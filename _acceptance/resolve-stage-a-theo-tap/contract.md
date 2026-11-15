@@ -5,7 +5,7 @@ slug: resolve-stage-a-theo-tap
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-15-resolve-stage-a-theo-tap-design.md
 veto_state: mo
 veto_opened_at: 2026-11-15T03:40:00Z
@@ -98,3 +98,7 @@ Core: AC-1…AC-8.
 ## Notes
 - Phép so đủ dữ liệu (ngoài lượt chấm, bù cho mẫu 5%): `node pipeline/scripts/resolve-so-stage-a.mjs --cu <bản chép A> --moi <bản chép B>` trên hai bản chép đủ dữ liệu dựng 15/11 ~03:00Z; kết quả ghi vào `_acceptance/resolve-stage-a-theo-tap/so-du-lieu-du.log` khi máy rảnh — chưa chạy được thì Cổng Bằng chứng ghi rõ «chưa đo», không chặn (giám sát 15/11).
 - Gộp là chạy thật: launchd chạy chuỗi từ checkout chính, lượt kế sau gộp dùng mã mới. Không migration, không lượt ghi dữ liệu riêng — chữ ký không kèm lời áp nào.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-16:
+  - Ngoài-1: gọi thẳng resolve-so-stage-a.mjs không truyền --rev thì sau khi gộp nó so bản mới với chính nó và báo xanh; đường chấm chính thức qua resolve-so-stage-a.sh đã ghim bản cũ d2b4beaf.
+  - Ngoài-4: cùng bẫy với Ngoài-1 — lượt so gọi thẳng sau gộp không chứng minh được gì.
+  - Ngoài-5: phép so chữ điều kiện lọc chỉ kiểm từng mẩu của bản cũ có mặt, không bắt một điều kiện thêm ngoài các mẩu ấy; lưới chính vẫn là so tập kết quả trên dữ liệu thật.
