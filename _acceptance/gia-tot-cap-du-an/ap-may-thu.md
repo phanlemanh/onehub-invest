@@ -6,6 +6,13 @@ không có view 105 thì bước chấm đêm tự lùi về cấp phường (AC
 
 ## 1. Lệnh áp
 
+Điều kiện trước: **105 (DV7) đã áp** lên máy thu. Lệnh kiểm trước — phải in `t`, không thì DỪNG, áp 105 theo hồ sơ DV7 trước:
+
+```bash
+docker exec -i -e PGPASSWORD=oneinvest one-invest-db psql -U oneinvest -h localhost -d oneinvest -Atc \
+  "SELECT to_regclass('offer_project') IS NOT NULL AND to_regclass('offer_price_rank') IS NOT NULL"
+```
+
 ```bash
 docker exec -i -e PGPASSWORD=oneinvest one-invest-db psql -U oneinvest -h localhost -d oneinvest -v ON_ERROR_STOP=1 -q \
   < ~/dev/onehub-invest/db/migrations/106_project_area_band.sql
