@@ -5,7 +5,7 @@ slug: tach-o-duong-dau-vao-ban
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: verified
 approved_by: Mạnh
 approved_at: 2026-11-15
 design_doc: docs/superpowers/specs/2026-11-15-tach-o-duong-dau-vao-ban-design.md
