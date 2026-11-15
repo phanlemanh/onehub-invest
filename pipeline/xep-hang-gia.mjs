@@ -14,8 +14,12 @@ import { PROPERTY_TYPE } from "./lib/vocab.generated.mjs";
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 
-/** Câu chấm (420) — đọc theo vị trí tệp này. */
+/** Câu chấm chỉ cấp phường (420, CG9) — đọc theo vị trí tệp này. Chạy khi DB chưa có view offer_project (105). */
 export const SQL_420 = readFileSync(new URL("./sql/420_price_rank.sql", import.meta.url), "utf8");
+/** Câu chấm có cấp dự án (422, CG10) — chạy khi DB có view offer_project. */
+export const SQL_420_DU_AN = readFileSync(new URL("./sql/422_price_rank_du_an.sql", import.meta.url), "utf8");
+/** Dải m² dự án × PN (421, CG10) — chạy khi DB có cả view offer_project lẫn bảng project_area_band (106). */
+export const SQL_421 = readFileSync(new URL("./sql/421_project_area_band.sql", import.meta.url), "utf8");
 
 /** Khoá advisory riêng của bước chấm — hai job đêm chạy chồng thì xếp hàng. */
 export const KHOA_XEP_HANG = "SELECT pg_advisory_xact_lock(hashtext('xep-hang-gia'))";
@@ -45,16 +49,26 @@ export function lyDoPhiLy(r) {
 /**
  * Chấm lại toàn bộ bảng. Tự mở giao dịch khi `c` chưa ở giao dịch; `savepoint: true` khi người gọi đã mở (test).
  * `sauXoa` chỉ cho ca đột biến của phép đo (ném lỗi sau khi xoá để chứng bảng cũ còn nguyên).
+ * CG10: dò view `offer_project` (105) và bảng `project_area_band` (106) theo search_path — không ghi `public.` (bài học #456):
+ * có view thì chấm bằng 422 (cấp dự án), không thì 420 (chỉ phường) và in một dòng; có 106 thì xoá trọn rồi ghi dải m² (421)
+ * trong cùng giao dịch, chưa áp 106 thì in một dòng và bỏ dải. `tenView`, `boDo106` chỉ cho ca đột biến của phép đo.
  * @param {import("pg").Client} c
- * @param {{ runId?: string, savepoint?: boolean, sql?: string, sauXoa?: () => Promise<void>, log?: (s: string) => void }} [opts]
- * @returns {Promise<{ chuaAp104: boolean, runId: string | null, tong: number,
+ * @param {{ runId?: string, savepoint?: boolean, sql?: string, sauXoa?: () => Promise<void>, log?: (s: string) => void,
+ *   tenView?: string, boDo106?: boolean }} [opts]
+ * @returns {Promise<{ chuaAp104: boolean, runId: string | null, tong: number, capDuAn: boolean, dai: number | null,
  *   theoKind: Record<string, { nhan: number, chiSo: number, khongCham: Record<string, number> }> }>}
  */
-export async function xepHangGia(c, { runId = `xhg-${randomUUID()}`, savepoint = false, sql = SQL_420, sauXoa, log = console.log } = {}) {
+export async function xepHangGia(c, { runId = `xhg-${randomUUID()}`, savepoint = false, sql, sauXoa, log = console.log,
+  tenView = "offer_project", boDo106 = false } = {}) {
   if (!(await c.query("SELECT to_regclass('offer_price_rank') AS t")).rows[0].t) {
     log("xep-hang-gia: chưa áp 104 — bỏ qua, không ghi");
-    return { chuaAp104: true, runId: null, tong: 0, theoKind: {} };
+    return { chuaAp104: true, runId: null, tong: 0, capDuAn: false, dai: null, theoKind: {} };
   }
+  const coView = Boolean((await c.query("SELECT to_regclass($1) AS t", [tenView])).rows[0].t);
+  const co106 = boDo106 || Boolean((await c.query("SELECT to_regclass('project_area_band') AS t")).rows[0].t);
+  if (!coView) log("xep-hang-gia: chưa có offer_project — chỉ chấm cấp phường");
+  else if (!co106) log("xep-hang-gia: chưa áp 106 — bỏ dải diện tích");
+  const cau = sql ?? (coView ? SQL_420_DU_AN : SQL_420);
   const [mo, xong, lui] = savepoint
     ? ["SAVEPOINT xep_hang_gia", "RELEASE SAVEPOINT xep_hang_gia", "ROLLBACK TO SAVEPOINT xep_hang_gia"]
     : ["BEGIN", "COMMIT", "ROLLBACK"];
@@ -71,8 +85,11 @@ export async function xepHangGia(c, { runId = `xhg-${randomUUID()}`, savepoint =
       if (ly) phiLy.push({ offer_id: r.offer_id, ly_do: ly });
     }
     await c.query(`DELETE FROM offer_price_rank`);
+    if (co106) await c.query(`DELETE FROM project_area_band`);
     if (sauXoa) await sauXoa();
-    await c.query(sql, [runId, JSON.stringify(phiLy)]);
+    await c.query(cau, [runId, JSON.stringify(phiLy)]);
+    let dai = null;
+    if (co106 && coView) dai = (await c.query(SQL_421, [runId, JSON.stringify(phiLy)])).rowCount;
     const dem = await c.query(`
       SELECT kind,
              count(*) FILTER (WHERE nhan IS NOT NULL)::int AS nhan,
@@ -90,11 +107,11 @@ export async function xepHangGia(c, { runId = `xhg-${randomUUID()}`, savepoint =
       theoKind[r.kind] = { nhan: r.nhan, chiSo: r.chi_so, khongCham: r.khong_cham };
       tong += r.nhan + r.chi_so + Object.values(r.khong_cham).reduce((a, b) => a + Number(b), 0);
     }
-    log(`xep-hang-gia: ${tong} tin (run ${runId})`);
+    log(`xep-hang-gia: ${tong} tin (run ${runId})${dai === null ? "" : ` · dải m² ${dai} nhóm`}`);
     for (const [k, v] of Object.entries(theoKind)) {
       log(`  ${k}: có nhãn ${v.nhan} · chỉ số ${v.chiSo} · không chấm ${JSON.stringify(v.khongCham)}`);
     }
-    return { chuaAp104: false, runId, tong, theoKind };
+    return { chuaAp104: false, runId, tong, capDuAn: coView, dai, theoKind };
   } catch (e) {
     await c.query(lui).catch(() => {});
     throw e;

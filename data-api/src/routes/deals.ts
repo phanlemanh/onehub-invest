@@ -22,7 +22,9 @@ export async function coBangHang(): Promise<boolean> {
  * = % dưới trung vị của nhóm phường × loại hình × bán/thuê (± số phòng ngủ khi nhóm đủ), mỗi căn một phiếu; thêm khối `rank`.
  * Mọi trường cũ giữ tên và kiểu; `kind` (sale mặc định, rent_lt) — giá trị khác → 400 (Hỏi-1).
  * Bảng chưa có hay rỗng (Hỏi-5): thước CG8 — view v_ruler_p2 (một căn một phiếu, chỉ tin bán, n≥5), tin chưa rõ loại không vào.
- * Query: ?area=<area_id>&market=<market_id>&limit=30&min_discount=5&kind=sale|rent_lt
+ * Query: ?area=<area_id>&market=<market_id>&limit=30&min_discount=5&kind=sale|rent_lt&project=<id nút dự án>
+ * CG10 (gia-tot-cap-du-an): `project` (chỉ chữ số, sai khuôn → 400) giữ tin xếp hạng cấp dự án của đúng nút đó; khối `rank` thêm
+ * `node` (id nút của nhóm: area_id hay asset_nodes.id). Chưa có bảng hạng thì không có cấp dự án → `project` trả danh sách rỗng.
  */
 dealsRoute.get("/", async (c) => {
   const rawKind = c.req.query("kind");
@@ -30,6 +32,10 @@ dealsRoute.get("/", async (c) => {
     return c.json({ error: "kind phải là sale hoặc rent_lt" }, 400);
   }
   const kind = rawKind ?? "sale";
+  const rawProject = c.req.query("project");
+  if (rawProject !== undefined && !/^[0-9]{1,18}$/.test(rawProject)) {
+    return c.json({ error: "project phải là mã số nút dự án" }, 400);
+  }
   // Mã thị trường dài đã đổi sang mã ngắn (migration 064) trả như gọi bằng mã mới.
   const rawArea = c.req.query("area");
   const rawMarket = c.req.query("market");
@@ -38,6 +44,7 @@ dealsRoute.get("/", async (c) => {
   const limit = Math.min(100, Number(c.req.query("limit") ?? 30) || 30);
   const minDiscount = Math.max(0, Math.min(50, Number(c.req.query("min_discount") ?? 5) || 5));
   const coBang = await coBangHang();
+  if (rawProject !== undefined && !coBang) return c.json({ data: [], meta: { total: 0, minDiscount, kind, project: rawProject } });
 
   const params: unknown[] = [];
   let loc = "";
@@ -56,9 +63,13 @@ dealsRoute.get("/", async (c) => {
     where = `h.kind = $${params.length} AND h.nhan IS NOT NULL
     AND o.last_seen >= now() - interval '45 days'
     AND h.duoi_trung_vi_pct >= ${minDiscount} AND h.duoi_trung_vi_pct <= 50`;
+    if (rawProject !== undefined) {
+      params.push(rawProject);
+      where += ` AND h.cap = 'du_an' AND h.nut = $${params.length}`;
+    }
     thuoc = `JOIN offer_price_rank h ON h.offer_id = o.offer_id`;
     cotSo = `CASE WHEN h.thuoc = 'gia-m2' THEN h.trung_vi END AS median_perm2, h.duoi_trung_vi_pct AS discount_pct,
-            h.cap, h.n, h.trung_vi, h.p20, h.hang_pct, h.nhan, h.can_xac_minh, h.thuoc, h.pn_nhom, h.ly_do`;
+            h.cap, h.nut, h.n, h.trung_vi, h.p20, h.hang_pct, h.nhan, h.can_xac_minh, h.thuoc, h.pn_nhom, h.ly_do`;
   } else {
     where = `o.kind = 'sale' AND o.price_perm2 > 0 AND o.area_id IS NOT NULL
     AND s.median_perm2 > 0
@@ -128,6 +139,7 @@ function khoiHang(r: Record<string, unknown>) {
   const num = (v: unknown) => (v === null || v === undefined ? null : Number(v));
   return {
     level: r.cap ?? null,
+    node: r.nut ?? null,
     n: num(r.n),
     median: num(r.trung_vi),
     p20: num(r.p20),
