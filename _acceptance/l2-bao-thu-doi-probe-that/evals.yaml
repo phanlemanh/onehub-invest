@@ -1,0 +1,104 @@
+schema_version: 1
+feature_slug: l2-bao-thu-doi-probe-that
+# Ca mới:
+# - «CD-AC-13…15» ở agent/tests/judge-entity-duong.test.ts (L2 bảo thủ, không DB).
+# - «CD-AC-16» ở agent/probes/o-duong-that.test.ts (đếm giá trị đổi khoá trên DB máy thu).
+# - «PT-AC-n» ở agent/probes/du-lieu-that.test.ts (script probe chung + quét suite + tsconfig).
+# Các ca probe dời giữ nguyên tên.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.judge_entity_duong
+    layer: backend-effect
+    paths: [agent/src/agents/judge-entity.ts, agent/tests/judge-entity-duong.test.ts]
+    expected: "exit 0; ca 'CD-AC-13 L2 bóc khi sau phẩy là tiền tố đường': mỗi tiền tố một ca: «46, Đường Điện Biên Phủ, …»↔«Điện Biên Phủ», «12, Phố Huế»↔«Huế», «7, Đ. Lê Lợi»↔«Lê Lợi», «9, duong Lang»↔«Đường Láng», «3, pho Hue»↔«Phố Huế», «237/6, Hẻm 237 Đường Hoàng Diệu»↔«Hoàng Diệu», «5, Ngõ 12 Lê Lợi»↔«Lê Lợi», «4, Ngách 3 Ngõ 9 La Dương»↔«La Dương», «6, Kiệt 12 Hùng Vương»↔«Hùng Vương», «33/3, Đường 25A»↔«Đường 25A» soDuong 'khop' hai chiều, apNguong không có khac_duong; chiều đỏ: bản đột biến bỏ dòng L2 → đỏ 'CD-AC-13 L2: 237/6, Hẻm 237 Đường Hoàng Diệu ↔ Hoàng Diệu'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.judge_entity_duong
+    layer: backend-effect
+    paths: [agent/src/agents/judge-entity.ts, agent/tests/judge-entity-duong.test.ts]
+    expected: "exit 0; ca 'CD-AC-14 L2 không bóc khi sau phẩy không phải tiền tố đường': soDuong(x, 'Lê Lợi') = 'thieu' hai chiều cho «3,5m», «4,5m», «7,5m», «4,3m», «15, Q1», «208, P12», «12, Phuong 5», «50 , Tân Khánh , tân Uyên , Tp , Hcm», «12, Phong Phú», «8, Phổ Quang»; khoaDuong(«2A, Khu dân cư Vĩnh Phú 1») không phần tử nào chứa 'khu dan cu'; «3/2, Phường 12, Quận 10»↔«3/2» và «19/5, Tân Bình»↔«Đường 19/5» 'khop'; «208, Nguyễn Hữu Cảnh, Phường 22, Quận Bình Thạnh, Tp Hồ Chí Minh»↔«Nguyễn Hữu Cảnh» = 'thieu' (ma trận L2 của CD-AC-9 đổi đúng một kỳ vọng này, ghi chú tên hồ sơ); chiều đỏ: bản đột biến dùng L2 của main f78e7382 (dòng danh sách loại trừ) → đỏ 'CD-AC-14 L2: 3,5m ↔ Lê Lợi'; bản đột biến bỏ ranh giới từ của tiền tố → đỏ 'CD-AC-14 L2: 12, Phong Phú ↔ Lê Lợi'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.judge_entity_duong
+    layer: backend-effect
+    paths: [agent/src/agents/judge-entity.ts, app/src/lib/ops/review-can-cu.ts, agent/tests/judge-entity-duong.test.ts, agent/probes/o-duong-that.test.ts]
+    expected: "exit 0; ca 'CD-AC-7 thẻ và luật cùng khoá đường' chạy ma trận cũ + mọi cặp CD-AC-13, CD-AC-14 trên luật và bản rút từ review-can-cu.ts, hai chiều, cùng kỳ vọng, số cặp in đúng tổng; chiều đỏ: luật đột biến bỏ dòng L2 → đỏ 'CD-AC-7 luật lệch thẻ duyệt ở'; ca 'CD-AC-16 L2 bảo thủ đổi khoá trên DB máy thu': SELECT DISTINCT street_raw, so khoaDuong mới với khoaDuong của bản main f78e7382 (chép đóng băng trong probe): chín giá trị của bảng design §1 (3,5m · 4,3m · 4,5m · 7,5m · 50 , Tân Khánh… · 44d/17, Khu Pho… · 2A, Khu dân cư… · 208, Nguyễn Hữu Cảnh… · 34/1A, Đỗ Mười) đều nằm trong tập đổi khoá (tập con); mọi giá trị đổi khoá có khoá mới rỗng hoặc chỉ gồm token số — giá trị nào ra khoá đường mới mà main không có thì đỏ 'CD-AC-16 L2 sinh khoá đường mới: <giá trị>'; in số đếm và danh sách, không assert số bằng"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.judge_entity_khong_dau
+    layer: backend-effect
+    paths: [agent/tests/judge-entity-khong-dau.test.ts, agent/probes/khong-dau-that.test.ts, _acceptance/config.yaml]
+    expected: "exit 0 trên máy thu; ca 'KD-AC-6 có dấu = không dấu' (phần a, tập viết trước) trong tests/ xanh; ca probe phần (b) ở agent/probes/khong-dau-that.test.ts xanh trên DB máy thu (0 lệch, in số giá trị so/loại) và đột biến khongTran/khongThang vẫn làm phần (b) phân biệt; KD-AC-1…5, KD-AC-7 xanh; dòng judge_entity_khong_dau của config.yaml nhắc probes/khong-dau-that.test.ts"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.judge_luat
+    layer: backend-effect
+    paths: [agent/tests/judge-luat.test.ts, agent/probes/judge-luat-that.test.ts, _acceptance/config.yaml]
+    expected: "exit 0 trên máy thu; LT-AC-1…5 trong tests/ xanh; hai ca 'LT-AC-6 probe thẻ đã quyết' và 'LT-AC-6 bộ nạp cặp thật' ở agent/probes/judge-luat-that.test.ts chạy trên DB máy thu (xanh, hoặc skip có lý do đúng như bản trước khi dời — 'bàn đo rỗng'), chiều đỏ của 'probe thẻ đã quyết' giữ nguyên khi bàn đo có thẻ; dòng judge_luat của config.yaml nhắc probes/judge-luat-that.test.ts"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.context_resolver_that
+    layer: backend-effect
+    paths: [agent/tests/context-resolver.test.ts, agent/probes/context-resolver-that.test.ts, _acceptance/config.yaml, _acceptance/enrich-hau-ky/evals.yaml]
+    expected: "exit 0 trên máy thu; executor mới context_resolver_that chạy tests/context-resolver.test.ts + probes/context-resolver-that.test.ts; ca 'AC-9 E1 đất từ nội dung tin' (fixture) và 'AC-8 …' xanh trong tests/; ca 'AC-9 chỉ kết quả land đổi trên tin thật của DB local' ở probes/ xanh trên DB máy thu (> 100 tin, đối chứng dương, chiều đỏ 'thước «chỉ land đổi» phải đỏ với luật quét-tin-trước' giữ nguyên); _acceptance/enrich-hau-ky/evals.yaml ô E9 khai status: not-run + superseded_by: l2-bao-thu-doi-probe-that#AC-5 (theo Hỏi-2)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.the_duyet_phuong
+    layer: backend-effect
+    paths: [app/tests/the-duyet-phuong-lech-gia.test.tsx, app/probes/the-duyet-phuong-that.test.tsx, _acceptance/config.yaml]
+    expected: "exit 0 trên máy thu; TPL-AC-1…5 trong app/tests xanh; ca 'TPL-AC-6 probe DB máy thu…' ở app/probes/the-duyet-phuong-that.test.tsx xanh trên DB máy thu; chiều đỏ của nó ghim khuôn lớp /TPL-AC-6 probe: .* cùng phường mà báo lech/ (không ghim giá trị cụ thể); dòng the_duyet_phuong của config.yaml nhắc probes/the-duyet-phuong-that.test.tsx"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.judge_entity_duong
+    layer: backend-effect
+    paths: [agent/tests/judge-entity-duong.test.ts, agent/package.json, app/package.json]
+    expected: "exit 0; ca 'CD-AC-10 suite chung không thêm probe dữ liệu thật' quét glob suite đọc từ agent/package.json VÀ app/package.json (tests/*.test.ts, tests/*.test.tsx), danh sách nợ rỗng: 0 dấu t.skip(\"cần DB máy thu trong mọi tệp, không tệp nào khai test( với tên năm ca đã dời; in số tệp mỗi module; chiều đỏ: chèn một dấu probe vào nội dung judge-luat.test.ts → ném 'CD-AC-10 probe dữ liệu thật vượt danh sách nợ: judge-luat.test.ts 1 > 0'; thêm app/probes/the-duyet-phuong-that.test.tsx vào danh sách suite → ném 'CD-AC-10 tệp suite có probe dữ liệu thật'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.probe_du_lieu_that
+    layer: backend-effect
+    paths: [scripts/probe-du-lieu-that.sh, scripts/audit-all.sh, agent/probes/du-lieu-that.test.ts]
+    expected: "exit 0 trên máy thu; ca 'PT-AC-8 mục Probe dữ liệu thật chạy hai nhánh': bash scripts/probe-du-lieu-that.sh → exit 0, đúng bốn dòng ✅ (khong-dau-that, judge-luat-that, context-resolver-that, the-duyet-phuong-that); với PROBE_GIA_DO=judge-luat-that → exit 1, đúng một dòng ❌ gọi tên judge-luat-that, ba dòng còn lại ✅; sau cả hai lượt không còn tệp .od-*/.cd-*/.kd-* nào trong agent/src/agents; scripts/audit-all.sh có mục B5 gọi scripts/probe-du-lieu-that.sh trong nhánh if/then pass/else fail; chiều đỏ: hàm kiểm trên bản audit-all bỏ dòng gọi → ném 'PT-AC-8 audit-all thiếu mục Probe dữ liệu thật'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.probe_du_lieu_that
+    layer: backend-effect
+    paths: [agent/tsconfig.json, agent/probes/du-lieu-that.test.ts, agent/probes/**]
+    expected: "exit 0; ca 'PT-AC-9 tsconfig kiểm agent/probes': agent/tsconfig.json include có 'probes/**/*.ts'; npx tsc --noEmit -p agent trả 0 lỗi mà đường tệp nằm dưới agent/probes/ (lỗi node_modules tồn đọng không tính, in số); chiều đỏ: chép một tệp probe sang agent/probes/.pt-loi-<pid>.ts có thêm dòng `const x: number = \"a\";`, tsc báo lỗi nêu đúng tệp đó (TS2322), xoá tệp cuối lượt"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.agent
+    layer: backend-effect
+    paths: [agent/**]
+    expected: "exit 0: cd agent && npm test trên DB của riêng lượt chép máy thu; không ca nào đỏ"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E12
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.app_ui
+    layer: backend-effect
+    paths: [app/tests/**, app/probes/**]
+    expected: "exit 0: cd app && npm test trên DB của riêng lượt chép máy thu; không ca nào đỏ; không ca TPL-AC-6 probe trong đầu ra"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
