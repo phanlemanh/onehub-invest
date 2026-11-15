@@ -301,7 +301,15 @@ async function main() {
     // — giữ phần dự án không mất khi chỉ lẫn căn; áp 094 rồi nạp lại được đủ.
     const coCatalogS08 = items.some((it) => it.source === "s08-danh-muc" && it.kind === "project_catalog");
     const boHetS08 = coCatalogS08 && !coBang094;
-    if (!(!coBang && boHetHoSo) && !boHetS10 && !boHetS08) {
+    if (boHetS08) {
+      // 1511-2/MỞ LẠI 1311-2: HOÃN SẠCH cả lượt NGAY TỪ ĐẦU — vòng trước chỉ bỏ dòng
+      // airbnb_snapshots rồi vòng căn vẫn INSERT stg_s08_inventory → lỗi FK, cả lượt
+      // thoát lỗi thay vì hoãn sạch như chú thích 1211-35 (đêm 14/11 094 mất khỏi DB
+      // máy thu đã xảy ra thật). Hoãn: log một dòng rõ, thoát 0, KHÔNG đánh dấu.
+      console.warn(`HOÃN S08: bảng stg_s08_project chưa có (migration 094 chưa áp) — hoãn sạch ${items.length} items (kể cả căn), KHÔNG đánh dấu đã nạp; áp 094 rồi nạp lại được đủ`);
+      return;
+    }
+    if (!(!coBang && boHetHoSo) && !boHetS10) {
       await client.query(
         `INSERT INTO airbnb_snapshots (snapshot_id, city, source, collected_at, manifest)
          VALUES ($1,$2,$3,$4,$5)

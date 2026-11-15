@@ -68,15 +68,17 @@ test("S08-1 có 094 (áp CHÍNH migration 094 — 1311-1a): catalog+detail → 2
   assert.equal(n2, 2, "nạp lại không nhân dòng");
 });
 
-test("S08-2 chiều đỏ: CÓ catalog, thiếu 094 → CHUA-AP-094, KHÔNG đánh dấu snapshot", async () => {
+test("S08-2 chiều đỏ: CÓ catalog, thiếu 094 → HOÃN SẠCH (1511-2/MỞ LẠI 1311-2) — không đánh dấu, không nạp căn (hết lỗi FK)", async () => {
   await q("DROP TABLE IF EXISTS stg_s08_project CASCADE");
   const pid = `DB${ts()}`;
-  const dir = await sinh([itemS08(pid), itemDetail(pid)]);
+  const dir = await sinh([itemS08(pid), itemDetail(pid), itemCan(pid, `${pid}-01`)]); // lẫn cả căn
   const r = nap(dir);
-  assert.equal(r.status, 0, "rc 0 (AC-6 rollback thoát)");
-  assert.match(r.stdout + r.stderr, /CHUA-AP-094/, "in CHUA-AP-094");
+  assert.equal(r.status, 0, "rc 0 — hoãn sạch, không thoát lỗi");
+  assert.match(r.stdout + r.stderr, /HOÃN S08/, "in dòng hoãn rõ");
   const d = (await q("SELECT count(*)::int n FROM airbnb_snapshots WHERE snapshot_id = $1", [dir.split("/").pop()])).rows[0].n;
   assert.equal(d, 0, "KHÔNG đánh dấu (áp 094 rồi nạp lại được đủ)");
+  const nCan = (await q("SELECT count(*)::int n FROM stg_s08_inventory WHERE snapshot_id = $1", [dir.split("/").pop()])).rows[0].n;
+  assert.equal(nCan, 0, "KHÔNG nạp căn (hết lỗi FK khi airbnb_snapshots chưa ghi)");
 });
 
 test("S08-3 đối chứng DƯƠNG (1311-2): CHỈ căn, thiếu 094 → vẫn nạp stg_s08_inventory + CÓ đánh dấu", async () => {
