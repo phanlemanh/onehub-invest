@@ -5,8 +5,10 @@ slug: resolve-stage-a-theo-tap
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: draft
+status: approved
 design_doc: docs/superpowers/specs/2026-11-15-resolve-stage-a-theo-tap-design.md
+veto_state: mo
+veto_opened_at: 2026-11-15T03:40:00Z
 ---
 
 # Acceptance Contract: resolve-stage-a-theo-tap
@@ -86,11 +88,11 @@ Core: AC-1…AC-8.
 
 ## Out of scope
 
-- Phép so trên đủ dữ liệu trong lượt chấm: bản cũ chạy hàng giờ; lượt chấm so trên mẫu 5%, một lượt đủ dữ liệu chạy một lần ngoài lượt chấm, ghi ở Notes.
+- Phép so bản cũ trên ĐỦ dữ liệu: CHƯA ĐO — bản cũ chạy hàng giờ (671 giây chỉ trên mẫu 10%), lượt đủ dữ liệu bị dừng giữa chừng để nhường máy (giám sát 15/11). Căn cứ thay: mẫu 10% lệch 0, mẫu trước lượt đêm lệch 0 có chèn căn và link, chiều đỏ của phép so; một lượt đủ dữ liệu chạy khi máy rảnh, ghi ở Notes.
 - Đổi luật gom (khoá cụm, ngưỡng lưới), Stage B, `goSdtKhoiCan`, `dienDuongCan`, các bước khác của chuỗi đêm.
 - Dừng hay đụng lượt resolve đang chạy trên DB máy thu: hàng không chạm DB `oneinvest`, chỉ đếm chỉ đọc.
 - Ca RTLD-AC-9 (điểm vào CLI, ô lỗi 42P10) đỏ sẵn trên main d2b4beaf (`0 !== 1`), không thuộc hàng; E6 bỏ ca này.
 
 ## Notes
-- Phép so đủ dữ liệu (ngoài lượt chấm, bù cho mẫu 5%): `node pipeline/scripts/resolve-so-stage-a.mjs --cu <bản chép A> --moi <bản chép B>` trên hai bản chép đủ dữ liệu dựng 15/11 ~03:00Z; kết quả ghi vào `_acceptance/resolve-stage-a-theo-tap/so-du-lieu-du.log` trước Cổng Bằng chứng — «TỔNG lệch 0» là điều kiện trình thẻ.
+- Phép so đủ dữ liệu (ngoài lượt chấm, bù cho mẫu 5%): `node pipeline/scripts/resolve-so-stage-a.mjs --cu <bản chép A> --moi <bản chép B>` trên hai bản chép đủ dữ liệu dựng 15/11 ~03:00Z; kết quả ghi vào `_acceptance/resolve-stage-a-theo-tap/so-du-lieu-du.log` khi máy rảnh — chưa chạy được thì Cổng Bằng chứng ghi rõ «chưa đo», không chặn (giám sát 15/11).
 - Gộp là chạy thật: launchd chạy chuỗi từ checkout chính, lượt kế sau gộp dùng mã mới. Không migration, không lượt ghi dữ liệu riêng — chữ ký không kèm lời áp nào.
