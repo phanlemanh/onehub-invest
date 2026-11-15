@@ -31,6 +31,10 @@ mục: `README.md` (tệp này), `sao-luu.sh`, `so-chay-thu.md`, `105-lui.sql`, 
    Đạt khi: có view; ô Định vị S03 (all) khớp số tin `mot_du_an` S03 của dòng 3 và gần số chạy thử; `xung_dot` được liệt
    kê; số B2 hôm nay bằng `b2_ky_vong`.
 
+**Thứ tự gộp và áp.** Gộp trước hay áp trước đều an toàn: khi DB chưa có `offer_project`, bộ chạy làm tươi
+(`pipeline/refresh-data-flow.mjs`) để ô Định vị bằng 0 và in một dòng «chưa có offer_project (chưa áp 105)» thay vì làm
+hỏng lượt cloud-sync. Áp xong thì lượt làm tươi kế (15 phút) tự lên số.
+
 **Dòng chuyển bậc dự kiến.** Lượt `do-hang-ngay` đầu sau áp ghi một loạt dòng `huong = 'len'` (B1 → B2) vào
 `data_level_change`, tới số `b2_ky_vong` (tin có dự án và đủ năm trường lõi, mọi nguồn — xem `so-chay-thu.md`). Đây là đổi định
 nghĩa một lần, không phải biến động dữ liệu; báo cáo DO1 ngày áp đọc theo chú thích này.
