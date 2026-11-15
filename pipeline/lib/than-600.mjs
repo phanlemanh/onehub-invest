@@ -16,3 +16,20 @@ export function than600(sql) {
   }
   return con.join("\n");
 }
+
+// DV7: hai hàm dưới nằm ở đây (không ở refresh-data-flow.mjs) để test import được mà không kéo URL DB chung theo (DT-AC-7).
+/** Dòng nối ô Định vị của 600 vào nguồn chung offer_project (DV7, migration 105). */
+export const DONG_DINH_VI = /^dinh_vi_link AS MATERIALIZED \(SELECT offer_id FROM offer_project WHERE status = 'mot_du_an'\),$/m;
+
+/**
+ * DV7: DB chưa có `offer_project` (máy thu sau gộp mà chưa áp 105, hay DB chép cũ) → thay dòng nối Định vị bằng CTE rỗng như
+ * trước DV7 và báo một dòng stderr, thay vì để cả lượt làm tươi lỗi. Có view (hay bảng cùng tên trên search_path) → giữ nguyên.
+ * @param {import("pg").Client} c @param {string} sql @returns {Promise<string>}
+ */
+export async function dinhViKhiCoView(c, sql) {
+  if (!DONG_DINH_VI.test(sql)) return sql;
+  const { rows: [r] } = await c.query("SELECT to_regclass('offer_project') IS NOT NULL AS co");
+  if (r?.co) return sql;
+  console.error("refresh-data-flow: chưa có offer_project (chưa áp 105) — ô Định vị tạm bằng 0");
+  return sql.replace(DONG_DINH_VI, "dinh_vi_link AS (SELECT NULL::text AS offer_id WHERE false),");
+}

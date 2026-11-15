@@ -308,7 +308,7 @@ test("DV7-AC-5 ô Định vị của 600 đọc view; chờ khớp giữ nghĩa 
 });
 
 test("DV7-AC-5b bộ chạy làm tươi: chưa có offer_project thì ô Định vị rỗng thay vì lỗi; có view thì giữ nguyên", { timeout: 300_000 }, async () => {
-  const { dinhViKhiCoView, DONG_DINH_VI } = await import("../refresh-data-flow.mjs");
+  const { dinhViKhiCoView, DONG_DINH_VI } = await import("../lib/than-600.mjs");
   assert.ok(DONG_DINH_VI.test(SQL600), "DV7-AC-5b: 600 không còn đúng dòng nối Định vị mà bộ chạy dò");
   await trongGiaoDich(async () => {
     await c.query(MIG);

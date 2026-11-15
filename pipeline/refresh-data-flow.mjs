@@ -9,6 +9,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
 import { napNhanhBai } from "./lib/nhanh-bai-s03.mjs";
+import { dinhViKhiCoView } from "./lib/than-600.mjs";
+
+export { DONG_DINH_VI, dinhViKhiCoView } from "./lib/than-600.mjs";
 
 const LOCAL_URL = "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 
@@ -22,22 +25,6 @@ export async function chayLamTuoi(c, sql) {
   const dem = await napNhanhBai(c);
   await c.query(await dinhViKhiCoView(c, sql));
   return dem;
-}
-
-/** Dòng nối ô Định vị của 600 vào nguồn chung offer_project (DV7, migration 105). */
-export const DONG_DINH_VI = /^dinh_vi_link AS MATERIALIZED \(SELECT offer_id FROM offer_project WHERE status = 'mot_du_an'\),$/m;
-
-/**
- * DV7: DB chưa có `offer_project` (máy thu sau gộp mà chưa áp 105, hay DB chép cũ) → thay dòng nối Định vị bằng CTE rỗng như
- * trước DV7 và báo một dòng stderr, thay vì để cả lượt làm tươi lỗi. Có view (hay bảng cùng tên trên search_path) → giữ nguyên.
- * @param {import("pg").Client} c @param {string} sql @returns {Promise<string>}
- */
-export async function dinhViKhiCoView(c, sql) {
-  if (!DONG_DINH_VI.test(sql)) return sql;
-  const { rows: [r] } = await c.query("SELECT to_regclass('offer_project') IS NOT NULL AS co");
-  if (r?.co) return sql;
-  console.error("refresh-data-flow: chưa có offer_project (chưa áp 105) — ô Định vị tạm bằng 0");
-  return sql.replace(DONG_DINH_VI, "dinh_vi_link AS (SELECT NULL::text AS offer_id WHERE false),");
 }
 
 async function main() {
