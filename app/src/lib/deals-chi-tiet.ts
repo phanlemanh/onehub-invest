@@ -50,6 +50,8 @@ export type DealChiTiet = {
   rank?: HangGia | null;
   /** Dải m² thường gặp của dự án × PN (CG10, project_area_band) cho căn hộ thiếu diện tích; null khi không có. Suy ra, không phải m² của tin. */
   daiM2?: { p10: number; p90: number } | null;
+  /** Số tin của cùng một căn trong danh sách (CG10: mỗi căn một dòng); 1 khi căn chỉ có một tin. */
+  soTin?: number;
 };
 
 /** Một dòng offer_price_rank cho trang (CG9). Số NULL khi tin không chấm (`reason` nói vì sao). */

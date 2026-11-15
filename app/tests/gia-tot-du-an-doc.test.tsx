@@ -113,3 +113,69 @@ test("CG10-AC-6 trang một căn: câu cấp dự án + Giá tốt, thuê giá t
   // lyDoRoi không đổi chữ khi tin cấp dự án có nhãn
   assert.equal(lyDoRoi(b0, false), null);
 });
+
+// ---------- AC-7: danh sách /ops/deals ----------
+test("CG10-AC-7 danh sách: lọc dự án không cắt 30, mỗi căn một dòng «N tin», tab Cần xác minh toàn tập và theo dự án, chỉ tin bán, id thật rỗng ≠ id lạ", async () => {
+  const c = await m.fx.dbCa();
+  const A = m.fx.A;
+  const d1 = await m.fx.duAn(c, { ten: "Khu thử Bảy" });
+  const d2 = await m.fx.duAn(c, { ten: "Khu thử Tám" });
+  const dRong = await m.fx.duAn(c, { ten: "Khu thử Rỗng" });
+  // d1: 180 phiếu căn hộ bán 40–57,9 tr/m² (36 dưới p20) + 3 tin rẻ quá 35% (cần xác minh) + một căn ba tin
+  for (let i = 0; i < 177; i++) await m.fx.tin(c, { id: `d7-${i}`, duAn: d1, phuong: A(i % 3 ? "a1" : "a2"), m2: 60, perm2: Math.round((40 + 0.1 * i) * M) });
+  for (let i = 0; i < 3; i++) await m.fx.tin(c, { id: `d7-xm-${i}`, duAn: d1, phuong: A("a1"), m2: 60, perm2: Math.round((29 + 0.5 * i) * M) });
+  for (let i = 0; i < 3; i++) await m.fx.tin(c, { id: `d7-can-${i}`, duAn: d1, phuong: A("a1"), m2: 60, perm2: Math.round((40.05 + 0.01 * i) * M) });
+  await m.fx.can(c, ["d7-can-0", "d7-can-1", "d7-can-2"]);
+  // d1: tin thuê có nhãn — không vào danh sách
+  for (let i = 0; i < 10; i++) await m.fx.tin(c, { id: `d7-thue-${i}`, duAn: d1, kind: "rent_lt", phuong: A("a1"), m2: 60, perm2: (200 + 10 * i) * 1000 });
+  // d2: 10 phiếu, một tin cần xác minh (đối chứng đếm tab theo dự án)
+  for (let i = 0; i < 9; i++) await m.fx.tin(c, { id: `d8-${i}`, duAn: d2, phuong: A("a3"), m2: 60, perm2: (50 + i) * M });
+  await m.fx.tin(c, { id: "d8-xm", duAn: d2, phuong: A("a3"), m2: 60, perm2: 33 * M });
+  // dRong: 4 tin — có thật mà không nhóm nào đủ
+  for (let i = 0; i < 4; i++) await m.fx.tin(c, { id: `d9-${i}`, duAn: dRong, phuong: A("a4"), m2: 60, perm2: (50 + i) * M });
+  await m.xep(c, im);
+
+  // kỳ vọng đọc thẳng từ bảng
+  const ky = async (nut: string | null) => (await c.query(
+    `SELECT h.offer_id, h.can_xac_minh, coalesce((SELECT min(property_id)::text FROM property_offers po WHERE po.offer_id = h.offer_id), h.offer_id) AS can
+       FROM offer_price_rank h WHERE h.kind = 'sale' AND h.nhan IS NOT NULL AND h.duoi_trung_vi_pct BETWEEN 5 AND 50
+        AND ($1::text IS NULL OR (h.cap = 'du_an' AND h.nut = $1))`, [nut])).rows;
+  const k1 = await ky(String(d1));
+  const can1 = new Set(k1.map((r) => r.can));
+  assert.ok(can1.size > 30, `đối chứng: dự án 1 phải có hơn 30 căn nhãn (có ${can1.size})`);
+
+  const ds1 = await quaClient(c, () => m.deals.getDeals(undefined, 5, { project: String(d1) }));
+  assert.equal(ds1.rows.length, can1.size, "CG10-AC-7 lọc dự án: mỗi căn một dòng, không cắt 30");
+  assert.ok(ds1.rows.every((r) => r.rank?.level === "du_an" && r.rank.node === String(d1)), "CG10-AC-7 lọc dự án lọt tin ngoài dự án");
+  const ba = ds1.rows.filter((r) => r.offerId.startsWith("d7-can-"));
+  assert.deepEqual(ba.map((r) => [r.offerId, r.soTin]), [["d7-can-2", 3]], "CG10-AC-7 căn ba tin: một dòng, đại diện là tin thấy sau cùng, soTin = 3");
+  assert.ok(ds1.rows.every((r) => !r.offerId.startsWith("d7-thue-")), "CG10-AC-7 tin thuê lọt danh sách");
+
+  // tab Cần xác minh trên toàn tập
+  const xmAll = await quaClient(c, () => m.deals.getXacMinh());
+  const kyXm = (await ky(null)).filter((r) => r.can_xac_minh);
+  assert.equal(xmAll!.tong, new Set(kyXm.map((r) => r.can)).size, "CG10-AC-7 tab toàn tập: đếm sai");
+  assert.equal(xmAll!.tong, 4);
+  assert.equal(xmAll!.rows.length, 4, "CG10-AC-7 tab toàn tập: liệt kê thiếu");
+  const ds30 = await quaClient(c, () => m.deals.getDeals());
+  assert.equal(ds30.rows.length, 30, "đối chứng: danh sách không lọc cắt 30");
+  // đột biến «đếm tab trong 30 dòng đã cắt» → lệch tổng
+  const demTrong30 = ds30.rows.filter((r) => r.suspect).length;
+  assert.notEqual(demTrong30, xmAll!.tong, "CG10-AC-7 đột biến đếm tab trên 30 dòng đã cắt phải lệch toàn tập");
+  // theo dự án
+  assert.equal((await quaClient(c, () => m.deals.getXacMinh({ project: String(d1) })))!.tong, 3, "CG10-AC-7 tab theo dự án 1");
+  assert.equal((await quaClient(c, () => m.deals.getXacMinh({ project: String(d2) })))!.tong, 1, "CG10-AC-7 tab theo dự án 2");
+
+  // id có thật mà rỗng ≠ id lạ
+  const rong = await quaClient(c, () => m.deals.getDeals(undefined, 5, { project: String(dRong) }));
+  assert.equal(rong.rows.length, 0);
+  assert.deepEqual(await quaClient(c, () => m.deals.getDuAn(String(dRong))), { id: String(dRong), ten: "Khu thử Rỗng" });
+  assert.equal(await quaClient(c, () => m.deals.getDuAn("999999999")), null, "id lạ phải không có dự án");
+  // tham số sai khuôn
+  for (const v of ["abc", "1;drop", "1".repeat(19), "", undefined, "-1"]) assert.equal(m.deals.parseProject(v), null, `parseProject(${v})`);
+  assert.equal(m.deals.parseProject(String(d1)), String(d1));
+  assert.equal(m.deals.parseProject(["7", "8"]), "7");
+  // CG9 danh sách không lọc vẫn một nguồn với câu SQL: so_tin có mặt, tin trong danh sách theo bảng
+  assert.ok(ds30.rows.every((r) => (r.soTin ?? 0) >= 1));
+  assert.ok(so(ds30.rows[0].discountPct) !== null);
+});
