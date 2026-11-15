@@ -292,3 +292,18 @@ test("DV7-AC-5 ô Định vị của 600 đọc view; chờ khớp giữ nghĩa 
     } finally { await c.query("ROLLBACK TO SAVEPOINT p"); }
   });
 });
+
+test("DV7-AC-5b bộ chạy làm tươi: chưa có offer_project thì ô Định vị rỗng thay vì lỗi; có view thì giữ nguyên", { timeout: 300_000 }, async () => {
+  const { dinhViKhiCoView, DONG_DINH_VI } = await import("../refresh-data-flow.mjs");
+  assert.ok(DONG_DINH_VI.test(SQL600), "DV7-AC-5b: 600 không còn đúng dòng nối Định vị mà bộ chạy dò");
+  await trongGiaoDich(async () => {
+    await c.query(MIG);
+    assert.equal(await dinhViKhiCoView(c, SQL600), SQL600, "DV7-AC-5b: có view mà bộ chạy vẫn thay dòng");
+    await c.query("DROP VIEW offer_project");
+    const doi = await dinhViKhiCoView(c, SQL600);
+    assert.ok(!DONG_DINH_VI.test(doi) && /dinh_vi_link AS \(SELECT NULL::text AS offer_id WHERE false\)/.test(doi),
+      "DV7-AC-5b: thiếu view mà dòng nối chưa thành CTE rỗng");
+    await c.query(`SET LOCAL oneinvest.flow_now = '${new Date().toISOString()}'`);
+    await chay600(doi); // chạy được, không lỗi relation
+  });
+});
