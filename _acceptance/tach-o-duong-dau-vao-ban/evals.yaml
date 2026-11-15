@@ -34,7 +34,7 @@ evals:
     cmd: config:executors.test.judge_entity_duong
     layer: backend-effect
     paths: [agent/src/agents/judge-entity.ts, agent/tests/judge-entity-duong.test.ts]
-    expected: "exit 0; ca 'CD-AC-9 lớp đầu vào bẩn' — L4/L5: «hẻm 3,5m Lê Văn Sỹ»↔«Lê Văn Sỹ» 'khop'; «Ngõ 2.5m»↔«Minh Khai» 'thieu'; khoaDuong(«hẻm 3,5m, 1 trục thẳng thới tam thôn 16») không chứa '5m'; «Hẻm 822 /131A HƯƠNG LỘ 2 BÌNH TRỊ ĐÔNG A, QUẬN BÌNH TÂN , TPHCM»↔«Hương Lộ 2 Bình Trị Đông A» 'khop'; đối chứng «1/ TRẦN VĂN MƯỜI»↔«Trần Văn Mười» 'khop'; chiều đỏ: đột biến bỏ bước bề rộng → đỏ 'CD-AC-9 L4 bề rộng hẻm: hẻm 3,5m Lê Văn Sỹ ↔ Lê Văn Sỹ'; đột biến bỏ bước gạch chéo → đỏ 'CD-AC-9 L5 trắng trước gạch chéo'"
+    expected: "exit 0; ca 'CD-AC-9 lớp đầu vào bẩn' — L4/L5: «hẻm 3,5m Lê Văn Sỹ»↔«Lê Văn Sỹ» 'khop'; «Ngõ 2.5m»↔«Minh Khai» 'thieu'; khoaDuong(«hẻm 3,5m, 1 trục thẳng thới tam thôn 16») không chứa '5m'; «Hẻm 822 /131A HƯƠNG LỘ 2 BÌNH TRỊ ĐÔNG A, QUẬN BÌNH TÂN , TPHCM»↔«Hương Lộ 2 Bình Trị Đông A» 'khop'; đối chứng «1/ TRẦN VĂN MƯỜI»↔«Trần Văn Mười» 'khop'; chiều đỏ: đột biến bỏ bước bề rộng → đỏ 'CD-AC-9 L4 bề rộng hẻm: Ngõ 2.5m ↔ Minh Khai'; đột biến bỏ bước gạch chéo → đỏ 'CD-AC-9 L5 trắng trước gạch chéo'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E5
     criterion: AC-5
@@ -50,7 +50,7 @@ evals:
     cmd: config:executors.test.judge_entity_duong
     layer: backend-effect
     paths: [agent/tests/judge-entity-duong.test.ts, agent/probes/o-duong-that.test.ts, agent/package.json, _acceptance/config.yaml]
-    expected: "exit 0; ca 'CD-AC-10 suite chung không thêm probe dữ liệu thật': đọc glob test từ agent/package.json, liệt mọi tệp khớp (≥ 10); không tệp nào chứa tên ca 'CD-AC-8 probe ô đường thật'; đếm dấu probe (t.skip có chuỗi 'cần DB máy thu') mỗi tệp ≤ danh sách nợ {judge-entity-khong-dau.test.ts: 1, judge-luat.test.ts: 2, mọi tệp khác: 0} và tổng in ra; agent/probes/o-duong-that.test.ts có ca 'CD-AC-8 probe ô đường thật'; dòng judge_entity_duong của _acceptance/config.yaml nhắc probes/o-duong-that.test.ts; chiều đỏ: cùng hàm kiểm chạy trên danh sách tệp cộng probes/o-duong-that.test.ts → ném 'CD-AC-10 tệp suite có probe dữ liệu thật: probes/o-duong-that.test.ts'; và trên nội dung judge-luat.test.ts chèn thêm một dấu probe → ném 'CD-AC-10 probe dữ liệu thật vượt danh sách nợ: judge-luat.test.ts 3 > 2'"
+    expected: "exit 0; ca 'CD-AC-10 suite chung không thêm probe dữ liệu thật': đọc glob test từ agent/package.json, liệt mọi tệp khớp (≥ 10); không tệp nào khai ca test(\"CD-AC-8 probe ô đường thật\"; đếm dấu probe (t.skip có chuỗi 'cần DB máy thu') mỗi tệp ≤ danh sách nợ {judge-entity-khong-dau.test.ts: 1, judge-luat.test.ts: 2, mọi tệp khác: 0} và tổng in ra; agent/probes/o-duong-that.test.ts có ca 'CD-AC-8 probe ô đường thật'; dòng judge_entity_duong của _acceptance/config.yaml nhắc probes/o-duong-that.test.ts; chiều đỏ: cùng hàm kiểm chạy trên danh sách tệp cộng probes/o-duong-that.test.ts → ném 'CD-AC-10 tệp suite có probe dữ liệu thật: probes/o-duong-that.test.ts'; và trên nội dung judge-luat.test.ts chèn thêm một dấu probe → ném 'CD-AC-10 probe dữ liệu thật vượt danh sách nợ: judge-luat.test.ts 3 > 2'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E7
     criterion: AC-7
