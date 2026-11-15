@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 4504f78407ba7f037e46b195bfdc12cabdebe73a
+verified_commit: 6f1d6a87d50896faa292add29d8c6046d829d665
 human_signoff: Mạnh 2026-11-16
 ---
 
@@ -206,3 +206,7 @@ none — every multi-run eval is uniform (mọi eval chạy một lần, determi
 
 Round 1: lịch sử vòng đầu nằm trong run-log.jsonl và decisions.jsonl của hồ sơ; báo cáo này thay thế hoàn toàn.
 Round 2: cả 13 eval đạt, bốn lệnh suite hồi quy đạt, không có mục chờ người chấm.
+
+### Re-pin lần 1 — 2026-11-15, do nhận main 8cf607e9 (#464–#466 đổi pipeline/**) trước khi gộp
+run_id: repin-20261115T213157Z-59503
+sha: 6f1d6a87d50896faa292add29d8c6046d829d665 · suites: 7 lệnh exit 0 · evals: 13/13 eval máy đạt kỳ vọng · chập chờn (đỏ lần đầu, đạt khi chạy lại): suite 1/7
