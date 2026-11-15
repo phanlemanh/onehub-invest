@@ -46,17 +46,26 @@ export function oBoDocLuat(r) {
   return o;
 }
 
+/** Đọc gộp dừng vì hết tiền nhà cung cấp model: bước mau-soat dừng ngay, in dòng cảnh báo bám vào và thoát 4. */
+export class LoiHetTien extends Error {
+  constructor() { super("mau-soat: doc-gop-s03 dừng sớm vì hết tiền nhà cung cấp model"); this.het_tien = true; }
+}
+export const DONG_HET_TIEN = "JOB FAIL [cloud-sync] bước mau-soat-cuon-chieu het-tien";
+export const MA_HET_TIEN = 4;
+
 /** Gọi đọc gộp qua lệnh của agent cho đúng danh sách bài, với trần còn lại. Trả số lời gọi, USD, có chạm trần. */
 export async function goiDocGopThat(postIds, tranConLai, { runId, cauHinh }) {
   const env = path.join(ROOT, ".env");
   const args = [...(existsSync(env) ? [`--env-file=${env}`] : []), "--import", "tsx", "scripts/doc-gop-s03.ts", "chay",
     "--post", postIds.join(","), "--tran-usd", String(tranConLai), "--run-id", runId, ...(cauHinh ? ["--cau-hinh", cauHinh] : [])];
   try {
-    const { stdout } = await promisify(execFile)("node", args, { cwd: path.join(ROOT, "agent"), maxBuffer: 1 << 24 });
+    // DOC_GOP_NODE: lệnh node thay thế (test), cùng biến với pipeline/doc-gop-hang-ngay.sh.
+    const { stdout } = await promisify(execFile)(process.env.DOC_GOP_NODE || "node", args, { cwd: path.join(ROOT, "agent"), maxBuffer: 1 << 24 });
     process.stdout.write(stdout);
     return { goi: postIds.length, cham_tran: false };
   } catch (e) {
     if (e.code === 3) return { goi: postIds.length, cham_tran: true }; // doc-gop thoát 3 = dừng vì trần
+    if (e.code === 4) throw new LoiHetTien(); // doc-gop thoát 4 = dừng sớm vì hết tiền (goi-thang-anthropic): bước dừng, không rút thẻ
     throw new Error(`mau-soat: doc-gop-s03 chay lỗi (mã ${e.code}): ${String(e.stderr ?? e.message).slice(0, 400)}`);
   }
 }
@@ -170,4 +179,12 @@ async function main() {
   } finally { await client.end(); }
 }
 const isMain = process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url);
-if (isMain) main().catch((e) => { console.error(e.message ?? e); process.exit(1); });
+/** Dòng stderr và mã thoát cho lỗi của main: hết tiền → dòng JOB FAIL … het-tien + mã 4; lỗi khác → message + mã 1. */
+export function xuLyLoiMain(e) {
+  return e?.het_tien ? { dong: [String(e.message ?? e), DONG_HET_TIEN], ma: MA_HET_TIEN } : { dong: [String(e?.message ?? e)], ma: 1 };
+}
+if (isMain) main().catch((e) => {
+  const x = xuLyLoiMain(e);
+  for (const d of x.dong) console.error(d);
+  process.exit(x.ma);
+});

@@ -6,6 +6,16 @@ import { join, matchesGlob } from "node:path";
 import { test } from "node:test";
 import { keHoach, kiemCauHinh, napCauHinh, NGUOI, tuyChonGui, type CauHinh } from "../src/enrich/doc-gop-s03/cau-hinh.js";
 
+/** goi-thang-anthropic: bảng chọn của kho nay cho Haiku đi thẳng API Anthropic; các ca PL30/PL34 dưới đây đo hành vi qua Gateway
+ * giả (taoModel), nên chạy trên bản sao bảng chọn của kho với mọi model ở đường gateway. */
+const CAU_GW = (() => {
+  const goc = JSON.parse(readFileSync(join(import.meta.dirname, "../config/doc-gop-s03.json"), "utf8"));
+  for (const m of Object.values(goc.model) as { duong?: string }[]) delete m.duong;
+  const tep = join(mkdtempSync(join(tmpdir(), "cau-gw-")), "doc-gop-s03.json");
+  writeFileSync(tep, JSON.stringify(goc));
+  return tep;
+})();
+
 const GOC = join(import.meta.dirname, "../..");
 const MODEL = {
   haiku: { gateway: "anthropic/claude-haiku-5.5", gia_vao: 0.1, gia_ra: 0.5 },
@@ -121,7 +131,7 @@ const TRA = {
 async function docTheo(c: CauHinh, ghi: Ghi[], tra: Record<string, string | Error> = TRA) {
   const kh = keHoach(c);
   const kq = new Map<string, KetQuaGoi>();
-  for (const n of kh.nhom) kq.set(n.gateway, await hoiGop({ gateway: n.gateway, gia: n.gia, the: THE, taoModel: gatewayGia(tra, ghi), recordCall: async () => {} }));
+  for (const n of kh.nhom) kq.set(n.gateway, await hoiGop({ gateway: n.gateway, duong: "gateway", gia: n.gia, the: THE, taoModel: gatewayGia(tra, ghi), recordCall: async () => {} }));
   return gop(kq, kh, THE.text);
 }
 
@@ -172,20 +182,20 @@ test("DGS-AC-6 câu trích chữ bài không có thật thì trich_ok false, gi�
 test("DGS-RF JSON thiếu ô: json_ok false, ô thiếu null, không ném", async () => {
   const thieu = JSON.parse(json17({ kind: { v: "sale", cc: "chu_bai", trich: "Bán" } }));
   delete thieu.seller_phone;
-  const k = await hoiGop({ gateway: HAI, gia: { vao: 0.1, ra: 0.5 }, the: THE, taoModel: gatewayGia({ [HAI]: JSON.stringify(thieu) }, []), recordCall: async () => {} });
+  const k = await hoiGop({ gateway: HAI, duong: "gateway", gia: { vao: 0.1, ra: 0.5 }, the: THE, taoModel: gatewayGia({ [HAI]: JSON.stringify(thieu) }, []), recordCall: async () => {} });
   assert.equal(k.json_ok, false);
   assert.equal(k.error_kind, "json-hong");
   assert.equal(k.json?.seller_phone, undefined);
   assert.equal(k.usd, 0.002, "chi phí của lời gọi hỏng vẫn tính");
 });
 
-test("DGS-RF một model lỗi: ô của nó null, ô model kia giữ; ai_calls ghi lỗi tên lớp", async () => {
+test("DGS-RF một model lỗi: ô của nó null, ô model kia giữ; ai_calls ghi lớp lỗi kèm tên lớp (goi-thang-anthropic)", async () => {
   const calls: { ok: boolean; loi: string | null }[] = [];
   const kh = keHoach(kiemCauHinh(bang({ price_min_vnd: "glm" })));
   const tm = gatewayGia({ [HAI]: TRA[HAI], [GLM]: new TypeError("mang") }, []);
   const kq = new Map<string, KetQuaGoi>();
-  for (const n of kh.nhom) kq.set(n.gateway, await hoiGop({ gateway: n.gateway, gia: n.gia, the: THE, taoModel: tm, recordCall: async (r) => { calls.push({ ok: r.ok, loi: r.loi }); } }));
-  assert.equal(kq.get(GLM)!.error_kind, "TypeError");
+  for (const n of kh.nhom) kq.set(n.gateway, await hoiGop({ gateway: n.gateway, duong: "gateway", gia: n.gia, the: THE, taoModel: tm, recordCall: async (r) => { calls.push({ ok: r.ok, loi: r.loi }); } }));
+  assert.equal(kq.get(GLM)!.error_kind, "khac:-:-:TypeError");
   const r = gop(kq, kh, THE.text);
   assert.equal((r.price_min_vnd as { v: unknown }).v, null);
   assert.equal((r.area_m2 as { v: unknown }).v, 62);
@@ -211,7 +221,7 @@ const clientGia = { query: async () => ({ rows: [], rowCount: 1 }) } as never;
 
 test("DGS-AC-8 ước vượt trần thì dừng với 0 lời gọi", async () => {
   const ghi: Ghi[] = [], log: string[] = [];
-  const kq = await chayLuot({ client: clientGia, co: { lat: "x", tranUsd: 0.01, thu: true }, the: muoiThe(), uoc: () => 0.003, taoModel: gatewayGia(TRA, ghi), recordCall: async () => {}, log: (s) => log.push(s) });
+  const kq = await chayLuot({ client: clientGia, co: { cauHinh: CAU_GW, lat: "x", tranUsd: 0.01, thu: true }, the: muoiThe(), uoc: () => 0.003, taoModel: gatewayGia(TRA, ghi), recordCall: async () => {}, log: (s) => log.push(s) });
   assert.equal(kq.goi, 0);
   assert.equal(ghi.length, 0);
   assert.ok(log.some((l) => l.includes("uoc vuot tran")));
@@ -219,7 +229,7 @@ test("DGS-AC-8 ước vượt trần thì dừng với 0 lời gọi", async () 
 
 test("DGS-AC-8 chạm trần giữa lượt: trước mỗi lời gọi, đã chi + ước > trần thì dừng (đúng 3 lời gọi, còn 7)", async () => {
   const log: string[] = [];
-  const kq = await chayLuot({ client: clientGia, co: { lat: "x", tranUsd: 0.05, thu: true }, the: muoiThe(), uoc: () => 0.003, taoModel: gatewayGia(TRA, [], "0.02"), recordCall: async () => {}, log: (s) => log.push(s) });
+  const kq = await chayLuot({ client: clientGia, co: { cauHinh: CAU_GW, lat: "x", tranUsd: 0.05, thu: true }, the: muoiThe(), uoc: () => 0.003, taoModel: gatewayGia(TRA, [], "0.02"), recordCall: async () => {}, log: (s) => log.push(s) });
   assert.equal(kq.goi, 3);
   assert.equal(kq.conLai, 7);
   assert.equal(kq.dungTran, true);
@@ -235,7 +245,7 @@ test("DGS-AC-8 không có đường chạy toàn S03: --toan-bo, --all bị từ
 
 test("DGS-RF bài không chữ không ảnh không gọi model", async () => {
   const ghi: Ghi[] = [];
-  const kq = await chayLuot({ client: clientGia, co: { lat: "x", tranUsd: 1, thu: true }, the: [{ ...THE, text: "  ", anh: [] }, THE], taoModel: gatewayGia(TRA, ghi), recordCall: async () => {}, log: () => {} });
+  const kq = await chayLuot({ client: clientGia, co: { cauHinh: CAU_GW, lat: "x", tranUsd: 1, thu: true }, the: [{ ...THE, text: "  ", anh: [] }, THE], taoModel: gatewayGia(TRA, ghi), recordCall: async () => {}, log: () => {} });
   assert.equal(kq.bo, 1);
   assert.equal(ghi.length, 1);
 });
@@ -301,7 +311,7 @@ test("DGS-RF ô trống trả gọn `null` (bài không phải tin rao) vẫn l�
   for (const f of FIELDS) o[f] = null;
   o.listing_intent = { v: "not_listing", cc: "chu_bai", trich: "Ngân hàng" };
   o.multi_unit = { v: "no", cc: "chu_bai", trich: "" };
-  const k = await hoiGop({ gateway: HAI, gia: { vao: 0.1, ra: 0.5 }, the: THE, taoModel: gatewayGia({ [HAI]: JSON.stringify(o) }, []), recordCall: async () => {} });
+  const k = await hoiGop({ gateway: HAI, duong: "gateway", gia: { vao: 0.1, ra: 0.5 }, the: THE, taoModel: gatewayGia({ [HAI]: JSON.stringify(o) }, []), recordCall: async () => {} });
   assert.equal(k.json_ok, true, "O TRONG NULL BI COI LA JSON HONG");
   assert.equal(k.json?.listing_intent?.v, "not_listing");
   assert.equal(k.json?.price_min_vnd?.v, null);
