@@ -184,3 +184,7 @@ Quét theo bảng phủ ca của thiết kế (đường × model × cách hỏn
 - Tách bộ đo DO1 theo đường gọi: nhãn đã mang `probabilities.duong`, đủ để tách sau.
 
 ## Notes
+
+- Nợ môi trường worktree (gom hàng nền, theo giám sát 15/11): worktree mới của Claude thiếu `data-api/node_modules` — suite
+  `cd app && npm test` đỏ ở S4 round 1 (CG9-AC-7, `tests/hang-gia-doc.test.tsx` không nạp được `pg` qua `data-api/src/db/client.ts`);
+  sửa tay bằng symlink sang checkout chính rồi chấm lại round 2. Cùng nhóm với nợ phải chạy `npx next typegen` trong `app/` trước suite app.
