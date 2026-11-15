@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 7f2fa8e241043e174fcba32de729e30c36929d1f
+verified_commit: dcc31dd038177772e365eab78fddf5cc3cc75605
 human_signoff: Mạnh 2026-11-15
 ---
 
@@ -132,3 +132,7 @@ none — every multi-run eval is uniform
 ## Iterations
 
 Round 3: E1, E2, E3, E4, E5 đều đạt, toàn bộ lệnh suite đạt, verdict PASS. Lịch sử round 1 và 2 nằm trong run-log.jsonl.
+
+### Re-pin lần 1 — 2026-11-15, do nhận main 1dbf52b2 sau chữ ký 15/11, trước khi gộp
+run_id: repin-20261115T221747Z-53254
+sha: dcc31dd038177772e365eab78fddf5cc3cc75605 · suites: 7 lệnh exit 0 · evals: 5/5 eval máy đạt kỳ vọng
