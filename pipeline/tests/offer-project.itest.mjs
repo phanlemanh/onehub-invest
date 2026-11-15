@@ -159,27 +159,34 @@ test("DV7-AC-2 ma trận 11 lớp tin theo bài", { timeout: 300_000 }, async ()
   });
 });
 
+/** Bảy tin S06 của AC-3 (bí danh mã nguồn: nút có sẵn, ứng viên, phân khu con, đã thôi, không bí danh, phân khu cháu, toà).
+ *  AC-3 và AC-4 dùng chung, để AC-4 so offer_located và B2 trên cả nhánh mã nguồn. */
+async function fixtureS06() {
+  const A = await nut("project"), U = await nut("project", null, "mot_loi_khai"), pk = await nut("subzone", A);
+  const chau = await nut("subzone", pk), toa = await nut("building", A);
+  const s06 = async (nodeId, { retired = false } = {}) => {
+    const list = 9_000_000_000 + (++dem);
+    const id = ma("tin-S06");
+    const pid = `dv7fx${dem}`;
+    await c.query(`INSERT INTO stg_chotot_ads (list_id, region_v2, city_code, category, ad_type, payload, snapshot_id)
+      VALUES ($1, 12000, '01', 1010, 's', $2, (SELECT snapshot_id FROM stg_chotot_ads LIMIT 1))`, [list, { projectid: pid }]);
+    await c.query(`INSERT INTO sale_offer_records (offer_id, kind, property_type, price_vnd, area_m2, area_id, source,
+        originating_system_key, first_seen, last_seen, offer_status)
+      VALUES ($1, 'sale', 'apartment', 3e9, 70, $2, 'S06', $3, now(), now(), 'active')`, [id, khuVuc, String(list)]);
+    if (nodeId !== null) {
+      await c.query(`INSERT INTO registry_aliases (object_key, kind, value, source, first_seen, retired_at)
+        VALUES ($1, 'ma_nguon', $2, 'S06', now(), $3)`, [`node:${nodeId}`, `du_an/${pid}`, retired ? new Date() : null]);
+    }
+    return id;
+  };
+  const tCoSan = await s06(A), tUng = await s06(U), tCon = await s06(pk), tThoi = await s06(A, { retired: true }), tRong = await s06(null);
+  const tChau = await s06(chau), tToa = await s06(toa);
+  return { A, U, tCoSan, tUng, tCon, tThoi, tRong, tChau, tToa };
+}
+
 test("DV7-AC-3 tin S06 qua bí danh mã nguồn", { timeout: 300_000 }, async () => {
   await trongGiaoDich(async () => {
-    const A = await nut("project"), U = await nut("project", null, "mot_loi_khai"), pk = await nut("subzone", A);
-    const chau = await nut("subzone", pk), toa = await nut("building", A);
-    const s06 = async (nodeId, { retired = false } = {}) => {
-      const list = 9_000_000_000 + (++dem);
-      const id = ma("tin-S06");
-      const pid = `dv7fx${dem}`;
-      await c.query(`INSERT INTO stg_chotot_ads (list_id, region_v2, city_code, category, ad_type, payload, snapshot_id)
-        VALUES ($1, 12000, '01', 1010, 's', $2, (SELECT snapshot_id FROM stg_chotot_ads LIMIT 1))`, [list, { projectid: pid }]);
-      await c.query(`INSERT INTO sale_offer_records (offer_id, kind, property_type, price_vnd, area_m2, area_id, source,
-          originating_system_key, first_seen, last_seen, offer_status)
-        VALUES ($1, 'sale', 'apartment', 3e9, 70, $2, 'S06', $3, now(), now(), 'active')`, [id, khuVuc, String(list)]);
-      if (nodeId !== null) {
-        await c.query(`INSERT INTO registry_aliases (object_key, kind, value, source, first_seen, retired_at)
-          VALUES ($1, 'ma_nguon', $2, 'S06', now(), $3)`, [`node:${nodeId}`, `du_an/${pid}`, retired ? new Date() : null]);
-      }
-      return id;
-    };
-    const tCoSan = await s06(A), tUng = await s06(U), tCon = await s06(pk), tThoi = await s06(A, { retired: true }), tRong = await s06(null);
-    const tChau = await s06(chau), tToa = await s06(toa);
+    const { A, U, tCoSan, tUng, tCon, tThoi, tRong, tChau, tToa } = await fixtureS06();
     const m = await dong([tCoSan, tUng, tCon, tThoi, tRong, tChau, tToa]);
     const s = (id) => { const r = m.get(id); return r ? { ...kq(r), catalog_tier: r.catalog_tier } : "khong-dong"; };
     assert.deepEqual(s(tCoSan), { status: "mot_du_an", project_node_id: A, evidence: "ma_nguon", n_posts: 0, n_posts_with_project: 0, catalog_tier: "xac_minh" });
@@ -213,8 +220,13 @@ test("DV7-AC-4 offer_located và data_level_units đọc cùng nguồn, theo t�
     const khongDuAn = await tin("S03", [b()]);
     const xd = o.find((x) => x[0] === "2 bài hai dự án")[1];
     const mot = o.find((x) => x[0] === "1 bài 1 dự án")[1];
-    const ids = [...o.map((x) => x[1]), thieu, khongDuAn];
+    // Cả bảy tin S06 của AC-3 (nhánh mã nguồn) vào cùng phép so — ma trận viết trước: 11 ô AC-2 + 2 tin lõi + 7 tin S06.
+    const t06 = await fixtureS06();
+    const s06Ids = [t06.tCoSan, t06.tUng, t06.tCon, t06.tThoi, t06.tRong, t06.tChau, t06.tToa];
+    const ids = [...o.map((x) => x[1]), thieu, khongDuAn, ...s06Ids];
+    assert.equal(ids.length, 20, "DV7-AC-4: ma trận phải đủ 20 tin (11 AC-2, 2 lõi, 7 S06)");
     const m = await dong(ids);
+    assert.equal(s06Ids.filter((id) => m.get(id)?.status === "mot_du_an").length, 5, "DV7-AC-4: năm tin S06 phải mot_du_an");
     for (const id of ids) {
       const loc = (await c.query(`SELECT offer_located($1) v`, [id])).rows[0].v;
       assert.equal(loc, m.get(id)?.status === "mot_du_an", `DV7-AC-4: offer_located(${id}) lệch view`);
@@ -225,6 +237,8 @@ test("DV7-AC-4 offer_located và data_level_units đọc cùng nguồn, theo t�
     assert.equal(bac.get(thieu), "B0", "DV7-AC-4: tin mot_du_an thiếu m² phải B0");
     assert.equal(bac.get(khongDuAn), "B1", "DV7-AC-4: tin không dự án đủ lõi phải B1");
     assert.equal(bac.get(xd), "B1", "DV7-AC-4: tin xung_dot đủ lõi phải B1");
+    assert.equal(bac.get(t06.tCoSan), "B2", "DV7-AC-4: tin S06 có bí danh, đủ lõi phải B2");
+    assert.equal(bac.get(t06.tRong), "B1", "DV7-AC-4: tin S06 không bí danh, đủ lõi phải B1");
     for (const id of ids) {
       const du = (await c.query(`SELECT offer_core_complete(kind, property_type, price_vnd, area_m2, area_id) v FROM sale_offers
         WHERE offer_id = $1`, [id])).rows[0].v;

@@ -45,7 +45,7 @@ const c = new pg.Client({ connectionString: URL });
 await c.connect();
 const so = async (sql, p = []) => (await c.query(sql, p)).rows;
 const tai = loadavg()[0];
-console.log(`[dv7] chế độ ${che} · DB ${URL.replace(/:[^:@/]+@/, ":***@")} · tải 1 phút ${tai.toFixed(1)} · ${new Date().toISOString()}`);
+console.log(`[dv7] chế độ ${che} · DB ${URL.replace(/^[^@]*@/, "")} · tải 1 phút ${tai.toFixed(1)} · ${new Date().toISOString()}`);
 
 async function trangThaiDB() {
   const [r] = await so(`SELECT to_regclass('offer_project') IS NOT NULL AS co_view,
