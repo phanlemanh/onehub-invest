@@ -94,9 +94,23 @@ export function khoaDuong(v: string): string[] {
     .trim()
     .toLowerCase()
     .replace(/ð/g, "đ")
+    // L4 (tach-o-duong-dau-vao-ban): bề rộng hẻm có số lẻ «hẻm 3,5m» → một token cụm «hẻm 35m», dấu phẩy thập phân không cắt ô.
+    .replace(/(ngõ|ngo|ngách|ngach|hẻm|hem|kiệt|kiet)(\.?\s*\d+)[.,](\d+\s*m)(?=[\s,]|$)/gu, "$1$2$3")
+    // L5: «822 /131A» → «822/131A»; chỉ khi hai phía gạch chéo đều là số, «1/ Trần Văn Mười» giữ nguyên.
+    .replace(/(\d)\s+\/(?=\d)/gu, "$1/")
+    // L1: dồn dấu phẩy lặp và khoảng trắng quanh nó («Hẻm 5 ,,1/ X» → «hẻm 5, 1/ x»).
+    .replace(/\s*,[\s,]*/gu, ", ")
+    // L2: số nhà trần rồi dấu phẩy («208, Nguyễn Hữu Cảnh, …») — tên đường là đoạn sau số nhà.
+    // …trừ khi đó là tên đường dạng ngày/tháng («3/2, Phường 12», «19/5, Tân Bình») hay đoạn sau phẩy là đơn vị hành chính.
+    .replace(/^(?!(?:3\/2|30\/4|19\/5|2\/9|1\/5|23\/9)\s*,)\d[\p{L}\d/-]*\s*,(?!\s*(?:phường|p\.|quận|q\.|huyện|xã|thị xã|thành phố|tỉnh|tp(?=[\s.]|$)))\s*/u, "")
     .replace(/^(?:(?:số|so|ngõ|ngo|ngách|ngach|hẻm|hem|kiệt|kiet)\.?\s*\d[\p{L}\d/-]*(?:\s*,\s*|\s+|$))+/u, "")
     .replace(/,.*$/u, "")
     .trim()
+    // L3, cụm đứng cuối ô («tôn thất tùng hẻm 86»): tên đường ở trước cụm — chỉ bỏ cụm.
+    .replace(/(\S)\s+(?:ngõ|ngo|ngách|ngach|hẻm|hem|kiệt|kiet)\.?\s*\d[\p{L}\d/-]*$/u, "$1")
+    // L3: cụm ngõ/ngách/hẻm/kiệt đứng sau chữ khác («Đường Kiệt 91 Lê Tân Trung», «Số nhà 17 ngõ 60 Dương Khuê») — lấy phần
+    // sau cụm cuối. Không áp cho «số»: «Đường số 7» là tên đường.
+    .replace(/^.*\S\s+(?:ngõ|ngo|ngách|ngach|hẻm|hem|kiệt|kiet)\.?\s*\d[\p{L}\d/-]*(?:\s+|$)/u, "")
     .replace(/(^|\s)thang(?=\s+\d)/gu, "$1tháng");
   if (/^(?:so|ngo|ngach|hem|kiet)$/.test(boDau(t))) t = "ngõ";
   if (/^(?:số|ngõ|ngách|hẻm|kiệt)?$/u.test(t)) return [];
