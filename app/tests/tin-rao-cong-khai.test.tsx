@@ -14,6 +14,7 @@ import { canCallOpsApi } from "../src/lib/ops-access"
 import { parseOfferFilters, type OfferFilters, type PublicOffer } from "../src/lib/offers-filters"
 import { KIND, PROPERTY_TYPE } from "../src/lib/vocab.generated"
 import {
+  BANG_TUY_CHON,
   CLOUD_ALLOW,
   FILL,
   RENAME,
@@ -657,6 +658,10 @@ async function dungHaiDau() {
   await admin.query(`CREATE TABLE "${S}_stage".rows (run_id text, tbl text, payload jsonb, staged_at timestamptz DEFAULT now())`)
   await admin.query(`CREATE TABLE "${S}_stage".swaps (run_id text, read_at timestamptz, swapped_at timestamptz DEFAULT now())`)
   for (const t of FILL as string[]) {
+    // Bảng tuỳ chọn của sync (CG9 offer_price_rank, migration 104) có thể chưa áp ở DB của lượt: hai đầu đều vắng, sync bỏ qua
+    // bảng ấy với một dòng — đúng trạng thái máy thu/cloud trước khi Mạnh áp. Bảng FILL khác vắng vẫn làm ca đỏ như cũ.
+    const co = (await admin.query(`SELECT to_regclass($1) AS r`, [`public."${t}"`])).rows[0].r
+    if (!co && (BANG_TUY_CHON as Map<string, string>).has(t)) continue
     await admin.query(`CREATE TABLE "${LOCAL}"."${t}" (LIKE public."${t}" INCLUDING DEFAULTS)`)
     await admin.query(`CREATE TABLE "${S}"."${RENAME(t)}" (LIKE public."${t}" INCLUDING DEFAULTS)`)
   }

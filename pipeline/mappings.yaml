@@ -732,3 +732,6 @@ enums_lint_allow:
   - path: app/src/components/compare/compare-types.ts
     axis: confidence
     reason: "better: \"high\" | \"low\" là chiều so sánh chỉ số, trục khác trùng chữ"
+  - path: data-api/src/routes/deals.ts
+    axis: kind
+    reason: "CG9: data-api (subtree công khai) không có tệp hằng sinh; tham số kind của /v1/deals kiểm hai giá trị tại chỗ"

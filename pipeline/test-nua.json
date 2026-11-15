@@ -10,6 +10,7 @@
     "scripts/dau-bai-thu-sql.test.mjs",
     "scripts/do-ngan-sach-yeu-cau.test.mjs",
     "scripts/entrypoint-symlink.test.mjs",
+    "scripts/hang-gia.test.mjs",
     "scripts/importer-schema-v5.test.mjs",
     "scripts/install-collector-api.test.mjs",
     "scripts/kiem-do-sau-070.test.mjs",
