@@ -33,7 +33,8 @@ Then lệnh không chạy, in đúng một dòng `suite-neu-doi: bỏ qua <suite
 Given diff có ít nhất một tệp trong vùng của suite (đã commit, chưa commit, hoặc chưa theo dõi),
 When chạy lệnh bọc,
 Then lệnh chạy từ gốc kho, dòng in nêu tệp kích hoạt, mã thoát bằng mã của lệnh (0 thì 0, 3 thì 3); `node_modules` nối
-bằng symlink không bao giờ tính là tệp đổi.
+bằng symlink không bao giờ tính là tệp đổi. Tệp bị `git mv` RA KHỎI vùng cũng kéo suite: diff đọc với `--no-renames`
+nên đường NGUỒN hiện ra, không bị git gộp vào một dòng đổi tên chỉ mang đường đích (thêm ở S4 r3, xem sổ).
 
 ### AC-3 — Đổi migration hay pipeline kéo cả app
 Given diff chỉ đổi một tệp `db/migrations/*.sql`, hoặc chỉ một tệp `pipeline/lib/*.mjs`,

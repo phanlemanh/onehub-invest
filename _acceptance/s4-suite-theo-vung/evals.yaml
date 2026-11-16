@@ -12,7 +12,7 @@ evals:
     executor: test
     cmd: config:executors.test.s4v_chay
     paths: ["scripts/suite-neu-doi.mjs", "scripts/suite-neu-doi.test.mjs"]
-    expected: "Ca S4V-AC-2 xanh: ba ca tệp trong vùng (đã commit, sửa chưa commit, chưa theo dõi) → lệnh chạy với cwd = gốc kho (lệnh ghi pwd), dòng in nêu tệp kích hoạt; lệnh `exit 3` → thoát 3; lệnh `exit 0` → thoát 0. Đối chứng: cùng fixture không có tệp trong vùng → không chạy."
+    expected: "Hai ca S4V-AC-2 xanh. (a) Ba ca tệp trong vùng (đã commit, sửa chưa commit, chưa theo dõi) → lệnh chạy với cwd = gốc kho (lệnh ghi pwd), dòng in nêu tệp kích hoạt; lệnh `exit 3` → thoát 3; lệnh `exit 0` → thoát 0. Đối chứng: cùng fixture không có tệp trong vùng → không chạy. (b) Ca «đổi tên»: `git mv app/a.ts collector/src/a.ts` → suite app vẫn chạy và dòng in nêu đường NGUỒN `app/a.ts`. Đối chứng đỏ cùng fixture: bản sao lệnh bỏ `--no-renames` thì bỏ qua app."
   - id: E3
     criterion: AC-3
     executor: test

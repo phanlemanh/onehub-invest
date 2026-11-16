@@ -101,9 +101,11 @@ export function tepDoi(cwd, base = process.env.SUITE_NEU_DOI_BASE) {
   try {
     const goc = base || "origin/main";
     const mb = git(cwd, "merge-base", goc, "HEAD").trim();
+    // --no-renames: git bật nhận diện đổi tên mặc định, nên `git mv a b` chỉ in đường ĐÍCH. Tệp chuyển RA KHỎI vùng
+    // của một suite sẽ không được tính là «đổi trong vùng» và suite bị bỏ qua tuy module vừa mất một tệp (S4 r3 t6).
     const dong = [
-      git(cwd, "diff", "--name-only", mb, "HEAD"),
-      git(cwd, "diff", "--name-only", "HEAD"),
+      git(cwd, "diff", "--no-renames", "--name-only", mb, "HEAD"),
+      git(cwd, "diff", "--no-renames", "--name-only", "HEAD"),
       git(cwd, "ls-files", "--others", "--exclude-standard"),
     ].join("\n");
     // node_modules nối bằng symlink (dung-worktree-cham.sh) không phải thay đổi của nhánh.

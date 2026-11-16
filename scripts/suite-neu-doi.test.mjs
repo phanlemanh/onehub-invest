@@ -104,6 +104,30 @@ test("S4V-AC-2 — tệp trong vùng (commit · sửa chưa commit · chưa theo
   }
 });
 
+test("S4V-AC-2 (đổi tên) — tệp chuyển RA KHỎI vùng vẫn kéo suite; đối chứng bản sao bỏ --no-renames thì bỏ qua", (t) => {
+  const { dir } = repoTam(t);
+  git(dir, "mv", "app/a.ts", "collector/src/a.ts");
+  git(dir, "commit", "-qm", "mv app -> collector");
+  // Vật lành: vùng app vừa mất app/a.ts nên suite app PHẢI chạy, và dòng in phải nêu đường NGUỒN.
+  const r = chay(dir, "app");
+  assert.equal(r.daChay, true, `S4V-AC-2 đổi tên: app/a.ts rời vùng app mà suite app bị bỏ qua: ${r.out}`);
+  assert.match(r.out, /^suite-neu-doi: chạy app — đổi app\/a\.ts/m, "S4V-AC-2 đổi tên: dòng in không nêu đường nguồn app/a.ts");
+  // Chiều đỏ cùng fixture: bản sao lệnh bỏ --no-renames (đặt NGOÀI kho thử để không thành tệp đổi của chính nó).
+  const ngoai = mkdtempSync(path.join(tmpdir(), "s4v-hong-"));
+  t.after(() => rmSync(ngoai, { recursive: true, force: true }));
+  const hong = path.join(ngoai, "suite-neu-doi-hong.mjs");
+  const nguon = readFileSync(LENH, "utf8");
+  assert.ok(nguon.includes('"--no-renames", '), "S4V-AC-2 đối chứng: không tìm thấy --no-renames để gỡ — thước đã mất mỏ neo");
+  writeFileSync(hong, nguon.replaceAll('"--no-renames", ', ""));
+  const rh = spawnSync(process.execPath, [hong, "app", "--", "pwd > DAU"], {
+    cwd: dir, encoding: "utf8", env: { ...process.env, SUITE_NEU_DOI: "", SUITE_NEU_DOI_BASE: "goc" },
+  });
+  assert.equal(existsSync(path.join(dir, "DAU")), false,
+    "S4V-AC-2 đối chứng: bản sao bỏ --no-renames mà vẫn chạy app — thước không đo chiều nào");
+  assert.match(rh.stdout, /^suite-neu-doi: bỏ qua app:/m,
+    "S4V-AC-2 đối chứng: bản sao bỏ --no-renames phải bỏ qua app (git nuốt đường nguồn của git mv)");
+});
+
 test("S4V-AC-3 — ma trận viết trước: migration, pipeline, collector, ROADMAP × bảy suite", () => {
   const MA_TRAN = {
     "db/migrations/090_x.sql": { app: true, app_ui: true, ui_lint_rules: true, pipeline_a: true, pipeline_b: true, agent: true, portal_static: true },
