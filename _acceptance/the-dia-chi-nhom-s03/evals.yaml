@@ -39,11 +39,11 @@ evals:
     criterion: AC-5
     executor: ui-check
     cmd: config:dev_server.start
-    target: "http://localhost:3460/ops/sources"
-    paths: [app/src/components/ops/sources, app/src/lib/the-dia-chi-nhom.ts]
+    target: "http://localhost:3460/ops/group-cards"
+    paths: [app/src/components/ops/group-cards, app/src/app/ops/group-cards, app/src/lib/the-dia-chi-nhom.ts]
     steps:
       - "Bản chạy: DB thử oneinvest_u1_tg1 (bản chép DB máy thu, db/db-thu.sh) đã áp 108 và chạy lệnh dựng nháp; dev :3460 trỏ DB thử; tài khoản ops thử (node scripts/dev-ops-account.mjs --vai ops với DATABASE_URL của DB thử). Dừng hay dựng lại server CHỈ theo cổng: `lsof -ti tcp:3460 | xargs kill`; cấm pkill/killall theo tên"
-      - "1280 px sáng: /ops/sources, khu Sổ đơn vị thu, tab Nhóm S03 → evidence/E5-step1.png; ghi dòng đầu lưới «Thẻ địa chỉ: x/27 nhóm có thẻ · n chờ duyệt» so với số lệnh dựng nháp in, badge từng hàng, hai nhóm «Chưa có trong sổ» ở cuối"
+      - "1280 px sáng: /ops/group-cards (mục «Thẻ địa chỉ nhóm» nhóm Xử lý — /ops/sources chỉ admin, xem sổ quyết định) → evidence/E5-step1.png; ghi số đầu trang «x nhóm có thẻ · n chờ duyệt» so với số lệnh dựng nháp in, badge từng hàng, nhóm «Chưa có trong sổ» ở cuối"
       - "Mở «Duyệt thẻ» ở nhóm lớn nhất chưa ghi dự án → evidence/E5-step2.png; ghi bốn ô và dòng căn cứ từng ô"
       - "Bấm Nhận → evidence/E5-step3.png: badge Đã duyệt, bộ đếm chờ duyệt giảm một; mở nhóm khác, sửa ô bán/thuê rồi Lưu sửa → evidence/E5-step4.png; mở nhóm thứ ba, Bác không lý do (thấy lỗi), rồi có lý do → evidence/E5-step5.png"
       - "Mở «Duyệt thẻ» ở một nhóm dưới 5 bài đọc → evidence/E5-step-o-trong.png; ghi ô trống và dòng vì sao"
@@ -56,8 +56,8 @@ evals:
     criterion: AC-6
     executor: test
     cmd: config:executors.test.tg1_app
-    paths: [app/src/lib/the-dia-chi-nhom.ts, app/src/app/api/v1/ops/group-cards/route.ts, app/src/components/ops/sources, app/tests/the-dia-chi-nhom-app.itest.tsx]
-    expected: "exit 0; ca 'TG1-AC-6': dựng trang /ops/sources (render server) và gọi route group-cards trên fixture có khoá nhóm mồi; đếm khoá mồi trong HTML và thân phản hồi = 0; đối chứng dương: chèn một khoá mồi vào chuỗi đếm thì ra ≥ 1; lược đồ tạm không có bảng thẻ: hàm đọc thẻ trả null, trang dựng không lỗi và không có khu thẻ"
+    paths: [app/src/lib/the-dia-chi-nhom.ts, app/src/app/api/v1/ops/group-cards/route.ts, app/src/components/ops/group-cards, app/tests/the-dia-chi-nhom-app.itest.tsx]
+    expected: "exit 0; ca 'TG1-AC-6': dựng HTML bảng thẻ của /ops/group-cards (render server từ dữ liệu hàm đọc) và gọi route group-cards trên fixture có khoá nhóm mồi; đếm khoá mồi trong HTML và thân phản hồi = 0; đối chứng dương: chèn một khoá mồi vào chuỗi đếm thì ra ≥ 1; lược đồ tạm không có bảng thẻ: hàm đọc thẻ trả null (trang dừng ở cảnh báo «Chỉ ở máy thu»)"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E7
     criterion: AC-7

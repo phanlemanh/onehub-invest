@@ -6,6 +6,8 @@ import { readFileSync, rmSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { after, before, test } from "node:test"
 import pg from "pg"
+import { createElement } from "react"
+import { renderToStaticMarkup } from "react-dom/server"
 
 import { taoNguoi } from "./helpers/phien-thu"
 
@@ -113,9 +115,14 @@ test("TG1-AC-4 đối chứng đỏ: bản sao bỏ kiểm version thì version 
 
 test("TG1-AC-6 khoá nhóm không lộ ra hàm đọc và phản hồi; lược đồ không bảng thẻ thì hàm đọc trả null", async () => {
   const { docTheDiaChi } = await import("../src/lib/the-dia-chi-nhom")
-  const docRa = JSON.stringify(await docTheDiaChi())
+  const { GroupCardsTable } = await import("../src/components/ops/group-cards/group-cards-table")
+  const ds = await docTheDiaChi()
+  const docRa = JSON.stringify(ds)
+  // HTML bảng thẻ của /ops/group-cards dựng phía máy chủ từ đúng dữ liệu hàm đọc trả (dữ liệu này cũng là thứ đi vào RSC).
+  const html = renderToStaticMarkup(createElement(GroupCardsTable, { rows: ds ?? [], coQuyet: true, onOpen: () => {} }))
+  assert.ok(html.includes(the[0]), "TG1-AC-6: HTML bảng phải có mã thẻ")
   const r = await goi(nguoi.ops.cookie, { action: "card-decide", card: "nhan", cardCode: the[1], version: 99 })
-  const chuoi = docRa + JSON.stringify(r.json)
+  const chuoi = docRa + html + JSON.stringify(r.json)
   const demMoi = (s: string) => KHOA_MOI.reduce((n, k) => n + s.split(k).length - 1, 0)
   assert.equal(demMoi(chuoi), 0, "TG1-AC-6: khoá nhóm lộ ra hàm đọc hay phản hồi")
   assert.ok(demMoi(chuoi + KHOA_MOI[0]) >= 1, "TG1-AC-6: đối chứng dương — bộ đếm không bắt được khoá chèn vào")

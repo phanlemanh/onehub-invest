@@ -12,6 +12,7 @@ export type CanCuO = { nguon: string | null; so_bai: number; [k: string]: unknow
 export type TheDiaChi = {
   card_code: string
   unit_code: string | null
+  ten_nhom: string | null
   status: TrangThaiThe
   du_an: { id: number; name: string }[]
   phuong: { id: string; name: string } | null
@@ -38,7 +39,7 @@ const coBang = async (db: Db) =>
 export async function docTheDiaChi(db: Db = pool): Promise<TheDiaChi[] | null> {
   if (!(await coBang(db))) return null
   const { rows } = await db.query<TheDiaChi>(
-    `SELECT t.card_code, t.unit_code, t.status, t.purpose AS muc_dich, t.evidence, t.version,
+    `SELECT t.card_code, t.unit_code, (SELECT u.original_name FROM collection_units u WHERE u.unit_code = t.unit_code) AS ten_nhom, t.status, t.purpose AS muc_dich, t.evidence, t.version,
             t.decided_at::text AS decided_at, t.decision_note,
             coalesce((SELECT json_agg(json_build_object('id', n.id::int, 'name', n.name) ORDER BY array_position(t.project_node_ids, n.id))
                         FROM asset_nodes n WHERE n.id = ANY (t.project_node_ids)), '[]'::json) AS du_an,
