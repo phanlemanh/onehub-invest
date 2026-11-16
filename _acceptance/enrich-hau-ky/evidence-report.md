@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: d156badd83a642fce13341e9f04524a5d40bf6fa
+verified_commit: 1dc945791d8d6854a64161c1d0c90e28b58ab340
 human_signoff: Mạnh 2026-10-23
 ---
 
@@ -174,3 +174,7 @@ Round 1: E1-E10 đều xanh trên HEAD; baseline đo cho thấy cả hai lệnh 
 ### Re-pin lần 1 — 2026-10-23, do gộp main eda1e04 (PR #16/#17/#18/#19/#1) vào nhánh trước khi mở PR
 run_id: repin-20261023T030112Z-75494
 sha: d156badd83a642fce13341e9f04524a5d40bf6fa · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng
+
+### Re-pin lần 2 — 2026-11-16, do ghim lại bằng làn eval
+run_id: repin-20261116T111401Z-87713
+sha: 1dc945791d8d6854a64161c1d0c90e28b58ab340 · suites: 7 lệnh exit 0 · evals: 9/9 eval máy đạt kỳ vọng · không chạy theo hồ sơ: E9 · thay bởi hồ sơ đã ký: E9→l2-bao-thu-doi-probe-that#AC-5 · AC không có chốt máy: AC-9
