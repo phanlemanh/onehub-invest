@@ -36,7 +36,7 @@ evals:
     executor: test
     cmd: config:executors.test.s4v_cau_hinh
     paths: ["_acceptance/config.yaml", "scripts/suite-neu-doi.test.mjs"]
-    expected: "Ca S4V-AC-6 xanh (quan hệ, không băm): suite_keys = sáu key executors.suite.*; mỗi lệnh bọc bằng `node scripts/suite-neu-doi.mjs <tên> -- '<executors.test|script.<tên> hiện hành>'`. Chiều đỏ: lệnh bọc app lệch một ký tự → đỏ gọi tên «app». Chiều xanh: bản sao thêm executors.test.moi vẫn xanh. Probe cau-hinh-khong-doi.sh: so merge-base origin/main, dòng bị xoá/sửa chỉ là suite_keys, sáu lệnh gốc nguyên byte; tự kiểm chiều đỏ bằng diff giả."
+    expected: "Ca S4V-AC-6 xanh (quan hệ, không băm): suite_keys = bảy key executors.suite.* (pipeline_a, pipeline_b thay pipeline); mỗi lệnh bọc bằng `node scripts/suite-neu-doi.mjs <tên> -- '<executors.test|script.<tên> hiện hành>'`. Chiều đỏ: lệnh bọc app lệch một ký tự → đỏ gọi tên «app». Chiều xanh: bản sao thêm executors.test.moi vẫn xanh. Probe cau-hinh-khong-doi.sh: so merge-base origin/main, dòng bị xoá/sửa chỉ là suite_keys, tám lệnh gốc (bảy suite bọc + executors.test.pipeline) nguyên byte; tự kiểm chiều đỏ bằng diff giả."
   - id: E7
     criterion: AC-7
     executor: test

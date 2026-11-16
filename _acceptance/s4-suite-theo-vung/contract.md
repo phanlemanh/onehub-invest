@@ -38,9 +38,9 @@ bằng symlink không bao giờ tính là tệp đổi.
 ### AC-3 — Đổi migration hay pipeline kéo cả app
 Given diff chỉ đổi một tệp `db/migrations/*.sql`, hoặc chỉ một tệp `pipeline/lib/*.mjs`,
 When quyết cho sáu suite,
-Then đổi migration làm chạy cả sáu suite (portal_static đọc tên nguồn từ `db/migrations` — sửa ở S4 r1, xem sổ); đổi
-pipeline làm chạy app, app_ui, pipeline, agent (bỏ qua ui_lint_rules, portal_static); đổi chỉ `collector/src/*.ts` hoặc chỉ
-`docs/ROADMAP.md` thì chỉ pipeline chạy.
+Then đổi migration làm chạy cả bảy suite (portal_static đọc tên nguồn từ `db/migrations` — sửa ở S4 r1, xem sổ); đổi
+pipeline làm chạy app, app_ui, pipeline_a, pipeline_b, agent (bỏ qua ui_lint_rules, portal_static); đổi chỉ
+`collector/src/*.ts` hoặc chỉ `docs/ROADMAP.md` thì chỉ pipeline_a và pipeline_b chạy.
 
 ### AC-4 — Không chắc thì chạy
 Given một trong: không giải được merge-base (ref gốc vắng), git lỗi, tên suite không có trong bảng, không tệp đổi nào ngoài
@@ -58,9 +58,10 @@ ra ngoài vùng làm phép quét đỏ gọi tên tệp.
 ### AC-6 — Cấu hình trỏ lệnh bọc, lệnh cũ không đổi
 Given `_acceptance/config.yaml`,
 When đọc,
-Then có `executors.suite.<tên>` cho đúng sáu suite của `suite_keys` cũ, mỗi lệnh là `node scripts/suite-neu-doi.mjs <tên> --
-'<lệnh cũ nguyên văn>'`; `feature_loop.suite_keys` trỏ đúng sáu key đó; mọi `executors.test.*` và
-`executors.script.portal_static` giữ nguyên từng byte so với origin/main lúc mở vòng.
+Then có `executors.suite.<tên>` cho đúng bảy suite của `suite_keys` cũ, mỗi lệnh là `node scripts/suite-neu-doi.mjs <tên> --
+'<lệnh cũ nguyên văn>'`; `feature_loop.suite_keys` trỏ đúng bảy key đó; mọi `executors.test.*` và
+`executors.script.portal_static` giữ nguyên từng byte so với origin/main lúc nhận main (vòng 3: 775d2661). Khoá
+`executors.test.*` do hàng KHÁC thêm sau mốc đó không tính là lệch — thước chỉ soi dòng bị xoá hay sửa.
 
 ### AC-7 — Dựng worktree chấm
 Given checkout chính có `.env` và `app/.env.local` chưa theo dõi, `node_modules` ở app và pipeline, `app/.next/dev/types`,
@@ -82,7 +83,7 @@ Then xanh.
 Trục (preset test-matrix cho «lệnh bọc suite»):
 - Trạng thái diff: tệp trong vùng (commit · chưa commit · chưa theo dõi) · tệp ngoài vùng · chỉ `_acceptance/` · rỗng ·
   không giải được gốc. [AC-1, AC-2, AC-4]
-- Suite: sáu suite của `suite_keys` · tên lạ. [thước CE: `feature_loop.suite_keys` hiện hành — AC-3, AC-4, AC-6]
+- Suite: bảy suite của `suite_keys` (pipeline tách hai nửa `pipeline_a`, `pipeline_b` dùng chung vùng) · tên lạ. [thước CE: `feature_loop.suite_keys` hiện hành — AC-3, AC-4, AC-6]
 - Nguồn vùng: import chéo đo được · ngoại lệ có tên. [AC-5]
 - Worktree: thiếu cả ba · có sẵn một phần · là checkout chính. [AC-7]
 

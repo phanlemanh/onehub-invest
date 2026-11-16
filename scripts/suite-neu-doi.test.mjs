@@ -87,29 +87,29 @@ test("S4V-AC-2 — tệp trong vùng (commit · sửa chưa commit · chưa theo
     const { dir } = repoTam(t);
     ghi(dir, "data-api/README.md", "doi\n");
     git(dir, "commit", "-qam", "data-api");
-    const truoc = chay(dir, "pipeline");
+    const truoc = chay(dir, "pipeline_a");
     assert.equal(truoc.daChay, false, `S4V-AC-2 ${ten}: đối chứng chưa đổi vùng mà đã chạy`);
     lam(dir);
     mkdirSync(path.join(dir, "pipeline", "sau"), { recursive: true });
-    const r = spawnSync(process.execPath, [LENH, "pipeline", "--", "pwd > DAU"], {
+    const r = spawnSync(process.execPath, [LENH, "pipeline_a", "--", "pwd > DAU"], {
       cwd: path.join(dir, "pipeline", "sau"), encoding: "utf8", env: { ...process.env, SUITE_NEU_DOI: "", SUITE_NEU_DOI_BASE: "goc" },
     });
     assert.equal(r.status, 0);
     assert.equal(readFileSync(path.join(dir, "DAU"), "utf8").trim(), execFileSync("realpath", [dir], { encoding: "utf8" }).trim(),
       `S4V-AC-2 ${ten}: lệnh không chạy từ gốc kho`);
     rmSync(path.join(dir, "DAU"));
-    assert.match(r.stdout, new RegExp(`^suite-neu-doi: chạy pipeline — đổi ${tep.replace(/[./]/g, "\\$&")}`, "m"), `S4V-AC-2 ${ten}: dòng in không nêu tệp`);
-    assert.equal(chay(dir, "pipeline", { lenh: "exit 3" }).code, 3, `S4V-AC-2 ${ten}: mã 3 không đi qua`);
-    assert.equal(chay(dir, "pipeline", { lenh: "exit 0" }).code, 0);
+    assert.match(r.stdout, new RegExp(`^suite-neu-doi: chạy pipeline_a — đổi ${tep.replace(/[./]/g, "\\$&")}`, "m"), `S4V-AC-2 ${ten}: dòng in không nêu tệp`);
+    assert.equal(chay(dir, "pipeline_a", { lenh: "exit 3" }).code, 3, `S4V-AC-2 ${ten}: mã 3 không đi qua`);
+    assert.equal(chay(dir, "pipeline_a", { lenh: "exit 0" }).code, 0);
   }
 });
 
-test("S4V-AC-3 — ma trận viết trước: migration, pipeline, collector, ROADMAP × sáu suite", () => {
+test("S4V-AC-3 — ma trận viết trước: migration, pipeline, collector, ROADMAP × bảy suite", () => {
   const MA_TRAN = {
-    "db/migrations/090_x.sql": { app: true, app_ui: true, ui_lint_rules: true, pipeline: true, agent: true, portal_static: true },
-    "pipeline/lib/x.mjs": { app: true, app_ui: true, ui_lint_rules: false, pipeline: true, agent: true, portal_static: false },
-    "collector/src/x.ts": { app: false, app_ui: false, ui_lint_rules: false, pipeline: true, agent: false, portal_static: false },
-    "docs/ROADMAP.md": { app: false, app_ui: false, ui_lint_rules: false, pipeline: true, agent: false, portal_static: false },
+    "db/migrations/090_x.sql": { app: true, app_ui: true, ui_lint_rules: true, pipeline_a: true, pipeline_b: true, agent: true, portal_static: true },
+    "pipeline/lib/x.mjs": { app: true, app_ui: true, ui_lint_rules: false, pipeline_a: true, pipeline_b: true, agent: true, portal_static: false },
+    "collector/src/x.ts": { app: false, app_ui: false, ui_lint_rules: false, pipeline_a: true, pipeline_b: true, agent: false, portal_static: false },
+    "docs/ROADMAP.md": { app: false, app_ui: false, ui_lint_rules: false, pipeline_a: true, pipeline_b: true, agent: false, portal_static: false },
   };
   let so = 0;
   for (const [tep, mong] of Object.entries(MA_TRAN)) {
@@ -118,8 +118,8 @@ test("S4V-AC-3 — ma trận viết trước: migration, pipeline, collector, RO
       so++;
     }
   }
-  assert.equal(so, 24);
-  assert.deepEqual(Object.keys(VUNG).sort(), ["agent", "app", "app_ui", "pipeline", "portal_static", "ui_lint_rules"]);
+  assert.equal(so, 28);
+  assert.deepEqual(Object.keys(VUNG).sort(), ["agent", "app", "app_ui", "pipeline_a", "pipeline_b", "portal_static", "ui_lint_rules"]);
 });
 
 test("S4V-AC-4 — không chắc thì chạy, dòng in nêu lý do; đối chứng ngoài vùng thì bỏ qua", (t) => {
@@ -204,7 +204,8 @@ export function quetNgoai(root, mods, tepKho) {
 
 const MODULE = {
   app: ["app"], app_ui: ["app"], ui_lint_rules: ["app/eslint-plugin-onehub-ui"],
-  pipeline: ["pipeline"], agent: ["agent"], portal_static: ["scripts/check-portal-compliance.mjs"],
+  pipeline_a: ["pipeline"], pipeline_b: ["pipeline"], agent: ["agent"],
+  portal_static: ["scripts/check-portal-compliance.mjs"],
 };
 
 // Ngoại lệ: đường phép quét thấy mà vùng cố ý không phủ — mỗi dòng một lý do; ngoại lệ không còn được quét thấy là đỏ.
@@ -216,10 +217,26 @@ const NGOAI_LE = [
   { suite: "app_ui", duong: ".claude", ly_do: "như app" },
   { suite: "ui_lint_rules", duong: ".claude", ly_do: "như app" },
   { suite: "app_ui", duong: "docs", ly_do: "như app" },
-  { suite: "pipeline", duong: "collector", ly_do: "vocab.mjs ghép tới collector/docs/field-targets.yaml (đã phủ); vocab.test.mjs băm cây collector chỉ để so trước/sau" },
-  { suite: "pipeline", duong: "docs", ly_do: "vocab.mjs: mảnh «docs» của join(root, \"collector\", \"docs\", …) — đã phủ bằng collector/docs/**" },
-  { suite: "pipeline", duong: "_acceptance", ly_do: "vocab.test.mjs ghép tới _acceptance/truong-nhan-s03-081/decisions.jsonl — đã phủ" },
+  { suite: "pipeline_a", duong: "collector", ly_do: "vocab.mjs ghép tới collector/docs/field-targets.yaml (đã phủ); vocab.test.mjs băm cây collector chỉ để so trước/sau" },
+  { suite: "pipeline_a", duong: "docs", ly_do: "vocab.mjs: mảnh «docs» của join(root, \"collector\", \"docs\", …) — đã phủ bằng collector/docs/**" },
+  { suite: "pipeline_a", duong: "_acceptance", ly_do: "vocab.test.mjs ghép tới _acceptance/truong-nhan-s03-081/decisions.jsonl — đã phủ" },
+  { suite: "pipeline_b", duong: "collector", ly_do: "như pipeline_a — hai nửa cùng cây mã" },
+  { suite: "pipeline_b", duong: "docs", ly_do: "như pipeline_a" },
+  { suite: "pipeline_b", duong: "_acceptance", ly_do: "như pipeline_a" },
   { suite: "agent", duong: "app", ly_do: "agent/src/memory/store.ts: giá trị enum source «app», không phải đường dẫn" },
+  // Nhận main 16/11: bốn đường mới là chú thích, danh sách bỏ qua, hay thư mục GHI ra — không phải tệp suite nạp.
+  { suite: "app", duong: "_acceptance/sao-luu-ma-hoa-b2", ly_do: "scripts/lib/sao-luu-ngoai-may.mjs: chuỗi trong khối chú thích đầu tệp (trỏ hồ sơ), không phải đường lúc chạy" },
+  { suite: "app", duong: "docs/superpowers/specs/2026-11-11-sao-luu-ma-hoa-b2-design.md", ly_do: "như trên — chú thích trỏ tài liệu thiết kế" },
+  { suite: "app_ui", duong: "_acceptance/sao-luu-ma-hoa-b2", ly_do: "như app" },
+  { suite: "app_ui", duong: "docs/superpowers/specs/2026-11-11-sao-luu-ma-hoa-b2-design.md", ly_do: "như app" },
+  { suite: "pipeline_a", duong: "_acceptance/sao-luu-ma-hoa-b2", ly_do: "như app" },
+  { suite: "pipeline_a", duong: "docs/superpowers/specs/2026-11-11-sao-luu-ma-hoa-b2-design.md", ly_do: "như app" },
+  { suite: "pipeline_a", duong: "PRODUCT-MAP.md", ly_do: "pipeline/scripts/tap-nhan-hai-khu-ranh-gioi.mjs: tên nằm trong tập MAY_SINH để BỎ QUA khi đọc diff, không phải tệp nạp" },
+  { suite: "pipeline_a", duong: "_acceptance/ma-du-an-s06-thanh-nut/evidence", ly_do: "pipeline/scripts/noi-du-an-s06-that.mjs: thư mục GHI bằng chứng (mkdirSync + writeFileSync), không phải đầu vào" },
+  { suite: "pipeline_b", duong: "_acceptance/sao-luu-ma-hoa-b2", ly_do: "như pipeline_a" },
+  { suite: "pipeline_b", duong: "docs/superpowers/specs/2026-11-11-sao-luu-ma-hoa-b2-design.md", ly_do: "như pipeline_a" },
+  { suite: "pipeline_b", duong: "PRODUCT-MAP.md", ly_do: "như pipeline_a" },
+  { suite: "pipeline_b", duong: "_acceptance/ma-du-an-s06-thanh-nut/evidence", ly_do: "như pipeline_a" },
 ];
 
 export function chuaPhu(root, vung, ngoaiLe = NGOAI_LE) {
@@ -254,9 +271,9 @@ test("S4V-AC-5 — bảng vùng phủ mọi đường dẫn mã tham chiếu; ng
   assert.ok(thieuPs.includes("db"), "S4V-AC-5 đối chứng: bỏ db/** khỏi portal_static mà phép quét không thấy tier-a-source-names đọc db/migrations");
 });
 
-test("S4V-AC-6 — executors.suite.* bọc nguyên văn lệnh hiện hành, suite_keys trỏ đúng sáu key; thêm key test mới vẫn xanh", () => {
+test("S4V-AC-6 — executors.suite.* bọc nguyên văn lệnh hiện hành, suite_keys trỏ đúng bảy key; thêm key test mới vẫn xanh", () => {
   const cfg = readFileSync(path.join(ROOT, "_acceptance/config.yaml"), "utf8");
-  const ten = ["agent", "app", "app_ui", "pipeline", "ui_lint_rules", "portal_static"];
+  const ten = ["agent", "app", "app_ui", "pipeline_a", "pipeline_b", "ui_lint_rules", "portal_static"];
   const khoi = (c, k) => { const m = c.match(new RegExp(`^  ${k}:\\n((?:    .*\\n|\\s*#.*\\n|\\s*\\n)*)`, "m")); return m ? m[1] : ""; };
   const lenh = (khoiTxt, k) => { const m = khoiTxt.match(new RegExp(`^    ${k}: "((?:[^"\\\\]|\\\\.)*)"`, "m")); return m ? m[1] : null; };
   const kiem = (c) => {

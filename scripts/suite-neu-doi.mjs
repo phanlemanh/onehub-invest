@@ -6,7 +6,8 @@
 // Tệp đổi = merge-base(origin/main, HEAD)..HEAD ∪ cây làm việc (so HEAD) ∪ tệp chưa theo dõi. Có tệp trong vùng → chạy
 // `bash -c <lệnh>` từ gốc kho, trả đúng mã thoát. Không có → in «bỏ qua», thoát 0. Không chắc → CHẠY (bảo thủ):
 // không giải được gốc, suite lạ, chỉ đổi _acceptance/ (đường nền đầu vòng), diff rỗng, SUITE_NEU_DOI=chay.
-// CI (`ci-test.yml`) vẫn chạy đủ agent, app, app_ui, pipeline, ui_lint_rules trên mọi PR — đây chỉ cắt lượt chấm trên
+// CI (`ci-test.yml`) vẫn chạy đủ agent, app, app_ui, pipeline, ui_lint_rules trên mọi PR (pipeline ở CI vẫn là
+// một lệnh; lượt chấm chạy hai nửa pipeline_a, pipeline_b) — đây chỉ cắt lượt chấm trên
 // máy. RIÊNG portal_static (check-portal-compliance.mjs, gồm cổng lộ tầng A) KHÔNG có trong CI: nó chỉ chạy ở lượt chấm
 // và ghim lại, nên vùng của nó phải phủ đủ mọi tệp nó nạp (S4 r1 t1).
 // Hồ sơ: _acceptance/s4-suite-theo-vung. Bảng vùng đo bằng test canh phủ (scripts/suite-neu-doi.test.mjs, S4V-AC-5).
@@ -21,18 +22,25 @@ const LOI_APP = [
   "_acceptance/tap-nhan-mau-ocp1/**",
 ];
 
+const LOI_PIPELINE = [
+  "pipeline/**", "db/**", "scripts/**", "agent/**", "app/**", "collector/src/**", "collector/docs/**",
+  "collector/scripts/**", "data-api/src/**", "tools/**", "CONTEXT.md", "LO-TRINH.html", "docs/ROADMAP.md",
+  "docs/ops/**",
+  "docs/adr/**", "docs/research/pty-project-type-s06.md",
+  "_acceptance/danh-ba-phuong-xa-toan-quoc/**", "_acceptance/du-an-cua-tin-len-dinh-vi/**",
+  "_acceptance/gop-tin-chi-anh-o-transform/**",
+  "_acceptance/lay-mau-khu-trung-theo-tin/**", "_acceptance/nhom-dang-ky-hai-lan-s03/**",
+  "_acceptance/s03-len-cong/**", "_acceptance/tap-nhan-mau-ocp1/**", "_acceptance/truong-nhan-s03-081/**",
+];
+
 export const VUNG = {
   app: LOI_APP,
   app_ui: LOI_APP,
   ui_lint_rules: ["app/**", "db/**", "CONTEXT.md", ".claude/skills/onehub-ui/**"],
-  pipeline: [
-    "pipeline/**", "db/**", "scripts/**", "agent/**", "app/**", "collector/src/**", "collector/docs/**",
-    "collector/scripts/**", "data-api/src/**", "tools/**", "CONTEXT.md", "LO-TRINH.html", "docs/ROADMAP.md",
-    "docs/ops/**",
-    "_acceptance/danh-ba-phuong-xa-toan-quoc/**", "_acceptance/gop-tin-chi-anh-o-transform/**",
-    "_acceptance/lay-mau-khu-trung-theo-tin/**", "_acceptance/nhom-dang-ky-hai-lan-s03/**",
-    "_acceptance/s03-len-cong/**", "_acceptance/tap-nhan-mau-ocp1/**", "_acceptance/truong-nhan-s03-081/**",
-  ],
+  // Hai nửa của `cd pipeline && npm test` (tach-suite-pipeline, 13/11) chạy trên cùng một cây mã, nên cùng vùng:
+  // tệp nào kéo nửa A thì cũng kéo nửa B. Chia nửa là chia theo tệp test, không theo vùng mã.
+  pipeline_a: LOI_PIPELINE,
+  pipeline_b: LOI_PIPELINE,
   agent: [
     "agent/**", "db/**", "pipeline/**", "scripts/**", "docs/ops/**",
     "app/src/lib/ops/review-can-cu.ts", "app/src/lib/vocab.generated.ts",
