@@ -306,7 +306,7 @@ async function main() {
       // airbnb_snapshots rồi vòng căn vẫn INSERT stg_s08_inventory → lỗi FK, cả lượt
       // thoát lỗi thay vì hoãn sạch như chú thích 1211-35 (đêm 14/11 094 mất khỏi DB
       // máy thu đã xảy ra thật). Hoãn: log một dòng rõ, thoát 0, KHÔNG đánh dấu.
-      console.warn(`HOÃN S08: bảng stg_s08_project chưa có (migration 094 chưa áp) — hoãn sạch ${items.length} items (kể cả căn), KHÔNG đánh dấu đã nạp; áp 094 rồi nạp lại được đủ`);
+      console.warn(`CHUA-AP-094 - HOÃN S08: bảng stg_s08_project chưa có (migration 094 chưa áp) — hoãn sạch ${items.length} items (kể cả căn), KHÔNG đánh dấu đã nạp; áp 094 rồi nạp lại được đủ`);
       await client.query("ROLLBACK").catch(() => {});
       return;
     }

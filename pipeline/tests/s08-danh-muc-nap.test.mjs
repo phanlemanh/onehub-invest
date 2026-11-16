@@ -74,7 +74,7 @@ test("S08-2 chiều đỏ: CÓ catalog, thiếu 094 → HOÃN SẠCH (1511-2/M�
   const dir = await sinh([itemS08(pid), itemDetail(pid), itemCan(pid, `${pid}-01`)]); // lẫn cả căn
   const r = nap(dir);
   assert.equal(r.status, 0, "rc 0 — hoãn sạch, không thoát lỗi");
-  assert.match(r.stdout + r.stderr, /HOÃN S08/, "in dòng hoãn rõ");
+  assert.match(r.stdout + r.stderr, /CHUA-AP-094 - HOÃN S08/, "giữ mã hiệu AC-2 kèm phần chữ hoãn rõ (1611-3)");
   const d = (await q("SELECT count(*)::int n FROM airbnb_snapshots WHERE snapshot_id = $1", [dir.split("/").pop()])).rows[0].n;
   assert.equal(d, 0, "KHÔNG đánh dấu (áp 094 rồi nạp lại được đủ)");
   const nCan = (await q("SELECT count(*)::int n FROM stg_s08_inventory WHERE snapshot_id = $1", [dir.split("/").pop()])).rows[0].n;
