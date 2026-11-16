@@ -5,7 +5,7 @@ slug: l2-bao-thu-doi-probe-that
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-15
 design_doc: docs/superpowers/specs/2026-11-15-l2-bao-thu-doi-probe-that-design.md
@@ -94,5 +94,14 @@ Không có ô cơ hội (hàng do GS giao). Số đổi khoá trên DB đo bằn
 - Đẩy cảnh báo chủ động khi probe ❌.
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-16:
+  - Ngoài-1: Số nhà trùng sáu tên đường ngày lễ («2/9, Lê Lợi») đứng trước tên đường khác vẫn có thể báo Khớp với đường ngày lễ — như bản đang chạy trước vòng.
+  - Ngoài-2: Bộ kiểm mới chỉ thử ba trong sáu tên đường ngày lễ.
+  - Ngoài-3: Phép đo «chỉ kết quả đất đổi» chạy ở môi trường kiểm tự động sẽ báo đỏ giả thay vì bỏ qua có lý do.
+  - Ngoài-4: Các phép đo dữ liệu thật có thể đọc hai cơ sở dữ liệu khác nhau nếu người chạy đặt biến môi trường lạ.
+  - Ngoài-5: Khi thiếu dữ liệu thật, phép đo bị bỏ qua nhưng mục kiểm sức khoẻ vẫn hiện xanh.
+  - Ngoài-6: Bộ so thẻ duyệt với luật chưa có ca đỏ khi bỏ bước bóc số nhà mới.
+  - Ngoài-9: Địa chỉ viết «D.» không dấu chưa được nhận là cùng đường với «Đ.» có dấu.
 
 - `_acceptance/config.yaml` chồng vùng với hàng P2 `ngoai-n-tu-dinh-tuyen-bat` — chỉ sửa các dòng executor nêu trên.
