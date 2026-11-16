@@ -194,11 +194,11 @@ export function khoaDuong(v: string, giuSoNha = true): string[] {
     const khongDau = s.match(/^(?:duong|pho)[\s-]+(.*)$/u);
     const tran = boDau(s);
     // giuSoNha = false (soDuong, hồ sơ l2-bao-thu-doi-probe-that): khoá trần chỉ gồm token mở đầu bằng số («34/1A», «44d/17»,
-    // «2A», «4/79» — số nhà còn lại khi tên đường đã bị cắt sau phẩy) không phải tên đường, không được so; trừ hai số thành
-    // ngày tháng hợp lệ («3/2», «19/5» là tên đường).
+    // «2A», «4/79», «12/3» — số nhà còn lại khi tên đường đã bị cắt sau phẩy) không phải tên đường, không được so; trừ sáu
+    // tên đường ngày lễ (danh sách L2 của main f78e7382: 3/2, 30/4, 19/5, 2/9, 1/5, 23/9).
     const tk = tran.split(" ");
-    const ngay = tk.length === 2 && tk.every((x) => /^\d+$/.test(x)) && +tk[0] >= 1 && +tk[0] <= 31 && +tk[1] >= 1 && +tk[1] <= 12;
-    const soNhaTran = !giuSoNha && tk.every((x) => /^\d/.test(x)) && !ngay;
+    const ngayLe = /^(?:3 2|30 4|19 5|2 9|1 5|23 9)$/.test(tran);
+    const soNhaTran = !giuSoNha && tk.every((x) => /^\d/.test(x)) && !ngayLe;
     return [khongDau ? boDau(khongDau[1]) : "", soNhaTran ? "" : tran];
   });
   return [...new Set(khoa)].filter((k) => k && !/^\d+$/.test(k));
