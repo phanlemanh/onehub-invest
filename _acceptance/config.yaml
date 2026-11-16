@@ -219,7 +219,7 @@ executors:
     airbnb_nghi: "cd pipeline && node --test scripts/airbnb-nghi.itest.mjs"   # airbnb-nghi-khong-hoi-sinh: ghiListing cho nghỉ ghi toạ độ mới + reassign không đánh thức, giao dịch ROLLBACK — chạy trên DB thử riêng (DATABASE_URL)
     the_duyet: "cd app && node --import tsx --test tests/the-duyet-du-can-cu.test.tsx"   # the-duyet-du-can-cu (PL3) — lược đồ tạm td_<pid> trên DB local :5433 + jsdom; giám sát duyệt U1-73
     the_duyet_agent: "cd agent && node --import tsx --test tests/enrich-goi-y.test.ts"   # the-duyet-du-can-cu AC-6 — thẻ bổ sung tin mới không mang gợi ý apply; DB local trong ROLLBACK ngắn (U1-73)
-    the_duyet_phuong: "cd app && node --import tsx --test tests/the-duyet-phuong-lech-gia.test.tsx"   # the-duyet-phuong-lech-gia — hàm thuần + jsdom; probe chỉ SELECT DB máy thu (bỏ qua có lời ở CI)
+    the_duyet_phuong: "cd app && node --import tsx --test tests/the-duyet-phuong-lech-gia.test.tsx probes/the-duyet-phuong-that.test.tsx"   # the-duyet-phuong-lech-gia — hàm thuần + jsdom; probe chỉ SELECT DB máy thu (bỏ qua có lời ở CI)
     api_surface_ops: "cd app && node --import tsx --test tests/api-surface-anh-vai-ops.test.tsx"   # api-surface-anh-vai-ops — sổ zalo-media ≥ mã (ma trận 6 người gọi × 2 chế độ), route chặn canAccessOps bằng 404
     zalo_media_core: "cd app && node --import tsx --test tests/zalo-media.test.tsx"   # lõi serveZaloMedia (PL3 + review-media-backend) — hồi quy quyền thật
     can_gia_tot: "cd app && node --import tsx --test tests/can-gia-tot-biet-can.test.tsx"   # can-gia-tot-biet-can — /ops/deals và trang một căn trên lược đồ tạm, page thật, vai giả
@@ -282,7 +282,7 @@ executors:
     enrich_giao_dich: "cd agent && node --import tsx --test tests/enrich-giao-dich.test.ts"   # enrich-chay-sau-nap AC-2..AC-4 — runEnrich trong BEGIN…ROLLBACK trên :5433, giao dịch mỗi tin = SAVEPOINT
     enrich_buoc_job: "node --test scripts/enrich-buoc-job.test.mjs"   # enrich-chay-sau-nap AC-6..AC-8 — bước enrich-run của zalo-import-daily (node giả, không DB)
     audit_loc: "cd app && node --import tsx --test tests/audit-loc.test.tsx"   # loc-enrich-thu-ops-audit AC-1..AC-5 — lược đồ tạm (ops_audit + phiên), route GET thật, public không chạm
-    judge_luat: "cd agent && node --import tsx --test tests/judge-luat.test.ts"   # judge-luat-loai-tru-dac-trung (HD2) — luật loại trừ thuần + probe evidence thẻ đã quyết trên DB máy thu (bỏ qua có lý do dưới CI)
+    judge_luat: "cd agent && node --import tsx --test tests/judge-luat.test.ts probes/judge-luat-that.test.ts"   # judge-luat-loai-tru-dac-trung (HD2) — luật loại trừ thuần + probe evidence thẻ đã quyết trên DB máy thu (bỏ qua có lý do dưới CI)
     judge_nguong: "cd agent && node --import tsx --test tests/judge-nguong.test.ts"   # judge-luat-loai-tru-dac-trung AC-5 — ma trận PL25/KP/PS theo luật pl25-2
     sdt_doc: "node --test pipeline/scripts/sdt-trong-duong.test.mjs pipeline/scripts/dac-trung-s06.test.mjs"   # sdt-trong-ten-duong E1 — hàm thuần
     ds1_doc: "node --test pipeline/scripts/dac-trung-s06.test.mjs"   # s06-duong-du-an-len-tin E1 — hàm thuần
@@ -298,7 +298,9 @@ executors:
     nguoi_nap_lai: "cd pipeline && DATABASE_URL=${NGUOI_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p3_nguoi} node scripts/nap-lai-nguoi.mjs"   # DB2b bat_khi: nạp lại mọi nguồn hai lần + đối chứng, ROLLBACK — CHỈ trên DB thử, không trên oneinvest
     nguoi_app: "cd app && node --import tsx --test tests/dq-nhan-danh-ba.test.tsx"   # DB2b AC-2: nhãn dòng kiểm DQ ba bảng mới — không DB (giám sát duyệt P3-115)
     judge_entity_duong: "cd agent && node --import tsx --test tests/judge-entity-duong.test.ts probes/o-duong-that.test.ts"   # chuan-hoa-o-duong — khoá đường bỏ ngõ/số nhà/đuôi địa chỉ, thẻ = luật; probe ô đường thật trên DB máy thu (bỏ qua có lý do dưới CI)
-    judge_entity_khong_dau: "cd agent && node --import tsx --test tests/judge-entity-khong-dau.test.ts"   # duong-thang-n-khong-dau — khoá đường có dấu = không dấu (tháng N, từ vị trí trần); probe DB máy thu bỏ qua có lý do dưới CI
+    context_resolver_that: "cd agent && node --import tsx --test tests/context-resolver.test.ts probes/context-resolver-that.test.ts"   # l2-bao-thu-doi-probe-that AC-5 — thay E9 enrich-hau-ky: ca cố định (suite) + ca DB local (probe, ngoài suite chung)
+    probe_du_lieu_that: "cd agent && node --import tsx --test probes/du-lieu-that.test.ts"   # l2-bao-thu-doi-probe-that AC-8, AC-9 — script probe chung hai nhánh + audit-all B5 + tsconfig probes
+    judge_entity_khong_dau: "cd agent && node --import tsx --test tests/judge-entity-khong-dau.test.ts probes/khong-dau-that.test.ts"   # duong-thang-n-khong-dau — khoá đường có dấu = không dấu (tháng N, từ vị trí trần); probe DB máy thu bỏ qua có lý do dưới CI
     the_duyet_nguoi: "cd pipeline && node --test scripts/the-duyet-nguoi.test.mjs"
     the_duyet_nguoi_db: "cd pipeline && DATABASE_URL=${NGUOI_U2_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_u2_nguoi} node --test scripts/the-duyet-nguoi.itest.mjs"
     review_nguoi: "cd app && node --import tsx --test tests/review-nguoi.test.tsx"

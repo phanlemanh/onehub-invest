@@ -118,6 +118,10 @@ GROUP_COUNT=$(curl -s -H "Authorization: Bearer $CTOKEN" "$CLOUD/api/v1/ops/coll
 echo "B4. Ô đường thật"
 if OD=$(bash "$ROOT/scripts/o-duong-that.sh"); then pass "${OD#✅ }"; else fail "${OD#❌ }"; fi
 
+# B5 (l2-bao-thu-doi-probe-that): bốn probe dữ liệu thật khác đã dời khỏi suite agent và app — đọc ở đây mỗi sáng.
+echo "B5. Probe dữ liệu thật"
+if PT=$(bash "$ROOT/scripts/probe-du-lieu-that.sh"); then pass "Probe dữ liệu thật: $(printf '%s' "$PT" | tr '\n' ' ')"; else fail "Probe dữ liệu thật: $(printf '%s' "$PT" | grep '^❌' | tr '\n' ' ')"; fi
+
 echo ""
 echo "─── C. INVEST PORTAL ───"
 for page in "/" "/vn" "/vn/hanoi" "/listing/abnb_1143101959271074607" "/deals" "/yield" "/compare" "/login"; do
