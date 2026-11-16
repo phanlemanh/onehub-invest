@@ -1,5 +1,5 @@
 import { LABELS_VI } from "./vocab.generated";
-import { fmtInt } from "./format";
+import { fmtInt, fmtPct } from "./format";
 import type { ReviewImage } from "./ops/review-media";
 
 /**
@@ -52,7 +52,44 @@ export type DealChiTiet = {
   daiM2?: { p10: number; p90: number } | null;
   /** Số tin của cùng một căn trong danh sách (CG10: mỗi căn một dòng); 1 khi căn chỉ có một tin. */
   soTin?: number;
+  /** Mặt bằng S03 so S06 của nhóm cấp dự án (CG15, project_source_baseline — chỉ máy thu); chỉ tin S03 cấp dự án, null khi không có. */
+  matBang?: MatBang | null;
 };
+
+/** Một dòng project_source_baseline (CG15): đếm theo căn (phiếu), trung vị theo thước của nhóm. */
+export type MatBang = {
+  nS03: number;
+  medianS03: number | null;
+  nS06: number;
+  medianS06: number | null;
+  /** (trung vị S03 / trung vị S06 − 1) × 100; null khi một bên dưới 5 căn. */
+  lechPct: number | null;
+  trangThai: "du" | "thieu-s03" | "thieu-s06" | "thieu-hai";
+};
+
+/** Trung vị theo thước: giá/m² (triệu, dưới một triệu thì nghìn) hay giá tháng. */
+const chuTrungVi = (v: number | null, metric: string | null): string => {
+  if (v === null) return "—";
+  if (metric === "gia-thang-pn") return `${fmtInt(v / 1e6)} tr/tháng`;
+  return v < 1e6 ? `${fmtInt(v / 1e3)} nghìn/m²` : `${fmtInt(v / 1e6)} tr/m²`;
+};
+/** Độ lệch có dấu, phẩy thập phân: «−4,1%» khi S03 rẻ hơn mặt bằng S06, «+3,0%» khi đắt hơn. */
+const chuLech = (pct: number): string => `${pct < 0 ? "−" : "+"}${fmtPct(Math.abs(pct) / 100)}`;
+
+/** Chữ mặt bằng S06 cạnh hạng của tin S03 (CG15, thiết kế §2.3): bốn câu theo trạng thái, đơn vị «căn» (Hỏi-3). */
+export function chuMatBang(m: MatBang, metric: string | null): string {
+  const s06 = `S06 ${chuTrungVi(m.medianS06, metric)} · ${m.nS06} căn`;
+  switch (m.trangThai) {
+    case "du":
+      return `${s06} · S03 ${m.lechPct === null ? "—" : chuLech(m.lechPct)}`;
+    case "thieu-s06":
+      return `S06 chưa đủ để so (${m.nS06} căn)`;
+    case "thieu-s03":
+      return `S03 chưa đủ để so (${m.nS03} căn) · ${s06}`;
+    default:
+      return `Chưa đủ căn hai nguồn để so (S03 ${m.nS03} · S06 ${m.nS06})`;
+  }
+}
 
 /** Một dòng offer_price_rank cho trang (CG9). Số NULL khi tin không chấm (`reason` nói vì sao). */
 export type HangGia = {

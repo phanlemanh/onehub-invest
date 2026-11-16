@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { A, M, can, dbCa, dongs, donHet, dungMau, duAn, pct, so, tin } from "./gia-tot-du-an-fixture.itest.mjs";
+import { A, M, can, dbCa, dongs, donHet, dungMau, duAn, pct, so, tin, tinS06 } from "./gia-tot-du-an-fixture.itest.mjs";
 import { GOC } from "./db-thu-dbv.mjs";
 import { SQL_423, xepHangGia } from "../xep-hang-gia.mjs";
 
@@ -14,23 +14,6 @@ before(dungMau);
 after(donHet);
 
 const im = { log: () => {} };
-let nS06 = 0;
-/** Một tin S06 có dự án qua bí danh mã nguồn (đường S06 của view 105: stg_chotot_ads → registry_aliases → s06_offer_project). */
-async function tinS06(c, o) {
-  const list = 8_100_000_000 + (++nS06);
-  const pid = `cg15fx${process.pid}x${nS06}`;
-  await c.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ('cg15-snap', 'vn', 'cg15-thu', '{}'::jsonb)
-    ON CONFLICT DO NOTHING`);
-  await c.query(`INSERT INTO stg_chotot_ads (list_id, region_v2, city_code, category, ad_type, payload, snapshot_id)
-    VALUES ($1, 12000, 'vn-hanoi', 1010, $2, $3, 'cg15-snap')`, [list, (o.kind ?? "sale") === "sale" ? "s" : "u", { projectid: pid }]);
-  await tin(c, { ...o, nguon: "S06" });
-  await c.query(`UPDATE sale_offer_records SET originating_system_key = $2 WHERE offer_id = $1`, [o.id, String(list)]);
-  if (o.duAn != null) {
-    await c.query(`INSERT INTO registry_aliases (object_key, kind, value, source, first_seen)
-      VALUES ($1, 'ma_nguon', $2, 'S06', now())`, [`node:${o.duAn}`, `du_an/${pid}`]);
-  }
-}
-
 const matBang = async (c) => (await c.query(`SELECT * FROM project_source_baseline ORDER BY nut, kind, thuoc, pn_nhom`)).rows;
 const khoa = (r) => `${r.nut}|${r.kind}|${r.property_type}|${r.thuoc}|${r.pn_nhom ?? "-"}`;
 const trungVi = (xs) => (xs.length ? pct([...xs].sort((a, b) => a - b), 0.5) : null);
