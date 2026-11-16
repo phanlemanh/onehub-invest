@@ -38,4 +38,4 @@ export function dongCanCuMucDich(t: TheDiaChi): string {
   return `từ bài đã đọc: ${fmtInt(o.ban ?? 0)} bán, ${fmtInt(o.thue ?? 0)} thuê`
 }
 
-export const tenNhom = (t: TheDiaChi) => t.ten_nhom ?? "Chưa có trong sổ"
+export const tenNhom = (t: TheDiaChi) => t.ten_nhom ?? (t.unit_code ? "Chưa có tên" : "Chưa có trong sổ")

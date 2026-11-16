@@ -21,6 +21,9 @@ let c: pg.Client
 const nguoi: Record<string, { id: string; cookie: string }> = {}
 let A = 0, PK = 0
 let the: string[] = []
+// Nhóm có tên trùng khoá thật (hình của S03-N014 trên DB máy thu): name và original_name đều bằng khoá.
+const KHOA_SO = `${process.pid}0000000000000`.slice(0, 19)
+let theTenKhoa = ""
 
 before(async () => {
   c = new pg.Client({ connectionString: DB_URL })
@@ -35,6 +38,10 @@ before(async () => {
                              VALUES ($1, NULL, $2, $3, 'ban', $4) RETURNING card_code`, [k, [A], phuong, { so_bai: 9, so_bai_doc: 5, du_an: { nguon: "nhan", so_bai: 4 } }])
     the.push(r.rows[0].card_code)
   }
+  const unit = (await c.query(`INSERT INTO collection_units (source_code, group_key, name, original_name, status, enabled)
+                                VALUES ('S03', $1, $2, $2, 'active', true) RETURNING unit_code`, [`zalo:group:${KHOA_SO}`, KHOA_SO])).rows[0].unit_code
+  theTenKhoa = (await c.query(`INSERT INTO group_address_cards (group_key, unit_code, purpose, evidence) VALUES ($1, $2, 'ban', '{}') RETURNING card_code`,
+    [KHOA_SO, unit])).rows[0].card_code
   for (const v of ["ops", "viewer"]) nguoi[v] = await taoNguoi(c, v)
 })
 after(async () => { await c?.end() })
@@ -123,7 +130,9 @@ test("TG1-AC-6 khoá nhóm không lộ ra hàm đọc và phản hồi; lược 
   assert.ok(html.includes(the[0]), "TG1-AC-6: HTML bảng phải có mã thẻ")
   const r = await goi(nguoi.ops.cookie, { action: "card-decide", card: "nhan", cardCode: the[1], version: 99 })
   const chuoi = docRa + html + JSON.stringify(r.json)
-  const demMoi = (s: string) => KHOA_MOI.reduce((n, k) => n + s.split(k).length - 1, 0)
+  const demMoi = (s: string) => [...KHOA_MOI, KHOA_SO].reduce((n, k) => n + s.split(k).length - 1, 0)
+  assert.ok(docRa.includes(theTenKhoa), "TG1-AC-6: hàm đọc phải có thẻ của nhóm tên trùng khoá")
+  assert.ok(html.includes("Chưa có tên"), "TG1-AC-6: nhóm tên trùng khoá phải hiện «Chưa có tên»")
   assert.equal(demMoi(chuoi), 0, "TG1-AC-6: khoá nhóm lộ ra hàm đọc hay phản hồi")
   assert.ok(demMoi(chuoi + KHOA_MOI[0]) >= 1, "TG1-AC-6: đối chứng dương — bộ đếm không bắt được khoá chèn vào")
   assert.ok(docRa.includes(the[0]), "TG1-AC-6: hàm đọc phải có mã thẻ")
@@ -137,4 +146,16 @@ test("TG1-AC-6 khoá nhóm không lộ ra hàm đọc và phản hồi; lược 
     await c.query(`RESET search_path`)
     await c.query(`DROP SCHEMA "${s}" CASCADE`)
   }
+})
+
+test("TG1-AC-6 đối chứng đỏ: bản sao bỏ lọc tên trùng khoá thì khoá lộ ra hàm đọc", async () => {
+  const goc = readFileSync(join(GOC, "app/src/lib/the-dia-chi-nhom.ts"), "utf8")
+  const pha = goc.replace(/SELECT CASE WHEN n\.x IS NULL[\s\S]*?ELSE n\.x END/, "SELECT n.x")
+  assert.notEqual(pha, goc, "ten-trung-khoa: không phá được hàm")
+  const tep = join(GOC, "app/src/lib", `.tg1-pha-ten-${process.pid}.ts`)
+  writeFileSync(tep, pha)
+  try {
+    const { docTheDiaChi } = (await import(tep)) as typeof import("../src/lib/the-dia-chi-nhom")
+    assert.ok(JSON.stringify(await docTheDiaChi()).includes(KHOA_SO), "ten-trung-khoa: bản bỏ lọc vẫn không lộ khoá — ca không phân biệt được")
+  } finally { rmSync(tep, { force: true }) }
 })

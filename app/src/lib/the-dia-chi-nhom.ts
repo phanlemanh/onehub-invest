@@ -1,5 +1,5 @@
 // Thẻ địa chỉ nhóm S03 (TG1 `the-dia-chi-nhom-s03`): đọc thẻ cho khu «Sổ đơn vị thu» trên /ops/sources và ghi quyết định
-// nhận · sửa · bác của người vận hành. Khoá nhóm (group_key, tầng A) KHÔNG BAO GIỜ rời hàm đọc — mọi thứ đi ra dùng card_code.
+// nhận · sửa · bác của người vận hành. Khoá nhóm (group_key) KHÔNG BAO GIỜ rời hàm đọc — mọi thứ đi ra dùng card_code; tên nhóm trùng khoá (hay chỉ là dãy số) thì trả NULL (AC-6).
 // Ghi thẻ, lịch sử thẻ và ops_audit trong CÙNG giao dịch; version lệch → 409. Bảng chỉ ở máy thu: chưa có bảng → null.
 import type { Pool } from "pg"
 
@@ -39,7 +39,10 @@ const coBang = async (db: Db) =>
 export async function docTheDiaChi(db: Db = pool): Promise<TheDiaChi[] | null> {
   if (!(await coBang(db))) return null
   const { rows } = await db.query<TheDiaChi>(
-    `SELECT t.card_code, t.unit_code, (SELECT u.original_name FROM collection_units u WHERE u.unit_code = t.unit_code) AS ten_nhom, t.status, t.purpose AS muc_dich, t.evidence, t.version,
+    `SELECT t.card_code, t.unit_code, (SELECT CASE WHEN n.x IS NULL OR n.x = t.group_key OR n.x = u.group_key
+                         OR n.x = regexp_replace(u.group_key, '^([^:]+:)?group:(?=.)', '') OR n.x ~ '^[0-9]{8,}$' THEN NULL ELSE n.x END
+               FROM collection_units u CROSS JOIN LATERAL (SELECT coalesce(nullif(btrim(u.original_name), ''), nullif(btrim(u.name), '')) AS x) n
+              WHERE u.unit_code = t.unit_code) AS ten_nhom, t.status, t.purpose AS muc_dich, t.evidence, t.version,
             t.decided_at::text AS decided_at, t.decision_note,
             coalesce((SELECT json_agg(json_build_object('id', n.id::int, 'name', n.name) ORDER BY array_position(t.project_node_ids, n.id))
                         FROM asset_nodes n WHERE n.id = ANY (t.project_node_ids)), '[]'::json) AS du_an,
