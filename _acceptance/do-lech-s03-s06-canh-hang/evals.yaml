@@ -45,7 +45,7 @@ evals:
     criterion: AC-6
     executor: script
     cmd: config:executors.script.cg15_doc
-    paths: [app/src/lib/deals-chi-tiet.ts, app/src/components/ops/deals-grid.tsx, app/src/components/ops/deal-body.tsx, app/tests/do-lech-s03-s06*]
+    paths: [app/src/lib/deals-chi-tiet.ts, app/src/components/ops/deals-cells.tsx, app/src/components/ops/deal-body.tsx, app/tests/do-lech-s03-s06*]
     expected: "Ca CG15-AC-6: bảy DealRow viết trước (đủ âm, đủ dương, thieu-s06, thieu-s03, thieu-hai, thuê giá tháng, nhóm 9 căn 10 tin) → chữ ô «Giảm so thước» và hàng mặt bằng trang một căn đúng bốn khuôn ghim theo trạng thái (đơn vị «căn»; 9 căn 10 tin ghi «9 căn»; thuê «tr/tháng»); không matBang → không có chữ «S06». Ba đột biến đỏ: đảo dấu, câu thieu-s06 cho dòng thieu-s03, n_s03 làm số căn S06."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E7
@@ -60,7 +60,7 @@ evals:
     criterion: AC-8
     executor: ui-check
     layer: ui-observed
-    paths: [app/src/lib/deals.ts, app/src/lib/deals-chi-tiet.ts, app/src/components/ops/deals-grid.tsx, app/src/components/ops/deal-body.tsx]
+    paths: [app/src/lib/deals.ts, app/src/lib/deals-chi-tiet.ts, app/src/components/ops/deals-cells.tsx, app/src/components/ops/deal-body.tsx]
     steps:
       - "Bản chạy: dev server của worktree này trên cổng 3466 (app/node_modules là thư mục thật, không symlink), DATABASE_URL trỏ DB thử do `bash pipeline/scripts/do-lech-s03-s06-db.sh ghi-thu` dựng; đăng nhập tài khoản ops thử của worktree. KHÔNG tạo hay sửa tệp nào trong cây ngoài evidence/. Che email đăng nhập lúc chụp; sau khi chụp che SĐT và mặt người."
       - "Chọn bằng SQL trên DB thử một tin S03 bán nhóm du có mặt trên /ops/deals?project=1, ghi khoá nhóm và dòng bảng vào observed; mở trang đó ở 1280 px sáng → evidence/E8-step1.png (dòng của tin có dòng phụ «S06 … căn · S03 ±x%» khớp dòng bảng; dòng S06 không có)"
