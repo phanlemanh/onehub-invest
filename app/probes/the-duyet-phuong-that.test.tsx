@@ -24,7 +24,9 @@ function chepTep(rel: string, doi: (s: string) => string): string {
   assert.notEqual(sau, goc, `đột biến của ${rel} không đổi gì — đối chứng vô nghĩa`)
   const dir = path.dirname(path.join(APP, rel))
   const tuyet = sau.replace(/(from\s+|import\()"(\.{1,2}\/[^"]+)"/g, (_m, a, p) => `${a}"${path.join(dir, p)}"`)
-  const f = path.join(APP, "probes", `.tpl-that-${process.pid}-${CHEP.length}${path.extname(rel)}`)
+  // Nhãn PROBE_NHAN_TAM: cùng nghĩa với nhanTam() của agent/probes/chung.ts (PT-AC-8 đếm đúng tệp của lượt mình).
+  const nhan = (process.env.PROBE_NHAN_TAM ?? "").replace(/[^\w-]/g, "")
+  const f = path.join(APP, "probes", `.tpl-that-${nhan}${process.pid}-${CHEP.length}${path.extname(rel)}`)
   writeFileSync(f, tuyet)
   CHEP.push(f)
   return f

@@ -11,18 +11,19 @@ const GOC_KHO = join(AGENT, "..");
 const SCRIPT = join(GOC_KHO, "scripts/probe-du-lieu-that.sh");
 const TEN = ["khong-dau-that", "judge-luat-that", "context-resolver-that", "the-duyet-phuong-that"];
 
+// Nhãn riêng của lượt này cho tệp tạm (PROBE_NHAN_TAM, xem agent/probes/chung.ts): ca khác chạy song song cùng worktree
+// (vd judge-entity-duong tạo `.cd-<pid>-*`) không làm phép đếm nhiễu — sự cố lượt chấm r1.
+const NHAN = `pt${process.pid}x-`;
 function chay(env: Record<string, string>): { ma: number; ra: string } {
   try {
-    return { ma: 0, ra: execFileSync("bash", [SCRIPT], { env: { ...process.env, ...env }, encoding: "utf8", timeout: 600_000 }) };
+    return { ma: 0, ra: execFileSync("bash", [SCRIPT], { env: { ...process.env, PROBE_NHAN_TAM: NHAN, ...env }, encoding: "utf8", timeout: 600_000 }) };
   } catch (e) {
     const x = e as { status?: number; stdout?: string };
     return { ma: x.status ?? -1, ra: String(x.stdout ?? "") };
   }
 }
-const tepTam = () => [
-  ...readdirSync(join(AGENT, "src/agents")).filter((f) => /^\.(kd|lt|lt-cu|od|cd)-/.test(f)),
-  ...readdirSync(join(GOC_KHO, "app/probes")).filter((f) => f.startsWith(".tpl-that-")),
-];
+const THU_MUC_TAM = [join(AGENT, "src/agents"), join(GOC_KHO, "app/probes")];
+const tepTam = () => THU_MUC_TAM.flatMap((d) => readdirSync(d).filter((f) => f.startsWith(".") && f.includes(`-${NHAN}`)));
 /** Mục B5: gọi scripts/probe-du-lieu-that.sh trong nhánh if/then pass/else fail. */
 function kiemAuditAll(noi: string) {
   assert.ok(noi.includes("probe-du-lieu-that.sh") && /Probe dữ liệu thật/.test(noi), "PT-AC-8 audit-all thiếu mục Probe dữ liệu thật");
@@ -34,7 +35,14 @@ test("PT-AC-8 mục Probe dữ liệu thật chạy hai nhánh", (t) => {
   const audit = readFileSync(join(GOC_KHO, "scripts/audit-all.sh"), "utf8");
   kiemAuditAll(audit);
   assert.throws(() => kiemAuditAll(audit.split("\n").filter((l) => !l.includes("probe-du-lieu-that.sh")).join("\n")), /PT-AC-8 audit-all thiếu mục Probe dữ liệu thật/);
-  const truoc = tepTam();
+  // Đối chứng dương của phép đếm: một tệp mang nhãn của lượt (đúng khuôn tên chung.ts sinh) phải được đếm.
+  const mau = join(AGENT, "src/agents", `.kd-${NHAN}0-0.ts`);
+  writeFileSync(mau, "");
+  try {
+    assert.deepEqual(tepTam(), [`.kd-${NHAN}0-0.ts`], "PT-AC-8 phép đếm tệp tạm không nhận ra tệp mang nhãn");
+  } finally {
+    rmSync(mau, { force: true });
+  }
   const sach = chay({});
   assert.equal(sach.ma, 0, `PT-AC-8 nhánh sạch thoát ${sach.ma}: ${sach.ra}`);
   const dong = sach.ra.trim().split("\n");
@@ -45,7 +53,7 @@ test("PT-AC-8 mục Probe dữ liệu thật chạy hai nhánh", (t) => {
   const loi = hong.ra.trim().split("\n").filter((l) => l.startsWith("❌"));
   assert.equal(loi.length, 1, `PT-AC-8 nhánh giả đỏ phải đúng một dòng ❌: ${hong.ra}`);
   assert.match(loi[0], /^❌ judge-luat-that: .*PROBE_GIA_DO/, "PT-AC-8 dòng ❌ không gọi đúng tên tệp");
-  assert.deepEqual(tepTam(), truoc, "PT-AC-8 lượt script để lại tệp đột biến");
+  assert.deepEqual(tepTam(), [], "PT-AC-8 lượt script để lại tệp đột biến");
   t.diagnostic(`PT-AC-8: ${dong.join(" | ")} · ${loi[0]}`);
 });
 

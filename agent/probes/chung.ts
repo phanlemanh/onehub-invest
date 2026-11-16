@@ -21,13 +21,17 @@ export function dotBienLuoi<T>(tep: string, tienTo: string, ten: string, doi: (s
     const goc = readFileSync(join(AGENTS, `${tep}.ts`), "utf8");
     const ma = doi(goc);
     assert.notEqual(ma, goc, `đột biến ${ten} không đổi mã — chiều đỏ vô nghĩa`);
-    const f = join(AGENTS, `.${tienTo}-${process.pid}-${CHEP.length}.ts`);
+    const f = join(AGENTS, `.${tienTo}-${nhanTam()}${process.pid}-${CHEP.length}.ts`);
     writeFileSync(f, ma);
     CHEP.push(f);
     NHO.set(khoa, import(f));
   }
   return NHO.get(khoa) as Promise<T>;
 }
+
+/** Nhãn chèn vào tên tệp tạm (PROBE_NHAN_TAM): PT-AC-8 đếm đúng tệp của lượt mình, không đếm nhầm tệp đột biến của
+ *  ca khác đang chạy song song cùng worktree (sự cố lượt chấm r1: ảnh chụp «trước» bắt tệp `.cd-*` của E1). */
+export const nhanTam = () => (process.env.PROBE_NHAN_TAM ?? "").replace(/[^\w-]/g, "");
 
 export const trongScript = () => process.env.O_DUONG_TRONG_SCRIPT === "1" || process.env.PROBE_TRONG_SCRIPT === "1";
 
