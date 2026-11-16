@@ -26,7 +26,8 @@ có trang nào để nhìn.
 Số đo hiện trạng DB máy thu (17/11 ~05:50 VN, giám sát đếm): `asset_nodes` 344 nút dự án (20 `xac_minh`, 324
 `mot_loi_khai`), 31 phân khu, 3 nút building; `buildings` 198 toà; `units` 1.748 căn (69 toà có căn) ở Ocean Park 1 và
 Grand Park; `project_links` S06: 341 nối, 8 chưa nối; `offer_project`: 5.470 tin S03 và 11.883 tin S06 đang rao có dự
-án; `stg_s08_project` 357 dự án và `stg_s09_item` 345 mục đã nạp nhưng chưa nối vào danh bạ.
+án; `stg_s08_project` 357 dòng (180 dự án khác nhau qua nhiều snapshot; 8 đã nối) và `stg_s09_item` 345 mục (344 dự án + 1
+danh mục; kho chưa có bảng nối dự án S09). Đếm lại theo cùng định nghĩa với ô số trên trang (17/11 ~06:30 VN).
 
 Ai đọc trang này phía sau: Mạnh (quản lý danh bạ bằng mắt), phiên duyệt thẻ nhóm, hàng nạp S16 (toà và mã căn sẽ tự
 hiện khi nạp).

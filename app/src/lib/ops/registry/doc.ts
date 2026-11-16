@@ -30,7 +30,8 @@ export type NutDanhBa = {
   soToa: number
   toaChuaCan: number
   soCan: number
-  /** Tin đang rao có đúng một dự án (`offer_project.status = mot_du_an`) theo nguồn — chỉ ở nút dự án gốc. */
+  /** Tin đang rao có đúng một dự án (`offer_project.status = mot_du_an`) theo nguồn. View đã quy mọi tin về dự án gốc
+   * (`project_node_id` là gốc), nên phân khu không mang tin và cộng tin trên các dự án gốc không đếm trùng. */
   tin: Record<string, number>
 }
 
@@ -44,6 +45,8 @@ export type TongDanhBa = {
   toaCoCan: number
   truc: number
   can: number
+  /** Toà mang bí danh còn dùng của S09 (S09 góp tên toà dù chưa có bảng nối dự án). */
+  toaBiDanhS09: number
   danhMuc: NguonDanhMuc[]
 }
 
@@ -131,7 +134,9 @@ SELECT
   (SELECT count(*) FROM buildings b WHERE b.status = 'active'
      AND EXISTS (SELECT 1 FROM units u WHERE u.building_key = b.building_key AND u.status = 'active'))::int AS toa_co_can,
   (SELECT count(*) FROM stacks WHERE status = 'active')::int AS truc,
-  (SELECT count(*) FROM units WHERE status = 'active')::int AS can`
+  (SELECT count(*) FROM units WHERE status = 'active')::int AS can,
+  (SELECT count(DISTINCT a.object_key) FROM registry_aliases a JOIN buildings b ON b.building_key = a.object_key
+     WHERE a.source = 'S09' AND a.retired_at IS NULL AND b.status = 'active')::int AS toa_bi_danh_s09`
 
 /**
  * Danh mục dự án đã nạp theo nguồn: số mã dự án khác nhau đã nạp, số đã nối nút, số chưa nối (gồm cả mã chưa qua bước
@@ -178,7 +183,7 @@ function nutTuHang(r: HangNut): NutDanhBa {
 /** Toàn bộ danh bạ cho trang /ops/registry: dải số, mọi nút kèm số đếm, tên tỉnh/thành, mã nguồn chưa nối. */
 export async function docDanhBa(q: Q = pool): Promise<DanhBa> {
   const [tong, nut, danhMuc, chuaNoi, tinh] = await Promise.all([
-    q.query<{ du_an: number; du_an_xac_minh: number; phan_khu: number; toa: number; toa_co_can: number; truc: number; can: number }>(SQL_TONG),
+    q.query<{ du_an: number; du_an_xac_minh: number; phan_khu: number; toa: number; toa_co_can: number; truc: number; can: number; toa_bi_danh_s09: number }>(SQL_TONG),
     q.query<HangNut>(SQL_NUT),
     q.query<{ source: string; da_nap: number; da_noi: number }>(SQL_DANH_MUC),
     q.query<{ source: string; ma: string; ten: string | null; ly_do: string | null }>(SQL_CHUA_NOI),
@@ -194,6 +199,7 @@ export async function docDanhBa(q: Q = pool): Promise<DanhBa> {
       toaCoCan: t.toa_co_can,
       truc: t.truc,
       can: t.can,
+      toaBiDanhS09: t.toa_bi_danh_s09,
       danhMuc: danhMuc.rows.map((r) => ({ source: r.source, daNap: r.da_nap, daNoi: r.da_noi, chuaNoi: r.da_nap - r.da_noi })),
     },
     nut: nut.rows.map(nutTuHang),

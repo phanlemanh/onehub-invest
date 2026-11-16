@@ -25,8 +25,8 @@ export async function DuAnContent({ id }: { id: number }) {
   const tenNut = new Map(duAn.nut.map((n) => [n.id, che(n.ten)]))
   const canTheoToa = new Map<string, HangToa[]>()
   for (const c of duAn.can) {
-    const phu = [c.tang ? `Tầng ${c.tang}` : null, c.truc ? `Trục ${c.truc}` : null].filter(Boolean).join(" · ")
-    const hang: HangToa = { key: c.key, laCan: true, ten: c.ma ?? c.key, phu, bac: c.bac, nguon: c.nguon, soTruc: null, soCan: null }
+    const phu = [c.tang ? `Tầng ${c.tang}` : null, c.truc ? `Trục ${che(c.truc)}` : null].filter(Boolean).join(" · ")
+    const hang: HangToa = { key: c.key, laCan: true, ten: c.ma ? che(c.ma) : c.key, phu, bac: c.bac, nguon: c.nguon, soTruc: null, soCan: null }
     canTheoToa.set(c.toaKey, [...(canTheoToa.get(c.toaKey) ?? []), hang])
   }
   const rows: HangToa[] = duAn.toa.map((t) => {
@@ -34,8 +34,8 @@ export async function DuAnContent({ id }: { id: number }) {
     return {
       key: t.key,
       laCan: false,
-      ten: t.ten.map(che).join(" · ") || t.maNguon[0] || t.key,
-      phu: [t.nutId === id ? null : tenNut.get(t.nutId), t.maNguon.length > 0 ? `Mã ${t.maNguon.join(", ")}` : null].filter(Boolean).join(" · "),
+      ten: t.ten.map(che).join(" · ") || (t.maNguon[0] ? che(t.maNguon[0]) : t.key),
+      phu: [t.nutId === id ? null : tenNut.get(t.nutId), t.maNguon.length > 0 ? `Mã ${t.maNguon.map(che).join(", ")}` : null].filter(Boolean).join(" · "),
       bac: t.bac,
       nguon: t.nguon,
       soTruc: t.soTruc,
@@ -51,7 +51,7 @@ export async function DuAnContent({ id }: { id: number }) {
       bac={goc.bac}
       tinh={tinh ? (duAn.tinh[tinh] ?? null) : null}
       nguon={goc.nguon}
-      maNoi={duAn.maNoi.map((m) => `${m.source} ${m.ma}`)}
+      maNoi={duAn.maNoi.map((m) => `${m.source} ${che(m.ma)}`)}
       soPhanKhu={goc.soPhanKhu}
       soToa={goc.soToa}
       toaChuaCan={goc.toaChuaCan}

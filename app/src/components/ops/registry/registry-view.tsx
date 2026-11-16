@@ -52,7 +52,13 @@ export function oSo(tong: TongDanhBa) {
     {
       title: "Mã nguồn chưa nối",
       value: fmtInt(chuaNoi),
-      footer: tong.danhMuc.map((d) => `${d.source} ${fmtInt(d.chuaNoi)}/${fmtInt(d.daNap)}`).join(" · ") || "Chưa nạp danh mục nào",
+      footer:
+        [
+          ...tong.danhMuc.map((d) => `${d.source} ${fmtInt(d.chuaNoi)}/${fmtInt(d.daNap)}`),
+          tong.toaBiDanhS09 > 0 ? `S09 đã cấp tên ${fmtInt(tong.toaBiDanhS09)} toà` : null,
+        ]
+          .filter(Boolean)
+          .join(" · ") || "Chưa nạp danh mục nào",
     },
   ]
 }

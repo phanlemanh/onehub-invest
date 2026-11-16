@@ -50,11 +50,15 @@ ghi dữ liệu.
 
 - `lib/ops/registry/doc.ts`: một câu đệ quy `to_tien` (tổ tiên mỗi nút, sâu ≤ 16 như `offer_project`) cộng toà/căn lên mọi
   tổ tiên; tỉnh = gốc `areas` của `area_ids[1]`; nguồn = bảng nối `noi` (S06 `project_links`, S08, S10) và `meta` S09; tin =
-  `offer_project` nhóm theo nguồn. Dải số đếm độc lập bằng `count(*)` từng bảng. Đo: 1,5 giây trên máy thu.
+  `offer_project` nhóm theo nguồn — view đã quy mọi tin về dự án gốc (`project_node_id` luôn là gốc), nên phân khu không mang
+  tin, cột tin chỉ ở dự án gốc và cộng trên các dự án gốc không đếm trùng. Dải số đếm độc lập bằng `count(*)` từng bảng. Đo: 1,5 giây trên máy thu.
 - `lib/ops/registry/du-an.ts`: toà (tên = bí danh `ten`, mã = `ma_nguon`, nguồn = nguồn bí danh), căn (tầng, trục qua
   bí danh trục, mã căn tại nguồn). Số đếm của nút đi qua cùng `docDanhBa` nên hai trang không lệch nhau.
 - `lib/ops/registry/cay.ts`: dựng cây, che tên nguồn (`maskSourceNames`) ở máy chủ, gắn chỗ thiếu. Không tính số.
 - Chỉ SELECT; không đọc `source_registry` trong câu danh bạ (bộ che lấy danh sách tên qua `getSourceNameEntries` dùng chung).
+- Toà có bí danh S09: ô «Mã nguồn chưa nối» thêm câu chú «S09 đã cấp tên N toà» (Hỏi-1, nháp theo khuyến nghị).
+- Mọi chữ lấy từ nguồn (tên dự án, bí danh, tên toà, mã toà, trục, căn, mã đã nối, tên dự án nguồn chưa nối) qua
+  `maskSourceNames` ở máy chủ.
 - Không cần view hay cột mới.
 
 ## Đặc tả UX
