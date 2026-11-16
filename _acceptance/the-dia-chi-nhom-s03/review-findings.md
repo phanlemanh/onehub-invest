@@ -2,13 +2,13 @@
 
 ## Trong hợp đồng
 
-(không có finding nào)
+Không có finding nào.
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-(không có muc moi round này; các muc carried từ round trước máy tự chen)
+Không có finding mới ở round này. Các mục mang từ round trước do máy tự chèn.
 
 - **POST /api/v1/ops/group-cards thiếu chặn «chỉ máy thu» (VERCEL=1 → 503) như các route ops-session chỉ ở máy thu khác (r1)**
   Người dùng thấy gì: Nếu ai đó gọi chức năng duyệt thẻ trên bản cloud hoặc trên máy chưa áp bảng mới, họ nhận thông báo lỗi chung chung thay vì lời giải thích rõ «chỉ có ở máy thu». Không ai mất hay sai dữ liệu.
@@ -24,7 +24,7 @@ Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm v
   severity: low
   Đề xuất: wont-fix
 
-- **Cờ dirty của hộp duyệt không được xoá sau khi lưu thành công, nên thẻ mở sau hỏi «Bỏ thay đổi chưa lưu?» dù chưa sửa gì (r1)**
+- **Cờ dirty của hộp duyệt không được xoá sau khi lưu thành công, nên thẻ mở sau hỏi «Bỏ thay đổi chưa lưu?» dù chưa sửa gì (r1 · tệp đã đổi)**
   Người dùng thấy gì: Sau khi lưu một thẻ, mở thẻ kế tiếp rồi đóng mà không sửa gì vẫn hiện hỏi «Bỏ thay đổi chưa lưu?». Người duyệt phải bấm xác nhận thêm một lần.
   Căn cứ: Chỉ gây thêm một lần bấm thừa, không mất hay sai dữ liệu, và sửa sau cũng rẻ.
   file: `app/src/components/ops/group-cards/group-cards-dialog.tsx`
