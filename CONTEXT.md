@@ -832,6 +832,11 @@ Nhãn tự vận hành từ xa — thêm ở TV0 `adr-duong-lenh-keo` (26/10, AD
 - Ghi chú: «Nhóm thu» vẫn là nhãn của một đơn vị loại nhóm (S03, S05) trên `/ops/sources`; «Đơn vị thu» là nhãn chung khi câu nói về mọi loại. Khu «Sổ đơn vị thu» trên `/ops/sources` hiện mọi đơn vị; «Khai thị trường, dự án» gắn thị trường và dự án nhóm chuyên về (PL12; chữ trên Ops đổi ở hàng `nhan-du-an-thay-khu-do-thi-ops`).
 _Avoid_: collection unit, source group
 
+**Thẻ địa chỉ nhóm**: Địa chỉ mặc định của một nhóm S03 — dự án (một hay danh sách tối đa ba), phường và tỉnh, phân khu mặc định, bán hay thuê. Máy dựng nháp từ bài của chính nhóm, mỗi ô ghi lấy từ đâu và bao nhiêu bài làm căn cứ; người vận hành nhận, sửa hay bác, mỗi lần ghi người, giờ, bản trước. Mỗi nhóm thật một thẻ, kể cả nhóm có bài mà chưa có trong sổ; mã thẻ dạng `TN-001`. Thẻ đã duyệt là mặc định cho địa chỉ tin của nhóm, chữ bài nêu rõ khác thì chữ bài thắng (ROADMAP §3 mục 51; đóng dấu lên tin ở TG2). Chỉ ở máy thu (TG1).
+- Code: `group_address_card (group_address_cards: card_code, status nhap|da_duyet|bac, project_node_ids, area_id, province_area_id, subzone_node_id, purpose ban|thue|ca_hai, evidence; group_address_card_history)` · RESO: —
+- Slug URL: `group-cards`
+_Avoid_: thẻ nhóm, card nhóm, địa chỉ nhóm
+
 **Lệnh**: Một ý muốn ghi có khuôn mà người vận hành gửi trên máy chủ (tạm dừng nguồn, bật một đơn vị thu, đổi lịch…). Máy thu kéo lệnh đã duyệt về, kiểm bất biến, áp, rồi báo kết quả. Lệnh đi theo vòng nháp → đã gửi → đã duyệt → chờ áp → đang áp → đã áp; nhánh phụ là bị từ chối, hoặc lỗi rồi tự hoàn tác. Hoàn tác là một lệnh đảo mới. Không có lệnh tự do (ADR-0015).
 - Code: `change_request (change_requests)` · RESO: —
 - Slug URL: `change-requests`

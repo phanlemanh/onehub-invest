@@ -32,7 +32,7 @@ evals:
     criterion: AC-4
     executor: test
     cmd: config:executors.test.tg1_app
-    paths: [app/src/lib/the-dia-chi-nhom.ts, app/src/app/api/v1/ops/source-groups/route.ts, app/src/lib/ops-access.ts, app/tests/the-dia-chi-nhom-app.itest.tsx]
+    paths: [app/src/lib/the-dia-chi-nhom.ts, app/src/app/api/v1/ops/group-cards/route.ts, app/src/lib/ops-access.ts, app/src/lib/api-surface.ts, app/tests/the-dia-chi-nhom-app.itest.tsx]
     expected: "exit 0; ca 'TG1-AC-4' trên DB thử: người vai ops nhận → status da_duyet, version +1, một dòng lịch sử {action nhan, actor, at, before, after} và một dòng ops_audit action unit.card_decide cùng giao dịch; sửa (đổi dự án, mục đích) → version +1, before/after đúng hai ô; bác có lý do → bac, decision_note lưu; bác không lý do → 400 không ghi; version cũ → 409 không ghi dòng nào (đếm ba bảng); viewer → 403; dự án là nút subzone → 400 nêu ô du_an; đối chứng đỏ: bản sao bỏ kiểm version thì ca nêu 'version-409'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E5
@@ -56,8 +56,8 @@ evals:
     criterion: AC-6
     executor: test
     cmd: config:executors.test.tg1_app
-    paths: [app/src/lib/the-dia-chi-nhom.ts, app/src/app/api/v1/ops/source-groups/route.ts, app/src/components/ops/sources, app/tests/the-dia-chi-nhom-app.itest.tsx]
-    expected: "exit 0; ca 'TG1-AC-6': dựng trang /ops/sources (render server) và gọi mọi action đọc/ghi của route source-groups trên fixture có khoá nhóm mồi; đếm khoá mồi trong HTML và thân phản hồi = 0; đối chứng dương: chèn một khoá mồi vào chuỗi đếm thì ra ≥ 1; lược đồ tạm không có bảng thẻ: hàm đọc thẻ trả null, trang dựng không lỗi và không có khu thẻ"
+    paths: [app/src/lib/the-dia-chi-nhom.ts, app/src/app/api/v1/ops/group-cards/route.ts, app/src/components/ops/sources, app/tests/the-dia-chi-nhom-app.itest.tsx]
+    expected: "exit 0; ca 'TG1-AC-6': dựng trang /ops/sources (render server) và gọi route group-cards trên fixture có khoá nhóm mồi; đếm khoá mồi trong HTML và thân phản hồi = 0; đối chứng dương: chèn một khoá mồi vào chuỗi đếm thì ra ≥ 1; lược đồ tạm không có bảng thẻ: hàm đọc thẻ trả null, trang dựng không lỗi và không có khu thẻ"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E7
     criterion: AC-7

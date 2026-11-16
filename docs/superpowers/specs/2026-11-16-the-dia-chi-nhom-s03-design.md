@@ -48,7 +48,7 @@ căn cứ đổi (mỗi lần đổi một dòng lịch sử). Lệnh không ghi
 - Hộp: bốn ô, mỗi ô giá trị nháp + dòng căn cứ («từ 676 bài đọc ra tên, 3 tên»); sửa bằng combobox như hộp «Khai thị trường,
   dự án»; ba nút **Nhận** (giữ nháp), **Lưu sửa**, **Bác** (đòi lý do).
 - Nhóm chưa có trong sổ hiện ở cuối lưới với nhãn «Chưa có trong sổ» và thẻ của nó — không có mã sổ, chỉ mã thẻ.
-- API: `POST /api/v1/ops/source-groups` action `card-decide` { cardCode, version, action, values?, note? } — quyền mới
+- API: `POST /api/v1/ops/group-cards` { cardCode, version, card: nhan|sua|bac, values?, note? } — quyền mới
   `unit.card_decide` (vai `ops`), ghi thẻ + lịch sử + `ops_audit` cùng giao dịch, `version` lệch → 409.
 
 ## Đặc tả UX
