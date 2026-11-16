@@ -5,7 +5,7 @@ slug: ngoai-n-tu-dinh-tuyen-bat
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: verified
 design_doc: docs/superpowers/specs/2026-11-15-ngoai-n-tu-dinh-tuyen-bat-design.md
 approved_by: Mạnh
 approved_at: 2026-11-15
@@ -79,3 +79,19 @@ Quét theo bảng trục của thiết kế kit (§8), thu về phần kho chạ
 - Lệnh đảo không cần ký (ngưỡng mở ở thiết kế kit §5).
 
 ## Notes
+
+- Ngoài-1 (máy định tuyến 2026-11-16, đề xuất S4 known-limits): Phép đo so sánh máy với lựa chọn của người có thể đổi kết quả sau này nếu sổ của các hồ sơ cũ có thêm dòng mới. Người dùng cuối không thấy gì; chỉ làm số kiểm kém ổn định khi chạy lại. — `_acceptance/ngoai-n-tu-dinh-tuyen-bat/do-mo-phong.mjs`
+- Ngoài-2 (máy định tuyến 2026-11-16, đề xuất S4 known-limits): Bản đồ lộ trình hiện một mục đỏ báo hồ sơ này chưa thuộc việc nào. Không ảnh hưởng hành vi hệ thống, chỉ làm bản đồ kém gọn. — `LO-TRINH.html`
+- Ngoài-3 (máy định tuyến 2026-11-16, đề xuất S4 known-limits): Phép kiểm lưới trước khi gộp có thể báo đạt dù lưới không chạy được. Người dùng không thấy ngay, nhưng một lỗi có thể lọt qua bước kiểm này. — `_acceptance/config.yaml`
+- Ngoài-5 (máy định tuyến 2026-11-16, đề xuất S4 known-limits): Phép kiểm lưới trước khi gộp có thể xanh giả khi lưới không chạy. Người dùng cuối không bị ảnh hưởng trực tiếp. — `_acceptance/config.yaml`
+- Ngoài-6 (máy định tuyến 2026-11-16, đề xuất S4 known-limits): Khi thiếu dòng của người, phép đo có thể coi là máy đảo lựa chọn của người và làm tỉ lệ rủi ro nhìn cao hơn thật. Hiện dữ liệu chưa gặp ca này. — `_acceptance/ngoai-n-tu-dinh-tuyen-bat/do-mo-phong.mjs`
+- Ngoài-8 (máy định tuyến 2026-11-16, đề xuất S4 known-limits): Con số tổng 38 mục trong bằng chứng là lời khai chứ không phải số đo lại. Người dùng không thấy khác biệt. — `_acceptance/ngoai-n-tu-dinh-tuyen-bat/do-mo-phong.mjs`
+- Ngoài-10 (máy định tuyến 2026-11-16, đề xuất S4 known-limits): Phép kiểm lưới có thể báo đạt khi lưới gãy hoặc đổi cách in. Người dùng cuối không thấy ngay. — `_acceptance/config.yaml`
+- Ngoài-13 (máy định tuyến 2026-11-16, đề xuất S4 known-limits): Công cụ kiểm số mục máy xếp so với lựa chọn của người có thể cho kết quả lệch nếu sau này có ai sửa sổ quyết định của sáu hồ sơ cũ. Hiện chưa lệch. — `_acceptance/ngoai-n-tu-dinh-tuyen-bat/do-mo-phong.mjs`
+- Ngoài-14 (máy định tuyến 2026-11-16, đề xuất S4 known-limits): Nếu ai đó cố tình chỉ công cụ kiểm sang một bản kit khác, bằng chứng vẫn báo đạt dù không đo trên đúng bản 2.37.0. — `_acceptance/ngoai-n-tu-dinh-tuyen-bat/do-mo-phong.mjs`
+- Ngoài-16 (máy định tuyến 2026-11-16, đề xuất S4 known-limits): Bước kiểm trước khi gộp có thể báo đạt dù công cụ kiểm của cổng không chạy được, và che luôn vi phạm thật của chính hồ sơ này. — `_acceptance/config.yaml`
+- Ngoài-17 (máy định tuyến 2026-11-16, đề xuất S4 known-limits): Công cụ so lựa chọn của máy với lựa chọn của người đọc một vế từ bản hiện tại thay vì bản đã ghim, nên có thể lệch nếu sổ cũ bị sửa. — `_acceptance/ngoai-n-tu-dinh-tuyen-bat/do-mo-phong.mjs`
+- Ngoài-19 (máy định tuyến 2026-11-16, đề xuất S4 known-limits): Công cụ kiểm bản kit có thể báo khớp nếu một tệp cần so vắng ở cả hai phía, dù chẳng so được gì. — `_acceptance/ngoai-n-tu-dinh-tuyen-bat/do-mo-phong.mjs`
+- Ngoài-21 (máy định tuyến 2026-11-16, đề xuất S4 known-limits): Bước kiểm trước khi gộp có thể báo đạt khi lưới kiểm của cổng sập, và không giới hạn hai dòng chờ đúng như hợp đồng hứa. — `_acceptance/config.yaml`
+- Ngoài-22 (máy định tuyến 2026-11-16, đề xuất S4 known-limits): Tổng 38 mục trong báo cáo được khai sẵn trong công cụ chứ không đếm lại từ hồ sơ, nên một sai lệch nhỏ giữa các hồ sơ có thể không bị phát hiện. — `_acceptance/ngoai-n-tu-dinh-tuyen-bat/do-mo-phong.mjs`
+- Ngoài-23 (máy định tuyến 2026-11-16, đề xuất S4 known-limits): Công cụ kiểm bản kit có thể báo khớp một cách rỗng nếu tên tệp gõ sai hoặc tệp đổi tên. — `_acceptance/ngoai-n-tu-dinh-tuyen-bat/do-mo-phong.mjs`
