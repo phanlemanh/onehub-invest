@@ -31,6 +31,7 @@ before(async () => {
   c = new pg.Client({ connectionString: DB_URL })
   await c.connect()
   await c.query(readFileSync(join(GOC, "db/migrations/108_the_dia_chi_nhom.sql"), "utf8"))
+  await c.query(readFileSync(join(GOC, "db/migrations/109_the_dia_chi_nhom_cho_nghi.sql"), "utf8"))
   const phuong = (await c.query(`SELECT id FROM areas WHERE region_type = 'submarket' ORDER BY id LIMIT 1`)).rows[0].id
   A = Number((await c.query(`INSERT INTO asset_nodes (node_type, name, slug, area_ids) VALUES ('project', $1, $1, $2) RETURNING id`, [`${T}-a`, [phuong]])).rows[0].id)
   PK = Number((await c.query(`SELECT id FROM asset_nodes WHERE node_type = 'subzone' ORDER BY id LIMIT 1`)).rows[0].id)
@@ -192,4 +193,37 @@ test("TG1-AC-10 đối chứng đỏ: bản sao bỏ kiểm nguồn thì ô ngư
     assert.equal(dongCanCuMucDich(theCanCu("thue", null)), "từ bài đã đọc: 18 bán, 2 thuê",
       "can-cu-muc-dich: bản bỏ kiểm nguồn vẫn nói người vận hành điền — ca không phân biệt được")
   } finally { rmSync(tep, { force: true }) }
+})
+
+test("TG1-AC-5 thẻ đang nghỉ không lên lưới Ops — bộ đếm đầu trang khớp số lệnh dựng nháp in", async () => {
+  const { docTheDiaChi } = await import("../src/lib/the-dia-chi-nhom")
+  // Thẻ NHÁP riêng cho ca này: các ca trước đã nhận hay bác vài thẻ, mà 109 chỉ cho thẻ nháp nghỉ.
+  const code = (await c.query(`INSERT INTO group_address_cards (group_key, unit_code, purpose, evidence)
+                               VALUES ($1, NULL, 'ban', '{}') RETURNING card_code`, [`${T}-nghi`])).rows[0].card_code
+  const truoc = (await docTheDiaChi()) ?? []
+  assert.ok(truoc.some((t) => t.card_code === code), "TG1-AC-5: thẻ sống phải có trên lưới trước khi cho nghỉ")
+
+  await c.query(`UPDATE group_address_cards SET retired_at = now(), retired_reason = 'nhom-khong-con-bai' WHERE card_code = $1`, [code])
+  try {
+    const sau = (await docTheDiaChi()) ?? []
+    assert.ok(!sau.some((t) => t.card_code === code), "TG1-AC-5: thẻ đang nghỉ vẫn lên lưới — bộ đếm đầu trang sẽ lớn hơn số lệnh in")
+    assert.equal(sau.length, truoc.length - 1, "TG1-AC-5: cho nghỉ một thẻ thì lưới phải bớt đúng một dòng")
+    const con = await c.query(`SELECT count(*)::int n FROM group_address_cards WHERE card_code = $1`, [code])
+    assert.equal(con.rows[0].n, 1, "TG1-AC-5: cho nghỉ không được xoá dòng khỏi bảng")
+
+    // Đối chứng đỏ: bản sao hàm đọc bỏ mệnh đề lọc thẻ nghỉ → thẻ nghỉ lại lên lưới.
+    const goc = readFileSync(join(GOC, "app/src/lib/the-dia-chi-nhom.ts"), "utf8")
+    const pha = goc.replace("      WHERE t.retired_at IS NULL\n", "")
+    assert.notEqual(pha, goc, "the-nghi: không phá được hàm đọc")
+    const tep = join(GOC, "app/src/lib", `.tg1-pha-nghi-${process.pid}.ts`)
+    writeFileSync(tep, pha)
+    try {
+      const m = (await import(tep)) as typeof import("../src/lib/the-dia-chi-nhom")
+      const ds = (await m.docTheDiaChi()) ?? []
+      assert.ok(ds.some((t) => t.card_code === code),
+        "the-nghi: bản bỏ mệnh đề lọc vẫn giấu thẻ nghỉ — ca không phân biệt được")
+    } finally { rmSync(tep, { force: true }) }
+  } finally {
+    await c.query(`DELETE FROM group_address_cards WHERE card_code = $1`, [code])
+  }
 })

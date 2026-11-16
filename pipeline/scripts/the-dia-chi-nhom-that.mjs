@@ -1,5 +1,7 @@
 // the-dia-chi-nhom-that.mjs — phép đo trên BẢN CHÉP DB máy thu cho hồ sơ the-dia-chi-nhom-s03 (TG1), E7 và E8.
 // Chỉ chạy trên DB tên oneinvest_u1_tg1 (dựng bằng `bash db/db-thu.sh oneinvest_u1_tg1`); từ chối DB oneinvest của máy thu.
+// Áp 108 rồi 109 (cho nghỉ thẻ rời tập) trước khi dựng nháp; chạy trên bản chép CÒN thẻ của lượt trước là có chủ ý — đó là ca
+// mà bất biến «số thẻ sống = số nhóm thật có bài» phải tự chữa, không dựng lại bản chép cho sạch.
 //   node pipeline/scripts/the-dia-chi-nhom-that.mjs --dem [--ghi <tệp.md>]   E7: áp 108, dựng nháp, so số đếm độc lập, sàn điền ô
 //   node pipeline/scripts/the-dia-chi-nhom-that.mjs --chat-luong              E8: nhóm sổ một dự án, dựng nháp bỏ sổ, đếm trùng
 // Số đếm độc lập viết bằng SQL riêng — không dùng hàm của lệnh dựng nháp — để hai đường cùng sai thì mới lọt.
@@ -44,6 +46,7 @@ function moDb() {
 async function dem(c, tepGhi) {
   const t0 = performance.now();
   await c.query(readFileSync(join(GOC, "db/migrations/108_the_dia_chi_nhom.sql"), "utf8"));
+  await c.query(readFileSync(join(GOC, "db/migrations/109_the_dia_chi_nhom_cho_nghi.sql"), "utf8"));
   const d = await docDuLieu(c);
   const nhap = dungTheoNhom(d);
   await c.query("BEGIN");
@@ -53,7 +56,10 @@ async function dem(c, tepGhi) {
 
   const docLap = Object.fromEntries((await c.query(SQL_LOP)).rows.map((r) => [r.lop, r.n]));
   const coBaiDocLap = LOP.filter((l) => l !== "so_khong_bai").reduce((s, l) => s + (docLap[l] ?? 0), 0);
-  const soThe = (await c.query(`SELECT count(*)::int n FROM group_address_cards`)).rows[0].n;
+  // Thẻ SỐNG (109): thẻ của nhóm rời tập đã được cho nghỉ, không còn tính vào bất biến của AC-7.
+  const { rows: [t] } = await c.query(`SELECT count(*) FILTER (WHERE retired_at IS NULL)::int AS song,
+                                              count(*) FILTER (WHERE retired_at IS NOT NULL)::int AS nghi FROM group_address_cards`);
+  const soThe = t.song;
   const lopMay = demLop(nhap);
   // Nhóm trong sổ không bài: khoá thật của sổ không có trong nháp (lệnh không dựng thẻ cho chúng).
   const khoaNhap = new Set(nhap.map((n) => n.group_key));
@@ -66,11 +72,12 @@ async function dem(c, tepGhi) {
            count(*) FILTER (WHERE area_id IS NOT NULL)::int AS phuong,
            count(*) FILTER (WHERE subzone_node_id IS NOT NULL)::int AS phan_khu,
            count(*) FILTER (WHERE purpose IS NOT NULL)::int AS muc_dich
-      FROM group_address_cards WHERE (evidence->>'so_bai_doc')::int >= 5`)).rows[0];
+      FROM group_address_cards WHERE retired_at IS NULL AND (evidence->>'so_bai_doc')::int >= 5`)).rows[0];
   const nua = sau.nhom5 / 2;
 
   const loi = [];
-  if (soThe !== coBaiDocLap) loi.push(`số thẻ ${soThe} ≠ số nhóm có bài đếm độc lập ${coBaiDocLap}`);
+  if (soThe !== coBaiDocLap) loi.push(`số thẻ sống ${soThe} ≠ số nhóm có bài đếm độc lập ${coBaiDocLap}`
+    + (t.nghi ? ` (${t.nghi} thẻ đang nghỉ, đã trừ khỏi số thẻ sống)` : " (không thẻ nào đang nghỉ)"));
   for (const l of LOP) if ((lopMay[l] ?? 0) !== (docLap[l] ?? 0)) loi.push(`lớp ${l}: lệnh ${lopMay[l] ?? 0} ≠ độc lập ${docLap[l] ?? 0}`);
   if (sau.nhom5 === 0) loi.push("không nhóm nào có từ 5 bài đọc — sàn điền ô không đo được");
   if (sau.muc_dich < nua) loi.push(`ô bán/thuê ${sau.muc_dich}/${sau.nhom5} dưới một nửa`);
@@ -84,7 +91,9 @@ async function dem(c, tepGhi) {
     "| Lớp | Lệnh dựng nháp | Đếm độc lập |",
     "|---|---|---|",
     ...LOP.map((l) => `| ${l} | ${lopMay[l] ?? 0} | ${docLap[l] ?? 0} |`),
-    `| **nhóm có bài / số thẻ** | **${soThe}** | **${coBaiDocLap}** |`,
+    `| **nhóm có bài / số thẻ sống** | **${soThe}** | **${coBaiDocLap}** |`,
+    "",
+    `Thẻ đang nghỉ (nhóm không còn trong tập nháp, giữ dòng không xoá): ${t.nghi}`,
     "",
     `Nhóm có từ 5 bài đọc: ${sau.nhom5} (sàn một nửa = ${nua})`,
     "",

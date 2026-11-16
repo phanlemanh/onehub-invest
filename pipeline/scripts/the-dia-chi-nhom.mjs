@@ -83,18 +83,32 @@ export function dungTheoNhom(d, { boSo = false } = {}) {
 
 const bam = (n) => createHash("sha1").update(JSON.stringify([n.unit_code, n.du_an, n.phuong, n.tinh, n.phan_khu, n.muc_dich, n.evidence])).digest("hex");
 const banThe = (r) => ({ unit_code: r.unit_code, status: r.status, du_an: (r.project_node_ids ?? []).map(Number), phuong: r.area_id,
-  tinh: r.province_area_id, phan_khu: r.subzone_node_id == null ? null : Number(r.subzone_node_id), muc_dich: r.purpose, evidence: r.evidence });
+  tinh: r.province_area_id, phan_khu: r.subzone_node_id == null ? null : Number(r.subzone_node_id), muc_dich: r.purpose, evidence: r.evidence,
+  nghi: r.retired_at == null ? null : { tu: r.retired_at, ly_do: r.retired_reason } });
 
 /** Ghi nháp trong giao dịch của người gọi. Trả số đếm. */
 export async function ghiNhap(client, nhap) {
-  const dem = { tao: 0, cap_nhat: 0, giu_da_quyet: 0, khong_doi: 0 };
+  const dem = { tao: 0, cap_nhat: 0, giu_da_quyet: 0, khong_doi: 0, cho_nghi: 0, thuc_lai: 0 };
   const { rows: cu } = await client.query(`SELECT * FROM group_address_cards`);
   const theoKhoa = new Map(cu.map((r) => [r.group_key, r]));
   for (const n of nhap) {
     const h = bam(n);
     const r = theoKhoa.get(n.group_key);
     if (r && r.status !== "nhap") { dem.giu_da_quyet++; continue; }
-    if (r && r.evidence_hash === h) { dem.khong_doi++; continue; }
+    // Nhóm quay lại tập nháp thì thẻ đang nghỉ sống lại trước, rồi mới xét băm — cùng nếp upsert gỡ retired_at của 044.
+    if (r && r.retired_at != null) {
+      const { rows: [tl] } = await client.query(
+        `UPDATE group_address_cards SET retired_at = NULL, retired_reason = NULL, version = version + 1
+          WHERE group_key = $1 AND status = 'nhap' AND retired_at IS NOT NULL RETURNING *`, [n.group_key]);
+      if (tl) {
+        await client.query(`INSERT INTO group_address_card_history (card_code, version, action, actor, before, after)
+                            VALUES ($1, $2, 'thuc_lai', $3, $4, $5)`, [tl.card_code, tl.version, ACTOR_MAY, banThe(r), banThe(tl)]);
+        dem.thuc_lai++;
+        theoKhoa.set(n.group_key, tl);
+      }
+      if (tl && tl.evidence_hash === h) { dem.khong_doi++; continue; }
+    } else if (r && r.evidence_hash === h) { dem.khong_doi++; continue; }
+    const truoc = theoKhoa.get(n.group_key) ?? r;
     const vals = [n.group_key, n.unit_code, n.du_an, n.phuong, n.tinh, n.phan_khu, n.muc_dich, n.evidence, h];
     const { rows: [moi] } = r
       ? await client.query(`UPDATE group_address_cards SET unit_code = $2, project_node_ids = $3, area_id = $4, province_area_id = $5,
@@ -103,8 +117,22 @@ export async function ghiNhap(client, nhap) {
       : await client.query(`INSERT INTO group_address_cards (group_key, unit_code, project_node_ids, area_id, province_area_id,
                               subzone_node_id, purpose, evidence, evidence_hash) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`, vals);
     await client.query(`INSERT INTO group_address_card_history (card_code, version, action, actor, before, after)
-                        VALUES ($1, $2, 'dung_nhap', $3, $4, $5)`, [moi.card_code, moi.version, ACTOR_MAY, r ? banThe(r) : null, banThe(moi)]);
+                        VALUES ($1, $2, 'dung_nhap', $3, $4, $5)`, [moi.card_code, moi.version, ACTOR_MAY, truoc ? banThe(truoc) : null, banThe(moi)]);
     if (r) dem.cap_nhat++; else dem.tao++;
+  }
+  // Thẻ của nhóm KHÔNG còn trong tập nháp: cho nghỉ, không xoá (Mạnh chốt 16/11 «thẻ rời tập thì cho nghỉ»). Chỉ thẻ đang
+  // nhap — thẻ người đã nhận, sửa hay bác là quyết định của người, giữ nguyên trong tập sống. Không có bước này thì bất biến
+  // «số thẻ sống = số nhóm thật có bài» của AC-7 vỡ vĩnh viễn ngay khi một nhóm thôi đủ điều kiện.
+  const conSong = new Set(nhap.map((n) => n.group_key));
+  for (const r of cu) {
+    if (r.status !== "nhap" || r.retired_at != null || conSong.has(r.group_key)) continue;
+    const { rows: [ng] } = await client.query(
+      `UPDATE group_address_cards SET retired_at = now(), retired_reason = $2, version = version + 1
+        WHERE group_key = $1 AND status = 'nhap' AND retired_at IS NULL RETURNING *`, [r.group_key, "nhom-khong-con-bai"]);
+    if (!ng) continue;
+    await client.query(`INSERT INTO group_address_card_history (card_code, version, action, actor, before, after)
+                        VALUES ($1, $2, 'nghi', $3, $4, $5)`, [ng.card_code, ng.version, ACTOR_MAY, banThe(r), banThe(ng)]);
+    dem.cho_nghi++;
   }
   return dem;
 }
@@ -128,6 +156,9 @@ async function main(argv) {
   try {
     const { rows: [k] } = await c.query(`SELECT to_regclass('group_address_cards') IS NOT NULL AS co`);
     if (!k.co) throw Object.assign(new Error("the-dia-chi-nhom: chưa có group_address_cards — DB chưa áp 108"), { code: "THIEU_DB" });
+    const { rows: [c109] } = await c.query(`SELECT count(*)::int n FROM information_schema.columns
+                                             WHERE table_name = 'group_address_cards' AND column_name = 'retired_at'`);
+    if (!c109.n) throw Object.assign(new Error("the-dia-chi-nhom: thiếu cột retired_at — DB chưa áp 109 (cho nghỉ thẻ rời tập)"), { code: "THIEU_DB" });
     const t0 = performance.now();
     const d = await docDuLieu(c);
     const nhap = dungTheoNhom(d);

@@ -16,7 +16,8 @@ if (!/\/oneinvest_suite_[a-z0-9_]+$/.test(DB_URL)) {
   throw new Error("the-dia-chi-nhom.itest: cần DATABASE_URL trỏ DB của riêng lượt oneinvest_suite_*, không chạy trên oneinvest");
 }
 const GOC = join(import.meta.dirname, "..", "..");
-const MIG = readFileSync(join(GOC, "db/migrations/108_the_dia_chi_nhom.sql"), "utf8");
+const MIG = readFileSync(join(GOC, "db/migrations/108_the_dia_chi_nhom.sql"), "utf8")
+  + "\n" + readFileSync(join(GOC, "db/migrations/109_the_dia_chi_nhom_cho_nghi.sql"), "utf8");
 const SCRIPT = join(GOC, "pipeline/scripts/the-dia-chi-nhom.mjs");
 
 let c;
@@ -180,5 +181,69 @@ test("TG1-AC-7 lệnh dựng nháp gạt bài thử: nhóm toàn bài thử khô
       await chay(await import(pathToFileURL(tep).href));
     } finally { rmSync(tep, { force: true }); }
     assert.equal((await theCua(k.thu)).length, 1, "bai-thu: bản đọc thẳng stg vẫn không dựng thẻ cho nhóm toàn bài thử — ca không phân biệt được");
+  });
+});
+
+test("TG1-AC-7 thẻ của nhóm rời tập được CHO NGHỈ chứ không xoá; thẻ đã quyết giữ nguyên; nhóm quay lại thì thẻ sống lại", { timeout: 600_000 }, async () => {
+  await trongGiaoDich(async () => {
+    await c.query(MIG);
+    const { k } = await fixture();
+    await chay();
+    const truoc = (await theCua(k.nhieu))[0];
+    assert.ok(truoc && truoc.retired_at === null, "TG1-AC-7: nhóm có bài phải có thẻ sống trước khi rời tập");
+    // Thẻ của nhóm «hai» cho người duyệt nhận — thẻ đã quyết KHÔNG bao giờ được cho nghỉ.
+    await c.query(`UPDATE group_address_cards SET status = 'da_duyet' WHERE group_key = $1`, [k.hai]);
+
+    // Hai nhóm rời tập nháp: bài của chúng hoá ra là bài thử (đúng ca đã xảy ra thật trên bản chép máy thu 16/11).
+    for (const khoa of [k.nhieu, k.hai]) await c.query(`UPDATE stg_zalo_posts SET group_name = 'TEST-G1' WHERE conversation_id = $1`, [khoa]);
+    const dem = await chay();
+
+    const sau = (await theCua(k.nhieu))[0];
+    assert.ok(sau, "TG1-AC-7: cho nghỉ không được XOÁ dòng thẻ");
+    assert.ok(sau.retired_at !== null, "TG1-AC-7: thẻ của nhóm rời tập phải nghỉ");
+    assert.equal(sau.retired_reason, "nhom-khong-con-bai");
+    assert.equal(sau.status, "nhap", "TG1-AC-7: thẻ nghỉ vẫn là nháp");
+    assert.equal(dem.cho_nghi, 1, "TG1-AC-7: đúng một thẻ được cho nghỉ (thẻ đã quyết không tính)");
+    const daQuyet = (await theCua(k.hai))[0];
+    assert.equal(daQuyet.retired_at, null, "TG1-AC-7: thẻ người đã quyết không được cho nghỉ");
+    const lsNghi = await mot(`SELECT count(*)::int n FROM group_address_card_history WHERE card_code = $1 AND action = 'nghi'`, [sau.card_code]);
+    assert.equal(lsNghi.n, 1, "TG1-AC-7: mỗi lượt nghỉ một dòng lịch sử");
+
+    // Bất biến của AC-7 trên chính DB này: thẻ SỐNG của fixture bằng đúng số nhóm lệnh còn dựng nháp cho fixture ấy.
+    // Thẻ đã quyết nằm ngoài tập nháp mà vẫn sống (thẻ của người), nên cộng riêng.
+    const pre = k.mot.replace(/-mot$/, "");
+    const nhapGio = (await dungTheoNhom(await docDuLieu(c))).filter((n) => n.group_key.includes(pre));
+    const song = await mot(`SELECT count(*)::int n FROM group_address_cards
+                             WHERE retired_at IS NULL AND group_key LIKE $1`, [`%${pre}%`]);
+    const daQuyetSong = await mot(`SELECT count(*)::int n FROM group_address_cards
+                                    WHERE retired_at IS NULL AND status <> 'nhap' AND group_key LIKE $1`, [`%${pre}%`]);
+    assert.equal(song.n, nhapGio.length + daQuyetSong.n,
+      `TG1-AC-7: thẻ sống ${song.n} ≠ nhóm còn trong tập nháp ${nhapGio.length} + thẻ người đã quyết ${daQuyetSong.n}`);
+
+    // Chạy lại khi không có gì rời tập: không nghỉ thêm thẻ nào (lệnh vẫn chạy lại được).
+    assert.equal((await chay()).cho_nghi, 0, "TG1-AC-7: chạy lại cho nghỉ thêm thẻ");
+
+    // Nhóm quay lại tập nháp → thẻ sống lại, giữ nguyên mã thẻ.
+    await c.query(`UPDATE stg_zalo_posts SET group_name = NULL WHERE conversation_id = $1`, [k.nhieu]);
+    const dem3 = await chay();
+    const lai = (await theCua(k.nhieu))[0];
+    assert.equal(lai.retired_at, null, "TG1-AC-7: nhóm quay lại mà thẻ vẫn nghỉ");
+    assert.equal(lai.card_code, truoc.card_code, "TG1-AC-7: thức lại phải giữ nguyên mã thẻ");
+    assert.equal(dem3.thuc_lai, 1, "TG1-AC-7: đếm thức lại sai");
+
+    // Đối chứng đỏ: bản sao lệnh bỏ hẳn vòng cho nghỉ → thẻ mồ côi ở lại tập sống.
+    await c.query(`UPDATE stg_zalo_posts SET group_name = 'TEST-G1' WHERE conversation_id = $1`, [k.nhieu]);
+    await c.query(`UPDATE group_address_cards SET retired_at = NULL, retired_reason = NULL WHERE group_key = $1`, [k.nhieu]);
+    const goc = readFileSync(SCRIPT, "utf8");
+    const pha = goc.replace(`    if (r.status !== "nhap" || r.retired_at != null || conSong.has(r.group_key)) continue;`,
+      "    continue;");
+    assert.notEqual(pha, goc, "cho-nghi: không phá được lệnh");
+    const tep = join(GOC, "pipeline/scripts", `.tg1-pha-cho-nghi-${process.pid}.mjs`);
+    writeFileSync(tep, pha);
+    try {
+      await chay(await import(pathToFileURL(tep).href));
+    } finally { rmSync(tep, { force: true }); }
+    assert.equal((await theCua(k.nhieu))[0].retired_at, null,
+      "cho-nghi: bản bỏ vòng cho nghỉ vẫn cho thẻ mồ côi nghỉ — ca không phân biệt được");
   });
 });

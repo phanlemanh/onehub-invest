@@ -33,9 +33,22 @@ type Ket = { status: number; body: Record<string, unknown> }
 type Db = Pick<Pool, "query">
 
 const coBang = async (db: Db) =>
-  Boolean((await db.query<{ co: boolean }>(`SELECT to_regclass('group_address_cards') IS NOT NULL AS co`)).rows[0]?.co)
+  Boolean(
+    (
+      await db.query<{ co: boolean }>(
+        // 108 dựng bảng, 109 thêm cột thẻ nghỉ — hai migration là MỘT bộ, áp cùng lượt. Thiếu cột thì coi như chưa áp:
+        // trang dừng ở «Chỉ ở máy thu» thay vì đọc thiếu rồi đếm cả thẻ của nhóm đã rời tập.
+        `SELECT to_regclass('group_address_cards') IS NOT NULL
+                AND EXISTS (SELECT 1 FROM information_schema.columns
+                             WHERE table_name = 'group_address_cards' AND column_name = 'retired_at') AS co`,
+      )
+    ).rows[0]?.co,
+  )
 
-/** Mọi thẻ, theo mã sổ rồi mã thẻ (nhóm chưa có trong sổ đứng cuối); null khi chưa có bảng thẻ (cloud, máy chưa áp 108). */
+/**
+ * Mọi thẻ SỐNG, theo mã sổ rồi mã thẻ (nhóm chưa có trong sổ đứng cuối); null khi chưa có bảng thẻ (cloud, máy chưa áp 108+109).
+ * Thẻ của nhóm đã rời tập nháp được cho nghỉ (`retired_at`) và không lên lưới — bộ đếm đầu trang phải khớp số lệnh dựng nháp in.
+ */
 export async function docTheDiaChi(db: Db = pool): Promise<TheDiaChi[] | null> {
   if (!(await coBang(db))) return null
   const { rows } = await db.query<TheDiaChi>(
@@ -50,6 +63,7 @@ export async function docTheDiaChi(db: Db = pool): Promise<TheDiaChi[] | null> {
             (SELECT json_build_object('id', a.id, 'name', a.name) FROM areas a WHERE a.id = t.province_area_id) AS tinh,
             (SELECT json_build_object('id', n.id::int, 'name', n.name) FROM asset_nodes n WHERE n.id = t.subzone_node_id) AS phan_khu
        FROM group_address_cards t
+      WHERE t.retired_at IS NULL
       ORDER BY t.unit_code NULLS LAST, t.card_code`,
   )
   return rows
