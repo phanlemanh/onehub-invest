@@ -26,6 +26,7 @@ const TEN_KIEM: Record<string, string> = {
   "enrich:proposal-assertion": "Đề xuất có phát biểu", // pipeline/bac-du-lieu.mjs (PL16)
   "data-level:distribution": "Phân bố bậc", // pipeline/bac-du-lieu.mjs (PL16)
   "so-chua-xac-minh": "Nhãn số chưa xác minh", // pipeline/sql/450_dq_checks.sql (070)
+  "s03-floor-fill": "Tầng của tin căn hộ S03", // pipeline/sql/450_dq_checks.sql (DV4, migration 095)
   // pipeline/do-danh-ba-sdt.mjs (SD5) — trục SĐT của danh bạ Người
   "danh-ba-sdt:n1": "Danh bạ SĐT: cặp một–một chưa gộp",
   "danh-ba-sdt:n2": "Danh bạ SĐT: người không có tin",
@@ -177,6 +178,8 @@ export function dqDetail(check: string, detail: string | null): DqText {
   if ((m = d.match(/^snapshot cuối (\d{4}-\d{2}-\d{2}) \((\d+) ngày, SLO (\d+)\)$/)))
     return { text: `Snapshot cuối ${m[1]} (${m[2]} ngày, SLO ${m[3]} ngày)`, known: true }
   if (d === "chưa có snapshot") return { text: "Chưa có snapshot", known: true }
+  if ((m = d.match(/^(\d+)\/(\d+) tin căn hộ S03 có tầng$/)))
+    return { text: `${nguyen(m[1])}/${nguyen(m[2])} tin căn hộ S03 có tầng (số tầng hoặc dải)`, known: true }
   if (d === "chưa có crosswalk S02 nào") return { text: "Chưa nối thị trường S02 nào", known: true }
   if ((m = d.match(/^our=(\w+) (?:s02|S02|airdna)_active=(\w+)\(([^)]*)\) universe=(\w+) history=(\w+)m coverage=([\d.]+%|n\/a) captured_age=(\w+|n\/a)d$/)))
     return {

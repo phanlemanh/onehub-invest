@@ -7,7 +7,7 @@ reason:
 verified_by: feature-loop:cham-lenh
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 6826a2a9e38a4fff5c02c402b2904f59ae4289ba
+verified_commit: 0f35ee9144b41ddf9f92ae9865ffe53699b762df
 human_signoff: Mạnh 2026-10-25
 ---
 
@@ -320,3 +320,7 @@ sha: 4819c9ceb992643c00d90dad5df0f834daf688bc · suites: 6 lệnh exit 0 · eval
 ### Re-pin lần 3 — 2026-10-31, do ghim lại sau gộp origin/main (333c9891)
 run_id: repin-20261031T033210Z-30899
 sha: 6826a2a9e38a4fff5c02c402b2904f59ae4289ba · suites: 6 lệnh exit 0 · evals: 13/13 eval máy đạt kỳ vọng
+
+### Re-pin lần 4 — 2026-11-12, do nhận main 3bfafd37 (sau #426, #423, #431)
+run_id: repin-20261112T125131Z-51828
+sha: 0f35ee9144b41ddf9f92ae9865ffe53699b762df · suites: 6 lệnh exit 0 · evals: 11/11 eval máy đạt kỳ vọng · không chạy theo hồ sơ: E11, E12 · thay bởi hồ sơ đã ký: E11→thuoc-lech-ma-nguon-va-lich-s05#AC-3, E12→thuoc-lech-ma-nguon-va-lich-s05#AC-3 · AC không có chốt máy: AC-9

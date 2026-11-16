@@ -97,6 +97,10 @@ phải tên thư mục (script thu của S02/S05/S06 nằm trong `pipeline/`).
 ## Luật bất biến
 
 1. **Raw snapshot BẤT BIẾN** — collector chỉ ghi mới, không sửa/xoá. Mọi diễn giải nằm ở pipeline.
+   **Ngoại lệ hạn giữ ảnh, video gốc** (Mạnh chốt 2026-11-11, «Cho xoá có hạn», ROADMAP §3 mục 46 QĐ8): tệp ảnh và video GỐC
+   có hạn giữ, hết hạn được xoá, mỗi lần xoá ghi sổ (băm, lý do, thời điểm). Giữ mãi: chữ bài, dữ liệu tin, manifest, ảnh thu
+   nhỏ, dấu vân tay ảnh, bộ ảnh chọn lọc, tư liệu dự án. Hạn giữ chưa chốt; lượt xoá thật chỉ chạy sau khi có bản sao lưu đã thử
+   khôi phục và có lời riêng của Mạnh. Collector vẫn chỉ ghi mới, không sửa.
 2. **Schema chỉ đổi qua migration mới** trong `db/migrations/` (số kế tiếp). Không sửa
    migration đã commit, không sửa tay DB production.
 3. **RESO-first (ADR-0011)**: field/enum mới phải tra RESO Data Dictionary trước; chỉ tạo
@@ -139,6 +143,9 @@ phải tên thư mục (script thu của S02/S05/S06 nằm trong `pipeline/`).
    **Gửi model đọc tin** (Mạnh chốt 2026-11-06, sửa đổi ADR-0007): chữ bài, ảnh, tên nhóm và tên nguồn in sẵn trong bài
    được gửi nguyên văn, không che, tới đúng ba model Haiku, DeepSeek V4.1 Flash, GLM-5.3 Flash. Không gửi hồ sơ user app,
    định danh tài khoản thu, phiên/khoá/QR, bảng giải mã nguồn. Mọi chỗ khác tầng A giữ nguyên.
+   **Bản sao lưu mã hoá** (Mạnh chốt 2026-11-11, sửa đổi ADR-0007; ROADMAP §3 mục 46 QĐ3): tầng A được rời máy CHỈ trong bản
+   sao lưu đã mã hoá ngay trên máy thu; khoá chỉ ở máy thu và một bản Mạnh giữ riêng, không lên cloud, kho git hay kênh nào.
+   Phạm vi: raw snapshot, kho gốc ảnh và tư liệu, bản dump DB. Mọi chỗ khác tầng A giữ nguyên.
 7. **LLM-off-data-path**: LLM/agent chỉ gate/judge/extract kèm audit + evidence; quyết định
    ghi dữ liệu đi qua người (`/ops/review`) hoặc luật xác định.
 8. **An toàn Zalo**: agent KHÔNG BAO GIỜ gửi tin vào nhóm xã hội (lockdown 7 lớp + watchdog;
@@ -178,6 +185,24 @@ Tính năng T2/T3 đi qua Acceptance-Gate Kit: contract → evals → evidence �
 kèm `_acceptance/<slug>/`. Tầng rủi ro, lệnh kiểm, `t3_paths`: `_acceptance/config.yaml`.
 `scripts/pre-merge-check.sh`, `scripts/product-map.mjs` … và `lib/*.cjs` là bản chép từ kit —
 không sửa tay, cập nhật bằng cách chép lại từ plugin. `PRODUCT-MAP.md` máy sinh.
+
+## Ai quyết gì: Mạnh ở cổng, giám sát chịu lộ trình (Mạnh chốt 2026-11-15, ROADMAP §3 mục 50)
+
+- **Mạnh chỉ xuất hiện ở các cổng**: Cổng Phạm vi, Cổng 1.5 (T3), Cổng Bằng chứng, Cổng Đáng và phiên nghiệm thu. Ngoài cổng,
+  agent không đem câu hỏi tới Mạnh; câu về cách làm thì gửi phiên giám sát.
+- **Phiên giám sát chịu hiệu quả lộ trình**: chọn việc theo đường găng của nhịp đang làm, cắt và gom hàng, thứ tự gộp, số dãy,
+  mở và dọn phiên. Báo tiến độ bằng con số trên màn, không bằng số PR đã gộp.
+- **Hàng trên đường găng xong khi con số trên màn đổi trên dữ liệu thật**, không xong ở «gộp». Hợp đồng ghi ô nào đổi, từ bao
+  nhiêu lên bao nhiêu, kèm lệnh đo. Hàng nền (test, CI, tài liệu) ghi rõ là miễn.
+- **Chữ ký Cổng Bằng chứng kèm luôn lời áp lên DB máy thu** đúng những gì hồ sơ đã ghi (migration, lượt ghi dữ liệu, thẻ luật).
+  Hồ sơ phải có đủ năm thứ: lệnh áp, số chạy thử, sao lưu trước, cách lùi, lệnh kiểm sau. Thiếu một thứ thì chữ ký không phủ
+  việc áp. Áp sau khi PR gộp, từ `main`; áp xong báo số thật cạnh số chạy thử; lệch thì dừng và báo, không tự sửa cho khớp.
+- **Vẫn cần lời riêng của Mạnh**: tiền; DDL hay ghi dữ liệu trên cloud (Supabase); xoá dữ liệu và mọi việc không lùi được; sửa
+  luật an toàn (tầng A, Zalo, raw snapshot). Các luật khác đang đòi lời riêng (gateway, plist launchd mới, khởi động lại dịch vụ
+  nền của máy, gỡ phanh `ops-apply`, sao lưu ra ngoài máy) giữ nguyên.
+- **Trước khi viết mã cho transform, bước khớp, lời gọi ngoài**: ở S1 lập bảng phủ ca (chiều × giá trị, số trong ô đếm từ DB máy
+  thu, không fixture viết tay; có cột «ai đọc đầu ra này phía sau»). Ô bỏ thì ghi «ngoài phạm vi, vì». Căn cứ:
+  `docs/research/dieu-tra-tien-do-cham-1511.md`.
 
 ## Lệnh
 

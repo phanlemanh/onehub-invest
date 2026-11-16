@@ -41,11 +41,17 @@ Field RESO đã xác minh (dd.reso.org): `SubdivisionName` (subdivision/communit
 > (không phải `ComplexName`, vốn không có ở DD 2.0 và ở DD 2.1 là tầng trên toà); Phân khu = `Building.ComplexName`
 > (DD 2.1), bỏ extension; thêm Trục căn = extension `Stack`. Phường/xã → `City`. Bảng dưới giữ để lưu vết.
 
+> **Sửa đổi 2026-11-11 (ROADMAP §3 mục 39)**: chữ hiển thị «**Dự án**» thay nhãn cũ (UI, văn xuôi, tiêu chí, CONTEXT);
+> khu đô thị, đại đô thị là quy mô của dự án. Chỉ đổi chữ: mã `project`, `asset_nodes.node_type`, RESO `SubdivisionName`, bảng, cột, URL giữ nguyên.
+> Phần khác chủ đầu tư hoặc mở bán riêng là **dự án con** trỏ dự án cha qua `parent_id` (cây không còn phẳng ở cấp
+> dự án); phần cùng chủ đầu tư là phân khu. Câu «cấm dùng làm danh pháp» dưới đây chỉ còn nghĩa: không tự suy tầng bậc
+> từ chữ «dự án» trong tin.
+
 "**Dự án**" bị cấm dùng làm danh pháp kỹ thuật đứng một mình. Bảng ánh xạ bắt buộc:
 
 | Thị trường gọi | Danh pháp nền tảng | `node_type` | RESO DD |
 |---|---|---|---|
-| "Dự án", "đại đô thị" (Ocean Park, Grand Park, Global City, PMH, Ecopark) | **Khu đô thị** — `project` | `project` | `SubdivisionName` |
+| "Dự án", "đại đô thị" (Ocean Park, Grand Park, Global City, PMH, Ecopark) | **Dự án** — `project` (quy mô khu đô thị, đại đô thị) | `project` | `SubdivisionName` |
 | "Dự án con", phần/phase (Sapphire, Beverly, The Rainbow) | **Phân khu** — `subzone` | `subzone` | — chưa có → extension (Qđ 3) |
 | "Tòa", "chung cư", "block" (S1.03, BE02) | **Tòa nhà** — `building` | `building` | `ComplexName` |
 | Phường/xã | `area` (bảng `areas`) | — | Country / StateOrProvince / City |
@@ -54,7 +60,7 @@ Quy tắc kèm theo:
 
 - Từ "dự án" gặp trong dữ liệu thô (tin đăng) **không được tự suy tầng bậc** —
   chỉ resolve qua matcher 2 tầng (project + subzone cùng lúc), vì tên phân khu
-  trùng lặp giữa các khu đô thị (Sapphire/Rainbow/Beverly ở cả Ocean Park lẫn
+  trùng lặp giữa các dự án (Sapphire/Rainbow/Beverly ở cả Ocean Park lẫn
   Grand Park).
 - Key là `slug`/`node_id`; tên hiển thị và alias chỉ là metadata. Alias lưu
   NFC + lowercase (bài học NFC/NFD của parser).
@@ -63,7 +69,7 @@ Quy tắc kèm theo:
   quan hệ pháp nhân.
 - **Hai trục địa lý song song, không thay nhau**: `area` (phường — hành chính,
   ruler toàn thị trường) ∥ `asset_nodes` (thị trường sản phẩm, benchmark trong
-  khu đô thị). `asset_nodes.area_ids` là mảng (một khu đô thị đè nhiều phường).
+  dự án). `asset_nodes.area_ids` là mảng (một dự án đè nhiều phường).
 
 ## Quyết định 3 — Quy trình tạo mới (local extension)
 

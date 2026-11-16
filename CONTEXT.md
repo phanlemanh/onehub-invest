@@ -46,13 +46,30 @@ _Avoid_: quận, huyện
 - Ghi chú: Tham số URL `area` luôn là mã khu vực địa lý — diện tích căn dùng `livingArea`.
 _Avoid_: địa bàn, region
 
-**Khu đô thị**: Đại đô thị một chủ đầu tư phát triển (Ocean Park, Ecopark) — `asset_nodes.node_type = project`. Trục song song với khu vực, không thay phường (ADR-0011 Qđ 2).
+**Dự án**: Một dự án bất động sản do một chủ đầu tư phát triển và mở bán (Ocean Park 1, Grand Park, Ecopark) — `asset_nodes.node_type = project`. Trục song song với khu vực, không thay phường (ADR-0011 Qđ 2). Khu đô thị, đại đô thị là quy mô của dự án, không phải một cấp riêng. Phần khác chủ đầu tư hoặc mở bán riêng là dự án con, trỏ dự án cha qua `parent_id`; phần cùng chủ đầu tư là phân khu (ROADMAP §3 mục 39 Hỏi-2). Chỉ đổi chữ hiển thị: mã `project`, tên bảng, cột, URL không đổi (mục 39 Hỏi-1).
 - Code: `project` · RESO: SubdivisionName
-_Avoid_: dự án, đại đô thị
+- Ghi chú: trạng thái theo vòng đời là huy hiệu («Trạng thái dự án»), nhãn «Dự án» không đổi; dự án hiện trên Invest khi đạt tiêu chí của mục 39 (kế hoạch thi công bản 2).
+_Avoid_: đại đô thị
 
-**Phân khu**: Một phần/phase trong khu đô thị (Sapphire, The Rainbow) — `node_type = subzone`. Tên phân khu trùng giữa các khu đô thị nên chỉ resolve qua matcher 2 tầng.
+**Phân khu**: Một phần/phase của dự án do cùng chủ đầu tư phát triển (Sapphire, The Rainbow) — `node_type = subzone`. Khác chủ đầu tư hoặc mở bán riêng thì là dự án con, không phải phân khu. Tên phân khu trùng giữa các dự án nên chỉ resolve qua matcher 2 tầng.
 - Code: `subzone` · RESO: Building.ComplexName / ComplexId (DD 2.1 — ADR-0013 §2)
-_Avoid_: dự án con, phase
+_Avoid_: phase
+
+**Danh mục dự án**: Danh sách dự án, toà, căn mà một nguồn danh mục công bố (chủ đầu tư hay nhà nước; hôm nay S08, sau thêm S07, S09) — là bằng chứng để dựng danh bạ và nối dự án, không phải danh bạ. Thông tin dự án trong danh mục là công khai (mục 38); tên nguồn thật vẫn tầng A.
+- Code: `stg_s08_inventory`, `s08_project_links` · RESO: không có (bản ghi nguồn, nối vào resource local của danh bạ)
+_Avoid_: giỏ hàng
+
+**Mức gắn**: Mức sâu nhất một tin gắn được vào danh bạ: căn · trục · toà · phân khu · dự án · xã/phường. Gắn dự án hay toà chỉ tăng mức gắn, chưa phải B2 (B2 là gắn được căn — FRAMING). Chỉ số chính của danh bạ dự án là phân bố tin theo mức gắn, mỗi đêm theo nguồn × loại nhà (DA9).
+- Code: phát biểu `UniversalPropertySubId` · `UniversalPropertyId` · `subzone_node_id` · `project_node_id` · `area_id` trên tin · RESO: UPI + SubdivisionName / ComplexName + City
+_Avoid_: mức khớp
+
+**Trạng thái dự án**: Huy hiệu vòng đời cạnh nhãn «Dự án»: «Sắp mở bán» · «Đang mở bán» · «Đã bàn giao». URL, tìm kiếm và bộ lọc không đổi theo trạng thái (mục 39).
+- Code: phát biểu trên nút dự án · RESO: DevelopmentStatus + extension SalesStatus, HandoverDate
+_Avoid_: tình trạng dự án
+
+**Mã định danh nhà nước**: Mã do cơ quan nhà nước cấp và công bố cho một vật thể: mã công trình cho toà (`BuildingId`), mã nhà ở cho căn (bí danh `ma_nha_nuoc`), số thửa (`ParcelNumber`). Thu từ phần công khai của nguồn nhà nước (DA24); là bí danh của danh bạ, không thay khoá mờ.
+- Code: `BuildingId`, bí danh `ma_nha_nuoc`, `ParcelNumber` · RESO: BuildingId, ParcelNumber; `ma_nha_nuoc` không có (bí danh local)
+_Avoid_: mã nhà nước
 
 **Tòa nhà**: Một công trình — tòa chung cư (S1.03, BE02), nhà phố, nhà trọ; cấp `building` của danh bạ vật thể (ADR-0016; 3 dòng `asset_nodes.node_type = building` thực là phân khu Grand Park, ở lại họ Vùng — ADR-0016 §3 sửa 07/11). Mã tòa thô trong tin nằm ở `block_raw`. Nhà phố nguyên căn gắn ở mức tòa.
 - Code: `building` · RESO: resource Building (BuildingName, BuildingKey, BuilderName) (ADR-0013 §2, ADR-0016 §2)
@@ -61,6 +78,14 @@ _Avoid_: block, chung cư
 **Trục căn**: Các căn cùng toà, cùng vị trí trên mặt bằng, khác tầng (cùng diện tích, số phòng). Môi giới thường lộ toà + trục mà che tầng («LD2xx11»), nên tin nhiều khi chỉ gắn được tới trục.
 - Code: `stack` · RESO: không có — extension `Stack` (ADR-0013 §9)
 _Avoid_: line căn, dòng căn
+
+**Tầng (của tin)**: Tầng nơi căn rao nằm, đọc từ chữ bài («tầng 12», «lầu 5») hoặc từ mã căn đủ («S1.12.08»), lưu là số 1–999. Nhãn UI «Tầng».
+- Code: `floor_raw` · RESO: UnitFloorLocation (DD 2.1)
+_Avoid_: số tầng (đó là `stories` — tổng tầng của nhà), lầu
+
+**Dải tầng**: Tầng nói theo khoảng khi môi giới không nêu số: «tầng thấp», «tầng trung», «tầng cao». Chỉ ghi khi bài không có số tầng. Nhãn UI «Dải tầng».
+- Code: `floor_band` (`lower` · `middle` · `upper`) · RESO: không có — extension (ADR-0011)
+_Avoid_: khoảng tầng, cao tầng (là loại toà)
 
 **Thửa**: Một mảnh đất — cấp `parcel` của danh bạ vật thể; tin đất gắn ở thửa. Chưa nối thửa với tòa nhà phố khi chưa có số nhà, số thửa (ADR-0016 §2).
 - Code: `parcel` · RESO: ParcelNumber; resource local `Parcel` (ADR-0016 §11)
@@ -88,7 +113,7 @@ _Avoid_: alias (trên UI)
 
 **Căn nhà**: "Một Căn Nhà" — đơn vị phân tích của nền tảng: nút vật thể trong danh bạ mà listing gắn vào — căn (căn hộ, phòng), tòa (nhà phố nguyên căn) hay thửa (đất); nhiều listing từ nhiều nguồn gộp về một căn nhà, nguồn chỉ là bằng chứng (ROADMAP §1.7, ADR-0016). Bảng `properties` hiện chứa cụm tin S06 do máy tự dựng (gom cụm) — cụm không phải căn đã gắn; bảng chuyển dần thành view trên danh bạ (FRAMING §3.4, 08/11).
 - Code: `property` · RESO: định danh UPI (`UniversalPropertyId` + `UniversalPropertySubId`) + resource Building — **không phải** resource Property, vốn là một tin (ADR-0013 §1)
-- Ghi chú: `asset_nodes` là cây khu đô thị/phân khu, không phải căn nhà — vì thế "asset" bị loại.
+- Ghi chú: `asset_nodes` là cây dự án/phân khu, không phải căn nhà — vì thế "asset" bị loại.
 _Avoid_: tài sản, bất động sản, BĐS, asset
 
 **Gắn căn**: Tin khớp đúng một căn của danh bạ bằng định danh duy nhất — dự án + toà + mã căn, hoặc số nhà + đường + phường; là bậc B3 (FRAMING §3.4, Mạnh chốt 08/11: «gắn được căn là đã nhận diện duy nhất, như có số nhà, có mã căn»). Mã căn hay số nhà có trong chữ tin là điều kiện cần, chỉ tính khi khớp một căn có thật trong danh bạ; tin mang định danh mà chưa khớp là «chờ khớp». Gom trùng và gom cụm không phải gắn căn.
@@ -100,6 +125,11 @@ _Avoid_: gắn cụm, linked (trên UI)
 - Code: `located` (khối `dataFlow`), chờ khớp: `locatedPending` · RESO: `SubdivisionName`, `BuildingName`
 - Slug URL: — (không có trang riêng; số hiện trên trang Dòng chảy dữ liệu)
 _Avoid_: gắn toà, căn suy ra
+
+**Định vị (cấp dự án)**: Mức định vị hiện có từ 15/11: tin có đúng một dự án gốc trong nguồn chung «dự án của tin» — S03, S05 qua phát biểu dự án trên bài, S06 qua mã dự án nguồn đã nối nút. Tin có bài mang hai dự án gốc khác nhau là «xung đột», không định vị. Nút phân khu, toà quy về dự án gốc. Cấp toà, trục chưa có, nên «chờ khớp» vẫn đếm tin ghi toà, trục chưa khớp nút toà, kể cả tin đã định vị cấp dự án.
+- Code: view `offer_project` (`status` `mot_du_an` · `xung_dot`), `offer_located()`; trên màn: cột `located` · RESO: `SubdivisionName`
+- Slug URL: — (số hiện trên trang Dòng chảy dữ liệu)
+_Avoid_: định vị toà (khi mới tới dự án), gắn dự án
 
 **Gom cụm**: Máy gom các tin trông giống nhau (cùng vùng, loại, diện tích, giá) thành một cụm — công cụ gợi ý cho bước định vị, **không phải một bậc** và không đưa tin lên bậc nào. Trên trang Dòng chảy chỉ đếm tin nằm trong cụm có từ hai tin sống; cụm một tin không tính. Khác gom trùng (bài đăng lại, trùng nội dung gộp thành một tin — nằm trong B1).
 - Code: `clustered` (khối `dataFlow`), cụm ở bảng `properties` · RESO: không có
@@ -179,10 +209,22 @@ _Avoid_: bí danh SĐT (đó là khoá định danh), số phụ
 **Tài khoản nhiều tên**: Chữ thay tên người đăng khi một tài khoản nguồn mang từ ba tên trở lên, nên không tên nào đáng tin. Tin không có tên thì ghi «Chưa có tên».
 - Code: `sellerManyNames`, `OFFER_MANY_NAMES`
 
-**Căn giá tốt**: Tin rao giá nội bộ (P1) có giá/m² thấp hơn thước giá cùng phường và loại hình. Hiện chỉ ở cổng Ops (PR #3); từ 23/10 liên hệ người bán là tầng C nên có thể đưa lại lên cổng công khai.
-- Code: `deal` · RESO: không có — chỉ số nội bộ
+**Căn giá tốt**: Tin rao bán (P1 và P2) mang nhãn hạng giá: giá nằm trong 20% thấp nhất của nhóm so sánh và thấp hơn trung vị nhóm từ 5%, nhóm từ 10 căn (ROADMAP §3 mục 42 Q1–Q3). Nhóm cấp phường mang nhãn «Rẻ trong phường»; nhãn «Giá tốt» chỉ từ cấp dự án trở xuống (CG10). Danh sách ở cổng Ops; bảng hạng chưa có thì danh sách lùi về thước giá cùng phường × loại hình của CG8.
+- Code: `deal` · `offer_price_rank.nhan` · RESO: không có — chỉ số nội bộ
 - Slug URL: `deals`
 _Avoid_: deal tốt, kèo
+
+**Hạng giá**: Vị trí giá của một tin trong nhóm so sánh, tính sẵn ở pipeline cho mọi tin đang rao (bán và thuê): số căn của nhóm, trung vị, p20, phần trăm hạng (0 = rẻ nhất), phần trăm dưới trung vị, nhãn và lý do lùi cấp hay không chấm. Nhóm từ 10 căn có nhãn; 5–9 căn chỉ có số; dưới 5 không chấm.
+- Code: `offer_price_rank` (migration 104) · `pipeline/sql/420_price_rank.sql` · `xep-hang-gia.mjs` · `rank` (API) · RESO: không có — chỉ số nội bộ
+_Avoid_: điểm giá, xếp loại
+
+**Nhóm so sánh**: Tập căn mà một tin được so giá: cùng nút vị trí sâu nhất đủ căn (hôm nay là phường; dự án, phân khu, toà ở CG10, CG11), cùng loại hình, cùng bán hay thuê, thêm cùng số phòng ngủ khi nhóm ấy đủ 10 căn. Mỗi căn một phiếu, chung P1 và P2. Tin thuê thiếu m² so giá thuê tháng trong nhóm cùng số phòng ngủ.
+- Code: `cap`, `nut`, `pn_nhom`, `thuoc` (`gia-m2`, `gia-thang-pn`) của `offer_price_rank` · RESO: không có — chỉ số nội bộ
+_Avoid_: thước phường (đã là nhóm), bucket
+
+**Rẻ trong phường**: Nhãn hạng giá ở nhóm cấp phường — cùng điều kiện với Căn giá tốt (20% thấp nhất, dưới trung vị từ 5%, nhóm từ 10 căn) nhưng chênh giá cấp phường còn gồm chênh giữa các dự án, nên chưa gọi là «Giá tốt».
+- Code: `re-trong-phuong` (`offer_price_rank.nhan`) · `NHAN_HANG` · RESO: không có — chỉ số nội bộ
+_Avoid_: giá tốt (dành cho cấp dự án trở xuống)
 
 **Kiểm chất lượng**: Một phép kiểm dữ liệu chạy định kỳ ở pipeline (độ tươi, từ vựng enum, số tham chiếu…), ghi kết quả theo từng đối tượng (bảng, nguồn, thị trường). Bảng «Kiểm chất lượng» trên `/ops/quality` hiện bản mới nhất của mỗi kiểm cho từng đối tượng trong 7 ngày; đầu trang đếm «n kiểm» (loại kiểm) và «m đối tượng» (dòng).
 - Code: `dq_check_results` · `check_name` · `entity` · RESO: không có — chỉ số nội bộ
@@ -193,8 +235,8 @@ _Avoid_: DQ check, test dữ liệu
 - Code: `dqResult("truthful-coverage", "pass")` (`app/src/lib/dq-checks.ts`) · RESO: không có — chỉ số nội bộ
 _Avoid_: «Đạt» (cho kiểm này), độ phủ đạt
 
-**Tin cần xác minh**: Căn giá tốt rẻ hơn thước giá quá 35% — vẫn hiện trên danh sách nhưng đứng sau mọi căn giảm đến 35%, hàng mang nhãn «Cần xác minh». Giảm sâu như vậy thường là so lệch loại hình (thước còn theo phường) hơn là căn rẻ thật; người vận hành gọi xác minh trước khi tin số. Tin rao có diện tích hay số phòng phi lý không phải tin cần xác minh: chúng bị loại khỏi danh sách, có dòng audit lý do.
-- Code: `suspect` · `NGHI_NGO_PCT = 35` (`app/src/lib/deals-chi-tiet.ts`, `deals.ts` xuất lại) · RESO: không có — chỉ số nội bộ
+**Tin cần xác minh**: Căn giá tốt rẻ hơn trung vị nhóm so sánh quá 35% — vẫn mang nhãn và vẫn hiện trên danh sách (mỏ neo 14/11 QĐ3: không giấu), đứng sau mọi căn giảm đến 35%, hàng mang nhãn «Cần xác minh»; người vận hành gọi xác minh trước khi tin số. Tin rao có diện tích hay số phòng phi lý không phải tin cần xác minh: chúng không được chấm hạng, lý do `phi-ly:<lý do>`.
+- Code: `suspect` · `can_xac_minh` (`offer_price_rank`) · `NGHI_NGO_PCT = 35` (`app/src/lib/deals-chi-tiet.ts`, `deals.ts` xuất lại) · RESO: không có — chỉ số nội bộ
 - Nhãn số lần đăng: «đăng 1 lần», «đăng n lần» (`repostLabel`)
 _Avoid_: tin nghi ngờ, tin ảo, «mới» (để chỉ tin chưa đăng lại)
 
@@ -297,6 +339,20 @@ _Avoid_: loại người bán
 - Tham số URL: `bedrooms`
 - Ghi chú: Tham số URL của /yield đang là `pn` → đổi `bedrooms` khi dọn nhóm trang.
 
+**Tin sơ cấp**: Một căn chủ đầu tư đang chào bán trực tiếp (quỹ căn trong danh mục S08), gắn đúng căn, mang giá chủ đầu tư và trạng thái quỹ (DA17). Không vào danh sách Bán, thước giá hay metrics; giá và quỹ căn hiện ở trang dự án, danh bạ (mục 39 Hỏi-3, mục 40 Q3). Khác tin thứ cấp do người bán, môi giới rao lại.
+- Code: tin có `MarketTier = primary` · RESO: resource Property + extension MarketTier
+_Avoid_: tin chủ đầu tư
+
+**Độ đủ hồ sơ**: Mức đầy đủ thông tin của một dự án theo bảy nhóm (danh tính, vị trí, phân loại và quy mô, pháp lý, tiến độ, sản phẩm sơ cấp và giá, mô tả và media); mỗi nhóm là trống, một nguồn, nhiều nguồn khớp hay mâu thuẫn; gộp thành mức hồ sơ M0 (có tên) tới M5 (đang bán) (DA20).
+- Code: thước DA20 · RESO: không có
+_Avoid_: điểm hồ sơ
+
+**Bẫy tên RESO**: Bốn chỗ tên field RESO dễ hiểu sai — đọc trước khi khai field mới (mục 40, ADR-0011):
+- `Duplex` của PropertySubType là nhà hai hộ (một toà hai căn), không phải căn hộ hai tầng; căn duplex là giá trị local của `UnitTypeType`.
+- `YearBuilt` là năm công trình được phép đưa vào sử dụng, không phải năm khởi công hay năm bàn giao căn.
+- `NewConstructionYN` chỉ công trình mới xây, khác sơ cấp/thứ cấp (tin sơ cấp là `MarketTier`).
+- `PropertySubtype` (resource Building, chữ t thường) khác `PropertySubType` (resource Property) chỉ ở một chữ hoa; tra đúng resource trước khi dùng.
+
 ## Giá
 
 **Giá rao**: Giá ghi trong tin rao, VND (bigint).
@@ -325,7 +381,8 @@ _Avoid_: giá vải
 - Code: `price_perm2` · RESO: SalePricePerArea / LeasePricePerArea + PricePerAreaUnit (DD 2.1) — vẫn tự tính
 _Avoid_: đơn giá
 
-**Thước giá**: Trung vị giá/m² giá công khai (P2) cùng phường × loại hình, cần n ≥ 5 (view `v_ruler_p2_*`). Thước để đo căn giá tốt.
+**Thước giá**: Trung vị của nhóm so sánh mà hạng giá dùng: giá/m² cho tin bán và tin thuê có m², giá thuê/tháng theo số phòng ngủ cho tin thuê thiếu m² (QĐ4 14/11); mỗi căn một phiếu, chung P1 và P2 (CG9, bảng `offer_price_rank`). Thước cũ của CG8 — trung vị giá/m² P2 cùng phường × loại hình, n ≥ 5 (view `v_ruler_p2`) — còn là lối lùi khi bảng hạng chưa có hay rỗng.
+- Ghi chú: Sửa 14/11 (ROADMAP §3 mục 48, QĐ4); CG9 viết lại theo nhóm so sánh, CG10 thêm cấp dự án.
 - Code: `ruler` · RESO: không có — chỉ số nội bộ
 _Avoid_: ruler
 
@@ -436,7 +493,7 @@ Mọi enum dữ liệu (loại tin, loại hình, trạng thái chào…) khai �
 | Độ tin trích xuất | `confidence` | local | `sale_offers.confidence` | `high` «cao» · `medium` «trung bình» · `low` «thấp» |
 | Bậc giá | `price_tier` | local | `sale_offers.price_tier` | `P0` «giá giao dịch (P0)» · `P1` «giá nội bộ (P1)» · `P2` «giá công khai (P2)» |
 | Trường làm giàu | `enrich_field` | local | `enrichment_proposals.field` | `property_type` «Loại hình» · `bedrooms` «Phòng ngủ» · `bathrooms` «WC» · `street_raw` «Đường» · `block_raw` «Toà» |
-| Trường phát biểu | `assertion_field` | local | `field_assertions.field` | `property_type` «Loại hình» · `bedrooms` «Phòng ngủ» · `bathrooms` «WC» · `street_raw` «Đường» · `block_raw` «Toà» · `offer_status` «Trạng thái chào» · `street_number` «Số nhà» · `unit_number` «Mã căn» · `frontage_length` «Mặt tiền» · `lot_size_dimensions` «Ngang × dài» · `stories` «Số tầng» · `latitude` «Vĩ độ» · `longitude` «Kinh độ» · `builder_name` «Chủ đầu tư» · `area_id` «Phường của toà» |
+| Trường phát biểu | `assertion_field` | local | `field_assertions.field` | `property_type` «Loại hình» · `bedrooms` «Phòng ngủ» · `bathrooms` «WC» · `street_raw` «Đường» · `block_raw` «Toà» · `offer_status` «Trạng thái chào» · `street_number` «Số nhà» · `unit_number` «Mã căn» · `frontage_length` «Mặt tiền» · `lot_size_dimensions` «Ngang × dài» · `stories` «Số tầng» · `latitude` «Vĩ độ» · `longitude` «Kinh độ» · `builder_name` «Chủ đầu tư» · `area_id` «Phường» · `floor_raw` «Tầng» · `floor_band` «Dải tầng» · `project_node_id` «Dự án» · `subzone_node_id` «Phân khu» |
 | Lớp căn cứ | `evidence_tier` | local | `field_assertions.evidence_tier`, `party_roles.evidence_tier` | `fact` «Sự thật» · `observed` «Quan sát có trích dẫn» · `inferred` «Suy luận» |
 | Phương pháp phát biểu | `assertion_method` | local | `field_assertions.method`, `party_roles.method` | `hitl` «Người quyết» · `source_field` «Trường có cấu trúc của nguồn» · `parser` «Bộ đọc tin» · `e1_rule` «Luật E1» · `e2_llm` «LLM E2» · `legacy` «Giá trị có trước» · `registry_inherit` «Kế thừa từ danh bạ» |
 | Trạng thái danh bạ | `registry_status` | local | `parties.status`, `buildings.status`, `stacks.status`, `units.status` | `active` «Đang dùng» · `merged` «Đã gộp» · `split` «Đã tách» · `retired` «Đã nghỉ» |
@@ -453,6 +510,7 @@ Mọi enum dữ liệu (loại tin, loại hình, trạng thái chào…) khai �
 | Bậc năng lực | `capability_level` | local | — | `N0` «Thu được» · `N1` «Đọc được» · `N2` «Đo được» · `N3` «Tự động ở ngưỡng» · `N4` «Tự duy trì» |
 | Nội thất | `furnished` | Furnished | — | `furnished` «Đủ nội thất» · `partially` «Nội thất cơ bản» · `unfurnished` «Nhà trống» · `negotiable` «Thoả thuận» |
 | Hướng | `direction_faces` | local | — | `east` «Đông» · `west` «Tây» · `south` «Nam» · `north` «Bắc» · `northeast` «Đông Bắc» · `southeast` «Đông Nam» · `northwest` «Tây Bắc» · `southwest` «Tây Nam» |
+| Dải tầng | `floor_band` | local | — | `lower` «Tầng thấp» · `middle` «Tầng trung» · `upper` «Tầng cao» |
 | View | `view` | View | — | `city` «Thành phố» · `lake` «Hồ» · `river` «Sông» · `park_greenbelt` «Công viên» · `garden` «Vườn, nội khu» · `pool` «Bể bơi» · `panoramic` «Toàn cảnh» · `other` «Khác» |
 | Phí đã gồm | `rent_includes` | RentIncludes | — | `management` «Phí quản lý» · `electricity` «Điện» · `water` «Nước» · `internet` «Internet» · `none` «Không gồm gì» · `other` «Khác» |
 | Cơ sở giá | `price_basis` | local | — | `net` «Thu về (NET)» · `gom_phi` «Đã gồm phí» · `chua_gom_phi` «Chưa gồm phí» |
@@ -531,7 +589,7 @@ người giữ hay sửa. Ra tỉ lệ giữ nháp và tỉ lệ tin rao bị b�
 _Avoid_: rolling sample, mẫu mù
 
 **Đo hằng ngày**: khối của «Chất lượng dữ liệu» hiện bốn nhóm số tính sẵn mỗi ngày — giữ nháp, bỏ sót, tín hiệu không cần
-nhãn, dòng chuyển bậc — cùng so cặp trước/sau; chọn lát Tổng · Thị trường · Phường/xã · Khu đô thị · Toà (tham số `lat-do`).
+nhãn, dòng chuyển bậc — cùng so cặp trước/sau; chọn lát Tổng · Thị trường · Phường/xã · Dự án · Toà (tham số `lat-do`).
 - Code: `pipeline/do-hang-ngay.mjs`, `dq_check_results` `do1-*`, `app/src/lib/do-hang-ngay.ts` · RESO: —
 _Avoid_: dashboard đo, KPI hằng ngày
 
@@ -771,13 +829,25 @@ Nhãn tự vận hành từ xa — thêm ở TV0 `adr-duong-lenh-keo` (26/10, AD
 **Đơn vị thu**: Một thứ mà một nguồn thu theo nó và người vận hành bật/tắt được: nhóm S03 hay S05, vùng S06, market S02. Mỗi đơn vị có một mã ngắn do máy sinh, ổn định, không tái dùng, dạng `S03-N012` (N nhóm · V vùng · M market), hiện ở cả máy chủ lẫn máy thu. Tiêu đề sửa được, mã thì không. Sổ đơn vị thu là một bảng chung cho mọi nguồn (PL12).
 - Code: `collection_unit (collection_units: unit_code, unit_type nhom|vung|market, group_key = khoá theo nguồn, market_codes, project_node_ids)` · RESO: —
 - Slug URL: `units`
-- Ghi chú: «Nhóm thu» vẫn là nhãn của một đơn vị loại nhóm (S03, S05) trên `/ops/sources`; «Đơn vị thu» là nhãn chung khi câu nói về mọi loại. Khu «Sổ đơn vị thu» trên `/ops/sources` hiện mọi đơn vị; «Khai thị trường, khu đô thị» gắn thị trường và khu đô thị nhóm chuyên về (PL12).
+- Ghi chú: «Nhóm thu» vẫn là nhãn của một đơn vị loại nhóm (S03, S05) trên `/ops/sources`; «Đơn vị thu» là nhãn chung khi câu nói về mọi loại. Khu «Sổ đơn vị thu» trên `/ops/sources` hiện mọi đơn vị; «Khai thị trường, dự án» gắn thị trường và dự án nhóm chuyên về (PL12; chữ trên Ops đổi ở hàng `nhan-du-an-thay-khu-do-thi-ops`).
 _Avoid_: collection unit, source group
 
 **Lệnh**: Một ý muốn ghi có khuôn mà người vận hành gửi trên máy chủ (tạm dừng nguồn, bật một đơn vị thu, đổi lịch…). Máy thu kéo lệnh đã duyệt về, kiểm bất biến, áp, rồi báo kết quả. Lệnh đi theo vòng nháp → đã gửi → đã duyệt → chờ áp → đang áp → đã áp; nhánh phụ là bị từ chối, hoặc lỗi rồi tự hoàn tác. Hoàn tác là một lệnh đảo mới. Không có lệnh tự do (ADR-0015).
 - Code: `change_request (change_requests)` · RESO: —
 - Slug URL: `change-requests`
 _Avoid_: change request, yêu cầu thay đổi
+
+**Tạm dừng nguồn** / **Bật lại nguồn**: Hai lệnh dừng và cho chạy lại mọi lượt thu của một mã nguồn. Người vận hành bấm ở cột «Thao tác» của bảng Sức khoẻ nguồn trên `/ops/collections`, ghi lý do. Người gửi tự duyệt sau khi xem trước → sau, trừ lệnh nhắm S03 (cần người thứ hai). Bật lại cần quản trị viên. Trong dòng trước → sau của lệnh, `active` hiện «Đang chạy» (nói về việc thu); danh mục nguồn vẫn ghi «Đang dùng» (TV4b).
+- Code: `source.pause` · `source.resume` (loại `change_requests.type`); lý do ở `payload.reason` (tạm dừng) và `note` · RESO: —
+_Avoid_: tắt nguồn, khoá nguồn, kill
+
+**Lệnh gần đây**: Vùng dưới bảng Sức khoẻ nguồn liệt kê 20 lệnh mới nhất kèm tiến trình: chờ duyệt → chờ máy thu nhận → máy thu đã nhận → đã áp (hoặc không áp được, bị từ chối, đã hoàn lại) (TV4b).
+- Code: `LenhGanDay` (`components/ops/collections/lenh-gan-day.tsx`), nhãn từ `trangThaiLenh` (`lib/lenh-hien.ts`) · RESO: —
+_Avoid_: lịch sử lệnh, nhật ký lệnh
+
+**Thao tác**: Tiêu đề cột hành động của một bảng Ops — chứa nút cho từng hàng (vd Tạm dừng, Bật lại); chỉ hiện với vai được làm.
+- Code: cột `thao-tac` · RESO: —
+_Avoid_: Actions
 
 **Token máy**: Chìa riêng của một máy thu, đặt theo tên (vd `may-thu-1`), để máy ấy kéo lệnh đã duyệt và gửi kết quả lên máy chủ. Mỗi token mang quyền hẹp (`ops:pull`), thu hồi riêng được, máy chủ chỉ giữ bản băm. Khác mật khẩu chung của máy nạp số: mật khẩu chung bị từ chối ở mọi cửa của đường lệnh (ADR-0015, TV4).
 - Code: `machine_token (machine_tokens: name, token_hash, scopes, revoked_at, last_used_at)` · RESO: —
@@ -823,7 +893,7 @@ _Avoid_: ngày bàn giao (là một trường hợp của ngày vào ở)
 - Ghi chú: Không gọi `review_queue.item_id` (dạng `nguoi:<S0x>:<băm>` của thẻ Người HD17 ở màn duyệt) là mã thẻ — đó là khoá dòng nguồn của thẻ duyệt, nghĩa khác. Chú thích ở `app/src/lib/ops/review-queue.ts` còn dùng chữ cũ, sửa khi có việc chạm tệp đó.
 _Avoid_: mã mẫu, ID thẻ, item id
 
-**Thẻ nhóm**: Đoạn mô tả một nhóm S03 trong sổ đơn vị thu: nhóm chuyên khu đô thị nào, thành viên hiểu ngầm gì. Chỉ hiện ở lượt hai, để nhãn không bị thẻ dẫn dắt; người gắn trả lời thẻ đúng, sai hay chưa xét được.
+**Thẻ nhóm**: Đoạn mô tả một nhóm S03 trong sổ đơn vị thu: nhóm chuyên dự án nào, thành viên hiểu ngầm gì. Chỉ hiện ở lượt hai, để nhãn không bị thẻ dẫn dắt; người gắn trả lời thẻ đúng, sai hay chưa xét được.
 - Code: `collection_units.note`, trả lời ở `eval_label_cases.group_card_verdict`
 
 **Trường hợp**: Loại tình huống người gắn ghi sau khi so nhãn của mình với máy đọc, như bí danh viết tắt hay mặc định theo nhóm. Không làm đổi nhãn đã lưu; là đầu vào để viết quy ước nhóm.

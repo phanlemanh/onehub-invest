@@ -66,7 +66,7 @@ async function tinMoi({ payload, toilets = 3, latitude = 21.0285, longitude = 10
     VALUES ($1, 12000, 'vn-hanoi', 1020, 's', 'Bán nhà', 5100000000, 60, 3, $2, $3, $4, $5, $6, '2026-10-25T00:00:00Z')`,
   [LIST_ID, toilets, latitude, longitude, JSON.stringify(payload), SNAP]);
 }
-const PAYLOAD = { street_number: "số 88", unitnumber_display: "A-12.05", width: 4.5, length: 15, floors: 4 };
+const PAYLOAD = { street_number: "số 88", unitnumber: "A-12.05", width: 4.5, length: 15, floors: 4 };   // DA5: cờ *_display không đọc
 const MONG = { street_number: "số 88", unit_number: "A-12.05", frontage_length: "4.5", lot_size_dimensions: "4.5 x 15",
   stories: "4", bathrooms: "3", latitude: "21.0285", longitude: "105.8542" };
 const phatBieuSong = async (field) => (await c.query(`SELECT value, evidence_tier, method, rule_id, observed_at FROM field_assertions
@@ -115,7 +115,7 @@ test("DT-AC-4: transform ghi một phát biểu sự thật mỗi đặc trưng;
   await trongGiaoDich(async () => {
     await tinMoi({ payload: PAYLOAD });
     await runTransformChotot(c);
-    const KHOA = { street_number: "payload.street_number", unit_number: "payload.unitnumber_display", frontage_length: "payload.width",
+    const KHOA = { street_number: "payload.street_number", unit_number: "payload.unitnumber", frontage_length: "payload.width",
       lot_size_dimensions: "payload.width+payload.length", stories: "payload.floors", bathrooms: "toilets", latitude: "latitude", longitude: "longitude" };
     for (const [field, gt] of Object.entries(MONG)) {
       const pb = await phatBieuSong(field);

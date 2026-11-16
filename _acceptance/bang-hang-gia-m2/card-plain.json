@@ -1,0 +1,40 @@
+{
+  "feature_plain": "Mỗi tin đang rao, bán hay thuê, có một hạng giá trong nhóm căn cùng phường, cùng loại hình (thêm cùng số phòng ngủ khi đủ căn); Ops và API đọc hạng này thay vì tự tính.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ chấm hạng, trung vị, p20 và % dưới trung vị cho nhóm từ 10 căn; nhóm 5–9 căn chỉ có số; nhóm dưới 5 không chấm; nhãn «Rẻ trong phường» khi nằm trong 20% rẻ nhất và rẻ hơn trung vị từ 5%."},
+    {"id": "AC-2", "p": "Sẽ đếm mỗi căn một phiếu: nhiều tin cùng một căn S06 chỉ tính một lần; tin S03 chung nhóm với S06."},
+    {"id": "AC-3", "p": "Sẽ chia nhóm theo số phòng ngủ khi nhóm ấy đủ 10 căn, không đủ thì lùi về nhóm cả phường và ghi lý do; tin không chấm luôn có lý do; căn rẻ quá 35% vẫn có nhãn kèm cờ «Cần xác minh»."},
+    {"id": "AC-4", "p": "Sẽ chấm tin thuê: có m² thì so giá thuê/m², thiếu m² thì so giá thuê/tháng với tin cùng số phòng ngủ; không lẫn tin bán."},
+    {"id": "AC-5", "p": "Sẽ chạy lại ra đúng bảng cũ; lỗi giữa chừng không làm mất bảng cũ; bảng sẵn chỗ cho cấp dự án, phân khu, toà."},
+    {"id": "AC-6", "p": "Sẽ cho /ops/deals đọc bảng: danh sách gồm cả tin S03 và S06 bán có nhãn, thẻ ghi «so với N căn», chữ «Cần xác minh» đúng căn, lý do rời danh sách bằng tiếng Việt; bảng chưa có thì đọc như hôm nay."},
+    {"id": "AC-7", "p": "Sẽ cho hai API Căn giá tốt đọc bảng, thêm tham số chọn bán hay thuê và khối hạng, giữ nguyên mọi trường cũ; bảng chưa có thì trả như hôm nay."},
+    {"id": "AC-8", "p": "Sẽ đẩy bảng hạng lên cloud cùng tin sống, không mang tên nguồn thật; cloud chưa có bảng thì bỏ qua bảng ấy, không gãy đồng bộ."},
+    {"id": "AC-9", "p": "Sẽ đo trên bản chép DB máy thu: số tin được chấm khớp phép đếm độc lập, chạy lần hai không đổi, không tin nào có nhãn ở nhóm dưới 10."},
+    {"id": "AC-10", "p": "Sẽ chụp màn /ops/deals sáng và tối để thấy nhãn, cờ «Cần xác minh» và dòng «so với N căn» đúng số trong bảng."},
+    {"id": "AC-11", "p": "Sẽ thêm bước chấm vào ba job đêm, đứng sau bước định vị; máy chưa có bảng thì bước in một dòng rồi đi tiếp."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "KHÔNG áp bảng lên máy thu hay cloud, không chấm thật trên DB dùng chung — chờ lời anh sau gộp."},
+    {"id": "OOS-2", "p": "KHÔNG làm nhãn «giá tốt» cấp dự án (CG10), cấp toà và lọc tầng (CG11), tin thuê trên màn Ops (CG3)."},
+    {"id": "OOS-3", "p": "KHÔNG đổi chỉ số «giá giữa của người bán» (vẫn so cả phường) — hàng riêng."},
+    {"id": "OOS-4", "p": "KHÔNG dựng rào trước khi lên Invest — đúng lời anh 14/11."},
+    {"id": "OOS-5", "p": "KHÔNG đẩy API ra kho công khai — anh gọi sync-public."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Cỡ nhóm (≥10, 5–9, <5) × có/không đủ điều kiện nhãn — AC-1, ma trận viết trước có ca đột biến đỏ."},
+    {"i": 1, "p": "Cách đếm phiếu: một tin một căn, nhiều tin một căn, một tin hai căn, tin không có căn — AC-2."},
+    {"i": 2, "p": "Lùi cấp theo số phòng ngủ và từng lý do không chấm, cờ cần xác minh — AC-3."},
+    {"i": 3, "p": "Bán/thuê × cách so (giá/m², giá tháng theo phòng ngủ, thiếu cả hai) — AC-4."},
+    {"i": 4, "p": "Chạy lại, lỗi giữa chừng, migration hai lần, cấp tương lai; chỗ gọi job đêm; bảng chưa có trên cloud — AC-5, AC-11, AC-6, AC-7."},
+    {"i": 5, "p": "Mọi đường đọc (pipeline, Ops, hai API, cloud) so với dòng của bảng — AC-6, AC-7, AC-8, AC-10."},
+    {"i": 6, "p": "Toàn bộ tin thật trên bản chép DB máy thu — AC-9."},
+    {"i": 7, "p": "Để lại có lý do: cấp dự án và toà (CG10, CG11), tin thuê trên màn Ops (CG3)."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Bước chấm đặt sai chỗ trong job đêm làm căn S06 mới bị đếm hai lần một đêm — đã dời ra sau bước định vị và thêm phép đo AC-11."},
+    {"i": 1, "p": "Gộp mã trước khi cloud có bảng thì Ops và API lỗi — đã thêm Hỏi-5 (khuyến nghị đọc như hôm nay khi bảng thiếu) và phép đo ở AC-6, AC-7."},
+    {"i": 2, "p": "Chỗ gọi job đêm và máy chưa có bảng không được đo — đã thêm AC-11."},
+    {"i": 3, "p": "Chữ «Cần xác minh» trên màn không được đo — đã thêm cặp kiểm có/không ở AC-6 và ảnh ở AC-10."},
+    {"i": 4, "p": "Lý do rời danh sách chỉ thử 4/9 mã và số N chưa ghim — đã mở ma trận đủ mã và ghim N bằng số căn của bảng."}
+  ]
+}

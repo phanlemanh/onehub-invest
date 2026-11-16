@@ -1,0 +1,86 @@
+schema_version: 1
+feature_slug: itest-nap-lai-migration-cu-sau-095
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.script.itnl_giu_rb
+    expected: "exit 0; ca 'ITNL-AC-1 …' ok, không SKIP: ma trận bốn ô (bằng nhau · sống ⊊ tệp · tệp ⊊ sống có qx_thu · giao một phần) × nạp lại 061/045/059: không lỗi violated, tập sau ⊇ hợp sống ∪ tệp ở mọi ô, hai ô sống ⊆ tệp trả nguyên từng byte"
+    paths: ["pipeline/scripts/nap-lai-giu-rang-buoc.itest.mjs", "pipeline/lib/nap-view-song.mjs", "pipeline/lib/nap-061.mjs", "pipeline/lib/nap-045.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.script.itnl_s06_duong
+    long_running: 30
+    expected: "exit 0; ℹ pass 10, ℹ fail 0, ℹ skipped 0"
+    paths: ["pipeline/scripts/s06-duong.itest.mjs", "pipeline/lib/nap-*.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.script.itnl_sdt
+    long_running: 30
+    expected: "exit 0; ℹ pass 14, ℹ fail 0, ℹ skipped 0"
+    paths: ["pipeline/scripts/sdt-trong-duong.itest.mjs", "pipeline/lib/nap-*.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.script.itnl_phat_bieu
+    long_running: 45
+    expected: "exit 0; mọi ca PD-AC-* ok gồm 'PD-AC-1 045 áp hai lần …' và 'PD-AC-1 sổ …' (ca đo trên DB dừng ở một mức thì in mức đó), ℹ fail 0, ℹ skipped 0"
+    paths: ["pipeline/scripts/phat-bieu-db.itest.mjs", "pipeline/lib/nap-*.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.dbv_that
+    long_running: 30
+    expected: "exit 0; ℹ pass 5, ℹ fail 0; ca 'DBV-AC-7 vùng chép theo luật một tỉnh …' assert dương cha của mọi area được chép có mặt và thị trường cha có admin_code ok; đầu ra không có 'tinh-khong-co-iso' hay 'nhieu-tinh'"
+    paths: ["pipeline/scripts/danh-ba-vat-the-that.itest.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.itnl_doi_chung
+    long_running: 90
+    expected: "exit 0; 'DOI CHUNG RB DO' (bản merge-base của nap-view-song: nạp lại 061 lỗi violated by some row, qx_thu mất); 'DOI CHUNG TEP DO 4/4' kèm tên s06-duong, sdt-trong-duong, phat-bieu-db, danh-ba-vat-the-that; không DB thử nào của tiến trình đã thoát còn sót"
+    paths: ["pipeline/lib/nap-view-song.mjs", "_acceptance/itest-nap-lai-migration-cu-sau-095/probes/doi-chung.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.itnl_giu
+    expected: "exit 0; 'ITNL-GIU PASS': dừng khác 0 khi tệp vùng có thay đổi chưa commit; danh sách tệp diff nằm trong danh sách AC-6; mọi lời gọi assert.*(…) của các tệp kiểm bị đổi còn nguyên văn so merge-base; chiều đỏ trên bản chép đổi số ở dòng hai của assert nhiều dòng → gọi tên"
+    paths: ["_acceptance/itest-nap-lai-migration-cu-sau-095/probes/giu.mjs", "pipeline/scripts/*.itest.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.script.itnl_kd070
+    expected: "exit 0; ca KD-AC-3 của kiem-do-sau-070.test.mjs ok, ℹ fail 0"
+    paths: ["pipeline/scripts/kiem-do-sau-070.test.mjs", "pipeline/lib/nap-view-song.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.itnl_co096
+    expected: "exit 0; 'CO 096: db/migrations/096_…sql'; thiếu thì thoát khác 0 'CHUA CO 096'; probe tĩnh thấy mọi ca AC-3 gọi taoDbThu với hetSo khớp mức ca"
+    paths: ["db/migrations/**", "_acceptance/itest-nap-lai-migration-cu-sau-095/probes/co-096.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E12
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.itnl_dac_trung
+    long_running: 30
+    expected: "exit 0; ℹ pass 8, ℹ fail 0, ℹ skipped 0"
+    paths: ["pipeline/scripts/dac-trung-s06.itest.mjs", "pipeline/lib/nap-*.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E13
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.itnl_tdt
+    expected: "exit 0; 'TDT-AC-4 áp 096 lần hai không lỗi, dấu lược đồ không đổi' ok, cả tệp ℹ fail 0, ℹ skipped 0; probe in 'ITNL-TDT PASS': tệp không còn apTep/docker, scripts/ci-bo-qua.json không còn mục TDT-AC-4, tự kiểm trên bản chép có mục ấy thì FAIL gọi tên mục"
+    paths: ["pipeline/scripts/truong-du-an-tren-tin.test.mjs", "scripts/ci-bo-qua.json", "_acceptance/itest-nap-lai-migration-cu-sau-095/probes/tdt-ci.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

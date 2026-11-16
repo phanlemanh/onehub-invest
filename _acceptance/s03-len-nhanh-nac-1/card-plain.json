@@ -1,0 +1,55 @@
+{
+  "feature_plain": "Tin S03 lên nhanh hơn, phần của Claude: lượt nạp nhanh 15′ (do hàng s03-nap-nhanh dựng) gặp khoá DB thì nhường lượt sau thay vì treo, và các bước đo dời khỏi lượt đồng bộ cloud 15′ sang một job chạy mỗi giờ.",
+  "will_do": [
+    {
+      "id": "AC-1",
+      "p": "Sẽ cho ba bước biến bài thành tin của lượt nạp nhanh chờ khoá DB tối đa 10 giây (đổi được bằng một biến); bước nạp và lượt 00:00 giữ nguyên như hôm nay."
+    },
+    {
+      "id": "AC-2",
+      "p": "Sẽ nhường lượt sau khi lượt nhanh gặp khoá DB (ghi dòng «BỎ LƯỢT»), nhưng báo lỗi khi bỏ 8 lượt liền (khoảng 2 giờ); lỗi thật vẫn báo ngay, lượt 00:00 gặp khoá vẫn báo lỗi."
+    },
+    {
+      "id": "AC-3",
+      "p": "Sẽ chứng trên DB thật: có người giữ khoá bảng bài S03 thì lượt nhanh dừng trong 30 giây, không ghi dở tin nào; không ai giữ khoá thì chạy xong bình thường."
+    },
+    {
+      "id": "AC-4",
+      "p": "Sẽ có job đo mỗi giờ chạy bảy bước đo theo đúng thứ tự cũ, không chạy chồng chính nó, và chỉ ghi dấu «đã chạy trọn» khi không bước nào lỗi."
+    },
+    {
+      "id": "AC-5",
+      "p": "Sẽ để lượt đồng bộ cloud tự bỏ bảy bước đo khi job giờ vừa chạy trọn trong 2 giờ qua, và tự chạy lại chúng khi job giờ chưa có hay đã chết — hai bên không bao giờ chạy chồng."
+    },
+    {
+      "id": "AC-6",
+      "p": "Sẽ KHÔNG đổi phần nạp của ZCode, không đổi lượt nhanh của hàng s03-nap-nhanh, không phá các bộ test job hiện có; mã thoát vẫn là mã của bước hỏng đầu tiên."
+    }
+  ],
+  "wont_do": [
+    {
+      "id": "OOS-1",
+      "p": "KHÔNG viết plist cho job đo mỗi giờ — giao ZCode qua liên làn sau khi gộp; lượt nạp nhanh 15′ (cờ, plist, bỏ đọc gộp và enrich) thuộc hàng s03-nap-nhanh."
+    },
+    {
+      "id": "OOS-2",
+      "p": "KHÔNG làm transform tăng dần, đường nóng 5′, sync tăng dần hay đọc gộp lô 15′ (LT2–LT5)."
+    },
+    {
+      "id": "OOS-3",
+      "p": "KHÔNG thêm cảnh báo trên /ops khi bỏ lượt liên tục, không đặt trần thời gian mỗi lượt."
+    },
+    {
+      "id": "OOS-4",
+      "p": "KHÔNG đo p95 đăng → tin, đăng → cloud trong hàng này — đo sau khi lịch 15′ đã bật."
+    },
+    {
+      "id": "OOS-5",
+      "p": "KHÔNG gỡ hẳn bảy bước đo khỏi cloud-sync — để hàng sau khi job giờ đã ổn."
+    },
+    {
+      "id": "OOS-6",
+      "p": "KHÔNG sửa giao dịch và khoá chung của bước bait gap ở đây — hàng T2 bait-gap-mot-giao-dich làm và gộp trước."
+    }
+  ]
+}

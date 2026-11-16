@@ -1,0 +1,37 @@
+schema_version: 1
+slug: stg-du-an-s08
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.s08da_db
+    long_running: 20
+    paths: ["db/migrations/094_stg_s08_du_an.sql", "pipeline/scripts/s08-du-an.itest.mjs"]
+    expected: "Ca «S08DA-AC-1» xanh (không cần snapshot): áp 094 hai lần, băm lược đồ stg_s08_project (information_schema.columns gồm is_generated + generation_expression, pg_constraint) bằng nhau; tập cột thô = {snapshot_id, project_id, catalog_payload, detail_payload, fetched_at}, tập cột is_generated='ALWAYS' = mười cột của AC-1 (so tập); khoá chính (snapshot_id, project_id); FK tới airbnb_snapshots; băm lược đồ stg_s08_inventory trước = sau. Chiều đỏ cùng ca: bản sao 094 bỏ cột sinh point_lat áp vào schema tạm → assert ghim «S08DA-AC-1» gọi tên point_lat."
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.s08da_db
+    long_running: 20
+    paths: ["db/migrations/094_stg_s08_du_an.sql", "pipeline/lib/s08-du-an.mjs", "pipeline/scripts/s08-du-an.itest.mjs"]
+    expected: "Ca «S08DA-AC-2» xanh trên hai snapshot S08 01/11 và 07/11 (thư mục snapshot: biến S08_SNAPSHOT_GOC, mặc định suy từ git common dir của kho — không viết cứng đường): dòng dựng bằng dongDuAnS08 của pipeline/lib/s08-du-an.mjs, chèn bằng câu năm cột của lời GIAO; số dòng mỗi snapshot = số project_id khác nhau của item kind project_catalog đếm độc lập từ tệp (07/11 phải = 177); số dòng detail_payload IS NOT NULL = số dự án có item meta.state detail; chạy lại câu chèn: tổng số dòng không đổi, rowCount lần hai = 0. Chiều đỏ: câu chèn bỏ ON CONFLICT → lần hai ném 23505, assert ghim «S08DA-AC-2». Snapshot vắng → ca đỏ nêu đường, không bỏ qua."
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.s08da_db
+    long_running: 20
+    paths: ["db/migrations/094_stg_s08_du_an.sql", "pipeline/lib/s08-du-an.mjs", "pipeline/scripts/s08-du-an.itest.mjs"]
+    expected: "Ca «S08DA-AC-3» xanh: với MỌI dòng của hai snapshot, project_code, project_name, project_address, investor, project_type = giá trị payload catalog cùng khoá (so trong JS, không dùng SQL); ownership_type_raw, total_area_raw, progress_raw = chữ project_info của payload detail; (point_lng, point_lat) = bocDiem(iframe_location) của pipeline/lib/s08-du-an.mjs trên cùng payload, so số tới 1e-9. Snapshot 07/11 (số từ đo raw của design doc): count(project_address) = 177, count(investor) = 177, project_type 76 low_rise · 101 high_rise, count(ownership_type_raw) = 149, count(point_lat) = 174, cả 174 trong khung lat 8–24, lng 102–110, 3 dòng NULL; ca so bằng nào mà cả hai vế NULL ở một trường catalog thì đỏ. Chiều đỏ: một dòng mồi sửa iframe_location sau khi đọc kỳ vọng (UPDATE detail_payload) → so lệch, assert ghim «S08DA-AC-3» nêu project_id."
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.s08da_db
+    long_running: 20
+    paths: ["db/migrations/094_stg_s08_du_an.sql", "pipeline/scripts/s08-du-an.itest.mjs"]
+    expected: "Ca «S08DA-AC-4» xanh (không cần snapshot): sáu dòng mồi (payload tổng hợp, không mã S08 thật) — detail NULL; iframe rỗng; iframe /maps/d/embed?mid=; iframe !2d1.2.3!3d21.0; iframe !2dabc!3d21.0; catalog thiếu investor — đều chèn được; cột sinh liên quan NULL, các cột còn lại bằng payload. Chiều đỏ: bản sao 094 thay mẫu số bằng [-0-9.]+ áp vào schema tạm → chèn dòng !2d1.2.3 ném lỗi ép kiểu, assert ghim «S08DA-AC-4»."
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.test.s08da_chan
+    paths: ["pipeline/sync-cloud.mjs", "app/**", "data-api/**", "_acceptance/stg-du-an-s08/probes/chan.sh"]
+    expected: "Probe exit 0, in «s08da-chan: PASS»: không tệp đã theo dõi nào dưới pipeline/sync-cloud.mjs, app/, data-api/ chứa stg_s08_project. Chiều đỏ trên cây tạm, ba ca, mỗi ca chèn tên vào một tệp của một gốc → probe báo đỏ đúng tệp đó; thước không đỏ đúng tệp → probe thoát 2 «thước hỏng»."

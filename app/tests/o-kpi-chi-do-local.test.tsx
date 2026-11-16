@@ -128,7 +128,8 @@ const COL_TILES = [">Sức khoẻ nguồn<", ">Bản ghi 24h<", ">Cổng S03", "
 const headings = (h: string) => [...h.matchAll(/role="heading"[^>]*>([^<]*)</g)].map((m) => m[1])
 /** Trên cloud chỉ dựng vùng đọc bản tin: hàng ô số + lưới sức khoẻ nguồn + lưới khoá an toàn (ON23) + lưới job khi có bản
  * tin (khuôn đổi ở lượt 3, sổ d-16). */
-const CLOUD_HEADINGS = ["Sức khoẻ nguồn", "Khoá an toàn &amp; hạ tầng thu", "Máy móc"]
+// «Lệnh gần đây» (TV4b) đọc sổ Lệnh của cloud (change_requests), không đọc bản tin — dựng ở mọi trạng thái bản tin.
+const CLOUD_HEADINGS = ["Sức khoẻ nguồn", "Khoá an toàn &amp; hạ tầng thu", "Máy móc", "Lệnh gần đây"]
 const NO_CLOUD_VIEW = { rel: "src/components/ops/collections/collections-view.tsx", fn: (s: string) => s.replace("if (props.cloud) return <CloudCollections", "if (false) return <CloudCollections") }
 
 /** Đạt SLO tính độc lập với bên đọc: nguồn đạt khi mọi hàng của nó tươi; mã có hàng chưa khai SLO không đếm. */

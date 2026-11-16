@@ -71,6 +71,11 @@ export function kiemLenh(cmd) {
   if (type === "source.pause" && (typeof payload.reason !== "string" || payload.reason.trim() === "")) {
     return { ok: false, ly_do: "thieu-reason" };
   }
+  // so-lenh-sua-sau-tv4 (Ngoài-4): hẹn bật lại sai kiểu làm bộ áp ném lỗi và kẹt hàng — chặn ngay ở khuôn.
+  const rw = payload.resume_when;
+  if (type === "source.pause" && rw !== undefined && rw !== null && typeof rw !== "string") {
+    return { ok: false, ly_do: "resume-when-sai-khuon" };
+  }
   return { ok: true };
 }
 

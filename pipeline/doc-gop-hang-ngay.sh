@@ -5,7 +5,9 @@
 #   bash pipeline/doc-gop-hang-ngay.sh
 # Biến: DOC_GOP_TRAN_NGAY_USD (mặc định 20) · DOC_GOP_BAY_GIO (ISO, mặc định bây giờ — để test) · DOC_GOP_NODE (lệnh node,
 # mặc định node — để test). Mỗi bước hỏng in `JOB FAIL [doc-gop-hang-ngay] bước <nhãn> mã <n>`; tệp thoát bằng mã hỏng đầu tiên
-# (3 = chạm trần, 1 = mọi lời gọi hỏng, 2 = đầu vào sai). Bước kia vẫn chạy.
+# (0 xong · 1 = mọi lời gọi hỏng hoặc khoá sai · 2 = đầu vào sai · 3 = chạm trần · 4 = hết tiền · 5 = thiếu khoá). Bước kia vẫn
+# chạy — trừ khi bước hôm qua thoát 4 (hết tiền) hay 5 (thiếu khoá) (goi-thang-anthropic): bước hôm kia chắc chắn cũng hỏng nên
+# bỏ, thoát ngay bằng mã đó, dòng `JOB FAIL [doc-gop-hang-ngay] het-tien|thieu-khoa: bo buoc hom-kia`.
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 NODE_BIN="$HOME/.local/node-v24.21.0/bin"
@@ -28,5 +30,10 @@ ENV_FILE=()
 # bước chết «unbound variable» trước lời gọi đầu) — hồ sơ doc-gop-env-rong.
 doc() { (cd "$ROOT/agent" && "$NODE" ${ENV_FILE[@]+"${ENV_FILE[@]}"} --import tsx scripts/doc-gop-s03.ts hang-ngay --ngay "$1" --tran-ngay-usd "$TRAN"); }
 job_run doc-gop-hang-ngay hom-qua doc "$HOM_QUA"
+if [ "$JOB_RC" -eq 4 ] || [ "$JOB_RC" -eq 5 ]; then
+  if [ "$JOB_RC" -eq 4 ]; then LY_DO=het-tien; else LY_DO=thieu-khoa; fi
+  echo "JOB FAIL [doc-gop-hang-ngay] $LY_DO: bo buoc hom-kia" >&2
+  exit "$JOB_RC"
+fi
 job_run doc-gop-hang-ngay hom-kia doc "$HOM_KIA"
 exit "$JOB_RC"

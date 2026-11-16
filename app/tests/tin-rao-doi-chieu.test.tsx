@@ -12,6 +12,7 @@ import { getOfferPhone, getPublicOffers } from "../src/lib/offers-public"
 import { pool } from "../src/lib/db"
 import { guardValues, entriesFromTokens } from "../../pipeline/lib/tier-a-guard.mjs"
 import { maskedSourceExpr } from "../../pipeline/sync-cloud.mjs"
+import { boQuaTrongSuiteChung } from "./helpers/suite-chung"
 
 const DB = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest"
 const HIEN = `o.kind = $1 AND o.property_type IS NOT NULL AND o.property_type <> 'unknown' AND o.price_vnd > 0 AND o.area_m2 > 0
@@ -179,7 +180,7 @@ async function coDbMayThu(ten: string) {
 type Duong = { ten: string; tt: string | null; qs: string }
 const qsSort = (d: Duong, sort: OfferSort) => `${d.qs}&sort=${sort}`
 
-test("E4B-AC-4 cùng kết quả như bản trước vòng ở 20 tổ hợp viết trước; bản phá đếm trong trang đỏ LECH CAU CU", { skip: KHONG_DB, timeout: 600_000 }, async () => {
+test("E4B-AC-4 cùng kết quả như bản trước vòng ở 20 tổ hợp viết trước; bản phá đếm trong trang đỏ LECH CAU CU", { skip: KHONG_DB || boQuaTrongSuiteChung("tir_doi_chieu"), timeout: 600_000 }, async () => {
   const c = await coDbMayThu("E4B-AC-4")
   let ward: string
   try {
@@ -240,7 +241,7 @@ test("E4B-AC-4 cùng kết quả như bản trước vòng ở 20 tổ hợp vi�
   await assert.rejects(soVoiCu(pha), /LECH CAU CU/)
 })
 
-test("E4B-AC-3 biên: mỗi sort bản mới dưới 700 ms, đo xen kẽ với bản trước vòng", { skip: KHONG_DB, timeout: 300_000 }, async () => {
+test("E4B-AC-3 biên: mỗi sort bản mới dưới 700 ms, đo xen kẽ với bản trước vòng", { skip: KHONG_DB || boQuaTrongSuiteChung("tir_doi_chieu"), timeout: 300_000 }, async () => {
   await (await coDbMayThu("E4B-AC-3")).end()
   const cu = await banCu()
   const loi: string[] = []
@@ -275,7 +276,7 @@ const soTran = (moi: string, goc: string) => {
   if (moi !== goc) throw new Error("TRAN BI NOI: khối đo thời gian của E4b khác bản trước vòng")
 }
 
-test("E4B-AC-7 khối đo thời gian của E4b giống hệt bản trước vòng; bản phá đổi trần đỏ TRAN BI NOI", { skip: KHONG_DB }, () => {
+test("E4B-AC-7 khối đo thời gian của E4b giống hệt bản trước vòng; bản phá đổi trần đỏ TRAN BI NOI", { skip: KHONG_DB || boQuaTrongSuiteChung("tir_doi_chieu") }, () => {
   const goc = khoiDo(gitShow("app/tests/tin-rao-doi-chieu.test.tsx"), "bản gốc")
   const moi = khoiDo(readFileSync(import.meta.filename, "utf8"), "HEAD")
   assert.ok(goc.includes("ms < 1000") && goc.includes("lan < 6"), "khối gốc phải chứa trần và số lượt: không đo được")

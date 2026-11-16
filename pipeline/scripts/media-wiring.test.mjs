@@ -46,14 +46,19 @@ export function kiemMappings(mappingsText, sql) {
   if (media.dd_resource !== "Media" || media.dd_version !== "2.1") throw new Error("khối media phải khai dd_resource Media, dd_version 2.1");
 }
 
-/** Ném khi script đêm không có đúng một bước transform-media cho nguồn, đứng ngay sau bước transform của nguồn. */
+/**
+ * Ném khi script đêm không có đúng một bước transform-media cho nguồn, đứng ngay sau bước transform của nguồn.
+ * Bước gọi qua `job_run` hoặc `buoc` (zalo-import-daily: `buoc` chia lượt nhanh/lượt đủ, hàng s03-len-nhanh-nac-1).
+ */
 export function kiemBuocDem(script, ten, { job, transform, nguon }) {
   const dong = script.split("\n");
-  const media = dong.flatMap((l, i) => (/\btransform-media\b/.test(l) && l.startsWith("job_run ") ? [i] : []));
+  const goi = (l) => /^(job_run|buoc) /.exec(l)?.[1];
+  const media = dong.flatMap((l, i) => (/\btransform-media\b/.test(l) && goi(l) ? [i] : []));
   if (media.length !== 1) throw new Error(`${ten}: cần đúng một bước transform-media, thấy ${media.length}`);
-  const mong = `job_run ${job} transform-media node "$ROOT/pipeline/transform-media.mjs" ${nguon}`;
+  const g = goi(dong[media[0]]);
+  const mong = `${g} ${job} transform-media node "$ROOT/pipeline/transform-media.mjs" ${nguon}`;
   if (dong[media[0]] !== mong) throw new Error(`${ten}: bước media phải là «${mong}»`);
-  if (!dong[media[0] - 1]?.startsWith(`job_run ${job} ${transform} `)) throw new Error(`${ten}: bước media phải đứng ngay sau ${transform}`);
+  if (!dong[media[0] - 1]?.startsWith(`${g} ${job} ${transform} `)) throw new Error(`${ten}: bước media phải đứng ngay sau ${transform}`);
 }
 
 const DEM = [

@@ -42,11 +42,14 @@ bán/thuê, người đăng, trạng thái chào) gắn với tin (FRAMING §3.1
 
 | Thị trường gọi | Danh pháp nền tảng | RESO |
 |---|---|---|
-| «Dự án», đại đô thị (Ocean Park 1, Grand Park) | Khu đô thị — `project` | `SubdivisionName` (giữ) |
+| «Dự án», đại đô thị (Ocean Park 1, Grand Park) | Dự án — `project` (dự án con trỏ cha qua `parent_id`) | `SubdivisionName` (giữ) |
 | «Dự án con», phân khu (The Zurich, Pavilion) | Phân khu — `subzone` | **`Building.ComplexId` / `Building.ComplexName`** (DD 2.1) — bỏ extension |
 | Toà (LD2, PR5, S1) | Toà nhà — `building` | **`BuildingName`** (`Property` 2.0, `Building` 2.1) + `Building.BuildingKey` — thay `ComplexName` |
 | Trục căn (cùng toà, cùng vị trí, khác tầng) | Trục — `stack` | **Extension `Stack`** (DD không có; `PropertyUnitTypes` gắn tin, không gắn toà) |
 | Căn | Căn — `unit` | `UniversalPropertySubId` + `UnitNumber` (chữ môi giới viết) + `UnitFloorLocation` / `EntryLevel` |
+
+> **Sửa đổi 2026-11-11 (ROADMAP §3 mục 39)**: nhãn của `project` là «Dự án» (khu đô thị, đại đô thị là quy mô);
+> «Dự án con» khác chủ đầu tư hoặc mở bán riêng là `project` có `parent_id`, cùng chủ đầu tư là phân khu `subzone` (`ComplexName`). Mã và field RESO không đổi.
 
 Các quy tắc khác của ADR-0011 Qđ 2 giữ nguyên (không suy tầng bậc từ chữ «dự án»; key là slug/node_id, tên chỉ là
 metadata; hai trục địa lý `area` ∥ `asset_nodes`).

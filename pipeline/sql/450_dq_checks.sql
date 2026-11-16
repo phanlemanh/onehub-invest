@@ -149,6 +149,22 @@ FROM (
   FROM sale_offers o
 ) d;
 
+-- ============ s03-floor-fill: tầng của tin căn hộ S03 (DV4 tang-tren-tin-s03, ADR-0011 điều 6 cho extension floor_band) ============
+-- Mẫu số: tin căn hộ S03 đang rao. Tử số: tin có floor_raw (số tầng) hoặc dải tầng ở field_provenance. skip khi chưa tin nào có
+-- tầng (DB chưa áp 095, hay chưa nạp lại S03 sau khi áp); pass khi từ 5%; fail khi dưới (đo 09/11: 15% tin căn hộ S03 ghi tầng).
+DELETE FROM dq_check_results WHERE check_name = 's03-floor-fill';
+INSERT INTO dq_check_results (check_name, entity, status, detail)
+SELECT 's03-floor-fill', 'S03',
+  CASE WHEN d.co_tang = 0 OR d.tong = 0 THEN 'skip'
+       WHEN d.co_tang::numeric / d.tong >= 0.05 THEN 'pass' ELSE 'fail' END,
+  d.co_tang || '/' || d.tong || ' tin căn hộ S03 có tầng'
+FROM (
+  SELECT count(*) AS tong,
+         count(*) FILTER (WHERE o.floor_raw IS NOT NULL OR o.field_provenance ? 'floor_band') AS co_tang
+    FROM sale_offers o
+   WHERE o.source = 'S03' AND o.property_type = 'apartment' AND o.offer_status = 'active'
+) d;
+
 -- Tổng kết cho log weekly-collect
 SELECT check_name, entity, status, detail
 FROM dq_check_results ORDER BY checked_at DESC, id DESC LIMIT 32;

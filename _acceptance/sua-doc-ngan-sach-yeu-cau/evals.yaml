@@ -1,0 +1,74 @@
+schema_version: 1
+feature_slug: sua-doc-ngan-sach-yeu-cau
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.ycns_doc
+    layer: backend-effect
+    paths: [pipeline/lib/yeu-cau.mjs, pipeline/scripts/yeu-cau-ngan-sach.test.mjs]
+    expected: "exit 0; ca 'YCNS-AC-1 phần lẻ viết liền' báo ok trên bốn ca 2ty6=2,6e9, 2ty65=2,65e9, 6tr5=6,5e6, 3tr5=3,5e6. Chiều đỏ: bản sao bỏ đọc phần lẻ → 'PHAN LE BI CAT 2ty6'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.ycns_doc
+    layer: backend-effect
+    paths: [pipeline/lib/yeu-cau.mjs, pipeline/scripts/yeu-cau-ngan-sach.test.mjs]
+    expected: "exit 0; ca 'YCNS-AC-2 phần lẻ viết rời' báo ok trên năm ca dương và sáu ca đối chứng pn, phòng, m2, m², tầng, căn ra đúng 2e9 (sáu assert). Chiều đỏ: mỗi chữ chặn một bản sao bỏ đúng chữ đó → 'PHAN LE AN SO <chữ>'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.ycns_doc
+    layer: backend-effect
+    paths: [pipeline/lib/yeu-cau.mjs, pipeline/scripts/yeu-cau-ngan-sach.test.mjs]
+    expected: "exit 0; ca 'YCNS-AC-3 khoảng đầu dưới thiếu đơn vị' báo ok: 800 - 1,2 tỷ → 8e8..1,2e9; 2 - 2,5 tỷ; 1,5-2 tỷ; 5- 6tr. Chiều đỏ: bản sao để đầu dưới lấy đơn vị tỷ → 'KHOANG DAO 800 - 1,2 tỷ'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.ycns_doc
+    layer: backend-effect
+    paths: [pipeline/lib/yeu-cau.mjs, pipeline/scripts/yeu-cau-ngan-sach.test.mjs]
+    expected: "exit 0; ca 'YCNS-AC-4 không bao giờ min lớn hơn max' báo ok trên ba ca rời ngược, khoảng ngược 3-2 tỷ → 2e9..3e9, và trên MỌI ca của ma trận (số assert bằng tổng số ca ghim); mỗi mã Ngoài-4/5/7/9/10/11, tc, 2ty6, 6tr5, quay đầu có ít nhất hai ca, thiếu thì đỏ 'THIEU CA <mã>'. Chiều đỏ: bản sao bỏ luật giữ biểu thức đầu → 'MIN LON HON MAX tối đa 2 tỷ, từ 3 tỷ'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.ycns_doc
+    layer: backend-effect
+    paths: [pipeline/lib/yeu-cau.mjs, pipeline/scripts/yeu-cau-ngan-sach.test.mjs]
+    expected: "exit 0; ca 'YCNS-AC-5 tc và tài chính' báo ok: tc 8tr, tc8tr, tài chính 8 (thuê) → 8e6; tc 2,5 (mua) → 2,5e9; tc 8 dịch vụ trống → trống. Chiều đỏ: bản sao đọc số trơn bằng tỷ cho mọi dịch vụ → 'DON VI SAI THEO DICH VU tài chính 8'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.ycns_doc
+    layer: backend-effect
+    paths: [pipeline/lib/yeu-cau.mjs, pipeline/scripts/yeu-cau-ngan-sach.test.mjs]
+    expected: "exit 0; ca 'YCNS-AC-6 quay đầu' báo ok: ba ca trần đúng số, đầu dưới trống; 5-6tr quay đầu → 5e6..6e6. Chiều đỏ: bản sao coi quay đầu là sàn → 'QUAY DAU KHONG PHAI TRAN 12tr quay đầu'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.ycns_that
+    layer: backend-effect
+    paths: [pipeline/lib/yeu-cau.mjs, pipeline/scripts/do-ngan-sach-yeu-cau.mjs]
+    expected: "exit 0; in 'YCNS-DO tổng <n> · có ngân sách cũ <a> mới <b> · mất <0> · thêm <t> · đổi giá trị <d> · thuê từ 100 triệu <0> · min lớn hơn max <0>' với b ≥ a, kèm 30 mẫu đổi giá trị; giao dịch chỉ đọc. Bộ ca tự kiểm: bộ đọc làm rơi tc 8tr → thoát 1 'YCNS-DO MAT NGAN SACH' dù tổng không giảm. Chiều đỏ: lệnh tự kiểm với bộ đọc gốc làm bộ đọc mới trên bộ ca dựng sẵn có min lớn hơn max → thoát 1 'YCNS-DO DO'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.ycns_doc
+    layer: backend-effect
+    paths: [pipeline/lib/yeu-cau.mjs, pipeline/scripts/yeu-cau-ngan-sach.test.mjs]
+    expected: "exit 0; ca 'YCNS-AC-8 ngoài khối ngân sách giữ nguyên' báo ok: băm phần ngoài khối bằng hằng ghim; hằng là băm cùng phần của git show 6c4ee41d:pipeline/lib/yeu-cau.mjs, test in lệnh tính lại cạnh hằng. Chiều đỏ: bản sao đổi một dòng ngoài khối → 'NGOAI KHOI DOI'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

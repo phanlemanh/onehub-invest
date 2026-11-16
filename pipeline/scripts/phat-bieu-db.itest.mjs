@@ -117,7 +117,8 @@ test("PD-AC-1 045 áp hai lần: bảng, CHECK theo sổ, chỉ mục sống, c�
     }
     await tuChoi(chen(`('TST:ac1-t', 'street_raw', 'y', 'khac', 'parser')`), /field_assertions_evidence_tier_chk/);
     for (const m of VOCAB.assertion_method) {
-      const t = m === "hitl" || m === "source_field" ? "fact" : "observed";
+      // Cặp lớp theo sổ (pipeline/mappings.yaml trục assertion_method): hitl, source_field → sự thật; registry_inherit (082) → suy luận.
+      const t = m === "hitl" || m === "source_field" ? "fact" : m === "registry_inherit" ? "inferred" : "observed";
       await c.query(chen(`('TST:ac1-m-${m}', 'street_raw', 'y', '${t}', '${m}')`)); n++;
     }
     await tuChoi(chen(`('TST:ac1-m', 'street_raw', 'y', 'observed', 'khac')`), /field_assertions_method_chk/);

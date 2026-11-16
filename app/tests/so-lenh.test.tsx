@@ -461,3 +461,14 @@ test("SL-NOI đầu-cuối: route thật → ops-apply thật → push-ops-facts
     rmSync(ch, { recursive: true, force: true })
   }
 })
+
+// ---- Hồ sơ _acceptance/so-lenh-sua-sau-tv4: «SS-AC-5» — cloud chặn resume_when sai kiểu ngay lúc gửi ----
+test("SS-AC-5 POST source.pause resume_when 5 → 400 resume-when-sai-khuon, không ghi; chuỗi → 201", async () => {
+  const P = (resume_when: unknown) => ({ type: "source.pause", target: "S05", payload: { reason: "x", resume_when } })
+  const truoc = [await dem("change_requests"), await dem("ops_audit")]
+  const r = await tao({ cookie: nguoi.ops.cookie, body: P(5) })
+  assert.deepEqual([r.status, r.body.error, r.body.ly_do], [400, "lenh-sai-khuon", "resume-when-sai-khuon"])
+  assert.deepEqual([await dem("change_requests"), await dem("ops_audit")], truoc, "lời gọi sai kiểu đã ghi")
+  const ok = await tao({ cookie: nguoi.ops.cookie, body: P("khi hết hạn mức") })
+  assert.equal(ok.status, 201, "đối chứng dương: resume_when chuỗi phải nhận")
+})

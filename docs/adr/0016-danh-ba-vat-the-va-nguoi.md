@@ -22,7 +22,7 @@ ADR-0013 §1 đặt căn = UPI + resource `Building`, ở bảng `properties`. T
 | Toạ độ S06 | 22.494 tin trên 5.155 điểm; 11.950 tin (53%) ở điểm có ≥ 10 tin; điểm đông nhất 384 tin — toạ độ phần lớn là điểm chung, không định danh được căn |
 | Số nhà trong tin | đầu `street_raw` có số: nhà 7/6.521 · đất 1/926 · căn hộ 25/9.462 |
 | Toà trong tin | `block_raw` 496/9.462 tin căn hộ; 0 khớp toà đã biết |
-| `asset_nodes` | 20 khu đô thị, 3 toà, 0 phân khu, 0 đa giác |
+| `asset_nodes` | 20 dự án, 3 toà, 0 phân khu, 0 đa giác |
 | `areas` | 34 `market` + 304 `submarket`, 334 có đa giác |
 | `field_assertions` | 50.278 dòng, toàn `resource_name = 'Property'` |
 | Người đăng | S06: 20.923 tin / 7.699 người (`seller_ref`); 1.036 người ≥ 5 tin giữ 52% số tin · P1: 276 tin có SĐT / 98 người · 0 tin S06 có SĐT |
@@ -45,7 +45,7 @@ và phát biểu theo vật thể.
 
 | Họ | Trả lời | Quan hệ | Bảng |
 |---|---|---|---|
-| **Vùng** | ở đâu | không gian (đa giác; một khu đô thị vắt nhiều phường) | `areas` (quốc gia · thị trường · phường) · `asset_nodes` (khu đô thị · phân khu) — **giữ** |
+| **Vùng** | ở đâu | không gian (đa giác; một dự án vắt nhiều phường) | `areas` (quốc gia · thị trường · phường) · `asset_nodes` (dự án · phân khu) — **giữ** |
 | **Vật thể** | cái gì | cha–con, không bắt buộc đủ cấp | thửa · toà · trục · căn — **mới** (§2) |
 | **Người** | ai, vai gì | vai trò là quan hệ có phát biểu | người/tổ chức + vai trò — **mới** (§7) |
 | **Listing** | ai chào, giá nào, khi nào | gắn vật thể ở mức sâu nhất biết được | resource `Property` (ROADMAP §3.21; gộp bảng ở Đ2) |
@@ -54,6 +54,7 @@ và phát biểu theo vật thể.
   phép cắt vùng × dịch vụ × loại hình × thời gian. Không dựng «khu thị trường» `MLSAreaMajor/Minor` khi chưa có câu hỏi
   sản phẩm cần.
 - Nguồn (`source_registry`) vẫn là tầng A, chỉ ở máy local — không thuộc các danh bạ trên.
+- **Sửa đổi 2026-11-11 (ROADMAP §3 mục 39)**: họ Vùng gọi nút `project` là «Dự án» (khu đô thị, đại đô thị là quy mô); dự án con trỏ dự án cha (§3).
 
 ### 2. Họ Vật thể
 
@@ -64,7 +65,7 @@ và phát biểu theo vật thể.
 | Trục — `stack` | các căn cùng vị trí, khác tầng | extension `Stack` (ADR-0013 §9) | trục 11 toà LD2 |
 | Căn — `unit` | phần con bán/thuê được trong toà | `UniversalPropertySubId` + `UnitNumber` · resource local `Unit` | căn hộ; shophouse chân đế |
 
-- Cha–con: căn → trục (khi biết) → toà → thửa (khi biết); toà → phân khu/khu đô thị và mọi vật thể → phường qua họ Vùng.
+- Cha–con: căn → trục (khi biết) → toà → thửa (khi biết); toà → phân khu/dự án và mọi vật thể → phường qua họ Vùng.
   Không cấp nào bắt buộc: chung cư không cần thửa; nhà phố không có trục.
 - **«Một Căn Nhà»** (đơn vị phân tích, ROADMAP §1.7) = nút vật thể mà listing gắn vào: căn (căn hộ, phòng), toà (nhà phố
   nguyên căn — UPI không SubId, đúng nghĩa RESO), thửa (đất).
@@ -85,6 +86,9 @@ và phát biểu theo vật thể.
   `registry_events` — hàng code chốt cùng migration. 3 dòng `asset_nodes.node_type = building` là **phân khu**
   (`dd_field = ComplexName` của Grand Park), không phải toà: ở lại họ Vùng, toà của chúng trỏ cha vùng là phân khu (sửa
   07/11, Mạnh duyệt Hỏi-1 của DB1 `danh-ba-toa-truc-can`; trước đó câu này ghi «chuyển sang `buildings`»).
+- **Sửa đổi 2026-11-11 (ROADMAP §3 mục 39)** (Hỏi-2): phần khác chủ đầu tư hoặc mở bán riêng là dự án con — `asset_nodes` `project` trỏ dự án cha qua
+  `parent_id`; cùng chủ đầu tư là phân khu `subzone`. Nguồn vạch khác chỉ là bí danh, luật là của mình. Ba nút Grand Park
+  ở trên đổi loại theo luật này ở hàng DA1, không chặn DB1: toà vẫn trỏ cùng nút vùng.
 
 ### 4. UPI (sửa ADR-0013 §3)
 
@@ -99,7 +103,7 @@ và phát biểu theo vật thể.
 
 - Liên kết là **phát biểu trên listing** (resource `Property`, field `UniversalPropertyId` / `UniversalPropertySubId`) có
   phương pháp và bằng chứng; bộ phân xử chọn. Không cột gắn ghi thẳng.
-- Gắn ở **mức sâu nhất biết được**: biết tầng → căn; che tầng → trục; chỉ biết toà → toà; chỉ biết khu đô thị → không gắn
+- Gắn ở **mức sâu nhất biết được**: biết tầng → căn; che tầng → trục; chỉ biết toà → toà; chỉ biết dự án → không gắn
   vật thể (giữ ở họ Vùng).
 - Khoá liên kết là khoá listing `<S0x>:<OriginatingSystemKey>` (như `field_assertions.subject_key`), **không** khoá ngoại
   tới bảng tin — nên độc lập với Đ2 (đổi tên/gộp bảng listing).
@@ -115,7 +119,7 @@ và phát biểu theo vật thể.
 
 ### 7. Kế thừa hai chiều (danh bạ ↔ listing)
 
-1. **Chỉ trường thuộc vật thể kế thừa xuống listing** (loại hình, diện tích, tầng, phòng, toà, khu đô thị, hướng, toạ độ,
+1. **Chỉ trường thuộc vật thể kế thừa xuống listing** (loại hình, diện tích, tầng, phòng, toà, dự án, hướng, toạ độ,
    vùng). Trường thuộc listing (giá, trạng thái, người đăng) không bao giờ đi từ vật thể xuống; chiều lên chúng gom thành
    *lịch sử* theo vật thể (giá theo căn), không thành sự thật của vật thể.
 2. **Không chép đè**: kế thừa là phát biểu mới, phương pháp `registry_inherit`, bằng chứng = UPI + id phát biểu gốc; độ chắc
@@ -124,6 +128,9 @@ và phát biểu theo vật thể.
 4. **Mâu thuẫn là tín hiệu**: listing và vật thể bất đồng (vd 80 m² ↔ 65 m² danh mục) → thẻ duyệt (gắn nhầm hoặc tin sai),
    không đè.
 5. **Rút dây chuyền**: gỡ liên kết, gộp, tách → rút mọi phát biểu kế thừa phía sau kèm lý do; chạy lại ra y nguyên.
+6. **Kế thừa từ nút vùng** (Sửa đổi 2026-11-11 (ROADMAP §3 mục 39), Hỏi-2): ngoài vật thể, nút vùng (dự án, phân khu) cũng cho kế thừa xuống toà và listing
+   các trường của chính nó — chủ đầu tư, phường (khi dự án nằm trọn một phường). Cùng luật 2–5: phát biểu mới phương pháp
+   `registry_inherit`, bằng chứng = id nút + id phát biểu gốc; không đè giá trị đang có; gỡ liên kết dự án thì rút.
 
 ### 8. Họ Người
 

@@ -1,0 +1,38 @@
+schema_version: 1
+feature_slug: yc1-khoang-le-va-doi-chung-do
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.ycns_doc
+    expected: "exit 0; ca 'YCNS-KLR khoảng có phần lẻ viết rời' ok trên 14 ca (12 ô dấu nối × đơn vị sinh từ danh sách sáu dấu nối và hai đơn vị, một ca hai đầu cùng lẻ, một đối chứng ngày), ca kiểm đếm số ô của mã 'khoảng lẻ rời' bằng 14; ca 'YCNS bảng ca' ok với TONG_CA = 48 và băm 34 dòng ca cũ bằng hằng ghim (băm cùng 34 dòng ở git show 7e7b7073); mọi ca 'YCNS-AC-*' cũ vẫn ok. Chiều đỏ trong cùng ca: bản sao đột biến giữ CACH_LE ở nhánh alec → 'KHOANG LE ROI 2 tỷ 5 - 3 tỷ'; bản chép bảng ca đổi đích một ca cũ → 'BANG CA CU DOI'"
+    paths: ["pipeline/lib/yeu-cau.mjs", "pipeline/scripts/yeu-cau-ngan-sach.test.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.ycns_that_klr
+    expected: "exit 0; dòng đầu 'YCNS-DO gốc <sha> băm <a1> · mới băm <a2>' với a1 ≠ a2; dòng 'YCNS-DO tổng <n> · có ngân sách cũ <a> mới <b> · mất 0 · thêm <t> · đổi giá trị <d> · thuê từ 100 triệu 0 · min lớn hơn max 0' với n > 0, a > 0, b ≥ a, kèm mẫu đổi giá trị; giao dịch chỉ đọc"
+    paths: ["pipeline/lib/yeu-cau.mjs", "pipeline/scripts/do-ngan-sach-yeu-cau.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.ycns_do_test
+    expected: "exit 0; năm ca 'YCNS-DO-AC-3 …' ok, danh sách bài dựng bằng docNganSach + docDichVu thật trên chữ thật: đối chứng dương ra mảng rỗng; bốn đột biến trên đầu ra thật ra đúng tập lý do ghim (['SO CO NGAN SACH GIAM','MAT NGAN SACH'] · ['MAT NGAN SACH'] · ['THUE TU 100 TRIEU'] · ['MIN LON HON MAX']), so bằng deepEqual; ca kiểm kind của bài thuê dựng sẵn đúng là giá trị docDichVu trả (KIND.rent_lt)"
+    paths: ["pipeline/scripts/do-ngan-sach-yeu-cau.mjs", "pipeline/scripts/do-ngan-sach-yeu-cau.test.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.ycns_tu_kiem
+    expected: "exit 0; in 'YCNS-DO TU-KIEM PASS 4/4'"
+    paths: ["pipeline/scripts/do-ngan-sach-yeu-cau.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.ycns_do_test
+    expected: "exit 0; ca 'YCNS-DO-AC-4 tự kiểm đỏ khi bỏ một nhánh' ok: bản chép do-ngan-sach-yeu-cau.mjs bỏ nhánh MIN LON HON MAX của lyDoDo, chạy --tu-kiem thì thoát 1 và stdout có 'YCNS-DO TU-KIEM FAIL min-lon-hon-max'; bản gốc chạy --tu-kiem thoát 0"
+    paths: ["pipeline/scripts/do-ngan-sach-yeu-cau.mjs", "pipeline/scripts/do-ngan-sach-yeu-cau.test.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

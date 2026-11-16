@@ -21,6 +21,8 @@ import {
 } from "./lib/danh-ba-vat-the.mjs";
 import { basename } from "node:path";
 import { khoaNhomThat } from "./lib/eval-labels.mjs";
+import { NOI_KHU_S09 } from "./lib/s09-du-an.mjs";
+import { buocS09 } from "./lib/s09-dung.mjs";
 
 export const KHU_MAC_DINH = Object.freeze(["vinhomes-ocean-park-1", "vinhomes-grand-park"]);
 const ISO = Object.freeze({ hanoi: "VN-HN", hcmc: "VN-SG" });
@@ -64,6 +66,7 @@ export async function napBangIso(c) {
  */
 export async function dung(c, {
   khuSlugs = KHU_MAC_DINH, tuDien = { giaTri: new Map(), ban: null, tep: null }, runId = `dbv-${Date.now()}`, log = console.log, isoTheo = null,
+  noiS09 = NOI_KHU_S09,
 } = {}) {
   if (!Array.isArray(khuSlugs) || khuSlugs.length === 0) throw new LoiGoi("danh sách khu rỗng — không dựng gì");
   await c.query("BEGIN");
@@ -210,6 +213,9 @@ export async function dung(c, {
         [t.key, kq.area_id, JSON.stringify({ nut_vung: kq.nut_vung }), runId]);
       phuong += r.rowCount;
     }
+
+    // DA31: phân khu, cụm, toà S09 (sau bước S08, cùng giao dịch). Chưa áp 097 hay khu không có dòng S09 → bỏ qua có lý do.
+    const s09 = await buocS09(c, { khu, isoKhu, noi: noiS09, log });
     await c.query("COMMIT");
 
     const theoKhu = {};
@@ -236,6 +242,7 @@ export async function dung(c, {
       builder_name_moi: builder,
       phuong_moi: phuong,
       ly_do_phuong: lyDoPhuong,
+      s09,
     };
   } catch (e) {
     await c.query("ROLLBACK").catch(() => {});
@@ -293,13 +300,17 @@ export async function napBangXa(c, muc) {
  * @param {import("pg").Client} c
  * @param {{ tep?: string, thu?: boolean, rut?: boolean }} [o] rut=false chỉ cho chiều đỏ của test
  */
+// Nút dự án mà tệp xã quản: bỏ nút ứng viên do thẻ luật S06 đúc (catalog_tier mot_loi_khai, xã lấy từ tin lúc đúc — DA32),
+// qua to_jsonb để câu chạy được cả trên DB chưa áp migration 100 (hồ sơ sua-xa-bo-nut-ung-vien).
+export const SQL_NUT_SUA_XA = `SELECT n.id::int AS id, n.slug, n.area_ids FROM asset_nodes n
+  WHERE n.node_type = 'project' AND (to_jsonb(n) ->> 'catalog_tier') IS DISTINCT FROM 'mot_loi_khai' ORDER BY n.slug`;
+
 export async function suaXaNut(c, { tep = TEP_XA, thu = false, rut = true } = {}) {
   const tepXa = JSON.parse(readFileSync(tep, "utf8"));
   await c.query("BEGIN");
   try {
     await c.query("SELECT pg_advisory_xact_lock(hashtext($1))", [KHOA_CO_VAN]);
-    const { rows: nut } = await c.query(
-      "SELECT id::int AS id, slug, area_ids FROM asset_nodes WHERE node_type = 'project' ORDER BY slug");
+    const { rows: nut } = await c.query(SQL_NUT_SUA_XA);
     const loiTep = kiemTepXa(tepXa, nut.map((n) => n.slug));
     if (loiTep.length) throw new LoiGoi(loiTep.join("; "));
     const muc = tepXa.nut;

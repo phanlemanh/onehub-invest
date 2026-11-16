@@ -19,6 +19,9 @@ Code ở các đường dẫn này đưa dữ liệu RA KHỎI máy local (cloud
 | C — công khai | nhãn ("Tự thu", "Hiệu chuẩn") · **định danh người bán trên tin rao** (tên, SĐT, ID tài khoản — hoạt động bán hàng/môi giới, Mạnh chốt 2026-10-23) · **tên nhóm cộng đồng S03 thu** (Mạnh chốt 2026-10-24) | Invest Portal, `/phuong-phap`, cloud, API |
 
 - Thêm cột/bảng vào luồng sync hoặc response API → kiểm từng field thuộc tầng nào trước.
+- **Bản sao lưu mã hoá là đường DUY NHẤT tầng A rời máy** (Mạnh chốt 2026-11-11, sửa đổi ADR-0007, AGENTS.md luật 6): mã hoá
+  ngay trên máy thu trước khi gửi, khoá chỉ ở máy thu và một bản Mạnh giữ riêng; phạm vi raw snapshot, kho gốc ảnh và tư liệu,
+  bản dump DB. Code ở các đường dẫn trên (sync, API, repo public) không vì thế mà được mang tầng A.
 - **Tên, SĐT người bán lên cloud và cổng Invest** (Mạnh chốt 2026-11-02, sửa đổi ADR-0007): `sale_offers.seller_name`,
   `seller_phone` được sync, giá trị chứa tên nguồn thật về `NULL` trong câu đọc của sync. Trên API công khai chỉ hai route
   `/api/v1/listings*` (sổ bề mặt khoá `publicOffers`) đọc tin rao qua `lib/offers-public.ts`; số chỉ ở route `contact`, không

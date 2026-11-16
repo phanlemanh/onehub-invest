@@ -129,7 +129,7 @@ const JOBS = {
     },
     // TV2b vòng 3 (cong-tac-that): cổng vòng đời S06 chạy TRƯỚC mọi bước — node giả trả 0 (chạy); DB tắt thì cổng thoát ≠0 (fail-closed)
     // NH1 media-canonical-reso (Hỏi-3 = B, Mạnh 30/10): transform-media đứng ngay sau transform-chotot.
-    seq: ["vong-doi", "collect-chotot", "doc-vung-s06", "import-chotot", "transform-chotot", "transform-media", "refresh-bait-gap", "resolve-properties"],
+    seq: ["vong-doi", "collect-chotot", "doc-vung-s06", "import-chotot", "transform-chotot", "transform-media", "refresh-bait-gap", "resolve-properties", "xep-hang-gia"],
   },
   "apify-facebook-daily": {
     script: "scripts/apify-facebook-daily.sh",
@@ -138,7 +138,7 @@ const JOBS = {
       // mốc đúng khuôn TS_RE của tệp bọc (có gạch ngang) — khuôn cũ không gạch bị bỏ qua, import-airbnb không được gọi
       dirs: ["collector/snapshots/hanoi/hanoi__zalo-agent__2026-10-23T000000", "pipeline/logs"],
     },
-    seq: ["apify-facebook-collector", "import-airbnb", "transform-fb", "refresh-bait-gap"],
+    seq: ["apify-facebook-collector", "import-airbnb", "transform-fb", "refresh-bait-gap", "xep-hang-gia"],
   },
   "airdna-daily": {
     script: "scripts/airdna-daily.sh",
@@ -229,8 +229,8 @@ describe("AC-6 job_step", () => {
 
 // ------------------------------------------------------------- AC-1, AC-2 --
 for (const [ac, job, steps] of [
-  ["AC-1", "chotot-daily", ["transform-chotot", "transform-media", "refresh-bait-gap", "resolve-properties"]],
-  ["AC-2", "apify-facebook-daily", ["transform-fb", "refresh-bait-gap"]],
+  ["AC-1", "chotot-daily", ["transform-chotot", "transform-media", "refresh-bait-gap", "resolve-properties", "xep-hang-gia"]],
+  ["AC-2", "apify-facebook-daily", ["transform-fb", "refresh-bait-gap", "xep-hang-gia"]],
 ]) {
   const J = JOBS[job];
   describe(`${ac} ${job}`, () => {
@@ -377,6 +377,28 @@ describe("AU13 cloud-sync", () => {
       assert.ok(p.every((m) => m.includes(step)), `thông điệp phải nêu tên bước ${step}: ${p.join(" | ")}`);
     });
   }
+});
+
+// ------------------------------------------ s03-len-nhanh-nac-1 cloud-sync-do --
+// Khai riêng, KHÔNG trong JOBS: ma trận AC-3 của AU3 ghim đúng năm job × hai trạng thái.
+const JOB_DO = {
+  script: "scripts/cloud-sync-do.sh",
+  seq: ["trang-thai-chao", "bac-du-lieu", "do-danh-ba-sdt", "do-the-duyet", "mau-soat-cuon-chieu", "do-hang-ngay", "do-lam-giau"],
+  root: () => makeTree("cloud-sync-do", { copy: ["scripts/cloud-sync-do.sh", "scripts/lib/job-step.sh"] }),
+};
+describe("AU13 cloud-sync-do (s03-len-nhanh-nac-1 AC-6)", () => {
+  const J = JOB_DO;
+  test("cloud-sync-do: bac-du-lieu hỏng → ≠0, đúng một dòng ghim, sáu bước còn lại vẫn chạy", () => {
+    const r = runJob(J.root(), J.script, { FAIL_STEPS: "bac-du-lieu" });
+    assert.deepEqual(problemsContinueOnFail(r, "cloud-sync-do", "bac-du-lieu", J.seq), [], r.stderr);
+  });
+  test("cloud-sync-do: hai bước hỏng (3, 5) → thoát 3, hai dòng ghim đúng thứ tự", () => {
+    const r = runJob(J.root(), J.script, { FAIL_STEPS: "trang-thai-chao:3,do-lam-giau:5" });
+    assert.equal(r.code, 3, "mã thoát phải là mã của bước hỏng ĐẦU TIÊN");
+    const ghim = r.stderr.split("\n").filter((l) => l.startsWith("JOB FAIL"));
+    assert.deepEqual(ghim, [failLine("cloud-sync-do", "trang-thai-chao", 3), failLine("cloud-sync-do", "do-lam-giau", 5)]);
+    assert.deepEqual(r.calls, J.seq);
+  });
 });
 
 // ------------------------------------------------------------------ AC-4 --

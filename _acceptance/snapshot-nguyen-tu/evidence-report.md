@@ -7,7 +7,7 @@ reason:
 verified_by: feature-loop:cham-lenh
 enforcement_mode: strict
 bypass_used: false
-verified_commit: e0a8505be8d687c7652a940cbfc17d154aea2382
+verified_commit: 0f35ee9144b41ddf9f92ae9865ffe53699b762df
 human_signoff: Mạnh 2026-10-25
 ---
 
@@ -212,3 +212,7 @@ none — 8 eval tất định, mỗi lệnh chạy một lần trên HEAD. Các 
 
 Round 1: 8/8 eval đạt trên `e0a8505`. Baseline đỏ ở E1, E2, E5, E8. E3, E6 và E7 xanh trên main (guard). E4 đỏ trên main
 vì bước dựng của harness, nhưng phân biệt được với vòng lỗi dd1ea44c. «Ngoài hợp đồng» có 3 mục low chờ người quyết. PASS.
+
+### Re-pin lần 1 — 2026-11-12, do nhận main 3bfafd37 (sau #426, #423, #431)
+run_id: repin-20261112T125131Z-51828
+sha: 0f35ee9144b41ddf9f92ae9865ffe53699b762df · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng

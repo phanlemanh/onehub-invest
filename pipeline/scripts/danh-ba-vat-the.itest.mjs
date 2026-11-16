@@ -1,5 +1,5 @@
 // danh-ba-vat-the.itest.mjs — hồ sơ danh-ba-toa-truc-can (DB1): ca «DBV-AC-*» trên DB thử dựng từ db/migrations.
-// DB thử oneinvest_dbv_<pid> (đủ migration) và oneinvest_dbv_<pid>_truoc (tới 081, trước 082) ở :5433, tạo đầu tệp, xoá
+// DB thử oneinvest_dbv_<pid> (đủ migration), oneinvest_dbv_<pid>_truoc (tới 081) và oneinvest_dbv_<pid>_082 (tới 082) ở :5433, tạo đầu tệp, xoá
 // cuối tệp; không đọc, không ghi DB `oneinvest`. Fixture là dữ liệu tổng hợp (mã tiền tố Q), không mã S08 thật.
 // Ngoài glob test của CI (cần :5433); chạy: node --test --test-concurrency=1 pipeline/scripts/danh-ba-vat-the.itest.mjs
 // Chiều đỏ: DBV_MIG_THAY=<bản chép 082> thay migration khi dựng DB thử.
@@ -14,20 +14,24 @@ import { SQL as SQL_NGUOI } from "../lib/danh-ba-nguoi.mjs";
 
 const TEN = `oneinvest_dbv_${process.pid}`;
 const TEN_TRUOC = `${TEN}_truoc`;
+// DB dừng ở 082: phép đo «áp 082 lần hai không đổi lược đồ» chỉ đúng nghĩa ở đây — migration sau (095) đổi CHECK mà 082 đặt.
+const TEN_082 = `${TEN}_082`;
 const CAU_DAU = readFileSync(join(GOC, "db/dau-luoc-do.sql"), "utf8");
 const K = (tienTo, n) => `${tienTo}_${String(n).padStart(26, "0")}`;
 
 let db;
 let dbTruoc;
+let db082;
 before(async () => {
-  const [u, uTruoc] = await Promise.all([taoDbThu(TEN), taoDbThu(TEN_TRUOC, { hetSo: 81 })]);
+  const [u, uTruoc, u082] = await Promise.all([taoDbThu(TEN), taoDbThu(TEN_TRUOC, { hetSo: 81 }), taoDbThu(TEN_082, { hetSo: 82 })]);
   db = new pg.Client({ connectionString: u });
   dbTruoc = new pg.Client({ connectionString: uTruoc });
-  await Promise.all([db.connect(), dbTruoc.connect()]);
+  db082 = new pg.Client({ connectionString: u082 });
+  await Promise.all([db.connect(), dbTruoc.connect(), db082.connect()]);
 });
 after(async () => {
-  await Promise.all([db?.end().catch(() => {}), dbTruoc?.end().catch(() => {})]);
-  await Promise.all([xoaDbThu(TEN), xoaDbThu(TEN_TRUOC)]);
+  await Promise.all([db?.end().catch(() => {}), dbTruoc?.end().catch(() => {}), db082?.end().catch(() => {})]);
+  await Promise.all([xoaDbThu(TEN), xoaDbThu(TEN_TRUOC), xoaDbThu(TEN_082)]);
 });
 
 const bam = (rows) => createHash("sha256").update(JSON.stringify(rows)).digest("hex");
@@ -68,10 +72,10 @@ async function moiVung(c) {
 }
 
 test("DBV-AC-1 lược đồ 082: chỉ thêm, khoá đúng khuôn, phát biểu vật thể; danh bạ Người và phân xử tin không đổi", async () => {
-  // Dấu lược đồ: áp 082 lần hai không đổi lược đồ.
-  const dau1 = await dau(db);
-  apTep(TEN, process.env.DBV_MIG_THAY ?? join(GOC, "db/migrations/082_danh_ba_vat_the.sql"));
-  assert.equal(await dau(db), dau1, "DBV-AC-1 áp 082 lần hai đổi lược đồ");
+  // Dấu lược đồ: áp 082 lần hai không đổi lược đồ — đo trên DB dừng ở 082.
+  const dau1 = await dau(db082);
+  apTep(TEN_082, process.env.DBV_MIG_THAY ?? join(GOC, "db/migrations/082_danh_ba_vat_the.sql"));
+  assert.equal(await dau(db082), dau1, "DBV-AC-1 áp 082 lần hai đổi lược đồ");
 
   // Quan hệ: ca Người và phân xử tin cho cùng tập dòng trước và sau 082.
   const nguoiTruoc = await caNguoi(dbTruoc);
@@ -184,9 +188,13 @@ const FIX_S08 = [
 ];
 
 async function napFixture(c) {
-  await c.query(`INSERT INTO areas (id, region_type, name, country_code) VALUES
-    ('q-p1', 'submarket', 'Q Phường Một', 'VN'), ('q-p2', 'submarket', 'Q Phường Hai', 'VN'),
-    ('q-p3', 'submarket', 'Q Phường Ba', 'VN'), ('q-m1', 'market', 'Q Thị Trường', 'VN') ON CONFLICT DO NOTHING`);
+  // Luật một tỉnh (DA1, isoCuaKhu): phường quy về thị trường qua parent_id, thị trường ra ISO qua admin_code → iso_regions
+  // (088: 01 → VN-HN, 79 → VN-SG). Khu một: q-m1 + phường của q-m1; khu hai: hai phường của q-m2.
+  await c.query(`INSERT INTO areas (id, region_type, name, country_code, admin_code) VALUES
+    ('q-m1', 'market', 'Q Thị Trường', 'VN', '01'), ('q-m2', 'market', 'Q Thị Trường Hai', 'VN', '79') ON CONFLICT DO NOTHING`);
+  await c.query(`INSERT INTO areas (id, region_type, name, country_code, parent_id) VALUES
+    ('q-p1', 'submarket', 'Q Phường Một', 'VN', 'q-m1'), ('q-p2', 'submarket', 'Q Phường Hai', 'VN', 'q-m2'),
+    ('q-p3', 'submarket', 'Q Phường Ba', 'VN', 'q-m2') ON CONFLICT DO NOTHING`);
   await c.query(`INSERT INTO asset_nodes (node_type, name, slug, aliases, area_ids, dd_field, meta) VALUES
     ('project', 'Q Khu Một', 'q-khu-mot', '{}', '{q-m1,q-p1}', 'SubdivisionName', '{"city":"hanoi"}'),
     ('project', 'Q Khu Hai', 'q-khu-hai', '{}', '{q-p2,q-p3}', 'SubdivisionName', '{"city":"hcmc"}') ON CONFLICT (slug) DO NOTHING`);
@@ -380,7 +388,8 @@ test("DBV-AC-9 chủ đầu tư từ từ điển: một phát biểu fact/hitl 
         WHERE f.resource_name = 'Building' AND f.field = 'builder_name' ORDER BY 1, 2`)).rows;
     const r1 = await doc();
     assert.deepEqual(r1.map((r) => [r.toa, r.value]), [["q1/Q12", "Q CĐT Một"], ["q3/QX1", "Q CĐT Ba"], ["q3/QX10", "Q CĐT Ba"]]);
-    for (const r of r1) assert.deepEqual([r.evidence_tier, r.method, r.ban], ["fact", "hitl", bamTep]);
+    // method theo hợp đồng DA1 đã ký: tệp từ điển là nguồn, không phải người duyệt → source_field.
+    for (const r of r1) assert.deepEqual([r.evidence_tier, r.method, r.ban], ["fact", "source_field", bamTep]);
     await dungLenh(d.url, { tuDien: tep });
     assert.equal((await doc()).length, 3, "DBV-AC-9 nhân phát biểu");
     writeFileSync(tep, JSON.stringify({ q1: "Q CĐT Khác", q3: "Q CĐT Ba" }));
@@ -698,8 +707,8 @@ test("DBM-AC-5 bước đêm chỉ đúc mã mới của khu đã dựng (qua ph
   assert.deepEqual(await soatAC5(demQuaRbg), []);
   const lan = banChep("lan-khu", [["const khuSlugs = await khuDaDung(c);", "const khuSlugs = [\"q-khu-mot\", \"q-khu-hai\"];"]]);
   assert.ok((await soatAC5(demTrucTiep(lan))).includes("DBM-AC-5 đêm lan sang khu chưa dựng"), "DBM-AC-5 thước không bắt được đêm lan khu");
-  const thua = banChep("duc-thua", [["  const tk = await dung(c, { khuSlugs, runId: `dbv-dem-${Date.now()}` });",
-    "  const tk = await dung(c, { khuSlugs, runId: `dbv-dem-${Date.now()}` });\n  { const s = (await c.query(\"SELECT building_key FROM buildings LIMIT 1\")).rows[0]; if (s) await c.query(\"INSERT INTO stacks (stack_key, building_key, catalog_tier) VALUES ($1, $2, 'xac_minh')\", [`stk_${'Z'.repeat(26)}`, s.building_key]); }"]]);
+  const thua = banChep("duc-thua", [["  const tk = await dung(c, { khuSlugs, runId: `dbv-dem-${Date.now()}`, log });",
+    "  const tk = await dung(c, { khuSlugs, runId: `dbv-dem-${Date.now()}`, log });\n  { const s = (await c.query(\"SELECT building_key FROM buildings LIMIT 1\")).rows[0]; if (s) await c.query(\"INSERT INTO stacks (stack_key, building_key, catalog_tier) VALUES ($1, $2, 'xac_minh')\", [`stk_${'Z'.repeat(26)}`, s.building_key]); }"]]);
   assert.ok((await soatAC5(demTrucTiep(thua))).some((l) => l.startsWith("DBM-AC-5 tập khoá mới khác kỳ vọng")), "DBM-AC-5 thước không bắt được khoá thừa");
   const boCha = banChep("bo-cha-phan-khu", [["const khuSlugs = await khuDaDung(c);",
     "const khuSlugs = (await c.query(\"SELECT DISTINCT n.slug FROM buildings b JOIN asset_nodes n ON n.id = b.region_node_id WHERE n.node_type = 'project'\")).rows.map((r) => r.slug);"]]);

@@ -103,22 +103,74 @@ test("SL1-AC-5 đỏ: bản hàm 061 chưa vá thì giá trị suy không vào c
   });
 });
 
-test("SL1-AC-5 áp 069 không đổi ô nào của tin hiện có", async () => {
+// Câu đã ký «phân xử lại mọi tin hiện có không đổi ô nào» đọc lại ở hồ sơ sl1-ac5-the-gioi-069 (Mạnh duyệt 11/11, Hỏi-1 chọn A):
+// phát biểu loại hình `inferred` đều sinh sau 069, và 069 sinh ra để cho chúng vào cột. Đo trên dữ liệu thật: tin không có phát biểu suy
+// (a) hay có lớp trên (d) không đổi ô nào; tin chỉ có suy (b một giá trị, c hai giá trị) chỉ đổi property_type và khoá property_type
+// của field_provenance, đúng luật 069. Kỳ vọng tính bằng SQL độc lập trên field_assertions, không gọi hàm phân xử.
+const SQL_LOAI = `
+  CREATE TEMP TABLE sl1_loai ON COMMIT DROP AS
+  WITH o AS (SELECT offer_id, offer_subject_keys(source, originating_system_key, post_ids) subj FROM sale_offer_records),
+  sk AS (SELECT DISTINCT offer_id, unnest(subj) subject_key FROM o),
+  a AS (SELECT sk.offer_id, fa.evidence_tier, fa.value_key, fa.value
+          FROM sk JOIN field_assertions fa ON fa.subject_key = sk.subject_key AND fa.retracted_at IS NULL AND fa.field = 'property_type'
+         WHERE fa.method <> 'legacy' OR fa.evidence ->> 'offer_id' = sk.offer_id),
+  k AS (SELECT offer_id, bool_or(evidence_tier IN ('fact', 'observed')) tren,
+               count(DISTINCT value_key) FILTER (WHERE evidence_tier = 'inferred')::int nsuy,
+               min(value COLLATE "C") FILTER (WHERE evidence_tier = 'inferred') vsuy
+          FROM a GROUP BY offer_id)
+  SELECT r.offer_id, CASE WHEN coalesce(k.nsuy, 0) = 0 THEN 'a' WHEN k.tren THEN 'd' WHEN k.nsuy = 1 THEN 'b' ELSE 'c' END loai, k.vsuy, k.nsuy
+    FROM sale_offer_records r LEFT JOIN k USING (offer_id)`;
+const SQL_KIEM = `
+  WITH d AS (SELECT l.loai, l.vsuy, l.nsuy, t.j, s.j sj FROM sl1_truoc t JOIN sl1_loai l USING (offer_id)
+               JOIN (SELECT offer_id, to_jsonb(x) - 'updated_at' j FROM sale_offer_records x) s USING (offer_id)),
+  cot AS (SELECT d.*, array(SELECT k FROM jsonb_object_keys(d.j || d.sj) k WHERE d.j -> k IS DISTINCT FROM d.sj -> k) doi,
+                 array(SELECT k FROM jsonb_object_keys(coalesce(d.j -> 'field_provenance', '{}') || coalesce(d.sj -> 'field_provenance', '{}')) k
+                        WHERE d.j -> 'field_provenance' -> k IS DISTINCT FROM d.sj -> 'field_provenance' -> k) fpdoi FROM d)
+  SELECT count(*) FILTER (WHERE loai IN ('a', 'd') AND cardinality(doi) > 0)::int "ad_doi",
+         count(*) FILTER (WHERE loai IN ('b', 'c') AND NOT doi <@ ARRAY['property_type', 'field_provenance'])::int "bc_cot_ngoai",
+         count(*) FILTER (WHERE loai IN ('b', 'c') AND NOT fpdoi <@ ARRAY['property_type'])::int "bc_fp_ngoai",
+         count(*) FILTER (WHERE loai = 'b' AND (sj ->> 'property_type' IS DISTINCT FROM vsuy
+                                                OR sj -> 'field_provenance' -> 'property_type' ->> 'tier' IS DISTINCT FROM 'inferred'))::int "b_sai",
+         count(*) FILTER (WHERE loai = 'c' AND (sj ->> 'property_type' IS DISTINCT FROM 'unknown'
+                                                OR jsonb_array_length(coalesce(sj -> 'field_provenance' -> 'property_type' -> 'goi_y', '[]')) <> nsuy))::int "c_sai",
+         count(*) FILTER (WHERE loai = 'a')::int na, count(*) FILTER (WHERE loai = 'b')::int nb,
+         count(*) FILTER (WHERE loai = 'c')::int nc, count(*) FILTER (WHERE loai = 'd')::int nd
+    FROM cot`;
+
+test("SL1-AC-5 áp 069 chỉ đổi ô luật 069 định đổi (đo trên dữ liệu thật)", { timeout: 2_700_000 }, async () => {
   await withTx(async (c) => {
-    // Trọn dòng (cả bathrooms, cột đặc trưng 061, field_provenance), trừ dấu thời gian cập nhật.
-    const chup = async () => (await c.query(
-      `SELECT md5(string_agg((to_jsonb(t) - 'updated_at')::text, E'\n' ORDER BY offer_id)) h, count(*)::int n FROM sale_offer_records t`)).rows[0];
+    const { rows: [{ n }] } = await c.query(
+      "SELECT count(*)::int n FROM field_assertions WHERE field = 'property_type' AND evidence_tier = 'inferred' AND retracted_at IS NULL");
+    assert.ok(n >= 1000, `SL1-AC-5: DB thử chỉ có ${n} phát biểu property_type inferred còn sống (cần ≥ 1000 — chép từ máy thu)`);
+    // Dữ liệu máy thu 11/11 không có tin loại (c) (hai giá trị suy, không lớp trên): thêm một tin mồi hai bài trong giao dịch.
+    const c2 = await tinMoi(c, 2);
+    await writeAssertions(c, [pb(c2.posts[0], "property_type", "apartment", "inferred"), pb(c2.posts[1], "property_type", "house", "inferred")]);
     await c.query(HAM_061);
     await resolveOffers(c, null);
-    const truoc = await chup();
+    await c.query(SQL_LOAI);
+    await c.query("CREATE TEMP TABLE sl1_truoc ON COMMIT DROP AS SELECT offer_id, to_jsonb(t) - 'updated_at' j FROM sale_offer_records t");
     await c.query(MIG_069);
     await resolveOffers(c, null);
-    const sau = await chup();
-    assert.ok(truoc.n > 0);
-    assert.equal(sau.h, truoc.h, "SL1-AC-5: có ô đổi sau khi áp 069");
-    // Đối chứng: đổi đúng một ô trên cột thước cũ không đo thì băm phải đổi.
-    await c.query("UPDATE sale_offer_records SET bathrooms = coalesce(bathrooms, 0) + 1 WHERE offer_id = (SELECT min(offer_id) FROM sale_offer_records)");
-    assert.notEqual((await chup()).h, truoc.h, "SL1-AC-5: thước không đỏ khi đổi một ô bathrooms");
+    const kiem = async () => (await c.query(SQL_KIEM)).rows[0];
+    const k = await kiem();
+    for (const loai of ["na", "nb", "nc", "nd"]) assert.ok(k[loai] >= 1, `SL1-AC-5: không có tin loại ${loai} trên DB thử`);
+    assert.deepEqual([k.ad_doi, k.bc_cot_ngoai, k.bc_fp_ngoai, k.b_sai, k.c_sai], [0, 0, 0, 0, 0],
+      `SL1-AC-5: 069 đổi sai ô ${JSON.stringify(k)}`);
+    // Ba chiều đỏ cùng fixture, mỗi chiều trong savepoint riêng.
+    const do_ = async (sql, khoa, thongDiep) => {
+      await c.query("SAVEPOINT sl1_do");
+      await c.query(sql);
+      assert.ok((await kiem())[khoa] > 0, `SL1-AC-5: ${thongDiep}`);
+      await c.query("ROLLBACK TO SAVEPOINT sl1_do");
+    };
+    const mot = (loai) => `(SELECT offer_id FROM sl1_loai WHERE loai = '${loai}' ORDER BY offer_id LIMIT 1)`;
+    await do_(`UPDATE sale_offer_records SET bathrooms = coalesce(bathrooms, 0) + 1 WHERE offer_id = ${mot("a")}`,
+      "ad_doi", "thước không đỏ khi đổi bathrooms của tin không có phát biểu suy");
+    await do_(`UPDATE sale_offer_records SET bathrooms = coalesce(bathrooms, 0) + 1 WHERE offer_id = ${mot("b")}`,
+      "bc_cot_ngoai", "thước không đỏ khi đổi một cột ngoài property_type của tin có phát biểu suy");
+    await do_(`UPDATE sale_offer_records SET field_provenance = coalesce(field_provenance, '{}') || '{"sl1_thu": {"tier": "observed"}}'
+               WHERE offer_id = ${mot("b")}`,
+      "bc_fp_ngoai", "thước không đỏ khi đổi một khoá field_provenance khác property_type của tin có phát biểu suy");
   });
 });
 
@@ -134,9 +186,34 @@ test("SL1-AC-5 hai thứ tự với 068 giữ cả fp_sdt lẫn luật mới, ch
     ["067→068→069", [MIG_067, MIG_068, MIG_069, MIG_069], { sdt: true, huong: true }],
   ];
   assert.equal(new Set(MA_TRAN.map(([ten]) => ten)).size, 5);
+  const dinhNghiaView = async () => {
+    const c = new pg.Client({ connectionString: DB_URL });
+    await c.connect();
+    try { return (await c.query("SELECT pg_get_viewdef('sale_offers'::regclass) d")).rows[0].d; } finally { await c.end(); }
+  };
+  const viewTruoc = await dinhNghiaView();
+  // Chiều đỏ: view đời 070 có cột tính seller_phone_inferred, bản sao 067 thay view bằng SELECT * thì vỡ — phần gỡ view dưới đây
+  // là phần chống đỡ thật của ca (hồ sơ sl1-ac5-the-gioi-069 AC-2).
+  // field_assertions chỉ thêm (trigger field_assertions_guard): tắt trigger đó trong giao dịch để gỡ, ROLLBACK bật lại.
+  const XOA_NGOAI_067 = `ALTER TABLE field_assertions DISABLE TRIGGER field_assertions_guard; DELETE FROM field_assertions WHERE field NOT IN ('property_type', 'bedrooms', 'bathrooms', 'street_raw',
+    'block_raw', 'offer_status', 'street_number', 'unit_number', 'frontage_length', 'lot_size_dimensions', 'stories', 'latitude',
+    'longitude', 'floor_raw', 'unit_facing'); ALTER TABLE field_assertions ENABLE TRIGGER field_assertions_guard`;
+  await withTx(async (c) => {
+    await c.query(HAM_061);
+    await c.query(XOA_NGOAI_067);
+    await assert.rejects(c.query(MIG_067), /seller_phone_inferred/, "SL1-AC-5: phát lại 067 trên view đời 070 không còn vỡ — gỡ view thành thừa");
+  });
   for (const [ten, thuTu, mong] of MA_TRAN) {
     await withTx(async (c) => {
       await c.query(HAM_061);
+      // 067 chạy CREATE OR REPLACE VIEW sale_offers AS SELECT *; view hiện tại đã có cột của 070. Ca này đo thứ tự áp hàm phân xử,
+      // không đo view: gỡ view trong giao dịch để 067 dựng lại (ROLLBACK trả view cũ).
+      // Cùng lý do: 067 đặt lại field_assertions_field_chk theo danh sách trường của nó, 082 về sau mở thêm trường — gỡ phát biểu
+      // của trường ngoài danh sách 067 trong giao dịch.
+      if (thuTu.includes(MIG_067)) {
+        await c.query("DROP VIEW IF EXISTS sale_offers CASCADE");
+        await c.query(XOA_NGOAI_067);
+      }
       for (const s of thuTu) await c.query(s);
       const { rows: [{ def }] } = await c.query("SELECT pg_get_functiondef('resolve_offer_fields(text[])'::regprocedure) def");
       assert.equal(def.includes("fp_sdt"), mong.sdt, `${ten}: fp_sdt`);
@@ -170,6 +247,7 @@ test("SL1-AC-5 hai thứ tự với 068 giữ cả fp_sdt lẫn luật mới, ch
     await c.query(`CREATE OR REPLACE FUNCTION resolve_offer_fields(p_offer_ids text[]) RETURNS jsonb LANGUAGE sql AS $$ SELECT '{}'::jsonb $$`);
     await assert.rejects(c.query(MIG_069), /MOC-069/);
   });
+  assert.equal(await dinhNghiaView(), viewTruoc, "SL1-AC-5: định nghĩa view sale_offers đổi sau ma trận — có lệnh chạy ngoài giao dịch");
 });
 
 // ---- Bên đọc khu vực (AC-2, AC-3) ----

@@ -78,7 +78,7 @@ Field `Building` dùng cho danh mục Ocean Park 1: `BuildingKey`, `BuildingName
 | `area_m2` | `LivingArea` + `LivingAreaUnits=SquareMeters` + **`LivingAreaSource`** · đất: `LotSizeArea` + `LotSizeUnits` + `LotSizeSource` | 2.0 | `area_basis` (FRAMING) = chọn đúng field; Source ghi nguồn đo |
 | `bedrooms` / `bathrooms` | `BedroomsTotal` / `BathroomsTotalInteger` | 2.0 | |
 | mã căn công bố | `UnitNumber` | 2.0 | Giữ nguyên chữ môi giới viết («LD2xx11») |
-| tầng | `UnitFloorLocation` (2.1) · `EntryLevel` (2.0, số) | 2.0/2.1 | Thường bị che → để trống, không đoán |
+| tầng | `UnitFloorLocation` (2.1) → `floor_raw` (số 1–999); dải «tầng thấp/trung/cao» → extension `floor_band` (`lower`·`middle`·`upper`, 095) · `EntryLevel` không dùng (tầng lối vào chính) | 2.1 | Thường bị che → để trống, không đoán; DV4 đọc từ chữ bài S03 qua phát biểu (tra DD 2.1 11/11) |
 | `block_raw` (toà) | **`BuildingName`** | 2.0 | mappings.yaml đang `dd: null` — sai |
 | dự án | `SubdivisionName` | 2.0 | |
 | `street_raw` | `StreetName` (+ `StreetNumber` khi có) | 2.0 | |

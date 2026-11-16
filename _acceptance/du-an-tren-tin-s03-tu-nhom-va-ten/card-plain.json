@@ -1,0 +1,27 @@
+{
+ "feature_plain": "Tin S03 có thêm dự án, lấy từ nhóm Zalo đã ghi đúng một dự án trong sổ nhóm và từ tên dự án chính bài tự nêu; tin mà hai nguồn nói khác nhau thì không ghi, đưa anh duyệt. Lệnh mặc định chỉ đếm; ghi thật lên máy thu chờ lời riêng của anh sau gộp.",
+ "will_do": [
+  {"id":"AC-1","p":"Sẽ ghi dự án cho bài thuộc nhóm có đúng một dự án trong sổ nhóm; nhóm nhiều dự án, nhóm trống, nhóm có hai dòng sổ lệch nhau không sinh gì."},
+  {"id":"AC-2","p":"Sẽ ghi dự án từ tên bài tự nêu khi tên khớp đúng một dự án của danh bạ và nhãn có căn cứ thuộc tập anh chốt ở Hỏi-4 (mặc định: chữ bài, có trích đã kiểm)."},
+  {"id":"AC-3","p":"Sẽ KHÔNG ghi dự án cho tin mà các bài hay hai nguồn chỉ ra hai dự án khác nhau; liệt các tin ấy vào một bảng để anh duyệt."},
+  {"id":"AC-4","p":"Sẽ xét lại khi sổ nhóm hay danh bạ đổi: chạy lại thì rút dự án đã hết căn cứ, thay dự án đã đổi, chạy thêm lần nữa không đổi gì."},
+  {"id":"AC-5","p":"Sẽ KHÔNG đụng dự án người duyệt hay bộ đọc khác đã ghi; nguồn suy ra nhường chỗ có phát biểu tầng cao hơn."},
+  {"id":"AC-6","p":"Sẽ chỉ đếm khi chạy không cờ; ghi thật là một giao dịch, lỗi giữa chừng không để lại dòng nào; DB chưa sẵn thì dừng và nói thiếu gì."},
+  {"id":"AC-7","p":"Sẽ in bảng đếm mà từng số khớp truy vấn kiểm độc lập, và «tin có dự án» đúng bằng số tin thật sự có dự án sau khi ghi."},
+  {"id":"AC-8","p":"Sẽ KHÔNG gọi model hay mạng; mã trường, lớp, phương pháp lấy từ sổ từ vựng sinh máy."},
+  {"id":"AC-9","p":"Sẽ giữ bộ kiểm pipeline xanh."}
+ ],
+ "wont_do": [
+  {"id":"OOS-1","p":"KHÔNG ghi thật lên máy thu hay cloud trong vòng này — chờ lời anh sau gộp, chạy đếm lại trước."},
+  {"id":"OOS-2","p":"KHÔNG nối vào chuỗi chạy đêm, KHÔNG dựng thẻ duyệt trong Ops ở hàng này (Hỏi-1, Hỏi-2)."},
+  {"id":"OOS-3","p":"KHÔNG làm dự án từ người bán (DV2), từ mã toà (DV3), dự án ngoài danh bạ."},
+  {"id":"OOS-4","p":"KHÔNG dựng cột dự án trên bảng tin, phân khu, hay mẫu đọc tay độ đúng."}
+ ],
+ "gap_probe_plain": [
+  {"i":0,"p":"Luật «tên phải có trong chữ bài» lẽ ra là câu cho anh. Đo lại thì thấy nhãn tên dự án phần lớn là model suy từ ngữ cảnh nhóm, không phải bài tự nêu — nay thành Hỏi-4 kèm bảng phủ 82,6% · 83,6% · 86,0%."},
+  {"i":1,"p":"Định nghĩa «tin có dự án» chưa chốt nên số còn lại có thể trừ hai lần — đã sửa: đếm bằng tin thật sự có dự án sau khi ghi."},
+  {"i":2,"p":"Hai phép thử đỏ phá nhầm tệp — đã sửa: phá đúng tệp lệnh chứa bước rút và giao dịch."},
+  {"i":3,"p":"Dữ liệu thử tự dựng có thể lệch khuôn thật — đã sửa: khuôn lấy từ DB máy thu, thêm một ca chạy đếm trên bản sao dữ liệu thật; so lệch với số máy thu để tới lúc ghi thật."},
+  {"i":4,"p":"Thiếu vài ô thử (hai dòng sổ lệch, bài ngoài tin, bài thuộc hai tin, lớp của luật tên) — đã thêm."}
+ ]
+}

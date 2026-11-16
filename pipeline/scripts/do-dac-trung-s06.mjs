@@ -38,8 +38,9 @@ const BAY = [A.street_number, A.unit_number, A.frontage_length, A.lot_size_dimen
 // Mỗi đặc trưng: biểu thức «có khoá khác rỗng», «hợp lệ» và «giá trị nguồn» trên stg (a = tin stg, viết độc lập với bộ đọc).
 const SO = (e) => `(CASE WHEN (${e}) ~ '^\\s*[0-9]+([.,][0-9]+)?\\s*(m|mét|tầng|t)?\\s*$' THEN replace(substring((${e}) from '[0-9]+(?:[.,][0-9]+)?'), ',', '.')::numeric END)`;
 const DT = {
-  street_number: { khoa: `coalesce(nullif(btrim(a.payload->>'street_number'),''), nullif(btrim(a.payload->>'streetnumber_display'),''))`, hop_le: null },
-  unit_number: { khoa: `coalesce(nullif(btrim(a.payload->>'unitnumber_display'),''), nullif(btrim(a.payload->>'unitnumber'),''))`, hop_le: null },
+  // DA5 (ma-can-s06-sach): *_display là cờ hiển thị, không phải giá trị; số nhà toàn chữ số 0, mã căn 0…/1 là rác.
+  street_number: { khoa: `nullif(btrim(a.payload->>'street_number'),'')`, hop_le: `btrim(a.payload->>'street_number') !~ '^0+$'` },
+  unit_number: { khoa: `nullif(btrim(a.payload->>'unitnumber'),'')`, hop_le: `btrim(a.payload->>'unitnumber') !~ '^(0+|1)$'` },
   frontage_length: { khoa: `nullif(btrim(a.payload->>'width'),'')`, hop_le: `${SO("a.payload->>'width'")} > 0 AND ${SO("a.payload->>'width'")} <= 200` },
   lot_size_dimensions: { khoa: `CASE WHEN nullif(btrim(a.payload->>'width'),'') IS NOT NULL AND nullif(btrim(a.payload->>'length'),'') IS NOT NULL THEN (a.payload->>'width') || ' x ' || (a.payload->>'length') END`,
     hop_le: `${SO("a.payload->>'width'")} > 0 AND ${SO("a.payload->>'width'")} <= 200 AND ${SO("a.payload->>'length'")} > 0 AND ${SO("a.payload->>'length'")} <= 200` },

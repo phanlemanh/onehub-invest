@@ -459,6 +459,11 @@ test("AC-10 migration idempotent", async () => {
   assert.equal(files.length, 3, "phải thấy đủ 036, 044 và 045");
   await withTx(async (c) => {
     // withTx đã áp 033+036(+039)+044+045 một lần; áp 036+044+045 thêm hai lần nữa.
+    // DB đã áp 101 (DA6, reconcile_stale_offers ghi nhật ký link): nạp lại 044 đè hàm về bản 044 → nạp lại 101 ngay sau,
+    // như 045 sau 036. 101 chỉ CREATE OR REPLACE hàm, không DDL bảng.
+    const { rows: [r101] } = await c.query(
+      `SELECT bool_or(pg_get_functiondef(oid) LIKE '%links_journaled%') AS co FROM pg_proc WHERE proname = 'reconcile_stale_offers'`);
+    if (r101.co) files.push(join(files[0].slice(0, files[0].lastIndexOf("/")), "101_doi_soat_chuyen_link.sql"));
     const s1 = (await c.query(SHAPE)).rows[0].h;
     const n1 = (await c.query(COUNTS)).rows[0].n;
     for (const round of [2, 3]) {

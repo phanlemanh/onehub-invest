@@ -6,7 +6,7 @@ import { ImageOffIcon } from "lucide-react"
 import { Progress, ProgressLabel } from "@/components/ui/progress"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
 import { cn } from "cn"
-import { type DealHang, NGHI_NGO_PCT, NGUONG_LOAI_PCT, soPct } from "@/lib/deals-chi-tiet"
+import { chuMatBang, type DealHang, NGHI_NGO_PCT, NGUONG_LOAI_PCT, soPct } from "@/lib/deals-chi-tiet"
 import { fmtInt } from "@/lib/format"
 
 /** Trục thanh giảm: 0 tới 50%, ngưỡng loại của ON11; vạch là ngưỡng cần xác minh. */
@@ -35,6 +35,11 @@ export function DiscountBar({ d, gon = false }: { d: DealHang; gon?: boolean }) 
       <span className="text-muted-foreground truncate text-xs tabular-nums">
         Thước {d.medianPerm2 ? `${fmtInt(d.medianPerm2 / 1e6)} tr/m²` : "—"} · {d.rulerN ? `${fmtInt(d.rulerN)} tin` : "—"}
       </span>
+      {d.matBang && (
+        <span className="text-muted-foreground truncate text-xs tabular-nums" data-deal-mat-bang={d.matBang.trangThai}>
+          {chuMatBang(d.matBang, d.rank?.metric ?? null)}
+        </span>
+      )}
     </div>
   )
 }

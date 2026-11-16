@@ -1,0 +1,39 @@
+{
+  "feature_plain": "Thông tin dự án đã thu từ nguồn S07 (danh sách dự án, trang từng dự án, sitemap) được đưa vào ba bảng nháp ở máy thu, nạp lại bao nhiêu lần cũng không nhân dòng và không mang tên miền của nguồn.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ tạo ba bảng nháp mới cho S07 ở DB; chạy lệnh tạo hai lần vẫn ra cùng kết quả và không đụng bảng nào đang có (AC-1, lược đồ)."},
+    {"id": "AC-2", "p": "Sẽ ghi mỗi dự án trên trang danh sách thành một dòng: tên, trạng thái mở bán, địa chỉ, diện tích, số căn, số toà, chủ đầu tư, ảnh; khối «dự án nổi bật» lặp ở mọi trang không tính (AC-2, thẻ danh sách)."},
+    {"id": "AC-3", "p": "Sẽ ghi mỗi trang dự án thành một dòng đầy đủ hơn: toạ độ, pháp lý, quy mô, tiện ích, phần mô tả, và danh sách dự án được nhắc tới trong mô tả (AC-3, trang dự án)."},
+    {"id": "AC-4", "p": "Sẽ ghi danh sách đường dẫn dự án lấy từ sitemap, để sau này đối chiếu xem danh sách đã thu đủ chưa (AC-4, sitemap)."},
+    {"id": "AC-5", "p": "Sẽ cho nạp lại thoải mái: cùng một lần thu nạp hai lần không thêm dòng; dự án được thu lại lần sau thì có thêm một dòng mới, giữ được thay đổi theo thời gian (AC-5, không nhân dòng)."},
+    {"id": "AC-6", "p": "Sẽ gỡ tên miền của nguồn khỏi mọi dòng trước khi ghi; còn sót thì dừng, không ghi gì của lần thu đó (AC-6, tên miền nguồn)."},
+    {"id": "AC-7", "p": "Sẽ KHÔNG nạp trang nào thu trong lúc trình duyệt đang đăng nhập tài khoản; chỉ đếm và báo số bị bỏ (AC-7, phiên đăng nhập)."},
+    {"id": "AC-8", "p": "Sẽ từ chối an toàn khi có gì sai: DB chưa có ba bảng thì báo và không đánh dấu đã nạp; tệp thu bị hỏng hay sai phiên bản thì không ghi gì (AC-8, từ chối an toàn)."},
+    {"id": "AC-9", "p": "Sẽ chứng minh trên dữ liệu thật ở máy thu: số dòng khớp số đếm độc lập trên bản thu gốc, nạp lần hai không thêm dòng, không còn tên miền nguồn trong bảng lẫn trong các tệp đưa vào kho (AC-9, dữ liệu thật)."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "Sẽ KHÔNG bao gồm việc thu: bộ chạy thu, nhịp thu và tiến độ 608 trang danh sách chạy riêng ở máy thu, không nằm trong lần gộp này."},
+    {"id": "OOS-2", "p": "Sẽ KHÔNG tạo bảng trên DB máy thu và KHÔNG gắn vào lịch chạy đêm; đó là bước sau khi gộp, cần lời riêng của anh."},
+    {"id": "OOS-3", "p": "Sẽ KHÔNG chọn bản mới nhất của mỗi dự án, nối vào danh bạ dự án, quyết cha–con hay khớp xã/phường; các việc đó thuộc hàng DA7, DA3, DA11, PX1."},
+    {"id": "OOS-4", "p": "Sẽ KHÔNG đưa ba bảng này lên cloud. Tên nguồn viết bằng chữ trong phần mô tả vẫn còn ở bảng tại máy thu; đường nào đưa lên cloud phải che trước."},
+    {"id": "OOS-5", "p": "Sẽ KHÔNG sửa bộ nạp chung đang dùng cho các nguồn khác (phần đó đang nằm trong việc S10 của dãy P3)."},
+    {"id": "OOS-6", "p": "Sẽ KHÔNG dựng lại bộ thu ở checkout chính để đổi số phiên bản ghi trong bản thu."}
+  ],
+  "scope_plain": "Vòng này chỉ làm phần nạp vào bảng nháp; sáu việc dưới đây để ngoài.",
+  "coverage_plain": [
+    {"i": 0, "p": "Loại nội dung thu: trang danh sách, trang dự án, sitemap đều có tiêu chí riêng (AC-2, AC-3, AC-4); loại lạ phải bằng 0 trên dữ liệu thật (AC-9)."},
+    {"i": 1, "p": "Tình trạng từng mục thu: lành, thu khi đăng nhập hoặc thiếu cờ, không đọc được, lẫn nguồn khác — có tiêu chí cho ba loại đầu (AC-2, AC-3, AC-7); nguồn khác lẫn vào chỉ đếm."},
+    {"i": 2, "p": "Tình huống nạp: DB chưa có bảng, nạp lần đầu, nạp lại, thu lại dự án cũ, tệp sai phiên bản, tệp hỏng, thư mục không phải của S07 — đủ bảy tình huống (AC-1, AC-5, AC-8)."},
+    {"i": 3, "p": "Hai điều áp cho mọi trường hợp: tên miền nguồn không vào bảng (AC-6, AC-9) và nạp lại không nhân dòng (AC-5, AC-9)."},
+    {"i": 4, "p": "Căn cứ để nói «đủ»: bảy luật đọc của hợp đồng dữ liệu S07 và 12 lần thu thật đang có ở máy thu (AC-9)."},
+    {"i": 5, "p": "Để sau: chọn bản mới nhất và nối danh bạ (DA7), gắn lịch chạy đêm, thu tiện ích quanh dự án."},
+    {"i": 6, "p": "Không làm trong vòng: quyết cha–con (DA11, DA3) và đưa ba bảng lên cloud."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Phản biện chỉ ra: máy mới chỉ gỡ tên MIỀN, còn tên nguồn viết bằng chữ trong phần mô tả thì chưa ai quyết. Đã xử: ghi rõ tên nguồn bằng chữ được ở lại bảng tại máy thu (luật tầng A chỉ cấm rời máy), đường lên cloud phải che; phép đo trên dữ liệu thật đòi 0 tên miền và 0 nhãn nguồn trong các tệp đưa vào kho, và in số dòng còn nhãn nguồn để anh biết."},
+    {"i": 1, "p": "Phản biện chỉ ra: «trang thiếu cờ đăng nhập thì bỏ» là đánh đổi của người, không phải máy tự quyết được. Đã đếm trên 12 lần thu: 38 trang danh sách và 7 trang dự án đều có cờ «khách», không trang nào thiếu cờ. Thành câu Hỏi-1 để anh quyết."},
+    {"i": 2, "p": "Phản biện chỉ ra: phép đo trên dữ liệu thật sẽ đỏ oan khi bản thu có trang rỗng hay dự án lặp. Đã sửa: số dòng phải bằng số đếm độc lập trừ phần bỏ theo từng lý do, từng con số bỏ phải khớp báo cáo của bộ nạp."},
+    {"i": 3, "p": "Phản biện chỉ ra: từng cột chỉ được kiểm ở bước đọc trang, chưa kiểm sau khi ghi vào DB; thứ tự nạp cũng chưa đo. Đã thêm: đọc lại từng cột từ DB để so, và nạp theo hai thứ tự phải ra cùng nội dung. Danh sách thuộc tính của dự án đổi cách lưu để giữ đúng thứ tự của nguồn."},
+    {"i": 4, "p": "Phản biện chỉ ra: lệnh đo trên dữ liệu thật hứa không chạy trên DB chung nhưng chưa ai kiểm lời hứa đó. Đã thêm hai phép thử: trỏ vào DB chung thì lệnh phải từ chối, thư mục thu rỗng thì phải báo không có dữ liệu."}
+  ]
+}

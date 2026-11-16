@@ -154,3 +154,47 @@ export async function rutLoaiHinhCu(client, giu, methodVersion) {
   );
   return res.rowCount;
 }
+
+/**
+ * Phát biểu tầng của bộ đọc tin S03 (hồ sơ tang-tren-tin-s03, DV4): mỗi bài một dòng — số tầng ở `floor_raw` (RESO
+ * UnitFloorLocation), dải ở `floor_band` (extension) — kèm đoạn trích nguyên văn ở `evidence.trich`. Bài không có trích thì
+ * không có dòng (không phát biểu khi không chỉ ra được chữ đã đọc).
+ * @param {string} source
+ * @param {Array<{post_id: string, posted_at: string|Date|null, floor?: string|null, floorBand?: string|null, trichTang?: string|null}>} bai
+ * @param {string} methodVersion
+ */
+export function phatBieuTang(source, bai, methodVersion) {
+  return bai.filter((p) => p.trichTang && (p.floor || p.floorBand)).map((p) => ({
+    subject_key: subjectKey(source, p.post_id), field: p.floor ? ASSERTION_FIELD.floor_raw : ASSERTION_FIELD.floor_band,
+    value: p.floor ?? p.floorBand, evidence_tier: EVIDENCE_TIER.observed, method: ASSERTION_METHOD.parser,
+    method_version: methodVersion, evidence: { trich: p.trichTang }, observed_at: p.posted_at ?? null,
+  }));
+}
+
+/**
+ * Rút phát biểu tầng cùng phiên bản bộ đọc mà lượt này không phát biểu lại ở đúng trường ấy: bài từ dải sang số (hay ngược
+ * lại) đổi TRƯỜNG nên `replaceOwn` không rút; bài thôi ghi tầng cũng vậy. Chỉ xét chủ thể của lượt này (`baiLuot`).
+ * @param {import("pg").Client} client
+ * @param {string[]} baiLuot chủ thể (subject_key) các bài lượt này đã đọc
+ * @param {string[]} giu khoá «chủ thể|trường» lượt này có phát biểu
+ * @param {string} methodVersion
+ * @returns {Promise<number>} số dòng rút
+ */
+export async function rutTangCu(client, baiLuot, giu, methodVersion) {
+  if (!baiLuot.length) return 0;
+  const res = await client.query(
+    `UPDATE field_assertions SET retracted_at = clock_timestamp(), retract_reason = 'thay-boi-luot'
+      WHERE retracted_at IS NULL AND field IN ($1, $2) AND method = $3 AND method_version = $4
+        AND subject_key = ANY ($5::text[]) AND NOT (subject_key || '|' || field = ANY ($6::text[]))`,
+    [ASSERTION_FIELD.floor_raw, ASSERTION_FIELD.floor_band, ASSERTION_METHOD.parser, methodVersion, baiLuot, giu],
+  );
+  return res.rowCount;
+}
+
+/** DB đã áp 095 chưa (trục trường phát biểu có `floor_band`). Mã mới chạy trên DB chưa áp thì CHECK chặn, nên hỏi trước. */
+export async function co095(client) {
+  const { rows } = await client.query(
+    `SELECT coalesce(bool_or(pg_get_constraintdef(oid) LIKE '%floor_band%'), false) AS co FROM pg_constraint
+      WHERE conname = 'field_assertions_field_chk'`);
+  return rows[0].co;
+}
