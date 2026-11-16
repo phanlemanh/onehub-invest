@@ -1,0 +1,71 @@
+schema_version: 1
+slug: do-lech-s03-s06-canh-hang
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.cg15_db
+    paths: [db/migrations/107_*, pipeline/sql/423_*, pipeline/xep-hang-gia.mjs, pipeline/scripts/do-lech-s03-s06*]
+    expected: "Ca CG15-AC-1 trên DB của riêng lượt: nhóm căn hộ bán 2PN 7 phiếu S03 + 9 phiếu S06 (một căn S06 hai tin, hai tin S03 trùng giá) → đúng một dòng project_source_baseline, n_s03=7, n_s06=9, hai trung vị bằng tính độc lập (lệch ≤ 0,1), lech_pct đúng công thức, trang_thai=du. Ba đột biến (đếm theo tin, bỏ lọc nguồn, đảo dấu) đỏ, thông điệp nêu khoá nhóm."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.cg15_db
+    paths: [pipeline/sql/423_*, pipeline/scripts/do-lech-s03-s06*]
+    expected: "Ca CG15-AC-2: ma trận viết trước bảy ô (S03 4 + S06 ≥5, S03 ≥5 + S06 4, cả hai <5, chỉ S06, S05 và S02 cùng nhóm, S03 cấp phường, S03 loại ra) → một assert mỗi ô về trang_thai/n/trung_vi/lech_pct; đối chứng dương cùng fixture: nhóm đủ hai bên có lech_pct."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.cg15_db
+    paths: [pipeline/sql/423_*, pipeline/scripts/do-lech-s03-s06*]
+    expected: "Ca CG15-AC-3: thuê có m² và thuê thiếu m² theo PN cùng dự án → mỗi thước một dòng đúng khoá nhóm của offer_price_rank; trung vị giá tháng tính độc lập; khoá dòng mặt bằng khớp khoá nhóm của mọi tin S03 trong nhóm; nhóm bán và thuê không trộn (đột biến bỏ kind khỏi khoá đỏ)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.cg15_db
+    paths: [db/migrations/107_*, pipeline/xep-hang-gia.mjs, pipeline/sql/423_*, pipeline/scripts/do-lech-s03-s06*, pipeline/scripts/gia-tot-du-an*]
+    expected: "Ca CG15-AC-4: chạy lại → 0 dòng khác trừ computed_at, run_id; đột biến ném sau xoá → hai bảng giữ dòng cũ; chưa áp 107 → thoát 0, đúng dòng «chưa áp 107 — bỏ mặt bằng hai nguồn», hạng bằng lượt có 107 (đột biến chèn không dò bảng đỏ); không view 105 → bảng rỗng; 107 áp hai lần sạch. Ca CG10 (gia-tot-du-an.test.mjs) chạy cùng lệnh, xanh không sửa ca."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.cg15_doc
+    paths: [app/src/lib/deals.ts, app/src/lib/deals-chi-tiet.ts, app/tests/do-lech-s03-s06*, pipeline/scripts/do-lech-s03-s06*]
+    expected: "Ca CG15-AC-5 trên DB của riêng lượt: dealsSql và trang một căn trả matBang của tin S03 cấp dự án bằng đúng dòng bảng (so từng trường với SELECT); tin S06, cấp phường, không dự án → null; lược đồ không bảng → không lỗi, null mọi dòng (đối chứng dương: cùng fixture có bảng thì có giá trị)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.cg15_doc
+    paths: [app/src/lib/deals-chi-tiet.ts, app/src/components/ops/deals-cells.tsx, app/src/components/ops/deal-body.tsx, app/tests/do-lech-s03-s06*]
+    expected: "Ca CG15-AC-6: bảy DealRow viết trước (đủ âm, đủ dương, thieu-s06, thieu-s03, thieu-hai, thuê giá tháng, nhóm 9 căn 10 tin) → chữ ô «Giảm so thước» và hàng mặt bằng trang một căn đúng bốn khuôn ghim theo trạng thái (đơn vị «căn»; 9 căn 10 tin ghi «9 căn»; thuê «tr/tháng»); không matBang → không có chữ «S06». Ba đột biến đỏ: đảo dấu, câu thieu-s06 cho dòng thieu-s03, n_s03 làm số căn S06."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.cg15_do
+    paths: [db/migrations/107_*, pipeline/sql/423_*, pipeline/xep-hang-gia.mjs, pipeline/scripts/do-lech-s03-s06*]
+    expected: "Bản chép DB máy thu, áp 107, chấm hai lần: bảng đếm bán/thuê × thước × trạng thái khớp đếm SQL riêng (lech=0); lần hai = lần một; tin_s03_co_mat_bang ≥ 1500; in mẫu số; ghi .acceptance-runs/do-lech-s03-s06-canh-hang/do-may-thu.md; thoát khác 0 khi một điều kiện hỏng, nêu điều kiện; hai đối chứng đỏ đúng: --doi-chung-tin (đếm theo tin → lech > 0), --doi-chung-nguon (bỏ lọc nguồn → lech > 0)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: ui-check
+    layer: ui-observed
+    paths: [app/src/lib/deals.ts, app/src/lib/deals-chi-tiet.ts, app/src/components/ops/deals-cells.tsx, app/src/components/ops/deal-body.tsx]
+    steps:
+      - "Bản chạy: dev server của worktree này trên cổng 3466 (app/node_modules là thư mục thật, không symlink), DATABASE_URL trỏ DB thử do `bash pipeline/scripts/do-lech-s03-s06-db.sh ghi-thu` dựng; đăng nhập tài khoản ops thử của worktree. KHÔNG tạo hay sửa tệp nào trong cây ngoài evidence/. Che email đăng nhập lúc chụp; sau khi chụp che SĐT và mặt người."
+      - "Chọn bằng SQL trên DB thử một tin S03 bán nhóm du có mặt trên /ops/deals?project=1, ghi khoá nhóm và dòng bảng vào observed; mở trang đó ở 1280 px sáng → evidence/E8-step1.png (dòng của tin có dòng phụ «S06 … căn · S03 ±x%» khớp dòng bảng; dòng S06 không có)"
+      - "Mở trang một căn của một tin bán S03 OP1 nhóm du (chọn bằng SQL trên DB thử) 1280 tối → evidence/E8-step2.png (hàng «Mặt bằng S06 cùng dự án»: trung vị và số căn của cả S03 lẫn S06, độ lệch — khớp dòng bảng)"
+      - "Mở trang một căn của một tin S03 cấp dự án ở nhóm thiếu một bên (chọn bằng SQL) 1280 sáng → evidence/E8-step3.png (đúng câu của trạng thái)"
+      - "Trên /ops/deals?project=<dự án có dòng S03 bán nhóm thiếu bên, chọn bằng SQL> 1280 tối → evidence/E8-step4.png (dòng phụ đúng câu của trạng thái)"
+    expected: "Ba khung trên bản chạy trỏ DB thử của AC-7: dòng phụ S06 trên danh sách cho tin S03, hàng mặt bằng trên trang một căn với số khớp dòng project_source_baseline, câu thiếu bên đúng trạng thái trên danh sách và trang một căn; đọc được ở sáng và tối."
+    evidence_required: [screenshot, observed, verifier, verified_at]
