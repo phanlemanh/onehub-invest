@@ -10,7 +10,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/reui/alert"
 import { Frame, FrameHeader, FramePanel, FrameTitle } from "@/components/reui/frame"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { chuDaiM2, type DealHang, loaiHinh, nhanThuoc, NGHI_NGO_PCT, NGUONG_LOAI_PCT, NGUONG_VAO_PCT, soPct } from "@/lib/deals-chi-tiet"
+import { chuDaiM2, chuMatBangChiTiet, type DealHang, loaiHinh, nhanThuoc, NGHI_NGO_PCT, NGUONG_LOAI_PCT, NGUONG_VAO_PCT, soPct } from "@/lib/deals-chi-tiet"
 import { fmtInt, fmtVnDate } from "@/lib/format"
 import { LABELS_VI } from "@/lib/vocab.generated"
 
@@ -93,6 +93,7 @@ export function DealBody({ d, xemNoiDung, mayThu, beMat, choGhep }: {
           <Dong nhan="Giá/m² căn này" value={trM2(d.pricePerm2)} beMat={beMat} />
           <Dong nhan={nhanThuoc(d)} value={trM2(d.medianPerm2)} beMat={beMat} />
           <Dong nhan="Số tin dựng thước" value={d.rulerN ? `${fmtInt(d.rulerN)} tin S06` : null} beMat={beMat} />
+          {d.matBang && <Dong nhan="Mặt bằng S06 cùng dự án" value={chuMatBangChiTiet(d.matBang, d.rank?.metric ?? null)} beMat={beMat} />}
           <Dong nhan="Mức giảm" value={d.discountPct === null ? null : d.discountPct < 0 ? `Đắt hơn ${soPct(d.discountPct)}%` : `${soPct(d.discountPct)}%`} beMat={beMat} />
           <Dong nhan="Ngưỡng" value={`Vào từ ${NGUONG_VAO_PCT}%, xác minh trên ${NGHI_NGO_PCT}%, loại trên ${NGUONG_LOAI_PCT}%`} beMat={beMat} />
         </dl>
