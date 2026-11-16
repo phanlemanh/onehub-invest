@@ -528,11 +528,13 @@ async function main() {
         s08ProjectDong += r.rowCount ?? 0;
       }
       console.log(`S08 danh mục: ${cacDong.length} dự án (stg_s08_project ghi ${s08ProjectDong})`);
-    } else if (coS08DanhMuc && !coBang094) {
-      console.log("CHUA-AP-094: bảng stg_s08_project chưa có (migration 094 chưa áp) — phần dự án S08 bỏ");
+    } else if (coCatalogS08 && !coBang094) {
+      // 1311-2 MỞ LẠI: chỉ snapshot CÓ item project_catalog mới rollback cả lượt (AC-6, giữ
+      // phần dự án không mất khi lẫn căn); snapshot CHỈ CĂN không rơi nhánh này — nạp căn
+      // bình thường ở vòng for phía trên và ĐÁNH DẤU như main (hết hồi quy chỉ căn bị bỏ).
+      console.log("CHUA-AP-094: bảng stg_s08_project chưa có (migration 094 chưa áp) — snapshot CÓ item project_catalog: KHÔNG đánh dấu đã nạp (áp 094 rồi nạp lại được đủ — 1211-35 MỞ LẠI(2))");
       await client.query("ROLLBACK").catch(() => {});
-      console.log("snapshot CÓ item project_catalog — KHÔNG đánh dấu đã nạp (áp 094 rồi nạp lại được đủ — 1211-35 MỞ LẠI(2))");
-      return; // thoát 0 — AC-6: rollback cả lượt kể cả khi snapshot lẫn căn
+      return; // thoát 0 — AC-6
     }
     await client.query("COMMIT");
     console.log(
