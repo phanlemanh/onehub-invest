@@ -9,7 +9,7 @@ import { Badge } from "@/components/reui/badge"
 import { DataGrid, dataGridFeatures, type DataGridFeatures } from "@/components/reui/data-grid/data-grid"
 import { DataGridPagination } from "@/components/reui/data-grid/data-grid-pagination"
 import { DataGridScrollArea } from "@/components/reui/data-grid/data-grid-scroll-area"
-import { DataGridTable, DataGridTableRowExpand } from "@/components/reui/data-grid/data-grid-table"
+import { DataGridTable, DataGridTableRowExpand, getDataGridTreeIndentStyle } from "@/components/reui/data-grid/data-grid-table"
 import { Frame, FrameDescription, FrameFooter, FrameHeader, FramePanel, FrameTitle } from "@/components/reui/frame"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -38,7 +38,13 @@ const COLUMNS: ColumnDef<DataGridFeatures, HangToa>[] = [
     header: "Toà · căn",
     cell: ({ row }) => (
       <div className="flex min-w-0 items-start gap-1">
-        <DataGridTableRowExpand row={row} />
+        {row.getCanExpand() ? (
+          <DataGridTableRowExpand row={row} />
+        ) : (
+          <span aria-hidden="true" style={getDataGridTreeIndentStyle(row, 20)} className="inline-flex shrink-0 ps-(--data-grid-tree-padding)">
+            <span className="size-6" />
+          </span>
+        )}
         <div className="flex min-w-0 flex-col gap-0.5">
           <span className={row.original.laCan ? "font-mono text-xs" : "text-sm font-medium"} translate="no">{row.original.ten}</span>
           {row.original.phu && <span className="text-muted-foreground truncate text-xs">{row.original.phu}</span>}

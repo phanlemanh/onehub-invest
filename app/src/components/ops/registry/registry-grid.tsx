@@ -11,7 +11,7 @@ import { Badge } from "@/components/reui/badge"
 import { DataGrid, dataGridFeatures, type DataGridFeatures } from "@/components/reui/data-grid/data-grid"
 import { DataGridPagination } from "@/components/reui/data-grid/data-grid-pagination"
 import { DataGridScrollArea } from "@/components/reui/data-grid/data-grid-scroll-area"
-import { DataGridTable, DataGridTableRowExpand } from "@/components/reui/data-grid/data-grid-table"
+import { DataGridTable, DataGridTableRowExpand, getDataGridTreeIndentStyle } from "@/components/reui/data-grid/data-grid-table"
 import { Filters } from "@/components/reui/filters/filters"
 import { createFilterQuery, flattenFilterConditions } from "@/components/reui/filters/filters-query"
 import type { FilterField, FilterQuery } from "@/components/reui/filters/filters-types"
@@ -42,7 +42,14 @@ const COLUMNS: ColumnDef<DataGridFeatures, HangCay>[] = [
     header: "Dự án · phân khu",
     cell: ({ row }) => (
       <div className="flex min-w-0 items-start gap-1">
-        <DataGridTableRowExpand row={row} />
+        {row.getCanExpand() ? (
+          <DataGridTableRowExpand row={row} />
+        ) : (
+          // Hàng lá giữ chỗ bằng nút mở để tên thẳng hàng với hàng anh em mở được.
+          <span aria-hidden="true" style={getDataGridTreeIndentStyle(row, 20)} className="inline-flex shrink-0 ps-(--data-grid-tree-padding)">
+            <span className="size-6" />
+          </span>
+        )}
         <div className="flex min-w-0 flex-col items-start gap-0.5">
           {row.depth === 0 ? (
             <Button variant="link" size="xs" className="max-w-full justify-start px-0" nativeButton={false} render={<Link href={`/ops/registry/${row.original.id}`} />}>
@@ -57,13 +64,12 @@ const COLUMNS: ColumnDef<DataGridFeatures, HangCay>[] = [
         </div>
       </div>
     ),
-    size: 320,
-    meta: { autoSize: true },
+    size: 260,
   },
-  { id: "tinh", header: "Tỉnh/thành", cell: ({ row }) => <span className="text-sm">{row.depth === 0 ? (row.original.tinh ?? "—") : ""}</span>, size: 150, meta: { headerClassName: "hidden md:table-cell", cellClassName: "hidden md:table-cell" } },
-  { id: "bac", header: "Bậc", cell: ({ row }) => <BacBadge bac={row.original.bac} />, size: 120 },
-  { id: "nguon", header: "Nguồn", cell: ({ row }) => <NguonBadges nguon={row.original.nguon} />, size: 120, meta: { headerClassName: "hidden md:table-cell", cellClassName: "hidden md:table-cell" } },
-  { id: "phanKhu", header: "Phân khu", cell: ({ row }) => so(row.original.soPhanKhu), size: 90, meta: { headerClassName: "text-end", cellClassName: "text-end" } },
+  { id: "tinh", header: "Tỉnh/thành", cell: ({ row }) => <span className="text-sm">{row.depth === 0 ? (row.original.tinh ?? "—") : ""}</span>, size: 110, meta: { headerClassName: "hidden lg:table-cell", cellClassName: "hidden lg:table-cell" } },
+  { id: "bac", header: "Bậc", cell: ({ row }) => <BacBadge bac={row.original.bac} />, size: 110 },
+  { id: "nguon", header: "Nguồn", cell: ({ row }) => <NguonBadges nguon={row.original.nguon} />, size: 100, meta: { headerClassName: "hidden md:table-cell", cellClassName: "hidden md:table-cell" } },
+  { id: "phanKhu", header: "Phân khu", cell: ({ row }) => so(row.original.soPhanKhu), size: 80, meta: { headerClassName: "hidden xl:table-cell text-end", cellClassName: "hidden xl:table-cell text-end" } },
   {
     id: "toa",
     header: "Toà",
@@ -73,7 +79,7 @@ const COLUMNS: ColumnDef<DataGridFeatures, HangCay>[] = [
         {row.original.toaChuaCan > 0 && <span className="text-muted-foreground text-xs tabular-nums">{fmtInt(row.original.toaChuaCan)} chưa có căn</span>}
       </div>
     ),
-    size: 120,
+    size: 110,
     meta: { headerClassName: "text-end", cellClassName: "text-end" },
   },
   { id: "can", header: "Căn", cell: ({ row }) => so(row.original.soCan), size: 90, meta: { headerClassName: "text-end", cellClassName: "text-end" } },
@@ -92,7 +98,7 @@ const COLUMNS: ColumnDef<DataGridFeatures, HangCay>[] = [
         </div>
       )
     },
-    size: 120,
+    size: 100,
     meta: { headerClassName: "text-end", cellClassName: "text-end" },
   },
 ]

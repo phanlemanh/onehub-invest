@@ -23,6 +23,13 @@ export async function DuAnContent({ id }: { id: number }) {
   const nutGoc = duAn.nut.find((n) => n.id === id)
   if (!goc || !nutGoc) notFound()
   const tenNut = new Map(duAn.nut.map((n) => [n.id, che(n.ten)]))
+  // Tên toà khác nhau chỉ ở hoa/thường là một tên; mã dạng UUID (S09) không đọc được bằng mắt nên không hiện ở dòng mã.
+  const motTen = (ds: string[]) => {
+    const m = new Map<string, string>()
+    for (const t of ds) if (!m.has(t.toLowerCase())) m.set(t.toLowerCase(), t)
+    return [...m.values()]
+  }
+  const maDoc = (ds: string[]) => ds.filter((m) => !/^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(m))
   const canTheoToa = new Map<string, HangToa[]>()
   for (const c of duAn.can) {
     const phu = [c.tang ? `Tầng ${c.tang}` : null, c.truc ? `Trục ${che(c.truc)}` : null].filter(Boolean).join(" · ")
@@ -34,8 +41,8 @@ export async function DuAnContent({ id }: { id: number }) {
     return {
       key: t.key,
       laCan: false,
-      ten: t.ten.map(che).join(" · ") || (t.maNguon[0] ? che(t.maNguon[0]) : t.key),
-      phu: [t.nutId === id ? null : tenNut.get(t.nutId), t.maNguon.length > 0 ? `Mã ${t.maNguon.map(che).join(", ")}` : null].filter(Boolean).join(" · "),
+      ten: motTen(t.ten.map(che)).join(" · ") || (maDoc(t.maNguon)[0] ? che(maDoc(t.maNguon)[0]) : t.key),
+      phu: [t.nutId === id ? null : tenNut.get(t.nutId), maDoc(t.maNguon).length > 0 ? `Mã ${maDoc(t.maNguon).map(che).join(", ")}` : null].filter(Boolean).join(" · "),
       bac: t.bac,
       nguon: t.nguon,
       soTruc: t.soTruc,

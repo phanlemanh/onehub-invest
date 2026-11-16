@@ -203,7 +203,8 @@ export async function docDanhBa(q: Q = pool): Promise<DanhBa> {
       danhMuc: danhMuc.rows.map((r) => ({ source: r.source, daNap: r.da_nap, daNoi: r.da_noi, chuaNoi: r.da_nap - r.da_noi })),
     },
     nut: nut.rows.map(nutTuHang),
-    tinh: Object.fromEntries(tinh.rows.map((r) => [r.id, r.name])),
+    // Tên ngắn như getAreaNames của /ops: bỏ tiền tố «Thành phố »/«Tỉnh ».
+    tinh: Object.fromEntries(tinh.rows.map((r) => [r.id, r.name.replace(/^(Thành phố|Tỉnh)\s+/u, "")])),
     chuaNoi: chuaNoi.rows.map((r) => ({ source: r.source, ma: r.ma, ten: r.ten, lyDo: r.ly_do })),
   }
 }
