@@ -12,12 +12,19 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), "../..");
-const WD = join(REPO, "scripts", "zalo-watchdog.sh");
 
 // stub pgrep — trả PID giả để watchdog không thoát sớm ở cổng «openclaw phải chạy»
+// 1611-5(1): chốt chặn RUNTIME đầu tệp — trước mọi chayWd, khẳng định cả ba binary
+// nguy hiểm (launchctl/pkill/osascript) resolve vào thư mục stub; không → CẢ TỆP dừng
+// exit 2 (cùng kiểu danh sách cho phép oneinvest_suite_* của chotDbThu, nhưng cho runtime).
+// Đây là lệnh ĐẦU TIÊN của tệp — không phải assert trong một ca.
 const PATH_DIR = mkdtempSync(join(tmpdir(), "s03-vhz2-path-"));
-writeFileSync(join(PATH_DIR, "pgrep"), "#!/bin/bash\necho 12345\n");
-chmodSync(join(PATH_DIR, "pgrep"), 0o755);
+// 1611-5(1): giả CẢ ba binary nguy hiểm trong alert() — launchctl bootout, pkill -9,
+// osascript notification (chỉ S03_SONG_OSASCRIPT phủ s03-song, KHÔNG phủ alert()).
+for (const ten of ["pgrep", "launchctl", "pkill", "osascript"]) {
+  writeFileSync(join(PATH_DIR, ten), "#!/bin/bash\necho \"stub $*\" >> \"$GIA_STUB_SO\"\n");
+  chmodSync(join(PATH_DIR, ten), 0o755);
+}
 
 /** Dựng môi trường cô lập: ROOT tmp (scripts + pipeline/logs + collector fixture), HOME tmp (CFG + CLI stub). */
 const dungMoi = ({ cfgLoi = false, attemptTruoc = false } = {}) => {
@@ -54,6 +61,9 @@ const dungMoi = ({ cfgLoi = false, attemptTruoc = false } = {}) => {
   const kick = join(root, "kick-stub.sh");
   writeFileSync(kick, `#!/bin/bash\necho "LAN $(date -u +%s) $*" >> "${kickSo}"\n`);
   chmodSync(kick, 0o755);
+  // 1611-5(4): S03_LOOKUP_DIR + GATEWAY_ENV_FILE về tmp — alert() ghi_bo_canh vào tệp
+  // sự kiện của listener THẬT nếu lọt env thật.
+  mkdirSync(join(root, "s03-lookup"), { recursive: true });
   const env = {
     ...process.env,
     HOME: home,
@@ -61,6 +71,9 @@ const dungMoi = ({ cfgLoi = false, attemptTruoc = false } = {}) => {
     ZALO_WATCHDOG_KICKSTART: `${kick} kick-gateway`,
     ZALO_WATCHDOG_P1_TAT: "0",
     S03_SONG_OSASCRIPT: "/usr/bin/true",
+    S03_LOOKUP_DIR: join(root, "s03-lookup"),
+    GIA_STUB_SO: join(root, "stub-goi.log"),
+    GATEWAY_ENV_FILE: join(home, ".openclaw", "gateway-env-gia"),
     PATH: `${PATH_DIR}:${process.env.PATH ?? ""}`,
   };
   return { home, root, env, gwLog, kickSo };
@@ -140,7 +153,7 @@ test("VHZ2-4 L4d có lượt agent dở (DB mới đã có events) → 0 lần k
   rmSync(home, { recursive: true, force: true }); rmSync(root, { recursive: true, force: true });
 });
 
-test("VHZ2-5 lần thứ hai trong 6 giờ → 0 lần, chỉ cảnh báo (gộp trong VHZ2-1); công tắc tắt → 0 lần", () => {
+test("VHZ2-5 công tắc tắt → 0 lần kickstart dù đủ mọi điều kiện (phần trần 1/6h đã đo trong VHZ2-1)", () => {
   const { home, root, env, gwLog } = dungMoi({ attemptTruoc: true });
   writeFileSync(join(root, "pipeline", "logs", "zalo-watchdog-p1-tat"), ""); // công tắc tắt
   chayWd(env, root);
@@ -148,6 +161,20 @@ test("VHZ2-5 lần thứ hai trong 6 giờ → 0 lần, chỉ cảnh báo (gộp
   chayWd(env, root); chayWd(env, root);
   assert.equal(kickSoDem(root), 0, "công tắc tắt → 0 lần kickstart dù đủ mọi điều kiện");
   rmSync(home, { recursive: true, force: true }); rmSync(root, { recursive: true, force: true });
+});
+
+test("VHZ2-6 neo (1611-5 điểm 5): khối P1 phải là phần CUỐI tệp watchdog — lớp lockdown mới chèn SAU khối P1 sẽ không được ca nào kiểm, neo tĩnh này đỏ khi ai chèn code thực thi sau P1", () => {
+  const nguon = readFileSync(join(REPO, "scripts", "zalo-watchdog.sh"), "utf8");
+  const viP1 = nguon.indexOf("VHZ2 (P1, claudedp-1411-33)");
+  assert.ok(viP1 > 0, "khối P1 tồn tại trong tệp");
+  // neo: từ tiêu đề P1 tới cuối tệp, DÒNG THỰC THI CUỐI của tệp phải là `fi` đóng if
+  // công tắc P1 — ai chèn khối logic mới SAU khối P1 thì dòng cuối thay đổi → đỏ
+  const sau = nguon.slice(nguon.indexOf("VHZ2 (P1, claudedp-1411-33)"));
+  const dongThucThi = sau.split("\n").filter((l) => {
+    const t = l.trim();
+    return t && !t.startsWith("#");
+  });
+  assert.ok(/\bfi\b/.test(dongThucThi[dongThucThi.length - 1] ?? ""), "dòng thực thi cuối của tệp phải là fi đóng khối P1 (khối P1 là phần cuối)");
 });
 
 test("CA ĐỎ VHZ2: gỡ điều kiện (a) L6(b) đỏ ≥10′ → ca kiểu 09/11 phải đỏ (kick khi chưa đủ mốc đỏ kéo dài)", () => {

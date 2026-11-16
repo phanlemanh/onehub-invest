@@ -16,7 +16,7 @@
 # Fail closed: config đúng nhưng hành vi sai vẫn bị bắt bởi L4b.
 set -uo pipefail
 
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+ROOT="${ZALO_WATCHDOG_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}" # 1611-5(2): env override cho test cô lập
 CFG="$HOME/.openclaw/openclaw.json"
 HANDLER="$ROOT/collector/openclaw/handler.js"
 ALERT_LOG="$ROOT/pipeline/logs/zalo-watchdog-alerts.log"
