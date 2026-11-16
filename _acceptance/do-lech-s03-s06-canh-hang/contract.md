@@ -5,7 +5,7 @@ slug: do-lech-s03-s06-canh-hang
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [db, pipeline, ui]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-16
 design_doc: docs/superpowers/specs/2026-11-16-do-lech-s03-s06-canh-hang-design.md
@@ -85,6 +85,10 @@ Trục lấy từ số phủ đo chỉ đọc 15/11 (ô cơ hội) và chuỗi n
 
 ## Notes
 
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-16:
+  - Ngoài-1: Trang một căn ghi «… tin S06» ở dòng số tin dựng thước dù thước cấp dự án gom mọi nguồn; đứng cạnh hàng mặt bằng có thể nói ngược nhau.
+  - Ngoài-2: Nhãn «Mặt bằng S06 cùng dự án» trùng chữ «Mặt bằng» của loại hình và chưa có trong CONTEXT.md.
+  - Ngoài-3: Nhóm giá tháng bỏ sót tin thuê có m² được xếp hạng cấp phường; vài nhóm thuê ghi «chưa đủ để so» dù thật đủ.
 - Số migration 107 do giám sát đợt dành cho hàng này (sổ số 16/11: 103 S16 · 104 CG9 · 105 DV7 · 106 CG10 · 107 CG15).
 - Hồ sơ áp đủ năm thứ như 106 (`ap-may-thu.md`: lệnh áp, số chạy thử, sao lưu, lùi, kiểm sau) để chữ ký Cổng Bằng chứng phủ cả lời áp
   107 lên DB máy thu.

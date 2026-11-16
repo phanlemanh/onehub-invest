@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 65503cccc8c265a557b6056ea262bdfa3eb31fde
-human_signoff:
+human_signoff: Mạnh 2026-11-16
 ---
 
 # Evidence Report: do-lech-s03-s06-canh-hang
@@ -100,7 +100,7 @@ human_signoff:
   run_id: minted-do-lech-s03-s06-canh-hang-E8-r2
   exit_code: 0
   baseline: n-a
-  verifier: config:executors.ui-check
+  verifier: config:executors.design.ui_check
   verified_at: 2026-11-16T04:44:29Z
   carried_from_round: 2
   screenshot: evidence/E8-step1.png
