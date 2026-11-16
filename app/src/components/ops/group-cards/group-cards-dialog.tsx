@@ -138,9 +138,9 @@ function TheForm({
           onChange={(v) => doi({ mucDich: v })} description={dongCanCuMucDich(t)} placeholder="Để trống" />
         {coQuyet && (
           <Field>
-            <FieldLabel htmlFor="the-ghi-chu">Ghi chú</FieldLabel>
+            <FieldLabel htmlFor="the-ghi-chu">Lý do</FieldLabel>
             <Textarea id="the-ghi-chu" value={note} rows={2} onChange={(e) => { setNote(e.target.value); onDirty(daSua || e.target.value.trim() !== "") }} />
-            <FieldDescription>Bác thẻ cần lý do, từ 3 ký tự.</FieldDescription>
+            <FieldDescription>Không bắt buộc khi nhận hay sửa; bác thẻ cần lý do từ 3 ký tự.</FieldDescription>
           </Field>
         )}
       </FieldGroup>

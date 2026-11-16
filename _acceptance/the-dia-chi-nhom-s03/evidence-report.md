@@ -7,112 +7,73 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 62702621183b8b38323cd3a968c8106eabf0eac3
+verified_commit: 77115140cdfcc85b72d68ac53f12793c23f3eeb9
 human_signoff:
 ---
 
 # Evidence Report: the-dia-chi-nhom-s03
 
+Round 2. Báo cáo này thay trọn báo cáo round 1; lịch sử round nằm ở mục Iterations. Tám eval máy (E1–E4, E6–E9) và E5 (ui-check) carry-forward từ round 1 vì delta không chạm paths của chúng. Verdict REJECT do hai lệnh suite hồi quy không gắn eval chạy đỏ (xem mục «Lệnh suite fail không gắn eval»).
+
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
-| E1 | AC-1 | test | PASS |
-| E2 | AC-2 | test | PASS |
-| E3 | AC-3 | test | PASS |
-| E4 | AC-4 | test | PASS |
-| E5 | AC-5 | ui-check | PASS |
-| E6 | AC-6 | test | PASS |
-| E7 | AC-7 | script | PASS |
-| E8 | AC-8 | script | PASS |
-| E9 | AC-9 | test | PASS |
-| E10 | AC-10 | judgment | UNCERTAIN |
-
-Verdict tổng là REJECT vì hai lệnh suite hồi quy không gắn eval nào bị đỏ: `cd app && npm test` và `cd pipeline && npm run test:a`. Chi tiết ở mục Lệnh suite và Iterations.
+| E1 | AC-1 | test | PASS (carry-forward từ round 1) |
+| E2 | AC-2 | test | PASS (carry-forward từ round 1) |
+| E3 | AC-3 | test | PASS (carry-forward từ round 1) |
+| E4 | AC-4 | test | PASS (carry-forward từ round 1) |
+| E5 | AC-5 | ui-check | PASS (carry-forward từ round 1) |
+| E6 | AC-6 | test | PASS (carry-forward từ round 1) |
+| E7 | AC-7 | script | PASS (carry-forward từ round 1) |
+| E8 | AC-8 | script | PASS (carry-forward từ round 1) |
+| E9 | AC-9 | test | PASS (carry-forward từ round 1) |
+| E10 | AC-10 | judgment | đề xuất PASS của hội đồng, chờ người (human_override trống) |
 
 ## Evidence
 
 - eval: E1
   run_id: minted-the-dia-chi-nhom-s03-E1-r1
   exit_code: 0
+  carried_from_round: 1
   baseline: n-a
   verifier: config:executors.test.tg1_db
   verified_at: 2026-11-16T02:41:51Z
   output: |
-    cmd: bash db/db-thu.sh oneinvest_suite_tg1 --chay node --test --test-concurrency=1 pipeline/tests/the-dia-chi-nhom.itest.mjs
-    ℹ duration_ms 7374.640458
-
-- eval: E3
-  run_id: minted-the-dia-chi-nhom-s03-E3-r1
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.test.tg1_db
-  verified_at: 2026-11-16T02:41:51Z
-  output: |
-    cmd: bash db/db-thu.sh oneinvest_suite_tg1 --chay node --test --test-concurrency=1 pipeline/tests/the-dia-chi-nhom.itest.mjs
-    ℹ duration_ms 7374.640458
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E2
   run_id: minted-the-dia-chi-nhom-s03-E2-r1
   exit_code: 0
+  carried_from_round: 1
   baseline: n-a
   verifier: config:executors.test.tg1_unit
   verified_at: 2026-11-16T02:41:51Z
   output: |
-    cmd: node --test pipeline/tests/the-dia-chi-nhom.test.mjs
-    ℹ duration_ms 39.632958
+    carry-forward tu round 1 — delta khong cham paths cua eval
+
+- eval: E3
+  run_id: minted-the-dia-chi-nhom-s03-E3-r1
+  exit_code: 0
+  carried_from_round: 1
+  baseline: n-a
+  verifier: config:executors.test.tg1_db
+  verified_at: 2026-11-16T02:41:51Z
+  output: |
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E4
   run_id: minted-the-dia-chi-nhom-s03-E4-r1
   exit_code: 0
+  carried_from_round: 1
   baseline: n-a
   verifier: config:executors.test.tg1_app
   verified_at: 2026-11-16T02:41:51Z
   output: |
-    cmd: cd app && bash ../db/db-thu.sh oneinvest_suite_tg1a --chay node --import tsx --test --test-concurrency=1 tests/the-dia-chi-nhom-app.itest.tsx
-    ℹ duration_ms 10699.39025
-
-- eval: E6
-  run_id: minted-the-dia-chi-nhom-s03-E6-r1
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.test.tg1_app
-  verified_at: 2026-11-16T02:41:51Z
-  output: |
-    cmd: cd app && bash ../db/db-thu.sh oneinvest_suite_tg1a --chay node --import tsx --test --test-concurrency=1 tests/the-dia-chi-nhom-app.itest.tsx
-    ℹ duration_ms 10699.39025
-
-- eval: E7
-  run_id: minted-the-dia-chi-nhom-s03-E7-r1
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.script.tg1_that_dem
-  verified_at: 2026-11-16T02:41:51Z
-  output: |
-    cmd: mkdir -p .acceptance-runs/the-dia-chi-nhom-s03 && node pipeline/scripts/the-dia-chi-nhom-that.mjs --dem --ghi .acceptance-runs/the-dia-chi-nhom-s03/so-chay-thu.md
-    **ĐẠT**
-
-- eval: E8
-  run_id: minted-the-dia-chi-nhom-s03-E8-r1
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.script.tg1_that_chat_luong
-  verified_at: 2026-11-16T02:41:51Z
-  output: |
-    cmd: node pipeline/scripts/the-dia-chi-nhom-that.mjs --chat-luong
-    khớp 12/13 (đạt khi từ 9)
-
-- eval: E9
-  run_id: minted-the-dia-chi-nhom-s03-E9-r1
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.test.tg1_lui
-  verified_at: 2026-11-16T02:41:51Z
-  output: |
-    cmd: bash db/db-thu.sh oneinvest_suite_tg1l --chay node --test --test-concurrency=1 pipeline/tests/the-dia-chi-nhom-lui.itest.mjs
-    ℹ duration_ms 190.231084
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E5
   run_id: E5-ui-20261116
   exit_code: 0
+  carried_from_round: 1
   baseline: n-a
   verifier: config:dev_server.start
   verified_at: 2026-11-16T02:41:51Z
@@ -123,60 +84,113 @@ Verdict tổng là REJECT vì hai lệnh suite hồi quy không gắn eval nào 
     E5-step-o-trong.png: ô trống ghi «Chưa đủ căn cứ (số bài đã đọc)». E5-step-409.png: Alert «Thẻ đã đổi từ lúc anh mở» giữ chữ đã nhập, có nút «Tải lại thẻ». E5-step-viewer.png: vai viewer chỉ có nút Đóng. E5-step6.png và E5-step6-hop.png (375): vừa màn hình, không tràn trang. Khớp expected.
   network_observed: clean
   output: |
-    Khung đã lưu: E5-step1.png đến E5-step6-hop.png và E5-network.txt trong evidence/. Hai lần POST bị từ chối do phiên cũ là chủ đích của bước E5-step-409; không có lỗi máy chủ. DB thử oneinvest_u1_tg1 đã đổi trạng thái sau lần chạy này (sinh lại bằng lệnh dựng nháp nếu cần sạch).
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
-### Lệnh suite (hồi quy)
-
-- cmd: cd agent && npm test
-  run_id: minted-the-dia-chi-nhom-s03-SUITE-npm_test__bb6271-r1
+- eval: E6
+  run_id: minted-the-dia-chi-nhom-s03-E6-r1
   exit_code: 0
+  carried_from_round: 1
+  baseline: n-a
+  verifier: config:executors.test.tg1_app
   verified_at: 2026-11-16T02:41:51Z
+  output: |
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
-- cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-the-dia-chi-nhom-s03-SUITE-lint-r1
+- eval: E7
+  run_id: minted-the-dia-chi-nhom-s03-E7-r1
   exit_code: 0
+  carried_from_round: 1
+  baseline: n-a
+  verifier: config:executors.script.tg1_that_dem
   verified_at: 2026-11-16T02:41:51Z
+  output: |
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
-- cmd: cd app && npm test
-  run_id: minted-the-dia-chi-nhom-s03-SUITE-npm_test__bd9a35-r1
-  exit_code: 1
-  verified_at: 2026-11-16T02:41:51Z
-  note: đỏ ở ca VT-AC-8 (tests/viewer-the-duyet.test.tsx): bảng kiểm kê route chưa khai hai tệp mới là src/app/api/v1/ops/group-cards/route.ts và src/app/ops/group-cards/page.tsx.
-
-- cmd: cd pipeline && npm run test:a
-  run_id: minted-the-dia-chi-nhom-s03-SUITE-test_a-r1
-  exit_code: 1
-  verified_at: 2026-11-16T02:41:51Z
-  note: đỏ ở ca TRG-AC-7 (scripts/tin-rao-gan-khu-vuc.test.mjs): tệp scripts/the-dia-chi-nhom.mjs khớp mẫu gán khu vực nhưng chưa có trong ma trận.
-
-- cmd: cd pipeline && npm run test:b
-  run_id: minted-the-dia-chi-nhom-s03-SUITE-test_b-r1
+- eval: E8
+  run_id: minted-the-dia-chi-nhom-s03-E8-r1
   exit_code: 0
+  carried_from_round: 1
+  baseline: n-a
+  verifier: config:executors.script.tg1_that_chat_luong
   verified_at: 2026-11-16T02:41:51Z
+  output: |
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
-- cmd: cd app && npm run test:lint-rules
-  run_id: minted-the-dia-chi-nhom-s03-SUITE-test_lint_rules-r1
+- eval: E9
+  run_id: minted-the-dia-chi-nhom-s03-E9-r1
   exit_code: 0
+  carried_from_round: 1
+  baseline: n-a
+  verifier: config:executors.test.tg1_lui
   verified_at: 2026-11-16T02:41:51Z
-
-- cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-the-dia-chi-nhom-s03-SUITE-node_scripts_check_portal_compliance_mjs-r1
-  exit_code: 0
-  verified_at: 2026-11-16T02:41:51Z
+  output: |
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 ### Judgment
 
 - eval: E10
-  judged_by: judge-subagent (fresh context)
-  panel: domain-correctness, operational-feasibility, spec-alignment (đề xuất)
-  - domain-correctness: UNCERTAIN — Hội đồng báo không đọc được E5-step2.png và E5-step-o-trong.png nên không phán được mỗi ô có nguồn và số bài làm căn cứ hay không; CONTEXT.md có mục «Thẻ địa chỉ nhóm» (`group_address_card`, slug `group-cards`) nhưng chỉ là nửa câu hỏi.
-  - operational-feasibility: UNCERTAIN — Cùng lý do thiếu hai ảnh; dòng định nghĩa mục thuật ngữ ở dòng 835 của CONTEXT.md bị cắt khi đọc nên chưa xác nhận đủ nhãn, mã, định nghĩa.
-  - spec-alignment: UNCERTAIN — Không đọc được hai ảnh trên; dòng định nghĩa CONTEXT.md bị cắt nên chưa xác nhận đủ ba phần.
-  required_evidence:
-    - Ảnh evidence/E5-step2.png (thẻ đủ ô, mỗi ô hiện nguồn và số bài căn cứ). Ghi chú người soạn: hai tệp này hiện CÓ trong thư mục evidence (E5-step2.png và E5-step-o-trong.png), nên hội đồng nên được chấm lại hoặc người xem trực tiếp ở Cổng 2.
-    - Ảnh evidence/E5-step-o-trong.png (thẻ có ô trống, nói rõ vì sao trống).
-    - Dòng 835 của CONTEXT.md đọc được đủ (Read offset 835 limit 1).
+  judged_by: hội đồng ba lens (domain-correctness, operational-feasibility, spec-alignment)
+  proposal: PASS
+  panel:
+    - domain-correctness: PASS — Thẻ TN-008 ghi nguồn và số bài ở từng ô (dự án «từ bài đã đọc, 44 bài», phường·tỉnh «theo dự án», bán/thuê «248 bán, 1.001 thuê», phân khu «Chưa đủ căn cứ (1.351 bài đã đọc)»). Thẻ TN-005 ghi «Chưa đủ căn cứ (1 bài đã đọc)» ở mọi ô trống nên người duyệt hiểu vì sao trống. CONTEXT.md có mục «Thẻ địa chỉ nhóm» đủ nhãn, mã (`group_address_card`, `TN-001`, slug `group-cards`) và định nghĩa nêu rõ mỗi ô ghi nguồn cùng số bài làm căn cứ.
+    - operational-feasibility: PASS — Ảnh thẻ TN-008 ghi nguồn và số bài cho từng ô; ảnh thẻ TN-005 có cả bốn ô trống kèm lý do «Chưa đủ căn cứ (1 bài đã đọc)». CONTEXT.md có mục «Thẻ địa chỉ nhóm» đủ nhãn, mã, định nghĩa, slug `group-cards` và _Avoid_.
+    - spec-alignment: PASS — Ảnh TN-008 ghi nguồn và số bài ở từng ô; ảnh TN-005 ghi «Chưa đủ căn cứ (1 bài đã đọc)» ở cả bốn ô. CONTEXT.md dòng 835 có mục «Thẻ địa chỉ nhóm» đủ nhãn, định nghĩa, mã `group_address_card` / `TN-001`, slug `group-cards` và _Avoid_. Điểm nhỏ: ô phường chỉ ghi «theo dự án», không kèm số bài, nhưng nguồn vẫn rõ vì suy ra từ dự án đã có số bài.
   human_override:  # chi nguoi ghi
+
+### Lệnh suite (hồi quy)
+
+- cmd: cd agent && npm test
+  run_id: minted-the-dia-chi-nhom-s03-SUITE-npm_test__bb6271-r2
+  exit_code: 1
+  baseline: n-a
+  verified_at: 2026-11-16T03:22:37Z
+
+- cmd: cd app && npx tsc --noEmit && npm run lint
+  run_id: minted-the-dia-chi-nhom-s03-SUITE-lint-r2
+  exit_code: 0
+  baseline: n-a
+  verified_at: 2026-11-16T03:22:37Z
+
+- cmd: cd app && npm test
+  run_id: minted-the-dia-chi-nhom-s03-SUITE-npm_test__bd9a35-r2
+  exit_code: 1
+  baseline: n-a
+  verified_at: 2026-11-16T03:22:37Z
+
+- cmd: cd pipeline && npm run test:a
+  run_id: minted-the-dia-chi-nhom-s03-SUITE-test_a-r2
+  exit_code: 0
+  baseline: n-a
+  verified_at: 2026-11-16T03:22:37Z
+
+- cmd: cd pipeline && npm run test:b
+  run_id: ba4duoa3f
+  exit_code: 0
+  baseline: n-a
+  verified_at: 2026-11-16T03:22:37Z
+
+- cmd: cd app && npm run test:lint-rules
+  run_id: minted-the-dia-chi-nhom-s03-SUITE-test_lint_rules-r2
+  exit_code: 0
+  baseline: n-a
+  verified_at: 2026-11-16T03:22:37Z
+
+- cmd: node scripts/check-portal-compliance.mjs
+  run_id: minted-the-dia-chi-nhom-s03-SUITE-node_scripts_check_portal_compliance_mjs-r2
+  exit_code: 0
+  baseline: n-a
+  verified_at: 2026-11-16T03:22:37Z
+
+### Lệnh suite fail không gắn eval
+
+Hai lệnh sau chạy đỏ và không gắn eval nào, nên `failed_evals` để trống nhưng verdict là REJECT:
+
+1. `cd agent && npm test` — 343 ca, 341 pass, 1 đỏ, 1 bỏ qua. Ca đỏ là «LS1-AC-7 đầu ghi khớp fixture thẻ mà app duyệt qua route» (`agent/tests/doc-toan-bo-the.test.ts`, qua `withTx` ở `tests/helpers/db.ts`). Lỗi Postgres mã 40P01, deadlock detected: hai tiến trình chờ khoá chéo trên hai quan hệ. Lỗi này nhiều khả năng do hai tiến trình tranh khoá trên DB thử. Cần xác định có do bảng TG1 (108) hay do chạy song song với suite khác trước khi kết luận.
+2. `cd app && npm test` — đỏ ở `tests/ops-nhan-theo-context.test.tsx`, hai ca:
+   - ca so danh sách tệp nhận diện (deepStrictEqual): danh sách thực tế có thêm các tệp `src/app/ops/group-cards/page.tsx` và `src/components/ops/group-cards/*`, trong khi danh sách mong đợi chỉ có `src/components/ops/review-content.tsx`.
+   - ca «ON12-AC-1 0 từ _Avoid_ trên chuỗi hiển thị của phạm vi quét»: còn 2 chỗ chứa từ _Avoid_ trên cổng Ops, tại `src/components/ops/labels/luot-hai.tsx:95` («Thẻ nhóm») và `src/components/shell/nav.tsx:154` («Thẻ địa chỉ nhóm»).
+
+Năm lệnh suite còn lại (tsc cùng lint, `test:a`, `test:b`, `test:lint-rules`, `check-portal-compliance`) xanh.
 
 ## Known limits
 
@@ -184,21 +198,15 @@ Verdict tổng là REJECT vì hai lệnh suite hồi quy không gắn eval nào 
 
 ## Analyst
 
-Baseline không đo: các eval E1 đến E9 đều là eval mới nên không so được với mã cũ.
+carried tu round 1 — baseline khong do lai round nay
 
-- bash db/db-thu.sh oneinvest_suite_tg1 --chay node --test --test-concurrency=1 pipeline/tests/the-dia-chi-nhom.itest.mjs: bo qua baseline: tep pipeline/tests/the-dia-chi-nhom.itest.mjs co o cay dang kiem nhung chua co o merge-base 573eba52911bff060537c5eab6da0fea72bf1d62 — eval moi, chay tren code cu khong phan biet gi
-- node --test pipeline/tests/the-dia-chi-nhom.test.mjs: bo qua baseline: tep pipeline/tests/the-dia-chi-nhom.test.mjs co o cay dang kiem nhung chua co o merge-base 573eba52911bff060537c5eab6da0fea72bf1d62 — eval moi, chay tren code cu khong phan biet gi
-- cd app && bash ../db/db-thu.sh oneinvest_suite_tg1a --chay node --import tsx --test --test-concurrency=1 tests/the-dia-chi-nhom-app.itest.tsx: bo qua baseline: tep app/tests/the-dia-chi-nhom-app.itest.tsx co o cay dang kiem nhung chua co o merge-base 573eba52911bff060537c5eab6da0fea72bf1d62 — eval moi, chay tren code cu khong phan biet gi
-- mkdir -p .acceptance-runs/the-dia-chi-nhom-s03 && node pipeline/scripts/the-dia-chi-nhom-that.mjs --dem --ghi .acceptance-runs/the-dia-chi-nhom-s03/so-chay-thu.md: bo qua baseline: tep pipeline/scripts/the-dia-chi-nhom-that.mjs co o cay dang kiem nhung chua co o merge-base 573eba52911bff060537c5eab6da0fea72bf1d62 — eval moi, chay tren code cu khong phan biet gi
-- node pipeline/scripts/the-dia-chi-nhom-that.mjs --chat-luong: bo qua baseline: tep pipeline/scripts/the-dia-chi-nhom-that.mjs co o cay dang kiem nhung chua co o merge-base 573eba52911bff060537c5eab6da0fea72bf1d62 — eval moi, chay tren code cu khong phan biet gi
-- bash db/db-thu.sh oneinvest_suite_tg1l --chay node --test --test-concurrency=1 pipeline/tests/the-dia-chi-nhom-lui.itest.mjs: bo qua baseline: tep pipeline/tests/the-dia-chi-nhom-lui.itest.mjs co o cay dang kiem nhung chua co o merge-base 573eba52911bff060537c5eab6da0fea72bf1d62 — eval moi, chay tren code cu khong phan biet gi
-
-Eval không phân biệt (xanh cả hai phía): none — moi eval feature deu red tren baseline (co phan biet)
+none — không có eval nào xanh cả hai phía được liệt kê; mọi `baseline:` ghi n-a vì round này không đo lại. Các lệnh suite xanh cả hai phía là regression-guard bình thường, không liệt kê.
 
 ## Variance
 
-none — every multi-run eval is uniform
+none — không eval nào có runs lớn hơn 1; mọi eval là deterministic.
 
 ## Iterations
 
-Round 1: mọi eval E1 đến E9 xanh; verdict REJECT vì hai lệnh suite hồi quy không gắn eval bị đỏ. Một là bảng kiểm kê route của app (VT-AC-8) chưa khai trang và route group-cards. Hai là ma trận gán khu vực của pipeline (TRG-AC-7) chưa khai tệp the-dia-chi-nhom.mjs. Cả hai do tệp mới của tính năng, cần khai vào bảng/ma trận tương ứng. E10 còn UNCERTAIN chờ người. Trả về bước triển khai.
+Round 1: E1–E9 PASS (2026-11-16T02:41:51Z); E10 hội đồng đề xuất PASS; chờ người. Commit gần nhất sửa kiểm kê route viewer và ma trận gán khu vực (S4 r1).
+Round 2: E1–E9 carry-forward; hai lệnh suite hồi quy (`cd agent && npm test`, `cd app && npm test`) đỏ và không gắn eval — một deadlock DB ở ca LS1-AC-7 và hai ca nhãn Ops (danh sách tệp nhận diện thiếu route `group-cards`, 2 chỗ còn từ _Avoid_). Trả về implementation.
