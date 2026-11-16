@@ -319,6 +319,8 @@ executors:
     ycns_do_test: "node --test pipeline/scripts/do-ngan-sach-yeu-cau.test.mjs"   # yc1-khoang-le-va-doi-chung-do AC-3, AC-4 — bốn lý do đỏ của lệnh đo, không DB
     s09_ham: "node --test pipeline/lib/s09-du-an.test.mjs"   # toa-s09-hai-khu-vao-danh-ba E2 — gộp toà S09 thuần, ma trận viết trước, không DB
     ns09_test: "bash db/db-thu.sh oneinvest_suite_nap_s09 --chay node --test pipeline/tests/import-s09.test.mjs"   # nap-s09 E1–E3 — bộ nạp S09 trên DB thử: nạp, nạp lại, ba lý do bỏ, chốt chặn và đối chứng --may-thu
+    jst_unit: "node --test scripts/job-step-thoi-luong.test.mjs"   # job-step-ghi-thoi-luong E1–E9 — cây tạm chép job-step.sh + tệp bọc thật, node/sleep giả, không DB
+    jst_regress: "node --test scripts/job-exit.test.mjs scripts/s03-nap-nhanh.test.mjs scripts/zalo-import-job.test.mjs scripts/zalo-import-job-nhe.test.mjs scripts/enrich-buoc-job.test.mjs"   # job-step-ghi-thoi-luong E10 — lưới hồi quy dòng cũ của năm bộ test job
   script:
     dv7_that_doc: "node pipeline/scripts/offer-project-that.mjs --doc"   # du-an-cua-tin-len-dinh-vi E6 — DB máy thu, giao dịch READ ONLY
     dv7_that_hieu_nang: "node pipeline/scripts/offer-project-that.mjs --hieu-nang"   # du-an-cua-tin-len-dinh-vi E7 — DB máy thu, giao dịch lùi, tải < 14
