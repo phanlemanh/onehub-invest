@@ -3,6 +3,7 @@
 //   node pipeline/scripts/the-dia-chi-nhom-that.mjs --dem [--ghi <tệp.md>]   E7: áp 108, dựng nháp, so số đếm độc lập, sàn điền ô
 //   node pipeline/scripts/the-dia-chi-nhom-that.mjs --chat-luong              E8: nhóm sổ một dự án, dựng nháp bỏ sổ, đếm trùng
 // Số đếm độc lập viết bằng SQL riêng — không dùng hàm của lệnh dựng nháp — để hai đường cùng sai thì mới lọt.
+// Cả hai đường đều gạt bài thử: lệnh qua loadStgPosts (JS), câu đếm qua TEST_POST_SQL_T (SQL).
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -10,6 +11,8 @@ import { fileURLToPath } from "node:url";
 import pg from "pg";
 
 import { demLop, docDuLieu, dungTheoNhom, ghiNhap } from "./the-dia-chi-nhom.mjs";
+// Vế «bài thử» bằng SQL của kho (GN5) — bốn dấu của testMarker, KHÔNG gọi testMarker, nên hai đường đếm vẫn độc lập.
+import { TEST_POST_SQL_T } from "./test-data-residue.mjs";
 
 const GOC = join(dirname(fileURLToPath(import.meta.url)), "../..");
 const DB_THU = "oneinvest_u1_tg1";
@@ -19,7 +22,8 @@ const LOP = ["so_mot_du_an", "so_chua_ghi", "so_nhieu_du_an", "ngoai_so", "so_kh
 // Khoá thật của nhóm bằng SQL (cùng nghĩa với khoaNhomThat nhưng viết riêng).
 const KHOA = (cot) => `regexp_replace(${cot}, '^([^:]+:)?group:(?=.)', '')`;
 const SQL_LOP = `
-  WITH g AS (SELECT DISTINCT ${KHOA("conversation_id")} AS k FROM stg_zalo_posts WHERE conversation_id IS NOT NULL),
+  WITH g AS (SELECT DISTINCT ${KHOA("t.conversation_id")} AS k FROM stg_zalo_posts t
+              WHERE t.conversation_id IS NOT NULL AND NOT (${TEST_POST_SQL_T})),
        u AS (SELECT ${KHOA("group_key")} AS k, project_node_ids FROM collection_units WHERE source_code = 'S03'),
        uk AS (SELECT k, count(DISTINCT p) AS so_da FROM u LEFT JOIN LATERAL unnest(u.project_node_ids) p ON true GROUP BY k)
   SELECT CASE WHEN uk.k IS NULL THEN 'ngoai_so' WHEN g.k IS NULL THEN 'so_khong_bai'

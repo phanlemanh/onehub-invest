@@ -1,4 +1,4 @@
-// the-dia-chi-nhom.itest.mjs — hồ sơ the-dia-chi-nhom-s03 (TG1) E1 · AC-1 và E3 · AC-3, chạy trên DB của riêng lượt
+// the-dia-chi-nhom.itest.mjs — hồ sơ the-dia-chi-nhom-s03 (TG1) E1 · AC-1, E3 · AC-3 và phần gạt bài thử của AC-7, chạy trên DB của riêng lượt
 // (db/db-thu.sh oneinvest_suite_tg1 --chay). Mỗi ca trong BEGIN … ROLLBACK; 108 áp trong giao dịch.
 import { strict as assert } from "node:assert";
 import { readFileSync, writeFileSync, rmSync } from "node:fs";
@@ -9,6 +9,7 @@ import { pathToFileURL } from "node:url";
 import pg from "pg";
 
 import { docDuLieu, dungTheoNhom, ghiNhap } from "../scripts/the-dia-chi-nhom.mjs";
+import { TEST_POST_SQL_T } from "../scripts/test-data-residue.mjs";
 
 const DB_URL = process.env.DATABASE_URL ?? "";
 if (!/\/oneinvest_suite_[a-z0-9_]+$/.test(DB_URL)) {
@@ -72,7 +73,9 @@ test("TG1-AC-1 migration 108: áp hai lần, lược đồ không đổi, trigge
 /** Fixture năm lớp nhóm; trả khoá thật của từng lớp. Bài, nhãn, sổ đúng ràng buộc bảng thật. */
 async function fixture() {
   const T = `tg1fx${process.pid}`;
-  const { rows: [snap] } = await c.query(`SELECT snapshot_id FROM stg_zalo_posts LIMIT 1`);
+  // Snapshot mượn phải KHÔNG mang dấu thử — nếu không mọi bài của fixture bị gạt và ca mất nghĩa.
+  const { rows: [snap] } = await c.query(`SELECT snapshot_id FROM stg_zalo_posts t WHERE NOT (${TEST_POST_SQL_T}) LIMIT 1`);
+  assert.ok(snap?.snapshot_id, "fixture: DB thử không có snapshot thật nào để mượn");
   const phuong = (await mot(`SELECT id FROM areas WHERE region_type = 'submarket' ORDER BY id LIMIT 1`)).id;
   const nut = async (s) => Number((await mot(`INSERT INTO asset_nodes (node_type, name, slug, area_ids) VALUES ('project', $1, $1, $2) RETURNING id`,
     [`${T}-${s}`, [phuong]])).id);
@@ -80,19 +83,24 @@ async function fixture() {
   const so = async (khoa, duAn = []) => c.query(`INSERT INTO collection_units (source_code, group_key, name, project_node_ids, status, enabled)
                                                  VALUES ('S03', $1, $1, $2, 'active', true)`, [khoa, duAn]);
   let dem = 0;
-  const bai = async (khoa, n, nhan) => {
+  const bai = async (khoa, n, nhan, { thu = false } = {}) => {
     for (let i = 0; i < n; i++) {
       const pid = `${T}-p${++dem}`;
-      await c.query(`INSERT INTO stg_zalo_posts (post_id, snapshot_id, text, conversation_id, captured_at) VALUES ($1, $2, 'bài thử', $3, now())`,
-        [pid, snap.snapshot_id, khoa]);
+      await c.query(`INSERT INTO stg_zalo_posts (post_id, snapshot_id, text, conversation_id, group_name, captured_at)
+                     VALUES ($1, $2, 'bài thử', $3, $4, now())`,
+        [pid, snap.snapshot_id, khoa, thu ? "TEST-G1" : null]);
       if (nhan) await c.query(`INSERT INTO silver_labels (source_code, post_id, text_hash, model, prompt_version, listing_intent, kind,
                                  probabilities, json_ok, run_id, labeled_at)
                                VALUES ('S03', $1, 'h', 'thu', 'thu', 'offer', $2, $3, true, 'tg1', now())`,
         [pid, nhan.kind, { o: { project: { v: nhan.project ?? "", cc: "chu_bai" } } }]);
     }
   };
-  const k = { mot: `${T}-mot`, chua: `${T}-chua`, nhieu: `${T}-nhieu`, ngoai: `${T}-ngoai`, khongBai: `${T}-khong`, hai: `${T}-hai` };
+  const k = { mot: `${T}-mot`, chua: `${T}-chua`, nhieu: `${T}-nhieu`, ngoai: `${T}-ngoai`, khongBai: `${T}-khong`, hai: `${T}-hai`,
+              thu: `${T}-thu` };
   await so(k.mot, [A]); await bai(k.mot, 6, { kind: "sale" });
+  // Bài thử: nhóm toàn bài thử (có trong sổ) và hai bài thử lẫn trong một nhóm thật.
+  await so(k.thu); await bai(k.thu, 3, { kind: "sale" }, { thu: true });
+  await bai(k.mot, 2, { kind: "sale" }, { thu: true });
   await so(k.chua); await bai(`group:${k.chua}`, 8, { kind: "rent_lt", project: `${T}-a` });
   await so(k.nhieu, [A, B]); await bai(k.nhieu, 5, { kind: "sale", project: `${T}-b` });
   await bai(k.ngoai, 3, null);
@@ -148,5 +156,29 @@ test("TG1-AC-3 lệnh dựng nháp: một thẻ mỗi nhóm thật có bài, ch�
       await chay(await import(pathToFileURL(tep).href));
     } finally { rmSync(tep, { force: true }); }
     assert.notEqual((await theCua(k.mot))[0].purpose, "ca_hai", "giu-da-duyet: bản bỏ điều kiện vẫn giữ thẻ đã duyệt — ca không phân biệt được");
+  });
+});
+
+test("TG1-AC-7 lệnh dựng nháp gạt bài thử: nhóm toàn bài thử không có thẻ, số bài căn cứ không cộng bài thử", { timeout: 600_000 }, async () => {
+  await trongGiaoDich(async () => {
+    await c.query(MIG);
+    const { k } = await fixture();
+    await chay();
+    assert.equal((await theCua(k.thu)).length, 0, "TG1-AC-7: nhóm toàn bài thử không được có thẻ");
+    const t = (await theCua(k.mot))[0];
+    assert.equal(t.evidence.so_bai, 6, "TG1-AC-7: số bài căn cứ của nhóm thật cộng cả bài thử");
+
+    // Đối chứng đỏ: bản sao lệnh đọc thẳng stg_zalo_posts (không qua loadStgPosts) → nhóm toàn bài thử có thẻ.
+    const goc = readFileSync(SCRIPT, "utf8");
+    const pha = goc.replace('const { posts, rejected } = await loadStgPosts(client, "zalo");',
+      'const { rows: posts } = await client.query(`SELECT DISTINCT ON (post_id) post_id, conversation_id FROM stg_zalo_posts'
+      + ' WHERE conversation_id IS NOT NULL ORDER BY post_id, captured_at DESC NULLS LAST`); const rejected = { total: 0 };');
+    assert.notEqual(pha, goc, "bai-thu: không phá được lệnh");
+    const tep = join(GOC, "pipeline/scripts", `.tg1-pha-bai-thu-${process.pid}.mjs`);
+    writeFileSync(tep, pha);
+    try {
+      await chay(await import(pathToFileURL(tep).href));
+    } finally { rmSync(tep, { force: true }); }
+    assert.equal((await theCua(k.thu)).length, 1, "bai-thu: bản đọc thẳng stg vẫn không dựng thẻ cho nhóm toàn bài thử — ca không phân biệt được");
   });
 });

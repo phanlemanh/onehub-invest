@@ -12,6 +12,7 @@ import { fileURLToPath } from "node:url";
 import pg from "pg";
 
 import { khoaNhomThat, donViTheoNhomThat } from "../lib/eval-labels.mjs";
+import { loadStgPosts } from "../lib/test-posts.mjs";
 import { dungNhap } from "../lib/the-dia-chi-nhom.mjs";
 
 export const NGUON = "S03";
@@ -22,8 +23,10 @@ export async function docDuLieu(client) {
   const q = async (sql, p = []) => (await client.query(sql, p)).rows;
   const so = await q(`SELECT unit_code, group_key, project_node_ids::bigint[] AS project_node_ids FROM collection_units
                        WHERE source_code = $1 ORDER BY unit_code`, [NGUON]);
-  const bai = await q(`SELECT DISTINCT ON (post_id) post_id, conversation_id FROM stg_zalo_posts
-                        WHERE conversation_id IS NOT NULL ORDER BY post_id, captured_at DESC NULLS LAST`);
+  // Bài thử gạt bằng định nghĩa DUY NHẤT của kho (lib/test-posts.mjs), như mọi transform đọc stg_zalo_posts: nhóm toàn
+  // bài thử không phải nhóm thật, và số bài căn cứ của nhóm thật không được cộng bài thử.
+  const { posts, rejected } = await loadStgPosts(client, "zalo");
+  const bai = posts.filter((p) => p.conversation_id != null).map((p) => ({ post_id: p.post_id, conversation_id: p.conversation_id }));
   const nhan = await q(`SELECT DISTINCT ON (post_id) post_id, kind,
                                btrim(probabilities->'o'->'project'->>'v') AS project, probabilities->'o'->'project'->>'cc' AS project_cc,
                                btrim(probabilities->'o'->'subzone'->>'v') AS subzone, probabilities->'o'->'subzone'->>'cc' AS subzone_cc
@@ -36,7 +39,7 @@ export async function docDuLieu(client) {
   const phanKhu = await q(`SELECT id::int AS id, name, aliases, parent_id::int AS parent_id FROM asset_nodes
                             WHERE node_type IN ('subzone', 'building')`);
   const phuong = await q(`SELECT id, parent_id FROM areas WHERE region_type = 'submarket'`);
-  return { so, bai, nhan, tin, duAn, phanKhu, phuong };
+  return { so, bai, nhan, tin, duAn, phanKhu, phuong, baiThu: rejected };
 }
 
 /** Gom theo nhóm thật và dựng nháp cho từng nhóm có bài. Hàm thuần trên dữ liệu đã đọc. */
@@ -126,14 +129,16 @@ async function main(argv) {
     const { rows: [k] } = await c.query(`SELECT to_regclass('group_address_cards') IS NOT NULL AS co`);
     if (!k.co) throw Object.assign(new Error("the-dia-chi-nhom: chưa có group_address_cards — DB chưa áp 108"), { code: "THIEU_DB" });
     const t0 = performance.now();
-    const nhap = dungTheoNhom(await docDuLieu(c));
+    const d = await docDuLieu(c);
+    const nhap = dungTheoNhom(d);
     let dem = null;
     if (ghi) {
       await c.query("BEGIN");
       try { dem = await ghiNhap(c, nhap); await c.query("COMMIT"); } catch (e) { await c.query("ROLLBACK"); throw e; }
     }
-    const ra = { nhom_co_bai: nhap.length, lop: demLop(nhap), ghi: dem, giay: +((performance.now() - t0) / 1000).toFixed(2) };
-    console.log(argv.includes("--json") ? JSON.stringify(ra) : `the-dia-chi-nhom: ${nhap.length} nhóm có bài · lớp ${JSON.stringify(ra.lop)}${dem ? ` · ghi ${JSON.stringify(dem)}` : " · chạy thử, không ghi"} · ${ra.giay} giây`);
+    const ra = { nhom_co_bai: nhap.length, bai_thu_bo: d.baiThu?.total ?? 0, lop: demLop(nhap), ghi: dem,
+                 giay: +((performance.now() - t0) / 1000).toFixed(2) };
+    console.log(argv.includes("--json") ? JSON.stringify(ra) : `the-dia-chi-nhom: ${nhap.length} nhóm có bài · bỏ ${ra.bai_thu_bo} bài thử · lớp ${JSON.stringify(ra.lop)}${dem ? ` · ghi ${JSON.stringify(dem)}` : " · chạy thử, không ghi"} · ${ra.giay} giây`);
   } finally {
     await c.end();
   }
