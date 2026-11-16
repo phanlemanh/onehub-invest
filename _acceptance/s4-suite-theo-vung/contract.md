@@ -87,7 +87,10 @@ Trục (preset test-matrix cho «lệnh bọc suite»):
 - Nguồn vùng: import chéo đo được · ngoại lệ có tên. [AC-5]
 - Worktree: thiếu cả ba · có sẵn một phần · là checkout chính. [AC-7]
 
-Core → AC-1…AC-8. Later: đọc vùng từ bản đồ import sinh tự động. Never: bỏ qua suite khi không xác định được diff.
+Core → AC-1…AC-8. Later: đọc vùng từ bản đồ import sinh tự động; kiểm lại có cần dựng `.next/dev/types` không khi
+`.next/types` đã có (P2 đo 16/11: chỉ `next typegen`, không `.next/dev/types`, giữ `next-env.d.ts` đã commit → tsc và
+lint đều mã 0 — hàng này chép và cộng một cấp «../» nên không dính lỗi nối liên kết tượng trưng của P2, nhưng bước
+dựng có thể thừa). Never: bỏ qua suite khi không xác định được diff.
 
 ## Out of scope
 
