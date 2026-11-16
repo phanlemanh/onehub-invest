@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 09b09495910c33528a94f75a67a9b0550c25185f
+verified_commit: 3951c77e10a620549baf1ca1c36ef63730e9d961
 human_signoff: Mạnh 2026-11-16
 ---
 
@@ -202,3 +202,7 @@ Round 1: E9, E10 failed — probe dữ liệu thật chưa chạy xanh trên b�
 Round 2: E1–E12 đều xanh trên 37b95383.
 Round 3: chạy lại E1, E2, E3, E8, E11 sau commit 09b09495 (ngoại lệ ngày lễ thu về sáu ngày); các eval còn lại mang từ round 2; tất cả xanh.
 
+
+### Re-pin lần 1 — 2026-11-16, do ghim lại bằng làn eval
+run_id: repin-20261116T121114Z-60882
+sha: 3951c77e10a620549baf1ca1c36ef63730e9d961 · suites: 7 lệnh exit 0 · evals: 12/12 eval máy đạt kỳ vọng
