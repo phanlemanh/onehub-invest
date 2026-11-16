@@ -1,0 +1,36 @@
+{
+  "feature_plain": "Anh mở mục «Danh bạ» trên Ops ở máy thu và thấy toàn bộ dự án, phân khu, toà, căn mà hệ thống đang giữ, cái nào đã xác minh, đến từ nguồn nào, có bao nhiêu tin đang rao, và chỗ nào còn thiếu.",
+  "will_do": [
+    {"id": "AC-2", "p": "Sẽ đếm đúng số phân khu, toà, toà chưa có căn và căn của từng dự án (tính cả phân khu lồng nhau); toà đã gộp và căn đã nghỉ không được đếm."},
+    {"id": "AC-3", "p": "Sẽ hiện bốn ô số đầu trang: dự án, toà, căn, mã dự án nguồn chưa nối theo từng nguồn — kèm câu chú S09 đã góp tên bao nhiêu toà."},
+    {"id": "AC-4", "p": "Sẽ cho tìm dự án theo tên hay bí danh (gõ không dấu cũng được) và lọc theo tỉnh/thành, nguồn, bậc xác minh, chỗ thiếu."},
+    {"id": "AC-5", "p": "Sẽ mở được một dự án xuống tới toà và căn (tầng, trục, mã căn), có tab riêng cho toà chưa có căn."},
+    {"id": "AC-7", "p": "Sẽ chỉ hiện nguồn bằng mã S0x; tên nguồn thật trong tên dự án, tên toà hay mã căn đều bị che."},
+    {"id": "AC-8", "p": "Sẽ có câu rõ ràng cho mọi lúc trống, đang tải, lỗi (kèm nút Thử lại), dự án chưa có toà."},
+    {"id": "AC-9", "p": "Sẽ có mục «Danh bạ» trên thanh bên Ops, đường dẫn tiếng Anh /ops/registry đã ghi vào từ điển sản phẩm."},
+    {"id": "AC-10", "p": "Sẽ cho số trên màn khớp đếm độc lập trên DB máy thu, đọc được ở sáng, tối và điện thoại."}
+  ],
+  "wont_do": [
+    {"id": "AC-1", "p": "Sẽ KHÔNG đọc danh bạ khi chạy trên máy chủ cloud — trang chỉ báo «Chỉ ở máy thu»."},
+    {"id": "AC-6", "p": "Sẽ KHÔNG ghi hay sửa bất kỳ dữ liệu nào; không thêm bảng hay view mới."},
+    {"id": "OOS-1", "p": "Chưa đếm số tin gắn vào từng toà, căn và chưa có màn đối chiếu trường × nguồn — phần sau của hàng DN2."},
+    {"id": "OOS-2", "p": "Chưa có thao tác sửa cây: gộp, tách, đổi cha, rút nút, duyệt nối mã nguồn."},
+    {"id": "OOS-3", "p": "Chưa đưa danh bạ dự án, toà, căn lên cloud."},
+    {"id": "OOS-4", "p": "Không có thay đổi cấu trúc DB hay ghi dữ liệu."},
+    {"id": "OOS-5", "p": "Chưa dựng bảng nối dự án cho S09, nên mọi mã S09 hiện «Chưa qua bước nối»."}
+  ],
+  "scope_plain": "Lát đầu chỉ để nhìn; mọi việc sửa, nối, lên cloud đi ở hàng sau.",
+  "coverage_plain": [
+    {"i": 0, "p": "Loại nút và bậc: dự án xác minh, một lời khai, suy ra mạnh; phân khu thường và ba nút Grand Park mang nhãn toà nhưng là phân khu — đo ở AC-2 (đếm đúng), AC-5 (trang dự án)."},
+    {"i": 1, "p": "Con và vật thể: dự án không con, phân khu lồng, toà có căn, toà chưa có căn, toà/căn đã nghỉ — đo ở AC-2, AC-5."},
+    {"i": 2, "p": "Nguồn: nối qua S06, S08, S09, S10; mã chưa nối có lý do và chưa qua bước nối; tin S03, S06 — đo ở AC-2, AC-3 (ô số), AC-4 (lọc)."},
+    {"i": 3, "p": "Môi trường: máy thu có dữ liệu, danh bạ rỗng, cloud, thiếu bảng, lỗi — đo ở AC-1 (cloud), AC-8 (trống, tải, lỗi)."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Phép kiểm «không lộ tên nguồn» ban đầu chỉ soi trang danh sách và tên dự án. Đã sửa: trang dự án che cả tên toà, mã toà, trục, căn, mã đã nối; phép kiểm soi trang của mọi dự án có toà."},
+    {"i": 1, "p": "Chưa nói rõ tin của phân khu có cộng lên dự án không. Đã ghi: hệ thống luôn quy tin về dự án gốc, nên cột tin chỉ ở dự án và không đếm trùng; phép kiểm thêm một tin gắn phân khu."},
+    {"i": 2, "p": "Cách đếm S09 «chưa nối» là câu chỉ anh quyết được, nên để mở ở cổng này (Hỏi-1). Bản nháp làm theo khuyến nghị và thêm câu chú S09 đã góp tên toà; số trong ô cơ hội sửa về cùng cách đếm với màn (S08 180 dự án, S09 344)."},
+    {"i": 3, "p": "Ma trận thử của phép đếm ghi sai số nút và thiếu hai phép phá. Đã sửa: liệt đủ sáu nút với số kỳ vọng, thêm phá «tin xung đột bị đếm» và «căn đã nghỉ bị đếm»."},
+    {"i": 4, "p": "Phép thử lọc chỉ đo «chỗ thiếu». Đã thêm lọc tỉnh/thành, nguồn, bậc với số dự án kỳ vọng viết trước và một phép phá tính tỉnh sai."}
+  ]
+}
