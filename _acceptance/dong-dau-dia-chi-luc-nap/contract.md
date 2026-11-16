@@ -36,7 +36,9 @@ Bảng phủ ca và mọi số đo: design doc §1, đếm trên DB máy thu m�
   - **(a) thước của hàng, không phụ thuộc người**: **100%** tin thuộc nhóm **có thẻ `da_duyet` sống** được đóng
     dấu — lệnh in tử số và mẫu số của riêng tập ấy. Hàng tự bảo đảm được thước này.
   - **(b) thước của mốc, phụ thuộc buổi duyệt**: tỉ lệ tin S03 đang rao có `status='mot_du_an'` trên mẫu số
-    `sale_offers WHERE source='S03'` đạt **ngưỡng chốt ở Cổng Phạm vi (đề xuất 90%)**; mốc nền 5.438/6.637 = 81,93%.
+    `sale_offers WHERE source='S03'` đạt **ngưỡng chốt ở Cổng Phạm vi (đề xuất 90%)**, trên cửa sổ `all`; mốc nền **đo lại tại chỗ, không chép**
+  (16/11: 5.438/6.637 = 81,93% · 17/11: 5.470/6.649 = 82,27%). `/ops/data-flow` mặc định hiện cửa sổ `7d`
+  (`app/src/lib/data-flow-queries.ts:371`), nên lệnh in cả ba cửa sổ và nói ngưỡng áp cho cửa sổ nào.
 
   Cả hai in mốc đo và **số đếm theo bài đầu** (`post_ids[1]`) tách khỏi số đếm theo tin.
 
@@ -78,8 +80,10 @@ Bảng phủ ca và mọi số đo: design doc §1, đếm trên DB máy thu m�
   và mọi hành vi khác của `transform-zalo.mjs` không đổi. Chiều đỏ: thoát khác 0 hoặc nuốt lặng thì ca đỏ.
 
 - **AC-8** (không tụt ô Định vị) Given tập tin đang `mot_du_an` trước khi đóng dấu, When chạy lượt nạp trên bản
-  chép, Then **0 tin** rơi từ `mot_du_an` sang `xung_dot` hay sang không-có-dòng; lệnh in số tin `xung_dot` trước
-  và sau. Mốc nền: S03 hôm nay có **0 dòng** `xung_dot`, nên mọi dòng xung đột sinh ra đều là của hàng này.
+  chép, Then **0 bài** rơi từ `mot_du_an` sang `xung_dot` hay sang không-có-dòng; lệnh in số `xung_dot` trước và sau.
+  Phép so đi theo **tập bài** (`post_id`), **không** theo `offer_id`: `kind` nằm trong `repostKey`
+  (`pipeline/transform-zalo.mjs:764`) nên đổi `kind` đổi luôn `offer_id`, so theo tin sẽ đếm nhầm việc tách-gộp
+  thành việc rơi. Mốc nền: S03 có **0 dòng** `xung_dot` (đo lại 17/11), nên mọi dòng xung đột sinh ra là của hàng này.
 
 - **AC-9** (raw bất biến, dọn dòng cũ) Given `collector/snapshots/` và hai luật DV6 đang có dòng sống,
   When chạy lượt nạp có đóng dấu, Then không tệp nào dưới `collector/snapshots/` đổi (so băm trước/sau), và dòng
@@ -97,6 +101,11 @@ Bảng phủ ca và mọi số đo: design doc §1, đếm trên DB máy thu m�
   `boi-canh-nhom`, When chạy lượt nạp có đóng dấu trên bản chép, Then **0 tin mất `kind`** — số tin `kind` rỗng
   sau không lớn hơn trước; lệnh in riêng số tin lấy `kind` từ chữ bài, từ thẻ, và từ nhánh cũ. Chiều đỏ: tắt
   nhánh `boi-canh-nhom` trong bản sao thì lệnh thoát 1 và gọi đúng số tin rỗng sinh ra.
+
+  **Và một thước thứ hai, cùng lệnh, in riêng: số bài LẬT `sale ↔ rent_lt`**, hai chiều tách nhau. Thẻ nói
+  «thuê» trên nhóm mà bối cảnh nhóm đang nói «bán» thì bài không mất `kind` nhưng **đổi cổng**
+  `listings/sale` ↔ `listings/rent`. Lượt đầu chưa có ngưỡng: in số, và nếu khác 0 thì khai vào «Known limits»
+  kèm số thật — một con số không ai nhìn là đúng lớp lỗi AC-11 sinh ra để chặn.
 
 ## Coverage
 
@@ -142,3 +151,10 @@ Quét theo preset test-matrix; trục và ô lấy từ bảng phủ ca của de
 - Executor key cho các eval dưới đây **chưa có** trong `_acceptance/config.yaml`; lượt S1 này không được ghi tệp
   ấy (phạm vi giám sát giao), nên thêm chúng là việc đầu của S3.
 - Hàng đứng trên TG1: phép đo AC-1, AC-5, AC-8 chỉ chạy được sau khi TG1 gộp và bản chép đã áp 108 + 109.
+- **Trigger của 096 NÉM** (`096_truong_du_an_tren_tin.sql:36-47`) khi `area_id` không trỏ `areas` cấp
+  `submarket`, `project_node_id` không trỏ nút `project`, `subzone_node_id` không trỏ nút `subzone|building`.
+  Một ô thẻ hỏng là **vỡ cả giao dịch transform đêm**, nên bộ đọc thẻ lọc trước khi ghi và đếm số ô bị bỏ.
+- **Giới hạn đã biết, phải nằm trong «Known limits» của bằng chứng:** TG2 sinh phát biểu `project_node_id`, mà
+  `pipeline/lib/phuong-tu-du-an.mjs:57` (DA9) suy `area_id · registry_inherit` từ chính các phát biểu dự án.
+  Trong lượt của TG2 thì cột `area_id` không đổi (AC-4 đúng), nhưng **lượt DA9 chạy sau sẽ dời cột ấy** ở hàng
+  nghìn tin.

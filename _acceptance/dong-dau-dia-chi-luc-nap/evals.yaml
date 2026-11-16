@@ -147,9 +147,10 @@ evals:
       - "pipeline/lib/dia-chi-the-nhom.mjs"
       - "pipeline/scripts/dong-dau-dia-chi-that.mjs"
     expected: >
-      Trên bản chép: lệnh in số tin mot_du_an và số tin xung_dot trước và sau lượt nạp; 0 tin rơi từ mot_du_an
-      sang xung_dot hay sang không-có-dòng, thoát 0.
-      Chiều đỏ: cấy một bài mang dự án khác vào một tin đang mot_du_an thì lệnh thoát 1 và gọi tên offer_id ấy.
+      Trên bản chép: lệnh in số mot_du_an và số xung_dot trước và sau lượt nạp, SO THEO TẬP BÀI (post_id) chứ
+      không theo offer_id — kind nằm trong repostKey nên đổi kind đổi luôn offer_id; 0 bài rơi từ mot_du_an sang
+      xung_dot hay sang không-có-dòng, thoát 0.
+      Chiều đỏ: cấy một bài mang dự án khác vào một tin đang mot_du_an thì lệnh thoát 1 và gọi tên bài ấy.
 
   - id: E11
     criterion: AC-9
@@ -186,6 +187,7 @@ evals:
       - "pipeline/lib/dia-chi-the-nhom.mjs"
       - "pipeline/scripts/dong-dau-dia-chi-that.mjs"
     expected: >
-      Trên bản chép: số tin S03 có kind rỗng SAU lượt nạp không lớn hơn TRƯỚC (mốc nền: 0 tin rỗng trên
-      6.637 tin); lệnh in riêng số tin lấy kind từ chữ bài, từ thẻ, từ nhánh boi-canh-nhom; thoát 0.
+      Trên bản chép: số tin S03 có kind rỗng SAU lượt nạp không lớn hơn TRƯỚC (mốc nền đo lại tại chỗ; 17/11 là
+      0 tin rỗng trên 6.649 tin); lệnh in riêng số tin lấy kind từ chữ bài, từ thẻ, từ nhánh boi-canh-nhom; VÀ
+      in số bài LẬT sale↔rent_lt, hai chiều tách nhau — khác 0 thì khai vào Known limits kèm số thật; thoát 0.
       Chiều đỏ: tắt nhánh boi-canh-nhom trong bản sao thì lệnh thoát 1 và gọi đúng số tin rỗng sinh ra.
