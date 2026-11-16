@@ -5,7 +5,7 @@ slug: the-dia-chi-nhom-s03
 owner: phanlemanh@gmail.com
 risk_tier: T3      # chạm db/migrations và app/src/app/api/v1/ops (t3_paths)
 surfaces: [cli, data, ui]
-status: approved
+status: implemented
 approved_by: Mạnh
 approved_at: 2026-11-16
 design_doc: docs/superpowers/specs/2026-11-16-the-dia-chi-nhom-s03-design.md
