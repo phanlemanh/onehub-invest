@@ -64,3 +64,4 @@
 {"ts":"2026-11-16T05:20:27Z","sha":"65503cccc8c265a557b6056ea262bdfa3eb31fde","round":3,"kind":"baseline","evals_hash":"0e9693d56ebe8ebd89ddfbdd5cb294cc21958a3783aae756e47eaa04266e00fd","non_discriminating":[],"carried_from_round":2}
 {"ts":"2026-11-16T05:20:27Z","sha":"65503cccc8c265a557b6056ea262bdfa3eb31fde","round":3,"kind":"round-tally","verdict":"PASS","expected":10,"returned":10,"blocked":0}
 {"ts":"2026-11-16T05:20:27Z","sha":"65503cccc8c265a557b6056ea262bdfa3eb31fde","round":3,"kind":"chot-truong-nguoi","human_signoff":0,"human_override":0,"bypass_ack":0,"verified_at":13}
+{"kind":"thuoc-vat","ts":"2026-11-16T05:56:42Z","round":3,"san":"f0f25d8a79f3851559f0b80d43a9988682c6bc10","vat":[101,22],"thuoc":[1,1],"ho_so":[307,3],"nhat":0,"lan":1,"tep_thuoc":["_acceptance/do-lech-s03-s06-canh-hang/evals.yaml"]}
