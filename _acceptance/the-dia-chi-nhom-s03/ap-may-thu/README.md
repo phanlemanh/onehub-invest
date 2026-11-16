@@ -29,7 +29,8 @@ chiếu. Không đổi bảng, view hay hàm có sẵn; không vào `sync-cloud`
    ```bash
    docker exec -i -e PGPASSWORD=oneinvest one-invest-db psql -U oneinvest -h localhost -d oneinvest -X < _acceptance/the-dia-chi-nhom-s03/ap-may-thu/kiem-sau.sql
    ```
-   Đạt khi: có hai bảng; số thẻ bằng số nhóm S03 có bài (dòng `nhom_co_bai`) và gần số chạy thử; mọi thẻ đang `nhap`; mỗi thẻ
+   Đạt khi: có hai bảng; số thẻ bằng số nhóm S03 có bài (dòng `nhom_co_bai`) — mốc chạy thử 16/11 là **26** sau khi gạt bài
+   thử; mọi thẻ đang `nhap`; mỗi thẻ
    có một dòng lịch sử `dung_nhap`.
 
 **Thứ tự gộp và áp.** Gộp trước hay áp trước đều an toàn: khi DB chưa có bảng thẻ, trang `/ops/group-cards` hiện «Chỉ ở máy
