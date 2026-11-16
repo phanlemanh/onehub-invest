@@ -5,7 +5,7 @@ slug: job-step-ghi-thoi-luong
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [pipeline]
-status: approved
+status: implemented
 veto_state: mo
 veto_opened_at: 2026-11-16T10:18:23Z
 design_doc: docs/superpowers/specs/2026-11-16-job-step-ghi-thoi-luong-design.md
@@ -75,7 +75,12 @@ Căn cứ: AGENTS.md «Phân làn hai agent»; `_acceptance/s03-len-nhanh-nac-1/
   `truoc-lan-claude` nêu tên là bước CHỈ có ở bản sau vòng nên nằm ngoài phép so đối chứng.
 - AC-10: Given cây sau vòng, When chạy `scripts/job-exit.test.mjs`, `scripts/s03-nap-nhanh.test.mjs`,
   `scripts/zalo-import-job.test.mjs`, `scripts/zalo-import-job-nhe.test.mjs`, `scripts/enrich-buoc-job.test.mjs`,
-  Then cả năm bộ đều xanh — không bộ nào phải sửa kỳ vọng vì dòng `JOB STEP` mới.
+  Then cả năm bộ đều xanh; và ĐÚNG HAI sửa đổi sau, không hơn, là phần của vòng (yêu cầu N1-87, giám sát duyệt
+  16/11): (a) `scripts/job-exit.test.mjs` ca `AC-6 job_step` ô mã 0 nới từ «stderr chỉ có đầu ra của lệnh» thành
+  «đầu ra của lệnh rồi ĐÚNG MỘT dòng `JOB STEP`» — hai ô mã 1 và mã 3 không đổi một byte; (b)
+  `scripts/zalo-import-job.test.mjs` sổ `TEP_NHAC` thêm đúng một dòng cho `scripts/job-step-thoi-luong.test.mjs`
+  và số đếm của `PL34-AC-4` đi từ 10 lên 11, logic quét không đổi. Mọi kỳ vọng khác của năm bộ giữ nguyên:
+  `git diff origin/main -- scripts/job-exit.test.mjs scripts/zalo-import-job.test.mjs` chỉ chạm đúng hai chỗ ấy.
 
 ## Coverage
 

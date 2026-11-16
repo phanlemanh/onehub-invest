@@ -322,6 +322,7 @@ const TEP_NHAC = [
   "pipeline/scripts/importer-bo-qua-du-lieu-thu.test.mjs",
   "pipeline/scripts/media-wiring.test.mjs",
   "scripts/enrich-buoc-job.test.mjs",
+  "scripts/job-step-thoi-luong.test.mjs",   // job-step-ghi-thoi-luong: dòng ghim thời lượng
   "scripts/nap-argmax.test.mjs",
   "scripts/nap-ts-order.test.mjs",
   "scripts/zalo-import-job-khoa.itest.mjs",
@@ -347,9 +348,9 @@ function soTepNhac(thay, ke) {
   assert.deepEqual(thay, [...ke].sort(), "PL34-AC-4 tập tệp kê có tệp không còn nhắc zalo-import-daily");
 }
 
-test("PL34-AC-4 tập tệp: mọi tệp test nhắc zalo-import-daily đúng bằng mười tệp kê trước (s03-len-nhanh-nac-1 thêm hai, CG9 thêm một); thiếu một thì đỏ gọi tên", () => {
+test("PL34-AC-4 tập tệp: mọi tệp test nhắc zalo-import-daily đúng bằng mười một tệp kê trước (s03-len-nhanh-nac-1 thêm hai, CG9 thêm một, job-step-ghi-thoi-luong thêm một); thiếu một thì đỏ gọi tên", () => {
   const thay = quetTepNhac();
-  assert.equal(thay.length, 10, `PL34-AC-4 số tệp quét: ${thay.join(", ")}`);
+  assert.equal(thay.length, 11, `PL34-AC-4 số tệp quét: ${thay.join(", ")}`);
   soTepNhac(thay, TEP_NHAC);
   assert.throws(() => soTepNhac(thay, TEP_NHAC.filter((f) => f !== "scripts/nap-argmax.test.mjs")),
     /PL34-AC-4 tệp test nhắc zalo-import-daily chưa kê: scripts\/nap-argmax\.test\.mjs/);
