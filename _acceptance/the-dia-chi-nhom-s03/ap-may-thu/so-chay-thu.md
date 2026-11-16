@@ -1,6 +1,6 @@
 # Số chạy thử TG1 trên bản chép oneinvest_u1_tg1
 
-Chạy lúc 2026-11-16T00:47:32.302Z · 0.3 giây (áp 108 + đọc + dựng nháp + ghi) · ghi {"tao":28,"cap_nhat":0,"giu_da_quyet":0,"khong_doi":0}
+Chạy lúc 2026-11-16T06:03:43.353Z · 0.26 giây (áp 108 + đọc + dựng nháp + ghi) · ghi {"tao":28,"cap_nhat":0,"giu_da_quyet":0,"khong_doi":0}
 
 | Lớp | Lệnh dựng nháp | Đếm độc lập |
 |---|---|---|
@@ -21,6 +21,8 @@ Nhóm có từ 5 bài đọc: 24 (sàn một nửa = 12)
 | bán/thuê | 24 |
 
 **ĐẠT**
+
+Bản chép dựng lại lúc 06:03Z ngày 16/11 (sau lượt ghi offer_project 03:59Z); số giống lượt 00:47Z.
 
 ## Chất lượng nháp (E8, cùng bản chép)
 
