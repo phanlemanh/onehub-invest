@@ -29,12 +29,15 @@ export function dongCanCu(o: CanCuO | undefined, soBaiDoc: number, coGiaTri: boo
   return o.so_bai > 0 ? `${nguon}, ${fmtInt(o.so_bai)} ${don}` : nguon
 }
 
-/** Dòng căn cứ của ô bán/thuê kèm số bài mỗi phía. */
+/**
+ * Dòng căn cứ của ô bán/thuê kèm số bài mỗi phía. Máy để trống ô này thì vẫn ghi căn cứ với `nguon` null
+ * (pipeline/lib/the-dia-chi-nhom.mjs), nên giá trị chỉ là của máy khi có `nguon` — như `dongCanCu` bên trên.
+ */
 export function dongCanCuMucDich(t: TheDiaChi): string {
   const o = t.evidence.muc_dich
   const doc = t.evidence.so_bai_doc ?? 0
   if (!t.muc_dich) return `Chưa đủ căn cứ (${fmtInt(doc)} bài đã đọc)`
-  if (!o) return "Người vận hành điền"
+  if (!o || !o.nguon) return "Người vận hành điền"
   return `từ bài đã đọc: ${fmtInt(o.ban ?? 0)} bán, ${fmtInt(o.thue ?? 0)} thuê`
 }
 

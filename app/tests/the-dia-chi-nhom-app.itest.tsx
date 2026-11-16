@@ -1,4 +1,4 @@
-// the-dia-chi-nhom-app.itest.tsx — hồ sơ the-dia-chi-nhom-s03 (TG1) E4 · AC-4 và E6 · AC-6. Chạy trên DB của riêng lượt
+// the-dia-chi-nhom-app.itest.tsx — hồ sơ the-dia-chi-nhom-s03 (TG1) E4 · AC-4, E6 · AC-6 và dòng căn cứ của hộp duyệt (AC-10). Chạy trên DB của riêng lượt
 // (config:executors.test.tg1_app — db-thu --chay chép bản mẫu rồi xoá khi xong), nên áp 108 và fixture được commit: route
 // dùng pool riêng của app, không thấy giao dịch chưa commit của ca thử.
 import assert from "node:assert/strict"
@@ -8,6 +8,8 @@ import { after, before, test } from "node:test"
 import pg from "pg"
 import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
+
+import type { MucDich, TheDiaChi } from "../src/lib/the-dia-chi-nhom"
 
 import { taoNguoi } from "./helpers/phien-thu"
 
@@ -157,5 +159,37 @@ test("TG1-AC-6 đối chứng đỏ: bản sao bỏ lọc tên trùng khoá thì
   try {
     const { docTheDiaChi } = (await import(tep)) as typeof import("../src/lib/the-dia-chi-nhom")
     assert.ok(JSON.stringify(await docTheDiaChi()).includes(KHOA_SO), "ten-trung-khoa: bản bỏ lọc vẫn không lộ khoá — ca không phân biệt được")
+  } finally { rmSync(tep, { force: true }) }
+})
+
+// Dòng căn cứ của hộp duyệt (AC-10): mỗi ô phải nói đúng giá trị lấy từ đâu. Ô bán/thuê luôn có căn cứ trong
+// evidence, kể cả khi máy để trống (nguon null) — lúc đó giá trị trên thẻ là của người vận hành.
+const theCanCu = (muc_dich: MucDich | null, nguon: string | null): TheDiaChi => ({
+  card_code: `${T}-canh`, unit_code: null, ten_nhom: null, status: "nhap", du_an: [], phuong: null, tinh: null, phan_khu: null,
+  muc_dich, evidence: { so_bai: 20, so_bai_doc: 7, muc_dich: { nguon, so_bai: nguon ? 20 : 0, ban: 18, thue: 2 } },
+  version: 1, decided_at: null, decision_note: null,
+})
+
+test("TG1-AC-10 dòng căn cứ ô bán/thuê: của máy thì nêu nguồn và số bài, của người thì nói là người điền", async () => {
+  const { dongCanCuMucDich } = await import("../src/components/ops/group-cards/group-cards-text")
+  // máy đọc được từ nhãn → nguồn và số bài mỗi phía
+  assert.equal(dongCanCuMucDich(theCanCu("ban", "nhan")), "từ bài đã đọc: 18 bán, 2 thuê", "TG1-AC-10: ô máy điền phải nêu nguồn và số bài")
+  // máy để trống, người vận hành tự chọn qua «sửa» → không được gán giá trị của người cho máy
+  assert.equal(dongCanCuMucDich(theCanCu("thue", null)), "Người vận hành điền", "TG1-AC-10: ô người điền bị ghi là từ bài đã đọc")
+  // chưa ai điền → nói vì sao trống, kèm số bài đã đọc
+  assert.equal(dongCanCuMucDich(theCanCu(null, null)), "Chưa đủ căn cứ (7 bài đã đọc)", "TG1-AC-10: ô trống phải nói vì sao")
+})
+
+test("TG1-AC-10 đối chứng đỏ: bản sao bỏ kiểm nguồn thì ô người điền lại ghi «từ bài đã đọc»", async () => {
+  const goc = readFileSync(join(GOC, "app/src/components/ops/group-cards/group-cards-text.ts"), "utf8")
+  // chỉ phá nhánh của ô bán/thuê (hàm dongCanCu bên trên có dòng y hệt)
+  const pha = goc.replace(/(if \(!t\.muc_dich\)[\s\S]*?\n\s*if \(!o) \|\| !o\.nguon(\) return "Người vận hành điền")/, "$1$2")
+  assert.notEqual(pha, goc, "can-cu-muc-dich: không phá được hàm")
+  const tep = join(GOC, "app/src/components/ops/group-cards", `.tg1-pha-can-cu-${process.pid}.ts`)
+  writeFileSync(tep, pha)
+  try {
+    const { dongCanCuMucDich } = (await import(tep)) as typeof import("../src/components/ops/group-cards/group-cards-text")
+    assert.equal(dongCanCuMucDich(theCanCu("thue", null)), "từ bài đã đọc: 18 bán, 2 thuê",
+      "can-cu-muc-dich: bản bỏ kiểm nguồn vẫn nói người vận hành điền — ca không phân biệt được")
   } finally { rmSync(tep, { force: true }) }
 })
