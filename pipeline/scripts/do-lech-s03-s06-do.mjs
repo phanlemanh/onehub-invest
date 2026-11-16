@@ -26,14 +26,14 @@ const DOT = {
 /** Tin vào mẫu, đọc thẳng các bảng nguồn (không qua 423). */
 const SQL_MAU = `
 SELECT h.nut, h.kind, h.property_type, h.thuoc, h.pn_nhom, o.source, h.gia_tri::float8 AS v, o.last_seen, o.offer_id,
-       (SELECT min(po.property_id)::text FROM property_offers po WHERE po.offer_id = o.offer_id) AS can
+       (SELECT min(po.property_id)::text FROM property_offers po WHERE po.offer_id = o.offer_id) AS can, true AS dong_hang
   FROM offer_price_rank h JOIN sale_offers o ON o.offer_id = h.offer_id
  WHERE h.cap = 'du_an' AND h.gia_tri IS NOT NULL AND o.source IN ('S03', 'S05', 'S06')
    AND (h.ly_do IS NULL OR h.ly_do IN ('nhom-5-9', 'pn-duoi-10'))
 UNION ALL
 -- nhóm giá tháng gom như nhóm dth của 422: tin thuê có m² cùng dự án, cùng loại, PN = pn_nhom, theo giá tháng
 SELECT k.nut, k.kind, k.property_type, k.thuoc, k.pn_nhom, o.source, o.price_vnd::float8, o.last_seen, o.offer_id,
-       (SELECT min(po.property_id)::text FROM property_offers po WHERE po.offer_id = o.offer_id)
+       (SELECT min(po.property_id)::text FROM property_offers po WHERE po.offer_id = o.offer_id), false
   FROM (SELECT DISTINCT nut, kind, property_type, thuoc, pn_nhom FROM offer_price_rank WHERE cap = 'du_an' AND thuoc = 'gia-thang-pn') k
   JOIN offer_price_rank h ON h.cap = 'du_an' AND h.nut = k.nut AND h.kind = 'rent_lt' AND h.property_type = k.property_type AND h.thuoc = 'gia-m2'
   JOIN sale_offers o ON o.offer_id = h.offer_id
@@ -111,7 +111,9 @@ async function main() {
       if (!b || !e || Number(b.n_s03) !== e.n3 || Number(b.n_s06) !== e.n6 || !gan(b.trung_vi_s03, e.tv3) || !gan(b.trung_vi_s06, e.tv6)
         || !gan(b.lech_pct, e.lech) || b.trang_thai !== e.tt) lechDs.push(k);
     }
-    const s03Du = mau.filter((r) => r.source === "S03" && ky.get(khoa(r))?.tt === "du").length;
+    // tin S03 có mặt bằng trên màn: đếm theo TIN, chỉ dòng hạng của chính tin (app khớp mặt bằng theo khoá dòng hạng) —
+    // dòng gom thêm vào nhóm giá tháng (tin thuê có m²) không phải mặt bằng của tin đó
+    const s03Du = new Set(mau.filter((r) => r.source === "S03" && r.dong_hang && ky.get(khoa(r))?.tt === "du").map((r) => r.offer_id)).size;
     const dem = new Map();
     for (const [k, e] of ky) {
       const [, kind, , thuoc] = k.split("|");
@@ -120,7 +122,7 @@ async function main() {
       x.nhom++;
       dem.set(kk, x);
     }
-    for (const r of mau) if (r.source === "S03") { const e = ky.get(khoa(r)); const kk = `${r.kind} · ${r.thuoc} · ${e.tt}`; dem.get(kk).tinS03++; }
+    for (const r of mau) if (r.source === "S03" && r.dong_hang) { const e = ky.get(khoa(r)); const kk = `${r.kind} · ${r.thuoc} · ${e.tt}`; dem.get(kk).tinS03++; }
     const lechPhanBo = [...ky.values()].filter((e) => e.lech !== null).map((e) => e.lech);
     const mauSo = (await c.query(`SELECT source, kind, count(*)::int AS n FROM sale_offers WHERE source IN ('S03', 'S06') GROUP BY 1, 2 ORDER BY 1, 2`)).rows;
     const dong = [
