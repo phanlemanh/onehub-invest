@@ -88,7 +88,7 @@ export function boDau(s: string): string {
  * trước hai phép thử «từ vị trí trần» và «tháng <số>», dạng không dấu hay gõ sai dấu («Ngo», «Ngỏ», «30 thang 4») được đưa về
  * dạng có dấu, nên ra đúng như «Ngõ», «30 Tháng 4».
  */
-export function khoaDuong(v: string): string[] {
+export function khoaDuong(v: string, giuSoNha = true): string[] {
   let t = v
     .normalize("NFC")
     .trim()
@@ -121,7 +121,14 @@ export function khoaDuong(v: string): string[] {
     const coDau = s.match(/^(?:(?:đường|phố)[\s-]+|[đd]\.\s*)(.*)$/u);
     if (coDau) return [boDau(coDau[1])];
     const khongDau = s.match(/^(?:duong|pho)[\s-]+(.*)$/u);
-    return [khongDau ? boDau(khongDau[1]) : "", boDau(s)];
+    const tran = boDau(s);
+    // giuSoNha = false (soDuong, hồ sơ l2-bao-thu-doi-probe-that): khoá trần chỉ gồm token mở đầu bằng số («34/1A», «44d/17»,
+    // «2A», «4/79» — số nhà còn lại khi tên đường đã bị cắt sau phẩy) không phải tên đường, không được so; trừ hai số thành
+    // ngày tháng hợp lệ («3/2», «19/5» là tên đường).
+    const tk = tran.split(" ");
+    const ngay = tk.length === 2 && tk.every((x) => /^\d+$/.test(x)) && +tk[0] >= 1 && +tk[0] <= 31 && +tk[1] >= 1 && +tk[1] <= 12;
+    const soNhaTran = !giuSoNha && tk.every((x) => /^\d/.test(x)) && !ngay;
+    return [khongDau ? boDau(khongDau[1]) : "", soNhaTran ? "" : tran];
   });
   return [...new Set(khoa)].filter((k) => k && !/^\d+$/.test(k));
 }
@@ -129,8 +136,8 @@ export function khoaDuong(v: string): string[] {
 /** So hàng Đường: chung ít nhất một cách đọc → Khớp (chép từ app/src/lib/ops/review-can-cu.ts). */
 export function soDuong(a: string | number | null, b: string | number | null): So {
   if (a === null || b === null) return "thieu";
-  const ka = khoaDuong(String(a));
-  const kb = khoaDuong(String(b));
+  const ka = khoaDuong(String(a), false);
+  const kb = khoaDuong(String(b), false);
   if (ka.length === 0 || kb.length === 0) return "thieu";
   return ka.some((k) => kb.includes(k)) ? "khop" : "lech";
 }

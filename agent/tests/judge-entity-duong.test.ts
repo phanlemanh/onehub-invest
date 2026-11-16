@@ -286,10 +286,29 @@ test("CD-AC-13 L2 bóc khi sau phẩy là tiền tố đường", async () => {
 test("CD-AC-14 L2 không bóc khi sau phẩy không phải tiền tố đường", async () => {
   assert.equal(kiemMaTran(that, "CD-AC-14", L2_KHONG), 26);
   assert.ok(!that.khoaDuong("2A, Khu dân cư Vĩnh Phú 1").some((k) => k.includes("khu dan cu")), "CD-AC-14 L2: 2A, Khu dân cư thành khoá đường");
-  const l2Cu = await dotBien((s) => s.replace(DONG_L2, DONG_L2_CU));
+  // L2 của main f78e7382: dòng danh sách loại trừ VÀ soDuong so cả khoá số nhà trần (main chưa có tham số giuSoNha).
+  const l2Cu = await dotBien((s) => s.replace(DONG_L2, DONG_L2_CU).replaceAll("khoaDuong(String(a), false)", "khoaDuong(String(a))").replaceAll("khoaDuong(String(b), false)", "khoaDuong(String(b))"));
   assert.throws(() => kiemMaTran(l2Cu, "CD-AC-14", L2_KHONG), /CD-AC-14 L2: 3,5m ↔ Lê Lợi/);
   const khongRanh = await dotBien((s) => s.replace(DONG_L2, DONG_L2.replace("(?=[\\s.-])", "")));
   assert.throws(() => kiemMaTran(khongRanh, "CD-AC-14", L2_KHONG.filter(([a]) => a.includes("Phong Phú"))), /CD-AC-14 L2: 12, Phong Phú ↔ Lê Lợi/);
+});
+
+// ---------- CD-AC-17: số nhà dính chữ không phải khoá đường khi so (hồ sơ l2-bao-thu-doi-probe-that, sửa trong vòng S4 r1) ----------
+// Hồi quy lượt chấm r1: «34/1A, Đỗ Mười» ↔ «34/1A, Lê Lợi» ra Khớp vì cả hai chỉ còn khoá «34 1a». soDuong không tính khoá trần
+// chỉ gồm token mở đầu bằng số và có chữ; khoaDuong(v) giữ nguyên khoá (Out of scope: «2A», «44d/17» vẫn ra khoá số).
+const L2_SO_NHA: [string, string, string][] = [
+  ["34/1A, Đỗ Mười", "34/1A, Lê Lợi", "thieu"],
+  ["44d/17, Khu Pho Binh Đáng, Phường Bình Hòa, Thành phố Hồ Chí Minh", "44d/17, Lê Lợi", "thieu"],
+  ["2A, Khu dân cư Vĩnh Phú 1", "2A, Lê Lợi", "thieu"],
+  ["34/1A, Đỗ Mười", "Đỗ Mười", "thieu"],
+  ["4/79, Nguyễn Thị Minh Khai, Thuận Giao, Hồ Chí Minh", "4/79, Lê Lợi", "thieu"],
+];
+test("CD-AC-17 số nhà dính chữ không khớp nhầm hai đường khác", async () => {
+  assert.equal(kiemMaTran(that, "CD-AC-17", L2_SO_NHA), 10);
+  assert.deepEqual(that.khoaDuong("34/1A, Đỗ Mười"), ["34 1a"], "CD-AC-17 khoaDuong đổi khoá (Out of scope giữ khoá số)");
+  // Chiều đỏ: soDuong so cả khoá số nhà trần (như main) → «34/1A, Đỗ Mười» ↔ «34/1A, Lê Lợi» ra Khớp.
+  const soCaSoNha = await dotBien((s) => s.replaceAll("khoaDuong(String(a), false)", "khoaDuong(String(a))").replaceAll("khoaDuong(String(b), false)", "khoaDuong(String(b))"));
+  assert.throws(() => kiemMaTran(soCaSoNha, "CD-AC-17", L2_SO_NHA), /CD-AC-17 L2: 34\/1A, Đỗ Mười ↔ 34\/1A, Lê Lợi/);
 });
 
 // ---------- CD-AC-7: thẻ duyệt và luật cùng khoá đường ----------
@@ -317,6 +336,7 @@ const MA_TRAN_7: [string, string, string][] = [
   ...LOP.flatMap(([, , ds]) => ds),
   ...L2_BOC,
   ...L2_KHONG,
+  ...L2_SO_NHA,
 ];
 function kiemAc7(luat: SoFn): number {
   const the = soDuongApp();
@@ -331,8 +351,8 @@ function kiemAc7(luat: SoFn): number {
   return n;
 }
 test("CD-AC-7 thẻ và luật cùng khoá đường", () => {
-  assert.equal(MA_TRAN_7.length, 73);
-  assert.equal(kiemAc7(that.soDuong), 146);
+  assert.equal(MA_TRAN_7.length, 78);
+  assert.equal(kiemAc7(that.soDuong), 156);
   assert.throws(() => kiemAc7(boCumMod.soDuong), /CD-AC-7 luật lệch thẻ duyệt ở: Ngõ 254 Minh Khai \| Minh Khai/);
   assert.throws(() => kiemAc7(boL3Mod.soDuong), /CD-AC-7 luật lệch thẻ duyệt ở: Đường Kiệt 91 Lê Tân Trung/);
 });

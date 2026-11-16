@@ -259,7 +259,7 @@ function kiemAc10(mod: Mod) {
 test("LT-AC-10 đường viết không dấu", async () => {
   assert.equal(kiemAc10(that), 4);
   // Lỗi cũ (Ngoài-2/7 của Cổng 2 lần 1): bỏ tiền tố không dấu mà không giữ cách đọc nguyên.
-  const boTienTo = await dotBien((s) => s.replace('[khongDau ? boDau(khongDau[1]) : "", boDau(s)]', "[khongDau ? boDau(khongDau[1]) : boDau(s)]"));
+  const boTienTo = await dotBien((s) => s.replace('[khongDau ? boDau(khongDau[1]) : "", soNhaTran ? "" : tran]', '[khongDau ? boDau(khongDau[1]) : soNhaTran ? "" : tran]'));
   assert.throws(() => kiemAc10(boTienTo), /LT-AC-10 cùng đường có dấu và không dấu bị loại: Duong Lam ↔ Phố Dương Lâm/);
 });
 

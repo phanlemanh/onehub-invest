@@ -149,7 +149,8 @@ function kiemAc12(mod: Mod, giaTri: string[], chi?: string): Record<string, numb
     if (chi && ma !== chi) continue;
     // Chỉ đo giá trị mà bộ tách độc lập rút được tên đường có khoá (đường đánh số, ô chỉ có cụm: ngoài diện).
     // Mẫu số độc lập với luật đang đo: phần tên phải còn chữ ngoài tiền tố Đường/Phố và không chỉ là số (đường đánh số).
-    const coTen = (v: string) => /\p{L}/u.test(tenDocLap(v).replace(/^(?:đường|phố|duong|pho)(?=[\s-]|$)/iu, "").replace(/\bsố\b/iu, ""));
+    // Tên đường phải có một token mở đầu bằng chữ: «34/1A», «2A» (số nhà dính chữ) không phải tên (hồ sơ l2-bao-thu-doi-probe-that).
+    const coTen = (v: string) => /(?:^|\s)\p{L}/u.test(tenDocLap(v).replace(/^(?:đường|phố|duong|pho)(?=[\s-]|$)/iu, "").replace(/\bsố\b/iu, ""));
     const ds = giaTri.filter((v) => chon.test(v.normalize("NFC")) && coTen(v));
     dem[ma] = ds.length;
     const sai = ds.filter((v) => mod.soDuong(v, tenDocLap(v)) !== "khop");
@@ -227,5 +228,8 @@ test("CD-AC-16 L2 bảo thủ đổi khoá trên DB máy thu", async (t) => {
   for (const v of doi) {
     const moi = that.khoaDuong(v);
     assert.ok(moi.every(khoaSo), `CD-AC-16 L2 sinh khoá đường mới: ${v} → ${JSON.stringify(moi)}`);
+    // Khoá số nhà không được làm hai đường khác khớp nhau (hồi quy lượt chấm r1, CD-AC-17): cùng số nhà, đường khác → không Khớp.
+    const so = v.split(",")[0].trim();
+    if (moi.length > 0) assert.notEqual(that.soDuong(v, `${so}, Lê Lợi`), "khop", `CD-AC-16 số nhà khớp nhầm hai đường: ${v} ↔ ${so}, Lê Lợi`);
   }
 });
