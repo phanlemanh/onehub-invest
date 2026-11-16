@@ -5,7 +5,7 @@ slug: do-lech-s03-s06-canh-hang
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [db, pipeline, ui]
-status: implemented
+status: verified
 approved_by: Mạnh
 approved_at: 2026-11-16
 design_doc: docs/superpowers/specs/2026-11-16-do-lech-s03-s06-canh-hang-design.md

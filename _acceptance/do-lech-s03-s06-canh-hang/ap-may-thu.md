@@ -24,8 +24,18 @@ cd ~/dev/onehub-invest/pipeline && node xep-hang-gia.mjs   # chấm lại ngay, 
 
 ## 2. Số chạy thử (bản chép DB máy thu, `bash pipeline/scripts/do-lech-s03-s06-db.sh do`)
 
-Lượt chấm S4 chạy lệnh này (E7) và ghi bảng đếm vào `.acceptance-runs/do-lech-s03-s06-canh-hang/do-may-thu.md`; số chép vào đây
-sau lượt chấm: số nhóm theo trạng thái, `tin_s03_co_mat_bang` (ngưỡng ≥ 1.500), thời gian một lượt chấm.
+Lượt chấm S4 lượt 3 (16/11 05:20Z, bản chép sau lượt ghi dự án S03 của 03:59Z), `.acceptance-runs/do-lech-s03-s06-canh-hang/do-may-thu.md`:
+
+| Thước | Bản chép 16/11 | Đích |
+|---|---|---|
+| Tin S03 cấp dự án có mặt bằng đủ hai bên (`tin_s03_co_mat_bang`) | **3.660** | ≥ 1.500 |
+| Nhóm đủ hai bên | 19 (bán 6 · thuê giá/m² 7 · thuê giá tháng 6) | — |
+| Độ lệch S03 so S06, trung vị trên 19 nhóm | +7,1% | — |
+| Đếm độc lập / lần hai | lech = 0 · lần hai = lần một | 0 |
+| Bước chấm (422 + 423) | 6,1 giây/lượt | — |
+
+Mẫu số (tin đang rao): S03 thuê 4.006 · S03 bán 2.475 · S06 thuê 57.661 · S06 bán 49.817. Số nền nhích mỗi ngày (lượt ghi dự án S03
+sau mỗi lần nạp) — đối chiếu sau áp bằng lệnh mục 5, đọc là sàn chứ không phải số đúng từng tin.
 
 ## 3. Sao lưu trước áp
 
