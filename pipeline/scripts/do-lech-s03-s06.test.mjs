@@ -106,6 +106,8 @@ test("CG15-AC-2 ma trận thiếu bên, nguồn khác, cấp phường, tin lo�
   // e) S03 5 + S06 5 + S05 2 + căn S06 có ghép một tin S03 (một phiếu cho mỗi nguồn) — đối chứng dương: có lech_pct
   const e = await nhom("a5", 5, 5, async (d) => {
     for (let i = 0; i < 2; i++) await tin(c, { id: `ac2-s05-${i}`, nguon: "S05", duAn: d, phuong: A("a5"), m2: 60, pn: 2, perm2: 20 * M });
+    // S02 cùng phường, có phát biểu dự án trên bài: view 105 không nhận nguồn S02 nên tin không lên cấp dự án, không vào n
+    for (let i = 0; i < 2; i++) await tin(c, { id: `ac2-s02-${i}`, nguon: "S02", duAn: d, phuong: A("a5"), m2: 60, pn: 2, perm2: 21 * M });
     await tinS06(c, { id: "ac2-can-s06", duAn: d, phuong: A("a5"), m2: 60, pn: 2, perm2: 80 * M });
     await tin(c, { id: "ac2-can-s03", duAn: d, phuong: A("a5"), m2: 60, pn: 2, perm2: 81 * M });
     await can(c, ["ac2-can-s06", "ac2-can-s03"]);
@@ -123,7 +125,13 @@ test("CG15-AC-2 ma trận thiếu bên, nguồn khác, cấp phường, tin lo�
   const re = mot(e.d, "CG15-AC-2 e");
   kiemDong(re, { n3: 6, n6: 6, tv3: trungVi([...e.v3, 81 * M]), tv6: trungVi([...e.v6, 80 * M]), trangThai: "du" }, "CG15-AC-2 e S05 không vào, căn ghép S03");
   assert.notEqual(re.lech_pct, null, "CG15-AC-2 đối chứng dương: nhóm đủ hai bên mà không có lech_pct");
-  assert.equal(rows.length, 5, `CG15-AC-2 tin cấp phường sinh dòng: ${rows.map(khoa).join(", ")}`);
+  // ô S02: không tin S02 nào ở cấp dự án (n của hai bên ở ô e đã không đếm S02)
+  const hang2 = await dongs(c);
+  assert.ok(["ac2-s02-0", "ac2-s02-1"].every((id) => hang2[id]?.cap !== "du_an"), "CG15-AC-2 ô S02: tin S02 lên cấp dự án");
+  // ô S03 cấp phường: tin có hạng cấp phường, không sinh dòng mặt bằng nào mang nút phường của nó
+  assert.equal(hang2["ac2-phuong"]?.cap, "phuong", "CG15-AC-2 ô cấp phường: tin không có hạng cấp phường");
+  assert.ok(rows.every((r) => r.nut !== hang2["ac2-phuong"].nut), "CG15-AC-2 ô cấp phường: có dòng mặt bằng theo nút phường");
+  assert.equal(rows.length, 5, `CG15-AC-2 số dòng mặt bằng ≠ năm dự án: ${rows.map(khoa).join(", ")}`);
 });
 
 // ---------- AC-3 ----------

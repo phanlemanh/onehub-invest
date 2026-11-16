@@ -7,7 +7,7 @@
 //   · tin_s03_co_mat_bang = tin S03 cấp dự án ở nhóm «du» — ngưỡng ≥ 1.500.
 // In bảng đếm kind × thước × trạng thái và mẫu số; ghi .acceptance-runs/do-lech-s03-s06-canh-hang/do-may-thu.md; thoát 1 nêu điều
 // kiện hỏng. DB phải là DB thử oneinvest_<…> (thoát 2). Đối chứng (thoát 0 khi đỏ đúng): --doi-chung-tin «đếm theo tin thay phiếu»
-// → lech > 0; --doi-chung-nguon «S05 lẫn vào bên S03» → lech > 0.
+// → lech > 0; --doi-chung-nguon «bỏ lọc nguồn ở bên S03» → lech > 0.
 import { mkdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
@@ -19,8 +19,8 @@ const MIG = (n) => new URL(`../../db/migrations/${n}`, import.meta.url);
 const RA = fileURLToPath(new URL("../../.acceptance-runs/do-lech-s03-s06-canh-hang/", import.meta.url));
 const DOT = {
   "--doi-chung-tin": [["coalesce((SELECT 'p:' || min(po.property_id) FROM property_offers po WHERE po.offer_id = o.offer_id),\n                  'o:' || o.offer_id) AS phieu", "'o:' || o.offer_id AS phieu"]],
-  "--doi-chung-nguon": [["AND o.source IN ('S03', 'S06')", "AND o.source IN ('S03', 'S05', 'S06')"],
-    ["FILTER (WHERE source = 'S03')", "FILTER (WHERE source <> 'S06')"]],
+  // bỏ lọc nguồn ở bên S03: phiếu S06 cũng tính vào n và trung vị của S03
+  "--doi-chung-nguon": [["FILTER (WHERE source = 'S03')", "FILTER (WHERE source IN ('S03', 'S06'))"]],
 };
 
 /** Tin vào mẫu, đọc thẳng các bảng nguồn (không qua 423). */

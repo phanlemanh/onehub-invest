@@ -10,7 +10,7 @@ import { pathToFileURL } from "node:url";
 import { renderToStaticMarkup } from "react-dom/server";
 import type pg from "pg";
 
-import { chuMatBang, type MatBang } from "../src/lib/deals-chi-tiet";
+import { chuMatBang, chuMatBangChiTiet, type MatBang } from "../src/lib/deals-chi-tiet";
 
 const ngoai = (rel: string) => import(pathToFileURL(join(import.meta.dirname, rel)).href);
 process.env.DATABASE_URL ??= process.env.CI ? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest" : "postgres://oneinvest:oneinvest@localhost:5433/oneinvest_suite_cg15_doc_khong_dung";
@@ -121,23 +121,55 @@ async function banChep(cu: string, moi: string): Promise<ChuFn> {
 }
 after(() => { for (const t of chep) rmSync(t, { force: true }); });
 
-test("CG15-AC-6 bốn câu theo trạng thái, đơn vị căn, thuê tr/tháng; ô danh sách và trang một căn; ba đột biến đỏ", async () => {
+/** Câu trang một căn: đủ hai bên ghi cả hai nguồn; thiếu bên trùng câu danh sách. */
+const CHI_TIET: Record<string, string> = {
+  "đủ, S03 rẻ hơn": "S03 56 tr/m² · 7 căn · S06 58 tr/m² · 92 căn · S03 −4,1%",
+  "đủ, S03 đắt hơn": "S03 62 tr/m² · 9 căn · S06 60 tr/m² · 40 căn · S03 +3,0%",
+  "thuê giá tháng": "S03 12 tr/tháng · 6 căn · S06 12 tr/tháng · 40 căn · S03 +3,0%",
+  "9 căn 10 tin": "S03 57 tr/m² · 5 căn · S06 60 tr/m² · 9 căn · S03 −5,0%",
+};
+const ROUTER = { refresh() {}, push() {}, replace() {}, back() {}, forward() {}, prefetch() {} };
+async function htmlTinh(el: React.ReactElement) {
+  const React = await import("react");
+  Object.assign(globalThis, { React });
+  const { AppRouterContext } = await import("next/dist/shared/lib/app-router-context.shared-runtime");
+  return renderToStaticMarkup(<AppRouterContext.Provider value={ROUTER as never}>{el}</AppRouterContext.Provider>);
+}
+/** DealHang tối thiểu cho ô danh sách và trang một căn (khuôn của ca OD1-AC-9). */
+const hang = (mb: MatBang | null, metric: string | null) => ({
+  offerId: "cg15-o", source: "S03", priceVnd: 2e9, areaM2: 50, pricePerm2: 4e7, bedrooms: 2, phuong: "Phường thử", areaPath: "/vn/x",
+  medianPerm2: 6e7, rulerN: 20, discountPct: 10, suspect: false, confidence: "high", firstSeen: "2026-11-01", lastSeen: "2026-11-07",
+  nReposts: 1, sellerName: null, sellerPhone: null, groupName: null, brokerNAds: null, brokerMedianGap: null, propertyType: "apartment",
+  block: null, floor: null, unit: null, streetNumber: null, street: null, district: null, images: [], postTextFull: null, roiDanhSach: null,
+  ten: "Căn thử", thieu: [], cau: null, tel: null, sdt: null, xemAnh: false,
+  rank: { n: 20, median: 6e7, p20: 5e7, pct: 10, below: 10, label: "gia-tot", needsVerification: false, bedroomsGroup: 2, reason: null, metric, level: "du_an", node: "1", nodeName: "Khu thử" },
+  matBang: mb,
+});
+/** Bỏ thẻ HTML, gộp khoảng trắng — so câu trên đầu ra dựng thật. */
+const chu = (html: string) => html.replace(/<[^>]+>/g, " ").replace(/&amp;/g, "&").replace(/\s+/g, " ");
+
+test("CG15-AC-6 bốn câu theo trạng thái, đơn vị căn, thuê tr/tháng; ô danh sách và trang một căn dựng thật; ba đột biến đỏ", async () => {
   kiemChu(chuMatBang);
-  // ô «Giảm so thước» của danh sách và hàng của trang một căn dùng đúng câu; dòng không matBang không có chữ «S06»
   const { DiscountBar } = await import("../src/components/ops/deals-cells");
-  const coMb = { discountPct: 10, suspect: false, medianPerm2: 58 * M, rulerN: 20, rank: { metric: "gia-m2" }, matBang: MB["thiếu S03"][0] };
-  const html = renderToStaticMarkup(<DiscountBar d={coMb as never} gon />);
-  assert.ok(html.includes(MB["thiếu S03"][2]), `CG15-AC-6 ô danh sách thiếu câu: ${html}`);
-  const khong = renderToStaticMarkup(<DiscountBar d={{ ...coMb, matBang: null } as never} gon />);
-  assert.ok(!khong.includes("S06"), `CG15-AC-6 dòng không matBang mà có chữ S06: ${khong}`);
-  const nguonBody = readFileSync(join(import.meta.dirname, "../src/components/ops/deal-body.tsx"), "utf8");
-  assert.match(nguonBody, /nhan="Mặt bằng S06 cùng dự án" value=\{chuMatBang\(d\.matBang, d\.rank\?\.metric \?\? null\)\}/,
-    "CG15-AC-6 trang một căn không dựng hàng mặt bằng bằng chuMatBang");
+  const { DealBody } = await import("../src/components/ops/deal-body");
+  for (const [ten, [mb, metric, ky]] of Object.entries(MB)) {
+    const o = chu(await htmlTinh(<DiscountBar d={hang(mb, metric) as never} gon />));
+    assert.ok(o.includes(ky), `CG15-AC-6 ô danh sách «${ten}» thiếu «${ky}»: ${o}`);
+    const t = chu(await htmlTinh(<DealBody d={hang(mb, metric) as never} xemNoiDung mayThu beMat="trang" />));
+    const kyCt = CHI_TIET[ten] ?? ky;
+    assert.equal(chuMatBangChiTiet(mb, metric), kyCt, `CG15-AC-6 câu trang một căn «${ten}»`);
+    assert.ok(t.includes("Mặt bằng S06 cùng dự án") && t.includes(kyCt), `CG15-AC-6 trang một căn «${ten}» thiếu «${kyCt}»: ${t}`);
+  }
+  // dòng không matBang: không có chữ «S06» ở ô danh sách, không có hàng mặt bằng ở trang một căn
+  const o0 = chu(await htmlTinh(<DiscountBar d={hang(null, "gia-m2") as never} gon />));
+  assert.ok(!o0.includes("S06"), `CG15-AC-6 ô danh sách không matBang mà có chữ S06: ${o0}`);
+  const t0 = chu(await htmlTinh(<DealBody d={hang(null, "gia-m2") as never} xemNoiDung mayThu beMat="trang" />));
+  assert.ok(!t0.includes("Mặt bằng S06 cùng dự án"), "CG15-AC-6 trang một căn không matBang mà có hàng mặt bằng");
   // ba đột biến
   const DOT: [string, string, string][] = [
     ["đảo dấu", "${pct < 0 ? \"−\" : \"+\"}", "${pct < 0 ? \"+\" : \"−\"}"],
     ["câu thieu-s06 cho thieu-s03", "    case \"thieu-s03\":\n      return `S03 chưa đủ để so (${m.nS03} căn) · ${s06}`;", "    case \"thieu-s03\":\n      return `S06 chưa đủ để so (${m.nS06} căn)`;"],
-    ["n S03 làm số căn S06", "· ${m.nS06} căn`;", "· ${m.nS03} căn`;"],
+    ["n S03 làm số căn S06", "const s06 = `S06 ${chuTrungVi(m.medianS06, metric)} · ${m.nS06} căn`;", "const s06 = `S06 ${chuTrungVi(m.medianS06, metric)} · ${m.nS03} căn`;"],
   ];
   for (const [ten, cu, moi] of DOT) {
     const fn = await banChep(cu, moi);

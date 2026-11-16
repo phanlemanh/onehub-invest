@@ -76,6 +76,16 @@ const chuTrungVi = (v: number | null, metric: string | null): string => {
 /** Độ lệch có dấu, phẩy thập phân: «−4,1%» khi S03 rẻ hơn mặt bằng S06, «+3,0%» khi đắt hơn. */
 const chuLech = (pct: number): string => `${pct < 0 ? "−" : "+"}${fmtPct(Math.abs(pct) / 100)}`;
 
+/**
+ * Hàng «Mặt bằng S06 cùng dự án» của trang một căn (thiết kế §2.3): đủ hai bên ghi trung vị và số căn của CẢ hai nguồn cùng độ
+ * lệch; thiếu bên dùng đúng câu của danh sách.
+ */
+export function chuMatBangChiTiet(m: MatBang, metric: string | null): string {
+  if (m.trangThai !== "du") return chuMatBang(m, metric);
+  return `S03 ${chuTrungVi(m.medianS03, metric)} · ${m.nS03} căn · S06 ${chuTrungVi(m.medianS06, metric)} · ${m.nS06} căn · S03 ${
+    m.lechPct === null ? "—" : chuLech(m.lechPct)}`;
+}
+
 /** Chữ mặt bằng S06 cạnh hạng của tin S03 (CG15, thiết kế §2.3): bốn câu theo trạng thái, đơn vị «căn» (Hỏi-3). */
 export function chuMatBang(m: MatBang, metric: string | null): string {
   const s06 = `S06 ${chuTrungVi(m.medianS06, metric)} · ${m.nS06} căn`;

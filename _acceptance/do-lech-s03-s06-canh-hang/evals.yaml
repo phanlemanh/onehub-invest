@@ -64,7 +64,7 @@ evals:
     steps:
       - "Bản chạy: dev server của worktree này trên cổng 3466 (app/node_modules là thư mục thật, không symlink), DATABASE_URL trỏ DB thử do `bash pipeline/scripts/do-lech-s03-s06-db.sh ghi-thu` dựng; đăng nhập tài khoản ops thử của worktree. KHÔNG tạo hay sửa tệp nào trong cây ngoài evidence/. Che email đăng nhập lúc chụp; sau khi chụp che SĐT và mặt người."
       - "Chọn bằng SQL trên DB thử một tin S03 bán nhóm du có mặt trên /ops/deals?project=1, ghi khoá nhóm và dòng bảng vào observed; mở trang đó ở 1280 px sáng → evidence/E8-step1.png (dòng của tin có dòng phụ «S06 … căn · S03 ±x%» khớp dòng bảng; dòng S06 không có)"
-      - "Mở trang một căn của một tin bán S03 OP1 nhóm du (chọn bằng SQL trên DB thử) 1280 tối → evidence/E8-step2.png (hàng «Mặt bằng S06 cùng dự án»: trung vị hai nguồn, số tin mỗi bên, độ lệch — khớp dòng bảng)"
+      - "Mở trang một căn của một tin bán S03 OP1 nhóm du (chọn bằng SQL trên DB thử) 1280 tối → evidence/E8-step2.png (hàng «Mặt bằng S06 cùng dự án»: trung vị và số căn của cả S03 lẫn S06, độ lệch — khớp dòng bảng)"
       - "Mở trang một căn của một tin S03 cấp dự án ở nhóm thiếu một bên (chọn bằng SQL) 1280 sáng → evidence/E8-step3.png (đúng câu của trạng thái)"
       - "Trên /ops/deals?project=<dự án có dòng S03 bán nhóm thiếu bên, chọn bằng SQL> 1280 tối → evidence/E8-step4.png (dòng phụ đúng câu của trạng thái)"
     expected: "Ba khung trên bản chạy trỏ DB thử của AC-7: dòng phụ S06 trên danh sách cho tin S03, hàng mặt bằng trên trang một căn với số khớp dòng project_source_baseline, câu thiếu bên đúng trạng thái trên danh sách và trang một căn; đọc được ở sáng và tối."
