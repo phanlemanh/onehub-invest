@@ -5,7 +5,7 @@ slug: l2-bao-thu-doi-probe-that
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: verified
 approved_by: Mạnh
 approved_at: 2026-11-15
 design_doc: docs/superpowers/specs/2026-11-15-l2-bao-thu-doi-probe-that-design.md
