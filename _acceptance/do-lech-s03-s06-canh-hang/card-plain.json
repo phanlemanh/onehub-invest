@@ -1,0 +1,16 @@
+{"feature_plain":"Trên Căn giá tốt, cạnh hạng cấp dự án của mỗi tin S03, người vận hành thấy mặt bằng giá S06 cùng dự án, cùng loại và số phòng ngủ: trung vị hai nguồn, số căn mỗi bên và S03 đang cao hay thấp hơn bao nhiêu phần trăm.",
+"will_do":[
+{"id":"AC-1","p":"Sẽ tính sẵn mỗi nhóm dự án × loại × số phòng ngủ một dòng: trung vị S03, trung vị S06, số căn mỗi bên và độ lệch phần trăm."},
+{"id":"AC-2","p":"Sẽ ghi «chưa đủ để so» cho nhóm mà một bên dưới 5 căn, và không trộn S02, S05 hay tin cấp phường vào số."},
+{"id":"AC-3","p":"Sẽ tách tin thuê có diện tích (so giá/m²) và thuê thiếu diện tích (so giá tháng theo số phòng ngủ), đúng nhóm mà hạng đã so."},
+{"id":"AC-4","p":"Sẽ chạy lại cùng ngày không sinh dòng trùng; máy chưa có bảng mới thì vẫn chấm hạng như cũ và báo một dòng."},
+{"id":"AC-5","p":"Sẽ gắn mặt bằng đúng vào tin S03 cấp dự án ở danh sách và trang một căn; tin S06, tin cấp phường không có."},
+{"id":"AC-6","p":"Sẽ ghi chữ theo bốn trạng thái: đủ hai bên, thiếu S06, thiếu S03, thiếu cả hai — đơn vị là căn."},
+{"id":"AC-7","p":"Sẽ đo trên bản chép DB máy thu: số đếm khớp phép đếm độc lập, ít nhất 1.500 tin S03 có mặt bằng để so."},
+{"id":"AC-8","p":"Sẽ chụp màn thật: dòng phụ S06 trên danh sách, hàng mặt bằng trên trang một căn, và câu «chưa đủ để so»."}],
+"wont_do":[
+{"id":"OOS-1","p":"KHÔNG làm lại bảng /ops/deals theo khối data-grid (hàng UI10, việc riêng)."},
+{"id":"OOS-2","p":"KHÔNG đưa bảng mặt bằng lên cloud hay API vòng này (Hỏi-2)."},
+{"id":"OOS-3","p":"KHÔNG đổi hạng hay nhãn «Giá tốt»; mặt bằng S06 chỉ là dữ kiện đọc kèm."},
+{"id":"OOS-4","p":"KHÔNG làm mặt bằng cấp phường, cấp toà, hay dùng S05 làm mặt bằng."},
+{"id":"OOS-5","p":"KHÔNG tự áp bảng mới lên DB máy thu — đi theo lời áp ở Cổng Bằng chứng."}]}
