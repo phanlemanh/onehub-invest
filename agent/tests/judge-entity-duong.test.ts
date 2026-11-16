@@ -174,7 +174,8 @@ test("CD-AC-6 chữ Eth", async () => {
 // Mỗi lớp: [ô đường, ô so, kỳ vọng]. Giá trị lấy nguyên văn từ sale_offers.street_raw (bảng phủ ca ở design doc §2).
 const L1: [string, string, string][] = [["Hẻm 5 ,,1/ Đường chùa Pháp thạnh", "Chùa Pháp Thạnh", "khop"], ["Ngõ 5 , Kim Mã", "Kim Mã", "khop"]];
 const L2: [string, string, string][] = [
-  ["208, Nguyễn Hữu Cảnh, Phường 22, Quận Bình Thạnh, Tp Hồ Chí Minh", "Nguyễn Hữu Cảnh", "khop"],
+  // Hồ sơ l2-bao-thu-doi-probe-that đổi có tên: L2 danh sách cho phép không bóc khi sau phẩy không phải tiền tố đường.
+  ["208, Nguyễn Hữu Cảnh, Phường 22, Quận Bình Thạnh, Tp Hồ Chí Minh", "Nguyễn Hữu Cảnh", "thieu"],
   ["46, Đường Điện Biên Phủ, Phường Hòa Khê, Quận Thanh Khê, Đà Nẵng", "Điện Biên Phủ", "khop"],
   ["Đường 70, Phường Phương Canh, Quận Nam Từ Liêm, Hà Nội", "Minh Khai", "thieu"],
   // Tên đường dạng ngày/tháng đứng trước phẩy KHÔNG phải số nhà (S4 r1 bắt được).
@@ -206,7 +207,9 @@ const LOP: [string, string, [string, string, string][]][] = [
 const DONG_L4 = '    .replace(/(ngõ|ngo|ngách|ngach|hẻm|hem|kiệt|kiet)(\\.?\\s*\\d+)[.,](\\d+\\s*m)(?=[\\s,]|$)/gu, "$1$2$3")\n';
 const DONG_L5 = '    .replace(/(\\d)\\s+\\/(?=\\d)/gu, "$1/")\n';
 const DONG_L1 = '    .replace(/\\s*,[\\s,]*/gu, ", ")\n';
-const DONG_L2 = '    .replace(/^(?!(?:3\\/2|30\\/4|19\\/5|2\\/9|1\\/5|23\\/9)\\s*,)\\d[\\p{L}\\d/-]*\\s*,(?!\\s*(?:phường|p\\.|quận|q\\.|huyện|xã|thị xã|thành phố|tỉnh|tp(?=[\\s.]|$)))\\s*/u, "")\n';
+const DONG_L2 = '    .replace(/^\\d[\\p{L}\\d/-]*\\s*,\\s*(?=(?:(?:đường|phố|duong|pho|ngõ|ngo|ngách|ngach|hẻm|hem|kiệt|kiet)(?=[\\s.-])|đ\\.))/u, "")\n';
+// L2 của main f78e7382 (danh sách loại trừ) — chiều đỏ của CD-AC-14.
+const DONG_L2_CU = '    .replace(/^(?!(?:3\\/2|30\\/4|19\\/5|2\\/9|1\\/5|23\\/9)\\s*,)\\d[\\p{L}\\d/-]*\\s*,(?!\\s*(?:phường|p\\.|quận|q\\.|huyện|xã|thị xã|thành phố|tỉnh|tp(?=[\\s.]|$)))\\s*/u, "")\n';
 const DONG_L3 = '    .replace(/^.*\\S\\s+(?:ngõ|ngo|ngách|ngach|hẻm|hem|kiệt|kiet)\\.?\\s*\\d[\\p{L}\\d/-]*(?:\\s+|$)/u, "")\n';
 function kiemLop(mod: Mod, ma: string): number {
   const [, ten, ds] = LOP.find(([m]) => m === ma)!;
@@ -227,7 +230,7 @@ test("CD-AC-9 lớp đầu vào bẩn", async () => {
   const boDong = async (dong: string) => dotBien((s) => s.replace(dong, ""));
   assert.throws(() => kiemLop(boL1, "L1"), /CD-AC-9 L1 dấu phẩy lặp: Hẻm 5 ,,1\/ Đường chùa Pháp thạnh ↔ Chùa Pháp Thạnh/);
   const boL2 = await boDong(DONG_L2);
-  assert.throws(() => kiemLop(boL2, "L2"), /CD-AC-9 L2 số nhà rồi phẩy: 208, Nguyễn Hữu Cảnh/);
+  assert.throws(() => kiemLop(boL2, "L2"), /CD-AC-9 L2 số nhà rồi phẩy: 46, Đường Điện Biên Phủ/);
   assert.throws(() => kiemLop(boL3Mod, "L3"), /CD-AC-9 L3 cụm sau chữ khác: Đường Kiệt 91 Lê Tân Trung ↔ Lê Tân Trung/);
   kiemRac(that);
   const boL4 = await boDong(DONG_L4);
@@ -241,6 +244,72 @@ let boL3Mod: Mod;
 before(async () => {
   boL1 = await dotBien((s) => s.replace(DONG_L1, ""));
   boL3Mod = await dotBien((s) => s.replace(DONG_L3, ""));
+});
+
+// ---------- CD-AC-13, CD-AC-14: L2 danh sách cho phép (hồ sơ l2-bao-thu-doi-probe-that) ----------
+const L2_BOC: [string, string, string][] = [
+  ["237/6, Hẻm 237 Đường Hoàng Diệu", "Hoàng Diệu", "khop"],
+  ["46, Đường Điện Biên Phủ, Phường Hòa Khê, Quận Thanh Khê, Đà Nẵng", "Điện Biên Phủ", "khop"],
+  ["12, Phố Huế", "Huế", "khop"],
+  ["7, Đ. Lê Lợi", "Lê Lợi", "khop"],
+  ["9, duong Lang", "Đường Láng", "khop"],
+  ["3, pho Hue", "Phố Huế", "khop"],
+  ["5, Ngõ 12 Lê Lợi", "Lê Lợi", "khop"],
+  ["4, Ngách 3 Ngõ 9 La Dương", "La Dương", "khop"],
+  ["6, Kiệt 12 Hùng Vương", "Hùng Vương", "khop"],
+  ["33/3, Đường 25A", "Đường 25A", "khop"],
+];
+const L2_KHONG: [string, string, string][] = [
+  ["3,5m", "Lê Lợi", "thieu"], ["4,5m", "Lê Lợi", "thieu"], ["7,5m", "Lê Lợi", "thieu"], ["4,3m", "Lê Lợi", "thieu"],
+  ["15, Q1", "Lê Lợi", "thieu"], ["208, P12", "Lê Lợi", "thieu"], ["12, Phuong 5", "Lê Lợi", "thieu"],
+  ["50 , Tân Khánh , tân Uyên , Tp , Hcm", "Lê Lợi", "thieu"],
+  ["12, Phong Phú", "Lê Lợi", "thieu"], ["8, Phổ Quang", "Lê Lợi", "thieu"],
+  ["3/2, Phường 12, Quận 10", "3/2", "khop"], ["19/5, Tân Bình", "Đường 19/5", "khop"],
+  ["208, Nguyễn Hữu Cảnh, Phường 22, Quận Bình Thạnh, Tp Hồ Chí Minh", "Nguyễn Hữu Cảnh", "thieu"],
+];
+function kiemMaTran(mod: Mod, ma: string, ds: [string, string, string][]): number {
+  let n = 0;
+  for (const [a, b, ky] of ds)
+    for (const [x, y] of [[a, b], [b, a]]) {
+      const kq = mod.apNguong(cap(voi({ street: x }), voi({ street: y })));
+      const ok = mod.soDuong(x, y) === ky && (ky === "lech" ? coDuong(kq).length === 1 : coDuong(kq).length === 0);
+      assert.ok(ok, `${ma} L2: ${a} ↔ ${b}`);
+      n++;
+    }
+  return n;
+}
+test("CD-AC-13 L2 bóc khi sau phẩy là tiền tố đường", async () => {
+  assert.equal(kiemMaTran(that, "CD-AC-13", L2_BOC), 20);
+  const boL2Moi = await dotBien((s) => s.replace(DONG_L2, ""));
+  assert.throws(() => kiemMaTran(boL2Moi, "CD-AC-13", L2_BOC), /CD-AC-13 L2: 237\/6, Hẻm 237 Đường Hoàng Diệu ↔ Hoàng Diệu/);
+});
+test("CD-AC-14 L2 không bóc khi sau phẩy không phải tiền tố đường", async () => {
+  assert.equal(kiemMaTran(that, "CD-AC-14", L2_KHONG), 26);
+  assert.ok(!that.khoaDuong("2A, Khu dân cư Vĩnh Phú 1").some((k) => k.includes("khu dan cu")), "CD-AC-14 L2: 2A, Khu dân cư thành khoá đường");
+  // L2 của main f78e7382: dòng danh sách loại trừ VÀ soDuong so cả khoá số nhà trần (main chưa có tham số giuSoNha).
+  const l2Cu = await dotBien((s) => s.replace(DONG_L2, DONG_L2_CU).replaceAll("khoaDuong(String(a), false)", "khoaDuong(String(a))").replaceAll("khoaDuong(String(b), false)", "khoaDuong(String(b))"));
+  assert.throws(() => kiemMaTran(l2Cu, "CD-AC-14", L2_KHONG), /CD-AC-14 L2: 3,5m ↔ Lê Lợi/);
+  const khongRanh = await dotBien((s) => s.replace(DONG_L2, DONG_L2.replace("(?=[\\s.-])", "")));
+  assert.throws(() => kiemMaTran(khongRanh, "CD-AC-14", L2_KHONG.filter(([a]) => a.includes("Phong Phú"))), /CD-AC-14 L2: 12, Phong Phú ↔ Lê Lợi/);
+});
+
+// ---------- CD-AC-17: số nhà dính chữ không phải khoá đường khi so (hồ sơ l2-bao-thu-doi-probe-that, sửa trong vòng S4 r1) ----------
+// Hồi quy lượt chấm r1: «34/1A, Đỗ Mười» ↔ «34/1A, Lê Lợi» ra Khớp vì cả hai chỉ còn khoá «34 1a». soDuong không tính khoá trần
+// chỉ gồm token mở đầu bằng số và có chữ; khoaDuong(v) giữ nguyên khoá (Out of scope: «2A», «44d/17» vẫn ra khoá số).
+const L2_SO_NHA: [string, string, string][] = [
+  ["34/1A, Đỗ Mười", "34/1A, Lê Lợi", "thieu"],
+  ["44d/17, Khu Pho Binh Đáng, Phường Bình Hòa, Thành phố Hồ Chí Minh", "44d/17, Lê Lợi", "thieu"],
+  ["2A, Khu dân cư Vĩnh Phú 1", "2A, Lê Lợi", "thieu"],
+  ["34/1A, Đỗ Mười", "Đỗ Mười", "thieu"],
+  ["4/79, Nguyễn Thị Minh Khai, Thuận Giao, Hồ Chí Minh", "4/79, Lê Lợi", "thieu"],
+  ["12/3, Nguyễn Trãi", "12/3, Lê Lợi", "thieu"],
+];
+test("CD-AC-17 số nhà dính chữ không khớp nhầm hai đường khác", async () => {
+  assert.equal(kiemMaTran(that, "CD-AC-17", L2_SO_NHA), 12);
+  assert.deepEqual(that.khoaDuong("34/1A, Đỗ Mười"), ["34 1a"], "CD-AC-17 khoaDuong đổi khoá (Out of scope giữ khoá số)");
+  // Chiều đỏ: soDuong so cả khoá số nhà trần (như main) → «34/1A, Đỗ Mười» ↔ «34/1A, Lê Lợi» ra Khớp.
+  const soCaSoNha = await dotBien((s) => s.replaceAll("khoaDuong(String(a), false)", "khoaDuong(String(a))").replaceAll("khoaDuong(String(b), false)", "khoaDuong(String(b))"));
+  assert.throws(() => kiemMaTran(soCaSoNha, "CD-AC-17", L2_SO_NHA), /CD-AC-17 L2: 34\/1A, Đỗ Mười ↔ 34\/1A, Lê Lợi/);
 });
 
 // ---------- CD-AC-7: thẻ duyệt và luật cùng khoá đường ----------
@@ -266,6 +335,9 @@ const MA_TRAN_7: [string, string, string][] = [
   [AC6[0], AC6[1], "khop"],
   ...HD2.map(([a, b]) => [a, b, "khop"] as [string, string, string]),
   ...LOP.flatMap(([, , ds]) => ds),
+  ...L2_BOC,
+  ...L2_KHONG,
+  ...L2_SO_NHA,
 ];
 function kiemAc7(luat: SoFn): number {
   const the = soDuongApp();
@@ -280,8 +352,8 @@ function kiemAc7(luat: SoFn): number {
   return n;
 }
 test("CD-AC-7 thẻ và luật cùng khoá đường", () => {
-  assert.equal(MA_TRAN_7.length, 50);
-  assert.equal(kiemAc7(that.soDuong), 100);
+  assert.equal(MA_TRAN_7.length, 79);
+  assert.equal(kiemAc7(that.soDuong), 158);
   assert.throws(() => kiemAc7(boCumMod.soDuong), /CD-AC-7 luật lệch thẻ duyệt ở: Ngõ 254 Minh Khai \| Minh Khai/);
   assert.throws(() => kiemAc7(boL3Mod.soDuong), /CD-AC-7 luật lệch thẻ duyệt ở: Đường Kiệt 91 Lê Tân Trung/);
 });
@@ -300,23 +372,37 @@ test("CD-AC-8 bộ tách: cụm vị trí không kèm tên đường thì ngoài
   assert.equal(phanTen("Ngách 84, ngõ 255 Lạc Long Quân"), "Lạc Long Quân");
 });
 
-// ---------- CD-AC-10: suite chung không thêm probe dữ liệu thật ----------
-// Dấu probe = ca bỏ qua dưới CI vì «cần DB máy thu». Nợ đo 15/11: bốn ca còn lại (Hỏi-2 — dời ở hàng riêng).
-const NO_PROBE: Record<string, number> = { "judge-entity-khong-dau.test.ts": 1, "judge-luat.test.ts": 2 };
+// ---------- CD-AC-10: suite chung agent và app không còn probe dữ liệu thật ----------
+// Dấu probe = ca bỏ qua dưới CI vì «cần DB máy thu». Hồ sơ l2-bao-thu-doi-probe-that dời nốt bốn ca nợ cuối (KD-AC-6b, hai
+// LT-AC-6, context-resolver AC-9) và TPL-AC-6 của app: nợ agent rỗng.
+// App còn 9 ca nợ ở 6 tệp (đo 15/11) — dời ở hàng riêng; khoá số để không thêm được ca mới.
+const NO_PROBE: Record<string, number> = {
+  "anh-goc-doi-chieu.test.tsx": 1, "danh-ba-nguoi-doi-chieu.test.tsx": 2, "sellers-chip.test.tsx": 1,
+  "the-duyet-du-can-cu.test.tsx": 3, "the-so-gia-tri-song.test.tsx": 1, "the-duyet-hien-nguoi-dang.test.tsx": 1,
+};
 const DAU_PROBE = /t\.skip\("cần DB máy thu/g;
-const TEN_PROBE = "CD-AC-8 probe ô đường thật";
+const TEN_PROBE = [
+  "CD-AC-8 probe ô đường thật",
+  "KD-AC-6 có dấu = không dấu — dữ liệu thật",
+  "LT-AC-6 probe thẻ đã quyết",
+  "LT-AC-6 bộ nạp cặp thật",
+  "AC-9 chỉ kết quả land đổi trên tin thật của DB local",
+  "TPL-AC-6 probe DB máy thu",
+];
 const AGENT = join(import.meta.dirname, "..");
-function tepSuite(): string[] {
-  const lenh = JSON.parse(readFileSync(join(AGENT, "package.json"), "utf8")).scripts.test as string;
-  const glob = lenh.match(/"(tests\/[^"]*\.test\.ts)"/)?.[1];
-  assert.equal(glob, "tests/*.test.ts", `CD-AC-10 glob suite agent đổi: ${lenh}`);
-  return readdirSync(join(AGENT, "tests")).filter((f) => f.endsWith(".test.ts")).map((f) => `tests/${f}`);
+const KHO = join(AGENT, "..");
+/** Tệp suite của một module, đọc glob từ package.json (đường tương đối gốc kho). */
+function tepSuite(mod: "agent" | "app", duoi: string): string[] {
+  const lenh = JSON.parse(readFileSync(join(KHO, mod, "package.json"), "utf8")).scripts.test as string;
+  const glob = lenh.match(/"(tests\/[^"]*\.test\.tsx?)"/)?.[1];
+  assert.equal(glob, `tests/*.test.${duoi}`, `CD-AC-10 glob suite ${mod} đổi: ${lenh}`);
+  return readdirSync(join(KHO, mod, "tests")).filter((f) => f.endsWith(`.test.${duoi}`)).map((f) => `${mod}/tests/${f}`);
 }
 function kiemAc10(tep: string[], doc: (t: string) => string): number {
   let tong = 0;
   for (const t of tep) {
     const noi = doc(t);
-    assert.ok(!noi.includes(`test("${TEN_PROBE}"`), `CD-AC-10 tệp suite có probe dữ liệu thật: ${t}`);
+    for (const ten of TEN_PROBE) assert.ok(!noi.includes(`test("${ten}`), `CD-AC-10 tệp suite có probe dữ liệu thật: ${t}`);
     const n = (noi.match(DAU_PROBE) ?? []).length;
     const ten = t.split("/").pop()!;
     assert.ok(n <= (NO_PROBE[ten] ?? 0), `CD-AC-10 probe dữ liệu thật vượt danh sách nợ: ${ten} ${n} > ${NO_PROBE[ten] ?? 0}`);
@@ -325,16 +411,18 @@ function kiemAc10(tep: string[], doc: (t: string) => string): number {
   return tong;
 }
 test("CD-AC-10 suite chung không thêm probe dữ liệu thật", (t) => {
-  const tep = tepSuite();
-  const doc = (f: string) => readFileSync(join(AGENT, f), "utf8");
-  assert.ok(tep.length >= 10, `CD-AC-10 glob suite quá ít tệp: ${tep.length}`);
-  const tong = kiemAc10(tep, doc);
-  t.diagnostic(`CD-AC-10: ${tep.length} tệp suite · ${tong} ca probe dữ liệu thật còn nợ`);
-  assert.ok(doc("probes/o-duong-that.test.ts").includes(`test("${TEN_PROBE}"`), "CD-AC-10 probe ô đường không nằm ở probes/o-duong-that.test.ts");
-  const cfg = readFileSync(join(AGENT, "../_acceptance/config.yaml"), "utf8").split("\n").find((l) => /^\s+judge_entity_duong:/.test(l)) ?? "";
+  const ag = tepSuite("agent", "ts");
+  const ap = tepSuite("app", "tsx");
+  const doc = (f: string) => readFileSync(join(KHO, f), "utf8");
+  assert.ok(ag.length >= 10 && ap.length >= 10, `CD-AC-10 glob suite quá ít tệp: agent ${ag.length}, app ${ap.length}`);
+  assert.equal(kiemAc10(ag, doc), 0, "CD-AC-10 suite agent còn ca probe dữ liệu thật");
+  const noApp = kiemAc10(ap, doc);
+  t.diagnostic(`CD-AC-10: ${ag.length} tệp suite agent · 0 ca probe · ${ap.length} tệp suite app · ${noApp} ca nợ`);
+  assert.ok(doc("agent/probes/o-duong-that.test.ts").includes(`test("${TEN_PROBE[0]}"`), "CD-AC-10 probe ô đường không nằm ở agent/probes/o-duong-that.test.ts");
+  const cfg = readFileSync(join(KHO, "_acceptance/config.yaml"), "utf8").split("\n").find((l) => /^\s+judge_entity_duong:/.test(l)) ?? "";
   assert.ok(cfg.includes("probes/o-duong-that.test.ts"), "CD-AC-10 executor judge_entity_duong không chạy tệp probe");
-  // Chiều đỏ trên cùng hàm: thêm tệp probe vào danh sách suite; thêm một dấu probe vào judge-luat.
-  assert.throws(() => kiemAc10([...tep, "probes/o-duong-that.test.ts"], doc), /CD-AC-10 tệp suite có probe dữ liệu thật: probes\/o-duong-that\.test\.ts/);
+  // Chiều đỏ trên cùng hàm: thêm tệp probe app vào danh sách suite; thêm một dấu probe vào judge-luat.
+  assert.throws(() => kiemAc10([...ag, "app/probes/the-duyet-phuong-that.test.tsx"], doc), /CD-AC-10 tệp suite có probe dữ liệu thật: app\/probes\/the-duyet-phuong-that\.test\.tsx/);
   const docThem = (f: string) => (f.endsWith("judge-luat.test.ts") ? `${doc(f)}\nt.skip(${JSON.stringify("cần DB máy thu — thêm")});` : doc(f));
-  assert.throws(() => kiemAc10(tep, docThem), /CD-AC-10 probe dữ liệu thật vượt danh sách nợ: judge-luat\.test\.ts 3 > 2/);
+  assert.throws(() => kiemAc10(ag, docThem), /CD-AC-10 probe dữ liệu thật vượt danh sách nợ: judge-luat\.test\.ts 1 > 0/);
 });
