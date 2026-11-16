@@ -46,6 +46,29 @@ const coBang = async (db: Db) =>
   )
 
 /**
+ * Căn cứ sau khi người vận hành sửa thẻ: ô nào đổi giá trị thì bỏ `nguon` của ô ấy, để dòng căn cứ nói «Người vận hành
+ * điền» thay vì gán cách máy suy cho giá trị của người (AC-10). Ô không đổi giữ nguyên căn cứ của máy.
+ */
+export function canCuSauSua(
+  evidence: TheDiaChi["evidence"] | null | undefined,
+  cu: { project_node_ids?: unknown[] | null; area_id?: string | null; subzone_node_id?: number | string | null; purpose?: string | null },
+  moi: { du_an: number[]; phuong: string | null; phan_khu: number | null; muc_dich: string | null },
+): TheDiaChi["evidence"] {
+  const e = { ...(evidence ?? {}) } as Record<string, unknown>
+  const boNguon = (k: string) => {
+    const o = e[k] as CanCuO | undefined
+    if (o && typeof o === "object") e[k] = { ...o, nguon: null }
+  }
+  const soCu = (cu.project_node_ids ?? []).map(Number)
+  if (soCu.length !== moi.du_an.length || soCu.some((v, i) => v !== moi.du_an[i])) boNguon("du_an")
+  if ((cu.area_id ?? null) !== moi.phuong) { boNguon("phuong"); boNguon("tinh") }
+  const pkCu = cu.subzone_node_id == null ? null : Number(cu.subzone_node_id)
+  if (pkCu !== moi.phan_khu) boNguon("phan_khu")
+  if ((cu.purpose ?? null) !== moi.muc_dich) boNguon("muc_dich")
+  return e as TheDiaChi["evidence"]
+}
+
+/**
  * Mọi thẻ SỐNG, theo mã sổ rồi mã thẻ (nhóm chưa có trong sổ đứng cuối); null khi chưa có bảng thẻ (cloud, máy chưa áp 108+109).
  * Thẻ của nhóm đã rời tập nháp được cho nghỉ (`retired_at`) và không lên lưới — bộ đếm đầu trang phải khớp số lệnh dựng nháp in.
  */
@@ -148,12 +171,16 @@ export async function quyetThe(
     try {
       if (action === "sua" && sua?.ok) {
         const g = sua.gt
+        // Ô người vận hành vừa đổi thì căn cứ của máy cho ô ấy không còn đúng — bỏ nguồn đi, nếu không mở lại thẻ sẽ
+        // thấy «từ bài đã đọc, N bài» chú thích cho một giá trị do người chọn (AC-10).
+        const canCu = canCuSauSua(cu.evidence, cu, g)
         moi = (await c.query(
           `UPDATE group_address_cards SET project_node_ids = $2, area_id = $3,
                   province_area_id = (SELECT parent_id FROM areas WHERE id = $3), subzone_node_id = $4, purpose = $5,
+                  evidence = $8,
                   status = 'da_duyet', version = version + 1, decided_by = $6, decided_at = now(), decision_note = NULLIF($7, '')
             WHERE card_code = $1 RETURNING *`,
-          [cardCode, g.du_an, g.phuong, g.phan_khu, g.muc_dich, nguoiKy, note],
+          [cardCode, g.du_an, g.phuong, g.phan_khu, g.muc_dich, nguoiKy, note, canCu],
         )).rows[0]
       } else {
         moi = (await c.query(

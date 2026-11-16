@@ -13,7 +13,10 @@ if (!/\/oneinvest_suite_[a-z0-9_]+$/.test(DB_URL)) {
 }
 const GOC = join(import.meta.dirname, "..", "..");
 const AP = join(GOC, "_acceptance/the-dia-chi-nhom-s03/ap-may-thu");
-const MIG = readFileSync(join(GOC, "db/migrations/108_the_dia_chi_nhom.sql"), "utf8");
+// 108 và 109 là MỘT bộ (109 thêm cột thẻ nghỉ vào bảng của 108) — kiem-sau.sql đọc cột của 109, nên áp thiếu một cái
+// thì ca này đo trên lược đồ không tồn tại ở đâu cả.
+const MIG = readFileSync(join(GOC, "db/migrations/108_the_dia_chi_nhom.sql"), "utf8")
+  + "\n" + readFileSync(join(GOC, "db/migrations/109_the_dia_chi_nhom_cho_nghi.sql"), "utf8");
 const LUI = readFileSync(join(AP, "108-lui.sql"), "utf8");
 const KIEM = readFileSync(join(AP, "kiem-sau.sql"), "utf8");
 
@@ -52,12 +55,28 @@ test("TG1-AC-9b tệp lùi chạy thật: hai bảng mất, áp lại 108 đư�
     await c.query(`INSERT INTO group_address_cards (group_key, purpose, evidence) VALUES ('tg1lui-khoa-2', 'thue', '{}')`);
     // kiem-sau.sql: bỏ lệnh meta của psql, chạy từng câu; câu số thẻ phải in đúng một thẻ vừa dựng.
     const cau = KIEM.split("\n").filter((l) => !l.startsWith("\\")).join("\n").split(";").map((s) => s.trim()).filter((s) => s && !/^--/.test(s.replace(/^(--.*\n)+/, "")));
-    let soThe = null;
+    // Đo ĐẦU RA, không đo tên khoá: tìm câu nào phát ra số thẻ sống, rồi so số thật. Không câu nào phát ra thì ca ĐỎ
+    // (trước đây nhánh gán im lặng không chạy khi tên cột đổi, nên assert chỉ phản ánh tên khoá chứ không đọc con số).
+    const COT_SONG = "so_the_song";
+    let soThe = null, coCau = false;
     for (const s of cau) {
       const r = await c.query(s);
-      if (r.fields.some((f) => f.name === "so_the") && r.fields.some((f) => f.name === "nhom_co_bai")) soThe = Number(r.rows[0].so_the);
+      if (!r.fields.some((f) => f.name === "nhom_co_bai")) continue;
+      coCau = true;
+      const cot = r.fields.find((f) => f.name === COT_SONG);
+      assert.ok(cot, `TG1-AC-9b: câu đếm của kiem-sau.sql không có cột ${COT_SONG} — phép đo không đọc được số thẻ sống`);
+      soThe = Number(r.rows[0][COT_SONG]);
     }
-    assert.equal(soThe, 1, "TG1-AC-9b: kiem-sau.sql không in đúng số thẻ");
+    assert.ok(coCau, "TG1-AC-9b: kiem-sau.sql không có câu nào đếm nhóm có bài");
+    assert.equal(soThe, 1, "TG1-AC-9b: kiem-sau.sql không in đúng số thẻ sống");
+    // Thẻ nghỉ không được tính vào số thẻ sống — bất biến mà bước kiểm sau dựa vào.
+    await c.query(`UPDATE group_address_cards SET retired_at = now(), retired_reason = 'nhom-khong-con-bai' WHERE group_key = 'tg1lui-khoa-2'`);
+    for (const s of cau) {
+      const r = await c.query(s);
+      if (!r.fields.some((f) => f.name === "nhom_co_bai")) continue;
+      assert.equal(Number(r.rows[0][COT_SONG]), 0, "TG1-AC-9b: thẻ đã nghỉ vẫn bị đếm là thẻ sống");
+      assert.equal(Number(r.rows[0].so_the_nghi), 1, "TG1-AC-9b: kiem-sau.sql không in số thẻ nghỉ");
+    }
   });
 });
 

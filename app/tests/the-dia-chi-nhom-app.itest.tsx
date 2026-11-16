@@ -227,3 +227,49 @@ test("TG1-AC-5 thẻ đang nghỉ không lên lưới Ops — bộ đếm đầu
     await c.query(`DELETE FROM group_address_cards WHERE card_code = $1`, [code])
   }
 })
+
+test("TG1-AC-10 người vận hành sửa một ô MÁY ĐÃ ĐIỀN thì dòng căn cứ thôi nhận là của máy; ô không đổi giữ căn cứ cũ", async () => {
+  const { quyetThe, docTheDiaChi } = await import("../src/lib/the-dia-chi-nhom")
+  const { dongCanCu } = await import("../src/components/ops/group-cards/group-cards-text")
+  const phuong = (await c.query(`SELECT id FROM areas WHERE region_type = 'submarket' ORDER BY id LIMIT 1`)).rows[0].id
+  const phuong2 = (await c.query(`SELECT id FROM areas WHERE region_type = 'submarket' ORDER BY id DESC LIMIT 1`)).rows[0].id
+  assert.notEqual(phuong, phuong2, "fixture: cần hai phường khác nhau")
+  // Thẻ máy đã điền CẢ ô dự án lẫn ô phường, mỗi ô một căn cứ của máy.
+  const code = (await c.query(`INSERT INTO group_address_cards (group_key, unit_code, project_node_ids, area_id, purpose, evidence)
+                               VALUES ($1, NULL, $2, $3, 'ban', $4) RETURNING card_code`,
+    [`${T}-ghi-de`, [A], phuong,
+     { so_bai: 20, so_bai_doc: 9, du_an: { nguon: "nhan", so_bai: 7 }, phuong: { nguon: "tin", so_bai: 12 } }])).rows[0].card_code
+  const ops = { id: nguoi.ops.id, email: "ops@local.test", plan: "free" as const, role: "ops" as const }
+  const v = (await c.query(`SELECT version FROM group_address_cards WHERE card_code = $1`, [code])).rows[0].version
+
+  // Người vận hành đổi Ô PHƯỜNG, giữ nguyên ô dự án.
+  const r = await quyetThe({ cardCode: code, version: v, card: "sua",
+    values: { projectNodeIds: [A], areaId: phuong2, subzoneNodeId: null, purpose: "ban" } } as never, ops)
+  assert.equal(r.status, 200, `TG1-AC-10: sửa thẻ phải thành công — ${JSON.stringify(r.body)}`)
+
+  const t = ((await docTheDiaChi()) ?? []).find((x) => x.card_code === code)
+  assert.ok(t, "TG1-AC-10: thẻ phải còn trên lưới sau khi sửa")
+  assert.equal(dongCanCu(t.evidence.phuong, t.evidence.so_bai_doc ?? 0, true), "Người vận hành điền",
+    "TG1-AC-10: ô người vừa đổi vẫn ghi căn cứ của máy")
+  assert.match(dongCanCu(t.evidence.du_an, t.evidence.so_bai_doc ?? 0, true), /từ bài đã đọc/,
+    "TG1-AC-10: ô KHÔNG đổi phải giữ nguyên căn cứ của máy")
+
+  // Đối chứng đỏ: bản sao bỏ bước cập nhật căn cứ → ô vừa sửa lại nhận căn cứ của máy.
+  const goc = readFileSync(join(GOC, "app/src/lib/the-dia-chi-nhom.ts"), "utf8")
+  const pha = goc.replace("        const canCu = canCuSauSua(cu.evidence, cu, g)", "        const canCu = cu.evidence")
+  assert.notEqual(pha, goc, "can-cu-ghi-de: không phá được hàm")
+  const tep = join(GOC, "app/src/lib", `.tg1-pha-cancu-${process.pid}.ts`)
+  writeFileSync(tep, pha)
+  try {
+    const m = (await import(tep)) as typeof import("../src/lib/the-dia-chi-nhom")
+    const code2 = (await c.query(`INSERT INTO group_address_cards (group_key, unit_code, project_node_ids, area_id, purpose, evidence)
+                                  VALUES ($1, NULL, $2, $3, 'ban', $4) RETURNING card_code`,
+      [`${T}-ghi-de-2`, [A], phuong, { so_bai: 20, so_bai_doc: 9, phuong: { nguon: "tin", so_bai: 12 } }])).rows[0].card_code
+    const v2 = (await c.query(`SELECT version FROM group_address_cards WHERE card_code = $1`, [code2])).rows[0].version
+    await m.quyetThe({ cardCode: code2, version: v2, card: "sua",
+      values: { projectNodeIds: [A], areaId: phuong2, subzoneNodeId: null, purpose: "ban" } } as never, ops)
+    const e2 = (await c.query(`SELECT evidence FROM group_address_cards WHERE card_code = $1`, [code2])).rows[0].evidence
+    assert.notEqual(dongCanCu(e2.phuong, 9, true), "Người vận hành điền",
+      "can-cu-ghi-de: bản bỏ bước cập nhật căn cứ vẫn nói «Người vận hành điền» — ca không phân biệt được")
+  } finally { rmSync(tep, { force: true }) }
+})
