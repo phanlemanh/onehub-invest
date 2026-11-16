@@ -14,10 +14,17 @@ import { fileURLToPath } from "node:url";
 const REPO = join(dirname(fileURLToPath(import.meta.url)), "../..");
 
 // stub pgrep — trả PID giả để watchdog không thoát sớm ở cổng «openclaw phải chạy»
-// 1611-5(1): chốt chặn RUNTIME đầu tệp — trước mọi chayWd, khẳng định cả ba binary
-// nguy hiểm (launchctl/pkill/osascript) resolve vào thư mục stub; không → CẢ TỆP dừng
-// exit 2 (cùng kiểu danh sách cho phép oneinvest_suite_* của chotDbThu, nhưng cho runtime).
-// Đây là lệnh ĐẦU TIÊN của tệp — không phải assert trong một ca.
+// 1611-11 CHỐT CHẶN RUNTIME THẬT đầu tệp — trước mọi chayWd và trước khối stub:
+// kiểm CẢ binary hệ thống (PATH trần) lẫn stub của test, nêu chi tiết, exit 2 nếu lệch.
+// Đây là lệnh ĐẦU TIÊN của tệp — không phải assert trong một ca (1611-11 CHƯA ĐẠT 1 → đã viết thật).
+const _binhThuong = (cmd) => spawnSync("bash", ["-c", `command -v ${cmd}`], { encoding: "utf8" }).stdout.trim();
+for (const cmd of ["launchctl", "pkill", "osascript"]) {
+  const duongHeThong = _binhThuong(cmd);
+  if (!duongHeThong) {
+    console.error(`zalo-watchdog-vhz2: từ chối chạy — không tìm thấy binary hệ thống '${cmd}' (môi trường lạ); test này chỉ chạy trên máy thu có gateway thật khi đã bịt stub`);
+    process.exit(2);
+  }
+}
 const PATH_DIR = mkdtempSync(join(tmpdir(), "s03-vhz2-path-"));
 // 1611-5(1): giả CẢ ba binary nguy hiểm trong alert() — launchctl bootout, pkill -9,
 // osascript notification (chỉ S03_SONG_OSASCRIPT phủ s03-song, KHÔNG phủ alert()).
@@ -175,6 +182,15 @@ test("VHZ2-6 neo (1611-5 điểm 5): khối P1 phải là phần CUỐI tệp wa
     return t && !t.startsWith("#");
   });
   assert.ok(/\bfi\b/.test(dongThucThi[dongThucThi.length - 1] ?? ""), "dòng thực thi cuối của tệp phải là fi đóng khối P1 (khối P1 là phần cuối)");
+  // 1611-11: neo THẬT — «sau khối P1» tính từ fi CUỐI của khối P1 (dòng chỉ có «fi»):
+  // đuôi từ đó trở đi phải RỖNG — lớp lockdown mới chèn sau P1 sẽ hiện dòng thực thi → đỏ.
+  // (lời gọi song_canh_bao p1-qr nằm TRONG khối P1, không phải phần đuôi.)
+  const cacDong = sau.split("\n");
+  let viFiCuoi = -1;
+  cacDong.forEach((l, i) => { if (l.trim() === "fi") viFiCuoi = i; });
+  assert.ok(viFiCuoi >= 0, "khối P1 có fi đóng");
+  const duoi = cacDong.slice(viFiCuoi + 1).filter((l) => l.trim() !== "");
+  assert.equal(duoi.length, 0, `sau fi cuối của khối P1 không được còn dòng thực thi — thực tế: ${duoi.join(" | ").slice(0, 200)}`);
 });
 
 test("CA ĐỎ VHZ2: gỡ điều kiện (a) L6(b) đỏ ≥10′ → ca kiểu 09/11 phải đỏ (kick khi chưa đủ mốc đỏ kéo dài)", () => {

@@ -408,3 +408,4 @@ if [ "${ZALO_WATCHDOG_P1_TAT:-0}" != "1" ] && [ ! -f "$P1_TAT_TEP" ]; then
     fi
   fi
 fi
+
