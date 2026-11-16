@@ -42,10 +42,11 @@ export async function donHet() {
 let nCa = 0;
 /**
  * DB sạch cho một ca. `view`: dựng view offer_project; `luocDoView`: đặt view trong lược đồ khác và thêm lược đồ đó vào
- * search_path của client (ca dò theo search_path); `bo106`: bỏ bảng project_area_band (DB chưa áp 106).
+ * search_path của client (ca dò theo search_path); `bo106`: bỏ bảng project_area_band (DB chưa áp 106); `bo107`: bỏ bảng
+ * project_source_baseline (DB chưa áp 107, CG15).
  * Mồi một tỉnh, năm phường thử. Trả client đã nối.
  */
-export async function dbCa({ view = true, luocDoView = null, bo106 = false } = {}) {
+export async function dbCa({ view = true, luocDoView = null, bo106 = false, bo107 = false } = {}) {
   const ten = TEN(`ca${++nCa}`);
   await quanTri(`DROP DATABASE IF EXISTS ${ten} WITH (FORCE)`);
   await quanTri(`CREATE DATABASE ${ten} TEMPLATE ${TEN("mau")}`);
@@ -53,6 +54,7 @@ export async function dbCa({ view = true, luocDoView = null, bo106 = false } = {
   await c.connect();
   moi.push({ ten, c });
   if (bo106) await c.query(`DROP TABLE project_area_band`);
+  if (bo107) await c.query(`DROP TABLE IF EXISTS project_source_baseline`);
   // Từ khi 105 (DV7) có trên main, DB dựng từ migration đã mang view public.offer_project (kèm hàm phụ thuộc): ca «không view»
   // và ca view ở lược đồ khác phải gỡ nó trước, không thì ca dò lược đồ đo nhầm view của 105.
   if (!view || luocDoView) await c.query(`DROP VIEW IF EXISTS public.offer_project CASCADE`);
