@@ -23,6 +23,8 @@ mặt bằng S06), `trang_thai` (`du` · `thieu-s03` · `thieu-s06` · `thieu-ha
 - Mẫu số là PHIẾU như CG10 (căn S06 trong `property_offers` lấy căn nhỏ nhất, tin S03 là phiếu riêng), tách theo nguồn của tin:
   phiếu × nguồn lấy tin thấy sau cùng. Giá trị là `offer_price_rank.gia_tri` (giá/m² ở thước `gia-m2`, giá tháng ở `gia-thang-pn`).
 - Chỉ tin đã vào nhóm (`cap = du_an`, `ly_do` không phải lý do loại) mới góp; tin phi lý, ngoài khoảng không vào mẫu.
+- Nhóm thuê giá tháng × PN gom như nhóm dth của 422: mọi tin thuê cùng dự án, cùng loại, PN = nhóm, giá tháng trong khoảng — kể cả tin
+  có m² (hạng của chúng theo giá/m²), giá trị là giá tháng (sửa ở S3: tin S03 thuê thường thiếu m², tin S06 thuê thường có m²).
 - Một bên đủ khi từ 5 phiếu (Hỏi-1); thiếu thì dòng vẫn ghi với `trang_thai` tương ứng, `trung_vi` của bên thiếu vẫn ghi khi có
   ≥ 1 phiếu, `lech_pct` NULL.
 - S02, S05 và nguồn khác không vào bảng (mục 51 so S03 với S06).

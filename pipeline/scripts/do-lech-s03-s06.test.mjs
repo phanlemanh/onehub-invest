@@ -145,7 +145,10 @@ async function kiemAc3(c, d) {
   assert.equal(rows.length, 3, `CG15-AC-3 cần ba dòng (bán m², thuê m², thuê tháng): ${rows.map(khoa).join(", ")}`);
   const thang = tim("rent_lt", "gia-thang-pn");
   assert.equal(thang.length, 1, "CG15-AC-3 thiếu dòng thuê giá tháng");
-  kiemDong(thang[0], { n3: 5, n6: 5, tv3: 12 * M, tv6: 13 * M, trangThai: "du" }, "CG15-AC-3 thuê giá tháng");
+  // nhóm giá tháng gom như nhóm dth của 422: tin thuê thiếu m² (giá tháng) + tin thuê có m² cùng PN (giá tháng = m² × giá/m²)
+  const thang3 = [0, 1, 2, 3, 4].flatMap((i) => [(10 + i) * M, 60 * (200 + 5 * i) * 1000]);
+  const thang6 = [0, 1, 2, 3, 4].flatMap((i) => [(11 + i) * M, 60 * (210 + 5 * i) * 1000]);
+  kiemDong(thang[0], { n3: 10, n6: 10, tv3: trungVi(thang3), tv6: trungVi(thang6), trangThai: "du" }, "CG15-AC-3 thuê giá tháng");
   assert.equal(tim("rent_lt", "gia-m2").length, 1, "CG15-AC-3 thiếu dòng thuê giá/m²");
   assert.equal(tim("sale", "gia-m2").length, 1, "CG15-AC-3 thiếu dòng bán");
   // khoá dòng mặt bằng khớp khoá nhóm của mọi tin S03 cấp dự án
@@ -160,6 +163,9 @@ test("CG15-AC-3 thuê m² và thuê giá tháng tách dòng, khoá khớp nhóm 
   const d = await fixtureAc3(c);
   await xepHangGia(c, im);
   await kiemAc3(c, d);
+  // đột biến: nhóm giá tháng chỉ lấy tin có thước giá tháng (bỏ tin thuê có m²) → n và trung vị lệch
+  await xepHangGia(c, { ...im, sql423: dot(["AND h.thuoc = 'gia-m2' AND (h.ly_do IS NULL", "AND h.thuoc = 'khong-co' AND (h.ly_do IS NULL"]) });
+  await assert.rejects(kiemAc3(c, d), /CG15-AC-3 thuê giá tháng \[/, "CG15-AC-3 đột biến bỏ tin thuê có m² khỏi nhóm giá tháng không đỏ");
   // đột biến: bỏ kind khỏi khoá (mọi tin coi như bán) → bán và thuê m² trộn
   const sai = dot(["SELECT h.nut, h.kind,", "SELECT h.nut, 'sale'::text AS kind,"]);
   await assert.rejects(async () => { await xepHangGia(c, { ...im, sql423: sai }); await kiemAc3(c, d); },

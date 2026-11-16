@@ -3,6 +3,8 @@
 -- offer_project. $1 = run_id. Đọc offer_price_rank vừa ghi (khoá nhóm = nut, kind, property_type, thuoc, pn_nhom của dòng
 -- cap = 'du_an'); luật (thiết kế §2.1):
 --   · tin vào mẫu = dòng cap du_an có gia_tri và không bị loại (ly_do rỗng, hay nhom-5-9 / pn-duoi-10 — vẫn có số)
+--   · nhóm giá tháng (thuoc gia-thang-pn) gom như nhóm dth của 422: mọi tin thuê cùng dự án, cùng loại, PN = pn_nhom, giá tháng
+--     trong khoảng — kể cả tin có m² (hạng của chúng theo giá/m²) — giá trị là giá tháng
 --   · chỉ nguồn S03, S06; phiếu như 422 (căn nhỏ nhất trong property_offers, không thì chính tin); phiếu × nguồn lấy tin thấy
 --     sau cùng — căn S06 có tin S03 ghép vào góp một phiếu cho mỗi nguồn
 --   · một bên đủ khi từ 5 phiếu (Hỏi-1); lech_pct chỉ khi hai bên đủ
@@ -17,6 +19,16 @@ WITH m AS (
    WHERE h.cap = 'du_an' AND h.gia_tri IS NOT NULL
      AND (h.ly_do IS NULL OR h.ly_do IN ('nhom-5-9', 'pn-duoi-10'))
      AND o.source IN ('S03', 'S06')
+  UNION ALL
+  SELECT k.nut, k.kind, k.property_type, k.thuoc, k.pn_nhom, o.source, o.price_vnd::numeric, o.last_seen, o.offer_id,
+         coalesce((SELECT 'p:' || min(po.property_id) FROM property_offers po WHERE po.offer_id = o.offer_id),
+                  'o:' || o.offer_id) AS phieu
+    FROM (SELECT DISTINCT nut, kind, property_type, thuoc, pn_nhom FROM offer_price_rank
+           WHERE cap = 'du_an' AND thuoc = 'gia-thang-pn') k
+    JOIN offer_price_rank h ON h.cap = 'du_an' AND h.nut = k.nut AND h.kind = 'rent_lt' AND h.property_type = k.property_type
+                           AND h.thuoc = 'gia-m2' AND (h.ly_do IS NULL OR h.ly_do IN ('nhom-5-9', 'pn-duoi-10'))
+    JOIN sale_offers o ON o.offer_id = h.offer_id AND o.bedrooms = k.pn_nhom
+                      AND o.price_vnd BETWEEN 1000000 AND 500000000 AND o.source IN ('S03', 'S06')
 ), p AS (
   SELECT DISTINCT ON (nut, kind, property_type, thuoc, coalesce(pn_nhom, -1), source, phieu)
          nut, kind, property_type, thuoc, pn_nhom, source, gia_tri
