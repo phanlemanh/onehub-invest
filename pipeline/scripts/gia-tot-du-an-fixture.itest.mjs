@@ -42,10 +42,11 @@ export async function donHet() {
 let nCa = 0;
 /**
  * DB sạch cho một ca. `view`: dựng view offer_project; `luocDoView`: đặt view trong lược đồ khác và thêm lược đồ đó vào
- * search_path của client (ca dò theo search_path); `bo106`: bỏ bảng project_area_band (DB chưa áp 106).
+ * search_path của client (ca dò theo search_path); `bo106`: bỏ bảng project_area_band (DB chưa áp 106); `bo107`: bỏ bảng
+ * project_source_baseline (DB chưa áp 107, CG15).
  * Mồi một tỉnh, năm phường thử. Trả client đã nối.
  */
-export async function dbCa({ view = true, luocDoView = null, bo106 = false } = {}) {
+export async function dbCa({ view = true, luocDoView = null, bo106 = false, bo107 = false } = {}) {
   const ten = TEN(`ca${++nCa}`);
   await quanTri(`DROP DATABASE IF EXISTS ${ten} WITH (FORCE)`);
   await quanTri(`CREATE DATABASE ${ten} TEMPLATE ${TEN("mau")}`);
@@ -53,6 +54,7 @@ export async function dbCa({ view = true, luocDoView = null, bo106 = false } = {
   await c.connect();
   moi.push({ ten, c });
   if (bo106) await c.query(`DROP TABLE project_area_band`);
+  if (bo107) await c.query(`DROP TABLE IF EXISTS project_source_baseline`);
   // Từ khi 105 (DV7) có trên main, DB dựng từ migration đã mang view public.offer_project (kèm hàm phụ thuộc): ca «không view»
   // và ca view ở lược đồ khác phải gỡ nó trước, không thì ca dò lược đồ đo nhầm view của 105.
   if (!view || luocDoView) await c.query(`DROP VIEW IF EXISTS public.offer_project CASCADE`);
@@ -103,6 +105,23 @@ export async function tin(c, o) {
       o.lastSeen ?? ngay, nguon, nguon === "S06" ? "P2" : "P1", bai]);
   for (const [i, d] of duAnDs.entries()) await phatBieuDuAn(c, nguon, bai[i], d);
 }
+let nS06 = 0;
+/** Một tin S06 có dự án qua bí danh mã nguồn (đường S06 của view 105: stg_chotot_ads → registry_aliases → s06_offer_project). */
+export async function tinS06(c, o) {
+  const list = 8_100_000_000 + (++nS06);
+  const pid = `cg15fx${process.pid}x${nS06}`;
+  await c.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ('cg15-snap', 'vn', 'cg15-thu', '{}'::jsonb)
+    ON CONFLICT DO NOTHING`);
+  await c.query(`INSERT INTO stg_chotot_ads (list_id, region_v2, city_code, category, ad_type, payload, snapshot_id)
+    VALUES ($1, 12000, 'vn-hanoi', 1010, $2, $3, 'cg15-snap')`, [list, (o.kind ?? "sale") === "sale" ? "s" : "u", { projectid: pid }]);
+  await tin(c, { ...o, nguon: "S06" });
+  await c.query(`UPDATE sale_offer_records SET originating_system_key = $2 WHERE offer_id = $1`, [o.id, String(list)]);
+  if (o.duAn != null) {
+    await c.query(`INSERT INTO registry_aliases (object_key, kind, value, source, first_seen)
+      VALUES ($1, 'ma_nguon', $2, 'S06', now())`, [`node:${o.duAn}`, `du_an/${pid}`]);
+  }
+}
+
 /** Phát biểu project_node_id của một bài (chứng cứ view 105 đọc). */
 export async function phatBieuDuAn(c, nguon, postId, nodeId) {
   await c.query(

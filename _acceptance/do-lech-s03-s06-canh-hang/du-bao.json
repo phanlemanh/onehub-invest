@@ -1,0 +1,30 @@
+{
+  "ngay_tinh": "2026-11-15",
+  "hang": {
+    "ma": "CG15",
+    "gio_may": [
+      0.5,
+      3.97
+    ],
+    "phan_tram": 1.43
+  },
+  "moc": {
+    "ten": "MS2 — hạng cấp dự án trên Ops",
+    "bat_dau": "2026-11-16",
+    "hoan_tat": "2026-11-17",
+    "gio_may": [
+      8.46,
+      25.779999999999998
+    ],
+    "gio_cho": 3.4,
+    "gio_cho_do": true,
+    "muc_tieu": null,
+    "hang": [
+      "UI10",
+      "DS2",
+      "CG3",
+      "CG10",
+      "CG15"
+    ]
+  }
+}
