@@ -1,0 +1,22 @@
+{
+  "feature_plain": "Mỗi nhóm S03 có bài nhận một thẻ địa chỉ do máy dựng nháp (dự án, phường và tỉnh, phân khu, bán hay thuê, kèm số bài làm căn cứ); người vận hành nhận, sửa hay bác ngay trên sổ nhóm ở Ops, và sổ đếm đủ 27/27 nhóm có thẻ.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ thêm hai bảng thẻ và lịch sử sửa thẻ, chỉ ở máy thu; giá trị sai loại (dự án không phải dự án, quá 3 dự án) bị chặn."},
+    {"id": "AC-2", "p": "Sẽ dựng mỗi ô nháp theo ngưỡng viết sẵn và ghi kèm nguồn, số bài làm căn cứ; ô thiếu căn cứ để trống kèm số bài đã đọc."},
+    {"id": "AC-3", "p": "Sẽ tạo đúng một thẻ cho mỗi nhóm thật có bài, kể cả nhóm chưa có trong sổ; chạy lại không đổi gì và không đụng thẻ đã duyệt hay đã bác."},
+    {"id": "AC-4", "p": "Sẽ ghi mỗi lần nhận, sửa, bác kèm người, giờ, bản trước; bác phải có lý do; hai người sửa cùng lúc thì người sau được báo thẻ đã đổi."},
+    {"id": "AC-5", "p": "Sẽ hiện trên sổ nhóm bộ đếm «x/27 nhóm có thẻ», trạng thái từng nhóm và hộp duyệt bốn ô; viewer chỉ xem."},
+    {"id": "AC-6", "p": "Sẽ KHÔNG để mã nhóm thật lộ ra trang hay API — chỉ mã sổ và mã thẻ; nơi chưa có bảng thẻ (cloud) thì khu thẻ không hiện."},
+    {"id": "AC-7", "p": "Sẽ chạy thử trên bản chép dữ liệu máy thu: đủ 27 nhóm có thẻ, đúng năm lớp nhóm, và ô bán/thuê, ô dự án có giá trị ở ít nhất một nửa nhóm đủ bài."},
+    {"id": "AC-8", "p": "Sẽ đo chất lượng nháp: dựng lại 13 nhóm đã có dự án mà không nhìn sổ, đạt khi từ 9/13 trùng."},
+    {"id": "AC-9", "p": "Sẽ có đủ hồ sơ áp lên máy thu: sao lưu trước, số chạy thử, tệp lùi đã chạy thật, lệnh kiểm sau."},
+    {"id": "AC-10", "p": "Sẽ để người duyệt đọc được mỗi ô lấy từ đâu và bao nhiêu bài mà không cần mở DB; thêm thuật ngữ «Thẻ địa chỉ nhóm»."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "KHÔNG đóng dấu thẻ lên tin lúc nạp — việc của hàng TG2."},
+    {"id": "OOS-2", "p": "KHÔNG làm tiêu đề chuẩn hoá, mô tả nhóm (ON19) hay sửa sổ từ cloud (ON20); mục đích bán/thuê (RM2) đã gom vào thẻ."},
+    {"id": "OOS-3", "p": "KHÔNG gọi model đọc thêm bài — nháp chỉ dùng nhãn đã có."},
+    {"id": "OOS-4", "p": "KHÔNG đưa thẻ lên cloud."},
+    {"id": "OOS-5", "p": "KHÔNG ghi thẻ đã duyệt ngược vào sổ nhóm (xem Hỏi-2)."}
+  ]
+}
