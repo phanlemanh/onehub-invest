@@ -364,3 +364,229 @@ test("chiều đỏ: bản đột biến làm đúng ca tương ứng đỏ", ()
     assert.ok(doDo(root), `đột biến «${ten}» không làm ca tương ứng đỏ`);
   }
 });
+
+// ===================================================== Task 2 — tệp bọc ====
+// Cây tạm theo khuôn scripts/s03-nap-nhanh.test.mjs: chép NGUYÊN tệp bọc thật + job-step.sh,
+// `node` và `sleep` giả đầu PATH, HOME tạm, DATABASE_URL cổng đóng. Bản đối chứng là tệp bọc ở
+// origin/main chạy trên CÙNG `node` giả — không viết tay dãy nhãn hay mã thoát ở bất kỳ ô nào.
+const BOC = "scripts/zalo-import-daily.sh";
+const MOC_LAN = "# Từ đây trở xuống là làn Claude";
+const SNAP = "collector/snapshots/hanoi/hanoi__zalo-agent__2026-10-25T000000Z";
+const STATE = "pipeline/logs/apify-daily.state";
+
+// node giả: nhãn = tên tệp .mjs/.js/.ts đầu tiên; ghi «nhãn cờ» vào CALLS; CHAM_BUOC ngủ THẬT.
+const NODE_GIA = `#!/bin/bash
+step=node
+for a in "$@"; do case "$a" in *.mjs|*.js|*.ts) step="$(basename "$a")"; step="\${step%.*}"; break;; esac; done
+echo "$step \${S03_LUOT_NHANH:-unset}" >> "$CALLS"
+[ -n "\${CHAM_BUOC:-}" ] && [ "$step" = "$CHAM_BUOC" ] && /bin/sleep "\${CHAM_GIAY:-2}"
+IFS=',' read -ra items <<< "\${FAIL_STEPS:-}"
+for it in "\${items[@]}"; do
+  name="\${it%%:*}"; rest="\${it#*:}"; c="\${rest%%:*}"; msg="\${rest#*:}"
+  [ "$name" = "$step" ] || continue
+  [ "$msg" = "$rest" ] && msg="boom ($step)"
+  echo "$msg" >&2; exit "$c"
+done
+exit 0
+`;
+
+/** Cây tệp bọc. `ban` = nội dung tệp bọc (mặc định bản trong cây làm việc). */
+function cayBoc(ban) {
+  const root = mkdtempSync(path.join(SCRATCH, "boc-"));
+  mkdirSync(path.join(root, "scripts/lib"), { recursive: true });
+  copyFileSync(path.join(REPO, LIB), path.join(root, LIB));
+  writeFileSync(path.join(root, BOC), ban ?? readFileSync(path.join(REPO, BOC), "utf8"));
+  mkdirSync(path.join(root, SNAP), { recursive: true });
+  writeFileSync(path.join(root, SNAP, "manifest.json"), "{}\n");
+  mkdirSync(path.join(root, "pipeline/logs"), { recursive: true });
+  mkdirSync(path.join(root, "agent"));
+  writeFileSync(path.join(root, "pipeline/doc-gop-hang-ngay.sh"),
+    '#!/bin/bash\nexec node "$(dirname "$0")/doc-gop-hang-ngay.mjs"\n');
+  writeFileSync(path.join(root, STATE), "2026-10-24T000000Z");
+  const bin = path.join(root, ".shim-bin");
+  mkdirSync(bin);
+  writeFileSync(path.join(bin, "node"), NODE_GIA);
+  chmodSync(path.join(bin, "node"), 0o755);
+  writeFileSync(path.join(bin, "sleep"), "#!/bin/bash\nexit 0\n"); // vòng chờ khoá không chờ thật
+  chmodSync(path.join(bin, "sleep"), 0o755);
+  mkdirSync(path.join(root, ".home"));
+  return root;
+}
+
+function chayBoc(root, args = [], extra = {}) {
+  const calls = path.join(root, `.calls-${++dem}`);
+  writeFileSync(calls, "");
+  const r = spawnSync("/bin/bash", [path.join(root, BOC), ...args], {
+    cwd: root,
+    encoding: "utf8",
+    timeout: 60_000,
+    env: {
+      PATH: `${path.join(root, ".shim-bin")}:/usr/bin:/bin`,
+      HOME: path.join(root, ".home"),
+      DATABASE_URL: "postgres://127.0.0.1:9/khong-co",
+      CALLS: calls,
+      ...extra,
+    },
+  });
+  const goi = readFileSync(calls, "utf8").split("\n").filter(Boolean);
+  return {
+    ma: r.status,
+    ra: r.stdout + r.stderr,
+    err: r.stderr,
+    goi: goi.map((l) => l.split(" ")[0]),   // dãy lời gọi node giả — tín hiệu có ở CẢ hai bản
+    co: goi.map((l) => l.split(" ")[1]),
+  };
+}
+
+const banGoc = () =>
+  spawnSync("git", ["show", `origin/main:${BOC}`], { cwd: REPO, encoding: "utf8" }).stdout;
+
+/** Lưới phạm vi làn trên CHÍNH cây làm việc: mọi khối @@ phải nằm dưới dòng mốc của bản origin/main. */
+function kiemRanhGioiLan() {
+  const goc = banGoc().split("\n");
+  const iMoc = goc.findIndex((l) => l.startsWith(MOC_LAN));
+  assert.ok(iMoc >= 0, "bản origin/main phải có dòng mốc ranh giới làn");
+  const socMoc = iMoc + 1;
+  assert.ok(
+    readFileSync(path.join(REPO, BOC), "utf8").includes(MOC_LAN),
+    "dòng mốc ranh giới làn phải còn nguyên trong cây",
+  );
+  const diff = spawnSync("git", ["diff", "-U0", "origin/main", "--", BOC], { cwd: REPO, encoding: "utf8" }).stdout;
+  const lan = [];
+  for (const d of diff.split("\n")) {
+    const m = /^@@ -(\d+)/.exec(d);
+    if (m && Number(m[1]) <= socMoc) lan.push(d);
+  }
+  return { lan, socMoc };
+}
+
+/** Chèn tạm một dòng vào tệp bọc trong cây làm việc rồi hoàn nguyên sau khi đo. */
+function voiDongChen(truocMoc, doc) {
+  const p = path.join(REPO, BOC);
+  const goc = readFileSync(p, "utf8");
+  const dong = goc.split("\n");
+  const i = dong.findIndex((l) => l.startsWith(MOC_LAN));
+  dong.splice(truocMoc ? i - 1 : i + 2, 0, "# dòng chèn tạm của phép đo JST-AC-8");
+  try {
+    writeFileSync(p, dong.join("\n"));
+    return doc();
+  } finally {
+    writeFileSync(p, goc);
+  }
+}
+
+// ---------------------------------------------------------------- JST-AC-7 --
+test("JST-AC-7 buoc_nhanh ba kết cục: mỗi kết cục một dòng ghim, dòng cũ nguyên văn, mã thoát không đổi", () => {
+  const o = [
+    ["xanh", {}, 0],
+    ["khoa", { FAIL_STEPS: "transform-zalo:1:canceling statement due to lock timeout" }, 1],
+    ["hong", { FAIL_STEPS: "transform-zalo:3:boom" }, 3],
+  ];
+  for (const [ten, env, maBuoc] of o) {
+    const r = chayBoc(cayBoc(), ["--luot-nhanh"], env);
+    const g = chayBoc(cayBoc(banGoc()), ["--luot-nhanh"], env);
+
+    assert.equal(r.ma, g.ma, `[${ten}] mã thoát phải bằng bản origin/main`);
+    const b = buoc(r.err, "transform-zalo");
+    assert.equal(b.ma, maBuoc, `[${ten}] mã trên dòng ghim`);
+    assert.equal(b.nhanh, 1, `[${ten}] lượt nhanh phải cho nhanh 1`);
+    assert.equal(
+      dongGhim(r.err).filter((l) => l.includes(" bước transform-zalo ")).length, 1,
+      `[${ten}] phải đúng MỘT dòng ghim cho transform-zalo`,
+    );
+    if (ten === "khoa") {
+      assert.ok(r.err.includes("BỎ LƯỢT [zalo-import-daily] bước transform-zalo: đụng khoá — lượt sau làm"),
+        `[khoa] dòng BỎ LƯỢT phải nguyên văn:\n${r.err}`);
+      assert.equal(dongHong(r.err).filter((l) => l.includes(" bước transform-zalo ")).length, 0);
+    }
+    if (ten === "hong") {
+      assert.ok(r.err.includes("JOB FAIL [zalo-import-daily] bước transform-zalo mã 3"),
+        `[hong] dòng JOB FAIL phải nguyên văn:\n${r.err}`);
+    }
+  }
+});
+
+// ---------------------------------------------------------------- JST-AC-8 --
+test("JST-AC-8 bước truoc-lan-claude: đứng trước mọi bước transform, giây đo thật", () => {
+  const r = chayBoc(cayBoc(), ["--luot-nhanh"]);
+  const g = dongGhim(r.err);
+  const iTruoc = g.findIndex((l) => l.includes(" bước truoc-lan-claude "));
+  assert.equal(g.filter((l) => l.includes(" bước truoc-lan-claude ")).length, 1, `phải ĐÚNG MỘT dòng:\n${r.err}`);
+  const iTransform = g.findIndex((l) => / bước transform-/.test(l));
+  assert.ok(iTransform >= 0 && iTruoc < iTransform, "bước gộp phải đứng TRƯỚC mọi bước transform");
+  assert.ok(buoc(r.err, "truoc-lan-claude").giay <= 1, "lượt không cấy ngủ phải ≤ 1 giây");
+
+  const cham = chayBoc(cayBoc(), ["--luot-nhanh"], { CHAM_BUOC: "import-airbnb", CHAM_GIAY: "2" });
+  assert.ok(buoc(cham.err, "truoc-lan-claude").giay >= 2,
+    `cấy ngủ 2s vào vòng nạp phải cho giây ≥ 2:\n${cham.err}`);
+});
+
+test("JST-AC-8 lưới phạm vi làn: cây hiện tại xanh, chèn dưới mốc xanh, chèn trên mốc đỏ", () => {
+  assert.deepEqual(kiemRanhGioiLan().lan, [], "cây hiện tại không được sửa phía trên ranh giới làn");
+  assert.deepEqual(voiDongChen(false, () => kiemRanhGioiLan().lan), [], "chèn DƯỚI mốc phải xanh");
+  assert.ok(voiDongChen(true, () => kiemRanhGioiLan().lan).length > 0,
+    "chèn TRÊN mốc phải đỏ — JST-AC-8 sửa phần trên ranh giới làn Claude");
+});
+
+// ---------------------------------------------------------------- JST-AC-9 --
+test("JST-AC-9 hai lượt: dãy lời gọi và mã thoát bằng bản origin/main, cột nhanh đúng", () => {
+  for (const [ten, args, nhanh] of [["nhanh", ["--luot-nhanh"], 1], ["00:00", [], 0]]) {
+    const r = chayBoc(cayBoc(), args);
+    const g = chayBoc(cayBoc(banGoc()), args);
+
+    assert.deepEqual(r.goi, g.goi, `[${ten}] dãy lời gọi phải bằng bản origin/main`);
+    assert.equal(r.ma, g.ma, `[${ten}] mã thoát phải bằng bản origin/main`);
+    assert.ok(r.goi.length > 0, `[${ten}] bản đối chứng phải gọi ít nhất một bước`);
+
+    // tín hiệu thứ hai, CHỈ có ở bản sau vòng: cột nhanh trên dòng ghim
+    const cot = dongGhim(r.err).map((l) => Number(/ nhanh ([01])$/.exec(l)[1]));
+    assert.deepEqual([...new Set(cot)], [nhanh], `[${ten}] mọi dòng ghim phải mang nhanh ${nhanh}`);
+    // truoc-lan-claude chỉ có ở bản sau vòng nên nằm NGOÀI phép so đối chứng ở trên
+    assert.ok(dongGhim(r.err).some((l) => l.includes(" bước truoc-lan-claude ")));
+    assert.ok(!g.goi.includes("truoc-lan-claude"));
+  }
+});
+
+// -------------------------------------------------------------------- RF-4 --
+test("RF-4 mọi nhãn bước tệp bọc truyền vào đều không chứa khoảng trắng", () => {
+  const r = chayBoc(cayBoc(), []);
+  const nhan = dongGhim(r.err).map((l) => /\] bước (.+) mã \d+ giây/.exec(l)[1]);
+  assert.ok(nhan.length > 0);
+  for (const n of nhan) {
+    assert.ok(!/\s/.test(n), `nhãn «${n}» có khoảng trắng — bộ đọc ở design §4.4 tách trường sai`);
+  }
+});
+
+// ------------------------------------------------------- chiều đỏ Task 2 ----
+test("chiều đỏ tệp bọc: bản đột biến làm đúng ca tương ứng đỏ", () => {
+  const goc = readFileSync(path.join(REPO, BOC), "utf8");
+  const o = [
+    ["JST-AC-7 buoc_nhanh không ghi thời lượng",
+      (s) => s.replace(/^\s*job_step_ghi "\$job" "\$nhan" "\$rc" "\$giay"$/m, "  :"),
+      (root) => dongGhim(chayBoc(root, ["--luot-nhanh"]).err)
+        .filter((l) => l.includes(" bước transform-zalo ")).length === 0],
+    ["JST-AC-7 dòng BỎ LƯỢT biến mất",
+      (s) => s.replace(/^(\s*job_step_ghi "\$job" "\$nhan" "\$rc" "\$giay")$/m, "$1\n  return 0"),
+      (root) => !chayBoc(root, ["--luot-nhanh"], {
+        FAIL_STEPS: "transform-zalo:1:canceling statement due to lock timeout",
+      }).err.includes("BỎ LƯỢT [zalo-import-daily] bước transform-zalo")],
+    ["JST-AC-8 không có bước truoc-lan-claude",
+      (s) => s.replace(/^job_step_ghi zalo-import-daily truoc-lan-claude .*$/m, ":"),
+      (root) => !dongGhim(chayBoc(root, ["--luot-nhanh"]).err).some((l) => l.includes(" bước truoc-lan-claude "))],
+    ["JST-AC-9 chuỗi bước lượt 00:00 đã đổi",
+      (s) => s.replace(/^buoc zalo-import-daily xep-hang-gia .*$/m, ":"),
+      (root) => {
+        const r = chayBoc(root, []);
+        return JSON.stringify(r.goi) !== JSON.stringify(chayBoc(cayBoc(banGoc()), []).goi);
+      }],
+    ["JST-AC-9 cột nhanh sai ở lượt 00:00",
+      (s) => s.replace(/^export S03_LUOT_NHANH="\$LUOT_NHANH"$/m, 'export S03_LUOT_NHANH=1'),
+      (root) => dongGhim(chayBoc(root, []).err).some((l) => / nhanh 1$/.test(l))],
+  ];
+
+  for (const [ten, doi, doDo] of o) {
+    const ban = doi(goc);
+    assert.notEqual(ban, goc, `đột biến «${ten}» không khớp mã thật — phép đo mất chiều đỏ`);
+    assert.ok(doDo(cayBoc(ban)), `đột biến «${ten}» không làm ca tương ứng đỏ`);
+  }
+});
