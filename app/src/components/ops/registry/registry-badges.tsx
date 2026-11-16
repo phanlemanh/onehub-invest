@@ -1,7 +1,11 @@
 import { Badge } from "@/components/reui/badge"
-import { LABELS_VI } from "@/lib/vocab.generated"
+import { CATALOG_TIER, LABELS_VI } from "@/lib/vocab.generated"
 
-const BAC_VARIANT = { xac_minh: "success-light", suy_ra_manh: "info-light", mot_loi_khai: "warning-light" } as const
+const BAC_VARIANT = {
+  [CATALOG_TIER.xac_minh]: "success-light",
+  [CATALOG_TIER.suy_ra_manh]: "info-light",
+  [CATALOG_TIER.mot_loi_khai]: "warning-light",
+} as const
 
 /** Bậc danh mục của nút, toà hay căn (nhãn từ sổ từ vựng `catalog_tier`). */
 export function BacBadge({ bac }: { bac: string }) {
