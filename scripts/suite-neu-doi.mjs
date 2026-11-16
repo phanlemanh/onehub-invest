@@ -45,6 +45,9 @@ export const VUNG = {
     "agent/**", "db/**", "pipeline/**", "scripts/**", "docs/ops/**",
     "app/src/lib/ops/review-can-cu.ts", "app/src/lib/vocab.generated.ts",
     "app/tests/the-duyet-du-can-cu.test.tsx", "app/tests/the-duyet-phuong-lech-gia.test.tsx",
+    // agent/probes/du-lieu-that.test.ts readdirSync đúng thư mục này để đếm tệp tạm của lượt (l2-bao-thu-doi-probe-that,
+    // nhận main 16/11); cả đường thư mục trần lẫn tệp dưới nó đều phải nằm trong vùng.
+    "app/probes", "app/probes/**",
     "_acceptance/config.yaml", "_acceptance/chon-model-theo-o/**", "_acceptance/the-ghep-can-tin-roi-kho/**",
   ],
   // check-portal-compliance.mjs nạp các cổng check-*.mjs cùng thư mục; tier-a-source-names.mjs rút tên nguồn từ
