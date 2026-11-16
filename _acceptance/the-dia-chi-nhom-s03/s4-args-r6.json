@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-11-16T07:59:14Z",
-  "generated_sha": "45287963dc538c20693a0885b64d55b34c03a81e",
+  "generated_at": "2026-11-16T13:04:35Z",
+  "generated_sha": "9d8b50a796b5065ceb0b59c6778d03d526fea8fc",
   "mainBranchInfo": {
     "branch": "main",
     "source": "remote"
   },
   "slug": "the-dia-chi-nhom-s03",
-  "round": 4,
+  "round": 6,
   "riskTier": "T3",
   "evals": [
     {
@@ -226,7 +226,7 @@
         "verifier",
         "verified_at"
       ],
-      "inputsHash": "57edcfa57b99d580c2880089abc7b47a6c9bbe7d1e83869bd551a9296de65fd8"
+      "inputsHash": "f14a3fe3c322b4d5b49f1a1f5b0d29dafa146bba090e80bd0f05669dadce7308"
     }
   ],
   "devServerUrl": "http://localhost:3456",
@@ -245,8 +245,8 @@
   "templatePath": "/Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.37.0/skills/acceptance/references/evidence-report-template.md",
   "toolKillRule": "# TOOL-KILL-RULE — lệnh bị công cụ ngắt KHÔNG phải lệnh fail\n\n**Nguồn duy nhất** của luật «hết giờ không phải trượt» cho MỌI đường chạy lệnh\nkiểm của kit. Hai đường tiêu thụ, cùng đọc khối marker dưới đây, không chép tay:\n\n- **Vòng lặp tính năng** (plugin feature-loop): skill `feature-loop` đọc file này\n  (resolve qua `resolve-plugin.mjs --require skills/acceptance/references/tool-kill-rule.md`)\n  và truyền NGUYÊN VĂN vào `args.toolKillRule` của workflow\n  `acceptance-verify.js`; workflow rút khối marker và nội suy vào prompt của mọi\n  agent chạy lệnh (machine · ui-check · baseline). Thiếu args hoặc không rút\n  được marker → workflow trả BLOCKED có tên, không chạy không luật.\n- **Đường VERIFY độc lập** (skill `acceptance` Phase 3): phiên điều phối chép khối\n  marker VERBATIM vào prompt của phiên tươi VERIFY, cùng nếp «Network truth».\n\nVì sao có luật: verifier chạy lệnh qua Bash tool có trần thời gian mặc định\n(~120 s) NGẮN hơn nhiều suite; lệnh bị công cụ giết trả exit code CỦA CÔNG CỤ,\nkhông phải của lệnh (vấp thật release-2-2-0 S4 r5: suite 108 s đơn lẻ, dưới tải\nbị giết ở 118 s → REJECT giả 4 eval). Nhận diện là việc AGENT (nó thấy tool\nresult thật); phần máy chỉ phòng thủ trên field cấu trúc `killedByTool` —\nKHÔNG grep nội dung output trong engine (chuỗi tổng kết là của suite từng repo).\n\nLệnh dài hơn trần 600 s của công cụ thì KHÔNG bị giết: công cụ **đẩy nó sang\nnền** và nó chạy tiếp. Tệp đầu ra nền trống tới phút chót, vì khung bọc lệnh của\nkit chỉ in khi lệnh xong — đọc trống thành «bị giết» là đúng sự cố crm 07/10/2026\n(hồ sơ `lenh-dai-chay-rieng`: hai lượt BLOCKED giả). Dòng «chuyển sang nền» trong\nkhối dưới là lối LỜI cho mọi lệnh. Lối MÁY: eval khai `long_running: <phút>`\ntrong `evals.yaml` thì lượt chấm feature-loop tự chạy lệnh nền, ghi nhật ký ở\n`.acceptance-runs/<slug>/s4-lenh-dai/` và chờ bằng lệnh nó sinh ra\n(`eval-executors.md`, mục `long_running`).\n\n<!-- <<<TOOL-KILL-RULE -->\nTRAN THOI GIAN CONG CU: khi goi Bash chay lenh, LUON dat tham so timeout >= 600000 (ms) — tran mac dinh cua cong cu (~120s) NGAN hon nhieu suite; lenh vuot tran se bi CONG CU giet va exit code luc do la cua cong cu, KHONG phai cua lenh. Neu lenh van bi cong cu dung (tool result bao timeout/killed, hoac output bi CAT giua chung truoc dong tong ket cuoi cua lenh) → DO KHONG PHAI ket qua that: khai cannotRun=true + killedByTool=true + reason \"bi cong cu giet o <so giay> giay\" kem dau hieu (timeout tool / output cat). TUYET DOI khong bao exitCode nhu the lenh tu fail va khong doan PASS/FAIL tu output cut.\nDAU RA DAI: harness co the CAT DAU RA RA TEP (\"Output too large … saved to <tep>\") va chi hien doan DAU — do KHONG phai bi cong cu giet: doc DUOI tep do (tail) de lay dong tong ket va ma thoat; chi khai killedByTool khi tool result bao timeout/killed that.\nCHUYEN SANG NEN KHONG PHAI BI GIET: tool result bao lenh chua xong trong timeout va da duoc CHUYEN SANG NEN (\"moved to the background\", kem ID + tep dau ra) → lenh VAN DANG CHAY: KHONG khai killedByTool, KHONG ket luan tu tep dau ra luc do. Tep dau ra nen TRONG la binh thuong — khung boc lenh chi in duoi dau ra + dong __EXIT=<n> khi lenh XONG. Cho bang lenh Bash co gioi han (moi lan goi ≤ 100 giay, duoi tran mac dinh 120 giay cua cong cu; vd vong lap kiem tep do co dong __EXIT= chua, sleep vai giay, het 100 giay thi thoat) va goi lai toi khi tep co dong __EXIT=<n> → doc ma tu dong do nhu binh thuong. Tong thoi gian cho toi da = so phut eval khai o long_running (vang thi 30 phut), tinh tu luc chay lenh; qua ma chua co dong __EXIT → cannotRun=true + reason \"lenh chay qua <so> phut chua xong — khai long_running: <phut> cho eval trong evals.yaml\" (KHONG killedByTool), va dung tac vu nen neu cong cu cho phep.\n<!-- TOOL-KILL-RULE>>> -->\n\n## Hồ sơ cho lượt bị ngắt (đường độc lập)\n\nPhiên tươi VERIFY gặp lệnh bị công cụ ngắt thì:\n\n- dòng run-log của eval đó: `\"exit_code\": null, \"killed_by_tool\": true` (không\n  ghi mã thoát của công cụ như mã thoát của lệnh);\n- verdict báo cáo `BLOCKED`, `reason: bi cong cu giet o <so giay> giay — <eval ids>`\n  (kèm dấu hiệu: timeout tool / output cắt trước dòng tổng kết); `failed_evals`\n  rỗng — người đọc hồ sơ thấy đây là sự cố hạ tầng, chữa bằng chạy lại với trần\n  công cụ đủ dài, không phải sửa sản phẩm.\n\nLệnh bị đẩy sang nền rồi QUÁ trần chờ (`long_running`, vắng thì 30 phút) cũng\nlà sự cố hạ tầng chứ không phải lệnh hỏng: dòng run-log `\"exit_code\": null`,\n`\"cannot_run\": true` (KHÔNG `killed_by_tool` — công cụ không giết nó), verdict\n`BLOCKED`, reason gọi tên việc cần làm (khai `long_running: <phút>` cho eval).\n",
   "contractPath": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/tg1-sach/_acceptance/the-dia-chi-nhom-s03/contract.md",
-  "invokedAt": "2026-11-16T07:59:14Z",
-  "invokedSha": "45287963dc538c20693a0885b64d55b34c03a81e",
+  "invokedAt": "2026-11-16T13:04:35Z",
+  "invokedSha": "9d8b50a796b5065ceb0b59c6778d03d526fea8fc",
   "vungVat": [
     ".claude/launch.json",
     ".claude/skills/onehub-ui/routes.md",
@@ -259,6 +259,22 @@
     "_acceptance/the-dia-chi-nhom-s03/du-bao.json",
     "_acceptance/the-dia-chi-nhom-s03/evals.yaml",
     "_acceptance/the-dia-chi-nhom-s03/evidence/E5-network.txt",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step-409.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step-o-trong.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step-viewer.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step1-cuoi.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step1.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step2.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step3.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step4-truoc.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step4.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step5-khong-ly-do.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step5-ly-do-ngan.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step5.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step6-hop.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step6.png",
+    "_acceptance/the-dia-chi-nhom-s03/s4-args-r6.json",
+    "_acceptance/the-dia-chi-nhom-s03/s4-args-r7.json",
     "agent/package.json",
     "app/src/app/api/v1/ops/group-cards/route.ts",
     "app/src/app/ops/group-cards/page.tsx",
@@ -311,12 +327,14 @@
     "_acceptance/the-dia-chi-nhom-s03/contract.md",
     "_acceptance/the-dia-chi-nhom-s03/decisions.jsonl",
     "_acceptance/the-dia-chi-nhom-s03/discovery/bang-phu-ca.md",
+    "_acceptance/the-dia-chi-nhom-s03/discovery/ra-lop-bai-thu.md",
     "_acceptance/the-dia-chi-nhom-s03/evidence-report.md",
     "_acceptance/the-dia-chi-nhom-s03/gap-probe.md",
     "_acceptance/the-dia-chi-nhom-s03/opportunity.md",
     "_acceptance/the-dia-chi-nhom-s03/reuse-plan.md",
     "_acceptance/the-dia-chi-nhom-s03/review-findings.md",
     "_acceptance/the-dia-chi-nhom-s03/run-log.jsonl",
+    "_acceptance/the-dia-chi-nhom-s03/usage-report.md",
     "docs/superpowers/plans/2026-11-16-the-dia-chi-nhom-s03.md",
     "docs/superpowers/specs/2026-11-16-the-dia-chi-nhom-s03-design.md"
   ],
@@ -337,15 +355,33 @@
     "_acceptance/the-dia-chi-nhom-s03/contract.md",
     "_acceptance/the-dia-chi-nhom-s03/decisions.jsonl",
     "_acceptance/the-dia-chi-nhom-s03/discovery/bang-phu-ca.md",
+    "_acceptance/the-dia-chi-nhom-s03/discovery/ra-lop-bai-thu.md",
     "_acceptance/the-dia-chi-nhom-s03/du-bao.json",
     "_acceptance/the-dia-chi-nhom-s03/evals.yaml",
     "_acceptance/the-dia-chi-nhom-s03/evidence-report.md",
     "_acceptance/the-dia-chi-nhom-s03/evidence/E5-network.txt",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step-409.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step-o-trong.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step-viewer.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step1-cuoi.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step1.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step2.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step3.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step4-truoc.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step4.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step5-khong-ly-do.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step5-ly-do-ngan.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step5.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step6-hop.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step6.png",
     "_acceptance/the-dia-chi-nhom-s03/gap-probe.md",
     "_acceptance/the-dia-chi-nhom-s03/opportunity.md",
     "_acceptance/the-dia-chi-nhom-s03/reuse-plan.md",
     "_acceptance/the-dia-chi-nhom-s03/review-findings.md",
     "_acceptance/the-dia-chi-nhom-s03/run-log.jsonl",
+    "_acceptance/the-dia-chi-nhom-s03/s4-args-r6.json",
+    "_acceptance/the-dia-chi-nhom-s03/s4-args-r7.json",
+    "_acceptance/the-dia-chi-nhom-s03/usage-report.md",
     "agent/package.json",
     "app/src/app/api/v1/ops/group-cards/route.ts",
     "app/src/app/ops/group-cards/page.tsx",
@@ -386,6 +422,22 @@
     "_acceptance/the-dia-chi-nhom-s03/du-bao.json",
     "_acceptance/the-dia-chi-nhom-s03/evals.yaml",
     "_acceptance/the-dia-chi-nhom-s03/evidence/E5-network.txt",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step-409.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step-o-trong.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step-viewer.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step1-cuoi.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step1.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step2.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step3.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step4-truoc.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step4.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step5-khong-ly-do.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step5-ly-do-ngan.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step5.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step6-hop.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step6.png",
+    "_acceptance/the-dia-chi-nhom-s03/s4-args-r6.json",
+    "_acceptance/the-dia-chi-nhom-s03/s4-args-r7.json",
     "app/src/app/api/v1/ops/group-cards/route.ts",
     "app/src/lib/api-surface.ts",
     "app/src/lib/ops-access.ts",
@@ -423,8 +475,203 @@
     "fromRound": 1,
     "nonDiscriminating": []
   },
+  "carriedEvals": [
+    {
+      "id": "E2",
+      "runId": "minted-the-dia-chi-nhom-s03-E2-r5",
+      "fromRound": 5,
+      "verifiedAt": "2026-11-16T10:25:09Z",
+      "cmd": "node --test pipeline/tests/the-dia-chi-nhom.test.mjs"
+    },
+    {
+      "id": "E4",
+      "runId": "minted-the-dia-chi-nhom-s03-E4-r5",
+      "fromRound": 5,
+      "verifiedAt": "2026-11-16T10:25:09Z",
+      "cmd": "cd app && bash ../db/db-thu.sh oneinvest_suite_tg1a --chay node --import tsx --test --test-concurrency=1 tests/the-dia-chi-nhom-app.itest.tsx"
+    },
+    {
+      "id": "E5",
+      "runId": "minted-the-dia-chi-nhom-s03-E5-r5",
+      "fromRound": 5,
+      "verifiedAt": "2026-11-16T10:25:09Z",
+      "cmd": "ui-check:E5",
+      "screenshot": "evidence/E5-step1.png",
+      "observed": "E5-step1.png (1280px, co CSS): tieu de 'The dia chi nhom', hai badge '28 nhom co the' va '28 cho duyet' khop 28 cua lenh dung nhap; bang cot Nhom/The/Du an/Phuong-tinh/Phan khu/Ban-thue/Bai da doc, moi hang badge vang 'Nhap'; cuon trong khung nen anh chi thay 11 hang dau. E5-step1-cuoi.png: hai hang cuoi 'Chua co trong so' TN-116 (0 bai) va TN-118 (5 bai, Ban), the xam.\nE5-step2.png: hop 'Duyet the TN-120 Nhap' cho S03-N002, bon o Du an (chip Vinhomes Grand Park, 'tu bai da doc, 47 bai'), Phuong-tinh (Long Binh, 'theo du an'), Phan khu ('Chua du can cu (1.408 bai da doc)'), Ban hay thue (Thue, 'tu bai da doc: 254 ban, 1.033 thue'), o Ly do, nut Bac (xam) va Nhan. E5-step3.png: sau Nhan, hang TN-120 badge xanh 'Da duyet', dau trang '27 cho duyet', toast 'Da duyet the TN-120'. E5-step4.png: TN-124 (N004) badge 'Da duyet', ban/thue 'Thue', bo dem 26 (E5-step4-truoc.png hien nut 'Luu sua' sau khi doi o).\nE5-step5-khong-ly-do.png: hop TN-122, Bac mo xam (disabled), khong thong bao loi, chi dong goi y 'bac the can ly do tu 3 ky tu'; E5-step5.png: TN-122 badge do 'Bac', toast 'Da bac the TN-122'. E5-step-o-trong.png: TN-117 (1 bai): Du an 'Chon du an', Phuong 'Chon phuong', Ban hay thue 'De trong', moi o kem 'Chua du can cu (1 bai da doc)', Phan khu 'Du an da chon chua co phan khu'. E5-step-409.png: hop TN-126, o Ly do con 'Chu da nhap o tab dau', Alert do 'The da doi tu luc anh mo' + 'the da doi tu luc anh mo - tai lai the roi lam lai', nut 'Tai lai the', Bac, Luu sua. E5-step-viewer.png: 'Xem the TN-139', cac o select mo xam, chi nut 'Dong'. E5-step6.png (375px): tieu de, hai badge, bang the voi cot bi cat trong khung cuon ngang cua the, khong tran trang. Email thanh ben che den trong moi anh.\nDoi chieu Expected: dat het; luu y nho (a) Bac khong ly do bi chan bang nut vo hieu, khong co thong bao loi; (b) Alert 409 lap y hai lan.",
+      "networkObserved": "clean"
+    },
+    {
+      "id": "E6",
+      "runId": "minted-the-dia-chi-nhom-s03-E6-r5",
+      "fromRound": 5,
+      "verifiedAt": "2026-11-16T10:25:09Z",
+      "cmd": "cd app && bash ../db/db-thu.sh oneinvest_suite_tg1a --chay node --import tsx --test --test-concurrency=1 tests/the-dia-chi-nhom-app.itest.tsx"
+    },
+    {
+      "id": "E9",
+      "runId": "minted-the-dia-chi-nhom-s03-E9-r5",
+      "fromRound": 5,
+      "verifiedAt": "2026-11-16T10:25:09Z",
+      "cmd": "bash db/db-thu.sh oneinvest_suite_tg1l --chay node --test --test-concurrency=1 pipeline/tests/the-dia-chi-nhom-lui.itest.mjs"
+    }
+  ],
+  "carriedFindings": [
+    {
+      "file": "pipeline/scripts/the-dia-chi-nhom.mjs",
+      "title": "Đọc sale_offer_records thay vì view sale_offers — tin đã nghỉ vẫn tính vào ô phường",
+      "severity": "medium",
+      "plain": "Khi máy đoán phường cho một nhóm, nó đếm cả những tin đã ngừng rao, nên nhóm ít tin có thể bị đoán sai phường.",
+      "can_cu": "Chỉ ảnh hưởng bản nháp, người duyệt thấy và sửa được trước khi thẻ có hiệu lực, không mất hay lộ dữ liệu.",
+      "proposal": "known-limits",
+      "fromRound": 5,
+      "tepDoi": true
+    },
+    {
+      "file": "app/src/lib/the-dia-chi-nhom.ts",
+      "title": "Biên API không kiểm phân khu phải thuộc dự án đã chọn",
+      "severity": "medium",
+      "plain": "Ai gọi thẳng vào máy chủ có thể lưu một thẻ có phân khu không thuộc dự án đã chọn; màn hình thông thường thì không cho làm vậy.",
+      "can_cu": "Chỉ người vận hành đã đăng nhập mới làm được, màn hình đã chặn, và thẻ sai vẫn sửa lại được trước khi đóng dấu lên tin.",
+      "proposal": "known-limits",
+      "fromRound": 5,
+      "tepDoi": false
+    },
+    {
+      "file": "app/src/app/api/v1/ops/group-cards/route.ts",
+      "title": "Chú thích route nói sai hành vi khi chưa áp migration 108",
+      "severity": "low",
+      "plain": "Một dòng ghi chú trong mã mô tả sai điều xảy ra khi chưa áp bảng thẻ; người dùng không thấy gì khác.",
+      "can_cu": "Không ảnh hưởng người dùng, sửa một dòng chú thích bất cứ lúc nào, không đáng mở việc.",
+      "proposal": "wont-fix",
+      "fromRound": 5,
+      "tepDoi": false
+    },
+    {
+      "file": "app/src/components/ops/group-cards/group-cards-content.tsx",
+      "title": "Chưa áp 108 trên máy thu lại hiện đúng chữ dành cho cloud",
+      "severity": "low",
+      "plain": "Nếu máy thu chưa áp bảng thẻ, người vận hành đọc câu bảo mở Ops trên máy thu, trong khi họ đang ở đó rồi; không biết cần áp bảng.",
+      "can_cu": "Chỉ gây bối rối ngắn trước khi áp, không mất dữ liệu, và hồ sơ áp đã ghi rõ bước cần làm.",
+      "proposal": "known-limits",
+      "fromRound": 5,
+      "tepDoi": false
+    },
+    {
+      "file": "app/src/components/ops/group-cards/group-cards-text.ts",
+      "title": "Dòng căn cứ vẫn gán giá trị của người vận hành cho máy khi ô ĐÃ được máy điền rồi bị sửa (AC-10 còn hở nửa ca)",
+      "severity": "medium",
+      "plain": "Sau khi người vận hành sửa một ô, mở lại thẻ vẫn thấy dòng căn cứ ghi là do máy đọc từ bài, dù giá trị là do người chọn.",
+      "can_cu": "Gây hiểu nhầm nguồn của ô đã sửa nhưng giá trị đúng vẫn được lưu, không mất dữ liệu; sửa tương đối rẻ nên nên ghi lại để làm sau.",
+      "proposal": "known-limits",
+      "fromRound": 5,
+      "tepDoi": false
+    },
+    {
+      "file": "app/src/components/ops/group-cards/group-cards-dialog.tsx",
+      "title": "Ô «Dự án» không bị khoá với vai Người xem — bấm được, xoá chip được, nhưng thao tác bị nuốt im lặng",
+      "severity": "low",
+      "plain": "Người chỉ xem thấy ô Dự án trông như còn sửa được, bấm vào không có tác dụng và không báo gì.",
+      "can_cu": "Không ghi được gì và máy chủ vẫn từ chối; chỉ gây khó hiểu nhẹ.",
+      "proposal": "known-limits",
+      "fromRound": 5,
+      "tepDoi": false
+    },
+    {
+      "file": "pipeline/scripts/the-dia-chi-nhom.mjs",
+      "title": "ghiNhap: UPDATE ... AND status='nhap' RETURNING * có thể trả 0 dòng → `moi.card_code` ném TypeError và hỏng cả lượt dựng nháp",
+      "severity": "low",
+      "plain": "Nếu ai đó duyệt một thẻ đúng lúc lệnh dựng nháp đang chạy, lệnh dừng với thông báo khó hiểu.",
+      "can_cu": "Hiếm gặp, không hỏng dữ liệu vì lượt bị hoàn lại, chạy lại lệnh là xong.",
+      "proposal": "known-limits",
+      "fromRound": 5,
+      "tepDoi": true
+    },
+    {
+      "file": "pipeline/scripts/the-dia-chi-nhom.mjs",
+      "title": "Ô phường đếm cả tin đã nghỉ vì đọc thẳng `sale_offer_records` thay vì view `sale_offers`",
+      "severity": "low",
+      "plain": "Máy đoán phường có tính cả tin đã ngừng rao hoặc đã bị thay, có thể lệch ở nhóm ít tin.",
+      "can_cu": "Chỉ ảnh hưởng bản nháp mà người duyệt sẽ xem lại, không mất hay lộ dữ liệu.",
+      "proposal": "known-limits",
+      "fromRound": 5,
+      "tepDoi": true
+    },
+    {
+      "file": "app/tests/the-dia-chi-nhom-app.itest.tsx",
+      "title": "Tuyên quét LỚP nhưng chỉ có điểm-case: AC-10 hứa «mỗi ô» nhưng chỉ đo 1 trong 4 ô căn cứ",
+      "severity": "high",
+      "plain": "Phép kiểm tự động chỉ chắc chắn bắt lỗi ở dòng căn cứ của ô bán/thuê, ba ô còn lại có thể sai mà không bị báo.",
+      "can_cu": "Không ảnh hưởng người dùng ngay, người ký vẫn xem hộp duyệt bằng mắt; bổ sung ca kiểm sau rẻ.",
+      "proposal": "known-limits",
+      "fromRound": 5,
+      "tepDoi": false
+    },
+    {
+      "file": "app/tests/the-dia-chi-nhom-app.itest.tsx",
+      "title": "Fixture VIẾT TAY đúng khuôn bên đọc: evidence.muc_dich.ban/thue không round-trip writer → reader",
+      "severity": "medium",
+      "plain": "Nếu sau này đổi tên số bài bán/thuê ở bên dựng nháp, dòng căn cứ có thể hiện 0 bán 0 thuê mà phép kiểm vẫn xanh.",
+      "can_cu": "Chưa gây lỗi nào hiện nay, chỉ là nguy cơ khi sửa sau; thêm ca kiểm nối hai phía là việc rẻ.",
+      "proposal": "known-limits",
+      "fromRound": 5,
+      "tepDoi": false
+    },
+    {
+      "file": "pipeline/tests/the-dia-chi-nhom-lui.itest.mjs",
+      "title": "Đo CHỈ DẪN thay vì ĐẦU RA: sao-luu.sh chấm bằng grep văn bản nguồn, không chạy",
+      "severity": "medium",
+      "plain": "Phép kiểm chỉ đọc chữ trong tệp sao lưu chứ không chạy thử, nên tệp sao lưu hỏng có thể lọt qua.",
+      "can_cu": "Nếu sao lưu lỗi, lần chạy thật trước khi áp sẽ lộ ra và chưa có dữ liệu nào bị mất.",
+      "proposal": "known-limits",
+      "fromRound": 5,
+      "tepDoi": false
+    },
+    {
+      "file": "pipeline/scripts/the-dia-chi-nhom-that.mjs",
+      "title": "Lời hứa là QUAN HỆ (khớp trên tổng) nhưng assert là ngưỡng tuyệt đối rời khỏi mẫu số",
+      "severity": "medium",
+      "plain": "Ngưỡng đạt 9 nhóm khớp là con số cố định, khi số nhóm trong sổ đổi thì mức chất lượng thực sự đòi hỏi cũng đổi theo.",
+      "can_cu": "Chỉ là phép đo trước buổi duyệt, không ảnh hưởng người dùng, ghi chú giới hạn là đủ.",
+      "proposal": "known-limits",
+      "fromRound": 5,
+      "tepDoi": true
+    },
+    {
+      "file": "pipeline/tests/the-dia-chi-nhom.itest.mjs",
+      "title": "Assertion âm-tính-một-mình: grep «không có trong sync-cloud» không có đối chứng dương, không ghim thông điệp",
+      "severity": "low",
+      "plain": "Phép kiểm xác nhận thẻ không bị đẩy lên cloud có thể thành luôn-xanh nếu cách khai danh sách sau này đổi.",
+      "can_cu": "Hiện không gây hại cho người dùng, và rào cloud còn có luật khác bảo vệ.",
+      "proposal": "wont-fix",
+      "fromRound": 5,
+      "tepDoi": true
+    }
+  ],
+  "deltaFiles": [
+    "_acceptance/the-dia-chi-nhom-s03/ap-may-thu/kiem-sau.sql",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-network.txt",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step-409.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step-o-trong.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step-viewer.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step1-cuoi.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step1.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step2.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step3.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step4-truoc.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step4.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step5-khong-ly-do.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step5-ly-do-ngan.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step5.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step6-hop.png",
+    "_acceptance/the-dia-chi-nhom-s03/evidence/E5-step6.png",
+    "_acceptance/the-dia-chi-nhom-s03/s4-args-r6.json",
+    "_acceptance/the-dia-chi-nhom-s03/s4-args-r7.json",
+    "pipeline/scripts/the-dia-chi-nhom-that.mjs",
+    "pipeline/scripts/the-dia-chi-nhom.mjs",
+    "pipeline/tests/the-dia-chi-nhom.itest.mjs"
+  ],
   "thuocChup": {
-    "sha": "45287963dc538c20693a0885b64d55b34c03a81e",
+    "sha": "9d8b50a796b5065ceb0b59c6778d03d526fea8fc",
     "n": 359,
     "digest": "3496c6dda620e0cca0215fb686124a365000bd397d9797dfffa58d7767c406dc",
     "tep": {
@@ -790,7 +1037,7 @@
     }
   },
   "cayChup": {
-    "sha": "45287963dc538c20693a0885b64d55b34c03a81e",
+    "sha": "9d8b50a796b5065ceb0b59c6778d03d526fea8fc",
     "ban": {},
     "chuaTheoDoi": []
   }

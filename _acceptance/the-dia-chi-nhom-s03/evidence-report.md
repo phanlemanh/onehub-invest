@@ -2,28 +2,28 @@
 schema_version: 2
 feature_slug: the-dia-chi-nhom-s03
 verdict: REJECT
-failed_evals: []
+failed_evals: ["E7"]
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 9475a2fb547bd65424f5837e3ca6ff6eec8490d4
+verified_commit: 9d8b50a796b5065ceb0b59c6778d03d526fea8fc
 human_signoff:
 ---
 
 # Evidence Report: the-dia-chi-nhom-s03
 
-Round 5. Nội dung thay toàn bộ round cũ; lịch sử các round nằm ở mục Iterations.
+Round 6. Nội dung thay trọn round cũ; lịch sử round nằm ở mục Iterations. E2, E4, E5, E6 mang từ round 5 (delta không chạm paths của các eval này).
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
 | E1 | AC-1 | test | PASS |
-| E2 | AC-2 | test | PASS |
+| E2 | AC-2 | test | PASS (carried r5) |
 | E3 | AC-3 | test | PASS |
-| E4 | AC-4 | test | PASS |
-| E5 | AC-5 | ui-check | PASS |
-| E6 | AC-6 | test | PASS |
-| E7 | AC-7 | script | PASS |
+| E4 | AC-4 | test | PASS (carried r5) |
+| E5 | AC-5 | ui-check | PASS (carried r5) |
+| E6 | AC-6 | test | PASS (carried r5) |
+| E7 | AC-7 | script | FAIL |
 | E8 | AC-8 | script | PASS |
 | E9 | AC-9 | test | PASS |
 | E10 | AC-10 | judgment | UNCERTAIN |
@@ -31,14 +31,14 @@ Round 5. Nội dung thay toàn bộ round cũ; lịch sử các round nằm ở 
 ## Evidence
 
 - eval: E1
-  run_id: minted-the-dia-chi-nhom-s03-E1-r5
+  run_id: minted-the-dia-chi-nhom-s03-E1-r6
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.tg1_db
-  verified_at: 2026-11-16T10:25:09Z
+  verified_at: 2026-11-16T13:04:35Z
   output: |
-    cmd: bash db/db-thu.sh oneinvest_suite_tg1 --chay node --test --test-concurrency=1 pipeline/tests/the-dia-chi-nhom.itest.mjs
-    ℹ duration_ms 8411.243833
+    bash db/db-thu.sh oneinvest_suite_tg1 --chay node --test --test-concurrency=1 pipeline/tests/the-dia-chi-nhom.itest.mjs
+    ℹ duration_ms 8155.737375
 
 - eval: E2
   run_id: minted-the-dia-chi-nhom-s03-E2-r5
@@ -46,19 +46,19 @@ Round 5. Nội dung thay toàn bộ round cũ; lịch sử các round nằm ở 
   baseline: n-a
   verifier: config:executors.test.tg1_unit
   verified_at: 2026-11-16T10:25:09Z
+  carried_from_round: 5
   output: |
-    cmd: node --test pipeline/tests/the-dia-chi-nhom.test.mjs
-    ℹ duration_ms 43.275417
+    carry-forward tu round 5 — delta khong cham paths cua eval
 
 - eval: E3
-  run_id: minted-the-dia-chi-nhom-s03-E3-r5
+  run_id: minted-the-dia-chi-nhom-s03-E3-r6
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.tg1_db
-  verified_at: 2026-11-16T10:25:09Z
+  verified_at: 2026-11-16T13:04:35Z
   output: |
-    cmd: bash db/db-thu.sh oneinvest_suite_tg1 --chay node --test --test-concurrency=1 pipeline/tests/the-dia-chi-nhom.itest.mjs
-    ℹ duration_ms 8411.243833
+    bash db/db-thu.sh oneinvest_suite_tg1 --chay node --test --test-concurrency=1 pipeline/tests/the-dia-chi-nhom.itest.mjs
+    ℹ duration_ms 8155.737375
 
 - eval: E4
   run_id: minted-the-dia-chi-nhom-s03-E4-r5
@@ -66,9 +66,9 @@ Round 5. Nội dung thay toàn bộ round cũ; lịch sử các round nằm ở 
   baseline: n-a
   verifier: config:executors.test.tg1_app
   verified_at: 2026-11-16T10:25:09Z
+  carried_from_round: 5
   output: |
-    cmd: cd app && bash ../db/db-thu.sh oneinvest_suite_tg1a --chay node --import tsx --test --test-concurrency=1 tests/the-dia-chi-nhom-app.itest.tsx
-    ℹ duration_ms 10883.527834
+    carry-forward tu round 5 — delta khong cham paths cua eval
 
 - eval: E5
   run_id: minted-the-dia-chi-nhom-s03-E5-r5
@@ -76,6 +76,7 @@ Round 5. Nội dung thay toàn bộ round cũ; lịch sử các round nằm ở 
   baseline: n-a
   verifier: config:dev_server.start
   verified_at: 2026-11-16T10:25:09Z
+  carried_from_round: 5
   screenshot: evidence/E5-step1.png
   observed: |
     E5-step1.png (1280px, co CSS): tieu de 'The dia chi nhom', hai badge '28 nhom co the' va '28 cho duyet' khop 28 cua lenh dung nhap; bang cot Nhom/The/Du an/Phuong-tinh/Phan khu/Ban-thue/Bai da doc, moi hang badge vang 'Nhap'; cuon trong khung nen anh chi thay 11 hang dau. E5-step1-cuoi.png: hai hang cuoi 'Chua co trong so' TN-116 (0 bai) va TN-118 (5 bai, Ban), the xam.
@@ -90,93 +91,96 @@ Round 5. Nội dung thay toàn bộ round cũ; lịch sử các round nằm ở 
   baseline: n-a
   verifier: config:executors.test.tg1_app
   verified_at: 2026-11-16T10:25:09Z
+  carried_from_round: 5
   output: |
-    cmd: cd app && bash ../db/db-thu.sh oneinvest_suite_tg1a --chay node --import tsx --test --test-concurrency=1 tests/the-dia-chi-nhom-app.itest.tsx
-    ℹ duration_ms 10883.527834
+    carry-forward tu round 5 — delta khong cham paths cua eval
 
 - eval: E7
-  run_id: minted-the-dia-chi-nhom-s03-E7-r5
-  exit_code: 0
+  run_id: minted-the-dia-chi-nhom-s03-E7-r6
+  exit_code: 1
   baseline: n-a
   verifier: config:executors.script.tg1_that_dem
-  verified_at: 2026-11-16T10:25:09Z
+  verified_at: 2026-11-16T13:04:35Z
   output: |
-    cmd: mkdir -p .acceptance-runs/the-dia-chi-nhom-s03 && node pipeline/scripts/the-dia-chi-nhom-that.mjs --dem --ghi .acceptance-runs/the-dia-chi-nhom-s03/so-chay-thu.md
-    **ĐẠT**
+    mkdir -p .acceptance-runs/the-dia-chi-nhom-s03 && node pipeline/scripts/the-dia-chi-nhom-that.mjs --dem --ghi .acceptance-runs/the-dia-chi-nhom-s03/so-chay-thu.md
+    # Số chạy thử TG1 trên bản chép oneinvest_u1_tg1
+    Chạy lúc 2026-11-16T13:23:27.835Z · 0.53 giây · ghi {"tao":0,"cap_nhat":0,"giu_da_quyet":4,"khong_doi":22}
+    so_mot_du_an 13/13 · so_chua_ghi 8/8 · so_nhieu_du_an 3/3 · ngoai_so 2/2 · so_khong_bai 3/3
+    nhóm có bài / số thẻ: lệnh dựng nháp 28, đếm độc lập 26
+    Nhóm có từ 5 bài đọc: 24 (sàn một nửa = 12); dự án 21, phường 21, phân khu 0, bán/thuê 24
+    ĐỎ: số thẻ 28 ≠ số nhóm có bài đếm độc lập 26
+  Nguyên nhân: bản chép oneinvest_u1_tg1 còn 28 dòng thẻ từ lượt chụp E5 trước bản vá; ghiNhap không gỡ thẻ của nhóm không còn trong tập nháp (hai nhóm toàn bài thử). Bất biến số thẻ = số nhóm có bài vỡ trên bản chép này. Các lớp và sàn ô (21/24 dự án, 24/24 bán-thuê) đều đạt; chỉ đẳng thức số thẻ đỏ.
 
 - eval: E8
-  run_id: minted-the-dia-chi-nhom-s03-E8-r5
+  run_id: minted-the-dia-chi-nhom-s03-E8-r6
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.tg1_that_chat_luong
-  verified_at: 2026-11-16T10:25:09Z
+  verified_at: 2026-11-16T13:04:35Z
   output: |
-    cmd: node pipeline/scripts/the-dia-chi-nhom-that.mjs --chat-luong
+    node pipeline/scripts/the-dia-chi-nhom-that.mjs --chat-luong
     khớp 12/13 (đạt khi từ 9)
 
 - eval: E9
-  run_id: minted-the-dia-chi-nhom-s03-E9-r5
+  run_id: minted-the-dia-chi-nhom-s03-E9-r6
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.tg1_lui
-  verified_at: 2026-11-16T10:25:09Z
+  verified_at: 2026-11-16T13:04:35Z
   output: |
-    cmd: bash db/db-thu.sh oneinvest_suite_tg1l --chay node --test --test-concurrency=1 pipeline/tests/the-dia-chi-nhom-lui.itest.mjs
-    ℹ duration_ms 207.592416
+    bash db/db-thu.sh oneinvest_suite_tg1l --chay node --test --test-concurrency=1 pipeline/tests/the-dia-chi-nhom-lui.itest.mjs
+    ℹ duration_ms 1152.95
 
 - eval: E10
-  judged_by: hội đồng đề xuất (fresh context), người quyết ở Cổng 2
+  judged_by: judge panel đề xuất (3 lens, fresh context)
   verdict: UNCERTAIN
-  rationale: Đề xuất của hội đồng là PASS nhưng một phiếu chưa chắc nên chưa tự chốt; ô Phường · tỉnh của thẻ đủ ô chỉ ghi «theo dự án», không có số bài.
+  rationale: Hai trong ba lens không chắc ô Phường · tỉnh của thẻ đủ ô chỉ ghi «theo dự án» mà không có số bài riêng có đạt «mỗi ô ghi nguồn và số bài» hay không; lens còn lại cho là đạt vì ô suy ra từ ô dự án 47 bài. Các ô khác (dự án, phân khu, bán/thuê, ô trống) đều nêu nguồn và số bài; CONTEXT.md có mục «Thẻ địa chỉ nhóm» đủ nhãn, mã, định nghĩa, slug.
+  votes:
+    - domain-correctness: UNCERTAIN — ô phường chỉ ghi «theo dự án», người duyệt phải tự suy ra số bài là 47 của ô dự án.
+    - operational-feasibility: UNCERTAIN — chưa có hợp đồng trong input để xác nhận cách đọc «theo dự án» là đủ căn cứ.
+    - spec-alignment: PASS — ô phường lấy từ ô dự án 47 bài nên căn cứ gián tiếp đã nêu.
   required_evidence:
-    - Văn bản AC-10 trong contract.md (hoặc một dòng chốt của người ký) nói ô suy ra từ dự án như Phường · tỉnh («theo dự án») được miễn ghi số bài
-    - Hoặc ảnh chụp lại hộp thẻ đủ ô (thẻ TN-008, ghi vào evidence/E5-step2.png) trong đó ô Phường · tỉnh ghi số bài làm căn cứ, ví dụ «theo dự án, 47 bài»
+    - Ảnh hộp duyệt chụp lại, ô Phường · tỉnh ghi số bài căn cứ, ví dụ «theo dự án (47 bài)», từ /ops/group-cards mở thẻ TN-120, lưu vào _acceptance/the-dia-chi-nhom-s03/evidence/.
+    - Hoặc câu trong contract.md (AC-10) chốt rằng nhãn «theo dự án» đã đủ chỉ nguồn và số bài của ô phường, rồi đưa contract vào Input của eval E10.
   human_override:  # chi nguoi ghi
-
-Phiếu từng lens (đề xuất, chưa có người chốt):
-
-- domain-correctness: PASS — Thẻ đủ ô (TN-008) ghi nguồn và số bài cho từng ô: dự án «từ bài đã đọc, 47 bài», phường «theo dự án», phân khu «Chưa đủ căn cứ (1.408 bài đã đọc)», bán/thuê «254 bán, 1.033 thuê». Thẻ ô trống (TN-005) ghi «Chưa đủ căn cứ (1 bài đã đọc)» ở cả bốn ô. CONTEXT.md có mục «Thẻ địa chỉ nhóm» với nhãn, định nghĩa (ghi nguồn và số bài căn cứ), mã `group_address_card` và `TN-001`, slug `group-cards`.
-- operational-feasibility: UNCERTAIN — Hộp duyệt thẻ đủ ô ghi rõ nguồn và số bài cho dự án và bán/thuê. Riêng ô Phường · tỉnh chỉ ghi «theo dự án», không có số bài, và ô Phân khu chỉ ghi «Chưa đủ căn cứ (1.408 bài đã đọc)» mà không nói nguồn. Mục «Thẻ địa chỉ nhóm» trong CONTEXT.md đủ nhãn, mã, slug và định nghĩa. Chỉ riêng ô phường chưa rõ là đạt hay không.
-- spec-alignment: PASS — Ảnh thẻ đủ ô (TN-008) hiện nguồn và số bài ở từng ô: dự án «từ bài đã đọc, 47 bài», phường·tỉnh «theo dự án», bán/thuê «từ bài đã đọc: 254 bán, 1.033 thuê», phân khu «Chưa đủ căn cứ (1.408 bài)». Thẻ ô trống (TN-005) ghi «Chưa đủ căn cứ (1 bài đã đọc)» ở cả bốn ô. CONTEXT.md có mục «Thẻ địa chỉ nhóm» đủ nhãn, mã `group_address_card`, slug `group-cards`, định nghĩa và _Avoid_.
-
-Đề xuất tổng: PASS (hai phiếu PASS, một phiếu UNCERTAIN). Dissent hiển thị đầy đủ ở trên; để human_override trống cho người quyết ở Cổng 2.
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-the-dia-chi-nhom-s03-SUITE-npm_test__bb6271-r5
+  run_id: minted-the-dia-chi-nhom-s03-SUITE-npm_test__bb6271-r6
   exit_code: 0
-  verified_at: 2026-11-16T10:25:09Z
+  verified_at: 2026-11-16T13:04:35Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-the-dia-chi-nhom-s03-SUITE-lint-r5
-  exit_code: 0
-  verified_at: 2026-11-16T10:25:09Z
+  run_id: minted-the-dia-chi-nhom-s03-SUITE-lint-r6
+  exit_code: 2
+  verified_at: 2026-11-16T13:04:35Z
+  ghi chú: lệnh không gắn eval nào. Lỗi tsc là TS2304 «Cannot find name 'LayoutProps'» và «'PageProps'» ở src/app/(app)/layout.tsx, (auth)/layout.tsx, (marketing)/layout.tsx, layout.tsx, ops/layout.tsx, ops/data-flow/page.tsx. Đây là kiểu toàn cục do Next sinh; không liên quan tới tệp của feature này.
 
 - cmd: cd app && npm test
-  run_id: minted-the-dia-chi-nhom-s03-SUITE-npm_test__bd9a35-r5
+  run_id: minted-the-dia-chi-nhom-s03-SUITE-npm_test__bd9a35-r6
   exit_code: 0
-  verified_at: 2026-11-16T10:25:09Z
+  verified_at: 2026-11-16T13:04:35Z
 
 - cmd: cd pipeline && npm run test:a
-  run_id: blg7ztive
+  run_id: bxd3aumq3
   exit_code: 0
-  verified_at: 2026-11-16T10:25:09Z
+  verified_at: 2026-11-16T13:04:35Z
 
 - cmd: cd pipeline && npm run test:b
-  run_id: bxqc5lnb6
+  run_id: minted-the-dia-chi-nhom-s03-SUITE-test_b-r6
   exit_code: 0
-  verified_at: 2026-11-16T10:25:09Z
+  verified_at: 2026-11-16T13:04:35Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-the-dia-chi-nhom-s03-SUITE-test_lint_rules-r5
+  run_id: minted-the-dia-chi-nhom-s03-SUITE-test_lint_rules-r6
   exit_code: 0
-  verified_at: 2026-11-16T10:25:09Z
+  verified_at: 2026-11-16T13:04:35Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-the-dia-chi-nhom-s03-SUITE-node_scripts_check_portal_compliance_mjs-r5
+  run_id: minted-the-dia-chi-nhom-s03-SUITE-node_scripts_check_portal_compliance_mjs-r6
   exit_code: 0
-  verified_at: 2026-11-16T10:25:09Z
+  verified_at: 2026-11-16T13:04:35Z
 
 ## Known limits
 
@@ -184,14 +188,15 @@ Phiếu từng lens (đề xuất, chưa có người chốt):
 
 ## Analyst
 
-carried tự round 1 — baseline không đo lại round này (evals.yaml không đổi từ lần đo baseline cuối). Trường baseline của từng eval ghi n-a.
+carried tu round 1 — baseline khong do lai round nay.
 
-Không có eval nào bị liệt kê là không-phân-biệt.
+Eval không phân biệt (xanh cả HEAD lẫn baseline): không có.
 
 ## Variance
 
-none — mọi eval chạy một lần, xác định, đều đồng nhất.
+none — every multi-run eval is uniform
 
 ## Iterations
 
-Round 5: không eval máy nào hỏng; verdict REJECT do review còn một lỗi trong hợp đồng (AC-7: lệnh dựng nháp không gạt bài thử nên đếm 28 nhóm thay vì 27 nhóm thật) và E10 còn một phiếu chưa chắc về dòng căn cứ ô Phường · tỉnh. Chi tiết ở review-findings.md. Trả về triển khai.
+Round 5: REJECT — AC-7, lệnh dựng nháp chưa gạt bài thử như mọi transform đọc stg; sửa ở commit 1eccf666.
+Round 6: E7 đỏ — số thẻ trên bản chép oneinvest_u1_tg1 (28) lệch số nhóm có bài đếm độc lập (26) vì thẻ cũ của hai nhóm toàn bài thử còn nằm lại; ghiNhap không gỡ thẻ mồ côi. Trả về implementation: dựng lại bản chép hoặc xử lý thẻ mồ côi, chụp lại loạt E5 trên cùng sha.
