@@ -1,14 +1,18 @@
-# E5 network (driver: ego-browser; browser network API không có -> nguồn: nhật ký dev server :3460 cây chép tracked, turbopack, DB oneinvest_u1_tg1)
-## yêu cầu app-origin (đếm theo method+đường+status)
-## status >= 400
- POST /api/v1/ops/group-cards 409 in 10ms (next.js: 0.8ms, application-code: 9ms)
-## error lines
-## đếm yêu cầu app
-  10 GET /ops/group-cards 200
-   4 POST /api/v1/ops/group-cards 200
-   1 POST /ops/group-cards 200
-   1 POST /login
-   1 POST /api/v1/ops/group-cards 409
-   1 GET /login 200
-   1 GET /login
-   1 GET / 200
+# E5 network (playwright, dev :3460, app-origin fetch/XHR/document; _next static excluded)
+A GET 200 /ops/group-cards
+A POST 200 /api/v1/ops/group-cards
+A GET 200 /ops/group-cards?_rsc=HZnZDULwks0KCV8h
+A FAILED GET /ops/group-cards?_rsc=HZnZDULwks0KCV8h net::ERR_ABORTED
+A POST 200 /api/v1/ops/group-cards
+A GET 200 /ops/group-cards?_rsc=HZnZDULwks0KCV8h
+A POST 200 /api/v1/ops/group-cards
+A GET 200 /ops/group-cards?_rsc=HZnZDULwks0KCV8h
+A GET 200 /ops/group-cards
+B GET 200 /ops/group-cards
+B POST 200 /api/v1/ops/group-cards
+B GET 200 /ops/group-cards?_rsc=HZnZDULwks0KCV8h
+A POST 409 /api/v1/ops/group-cards
+A CONSOLE-ERROR Failed to load resource: the server responded with a status of 409 (Conflict)
+M GET 200 /ops/group-cards
+viewer: 200 /ops/group-cards
+NOTE: POST 409 /api/v1/ops/group-cards la ket qua DUNG MONG DOI cua buoc 409 (the da doi); GET ?_rsc ERR_ABORTED la prefetch RSC bi huy khi dieu huong (khong phai loi app).
