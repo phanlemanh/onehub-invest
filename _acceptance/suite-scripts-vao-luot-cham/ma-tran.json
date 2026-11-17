@@ -65,7 +65,7 @@
   "ci": {
     "uses actions/checkout": "mien: worktree chấm đã là bản checkout của nhánh",
     "uses actions/setup-node": "mien: Node của máy cùng bản chính 24 (AC-1 kiểm)",
-    "run: cài phụ thuộc (npm ci app, pipeline, agent)": "mien: worktree chấm đã nối node_modules của checkout chính qua dung-worktree-cham.sh",
+    "run: cài phụ thuộc": "mien: worktree chấm đã nối node_modules của checkout chính qua dung-worktree-cham.sh",
     "run: kiểm cú pháp .mjs": "tuong-duong: node --check mọi scripts/**/*.mjs",
     "run: dựng DB trống từ migration": "tuong-duong: node scripts/ci-db-init.mjs trên DB trống oneinvest_ci_scripts_<pid>",
     "run: test": "tuong-duong: NODE_OPTIONS từ ci-can-du-lieu.mjs scripts với CI=true, node --test các tệp chọn",
