@@ -99,6 +99,8 @@ _Avoid_: unit (trong chữ UI), căn hộ (khi nói chung mọi loại)
 
 **Danh bạ**: Bảng định danh bền của một loại thực thể của mình — vật thể (thửa, tòa, trục, căn) hoặc người: khoá mờ cấp một lần, bí danh, vòng đời gộp · tách · nghỉ; mọi thuộc tính đi qua phát biểu (ADR-0016 §3). Khác «danh mục»: danh mục là danh sách căn lấy từ một nguồn (S08), là bằng chứng để dựng danh bạ.
 - Code: `registry` · RESO: không có (khung theo HistoryTransactional)
+- Slug URL: `registry`
+- Ghi chú: trang `/ops/registry` «Danh bạ» (máy thu, chỉ đọc) đi theo cây dự án → phân khu → toà → căn với số đếm, bậc danh mục, nguồn `S0x`, tin đang rao và mã dự án nguồn chưa nối; `/ops/registry/<id nút>` mở một dự án xuống tới căn.
 _Avoid_: master data, MDM
 
 **Danh bạ người**: Phần người của danh bạ — mỗi người một khoá mờ `pty_…` cấp một lần, thuộc đúng một nguồn (chưa nối xuyên nguồn); định danh tại nguồn là bí danh, quan hệ với tin là vai trò (ADR-0016 §8). Chỉ ở DB local.

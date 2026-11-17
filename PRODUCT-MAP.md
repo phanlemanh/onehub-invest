@@ -13,7 +13,7 @@ flowchart TD
   B --> CD["Chờ duyệt phạm vi<br/>20 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
   GB --> DG["Đã giao<br/>200 việc"]
-  GB --> CN["Chờ phiên nghiệm thu<br/>128 việc"] --> GG{"Cổng Giá trị"}
+  GB --> CN["Chờ phiên nghiệm thu<br/>129 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
 
@@ -190,6 +190,7 @@ flowchart TD
 - Phần danh mục dự án của S07 thu theo giải pháp ZCode, ưu tiên Hà Nội và HCM, và nạp vào stg_* không nhân dòng (`thu-danh-muc-s07`)
 - Phân khu và toà S09 của Ocean Park 1 và Grand Park vào danh bạ không sinh toà trùng, nên tên toà bài S03 nêu mà danh bạ chỉ có từ S08 khớp được (`toa-s09-hai-khu-vao-danh-ba`)
 - Khách mở trang chủ và /methodology (301 từ /phuong-phap) thấy định nghĩa dạng faq-3, hero và thẻ thị trường không còn màu cứng, lỗi nhóm marketing có error.tsx và lỗi toàn cục có global-error.tsx (`trang-chu-methodology`)
+- Trang /ops/registry chỉ đọc cho người vận hành thấy danh bạ dự án → phân khu → toà → căn ở máy thu — số đếm, bậc danh mục, nguồn S0x, tin đang rao, chỗ thiếu, mã dự án nguồn chưa nối (`trang-danh-ba-chi-doc`)
 - Job nạp Zalo hằng đêm thoát khác 0 khi bước transform-zalo hoặc refresh-bait-gap hỏng, mỗi bước hỏng in một dòng JOB FAIL; phần nạp giữ nguyên (`transform-zalo-boc-job-run`)
 - DA2 — tin rao mọi nguồn ghi được phát biểu dự án, phân khu và phường (project_node_id, subzone_node_id, area_id ở resource Property), migration 096 (`truong-du-an-tren-tin`)
 - DA4 — từ vựng và mappings theo mục 39 — «Dự án» thay «Khu đô thị», dự án cha, kế thừa từ nút vùng, thuật ngữ mới, bẫy tên RESO, ba dòng mappings.yaml (`tu-vung-du-an-muc-39`)
