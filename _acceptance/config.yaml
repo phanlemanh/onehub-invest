@@ -7,6 +7,7 @@ gap_probe: advisory          # Luật phản biện context sạch ở pre-merge
 recheck: strict              # CI re-check of COMMITTED evidence — repo mới, chưa có báo cáo cũ.
 # Hai ổ cắm thiết kế (repo có bề mặt người dùng): cả hai trỏ tới skill repo `onehub-ui`.
 feature_loop:
+  ngoai_n_tu_dinh_tuyen: true  # kit 2.37.0: máy tự xếp mục ngoài hợp đồng mà chính nó đề xuất known-limits/wont-fix ở hồ sơ T2 · PASS · 0 UNCERTAIN (Mạnh duyệt điểm D 15/11; hồ sơ ngoai-n-tu-dinh-tuyen-bat)
   ui_standards_skill: onehub-ui
   suite_keys: [executors.test.agent, executors.test.app, executors.test.app_ui, executors.test.pipeline_a, executors.test.pipeline_b, executors.test.ui_lint_rules, executors.script.portal_static]   # làn ghim lại (repin) chạy mỗi lượt — agent/app_ui/pipeline thêm từ vòng enrich-qua-de-xuat; pipeline tách hai nửa (tach-suite-pipeline, 13/11: một lệnh vượt trần chờ 30′ của tác tử chấm)
   # Khoá làn ghim lại của kit (GUIDE §7.1; Mạnh duyệt 2026-10-26, hồ sơ kit-khoa-nhom-1).
@@ -413,6 +414,8 @@ executors:
     design_floor_fresh: "node scripts/design-floor/gen-tokens.mjs --root . --check && node scripts/design-floor/gen-registry.mjs --root . --check"   # dung-m2-song-song: design/*.json khớp nguồn — đo trạng thái cây
     portal_smoke: "BASE_URL=http://localhost:3456 node scripts/smoke-portal-compliance.mjs"   # cần app đang chạy :3456 + DB local
     product_map: "node scripts/product-map.mjs --root . --check"
+    nntd_do: "node _acceptance/ngoai-n-tu-dinh-tuyen-bat/do-mo-phong.mjs"   # ngoai-n-tu-dinh-tuyen-bat: dựng lại 9 hồ sơ đã ký (mốc d2b4beaf) về trước Cổng 2, chạy dinh-tuyen-may.cjs của kit với config thật
+    nntd_luoi: "! bash scripts/pre-merge-check.sh . --base origin/main 2>&1 | grep '^VIOLATION' | grep -vF 'VIOLATION [ngoai-n-tu-dinh-tuyen-bat]'"   # ngoai-n-tu-dinh-tuyen-bat AC-8 — lưới trước-gộp không có vi phạm nào ngoài dòng chờ của chính hồ sơ
     gta_luoi: "! bash scripts/pre-merge-check.sh . --base origin/main 2>&1 | grep '^VIOLATION' | grep -vF 'VIOLATION [goi-thang-anthropic]'"   # goi-thang-anthropic E13
     listing_static: "node scripts/check-listing-no-airdna.mjs"   # /listing/[id] không AirDNA (luật 5) — đo trạng thái cây
     listing_smoke: "BASE_URL=${BASE_URL:-http://localhost:3456} node scripts/smoke-listing-no-airdna.mjs"   # cần app chạy TỪ worktree đang kiểm (mặc định :3456, đổi bằng env BASE_URL) + DB local
