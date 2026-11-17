@@ -100,3 +100,10 @@ lại. Lệnh chạy ngoài khoá s4, không đụng DB `oneinvest`.
 hiện #472 đỏ đúng DT-AC-7 của `db-thu`, `fail` 1, 72,2 giây; chạy khô trên nhánh @c71fe276 xanh, 524 ca, 517 đạt, 0 hỏng,
 93 giây; hồi quy `node --test scripts/*.test.mjs` trên DB máy thu xanh, 547 ca, 545 đạt, 2 bỏ qua, 1.151 giây. Chạy theo
 cách CI (DB trống, bỏ ca cần dữ liệu thật) nhanh hơn ~12 lần so với chạy trên DB máy thu.
+
+**Vòng 1 (17/11 07:06Z, REJECT E5, E7 — do tải máy).** E5 đỏ JST-AC-8 của `job-step-thoi-luong` (ngưỡng ≤ 1 giây đo đồng hồ,
+đo được 2,6 giây khi tải 9–10; chạy riêng lúc 08:13Z xanh). E7 đỏ KDM-AC-3 của `kiem-tin-rao-gan-khu-vuc` (lượt db-thu bị ngắt,
+mã 143). Baseline main 5508f620 của chính lượt chấm đỏ cả hai lệnh; cả hai tệp ngoài diff. Hệ quả cho cách dùng: dòng
+`scripts-ci` đỏ ở ca đo giờ khi máy đang chấm nặng thì chạy lại lúc máy yên trước khi coi là lỗi. Vòng 2 sửa tám lỗi review
+(DB mồ côi, SIGHUP, dropdb lỗi, cờ thiếu giá trị, `bash -e`, ba chỗ đo chỉ âm tính) và đổi E1, E2 sang probe `co-ca.sh` (đếm
+ca «✔ <mẫu>», vì `--test-name-pattern` không khớp ca nào vẫn thoát 0 trên gốc).
