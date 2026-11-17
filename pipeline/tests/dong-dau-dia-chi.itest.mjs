@@ -306,3 +306,17 @@ test("TG2-T4 E10 AC-8 một bài chữ nêu dự án khác thẻ: tin mang đún
     assert.deepEqual((await dongSong(b)).filter((x) => x.field === "project_node_id"), [], "bài im cùng tin vẫn nhận dự án thẻ");
   });
 });
+
+test("TG2-T4 E10 AC-8 duyệt từng đợt: thẻ thứ hai bất đồng không làm tin MẤT dự án thẻ thứ nhất đã cho", async () => {
+  await ca(async (f) => {
+    await the("tg2-dot-a", { duAn: [f.duAn1] });
+    await the("tg2-dot-b", { status: "nhap", duAn: [f.duAn2] });
+    const [a] = await baiCheo("tg2-dot-a", "tg2-dot-b");
+    await nap();
+    assert.deepEqual(await trangThaiTin(a), { status: "mot_du_an", du_an: f.duAn1, n: 2 }, "tiền đề: đợt một cho tin dự án của thẻ đã duyệt");
+    await c.query(`UPDATE group_address_cards SET status = 'da_duyet' WHERE group_key = 'tg2-dot-b'`);
+    const { kq } = await nap();
+    assert.deepEqual(await trangThaiTin(a), { status: "mot_du_an", du_an: f.duAn1, n: 2 }, "duyệt thêm thẻ bất đồng làm tin mất dự án");
+    assert.equal(kq.the_nhom.tin.theGiuHienTai, 1);
+  });
+});

@@ -182,3 +182,40 @@ describe("AC-8 hoà giải ở mức tin: không tự sinh xung đột", () => {
     assert.deepEqual(duAn(r), { k1: "11" });
   });
 });
+
+// ---- Duyệt TỪNG ĐỢT (đo 17/11 14:39Z trên bản chép: máy thu đã có 6 thẻ duyệt thật) ----
+// Tin 7695b269: bài ở TN-010 (duyệt thật, dự án 1), TN-025 (dự án 1), TN-002 (dự án 6). Lượt nền chỉ có TN-010 → tin mang dự án 1.
+// Duyệt thêm TN-002 → thẻ bất đồng → bản trước bỏ hết dòng dự án → tin MẤT dự án đang có (10 bài rơi sang «không dự án»).
+describe("AC-8 duyệt từng đợt: thẻ bất đồng không được làm tin mất dự án nó đang mang", () => {
+  const T3 = new Map([
+    ["g-x", { card_code: "TN-010", version: 1, duAn: "1", areaId: null, phanKhu: null, mucDich: null }],
+    ["g-y", { card_code: "TN-025", version: 1, duAn: "1", areaId: null, phanKhu: null, mucDich: null }],
+    ["g-z", { card_code: "TN-002", version: 1, duAn: "6", areaId: null, phanKhu: null, mucDich: null }],
+  ]);
+  const b = (post_id, conversation_id) => ({ post_id, conversation_id, tin: "T7695" });
+  const bai = [b("x1", "g-x"), b("x2", "g-x"), b("y1", "g-y"), b("z1", "g-z")];
+  const duAn = (r) => Object.fromEntries(r.dong.filter((d) => d.field === "project_node_id").map((d) => [d.subject_key.slice(4), d.value]));
+
+  test("tin đang mang đúng một dự án nằm trong các thẻ bất đồng: giữ dự án ấy, chỉ bỏ dòng của thẻ khác", () => {
+    const r = phatBieuDiaChiNhom({ bai, the: T3, nhanDuAn: new Map(), duAnHienTai: new Map([["x1", ["1"]], ["x2", ["1"]]]) });
+    assert.deepEqual(duAn(r), { x1: "1", x2: "1", y1: "1" }, "tin mất dự án 1 nó đang mang");
+    assert.equal(r.demTin.theGiuHienTai, 1);
+    assert.equal(r.demTin.theBatDong, 0);
+  });
+
+  test("tin chưa mang dự án nào: vẫn không đoán", () => {
+    const r = phatBieuDiaChiNhom({ bai, the: T3, nhanDuAn: new Map(), duAnHienTai: new Map() });
+    assert.deepEqual(duAn(r), {});
+    assert.equal(r.demTin.theBatDong, 1);
+  });
+
+  test("tin đang mang dự án KHÔNG nằm trong các thẻ: không đoán", () => {
+    const r = phatBieuDiaChiNhom({ bai, the: T3, nhanDuAn: new Map(), duAnHienTai: new Map([["x1", ["9"]]]) });
+    assert.deepEqual(duAn(r), {});
+  });
+
+  test("tin đang mang HAI dự án (đã xung đột sẵn): không đoán", () => {
+    const r = phatBieuDiaChiNhom({ bai, the: T3, nhanDuAn: new Map(), duAnHienTai: new Map([["x1", ["1"]], ["z1", ["6"]]]) });
+    assert.deepEqual(duAn(r), {});
+  });
+});

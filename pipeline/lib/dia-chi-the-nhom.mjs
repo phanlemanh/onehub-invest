@@ -85,7 +85,10 @@ const NGUON = "S03";
  * không nhìn cả tin là tự sinh xung đột (đo 17/11, kịch bản K1: 13 tin — 9 tin đăng lại chéo nhóm, 4 tin có bài chữ nêu dự án khác).
  *   - hai bài chữ nêu hai dự án khác nhau → bỏ mọi dòng dự án của tin (xung đột thật của chữ, không phải việc của thẻ);
  *   - đúng một dự án do chữ nêu → chữ thắng trên CẢ tin: bỏ dòng dự án từ thẻ khác giá trị ấy;
- *   - chữ im mà thẻ của các nhóm trong tin bất đồng (bài đăng lại chéo nhóm) → không đoán, bỏ mọi dòng dự án từ thẻ;
+ *   - chữ im mà thẻ của các nhóm trong tin bất đồng (bài đăng lại chéo nhóm) → nếu tin ĐANG mang đúng một dự án (`duAnHienTai`,
+ *     mọi luật kể cả luật này ở lượt trước) và dự án ấy nằm trong các thẻ → giữ nó, chỉ bỏ dòng của thẻ khác; còn lại không đoán,
+ *     bỏ mọi dòng dự án từ thẻ. Duyệt từng đợt là lý do: thẻ thứ nhất đã cho tin một dự án, thẻ thứ hai bất đồng không được
+ *     làm tin mất dự án ấy (đo 17/11 14:39Z: 10 bài một tin rơi sang «không dự án»);
  *   - bài khác cùng tin mà hàng này KHÔNG ghi dự án đang mang dòng dự án của luật khác (`duAnKhac`) khác giá trị → bỏ mọi dòng
  *     dự án của tin: hàng này chỉ rút dòng luật khác trên bài nó ghi dự án, nên đóng dấu là sinh hai dự án sống.
  *   Bỏ ô dự án KHÔNG kéo theo ô phường hay phân khu.
@@ -93,13 +96,14 @@ const NGUON = "S03";
  *
  * @param {{ bai: { post_id: string, conversation_id: string|null, posted_at?: string|null, tin?: string }[],
  *           the: Map<string, The>, nhanDuAn: Map<string, string>, phuongChu?: Set<string>,
- *           duAnKhac?: Map<string, string[]> }} p
+ *           duAnKhac?: Map<string, string[]>, duAnHienTai?: Map<string, string[]> }} p
  *   `conversation_id` là khoá nhóm ĐÃ chuẩn hoá; `nhanDuAn` post_id → id nút dự án đã khớp từ chữ bài; `phuongChu` các post_id mà
- *   chữ bài đã nêu phường; `duAnKhac` post_id → giá trị các dòng dự án SỐNG của luật khác trên bài ấy.
+ *   chữ bài đã nêu phường; `duAnKhac` post_id → giá trị các dòng dự án SỐNG của luật khác trên bài ấy; `duAnHienTai` post_id →
+ *   giá trị mọi dòng dự án SỐNG trên bài ấy (mọi luật, kể cả luật này), đọc TRƯỚC khi lượt rút dòng nào.
  * @returns {{ dong: object[], baiDong: string[], demTheoNguon: { the: number, chu_bai: number, bo: number },
- *             demTin: { chuBaiThang: number, chuBaiBatDong: number, theBatDong: number, xungLuatKhac: number } }}
+ *             demTin: { chuBaiThang: number, chuBaiBatDong: number, theBatDong: number, theGiuHienTai: number, xungLuatKhac: number } }}
  */
-export function phatBieuDiaChiNhom({ bai, the, nhanDuAn, phuongChu = new Set(), duAnKhac = new Map() }) {
+export function phatBieuDiaChiNhom({ bai, the, nhanDuAn, phuongChu = new Set(), duAnKhac = new Map(), duAnHienTai = new Map() }) {
   const khac = [];               // dòng phường, phân khu — không qua hoà giải
   const duAn = new Map();        // post_id → dòng dự án (bước 1)
   const tinCua = new Map();      // khoá tin → [post_id]
@@ -121,7 +125,7 @@ export function phatBieuDiaChiNhom({ bai, the, nhanDuAn, phuongChu = new Set(), 
     if (t.phanKhu != null) khac.push(dongCho(b, t, ASSERTION_FIELD.subzone_node_id, t.phanKhu, "the"));
   }
 
-  const demTin = { chuBaiThang: 0, chuBaiBatDong: 0, theBatDong: 0, xungLuatKhac: 0 };
+  const demTin = { chuBaiThang: 0, chuBaiBatDong: 0, theBatDong: 0, theGiuHienTai: 0, xungLuatKhac: 0 };
   for (const ps of tinCua.values()) {
     const co = ps.filter((p) => duAn.has(p));
     if (!co.length) continue;
@@ -131,7 +135,15 @@ export function phatBieuDiaChiNhom({ bai, the, nhanDuAn, phuongChu = new Set(), 
     if (chu.size === 1) {
       const [x] = chu;
       if (bo((d) => d.evidence.nguon_o === "the" && d.value !== x)) demTin.chuBaiThang++;
-    } else if (new Set(co.map((p) => duAn.get(p).value)).size >= 2) { bo(() => true); demTin.theBatDong++; continue; }
+    } else {
+      const theVals = new Set(co.map((p) => duAn.get(p).value));
+      if (theVals.size >= 2) {
+        const hienTai = new Set(ps.flatMap((p) => duAnHienTai.get(p) ?? []).map(String));
+        const [v] = hienTai;
+        if (hienTai.size === 1 && theVals.has(v)) { bo((d) => d.value !== v); demTin.theGiuHienTai++; }
+        else { bo(() => true); demTin.theBatDong++; continue; }
+      }
+    }
     const conLai = new Set(ps.filter((p) => duAn.has(p)).map((p) => duAn.get(p).value));
     const ngoai = ps.filter((p) => !duAn.has(p)).flatMap((p) => duAnKhac.get(p) ?? []);
     if (conLai.size === 1 && ngoai.some((v) => !conLai.has(String(v)))) { bo(() => true); demTin.xungLuatKhac++; }

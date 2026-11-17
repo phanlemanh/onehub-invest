@@ -1026,14 +1026,19 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
   if (coThe) {
     const nhomCua = new Map(posts.map((p) => [p.post_id, p.conversation_id ?? null]));
     const tinCua = new Map(nhom.flatMap((o) => o.posts.map((p) => [p.post_id, o.offerId])));
-    // Dòng dự án SỐNG của luật khác trên bài của lượt — để không đóng dấu một tin mà bài khác của nó đang mang dự án khác.
-    const { rows: khacRows } = await client.query(
-      `SELECT split_part(subject_key, ':', 2) AS p, array_agg(value) AS v FROM field_assertions
-        WHERE retracted_at IS NULL AND field = 'project_node_id' AND subject_key = ANY ($1::text[]) AND rule_id IS DISTINCT FROM $2
+    // Dòng dự án SỐNG trên bài của lượt, đọc TRƯỚC khi rút gì: của luật khác (để không đóng dấu một tin mà bài khác của nó
+    // đang mang dự án khác) và của mọi luật kể cả luật này (để duyệt thêm một thẻ bất đồng không làm tin mất dự án đang có).
+    const { rows: songRows } = await client.query(
+      `SELECT split_part(subject_key, ':', 2) AS p, array_agg(value) AS v,
+              array_agg(value) FILTER (WHERE rule_id IS DISTINCT FROM $2) AS khac
+         FROM field_assertions
+        WHERE retracted_at IS NULL AND field = 'project_node_id' AND subject_key = ANY ($1::text[])
         GROUP BY 1`, [baiDoc.map((p) => subjectKey("S03", p.post_id)), RULE_ID_THE]);
     const r = phatBieuDiaChiNhom({
       bai: baiDoc.map((p) => ({ post_id: p.post_id, conversation_id: nhomCua.get(p.post_id) ?? null, posted_at: p.posted_at, tin: tinCua.get(p.post_id) })),
-      the: theNhom, nhanDuAn: await docNhanDuAn(client), phuongChu, duAnKhac: new Map(khacRows.map((x) => [x.p, x.v])),
+      the: theNhom, nhanDuAn: await docNhanDuAn(client), phuongChu,
+      duAnKhac: new Map(songRows.filter((x) => x.khac).map((x) => [x.p, x.khac])),
+      duAnHienTai: new Map(songRows.map((x) => [x.p, x.v])),
     });
     dongThe = r.dong;
     const baiDuAn = [...new Set(r.dong.filter((d) => d.field === "project_node_id").map((d) => d.subject_key))];
