@@ -1,4 +1,4 @@
-# Review findings: nhan-du-an-thay-khu-do-thi-ops (round 1)
+# Review findings: nhan-du-an-thay-khu-do-thi-ops (round 2)
 
 ## Trong hợp đồng
 
@@ -8,9 +8,7 @@ Không có finding.
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-Không có mục nào.
-
-## Chưa adversarial-verify (refuter chết)
+Không có finding.
 
 Cụm ngoài vùng phủ: cluster: n-a (không đo được — không eval nào khai paths, hoặc dưới ngưỡng cụm).
 
