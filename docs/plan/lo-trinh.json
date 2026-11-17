@@ -5277,6 +5277,100 @@
       "bat_khi": "Ô đường có số rồi dấu phẩy mà đoạn sau không mở bằng tiền tố tên đường thì giữ nguyên; suite chung của agent và app không còn ca đọc dữ liệu thật; probe chạy riêng và in kết quả từng ca",
       "vi_sao": "Việc nối tiếp hàng tách ô đường (#460): chủ kho ký 15/11 mở hợp đồng mới cho hai mục ngoài hợp đồng và việc dời probe.",
       "ghi_chu": "Hàng ghi nhận việc đang chạy (nhánh fix/l2-bao-thu-doi-probe-that, hợp đồng đã duyệt 15/11)."
+    },
+    {
+      "ma": "DA36",
+      "slug": "danh-ba-toa-theo-phan-khu-hieu-luc",
+      "dot": "danh-ba-cau-truc-1711",
+      "nhom": "l04-danh-ba-toa",
+      "phu": [
+        "CT1"
+      ],
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 6,
+      "dung_tren": [],
+      "cau_giao": "Người vận hành mở trang Danh bạ trên Ops và thấy mỗi toà nằm dưới phân khu hiệu lực của nó (cụm, rồi phân khu S09, rồi cột gốc), không còn treo thẳng dưới dự án khi phân khu đã biết",
+      "bat_khi": "Trên DB máy thu, /ops/registry: toà treo thẳng dưới dự án 54 → 14, phân khu không có toà 7 → 1, tổng toà 198 không đổi; số toà của từng phân khu khớp đếm trực tiếp trên view v_toa_nut_vung",
+      "vi_sao": "Phân tích cấu trúc danh bạ 17/11: view v_toa_nut_vung (migration 097) đã sửa 40/54 toà treo sai, nhưng trang đọc cột buildings.region_node_id gốc (app/src/lib/ops/registry/doc.ts, du-an.ts).",
+      "vung": [
+        "app/src/lib/ops/registry",
+        "app/src/components/ops/registry"
+      ],
+      "ghi_chu": "Giám sát giao dãy N1 ngày 17/11 trước khi cắt; lượt cắt này chỉ đưa hàng vào lộ trình cho khớp sổ đợt. Không migration, không ghi dữ liệu. ROADMAP §3 mục 54."
+    },
+    {
+      "ma": "DA37",
+      "slug": "danh-ba-s16-thang-cau-truc",
+      "dot": "danh-ba-cau-truc-1711",
+      "nhom": "l04-danh-ba-toa",
+      "phu": [
+        "CT2"
+      ],
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 10,
+      "dung_tren": [
+        "DA33"
+      ],
+      "cau_giao": "Ở các dự án có S16, phân khu hiệu lực của toà đi theo S16: S16 đúc nút phân khu từ danh sách khu chủ đầu tư công bố qua thẻ luật, view nút vùng hiệu lực (v_toa_nut_vung) đặt toà S16 vào phân khu qua khu S16 của nó và xếp S16 trên S09, S08 và S09 lệch về cấu trúc thành bí danh và số lệch đếm theo cặp nguồn, thẻ lệch S08 ↔ S16 đã thành thừa được cho nghỉ; cột gốc của toà giữ nguyên",
+      "bat_khi": "Trên DB máy thu sau khi DA33 áp, đo trên view hiệu lực: ô «toà treo thẳng dưới dự án» ở các dự án có S16 về 0 (ước 109 toà S16 mới cộng phần còn treo của Ocean Park 1, Grand Park; số trước đo lại sau DA33); 2 thẻ lệch S08 ↔ S16 của DA33 cho nghỉ, 38 thẻ «một mã căn dưới nhiều toà» và 20 thẻ trùng tên xử theo lời Cổng Phạm vi; số lệch cấu trúc hiện theo cặp nguồn; lệch giá, pháp lý vẫn ra thẻ; nút phân khu S16 chỉ nhận toà sau khi thẻ luật được duyệt; 0 dòng buildings đổi region_node_id (rào chỉ-thêm 082 giữ nguyên); dựng lại hai lần không đổi khoá",
+      "vi_sao": "Mạnh 17/11 Q-B, Q-C «Theo khuyến nghị cả ba câu» (ROADMAP §3 mục 54): sửa mô hình 11/11 §1.3 cho phần cấu trúc ở dự án có S16. Khoảng 110 nghìn căn S16; mỗi lệch một thẻ thì không duyệt nổi. DA33 chép luật xếp phân khu cũ (chỉ xét con loại building, khớp tên tuyệt đối) nên toà S16 mới treo dưới dự án.",
+      "vung": [
+        "db/migrations",
+        "pipeline/lib/s16-dung.mjs",
+        "pipeline/lib/danh-ba-vat-the.mjs"
+      ],
+      "ghi_chu": "Hạng T3: ghi dữ liệu danh bạ lên cloud (nút phân khu, bí danh) và đổi luật phân xử. Thang theo thuộc tính: mo-hinh-danh-ba-du-an.md §1.3. Hướng (GS chốt 17/11, theo nếp DA31): cột buildings.region_node_id giữ nguyên, nút vùng hiệu lực tính ở view v_toa_nut_vung (097) — mở rộng view bằng migration mới; không nới rào, không đúc lại toà hay căn. Đã cân nhắc, không chọn: nới rào chỉ-thêm của buildings (vat_the_chi_them, 082) cho phép UPDATE region_node_id — P2 thử trên bản chép 17/11, rào từ chối mọi đổi trừ status, merged_into; nới là sửa luật an toàn của danh bạ vật thể, cần lời riêng của Mạnh, trong khi view đã là nếp có sẵn. Câu cho Cổng Phạm vi: 60 thẻ S16 của DA33 = 38 «một mã căn dưới nhiều toà» + 20 trùng tên + 2 lệch S08 ↔ S16; Q-B chỉ cho nghỉ 2 thẻ lệch — 58 thẻ còn lại người duyệt từng thẻ, hay một thẻ luật mới (vd «mã căn S16 dưới nhiều toà → giữ toà của khu S16»), Mạnh xem mẫu? Mã căn lấy bằng đăng nhập vẫn không lên cloud (AC-9, AC-10 của DA33 đã sửa 17/11). Giữa S08, S09, tin S03 không có thứ tự; dự án không có S16 giữ luật lệch → thẻ. Đo của P2 17/11 trên bản chép sau khi áp DA33: 109/109 toà S16 mới có bí danh mã toà; nối về khu thì 90 toà ra đúng một khu, 19 toà ra hai mã khu (GP 4, OP2 10, OP3 5) vì bản thu S16 thứ ba không kèm danh sách khu và ghi mã khu khác, còn view v_s16_toa lấy bản thu mới nhất nên chỉ 90/109 ra khu có thật. Hàng này lấy khu từ bản thu CÓ danh sách khu (mã khu có trong stg_s16_khu); tiêu chí đo: «109/109 toà S16 có đúng một phân khu hiệu lực»."
+    },
+    {
+      "ma": "DA38",
+      "slug": "du-an-con-tu-hau-to-khu",
+      "dot": "danh-ba-cau-truc-1711",
+      "nhom": "l04-danh-ba-toa",
+      "phu": [
+        "CT3"
+      ],
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "dung_tren": [
+        "DA8"
+      ],
+      "cau_giao": "Dự án S08 có hậu tố khu (OCP1, OCP2…) thành nút dự án con có cha theo hậu tố qua thẻ luật theo nguồn, hai dự án con Grand Park đang thiếu cha có cha, mã S08 của dự án con nối vào dự án con thay vì dự án cha, và toà của dự án con nằm dưới dự án con",
+      "bat_khi": "Trên DB máy thu: dự án có cha 0 → ít nhất số dự án S08 có hậu tố khu cộng hai (đo lại số hậu tố lúc mở vòng); hai mã S08 đang nối vào Grand Park chuyển sang dự án con; toà Lakeside và The Senique (6 toà, Ocean Park 1) nằm dưới dự án con trên view nút vùng hiệu lực (cột gốc của toà giữ nguyên, rào chỉ-thêm 082); nút chưa qua thẻ luật thì 0 tin nối; chạy lại không đúc nút trùng; đổi cha của nút dự án có sự kiện và lùi được",
+      "vi_sao": "Mạnh 17/11 Q-A (ROADMAP §3 mục 54). Phân tích 17/11: 0/344 dự án có cha; S08 nối Masteri Centre Point và Lumière Boulevard vào chính Grand Park nên toà và tin của cùng dự án nằm ở hai nhánh. Luật dự án con của mục 39, nút ứng viên của mục 44 Hỏi-1.",
+      "vung": [
+        "pipeline/noi-du-an-s08.mjs",
+        "pipeline/danh-ba-vat-the.mjs",
+        "pipeline/lib/danh-ba-vat-the.mjs",
+        "db/migrations"
+      ],
+      "ghi_chu": "Đứng sau DA8 (ba nút Grand Park đổi loại, Ocean Park 1, 2, 3 có cha) vì cùng tệp và cần luật loại nút của DA8; gộp hai hàng thành 14 tiêu chí, vượt ngưỡng tách nên giữ riêng. Gộp nút trùng tên (Lumière Boulevard hai nút, Lakeview City) là DA19, không làm ở đây. «Trong hệ VGP» (17/11) chỉ là cách chấm TG2, không gộp nút."
+    },
+    {
+      "ma": "DA39",
+      "slug": "nut-ung-vien-s08-s09-ha-noi",
+      "dot": "danh-ba-cau-truc-1711",
+      "nhom": "l04-danh-ba-toa",
+      "phu": [
+        "CT4"
+      ],
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "dung_tren": [
+        "DA32"
+      ],
+      "cau_giao": "Mã dự án S08 và S09 chưa khớp nút nào thành nút ứng viên hàng loạt qua thẻ luật theo nguồn (Hà Nội trước), S09 có bảng nối dự án như S06 và S08, và ô «Mã nguồn chưa nối» trên trang Danh bạ giảm theo",
+      "bat_khi": "Trên /ops/registry máy thu: mã nguồn chưa nối 524 → dưới 100 sau khi Mạnh duyệt hai thẻ luật (ước: S09 344 → dưới 40, S08 172 → dưới 50; số chính xác đo lúc mở vòng); S09 có bảng nối với lý do và người duyệt; nút ứng viên chưa qua thẻ luật thì 0 tin nối, 0 lên Invest; không nối khi lệch tỉnh; chạy lại không đúc nút trùng",
+      "vi_sao": "Phân tích 17/11: 524 mã chưa nối phần lớn vì thiếu nút (Hà Nội chỉ 11 nút dự án; so tên chỉ khớp S09 7/344, S08 5/172), và S09 chưa có bảng nối (chỉ hằng NOI_KHU_S09 hai cặp). Lát mỏng theo khuôn DA32 (mã dự án S06 thành nút), luật nút ứng viên mục 44 Hỏi-1.",
+      "vung": [
+        "pipeline/lib/s09-du-an.mjs",
+        "pipeline/noi-du-an-s08.mjs",
+        "db/migrations"
+      ],
+      "ghi_chu": "Hạng T3 như DA32: đúc nút hàng loạt lên cloud. Lát mỏng của DA18 (nút ứng viên từ danh mục) và DA3 (bảng nối đầy đủ) cho S08, S09; hai hàng ấy giữ phần còn lại (S07, S11, khuôn chung, thẻ từng cặp). Dùng lại bảng thẻ luật của DA32 (migration 100)."
     }
   ],
   "chan_troi": [
