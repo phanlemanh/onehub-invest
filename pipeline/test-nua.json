@@ -11,6 +11,7 @@
     "scripts/db-thu-chot.test.mjs",
     "scripts/do-lech-s03-s06.test.mjs",
     "scripts/do-ngan-sach-yeu-cau.test.mjs",
+    "scripts/dong-dau-dia-chi.test.mjs",
     "scripts/entrypoint-symlink.test.mjs",
     "scripts/gia-tot-du-an.test.mjs",
     "scripts/goi-thang-anthropic.test.mjs",

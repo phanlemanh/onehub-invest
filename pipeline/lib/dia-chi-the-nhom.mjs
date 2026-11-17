@@ -5,6 +5,8 @@
 //   bộ đọc (cổng dò lược đồ + đọc thẻ đã duyệt + lọc giá trị) · hàm thuần sinh dòng phát biểu · hàm rút dòng cũ theo căn cứ.
 // Khoá nhóm là tầng A: không vào `evidence`, không vào log, không lên cloud — mọi chỗ in ra dùng `card_code`.
 import { khoaNhomThat } from "./eval-labels.mjs";
+import { subjectKey } from "./assert.mjs";
+import { ASSERTION_FIELD, ASSERTION_METHOD, EVIDENCE_TIER } from "./vocab.generated.mjs";
 
 export const RULE_ID = "dia-chi-the-nhom";
 export const METHOD_VERSION = "dong-dau-dia-chi@1";
@@ -66,4 +68,49 @@ export async function docTheDaDuyet(client, khoaNhom = khoaNhomThat) {
     });
   }
   return { the, oBo };
+}
+
+const NGUON = "S03";
+
+/**
+ * Dòng phát biểu cho bài của các nhóm có thẻ đã duyệt. Hàm thuần, không đọc DB.
+ *
+ * Với MỖI bài, mỗi trường chọn đúng MỘT giá trị rồi mới ghi — không cộng dồn hai nguồn trên cùng bài (nếu cộng dồn, tin gom
+ * nhiều bài sẽ thành «xung đột» do chính hàng này sinh ra):
+ *   dự án:    chữ bài (nhãn bạc chu_bai, trích đã kiểm, đã khớp một nút) → ô dự án của thẻ (đúng một nút) → không ghi;
+ *   phường:   chữ bài đã nêu phường (cột của tin đã mang nó) → không ghi; còn lại → ô phường của thẻ;
+ *   phân khu: ô phân khu của thẻ (chữ bài chỉ có phân khu dạng chữ, chưa nối nút — PL20, ngoài phạm vi).
+ * Bài của nhóm KHÔNG có thẻ đã duyệt: không đụng tới (đường cũ giữ nguyên). Bài không có khoá nhóm: bỏ qua.
+ *
+ * @param {{ bai: { post_id: string, conversation_id: string|null, posted_at?: string|null }[],
+ *           the: Map<string, The>, nhanDuAn: Map<string, string>, phuongChu?: Set<string> }} p
+ *   `conversation_id` là khoá nhóm ĐÃ chuẩn hoá; `nhanDuAn` post_id → id nút dự án đã khớp từ chữ bài (bài có nhãn mà không
+ *   khớp nút nào thì vắng mặt, nên rơi về thẻ); `phuongChu` các post_id mà chữ bài đã nêu phường.
+ * @returns {{ dong: object[], baiDong: string[], demTheoNguon: { the: number, chu_bai: number, bo: number } }}
+ */
+export function phatBieuDiaChiNhom({ bai, the, nhanDuAn, phuongChu = new Set() }) {
+  const dong = [];
+  const baiDong = new Set();
+  const demTheoNguon = { the: 0, chu_bai: 0, bo: 0 };
+  for (const b of bai) {
+    if (b.conversation_id == null) continue;
+    const t = the.get(b.conversation_id);
+    if (!t) continue;
+    const sk = subjectKey(NGUON, b.post_id);
+    const ghi = (field, value, nguon_o) => {
+      dong.push({
+        subject_key: sk, field, value, evidence_tier: EVIDENCE_TIER.inferred, method: ASSERTION_METHOD.e1_rule,
+        method_version: METHOD_VERSION, rule_id: RULE_ID, evidence: { the: t.card_code, ban: t.version, nguon_o },
+        observed_at: b.posted_at ?? null,
+      });
+      baiDong.add(sk);
+    };
+    const chu = nhanDuAn.get(b.post_id);
+    if (chu != null) { ghi(ASSERTION_FIELD.project_node_id, String(chu), "chu_bai"); demTheoNguon.chu_bai++; }
+    else if (t.duAn != null) { ghi(ASSERTION_FIELD.project_node_id, t.duAn, "the"); demTheoNguon.the++; }
+    else demTheoNguon.bo++;
+    if (t.areaId != null && !phuongChu.has(b.post_id)) ghi(ASSERTION_FIELD.area_id, t.areaId, "the");
+    if (t.phanKhu != null) ghi(ASSERTION_FIELD.subzone_node_id, t.phanKhu, "the");
+  }
+  return { dong, baiDong: [...baiDong], demTheoNguon };
 }
