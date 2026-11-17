@@ -16,6 +16,7 @@ import { dung } from "../danh-ba-vat-the.mjs";
 export const TEN = `oneinvest_dbv_s16_${process.pid}`;
 const SNAP = "q__s16__2026-11-14T000000000";
 const MIG103 = join(GOC, "db/migrations/103_stg_s16.sql");
+const MIG110 = join(GOC, "db/migrations/110_v_s16_can_nhanh.sql");
 let db;
 
 before(async () => {
@@ -45,7 +46,7 @@ const rangBuoc = async (c) => (await c.query(
   `SELECT conname, pg_get_constraintdef(oid) AS d FROM pg_constraint
     WHERE conrelid::regclass::text IN ('registry_aliases') OR conrelid::regclass::text LIKE 'stg_s16%' ORDER BY 1`)).rows;
 
-test("DA33-AC-1 nạp fixture 11 kind hai lần: lần một đúng số dòng, lần hai 0; url không host; 103 áp lại không đổi lược đồ", async () => {
+test("DA33-AC-1 nạp fixture 11 kind hai lần: lần một đúng số dòng, lần hai 0; url không host; 103 rồi 110 áp lại không đổi lược đồ", async () => {
   await db.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ($1, 'vn', 'S16', '{}'::jsonb)`, [SNAP]);
   const kq = dongS16(FIXTURE, SNAP);
   assert.deepEqual(kq.bo, { "thieu-source-id": 1, "kind-la": 1, "csv-loi": 1, "jsonl-loi": 1 }, "DA33-AC-1 đếm bỏ theo lý do");
@@ -57,9 +58,17 @@ test("DA33-AC-1 nạp fixture 11 kind hai lần: lần một đúng số dòng, 
   assert.deepEqual(lan2, { item: 0, khu: 0, toa: 0, can: 0 }, "DA33-AC-1 nạp lại ghi thêm dòng");
   const { rows: url } = await db.query("SELECT count(*)::int AS n FROM stg_s16_item WHERE payload::text ~ '\"url\": ?\"[a-z]+://'");
   assert.equal(url[0].n, 0, "DA33-AC-1 url còn host");
+  // 110 thay thân view v_s16_can của 103 mà giữ nguyên cột, nên băm cột không phân biệt hai bản: so cả định nghĩa view.
+  const dinhNghia = async () => (await db.query("SELECT pg_get_viewdef('v_s16_can'::regclass) AS d")).rows[0].d;
+  const viewTruoc = await dinhNghia();
+  assert.match(viewTruoc, /LEFT JOIN t ON/, "DA33-AC-1 DB dựng từ migrations không mang view bản 110");
   const truoc = bam([await luocDo(db), await rangBuoc(db)]);
   apTep(TEN, MIG103);
-  assert.equal(bam([await luocDo(db), await rangBuoc(db)]), truoc, "DA33-AC-1 103 áp lần hai đổi lược đồ");
+  // Chiều đỏ có tên: áp lại riêng 103 đưa view về bản chậm — ai chạy lại 103 thì phải chạy lại 110 (hồ sơ áp ghi vậy).
+  assert.notEqual(await dinhNghia(), viewTruoc, "DA33-AC-1 áp lại riêng 103 không đổi view — phép so định nghĩa không phân biệt được");
+  apTep(TEN, MIG110);
+  assert.equal(bam([await luocDo(db), await rangBuoc(db)]), truoc, "DA33-AC-1 103 rồi 110 áp lần hai đổi lược đồ");
+  assert.equal(await dinhNghia(), viewTruoc, "DA33-AC-1 103 rồi 110 áp lần hai không về đúng view bản 110");
 });
 
 test("DA33-AC-1 bí danh nguồn S16 chèn được, S1A bị từ chối", async () => {

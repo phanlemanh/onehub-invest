@@ -1,6 +1,8 @@
 # Áp DA33 lên DB máy thu — năm thứ cho lời áp (ROADMAP §3 mục 50)
 
-Chữ ký Cổng Bằng chứng của hồ sơ này kèm lời áp những gì dưới đây lên **DB máy thu** (`oneinvest` :5433). Cloud không đổi:
+Chữ ký Cổng Bằng chứng của hồ sơ này kèm lời áp những gì dưới đây lên **DB máy thu** (`oneinvest` :5433) — **gồm HAI migration:
+103 và 110**. 110 thêm sau Cổng Phạm vi (GS cấp số 17/11): nó thay view `v_s16_can` của 103 bằng bản tính một lượt, vì bản 103
+treo hàng chục phút trên dữ liệu thật và bước dựng ở 1e đọc view ấy. Cloud không đổi:
 bảng `stg_s16_*` và bảng vật thể danh bạ không lên cloud (AC-9, chốt trong `pipeline/sync-cloud.mjs`). Áp sau khi PR DA33 gộp,
 từ `main`, ở checkout chính `~/dev/onehub-invest`.
 
@@ -35,6 +37,21 @@ docker exec -i -e PGPASSWORD=oneinvest one-invest-db psql -U oneinvest -h localh
 
 Số 103 nằm sau 104–107 trên `main`: kho không có bảng sổ migration — `scripts/setup.sh` chạy glob `*.sql` theo thứ tự chữ, mọi
 migration viết idempotent — nên áp riêng 103 lên máy thu đã có 104–107 không lệch thứ tự. 103 không phụ thuộc 104–107.
+
+### 1b-bis. Áp 110 ngay sau 103 (hai lần — lần hai phải sạch)
+
+```bash
+docker exec -i -e PGPASSWORD=oneinvest one-invest-db psql -U oneinvest -h localhost -d oneinvest -v ON_ERROR_STOP=1 -q \
+  < ~/dev/onehub-invest/db/migrations/110_v_s16_can_nhanh.sql
+docker exec -i -e PGPASSWORD=oneinvest one-invest-db psql -U oneinvest -h localhost -d oneinvest -v ON_ERROR_STOP=1 -q \
+  < ~/dev/onehub-invest/db/migrations/110_v_s16_can_nhanh.sql
+```
+
+110 chỉ có một câu `CREATE OR REPLACE VIEW v_s16_can` — cùng tên, kiểu, thứ tự cột với bản 103, không chỉ mục, không đổi dòng
+dữ liệu nào. Cần 103 đã áp (view đọc `stg_s16_can` và hàm `s16_chuan_toa`).
+
+**Áp lại 103 thì phải áp lại 110.** Chạy lại riêng tệp 103 (vd sửa tay một lần) đưa view về bản chậm mà không lỗi gì;
+`scripts/setup.sh` chạy cả thư mục theo thứ tự nên 110 luôn về sau và tự đè đúng. Ca DA33-AC-1 của itest giữ điều này.
 
 ### 1c. Thêm dòng S16 vào sổ nguồn
 
@@ -73,6 +90,9 @@ Ghi ở `do-may-thu.md` của hồ sơ: lượt đo `node pipeline/scripts/danh-
 ba bản thu qua đúng hàm dùng chung, dựng năm khu, đối chứng bằng bộ đếm độc lập đọc thẳng snapshot. Không ghi gì lên DB máy thu
 (phiên đọc đặt `default_transaction_read_only = on`). Số thật sau áp phải bằng số ở đó; lệch thì DỪNG và báo, không tự sửa cho khớp.
 
+Bằng chứng 110 tương đương 103 và thời gian trước/sau: `do-view-110.md` của hồ sơ — `EXCEPT ALL` hai chiều 0 dòng trên 147.266
+dòng thật; quét trọn view 35 phút 37 giây → 0,68 giây; lượt đo E2 + E10 trọn 89 phút → 14 giây, cùng số.
+
 ## 3. Sao lưu trước áp
 
 Chạy ngay trước 1b, sau một lượt thu đã xong (bước 4 khôi phục về đúng thời điểm này):
@@ -96,7 +116,16 @@ pg_restore -U oneinvest -h localhost -p 5433 -d oneinvest --clean --if-exists ~/
 **Giá:** mất mọi dòng ghi vào DB máy thu sau lúc sao lưu (kể cả lượt thu đêm nếu chạy xen). Vì thế bước 3 làm ngay sau một lượt thu,
 và 1b → 1e chạy liền một mạch.
 
-**Chưa dựng (chỉ 1b, 1c).** Lùi riêng lược đồ, không mất dữ liệu nào khác:
+**Chỉ lùi 110 (giữ 103).** Áp lại tệp 103: nó `CREATE OR REPLACE` view `v_s16_can` về đúng định nghĩa của 103, các câu khác
+của 103 là `IF NOT EXISTS` / `DROP … IF EXISTS` rồi `ADD` nên chạy lại không đổi gì khác. Kết quả của view không đổi (hai bản
+tương đương — phần 2), chỉ chậm lại. Ca DA33-AC-1 của itest chứng việc áp lại 103 đổi đúng view.
+
+```bash
+docker exec -i -e PGPASSWORD=oneinvest one-invest-db psql -U oneinvest -h localhost -d oneinvest -v ON_ERROR_STOP=1 -q \
+  < ~/dev/onehub-invest/db/migrations/103_stg_s16.sql
+```
+
+**Chưa dựng (chỉ 1b, 1b-bis, 1c).** Lùi riêng lược đồ, không mất dữ liệu nào khác:
 
 ```sql
 DROP VIEW IF EXISTS v_s16_can;
@@ -115,6 +144,7 @@ và giữ nguyên bản rộng — chiều an toàn.
 
 ```sql
 SELECT to_regclass('stg_s16_can') IS NOT NULL AS co_103;                                 -- t
+SELECT pg_get_viewdef('v_s16_can'::regclass) LIKE '%LEFT JOIN t ON%' AS co_110;            -- t (view bản nhanh của 110)
 SELECT pg_get_constraintdef(oid) FROM pg_constraint
  WHERE conname = 'registry_aliases_source_check';                                         -- CHECK … '^S(0[1-9]|1[0-9])$'
 SELECT code, label_vi, status FROM source_registry WHERE code = 'S16';                    -- một dòng; KHÔNG chọn real_name
