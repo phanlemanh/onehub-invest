@@ -18,6 +18,7 @@ export type HanhDong =
   | "unit.delete"
   | "unit.set_mode"
   | "unit.update_meta"
+  | "unit.card_decide"
   | "zalo.admin"
   | "lenh.xem"
   | "lenh.gui"
@@ -40,6 +41,8 @@ export const QUYEN_OPS: Record<HanhDong, { vai: Exclude<Vai, "user">; bearer: bo
   "unit.delete": { vai: "admin", bearer: false },
   "unit.set_mode": { vai: "admin", bearer: false },
   "unit.update_meta": { vai: "admin", bearer: false },
+  // Thẻ địa chỉ nhóm S03 (TG1, Hỏi-1 Cổng Phạm vi 16/11): người vận hành nhận, sửa, bác thẻ — một người thật, ghi lịch sử.
+  "unit.card_decide": { vai: "ops", bearer: false },
   "zalo.admin": { vai: "admin", bearer: false },
   // Đường lệnh kéo (TV4 `so-lenh-bo-ap`, ADR-0015 §6, tài liệu §3.5 + §4.8 #4): xem từ viewer; gửi lệnh từ ops (route
   // còn đòi isAdmin cho source.resume — bật lại do admin bấm); duyệt là admin. Máy thu không đi bảng này — nó xưng bằng

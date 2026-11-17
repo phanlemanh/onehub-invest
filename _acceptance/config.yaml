@@ -39,6 +39,10 @@ executors:
     ui_lint_rules: "node scripts/suite-neu-doi.mjs ui_lint_rules -- 'cd app && npm run test:lint-rules'"
     portal_static: "node scripts/suite-neu-doi.mjs portal_static -- 'node scripts/check-portal-compliance.mjs'"
   test:
+    tg1_unit: "node --test pipeline/tests/the-dia-chi-nhom.test.mjs"   # the-dia-chi-nhom-s03 E2 — hàm dựng nháp, ma trận 16 ô
+    tg1_db: "bash db/db-thu.sh oneinvest_suite_tg1 --chay node --test --test-concurrency=1 pipeline/tests/the-dia-chi-nhom.itest.mjs"   # the-dia-chi-nhom-s03 E1, E3 — áp 108, lệnh dựng nháp năm lớp
+    tg1_lui: "bash db/db-thu.sh oneinvest_suite_tg1l --chay node --test --test-concurrency=1 pipeline/tests/the-dia-chi-nhom-lui.itest.mjs"   # the-dia-chi-nhom-s03 E9 — hồ sơ áp năm tệp + tệp lùi
+    tg1_app: "cd app && bash ../db/db-thu.sh oneinvest_suite_tg1a --chay node --import tsx --test --test-concurrency=1 tests/the-dia-chi-nhom-app.itest.tsx"   # the-dia-chi-nhom-s03 E4, E6 — route card-decide, đọc thẻ, khoá nhóm
     dv7_db: "bash db/db-thu.sh oneinvest_suite_dv7 --chay node --test --test-concurrency=1 pipeline/tests/offer-project.itest.mjs"   # du-an-cua-tin-len-dinh-vi E1–E5 — áp 105 rồi fixture chín lớp trên DB của riêng lượt
     dv7_lui: "bash db/db-thu.sh oneinvest_suite_dv7l --chay node --test --test-concurrency=1 pipeline/tests/offer-project-lui.itest.mjs"   # du-an-cua-tin-len-dinh-vi E10 — hồ sơ áp năm tệp + tệp lùi chạy thật
     dv7_app: "cd app && bash ../db/db-thu.sh oneinvest_suite_dv7a --chay node --import tsx --test --test-concurrency=1 tests/offer-project-app.itest.tsx tests/thang-bac-db.itest.tsx"   # du-an-cua-tin-len-dinh-vi E11 — bên đọc bản ghi, bậc của app
@@ -341,10 +345,14 @@ executors:
     cg8_ham: "cd app && node --import tsx --test tests/can-gia-cung-loai.test.tsx"   # can-gia-tot-cung-loai E4 — lý do rời danh sách, câu chứng minh theo loại hình (hàm thuần)
     ycns_do_test: "node --test pipeline/scripts/do-ngan-sach-yeu-cau.test.mjs"   # yc1-khoang-le-va-doi-chung-do AC-3, AC-4 — bốn lý do đỏ của lệnh đo, không DB
     s09_ham: "node --test pipeline/lib/s09-du-an.test.mjs"   # toa-s09-hai-khu-vao-danh-ba E2 — gộp toà S09 thuần, ma trận viết trước, không DB
+    s16_ham: "node --test pipeline/lib/s16-danh-muc.test.mjs"   # nap-s16-vao-danh-ba E3 — lõi thuần stg S16: ma trận năm ô chọn toà, dongS16 đủ 11 kind, không DB
+    s16_soat: "node --test pipeline/lib/s16-soat.test.mjs"   # nap-s16-vao-danh-ba E9 — bộ soát S16 trước khi đẩy cloud (AC-9 sửa 17/11) + tên nguồn thật không vào diff hàng
     ns09_test: "bash db/db-thu.sh oneinvest_suite_nap_s09 --chay node --test pipeline/tests/import-s09.test.mjs"   # nap-s09 E1–E3 — bộ nạp S09 trên DB thử: nạp, nạp lại, ba lý do bỏ, chốt chặn và đối chứng --may-thu
     jst_unit: "node --test scripts/job-step-thoi-luong.test.mjs"   # job-step-ghi-thoi-luong E1–E9 — cây tạm chép job-step.sh + tệp bọc thật, node/sleep giả, không DB
     jst_regress: "node --test scripts/job-exit.test.mjs scripts/s03-nap-nhanh.test.mjs scripts/zalo-import-job.test.mjs scripts/zalo-import-job-nhe.test.mjs scripts/enrich-buoc-job.test.mjs"   # job-step-ghi-thoi-luong E10 — lưới hồi quy dòng cũ của năm bộ test job
   script:
+    tg1_that_dem: "mkdir -p .acceptance-runs/the-dia-chi-nhom-s03 && node pipeline/scripts/the-dia-chi-nhom-that.mjs --dem --ghi .acceptance-runs/the-dia-chi-nhom-s03/so-chay-thu.md"   # the-dia-chi-nhom-s03 E7 — bản chép DB máy thu oneinvest_u1_tg1, áp 108 + dựng nháp
+    tg1_that_chat_luong: "node pipeline/scripts/the-dia-chi-nhom-that.mjs --chat-luong"   # the-dia-chi-nhom-s03 E8 — 13 nhóm sổ một dự án, dựng nháp bỏ sổ
     dv7_that_doc: "node pipeline/scripts/offer-project-that.mjs --doc"   # du-an-cua-tin-len-dinh-vi E6 — DB máy thu, giao dịch READ ONLY
     dv7_that_hieu_nang: "node pipeline/scripts/offer-project-that.mjs --hieu-nang"   # du-an-cua-tin-len-dinh-vi E7 — DB máy thu, giao dịch lùi, tải < 14
     dv7_that_chay_thu: "mkdir -p .acceptance-runs/du-an-cua-tin-len-dinh-vi && node pipeline/scripts/offer-project-that.mjs --chay-thu --ghi .acceptance-runs/du-an-cua-tin-len-dinh-vi/so-chay-thu.md"   # du-an-cua-tin-len-dinh-vi E9 — áp 105 + 600 trong một giao dịch lùi
@@ -1010,6 +1018,8 @@ executors:
     s09_db: "node --test --test-concurrency=1 pipeline/scripts/danh-ba-s09.itest.mjs"   # toa-s09-hai-khu-vao-danh-ba E1, E3–E5, E8 — DB thử oneinvest_s09_<pid> ở :5433 áp 001…097, fixture tổng hợp
     s09_that: "node pipeline/scripts/danh-ba-s09-that.mjs"   # toa-s09-hai-khu-vao-danh-ba E6, E7 — chép máy thu sang DB thử, nạp bản thu API S09, đối chứng hai bản tay, chỉ in số; ngoài CI
     s09_ranh_gioi: "node pipeline/scripts/s09-ranh-gioi.mjs --base origin/main"   # toa-s09-hai-khu-vao-danh-ba E9 — vùng, tầng A, 097 áp hai lần
+    s16_db: "node --test --test-concurrency=1 pipeline/scripts/danh-ba-s16.itest.mjs"   # nap-s16-vao-danh-ba E1, E3–E8 — itest tự dựng DB oneinvest_suite_s16_<pid> từ db/migrations, xoá khi xong
+    s16_that: "node pipeline/scripts/danh-ba-s16-that.mjs"   # nap-s16-vao-danh-ba E2, E10 — ba bản thu thật trên DB thử chép máy thu, đếm độc lập, sync chạy thử đọc chỉ-đọc DB máy thu; ngoài CI
     ns09_that: "node pipeline/scripts/nap-s09-that.mjs"   # nap-s09 E4 — bản chép DB máy thu, chạy lệnh nạp hai lần trên bản thu S09 13/11, số khớp DA31; ngoài CI
     ns09_ranh_gioi: "node pipeline/scripts/nap-s09-ranh-gioi.mjs --base origin/main"   # nap-s09 E6 — vùng, tên nguồn, chia nửa test pipeline
   design:                                            # app/ là web UI
