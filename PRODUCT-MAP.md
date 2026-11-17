@@ -12,7 +12,7 @@ flowchart TD
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>20 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>199 việc"]
+  GB --> DG["Đã giao<br/>200 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>128 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
@@ -354,6 +354,7 @@ flowchart TD
 - Sửa hồi quy bộ nạp S08 — snapshot chỉ căn thiếu 094 vẫn nạp và đánh dấu; snapshot có danh mục dự án hoãn khi thiếu 094 (`s08-nap-sua`)
 - bộ thu và bộ nạp S08 không nuốt lỗi token, không trùng sourceId danh mục, không đọc nhầm số (`s08-noi-tiep`)
 - Bảng hàng chủ đầu tư S10 vào stg (migration 089) và nối được vào nút dự án của danh bạ (`s10-bang-hang-vao-danh-ba`)
+- Lượt chấm S4 và ghim lại chỉ chạy suite có vùng bị nhánh đổi, và một lệnh dựng worktree chấm đủ .env, node_modules, kiểu của app (`s4-suite-theo-vung`) — đã giao — máy thông, cửa veto còn mở
 - Máy thu có công cụ sao lưu hằng ngày ra kho restic mã hoá trên máy (đích B2), thử khôi phục định kỳ và cảnh báo quá hạn — chứng minh trên dữ liệu giả (`sao-luu-ma-hoa-b2`)
 - Phép đo danh bạ SĐT chặt — mỗi số một người đo mỗi đêm, đúng ảnh và tên đúng người khi chuyển 060, che số /ops/people qua loader thật (`sd3-lam-chat-do-danh-ba`)
 - Test người bán theo SĐT (SD3) chịu chạy song song — mỗi ca dựng lược đồ riêng, không xếp hàng khoá tư vấn dùng chung (`sd3-test-chiu-song-song`)
