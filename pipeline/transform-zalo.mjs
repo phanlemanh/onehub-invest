@@ -1031,15 +1031,22 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
     const moiChuThe = baiDoc.map((p) => subjectKey("S03", p.post_id));
     // Dòng TG2 của bản thẻ không còn hiệu lực (thẻ sửa, bác) sẽ bị rút «the-doi-ban» cuối lượt — không tính là «dự án đang có»,
     // không thì hoà giải «giữ dự án hiện tại» lượt này bỏ dấu cả tin, lượt sau mới đóng: chạy lại đổi tập dòng sống (S4-r3).
+    // Dòng bản cũ mà thẻ bản mới vẫn cho đúng giá trị ấy (sửa ô phường, giữ dự án) hay lấy từ chữ bài thì vẫn là «đang có» —
+    // không thì sửa một ô không liên quan làm tin chéo nhóm đang giữ dự án nhờ nhánh này mất dự án (S4-r3, AC-5).
     const banHieuLuc = [...theNhom.values()].map((t) => `${t.card_code}|${t.version}`);
+    const giaTriHieuLuc = [...theNhom.values()].filter((t) => t.duAn != null).map((t) => `${t.card_code}|${t.duAn}`);
+    const theHieuLuc = [...theNhom.values()].map((t) => t.card_code);
     const sinh = async () => {
       const { rows: songRows } = await client.query(
         `SELECT split_part(subject_key, ':', 2) AS p, array_agg(value) AS v,
                 array_agg(value) FILTER (WHERE rule_id IS DISTINCT FROM $2) AS khac
            FROM field_assertions
           WHERE retracted_at IS NULL AND field = 'project_node_id' AND subject_key = ANY ($1::text[])
-            AND (rule_id IS DISTINCT FROM $2 OR (evidence->>'the') || '|' || (evidence->>'ban') = ANY ($3::text[]))
-          GROUP BY 1`, [moiChuThe, RULE_ID_THE, banHieuLuc]);
+            AND (rule_id IS DISTINCT FROM $2
+                 OR (evidence->>'the') || '|' || (evidence->>'ban') = ANY ($3::text[])
+                 OR (evidence->>'the') || '|' || value = ANY ($4::text[])
+                 OR (evidence->>'nguon_o' = 'chu_bai' AND evidence->>'the' = ANY ($5::text[])))
+          GROUP BY 1`, [moiChuThe, RULE_ID_THE, banHieuLuc, giaTriHieuLuc, theHieuLuc]);
       return phatBieuDiaChiNhom({
         bai: baiDoc.map((p) => ({ post_id: p.post_id, conversation_id: nhomCua.get(p.post_id) ?? null, posted_at: p.posted_at, tin: tinCua.get(p.post_id) })),
         the: theNhom, nhanDuAn, phuongChu,

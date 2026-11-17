@@ -611,3 +611,24 @@ test("TG2-r3 AC-8 vòng trả DV6 chạy hai lần: thẻ của a bị bác, DV6
     assert.deepEqual(await tapSong([a, b]), truoc, "chạy lại đổi tập dòng sống");
   });
 });
+
+// S4-r3 phát hiện (AC-5, trong hợp đồng): sửa thẻ tăng bản mà GIỮ NGUYÊN dự án (chỉ đổi ô phường) không được làm tin đăng
+// chéo — đang giữ dự án nhờ nhánh «giữ dự án hiện tại» — mất dự án. Dòng TG2 bản cũ cùng giá trị với ô dự án hiện tại của thẻ
+// vẫn là «dự án đang có».
+test("TG2-r3 AC-5 sửa thẻ chỉ đổi ô phường: tin chéo hai nhóm thẻ bất đồng vẫn giữ dự án thẻ thứ nhất, chạy lại y nguyên", async () => {
+  await ca(async (f) => {
+    await the("tg2-giu-g1", { duAn: [f.duAn1] });
+    await the("tg2-giu-g2", { status: "nhap", duAn: [f.duAn2] });
+    const [a, b] = await baiCheo("tg2-giu-g1", "tg2-giu-g2");
+    await nap();
+    await c.query(`UPDATE group_address_cards SET status = 'da_duyet', version = version + 1 WHERE group_key = 'tg2-giu-g2'`);
+    await nap();
+    assert.deepEqual(await trangThaiTin(a), { status: "mot_du_an", du_an: f.duAn1, n: 2 }, "tiền đề: duyệt từng đợt giữ dự án thẻ thứ nhất");
+    await c.query(`UPDATE group_address_cards SET area_id = $1, version = version + 1 WHERE group_key = 'tg2-giu-g1'`, [f.phuong1]);
+    await nap();
+    assert.deepEqual(await trangThaiTin(a), { status: "mot_du_an", du_an: f.duAn1, n: 2 }, "sửa ô phường làm tin mất dự án");
+    const truoc = await tapSong([a, b]);
+    await nap();
+    assert.deepEqual(await tapSong([a, b]), truoc, "chạy lại đổi tập dòng sống");
+  });
+});

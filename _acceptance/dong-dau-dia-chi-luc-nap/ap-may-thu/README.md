@@ -56,7 +56,7 @@ Dòng DV6 đã có không bị xoá ở lối nào: nhóm chưa có thẻ duyệ
    ```
    rồi NGAY sau đó, từ checkout chính:
    ```bash
-   cd pipeline && node scripts/du-an-tren-tin-s03.mjs --ghi
+   cd pipeline && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest node scripts/du-an-tren-tin-s03.mjs --ghi
    ```
    Bước SQL rút mọi dòng sống của `dia-chi-the-nhom` (lý do `lui-tg2`). Bước DV6 để chính DV6 tính lại ý định của nó trên dữ
    liệu hiện tại và ghi đúng dòng nó muốn. Khuôn S4-r3: lùi **không hồi sinh** dòng DV6 đã rút — bản rút có thể mang giá trị DV6
