@@ -29,6 +29,7 @@ const dungMoi = ({ treo = false, cham = false, bien = null } = {}) => {
   mkdirSync(join(root, "scripts", "lib"), { recursive: true });
   const goc = readFileSync(SCRIPT, "utf8");
   writeFileSync(join(root, "scripts", "zalo-import-daily.sh"), bien ? bien(goc) : goc);
+  chmodSync(join(root, "scripts", "zalo-import-daily.sh"), 0o755); // ca AC-5 chạy thẳng tệp qua bash -c '"$0"'
   cpSync(join(REPO, "scripts", "lib", "job-step.sh"), join(root, "scripts", "lib", "job-step.sh"));
   mkdirSync(join(root, "pipeline", "logs"), { recursive: true });
   mkdirSync(join(root, "collector", "snapshots", "vn"), { recursive: true });

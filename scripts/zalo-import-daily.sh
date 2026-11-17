@@ -120,14 +120,48 @@ canh_gio() {
     echo "⚠️ [zalo-import-daily] không có node thật ($node_that) — TRẦN THỜI GIAN TẮT cho lượt này" >&2
     return 0
   fi
-  TRAN_GIAY="$1" CANH_GIAY="$2" NHAN_CANH="$3" DO_KILL="$4" "$node_that" -e '
+  # 1711-4 MỞ LẠI lần 3: (1) node đồng hồ TỰ THOÁT khi script chết (ppid → 1 —
+  # «trap - EXIT» trước đọc gộp gỡ trap giết đồng hồ, đồng hồ cũ sống tới trần rồi
+  # TERM cả nhóm người gọi); (2) chỉ TERM CẢ NHÓM khi script là TRƯỞNG nhóm
+  # (PGID == PID script — dưới launchd); khi chạy tay/bash -c (PGID của người gọi)
+  # thì chỉ TERM con trực tiếp + script — không trúng người gọi.
+  TRAN_GIAY="$1" CANH_GIAY="$2" NHAN_CANH="$3" PID_SCRIPT="$$" PGID_SCRIPT="$PGID_LUOT" "$node_that" -e '
+    const { execSync } = require("node:child_process");
     const s = (v) => Number(v) * 1000;
-    const doKill = () => { try { process.kill(Number(process.env.DO_KILL), "SIGTERM"); } catch {} };
+    const script = Number(process.env.PID_SCRIPT);
+    const truongNhom = String(process.env.PGID_SCRIPT) === String(script);
+    const conSong = () => { // con trực tiếp còn sống của script (pgrep -P có cả macOS/linux)
+      try { return execSync(`pgrep -P ${script}`, { encoding: "utf8" }).split("\n").map((l) => parseInt(l.trim(), 10)).filter(Number.isFinite); } catch { return []; }
+    };
     setTimeout(() => console.error(`⚠️ [zalo-import-daily] WARN: ${process.env.NHAN_CANH} đã chạy ${process.env.CANH_GIAY}s (trần ${process.env.TRAN_GIAY}s) — vẫn chưa xong`), s(process.env.CANH_GIAY));
     setTimeout(() => {
       console.error(`❌ [zalo-import-daily] TIMEOUT: ${process.env.NHAN_CANH} vượt trần ${process.env.TRAN_GIAY}s — gửi TERM để dừng sạch`);
-      doKill();
-    }, s(process.env.TRAN_GIAY)); // giữ timer trần ref — node sống tới khi trần bắn (trap kill khi lượt xong sớm)
+      // 1711-4 MỞ LẠI lần 3 lỗ (2): chỉ TERM CẢ NHÓM khi script là TRƯỞNG nhóm
+      // (PGID == PID script — dưới launchd); chạy tay/bash -c thì TERM con trực
+      // tiếp + script theo VÒNG mỗi giây (bash defer TERM khi đang chờ con —
+      // TERM một lần không đủ, script nhảy sang lệnh kế) — không trúng người gọi.
+      const giu = setInterval(() => {
+        if (truongNhom) { try { process.kill(-script, "SIGTERM"); } catch {} }
+        else {
+          // p !== process.pid: đồng hồ chính nó cũng là con của script — tự TERM
+          // là chết trước khi TERM tới các con khác (treo vĩnh viễn)
+          for (const p of conSong()) { if (p === process.pid) continue; try { process.kill(p, "SIGTERM"); } catch {} }
+          try { process.kill(script, "SIGTERM"); } catch {}
+        }
+      }, 1000); // KHÔNG unref — interval TERM phải giữ event loop sống, không thì node thoát ngay sau TIMEOUT và không TERM ai
+      setTimeout(() => { // grace 20s rồi KILL cứng script (+ nhóm khi là trưởng nhóm)
+        clearInterval(giu);
+        if (truongNhom) { try { process.kill(-script, "SIGKILL"); } catch {} }
+        else { for (const p of conSong()) { try { process.kill(p, "SIGKILL"); } catch {} } }
+        try { process.kill(script, "SIGKILL"); } catch {}
+      }, 20000).unref();
+    }, s(process.env.TRAN_GIAY));
+    setInterval(() => { // (1) script chết → đồng hồ tự thoát, không mồ côi. process.ppid là TĨNH
+      // (không đổi khi cha chết) — kiểm sống bằng kill(pid, 0): ESRCH = cha đã chết
+      let conSong = true;
+      try { process.kill(script, 0); } catch { conSong = false; }
+      if (!conSong) process.exit(0);
+    }, 2000).unref();
     process.on("SIGTERM", () => process.exit(0));
   ' &
   DONG_HO_PID=$!

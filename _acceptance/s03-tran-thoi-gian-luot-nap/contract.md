@@ -85,5 +85,8 @@ fixture thay bước pipeline, DB trỏ cổng đóng; lượt thử khởi deta
 
 ## Notes
 
+- Giới hạn đã biết (LL soát 7cb255c24, 18/11): khi script không đứng đầu nhóm (chạy tay, chạy bù, bash -c), trần chỉ TERM
+  con TRỰC TIẾP và chính script; cháu chắt mà bước con tự đẻ ra có thể sót. Dưới launchd script đứng đầu nhóm nên không vướng.
+
 - Lỗ A, B (AC-4, AC-5) thuộc logic đồng hồ phía trên mốc làn → trả ZCode qua GS/LL (U1-1711-6, U1-1711-7); U1 chỉ sửa lỗ C
   ở tệp test.
