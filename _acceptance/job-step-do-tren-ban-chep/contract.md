@@ -5,7 +5,7 @@ slug: job-step-do-tren-ban-chep
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [pipeline]
-status: approved
+status: implemented
 veto_state: mo
 veto_opened_at: 2026-11-17T02:35:50Z
 design_doc: docs/superpowers/specs/2026-11-17-job-step-do-tren-ban-chep-design.md
