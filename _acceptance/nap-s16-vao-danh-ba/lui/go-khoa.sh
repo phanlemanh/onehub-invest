@@ -10,6 +10,10 @@ TEP=$1; DB=${2:-oneinvest}
 DB_TEP=$(awk -F'\t' '$1=="# db"{print $2}' "$TEP")
 [ -n "$DB_TEP" ] || { echo "go-khoa: tệp khoá thiếu dòng «# db» — không rõ của DB nào; DỪNG" >&2; exit 4; }
 [ "$DB_TEP" = "$DB" ] || { echo "go-khoa: tệp khoá của DB «$DB_TEP», DB đích «$DB» — từ chối" >&2; exit 4; }
+# field_assertions mang rào chỉ-thêm riêng (field_assertions_guard, 045) mà đường lùi này KHÔNG tắt: lượt dựng đã ghi khẳng định thì
+# gỡ có đích không làm trọn được — từ chối từ đầu, lùi bằng khôi phục bản sao lưu (phần 4 hồ sơ áp).
+FA=$(awk -F'\t' '$1=="field_assertions"' "$TEP" | wc -l | tr -d ' ')
+[ "$FA" = 0 ] || { echo "go-khoa: tệp khoá có $FA khẳng định (field_assertions) — đường lùi có đích không gỡ được; dùng pg_restore" >&2; exit 5; }
 {
   echo "\\set ON_ERROR_STOP on"
   echo "BEGIN;"

@@ -111,6 +111,16 @@ cloud. Bộ soát S16 (AC-9) không phủ chỗ này — nó chỉ bắt token S
 
 ### 1e. Dựng toà, căn S16 vào danh bạ — cả năm khu
 
+**Chạy NGAY sau 1d, trước 23:55.** Từ lúc `stg_s16_*` có dữ liệu, mọi job có bước `refresh-bait-gap` (00:00 Zalo và S03 Facebook,
+05:30 và 14:00 S06, 06:00, 12:00, 18:00 S03 Facebook) tự dựng S16 cho hai khu đã có toà (OP1, GP) trong giao dịch của nó — không sao
+lưu, không mốc, `ghi-khoa.sh` không thấy. Kiểm ngay trước lệnh dựng, phải in `0`, khác 0 thì DỪNG và báo:
+
+```bash
+docker exec -e PGPASSWORD=oneinvest one-invest-db psql -U oneinvest -h localhost -d oneinvest -Atc \
+  "SELECT count(*) FROM registry_aliases WHERE source = 'S16'"
+```
+
+
 `--khu` **phải** khai đủ năm: mặc định của bộ dựng (`KHU_MAC_DINH`) chỉ có Ocean Park 1 và Grand Park, thiếu ba khu thì ba khu
 ấy không nhận toà, căn S16. `--sao-luu` trỏ tệp ở bước 3.
 
@@ -214,7 +224,9 @@ ls -la ~/onehub-backups/db/truoc-103-s16-*.dump   # phải khác 0 byte; bộ d�
 **Đã dựng (1e chạy rồi) — đường lùi có đích, CẦN lời Mạnh tắt rào.** Bốn bảng `buildings`, `stacks`, `units`, `registry_aliases`
 mang rào «chỉ thêm» (055, 082): DELETE bị từ chối. `go-khoa.sh` tắt rào hàng của đúng bốn bảng ấy **trong một giao dịch**, gỡ đúng
 các khoá trong tệp của 1e, bật rào lại rồi mới COMMIT; `DISABLE TRIGGER` là giao dịch, lỗi giữa chừng thì rào về nguyên trạng. Mỗi
-bảng: số dòng xoá phải bằng số khoá trong tệp, lệch thì lùi trọn, không gỡ gì. Tắt rào là sửa luật an toàn danh bạ — chỉ chạy khi
+bảng: số dòng xoá phải bằng số khoá trong tệp, lệch thì lùi trọn, không gỡ gì. `field_assertions` có rào chỉ-thêm riêng mà đường
+này không tắt: tệp khoá có khẳng định (lượt dựng ghi phường hay chủ đầu tư) thì `go-khoa.sh` từ chối từ đầu (thoát 5) — lùi bằng
+khôi phục bản sao lưu. Diễn tập trên bản chép: lượt dựng ghi 0 khẳng định. Tắt rào là sửa luật an toàn danh bạ — chỉ chạy khi
 chữ ký Cổng Bằng chứng ghi rõ đã cho đường lùi này. **Chữ ký phủ việc ÁP; CHẠY đường lùi chỉ làm khi Mạnh gõ lời lùi lúc đó —
 không ai tự chạy.** Tệp khoá ghi tên DB và mốc của lượt dựng; `go-khoa.sh` từ chối (thoát 4, không mở giao dịch) khi DB đích khác
 DB trong tệp hoặc tệp thiếu dòng ấy. Thứ tự (sau đó thì rào 082 nhận lại, nên lùi được 088):
