@@ -11,9 +11,9 @@ flowchart TD
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>20 việc"] --> GP{"Cổng Phạm vi"}
-  GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>200 việc"]
-  GB --> CN["Chờ phiên nghiệm thu<br/>129 việc"] --> GG{"Cổng Giá trị"}
+  GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
+  GB --> DG["Đã giao<br/>202 việc"]
+  GB --> CN["Chờ phiên nghiệm thu<br/>132 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
 
@@ -68,10 +68,6 @@ flowchart TD
 - harness của s06-vung-moi-len-canonical chạy được transform-chotot có import gan-sdt-s06.mjs (`s06-vung-moi-harness-gan-sdt`)
 - Tách bộ kiểm pipeline của lượt chấm thành hai nửa chạy song song, mỗi nửa một DB thử, để một lệnh không vượt trần chờ 30 phút của tác tử chấm (`tach-suite-pipeline`)
 - hai test app chạy trên DB chung thôi đỏ vì mã vùng dài cũ và thôi treo khi có DDL xếp hàng (`test-app-tren-db-chung`)
-
-## Đang làm
-
-- Heartbeat S03 cảnh báo L6(d) khi DOWN từ hai nhịp liền và ghi lý do DOWN (phiên mất hiệu lực hay kênh dừng) bằng lệnh liệt kê nhóm chỉ-đọc tối đa 1 lần/giờ — tích hợp nhánh làn thu (`l6d-down-keo-dai-ly-do`)
 
 ## Đã giao — chờ phiên nghiệm thu
 
@@ -132,6 +128,7 @@ flowchart TD
 - Ghép căn kết luận bằng luật ngưỡng trong code, LLM chỉ viết lời giải thích; mỗi lần chấm ghi model và trace lên thẻ; mọi cặp ứng viên needs_llm sinh đúng một thẻ ghép căn (`judge-nguong-la-code`)
 - Mỗi tin thuộc nhiều nhất một căn, và đổi giá một tin không sinh căn mới (`khoa-gop-can-khong-gia`)
 - Thẻ duyệt ghép căn và luật chấm cùng coi «P.12» là «Phường 12» (`khoa-phuong-chung-phuong-so`)
+- Heartbeat S03 cảnh báo L6(d) khi DOWN từ hai nhịp liền và ghi lý do DOWN (phiên mất hiệu lực hay kênh dừng) bằng lệnh liệt kê nhóm chỉ-đọc tối đa 1 lần/giờ — tích hợp nhánh làn thu (`l6d-down-keo-dai-ly-do`)
 - Leak gate của sync cloud đỏ khi role anon còn SELECT được bất kỳ bảng hay view nào (`leak-gate-kiem-anon`)
 - Nhà đầu tư mở /listing/[id] thấy đầu trang product-detail-5, ảnh tự thu khi có (không có thì ẩn gallery), lịch form-5 không còn điều khiển thô, vùng dữ liệu có Skeleton và Empty (`listing-detail-product-detail-5`)
 - Nhà đầu tư duyệt listing lọc bằng filters (màn hẹp filter-sidebar-5) và bản đồ @mapcn/store-locator gom cụm, vẫn lọc theo khung nhìn khi kéo hoặc zoom (`listings-filters-store-locator`)
@@ -144,6 +141,7 @@ flowchart TD
 - Bản khai công cụ app/docs/api/mcp-tools.json khớp sổ bề mặt API: công cụ tin rao đòi bearer ops hoặc bị gỡ, không công cụ nào ghi «public» trái sổ (`mcp-tools-theo-so-be-mat`)
 - Ảnh của tin S03 và S06 nằm ở một bảng media canonical theo RESO Media nối với offer, và /ops/review, /ops/data-flow ở máy thu đọc ảnh từ bảng này (`media-canonical-reso`)
 - Nạp lại mọi nguồn không xoá hàng: khoá tin bền, retired_at thay DELETE, mọi khoá ngoại tới sale_offers và listings là RESTRICT (`nap-lai-khong-xoa`)
+- Dự án, phân khu, toà và mã căn S16 vào danh bạ không sinh toà, căn trùng, và mã căn S16 là neo tin cậy cao nhất khi dựng cây toà → căn (`nap-s16-vao-danh-ba`)
 - Danh bạ Người gộp người theo SĐT vào người theo tài khoản cùng nguồn khi nối một–một, mỗi lần gộp có vết và tách lại được (`nguoi-noi-theo-sdt`)
 - Người gắn nhãn gõ giá có dấu chấm ngăn nghìn hay gửi đơn vị lạ thì bị chặn với lỗi dưới ô thay vì lưu sai 1000 lần, và mất mạng khi Lưu thì thấy thông báo (`nhan-gia-va-luu-loi-mang`)
 - Bảng nhóm S03 ghi đúng số nhóm đang bật trong danh sách cho phép và «Vào bảng thô» theo nhóm — ở máy thu đo trực tiếp, trên máy chủ đọc khối s03 máy thu đẩy lên; thiếu số thì «—», không 0 (`nhom-s03-tren-cloud`)
@@ -185,6 +183,7 @@ flowchart TD
 - Tin S03 ghi tầng (số tầng hay dải cao, trung, thấp) mang phát biểu tầng có trích dẫn, ở field đã kiểm RESO (`tang-tren-tin-s03`)
 - Mẫu bài căn hộ S03 của Ocean Park 1 và Grand Park chọn phân tầng theo khu và mức gắn, có nháp nhãn toà, trục, căn do tác tử điền kèm câu trích, nạp vào eval_label_items chờ người duyệt trên /ops/labels, và đóng băng được thành tập test có băm cho PL20 (`tap-nhan-ghep-tin-hai-khu`)
 - Người vận hành dữ liệu sinh được một tập tin mẫu của lát Ocean Park 1 có đáp án biết sẵn, sinh lại ra đúng tập cũ, mang dấu mẫu và không bao giờ tới bảng canonical — để PL9 chấm cách đọc tin trước khi đội gắn nhãn xong (`tap-nhan-mau-ocp1`)
+- Người vận hành mở sổ nhóm trên Ops và thấy mỗi nhóm S03 có bài một thẻ địa chỉ — máy dựng nháp dự án (một hay danh sách ngắn), phường và tỉnh, phân khu mặc định, bán hay thuê kèm số bài làm căn cứ — rồi nhận, sửa hay bác từng thẻ; sổ đếm đủ 27/27 nhóm có thẻ (`the-dia-chi-nhom-s03`)
 - Người duyệt mở /ops/review và thấy mọi trường kèm căn cứ, ảnh tin và toàn văn tin, không có «AI tự tin %», rồi quyết kèm lý do được ghi audit cùng giao dịch (`the-duyet-du-can-cu`)
 - Người duyệt thấy người đăng của mỗi tin trên thẻ ghép căn (tên, SĐT, số tin đang rao) và nhận ra ngay khi hai tin cùng một người (`the-duyet-hien-nguoi-dang`)
 - Thẻ duyệt Người cho ca nhiều–nhiều trên /ops/review — SĐT nhiều người gửi, người gửi nhiều SĐT thành thẻ; người duyệt chọn gộp hay giữ tách, quyết định áp qua luật xác định ở bước dựng danh bạ, có vết và đảo được (`the-duyet-nguoi-nhieu-nhieu`)
@@ -279,6 +278,7 @@ flowchart TD
 - 2410-1 — mốc thu captured_at của stg Zalo và Chợ Tốt luôn là giờ thu snapshot, nạp lại không làm sai, có script khôi phục kèm sao lưu (`giu-captured-at`)
 - Ngôn ngữ chuẩn — CONTEXT.md, luật đặt tên, bối cảnh sản phẩm, test slug route (`glossary-context`)
 - Đọc gộp S03 và nháp nhãn PL35 có thêm đường gọi Haiku thẳng API Anthropic song song Vercel AI Gateway (thứ tự và tự lùi bằng bảng chọn), ghi rõ lỗi nhà cung cấp và dừng sớm khi hết tiền (`goi-thang-anthropic`)
+- probe GS-AC-6 của the-so-gia-tri-song chỉ xét thẻ ghép căn có bên (evidence.<bên>.offer_id là chuỗi), không nhận nhầm thẻ danh bạ DA33 là «tin rời kho» (`gs-ac-6-the-khong-tin-a`) — đã giao — máy thông, cửa veto còn mở
 - guard-edits lấy gốc theo kho chứa tệp — luật chặn sửa migration đã commit chạy cả khi tệp ở worktree khác (`guard-edits-goc-theo-tep`)
 - ZC6 nối tiếp — hook Zalo giữ tin lại hàng đợi khi khoá collector sai (401/403/404) và có trần thời gian cho cả lượt xả (`hook-spool-nghiem-ngat`)
 - ZC6 — hook Zalo giữ tin trong hàng đợi cục bộ khi collector chết rồi gửi lại, không làm treo gateway (`hook-zalo-spool`)
@@ -288,6 +288,7 @@ flowchart TD
 - lối cài riêng job sao lưu tuần — install-cron.sh --chi backup chỉ cài job sao lưu, không khởi động lại job thu đang chạy (`install-cron-chi`) — đã giao — máy thông, cửa veto còn mở
 - Bản đồ đích cổng Invest — block đích cho mọi route Invest trước khi dọn tiếp (`invest-target-map`)
 - Itest nạp lại migration cũ xanh lại trên DB đã có 095 — phép đo về migration X chạy trên DB dừng ở X, bộ nạp lại không bao giờ thu hẹp ràng buộc trường, bền với 096 (`itest-nap-lai-migration-cu-sau-095`)
+- Lưới phạm vi làn của JST-AC-8 đo trên bản chép — hai ô đột biến dựng diff từ hai tệp tạm bằng git diff --no-index thay vì ghi vào scripts/zalo-import-daily.sh thật trong cây làm việc (`job-step-do-tren-ban-chep`) — đã giao — máy thông, cửa veto còn mở
 - Ghi thời lượng từng bước của job nạp — job_step, job_run và buoc_nhanh in một dòng ghim JOB STEP ra stderr (job, bước, mã, giây, cột nhanh), kèm một bước gộp truoc-lan-claude đo phần lấy khoá và nạp của zalo-import-daily.sh; phép đo không mở hay ghi tệp nào (`job-step-ghi-thoi-luong`)
 - ZC1 nối tiếp — cứng hoá ingest của collector API (media rác không làm hỏng lô, id tin chữ giữ nguyên, payload nguyên vẹn) (`kev-nhan-cung-hoa`)
 - sửa thước kiểm kev-nhan đỏ sẵn trên main — tên thư mục giả theo khuôn PL1 và chữ log Kev hỏng theo ZC6 (`kev-nhan-thuoc-sau-pl1`)

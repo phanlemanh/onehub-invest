@@ -5,7 +5,7 @@ slug: l6d-down-keo-dai-ly-do
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-17
 design_doc: docs/superpowers/specs/2026-11-17-l6d-down-keo-dai-ly-do-design.md
@@ -94,3 +94,10 @@ lý do DOWN gần nhất `grep 'heartbeat zalouser DOWN' ~/.openclaw/logs/oneinv
   hợp nền tảng: heartbeat dùng `date -j` (BSD) ở nhánh silent-gate; trên CI ubuntu lệnh rơi về `|| echo 0` nên ca D3-5 đỏ.
   Sửa ở S3 trong nhánh tích hợp: ca D3-5 skip khi không phải darwin (tiền lệ VHZ2 @1be76ccc6); script không đổi. Giới hạn đã
   biết: ca mốc giờ silent-gate chỉ đo trên máy thu.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-18:
+  - Ngoài-2: Kênh S03 rớt, lên lại rồi rớt lần nữa trong vòng một giờ thì cảnh báo lần sau vẫn bắn nhưng chưa kèm lý do cho tới hết giờ.
+  - Ngoài-4: Lệnh liệt kê nhóm chạy xong mà không in gì thì lý do DOWN cũ còn nằm thêm tới một giờ dù chưa xác nhận lại.
+  - Ngoài-7: Gateway treo thoáng qua lúc phiên đã chết thì lý do «cần quét QR» bị che thành «chưa rõ» tới gần một giờ; cảnh báo vẫn bắn.
+  - Ngoài-8: Lệnh liệt kê nhóm lỗi âm thầm thì log heartbeat vẫn in lý do cũ như vừa đo xong.
+  - Ngoài-9: Phiên chết chỉ nhận ra bằng cụm chữ «Đăng nhập thất bại» viết tay theo ghi chép 13/11; chữ CLI đổi thì lý do rơi về «kênh dừng».
+  - Ngoài-11: Một ca test của làn thu kiểm cờ cảnh báo bằng mẫu không neo, nên lỏng hơn ca nghiệm thu.
