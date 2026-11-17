@@ -5,7 +5,7 @@ slug: ngoai-n-tu-dinh-tuyen-bat
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-15-ngoai-n-tu-dinh-tuyen-bat-design.md
 approved_by: Mạnh
 approved_at: 2026-11-15
