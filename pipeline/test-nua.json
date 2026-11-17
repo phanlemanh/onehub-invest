@@ -29,6 +29,7 @@
     "scripts/ops-facts-so-tong-hop.test.mjs",
     "scripts/phat-bieu.test.mjs",
     "scripts/phuong-tu-du-an.test.mjs",
+    "scripts/quet-doc-stg.test.mjs",
     "scripts/refresh-bait-gap-goi.test.mjs",
     "scripts/soat-tang-a.test.mjs",
     "scripts/tap-nhan-hai-khu.test.mjs",

@@ -10,10 +10,11 @@
 // Số của lượt NỀN là số thật trên máy thu ngay sau khi hàng gộp; số SAU là số khi buổi duyệt làm đúng kịch bản.
 //
 //   node pipeline/scripts/dong-dau-dia-chi-that.mjs --chay [--kich-ban K1]   hai lượt nạp, ghi .acceptance-runs/…/do-that.json
-//   node pipeline/scripts/dong-dau-dia-chi-that.mjs --thuoc <phu-the|nguong-moc|khong-tut|phu-kind|chu-bai-that>
+//   node pipeline/scripts/dong-dau-dia-chi-that.mjs --thuoc <phu-the|nguong-moc|khong-tut|phu-kind|chu-bai-that> [--do-neu-cu]
+//     --do-neu-cu: số đo vắng hay ghim commit khác thì dựng lại bản chép và đo trước (khoá thư mục, thước song song chờ nhau)
 // Mỗi thước một mã thoát riêng (0 đạt · 1 trượt · 2 chưa đo được). Bài đọc qua loadStgPosts — không đọc thẳng bảng staging.
 import { execFileSync } from "node:child_process";
-import { mkdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
+import { mkdirSync, readFileSync, rmSync, writeFileSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -114,6 +115,27 @@ async function chay(kichBan) {
   } finally {
     await c.end();
   }
+}
+
+/** Số đo còn dùng được: có tệp và ghim đúng commit đang chạy. */
+const conMoi = () => existsSync(TEP_DO) && JSON.parse(readFileSync(TEP_DO, "utf8")).sha === sha();
+
+/**
+ * Đo lại CHỈ khi số cũ đã cũ — để mỗi thước tự đủ mà lượt chấm chạy nhiều thước vẫn chỉ trả một lần dựng bản chép + hai lượt
+ * nạp. Khoá bằng mkdir (nguyên tử): thước chạy song song chờ nhau, không hai lượt cùng ghi lên một bản chép.
+ */
+async function chayNeuCu(kichBan) {
+  if (conMoi()) return;
+  const khoa = `${TEP_DO}.khoa`;
+  mkdirSync(dirname(TEP_DO), { recursive: true });
+  for (;;) {
+    try { mkdirSync(khoa); break; } catch { await new Promise((r) => setTimeout(r, 5000)); }
+  }
+  try {
+    if (conMoi()) return;
+    execFileSync("bash", [join(GOC, "db/db-thu.sh"), DB_THU], { stdio: "inherit" });
+    await chay(kichBan);
+  } finally { rmSync(khoa, { recursive: true, force: true }); }
 }
 
 function docDo() {
@@ -223,6 +245,9 @@ if (process.argv[1] && process.argv[1].endsWith("dong-dau-dia-chi-that.mjs")) {
   const a = process.argv.slice(2);
   const lay = (k) => { const i = a.indexOf(k); return i < 0 ? undefined : a[i + 1]; };
   if (a.includes("--chay")) await chay(lay("--kich-ban") ?? "K1");
-  else if (THUOC[lay("--thuoc")]) process.exit((await THUOC[lay("--thuoc")]()) ? 0 : 1);
+  else if (THUOC[lay("--thuoc")]) {
+    if (a.includes("--do-neu-cu")) await chayNeuCu(lay("--kich-ban") ?? "K1");
+    process.exit((await THUOC[lay("--thuoc")]()) ? 0 : 1);
+  }
   else { console.error(`dùng: --chay [--kich-ban K1] | --thuoc <${Object.keys(THUOC).join("|")}>`); process.exit(2); }
 }
