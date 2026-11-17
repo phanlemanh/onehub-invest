@@ -13,24 +13,31 @@ import { fileURLToPath } from "node:url";
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), "../..");
 
-// stub pgrep — trả PID giả để watchdog không thoát sớm ở cổng «openclaw phải chạy»
-// 1611-11 CHỐT CHẶN RUNTIME THẬT đầu tệp — trước mọi chayWd và trước khối stub:
-// kiểm CẢ binary hệ thống (PATH trần) lẫn stub của test, nêu chi tiết, exit 2 nếu lệch.
-// Đây là lệnh ĐẦU TIÊN của tệp — không phải assert trong một ca (1611-11 CHƯA ĐẠT 1 → đã viết thật).
-const _binhThuong = (cmd) => spawnSync("bash", ["-c", `command -v ${cmd}`], { encoding: "utf8" }).stdout.trim();
-for (const cmd of ["launchctl", "pkill", "osascript"]) {
-  const duongHeThong = _binhThuong(cmd);
-  if (!duongHeThong) {
-    console.error(`zalo-watchdog-vhz2: từ chối chạy — không tìm thấy binary hệ thống '${cmd}' (môi trường lạ); test này chỉ chạy trên máy thu có gateway thật khi đã bịt stub`);
-    process.exit(2);
-  }
-}
 const PATH_DIR = mkdtempSync(join(tmpdir(), "s03-vhz2-path-"));
 // 1611-5(1): giả CẢ ba binary nguy hiểm trong alert() — launchctl bootout, pkill -9,
 // osascript notification (chỉ S03_SONG_OSASCRIPT phủ s03-song, KHÔNG phủ alert()).
 for (const ten of ["pgrep", "launchctl", "pkill", "osascript"]) {
-  writeFileSync(join(PATH_DIR, ten), "#!/bin/bash\necho \"stub $*\" >> \"$GIA_STUB_SO\"\n");
+  // ghi cả TÊN lệnh (basename $0) — $* chỉ có đối số; số đo stub-goi.log phải đọc ra
+  // được «stub launchctl bootout» / «stub pkill -9 -f openclaw» để biết stub nào bị gọi
+  writeFileSync(join(PATH_DIR, ten), "#!/bin/bash\necho \"stub $(basename \"$0\") $*\" >> \"$GIA_STUB_SO\"\n");
   chmodSync(join(PATH_DIR, ten), 0o755);
+}
+// 1611-5 vòng 3 (1611-11 CHƯA ĐẠT 1+2, sửa): chốt chặn KHÔNG đòi máy có launchctl/osascript
+// thật — CI ubuntu không có hai lệnh đó (glob scripts/*.test.mjs của npm test pipeline chạy
+// trên ci-test.yml job ubuntu-latest → bản cũ exit 2 làm CI đỏ). Bản cần: TRƯỚC mọi chayWd,
+// khẳng định stub THẮNG resolve trên đúng PATH mà watchdog sẽ chạy (PATH_DIR đứng đầu,
+// `command -v` trỏ vào PATH_DIR); lệch → exit 2 vì khi đó alert() gọi nhầm binary THẬT.
+const stubThang = (cmd) =>
+  spawnSync("bash", ["-c", `command -v ${cmd}`], {
+    encoding: "utf8",
+    env: { ...process.env, PATH: `${PATH_DIR}:${process.env.PATH ?? ""}` },
+  }).stdout.trim();
+for (const cmd of ["pgrep", "launchctl", "pkill", "osascript"]) {
+  const duong = stubThang(cmd);
+  if (!duong || !duong.startsWith(PATH_DIR)) {
+    console.error(`zalo-watchdog-vhz2: từ chối chạy — stub '${cmd}' KHÔNG thắng resolve trên PATH chạy watchdog (command -v → '${duong || "không thấy"}'); khi đó alert() gọi binary thật = sự cố 14/11 lặp lại`);
+    process.exit(2);
+  }
 }
 
 /** Dựng môi trường cô lập: ROOT tmp (scripts + pipeline/logs + collector fixture), HOME tmp (CFG + CLI stub). */
@@ -144,6 +151,11 @@ test("VHZ2-3 lockdown có một lớp không ok (L2 bindings) → 0 lần kickst
   const l2 = chayWd(env, root);
   assert.equal(l2.status, 1, "lockdown vi phạm → alert exit 1");
   assert.equal(kickSoDem(root), 0, "0 lần kickstart khi lockdown không ok");
+  // 1611-5 vòng 3 (CHƯA ĐẠT 4): số đo DƯƠNG rằng stub đã chặn cả ba lệnh nguy hiểm của alert()
+  const stubGoi = readFileSync(env.GIA_STUB_SO, "utf8");
+  assert.match(stubGoi, /stub launchctl bootout/, "alert gọi launchctl bootout — bị stub chặn");
+  assert.match(stubGoi, /stub pkill -9 -f openclaw/, "alert gọi pkill -9 -f openclaw — bị stub chặn");
+  assert.match(stubGoi, /stub osascript/, "alert gọi osascript — bị stub chặn");
   rmSync(home, { recursive: true, force: true }); rmSync(root, { recursive: true, force: true });
 });
 
@@ -157,6 +169,11 @@ test("VHZ2-4 L4d có lượt agent dở (DB mới đã có events) → 0 lần k
   execFileSync("sqlite3", [db, "CREATE TABLE transcript_events (created_at TEXT); INSERT INTO transcript_events VALUES ('2026-11-14T10:00:00');"]);
   chayWd(env, root); // L4d alert (exit 1) — kick không được phép
   assert.equal(kickSoDem(root), 0, "0 lần kickstart khi L4d có lượt dở");
+  // 1611-5 vòng 3 (CHƯA ĐẠT 4): số đo DƯƠNG rằng stub đã chặn cả ba lệnh nguy hiểm của alert()
+  const stubGoi = readFileSync(env.GIA_STUB_SO, "utf8");
+  assert.match(stubGoi, /stub launchctl bootout/, "alert gọi launchctl bootout — bị stub chặn");
+  assert.match(stubGoi, /stub pkill -9 -f openclaw/, "alert gọi pkill -9 -f openclaw — bị stub chặn");
+  assert.match(stubGoi, /stub osascript/, "alert gọi osascript — bị stub chặn");
   rmSync(home, { recursive: true, force: true }); rmSync(root, { recursive: true, force: true });
 });
 
@@ -170,27 +187,56 @@ test("VHZ2-5 công tắc tắt → 0 lần kickstart dù đủ mọi điều ki�
   rmSync(home, { recursive: true, force: true }); rmSync(root, { recursive: true, force: true });
 });
 
-test("VHZ2-6 neo (1611-5 điểm 5): khối P1 phải là phần CUỐI tệp watchdog — lớp lockdown mới chèn SAU khối P1 sẽ không được ca nào kiểm, neo tĩnh này đỏ khi ai chèn code thực thi sau P1", () => {
-  const nguon = readFileSync(join(REPO, "scripts", "zalo-watchdog.sh"), "utf8");
+// 1611-5 vòng 3 (CHƯA ĐẠT 3): neo cũ đếm «fi cuối» bị LỚP GIẢ TỰ CÂN qua mặt — khối
+// `if …; then …; fi` viết nhiều dòng chèn sau P1 có fi riêng → viFiCuoi nhảy sang fi mới,
+// đuôi lại rỗng → XANH sai. Neo thật GHIM ĐẾM: số khối if|for|while|until|case CẤP 0
+// sau mốc P1 (bỏ comment) phải đúng giá trị đo từ mã hiện tại (khối P1 = MỘT khối if
+// duy nhất) — lớp giả chèn thêm khối nào, viết một dòng hay nhiều dòng, đều làm số tăng → đỏ.
+// Kèm giữ: dòng thực thi cuối là fi + đuôi sau fi cuối-thuần rỗng (bắt code trần không bọc if).
+const NEO_SO_KHOI_CAP0 = 1;
+const neoP1 = (nguon) => {
+  const loi = [];
   const viP1 = nguon.indexOf("VHZ2 (P1, claudedp-1411-33)");
-  assert.ok(viP1 > 0, "khối P1 tồn tại trong tệp");
-  // neo: từ tiêu đề P1 tới cuối tệp, DÒNG THỰC THI CUỐI của tệp phải là `fi` đóng if
-  // công tắc P1 — ai chèn khối logic mới SAU khối P1 thì dòng cuối thay đổi → đỏ
-  const sau = nguon.slice(nguon.indexOf("VHZ2 (P1, claudedp-1411-33)"));
-  const dongThucThi = sau.split("\n").filter((l) => {
+  if (viP1 <= 0) return ["khối P1 không tồn tại trong tệp"];
+  const sau = nguon.slice(viP1);
+  const cacDong = sau.split("\n").filter((l) => {
     const t = l.trim();
     return t && !t.startsWith("#");
   });
-  assert.ok(/\bfi\b/.test(dongThucThi[dongThucThi.length - 1] ?? ""), "dòng thực thi cuối của tệp phải là fi đóng khối P1 (khối P1 là phần cuối)");
-  // 1611-11: neo THẬT — «sau khối P1» tính từ fi CUỐI của khối P1 (dòng chỉ có «fi»):
-  // đuôi từ đó trở đi phải RỖNG — lớp lockdown mới chèn sau P1 sẽ hiện dòng thực thi → đỏ.
-  // (lời gọi song_canh_bao p1-qr nằm TRONG khối P1, không phải phần đuôi.)
-  const cacDong = sau.split("\n");
+  if (!cacDong.length) return ["sau mốc P1 không còn dòng thực thi nào"];
+  const soKhoi = cacDong.filter((l) => {
+    const t = l.trim();
+    return l === t && /^(if|for|while|until|case)\b/.test(t);
+  }).length;
+  if (soKhoi !== NEO_SO_KHOI_CAP0) loi.push(`số khối if/for/while/until/case cấp 0 sau mốc P1 là ${soKhoi}, neo ghim ${NEO_SO_KHOI_CAP0} — có khối chèn thêm sau/đuôi P1 (kiểm từng khối có ca phủ không)`);
+  if (!/^fi\b/.test(cacDong[cacDong.length - 1] ?? "")) loi.push("dòng thực thi cuối của tệp không phải fi đóng khối P1 (khối P1 phải là phần cuối tệp)");
   let viFiCuoi = -1;
-  cacDong.forEach((l, i) => { if (l.trim() === "fi") viFiCuoi = i; });
-  assert.ok(viFiCuoi >= 0, "khối P1 có fi đóng");
-  const duoi = cacDong.slice(viFiCuoi + 1).filter((l) => l.trim() !== "");
-  assert.equal(duoi.length, 0, `sau fi cuối của khối P1 không được còn dòng thực thi — thực tế: ${duoi.join(" | ").slice(0, 200)}`);
+  sau.split("\n").forEach((l, i) => { if (l.trim() === "fi") viFiCuoi = i; });
+  if (viFiCuoi < 0) loi.push("khối P1 không có fi thuần đóng");
+  else {
+    const duoi = sau.split("\n").slice(viFiCuoi + 1).filter((l) => l.trim() !== "" && !l.trim().startsWith("#"));
+    if (duoi.length) loi.push(`sau fi cuối của khối P1 không được còn dòng thực thi — thực tế: ${duoi.join(" | ").slice(0, 200)}`);
+  }
+  return loi;
+};
+
+test("VHZ2-6 neo (1611-5 điểm 5): khối P1 phải là phần CUỐI tệp watchdog, đúng MỘT khối if cấp 0 — lớp lockdown mới chèn SAU khối P1 sẽ không được ca nào kiểm, neo tĩnh này đỏ khi ai chèn code thực thi sau P1", () => {
+  const nguon = readFileSync(join(REPO, "scripts", "zalo-watchdog.sh"), "utf8");
+  assert.deepEqual(neoP1(nguon), [], "neo P1 sạch trên nguồn thật");
+});
+
+test("CA ĐỎ neo VHZ2-6 (1611-5 vòng 3): chèn lớp giả TỰ CÂN NHIỀU DÒNG (khối if…fi sau P1) — neo cũ XANH sai, neo ghim-đếm phải ĐỎ; gỡ lớp giả → sạch", () => {
+  const nguon = readFileSync(join(REPO, "scripts", "zalo-watchdog.sh"), "utf8");
+  const loiGia = nguon + `\nif ! grep -q requireMention "$HOME/.openclaw/openclaw.json"; then\n  alert "lớp giả chèn sau P1"\nfi\n`;
+  const vi = neoP1(loiGia);
+  assert.ok(vi.length > 0, `neo phải đỏ khi chèn lớp giả nhiều dòng sau P1 — thực tế: ${JSON.stringify(vi)}`);
+  assert.match(vi.join(" | "), /số khối if\/for\/while\/until\/case cấp 0/, "vi phạm do số khối tăng");
+  // một dòng tự cân cũng phải đỏ (neo cũ không bắt được dạng này)
+  const vi1 = neoP1(nguon + `\nif [ -f /tmp/x ]; then rm /tmp/x; fi\n`);
+  assert.ok(vi1.length > 0, "lớp giả if MỘT DÒNG chèn sau P1 cũng phải đỏ");
+  // code trần không bọc if vẫn đỏ qua neo đuôi
+  const vi2 = neoP1(nguon + `\necho "code trần chèn sau P1"\n`);
+  assert.ok(vi2.some((s) => /dòng thực thi cuối|fi cuối/.test(s)), "code trần chèn sau P1 phải đỏ");
 });
 
 test("CA ĐỎ VHZ2: gỡ điều kiện (a) L6(b) đỏ ≥10′ → ca kiểu 09/11 phải đỏ (kick khi chưa đủ mốc đỏ kéo dài)", () => {
