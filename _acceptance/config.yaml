@@ -324,6 +324,8 @@ executors:
     s16_ham: "node --test pipeline/lib/s16-danh-muc.test.mjs"
     s16_soat: "node --test pipeline/lib/s16-soat.test.mjs"
     ns09_test: "bash db/db-thu.sh oneinvest_suite_nap_s09 --chay node --test pipeline/tests/import-s09.test.mjs"   # nap-s09 E1–E3 — bộ nạp S09 trên DB thử: nạp, nạp lại, ba lý do bỏ, chốt chặn và đối chứng --may-thu
+    jst_unit: "node --test scripts/job-step-thoi-luong.test.mjs"   # job-step-ghi-thoi-luong E1–E9 — cây tạm chép job-step.sh + tệp bọc thật, node/sleep giả, không DB
+    jst_regress: "node --test scripts/job-exit.test.mjs scripts/s03-nap-nhanh.test.mjs scripts/zalo-import-job.test.mjs scripts/zalo-import-job-nhe.test.mjs scripts/enrich-buoc-job.test.mjs"   # job-step-ghi-thoi-luong E10 — lưới hồi quy dòng cũ của năm bộ test job
   script:
     dv7_that_doc: "node pipeline/scripts/offer-project-that.mjs --doc"   # du-an-cua-tin-len-dinh-vi E6 — DB máy thu, giao dịch READ ONLY
     dv7_that_hieu_nang: "node pipeline/scripts/offer-project-that.mjs --hieu-nang"   # du-an-cua-tin-len-dinh-vi E7 — DB máy thu, giao dịch lùi, tải < 14
