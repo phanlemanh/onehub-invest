@@ -33,6 +33,7 @@ const LOI_PIPELINE = [
   "_acceptance/gop-tin-chi-anh-o-transform/**",
   "_acceptance/lay-mau-khu-trung-theo-tin/**", "_acceptance/nhom-dang-ky-hai-lan-s03/**",
   "_acceptance/s03-len-cong/**", "_acceptance/tap-nhan-mau-ocp1/**", "_acceptance/truong-nhan-s03-081/**",
+  "_acceptance/the-dia-chi-nhom-s03/ap-may-thu/**",
 ];
 
 export const VUNG = {

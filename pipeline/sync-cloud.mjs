@@ -42,6 +42,7 @@ import { fileURLToPath } from "node:url";
 import pg from "pg";
 import { fold, nameVariants } from "./lib/mask-source-names.mjs";
 import { entriesFromTokens, guardValues } from "./lib/tier-a-guard.mjs";
+import { kiemBangDay, soatDuLieu, thongDiepS16, tokenS16 } from "./lib/s16-soat.mjs";
 
 const REF = "smqpqiigzulwpmrsrhci";
 const MGMT = `https://api.supabase.com/v1/projects/${REF}/database/query`;
@@ -601,7 +602,7 @@ async function gateAnon(exec) {
 
 /** Một lượt đồng bộ. `local`: pg.Client tới DB local (dựng với `types: localTypes`).
  * `exec(sql, opts)` → mảng dòng của câu cuối. Ném PhaseError (`err.phase`) khi gãy. */
-export async function syncOnce({ local, exec, log = console.log, runId = newRunId(), swapPause = 0, sourceTokens } = {}) {
+export async function syncOnce({ local, exec, log = console.log, runId = newRunId(), swapPause = 0, sourceTokens, fill = FILL } = {}) {
   const timings = {};
   const warnings = [];
   const warn = (m) => {
@@ -613,9 +614,11 @@ export async function syncOnce({ local, exec, log = console.log, runId = newRunI
     timings[k] = (Date.now() - t0) / 1000;
     t0 = Date.now();
   };
-  const cloudOf = new Map(FILL.map((t) => [t, RENAME(t)]));
+  // DA33 AC-9: bảng stg S16 / bảng vật thể danh bạ không bao giờ trong danh sách đẩy.
+  const cam = kiemBangDay(fill);
+  if (cam) throw new PhaseError("scan", `bảng ${cam} không được lên cloud (mã đăng nhập S16 / danh bạ vật thể) — dừng trước khi gửi`);
+  const cloudOf = new Map(fill.map((t) => [t, RENAME(t)]));
   let cloudNames = [...cloudOf.values()];
-  let fill = [...FILL];
   let arr = `ARRAY[${cloudNames.map(lit).join(",")}]`;
 
   // 1. catalog
@@ -727,6 +730,11 @@ export async function syncOnce({ local, exec, log = console.log, runId = newRunI
       const list = selectList(t, send, geo.get(t) ?? [], tokens).sql;
       const { rows } = await local.query(localReadSql(t, list));
       data.set(ct, send.length ? rows.map((r) => r.j) : []);
+    }
+    // DA33 AC-9: mã căn, khu_id, toa_id S16 (đăng nhập) không có trong bất kỳ giá trị nào sắp gửi.
+    const hitS16 = soatDuLieu(data, await tokenS16(local));
+    if (hitS16) {
+      throw new PhaseError("scan", thongDiepS16(hitS16));
     }
     const masked = maskedSellerWarning(await countMaskedSeller(local, tokens));
     if (masked) warn(masked);

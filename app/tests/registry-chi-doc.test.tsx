@@ -5,7 +5,6 @@
 // chiều đỏ trên cùng fixture (bản chép mã sang app/tests/.tdb-cu-<pid>/, đổi đúng một chỗ), thông điệp ghim.
 import { after, before, test } from "node:test"
 import assert from "node:assert/strict"
-import { execFileSync } from "node:child_process"
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs"
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
@@ -371,7 +370,10 @@ test("TDB-AC-5 trang một dự án: đầu trang, bốn ô bằng số danh sá
 const CAU_GHI = /\b(INSERT|UPDATE|DELETE|TRUNCATE|CREATE|ALTER|DROP)\b/
 const quetGhi = (files: Record<string, string>) => Object.entries(files).filter(([, s]) => CAU_GHI.test(s)).map(([f]) => f)
 
-test("TDB-AC-6 chỉ đọc: số dòng mười bảng không đổi, lớp đọc không có câu ghi, không migration mới", async () => {
+// Vế «không migration mới» (git diff origin/main...HEAD -- db/migrations rỗng) là phép kiểm MỘT LẦN của riêng hàng trang-danh-ba-chi-doc,
+// đã đạt ở S4 của nó (#472). Để trong bộ hồi quy của main thì nó chặn mọi nhánh mang migration — GS phán gỡ 17/11 (sổ DA33 và sổ
+// trang-danh-ba-chi-doc). Ý chỉ-đọc về sau giữ bằng quetGhi kèm chiều đỏ dưới đây.
+test("TDB-AC-6 chỉ đọc: số dòng mười bảng không đổi, lớp đọc không có câu ghi", async () => {
   const dem = async () => Object.fromEntries(await Promise.all(BANG_DEM.map(async (b) => [b, (await q(`SELECT count(*)::int AS n FROM ${b}`)).rows[0].n])))
   const truoc = await dem()
   await htmlDanhBa()
@@ -380,8 +382,6 @@ test("TDB-AC-6 chỉ đọc: số dòng mười bảng không đổi, lớp đ�
   const thu = join(APP, "src/lib/ops/registry")
   const tep = Object.fromEntries(readdirSync(thu).map((f) => [f, readFileSync(join(thu, f), "utf8")]))
   assert.deepEqual(quetGhi(tep), [])
-  const mig = execFileSync("git", ["diff", "--name-only", "origin/main...HEAD", "--", "db/migrations"], { cwd: ROOT, encoding: "utf8" }).trim()
-  assert.equal(mig, "")
   assert.throws(() => assert.deepEqual(quetGhi({ ...tep, "doc.ts": `${tep["doc.ts"]}\nconst x = "DELETE FROM units"` }), [], "TDB-AC-6 câu ghi trong lớp đọc"), /TDB-AC-6 câu ghi trong lớp đọc/)
 })
 
