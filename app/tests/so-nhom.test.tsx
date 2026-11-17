@@ -207,7 +207,7 @@ async function renderSo(props: Record<string, unknown>, fetchImpl: (b: Record<st
     while (dangChay.size) await act(async () => { await Promise.allSettled([...dangChay]) })
     await tick()
   }
-  const openFor = (code: string) => press(row(code)?.querySelector('[aria-label="Khai thị trường, khu đô thị"]'), `nút khai hàng ${code}`)
+  const openFor = (code: string) => press(row(code)?.querySelector('[aria-label="Khai thị trường, dự án"]'), `nút khai hàng ${code}`)
   /** Mở ô chọn có nhãn `label` trong hộp rồi bấm mục có chữ `ten`. */
   const pick = async (label: string, ten: string) => {
     const lbl = [...(dialog()?.querySelectorAll("label") ?? [])].find((l) => l.textContent?.trim() === label)
@@ -248,7 +248,7 @@ test("SN-AC-8 khu sổ: mọi đơn vị bốn nguồn, không khoá nhóm, nhã
   await u.openFor(s05.unit_code)
   assert.ok(u.dialog()?.textContent?.includes(s05.unit_code))
   await u.pick("Thị trường", "Thị trường thử")
-  await u.pick("Khu đô thị", "Khu đô thị thử")
+  await u.pick("Dự án", "Khu đô thị thử")
   await u.press(u.save(), "nút Lưu")
   assert.deepEqual(u.sent.at(-1), { action: "set-meta", unitCode: s05.unit_code, marketCodes: [THAM_CHIEU.market], projectNodeIds: [THAM_CHIEU.project] })
   assert.deepEqual(await donVi("S05"), { unit_code: s05.unit_code, market_codes: [THAM_CHIEU.market], project_node_ids: [THAM_CHIEU.project] })

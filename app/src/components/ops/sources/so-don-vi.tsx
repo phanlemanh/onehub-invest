@@ -89,7 +89,7 @@ export function SoDonVi({ rows, danhMuc, loi }: { rows: DonViRow[]; danhMuc: Dan
           us.map((x) => (x.unit_code === u.unit_code ? { ...x, market_codes: data.market_codes, project_node_ids: data.project_node_ids } : x)),
         )
         setEditing(null)
-        toast.success("Đã khai thị trường, khu đô thị")
+        toast.success("Đã khai thị trường, dự án")
       } catch {
         setError("Lỗi mạng")
       }
@@ -124,7 +124,7 @@ export function SoDonVi({ rows, danhMuc, loi }: { rows: DonViRow[]; danhMuc: Dan
       size: 200,
     },
     { id: "markets", header: "Thị trường", cell: ({ row }) => danhSach(row.original.market_codes, tenThiTruong as Map<string | number, string>), size: 160 },
-    { id: "projects", header: "Khu đô thị", cell: ({ row }) => danhSach(row.original.project_node_ids, tenDuAn as Map<string | number, string>), size: 160 },
+    { id: "projects", header: "Dự án", cell: ({ row }) => danhSach(row.original.project_node_ids, tenDuAn as Map<string | number, string>), size: 160 },
     {
       id: "status",
       accessorKey: "status",
@@ -145,7 +145,7 @@ export function SoDonVi({ rows, danhMuc, loi }: { rows: DonViRow[]; danhMuc: Dan
           <Button
             size="icon-sm"
             variant="ghost"
-            aria-label="Khai thị trường, khu đô thị"
+            aria-label="Khai thị trường, dự án"
             aria-describedby={`don-vi-${row.original.unit_code}`}
             onClick={() => {
               setError(null)
