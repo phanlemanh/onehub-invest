@@ -11,6 +11,12 @@ từ `main`, ở checkout chính `~/dev/onehub-invest`.
 Bộ nạp `pipeline/import-s16.mjs` là của làn ZCode (LL soát đạt 17/11, nhánh `zcode/import-s16-sach @1c6b6738`, đã gộp vào nhánh
 này). Nó ghi `stg_s16_*` qua đúng hàm `napS16(c, dongS16(items, snapshot_id))` mà E1, E2 đo.
 
+**Điều kiện lúc áp.** Sau khi PR DA33 gộp và checkout chính đã kéo `main`; GS là bên chạy lệnh áp và báo số thật cạnh số diễn tập.
+Chạy bước 3 → 1e liền một mạch trong khung **22:05–23:55 giờ VN** (Chủ nhật: 20:30–23:55): ngoài lượt nạp
+S03 15 phút (07:00–22:00), lượt S06 (05:30, 14:00), lượt nhập Zalo 00:00 và lượt thu Chủ nhật 19:30. Cả chuỗi bước 0 → 1e chạy
+15 giây trên bản chép (phần 2); pg_dump ở bước 3 thêm vài phút. Áp xen một lượt nạp thì `ghi-khoa.sh` vẫn tách đúng dòng của lượt
+dựng (mốc giao dịch), nhưng pg_restore — lối cuối — sẽ mất lượt nạp ấy.
+
 ## 1. Lệnh áp
 
 ### 0. Áp 088 (hai lần — lần hai phải sạch), sau bước 3, trước 1a
@@ -116,6 +122,22 @@ cd ~/dev/onehub-invest && node pipeline/danh-ba-vat-the.mjs --db postgres://onei
 
 Lệnh in một dòng `tong_ket {…}`. Chép nguyên dòng ấy vào báo cáo áp.
 
+Ghi mốc ngay trước và ngay sau lệnh dựng, rồi ghi tệp khoá do chính lượt dựng tạo — tệp này là đầu vào của đường lùi có đích (phần 4):
+
+```bash
+Q(){ docker exec -e PGPASSWORD=oneinvest one-invest-db psql -U oneinvest -h localhost -d oneinvest -Atc "$1"; }
+T0=$(Q "SELECT now()")      # chạy NGAY TRƯỚC lệnh dựng ở trên
+T1=$(Q "SELECT now()")      # chạy NGAY SAU lệnh dựng
+bash ~/dev/onehub-invest/_acceptance/nap-s16-vao-danh-ba/lui/ghi-khoa.sh "$T0" "$T1" \
+  > ~/onehub-backups/db/khoa-da33-$(date -u +%Y%m%dT%H%M%SZ).tsv
+cut -f1 ~/onehub-backups/db/khoa-da33-*.tsv | grep -v '^#' | sort | uniq -c   # phải: 109 buildings · 3051 stacks · 109920 units · 114707 registry_aliases · 60 review_queue
+```
+
+Bộ dựng chạy một giao dịch, nên mọi dòng nó chèn vào `buildings`, `stacks`, `units`, `registry_aliases`, `review_queue` mang cùng
+mốc `now()` của giao dịch ấy; `ghi-khoa.sh` chỉ lấy dòng đúng mốc đó (dòng tiến trình khác ghi cùng khoảng có mốc khác) và dừng nếu
+toà mới mang hơn một mốc. Trước bước 3, chụp dấu vân tay để so khi lùi:
+`bash ~/dev/onehub-invest/_acceptance/nap-s16-vao-danh-ba/lui/dau-van-tay.sh > ~/onehub-backups/db/van-tay-truoc-da33.txt`.
+
 ## 2. Số chạy thử
 
 Ghi ở `do-may-thu.md` của hồ sơ: lượt đo `node pipeline/scripts/danh-ba-s16-that.mjs` (E2, E10) trên bản chép DB máy thu, nạp
@@ -146,6 +168,8 @@ qua mã test:
 | Dựng lần hai | 0 khoá mới | 0 khoá mới |
 | Lùi 088 trước 1e | sạch; ràng buộc trùng bản trước áp; `iso_regions` mất; dữ liệu toà không đổi; áp lại 088 sạch | — |
 | Lùi 088 sau 1e | lỗi `buildings_iso_region_check`, giao dịch lùi trọn (21 toà `VN-66`) | — |
+| Đường lùi có đích (lượt riêng) | áp bước 0 → 1e 9–16 giây; `ghi-khoa.sh`: 109 toà · 3.051 trục · 109.920 căn · 114.707 bí danh · 60 thẻ · 0 khẳng định · 0 nút; `go-khoa.sh` → `lui-nap.sql` → `lui-luoc-do.sql` → `lui-088.sql` 128–185 giây; dấu vân tay sau lùi **trùng** trước áp (lược đồ `public` + số dòng, băm mười bảng); rào chỉ-thêm bật lại 4/4 | — |
+| Ca hỏng của đường lùi | tệp khoá thêm một khoá toà không có: thoát 3, 0 dòng bị gỡ, rào vẫn bật (giao dịch lỗi giữa chừng); tệp khoá của DB khác hoặc thiếu dòng `# db`: thoát 4, không mở giao dịch | — |
 
 Theo khu (toà · căn, sau dựng): Grand Park 77 → 89 · 1.430 → 38.135; Ocean Park 1 121 → 160 · 318 → 34.402; Ocean Park 2 0 → 14 ·
 12.413; Ocean Park 3 0 → 7 · 4.599; Smart City 0 → 37 · 22.119. Toà mới: 12 + 39 + 14 + 7 + 37 = 109. Phương án B chỉ có hai dòng
@@ -178,16 +202,38 @@ ls -la ~/onehub-backups/db/truoc-103-s16-*.dump   # phải khác 0 byte; bộ d�
 
 ## 4. Cách lùi
 
-**Đã dựng (1e chạy rồi).** Bước dựng ghi vào năm bảng — `buildings`, `stacks`, `units`, `registry_aliases` (nguồn `S16`),
-`review_queue` — với khoá mới, chung giao dịch với bước S08, S09. Chưa có ca thử cho việc gỡ chọn lọc từng dòng, nên lối lùi tin
-được là khôi phục bản sao lưu:
+**Đã dựng (1e chạy rồi) — đường lùi có đích, CẦN lời Mạnh tắt rào.** Bốn bảng `buildings`, `stacks`, `units`, `registry_aliases`
+mang rào «chỉ thêm» (055, 082): DELETE bị từ chối. `go-khoa.sh` tắt rào hàng của đúng bốn bảng ấy **trong một giao dịch**, gỡ đúng
+các khoá trong tệp của 1e, bật rào lại rồi mới COMMIT; `DISABLE TRIGGER` là giao dịch, lỗi giữa chừng thì rào về nguyên trạng. Mỗi
+bảng: số dòng xoá phải bằng số khoá trong tệp, lệch thì lùi trọn, không gỡ gì. Tắt rào là sửa luật an toàn danh bạ — chỉ chạy khi
+chữ ký Cổng Bằng chứng ghi rõ đã cho đường lùi này. **Chữ ký phủ việc ÁP; CHẠY đường lùi chỉ làm khi Mạnh gõ lời lùi lúc đó —
+không ai tự chạy.** Tệp khoá ghi tên DB và mốc của lượt dựng; `go-khoa.sh` từ chối (thoát 4, không mở giao dịch) khi DB đích khác
+DB trong tệp hoặc tệp thiếu dòng ấy. Thứ tự (sau đó thì rào 082 nhận lại, nên lùi được 088):
+
+```bash
+cd ~/dev/onehub-invest; L=_acceptance/nap-s16-vao-danh-ba/lui
+P(){ docker exec -i -e PGPASSWORD=oneinvest one-invest-db psql -U oneinvest -h localhost -d oneinvest -v ON_ERROR_STOP=1 -q; }
+bash $L/go-khoa.sh ~/onehub-backups/db/khoa-da33-<thời điểm>.tsv     # gỡ khoá của lượt dựng
+P < $L/lui-nap.sql                                                    # lùi 1d
+P < $L/lui-luoc-do.sql                                                # lùi 110, 103, 1c
+P < $L/lui-088.sql                                                    # lùi bước 0
+bash $L/dau-van-tay.sh | diff ~/onehub-backups/db/van-tay-truoc-da33.txt -   # phải không in gì
+```
+
+Đã thử trên bản chép (phần 2): sau lùi, lược đồ `public` và số dòng + băm nội dung mười bảng (`buildings`, `stacks`, `units`,
+`registry_aliases`, `review_queue`, `field_assertions`, `asset_nodes`, `source_registry`, `airbnb_snapshots`, `iso_regions`) trùng bản
+trước áp; ca tệp khoá bị sửa (thêm một khoá toà không có) thoát 3 và không gỡ dòng nào; rào bật lại 4/4. Giới hạn: thẻ S16 đã có
+người duyệt giữa lúc áp và lúc lùi thì quyết định ấy mất cùng thẻ.
+
+**Lối cuối — khôi phục bản sao lưu** (khi không có lời tắt rào, hoặc dấu vân tay sau lùi lệch):
 
 ```bash
 pg_restore -U oneinvest -h localhost -p 5433 -d oneinvest --clean --if-exists ~/onehub-backups/db/truoc-103-s16-<thời điểm>.dump
 ```
 
-**Giá:** mất mọi dòng ghi vào DB máy thu sau lúc sao lưu (kể cả lượt thu đêm nếu chạy xen). Vì thế bước 3 làm ngay sau một lượt thu,
-và bước 0 → 1e chạy liền một mạch.
+**Giá:** mất mọi dòng ghi vào DB máy thu sau lúc sao lưu — lượt nạp S03 15 phút, S06, Zalo, thẻ đã duyệt; phải nạp lại từ bản thu
+gốc (raw snapshot bất biến nên nạp lại được, nhưng tốn một lượt nạp và các bước sau nó). Vì thế bước 3 làm ngay sau một lượt thu,
+và bước 0 → 1e chạy liền một mạch trong khung ở đầu hồ sơ.
 
 **Chỉ lùi 110 (giữ 103).** Áp lại tệp 103: nó `CREATE OR REPLACE` view `v_s16_can` về đúng định nghĩa của 103, các câu khác
 của 103 là `IF NOT EXISTS` / `DROP … IF EXISTS` rồi `ADD` nên chạy lại không đổi gì khác. Kết quả của view không đổi (hai bản
@@ -208,10 +254,10 @@ DELETE FROM airbnb_snapshots WHERE source = 'S16';
 Lọc theo `source`, không theo mẫu `snapshot_id`: bộ nạp lấy `snapshot_id` từ manifest, chỉ rơi về tên thư mục khi manifest thiếu. Máy thu
 có 0 dòng `airbnb_snapshots` nguồn `S16` trước áp (đo 17/11), nên mọi dòng `S16` sau áp đều do bước 1d ghi.
 
-**Chỉ lùi 088 (bước 0) — CHỈ trước 1e.** Trả hai ràng buộc hai mã của 082, bỏ khoá ngoại và bảng tra. Sau 1e câu này **không chạy
+**Chỉ lùi 088 (bước 0) — trước 1e, hoặc sau `go-khoa.sh`.** Trả hai ràng buộc hai mã của 082, bỏ khoá ngoại và bảng tra. Ngay sau 1e câu này **không chạy
 được**: Ocean Park 2 và Ocean Park 3 nằm ở Hưng Yên (mã tỉnh 33), nên 088 cho 21 toà S16 mới của hai khu ấy mã `VN-66` (14 + 7), và
 ràng buộc hai mã của 082 không nhận chúng — `ADD CONSTRAINT` báo lỗi, giao dịch lùi trọn, 088 giữ nguyên (chiều an toàn). Đã thử
-trên bản chép cả hai ca (phần 2). Đã qua 1e thì lùi bằng khôi phục bản sao lưu ở trên.
+trên bản chép cả hai ca (phần 2). Đã qua 1e thì chạy `go-khoa.sh` trước (gỡ 21 toà ấy cùng các toà khác của lượt), rồi câu này chạy được — xem thứ tự ở trên.
 
 ```sql
 BEGIN;
@@ -253,6 +299,7 @@ SELECT count(*) FROM units;                                                     
 SELECT count(*) FROM units u JOIN stacks s ON s.stack_key = u.stack_key
  WHERE s.building_key <> u.building_key;                                                  -- 0
 SELECT count(*) FROM review_queue WHERE evidence->>'loai' = 'toa-trung-ten';              -- 20 (một thẻ mỗi toa_id trùng tên)
+SELECT count(*) FROM buildings WHERE iso_region = 'VN-66';                               -- 21 (OP2 14 + OP3 7, Hưng Yên; 0 nếu phương án B)
 ```
 
 Câu thứ ba cố ý không chọn `real_name`: kết quả lệnh kiểm có thể được dán vào báo cáo áp gửi qua kênh.
