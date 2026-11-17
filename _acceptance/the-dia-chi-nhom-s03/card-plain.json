@@ -1,0 +1,10 @@
+{
+  "feature_plain": "Người vận hành mở một trang Ops mới, thấy mỗi nhóm Zalo đang thu có một thẻ địa chỉ máy dựng sẵn — dự án, phường và tỉnh, phân khu, nhóm này bán hay cho thuê — kèm số bài làm căn cứ, rồi nhận, sửa hay bác từng thẻ; nhóm thôi đủ điều kiện thì thẻ được cho nghỉ chứ không xoá.",
+  "decisions": [
+    {
+      "id": "E10",
+      "q": "Người duyệt đọc thẻ có biết mỗi ô lấy từ đâu, bao nhiêu bài không?",
+      "why": "Ba người chấm độc lập đều cho là đạt trên ảnh chụp lại: mỗi ô ghi nguồn và số bài, ô trống nói vì sao (chưa đủ căn cứ, kèm số bài đã đọc), và mục «Thẻ địa chỉ nhóm» trong từ điển sản phẩm đủ nhãn, mã, định nghĩa."
+    }
+  ]
+}
