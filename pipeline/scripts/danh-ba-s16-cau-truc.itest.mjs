@@ -273,8 +273,12 @@ test("DA37-AC-7 chiều đỏ: đúc lại căn S16 khi đã có bí danh thì l
   const truoc = (await cA.query("SELECT count(*)::int AS n FROM units")).rows[0].n;
   await banDotBien([
     { tep: "pipeline/danh-ba-vat-the.mjs", thay: [] },
-    { tep: "pipeline/lib/s16-dung.mjs", thay: [["    if (s16.has(vCan)) { tk.can_da_co++; continue; }", "    if (false) { tk.can_da_co++; continue; }"]] },
-  ], (m) => chay37(cA, m)).catch(() => {});
-  const sau = (await cA.query("SELECT count(*)::int AS n FROM units")).rows[0].n;
-  assert.ok(sau > truoc, "đối chứng AC-7: đột biến đúc lại mà không có khoá mới ở lần hai — thước không phân biệt «khoá mới ở lần hai»");
+    { tep: "pipeline/lib/s16-dung.mjs", thay: [["if (s16.has(vCan)) { tk.can_da_co++; continue; }", ""]] },
+  ], async (m) => {
+    // Đỏ ở một trong hai dạng: đúc thêm căn, hoặc ràng buộc bí danh duy nhất chặn cả giao dịch (khoá mới ở lần hai).
+    const loi = await chay37(cA, m).then(() => null, (e) => e);
+    const sau = (await cA.query("SELECT count(*)::int AS n FROM units")).rows[0].n;
+    assert.ok(loi?.constraint === "registry_aliases_ma_nguon_uq" || sau > truoc,
+      "đối chứng AC-7: đột biến đúc lại mà không có khoá mới ở lần hai — thước không phân biệt «khoá mới ở lần hai»");
+  });
 });
