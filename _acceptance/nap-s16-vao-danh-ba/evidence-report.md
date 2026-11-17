@@ -7,13 +7,13 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 57ff16ebda9efc3736fd3d23e9cc4426c2bb7d91
+verified_commit: 5864472a44dcb75eeba57da7f2176c3ee7272e93
 human_signoff:
 ---
 
 # Evidence Report: nap-s16-vao-danh-ba
 
-Round 1. Mười eval máy đều chạy xanh. Verdict tổng là REJECT vì hai lệnh suite hồi quy không gắn eval nào chạy đỏ: suite app (tsc + lint) và suite pipeline_b (một ca vocab-lint). Hai lệnh này được ghi trong mục Lệnh suite bên dưới và trong Iterations.
+Vòng 2. Mười eval gắn AC (E1–E10) đều chạy xanh. Hồ sơ vẫn REJECT vì một lệnh suite hồi quy không gắn eval nào chạy đỏ: `cd app && npm test` (suite app_ui), ca TDB-AC-6 trong `app/tests/registry-chi-doc.test.tsx`. Chi tiết ở mục Lệnh suite bên dưới.
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
@@ -31,143 +31,142 @@ Round 1. Mười eval máy đều chạy xanh. Verdict tổng là REJECT vì hai
 ## Evidence
 
 - eval: E1
-  run_id: minted-nap-s16-vao-danh-ba-E1-r1
+  run_id: minted-nap-s16-vao-danh-ba-E1-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.s16_db
-  verified_at: 2026-11-17T05:00:27Z
+  verified_at: 2026-11-17T06:20:30Z
   output: |
     node --test --test-concurrency=1 pipeline/scripts/danh-ba-s16.itest.mjs
-    ℹ duration_ms 13444.989958
+    duration_ms 22101.955708
+    Cùng lệnh phủ E1, E4, E5, E6, E7, E8 (một lần chạy, một lần xanh).
+
+- eval: E4
+  run_id: minted-nap-s16-vao-danh-ba-E4-r2
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.script.s16_db
+  verified_at: 2026-11-17T06:20:30Z
+  output: |
+    Cùng lệnh danh-ba-s16.itest.mjs với E1 (ca DA33-AC-4).
+
+- eval: E5
+  run_id: minted-nap-s16-vao-danh-ba-E5-r2
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.script.s16_db
+  verified_at: 2026-11-17T06:20:30Z
+  output: |
+    Cùng lệnh danh-ba-s16.itest.mjs với E1 (ca DA33-AC-5).
+
+- eval: E6
+  run_id: minted-nap-s16-vao-danh-ba-E6-r2
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.script.s16_db
+  verified_at: 2026-11-17T06:20:30Z
+  output: |
+    Cùng lệnh danh-ba-s16.itest.mjs với E1 (ca DA33-AC-6).
+
+- eval: E7
+  run_id: minted-nap-s16-vao-danh-ba-E7-r2
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.script.s16_db
+  verified_at: 2026-11-17T06:20:30Z
+  output: |
+    Cùng lệnh danh-ba-s16.itest.mjs với E1 (ca DA33-AC-7, hai DB riêng).
+
+- eval: E8
+  run_id: minted-nap-s16-vao-danh-ba-E8-r2
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.script.s16_db
+  verified_at: 2026-11-17T06:20:30Z
+  output: |
+    Cùng lệnh danh-ba-s16.itest.mjs với E1 (ca DA33-AC-8, dựng ba lần).
 
 - eval: E2
-  run_id: minted-nap-s16-vao-danh-ba-E2-r1
+  run_id: minted-nap-s16-vao-danh-ba-E2-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.s16_that
-  verified_at: 2026-11-17T05:00:27Z
+  verified_at: 2026-11-17T06:20:30Z
   output: |
     node pipeline/scripts/danh-ba-s16-that.mjs
     OK
+    Cùng lệnh phủ E2 và E10.
+
+- eval: E10
+  run_id: minted-nap-s16-vao-danh-ba-E10-r2
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.script.s16_that
+  verified_at: 2026-11-17T06:20:30Z
+  output: |
+    Cùng lệnh danh-ba-s16-that.mjs với E2, in OK.
 
 - eval: E3
-  run_id: minted-nap-s16-vao-danh-ba-E3-r1
+  run_id: minted-nap-s16-vao-danh-ba-E3-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.s16_ham
-  verified_at: 2026-11-17T05:00:27Z
+  verified_at: 2026-11-17T06:20:30Z
   output: |
     node --test pipeline/lib/s16-danh-muc.test.mjs
-    ℹ duration_ms 56.292208
-
-- eval: E4
-  run_id: minted-nap-s16-vao-danh-ba-E4-r1
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.script.s16_db
-  verified_at: 2026-11-17T05:00:27Z
-  output: |
-    node --test --test-concurrency=1 pipeline/scripts/danh-ba-s16.itest.mjs
-    ℹ duration_ms 13444.989958
-
-- eval: E5
-  run_id: minted-nap-s16-vao-danh-ba-E5-r1
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.script.s16_db
-  verified_at: 2026-11-17T05:00:27Z
-  output: |
-    node --test --test-concurrency=1 pipeline/scripts/danh-ba-s16.itest.mjs
-    ℹ duration_ms 13444.989958
-
-- eval: E6
-  run_id: minted-nap-s16-vao-danh-ba-E6-r1
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.script.s16_db
-  verified_at: 2026-11-17T05:00:27Z
-  output: |
-    node --test --test-concurrency=1 pipeline/scripts/danh-ba-s16.itest.mjs
-    ℹ duration_ms 13444.989958
-
-- eval: E7
-  run_id: minted-nap-s16-vao-danh-ba-E7-r1
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.script.s16_db
-  verified_at: 2026-11-17T05:00:27Z
-  output: |
-    node --test --test-concurrency=1 pipeline/scripts/danh-ba-s16.itest.mjs
-    ℹ duration_ms 13444.989958
-
-- eval: E8
-  run_id: minted-nap-s16-vao-danh-ba-E8-r1
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.script.s16_db
-  verified_at: 2026-11-17T05:00:27Z
-  output: |
-    node --test --test-concurrency=1 pipeline/scripts/danh-ba-s16.itest.mjs
-    ℹ duration_ms 13444.989958
+    duration_ms 68.5005
 
 - eval: E9
-  run_id: minted-nap-s16-vao-danh-ba-E9-r1
+  run_id: minted-nap-s16-vao-danh-ba-E9-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.s16_soat
-  verified_at: 2026-11-17T05:00:27Z
+  verified_at: 2026-11-17T06:20:30Z
   output: |
     node --test pipeline/lib/s16-soat.test.mjs
-    ℹ duration_ms 161.1515
-
-- eval: E10
-  run_id: minted-nap-s16-vao-danh-ba-E10-r1
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.script.s16_that
-  verified_at: 2026-11-17T05:00:27Z
-  output: |
-    node pipeline/scripts/danh-ba-s16-that.mjs
-    OK
+    duration_ms 174.647125
 
 ### Lệnh suite (hồi quy)
 
 - cmd: node scripts/suite-neu-doi.mjs agent -- 'cd agent && npm test'
-  run_id: minted-nap-s16-vao-danh-ba-SUITE-node_scripts_suite_neu_doi_mjs_agent_cd_-r1
+  run_id: minted-nap-s16-vao-danh-ba-SUITE-node_scripts_suite_neu_doi_mjs_agent_cd_-r2
   exit_code: 0
-  verified_at: 2026-11-17T05:00:27Z
+  verified_at: 2026-11-17T06:20:30Z
 
 - cmd: node scripts/suite-neu-doi.mjs app -- 'cd app && npx tsc --noEmit && npm run lint'
-  run_id: minted-nap-s16-vao-danh-ba-SUITE-lint-r1
-  exit_code: 2
-  verified_at: 2026-11-17T05:00:27Z
-  note: tsc báo thiếu tên kiểu toàn cục LayoutProps, PageProps ở sáu tệp layout/page của app (TS2304); các tệp này không nằm trong diff của hàng.
+  run_id: minted-nap-s16-vao-danh-ba-SUITE-lint-r2
+  exit_code: 0
+  verified_at: 2026-11-17T06:20:30Z
 
 - cmd: node scripts/suite-neu-doi.mjs app_ui -- 'cd app && npm test'
-  run_id: minted-nap-s16-vao-danh-ba-SUITE-node_scripts_suite_neu_doi_mjs_app_ui_cd-r1
-  exit_code: 0
-  verified_at: 2026-11-17T05:00:27Z
+  run_id: minted-nap-s16-vao-danh-ba-SUITE-node_scripts_suite_neu_doi_mjs_app_ui_cd-r2
+  exit_code: 1
+  verified_at: 2026-11-17T06:20:30Z
+  output: |
+    1181 ca, 1171 đạt, 1 đỏ, 9 bỏ qua.
+    Ca đỏ: tests/registry-chi-doc.test.tsx, «TDB-AC-6 chỉ đọc: số dòng mười bảng không đổi, lớp đọc không có câu ghi, không migration mới».
+    Ca khẳng định không có migration mới so với mốc, nhưng thấy hai tệp: db/migrations/103_stg_s16.sql và db/migrations/110_v_s16_can_nhanh.sql, là hai migration của chính hàng này.
+    Lệnh này không gắn eval nào của hợp đồng nên không vào failed_evals; vẫn là hồi quy đỏ, cần người quyết (sửa ca TDB-AC-6 cho chấp nhận migration của hàng này, hay xác nhận ca thuộc hàng khác).
 
 - cmd: node scripts/suite-neu-doi.mjs pipeline_a -- 'cd pipeline && npm run test:a'
-  run_id: minted-nap-s16-vao-danh-ba-SUITE-test_a-r1
+  run_id: minted-nap-s16-vao-danh-ba-SUITE-test_a-r2
   exit_code: 0
-  verified_at: 2026-11-17T05:00:27Z
+  verified_at: 2026-11-17T06:20:30Z
 
 - cmd: node scripts/suite-neu-doi.mjs pipeline_b -- 'cd pipeline && npm run test:b'
-  run_id: minted-nap-s16-vao-danh-ba-SUITE-test_b-r1
-  exit_code: 1
-  verified_at: 2026-11-17T05:00:27Z
-  note: 577 ca qua, 1 ca đỏ là VL-AC-5 (scripts/vocab-lint.test.mjs:169): cây thật còn một chỗ viết tay ngoài sổ ở pipeline/scripts/danh-ba-s16-that.mjs:110 (alias_kind · ma_nguon,ten).
+  run_id: minted-nap-s16-vao-danh-ba-SUITE-test_b-r2
+  exit_code: 0
+  verified_at: 2026-11-17T06:20:30Z
 
 - cmd: node scripts/suite-neu-doi.mjs ui_lint_rules -- 'cd app && npm run test:lint-rules'
-  run_id: minted-nap-s16-vao-danh-ba-SUITE-test_lint_rules-r1
+  run_id: minted-nap-s16-vao-danh-ba-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-11-17T05:00:27Z
+  verified_at: 2026-11-17T06:20:30Z
 
 - cmd: node scripts/suite-neu-doi.mjs portal_static -- 'node scripts/check-portal-compliance.mjs'
-  run_id: minted-nap-s16-vao-danh-ba-SUITE-node_scripts_suite_neu_doi_mjs_portal_st-r1
+  run_id: minted-nap-s16-vao-danh-ba-SUITE-node_scripts_suite_neu_doi_mjs_portal_st-r2
   exit_code: 0
-  verified_at: 2026-11-17T05:00:27Z
+  verified_at: 2026-11-17T06:20:30Z
 
 ## Known limits
 
@@ -177,11 +176,13 @@ Round 1. Mười eval máy đều chạy xanh. Verdict tổng là REJECT vì hai
 
 none — moi eval feature deu red tren baseline (co phan biet)
 
-Baseline khong do:
-- node --test --test-concurrency=1 pipeline/scripts/danh-ba-s16.itest.mjs: bo qua baseline: tep pipeline/scripts/danh-ba-s16.itest.mjs co o cay dang kiem nhung chua co o merge-base e03a02156c2c2a154499a39a0b5cb82ba4261fea — eval moi, chay tren code cu khong phan biet gi
-- node pipeline/scripts/danh-ba-s16-that.mjs: bo qua baseline: tep pipeline/scripts/danh-ba-s16-that.mjs co o cay dang kiem nhung chua co o merge-base e03a02156c2c2a154499a39a0b5cb82ba4261fea — eval moi, chay tren code cu khong phan biet gi
-- node --test pipeline/lib/s16-danh-muc.test.mjs: bo qua baseline: tep pipeline/lib/s16-danh-muc.test.mjs co o cay dang kiem nhung chua co o merge-base e03a02156c2c2a154499a39a0b5cb82ba4261fea — eval moi, chay tren code cu khong phan biet gi
-- node --test pipeline/lib/s16-soat.test.mjs: bo qua baseline: tep pipeline/lib/s16-soat.test.mjs co o cay dang kiem nhung chua co o merge-base e03a02156c2c2a154499a39a0b5cb82ba4261fea — eval moi, chay tren code cu khong phan biet gi
+Ghi chú trung thực: không eval nào có baseline đo được (cả mười là n-a), nên dòng trên nghĩa là máy không phát hiện eval không-phân-biệt, không phải đã chứng minh phân biệt.
+
+Baseline khong do
+- node --test --test-concurrency=1 pipeline/scripts/danh-ba-s16.itest.mjs: bo qua baseline: tep pipeline/scripts/danh-ba-s16.itest.mjs co o cay dang kiem nhung chua co o merge-base 5508f6209d5abe3ee654ca0738745155d7bfc3e6 — eval moi, chay tren code cu khong phan biet gi
+- node pipeline/scripts/danh-ba-s16-that.mjs: bo qua baseline: tep pipeline/scripts/danh-ba-s16-that.mjs co o cay dang kiem nhung chua co o merge-base 5508f6209d5abe3ee654ca0738745155d7bfc3e6 — eval moi, chay tren code cu khong phan biet gi
+- node --test pipeline/lib/s16-danh-muc.test.mjs: bo qua baseline: tep pipeline/lib/s16-danh-muc.test.mjs co o cay dang kiem nhung chua co o merge-base 5508f6209d5abe3ee654ca0738745155d7bfc3e6 — eval moi, chay tren code cu khong phan biet gi
+- node --test pipeline/lib/s16-soat.test.mjs: bo qua baseline: tep pipeline/lib/s16-soat.test.mjs co o cay dang kiem nhung chua co o merge-base 5508f6209d5abe3ee654ca0738745155d7bfc3e6 — eval moi, chay tren code cu khong phan biet gi
 
 ## Variance
 
@@ -189,4 +190,5 @@ none — every multi-run eval is uniform
 
 ## Iterations
 
-Round 1: mười eval máy E1–E10 xanh; hai lệnh suite không gắn eval chạy đỏ (app: tsc thiếu kiểu LayoutProps/PageProps; pipeline_b: vocab-lint VL-AC-5 trúng pipeline/scripts/danh-ba-s16-that.mjs:110). Trả lại phần triển khai; cần ghi chỗ viết tay đó vào sổ vocab-lint hoặc đọc hằng sinh, và xác minh lỗi kiểu của app có từ trước hay không.
+Round 1: vòng review 1 ghi các mục ngoài hợp đồng (xem review-findings.md), chưa có mục nào làm hỏng eval.
+Round 2: E1–E10 xanh; REJECT vì lệnh suite app_ui đỏ ở ca TDB-AC-6 của registry-chi-doc.test.tsx (thấy migration 103 và 110 của chính hàng này). Trả về triển khai/người quyết.
