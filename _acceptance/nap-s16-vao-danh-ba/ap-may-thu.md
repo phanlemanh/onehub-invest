@@ -179,6 +179,12 @@ Theo khu (toà · căn, sau dựng): Grand Park 77 → 89 · 1.430 → 38.135; O
 không phải `VN-HN`. E10 đo bằng mã tỉnh suy theo thành phố nên cho cùng số đếm mà khác mã tỉnh ở 21 toà ấy; số đếm của phần này là
 số của đường áp thật.
 
+**Cơ cấu 60 thẻ S16** (đếm trên bản chép sau lối A, 17/11): 38 «căn có mã nằm dưới nhiều toà» (`can-mo-ho` — chính S16 ghi một
+mã căn dưới nhiều toà, không phải lệch S08), 20 «toà S16 trùng tên» (`toa-trung-ten`), 2 «căn S08 cùng mã nằm ở toà khác»
+(`can-lech-toa` — lệch S08↔S16, Grand Park). Hàng này áp theo luật cũ (lệch → thẻ, luật xếp phân khu cũ). Quyết định 17/11 của Mạnh
+(S16 thắng cấu trúc, phân khu từ khu S16) làm ở hàng nối tiếp: 2 thẻ lệch S08↔S16 sẽ được cho nghỉ tự động (căn S08 gộp vào căn S16
+qua `merged_into`, rào cho phép). 38 thẻ mơ hồ và 20 thẻ trùng tên KHÔNG nằm trong quyết định ấy — vẫn cần người (hoặc một luật mới).
+
 **Giới hạn đã biết — 20 `toa_id` / 10 tên toà trùng chờ duyệt.** Toà S16 trùng tên chuẩn hoá trong cùng dự án không được đúc;
 2.489 căn của chúng chưa vào danh bạ (OP1 6 toa_id / 821 căn, GP 4 / 64, OP2 2 / 178, OP3 8 / 1.426). Mỗi `toa_id` có một thẻ
 «toà S16 trùng tên» ở `/ops/review`, mang chỉ mục che của mọi ứng viên và số căn mỗi bên. Đường mở: người duyệt thẻ.
@@ -186,9 +192,12 @@ số của đường áp thật.
 **Giới hạn đã biết — 109 toà S16 mới treo thẳng dưới dự án, 0 dưới phân khu.** Luật tìm phân khu của bước dựng chỉ xét nút loại
 `building` khớp tên tuyệt đối: OP1, OP2, OP3, Smart City có 0 nút như vậy; Grand Park có 3 nút nhưng không toà nào khớp tên. Theo dự
 án: GP 12, OP1 39, OP2 14, OP3 7, Smart City 37 — cả 109 dưới nút dự án. Sửa ở hàng cấu trúc sau (chờ Mạnh trả lời Q-A/Q-B/Q-C của
-bản phân tích cấu trúc danh bạ). Chuyển cha của toà là một `UPDATE buildings SET region_node_id`, lùi được, **không đụng căn**: căn
-và trục trỏ toà qua `building_key`; UPI của toà S16 không chứa nút cha; không bước nào chèn lại toà đã có; bước S16 không ghi phường
-suy từ nút cha. Trang `/ops/registry` vẽ cây theo `region_node_id`, nên đổi cha xong cây hiện đúng ngay.
+bản phân tích cấu trúc danh bạ — Mạnh trả lời 17/11: phân khu đúc từ danh sách khu S16, làm ở hàng nối tiếp). **Chuyển cha của toà
+KHÔNG làm được bằng một `UPDATE`:** rào chỉ-thêm của `buildings` (`vat_the_chi_them`, 082) chỉ cho đổi `status`, `merged_into` —
+đổi `region_node_id` bị từ chối (đã thử trên bản chép 17/11). Hàng nối tiếp phải chọn một trong hai: (i) migration mới cho rào nhận
+thêm `region_node_id` (kèm sự kiện danh bạ) — là sửa luật an toàn, cần lời Mạnh; hoặc (ii) đúc toà mới dưới phân khu rồi gộp toà cũ vào
+(`merged_into`) — rào cho phép, nhưng toà mới có UPI mới và căn, trục trỏ toà qua `building_key` không đổi được, nên phải đúc lại và
+gộp 109.920 căn, 3.051 trục. Căn và trục KHÔNG phải đụng ở lối (i). Trang `/ops/registry` vẽ cây theo `region_node_id`.
 
 ## 3. Sao lưu trước áp
 
