@@ -1,32 +1,23 @@
 #!/usr/bin/env bash
-# E6 (AC-6): tái hiện hai lần đỏ thật. Bộ chọn + lệnh suite của HEAD, tệp khai của HEAD (--khai), chạy trên worktree tạm
-# của đỉnh cũ (đỉnh cũ chưa có bộ chọn). Gốc so sánh = merge-base của đỉnh với origin/main (hai PR gộp kiểu squash nên đỉnh
-# không nằm trong main). Kỳ vọng: tệp được chọn VÀ lệnh đỏ đúng ca. Thoát 1 gọi tên đỉnh khi lệch.
+# E3/E4 (AC-3, AC-4): tái hiện một lần đỏ thật. Lệnh --chay-scripts của HEAD chạy trọn bộ scripts theo các bước CI trên
+# worktree tạm của đỉnh cũ (--root). Kỳ vọng: lệnh thoát khác 0 VÀ ca đỏ đã biết nằm trong danh sách đỏ.
+#   bash tai-hien.sh 471   → 5b02c3de (cha của bản vá 8d5b75b1), ca «(5) bước thu lỗi» của scripts/s05-khoa-nap.test.mjs
+#   bash tai-hien.sh 472   → f3fecd5f, ca DT-AC-7 của scripts/db-thu.test.mjs
 set -uo pipefail
+case "${1:-}" in
+  471) SHA=5b02c3de0; TEP=scripts/s05-khoa-nap.test.mjs; MAU="(5) bước thu lỗi" ;;
+  472) SHA=f3fecd5f6; TEP=scripts/db-thu.test.mjs; MAU="DT-AC-7" ;;
+  *) echo "dùng: bash tai-hien.sh 471|472"; exit 2 ;;
+esac
 GOC=$(git rev-parse --show-toplevel)
 HEAD_SHA=$(git -C "$GOC" rev-parse HEAD)
-LENH="$GOC/scripts/suite-neu-doi.mjs"
-KHAI="$GOC/scripts/suite-scripts-vung.json"
-TAM=$(mktemp -d)
-WTS=()
-don() { for w in "${WTS[@]}"; do git -C "$GOC" worktree remove --force "$w" >/dev/null 2>&1; done; rm -rf "$TAM"; }
-trap don EXIT
-loi=0
-ca() { # <sha> <tệp test kỳ vọng> <đầu tên ca đỏ>
-  local sha=$1 tep=$2 mau=$3 wt="$TAM/wt-$1" base out rc
-  git -C "$GOC" worktree add -q --detach "$wt" "$sha" || { echo "tai-hien: ĐỎ — không dựng được worktree $sha"; loi=1; return; }
-  WTS+=("$wt")
-  bash "$GOC/scripts/dung-worktree-cham.sh" "$wt" --khong-tsc >/dev/null 2>&1
-  base=$(git -C "$GOC" merge-base "$sha" origin/main)
-  out=$(SUITE_NEU_DOI_BASE="$base" node "$LENH" --chay-scripts --root "$wt" --khai "$KHAI" 2>&1); rc=$?
-  echo "== $sha · bộ chọn @${HEAD_SHA:0:9} · gốc ${base:0:9} · lệnh thoát $rc"
-  echo "$out" | grep -E "^suite-neu-doi: scripts" ; echo "$out" | grep -F "  $tep ←"
-  if ! echo "$out" | grep -qF "  $tep ←"; then echo "tai-hien: ĐỎ — $sha: $tep không được chọn"; loi=1; return; fi
-  if [ "$rc" -eq 0 ]; then echo "tai-hien: ĐỎ — $sha: lệnh suite xanh, kỳ vọng đỏ ở $tep"; loi=1; return; fi
-  if ! echo "$out" | grep -E "^\s*(not ok|✖)" | grep -qF "$mau"; then echo "tai-hien: ĐỎ — $sha: ca đỏ «$mau» không xuất hiện"; loi=1; return; fi
-  echo "tai-hien: $sha đỏ đúng «$mau» ở $tep"
-}
-ca 5b02c3de0 scripts/s05-khoa-nap.test.mjs "(5) bước thu lỗi"
-ca f3fecd5f6 scripts/db-thu.test.mjs "DT-AC-7"
-[ "$loi" -eq 0 ] && echo "tai-hien: xanh — hai lần đỏ thật tái hiện qua bộ chọn @${HEAD_SHA:0:9}"
-exit "$loi"
+TAM=$(mktemp -d); WT="$TAM/wt"
+trap 'git -C "$GOC" worktree remove --force "$WT" >/dev/null 2>&1; rm -rf "$TAM"' EXIT
+git -C "$GOC" worktree add -q --detach "$WT" "$SHA" || { echo "tai-hien: ĐỎ — không dựng được worktree $SHA"; exit 1; }
+bash "$GOC/scripts/dung-worktree-cham.sh" "$WT" --khong-tsc >/dev/null 2>&1
+OUT=$(node "$GOC/scripts/suite-neu-doi.mjs" --chay-scripts --root "$WT" 2>&1); RC=$?
+echo "== #$1 · đỉnh $SHA · lệnh @${HEAD_SHA:0:9} · thoát $RC"
+echo "$OUT" | tail -1
+if [ "$RC" -eq 0 ]; then echo "tai-hien: ĐỎ — #$1 ($SHA): lệnh xanh, kỳ vọng đỏ ở $TEP"; exit 1; fi
+if ! echo "$OUT" | grep -E "^\s*(✖|not ok)" | grep -qF "$MAU"; then echo "tai-hien: ĐỎ — #$1 ($SHA): ca «$MAU» của $TEP không nằm trong danh sách đỏ"; exit 1; fi
+echo "tai-hien: xanh — #$1 ($SHA) đỏ đúng «$MAU» ở $TEP"
