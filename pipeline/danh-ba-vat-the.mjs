@@ -24,7 +24,7 @@ import { khoaNhomThat } from "./lib/eval-labels.mjs";
 import { NOI_KHU_S09 } from "./lib/s09-du-an.mjs";
 import { buocS09 } from "./lib/s09-dung.mjs";
 import { NOI_DU_AN_S16 } from "./lib/s16-danh-muc.mjs";
-import { buocS16, napS16TheoKhu, theLechS16 } from "./lib/s16-dung.mjs";
+import { buocS16, ganLechS16, napS16TheoKhu } from "./lib/s16-dung.mjs";
 
 export const KHU_MAC_DINH = Object.freeze(["vinhomes-ocean-park-1", "vinhomes-grand-park"]);
 const ISO = Object.freeze({ hanoi: "VN-HN", hcmc: "VN-SG" });
@@ -122,7 +122,7 @@ export async function dung(c, {
     // DA33 §5.5: toà, trục, căn S16 đã có của khu — bước S08 gắn bí danh vào chúng thay vì đúc; lệch toà → thẻ.
     const s16TheoKhu = await napS16TheoKhu(c, khuIds);
     const kh = keHoachDung({ dongS08: s08, biDanh, phanKhuTheoKhu, s16TheoKhu });
-    const theLech = await theLechS16(c, kh.lechS16);
+    const ganLech = await ganLechS16(c, kh.lechS16);
 
     // Ghi: toà → trục → căn → bí danh.
     const toaMoi = kh.toa.filter((t) => t.moi);
@@ -251,7 +251,7 @@ export async function dung(c, {
       ly_do_phuong: lyDoPhuong,
       s09,
       s16,
-      s08_lech_s16: theLech,
+      s08_lech_s16: ganLech.choNghi, s08_bi_danh_can_s16: ganLech.biDanh,
     };
   } catch (e) {
     await c.query("ROLLBACK").catch(() => {});

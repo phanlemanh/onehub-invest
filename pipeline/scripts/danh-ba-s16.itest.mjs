@@ -241,7 +241,7 @@ async function moiDuLieu(c, { s08 = true, s16 = true } = {}) {
 const q = async (c, s, p = []) => (await c.query(s, p)).rows;
 const mot = async (c, s, p = []) => (await c.query(s, p)).rows[0];
 const doiTuong = async (c, v, src = "S16") => (await mot(c, "SELECT object_key FROM registry_aliases WHERE kind = 'ma_nguon' AND source = $2 AND value = $1", [v, src]))?.object_key;
-const canCua = async (c, k) => mot(c, "SELECT unit_key, building_key, stack_key, floor, sub_id FROM units WHERE unit_key = $1", [k]);
+const canCua = async (c, k) => mot(c, "SELECT unit_key, building_key, stack_key, floor, sub_id, status, merged_into FROM units WHERE unit_key = $1", [k]);
 async function anhVatThe(c) {
   return {
     can: await q(c, "SELECT unit_key, building_key, stack_key, floor FROM units ORDER BY 1"),
@@ -317,11 +317,15 @@ test("DA33-AC-5/6 thẻ S16 không mang giá trị đăng nhập (đối chứng
   }
 });
 
-test("DA33-AC-6 căn: S08 cùng toà → bí danh; lệch toà → thẻ; mới có trục/tầng; mã lô không trục; không trùng", async () => {
+test("DA33-AC-6 căn: S08 cùng toà → bí danh; lệch toà → S16 thắng (DA37 Q-B); mới có trục/tầng; mã lô không trục; không trùng", async () => {
   const c1 = await doiTuong(db, "q8/Q12-11-01", "S08");
   assert.equal(await doiTuong(db, `${DA}/Q12-11-01`), c1, "DA33-AC-6 căn S08 cùng toà không nhận bí danh S16");
-  assert.equal(await doiTuong(db, `${DA}/Q12-11-05`), undefined, "DA33-AC-6 căn lệch toà được ghi");
-  assert.equal((await q(db, "SELECT 1 FROM review_queue WHERE evidence->>'loai' = 'can-lech-toa'")).length, 1, "DA33-AC-6 lệch toà không ra một thẻ");
+  // DA37 Q-B: lệch toà → căn S16 đúc ở toà S16, căn S08 gộp vào nó, không thẻ chờ (sổ DA37 dòng fix S3)
+  const c16 = await doiTuong(db, `${DA}/Q12-11-05`);
+  assert.ok(c16, "DA37-Q-B căn S16 lệch toà không được đúc");
+  const c08 = await canCua(db, await doiTuong(db, "q8/Q12-11-05", "S08"));
+  assert.deepEqual([c08.status, c08.merged_into], ["merged", c16], "DA37-Q-B căn S08 lệch toà không gộp vào căn S16");
+  assert.equal((await q(db, "SELECT 1 FROM review_queue WHERE evidence->>'loai' = 'can-lech-toa' AND status = 'pending'")).length, 0, "DA37-Q-B lệch toà vẫn ra thẻ chờ");
   const c2 = await canCua(db, await doiTuong(db, `${DA}/Q12-11-02`));
   assert.ok(c2.stack_key, "DA33-AC-6 căn mới tách được không có trục");
   assert.equal(c2.floor, "11", "DA33-AC-6 tầng căn mới");
@@ -404,13 +408,15 @@ async function banDotBien(ds, chayFn) {
   }
 }
 const chayVoi = (m, c) => m.dung(c, { khuSlugs: [KHU_A, KHU_B], isoTheo: () => "VN-HN", noiS09: {}, noiS16: NOI, log, runId: "da33-itest" });
+// Q-B (DA37): đếm trên căn SỐNG — căn S08 đã gộp (merged_into) quy về căn nó gộp vào; thẻ đếm là thẻ còn chờ.
 async function theoMa(c, ma) {
-  const can = await q(c, `SELECT DISTINCT object_key FROM registry_aliases WHERE kind = 'ma_nguon' AND object_key LIKE 'unt_%'
-                           AND ((source = 'S08' AND value = $1) OR (source = 'S16' AND value = $2))`, [`q8/${ma}`, `${DA}/${ma}`]);
-  const ca = await mot(c, `SELECT count(*) FILTER (WHERE source = 'S08')::int AS s08, count(*) FILTER (WHERE source = 'S16')::int AS s16
-                             FROM registry_aliases WHERE object_key = $1 AND kind = 'ma_nguon'`, [can[0]?.object_key ?? ""]);
-  const the = (await mot(c, "SELECT count(*)::int AS n FROM review_queue WHERE item_id = $1", [`s16:${s16Ref(DA, ma)}`])).n;
-  return { so_can: can.length, s08: ca.s08, s16: ca.s16, the };
+  const giu = await q(c, `SELECT a.source, CASE WHEN u.status = 'merged' THEN u.merged_into ELSE u.unit_key END AS song
+                            FROM registry_aliases a JOIN units u ON u.unit_key = a.object_key
+                           WHERE a.kind = 'ma_nguon' AND a.retired_at IS NULL
+                             AND ((a.source = 'S08' AND a.value = $1) OR (a.source = 'S16' AND a.value = $2))`, [`q8/${ma}`, `${DA}/${ma}`]);
+  const song = [...new Set(giu.map((r) => r.song))];
+  const the = (await mot(c, "SELECT count(*)::int AS n FROM review_queue WHERE item_id = $1 AND status = 'pending'", [`s16:${s16Ref(DA, ma)}`])).n;
+  return { so_can: song.length, s08: giu.filter((r) => r.source === "S08").length, s16: giu.filter((r) => r.source === "S16").length, the };
 }
 const toaTen = async (c, ten) => (await mot(c, `SELECT count(DISTINCT object_key)::int AS n FROM registry_aliases WHERE kind = 'ten' AND value = $1`, [ten])).n;
 
@@ -426,9 +432,9 @@ test("DA33-AC-7 dựng S16 trước rồi S08 cho cùng tập căn và thẻ nh�
   }
   const lech = [await theoMa(db, "Q12-11-05"), await theoMa(c2, "Q12-11-05")];
   for (const [i, x] of lech.entries()) {
-    assert.equal(x.so_can, 1, `DA33-AC-7 thứ tự: mã khác toà không đúng một căn ở DB ${i + 1}`);
-    assert.equal(x.the, 1, `DA33-AC-7 lệch toà: không đúng một thẻ ở DB ${i + 1}`);
-    assert.equal(x.s08 + x.s16, 1, `DA33-AC-7 lệch toà: căn mang cả hai bí danh ở DB ${i + 1}`);
+    assert.equal(x.so_can, 1, `DA33-AC-7 thứ tự: mã khác toà không đúng một căn sống ở DB ${i + 1}`);
+    assert.equal(x.the, 0, `DA37-Q-B lệch toà: còn thẻ chờ ở DB ${i + 1}`);
+    assert.deepEqual([x.s08, x.s16], [1, 1], `DA37-Q-B lệch toà: căn sống không nhận đủ bí danh S08 và S16 ở DB ${i + 1}`);
   }
   assert.equal(await toaTen(c2, "Q12"), 1, "DA33-AC-7 thứ tự: toà Q12 bị đúc hai lần");
   assert.deepEqual(await trungKhoa(c2), { ma_hai_doi_tuong: 0, can_hai_bi_danh_s16: 0 });
@@ -444,18 +450,16 @@ test("DA33-AC-7 chiều đỏ: bỏ tra bí danh S16 trong bước S08 thì mã 
   assert.equal((await theoMa(c, "Q12-11-01")).so_can, 2, "đối chứng thứ tự: đột biến không làm mã chung thành hai căn");
 });
 
-test("DA33-AC-7 chiều đỏ: bỏ kiểm toà trong bước S08 thì gắn bí danh lệch toà, 0 thẻ", async () => {
+test("DA33-AC-7 chiều đỏ (DA37 Q-B): bỏ bước gắn bí danh S08 vào căn S16 lệch toà thì căn sống thiếu bí danh S08", async () => {
   const c = await dbMoi("d2");
   await moiDuLieu(c, { s08: false });
   await chay(c);
   await moiDuLieu(c, { s16: false });
   await banDotBien([
-    { tep: "pipeline/danh-ba-vat-the.mjs", thay: [] },
-    { tep: "pipeline/lib/danh-ba-vat-the.mjs", thay: [["if (canS16 && canS16.building_key !== t.key) {", "if (false) {"]] },
+    { tep: "pipeline/danh-ba-vat-the.mjs", thay: [["const ganLech = await ganLechS16(c, kh.lechS16);", "const ganLech = { biDanh: 0, choNghi: 0 };"]] },
   ], (m) => chayVoi(m, c));
   const x = await theoMa(c, "Q12-11-05");
-  assert.equal(x.the, 0, "đối chứng lệch toà: đột biến vẫn ra thẻ");
-  assert.equal(x.s08 + x.s16, 2, "đối chứng lệch toà: đột biến không gắn bí danh lệch toà");
+  assert.equal(x.s08, 0, "đối chứng Q-B: đột biến bỏ gắn bí danh mà căn sống vẫn có bí danh S08");
 });
 
 test("DA33-AC-6 chiều đỏ: bỏ tra căn S08 thì mã S08 cùng toà có căn trùng", async () => {

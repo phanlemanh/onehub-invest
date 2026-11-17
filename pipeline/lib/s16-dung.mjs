@@ -32,6 +32,16 @@ export async function theDuyet(c, ref, title, evidence) {
   return r.rowCount;
 }
 
+/** Q-B (DA37): thẻ lệch toà đang chờ của mã này cho nghỉ — S16 thắng cấu trúc; không đúc thẻ mới. Trả số thẻ đổi. */
+export const GHI_CHU_NGHI = "S16 thắng cấu trúc (DA37)";
+export async function choNghiTheLech(c, ref) {
+  const r = await c.query(
+    `UPDATE review_queue SET status = 'rejected', decision_note = $2, decided_by = 'may-da37', decided_at = now()
+      WHERE item_type = 'entity_match' AND item_id = $1 AND status = 'pending' AND evidence ->> 'loai' = 'can-lech-toa'`,
+    [`s16:${ref}`, GHI_CHU_NGHI]);
+  return r.rowCount;
+}
+
 async function chenBiDanh(c, ds, kind) {
   if (!ds.length) return 0;
   const r = await c.query(
@@ -190,7 +200,7 @@ async function dungMotDuAn(c, { du_an, k, iso, taoKhoa, ra }) {
     const p = r.value.split("/");
     if (p.length >= 3) trucCo.set(`${r.building_key}|${chuanHoaTenToa(p[p.length - 2])}|${p[p.length - 1]}`, r.stack_key);
   }
-  const trucMoi = [], canMoi = [], biDanhCan = [], biDanhTruc = [];
+  const trucMoi = [], canMoi = [], biDanhCan = [], biDanhTruc = [], gop = [];
   for (const r of canS16) {
     const ma = khoaMa(r.ma_can);
     if (r.mo_ho) {
@@ -209,12 +219,11 @@ async function dungMotDuAn(c, { du_an, k, iso, taoKhoa, ra }) {
         biDanhCan.push({ k: cu.unit_key, v: vCan });
         s16.set(vCan, cu.unit_key);
         tk.can_s08_bi_danh++;
-      } else {
-        tk.can_lech_toa++;
-        tk.the_moi += await theDuyet(c, s16Ref(du_an, ma), "S16: căn S08 cùng mã nằm ở toà khác",
-          { loai: "can-lech-toa", khoa_can: cu.unit_key, khoa_toa: [cu.building_key, bkey].sort() });
+        continue;
       }
-      continue;
+      // Q-B (DA37): S16 thắng về căn thuộc toà — đúc căn S16 ở toà S16 (dưới đây), căn S08 gộp vào sau khi chèn.
+      tk.can_lech_toa++;
+      gop.push({ cu: cu.unit_key, vCan, ref: s16Ref(du_an, ma) });
     }
     const key = taoKhoa("unt");
     const kq = tachMa(ma);
@@ -252,6 +261,15 @@ async function dungMotDuAn(c, { du_an, k, iso, taoKhoa, ra }) {
   }
   await chenBiDanh(c, biDanhTruc, "ma_nguon");
   for (let i = 0; i < biDanhCan.length; i += 5000) await chenBiDanh(c, biDanhCan.slice(i, i + 5000), "ma_nguon");
+  // Q-B: căn S08 lệch toà gộp vào căn S16 vừa đúc (rào 082 cho đổi status, merged_into); thẻ lệch cũ cho nghỉ.
+  tk.can_s08_gop = 0; tk.the_cho_nghi = 0;
+  for (const g of gop) {
+    const moi = s16.get(g.vCan);
+    if (!moi) continue;
+    const r = await c.query(`UPDATE units SET status = 'merged', merged_into = $2 WHERE unit_key = $1 AND status = 'active'`, [g.cu, moi]);
+    tk.can_s08_gop += r.rowCount;
+    tk.the_cho_nghi += await choNghiTheLech(c, g.ref);
+  }
   return tk;
 }
 
@@ -290,12 +308,20 @@ export async function napS16TheoKhu(c, khuIds) {
   return ra;
 }
 
-/** Thẻ cho căn S08 lệch toà với căn S16 cùng mã (bước S08 đi sau S16) — cùng mã thẻ với nhánh lệch của bước S16. */
-export async function theLechS16(c, lech) {
-  let n = 0;
+/**
+ * Bước S08 đi sau S16, căn S16 cùng mã nằm ở toà khác (Q-B, DA37): S16 thắng — bí danh S08 gắn vào căn S16, thẻ lệch cũ
+ * cho nghỉ; không đúc căn S08, không thẻ mới. Trả { biDanh, choNghi }.
+ */
+export async function ganLechS16(c, lech) {
+  let biDanh = 0, choNghi = 0;
   for (const l of lech) {
-    n += await theDuyet(c, s16Ref(l.du_an, l.ma), "S16: căn S08 cùng mã nằm ở toà khác",
-      { loai: "can-lech-toa", khoa_can: l.khoa_can, khoa_toa: l.khoa_toa });
+    const r = await c.query(
+      `INSERT INTO registry_aliases (object_key, kind, value, source)
+       SELECT $1, 'ma_nguon', $2, 'S08'
+        WHERE NOT EXISTS (SELECT 1 FROM registry_aliases WHERE source = 'S08' AND kind = 'ma_nguon' AND value = $2 AND retired_at IS NULL)`,
+      [l.khoa_can, l.v]);
+    biDanh += r.rowCount;
+    choNghi += await choNghiTheLech(c, s16Ref(l.du_an, l.ma));
   }
-  return n;
+  return { biDanh, choNghi };
 }

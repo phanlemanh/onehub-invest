@@ -107,7 +107,7 @@ export function keHoachDung({ dongS08, biDanh, phanKhuTheoKhu = new Map(), taoKh
     if (d.subdivision) t.phan_khu.add(String(d.subdivision).toLowerCase());
     const canS16 = !biDanh.has(vCan) ? s16?.can.get(ma) : null;
     if (canS16 && canS16.building_key !== t.key) {
-      lechS16.push({ du_an: canS16.du_an, ma, khoa_can: canS16.unit_key, khoa_toa: [canS16.building_key, t.key].sort() });
+      lechS16.push({ du_an: canS16.du_an, ma, v: vCan, khoa_can: canS16.unit_key, khoa_toa: [canS16.building_key, t.key].sort() });
       continue;
     }
     const vTruc = biDanhTruc(d.project_id, kq.toa, kq.truc);
