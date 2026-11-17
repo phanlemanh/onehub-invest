@@ -1,52 +1,57 @@
-# Review findings: suite-scripts-vao-luot-cham (round 2)
-
 ## Trong hợp đồng
 
-- **Dòng tóm tắt mất số ca khi lượt đỏ có nhiều ca hỏng: chỉ giữ 20000 ký tự cuối, mà dòng «ℹ tests/pass/fail» đứng TRƯỚC phần «✖ failing tests»**
+- **Dòng tổng kết bị mất số ca khi một mẩu stdout cắt giữa ký tự UTF-8 «ℹ»**
   AC: AC-2
-  file: `scripts/suite-neu-doi.mjs:226`
+  file: `scripts/suite-neu-doi.mjs:239`
   severity: medium
   source: bugs
-  detail: Code giữ `raTest = (raTest + b).slice(-20000)` rồi để `tomTatScripts` tìm các dòng `^(?:ℹ|#) tests|pass|fail N`. Với reporter spec của Node 24 (đã chạy thử), các dòng tổng kết ℹ in ra TRƯỚC khối «✖ failing tests:», và khối này in lại mọi ca đỏ kèm stack trace. Lượt đỏ thật có vài chục ca hỏng (ví dụ lượt tái hiện #471/#472 trên đỉnh cũ, hoặc một trận đỏ do DB) dễ có khối này dài hơn 20 KB. Khi đó dòng ℹ bị cắt mất và tests/pass/fail thành null. Lỗi không báo ra đâu cả, dòng `scripts-ci` vẫn được ghi vào run-log với `fail: null`. Điều này trái với cam kết E2 «tệp mẫu đỏ → fail ≥ 1». Ca test chỉ dùng một tệp mẫu nhỏ nên không bao giờ gặp. Cách sửa: giữ phần đầu khối tổng kết, ví dụ dò dòng ℹ trên luồng khi chúng tới rồi lưu lại, thay vì chỉ giữ đuôi.
-  rationale: AC-2 đòi dòng cuối là JSON có đủ tests, pass, fail với mọi kết cục xanh hay đỏ; lượt đỏ nhiều ca hỏng cho fail null là sai hợp đồng.
+  detail: Ở bước test, `con.stdout` không gọi setEncoding nên mỗi sự kiện 'data' nhận về một Buffer, và mỗi Buffer bị `tongKet.nap(String(b))` giải mã riêng lẻ. Ký tự «ℹ» mà reporter spec in ở đầu mọi dòng tổng kết (`ℹ tests N`, `ℹ pass N`, `ℹ fail N`) dài 3 byte UTF-8. Khi ranh giới mẩu đọc từ pipe rơi vào giữa 3 byte đó, hai nửa bị đổi thành U+FFFD. Dòng ghép lại trong `du` khi đó không còn khớp MAU_TONG_KET, nên tomTatScripts trả `tests`/`pass`/`fail` = null, hoặc lấy một dòng trùng mẫu in sớm hơn. Hậu quả: dòng `scripts-ci` ghi vào run-log có `fail: null` dù lượt chạy đỏ, trong khi E5 và AC-2 đọc đúng các trường này. Ca test SSL-AC-2 cắt mẫu theo chuỗi JS (`ra.slice`), không cắt theo byte, nên không bắt được lỗi này. Cách sửa: gọi `con.stdout.setEncoding('utf8')` (dùng StringDecoder bên trong), hoặc giữ phần byte dở dang giữa hai mẩu.
+  rationale: AC-2 đòi dòng cuối là JSON có tests, pass, fail là số; lỗi này làm các trường thành null dù lượt đỏ, và AC-5 đọc fail:0 cũng bị ảnh hưởng.
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **Test SSL-AC-2 ghi hồ sơ tạm vào thẳng cây _acceptance/ thật của kho**
-  Người dùng thấy gì: Nếu một lượt chạy thử bị ngắt giữa chừng, một thư mục hồ sơ giả có thể nằm lại trong kho và bị các công cụ sinh lộ trình, bản đồ sản phẩm nhìn thấy. Người dùng không thấy lỗi nào trên màn, chỉ có thể gặp một mục lạ trong báo cáo.
-  Căn cứ: Hậu quả nhẹ, không mất hay lộ dữ liệu, người vận hành tự xoá thư mục thừa được và chỉ xảy ra khi lượt chạy bị ngắt giữa chừng.
-  file: `scripts/suite-neu-doi.test.mjs`
-  severity: medium
-  Đề xuất: known-limits
+- **E3/E4/E5 khai executor: script nhưng lệnh đặt ở executors.test, lệch cách đặt lệnh của cả kho**
+  Người dùng thấy gì: Ba lệnh kiểm được xếp nhầm nhóm trong tệp cấu hình, nhưng vẫn chạy đúng. Người dùng không thấy khác biệt nào.
+  Căn cứ: Chỉ là chuyện xếp gọn, không ảnh hưởng kết quả hay dữ liệu; sửa sau cũng rẻ nhưng không đáng mở việc.
+  file: `_acceptance/config.yaml`
+  severity: low
+  Đề xuất: wont-fix
 
-- **Probe tai-hien.sh dựng worktree trong mktemp ngoài .claude/worktrees và chép .env sang đó**
-  Người dùng thấy gì: Khi lượt kiểm tái hiện bị ngắt đột ngột, bản sao tệp cấu hình bí mật có thể nằm lại trong thư mục tạm của máy. Nó vẫn ở trên máy local, không đi đâu khác.
-  Căn cứ: Rủi ro thấp vì tệp chỉ nằm trên máy thu, không rời máy, và chỉ xuất hiện khi lượt kiểm bị ngắt; dọn tay là xong.
+- **tai-hien.sh bỏ qua lỗi của dung-worktree-cham.sh nên báo đỏ sai lý do**
+  Người dùng thấy gì: Khi môi trường kiểm tra hỏng, phép kiểm có thể báo kết quả sai lý do mà người xem không nhận ra ngay. Sản phẩm cho người dùng không bị ảnh hưởng.
+  Căn cứ: Chỉ làm giảm độ tin cậy của bằng chứng nội bộ, không mất dữ liệu; người ký có thể chạy lại để thấy rõ.
   file: `_acceptance/suite-scripts-vao-luot-cham/probes/tai-hien.sh`
   severity: low
   Đề xuất: known-limits
 
-- **co-ca.sh không bắt được ca bị bỏ qua: reporter spec của Node 24 không in «# SKIP»**
-  Người dùng thấy gì: Lượt kiểm nghiệm có thể báo xanh dù ca chính thực ra bị bỏ qua vì thiếu container DB. Người ký có thể tin là phần tóm tắt và dọn DB đã được đo trong khi chưa hề chạy.
-  Căn cứ: Gây tin nhầm ở bằng chứng nghiệm thu nhưng không làm hỏng tính năng cho người dùng cuối; nên sửa riêng vì sửa công cụ kiểm rẻ và không đụng lệnh đã ship.
-  file: `_acceptance/suite-scripts-vao-luot-cham/probes/co-ca.sh`
-  severity: high
-  Đề xuất: new-contract
-
-- **Hình dạng 4 — assertion âm tính một mình: co-ca.sh kiểm «không có # SKIP» bằng chuỗi mà reporter spec không bao giờ in**
-  Người dùng thấy gì: Lượt kiểm nghiệm có thể báo xanh giả cho phần tóm tắt, ghi nhật ký và dọn DB khi ca chính bị bỏ qua. Người ký không biết các phần đó chưa được đo.
-  Căn cứ: Chỉ làm bằng chứng nghiệm thu kém tin cậy, không ảnh hưởng người dùng cuối; sửa riêng cùng lỗi tương tự rẻ và an toàn.
-  file: `_acceptance/suite-scripts-vao-luot-cham/probes/co-ca.sh`
-  severity: high
-  Đề xuất: new-contract
-
-- **Hình dạng 1 — đo chỉ dẫn thay vì đầu ra: assert «nguyên văn run của job» so bộ đọc với chính tệp nó đọc**
-  Người dùng thấy gì: Phép kiểm rằng lệnh chạy đúng nguyên văn các bước của CI khá yếu, nên nếu lệnh bị đổi lúc thực thi thì test có thể không đỏ. Người dùng không thấy tác động trực tiếp.
-  Căn cứ: Rủi ro chỉ là bỏ sót một lệch lạc hiếm trong công cụ nội bộ, không mất dữ liệu; có thể ghi nhận và củng cố sau.
+- **Hình dạng 2 — fixture viết tay đúng khuôn bên đọc: lượt đỏ dài của boTongKet/tomTatScripts không được đo khứ hồi**
+  Người dùng thấy gì: Phép kiểm chưa thử với đầu ra dài thật của một lượt đỏ, nên nếu định dạng khác dự kiến thì sổ ghi có thể thiếu số ca mà test vẫn xanh.
+  Căn cứ: Chỉ ảnh hưởng độ tin cậy của sổ kiểm nội bộ, không ảnh hưởng người dùng; chạy lại là thấy ngay.
   file: `scripts/suite-neu-doi.test.mjs`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Hình dạng 5 — tuyên quét mọi phần tử job CI nhưng phanTu chỉ liệt kê một phần**
+  Người dùng thấy gì: Nếu ai đó đổi một số thiết lập nhỏ của quy trình kiểm tự động, lệnh chạy thử cục bộ có thể không phát hiện sự lệch. Người dùng cuối không thấy ảnh hưởng.
+  Căn cứ: Chỉ làm lệnh chạy thử tại máy lệch khỏi CI ở vài chi tiết hiếm; CI thật vẫn bắt được, nên hậu quả nhẹ.
+  file: `scripts/suite-neu-doi.test.mjs`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Hình dạng 4 — tái hiện đỏ chỉ khẳng định «ca nằm trong danh sách đỏ», không có đối chứng dương trong cùng môi trường**
+  Người dùng thấy gì: Phép tái hiện lỗi cũ chưa có đối chứng chứng minh ca đỏ do đúng lỗi chứ không do môi trường. Người dùng cuối không bị ảnh hưởng.
+  Căn cứ: Chỉ giảm độ chắc của bằng chứng nội bộ; số đo thật ở vòng trước đã thấy đúng ca đỏ nên rủi ro thấp.
+  file: `_acceptance/suite-scripts-vao-luot-cham/probes/tai-hien.sh`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Hình dạng 3 — E5 hứa «dòng tóm tắt có "fail":0» nhưng chỉ đo mã thoát**
+  Người dùng thấy gì: Phép kiểm cây xanh chỉ nhìn kết quả chạy, chưa soi số ca hỏng ghi trong dòng tóm tắt. Người dùng cuối không bị ảnh hưởng.
+  Căn cứ: Mã thoát 0 đã gần như bảo đảm không có ca hỏng; thiếu sót chỉ là chưa đối chiếu thêm một con số.
+  file: `_acceptance/config.yaml`
   severity: low
   Đề xuất: known-limits
 
-⚠ Cụm ngoài vùng phủ: 2/6 lỗi rơi vào file không bộ đo nào phủ (_acceptance/suite-scripts-vao-luot-cham/probes/co-ca.sh) — dừng và quyết: mở rộng hợp đồng hay rút phạm vi.
+Cụm ngoài vùng phủ: cluster: n-a (không đo được — không eval nào khai paths, hoặc dưới ngưỡng cụm).

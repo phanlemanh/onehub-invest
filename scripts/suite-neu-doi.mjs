@@ -240,7 +240,8 @@ async function mainScripts(argv) {
       console.log(`suite-neu-doi: bước «${tb}»`);
       const k = await new Promise((xong) => {
         con = spawn("bash", [...SHELL_CI, l], { cwd: root, env, stdio: ["inherit", tb === "test" ? "pipe" : "inherit", "inherit"], detached: true });
-        if (tb === "test") con.stdout.on("data", (b) => { process.stdout.write(b); tongKet.nap(String(b)); });
+        // setEncoding: mẩu đọc từ pipe có thể cắt giữa «ℹ» (3 byte UTF-8); StringDecoder giữ phần byte dở sang mẩu sau.
+        if (tb === "test") { con.stdout.setEncoding("utf8"); con.stdout.on("data", (b) => { process.stdout.write(b); tongKet.nap(b); }); }
         con.on("close", (status, signal) => xong({ status, signal }));
         con.on("error", () => xong({ status: 127, signal: null }));
       });

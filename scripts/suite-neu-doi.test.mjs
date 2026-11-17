@@ -434,6 +434,24 @@ test("SSL-AC-2 — dòng scripts-ci khi xanh và khi đỏ, --ho-so ghi run-log,
   assert.equal(coDb(db2), false, `SSL-AC-2 DB ${db2} phải bị xoá cả khi lệnh bị ngắt`);
 });
 
+test("SSL-AC-2 đọc pipe theo byte — mẩu cắt giữa «ℹ» không làm mất số ca", async () => {
+  const { spawn } = await import("node:child_process");
+  // một tiến trình con ghi dòng tổng kết từng byte một, có ngắt quãng để mỗi byte là một mẩu riêng của pipe
+  const src = `const b = Buffer.from("ℹ tests 7\\nℹ pass 5\\nℹ fail 2\\n"); (async () => { for (const x of b) { process.stdout.write(Buffer.from([x])); await new Promise((r) => setTimeout(r, 2)); } })();`;
+  const doc = async (giaiMa) => {
+    const c = spawn(process.execPath, ["-e", src]);
+    const t = boTongKet();
+    if (giaiMa) c.stdout.setEncoding("utf8");
+    c.stdout.on("data", (b) => t.nap(giaiMa ? b : String(b)));
+    await new Promise((r) => c.on("close", r));
+    return tomTatScripts(t.text(), { sha: "a", exit: 1, giay: 1 });
+  };
+  const dung = await doc(true);
+  assert.deepEqual([dung.tests, dung.pass, dung.fail], [7, 5, 2], "SSL-AC-2 setEncoding giữ số ca khi mẩu cắt giữa ký tự");
+  const sai = await doc(false);
+  assert.notDeepEqual([sai.tests, sai.pass, sai.fail], [7, 5, 2], "SSL-AC-2 đối chứng: giải mã từng mẩu riêng lẻ phải mất số ca");
+});
+
 test("SSL-AC-2 tomTatScripts — đọc số ca từ dòng tổng kết spec hay tap; không có dòng thì null", () => {
   assert.deepEqual(tomTatScripts("ℹ tests 5\nℹ pass 4\nℹ fail 1\n", { sha: "a", exit: 1, giay: 2 }).fail, 1);
   assert.deepEqual(tomTatScripts("# tests 3\n# pass 3\n# fail 0\n", { sha: "a", exit: 0, giay: 2 }).tests, 3);
