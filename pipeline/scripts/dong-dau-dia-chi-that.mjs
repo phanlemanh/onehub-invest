@@ -195,7 +195,9 @@ const THUOC = {
     console.log(`ngưỡng ${NGUONG.dinhViAll * 100}% áp cho cửa sổ all; /ops/data-flow mặc định hiện 7d`);
     return d.sau.dinhVi.all.located / d.sau.dinhVi.all.offers >= NGUONG.dinhViAll;
   },
-  // AC-1(a): 100% tin mà bài đầu thuộc nhóm có thẻ đã duyệt CÓ dự án để ghi được ghi dự án.
+  // AC-1(a), đúng chữ tiêu chí: 100% tin thuộc nhóm có thẻ đã duyệt sống (theo bài đầu) — mà thẻ có ít nhất một ô dùng được
+  // hay bài có dự án do chữ nêu — được đóng dấu: có ít nhất một dòng của luật trên một bài của tin. In riêng số tin mà bước
+  // hoà giải mức tin (AC-8) cố ý KHÔNG ghi ô dự án, để không ai đọc «đóng dấu» thành «có dự án».
   "phu-the": async () => {
     const d = docDo();
     const c = moDb(); await c.connect();
@@ -203,14 +205,26 @@ const THUOC = {
       const { the } = await docTheDaDuyet(c);
       const nhan = await docNhanDuAn(c);
       const nhom = await nhomCuaBai(c);
+      const tinBai = new Map();
+      for (const [p, v] of Object.entries(d.sau.bai)) tinBai.set(v[0], [...(tinBai.get(v[0]) ?? []), p]);
       const dau = Object.entries(d.sau.bai).filter(([, v]) => v[3]).map(([p, v]) => [p, v[0]]);
-      const can = dau.filter(([p]) => { const t = the.get(nhom.get(p)); return t && (t.duAn != null || nhan.has(p)); });
-      const { rows } = await c.query(`SELECT DISTINCT split_part(subject_key, ':', 2) AS p FROM field_assertions
-        WHERE rule_id = $1 AND field = 'project_node_id' AND retracted_at IS NULL AND subject_key = ANY ($2::text[])`,
-        [RULE_ID, can.map(([p]) => `S03:${p}`)]);
-      const co = new Set(rows.map((r) => r.p));
-      const thieu = can.filter(([p]) => !co.has(p));
-      console.log(`tin có bài đầu thuộc nhóm có thẻ đã duyệt, có dự án để ghi: ${can.length} · đã đóng dấu dự án: ${can.length - thieu.length} (${pc(can.length - thieu.length, can.length)})`);
+      // Ô phường của thẻ không ghi lên bài mà chữ đã nêu phường (thiết kế §2.2) — tin có phuong_raw là tin ấy.
+      const { rows: pr } = await c.query(`SELECT offer_id FROM sale_offers WHERE source = 'S03' AND phuong_raw IS NOT NULL`);
+      const chuPhuong = new Set(pr.map((r) => r.offer_id));
+      const can = dau.filter(([p, o]) => {
+        const t = the.get(nhom.get(p));
+        return t && (t.duAn != null || t.phanKhu != null || nhan.has(p) || (t.areaId != null && !chuPhuong.has(o)));
+      });
+      const { rows } = await c.query(`SELECT split_part(subject_key, ':', 2) AS p, bool_or(field = 'project_node_id') AS du_an
+        FROM field_assertions WHERE rule_id = $1 AND retracted_at IS NULL AND subject_key = ANY ($2::text[]) GROUP BY 1`,
+        [RULE_ID, can.flatMap(([, o]) => tinBai.get(o)).map((p) => `S03:${p}`)]);
+      const dong = new Map(rows.map((r) => [r.p, r.du_an]));
+      const coDau = (o) => tinBai.get(o).some((p) => dong.has(p));
+      const coDuAn = (o) => tinBai.get(o).some((p) => dong.get(p) === true);
+      const thieu = can.filter(([, o]) => !coDau(o));
+      const khongDuAn = can.filter(([p, o]) => coDau(o) && !coDuAn(o) && (the.get(nhom.get(p)).duAn != null || nhan.has(p)));
+      console.log(`tin có bài đầu thuộc nhóm có thẻ đã duyệt, có ô để ghi: ${can.length} · được đóng dấu: ${can.length - thieu.length} (${pc(can.length - thieu.length, can.length)})`);
+      console.log(`  trong đó thẻ có ô dự án mà tin KHÔNG nhận dự án từ luật này (hoà giải mức tin, AC-8): ${khongDuAn.length}`);
       for (const [p, o] of thieu.slice(0, 20)) console.log(`  thiếu dấu: tin ${o} · bài đầu ${p}`);
       return can.length > 0 && thieu.length === 0;
     } finally { await c.end(); }

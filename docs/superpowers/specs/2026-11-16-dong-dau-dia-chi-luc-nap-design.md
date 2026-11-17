@@ -154,8 +154,24 @@ status = 'da_duyet' AND retired_at IS NULL
 2. nếu không → **thẻ nhóm** đã duyệt, ô `du_an` có đúng **một** nút → ghi dự án ấy;
 3. nếu không → **không ghi dòng nào** (thẻ hai hay ba dự án: không đoán).
 
-Không cộng dồn hai nguồn trên cùng một bài. Tin vẫn có thể thành `xung_dot` khi hai bài khác nhau cho hai dự án
-khác nhau — đó là xung đột thật, và hợp đồng đo đúng số tin rơi vào đó.
+Không cộng dồn hai nguồn trên cùng một bài.
+
+**Sửa 17/11 sau phép đo thật — hoà giải ở mức TIN.** Bản trên để tin thành `xung_dot` khi hai bài khác nhau cho hai dự án
+khác nhau và gọi đó là «xung đột thật». Đo trên bản chép (kịch bản K1, 26 thẻ nhận nguyên nháp): **34 bài trong 13 tin**
+rơi từ `mot_du_an` sang `xung_dot`, từ mốc 0 — trái AC-8 đã ký. 9 tin là bài **đăng lại chéo nhóm** của hai dự án (cùng căn
+rao ở nhóm VOP1 và nhóm dự án khác), 4 tin có **một bài chữ nêu dự án khác thẻ** trong khi các bài còn lại im. Cả hai là
+xung đột do chính việc đóng dấu từng bài sinh ra, vì `offer_project` đếm mọi dòng dự án sống của mọi bài trong tin. Nên ô
+dự án có thêm bước hai, theo tin (phường, phân khu không bị kéo theo):
+
+| Trong một tin | Làm gì |
+|---|---|
+| hai bài chữ nêu hai dự án khác nhau | bỏ mọi dòng dự án của tin — xung đột của chữ, không phải việc của thẻ |
+| đúng một dự án do chữ nêu | chữ thắng trên **cả tin**: bỏ dòng dự án từ thẻ khác giá trị ấy |
+| chữ im, thẻ các nhóm trong tin bất đồng | không đoán: bỏ mọi dòng dự án từ thẻ |
+| bài khác cùng tin, không được đóng dấu dự án, mang dòng dự án luật khác khác giá trị | bỏ mọi dòng dự án của tin — hàng này chỉ rút dòng luật khác trên bài nó ghi dự án |
+
+Bỏ dòng dự án của một tin nghĩa là bài của tin ấy giữ nguyên dòng DV6 cũ (không bị rút), nên tin ở lại đúng trạng thái
+trước hàng này.
 
 Phường và phân khu đi cùng luật: chữ bài trước, thẻ sau, im thì bỏ trống.
 
