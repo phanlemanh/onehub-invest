@@ -5,7 +5,7 @@ slug: gs-ac-6-the-khong-tin-a
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: machine-cleared
+status: implemented
 veto_state: mo
 veto_opened_at: 2026-11-17T15:40:00Z
 approved_by:
