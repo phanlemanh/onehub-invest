@@ -6,7 +6,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { VUNG, quyetDinh, trongVung } from "./suite-neu-doi.mjs";
+import { HA_TANG, VUNG, chonScripts, docKhai, khop, quyetDinh, trongVung } from "./suite-neu-doi.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, "..");
@@ -320,4 +320,67 @@ test("S4V-AC-6 — executors.suite.* bọc nguyên văn lệnh hiện hành, sui
   const them = cfg.replace("\n  test:\n", '\n  test:\n    moi: "node --test x.test.mjs"\n');
   assert.notEqual(them, cfg);
   assert.deepEqual(kiem(them), [], "S4V-AC-6 thêm key executors.test mới mà đỏ");
+});
+
+// ── suite-scripts-vao-luot-cham: bộ chọn tệp test scripts theo tệp khai vùng ─────────────────────────────────────
+const KHAI_GIA = { "scripts/a.test.mjs": ["pipeline/x.mjs"], "scripts/b.test.mjs": ["app/**"], "scripts/c.test.mjs": "luon" };
+const TESTS_GIA = Object.keys(KHAI_GIA);
+const chonGia = (tep, them = {}) => chonScripts({ tep, khai: KHAI_GIA, tests: TESTS_GIA, ...them });
+
+test("SSL-AC-2 — chọn theo tệp khai: vùng chạm diff thì chạy, không chạm thì bỏ, lý do có tên", () => {
+  const a = chonGia(["pipeline/x.mjs"]);
+  assert.deepEqual(a.chon, ["scripts/a.test.mjs", "scripts/c.test.mjs"], "SSL-AC-2 diff pipeline/x.mjs phải chọn a và c, không b");
+  assert.equal(a.ly_do["scripts/a.test.mjs"], "vùng: pipeline/x.mjs");
+  assert.equal(a.ly_do["scripts/c.test.mjs"], "luôn");
+  assert.deepEqual(chonGia(["app/src/y.ts"]).chon, ["scripts/b.test.mjs", "scripts/c.test.mjs"], "SSL-AC-2 diff app/ phải chọn b và c");
+  const b = chonGia(["scripts/b.test.mjs"]);
+  assert.ok(b.chon.includes("scripts/b.test.mjs"), "SSL-AC-2 chính tệp test trong diff phải được chọn");
+  assert.equal(b.ly_do["scripts/b.test.mjs"], "tệp test trong diff");
+  assert.deepEqual(chonGia(["docs/khong-ai-doc.md"]).chon, ["scripts/c.test.mjs"], "SSL-AC-2 diff ngoài mọi vùng chỉ còn tập luôn");
+  // Review Focus 1: «**» giữa đường; 3: tệp đã xoá vẫn so được bằng đường.
+  assert.ok(khop("pipeline/x.test.mjs", "pipeline/**/*.test.mjs") && khop("pipeline/a/b/x.test.mjs", "pipeline/**/*.test.mjs"),
+    "SSL-AC-2 glob «**/» phải khớp cả không tầng lẫn nhiều tầng");
+  assert.ok(!khop("pipeline/x.mjs", "pipeline/**/*.test.mjs"), "SSL-AC-2 đối chứng: «**/*.test.mjs» không khớp tệp thường");
+  assert.deepEqual(chonGia(["pipeline/x.mjs"]).chon, chonScripts({ tep: ["pipeline/x.mjs"], khai: KHAI_GIA, tests: TESTS_GIA }).chon);
+});
+
+test("SSL-AC-4 — diff chạm hạ tầng chung thì trọn bộ, gọi tên tệp; tệp scripts thường thì không", () => {
+  const MAU = {
+    "scripts/lib/**": "scripts/lib/x.mjs", "db/migrations/**": "db/migrations/999_x.sql",
+    "scripts/ci-db-init.mjs": "scripts/ci-db-init.mjs", "scripts/ci-bo-qua.json": "scripts/ci-bo-qua.json",
+    ".github/workflows/ci-test.yml": ".github/workflows/ci-test.yml", "scripts/suite-scripts-vung.json": "scripts/suite-scripts-vung.json",
+    "app/package.json": "app/package.json", "app/package-lock.json": "app/package-lock.json",
+    "pipeline/package.json": "pipeline/package.json", "pipeline/package-lock.json": "pipeline/package-lock.json",
+    "agent/package.json": "agent/package.json", "agent/package-lock.json": "agent/package-lock.json",
+  };
+  assert.deepEqual(Object.keys(MAU).sort(), [...HA_TANG].sort(), "SSL-AC-4 ma trận viết trước phải đủ đúng các phần tử HA_TANG");
+  for (const [glob, tep] of Object.entries(MAU)) {
+    const r = chonGia([tep]);
+    assert.equal(r.chon.length, TESTS_GIA.length, `SSL-AC-4 ${glob}: diff ${tep} phải trọn bộ`);
+    assert.match(r.tron_bo ?? "", new RegExp(tep.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")), `SSL-AC-4 ${glob}: lý do phải gọi tên ${tep}`);
+  }
+  for (const tep of ["scripts/x.mjs", "scripts/lib-khac/x.mjs"]) assert.equal(chonGia([tep]).tron_bo, null, `SSL-AC-4 đối chứng: ${tep} không được trọn bộ`);
+});
+
+test("SSL-AC-8 — không chắc thì trọn bộ, lý do có tên; diff chạm vùng thì không", () => {
+  const ca = [
+    [{ tep: null }, /không giải được gốc/], [{ tep: [] }, /diff rỗng/],
+    [{ tep: ["pipeline/x.mjs"], khai: null, loiKhai: "không đọc được tệp khai: Unexpected token" }, /không đọc được tệp khai/],
+    [{ tep: ["pipeline/x.mjs"], ep: true }, /ép chạy/],
+  ];
+  for (const [them, re] of ca) {
+    const r = chonScripts({ khai: KHAI_GIA, tests: TESTS_GIA, ...them });
+    assert.equal(r.chon.length, TESTS_GIA.length, `SSL-AC-8 ${re}: phải trọn bộ`);
+    assert.match(r.tron_bo ?? "", re, `SSL-AC-8 lý do phải khớp ${re}`);
+  }
+  assert.equal(chonGia(["pipeline/x.mjs"]).tron_bo, null, "SSL-AC-8 đối chứng: diff chạm một vùng thì không trọn bộ");
+  // tệp khai hỏng JSON trên đĩa → docKhai trả lỗi có tên
+  const dir = mkdtempSync(path.join(tmpdir(), "ssl8-"));
+  try {
+    mkdirSync(path.join(dir, "scripts"));
+    writeFileSync(path.join(dir, "scripts/suite-scripts-vung.json"), "{ hỏng");
+    const k = docKhai(dir);
+    assert.equal(k.khai, null);
+    assert.match(k.loi ?? "", /không đọc được tệp khai/, "SSL-AC-8 docKhai phải gọi tên lỗi tệp khai");
+  } finally { rmSync(dir, { recursive: true, force: true }); }
 });

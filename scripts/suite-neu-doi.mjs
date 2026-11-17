@@ -12,7 +12,8 @@
 // và ghim lại, nên vùng của nó phải phủ đủ mọi tệp nó nạp (S4 r1 t1).
 // Hồ sơ: _acceptance/s4-suite-theo-vung. Bảng vùng đo bằng test canh phủ (scripts/suite-neu-doi.test.mjs, S4V-AC-5).
 import { execFileSync, spawnSync } from "node:child_process";
-import { realpathSync } from "node:fs";
+import { readFileSync, readdirSync, realpathSync } from "node:fs";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 // Tệp test của các module đọc tệp của module khác (import, chép fixture, quét cây) — vùng rộng theo đo 10/11.
@@ -62,8 +63,10 @@ export const VUNG = {
 // Mỗi suite còn chạy khi chính bộ lọc đổi — bộ lọc sai thì mọi quyết định sau nó sai.
 const CHUNG = ["scripts/suite-neu-doi.mjs"];
 
+// «**/» giữa đường = không hay nhiều tầng thư mục (pipeline/**/*.test.mjs khớp cả pipeline/x.test.mjs).
 const reGlob = (g) =>
-  new RegExp("^" + g.replace(/[.+^${}()|[\]\\]/g, "\\$&").replace(/\*\*/g, "\u0000").replace(/\*/g, "[^/]*").replace(/\u0000/g, ".*") + "$");
+  new RegExp("^" + g.replace(/[.+^${}()|[\]\\]/g, "\\$&").replace(/\*\*\//g, "\u0001").replace(/\*\*/g, "\u0000")
+    .replace(/\*/g, "[^/]*").replace(/\u0001/g, "(?:.*/)?").replace(/\u0000/g, ".*") + "$");
 
 // `x/**` = mọi đường dưới x; không có `*` = khớp nguyên đường.
 export function khop(duong, glob) {
@@ -73,6 +76,51 @@ export function khop(duong, glob) {
 }
 
 export const trongVung = (duong, vung) => vung.some((g) => khop(duong, g));
+
+// ── Suite «scripts» (hồ sơ suite-scripts-vao-luot-cham): chọn TỪNG tệp scripts/*.test.mjs theo tệp khai vùng viết tay.
+// Không tính vùng tự động: lời đọc liệt kê nằm nhiều trong tệp được import, xét an toàn thì 20–34/43 tệp phải luôn chạy.
+export const TEP_KHAI = "scripts/suite-scripts-vung.json";
+// Hạ tầng chung: đổi một tệp này thì mọi tệp test có thể đổi kết quả → trọn bộ.
+export const HA_TANG = [
+  "scripts/lib/**", "db/migrations/**", "scripts/ci-db-init.mjs", "scripts/ci-bo-qua.json", ".github/workflows/ci-test.yml",
+  TEP_KHAI, "app/package.json", "app/package-lock.json", "pipeline/package.json", "pipeline/package-lock.json",
+  "agent/package.json", "agent/package-lock.json",
+];
+
+export function docKhai(root) {
+  try {
+    const khai = JSON.parse(readFileSync(path.join(root, TEP_KHAI), "utf8"));
+    if (!khai || typeof khai !== "object" || Array.isArray(khai)) throw new Error("gốc không phải object");
+    return { khai, loi: null };
+  } catch (e) {
+    return { khai: null, loi: `không đọc được tệp khai ${TEP_KHAI}: ${e.message}` };
+  }
+}
+
+// Đúng tập `scripts/*.test.mjs` mà glob của job CI mở ra (một tầng, kể cả tệp chưa theo dõi).
+export const testsScripts = (root) =>
+  readdirSync(path.join(root, "scripts")).filter((f) => f.endsWith(".test.mjs")).sort().map((f) => `scripts/${f}`);
+
+// Quyết định thuần. tep = null nghĩa là không đọc được diff. Tệp test chưa có dòng khai được coi là «luon».
+export function chonScripts({ tep, khai, tests, ep = false, loiKhai = null }) {
+  const tronBo = (ly) => ({ chon: [...tests], ly_do: Object.fromEntries(tests.map((t) => [t, `trọn bộ: ${ly}`])), tron_bo: ly });
+  if (ep) return tronBo("ép chạy (SUITE_NEU_DOI=chay)");
+  if (tep === null) return tronBo("không giải được gốc so sánh");
+  if (!khai) return tronBo(loiKhai || `không đọc được tệp khai ${TEP_KHAI}`);
+  if (tep.length === 0) return tronBo("diff rỗng");
+  const ht = tep.find((p) => trongVung(p, HA_TANG));
+  if (ht) return tronBo(`chạm hạ tầng chung ${ht}`);
+  const chon = [], ly_do = {};
+  for (const t of tests) {
+    const co = Object.hasOwn(khai, t);
+    const z = co ? khai[t] : "luon";
+    if (z === "luon") { chon.push(t); ly_do[t] = co ? "luôn" : "luôn (chưa khai)"; continue; }
+    if (tep.includes(t)) { chon.push(t); ly_do[t] = "tệp test trong diff"; continue; }
+    const p = tep.find((x) => trongVung(x, z));
+    if (p) { chon.push(t); ly_do[t] = `vùng: ${p}`; }
+  }
+  return { chon, ly_do, tron_bo: null };
+}
 
 const tomTat = (vung) => (vung.length <= 4 ? vung.join(", ") : `${vung.slice(0, 4).join(", ")} … (+${vung.length - 4})`);
 
