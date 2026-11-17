@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 9e711f3bcda17542b3a557f8c014185345a5d05e
+verified_commit: 89a7476de537a429fa0ef36c2f42564f3469407e
 human_signoff:
 ---
 
@@ -166,3 +166,7 @@ none — every multi-run eval is uniform
 
 Round 3: PASS — gói bằng chứng máy viết; E7 chốt ở vòng này.
 Round 4: PASS — sau khi nhận main, vùng agent thêm app/probes; E1-E6 và E8 chạy lại, E7 carry-forward từ round 3 vì delta không chạm paths của eval; không có judgment item.
+
+### Re-pin lần 1 — 2026-11-17, do nhận main 734665b5 (#471 đổi scripts/) sau vòng 4 PASS
+run_id: repin-20261117T033744Z-54929
+sha: 89a7476de537a429fa0ef36c2f42564f3469407e · suites: 7 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng
