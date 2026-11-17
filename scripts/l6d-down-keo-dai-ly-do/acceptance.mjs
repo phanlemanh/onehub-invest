@@ -133,6 +133,10 @@ exit 9
   );
   vietTep(join(bin, "osascript"), `#!/bin/bash\necho "$*" >> "${thongBao}"\n`, true);
   vietTep(join(bin, "drift"), `#!/bin/bash\necho drift >> "${driftDau}"\n`, true);
+  // Đồng hồ giả của lượt: chỉ khi có tệp dong-ho, và chỉ cho đúng lời `date -u +%s` (mốc 1/giờ của lệnh nhóm);
+  // mọi lời khác chuyển nguyên cho /bin/date. Ca biên mốc 3599/3601 s không phụ thuộc tốc độ máy.
+  const dongHo = join(tam, "dong-ho");
+  vietTep(join(bin, "date"), `#!/bin/bash\nif [ "$*" = "-u +%s" ] && [ -f "${dongHo}" ]; then cat "${dongHo}"; exit 0; fi\nexec /bin/date "$@"\n`, true);
   const pipeLog = join(nha, ".openclaw/logs/oneinvest-zalo-pipe.log");
   const env = {
     HOME: nha,
@@ -149,6 +153,7 @@ exit 9
   const luot = {
     tam, home: nha, bin, so, thongBao, driftDau, pipeLog, env,
     state: env.ZALO_HEARTBEAT_STATE, alerts: env.ZALO_HEARTBEAT_ALERTS, moc: env.ZALO_HEARTBEAT_LINH_MUC,
+    datDongHo(t) { vietTep(dongHo, `${t}\n`); },
     datKichBan(k) {
       if (k.status) vietTep(join(kichBan, "status"), k.status);
       if (k.nhom) vietTep(join(kichBan, "nhom"), k.nhom);
@@ -390,16 +395,18 @@ async function caTreoSauSession() {
 
 async function caTanSuat() {
   const l = dungLuot();
+  const T = nowS();
+  l.datDongHo(T); // đồng hồ đứng yên: biên 3599/3601 s đo đúng biên, máy chậm không làm lệch
   await l.nhip({ status: "down", nhom: "session" });
   l.datKichBan({ nhom: "khac" });
   for (let i = 0; i < 3; i++) await l.nhip();
   const n4 = l.soNhom();
   const giu = /^reason=session$/m.test(l.trangThai());
-  writeFileSync(l.moc, `${nowS() - (CHO_DIEN + 1)}\n`);
+  writeFileSync(l.moc, `${T - (CHO_DIEN + 1)}\n`);
   await l.nhip();
   const n5 = l.soNhom();
   const doi = /^reason=stopped$/m.test(l.trangThai());
-  writeFileSync(l.moc, `${nowS() - (CHO_DIEN - 1)}\n`);
+  writeFileSync(l.moc, `${T - (CHO_DIEN - 1)}\n`);
   await l.nhip();
   const n6 = l.soNhom();
   kiem("TAN-SUAT", [
