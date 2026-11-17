@@ -4,9 +4,13 @@
 // ^oneinvest_suite_ (khuôn import-s09 1411-11); ghi ĐÚNG napS16(c, dongS16(items, id)) —
 // eval E1/E2 của DA33 đo chính hàm đó. Ca đỏ: thiếu sourceId / kind lạ / csv-jsonl lỗi
 // bị bỏ có đếm; nạp lại 0 dòng mới; URL biến thể rc 2 trước khi kết nối.
+// Ca đỏ manifest (claudedp-1711-20): (a) sửa một byte items-*.json.gz → lỗi checksum,
+// rollback 0 dòng ở bốn bảng stg_s16_* lẫn airbnb_snapshots; (b) schemaVersion lạ → lỗi, 0 dòng.
+// MỞ LẠI (2): manifest.files không còn tệp items nào → ném trước khi mở DB (S16-7).
+// Thông điệp lỗi không in tên nguồn thật (s16-thu) hay tên thư mục bản thu (snapshotId).
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, rmSync, readFileSync } from "node:fs";
+import { mkdtempSync, rmSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
@@ -50,16 +54,16 @@ const itemsGia = () => [
   }),
   item("tin-niem-yet", "tny-1", { url: "https://x/z" }),
 ];
-const snapshotGia = async (items) => {
+const snapshotGia = async (items, schemaVersion = 12) => {
   const { SnapshotWriter } = await import(new URL("../../collector/src/core/storage.ts", import.meta.url).href);
   const r = mkdtempSync(join(tmpdir(), "s16-snap-"));
-  const w = new SnapshotWriter(r, "vn", "s16-thu", { schemaVersion: 1 });
+  const w = new SnapshotWriter(r, "vn", "s16-thu", { schemaVersion });
   await w.write(items);
   const m = await w.finalize({ failed: 0 });
   return join(r, "vn", m.snapshotId);
 };
 const tmps = [];
-const sinh = async (items) => { const d = await snapshotGia(items); tmps.push(d); return d; };
+const sinh = async (items, schemaVersion) => { const d = await snapshotGia(items, schemaVersion); tmps.push(d); return d; };
 
 test.before(async () => { await q(DDL_103); });
 test.after(() => { tmps.forEach((d) => rmSync(d, { recursive: true, force: true })); });
@@ -151,4 +155,68 @@ test("S16-4 đối chứng dương chốt chặn (khuôn S09-4): cùng URL kèm 
     assert.equal(r.status, 1, `qua chốt rồi lỗi kết nối phải thoát 1 với ${url}: stderr=${(r.stderr || "").slice(0, 120)}`);
     assert.match(r.stderr, /ECONNREFUSED|connect|AggregateError/i, `lỗi in ra phải là lỗi kết nối với ${url}`);
   }
+});
+
+// ---------- ca đỏ manifest (claudedp-1711-20) ----------
+const sidCua = (dir) => JSON.parse(readFileSync(join(dir, "manifest.json"), "utf8")).snapshotId;
+
+test("S16-5 ca đỏ checksum (1711-20): sửa một byte items-*.json.gz → ném 'checksum sai', 0 dòng mới ở bốn bảng stg lẫn airbnb_snapshots; lỗi không lộ tên nguồn/thư mục", async () => {
+  const dir = await sinh(itemsGia());
+  const sid = sidCua(dir);
+  const tep = readdirSync(dir).find((f) => /^items-\d+\.json\.gz$/.test(f));
+  const duong = join(dir, tep);
+  const buf = readFileSync(duong);
+  buf[buf.length - 5] ^= 0x01; // sửa đúng MỘT byte trong phần cuối tệp nén
+  writeFileSync(duong, buf);
+  await assert.rejects(
+    () => napS16ThuMuc(dir, DB),
+    (e) => {
+      assert.match(e.message, /checksum sai/, "thông điệp phải là lỗi checksum");
+      assert.doesNotMatch(e.message, new RegExp(sid), "không in tên thư mục bản thu (snapshotId)");
+      assert.doesNotMatch(e.message, /s16-thu|s16-/, "không in tên nguồn thật");
+      return true;
+    },
+  );
+  const dem = await demCacBang(sid);
+  assert.deepEqual(dem, { item: 0, khu: 0, toa: 0, can: 0 }, "rollback sạch — bốn bảng stg 0 dòng");
+  const snap = (await q("SELECT count(*)::int n FROM airbnb_snapshots WHERE snapshot_id = $1", [sid])).rows[0].n;
+  assert.equal(snap, 0, "không dòng airbnb_snapshots nào bị ghi");
+});
+
+test("S16-6 ca đỏ schemaVersion lạ (1711-20): sv 99 → ném 'chưa hỗ trợ', 0 dòng ở bốn bảng lẫn airbnb_snapshots; lỗi không lộ tên nguồn/thư mục", async () => {
+  const dir = await sinh(itemsGia(), 99);
+  const sid = sidCua(dir);
+  await assert.rejects(
+    () => napS16ThuMuc(dir, DB),
+    (e) => {
+      assert.match(e.message, /schemaVersion 99 chưa hỗ trợ/, "thông điệp nêu phiên bản chưa hỗ trợ");
+      assert.doesNotMatch(e.message, new RegExp(sid), "không in tên thư mục bản thu (snapshotId)");
+      assert.doesNotMatch(e.message, /s16-thu|s16-/, "không in tên nguồn thật");
+      return true;
+    },
+  );
+  const dem = await demCacBang(sid);
+  assert.deepEqual(dem, { item: 0, khu: 0, toa: 0, can: 0 }, "bốn bảng stg 0 dòng");
+  const snap = (await q("SELECT count(*)::int n FROM airbnb_snapshots WHERE snapshot_id = $1", [sid])).rows[0].n;
+  assert.equal(snap, 0, "không dòng airbnb_snapshots nào bị ghi");
+});
+
+test("S16-7 ca đỏ manifest không có tệp items (1711-20 MỞ LẠI): manifest.files bỏ hết items-* → ném 'manifest không có tệp items' trước khi mở DB, không chèn airbnb_snapshots", async () => {
+  const dir = await sinh(itemsGia());
+  const sid = sidCua(dir);
+  const duong = join(dir, "manifest.json");
+  const m = JSON.parse(readFileSync(duong, "utf8"));
+  m.files = (m.files ?? []).filter((f) => !/^items-\d+\.json\.gz$/.test(f.name));
+  writeFileSync(duong, JSON.stringify(m));
+  await assert.rejects(
+    () => napS16ThuMuc(dir, DB),
+    (e) => {
+      assert.match(e.message, /manifest không có tệp items/, "thông điệp nêu thiếu tệp items");
+      assert.doesNotMatch(e.message, new RegExp(sid), "không in tên thư mục bản thu (snapshotId)");
+      assert.doesNotMatch(e.message, /s16-thu|s16-/, "không in tên nguồn thật");
+      return true;
+    },
+  );
+  const snap = (await q("SELECT count(*)::int n FROM airbnb_snapshots WHERE snapshot_id = $1", [sid])).rows[0].n;
+  assert.equal(snap, 0, "không dòng airbnb_snapshots nào bị ghi");
 });
