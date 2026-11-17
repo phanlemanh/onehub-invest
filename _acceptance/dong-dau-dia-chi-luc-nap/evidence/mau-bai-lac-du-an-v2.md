@@ -163,6 +163,26 @@ Masteri trong khu Ocean Park thì theo định nghĩa đã khai bài ấy là l�
 
 ## Kết quả
 
-**CHỜ MẠNH DUYỆT** trên trang `research-local/duyet-nhan-ac10-v2.html` (ngoài kho). Tệp nhãn tải về được tính bằng:
-`node pipeline/scripts/mau-bai-lac-du-an.mjs --tinh-duyet <tệp nhãn> --seed tg2-ac10-v2-20261117 --mau _acceptance/dong-dau-dia-chi-luc-nap/evidence/mau-bai-lac-du-an-v2.md` — lệnh đối chiếu tệp nhãn với đúng 100 mã ở mục «Đã rút» (thiếu, thừa, trùng, ô nháp lạ, còn dòng chưa bấm → thoát khác 0)
-— lệnh thoát 0 chỉ khi cận trên Wilson ≤ 10% VÀ cả 100 dòng đã được người bấm.
+Nhãn người: tệp `nhan-ac10-v2.json` (cạnh tệp này; chép nguyên từ tệp trang duyệt lưu, `nhan-ac10-v2-2026-11-17T230412684Z.json`,
+sha256 `5f4838641787d9128e51329de4df345be78c02014495ca1433a96231549a5c1c`) — người duyệt **Mạnh**, lúc 2026-11-17T23:04:12Z,
+duyệt trong buổi đi từng lượt 10 dòng với trợ lý khuyến nghị. Lệnh tính (đối chiếu đúng 100 mã ở mục «Đã rút», hạt giống và n
+khai trước):
+
+`node pipeline/scripts/mau-bai-lac-du-an.mjs --tinh-duyet _acceptance/dong-dau-dia-chi-luc-nap/evidence/nhan-ac10-v2.json --seed tg2-ac10-v2-20261117 --mau _acceptance/dong-dau-dia-chi-luc-nap/evidence/mau-bai-lac-du-an-v2.md`
+
+In ra (thoát 0): cỡ mẫu khai 100 · dòng đã duyệt **100** · chưa duyệt 0 · sửa nháp 0 · bài lạc **0/100 = 0,00%** · khoảng Wilson
+95% **0,00% — 3,70%** · cận trên so ngưỡng 10%: **ĐẠT**.
+
+| Cách đếm | Bài lạc | Cận TRÊN Wilson 95% | So ngưỡng 10% |
+|---|---|---|---|
+| **Nhãn người, hệ mở rộng sang OP1** (lời Mạnh, mục «Sửa đổi SAU khi rút mẫu») | 0 / 100 | **3,70%** | ĐẠT |
+| Theo chữ khai trước (hệ chỉ VGP — dòng #32 Masteri Waterfront tính lạc) | 1 / 100 | 5,45% | ĐẠT |
+| Mẫu v1 (khung mọi bài, 16/11 — `mau-bai-lac-du-an.md`) | 1 / 100 | 5,45% | ĐẠT |
+
+Cỡ mẫu thật 100 = cỡ mẫu tối thiểu chốt ở Cổng Phạm vi, khai trước khi rút (commit `f840af82`, rút 16:33:45Z).
+
+**Kết luận: bối cảnh nhóm ĐỦ làm mặc định cho dự án của tin** — cận trên 3,70% ≤ 10% (và vẫn ≤ 10% ở cả hai cách đếm còn lại).
+
+Giới hạn đã biết của phép đo: mẫu rơi vào hai nhóm dự án (77 bài Grand Park, 23 bài Ocean Park 1) vì khung rút theo băm trên
+toàn kho; danh bạ chưa có nút Masteri Waterfront nên bài về toà M1, M2… trong nhóm OP1 hiện được đóng dấu Ocean Park 1 — đúng với
+hệ mở rộng, cần thêm nút con nếu muốn tách Masteri Waterfront.
