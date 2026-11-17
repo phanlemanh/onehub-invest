@@ -696,6 +696,10 @@ executors:
     s03_song_tron: "node scripts/canh-bao-s03-ngung-thu/acceptance.mjs tron"   # watchdog trọn vẹn: khoẻ, sự cố 09/11, lặp, hồi, tái phát, đêm
     s03_song_bien: "node scripts/canh-bao-s03-ngung-thu/acceptance.mjs bien"   # biên giờ 6/7/21/22, tuổi 1799/1800s, attempt 119/120s
     s03_song_syntax: "bash -n scripts/lib/s03-song.sh && bash -n scripts/zalo-watchdog.sh && echo SYNTAX OK"
+    # l6d-down-keo-dai-ly-do (VHZ1, D3) — heartbeat trọn vẹn trên HOME tạm + CLI giả ghi sổ (luật 8)
+    s03_hb_chan: "cd pipeline && node --test scripts/zalo-heartbeat-chan.test.mjs"   # 9 ca của ZCode
+    s03_hb_nghiem_thu: "node scripts/l6d-down-keo-dai-ly-do/acceptance.mjs"   # ma trận nhịp × lý do × tần suất × sổ lời gọi × đối chứng gỡ CLI giả × khuôn tệp trạng thái
+    s03_hb_syntax: "bash -n collector/scripts/zalo-heartbeat.sh && bash -n scripts/lib/s03-song.sh && bash -n scripts/zalo-watchdog.sh && echo SYNTAX OK"
     # s03-nap-nhanh (1011-3 nấc 1, liên làn làm thay ZCode 10/11) — bản chép tệp bọc nạp S03 trong cây tạm, node/sleep giả
     snn_test: "node --test scripts/s03-nap-nhanh.test.mjs"
     snn_regress: "node --test scripts/*-import-job.test.mjs scripts/*-import-job-lan.test.mjs scripts/enrich-buoc-job.test.mjs scripts/job-exit.test.mjs scripts/nap-argmax.test.mjs scripts/nap-ts-order.test.mjs scripts/s05-khoa-nap.test.mjs"
@@ -847,6 +851,7 @@ executors:
     dn1_thuan: "node --test pipeline/noi-du-an-s08.test.mjs"   # noi-du-an-s08-khu-do-thi E1, E2 — hàm thuần, không DB
     dn1_nap: "node _acceptance/noi-du-an-s08-khu-do-thi/probes/nap.mjs"   # noi-du-an-s08-khu-do-thi E3–E6, E8–E10 — migration và lệnh nối trên DB thử oneinvest_dn1_noi
     dn1_kin: "node _acceptance/noi-du-an-s08-khu-do-thi/probes/kin.mjs"   # noi-du-an-s08-khu-do-thi E7 — S08 không rời máy
+    ndt_unit: "node --test scripts/nhan-du-an-thay-khu-do-thi.test.mjs"   # nhan-du-an-thay-khu-do-thi-ops E1, E3, E6 — lưới chữ app/src, _Avoid_ của CONTEXT; không DB
     gc1_parse: "node --test pipeline/parse.test.mjs"   # doc-so-m2-bi-sot E1 — hàm thuần, không DB
     gc1_dot_bien: "node _acceptance/doc-so-m2-bi-sot/probes/dot-bien.mjs"   # doc-so-m2-bi-sot E2 — phá thử bản sao bộ đọc
     gc1_so_bo_doc: "node _acceptance/doc-so-m2-bi-sot/probes/so-bo-doc.mjs"   # doc-so-m2-bi-sot E3 — bộ đọc cũ và mới trên bài thật, chỉ đọc oneinvest

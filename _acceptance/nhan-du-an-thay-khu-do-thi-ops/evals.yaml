@@ -1,0 +1,38 @@
+schema_version: 1
+feature_slug: nhan-du-an-thay-khu-do-thi-ops
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.script.ndt_unit
+    paths: [scripts/nhan-du-an-thay-khu-do-thi.test.mjs, app/src/components/ops/sources/so-don-vi.tsx, app/src/components/ops/sources/so-don-vi-dialog.tsx, app/src/components/ops/quality/do-hang-ngay.tsx, app/src/components/ops/quality/lam-giau-bang.tsx, app/src/lib/so-don-vi.ts, app/src/lib/dq-labels.ts, app/src/lib/labels-normalize.ts, app/src/lib/do-hang-ngay.ts]
+    expected: "exit 0; ca NDT-AC-1 liệt mọi tệp .ts/.tsx dưới app/src (đệ quy, đếm số tệp > 0 để không xanh rỗng), mỗi dòng khớp /khu đô thị/iu mà không chứa «quy mô» là một vi phạm; số vi phạm bằng 0. Chiều đỏ CÙNG fixture: cây tạm chép app/src rồi chèn dòng `const x = \"Khu đô thị\"` vào cuối app/src/lib/do-hang-ngay.ts → ca đỏ ghim «NDT-AC-1 app/src/lib/do-hang-ngay.ts:<n> còn chữ Khu đô thị» đúng số dòng chèn; và dòng chèn có «quy mô» thì KHÔNG bị bắt (đối chứng luật quy mô). Đối chứng dương: chạy cùng hàm quét trên bản `git show 5508f620:<tệp>` của tám tệp → đúng 18 vi phạm ở 8 tệp, khớp bảng phủ của hợp đồng. Ma trận viết trước NDT-AC-2 (tệp × chuỗi mới, mỗi ô một khẳng định có mặt): so-don-vi.tsx có `header: \"Dự án\"`, `\"Đã khai thị trường, dự án\"`, `aria-label=\"Khai thị trường, dự án\"`; so-don-vi-dialog.tsx có `<DialogTitle>Khai thị trường, dự án</DialogTitle>` (nguyên thẻ, để chú thích đầu tệp không làm ô xanh), `label=\"Dự án\"`, `placeholder=\"Chọn dự án…\"`; do-hang-ngay.tsx có `tên dự án trong bài`; lib/do-hang-ngay.ts có `{ value: \"du_an\", label: \"Dự án\" }`; labels-normalize.ts có `project: \"Dự án\"` và `{ value: \"ma-trung-du-an\", label: \"Mã trùng giữa dự án\" }`; so-don-vi.tsx vẫn có `id: \"projects\"`. Ô nào thiếu thì ca đỏ ghim «NDT-AC-2 <tệp> thiếu <chuỗi>»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/tests/so-nhom.test.tsx, app/tests/do-hang-ngay-quality.test.tsx, app/tests/labels-nhom.test.tsx, app/tests/dq-eval-classify-label.test.tsx, app/src/components/ops/sources/so-don-vi.tsx, app/src/components/ops/sources/so-don-vi-dialog.tsx, app/src/components/ops/quality/do-hang-ngay.tsx, app/src/lib/labels-normalize.ts, app/src/lib/dq-labels.ts, app/src/lib/do-hang-ngay.ts]
+    expected: "exit 0; bộ render jsdom của app xanh, trong đó: so-nhom.test.tsx mở hộp bằng nút aria-label «Khai thị trường, dự án», chọn ô «Dự án», hàng hiện tên nút thử «Khu đô thị thử» (tên dữ liệu của fixture pipeline/scripts/so-nhom-fixture.mjs, không phải nhãn); do-hang-ngay-quality.test.tsx thấy năm lát Tổng · Thị trường · Phường/xã · Dự án · Toà; dq-eval-classify-label.test.tsx đòi nhãn trường project là «Dự án»; labels-nhom.test.tsx thấy «Dự án» trong mẫu. Mỗi kỳ vọng NHÃN cũ «Khu đô thị» trong bốn tệp đổi sang «Dự án»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.script.ndt_unit
+    paths: [scripts/nhan-du-an-thay-khu-do-thi.test.mjs, CONTEXT.md]
+    expected: "exit 0; ca NDT-AC-3 đọc CONTEXT.md, gom mọi dòng chứa `_Avoid_:` (số dòng > 0), không dòng nào chứa «danh mục dự án» (không phân biệt hoa thường). Chiều đỏ CÙNG fixture: bản chép CONTEXT.md nối «, danh mục dự án» vào dòng `_Avoid_` của «Danh mục CĐT» → ca đỏ ghim «NDT-AC-3 danh mục dự án nằm trong _Avoid_»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.design.tb_gate
+    paths: [app/src/components/ops/quality/do-hang-ngay.tsx]
+    expected: "exit 0; gate thiết kế có sẵn chấm do-hang-ngay.tsx (một trong bốn tệp giao diện của vòng) — đổi chuỗi không được đổi lớp, màu hay khoảng."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.script.ndt_unit
+    paths: [scripts/nhan-du-an-thay-khu-do-thi.test.mjs, app/src/components/ops/sources/so-don-vi.tsx, app/src/components/ops/sources/so-don-vi-dialog.tsx, app/src/components/ops/quality/do-hang-ngay.tsx, app/src/lib/do-hang-ngay.ts, app/src/lib/labels-normalize.ts]
+    expected: "exit 0; ca NDT-AC-2 là ma trận viết trước tệp × chuỗi hiển thị mới (kê nguyên văn ở E1) cùng các khoá giữ nguyên (`id: \"projects\"`, `value: \"du_an\"`, `value: \"ma-trung-du-an\"`, khoá `project:` của FIELD_LABEL); mỗi ô một khẳng định có mặt, số ô bằng số phần tử ma trận. Chiều đỏ CÙNG fixture: bản chép labels-normalize.ts đổi `project: \"Dự án\"` thành `project: \"Du an\"` → ca đỏ ghim «NDT-AC-2 app/src/lib/labels-normalize.ts thiếu project: \"Dự án\"»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

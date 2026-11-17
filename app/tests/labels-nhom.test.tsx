@@ -726,7 +726,7 @@ test("GCN-AC-10 trạng thái render: rỗng, nhóm hết, chờ người hai, v
   const mau = renderToStaticMarkup(<LabelsView mode="local" lat="x" coGhi tienDo={T} dongThuan={[]} tin={tin} {...nhom(0)} />)
   assert.match(mau, /data-labels-form="7"/)
   assert.equal((mau.match(/data-o="/g) ?? []).length, 25, "24 ô và ô Lý do")
-  for (const c of ["Khu đô thị", "Phân khu", "Trục", "Tầng", "WC", "Nhiều căn", "SĐT", "không suy ra được"]) assert.ok(mau.includes(c), c)
+  for (const c of ["Dự án", "Phân khu", "Trục", "Tầng", "WC", "Nhiều căn", "SĐT", "không suy ra được"]) assert.ok(mau.includes(c), c)
   assert.doesNotMatch(mau, /Ghi theo đúng chữ của tin/)
   assert.match(mau, /Ghi điều người trong nhóm hiểu/)
   const d = { itemId: 7, lat: "x", text: "chữ", anh: [], soLinkKhac: 0, ghep: null, groupName: "Nhóm A", postedAt: null, cuaToi: [], lyDo: null, truongHop: [] }
