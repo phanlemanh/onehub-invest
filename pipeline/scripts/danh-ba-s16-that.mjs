@@ -213,13 +213,29 @@ async function main() {
     const theLo = the.filter((x) => soatS16(x, tk)).length;
     console.log(`E10 · thẻ S16 ${the.length}, mang token S16 ${theLo}`);
     kiem(theLo === 0, "E10 thẻ mang token");
+    // Sync chạy thử trên DỮ LIỆU THẬT của mọi bảng sắp đẩy (S4-r1 t2): DB thử chỉ chép vài bảng nên trước đây vòng lặp gần như
+    // chỉ soát asset_nodes và xanh vì không có gì để soát. Nay bảng nào DB thử có dòng (bảng vừa dựng/chép) thì đọc ở DB thử, còn
+    // lại đọc thẳng DB máy thu trong phiên chỉ-đọc. Không in giá trị — chỉ bảng.cột trúng và số dòng mỗi nguồn.
+    const may = new pg.Client({ connectionString: NGUON_DB });
+    await may.connect();
+    await may.query("SET default_transaction_read_only = on");
     const data = new Map();
-    for (const t of FILL) {
-      if (!(await mot("SELECT to_regclass($1) AS r", [`public.${t}`])).r) continue;
-      data.set(t, (await c.query(`SELECT row_to_json(x)::text AS j FROM ${t} x`)).rows.map((r) => r.j));
+    const tuNguon = { thu: 0, may: 0 };
+    try {
+      for (const t of FILL) {
+        const coThu = (await mot("SELECT to_regclass($1) AS r", [`public.${t}`])).r
+          && (await mot(`SELECT EXISTS (SELECT 1 FROM ${t}) AS co`)).co;
+        const nguon = coThu ? c : may;
+        if (!coThu && !(await may.query("SELECT to_regclass($1) AS r", [`public.${t}`])).rows[0].r) continue;
+        const dong = (await nguon.query(`SELECT row_to_json(x)::text AS j FROM ${t} x`)).rows.map((r) => r.j);
+        tuNguon[coThu ? "thu" : "may"] += dong.length;
+        data.set(t, dong);
+      }
+    } finally {
+      await may.end();
     }
     const hit = soatDuLieu(data, tk);
-    console.log(`E10 · sync chạy thử (không gửi): ${hit ? `TRÚNG ở ${hit.bang}.${hit.cot}` : "0 token S16"}`);
+    console.log(`E10 · sync chạy thử (không gửi) trên ${data.size} bảng sắp đẩy (${tuNguon.thu} dòng DB thử · ${tuNguon.may} dòng DB máy thu): ${hit ? `TRÚNG ở ${hit.bang}.${hit.cot}` : "0 token S16"}`);
     kiem(!hit, "E10 sync chạy thử");
 
     // Dựng lần hai.
