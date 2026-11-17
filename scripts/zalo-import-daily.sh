@@ -60,9 +60,12 @@ go_khoa_cu() {
   [ -f "$LOCK_DIR/pid" ] && read -r pid < "$LOCK_DIR/pid"
   [ -f "$LOCK_DIR/luc" ] && read -r luc < "$LOCK_DIR/luc"
   local goc_do_tuoi=0
-  # Lượt nhanh (review 1011-3): PID còn sống thì KHÔNG gỡ dù khoá cũ >2h hay luc hỏng — lượt 00:00 nạp dồn có
-  # thể giữ khoá lâu; gỡ là hai lượt nạp chồng nhau. Bỏ lượt, 15′ sau thử lại.
-  if [ "$LUOT_NHANH" = "1" ] && [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+  # 1711-4: PID còn sống thì KHÔNG gỡ cho MỌI lượt (trước đây chỉ lượt nhanh
+  # được bảo vệ — lượt 00:00 sau gặp khoá của lượt 00:00 trước chạy dài >2h sẽ
+  # gỡ rồi nạp chồng). Lượt 00:00 đụng khoá sống: chờ tối đa 5′ rồi thoát 1 —
+  # không gỡ, không chồng lượt.
+  if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+    echo "khoá còn sống (PID $pid, lấy lúc ${luc:-?}) — không gỡ"
     return 1
   fi
   if [ -n "$pid" ] && ! kill -0 "$pid" 2>/dev/null; then
@@ -88,11 +91,51 @@ if [ "$LUOT_NHANH" = "1" ]; then
   fi
 else
   i=0; until mkdir "$LOCK_DIR" 2>/dev/null; do
-    go_khoa_cu || { i=$((i+1)); [ "$i" -ge 60 ] && { echo "❌ khoá $LOCK_DIR bận >5′ — job khác đang nạp?"; exit 1; }; sleep 5; }
+    go_khoa_cu || { i=$((i+1)); [ "$i" -ge "${ZALO_IMPORT_CHO_KHOA:-60}" ] && { echo "❌ khoá $LOCK_DIR bận >5′ — job khác đang nạp?"; exit 1; }; sleep 5; }
   done
 fi
 echo $$ > "$LOCK_DIR/pid"; date +%s > "$LOCK_DIR/luc"
 trap 'rm -rf "$LOCK_DIR" 2>/dev/null' EXIT
+
+# 1711-4: TRẦN TỔNG lượt (đồng hồ chết) — lượt 00:00 hôm 17/11 chạy ≈5h38m
+# (00:00→05:38 +07, exit 1 vì JOB FAIL doc-gop giữa chừng) mà không có trần
+# nào; cloud-sync nhịp 15′ đụng lượt đang chạy, bước mẫu soát lỗi 110 lần.
+# Trần bao TOÀN chuỗi (nạp + transform + doc-gop + enrich) — doc-gop có
+# checkpoint «đã đọc» nên cắt giữa chừng chỉ hoãn phần còn lại cho lượt sau,
+# không mất dữ liệu. Trần qua env (không đổi plist): lượt 00:00 4h, lượt
+# nhanh 20′. Ngưỡng WARN = nửa trần, cảnh báo MỘT lần.
+# Đồng hồ là MỘT tiến trình node (không subshell+sleep — sleep con thành mồ
+# côi giữ pipe stdout mở, caller chờ tệp log không bao giờ đóng).
+TRAN_TONG="${ZALO_IMPORT_TRAN_TONG:-$([ "$LUOT_NHANH" = "1" ] && echo 1200 || echo 14400)}"
+CANH_BAO="${ZALO_IMPORT_CANH_BAO:-$((TRAN_TONG / 2))}"
+# canh_gio <trần-giây> <warn-giây> <nhãn> <đích-kill> — nhãn in kèm dòng ghim;
+# đích: pid bước, hoặc -PGID để TERM cả nhóm tiến trình của lượt.
+# node dùng ĐƯỜNG TUYỆT ĐỐI (PATH đầu có shim `node` của phép đo job-step —
+# gọi qua PATH sẽ vào shim, ghi dày dòng calls làm lệch dãy lời gọi đo được).
+# Không tìm thấy node thật → trần thời gian TẮT, log một dòng cảnh báo.
+canh_gio() {
+  DONG_HO_PID="" # set -u: ca không node thật vẫn có biến để trap/gọi sau đọc
+  local node_that="${ZALO_IMPORT_NODE_BIN:-$HOME/.local/node-v24.21.0/bin/node}"
+  if [ ! -x "$node_that" ]; then
+    echo "⚠️ [zalo-import-daily] không có node thật ($node_that) — TRẦN THỜI GIAN TẮT cho lượt này" >&2
+    return 0
+  fi
+  TRAN_GIAY="$1" CANH_GIAY="$2" NHAN_CANH="$3" DO_KILL="$4" "$node_that" -e '
+    const s = (v) => Number(v) * 1000;
+    const doKill = () => { try { process.kill(Number(process.env.DO_KILL), "SIGTERM"); } catch {} };
+    setTimeout(() => console.error(`⚠️ [zalo-import-daily] WARN: ${process.env.NHAN_CANH} đã chạy ${process.env.CANH_GIAY}s (trần ${process.env.TRAN_GIAY}s) — vẫn chưa xong`), s(process.env.CANH_GIAY));
+    setTimeout(() => {
+      console.error(`❌ [zalo-import-daily] TIMEOUT: ${process.env.NHAN_CANH} vượt trần ${process.env.TRAN_GIAY}s — gửi TERM để dừng sạch`);
+      doKill();
+    }, s(process.env.TRAN_GIAY)); // giữ timer trần ref — node sống tới khi trần bắn (trap kill khi lượt xong sớm)
+    process.on("SIGTERM", () => process.exit(0));
+  ' &
+  DONG_HO_PID=$!
+}
+PGID_LUOT="$(ps -o pgid= -p $$ | tr -d ' ')"
+canh_gio "$TRAN_TONG" "$CANH_BAO" "lượt" "-$PGID_LUOT"
+DONG_HO_TONG_PID="${DONG_HO_PID:-}" # PID riêng cho trap (khi node thật thiếu thì rỗng)
+trap '[ -n "$DONG_HO_TONG_PID" ] && kill "$DONG_HO_TONG_PID" 2>/dev/null; rm -rf "$LOCK_DIR" 2>/dev/null' EXIT
 LAST=$(cat "$STATE" 2>/dev/null || echo "00000000T000000")
 MAXTS="$LAST"
 FAILED=0
@@ -127,6 +170,13 @@ for SNAP in $(printf '%s\n' "$DS_DIR" | while read -r d; do
     echo "$ts $d"
   done | sort | while read -r _ d; do echo "$d"; done); do
   TS=$(basename "$SNAP" | sed 's/.*__//')
+  # 1711-4: trần phần nạp (mặc định 30′) — vượt trần dừng chuỗi giữ state,
+  # mã 124 để bộ canh thấy khác với lỗi nạp thường; lượt sau nạp tiếp.
+  if [ "$SECONDS" -ge "${ZALO_IMPORT_TRAN_NAP:-1800}" ]; then
+    echo "❌ [zalo-import-daily] TIMEOUT: phần nạp vượt trần ${ZALO_IMPORT_TRAN_NAP:-1800}s tại snapshot $TS — dừng chuỗi giữ state, lượt sau nạp tiếp"
+    FAILED=124
+    break
+  fi
   if [[ "$TS" > "$LAST" ]]; then
     # 2510-8: thiếu manifest = snapshot CHƯA xong (bản mới ghi '.partial' rồi
     # rename; bản cũ crash giữa chừng) — KHÔNG được coi là đã nạp.
@@ -151,7 +201,9 @@ done
 echo "$MAXTS" > "$STATE"
 
 if [ "$FAILED" != "0" ]; then
-  exit 1 # có lỗi — bỏ qua transform/refresh, để nguyên cho lần sau
+  # 1711-4: 124 = chạm trần nạp (khác 1 = lỗi nạp thường) — cùng ý: bỏ qua
+  # transform/refresh, để nguyên cho lần sau nạp tiếp
+  exit "$FAILED" # có lỗi — bỏ qua transform/refresh, để nguyên cho lần sau
 fi
 
 # claudedp-1011-12 (link-nguoi-ban-s03 Ngoài-1/5/6, Mạnh ký Cổng 2 10/11): nạp snapshot HỒ SƠ người bán S03
@@ -175,6 +227,12 @@ for SNAP in $(printf '%s\n' "$HS_DIRS" | while read -r d; do
     echo "$ts $d"
   done | sort | while read -r _ d; do echo "$d"; done); do
   TS=${SNAP##*__}
+  # 1711-4: trần phần nạp dùng chung với vòng tin (SECONDS tính từ đầu lượt)
+  if [ "$SECONDS" -ge "${ZALO_IMPORT_TRAN_NAP:-1800}" ]; then
+    echo "❌ [zalo-import-daily] TIMEOUT: phần nạp vượt trần ${ZALO_IMPORT_TRAN_NAP:-1800}s tại hồ sơ $TS — dừng vòng hồ sơ giữ con trỏ, lượt sau nạp tiếp"
+    HS_RC=124
+    break
+  fi
   [[ "$TS" > "$HS_LAST" ]] || continue
   if [ ! -f "$SNAP/manifest.json" ]; then
     # như vòng tin (2510-8): thiếu manifest <30′ = đang ghi → giữ con trỏ, lượt sau thử lại; ≥30′ = mồ côi → bỏ, đi tiếp

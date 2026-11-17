@@ -441,7 +441,9 @@ function chayBoc(root, args = [], extra = {}) {
 const banGoc = () =>
   spawnSync("git", ["show", `origin/main:${BOC}`], { cwd: REPO, encoding: "utf8" }).stdout;
 
-/** Lưới phạm vi làn trên CHÍNH cây làm việc: mọi khối @@ phải nằm dưới dòng mốc của bản origin/main. */
+/** Lưới phạm vi làn trên CHÍNH cây làm việc (1711-4 ĐẢO CHIỀU): phần TRÊN dòng mốc
+ * là làn ZCode (khoá + nạp + trần thời gian) — sửa được; phần DƯỚI mốc là làn Claude
+ * (transform/doc-gop/enrich trong tệp bọc) — khối @@ không được nằm ở đó. */
 function kiemRanhGioiLan() {
   const goc = banGoc().split("\n");
   const iMoc = goc.findIndex((l) => l.startsWith(MOC_LAN));
@@ -455,7 +457,7 @@ function kiemRanhGioiLan() {
   const lan = [];
   for (const d of diff.split("\n")) {
     const m = /^@@ -(\d+)/.exec(d);
-    if (m && Number(m[1]) <= socMoc) lan.push(d);
+    if (m && Number(m[1]) > socMoc) lan.push(d);
   }
   return { lan, socMoc };
 }
@@ -521,11 +523,11 @@ test("JST-AC-8 bước truoc-lan-claude: đứng trước mọi bước transfor
     `cấy ngủ 2s vào vòng nạp phải cho giây ≥ 2:\n${cham.err}`);
 });
 
-test("JST-AC-8 lưới phạm vi làn: cây hiện tại xanh, chèn dưới mốc xanh, chèn trên mốc đỏ", () => {
-  assert.deepEqual(kiemRanhGioiLan().lan, [], "cây hiện tại không được sửa phía trên ranh giới làn");
-  assert.deepEqual(voiDongChen(false, () => kiemRanhGioiLan().lan), [], "chèn DƯỚI mốc phải xanh");
-  assert.ok(voiDongChen(true, () => kiemRanhGioiLan().lan).length > 0,
-    "chèn TRÊN mốc phải đỏ — JST-AC-8 sửa phần trên ranh giới làn Claude");
+test("JST-AC-8 lưới phạm vi làn (1711-4 đảo chiều): cây hiện tại xanh, chèn TRÊN mốc xanh, chèn DƯỚI mốc đỏ", () => {
+  assert.deepEqual(kiemRanhGioiLan().lan, [], "cây hiện tại không được sửa phía DƯỚI ranh giới làn (phần làn Claude)");
+  assert.deepEqual(voiDongChen(true, () => kiemRanhGioiLan().lan), [], "chèn TRÊN mốc phải xanh (phần trên là làn ZCode — trần thời gian 1711-4 nằm ở đó)");
+  assert.ok(voiDongChen(false, () => kiemRanhGioiLan().lan).length > 0,
+    "chèn DƯỚI mốc phải đỏ — sửa phần làn Claude trong tệp bọc");
 });
 
 // ---------------------------------------------------------------- JST-AC-9 --
