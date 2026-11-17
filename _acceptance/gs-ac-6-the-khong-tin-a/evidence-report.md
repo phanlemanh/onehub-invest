@@ -92,5 +92,3 @@ ca mới. Các `assert.deepEqual` và hai chỗ bỏ qua có sẵn (CI, tập r�
 ## Known limits
 
 ## Ngoài hợp đồng
-
-Không có mục nào.
