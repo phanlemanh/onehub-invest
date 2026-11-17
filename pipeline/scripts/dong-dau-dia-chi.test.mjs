@@ -114,3 +114,71 @@ describe("Review Focus và tập bài được đóng dấu", () => {
     assert.deepEqual(r.demTheoNguon, { the: 1, chu_bai: 1, bo: 1 });
   });
 });
+
+// ---- Mức TIN (AC-8): offer_project đếm mọi dòng dự án sống của MỌI bài trong tin — đóng dấu theo từng bài mà không nhìn cả
+// tin là tự sinh xung đột. Đo 17/11 trên bản chép, kịch bản K1: 13 tin rơi sang xung_dot — 9 tin bài đăng lại chéo nhóm của hai
+// dự án, 4 tin có một bài chữ nêu dự án khác thẻ.
+describe("AC-8 hoà giải ở mức tin: không tự sinh xung đột", () => {
+  const T2 = new Map([
+    ["g-a", { card_code: "TN-010", version: 1, duAn: "11", areaId: null, phanKhu: null, mucDich: null }],
+    ["g-b", { card_code: "TN-011", version: 1, duAn: "44", areaId: null, phanKhu: null, mucDich: null }],
+  ]);
+  const b = (post_id, conversation_id, tin) => ({ post_id, conversation_id, tin });
+  const duAn = (r) => Object.fromEntries(r.dong.filter((d) => d.field === "project_node_id").map((d) => [d.subject_key.slice(4), d.value]));
+
+  test("bài đăng lại chéo hai nhóm, thẻ bất đồng, chữ im: không đoán — 0 dòng dự án trong tin", () => {
+    const r = phatBieuDiaChiNhom({ bai: [b("x1", "g-a", "T1"), b("x2", "g-b", "T1")], the: T2, nhanDuAn: new Map() });
+    assert.deepEqual(duAn(r), {}, "tin chéo hai nhóm bất đồng mà vẫn đóng hai dự án");
+    assert.equal(r.demTin.theBatDong, 1);
+  });
+
+  test("một bài chữ nêu dự án khác: chữ bài thắng trên CẢ tin — bài im cùng tin không nhận dự án của thẻ", () => {
+    const r = phatBieuDiaChiNhom({
+      bai: [b("y1", "g-a", "T2"), b("y2", "g-a", "T2"), b("y3", "g-a", "T2")], the: T2, nhanDuAn: new Map([["y1", "22"]]),
+    });
+    assert.deepEqual(duAn(r), { y1: "22" }, "bài im cùng tin vẫn nhận dự án thẻ, tin thành hai dự án");
+    assert.equal(r.demTin.chuBaiThang, 1);
+  });
+
+  test("chữ bài trùng dự án thẻ: giữ cả hai nguồn, tin vẫn một dự án", () => {
+    const r = phatBieuDiaChiNhom({ bai: [b("z1", "g-a", "T3"), b("z2", "g-a", "T3")], the: T2, nhanDuAn: new Map([["z1", "11"]]) });
+    assert.deepEqual(duAn(r), { z1: "11", z2: "11" });
+  });
+
+  test("hai bài chữ nêu hai dự án khác nhau trong một tin: xung đột thật của chữ — 0 dòng dự án", () => {
+    const r = phatBieuDiaChiNhom({
+      bai: [b("w1", "g-a", "T4"), b("w2", "g-a", "T4")], the: T2, nhanDuAn: new Map([["w1", "22"], ["w2", "33"]]),
+    });
+    assert.deepEqual(duAn(r), {});
+    assert.equal(r.demTin.chuBaiBatDong, 1);
+  });
+
+  test("bài khác cùng tin mang dòng dự án của luật khác, khác giá trị, mà hàng này không thay: không đóng dấu dự án cả tin", () => {
+    // v2 thuộc nhóm KHÔNG có thẻ đã duyệt, đang mang dòng DV6 = 55; hàng này không rút dòng ấy (không đóng dấu v2).
+    const r = phatBieuDiaChiNhom({
+      bai: [b("v1", "g-a", "T5"), b("v2", "g-khong", "T5")], the: T2, nhanDuAn: new Map(),
+      duAnKhac: new Map([["v2", ["55"]]]),
+    });
+    assert.deepEqual(duAn(r), {}, "đóng dấu 11 lên v1 trong khi v2 mang 55 là tự sinh xung đột");
+    assert.equal(r.demTin.xungLuatKhac, 1);
+  });
+
+  test("dòng của luật khác trên CHÍNH bài được đóng dấu không tính — bước sau rút nó", () => {
+    const r = phatBieuDiaChiNhom({
+      bai: [b("u1", "g-a", "T6")], the: T2, nhanDuAn: new Map(), duAnKhac: new Map([["u1", ["55"]]]),
+    });
+    assert.deepEqual(duAn(r), { u1: "11" });
+  });
+
+  test("dòng phường và phân khu không bị hoà giải dự án kéo theo — chỉ ô dự án bị bỏ", () => {
+    const the = new Map([["g-a", { ...T2.get("g-a"), areaId: "vn-p1" }], ["g-b", T2.get("g-b")]]);
+    const r = phatBieuDiaChiNhom({ bai: [b("s1", "g-a", "T7"), b("s2", "g-b", "T7")], the, nhanDuAn: new Map() });
+    assert.deepEqual(duAn(r), {});
+    assert.ok(r.dong.some((d) => d.subject_key === "S03:s1" && d.field === "area_id"), "bỏ nhầm cả ô phường");
+  });
+
+  test("bài không mang mã tin thì xét như một tin riêng (giữ hành vi cũ)", () => {
+    const r = phatBieuDiaChiNhom({ bai: [{ post_id: "k1", conversation_id: "g-a" }], the: T2, nhanDuAn: new Map() });
+    assert.deepEqual(duAn(r), { k1: "11" });
+  });
+});

@@ -263,3 +263,46 @@ test("TG2-T4 E9 AC-7 DB chưa có bảng thẻ: lượt nạp thoát êm, đúng
     assert.deepEqual(khongBang.kq[k], coBang.kq[k], `khoá ${k} của lượt đổi khi thiếu bảng thẻ`);
   }
 });
+
+/** Cấy hai bài CÙNG chữ (thành một tin) vào hai nhóm — dạng bài đăng lại chéo nhóm. */
+async function baiCheo(nhomA, nhomB) {
+  so++;
+  const text = `Bán căn 2PN ${60 + so}m2 giá 3,${60 + so} tỷ sổ hồng`;
+  const ids = [];
+  for (const [i, nhom] of [nhomA, nhomB].entries()) {
+    const post_id = `t_tg2_${process.pid}_${so}_${i}`;
+    await c.query(
+      `INSERT INTO stg_zalo_posts (post_id, snapshot_id, agent_id, group_name, conversation_id, text, posted_at)
+       VALUES ($1, $2, 'openclaw-hook', 'Nhóm mồi TG2', $3, $4, '2026-11-10T08:00:00Z')`, [post_id, SNAP, nhom, text]);
+    ids.push(post_id);
+  }
+  return ids;
+}
+const trangThaiTin = async (p) => (await mot(
+  `SELECT op.status, op.project_node_id::text AS du_an, cardinality(o.post_ids) AS n FROM sale_offers o
+     LEFT JOIN offer_project op USING (offer_id) WHERE $1 = ANY (o.post_ids)`, [p]));
+
+test("TG2-T4 E10 AC-8 bài đăng lại chéo hai nhóm có thẻ khác dự án: tin KHÔNG thành xung đột, không đoán dự án", async () => {
+  await ca(async (f) => {
+    await the("tg2-cheo-a", { duAn: [f.duAn1] });
+    await the("tg2-cheo-b", { duAn: [f.duAn2] });
+    const [a, b] = await baiCheo("tg2-cheo-a", "tg2-cheo-b");
+    const { kq } = await nap();
+    const t = await trangThaiTin(a);
+    assert.equal(t.n, 2, "tiền đề: hai bài cùng chữ phải gom thành một tin");
+    assert.notEqual(t.status, "xung_dot", "tin chéo hai nhóm thành xung đột do chính hàng này");
+    for (const p of [a, b]) assert.ok(!(await dongSong(p)).some((x) => x.field === "project_node_id"), `bài ${p} vẫn mang dự án thẻ`);
+    assert.equal(kq.the_nhom.tin.theBatDong, 1);
+  });
+});
+
+test("TG2-T4 E10 AC-8 một bài chữ nêu dự án khác thẻ: tin mang đúng dự án của chữ, bài im cùng tin không nhận dự án thẻ", async () => {
+  await ca(async (f) => {
+    await the("tg2-chu-tin", { duAn: [f.duAn1] });
+    const [a, b] = await baiCheo("tg2-chu-tin", "tg2-chu-tin");
+    await nhanChuBai(a, f.ten2);
+    await nap();
+    assert.deepEqual(await trangThaiTin(a), { status: "mot_du_an", du_an: f.duAn2, n: 2 });
+    assert.deepEqual((await dongSong(b)).filter((x) => x.field === "project_node_id"), [], "bài im cùng tin vẫn nhận dự án thẻ");
+  });
+});

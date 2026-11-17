@@ -77,44 +77,74 @@ const NGUON = "S03";
 /**
  * Dòng phát biểu cho bài của các nhóm có thẻ đã duyệt. Hàm thuần, không đọc DB.
  *
- * Với MỖI bài, mỗi trường chọn đúng MỘT giá trị rồi mới ghi — không cộng dồn hai nguồn trên cùng bài (nếu cộng dồn, tin gom
- * nhiều bài sẽ thành «xung đột» do chính hàng này sinh ra):
+ * Bước 1 — theo BÀI: mỗi trường chọn đúng MỘT giá trị:
  *   dự án:    chữ bài (nhãn bạc chu_bai, trích đã kiểm, đã khớp một nút) → ô dự án của thẻ (đúng một nút) → không ghi;
  *   phường:   chữ bài đã nêu phường (cột của tin đã mang nó) → không ghi; còn lại → ô phường của thẻ;
  *   phân khu: ô phân khu của thẻ (chữ bài chỉ có phân khu dạng chữ, chưa nối nút — PL20, ngoài phạm vi).
- * Bài của nhóm KHÔNG có thẻ đã duyệt: không đụng tới (đường cũ giữ nguyên). Bài không có khoá nhóm: bỏ qua.
+ * Bước 2 — theo TIN, chỉ ô dự án (AC-8): offer_project đếm mọi dòng dự án sống của MỌI bài trong tin, nên đóng dấu từng bài mà
+ * không nhìn cả tin là tự sinh xung đột (đo 17/11, kịch bản K1: 13 tin — 9 tin đăng lại chéo nhóm, 4 tin có bài chữ nêu dự án khác).
+ *   - hai bài chữ nêu hai dự án khác nhau → bỏ mọi dòng dự án của tin (xung đột thật của chữ, không phải việc của thẻ);
+ *   - đúng một dự án do chữ nêu → chữ thắng trên CẢ tin: bỏ dòng dự án từ thẻ khác giá trị ấy;
+ *   - chữ im mà thẻ của các nhóm trong tin bất đồng (bài đăng lại chéo nhóm) → không đoán, bỏ mọi dòng dự án từ thẻ;
+ *   - bài khác cùng tin mà hàng này KHÔNG ghi dự án đang mang dòng dự án của luật khác (`duAnKhac`) khác giá trị → bỏ mọi dòng
+ *     dự án của tin: hàng này chỉ rút dòng luật khác trên bài nó ghi dự án, nên đóng dấu là sinh hai dự án sống.
+ *   Bỏ ô dự án KHÔNG kéo theo ô phường hay phân khu.
+ * Bài của nhóm KHÔNG có thẻ đã duyệt: không ghi gì. Bài không có khoá nhóm: bỏ qua. Bài không mang mã tin: là một tin riêng.
  *
- * @param {{ bai: { post_id: string, conversation_id: string|null, posted_at?: string|null }[],
- *           the: Map<string, The>, nhanDuAn: Map<string, string>, phuongChu?: Set<string> }} p
- *   `conversation_id` là khoá nhóm ĐÃ chuẩn hoá; `nhanDuAn` post_id → id nút dự án đã khớp từ chữ bài (bài có nhãn mà không
- *   khớp nút nào thì vắng mặt, nên rơi về thẻ); `phuongChu` các post_id mà chữ bài đã nêu phường.
- * @returns {{ dong: object[], baiDong: string[], demTheoNguon: { the: number, chu_bai: number, bo: number } }}
+ * @param {{ bai: { post_id: string, conversation_id: string|null, posted_at?: string|null, tin?: string }[],
+ *           the: Map<string, The>, nhanDuAn: Map<string, string>, phuongChu?: Set<string>,
+ *           duAnKhac?: Map<string, string[]> }} p
+ *   `conversation_id` là khoá nhóm ĐÃ chuẩn hoá; `nhanDuAn` post_id → id nút dự án đã khớp từ chữ bài; `phuongChu` các post_id mà
+ *   chữ bài đã nêu phường; `duAnKhac` post_id → giá trị các dòng dự án SỐNG của luật khác trên bài ấy.
+ * @returns {{ dong: object[], baiDong: string[], demTheoNguon: { the: number, chu_bai: number, bo: number },
+ *             demTin: { chuBaiThang: number, chuBaiBatDong: number, theBatDong: number, xungLuatKhac: number } }}
  */
-export function phatBieuDiaChiNhom({ bai, the, nhanDuAn, phuongChu = new Set() }) {
-  const dong = [];
-  const baiDong = new Set();
-  const demTheoNguon = { the: 0, chu_bai: 0, bo: 0 };
+export function phatBieuDiaChiNhom({ bai, the, nhanDuAn, phuongChu = new Set(), duAnKhac = new Map() }) {
+  const khac = [];               // dòng phường, phân khu — không qua hoà giải
+  const duAn = new Map();        // post_id → dòng dự án (bước 1)
+  const tinCua = new Map();      // khoá tin → [post_id]
+  const dongCho = (b, t, field, value, nguon_o) => ({
+    subject_key: subjectKey(NGUON, b.post_id), field, value, evidence_tier: EVIDENCE_TIER.inferred, method: ASSERTION_METHOD.e1_rule,
+    method_version: METHOD_VERSION, rule_id: RULE_ID, evidence: { the: t.card_code, ban: t.version, nguon_o },
+    observed_at: b.posted_at ?? null,
+  });
   for (const b of bai) {
+    const k = b.tin ?? `bai:${b.post_id}`;
+    tinCua.set(k, [...(tinCua.get(k) ?? []), b.post_id]);
     if (b.conversation_id == null) continue;
     const t = the.get(b.conversation_id);
     if (!t) continue;
-    const sk = subjectKey(NGUON, b.post_id);
-    const ghi = (field, value, nguon_o) => {
-      dong.push({
-        subject_key: sk, field, value, evidence_tier: EVIDENCE_TIER.inferred, method: ASSERTION_METHOD.e1_rule,
-        method_version: METHOD_VERSION, rule_id: RULE_ID, evidence: { the: t.card_code, ban: t.version, nguon_o },
-        observed_at: b.posted_at ?? null,
-      });
-      baiDong.add(sk);
-    };
     const chu = nhanDuAn.get(b.post_id);
-    if (chu != null) { ghi(ASSERTION_FIELD.project_node_id, String(chu), "chu_bai"); demTheoNguon.chu_bai++; }
-    else if (t.duAn != null) { ghi(ASSERTION_FIELD.project_node_id, t.duAn, "the"); demTheoNguon.the++; }
-    else demTheoNguon.bo++;
-    if (t.areaId != null && !phuongChu.has(b.post_id)) ghi(ASSERTION_FIELD.area_id, t.areaId, "the");
-    if (t.phanKhu != null) ghi(ASSERTION_FIELD.subzone_node_id, t.phanKhu, "the");
+    if (chu != null) duAn.set(b.post_id, dongCho(b, t, ASSERTION_FIELD.project_node_id, String(chu), "chu_bai"));
+    else if (t.duAn != null) duAn.set(b.post_id, dongCho(b, t, ASSERTION_FIELD.project_node_id, t.duAn, "the"));
+    if (t.areaId != null && !phuongChu.has(b.post_id)) khac.push(dongCho(b, t, ASSERTION_FIELD.area_id, t.areaId, "the"));
+    if (t.phanKhu != null) khac.push(dongCho(b, t, ASSERTION_FIELD.subzone_node_id, t.phanKhu, "the"));
   }
-  return { dong, baiDong: [...baiDong], demTheoNguon };
+
+  const demTin = { chuBaiThang: 0, chuBaiBatDong: 0, theBatDong: 0, xungLuatKhac: 0 };
+  for (const ps of tinCua.values()) {
+    const co = ps.filter((p) => duAn.has(p));
+    if (!co.length) continue;
+    const bo = (dk) => { let n = 0; for (const p of co) if (duAn.has(p) && dk(duAn.get(p))) { duAn.delete(p); n++; } return n; };
+    const chu = new Set(co.map((p) => duAn.get(p)).filter((d) => d.evidence.nguon_o === "chu_bai").map((d) => d.value));
+    if (chu.size >= 2) { bo(() => true); demTin.chuBaiBatDong++; continue; }
+    if (chu.size === 1) {
+      const [x] = chu;
+      if (bo((d) => d.evidence.nguon_o === "the" && d.value !== x)) demTin.chuBaiThang++;
+    } else if (new Set(co.map((p) => duAn.get(p).value)).size >= 2) { bo(() => true); demTin.theBatDong++; continue; }
+    const conLai = new Set(ps.filter((p) => duAn.has(p)).map((p) => duAn.get(p).value));
+    const ngoai = ps.filter((p) => !duAn.has(p)).flatMap((p) => duAnKhac.get(p) ?? []);
+    if (conLai.size === 1 && ngoai.some((v) => !conLai.has(String(v)))) { bo(() => true); demTin.xungLuatKhac++; }
+  }
+
+  const dong = [...duAn.values(), ...khac];
+  const demTheoNguon = { the: 0, chu_bai: 0, bo: 0 };
+  for (const b of bai) {
+    if (b.conversation_id == null || !the.has(b.conversation_id)) continue;
+    const d = duAn.get(b.post_id);
+    demTheoNguon[d ? d.evidence.nguon_o : "bo"]++;
+  }
+  return { dong, baiDong: [...new Set(dong.map((d) => d.subject_key))], demTheoNguon, demTin };
 }
 
 /**

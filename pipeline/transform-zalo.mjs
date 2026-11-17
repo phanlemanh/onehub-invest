@@ -16,7 +16,7 @@ import { writeOffers } from "./lib/write-offers.mjs";
 import { ganSdtQuaNguoi } from "./lib/gan-sdt-qua-nguoi.mjs";
 import { co095, retractRule, subjectKey, phatBieuLoaiHinh, phatBieuPhongNgu, phatBieuTang, phatBieuToaTruc, rutLoaiHinhCu, rutTangCu } from "./lib/assert.mjs";
 import { assignStickyIds } from "./lib/offer-key.mjs";
-import { LY_DO_RUT, coBangThe, docNhanDuAn, docTheDaDuyet, phatBieuDiaChiNhom, rutTheCu } from "./lib/dia-chi-the-nhom.mjs";
+import { LY_DO_RUT, RULE_ID as RULE_ID_THE, coBangThe, docNhanDuAn, docTheDaDuyet, phatBieuDiaChiNhom, rutTheCu } from "./lib/dia-chi-the-nhom.mjs";
 import { normText } from "./lib/norm-text.mjs";
 import { ASSERTION_METHOD, CONFIDENCE, ENRICH_FIELD, FLOOR_BAND, KIND, PROPERTY_TYPE } from "./lib/vocab.generated.mjs";
 
@@ -1025,9 +1025,15 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
   const theNhomDem = { nhom: theNhom.size, dong: 0, o_bo: oBo, rut_ban: 0, rut_luot: 0, rut_dv6: 0, nguon: null };
   if (coThe) {
     const nhomCua = new Map(posts.map((p) => [p.post_id, p.conversation_id ?? null]));
+    const tinCua = new Map(nhom.flatMap((o) => o.posts.map((p) => [p.post_id, o.offerId])));
+    // Dòng dự án SỐNG của luật khác trên bài của lượt — để không đóng dấu một tin mà bài khác của nó đang mang dự án khác.
+    const { rows: khacRows } = await client.query(
+      `SELECT split_part(subject_key, ':', 2) AS p, array_agg(value) AS v FROM field_assertions
+        WHERE retracted_at IS NULL AND field = 'project_node_id' AND subject_key = ANY ($1::text[]) AND rule_id IS DISTINCT FROM $2
+        GROUP BY 1`, [baiDoc.map((p) => subjectKey("S03", p.post_id)), RULE_ID_THE]);
     const r = phatBieuDiaChiNhom({
-      bai: baiDoc.map((p) => ({ post_id: p.post_id, conversation_id: nhomCua.get(p.post_id) ?? null, posted_at: p.posted_at })),
-      the: theNhom, nhanDuAn: await docNhanDuAn(client), phuongChu,
+      bai: baiDoc.map((p) => ({ post_id: p.post_id, conversation_id: nhomCua.get(p.post_id) ?? null, posted_at: p.posted_at, tin: tinCua.get(p.post_id) })),
+      the: theNhom, nhanDuAn: await docNhanDuAn(client), phuongChu, duAnKhac: new Map(khacRows.map((x) => [x.p, x.v])),
     });
     dongThe = r.dong;
     const baiDuAn = [...new Set(r.dong.filter((d) => d.field === "project_node_id").map((d) => d.subject_key))];
@@ -1035,9 +1041,10 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
       theNhomDem.rut_dv6 += await retractRule(client, baiDuAn, "project_node_id", rule, LY_DO_RUT.thayDV6);
     }
     const rut = await rutTheCu(client, { dong: r.dong, moiChuThe: baiDoc.map((p) => subjectKey("S03", p.post_id)), the: theNhom });
-    Object.assign(theNhomDem, { dong: r.dong.length, rut_ban: rut.rutBan, rut_luot: rut.rutLuot, nguon: r.demTheoNguon });
+    Object.assign(theNhomDem, { dong: r.dong.length, rut_ban: rut.rutBan, rut_luot: rut.rutLuot, nguon: r.demTheoNguon, tin: r.demTin });
     console.log(`thẻ nhóm: ${theNhom.size} thẻ đã duyệt, ${r.dong.length} phát biểu ${JSON.stringify(r.demTheoNguon)}, ` +
-      `rút ${rut.rutBan} theo bản thẻ + ${rut.rutLuot} theo lượt + ${theNhomDem.rut_dv6} dòng DV6, ô bỏ ${JSON.stringify(oBo)}`);
+      `hoà giải tin ${JSON.stringify(r.demTin)}, rút ${rut.rutBan} theo bản thẻ + ${rut.rutLuot} theo lượt + ${theNhomDem.rut_dv6} dòng DV6, ` +
+      `ô bỏ ${JSON.stringify(oBo)}`);
   }
   // PL15: phòng ngủ đi qua phát biểu (mỗi post một), năm cột do bộ phân xử dựng — không ghi thẳng.
   const { reconcile } = await writeOffers(client, "S03", rows, {
