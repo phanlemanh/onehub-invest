@@ -12,8 +12,8 @@ flowchart TD
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>20 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>200 việc"]
-  GB --> CN["Chờ phiên nghiệm thu<br/>129 việc"] --> GG{"Cổng Giá trị"}
+  GB --> DG["Đã giao<br/>201 việc"]
+  GB --> CN["Chờ phiên nghiệm thu<br/>130 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
 
@@ -181,6 +181,7 @@ flowchart TD
 - Tin S03 ghi tầng (số tầng hay dải cao, trung, thấp) mang phát biểu tầng có trích dẫn, ở field đã kiểm RESO (`tang-tren-tin-s03`)
 - Mẫu bài căn hộ S03 của Ocean Park 1 và Grand Park chọn phân tầng theo khu và mức gắn, có nháp nhãn toà, trục, căn do tác tử điền kèm câu trích, nạp vào eval_label_items chờ người duyệt trên /ops/labels, và đóng băng được thành tập test có băm cho PL20 (`tap-nhan-ghep-tin-hai-khu`)
 - Người vận hành dữ liệu sinh được một tập tin mẫu của lát Ocean Park 1 có đáp án biết sẵn, sinh lại ra đúng tập cũ, mang dấu mẫu và không bao giờ tới bảng canonical — để PL9 chấm cách đọc tin trước khi đội gắn nhãn xong (`tap-nhan-mau-ocp1`)
+- Người vận hành mở sổ nhóm trên Ops và thấy mỗi nhóm S03 có bài một thẻ địa chỉ — máy dựng nháp dự án (một hay danh sách ngắn), phường và tỉnh, phân khu mặc định, bán hay thuê kèm số bài làm căn cứ — rồi nhận, sửa hay bác từng thẻ; sổ đếm đủ 27/27 nhóm có thẻ (`the-dia-chi-nhom-s03`)
 - Người duyệt mở /ops/review và thấy mọi trường kèm căn cứ, ảnh tin và toàn văn tin, không có «AI tự tin %», rồi quyết kèm lý do được ghi audit cùng giao dịch (`the-duyet-du-can-cu`)
 - Người duyệt thấy người đăng của mỗi tin trên thẻ ghép căn (tên, SĐT, số tin đang rao) và nhận ra ngay khi hai tin cùng một người (`the-duyet-hien-nguoi-dang`)
 - Thẻ duyệt Người cho ca nhiều–nhiều trên /ops/review — SĐT nhiều người gửi, người gửi nhiều SĐT thành thẻ; người duyệt chọn gộp hay giữ tách, quyết định áp qua luật xác định ở bước dựng danh bạ, có vết và đảo được (`the-duyet-nguoi-nhieu-nhieu`)
@@ -284,6 +285,7 @@ flowchart TD
 - lối cài riêng job sao lưu tuần — install-cron.sh --chi backup chỉ cài job sao lưu, không khởi động lại job thu đang chạy (`install-cron-chi`) — đã giao — máy thông, cửa veto còn mở
 - Bản đồ đích cổng Invest — block đích cho mọi route Invest trước khi dọn tiếp (`invest-target-map`)
 - Itest nạp lại migration cũ xanh lại trên DB đã có 095 — phép đo về migration X chạy trên DB dừng ở X, bộ nạp lại không bao giờ thu hẹp ràng buộc trường, bền với 096 (`itest-nap-lai-migration-cu-sau-095`)
+- Lưới phạm vi làn của JST-AC-8 đo trên bản chép — hai ô đột biến dựng diff từ hai tệp tạm bằng git diff --no-index thay vì ghi vào scripts/zalo-import-daily.sh thật trong cây làm việc (`job-step-do-tren-ban-chep`) — đã giao — máy thông, cửa veto còn mở
 - Ghi thời lượng từng bước của job nạp — job_step, job_run và buoc_nhanh in một dòng ghim JOB STEP ra stderr (job, bước, mã, giây, cột nhanh), kèm một bước gộp truoc-lan-claude đo phần lấy khoá và nạp của zalo-import-daily.sh; phép đo không mở hay ghi tệp nào (`job-step-ghi-thoi-luong`)
 - ZC1 nối tiếp — cứng hoá ingest của collector API (media rác không làm hỏng lô, id tin chữ giữ nguyên, payload nguyên vẹn) (`kev-nhan-cung-hoa`)
 - sửa thước kiểm kev-nhan đỏ sẵn trên main — tên thư mục giả theo khuôn PL1 và chữ log Kev hỏng theo ZC6 (`kev-nhan-thuoc-sau-pl1`)
