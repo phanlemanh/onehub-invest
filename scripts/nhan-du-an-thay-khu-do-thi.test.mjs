@@ -58,7 +58,7 @@ export const MA_TRAN = [
   ["app/src/components/ops/sources/so-don-vi.tsx", '"Đã khai thị trường, dự án"'],
   ["app/src/components/ops/sources/so-don-vi.tsx", 'aria-label="Khai thị trường, dự án"'],
   ["app/src/components/ops/sources/so-don-vi.tsx", 'id: "projects"'],
-  ["app/src/components/ops/sources/so-don-vi-dialog.tsx", "Khai thị trường, dự án"],
+  ["app/src/components/ops/sources/so-don-vi-dialog.tsx", "<DialogTitle>Khai thị trường, dự án</DialogTitle>"],
   ["app/src/components/ops/sources/so-don-vi-dialog.tsx", 'label="Dự án"'],
   ["app/src/components/ops/sources/so-don-vi-dialog.tsx", 'placeholder="Chọn dự án…"'],
   ["app/src/components/ops/quality/do-hang-ngay.tsx", "tên dự án trong bài"],
