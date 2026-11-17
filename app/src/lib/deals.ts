@@ -2,6 +2,7 @@ import { pool } from "./db";
 import {
   type DealChiTiet,
   type DealHang,
+  type MatBang,
   cauChungMinh,
   lyDoRoi,
   NGAY_TOI_DA,
@@ -323,6 +324,34 @@ async function hoanTat(rows: DealRow[], mayThu: boolean): Promise<{ rows: DealRo
   };
 }
 
+/**
+ * Mặt bằng S03 so S06 (CG15, project_source_baseline — chỉ máy thu) của các tin S03 cấp dự án trong `ids`: một câu, khớp khoá
+ * nhóm của dòng hạng. Bảng vắng (cloud, máy thu chưa áp 107) → `{}`, không lỗi; lỗi khác ném tiếp cho khối lỗi.
+ */
+export async function matBangCho(ids: string[]): Promise<Record<string, MatBang>> {
+  if (ids.length === 0) return {};
+  const { rows: co } = await pool.query(`SELECT to_regclass('project_source_baseline') IS NOT NULL AS co`);
+  if (!co[0]?.co) return {};
+  const { rows } = await pool.query(
+    `SELECT h.offer_id, b.n_s03, b.trung_vi_s03, b.n_s06, b.trung_vi_s06, b.lech_pct, b.trang_thai
+       FROM offer_price_rank h
+       JOIN sale_offers o ON o.offer_id = h.offer_id AND o.source = 'S03'
+       JOIN project_source_baseline b
+         ON b.nut = h.nut AND b.kind = h.kind AND b.property_type = h.property_type AND b.thuoc = h.thuoc
+        AND coalesce(b.pn_nhom, -1) = coalesce(h.pn_nhom, -1)
+      WHERE h.cap = 'du_an' AND h.offer_id = ANY($1::text[])`, [ids]);
+  const num = (v: unknown) => (v === null || v === undefined ? null : Number(v));
+  return Object.fromEntries(rows.map((r) => [r.offer_id as string, {
+    nS03: Number(r.n_s03), medianS03: num(r.trung_vi_s03), nS06: Number(r.n_s06), medianS06: num(r.trung_vi_s06),
+    lechPct: num(r.lech_pct), trangThai: r.trang_thai as MatBang["trangThai"],
+  }]));
+}
+/** Gắn `matBang` vào từng dòng (null khi tin không có mặt bằng). */
+async function ganMatBang(rows: DealRow[]): Promise<DealRow[]> {
+  const mb = await matBangCho(rows.filter((d) => d.source === "S03" && d.rank?.level === "du_an").map((d) => d.offerId));
+  return rows.map((d) => ({ ...d, matBang: mb[d.offerId] ?? null }));
+}
+
 /** Giới hạn danh sách khi lọc một dự án (CG10): không cắt 30 — Ocean Park 1 có 140 căn. */
 export const SO_CAN_DU_AN = 300;
 
@@ -334,7 +363,7 @@ export async function getDeals(limit?: number, minDiscountPct = NGUONG_VAO_PCT, 
   // Không có bảng hạng thì không có cấp dự án: lọc dự án trả rỗng thay vì danh sách cả phường.
   if (project && !(await coBangHang())) return { rows: [], mayThu: true };
   const { rows, mayThu } = await truyVan(sql, project ? [minDiscountPct, lim, project] : [minDiscountPct, lim]);
-  return hoanTat(rows.map(toDealRow), mayThu);
+  return hoanTat(await ganMatBang(rows.map(toDealRow)), mayThu);
 }
 
 /**
@@ -346,7 +375,7 @@ export async function getXacMinh({ project = null, limit = SO_CAN_DU_AN }: { pro
   if (!(await coBangHang())) return null;
   const sql = (o: { cloud?: boolean; coBang?: boolean }) => dealsSql({ ...o, duAn: Boolean(project), chiXacMinh: true });
   const { rows, mayThu } = await truyVan(sql, project ? [NGUONG_VAO_PCT, limit, project] : [NGUONG_VAO_PCT, limit]);
-  const xong = await hoanTat(rows.map(toDealRow), mayThu);
+  const xong = await hoanTat(await ganMatBang(rows.map(toDealRow)), mayThu);
   return { tong: Number(rows[0]?.tong ?? 0), rows: xong.rows, mayThu: xong.mayThu };
 }
 
@@ -390,7 +419,8 @@ async function daiM2Cua(d: DealRow): Promise<{ p10: number; p90: number } | null
 export async function getDeal(offerId: string): Promise<{ deal: DealRow | null; mayThu: boolean }> {
   const { rows, mayThu } = await truyVan(dealSql, [offerId]);
   if (!rows[0]) return { deal: null, mayThu };
-  const d = { ...toDealRow(rows[0]), daiM2: await daiM2Cua(toDealRow(rows[0])) };
+  const [d0] = await ganMatBang([toDealRow(rows[0])]);
+  const d = { ...d0, daiM2: await daiM2Cua(d0) };
   const xong = await hoanTat([{ ...d, roiDanhSach: lyDoRoi(d, rows[0].qua_han === true) }], mayThu);
   return { deal: xong.rows[0], mayThu: xong.mayThu };
 }
