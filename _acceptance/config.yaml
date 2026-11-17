@@ -139,8 +139,8 @@ executors:
     s4v_phu: "node --test --test-name-pattern=S4V-AC-5 scripts/suite-neu-doi.test.mjs"      # s4-suite-theo-vung E5 — quét kho thật
     s4v_cau_hinh: "node --test --test-name-pattern=S4V-AC-6 scripts/suite-neu-doi.test.mjs && bash _acceptance/s4-suite-theo-vung/probes/cau-hinh-khong-doi.sh"   # s4-suite-theo-vung E6
     s4v_dung_wt: "node --test scripts/dung-worktree-cham.test.mjs"   # s4-suite-theo-vung E7 — repo git tạm + worktree, không DB
-    sstl_buoc_ci: "node --test --test-name-pattern=SSL-AC-1 scripts/suite-neu-doi.test.mjs"   # suite-scripts-vao-luot-cham E1 — so phần tử job CI, đầu ra thật
-    sstl_tom_tat: "node --test --test-name-pattern=SSL-AC-2 scripts/suite-neu-doi.test.mjs"   # suite-scripts-vao-luot-cham E2 — dòng tóm tắt, run-log, dọn DB
+    sstl_buoc_ci: "bash _acceptance/suite-scripts-vao-luot-cham/probes/co-ca.sh SSL-AC-1" # suite-scripts-vao-luot-cham E1 — so phần tử job CI, đầu ra thật
+    sstl_tom_tat: "bash _acceptance/suite-scripts-vao-luot-cham/probes/co-ca.sh SSL-AC-2" # suite-scripts-vao-luot-cham E2 — dòng tóm tắt, run-log, dọn DB
     sstl_tai_hien_471: "bash _acceptance/suite-scripts-vao-luot-cham/probes/tai-hien.sh 471"   # suite-scripts-vao-luot-cham E3 — đỉnh 5b02c3de phải đỏ s05-khoa-nap (5)
     sstl_tai_hien_472: "bash _acceptance/suite-scripts-vao-luot-cham/probes/tai-hien.sh 472"   # suite-scripts-vao-luot-cham E4 — đỉnh f3fecd5f phải đỏ DT-AC-7
     sstl_main_xanh: "node scripts/suite-neu-doi.mjs --chay-scripts"                            # suite-scripts-vao-luot-cham E5 — trọn bộ theo CI trên cây đang chấm phải xanh

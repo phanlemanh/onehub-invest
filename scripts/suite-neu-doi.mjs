@@ -151,7 +151,30 @@ export function tomTatScripts(out, { sha, exit, giay }) {
 
 const dx = (...a) => spawnSync("docker", ["exec", "-i", "-e", "PGPASSWORD=oneinvest", DB_CONTAINER, ...a], { encoding: "utf8" });
 
+// Shell của bước: job không khai `shell:` thì runner Linux chạy `bash -e {0}` — không pipefail. Lệch thì gọi tên trong
+// lechMoiTruong để SSL-AC-1 đỏ.
+export const SHELL_CI = ["-e", "-c"];
+export function lechMoiTruong(job, anhMay) {
+  const sai = [];
+  for (const [svc, c] of Object.entries(job.services ?? {}))
+    if (c.image !== anhMay) sai.push(`services.${svc}.image: job ${c.image} ≠ máy ${anhMay}`);
+  if (job.defaults?.run?.shell) sai.push(`defaults.run.shell: ${job.defaults.run.shell}`);
+  for (const st of job.steps ?? []) if (st.run && st.shell) sai.push(`shell của bước «${st.name}»: ${st.shell}`);
+  return sai;
+}
+
+// DB của lượt trước bị giết cứng (SIGKILL, máy tắt) không qua được finally: lượt sau xoá DB nào có pid ở đuôi không còn sống.
+const MAU_DB = /^oneinvest_ci_scripts_(\d+)$/;
+export function dbMoCoi(ten, song, pidMinh = process.pid) {
+  return ten.filter((t) => { const m = MAU_DB.exec(t); return m && Number(m[1]) !== pidMinh && !song(Number(m[1])); });
+}
+const pidSong = (pid) => { try { process.kill(pid, 0); return true; } catch (e) { return e.code === "EPERM"; } };
+
 async function mainScripts(argv) {
+  for (const k of ["--root", "--ho-so", "--tep"]) {
+    const i = argv.indexOf(k);
+    if (i >= 0 && (argv[i + 1] === undefined || argv[i + 1].startsWith("--"))) { console.error(`suite-neu-doi: ${k} thiếu giá trị`); return 2; }
+  }
   const opt = (k) => { const i = argv.indexOf(k); return i >= 0 ? argv[i + 1] : undefined; };
   const root = opt("--root") ? path.resolve(opt("--root")) : gocKho(process.cwd());
   const hoSo = opt("--ho-so");
@@ -161,10 +184,21 @@ async function mainScripts(argv) {
   let buoc;
   try { buoc = buocSuite(root); } catch (e) { console.error(`suite-neu-doi: ${e.message}`); return 2; }
   const ten = `oneinvest_ci_scripts_${process.pid}`;
+  const ds = dx("psql", "-U", "oneinvest", "-h", "localhost", "-d", "oneinvest", "-At", "-c", "select datname from pg_database");
+  for (const cu of dbMoCoi((ds.stdout || "").split("\n").map((x) => x.trim()), pidSong)) {
+    const r = dx("dropdb", "-U", "oneinvest", "-h", "localhost", "--if-exists", "--force", cu);
+    console.error(`suite-neu-doi: ${r.status === 0 ? "đã xoá" : "không xoá được"} DB mồ côi ${cu}`);
+  }
   const tao = dx("createdb", "-U", "oneinvest", "-h", "localhost", ten);
   if (tao.status !== 0) { console.error(`suite-neu-doi: không dựng được DB trống ${ten}: ${(tao.stderr || tao.error?.message || "").trim()}`); return 2; }
   let daXoa = false;
-  const xoa = () => { if (!daXoa) { daXoa = true; dx("dropdb", "-U", "oneinvest", "-h", "localhost", "--if-exists", "--force", ten); } };
+  const xoa = () => {
+    if (daXoa) return true;
+    daXoa = true;
+    const r = dx("dropdb", "-U", "oneinvest", "-h", "localhost", "--if-exists", "--force", ten);
+    if (r.status !== 0) console.error(`suite-neu-doi: KHÔNG xoá được DB ${ten}: ${(r.stderr || r.error?.message || "").trim()}`);
+    return r.status === 0;
+  };
   // Bước chạy trong nhóm tiến trình riêng: nhận tín hiệu thì ngắt cả nhóm (bash, node --test và con của nó), xoá DB, thoát
   // 128 + số hiệu. spawnSync không làm được: trình xử lý tín hiệu chỉ chạy sau khi con xong.
   let con = null;
@@ -172,7 +206,7 @@ async function mainScripts(argv) {
     if (con?.pid) { try { process.kill(-con.pid, "SIGTERM"); } catch { /* nhóm đã thoát */ } }
     xoa(); process.exit(128 + so);
   });
-  ngat("SIGINT", 2); ngat("SIGTERM", 15);
+  ngat("SIGHUP", 1); ngat("SIGINT", 2); ngat("SIGTERM", 15);
   const batDau = Date.now();
   let ma = 0, raTest = "";
   try {
@@ -188,7 +222,7 @@ async function mainScripts(argv) {
       }
       console.log(`suite-neu-doi: bước «${tb}»`);
       const k = await new Promise((xong) => {
-        con = spawn("bash", ["-eo", "pipefail", "-c", l], { cwd: root, env, stdio: ["inherit", tb === "test" ? "pipe" : "inherit", "inherit"], detached: true });
+        con = spawn("bash", [...SHELL_CI, l], { cwd: root, env, stdio: ["inherit", tb === "test" ? "pipe" : "inherit", "inherit"], detached: true });
         if (tb === "test") con.stdout.on("data", (b) => { process.stdout.write(b); raTest = (raTest + b).slice(-20000); });
         con.on("close", (status, signal) => xong({ status, signal }));
         con.on("error", () => xong({ status: 127, signal: null }));
@@ -197,7 +231,10 @@ async function mainScripts(argv) {
       if (k.signal) { ma = 128 + ({ SIGINT: 2, SIGKILL: 9, SIGTERM: 15 }[k.signal] ?? 1); break; }
       if (k.status !== 0) { console.error(`suite-neu-doi: bước «${tb}» thoát ${k.status}`); ma = k.status ?? 1; break; }
     }
-  } finally { xoa(); }
+  } finally {
+    // DB tạm rò lại trên server dùng chung: lượt chạy khô không được báo xanh.
+    if (!xoa() && ma === 0) ma = 3;
+  }
   let sha = null;
   try { sha = git(root, "rev-parse", "HEAD").trim(); } catch { /* không phải kho git */ }
   const dong = JSON.stringify(tomTatScripts(raTest, { sha, exit: ma, giay: Math.round((Date.now() - batDau) / 100) / 10 }));
