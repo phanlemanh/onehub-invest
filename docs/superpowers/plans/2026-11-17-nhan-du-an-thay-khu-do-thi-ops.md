@@ -11,7 +11,7 @@
 ## Global Constraints
 - Chỉ đổi chữ: `id: "projects"`, `value: "du_an"`, `value: "ma-trung-du-an"`, khoá `project` giữ nguyên (mục 39 Hỏi-1).
 - `CONTEXT.md`: chỉ một dòng `_Avoid_` của «Danh mục CĐT».
-- `_acceptance/config.yaml`: chỉ thêm `executors.test.ndt_unit`.
+- `_acceptance/config.yaml`: chỉ thêm `executors.script.ndt_unit`.
 - ReUI: không đổi lớp, màu, khoảng.
 
 ## Review Focus

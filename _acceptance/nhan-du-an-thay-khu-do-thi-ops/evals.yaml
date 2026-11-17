@@ -4,7 +4,7 @@ evals:
   - id: E1
     criterion: AC-1
     executor: test
-    cmd: config:executors.test.ndt_unit
+    cmd: config:executors.script.ndt_unit
     paths: [scripts/nhan-du-an-thay-khu-do-thi.test.mjs, app/src/components/ops/sources/so-don-vi.tsx, app/src/components/ops/sources/so-don-vi-dialog.tsx, app/src/components/ops/quality/do-hang-ngay.tsx, app/src/components/ops/quality/lam-giau-bang.tsx, app/src/lib/so-don-vi.ts, app/src/lib/dq-labels.ts, app/src/lib/labels-normalize.ts, app/src/lib/do-hang-ngay.ts]
     expected: "exit 0; ca NDT-AC-1 liệt mọi tệp .ts/.tsx dưới app/src (đệ quy, đếm số tệp > 0 để không xanh rỗng), mỗi dòng khớp /khu đô thị/iu mà không chứa «quy mô» là một vi phạm; số vi phạm bằng 0. Chiều đỏ CÙNG fixture: cây tạm chép app/src rồi chèn dòng `const x = \"Khu đô thị\"` vào cuối app/src/lib/do-hang-ngay.ts → ca đỏ ghim «NDT-AC-1 app/src/lib/do-hang-ngay.ts:<n> còn chữ Khu đô thị» đúng số dòng chèn; và dòng chèn có «quy mô» thì KHÔNG bị bắt (đối chứng luật quy mô). Đối chứng dương: chạy cùng hàm quét trên bản `git show 5508f620:<tệp>` của tám tệp → đúng 18 vi phạm ở 8 tệp, khớp bảng phủ của hợp đồng. Ma trận viết trước NDT-AC-2 (tệp × chuỗi mới, mỗi ô một khẳng định có mặt): so-don-vi.tsx có `header: \"Dự án\"`, `\"Đã khai thị trường, dự án\"`, `aria-label=\"Khai thị trường, dự án\"`; so-don-vi-dialog.tsx có `Khai thị trường, dự án`, `label=\"Dự án\"`, `placeholder=\"Chọn dự án…\"`; do-hang-ngay.tsx có `tên dự án trong bài`; lib/do-hang-ngay.ts có `{ value: \"du_an\", label: \"Dự án\" }`; labels-normalize.ts có `project: \"Dự án\"` và `{ value: \"ma-trung-du-an\", label: \"Mã trùng giữa dự án\" }`; so-don-vi.tsx vẫn có `id: \"projects\"`. Ô nào thiếu thì ca đỏ ghim «NDT-AC-2 <tệp> thiếu <chuỗi>»."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
@@ -18,14 +18,14 @@ evals:
   - id: E3
     criterion: AC-3
     executor: test
-    cmd: config:executors.test.ndt_unit
+    cmd: config:executors.script.ndt_unit
     paths: [scripts/nhan-du-an-thay-khu-do-thi.test.mjs, CONTEXT.md]
     expected: "exit 0; ca NDT-AC-3 đọc CONTEXT.md, gom mọi dòng chứa `_Avoid_:` (số dòng > 0), không dòng nào chứa «danh mục dự án» (không phân biệt hoa thường). Chiều đỏ CÙNG fixture: bản chép CONTEXT.md nối «, danh mục dự án» vào dòng `_Avoid_` của «Danh mục CĐT» → ca đỏ ghim «NDT-AC-3 danh mục dự án nằm trong _Avoid_»."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4
     criterion: AC-4
     executor: test
-    cmd: config:executors.test.dn1_nap
+    cmd: config:executors.script.dn1_nap
     expected_exit: 1
     paths: [_acceptance/noi-du-an-s08-khu-do-thi/probes/nap.mjs, pipeline/mappings.yaml]
     expected: "exit 1 — giới hạn có sẵn, không do vòng này: trên main 5508f620 probe đã thoát 1 với 6 dòng FAIL; sau vòng còn đúng 5, cùng nguyên văn: «loi truoc 074 thay q7», «loi truoc 074 ma ocp da co trong areas», «loi con trung q7», «loi nut khac bi doi», «loi git grep thoat 0: app/src/lib/ops/registry/doc.ts» (trạng thái DB thử và tệp của #472, ngoài ranh giới hàng). Dòng «FAIL mappings chi local» biến mất; output có «ok mappings S08 cong khai», «ok mappings S08 tang A», «ok doi chung: mappings mat cau cong khai bi bat», «ok doi chung: mappings mat cau tang A bi bat», «ok doi chung: cong khai o khoi khac khong tinh». Mã thoát của probe không phân biệt được AC-4 — phép đo quyết định là E7."
@@ -40,14 +40,14 @@ evals:
   - id: E6
     criterion: AC-2
     executor: test
-    cmd: config:executors.test.ndt_unit
+    cmd: config:executors.script.ndt_unit
     paths: [scripts/nhan-du-an-thay-khu-do-thi.test.mjs, app/src/components/ops/sources/so-don-vi.tsx, app/src/components/ops/sources/so-don-vi-dialog.tsx, app/src/components/ops/quality/do-hang-ngay.tsx, app/src/lib/do-hang-ngay.ts, app/src/lib/labels-normalize.ts]
     expected: "exit 0; ca NDT-AC-2 là ma trận viết trước tệp × chuỗi hiển thị mới (kê nguyên văn ở E1) cùng các khoá giữ nguyên (`id: \"projects\"`, `value: \"du_an\"`, `value: \"ma-trung-du-an\"`, khoá `project:` của FIELD_LABEL); mỗi ô một khẳng định có mặt, số ô bằng số phần tử ma trận. Chiều đỏ CÙNG fixture: bản chép labels-normalize.ts đổi `project: \"Dự án\"` thành `project: \"Du an\"` → ca đỏ ghim «NDT-AC-2 app/src/lib/labels-normalize.ts thiếu project: \"Dự án\"»."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E7
     criterion: AC-4
     executor: test
-    cmd: config:executors.test.ndt_unit
+    cmd: config:executors.script.ndt_unit
     paths: [scripts/nhan-du-an-thay-khu-do-thi.test.mjs, _acceptance/noi-du-an-s08-khu-do-thi/probes/nap.mjs, pipeline/mappings.yaml]
     expected: "exit 0; ca NDT-AC-4 rút nguyên văn hàm kiemMappings từ nap.mjs (không cần DB), chạy trên pipeline/mappings.yaml: congKhai=true, tangA=true, không còn khoá local; ba đối chứng cùng fixture: khối S08 mất «công khai» → congKhai=false, mất «tầng A» → tangA=false, «công khai» chỉ còn ở khối khác → congKhai=false. Trên bản main 5508f620 của nap.mjs ca này đỏ (hàm trả local, không có congKhai)."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
