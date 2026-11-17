@@ -98,6 +98,7 @@
     "scripts/write-offers.test.mjs",
     "sync-cloud.test.mjs",
     "sync-pii.test.mjs",
-    "tests/import-s09.test.mjs"
+    "tests/import-s09.test.mjs",
+    "tests/import-s16.test.mjs"
   ]
 }
