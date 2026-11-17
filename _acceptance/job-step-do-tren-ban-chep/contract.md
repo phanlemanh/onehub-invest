@@ -60,5 +60,5 @@ vế cuối. Never: (i)×no-index (ô cây hiện tại phải đọc diff thậ
 
 ## Notes
 
-Sau S4 của vòng này, hồ sơ `job-step-ghi-thoi-luong` cần một lượt ghim lại bằng làn máy (tệp test là `paths` của E1–E9
-của nó); lượt ghim không đụng chữ ký người.
+Hồ sơ `job-step-ghi-thoi-luong` KHÔNG ghim lại trong vòng này: lưới trước gộp coi phần đổi ở đó chỉ là `decisions.jsonl`
+và vẫn báo OK, còn mọi ca JST-AC-1…9 của nó được E3 của vòng này chạy lại trọn trên đúng sha được chấm.

@@ -66,8 +66,8 @@ test: gộp PR xong thì `origin/main` mang bản mới, và đối chứng rút
 
 Hợp đồng `job-step-ghi-thoi-luong` giữ nguyên chữ như lúc ký (Mạnh chọn «mở hợp đồng mới», không chọn «nâng phạm vi
 sửa ngay»; và chọn «Để nguyên» khi được hỏi có sửa lời một tiêu chí đã ký). Sổ của hồ sơ cũ nhận một dòng trỏ sang hàng
-này. Tệp test là `paths` của E1–E9 hồ sơ cũ, nên sau S4 của hàng này máy ghim lại hồ sơ cũ một lượt (làn máy, không
-đụng chữ ký).
+này. Tệp test là `paths` của E1–E9 hồ sơ cũ, nhưng không ghim lại hồ sơ cũ: lưới trước gộp không đòi, và E3 của hàng
+này chạy lại trọn mọi ca của nó.
 
 ## 5. Ngoài phạm vi
 
