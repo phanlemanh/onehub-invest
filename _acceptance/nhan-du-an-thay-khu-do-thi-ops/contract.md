@@ -5,7 +5,7 @@ slug: nhan-du-an-thay-khu-do-thi-ops
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: implemented
+status: machine-cleared
 design_doc: docs/superpowers/specs/2026-11-17-nhan-du-an-thay-khu-do-thi-ops-design.md
 approved_by:
 approved_at:
@@ -70,3 +70,4 @@ agent/ và pipeline/ × quét (không phải chữ hiển thị — lời nhắc
 ## Notes
 
 Mọi lần sửa `CONTEXT.md` giữ hẹp đúng một dòng `_Avoid_` — nhánh TG1 của dãy U1 cũng sửa tệp này.
+- Ngoài-1 (máy định tuyến 2026-11-17, đề xuất S4 known-limits): Phép kiểm tiêu đề hộp «Khai thị trường, dự án» hiện vẫn báo xanh nếu ai đó đổi tiêu đề nhưng còn sót chữ đó trong chú thích. Người dùng thấy tiêu đề đúng ở thời điểm này; chỉ có nguy cơ về sau là một lần đổi chữ nhầm có thể lọt mà không bị bắt. — `scripts/nhan-du-an-thay-khu-do-thi.test.mjs`
