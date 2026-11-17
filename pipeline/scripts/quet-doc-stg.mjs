@@ -3,7 +3,7 @@
 // loadStgPosts (gạt bài thử). Quét tĩnh tệp của hàng: một câu SQL đọc thẳng bảng (FROM / JOIN stg_zalo_posts) là vi phạm —
 // đúng lớp lỗi đã làm TG1 mất hai vòng chấm. Chú thích nhắc tên bảng không tính.
 //   node pipeline/scripts/quet-doc-stg.mjs [tệp…]     vắng đối số thì quét tập tệp của hàng; thoát 1 kèm tệp:dòng khi có vi phạm
-import { readFileSync } from "node:fs";
+import { readFileSync, realpathSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -27,7 +27,7 @@ export function quet(ma) {
   return ra;
 }
 
-if (process.argv[1] && process.argv[1].endsWith("quet-doc-stg.mjs")) {
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const tep = process.argv.slice(2).length ? process.argv.slice(2) : TEP_CUA_HANG.map((t) => join(GOC, t));
   let n = 0;
   for (const t of tep) {

@@ -10,7 +10,8 @@
 //
 // Bài đọc QUA loadStgPosts (gạt bài thử) — không đọc thẳng stg_zalo_posts.
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { readFileSync, realpathSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import pg from "pg";
 
 import { khoaNhomThat } from "../lib/eval-labels.mjs";
@@ -151,6 +152,6 @@ async function main() {
   }
 }
 
-if (process.argv[1] && process.argv[1].endsWith("mau-bai-lac-du-an.mjs")) {
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   main().catch((e) => { console.error(e); process.exit(1); });
 }

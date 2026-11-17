@@ -14,7 +14,7 @@
 //     --do-neu-cu: số đo vắng hay ghim commit khác thì dựng lại bản chép và đo trước (khoá thư mục, thước song song chờ nhau)
 // Mỗi thước một mã thoát riêng (0 đạt · 1 trượt · 2 chưa đo được). Bài đọc qua loadStgPosts — không đọc thẳng bảng staging.
 import { execFileSync } from "node:child_process";
-import { mkdirSync, readFileSync, rmSync, writeFileSync, existsSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -255,7 +255,7 @@ const THUOC = {
   },
 };
 
-if (process.argv[1] && process.argv[1].endsWith("dong-dau-dia-chi-that.mjs")) {
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const a = process.argv.slice(2);
   const lay = (k) => { const i = a.indexOf(k); return i < 0 ? undefined : a[i + 1]; };
   if (a.includes("--chay")) await chay(lay("--kich-ban") ?? "K1");
