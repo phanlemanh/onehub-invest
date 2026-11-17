@@ -331,3 +331,4 @@
 {"ts":"2026-11-17T09:44:23Z","sha":"f7b54a127386ff0bc0d82be7c8d69d02241df196","round":9,"kind":"baseline","evals_hash":"05c3480c4cd5a61acb247c2422986ed2c49876e2a442e4a57046e2d380c4d76b","non_discriminating":[],"carried_from_round":1}
 {"ts":"2026-11-17T09:44:23Z","sha":"f7b54a127386ff0bc0d82be7c8d69d02241df196","round":9,"kind":"round-tally","verdict":"PENDING-JUDGMENT","expected":14,"returned":14,"blocked":0}
 {"ts":"2026-11-17T09:44:23Z","sha":"f7b54a127386ff0bc0d82be7c8d69d02241df196","round":9,"kind":"chot-truong-nguoi","human_signoff":0,"human_override":1,"bypass_ack":0,"verified_at":16}
+{"kind":"thuoc-vat","ts":"2026-11-17T10:28:20Z","round":9,"san":"62702621183b8b38323cd3a968c8106eabf0eac3","vat":[433,42],"thuoc":[0,0],"ho_so":[2953,47],"nhat":0,"lan":0,"tep_thuoc":[]}
