@@ -5,7 +5,7 @@ slug: nap-s16-vao-danh-ba
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-14
 design_doc: docs/superpowers/specs/2026-11-14-nap-s16-vao-danh-ba-design.md
@@ -203,3 +203,11 @@ Ngưỡng ở `opportunity.md` (dòng `bat_khi` của hàng) đo như sau:
 - Số migration 103 theo lời giao của giám sát.
 - Lời giao nói «8 kind»; ba bản thu đo được 11 kind (thiết kế §2). Hợp đồng dữ liệu cần sửa chữ này khi duyệt.
 - TẠM DỪNG 14/11 theo lời giám sát đợt (hạn mức tuần): cuối S3, mã xong; lượt đo thật E2 khớp từng ô, E10 xanh 14/11 (bốn phần khớp: GP 1.282 = 1.280 + 2 + 0 + 0, OP1 153 = 117 + 0 + 0 + 36; mã S08 chưa thành căn in riêng: GP 1, OP1 10; dựng lại 0 khoá mới). Lệnh kế khi GS báo: chạy lại `node pipeline/scripts/danh-ba-s16-that.mjs` (thoát 0), đặt contract `status: implemented`, rồi `/feature-loop:feature-loop nap-s16-vao-danh-ba` vào S4.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-17:
+  - Ngoài-4: Chú thích cấu hình chấm của bộ test S16 ghi nhầm tên cơ sở dữ liệu thử; sản phẩm chạy đúng, chỉ người đọc cấu hình có thể hiểu nhầm.
+  - Ngoài-7: Phép kiểm thẻ duyệt S16 không lộ mã đăng nhập chưa có ca cấy mã để chứng bộ dò bắt được; bộ soát trước khi đẩy cloud vẫn là lớp chặn riêng.
+  - Ngoài-8: Phép kiểm thẻ toà trùng tên chỉ bắt mã đứng nguyên một chuỗi, chưa có ca cấy mã nằm lẫn trong chữ dài hơn.
+  - Ngoài-9: Phép thử chặn bảng cấm đẩy cloud chỉ thử hai trong năm bảng; gõ sai tên một bảng còn lại sẽ không bị phát hiện.
+  - Ngoài-10: Phép thử chỉ kiểm căn mới có trục, chưa kiểm trục thuộc đúng toà; lượt đo trên dữ liệu thật vẫn đếm 0 căn trên trục toà khác.
+  - Ngoài-11: Phép thử chỉ đếm số khoá toà trong thẻ khớp hai và thẻ lệch toà, chưa kiểm đúng hai toà liên quan.
+  - Ngoài-13: Phép kiểm đường dẫn trong bảng nạp S16 không còn tên máy chủ chưa có ca cấy để chứng nó bắt được.
