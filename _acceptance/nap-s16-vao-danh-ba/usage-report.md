@@ -123,3 +123,40 @@ wall: 2620s
 - **claude-sonnet-5-5**: 4 agent · 9 calls · out 11,851 · in 18 · cache_read 192,068 · cache_create 178,776
 - **claude-haiku-5-5**: 11 agent · 30 calls · out 20,702 · in 60 · cache_read 540,416 · cache_create 435,169
 
+### S4 round 4 — wf_6f773445-8a4 (17 agent, 98,727 out-tok)
+
+| label | model | calls | out | in | cache_read | s |
+|---|---|--:|--:|--:|--:|--:|
+| review:bugs | claude-opus-5-5 | 30 | 31,702 | 62 | 3,385,771 | 331 |
+| review:conventions | claude-opus-5-5 | 31 | 17,522 | 66 | 2,976,805 | 184 |
+| review:measurement | claude-opus-5-5 | 18 | 15,024 | 38 | 1,577,167 | 156 |
+| synthesize:report | claude-sonnet-5-5 | 4 | 7,674 | 8 | 164,148 | 42 |
+| triage | claude-sonnet-5-5 | 2 | 4,506 | 4 | 35,768 | 31 |
+| machine:node scripts/suite-neu-doi.mjs pipeline_ | claude-haiku-5-5 | 5 | 3,274 | 10 | 104,144 | 772 |
+| machine:node scripts/suite-neu-doi.mjs agent -- | claude-haiku-5-5 | 2 | 2,830 | 4 | 32,939 | 72 |
+| machine:node scripts/suite-neu-doi.mjs pipeline_ | claude-haiku-5-5 | 7 | 2,618 | 14 | 173,753 | 896 |
+| machine:node --test --test-concurrency=1 pipelin | claude-haiku-5-5 | 2 | 2,545 | 4 | 32,939 | 23 |
+| machine:node scripts/suite-neu-doi.mjs app_ui -- | claude-haiku-5-5 | 2 | 2,516 | 4 | 3,300 | 450 |
+| machine:node scripts/suite-neu-doi.mjs portal_st | claude-haiku-5-5 | 2 | 2,108 | 4 | 32,949 | 10 |
+| machine:node pipeline/scripts/danh-ba-s16-that.m | claude-haiku-5-5 | 2 | 1,818 | 4 | 32,931 | 31 |
+| machine:node scripts/suite-neu-doi.mjs app -- 'c | claude-haiku-5-5 | 2 | 1,259 | 4 | 32,951 | 17 |
+| machine:node --test pipeline/lib/s16-danh-muc.te | claude-haiku-5-5 | 2 | 1,177 | 4 | 32,931 | 6 |
+| machine:node --test pipeline/lib/s16-soat.test.m | claude-haiku-5-5 | 2 | 1,170 | 4 | 32,927 | 6 |
+| machine:node scripts/suite-neu-doi.mjs ui_lint_r | claude-haiku-5-5 | 2 | 650 | 4 | 32,953 | 5 |
+| capture:provenance | claude-sonnet-5-5 | 2 | 334 | 4 | 28,401 | 3 |
+
+
+wall: 2298s
+
+| vai tro | agents | out | cache_read | wall s | bat dau | ket thuc |
+|---|--:|--:|--:|--:|---|---|
+| review | 3 | 64,248 | 7,939,743 | 332 | 10:29:16 | 10:34:48 |
+| machine | 11 | 21,965 | 544,717 | 2221 | 10:29:16 | 11:06:18 |
+| triage | 1 | 4,506 | 35,768 | 31 | 11:06:18 | 11:06:49 |
+| capture | 1 | 334 | 28,401 | 3 | 11:06:49 | 11:06:52 |
+| synthesize | 1 | 7,674 | 164,148 | 42 | 11:06:52 | 11:07:35 |
+
+- **claude-opus-5-5**: 3 agent · 79 calls · out 64,248 · in 166 · cache_read 7,939,743 · cache_create 426,952
+- **claude-sonnet-5-5**: 3 agent · 8 calls · out 12,514 · in 16 · cache_read 228,317 · cache_create 137,381
+- **claude-haiku-5-5**: 11 agent · 30 calls · out 21,965 · in 60 · cache_read 544,717 · cache_create 432,895
+
