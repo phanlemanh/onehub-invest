@@ -44,4 +44,5 @@ evals:
     criterion: AC-7
     executor: test
     cmd: config:executors.test.scripts
+    long_running: 60
     expected: "node --test scripts/*.test.mjs thoát 0."

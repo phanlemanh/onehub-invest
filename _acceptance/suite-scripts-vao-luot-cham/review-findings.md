@@ -1,67 +1,52 @@
-# Review findings: suite-scripts-vao-luot-cham (round 1)
+# Review findings: suite-scripts-vao-luot-cham (round 2)
 
 ## Trong hợp đồng
 
-(không có)
+- **Dòng tóm tắt mất số ca khi lượt đỏ có nhiều ca hỏng: chỉ giữ 20000 ký tự cuối, mà dòng «ℹ tests/pass/fail» đứng TRƯỚC phần «✖ failing tests»**
+  AC: AC-2
+  file: `scripts/suite-neu-doi.mjs:226`
+  severity: medium
+  source: bugs
+  detail: Code giữ `raTest = (raTest + b).slice(-20000)` rồi để `tomTatScripts` tìm các dòng `^(?:ℹ|#) tests|pass|fail N`. Với reporter spec của Node 24 (đã chạy thử), các dòng tổng kết ℹ in ra TRƯỚC khối «✖ failing tests:», và khối này in lại mọi ca đỏ kèm stack trace. Lượt đỏ thật có vài chục ca hỏng (ví dụ lượt tái hiện #471/#472 trên đỉnh cũ, hoặc một trận đỏ do DB) dễ có khối này dài hơn 20 KB. Khi đó dòng ℹ bị cắt mất và tests/pass/fail thành null. Lỗi không báo ra đâu cả, dòng `scripts-ci` vẫn được ghi vào run-log với `fail: null`. Điều này trái với cam kết E2 «tệp mẫu đỏ → fail ≥ 1». Ca test chỉ dùng một tệp mẫu nhỏ nên không bao giờ gặp. Cách sửa: giữ phần đầu khối tổng kết, ví dụ dò dòng ℹ trên luồng khi chúng tới rồi lưu lại, thay vì chỉ giữ đuôi.
+  rationale: AC-2 đòi dòng cuối là JSON có đủ tests, pass, fail với mọi kết cục xanh hay đỏ; lượt đỏ nhiều ca hỏng cho fail null là sai hợp đồng.
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **DB oneinvest_ci_scripts_<pid> mồ côi khi lệnh bị SIGKILL, không có bước quét như pattern db-thu.sh**
-  Người dùng thấy gì: Nếu lượt chạy thử bị giết cứng giữa chừng, một cơ sở dữ liệu tạm nằm lại trên máy dùng chung và chiếm chỗ cho tới khi ai đó xoá tay.
-  Căn cứ: Chỉ xảy ra khi tiến trình bị giết cứng, hiếm; dữ liệu thật không bị đụng, chỉ tốn chỗ và người vận hành xoá tay được.
-  file: `scripts/suite-neu-doi.mjs`
-  severity: medium
-  Đề xuất: known-limits
-
-- **Bước CI chạy bằng `bash -eo pipefail`, khác shell mặc định của GitHub (`bash -e`), mà ma trận vẫn ghi «tương đương: nguyên văn»**
-  Người dùng thấy gì: Lượt chạy thử tại máy có thể nghiêm hơn CI một chút ở các bước có ống nối lệnh, nên hiếm khi báo đỏ ở máy mà CI vẫn xanh.
-  Căn cứ: Sai khác này chỉ làm máy chặt hơn CI, không làm lọt lỗi; hậu quả nhẹ và ghi lại như giới hạn đã biết là đủ.
-  file: `scripts/suite-neu-doi.mjs`
-  severity: low
-  Đề xuất: known-limits
-
-- **Bước chạy detached: SIGHUP (đóng terminal hay phiên) để node --test mồ côi và DB oneinvest_ci_scripts_<pid> không bao giờ bị xoá**
-  Người dùng thấy gì: Nếu đóng cửa sổ terminal hay phiên khi lượt chạy thử đang chạy, bài test có thể vẫn chạy ngầm và để lại cơ sở dữ liệu tạm trên máy dùng chung.
-  Căn cứ: Chỉ xảy ra khi đóng phiên giữa lượt chạy, không mất dữ liệu thật; người vận hành dừng tiến trình và xoá cơ sở dữ liệu tạm bằng tay được.
-  file: `scripts/suite-neu-doi.mjs`
-  severity: medium
-  Đề xuất: known-limits
-
-- **dropdb lỗi bị nuốt im lặng, lệnh vẫn báo xanh trong khi DB tạm bị rò**
-  Người dùng thấy gì: Nếu việc xoá cơ sở dữ liệu tạm thất bại vì lỗi hạ tầng, lệnh vẫn báo xanh và không cảnh báo, để lại một cơ sở dữ liệu thừa.
-  Căn cứ: Cần lỗi hạ tầng đi kèm mới xảy ra, kết quả chạy thử vẫn đúng, chỉ rò chỗ chứa và dọn tay được.
-  file: `scripts/suite-neu-doi.mjs`
-  severity: low
-  Đề xuất: known-limits
-
-- **--ho-so hay --root thiếu giá trị bị bỏ qua im lặng: không ghi run-log mà vẫn thoát 0**
-  Người dùng thấy gì: Gõ thiếu giá trị sau cờ hồ sơ hoặc gốc kho thì lệnh vẫn chạy xanh nhưng không ghi bằng chứng, hoặc chạy trên cây khác ý định.
-  Căn cứ: Lỗi do gõ sai lệnh, người dùng thấy ngay khi không có dòng bằng chứng và chạy lại được; không mất dữ liệu.
-  file: `scripts/suite-neu-doi.mjs`
-  severity: low
-  Đề xuất: known-limits
-
-- **Hình dạng 4 (âm tính một mình): «DB bị xoá» kiểm bằng coDb(...) === false, không có đối chứng dương nào cho thấy coDb trả true khi DB còn sống**
-  Người dùng thấy gì: Bài kiểm việc dọn cơ sở dữ liệu tạm có thể vẫn xanh dù việc dọn không chạy, nên khó phát hiện nếu sau này việc dọn hỏng.
-  Căn cứ: Không ảnh hưởng người dùng hôm nay; chỉ làm lưới an toàn yếu đi, sửa sau không đắt và không mất gì.
+- **Test SSL-AC-2 ghi hồ sơ tạm vào thẳng cây _acceptance/ thật của kho**
+  Người dùng thấy gì: Nếu một lượt chạy thử bị ngắt giữa chừng, một thư mục hồ sơ giả có thể nằm lại trong kho và bị các công cụ sinh lộ trình, bản đồ sản phẩm nhìn thấy. Người dùng không thấy lỗi nào trên màn, chỉ có thể gặp một mục lạ trong báo cáo.
+  Căn cứ: Hậu quả nhẹ, không mất hay lộ dữ liệu, người vận hành tự xoá thư mục thừa được và chỉ xảy ra khi lượt chạy bị ngắt giữa chừng.
   file: `scripts/suite-neu-doi.test.mjs`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Probe tai-hien.sh dựng worktree trong mktemp ngoài .claude/worktrees và chép .env sang đó**
+  Người dùng thấy gì: Khi lượt kiểm tái hiện bị ngắt đột ngột, bản sao tệp cấu hình bí mật có thể nằm lại trong thư mục tạm của máy. Nó vẫn ở trên máy local, không đi đâu khác.
+  Căn cứ: Rủi ro thấp vì tệp chỉ nằm trên máy thu, không rời máy, và chỉ xuất hiện khi lượt kiểm bị ngắt; dọn tay là xong.
+  file: `_acceptance/suite-scripts-vao-luot-cham/probes/tai-hien.sh`
+  severity: low
+  Đề xuất: known-limits
+
+- **co-ca.sh không bắt được ca bị bỏ qua: reporter spec của Node 24 không in «# SKIP»**
+  Người dùng thấy gì: Lượt kiểm nghiệm có thể báo xanh dù ca chính thực ra bị bỏ qua vì thiếu container DB. Người ký có thể tin là phần tóm tắt và dọn DB đã được đo trong khi chưa hề chạy.
+  Căn cứ: Gây tin nhầm ở bằng chứng nghiệm thu nhưng không làm hỏng tính năng cho người dùng cuối; nên sửa riêng vì sửa công cụ kiểm rẻ và không đụng lệnh đã ship.
+  file: `_acceptance/suite-scripts-vao-luot-cham/probes/co-ca.sh`
   severity: high
-  Đề xuất: known-limits
+  Đề xuất: new-contract
 
-- **Hình dạng 4 (âm tính một mình): assert «không tạo hồ sơ hay run-log» không thể đỏ, và mã thoát 2 không ghim thông điệp**
-  Người dùng thấy gì: Bài kiểm trường hợp hồ sơ không tồn tại có thể xanh dù lệnh thoát vì lý do khác, nên khó phát hiện nếu hành vi này hỏng.
-  Căn cứ: Không có hậu quả trực tiếp cho người dùng; chỉ làm bằng chứng yếu hơn mức nên có, sửa sau được.
+- **Hình dạng 4 — assertion âm tính một mình: co-ca.sh kiểm «không có # SKIP» bằng chuỗi mà reporter spec không bao giờ in**
+  Người dùng thấy gì: Lượt kiểm nghiệm có thể báo xanh giả cho phần tóm tắt, ghi nhật ký và dọn DB khi ca chính bị bỏ qua. Người ký không biết các phần đó chưa được đo.
+  Căn cứ: Chỉ làm bằng chứng nghiệm thu kém tin cậy, không ảnh hưởng người dùng cuối; sửa riêng cùng lỗi tương tự rẻ và an toàn.
+  file: `_acceptance/suite-scripts-vao-luot-cham/probes/co-ca.sh`
+  severity: high
+  Đề xuất: new-contract
+
+- **Hình dạng 1 — đo chỉ dẫn thay vì đầu ra: assert «nguyên văn run của job» so bộ đọc với chính tệp nó đọc**
+  Người dùng thấy gì: Phép kiểm rằng lệnh chạy đúng nguyên văn các bước của CI khá yếu, nên nếu lệnh bị đổi lúc thực thi thì test có thể không đỏ. Người dùng không thấy tác động trực tiếp.
+  Căn cứ: Rủi ro chỉ là bỏ sót một lệch lạc hiếm trong công cụ nội bộ, không mất dữ liệu; có thể ghi nhận và củng cố sau.
   file: `scripts/suite-neu-doi.test.mjs`
-  severity: medium
+  severity: low
   Đề xuất: known-limits
 
-- **Hình dạng 4: «đối chứng» đổi ảnh services chỉ so hằng "postgres:16" với đầu ra docker, không chạy bộ dò lệch ảnh nào**
-  Người dùng thấy gì: Bài kiểm ảnh cơ sở dữ liệu của job không thật sự chứng minh việc phát hiện lệch phiên bản, nên nếu CI đổi ảnh có thể không bị báo.
-  Căn cứ: Hậu quả nhẹ, chỉ là lưới kiểm lỏng hơn lời nói; không mất dữ liệu và bổ sung sau được.
-  file: `scripts/suite-neu-doi.test.mjs`
-  severity: medium
-  Đề xuất: known-limits
-
-Cụm ngoài vùng phủ: cluster: n-a (không đo được — không eval nào khai paths, hoặc dưới ngưỡng cụm).
+⚠ Cụm ngoài vùng phủ: 2/6 lỗi rơi vào file không bộ đo nào phủ (_acceptance/suite-scripts-vao-luot-cham/probes/co-ca.sh) — dừng và quyết: mở rộng hợp đồng hay rút phạm vi.

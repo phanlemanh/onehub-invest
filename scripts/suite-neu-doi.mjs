@@ -144,6 +144,22 @@ export function buocSuite(root) {
 }
 
 // Đọc số ca từ dòng tổng kết của node --test (reporter spec «ℹ tests N» hay tap «# tests N»); không có thì null.
+// Giữ các dòng tổng kết «ℹ|# tests|pass|fail N» khi chúng chảy qua. Reporter spec in chúng TRƯỚC khối «✖ failing tests»
+// (in lại mọi ca đỏ kèm stack), nên giữ đuôi đầu ra là mất số ca đúng khi lượt đỏ dài.
+const MAU_TONG_KET = /^(?:ℹ|#) (?:tests|pass|fail) \d+/;
+export function boTongKet() {
+  let du = "";
+  const giu = [];
+  return {
+    nap(b) {
+      const dong = (du + b).split("\n");
+      du = dong.pop();
+      for (const l of dong) if (MAU_TONG_KET.test(l)) giu.push(l);
+    },
+    text() { return [...giu, ...(MAU_TONG_KET.test(du) ? [du] : [])].join("\n"); },
+  };
+}
+
 export function tomTatScripts(out, { sha, exit, giay }) {
   const so = (k) => { const m = [...out.matchAll(new RegExp(`^(?:ℹ|#) ${k} (\\d+)`, "gm"))].pop(); return m ? Number(m[1]) : null; };
   return { kind: "scripts-ci", ts: new Date().toISOString(), sha, exit, tests: so("tests"), pass: so("pass"), fail: so("fail"), giay };
@@ -208,7 +224,8 @@ async function mainScripts(argv) {
   });
   ngat("SIGHUP", 1); ngat("SIGINT", 2); ngat("SIGTERM", 15);
   const batDau = Date.now();
-  let ma = 0, raTest = "";
+  let ma = 0;
+  const tongKet = boTongKet();
   try {
     // NODE_TEST_CONTEXT: khi lệnh chạy từ trong một lượt `node --test`, biến ấy làm `node --test` lồng bên trong báo về
     // cha thay vì tự chạy tệp. Bước CI thật không có biến này.
@@ -223,7 +240,7 @@ async function mainScripts(argv) {
       console.log(`suite-neu-doi: bước «${tb}»`);
       const k = await new Promise((xong) => {
         con = spawn("bash", [...SHELL_CI, l], { cwd: root, env, stdio: ["inherit", tb === "test" ? "pipe" : "inherit", "inherit"], detached: true });
-        if (tb === "test") con.stdout.on("data", (b) => { process.stdout.write(b); raTest = (raTest + b).slice(-20000); });
+        if (tb === "test") con.stdout.on("data", (b) => { process.stdout.write(b); tongKet.nap(String(b)); });
         con.on("close", (status, signal) => xong({ status, signal }));
         con.on("error", () => xong({ status: 127, signal: null }));
       });
@@ -237,7 +254,7 @@ async function mainScripts(argv) {
   }
   let sha = null;
   try { sha = git(root, "rev-parse", "HEAD").trim(); } catch { /* không phải kho git */ }
-  const dong = JSON.stringify(tomTatScripts(raTest, { sha, exit: ma, giay: Math.round((Date.now() - batDau) / 100) / 10 }));
+  const dong = JSON.stringify(tomTatScripts(tongKet.text(), { sha, exit: ma, giay: Math.round((Date.now() - batDau) / 100) / 10 }));
   if (hoSo) appendFileSync(path.join(root, "_acceptance", hoSo, "run-log.jsonl"), dong + "\n");
   console.log(dong);
   return ma;

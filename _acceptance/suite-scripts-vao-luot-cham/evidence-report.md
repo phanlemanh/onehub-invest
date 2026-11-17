@@ -1,19 +1,17 @@
 ---
 schema_version: 2
 feature_slug: suite-scripts-vao-luot-cham
-verdict: REJECT
-failed_evals: [E5, E7]
-reason:
+verdict: BLOCKED
+failed_evals: []
+reason: "Lệnh `node --test scripts/*.test.mjs` (eval E7) chạy nền sau khi vượt 600 giây của công cụ (ID tác vụ bl5w4d0rt, tệp đầu ra /private/tmp/claude-503/-Users-manhphan-dev-onehub-invest/12195456-35b8-4f14-b46e-d86f8852586a/tasks/bl5w4d0rt.output). Sau khoảng 33 phút theo dõi tệp đầu ra vẫn rỗng và chưa có dòng mã thoát, nên không có kết quả thật. Tiến trình node --test vẫn còn chạy. Vượt ngưỡng 30 phút mặc định (chưa xác định được long_running của eval này trong evals.yaml). Không suy ra PASS hay FAIL từ đầu ra. Không chạy lại, không sửa code. Chưa dừng tác vụ nền vì công cụ TaskStop chưa được nạp; tiến trình có thể cần dừng thủ công. Cách gỡ: chạy lại với timeout công cụ dài hơn, hoặc khai long_running cho E7."
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 3199ee35d85ed059be01b807f3d972b85b7b8129
+verified_commit: e424c0591ba4ddd9faff433942a303e27356826b
 human_signoff:
 ---
 
 # Evidence Report: suite-scripts-vao-luot-cham
-
-Round 1. Hai eval không đạt: E5 (lệnh trọn bộ scripts trên cây đang chấm có 1 ca đỏ) và E7 (`node --test scripts/*.test.mjs` có ca đỏ). Năm eval còn lại (E1, E2, E3, E4, E6) xanh.
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
@@ -21,125 +19,110 @@ Round 1. Hai eval không đạt: E5 (lệnh trọn bộ scripts trên cây đang
 | E2 | AC-2 | test | PASS |
 | E3 | AC-3 | script | PASS |
 | E4 | AC-4 | script | PASS |
-| E5 | AC-5 | script | FAIL |
+| E5 | AC-5 | script | PASS |
 | E6 | AC-6 | test | PASS |
-| E7 | AC-7 | test | FAIL |
+| E7 | AC-7 | test | BLOCKED |
 
 ## Evidence
 
 - eval: E1
-  run_id: minted-suite-scripts-vao-luot-cham-E1-r1
+  run_id: minted-suite-scripts-vao-luot-cham-E1-r2
   exit_code: 0
-  baseline: green
+  baseline: n-a
   verifier: config:executors.test.sstl_buoc_ci
-  verified_at: 2026-11-17T07:06:39Z
+  verified_at: 2026-11-17T13:41:02Z
   output: |
-    node --test --test-name-pattern=SSL-AC-1 scripts/suite-neu-doi.test.mjs
-    duration_ms 27755.538792
+    co-ca: xanh — 2 ca «SSL-AC-1» chạy và đạt
 
 - eval: E2
-  run_id: minted-suite-scripts-vao-luot-cham-E2-r1
+  run_id: minted-suite-scripts-vao-luot-cham-E2-r2
   exit_code: 0
-  baseline: green
+  baseline: n-a
   verifier: config:executors.test.sstl_tom_tat
-  verified_at: 2026-11-17T07:06:39Z
+  verified_at: 2026-11-17T13:41:02Z
   output: |
-    node --test --test-name-pattern=SSL-AC-2 scripts/suite-neu-doi.test.mjs
-    duration_ms 85778.370084
+    co-ca: xanh — 3 ca «SSL-AC-2» chạy và đạt
 
 - eval: E3
-  run_id: minted-suite-scripts-vao-luot-cham-E3-r1
+  run_id: b419nfeuq
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.sstl_tai_hien_471
-  verified_at: 2026-11-17T07:06:39Z
+  verified_at: 2026-11-17T13:41:02Z
   output: |
     tai-hien: xanh — #471 (5b02c3de0) đỏ đúng «(5) bước thu lỗi» ở scripts/s05-khoa-nap.test.mjs
 
 - eval: E4
-  run_id: minted-suite-scripts-vao-luot-cham-E4-r1
+  run_id: minted-suite-scripts-vao-luot-cham-E4-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.sstl_tai_hien_472
-  verified_at: 2026-11-17T07:06:39Z
+  verified_at: 2026-11-17T13:41:02Z
   output: |
     tai-hien: xanh — #472 (f3fecd5f6) đỏ đúng «DT-AC-7» ở scripts/db-thu.test.mjs
 
 - eval: E5
-  run_id: minted-suite-scripts-vao-luot-cham-E5-r1
-  exit_code: 1
-  baseline: red
+  run_id: minted-suite-scripts-vao-luot-cham-E5-r2
+  exit_code: 0
+  baseline: n-a
   verifier: config:executors.test.sstl_main_xanh
-  verified_at: 2026-11-17T07:06:39Z
+  verified_at: 2026-11-17T13:41:02Z
   output: |
-    tests 524, pass 516, fail 1, skipped 7
-    ca đỏ: scripts/job-step-thoi-luong.test.mjs:510 — JST-AC-8 bước truoc-lan-claude: «lượt không cấy ngủ phải ≤ 1 giây» (đo được 2604 ms)
-    suite-neu-doi: bước «test» thoát 1
-    dòng tóm tắt: {"kind":"scripts-ci","sha":"3199ee35d85ed059be01b807f3d972b85b7b8129","exit":1,"tests":524,"pass":516,"fail":1,"giay":267.9}
-    kỳ vọng AC-5 là "fail":0 — không đạt.
+    {"kind":"scripts-ci","ts":"2026-11-17T13:45:05.370Z","sha":"e424c0591ba4ddd9faff433942a303e27356826b","tests":525,"pass":518,"fail":0,"giay":188.3}
 
 - eval: E6
-  run_id: minted-suite-scripts-vao-luot-cham-E6-r1
+  run_id: minted-suite-scripts-vao-luot-cham-E6-r2
   exit_code: 0
-  baseline: green
+  baseline: n-a
   verifier: config:executors.test.sstl_cau_hinh
-  verified_at: 2026-11-17T07:06:39Z
+  verified_at: 2026-11-17T13:41:02Z
   output: |
     cau-hinh: xanh — chỉ suite_keys đổi; tám lệnh cũ (bảy suite bọc + pipeline) nguyên byte (gốc 5508f6209d5abe3ee654ca0738745155d7bfc3e6)
 
 - eval: E7
-  run_id: minted-suite-scripts-vao-luot-cham-E7-r1
-  exit_code: 1
-  baseline: red
+  run_id: minted-suite-scripts-vao-luot-cham-E7-r2
+  baseline: n-a
   verifier: config:executors.test.scripts
-  verified_at: 2026-11-17T07:06:39Z
+  verified_at: 2026-11-17T13:41:02Z
   output: |
-    node --test scripts/*.test.mjs kết thúc đỏ.
-    ca đỏ thấy ở đuôi: scripts/kiem-tin-rao-gan-khu-vuc.test.mjs:33 — strictEqual, actual 143, expected 0.
-    kỳ vọng AC-7 là lệnh thoát 0 — không đạt.
-
-### Lệnh fail không gắn eval
-
-Không có lệnh nào fail mà không gắn eval. Hai lệnh fail đều gắn eval:
-- `node scripts/suite-neu-doi.mjs --chay-scripts` gắn E5.
-- `node --test scripts/*.test.mjs` gắn E7.
+    BLOCKED: lệnh chạy nền vượt 600 giây của công cụ, chờ thêm khoảng 33 phút, tệp đầu ra rỗng, chưa có dòng mã thoát. Không có kết quả PASS hay FAIL thật.
 
 ### Lệnh suite (hồi quy)
 
 - cmd: node scripts/suite-neu-doi.mjs agent -- 'cd agent && npm test'
-  run_id: minted-suite-scripts-vao-luot-cham-SUITE-node_scripts_suite_neu_doi_mjs_agent_cd_-r1
+  run_id: minted-suite-scripts-vao-luot-cham-SUITE-node_scripts_suite_neu_doi_mjs_agent_cd_-r2
   exit_code: 0
-  verified_at: 2026-11-17T07:06:39Z
+  verified_at: 2026-11-17T13:41:02Z
 
 - cmd: node scripts/suite-neu-doi.mjs app -- 'cd app && npx tsc --noEmit && npm run lint'
-  run_id: minted-suite-scripts-vao-luot-cham-SUITE-lint-r1
+  run_id: minted-suite-scripts-vao-luot-cham-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-11-17T07:06:39Z
+  verified_at: 2026-11-17T13:41:02Z
 
 - cmd: node scripts/suite-neu-doi.mjs app_ui -- 'cd app && npm test'
-  run_id: minted-suite-scripts-vao-luot-cham-SUITE-node_scripts_suite_neu_doi_mjs_app_ui_cd-r1
+  run_id: minted-suite-scripts-vao-luot-cham-SUITE-node_scripts_suite_neu_doi_mjs_app_ui_cd-r2
   exit_code: 0
-  verified_at: 2026-11-17T07:06:39Z
+  verified_at: 2026-11-17T13:41:02Z
 
 - cmd: node scripts/suite-neu-doi.mjs pipeline_a -- 'cd pipeline && npm run test:a'
-  run_id: minted-suite-scripts-vao-luot-cham-SUITE-test_a-r1
+  run_id: minted-suite-scripts-vao-luot-cham-SUITE-test_a-r2
   exit_code: 0
-  verified_at: 2026-11-17T07:06:39Z
+  verified_at: 2026-11-17T13:41:02Z
 
 - cmd: node scripts/suite-neu-doi.mjs pipeline_b -- 'cd pipeline && npm run test:b'
-  run_id: minted-suite-scripts-vao-luot-cham-SUITE-test_b-r1
+  run_id: minted-suite-scripts-vao-luot-cham-SUITE-test_b-r2
   exit_code: 0
-  verified_at: 2026-11-17T07:06:39Z
+  verified_at: 2026-11-17T13:41:02Z
 
 - cmd: node scripts/suite-neu-doi.mjs ui_lint_rules -- 'cd app && npm run test:lint-rules'
-  run_id: minted-suite-scripts-vao-luot-cham-SUITE-test_lint_rules-r1
+  run_id: minted-suite-scripts-vao-luot-cham-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-11-17T07:06:39Z
+  verified_at: 2026-11-17T13:41:02Z
 
 - cmd: node scripts/suite-neu-doi.mjs portal_static -- 'node scripts/check-portal-compliance.mjs'
-  run_id: minted-suite-scripts-vao-luot-cham-SUITE-node_scripts_suite_neu_doi_mjs_portal_st-r1
+  run_id: minted-suite-scripts-vao-luot-cham-SUITE-node_scripts_suite_neu_doi_mjs_portal_st-r2
   exit_code: 0
-  verified_at: 2026-11-17T07:06:39Z
+  verified_at: 2026-11-17T13:41:02Z
 
 ## Known limits
 
@@ -147,21 +130,17 @@ Không có lệnh nào fail mà không gắn eval. Hai lệnh fail đều gắn 
 
 ## Analyst
 
-Eval không phân biệt (xanh trên cả HEAD lẫn baseline):
-- E1 (`node --test --test-name-pattern=SSL-AC-1 scripts/suite-neu-doi.test.mjs`): xanh cả hai phía, cần viết lại để assert hành vi mới hoặc xác nhận là regression-guard có chủ ý.
-- E2 (`node --test --test-name-pattern=SSL-AC-2 scripts/suite-neu-doi.test.mjs`): xanh cả hai phía, cùng yêu cầu như E1.
-- E6 (`node --test --test-name-pattern=S4V-AC-6 scripts/suite-neu-doi.test.mjs && bash _acceptance/s4-suite-theo-vung/probes/cau-hinh-khong-doi.sh`): xanh cả hai phía, hợp lý là regression-guard của cấu hình cũ.
+carried tu round 1 — baseline khong do lai round nay (evals.yaml khong doi tu lan baseline cuoi). Baseline khong do: moi eval ghi n-a.
 
-Baseline không đo:
-- bash _acceptance/suite-scripts-vao-luot-cham/probes/tai-hien.sh 471: bo qua baseline: tep _acceptance/suite-scripts-vao-luot-cham/probes/tai-hien.sh co o cay dang kiem nhung chua co o merge-base 5508f6209d5abe3ee654ca0738745155d7bfc3e6 — eval moi, chay tren code cu khong phan biet gi
-- bash _acceptance/suite-scripts-vao-luot-cham/probes/tai-hien.sh 472: bo qua baseline: tep _acceptance/suite-scripts-vao-luot-cham/probes/tai-hien.sh co o cay dang kiem nhung chua co o merge-base 5508f6209d5abe3ee654ca0738745155d7bfc3e6 — eval moi, chay tren code cu khong phan biet gi
+Eval không-phân-biệt (xanh cả trên HEAD lẫn baseline, theo danh sách máy đưa): E1 (SSL-AC-1), E2 (SSL-AC-2), E6 (S4V-AC-6 kèm probe cau-hinh-khong-doi.sh). Cần viết lại để assert hành vi mới hoặc xác nhận là regression-guard có chủ ý. Riêng E6 là regression-guard có chủ ý (đòi cấu hình gốc nguyên byte). Lệnh suite xanh cả hai phía là regression-guard bình thường, không liệt kê.
 
-Ghi chú về hai eval đỏ: E5 và E7 đều red trên baseline và đều đỏ trên HEAD. Ca đỏ của E5 là đo thời gian (JST-AC-8, 2604 ms so với trần 1 giây) và ca đỏ ở đuôi E7 là một test khác (kiem-tin-rao-gan-khu-vuc); cả hai nằm ngoài tệp mà feature này sửa. Máy không phân xử nguyên nhân; người quyết ở Cổng 2.
+Cảnh báo bổ sung: probe co-ca.sh (dùng cho E1, E2) không bắt được ca bị bỏ qua, nên xanh của E1 và E2 có thể che ca chính bị skip (xem review-findings.md).
 
 ## Variance
 
-none — mọi eval chạy một lượt, kết quả tất định, không có pass_rate lẫn.
+none — mọi eval chạy một lần, xác định (runs 1), không có pass_rate pha trộn.
 
 ## Iterations
 
-Round 1: E5, E7 failed — `node scripts/suite-neu-doi.mjs --chay-scripts` có 1 ca đỏ (JST-AC-8, ngưỡng thời gian 1 giây bị vượt) và `node --test scripts/*.test.mjs` có ca đỏ ở kiem-tin-rao-gan-khu-vuc. Returned to implementation.
+Round 1: đã ghi ở round trước, xem lịch sử run-log.
+Round 2: E1 đến E6 xanh trên e424c0591; E7 BLOCKED vì lệnh node --test scripts/*.test.mjs vượt hạn chờ công cụ, chưa có kết quả thật. Cần chạy lại E7 với timeout dài hơn.

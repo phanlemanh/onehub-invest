@@ -6,7 +6,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { BUOC_CI, SHELL_CI, VUNG, buocSuite, dbMoCoi, lechMoiTruong, quyetDinh, tomTatScripts, trongVung } from "./suite-neu-doi.mjs";
+import { BUOC_CI, SHELL_CI, VUNG, boTongKet, buocSuite, dbMoCoi, lechMoiTruong, quyetDinh, tomTatScripts, trongVung } from "./suite-neu-doi.mjs";
 import { createRequire } from "node:module";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -437,6 +437,12 @@ test("SSL-AC-2 — dòng scripts-ci khi xanh và khi đỏ, --ho-so ghi run-log,
 test("SSL-AC-2 tomTatScripts — đọc số ca từ dòng tổng kết spec hay tap; không có dòng thì null", () => {
   assert.deepEqual(tomTatScripts("ℹ tests 5\nℹ pass 4\nℹ fail 1\n", { sha: "a", exit: 1, giay: 2 }).fail, 1);
   assert.deepEqual(tomTatScripts("# tests 3\n# pass 3\n# fail 0\n", { sha: "a", exit: 0, giay: 2 }).tests, 3);
+  // lượt đỏ dài: dòng tổng kết đứng trước khối «✖ failing tests» hàng chục KB, chảy qua theo mẩu cắt giữa dòng
+  const b = boTongKet(), ra = `✔ a\n✖ b\nℹ tests 40\nℹ pass 10\nℹ fail 30\n✖ failing tests:\n${"    at x (file:///y.mjs:1:1)\n".repeat(3000)}`;
+  for (let i = 0; i < ra.length; i += 777) b.nap(ra.slice(i, i + 777));
+  const dai = tomTatScripts(b.text(), { sha: "a", exit: 1, giay: 2 });
+  assert.ok(ra.length > 60000, "SSL-AC-2 mẫu phải dài hơn mọi bộ đệm đuôi");
+  assert.deepEqual([dai.tests, dai.pass, dai.fail], [40, 10, 30], "SSL-AC-2 lượt đỏ dài vẫn phải giữ số ca");
   const k = tomTatScripts("bị giết giữa chừng", { sha: "a", exit: 143, giay: 2 });
   assert.deepEqual([k.tests, k.pass, k.fail], [null, null, null], "SSL-AC-2 không có dòng tổng kết thì số ca phải null, không bịa 0");
 });
