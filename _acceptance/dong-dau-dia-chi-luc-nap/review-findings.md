@@ -1,71 +1,93 @@
-# Review findings: dong-dau-dia-chi-luc-nap (round 2)
+# Review findings: dong-dau-dia-chi-luc-nap (round 3)
 
 ## Trong hợp đồng
 
-- **--tinh-duyet không đối chiếu tệp nhãn với 100 mã bài đã khoá trong hồ sơ, nên tệp thiếu dòng vẫn ra ĐẠT và exit 0**
-  file: `pipeline/scripts/mau-bai-lac-du-an.mjs:230`
+- **Lọc banHieuLuc bỏ cả dòng TG2 cũ cùng dự án: sửa thẻ mà giữ nguyên dự án làm tin đăng chéo nhóm mất dự án vĩnh viễn**
+  AC: AC-5
+  file: `pipeline/transform-zalo.mjs:1040`
   severity: medium
-  AC: AC-10
-  source: conventions
-  detail: docTepDuyet là cửa nhận một tệp JSON từ ngoài vào (trang duyệt lưu ra), nhưng chỉ kiểm tên người duyệt, giờ và (nếu có) hat_giong. Hàm không kiểm bốn điều: (1) post_id trong tep.nhan có đúng là danh sách mã bài khoá mẫu ở evidence/mau-bai-lac-du-an-v2.md hay không; (2) có post_id trùng hay không; (3) số dòng có bằng cỡ mẫu khai trước (n = 100) hay không; (4) trường `nhap` có thuộc {lac, khong} hay không. Với «chon: dung» thì nhãn lấy luôn d.nhap, nên nhap là undefined hay sai chính tả sẽ bị đếm lặng lẽ thành «không lạc». Hệ quả: chỉ cần tệp bỏ hẳn những dòng chưa duyệt, thay vì để chon = null, là chuaDuyet = 0, rồi main() in ĐẠT và thoát 0 trên cỡ mẫu thật nhỏ hơn cỡ đã khai. Cũng có thể trùng dòng để thổi n lên. Thêm nữa, `--seed` là tuỳ chọn (`lay("--seed") ?? null`): bỏ cờ này thì phép kiểm hạt giống bị bỏ qua mà không báo gì, nên tệp nhãn của mẫu khác vẫn được nhận. Chính tệp này ghi rằng «thứ khoá mẫu là DANH SÁCH MÃ BÀI ghi trong hồ sơ, không phải một mình hạt giống», nhưng bộ đọc nhãn lại không dùng danh sách ấy. Hiện test không có ca nào cho tệp thiếu dòng, trùng dòng hay sai danh sách mã.
-  Lý do vào hợp đồng: AC-10 đòi cỡ mẫu thật không nhỏ hơn mức chốt và in cỡ mẫu thật; tệp thiếu dòng vẫn ĐẠT làm thước này qua im lặng.
-
-- **traLaiDV6 ghi lại MỌI giá trị DV6 từng bị rút (kể cả giá trị cũ DV6 đã bỏ), làm bài có hai dự án sống hoặc dự án sai**
-  file: `pipeline/lib/dia-chi-the-nhom.mjs:236`
-  severity: medium
-  AC: AC-8
   source: bugs
-  detail: Câu chọn dùng `DISTINCT ON (subject_key, field, value_key, method, rule_id)` trên các dòng có retract_reason='thay-bang-the-nhom'. Vì khoá có value_key nên mỗi GIÁ TRỊ từng bị rút trên bài đều được ghi lại, không phải chỉ dòng mới nhất của (bài, luật). Đường đi cụ thể: (1) DV6 ghi bài P = A; (2) lượt nạp TG2 rút dòng A (thay-bang-the-nhom); (3) DV6 chạy lại sau khi nhãn hoặc sổ nhóm đổi sang B. ghiPhatBieu của du-an-tren-tin-s03 chỉ đối soát dòng SỐNG, nên dòng A đã rút không bị đổi lý do; bước tangCao không chặn vì dòng thẻ ở lớp inferred, nên DV6 chèn B sống; (4) lượt TG2 kế rút B, cũng với lý do thay-bang-the-nhom; (5) thẻ bị bác hoặc sửa thành 2–3 dự án, traLaiDV6 ghi lại CẢ A lẫn B. Chỉ mục sống của 045 khoá theo value_key nên cả hai cùng chèn được, và P mang hai dòng project_node_id sống khác giá trị. offer_project của tin thành xung_dot, đúng lỗi AC-8 mà hàm này sinh ra để chặn. Cùng gốc đó, một giá trị mà DV6 hiện KHÔNG còn muốn ghi (vì nhãn đổi, sổ nhóm đổi, hay tin mâu thuẫn) vẫn được dựng lại: dòng đã rút nằm ngoài tầm đối soát của DV6. Cách sửa: chỉ lấy bản rút mới nhất theo (subject_key, field, rule_id) và bỏ value_key khỏi DISTINCT ON. Tốt hơn nữa là đối chiếu với tập DV6 đang muốn ghi, hoặc để DV6 tự chạy lại thay vì sống lại dòng cũ.
-  Lý do vào hợp đồng: bài có hai dự án sống thành xung_dot, đúng trường hợp AC-8 đòi 0 bài rơi khỏi mot_du_an.
+  detail: Ở 0326b5c06, truy vấn songRows trong sinh() chỉ giữ dòng TG2 có cặp (thẻ|bản) nằm trong banHieuLuc. Vì vậy dòng TG2 của bản thẻ trước bị loại khỏi duAnHienTai, kể cả khi bản mới vẫn cho đúng dự án ấy. Trong app (app/src/lib/the-dia-chi-nhom.ts:177-188), thao tác «sua» (đổi phường, phân khu hay mục đích nhưng giữ dự án) và cả «nhan» đều tăng version.
 
-- **--tinh-duyet không kiểm tệp nhãn đủ mẫu đã khai và không kiểm ô nháp, nên tệp thiếu dòng hay nháp hỏng vẫn thoát 0 «ĐẠT»**
-  file: `pipeline/scripts/mau-bai-lac-du-an.mjs:152`
-  severity: medium
-  AC: AC-10
-  source: bugs
-  detail: docTepDuyet chỉ đếm những dòng có trong `tep.nhan`. Lệnh không đối chiếu số dòng với cỡ mẫu đã khai (n = 100), cũng không đối chiếu post_id với danh sách mã bài khoá mẫu. Chính tiêu đề tệp nói danh sách mã mới là thứ khoá mẫu, và lệnh cũng không chặn post_id trùng. Tệp lưu thiếu dòng, ví dụ trang duyệt chỉ ghi các dòng đã hiện, cho chuaDuyet = 0 nên `process.exit(w.tren <= 0.1 && t.chuaDuyet === 0 ? 0 : 1)` trả 0 trên cỡ mẫu nhỏ hơn mẫu đã khai. Với chon = 'dung', nhãn lấy thẳng `d.nhap` mà không kiểm giá trị thuộc {'lac','khong'}: nháp thiếu hay sai chính tả bị đếm im là «không lạc», làm số ca lạc thấp đi đúng về phía qua ngưỡng. Kiểm hạt giống cũng bị bỏ im khi gọi lệnh không kèm --seed (hatGiong = null). Cả ba đều là lối qua im lặng của thước AC-10.
-  Lý do vào hợp đồng: cùng gốc với finding đầu của AC-10, thước AC-10 qua được với cỡ mẫu nhỏ hơn đã khai và nhãn hỏng.
+  Kịch bản lỗi: tin có bài a (nhóm g1, thẻ dự án X) và bài b (nhóm g2, thẻ dự án Y). Duyệt g1 trước thì a được đóng dấu X. Duyệt g2 sau thì nhánh theGiuHienTai giữ X, đúng ý AC-8 «duyệt từng đợt». Sau đó người vận hành sửa ô phường của thẻ g1, version thành 2, dự án vẫn X. Ở lượt nạp kế, dòng X của a mang bản 1 nên bị lọc, nên hienTai rỗng (hoặc chỉ còn dòng DV6 khác X). Khi đó theVals = {X,Y} và nhánh bo(() => true) bỏ dự án của cả tin. Cuối lượt, rutTheCu rút dòng bản 1. Từ lượt sau trở đi hienTai vẫn rỗng, nên tin mất dự án mãi. Chỉ cứu được khi traLaiDV6 có dòng DV6 cũ để trả, và DV6 muốn đúng X.
+
+  Hàng rào AC-8 của b098fe1de bị một lần sửa ô không liên quan phá mất. Bảng 48 ô và ca «TG2-r3 bất biến (4)» chỉ thử đổi bản kèm đổi dự án, không thử đổi bản mà giữ dự án.
+
+  Cách sửa: chỉ loại dòng TG2 cũ khi giá trị của nó khác ô dự án hiện tại của thẻ cùng card_code. Cũng có thể khớp theo card_code, bỏ qua version, khi giá trị bằng t.duAn.
+  rationale: AC-5 đòi ca bản n+1 chỉ đổi ô phường thì dòng dự án được rút rồi chèn lại đúng một lần; finding chỉ ra dự án bị mất hẳn và tin rơi khỏi ô Định vị (cũng chạm AC-8).
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **Chạy thẳng --chay trên bản chép đã dùng thì mốc GỐC không còn là «máy thu nguyên trạng», khong-tut và phu-kind lại hết khả năng đỏ**
+- **traLaiDV6 đọc thẳng stg_zalo_posts qua docDuLieu của DV6, không qua loadStgPosts. Luật AC-6 bị phá mà thước quét tĩnh E8 vẫn báo xanh**
+  Người dùng thấy gì: Một đường đọc dữ liệu mới có thể, về lý thuyết, đọc cả bài thử mà thước kiểm tự động không báo. Hiện chưa có bài thử nào bị gắn dự án nhầm.
+  Căn cứ: Chưa gây hại thật vì bài thử đang được lọc ở bước khác; chỉ là lưới an toàn kiểm tra mỏng hơn, và có thể gia cố sau mà không mất dữ liệu.
+  file: `pipeline/lib/dia-chi-the-nhom.mjs`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Lệnh lùi bước 2 thiếu DATABASE_URL: du-an-tren-tin-s03 thoát 2 sau khi lui.sql đã commit, tin S03 nằm ở trạng thái không dự án**
+  Người dùng thấy gì: Nếu người vận hành làm đúng từng chữ khi lùi mà chưa đặt biến kết nối, bước đầu xoá hết dự án trên tin còn bước sau báo lỗi, tin tạm không có dự án.
+  Căn cứ: Không mất dữ liệu gốc và chạy lại bước sau với biến kết nối đúng là khôi phục được ngay; sửa chỉ là thêm một dòng chữ nên rẻ, nhưng không chặn việc ra mắt.
+  file: `_acceptance/dong-dau-dia-chi-luc-nap/ap-may-thu/lui.sql`
+  severity: low
+  Đề xuất: known-limits
+
+- **Hình dạng 2 (fixture viết tay, không lấy từ writer): bảng 48 ô AC-8 tự chèn dòng DV6 trước khi trả, ô D4·P3 mang trạng thái DV6 thật không sinh ra được**
+  Người dùng thấy gì: Một số ô trong bảng kiểm tra dựng trạng thái mà hệ thống thật không bao giờ tạo ra, nên kết quả vài ô kiểm tra kém đáng tin hơn. Người dùng cuối không bị ảnh hưởng trực tiếp.
+  Căn cứ: Chỉ làm bài kiểm tra kém sát thực tế, không làm mất hay sai dữ liệu; có thể dựng lại bằng dữ liệu do chính hệ thống sinh ở đợt sau.
+  file: `pipeline/tests/dong-dau-dia-chi.itest.mjs`
+  severity: low
+  Đề xuất: known-limits
+
+- **Chạy thẳng --chay trên bản chép đã dùng thì mốc GỐC không còn là «máy thu nguyên trạng», khong-tut và phu-kind lại hết khả năng đỏ** (r2)
+- **HE_DU_AN/laLac («trong hệ VGP») chỉ có test gọi, đường đo AC-10 không dùng, và ghim cứng ID node danh bạ** (r2)
+- **Khoá mkdir của chayNeuCu bị bỏ lại khi tiến trình thoát bằng process.exit hoặc Ctrl-C, mọi lượt --do-neu-cu sau treo vô hạn và không in gì** (r2)
+- **Hình dạng 2: fixture tệp nhãn người duyệt viết tay đúng khuôn docTepDuyet, không round-trip từ trang duyệt** (r2)
+- **Hình dạng 3: test «tệp của mẫu khác thì không nhận» chỉ ghim chuỗi hat_giong, trong khi lời hứa là quan hệ giữa tệp nhãn và 100 mã bài đã khai** (r2)
+- **Hình dạng 4: E9 AC-7 ghim «đúng một dòng cảnh báo» ở ca thiếu lược đồ mà không đối chứng 0 dòng ở ca đủ lược đồ** (r2)
+- **Rút dòng DV6 bằng rule_id viết cứng thay vì dùng hằng RULE của module DV6, và rút chéo luật mà module DV6 khai là chỉ nó được rút** (r2)
+- **Khoá `.khoa` của --do-neu-cu bị bỏ lại khi process.exit(2) chạy trong vùng khoá, các lượt đo sau treo vô hạn** (r2)
+- **Bộ quét E8 chỉ xét từng dòng: câu SQL xuống dòng giữa FROM/JOIN và stg_zalo_posts lọt qua** (r2)
+- **Hình dạng 2 (fixture viết tay theo đúng khuôn bên đọc): bảng nhãn AC-10 viết tay, không đi một vòng từ bộ sinh inBangTrong** (r2)
+
+- **Chạy thẳng --chay trên bản chép đã dùng thì mốc GỐC không còn là «máy thu nguyên trạng», khong-tut và phu-kind lại hết khả năng đỏ (r2 · tệp đã đổi)**
   Người dùng thấy gì: Nếu người chạy đo lại trên bản chép đã dùng, số đo có thể trông đạt dù tin bị mất nhãn bán hay thuê. Đo trên bản chép mới dựng thì số đúng.
   Căn cứ: Chỉ ảnh hưởng người chạy phép đo khi chạy lại sai cách, không làm hỏng dữ liệu thật, và dựng lại bản chép là tự làm được.
   file: `pipeline/scripts/dong-dau-dia-chi-that.mjs`
   severity: medium
   Đề xuất: known-limits
 
-- **HE_DU_AN/laLac («trong hệ VGP») chỉ có test gọi, đường đo AC-10 không dùng, và ghim cứng ID node danh bạ**
+- **HE_DU_AN/laLac («trong hệ VGP») chỉ có test gọi, đường đo AC-10 không dùng, và ghim cứng ID node danh bạ (r2 · tệp đã đổi)**
   Người dùng thấy gì: Một phần mã định nghĩa «trong hệ» chỉ được test chứ không dùng khi đo, và có thể lệch nếu danh bạ dự án được đúc lại. Số đo tỉ lệ bài lạc không bị ảnh hưởng.
   Căn cứ: Chưa gây sai số liệu nào hiện tại; chỉ thành vấn đề khi danh bạ đổi, và khi đó sửa vẫn rẻ.
   file: `pipeline/scripts/mau-bai-lac-du-an.mjs`
   severity: low
   Đề xuất: known-limits
 
-- **Khoá mkdir của chayNeuCu bị bỏ lại khi tiến trình thoát bằng process.exit hoặc Ctrl-C, mọi lượt --do-neu-cu sau treo vô hạn và không in gì**
+- **Khoá mkdir của chayNeuCu bị bỏ lại khi tiến trình thoát bằng process.exit hoặc Ctrl-C, mọi lượt --do-neu-cu sau treo vô hạn và không in gì (r2 · tệp đã đổi)**
   Người dùng thấy gì: Nếu một lượt đo bị ngắt giữa chừng, các lượt đo sau sẽ đứng im không báo gì cho tới khi người chạy xoá khoá thủ công.
   Căn cứ: Không mất hay lộ dữ liệu, chỉ làm chậm người chạy đo, và xoá khoá là gỡ được ngay.
   file: `pipeline/scripts/dong-dau-dia-chi-that.mjs`
   severity: medium
   Đề xuất: known-limits
 
-- **Hình dạng 2: fixture tệp nhãn người duyệt viết tay đúng khuôn docTepDuyet, không round-trip từ trang duyệt**
+- **Hình dạng 2: fixture tệp nhãn người duyệt viết tay đúng khuôn docTepDuyet, không round-trip từ trang duyệt (r2 · tệp đã đổi)**
   Người dùng thấy gì: Test đọc tệp nhãn dùng tệp tự viết nên không bắt được trường hợp trang duyệt lưu khác khuôn; khi đó lệnh đo thật có thể lỗi hoặc đếm sai.
   Căn cứ: Lỗi sẽ lộ ra ngay khi chạy trên tệp thật và người chạy thử lại được, nên hậu quả nhẹ.
   file: `pipeline/scripts/mau-bai-lac-du-an.test.mjs`
   severity: medium
   Đề xuất: known-limits
 
-- **Hình dạng 3: test «tệp của mẫu khác thì không nhận» chỉ ghim chuỗi hat_giong, trong khi lời hứa là quan hệ giữa tệp nhãn và 100 mã bài đã khai**
+- **Hình dạng 3: test «tệp của mẫu khác thì không nhận» chỉ ghim chuỗi hat_giong, trong khi lời hứa là quan hệ giữa tệp nhãn và 100 mã bài đã khai (r2 · tệp đã đổi)**
   Người dùng thấy gì: Test chỉ kiểm tệp nhãn có đúng hạt giống chứ không kiểm tệp có đủ và đúng 100 bài của mẫu, nên không bắt được tệp thiếu bài.
   Căn cứ: Hậu quả thật được xử lý ở lỗi mã gốc; phần test thiếu chỉ là lưới an toàn, bổ sung sau rẻ.
   file: `pipeline/scripts/mau-bai-lac-du-an.test.mjs`
   severity: medium
   Đề xuất: known-limits
 
-- **Hình dạng 4: E9 AC-7 ghim «đúng một dòng cảnh báo» ở ca thiếu lược đồ mà không đối chứng 0 dòng ở ca đủ lược đồ**
+- **Hình dạng 4: E9 AC-7 ghim «đúng một dòng cảnh báo» ở ca thiếu lược đồ mà không đối chứng 0 dòng ở ca đủ lược đồ (r2 · tệp đã đổi)**
   Người dùng thấy gì: Test chưa chứng minh rằng khi DB đủ bảng thẻ thì không in cảnh báo thừa; nếu có in thừa thì chỉ là một dòng nhắc không đúng chỗ.
   Căn cứ: Nhiều nhất là một dòng cảnh báo thừa, không ảnh hưởng dữ liệu, và bổ sung ca test sau rất rẻ.
   file: `pipeline/tests/dong-dau-dia-chi.itest.mjs`
@@ -100,4 +122,4 @@ Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm v
   severity: low
   Đề xuất: known-limits
 
-⚠ Cụm ngoài vùng phủ: 6/9 lỗi rơi vào file không bộ đo nào phủ (pipeline/scripts/mau-bai-lac-du-an.mjs, pipeline/scripts/mau-bai-lac-du-an.test.mjs, pipeline/tests/dong-dau-dia-chi.itest.mjs) — dừng và quyết: mở rộng hợp đồng hay rút phạm vi.
+⚠ Cụm ngoài vùng phủ: 2/4 lỗi rơi vào file không bộ đo nào phủ (_acceptance/dong-dau-dia-chi-luc-nap/ap-may-thu/lui.sql, pipeline/tests/dong-dau-dia-chi.itest.mjs) — dừng và quyết: mở rộng hợp đồng hay rút phạm vi.
