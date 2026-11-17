@@ -119,10 +119,12 @@ When:
 - (a) thêm `stg_s16_can` hoặc `units` vào danh sách đẩy;
 - (b) cấy vào một dòng `asset_nodes` một mã căn S16;
 - (c) cấy vào một dòng `asset_nodes` một `toa_id` S16;
-- (d) cấy một mã căn S16 vào bảng khác trong danh sách đẩy;
-- (e) cấy một `toa_id` S16 vào evidence một thẻ rồi gọi `soatS16`,
+- (d) cấy một `toa_id` hoặc `khu_id` S16 vào bảng khác trong danh sách đẩy;
+- (e) cấy một `toa_id` S16 vào evidence một thẻ rồi gọi `soatS16`;
+- (f) một mã căn S16 có trong bảng sinh từ tin rao (vd `sale_offers`), và một mã căn S16 chỉ gồm chữ số,
 Then:
-- cả năm ca đỏ: bốn ca đầu dừng trước khi gửi, thoát khác 0, nêu bảng và cột; ca (e) `soatS16` trả lỗi nêu đường của giá trị; không ca nào in giá trị;
+- cả năm ca (a)–(e) đỏ: bốn ca đầu dừng trước khi gửi, thoát khác 0, nêu bảng và cột; ca (e) `soatS16` trả lỗi nêu đường của giá trị; không ca nào in giá trị;
+- ca (f) xanh: mã căn S16 chỉ soát ở bảng dữ liệu S16 chạm được (`asset_nodes`, `review_queue`) và trong thẻ — bảng tin rao mang số căn người bán ghi công khai; mã căn toàn số không vào tập soát; `toa_id`, `khu_id` S16 vẫn soát ở mọi bảng (Mạnh duyệt 17/11, sổ d-20261117T060847Z-25);
 - payload sạch thì bộ soát xanh;
 - tên thật của nguồn không xuất hiện trong mọi tệp hàng này thêm hay đổi; chỉ tệp kê local được phép mang nó.
 
@@ -133,7 +135,7 @@ Then:
 - in bảng theo khu: toà S16 nối có sẵn, toà mới, toà 0 căn không đúc, căn S16, căn S08 nhận bí danh S16, thẻ;
 - in bảng số căn theo từng toà mới (tên đã che) và số toà mới có dưới 10 căn;
 - ở GP và OP1, mỗi mã S08 có trong dự án S16 (1.283 và 153, đo 14/11) rơi vào đúng một trong bốn phần, mỗi phần đếm bằng một SELECT riêng: căn S08 nhận bí danh S16 · thẻ lệch toà · mã thuộc căn mơ hồ · căn thuộc toà S16 đã ra thẻ (khớp nhiều toà, AC-5); tổng bốn phần bằng số mã S08 có trong S16 (đếm lại lúc chạy);
-- 0 thẻ S16 có evidence mang token S16; sync-cloud chạy thử (không gửi) trên DB thử sau khi dựng: 0 token S16 trong mọi bảng sẽ đẩy;
+- 0 thẻ S16 có evidence mang token S16; sync-cloud chạy thử (không gửi) trên dữ liệu thật của mọi bảng sẽ đẩy (bảng DB thử vừa dựng, còn lại đọc chỉ-đọc từ DB máy thu): 0 `toa_id`/`khu_id` S16 ở mọi bảng, 0 mã căn S16 ở `review_queue` và `asset_nodes` (Mạnh duyệt 17/11);
 - toà hai UPI bằng 0, mã hai căn bằng 0;
 - chạy lại ra cùng số và 0 khoá mới.
 
