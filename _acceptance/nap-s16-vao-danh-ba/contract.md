@@ -5,7 +5,7 @@ slug: nap-s16-vao-danh-ba
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli]
-status: approved
+status: implemented
 approved_by: Mạnh
 approved_at: 2026-11-14
 design_doc: docs/superpowers/specs/2026-11-14-nap-s16-vao-danh-ba-design.md
