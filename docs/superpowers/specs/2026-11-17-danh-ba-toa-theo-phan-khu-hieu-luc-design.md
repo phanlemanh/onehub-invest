@@ -17,9 +17,11 @@ rồi phân khu S09, rồi cột gốc) và đưa 40/54 toà về đúng phân k
 - `du-an.ts`: `SQL_TOA`, `SQL_CAN` lọc cây con theo nút hiệu lực; `ToaDanhBa` thêm `nutIdGoc` và `nguonNut`
   (`goc | s09_cum | s09_phan_khu`).
 - `hang-toa.ts`: dòng phụ của toà hiện tên nút hiệu lực; khi khác cột gốc, thêm «S09 xếp lại, gốc: <tên nút gốc>» để người
-  vận hành thấy nguồn của phân khu.
+  vận hành thấy nguồn của phân khu. Tên nút gốc tra trong TOÀN BỘ nút của danh bạ (không chỉ cây con) và qua bộ che tên
+  nguồn như mọi chữ khác của dòng.
 - Chỉ SELECT; không migration, không ghi dữ liệu. Không thêm thuật ngữ CONTEXT (CONTEXT ngoài ranh giới hàng).
-- Bộ test TDB dựng lại `v_s09_toa`, `v_toa_nut_vung` trong lược đồ tạm (lớp đọc nay đọc view).
+- Bộ test TDB dựng lại `v_s09_toa`, `v_toa_nut_vung` trong lược đồ tạm (lớp đọc nay đọc view); chuỗi đột biến của chiều
+  đỏ TDB-AC-2 viết lại cho CTE mới mà vẫn bỏ lọc status. Probe TDB-DC đếm tổng toà trên dự án gốc theo nút hiệu lực.
 
 ## 3. Phép đo
 

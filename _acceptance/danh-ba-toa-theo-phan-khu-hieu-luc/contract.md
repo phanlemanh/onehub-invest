@@ -24,12 +24,13 @@ nhưng `/ops/registry` đọc cột `buildings.region_node_id` gốc. Hàng ch�
   toà, toà chưa có căn và căn của mỗi nút tính theo nút hiệu lực, đúng bảng kỳ vọng viết trước; tổng toà toàn danh bạ không
   đổi; và bản chép lớp đọc đọc lại cột gốc thì lệch bảng với thông điệp gọi tên nút.
 - AC-2: Given trang một dự án render trong jsdom, When đọc bảng toà, Then mỗi toà nằm dưới nút hiệu lực của nó; toà có gốc
-  khác hiệu lực hiện dòng phụ «S09 xếp lại, gốc: <tên nút gốc>»; toà có gốc bằng hiệu lực không có cụm ấy; căn của toà vẫn
-  đi theo toà.
+  khác hiệu lực hiện dòng phụ bắt đầu bằng tên nút hiệu lực rồi «S09 xếp lại, gốc: <tên nút gốc>» (tên qua bộ che tên
+  nguồn); toà có gốc bằng hiệu lực không có cụm ấy; căn của toà vẫn đi theo toà; ô Toà của phân khu trên trang danh sách
+  bằng số theo nút hiệu lực.
 - AC-3: Given DB máy thu (chỉ đọc), When lớp đọc của `/ops/registry` chạy trên dữ liệu thật, Then số toà của từng nút khớp
   đếm trực tiếp trên `v_toa_nut_vung`; toà treo thẳng dưới dự án và phân khu không toà không con bằng đếm trên view và nhỏ
   hơn đếm theo cột gốc (đo 17/11: 54 → 14 và 7 → 1); tổng toà bằng đếm `buildings` đang dùng (17/11: 198), không đổi so với
-  cột gốc; DB không đổi số dòng.
+  cột gốc; không toà nào đổi dự án gốc giữa cột gốc và hiệu lực; probe đối chiếu sẵn có của `/ops/registry` vẫn khớp.
 - AC-4: Given lớp đọc sau vòng, When quét các tệp `app/src/lib/ops/registry/*.ts`, Then không có câu ghi (luật chỉ-đọc của
   `trang-danh-ba-chi-doc`, ca `quetGhi`) và bộ test TDB sẵn có vẫn xanh.
 
@@ -48,7 +49,7 @@ loại nút gốc/hiệu lực.
 | `s09_phan_khu` | subzone → subzone | 74 | người vận hành | trong phạm vi — AC-1 (không đổi) |
 | `s09_phan_khu` | project → subzone | 25 | người vận hành (dòng phụ gốc) | trong phạm vi — AC-1, AC-2 |
 | gốc subzone → subzone khác | — | 0 | — | ngoài phạm vi, vì 0 dòng trên DB máy thu; fixture vẫn phủ gốc ≠ hiệu lực |
-| hiệu lực sang dự án khác | — | 0 | — | ngoài phạm vi, vì 0 dòng (đếm theo gốc cây) |
+| hiệu lực sang dự án khác | — | 0 | người vận hành (toà biến khỏi trang dự án) | trong phạm vi — AC-3 giữ số 0 bằng probe |
 
 - Trục A — nguồn nút: gốc | cụm S09 | phân khu S09
 - Trục B — gốc so hiệu lực: bằng | khác
