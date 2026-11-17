@@ -1,0 +1,115 @@
+schema_version: 1
+feature_slug: trang-danh-ba-chi-doc
+# Ca «TDB-AC-n» ở app/tests/registry-chi-doc.test.tsx (node --test + tsx; lược đồ tạm tdb_<pid> trên DB của riêng lượt
+# — db/db-thu.sh — dựng các bảng danh bạ bằng LIKE public … INCLUDING ALL, page thật dựng bằng renderToStaticMarkup với
+# getSessionUser giả). Ca «TDB-DC» ở app/probes/registry-doi-chieu.test.tsx: chỉ đọc DB máy thu :5433 trong giao dịch
+# READ ONLY, chỉ in số. Mỗi phép đo mới có cặp hai chiều trên cùng fixture (bản đột biến chép sang thư mục tạm, đổi đúng
+# một chỗ), thông điệp ghim. Hai khoá executor tdb_app, tdb_doi_chieu xin thêm vào _acceptance/config.yaml qua U2-67.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.tdb_app
+    paths: [app/src/components/ops/registry/**, app/src/app/ops/registry/**, app/src/lib/ops/registry/**, app/tests/registry-chi-doc.test.tsx]
+    expected: "exit 0; ca TDB-AC-1: VERCEL=1 → HTML hai trang có «Chỉ ở máy thu» và số truy vấn chạm bảng danh bạ = 0 (đếm qua pool giả bọc pool thật); lược đồ không có buildings → cùng kết quả; đối chứng dương: lược đồ có bảng → HTML có tên dự án của ma trận, không có «Chỉ ở máy thu»; chiều đỏ: bản đột biến bỏ nhánh cloud ở registry-content → ca đỏ ghim «TDB-AC-1 cloud vẫn truy vấn»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.tdb_app
+    paths: [app/src/lib/ops/registry/**, app/tests/registry-chi-doc.test.tsx]
+    expected: "exit 0; ca TDB-AC-2 trên lược đồ tạm: ma trận viết trước sáu nút asset_nodes — D1 (dự án xác minh), K1 (phân khu dưới D1), K2 (phân khu dưới K1), B1 (nút building dưới D1), D2 (dự án một lời khai không con), D3 (dự án xác minh không con) — và vật thể: toà T1 3 căn active + 1 căn retired dưới K2, toà T2 0 căn dưới K1, toà T3 merged dưới K1, toà T4 2 căn dưới B1; tin: D1 1 tin S03 mot_du_an qua phát biểu dự án gắn K2 (view quy về D1), D2 2 tin S06 mot_du_an + 1 tin xung_dot. Bảng kỳ vọng sáu dòng × năm trường (soPhanKhu, soToa, toaChuaCan, soCan, tin) — D1 (3, 3, 1, 5, {S03:1}), K1 (1, 2, 1, 3, {}), K2 (0, 1, 0, 3, {}), B1 (0, 1, 0, 2, {}), D2 (0, 0, 0, 0, {S06:2}), D3 (0, 0, 0, 0, {}); số assert = 30; chiều đỏ, mỗi bản đột biến đổi đúng một chỗ của doc.ts: bỏ lọc status='active' ở toà → ghim «TDB-AC-2 toà không active được đếm»; bỏ lọc status='active' ở căn → ghim «TDB-AC-2 căn không active được đếm»; bỏ lọc status='mot_du_an' → ghim «TDB-AC-2 tin xung_dot được đếm»; đếm node_type building vào toà → ghim «TDB-AC-2 nút building thành toà»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.tdb_app
+    paths: [app/src/lib/ops/registry/**, app/src/components/ops/registry/registry-view.tsx, app/tests/registry-chi-doc.test.tsx]
+    expected: "exit 0; ca TDB-AC-3: tổng (duAn, duAnXacMinh, phanKhu, toa, toaCoCan, truc, can) bằng bảng kỳ vọng của ma trận; danh mục: S06 (3 mã: 2 nối, 1 chưa nối), S08 (stg 4 dự án × 2 snapshot, 1 nối, 1 chưa nối có lý do, 2 chưa qua bước nối → daNap 4, chuaNoi 3), S09 (2 dự án → chuaNoi 2); HTML trang có chuỗi footer «S08 3/4» và «S09 đã cấp tên 1 toà» (ma trận: T1 mang bí danh ten S09 còn dùng, T2 mang bí danh S09 đã nghỉ → N = 1); chiều đỏ: bản đột biến đếm S08 không DISTINCT → ghim «TDB-AC-3 S08 đếm trùng snapshot»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.tdb_app
+    paths: [app/src/lib/ops/registry/cay.ts, app/src/components/ops/registry/registry-grid.tsx, app/tests/registry-chi-doc.test.tsx]
+    expected: "exit 0; ca TDB-AC-4: khopTim trên cây của ma trận — 'ocean' / 'OCEAN' / 'ôcêan' → D1; bí danh 'ocp1' → D1; tên phân khu K2 'Sapphire 2' tìm 'sapphire' → D1 (khớp qua con); 'khongco' → rỗng; chỗ thiếu của D2 = [chua-toa, chua-nguon], D3 = [chua-toa, chua-tin, chua-nguon], D1 = [toa-chua-can]; tỉnh: areas hai cây (vn-tinh-a ⊃ vn-tinh-a-xa, vn-tinh-b), D1 area_ids [vn-tinh-a-xa] → tên gốc tỉnh A, D2 [vn-tinh-b] → tỉnh B, D3 [] → null; bảng dựng trong jsdom với bảng kỳ vọng nhãn đếm viết trước: Chỗ thiếu = Chưa có toà → «2/3 dự án», Tỉnh/thành = tỉnh A → «1/3 dự án», Nguồn = S06 → «1/3 dự án» (D1 nối S06), Bậc = Một lời khai → «1/3 dự án», «Xoá lọc» → «3/3 dự án»; chiều đỏ: bản đột biến lấy tỉnh từ khu vực không leo lên gốc → ghim «TDB-AC-4 tỉnh không leo gốc»; chiều đỏ: bản đột biến khopTim bỏ duyệt subRows → ghim «TDB-AC-4 tìm qua phân khu con»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.tdb_app
+    paths: [app/src/lib/ops/registry/**, app/src/components/ops/registry/**, app/src/app/ops/registry/**, app/tests/registry-chi-doc.test.tsx]
+    expected: "exit 0; ca TDB-AC-5: HTML /ops/registry/<D1> có nhãn bậc «Xác minh», tỉnh, nguồn, bí danh, mã đã nối «S06 du_an/1»; bốn ô số bằng số của D1 ở docDanhBa; bảng toà có đúng T1, T2, T4 (không T3 merged) với phân khu chứa và mã tại nguồn; tab «Chưa có căn» đếm 1 (T2); id 'abc', '0', id không tồn tại, id của K1 → notFound; chiều đỏ: bản đột biến nhận phân khu làm gốc → ghim «TDB-AC-5 phân khu mở như dự án»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.tdb_app
+    paths: [app/src/lib/ops/registry/**, app/tests/registry-chi-doc.test.tsx]
+    expected: "exit 0; ca TDB-AC-6: đếm dòng mười bảng danh bạ của lược đồ tạm trước = sau khi dựng hai trang; quét mã lib/ops/registry/** không có INSERT/UPDATE/DELETE/TRUNCATE/CREATE/ALTER/DROP; git diff origin/main không có tệp db/migrations/**; chiều đỏ: bản sao doc.ts chèn 'DELETE FROM units' → quét đỏ ghim «TDB-AC-6 câu ghi trong lớp đọc»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.tdb_app
+    paths: [app/src/lib/ops/registry/**, app/src/components/ops/registry/**, app/tests/registry-chi-doc.test.tsx]
+    expected: "exit 0; ca TDB-AC-7: lược đồ tạm có source_registry dòng S07 real_name 'Nguon That Tdb', dự án D2 tên 'Nguon That Tdb Residence', bí danh 'nguon that tdb', mã S08 chưa nối tên 'Du an Nguon That Tdb', bí danh ten của T1 'Toa Nguon That Tdb', ma_nguon của T1, trục và một căn chứa 'nguonthattdb', mã nối S06 của D1 'nguon-that-tdb/1' — HTML hai trang không chứa 'Nguon That Tdb' (so qua fold không dấu) và chứa 'S07 Residence'; mọi chuỗi khớp /S\\d\\d/ đúng khuôn mã; quét mã lib/ops/registry/** không có source_registry, real_name, users, sessions, user_events, user_profile; chiều đỏ: bản đột biến bỏ che ở dungCay → ghim «TDB-AC-7 tên dự án lộ tên nguồn»; bản đột biến bỏ che mã ở du-an-content → ghim «TDB-AC-7 toà lộ tên nguồn»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.tdb_app
+    paths: [app/src/components/ops/registry/**, app/src/app/ops/registry/**, app/tests/registry-chi-doc.test.tsx]
+    expected: "exit 0; ca TDB-AC-8: lược đồ rỗng → HTML có «Danh bạ chưa có dự án» và lệnh «node pipeline/noi-du-an-s06.mjs»; RegistryGrid trong jsdom lọc không khớp → «Xoá lọc»; RegistrySkeleton có Skeleton và aria-busy; page bọc RegionError (nội dung ném lỗi → «Thử lại»); trang D3 (không toà) → «Dự án chưa có toà nào trong danh bạ.» + liên kết /ops/registry; chuaNoi rỗng → «Mọi mã dự án đã nạp đều đã nối.»; đối chứng dương: ma trận đủ → không có các câu trống"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.ui_route_slugs
+    paths: [CONTEXT.md, app/src/app/ops/registry/**]
+    expected: "exit 0; đoạn tĩnh registry có trong dòng Slug URL của CONTEXT.md"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.ui_routes_map
+    paths: [.claude/skills/onehub-ui/routes.md, app/src/app/ops/registry/**]
+    expected: "exit 0; hai page.tsx mới có dòng trong routes.md"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.tdb_app
+    paths: [app/src/components/shell/nav.tsx, docs/architecture/portals.md, app/tests/registry-chi-doc.test.tsx]
+    expected: "exit 0; ca TDB-AC-9: nav Ops có mục href /ops/registry nhãn «Danh bạ»; portals.md có dòng `/ops/registry`; chiều đỏ: bản sao nav không có mục → ghim «TDB-AC-9 nav thiếu Danh bạ»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E12
+    criterion: AC-10
+    executor: ui-check
+    layer: ui-observed
+    paths: [app/src/components/ops/registry/**, app/src/app/ops/registry/**]
+    steps:
+      - "Bản chạy: dev server của worktree dãy U2 ở http://localhost:3461 trên DB máy thu :5433, đăng nhập tài khoản thử admin của scripts/dev-ops-account.mjs qua loginState của scripts/ui-capture-login.mjs; không lên thì FAIL «bản chạy :3461 không lên»"
+      - "1280 px sáng: /ops/registry → evidence/E12-step1.png (bốn ô số + bảng); mở hàng Vinhomes Ocean Park 1 (phân khu hiện dưới) → evidence/E12-step2.png; lọc Chỗ thiếu = «Có toà chưa có căn» → evidence/E12-step3.png"
+      - "1280 px tối: bấm Vinhomes Grand Park → evidence/E12-step4.png; mở toà đầu → evidence/E12-step5.png (căn theo tầng, trục); tab «Chưa có căn» → evidence/E12-step6.png"
+      - "390 px sáng: /ops/registry → evidence/E12-step7.png; ghi document.documentElement.scrollWidth và clientWidth"
+    expected: "Bốn ô số và bảng đọc được ở sáng và tối; hàng dự án mở ra phân khu, hàng toà mở ra căn; nguồn chỉ là mã S0x; lọc chỗ thiếu thu bảng và nhãn đếm đổi; scrollWidth = clientWidth ở 390 px."
+    evidence_required: [run_id, screenshot, observed, verifier, verified_at]
+  - id: E13
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.design.floor
+    paths: [app/src/app/ops/registry/**, app/src/components/ops/registry/**]
+    expected: "exit 0; sàn thiết kế bậc M1 không báo hex thô mới trên tệp giao diện vòng chạm"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E14
+    criterion: AC-10
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.tdb_doi_chieu
+    paths: [app/src/lib/ops/registry/**, app/src/components/ops/registry/**, app/probes/registry-doi-chieu.test.tsx]
+    expected: "exit 0; ca TDB-DC trên DB máy thu :5433 (một giao dịch READ ONLY, chỉ in số): mọi trường của docDanhBa().tong = count(*) độc lập từng bảng (asset_nodes theo node_type/catalog_tier, buildings active, buildings active có căn active, stacks active, units active); tổng soCan trên mọi dự án gốc = count(units active); tổng soToa trên mọi dự án gốc = count(buildings active có dự án tổ tiên); tổng tin theo nguồn trên các dự án gốc = count(offer_project mot_du_an) theo nguồn và tin trên mọi nút không phải gốc = 0; toaBiDanhS09 = đếm độc lập; danhMuc S06/S08/S09 = đếm độc lập; HTML /ops/registry và HTML /ops/registry/<id> của MỌI dự án có toà có 0 chỗ khớp tên nguồn thật (findSourceNames với danh sách lấy trong ca); đếm mười bảng trước = sau; đối chứng dương: quét HTML bằng danh sách có tên giả cài vào chuỗi thử → ≥ 1 chỗ khớp ghim «TDB-DC tên nguồn lọt»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
