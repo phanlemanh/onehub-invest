@@ -5,7 +5,7 @@ slug: danh-ba-toa-theo-phan-khu-hieu-luc
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: machine-cleared
+status: implemented
 design_doc: docs/superpowers/specs/2026-11-17-danh-ba-toa-theo-phan-khu-hieu-luc-design.md
 approved_by:
 approved_at:
