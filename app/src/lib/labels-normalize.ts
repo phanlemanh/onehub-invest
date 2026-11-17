@@ -91,7 +91,7 @@ export const FIELD_LABEL: Record<LabelField, string> = {
   kind: "Loại tin",
   property_type: "Loại hình",
   multi_unit: "Nhiều căn",
-  project: "Khu đô thị",
+  project: "Dự án",
   subzone: "Phân khu",
   building: "Toà",
   stack: "Trục",
@@ -117,7 +117,7 @@ export const FIELD_LABEL: Record<LabelField, string> = {
 export const CASE_KINDS = [
   { value: "bi-danh", label: "Bí danh viết tắt" },
   { value: "mac-dinh-nhom", label: "Mặc định theo nhóm" },
-  { value: "ma-trung-du-an", label: "Mã trùng giữa khu đô thị" },
+  { value: "ma-trung-du-an", label: "Mã trùng giữa dự án" },
   { value: "nhieu-can", label: "Bài nhiều căn" },
   { value: "che-tang", label: "Che tầng" },
   { value: "so-ngoai-bai", label: "Số ngoài chữ bài" },
