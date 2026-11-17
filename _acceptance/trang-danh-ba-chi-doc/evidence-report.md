@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: b3dd21d9776ef726ce77402b9268a882de3e8685
+verified_commit: af430f2784c650e1c817dfb531bb46ebbd74e27f
 human_signoff: Mạnh 2026-11-17
 ---
 
@@ -222,3 +222,7 @@ none — mọi eval chạy một lần, kết quả đồng nhất.
 
 Round 1: E1–E14 chạy lần đầu trên bản S4 vòng 1; E9, E10, E12, E13, E14 đạt và được mang sang round 2.
 Round 2: E1–E8 và E11 chạy lại sau sửa S4-r1 (siết đo ô số, tab, RegionError), đạt; E9, E10, E12, E13, E14 carry-forward vì delta không chạm paths của chúng; bảy lệnh suite đạt.
+
+### Re-pin lần 1 — 2026-11-17, do dời ca đối chiếu sang app/probes sau chữ ký (lưới DT-AC-7)
+run_id: repin-20261117T042618Z-27130
+sha: af430f2784c650e1c817dfb531bb46ebbd74e27f · suites: 7 lệnh exit 0 · evals: 13/13 eval máy đạt kỳ vọng · ngoài làn máy: E12
