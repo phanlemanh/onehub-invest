@@ -4304,7 +4304,7 @@
         "db/migrations/089_s10_bang_hang.sql",
         "pipeline/transform-s10*"
       ],
-      "ghi_chu": "Migration 089; đang làm ở dãy P3 đợt dot0-cam-mau. Sửa 11/11 (mục 45 Q6): lượt thu S10 kế tiếp lấy thêm danh mục dự án (id → tên), làn ZCode — raw S10 hiện chỉ có id số.",
+      "ghi_chu": "Migration 089; đang làm ở dãy P3 đợt dot0-cam-mau. Sửa 11/11 (mục 45 Q6): lượt thu S10 kế tiếp lấy thêm danh mục dự án (id → tên), làn ZCode — raw S10 hiện chỉ có id số. 18/11 (chuan-hoa-1711): nếu hàng này ghi S10 vào media, parties, party_roles, silver_labels hay collection_units thì mở mục chờ CH6 (ràng buộc mã nguồn một chữ số) trước.",
       "phu": [
         "DA29"
       ]
@@ -4616,7 +4616,7 @@
       "slug": "s06-gan-tinh-theo-tung-tin",
       "hang": "T2",
       "vai": "nen",
-      "tieu_chi": 9,
+      "tieu_chi": 11,
       "nhom": "l11-mat-bang-s06",
       "dung_tren": [],
       "phu": [
@@ -4624,14 +4624,14 @@
         "B3"
       ],
       "cau_giao": "Transform S06 gán thị trường và phường cho tin theo tỉnh của chính tin chứ không theo vùng thu, nên vùng thứ ba đang nháp bật được, và ba vùng mới có số đo gán phường, toạ độ kèm ngưỡng",
-      "bat_khi": "Tin của đơn vị thu chỉ có mã vùng cũ (đang nháp) mà nằm ở hai tỉnh cũ đã sáp nhập đều vào đúng một thị trường; tin Hà Nội, TP.HCM, Đà Nẵng gán phường không đổi so với trước; mỗi vùng mới có tỉ lệ tin có phường và có toạ độ ghi vào bảng kiểm chất lượng, dưới ngưỡng thì đỏ có tên vùng",
-      "vi_sao": "ROADMAP §3 mục 47 (12/11): hai vùng S06 mới đã bật; vùng thứ ba giữ nháp vì nguồn không có mã vùng riêng, chờ transform gán tỉnh theo từng tin. Hôm nay thị trường của tin lấy từ city_code của đơn vị thu.",
+      "bat_khi": "Tin của đơn vị thu chỉ có mã vùng cũ (đang nháp) mà nằm ở hai tỉnh cũ đã sáp nhập đều vào đúng một thị trường; tin Hà Nội, TP.HCM, Đà Nẵng gán phường không đổi so với trước; mỗi vùng mới có tỉ lệ tin có phường và có toạ độ ghi vào bảng kiểm chất lượng, dưới ngưỡng thì đỏ có tên vùng Gộp từ DV8 (chuan-hoa-1711, đo 17/11 trên DB máy thu): tin S06 đang rao của vùng thu gộp «Bình Dương» mang region_v2 2012–2014 (Bình Phước, Đồng Nai, Tây Ninh cũ; 2.743 tin) có 0 tin mang phường HCM (từ 610); hạng cấp phường Tân Thành (HCM) 87 → 24 tin, 7 nhãn «rẻ trong phường» của tin tỉnh khác gỡ; tin Bình Dương, Bà Rịa–Vũng Tàu cũ vẫn ở HCM, số không đổi; tin S06 có toạ độ ngoài ranh thị trường được gán 685 → dưới 80; tin ghi diện tích theo hecta (size_unit 2, 8 tin) lưu m² bằng số nhân 10.000; chạy lại không đổi. Lệnh đo: đếm tin S06 sống theo region_v2 của bảng nạp × tiền tố area_id, tin có toạ độ ngoài ranh thị trường cha (ST_Contains), tin size_unit 2 — câu V18, V21, Q-G10, W2 ở trang tri thức dot/chuan-hoa-1711.",
+      "vi_sao": "ROADMAP §3 mục 47 (12/11): hai vùng S06 mới đã bật; vùng thứ ba giữ nháp vì nguồn không có mã vùng riêng, chờ transform gán tỉnh theo từng tin. Hôm nay thị trường của tin lấy từ city_code của đơn vị thu. Phân tích chuẩn hoá 17/11: vùng thu «Bình Dương» gồm năm tỉnh cũ (region_v2 2010–2014); lib/thi-truong.mjs đổi cả vùng sang HCM — đúng cho Bình Dương, Bà Rịa–Vũng Tàu, sai cho Bình Phước, Đồng Nai, Tây Ninh; phường gán theo tên nên tin Biên Hoà, Long Thành, Trảng Bàng… vào phường HCM trùng tên (Tân Thành 63/87 tin xếp hạng), 2.133 tin không khớp tên thành tin không phường (99% tin S06 không phường). Bảng nạp có sẵn region_v2.",
       "vung": [
         "pipeline/transform-chotot.mjs",
         "pipeline/lib/thi-truong.mjs",
         "pipeline/sql"
       ],
-      "ghi_chu": "Gộp B2 và B3: đo gán phường không có giá trị khi vùng thứ ba chưa vào canonical, và cùng một bước transform. Ngưỡng tỉ lệ chốt ở Cổng Phạm vi trên số đo hai vùng đã bật. Bật vùng trong collection_units và lượt thu đầu là bước triển khai làn ZCode (ra khỏi kho). Hàng trước: s06-vung-moi-len-canonical, s06-region-tinh (đã ký)."
+      "ghi_chu": "Gộp B2 và B3: đo gán phường không có giá trị khi vùng thứ ba chưa vào canonical, và cùng một bước transform. Ngưỡng tỉ lệ chốt ở Cổng Phạm vi trên số đo hai vùng đã bật. Bật vùng trong collection_units và lượt thu đầu là bước triển khai làn ZCode (ra khỏi kho). Hàng trước: s06-vung-moi-len-canonical, s06-region-tinh (đã ký). Sửa 18/11 (chuan-hoa-1711): gộp DV8 (trùng phạm vi — cùng một sửa tỉnh theo từng tin) và lỗi đơn vị hecta (cùng bước transform); tiêu chí 9 → 11, không tách vì cùng một hàm gán thị trường và một lượt chạy lại. Câu Cổng Phạm vi cho Mạnh: 2.743 tin S06 của Bình Phước, Đồng Nai, Tây Ninh cũ (đã thu sẵn trong vùng gộp) gán đúng tỉnh (Đồng Nai, Tây Ninh mới) hay loại khỏi số? Khuyến nghị: gán đúng tỉnh — dữ liệu đã thu, không mở rộng phạm vi thu, tin chỉ hiện ở tỉnh của nó; Đồng Nai, Tây Ninh chưa có ranh phường (0/95, 0/96) nên tin không khớp tên dừng ở cấp tỉnh."
     },
     {
       "dot": "no-cat-hang-1311",
@@ -5371,26 +5371,6 @@
         "db/migrations"
       ],
       "ghi_chu": "Hạng T3 như DA32: đúc nút hàng loạt lên cloud. Lát mỏng của DA18 (nút ứng viên từ danh mục) và DA3 (bảng nối đầy đủ) cho S08, S09; hai hàng ấy giữ phần còn lại (S07, S11, khuôn chung, thẻ từng cặp). Dùng lại bảng thẻ luật của DA32 (migration 100). Sửa 17/11 (chuan-hoa-1711): thêm gộp năm cặp nút trùng — thẻ luật S06 «mã nguồn» đúc một nút cho mỗi mã, nên một dự án có hai mã thành hai nút và hạng giá cấp dự án chia đôi mẫu."
-    },
-    {
-      "ma": "DV8",
-      "slug": "s06-tinh-theo-ma-tinh-nguon",
-      "dot": "chuan-hoa-1711",
-      "nhom": "l11-mat-bang-s06",
-      "phu": [
-        "CH1"
-      ],
-      "hang": "T2",
-      "vai": "nen",
-      "tieu_chi": 7,
-      "dung_tren": [],
-      "cau_giao": "Transform S06 lấy tỉnh của tin từ mã tỉnh thật trong bảng nạp (region_v2) thay vì từ vùng thu gộp, nên tin của tỉnh khác không còn rơi vào phường trùng tên của TP. Hồ Chí Minh",
-      "bat_khi": "Trên DB máy thu, tin S06 đang rao của vùng thu gộp «Bình Dương» có mã tỉnh Bình Phước, Đồng Nai, Tây Ninh cũ (2.743 tin đo 17/11): 0 tin mang phường HCM (từ 610); hạng cấp phường Tân Thành (HCM) 87 → 24 tin, 7 nhãn «rẻ trong phường» của tin tỉnh khác gỡ; tin Bình Dương, Bà Rịa–Vũng Tàu cũ vẫn ở HCM, số không đổi; tin S06 ngoài ranh tỉnh được gán 685 → dưới 80 (phần còn là toạ độ lệch trong cùng tỉnh); chạy lại không đổi. Lệnh đo: đếm tin S06 sống theo region_v2 ∈ {2012, 2013, 2014} của bảng nạp S06 × tiền tố area_id, và đếm tin có toạ độ ngoài ranh thị trường cha (ST_Contains) — câu V18, V21, Q-G10 ở trang tri thức dot/chuan-hoa-1711",
-      "vi_sao": "Phân tích chuẩn hoá 17/11: vùng thu «Bình Dương» của S06 gồm năm tỉnh cũ (region_v2 2010–2014); lib/thi-truong.mjs đổi cả vùng sang HCM (đúng cho Bình Dương, Bà Rịa–Vũng Tàu sau sáp nhập 2025, sai cho Bình Phước, Đồng Nai, Tây Ninh). Phường gán theo tên trong thị trường đó nên tin Biên Hoà, Long Thành, Trảng Bàng… vào phường HCM trùng tên (Tân Thành 63/87 tin xếp hạng là tin tỉnh khác); 2.133 tin không khớp tên thành tin không phường (99% số tin S06 không phường). Bảng nạp có sẵn region_v2, transform không đọc.",
-      "vung": [
-        "pipeline/lib/thi-truong.mjs"
-      ],
-      "ghi_chu": "Làn Claude (transform), không đổi DATA-CONTRACT, không migration; đổi dữ liệu trên DB máy thu theo luật hàng xong khi số trên màn đổi — lời áp đi cùng chữ ký Cổng Bằng chứng (đủ năm thứ). Vùng còn gồm điểm gọi trong transform S06. Câu Cổng Phạm vi cho Mạnh: 2.743 tin S06 của Bình Phước, Đồng Nai, Tây Ninh cũ (đã thu sẵn trong vùng gộp) gán đúng tỉnh (Đồng Nai, Tây Ninh mới) hay loại khỏi số? Khuyến nghị: gán đúng tỉnh — dữ liệu đã thu, không mở rộng phạm vi thu, tin chỉ hiện ở tỉnh của nó; Đồng Nai, Tây Ninh chưa có ranh phường (0/95, 0/96) nên tin ở đó dừng ở cấp tỉnh khi không khớp tên. Cỡ dưới mục tiêu có chủ ý: một sửa nhỏ, không có hàng cùng nhóm trong đợt để gộp."
     }
   ],
   "chan_troi": [
@@ -6520,7 +6500,7 @@
       "phu": [
         "DA24a"
       ],
-      "mo_lai_khi": "Một ô của hạng mục liên quan đứng yên hai lượt đo liền, hoặc MS3 đạt"
+      "mo_lai_khi": "Một ô của hạng mục liên quan đứng yên hai lượt đo liền, hoặc MS3 đạt — khi mở, xét mục chờ CH6 nếu S11 ghi vào media, parties, party_roles, silver_labels hay collection_units."
     },
     {
       "ma": "DF7",
@@ -6781,6 +6761,76 @@
         "N11"
       ],
       "mo_lai_khi": "MS5 đạt, hoặc chủ kho mở lại nhánh thuê ngắn hạn"
+    },
+    {
+      "ma": "CH1",
+      "dot": "chuan-hoa-1711",
+      "cau_giao": "Transform S06 lấy tỉnh của tin từ mã tỉnh thật trong bảng nạp (region_v2) thay vì từ vùng thu gộp, nên tin của tỉnh khác không còn rơi vào phường trùng tên của TP. Hồ Chí Minh",
+      "ly_do": "Trùng phạm vi VM1 (s06-gan-tinh-theo-tung-tin, đợt no-cat-hang-1311): cùng một sửa — transform S06 gán tỉnh theo từng tin, không theo vùng thu. Lượt cắt 17/11 sót VM1 và đặt hàng DV8; 18/11 bỏ DV8, chép số đo và câu Cổng Phạm vi sang VM1.",
+      "phu": [
+        "CH1"
+      ],
+      "mo_lai_khi": "Không mở riêng: giao cùng VM1 (s06-gan-tinh-theo-tung-tin)"
+    },
+    {
+      "ma": "CH2",
+      "dot": "chuan-hoa-1711",
+      "cau_giao": "Tin có giá, giá/m² hay diện tích ngoài khoảng hợp lệ theo loại × bán/thuê không vào bảng hạng giá và lên thẻ kiểm, có lý do",
+      "ly_do": "Đo 17/11: bảng hạng chỉ đòi giá/m² > 0; lọt S06 bán > 500 tỷ 13 tin, thuê > 2 tỷ/tháng 42, S03 bán < 100 triệu 42, S06 > 2.000 m² 793 (đa số đất, toà nhà thật). Dưới 0,1% tin; tin quá rẻ đã bị trần «Cần xác minh» 35% của CG giữ, tin quá đắt chỉ kéo đuôi trên, không đổi nhãn «giá tốt». Chưa đủ cỡ thành hàng.",
+      "phu": [
+        "CH2"
+      ],
+      "mo_lai_khi": "Khi một nhóm so (dự án, toà hay phường × loại) có nhãn «giá tốt» đổi vì tin ngoài khoảng, đo bằng chạy lại bảng hạng sau khi loại tin ngoài khoảng; hoặc tin ngoài khoảng vượt 0,5% tin đang rao của một nguồn"
+    },
+    {
+      "ma": "CH3",
+      "dot": "chuan-hoa-1711",
+      "cau_giao": "Tin S06 có toạ độ điểm thật nằm ngoài ranh phường được gán thì được gán lại theo ranh hoặc lên thẻ, trong cùng tỉnh",
+      "ly_do": "Mẫu 5.000 tin S06 17/11: 446 (9%) có toạ độ ngoài ranh phường được gán; nhưng 41% tin S06 dùng chung toạ độ với hơn 50 tin (tâm phường, đường, dự án), nên phần lệch phần lớn có thể là toạ độ thô, không phải phường sai. VM1 chỉ đo tỉ lệ có phường. Làm trước khi có độ chính xác toạ độ (CH4) sẽ sửa sai ngược.",
+      "phu": [
+        "CH3"
+      ],
+      "mo_lai_khi": "Sau khi CH4 phân được toạ độ điểm thật, và trên tin có toạ độ điểm thật tỉ lệ ngoài ranh phường được gán còn từ 3% (HCM 167/168, Hà Nội 126/126 phường có ranh)"
+    },
+    {
+      "ma": "CH4",
+      "dot": "chuan-hoa-1711",
+      "cau_giao": "Mỗi tin mang độ chính xác của toạ độ (điểm thật, tâm dự án, tâm đường, tâm phường), và bước ghép căn, kiểm phường chỉ dùng toạ độ đủ chính xác",
+      "ly_do": "Đo 17/11: chỉ 4,5% tin S06 có toạ độ không trùng tin nào; 463 điểm mang hơn 50 tin (46.226 tin), 68 điểm là tâm dự án căn hộ, phần còn lại trộn nhà phố, phòng trọ. Căn hộ dùng danh bạ nên không chặn đích căn hộ; HD2 dùng toạ độ làm đặc trưng loại trừ nhà phố.",
+      "phu": [
+        "CH4"
+      ],
+      "mo_lai_khi": "Khi mở lại ghép căn nhà phố (Stage B đang đóng băng từ 08/11) hoặc mở CH3; số đo mở: tỉ lệ cặp ghép căn nhà phố mà toạ độ hai bên là cùng một điểm dùng chung"
+    },
+    {
+      "ma": "CH5",
+      "dot": "chuan-hoa-1711",
+      "cau_giao": "Tin S06 lưu mã đường của nguồn, và tin nhà phố cùng đường so được theo mã đường thay vì chữ tên đường",
+      "ly_do": "Bảng nạp S06 có mã đường (unique_street_id) ở khoảng 52% tin (mẫu 2%, 17/11) nhưng transform không lưu; không có danh bạ đường. Chỉ phục vụ nhà phố, không ở đường găng căn hộ.",
+      "phu": [
+        "CH5"
+      ],
+      "mo_lai_khi": "Khi đích lộ trình có nhà phố (hạng giá theo đường hay ghép căn nhà phố), hoặc khi một hàng cần so tin theo đường"
+    },
+    {
+      "ma": "CH6",
+      "dot": "chuan-hoa-1711",
+      "cau_giao": "Các bảng còn ràng buộc mã nguồn một chữ số nhận được nguồn S10 trở lên, cùng một khuôn mã nguồn",
+      "ly_do": "Đếm pg_constraint lược đồ public trên DB máy thu 18/11 (sau DA33): còn năm ràng buộc một chữ số — media.originating_system_name ^S0[0-9]$, parties.source ^S0[1-9]$, party_roles.subject_key ^S0[1-9]:, silver_labels.source_code ^S0[0-9]$, collection_units.unit_code ^S0[0-9]-; registry_aliases đã nới tới S19 ở migration 103 (DA33); project_links, project_link_rules nhận S[0-9]{2}. Hôm nay chưa hàng nào ghi nguồn từ S10 vào năm bảng ấy (DA29, DA24a, DA33 chỉ ghi stg và danh bạ).",
+      "phu": [
+        "CH6"
+      ],
+      "mo_lai_khi": "Trước hàng nạp đầu tiên ghi nguồn từ S10 trở lên vào một trong năm bảng media, parties, party_roles, silver_labels, collection_units — kiểm bằng cùng câu đếm pg_constraint, chỉ lược đồ public"
+    },
+    {
+      "ma": "CH7",
+      "dot": "chuan-hoa-1711",
+      "cau_giao": "Một thư viện chuẩn hoá chung (bỏ dấu giữ hay bỏ dấu có tên, tên toà, SĐT, đọc giá «tỷ/triệu») cho pipeline, app và agent, có test cặp",
+      "ly_do": "Đo 17/11: 19 tệp tự viết bỏ dấu với ít nhất năm luật, sáu chỗ tự viết luật SĐT, ba chỗ đọc giá; nhưng thống nhất tên toà chỉ thêm 39 tin khớp, SĐT đã đúng dạng 100% nhờ CHECK. PL20 đã gánh một hàm tên toà dùng chung. Luật «không thêm cơ chế khi chưa có số đo».",
+      "phu": [
+        "CH7"
+      ],
+      "mo_lai_khi": "Khi có hàng thứ ba cần cùng một hàm chuẩn hoá (sau PL20), hoặc đo được một con số trên màn lệch vì hai bước chuẩn hoá cùng một thứ khác luật"
     }
   ],
   "da_bac": [
