@@ -1,139 +1,66 @@
-# Review findings: the-dia-chi-nhom-s03 (round 8)
+# Review findings: the-dia-chi-nhom-s03 (round 9)
 
 ## Trong hợp đồng
 
-Không có.
+- **Hình dạng 5 (tuyên quét lớp nhưng chỉ có điểm-case): ma trận 16 ô chỉ so một phần kết cục, không phải deepEqual đủ năm ô như E2 hứa**
+  AC: AC-2
+  file: `pipeline/tests/the-dia-chi-nhom.test.mjs:56`
+  severity: medium
+  source: measurement
+  detail: E2 trong evals.yaml ghi «mỗi ô so deepEqual {du_an, phuong, tinh, phan_khu, muc_dich}». Nhưng vòng lặp `for (const [k, v] of Object.entries(mong)) assert.deepEqual(g[k], v, …)` chỉ so những khoá được viết trong `mong`, và comment của MA_TRAN tự ghi «kết cục mong đợi (một phần)». Nhiều ô chỉ ghim một trường: «tên 2 bài» → {du_an:[]}, «tên 4/50 bài» → {du_an:[5]}, «bán 18/20» → {muc_dich}, «phân khu 2 bài» → {phan_khu:null}, «dưới 5 bài đọc» → {muc_dich:null}. Phường, tỉnh, phân khu, bán/thuê của các ô đó không bị so. Ví dụ hàm làm sai ô phường hay tỉnh khi chỉ có nhãn bán/thuê thì ca vẫn xanh. Số assert thật ít hơn 16×5 ô mà hồ sơ tuyên bố đã phủ.
+  rationale: AC-2 đòi mỗi ô của ma trận 16 nhóm ra đúng giá trị viết trước, mà phép kiểm chỉ so một phần nên AC chưa được chứng minh đủ.
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **Trang Ops mới /ops/group-cards chưa khai trong docs/architecture/portals.md**
-  Người dùng thấy gì: Bảng liệt kê các trang Ops trong tài liệu thiếu một trang mới. Người dùng không thấy gì khác trên màn, chỉ tài liệu cổng chưa đầy đủ.
-  Căn cứ: Chỉ là tài liệu thiếu một dòng, không mất dữ liệu, bổ sung sau rất rẻ.
-  file: `app/src/app/ops/group-cards/page.tsx`
-  severity: medium
-  Đề xuất: known-limits
-
-- **kiem-sau.sql chép tay định nghĩa «bài thử» — bản thứ năm ngoài vòng giữ của GN5**
-  Người dùng thấy gì: Lệnh kiểm sau khi áp có thể báo sai (đỏ hoặc xanh giả) nếu sau này luật nhận diện bài thử đổi. Hôm nay hai số vẫn khớp.
-  Căn cứ: Chỉ ảnh hưởng bước kiểm khi luật đổi trong tương lai, không làm hỏng dữ liệu, người vận hành nhìn ra được lệch số.
-  file: `_acceptance/the-dia-chi-nhom-s03/ap-may-thu/kiem-sau.sql`
-  severity: medium
-  Đề xuất: known-limits
-
-- **Route ghi thẻ không kiểm phân khu thuộc dự án đã chọn (thiếu validation ở biên)**
-  Người dùng thấy gì: Gọi thẳng đường ghi có thể lưu thẻ có phân khu của dự án khác. Giao diện không cho chọn như vậy nên người dùng bình thường ít gặp.
-  Căn cứ: Dữ liệu sai chỉ xảy ra khi gọi trực tiếp ngoài giao diện, nhưng sẽ đóng dấu địa chỉ mâu thuẫn lên tin ở bước sau nên đáng làm trong việc riêng.
-  file: `app/src/lib/the-dia-chi-nhom.ts`
-  severity: medium
-  Đề xuất: new-contract
-
-- **Route group-cards thiếu chốt «chỉ ở máy thu» như các route bảng local khác; chú thích nói sai mã lỗi**
-  Người dùng thấy gì: Trên cloud hoặc máy chưa áp bảng thẻ, đường ghi trả lỗi chung thay vì thông báo rõ chỉ có ở máy thu. Không có dữ liệu bị ghi sai.
-  Căn cứ: Chỉ là thông báo lỗi kém rõ trên môi trường không dùng tính năng này, không mất dữ liệu.
+- **Route POST /api/v1/ops/group-cards thiếu chốt «chỉ máy thu» (VERCEL=1 → 503) như route nhãn; trên cloud trả 500 thay vì 404/503 như comment nói**
+  Người dùng thấy gì: Nếu ai đó gọi chức năng ghi thẻ từ bản cloud thì nhận thông báo lỗi chung chung thay vì lời báo rõ là chỉ làm được ở máy thu. Không có dữ liệu nào bị hỏng.
+  Căn cứ: Chỉ ảnh hưởng thông báo lỗi ở nơi thẻ vốn không dùng, không mất hay lộ dữ liệu, và bản cloud không có màn nào dẫn tới đây.
   file: `app/src/app/api/v1/ops/group-cards/route.ts`
   severity: medium
   Đề xuất: known-limits
 
-- **ghiNhap: không có chốt khi UPDATE không khớp dòng (người vừa quyết thẻ giữa chừng) → TypeError làm hỏng cả lượt**
-  Người dùng thấy gì: Nếu người vận hành vừa nhận hoặc bác một thẻ đúng lúc lệnh dựng nháp chạy, lượt dựng bị huỷ và phải chạy lại. Không mất dữ liệu.
-  Căn cứ: Hiếm gặp, hỏng cả lượt nhưng được hoàn lại sạch và chạy lại là xong.
-  file: `pipeline/scripts/the-dia-chi-nhom.mjs`
-  severity: low
-  Đề xuất: known-limits
-
-- **Chú thích trong lib còn trỏ bề mặt cũ (route source-groups, khu «Sổ đơn vị thu» trên /ops/sources)**
-  Người dùng thấy gì: Chú thích trong mã nguồn còn chỉ về chỗ cũ. Người dùng không thấy ảnh hưởng.
-  Căn cứ: Chỉ gây nhầm cho người đọc mã sau này, không ảnh hưởng người dùng, sửa tiện tay khi chạm tệp.
+- **Docstring quyetThe vẫn tả hàm là action `card-decide` của route source-groups**
+  Người dùng thấy gì: Một dòng chú thích trong mã nói sai nơi hàm được gọi; người dùng không thấy gì khác đi.
+  Căn cứ: Không ảnh hưởng hành vi nào của người dùng, chỉ có thể làm người đọc mã hiểu nhầm và sửa lúc nào cũng được.
   file: `app/src/lib/the-dia-chi-nhom.ts`
   severity: low
   Đề xuất: wont-fix
 
-- **coBang dò cột không lọc table_schema**
-  Người dùng thấy gì: Trên môi trường thử có nhiều lược đồ, trang có thể đoán sai phiên bản bảng và đọc thiếu một cột. Máy thu thật không bị.
-  Căn cứ: Chỉ nằm ở môi trường thử, không chạm dữ liệu thật và dễ nhận ra khi trang báo lỗi.
+- **Cấu hình preview mới app-3460-tg1 trùng cổng 3460 với app-3460-pl35**
+  Người dùng thấy gì: Hai cấu hình xem thử dùng chung một cổng nên không chạy cùng lúc được. Người dùng cuối không bị ảnh hưởng.
+  Căn cứ: Chỉ vướng cho người phát triển khi mở hai bản xem thử một lúc, tự khắc phục bằng cách chạy lần lượt.
+  file: `.claude/launch.json`
+  severity: low
+  Đề xuất: wont-fix
+
+- **Cờ dirty của hộp Duyệt thẻ không được xoá sau khi lưu thành công, nên lần mở thẻ sau hỏi «Bỏ thay đổi chưa lưu?» dù chưa sửa gì**
+  Người dùng thấy gì: Sau khi lưu một thẻ, mở thẻ khác rồi đóng hộp có thể hiện câu hỏi «Bỏ thay đổi chưa lưu?» dù chưa sửa gì. Người duyệt chỉ cần bấm xác nhận để đóng.
+  Căn cứ: Chỉ làm phiền thêm một lần bấm, không mất hay sai dữ liệu, và người duyệt tự vượt qua được ngay.
+  file: `app/src/components/ops/group-cards/group-cards-view.tsx`
+  severity: low
+  Đề xuất: known-limits
+
+- **Route group-cards trả 500 «không ghi được thẻ» khi chưa có bảng thẻ, không phải 404 như ghi chú**
+  Người dùng thấy gì: Trên DB chưa áp bảng thẻ, thao tác ghi thẻ báo lỗi máy chủ chung chung thay vì báo rõ là chưa có bảng thẻ. Không có thẻ nào bị ghi sai.
+  Căn cứ: Chỉ xảy ra trên môi trường chưa áp bản cập nhật, thao tác bị từ chối an toàn nên không mất dữ liệu; chỉ thông báo kém rõ.
   file: `app/src/lib/the-dia-chi-nhom.ts`
   severity: low
   Đề xuất: known-limits
 
-- **Sửa tay app/next-env.d.ts — tệp máy sinh, sẽ lật lại khi chạy next dev**
-  Người dùng thấy gì: Một tệp tự sinh bị đổi, gây nhiễu khi so sánh thay đổi giữa các nhánh. Người dùng không thấy.
-  Căn cứ: Chỉ là nhiễu trong lịch sử thay đổi, tự lật lại khi chạy công cụ, trả về bản gốc rất rẻ.
-  file: `app/next-env.d.ts`
-  severity: low
-  Đề xuất: wont-fix
-
-- **Bất biến «số thẻ sống = số nhóm có bài» vẫn vỡ vĩnh viễn với thẻ đã duyệt/bác**
-  Người dùng thấy gì: Về sau, khi một nhóm đã duyệt thẻ rồi hoá ra không còn bài thật, số đếm thẻ và số nhóm sẽ lệch mãi và phép kiểm báo đỏ dù không ai sai.
-  Căn cứ: Không xảy ra hôm nay và không mất dữ liệu, nhưng sẽ gây báo động giả kéo dài nên nên xử lý trong việc riêng.
-  file: `pipeline/scripts/the-dia-chi-nhom.mjs`
-  severity: medium
-  Đề xuất: new-contract
-
-- **Nháp thẻ đọc `sale_offer_records` nên đếm cả tin đã NGHỈ vào phiếu bầu phường**
-  Người dùng thấy gì: Tin đã nghỉ vẫn được tính khi máy đề xuất phường cho nhóm, nên gợi ý phường có thể lệch ở vài nhóm sát ngưỡng.
-  Căn cứ: Chỉ là nháp, người duyệt xem và sửa được trước khi nhận, nên hậu quả nhẹ nhưng đáng sửa để nháp chính xác hơn.
-  file: `pipeline/scripts/the-dia-chi-nhom.mjs`
-  severity: medium
-  Đề xuất: new-contract
-
-- **Route ghi thẻ không kiểm phân khu có thuộc dự án đã chọn**
-  Người dùng thấy gì: Gọi thẳng đường ghi có thể lưu phân khu của dự án khác. Giao diện không cho chọn như vậy.
-  Căn cứ: Chỉ xảy ra khi gọi ngoài giao diện, nhưng dữ liệu sai sẽ đi tiếp sang bước đóng dấu tin nên nên chặn trong việc riêng.
-  file: `app/src/lib/the-dia-chi-nhom.ts`
-  severity: low
-  Đề xuất: new-contract
-
-- **Hai đường đếm «độc lập» lệch bộ lọc kênh và lệch bản ghi mới nhất**
-  Người dùng thấy gì: Phép đếm đối chứng có thể báo đỏ giả trong tương lai khi dữ liệu nguồn đổi hình dạng. Hiện nay khớp.
-  Căn cứ: Không mất dữ liệu và chưa xảy ra, nếu đỏ thì người vận hành thấy ngay và tra được.
-  file: `pipeline/scripts/the-dia-chi-nhom-that.mjs`
-  severity: low
-  Đề xuất: known-limits
-
-- **Chú thích đầu tệp và docstring trỏ sai cổng/route**
-  Người dùng thấy gì: Chú thích trong mã trỏ sai chỗ. Người dùng không bị ảnh hưởng.
-  Căn cứ: Chỉ gây nhầm cho người đọc mã sau, sửa gần như không tốn gì khi chạm tệp.
-  file: `app/src/lib/the-dia-chi-nhom.ts`
-  severity: low
-  Đề xuất: wont-fix
-
-- **Sửa tay tệp máy sinh `next-env.d.ts`**
-  Người dùng thấy gì: Tệp tự sinh bị ghim sang đường khác, có thể làm bước kiểm kiểu cuối lượt báo đỏ trên cây làm việc mới. Người dùng không thấy.
-  Căn cứ: Chỉ là nhiễu cho người làm, tự sinh lại khi chạy công cụ, không chạm dữ liệu.
-  file: `app/next-env.d.ts`
-  severity: low
-  Đề xuất: wont-fix
-
-- **Fixture VIẾT TAY đúng khuôn bên đọc — căn cứ `muc_dich.ban/thue` không round-trip từ writer**
-  Người dùng thấy gì: Nếu phía dựng nháp đổi tên khoá số bán/thuê, màn hình sẽ lặng lẽ hiện «0 bán, 0 thuê» mà bộ thử vẫn xanh.
-  Căn cứ: Chỉ lộ khi có người đổi cấu trúc dữ liệu, sai hiển thị nhưng không mất dữ liệu, thêm một phép thử nối hai phía là rẻ.
-  file: `app/tests/the-dia-chi-nhom-app.itest.tsx`
+- **Hình dạng 4 (assertion âm tính một mình): «nhóm hai dòng sổ cùng khoá thật một thẻ» không có cách nào đỏ**
+  Người dùng thấy gì: Chưa có phép thử chứng minh rằng nhóm có hai dòng trong sổ vẫn chỉ ra đúng một thẻ. Nếu có lỗi, người duyệt có thể thấy thẻ trùng cho một nhóm.
+  Căn cứ: Là chỗ hở của phép thử chứ chưa thấy lỗi thật, nếu có thẻ trùng người duyệt bác được và không mất dữ liệu.
+  file: `pipeline/tests/the-dia-chi-nhom.itest.mjs`
   severity: medium
   Đề xuất: known-limits
 
-- **Fixture/bản chép VIẾT TAY không round-trip — vị từ «bài thử» trong kiem-sau.sql là bản chép thứ năm nằm ngoài bộ giữ GN5**
-  Người dùng thấy gì: Bước kiểm sau khi áp có thể báo đỏ hoặc xanh giả nếu luật bài thử đổi mà bản chép không đổi theo.
-  Căn cứ: Chỉ ảnh hưởng độ tin của một phép kiểm, không động dữ liệu, người vận hành thấy lệch số.
-  file: `_acceptance/the-dia-chi-nhom-s03/ap-may-thu/kiem-sau.sql`
-  severity: medium
-  Đề xuất: known-limits
-
-- **Đo CHỈ DẪN thay vì ĐẦU RA — AC-9a grep chữ trong sao-luu.sh, không chạy nó**
-  Người dùng thấy gì: Bộ thử chỉ soi chữ trong tệp sao lưu chứ chưa chạy nó, nên một lỗi hành vi của bước sao lưu có thể lọt qua.
-  Căn cứ: Sao lưu là bước người vận hành chạy và nhìn kết quả trước khi áp, lỗi lộ ra ngay, không mất dữ liệu.
+- **Hình dạng 1 (đo chỉ dẫn thay vì đầu ra): AC-9a grep chữ trong sao-luu.sh, không chạy để xem tệp sao lưu ra đâu và có khác rỗng không**
+  Người dùng thấy gì: Phép thử chỉ đọc chữ trong kịch bản sao lưu chứ chưa chạy thật để thấy tệp sao lưu được tạo. Nếu kịch bản hỏng thì chỉ phát hiện khi áp thật.
+  Căn cứ: Bước sao lưu sẽ được người áp chạy và nhìn thấy kết quả trước khi áp, nên lỗi sẽ lộ ra trước khi ảnh hưởng dữ liệu.
   file: `pipeline/tests/the-dia-chi-nhom-lui.itest.mjs`
-  severity: medium
-  Đề xuất: known-limits
-
-- **Assert «chuỗi có mặt» trong khi lời hứa là QUAN HỆ giữa thẻ và nhãn**
-  Người dùng thấy gì: Phép thử chỉ kiểm chữ «Chưa có tên» có xuất hiện đâu đó, chưa chắc đúng ở hàng cần hiện.
-  Căn cứ: Chỉ là độ chặt của bộ thử, màn hình hiện đúng hôm nay, không ảnh hưởng người dùng.
-  file: `app/tests/the-dia-chi-nhom-app.itest.tsx`
   severity: low
   Đề xuất: known-limits
 
-## Chưa adversarial-verify (refuter chết)
-
-⚠ Cụm ngoài vùng phủ: 5/18 lỗi rơi vào file không bộ đo nào phủ (app/src/app/ops/group-cards/page.tsx, _acceptance/the-dia-chi-nhom-s03/ap-may-thu/kiem-sau.sql, app/next-env.d.ts) — dừng và quyết: mở rộng hợp đồng hay rút phạm vi.
+⚠ Cụm ngoài vùng phủ: 2/8 lỗi rơi vào file không bộ đo nào phủ (.claude/launch.json, app/src/components/ops/group-cards/group-cards-view.tsx) — dừng và quyết: mở rộng hợp đồng hay rút phạm vi.

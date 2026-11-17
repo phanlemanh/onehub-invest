@@ -1,9 +1,26 @@
-# E5 network (dev :3460, DB oneinvest_u1_tg1; playwright-cli sessions e5a ops, e5b ops tab hai, e5v viewer; lenh 'network' khong co trong playwright-cli nay)
-## console errors theo phien (tu lan tai trang cuoi): e5a 0, e5b 0, e5v 0
-## dev server log :3460 - request app-origin (document/API), tinh
-   8 GET /ops/group-cards 200
-   4 POST /api/v1/ops/group-cards 200
-   1 POST /api/v1/ops/group-cards 409
-## 5xx/loi server:
-0
-NOTE: POST 409 la ket qua DUNG MONG DOI cua buoc 409 (the da doi). Khong co 5xx.
+# E5 network (dev :3460, DB oneinvest_u1_tg1; playwright-core, ba ngữ cảnh ops/viewer/375). Chỉ request app-origin (bỏ _next, ảnh, font).
+A GET /ops/group-cards 200
+A POST /api/v1/ops/group-cards 200
+A GET /ops/group-cards?_rsc=HZnZDULwks0KCV8h 200
+A FAILED GET /ops/group-cards?_rsc=HZnZDULwks0KCV8h net::ERR_ABORTED
+A POST /api/v1/ops/group-cards 200
+A GET /ops/group-cards?_rsc=HZnZDULwks0KCV8h 200
+A FAILED GET /ops/group-cards?_rsc=HZnZDULwks0KCV8h net::ERR_ABORTED
+A POST /api/v1/ops/group-cards 200
+A GET /ops/group-cards?_rsc=HZnZDULwks0KCV8h 200
+A FAILED GET /ops/group-cards?_rsc=HZnZDULwks0KCV8h net::ERR_ABORTED
+A GET /ops/group-cards 200
+B GET /ops/group-cards 200
+B POST /api/v1/ops/group-cards 200
+B GET /ops/group-cards?_rsc=HZnZDULwks0KCV8h 200
+B FAILED GET /ops/group-cards?_rsc=HZnZDULwks0KCV8h net::ERR_ABORTED
+A POST /api/v1/ops/group-cards 409
+A GET /ops/group-cards?_rsc=HZnZDULwks0KCV8h 200
+A FAILED GET /ops/group-cards?_rsc=HZnZDULwks0KCV8h net::ERR_ABORTED
+V GET /ops/group-cards 200
+M GET /ops/group-cards 200
+## console errors
+A Failed to load resource: the server responded with a status of 409 (Conflict)
+## run2 (viewer + 409 tải lại TN-025)
+V GET /ops/group-cards 200
+viewer console: (không có)
