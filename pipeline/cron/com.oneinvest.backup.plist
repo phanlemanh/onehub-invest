@@ -6,10 +6,12 @@
   <key>ProgramArguments</key>
   <array>
     <string>bash</string>
-    <string>__ROOT__/pipeline/scripts/backup.sh</string>
+    <string>__ROOT__/scripts/db-sao-luu-tuan.sh</string>
   </array>
-  <!-- Chu nhat 21:00 - sau collector; env BACKUP_DIR/BACKUP_PASS do install
-       ghi vao plist khi co (script doc env, khong hardcode pass) -->
+  <!-- Chu nhat 21:00 - sau collector. 1711-15 (loi Manh «Khong can mat khau» +
+       «Dung, luu tren may»): dump KHONG ma hoa qua scripts/db-sao-luu.sh co san,
+       KHONG gui ra ngoai may; xoay 8 ban trong scripts/lib/db-sao-luu-xoay.sh.
+       Env DB_BACKUP_ROOT do install ghi vao khi co (khong can BACKUP_PASS). -->
   <key>StartCalendarInterval</key>
   <dict><key>Weekday</key><integer>0</integer><key>Hour</key><integer>21</integer><key>Minute</key><integer>0</integer></dict>
   <key>StandardOutPath</key><string>__ROOT__/pipeline/logs/launchd-backup.log</string>

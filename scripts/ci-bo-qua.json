@@ -213,12 +213,12 @@
   "scripts": [
     {
       "tep": "scripts/audit-all.test.mjs",
-      "ca": "AA-AC-1 backup (d) BACKUP_DIR không có bản 8 ngày → ❌",
+      "ca": "AA-AC-1 backup (d) DB_BACKUP_ROOT không có bản khuôn ≤8 ngày → ❌",
       "ly_do": "đọc plist bằng /usr/libexec/PlistBuddy (chỉ có trên macOS)"
     },
     {
       "tep": "scripts/audit-all.test.mjs",
-      "ca": "AA-AC-1 backup (e) có bản 2 ngày → ✅ kèm tên tệp",
+      "ca": "AA-AC-1 backup (e) có bản 2 ngày manifest khớp → ✅ kèm tên thư mục",
       "ly_do": "đọc plist bằng /usr/libexec/PlistBuddy (chỉ có trên macOS)"
     },
     {

@@ -169,24 +169,29 @@ for svc in ":8009" ":9210"; do
   ALIVE=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 2 "http://127.0.0.1$svc/" 2>/dev/null)
   [ "$ALIVE" != "000" ] && pass "Service $svc sống" || fail "Service $svc chết"
 done
-# --- backup (AU5) ---
-# Chưa có job → FAIL; job lỗi → FAIL kèm mã; job chạy mà plist không BACKUP_DIR thì backup.sh thoát 0 mà không sao
-# lưu → FAIL; PASS chỉ khi thấy db-*.sql.gz ≤ 8 ngày (RPO 7 ngày ADR-0007 + 1).
+# --- backup (AU5) ---  # 1711-15: dump không mã hoá qua db-sao-luu-tuan
+# Chưa có job → FAIL; job lỗi → FAIL kèm mã. PASS khi: thư mục bản tuần KHỚP KHUÔN UTC
+# mới nhất trong gốc sao lưu (mặc định ~/onehub-backups/db, plist ghi DB_BACKUP_ROOT)
+# ≤ 8 ngày (RPO 7 ngày ADR-0007 + 1) VÀ manifest.sha256 khớp (shasum -c).
 BACKUP_JOB=$(launchctl list 2>/dev/null | awk -F'\t' '$3 == "com.oneinvest.backup"' | head -1)
 if [ -z "$BACKUP_JOB" ]; then
-  fail "Backup tuần CHƯA cài — cần BACKUP_DIR + BACKUP_PASS rồi chạy scripts/install-cron.sh"
+  fail "Backup tuần CHƯA cài — bash scripts/install-cron.sh --chi backup (không cần mật khẩu)"
 else
   BACKUP_RC=$(printf '%s\n' "$BACKUP_JOB" | cut -f2)
-  BACKUP_TO=$(/usr/libexec/PlistBuddy -c "Print :EnvironmentVariables:BACKUP_DIR" \
+  BACKUP_TO=$(/usr/libexec/PlistBuddy -c "Print :EnvironmentVariables:DB_BACKUP_ROOT" \
     "$HOME/Library/LaunchAgents/com.oneinvest.backup.plist" 2>/dev/null || true)
+  BACKUP_TO=${BACKUP_TO:-$HOME/onehub-backups/db}
   if [ "$BACKUP_RC" != "0" ]; then
     fail "Backup tuần: lần chạy cuối thoát mã $BACKUP_RC (xem pipeline/logs/launchd-backup.log)"
-  elif [ -z "$BACKUP_TO" ]; then
-    fail "Backup tuần: job đã cài nhưng chưa đặt BACKUP_DIR — backup.sh bỏ qua, không sao lưu gì"
   else
-    LAST_DUMP=$(find "$BACKUP_TO" -maxdepth 1 -name 'db-*.sql.gz' -mtime -8 2>/dev/null | sort | tail -1)
-    [ -n "$LAST_DUMP" ] && pass "Backup tuần: $(basename "$LAST_DUMP")" \
-      || fail "Backup tuần: không có bản sao lưu trong 8 ngày ở $BACKUP_TO"
+    LAST_BAN=$(find "$BACKUP_TO" -maxdepth 1 -type d -regex '.*/[0-9]\{8\}T[0-9]\{6\}Z' -mtime -8 2>/dev/null | sort | tail -1)
+    if [ -z "$LAST_BAN" ]; then
+      fail "Backup tuần: không có bản (thư mục khuôn UTC) trong 8 ngày ở $BACKUP_TO"
+    elif ( cd "$LAST_BAN" && shasum -a 256 -c manifest.sha256 --status ) >/dev/null 2>&1; then
+      pass "Backup tuần: $(basename "$LAST_BAN") (manifest khớp)"
+    else
+      fail "Backup tuần: manifest.sha256 KHÔNG khớp nội dung ở $(basename "$LAST_BAN")"
+    fi
   fi
 fi
 # --- hết backup ---

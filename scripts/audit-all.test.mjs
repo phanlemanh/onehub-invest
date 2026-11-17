@@ -91,14 +91,21 @@ function runAudit(opts = {}) {
     launch += backupLine(opts.backup.rc) + "\n";
     const env = { PATH: "/usr/bin:/bin" };
     if (opts.backup.backupDir) {
+      // 1711-15: audit đọc DB_BACKUP_ROOT từ plist; bản = thư mục khuôn UTC có manifest.sha256
       const dir = path.join(root, "backup-disk");
       mkdirSync(dir, { recursive: true });
-      env.BACKUP_DIR = dir;
+      env.DB_BACKUP_ROOT = dir;
       if (opts.backup.dumpAgeDays != null) {
-        const f = path.join(dir, "db-20261021.sql.gz");
-        writeFileSync(f, "x");
+        const d = path.join(dir, new Date(Date.now() - opts.backup.dumpAgeDays * 86400000)
+          .toISOString().replace(/[-:]/g, "").replace(/\.\d+Z$/, "Z"));
+        mkdirSync(d, { recursive: true });
+        writeFileSync(path.join(d, "oneinvest.dump"), "x");
+        const mf = opts.backup.manifestLech
+          ? "hash-sai-cố-ý\n"
+          : spawnSync("shasum", ["-a", "256", "oneinvest.dump"], { cwd: d, encoding: "utf8" }).stdout;
+        writeFileSync(path.join(d, "manifest.sha256"), mf);
         const t = Date.now() / 1000 - opts.backup.dumpAgeDays * 86400;
-        utimesSync(f, t, t);
+        utimesSync(d, t, t);
       }
     }
     const la = path.join(home, "Library/LaunchAgents");
@@ -151,22 +158,27 @@ describe("audit-all nói thật (AU5)", () => {
     assertBackupFail(r.out, /mã 1\b/);
   });
 
-  test("AA-AC-1 backup (c) mã 0, plist không BACKUP_DIR → ❌ chưa đặt BACKUP_DIR", () => {
+  test("AA-AC-1 backup (c) mã 0, plist không DB_BACKUP_ROOT → ❌ gốc mặc định không có bản khuôn ≤8 ngày", () => {
     const r = runAudit({ backup: { rc: 0 } });
-    assertBackupFail(r.out, /chưa đặt BACKUP_DIR/);
+    assertBackupFail(r.out, /không có bản \(thư mục khuôn UTC\) trong 8 ngày/);
   });
 
-  test("AA-AC-1 backup (d) BACKUP_DIR không có bản 8 ngày → ❌", () => {
+  test("AA-AC-1 backup (d) DB_BACKUP_ROOT không có bản khuôn ≤8 ngày → ❌", () => {
     const noFile = runAudit({ backup: { rc: 0, backupDir: true } });
-    assertBackupFail(noFile.out, /không có bản sao lưu trong 8 ngày/);
+    assertBackupFail(noFile.out, /không có bản \(thư mục khuôn UTC\) trong 8 ngày/);
     const old = runAudit({ backup: { rc: 0, backupDir: true, dumpAgeDays: 10 } });
-    assertBackupFail(old.out, /không có bản sao lưu trong 8 ngày/);
+    assertBackupFail(old.out, /không có bản \(thư mục khuôn UTC\) trong 8 ngày/);
   });
 
-  test("AA-AC-1 backup (e) có bản 2 ngày → ✅ kèm tên tệp", () => {
+  test("AA-AC-1 backup (e) có bản 2 ngày manifest khớp → ✅ kèm tên thư mục", () => {
     const r = runAudit({ backup: { rc: 0, backupDir: true, dumpAgeDays: 2 } });
     const l = backupResult(r.out);
-    assert.match(l, /^ {2}✅ .*db-20261021\.sql\.gz/);
+    assert.match(l, /^ {2}✅ .*20\d{6}T\d{6}Z \(manifest khớp\)/);
+  });
+
+  test("AA-AC-1 backup (f) manifest lệch → ❌ không khớp", () => {
+    const r = runAudit({ backup: { rc: 0, backupDir: true, dumpAgeDays: 2, manifestLech: true } });
+    assertBackupFail(r.out, /manifest\.sha256 KHÔNG khớp/);
   });
 
   test("AA-AC-1 bản sao giữ || echo 0 → backup ra PASS, bị bắt", () => {
