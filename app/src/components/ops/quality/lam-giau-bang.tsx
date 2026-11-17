@@ -194,7 +194,7 @@ export function BangKiemNguoc({ duong, tuan }: { duong: DuongLamGiau[]; tuan: st
   )
 }
 
-// ---------------- Lát (Thị trường · Phường/xã · Khu đô thị · Toà) ----------------
+// ---------------- Lát (Thị trường · Phường/xã · Dự án · Toà) ----------------
 type DongLat = { duong: string; o: string; so: Record<string, number> }
 /** Hai ô chưa gắn luôn hiện (kể cả 0), như BangLat của DO1; ô khác chỉ hiện khi có số. */
 const hienO = (k: string, so: Record<string, number>) => k === "khong-tin-hieu" || k === "chua-co-danh-ba" || Object.values(so).some((n) => n > 0)

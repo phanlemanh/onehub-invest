@@ -27,13 +27,13 @@ test("AC-9 tên kiểm eval-classify có nhãn", () => {
   assert.deepEqual(dqCheckName("eval-classify"), { text: "Độ đúng cách đọc", known: true })
 })
 
-test("AC-9 ma trận 3 phân khúc × 16 trường: đối tượng có nhãn tiếng Việt, nhãn trường của màn gắn nhãn («Dự án» theo CONTEXT.md là «Khu đô thị»)", () => {
+test("AC-9 ma trận 3 phân khúc × 16 trường: đối tượng có nhãn tiếng Việt, nhãn trường của màn gắn nhãn (trường project là «Dự án», mục 39 Hỏi-1)", () => {
   let soAssert = 0
   for (const pk of PHAN_KHUC) {
     for (const truong of ben.TRUONG) {
       const t = dqEntityLabel(ben.veEntity("ocp1", o(pk, truong, 1, 1, true)), new Map())
       assert.equal(t.known, true, `${pk}|${truong}`)
-      const nhan = truong === "project" ? "Khu đô thị" : FIELD_LABEL[truong as keyof typeof FIELD_LABEL]
+      const nhan = truong === "project" ? "Dự án" : FIELD_LABEL[truong as keyof typeof FIELD_LABEL]
       assert.equal(TRUONG_DO_DUNG[truong], nhan)
       assert.ok(t.text.endsWith(`· ${nhan}`), t.text)
       soAssert++

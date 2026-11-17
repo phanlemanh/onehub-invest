@@ -1,7 +1,7 @@
 "use client"
 
-// Hộp «Khai thị trường, khu đô thị» của một đơn vị thu (PL12 so-nhom-mot-noi): cùng khuôn hộp «Chế độ thu» (mode-dialog);
-// hai ô chọn nhiều theo @reui/c-combobox-12 (chip + ô gõ lọc). Thị trường là vùng cấp market; dự án là khu đô thị
+// Hộp «Khai thị trường, dự án» của một đơn vị thu (PL12 so-nhom-mot-noi): cùng khuôn hộp «Chế độ thu» (mode-dialog);
+// hai ô chọn nhiều theo @reui/c-combobox-12 (chip + ô gõ lọc). Thị trường là vùng cấp market; dự án là nút project
 // (Hỏi-3). Máy chủ kiểm lại tham chiếu (trigger 048); lỗi của nó hiện ngay trong hộp, hộp không đóng.
 import { Fragment, useId, useState } from "react"
 import { CircleAlertIcon } from "lucide-react"
@@ -137,7 +137,7 @@ function KhaiForm({
       }}
     >
       <DialogHeader>
-        <DialogTitle>Khai thị trường, khu đô thị</DialogTitle>
+        <DialogTitle>Khai thị trường, dự án</DialogTitle>
         <DialogDescription>
           {target.unit_code} · {target.original_name}. Để trống một ô là xoá khai báo của ô đó.
         </DialogDescription>
@@ -154,12 +154,12 @@ function KhaiForm({
         />
         <ChonNhieu
           id={`${id}-du-an`}
-          label="Khu đô thị"
-          description="Khu đô thị mà nhóm chuyên về — bỏ trống nếu nhóm không chuyên một khu đô thị."
+          label="Dự án"
+          description="Dự án mà nhóm chuyên về — bỏ trống nếu nhóm không chuyên một dự án."
           items={danhMuc.projects.map((p) => ({ id: String(p.id), name: p.name }))}
           value={projects}
           onChange={setProjects}
-          placeholder="Chọn khu đô thị…"
+          placeholder="Chọn dự án…"
         />
         {error ? (
           <Alert variant="destructive" role="status">
