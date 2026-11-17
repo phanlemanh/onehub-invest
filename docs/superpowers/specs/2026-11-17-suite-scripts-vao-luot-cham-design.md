@@ -2,6 +2,8 @@
 
 Hồ sơ: `_acceptance/suite-scripts-vao-luot-cham/` · T2 · dãy P3 · giám sát quyết hướng 17/11.
 
+> **Bản chốt là mục «Đổi phán 17/11 07:00Z» ở cuối.** Các mục trước ghi hai hướng đã thử và số đo khiến chúng bị loại.
+
 ## Vấn đề
 
 Ba PR đã ký đỏ ở ô CI `scripts` **sau** chữ ký: #471 (`s05-khoa-nap`), #472 (`db-thu` DT-AC-7), và
@@ -95,6 +97,19 @@ và tệp chúng import. AC-7 đổi sang ngưỡng giây: nhánh chỉ đổi `
 
 Rủi ro nhận có tên: vùng khai tay có thể sót phụ thuộc → bỏ qua giả. Ca canh bắt tệp chưa khai, không bắt vùng khai thiếu;
 CI vẫn chạy trọn bộ trên mọi PR làm lưới cuối.
+
+## Đổi phán 17/11 07:00Z — một lệnh trọn bộ ngoài khoá s4 (bản chốt)
+
+Giám sát bỏ cả lối tệp khai tay sau khi đọc đủ số đo: lời đọc liệt kê nằm trong bao đóng, nên tệp khai tay chính là phép
+phán tay trên ~100 script — ma trận đọc tay đã phải sửa bảy thành tám tệp động và một phán sai về `check-mcp-tools.mjs`.
+Cùng rủi ro bỏ qua giả, tiết kiệm chỉ 30–50%.
+
+Giao: `node scripts/suite-neu-doi.mjs --chay-scripts [--root <cây>] [--ho-so <slug>]` — chạy nguyên văn ba bước `run` của
+job `scripts` (kiểm cú pháp, dựng DB trống từ migration, test với `NODE_OPTIONS` từ `ci-can-du-lieu.mjs`) trên DB trống
+`oneinvest_ci_scripts_<pid>` dựng trong cùng server :5433, `CI=true` cho mọi bước, xoá DB khi thoát kể cả khi bị ngắt; in
+dòng cuối `{"kind":"scripts-ci","sha","exit","tests","pass","fail","giay"}` và với `--ho-so` thì nối dòng ấy vào run-log
+của hồ sơ. Chỗ đứng: bước chạy khô trước khi xin chấm, và sau mỗi lần nhận main chạm `scripts/**`; giám sát đưa vào
+LUAT.md và bước soát trước gộp. `suite_keys` giữ bảy key — S4V-AC-6 và probe của hồ sơ cũ không sửa.
 
 ## Ngoài phạm vi
 

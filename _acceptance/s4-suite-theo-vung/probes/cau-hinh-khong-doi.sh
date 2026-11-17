@@ -16,8 +16,7 @@ if [ -n "$xoa" ]; then
 fi
 # executors.script.portal_static và executors.test.<các tên bị bọc> còn nguyên ở HEAD như ở gốc.
 # Giữ cả `pipeline`: nó thôi nằm trong suite_keys (tach-suite-pipeline 13/11) nhưng key vẫn sống trên main.
-# `scripts`: suite thứ tám (suite-scripts-vao-luot-cham) không bọc nguyên văn, nhưng executors.test.scripts phải còn nguyên.
-for k in agent app app_ui pipeline pipeline_a pipeline_b ui_lint_rules portal_static scripts; do
+for k in agent app app_ui pipeline pipeline_a pipeline_b ui_lint_rules portal_static; do
   a=$(git -C "$GOC" show "$BASE:_acceptance/config.yaml" | grep -E "^    $k: " | grep -v suite-neu-doi)
   b=$(grep -E "^    $k: " "$GOC/_acceptance/config.yaml" | grep -v suite-neu-doi)
   [ "$a" = "$b" ] || { echo "cau-hinh: ĐỎ — lệnh $k lệch gốc"; exit 1; }
@@ -25,4 +24,4 @@ done
 # chiều đỏ của chính thước
 gia=$(printf -- '--- a\n+++ b\n-    app: "cd app && npx tsc --noEmit && npm run lint"\n+    app: "cd app && npx tsc --noEmit && npm run lint "\n' | kiem)
 [ -n "$gia" ] || { echo "cau-hinh: thước hỏng — diff giả sửa test.app không bị bắt"; exit 3; }
-echo "cau-hinh: xanh — chỉ suite_keys đổi; chín lệnh cũ (bảy suite bọc + pipeline + scripts) nguyên byte (gốc $BASE)"
+echo "cau-hinh: xanh — chỉ suite_keys đổi; tám lệnh cũ (bảy suite bọc + pipeline) nguyên byte (gốc $BASE)"

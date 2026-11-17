@@ -11,10 +11,8 @@
 // máy. RIÊNG portal_static (check-portal-compliance.mjs, gồm cổng lộ tầng A) KHÔNG có trong CI: nó chỉ chạy ở lượt chấm
 // và ghim lại, nên vùng của nó phải phủ đủ mọi tệp nó nạp (S4 r1 t1).
 // Hồ sơ: _acceptance/s4-suite-theo-vung. Bảng vùng đo bằng test canh phủ (scripts/suite-neu-doi.test.mjs, S4V-AC-5).
-import { execFileSync, spawn, spawnSync } from "node:child_process";
-import { readFileSync, readdirSync, realpathSync } from "node:fs";
-import path from "node:path";
-import { createRequire } from "node:module";
+import { execFileSync, spawnSync } from "node:child_process";
+import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 // Tệp test của các module đọc tệp của module khác (import, chép fixture, quét cây) — vùng rộng theo đo 10/11.
@@ -64,10 +62,8 @@ export const VUNG = {
 // Mỗi suite còn chạy khi chính bộ lọc đổi — bộ lọc sai thì mọi quyết định sau nó sai.
 const CHUNG = ["scripts/suite-neu-doi.mjs"];
 
-// «**/» giữa đường = không hay nhiều tầng thư mục (pipeline/**/*.test.mjs khớp cả pipeline/x.test.mjs).
 const reGlob = (g) =>
-  new RegExp("^" + g.replace(/[.+^${}()|[\]\\]/g, "\\$&").replace(/\*\*\//g, "\u0001").replace(/\*\*/g, "\u0000")
-    .replace(/\*/g, "[^/]*").replace(/\u0001/g, "(?:.*/)?").replace(/\u0000/g, ".*") + "$");
+  new RegExp("^" + g.replace(/[.+^${}()|[\]\\]/g, "\\$&").replace(/\*\*/g, "\u0000").replace(/\*/g, "[^/]*").replace(/\u0000/g, ".*") + "$");
 
 // `x/**` = mọi đường dưới x; không có `*` = khớp nguyên đường.
 export function khop(duong, glob) {
@@ -77,51 +73,6 @@ export function khop(duong, glob) {
 }
 
 export const trongVung = (duong, vung) => vung.some((g) => khop(duong, g));
-
-// ── Suite «scripts» (hồ sơ suite-scripts-vao-luot-cham): chọn TỪNG tệp scripts/*.test.mjs theo tệp khai vùng viết tay.
-// Không tính vùng tự động: lời đọc liệt kê nằm nhiều trong tệp được import, xét an toàn thì 20–34/43 tệp phải luôn chạy.
-export const TEP_KHAI = "scripts/suite-scripts-vung.json";
-// Hạ tầng chung: đổi một tệp này thì mọi tệp test có thể đổi kết quả → trọn bộ.
-export const HA_TANG = [
-  "scripts/lib/**", "db/migrations/**", "scripts/ci-db-init.mjs", "scripts/ci-bo-qua.json", ".github/workflows/ci-test.yml",
-  TEP_KHAI, "app/package.json", "app/package-lock.json", "pipeline/package.json", "pipeline/package-lock.json",
-  "agent/package.json", "agent/package-lock.json",
-];
-
-export function docKhai(root, tep = path.join(root, TEP_KHAI)) {
-  try {
-    const khai = JSON.parse(readFileSync(tep, "utf8"));
-    if (!khai || typeof khai !== "object" || Array.isArray(khai)) throw new Error("gốc không phải object");
-    return { khai, loi: null };
-  } catch (e) {
-    return { khai: null, loi: `không đọc được tệp khai ${TEP_KHAI}: ${e.message}` };
-  }
-}
-
-// Đúng tập `scripts/*.test.mjs` mà glob của job CI mở ra (một tầng, kể cả tệp chưa theo dõi).
-export const testsScripts = (root) =>
-  readdirSync(path.join(root, "scripts")).filter((f) => f.endsWith(".test.mjs")).sort().map((f) => `scripts/${f}`);
-
-// Quyết định thuần. tep = null nghĩa là không đọc được diff. Tệp test chưa có dòng khai được coi là «luon».
-export function chonScripts({ tep, khai, tests, ep = false, loiKhai = null }) {
-  const tronBo = (ly) => ({ chon: [...tests], ly_do: Object.fromEntries(tests.map((t) => [t, `trọn bộ: ${ly}`])), tron_bo: ly });
-  if (ep) return tronBo("ép chạy (SUITE_NEU_DOI=chay)");
-  if (tep === null) return tronBo("không giải được gốc so sánh");
-  if (!khai) return tronBo(loiKhai || `không đọc được tệp khai ${TEP_KHAI}`);
-  if (tep.length === 0) return tronBo("diff rỗng");
-  const ht = tep.find((p) => trongVung(p, HA_TANG));
-  if (ht) return tronBo(`chạm hạ tầng chung ${ht}`);
-  const chon = [], ly_do = {};
-  for (const t of tests) {
-    const co = Object.hasOwn(khai, t);
-    const z = co ? khai[t] : "luon";
-    if (z === "luon") { chon.push(t); ly_do[t] = co ? "luôn" : "luôn (chưa khai)"; continue; }
-    if (tep.includes(t)) { chon.push(t); ly_do[t] = "tệp test trong diff"; continue; }
-    const p = tep.find((x) => trongVung(x, z));
-    if (p) { chon.push(t); ly_do[t] = `vùng: ${p}`; }
-  }
-  return { chon, ly_do, tron_bo: null };
-}
 
 const tomTat = (vung) => (vung.length <= 4 ? vung.join(", ") : `${vung.slice(0, 4).join(", ")} … (+${vung.length - 4})`);
 
@@ -168,88 +119,7 @@ function gocKho(cwd) {
   try { return git(cwd, "rev-parse", "--show-toplevel").trim(); } catch { return cwd; }
 }
 
-// ── Lệnh suite scripts: chạy đúng các bước `run` của job `scripts` trong ci-test.yml (đọc từ chính tệp workflow của
-// gốc đang chấm), chỉ thay glob `scripts/*.test.mjs` bằng tập chọn. Bước checkout, setup-node, «cài phụ thuộc» miễn:
-// worktree chấm đã nối node_modules (dung-worktree-cham.sh). DB trống dựng mới trong cùng server :5433 — cùng ảnh
-// kartoza/postgis với services của job — và xoá khi thoát, kể cả khi bị ngắt. GitHub đặt CI=true cho mọi bước.
-export const BUOC_CI = ["kiểm cú pháp .mjs", "dựng DB trống từ migration", "test"];
-const GLOB_TEST = "scripts/*.test.mjs";
-const DB_CONTAINER = "one-invest-db";
-const dbUrl = (ten) => `postgres://oneinvest:oneinvest@localhost:5433/${ten}`;
-
-export function buocSuite(root) {
-  const yaml = createRequire(path.join(root, "app/package.json"))("js-yaml");
-  const job = yaml.load(readFileSync(path.join(root, ".github/workflows/ci-test.yml"), "utf8")).jobs?.scripts;
-  if (!job) throw new Error("ci-test.yml không có job scripts");
-  return BUOC_CI.map((ten) => {
-    const b = (job.steps ?? []).find((s) => s.name === ten);
-    if (!b?.run) throw new Error(`job scripts thiếu bước «${ten}»`);
-    return { ten, lenh: b.run.trim() };
-  });
-}
-
-const dx = (...a) => spawnSync("docker", ["exec", "-i", "-e", "PGPASSWORD=oneinvest", DB_CONTAINER, ...a], { encoding: "utf8" });
-
-async function mainScripts(argv) {
-  const opt = (k) => { const i = argv.indexOf(k); return i >= 0 ? argv[i + 1] : undefined; };
-  const root = opt("--root") ? path.resolve(opt("--root")) : gocKho(process.cwd());
-  const tests = testsScripts(root);
-  let r;
-  if (opt("--tep")) {
-    const chon = opt("--tep").split(",").filter(Boolean);
-    r = { chon, ly_do: Object.fromEntries(chon.map((t) => [t, "chỉ định bằng --tep"])), tron_bo: null };
-  } else {
-    // --khai: đọc tệp khai từ đường khác gốc đang chấm — probe tái hiện chạy tệp khai của HEAD trên cây của đỉnh cũ.
-    const { khai, loi } = docKhai(root, opt("--khai") ? path.resolve(opt("--khai")) : undefined);
-    r = chonScripts({ tep: tepDoi(root, opt("--base")), khai, tests, ep: process.env.SUITE_NEU_DOI === "chay", loiKhai: loi });
-  }
-  console.log(`suite-neu-doi: scripts — ${r.chon.length}/${tests.length} tệp${r.tron_bo ? ` (trọn bộ: ${r.tron_bo})` : ""}`);
-  for (const t of r.chon) console.log(`  ${t} ← ${r.ly_do[t]}`);
-  if (argv[0] === "--chon-scripts") return 0;
-
-  let buoc;
-  try { buoc = buocSuite(root); } catch (e) { console.error(`suite-neu-doi: ${e.message}`); return 2; }
-  const ten = `oneinvest_ci_scripts_${process.pid}`;
-  const tao = dx("createdb", "-U", "oneinvest", "-h", "localhost", ten);
-  if (tao.status !== 0) { console.error(`suite-neu-doi: không dựng được DB trống ${ten}: ${(tao.stderr || tao.error?.message || "").trim()}`); return 2; }
-  let daXoa = false;
-  const xoa = () => { if (!daXoa) { daXoa = true; dx("dropdb", "-U", "oneinvest", "-h", "localhost", "--if-exists", "--force", ten); } };
-  // Bước chạy trong nhóm tiến trình riêng: nhận tín hiệu thì ngắt cả nhóm (bash, node --test và con của nó), xoá DB,
-  // thoát 128 + số hiệu. spawnSync không làm được việc này: trình xử lý tín hiệu chỉ chạy sau khi con xong.
-  let con = null;
-  const ngat = (sig, so) => process.on(sig, () => {
-    if (con?.pid) { try { process.kill(-con.pid, "SIGTERM"); } catch { /* nhóm đã thoát */ } }
-    xoa(); process.exit(128 + so);
-  });
-  ngat("SIGINT", 2); ngat("SIGTERM", 15);
-  try {
-    // NODE_TEST_CONTEXT: khi lệnh này chạy từ trong một lượt `node --test`, biến ấy làm `node --test` lồng bên trong
-    // báo về cha thay vì tự chạy tệp. Bước CI thật không có biến này.
-    const { NODE_TEST_CONTEXT: _bo, ...goc } = process.env;
-    const env = { ...goc, CI: "true", DATABASE_URL: dbUrl(ten) };
-    for (const { ten: tb, lenh } of buoc) {
-      let l = lenh;
-      if (tb === "test") {
-        if (!r.chon.length) { console.log("suite-neu-doi: bước test bỏ — không tệp nào được chọn"); continue; }
-        if (!l.includes(GLOB_TEST)) { console.error(`suite-neu-doi: bước test không còn glob ${GLOB_TEST} — lệnh CI đã đổi`); return 2; }
-        l = l.replace(GLOB_TEST, r.chon.map((t) => `'${t}'`).join(" "));
-      }
-      console.log(`suite-neu-doi: bước «${tb}»`);
-      const k = await new Promise((xong) => {
-        con = spawn("bash", ["-eo", "pipefail", "-c", l], { cwd: root, env, stdio: "inherit", detached: true });
-        con.on("exit", (status, signal) => xong({ status, signal }));
-        con.on("error", (error) => xong({ status: 127, signal: null, error }));
-      });
-      con = null;
-      if (k.signal) return 128 + ({ SIGINT: 2, SIGKILL: 9, SIGTERM: 15 }[k.signal] ?? 1);
-      if (k.status !== 0) { console.error(`suite-neu-doi: bước «${tb}» thoát ${k.status}`); return k.status ?? 1; }
-    }
-    return 0;
-  } finally { xoa(); }
-}
-
 function main(argv) {
-  if (argv[0] === "--chon-scripts" || argv[0] === "--chay-scripts") return mainScripts(argv);
   const i = argv.indexOf("--");
   const ten = argv[0];
   if (!ten || ten === "--" || i < 0 || i === argv.length - 1) {
@@ -271,7 +141,4 @@ function main(argv) {
 }
 
 const laLoiVao = (() => { try { return realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url)); } catch { return false; } })();
-if (laLoiVao) {
-  const ma = main(process.argv.slice(2));
-  if (ma instanceof Promise) ma.then((c) => { process.exitCode = c; }); else process.exitCode = ma;
-}
+if (laLoiVao) process.exitCode = main(process.argv.slice(2));
