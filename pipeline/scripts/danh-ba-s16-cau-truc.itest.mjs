@@ -185,3 +185,96 @@ test("DA37-AC-4 sau áp: S16 thắng S09; sau đảo về phân khu S09; chiều
   const luat = (await db.query("SELECT dao_by, dao_at IS NOT NULL AS da FROM project_link_rules WHERE id = $1", [RULE])).rows[0];
   assert.deepEqual(luat, { dao_by: "thử", da: true }, "DA37-AC-3 dòng luật không ghi người đảo");
 });
+
+// ---- Task 3: S16 thắng khi căn S08 lệch toà (AC-5), lệch cấu trúc không thẻ (AC-6), dựng lại không sinh gì (AC-7) ----
+import { KHU_A, KHU_B, NOI, DA, moiDuLieu, banDotBien } from "./s16-fixture.mjs";
+import { dung } from "../danh-ba-vat-the.mjs";
+import { s16Ref } from "../lib/s16-danh-muc.mjs";
+import { GHI_CHU_NGHI } from "../lib/s16-dung.mjs";
+
+const MA_LECH = "Q12-11-05";
+const phu37 = [];
+after(async () => { for (const [c, ten] of phu37) { await c.end().catch(() => {}); await xoaDbThu(ten); } });
+async function dbPhu(tag) {
+  const ten = `${TEN}_${tag}`;
+  const c = new pg.Client({ connectionString: await taoDbThu(ten) });
+  await c.connect();
+  phu37.push([c, ten]);
+  return c;
+}
+const chay37 = (c, m = { dung }) => m.dung(c, { khuSlugs: [KHU_A, KHU_B], isoTheo: () => "VN-HN", noiS09: {}, noiS16: NOI, log: () => {}, runId: "da37-itest" });
+// Thẻ lệch toà còn chờ từ DA33 (trên DB máy thu: 2 thẻ) — dựng sẵn trước lượt dựng đi sau.
+const theCu = (c) => c.query(`INSERT INTO review_queue (item_type, item_id, title, evidence) VALUES ('entity_match', $1, 'S16: căn S08 cùng mã nằm ở toà khác', $2)`,
+  [`s16:${s16Ref(DA, MA_LECH)}`, { nguon: "S16", loai: "can-lech-toa" }]);
+async function tapMa(c, ma) {
+  const giu = (await c.query(`SELECT a.source, CASE WHEN u.status = 'merged' THEN u.merged_into ELSE u.unit_key END AS song
+                                FROM registry_aliases a JOIN units u ON u.unit_key = a.object_key
+                               WHERE a.kind = 'ma_nguon' AND a.retired_at IS NULL
+                                 AND ((a.source = 'S08' AND a.value = $1) OR (a.source = 'S16' AND a.value = $2))`, [`q8/${ma}`, `${DA}/${ma}`])).rows;
+  const song = [...new Set(giu.map((r) => r.song))];
+  const toa = song.length === 1 ? (await c.query("SELECT building_key, status FROM units WHERE unit_key = $1", [song[0]])).rows[0] : null;
+  const the = (await c.query(`SELECT status, decision_note FROM review_queue WHERE item_id = $1 ORDER BY id`, [`s16:${s16Ref(DA, ma)}`])).rows;
+  return { song: song.length, song_active: toa?.status === "active", s08: giu.filter((r) => r.source === "S08").length,
+    s16: giu.filter((r) => r.source === "S16").length, the };
+}
+const TAP_MONG = { song: 1, song_active: true, s08: 1, s16: 1, the: [{ status: "rejected", decision_note: GHI_CHU_NGHI }] };
+
+let cA;
+test("DA37-AC-5 S08 trước rồi S16, và S16 trước rồi S08: một căn sống mang đủ bí danh, thẻ cũ cho nghỉ, không thẻ mới", async () => {
+  cA = await dbPhu("a");
+  await moiDuLieu(cA, { s16: false }); await chay37(cA); await theCu(cA);
+  await moiDuLieu(cA, { s08: false }); await chay37(cA);
+  const cB = await dbPhu("b");
+  await moiDuLieu(cB, { s08: false }); await chay37(cB); await theCu(cB);
+  await moiDuLieu(cB, { s16: false }); await chay37(cB);
+  const [a, b] = [await tapMa(cA, MA_LECH), await tapMa(cB, MA_LECH)];
+  assert.deepEqual(a, TAP_MONG, "DA37-AC-5 S08 trước: tập mã lệch toà khác kỳ vọng");
+  assert.deepEqual(b, TAP_MONG, "DA37-AC-5 S16 trước: tập mã lệch toà khác kỳ vọng");
+  const u08 = (await cA.query(`SELECT u.status, u.merged_into FROM units u JOIN registry_aliases a ON a.object_key = u.unit_key
+                                 WHERE a.source = 'S08' AND a.value = $1`, [`q8/${MA_LECH}`])).rows[0];
+  const u16 = (await cA.query(`SELECT object_key FROM registry_aliases WHERE source = 'S16' AND value = $1`, [`${DA}/${MA_LECH}`])).rows[0].object_key;
+  assert.deepEqual([u08.status, u08.merged_into], ["merged", u16], "DA37-AC-5 căn S08 không gộp vào căn S16");
+  const moi = (await cA.query(`SELECT count(*)::int AS n FROM review_queue WHERE evidence ->> 'loai' = 'can-lech-toa'`)).rows[0].n;
+  assert.equal(moi, 1, "DA37-AC-5 có thẻ lệch toà mới ngoài thẻ cũ");
+});
+
+test("DA37-AC-5 chiều đỏ: giữ nhánh «lệch → thẻ» của DA33 thì ca nêu thẻ lệch mới", async () => {
+  const c = await dbPhu("d5");
+  await moiDuLieu(c, { s16: false }); await chay37(c);
+  await moiDuLieu(c, { s08: false });
+  await banDotBien([
+    { tep: "pipeline/danh-ba-vat-the.mjs", thay: [] },
+    { tep: "pipeline/lib/s16-dung.mjs", thay: [["      gop.push({ cu: cu.unit_key, vCan, ref: s16Ref(du_an, ma) });\n    }",
+      "      tk.the_moi += await theDuyet(c, s16Ref(du_an, ma), \"x\", { loai: \"can-lech-toa\" });\n      continue;\n    }"]] },
+  ], (m) => chay37(c, m));
+  const moi = (await c.query(`SELECT count(*)::int AS n FROM review_queue WHERE evidence ->> 'loai' = 'can-lech-toa' AND status = 'pending'`)).rows[0].n;
+  assert.equal(moi, 1, "đối chứng Q-B: đột biến giữ nhánh thẻ mà không có thẻ lệch mới — thước không phân biệt «thẻ lệch mới»");
+});
+
+test("DA37-AC-6 (thẻ) 0 thẻ lệch cấu trúc mới ở dự án có S16; đối chứng dương: thẻ toà khớp nhiều vẫn ra", async () => {
+  const loai = (await cA.query(`SELECT evidence ->> 'loai' AS l, status, count(*)::int AS n FROM review_queue GROUP BY 1, 2 ORDER BY 1, 2`)).rows;
+  assert.ok(!loai.some((r) => r.l === "can-lech-toa" && r.status === "pending"), "DA37-AC-6 còn thẻ lệch toà chờ ở dự án có S16");
+  assert.ok(loai.some((r) => r.l === "toa-khop-nhieu" && r.n >= 1), "DA37-AC-6 đối chứng dương: thẻ toà khớp nhiều (không thuộc Q-B) không còn ra");
+  const lech = (await cA.query(`SELECT du_an, cap_nguon, loai, so FROM v_lech_cau_truc_s16 WHERE loai = 'can-lech-toa'`)).rows;
+  assert.deepEqual(lech, [{ du_an: DA, cap_nguon: "S08-S16", loai: "can-lech-toa", so: 1 }], "DA37-AC-6 view không đếm căn S08 đã gộp");
+});
+
+test("DA37-AC-7 dựng lại hai lần: 0 khoá mới, 0 thẻ mới, cột gốc của toà không đổi, thẻ mơ hồ không đổi", async () => {
+  const anh = async () => (await cA.query(`SELECT
+      (SELECT md5(string_agg(building_key || ':' || region_node_id, ',' ORDER BY building_key)) FROM buildings) AS toa,
+      (SELECT count(*) FROM units) AS can, (SELECT count(*) FROM stacks) AS truc, (SELECT count(*) FROM registry_aliases) AS bd,
+      (SELECT md5(string_agg(item_id || ':' || status, ',' ORDER BY id)) FROM review_queue) AS the`)).rows[0];
+  const truoc = await anh();
+  await chay37(cA); await chay37(cA);
+  assert.deepEqual(await anh(), truoc, "DA37-AC-7 dựng lại sinh khoá/thẻ mới hoặc đổi cột gốc");
+});
+
+test("DA37-AC-7 chiều đỏ: đúc lại căn S16 khi đã có bí danh thì lần hai có khoá mới", async () => {
+  const truoc = (await cA.query("SELECT count(*)::int AS n FROM units")).rows[0].n;
+  await banDotBien([
+    { tep: "pipeline/danh-ba-vat-the.mjs", thay: [] },
+    { tep: "pipeline/lib/s16-dung.mjs", thay: [["    if (s16.has(vCan)) { tk.can_da_co++; continue; }", "    if (false) { tk.can_da_co++; continue; }"]] },
+  ], (m) => chay37(cA, m)).catch(() => {});
+  const sau = (await cA.query("SELECT count(*)::int AS n FROM units")).rows[0].n;
+  assert.ok(sau > truoc, "đối chứng AC-7: đột biến đúc lại mà không có khoá mới ở lần hai — thước không phân biệt «khoá mới ở lần hai»");
+});
