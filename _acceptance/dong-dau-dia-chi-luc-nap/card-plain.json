@@ -1,0 +1,40 @@
+{
+  "feature_plain": "Mỗi lượt nạp, tin S03 của một nhóm có thẻ địa chỉ đã duyệt tự mang dự án, phường, phân khu và bán hay thuê theo thẻ — trừ khi chính bài nêu rõ dự án khác; sửa thẻ thì tin cũ của nhóm đổi theo ở lượt nạp kế.",
+  "will_do": [
+    {"id":"AC-1","p":"Sẽ đóng dấu 100% tin của nhóm có thẻ đã duyệt, và đưa ô «Định vị» của S03 lên mức anh chốt (đề xuất 90%) khi buổi duyệt ký đủ thẻ."},
+    {"id":"AC-2","p":"Sẽ chỉ đóng dấu từ thẻ người đã nhận hoặc đã sửa — thẻ nháp, thẻ bác, thẻ đã nghỉ không đóng dấu gì."},
+    {"id":"AC-3","p":"Sẽ để chữ bài thắng thẻ khi bài nêu rõ một dự án khác; thẻ có hai, ba dự án thì không đoán."},
+    {"id":"AC-4","p":"Sẽ ghi dự án, phường, phân khu thành phát biểu có căn cứ là mã thẻ và phiên bản thẻ, không ghi đè cột phường cũ của tin."},
+    {"id":"AC-5","p":"Sẽ tính lại tin cũ khi thẻ được sửa, không cần bài mới, và chạy lại lần nữa không nhân đôi dòng."},
+    {"id":"AC-6","p":"Sẽ gạt bài thử khỏi mọi đường đọc — bài thử không bao giờ được đóng dấu."},
+    {"id":"AC-7","p":"Sẽ vẫn chạy lượt nạp bình thường trên máy chưa có bảng thẻ, chỉ bỏ bước đóng dấu và nói một dòng vì sao."},
+    {"id":"AC-9","p":"Sẽ thay dòng dự án cũ của luật suy-theo-sổ-nhóm trên đúng những bài vừa đóng dấu, và không đụng tới tệp gốc nào."}
+  ],
+  "wont_do": [
+    {"id":"AC-8","p":"Sẽ KHÔNG làm tin nào đang có một dự án rơi sang trạng thái xung đột hay mất dự án."},
+    {"id":"AC-11","p":"Sẽ KHÔNG làm tin nào mất ô bán/thuê, và đếm riêng số bài bị lật chiều bán↔thuê."},
+    {"id":"OOS-1","p":"Không gỡ lệnh suy-dự-án-theo-sổ-nhóm đang chạy tay — chạy lại nó bằng tay sau khi gộp sẽ ghi lại dòng cũ (giới hạn đã biết)."},
+    {"id":"OOS-2","p":"Không nối phân khu dạng chữ của 3.509 tin vào danh bạ — việc của hàng khớp mã căn."},
+    {"id":"OOS-3","p":"Không áp hai migration bảng thẻ lên máy thu — việc ấy đi cùng chữ ký của TG1."},
+    {"id":"OOS-4","p":"Không đưa bảng thẻ hay phát biểu mới lên cloud."},
+    {"id":"OOS-5","p":"Không đo ô «bài chỉ ảnh» — bài chỉ ảnh không bao giờ đứng đầu một tin."}
+  ],
+  "scope_plain": "Năm việc cố ý để ngoài hàng này:",
+  "coverage_plain": [
+    {"i":0,"p":"Phủ năm loại nhóm, từ nhóm một dự án (4.803 tin) tới tin không nối được nhóm (70) — đủ khi AC-1, AC-3, AC-8 xanh."},
+    {"i":1,"p":"Phủ bốn kiểu chữ bài; ca «bài nêu dự án khác» chỉ có 13 tin nên chấm bằng ma trận viết trước và đo trên trọn tập thật, không bằng tỉ lệ."},
+    {"i":2,"p":"Phủ tin rao, bài Yêu cầu, bài chưa có nhãn — ca kiểm không được dựa vào nhãn loại bài vì nhãn mới phủ 10,7% số bài."},
+    {"i":3,"p":"Phủ sáu trạng thái thẻ, từ nháp tới đã nghỉ — đủ khi AC-2 (chỉ thẻ đã duyệt đóng dấu) xanh."},
+    {"i":4,"p":"Phủ ba ca phiên bản thẻ: bản cũ, bản sửa, không đổi — đủ khi AC-5 (tính lại tin cũ) xanh."},
+    {"i":5,"p":"Phủ ba ca máy có hay chưa có bảng thẻ — đủ khi AC-7 (vẫn chạy khi thiếu bảng) xanh."},
+    {"i":6,"p":"Bỏ ô «bài chỉ ảnh» vì nó bằng 0 tin thật, không phải vì thiếu dữ liệu."},
+    {"i":7,"p":"Bỏ hai ô trống thật trên dữ liệu hôm nay, không viết ca cho chúng."}
+  ],
+  "gap_probe_plain": [
+    {"i":0,"p":"Bản thiết kế đầu cho thẻ THAY nhánh suy bán/thuê theo nhóm — nhánh đang giữ 100% tin có bán/thuê; duyệt ít thẻ là hàng nghìn tin rơi khỏi hai trang danh sách. Đã sửa: thẻ chen trước, không thay; thêm AC-11 đo thẳng."},
+    {"i":1,"p":"Thước «bài lạc dự án» — phép đo duy nhất kiểm tiền đề của hàng — chưa có ngưỡng số. Đã sửa: cận trên Wilson ≤ 10%, cỡ mẫu khai trước (Hỏi-3)."},
+    {"i":2,"p":"Luật «chữ bài thắng» chỉ được chấm trên ca viết tay. Đã sửa: thêm phép đo trên trọn tập bài thật."},
+    {"i":3,"p":"Tiêu chí sửa thẻ viết lẫn hai tập tin, và ca kiểm có thể xanh dù quên bước rút dòng cũ. Đã sửa: tách hai tập, thêm ca chỉ đổi ô phường."},
+    {"i":4,"p":"Hai tiêu chí độc lập dùng chung một lệnh đo nên một cái trượt kéo cái kia trượt theo. Đã sửa: mỗi thước một lệnh riêng."}
+  ]
+}
