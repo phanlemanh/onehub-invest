@@ -12,8 +12,8 @@ flowchart TD
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>20 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>200 việc"]
-  GB --> CN["Chờ phiên nghiệm thu<br/>128 việc"] --> GG{"Cổng Giá trị"}
+  GB --> DG["Đã giao<br/>201 việc"]
+  GB --> CN["Chờ phiên nghiệm thu<br/>129 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
 
@@ -190,6 +190,7 @@ flowchart TD
 - Phần danh mục dự án của S07 thu theo giải pháp ZCode, ưu tiên Hà Nội và HCM, và nạp vào stg_* không nhân dòng (`thu-danh-muc-s07`)
 - Phân khu và toà S09 của Ocean Park 1 và Grand Park vào danh bạ không sinh toà trùng, nên tên toà bài S03 nêu mà danh bạ chỉ có từ S08 khớp được (`toa-s09-hai-khu-vao-danh-ba`)
 - Khách mở trang chủ và /methodology (301 từ /phuong-phap) thấy định nghĩa dạng faq-3, hero và thẻ thị trường không còn màu cứng, lỗi nhóm marketing có error.tsx và lỗi toàn cục có global-error.tsx (`trang-chu-methodology`)
+- Trang /ops/registry chỉ đọc cho người vận hành thấy danh bạ dự án → phân khu → toà → căn ở máy thu — số đếm, bậc danh mục, nguồn S0x, tin đang rao, chỗ thiếu, mã dự án nguồn chưa nối (`trang-danh-ba-chi-doc`)
 - Job nạp Zalo hằng đêm thoát khác 0 khi bước transform-zalo hoặc refresh-bait-gap hỏng, mỗi bước hỏng in một dòng JOB FAIL; phần nạp giữ nguyên (`transform-zalo-boc-job-run`)
 - DA2 — tin rao mọi nguồn ghi được phát biểu dự án, phân khu và phường (project_node_id, subzone_node_id, area_id ở resource Property), migration 096 (`truong-du-an-tren-tin`)
 - DA4 — từ vựng và mappings theo mục 39 — «Dự án» thay «Khu đô thị», dự án cha, kế thừa từ nút vùng, thuật ngữ mới, bẫy tên RESO, ba dòng mappings.yaml (`tu-vung-du-an-muc-39`)
@@ -355,6 +356,7 @@ flowchart TD
 - Sửa hồi quy bộ nạp S08 — snapshot chỉ căn thiếu 094 vẫn nạp và đánh dấu; snapshot có danh mục dự án hoãn khi thiếu 094 (`s08-nap-sua`)
 - bộ thu và bộ nạp S08 không nuốt lỗi token, không trùng sourceId danh mục, không đọc nhầm số (`s08-noi-tiep`)
 - Bảng hàng chủ đầu tư S10 vào stg (migration 089) và nối được vào nút dự án của danh bạ (`s10-bang-hang-vao-danh-ba`)
+- Lượt chấm S4 và ghim lại chỉ chạy suite có vùng bị nhánh đổi, và một lệnh dựng worktree chấm đủ .env, node_modules, kiểu của app (`s4-suite-theo-vung`) — đã giao — máy thông, cửa veto còn mở
 - Máy thu có công cụ sao lưu hằng ngày ra kho restic mã hoá trên máy (đích B2), thử khôi phục định kỳ và cảnh báo quá hạn — chứng minh trên dữ liệu giả (`sao-luu-ma-hoa-b2`)
 - Phép đo danh bạ SĐT chặt — mỗi số một người đo mỗi đêm, đúng ảnh và tên đúng người khi chuyển 060, che số /ops/people qua loader thật (`sd3-lam-chat-do-danh-ba`)
 - Test người bán theo SĐT (SD3) chịu chạy song song — mỗi ca dựng lược đồ riêng, không xếp hàng khoá tư vấn dùng chung (`sd3-test-chiu-song-song`)
