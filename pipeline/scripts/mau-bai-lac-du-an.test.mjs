@@ -4,7 +4,7 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
 
-import { chonMau, docBangDaDien, docTepDuyet, laLac, locKhung, soMau, wilson95 } from "./mau-bai-lac-du-an.mjs";
+import { chonMau, docBangDaDien, docMaKhoa, docTepDuyet, laLac, locKhung, soMau, wilson95 } from "./mau-bai-lac-du-an.mjs";
 
 /** Làm tròn 4 chữ số để so số thực. */
 const r4 = (x) => Math.round(x * 1e4) / 1e4;
@@ -111,24 +111,134 @@ describe("AC-10 mẫu v2 — khung rút và định nghĩa khai trước (lối 
 });
 
 describe("AC-10 mẫu v2 — đọc tệp nhãn người duyệt lưu từ trang duyệt", () => {
-  const tep = (nhan, them = {}) => ({ mau: "v2", hat_giong: "tg2-ac10-v2-20261117", nguoi_duyet: "Mạnh", luc: "2026-11-17T17:00:00Z", nhan, ...them });
+  const HG = "tg2-ac10-v2-20261117";
+  const KHOA = ["a", "b", "c", "e"];
+  const tep = (nhan, them = {}) => ({ mau: "v2", hat_giong: HG, nguoi_duyet: "Mạnh", luc: "2026-11-17T17:00:00Z", nhan, ...them });
   const d = (post_id, nhap, chon) => ({ post_id, nhap, chon });
+  const du = (chon = "dung") => KHOA.map((id) => d(id, "khong", chon));
+  const doc = (t, them = {}) => docTepDuyet(t, { hatGiong: HG, maKhoa: KHOA, ...them });
 
   test("chỉ dòng người đã bấm mới tính; «đúng nháp» lấy nháp, «sửa» lấy giá trị người chọn", () => {
-    const r = docTepDuyet(tep([d("a", "khong", "dung"), d("b", "khong", "lac"), d("c", "lac", "khong"), d("e", "khong", null)]));
+    const r = doc(tep([d("a", "khong", "dung"), d("b", "khong", "lac"), d("c", "lac", "khong"), d("e", "khong", null)]));
     assert.deepEqual(r, { n: 3, k: 1, chuaDuyet: 1, sua: 2, nguoiDuyet: "Mạnh", luc: "2026-11-17T17:00:00Z" });
   });
 
   test("tệp thiếu tên người duyệt hay giờ thì không nhận — nhãn người phải có người", () => {
-    assert.throws(() => docTepDuyet(tep([], { nguoi_duyet: "" })), /người duyệt/);
-    assert.throws(() => docTepDuyet(tep([], { luc: null })), /giờ/);
+    assert.throws(() => doc(tep(du(), { nguoi_duyet: "" })), /người duyệt/);
+    assert.throws(() => doc(tep(du(), { luc: null })), /giờ/);
   });
 
   test("tệp của mẫu khác hay hạt giống khác thì không nhận", () => {
-    assert.throws(() => docTepDuyet(tep([], { hat_giong: "khac" }), "tg2-ac10-v2-20261117"), /hạt giống/);
+    assert.throws(() => doc(tep(du(), { hat_giong: "khac" })), /hạt giống/);
   });
 
   test("lựa chọn lạ thì không nhận, không đoán", () => {
-    assert.throws(() => docTepDuyet(tep([d("a", "khong", "co-le")])), /lựa chọn/);
+    assert.throws(() => doc(tep([d("a", "khong", "co-le"), ...du().slice(1)])), /lựa chọn/);
+  });
+
+  // Vòng S4-r2: thứ khoá mẫu là DANH SÁCH MÃ BÀI trong hồ sơ, nên tệp nhãn phải khớp đúng danh sách ấy — cỡ mẫu
+  // thật không được nhỏ hơn cỡ đã khai chỉ vì tệp bỏ hẳn những dòng chưa duyệt.
+  test("tệp bỏ hẳn một mã bài của mẫu thì không nhận, gọi tên mã thiếu", () => {
+    assert.throws(() => doc(tep(du().slice(1))), /thiếu 1 mã bài.*a/);
+  });
+
+  test("tệp có mã bài ngoài mẫu thì không nhận, gọi tên mã lạ", () => {
+    assert.throws(() => doc(tep([...du(), d("z", "khong", "dung")])), /ngoài mẫu.*z/);
+  });
+
+  test("tệp trùng một mã bài thì không nhận — trùng là thổi cỡ mẫu", () => {
+    assert.throws(() => doc(tep([...du(), d("b", "khong", "dung")])), /trùng.*b/);
+  });
+
+  test("ô nháp ngoài «lac» / «khong» thì không nhận — «đúng nháp» trên nháp hỏng không được đếm thành «không lạc»", () => {
+    assert.throws(() => doc(tep([d("a", undefined, "dung"), ...du().slice(1)])), /nháp.*a/);
+    assert.throws(() => doc(tep([d("a", "lạc", "dung"), ...du().slice(1)])), /nháp.*a/);
+  });
+
+  test("thiếu hạt giống hay danh sách mã khoá thì không đọc — không có đường bỏ qua phép đối chiếu", () => {
+    assert.throws(() => docTepDuyet(tep(du()), { maKhoa: KHOA }), /hạt giống/);
+    assert.throws(() => docTepDuyet(tep(du()), { hatGiong: HG }), /danh sách mã/);
+    assert.throws(() => docTepDuyet(tep(du()), { hatGiong: HG, maKhoa: [] }), /danh sách mã/);
+  });
+
+  test("tệp đủ, đúng danh sách, đã duyệt hết thì đọc ra n bằng cỡ mẫu khai trước", () => {
+    const r = doc(tep(du()));
+    assert.equal(r.n, KHOA.length);
+    assert.equal(r.chuaDuyet, 0);
+  });
+});
+
+describe("AC-10 mẫu v2 — đọc danh sách mã bài đã khoá từ hồ sơ", () => {
+  test("lấy khối mã ngay dưới mục «Đã rút», bỏ dòng trống", () => {
+    const md = "# x\n\n## Khai trước\n\n```\nkhong-phai\n```\n\n## Đã rút\n\nRút lúc …\n\n```\nm1\nm2\n\nm3\n```\n\n## Nháp\n";
+    assert.deepEqual(docMaKhoa(md), ["m1", "m2", "m3"]);
+  });
+
+  test("hồ sơ không có mục «Đã rút» hay khối mã rỗng thì báo lỗi, không trả danh sách rỗng", () => {
+    assert.throws(() => docMaKhoa("# x\n"), /Đã rút/);
+    assert.throws(() => docMaKhoa("## Đã rút\n\n```\n```\n"), /rỗng/);
+  });
+
+  test("hồ sơ v2 thật khoá đúng 100 mã, không trùng", async () => {
+    const { readFileSync } = await import("node:fs");
+    const md = readFileSync(new URL("../../_acceptance/dong-dau-dia-chi-luc-nap/evidence/mau-bai-lac-du-an-v2.md", import.meta.url), "utf8");
+    const ma = docMaKhoa(md);
+    assert.equal(ma.length, 100);
+    assert.equal(new Set(ma).size, 100);
+  });
+});
+
+describe("AC-10 --tinh-duyet ở dòng lệnh — mã thoát của từng nhánh", async () => {
+  const { spawnSync } = await import("node:child_process");
+  const { mkdtempSync, writeFileSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const SCRIPT = new URL("./mau-bai-lac-du-an.mjs", import.meta.url).pathname;
+  const dir = mkdtempSync(join(tmpdir(), "tinh-duyet-"));
+  const KHOA = Array.from({ length: 100 }, (_, i) => `m${i}`);
+  const mau = join(dir, "mau.md");
+  writeFileSync(mau, `# mẫu\n\n## Đã rút\n\n\`\`\`\n${KHOA.join("\n")}\n\`\`\`\n`);
+  const chay = (nhan, args = ["--seed", "hg", "--mau", mau]) => {
+    const f = join(dir, `nhan-${Math.random().toString(36).slice(2)}.json`);
+    writeFileSync(f, JSON.stringify({ hat_giong: "hg", nguoi_duyet: "Mạnh", luc: "2026-11-17T17:00:00Z", nhan }));
+    return spawnSync(process.execPath, [SCRIPT, "--tinh-duyet", f, ...args], { encoding: "utf8" });
+  };
+  const du = (sua = {}) => KHOA.map((id) => ({ post_id: id, nhap: "khong", chon: "dung", ...(sua[id] ?? {}) }));
+
+  test("đủ 100 dòng, đã duyệt hết, 0 lạc → thoát 0, in ĐẠT và cỡ mẫu 100", () => {
+    const r = chay(du());
+    assert.equal(r.status, 0, r.stderr);
+    assert.match(r.stdout, /cỡ mẫu khai 100 · dòng đã duyệt 100/);
+    assert.match(r.stdout, /ĐẠT/);
+  });
+
+  test("còn một dòng chưa bấm → thoát 1 dù cận trên đạt", () => {
+    const r = chay(du({ m7: { chon: null } }));
+    assert.equal(r.status, 1);
+    assert.match(r.stdout, /còn 1 dòng chưa duyệt/);
+  });
+
+  test("tệp bỏ hẳn một dòng → thoát 1, gọi tên mã thiếu", () => {
+    const r = chay(du().slice(1));
+    assert.equal(r.status, 1);
+    assert.match(r.stderr, /thiếu 1 mã bài.*m0/);
+  });
+
+  test("tệp trùng dòng → thoát 1", () => {
+    const r = chay([...du(), { post_id: "m3", nhap: "khong", chon: "dung" }]);
+    assert.equal(r.status, 1);
+    assert.match(r.stderr, /trùng/);
+  });
+
+  test("thiếu --mau hay --seed → thoát 2, không tính", () => {
+    assert.equal(chay(du(), ["--seed", "hg"]).status, 2);
+    assert.equal(chay(du(), ["--mau", mau]).status, 2);
+  });
+
+  test("năm bài lạc trên 100 → thoát 1, CHƯA ĐẠT", () => {
+    const lac = Object.fromEntries(KHOA.slice(0, 5).map((id) => [id, { chon: "lac" }]));
+    const r = chay(du(lac));
+    assert.equal(r.status, 1);
+    assert.match(r.stdout, /CHƯA ĐẠT/);
   });
 });

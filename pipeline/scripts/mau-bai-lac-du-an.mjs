@@ -141,20 +141,53 @@ export function docBangDaDien(md) {
  * tính là nhãn người (GS P4-196). Tệp phải mang tên người duyệt và giờ, và đúng hạt giống của mẫu.
  * @returns {{ n: number, k: number, chuaDuyet: number, sua: number, nguoiDuyet: string, luc: string }}
  */
-export function docTepDuyet(tep, hatGiong = null) {
+export function docTepDuyet(tep, { hatGiong, maKhoa } = {}) {
+  // Không có đường bỏ qua phép đối chiếu (S4-r2): thiếu hạt giống hay danh sách mã khoá là lỗi, không phải «khỏi kiểm».
+  if (!hatGiong) throw new Error("thiếu hạt giống của mẫu để đối chiếu tệp nhãn");
+  if (!Array.isArray(maKhoa) || maKhoa.length === 0) throw new Error("thiếu danh sách mã bài đã khoá của mẫu để đối chiếu tệp nhãn");
   if (!tep?.nguoi_duyet || !String(tep.nguoi_duyet).trim()) throw new Error("tệp nhãn thiếu tên người duyệt");
   if (!tep.luc || Number.isNaN(Date.parse(tep.luc))) throw new Error("tệp nhãn thiếu giờ duyệt");
-  if (hatGiong && tep.hat_giong !== hatGiong) throw new Error(`tệp nhãn của hạt giống khác (${tep.hat_giong}, cần ${hatGiong})`);
+  if (tep.hat_giong !== hatGiong) throw new Error(`tệp nhãn của hạt giống khác (${tep.hat_giong}, cần ${hatGiong})`);
+  const nhan = Array.isArray(tep.nhan) ? tep.nhan : [];
+  // Tệp phải khớp ĐÚNG danh sách mã khoá mẫu: thiếu dòng làm cỡ mẫu thật nhỏ hơn cỡ đã khai, trùng dòng thổi cỡ mẫu.
+  const khoa = new Set(maKhoa), thay = new Set(), trung = [], la = [];
+  for (const d of nhan) {
+    if (thay.has(d.post_id)) trung.push(d.post_id);
+    thay.add(d.post_id);
+    if (!khoa.has(d.post_id)) la.push(d.post_id);
+  }
+  const thieu = maKhoa.filter((m) => !thay.has(m));
+  if (trung.length) throw new Error(`tệp nhãn trùng ${trung.length} mã bài: ${trung.join(", ")}`);
+  if (la.length) throw new Error(`tệp nhãn có ${la.length} mã bài ngoài mẫu đã khoá: ${la.join(", ")}`);
+  if (thieu.length) throw new Error(`tệp nhãn thiếu ${thieu.length} mã bài của mẫu đã khoá: ${thieu.join(", ")}`);
   let n = 0, k = 0, chuaDuyet = 0, sua = 0;
-  for (const d of tep.nhan ?? []) {
+  for (const d of nhan) {
+    // Ô nháp hỏng mà người bấm «đúng nháp» sẽ lặng lẽ thành «không lạc» — nên nháp phải là một trong hai giá trị.
+    if (!["lac", "khong"].includes(d.nhap)) throw new Error(`ô nháp lạ ở ${d.post_id}: ${d.nhap}`);
     if (d.chon == null) { chuaDuyet++; continue; }
     if (!["dung", "lac", "khong"].includes(d.chon)) throw new Error(`lựa chọn lạ ở ${d.post_id}: ${d.chon}`);
-    const nhan = d.chon === "dung" ? d.nhap : d.chon;
+    const gt = d.chon === "dung" ? d.nhap : d.chon;
     if (d.chon !== "dung" && d.chon !== d.nhap) sua++;
     n++;
-    if (nhan === "lac") k++;
+    if (gt === "lac") k++;
   }
   return { n, k, chuaDuyet, sua, nguoiDuyet: String(tep.nguoi_duyet), luc: tep.luc };
+}
+
+/**
+ * Danh sách mã bài khoá mẫu: khối mã đầu tiên ngay dưới mục «## Đã rút» của hồ sơ mẫu. Đây là thứ khoá mẫu (rút theo
+ * băm trên toàn kho nên hạt giống một mình không rút lại được), nên bộ đọc nhãn đối chiếu với nó, không với hạt giống.
+ */
+export function docMaKhoa(md) {
+  const i = md.search(/^## Đã rút\s*$/m);
+  if (i < 0) throw new Error("hồ sơ mẫu không có mục «## Đã rút»");
+  const sau = md.slice(i);
+  const m = sau.match(/```[^\n]*\n([\s\S]*?)```/);
+  const ke = sau.slice(1).search(/^## /m);
+  if (!m || (ke >= 0 && sau.indexOf(m[0]) > ke + 1)) throw new Error("mục «## Đã rút» không có khối mã bài");
+  const ma = m[1].split("\n").map((l) => l.trim()).filter(Boolean);
+  if (!ma.length) throw new Error("khối mã bài dưới «## Đã rút» rỗng");
+  return ma;
 }
 
 /** Cỡ mẫu từ dòng lệnh. Không nhận NaN hay 0: bảng 0 dòng thoát 0 là một phép đo im lặng sai. */
@@ -169,9 +202,15 @@ async function main() {
   const lay = (c, md) => { const i = argv.indexOf(c); return i < 0 ? md : argv[i + 1]; };
 
   if (argv.includes("--tinh-duyet")) {
-    const t = docTepDuyet(JSON.parse(readFileSync(lay("--tinh-duyet"), "utf8")), lay("--seed") ?? null);
+    const seed = lay("--seed"), tepMau = lay("--mau");
+    if (!seed || !tepMau) { console.error("--tinh-duyet cần --seed <hạt giống> và --mau <hồ sơ mẫu có mục «Đã rút»>"); process.exit(2); }
+    let t;
+    try {
+      t = docTepDuyet(JSON.parse(readFileSync(lay("--tinh-duyet"), "utf8")), { hatGiong: seed, maKhoa: docMaKhoa(readFileSync(tepMau, "utf8")) });
+    } catch (e) { console.error(`không nhận tệp nhãn: ${e.message}`); process.exit(1); }
+    if (t.n === 0) { console.error(`chưa có dòng nào được duyệt (chưa duyệt ${t.chuaDuyet}) — chưa tính được`); process.exit(1); }
     const w = wilson95(t.k, t.n);
-    console.log(`người duyệt: ${t.nguoiDuyet} · lúc ${t.luc} · dòng đã duyệt ${t.n} · chưa duyệt ${t.chuaDuyet} · sửa nháp ${t.sua}`);
+    console.log(`người duyệt: ${t.nguoiDuyet} · lúc ${t.luc} · cỡ mẫu khai ${t.n + t.chuaDuyet} · dòng đã duyệt ${t.n} · chưa duyệt ${t.chuaDuyet} · sửa nháp ${t.sua}`);
     console.log(`bài lạc: ${t.k}/${t.n} = ${PHAN_TRAM(w.p)} · khoảng Wilson 95%: ${PHAN_TRAM(w.duoi)} — ${PHAN_TRAM(w.tren)}`);
     console.log(`cận trên so ngưỡng 10%: ${w.tren <= 0.1 ? "ĐẠT" : "CHƯA ĐẠT"}${t.chuaDuyet ? ` — còn ${t.chuaDuyet} dòng chưa duyệt, cỡ mẫu thật thấp hơn cỡ đã khai` : ""}`);
     process.exit(w.tren <= 0.1 && t.chuaDuyet === 0 ? 0 : 1);

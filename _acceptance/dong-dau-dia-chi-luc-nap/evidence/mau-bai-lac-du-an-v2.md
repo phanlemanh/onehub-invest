@@ -157,5 +157,5 @@ Masteri trong khu Ocean Park thì theo định nghĩa đã khai bài ấy là l�
 ## Kết quả
 
 **CHỜ MẠNH DUYỆT** trên trang `research-local/duyet-nhan-ac10-v2.html` (ngoài kho). Tệp nhãn tải về được tính bằng:
-`node pipeline/scripts/mau-bai-lac-du-an.mjs --tinh-duyet <tệp nhãn> --seed tg2-ac10-v2-20261117`
+`node pipeline/scripts/mau-bai-lac-du-an.mjs --tinh-duyet <tệp nhãn> --seed tg2-ac10-v2-20261117 --mau _acceptance/dong-dau-dia-chi-luc-nap/evidence/mau-bai-lac-du-an-v2.md` — lệnh đối chiếu tệp nhãn với đúng 100 mã ở mục «Đã rút» (thiếu, thừa, trùng, ô nháp lạ, còn dòng chưa bấm → thoát khác 0)
 — lệnh thoát 0 chỉ khi cận trên Wilson ≤ 10% VÀ cả 100 dòng đã được người bấm.
