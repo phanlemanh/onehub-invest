@@ -5346,7 +5346,7 @@
         "pipeline/lib/danh-ba-vat-the.mjs",
         "db/migrations"
       ],
-      "ghi_chu": "Đứng sau DA8 (ba nút Grand Park đổi loại, Ocean Park 1, 2, 3 có cha) vì cùng tệp và cần luật loại nút của DA8; gộp hai hàng thành 14 tiêu chí, vượt ngưỡng tách nên giữ riêng. Gộp nút trùng tên (Lumière Boulevard hai nút, Lakeview City) là DA19, không làm ở đây. «Trong hệ VGP» (17/11) chỉ là cách chấm TG2, không gộp nút."
+      "ghi_chu": "Đứng sau DA8 (ba nút Grand Park đổi loại, Ocean Park 1, 2, 3 có cha) vì cùng tệp và cần luật loại nút của DA8; gộp hai hàng thành 14 tiêu chí, vượt ngưỡng tách nên giữ riêng. Gộp nút trùng tên (Lumière Boulevard hai nút, Lakeview City) là DA19, không làm ở đây. «Trong hệ VGP» (17/11) chỉ là cách chấm TG2, không gộp nút. 18/11 (lời Mạnh ở TG2, «Mở rộng hệ sang OP1»): Masteri Waterfront là dự án con trong hệ Ocean Park 1 (toà M… trong nhóm OP1) — DA38 đúc nút dự án con này có cha OP1 như các dự án con Grand Park; khi nút có, luật «trong hệ» của TG2 (laLac/HE_DU_AN, pipeline) đọc hệ từ danh bạ thay danh sách viết trong mã."
     },
     {
       "ma": "DA39",
