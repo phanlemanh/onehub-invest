@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 52f17640195d335b65ee0f53307d9ef96a07f785
+verified_commit: 9e711f3bcda17542b3a557f8c014185345a5d05e
 human_signoff:
 ---
 
@@ -21,126 +21,124 @@ human_signoff:
 | E4 | AC-4 | test | PASS |
 | E5 | AC-5 | test | PASS |
 | E6 | AC-6 | test | PASS |
-| E7 | AC-7 | test | PASS |
+| E7 | AC-7 | test | PASS (carry-forward tu round 3) |
 | E8 | AC-8 | test | PASS |
 
 ## Evidence
 
 - eval: E1
-  run_id: minted-s4-suite-theo-vung-E1-r3
+  run_id: minted-s4-suite-theo-vung-E1-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.s4v_bo_qua
-  verified_at: 2026-11-16T14:05:02Z
+  verified_at: 2026-11-16T22:29:26Z
   output: |
     node --test --test-name-pattern=S4V-AC-1 scripts/suite-neu-doi.test.mjs
-    ca S4V-AC-1 xanh
+    duration_ms 2016.411333
 
 - eval: E2
-  run_id: minted-s4-suite-theo-vung-E2-r3
+  run_id: minted-s4-suite-theo-vung-E2-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.s4v_chay
-  verified_at: 2026-11-16T14:05:02Z
+  verified_at: 2026-11-16T22:29:26Z
   output: |
     node --test --test-name-pattern=S4V-AC-2 scripts/suite-neu-doi.test.mjs
-    ca S4V-AC-2 xanh
+    duration_ms 5209.450625
 
 - eval: E3
-  run_id: minted-s4-suite-theo-vung-E3-r3
+  run_id: minted-s4-suite-theo-vung-E3-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.s4v_keo
-  verified_at: 2026-11-16T14:05:02Z
+  verified_at: 2026-11-16T22:29:26Z
   output: |
     node --test --test-name-pattern=S4V-AC-3 scripts/suite-neu-doi.test.mjs
-    ca S4V-AC-3 xanh
+    duration_ms 42.260583
 
 - eval: E4
-  run_id: minted-s4-suite-theo-vung-E4-r3
+  run_id: minted-s4-suite-theo-vung-E4-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.s4v_bao_thu
-  verified_at: 2026-11-16T14:05:02Z
+  verified_at: 2026-11-16T22:29:26Z
   output: |
     node --test --test-name-pattern=S4V-AC-4 scripts/suite-neu-doi.test.mjs
-    ca S4V-AC-4 xanh
+    duration_ms 2988.09825
 
 - eval: E5
-  run_id: minted-s4-suite-theo-vung-E5-r3
+  run_id: minted-s4-suite-theo-vung-E5-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.s4v_phu
-  verified_at: 2026-11-16T14:05:02Z
+  verified_at: 2026-11-16T22:29:26Z
   output: |
     node --test --test-name-pattern=S4V-AC-5 scripts/suite-neu-doi.test.mjs
-    ca S4V-AC-5 xanh
+    duration_ms 909.681541
 
 - eval: E6
-  run_id: minted-s4-suite-theo-vung-E6-r3
+  run_id: minted-s4-suite-theo-vung-E6-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.s4v_cau_hinh
-  verified_at: 2026-11-16T14:05:02Z
+  verified_at: 2026-11-16T22:29:26Z
   output: |
-    cau-hinh: xanh — chỉ suite_keys đổi; tám lệnh cũ (bảy suite bọc + pipeline) nguyên byte (gốc 775d266148915d3584939a7ce43aa4c452356ea4)
+    cau-hinh: xanh — chỉ suite_keys đổi; tám lệnh cũ (bảy suite bọc + pipeline) nguyên byte (gốc ac6cb449fcfed4eefab4f9ec0a190fd61a490d97)
 
 - eval: E7
   run_id: minted-s4-suite-theo-vung-E7-r3
   exit_code: 0
-  baseline: n-a
   verifier: config:executors.test.s4v_dung_wt
   verified_at: 2026-11-16T14:05:02Z
-  output: |
-    node --test scripts/dung-worktree-cham.test.mjs
-    ca S4V-AC-7 xanh
+  carried_from_round: 3
+  # carry-forward tu round 3 — delta khong cham paths cua eval
 
 - eval: E8
-  run_id: minted-s4-suite-theo-vung-E8-r3
+  run_id: minted-s4-suite-theo-vung-E8-r4
   exit_code: 0
   baseline: red
   verifier: config:executors.test.scripts
-  verified_at: 2026-11-16T14:05:02Z
+  verified_at: 2026-11-16T22:29:26Z
   output: |
     node --test scripts/*.test.mjs
-    toàn bộ ca xanh
+    duration_ms 1091421.315
 
 ### Lệnh suite (hồi quy)
 
 - cmd: node scripts/suite-neu-doi.mjs agent -- 'cd agent && npm test'
-  run_id: minted-s4-suite-theo-vung-SUITE-node_scripts_suite_neu_doi_mjs_agent_cd_-r3
+  run_id: minted-s4-suite-theo-vung-SUITE-node_scripts_suite_neu_doi_mjs_agent_cd_-r4
   exit_code: 0
-  verified_at: 2026-11-16T14:05:02Z
+  verified_at: 2026-11-16T22:29:26Z
 
 - cmd: node scripts/suite-neu-doi.mjs app -- 'cd app && npx tsc --noEmit && npm run lint'
-  run_id: minted-s4-suite-theo-vung-SUITE-lint-r3
+  run_id: minted-s4-suite-theo-vung-SUITE-lint-r4
   exit_code: 0
-  verified_at: 2026-11-16T14:05:02Z
+  verified_at: 2026-11-16T22:29:26Z
 
 - cmd: node scripts/suite-neu-doi.mjs app_ui -- 'cd app && npm test'
-  run_id: minted-s4-suite-theo-vung-SUITE-node_scripts_suite_neu_doi_mjs_app_ui_cd-r3
+  run_id: minted-s4-suite-theo-vung-SUITE-node_scripts_suite_neu_doi_mjs_app_ui_cd-r4
   exit_code: 0
-  verified_at: 2026-11-16T14:05:02Z
+  verified_at: 2026-11-16T22:29:26Z
 
 - cmd: node scripts/suite-neu-doi.mjs pipeline_a -- 'cd pipeline && npm run test:a'
-  run_id: minted-s4-suite-theo-vung-SUITE-test_a-r3
+  run_id: minted-s4-suite-theo-vung-SUITE-test_a-r4
   exit_code: 0
-  verified_at: 2026-11-16T14:05:02Z
+  verified_at: 2026-11-16T22:29:26Z
 
 - cmd: node scripts/suite-neu-doi.mjs pipeline_b -- 'cd pipeline && npm run test:b'
-  run_id: minted-s4-suite-theo-vung-SUITE-test_b-r3
+  run_id: minted-s4-suite-theo-vung-SUITE-test_b-r4
   exit_code: 0
-  verified_at: 2026-11-16T14:05:02Z
+  verified_at: 2026-11-16T22:29:26Z
 
 - cmd: node scripts/suite-neu-doi.mjs ui_lint_rules -- 'cd app && npm run test:lint-rules'
-  run_id: minted-s4-suite-theo-vung-SUITE-test_lint_rules-r3
+  run_id: minted-s4-suite-theo-vung-SUITE-test_lint_rules-r4
   exit_code: 0
-  verified_at: 2026-11-16T14:05:02Z
+  verified_at: 2026-11-16T22:29:26Z
 
 - cmd: node scripts/suite-neu-doi.mjs portal_static -- 'node scripts/check-portal-compliance.mjs'
-  run_id: minted-s4-suite-theo-vung-SUITE-node_scripts_suite_neu_doi_mjs_portal_st-r3
+  run_id: minted-s4-suite-theo-vung-SUITE-node_scripts_suite_neu_doi_mjs_portal_st-r4
   exit_code: 0
-  verified_at: 2026-11-16T14:05:02Z
+  verified_at: 2026-11-16T22:29:26Z
 
 ## Known limits
 
@@ -148,22 +146,23 @@ human_signoff:
 
 ## Analyst
 
-none — mọi eval feature đều red trên baseline (có phân biệt) hoặc không đo được baseline (xem dưới); không eval nào xanh cả hai phía ngoài regression-guard có chủ ý.
+none — moi eval feature deu red tren baseline (co phan biet)
+
+Ghi chu: E8 la hoi quy (red tren baseline). E1-E6 la eval moi, khong do duoc baseline.
 
 Baseline khong do:
-- node --test --test-name-pattern=S4V-AC-1 scripts/suite-neu-doi.test.mjs: bo qua baseline: tep scripts/suite-neu-doi.test.mjs co o cay dang kiem nhung chua co o merge-base 775d266148915d3584939a7ce43aa4c452356ea4 — eval moi, chay tren code cu khong phan biet gi
-- node --test --test-name-pattern=S4V-AC-2 scripts/suite-neu-doi.test.mjs: bo qua baseline: tep scripts/suite-neu-doi.test.mjs co o cay dang kiem nhung chua co o merge-base 775d266148915d3584939a7ce43aa4c452356ea4 — eval moi, chay tren code cu khong phan biet gi
-- node --test --test-name-pattern=S4V-AC-3 scripts/suite-neu-doi.test.mjs: bo qua baseline: tep scripts/suite-neu-doi.test.mjs co o cay dang kiem nhung chua co o merge-base 775d266148915d3584939a7ce43aa4c452356ea4 — eval moi, chay tren code cu khong phan biet gi
-- node --test --test-name-pattern=S4V-AC-4 scripts/suite-neu-doi.test.mjs: bo qua baseline: tep scripts/suite-neu-doi.test.mjs co o cay dang kiem nhung chua co o merge-base 775d266148915d3584939a7ce43aa4c452356ea4 — eval moi, chay tren code cu khong phan biet gi
-- node --test --test-name-pattern=S4V-AC-5 scripts/suite-neu-doi.test.mjs: bo qua baseline: tep scripts/suite-neu-doi.test.mjs co o cay dang kiem nhung chua co o merge-base 775d266148915d3584939a7ce43aa4c452356ea4 — eval moi, chay tren code cu khong phan biet gi
-- node --test --test-name-pattern=S4V-AC-6 scripts/suite-neu-doi.test.mjs && bash _acceptance/s4-suite-theo-vung/probes/cau-hinh-khong-doi.sh: bo qua baseline: tep scripts/suite-neu-doi.test.mjs co o cay dang kiem nhung chua co o merge-base 775d266148915d3584939a7ce43aa4c452356ea4 — eval moi, chay tren code cu khong phan biet gi
-- node --test scripts/dung-worktree-cham.test.mjs: bo qua baseline: tep scripts/dung-worktree-cham.test.mjs co o cay dang kiem nhung chua co o merge-base 775d266148915d3584939a7ce43aa4c452356ea4 — eval moi, chay tren code cu khong phan biet gi
+- node --test --test-name-pattern=S4V-AC-1 scripts/suite-neu-doi.test.mjs: bo qua baseline: tep scripts/suite-neu-doi.test.mjs co o cay dang kiem nhung chua co o merge-base ac6cb449fcfed4eefab4f9ec0a190fd61a490d97 — eval moi, chay tren code cu khong phan biet gi
+- node --test --test-name-pattern=S4V-AC-2 scripts/suite-neu-doi.test.mjs: bo qua baseline: tep scripts/suite-neu-doi.test.mjs co o cay dang kiem nhung chua co o merge-base ac6cb449fcfed4eefab4f9ec0a190fd61a490d97 — eval moi, chay tren code cu khong phan biet gi
+- node --test --test-name-pattern=S4V-AC-3 scripts/suite-neu-doi.test.mjs: bo qua baseline: tep scripts/suite-neu-doi.test.mjs co o cay dang kiem nhung chua co o merge-base ac6cb449fcfed4eefab4f9ec0a190fd61a490d97 — eval moi, chay tren code cu khong phan biet gi
+- node --test --test-name-pattern=S4V-AC-4 scripts/suite-neu-doi.test.mjs: bo qua baseline: tep scripts/suite-neu-doi.test.mjs co o cay dang kiem nhung chua co o merge-base ac6cb449fcfed4eefab4f9ec0a190fd61a490d97 — eval moi, chay tren code cu khong phan biet gi
+- node --test --test-name-pattern=S4V-AC-5 scripts/suite-neu-doi.test.mjs: bo qua baseline: tep scripts/suite-neu-doi.test.mjs co o cay dang kiem nhung chua co o merge-base ac6cb449fcfed4eefab4f9ec0a190fd61a490d97 — eval moi, chay tren code cu khong phan biet gi
+- node --test --test-name-pattern=S4V-AC-6 scripts/suite-neu-doi.test.mjs && bash _acceptance/s4-suite-theo-vung/probes/cau-hinh-khong-doi.sh: bo qua baseline: tep scripts/suite-neu-doi.test.mjs co o cay dang kiem nhung chua co o merge-base ac6cb449fcfed4eefab4f9ec0a190fd61a490d97 — eval moi, chay tren code cu khong phan biet gi
 
 ## Variance
 
-none — mọi eval nhiều lần chạy đều đồng đều (không eval nào có runs lớn hơn 1).
+none — every multi-run eval is uniform
 
 ## Iterations
 
-Round 1 và Round 2: đã trả về triển khai sau các phát hiện của vòng; chi tiết ở review-findings các vòng đó, không chép lại.
-Round 3: E1 đến E8 và bảy lệnh suite đều xanh trên commit 52f17640195d335b65ee0f53307d9ef96a07f785; verdict PASS.
+Round 3: PASS — gói bằng chứng máy viết; E7 chốt ở vòng này.
+Round 4: PASS — sau khi nhận main, vùng agent thêm app/probes; E1-E6 và E8 chạy lại, E7 carry-forward từ round 3 vì delta không chạm paths của eval; không có judgment item.
