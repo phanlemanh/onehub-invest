@@ -10,6 +10,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
 import pg from "pg"
+import { isValidElement, type ReactNode } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 
 import { localDbUrl } from "../../pipeline/scripts/capture-ops-facts.mjs"
@@ -163,6 +164,52 @@ const docGoc = () => import("../src/lib/ops/registry/doc")
 const theoId = (d: DanhBa) => new Map<number, NutDanhBa>(d.nut.map((n) => [n.id, n]))
 const nam = (n: NutDanhBa | undefined) => n && { soPhanKhu: n.soPhanKhu, soToa: n.soToa, toaChuaCan: n.toaChuaCan, soCan: n.soCan, tin: n.tin }
 
+/** Bốn ô số của StatTiles theo thứ tự: [tiêu đề, giá trị] — giá trị là span số lớn ĐẦU TIÊN sau đúng tiêu đề ô ấy và
+ *  trước tiêu đề ô kế (không trôi sang ô hay bảng phía sau). */
+function oSo(html: string): [string, string][] {
+  const out: [string, string][] = []
+  const re = /<h3[^>]*>([^<]+)<\/h3>((?:(?!<h3)[\s\S])*?)<span class="[^"]*text-2xl[^"]*">([^<]+)<\/span>/g
+  for (const m of html.matchAll(re)) out.push([m[1], m[3]])
+  return out
+}
+/** Số trên huy hiệu của đúng một tab: «<nhãn> <span …>n</span>» ngay sau nhãn, không trôi xa hơn một thẻ. */
+function soTab(html: string, nhan: string): string | null {
+  const m = html.match(new RegExp(`${nhan}\\s*(?:<!-- -->)?\\s*<span[^>]*>(\\d+)</span>`))
+  return m ? m[1] : null
+}
+/** Bản chép một tệp và các tệp con nó import tương đối (khoá = chuỗi import, giá trị = tệp gốc), đổi `doi` ở bất kỳ tệp
+ *  nào trong bộ — để đột biến một tệp con được tệp cha dùng. Khai con theo thứ tự lá trước: con chép sau trỏ được tới con
+ *  chép trước. */
+async function banChepCay(rel: string, con: Record<string, string>, doi: [string, string][]): Promise<typeof import("../src/components/ops/registry/du-an-content")> {
+  mkdirSync(CU, { recursive: true })
+  const daAp = new Set<string>()
+  const ap = (src: string) => doi.reduce((a, [tu, thanh]) => (a.includes(tu) ? (daAp.add(tu), a.split(tu).join(thanh)) : a), src)
+  const daChep: Record<string, string> = {}
+  for (const [spec, tep] of Object.entries(con)) {
+    const f = join(CU, `con-${++soBan}.tsx`)
+    let src = ap(readFileSync(join(APP, tep), "utf8"))
+    src = src.replace(/from "(\.{1,2}\/[^"]+)"/g, (_m, sp: string) => {
+      if (daChep[sp]) return `from "${daChep[sp]}"`
+      const g = join(APP, dirname(tep), sp)
+      const p = [".ts", ".tsx"].map((e) => g + e).find((x) => existsSync(x)) ?? g
+      return `from "${pathToFileURL(p).href}"`
+    })
+    writeFileSync(f, `import React from "react"\n${src}`)
+    daChep[spec] = pathToFileURL(f).href
+  }
+  let src = ap(readFileSync(join(APP, rel), "utf8"))
+  src = src.replace(/from "(\.{1,2}\/[^"]+)"/g, (_m, sp: string) => {
+    if (daChep[sp]) return `from "${daChep[sp]}"`
+    const g = join(APP, dirname(rel), sp)
+    const p = [".ts", ".tsx"].map((e) => g + e).find((x) => existsSync(x)) ?? g
+    return `from "${pathToFileURL(p).href}"`
+  })
+  for (const [tu] of doi) assert.ok(daAp.has(tu), `bản chép không áp được: ${tu}`)
+  const f = join(CU, `ban-${++soBan}.tsx`)
+  writeFileSync(f, `import React from "react"\n${src}`)
+  return import(pathToFileURL(f).href)
+}
+
 async function htmlDanhBa(): Promise<string> {
   const { RegistryContent } = await import("../src/components/ops/registry/registry-content")
   return renderToStaticMarkup(await RegistryContent())
@@ -297,15 +344,24 @@ test("TDB-AC-5 trang một dự án: đầu trang, bốn ô bằng số danh sá
   const html = await htmlDuAn(N.D1)
   for (const s of ["Xác minh", "Alpha", "Nguồn S06, S08", "ocp1", "S06 du_an/1"]) assert.ok(html.includes(s), `TDB-AC-5 đầu trang thiếu «${s}»`)
   const d1 = theoId(await (await docGoc()).docDanhBa(sc)).get(N.D1)!
-  for (const [nhan, v] of [["Toà", d1.soToa], ["Căn", d1.soCan], ["Phân khu", d1.soPhanKhu]] as const)
-    assert.match(html, new RegExp(`${nhan}</h3>[\\s\\S]*?>${v}</span>`), `TDB-AC-5 ô ${nhan}`)
+  const tongTin = Object.values(d1.tin).reduce((a, b) => a + b, 0)
+  const KV_O: [string, number][] = [["Phân khu", d1.soPhanKhu], ["Toà", d1.soToa], ["Căn", d1.soCan], ["Tin đang rao", tongTin]]
+  assert.deepEqual(oSo(html), KV_O.map(([t, v]) => [t, String(v)]), "TDB-AC-5 bốn ô số")
   const mot = await docDuAn(N.D1, sc)
   assert.deepEqual(mot?.toa.map((t) => t.key).sort(), [T.T1, T.T2, T.T4].sort(), "TDB-AC-5 toà của cây con")
   assert.match(html, /Sapphire 2 · Mã 102\/T1/)
-  assert.match(html, /Chưa có căn[\s\S]*?>1</, "TDB-AC-5 tab chưa có căn đếm 1")
+  assert.equal(soTab(html, "Chưa có căn"), "1", "TDB-AC-5 tab chưa có căn đếm 1")
+  assert.equal(soTab(html, "Mọi toà"), "3")
   for (const v of ["abc", "0", "-1", "1e3", undefined]) assert.equal(parseNodeId(v), null)
   assert.equal(parseNodeId("9001"), 9001)
   for (const id of [N.K1, 123456789]) await assert.rejects(htmlDuAn(id), /NEXT_HTTP_ERROR_FALLBACK;404|NEXT_NOT_FOUND/)
+  // Chiều đỏ ô số: ô Căn đọc nhầm số toà; tab đếm toà có căn thay vì toà chưa có căn.
+  const dotContent = await banChepCay("src/components/ops/registry/du-an-content.tsx", { "./du-an-view": "src/components/ops/registry/du-an-view.tsx" }, [["value: fmtInt(p.soCan)", "value: fmtInt(p.soToa)"]])
+  const htmlDot = renderToStaticMarkup(await dotContent.DuAnContent({ id: N.D1 }))
+  assert.throws(() => assert.deepEqual(oSo(htmlDot), KV_O.map(([t, v]) => [t, String(v)]), "TDB-AC-5 bốn ô số"), /TDB-AC-5 bốn ô số/)
+  const tabDot = await banChepCay("src/components/ops/registry/du-an-content.tsx", { "./du-an-toa-grid": "src/components/ops/registry/du-an-toa-grid.tsx", "./du-an-view": "src/components/ops/registry/du-an-view.tsx" }, [["rows.filter((r) => r.soCan === 0)", "rows.filter((r) => r.soCan !== 0)"]])
+  const htmlTab = renderToStaticMarkup(await tabDot.DuAnContent({ id: N.D1 }))
+  assert.throws(() => assert.equal(soTab(htmlTab, "Chưa có căn"), "1", "TDB-AC-5 tab chưa có căn đếm 1"), /TDB-AC-5 tab chưa có căn đếm 1/)
   const dot = await banChep<typeof import("../src/lib/ops/registry/du-an")>("src/lib/ops/registry/du-an.ts", [['if (goc.rows[0]?.node_type !== "project") return null', "if (!goc.rows[0]) return null"]])
   const k1 = await dot.docDuAn(N.K1, sc)
   assert.throws(() => assert.equal(k1, null, "TDB-AC-5 phân khu mở như dự án"), /TDB-AC-5 phân khu mở như dự án/)
@@ -389,10 +445,22 @@ test("TDB-AC-8 trạng thái: danh bạ rỗng, lọc không khớp, khung chờ
   const cho = renderToStaticMarkup(<RegistrySkeleton />)
   assert.match(cho, /aria-busy="true"/)
   assert.match(cho, /data-slot="skeleton"/)
-  for (const p of ["src/app/ops/registry/page.tsx", "src/app/ops/registry/[nodeId]/page.tsx"]) {
-    const src = readFileSync(join(APP, p), "utf8")
-    assert.match(src, /<RegionError what="[^"]+">\s*<Suspense fallback={<RegistrySkeleton/, `TDB-AC-8 ${p} không bọc RegionError`)
+  // Page thật (bản chép thay getSessionUser bằng phiên giả): cây trả về là RegionError bọc Suspense có khung chờ.
+  const { RegionError } = await import("../src/components/states/region-error")
+  const boc = async (rel: string, props: unknown, them: [string, string][] = []) => {
+    const mod = await banChep<{ default: (p: unknown) => Promise<ReactNode> }>(rel, [STUB_PHIEN, ...them])
+    ;(globalThis as unknown as { __TDB_NGUOI: unknown }).__TDB_NGUOI = { id: "usr_admin", email: "admin@local.test", plan: "free", role: "admin" }
+    return mod.default(props)
   }
+  for (const [rel, props] of [["src/app/ops/registry/page.tsx", {}], ["src/app/ops/registry/[nodeId]/page.tsx", { params: Promise.resolve({ nodeId: String(N.D1) }) }]] as const) {
+    const cay = await boc(rel, props)
+    assert.ok(isValidElement(cay) && cay.type === RegionError, `TDB-AC-8 ${rel} không bọc RegionError`)
+    const susp = (cay.props as { children: ReactNode }).children
+    assert.ok(isValidElement(susp) && isValidElement((susp.props as { fallback: ReactNode }).fallback) && ((susp.props as { fallback: { type: unknown } }).fallback.type === RegistrySkeleton), `TDB-AC-8 ${rel} khung chờ`)
+  }
+  // Chiều đỏ: bản page bỏ RegionError → cây không còn bọc.
+  const khongBoc = await boc("src/app/ops/registry/page.tsx", {}, [['<RegionError what="danh bạ">', "<>"], ["</RegionError>", "</>"]])
+  assert.throws(() => assert.ok(isValidElement(khongBoc) && khongBoc.type === RegionError, "TDB-AC-8 không bọc RegionError"), /TDB-AC-8 không bọc RegionError/)
   const d3 = await htmlDuAn(N.D3)
   assert.match(d3, /Dự án chưa có toà nào trong danh bạ\./)
   assert.match(d3, /href="\/ops\/registry"/)
@@ -401,10 +469,52 @@ test("TDB-AC-8 trạng thái: danh bạ rỗng, lọc không khớp, khung chờ
   assert.doesNotMatch(du, /Danh bạ chưa có dự án|Mọi mã dự án đã nạp đều đã nối/)
 })
 
+const STUB_PHIEN: [string, string] = [
+  `import { getSessionUser } from "@/lib/auth"`,
+  `const getSessionUser = async () => (globalThis as unknown as { __TDB_NGUOI: unknown }).__TDB_NGUOI as never`,
+]
+
 test("TDB-AC-9 thanh bên Ops có mục Danh bạ, sổ cổng có dòng trang", async () => {
   const { NAV_SECTIONS } = await import("../src/components/shell/nav")
   const coDanhBa = (sections: typeof NAV_SECTIONS.ops) => sections.some((s) => s.href === "/ops/registry" && s.label === "Danh bạ")
   assert.ok(coDanhBa(NAV_SECTIONS.ops))
   assert.match(readFileSync(join(ROOT, "docs/architecture/portals.md"), "utf8"), /^\| `\/ops\/registry` \| Danh bạ \|/m)
   assert.throws(() => assert.ok(coDanhBa(NAV_SECTIONS.ops.filter((s) => s.href !== "/ops/registry")), "TDB-AC-9 nav thiếu Danh bạ"), /TDB-AC-9 nav thiếu Danh bạ/)
+})
+
+// Cuối tệp: dựng RegionError của trang trong jsdom với nội dung ném lỗi → «Không tải được danh bạ» + «Thử lại» (ranh giới
+// lỗi chỉ chạy khi dựng phía khách). Đặt cuối vì ca gán window/document toàn cục.
+test("TDB-AC-8 RegionError của trang hiện «Thử lại» khi nội dung ném lỗi", async () => {
+  const { JSDOM } = await import("jsdom")
+  const dom = new JSDOM("<!doctype html><div id=root></div>", { url: "http://localhost:3461/ops/registry" })
+  Object.assign(globalThis, { window: dom.window, document: dom.window.document, HTMLElement: dom.window.HTMLElement, IS_REACT_ACT_ENVIRONMENT: true })
+  Object.defineProperty(globalThis, "navigator", { value: dom.window.navigator, configurable: true })
+  const React = await import("react")
+  const { createRoot } = await import("react-dom/client")
+  const { AppRouterContext } = await import("next/dist/shared/lib/app-router-context.shared-runtime")
+  const { RegionError } = await import("../src/components/states/region-error")
+  const Nem = () => {
+    throw new Error("tdb-thu")
+  }
+  const router = { refresh() {}, push() {}, replace() {}, back() {}, forward() {}, prefetch() {} }
+  const loi = console.error
+  console.error = () => {}
+  try {
+    const root = createRoot(document.getElementById("root")!)
+    await React.act(async () => {
+      root.render(
+        <AppRouterContext.Provider value={router as never}>
+          <RegionError what="danh bạ">
+            <Nem />
+          </RegionError>
+        </AppRouterContext.Provider>,
+      )
+    })
+    const text = document.body.textContent ?? ""
+    assert.match(text, /Không tải được danh bạ/)
+    assert.match(text, /Thử lại/)
+    await React.act(async () => root.unmount())
+  } finally {
+    console.error = loi
+  }
 })
