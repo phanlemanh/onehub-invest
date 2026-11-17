@@ -5,7 +5,7 @@ slug: dong-dau-dia-chi-luc-nap
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: approved
+status: implemented
 approved_by: Mạnh
 approved_at: 2026-11-17
 design_doc: docs/superpowers/specs/2026-11-16-dong-dau-dia-chi-luc-nap-design.md
