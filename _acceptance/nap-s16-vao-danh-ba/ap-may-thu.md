@@ -6,10 +6,8 @@ treo hàng chục phút trên dữ liệu thật và bước dựng ở 1e đọ
 bảng `stg_s16_*` và bảng vật thể danh bạ không lên cloud (AC-9, chốt trong `pipeline/sync-cloud.mjs`). Áp sau khi PR DA33 gộp,
 từ `main`, ở checkout chính `~/dev/onehub-invest`.
 
-> **CHƯA ĐỦ NĂM THỨ — bước 1d còn trống.** Bộ nạp `pipeline/import-s16*` thuộc làn ZCode (thiết kế §3, dòng 45) chưa có trên
-> `main` hay nhánh nào lúc soạn hồ sơ (17/11). Thiếu nó thì không có lệnh đưa ba bản thu S16 vào `stg_s16_*`, nên chữ ký **không
-> phủ** bước 1d và mọi bước sau nó (1e, phần 5 từ dòng thứ hai). Bước 1a–1c áp được độc lập. Khi bộ nạp gộp, điền 1d rồi trình lại
-> phần áp.
+Bộ nạp `pipeline/import-s16.mjs` là của làn ZCode (LL soát đạt 17/11, nhánh `zcode/import-s16-sach @1c6b6738`, đã gộp vào nhánh
+này). Nó ghi `stg_s16_*` qua đúng hàm `napS16(c, dongS16(items, snapshot_id))` mà E1, E2 đo.
 
 ## 1. Lệnh áp
 
@@ -64,12 +62,23 @@ docker exec -i -e PGPASSWORD=oneinvest one-invest-db psql -U oneinvest -h localh
   ON CONFLICT (code) DO NOTHING"
 ```
 
-### 1d. Nạp ba bản thu S16 vào `stg_s16_*` — CHỜ BỘ NẠP CỦA LÀN ZCODE
+### 1d. Nạp ba bản thu S16 vào `stg_s16_*`
 
-```text
-(trống — điền lệnh của pipeline/import-s16* khi gộp; bộ nạp phải gọi napS16(c, dongS16(items, snapshot_id))
- của pipeline/lib/s16-danh-muc.mjs, đúng hàm mà E1, E2 đo)
+Bộ nạp từ chối mọi DB không phải DB thử `oneinvest_suite_*` trừ khi khai `--may-thu` — cờ ấy chỉ dùng ở bước này:
+
+```bash
+cd ~/dev/onehub-invest
+for d in collector/snapshots/vn/vn__s16-*; do
+  DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest node pipeline/import-s16.mjs "$d" --may-thu
+done
 ```
+
+Mỗi bản thu ghi một dòng `airbnb_snapshots` (source `S16`) rồi nạp; chạy lại cùng bản thu ghi 0 dòng mới. Lệnh chỉ in số đếm,
+không in mã căn, `toa_id`, `khu_id` hay tên nguồn.
+
+`airbnb_snapshots.manifest` mang manifest thật của bản thu (có tên nguồn — tầng A) và **ở lại máy**: bảng ấy không nằm trong danh
+sách đẩy của `sync-cloud`; nếu có ngày lọt vào, `leakGate` (`sync-cloud.mjs` dòng 466–484) chặn vì bảng tầng A phải vắng hoặc 0 dòng ở
+cloud. Bộ soát S16 (AC-9) không phủ chỗ này — nó chỉ bắt token S16, không bắt tên nguồn.
 
 ### 1e. Dựng toà, căn S16 vào danh bạ — cả năm khu
 
@@ -106,6 +115,13 @@ Số chạy thử hiện hành (17/11, sau luật toà trùng tên của GS — 
 2.489 căn của chúng chưa vào danh bạ (OP1 6 toa_id / 821 căn, GP 4 / 64, OP2 2 / 178, OP3 8 / 1.426). Mỗi `toa_id` có một thẻ
 «toà S16 trùng tên» ở `/ops/review`, mang chỉ mục che của mọi ứng viên và số căn mỗi bên. Đường mở: người duyệt thẻ.
 
+**Giới hạn đã biết — 109 toà S16 mới treo thẳng dưới dự án, 0 dưới phân khu.** Luật tìm phân khu của bước dựng chỉ xét nút loại
+`building` khớp tên tuyệt đối: OP1, OP2, OP3, Smart City có 0 nút như vậy; Grand Park có 3 nút nhưng không toà nào khớp tên. Theo dự
+án: GP 12, OP1 39, OP2 14, OP3 7, Smart City 37 — cả 109 dưới nút dự án. Sửa ở hàng cấu trúc sau (chờ Mạnh trả lời Q-A/Q-B/Q-C của
+bản phân tích cấu trúc danh bạ). Chuyển cha của toà là một `UPDATE buildings SET region_node_id`, lùi được, **không đụng căn**: căn
+và trục trỏ toà qua `building_key`; UPI của toà S16 không chứa nút cha; không bước nào chèn lại toà đã có; bước S16 không ghi phường
+suy từ nút cha. Trang `/ops/registry` vẽ cây theo `region_node_id`, nên đổi cha xong cây hiện đúng ngay.
+
 ## 3. Sao lưu trước áp
 
 Chạy ngay trước 1b, sau một lượt thu đã xong (bước 4 khôi phục về đúng thời điểm này):
@@ -137,6 +153,16 @@ tương đương — phần 2), chỉ chậm lại. Ca DA33-AC-1 của itest ch�
 docker exec -i -e PGPASSWORD=oneinvest one-invest-db psql -U oneinvest -h localhost -d oneinvest -v ON_ERROR_STOP=1 -q \
   < ~/dev/onehub-invest/db/migrations/103_stg_s16.sql
 ```
+
+**Chỉ lùi bước nạp 1d (chưa dựng).** Bốn bảng `stg_s16_*` khai `REFERENCES airbnb_snapshots ON DELETE CASCADE`, nên xoá dòng bản
+thu S16 là gỡ trọn lượt nạp, không chạm bảng nào khác:
+
+```sql
+DELETE FROM airbnb_snapshots WHERE source = 'S16';
+```
+
+Lọc theo `source`, không theo mẫu `snapshot_id`: bộ nạp lấy `snapshot_id` từ manifest, chỉ rơi về tên thư mục khi manifest thiếu. Máy thu
+có 0 dòng `airbnb_snapshots` nguồn `S16` trước áp (đo 17/11), nên mọi dòng `S16` sau áp đều do bước 1d ghi.
 
 **Chưa dựng (chỉ 1b, 1b-bis, 1c).** Lùi riêng lược đồ, không mất dữ liệu nào khác:
 
