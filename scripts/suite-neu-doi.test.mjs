@@ -6,7 +6,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { HA_TANG, VUNG, chonScripts, docKhai, khop, quyetDinh, trongVung } from "./suite-neu-doi.mjs";
+import { HA_TANG, VUNG, chonScripts, docKhai, khop, quyetDinh, testsScripts, trongVung } from "./suite-neu-doi.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, "..");
@@ -383,4 +383,50 @@ test("SSL-AC-8 — không chắc thì trọn bộ, lý do có tên; diff chạm 
     assert.equal(k.khai, null);
     assert.match(k.loi ?? "", /không đọc được tệp khai/, "SSL-AC-8 docKhai phải gọi tên lỗi tệp khai");
   } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+// Ca canh: mọi scripts/*.test.mjs có đúng một dòng khai đúng hình; trả danh sách lỗi có tên.
+function loiKhai(khai, tests) {
+  const loi = [];
+  for (const t of tests) if (!Object.hasOwn(khai, t)) loi.push(`thiếu dòng khai: ${t}`);
+  for (const [t, z] of Object.entries(khai)) {
+    if (!tests.includes(t)) loi.push(`dòng khai thừa (tệp không tồn tại): ${t}`);
+    else if (z !== "luon" && !(Array.isArray(z) && z.length && z.every((g) => typeof g === "string" && g))) loi.push(`vùng khai hỏng: ${t}`);
+  }
+  return loi;
+}
+
+test("SSL-AC-3 — tệp khai đủ, đúng hình; tệp chưa khai thì đỏ và bộ chọn coi là luôn", () => {
+  const { khai, loi } = docKhai(ROOT);
+  assert.equal(loi, null, `SSL-AC-3 ${loi}`);
+  const tests = testsScripts(ROOT);
+  assert.deepEqual(loiKhai(khai, tests), [], "SSL-AC-3 tệp khai lệch tập scripts/*.test.mjs");
+  // chiều đỏ trên bản sao
+  const thieu = { ...khai }; delete thieu["scripts/db-thu.test.mjs"];
+  assert.deepEqual(loiKhai(thieu, tests), ["thiếu dòng khai: scripts/db-thu.test.mjs"], "SSL-AC-3 đối chứng: bỏ một dòng phải gọi tên tệp thiếu");
+  const r = chonScripts({ tep: ["docs/khong-ai-doc.md"], khai: thieu, tests });
+  assert.equal(r.ly_do["scripts/db-thu.test.mjs"], "luôn (chưa khai)", "SSL-AC-3 tệp chưa khai phải được bộ chọn coi là luôn");
+  assert.deepEqual(loiKhai({ ...khai, "scripts/khong-co.test.mjs": ["app/**"] }, tests), ["dòng khai thừa (tệp không tồn tại): scripts/khong-co.test.mjs"]);
+  assert.deepEqual(loiKhai({ ...khai, "scripts/db-thu.test.mjs": [] }, tests), ["vùng khai hỏng: scripts/db-thu.test.mjs"]);
+});
+
+test("SSL-AC-5 — tệp khai khớp ma trận đọc tay: luôn ⇔ liệt kê cả kho, chủ thể trong vùng, vùng db-thu khoanh ba bộ", () => {
+  const { khai } = docKhai(ROOT);
+  const mt = JSON.parse(readFileSync(path.join(ROOT, "_acceptance/suite-scripts-vao-luot-cham/ma-tran.json"), "utf8"));
+  const tests = testsScripts(ROOT);
+  assert.equal(Object.keys(mt.doc).length, tests.length, "SSL-AC-5 ma trận phải có đúng một dòng cho mỗi tệp test");
+  for (const t of tests) {
+    const caKho = (mt.doc[t] ?? "").startsWith("lietke-ca-kho");
+    assert.equal(khai[t] === "luon", caKho, `SSL-AC-5 ${t}: luon phải trùng «liệt kê cả kho» của ma trận (ma trận: ${mt.doc[t]})`);
+  }
+  const loThieu = (k) => Object.entries(mt.chu_the).filter(([t, c]) => k[t] !== "luon" && !trongVung(c, k[t])).map(([t]) => t);
+  assert.equal(Object.keys(mt.chu_the).length, 15, "SSL-AC-5 ma trận phải ghi đủ 15 cặp chủ thể");
+  assert.deepEqual(loThieu(khai), [], "SSL-AC-5 vùng khai thiếu chủ thể cùng thân tên");
+  const dt = khai["scripts/db-thu.test.mjs"];
+  assert.ok(Array.isArray(dt) && !dt.includes("**"), "SSL-AC-5 vùng db-thu không được là luon hay «**»");
+  for (const p of ["app/tests/x.test.tsx", "app/probes/x.test.tsx", "pipeline/a/b.test.mjs", "agent/tests/x.test.ts"])
+    assert.ok(trongVung(p, dt), `SSL-AC-5 vùng db-thu phải khớp ${p}`);
+  // chiều đỏ: bỏ chủ thể khỏi vùng của dung-worktree-cham
+  const hong = { ...khai, "scripts/dung-worktree-cham.test.mjs": khai["scripts/dung-worktree-cham.test.mjs"].filter((g) => g !== "scripts/dung-worktree-cham.sh") };
+  assert.deepEqual(loThieu(hong), ["scripts/dung-worktree-cham.test.mjs"], "SSL-AC-5 đối chứng: bỏ chủ thể phải gọi tên dung-worktree-cham");
 });
