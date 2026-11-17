@@ -8,14 +8,14 @@ import { khoaNhomThat } from "./eval-labels.mjs";
 import { subjectKey } from "./assert.mjs";
 import { nhanDuocNhan } from "./du-an-tren-tin-s03.mjs";
 import { chuan } from "./the-dia-chi-nhom.mjs";
-import { ASSERTION_FIELD, ASSERTION_METHOD, EVIDENCE_TIER } from "./vocab.generated.mjs";
+import { ASSERTION_FIELD, ASSERTION_METHOD, EVIDENCE_TIER, KIND } from "./vocab.generated.mjs";
 
 export const RULE_ID = "dia-chi-the-nhom";
 export const METHOD_VERSION = "dong-dau-dia-chi@1";
 export const LY_DO_RUT = Object.freeze({ doiBan: "the-doi-ban", thayDV6: "thay-bang-the-nhom" });
 
 /** Ô bán/thuê của thẻ (108: ban · thue · ca_hai) sang giá trị `suyLoai` so (KIND.sale · KIND.rent_lt) — chỉ ánh xạ ở đây. */
-const MUC_DICH = Object.freeze({ ban: "sale", thue: "rent_lt", ca_hai: null });
+const MUC_DICH = Object.freeze({ ban: KIND.sale, thue: KIND.rent_lt, ca_hai: null });
 
 /**
  * DB đã có bảng thẻ VÀ cột cho nghỉ chưa (108 + 109). transform-zalo chạy trên nhiều DB; thiếu một trong hai thì bỏ bước
