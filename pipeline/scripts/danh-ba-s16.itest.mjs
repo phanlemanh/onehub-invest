@@ -336,7 +336,7 @@ async function trongGiaoDich(fn) {
 const khuMap = async () => new Map((await q(db, "SELECT id::int AS id, slug FROM asset_nodes WHERE slug = ANY($1)", [[KHU_A, KHU_B]])).map((k) => [k.id, k]));
 
 test("DA33-AC-5 chiều đỏ: chọn toà đầu khi khớp hai thì toà QD1 nhận bí danh", async () => {
-  await dotBien("if (khop.length === 1 && (nhomTen.get(ten) ?? 0) === 1) {", "if (khop.length >= 1) {", async (m) => trongGiaoDich(async () => {
+  await dotBien("} else if (khop.length === 1) {", "} else if (khop.length >= 1) {", async (m) => trongGiaoDich(async () => {
     const km = await khuMap();
     await m.buocS16(db, { khu: km, isoKhu: new Map([...km.keys()].map((id) => [id, "VN-HN"])), noi: NOI, log });
     assert.ok(await doiTuong(db, `${DA}/t4`), "DA33-AC-5 đột biến khớp-hai không làm toà QD1 nhận bí danh");
@@ -435,41 +435,108 @@ test("DA33-AC-6 chiều đỏ: bỏ tra căn S08 thì mã S08 cùng toà có că
 
 // ---- S4-r1 t6: hai toà S16 khác toa_id cùng tên, cả hai mới đúc, có căn cùng số trục ----
 // Dữ liệu thật có 10 tên toà như vậy (20 toa_id). Mỗi căn phải lấy trục của chính toà nó. DB riêng: không đổi số các ca trên.
-async function toaTrungTen(c) {
+async function toaTrungTen(c, { s16 = true } = {}) {
   for (const [slug, ten] of [[KHU_A, "Q Khu A"], [KHU_B, "Q Khu B"]]) {
     await c.query(`INSERT INTO asset_nodes (node_type, name, slug, aliases, area_ids, dd_field, meta)
       VALUES ('project', $2, $1, '{}', '{}', 'SubdivisionName', '{}') ON CONFLICT (slug) DO NOTHING`, [slug, ten]);
   }
+  if (!s16) return;
   await c.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ($1, 'vn', 'S16', '{}') ON CONFLICT DO NOTHING`, [SNAP2]);
   for (const [khu, toa_id] of [["k1", "ta"], ["k2", "tb"]]) {
-    await c.query(`INSERT INTO stg_s16_toa (snapshot_id, du_an, khu_id, khu_nhan, toa_id, toa_ten) VALUES ($1, $2, $3, $3, $4, 'Q56')`,
-      [SNAP2, DA, khu, toa_id]);
+    await c.query(`INSERT INTO stg_s16_toa (snapshot_id, du_an, khu_id, khu_nhan, toa_id, toa_ten) VALUES ($1, $2, $3, $3, $4, 'Q56')
+                   ON CONFLICT DO NOTHING`, [SNAP2, DA, khu, toa_id]);
   }
   for (const [khu, toa_id, ma] of [["k1", "ta", "Q56-05-01"], ["k2", "tb", "Q56-06-01"]]) {
     await c.query(`INSERT INTO stg_s16_can (snapshot_id, du_an, khu_nhan, toa_id, toa_ten, tang, ma_can, pha)
-                   VALUES ($1, $2, $3, $4, 'Q56', NULL, $5, 2)`, [SNAP2, DA, khu, toa_id, ma]);
+                   VALUES ($1, $2, $3, $4, 'Q56', NULL, $5, 2) ON CONFLICT DO NOTHING`, [SNAP2, DA, khu, toa_id, ma]);
   }
 }
 const trucToaKhac = async (c) => (await mot(c, `SELECT count(*)::int AS n FROM units u JOIN stacks s ON s.stack_key = u.stack_key
                                                   WHERE s.building_key <> u.building_key`)).n;
-test("DA33-AC-6 hai toà S16 cùng tên, căn cùng số trục: mỗi căn lấy trục của chính toà nó; dựng lại 0 khoá mới", async () => {
-  const c = await dbMoi("t6");
+const theTrungTen = async (c) => q(c, `SELECT item_id, evidence FROM review_queue WHERE evidence->>'loai' = 'toa-trung-ten' ORDER BY item_id`);
+// Luật (a) — GS quyết 17/11 theo AC-7: toà S16 trùng tên trong dự án không đúc, căn của chúng không vào danh bạ, mỗi toa_id một thẻ.
+test("DA33-AC-5 hai toà S16 cùng tên: không đúc toà, không nạp căn; mỗi toa_id một thẻ mang ứng viên che và số căn; dựng lại 0 khoá", async () => {
+  const c = await dbMoi("tt");
   await toaTrungTen(c);
-  await chay(c);
-  const toa = await q(c, "SELECT DISTINCT u.building_key FROM units u");
-  assert.equal(toa.length, 2, "DA33-AC-6 hai toà cùng tên: không ra đúng hai toà có căn");
-  assert.equal(await trucToaKhac(c), 0, "DA33-AC-6 hai toà cùng tên: căn nằm trên trục của toà khác");
-  assert.equal((await mot(c, "SELECT count(*)::int AS n FROM stacks")).n, 2, "DA33-AC-6 hai toà cùng tên: không ra hai trục");
+  const tk = await chay(c);
+  assert.equal((await mot(c, "SELECT count(*)::int AS n FROM buildings")).n, 0, "DA33-AC-5 trùng tên: vẫn đúc toà");
+  assert.equal((await mot(c, "SELECT count(*)::int AS n FROM units")).n, 0, "DA33-AC-5 trùng tên: căn của toà trùng tên vào danh bạ");
+  const the = await theTrungTen(c);
+  assert.deepEqual(the.map((x) => x.item_id), [`s16:${s16Ref(DA, "ta")}`, `s16:${s16Ref(DA, "tb")}`].sort(), "DA33-AC-5 trùng tên: không đúng một thẻ mỗi toa_id");
+  for (const x of the) {
+    assert.deepEqual(x.evidence.ung_vien, [s16Ref(DA, "ta"), s16Ref(DA, "tb")], "DA33-AC-5 trùng tên: thẻ thiếu ứng viên");
+    assert.deepEqual(x.evidence.so_can, [1, 1], "DA33-AC-5 trùng tên: thẻ thiếu số căn mỗi bên");
+    for (const tok of ["ta", "tb", "Q56-05-01", "Q56-06-01"]) {
+      assert.ok(!JSON.stringify(x.evidence).includes(`"${tok}"`), "DA33-AC-5 trùng tên: thẻ mang giá trị đăng nhập S16");
+    }
+  }
+  const s16 = tk.s16?.khu?.[KHU_A] ?? Object.values(tk.s16?.khu ?? {})[0] ?? {};
+  assert.equal(s16.can_cho_trung_ten, 2, "DA33-AC-5 trùng tên: không đếm căn đang chờ sau thẻ");
   const truoc = await anhVatThe(c);
   await chay(c);
-  assert.deepEqual(await anhVatThe(c), truoc, "DA33-AC-8 hai toà cùng tên: dựng lại sinh khoá mới");
+  assert.deepEqual(await anhVatThe(c), truoc, "DA33-AC-8 trùng tên: dựng lại sinh khoá hay thẻ mới");
 });
-test("DA33-AC-6 chiều đỏ: bỏ toa_id khỏi bí danh trục thì căn toà hai nằm trên trục của toà một", async () => {
+// AC-7 cho toà trùng tên: hai toà S16 tên Q56 (ta, tb) và một toà S08 cùng tên (căn Q56-07-01). S08 trước hay S16 trước phải ra
+// cùng trạng thái. Khoá vật thể là ULID mới mỗi lượt nên so trạng thái chuẩn hoá: số toà/trục/căn, tập bí danh, tập thẻ.
+async function s08Q56(c) {
+  const a = (await mot(c, "SELECT id::int AS id FROM asset_nodes WHERE slug = $1", [KHU_A])).id;
+  await c.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ('q-s08', 'q', 'S08', '{}') ON CONFLICT DO NOTHING`);
+  await c.query(`INSERT INTO s08_project_links (project_id, asset_node_id, status) VALUES ('q8', $1, 'noi') ON CONFLICT DO NOTHING`, [a]);
+  await c.query(`INSERT INTO stg_s08_inventory (source_id, snapshot_id, project_id, project_type, state, product_code, subdivision_name, payload)
+                 VALUES ('q8:Q56-07-01', 'q-s08', 'q8', 'high_rise', 'notSold', 'Q56-07-01', NULL, '{}') ON CONFLICT DO NOTHING`);
+}
+async function trangThai(c) {
+  const n = async (t) => (await mot(c, `SELECT count(*)::int AS n FROM ${t}`)).n;
+  return {
+    toa: await n("buildings"), truc: await n("stacks"), can: await n("units"),
+    bi_danh: await q(c, "SELECT source, kind, value FROM registry_aliases ORDER BY 1, 2, 3"),
+    the: await q(c, "SELECT item_id, evidence->>'loai' AS loai FROM review_queue ORDER BY 1"),
+  };
+}
+async function haiThuTu(m) {
+  const goi = m ? (c) => chayVoi(m, c) : chay;
+  const s08Truoc = await dbMoi(`o1${m ? "d" : ""}`);
+  await toaTrungTen(s08Truoc, { s16: false }); await s08Q56(s08Truoc); await goi(s08Truoc);
+  await toaTrungTen(s08Truoc); await goi(s08Truoc);
+  const s16Truoc = await dbMoi(`o2${m ? "d" : ""}`);
+  await toaTrungTen(s16Truoc); await goi(s16Truoc);
+  await s08Q56(s16Truoc); await goi(s16Truoc);
+  return [await trangThai(s08Truoc), await trangThai(s16Truoc)];
+}
+test("DA33-AC-7 toà S16 trùng tên + toà S08 cùng tên: S08 trước hay S16 trước cho cùng trạng thái", async () => {
+  const [mot1, hai] = await haiThuTu(null);
+  assert.deepEqual(hai, mot1, "DA33-AC-7 toà trùng tên: hai thứ tự cho hai trạng thái");
+  assert.deepEqual({ toa: mot1.toa, can: mot1.can }, { toa: 1, can: 1 }, "DA33-AC-7 toà trùng tên: không phải một toà S08 với một căn S08");
+  assert.deepEqual(mot1.the.map((x) => x.loai), ["toa-trung-ten", "toa-trung-ten"], "DA33-AC-7 toà trùng tên: không đúng hai thẻ trùng tên");
+});
+test("DA33-AC-7 chiều đỏ: gỡ luật trùng tên thì S08 trước và S16 trước cho hai trạng thái", async () => {
+  const [mot1, hai] = await banDotBien([
+    { tep: "pipeline/danh-ba-vat-the.mjs", thay: [] },
+    { tep: "pipeline/lib/s16-dung.mjs", thay: [["    if (trung) {", "    if (false) {"]] },
+  ], (m) => haiThuTu(m));
+  assert.notDeepEqual(hai, mot1, "đối chứng AC-7 trùng tên: gỡ luật (a) mà hai thứ tự vẫn bằng nhau — ca không phân biệt được");
+});
+
+// Lớp phòng thủ thứ hai (S4-r1 t6): gỡ luật (a) cho hai toà cùng tên được đúc thì bí danh trục mang toa_id vẫn giữ mỗi căn trên
+// trục của chính toà nó; gỡ cả toa_id khỏi bí danh thì căn toà hai nằm trên trục toà một.
+const TAT_TRUNG_TEN = ["    if (trung) {", "    if (false) {"];
+test("DA33-AC-6 gỡ luật trùng tên: hai toà cùng tên được đúc, mỗi căn vẫn trên trục của chính toà nó", async () => {
+  const c = await dbMoi("t6");
+  await toaTrungTen(c);
+  await banDotBien([
+    { tep: "pipeline/danh-ba-vat-the.mjs", thay: [] },
+    { tep: "pipeline/lib/s16-dung.mjs", thay: [TAT_TRUNG_TEN] },
+  ], (m) => chayVoi(m, c));
+  assert.equal((await q(c, "SELECT DISTINCT building_key FROM units")).length, 2, "DA33-AC-6 gỡ luật (a): không ra hai toà có căn");
+  assert.equal(await trucToaKhac(c), 0, "DA33-AC-6 gỡ luật (a): căn nằm trên trục của toà khác");
+});
+test("DA33-AC-6 chiều đỏ: gỡ luật trùng tên và bỏ toa_id khỏi bí danh trục thì căn toà hai nằm trên trục toà một", async () => {
   const c = await dbMoi("t6d");
   await toaTrungTen(c);
   await banDotBien([
     { tep: "pipeline/danh-ba-vat-the.mjs", thay: [] },
-    { tep: "pipeline/lib/s16-dung.mjs", thay: [["biDanhTrucS16(du_an, toaCuaCan(r), kq.toa, kq.truc)", "biDanhTrucS16(du_an, \"\", kq.toa, kq.truc)"]] },
+    { tep: "pipeline/lib/s16-dung.mjs", thay: [TAT_TRUNG_TEN,
+      ["biDanhTrucS16(du_an, toaCuaCan(r), kq.toa, kq.truc)", "biDanhTrucS16(du_an, \"\", kq.toa, kq.truc)"]] },
   ], (m) => chayVoi(m, c));
   assert.equal(await trucToaKhac(c), 1, "đối chứng t6: đột biến không làm căn toà hai lấy trục toà một");
 });

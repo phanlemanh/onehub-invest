@@ -93,6 +93,19 @@ ba bản thu qua đúng hàm dùng chung, dựng năm khu, đối chứng bằng
 Bằng chứng 110 tương đương 103 và thời gian trước/sau: `do-view-110.md` của hồ sơ — `EXCEPT ALL` hai chiều 0 dòng trên 147.266
 dòng thật; quét trọn view 35 phút 37 giây → 0,68 giây; lượt đo E2 + E10 trọn 89 phút → 14 giây, cùng số.
 
+Số chạy thử hiện hành (17/11, sau luật toà trùng tên của GS — dòng sổ d-20261117T060050Z-22), là số mà lệnh kiểm sau áp phải ra:
+
+| | Số |
+|---|---|
+| Tổng toà | 198 → 307 (toà mới 109) |
+| Tổng căn | 1.748 → 111.668 |
+| Thẻ S16 | 60 (0 mang token S16) |
+| Căn nằm trên trục của toà khác | 0 |
+
+**Giới hạn đã biết — 20 `toa_id` / 10 tên toà trùng chờ duyệt.** Toà S16 trùng tên chuẩn hoá trong cùng dự án không được đúc;
+2.489 căn của chúng chưa vào danh bạ (OP1 6 toa_id / 821 căn, GP 4 / 64, OP2 2 / 178, OP3 8 / 1.426). Mỗi `toa_id` có một thẻ
+«toà S16 trùng tên» ở `/ops/review`, mang chỉ mục che của mọi ứng viên và số căn mỗi bên. Đường mở: người duyệt thẻ.
+
 ## 3. Sao lưu trước áp
 
 Chạy ngay trước 1b, sau một lượt thu đã xong (bước 4 khôi phục về đúng thời điểm này):
@@ -150,7 +163,10 @@ SELECT pg_get_constraintdef(oid) FROM pg_constraint
 SELECT code, label_vi, status FROM source_registry WHERE code = 'S16';                    -- một dòng; KHÔNG chọn real_name
 SELECT count(*) FROM stg_s16_can;                                                         -- = số cặp ở do-may-thu.md
 SELECT count(*) FROM registry_aliases WHERE source = 'S16' AND retired_at IS NULL;        -- = số bí danh S16 ở do-may-thu.md
-SELECT count(*) FROM units;                                                               -- = số căn sau dựng ở do-may-thu.md
+SELECT count(*) FROM units;                                                               -- = số căn sau dựng ở phần 2
+SELECT count(*) FROM units u JOIN stacks s ON s.stack_key = u.stack_key
+ WHERE s.building_key <> u.building_key;                                                  -- 0
+SELECT count(*) FROM review_queue WHERE evidence->>'loai' = 'toa-trung-ten';              -- 20 (một thẻ mỗi toa_id trùng tên)
 ```
 
 Câu thứ ba cố ý không chọn `real_name`: kết quả lệnh kiểm có thể được dán vào báo cáo áp gửi qua kênh.

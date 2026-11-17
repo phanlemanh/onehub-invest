@@ -75,7 +75,7 @@ export async function buocS16(c, { khu, isoKhu, noi = NOI_DU_AN_S16, log = conso
 
 async function dungMotDuAn(c, { du_an, k, iso, taoKhoa, ra }) {
   const tk = { toa_noi: 0, toa_moi: 0, toa_0_can: 0, toa_the: 0, can_moi: 0, can_s08_bi_danh: 0, can_da_co: 0, can_lech_toa: 0,
-    can_khong_toa: 0, the_moi: 0, mo_ho: 0 };
+    can_khong_toa: 0, the_moi: 0, mo_ho: 0, toa_trung_ten: 0, can_cho_trung_ten: 0 };
   // ---- Trạng thái hiện có của khu ----
   const { rows: toaKhu } = await c.query(
     `SELECT b.building_key FROM buildings b
@@ -129,6 +129,14 @@ async function dungMotDuAn(c, { du_an, k, iso, taoKhoa, ra }) {
   // ---- Toà ----
   const nhomTen = new Map();
   for (const t of toaS16) { const n = chuanHoaTenToa(t.toa_ten); nhomTen.set(n, (nhomTen.get(n) ?? 0) + 1); }
+  // Toà S16 trùng tên chuẩn hoá trong dự án (GS quyết 17/11 theo AC-7): máy không phân biệt được nên không đúc, không gắn,
+  // không nạp căn của chúng; mỗi toa_id một thẻ «toà S16 trùng tên» kèm chỉ mục che của mọi ứng viên và số căn mỗi bên.
+  // Xét TRƯỚC khớp-toà-có-sẵn: thứ tự S08-trước hay S16-trước đều ra đúng thẻ này (không thì một bên ra «khớp nhiều»).
+  const ungVienTen = new Map(); // tên chuẩn → [toa_id] theo thứ tự xác định
+  for (const t of [...toaS16].sort((a, b) => String(a.toa_id).localeCompare(String(b.toa_id)))) {
+    const n = chuanHoaTenToa(t.toa_ten);
+    if ((nhomTen.get(n) ?? 0) > 1) ungVienTen.set(n, [...(ungVienTen.get(n) ?? []), t.toa_id]);
+  }
   const toaKey = new Map(); // toa_id → building_key
   const toaMoi = [], biDanhToa = [], tenMoi = [];
   for (const t of toaS16) {
@@ -137,7 +145,14 @@ async function dungMotDuAn(c, { du_an, k, iso, taoKhoa, ra }) {
     const so = soCan.get(t.toa_id) ?? 0;
     const ten = chuanHoaTenToa(t.toa_ten);
     const khop = tenToa.get(ten) ?? [];
-    if (khop.length === 1 && (nhomTen.get(ten) ?? 0) === 1) {
+    const trung = ungVienTen.get(ten);
+    if (trung) {
+      tk.the_moi += await theDuyet(c, s16Ref(du_an, t.toa_id), "S16: toà trùng tên với toà S16 khác trong dự án",
+        { loai: "toa-trung-ten", ung_vien: trung.map((x) => s16Ref(du_an, x)), so_can: trung.map((x) => soCan.get(x) ?? 0),
+          khoa_toa: [...khop].sort() });
+      tk.toa_trung_ten++;
+      tk.can_cho_trung_ten += so;
+    } else if (khop.length === 1) {
       toaKey.set(t.toa_id, khop[0]);
       biDanhToa.push({ k: khop[0], v });
       tenMoi.push({ k: khop[0], v: ten });
@@ -261,7 +276,8 @@ export async function napS16TheoKhu(c, khuIds) {
             COALESCE(CASE WHEN n.node_type = 'project' THEN n.id END, CASE WHEN p.node_type = 'project' THEN p.id END, p.parent_id)::int AS khu,
             (SELECT min(t.value) FROM registry_aliases t WHERE t.object_key = vt.building_key AND t.kind = 'ten' AND t.source = $1) AS ten
        FROM vt JOIN buildings b ON b.building_key = vt.building_key
-       JOIN asset_nodes n ON n.id = b.region_node_id LEFT JOIN asset_nodes p ON p.id = n.parent_id`, [NGUON_S16]);
+       JOIN asset_nodes n ON n.id = b.region_node_id LEFT JOIN asset_nodes p ON p.id = n.parent_id
+      ORDER BY vt.object_key, vt.value`, [NGUON_S16]); // thứ tự xác định: các Map «theo tên» không đổi giữa hai lượt
   for (const r of rows) {
     if (!khuIds.includes(r.khu)) continue;
     const m = ra.get(r.khu) ?? { toa: new Map(), truc: new Map(), can: new Map() };

@@ -143,10 +143,12 @@ async function main() {
     const truoc = await mot("SELECT (SELECT count(*) FROM buildings)::int AS b, (SELECT count(*) FROM units)::int AS u");
     const kq = await dung(c, { khuSlugs: KHU, isoTheo: iso, noiS09: {}, log: () => {}, runId: "da33-that" });
     const s16 = kq.s16;
-    console.log("E10 · theo khu: toà nối · toà mới · toà 0 căn · toà thẻ · căn mới · căn S08 nhận S16 · lệch toà · mơ hồ · căn chưa có toà · thẻ");
+    console.log("E10 · theo khu: toà nối · toà mới · toà 0 căn · toà thẻ · toà trùng tên · căn mới · căn S08 nhận S16 · lệch toà · mơ hồ · căn chưa có toà · căn chờ sau thẻ trùng tên · thẻ");
     for (const [slug, t] of Object.entries(s16.khu ?? {})) {
-      console.log(`  ${slug.padEnd(24)} ${[t.toa_noi, t.toa_moi, t.toa_0_can, t.toa_the, t.can_moi, t.can_s08_bi_danh, t.can_lech_toa, t.mo_ho, t.can_khong_toa, t.the_moi].join(" · ")}`);
+      console.log(`  ${slug.padEnd(24)} ${[t.toa_noi, t.toa_moi, t.toa_0_can, t.toa_the, t.toa_trung_ten, t.can_moi, t.can_s08_bi_danh, t.can_lech_toa, t.mo_ho, t.can_khong_toa, t.can_cho_trung_ten, t.the_moi].join(" · ")}`);
     }
+    const tongTrung = Object.values(s16.khu ?? {}).reduce((a, t) => ({ toa: a.toa + (t.toa_trung_ten ?? 0), can: a.can + (t.can_cho_trung_ten ?? 0) }), { toa: 0, can: 0 });
+    console.log(`E10 · toà S16 trùng tên chờ duyệt: ${tongTrung.toa} toa_id, ${tongTrung.can} căn đang chờ sau các thẻ ấy`);
     console.log(`  dự án S16 chưa nối: ${Object.keys(s16.bo_du_an ?? {}).length} (${Object.values(s16.bo_du_an ?? {}).reduce((a, b) => a + b, 0)} căn)`);
     const it = s16.toa_moi_so_can ?? [];
     console.log(`E10 · toà mới: ${it.length}; dưới 10 căn: ${it.filter((x) => x.so_can < 10).length}`);
@@ -175,15 +177,20 @@ async function main() {
         [await refCua(c, slug)])).n;
       // Phần bốn: căn có toà S16 đã ra thẻ «khớp nhiều toà» (AC-5) — đếm riêng theo mã thẻ của toà.
       const { s16Ref } = await import("../lib/s16-danh-muc.mjs");
-      const coThe = new Set((await c.query("SELECT item_id FROM review_queue WHERE evidence->>'loai' = 'toa-khop-nhieu'")).rows.map((x) => x.item_id));
+      // Phần bốn «căn thuộc toà S16 đã ra thẻ»: thẻ khớp nhiều (AC-5) và thẻ trùng tên (GS quyết 17/11, cùng nhánh không-đúc-ra-thẻ).
+      const theTheoLoai = async (loai) => new Set((await c.query("SELECT item_id FROM review_queue WHERE evidence->>'loai' = $1", [loai])).rows.map((x) => x.item_id));
+      const theKhop = await theTheoLoai("toa-khop-nhieu"), theTrung = await theTheoLoai("toa-trung-ten");
+      const coThe = new Set([...theKhop, ...theTrung]);
       const { rows: canToa } = await c.query(
         `SELECT v.du_an, v.ma_can, coalesce(v.toa_id, (SELECT min(t.toa_id) FROM v_s16_toa t WHERE t.du_an = v.du_an AND t.toa_ten = v.toa_ten)) AS toa_id
            FROM v_s16_can v WHERE v.du_an = ANY($1) AND NOT v.mo_ho AND v.ma_can = ANY($2)`,
         [Object.keys(await duAnCua(c, slug)), (await c.query(`SELECT DISTINCT upper(btrim(i.product_code)) AS ma FROM stg_s08_inventory i
              JOIN s08_project_links l ON l.project_id = i.project_id AND l.status = 'noi' AND l.asset_node_id = $1 WHERE i.project_type = 'high_rise'`, [id])).rows.map((x) => x.ma)]);
-      const toaThe = canToa.filter((x) => x.toa_id && coThe.has(`s16:${s16Ref(x.du_an, x.toa_id)}`)).length;
+      const theCua = (x) => `s16:${s16Ref(x.du_an, x.toa_id)}`;
+      const toaThe = canToa.filter((x) => x.toa_id && coThe.has(theCua(x))).length;
+      const toaTheTrung = canToa.filter((x) => x.toa_id && theTrung.has(theCua(x))).length;
       console.log(`E10 · ${slug}: mã S08 có trong S16 nhưng S08 chưa thành căn (bộ tách S08 không tách được) — S16 đúc căn mới: ${r.chua_can}`);
-      console.log(`E10 · ${slug}: căn S08 có mã trong S16 ${r.tong} = bí danh ${r.bi_danh} + lệch toà ${lech} + mơ hồ ${r.mo_ho} + toà ra thẻ ${toaThe} (đo 14/11: ${SAN_S08[slug]})`);
+      console.log(`E10 · ${slug}: căn S08 có mã trong S16 ${r.tong} = bí danh ${r.bi_danh} + lệch toà ${lech} + mơ hồ ${r.mo_ho} + toà ra thẻ ${toaThe} (khớp nhiều ${toaThe - toaTheTrung} · trùng tên ${toaTheTrung}) (đo 14/11: ${SAN_S08[slug]})`);
       kiem(r.bi_danh + lech + r.mo_ho + toaThe === r.tong, `E10 bốn phần ${slug}`);
     }
 
@@ -193,6 +200,11 @@ async function main() {
       (SELECT count(*) FROM (SELECT upi FROM buildings GROUP BY upi HAVING count(*) > 1) x)::int AS upi_hai`);
     console.log(`E10 · mã hai đối tượng ${trung.ma_hai} · UPI hai toà ${trung.upi_hai}`);
     kiem(trung.ma_hai === 0 && trung.upi_hai === 0, "E10 trùng khoá");
+    // AC-6 trên dữ liệu thật (S4-r1 t6): không căn nào nằm trên trục của toà khác.
+    const trucKhac = (await mot(`SELECT count(*)::int AS n FROM units u JOIN stacks s ON s.stack_key = u.stack_key
+                                  WHERE s.building_key <> u.building_key`)).n;
+    console.log(`E10 · căn nằm trên trục của toà khác ${trucKhac}`);
+    kiem(trucKhac === 0, "E10 căn trên trục toà khác");
 
     // Thẻ và dữ liệu sắp gửi không mang token S16.
     const { soatDuLieu, soatS16, tokenS16 } = await import("../lib/s16-soat.mjs");
