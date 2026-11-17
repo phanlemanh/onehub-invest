@@ -4,7 +4,7 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
 
-import { chonMau, docBangDaDien, soMau, wilson95 } from "./mau-bai-lac-du-an.mjs";
+import { chonMau, docBangDaDien, laLac, locKhung, soMau, wilson95 } from "./mau-bai-lac-du-an.mjs";
 
 /** Làm tròn 4 chữ số để so số thực. */
 const r4 = (x) => Math.round(x * 1e4) / 1e4;
@@ -88,5 +88,24 @@ describe("AC-10 mẫu rút lại được", () => {
     const chung = a.filter((x) => b.includes(x)).length;
     assert.ok(chung < 100, "nếu bằng 100 thì câu «rút lại được bằng hạt giống» mới đúng");
     assert.ok(chung > 80, `mẫu không được đổi gần hết (trùng ${chung}/100)`);
+  });
+});
+
+describe("AC-10 mẫu v2 — khung rút và định nghĩa khai trước (lối A, GS 17/11)", () => {
+  test("khung «bài trong tin»: chỉ giữ bài nằm trong một tin đang rao — đúng tập bài sẽ bị đóng dấu", () => {
+    const bai = [{ post_id: "a" }, { post_id: "b" }, { post_id: "c" }];
+    assert.deepEqual(locKhung(bai, "bai-trong-tin", new Set(["a", "c"])).map((b) => b.post_id), ["a", "c"]);
+    assert.deepEqual(locKhung(bai, "moi-bai", new Set(["a"])).map((b) => b.post_id), ["a", "b", "c"]);
+    assert.throws(() => locKhung(bai, "khung-la", new Set()), /khung/);
+  });
+
+  test("định nghĩa «trong hệ VGP»: bài MCP hay LBV trong nhóm VGP không lạc; dự án khác vẫn lạc", () => {
+    // Danh bạ 17/11: Vinhomes Grand Park = 16, Masteri Centre Point = 304, Lumiere Boulevard = 310.
+    assert.equal(laLac("16", "304"), false);
+    assert.equal(laLac("16", "310"), false);
+    assert.equal(laLac("16", "16"), false);
+    assert.equal(laLac("16", "2"), true, "Ocean Park 2 trong nhóm VGP phải là lạc");
+    assert.equal(laLac("1", "304"), true, "hệ VGP chỉ áp cho nhóm VGP");
+    assert.equal(laLac("16", null), false, "bài không nêu dự án không lạc");
   });
 });

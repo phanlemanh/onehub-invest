@@ -50,8 +50,32 @@ export function chonMau(bai, n, seed) {
     .map((x) => x.b);
 }
 
+/**
+ * Hệ dự án mà một nhóm «chuyên» một dự án vẫn coi là của mình. Mạnh 17/11, nguyên văn «Trong hệ VGP», trả lời câu «MCP và LBV
+ * tính là dự án khác Vinhomes Grand Park chứ?». Danh bạ 17/11: Vinhomes Grand Park = 16, Masteri Centre Point = 304, Lumiere
+ * Boulevard = 310 (ba nút riêng, không quan hệ cha–con). Chỉ hệ này được khai; nhóm khác thì hệ = chính dự án của nhóm.
+ */
+export const HE_DU_AN = Object.freeze({ 16: Object.freeze(["16", "304", "310"]) });
+
+/** Bài có nói về một dự án KHÁC dự án (hệ) của nhóm không. Bài không nêu dự án nào thì không lạc. */
+export function laLac(duAnNhom, duAnBai) {
+  if (duAnBai == null) return false;
+  const he = HE_DU_AN[duAnNhom] ?? [String(duAnNhom)];
+  return !he.includes(String(duAnBai));
+}
+
+/**
+ * Khung rút: «moi-bai» — mọi bài của nhóm (mẫu v1, 16/11); «bai-trong-tin» — chỉ bài nằm trong một tin S03 đang rao, đúng tập
+ * bài mà hàng này đóng dấu (mẫu v2, lối A — bài Yêu cầu và bài chỉ ảnh không thành tin nên không bị đóng dấu).
+ */
+export function locKhung(bai, khung, baiTrongTin) {
+  if (khung === "moi-bai") return bai;
+  if (khung === "bai-trong-tin") return bai.filter((b) => baiTrongTin.has(b.post_id));
+  throw new Error(`khung rút không có: ${khung} (có: moi-bai, bai-trong-tin)`);
+}
+
 /** Bài của các nhóm mà sổ nhóm ghi ĐÚNG MỘT dự án — tập mà tiền đề «bối cảnh nhóm» nói là an toàn. */
-async function docBaiNhomMotDuAn(client) {
+async function docBaiNhomMotDuAn(client, khung = "moi-bai") {
   const { rows: nhom } = await client.query(
     `SELECT group_key, project_node_ids[1] AS du_an FROM collection_units
       WHERE source_code = 'S03' AND cardinality(project_node_ids) = 1`);
@@ -62,7 +86,9 @@ async function docBaiNhomMotDuAn(client) {
     const k = p.conversation_id == null ? null : khoaNhomThat(p.conversation_id);
     if (k && cua.has(k)) ra.push({ post_id: p.post_id, nhom: k, du_an_nhom: cua.get(k), text: p.text ?? "" });
   }
-  return { bai: ra, soNhom: cua.size };
+  const { rows: tin } = await client.query(
+    `SELECT DISTINCT p FROM sale_offers s CROSS JOIN LATERAL unnest(s.post_ids) p WHERE s.source = 'S03'`);
+  return { bai: locKhung(ra, khung, new Set(tin.map((r) => r.p))), soNhom: cua.size };
 }
 
 const PHAN_TRAM = (x) => `${(x * 100).toFixed(2)}%`;
@@ -144,7 +170,8 @@ async function main() {
   const client = new pg.Client({ connectionString: DB_URL });
   await client.connect();
   try {
-    const { bai, soNhom } = await docBaiNhomMotDuAn(client);
+    const khung = lay("--khung", "moi-bai");
+    const { bai, soNhom } = await docBaiNhomMotDuAn(client, khung);
     const mau = chonMau(bai, n, seed);
     console.log(inBangTrong({ mau, n, seed, soNhom, tongBai: bai.length, mocDo: new Date().toISOString() }));
   } finally {
