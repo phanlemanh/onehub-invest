@@ -5,7 +5,7 @@ slug: job-step-ghi-thoi-luong
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [pipeline]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-11-16T10:18:23Z
 design_doc: docs/superpowers/specs/2026-11-16-job-step-ghi-thoi-luong-design.md
@@ -115,3 +115,17 @@ Không gian 108 ô, cắt theo lát của trục A. Chín ô Core ↔ AC-1..AC-9
 
 Số đọc ra từ log launchd có sẵn: `pipeline/logs/s03-nap-15phut.log` (lượt nhanh) và `pipeline/logs/zalo-import.log`
 (lượt 00:00) — cả `StandardOutPath` lẫn `StandardErrorPath` của hai plist đều trỏ vào đó.
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-17:
+  - Ngoài-2: Khi bước nạp hồ sơ hỏng, dòng ghi thời lượng và dòng báo hỏng mang hai tên bước khác nhau nên người đọc nhật ký thấy hai dòng lệch nhau đúng ở ca hỏng.
+  - Ngoài-3: Một số job khác dùng chung bộ chạy bước không nằm trong lưới kiểm tra hồi quy của vòng này; chạy thử đều xanh, chỉ là chưa được canh tự động.
+  - Ngoài-4: Kết quả kiểm thử phụ thuộc bản gốc đã tải về máy, nên máy chưa tải mới có thể thấy lỗi khó hiểu.
+  - Ngoài-6: Nếu sau này ai thêm một dòng hợp lệ ngay sát dưới dòng ranh giới làn, bộ kiểm sẽ báo đỏ nhầm là sửa sai làn.
+  - Ngoài-7: Nếu máy chưa tải bản gốc, một số ô so sánh có thể xanh giả hoặc báo lỗi chỉ sai hướng.
+  - Ngoài-8: Một ca cố ý làm hỏng để chứng minh bộ kiểm bắt được lỗi lại làm hỏng sai kiểu, nên chưa chứng minh được điều nó định chứng minh.
+  - Ngoài-9: Các lượt nạp hỏng sớm hoặc bận khoá không có dòng thời lượng, nên số đo chỉ phản ánh các lượt lành.
+  - Ngoài-10: Hai kiểm tra rằng môi trường chỉ đọc không sinh lỗi quyền chưa được chứng minh là có thể đỏ.
+  - Ngoài-12: Bằng chứng kiểm thử khai phủ nhiều trường hợp lỗi hơn số trường hợp thật sự được thử.
+  - Ngoài-13: Hai kiểu lỗi mà hồ sơ nói là đã thử thì thực ra chưa được thử trong bộ kiểm.
+  - Ngoài-14: Kiểm tra mã thoát chỉ xem chuỗi có chứa số, nên mã 127 vẫn lọt qua ô kiểm mã 1.
+  - Ngoài-15: Ở môi trường chỉ đọc, bộ kiểm không xác nhận mã của từng bước mà chỉ đếm dòng.

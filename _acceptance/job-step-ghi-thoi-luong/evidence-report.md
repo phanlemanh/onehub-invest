@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 5cb41bebc63a10519f4eae28a5b2f3c2b364ff5a
-human_signoff:
+human_signoff: Mạnh 2026-11-17
 ---
 
 # Evidence Report: job-step-ghi-thoi-luong
