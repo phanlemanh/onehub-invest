@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 384ac895b6ab58c16ca28f5b5b8ad078f0275d22
+verified_commit: a70ca18b8b913c54d8ba8028c0391fa276880411
 human_signoff: Mạnh 2026-11-17
 ---
 
@@ -230,3 +230,7 @@ sha: af430f2784c650e1c817dfb531bb46ebbd74e27f · suites: 7 lệnh exit 0 · eval
 ### Re-pin lần 2 — 2026-11-17, do TDB-AC-6 bỏ vế không-migration-mới (GS 17/11), ghim trên nhánh DA33
 run_id: repin-20261117T081456Z-71670
 sha: 384ac895b6ab58c16ca28f5b5b8ad078f0275d22 · suites: 7 lệnh exit 0 · evals: 13/13 eval máy đạt kỳ vọng · ngoài làn máy: E12
+
+### Re-pin lần 3 — 2026-11-17, do gộp main (TG1 #477) làm cũ bằng chứng; ghim lại trên nhánh DA33
+run_id: repin-20261117T115940Z-48211
+sha: a70ca18b8b913c54d8ba8028c0391fa276880411 · suites: 7 lệnh exit 0 · evals: 13/13 eval máy đạt kỳ vọng · ngoài làn máy: E12
