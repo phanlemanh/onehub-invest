@@ -71,7 +71,7 @@ flowchart TD
 
 ## Đang làm
 
-- Chữ «Dự án» thay «Khu đô thị» trên màn Ops (Sổ đơn vị thu, Đo hằng ngày, nhãn trường), bỏ «danh mục dự án» khỏi danh sách tránh của CONTEXT, và probe DN1 đọc đúng chính sách công khai của khối S08 (`nhan-du-an-thay-khu-do-thi-ops`)
+- Chữ «Dự án» thay «Khu đô thị» trên màn Ops (Sổ đơn vị thu, Đo hằng ngày, nhãn trường), và bỏ «danh mục dự án» khỏi danh sách tránh của CONTEXT (`nhan-du-an-thay-khu-do-thi-ops`)
 
 ## Đã giao — chờ phiên nghiệm thu
 
