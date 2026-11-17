@@ -1,0 +1,31 @@
+schema_version: 1
+feature_slug: danh-ba-toa-theo-phan-khu-hieu-luc
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: "cd app && bash ../db/db-thu.sh oneinvest_suite_tth --chay node --import tsx --test --test-concurrency=1 tests/registry-toa-hieu-luc.test.tsx"
+    paths: [app/tests/registry-toa-hieu-luc.test.tsx, app/src/lib/ops/registry/doc.ts, app/src/lib/ops/registry/du-an.ts]
+    expected: "exit 0; ca TTH-AC-1: lược đồ tạm tth_<pid> chép khuôn public của bảng danh bạ và dựng lại v_s09_du_an_moi, v_s09_toa, v_toa_nut_vung từ định nghĩa public. Fixture: dự án D, phân khu K (meta s09_sector_ids), cụm C dưới K (meta s09_cum + s09_sector_id), nút building B; toà T1 gốc D nối S09 vào phân khu K, T2 gốc D nối S09 vào cụm C, T3 gốc D không nối S09, T4 gốc B; căn T1 2, T2 1, T3 0, T4 1. Bảng kỳ vọng viết trước (soToa, toaChuaCan, soCan): D (4,1,4), K (2,0,3), C (1,0,1), B (1,0,1); tổng toà danh bạ 4. Chiều đỏ CÙNG fixture: bản chép doc.ts đọc lại b.region_node_id → ca đỏ ghim «TTH-AC-1 nút K lệch bảng»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: "cd app && bash ../db/db-thu.sh oneinvest_suite_tth --chay node --import tsx --test --test-concurrency=1 tests/registry-toa-hieu-luc.test.tsx"
+    paths: [app/tests/registry-toa-hieu-luc.test.tsx, app/src/lib/ops/registry/du-an.ts, app/src/lib/ops/registry/hang-toa.ts, app/src/components/ops/registry/du-an-toa-grid.tsx]
+    expected: "exit 0; ca TTH-AC-2: docDuAn(D) trả T1 nutId K nutIdGoc D nguonNut s09_phan_khu, T2 nutId C nguonNut s09_cum, T3 nutId D nguonNut goc, T4 nutId B; DOM trang dự án D (renderToStaticMarkup DuAnContent) có dòng phụ của T1 chứa «S09 xếp lại, gốc: <tên D>», T2 cũng vậy, T3 và T4 KHÔNG có «S09 xếp lại»; căn của T1 nằm trong hàng con của T1. Chiều đỏ CÙNG fixture: bản chép hang-toa.ts bỏ cụm gốc → ca đỏ ghim «TTH-AC-2 T1 thiếu dòng gốc»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: "cd app && node --import tsx --test probes/registry-toa-hieu-luc.test.tsx"
+    paths: [app/probes/registry-toa-hieu-luc.test.tsx, app/src/lib/ops/registry/doc.ts, app/src/lib/ops/registry/du-an.ts]
+    expected: "exit 0 trên DB máy thu :5433 trong MỘT giao dịch READ ONLY (CI: ca bỏ qua có lý do): với mọi nút, soToa của docDanhBa bằng đếm toà đang dùng có tổ tiên là nút ấy theo v_toa_nut_vung; số toà có nút hiệu lực là dự án bằng đếm trên view và nhỏ hơn đếm theo cột gốc; số phân khu không toà không con theo lớp đọc bằng đếm trên view và nhỏ hơn đếm theo cột gốc; tổng toà dải số bằng count buildings active; mười bảng danh bạ không đổi số dòng. In một dòng «# TTH-DC treo <gốc> → <hiệu lực> · phân khu rỗng <gốc> → <hiệu lực> · tổng <n>» (đo 17/11: 54 → 14 · 7 → 1 · 198)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.tdb_app
+    paths: [app/tests/registry-chi-doc.test.tsx, app/src/lib/ops/registry/doc.ts, app/src/lib/ops/registry/du-an.ts, app/src/lib/ops/registry/hang-toa.ts]
+    expected: "exit 0; bộ TDB sẵn có xanh trên lớp đọc mới (lược đồ tạm dựng thêm v_s09_toa, v_toa_nut_vung), gồm TDB-AC-6 quetGhi: lớp đọc không có câu ghi, chiều đỏ còn bắt."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
