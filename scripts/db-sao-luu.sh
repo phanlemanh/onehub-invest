@@ -83,11 +83,38 @@ fi
 phu pg_dump -U oneinvest -h localhost -Fc --snapshot="$SID" -f /b/oneinvest.dump oneinvest || die "pg_dump oneinvest lỗi"
 echo "COMMIT;" >&3; exec 3>&-; wait "$SNAP_PID" 2>/dev/null; exec 4<&-
 
-for db in $("${PSQL[@]}" -d postgres -c "select datname from pg_database where not datistemplate and datname <> 'oneinvest' order by 1"); do
-  phu pg_dump -U oneinvest -h localhost -Fc -f "/b/$db.dump" "$db" || die "pg_dump $db lỗi"
+# 1711-16 (a): bỏ qua DB tắt nhận kết nối (datallowconn=false — DB thử sót, pg_dump
+# sẽ lỗi) — lọc cạnh not datistemplate. (b) DB_SAO_LUU_CHI: CHỈ dump danh sách DB nêu
+# tên (job tuần: oneinvest + globals; oneinvest đã dump riêng ở trên nên bị bỏ khỏi
+# danh sách phụ) — rỗng = mọi DB như cũ (hồ sơ db-vao-volume giữ nguyên).
+CAU_DS_DB="select datname from pg_database where not datistemplate and datallowconn and datname <> 'oneinvest' order by 1"
+if [ -n "${DB_SAO_LUU_CHI:-}" ]; then
+  DS_CHI=$(printf '%s' "$DB_SAO_LUU_CHI" | tr ',' '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | grep -v '^$' | grep -vx 'oneinvest' || true)
+  for d in $DS_CHI; do
+    echo "$d" | grep -qE '^[a-z0-9_]+$' || die "tên DB lạ trong DB_SAO_LUU_CHI: $d" 2
+  done
+  if [ -n "$DS_CHI" ]; then
+    CAU_DS_DB="select datname from pg_database where datname in ($(printf '%s\n' "$DS_CHI" | sed "s/'/''/g" | sed "s/^\(.*\)$/'\1'/" | paste -sd, -)) and datallowconn order by 1"
+  else
+    CAU_DS_DB="select datname from pg_database where false"
+  fi
+fi
+# 1711-16 (c): một DB phụ lỗi KHÔNG làm mất manifest của các DB đã dump xong —
+# ghi lỗi vào LOI_PHU, đi tiếp; cuối lượt vẫn ghi manifest.sha256 phần đã có rồi
+# thoát khác 0 kèm dòng nêu DB lỗi (globals lỗi thì vẫn die — phần cốt của cụm).
+LOI_PHU=""
+for db in $("${PSQL[@]}" -d postgres -c "$CAU_DS_DB"); do
+  if ! phu pg_dump -U oneinvest -h localhost -Fc -f "/b/$db.dump" "$db"; then
+    echo "db-sao-luu: pg_dump $db LỖI — tiếp các DB còn lại, manifest chỉ phủ phần đã có"
+    LOI_PHU="$LOI_PHU $db"
+  fi
 done
 phu pg_dumpall -U oneinvest -h localhost --globals-only -f /b/globals.sql || die "pg_dumpall --globals-only lỗi"
 
 ( cd "$DICH" && shasum -a 256 $(ls | grep -v '^manifest.sha256$') > manifest.sha256 ) || die "không ghi được manifest.sha256"
 echo "db-sao-luu: $(grep -c . "$DICH/so-dong.tsv") bảng oneinvest đếm cùng snapshot $SID; $(ls "$DICH"/*.dump | wc -l | tr -d ' ') bản dump"
+if [ -n "$LOI_PHU" ]; then
+  echo "db-sao-luu: CÓ DB PHỤ LỖI:$LOI_PHU — manifest.sha256 chỉ phủ phần đã dump xong" >&2
+  exit 1
+fi
 echo "db-sao-luu: $DICH"
