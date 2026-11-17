@@ -1,0 +1,64 @@
+schema_version: 1
+slug: suite-scripts-vao-luot-cham
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.sstl_buoc_ci
+    paths: ["scripts/suite-neu-doi.mjs", "scripts/suite-neu-doi.test.mjs", "_acceptance/config.yaml", ".github/workflows/ci-test.yml"]
+    expected: "Ca SSL-AC-1 xanh: ma trận viết trước phủ MỌI bước run, khoá env và services.*.image của job scripts rút từ ci-test.yml, mỗi phần tử một assert «tương đương» hay «miễn: lý do» (checkout, setup-node, npm ci miễn); ảnh DB của job = ảnh của server nơi lệnh suite dựng DB trống, bản chính Node trùng. Đầu ra thật: lệnh suite chạy một tệp cố định thì DB test nối tới là DB vừa dựng (không phải oneinvest) và danh sách ca bị bỏ = danh sách ci-bo-qua.json của module scripts. Chiều đỏ cùng fixture: bản sao workflow thêm một bước run chưa có dòng → đỏ gọi tên bước; bản sao đổi ảnh services → đỏ gọi tên ảnh."
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.sstl_chon
+    paths: ["scripts/suite-neu-doi.mjs", "scripts/suite-neu-doi.test.mjs"]
+    expected: "Ca SSL-AC-2 xanh trên kho git tạm: diff chỉ đổi pipeline/x.mjs → chọn đúng scripts/a.test.mjs, không có b; diff đổi app/y.ts và pipeline/x.mjs → chọn cả hai; diff đổi chính scripts/b.test.mjs → b được chọn; dòng in nêu tệp chọn và tệp kích hoạt. Đối chứng: diff đổi tệp không ai đọc → không chọn tệp nào ngoài tập luôn chạy."
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.sstl_dong
+    paths: ["scripts/suite-neu-doi.mjs", "scripts/suite-neu-doi.test.mjs", "scripts/*.test.mjs"]
+    expected: "Ca SSL-AC-3 xanh trên 43 tệp thật: ma trận đọc tay viết TRƯỚC mã (không sinh từ bộ phát hiện), đúng 43 assert gọi tên tệp, kết quả bộ phát hiện bằng ma trận ở mọi dòng; bảy tệp đã đếm (db-thu, design-floor-vung, don-hex-tho, ops-local-dong-bang, s05-slo, suite-neu-doi, zalo-import-job) trong tập động, năm tệp chỉ đọc tạm (bo-worktree, install-cron-chi, job-step-thoi-luong, sao-luu-ngoai-may, ui-capture-login) ngoài tập. Chiều đỏ: với mỗi lối nhận diện (readdir, glob, git ls-files, exec find/grep/git, template literal có biểu thức, import() không literal) một bản sao tắt riêng lối ấy → đỏ gọi tên tệp lọt."
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.sstl_rao
+    paths: ["scripts/suite-neu-doi.mjs", "scripts/suite-neu-doi.test.mjs"]
+    expected: "Ca SSL-AC-4 xanh: ma trận viết trước một assert cho mỗi tệp hạ tầng — scripts/lib/x.mjs, db/migrations/999_x.sql, scripts/ci-db-init.mjs, scripts/ci-bo-qua.json, .github/workflows/ci-test.yml, package.json và package-lock.json của app, pipeline, agent — mỗi tệp đơn lẻ trong diff → trọn 43 tệp kèm lý do gọi tên tệp ấy; diff không chọn tệp nào → kết quả vẫn mang bước node --check. Đối chứng: một tệp scripts/ thường và scripts/lib-khac/x.mjs → không trọn bộ."
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.sstl_chu_the
+    paths: ["scripts/suite-neu-doi.mjs", "scripts/suite-neu-doi.test.mjs", "scripts/**"]
+    expected: "Ca SSL-AC-5 xanh. Kho thử a.test.mjs → x.sh → pipeline/y.mjs: diff chỉ sửa y.mjs → a được chọn với lý do «tập đọc»; đối chứng diff sửa tệp không ai nhắc → a không được chọn. Kho thật: 15/15 tệp scripts/*.test.mjs có chủ thể cùng thân tên có chủ thể trong tập đọc (ma trận viết trước gọi tên từng tệp, gồm cap-token-may, dung-worktree-cham, sao-luu-ngoai-may), và với mỗi tệp, diff chỉ sửa chủ thể → đúng tệp test ấy được chọn với lý do «tập đọc», không qua rào. Chiều đỏ: bản sao tắt luật tên trần cùng thư mục → đúng ba tệp ấy lọt, gọi tên cả ba; bản sao tắt bao đóng → ca a.test đỏ. S4V-AC-5 vẫn xanh."
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.test.sstl_tai_hien
+    long_running: 60
+    paths: ["scripts/suite-neu-doi.mjs", "_acceptance/suite-scripts-vao-luot-cham/probes/tai-hien.sh"]
+    expected: "Probe tai-hien.sh chạy bộ chọn và lệnh suite của HEAD với --root trỏ worktree tạm của từng đỉnh cũ, in sha bộ chọn và lý do chọn từng tệp; thoát 0 khi: ở 5b02c3de bộ chọn có scripts/s05-khoa-nap.test.mjs và lệnh suite thoát khác 0 với ca (5) của tệp ấy trong danh sách đỏ; ở f3fecd5f bộ chọn có scripts/db-thu.test.mjs và lệnh thoát khác 0 với ca DT-AC-7 trong danh sách đỏ. Worktree tạm xoá khi xong. Probe thoát 1 gọi tên đỉnh nếu ca đỏ kỳ vọng không xuất hiện, tệp không được chọn, hay sha bộ chọn khác HEAD."
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.test.sstl_app_src
+    long_running: 45
+    paths: ["scripts/suite-neu-doi.mjs", "_acceptance/suite-scripts-vao-luot-cham/probes/do-app-src.sh"]
+    expected: "Probe do-app-src.sh trên nhánh tạm chỉ đổi đúng app/src/lib/ops/registry/doc.ts: số tệp chọn ≤ 15 và chứa đủ tập luôn chạy; giây của lượt ≤ 40% giây trọn bộ đo cùng máy cùng lúc; in cả ba số; thoát 1 nếu vượt ngưỡng nào hoặc thiếu một tệp luôn chạy."
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.sstl_bao_thu
+    paths: ["scripts/suite-neu-doi.mjs", "scripts/suite-neu-doi.test.mjs"]
+    expected: "Ca SSL-AC-8 xanh: ref gốc vắng → trọn bộ, dòng in «không giải được gốc»; thư mục không phải kho git → trọn bộ; diff rỗng → trọn bộ; SUITE_NEU_DOI=chay → trọn bộ, dòng in «ép chạy». Đối chứng: cùng kho, diff chạm một tệp đọc tĩnh → không trọn bộ."
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.sstl_cau_hinh
+    paths: ["_acceptance/config.yaml", "scripts/suite-neu-doi.test.mjs", "_acceptance/s4-suite-theo-vung/probes/cau-hinh-khong-doi.sh"]
+    expected: "Ca S4V-AC-6 xanh với tám key (bảy key cũ + executors.suite.scripts) và probe cau-hinh-khong-doi.sh xanh: dòng cũ bị xoá/sửa chỉ là suite_keys, executors.test.scripts cùng mọi lệnh gốc nguyên byte so với merge-base. Chiều đỏ của S4V-AC-6 giữ nguyên (lệnh bọc app lệch một ký tự → đỏ gọi tên «app»)."
+  - id: E10
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.scripts
+    expected: "node --test scripts/*.test.mjs thoát 0."

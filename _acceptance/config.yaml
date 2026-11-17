@@ -139,6 +139,15 @@ executors:
     s4v_phu: "node --test --test-name-pattern=S4V-AC-5 scripts/suite-neu-doi.test.mjs"      # s4-suite-theo-vung E5 — quét kho thật
     s4v_cau_hinh: "node --test --test-name-pattern=S4V-AC-6 scripts/suite-neu-doi.test.mjs && bash _acceptance/s4-suite-theo-vung/probes/cau-hinh-khong-doi.sh"   # s4-suite-theo-vung E6
     s4v_dung_wt: "node --test scripts/dung-worktree-cham.test.mjs"   # s4-suite-theo-vung E7 — repo git tạm + worktree, không DB
+    sstl_buoc_ci: "node --test --test-name-pattern=SSL-AC-1 scripts/suite-neu-doi.test.mjs"   # suite-scripts-vao-luot-cham E1 — so bước với ci-test.yml
+    sstl_chon: "node --test --test-name-pattern=SSL-AC-2 scripts/suite-neu-doi.test.mjs"      # suite-scripts-vao-luot-cham E2 — repo git tạm
+    sstl_dong: "node --test --test-name-pattern=SSL-AC-3 scripts/suite-neu-doi.test.mjs"      # suite-scripts-vao-luot-cham E3 — 43 tệp thật
+    sstl_rao: "node --test --test-name-pattern=SSL-AC-4 scripts/suite-neu-doi.test.mjs"       # suite-scripts-vao-luot-cham E4
+    sstl_chu_the: "node --test --test-name-pattern=SSL-AC-5 scripts/suite-neu-doi.test.mjs"   # suite-scripts-vao-luot-cham E5 — kho thật
+    sstl_tai_hien: "bash _acceptance/suite-scripts-vao-luot-cham/probes/tai-hien.sh"          # suite-scripts-vao-luot-cham E6 — hai đỉnh đỏ thật, worktree tạm
+    sstl_app_src: "bash _acceptance/suite-scripts-vao-luot-cham/probes/do-app-src.sh"         # suite-scripts-vao-luot-cham E7 — nhánh tạm chỉ đổi app/src
+    sstl_bao_thu: "node --test --test-name-pattern=SSL-AC-8 scripts/suite-neu-doi.test.mjs"   # suite-scripts-vao-luot-cham E8
+    sstl_cau_hinh: "node --test --test-name-pattern=S4V-AC-6 scripts/suite-neu-doi.test.mjs && bash _acceptance/s4-suite-theo-vung/probes/cau-hinh-khong-doi.sh"   # suite-scripts-vao-luot-cham E9 — tám key
     icc_test: "node --test scripts/install-cron-chi.test.mjs"   # install-cron-chi AC-1, AC-2, AC-4 — HOME giả + launchctl giả, không DB
     tsdt_mot: "node --test scripts/db-thu.test.mjs"   # test-suite-db-thu E1, E1b, E1c, E8 — docker giả, không DB; từ dau-luoc-do-ban-mau E8 tệp có thêm ca DL- cần Postgres :5433
     dau_luoc_do: "node --test --test-name-pattern=^DL- scripts/db-thu.test.mjs"   # dau-luoc-do-ban-mau E1–E7, E9 — Postgres :5433 thật, chỉ DB postgres và oneinvest_suite_dau_<pid>
