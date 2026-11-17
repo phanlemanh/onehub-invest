@@ -900,7 +900,8 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
         S08, S09 lệch thì giữ làm bí danh và đếm số lệch trên Ops, không ra thẻ từng cái. Giá, pháp lý và mọi thuộc tính khác
         vẫn lệch → thẻ. **Sửa mô hình 11/11 §1.3 (mục 44)** «Không có thứ tự nguồn tự thắng» cho riêng phần cấu trúc ở dự án có
         S16 (thang theo thuộc tính ở `docs/architecture/mo-hinh-danh-ba-du-an.md` §1.3). Hàng DA33 đi tiếp nguyên hành vi đã
-        ký (lệch → thẻ); hành vi mới là hàng nối tiếp dựng trên dữ liệu DA33.
+        ký (lệch → thẻ); hành vi mới là hàng nối tiếp dựng trên dữ liệu DA33, tính phân khu hiệu lực ở view `v_toa_nut_vung`
+        (cột gốc của toà giữ nguyên vì rào chỉ-thêm 082).
       - **Q-C phân khu từ danh sách khu S16.** S16 đúc nút phân khu từ danh sách khu chủ đầu tư công bố, qua thẻ luật (mục 38:
         phân khu là thông tin dự án công khai). Mã căn lấy bằng đăng nhập vẫn không lên cloud.
     - **«Trong hệ VGP»** (Mạnh gõ ở phiên P4, theo nhật ký giám sát 01:32Z): khi đếm bài lạc dự án trong nhóm S03 (TG2 AC-10),

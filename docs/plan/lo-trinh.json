@@ -5313,16 +5313,15 @@
       "dung_tren": [
         "DA33"
       ],
-      "cau_giao": "Ở các dự án có S16, cây phân khu → toà → căn đi theo S16: S16 đúc nút phân khu từ danh sách khu chủ đầu tư công bố qua thẻ luật, toà S16 chuyển về phân khu của nó, S08 và S09 lệch về cấu trúc thành bí danh và số lệch đếm theo cặp nguồn, thẻ lệch cấu trúc đã thành thừa được cho nghỉ",
-      "bat_khi": "Trên DB máy thu sau khi DA33 áp: toà treo thẳng dưới dự án có phân khu ở các dự án có S16 về 0 (ước 109 toà S16 mới cộng phần còn treo của Ocean Park 1, Grand Park; số trước đo lại sau DA33); 0 thẻ lệch cấu trúc S16 ↔ S08 còn mở; số lệch cấu trúc hiện theo cặp nguồn; lệch giá, pháp lý vẫn ra thẻ; nút phân khu S16 chỉ nhận toà sau khi thẻ luật được duyệt; đổi cha toà lùi được bằng một lệnh; dựng lại hai lần không đổi khoá",
+      "cau_giao": "Ở các dự án có S16, phân khu hiệu lực của toà đi theo S16: S16 đúc nút phân khu từ danh sách khu chủ đầu tư công bố qua thẻ luật, view nút vùng hiệu lực (v_toa_nut_vung) đặt toà S16 vào phân khu qua khu S16 của nó và xếp S16 trên S09, S08 và S09 lệch về cấu trúc thành bí danh và số lệch đếm theo cặp nguồn, thẻ lệch S08 ↔ S16 đã thành thừa được cho nghỉ; cột gốc của toà giữ nguyên",
+      "bat_khi": "Trên DB máy thu sau khi DA33 áp, đo trên view hiệu lực: ô «toà treo thẳng dưới dự án» ở các dự án có S16 về 0 (ước 109 toà S16 mới cộng phần còn treo của Ocean Park 1, Grand Park; số trước đo lại sau DA33); 2 thẻ lệch S08 ↔ S16 của DA33 cho nghỉ, 38 thẻ «một mã căn dưới nhiều toà» và 20 thẻ trùng tên xử theo lời Cổng Phạm vi; số lệch cấu trúc hiện theo cặp nguồn; lệch giá, pháp lý vẫn ra thẻ; nút phân khu S16 chỉ nhận toà sau khi thẻ luật được duyệt; 0 dòng buildings đổi region_node_id (rào chỉ-thêm 082 giữ nguyên); dựng lại hai lần không đổi khoá",
       "vi_sao": "Mạnh 17/11 Q-B, Q-C «Theo khuyến nghị cả ba câu» (ROADMAP §3 mục 54): sửa mô hình 11/11 §1.3 cho phần cấu trúc ở dự án có S16. Khoảng 110 nghìn căn S16; mỗi lệch một thẻ thì không duyệt nổi. DA33 chép luật xếp phân khu cũ (chỉ xét con loại building, khớp tên tuyệt đối) nên toà S16 mới treo dưới dự án.",
       "vung": [
+        "db/migrations",
         "pipeline/lib/s16-dung.mjs",
-        "pipeline/lib/danh-ba-vat-the.mjs",
-        "pipeline/danh-ba-vat-the.mjs",
-        "db/migrations"
+        "pipeline/lib/danh-ba-vat-the.mjs"
       ],
-      "ghi_chu": "Hạng T3: ghi dữ liệu danh bạ lên cloud và đổi luật phân xử. Thang theo thuộc tính: mo-hinh-danh-ba-du-an.md §1.3. Chuyển cha toà là UPDATE lùi được (P2 đã chứng trên DA33). Mã căn lấy bằng đăng nhập vẫn không lên cloud (AC-9, AC-10 của DA33 đã sửa 17/11). Giữa S08, S09, tin S03 không có thứ tự; dự án không có S16 giữ luật lệch → thẻ."
+      "ghi_chu": "Hạng T3: ghi dữ liệu danh bạ lên cloud (nút phân khu, bí danh) và đổi luật phân xử. Thang theo thuộc tính: mo-hinh-danh-ba-du-an.md §1.3. Hướng (GS chốt 17/11, theo nếp DA31): cột buildings.region_node_id giữ nguyên, nút vùng hiệu lực tính ở view v_toa_nut_vung (097) — mở rộng view bằng migration mới; không nới rào, không đúc lại toà hay căn. Đã cân nhắc, không chọn: nới rào chỉ-thêm của buildings (vat_the_chi_them, 082) cho phép UPDATE region_node_id — P2 thử trên bản chép 17/11, rào từ chối mọi đổi trừ status, merged_into; nới là sửa luật an toàn của danh bạ vật thể, cần lời riêng của Mạnh, trong khi view đã là nếp có sẵn. Câu cho Cổng Phạm vi: 60 thẻ S16 của DA33 = 38 «một mã căn dưới nhiều toà» + 20 trùng tên + 2 lệch S08 ↔ S16; Q-B chỉ cho nghỉ 2 thẻ lệch — 58 thẻ còn lại người duyệt từng thẻ, hay một thẻ luật mới (vd «mã căn S16 dưới nhiều toà → giữ toà của khu S16»), Mạnh xem mẫu? Mã căn lấy bằng đăng nhập vẫn không lên cloud (AC-9, AC-10 của DA33 đã sửa 17/11). Giữa S08, S09, tin S03 không có thứ tự; dự án không có S16 giữ luật lệch → thẻ."
     },
     {
       "ma": "DA38",
@@ -5339,7 +5338,7 @@
         "DA8"
       ],
       "cau_giao": "Dự án S08 có hậu tố khu (OCP1, OCP2…) thành nút dự án con có cha theo hậu tố qua thẻ luật theo nguồn, hai dự án con Grand Park đang thiếu cha có cha, mã S08 của dự án con nối vào dự án con thay vì dự án cha, và toà của dự án con nằm dưới dự án con",
-      "bat_khi": "Trên DB máy thu: dự án có cha 0 → ít nhất số dự án S08 có hậu tố khu cộng hai (đo lại số hậu tố lúc mở vòng); hai mã S08 đang nối vào Grand Park chuyển sang dự án con; toà Lakeside và The Senique (6 toà, Ocean Park 1) nằm dưới dự án con; nút chưa qua thẻ luật thì 0 tin nối; chạy lại không đúc nút trùng; đổi cha có sự kiện và lùi được",
+      "bat_khi": "Trên DB máy thu: dự án có cha 0 → ít nhất số dự án S08 có hậu tố khu cộng hai (đo lại số hậu tố lúc mở vòng); hai mã S08 đang nối vào Grand Park chuyển sang dự án con; toà Lakeside và The Senique (6 toà, Ocean Park 1) nằm dưới dự án con trên view nút vùng hiệu lực (cột gốc của toà giữ nguyên, rào chỉ-thêm 082); nút chưa qua thẻ luật thì 0 tin nối; chạy lại không đúc nút trùng; đổi cha của nút dự án có sự kiện và lùi được",
       "vi_sao": "Mạnh 17/11 Q-A (ROADMAP §3 mục 54). Phân tích 17/11: 0/344 dự án có cha; S08 nối Masteri Centre Point và Lumière Boulevard vào chính Grand Park nên toà và tin của cùng dự án nằm ở hai nhánh. Luật dự án con của mục 39, nút ứng viên của mục 44 Hỏi-1.",
       "vung": [
         "pipeline/noi-du-an-s08.mjs",

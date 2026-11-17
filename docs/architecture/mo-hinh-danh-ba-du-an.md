@@ -174,8 +174,11 @@ Mỗi thẻ luật Mạnh xem mẫu, đúng như đã chốt. Mẫu soát 20 c�
   nút chưa nối tin, chưa lên Invest. Cùng việc: hai dự án con đang thiếu cha và ba nút `building` cũ ở Grand Park (mục 39 Hỏi-2).
 - **Phân khu từ danh sách khu S16 (Q-C).** Dự án có S16: máy đúc nút phân khu (`subzone`) từ danh sách khu chủ đầu tư công bố,
   qua thẻ luật. Phân khu S09 trùng thì thành bí danh của nút S16.
-- **Toà thuộc phân khu theo thang §1.3**, không theo một lần khớp tên lúc đúc. Đổi cha của toà là một cập nhật lùi được (giữ
-  cha cũ trong sự kiện). Mục tiêu đo: số toà treo thẳng dưới dự án mà dự án có phân khu → 0.
+- **Toà thuộc phân khu theo thang §1.3**, không theo một lần khớp tên lúc đúc. Cột `buildings.region_node_id` giữ nguyên (rào
+  chỉ-thêm của 082 chỉ cho đổi `status`, `merged_into`); **nút vùng hiệu lực** tính ở view `v_toa_nut_vung` (097), mở rộng để S16
+  xếp trên S09 và toà vào phân khu qua khu S16 của nó. Không nới rào, không đúc lại toà hay căn. Mục tiêu đo trên view: số toà treo
+  thẳng dưới dự án mà dự án có phân khu → 0. (Đã cân nhắc nới rào 082 cho `region_node_id`, không chọn: là sửa luật an toàn của
+  danh bạ vật thể, cần lời riêng của Mạnh, và view đã là nếp có sẵn.)
 - Trang `/ops/registry` đọc phân khu hiệu lực (view `v_toa_nut_vung`), không đọc cột gốc.
 - Hàng: xem ROADMAP §3 mục 54.
 
