@@ -151,26 +151,33 @@ c262066dfba285b4a75afe1738c40ac0
 f3a898a8e69f2e27915b0cbafab9cb85
 ```
 
-## Kết quả — NHÁP, CHỜ MẠNH DUYỆT
+## Kết quả
 
-Trợ lý đã đọc cả 100 bài và điền nháp (17/11). **Đây chưa phải số của hồ sơ** — nó treo trên đúng một câu hỏi
-mà chỉ Mạnh trả lời được, và hai cách trả lời cho hai kết luận ngược nhau.
+**1/100 bài lạc · tỉ lệ 1,00% · khoảng Wilson 95%: 0,18% – 5,45% · cận trên ≤ 10%: ĐẠT.**
 
-### Câu phải quyết: Masteri Centre Point và Lumière Boulevard có phải dự án khác Vinhomes Grand Park không?
+**Kết luận: bối cảnh nhóm đủ làm mặc định cho dự án của tin**, trên mẫu này và với quyết định dưới.
 
-Bốn trong năm bài bị đánh «lạc» là bài nói về **MCP** (Masteri Centre Point) hay **LBV** (Lumière Boulevard) —
-hai dự án của Masterise Homes, nằm trong hoặc sát khu Vinhomes Grand Park và được rao trong chính nhóm VGP.
+Lệnh: `node pipeline/scripts/mau-bai-lac-du-an.mjs --tinh research-local/mau-bai-lac-du-an.md`.
 
-| Cách đọc | bài lạc | tỉ lệ | Wilson 95% | so ngưỡng 10% |
-|---|---|---|---|---|
-| **A** — MCP, LBV là dự án KHÁC | 5/100 | 5,00% | 2,15% – **11,18%** | **CHƯA ĐẠT** |
-| **B** — MCP, LBV tính trong hệ VGP | 1/100 | 1,00% | 0,18% – **5,45%** | **ĐẠT** |
+### Ai gắn nhãn
 
-Chỉ một bài lạc theo cả hai cách: bài rao «căn hot nhất Ocean park 2 3» (dự án ở Hà Nội) đăng trong nhóm
-Vinhomes Grand Park ở TP.HCM.
+Trợ lý đọc cả 100 bài và điền nháp ngày 17/11 (luật «nháp rồi Mạnh duyệt»). Nháp treo trên đúng một câu:
+bốn trong năm ca bị đánh lạc là bài rao **Masteri Centre Point** hay **Lumière Boulevard** — hai dự án của
+Masterise Homes, nằm trong hoặc sát khu, rao ngay trong nhóm Vinhomes Grand Park.
 
-Bốn ca MCP/LBV, nguyên văn đầu bài: «tìm 1pn+ mcp lbv ở liền nhà trống CĐT» · «Cho thuê 2PN bếp rèm căn góc
-LBV» · «Khách tìm thuê căn 2pn2wc có nội thất Khu mcp» · «MCP B. 1PN+ Full 15tr».
+**Mạnh quyết 17/11, nguyên văn: «Trong hệ VGP».** Bốn ca ấy vì thế không lạc. Chín mươi sáu nhãn còn lại là nháp
+của trợ lý, chưa được duyệt từng dòng.
+
+| Cách đọc | bài lạc | Wilson 95% | so ngưỡng |
+|---|---|---|---|
+| **Theo quyết định của Mạnh** — MCP, LBV trong hệ VGP | **1/100** | 0,18% – **5,45%** | **đạt** |
+| Nếu MCP, LBV là dự án khác (đối chứng, không dùng) | 5/100 | 2,15% – 11,18% | chưa đạt |
+
+Ca lạc duy nhất: bài rao «căn hot nhất Ocean park 2 3» (dự án ở Hà Nội) đăng trong nhóm VGP ở TP.HCM.
+
+**Hệ quả của quyết định lên hàng TG2**: bài MCP/LBV trong nhóm VGP sẽ được đóng dấu dự án Vinhomes Grand Park
+khi chữ bài im. Bài nào chữ bài nêu rõ MCP hay LBV *và* nhãn bạc khớp được một nút danh bạ riêng thì chữ bài vẫn
+thắng (AC-3) — quyết định này không gộp nút danh bạ, chỉ nói rằng đóng dấu VGP lên chúng không tính là sai.
 
 ### Giới hạn của chính mẫu này, phải đọc cùng con số
 
