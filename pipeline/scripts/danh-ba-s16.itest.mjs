@@ -10,7 +10,7 @@ import { rmSync, readFileSync, writeFileSync } from "node:fs";
 import pg from "pg";
 import { GOC, apTep, taoDbThu, xoaDbThu } from "./db-thu-dbv.mjs";
 import { FIXTURE } from "./s16-fixture.mjs";
-import { CAU_CHEN_S16_ITEM, NOI_DU_AN_S16, chonToa, dongS16, napS16, s16Ref } from "../lib/s16-danh-muc.mjs";
+import { CAU_CHEN_S16_ITEM, NOI_DU_AN_S16, chonToa, dongS16, duoiDuAn, napS16, s16Ref } from "../lib/s16-danh-muc.mjs";
 import { dung } from "../danh-ba-vat-the.mjs";
 
 export const TEN = `oneinvest_dbv_s16_${process.pid}`;
@@ -84,6 +84,35 @@ test("DA33-AC-1 chiều đỏ: câu chèn không ON CONFLICT thì nạp lại l�
   const r = dongS16(FIXTURE, SNAP).item[0];
   await assert.rejects(db.query(cau, [r.snapshot_id, r.source_id, r.kind, r.payload, r.fetched_at]),
     (e) => e.code === "23505", "DA33-AC-1 nạp lại: thiếu ON CONFLICT mà không lỗi");
+});
+
+// S4-r1 t5: căn không tên toà (pha 1 csv để trống cột toa_ten; pha 2 không có toa lẫn toaTen) phải nạp được — toa_ten NOT NULL
+// và thuộc khoá chính, nên bộ nạp ghi '' và view đọc '' thành mơ hồ. Dự án qz riêng, xoá khi xong để không đổi số của ca sau.
+test("DA33-AC-1 căn không tên toà nạp được, view đọc thành mơ hồ; chiều đỏ: toa_ten NULL bị DB từ chối", async () => {
+  const snap = "qz__s16__2026-11-14T000000001";
+  await db.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ($1, 'vn', 'S16', '{}'::jsonb)`, [snap]);
+  try {
+    const items = [
+      { sourceId: "c-trong", kind: "mngt-can", payload: { tenTep: "c", csv: "du_an_alias,du_an,khu_alias,toa_ten,ma_can\nqz-qz,Q Z,q-khu-z,,QZ0001" } },
+      { sourceId: "moi-trong", kind: "mngt-can-moi", payload: {
+        theoTang: JSON.stringify({ toa: "qz-qz|kz|tz", tongKhai: 1, can: [{ du_an: "qz-qz", tang: "1", ma_can: "QZ0002" }] }), khongTang: "" } },
+    ];
+    const kq = dongS16(items, snap);
+    assert.deepEqual(kq.can.map((r) => [r.ma_can, r.toa_ten]).sort(), [["QZ0001", ""], ["QZ0002", ""]],
+      "DA33-AC-1 căn không tên toà phải mang toa_ten '' (pha 1 và pha 2)");
+    await db.query("BEGIN");
+    const n = await napS16(db, kq);
+    await db.query("COMMIT");
+    assert.equal(n.can, 2, "DA33-AC-1 căn không tên toà làm lùi lượt nạp");
+    const { rows } = await db.query("SELECT ma_can, mo_ho FROM v_s16_can WHERE du_an = 'qz-qz' ORDER BY ma_can");
+    assert.deepEqual(rows, [{ ma_can: "QZ0001", mo_ho: true }, { ma_can: "QZ0002", mo_ho: true }], "DA33-AC-1 căn không tên toà không ra mơ hồ");
+    // Chiều đỏ: bản trước sửa truyền NULL — DB từ chối (23502), nên một dòng như vậy làm lùi cả lô.
+    await assert.rejects(napS16(db, { item: [], khu: [], toa: [], can: [{ ...kq.can[0], ma_can: "QZ0003", toa_ten: null }] }),
+      (e) => e.code === "23502", "DA33-AC-1 toa_ten NULL không bị từ chối — ca không phân biệt được bản sửa");
+  } finally {
+    await db.query("ROLLBACK").catch(() => {});
+    await db.query("DELETE FROM airbnb_snapshots WHERE snapshot_id = $1", [snap]);
+  }
 });
 
 // ---- AC-3 qua view: cùng ma trận năm ô như pipeline/lib/s16-danh-muc.test.mjs ----
@@ -211,7 +240,15 @@ test("DA33-AC-4 chỉ dự án đã nối vào danh bạ; dự án không nối 
   }, "DA33-AC-4 bảng nối khác năm cặp đã duyệt");
   const c = (await mot(db, "SELECT count(*)::int AS n FROM registry_aliases WHERE source = 'S16' AND value LIKE $1", [`${DC}/%`])).n;
   assert.equal(c, 0, "DA33-AC-4 dự án không nối có bí danh trong danh bạ");
-  assert.ok(Object.values(tk1.bo_du_an).reduce((a, b) => a + b, 0) >= 2, "DA33-AC-4 không đếm căn bị bỏ của dự án không nối");
+  // S4-r1 t9: số căn bị bỏ phải bằng đúng số căn của TỪNG dự án không nối (đếm độc lập từ view), không phải tổng ≥ 2.
+  // Nhãn trong bo_du_an là nhãn che (du-an#n) theo thứ tự SQL, nên so đa tập số đếm; DC có đúng 2 căn trong fixture.
+  const theoDuAn = await q(db, "SELECT du_an, count(*)::int AS n FROM v_s16_can GROUP BY du_an");
+  const khongNoi = theoDuAn.filter((r) => !NOI[duoiDuAn(r.du_an)]);
+  assert.equal(khongNoi.find((r) => r.du_an === DC)?.n, 2, "DA33-AC-4 fixture: dự án không nối DC không có đúng 2 căn");
+  assert.ok(!khongNoi.some((r) => r.du_an === DA || r.du_an === DB), "DA33-AC-4 fixture: dự án đã nối bị tính là không nối");
+  const soDem = (xs) => [...xs].sort((a, b) => a - b);
+  assert.deepEqual(soDem(Object.values(tk1.bo_du_an)), soDem(khongNoi.map((r) => r.n)),
+    "DA33-AC-4 số căn bị bỏ không khớp từng dự án không nối");
   assert.ok(await doiTuong(db, `${DB}/tb`), "DA33-AC-4 khu thứ hai đã nối không có toà");
 });
 
@@ -394,6 +431,47 @@ test("DA33-AC-6 chiều đỏ: bỏ tra căn S08 thì mã S08 cùng toà có că
     { tep: "pipeline/lib/s16-dung.mjs", thay: [["const cu = canS08.get(ma);", "const cu = undefined;"]] },
   ], (m) => chayVoi(m, c));
   assert.equal((await theoMa(c, "Q12-11-01")).so_can, 2, "đối chứng căn S08: đột biến không sinh căn trùng mã");
+});
+
+// ---- S4-r1 t6: hai toà S16 khác toa_id cùng tên, cả hai mới đúc, có căn cùng số trục ----
+// Dữ liệu thật có 10 tên toà như vậy (20 toa_id). Mỗi căn phải lấy trục của chính toà nó. DB riêng: không đổi số các ca trên.
+async function toaTrungTen(c) {
+  for (const [slug, ten] of [[KHU_A, "Q Khu A"], [KHU_B, "Q Khu B"]]) {
+    await c.query(`INSERT INTO asset_nodes (node_type, name, slug, aliases, area_ids, dd_field, meta)
+      VALUES ('project', $2, $1, '{}', '{}', 'SubdivisionName', '{}') ON CONFLICT (slug) DO NOTHING`, [slug, ten]);
+  }
+  await c.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ($1, 'vn', 'S16', '{}') ON CONFLICT DO NOTHING`, [SNAP2]);
+  for (const [khu, toa_id] of [["k1", "ta"], ["k2", "tb"]]) {
+    await c.query(`INSERT INTO stg_s16_toa (snapshot_id, du_an, khu_id, khu_nhan, toa_id, toa_ten) VALUES ($1, $2, $3, $3, $4, 'Q56')`,
+      [SNAP2, DA, khu, toa_id]);
+  }
+  for (const [khu, toa_id, ma] of [["k1", "ta", "Q56-05-01"], ["k2", "tb", "Q56-06-01"]]) {
+    await c.query(`INSERT INTO stg_s16_can (snapshot_id, du_an, khu_nhan, toa_id, toa_ten, tang, ma_can, pha)
+                   VALUES ($1, $2, $3, $4, 'Q56', NULL, $5, 2)`, [SNAP2, DA, khu, toa_id, ma]);
+  }
+}
+const trucToaKhac = async (c) => (await mot(c, `SELECT count(*)::int AS n FROM units u JOIN stacks s ON s.stack_key = u.stack_key
+                                                  WHERE s.building_key <> u.building_key`)).n;
+test("DA33-AC-6 hai toà S16 cùng tên, căn cùng số trục: mỗi căn lấy trục của chính toà nó; dựng lại 0 khoá mới", async () => {
+  const c = await dbMoi("t6");
+  await toaTrungTen(c);
+  await chay(c);
+  const toa = await q(c, "SELECT DISTINCT u.building_key FROM units u");
+  assert.equal(toa.length, 2, "DA33-AC-6 hai toà cùng tên: không ra đúng hai toà có căn");
+  assert.equal(await trucToaKhac(c), 0, "DA33-AC-6 hai toà cùng tên: căn nằm trên trục của toà khác");
+  assert.equal((await mot(c, "SELECT count(*)::int AS n FROM stacks")).n, 2, "DA33-AC-6 hai toà cùng tên: không ra hai trục");
+  const truoc = await anhVatThe(c);
+  await chay(c);
+  assert.deepEqual(await anhVatThe(c), truoc, "DA33-AC-8 hai toà cùng tên: dựng lại sinh khoá mới");
+});
+test("DA33-AC-6 chiều đỏ: bỏ toa_id khỏi bí danh trục thì căn toà hai nằm trên trục của toà một", async () => {
+  const c = await dbMoi("t6d");
+  await toaTrungTen(c);
+  await banDotBien([
+    { tep: "pipeline/danh-ba-vat-the.mjs", thay: [] },
+    { tep: "pipeline/lib/s16-dung.mjs", thay: [["biDanhTrucS16(du_an, toaCuaCan(r), kq.toa, kq.truc)", "biDanhTrucS16(du_an, \"\", kq.toa, kq.truc)"]] },
+  ], (m) => chayVoi(m, c));
+  assert.equal(await trucToaKhac(c), 1, "đối chứng t6: đột biến không làm căn toà hai lấy trục toà một");
 });
 
 test("DA33-AC-8 chiều đỏ: bỏ tra bí danh S16 trước khi đúc thì lần hai đúc thêm", async () => {

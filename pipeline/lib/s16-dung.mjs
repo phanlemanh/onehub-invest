@@ -14,7 +14,11 @@ const thuong = (s) => String(s ?? "").normalize("NFC").trim().toLowerCase();
 const TANG_HOP_LE = /^[0-9]+[A-Z]?$/;
 
 export const biDanhToaS16 = (duAn, toaId) => `${duAn}/${toaId}`;
-export const biDanhTrucS16 = (duAn, toa, truc) => `${duAn}/${toa}/${truc}`;
+// Bí danh trục mang toa_id: hai toà S16 khác toa_id mà trùng tên (dữ liệu thật có 10 tên như vậy) có trục cùng số thì vẫn ra hai
+// bí danh khác nhau — bí danh là duy nhất trên (source, kind, value), nên thiếu toa_id thì trục của toà thứ hai không có bí danh và
+// căn của nó tra theo tên ra trục của toà thứ nhất (S4-r1 t6). Tên toà vẫn ở vị trí áp chót, trục ở cuối: hai bộ đọc (trucCo dưới
+// đây và napS16TheoKhu) tách theo đúng hai vị trí ấy rồi ghép với building_key, nên không bộ đọc nào phải đổi.
+export const biDanhTrucS16 = (duAn, toaId, toa, truc) => `${duAn}/${toaId}/${toa}/${truc}`;
 export const biDanhCanS16 = (duAn, ma) => `${duAn}/${khoaMa(ma)}`;
 
 /** Thẻ duyệt một lần mỗi mục (mọi trạng thái): chạy lại không nhân thẻ. Evidence không mang giá trị đăng nhập. */
@@ -202,12 +206,13 @@ async function dungMotDuAn(c, { du_an, k, iso, taoKhoa, ra }) {
     const tang = kq.toa ? (r.tang && TANG_HOP_LE.test(String(r.tang).toUpperCase()) ? String(r.tang).toUpperCase() : kq.tang) : null;
     if (kq.toa && chuanHoaTenToa(kq.toa) === chuanHoaTenToa(r.toa_ten) && TANG_HOP_LE.test(tang ?? "")) {
       const kt = `${bkey}|${chuanHoaTenToa(kq.toa)}|${kq.truc}`;
-      let skey = trucCo.get(kt) ?? s16.get(biDanhTrucS16(du_an, kq.toa, kq.truc));
+      const vTruc = biDanhTrucS16(du_an, toaCuaCan(r), kq.toa, kq.truc);
+      let skey = trucCo.get(kt) ?? s16.get(vTruc);
       if (!skey) {
         skey = taoKhoa("stk");
         trucMoi.push({ key: skey, b: bkey });
-        biDanhTruc.push({ k: skey, v: biDanhTrucS16(du_an, kq.toa, kq.truc) });
-        s16.set(biDanhTrucS16(du_an, kq.toa, kq.truc), skey);
+        biDanhTruc.push({ k: skey, v: vTruc });
+        s16.set(vTruc, skey);
       }
       trucCo.set(kt, skey);
       canMoi.push({ key, b: bkey, s: skey, f: tang });

@@ -13,6 +13,7 @@ import pg from "pg";
 import { taoDbThu, xoaDbThu, MAY_CHU, GOC } from "./db-thu-dbv.mjs";
 import { dung } from "../danh-ba-vat-the.mjs";
 import { FILL } from "../sync-cloud.mjs";
+import { ALIAS_KIND } from "../lib/vocab.generated.mjs";
 
 const NGUON_DB = process.env.DATABASE_URL ?? `${MAY_CHU}/oneinvest`;
 const TEN = `oneinvest_dbv_s16that_${process.pid}`;
@@ -107,7 +108,7 @@ async function main() {
     await chep(src, c, "buildings", "merged_into IS NULL");
     await chep(src, c, "stacks", "merged_into IS NULL");
     await chep(src, c, "units", "merged_into IS NULL");
-    await chep(src, c, "registry_aliases", "kind IN ('ma_nguon', 'ten')");
+    await chep(src, c, "registry_aliases", `kind IN ('${ALIAS_KIND.ma_nguon}', '${ALIAS_KIND.ten}')`);
     await src.end();
     // Cột id tự tăng đã chép theo dòng: đẩy bộ đếm lên để dòng mới không trùng khoá.
     await c.query("SELECT setval(pg_get_serial_sequence('registry_aliases', 'id'), (SELECT coalesce(max(id), 1) FROM registry_aliases))");

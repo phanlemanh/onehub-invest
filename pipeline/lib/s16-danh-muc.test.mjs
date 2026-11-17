@@ -3,18 +3,27 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  KIND_S16, NOI_DU_AN_S16, boHost, chonToa, dongS16, duoiDuAn, khoaMa, s16Ref,
+  KIND_S16, NOI_DU_AN_S16, boHost, chonToa, dongS16, duoiDuAn, s16Ref,
 } from "./s16-danh-muc.mjs";
 import { FIXTURE } from "../scripts/s16-fixture.mjs";
+import { biDanhCanS16 } from "./s16-dung.mjs";
 
 // ---- AC-3: ma trận năm ô, một assert mỗi ô ----
-const nhomMot = (dong) => new Set(dong.map((d) => `${d.du_an}|${khoaMa(d.ma_can)}`)).size;
+// Ô1, ô2 chạy qua mã thật (S4-r1 t8): dongS16 nhận hai dòng csv rồi ra dòng stg, rồi định danh căn mà bước dựng dùng
+// (biDanhCanS16 của s16-dung.mjs — khoá bí danh S16 của căn). Một căn = một định danh. Phần gom trong SQL đo ở itest qua v_s16_can.
+const canCsv = (dong) => dongS16([{ sourceId: "c", kind: "mngt-can", payload: { tenTep: "c",
+  csv: ["du_an_alias,du_an,khu_alias,toa_ten,ma_can", ...dong].join("\n") } }], "q__s16__ac3").can;
+const dinhDanhCan = (can) => new Set(can.map((r) => biDanhCanS16(r.du_an, r.ma_can)));
 
 test("DA33-AC-3 ô1 cùng mã khác nhãn khu → một căn", () => {
-  assert.equal(nhomMot([{ du_an: "q", ma_can: "QS2.081101" }, { du_an: "q", ma_can: "QS2.081101" }]), 1, "ô1 khác-khu");
+  const can = canCsv(["qb-qa,Q,q-khu-1,QS2.08,QS2.081101", "qb-qa,Q,q-khu-2,QS2.08,QS2.081101"]);
+  assert.deepEqual(can.map((r) => r.khu_nhan).sort(), ["q-khu-1", "q-khu-2"], "ô1 stg phải giữ hai nhãn khu (hai dòng)");
+  assert.equal(dinhDanhCan(can).size, 1, "ô1 khác-khu");
 });
 test("DA33-AC-3 ô2 cùng mã khác hoa thường, khoảng trắng → một căn", () => {
-  assert.equal(nhomMot([{ du_an: "q", ma_can: "qs2.081101 " }, { du_an: "q", ma_can: "QS2.081101" }]), 1, "ô2 hoa-thuong");
+  const can = canCsv(["qb-qa,Q,q-khu-1,QS2.08,qs2.081101 ", "qb-qa,Q,q-khu-1,QS2.08,QS2.081101"]);
+  assert.equal(new Set(can.map((r) => r.ma_can)).size, 2, "ô2 stg phải giữ hai cách viết (hai dòng)");
+  assert.equal(dinhDanhCan(can).size, 1, "ô2 hoa-thuong");
 });
 test("DA33-AC-3 ô3 toà thật + nhãn gom → chọn toà thật", () => {
   assert.deepEqual(chonToa("QS2.051101", ["QS2.05", "QRAINBOW"]), { toa: "QS2.05" }, "ô3 nhan-gom");

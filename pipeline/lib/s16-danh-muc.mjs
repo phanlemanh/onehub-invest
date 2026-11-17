@@ -138,7 +138,8 @@ export function dongS16(items, snapshotId) {
   for (const it of theo("mngt-can")) for (const r of docCsv(it.payload?.csv, bo)) {
     const du_an = chuoi(r.du_an_alias), ma_can = chuoi(r.ma_can), khu_alias = chuoi(r.khu_alias), toa_ten = chuoi(r.toa_ten);
     if (!du_an || !ma_can) { bo["csv-loi"]++; continue; }
-    ganCan({ snapshot_id: snapshotId, du_an, khu_nhan: khu_alias ?? "", toa_id: toaTheoTen.get(`${du_an}|${khu_alias}|${toa_ten}`) ?? null, toa_ten, tang: null, ma_can, pha: 1 });
+    // toa_ten NOT NULL và thuộc khoá chính (103): căn không tên toà ghi '' — view đọc '' thành mơ hồ (NULLIF), không làm lùi lượt nạp.
+    ganCan({ snapshot_id: snapshotId, du_an, khu_nhan: khu_alias ?? "", toa_id: toaTheoTen.get(`${du_an}|${khu_alias}|${toa_ten}`) ?? null, toa_ten: toa_ten ?? "", tang: null, ma_can, pha: 1 });
   }
   const theoToa = (o, pha) => {
     const [du_an, khu_id, toa_id] = String(o?.toa ?? o?.key ?? "").split("|").map(chuoi);
@@ -147,7 +148,7 @@ export function dongS16(items, snapshotId) {
     for (const c of Array.isArray(o.can) ? o.can : []) {
       const ma_can = chuoi(c?.ma_can);
       if (!ma_can) continue;
-      ganCan({ snapshot_id: snapshotId, du_an, khu_nhan: khu_id ?? "", toa_id, toa_ten: chuoi(c.toa) ?? chuoi(o.toaTen), tang: chuoi(c.tang), ma_can, pha });
+      ganCan({ snapshot_id: snapshotId, du_an, khu_nhan: khu_id ?? "", toa_id, toa_ten: chuoi(c.toa) ?? chuoi(o.toaTen) ?? "", tang: chuoi(c.tang), ma_can, pha });
     }
   };
   for (const it of theo("mngt-can-moi")) for (const k of ["theoTang", "khongTang"]) for (const o of docJsonl(it.payload?.[k], bo)) theoToa(o, 2);
