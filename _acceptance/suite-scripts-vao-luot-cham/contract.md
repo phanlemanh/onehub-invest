@@ -107,3 +107,12 @@ mã 143). Baseline main 5508f620 của chính lượt chấm đỏ cả hai lệ
 `scripts-ci` đỏ ở ca đo giờ khi máy đang chấm nặng thì chạy lại lúc máy yên trước khi coi là lỗi. Vòng 2 sửa tám lỗi review
 (DB mồ côi, SIGHUP, dropdb lỗi, cờ thiếu giá trị, `bash -e`, ba chỗ đo chỉ âm tính) và đổi E1, E2 sang probe `co-ca.sh` (đếm
 ca «✔ <mẫu>», vì `--test-name-pattern` không khớp ca nào vẫn thoát 0 trên gốc).
+
+**Vòng 2 (17/11 13:41Z, BLOCKED E7).** `node --test scripts/*.test.mjs` trên DB máy thu quá 30 phút khi máy tải cao (1.151 giây
+khi máy yên) — E7 khai `long_running: 60`. Sửa lỗi AC-2 (giữ dòng tổng kết khi chảy qua thay vì 20 KB đuôi) và probe
+`co-ca.sh` bắt ca bị skip.
+
+**Vòng 3 (17/11 20:20Z, REJECT) — hai việc tách nhau.** (a) Suite `app_ui` đỏ ở GS-AC-6 của `the-so-gia-tri-song.test.tsx`
+do dữ liệu máy thu đổi sau khi DA33 nạp S16 vào danh bạ, không do mã của hàng: đối chứng main `55bcea7a2` đỏ y hệt, main
+`98fe528b1` (#479) xanh; nhánh nhận main `d6b3d2b8f` (giám sát cho, 18/11). (b) Lỗi trong hợp đồng AC-2: mẩu stdout cắt giữa
+«ℹ» (3 byte UTF-8) làm mất số ca — sửa ở `10676ade` (`setEncoding("utf8")`, ca đo khứ hồi theo byte).
