@@ -8,7 +8,7 @@ evals:
   - id: E1
     criterion: AC-1
     executor: script
-    cmd: "config:executors.script.tg2_phu_the"
+    cmd: config:executors.script.tg2_phu_the
     paths:
       - "pipeline/transform-zalo.mjs"
       - "pipeline/lib/dia-chi-the-nhom.mjs"
@@ -22,7 +22,7 @@ evals:
   - id: E1b
     criterion: AC-1
     executor: script
-    cmd: "config:executors.script.tg2_nguong_moc"
+    cmd: config:executors.script.tg2_nguong_moc
     paths:
       - "pipeline/transform-zalo.mjs"
       - "pipeline/lib/dia-chi-the-nhom.mjs"
@@ -35,7 +35,7 @@ evals:
   - id: E2
     criterion: AC-2
     executor: test
-    cmd: "config:executors.test.tg2_pipeline"
+    cmd: config:executors.test.tg2_pipeline
     paths:
       - "pipeline/lib/dia-chi-the-nhom.mjs"
     expected: >
@@ -46,7 +46,7 @@ evals:
   - id: E3
     criterion: AC-3
     executor: test
-    cmd: "config:executors.test.tg2_pipeline"
+    cmd: config:executors.test.tg2_pipeline
     paths:
       - "pipeline/lib/dia-chi-the-nhom.mjs"
     expected: >
@@ -58,7 +58,7 @@ evals:
     criterion: AC-3
     layer: backend-effect
     executor: test
-    cmd: "config:executors.test.tg2_itest"
+    cmd: config:executors.test.tg2_itest
     paths:
       - "pipeline/transform-zalo.mjs"
       - "pipeline/lib/dia-chi-the-nhom.mjs"
@@ -69,7 +69,7 @@ evals:
   - id: E5
     criterion: AC-4
     executor: test
-    cmd: "config:executors.test.tg2_itest"
+    cmd: config:executors.test.tg2_itest
     paths:
       - "pipeline/transform-zalo.mjs"
       - "pipeline/lib/dia-chi-the-nhom.mjs"
@@ -82,7 +82,7 @@ evals:
   - id: E6
     criterion: AC-5
     executor: test
-    cmd: "config:executors.test.tg2_itest"
+    cmd: config:executors.test.tg2_itest
     paths:
       - "pipeline/transform-zalo.mjs"
       - "pipeline/lib/dia-chi-the-nhom.mjs"
@@ -94,7 +94,7 @@ evals:
   - id: E7
     criterion: AC-6
     executor: test
-    cmd: "config:executors.test.tg2_itest"
+    cmd: config:executors.test.tg2_itest
     paths:
       - "pipeline/transform-zalo.mjs"
       - "pipeline/lib/dia-chi-the-nhom.mjs"
@@ -105,7 +105,7 @@ evals:
   - id: E8
     criterion: AC-6
     executor: script
-    cmd: "config:executors.script.tg2_quet_doc"
+    cmd: config:executors.script.tg2_quet_doc
     paths:
       - "pipeline/transform-zalo.mjs"
       - "pipeline/lib/dia-chi-the-nhom.mjs"
@@ -116,7 +116,7 @@ evals:
   - id: E9
     criterion: AC-7
     executor: test
-    cmd: "config:executors.test.tg2_itest"
+    cmd: config:executors.test.tg2_itest
     paths:
       - "pipeline/transform-zalo.mjs"
     expected: >
@@ -127,7 +127,7 @@ evals:
   - id: E3b
     criterion: AC-3
     executor: script
-    cmd: "config:executors.script.tg2_chu_bai_that"
+    cmd: config:executors.script.tg2_chu_bai_that
     paths:
       - "pipeline/transform-zalo.mjs"
       - "pipeline/lib/dia-chi-the-nhom.mjs"
@@ -141,7 +141,7 @@ evals:
   - id: E10
     criterion: AC-8
     executor: script
-    cmd: "config:executors.script.tg2_khong_tut"
+    cmd: config:executors.script.tg2_khong_tut
     paths:
       - "pipeline/transform-zalo.mjs"
       - "pipeline/lib/dia-chi-the-nhom.mjs"
@@ -155,7 +155,7 @@ evals:
   - id: E11
     criterion: AC-9
     executor: test
-    cmd: "config:executors.test.tg2_itest"
+    cmd: config:executors.test.tg2_itest
     paths:
       - "pipeline/transform-zalo.mjs"
       - "pipeline/lib/dia-chi-the-nhom.mjs"
@@ -181,7 +181,7 @@ evals:
   - id: E13
     criterion: AC-11
     executor: script
-    cmd: "config:executors.script.tg2_phu_kind"
+    cmd: config:executors.script.tg2_phu_kind
     paths:
       - "pipeline/transform-zalo.mjs"
       - "pipeline/lib/dia-chi-the-nhom.mjs"
