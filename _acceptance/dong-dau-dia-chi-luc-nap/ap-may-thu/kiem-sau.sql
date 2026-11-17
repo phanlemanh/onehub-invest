@@ -25,3 +25,9 @@ SELECT (SELECT count(*) FROM offer_project WHERE source = 'S03' AND status = 'mo
        round(100.0 * (SELECT count(*) FROM offer_project WHERE source = 'S03' AND status = 'mot_du_an')
              / NULLIF((SELECT count(*) FROM sale_offers WHERE source = 'S03'), 0), 2) AS phan_tram,
        (SELECT count(*) FROM offer_project WHERE source = 'S03' AND status = 'xung_dot') AS xung_dot;
+
+-- AC-8 (S4-r3): bài S03 mang hơn một dự án sống (mọi luật). Đạt khi 0.
+SELECT 'bai_nhieu_du_an_song' AS kiem, count(*) FROM (
+  SELECT subject_key FROM field_assertions
+   WHERE retracted_at IS NULL AND field = 'project_node_id' AND subject_key LIKE 'S03:%'
+   GROUP BY subject_key HAVING count(DISTINCT value) > 1) x;

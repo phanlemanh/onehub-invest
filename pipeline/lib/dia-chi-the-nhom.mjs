@@ -6,7 +6,7 @@
 // Khoá nhóm là tầng A: không vào `evidence`, không vào log, không lên cloud — mọi chỗ in ra dùng `card_code`.
 import { khoaNhomThat } from "./eval-labels.mjs";
 import { subjectKey } from "./assert.mjs";
-import { RULE as RULE_DV6, nhanDuocNhan } from "./du-an-tren-tin-s03.mjs";
+import { RULE as RULE_DV6, docDuLieu as docDuLieuDV6, nhanDuocNhan, tinhDuAn as tinhDuAnDV6 } from "./du-an-tren-tin-s03.mjs";
 import { chuan } from "./the-dia-chi-nhom.mjs";
 import { ASSERTION_FIELD, ASSERTION_METHOD, EVIDENCE_TIER, KIND } from "./vocab.generated.mjs";
 
@@ -221,26 +221,46 @@ export async function rutTheCu(client, { dong, moiChuThe, the }) {
 }
 
 /**
- * GHI LẠI dòng DV6 mà hàng này đã rút (lý do «thay-bang-the-nhom») trên những bài nay KHÔNG còn nhận dự án từ luật này — thẻ bị
- * bác, sửa sang 2–3 dự án, ô dự án bị lọc, hay hoà giải mức tin bỏ dự án. Không ghi lại thì tin rơi khỏi ô Định vị (AC-8).
- * Sổ phát biểu chỉ-thêm (trigger field_assertions_guard cấm đổi dòng đã rút), nên ghi DÒNG MỚI cùng chủ thể, trường, giá trị, luật,
- * căn cứ — bản rút gần nhất của mỗi khoá; bỏ khoá nào đã có dòng sống y hệt (DV6 chạy lại sau khi rút).
+ * AC-8, khuôn S4-r3 (GS P4-199 «đổi khuôn»): bài nay KHÔNG nhận dự án từ thẻ nữa (thẻ bị bác, sửa sang dự án khác hay 2–3 dự
+ * án, ô dự án bị lọc, hoà giải mức tin bỏ) mà dòng DV6 của nó đã bị một lượt trước rút với lý do `thay-bang-the-nhom`. Trả lại
+ * bằng Ý ĐỊNH HIỆN TẠI của DV6 — gọi chính hàm thuần `tinhDuAn` của DV6 trên dữ liệu DV6 đọc — chứ không hồi sinh dòng đã rút:
+ * dòng cũ có thể mang giá trị DV6 đã bỏ (sổ nhóm, nhãn đổi), và hồi sinh mọi bản rút làm bài mang hai dự án sống (S4-r2).
+ * DV6 là nguồn ý định duy nhất; hàm này chỉ ghi dòng DV6 muốn, cho đúng tập bài ứng viên, bằng luật/lớp/phiên bản của DV6.
  * @param {string[]} chuThe subject_key các bài của lượt KHÔNG có dòng dự án của luật này sau bước sinh
- * @returns {Promise<number>} số dòng ghi lại
+ * @param {{ tin?: {offer_id: string, post_ids: string[]}[] }} [opt] tin của lượt (thay tin đọc từ DB — lượt chưa ghi tin mới)
+ * @returns {Promise<{ chen: number, ungVien: number, khongMuon: string[] }>} số dòng ghi, số bài ứng viên, bài DV6 không còn muốn
  */
-export async function traLaiDV6(client, chuThe) {
-  if (!chuThe.length) return 0;
-  const res = await client.query(
-    `INSERT INTO field_assertions (subject_key, field, value, evidence_tier, method, method_version, rule_id, evidence, observed_at, changed_by, run_id)
-     SELECT r.subject_key, r.field, r.value, r.evidence_tier, r.method, r.method_version, r.rule_id, r.evidence, r.observed_at, 'tra-lai-tg2', r.run_id
-       FROM (SELECT DISTINCT ON (subject_key, field, value_key, method, rule_id) *
-               FROM field_assertions
-              WHERE retract_reason = $1 AND rule_id = ANY ($2::text[]) AND subject_key = ANY ($3::text[])
-              ORDER BY subject_key, field, value_key, method, rule_id, id DESC) r
-      WHERE NOT EXISTS (SELECT 1 FROM field_assertions s
+export async function traLaiDV6(client, chuThe, { tin } = {}) {
+  if (!chuThe.length) return { chen: 0, ungVien: 0, khongMuon: [] };
+  // Ứng viên: từng bị lượt TG2 rút dòng DV6, và hiện không còn dòng DV6 sống nào (DV6 chạy lại sau rút thì thôi).
+  const { rows } = await client.query(
+    `SELECT DISTINCT r.subject_key
+       FROM field_assertions r
+      WHERE r.retract_reason = $1 AND r.rule_id = ANY ($2::text[]) AND r.subject_key = ANY ($3::text[])
+        AND r.field = $4
+        AND NOT EXISTS (SELECT 1 FROM field_assertions s
                          WHERE s.retracted_at IS NULL AND s.subject_key = r.subject_key AND s.field = r.field
-                           AND s.value_key = r.value_key AND s.method = r.method AND s.rule_id = r.rule_id)
-     ON CONFLICT DO NOTHING`,
-    [LY_DO_RUT.thayDV6, LUAT_DV6, chuThe]);
-  return res.rowCount;
+                           AND s.rule_id = ANY ($2::text[]))`,
+    [LY_DO_RUT.thayDV6, LUAT_DV6, chuThe, ASSERTION_FIELD.project_node_id]);
+  const ungVien = new Set(rows.map((r) => r.subject_key));
+  if (!ungVien.size) return { chen: 0, ungVien: 0, khongMuon: [] };
+  const du = await docDuLieuDV6(client);
+  if (tin) du.tin = tin;
+  const dong = tinhDuAnDV6(du).dong.filter((d) => ungVien.has(d.subject_key));
+  let chen = 0;
+  if (dong.length) {
+    const cot = (k) => dong.map((d) => (k === "evidence" ? JSON.stringify(d[k] ?? {}) : d[k] == null ? null : String(d[k])));
+    const r = await client.query(
+      `INSERT INTO field_assertions (subject_key, field, value, evidence_tier, method, method_version, rule_id, evidence, observed_at, changed_by)
+       SELECT s, f, v, t, m, mv, r, e, clock_timestamp(), 'tra-lai-tg2'
+         FROM unnest($1::text[], $2::text[], $3::text[], $4::text[], $5::text[], $6::text[], $7::text[], $8::jsonb[])
+              AS x(s, f, v, t, m, mv, r, e)
+        WHERE NOT EXISTS (SELECT 1 FROM field_assertions fa WHERE fa.retracted_at IS NULL AND fa.subject_key = x.s
+                            AND fa.field = x.f AND fa.rule_id = x.r AND fa.value = x.v)
+       ON CONFLICT DO NOTHING`,
+      ["subject_key", "field", "value", "evidence_tier", "method", "method_version", "rule_id", "evidence"].map(cot));
+    chen = r.rowCount;
+  }
+  const muon = new Set(dong.map((d) => d.subject_key));
+  return { chen, ungVien: ungVien.size, khongMuon: [...ungVien].filter((k) => !muon.has(k)) };
 }

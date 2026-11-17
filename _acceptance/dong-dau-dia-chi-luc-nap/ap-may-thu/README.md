@@ -54,10 +54,15 @@ Dòng DV6 đã có không bị xoá ở lối nào: nhóm chưa có thẻ duyệ
    ```bash
    docker exec -i -e PGPASSWORD=oneinvest one-invest-db psql -U oneinvest -h localhost -d oneinvest -v ON_ERROR_STOP=1 -1 < _acceptance/dong-dau-dia-chi-luc-nap/ap-may-thu/lui.sql
    ```
-   Rút mọi dòng sống của `dia-chi-the-nhom` (lý do `lui-tg2`) rồi **ghi lại** các dòng DV6 mà TG2 đã rút (lý do
-   `thay-bang-the-nhom`) thành dòng mới, trong một giao dịch — sổ phát biểu là chỉ-thêm, trigger cấm «trả sống» một dòng đã
-   rút. Thử trên bản chép 17/11: xem `so-chay-thu.md`. Cột `kind` tự về cách cũ ở lượt nạp kế (mã đã lùi). offer_project là view nên
-   ô «Định vị» về số cũ ngay khi giao dịch xong.
+   rồi NGAY sau đó, từ checkout chính:
+   ```bash
+   cd pipeline && node scripts/du-an-tren-tin-s03.mjs --ghi
+   ```
+   Bước SQL rút mọi dòng sống của `dia-chi-the-nhom` (lý do `lui-tg2`). Bước DV6 để chính DV6 tính lại ý định của nó trên dữ
+   liệu hiện tại và ghi đúng dòng nó muốn. Khuôn S4-r3: lùi **không hồi sinh** dòng DV6 đã rút — bản rút có thể mang giá trị DV6
+   đã bỏ, và hồi sinh mọi bản rút làm bài mang hai dự án sống (lỗi bắt ở S4 vòng 2). Giữa hai bước, bài từng được thẻ đóng dấu
+   tạm không có dự án, nên chạy liền nhau. Thử trên bản chép: xem `so-chay-thu.md`. Cột `kind` tự về cách cũ ở lượt nạp kế (mã đã
+   lùi). offer_project là view nên ô «Định vị» về số cũ ngay khi bước DV6 xong.
 5. **Kiểm sau** —
    ```bash
    docker exec -i -e PGPASSWORD=oneinvest one-invest-db psql -U oneinvest -h localhost -d oneinvest -X < _acceptance/dong-dau-dia-chi-luc-nap/ap-may-thu/kiem-sau.sql

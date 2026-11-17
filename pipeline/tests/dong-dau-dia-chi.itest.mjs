@@ -363,6 +363,7 @@ for (const [ten, doiThe] of [
 ]) {
   test(`TG2-T4 E10 AC-8 ${ten} sau khi đã đóng dấu: dòng DV6 đã rút được GHI LẠI, tin không rơi khỏi ô Định vị`, async () => {
     await ca(async (f) => {
+      await soNhom("tg2-tra-lai", f.duAn1); // DV6 muốn duAn1 thật (sổ nhóm), không chỉ một dòng viết tay
       await the("tg2-tra-lai", { duAn: [f.duAn1] });
       const p = await bai("tg2-tra-lai", BAN);
       await dv6(p, f.duAn1);
@@ -419,5 +420,141 @@ test("chiều đỏ E2 AC-2: đổi ô bac thành da_duyet thì đúng ô ấy s
     await c.query(`UPDATE group_address_cards SET status = 'da_duyet' WHERE group_key = 'tg2-o-bac'`);
     await nap();
     assert.deepEqual(await kiemSauO(pid), ["ô bac: 1 dòng (cần 0)"]);
+  });
+});
+
+// ── AC-8 bảng phủ ca, khuôn S4-r3 (GS P4-199 «đổi khuôn»): trả dòng DV6 bằng Ý ĐỊNH HIỆN TẠI của DV6, không hồi sinh dòng cũ ──
+// Ba chiều: chuyển trạng thái thẻ × DV6 muốn gì lúc trả × dạng bài. Ý định DV6 dựng bằng chính đầu vào của DV6 (sổ nhóm
+// collection_units, nhãn chữ bài), không bằng dòng viết tay — nên «DV6 không còn muốn» có nghĩa thật. Bất biến đo ở MỌI ô:
+// (1) mỗi bài tối đa MỘT dự án sống (mọi luật); (2) thẻ thôi phủ thì không còn dòng sống nào mang luật TG2; (3) tin mang đúng
+// dự án kỳ vọng tính tay từ ba chiều (TG2 đóng dấu thì giá trị thẻ/chữ bài, không thì giá trị DV6 muốn); (4) chạy lại lần nữa ra
+// đúng cùng tập dòng sống. Chiều đỏ: chạy bảng trên bản r2 (hồi sinh MỌI bản rút) thì các ô D3 (DV6 thôi muốn) và D4 (nhiều giá
+// trị từng rút) đỏ ở (1) hoặc (3) — số ô đỏ ghi ở ap-may-thu/so-chay-thu.md.
+async function soNhom(nhom, duAn) {
+  await c.query(
+    `INSERT INTO collection_units (source_code, group_key, name, unit_type, project_node_ids)
+     VALUES ('S03', $1, $2, 'nhom', $3::bigint[])
+     ON CONFLICT (source_code, group_key) DO UPDATE SET project_node_ids = EXCLUDED.project_node_ids`,
+    [nhom, `Sổ mồi ${nhom}`, duAn == null ? [] : [duAn]]); // unit_code do trigger cấp
+}
+/** Dòng DV6 sống như lệnh du-an-tren-tin-s03 --ghi để lại (luật nhóm). */
+async function dv6Nhom(p, giaTri) {
+  await c.query(
+    `INSERT INTO field_assertions (subject_key, field, value, evidence_tier, method, method_version, rule_id, evidence, observed_at)
+     VALUES ($1, 'project_node_id', $2, 'inferred', 'e1_rule', 'du-an-tren-tin-s03@1', 'du-an-nhom-mot-du-an', '{}'::jsonb, now())`,
+    [`S03:${p}`, giaTri]);
+}
+const duAnSong = async (p) => [...new Set((await nhieu(
+  `SELECT value FROM field_assertions WHERE subject_key = $1 AND field = 'project_node_id' AND retracted_at IS NULL`,
+  [`S03:${p}`])).map((r) => r.value))].sort();
+const tg2Song = async (p) => (await nhieu(
+  `SELECT value FROM field_assertions WHERE subject_key = $1 AND field = 'project_node_id' AND rule_id = $2 AND retracted_at IS NULL`,
+  [`S03:${p}`, RULE_ID])).map((r) => r.value);
+const tapSong = async (ps) => (await nhieu(
+  `SELECT subject_key, field, value, rule_id FROM field_assertions
+    WHERE subject_key = ANY ($1::text[]) AND retracted_at IS NULL ORDER BY 1, 2, 3, 4`, [ps.map((p) => `S03:${p}`)]));
+
+const CHUYEN = {
+  T1: "duyệt → bác",
+  T2: "duyệt → sửa sang dự án khác",
+  T3: "duyệt → sửa sang hai dự án",
+  T4: "duyệt → bác → duyệt lại",
+};
+const DV6 = {
+  D1: "DV6 muốn cùng dự án thẻ",
+  D2: "DV6 muốn dự án khác",
+  D3: "DV6 không còn muốn gì (sổ nhóm thôi ghi dự án)",
+  D4: "DV6 từng bị rút hai giá trị, nay muốn giá trị sau",
+};
+const DANG = { P1: "bài một nhóm", P2: "bài đăng chéo sang nhóm không thẻ", P3: "bài có chữ nêu dự án" };
+
+/**
+ * Kỳ vọng tính tay, không qua mã đang kiểm. A = dự án thẻ ban đầu (và dự án chữ bài nêu), B = dự án thẻ sửa sang (T2) và giá
+ * trị sổ sau của D4, C = dự án khác của D2. TG2 đóng dấu ở T2 (B, chữ bài thì A) và T4 (A). T3: thẻ hai dự án vẫn đã duyệt,
+ * vẫn phủ nhóm — ô dự án của thẻ thôi cho giá trị, nhưng bài có chữ nêu A vẫn được TG2 ghi A (AC-3: chữ bài thắng). T1: thẻ bị
+ * bác, TG2 thôi phủ hẳn → giá trị DV6 muốn; T3 bài không chữ → giá trị DV6 muốn.
+ * DV6 với bài chữ nêu A: sổ cùng A thì A; sổ khác A thì hai ứng viên → DV6 không ghi (tin mâu thuẫn); không sổ thì A từ chữ bài.
+ */
+function kyVong(t, d, p, f) {
+  const A = f.duAn1, B = f.duAn2, C = f.duAn3;
+  const tg2 = t === "T2" ? (p === "P3" ? A : B) : t === "T4" ? A : t === "T3" && p === "P3" ? A : null;
+  if (tg2) return tg2;
+  const so = { D1: A, D2: C, D3: null, D4: B }[d];
+  if (p !== "P3") return so;
+  if (so == null || so === A) return A;
+  return null;
+}
+
+// Một giao dịch cho cả 48 ô, chạy theo PHA (mỗi lượt nạp ~15–30 giây trên bản chép — 48 ô riêng là gần một giờ): lượt nạp đóng
+// dấu cho mọi ô một lần ở mỗi pha. Lượt nạp thừa với một ô (ô T1–T3 qua pha T4) là lượt chạy lại trên trạng thái đã ổn — bất
+// biến (4) nói nó không đổi gì. Mỗi ô một ca con có tên ô; khoá nhóm riêng từng ô nên các ô không chạm nhau.
+test("TG2-r3 AC-8 bảng phủ 4 chuyển trạng thái thẻ × 4 ý định DV6 × 3 dạng bài (48 ô)", async (tt) => {
+  await ca(async (f0) => {
+    const ba = await nhieu(`SELECT id::text AS id, name FROM asset_nodes WHERE node_type = 'project' ORDER BY id LIMIT 3`);
+    const f = { ...f0, duAn3: ba[2].id };
+    const O = [];
+    for (const t of Object.keys(CHUYEN)) for (const d of Object.keys(DV6)) for (const p of Object.keys(DANG)) {
+      const G = `tg2-pc-${t}${d}${p}`.toLowerCase();
+      O.push({ t, d, p, G, ten: `[${t}·${d}·${p}] ${CHUYEN[t]} · ${DV6[d]} · ${DANG[p]}` });
+    }
+    assert.equal(O.length, 48, "bảng phủ phải đủ 4 × 4 × 3 ô");
+    const doi = (o, sql, ts = []) => c.query(sql, [o.G, ...ts]);
+    // Pha 0 — dựng: sổ nhóm, thẻ đã duyệt dự án A, bài; DV6 đã ghi trước khi có thẻ (D2 + chữ bài A: hai ứng viên, DV6 không ghi).
+    for (const o of O) {
+      await soNhom(o.G, o.d === "D2" ? f.duAn3 : f.duAn1);
+      await the(o.G, { duAn: [f.duAn1] });
+      o.bai = o.p === "P2" ? await baiCheo(o.G, `${o.G}-cheo`) : [await bai(o.G, BAN)];
+      if (o.p === "P3") await nhanChuBai(o.bai[0], f.ten1);
+      if (!(o.d === "D2" && o.p === "P3")) await dv6Nhom(o.bai[0], o.d === "D2" ? f.duAn3 : f.duAn1);
+    }
+    await nap();
+    const tienDe = [];
+    for (const o of O) if (JSON.stringify(await tg2Song(o.bai[0])) !== JSON.stringify([f.duAn1])) tienDe.push(o.ten);
+    assert.deepEqual(tienDe, [], "tiền đề: lượt một phải đóng dấu dự án thẻ (hay chữ bài) lên bài của mọi ô");
+    // Pha 1 — DV6 đổi ý: D3 sổ thôi ghi dự án; D4 sổ sang B và DV6 chạy lại chèn B (lớp inferred của thẻ không chặn DV6).
+    for (const o of O) {
+      if (o.d === "D3") await soNhom(o.G, null);
+      if (o.d === "D4") { await soNhom(o.G, f.duAn2); await dv6Nhom(o.bai[0], f.duAn2); }
+    }
+    await nap(); // lượt TG2 kế rút luôn B của D4 → D4 có hai giá trị từng bị rút
+    // Pha 2 — T4 bác trước.
+    for (const o of O.filter((x) => x.t === "T4")) await doi(o, `UPDATE group_address_cards SET status = 'bac', version = version + 1 WHERE group_key = $1`);
+    await nap();
+    // Pha 3 — chuyển trạng thái cuối của mọi ô.
+    for (const o of O) {
+      if (o.t === "T1") await doi(o, `UPDATE group_address_cards SET status = 'bac', version = version + 1 WHERE group_key = $1`);
+      if (o.t === "T2") await doi(o, `UPDATE group_address_cards SET project_node_ids = $2::bigint[], version = version + 1 WHERE group_key = $1`, [[f.duAn2]]);
+      if (o.t === "T3") await doi(o, `UPDATE group_address_cards SET project_node_ids = $2::bigint[], version = version + 1 WHERE group_key = $1`, [[f.duAn1, f.duAn2]]);
+      if (o.t === "T4") await doi(o, `UPDATE group_address_cards SET status = 'da_duyet', version = version + 1 WHERE group_key = $1`);
+    }
+    await nap();
+    for (const o of O) o.truoc = await tapSong(o.bai);
+    await nap(); // bất biến (4): chạy lại lần nữa
+    for (const o of O) {
+      await tt.test(o.ten, async () => {
+        for (const x of o.bai) {
+          const ds = await duAnSong(x);
+          assert.ok(ds.length <= 1, `${o.ten}: bài ${x} mang ${ds.length} dự án sống: ${ds.join(", ")}`);
+        }
+        // (2) thẻ thôi cho dự án: T1 bác → không còn dòng dự án TG2 nào; T3 hai dự án → không còn dòng dự án TG2 lấy từ THẺ
+        // (dòng lấy từ chữ bài vẫn hợp lệ, AC-3).
+        if (o.t === "T1" || o.t === "T3") {
+          for (const x of o.bai) {
+            const tuThe = (await nhieu(
+              `SELECT value, evidence->>'nguon_o' AS nguon FROM field_assertions WHERE subject_key = $1 AND field = 'project_node_id'
+                  AND rule_id = $2 AND retracted_at IS NULL AND (${o.t === "T1" ? "true" : "evidence->>'nguon_o' IS DISTINCT FROM 'chu_bai'"})`,
+              [`S03:${x}`, RULE_ID]));
+            assert.deepEqual(tuThe, [], `${o.ten}: thẻ thôi cho dự án mà bài ${x} còn dòng dự án TG2 ${JSON.stringify(tuThe)}`);
+          }
+        }
+        const can = kyVong(o.t, o.d, o.p, f);
+        const tin = await trangThaiTin(o.bai[0]);
+        assert.equal(tin.n, o.bai.length, `${o.ten}: tiền đề số bài của tin`);
+        if (can) assert.deepEqual({ status: tin.status, du_an: tin.du_an }, { status: "mot_du_an", du_an: can },
+          `${o.ten}: tin mang ${tin.du_an} (${tin.status}), cần ${can}`);
+        else assert.equal(tin.du_an ?? null, null, `${o.ten}: tin mang ${tin.du_an} (${tin.status}), cần không dự án`);
+        assert.deepEqual(await tapSong(o.bai), o.truoc, `${o.ten}: chạy lại lần nữa đổi tập dòng sống`);
+      });
+    }
   });
 });

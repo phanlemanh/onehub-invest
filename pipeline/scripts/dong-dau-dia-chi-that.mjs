@@ -79,7 +79,12 @@ async function chup(c) {
   const bai = {};
   for (const r of rows) bai[r.post_id] = [r.offer_id, r.kind, r.st, r.dau ? 1 : 0];
   const xd = (await c.query(`SELECT count(*)::int AS n FROM offer_project WHERE source = 'S03' AND status = 'xung_dot'`)).rows[0].n;
-  return { nThe, dinhVi: await dinhVi(c), xungDotTin: xd, bai };
+  // AC-8 (S4-r2): bài mang hơn MỘT dự án sống (mọi luật) — đúng lỗi hồi sinh dòng DV6 cũ gây ra; sau lượt nạp phải bằng 0.
+  const nhieuDuAn = (await c.query(`SELECT count(*)::int AS n FROM (
+      SELECT subject_key FROM field_assertions
+       WHERE retracted_at IS NULL AND field = 'project_node_id' AND subject_key LIKE 'S03:%'
+       GROUP BY subject_key HAVING count(DISTINCT value) > 1) x`)).rows[0].n;
+  return { nThe, dinhVi: await dinhVi(c), xungDotTin: xd, nhieuDuAn, bai };
 }
 
 async function napIm(c) {
@@ -174,7 +179,9 @@ const THUOC = {
     console.log(`bài mot_du_an ở GỐC: ${motGoc} · rơi khỏi mot_du_an ở SAU: ${roi.length} ${JSON.stringify(sang)} · (nền → sau: ${roiNen})`);
     console.log(`tin xung_dot: gốc ${d.goc.xungDotTin} · nền ${d.truoc.xungDotTin} · sau ${d.sau.xungDotTin}`);
     for (const [p] of roi.slice(0, 20)) console.log(`  rơi: bài ${p} · tin ${d.sau.bai[p]?.[0] ?? "(không còn tin)"}`);
-    return roi.length === 0;
+    if (d.sau.nhieuDuAn == null) { console.error("số đo thiếu số bài nhiều dự án (bản đo cũ) — chạy lại --chay"); process.exit(2); }
+    console.log(`bài mang >1 dự án sống: gốc ${d.goc.nhieuDuAn} · nền ${d.truoc.nhieuDuAn} · sau ${d.sau.nhieuDuAn} (sau phải 0)`);
+    return roi.length === 0 && d.sau.nhieuDuAn === 0 && d.truoc.nhieuDuAn === 0;
   },
   // AC-11: 0 bài mất kind; in nguồn của kind và số bài LẬT sale ↔ rent_lt (khác 0 thì khai Known limits).
   "phu-kind": async () => {

@@ -1,23 +1,14 @@
 -- lui.sql — TG2 dong-dau-dia-chi-luc-nap: trả dữ liệu về trước TG2. Chạy SAU khi đã revert mã (không thì lượt nạp kế đóng dấu lại).
--- Một giao dịch (psql -1). field_assertions là sổ CHỈ THÊM: trigger field_assertions_guard cấm đổi một dòng đã rút, nên lùi
--- không «trả sống» dòng DV6 cũ mà GHI LẠI chúng thành dòng mới (cùng chủ thể, trường, giá trị, luật, căn cứ), như lượt DV6 ghi.
--- Thứ tự: rút dòng TG2 trước, rồi ghi lại dòng DV6 — làm ngược thì có lúc một bài mang hai dự án sống.
+-- Khuôn S4-r3 (GS P4-199 «đổi khuôn»): lùi KHÔNG hồi sinh dòng DV6 đã rút. Bản rút có thể mang giá trị DV6 đã bỏ (sổ nhóm, nhãn
+-- đổi giữa chừng) — hồi sinh mọi bản rút làm bài mang hai dự án sống (lỗi S4-r2). Lùi hai bước:
+--   1. tệp này: rút mọi dòng sống của luật TG2 (lý do lui-tg2), một giao dịch (psql -1);
+--   2. ngay sau đó: `node pipeline/scripts/du-an-tren-tin-s03.mjs --ghi` — DV6 tự tính lại ý định của nó trên dữ liệu hiện tại và
+--      ghi đúng dòng nó muốn (lệnh có sẵn, đúng lời thường trực «ghi dự án lên tin S03 sau mỗi lượt nạp»).
+-- Giữa bước 1 và 2 các bài từng được thẻ đóng dấu tạm không có dự án — chạy hai bước liền nhau.
 
 UPDATE field_assertions SET retracted_at = clock_timestamp(), retract_reason = 'lui-tg2'
  WHERE rule_id = 'dia-chi-the-nhom' AND retracted_at IS NULL;
 
--- Mỗi (chủ thể, trường, giá trị, phương pháp, luật) mà TG2 đã rút: lấy bản rút gần nhất, ghi lại nếu chưa có dòng sống y hệt.
-INSERT INTO field_assertions (subject_key, field, value, evidence_tier, method, method_version, rule_id, evidence, observed_at, changed_by, run_id)
-SELECT r.subject_key, r.field, r.value, r.evidence_tier, r.method, r.method_version, r.rule_id, r.evidence, r.observed_at, 'lui-tg2', r.run_id
-  FROM (SELECT DISTINCT ON (subject_key, field, value_key, method, rule_id) *
-          FROM field_assertions
-         WHERE retract_reason = 'thay-bang-the-nhom' AND rule_id IN ('du-an-nhom-mot-du-an', 'du-an-ten-bai')
-         ORDER BY subject_key, field, value_key, method, rule_id, id DESC) r
- WHERE NOT EXISTS (SELECT 1 FROM field_assertions s
-                    WHERE s.retracted_at IS NULL AND s.subject_key = r.subject_key AND s.field = r.field
-                      AND s.value_key = r.value_key AND s.method = r.method AND s.rule_id = r.rule_id)
-ON CONFLICT DO NOTHING;
-
 SELECT 'tg2_con_song' AS kiem, count(*) FROM field_assertions WHERE rule_id = 'dia-chi-the-nhom' AND retracted_at IS NULL
 UNION ALL
-SELECT 'dv6_song', count(*) FROM field_assertions WHERE rule_id IN ('du-an-nhom-mot-du-an', 'du-an-ten-bai') AND retracted_at IS NULL;
+SELECT 'dv6_song_truoc_buoc_2', count(*) FROM field_assertions WHERE rule_id IN ('du-an-nhom-mot-du-an', 'du-an-ten-bai') AND retracted_at IS NULL;
