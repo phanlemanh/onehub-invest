@@ -211,22 +211,47 @@ const chotKhuon = (txt) => {
 };
 const grepSession = (p) => spawnSync("/usr/bin/grep", ["-q", "^reason=session", p]).status;
 
-function chotMaChiDoc(txtHb, txtSong) {
-  const xau = [];
-  for (const [ten, txt] of [["heartbeat", txtHb], ["s03-song", txtSong]]) {
-    for (const dong of txt.split("\n")) {
-      const d = dong.trim();
-      if (!d || d.startsWith("#")) continue;
-      if (/openclaw\.json/.test(d) && /(>|\btee\b|sed -i|\bjq\b|\bcp\b|\bmv\b)/.test(d)) xau.push(`${ten}: ${d}`);
-      const goiCli = /\$\{?OPENCLAW\}?|\.openclaw\/bin\/openclaw|(^|[;&|(\s"])openclaw\s/.test(d);
-      if (!goiCli) continue;
-      if (/^OPENCLAW="\$\{ZALO_OPENCLAW_CLI:-\$HOME\/\.openclaw\/bin\/openclaw\}"$/.test(d)) continue;
-      if (/"\$OPENCLAW" channels status( |$)/.test(d) || /"\$OPENCLAW" directory groups list --channel zalouser( |$)/.test(d)) continue;
-      xau.push(`${ten}: ${d}`);
+// AC-5 quét tĩnh: hai bộ dò RIÊNG — (ghi) lệnh ghi vào openclaw.json; (goi) lời gọi CLI ngoài hai dạng cho phép.
+// Bộ dò lời gọi theo BIẾN, không theo đường dẫn: tập biến CLI = {OPENCLAW, ZALO_OPENCLAW_CLI} ∪ mọi biến được gán từ
+// đường `bin/openclaw`, từ lệnh `openclaw` trần hay từ một biến CLI khác (lặp tới điểm dừng). Mọi chỗ dùng biến CLI
+// (ngoài dòng gán) và mọi lệnh `openclaw` trần là một lời gọi; lời gọi phải là `"$OPENCLAW" channels status` hoặc
+// `"$OPENCLAW" directory groups list --channel zalouser`.
+const GAN = /^(?:export\s+|local\s+)?([A-Za-z_][A-Za-z0-9_]*)=(.*)$/;
+const DONG_GAN_GOC = /^OPENCLAW="\$\{ZALO_OPENCLAW_CLI:-\$HOME\/\.openclaw\/bin\/openclaw\}"$/;
+const DANG_GOI_CHO_PHEP = [/"\$OPENCLAW" channels status( |$)/, /"\$OPENCLAW" directory groups list --channel zalouser( |$)/];
+const dungBien = (v) => new RegExp(`\\$\\{?${v}\\}?(?![A-Za-z0-9_])`);
+const OPENCLAW_TRAN = /(^|[;&|(`]\s*|\s)openclaw(\s|$)/;
+function chotMaChiDocChiTiet(txtHb, txtSong) {
+  const loai = new Set();
+  const dong = [];
+  for (const txt of [txtHb, txtSong]) for (const d0 of txt.split("\n")) {
+    const d = d0.trim();
+    if (d && !d.startsWith("#")) dong.push(...d.split(/;\s*/).map((x) => x.trim()).filter(Boolean));
+  }
+  const bien = new Set(["OPENCLAW", "ZALO_OPENCLAW_CLI"]);
+  for (let doi = true; doi; ) {
+    doi = false;
+    for (const d of dong) {
+      const g = d.match(GAN);
+      if (!g || bien.has(g[1])) continue;
+      const rhs = g[2];
+      if (/bin\/openclaw/.test(rhs) || OPENCLAW_TRAN.test(` ${rhs.replace(/["'$()]/g, " ")} `) || [...bien].some((v) => dungBien(v).test(rhs))) {
+        bien.add(g[1]);
+        doi = true;
+      }
     }
   }
-  return xau.length ? "mã heartbeat có lệnh ghi cấu hình hoặc lời gọi CLI lạ" : null;
+  for (const d of dong) {
+    if (/openclaw\.json/.test(d) && /(>|\btee\b|sed -i|\bjq\b|\bcp\b|\bmv\b)/.test(d)) loai.add("ghi");
+    if (DONG_GAN_GOC.test(d)) continue;
+    const g = d.match(GAN);
+    if (g && !/\s/.test(g[2].replace(/"[^"]*"/g, "").replace(/'[^']*'/g, ""))) continue; // dòng chỉ gán, không gọi
+    const laGoi = [...bien].some((v) => dungBien(v).test(d)) || OPENCLAW_TRAN.test(d.replace(/\.openclaw/g, ""));
+    if (laGoi && !DANG_GOI_CHO_PHEP.some((re) => re.test(d))) loai.add("goi");
+  }
+  return { msg: loai.size ? "mã heartbeat có lệnh ghi cấu hình hoặc lời gọi CLI lạ" : null, loai: [...loai].sort().join(",") };
 }
+const chotMaChiDoc = (hb, song) => chotMaChiDocChiTiet(hb, song).msg;
 
 // ---------------------------------------------------------------- ca
 const ketQua = new Map();
@@ -410,11 +435,25 @@ async function caSoLoiGoiDo() {
 
 function caMaChiDoc() {
   const hb = readFileSync(HB, "utf8"), song = readFileSync(SONG, "utf8");
-  const v = chotMaChiDoc(hb, song);
-  kiem("MA-CHI-DOC", [[v === null, v ?? ""]]);
-  const hbPha = thay(hb, 'rm -f "$TEP_ST"\n', 'rm -f "$TEP_ST"\necho "{}" > "$HOME/.openclaw/openclaw.json"\nGW="$HOME/.openclaw/bin/openclaw"; "$GW" config set a b\n');
-  if (hbPha === hb) return ghi("MA-CHI-DOC-DO", false, "bản phá không áp được");
-  kiemDo("MA-CHI-DOC-DO", chotMaChiDoc(hbPha, song), "mã heartbeat có lệnh ghi cấu hình hoặc lời gọi CLI lạ");
+  const v = chotMaChiDocChiTiet(hb, song);
+  kiem("MA-CHI-DOC", [[v.msg === null, `${v.msg} (loại: ${v.loai})`]]);
+  // Ma trận bản phá: mỗi bản một vi phạm, mỗi bộ dò phải tự đỏ (loại đúng một), không dựa bộ dò kia.
+  const neo = 'rm -f "$TEP_ST"\n';
+  const PHA = [
+    ["ghi-cau-hinh", 'echo "{}" > "$HOME/.openclaw/openclaw.json"\n', "ghi"],
+    ["bien-khac-dong", 'GW="$HOME/.openclaw/bin/openclaw"\n"$GW" config set a b\n', "goi"],
+    ["bien-moi-truong", '"$ZALO_OPENCLAW_CLI" message send --target x --message y\n', "goi"],
+    ["bi-danh", 'CLI2="$OPENCLAW"\n$CLI2 channels logout\n', "goi"],
+    ["dang-la-qua-bien-goc", 'chay_20s "$TEP_ST" "$OPENCLAW" message send --target x --message y\n', "goi"],
+  ];
+  const loi = [];
+  for (const [ten, chen, loaiCan] of PHA) {
+    const hbPha = thay(hb, neo, neo + chen);
+    if (hbPha === hb) { loi.push(`${ten}: bản phá không áp được`); continue; }
+    const r = chotMaChiDocChiTiet(hbPha, song);
+    if (r.msg !== "mã heartbeat có lệnh ghi cấu hình hoặc lời gọi CLI lạ" || r.loai !== loaiCan) loi.push(`${ten}: nhận ${JSON.stringify(r)}, cần loại ${loaiCan}`);
+  }
+  ghi("MA-CHI-DOC-DO", loi.length === 0, loi.length ? loi.join("; ") : `(đỏ đúng: mã heartbeat có lệnh ghi cấu hình hoặc lời gọi CLI lạ — ${PHA.length} bản phá, mỗi bộ dò tự đỏ)`);
 }
 
 async function caAnToan() {
