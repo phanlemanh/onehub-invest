@@ -164,3 +164,10 @@ Trục (quét bằng morphological-scan, preset entity-feature):
   trùng tên + 2 lệch toà, 19 toà có hai `khu_id` nếu đọc từ bản thu không kèm danh sách khu; migration 111 giữ sẵn.
 - Không đếm trùng với DA36 (N1): N1 đếm toà treo thẳng dưới dự án 163 (cột gốc) → 123 (view), trong đó 109 là toà S16 — phần 109
   này thuộc hàng này; DA36 đếm phần còn lại.
+- Nhận diện thẻ cho hàng U2 (the-danh-ba-hien-o-hang-duyet): hàng này KHÔNG đúc loại thẻ mới. Thẻ S16 nó chạm (cho nghỉ 2 thẻ
+  `can-lech-toa`) giữ `item_type = 'entity_match'` (ràng buộc cột chỉ nhận `entity_match`, `source_decision`, `agent_output`,
+  `data_quality` — đo 17/11), `item_id` dạng `s16:%`, loại ở `evidence->>'loai'`. Hàng U2 nhận diện thẻ danh bạ S16 bằng một vị từ
+  `item_id LIKE 's16:%'`.
+- Hàng này không hứa thẻ hiện trên `/ops/review`: mọi AC đo trạng thái thẻ trong `review_queue`, không đo trang — trang ẩn mọi
+  thẻ `entity_match` đang chờ theo quyết định đóng băng V7 (08/11); hiện thẻ danh bạ là hàng U2.
+- Ca app GS-AC-6 đỏ sẵn trên main sau DA33 (probe đếm nhầm 60 thẻ S16) — N1 sửa, không thuộc hàng này.
