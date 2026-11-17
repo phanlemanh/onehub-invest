@@ -178,7 +178,7 @@ async function main() {
       // Phần bốn: căn có toà S16 đã ra thẻ «khớp nhiều toà» (AC-5) — đếm riêng theo mã thẻ của toà.
       const { s16Ref } = await import("../lib/s16-danh-muc.mjs");
       // Phần bốn «căn thuộc toà S16 đã ra thẻ»: thẻ khớp nhiều (AC-5) và thẻ trùng tên (GS quyết 17/11, cùng nhánh không-đúc-ra-thẻ).
-      const theTheoLoai = async (loai) => new Set((await c.query("SELECT item_id FROM review_queue WHERE evidence->>'loai' = $1", [loai])).rows.map((x) => x.item_id));
+      const theTheoLoai = async (loai) => new Set((await c.query(`SELECT item_id FROM review_queue WHERE item_id LIKE 's16:%' AND evidence->>'loai' = $1`, [loai])).rows.map((x) => x.item_id));
       const theKhop = await theTheoLoai("toa-khop-nhieu"), theTrung = await theTheoLoai("toa-trung-ten");
       const coThe = new Set([...theKhop, ...theTrung]);
       const { rows: canToa } = await c.query(
