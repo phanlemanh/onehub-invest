@@ -136,6 +136,20 @@ test("DA33-AC-9 tokenS16 tách toa_id/khu_id với mã căn và bỏ mã căn to
   }
 });
 
+// sync-cloud gọi tokenS16 trên phiên local: bảng 103 nằm ở public mà phiên đứng ở schema khác (test app chạy schema riêng)
+// thì câu đọc không thấy bảng — phải coi là chưa áp 103 (null), không ném «relation does not exist» (CI app E4c 17/11).
+test("DA33-AC-9 tokenS16 theo search_path: schema không có bảng S16 → null, không ném; về public → có token", async () => {
+  await db.query("CREATE SCHEMA IF NOT EXISTS s16_khac");
+  try {
+    await db.query("SET search_path TO s16_khac");
+    assert.equal(await tokenS16(db), null, "DA33-AC-9 tokenS16 không trả null ở schema thiếu bảng S16");
+  } finally {
+    await db.query("RESET search_path");
+    await db.query("DROP SCHEMA s16_khac");
+  }
+  assert.notEqual(await tokenS16(db), null, "DA33-AC-9 đối chứng: ở public tokenS16 phải đọc được");
+});
+
 // ---- AC-3 qua view: cùng ma trận năm ô như pipeline/lib/s16-danh-muc.test.mjs ----
 const O = [
   { o: "ô1 khác-khu", dong: [["qv1", "k1", "QS2.08", "QS2.081101"], ["qv1", "k2", "QS2.08", "QS2.081101"]], ma: "QS2.081101" },

@@ -30,7 +30,11 @@ export const BANG_SOAT_MA_CAN = Object.freeze(["asset_nodes", "review_queue"]);
  * dinhDanh: toa_id, khu_id. maCan: mã căn viết hoa, BỎ token toàn số (không phân biệt được với định danh số của kho).
  */
 export async function tokenS16(c) {
-  if (!(await c.query("SELECT to_regclass('public.stg_s16_toa') AS t")).rows[0].t) return null;
+  // Kiểm theo đúng search_path mà câu đọc dưới dùng (không ghim public): DB có 103 ở public nhưng phiên đứng ở schema khác
+  // (test chạy schema riêng) thì câu đọc không thấy bảng — coi như chưa áp 103.
+  const co = (await c.query(
+    `SELECT to_regclass('stg_s16_khu') IS NOT NULL AND to_regclass('stg_s16_toa') IS NOT NULL AND to_regclass('stg_s16_can') IS NOT NULL AS t`)).rows[0].t;
+  if (!co) return null;
   const { rows } = await c.query(
     `SELECT DISTINCT x, loai FROM (
        SELECT khu_id AS x, 'dinh_danh' AS loai FROM stg_s16_khu UNION ALL SELECT toa_id, 'dinh_danh' FROM stg_s16_toa
