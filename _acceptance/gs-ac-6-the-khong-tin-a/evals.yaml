@@ -1,0 +1,24 @@
+schema_version: 1
+feature_slug: gs-ac-6-the-khong-tin-a
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: "bash _acceptance/gs-ac-6-the-khong-tin-a/probes/kiem.sh e1"
+    paths: [app/tests/the-so-gia-tri-song.test.tsx, _acceptance/gs-ac-6-the-khong-tin-a/probes/kiem.sh]
+    expected: "exit 0 trên DB máy thu :5433 (không đặt CI); dòng «✔ GS-AC-6 probe DB máy thu: tập thẻ có Alert bên A bằng tập Tin A rời kho» là ✔ (không phải # SKIP); ℹ fail 0. Trên bản origin/main của tệp cùng ca đỏ (đối chứng)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: "bash _acceptance/gs-ac-6-the-khong-tin-a/probes/kiem.sh e2"
+    paths: [app/tests/the-so-gia-tri-song.test.tsx, _acceptance/gs-ac-6-the-khong-tin-a/probes/kiem.sh]
+    expected: "exit 0; ca «GS-AC-6 tập rời kho chỉ gồm thẻ có bên» ✔: tập Tin A rời = [2], Tin B rời = [3], câu cũ trả [1, 2] (thẻ danh bạ 1 lọt — chiều đỏ của câu cũ)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: "bash _acceptance/gs-ac-6-the-khong-tin-a/probes/kiem.sh e3"
+    paths: [app/tests/the-so-gia-tri-song.test.tsx, _acceptance/gs-ac-6-the-khong-tin-a/probes/kiem.sh]
+    expected: "exit 0; dòng «PHAM-VI OK», không dòng «NGOÀI PHẠM VI»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
