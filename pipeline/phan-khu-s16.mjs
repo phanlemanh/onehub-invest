@@ -7,7 +7,7 @@
 import { realpathSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
-import { NOI_DU_AN_S16 } from "./lib/s16-danh-muc.mjs";
+import { NOI_DU_AN_S16, duoiDuAn } from "./lib/s16-danh-muc.mjs";
 import { chuanHoaTenToa } from "./lib/danh-ba-vat-the.mjs";
 import { dungThe, keHoachPhanKhu, khoaKhu } from "./lib/s16-phan-khu.mjs";
 
@@ -16,9 +16,9 @@ export const CAN_CU = "S16-danh-sach-khu";
 const DB_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 
 /** Khu S16 của các dự án đã nối, kèm số toà mang bí danh S16 có đúng khu ấy (cùng luật view 111). */
+// `noi` khoá theo ĐUÔI mã dự án (duoiDuAn, như NOI_DU_AN_S16 của bước dựng); stg mang mã đầy đủ — lọc ở JS, không ở SQL.
 async function docKhu(client, noi) {
-  const duAn = Object.keys(noi);
-  if (!duAn.length) return [];
+  if (!Object.keys(noi).length) return [];
   const { rows } = await client.query(`
     WITH toa AS (
       SELECT a.object_key, min(t.du_an || '/' || t.khu_id) AS khu
@@ -29,8 +29,8 @@ async function docKhu(client, noi) {
        GROUP BY a.object_key HAVING count(DISTINCT t.du_an || '/' || t.khu_id) = 1)
     SELECT k.du_an, k.khu_id, (array_agg(k.khu_ten ORDER BY k.snapshot_id DESC) FILTER (WHERE k.khu_ten IS NOT NULL))[1] AS khu_ten,
            (SELECT count(*)::int FROM toa WHERE toa.khu = k.du_an || '/' || k.khu_id) AS so_toa
-      FROM stg_s16_khu k WHERE k.du_an = ANY($1) GROUP BY k.du_an, k.khu_id`, [duAn]);
-  return rows;
+      FROM stg_s16_khu k GROUP BY k.du_an, k.khu_id`);
+  return rows.filter((r) => noi[duoiDuAn(r.du_an)]);
 }
 
 async function docNutDuAn(client, noi) {
@@ -42,8 +42,8 @@ async function docNutDuAn(client, noi) {
 export async function dungTheLuat(client, { noi = NOI_DU_AN_S16 } = {}) {
   const duAn = await docNutDuAn(client, noi);
   const khu = (await docKhu(client, noi))
-    .filter((k) => duAn.has(noi[k.du_an]))
-    .map((k) => ({ ...k, du_an_node_id: duAn.get(noi[k.du_an]).id }));
+    .filter((k) => duAn.has(noi[duoiDuAn(k.du_an)]))
+    .map((k) => ({ ...k, du_an_node_id: duAn.get(noi[duoiDuAn(k.du_an)]).id }));
   const { rows: nut } = await client.query(`
     SELECT id::int AS id, parent_id::int AS parent_id, name,
            COALESCE(ARRAY(SELECT jsonb_array_elements_text(meta -> 's16_khu_ids')), '{}') AS s16_khu_ids
