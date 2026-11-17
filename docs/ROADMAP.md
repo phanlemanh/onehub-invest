@@ -887,6 +887,35 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
       và 12 mục chờ cho việc mục tiêu cần mà lộ trình chưa có và việc nợ ngoài lộ trình.
     - Trạng thái thật của một hàng đọc cả trên nhánh đang làm, không chỉ trên `main`. Ngưỡng 90% (MS1) và 50% (MS3) là đề
       xuất, chốt ở Cổng Phạm vi của hàng mang thước.
+54. **Cấu trúc danh bạ: nguồn chủ đầu tư S16 thắng về cấu trúc, cây Dự án → Phân khu → Toà** (17/11). Căn cứ: phân tích cấu
+    trúc danh bạ 17/11 (phiên phân tích, chỉ đọc DB máy thu 06:15–06:45Z; bản đầy đủ ở `research-local/`, không vào kho).
+    54/198 toà treo thẳng dưới dự án vì luật xếp phân khu lúc đúc chỉ xét nút `node_type = building` khớp tên tuyệt đối (view
+    `v_toa_nut_vung` của migration 097 đưa về 14, nhưng `/ops/registry` đọc cột gốc); 0/344 dự án có cha; 524 mã nguồn chưa nối
+    (S06 8, S08 172, S09 344), phần lớn vì thiếu nút, nhất là Hà Nội (11 nút dự án), và S09 chưa có bảng nối; trong mã không có
+    thang tin cậy: nguồn đúc trước thắng, lệch thì ra thẻ.
+    - **Ba câu Q-A, Q-B, Q-C** — Mạnh «Theo khuyến nghị cả ba câu» (gõ ở phiên phân tích, 07:57Z):
+      - **Q-A dự án con từ hậu tố khu S08.** Dự án S08 có hậu tố khu (OCP1, OCP2…) → máy đúc nút dự án con, gắn cha theo hậu
+        tố, qua thẻ luật Mạnh xem mẫu. Áp luật dự án con của mục 39 và luật nút ứng viên của mục 44 Hỏi-1.
+      - **Q-B S16 thắng về cấu trúc.** Ở dự án có S16, S16 tự thắng về toà, mã căn, căn thuộc toà nào, toà thuộc phân khu nào.
+        S08, S09 lệch thì giữ làm bí danh và đếm số lệch trên Ops, không ra thẻ từng cái. Giá, pháp lý và mọi thuộc tính khác
+        vẫn lệch → thẻ. **Sửa mô hình 11/11 §1.3 (mục 44)** «Không có thứ tự nguồn tự thắng» cho riêng phần cấu trúc ở dự án có
+        S16 (thang theo thuộc tính ở `docs/architecture/mo-hinh-danh-ba-du-an.md` §1.3). Hàng DA33 đi tiếp nguyên hành vi đã
+        ký (lệch → thẻ); hành vi mới là hàng nối tiếp dựng trên dữ liệu DA33, tính phân khu hiệu lực ở view `v_toa_nut_vung`
+        (cột gốc của toà giữ nguyên vì rào chỉ-thêm 082).
+      - **Q-C phân khu từ danh sách khu S16.** S16 đúc nút phân khu từ danh sách khu chủ đầu tư công bố, qua thẻ luật (mục 38:
+        phân khu là thông tin dự án công khai). Mã căn lấy bằng đăng nhập vẫn không lên cloud.
+    - **«Trong hệ VGP»** (Mạnh gõ ở phiên P4, theo nhật ký giám sát 01:32Z): khi đếm bài lạc dự án trong nhóm S03 (TG2 AC-10),
+      bài Masteri Centre Point và Lumière Boulevard tính trong hệ Grand Park. **Chỉ là cách chấm**, không gộp nút danh bạ; bài
+      có chữ nêu rõ hai dự án này mà khớp nút riêng vẫn giữ dự án của chữ.
+    - **«Có» sửa AC-9, AC-10 của DA33** (Mạnh gõ ở phiên P2, 06:09Z): bộ soát mã S16 soát mã toà và mã khu S16 ở mọi bảng sắp
+      đẩy lên cloud; mã căn S16 chỉ soát ở chỗ dữ liệu S16 chạm được (thẻ duyệt `review_queue`, bảng nút `asset_nodes`); bỏ
+      token toàn số. Lý do: lời cũ chặn trọn đồng bộ cloud ngay lượt đầu (69 dòng trúng, 47 mã trúng đều là mã căn người bán
+      ghi công khai hoặc số trùng định danh; 0 mã toà, 0 mã khu).
+    - **«Làm VHZ1 trước rồi VHZ2»** (Mạnh gõ ở phiên U2, theo nhật ký giám sát): hàng `l6d-down-keo-dai-ly-do` (VHZ1) trước,
+      `watchdog-tu-khoi-dong-gateway` (VHZ2) sau, thay phán gộp một hàng của giám sát.
+    - Hàng (bản phạm vi `docs/plan/pham-vi-danh-ba-cau-truc-1711.md`): DA36 `danh-ba-toa-theo-phan-khu-hieu-luc` (trang đọc
+      view, 54 → 14), DA37 `danh-ba-s16-thang-cau-truc` (Q-B + Q-C, sau DA33), DA38 `du-an-con-tu-hau-to-khu` (Q-A, sau DA8 ba
+      nút Grand Park của mục 39 Hỏi-2), DA39 `nut-ung-vien-s08-s09-ha-noi` (nút thiếu + bảng nối S09, lát mỏng của DA18, DA3).
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
