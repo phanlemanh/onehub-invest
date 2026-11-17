@@ -151,10 +151,37 @@ c262066dfba285b4a75afe1738c40ac0
 f3a898a8e69f2e27915b0cbafab9cb85
 ```
 
-## Kết quả
+## Kết quả — NHÁP, CHỜ MẠNH DUYỆT
 
-**CHƯA CÓ — chờ người gắn nhãn.** Mẫu đã rút và khoá hạt giống; bước còn lại là người đọc 100 bài rồi đánh dấu
-cột `lac`, sau đó chạy lệnh tính và dán vào đây: tỉ lệ, cả hai cận, cỡ mẫu thật, và một câu kết luận bối cảnh
-nhóm đủ hay chưa đủ làm mặc định.
+Trợ lý đã đọc cả 100 bài và điền nháp (17/11). **Đây chưa phải số của hồ sơ** — nó treo trên đúng một câu hỏi
+mà chỉ Mạnh trả lời được, và hai cách trả lời cho hai kết luận ngược nhau.
+
+### Câu phải quyết: Masteri Centre Point và Lumière Boulevard có phải dự án khác Vinhomes Grand Park không?
+
+Bốn trong năm bài bị đánh «lạc» là bài nói về **MCP** (Masteri Centre Point) hay **LBV** (Lumière Boulevard) —
+hai dự án của Masterise Homes, nằm trong hoặc sát khu Vinhomes Grand Park và được rao trong chính nhóm VGP.
+
+| Cách đọc | bài lạc | tỉ lệ | Wilson 95% | so ngưỡng 10% |
+|---|---|---|---|---|
+| **A** — MCP, LBV là dự án KHÁC | 5/100 | 5,00% | 2,15% – **11,18%** | **CHƯA ĐẠT** |
+| **B** — MCP, LBV tính trong hệ VGP | 1/100 | 1,00% | 0,18% – **5,45%** | **ĐẠT** |
+
+Chỉ một bài lạc theo cả hai cách: bài rao «căn hot nhất Ocean park 2 3» (dự án ở Hà Nội) đăng trong nhóm
+Vinhomes Grand Park ở TP.HCM.
+
+Bốn ca MCP/LBV, nguyên văn đầu bài: «tìm 1pn+ mcp lbv ở liền nhà trống CĐT» · «Cho thuê 2PN bếp rèm căn góc
+LBV» · «Khách tìm thuê căn 2pn2wc có nội thất Khu mcp» · «MCP B. 1PN+ Full 15tr».
+
+### Giới hạn của chính mẫu này, phải đọc cùng con số
+
+- **41/100 bài không có chữ nào nói về dự án**: 39 bài chỉ có đường dẫn ảnh hoặc video, 2 bài là quảng cáo
+  không phải bất động sản (mở tài khoản xe máy điện, bán tài khoản Netflix). Với những bài ấy ta chỉ biết
+  **chữ bài không mâu thuẫn**, không biết là đúng. Tính riêng 59 bài có chữ: cách A cho 5/59 = 8,47%, cận trên
+  **18,35%** (chưa đạt); cách B cho 1/59 = 1,69%, cận trên **9,00%** (đạt).
+- **Mẫu rút trên MỌI bài, trong khi TG2 chỉ đóng dấu bài thuộc một tin.** Bài «Yêu cầu» (khách tìm nhà) và bài
+  chỉ ảnh không thành tin nên không bị đóng dấu — mà hai trong năm ca lạc của cách A lại đúng là bài Yêu cầu.
+  Nếu Mạnh muốn thước bám đúng tập bị đóng dấu thì phải rút lại mẫu trên tập ấy, với hạt giống mới khai trước.
 
 Cận trên vượt 10% là **chưa đạt**, và kết luận đúng khi ấy là **hàng đổi hướng** — không phải một ghi chú.
+
+Bảng nhãn nháp đầy đủ kèm ghi chú từng ca: `research-local/mau-bai-lac-du-an.md` (ngoài kho).
