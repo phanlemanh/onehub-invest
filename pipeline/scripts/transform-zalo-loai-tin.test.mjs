@@ -261,7 +261,8 @@ describe("SLT-AC-8 đếm theo nguồn", () => {
     const bai = [...BAN, ...THUE, ...YEU_CAU, ...KHONG_RAC.slice(0, 4), ...CO_SAN.map(([t]) => [t])];
     const nguon = bai.map(([t]) => suy(goc, t).nguon);
     const dem = goc.demNguonLoai(nguon);
-    assert.deepEqual(dem, { "chu-bai": 2, "tin-hieu-chu": 9, "don-vi-gia": 7, "boi-canh-nhom": 0, "yeu-cau": 8, bo: 4 });
+    // «the-nhom» = 0 vì bộ bài này gọi suy() không truyền ô bán/thuê của thẻ — nguồn mới có mặt, chưa có bài nào đi qua nó.
+    assert.deepEqual(dem, { "chu-bai": 2, "tin-hieu-chu": 9, "don-vi-gia": 7, "the-nhom": 0, "boi-canh-nhom": 0, "yeu-cau": 8, bo: 4 });
     assert.equal(Object.values(dem).reduce((a, b) => a + b, 0), bai.length);
     assert.deepEqual(Object.keys(dem), [...goc.NGUON_LOAI]);
   });
@@ -328,5 +329,88 @@ describe("CV-AC-1/2 «<số> năm/nữ» không phải phòng ngủ, viết tắ
     const mod = await banDot([[NHANH_N_MOI, "\\d+\\s*n\\s*\\+?\\s*\\d?(?=[\\d+\\s])"]]);
     const cu = await banCu();
     assert.throws(() => kiemVietTat(mod, cu), /CV-AC-2 viết tắt phòng ngủ mất: .*căn 2n, giá 14tr/);
+  });
+});
+
+// ---------- TN: ô bán/thuê của thẻ địa chỉ nhóm (TG2 dong-dau-dia-chi-luc-nap, AC-11) ----------
+// Thứ tự: chữ bài → ô bán/thuê của thẻ ĐÃ DUYỆT → nhánh boi-canh-nhom (giữ nguyên) → bỏ.
+// Thẻ CHEN TRƯỚC nhánh cũ, không thay nó: trượt cửa giá thì RƠI XUỐNG nhánh cũ, nên độ phủ `kind`
+// chỉ giữ nguyên hoặc tăng. Giá trị `mucDichThe` đã được bộ đọc thẻ ánh xạ sang "sale"/"rent_lt"/null
+// (108 lưu ban/thue/ca_hai) — suyLoai KHÔNG tự ánh xạ.
+
+/** Chạy suy loại với ô bán/thuê của thẻ; trả cả priceVnd để bắt tác dụng phụ lên pr. */
+const suyThe = (mod, text, mucDich, mucDichThe) => {
+  const pr = mod.parsePost(text);
+  return { ...mod.suyLoai(pr, text, mucDich, mucDichThe), priceVnd: pr.priceVnd };
+};
+
+const PERM2 = "Căn hộ 2PN 70m2 giá 45tr/m2, bàn giao tháng 12";
+const DONG_800 = "Căn 2PN 70m2 giá 800.000.000";
+const DUOI_SAN = "Căn 2PN 70m2 giá 200.000.000";
+const KHONG_DON_VI = "Căn hộ 2PN 70m2 bàn giao tháng 12, giá 2.900";
+
+// [text, mucDich nhóm, mucDichThe, kind, nguon, priceVnd]
+const THE_NHOM = [
+  // thẻ thắng bối cảnh nhóm — nhóm nói thuê, thẻ nói bán
+  [PERM2, "rent_lt", "sale", "sale", "the-nhom", null],
+  // thẻ LẬT chiều của nhánh cũ: nhóm nói bán, thẻ nói thuê (đúng ca AC-11 đếm)
+  [DONG_800, "sale", "rent_lt", "rent_lt", "the-nhom", 800_000_000],
+  // thẻ bán thắng VÀ đặt giá y như nhánh cũ vẫn làm cho giá không đơn vị
+  [KHONG_DON_VI, "rent_lt", "sale", "sale", "the-nhom", 2_900_000_000],
+  // thẻ thuê trượt cửa giá theo m² → RƠI XUỐNG nhánh cũ, không thành «bỏ»
+  [PERM2, "sale", "rent_lt", "sale", "boi-canh-nhom", null],
+  // thẻ bán trượt sàn giá bán → RƠI XUỐNG nhánh cũ, và KHÔNG đụng tới giá của bài
+  [DUOI_SAN, "rent_lt", "sale", "rent_lt", "boi-canh-nhom", 200_000_000],
+  // chữ bài vẫn thắng thẻ
+  ["Căn 2PN 70m2 giá 3,2 tỷ", "rent_lt", "rent_lt", "sale", "tin-hieu-chu", 3_200_000_000],
+  // không có thẻ → y hệt hôm nay
+  [PERM2, "sale", null, "sale", "boi-canh-nhom", null],
+];
+
+function kiemTheNhom(mod, ten, oList) {
+  const lech = [];
+  for (const [text, mucDich, mucDichThe, kind, nguon, gia] of oList) {
+    const r = suyThe(mod, text, mucDich, mucDichThe);
+    if (r.kind !== kind || r.nguon !== nguon || r.priceVnd !== gia) {
+      lech.push(`«${text}» nhóm=${mucDich} thẻ=${mucDichThe} → ${r.kind}/${r.nguon}/${r.priceVnd} (cần ${kind}/${nguon}/${gia})`);
+    }
+  }
+  if (lech.length) assert.fail(`${ten}: ${lech.join(" · ")}`);
+}
+
+describe("TN ô bán/thuê của thẻ nhóm chen trước nhánh boi-canh-nhom", () => {
+  test("TN-1 bảy ô «nhóm × thẻ»: thẻ thắng bối cảnh, chữ bài thắng thẻ, trượt cửa thì rơi xuống", () => {
+    assert.equal(THE_NHOM.length, 7);
+    kiemTheNhom(goc, "TN-1 thẻ nhóm", THE_NHOM);
+  });
+
+  test("TN-2 «the-nhom» là một nguồn khai báo, nằm giữa don-vi-gia và boi-canh-nhom", () => {
+    assert.ok(goc.NGUON_LOAI.includes("the-nhom"), "NGUON_LOAI thiếu the-nhom");
+    assert.equal(goc.NGUON_LOAI.indexOf("the-nhom"), goc.NGUON_LOAI.indexOf("don-vi-gia") + 1);
+    assert.equal(goc.NGUON_LOAI.indexOf("boi-canh-nhom"), goc.NGUON_LOAI.indexOf("the-nhom") + 1);
+    assert.equal(goc.demNguonLoai(["the-nhom", "the-nhom", "bo"])["the-nhom"], 2);
+  });
+
+  test("TN-3 thẻ KHÔNG đụng tới pr khi nó còn có thể rơi xuống nhánh cũ", () => {
+    const pr = goc.parsePost(DUOI_SAN);
+    const truoc = { ...pr };
+    goc.suyLoai(pr, DUOI_SAN, "rent_lt", "sale"); // thẻ bán trượt sàn giá → rơi xuống
+    assert.deepEqual({ ...pr }, truoc, "suyLoai sửa pr trên đường rơi-xuống");
+  });
+
+  test("chiều đỏ TN-1: bản đột biến cho nhánh thẻ BỎ thay vì rơi xuống → hai ô trượt cửa đỏ", async () => {
+    const mod = await banDot([[
+      'if (mucDichThe === KIND.sale || mucDichThe === KIND.rent_lt) {',
+      'if (mucDichThe === KIND.sale || mucDichThe === KIND.rent_lt) {\n    if (true) return { kind: null, nguon: "bo" };',
+    ]]);
+    assert.throws(() => kiemTheNhom(mod, "TN-1 thẻ nhóm", THE_NHOM), /TN-1 thẻ nhóm: .*45tr\/m2.*nhóm=sale/);
+  });
+
+  test("chiều đỏ TN-1b: bản đột biến cho thẻ THAY nhánh cũ (bỏ nhánh boi-canh-nhom) → ô không-thẻ mất kind", async () => {
+    const mod = await banDot([[
+      'if (mucDich === KIND.sale || mucDich === KIND.rent_lt) {',
+      'if (false) {',
+    ]]);
+    assert.throws(() => kiemTheNhom(mod, "TN-1 thẻ nhóm", THE_NHOM), /TN-1 thẻ nhóm: .*thẻ=null/);
   });
 });

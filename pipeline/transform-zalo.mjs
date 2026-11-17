@@ -478,7 +478,7 @@ export function parsePost(text, { giaKhongDonVi = true } = {}) {
 // vàng xác nhận; luật ở lại làm dự phòng.
 
 /** Nguồn suy loại, theo thứ tự đếm của dòng log. */
-export const NGUON_LOAI = Object.freeze(["chu-bai", "tin-hieu-chu", "don-vi-gia", "boi-canh-nhom", "yeu-cau", "bo"]);
+export const NGUON_LOAI = Object.freeze(["chu-bai", "tin-hieu-chu", "don-vi-gia", "the-nhom", "boi-canh-nhom", "yeu-cau", "bo"]);
 
 // Yêu cầu (listing_intent = inquiry, CONTEXT.md): bên mua — «cần mua/thuê/tìm», «tìm mua/thuê/căn/nhà», «khách … xem/tìm/cần»
 // trong cùng câu ngắn, «anh chị/ai có căn (gửi)». «Có khách cọc», «đã có khách» là tin rao (không có động từ tìm/xem/cần).
@@ -554,9 +554,11 @@ export function mucDichNhom(bai) {
  * @param {ReturnType<typeof parsePost>} pr  (bị sửa priceVnd trong ca giá không đơn vị)
  * @param {string} text
  * @param {KIND.sale|KIND.rent_lt|"ca-hai"|undefined} mucDich
+ * @param {KIND.sale|KIND.rent_lt|null} [mucDichThe] ô bán/thuê của thẻ địa chỉ nhóm ĐÃ DUYỆT (TG2), đã được bộ đọc
+ *   thẻ ánh xạ từ ban/thue/ca_hai sang sale/rent_lt/null — suyLoai không tự ánh xạ.
  * @returns {{ kind: KIND.sale|KIND.rent_lt|null, nguon: string }}
  */
-export function suyLoai(pr, text, mucDich) {
+export function suyLoai(pr, text, mucDich, mucDichThe = null) {
   if (pr.kind) return { kind: pr.kind, nguon: "chu-bai" };
   const so = gatSo(text ?? "");
   if (YEU_CAU.test(so)) return { kind: null, nguon: "yeu-cau" };
@@ -572,6 +574,19 @@ export function suyLoai(pr, text, mucDich) {
     if (pr.priceVnd == null && giaKhongDonVi) pr.priceVnd = Math.round(parseVnNumber(giaKhongDonVi[1]) * 1e6);
     if (pr.priceVnd != null && pr.priceVnd < GIA_BAN_SAN) return { kind: null, nguon: "bo" };
     return { kind: KIND.sale, nguon: "tin-hieu-chu" };
+  }
+  // TG2 (dong-dau-dia-chi-luc-nap, AC-11): ô bán/thuê của thẻ nhóm chen TRƯỚC bối cảnh nhóm nhưng KHÔNG thay nó —
+  // trượt cửa giá thì rơi xuống nhánh dưới, nên độ phủ `kind` chỉ giữ nguyên hoặc tăng. Nhánh này không đụng `pr`
+  // khi nó còn có thể rơi xuống: nhánh dưới sửa pr.priceVnd theo luật của chính nó.
+  if (mucDichThe === KIND.sale || mucDichThe === KIND.rent_lt) {
+    if (mucDichThe === KIND.rent_lt && giaCoTheThue) return { kind: KIND.rent_lt, nguon: "the-nhom" };
+    if (mucDichThe === KIND.sale) {
+      const giaBan = pr.priceVnd ?? (giaKhongDonVi ? Math.round(parseVnNumber(giaKhongDonVi[1]) * 1e6) : null);
+      if (giaBan == null || giaBan >= GIA_BAN_SAN) {
+        pr.priceVnd = giaBan;
+        return { kind: KIND.sale, nguon: "the-nhom" };
+      }
+    }
   }
   if (mucDich === KIND.sale || mucDich === KIND.rent_lt) {
     if (mucDich === KIND.sale && pr.priceVnd == null && giaKhongDonVi) pr.priceVnd = Math.round(parseVnNumber(giaKhongDonVi[1]) * 1e6);
