@@ -36,8 +36,9 @@ export function wilson95(k, n) {
 }
 
 /**
- * Rút mẫu xác định theo hạt giống: xếp bài theo băm (hạt giống + post_id) rồi lấy n bài đầu. Cùng hạt giống
- * cho cùng mẫu ở mọi máy, nên mẫu rút lại được và không ai chọn được bài dễ.
+ * Rút mẫu xác định theo hạt giống: xếp bài theo băm (hạt giống + post_id) rồi lấy n bài đầu. Không ai chọn được
+ * bài dễ, và cùng hạt giống TRÊN CÙNG MỘT KHO cho cùng mẫu. Kho lớn lên thì mẫu đổi — nên thứ khoá mẫu là
+ * DANH SÁCH MÃ BÀI ghi trong hồ sơ, không phải một mình hạt giống.
  */
 export function chonMau(bai, n, seed) {
   if (bai.length < n) throw new Error(`chonMau: kho không đủ bài (${bai.length} < ${n})`);
@@ -81,19 +82,37 @@ function inBangTrong({ mau, n, seed, soNhom, tongBai, mocDo }) {
     const dau = b.text.replace(/\s+/g, " ").slice(0, 70).replace(/\|/g, "\\|");
     d.push(`| ${i + 1} |  | \`${b.post_id}\` | ${b.du_an_nhom} | ${dau} |`);
   });
+  // Danh sách mã bài: rút theo băm trên TOÀN KHO, nên kho lớn lên là mẫu đổi — hạt giống một mình KHÔNG đủ để
+  // rút lại đúng mẫu này. Danh sách dưới đây mới là thứ khoá mẫu, và nó chép được vào hồ sơ (post_id không phải tầng A).
+  d.push("", "## Mã bài của mẫu (chép vào hồ sơ — đây mới là thứ khoá mẫu)", "", "```");
+  d.push(mau.map((b) => b.post_id).join("\n"), "```");
   d.push("", "## Kết quả", "", "_Chạy `--tinh` trên tệp này sau khi điền xong, rồi dán kết quả vào đây._", "");
   return d.join("\n");
 }
 
-/** Đọc bảng đã điền: đếm dòng và số ô `lac` có dấu. Dòng thiếu post_id bị bỏ qua. */
+/**
+ * Đọc bảng đã điền: đếm dòng nhãn và số ô `lac` có dấu. Dòng chỉ được tính khi cột 1 là số thứ tự VÀ cột 3 là
+ * mã bài trong dấu nháy ngược — tệp bằng chứng còn những bảng khác (bảng ngưỡng «| 5 | 11,18% | chưa đạt |»),
+ * và đếm nhầm chúng là đếm ra ca lạc không có thật.
+ */
 export function docBangDaDien(md) {
-  const dong = md.split("\n").filter((l) => /^\|\s*\d+\s*\|/.test(l));
-  let k = 0;
-  for (const l of dong) {
+  let n = 0, k = 0;
+  for (const l of md.split("\n")) {
     const o = l.split("|");
+    if (o.length < 5) continue;
+    if (!/^\s*\d+\s*$/.test(o[1] ?? "")) continue;
+    if (!/^\s*`[^`]+`\s*$/.test(o[3] ?? "")) continue;
+    n++;
     if ((o[2] ?? "").trim() !== "") k++;
   }
-  return { n: dong.length, k };
+  return { n, k };
+}
+
+/** Cỡ mẫu từ dòng lệnh. Không nhận NaN hay 0: bảng 0 dòng thoát 0 là một phép đo im lặng sai. */
+export function soMau(raw) {
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n <= 0) throw new Error(`cỡ mẫu phải là số nguyên dương (nhận ${raw ?? "thiếu"})`);
+  return n;
 }
 
 async function main() {
@@ -117,7 +136,7 @@ async function main() {
     console.error("dùng: --rut --n <số> --seed <chuỗi>   hoặc   --tinh <tệp>");
     process.exit(2);
   }
-  const n = Number(lay("--n", "100"));
+  const n = soMau(lay("--n", "100"));
   const seed = lay("--seed");
   if (!seed) { console.error("--rut cần --seed (hạt giống khai trước)"); process.exit(2); }
 

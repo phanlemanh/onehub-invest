@@ -579,11 +579,14 @@ export function suyLoai(pr, text, mucDich, mucDichThe = null) {
   // trượt cửa giá thì rơi xuống nhánh dưới, nên độ phủ `kind` chỉ giữ nguyên hoặc tăng. Nhánh này không đụng `pr`
   // khi nó còn có thể rơi xuống: nhánh dưới sửa pr.priceVnd theo luật của chính nó.
   if (mucDichThe === KIND.sale || mucDichThe === KIND.rent_lt) {
-    if (mucDichThe === KIND.rent_lt && giaCoTheThue) return { kind: KIND.rent_lt, nguon: "the-nhom" };
+    // Thẻ THUÊ cần một giá đã đọc được thật. Bài mà bằng chứng giá duy nhất là dạng giá BÁN (giá không đơn vị,
+    // «giá 2.900») thì để nhánh dưới xử: chỉ đường bán mới diễn giải dạng ấy, nên cướp bài là tin mất luôn giá
+    // (đo 17/11 trên 153.410 bài: 12 bài). Mất giá không rơi vào thước nào của AC-11 vì `kind` vẫn còn.
+    if (mucDichThe === KIND.rent_lt && giaCoTheThue && pr.priceVnd != null) return { kind: KIND.rent_lt, nguon: "the-nhom" };
     if (mucDichThe === KIND.sale) {
       const giaBan = pr.priceVnd ?? (giaKhongDonVi ? Math.round(parseVnNumber(giaKhongDonVi[1]) * 1e6) : null);
       if (giaBan == null || giaBan >= GIA_BAN_SAN) {
-        pr.priceVnd = giaBan;
+        if (pr.priceVnd == null) pr.priceVnd = giaBan; // điền giá y như nhánh dưới vẫn điền cho bài bán
         return { kind: KIND.sale, nguon: "the-nhom" };
       }
     }

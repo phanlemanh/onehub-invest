@@ -4,7 +4,7 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
 
-import { chonMau, wilson95 } from "./mau-bai-lac-du-an.mjs";
+import { chonMau, docBangDaDien, soMau, wilson95 } from "./mau-bai-lac-du-an.mjs";
 
 /** Làm tròn 4 chữ số để so số thực. */
 const r4 = (x) => Math.round(x * 1e4) / 1e4;
@@ -49,5 +49,44 @@ describe("AC-10 rút mẫu có hạt giống", () => {
     const a = chonMau(BAI, 100, "hat-1").map((b) => b.post_id);
     assert.equal(new Set(a).size, 100);
     assert.throws(() => chonMau(BAI.slice(0, 50), 100, "hat-1"), /không đủ bài/);
+  });
+});
+
+describe("AC-10 đọc bảng đã điền — chỉ dòng nhãn thật mới được tính", () => {
+  const DONG = (i, lac, pid) => `| ${i} | ${lac} | \`${pid}\` | 1 | đầu bài gì đó |`;
+  const BANG = ["| # | lac | post_id | dự án của nhóm | đầu bài |", "|---|---|---|---|---|",
+    DONG(1, "x", "p1"), DONG(2, "", "p2"), DONG(3, "x", "p3"), DONG(4, "", "p4")].join("\n");
+
+  test("đếm đúng cỡ mẫu và số ca lạc trên bảng hợp lệ", () => {
+    assert.deepEqual(docBangDaDien(BANG), { n: 4, k: 2 });
+  });
+
+  test("bảng ngưỡng của tệp bằng chứng KHÔNG bị đếm thành bài lạc", () => {
+    // Đúng khuôn trong evidence/mau-bai-lac-du-an.md: cột 1 là số, cột 2 có chữ, không có post_id.
+    const nguong = ["| số bài lạc | cận trên Wilson 95% | |", "|---|---|---|",
+      "| 0 | 3,70% | đạt |", "| 4 | 9,84% | đạt |", "| 5 | 11,18% | **chưa đạt** |"].join("\n");
+    assert.deepEqual(docBangDaDien(nguong), { n: 0, k: 0 });
+    assert.deepEqual(docBangDaDien(`${BANG}\n\n${nguong}`), { n: 4, k: 2 });
+  });
+
+  test("dòng nhãn thiếu post_id bị bỏ qua, đúng như chú thích nói", () => {
+    assert.deepEqual(docBangDaDien(`${BANG}\n| 5 | x |  | 1 | thiếu mã bài |`), { n: 4, k: 2 });
+  });
+
+  test("cỡ mẫu phải là số nguyên dương, không nhận NaN hay 0", () => {
+    assert.equal(soMau("100"), 100);
+    for (const x of [undefined, "", "0", "-3", "abc", "1.5"]) assert.throws(() => soMau(x), /cỡ mẫu/, `nhận ${x}`);
+  });
+});
+
+describe("AC-10 mẫu rút lại được", () => {
+  const kho = (n) => Array.from({ length: n }, (_, i) => ({ post_id: `p${i}` }));
+
+  test("kho lớn lên thì cùng hạt giống KHÔNG còn cho cùng mẫu — nên hồ sơ phải ghi danh sách mã bài", () => {
+    const a = chonMau(kho(500), 100, "h").map((b) => b.post_id);
+    const b = chonMau(kho(520), 100, "h").map((b) => b.post_id);
+    const chung = a.filter((x) => b.includes(x)).length;
+    assert.ok(chung < 100, "nếu bằng 100 thì câu «rút lại được bằng hạt giống» mới đúng");
+    assert.ok(chung > 80, `mẫu không được đổi gần hết (trùng ${chung}/100)`);
   });
 });

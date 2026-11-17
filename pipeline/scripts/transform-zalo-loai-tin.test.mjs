@@ -348,6 +348,7 @@ const PERM2 = "Căn hộ 2PN 70m2 giá 45tr/m2, bàn giao tháng 12";
 const DONG_800 = "Căn 2PN 70m2 giá 800.000.000";
 const DUOI_SAN = "Căn 2PN 70m2 giá 200.000.000";
 const KHONG_DON_VI = "Căn hộ 2PN 70m2 bàn giao tháng 12, giá 2.900";
+const DON_VI = "Căn 2PN 70m2 giá 14tr/tháng";
 
 // [text, mucDich nhóm, mucDichThe, kind, nguon, priceVnd]
 const THE_NHOM = [
@@ -365,6 +366,11 @@ const THE_NHOM = [
   ["Căn 2PN 70m2 giá 3,2 tỷ", "rent_lt", "rent_lt", "sale", "tin-hieu-chu", 3_200_000_000],
   // không có thẻ → y hệt hôm nay
   [PERM2, "sale", null, "sale", "boi-canh-nhom", null],
+  // thẻ KHÔNG được vượt mặt đơn vị giá của chữ bài: «14tr/tháng» là thuê dù thẻ nói bán
+  [DON_VI, "sale", "sale", "rent_lt", "don-vi-gia", 14_000_000],
+  // thẻ thuê KHÔNG được cướp bài mà bằng chứng giá duy nhất là dạng giá BÁN (giá không đơn vị):
+  // cướp thì bài mất luôn giá, vì chỉ đường bán mới diễn giải dạng ấy. Đo 17/11: 12 bài thật.
+  [KHONG_DON_VI, "sale", "rent_lt", "sale", "boi-canh-nhom", 2_900_000_000],
 ];
 
 function kiemTheNhom(mod, ten, oList) {
@@ -380,7 +386,7 @@ function kiemTheNhom(mod, ten, oList) {
 
 describe("TN ô bán/thuê của thẻ nhóm chen trước nhánh boi-canh-nhom", () => {
   test("TN-1 bảy ô «nhóm × thẻ»: thẻ thắng bối cảnh, chữ bài thắng thẻ, trượt cửa thì rơi xuống", () => {
-    assert.equal(THE_NHOM.length, 7);
+    assert.equal(THE_NHOM.length, 9);
     kiemTheNhom(goc, "TN-1 thẻ nhóm", THE_NHOM);
   });
 
@@ -391,11 +397,26 @@ describe("TN ô bán/thuê của thẻ nhóm chen trước nhánh boi-canh-nhom"
     assert.equal(goc.demNguonLoai(["the-nhom", "the-nhom", "bo"])["the-nhom"], 2);
   });
 
-  test("TN-3 thẻ KHÔNG đụng tới pr khi nó còn có thể rơi xuống nhánh cũ", () => {
-    const pr = goc.parsePost(DUOI_SAN);
-    const truoc = { ...pr };
-    goc.suyLoai(pr, DUOI_SAN, "rent_lt", "sale"); // thẻ bán trượt sàn giá → rơi xuống
-    assert.deepEqual({ ...pr }, truoc, "suyLoai sửa pr trên đường rơi-xuống");
+  test("TN-3 bài rơi-xuống giữ nguyên pr; bài thẻ thắng được điền giá y như nhánh cũ vẫn điền", () => {
+    // Đường rơi-xuống: thẻ bán trượt SÀN GIÁ (giá đã parse 200 triệu < 3e8).
+    const a = goc.parsePost(DUOI_SAN);
+    const truoc = { ...a };
+    goc.suyLoai(a, DUOI_SAN, "rent_lt", "sale");
+    assert.deepEqual({ ...a }, truoc, "suyLoai sửa pr trên đường rơi-xuống");
+    // Đường thẻ bán THẮNG trên giá không đơn vị: phải điền giá, đúng như nhánh boi-canh-nhom vẫn điền.
+    const b = goc.parsePost(KHONG_DON_VI);
+    assert.equal(b.priceVnd, null, "tiền đề: parsePost chưa đọc ra giá");
+    assert.equal(goc.suyLoai(b, KHONG_DON_VI, "rent_lt", "sale").nguon, "the-nhom");
+    assert.equal(b.priceVnd, 2_900_000_000, "thẻ thắng mà không điền giá thì tin mất giá");
+  });
+
+  test("chiều đỏ TN-1c: bản đột biến dời khối thẻ LÊN TRƯỚC don-vi-gia và tin-hieu-chu → hai ô chữ bài đỏ", async () => {
+    const KHOI = `  if (mucDichThe === KIND.sale || mucDichThe === KIND.rent_lt) {`;
+    const mod = await banDot([
+      [KHOI, "  if (false) {"],
+      ['  const giaThue = pr.priceVnd != null', `${KHOI}\n    if (mucDichThe === KIND.rent_lt) return { kind: KIND.rent_lt, nguon: "the-nhom" };\n    return { kind: KIND.sale, nguon: "the-nhom" };\n  }\n  const giaThue = pr.priceVnd != null`],
+    ]);
+    assert.throws(() => kiemTheNhom(mod, "TN-1 thẻ nhóm", THE_NHOM), /TN-1 thẻ nhóm: .*14tr\/tháng/);
   });
 
   test("chiều đỏ TN-1: bản đột biến cho nhánh thẻ BỎ thay vì rơi xuống → hai ô trượt cửa đỏ", async () => {
