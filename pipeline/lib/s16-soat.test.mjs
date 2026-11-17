@@ -92,17 +92,35 @@ async function tokenTangA() {
   return { tk: ra, bang: bang.sort((a, b) => b.length - a.length) };
 }
 /** Dòng «+» của diff mang token tầng A, sau khi bỏ tên bảng có sẵn: [[tệp, số dòng]]. Không trả token. */
+// Đếm theo tệp: mỗi token, số lần ở dòng «+» trừ số lần ở dòng «-». Dòng có sẵn token mà hàng này chỉ sửa phần khác của nó
+// (vd nối thêm một tệp test vào dòng "test" của package.json) cho 0 — token không do hàng này thêm. Dư > 0 thì báo tệp.
 function dongLo(diff, tk, bang) {
-  const trung = new Map();
+  const dem = new Map(); // tep → Map(token → +/-)
   let tep = null;
-  for (const l of diff.split("\n")) {
-    if (l.startsWith("+++ ")) { tep = l.slice(6); continue; }
-    if (!l.startsWith("+")) continue;
+  const dau = (l) => {
     let noi = l.toLowerCase();
     for (const b of bang) if (noi.includes(b)) noi = noi.split(b).join(" ");
-    if ([...tk].some((x) => noi.includes(x))) trung.set(tep, (trung.get(tep) ?? 0) + 1);
+    return noi;
+  };
+  for (const l of diff.split("\n")) {
+    if (l.startsWith("+++ ")) { tep = l.slice(6); continue; }
+    if (l.startsWith("--- ")) continue;
+    const chieu = l.startsWith("+") ? 1 : l.startsWith("-") ? -1 : 0;
+    if (!chieu) continue;
+    const noi = dau(l.slice(1));
+    for (const x of tk) {
+      const n = noi.split(x).length - 1;
+      if (!n) continue;
+      if (!dem.has(tep)) dem.set(tep, new Map());
+      dem.get(tep).set(x, (dem.get(tep).get(x) ?? 0) + chieu * n);
+    }
   }
-  return [...trung];
+  const trung = [];
+  for (const [f, m] of dem) {
+    const du = [...m.values()].filter((v) => v > 0).reduce((a, v) => a + v, 0);
+    if (du) trung.push([f, du]);
+  }
+  return trung;
 }
 test("DA33-AC-9 tệp hàng này thêm hay đổi không mang tên nguồn thật", async (t) => {
   const { tk, bang } = await tokenTangA();
@@ -116,6 +134,9 @@ test("DA33-AC-9 tệp hàng này thêm hay đổi không mang tên nguồn thậ
   const t0 = [...tk][0];
   const doiChung = dongLo(`+++ b/q.mjs\n+const x = "${t0}";\n+const y = "${bang[0] ?? "q"}";`, tk, bang);
   assert.deepEqual(doiChung, [["q.mjs", 1]], "đối chứng tầng A: dòng cấy token không bị bắt");
+  // Dòng có sẵn token, hàng này chỉ sửa phần khác → không bắt; sửa mà thêm một lần token nữa → bắt.
+  assert.deepEqual(dongLo(`+++ b/p.json\n-"a": "${t0} x"\n+"a": "${t0} x y"`, tk, bang), [], "sửa dòng có sẵn token bị bắt nhầm");
+  assert.deepEqual(dongLo(`+++ b/p.json\n-"a": "${t0} x"\n+"a": "${t0} x ${t0}"`, tk, bang), [["p.json", 1]], "thêm token vào dòng có sẵn không bị bắt");
   const trung = dongLo(diff, tk, bang);
   assert.deepEqual(trung, [], `dòng thêm mang tên nguồn thật (${trung.length} tệp)`);
 });
