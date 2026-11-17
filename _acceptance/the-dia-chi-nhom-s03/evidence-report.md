@@ -1,14 +1,14 @@
 ---
 schema_version: 2
 feature_slug: the-dia-chi-nhom-s03
-verdict: PENDING-JUDGMENT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: f7b54a127386ff0bc0d82be7c8d69d02241df196
-human_signoff:
+human_signoff: Mạnh 2026-11-17
 ---
 
 # Evidence Report: the-dia-chi-nhom-s03
@@ -134,7 +134,7 @@ Hội đồng chấm đề xuất PASS cho E10; mục này chờ người ở C�
     - spec-alignment: PASS — Thẻ đủ ô (E5-step2) ghi nguồn từng ô: dự án «từ bài đã đọc, 56 bài», phường·tỉnh «theo dự án», phân khu «Chưa đủ căn cứ (1.595 bài đã đọc)», bán/thuê «từ bài đã đọc: 275 bán, 1.185 thuê». Thẻ ô trống (E5-step-o-trong) ghi «Chưa đủ căn cứ (1 bài đã đọc)» ở cả bốn ô. CONTEXT.md có mục «Thẻ địa chỉ nhóm» đủ nhãn, định nghĩa (nói rõ mỗi ô ghi nguồn và số bài), mã `group_address_card` / `TN-001`, slug và _Avoid_.
   required_evidence:
     - (judge không nêu bằng-chứng-thiếu)
-  human_override:  # chi nguoi ghi
+  human_override: Mạnh 2026-11-17 — Đạt
 
 ### Lệnh suite (hồi quy)
 

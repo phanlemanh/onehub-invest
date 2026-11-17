@@ -5,7 +5,7 @@ slug: the-dia-chi-nhom-s03
 owner: phanlemanh@gmail.com
 risk_tier: T3      # chạm db/migrations và app/src/app/api/v1/ops (t3_paths)
 surfaces: [cli, data, ui]
-status: implemented
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-16
 design_doc: docs/superpowers/specs/2026-11-16-the-dia-chi-nhom-s03-design.md
@@ -80,3 +80,9 @@ máy thu. Luật «Ai quyết gì»: chữ ký Cổng Bằng chứng kèm lời 
 ## Notes
 
 - Ra khỏi kho: áp 108 lên DB máy thu đi cùng chữ ký Cổng Bằng chứng; buổi duyệt 14 thẻ là việc của Mạnh hoặc đội vận hành.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-17:
+  - Ngoài-1: Gọi chức năng ghi thẻ từ bản cloud nhận lỗi chung chung thay vì lời báo rõ là chỉ làm được ở máy thu; không dữ liệu nào hỏng.
+  - Ngoài-4: Sau khi lưu một thẻ, mở thẻ khác rồi đóng hộp có thể hỏi «Bỏ thay đổi chưa lưu?» dù chưa sửa gì; bấm xác nhận là đóng.
+  - Ngoài-5: Trên DB chưa áp bảng thẻ, thao tác ghi thẻ báo lỗi máy chủ chung chung thay vì báo rõ là chưa có bảng thẻ; không thẻ nào ghi sai.
+  - Ngoài-6: Chưa có phép thử chứng minh nhóm có hai dòng trong sổ chỉ ra đúng một thẻ; nếu có thẻ trùng, người duyệt bác được.
+  - Ngoài-7: Phép thử chỉ đọc chữ trong kịch bản sao lưu chứ chưa chạy thật; kịch bản hỏng thì lộ ra lúc người áp chạy bước sao lưu.
