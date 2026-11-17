@@ -5,7 +5,7 @@ slug: s4-suite-theo-vung
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: machine-cleared
 veto_state: mo
 veto_opened_at: 2026-11-10T14:42:00Z
 approved_by:
@@ -102,3 +102,22 @@ dựng có thể thừa). Never: bỏ qua suite khi không xác định được
 
 - Đường ghép mảnh bằng `join(ROOT, "a", "b")` nằm ngoài tầm phép quét AC-5 — lưới cho chỗ hở là CI chạy đủ suite, TRỪ
   portal_static (CI không chạy `check-portal-compliance.mjs`): vùng của nó liệt kê tay từng tệp nó nạp.
+- Ngoài-2 (máy định tuyến 2026-11-17, đề xuất S4 known-limits): Khi dựng worktree chấm theo nhánh dự phòng, một số tệp kiểu có thể trỏ sai chỗ mà script vẫn báo thành công; lỗi chỉ lộ ra sau đó ở bước kiểm kiểu với thông báo khó hiểu. — `scripts/dung-worktree-cham.sh`
+- Ngoài-3 (máy định tuyến 2026-11-17, đề xuất S4 known-limits): Hồ sơ nghiệm thu ghi số ô kiểm khác với số thực chạy, người chấm vòng sau có thể hiểu nhầm phạm vi kiểm; chức năng không bị ảnh hưởng. — `_acceptance/s4-suite-theo-vung/evals.yaml`
+- Ngoài-4 (máy định tuyến 2026-11-17, đề xuất S4 known-limits): Nếu danh sách tệp cần chép hỏng, worktree chấm có thể thiếu .env mà script vẫn báo xong, làm lượt chấm hỏng giả khó đoán nguyên nhân. — `scripts/dung-worktree-cham.sh`
+- Ngoài-5 (máy định tuyến 2026-11-17, đề xuất S4 known-limits): Nếu chép tệp môi trường thất bại giữa chừng, worktree thiếu .env nhưng lượt dựng vẫn được coi là thành công. — `scripts/dung-worktree-cham.sh`
+- Ngoài-6 (máy định tuyến 2026-11-17, đề xuất S4 known-limits): Phép kiểm cấu hình có thể báo xanh cho một lệnh cũ thực ra không còn tồn tại, nên một sửa đổi trong tương lai có thể lọt mà không ai thấy. — `_acceptance/s4-suite-theo-vung/probes/cau-hinh-khong-doi.sh`
+- Ngoài-7 (máy định tuyến 2026-11-17, đề xuất S4 known-limits): Phép tự kiểm của probe dùng dữ liệu gõ tay nên không chứng minh bắt được việc ai đó đổi lệnh thật; nó vẫn xanh khi lệnh thật đã khác. — `_acceptance/s4-suite-theo-vung/probes/cau-hinh-khong-doi.sh`
+- Ngoài-8 (máy định tuyến 2026-11-17, đề xuất S4 known-limits): Hồ sơ nghiệm thu ghi sai số ô kiểm (24 thay vì 28), người chấm đọc có thể bối rối nhưng công cụ chạy đúng. — `_acceptance/s4-suite-theo-vung/evals.yaml`
+- Ngoài-9 (máy định tuyến 2026-11-17, đề xuất S4 known-limits): Nếu máy chấm tình cờ có sẵn một biến môi trường riêng, bài kiểm có thể chạy trên thư mục thật thay vì thư mục thử và báo đỏ khó hiểu. — `scripts/dung-worktree-cham.test.mjs`
+- Ngoài-10 (máy định tuyến 2026-11-17, đề xuất S4 known-limits): Khi có tệp bị xoá trên đĩa mà chưa commit, bài kiểm vùng phủ sẽ báo lỗi khó hiểu thay vì nói rõ nguyên nhân. — `scripts/suite-neu-doi.test.mjs`
+- Ngoài-11 (máy định tuyến 2026-11-17, đề xuất S4 known-limits): Sửa một dòng chú thích ở nơi khác có thể làm kiểm tự động đỏ, khiến người làm mất thời gian dò nguyên nhân. — `scripts/suite-neu-doi.test.mjs`
+- Ngoài-12 (máy định tuyến 2026-11-17, đề xuất S4 known-limits): Gõ sai tên cờ thì lệnh dựng vẫn chạy bước kiểm kiểu tốn vài phút thay vì báo lỗi ngay. — `scripts/dung-worktree-cham.sh`
+- Ngoài-13 (máy định tuyến 2026-11-17, đề xuất S4 known-limits): Sau khi đã dựng app trong thư mục chấm, chạy lại lệnh dựng có thể nối nhầm thư mục sinh sang checkout chính, làm kết quả kiểm kiểu lẫn sản phẩm dựng của nhánh khác. — `scripts/dung-worktree-cham.sh`
+- Ngoài-14 (máy định tuyến 2026-11-17, đề xuất S4 known-limits): Khi bước sinh kiểu hỏng, lệnh vẫn báo thành công và có thể dùng kiểu cũ, nên kiểm kiểu có thể xanh hoặc đỏ sai. — `scripts/dung-worktree-cham.sh`
+- Ngoài-15 (máy định tuyến 2026-11-17, đề xuất S4 known-limits): Hồ sơ nghiệm thu còn ghi số cũ sáu suite ở vài chỗ, dễ gây hiểu nhầm cho người đọc. — `_acceptance/s4-suite-theo-vung/evals.yaml`
+- Ngoài-16 (máy định tuyến 2026-11-17, đề xuất S4 known-limits): Một tham chiếu viết kiểu rút gọn từ module này sang module khác có thể lọt khỏi phép kiểm vùng phủ, khiến lượt chấm bỏ sót suite. — `scripts/suite-neu-doi.test.mjs`
+- Ngoài-17 (máy định tuyến 2026-11-17, đề xuất S4 known-limits): Nếu ai đó dời khối cấu hình sai chỗ, bài kiểm vẫn xanh nhưng bước ghim lại sẽ hỏng, chỉ lộ ra khi chạy thật. — `scripts/suite-neu-doi.test.mjs`
+- Ngoài-18 (máy định tuyến 2026-11-17, đề xuất S4 known-limits): Bài kiểm dựng worktree dùng dữ liệu giả quá khớp nên có thể không bắt được lỗi với kiểu thật. — `scripts/dung-worktree-cham.test.mjs`
+- Ngoài-19 (máy định tuyến 2026-11-17, đề xuất S4 known-limits): Bài kiểm vế chạy lại không đổi gì khá yếu nên có thể xanh dù thông điệp thay đổi. — `scripts/dung-worktree-cham.test.mjs`
+- Ngoài-20 (máy định tuyến 2026-11-17, đề xuất S4 known-limits): Ba tài liệu ghi ba con số khác nhau cho cùng một ma trận kiểm, dễ làm người đọc nghi ngờ. — `_acceptance/s4-suite-theo-vung/evals.yaml`
