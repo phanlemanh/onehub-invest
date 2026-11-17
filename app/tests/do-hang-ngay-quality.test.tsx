@@ -82,7 +82,7 @@ test("DO1-AC-8 khối Đo hằng ngày: bảng, lập mốc, cảnh báo soát, 
     assert.ok(h.includes("data-do1-ty-le-soat") && h.includes("6/20"), "dòng tỉ lệ soát luôn hiện")
     assert.ok(h.includes("data-do1-canh-bao-soat"), "6/20 thẻ đã soát → cảnh báo")
     assert.ok(h.includes("ít mẫu"), "n < 5 hiện «ít mẫu»")
-    for (const l of ["Tổng", "Thị trường", "Phường/xã", "Khu đô thị", "Toà"]) assert.ok(h.includes(l))
+    for (const l of ["Tổng", "Thị trường", "Phường/xã", "Dự án", "Toà"]) assert.ok(h.includes(l))
     const kiemLat = (html: string) => { if (!html.includes("Không nêu chỗ")) throw new Error("THIEU CHUA GAN TREN MAN") }
     kiemLat(ve(data, "phuong"))
     const lat = data.giuNhap!.lat!.phuong

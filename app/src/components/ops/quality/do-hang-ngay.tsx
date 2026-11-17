@@ -15,7 +15,7 @@ import { BangBoSot, BangChuyenBac, BangGiu, BangLat, BangSoCap, BangTinHieu } fr
 
 /**
  * Khối «Đo hằng ngày» (DO1) trên /ops/quality: giữ nháp tuần này so tuần trước, bỏ sót, tín hiệu không cần nhãn, dòng
- * chuyển bậc, so cặp trước/sau; chọn lát Tổng · Thị trường · Phường/xã · Khu đô thị · Toà (`?lat-do=`). Số tính sẵn ở pipeline.
+ * chuyển bậc, so cặp trước/sau; chọn lát Tổng · Thị trường · Phường/xã · Dự án · Toà (`?lat-do=`). Số tính sẵn ở pipeline.
  */
 
 const MO_TA = "Số có neo theo nháp: chỉ so tuần với tuần và so các cách đọc với nhau, không phải độ đúng."
@@ -140,7 +140,7 @@ export function DoHangNgay({ data, lat, areaNames = {} }: { data: Do1 | null; la
       {data && c ? (
         <>
           {data.giuNhap?.lat?.[c.giu] ? <BangLat title="Thẻ mẫu soát đã soát" lat={data.giuNhap.lat[c.giu]} areaNames={areaNames} /> : null}
-          {c.them && data.giuNhap?.lat?.[c.them] ? <BangLat title="Thẻ mẫu soát theo tên khu đô thị trong bài" lat={data.giuNhap.lat[c.them]} areaNames={areaNames} /> : null}
+          {c.them && data.giuNhap?.lat?.[c.them] ? <BangLat title="Thẻ mẫu soát theo tên dự án trong bài" lat={data.giuNhap.lat[c.them]} areaNames={areaNames} /> : null}
           {data.boSot?.lat?.[c.giu] ? <BangLat title="Thẻ tin rao (mẫu bỏ sót)" lat={data.boSot.lat[c.giu]} areaNames={areaNames} /> : null}
           {data.tinHieu?.lat?.[c.tin] ? <BangLat title="Lời đọc trong ngày" lat={data.tinHieu.lat[c.tin]} areaNames={areaNames} /> : null}
           {bac?.lat?.[c.bac] ? <BangLat title="Đơn vị đổi bậc hôm nay" lat={bac.lat[c.bac]} areaNames={areaNames} /> : null}

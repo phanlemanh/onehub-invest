@@ -359,6 +359,39 @@ describe("GS-AC-4/5/8 tin rời kho", () => {
 })
 
 // ---------- GS-AC-6: probe DB máy thu (chỉ SELECT) ----------
+/** Thẻ có bên `ben` rời kho — CÙNG định nghĩa bên của `sidesOf` (lib/ops/review-context.ts): thẻ entity_match chỉ có bên
+ *  khi `evidence.<ben>.offer_id` là chuỗi. Thẻ danh bạ của DA33 (item_id `s16:…`, evidence.loai, không offer_a/offer_b)
+ *  không có bên nào nên không thuộc tập — trang không vẽ Alert cho chúng. */
+const roiKhoBen = (ben: "offer_a" | "offer_b") =>
+  `SELECT id::int AS id FROM review_queue r WHERE item_type = 'entity_match'
+     AND jsonb_typeof(r.evidence->'${ben}'->'offer_id') = 'string'
+     AND NOT EXISTS (SELECT 1 FROM sale_offers o WHERE o.offer_id = r.evidence->'${ben}'->>'offer_id') ORDER BY id`
+
+test("GS-AC-6 tập rời kho chỉ gồm thẻ có bên: thẻ entity_match không có offer_a không vào tập (chiều đỏ trên câu cũ)", async () => {
+  const c = new pg.Client({ connectionString: localDbUrl() })
+  await c.connect()
+  try {
+    // review_queue và sale_offers là CTE che bảng thật — không đọc, không ghi bảng nào.
+    const bao = (cau: string) =>
+      `WITH sale_offers(offer_id) AS (VALUES ('tin-song')),
+            review_queue(id, item_type, evidence) AS (VALUES
+              (1, 'entity_match', '{"loai":"can-mo-ho"}'::jsonb),
+              (2, 'entity_match', '{"offer_a":{"offer_id":"tin-roi"},"offer_b":{"offer_id":"tin-song"}}'::jsonb),
+              (3, 'entity_match', '{"offer_a":{"offer_id":"tin-song"},"offer_b":{"offer_id":"tin-roi"}}'::jsonb),
+              (4, 'data_quality', '{}'::jsonb))
+       ${cau}`
+    const ids = async (cau: string) => (await c.query(bao(cau))).rows.map((r) => r.id as number)
+    assert.deepEqual(await ids(roiKhoBen("offer_a")), [2], "GS-AC-6 tập Tin A rời kho")
+    assert.deepEqual(await ids(roiKhoBen("offer_b")), [3], "GS-AC-6 tập Tin B rời kho")
+    // Câu cũ (không đòi bên có offer_id) nhận thẻ danh bạ 1 là «rời kho» — đúng lỗi đỏ trên main sau DA33.
+    const cu = roiKhoBen("offer_a").replace(/\n\s+AND jsonb_typeof\(r\.evidence->'offer_a'->'offer_id'\) = 'string'/, "")
+    assert.notEqual(cu, roiKhoBen("offer_a"), "bản câu cũ không dựng được")
+    assert.deepEqual(await ids(cu), [1, 2], "GS-AC-6 chiều đỏ: câu cũ phải nhận nhầm thẻ danh bạ 1")
+  } finally {
+    await c.end()
+  }
+})
+
 test("GS-AC-6 probe DB máy thu: tập thẻ có Alert bên A bằng tập Tin A rời kho", async (t) => {
   if (process.env.CI) return t.skip("cần DB máy thu có thẻ ghép căn thật — CI chỉ có lược đồ")
   const that = new pg.Client({ connectionString: localDbUrl() })
@@ -370,8 +403,7 @@ test("GS-AC-6 probe DB máy thu: tập thẻ có Alert bên A bằng tập Tin A
     )
     const roi = (
       await that.query(
-        `SELECT id::int AS id FROM review_queue r WHERE item_type = 'entity_match'
-           AND NOT EXISTS (SELECT 1 FROM sale_offers o WHERE o.offer_id = r.evidence->'offer_a'->>'offer_id') ORDER BY id`,
+        roiKhoBen("offer_a"),
       )
     ).rows.map((r) => r.id as number)
     if (roi.length === 0) return t.skip("máy thu không có thẻ ghép căn nào có Tin A rời kho — bàn đo rỗng")
@@ -387,8 +419,7 @@ test("GS-AC-6 probe DB máy thu: tập thẻ có Alert bên A bằng tập Tin A
     assert.deepEqual(coAlertA, roi, "GS-AC-6 tập thẻ có Alert bên A lệch tập Tin A rời kho")
     const roiB = (
       await that.query(
-        `SELECT id::int AS id FROM review_queue r WHERE item_type = 'entity_match'
-           AND NOT EXISTS (SELECT 1 FROM sale_offers o WHERE o.offer_id = r.evidence->'offer_b'->>'offer_id') ORDER BY id`,
+        roiKhoBen("offer_b"),
       )
     ).rows.map((r) => r.id as number)
     assert.deepEqual(coAlert, [...new Set([...roi, ...roiB])].sort((x, y) => x - y), "GS-AC-6 thẻ hai tin sống có Alert")

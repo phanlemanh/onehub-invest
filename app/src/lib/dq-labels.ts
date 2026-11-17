@@ -95,8 +95,8 @@ const DOI_TUONG: Record<string, string> = {
 const LAT_NHAN: Record<string, string> = { ocp1: "Lát OCP1" }
 const CACH_DOC_NHAN: Record<string, string> = { parser: "Bộ đọc theo luật" }
 const PHAN_KHUC_NHAN: Record<string, string> = { "tat-ca": "mọi loại hình", "khong-neu": "loại hình không nêu" }
-/** Nhãn trường của màn gắn nhãn; trường `project` gọi theo CONTEXT.md («Khu đô thị», tránh «dự án»). */
-export const TRUONG_DO_DUNG: Record<string, string> = { ...FIELD_LABEL, project: "Khu đô thị" }
+/** Nhãn trường của màn gắn nhãn; trường `project` gọi theo CONTEXT.md («Dự án», mục 39 Hỏi-1) — lấy thẳng từ FIELD_LABEL. */
+export const TRUONG_DO_DUNG: Record<string, string> = { ...FIELD_LABEL }
 function oDoDung(entity: string): DqText | null {
   const m = entity.match(/^([a-z0-9]+)\|([a-z_-]+)\|([a-z0-9_]+)\|([a-z_0-9]+)$/)
   if (!m) return null
