@@ -138,7 +138,7 @@ test("D3-4 (1411-20 MỞ LẠI): UP → zalo-drift.sh (giả) ĐƯỢC gọi; DO
   rmSync(home, { recursive: true, force: true });
 });
 
-test("D3-5: UP mà post 202 cuối cũ hơn 24 giờ → có dòng alert silent-gate", () => {
+test("D3-5: UP mà post 202 cuối cũ hơn 24 giờ → có dòng alert silent-gate", { skip: process.platform !== "darwin" && "silent-gate dùng date -j (BSD) — chỉ đo trên máy thu" }, () => {
   const home = mkdtempSync(join(tmpdir(), "s03-hb5-"));
   const cli = stubCli(home);
   const state = join(home, "state"), alerts = join(home, "alerts.log"), moc = join(home, "moc");
