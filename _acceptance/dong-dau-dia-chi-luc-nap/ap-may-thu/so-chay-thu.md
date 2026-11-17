@@ -22,6 +22,10 @@ thẻ). Ba lượt nạp 105,8 giây. Năm thước, mỗi thước thoát 0:
 | Bài mất `kind` · lật bán↔thuê | — | — | 0 · 0 |
 | Chữ bài nêu dự án nhận đúng dự án chữ | — | — | 108 / 108 (25 bài nêu dự án KHÁC thẻ) |
 
+**Đo lại ở `8fe57ef5`** (sau sửa AC-5 của S4-r3), bản chép dựng lại 2026-11-18, ba lượt 137,7 giây: gốc 5.720 / 6.942 = 82,40%
+(máy thu đã chạy DV6 giữa hai lần dựng) → nền 6.752 / 6.942 = **97,26%** → K1 6.795 / 6.942 = **97,88%**; bài > 1 dự án sống
+0 · 0 · 0; bài rơi 0 / 62.701; xung đột 0; đóng dấu 100%; mất kind 0, lật 0; chữ bài 114 / 114. Itest đầy đủ 75/75.
+
 **Đo lại ở `0326b5c0`** (sau lượt soát context sạch: hoà giải bỏ dòng TG2 của bản thẻ hết hiệu lực), bản chép dựng lại, ba lượt
 251,5 giây: mọi số trong bảng y nguyên; chữ bài 110 / 110 (2 bài mới vào tin giữa hai lần dựng). Itest đầy đủ 74/74.
 
