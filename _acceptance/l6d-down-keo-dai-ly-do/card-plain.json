@@ -1,0 +1,112 @@
+{
+ "feature_plain": "Khi kênh S03 mất kết nối từ 30 phút trở lên, máy thu tự cảnh báo một lần (sổ cảnh báo + thông báo màn hình) và ghi lý do: phiên chết (cần quét QR) hay kênh dừng. Lượt chấm 2 đạt 14/14 tiêu chí, đo hoàn toàn trên OpenClaw giả.",
+ "will_do": [
+  {
+   "id": "AC-1",
+   "p": "Sẽ cảnh báo đúng một lần khi kênh S03 mất kết nối hai nhịp liền (30 phút), không lặp ở nhịp 3; kênh lên lại thì tự đóng, sự cố mới lại báo đúng một lần. Đo cả trên mẫu trạng thái thật của máy thu."
+  },
+  {
+   "id": "AC-3",
+   "p": "Sẽ ghi lý do «kênh dừng» cho kiểu sự cố 09/11, và nếu lệnh kiểm treo quá 20 giây thì kết thúc dưới 25 giây với lý do «chưa rõ»."
+  },
+  {
+   "id": "AC-4",
+   "p": "Sẽ chỉ hỏi danh sách nhóm (chỉ đọc) khi kênh đang mất kết nối, tối đa một lần mỗi giờ; kênh đang chạy thì không hỏi."
+  },
+  {
+   "id": "AC-5",
+   "p": "Sẽ chỉ dùng đúng hai lệnh chỉ đọc của OpenClaw; không gửi tin, không đăng nhập, không sửa cấu hình — có ca đỏ khi ai chèn lệnh khác."
+  },
+  {
+   "id": "AC-6",
+   "p": "Sẽ đo toàn bộ trên thư mục tạm với OpenClaw giả; từ chối chạy nếu trỏ vào máy thật; hai sổ log thật của máy giữ nguyên trước và sau."
+  },
+  {
+   "id": "AC-7",
+   "p": "Sẽ ghi tệp trạng thái đúng khuôn mà bộ canh VHZ2 (hàng kế) đọc để biết có phải phiên đã chết không."
+  },
+  {
+   "id": "AC-8",
+   "p": "Sẽ giữ xanh 9 ca của làn thu và các lớp canh S03 cũ (L6 a/b/c, kiểm lệch, cổng im lặng)."
+  }
+ ],
+ "wont_do": [
+  {
+   "id": "AC-2",
+   "p": "Chặn chỗ mù của sự cố 13/11: phiên chết mà trạng thái vẫn in «linked» thì lớp cũ L6(c) không bắn, lớp mới L6(d) bắn và ghi lý do «phiên chết»."
+  },
+  {
+   "id": "OOS-1",
+   "p": "Không đẩy cảnh báo ra ngoài máy thu (issue riêng tư) — chờ VH1, làn P3 làm; vòng này cảnh báo dừng ở sổ cảnh báo + thông báo màn hình."
+  },
+  {
+   "id": "OOS-2",
+   "p": "Không tự khởi động lại gateway — đó là hàng kế VHZ2."
+  },
+  {
+   "id": "OOS-3",
+   "p": "Không vá gốc bộ hẹn khởi động lại của OpenClaw (VHZ3)."
+  },
+  {
+   "id": "OOS-4",
+   "p": "Không thêm ô hiện lý do trên trang Ops."
+  },
+  {
+   "id": "OOS-5",
+   "p": "Không chạy OpenClaw thật trong phép đo, không nạp plist mới, không khởi động lại gateway."
+  }
+ ],
+ "coverage_plain": [
+  {
+   "i": 0,
+   "p": "Nhịp mất kết nối 1, 2, 3, lên lại (mẫu thật), tái phát — AC-1 cảnh báo đúng nhịp."
+  },
+  {
+   "i": 1,
+   "p": "Đủ các lý do: phiên chết (13/11), kênh dừng (09/11), chưa rõ do treo, giữ lý do khi không hỏi — AC-2, AC-3, AC-4, AC-7."
+  },
+  {
+   "i": 2,
+   "p": "Tần suất hỏi nhóm: lần đầu, trong giờ, sau giờ, khi kênh chạy, khi treo — AC-3, AC-4."
+  },
+  {
+   "i": 3,
+   "p": "An toàn Zalo: lệnh cho phép và lệnh cấm, ghi cấu hình, gửi nhóm — AC-5."
+  },
+  {
+   "i": 4,
+   "p": "Phép đo cô lập: OpenClaw giả, gỡ lớp giả, trỏ nhầm máy thật, log thật không đổi — AC-6."
+  },
+  {
+   "i": 5,
+   "p": "Khuôn tệp trạng thái cho VHZ2 — AC-7."
+  },
+  {
+   "i": 6,
+   "p": "Hồi quy các lớp canh cũ và cú pháp — AC-8."
+  }
+ ],
+ "gap_probe_plain": [
+  {
+   "i": 0,
+   "p": "Phép đo ban đầu chỉ giả thư mục nhà, chưa chặn đường tìm lệnh thật — đã thêm chốt đường tìm và ca đỏ."
+  },
+  {
+   "i": 1,
+   "p": "Chưa nói hai sổ log thật được giữ thế nào — đã thêm chốt so băm trước/sau."
+  },
+  {
+   "i": 2,
+   "p": "Mọi mẫu trạng thái đều viết tay — đã lấy một mẫu thật (chỉ đọc, che định danh) và thêm ca đỏ cho lỗi «disconnected» bị đọc là chạy."
+  },
+  {
+   "i": 3,
+   "p": "Hai chốt thiếu ca đỏ hoặc đối chứng dương — đã bổ sung."
+  },
+  {
+   "i": 4,
+   "p": "Hai tiêu chí vênh nhau ở nhịp treo — đã chốt theo mã làn thu (treo thì ghi «chưa rõ») và thêm ca phiên chết → treo → nhịp kế."
+  }
+ ],
+ "scope_plain": "Năm việc để ngoài vòng này:"
+}
