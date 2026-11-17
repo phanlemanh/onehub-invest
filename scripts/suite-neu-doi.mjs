@@ -88,9 +88,9 @@ export const HA_TANG = [
   "agent/package.json", "agent/package-lock.json",
 ];
 
-export function docKhai(root) {
+export function docKhai(root, tep = path.join(root, TEP_KHAI)) {
   try {
-    const khai = JSON.parse(readFileSync(path.join(root, TEP_KHAI), "utf8"));
+    const khai = JSON.parse(readFileSync(tep, "utf8"));
     if (!khai || typeof khai !== "object" || Array.isArray(khai)) throw new Error("gốc không phải object");
     return { khai, loi: null };
   } catch (e) {
@@ -199,7 +199,8 @@ async function mainScripts(argv) {
     const chon = opt("--tep").split(",").filter(Boolean);
     r = { chon, ly_do: Object.fromEntries(chon.map((t) => [t, "chỉ định bằng --tep"])), tron_bo: null };
   } else {
-    const { khai, loi } = docKhai(root);
+    // --khai: đọc tệp khai từ đường khác gốc đang chấm — probe tái hiện chạy tệp khai của HEAD trên cây của đỉnh cũ.
+    const { khai, loi } = docKhai(root, opt("--khai") ? path.resolve(opt("--khai")) : undefined);
     r = chonScripts({ tep: tepDoi(root, opt("--base")), khai, tests, ep: process.env.SUITE_NEU_DOI === "chay", loiKhai: loi });
   }
   console.log(`suite-neu-doi: scripts — ${r.chon.length}/${tests.length} tệp${r.tron_bo ? ` (trọn bộ: ${r.tron_bo})` : ""}`);
