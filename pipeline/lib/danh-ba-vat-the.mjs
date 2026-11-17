@@ -52,9 +52,12 @@ export function nutVungCuaToa(toa, phanKhuTheoKhu) {
  * Kế hoạch đúc từ dòng S08 và bí danh đang có.
  * @param {{ dongS08: Array<{ project_id: string, product_code: string, khu_id: number, iso: 'VN-HN'|'VN-SG', subdivision?: string|null }>,
  *           biDanh: Map<string, string>, phanKhuTheoKhu?: Map<number, Array<{ id: number, ten: string[] }>>,
- *           taoKhoa?: (tienTo: string) => string }} vao
+ *           taoKhoa?: (tienTo: string) => string,
+ *           s16TheoKhu?: Map<number, { toa: Map<string,string>, truc: Map<string,string>,
+ *                                      can: Map<string,{ unit_key: string, building_key: string, du_an: string }> }> }} vao
+ *   s16TheoKhu (DA33 §5.5): toà, trục, căn S16 đã có của khu — bước S08 dùng lại thay vì đúc; căn S16 cùng mã khác toà → lechS16.
  */
-export function keHoachDung({ dongS08, biDanh, phanKhuTheoKhu = new Map(), taoKhoa = (t) => moiKhoa(t) }) {
+export function keHoachDung({ dongS08, biDanh, phanKhuTheoKhu = new Map(), taoKhoa = (t) => moiKhoa(t), s16TheoKhu = new Map() }) {
   const toa = new Map(); // value bí danh → bản ghi
   const truc = new Map();
   const can = new Map();
@@ -69,6 +72,14 @@ export function keHoachDung({ dongS08, biDanh, phanKhuTheoKhu = new Map(), taoKh
     biDanhMoi.push({ object_key: key, value });
     return { key, moi: true };
   };
+  // Gắn bí danh S08 vào vật thể S16 có sẵn (không đúc).
+  const ganCo = (value, key) => {
+    if (biDanh.has(value)) return { key: biDanh.get(value), moi: false };
+    biDanh.set(value, key);
+    biDanhMoi.push({ object_key: key, value });
+    return { key, moi: false };
+  };
+  const lechS16 = [];
   const daThay = new Set();
   for (const d of dongS08) {
     const ma = typeof d.product_code === "string" ? d.product_code.trim().toUpperCase() : "";
@@ -86,18 +97,28 @@ export function keHoachDung({ dongS08, biDanh, phanKhuTheoKhu = new Map(), taoKh
     tiLe[d.khu_id].tach++;
     const vToa = biDanhToa(d.project_id, kq.toa);
     let t = toa.get(vToa);
+    const s16 = s16TheoKhu.get(d.khu_id);
     if (!t) {
-      t = { ...datKhoa(vToa, "bld"), project_id: d.project_id, ma_toa: kq.toa, khu_id: d.khu_id, iso: d.iso, phan_khu: new Set() };
+      const coS16 = !biDanh.has(vToa) && s16?.toa.get(chuanHoaTenToa(kq.toa));
+      t = { ...(coS16 ? ganCo(vToa, coS16) : datKhoa(vToa, "bld")), project_id: d.project_id, ma_toa: kq.toa, khu_id: d.khu_id, iso: d.iso,
+        phan_khu: new Set() };
       toa.set(vToa, t);
     }
     if (d.subdivision) t.phan_khu.add(String(d.subdivision).toLowerCase());
+    const canS16 = !biDanh.has(vCan) ? s16?.can.get(ma) : null;
+    if (canS16 && canS16.building_key !== t.key) {
+      lechS16.push({ du_an: canS16.du_an, ma, khoa_can: canS16.unit_key, khoa_toa: [canS16.building_key, t.key].sort() });
+      continue;
+    }
     const vTruc = biDanhTruc(d.project_id, kq.toa, kq.truc);
     let s = truc.get(vTruc);
     if (!s) {
-      s = { ...datKhoa(vTruc, "stk"), toa_key: t.key, project_id: d.project_id };
+      const trucS16 = !biDanh.has(vTruc) && s16?.truc.get(`${t.key}|${chuanHoaTenToa(kq.toa)}|${kq.truc}`);
+      s = { ...(trucS16 ? ganCo(vTruc, trucS16) : datKhoa(vTruc, "stk")), toa_key: t.key, project_id: d.project_id };
       truc.set(vTruc, s);
     }
-    can.set(vCan, { ...datKhoa(vCan, "unt"), toa_key: t.key, truc_key: s.key, tang: kq.tang, project_id: d.project_id });
+    can.set(vCan, { ...(canS16 ? ganCo(vCan, canS16.unit_key) : datKhoa(vCan, "unt")), toa_key: t.key, truc_key: s.key, tang: kq.tang,
+      project_id: d.project_id });
   }
   for (const t of toa.values()) t.region_node_id = nutVungCuaToa(t, phanKhuTheoKhu);
   return {
@@ -105,6 +126,7 @@ export function keHoachDung({ dongS08, biDanh, phanKhuTheoKhu = new Map(), taoKh
     truc: [...truc.values()],
     can: [...can.values()],
     biDanhMoi,
+    lechS16,
     soLyDo: [...lyDo].map(([k, so]) => {
       const [project_id, ly_do] = k.split("|");
       return { project_id, ly_do, so };
