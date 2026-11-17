@@ -166,21 +166,30 @@ test("TTH-AC-2 trang một dự án: toà dưới nút hiệu lực, dòng phụ
     "TTH-AC-2 nút của toà",
   )
   assert.equal(theo[T.T6], undefined, "TTH-AC-2 toà đã gộp không hiện")
-  const kiemHang = (rows: ReturnType<HangMod["dungHangToa"]>) => {
+  const kiemHang = (rows: { key: string; phu: string; subRows?: { key: string }[] }[], coCan = true) => {
     const h = Object.fromEntries(rows.map((r) => [r.key, r]))
     const goc = `S09 xếp lại, gốc: ${tenDChe}`
     assert.ok(h[T.T1].phu.startsWith("Phan khu Ka"), "TTH-AC-2 T1 sai nút")
     assert.ok(h[T.T1].phu.includes(goc), "TTH-AC-2 T1 thiếu dòng gốc")
     assert.ok(h[T.T2].phu.startsWith("Cum Ce") && h[T.T2].phu.includes(goc), "TTH-AC-2 T2 sai nút hay thiếu dòng gốc")
-    assert.ok(!h[T.T3].phu.includes("S09 xếp lại") && !h[T.T3].phu.startsWith(tenDChe), "TTH-AC-2 T3 có dòng gốc thừa")
-    assert.ok(h[T.T4].phu.startsWith("Nut Be") && !h[T.T4].phu.includes("S09 xếp lại"), "TTH-AC-2 T4 sai")
-    assert.deepEqual(h[T.T1].subRows?.map((c) => c.key).length, 2, "TTH-AC-2 căn của T1 (đối chứng dương)")
+    // T3 nằm thẳng ở D, gốc = hiệu lực, không bí danh mã: dòng phụ rỗng hẳn; T4 chỉ mang tên nút B.
+    assert.equal(h[T.T3].phu, "", "TTH-AC-2 T3 có dòng phụ thừa")
+    assert.equal(h[T.T4].phu, "Nut Be", "TTH-AC-2 T4 sai")
+    if (coCan) assert.deepEqual(h[T.T1].subRows?.map((c) => c.key).length, 2, "TTH-AC-2 căn của T1 (đối chứng dương)")
     return h
   }
   const h = kiemHang(dungHangToa(duAn!, N.D, entries))
   const { DuAnContent } = await import("../src/components/ops/registry/du-an-content")
   const html = renderToStaticMarkup(await DuAnContent({ id: N.D }))
-  assert.ok(html.includes(h[T.T1].phu.replace(/&/g, "&amp;")), "TTH-AC-2 DOM thiếu dòng phụ của T1")
+  // Đọc dòng phụ của TỪNG toà trên HTML: span ngay sau span tên toà (du-an-toa-grid.tsx), rồi kiểm cùng bảng như dữ liệu.
+  const TEN_TOA: Record<string, string> = { [T.T1]: "Toa Mot", [T.T2]: "Toa Hai", [T.T3]: "Toa Ba", [T.T4]: "Toa Bon", [T.T5]: "Toa Nam" }
+  const phuDom = Object.entries(TEN_TOA).map(([key, ten]) => {
+    const m = html.match(new RegExp(`>${ten}</span>(?:<span[^>]*>([^<]*)</span>)?`))
+    assert.ok(m, `TTH-AC-2 DOM thiếu hàng toà ${ten}`)
+    return { key, phu: m[1] ?? "" }
+  })
+  kiemHang(phuDom, false)
+  assert.ok(h[T.T5].phu.startsWith("Phan khu Ka"), "TTH-AC-2 T5 sai nút")
   assert.ok(!html.includes(TEN_THAT), "TTH-AC-2 HTML lộ tên nguồn thật")
   // Trang danh sách: hàng K của cây (dữ liệu RegistryGrid vẽ) mang soToa theo nút hiệu lực.
   const doc = await import("../src/lib/ops/registry/doc")
