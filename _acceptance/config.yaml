@@ -141,9 +141,9 @@ executors:
     s4v_dung_wt: "node --test scripts/dung-worktree-cham.test.mjs"   # s4-suite-theo-vung E7 — repo git tạm + worktree, không DB
     sstl_buoc_ci: "node --test --test-name-pattern=SSL-AC-1 scripts/suite-neu-doi.test.mjs"   # suite-scripts-vao-luot-cham E1 — so bước với ci-test.yml
     sstl_chon: "node --test --test-name-pattern=SSL-AC-2 scripts/suite-neu-doi.test.mjs"      # suite-scripts-vao-luot-cham E2 — repo git tạm
-    sstl_dong: "node --test --test-name-pattern=SSL-AC-3 scripts/suite-neu-doi.test.mjs"      # suite-scripts-vao-luot-cham E3 — 43 tệp thật
+    sstl_khai: "node --test --test-name-pattern=SSL-AC-3 scripts/suite-neu-doi.test.mjs"      # suite-scripts-vao-luot-cham E3 — tệp khai đủ, đúng hình
     sstl_rao: "node --test --test-name-pattern=SSL-AC-4 scripts/suite-neu-doi.test.mjs"       # suite-scripts-vao-luot-cham E4
-    sstl_chu_the: "node --test --test-name-pattern=SSL-AC-5 scripts/suite-neu-doi.test.mjs"   # suite-scripts-vao-luot-cham E5 — kho thật
+    sstl_khop: "node --test --test-name-pattern=SSL-AC-5 scripts/suite-neu-doi.test.mjs"      # suite-scripts-vao-luot-cham E5 — tệp khai khớp ma trận đọc tay
     sstl_tai_hien: "bash _acceptance/suite-scripts-vao-luot-cham/probes/tai-hien.sh"          # suite-scripts-vao-luot-cham E6 — hai đỉnh đỏ thật, worktree tạm
     sstl_app_src: "bash _acceptance/suite-scripts-vao-luot-cham/probes/do-app-src.sh"         # suite-scripts-vao-luot-cham E7 — nhánh tạm chỉ đổi app/src
     sstl_bao_thu: "node --test --test-name-pattern=SSL-AC-8 scripts/suite-neu-doi.test.mjs"   # suite-scripts-vao-luot-cham E8

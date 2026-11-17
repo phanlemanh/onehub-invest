@@ -79,6 +79,23 @@ trên từng phần tử của job và trên đầu ra thật (DB nối tới l�
 - Rào trọn bộ phủ cả hạ tầng của chính chuỗi bước CI: `scripts/ci-db-init.mjs`, `scripts/ci-bo-qua.json`,
   `.github/workflows/ci-test.yml`, `package.json`/`package-lock.json` của app, pipeline, agent.
 
+## Đổi hướng 17/11 06:00Z — tệp khai vùng viết tay (giám sát quyết, P3-208)
+
+Dựng ma trận đọc tay ở S3 lộ ra: lời đọc liệt kê (readdir, glob, `git ls-files`, `find`, `git clone` cả kho) phần lớn nằm
+trong tệp được import — `check-api-surface.mjs`, `check-mcp-tools.mjs`, `check-ops-tier-a.mjs`, `check-invest-tier-a.mjs`,
+`lib/ops-app.mjs`, `lib/ops-local.mjs`, `ci-db-init.mjs`… Xét an toàn trên bao đóng thì 20–34/43 tệp test phải luôn chạy;
+tính hẹp hơn phải lần luồng đối số đường qua ~100 tệp. Tập động thật đọc tay ra tám tệp, không phải bảy
+(`zalo-import-job-lan` clone cả kho).
+
+Hướng mới: `scripts/suite-scripts-vung.json` — mỗi `scripts/*.test.mjs` → danh sách glob nó phụ thuộc, hoặc `"luon"` khi tệp
+quét cả kho mà không khoanh được. Viết tay từ ma trận đọc tay (`_acceptance/suite-scripts-vao-luot-cham/ma-tran.json`),
+ma trận viết trước. Bộ chọn chỉ đọc tệp khai; ba rào trọn bộ giữ, thêm chính tệp khai vào hạ tầng chung; ca canh: mọi tệp
+test phải có dòng, tệp chưa khai thì ca đỏ và bộ chọn coi là `"luon"`. Vùng của `db-thu.test.mjs` khoanh tệp test của ba bộ
+và tệp chúng import. AC-7 đổi sang ngưỡng giây: nhánh chỉ đổi `app/src/lib/ops/registry/doc.ts` chạy tập chọn ≤ 120 giây.
+
+Rủi ro nhận có tên: vùng khai tay có thể sót phụ thuộc → bỏ qua giả. Ca canh bắt tệp chưa khai, không bắt vùng khai thiếu;
+CI vẫn chạy trọn bộ trên mọi PR làm lưới cuối.
+
 ## Ngoài phạm vi
 
 Tối ưu tệp test nặng (giám sát xét riêng nếu cần); chọn theo từng ca trong một tệp; sửa kit (`repin-lane.mjs`,
