@@ -22,6 +22,9 @@ thẻ). Ba lượt nạp 105,8 giây. Năm thước, mỗi thước thoát 0:
 | Bài mất `kind` · lật bán↔thuê | — | — | 0 · 0 |
 | Chữ bài nêu dự án nhận đúng dự án chữ | — | — | 108 / 108 (25 bài nêu dự án KHÁC thẻ) |
 
+**Đo lại ở `0326b5c0`** (sau lượt soát context sạch: hoà giải bỏ dòng TG2 của bản thẻ hết hiệu lực), bản chép dựng lại, ba lượt
+251,5 giây: mọi số trong bảng y nguyên; chữ bài 110 / 110 (2 bài mới vào tin giữa hai lần dựng). Itest đầy đủ 74/74.
+
 Lệch với bản đo 05f4a90c (gốc 80,87% · nền 96,38% · K1 97,88%): mẫu số tăng 6.637 → 6.942 tin do dữ liệu máy thu mới và DA33;
 tỉ lệ K1 giữ nguyên, gốc và nền lệch dưới 0,15 điểm.
 
