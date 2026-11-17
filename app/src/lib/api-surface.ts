@@ -52,6 +52,7 @@ export const API_SURFACE: ApiSurfaceEntry[] = [
   { route: "v1/ops/labels", methods: ["GET", "POST"], mode: "ops-session", note: "gắn nhãn đánh giá mù — label.write: vai ops, không bearer; chỉ máy thu (PL7)" },
   { route: "v1/ops/labels/[itemId]/review", methods: ["GET", "POST"], mode: "ops-session", note: "lượt hai sau khi lưu nhãn: so với máy đọc, ghi trường hợp — label.write: vai ops, không bearer; chỉ máy thu (GC0)" },
   { route: "v1/ops/source-groups", methods: ["GET", "POST"], mode: "ops", methodModes: { POST: "admin" }, note: "nhóm nguồn — GET ops.read; mọi action POST là unit.* chỉ admin (TV1)" },
+  { route: "v1/ops/group-cards", methods: ["POST"], mode: "ops-session", note: "thẻ địa chỉ nhóm S03: nhận, sửa, bác — unit.card_decide: vai ops, không bearer; chỉ máy thu (TG1)" },
   { route: "v1/ops/zalo/accounts", methods: ["GET", "POST", "DELETE"], mode: "admin", note: "tài khoản thu Zalo — zalo.admin (TV1)" },
   { route: "v1/ops/zalo/groups", methods: ["GET", "POST"], mode: "admin", note: "nhóm Zalo theo dõi — zalo.admin (TV1)" },
   { route: "v1/ops/zalo/login", methods: ["POST", "GET", "DELETE"], mode: "admin", note: "đăng nhập QR tài khoản thu (QR trả base64, không qua zalo-media) — zalo.admin (TV1)" },

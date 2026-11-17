@@ -53,7 +53,7 @@ export function SoDonViDialog({
   )
 }
 
-function ChonNhieu({
+export function ChonNhieu({
   id,
   label,
   description,

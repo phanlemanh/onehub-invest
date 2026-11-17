@@ -218,7 +218,12 @@ describe("AC-6 job_step", () => {
       assert.equal(r.stdout, "ra-out\n", "stdout của lệnh phải đi qua nguyên vẹn, không thêm dòng ghim");
       const ghim = r.stderr.split("\n").filter((l) => l.startsWith("JOB FAIL"));
       if (code === 0) {
-        assert.equal(r.stderr, "ra-err\n", "lệnh lành: stderr chỉ có đầu ra của lệnh");
+        // job-step-ghi-thoi-luong: mỗi bước nay có thêm ĐÚNG MỘT dòng ghim thời lượng ở stderr,
+        // kể cả bước lành. stdout vẫn không thêm byte nào (khẳng định ở trên).
+        const ghimGio = r.stderr.split("\n").filter((l) => l.startsWith("JOB STEP "));
+        assert.equal(ghimGio.length, 1, "lệnh lành: đúng một dòng ghim thời lượng ở stderr");
+        assert.equal(r.stderr, `ra-err\n${ghimGio[0]}\n`,
+          "lệnh lành: stderr chỉ có đầu ra của lệnh rồi dòng ghim thời lượng");
       } else {
         assert.deepEqual(ghim, [`JOB FAIL [demo] bước buoc-thu mã ${code}`], "lệnh hỏng: đúng một dòng ghim ở stderr");
         assert.ok(r.stderr.startsWith("ra-err\n"), "stderr của lệnh đi trước dòng ghim, nguyên vẹn");
