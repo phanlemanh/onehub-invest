@@ -4,10 +4,13 @@
 //
 // Vì sao phải có KỊCH BẢN DUYỆT khai trước: Cổng Phạm vi đã chốt «không đóng dấu từ thẻ nháp», mà trên máy thu lúc đo cả 26
 // thẻ đều còn nháp — đo thẳng thì số đóng dấu thật là 0, và lượt chấm sẽ đỏ hay xanh vì trạng thái duyệt chứ không vì mã.
-// Nên lệnh chạy HAI lượt nạp trên cùng bản chép, cùng mã:
-//   lượt NỀN  — thẻ để nguyên như máy thu (N thẻ đã duyệt lúc đo, in ra) → chụp TRƯỚC;
-//   kịch bản  — áp đúng kịch bản đã khai trong evidence/kich-ban-duyet.md TRƯỚC khi đo → lượt nạp → chụp SAU.
-// Số của lượt NỀN là số thật trên máy thu ngay sau khi hàng gộp; số SAU là số khi buổi duyệt làm đúng kịch bản.
+// Nên lệnh chụp BA mốc trên cùng bản chép:
+//   GỐC  — bản chép NGUYÊN TRẠNG, chụp TRƯỚC mọi lượt nạp: đúng thứ máy thu đang hiện (mã main, chưa có hàng này). Đây là mốc
+//          «trước khi đóng dấu» của AC-8 và AC-11. Chụp sau một lượt nạp bằng mã mới thì một bản mã hỏng làm hỏng cả hai mốc như
+//          nhau và thước không bao giờ đỏ được (S4 vòng 1, phát hiện «khẳng định âm một mình»).
+//   NỀN  — lượt nạp bằng mã này, thẻ để nguyên như máy thu (N thẻ đã duyệt lúc đo, in ra) = máy thu ngay sau khi hàng gộp;
+//   SAU  — áp đúng kịch bản đã khai trong evidence/kich-ban-duyet.md TRƯỚC khi đo → lượt nạp → chụp.
+// Thước «không tụt» và «không mất kind» so GỐC → SAU.
 //
 //   node pipeline/scripts/dong-dau-dia-chi-that.mjs --chay [--kich-ban K1]   hai lượt nạp, ghi .acceptance-runs/…/do-that.json
 //   node pipeline/scripts/dong-dau-dia-chi-that.mjs --thuoc <phu-the|nguong-moc|khong-tut|phu-kind|chu-bai-that> [--do-neu-cu]
@@ -97,6 +100,7 @@ async function chay(kichBan) {
   await c.connect();
   try {
     const t0 = performance.now();
+    const goc = await chup(c);
     const nen = await napIm(c);
     const truoc = await chup(c);
     await c.query(kb.sql);
@@ -105,13 +109,14 @@ async function chay(kichBan) {
     const ra = {
       sha: sha(), luc: new Date().toISOString(), db: DB_THU, kich_ban: kichBan, mo_ta: kb.mo_ta,
       giay: +((performance.now() - t0) / 1000).toFixed(1),
+      goc,
       truoc: { ...truoc, nguonLoai: nen.nguonLoai, the_nhom: nen.the_nhom },
       sau: { ...sauChup, nguonLoai: sau.nguonLoai, the_nhom: sau.the_nhom },
     };
     mkdirSync(dirname(TEP_DO), { recursive: true });
     writeFileSync(TEP_DO, JSON.stringify(ra));
     console.log(`đo xong trên ${DB_THU} ở ${ra.sha.slice(0, 9)}, ${ra.giay} giây — kịch bản ${kichBan}: ${kb.mo_ta}`);
-    console.log(`thẻ đã duyệt: lượt nền ${truoc.nThe} · sau kịch bản ${sauChup.nThe}`);
+    console.log(`thẻ đã duyệt: gốc ${goc.nThe} · lượt nền ${truoc.nThe} · sau kịch bản ${sauChup.nThe}`);
   } finally {
     await c.end();
   }
@@ -156,28 +161,32 @@ async function nhomCuaBai(c) {
 }
 
 const THUOC = {
-  // AC-8: 0 bài rơi từ mot_du_an sang xung_dot hay sang không-có-dự-án.
+  // AC-8: so GỐC (máy thu nguyên trạng, trước khi đóng dấu) → SAU: 0 bài rơi từ mot_du_an sang xung_dot hay sang không dự án.
   "khong-tut": async () => {
     const d = docDo();
-    const roi = Object.entries(d.truoc.bai).filter(([p, v]) => v[2] === "mot_du_an" && d.sau.bai[p]?.[2] !== "mot_du_an");
+    if (!d.goc) { console.error("số đo thiếu mốc GỐC (bản đo cũ) — chạy lại --chay"); process.exit(2); }
+    const roiTu = (a) => Object.entries(a.bai).filter(([p, v]) => v[2] === "mot_du_an" && d.sau.bai[p]?.[2] !== "mot_du_an");
+    const roiNen = roiTu(d.truoc).length;
+    const roi = roiTu(d.goc);
     const sang = {};
     for (const [p] of roi) { const s = d.sau.bai[p]?.[2] ?? "khoi-tin"; sang[s] = (sang[s] ?? 0) + 1; }
-    const motTruoc = Object.values(d.truoc.bai).filter((v) => v[2] === "mot_du_an").length;
-    console.log(`bài mot_du_an: trước ${motTruoc} · rơi khỏi mot_du_an: ${roi.length} ${JSON.stringify(sang)}`);
-    console.log(`tin xung_dot: trước ${d.truoc.xungDotTin} · sau ${d.sau.xungDotTin}`);
+    const motGoc = Object.values(d.goc.bai).filter((v) => v[2] === "mot_du_an").length;
+    console.log(`bài mot_du_an ở GỐC: ${motGoc} · rơi khỏi mot_du_an ở SAU: ${roi.length} ${JSON.stringify(sang)} · (nền → sau: ${roiNen})`);
+    console.log(`tin xung_dot: gốc ${d.goc.xungDotTin} · nền ${d.truoc.xungDotTin} · sau ${d.sau.xungDotTin}`);
     for (const [p] of roi.slice(0, 20)) console.log(`  rơi: bài ${p} · tin ${d.sau.bai[p]?.[0] ?? "(không còn tin)"}`);
     return roi.length === 0;
   },
   // AC-11: 0 bài mất kind; in nguồn của kind và số bài LẬT sale ↔ rent_lt (khác 0 thì khai Known limits).
   "phu-kind": async () => {
     const d = docDo();
+    if (!d.goc) { console.error("số đo thiếu mốc GỐC (bản đo cũ) — chạy lại --chay"); process.exit(2); }
     let mat = 0; const lat = { "sale→rent_lt": 0, "rent_lt→sale": 0 };
-    for (const [p, v] of Object.entries(d.truoc.bai)) {
+    for (const [p, v] of Object.entries(d.goc.bai)) {
       const s = d.sau.bai[p];
       if (v[1] && !s?.[1]) mat++;
       else if (v[1] && s[1] && v[1] !== s[1]) lat[`${v[1]}→${s[1]}`] = (lat[`${v[1]}→${s[1]}`] ?? 0) + 1;
     }
-    console.log(`bài có kind: trước ${Object.keys(d.truoc.bai).length} · sau ${Object.keys(d.sau.bai).length} · mất kind ${mat}`);
+    console.log(`bài có kind: gốc ${Object.keys(d.goc.bai).length} · nền ${Object.keys(d.truoc.bai).length} · sau ${Object.keys(d.sau.bai).length} · mất kind (gốc → sau) ${mat}`);
     console.log(`bài lật chiều: ${JSON.stringify(lat)}`);
     console.log(`nguồn kind (bài, lượt sau): chữ bài ${(d.sau.nguonLoai["chu-bai"] ?? 0) + (d.sau.nguonLoai["tin-hieu-chu"] ?? 0) + (d.sau.nguonLoai["don-vi-gia"] ?? 0)}` +
       ` · thẻ ${d.sau.nguonLoai["the-nhom"] ?? 0} · bối cảnh nhóm ${d.sau.nguonLoai["boi-canh-nhom"] ?? 0}`);
@@ -186,7 +195,7 @@ const THUOC = {
   // AC-1(b): ô Định vị S03, ngưỡng 90% trên cửa sổ all; in ba cửa sổ, cả lượt nền (= máy thu lúc này) lẫn sau kịch bản.
   "nguong-moc": async () => {
     const d = docDo();
-    for (const [ten, x] of [["lượt nền (máy thu ngay sau khi gộp)", d.truoc], ["sau kịch bản", d.sau]]) {
+    for (const [ten, x] of [["gốc (máy thu nguyên trạng, chưa có hàng này)", d.goc], ["lượt nền (máy thu ngay sau khi gộp)", d.truoc], ["sau kịch bản", d.sau]].filter(([, x]) => x)) {
       const w = x.dinhVi;
       console.log(`${ten} — ${x.nThe} thẻ đã duyệt: all ${w.all.located}/${w.all.offers} = ${pc(w.all.located, w.all.offers)} · ` +
         `30d ${pc(w["30d"].located, w["30d"].offers)} · 7d ${pc(w["7d"].located, w["7d"].offers)}  ` +

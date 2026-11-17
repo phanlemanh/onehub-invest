@@ -16,7 +16,7 @@ import { writeOffers } from "./lib/write-offers.mjs";
 import { ganSdtQuaNguoi } from "./lib/gan-sdt-qua-nguoi.mjs";
 import { co095, retractRule, subjectKey, phatBieuLoaiHinh, phatBieuPhongNgu, phatBieuTang, phatBieuToaTruc, rutLoaiHinhCu, rutTangCu } from "./lib/assert.mjs";
 import { assignStickyIds } from "./lib/offer-key.mjs";
-import { LY_DO_RUT, RULE_ID as RULE_ID_THE, coBangThe, docNhanDuAn, docTheDaDuyet, phatBieuDiaChiNhom, rutTheCu } from "./lib/dia-chi-the-nhom.mjs";
+import { LUAT_DV6, LY_DO_RUT, RULE_ID as RULE_ID_THE, coBangThe, docNhanDuAn, docTheDaDuyet, phatBieuDiaChiNhom, rutTheCu, traLaiDV6 } from "./lib/dia-chi-the-nhom.mjs";
 import { normText } from "./lib/norm-text.mjs";
 import { ASSERTION_METHOD, CONFIDENCE, ENRICH_FIELD, FLOOR_BAND, KIND, PROPERTY_TYPE } from "./lib/vocab.generated.mjs";
 
@@ -1022,33 +1022,44 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
   // luật hay lớp — nên dòng DV6 và dòng của thẻ cùng sống trên một bài mà khác giá trị là tin thành xung đột ngay. Thứ tự:
   // sinh dòng → rút dòng DV6 trên đúng bài vừa được ghi DỰ ÁN → rút dòng cũ của chính luật này → ghi cùng lượt writeOffers.
   let dongThe = [];
-  const theNhomDem = { nhom: theNhom.size, dong: 0, o_bo: oBo, rut_ban: 0, rut_luot: 0, rut_dv6: 0, nguon: null };
+  const theNhomDem = { nhom: theNhom.size, dong: 0, o_bo: oBo, rut_ban: 0, rut_luot: 0, rut_dv6: 0, tra_lai_dv6: 0, nguon: null };
   if (coThe) {
     const nhomCua = new Map(posts.map((p) => [p.post_id, p.conversation_id ?? null]));
     const tinCua = new Map(nhom.flatMap((o) => o.posts.map((p) => [p.post_id, o.offerId])));
     // Dòng dự án SỐNG trên bài của lượt, đọc TRƯỚC khi rút gì: của luật khác (để không đóng dấu một tin mà bài khác của nó
     // đang mang dự án khác) và của mọi luật kể cả luật này (để duyệt thêm một thẻ bất đồng không làm tin mất dự án đang có).
-    const { rows: songRows } = await client.query(
-      `SELECT split_part(subject_key, ':', 2) AS p, array_agg(value) AS v,
-              array_agg(value) FILTER (WHERE rule_id IS DISTINCT FROM $2) AS khac
-         FROM field_assertions
-        WHERE retracted_at IS NULL AND field = 'project_node_id' AND subject_key = ANY ($1::text[])
-        GROUP BY 1`, [baiDoc.map((p) => subjectKey("S03", p.post_id)), RULE_ID_THE]);
-    const r = phatBieuDiaChiNhom({
-      bai: baiDoc.map((p) => ({ post_id: p.post_id, conversation_id: nhomCua.get(p.post_id) ?? null, posted_at: p.posted_at, tin: tinCua.get(p.post_id) })),
-      the: theNhom, nhanDuAn: await docNhanDuAn(client), phuongChu,
-      duAnKhac: new Map(songRows.filter((x) => x.khac).map((x) => [x.p, x.khac])),
-      duAnHienTai: new Map(songRows.map((x) => [x.p, x.v])),
-    });
+    const moiChuThe = baiDoc.map((p) => subjectKey("S03", p.post_id));
+    const sinh = async () => {
+      const { rows: songRows } = await client.query(
+        `SELECT split_part(subject_key, ':', 2) AS p, array_agg(value) AS v,
+                array_agg(value) FILTER (WHERE rule_id IS DISTINCT FROM $2) AS khac
+           FROM field_assertions
+          WHERE retracted_at IS NULL AND field = 'project_node_id' AND subject_key = ANY ($1::text[])
+          GROUP BY 1`, [moiChuThe, RULE_ID_THE]);
+      return phatBieuDiaChiNhom({
+        bai: baiDoc.map((p) => ({ post_id: p.post_id, conversation_id: nhomCua.get(p.post_id) ?? null, posted_at: p.posted_at, tin: tinCua.get(p.post_id) })),
+        the: theNhom, nhanDuAn, phuongChu,
+        duAnKhac: new Map(songRows.filter((x) => x.khac).map((x) => [x.p, x.khac])),
+        duAnHienTai: new Map(songRows.map((x) => [x.p, x.v])),
+      });
+    };
+    const nhanDuAn = await docNhanDuAn(client);
+    let r = await sinh();
+    // AC-8: bài nay KHÔNG nhận dự án từ thẻ (bác, sửa sang nhiều dự án, hoà giải bỏ) mà dòng DV6 của nó đã bị lượt trước rút →
+    // ghi lại dòng DV6, rồi sinh lại để hoà giải mức tin thấy giá trị vừa trả.
+    const coDuAn = new Set(r.dong.filter((d) => d.field === "project_node_id").map((d) => d.subject_key));
+    theNhomDem.tra_lai_dv6 = await traLaiDV6(client, moiChuThe.filter((k) => !coDuAn.has(k)));
+    if (theNhomDem.tra_lai_dv6) r = await sinh();
     dongThe = r.dong;
     const baiDuAn = [...new Set(r.dong.filter((d) => d.field === "project_node_id").map((d) => d.subject_key))];
-    for (const rule of ["du-an-nhom-mot-du-an", "du-an-ten-bai"]) {
+    for (const rule of LUAT_DV6) {
       theNhomDem.rut_dv6 += await retractRule(client, baiDuAn, "project_node_id", rule, LY_DO_RUT.thayDV6);
     }
-    const rut = await rutTheCu(client, { dong: r.dong, moiChuThe: baiDoc.map((p) => subjectKey("S03", p.post_id)), the: theNhom });
+    const rut = await rutTheCu(client, { dong: r.dong, moiChuThe, the: theNhom });
     Object.assign(theNhomDem, { dong: r.dong.length, rut_ban: rut.rutBan, rut_luot: rut.rutLuot, nguon: r.demTheoNguon, tin: r.demTin });
     console.log(`thẻ nhóm: ${theNhom.size} thẻ đã duyệt, ${r.dong.length} phát biểu ${JSON.stringify(r.demTheoNguon)}, ` +
       `hoà giải tin ${JSON.stringify(r.demTin)}, rút ${rut.rutBan} theo bản thẻ + ${rut.rutLuot} theo lượt + ${theNhomDem.rut_dv6} dòng DV6, ` +
+      `ghi lại ${theNhomDem.tra_lai_dv6} dòng DV6, ` +
       `ô bỏ ${JSON.stringify(oBo)}`);
   }
   // PL15: phòng ngủ đi qua phát biểu (mỗi post một), năm cột do bộ phân xử dựng — không ghi thẳng.

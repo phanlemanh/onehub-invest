@@ -88,11 +88,14 @@ test("TG2-T4 E4 AC-3 cross-layer: lượt nạp thật ghi đúng những dòng 
   await ca(async (f) => {
     await the("tg2-mot", { duAn: [f.duAn1], phuong: f.phuong1, phanKhu: f.phanKhu, mucDich: "ban" });
     await the("tg2-hai", { duAn: [f.duAn1, f.duAn2], phuong: f.phuong2 });
+    // Chín ô «chữ bài × thẻ»: chữ im · chữ nêu CÙNG dự án thẻ một-dự-án (ten1) · chữ nêu dự án KHÁC (ten2) × thẻ một dự án ·
+    // thẻ hai dự án · nhóm không có thẻ đã duyệt. Ô then chốt: khac×khong — chữ nêu dự án trong nhóm không thẻ ra 0 dòng.
     const ds = [
-      ["im×mot", "tg2-mot", null], ["khac×mot", "tg2-mot", f.ten2],
-      ["im×hai", "tg2-hai", null], ["khac×hai", "tg2-hai", f.ten2],
-      ["im×khong", "tg2-khong", null],
+      ["im×mot", "tg2-mot", null], ["cung×mot", "tg2-mot", f.ten1], ["khac×mot", "tg2-mot", f.ten2],
+      ["im×hai", "tg2-hai", null], ["cung×hai", "tg2-hai", f.ten1], ["khac×hai", "tg2-hai", f.ten2],
+      ["im×khong", "tg2-khong", null], ["cung×khong", "tg2-khong", f.ten1], ["khac×khong", "tg2-khong", f.ten2],
     ];
+    assert.equal(ds.length, 9, "ma trận AC-3 phải đủ chín ô");
     const pid = {};
     for (const [k, nhom, ten] of ds) { pid[k] = await bai(nhom, BAN); if (ten) await nhanChuBai(pid[k], ten); }
     await nap();
@@ -111,6 +114,9 @@ test("TG2-T4 E4 AC-3 cross-layer: lượt nạp thật ghi đúng những dòng 
     assert.deepEqual(await st(pid["im×mot"]), { status: "mot_du_an", du_an: f.duAn1 }, "bài im của nhóm thẻ một dự án không lên ô Định vị");
     assert.deepEqual(await st(pid["khac×mot"]), { status: "mot_du_an", du_an: f.duAn2 }, "chữ bài nêu dự án khác mà ra dự án của thẻ");
     assert.equal((await st(pid["im×hai"])).status, null, "thẻ hai dự án mà tin vẫn có dự án");
+    for (const k of ["im×khong", "cung×khong", "khac×khong"]) {
+      assert.deepEqual(await dongSong(pid[k]), [], `ô ${k}: nhóm không có thẻ đã duyệt mà bài vẫn nhận dòng của luật này`);
+    }
   });
 });
 
@@ -127,6 +133,15 @@ test("TG2-T4 E5 AC-4 bốn ô: ba trường thành phát biểu, bán/thuê vào
     const d = await dongSong(p);
     assert.deepEqual(d.map((x) => x.field), ["area_id", "project_node_id", "subzone_node_id"]);
     for (const x of d) assert.deepEqual(Object.keys(x.evidence).sort(), ["ban", "nguon_o", "the"], `${x.field}: căn cứ thiếu khoá`);
+    // Đọc đúng dòng ĐÃ GHI trên DB — không phải mảng dòng hàm thuần trao cho bộ ghi (phát hiện S4 vòng 1, «đo chỉ dẫn»).
+    const cot = await nhieu(
+      `SELECT field, evidence_tier, method, method_version, rule_id FROM field_assertions
+        WHERE subject_key = $1 AND rule_id = $2 AND retracted_at IS NULL ORDER BY field`, [`S03:${p}`, RULE_ID]);
+    assert.equal(cot.length, 3);
+    for (const x of cot) {
+      assert.deepEqual([x.evidence_tier, x.method, x.method_version, x.rule_id], ["inferred", "e1_rule", "dong-dau-dia-chi@1", "dia-chi-the-nhom"],
+        `${x.field}: dòng trên DB sai lớp, phương pháp, phiên bản hay luật`);
+    }
   });
 });
 
@@ -138,6 +153,10 @@ test("TG2-T4 E6 AC-5 sửa thẻ đổi dự án: dòng bản cũ rút «the-doi
     await nhanChuBai(chu, f.ten2);
     await nap();
     const chuTruoc = await dongSong(chu);
+    // Vế dương: bài có chữ bài PHẢI có đúng một dòng dự án, giá trị của chữ, nguồn chu_bai — không thì hai câu so dưới qua được
+    // khi cả hai mốc đều rỗng (phát hiện S4 vòng 1).
+    assert.deepEqual(chuTruoc.filter((x) => x.field === "project_node_id").map((x) => [x.value, x.evidence.nguon_o]),
+      [[f.duAn2, "chu_bai"]], "bài có chữ bài nêu dự án không nhận đúng một dòng dự án của chữ");
     await c.query(`UPDATE group_address_cards SET project_node_ids = $2::bigint[], version = version + 1 WHERE group_key = $1`,
       ["tg2-sua", [f.duAn2]]);
     await nap();
@@ -245,24 +264,30 @@ test("TG2-T4 E11 AC-9 dòng DV6 trên bài vừa đóng dấu dự án bị rút
   });
 });
 
-test("TG2-T4 E9 AC-7 DB chưa có bảng thẻ: lượt nạp thoát êm, đúng một dòng cảnh báo, năm số của lượt y như khi có bảng", async () => {
-  let coBang, khongBang;
-  await ca(async () => {
-    await bai("tg2-ap", BAN); await bai("tg2-ap", BAN);
-    coBang = await nap();
+for (const [ten, pha] of [
+  ["DB chưa có bảng thẻ", "DROP TABLE group_address_cards CASCADE"],
+  ["bảng thẻ thiếu cột retired_at (áp 108, chưa áp 109)", "ALTER TABLE group_address_cards DROP COLUMN retired_at CASCADE"],
+]) {
+  test(`TG2-T4 E9 AC-7 ${ten}: lượt nạp thoát êm, đúng một dòng cảnh báo, năm số của lượt y như khi đủ lược đồ`, async () => {
+    let du, thieu;
+    await ca(async () => {
+      await bai("tg2-ap", BAN); await bai("tg2-ap", BAN);
+      du = await nap();
+    });
+    await ca(async () => {
+      so -= 2; // cùng mã bài, cùng chữ bài với ca trên
+      await bai("tg2-ap", BAN); await bai("tg2-ap", BAN);
+      await c.query(pha);
+      thieu = await nap();
+    });
+    const dong = thieu.canhBao.filter((x) => /thẻ địa chỉ/.test(x));
+    assert.equal(dong.length, 1, `cần đúng một dòng nói vì sao bỏ bước, có ${dong.length}: ${JSON.stringify(thieu.canhBao)}`);
+    for (const k of ["offers", "rejected", "reconcile", "loaiGiaPhiLy", "nguonLoai"]) {
+      assert.deepEqual(thieu.kq[k], du.kq[k], `khoá ${k} của lượt đổi khi ${ten}`);
+    }
   });
-  await ca(async () => {
-    so -= 2; // cùng mã bài, cùng chữ bài với ca trên
-    await bai("tg2-ap", BAN); await bai("tg2-ap", BAN);
-    await c.query("DROP TABLE group_address_cards CASCADE");
-    khongBang = await nap();
-  });
-  const bang = khongBang.canhBao.filter((x) => /thẻ địa chỉ/.test(x));
-  assert.equal(bang.length, 1, `cần đúng một dòng nói vì sao bỏ bước, có ${bang.length}: ${JSON.stringify(khongBang.canhBao)}`);
-  for (const k of ["offers", "rejected", "reconcile", "loaiGiaPhiLy", "nguonLoai"]) {
-    assert.deepEqual(khongBang.kq[k], coBang.kq[k], `khoá ${k} của lượt đổi khi thiếu bảng thẻ`);
-  }
-});
+}
+
 
 /** Cấy hai bài CÙNG chữ (thành một tin) vào hai nhóm — dạng bài đăng lại chéo nhóm. */
 async function baiCheo(nhomA, nhomB) {
@@ -318,5 +343,81 @@ test("TG2-T4 E10 AC-8 duyệt từng đợt: thẻ thứ hai bất đồng khôn
     const { kq } = await nap();
     assert.deepEqual(await trangThaiTin(a), { status: "mot_du_an", du_an: f.duAn1, n: 2 }, "duyệt thêm thẻ bất đồng làm tin mất dự án");
     assert.equal(kq.the_nhom.tin.theGiuHienTai, 1);
+  });
+});
+
+/** Dòng DV6 mồi trên một bài (như lệnh du-an-tren-tin-s03 --ghi để lại). */
+async function dv6(p, giaTri) {
+  await c.query(
+    `INSERT INTO field_assertions (subject_key, field, value, evidence_tier, method, method_version, rule_id, evidence, observed_at)
+     VALUES ($1, 'project_node_id', $2, 'inferred', 'e1_rule', 'du-an-tren-tin-s03@1', 'du-an-nhom-mot-du-an', '{}'::jsonb, now())`,
+    [`S03:${p}`, giaTri]);
+}
+const dv6Song = async (p) => (await nhieu(
+  `SELECT value FROM field_assertions WHERE subject_key = $1 AND rule_id = 'du-an-nhom-mot-du-an' AND retracted_at IS NULL`,
+  [`S03:${p}`])).map((r) => r.value);
+
+for (const [ten, doiThe] of [
+  ["thẻ bị BÁC", `UPDATE group_address_cards SET status = 'bac', version = version + 1 WHERE group_key = 'tg2-tra-lai'`],
+  ["thẻ sửa sang HAI dự án", null],
+]) {
+  test(`TG2-T4 E10 AC-8 ${ten} sau khi đã đóng dấu: dòng DV6 đã rút được GHI LẠI, tin không rơi khỏi ô Định vị`, async () => {
+    await ca(async (f) => {
+      await the("tg2-tra-lai", { duAn: [f.duAn1] });
+      const p = await bai("tg2-tra-lai", BAN);
+      await dv6(p, f.duAn1);
+      await nap();
+      assert.deepEqual(await dv6Song(p), [], "tiền đề: lượt một phải rút dòng DV6 trên bài vừa đóng dấu dự án");
+      await c.query(doiThe ?? `UPDATE group_address_cards SET project_node_ids = $1::bigint[], version = version + 1
+                               WHERE group_key = 'tg2-tra-lai'`, doiThe ? [] : [[f.duAn1, f.duAn2]]);
+      const { kq } = await nap();
+      assert.deepEqual(await dv6Song(p), [f.duAn1], "dòng DV6 không được ghi lại — tin mất dự án");
+      assert.deepEqual(await trangThaiTin(p), { status: "mot_du_an", du_an: f.duAn1, n: 1 }, "tin rơi khỏi ô Định vị");
+      assert.equal(kq.the_nhom.tra_lai_dv6, 1);
+    });
+  });
+}
+
+/** Sáu ô trạng thái thẻ (AC-2) ở lượt nạp thật; trả danh sách ô lệch, mỗi ô gọi tên. */
+async function kiemSauO(pid) {
+  const can = { nhap: false, nhan: true, sua: true, bac: false, nghi: false, khong_the: false };
+  const lech = [];
+  for (const [o, coDong] of Object.entries(can)) {
+    const n = (await dongSong(pid[o])).length;
+    if ((n > 0) !== coDong) lech.push(`ô ${o}: ${n} dòng (cần ${coDong ? "có" : "0"})`);
+  }
+  return lech;
+}
+async function caySauO(f) {
+  await the("tg2-o-nhap", { status: "nhap", duAn: [f.duAn1] });
+  await the("tg2-o-nhan", { duAn: [f.duAn1] });
+  const sua = await the("tg2-o-sua", { duAn: [f.duAn1] });
+  await c.query(`UPDATE group_address_cards SET project_node_ids = $2::bigint[], version = version + 1 WHERE card_code = $1`,
+    [sua.card_code, [f.duAn2]]); // lối «sửa»: người đổi ô rồi lưu — vẫn da_duyet, phiên bản tăng
+  await the("tg2-o-bac", { status: "bac", duAn: [f.duAn1] });
+  await c.query(
+    `INSERT INTO group_address_cards (group_key, status, project_node_ids, retired_at, retired_reason)
+     VALUES ('tg2-o-nghi', 'nhap', $1::bigint[], now(), 'nhom-roi-tap-nhap')`, [[f.duAn1]]);
+  const o = ["nhap", "nhan", "sua", "bac", "nghi", "khong_the"];
+  assert.equal(o.length, 6, "ma trận AC-2 phải đủ sáu ô");
+  const pid = {};
+  for (const k of o) pid[k] = await bai(`tg2-o-${k.replace("_", "-")}`, BAN);
+  return pid;
+}
+
+test("TG2-T4 E2 AC-2 sáu ô trạng thái thẻ ở lượt nạp thật: chỉ hai ô đã duyệt sống sinh phát biểu", async () => {
+  await ca(async (f) => {
+    const pid = await caySauO(f);
+    await nap();
+    assert.deepEqual(await kiemSauO(pid), []);
+  });
+});
+
+test("chiều đỏ E2 AC-2: đổi ô bac thành da_duyet thì đúng ô ấy sinh dòng và bộ kiểm gọi tên ô", async () => {
+  await ca(async (f) => {
+    const pid = await caySauO(f);
+    await c.query(`UPDATE group_address_cards SET status = 'da_duyet' WHERE group_key = 'tg2-o-bac'`);
+    await nap();
+    assert.deepEqual(await kiemSauO(pid), ["ô bac: 1 dòng (cần 0)"]);
   });
 });

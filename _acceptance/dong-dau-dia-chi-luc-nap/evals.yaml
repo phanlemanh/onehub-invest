@@ -35,9 +35,10 @@ evals:
   - id: E2
     criterion: AC-2
     executor: test
-    cmd: config:executors.test.tg2_pipeline
+    cmd: config:executors.test.tg2_itest
     paths:
       - "pipeline/lib/dia-chi-the-nhom.mjs"
+      - "pipeline/transform-zalo.mjs"
     expected: >
       Ma trận sáu ô trạng thái thẻ viết trước (nhap sống, da_duyet-nhận, da_duyet-sửa, bac, nhap nghỉ, không thẻ):
       đúng hai ô da_duyet sống sinh phát biểu, bốn ô còn lại 0 dòng.

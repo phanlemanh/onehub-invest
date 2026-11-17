@@ -6,13 +6,15 @@
 // Khoá nhóm là tầng A: không vào `evidence`, không vào log, không lên cloud — mọi chỗ in ra dùng `card_code`.
 import { khoaNhomThat } from "./eval-labels.mjs";
 import { subjectKey } from "./assert.mjs";
-import { nhanDuocNhan } from "./du-an-tren-tin-s03.mjs";
+import { RULE as RULE_DV6, nhanDuocNhan } from "./du-an-tren-tin-s03.mjs";
 import { chuan } from "./the-dia-chi-nhom.mjs";
 import { ASSERTION_FIELD, ASSERTION_METHOD, EVIDENCE_TIER, KIND } from "./vocab.generated.mjs";
 
 export const RULE_ID = "dia-chi-the-nhom";
 export const METHOD_VERSION = "dong-dau-dia-chi@1";
 export const LY_DO_RUT = Object.freeze({ doiBan: "the-doi-ban", thayDV6: "thay-bang-the-nhom" });
+/** Hai luật của lệnh DV6 (du-an-tren-tin-s03) mà hàng này thay trên bài nó ghi dự án — nguồn duy nhất là hằng RULE của DV6. */
+export const LUAT_DV6 = Object.freeze(Object.values(RULE_DV6));
 
 /** Ô bán/thuê của thẻ (108: ban · thue · ca_hai) sang giá trị `suyLoai` so (KIND.sale · KIND.rent_lt) — chỉ ánh xạ ở đây. */
 const MUC_DICH = Object.freeze({ ban: KIND.sale, thue: KIND.rent_lt, ca_hai: null });
@@ -216,4 +218,29 @@ export async function rutTheCu(client, { dong, moiChuThe, the }) {
                  = ANY ($3::text[]))`,
     [RULE_ID, moiChuThe, giu]);
   return { rutBan: r1.rowCount, rutLuot: r2.rowCount };
+}
+
+/**
+ * GHI LẠI dòng DV6 mà hàng này đã rút (lý do «thay-bang-the-nhom») trên những bài nay KHÔNG còn nhận dự án từ luật này — thẻ bị
+ * bác, sửa sang 2–3 dự án, ô dự án bị lọc, hay hoà giải mức tin bỏ dự án. Không ghi lại thì tin rơi khỏi ô Định vị (AC-8).
+ * Sổ phát biểu chỉ-thêm (trigger field_assertions_guard cấm đổi dòng đã rút), nên ghi DÒNG MỚI cùng chủ thể, trường, giá trị, luật,
+ * căn cứ — bản rút gần nhất của mỗi khoá; bỏ khoá nào đã có dòng sống y hệt (DV6 chạy lại sau khi rút).
+ * @param {string[]} chuThe subject_key các bài của lượt KHÔNG có dòng dự án của luật này sau bước sinh
+ * @returns {Promise<number>} số dòng ghi lại
+ */
+export async function traLaiDV6(client, chuThe) {
+  if (!chuThe.length) return 0;
+  const res = await client.query(
+    `INSERT INTO field_assertions (subject_key, field, value, evidence_tier, method, method_version, rule_id, evidence, observed_at, changed_by, run_id)
+     SELECT r.subject_key, r.field, r.value, r.evidence_tier, r.method, r.method_version, r.rule_id, r.evidence, r.observed_at, 'tra-lai-tg2', r.run_id
+       FROM (SELECT DISTINCT ON (subject_key, field, value_key, method, rule_id) *
+               FROM field_assertions
+              WHERE retract_reason = $1 AND rule_id = ANY ($2::text[]) AND subject_key = ANY ($3::text[])
+              ORDER BY subject_key, field, value_key, method, rule_id, id DESC) r
+      WHERE NOT EXISTS (SELECT 1 FROM field_assertions s
+                         WHERE s.retracted_at IS NULL AND s.subject_key = r.subject_key AND s.field = r.field
+                           AND s.value_key = r.value_key AND s.method = r.method AND s.rule_id = r.rule_id)
+     ON CONFLICT DO NOTHING`,
+    [LY_DO_RUT.thayDV6, LUAT_DV6, chuThe]);
+  return res.rowCount;
 }
