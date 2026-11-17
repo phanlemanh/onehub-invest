@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: b3dd21d9776ef726ce77402b9268a882de3e8685
-human_signoff:
+human_signoff: Mạnh 2026-11-17
 ---
 
 # Evidence Report: trang-danh-ba-chi-doc
@@ -137,7 +137,7 @@ Lệnh chung của E1, E2, E3, E4, E5, E6, E7, E8, E11 (một lệnh phủ chín
   run_id: minted-trang-danh-ba-chi-doc-E12-r1
   exit_code: 0
   baseline: n-a
-  verifier: config:executors.ui-check
+  verifier: config:executors.design.ui_check   # tác tử chấm lái trình duyệt trên bản dev của worktree (:3461); bản tổng hợp ghi khoá executors.ui-check không có trong config — sửa nhãn theo tiền lệ của kho
   verified_at: 2026-11-17T01:31:50Z
   carried_from_round: 1
   # carry-forward tu round 1 — delta khong cham paths cua eval

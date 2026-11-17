@@ -5,7 +5,7 @@ slug: trang-danh-ba-chi-doc
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-17
 design_doc: docs/superpowers/specs/2026-11-17-trang-danh-ba-chi-doc-design.md
@@ -61,3 +61,6 @@ trường × nguồn (DN2 phần sau). Never: ghi vào danh bạ từ trang (Out
 
 - Hỏi-1 (mở ở Cổng Phạm vi): cách đếm S09 «chưa nối» và câu chú toà S09 — xem sổ quyết định dòng S1 cuối.
 - Ô số «Mã nguồn chưa nối» đếm theo dự án nguồn: S08 dùng `stg_s08_project` (nhiều snapshot) nên đếm `DISTINCT project_id`.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-17:
+  - Ngoài-1: bài kiểm lỗi trang tự dựng câu lỗi thay vì lấy từ trang thật, nên đổi câu báo lỗi sau này không làm test đỏ.
+  - Ngoài-2: đọc danh sách tên nguồn lỗi thì mọi tên và mã trên trang thành «—» mà không có cảnh báo; tải lại khi hết lỗi là bình thường.
