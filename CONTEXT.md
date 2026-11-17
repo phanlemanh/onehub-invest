@@ -880,7 +880,7 @@ _Avoid_: nguồn nhãn
 
 **Danh mục CĐT** (nút ngắn «CĐT»): Căn cứ nhãn lấy giá trị từ danh mục căn của chủ đầu tư (S08), nguồn tin cậy cao nhất hiện nay nhưng chưa chắc đúng hết. Chỉ nhận khi mã căn của thẻ có trong danh mục và giá trị khớp một dòng cùng mã. (Câu cũ «chỉ ở máy thu, không lên cloud» hết hiệu lực từ 08/11, ROADMAP §3 mục 38; luật hiển thị theo hàng DN4.) Máy đọc tin không thấy S08 nên ô căn cứ này không vào phép chấm máy đọc tin.
 - Code: `eval_labels.basis = 'danh_muc_cdt'`, kiểm ở `app/src/lib/labels-s08.ts`
-_Avoid_: danh mục dự án, quỹ căn
+_Avoid_: quỹ căn
 
 **Mô tả căn**: Khối thứ sáu của biểu mẫu theo nhóm: Nội thất, Hướng, View, Ngày vào ở.
 - Code: `KHOI` id `mo-ta` (`nhom-fields.ts`)

@@ -64,6 +64,9 @@ agent/ và pipeline/ × quét (không phải chữ hiển thị — lời nhắc
 - Hai lỗi còn lại của `glossary_terms` («nhãn bạc», «tự thu» trong `_Avoid_`) — của hồ sơ khác; bộ ấy vẫn thoát 1 sau vòng.
 - «khu đô thị» trong `agent/` và `pipeline/` — không phải chữ trên màn.
 - Mã `project`, bảng, cột, URL — giữ nguyên theo mục 39 Hỏi-1; đọc ở diff của PR, không có eval riêng.
+- Năm dòng FAIL có sẵn của probe DN1 (`truoc 074 thay q7`, `truoc 074 ma ocp da co trong areas`, `con trung q7`, `nut khac bi
+  doi`, `git grep thoat 0: app/src/lib/ops/registry/doc.ts`) — đỏ ngay trên `main` 5508f620, không thuộc ba mục DA4; probe vẫn
+  thoát 1 sau vòng (E4 khai `expected_exit: 1`), AC-4 đo bằng E7.
 - Gate thiết kế cho `so-don-vi.tsx`, `so-don-vi-dialog.tsx`, `lam-giau-bang.tsx` — vòng chỉ đổi chuỗi, không đổi lớp,
   màu hay khoảng; gate có sẵn `tb_gate` phủ `do-hang-ngay.tsx`.
 

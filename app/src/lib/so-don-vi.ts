@@ -34,7 +34,7 @@ export async function docSoDonVi(db: Pick<Pool, "query"> = pool): Promise<DonViR
   return rows
 }
 
-/** Danh mục để khai: thị trường (areas cấp market) và khu đô thị (asset_nodes project — Hỏi-3). */
+/** Danh mục để khai: thị trường (areas cấp market) và dự án (asset_nodes project — Hỏi-3). */
 export async function docDanhMuc(db: Pick<Pool, "query"> = pool): Promise<DanhMuc> {
   const [markets, projects] = await Promise.all([
     db.query<{ id: string; name: string }>(`SELECT id, name FROM areas WHERE region_type = 'market' ORDER BY name`),
