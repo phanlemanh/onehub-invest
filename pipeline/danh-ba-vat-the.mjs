@@ -264,7 +264,7 @@ export async function dung(c, {
  * chủ đầu tư (phát biểu builder_name là hitl — chỉ lệnh tay ghi). Đích ngoài máy này → ném trước câu truy vấn đầu tiên.
  * @param {import("pg").Client} c
  */
-export async function buocVatTheDem(c, { log = console.log } = {}) {
+export async function buocVatTheDem(c, { log = console.log, dungFn = dung } = {}) {
   const kq = kiemDich(c.connectionParameters, { dbThat: true });
   if (!kq.ok) throw new Error(`danh-ba-vat-the: ${kq.ly_do}`);
   if (!(await c.query("SELECT to_regclass('public.buildings') AS t")).rows[0].t) {
@@ -276,8 +276,9 @@ export async function buocVatTheDem(c, { log = console.log } = {}) {
     log("danh-ba-vat-the: bỏ qua — chưa dựng lần đầu (lần đầu là lệnh tay --db-that --sao-luu)");
     return { bo_qua: "chua-dung-lan-dau" };
   }
-  const tk = await dung(c, { khuSlugs, runId: `dbv-dem-${Date.now()}`, log });
+  const tk = await dungFn(c, { khuSlugs, runId: `dbv-dem-${Date.now()}`, log });
   log(`danh-ba-vat-the: đêm ${JSON.stringify({ khu: khuSlugs.length, khoa_moi: tk.khoa_moi })}`);
+  if (tk.s16?.moc) log(`S16: khoá mới ${tk.s16.khoa_moi}, mốc ${tk.s16.moc}`);
   return tk;
 }
 

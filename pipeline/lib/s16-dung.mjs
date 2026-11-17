@@ -80,6 +80,10 @@ export async function buocS16(c, { khu, isoKhu, noi = NOI_DU_AN_S16, log = conso
     log(`danh-ba-vat-the: S16 ${slug} toà nối ${t.toa_noi} mới ${t.toa_moi} 0-căn ${t.toa_0_can} · căn mới ${t.can_moi} S08→S16 ${t.can_s08_bi_danh} · thẻ ${t.the_moi} mơ hồ ${t.mo_ho}`);
   }
   ra.toa_moi_so_can.forEach((t, i) => log(`danh-ba-vat-the: S16 toà mới #${i + 1} (${t.khu}) ${t.so_can} căn`));
+  // DA37 AC-8: mốc giao dịch (now() — mọi dòng lượt này chèn mang đúng mốc ấy) + số khoá mới, để lượt (cả lượt đêm) lùi được
+  // bằng tệp khoá (_acceptance/danh-ba-s16-thang-cau-truc/lui/ghi-khoa.sh).
+  ra.moc = (await c.query("SELECT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD\"T\"HH24:MI:SS.US\"Z\"') AS t")).rows[0].t; // đủ micro giây
+  ra.khoa_moi = Object.values(ra.khu).reduce((a, t) => a + (t.toa_moi ?? 0) + (t.can_moi ?? 0) + (t.truc_moi ?? 0), 0);
   return ra;
 }
 
@@ -247,6 +251,7 @@ async function dungMotDuAn(c, { du_an, k, iso, taoKhoa, ra }) {
     s16.set(vCan, key);
     tk.can_moi++;
   }
+  tk.truc_moi = trucMoi.length;
   if (trucMoi.length) {
     await c.query(`INSERT INTO stacks (stack_key, building_key, catalog_tier)
                    SELECT k, b, 'xac_minh' FROM unnest($1::text[], $2::text[]) AS x(k, b)`,

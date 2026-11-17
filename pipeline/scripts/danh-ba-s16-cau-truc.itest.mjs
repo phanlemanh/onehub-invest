@@ -282,3 +282,32 @@ test("DA37-AC-7 chiều đỏ: đúc lại căn S16 khi đã có bí danh thì l
       "đối chứng AC-7: đột biến đúc lại mà không có khoá mới ở lần hai — thước không phân biệt «khoá mới ở lần hai»");
   });
 });
+
+// ---- Task 4: job đêm dựng mọi khu đã có toà và in mốc (AC-8) ----
+import { buocVatTheDem } from "../danh-ba-vat-the.mjs";
+import { khuDaDung } from "../lib/danh-ba-vat-the.mjs";
+
+test("DA37-AC-8 job đêm: tập khu = mọi khu đã có toà; in «S16: khoá mới n, mốc t» khớp created_at; không mới → khoá mới 0", async () => {
+  const c = await dbPhu("dem");
+  await moiDuLieu(c, { s16: false }); await chay37(c);          // khu đã có toà từ S08
+  await moiDuLieu(c, { s08: false });                            // bản thu S16 mới tới, chưa dựng
+  const daCo = (await khuDaDung(c)).sort();
+  const dong = []; let khuDung;
+  const boc = (cc, o) => { khuDung = [...o.khuSlugs].sort(); return dung(cc, { ...o, isoTheo: () => "VN-HN", noiS09: {}, noiS16: NOI }); };
+  const tk = await buocVatTheDem(c, { log: (s) => dong.push(s), dungFn: boc });
+  assert.deepEqual(khuDung, daCo, "DA37-AC-8 job đêm không dựng đúng tập khu đã có toà");
+  const moc = dong.find((s) => s.startsWith("S16: khoá mới"));
+  assert.ok(moc, "DA37-AC-8 thiếu dòng mốc S16");
+  const [, n, t] = moc.match(/^S16: khoá mới (\d+), mốc (\S+)$/);
+  assert.ok(Number(n) > 0 && Number(n) === tk.s16.khoa_moi, "DA37-AC-8 số khoá mới không khớp tổng kết");
+  const khop = (await c.query("SELECT count(*)::int AS n FROM units WHERE created_at = $1", [t])).rows[0].n;
+  assert.ok(khop > 0, "DA37-AC-8 mốc in ra không khớp created_at của căn mới");
+  const dong2 = [];
+  await buocVatTheDem(c, { log: (s) => dong2.push(s), dungFn: boc });
+  assert.ok(dong2.some((s) => /^S16: khoá mới 0, mốc /.test(s)), "DA37-AC-8 lượt không mới không in «khoá mới 0»");
+  // Chiều đỏ: bỏ một khu khỏi tập → ca nêu slug thiếu
+  const thieu = daCo.slice(1);
+  const bocHong = async (cc, o) => { khuDung = thieu; return { khoa_moi: 0 }; }; // bản bọc hỏng: dựng thiếu một khu
+  await buocVatTheDem(c, { log: () => {}, dungFn: bocHong });
+  assert.notDeepEqual(khuDung, daCo, `đối chứng AC-8: bỏ khu ${daCo[0]} mà tập vẫn đủ`);
+});
