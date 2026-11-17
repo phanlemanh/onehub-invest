@@ -1,4 +1,5 @@
-// registry-doi-chieu.test.tsx — hồ sơ _acceptance/trang-danh-ba-chi-doc, ca «TDB-DC» (E14). Chỉ đọc DB máy thu :5433
+// registry-doi-chieu.test.tsx — hồ sơ _acceptance/trang-danh-ba-chi-doc, ca «TDB-DC» (E14). Probe dữ liệu thật, NGOÀI suite chung
+// app (lưới DT-AC-7 của scripts/db-thu.test.mjs; tiền lệ IT7). Chạy ở: executors.test.tdb_doi_chieu. Chỉ đọc DB máy thu
 // trong MỘT giao dịch READ ONLY: số của lớp đọc trang /ops/registry so với count(*) độc lập từng bảng; HTML hai trang quét
 // tên nguồn thật. Chỉ in số, không in tên. Đối chứng dương: bộ quét bắt được tên cài vào chuỗi thử.
 import { after, before, test } from "node:test"
@@ -6,9 +7,11 @@ import assert from "node:assert/strict"
 import pg from "pg"
 import { renderToStaticMarkup } from "react-dom/server"
 
+import { localDbUrl } from "../../pipeline/scripts/capture-ops-facts.mjs"
+
 
 // Lớp đọc của trang lấy pool từ DATABASE_URL; trỏ đúng DB máy thu (không phải DB của lượt) trước mọi import động.
-const URL_MAY_THU = process.env.TDB_DC_URL ?? new URL("postgres://oneinvest:oneinvest@localhost:5433/oneinvest").toString()
+const URL_MAY_THU = process.env.TDB_DC_URL ?? localDbUrl()
 process.env.DATABASE_URL = URL_MAY_THU
 
 const c = new pg.Client({ connectionString: URL_MAY_THU })
@@ -18,18 +21,20 @@ const demBang = async () => Object.fromEntries(await Promise.all(BANG.map(async 
 
 let truoc: Record<string, number>
 before(async () => {
+  if (process.env.CI) return
   await c.connect()
   await c.query("BEGIN READ ONLY")
   truoc = await demBang()
 })
 after(async () => {
+  if (process.env.CI) return
   await c.query("ROLLBACK").catch(() => {})
   await c.end().catch(() => {})
   const { pool } = await import("../src/lib/db")
   await pool.end().catch(() => {})
 })
 
-test("TDB-DC dải số, tổng cây, tin theo nguồn, danh mục khớp đếm độc lập; HTML không lộ tên nguồn; DB không đổi", async () => {
+test("TDB-DC dải số, tổng cây, tin theo nguồn, danh mục khớp đếm độc lập; HTML không lộ tên nguồn; DB không đổi", { skip: process.env.CI ? "cần DB máy thu có danh bạ thật — CI chỉ có lược đồ" : false }, async () => {
   const { docDanhBa } = await import("../src/lib/ops/registry/doc")
   const d = await docDanhBa(c)
   const kv = {

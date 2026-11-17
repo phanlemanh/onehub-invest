@@ -42,11 +42,11 @@ bộ đối chiếu chỉ-đọc trên DB máy thu.
 - [ ] Mỗi ca kèm đột biến chép mã sang `app/tests/.tdb-cu-<pid>/`, đổi đúng một chỗ, ghim thông điệp.
 - [ ] Chạy: `cd app && bash ../db/db-thu.sh oneinvest_suite_tdb --chay node --import tsx --test --test-concurrency=1 tests/registry-chi-doc.test.tsx` → pass hết.
 
-### Task 2: `app/tests/registry-doi-chieu.test.tsx` — E14
+### Task 2: `app/probes/registry-doi-chieu.test.tsx` (dời khỏi suite chung sau chữ ký, lưới DT-AC-7) — E14
 
-**Files:** Create `app/tests/registry-doi-chieu.test.tsx`.
+**Files:** Create `app/probes/registry-doi-chieu.test.tsx` (dời khỏi suite chung sau chữ ký, lưới DT-AC-7).
 
 - [ ] Một giao dịch `BEGIN READ ONLY` trên `:5433/oneinvest`; so `docDanhBa(client)` với `count(*)` độc lập; HTML
   `/ops/registry` + mọi `/ops/registry/<id>` có toà quét `findSourceNames` = 0; đếm mười bảng trước = sau; đối chứng
   dương bộ quét.
-- [ ] Chạy: `cd app && node --import tsx --test tests/registry-doi-chieu.test.tsx` → pass.
+- [ ] Chạy: `cd app && node --import tsx --test probes/registry-doi-chieu.test.tsx` → pass.

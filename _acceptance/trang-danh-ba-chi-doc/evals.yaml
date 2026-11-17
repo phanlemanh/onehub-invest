@@ -2,7 +2,7 @@ schema_version: 1
 feature_slug: trang-danh-ba-chi-doc
 # Ca «TDB-AC-n» ở app/tests/registry-chi-doc.test.tsx (node --test + tsx; lược đồ tạm tdb_<pid> trên DB của riêng lượt
 # — db/db-thu.sh — dựng các bảng danh bạ bằng LIKE public … INCLUDING ALL, page thật dựng bằng renderToStaticMarkup với
-# getSessionUser giả). Ca «TDB-DC» ở app/tests/registry-doi-chieu.test.tsx: chỉ đọc DB máy thu :5433 trong giao dịch
+# getSessionUser giả). Ca «TDB-DC» ở app/probes/registry-doi-chieu.test.tsx: chỉ đọc DB máy thu :5433 trong giao dịch
 # READ ONLY, chỉ in số. Mỗi phép đo mới có cặp hai chiều trên cùng fixture (bản đột biến chép sang thư mục tạm, đổi đúng
 # một chỗ), thông điệp ghim. Hai khoá executor tdb_app, tdb_doi_chieu xin thêm vào _acceptance/config.yaml qua U2-67.
 evals:
@@ -110,6 +110,6 @@ evals:
     executor: test
     layer: backend-effect
     cmd: config:executors.test.tdb_doi_chieu
-    paths: [app/src/lib/ops/registry/**, app/src/components/ops/registry/**, app/tests/registry-doi-chieu.test.tsx]
+    paths: [app/src/lib/ops/registry/**, app/src/components/ops/registry/**, app/probes/registry-doi-chieu.test.tsx]
     expected: "exit 0; ca TDB-DC trên DB máy thu :5433 (một giao dịch READ ONLY, chỉ in số): mọi trường của docDanhBa().tong = count(*) độc lập từng bảng (asset_nodes theo node_type/catalog_tier, buildings active, buildings active có căn active, stacks active, units active); tổng soCan trên mọi dự án gốc = count(units active); tổng soToa trên mọi dự án gốc = count(buildings active có dự án tổ tiên); tổng tin theo nguồn trên các dự án gốc = count(offer_project mot_du_an) theo nguồn và tin trên mọi nút không phải gốc = 0; toaBiDanhS09 = đếm độc lập; danhMuc S06/S08/S09 = đếm độc lập; HTML /ops/registry và HTML /ops/registry/<id> của MỌI dự án có toà có 0 chỗ khớp tên nguồn thật (findSourceNames với danh sách lấy trong ca); đếm mười bảng trước = sau; đối chứng dương: quét HTML bằng danh sách có tên giả cài vào chuỗi thử → ≥ 1 chỗ khớp ghim «TDB-DC tên nguồn lọt»"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
