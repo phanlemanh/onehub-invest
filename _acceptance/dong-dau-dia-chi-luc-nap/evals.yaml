@@ -169,7 +169,7 @@ evals:
     criterion: AC-10
     executor: judgment
     inputs:
-      - "_acceptance/dong-dau-dia-chi-luc-nap/evidence/mau-bai-lac-du-an.md"
+      - "_acceptance/dong-dau-dia-chi-luc-nap/evidence/mau-bai-lac-du-an-v2.md"
       - "_acceptance/dong-dau-dia-chi-luc-nap/contract.md"
     question: >
       Chỉ đọc hai tệp trong inputs, không chạy lệnh, không xem diff. Mục «Đường đo» của hợp đồng khai ngưỡng cho
