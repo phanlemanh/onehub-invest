@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 5b570364a4328549ac7127629eaea33cc9a1d5db
+verified_commit: c21a654524ab23dd7095787ff6c82c5ece77057e
 human_signoff:
 ---
 
@@ -29,136 +29,141 @@ human_signoff:
 ## Evidence
 
 - eval: E1
-  run_id: minted-nap-s16-vao-danh-ba-E1-r4
+  run_id: minted-nap-s16-vao-danh-ba-E1-r5
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.s16_db
-  verified_at: 2026-11-17T10:28:00Z
+  verified_at: 2026-11-17T12:45:21Z
   output: |
     node --test --test-concurrency=1 pipeline/scripts/danh-ba-s16.itest.mjs
-    duration_ms 12657.567042
+    duration_ms 21391.706375
+
+- eval: E4
+  run_id: minted-nap-s16-vao-danh-ba-E4-r5
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.script.s16_db
+  verified_at: 2026-11-17T12:45:21Z
+  output: |
+    node --test --test-concurrency=1 pipeline/scripts/danh-ba-s16.itest.mjs
+    duration_ms 21391.706375
+
+- eval: E5
+  run_id: minted-nap-s16-vao-danh-ba-E5-r5
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.script.s16_db
+  verified_at: 2026-11-17T12:45:21Z
+  output: |
+    node --test --test-concurrency=1 pipeline/scripts/danh-ba-s16.itest.mjs
+    duration_ms 21391.706375
+
+- eval: E6
+  run_id: minted-nap-s16-vao-danh-ba-E6-r5
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.script.s16_db
+  verified_at: 2026-11-17T12:45:21Z
+  output: |
+    node --test --test-concurrency=1 pipeline/scripts/danh-ba-s16.itest.mjs
+    duration_ms 21391.706375
+
+- eval: E7
+  run_id: minted-nap-s16-vao-danh-ba-E7-r5
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.script.s16_db
+  verified_at: 2026-11-17T12:45:21Z
+  output: |
+    node --test --test-concurrency=1 pipeline/scripts/danh-ba-s16.itest.mjs
+    duration_ms 21391.706375
+
+- eval: E8
+  run_id: minted-nap-s16-vao-danh-ba-E8-r5
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.script.s16_db
+  verified_at: 2026-11-17T12:45:21Z
+  output: |
+    node --test --test-concurrency=1 pipeline/scripts/danh-ba-s16.itest.mjs
+    duration_ms 21391.706375
 
 - eval: E2
-  run_id: minted-nap-s16-vao-danh-ba-E2-r4
+  run_id: minted-nap-s16-vao-danh-ba-E2-r5
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.s16_that
-  verified_at: 2026-11-17T10:28:00Z
+  verified_at: 2026-11-17T12:45:21Z
+  output: |
+    node pipeline/scripts/danh-ba-s16-that.mjs
+    OK
+
+- eval: E10
+  run_id: minted-nap-s16-vao-danh-ba-E10-r5
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.script.s16_that
+  verified_at: 2026-11-17T12:45:21Z
   output: |
     node pipeline/scripts/danh-ba-s16-that.mjs
     OK
 
 - eval: E3
-  run_id: minted-nap-s16-vao-danh-ba-E3-r4
+  run_id: minted-nap-s16-vao-danh-ba-E3-r5
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.s16_ham
-  verified_at: 2026-11-17T10:28:00Z
+  verified_at: 2026-11-17T12:45:21Z
   output: |
     node --test pipeline/lib/s16-danh-muc.test.mjs
-    duration_ms 48.945916
-
-- eval: E4
-  run_id: minted-nap-s16-vao-danh-ba-E4-r4
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.script.s16_db
-  verified_at: 2026-11-17T10:28:00Z
-  output: |
-    chung lệnh với E1 (danh-ba-s16.itest.mjs), ca DA33-AC-4
-
-- eval: E5
-  run_id: minted-nap-s16-vao-danh-ba-E5-r4
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.script.s16_db
-  verified_at: 2026-11-17T10:28:00Z
-  output: |
-    chung lệnh với E1 (danh-ba-s16.itest.mjs), ca DA33-AC-5
-
-- eval: E6
-  run_id: minted-nap-s16-vao-danh-ba-E6-r4
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.script.s16_db
-  verified_at: 2026-11-17T10:28:00Z
-  output: |
-    chung lệnh với E1 (danh-ba-s16.itest.mjs), ca DA33-AC-6
-
-- eval: E7
-  run_id: minted-nap-s16-vao-danh-ba-E7-r4
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.script.s16_db
-  verified_at: 2026-11-17T10:28:00Z
-  output: |
-    chung lệnh với E1 (danh-ba-s16.itest.mjs), ca DA33-AC-7
-
-- eval: E8
-  run_id: minted-nap-s16-vao-danh-ba-E8-r4
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.script.s16_db
-  verified_at: 2026-11-17T10:28:00Z
-  output: |
-    chung lệnh với E1 (danh-ba-s16.itest.mjs), ca DA33-AC-8
+    duration_ms 72.058917
 
 - eval: E9
-  run_id: minted-nap-s16-vao-danh-ba-E9-r4
+  run_id: minted-nap-s16-vao-danh-ba-E9-r5
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.s16_soat
-  verified_at: 2026-11-17T10:28:00Z
+  verified_at: 2026-11-17T12:45:21Z
   output: |
     node --test pipeline/lib/s16-soat.test.mjs
-    duration_ms 136.237375
-
-- eval: E10
-  run_id: minted-nap-s16-vao-danh-ba-E10-r4
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.script.s16_that
-  verified_at: 2026-11-17T10:28:00Z
-  output: |
-    chung lệnh với E2 (danh-ba-s16-that.mjs)
-    OK
+    duration_ms 169.033541
 
 ### Lệnh suite (hồi quy)
 
 - cmd: node scripts/suite-neu-doi.mjs agent -- 'cd agent && npm test'
-  run_id: minted-nap-s16-vao-danh-ba-SUITE-node_scripts_suite_neu_doi_mjs_agent_cd_-r4
+  run_id: minted-nap-s16-vao-danh-ba-SUITE-node_scripts_suite_neu_doi_mjs_agent_cd_-r5
   exit_code: 0
-  verified_at: 2026-11-17T10:28:00Z
+  verified_at: 2026-11-17T12:45:21Z
 
 - cmd: node scripts/suite-neu-doi.mjs app -- 'cd app && npx tsc --noEmit && npm run lint'
-  run_id: minted-nap-s16-vao-danh-ba-SUITE-lint-r4
+  run_id: minted-nap-s16-vao-danh-ba-SUITE-lint-r5
   exit_code: 0
-  verified_at: 2026-11-17T10:28:00Z
+  verified_at: 2026-11-17T12:45:21Z
 
 - cmd: node scripts/suite-neu-doi.mjs app_ui -- 'cd app && npm test'
-  run_id: minted-nap-s16-vao-danh-ba-SUITE-node_scripts_suite_neu_doi_mjs_app_ui_cd-r4
+  run_id: minted-nap-s16-vao-danh-ba-SUITE-node_scripts_suite_neu_doi_mjs_app_ui_cd-r5
   exit_code: 0
-  verified_at: 2026-11-17T10:28:00Z
+  verified_at: 2026-11-17T12:45:21Z
 
 - cmd: node scripts/suite-neu-doi.mjs pipeline_a -- 'cd pipeline && npm run test:a'
-  run_id: minted-nap-s16-vao-danh-ba-SUITE-test_a-r4
+  run_id: minted-nap-s16-vao-danh-ba-SUITE-test_a-r5
   exit_code: 0
-  verified_at: 2026-11-17T10:28:00Z
+  verified_at: 2026-11-17T12:45:21Z
 
 - cmd: node scripts/suite-neu-doi.mjs pipeline_b -- 'cd pipeline && npm run test:b'
-  run_id: minted-nap-s16-vao-danh-ba-SUITE-test_b-r4
+  run_id: minted-nap-s16-vao-danh-ba-SUITE-test_b-r5
   exit_code: 0
-  verified_at: 2026-11-17T10:28:00Z
+  verified_at: 2026-11-17T12:45:21Z
 
 - cmd: node scripts/suite-neu-doi.mjs ui_lint_rules -- 'cd app && npm run test:lint-rules'
-  run_id: minted-nap-s16-vao-danh-ba-SUITE-test_lint_rules-r4
+  run_id: minted-nap-s16-vao-danh-ba-SUITE-test_lint_rules-r5
   exit_code: 0
-  verified_at: 2026-11-17T10:28:00Z
+  verified_at: 2026-11-17T12:45:21Z
 
 - cmd: node scripts/suite-neu-doi.mjs portal_static -- 'node scripts/check-portal-compliance.mjs'
-  run_id: minted-nap-s16-vao-danh-ba-SUITE-node_scripts_suite_neu_doi_mjs_portal_st-r4
+  run_id: minted-nap-s16-vao-danh-ba-SUITE-node_scripts_suite_neu_doi_mjs_portal_st-r5
   exit_code: 0
-  verified_at: 2026-11-17T10:28:00Z
+  verified_at: 2026-11-17T12:45:21Z
 
 ## Known limits
 
@@ -166,16 +171,14 @@ human_signoff:
 
 ## Analyst
 
-carried tu round truoc — baseline khong do lai round nay. Moi eval ghi baseline n-a vi round nay khong do; evals.yaml khong doi tu lan baseline cuoi. Khong co eval nao duoc xac dinh la khong-phan-biet. Lenh suite xanh ca hai phia la regression-guard binh thuong.
+carried tu round 4 — baseline khong do lai round nay
 
-Judge panels: hop dong khong co judgment item nao, nen khong co panel va khong co human_override can dien.
+Eval khong-phan-biet: none.
 
 ## Variance
 
-none — moi eval chay mot lan, deterministic, khong co pass_rate hon hop.
+none — every multi-run eval is uniform
 
 ## Iterations
 
-Round 1-2: lich su xem cac round truoc trong run-log.jsonl.
-Round 3: E9 bi tu choi — thuoc do ten nguon E9 bat nham token co san o dong sua.
-Round 4: sua thuoc do E9 dem token du theo tep (commit 5b570364a), toan bo 10 eval va 7 lenh suite xanh.
+Round 5: tat ca E1-E10 va 7 lenh suite xanh, khong judgment item, khong eval ngau nhien. Lich su cac round truoc xem run-log.jsonl.
