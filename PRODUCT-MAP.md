@@ -12,7 +12,7 @@ flowchart TD
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>20 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>197 việc"]
+  GB --> DG["Đã giao<br/>199 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>129 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
@@ -284,6 +284,7 @@ flowchart TD
 - lối cài riêng job sao lưu tuần — install-cron.sh --chi backup chỉ cài job sao lưu, không khởi động lại job thu đang chạy (`install-cron-chi`) — đã giao — máy thông, cửa veto còn mở
 - Bản đồ đích cổng Invest — block đích cho mọi route Invest trước khi dọn tiếp (`invest-target-map`)
 - Itest nạp lại migration cũ xanh lại trên DB đã có 095 — phép đo về migration X chạy trên DB dừng ở X, bộ nạp lại không bao giờ thu hẹp ràng buộc trường, bền với 096 (`itest-nap-lai-migration-cu-sau-095`)
+- Ghi thời lượng từng bước của job nạp — job_step, job_run và buoc_nhanh in một dòng ghim JOB STEP ra stderr (job, bước, mã, giây, cột nhanh), kèm một bước gộp truoc-lan-claude đo phần lấy khoá và nạp của zalo-import-daily.sh; phép đo không mở hay ghi tệp nào (`job-step-ghi-thoi-luong`)
 - ZC1 nối tiếp — cứng hoá ingest của collector API (media rác không làm hỏng lô, id tin chữ giữ nguyên, payload nguyên vẹn) (`kev-nhan-cung-hoa`)
 - sửa thước kiểm kev-nhan đỏ sẵn trên main — tên thư mục giả theo khuôn PL1 và chữ log Kev hỏng theo ZC6 (`kev-nhan-thuoc-sau-pl1`)
 - PL4 — hook Zalo đẩy mọi tin tới collector kèm điểm Kev (meta.kev), không bỏ tin theo điểm (`kev-thanh-nhan`)
@@ -307,6 +308,7 @@ flowchart TD
 - Kiểm N1 đêm của danh bạ SĐT không đếm người đã tách là «chưa gộp», nên không đỏ vĩnh viễn sau lần tách đầu tiên (`n1-dem-nguoi-tach`)
 - Bộ nạp S09 của làn thu vào main — bản thu S09 khuôn API nạp được vào stg_s09_item (097) bằng lõi DA31, chạy lại không nhân dòng, chỉ ghi DB máy thu khi có cờ tường minh (`nap-s09`)
 - Dọn luật hỏi quyền rộng — rào push main chuyển sang branch protection GitHub như crm/kit (`narrow-ask-rules`)
+- Bật máy tự xếp mục ngoài hợp đồng loại «giới hạn đã biết» ở Cổng Bằng chứng (feature_loop.ngoai_n_tu_dinh_tuyen) (`ngoai-n-tu-dinh-tuyen-bat`)
 - Lệnh nhãn bạc S03 — model lớn (Claude Haiku 5.5, OpenAI Decisions, Qwen 27B local) đọc bài S03 và ghi ý định tin, bán/thuê, xác suất, câu trích vào bảng nhãn bạc riêng (migration 065), kèm chế độ đo trên tập vàng — không ghi dữ liệu canonical (`nhan-bac-model-lon-s03`)
 - Dòng kiểm chất lượng ảnh tin media:local-file có nhãn tiếng Việt trên /ops/quality (`nhan-dq-media-local-file`)
 - Trạng thái mã nguồn draft có nhãn «Chưa thu» trên cổng Ops, kèm ca kiểm thuần đòi mọi giá trị CHECK của source_registry.status có nhãn (`nhan-trang-thai-nguon-draft`)
