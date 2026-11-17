@@ -31,6 +31,13 @@ Theo danh bạ lúc khai (`asset_nodes`, 17/11):
 Trong nhóm mà sổ ghi Vinhomes Grand Park, bài về một trong ba nút trên là **không lạc**. Hệ này chỉ áp cho nhóm VGP; nhóm
 khác thì «dự án của nhóm» là đúng một nút trong sổ. Luật ở `laLac` + `HE_DU_AN` trong `pipeline/scripts/mau-bai-lac-du-an.mjs`.
 
+**Sửa đổi SAU khi rút mẫu (khai rõ, 18/11, trong buổi duyệt nhãn).** Dòng #32 (nhóm Vinhomes Ocean Park 1, «Mã căn: M2») là toà
+M2 phân khu Miami của Masteri Waterfront (Masterise Homes) nằm trong khu đô thị Ocean Park 1 — cùng quan hệ MCP/LBV với Grand
+Park. Mạnh, nguyên văn: «Mở rộng hệ sang OP1». Từ đây hệ áp cả cho nhóm Ocean Park 1: bài về Masteri Waterfront trong nhóm OP1 là
+**không lạc**. Danh bạ lúc ấy chưa có nút Masteri Waterfront nên `HE_DU_AN` không đổi mã. Sửa này đổi đúng một dòng (#32) và
+không đổi kết luận so ngưỡng: theo chữ khai trước thì 1 lạc / 100 → cận trên Wilson ≈ 5,4%; theo hệ mở rộng 0 / 100 → ≈ 3,7%,
+cả hai ≤ 10%. Kết quả ghi cả hai con số.
+
 ## Ai gắn nhãn
 
 1. Trợ lý điền NHÁP từng dòng kèm căn cứ (đoạn chữ bài, dự án của nhóm, dự án bài nêu) — nếp Mạnh chốt 06/11.
