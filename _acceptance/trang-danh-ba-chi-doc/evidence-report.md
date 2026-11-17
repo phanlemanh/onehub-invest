@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: af430f2784c650e1c817dfb531bb46ebbd74e27f
+verified_commit: 384ac895b6ab58c16ca28f5b5b8ad078f0275d22
 human_signoff: Mạnh 2026-11-17
 ---
 
@@ -226,3 +226,7 @@ Round 2: E1–E8 và E11 chạy lại sau sửa S4-r1 (siết đo ô số, tab, 
 ### Re-pin lần 1 — 2026-11-17, do dời ca đối chiếu sang app/probes sau chữ ký (lưới DT-AC-7)
 run_id: repin-20261117T042618Z-27130
 sha: af430f2784c650e1c817dfb531bb46ebbd74e27f · suites: 7 lệnh exit 0 · evals: 13/13 eval máy đạt kỳ vọng · ngoài làn máy: E12
+
+### Re-pin lần 2 — 2026-11-17, do TDB-AC-6 bỏ vế không-migration-mới (GS 17/11), ghim trên nhánh DA33
+run_id: repin-20261117T081456Z-71670
+sha: 384ac895b6ab58c16ca28f5b5b8ad078f0275d22 · suites: 7 lệnh exit 0 · evals: 13/13 eval máy đạt kỳ vọng · ngoài làn máy: E12
