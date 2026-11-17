@@ -135,6 +135,28 @@ export function docBangDaDien(md) {
   return { n, k };
 }
 
+/**
+ * Tệp nhãn người duyệt lưu từ trang duyệt (mẫu v2, lối A). Mỗi dòng: `nhap` («lac» | «khong») là nháp của trợ lý, `chon` là
+ * lựa chọn của người: «dung» (đúng nháp), «lac» hay «khong» (sửa thành), null nếu người chưa bấm. CHỈ dòng người đã bấm mới
+ * tính là nhãn người (GS P4-196). Tệp phải mang tên người duyệt và giờ, và đúng hạt giống của mẫu.
+ * @returns {{ n: number, k: number, chuaDuyet: number, sua: number, nguoiDuyet: string, luc: string }}
+ */
+export function docTepDuyet(tep, hatGiong = null) {
+  if (!tep?.nguoi_duyet || !String(tep.nguoi_duyet).trim()) throw new Error("tệp nhãn thiếu tên người duyệt");
+  if (!tep.luc || Number.isNaN(Date.parse(tep.luc))) throw new Error("tệp nhãn thiếu giờ duyệt");
+  if (hatGiong && tep.hat_giong !== hatGiong) throw new Error(`tệp nhãn của hạt giống khác (${tep.hat_giong}, cần ${hatGiong})`);
+  let n = 0, k = 0, chuaDuyet = 0, sua = 0;
+  for (const d of tep.nhan ?? []) {
+    if (d.chon == null) { chuaDuyet++; continue; }
+    if (!["dung", "lac", "khong"].includes(d.chon)) throw new Error(`lựa chọn lạ ở ${d.post_id}: ${d.chon}`);
+    const nhan = d.chon === "dung" ? d.nhap : d.chon;
+    if (d.chon !== "dung" && d.chon !== d.nhap) sua++;
+    n++;
+    if (nhan === "lac") k++;
+  }
+  return { n, k, chuaDuyet, sua, nguoiDuyet: String(tep.nguoi_duyet), luc: tep.luc };
+}
+
 /** Cỡ mẫu từ dòng lệnh. Không nhận NaN hay 0: bảng 0 dòng thoát 0 là một phép đo im lặng sai. */
 export function soMau(raw) {
   const n = Number(raw);
@@ -145,6 +167,15 @@ export function soMau(raw) {
 async function main() {
   const argv = process.argv.slice(2);
   const lay = (c, md) => { const i = argv.indexOf(c); return i < 0 ? md : argv[i + 1]; };
+
+  if (argv.includes("--tinh-duyet")) {
+    const t = docTepDuyet(JSON.parse(readFileSync(lay("--tinh-duyet"), "utf8")), lay("--seed") ?? null);
+    const w = wilson95(t.k, t.n);
+    console.log(`người duyệt: ${t.nguoiDuyet} · lúc ${t.luc} · dòng đã duyệt ${t.n} · chưa duyệt ${t.chuaDuyet} · sửa nháp ${t.sua}`);
+    console.log(`bài lạc: ${t.k}/${t.n} = ${PHAN_TRAM(w.p)} · khoảng Wilson 95%: ${PHAN_TRAM(w.duoi)} — ${PHAN_TRAM(w.tren)}`);
+    console.log(`cận trên so ngưỡng 10%: ${w.tren <= 0.1 ? "ĐẠT" : "CHƯA ĐẠT"}${t.chuaDuyet ? ` — còn ${t.chuaDuyet} dòng chưa duyệt, cỡ mẫu thật thấp hơn cỡ đã khai` : ""}`);
+    process.exit(w.tren <= 0.1 && t.chuaDuyet === 0 ? 0 : 1);
+  }
 
   if (argv.includes("--tinh")) {
     const tep = lay("--tinh");

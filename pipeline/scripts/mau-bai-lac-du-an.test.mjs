@@ -4,7 +4,7 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
 
-import { chonMau, docBangDaDien, laLac, locKhung, soMau, wilson95 } from "./mau-bai-lac-du-an.mjs";
+import { chonMau, docBangDaDien, docTepDuyet, laLac, locKhung, soMau, wilson95 } from "./mau-bai-lac-du-an.mjs";
 
 /** Làm tròn 4 chữ số để so số thực. */
 const r4 = (x) => Math.round(x * 1e4) / 1e4;
@@ -107,5 +107,28 @@ describe("AC-10 mẫu v2 — khung rút và định nghĩa khai trước (lối 
     assert.equal(laLac("16", "2"), true, "Ocean Park 2 trong nhóm VGP phải là lạc");
     assert.equal(laLac("1", "304"), true, "hệ VGP chỉ áp cho nhóm VGP");
     assert.equal(laLac("16", null), false, "bài không nêu dự án không lạc");
+  });
+});
+
+describe("AC-10 mẫu v2 — đọc tệp nhãn người duyệt lưu từ trang duyệt", () => {
+  const tep = (nhan, them = {}) => ({ mau: "v2", hat_giong: "tg2-ac10-v2-20261117", nguoi_duyet: "Mạnh", luc: "2026-11-17T17:00:00Z", nhan, ...them });
+  const d = (post_id, nhap, chon) => ({ post_id, nhap, chon });
+
+  test("chỉ dòng người đã bấm mới tính; «đúng nháp» lấy nháp, «sửa» lấy giá trị người chọn", () => {
+    const r = docTepDuyet(tep([d("a", "khong", "dung"), d("b", "khong", "lac"), d("c", "lac", "khong"), d("e", "khong", null)]));
+    assert.deepEqual(r, { n: 3, k: 1, chuaDuyet: 1, sua: 2, nguoiDuyet: "Mạnh", luc: "2026-11-17T17:00:00Z" });
+  });
+
+  test("tệp thiếu tên người duyệt hay giờ thì không nhận — nhãn người phải có người", () => {
+    assert.throws(() => docTepDuyet(tep([], { nguoi_duyet: "" })), /người duyệt/);
+    assert.throws(() => docTepDuyet(tep([], { luc: null })), /giờ/);
+  });
+
+  test("tệp của mẫu khác hay hạt giống khác thì không nhận", () => {
+    assert.throws(() => docTepDuyet(tep([], { hat_giong: "khac" }), "tg2-ac10-v2-20261117"), /hạt giống/);
+  });
+
+  test("lựa chọn lạ thì không nhận, không đoán", () => {
+    assert.throws(() => docTepDuyet(tep([d("a", "khong", "co-le")])), /lựa chọn/);
   });
 });
