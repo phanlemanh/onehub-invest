@@ -14,21 +14,9 @@ import { Frame, FrameDescription, FrameFooter, FrameHeader, FramePanel, FrameTit
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { fmtInt } from "@/lib/format"
+import type { HangToa } from "@/lib/ops/registry/hang-toa"
 
 import { BacBadge, NguonBadges } from "./registry-badges"
-
-/** Hàng bảng toà của một dự án: toà mang căn ở `subRows` (bấm mở). Căn chỉ có tầng, trục, mã tại nguồn. */
-export type HangToa = {
-  key: string
-  laCan: boolean
-  ten: string
-  phu: string
-  bac: string
-  nguon: string[]
-  soTruc: number | null
-  soCan: number | null
-  subRows?: HangToa[]
-}
 
 type Tab = "all" | "chua-can"
 

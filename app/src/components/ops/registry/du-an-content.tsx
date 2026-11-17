@@ -4,11 +4,11 @@ import { localOnlyTable } from "@/lib/ops-queries"
 import { maskSourceNames } from "@/lib/mask-source-names"
 import { dungCay } from "@/lib/ops/registry/cay"
 import { docDuAn } from "@/lib/ops/registry/du-an"
+import { dungHangToa } from "@/lib/ops/registry/hang-toa"
 import { getSourceNameEntries } from "@/lib/source-roles"
 
 import { RegistryView } from "./registry-view"
 import { DuAnView } from "./du-an-view"
-import type { HangToa } from "./du-an-toa-grid"
 
 /**
  * Nội dung /ops/registry/[nodeId]. Cloud hay DB thiếu bảng vật thể → cảnh báo «Chỉ ở máy thu» như trang danh sách.
@@ -22,34 +22,7 @@ export async function DuAnContent({ id }: { id: number }) {
   const goc = dungCay(duAn.nut, {}, entries)[0]
   const nutGoc = duAn.nut.find((n) => n.id === id)
   if (!goc || !nutGoc) notFound()
-  const tenNut = new Map(duAn.nut.map((n) => [n.id, che(n.ten)]))
-  // Tên toà khác nhau chỉ ở hoa/thường là một tên; mã dạng UUID (S09) không đọc được bằng mắt nên không hiện ở dòng mã.
-  const motTen = (ds: string[]) => {
-    const m = new Map<string, string>()
-    for (const t of ds) if (!m.has(t.toLowerCase())) m.set(t.toLowerCase(), t)
-    return [...m.values()]
-  }
-  const maDoc = (ds: string[]) => ds.filter((m) => !/^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(m))
-  const canTheoToa = new Map<string, HangToa[]>()
-  for (const c of duAn.can) {
-    const phu = [c.tang ? `Tầng ${c.tang}` : null, c.truc ? `Trục ${che(c.truc)}` : null].filter(Boolean).join(" · ")
-    const hang: HangToa = { key: c.key, laCan: true, ten: c.ma ? che(c.ma) : c.key, phu, bac: c.bac, nguon: c.nguon, soTruc: null, soCan: null }
-    canTheoToa.set(c.toaKey, [...(canTheoToa.get(c.toaKey) ?? []), hang])
-  }
-  const rows: HangToa[] = duAn.toa.map((t) => {
-    const can = canTheoToa.get(t.key)
-    return {
-      key: t.key,
-      laCan: false,
-      ten: motTen(t.ten.map(che)).join(" · ") || (maDoc(t.maNguon)[0] ? che(maDoc(t.maNguon)[0]) : t.key),
-      phu: [t.nutId === id ? null : tenNut.get(t.nutId), maDoc(t.maNguon).length > 0 ? `Mã ${maDoc(t.maNguon).map(che).join(", ")}` : null].filter(Boolean).join(" · "),
-      bac: t.bac,
-      nguon: t.nguon,
-      soTruc: t.soTruc,
-      soCan: t.soCan,
-      ...(can ? { subRows: can } : {}),
-    }
-  })
+  const rows = dungHangToa(duAn, id, entries)
   const tinh = nutGoc.tinhId
   return (
     <DuAnView

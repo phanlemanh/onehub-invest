@@ -127,18 +127,21 @@ function truongLoc(rows: HangCay[]): FilterField[] {
   ]
 }
 
-function hopLoc(query: FilterQuery): (h: HangCay) => boolean {
+export function hopLoc(query: FilterQuery): (h: HangCay) => boolean {
   const dk = flattenFilterConditions(query).filter((c) => c.field in GIA_TRI && c.values.length > 0)
   return (h) =>
     dk.every((c) => {
       const co = GIA_TRI[c.field as TruongLoc](h)
       const trung = c.values.some((v) => co.includes(String(v)))
-      return c.operator === "is_none_of" ? !trung : trung
+      // Phủ định: is_none_of là nghịch của is_any_of; cờ negated lật thêm một lần.
+      const khop = c.operator === "is_none_of" ? !trung : trung
+      return c.negated ? !khop : khop
     })
 }
 
-export function RegistryGrid({ rows }: { rows: HangCay[] }) {
-  const [query, setQuery] = useState<FilterQuery>(() => createFilterQuery())
+/** `locBanDau`: bộ lọc mở sẵn (khuôn /ops/deals) — test dựng bảng đã lọc mà không cần bấm. */
+export function RegistryGrid({ rows, locBanDau }: { rows: HangCay[]; locBanDau?: FilterQuery }) {
+  const [query, setQuery] = useState<FilterQuery>(() => locBanDau ?? createFilterQuery())
   const [chu, setChu] = useState("")
   const [expanded, setExpanded] = useState<ExpandedState>({})
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 25 })

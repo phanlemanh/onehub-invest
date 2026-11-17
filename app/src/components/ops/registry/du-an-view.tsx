@@ -5,7 +5,9 @@ import { StatTiles } from "@/components/page/stat-tiles"
 import { fmtInt } from "@/lib/format"
 import { LABELS_VI } from "@/lib/vocab.generated"
 
-import { DuAnToaGrid, type HangToa } from "./du-an-toa-grid"
+import type { HangToa } from "@/lib/ops/registry/hang-toa"
+
+import { DuAnToaGrid } from "./du-an-toa-grid"
 
 /** Đầu trang một dự án: tên, bậc, tỉnh, nguồn, mã đã nối; bốn ô số; bảng toà → căn. */
 export type DuAnProps = {
