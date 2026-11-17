@@ -296,9 +296,12 @@ test("S4V-AC-5 — bảng vùng phủ mọi đường dẫn mã tham chiếu; ng
   assert.ok(thieuPs.includes("db"), "S4V-AC-5 đối chứng: bỏ db/** khỏi portal_static mà phép quét không thấy tier-a-source-names đọc db/migrations");
 });
 
-test("S4V-AC-6 — executors.suite.* bọc nguyên văn lệnh hiện hành, suite_keys trỏ đúng bảy key; thêm key test mới vẫn xanh", () => {
+test("S4V-AC-6 — executors.suite.* bọc nguyên văn lệnh hiện hành, suite_keys trỏ đúng tám key; thêm key test mới vẫn xanh", () => {
   const cfg = readFileSync(path.join(ROOT, "_acceptance/config.yaml"), "utf8");
-  const ten = ["agent", "app", "app_ui", "pipeline_a", "pipeline_b", "ui_lint_rules", "portal_static"];
+  const ten = ["agent", "app", "app_ui", "pipeline_a", "pipeline_b", "ui_lint_rules", "portal_static", "scripts"];
+  // suite scripts (suite-scripts-vao-luot-cham) không bọc nguyên văn: nó chạy các bước job CI scripts trên tập chọn theo
+  // tệp khai; lệnh gốc executors.test.scripts vẫn phải còn nguyên.
+  const RIENG = { scripts: "node scripts/suite-neu-doi.mjs --chay-scripts" };
   const khoi = (c, k) => { const m = c.match(new RegExp(`^  ${k}:\\n((?:    .*\\n|\\s*#.*\\n|\\s*\\n)*)`, "m")); return m ? m[1] : ""; };
   const lenh = (khoiTxt, k) => { const m = khoiTxt.match(new RegExp(`^    ${k}: "((?:[^"\\\\]|\\\\.)*)"`, "m")); return m ? m[1] : null; };
   const kiem = (c) => {
@@ -308,7 +311,8 @@ test("S4V-AC-6 — executors.suite.* bọc nguyên văn lệnh hiện hành, sui
     for (const x of ten) {
       const goc = lenh(khoi(c, x === "portal_static" ? "script" : "test"), x);
       if (!goc || goc.includes("'")) { sai.push(`${x}: lệnh gốc vắng hoặc có nháy đơn`); continue; }
-      if (lenh(khoi(c, "suite"), x) !== `node scripts/suite-neu-doi.mjs ${x} -- '${goc}'`) sai.push(x);
+      const mong = RIENG[x] ?? `node scripts/suite-neu-doi.mjs ${x} -- '${goc}'`;
+      if (lenh(khoi(c, "suite"), x) !== mong) sai.push(x);
     }
     return sai;
   };
