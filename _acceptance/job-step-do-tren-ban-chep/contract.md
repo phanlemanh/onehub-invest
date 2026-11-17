@@ -5,7 +5,7 @@ slug: job-step-do-tren-ban-chep
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [pipeline]
-status: implemented
+status: machine-cleared
 veto_state: mo
 veto_opened_at: 2026-11-17T02:35:50Z
 design_doc: docs/superpowers/specs/2026-11-17-job-step-do-tren-ban-chep-design.md
@@ -62,3 +62,7 @@ vế cuối. Never: (i)×no-index (ô cây hiện tại phải đọc diff thậ
 
 Hồ sơ `job-step-ghi-thoi-luong` KHÔNG ghim lại trong vòng này: lưới trước gộp coi phần đổi ở đó chỉ là `decisions.jsonl`
 và vẫn báo OK, còn mọi ca JST-AC-1…9 của nó được E3 của vòng này chạy lại trọn trên đúng sha được chấm.
+- Ngoài-1 (máy định tuyến 2026-11-17, đề xuất S4 known-limits): Nếu bộ kiểm tra bị chạy từ một công cụ đã đặt sẵn biến trỏ vào kho thật, nó có thể ghi nhầm vào kho thật thay vì kho tạm. Cách chạy bình thường không bị ảnh hưởng. — `scripts/job-step-thoi-luong.test.mjs`
+- Ngoài-2 (máy định tuyến 2026-11-17, đề xuất S4 known-limits): Phép thử kiểm việc báo lỗi khi thiếu bản gốc có thể báo xanh dù ca thật không chạy tới đó, nên có thể bỏ sót một lỗi về sau. Người dùng không thấy tác động trực tiếp. — `scripts/job-step-thoi-luong.test.mjs`
+- Ngoài-3 (máy định tuyến 2026-11-17, đề xuất S4 known-limits): Nếu lệnh so sánh với bản gốc bị lỗi, phép kiểm phạm vi làn có thể báo xanh dù chưa đo được gì. Người dùng không thấy ảnh hưởng, chỉ giảm độ tin của lưới nội bộ. — `scripts/job-step-thoi-luong.test.mjs`
+- Ngoài-4 (máy định tuyến 2026-11-17, đề xuất S4 known-limits): Phép thử cho trường hợp thiếu bản gốc chỉ kiểm lời báo không xuất hiện, nên có thể xanh khi ca thật chưa chạy. Lỗi về sau có thể lọt qua mà không ai biết. — `scripts/job-step-thoi-luong.test.mjs`
