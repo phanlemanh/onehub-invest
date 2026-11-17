@@ -14,8 +14,9 @@ import { docBiDanhAnToan, docPhuongHopLe, docThiTruongCoPhuong, docThiTruongCoXa
 import { matchXaCuCoTienTo } from "./lib/dvhc.mjs";
 import { writeOffers } from "./lib/write-offers.mjs";
 import { ganSdtQuaNguoi } from "./lib/gan-sdt-qua-nguoi.mjs";
-import { co095, subjectKey, phatBieuLoaiHinh, phatBieuPhongNgu, phatBieuTang, phatBieuToaTruc, rutLoaiHinhCu, rutTangCu } from "./lib/assert.mjs";
+import { co095, retractRule, subjectKey, phatBieuLoaiHinh, phatBieuPhongNgu, phatBieuTang, phatBieuToaTruc, rutLoaiHinhCu, rutTangCu } from "./lib/assert.mjs";
 import { assignStickyIds } from "./lib/offer-key.mjs";
+import { LY_DO_RUT, coBangThe, docNhanDuAn, docTheDaDuyet, phatBieuDiaChiNhom, rutTheCu } from "./lib/dia-chi-the-nhom.mjs";
 import { normText } from "./lib/norm-text.mjs";
 import { ASSERTION_METHOD, CONFIDENCE, ENRICH_FIELD, FLOOR_BAND, KIND, PROPERTY_TYPE } from "./lib/vocab.generated.mjs";
 
@@ -874,6 +875,13 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
   const { rows: dongTT } = await client.query("SELECT id FROM areas WHERE region_type = 'market'");
   const maCoThat = new Set(dongTT.map((r) => r.id));
 
+  // TG2 (dong-dau-dia-chi-luc-nap): thẻ địa chỉ nhóm ĐÃ DUYỆT. Đọc trước vòng parse vì ô bán/thuê của thẻ đi vào suyLoai.
+  // DB chưa áp 108 + 109 thì bỏ trọn bước đóng dấu, lượt vẫn chạy (AC-7).
+  const coThe = await coBangThe(client);
+  if (!coThe) console.warn("transform-zalo: DB chưa có bảng thẻ địa chỉ nhóm (migration 108 + 109), bỏ bước đóng dấu thẻ ở lượt này");
+  const { the: theNhom, oBo } = coThe ? await docTheDaDuyet(client, khoaNhom) : { the: new Map(), oBo: null };
+  const phuongChu = new Set(); // bài mà chữ bài đã nêu phường — thẻ không đè ô phường của chúng
+
   // Load staging posts (mới nhất per post_id). Chỉ nguồn Zalo — posts
   // Facebook (agent_id apify-facebook) do transform-fb.mjs xử lý (S05).
   // Post thử (zalo-mock, e2e, nhóm TEST) bị gạt tại đây — L19.
@@ -893,7 +901,7 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
   const nguon = [];
   for (const { p, pr } of docBai) {
     if (suyLoaiTin) {
-      const r = suyLoai(pr, p.text, mucDich.get(p.conversation_id ?? ""));
+      const r = suyLoai(pr, p.text, mucDich.get(p.conversation_id ?? ""), theNhom.get(p.conversation_id ?? "")?.mucDich ?? null);
       pr.kind = r.kind;
       nguon.push(r.nguon);
     } else nguon.push(pr.kind ? "chu-bai" : "bo");
@@ -905,6 +913,7 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
     const { ph } = ganPhuongS03(p.text, khai, { entries, moiThiTruong, biDanhCua });
     const kv = ganKhuVuc({ khai, ph, maCoThat });
     if (kv.areaId) { pr.areaId = kv.areaId; pr.phuong = kv.phuong; }
+    if (kv.phuong != null) phuongChu.add(p.post_id);
     const loaiChu = docLoaiHinh(p.text);
     pr.loaiHinh = loaiChu ?? loaiNhom.get(p.conversation_id) ?? null;
     pr.nguonLoaiHinh = loaiChu ? "chu" : pr.loaiHinh ? "nhom" : null;
@@ -1009,9 +1018,30 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
   const coTang = await co095(client);
   if (!coTang) console.warn("transform-zalo: DB chưa áp migration 095, bỏ phát biểu tầng ở lượt này");
   const dongTang = coTang ? phatBieuTang("S03", baiDoc, TANG_VERSION) : [];
+  // TG2: đóng dấu thẻ đã duyệt lên bài của tin. offer_project đếm MỌI dòng dự án còn sống của mọi bài trong tin, không xét
+  // luật hay lớp — nên dòng DV6 và dòng của thẻ cùng sống trên một bài mà khác giá trị là tin thành xung đột ngay. Thứ tự:
+  // sinh dòng → rút dòng DV6 trên đúng bài vừa được ghi DỰ ÁN → rút dòng cũ của chính luật này → ghi cùng lượt writeOffers.
+  let dongThe = [];
+  const theNhomDem = { nhom: theNhom.size, dong: 0, o_bo: oBo, rut_ban: 0, rut_luot: 0, rut_dv6: 0, nguon: null };
+  if (coThe) {
+    const nhomCua = new Map(posts.map((p) => [p.post_id, p.conversation_id ?? null]));
+    const r = phatBieuDiaChiNhom({
+      bai: baiDoc.map((p) => ({ post_id: p.post_id, conversation_id: nhomCua.get(p.post_id) ?? null, posted_at: p.posted_at })),
+      the: theNhom, nhanDuAn: await docNhanDuAn(client), phuongChu,
+    });
+    dongThe = r.dong;
+    const baiDuAn = [...new Set(r.dong.filter((d) => d.field === "project_node_id").map((d) => d.subject_key))];
+    for (const rule of ["du-an-nhom-mot-du-an", "du-an-ten-bai"]) {
+      theNhomDem.rut_dv6 += await retractRule(client, baiDuAn, "project_node_id", rule, LY_DO_RUT.thayDV6);
+    }
+    const rut = await rutTheCu(client, { dong: r.dong, moiChuThe: baiDoc.map((p) => subjectKey("S03", p.post_id)), the: theNhom });
+    Object.assign(theNhomDem, { dong: r.dong.length, rut_ban: rut.rutBan, rut_luot: rut.rutLuot, nguon: r.demTheoNguon });
+    console.log(`thẻ nhóm: ${theNhom.size} thẻ đã duyệt, ${r.dong.length} phát biểu ${JSON.stringify(r.demTheoNguon)}, ` +
+      `rút ${rut.rutBan} theo bản thẻ + ${rut.rutLuot} theo lượt + ${theNhomDem.rut_dv6} dòng DV6, ô bỏ ${JSON.stringify(oBo)}`);
+  }
   // PL15: phòng ngủ đi qua phát biểu (mỗi post một), năm cột do bộ phân xử dựng — không ghi thẳng.
   const { reconcile } = await writeOffers(client, "S03", rows, {
-    assertions: [...phatBieuPhongNgu("S03", nhom, "transform-zalo@045"), ...phatBieuToaTruc("S03", baiDoc, "transform-zalo@sv1"), ...dongLoai, ...dongTang],
+    assertions: [...phatBieuPhongNgu("S03", nhom, "transform-zalo@045"), ...phatBieuToaTruc("S03", baiDoc, "transform-zalo@sv1"), ...dongLoai, ...dongTang, ...dongThe],
   });
   if (coTang) {
     const rutTang = await rutTangCu(client, baiDoc.map((p) => subjectKey("S03", p.post_id)), dongTang.map((d) => `${d.subject_key}|${d.field}`), TANG_VERSION);
@@ -1024,7 +1054,7 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
   await ganSo(client, { rieng: new Map(rows.map((r) => [r.offer_id, r.seller_phone])) });
   console.log(`đối soát: ${JSON.stringify({ ...reconcile, pairs: undefined })}`);
   console.log(`offers ghi: ${dedup.size} (SĐT: ${sellerAgg.size} người bán)`);
-  return { offers: rows.length, rejected, reconcile, loaiGiaPhiLy, nguonLoai, bai_doi_khoa: baiDoiKhoa };
+  return { offers: rows.length, rejected, reconcile, loaiGiaPhiLy, nguonLoai, bai_doi_khoa: baiDoiKhoa, the_nhom: theNhomDem };
 }
 
 /** Thị trường có phường và danh sách phường của chúng, để đối chiếu tên phường trong chữ bài. */

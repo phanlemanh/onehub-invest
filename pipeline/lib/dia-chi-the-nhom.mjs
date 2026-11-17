@@ -6,6 +6,8 @@
 // Khoá nhóm là tầng A: không vào `evidence`, không vào log, không lên cloud — mọi chỗ in ra dùng `card_code`.
 import { khoaNhomThat } from "./eval-labels.mjs";
 import { subjectKey } from "./assert.mjs";
+import { nhanDuocNhan } from "./du-an-tren-tin-s03.mjs";
+import { chuan } from "./the-dia-chi-nhom.mjs";
 import { ASSERTION_FIELD, ASSERTION_METHOD, EVIDENCE_TIER } from "./vocab.generated.mjs";
 
 export const RULE_ID = "dia-chi-the-nhom";
@@ -113,4 +115,63 @@ export function phatBieuDiaChiNhom({ bai, the, nhanDuAn, phuongChu = new Set() }
     if (t.phanKhu != null) ghi(ASSERTION_FIELD.subzone_node_id, t.phanKhu, "the");
   }
   return { dong, baiDong: [...baiDong], demTheoNguon };
+}
+
+/**
+ * Dự án do CHỮ BÀI nêu: nhãn bạc mới nhất của mỗi bài S03 có căn cứ `chu_bai` + đoạn trích đã kiểm (`nhanDuocNhan` của DV6),
+ * tên khớp đúng MỘT nút dự án theo tên hay bí danh (cùng cách khớp của DV6, bỏ nút một-lời-khai). Bài có nhãn mà tên không khớp,
+ * hay khớp hai nút, thì vắng mặt — để rơi về thẻ chứ không làm bài mất dự án.
+ * @returns {Promise<Map<string, string>>} post_id → id nút dự án (chuỗi)
+ */
+export async function docNhanDuAn(client) {
+  const { rows: nut } = await client.query(
+    `SELECT n.id::text AS id, n.name, n.aliases FROM asset_nodes n
+      WHERE n.node_type = 'project' AND (to_jsonb(n) ->> 'catalog_tier') IS DISTINCT FROM 'mot_loi_khai'`);
+  const theoTen = new Map();
+  for (const n of nut) {
+    for (const t of [n.name, ...(n.aliases ?? [])]) {
+      const k = chuan(t);
+      if (k) theoTen.set(k, new Set([...(theoTen.get(k) ?? []), n.id]));
+    }
+  }
+  const { rows: nhan } = await client.query(
+    `SELECT DISTINCT ON (post_id) post_id, btrim(probabilities->'o'->'project'->>'v') AS v,
+            probabilities->'o'->'project'->>'cc' AS cc, probabilities->'o'->'project'->>'trich_ok' AS trich_ok
+       FROM silver_labels WHERE source_code = $1
+      ORDER BY post_id, labeled_at DESC, label_id DESC`, [NGUON]);
+  const ra = new Map();
+  for (const n of nhan) {
+    if (!n.v || !nhanDuocNhan(n)) continue;
+    const ids = theoTen.get(chuan(n.v));
+    if (ids?.size === 1) ra.set(n.post_id, [...ids][0]);
+  }
+  return ra;
+}
+
+/**
+ * Rút dòng cũ của luật này trên chủ thể của lượt, TRƯỚC khi ghi dòng mới. Hai bước, hai lý do:
+ *   (1) dòng mà cặp (mã thẻ, phiên bản thẻ) trong căn cứ không còn là cặp của một thẻ đã duyệt sống — thẻ được sửa, thẻ bị bác,
+ *       hay nhóm được cấp thẻ mới sau khi bác (mã đổi mà phiên bản về 1) → lý do «the-doi-ban»;
+ *   (2) dòng còn lại mà lượt này không phát biểu lại y hệt (chủ thể, trường, giá trị, căn cứ) → lý do «thay-boi-luot».
+ * Không dựa vào `replaceOwn` của writeAssertions: nó khoá theo (chủ thể, trường, phương pháp) chứ không theo căn cứ, nên đổi
+ * phiên bản mà giữ giá trị thì dòng mới bị ON CONFLICT nuốt lặng và căn cứ cũ sống mãi.
+ * @param {{ dong: object[], moiChuThe: string[], the: Map<string, The> }} p
+ * @returns {Promise<{ rutBan: number, rutLuot: number }>}
+ */
+export async function rutTheCu(client, { dong, moiChuThe, the }) {
+  if (!moiChuThe.length) return { rutBan: 0, rutLuot: 0 };
+  const cap = [...the.values()].map((t) => `${t.card_code}|${t.version}`);
+  const r1 = await client.query(
+    `UPDATE field_assertions SET retracted_at = clock_timestamp(), retract_reason = $4
+      WHERE retracted_at IS NULL AND rule_id = $1 AND subject_key = ANY ($2::text[])
+        AND NOT ((evidence ->> 'the') || '|' || (evidence ->> 'ban') = ANY ($3::text[]))`,
+    [RULE_ID, moiChuThe, cap, LY_DO_RUT.doiBan]);
+  const giu = dong.map((d) => [d.subject_key, d.field, d.value, d.evidence.the, d.evidence.ban, d.evidence.nguon_o].join("|"));
+  const r2 = await client.query(
+    `UPDATE field_assertions SET retracted_at = clock_timestamp(), retract_reason = 'thay-boi-luot'
+      WHERE retracted_at IS NULL AND rule_id = $1 AND subject_key = ANY ($2::text[])
+        AND NOT (concat_ws('|', subject_key, field, value, evidence ->> 'the', evidence ->> 'ban', evidence ->> 'nguon_o')
+                 = ANY ($3::text[]))`,
+    [RULE_ID, moiChuThe, giu]);
+  return { rutBan: r1.rowCount, rutLuot: r2.rowCount };
 }
