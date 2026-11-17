@@ -29,7 +29,7 @@ nhưng `/ops/registry` đọc cột `buildings.region_node_id` gốc. Hàng ch�
   bằng số theo nút hiệu lực.
 - AC-3: Given DB máy thu (chỉ đọc), When lớp đọc của `/ops/registry` chạy trên dữ liệu thật, Then số toà của từng nút khớp
   đếm trực tiếp trên `v_toa_nut_vung`; toà treo thẳng dưới dự án và phân khu không toà không con bằng đếm trên view và nhỏ
-  hơn đếm theo cột gốc (đo 17/11: 54 → 14 và 7 → 1); tổng toà bằng đếm `buildings` đang dùng (17/11: 198), không đổi so với
+  hơn đếm theo cột gốc (đo 17/11 sau khi DA33 áp lên DB máy thu: 163 → 123 và 7 → 1; trước DA33: 54 → 14); tổng toà bằng đếm `buildings` đang dùng (307 sau DA33), không đổi so với
   cột gốc; không toà nào đổi dự án gốc giữa cột gốc và hiệu lực; probe đối chiếu sẵn có của `/ops/registry` vẫn khớp.
 - AC-4: Given lớp đọc sau vòng, When quét các tệp `app/src/lib/ops/registry/*.ts`, Then không có câu ghi (luật chỉ-đọc của
   `trang-danh-ba-chi-doc`, ca `quetGhi`) và bộ test TDB sẵn có vẫn xanh.
@@ -37,11 +37,11 @@ nhưng `/ops/registry` đọc cột `buildings.region_node_id` gốc. Hàng ch�
 ## Coverage
 
 Quét bằng ma trận nhỏ (preset test-matrix). Thước CE: đếm trên DB máy thu 17/11 (READ ONLY) theo `v_toa_nut_vung` ×
-loại nút gốc/hiệu lực.
+loại nút gốc/hiệu lực, đếm lại sau khi DA33 áp (15:06Z: 307 toà; 109 toà S16 mới đều theo cột gốc dưới nút dự án, không nối S09).
 
 | Nguồn nút (view) | Gốc → hiệu lực | Số toà | Ai đọc phía sau | Xử lý |
 |---|---|---|---|---|
-| `goc` | project → project | 14 | người vận hành (toà treo còn lại) | trong phạm vi — AC-1, AC-3 |
+| `goc` | project → project | 123 (OP1 46, Smart City 37, GP 19, OP2 14, OP3 7) | người vận hành (toà treo còn lại) | trong phạm vi — AC-1, AC-3 |
 | `goc` | building → building | 10 | người vận hành | trong phạm vi — AC-1 (không đổi) |
 | `s09_cum` | subzone → subzone | 54 | người vận hành | trong phạm vi — AC-1 (không đổi) |
 | `s09_cum` | project → subzone | 15 | người vận hành (dòng phụ gốc) | trong phạm vi — AC-1, AC-2 |
@@ -66,4 +66,4 @@ Core: nguồn × khác × số cây (AC-1); khác × DOM (AC-2); mọi ô × d�
 
 ## Notes
 
-Số 54/14/7/1/198 đo 17/11 trước DA33; DA33 gộp thì tổng toà đổi (198 → 307) — probe đo theo đẳng thức với view, in số.
+Số trước DA33 (17/11 sáng): treo 54 → 14, tổng 198. Sau DA33 áp (15:06Z): treo 163 → 123, phân khu rỗng 7 → 1, tổng 307 — hàng vẫn đưa đúng 40 toà về phân khu; 123 toà còn treo chủ yếu là toà S16 chưa có nút phân khu (ngoài hàng: luật đúc của DA33). Probe đo theo đẳng thức với view, in số.
