@@ -81,3 +81,6 @@ Dòng DV6 đã có không bị xoá ở lối nào: nhóm chưa có thẻ duyệ
   số «DV6 tính lại hôm nay» (82,46% trên bản chép), không đúng bằng gốc (80,75%).
 - Bảng phủ 48 ô chưa có hai chuyển trạng thái «ô dự án bị lọc» và «thẻ nghỉ» (cùng đường `docTheDaDuyet` ra `duAn = null` như
   T1/T3), và chưa có ca «hoà giải tin bỏ ở lượt sau» kèm dòng DV6 mồi.
+- **Hệ dự án của AC-10 viết trong mã.** `HE_DU_AN` / `laLac` (`pipeline/scripts/mau-bai-lac-du-an.mjs`) mang danh sách hệ VGP
+  bằng mã nút (16, 304, 310); hệ Ocean Park 1 (Mạnh «Mở rộng hệ sang OP1», 18/11) chưa có mã vì danh bạ chưa có nút Masteri
+  Waterfront. Khi dãy danh bạ thêm nút ấy làm dự án con của Ocean Park 1, luật đọc hệ từ danh bạ thay vì danh sách viết tay.
