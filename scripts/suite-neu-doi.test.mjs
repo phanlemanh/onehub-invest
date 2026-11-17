@@ -6,7 +6,8 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { VUNG, quyetDinh, trongVung } from "./suite-neu-doi.mjs";
+import { BUOC_CI, VUNG, buocSuite, quyetDinh, tomTatScripts, trongVung } from "./suite-neu-doi.mjs";
+import { createRequire } from "node:module";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, "..");
@@ -320,4 +321,102 @@ test("S4V-AC-6 — executors.suite.* bọc nguyên văn lệnh hiện hành, sui
   const them = cfg.replace("\n  test:\n", '\n  test:\n    moi: "node --test x.test.mjs"\n');
   assert.notEqual(them, cfg);
   assert.deepEqual(kiem(them), [], "S4V-AC-6 thêm key executors.test mới mà đỏ");
+});
+
+// ── suite-scripts-vao-luot-cham: lệnh --chay-scripts chạy trọn bộ scripts theo đúng các bước job CI ─────────────
+const yamlLib = createRequire(path.join(ROOT, "app/package.json"))("js-yaml");
+const jobScripts = () => yamlLib.load(readFileSync(path.join(ROOT, ".github/workflows/ci-test.yml"), "utf8")).jobs.scripts;
+function phanTu(job) {
+  const out = (job.steps ?? []).map((s) => (s.uses ? `uses ${s.uses.split("@")[0]}` : `run: ${s.name}`));
+  for (const [svc, cfg] of Object.entries(job.services ?? {})) { out.push(`services.${svc}.image`); if (cfg.env) out.push(`services.${svc}.env`); }
+  for (const k of Object.keys(job.env ?? {})) out.push(`env.${k}`);
+  return out;
+}
+const MT_CI = () => JSON.parse(readFileSync(path.join(ROOT, "_acceptance/suite-scripts-vao-luot-cham/ma-tran.json"), "utf8")).ci;
+const lechCi = (job, ci) => { const pt = phanTu(job);
+  return [...pt.filter((p) => !Object.hasOwn(ci, p)).map((p) => `phần tử chưa có dòng: ${p}`), ...Object.keys(ci).filter((k) => !pt.includes(k)).map((k) => `dòng thừa: ${k}`)]; };
+const coDocker = () => spawnSync("docker", ["inspect", "-f", "{{.Config.Image}}", "one-invest-db"], { encoding: "utf8" });
+const coDb = (ten) => spawnSync("docker", ["exec", "-i", "-e", "PGPASSWORD=oneinvest", "one-invest-db", "psql", "-U", "oneinvest", "-h", "localhost", "-d", "oneinvest", "-At", "-c", `select count(*) from pg_database where datname='${ten}'`], { encoding: "utf8" }).stdout.trim() === "1";
+const dongCuoi = (out) => JSON.parse(out.trim().split("\n").pop());
+function tepMau(dir, { ra, cho = false, do_ = false }) {
+  const f = path.join(dir, `mau-${Math.random().toString(36).slice(2)}.test.mjs`);
+  writeFileSync(f, `import { test } from "node:test"; import assert from "node:assert"; import { writeFileSync } from "node:fs"; import { createRequire } from "node:module";
+const pg = createRequire(${JSON.stringify(path.join(ROOT, "app/package.json"))})("pg");
+test("ssl-mau", async () => { const c = new pg.Client({ connectionString: process.env.DATABASE_URL }); await c.connect();
+  const db = (await c.query("select current_database() as d")).rows[0].d; await c.end();
+  writeFileSync(${JSON.stringify(ra)}, JSON.stringify({ db, ci: process.env.CI, no: process.env.NODE_OPTIONS ?? "" }));
+  ${cho ? "await new Promise((r) => setTimeout(r, 60000));" : ""} ${do_ ? 'assert.fail("ssl-mau đỏ cố ý");' : ""} });`);
+  return f;
+}
+
+test("SSL-AC-1 ma trận — mọi phần tử job scripts có dòng; bước là nguyên văn run của job; ảnh DB và bản chính Node khớp", (t) => {
+  const job = jobScripts(), ci = MT_CI();
+  assert.deepEqual(lechCi(job, ci), [], "SSL-AC-1 ma trận ci lệch phần tử job scripts");
+  const tuong = Object.entries(ci).filter(([k, v]) => k.startsWith("run: ") && v.startsWith("tuong-duong")).map(([k]) => k.slice(5));
+  assert.deepEqual(tuong, BUOC_CI, "SSL-AC-1 bước tương đương của ma trận phải đúng BUOC_CI");
+  for (const b of buocSuite(ROOT)) assert.equal(b.lenh, job.steps.find((s) => s.name === b.ten).run.trim(), `SSL-AC-1 lệnh «${b.ten}» phải là nguyên văn run của job`);
+  const node = String(job.steps.find((s) => (s.uses ?? "").startsWith("actions/setup-node")).with["node-version"]);
+  assert.equal(process.versions.node.split(".")[0], node, "SSL-AC-1 bản chính Node lệch job");
+  const them = structuredClone(job); them.steps.push({ name: "bước lạ", run: "true" });
+  assert.deepEqual(lechCi(them, ci), ["phần tử chưa có dòng: run: bước lạ"], "SSL-AC-1 đối chứng: bước mới phải đỏ gọi tên");
+  const d = coDocker();
+  if (process.env.CI || d.status !== 0) return t.skip("không có container one-invest-db — chỉ kiểm được ảnh trên máy thu");
+  const anh = (j) => Object.values(j.services)[0].image;
+  assert.equal(d.stdout.trim(), anh(job), "SSL-AC-1 ảnh DB của máy lệch services của job");
+  const doi = structuredClone(job); Object.values(doi.services)[0].image = "postgres:16";
+  assert.notEqual(d.stdout.trim(), anh(doi), "SSL-AC-1 đối chứng: đổi ảnh services phải lệch, gọi tên postgres:16");
+});
+
+test("SSL-AC-1 đầu ra thật — test nối DB trống vừa dựng, thấy CI=true, ca bỏ đúng ci-bo-qua", (t) => {
+  if (process.env.CI || coDocker().status !== 0) return t.skip("cần docker và container one-invest-db của máy thu");
+  const dir = mkdtempSync(path.join(tmpdir(), "ssl1-")); t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const ra = path.join(dir, "ra.json");
+  const r = spawnSync(process.execPath, [LENH, "--chay-scripts", "--tep", tepMau(dir, { ra })], { cwd: ROOT, encoding: "utf8" });
+  assert.equal(r.status, 0, `SSL-AC-1 lệnh thoát ${r.status}: ${(r.stderr || "").slice(-400)}`);
+  const o = JSON.parse(readFileSync(ra, "utf8"));
+  assert.match(o.db, /^oneinvest_ci_scripts_\d+$/, `SSL-AC-1 test phải nối DB trống vừa dựng, không phải ${o.db}`);
+  assert.equal(o.ci, "true", "SSL-AC-1 bước test phải thấy CI=true như runner GitHub");
+  const mong = spawnSync(process.execPath, ["scripts/lib/ci-can-du-lieu.mjs", "scripts"], { cwd: ROOT, encoding: "utf8", env: { ...process.env, CI: "true" } }).stdout.trim();
+  assert.equal(o.no.trim(), mong, "SSL-AC-1 NODE_OPTIONS phải đúng danh sách ca bỏ của ci-bo-qua.json cho scripts");
+});
+
+test("SSL-AC-2 — dòng scripts-ci khi xanh và khi đỏ, --ho-so ghi run-log, hồ sơ vắng thoát 2, DB luôn được dọn", async (t) => {
+  if (process.env.CI || coDocker().status !== 0) return t.skip("cần docker và container one-invest-db của máy thu");
+  const dir = mkdtempSync(path.join(tmpdir(), "ssl2-")); t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const slug = `ssl2-tam-${process.pid}`, hs = path.join(ROOT, "_acceptance", slug);
+  mkdirSync(hs); t.after(() => rmSync(hs, { recursive: true, force: true }));
+  const sha = execFileSync("git", ["rev-parse", "HEAD"], { cwd: ROOT, encoding: "utf8" }).trim();
+  const chay = (f, them = []) => spawnSync(process.execPath, [LENH, "--chay-scripts", "--tep", f, ...them], { cwd: ROOT, encoding: "utf8" });
+  const ra = path.join(dir, "ra.json");
+  const x = chay(tepMau(dir, { ra }), ["--ho-so", slug]);
+  const d = dongCuoi(x.stdout);
+  assert.equal(x.status, 0);
+  assert.deepEqual([d.kind, d.sha, d.exit, d.tests, d.pass, d.fail], ["scripts-ci", sha, 0, 1, 1, 0], "SSL-AC-2 dòng tóm tắt khi xanh");
+  assert.equal(typeof d.giay, "number");
+  const log = readFileSync(path.join(hs, "run-log.jsonl"), "utf8").trim().split("\n").map((l) => JSON.parse(l));
+  assert.deepEqual(log.at(-1), d, "SSL-AC-2 --ho-so phải nối đúng dòng tóm tắt vào run-log của hồ sơ");
+  assert.equal(coDb(JSON.parse(readFileSync(ra, "utf8")).db), false, "SSL-AC-2 DB phải bị xoá khi lệnh xong");
+  const dd = chay(tepMau(dir, { ra, do_: true }));
+  const dt = dongCuoi(dd.stdout);
+  assert.notEqual(dd.status, 0, "SSL-AC-2 tệp mẫu đỏ thì lệnh phải đỏ");
+  assert.ok(dt.exit !== 0 && dt.fail >= 1, `SSL-AC-2 dòng tóm tắt khi đỏ phải mang exit ≠ 0 và fail ≥ 1: ${JSON.stringify(dt)}`);
+  const v = spawnSync(process.execPath, [LENH, "--chay-scripts", "--ho-so", "khong-co-ho-so-nay"], { cwd: ROOT, encoding: "utf8" });
+  assert.equal(v.status, 2, "SSL-AC-2 hồ sơ không tồn tại phải thoát 2");
+  assert.equal(existsSync(path.join(ROOT, "_acceptance/khong-co-ho-so-nay")), false, "SSL-AC-2 không được tạo hồ sơ hay run-log");
+  // ngắt giữa chừng
+  rmSync(ra, { force: true });
+  const { spawn } = await import("node:child_process");
+  const p = spawn(process.execPath, [LENH, "--chay-scripts", "--tep", tepMau(dir, { ra, cho: true })], { cwd: ROOT, stdio: "ignore" });
+  for (let i = 0; i < 240 && !existsSync(ra); i++) await new Promise((res) => setTimeout(res, 500));
+  const db2 = JSON.parse(readFileSync(ra, "utf8")).db;
+  const ma = await new Promise((res) => { p.on("exit", (c, s) => res(c ?? s)); p.kill("SIGTERM"); });
+  assert.equal(ma, 143, "SSL-AC-2 bị SIGTERM thì thoát 143");
+  assert.equal(coDb(db2), false, `SSL-AC-2 DB ${db2} phải bị xoá cả khi lệnh bị ngắt`);
+});
+
+test("SSL-AC-2 tomTatScripts — đọc số ca từ dòng tổng kết spec hay tap; không có dòng thì null", () => {
+  assert.deepEqual(tomTatScripts("ℹ tests 5\nℹ pass 4\nℹ fail 1\n", { sha: "a", exit: 1, giay: 2 }).fail, 1);
+  assert.deepEqual(tomTatScripts("# tests 3\n# pass 3\n# fail 0\n", { sha: "a", exit: 0, giay: 2 }).tests, 3);
+  const k = tomTatScripts("bị giết giữa chừng", { sha: "a", exit: 143, giay: 2 });
+  assert.deepEqual([k.tests, k.pass, k.fail], [null, null, null], "SSL-AC-2 không có dòng tổng kết thì số ca phải null, không bịa 0");
 });
