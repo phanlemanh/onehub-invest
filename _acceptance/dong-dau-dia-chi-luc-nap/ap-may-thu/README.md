@@ -70,3 +70,14 @@ Dòng DV6 đã có không bị xoá ở lối nào: nhóm chưa có thẻ duyệ
    In: số thẻ đã duyệt; số dòng sống của luật theo trường và nguồn ô; số dòng DV6 đã rút vì thẻ; số thẻ đã duyệt có dự án
    khác sổ (khác 0 mà DV6 còn chạy là xung đột — xem lối B); ô «Định vị» S03 cửa sổ all; số tin xung đột. Đạt khi số dòng
    khớp `so-chay-thu.md` cho đúng số thẻ đã duyệt, và số tin xung đột không tăng.
+
+## Giới hạn đã biết của khuôn trả DV6 (S4-r3, soát context sạch)
+
+- **Bài nạp sau khi thôi DV6.** Trả DV6 chỉ áp cho bài TỪNG bị hàng này rút dòng DV6. Sau khi thôi chạy DV6 `--ghi` (lối A),
+  bài mới vào nhóm có thẻ chưa từng có dòng DV6 — thẻ ấy về sau bị bác thì bài không có dự án dù DV6 (nếu chạy) sẽ ghi. Chữa
+  khi gặp: chạy DV6 `--ghi` một lần sau khi bác thẻ.
+- **Khe giữa hai bước lùi.** Giữa `lui.sql` và DV6 `--ghi`, ô «Định vị» về gần 0 — đừng để lượt đồng bộ cloud chạy vào khe ấy
+  (chạy hai bước liền, ngoài giờ đồng bộ). DV6 `--ghi` còn rút mọi dòng DV6 nó không còn muốn trên toàn S03, nên số sau lùi là
+  số «DV6 tính lại hôm nay» (82,46% trên bản chép), không đúng bằng gốc (80,75%).
+- Bảng phủ 48 ô chưa có hai chuyển trạng thái «ô dự án bị lọc» và «thẻ nghỉ» (cùng đường `docTheDaDuyet` ra `duAn = null` như
+  T1/T3), và chưa có ca «hoà giải tin bỏ ở lượt sau» kèm dòng DV6 mồi.

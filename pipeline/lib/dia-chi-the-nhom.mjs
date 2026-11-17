@@ -227,10 +227,11 @@ export async function rutTheCu(client, { dong, moiChuThe, the }) {
  * dòng cũ có thể mang giá trị DV6 đã bỏ (sổ nhóm, nhãn đổi), và hồi sinh mọi bản rút làm bài mang hai dự án sống (S4-r2).
  * DV6 là nguồn ý định duy nhất; hàm này chỉ ghi dòng DV6 muốn, cho đúng tập bài ứng viên, bằng luật/lớp/phiên bản của DV6.
  * @param {string[]} chuThe subject_key các bài của lượt KHÔNG có dòng dự án của luật này sau bước sinh
- * @param {{ tin?: {offer_id: string, post_ids: string[]}[] }} [opt] tin của lượt (thay tin đọc từ DB — lượt chưa ghi tin mới)
+ * @param {{ tin?: {offer_id: string, post_ids: string[]}[], boNho?: object }} [opt] tin của lượt (thay tin đọc từ DB — lượt chưa ghi
+ *   tin mới); boNho: chỗ giữ đầu vào DV6 đã đọc để vòng lặp của người gọi không đọc lại
  * @returns {Promise<{ chen: number, ungVien: number, khongMuon: string[] }>} số dòng ghi, số bài ứng viên, bài DV6 không còn muốn
  */
-export async function traLaiDV6(client, chuThe, { tin } = {}) {
+export async function traLaiDV6(client, chuThe, { tin, boNho = {} } = {}) {
   if (!chuThe.length) return { chen: 0, ungVien: 0, khongMuon: [] };
   // Ứng viên: từng bị lượt TG2 rút dòng DV6, và hiện không còn dòng DV6 sống nào (DV6 chạy lại sau rút thì thôi).
   const { rows } = await client.query(
@@ -244,8 +245,8 @@ export async function traLaiDV6(client, chuThe, { tin } = {}) {
     [LY_DO_RUT.thayDV6, LUAT_DV6, chuThe, ASSERTION_FIELD.project_node_id]);
   const ungVien = new Set(rows.map((r) => r.subject_key));
   if (!ungVien.size) return { chen: 0, ungVien: 0, khongMuon: [] };
-  const du = await docDuLieuDV6(client);
-  if (tin) du.tin = tin;
+  boNho.du ??= await docDuLieuDV6(client);
+  const du = tin ? { ...boNho.du, tin } : boNho.du;
   const dong = tinhDuAnDV6(du).dong.filter((d) => ungVien.has(d.subject_key));
   let chen = 0;
   if (dong.length) {

@@ -1029,13 +1029,17 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
     // Dòng dự án SỐNG trên bài của lượt, đọc TRƯỚC khi rút gì: của luật khác (để không đóng dấu một tin mà bài khác của nó
     // đang mang dự án khác) và của mọi luật kể cả luật này (để duyệt thêm một thẻ bất đồng không làm tin mất dự án đang có).
     const moiChuThe = baiDoc.map((p) => subjectKey("S03", p.post_id));
+    // Dòng TG2 của bản thẻ không còn hiệu lực (thẻ sửa, bác) sẽ bị rút «the-doi-ban» cuối lượt — không tính là «dự án đang có»,
+    // không thì hoà giải «giữ dự án hiện tại» lượt này bỏ dấu cả tin, lượt sau mới đóng: chạy lại đổi tập dòng sống (S4-r3).
+    const banHieuLuc = [...theNhom.values()].map((t) => `${t.card_code}|${t.version}`);
     const sinh = async () => {
       const { rows: songRows } = await client.query(
         `SELECT split_part(subject_key, ':', 2) AS p, array_agg(value) AS v,
                 array_agg(value) FILTER (WHERE rule_id IS DISTINCT FROM $2) AS khac
            FROM field_assertions
           WHERE retracted_at IS NULL AND field = 'project_node_id' AND subject_key = ANY ($1::text[])
-          GROUP BY 1`, [moiChuThe, RULE_ID_THE]);
+            AND (rule_id IS DISTINCT FROM $2 OR (evidence->>'the') || '|' || (evidence->>'ban') = ANY ($3::text[]))
+          GROUP BY 1`, [moiChuThe, RULE_ID_THE, banHieuLuc]);
       return phatBieuDiaChiNhom({
         bai: baiDoc.map((p) => ({ post_id: p.post_id, conversation_id: nhomCua.get(p.post_id) ?? null, posted_at: p.posted_at, tin: tinCua.get(p.post_id) })),
         the: theNhom, nhanDuAn, phuongChu,
@@ -1051,14 +1055,17 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
     // thành ứng viên lần nữa — vòng dừng; trần 5 lần chỉ để chặn lỗi lập trình.
     const khongMuon = new Set();
     const tinLuot = nhom.map((o) => ({ offer_id: o.offerId, post_ids: o.posts.map((p) => p.post_id) }));
+    const boNho = {}; // đầu vào DV6 đọc một lần cho cả vòng (không đổi giữa các lần)
+    let hoiTu = false;
     for (let lan = 0; lan < 5; lan++) {
       const coDuAn = new Set(r.dong.filter((d) => d.field === "project_node_id").map((d) => d.subject_key));
-      const tra = await traLaiDV6(client, moiChuThe.filter((k) => !coDuAn.has(k)), { tin: tinLuot });
+      const tra = await traLaiDV6(client, moiChuThe.filter((k) => !coDuAn.has(k)), { tin: tinLuot, boNho });
       theNhomDem.tra_lai_dv6 += tra.chen;
       for (const k of tra.khongMuon) khongMuon.add(k);
-      if (!tra.chen) break;
+      if (!tra.chen) { hoiTu = true; break; }
       r = await sinh();
     }
+    if (!hoiTu) console.warn("transform-zalo: vòng trả dòng DV6 chạm trần 5 lần mà chưa dừng — lỗi lập trình, báo người; lượt vẫn ghi");
     theNhomDem.dv6_khong_muon = khongMuon.size;
     dongThe = r.dong;
     const baiDuAn = [...new Set(r.dong.filter((d) => d.field === "project_node_id").map((d) => d.subject_key))];

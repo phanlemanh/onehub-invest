@@ -170,8 +170,23 @@ dự án có thêm bước hai, theo tin (phường, phân khu không bị kéo 
 | chữ im, thẻ các nhóm trong tin bất đồng | không đoán: bỏ mọi dòng dự án từ thẻ |
 | bài khác cùng tin, không được đóng dấu dự án, mang dòng dự án luật khác khác giá trị | bỏ mọi dòng dự án của tin — hàng này chỉ rút dòng luật khác trên bài nó ghi dự án |
 
-Bỏ dòng dự án của một tin nghĩa là bài của tin ấy giữ nguyên dòng DV6 cũ (không bị rút), nên tin ở lại đúng trạng thái
-trước hàng này.
+Bỏ dòng dự án của một tin ở lượt ĐẦU nghĩa là bài của tin ấy giữ nguyên dòng DV6 cũ (không bị rút), nên tin ở lại đúng
+trạng thái trước hàng này.
+
+**Khi thẻ thôi cho dự án sau khi đã đóng dấu** (thẻ bị bác, sửa sang dự án khác hay 2–3 dự án, ô dự án bị lọc, hoà giải tin
+bỏ ở một lượt sau) — khuôn S4-r3, GS chọn «đổi khuôn» (P4-199) sau hai vòng chấm hỏng ở cùng cơ chế:
+
+- Bài ứng viên: bài của lượt không nhận dự án từ thẻ, từng bị hàng này rút dòng DV6 (`thay-bang-the-nhom`), hiện không còn dòng
+  DV6 sống.
+- Ghi dòng DV6 **đang muốn**: gọi hàm thuần `tinhDuAn` của DV6 trên đầu vào của DV6 (sổ nhóm, nhãn chữ bài, nút danh bạ, tin của
+  lượt) rồi ghi đúng dòng nó trả cho các bài ứng viên, bằng luật/lớp/phiên bản của DV6. **Không hồi sinh** dòng đã rút: bản rút
+  có thể mang giá trị DV6 đã bỏ, hồi sinh mọi bản rút làm bài mang hai dự án sống (lỗi S4-r2). DV6 thôi muốn thì bài không có
+  dự án — đúng điều DV6 tự chạy sẽ cho.
+- Sinh lại và lặp tới điểm dừng: dòng DV6 vừa trả có thể khiến hoà giải mức tin bỏ dấu thẻ của bài khác cùng tin, bài ấy thành
+  ứng viên ở lần sau. Mỗi bài trả xong có dòng DV6 sống nên vòng dừng (trần 5 lần, chạm trần thì cảnh báo).
+- «Dự án đang có» của hoà giải không tính dòng TG2 thuộc bản thẻ đã hết hiệu lực (sẽ bị rút `the-doi-ban` cuối lượt) — không
+  thì lượt một bỏ dấu, lượt hai mới đóng (chạy lại đổi tập dòng sống).
+- Lùi dữ liệu: rút dòng TG2 rồi chạy DV6 `--ghi` (DV6 tự tính lại), không hồi sinh.
 
 Phường và phân khu đi cùng luật: chữ bài trước, thẻ sau, im thì bỏ trống.
 

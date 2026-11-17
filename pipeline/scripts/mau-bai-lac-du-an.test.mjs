@@ -4,7 +4,7 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
 
-import { chonMau, docBangDaDien, docMaKhoa, docTepDuyet, laLac, locKhung, soMau, wilson95 } from "./mau-bai-lac-du-an.mjs";
+import { chonMau, docBangDaDien, docKhaiMau, docMaKhoa, docTepDuyet, laLac, locKhung, soMau, wilson95 } from "./mau-bai-lac-du-an.mjs";
 
 /** Làm tròn 4 chữ số để so số thực. */
 const r4 = (x) => Math.round(x * 1e4) / 1e4;
@@ -197,7 +197,9 @@ describe("AC-10 --tinh-duyet ở dòng lệnh — mã thoát của từng nhánh
   const dir = mkdtempSync(join(tmpdir(), "tinh-duyet-"));
   const KHOA = Array.from({ length: 100 }, (_, i) => `m${i}`);
   const mau = join(dir, "mau.md");
-  writeFileSync(mau, `# mẫu\n\n## Đã rút\n\n\`\`\`\n${KHOA.join("\n")}\n\`\`\`\n`);
+  const hoSo = (ma, { hg = "hg", n = 100 } = {}) =>
+    `# mẫu\n\n| | |\n|---|---|\n| Hạt giống | \`${hg}\` |\n| Cỡ mẫu | **n = ${n}** |\n\n## Đã rút\n\n\`\`\`\n${ma.join("\n")}\n\`\`\`\n`;
+  writeFileSync(mau, hoSo(KHOA));
   const chay = (nhan, args = ["--seed", "hg", "--mau", mau]) => {
     const f = join(dir, `nhan-${Math.random().toString(36).slice(2)}.json`);
     writeFileSync(f, JSON.stringify({ hat_giong: "hg", nguoi_duyet: "Mạnh", luc: "2026-11-17T17:00:00Z", nhan }));
@@ -212,10 +214,27 @@ describe("AC-10 --tinh-duyet ở dòng lệnh — mã thoát của từng nhánh
     assert.match(r.stdout, /ĐẠT/);
   });
 
-  test("còn một dòng chưa bấm → thoát 1 dù cận trên đạt", () => {
+  test("còn một dòng chưa bấm → thoát 1, KHÔNG in «ĐẠT»", () => {
     const r = chay(du({ m7: { chon: null } }));
     assert.equal(r.status, 1);
     assert.match(r.stdout, /còn 1 dòng chưa duyệt/);
+    assert.doesNotMatch(r.stdout, /: ĐẠT/);
+  });
+
+  test("hồ sơ có số mã khoá khác cỡ mẫu khai trước → thoát 1, không tính trên mẫu bị cắt", () => {
+    const cut = join(dir, "mau-cut.md");
+    writeFileSync(cut, hoSo(KHOA.slice(0, 35)));
+    const r = chay(du().slice(0, 35), ["--seed", "hg", "--mau", cut]);
+    assert.equal(r.status, 1);
+    assert.match(r.stderr, /35 mã.*n = 100/);
+  });
+
+  test("--seed khác hạt giống khai trong hồ sơ → thoát 1", () => {
+    const khac = join(dir, "mau-khac.md");
+    writeFileSync(khac, hoSo(KHOA, { hg: "hat-khac" }));
+    const r = chay(du(), ["--seed", "hg", "--mau", khac]);
+    assert.equal(r.status, 1);
+    assert.match(r.stderr, /hạt giống/);
   });
 
   test("tệp bỏ hẳn một dòng → thoát 1, gọi tên mã thiếu", () => {
@@ -240,5 +259,20 @@ describe("AC-10 --tinh-duyet ở dòng lệnh — mã thoát của từng nhánh
     const r = chay(du(lac));
     assert.equal(r.status, 1);
     assert.match(r.stdout, /CHƯA ĐẠT/);
+  });
+});
+
+describe("AC-10 đọc phần khai trước của hồ sơ mẫu", () => {
+  test("hồ sơ v2 thật: hạt giống, n = 100, 100 mã", async () => {
+    const { readFileSync } = await import("node:fs");
+    const md = readFileSync(new URL("../../_acceptance/dong-dau-dia-chi-luc-nap/evidence/mau-bai-lac-du-an-v2.md", import.meta.url), "utf8");
+    const k = docKhaiMau(md);
+    assert.equal(k.hatGiong, "tg2-ac10-v2-20261117");
+    assert.equal(k.n, 100);
+    assert.equal(k.ma.length, 100);
+  });
+  test("thiếu dòng hạt giống hay cỡ mẫu thì báo lỗi", () => {
+    assert.throws(() => docKhaiMau("| Cỡ mẫu | **n = 100** |\n## Đã rút\n```\na\n```\n"), /hạt giống/);
+    assert.throws(() => docKhaiMau("| Hạt giống | `x` |\n## Đã rút\n```\na\n```\n"), /cỡ mẫu/);
   });
 });

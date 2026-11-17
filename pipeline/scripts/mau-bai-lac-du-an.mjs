@@ -175,6 +175,19 @@ export function docTepDuyet(tep, { hatGiong, maKhoa } = {}) {
 }
 
 /**
+ * Phần khai trước của hồ sơ mẫu: hạt giống, cỡ mẫu n và danh sách mã khoá. Bộ tính nhãn đối chiếu cả ba — mẫu bị cắt (ít mã hơn
+ * n) hay `--seed` gõ khác hồ sơ không được thành một phép tính lặng lẽ trên mẫu khác (soát context sạch trước S4-r3).
+ * @returns {{ hatGiong: string, n: number, ma: string[] }}
+ */
+export function docKhaiMau(md) {
+  const hg = md.match(/^\|\s*Hạt giống\s*\|\s*`([^`]+)`/m);
+  if (!hg) throw new Error("hồ sơ mẫu thiếu dòng khai hạt giống («| Hạt giống | `…` |»)");
+  const n = md.match(/^\|\s*Cỡ mẫu\s*\|[^|\n]*?n\s*=\s*(\d+)/m);
+  if (!n) throw new Error("hồ sơ mẫu thiếu dòng khai cỡ mẫu («| Cỡ mẫu | n = … |»)");
+  return { hatGiong: hg[1], n: Number(n[1]), ma: docMaKhoa(md) };
+}
+
+/**
  * Danh sách mã bài khoá mẫu: khối mã đầu tiên ngay dưới mục «## Đã rút» của hồ sơ mẫu. Đây là thứ khoá mẫu (rút theo
  * băm trên toàn kho nên hạt giống một mình không rút lại được), nên bộ đọc nhãn đối chiếu với nó, không với hạt giống.
  */
@@ -206,13 +219,18 @@ async function main() {
     if (!seed || !tepMau) { console.error("--tinh-duyet cần --seed <hạt giống> và --mau <hồ sơ mẫu có mục «Đã rút»>"); process.exit(2); }
     let t;
     try {
-      t = docTepDuyet(JSON.parse(readFileSync(lay("--tinh-duyet"), "utf8")), { hatGiong: seed, maKhoa: docMaKhoa(readFileSync(tepMau, "utf8")) });
+      const khai = docKhaiMau(readFileSync(tepMau, "utf8"));
+      if (khai.hatGiong !== seed) throw new Error(`--seed ${seed} khác hạt giống khai trong hồ sơ (${khai.hatGiong})`);
+      if (khai.ma.length !== khai.n) throw new Error(`hồ sơ khoá ${khai.ma.length} mã mà cỡ mẫu khai trước là n = ${khai.n}`);
+      t = docTepDuyet(JSON.parse(readFileSync(lay("--tinh-duyet"), "utf8")), { hatGiong: seed, maKhoa: khai.ma });
     } catch (e) { console.error(`không nhận tệp nhãn: ${e.message}`); process.exit(1); }
     if (t.n === 0) { console.error(`chưa có dòng nào được duyệt (chưa duyệt ${t.chuaDuyet}) — chưa tính được`); process.exit(1); }
     const w = wilson95(t.k, t.n);
     console.log(`người duyệt: ${t.nguoiDuyet} · lúc ${t.luc} · cỡ mẫu khai ${t.n + t.chuaDuyet} · dòng đã duyệt ${t.n} · chưa duyệt ${t.chuaDuyet} · sửa nháp ${t.sua}`);
     console.log(`bài lạc: ${t.k}/${t.n} = ${PHAN_TRAM(w.p)} · khoảng Wilson 95%: ${PHAN_TRAM(w.duoi)} — ${PHAN_TRAM(w.tren)}`);
-    console.log(`cận trên so ngưỡng 10%: ${w.tren <= 0.1 ? "ĐẠT" : "CHƯA ĐẠT"}${t.chuaDuyet ? ` — còn ${t.chuaDuyet} dòng chưa duyệt, cỡ mẫu thật thấp hơn cỡ đã khai` : ""}`);
+    console.log(t.chuaDuyet
+      ? `cận trên so ngưỡng 10%: CHƯA TÍNH XONG — còn ${t.chuaDuyet} dòng chưa duyệt, cỡ mẫu thật thấp hơn cỡ đã khai`
+      : `cận trên so ngưỡng 10%: ${w.tren <= 0.1 ? "ĐẠT" : "CHƯA ĐẠT"}`);
     process.exit(w.tren <= 0.1 && t.chuaDuyet === 0 ? 0 : 1);
   }
 

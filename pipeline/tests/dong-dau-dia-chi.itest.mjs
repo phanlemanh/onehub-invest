@@ -558,3 +558,56 @@ test("TG2-r3 AC-8 bảng phủ 4 chuyển trạng thái thẻ × 4 ý định DV
     }
   });
 });
+
+// Soát context sạch trước S4-r3, phát hiện 1: hoà giải «giữ dự án hiện tại» đọc cả dòng TG2 CŨ (bản thẻ đã đổi, sẽ bị rút
+// «the-doi-ban» cuối lượt) như dự án đang có → lượt một bỏ dấu cả tin, lượt hai mới đóng dấu: chạy lại đổi tập dòng sống.
+test("TG2-r3 AC-8 bất biến (4): thẻ đổi bản + bài chéo nhóm có thẻ bất đồng — lượt nạp thứ hai không đổi gì", async () => {
+  await ca(async (f0) => {
+    const ba = await nhieu(`SELECT id::text AS id FROM asset_nodes WHERE node_type = 'project' ORDER BY id LIMIT 3`);
+    const [X, Y, Z] = ba.map((r) => r.id);
+    await soNhom("tg2-hd-g1", Y);
+    await the("tg2-hd-g1", { duAn: [X] });
+    await the("tg2-hd-g2", { status: "nhap", duAn: [Y] });
+    const [a, b] = await baiCheo("tg2-hd-g1", "tg2-hd-g2");
+    await dv6Nhom(a, Y);
+    await nap();
+    assert.deepEqual(await tg2Song(a), [X], "tiền đề: a được đóng dấu X, dòng DV6 Y của a bị rút");
+    await c.query(`UPDATE group_address_cards SET project_node_ids = $1::bigint[], version = version + 1 WHERE group_key = 'tg2-hd-g1'`, [[Z]]);
+    await c.query(`UPDATE group_address_cards SET status = 'da_duyet', version = version + 1 WHERE group_key = 'tg2-hd-g2'`);
+    await nap();
+    const truoc = await tapSong([a, b]);
+    const tt = await trangThaiTin(a);
+    await nap();
+    assert.deepEqual(await tapSong([a, b]), truoc, "lượt nạp thứ hai đổi tập dòng sống — lượt một chưa hội tụ");
+    assert.deepEqual({ status: tt.status, du_an: tt.du_an }, { status: "mot_du_an", du_an: Y });
+    for (const p of [a, b]) assert.ok((await duAnSong(p)).length <= 1);
+  });
+});
+
+// Soát context sạch, phát hiện 6: vòng trả DV6 chạy HƠN MỘT lần — trả DV6 cho a làm bỏ dấu thẻ của b cùng tin, b lại thành
+// ứng viên và được trả DV6 ở lần hai. Không ô nào của bảng 48 ô đi qua nhánh này.
+test("TG2-r3 AC-8 vòng trả DV6 chạy hai lần: thẻ của a bị bác, DV6 muốn Y cho cả tin — b mất dấu thẻ A và nhận Y, tin một dự án", async () => {
+  await ca(async (f0) => {
+    const ba = await nhieu(`SELECT id::text AS id FROM asset_nodes WHERE node_type = 'project' ORDER BY id LIMIT 2`);
+    const [A, Y] = ba.map((r) => r.id);
+    await soNhom("tg2-v2-g1", Y);
+    await soNhom("tg2-v2-g2", Y);
+    await the("tg2-v2-g1", { duAn: [A] });
+    await the("tg2-v2-g2", { duAn: [A] });
+    const [a, b] = await baiCheo("tg2-v2-g1", "tg2-v2-g2");
+    await dv6Nhom(a, Y);
+    await dv6Nhom(b, Y);
+    await nap();
+    assert.deepEqual([await tg2Song(a), await tg2Song(b)], [[A], [A]], "tiền đề: cả hai bài được đóng dấu A");
+    await c.query(`UPDATE group_address_cards SET status = 'bac', version = version + 1 WHERE group_key = 'tg2-v2-g1'`);
+    const { kq } = await nap();
+    assert.deepEqual([await duAnSong(a), await duAnSong(b)], [[Y], [Y]], "mỗi bài đúng một dự án Y");
+    assert.deepEqual(await tg2Song(b), [], "b vẫn giữ dấu thẻ A trong khi a mang DV6 Y — tin xung đột");
+    assert.equal(kq.the_nhom.tra_lai_dv6, 2, "phải trả DV6 cho cả a (lần một) và b (lần hai)");
+    const tt = await trangThaiTin(a);
+    assert.deepEqual({ status: tt.status, du_an: tt.du_an }, { status: "mot_du_an", du_an: Y });
+    const truoc = await tapSong([a, b]);
+    await nap();
+    assert.deepEqual(await tapSong([a, b]), truoc, "chạy lại đổi tập dòng sống");
+  });
+});
