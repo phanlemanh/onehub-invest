@@ -5,6 +5,39 @@ Bản chép DB máy thu `oneinvest_p4_tg2`, dựng lại từ đầu bằng `bas
 `node pipeline/scripts/dong-dau-dia-chi-that.mjs --do-neu-cu --thuoc <thước>`. Kịch bản duyệt khai trước: `../evidence/kich-ban-duyet.md`.
 Hai lượt nạp trên cùng bản chép mất 125,5 giây.
 
+## Đo lại 2026-11-17 17:59Z — mã `3aca0cb2` (khuôn S4-r3), bản chép dựng lại SAU DA33
+
+Bản chép `oneinvest_p4_tg2` dựng lại từ máy thu (sau DA33, main `98fe528b1`) bằng `--do-neu-cu`; lúc chụp máy thu có **6 thẻ đã
+duyệt** (Mạnh duyệt 17/11), 20 thẻ nháp. Ba lượt: gốc (máy thu nguyên trạng) → nền (lượt nạp đầu với 6 thẻ) → K1 (nhận nguyên 26
+thẻ). Ba lượt nạp 105,8 giây. Năm thước, mỗi thước thoát 0:
+
+| Thước | Gốc | Nền (6 thẻ) | Sau K1 (26 thẻ) |
+|---|---|---|---|
+| Ô «Định vị» S03 cửa sổ all | 5.606 / 6.942 = 80,75% | 6.684 / 6.942 = **96,28%** | 6.795 / 6.942 = **97,88%** |
+| … 30d · 7d | 80,78% · 75,10% | 96,31% · 92,67% | 97,91% · 99,00% |
+| **Bài mang > 1 dự án sống** (mọi luật) | 0 | **0** | **0** |
+| Tin xung đột | 0 | 0 | 0 |
+| Bài rơi khỏi `mot_du_an` (gốc → sau, theo bài) | — | — | **0** / 62.387 |
+| Đóng dấu tin thuộc nhóm có thẻ, có ô để ghi | — | — | 6.860 / 6.860 = 100% (1 tin hoà giải bỏ dự án) |
+| Bài mất `kind` · lật bán↔thuê | — | — | 0 · 0 |
+| Chữ bài nêu dự án nhận đúng dự án chữ | — | — | 108 / 108 (25 bài nêu dự án KHÁC thẻ) |
+
+Lệch với bản đo 05f4a90c (gốc 80,87% · nền 96,38% · K1 97,88%): mẫu số tăng 6.637 → 6.942 tin do dữ liệu máy thu mới và DA33;
+tỉ lệ K1 giữ nguyên, gốc và nền lệch dưới 0,15 điểm.
+
+**Bảng phủ AC-8 (itest, 48 ô)** — 4 chuyển trạng thái thẻ × 4 ý định DV6 × 3 dạng bài, bốn bất biến mỗi ô: mã `3aca0cb2`
+**48/48 xanh**; cùng bảng chạy trên mã vòng 2 (`01ee5f66`, hồi sinh mọi bản rút) **9 ô đỏ**: T1/T3 × D3 (tin vẫn mang dự án
+DV6 đã thôi muốn) và T1/T3 × D4 (bài mang 2 dự án sống). Ô T2/T4 không trả dòng nào nên không phân biệt hai khuôn — đúng kỳ vọng.
+
+**Lùi, thử trên bản chép (sau K1, khuôn mới):** bước 1 `lui.sql` rút 140.389 dòng TG2 (giữa hai bước: Định vị 0/6.942 — vì thế
+chạy liền); bước 2 `du-an-tren-tin-s03.mjs --ghi` 1,6 giây, ghi 50.540 dòng theo ý định DV6, rút 0. Sau lùi: 0 dòng TG2 sống,
+**0 bài mang > 1 dự án**, 0 tin xung đột, Định vị **5.724 / 6.942 = 82,46%** — trên gốc 80,75% vì DV6 tính lại trên dữ liệu
+mới nhất (gốc là trạng thái lần DV6 chạy cuối trên máy thu).
+
+---
+
+_Bản đo 12:00Z cùng ngày, mã `69c35406`, khuôn trả DV6 cũ — giữ làm sử, không dùng cho cổng:_
+
 ## Hai lượt
 
 | | Lượt **nền** — 0 thẻ đã duyệt (= máy thu ngay sau khi gộp) | **Sau kịch bản K1** — 26 thẻ nhận nguyên nháp |
