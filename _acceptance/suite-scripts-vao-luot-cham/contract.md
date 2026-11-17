@@ -5,7 +5,7 @@ slug: suite-scripts-vao-luot-cham
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: approved
+status: implemented
 veto_state: mo
 veto_opened_at: 2026-11-17T06:19:01Z
 approved_by:
@@ -91,5 +91,12 @@ Core → AC-1…AC-7. Later: lần đỏ thứ ba (`toa-s09-hai-khu-vao-danh-ba`
 
 **Cách đọc dòng `scripts-ci` trong run-log của một hồ sơ.** Lệnh `node scripts/suite-neu-doi.mjs --chay-scripts --ho-so <slug>`
 nối một dòng `{"kind":"scripts-ci","ts":"<ISO>","sha":"<40-hex>","exit":<n>,"tests":<n>,"pass":<n>,"fail":<n>,"giay":<n>}`.
-Hồ sơ đủ điều kiện xin chấm (và giám sát gộp) khi dòng `scripts-ci` MỚI NHẤT có `sha` bằng đỉnh nhánh và `exit` bằng 0;
-`sha` khác đỉnh nghĩa là cây đã đổi sau lượt chạy khô — chạy lại. Lệnh chạy ngoài khoá s4, không đụng DB `oneinvest`.
+Hồ sơ đủ điều kiện xin chấm (và giám sát gộp) khi dòng `scripts-ci` MỚI NHẤT có `exit` bằng 0 và `sha` bằng đỉnh nhánh,
+hoặc `git diff --name-only <sha> HEAD` chỉ ra tệp trong `_acceptance/` (chính việc commit dòng run-log đã đổi đỉnh — cùng
+luật với bộ canh bằng chứng cũ của kit). Có tệp ngoài `_acceptance/` đổi sau `sha` → cây đã đổi sau lượt chạy khô, chạy
+lại. Lệnh chạy ngoài khoá s4, không đụng DB `oneinvest`.
+
+**Số đo 17/11 (máy đang có lượt chấm của P2):** tái hiện #471 đỏ đúng ca (5) của `s05-khoa-nap`, `fail` 1, 63,4 giây; tái
+hiện #472 đỏ đúng DT-AC-7 của `db-thu`, `fail` 1, 72,2 giây; chạy khô trên nhánh @c71fe276 xanh, 524 ca, 517 đạt, 0 hỏng,
+93 giây; hồi quy `node --test scripts/*.test.mjs` trên DB máy thu xanh, 547 ca, 545 đạt, 2 bỏ qua, 1.151 giây. Chạy theo
+cách CI (DB trống, bỏ ca cần dữ liệu thật) nhanh hơn ~12 lần so với chạy trên DB máy thu.
