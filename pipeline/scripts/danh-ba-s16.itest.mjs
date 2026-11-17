@@ -12,6 +12,7 @@ import { GOC, apTep, taoDbThu, xoaDbThu } from "./db-thu-dbv.mjs";
 import { FIXTURE } from "./s16-fixture.mjs";
 import { CAU_CHEN_S16_ITEM, NOI_DU_AN_S16, chonToa, dongS16, duoiDuAn, napS16, s16Ref } from "../lib/s16-danh-muc.mjs";
 import { dung } from "../danh-ba-vat-the.mjs";
+import { tokenS16 } from "../lib/s16-soat.mjs";
 
 export const TEN = `oneinvest_dbv_s16_${process.pid}`;
 const SNAP = "q__s16__2026-11-14T000000000";
@@ -111,6 +112,26 @@ test("DA33-AC-1 căn không tên toà nạp được, view đọc thành mơ h�
       (e) => e.code === "23502", "DA33-AC-1 toa_ten NULL không bị từ chối — ca không phân biệt được bản sửa");
   } finally {
     await db.query("ROLLBACK").catch(() => {});
+    await db.query("DELETE FROM airbnb_snapshots WHERE snapshot_id = $1", [snap]);
+  }
+});
+
+// Lời AC-9 sửa (chờ Mạnh duyệt 17/11): tokenS16 tách định danh và mã căn, BỎ mã căn toàn số — trên dữ liệu thật 3 mã S16 chỉ
+// là số 4 chữ số và va với properties.id, property_offers.property_id, dq_check_results.detail.
+test("DA33-AC-9 tokenS16 tách toa_id/khu_id với mã căn và bỏ mã căn toàn số", async () => {
+  const snap = "qn__s16__2026-11-14T000000002";
+  await db.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ($1, 'vn', 'S16', '{}'::jsonb)`, [snap]);
+  try {
+    await db.query(`INSERT INTO stg_s16_toa (snapshot_id, du_an, khu_id, khu_nhan, toa_id, toa_ten) VALUES ($1, 'qn-qn', 'KHUQN01', 'KHUQN01', 'TOAQN01', 'QN1')`, [snap]);
+    for (const ma of ["1203", "QN1-02-03"]) {
+      await db.query(`INSERT INTO stg_s16_can (snapshot_id, du_an, khu_nhan, toa_id, toa_ten, tang, ma_can, pha) VALUES ($1, 'qn-qn', 'KHUQN01', 'TOAQN01', 'QN1', NULL, $2, 2)`, [snap, ma]);
+    }
+    const tk = await tokenS16(db);
+    assert.ok(tk.dinhDanh.has("TOAQN01") && tk.dinhDanh.has("KHUQN01"), "DA33-AC-9 toa_id/khu_id không vào tập định danh");
+    assert.ok(tk.maCan.has("QN1-02-03"), "DA33-AC-9 mã căn thường không vào tập mã căn");
+    assert.ok(!tk.maCan.has("1203") && !tk.dinhDanh.has("1203"), "DA33-AC-9 mã căn toàn số vẫn vào tập soát");
+    assert.ok(!tk.maCan.has("TOAQN01") && !tk.dinhDanh.has("QN1-02-03"), "DA33-AC-9 hai tập lẫn nhau");
+  } finally {
     await db.query("DELETE FROM airbnb_snapshots WHERE snapshot_id = $1", [snap]);
   }
 });

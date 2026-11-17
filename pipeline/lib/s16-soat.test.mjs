@@ -11,7 +11,8 @@ import { BANG_CAM_S16, kiemBangDay, soatDuLieu, soatS16, thongDiepS16 } from "./
 import { FILL, syncOnce } from "../sync-cloud.mjs";
 
 const MA = "QZ9.081101", TOA_ID = "1700000000001_4242", KHU_ID = "1700000000002_7777";
-const TOKEN = new Set([MA, TOA_ID, KHU_ID]);
+// Hai tập như tokenS16 trả (lời AC-9 sửa, chờ Mạnh duyệt 17/11): định danh soát mọi bảng, mã căn chỉ ở bảng S16 chạm được.
+const TOKEN = { dinhDanh: new Set([TOA_ID, KHU_ID]), maCan: new Set([MA]) };
 const sach = new Map([["asset_nodes", [JSON.stringify({ id: 1, name: "Q Khu", meta: { a: "QZ9.08" } })]]]);
 
 test("DA33-AC-9 (a) bảng stg S16 hay bảng vật thể trong danh sách đẩy → dừng trước khi gửi, nêu bảng", async () => {
@@ -29,7 +30,8 @@ test("DA33-AC-9 (a) bảng stg S16 hay bảng vật thể trong danh sách đẩ
 const ca = [
   ["(b) mã căn trong asset_nodes", new Map([["asset_nodes", [JSON.stringify({ id: 2, name: `Căn ${MA}`, meta: {} })]]]), MA, "asset_nodes.name"],
   ["(c) toa_id trong asset_nodes", new Map([["asset_nodes", [JSON.stringify({ id: 3, meta: { s16: [TOA_ID] } })]]]), TOA_ID, "asset_nodes.meta"],
-  ["(d) mã căn ở bảng khác trong FILL", new Map([...sach, ["sale_offers", [JSON.stringify({ offer_id: "o1", block_raw: MA.toLowerCase() })]]]), MA, "sale_offers.block_raw"],
+  ["(d) toa_id ở bảng khác trong FILL", new Map([...sach, ["sale_offers", [JSON.stringify({ offer_id: "o1", field_provenance: { x: TOA_ID } })]]]), TOA_ID, "sale_offers.field_provenance"],
+  ["(d) khu_id ở bảng khác trong FILL", new Map([...sach, ["properties", [JSON.stringify({ id: "p1", note: `khu ${KHU_ID}` })]]]), KHU_ID, "properties.note"],
 ];
 for (const [ten, data, gt, noi] of ca) {
   test(`DA33-AC-9 ${ten} → trúng, thông điệp nêu bảng.cột, không giá trị`, () => {
@@ -45,6 +47,16 @@ test("DA33-AC-9 (e) toa_id trong evidence một thẻ → soatS16 trả đườn
   const the = { item_id: "s16:abcd", evidence: { nguon: "S16", khoa_toa: ["bld_X"], x: [{ y: `toà ${TOA_ID}` }] } };
   assert.deepEqual(soatS16(the, TOKEN), { duong: "evidence.x[0].y" });
   assert.equal(soatS16({ item_id: "s16:abcd", evidence: { nguon: "S16", s16_ref: "0123456789abcdef" } }, TOKEN), null);
+});
+
+test("DA33-AC-9 (f) mã căn S16 trong bảng sinh từ tin rao → xanh (số căn người bán ghi công khai, không phải rò)", () => {
+  for (const [bang, dong] of [["sale_offers", { offer_id: "o2", unit_number: MA, block_raw: MA.toLowerCase() }],
+    ["properties", { id: "p2", note: `căn ${MA}` }]]) {
+    assert.equal(soatDuLieu(new Map([...sach, [bang, [JSON.stringify(dong)]]]), TOKEN), null, `DA33-AC-9 (f) mã căn ở ${bang} bị coi là rò`);
+  }
+  // Đối chứng: cùng giá trị ấy trong bảng S16 chạm được vẫn đỏ, và cách gọi Set trần (luật cũ) vẫn bắt ở bảng tin rao.
+  assert.ok(soatDuLieu(new Map([["asset_nodes", [JSON.stringify({ id: 9, name: MA })]]]), TOKEN), "đối chứng (f): mã căn ở asset_nodes không bị bắt");
+  assert.ok(soatDuLieu(new Map([["sale_offers", [JSON.stringify({ unit_number: MA })]]]), new Set([MA])), "đối chứng (f): Set trần không bắt ở sale_offers");
 });
 
 test("DA33-AC-9 payload sạch → xanh; mã trong chuỗi dài hơn không khớp nhầm (ca âm)", () => {
