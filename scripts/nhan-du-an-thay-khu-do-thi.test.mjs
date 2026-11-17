@@ -139,34 +139,3 @@ test("NDT-AC-3 chiều đỏ cùng fixture: chèn lại vào _Avoid_ của «Dan
   assert.deepEqual(kiemAvoid(goc.join("\n")).loi, ["NDT-AC-3 danh mục dự án nằm trong _Avoid_"])
 })
 
-// NDT-AC-4: chạy ĐÚNG hàm kiemMappings của probe DN1 (rút nguyên văn từ nap.mjs, không cần DB) trên mappings thật.
-async function napKiemMappings() {
-  const nguon = readFileSync(join(ROOT, "_acceptance/noi-du-an-s08-khu-do-thi/probes/nap.mjs"), "utf8")
-  const m = nguon.match(/export function kiemMappings\(chu\) \{\n[\s\S]*?\n\}\n/)
-  assert.ok(m, "không rút được kiemMappings từ nap.mjs")
-  const d = mkdtempSync(join(tmpdir(), "ndt-km-"))
-  writeFileSync(join(d, "km.mjs"), m[0])
-  try {
-    return (await import(join(d, "km.mjs"))).kiemMappings
-  } finally {
-    rmSync(d, { recursive: true, force: true })
-  }
-}
-function doiKhoiS08(chu, tu) {
-  const i = chu.indexOf("\n  S08:")
-  const s = chu.slice(i)
-  const n = s.slice(1).search(/\n  [A-Za-z0-9_]+:\n/) + 1 || s.length
-  return chu.slice(0, i) + s.slice(0, n).split(tu).join("") + s.slice(n)
-}
-
-test("NDT-AC-4 kiemMappings của probe DN1: khối S08 có «công khai» và «tầng A»; ba đối chứng bị bắt", async () => {
-  const km = await napKiemMappings()
-  const chu = readFileSync(join(ROOT, "pipeline/mappings.yaml"), "utf8")
-  const r = km(chu)
-  assert.equal(r.congKhai, true, "mappings S08 cong khai")
-  assert.equal(r.tangA, true, "mappings S08 tang A")
-  assert.equal("local" in r, false, "khẳng định cũ «chỉ local» đã bỏ")
-  assert.equal(km(doiKhoiS08(chu, "công khai")).congKhai, false, "doi chung: mappings mat cau cong khai bi bat")
-  assert.equal(km(doiKhoiS08(chu, "tầng A")).tangA, false, "doi chung: mappings mat cau tang A bi bat")
-  assert.equal(km("# công khai\n" + doiKhoiS08(chu, "công khai")).congKhai, false, "doi chung: cong khai o khoi khac khong tinh")
-})

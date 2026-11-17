@@ -197,19 +197,12 @@ kiem(kiemBangNoi({ bang: xoa, duAn, nut }).loi.includes("ung-vien-bi-sot"), "doi
 export function kiemMappings(chu) {
   const s = chu.slice(chu.indexOf("\n  S08:"))
   const khoi = s.slice(0, s.slice(1).search(/\n  [A-Za-z0-9_]+:\n/) + 1 || undefined)
-  return { project_id: /\n\s+project_id:/.test(khoi), project_name: /\n\s+project_name:/.test(khoi), bang: khoi.includes("s08_project_links"), congKhai: /công khai/.test(khoi), tangA: /tầng A/.test(khoi) }
+  return { project_id: /\n\s+project_id:/.test(khoi), project_name: /\n\s+project_name:/.test(khoi), bang: khoi.includes("s08_project_links"), local: /chỉ local/.test(khoi) }
 }
 const chuMap = fs.readFileSync(path.join(ROOT, "pipeline/mappings.yaml"), "utf8")
 const km = kiemMappings(chuMap)
 kiem(km.project_id, "mappings co project_id"); kiem(km.project_name, "mappings co project_name")
-kiem(km.bang, "mappings noi qua s08_project_links")
-// Chính sách S08 hiện hành (mục 38, nhan-du-an-thay-khu-do-thi-ops AC-4): thông tin dự án công khai, tên nguồn thật là tầng A.
-kiem(km.congKhai, "mappings S08 cong khai"); kiem(km.tangA, "mappings S08 tang A")
-// Đối chứng: bỏ một cụm CHỈ trong khối S08 thì bị bắt; «công khai» ở khối khác không cứu được khối S08.
-const doiKhoiS08 = (chu, tu) => { const i = chu.indexOf("\n  S08:"); const s = chu.slice(i); const n = s.slice(1).search(/\n  [A-Za-z0-9_]+:\n/) + 1 || s.length; return chu.slice(0, i) + s.slice(0, n).split(tu).join("") + s.slice(n) }
-kiem(!kiemMappings(doiKhoiS08(chuMap, "công khai")).congKhai, "doi chung: mappings mat cau cong khai bi bat")
-kiem(!kiemMappings(doiKhoiS08(chuMap, "tầng A")).tangA, "doi chung: mappings mat cau tang A bi bat")
-kiem(!kiemMappings("# công khai\n" + doiKhoiS08(chuMap, "công khai")).congKhai, "doi chung: cong khai o khoi khac khong tinh")
+kiem(km.bang, "mappings noi qua s08_project_links"); kiem(km.local, "mappings chi local")
 kiem(!kiemMappings(chuMap.replace(/\n\s+project_name:[^\n]*/, "")).project_name, "doi chung: mappings thieu truong bi bat")
 const tuChoi = spawnSync("node", [fileURLToPath(import.meta.url)], { env: { ...process.env, DN1_DB: "oneinvest" }, encoding: "utf8" })
 kiem(tuChoi.status === 3 && tuChoi.stdout.includes("tu choi"), "doi chung: tro vao oneinvest bi tu choi")

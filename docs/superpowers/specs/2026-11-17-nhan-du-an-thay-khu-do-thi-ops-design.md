@@ -36,7 +36,7 @@ Ngày: 2026-11-17 · Dãy N1 · Hạng T2 · Nguồn: Ngoài-2, Ngoài-5, Ngoài
 - **Danh sách tránh** (cùng tệp test): mọi dòng `_Avoid_:` của `CONTEXT.md` không chứa «danh mục dự án»; chiều đỏ: bản
   chép chèn lại → đỏ ghim `NDT-AC-3 danh mục dự án nằm trong _Avoid_`.
 - **Màn render đúng chữ**: bốn test render jsdom của app (khoá `app_ui`) đọc chữ trên DOM.
-- **Probe**: `dn1_nap` chạy lại trọn probe trên DB thử của nó.
+- **Probe**: đã cắt khỏi hàng (17/11, giám sát phán N1-98) — sang hàng riêng «sửa probe DN1 + ghim lại noi-du-an-s08-khu-do-thi».
 - **Sàn thiết kế**: `tb_gate` (gate thiết kế có sẵn, phủ `do-hang-ngay.tsx`).
 
 ## 4. Ngoài phạm vi

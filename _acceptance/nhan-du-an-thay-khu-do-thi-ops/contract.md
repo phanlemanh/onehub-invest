@@ -1,11 +1,11 @@
 ---
 schema_version: 1
-feature: Chữ «Dự án» thay «Khu đô thị» trên màn Ops (Sổ đơn vị thu, Đo hằng ngày, nhãn trường), bỏ «danh mục dự án» khỏi danh sách tránh của CONTEXT, và probe DN1 đọc đúng chính sách công khai của khối S08
+feature: Chữ «Dự án» thay «Khu đô thị» trên màn Ops (Sổ đơn vị thu, Đo hằng ngày, nhãn trường), và bỏ «danh mục dự án» khỏi danh sách tránh của CONTEXT
 slug: nhan-du-an-thay-khu-do-thi-ops
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: verified
+status: implemented
 design_doc: docs/superpowers/specs/2026-11-17-nhan-du-an-thay-khu-do-thi-ops-design.md
 approved_by:
 approved_at:
@@ -19,7 +19,7 @@ veto_opened_at: 2026-11-17T08:20:00Z
 
 Mục 39 Hỏi-1 (08/11): chữ hiển thị «Dự án» thay «Khu đô thị», CHỈ chữ. `CONTEXT.md` đã đổi, app chưa. DA4 (#425) để lại
 ba vết Mạnh định tuyến «mở hợp đồng mới»: chữ cũ trên màn Ops (Ngoài-2), «danh mục dự án» còn trong `_Avoid_` dù đã là
-thuật ngữ chuẩn (Ngoài-5), probe DN1 đòi chữ «chỉ local» mà mappings đã bỏ theo mục 38 (Ngoài-6).
+thuật ngữ chuẩn (Ngoài-5), probe DN1 đòi chữ «chỉ local» mà mappings đã bỏ theo mục 38 (Ngoài-6) — vết này đã cắt sang hàng riêng, xem Out of scope.
 
 ## Acceptance Criteria
 
@@ -33,9 +33,6 @@ thuật ngữ chuẩn (Ngoài-5), probe DN1 đòi chữ «chỉ local» mà mapp
   `value: "du_an"`, `value: "ma-trung-du-an"` và khoá `project` của `FIELD_LABEL` vẫn nguyên.
 - AC-3: Given `CONTEXT.md` sau vòng, When đọc mọi dòng `_Avoid_:`, Then không dòng nào chứa «danh mục dự án»; và khi bản
   chép chèn lại cụm ấy vào một `_Avoid_`, Then lưới đỏ với thông điệp «NDT-AC-3 danh mục dự án nằm trong _Avoid_».
-- AC-4: Given `pipeline/mappings.yaml` hiện hành, When chạy probe `noi-du-an-s08-khu-do-thi/probes/nap.mjs`, Then phần kiểm
-  mappings của khối S08 xanh trên chính sách mục 38 (khối có «công khai» và có «tầng A»), và bản mappings mất chữ «công
-  khai» bị bắt.
 
 ## Coverage
 
@@ -50,11 +47,11 @@ ba mục Ngoài-2/5/6 của `tu-vung-du-an-muc-39/review-findings.md`.
 | `pipeline` test/fixture, `agent/` | — | phép đo và lời nhắc model, «khu đô thị» theo nghĩa chữ nguồn | ngoài phạm vi, vì không phải chữ hiển thị |
 | `data-api/src`, `pipeline/sql` | 0 | — | không có |
 
-- Trục A — chỗ đổi: chữ trên màn | chú thích mã | danh sách tránh | khẳng định của probe
-- Trục B — lớp đo: quét chữ trong mã | render DOM | đọc CONTEXT | chạy probe
+- Trục A — chỗ đổi: chữ trên màn | chú thích mã | danh sách tránh
+- Trục B — lớp đo: quét chữ trong mã | render DOM | đọc CONTEXT
 - Trục C — kết cục: xanh | đỏ gọi tên tệp/dòng
 
-Core: màn × render (AC-2); mã × quét (AC-1, phủ cả chú thích); tránh × đọc CONTEXT (AC-3); probe × chạy (AC-4). Never:
+Core: màn × render (AC-2); mã × quét (AC-1, phủ cả chú thích); tránh × đọc CONTEXT (AC-3). Never:
 agent/ và pipeline/ × quét (không phải chữ hiển thị — lời nhắc model và fixture dùng «khu đô thị» theo nghĩa nguồn).
 
 ## Out of scope
@@ -64,9 +61,9 @@ agent/ và pipeline/ × quét (không phải chữ hiển thị — lời nhắc
 - Hai lỗi còn lại của `glossary_terms` («nhãn bạc», «tự thu» trong `_Avoid_`) — của hồ sơ khác; bộ ấy vẫn thoát 1 sau vòng.
 - «khu đô thị» trong `agent/` và `pipeline/` — không phải chữ trên màn.
 - Mã `project`, bảng, cột, URL — giữ nguyên theo mục 39 Hỏi-1; đọc ở diff của PR, không có eval riêng.
-- Năm dòng FAIL có sẵn của probe DN1 (`truoc 074 thay q7`, `truoc 074 ma ocp da co trong areas`, `con trung q7`, `nut khac bi
-  doi`, `git grep thoat 0: app/src/lib/ops/registry/doc.ts`) — đỏ ngay trên `main` 5508f620, không thuộc ba mục DA4; probe vẫn
-  thoát 1 sau vòng (E4 khai `expected_exit: 1`), AC-4 đo bằng E7.
+- **Đã cắt AC-4 (probe DN1, Ngoài-6 của DA4) khỏi hàng, chuyển sang hàng riêng** «sửa probe DN1 + ghim lại noi-du-an-s08-khu-do-thi»
+  (giám sát phán 17/11, N1-98): sửa `probes/nap.mjs` kéo hồ sơ đã ký ấy vào lưới trước-merge, mà nó không ghim lại được vì
+  probe còn 5 FAIL có sẵn trên `main` (DB thử 074/q7, `git grep` bắt `app/src/lib/ops/registry/doc.ts`).
 - Gate thiết kế cho `so-don-vi.tsx`, `so-don-vi-dialog.tsx`, `lam-giau-bang.tsx` — vòng chỉ đổi chuỗi, không đổi lớp,
   màu hay khoảng; gate có sẵn `tb_gate` phủ `do-hang-ngay.tsx`.
 

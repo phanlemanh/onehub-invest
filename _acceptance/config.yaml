@@ -837,7 +837,7 @@ executors:
     dn1_thuan: "node --test pipeline/noi-du-an-s08.test.mjs"   # noi-du-an-s08-khu-do-thi E1, E2 — hàm thuần, không DB
     dn1_nap: "node _acceptance/noi-du-an-s08-khu-do-thi/probes/nap.mjs"   # noi-du-an-s08-khu-do-thi E3–E6, E8–E10 — migration và lệnh nối trên DB thử oneinvest_dn1_noi
     dn1_kin: "node _acceptance/noi-du-an-s08-khu-do-thi/probes/kin.mjs"   # noi-du-an-s08-khu-do-thi E7 — S08 không rời máy
-    ndt_unit: "node --test scripts/nhan-du-an-thay-khu-do-thi.test.mjs"   # nhan-du-an-thay-khu-do-thi-ops E1, E3, E6, E7 — lưới chữ app/src, _Avoid_ của CONTEXT, kiemMappings của probe DN1; không DB
+    ndt_unit: "node --test scripts/nhan-du-an-thay-khu-do-thi.test.mjs"   # nhan-du-an-thay-khu-do-thi-ops E1, E3, E6 — lưới chữ app/src, _Avoid_ của CONTEXT; không DB
     gc1_parse: "node --test pipeline/parse.test.mjs"   # doc-so-m2-bi-sot E1 — hàm thuần, không DB
     gc1_dot_bien: "node _acceptance/doc-so-m2-bi-sot/probes/dot-bien.mjs"   # doc-so-m2-bi-sot E2 — phá thử bản sao bộ đọc
     gc1_so_bo_doc: "node _acceptance/doc-so-m2-bi-sot/probes/so-bo-doc.mjs"   # doc-so-m2-bi-sot E3 — bộ đọc cũ và mới trên bài thật, chỉ đọc oneinvest
