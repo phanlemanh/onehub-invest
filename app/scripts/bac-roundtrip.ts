@@ -10,6 +10,7 @@ import path from "node:path"
 import { Client } from "pg"
 
 import { dqCheckName, dqDetail, dqEntityLabel } from "../src/lib/dq-labels"
+import { sqlDem } from "./bac-dem-sql"
 
 const url = process.env.DATABASE_URL ?? ""
 const CLI = path.join(__dirname, "..", "..", "pipeline", "bac-du-lieu.mjs")
@@ -33,19 +34,6 @@ export function kiemTong(n: number, can: number, le: number): string | null {
   return n === can + le ? null : `AC-5 lệch tổng: ảnh chụp ${n} ≠ căn ${can} + tin lẻ ${le}`
 }
 
-// Câu đếm độc lập: không qua 610 hay data_level_units — phường → cha market bằng truy vấn con. Thang 08/11: tin trong cụm
-// vẫn là đơn vị tin; chưa có bảng nối nên không tin nào định vị (tham số cuối false) và không căn nào.
-const SQL_DEM = `
-  WITH u AS (
-    SELECT 'tin_le' AS unit, o.area_id, o.property_type,
-           (SELECT data_level FROM offer_data_level(o.kind, o.property_type, o.price_vnd, o.area_m2, o.area_id, false))
-      FROM sale_offers o
-     WHERE o.source IN ('S03', 'S05', 'S06'))
-  SELECT coalesce((SELECT m.id FROM areas m WHERE m.id = u.area_id AND m.region_type = 'market'),   -- tin mang mã thị trường (s03-len-cong)
-                  (SELECT m.id FROM areas w JOIN areas m ON m.id = w.parent_id
-                    WHERE w.id = u.area_id AND m.region_type = 'market'), 'chua-ro') AS market_id,
-         coalesce(property_type, 'unknown') AS property_type, unit, data_level, count(*)::int AS n
-    FROM u GROUP BY 1, 2, 3, 4`
 const khoa = (r: { market_id: string; property_type: string; unit: string; data_level: string }) =>
   `${r.market_id}|${r.property_type}|${r.unit}|${r.data_level}`
 type Dong = { market_id: string; property_type: string; unit: string; data_level: string; n: number }
@@ -82,7 +70,8 @@ async function main() {
     else dong(`AC-5 tổng n=${n} = căn ${d.can} + tin lẻ ${d.le}`)
     if (kiemTong(n + 1, d.can, d.le) === null) hong("AC-5 thước tổng không đỏ khi tổng lệch 1")
 
-    const dem = new Map((await c.query<Dong>(SQL_DEM)).rows.map((r) => [khoa(r), r.n]))
+    const coView = Boolean((await c.query<{ co: boolean }>("SELECT to_regclass('offer_project') IS NOT NULL AS co")).rows[0]?.co)
+    const dem = new Map((await c.query<Dong>(sqlDem(coView))).rows.map((r) => [khoa(r), r.n]))
     const anh = new Map(lan1.map((r) => [khoa(r), r.n]))
     const tatCa = new Set([...dem.keys(), ...anh.keys()])
     const khop = [...tatCa].filter((k) => dem.get(k) === anh.get(k)).length

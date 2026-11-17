@@ -87,6 +87,11 @@ export async function makeFlowSchema(
     await admin.query(`CREATE SCHEMA "${schema}"`)
   }
   for (const t of tables) await admin.query(`CREATE TABLE IF NOT EXISTS "${schema}".${t} (LIKE public.${t} INCLUDING DEFAULTS)`)
+  // DV7: 600 đọc nguồn chung offer_project (view của 105, chỉ máy thu). Lược đồ tạm có bảng rỗng cùng tám cột — fixture không
+  // mang chứng cứ dự án — để 600 đọc đúng lược đồ của test, không rơi về view của public (đọc bảng public) hay lỗi khi DB
+  // chép chưa áp 105. Ca muốn tin định vị thì chèn dòng vào bảng này.
+  await admin.query(`CREATE TABLE IF NOT EXISTS "${schema}".offer_project (offer_id text PRIMARY KEY, source text, project_node_id bigint,
+    status text, evidence text, catalog_tier text, n_posts int, n_posts_with_project int)`)
   if (tables.includes("stg_zalo_posts"))
     for (const [id, snap, agent, group, posted, media, files] of POSTS)
       await admin.query(

@@ -113,6 +113,15 @@ ACC_COUNT=$(curl -s -H "Authorization: Bearer $CTOKEN" "$CLOUD/api/v1/ops/collec
 GROUP_COUNT=$(curl -s -H "Authorization: Bearer $CTOKEN" "$CLOUD/api/v1/ops/collections?days=1" 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print(len(d.get('zaloGroups',[])))" 2>/dev/null)
 [ "$ACC_COUNT" -ge 2 ] 2>/dev/null && pass "Heartbeat: $ACC_COUNT accounts, $GROUP_COUNT groups, heartbeat ${HB_AGE}′" || fail "Heartbeat: chỉ $ACC_COUNT accounts"
 
+# B4 (tach-o-duong-dau-vao-ban): probe bộ tách ô đường trên DB máy thu — ra khỏi suite agent, đọc ở đây mỗi sáng.
+# ❌ = nguồn có kiểu viết ô đường mới mà bộ tách chưa hiểu → mở hàng sửa khoaDuong.
+echo "B4. Ô đường thật"
+if OD=$(bash "$ROOT/scripts/o-duong-that.sh"); then pass "${OD#✅ }"; else fail "${OD#❌ }"; fi
+
+# B5 (l2-bao-thu-doi-probe-that): bốn probe dữ liệu thật khác đã dời khỏi suite agent và app — đọc ở đây mỗi sáng.
+echo "B5. Probe dữ liệu thật"
+if PT=$(bash "$ROOT/scripts/probe-du-lieu-that.sh"); then pass "Probe dữ liệu thật: $(printf '%s' "$PT" | tr '\n' ' ')"; else fail "Probe dữ liệu thật: $(printf '%s' "$PT" | grep '^❌' | tr '\n' ' ')"; fi
+
 echo ""
 echo "─── C. INVEST PORTAL ───"
 for page in "/" "/vn" "/vn/hanoi" "/listing/abnb_1143101959271074607" "/deals" "/yield" "/compare" "/login"; do

@@ -67,6 +67,7 @@ export const FILL = [
   "property_offers",
   "area_sources",
   "dq_check_results",
+  "offer_price_rank",
   "airdna_markets",
   "airdna_scores",
   "airdna_market_metrics",
@@ -251,7 +252,16 @@ export const CHILD_OF_LIVE = {
   nights: ["listing_id", "listings", "id"],
   listing_stats: ["listing_id", "listings", "id"],
   property_offers: ["offer_id", "sale_offers", "offer_id"],
+  offer_price_rank: ["offer_id", "sale_offers", "offer_id"],
 };
+
+/**
+ * Bảng FILL được phép vắng trên cloud: cloud chưa áp DDL của nó thì lượt sync bỏ qua đúng bảng ấy với một dòng, các bảng khác
+ * chép như cũ (CG9 Hỏi-5 — gộp mã không chờ lịch áp DDL cloud). Bảng ngoài tập này vắng vẫn dừng «cloud thiếu bảng».
+ */
+export const BANG_TUY_CHON = new Map([
+  ["offer_price_rank", "docs/ops/cloud-schema-catchup-2026-11-14-offer-price-rank.sql"],
+]);
 
 /** Mệnh đề WHERE lọc bảng con theo cha sống (rỗng với bảng khác). */
 export function childFilterSql(table) {
@@ -608,8 +618,8 @@ export async function syncOnce({ local, exec, log = console.log, runId = newRunI
   const cam = kiemBangDay(fill);
   if (cam) throw new PhaseError("scan", `bảng ${cam} không được lên cloud (mã đăng nhập S16 / danh bạ vật thể) — dừng trước khi gửi`);
   const cloudOf = new Map(fill.map((t) => [t, RENAME(t)]));
-  const cloudNames = [...cloudOf.values()];
-  const arr = `ARRAY[${cloudNames.map(lit).join(",")}]`;
+  let cloudNames = [...cloudOf.values()];
+  let arr = `ARRAY[${cloudNames.map(lit).join(",")}]`;
 
   // 1. catalog
   let cloudCols, plan, cloudCounts;
@@ -633,8 +643,17 @@ export async function syncOnce({ local, exec, log = console.log, runId = newRunI
       if (!cloudCols.has(r.t)) cloudCols.set(r.t, []);
       if (!r.gen) cloudCols.get(r.t).push(r.c);
     }
-    const missing = cloudNames.filter((t) => !cloudCols.has(t));
+    const vang = cloudNames.filter((t) => !cloudCols.has(t));
+    for (const t of vang.filter((x) => BANG_TUY_CHON.has(x))) {
+      log(`  bỏ qua ${t} — cloud chưa có bảng (áp ${BANG_TUY_CHON.get(t)} rồi lượt sau chép)`);
+    }
+    const missing = vang.filter((t) => !BANG_TUY_CHON.has(t));
     if (missing.length) throw new Error(`cloud thiếu bảng: ${missing.join(", ")}`);
+    if (vang.length) {
+      cloudNames = cloudNames.filter((t) => !vang.includes(t));
+      fill = fill.filter((t) => !vang.includes(cloudOf.get(t)));
+      arr = `ARRAY[${cloudNames.map(lit).join(",")}]`;
+    }
     const fks = await exec(`SELECT conrelid::regclass::text AS src, confrelid::regclass::text AS dst
       FROM pg_constraint WHERE contype = 'f' AND connamespace = 'public'::regnamespace`);
     const pkRows = await exec(`SELECT c.relname AS t, a.attname AS c
@@ -782,7 +801,7 @@ export async function runMain({ local, exec, out = console.log, err = console.er
     for (const [t, n] of Object.entries(r.counts)) out(`  ${t}: ${n}`);
     const tm = Object.entries(r.timings).map(([k, v]) => `${k} ${v.toFixed(1)}s`).join(" · ");
     out(
-      `sync xong ${new Date().toISOString()} (run ${r.runId}): ${r.total} dòng, ${FILL.length} bảng; ${tm}; tổng ${((Date.now() - started) / 1000).toFixed(1)}s; leak gate PASS`,
+      `sync xong ${new Date().toISOString()} (run ${r.runId}): ${r.total} dòng, ${Object.keys(r.counts).length} bảng; ${tm}; tổng ${((Date.now() - started) / 1000).toFixed(1)}s; leak gate PASS`,
     );
     return 0;
   } catch (e) {

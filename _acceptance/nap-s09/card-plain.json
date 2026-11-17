@@ -1,0 +1,3 @@
+{
+  "feature_plain": "Bản thu S09 (danh mục dự án, gồm toà và phân khu của Ocean Park 1, Grand Park) nay nạp được vào kho dữ liệu bằng một lệnh; chạy lại không nhân dòng, và chỉ ghi vào DB máy thu khi người chạy khai cờ rõ ràng."
+}

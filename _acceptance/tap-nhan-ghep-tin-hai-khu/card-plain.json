@@ -1,0 +1,23 @@
+{
+  "feature_plain": "Chọn khoảng 300–450 bài căn hộ S03 của Ocean Park 1 và Grand Park thành tập mẫu chia theo khu và mức gắn, để máy điền nháp nhãn toà (kèm trục, căn) có câu trích, anh duyệt trên màn Gắn nhãn, rồi đóng băng thành tập test có băm cho PL20 đo độ chính xác gắn toà.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ chọn ra cùng một tập bài khi chạy lại cùng hạt giống, mỗi nhóm bài trùng chữ chỉ lấy một bài, và không thêm dòng ở lần chạy lại."},
+    {"id": "AC-2", "p": "Sẽ lấy tối đa 75 bài mỗi tầng; tầng nào thiếu thì báo «thiếu N» — tầng toà/không gắn thiếu là «bắt buộc», tầng trục thiếu chỉ ghi «cho PL36»."},
+    {"id": "AC-3", "p": "Sẽ xếp bài vào khu theo tên nhóm; nhóm khớp cả hai khu hay không khớp khu nào thì bỏ khỏi tập."},
+    {"id": "AC-4", "p": "Sẽ phân tầng bài theo tên toà, mã trục nêu trong bài so với danh bạ, không dựa vào kết quả gắn của PL20."},
+    {"id": "AC-5", "p": "Sẽ điền nháp ba ô toà, trục, căn kèm câu trích; câu trích không có trong bài thì để trống; màn Gắn nhãn hiện sẵn nháp và lưu được khi anh sửa."},
+    {"id": "AC-8", "p": "Sẽ đóng băng tập đã duyệt thành một tệp có băm: cùng dữ liệu cùng băm, đổi một nhãn thì băm đổi; bài hai người gắn lệch bị loại và đếm riêng; tệp không chứa chữ bài, câu trích hay tên người gắn."},
+    {"id": "AC-9", "p": "Sẽ đo trên bản chép DB máy thu (tự dựng toà S09 trên bản chép nếu máy thu chưa có): in số bài mỗi nhóm, mỗi tầng; bốn tầng toà/không gắn phải đủ 75, tổng 300–450, không đụng nhãn người."}
+  ],
+  "wont_do": [
+    {"id": "AC-6", "p": "Sẽ KHÔNG ghi đè nhãn người đã có khi chạy nháp lại."},
+    {"id": "AC-7", "p": "Chặn bước điền nháp đọc kết quả gắn của PL20 — tập test phải độc lập với bộ được đo."},
+    {"id": "AC-10", "p": "Sẽ KHÔNG thêm migration, không đổi đường lên cloud, không đổi màn app, không đưa tên nguồn thật vào kho."},
+    {"id": "OOS-1", "p": "Việc anh duyệt nháp trên màn Gắn nhãn là việc vận hành, ngoài kho; PL20 đo trên phần đã duyệt."},
+    {"id": "OOS-2", "p": "Gắn mù không có nháp — hoãn tới PL21."},
+    {"id": "OOS-3", "p": "Không đổi màn Gắn nhãn (ví dụ hiện câu trích cạnh ô)."},
+    {"id": "OOS-4", "p": "Nhãn trục, căn đủ cỡ để đo — thuộc nhịp trục và căn của PL36."},
+    {"id": "OOS-5", "p": "Gắn dự án cho nhóm S03 trong sổ nhóm — thuộc DV6."}
+  ],
+  "scope_plain": "Các việc dưới đây cố ý để hàng khác làm."
+}

@@ -133,8 +133,17 @@ export async function importDir(client, dir) {
   // «vừa thấy», payload không bị ghi đè bằng bản mỏng của lượt số.
   const sellerOnly = Number(manifest.coverage?.methods?.hienSo ?? 0) > 0;
   let n = 0;
+  // 1411-23: ngưỡng bỏ tin thiếu region_v2 — dưới 1% số tin vùng thì nạp phần còn lại
+  // và THOÁT 0 (tin lạ trang sâu không được huỷ cả đêm transform); vượt ngưỡng là hỏng
+  // thật → thoát khác 0. KHÔNG suy region_v2 từ region: không có ánh xạ chắc chắn.
+  const NGUONG_BO_TIN = 0.01;
+  let boThieuRegionV2 = 0;
   for (const it of items) {
     const a = it.payload;
+    if (!sellerOnly && !(a.region_v2 ?? it.meta?.region_v2)) {
+      boThieuRegionV2++;
+      continue;
+    }
     // v5 (MỞ LẠI 0211-1 đ1): RawItem.seller gộp PHẲNG vào cột seller có sẵn
     // (thêm accountRef/displayName/phone/phoneStatus/seenAt cạnh full_name/
     // company_ad/seller_info). Snapshot cũ không có it.seller → giá trị y hệt
@@ -185,8 +194,12 @@ export async function importDir(client, dir) {
     );
     n++;
   }
-  console.log(`✅ ${n} ads → stg_chotot_ads${sellerOnly ? " (lượt lấy số: chỉ cập nhật seller)" : ""}`);
-  return n;
+  if (boThieuRegionV2 > 0) {
+    console.warn(`⚠ bỏ ${boThieuRegionV2}/${items.length} tin thiếu region_v2 (payload lẫn meta đều rỗng — trang sâu; 1411-23)`);
+  }
+  const vuotNguong = boThieuRegionV2 > NGUONG_BO_TIN * items.length;
+  console.log(`✅ ${n} ads → stg_chotot_ads${sellerOnly ? " (lượt lấy số: chỉ cập nhật seller)" : ""}${boThieuRegionV2 ? ` (bỏ ${boThieuRegionV2} thiếu region_v2${vuotNguong ? " — VƯỢT NGƯỠNG 1%" : ""})` : ""}`);
+  return { n, boThieuRegionV2, vuotNguong, soTin: items.length };
 }
 
 async function main() {
@@ -211,7 +224,13 @@ async function main() {
       }
       return true;
     });
-    for (const d of dirs) await importDir(client, d);
+    let vuot = false;
+    for (const d of dirs) {
+      const kq = await importDir(client, d);
+      if (kq?.vuotNguong) vuot = true;
+    }
+    // 1411-23: vượt ngưỡng bỏ tin (hỏng thật) → thoát khác 0 để daily.sh biết; dưới ngưỡng thoát 0.
+    if (vuot) process.exitCode = 2;
   } finally {
     await client.end();
   }

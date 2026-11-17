@@ -135,6 +135,12 @@ Không ghi bí mật ở đây. Giá trị gốc nằm ở `~/.oneinvest/cloud.e
 - User dọn (tuỳ chọn): remove OpenClaw Desktop app; giữ ~/dev/openclaw
   tới khi PR upstream xong.
 
+## Kênh S03 đứt — runbook một trang (2026-11-14)
+
+Khi nhận cảnh báo «S03 DOWN» hay thấy «Kênh S03 đứt» trên `/ops`: làm theo §6 của
+`docs/ops/de-xuat-van-hanh-on-dinh-1411.md` (đăng nhập lại bằng QR trước, chỉ khởi động lại gateway khi vẫn không có bài).
+Sự cố gốc và quyết định: ROADMAP §3 mục 49.
+
 ## Leak gate kiểm anon của sync cloud (chốt 2026-10-23, `_acceptance/leak-gate-kiem-anon/`)
 
 - `pipeline/sync-cloud.mjs` dừng lượt (pha `gate`, exit 1) khi role anon/authenticated SELECT được quan hệ nào trong

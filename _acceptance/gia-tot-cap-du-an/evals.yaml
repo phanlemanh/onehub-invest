@@ -1,0 +1,90 @@
+schema_version: 1
+slug: gia-tot-cap-du-an
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.cg10_db
+    paths: [pipeline/sql/420_price_rank.sql, pipeline/xep-hang-gia.mjs, pipeline/scripts/gia-tot-du-an*]
+    expected: "Ca CG10-AC-1 trên DB của riêng lượt (view offer_project tạm từ thân 105): ma trận viết trước một dự án trải hai phường (bán căn hộ 12 phiếu, 2PN đủ 10, 1PN dưới 10; thuê có m²) → mỗi tin cap=du_an, nut=id dự án, n/trung_vi/p20/hang_pct/duoi_trung_vi_pct bằng tính độc lập (lệch ≤ 0,1) trên phiếu gom hai phường; nhãn gia-tot đúng tập ≤ p20 ∧ ≥5%; 2PN pn_nhom=2; 1PN ly_do=pn-duoi-10; thuê so trong nhóm thuê. Ba đột biến (bỏ 5%, nhóm theo phường, nhãn re-trong-phuong ở cấp dự án) đỏ, thông điệp nêu mã tin."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.cg10_db
+    paths: [pipeline/sql/420_price_rank.sql, pipeline/scripts/gia-tot-du-an*, pipeline/scripts/hang-gia*]
+    expected: "Ca CG10-AC-2: ma trận viết trước 8 ô (dự án <5, 5–9 + phường ≥10, 5–9 + phường <10, xung_dot, không dự án, dự án con, thiếu loại, bán thiếu m²) → một assert mỗi ô về cap/nhan/ly_do/nut; đối chứng dương cùng fixture: tin dự án ≥10 có cap=du_an; ca CG9 hang-gia.test.mjs chạy trong cùng lệnh, xanh không sửa ca."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.cg10_db
+    paths: [pipeline/sql/420_price_rank.sql, pipeline/scripts/gia-tot-du-an*]
+    expected: "Ca CG10-AC-3: thuê 2PN thiếu m² → cap=du_an, thuoc=gia-thang-pn, pn_nhom=2, trung_vi = trung vị giá tháng nhóm 2PN dự án tính độc lập; 1PN 5–9 theo luật AC-2; thiếu cả hai thieu-dt-va-pn; đột biến bỏ khoá PN khỏi nhóm giá tháng đỏ nêu mã tin."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.cg10_db
+    paths: [pipeline/xep-hang-gia.mjs, pipeline/sql/420_price_rank.sql, pipeline/scripts/gia-tot-du-an*]
+    expected: "Ca CG10-AC-4: lược đồ không view → thoát 0, đúng dòng «chưa có offer_project — chỉ chấm cấp phường», bảng chỉ cap=phuong và bằng từng dòng kết quả câu CG9; view dưới lược đồ khác public trong search_path → có dòng du_an (đột biến dò public.offer_project đỏ ở ca này); có view mà chưa áp 106 → thoát 0, có dòng du_an, đúng dòng «chưa áp 106 — bỏ dải diện tích» (đột biến chèn dải không dò bảng đỏ); chạy lại → 0 dòng khác trừ computed_at, run_id; tin rời dự án ở lượt sau → cap=phuong."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.cg10_db
+    paths: [db/migrations/106_*, pipeline/xep-hang-gia.mjs, pipeline/sql/4*, pipeline/scripts/gia-tot-du-an*]
+    expected: "Ca CG10-AC-5: áp 106 hai lần không lỗi; project_area_band đúng một dòng dự án × 2PN, p10/p50/p90/n bằng tính độc lập (lệch ≤ 0,1); không dòng 1PN (7 mẫu); tin m² ngoài khoảng không vào mẫu; area_m2 và offer_price_rank không đổi so với lượt không có 106 (đột biến dùng p50 làm m² đỏ); đột biến ném sau xoá → cả hai bảng giữ dòng cũ."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.cg10_doc
+    paths: [app/src/lib/deals.ts, app/src/lib/deals-chi-tiet.ts, app/tests/gia-tot-du-an*, pipeline/scripts/gia-tot-du-an*]
+    expected: "Ca CG10-AC-6 trên DB của riêng lượt: cauChungMinh/lyDoRoi/dealSql cho năm tin viết trước → «So với N căn cùng dự án <tên>, cùng loại (căn hộ), cùng 2PN» + «Giá tốt» với N = offer_price_rank.n (đột biến N = số tin đỏ); «cùng 2PN, theo giá thuê tháng»; tin cấp phường giữ chữ CG9 và không có «cùng dự án»; nhom-5-9 đúng chữ ghim; «≈ a–b m² · suy ra» = p10–p90 làm tròn, tin có m² không có «suy ra»; lược đồ không project_area_band → không lỗi, không dòng dải."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.cg10_doc
+    paths: [app/src/lib/deals.ts, app/src/lib/deals-chi-tiet.ts, app/src/app/ops/deals, app/src/components/ops/deals-grid.tsx, app/tests/gia-tot-du-an*]
+    expected: "Ca CG10-AC-7: getDeals với project=<id> chỉ trả cap=du_an ∧ nut=id, giới hạn 300 dòng-căn (fixture 35 dòng một dự án ra đủ 35); căn 3 tin → một dòng soTin=3, đại diện là tin thấy sau cùng; không lọc: đếm và danh sách tab Cần xác minh = 3 dù danh sách thường đã đủ 30 (đột biến đếm trên 30 dòng đã cắt đỏ); có lọc: đếm tab chỉ tin cờ của dự án (dự án thứ hai có tin cờ làm đối chứng); chỉ tin bán; id có thật 0 dòng → rỗng mang tên dự án, id lạ → rỗng không tên, không ném."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.cg10_ranh
+    paths: [data-api/src/routes/deals.ts, app/src/app/api/v1/deals/route.ts, app/tests/gia-tot-du-an*, pipeline/scripts/gia-tot-du-an*]
+    expected: "Ca CG10-AC-8: /v1/deals (app.request) và GET /api/v1/deals (token ops) với project vắng / =<id> / =abc → rank.level=du_an, rank.node=id, rank.label=gia-tot ở dòng cấp dự án; lọc đúng dự án; abc → 400; bảng khoá cũ viết trước đủ tên và kiểu; lược đồ kiểu cloud (không offer_project, không project_area_band) → 200. sync-cloud (không sửa) với cloud giả chép dòng cap=du_an của tin sống đúng số đếm độc lập (lối Hỏi-5 «đi cùng»). Công cụ rà ranh giới: diff so điểm tách nhánh không chạm refresh-bait-gap.mjs, 0 dòng thêm chứa tên nguồn thật; --doi-chung (cây tạm sửa refresh-bait-gap, thêm dòng mang tên nguồn giả) đỏ đúng."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.cg10_do
+    paths: [db/migrations/106_*, pipeline/sql/420_price_rank.sql, pipeline/xep-hang-gia.mjs, pipeline/scripts/gia-tot-du-an*]
+    expected: "Bản chép DB máy thu, áp 105 (nếu thiếu) và 106, chấm hai lần: bảng đếm cấp × bán/thuê × thước × (nhãn · chỉ số · lý do) khớp đếm SQL riêng (lech=0); lần hai = lần một; nhan_nhom_duoi_10=0; sai_khoa=0 (khoá nhóm = dự án/phường, loại, bán/thuê của chính tin); can_ho_cap_du_an ≥ 10000; op1_danh_sach_can ≥ 100 đếm qua chính câu SQL của getDeals({project:1}) (in thêm op1_danh_sach_tin); in mẫu số; ghi do-may-thu.md; thoát khác 0 khi một điều kiện hỏng, nêu điều kiện; hai đối chứng đỏ đúng: --doi-chung-khoa (nhóm theo phường thay dự án → sai_khoa > 0), --doi-chung-hong (mỗi tin một phiếu → lech > 0)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-10
+    executor: ui-check
+    layer: ui-observed
+    paths: [app/src/lib/deals.ts, app/src/lib/deals-chi-tiet.ts, app/src/app/ops/deals, app/src/components/ops/deals-grid.tsx]
+    steps:
+      - "Bản chạy: dev server của worktree này trên cổng 3465 (app/node_modules là thư mục thật, không symlink — Turbopack mới dựng được CSS), DATABASE_URL trỏ DB thử do `bash pipeline/scripts/gia-tot-du-an-db.sh ghi-thu` dựng (bản chép máy thu đã áp 105, 106 và chấm); đăng nhập tài khoản ops thử của worktree. KHÔNG tạo hay sửa tệp nào trong cây ngoài evidence/. Che email đăng nhập lúc chụp; sau khi chụp che SĐT và mặt người."
+      - "Mở /ops/deals?project=1 ở 1280 px sáng → evidence/E10-step1.png (tiêu đề có «Vinhomes Ocean Park 1», mỗi căn một dòng, cột «N tin», nút bỏ lọc)"
+      - "Bấm tab «Cần xác minh» ở 1280 sáng → evidence/E10-step2.png (đếm tab = số tin can_xac_minh của dự án trong DB)"
+      - "Mở trang một căn của một tin bán OP1 nhãn gia-tot (chọn bằng SQL trên DB thử) 1280 tối → evidence/E10-step3.png (câu «So với N căn cùng dự án Vinhomes Ocean Park 1 …», badge «Giá tốt», N khớp bảng)"
+      - "Mở trang một căn của một tin thuê OP1 thiếu m² có PN, thuoc=gia-thang-pn 1280 tối → evidence/E10-step4.png (câu «… cùng kPN, theo giá thuê tháng …», «≈ a–b m² · suy ra»)"
+      - "Mở /ops/deals?project=999999999 ở 1280 sáng → evidence/E10-step5.png (trạng thái trống «Không tìm thấy dự án» có nút «Bỏ lọc dự án»)"
+      - "Mở /ops/deals?project=<id một dự án có tin mà 0 dòng du_an, chọn bằng SQL trên DB thử> ở 1280 tối → evidence/E10-step6.png (trạng thái trống «Dự án chưa đủ căn để xếp hạng» mang tên dự án, nút «Bỏ lọc dự án»)"
+    expected: "Năm khung trên bản chạy trỏ DB thử của AC-9, CSS thật: lọc dự án, mỗi căn một dòng «N tin», tab Cần xác minh đếm toàn tập, câu cấp dự án + «Giá tốt», câu thuê giá tháng + dải m² suy ra, trạng thái trống id lạ và dự án chưa đủ căn; con số khớp dòng offer_price_rank / project_area_band của tin; đọc được ở sáng và tối."
+    evidence_required: [screenshot, observed, verifier, verified_at]

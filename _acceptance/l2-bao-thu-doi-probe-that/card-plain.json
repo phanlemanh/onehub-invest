@@ -1,0 +1,20 @@
+{
+ "feature_plain": "Bộ so tên đường thôi đoán nhầm «số nhà, …» và mọi phép đo trên dữ liệu thật còn lại ra khỏi bộ kiểm chung, để không dòng dữ liệu mới nào chặn được cả kho nữa.",
+ "will_do": [
+  {"id":"AC-1","p":"Sẽ chỉ bóc số nhà trước dấu phẩy khi đoạn sau mở đầu bằng Đường, Phố, Hẻm, Ngõ, Ngách hay Kiệt (có hay không dấu)."},
+  {"id":"AC-2","p":"Sẽ thôi biến «3,5m», «15, Q1», «208, P12», tên phường hay «Khu dân cư» thành tên đường giả; «208, Nguyễn Hữu Cảnh» đổi từ Khớp thành Thiếu (giá của luật chặt)."},
+  {"id":"AC-3","p":"Sẽ giữ thẻ duyệt và luật máy cùng kết quả, và đo trên DB máy thu rằng 9 giá trị đổi đúng như bảng, không giá trị nào ra tên đường giả mới."},
+  {"id":"AC-4","p":"Sẽ dời ba phép đo dữ liệu thật của luật ghép căn (KD-AC-6b, hai LT-AC-6) ra khỏi bộ kiểm chung, hồ sơ đã ký vẫn đo được."},
+  {"id":"AC-5","p":"Sẽ dời phép đo dữ liệu thật của bộ đọc loại BĐS ra khỏi bộ kiểm chung; eval đã ký E9 của enrich-hau-ky trỏ sang hồ sơ này (Hỏi-2)."},
+  {"id":"AC-6","p":"Sẽ dời phép đo phường trên dữ liệu thật của app ra khỏi bộ kiểm app và sửa chỗ nó ghim đúng một giá trị nên đang đỏ."},
+  {"id":"AC-7","p":"Sẽ chặn ai đưa phép đo dữ liệu thật trở lại bộ kiểm chung agent hay app."},
+  {"id":"AC-8","p":"Sẽ chạy bốn phép đo dời ra mỗi sáng trong /ops-check (mục B5), báo ✅ hay ❌ từng phép."},
+  {"id":"AC-9","p":"Sẽ đưa thư mục phép đo của agent vào bước kiểm kiểu."},
+  {"id":"AC-10","p":"Sẽ giữ bộ kiểm agent và app xanh trên bản chép DB máy thu."}
+ ],
+ "wont_do": [
+  {"id":"OOS-1","p":"Sẽ KHÔNG đổi cách xử số nhà đứng một mình («2A», «44d/17»)."},
+  {"id":"OOS-2","p":"Sẽ KHÔNG quét phép đo dữ liệu thật ở pipeline hay data-api."},
+  {"id":"OOS-3","p":"Sẽ KHÔNG đẩy cảnh báo chủ động; ❌ chỉ hiện ở /ops-check."}
+ ]
+}

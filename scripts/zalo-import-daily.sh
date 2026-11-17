@@ -233,6 +233,7 @@ buoc() { if [ "$NHANH" = "1" ]; then buoc_nhanh "$@"; else job_run "$@"; fi; }
 buoc zalo-import-daily transform-zalo node "$ROOT/pipeline/transform-zalo.mjs"
 buoc zalo-import-daily transform-media node "$ROOT/pipeline/transform-media.mjs" S03 S05
 buoc zalo-import-daily refresh-bait-gap node "$ROOT/pipeline/refresh-bait-gap.mjs"
+buoc zalo-import-daily xep-hang-gia node "$ROOT/pipeline/xep-hang-gia.mjs"   # CG9: hạng giá sau định vị
 mkdir -p "$(dirname "$SO_BO")"
 # Lượt nhanh 15′ dừng ở đây: đọc gộp và enrich chỉ chạy ở lượt 00:00 (hàng s03-nap-nhanh). Khoá nạp nhả qua trap EXIT.
 if [ "$NHANH" = "1" ]; then

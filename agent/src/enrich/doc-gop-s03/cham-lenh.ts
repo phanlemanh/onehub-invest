@@ -3,10 +3,11 @@
 // không chữ bài, không tên người — làm bằng chứng AC-10, ghim băm prompt, bảng chọn và mã.
 import { appendFileSync, writeFileSync } from "node:fs";
 import pg from "pg";
-import { keHoach, napCauHinh } from "./cau-hinh.js";
+import { duongDung, keHoach, khoaThieu, napCauHinh } from "./cau-hinh.js";
 import { bangCham, maSha, type BangCham, type KetQuaThe } from "./cham.js";
 import { uocThe } from "./chay.js";
-import { gop, hoiGop, type KetQuaGoi, type TaoModel } from "./doc.js";
+import { gop, hoiGop, type KetQuaGoi, type TaoAnthropic, type TaoModel } from "./doc.js";
+import { laLopDung } from "../../runtime/loi-nha-cung-cap.js";
 import { FIELDS, type Field } from "./o.js";
 import { PROMPT_SHA, PROMPT_VERSION } from "./prompt.js";
 import { docTheTheoLat, type Q } from "./the.js";
@@ -18,7 +19,7 @@ export type TomTat = {
 };
 
 export async function chamLuot(o: {
-  client: Q; lat: string; split?: "dev" | "test"; cauHinh?: string; tranUsd: number; taoModel?: TaoModel; so?: string; log?: (s: string) => void;
+  client: Q; lat: string; split?: "dev" | "test"; cauHinh?: string; tranUsd: number; taoModel?: TaoModel; taoAnthropic?: TaoAnthropic; so?: string; log?: (s: string) => void;
 }): Promise<{ bang: BangCham; tomTat: TomTat }> {
   const log = o.log ?? console.log;
   const cau = napCauHinh(o.cauHinh);
@@ -40,8 +41,9 @@ export async function chamLuot(o: {
     const goi = new Map<string, KetQuaGoi>();
     for (const n of kh.nhom) {
       if (chi + uocThe(t, n.gia) > o.tranUsd) throw new Error(`cham tran ${o.tranUsd} USD giua luot (da chi ${chi.toFixed(4)})`);
-      const k = await hoiGop({ gateway: n.gateway, gia: n.gia, the: t, taoModel: o.taoModel, recordCall: async () => {} });
+      const k = await hoiGop({ gateway: n.gateway, duong: (kh.tuLui ? duongDung(n, true) : [])[0] ?? n.duong[0], gia: n.gia, the: t, taoModel: o.taoModel, taoAnthropic: o.taoAnthropic, recordCall: async () => {} });
       chi += k.usd;
+      if (laLopDung(k.lop)) throw new Error(`dung som ${k.lop}: ${k.error_kind}`); // hết tiền / khoá sai: không bắn tiếp
       goi.set(n.gateway, k);
       if (o.so) appendFileSync(o.so, JSON.stringify({ luc: new Date().toISOString(), nhan: `pl30-cham-${o.split ?? "all"}`, model: n.gateway, item_id: t.item_id, usd: k.usd, usd_gateway: k.usd_gateway, vao: k.vao, ra: k.ra }) + "\n");
     }
@@ -81,6 +83,7 @@ const CO = new Set(["--lat", "--split", "--tran-usd", "--cau-hinh", "--ra", "--t
 
 export async function lenhCham(argv: string[]): Promise<number> {
   const m = new Map<string, string>();
+  let thieu: string[];
   try {
     for (let i = 0; i < argv.length; i++) {
       if (!CO.has(argv[i])) throw new Error(`cờ không nhận: ${argv[i]}`);
@@ -89,14 +92,14 @@ export async function lenhCham(argv: string[]): Promise<number> {
     const split = m.get("--split");
     if (split !== undefined && split !== "dev" && split !== "test") throw new Error("--split phải là dev hoặc test");
     if (!Number.isFinite(Number(m.get("--tran-usd")))) throw new Error("cần --tran-usd <số USD>");
-    napCauHinh(m.get("--cau-hinh"));
+    thieu = khoaThieu(keHoach(napCauHinh(m.get("--cau-hinh")).cauHinh));
   } catch (e) {
     console.error(`doc-gop-s03 cham: ${(e as Error).message}`);
     return 2;
   }
-  if (!process.env.AI_GATEWAY_API_KEY) {
-    console.error("doc-gop-s03 cham: thiếu AI_GATEWAY_API_KEY — nạp .env bằng --env-file; chưa gọi model lần nào");
-    return 2;
+  if (thieu.length) { // goi-thang-anthropic: khoá theo đường của bảng chọn, mã riêng 5
+    for (const k of thieu) console.error(`doc-gop-s03 cham: THIEU KHOA ${k} — nạp .env bằng --env-file; chưa gọi model lần nào`);
+    return 5;
   }
   const c = new pg.Client({ connectionString: process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest" });
   await c.connect();

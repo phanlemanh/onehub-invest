@@ -49,14 +49,14 @@ export function buildFlow(sources: SourceFlow[], roles: SourceRoles) {
   const levels: Draft[] = known
     ? [
         { id: "unit", name: "Gắn căn", stage: "linked", amount: unit },
-        { id: "located", name: "Định vị", stage: "located", amount: located },
+        { id: "located", name: "Định vị (cấp dự án)", stage: "located", amount: located },
         { id: "clustered", name: "Gom cụm", stage: "clustered", amount: clustered },
         {
           id: "unlocated",
           name: "Chưa định vị",
           stage: "dropped",
           amount: offers - unit - located - clustered,
-          hint: `Chưa khớp danh bạ: ${fmtInt(locatedPending)} tin ghi toà hoặc trục, ${fmtInt(uniqueIdPending)} tin đủ định danh (mã căn, số nhà) đang chờ khớp; còn lại chưa ghi toà, trục hay số nhà và chưa cùng cụm với tin khác`,
+          hint: `Chưa khớp danh bạ: ${fmtInt(locatedPending)} tin ghi toà hoặc trục đang chờ khớp toà (kể cả tin đã định vị cấp dự án), ${fmtInt(uniqueIdPending)} tin đủ định danh (mã căn, số nhà) đang chờ khớp căn; còn lại chưa có dự án, chưa ghi toà, trục hay số nhà và chưa cùng cụm với tin khác`,
         },
       ]
     : [{ id: "levels-pending", name: "Chờ lượt làm tươi", stage: "merged", amount: offers, hint: "Số mức nhận diện có ở lượt làm tươi kế" }]

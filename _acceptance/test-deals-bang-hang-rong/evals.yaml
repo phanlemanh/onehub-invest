@@ -1,0 +1,19 @@
+schema_version: 1
+slug: test-deals-bang-hang-rong
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.hf_deals
+    paths: [app/tests/can-gia-cung-loai-db.test.tsx, app/tests/can-gia-tot-biet-can.test.tsx, pipeline/scripts/can-gia-cung-loai-fixture.itest.mjs]
+    expected: "Hai tệp trên DB của lượt chép từ máy thu (có dòng offer_price_rank): mọi ca xanh; ca CG8-TIEN-DE chạy (không skip) và chứng hai chiều — withTx thường: coBangHang() false; withTx boBangHang: true, thông điệp ghim CG8-TIEN-DE"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.test.app_ui
+    paths: [app/tests/**, pipeline/scripts/can-gia-cung-loai-fixture.itest.mjs]
+    expected: "cd app && npm test trên DB của lượt chép máy thu thoát 0 (trước sửa: 16 ca đỏ CG8/CGT/CGB)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
