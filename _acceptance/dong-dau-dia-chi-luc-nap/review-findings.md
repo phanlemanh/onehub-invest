@@ -1,88 +1,103 @@
-# Review findings: dong-dau-dia-chi-luc-nap (round 1)
+# Review findings: dong-dau-dia-chi-luc-nap (round 2)
 
 ## Trong hợp đồng
 
-- **Dòng DV6 bị rút không bao giờ được trả lại khi thẻ thôi ghi dự án (bác, sửa sang 2–3 dự án, ô dự án bị lọc), nên tin rơi khỏi mot_du_an mà không ai biết**
+- **--tinh-duyet không đối chiếu tệp nhãn với 100 mã bài đã khoá trong hồ sơ, nên tệp thiếu dòng vẫn ra ĐẠT và exit 0**
+  file: `pipeline/scripts/mau-bai-lac-du-an.mjs:230`
+  severity: medium
+  AC: AC-10
+  source: conventions
+  detail: docTepDuyet là cửa nhận một tệp JSON từ ngoài vào (trang duyệt lưu ra), nhưng chỉ kiểm tên người duyệt, giờ và (nếu có) hat_giong. Hàm không kiểm bốn điều: (1) post_id trong tep.nhan có đúng là danh sách mã bài khoá mẫu ở evidence/mau-bai-lac-du-an-v2.md hay không; (2) có post_id trùng hay không; (3) số dòng có bằng cỡ mẫu khai trước (n = 100) hay không; (4) trường `nhap` có thuộc {lac, khong} hay không. Với «chon: dung» thì nhãn lấy luôn d.nhap, nên nhap là undefined hay sai chính tả sẽ bị đếm lặng lẽ thành «không lạc». Hệ quả: chỉ cần tệp bỏ hẳn những dòng chưa duyệt, thay vì để chon = null, là chuaDuyet = 0, rồi main() in ĐẠT và thoát 0 trên cỡ mẫu thật nhỏ hơn cỡ đã khai. Cũng có thể trùng dòng để thổi n lên. Thêm nữa, `--seed` là tuỳ chọn (`lay("--seed") ?? null`): bỏ cờ này thì phép kiểm hạt giống bị bỏ qua mà không báo gì, nên tệp nhãn của mẫu khác vẫn được nhận. Chính tệp này ghi rằng «thứ khoá mẫu là DANH SÁCH MÃ BÀI ghi trong hồ sơ, không phải một mình hạt giống», nhưng bộ đọc nhãn lại không dùng danh sách ấy. Hiện test không có ca nào cho tệp thiếu dòng, trùng dòng hay sai danh sách mã.
+  Lý do vào hợp đồng: AC-10 đòi cỡ mẫu thật không nhỏ hơn mức chốt và in cỡ mẫu thật; tệp thiếu dòng vẫn ĐẠT làm thước này qua im lặng.
+
+- **traLaiDV6 ghi lại MỌI giá trị DV6 từng bị rút (kể cả giá trị cũ DV6 đã bỏ), làm bài có hai dự án sống hoặc dự án sai**
+  file: `pipeline/lib/dia-chi-the-nhom.mjs:236`
+  severity: medium
   AC: AC-8
-  file: `pipeline/transform-zalo.mjs:1046`
-  severity: high
   source: bugs
-  detail: Ở lượt nạp thẻ ghi dự án lên bài p, transform rút dòng DV6 (`du-an-nhom-mot-du-an`, `du-an-ten-bai`) trên p với lý do `thay-bang-the-nhom`. Dòng DV6 gần như chỉ đọc từ sổ nhóm, không phụ thuộc thẻ. Ở các lượt sau, `rutTheCu` (pipeline/lib/dia-chi-the-nhom.mjs:203-219) rút dòng dự án của thẻ trên p khi gặp một trong các ca: thẻ chuyển sang `bac` (route card-decide, app/src/lib/the-dia-chi-nhom.ts, cho bác cả thẻ đang `da_duyet`); thẻ được sửa sang 2–3 dự án hay xoá ô dự án khiến `duAn` thành null; nút dự án bị `docTheDaDuyet` lọc (đếm vào `oBo.duAn`). Không có bước nào ghi lại dòng DV6 đã rút; chỉ `lui.sql` làm việc đó. Hệ quả: `offer_project` của tin không còn dòng nào, tin rơi từ `mot_du_an` sang không có dự án. Đây là đúng điều AC-8 cấm, và trái câu của thiết kế §2.2 «bài của tin ấy giữ nguyên dòng DV6 cũ … tin ở lại đúng trạng thái trước hàng này», câu ấy chỉ đúng ở lượt đầu. Thước E10 (`khong-tut`) chỉ so lượt nền với một lượt K1 nhận thẻ nên không bắt được ca bác hay sửa. Lượt nạp không in hay cảnh báo gì, ngoài con số `rut_ban` trong log.
+  detail: Câu chọn dùng `DISTINCT ON (subject_key, field, value_key, method, rule_id)` trên các dòng có retract_reason='thay-bang-the-nhom'. Vì khoá có value_key nên mỗi GIÁ TRỊ từng bị rút trên bài đều được ghi lại, không phải chỉ dòng mới nhất của (bài, luật). Đường đi cụ thể: (1) DV6 ghi bài P = A; (2) lượt nạp TG2 rút dòng A (thay-bang-the-nhom); (3) DV6 chạy lại sau khi nhãn hoặc sổ nhóm đổi sang B. ghiPhatBieu của du-an-tren-tin-s03 chỉ đối soát dòng SỐNG, nên dòng A đã rút không bị đổi lý do; bước tangCao không chặn vì dòng thẻ ở lớp inferred, nên DV6 chèn B sống; (4) lượt TG2 kế rút B, cũng với lý do thay-bang-the-nhom; (5) thẻ bị bác hoặc sửa thành 2–3 dự án, traLaiDV6 ghi lại CẢ A lẫn B. Chỉ mục sống của 045 khoá theo value_key nên cả hai cùng chèn được, và P mang hai dòng project_node_id sống khác giá trị. offer_project của tin thành xung_dot, đúng lỗi AC-8 mà hàm này sinh ra để chặn. Cùng gốc đó, một giá trị mà DV6 hiện KHÔNG còn muốn ghi (vì nhãn đổi, sổ nhóm đổi, hay tin mâu thuẫn) vẫn được dựng lại: dòng đã rút nằm ngoài tầm đối soát của DV6. Cách sửa: chỉ lấy bản rút mới nhất theo (subject_key, field, rule_id) và bỏ value_key khỏi DISTINCT ON. Tốt hơn nữa là đối chiếu với tập DV6 đang muốn ghi, hoặc để DV6 tự chạy lại thay vì sống lại dòng cũ.
+  Lý do vào hợp đồng: bài có hai dự án sống thành xung_dot, đúng trường hợp AC-8 đòi 0 bài rơi khỏi mot_du_an.
 
-- **Hình dạng 4 (khẳng định âm một mình, không có đối chứng dương): mốc «trước» của E13/E10 lấy SAU lượt nạp bằng mã mới, nên chiều đỏ đã khai không thể đỏ**
-  AC: AC-11
-  file: `pipeline/scripts/dong-dau-dia-chi-that.mjs:100`
-  severity: high
-  source: measurement
-  detail: chay() chạy `nen = await napIm(c)` (runTransformZalo của mã đang kiểm) rồi mới `truoc = await chup(c)` (dòng 100-101); sau đó áp kịch bản K1 và nạp lại. Thước phu-kind trả `mat === 0` (dòng 184), thước khong-tut trả `roi.length === 0` (dòng 169); cả hai so hai lượt chạy CÙNG một mã. Chiều đỏ của E13 trong evals.yaml («tắt nhánh boi-canh-nhom trong bản sao thì lệnh thoát 1 và gọi đúng số tin rỗng sinh ra») không thể xảy ra: bản đột biến chạy ở cả lượt nền lẫn lượt sau, nên tin mất kind đã nằm sẵn trong `truoc` và `mat` vẫn bằng 0. Tương tự, AC-8 hứa so với «tập tin đang mot_du_an TRƯỚC khi đóng dấu», nhưng lượt nền đã đóng dấu theo các thẻ đã duyệt thật trên máy thu (6 thẻ lúc 14:39Z theo chú thích trong test), nên mọi bài rơi khỏi mot_du_an do những thẻ ấy bị hút vào mốc và không ai thấy. Hai khẳng định «0 mất / 0 rơi» không có ca dương nào chứng minh thước bắt được lỗi do chính mã gây ra.
-
-- **Hình dạng 5 (tuyên quét cả lớp nhưng chỉ có vài ca): E2 tuyên ma trận sáu ô trạng thái thẻ nhưng lệnh của nó không chạy ma trận nào**
-  AC: AC-2
-  file: `_acceptance/dong-dau-dia-chi-luc-nap/evals.yaml:36`
-  severity: high
-  source: measurement
-  detail: E2 dùng `cmd: config:executors.test.tg2_pipeline`, tức chạy dong-dau-dia-chi.test.mjs và transform-zalo-loai-tin.test.mjs. Không tệp nào trong hai tệp đó có ma trận sáu ô (nhap sống · da_duyet nhận · da_duyet sửa · bac · nhap nghỉ · không thẻ). Ma trận duy nhất nằm ở pipeline/tests/dia-chi-the-nhom.itest.mjs:49-61, tệp này thuộc tg2_itest. Ngay trong đó cũng chỉ chèn 5 thẻ, thiếu ô «nhóm không có thẻ». Không có assert nào nói số ô bằng 6. Ca chỉ kiểm khoá Map của bộ đọc `docTheDaDuyet`, không kiểm «sinh phát biểu / 0 dòng» như AC-2 hứa. Chiều đỏ «đổi ô bac thành da_duyet, thông điệp ghim tên ô» cũng không có ca nào.
-
-- **Hình dạng 5: E4 tuyên chạy transform thật trên ma trận chín ô AC-3 nhưng chỉ cấy 5 ô**
-  AC: AC-3
-  file: `pipeline/tests/dong-dau-dia-chi.itest.mjs:90`
+- **--tinh-duyet không kiểm tệp nhãn đủ mẫu đã khai và không kiểm ô nháp, nên tệp thiếu dòng hay nháp hỏng vẫn thoát 0 «ĐẠT»**
+  file: `pipeline/scripts/mau-bai-lac-du-an.mjs:152`
   severity: medium
-  source: measurement
-  detail: Mảng `ds` của ca E4 (dòng 90-95) chỉ có im×mot, khac×mot, im×hai, khac×hai, im×khong. Thiếu cung×mot, cung×hai, cung×khong và khac×khong. Trong đó khac×khong là ô then chốt của AC-3: chữ bài nêu dự án trong nhóm KHÔNG có thẻ phải ra 0 dòng. E4 hứa «chạy transform thật trên ma trận AC-3 … khớp từng ô với kết quả hàm thuần của E3». Ma trận chín ô chỉ đầy đủ ở tầng hàm thuần (dong-dau-dia-chi.test.mjs). Tầng chéo lớp có 5/9 ô và không có assert số ô.
-
-- **Hình dạng 5: E9/AC-7 tuyên ba ca lược đồ ở mức lượt nạp nhưng lượt nạp chỉ được thử với ca «không bảng»**
-  AC: AC-7
-  file: `pipeline/tests/dong-dau-dia-chi.itest.mjs:248`
-  severity: medium
-  source: measurement
-  detail: E9 hứa: ở hai ca «không có group_address_cards» và «có bảng mà thiếu cột retired_at», transform bỏ bước đóng dấu, in đúng một dòng, thoát 0 và các bước khác không đổi. Ca chạy runTransformZalo duy nhất (dòng 248-266) chỉ `DROP TABLE group_address_cards` (dòng 257). Ca «thiếu retired_at» chỉ được thử ở mức boolean của `coBangThe` (dia-chi-the-nhom.itest.mjs:39-47). Không ca nào chạy lượt nạp trên lược đồ ấy để đếm dòng cảnh báo và so năm số của lượt.
-
-- **Hình dạng 1 (đo chỉ dẫn thay vì đầu ra): E5 hứa lớp, phương pháp, rule_id, method_version trên field_assertions nhưng lệnh của E5 không đọc các cột đó từ DB**
-  AC: AC-4
-  file: `pipeline/tests/dong-dau-dia-chi.itest.mjs:80`
-  severity: medium
-  source: measurement
-  detail: E5 dùng tg2_itest. Trong itest, hàm `dongSong` chỉ SELECT `field, value, evidence` (dòng 80-82), và ca E5 (dòng 117-131) chỉ kiểm tên trường và khoá căn cứ. Các assert evidence_tier='inferred', method='e1_rule', method_version='dong-dau-dia-chi@1' chỉ có trong dong-dau-dia-chi.test.mjs, và chạy trên mảng dòng mà hàm thuần trao cho writeAssertions (chỉ dẫn gửi bộ ghi), không chạy trên dòng đã ghi vào DB. Tệp đó cũng không nằm trong lệnh của E5. Nếu bộ ghi đổi hay bỏ các cột này, E5 vẫn xanh.
-
-- **Hình dạng 4: ca E6 «bài có chữ bài giữ nguyên» qua được khi không có dòng nào**
-  AC: AC-5
-  file: `pipeline/tests/dong-dau-dia-chi.itest.mjs:148`
-  severity: medium
-  source: measurement
-  detail: `assert.ok(chuSau.every((x) => x.evidence.nguon_o === "chu_bai"))` và `assert.deepEqual(chuSau.map(v), chuTruoc.map(v))` (dòng 148-149) đều đúng khi cả chuTruoc lẫn chuSau là []. Không có assert dương nào nói chuTruoc có đúng một dòng project_node_id mang giá trị f.duAn2 với nguon_o 'chu_bai'. Nếu nhãn chữ bài không được đọc ra, hay bị hoà giải tin bỏ mất khiến bài không có dòng nào, ca vẫn xanh. AC-5 hứa chữ bài thắng và giữ nguyên, nhưng ca này không chứng minh được điều đó.
+  AC: AC-10
+  source: bugs
+  detail: docTepDuyet chỉ đếm những dòng có trong `tep.nhan`. Lệnh không đối chiếu số dòng với cỡ mẫu đã khai (n = 100), cũng không đối chiếu post_id với danh sách mã bài khoá mẫu. Chính tiêu đề tệp nói danh sách mã mới là thứ khoá mẫu, và lệnh cũng không chặn post_id trùng. Tệp lưu thiếu dòng, ví dụ trang duyệt chỉ ghi các dòng đã hiện, cho chuaDuyet = 0 nên `process.exit(w.tren <= 0.1 && t.chuaDuyet === 0 ? 0 : 1)` trả 0 trên cỡ mẫu nhỏ hơn mẫu đã khai. Với chon = 'dung', nhãn lấy thẳng `d.nhap` mà không kiểm giá trị thuộc {'lac','khong'}: nháp thiếu hay sai chính tả bị đếm im là «không lạc», làm số ca lạc thấp đi đúng về phía qua ngưỡng. Kiểm hạt giống cũng bị bỏ im khi gọi lệnh không kèm --seed (hatGiong = null). Cả ba đều là lối qua im lặng của thước AC-10.
+  Lý do vào hợp đồng: cùng gốc với finding đầu của AC-10, thước AC-10 qua được với cỡ mẫu nhỏ hơn đã khai và nhãn hỏng.
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **Rút dòng DV6 bằng rule_id viết cứng thay vì dùng hằng RULE của module DV6, và rút chéo luật mà module DV6 khai là chỉ nó được rút**
+- **Chạy thẳng --chay trên bản chép đã dùng thì mốc GỐC không còn là «máy thu nguyên trạng», khong-tut và phu-kind lại hết khả năng đỏ**
+  Người dùng thấy gì: Nếu người chạy đo lại trên bản chép đã dùng, số đo có thể trông đạt dù tin bị mất nhãn bán hay thuê. Đo trên bản chép mới dựng thì số đúng.
+  Căn cứ: Chỉ ảnh hưởng người chạy phép đo khi chạy lại sai cách, không làm hỏng dữ liệu thật, và dựng lại bản chép là tự làm được.
+  file: `pipeline/scripts/dong-dau-dia-chi-that.mjs`
+  severity: medium
+  Đề xuất: known-limits
+
+- **HE_DU_AN/laLac («trong hệ VGP») chỉ có test gọi, đường đo AC-10 không dùng, và ghim cứng ID node danh bạ**
+  Người dùng thấy gì: Một phần mã định nghĩa «trong hệ» chỉ được test chứ không dùng khi đo, và có thể lệch nếu danh bạ dự án được đúc lại. Số đo tỉ lệ bài lạc không bị ảnh hưởng.
+  Căn cứ: Chưa gây sai số liệu nào hiện tại; chỉ thành vấn đề khi danh bạ đổi, và khi đó sửa vẫn rẻ.
+  file: `pipeline/scripts/mau-bai-lac-du-an.mjs`
+  severity: low
+  Đề xuất: known-limits
+
+- **Khoá mkdir của chayNeuCu bị bỏ lại khi tiến trình thoát bằng process.exit hoặc Ctrl-C, mọi lượt --do-neu-cu sau treo vô hạn và không in gì**
+  Người dùng thấy gì: Nếu một lượt đo bị ngắt giữa chừng, các lượt đo sau sẽ đứng im không báo gì cho tới khi người chạy xoá khoá thủ công.
+  Căn cứ: Không mất hay lộ dữ liệu, chỉ làm chậm người chạy đo, và xoá khoá là gỡ được ngay.
+  file: `pipeline/scripts/dong-dau-dia-chi-that.mjs`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Hình dạng 2: fixture tệp nhãn người duyệt viết tay đúng khuôn docTepDuyet, không round-trip từ trang duyệt**
+  Người dùng thấy gì: Test đọc tệp nhãn dùng tệp tự viết nên không bắt được trường hợp trang duyệt lưu khác khuôn; khi đó lệnh đo thật có thể lỗi hoặc đếm sai.
+  Căn cứ: Lỗi sẽ lộ ra ngay khi chạy trên tệp thật và người chạy thử lại được, nên hậu quả nhẹ.
+  file: `pipeline/scripts/mau-bai-lac-du-an.test.mjs`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Hình dạng 3: test «tệp của mẫu khác thì không nhận» chỉ ghim chuỗi hat_giong, trong khi lời hứa là quan hệ giữa tệp nhãn và 100 mã bài đã khai**
+  Người dùng thấy gì: Test chỉ kiểm tệp nhãn có đúng hạt giống chứ không kiểm tệp có đủ và đúng 100 bài của mẫu, nên không bắt được tệp thiếu bài.
+  Căn cứ: Hậu quả thật được xử lý ở lỗi mã gốc; phần test thiếu chỉ là lưới an toàn, bổ sung sau rẻ.
+  file: `pipeline/scripts/mau-bai-lac-du-an.test.mjs`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Hình dạng 4: E9 AC-7 ghim «đúng một dòng cảnh báo» ở ca thiếu lược đồ mà không đối chứng 0 dòng ở ca đủ lược đồ**
+  Người dùng thấy gì: Test chưa chứng minh rằng khi DB đủ bảng thẻ thì không in cảnh báo thừa; nếu có in thừa thì chỉ là một dòng nhắc không đúng chỗ.
+  Căn cứ: Nhiều nhất là một dòng cảnh báo thừa, không ảnh hưởng dữ liệu, và bổ sung ca test sau rất rẻ.
+  file: `pipeline/tests/dong-dau-dia-chi.itest.mjs`
+  severity: low
+  Đề xuất: known-limits
+
+- **Rút dòng DV6 bằng rule_id viết cứng thay vì dùng hằng RULE của module DV6, và rút chéo luật mà module DV6 khai là chỉ nó được rút (r1 · tệp đã đổi)**
   Người dùng thấy gì: Hôm nay tin vẫn hiện đúng. Nếu sau này ai đổi tên một luật cũ, việc thay bằng thẻ nhóm có thể lặng lẽ không chạy và một số tin bị báo xung đột dự án.
   Căn cứ: Chưa gây sai gì cho người dùng, chỉ là mối nguy khi sửa về sau; ghi lại rồi sửa lúc đụng tới luật đó thì rẻ.
   file: `pipeline/transform-zalo.mjs`
   severity: low
   Đề xuất: known-limits
 
-- **Khoá `.khoa` của --do-neu-cu bị bỏ lại khi process.exit(2) chạy trong vùng khoá, các lượt đo sau treo vô hạn**
+- **Khoá `.khoa` của --do-neu-cu bị bỏ lại khi process.exit(2) chạy trong vùng khoá, các lượt đo sau treo vô hạn (r1 · tệp đã đổi)**
   Người dùng thấy gì: Một lần chạy đo bị ngắt giữa chừng có thể làm các lần đo sau đứng im không báo gì, người chạy phải tự xoá tệp khoá. Dữ liệu tin và người dùng cuối không bị ảnh hưởng.
   Căn cứ: Chỉ làm chậm việc nghiệm thu nội bộ, không mất dữ liệu, và người vận hành tự gỡ được bằng cách xoá tệp khoá.
   file: `pipeline/scripts/dong-dau-dia-chi-that.mjs`
   severity: medium
   Đề xuất: known-limits
 
-- **Bộ quét E8 chỉ xét từng dòng: câu SQL xuống dòng giữa FROM/JOIN và stg_zalo_posts lọt qua**
+- **Bộ quét E8 chỉ xét từng dòng: câu SQL xuống dòng giữa FROM/JOIN và stg_zalo_posts lọt qua (r1)**
   Người dùng thấy gì: Rào kiểm tra bài thử có thể báo xanh dù một câu truy vấn viết nhiều dòng đọc thẳng dữ liệu thô. Hiện chưa có bằng chứng bài thử nào bị đóng dấu nhầm.
   Căn cứ: Chỉ làm rào kiểm yếu đi chứ chưa gây sai dữ liệu; mã hiện tại có thể rà tay một lần và sửa bộ quét sau với chi phí thấp.
   file: `pipeline/scripts/quet-doc-stg.mjs`
   severity: low
   Đề xuất: known-limits
 
-- **Hình dạng 2 (fixture viết tay theo đúng khuôn bên đọc): bảng nhãn AC-10 viết tay, không đi một vòng từ bộ sinh inBangTrong**
+- **Hình dạng 2 (fixture viết tay theo đúng khuôn bên đọc): bảng nhãn AC-10 viết tay, không đi một vòng từ bộ sinh inBangTrong (r1 · tệp đã đổi)**
   Người dùng thấy gì: Nếu khuôn bảng gắn nhãn đổi, công cụ đọc nhãn có thể hỏng mà bài kiểm tra vẫn xanh, làm số đo bài lạc dự án sai đi.
   Căn cứ: Rủi ro nhỏ, chỉ xảy ra khi ai đó đổi khuôn bảng, và lệch sẽ lộ ngay khi chạy mẫu thật; sửa sau rẻ.
   file: `pipeline/scripts/mau-bai-lac-du-an.test.mjs`
   severity: low
   Đề xuất: known-limits
 
-## Chưa adversarial-verify (refuter chết)
-
-⚠ Cụm ngoài vùng phủ: 7/11 lỗi rơi vào file không bộ đo nào phủ (pipeline/scripts/quet-doc-stg.mjs, _acceptance/dong-dau-dia-chi-luc-nap/evals.yaml, pipeline/tests/dong-dau-dia-chi.itest.mjs, pipeline/scripts/mau-bai-lac-du-an.test.mjs) — dừng và quyết: mở rộng hợp đồng hay rút phạm vi.
+⚠ Cụm ngoài vùng phủ: 6/9 lỗi rơi vào file không bộ đo nào phủ (pipeline/scripts/mau-bai-lac-du-an.mjs, pipeline/scripts/mau-bai-lac-du-an.test.mjs, pipeline/tests/dong-dau-dia-chi.itest.mjs) — dừng và quyết: mở rộng hợp đồng hay rút phạm vi.
