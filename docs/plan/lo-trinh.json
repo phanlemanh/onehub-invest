@@ -698,7 +698,7 @@
     },
     {
       "ma": "PL20",
-      "cau_giao": "Tin căn hộ cao tầng Ocean Park 1 và Grand Park được gắn vào toà của Danh bạ (hoặc phân khu khi bài chỉ nêu phân khu) bằng một phát biểu trường toà; trục và căn là nhịp sau (PL36)",
+      "cau_giao": "Tin căn hộ cao tầng Ocean Park 1 và Grand Park được gắn vào toà của Danh bạ (hoặc phân khu, cụm khi bài chỉ nêu phân khu, cụm) bằng một phát biểu trường toà; trục và căn là nhịp sau (PL36)",
       "vai": "nen",
       "tieu_chi": 9,
       "vi_sao": "§0.2 D-3: ghép căn là phát biểu; D1/D3.",
@@ -718,7 +718,7 @@
       "phu": [
         "C2.7"
       ],
-      "ghi_chu": "Mạnh chốt 03/11: gắn vào Danh bạ (DB1), mở lát sang Grand Park. docs/superpowers/specs/2026-11-03-danh-ba-xac-nhan-toan-quoc-design.md. Mạnh chốt 04/11: chuỗi này làm đầu tiên sau 05/11, bắt đầu từ Ocean Park (mốc GCM1, docs/plan/pham-vi-gan-can-s03-0411.md). Mức gắn theo ADR-0016 §5; Grand Park phần lớn chỉ tới toà, tín hiệu ngoài chữ bài ở mục chờ GCH1. Sửa 13/11 (no-cat-hang-1311): dung_tren bỏ PL13, thêm DA31 (toà S09 hai khu), DV6 (dự án trên tin S03 từ nhóm và tên) và PL35 (tập nhãn) — số đo S1 12/11: chữ bài đã ra tên toà, mã căn đủ dày từ đọc gộp, nút cổ chai là danh bạ thiếu toà, sổ nhóm chưa gắn dự án và chưa có tập test nhãn người. Sửa 14/11 (mo-neo-1411, ROADMAP §3 mục 48): QĐ6 chia hai nhịp — hàng này giữ slug và là nhịp toà (đủ cho CG11); trục và căn chuyển sang PL36. Tên hàng cũ «mức sâu nhất, trục hoặc căn» thành của PL36."
+      "ghi_chu": "Mạnh chốt 03/11: gắn vào Danh bạ (DB1), mở lát sang Grand Park. docs/superpowers/specs/2026-11-03-danh-ba-xac-nhan-toan-quoc-design.md. Mạnh chốt 04/11: chuỗi này làm đầu tiên sau 05/11, bắt đầu từ Ocean Park (mốc GCM1, docs/plan/pham-vi-gan-can-s03-0411.md). Mức gắn theo ADR-0016 §5; Grand Park phần lớn chỉ tới toà, tín hiệu ngoài chữ bài ở mục chờ GCH1. Sửa 13/11 (no-cat-hang-1311): dung_tren bỏ PL13, thêm DA31 (toà S09 hai khu), DV6 (dự án trên tin S03 từ nhóm và tên) và PL35 (tập nhãn) — số đo S1 12/11: chữ bài đã ra tên toà, mã căn đủ dày từ đọc gộp, nút cổ chai là danh bạ thiếu toà, sổ nhóm chưa gắn dự án và chưa có tập test nhãn người. Sửa 14/11 (mo-neo-1411, ROADMAP §3 mục 48): QĐ6 chia hai nhịp — hàng này giữ slug và là nhịp toà (đủ cho CG11); trục và căn chuyển sang PL36. Tên hàng cũ «mức sâu nhất, trục hoặc căn» thành của PL36. Sửa 17/11 (chuan-hoa-1711): cụm (S1–S10 ở Grand Park…) là mức gắn hợp lệ như phân khu — đo 17/11: tin sống khớp đúng một toà theo tên OP1 815/954, GP 1.168/1.852; 586 tin GP nêu tên cụm, 78 tin trượt vì tên toà trùng giữa hai dự án con (DA38 gỡ). Một hàm tên toà dùng chung cho đọc tin và danh bạ (bỏ dấu chấm khi so chỉ thêm 39 tin GP)."
     },
     {
       "ma": "PL36",
@@ -2908,7 +2908,7 @@
         "app/src/app/ops/deals",
         "app/src/lib/deals.ts"
       ],
-      "ghi_chu": "Gánh CGP1 của đợt can-gia-tot-0311 (tin S03 không phường so theo toà); CGP1 không mở riêng. Lát đầu Ocean Park 1 và Grand Park. Tầng chỉ là bộ lọc, không chia nhóm: S03 che tầng trong mã căn, S06 có tầng ở 6% tin căn hộ bán; tin chưa rõ tầng ẩn khi lọc tầng. Đích đề xuất: từ 50% tin bán căn hộ chấm ở cấp dự án trở xuống. Sửa 14/11 (mo-neo-1411, ROADMAP §3 mục 48): giữ PL20 trong dung_tren — PL20 nay là nhịp toà, đủ cho hàng này; trục, căn (PL36) không chặn. Lọc dải tầng phủ thêm khi PL36 suy tầng từ mã căn. QĐ4 áp như CG10 cho tin thuê thiếu m²."
+      "ghi_chu": "Gánh CGP1 của đợt can-gia-tot-0311 (tin S03 không phường so theo toà); CGP1 không mở riêng. Lát đầu Ocean Park 1 và Grand Park. Tầng chỉ là bộ lọc, không chia nhóm: S03 che tầng trong mã căn, S06 có tầng ở 6% tin căn hộ bán; tin chưa rõ tầng ẩn khi lọc tầng. Đích đề xuất: từ 50% tin bán căn hộ chấm ở cấp dự án trở xuống. Sửa 14/11 (mo-neo-1411, ROADMAP §3 mục 48): giữ PL20 trong dung_tren — PL20 nay là nhịp toà, đủ cho hàng này; trục, căn (PL36) không chặn. Lọc dải tầng phủ thêm khi PL36 suy tầng từ mã căn. QĐ4 áp như CG10 cho tin thuê thiếu m². Đo 17/11 (chuan-hoa-1711): 876 tin bán S03 đủ dự án + toà + giá + m² — 156 (18%) có tầng hoặc dải tầng, 315 (36%) người bán che tầng trong mã căn; tầng đúng số không đến từ tin rao mà từ danh bạ căn (DA33, PL36). Khớp mục 42: tầng là bộ lọc theo dải, không chia nhóm."
     },
     {
       "dot": "can-gia-tot-vi-tri-0911",
@@ -2917,14 +2917,14 @@
       "slug": "huong-view-noi-that",
       "hang": "T2",
       "vai": "Người vận hành",
-      "tieu_chi": 9,
+      "tieu_chi": 10,
       "dung_tren": [
         "CG3"
       ],
       "phu": [
         "CG12"
       ],
-      "cau_giao": "Người vận hành lọc Căn giá tốt theo hướng, view, nội thất; giá trị đến từ trường nguồn S06 và chữ bài S03 thành phát biểu có bằng chứng, và bộ lọc nói phủ bao nhiêu tin",
+      "cau_giao": "Người vận hành lọc Căn giá tốt theo hướng, view, nội thất, pháp lý; giá trị đến từ trường nguồn S06 và chữ bài S03 thành phát biểu có bằng chứng, và bộ lọc nói phủ bao nhiêu tin",
       "vi_sao": "Mạnh nêu hướng, view, nội thất là thông số tra cứu (09/11). Dữ liệu thô S06 căn hộ bán 09/11: hướng 29%, nội thất 66%; chưa field nào thành phát biểu.",
       "vung": [
         "pipeline/mappings.yaml",
@@ -2932,7 +2932,7 @@
         "app/src/app/ops/deals",
         "app/src/lib/deals.ts"
       ],
-      "ghi_chu": "RESO DirectionFaces, View, Furnished — tra DD 2.1 trước (ADR-0011). Bộ lọc, không chia nhóm. Đọc S03 bằng model chỉ cho phát biểu kèm bằng chứng (luật 7), trong ba model được phép. Cần cột mới thì lên T3."
+      "ghi_chu": "RESO DirectionFaces, View, Furnished — tra DD 2.1 trước (ADR-0011). Bộ lọc, không chia nhóm. Đọc S03 bằng model chỉ cho phát biểu kèm bằng chứng (luật 7), trong ba model được phép. Cần cột mới thì lên T3. Sửa 17/11 (chuan-hoa-1711): thêm pháp lý — bảng nạp S06 trả mã pháp lý ở 46% tin (55.240 / 119.664, mọi loại nhà), hướng 15,5%, nội thất 47%; chưa trường nào thành phát biểu. Pháp lý không có field RESO → extension VN khai đủ sáu điều kiện ở mappings.yaml; lưu và lọc trước, không chia nhóm so (đo lệch giá theo pháp lý rồi mới bàn). Mở CHECK field_assertions.field cho hướng, nội thất, pháp lý là migration → hàng lên T3 khi mở vòng."
     },
     {
       "dot": "can-gia-tot-vi-tri-0911",
@@ -3268,7 +3268,7 @@
         "pipeline/lib/gop-anh.mjs",
         "db/migrations"
       ],
-      "ghi_chu": "Mạnh chốt 05/11 đứng sau GCQ1. Lưu bảng riêng hay tính lại mỗi lần: quyết ở Cổng Phạm vi, sau khi có câu trả lời của ZCode về mã album và nhóm nhãn đầu tiên. Dùng lại luật của ghep-anh-tren-the-gan-nhan, không viết luật thứ hai. Phía thu mã album thuộc làn ZCode."
+      "ghi_chu": "Mạnh chốt 05/11 đứng sau GCQ1. Lưu bảng riêng hay tính lại mỗi lần: quyết ở Cổng Phạm vi, sau khi có câu trả lời của ZCode về mã album và nhóm nhãn đầu tiên. Dùng lại luật của ghep-anh-tren-the-gan-nhan, không viết luật thứ hai. Phía thu mã album thuộc làn ZCode. Ghi chú 17/11 (chuan-hoa-1711): bảng nạp S03 đã có băm nội dung sha256 cho 77% ảnh (23% còn lại là ảnh tải lỗi — ZC9); 10.994 ảnh khác nhau, 62% ảnh lặp ở hơn một bài. Dùng làm tín hiệu ghép, gom có sẵn trước khi dựng băm cảm nhận (luật 11 — đo trước)."
     },
     {
       "ma": "GT4",
@@ -4402,7 +4402,7 @@
         "pipeline/transform-zalo.mjs",
         "pipeline/lib"
       ],
-      "ghi_chu": "Hạng T3: thành phần tin và offer_id đổi (đi qua khoá dính PL14). Từ điển phân khu lấy từ danh bạ (nút con của dự án) và sổ nhóm; dự án chưa có nút phân khu thì khai danh sách ở Cổng Phạm vi. Cửa sổ nối bản chữ (đề xuất 7 ngày) và ngưỡng chữ giống khi một bên thiếu trường (đề xuất 0,9) chốt ở Cổng Phạm vi trên thước GT4. LLM không vào khoá (luật 7). PL18, SV2, GT6, GT8 cùng sửa transform-zalo.mjs: làm tuần tự.",
+      "ghi_chu": "Hạng T3: thành phần tin và offer_id đổi (đi qua khoá dính PL14). Từ điển phân khu lấy từ danh bạ (nút con của dự án) và sổ nhóm; dự án chưa có nút phân khu thì khai danh sách ở Cổng Phạm vi. Cửa sổ nối bản chữ (đề xuất 7 ngày) và ngưỡng chữ giống khi một bên thiếu trường (đề xuất 0,9) chốt ở Cổng Phạm vi trên thước GT4. LLM không vào khoá (luật 7). PL18, SV2, GT6, GT8 cùng sửa transform-zalo.mjs: làm tuần tự. Ghi chú 17/11 (chuan-hoa-1711): bảng nạp S03 đã có băm nội dung sha256 cho 77% ảnh (23% còn lại là ảnh tải lỗi — ZC9); 10.994 ảnh khác nhau, 62% ảnh lặp ở hơn một bài. Dùng làm tín hiệu ghép, gom có sẵn trước khi dựng băm cảm nhận (luật 11 — đo trước).",
       "dot": "dinh-vi-gom-tin-s03-1011"
     },
     {
@@ -5358,19 +5358,39 @@
       ],
       "hang": "T3",
       "vai": "nen",
-      "tieu_chi": 9,
+      "tieu_chi": 10,
       "dung_tren": [
         "DA32"
       ],
       "cau_giao": "Mã dự án S08 và S09 chưa khớp nút nào thành nút ứng viên hàng loạt qua thẻ luật theo nguồn (Hà Nội trước), S09 có bảng nối dự án như S06 và S08, và ô «Mã nguồn chưa nối» trên trang Danh bạ giảm theo",
-      "bat_khi": "Trên /ops/registry máy thu: mã nguồn chưa nối 524 → dưới 100 sau khi Mạnh duyệt hai thẻ luật (ước: S09 344 → dưới 40, S08 172 → dưới 50; số chính xác đo lúc mở vòng); S09 có bảng nối với lý do và người duyệt; nút ứng viên chưa qua thẻ luật thì 0 tin nối, 0 lên Invest; không nối khi lệch tỉnh; chạy lại không đúc nút trùng",
+      "bat_khi": "Trên /ops/registry máy thu: mã nguồn chưa nối 524 → dưới 100 sau khi Mạnh duyệt hai thẻ luật (ước: S09 344 → dưới 40, S08 172 → dưới 50; số chính xác đo lúc mở vòng); S09 có bảng nối với lý do và người duyệt; nút ứng viên chưa qua thẻ luật thì 0 tin nối, 0 lên Invest; không nối khi lệch tỉnh; chạy lại không đúc nút trùng; năm cặp nút dự án trùng cùng phường do S06 có hai mã cho một dự án (Happy One Central, Thuận Việt, D-Aqua, 8X Đầm Sen, Lakeview City — đo 17/11) gộp về một nút qua sự kiện gộp của danh bạ, phép so tên bỏ dấu + bỏ tiền tố loại hình trong cùng phường còn 0 cặp",
       "vi_sao": "Phân tích 17/11: 524 mã chưa nối phần lớn vì thiếu nút (Hà Nội chỉ 11 nút dự án; so tên chỉ khớp S09 7/344, S08 5/172), và S09 chưa có bảng nối (chỉ hằng NOI_KHU_S09 hai cặp). Lát mỏng theo khuôn DA32 (mã dự án S06 thành nút), luật nút ứng viên mục 44 Hỏi-1.",
       "vung": [
         "pipeline/lib/s09-du-an.mjs",
         "pipeline/noi-du-an-s08.mjs",
         "db/migrations"
       ],
-      "ghi_chu": "Hạng T3 như DA32: đúc nút hàng loạt lên cloud. Lát mỏng của DA18 (nút ứng viên từ danh mục) và DA3 (bảng nối đầy đủ) cho S08, S09; hai hàng ấy giữ phần còn lại (S07, S11, khuôn chung, thẻ từng cặp). Dùng lại bảng thẻ luật của DA32 (migration 100)."
+      "ghi_chu": "Hạng T3 như DA32: đúc nút hàng loạt lên cloud. Lát mỏng của DA18 (nút ứng viên từ danh mục) và DA3 (bảng nối đầy đủ) cho S08, S09; hai hàng ấy giữ phần còn lại (S07, S11, khuôn chung, thẻ từng cặp). Dùng lại bảng thẻ luật của DA32 (migration 100). Sửa 17/11 (chuan-hoa-1711): thêm gộp năm cặp nút trùng — thẻ luật S06 «mã nguồn» đúc một nút cho mỗi mã, nên một dự án có hai mã thành hai nút và hạng giá cấp dự án chia đôi mẫu."
+    },
+    {
+      "ma": "DV8",
+      "slug": "s06-tinh-theo-ma-tinh-nguon",
+      "dot": "chuan-hoa-1711",
+      "nhom": "l11-mat-bang-s06",
+      "phu": [
+        "CH1"
+      ],
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 7,
+      "dung_tren": [],
+      "cau_giao": "Transform S06 lấy tỉnh của tin từ mã tỉnh thật trong bảng nạp (region_v2) thay vì từ vùng thu gộp, nên tin của tỉnh khác không còn rơi vào phường trùng tên của TP. Hồ Chí Minh",
+      "bat_khi": "Trên DB máy thu, tin S06 đang rao của vùng thu gộp «Bình Dương» có mã tỉnh Bình Phước, Đồng Nai, Tây Ninh cũ (2.743 tin đo 17/11): 0 tin mang phường HCM (từ 610); hạng cấp phường Tân Thành (HCM) 87 → 24 tin, 7 nhãn «rẻ trong phường» của tin tỉnh khác gỡ; tin Bình Dương, Bà Rịa–Vũng Tàu cũ vẫn ở HCM, số không đổi; tin S06 ngoài ranh tỉnh được gán 685 → dưới 80 (phần còn là toạ độ lệch trong cùng tỉnh); chạy lại không đổi. Lệnh đo: đếm tin S06 sống theo region_v2 ∈ {2012, 2013, 2014} của bảng nạp S06 × tiền tố area_id, và đếm tin có toạ độ ngoài ranh thị trường cha (ST_Contains) — câu V18, V21, Q-G10 ở trang tri thức dot/chuan-hoa-1711",
+      "vi_sao": "Phân tích chuẩn hoá 17/11: vùng thu «Bình Dương» của S06 gồm năm tỉnh cũ (region_v2 2010–2014); lib/thi-truong.mjs đổi cả vùng sang HCM (đúng cho Bình Dương, Bà Rịa–Vũng Tàu sau sáp nhập 2025, sai cho Bình Phước, Đồng Nai, Tây Ninh). Phường gán theo tên trong thị trường đó nên tin Biên Hoà, Long Thành, Trảng Bàng… vào phường HCM trùng tên (Tân Thành 63/87 tin xếp hạng là tin tỉnh khác); 2.133 tin không khớp tên thành tin không phường (99% số tin S06 không phường). Bảng nạp có sẵn region_v2, transform không đọc.",
+      "vung": [
+        "pipeline/lib/thi-truong.mjs"
+      ],
+      "ghi_chu": "Làn Claude (transform), không đổi DATA-CONTRACT, không migration; đổi dữ liệu trên DB máy thu theo luật hàng xong khi số trên màn đổi — lời áp đi cùng chữ ký Cổng Bằng chứng (đủ năm thứ). Vùng còn gồm điểm gọi trong transform S06. Câu Cổng Phạm vi cho Mạnh: 2.743 tin S06 của Bình Phước, Đồng Nai, Tây Ninh cũ (đã thu sẵn trong vùng gộp) gán đúng tỉnh (Đồng Nai, Tây Ninh mới) hay loại khỏi số? Khuyến nghị: gán đúng tỉnh — dữ liệu đã thu, không mở rộng phạm vi thu, tin chỉ hiện ở tỉnh của nó; Đồng Nai, Tây Ninh chưa có ranh phường (0/95, 0/96) nên tin ở đó dừng ở cấp tỉnh khi không khớp tên. Cỡ dưới mục tiêu có chủ ý: một sửa nhỏ, không có hàng cùng nhóm trong đợt để gộp."
     }
   ],
   "chan_troi": [
