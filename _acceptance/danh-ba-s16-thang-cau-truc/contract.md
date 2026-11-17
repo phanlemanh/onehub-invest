@@ -82,7 +82,9 @@ When đọc view đếm lệch cấu trúc,
 Then:
 - mỗi dòng là (dự án, cặp nguồn, loại lệch, số);
 - lệch cấu trúc ở dự án có S16 không sinh thẻ mới;
-- trên dữ liệu thật in bảng theo dự án; không in mã căn hay tên nguồn thật.
+- trên dữ liệu thật in bảng theo dự án; không in mã căn hay tên nguồn thật;
+- có ca lệch tên toà (S08/S09 gọi khác tên S16) trong bảng kỳ vọng;
+- đối chứng dương: cùng loại lệch cấu trúc ở dự án KHÔNG có S16 vẫn ra thẻ như luật 1 (đúng một thẻ).
 
 ### AC-7 — Rào chỉ-thêm giữ nguyên, dựng lại không sinh gì
 Given DB sau AC-3 và AC-5,
@@ -101,14 +103,29 @@ Then:
 ### AC-9 — Đường lùi có đích xử được khẳng định
 Given lượt dựng đã ghi khẳng định (`field_assertions`) và căn S08 đã gộp ở AC-5,
 When chạy đường lùi có đích của hàng này trên bản chép,
-Then khẳng định của lượt được rút (`retracted_at` + lý do), không xoá; căn S08 trở lại `active`; căn S16 mới của lượt gỡ được;
-dấu vân tay bảng danh bạ (trừ cột rút) trùng bản trước áp; tệp khoá thiếu dòng `# db` hay của DB khác → từ chối.
+Then khẳng định của lượt được rút (`retracted_at` + lý do), không xoá; căn S08 trở lại `active`, `merged_into` rỗng; căn S16 mới
+của lượt gỡ được; thẻ `can-lech-toa` lượt đã cho nghỉ trở lại `pending` với ghi chú cũ; dấu vân tay gồm lược đồ `public` và số
+dòng + băm nội dung của `buildings`, `stacks`, `units`, `registry_aliases`, `review_queue`, `field_assertions` (trừ hai cột rút),
+`v_toa_nut_vung` trùng bản trước áp; phần dư được phép và được đếm: nút phân khu do luật đúc mang `meta.nghi = true`, dòng
+`project_link_rules` có `dao_at`; tệp khoá thiếu dòng `# db` hay của DB khác → từ chối.
 
 ### AC-10 — Chuỗi áp trên dữ liệu thật đúng số
 Given bản chép DB máy thu sau DA33,
 When áp 111, áp thẻ luật với băm của `--the`, dựng năm khu,
-Then in bảng theo dự án: khu S16, nút phân khu mới và nút nhận bí danh, toà theo nguồn nút vùng trước/sau, căn S08 gộp, thẻ cho
-nghỉ, số lệch theo cặp nguồn; toà S16 treo dưới dự án = 0; dựng lần hai 0 khoá mới. Lệch một ô → thoát 1 nêu ô.
+Then in bảng theo dự án và so từng ô với bảng kỳ vọng viết trước (số đo 17/11 trên DB máy thu sau DA33):
+
+| Ô | Kỳ vọng |
+|---|---|
+| Khu S16 trong danh sách | 61 (GP 12, OP1 16, OP2 13, OP3 9, Smart City 11) |
+| Nút phân khu mới + nút sẵn nhận khu | = 61 (mỗi khu đúng một nút) |
+| Toà mang bí danh S16 có nút vùng là dự án | trước 109 → sau 0 |
+| Căn S08 chuyển `merged` | 2 |
+| Thẻ `can-lech-toa` chuyển `rejected` | 2 |
+| Thẻ `can-mo-ho` / `toa-trung-ten` còn `pending` | 38 / 20 |
+| Dòng `buildings` đổi `region_node_id` | 0 |
+| Dựng lần hai: khoá mới | 0 |
+
+Lệch một ô (±1) → thoát 1 nêu ô.
 
 ## Coverage
 

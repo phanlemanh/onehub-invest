@@ -42,7 +42,7 @@ evals:
     criterion: AC-6
     executor: script
     cmd: config:executors.script.s37_db
-    expected: "Ca DA37-AC-6: fixture có lệch toà (S08), lệch phân khu (S09) ở dự án có S16 → view đếm lệch có đúng các dòng (dự án, cặp nguồn, loại, số) viết trước; 0 thẻ mới. Chiều đỏ: đột biến bỏ cặp S09 khỏi view thì ca đỏ nêu «thiếu cặp S09»"
+    expected: "Ca DA37-AC-6: fixture có lệch toà (S08), lệch phân khu (S09) ở dự án có S16 → view đếm lệch có đúng các dòng (dự án, cặp nguồn, loại, số) viết trước; 0 thẻ mới ở dự án có S16; ca lệch tên toà có dòng riêng; đối chứng dương: cùng lệch ở dự án không có S16 ra đúng một thẻ. Chiều đỏ: đột biến bỏ cặp S09 khỏi view thì ca đỏ nêu «thiếu cặp S09»; đột biến chặn thẻ theo mọi dự án thì ca đỏ nêu «mất thẻ ngoài dự án S16»"
     paths: ["db/migrations/111_*", "pipeline/scripts/*s16-cau-truc*"]
   - id: E7
     criterion: AC-7
@@ -61,12 +61,12 @@ evals:
     executor: script
     layer: backend-effect
     cmd: config:executors.script.s37_that
-    expected: "Trên bản chép DB máy thu: chụp dấu vân tay → áp chuỗi của hàng → ghi tệp khoá → đường lùi có đích (rút khẳng định của lượt bằng retracted_at + lý do, trả căn S08 về active, gỡ căn S16 mới của lượt, đảo thẻ luật, áp lại view 097) → dấu vân tay bằng nhau trừ cột rút của khẳng định; số khẳng định đã rút = số của lượt; tệp khoá sai DB → thoát 4, không mở giao dịch"
+    expected: "Trên bản chép DB máy thu: chụp dấu vân tay → áp chuỗi của hàng → ghi tệp khoá → đường lùi có đích (rút khẳng định của lượt bằng retracted_at + lý do, trả căn S08 về active, gỡ căn S16 mới của lượt, đảo thẻ luật, áp lại view 097) → dấu vân tay (lược đồ public; buildings, stacks, units, registry_aliases, review_queue, field_assertions trừ hai cột rút; v_toa_nut_vung) bằng nhau; thẻ can-lech-toa của lượt về pending với ghi chú cũ; phần dư đếm đúng (nút nghi, dòng luật có dao_at); số khẳng định đã rút = số của lượt; tệp khoá sai DB → thoát 4, không mở giao dịch. Chiều đỏ: bỏ bước trả thẻ thì lượt nêu «thẻ lệch không về pending»"
     paths: ["_acceptance/danh-ba-s16-thang-cau-truc/lui/**", "pipeline/scripts/*s16-cau-truc*"]
   - id: E10
     criterion: AC-10
     executor: script
     layer: backend-effect
     cmd: config:executors.script.s37_that
-    expected: "Cùng script E2b: áp 111, --the rồi --ap với băm in ra, dựng năm khu; bảng theo dự án (khu S16, nút mới, nút nhận bí danh, toà theo nguồn nút vùng trước/sau, căn S08 gộp, thẻ cho nghỉ, lệch theo cặp nguồn); toà S16 có nút vùng là dự án = 0; dựng lần hai 0 khoá mới. Lệch một ô → thoát 1 nêu ô"
+    expected: "Cùng script E2b: áp 111, --the rồi --ap với băm in ra, dựng năm khu; so từng ô với bảng kỳ vọng của AC-10 (khu 61; nút mới + nút nhận = 61; toà S16 có nút vùng là dự án 109 → 0; căn S08 merged 2; thẻ can-lech-toa rejected 2; can-mo-ho 38 và toa-trung-ten 20 còn pending; 0 buildings đổi region_node_id; dựng lần hai 0 khoá mới). Lệch một ô (±1) → thoát 1 nêu ô"
     paths: ["db/migrations/111_*", "pipeline/phan-khu-s16.mjs", "pipeline/lib/s16*", "pipeline/danh-ba-vat-the.mjs", "pipeline/scripts/*s16-cau-truc*"]
