@@ -69,7 +69,7 @@ evals:
     layer: backend-effect
     cmd: bash _acceptance/so-so-tren-man-theo-ngay/probes/do-may-thu.sh
     paths: [pipeline/sql/600_data_flow.sql, _acceptance/so-so-tren-man-theo-ngay/probes/do-may-thu*]
-    expected: "Bản chép DB máy thu, làm tươi hai lần: một dòng hôm nay, bốn số lệch 0 so với SQL đếm độc lập, project_linked khớp ô Định vị S03, chênh thời gian tối đa 2 giây, in mẫu số, ghi .acceptance-runs/so-so-tren-man-theo-ngay/do-may-thu.md. Đối chứng đếm thiếu lọc nguồn phải lệch khác 0."
+    expected: "Bản chép mới của DB máy thu đã ANALYZE, làm tươi hai lần: một dòng hôm nay, bốn số lệch 0 so với SQL đếm độc lập, project_linked khớp ô Định vị S03, chậm hơn bản 600 như main tối đa 2 giây và tối đa 20%, in mẫu số, ghi .acceptance-runs/so-so-tren-man-theo-ngay/do-may-thu.md. Đối chứng đếm thiếu lọc nguồn phải lệch khác 0."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E10
     criterion: AC-10

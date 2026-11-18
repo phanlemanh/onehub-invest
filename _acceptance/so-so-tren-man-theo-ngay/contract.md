@@ -45,7 +45,7 @@ vùng «Số mốc S03 theo ngày» trên `/ops/data-flow`. Không thêm migrati
   đúng chữ của từng trạng thái trong bảng trạng thái của thiết kế, bốn nhãn lấy từ `CONTEXT.md`, phần trăm trên tin đang rao, và bảng ẩn
   mang số từng ngày cho trình đọc màn hình.
 - AC-9: Given bản chép DB máy thu, When làm tươi hai lần và đếm độc lập bằng SQL riêng, Then đúng một dòng hôm nay, bốn số
-  lệch 0 so với đếm độc lập, `project_linked` khớp ô Định vị của S03, lượt có ghi số mốc chậm hơn lượt không ghi tối đa 2 giây; ghi
+  lệch 0 so với đếm độc lập, `project_linked` khớp ô Định vị của S03, lượt có ghi số mốc chậm hơn bản 600 như `main` tối đa 2 giây và tối đa 20% (đo trên bản chép đã `ANALYZE`, trung vị ba vòng); ghi
   kết quả vào `.acceptance-runs/so-so-tren-man-theo-ngay/do-may-thu.md`.
 - AC-10: Given app chạy trên DB thử của AC-9 ở cổng 3462, When mở `/ops/data-flow`, Then vùng số mốc hiện bốn ô với số khớp dòng hôm nay
   trong DB và khớp ô Định vị của màn chặng; đọc được ở sáng, tối và khổ điện thoại, không tràn ngang.
