@@ -212,6 +212,9 @@ làn Claude); `import-airbnb.mjs` không có nguồn này trong ALLOWLIST.
   `name`, `folderPath`, `rootLinks` (tên tệp hợp đồng hay có tên người mua): chỉ `driveId`, `posts`, `skipReason`,
   `matchedRule` (`contract|id-card|payment-proof`, mã luật, không chép chữ khớp) và `bytesAnnounced`. Bản tải cho người soát
   để ngoài `snapshots/` (thư mục xoá được của máy thu); soát xong là «bản mẫu» thì lượt sau ghi vào một snapshot mới.
+- **Kho riêng giấy tờ người mua** (Mạnh chốt 18/11, ROADMAP §3 mục 46 QĐ1, hàng ZC12; chưa triển khai): tệp soát ra là hợp đồng đã
+  ký hay giấy tờ người mua vẫn KHÔNG vào snapshot; lưu ở kho mã hoá trên máy thu, ngoài `snapshots/`, xoá được từng tệp, có sổ xoá.
+  Kho không lên cloud, không nạp DB, không gửi model, không hiện trên cổng, không lên kênh. Hình dạng item trong snapshot không đổi.
 - **Layout**: snapshot thường `vn/vn__s03-tu-lieu-drive__<ts>/` gồm `items-0001.json.gz`, `media/<sha256[:16]>.<ext>` —
   tên theo băm NỘI DUNG (khác `media/` v2 của zalo-agent, băm URL) — và `manifest.json` khai đủ mọi tệp trong `files`.
   Hai tệp cùng nội dung chỉ lưu một bản. `manifest.schemaVersion = 10`; `coverage.methods = {"public-link-no-login": n}`.
