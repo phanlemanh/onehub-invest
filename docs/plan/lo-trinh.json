@@ -5545,7 +5545,7 @@
         "collector/src/collectors",
         "pipeline/sync-cloud.mjs"
       ],
-      "ghi_chu": "RÀNG BUỘC: không tải tệp thật trước khi (a) LL soát mã đạt, (b) hàng qua Cổng Phạm vi có chữ Mạnh, (c) có GIAO triển khai riêng. Khoá mã hoá chỉ ở máy thu và một bản Mạnh giữ, không vào git, kênh, cloud. Không agent nào đọc nội dung tệp, chỉ băm và siêu dữ liệu. Làn thu (tin claudedp-1811-16): đưa bộ lọc từ script tải tạm vào collector, công cụ mã hoá. Câu Cổng Phạm vi: kho có vào bản sao lưu ngoài máy không (mặc định không); hạn giữ; ai được mở tệp; ý kiến pháp lý trước khi dùng ngoài lưu trữ; có tải lại tệp có dấu vết người mua đã xoá 12/11 không."
+      "ghi_chu": "RÀNG BUỘC: không tải tệp thật trước khi (a) LL soát mã đạt, (b) hàng qua Cổng Phạm vi có chữ Mạnh, (c) có GIAO triển khai riêng. Khoá mã hoá chỉ ở máy thu và một bản Mạnh giữ, không vào git, kênh, cloud. Không agent nào đọc nội dung tệp, chỉ băm và siêu dữ liệu. Làn thu (tin claudedp-1811-16): đưa bộ lọc từ script tải tạm vào collector, công cụ mã hoá. Mục Drive của collector/docs/DATA-CONTRACT.md (thêm kho riêng) sửa trong PR của chính hàng này, kèm hồ sơ _acceptance. Câu Cổng Phạm vi: kho có vào bản sao lưu ngoài máy không (mặc định không); hạn giữ; ai được mở tệp; ý kiến pháp lý trước khi dùng ngoài lưu trữ; có tải lại tệp có dấu vết người mua đã xoá 12/11 không."
     }
   ],
   "chan_troi": [
