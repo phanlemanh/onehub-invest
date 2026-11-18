@@ -5,7 +5,9 @@ slug: watchdog-tu-khoi-dong-gateway
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli]
-status: draft
+status: approved
+approved_by: Mạnh
+approved_at: 2026-11-18
 design_doc: docs/superpowers/specs/2026-11-18-watchdog-tu-khoi-dong-gateway-design.md
 ---
 
