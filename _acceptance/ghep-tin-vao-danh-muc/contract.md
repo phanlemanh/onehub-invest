@@ -5,9 +5,9 @@ slug: ghep-tin-vao-danh-muc
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli, data]
-status: draft
-approved_by:
-approved_at:
+status: approved
+approved_by: Mạnh
+approved_at: 2026-11-18
 design_doc: docs/superpowers/specs/2026-11-18-ghep-tin-vao-danh-muc-design.md
 ---
 

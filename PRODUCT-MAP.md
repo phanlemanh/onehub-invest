@@ -10,8 +10,8 @@ flowchart TD
   GD --> B["Sắp mở vòng<br/>21 việc"]
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
-  B --> CD["Chờ duyệt phạm vi<br/>21 việc"] --> GP{"Cổng Phạm vi"}
-  GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
+  B --> CD["Chờ duyệt phạm vi<br/>20 việc"] --> GP{"Cổng Phạm vi"}
+  GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
   GB --> DG["Đã giao<br/>204 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>133 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
@@ -55,7 +55,6 @@ flowchart TD
 - đầu dò của hồ sơ chuyen-huong-ma-thi-truong gỡ đúng worktree tạm của nó, bỏ lệnh prune trên kho dùng chung (`chm-dau-do-khong-prune`)
 - CI bỏ qua ca «DF-AC-3 DB thật» cần tin rao thật ở DB local (chỉ chạy ở máy thu) (`ci-bo-qua-df-ac-3`)
 - Diễn giải dòng kiểm «Nhãn số chưa xác minh» trên /ops/quality, kể cả vế S03 qua người đăng (`dq-so-chua-xac-minh-qua-nguoi`)
-- Tin căn hộ S03 của Ocean Park 1 và Grand Park được gắn vào toà của Danh bạ, hoặc phân khu, cụm khi bài chỉ nêu tới đó, từ ô tên toà, chữ bài và bản đọc của model, mỗi nhóm nguồn có căn cứ và tắt riêng được; người đọc phía sau lấy toà của tin từ một view (`ghep-tin-vao-danh-muc`)
 - giải thích hai nhãn «Chưa xác minh» ngay trên thẻ tin và trên trang Phương pháp (`giai-thich-nhan-chua-xac-minh`)
 - Bật nhóm khoá kit 2.34.0 cho làn ghim lại và lưới hoá cũ; gỡ đường cache 2.32.0 khỏi config (`kit-khoa-nhom-1`)
 - Lớp chép CI của Acceptance Gate Kit lên 2.34.0 và kế hoạch chuyển bản cho đợt dot0-cam-mau (`nang-kit-2-34-0`)
@@ -69,6 +68,10 @@ flowchart TD
 - harness của s06-vung-moi-len-canonical chạy được transform-chotot có import gan-sdt-s06.mjs (`s06-vung-moi-harness-gan-sdt`)
 - Tách bộ kiểm pipeline của lượt chấm thành hai nửa chạy song song, mỗi nửa một DB thử, để một lệnh không vượt trần chờ 30 phút của tác tử chấm (`tach-suite-pipeline`)
 - hai test app chạy trên DB chung thôi đỏ vì mã vùng dài cũ và thôi treo khi có DDL xếp hàng (`test-app-tren-db-chung`)
+
+## Đang làm
+
+- Tin căn hộ S03 của Ocean Park 1 và Grand Park được gắn vào toà của Danh bạ, hoặc phân khu, cụm khi bài chỉ nêu tới đó, từ ô tên toà, chữ bài và bản đọc của model, mỗi nhóm nguồn có căn cứ và tắt riêng được; người đọc phía sau lấy toà của tin từ một view (`ghep-tin-vao-danh-muc`)
 
 ## Đã giao — chờ phiên nghiệm thu
 
