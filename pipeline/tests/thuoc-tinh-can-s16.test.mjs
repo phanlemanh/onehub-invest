@@ -63,7 +63,7 @@ async function loiPha(tu, sang) {
   assert.ok(src.includes(tu), `TTC chỗ phá không còn trong lõi: ${tu}`);
   const dir = mkdtempSync(join(tmpdir(), "ttc-pha-"));
   const tep = join(dir, "loi.mjs");
-  writeFileSync(tep, src.replace(tu, sang));
+  writeFileSync(tep, src.replace(tu, sang).replace('"./vocab.generated.mjs"', JSON.stringify(pathToFileURL(join(dirname(TEP_LOI), "vocab.generated.mjs")).href)));
   try { return await import(pathToFileURL(tep).href); } finally { rmSync(dir, { recursive: true, force: true }); }
 }
 

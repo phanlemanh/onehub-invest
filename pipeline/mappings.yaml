@@ -175,6 +175,32 @@ canonical:
         mappings này (canonical.fields + trục assertion_field); (6) DQ: miền giá trị qua pipeline/dq-enum-vocab.mjs
         (field_assertions.field), độ phủ trên tin ở hàng DA9 — thoả một phần tới khi DA9 gộp. Không có cột.
       checked_on: "2026-11-12"
+    living_area:
+      dd: LivingArea
+      note: >
+        diện tích căn qua phát biểu (DA40 thuoc-tinh-can-s16, migration 113): căn hộ cao tầng = thông thuỷ, nhà thấp tầng = sàn
+        sử dụng (Mạnh chốt 18/11). Tra DD 2.1 local 18/11: LivingArea (Property; LivingAreaUnits='sqm' ngầm hiểu, ADR-0011 Qđ 4).
+        Resource Unit (căn danh bạ) và Property; trigger miền 113: số m² dương ≤ 100.000. Không có cột — đọc qua v_unit_thuoc_tinh.
+      checked_on: "2026-11-18"
+    building_area_total:
+      dd: BuildingAreaTotal
+      note: >
+        diện tích tim tường của căn hộ cao tầng S16 (DA40, migration 113). Tra DD 2.1 local 18/11: BuildingAreaTotal (Property,
+        tổng diện tích công trình). Nhà thấp tầng không ghi trường này (số thứ hai của nguồn là diện tích đất → lot_size_area).
+      checked_on: "2026-11-18"
+    lot_size_area:
+      dd: LotSizeArea
+      note: >
+        diện tích đất của nhà thấp tầng S16 (DA40, migration 113; Mạnh xác nhận 18/11 «84 m² đúng là diện tích đất»). Tra DD 2.1
+        local 18/11: LotSizeArea (Property; LotSizeUnits='sqm' ngầm hiểu). Cùng field RESO với land_area của S08.
+      checked_on: "2026-11-18"
+    direction_faces:
+      dd: null
+      note: >
+        hướng của căn qua phát biểu (DA40, migration 113) — dùng trục local direction_faces đã khai (GN1, Mạnh 07/11: căn hộ ghi
+        hướng ban công, nhà riêng hướng cửa); trigger miền 113 giữ đúng tám mã. Căn góc hai hướng = hai phát biểu, view phân xử
+        trả mảng. Sáu điều kiện ADR-0011 của trục đã khai ở mục enums.direction_faces.
+      checked_on: "2026-11-18"
     area_id:
       dd: null
       note: >
@@ -323,6 +349,26 @@ sources:
     chua_dua_sang_canonical:
       - "early_payment_price — DD không có tương đương; cần extension đủ 6 điều kiện nếu đưa lên"
       - "row_code, state_line, delivery_standard_name, fund_groups_sell_code — giữ ở staging"
+  S16:
+    label: "danh mục căn chủ đầu tư (lấy bằng phiên đăng nhập — chỉ nội bộ, ROADMAP §3 mục 48)"
+    staging: [stg_s16_item, stg_s16_khu, stg_s16_toa, stg_s16_can, stg_s16_can_chi_tiet]
+    transform: "pipeline/lib/s16-dung.mjs (cây toà → căn, DA33); pipeline/scripts/thuoc-tinh-can-s16.mjs (thuộc tính căn → phát biểu Unit, DA40)"
+    method: "field cấu trúc trực tiếp; thuộc tính căn: giá trị có mặt là của chủ đầu tư (trường rỗng ⇔ chủ căn được sửa) → lớp fact, source_field"
+    policy: "mã căn, khu_id, toa_id và thuộc tính căn lấy bằng đăng nhập không rời máy thu (sync-cloud chặn ^stg_s16; field_assertions không ở FILL); giá chủ đầu tư S16 chưa lên Invest/cloud (Mạnh, Cổng Phạm vi DA40 18/11)"
+    checked_on: "2026-11-18"  # tra research-local/reso/dd-2.1.json
+    fields:
+      area_using: "→ LivingArea (living_area; cao tầng thông thuỷ, thấp tầng sàn sử dụng)"
+      area_building: "→ BuildingAreaTotal (building_area_total) ở toà cao tầng · LotSizeArea (lot_size_area) ở nhà thấp tầng"
+      bedroom: "→ BedroomsTotal (0 = chưa có)"
+      bathroom: "→ BathroomsTotalInteger (0 = chưa có)"
+      balcony_direction: "→ direction_faces ở toà cao tầng (hướng ban công, trục local GN1)"
+      direction: "→ direction_faces ở nhà thấp tầng (hướng cửa)"
+      property_type: "→ PropertySubType (property_type): APARTMENT, PENT_HOUSE → apartment; ROW_HOUSE, *_VILLA → house; SHOP_HOUSE, ROW_SHOP_HOUSE, *_SHOP, COMMERCIAL_SERVICE → commercial; UNDEF bỏ"
+      sale_price: "→ ListPrice (giá chủ đầu tư — không phát biểu trên căn, đọc qua view v_s16_gia_cdt; ADR-0016 §7.1)"
+      floor_number: "→ UnitFloorLocation — không phát biểu (tầng của căn ở units.floor, DA33); lệch thì đếm"
+    chua_dua_sang_canonical:
+      - "house_style (kiểu căn, vd TWO_BEDROOMS_1_2_TOILET) — chữ mơ hồ, giữ ở staging"
+      - "purchasePrice, purchaseDate, initialInvestmentCost, investmentCapital, loanAmount, juridicalStatus, deliveryStatus, furnitureStatus, houseStatus — chủ căn tự nhập, không có cột stg, chỉ ở raw snapshot"
 
 # --------------------------------------------------------------------------
 # SỔ TỪ VỰNG — nguồn duy nhất của mọi enum dữ liệu (PL6, ADR-0013 §8: khuôn RESO Lookup / RelatedLookup)
@@ -400,7 +446,7 @@ enums:
     term_vi: Trường phát biểu
     dd_field: null
     local: true
-    rationale: "extension FieldAssertion.FieldName (ADR-0013 §6) — trường nhận phát biểu và phân xử: năm trường enrich + trạng thái chào (PL19, migration 059) + bảy đặc trưng nhà S06 (HD5, migration 061) + hai trường của toà (DB1, migration 082: builder_name, area_id — chỉ resource Building) + tầng và dải tầng của tin (DV4, migration 095: floor_raw → UnitFloorLocation tra DD 2.1 11/11, floor_band extension) + dự án, phân khu, phường của tin (DA2, migration 096: project_node_id → SubdivisionName tra DD 2.1 12/11, subzone_node_id extension, area_id mở cho resource Property); dd_lookup = tên field RESO của trường (BuilderName: tra DD 2.1 07/11 — field của resource Building). DQ: dq-enum-vocab field_assertions.field. Cột resource_name (CHECK ở 082: Property · Building · Stack · Unit) giữ tên resource RESO viết hoa nên nằm ngoài sổ: Property, Building theo DD 2.1; Stack, Unit là resource local (ADR-0016 §11 — DD 2.1 chỉ có UnitNumber/SubId trên tin, không resource bền cho căn, trục)"
+    rationale: "extension FieldAssertion.FieldName (ADR-0013 §6) — trường nhận phát biểu và phân xử: năm trường enrich + trạng thái chào (PL19, migration 059) + bảy đặc trưng nhà S06 (HD5, migration 061) + hai trường của toà (DB1, migration 082: builder_name, area_id — chỉ resource Building) + tầng và dải tầng của tin (DV4, migration 095: floor_raw → UnitFloorLocation tra DD 2.1 11/11, floor_band extension) + dự án, phân khu, phường của tin (DA2, migration 096: project_node_id → SubdivisionName tra DD 2.1 12/11, subzone_node_id extension, area_id mở cho resource Property) + bốn thuộc tính căn (DA40, migration 113: living_area → LivingArea, building_area_total → BuildingAreaTotal, lot_size_area → LotSizeArea tra DD 2.1 18/11; direction_faces trục local — resource Unit và Property); dd_lookup = tên field RESO của trường (BuilderName: tra DD 2.1 07/11 — field của resource Building). DQ: dq-enum-vocab field_assertions.field. Cột resource_name (CHECK ở 082: Property · Building · Stack · Unit) giữ tên resource RESO viết hoa nên nằm ngoài sổ: Property, Building theo DD 2.1; Stack, Unit là resource local (ADR-0016 §11 — DD 2.1 chỉ có UnitNumber/SubId trên tin, không resource bền cho căn, trục)"
     checked_on: "2026-11-12"
     columns: [field_assertions.field]
     nullable: false
@@ -424,6 +470,10 @@ enums:
       - { code: floor_band, label_vi: Dải tầng }   # DV4 (095): extension, DD 2.1 không có dải tầng
       - { code: project_node_id, label_vi: Dự án, dd_lookup: SubdivisionName }   # DA2 (096): resource Property, id nút asset_nodes loại project
       - { code: subzone_node_id, label_vi: Phân khu }   # DA2 (096): resource Property, id nút subzone (hay building của Grand Park tới DA1); extension
+      - { code: living_area, label_vi: Diện tích thông thuỷ, dd_lookup: LivingArea }   # DA40 (113): resource Unit/Property
+      - { code: building_area_total, label_vi: Diện tích tim tường, dd_lookup: BuildingAreaTotal }   # DA40 (113): căn hộ cao tầng
+      - { code: direction_faces, label_vi: Hướng }   # DA40 (113): trục local direction_faces, tám mã
+      - { code: lot_size_area, label_vi: Diện tích đất, dd_lookup: LotSizeArea }   # DA40 (113): nhà thấp tầng
   evidence_tier:
     term_vi: Lớp căn cứ
     dd_field: null

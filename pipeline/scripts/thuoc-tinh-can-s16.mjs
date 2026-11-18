@@ -12,10 +12,13 @@
 // Không in mã căn, mã toà hay snapshot_id (tên snapshot mang tên nguồn thật); evidence chỉ mang mã S16 + băm snapshot.
 // Cột du_an in nguyên mã dự án của nguồn: đầu ra chỉ ở terminal máy thu — chép vào hồ sơ thì dùng tên ngắn.
 import { createHash } from "node:crypto";
+import { realpathSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import pg from "pg";
 import { NGUON_S16, gopKhoa, khoaCan, phatBieuTuDong } from "../lib/thuoc-tinh-can-s16.mjs";
+import { ASSERTION_FIELD as F } from "../lib/vocab.generated.mjs";
 
-export const TRUONG = ["living_area", "building_area_total", "lot_size_area", "bedrooms", "bathrooms", "direction_faces", "property_type"];
+export const TRUONG = [F.living_area, F.building_area_total, F.lot_size_area, F.bedrooms, F.bathrooms, F.direction_faces, F.property_type];
 export const PHUONG_PHAP_BAN = "thuoc-tinh-can-s16@1";
 
 /** Đọc + tính, không ghi. Trả { bang, phat, chua_ap } — phat là các dòng sẵn để chèn. */
@@ -135,6 +138,6 @@ async function main() {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   main().catch((e) => { console.error(e.message); process.exit(e.ma ?? 1); });
 }

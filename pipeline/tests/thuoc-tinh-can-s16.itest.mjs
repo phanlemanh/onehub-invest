@@ -168,6 +168,7 @@ async function lenhPha(tu, sang) {
   const dir = mkdtempSync(join(tmpdir(), "ttc-lenh-"));
   const tep = join(dir, "lenh.mjs");
   writeFileSync(tep, src.replace(tu, sang).replace('"../lib/thuoc-tinh-can-s16.mjs"', JSON.stringify(pathToFileURL(join(GOC, "pipeline/lib/thuoc-tinh-can-s16.mjs")).href))
+    .replace('"../lib/vocab.generated.mjs"', JSON.stringify(pathToFileURL(join(GOC, "pipeline/lib/vocab.generated.mjs")).href))
     .replace('import pg from "pg";', `import pg from ${JSON.stringify(pathToFileURL(createRequire(import.meta.url).resolve("pg")).href)};`));
   try { return await import(pathToFileURL(tep).href); } finally { rmSync(dir, { recursive: true, force: true }); }
 }

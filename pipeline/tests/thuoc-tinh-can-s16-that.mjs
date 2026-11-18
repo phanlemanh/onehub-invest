@@ -6,7 +6,7 @@
 // (khối ```chay-thu của _acceptance/thuoc-tinh-can-s16/ap-may-thu.md, nếu có) · «bảng phủ ca» (bang-phu-ca.md §1, đếm từ tệp
 // thu gốc 18/11 — chỉ so khi snapshot là lượt 18/11).
 // Thoát: 0 khớp · 1 lệch (in ô) · 3 chưa áp 113 hay bảng nạp rỗng. Chỉ in số và tên dự án ngắn; không mã căn, không snapshot.
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, realpathSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
@@ -110,6 +110,6 @@ async function main() {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   main().then((code) => process.exit(code)).catch((e) => { console.error(e.message); process.exit(2); });
 }
