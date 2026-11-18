@@ -82,11 +82,13 @@ function Tile({ tile }: { tile: MilestoneTile }) {
   )
 }
 
-/** Bảng ẩn: trình đọc màn hình đọc được số từng ngày mà đường không nói ra. */
+/** Bảng ẩn: trình đọc màn hình đọc được số từng ngày mà đường không nói ra. `sr-only` đặt ở thẻ bọc: `<table>` không nhận `width: 1px`, đặt
+ * thẳng lên bảng thì bảng đẩy khung cuộn của trang rộng ra ở khổ điện thoại. */
 function DaysTable({ tiles }: { tiles: MilestoneTile[] }) {
   return (
-    // eslint-disable-next-line onehub-ui/no-raw-table -- bảng chỉ cho trình đọc màn hình, không hiện trên màn nên không cần data-grid
-    <table className="sr-only">
+    <div className="sr-only">
+      {/* eslint-disable-next-line onehub-ui/no-raw-table -- bảng chỉ cho trình đọc màn hình, không hiện trên màn nên không cần data-grid */}
+      <table>
       <caption>{TITLE}</caption>
       <thead>
         <tr>
@@ -108,7 +110,8 @@ function DaysTable({ tiles }: { tiles: MilestoneTile[] }) {
           </tr>
         ))}
       </tbody>
-    </table>
+      </table>
+    </div>
   )
 }
 

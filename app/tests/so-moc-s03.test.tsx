@@ -437,7 +437,7 @@ function oCua(root: Element, nhan: string) {
   assert.ok(the, `không thấy ô «${nhan}»`)
   return the.parentElement!.parentElement!
 }
-const dongBang = (root: Element) => [...root.querySelectorAll("table.sr-only tbody tr")].map((r) => [...r.children].map(txt))
+const dongBang = (root: Element) => [...root.querySelectorAll(".sr-only > table tbody tr")].map((r) => [...r.children].map(txt))
 
 function kiemTrong(root: Element) {
   const chu = txt(root)
@@ -484,7 +484,9 @@ async function kiemDu(Comp?: Vung) {
     ["17/11", "6.880", "0", "5.422", "0"],
     ["18/11", "6.890", "0", "5.432", "0"],
   ])
-  assert.deepEqual([...root.querySelectorAll("table.sr-only thead th")].map(txt), ["Ngày", ...NHAN_O], "bảng ẩn mang bốn nhãn")
+  assert.deepEqual([...root.querySelectorAll(".sr-only > table thead th")].map(txt), ["Ngày", ...NHAN_O], "bảng ẩn mang bốn nhãn")
+  // `<table>` không nhận `width: 1px` của sr-only: đặt thẳng lên bảng thì khung cuộn của trang tràn ngang ở khổ điện thoại.
+  assert.equal(root.querySelector("table.sr-only"), null, "sr-only phải ở thẻ bọc, không ở <table>")
 }
 test("SM1-AC-8 đủ ngày: bốn nhãn, phần trăm trên tin đang rao, mức đổi, bảng ẩn có số từng ngày", { timeout: 60_000 }, async () => {
   await kiemDu()
