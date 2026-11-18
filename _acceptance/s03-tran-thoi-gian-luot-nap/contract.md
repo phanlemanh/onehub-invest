@@ -5,7 +5,7 @@ slug: s03-tran-thoi-gian-luot-nap
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: approved
+status: implemented
 veto_state: mo
 veto_opened_at: 2026-11-17T14:27:07Z
 design_doc: _acceptance/s03-tran-thoi-gian-luot-nap/design.md
