@@ -83,3 +83,9 @@ máy thu theo luật đợt 30/10.
 
 Ảnh xem màn chụp trên DB thử `oneinvest_u2_sm1`: số của các ngày trước hôm dựng DB là số chèn tay để thấy đường và cờ đứng yên, không phải
 số đo. Bằng chứng số thật là phép đo trên bản chép DB máy thu (AC-9), không phải ảnh.
+
+Hạn chế đã biết từ lượt xem màn (`evidence/design-pass/nhan-xet.md`), giữ nguyên ở vòng này:
+
+- Rê chuột vào ngày trống không hiện gợi ý; bảng cho trình đọc màn hình vẫn đọc «Không có số».
+- Nút «Toàn kho» vẽ 30 ngày, giống nút «30 ngày», vì `facts.milestones` chỉ chở 30 ngày.
+- Ở khổ 1.280px cờ «Đứng yên 2 ngày» của ô «Có hạng cấp dự án» xuống dòng, cả hàng ô cao thêm 20px.
