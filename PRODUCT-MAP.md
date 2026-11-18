@@ -10,8 +10,8 @@ flowchart TD
   GD --> B["Sắp mở vòng<br/>21 việc"]
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
-  B --> CD["Chờ duyệt phạm vi<br/>21 việc"] --> GP{"Cổng Phạm vi"}
-  GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
+  B --> CD["Chờ duyệt phạm vi<br/>20 việc"] --> GP{"Cổng Phạm vi"}
+  GP --> DL["Đang làm<br/>2 việc"] --> GB{"Cổng Bằng chứng"}
   GB --> DG["Đã giao<br/>204 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>133 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
@@ -58,7 +58,6 @@ flowchart TD
 - giải thích hai nhãn «Chưa xác minh» ngay trên thẻ tin và trên trang Phương pháp (`giai-thich-nhan-chua-xac-minh`)
 - Bật nhóm khoá kit 2.34.0 cho làn ghim lại và lưới hoá cũ; gỡ đường cache 2.32.0 khỏi config (`kit-khoa-nhom-1`)
 - Lớp chép CI của Acceptance Gate Kit lên 2.34.0 và kế hoạch chuyển bản cho đợt dot0-cam-mau (`nang-kit-2-34-0`)
-- Căn cao tầng S09 vào danh bạ dưới toà đã có, căn trùng S16 và S08 thành bí danh, không sinh căn hai khoá (`nap-s09-can-cao-tang-vao-danh-ba`)
 - Nhận kit 2.35.0 — đổi đường bộ đệm có số sang 2.35.0 và khai vùng giao diện (design-floor bậc M1) (`nhan-kit-2-35-0`)
 - Nhận kit 2.36.0 — chép lớp CI theo thẻ, vẽ lại bản đồ, bật GITATTR-TEP-SINH (`nhan-kit-2-36-0`)
 - Nhận kit 2.37.0 — chép lớp CI theo bản cài, gỡ chân engine đỏ của đường nền (`nhan-kit-2-37-0`)
@@ -72,6 +71,7 @@ flowchart TD
 
 ## Đang làm
 
+- Căn cao tầng S09 vào danh bạ dưới toà đã có, căn trùng S16 và S08 thành bí danh, không sinh căn hai khoá (`nap-s09-can-cao-tang-vao-danh-ba`)
 - Dự án, toà, tầng, khu và căn thấp tầng S09 vào danh bạ, toà và căn trùng S16, S08 thành bí danh, không sinh trùng (`nap-s09-toa-tang-vao-danh-ba`)
 
 ## Đã giao — chờ phiên nghiệm thu
