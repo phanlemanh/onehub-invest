@@ -71,6 +71,14 @@ async function main() {
     const hit = soatDuLieu(nodes, await tokenS16(c));
     o("soat_asset_nodes", hit ? 1 : 0);
     if (hit) console.log(`  bộ soát dừng ở ${hit.bang}.${hit.cot}`);
+    // Đối chứng trên bản chép: cấy một khoá khu thô `<du_an>/<khu_id>` thật vào meta một nút → bộ soát phải dừng ở asset_nodes.meta
+    const tho = (await mot("SELECT du_an || '/' || khu_id AS k FROM stg_s16_khu WHERE length(khu_id) >= 4 ORDER BY 1 LIMIT 1")).k;
+    const nutCay = (await mot("SELECT min(id) AS id FROM asset_nodes WHERE meta ? 's16_khu_ids'")).id;
+    await c.query("UPDATE asset_nodes SET meta = meta || jsonb_build_object('thu_tho', $2::text) WHERE id = $1", [nutCay, tho]);
+    const cay = soatDuLieu(new Map([["asset_nodes", (await c.query("SELECT row_to_json(x)::text AS j FROM asset_nodes x")).rows.map((r) => r.j)]]), await tokenS16(c));
+    await c.query("UPDATE asset_nodes SET meta = meta - 'thu_tho' WHERE id = $1", [nutCay]);
+    console.log(`  đối chứng: cấy khoá khu thô vào meta → bộ soát ${cay?.bang === "asset_nodes" && cay?.cot === "meta" ? "dừng ở asset_nodes.meta" : "KHÔNG dừng"}`);
+    if (!(cay?.bang === "asset_nodes" && cay?.cot === "meta")) loi.push("doi-chung-khoa-tho");
     o("can_gop", Object.values(tk.s16.khu).reduce((a, t) => a + (t.can_s08_gop ?? 0), 0));
     const the2 = async (loai, st) => (await mot(`SELECT count(*)::int AS n FROM review_queue WHERE item_id LIKE 's16:%' AND evidence ->> 'loai' = $1 AND status = $2`, [loai, st])).n;
     o("the_nghi", await the2("can-lech-toa", "rejected"));

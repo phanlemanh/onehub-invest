@@ -114,7 +114,7 @@ Lượt 18/11 (bản chép từ DB máy thu sáng 18/11, sau khi DA33 đã áp),
 | Khu S16 trên thẻ luật | — | **61** (GP 12, OP1 16, OP2 13, OP3 9, Smart City 11) |
 | Nút nhận | — | **61** = 51 nút mới + 10 nút sẵn; 0 mơ hồ |
 | Toà S16 mà nút vùng là dự án | **109** | **0** |
-| `asset_nodes` qua bộ soát S16 của sync-cloud (token khu, toà, căn ≥4 ký tự) | — | sạch (0 bảng dừng) |
+| `asset_nodes` qua bộ soát S16 của sync-cloud (token khu, toà, căn ≥4 ký tự) | — | sạch (0 bảng dừng); đối chứng cấy một khoá khu thô vào meta một nút → bộ soát dừng ở `asset_nodes.meta` |
 | Toà đổi `region_node_id` trong bảng `buildings` | — | 0 (toà vào phân khu qua view) |
 | Căn S08 gộp vào căn S16 (`merged`) | 0 | **2** (Grand Park) — lượt dựng đúc 2 căn S16, 2 bí danh |
 | Thẻ «căn S08 cùng mã nằm ở toà khác» | 2 pending | 2 `rejected`, ghi chú «S16 thắng cấu trúc (DA37)» |
