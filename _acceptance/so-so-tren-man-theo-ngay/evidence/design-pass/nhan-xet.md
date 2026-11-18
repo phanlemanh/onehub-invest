@@ -1,3 +1,20 @@
+# Xem lại màn SM1 sau bản sửa, 18/11
+
+Bản chạy: commit `6e7c376e1`, dev cổng 3462, DB thử `oneinvest_u2_sm1`, trạng thái `du`, trình duyệt đặt tiếng Anh (`en-US`). Ảnh mới có tiền tố `xem-lai--`.
+
+**Kết luận: cả ba lỗi mức Trung bình của lượt trước đã hết, nhãn ngày không tràn ở 390 px.**
+
+| # | Điểm | Kết quả đo | Ảnh |
+|---|---|---|---|
+| 1 | Gợi ý khi rê chuột | **Đạt.** Ghi «Có dự án: 6.949» dù trình duyệt đặt `en-US`, ở sáng, tối, 390 px | `xem-lai--du--30-ngay--sang.jpg` |
+| 2 | Chấm đáy ở hai ô số 0 | **Đạt.** 0 chấm bị cắt ở cả bốn ô, chấm cách mép dưới biểu đồ 24 px, không chạm nhãn ngày | `xem-lai--cham-day-o-so-0--sang.jpg` |
+| 3 | Trục và khoảng số | **Đạt.** Trục ghi ngày đầu, ngày cuối («12/11», «18/11»; 30 ngày: «20/10», «18/11»). Ô có số đổi ghi «Thấp nhất 6.608 · cao nhất 6.949»; hai ô số 0 ghi «Cả khoảng: 0». Mô tả vùng có câu «Ngày chưa có số để trống.» | `xem-lai--du--30-ngay--toi.jpg` |
+| 4 | Nhãn ngày ở 390 px | **Đạt.** Nhãn nằm trọn trong ô, trang không cuộn ngang | `xem-lai--du--30-ngay--hep-390.jpg` |
+
+Còn lại ở mức Thấp, giữ nguyên từ lượt trước: rê chuột vào ngày trống không hiện gì; «Toàn kho» hiện đúng 30 ngày như nút «30 ngày»; lượt này không đo lại cờ xuống dòng ở khổ 1.280 px. ESLint và `tsc --noEmit` sạch.
+
+---
+
 # Xem màn SM1 `so-so-tren-man-theo-ngay`, 18/11
 
 Bản chạy: commit `1b226137d`, dev cổng 3462, DB thử `oneinvest_u2_sm1`, vai Quản trị. Số các ngày trước hôm dựng DB là số chèn tay, ảnh không phải bằng chứng số đo.
