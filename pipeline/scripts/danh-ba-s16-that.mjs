@@ -108,7 +108,8 @@ async function main() {
     await chep(src, c, "stg_s08_inventory", "project_id IN (SELECT project_id FROM s08_project_links WHERE status = 'noi')");
     await chep(src, c, "buildings", "merged_into IS NULL");
     await chep(src, c, "stacks", "merged_into IS NULL");
-    await chep(src, c, "units", "merged_into IS NULL");
+    // Chép cả căn đã gộp: sau khi áp DA37 máy thu có căn S08 merged, bí danh S08 còn trên căn cũ; bỏ dòng này thì phần «gộp» đếm thiếu.
+    await chep(src, c, "units");
     await chep(src, c, "registry_aliases", `kind IN ('${ALIAS_KIND.ma_nguon}', '${ALIAS_KIND.ten}')`);
     await src.end();
     // Cột id tự tăng đã chép theo dòng: đẩy bộ đếm lên để dòng mới không trùng khoá.

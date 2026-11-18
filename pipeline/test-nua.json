@@ -38,7 +38,8 @@
     "tests/s08-danh-muc-nap.test.mjs",
     "scripts/db-thu-chot.test.mjs",
     "scripts/gia-tot-du-an.test.mjs",
-    "scripts/do-lech-s03-s06.test.mjs"
+    "scripts/do-lech-s03-s06.test.mjs",
+    "scripts/s16-bon-phan.test.mjs"
   ],
   "b": [
     "parse.test.mjs",
