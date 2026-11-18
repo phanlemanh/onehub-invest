@@ -334,6 +334,8 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   giờ, plist chờ ZCode); `cloud-sync.sh` tự bỏ chúng khi job giờ vừa chạy trọn dưới 2 giờ, ngược lại tự chạy dưới cùng
   khoá. Đo 10/11 trên DB thử: transform-zalo + media + bait-gap ≈ 76 s/lượt — LT2 chưa cần.
 
+**Số mốc S03 theo ngày (SM1, 18/11):** lượt làm tươi `pipeline/sql/600_data_flow.sql` ghi mỗi ngày VN một dòng `s03-moc-ngay` vào `dq_check_results` (có dự án, khớp toà, có hạng cấp dự án, có hạng cấp toà, mẫu số là tin S03 đang rao) và chở 30 ngày trong `facts.milestones`; `/ops/data-flow` vẽ mức đổi và cờ đứng yên. Số lên cloud trong khối `dataFlow`; dòng của bảng đo ở lại máy thu (`LOCAL_ONLY_ROWS` của `pipeline/sync-cloud.mjs`, Mạnh chốt Hỏi-4).
+
 ### 2.3 Nguồn (source_registry + /ops/collections feed health)
 Đo 26/10 trên máy thu (`source_registry`, `launchctl list`, `airdna_markets`). Trạng thái theo vòng đời năm giá trị
 `draft · active · paused · retired · completed` (CHECK từ 047, TV2a); script thu hỏi «có được thu» qua `isRunnable` (TV2b).

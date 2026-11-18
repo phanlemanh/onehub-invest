@@ -14,6 +14,7 @@ import ts from "typescript"
 
 import { captureOpsFacts, localDbUrl } from "../../pipeline/scripts/capture-ops-facts.mjs"
 import { makeOpsSchema, schemaUrl } from "../../pipeline/scripts/ops-facts-fixture.mjs"
+import { localReadSql } from "../../pipeline/sync-cloud.mjs"
 import type { DataFlow, FlowFacts, Milestone } from "../src/lib/data-flow-queries"
 import { IN, NOW, OFFERS, ROOT, makeFlowSchema, refreshFlow, type Offer } from "./ops-dong-chay-fixture"
 
@@ -252,7 +253,9 @@ test("SM1-AC-6 đối chứng: tên nguồn cấy vào số mốc thì lượt �
 })
 
 // Lối giữ ở máy thu: dòng số mốc không rời máy theo bảng chung, mọi dòng kiểm khác phải đi qua nguyên vẹn.
-const LOC_GIU = `SELECT id, check_name, entity, status, detail, checked_at FROM "${S_GIU}".dq_check_results WHERE check_name <> 's03-moc-ngay' ORDER BY id`
+// Câu đọc THẬT của lượt đồng bộ: đổi bộ lọc ở pipeline/sync-cloud.mjs thì ca này đổi theo.
+const COT_GIU = `"id", "check_name", "entity", "status", "detail"`
+const LOC_GIU = localReadSql("dq_check_results", COT_GIU)
 const KIEM_KHAC = [
   ["s03-floor-fill", "S03", "pass", JSON.stringify({ n: 1 })],
   ["dq-kiem-khac", "x", "warn", "chữ không phải JSON"],
@@ -267,7 +270,7 @@ function dungLoiGiu() {
     const dong: DongKiem[] = []
     for (const k of KIEM_KHAC)
       dong.push((await admin.query(`INSERT INTO "${S_GIU}".dq_check_results (check_name, entity, status, detail) VALUES ($1, $2, $3, $4)
-        RETURNING id, check_name, entity, status, detail, checked_at`, k)).rows[0] as DongKiem)
+        RETURNING id, check_name, entity, status, detail`, k)).rows[0] as DongKiem)
     return dong
   })()
   return sanGiu
@@ -277,11 +280,16 @@ const milestonesGiu = async () =>
 async function kiemLoiGiu(locSql: string) {
   const mong = await dungLoiGiu()
   const truoc = await milestonesGiu()
-  const dong = (await admin.query(locSql)).rows as DongKiem[]
+  const nguon = (await admin.query(`SELECT check_name, count(*)::int AS n FROM "${S_GIU}".dq_check_results GROUP BY 1`)).rows as { check_name: string; n: number }[]
+  assert.ok(nguon.some((r) => r.check_name === "s03-moc-ngay" && r.n >= 1), "đối chứng: bảng nguồn phải có dòng s03-moc-ngay")
+  const c = new pg.Client({ connectionString: schemaUrl(S_GIU) })
+  await c.connect()
+  const dong = await c.query(locSql).then((r) => r.rows.map((x) => JSON.parse(x.j) as DongKiem).sort((a, b) => a.id - b.id)).finally(() => c.end())
+  assert.equal(dong.filter((d) => d.check_name === "s03-moc-ngay").length, 0, "tập gửi cloud không được còn dòng s03-moc-ngay")
   const mat = mong.filter((m) => !dong.some((d) => d.id === m.id)).map((m) => m.check_name)
   assert.deepEqual(mat, [], `lối giữ làm mất dòng kiểm khác: ${mat.join(", ")}`)
+  assert.equal(dong.length, nguon.filter((r) => r.check_name !== "s03-moc-ngay").reduce((a, r) => a + r.n, 0), "số dòng kiểm khác trước và sau phải bằng nhau")
   assert.deepEqual(dong, mong, "lối giữ phải giữ nguyên id và nội dung mọi dòng kiểm khác")
-  assert.equal(dong.filter((d) => d.check_name === "s03-moc-ngay").length, 0, "lối giữ không được còn dòng s03-moc-ngay")
   assert.deepEqual(await milestonesGiu(), truoc, "facts.milestones phải không đổi")
   assert.deepEqual(truoc.map((r) => r.time_window), ["30d", "7d", "all"])
   for (const r of truoc) assert.deepEqual(r.m, MONG, `facts.milestones cửa sổ ${r.time_window}`)
@@ -290,7 +298,10 @@ test("SM1-AC-6 lối giữ ở máy thu", { timeout: 180_000 }, async () => {
   await kiemLoiGiu(LOC_GIU)
 })
 test("SM1-AC-6 lối giữ ở máy thu: đột biến lọc nhầm NOT LIKE 's03%' thì đỏ, thông điệp nêu s03-floor-fill", { timeout: 180_000 }, async () => {
-  await assert.rejects(() => kiemLoiGiu(doi(LOC_GIU, "check_name <> 's03-moc-ngay'", "check_name NOT LIKE 's03%'")), /s03-floor-fill/)
+  await assert.rejects(() => kiemLoiGiu(doi(LOC_GIU, `"check_name" IS DISTINCT FROM 's03-moc-ngay'`, `"check_name" NOT LIKE 's03%'`)), /s03-floor-fill/)
+})
+test("SM1-AC-6 lối giữ ở máy thu: đột biến bỏ bộ lọc của sync-cloud thì đỏ, thông điệp nêu s03-moc-ngay", { timeout: 180_000 }, async () => {
+  await assert.rejects(() => kiemLoiGiu(doi(LOC_GIU, ` WHERE "check_name" IS DISTINCT FROM 's03-moc-ngay'`, "")), /s03-moc-ngay/)
 })
 
 function kiemKhoiCu(normalize: (raw: FlowFacts) => FlowFacts) {
