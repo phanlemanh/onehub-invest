@@ -38,10 +38,16 @@ before(async () => {
   await db.query(`INSERT INTO buildings (building_key, region_node_id, upi, iso_region, catalog_tier)
                   VALUES ($1, $2, 'urn:onehub:upi:1:VN:VN-HN:' || $1, 'VN-HN', 'xac_minh')`, [BLD, nut]);
   // QA1–QA3 bí danh sống; QA4 bí danh đã nghỉ; QA5 không có căn; QA6 có căn nhưng mã ở hai toà trong snapshot
-  for (const [n, ma, tang, nghi] of [[1, "QA1", "10", false], [2, "QA2", "11", false], [3, "QA3", "12", false], [4, "QA4", "13", true], [6, "QA6", "14", false]]) {
+  // QA7: có căn, một dòng trong bảng nạp, nhưng mơ hồ toà theo v_s16_can (hai toà, mã không mang tiền tố toà nào)
+  for (const [n, ma, tang, nghi] of [[1, "QA1", "10", false], [2, "QA2", "11", false], [3, "QA3", "12", false], [4, "QA4", "13", true], [6, "QA6", "14", false], [7, "QA7", "15", false]]) {
     await db.query(`INSERT INTO units (unit_key, building_key, floor, sub_id, catalog_tier) VALUES ($1, $2, $3, $1, 'xac_minh')`, [can(n), BLD, tang]);
     await db.query(`INSERT INTO registry_aliases (object_key, kind, value, source, retired_at) VALUES ($1, 'ma_nguon', $2, 'S16', $3)`,
       [can(n), `${DA}/${ma}`, nghi ? new Date() : null]);
+  }
+  await db.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ('q__ttc__can', 'vn', 'S16', '{}')`);
+  for (const toa of ["ZZ1", "ZZ2"]) {
+    await db.query(`INSERT INTO stg_s16_can (snapshot_id, du_an, khu_nhan, toa_id, toa_ten, tang, ma_can, pha)
+                    VALUES ('q__ttc__can', $1, 'K', $2, $2, '15', 'QA7', 1)`, [DA, toa]);
   }
 });
 after(async () => { await db?.end().catch(() => {}); await xoaDbThu(TEN); });
@@ -65,6 +71,7 @@ const DONG1 = [
   { ma: "QA5", tang: "9", pn: 2, bc: "NW", tt: 60, tim: 65, gia: 1_000_000_000 },
   { ma: "QA6", toa: "T1", tang: "14", pn: 2, bc: "NE", tt: 60, tim: 65, gia: 3_000_000_000 },
   { ma: "QA6", toa: "T2", tang: "14", pn: 2, bc: "NE", tt: 61, tim: 66, gia: 3_000_000_000 },
+  { ma: "QA7", tang: "15", pn: 2, bc: "NW", tt: 55, tim: 60 },
 ];
 
 const dauLuocDo = async () => createHash("sha256").update(JSON.stringify([
@@ -142,7 +149,7 @@ test("TTC-AC-4, AC-5 chạy thử không ghi; --ghi chỉ căn có bí danh số
   assert.equal(await dem(), n0, "TTC-AC-5 chạy thử ghi dòng");
   const b = bangDuAn(kq);
   assert.deepEqual({ co_tt: b.co_tt, noi: b.noi, chua_can: b.chua_can, nhieu_toa: b.nhieu_toa, tang_lech: b.tang_lech, gia: b.gia_cdt },
-    { co_tt: 6, noi: 3, chua_can: 2, nhieu_toa: 1, tang_lech: 1, gia: 1 }, "TTC-AC-4 bảng số theo dự án");
+    { co_tt: 7, noi: 3, chua_can: 2, nhieu_toa: 2, tang_lech: 1, gia: 1 }, "TTC-AC-4 bảng số theo dự án");
   await db.query("BEGIN");
   const moi = await lenh.ghi(db, kq.phat, kq.observed_at, "ttc-itest");
   await db.query("COMMIT");
@@ -173,10 +180,13 @@ async function lenhPha(tu, sang) {
   try { return await import(pathToFileURL(tep).href); } finally { rmSync(dir, { recursive: true, force: true }); }
 }
 
-test("TTC-AC-4, AC-5 chiều đỏ: bỏ điều kiện bí danh còn sống → căn bí danh nghỉ có phát biểu; bỏ ON CONFLICT → chạy lại lỗi", async () => {
+test("TTC-AC-4, AC-5 chiều đỏ: bỏ điều kiện bí danh còn sống → căn bí danh nghỉ có phát biểu; bỏ luật mơ hồ toà → QA7 có phát biểu; bỏ ON CONFLICT → chạy lại lỗi", async () => {
   const p1 = await lenhPha("a.retired_at IS NULL AND", "");
   const kq = await p1.tinh(db);
   assert.ok(kq.phat.some((p) => p.subject_key === can(4)), "TTC-AC-4 phá bí danh nghỉ mà căn QA4 vẫn không có phát biểu");
+  assert.ok(!kq.phat.some((p) => p.subject_key === can(7)), "TTC-AC-4 bản thật ghi phát biểu cho mã mơ hồ toà QA7");
+  const p3 = await lenhPha("g.nhieu_toa || moHo.has(khoaCan(g.du_an, g.ma))", "g.nhieu_toa");
+  assert.ok((await p3.tinh(db)).phat.some((p) => p.subject_key === can(7)), "TTC-AC-4 bỏ luật mo_ho mà QA7 vẫn không có phát biểu — phép đo không phân biệt");
   const p2 = await lenhPha("ON CONFLICT DO NOTHING", "");
   await db.query("BEGIN");
   await assert.rejects(p2.ghi(db, (await p2.tinh(db)).phat, new Date(T1), "ttc-pha"), (e) => e.code === "23505", "TTC-AC-5 chạy lại không đụng khoá trùng khi bỏ ON CONFLICT");

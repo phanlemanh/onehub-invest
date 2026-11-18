@@ -39,6 +39,11 @@ export async function tinh(c, { snapshot = null } = {}) {
     `SELECT a.value, u.unit_key, u.floor FROM registry_aliases a JOIN units u ON u.unit_key = a.object_key
       WHERE a.source = $1 AND a.kind = 'ma_nguon' AND a.retired_at IS NULL AND a.object_key LIKE 'unt\\_%'`, [NGUON_S16]);
   const biDanh = new Map(bd.map((r) => [r.value, r]));
+  // Mã mơ hồ (ở hai toà) theo v_s16_can của DA33: snapshot thuộc tính đã gộp một item mỗi mã nên bảng nạp không còn thấy
+  // hai toà — luật chọn toà là của v_s16_can, nhóm mo_ho không phát biểu (bảng phủ ca §2).
+  const { rows: mh } = await c.query(
+    `SELECT du_an || '/' || ma_can AS k FROM v_s16_can WHERE mo_ho`).catch(() => ({ rows: [] }));
+  const moHo = new Set(mh.map((r) => r.k));
   const danhBaTheoDuAn = new Map();
   for (const r of bd) { const d = r.value.split("/")[0]; danhBaTheoDuAn.set(d, (danhBaTheoDuAn.get(d) ?? 0) + 1); }
 
@@ -54,7 +59,7 @@ export async function tinh(c, { snapshot = null } = {}) {
   for (const g of gopKhoa(rows).values()) {
     const x = o(g.du_an);
     x.co_tt++;
-    if (g.nhieu_toa) { x.nhieu_toa++; continue; }
+    if (g.nhieu_toa || moHo.has(khoaCan(g.du_an, g.ma))) { x.nhieu_toa++; continue; }
     const can = biDanh.get(khoaCan(g.du_an, g.ma));
     if (!can) { x.chua_can++; continue; }
     x.noi++;

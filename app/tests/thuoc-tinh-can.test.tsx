@@ -48,11 +48,17 @@ before(async () => {
     ["T1", "QA5", "HIGH_RISE", "APARTMENT", 2, 1, "", "SE", 0, 60, 65],
     ["T1", "QA6", "HIGH_RISE", "APARTMENT", 2, 1, "", "SE", 0, 60, 65],
     ["T2", "QA6", "HIGH_RISE", "APARTMENT", 2, 1, "", "SE", 0, 61, 66],
+    ["T1", "QA8", "HIGH_RISE", "APARTMENT", 2, 1, "", "SE", 0, 60, 65],
   ] as const
   for (const [i, d] of dong.entries()) {
     await db.query(`INSERT INTO stg_s16_can_chi_tiet (snapshot_id, du_an, toa, ma_can, dong, height_type, property_type, bedroom, bathroom,
         direction, balcony_direction, sale_price, area_using, area_building) VALUES ('q__ttca', $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
       [DA, d[0], d[1], i, d[2], d[3], d[4], d[5], d[6], d[7], d[8], d[9], d[10]])
+  }
+  // QA8: không có căn, một dòng trong bảng nạp, nhưng mơ hồ toà theo v_s16_can (hai toà) → không tính vào «chưa vào danh bạ»
+  await db.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ('q__ttca_can', 'vn', 'S16', '{}')`)
+  for (const toa of ["ZZ1", "ZZ2"]) {
+    await db.query(`INSERT INTO stg_s16_can (snapshot_id, du_an, khu_nhan, toa_id, toa_ten, tang, ma_can, pha) VALUES ('q__ttca_can', $1, 'K', $2, $2, '10', 'QA8', 1)`, [DA, toa])
   }
   const kq = await tinh(db)
   await db.query("BEGIN")
@@ -111,7 +117,8 @@ test("TTC-AC-10 ô phủ bằng lệnh đếm độc lập; dự án không có 
   const d = (await db.query(DEM_PHU, [B1])).rows[0]
   // N độc lập: mã một toà trong bảng nạp của dự án mà không có bí danh căn (QA5; QA6 ở hai toà không tính)
   const n = (await db.query(`SELECT count(*)::int n FROM (SELECT ma_can FROM stg_s16_can_chi_tiet WHERE du_an = $1 GROUP BY ma_can
-      HAVING count(DISTINCT toa) = 1) k WHERE NOT EXISTS (SELECT 1 FROM registry_aliases a WHERE a.value = $1 || '/' || k.ma_can AND a.object_key LIKE 'unt%')`, [DA])).rows[0].n
+      HAVING count(DISTINCT toa) = 1) k WHERE NOT EXISTS (SELECT 1 FROM registry_aliases a WHERE a.value = $1 || '/' || k.ma_can AND a.object_key LIKE 'unt%')
+      AND NOT EXISTS (SELECT 1 FROM v_s16_can m WHERE m.mo_ho AND m.du_an = $1 AND m.ma_can = k.ma_can)`, [DA])).rows[0].n
   assert.deepEqual({ y: phu.data.trongDanhBa, x: phu.data.coThuocTinh, z: phu.data.coGia, n: phu.data.chuaVaoDanhBa }, { ...d, n }, "TTC-AC-10 ô phủ lệch đếm độc lập")
   assert.deepEqual({ ...d, n }, { y: 4, x: 3, z: 2, n: 1 }, "TTC-AC-10 fixture đổi")
   const khong = await lop.docPhuThuocTinh([B2], db)
@@ -131,11 +138,14 @@ test("TTC-AC-10 ô phủ bằng lệnh đếm độc lập; dự án không có 
   } finally { delete process.env.ONEHUB_TTC_LOI_THU }
 })
 
-test("TTC-AC-10 chiều đỏ: bỏ điều kiện một toà khi đếm «chưa vào danh bạ» → ô N lệch đếm độc lập", async () => {
+test("TTC-AC-10 chiều đỏ: bỏ điều kiện một toà, hay luật mơ hồ toà, khi đếm «chưa vào danh bạ» → ô N lệch đếm độc lập", async () => {
   const pha = await lopPha("GROUP BY c.du_an, upper(btrim(c.ma_can)) HAVING count(DISTINCT c.toa) = 1", "GROUP BY c.du_an, upper(btrim(c.ma_can))")
   const p = await pha.docPhuThuocTinh([B1], db)
   assert.ok(p.ok && p.data.trangThai === "co")
   assert.notEqual(p.data.chuaVaoDanhBa, 1, "TTC-AC-10 lớp đọc phá vẫn ra N đúng — phép đếm không phân biệt")
+  const pha2 = await lopPha("WHERE b.value IS NULL AND m.gia_tri IS NULL", "WHERE b.value IS NULL")
+  const p2 = await pha2.docPhuThuocTinh([B1], db)
+  assert.ok(p2.ok && p2.data.trangThai === "co" && p2.data.chuaVaoDanhBa === 2, "TTC-AC-10 bỏ luật mơ hồ toà mà N không đổi — phép đếm không phân biệt")
 })
 
 // ---- Mức màn (TTC-AC-9, AC-10): render tĩnh component thật với dữ liệu lớp đọc trả về ----

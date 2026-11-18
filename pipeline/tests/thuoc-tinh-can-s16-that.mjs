@@ -35,6 +35,7 @@ WITH snap AS (SELECT s.snapshot_id, s.collected_at FROM airbnb_snapshots s
 d AS (SELECT c.*, upper(btrim(c.ma_can)) AS ma FROM stg_s16_can_chi_tiet c JOIN snap USING (snapshot_id)),
 k AS (SELECT DISTINCT ON (d.du_an, d.ma) d.* FROM d
        WHERE (d.du_an, d.ma) IN (SELECT du_an, ma FROM d GROUP BY du_an, ma HAVING count(DISTINCT toa) = 1)
+         AND NOT EXISTS (SELECT 1 FROM v_s16_can m WHERE m.mo_ho AND m.du_an = d.du_an AND m.ma_can = d.ma)
        ORDER BY d.du_an, d.ma, d.dong),
 n AS (SELECT k.* FROM k JOIN registry_aliases a ON a.source = 'S16' AND a.kind = 'ma_nguon' AND a.retired_at IS NULL
         AND a.object_key LIKE 'unt\\_%' AND a.value = k.du_an || '/' || k.ma)

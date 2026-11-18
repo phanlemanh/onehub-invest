@@ -73,6 +73,10 @@ khoa AS MATERIALIZED (
    WHERE c.du_an IN (SELECT du_an FROM da)
    GROUP BY c.du_an, upper(btrim(c.ma_can)) HAVING count(DISTINCT c.toa) = 1
 ),
+mo_ho AS MATERIALIZED (
+  -- mã ở hai toà theo luật chọn toà của DA33 (snapshot thuộc tính chỉ giữ một item mỗi mã nên bảng nạp không thấy hai toà)
+  SELECT v.du_an || '/' || v.ma_can AS gia_tri FROM v_s16_can v WHERE v.mo_ho AND v.du_an IN (SELECT du_an FROM da)
+),
 bi_danh AS MATERIALIZED (
   SELECT a.value FROM registry_aliases a
    WHERE a.source = 'S16' AND a.kind = 'ma_nguon' AND a.retired_at IS NULL AND a.object_key LIKE 'unt\\_%'
@@ -81,7 +85,8 @@ SELECT (SELECT count(*) FROM da)::int AS so_du_an,
        (SELECT count(*) FROM can)::int AS trong_danh_ba,
        (SELECT count(*) FROM can JOIN v USING (unit_key))::int AS co_thuoc_tinh,
        (SELECT count(*) FROM can JOIN g USING (unit_key))::int AS co_gia,
-       (SELECT count(*) FROM khoa k LEFT JOIN bi_danh b ON b.value = k.gia_tri WHERE b.value IS NULL)::int AS chua_vao_danh_ba,
+       (SELECT count(*) FROM khoa k LEFT JOIN bi_danh b ON b.value = k.gia_tri LEFT JOIN mo_ho m ON m.gia_tri = k.gia_tri
+         WHERE b.value IS NULL AND m.gia_tri IS NULL)::int AS chua_vao_danh_ba,
        (SELECT max(v.observed_at) FROM can JOIN v USING (unit_key)) AS lan_thu`
 
 const iso = (d: Date | string | null) => (d == null ? null : new Date(d).toISOString())
