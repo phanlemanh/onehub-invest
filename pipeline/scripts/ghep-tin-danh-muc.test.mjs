@@ -5,7 +5,7 @@ import { test } from "node:test";
 import { pathToFileURL } from "node:url";
 
 const lib = await import(process.env.GHEP_LIB ? pathToFileURL(process.env.GHEP_LIB).href : "../lib/ghep-tin-danh-muc.mjs");
-const { RULE, dungDanhBa, gopTin, xetBai, xetTin } = lib;
+const { NGUON_BAT, RULE, TAT_CA_NGUON, dungDanhBa, gopTin, xetBai, xetTin } = lib;
 
 // Tên lấy từ danh bạ thật của hai khu; khoá rút gọn để đọc được.
 const OP1 = dungDanhBa({
@@ -33,7 +33,7 @@ const banDoc = (o) => ({ label_id: "9", model: "m", ...o });
 const bai = (o) => ({ cot: [], chu: "", banDoc: null, ...o });
 
 const moiO = (ten, vao, mong, d = OP1) => test(ten, () => {
-  const kq = xetBai(bai(vao), d);
+  const kq = xetBai(bai(vao), d, { nguonBat: TAT_CA_NGUON });
   for (const [k, v] of Object.entries(mong)) assert.equal(kq[k], v, `ô «${ten}»: ${k} = ${kq[k]}, cần ${v}`);
 });
 
@@ -101,11 +101,16 @@ test("can-cu-cua-tung-nguon", () => {
   assert.deepEqual(xetBai(bai({ cot: ["S102"] }), OP1).can_cu, { nguon: "cot", ten: "S102", ten_chuan: "S1.02" });
   const c = xetBai(bai({ chu: "toà S1.02", banDoc: banDoc({ building: oDoc("S1.02", "toà S1.02") }) }), OP1).can_cu;
   assert.deepEqual(c, { nguon: "chu-model", ten: "S1.02", label_id: "9", trich: "toà S1.02" });
-  const d = xetBai(bai({ chu: "tòa S1 . 02", banDoc: banDoc({ building: oDoc("S1.02", "tòa S1 . 02") }) }), OP1).can_cu;
+  const d = xetBai(bai({ chu: "tòa S1 . 02", banDoc: banDoc({ building: oDoc("S1.02", "tòa S1 . 02") }) }), OP1, { nguonBat: TAT_CA_NGUON }).can_cu;
   assert.deepEqual(d, { nguon: "model", ten: "S1.02", label_id: "9", model: "m", trich: "tòa S1 . 02" });
 });
 
 // Tắt một nguồn
+test("mac-dinh-nguon-chi-co-model-dang-tat", () => {
+  assert.equal(NGUON_BAT.includes(RULE.model), false, "nguồn D, G phải tắt ở hàng này");
+  const kq = xetBai(bai({ chu: "Bán căn tòa S1 . 02", banDoc: banDoc({ building: oDoc("S1.02", "tòa S1 . 02") }) }), OP1);
+  assert.equal(kq.ly_do, "nguon-tat");
+});
 test("nguon-tat-khong-gan", () => {
   const kq = xetBai(bai({ cot: ["S1.02"] }), OP1, { nguonBat: [RULE.model] });
   assert.equal(kq.ly_do, "nguon-tat");

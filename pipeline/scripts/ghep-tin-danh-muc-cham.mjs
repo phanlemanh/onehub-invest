@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // ghep-tin-danh-muc-cham.mjs — PL20 (AC-9): chấm độ đúng của máy trên lát hai-khu-ghep-b, tính lại từ nhãn thô.
-//   --cham <tệp đóng băng> [--ra <báo cáo.md>]       thoát 0 khi N1, N2 đạt
+//   --cham <tệp đóng băng> [--ra <báo cáo.md>]       thoát 0 khi cả N1, N2 đạt
 //   --cham <tệp đóng băng> --doi-chieu <báo cáo.md>  tính lại và đỏ khi số khác báo cáo
 //   --cham <tệp đóng băng> --tien-do                 in tiến độ gắn nhãn, không kết luận
 // Chỉ đọc DB. Máy gắn toà đúng khi người ghi đúng toà đó. Máy gắn vùng đúng khi người ghi đúng vùng đó, vùng con của nó, hay một toà
@@ -17,9 +17,9 @@ import { LAT, docTepMau } from "./ghep-tin-danh-muc-lat-nhan.mjs";
 
 export const CO_MAU = 110;
 export const NGUONG = 0.95;
-/** Nhóm phải đạt thì hàng mới đạt. N3 chưa chấm hay hụt thì D, G tắt và hàng vẫn xét tiếp. */
+/** Hai nhóm đều phải đạt thì hàng mới đạt. Nguồn D, G đang tắt nên không có nhóm chấm. */
 const NHOM_BAT_BUOC = ["n1", "n2"];
-const NGUON_CUA_NHOM = { n1: ["A", "B"], n2: ["C", "F"], n3: ["D", "G"] };
+const NGUON_CUA_NHOM = { n1: ["A", "B"], n2: ["C", "F"] };
 
 /** Quy tên người gắn về nút của dự án. */
 export function quyNhan({ building, subzone }, d) {

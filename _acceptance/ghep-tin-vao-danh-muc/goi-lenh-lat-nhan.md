@@ -1,8 +1,8 @@
 # PL20 — Gói lệnh nạp lát nhãn `hai-khu-ghep-b` (giám sát chạy)
 
-**Lời duyệt:** Mạnh ký Cổng Phạm vi (`/acceptance-gate:approve ghep-tin-vao-danh-muc duyệt`) với hai khuyến nghị trên thẻ: chấm ba nhóm nguồn, tối đa 330 bài. Hợp đồng ghi rõ chữ ký phủ lượt nạp lát này.
+**Lời duyệt:** Mạnh ký Cổng Phạm vi (`/acceptance-gate:approve ghep-tin-vao-danh-muc duyệt`) và chọn phương án 1 ngày 18/11: chấm hai nhóm nguồn, 220 bài. Hợp đồng ghi rõ chữ ký phủ lượt nạp lát này.
 
-**Điều kiện chạy:** lượt đọc bù đã xong bước 6 và 7 của `goi-lenh-doc-bu.md`, và đã qua ít nhất một lượt nạp S03 sau khi đọc xong, để đầu ra của máy ổn định.
+**Điều kiện chạy:** cả hai lượt đọc bù đã xong (`goi-lenh-doc-bu.md`, `goi-lenh-doc-them.md`), và đã qua ít nhất một lượt nạp S03 sau khi đọc xong, để đầu ra của máy ổn định.
 
 **Ghi vào:** chỉ `eval_label_items`, lát `hai-khu-ghep-b`, trên DB máy thu. Không điền nháp, không gọi model.
 
@@ -21,11 +21,9 @@ cd "$W/pipeline" && node scripts/ghep-tin-danh-muc-lat-nhan.mjs --rut --seed pl2
 
 Đặt `F` là đường tệp lệnh vừa in. Đọc dòng `thieu`:
 
-- Thoát 0: đủ 110 bài mỗi nhóm, đi tiếp.
-- Nhóm `n1` hoặc `n2` thiếu: **dừng, báo P4**.
-- Chỉ nhóm `n3` thiếu: đi tiếp và báo P4 số thiếu. Nhóm này không đủ cỡ thì nguồn D, G sẽ tắt.
+Thoát 0 khi đủ 110 bài mỗi nhóm. Nhóm nào thiếu thì **dừng, báo P4**.
 
-Số chạy thử trước lượt đọc bù: `n1` 110, `n2` 110, `n3` 44 (thiếu 66). Số thật lấy sau lượt đọc.
+Số chạy thử sau lượt đọc bù đầu: `n1` 110, `n2` 110.
 
 ## 2. Sao lưu
 
@@ -59,7 +57,7 @@ DELETE FROM eval_label_items WHERE lat = 'hai-khu-ghep-b' AND NOT EXISTS (SELECT
 
 ## Sau khi nạp
 
-Màn gắn nhãn theo thứ tự: `/ops/labels?lat=hai-khu-ghep-b&nhom=n1`, rồi `nhom=n2`, rồi `nhom=n3`. Phép chấm chỉ đọc ô Toà và ô Phân khu, nhưng màn hiện đòi điền đủ 17 ô mỗi bài.
+Màn gắn nhãn theo thứ tự: `/ops/labels?lat=hai-khu-ghep-b&nhom=n1`, rồi `nhom=n2`. Phép chấm chỉ đọc ô Toà và ô Phân khu, nhưng màn hiện đòi điền đủ 17 ô mỗi bài.
 
 ## Báo lại cho P4
 

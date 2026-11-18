@@ -49,6 +49,8 @@ luật không đọc ra gì có tên trong đoạn trích. Ước tính sau đ�
 | A, B, C, F (nhóm model một mình bị tắt) | 51,1–52,4% |
 | A, B (cả hai nhóm dùng chữ và model bị tắt) | 43,0% |
 
+**Kết quả lượt đọc bù đầu (18/11, 1.740 bài, 2,47 USD):** độ phủ 3.301/6.544 = 50,4%, thấp hơn ước tính. Nguồn D, G chỉ có 81 tin, không đủ 110 bài để chấm, nên **Mạnh chọn tắt D, G**; độ phủ còn 49,2%. Có 285 tin chưa gắn có bài mà luật đọc ra toà hay vùng nhưng chính bài đó chưa được đọc, vì lượt đầu chọn bài dài nhất của tin. **Lượt đọc thêm** đọc đúng 285 bài này, khoảng 0,41 USD; tỉ lệ model xác nhận đo được là 59,9%, ước đạt **51,8%**.
+
 ## 3. Thiết kế
 
 **Một hàm gắn thuần** `pipeline/lib/ghep-tin-danh-muc.mjs`, xét từng bài. Đầu vào: dự án của tin, ô tên toà của bài, chữ bài, bản đọc của model, danh bạ của
@@ -96,14 +98,15 @@ và chưa có bản đọc `dg3-s03-v3`, mỗi tin một bài chữ dài nhất,
 
 ## 4. Đo chất lượng
 
-Chấm ba nhóm riêng trên lát nhãn mới `hai-khu-ghep-b`. Mỗi nhóm cận dưới Wilson từ **0,95**, tối thiểu **110 bài máy gắn** (chịu được 1 bài sai). Mỗi nhóm rút ngẫu nhiên theo hạt giống, mỗi tin một bài, từ chính các tin máy
-gắn sau lượt đọc bù.
+Chấm hai nhóm riêng trên lát nhãn mới `hai-khu-ghep-b`. Mỗi nhóm cận dưới Wilson từ **0,95**, tối thiểu **110 bài máy gắn** (chịu được 1 bài sai). Mỗi nhóm rút ngẫu nhiên theo hạt giống, mỗi tin một bài, từ chính các tin máy
+gắn sau hai lượt đọc bù.
 
-| Nhóm | Nguồn | Tin máy gắn (sau đợt 2, ước) | Khi hụt ngưỡng hoặc chưa chấm |
-|---|---|---:|---|
-| N1 | A, B | khoảng 2.770 | hàng không đạt |
-| N2 | C, F | 520–610 | tắt C, F; độ phủ 43,0%, MS3 chưa đạt |
-| N3 | D, G | 180–310 | tắt D, G; độ phủ vẫn ước 51,1–52,4% |
+| Nhóm | Nguồn | Khi hụt ngưỡng hoặc chưa chấm |
+|---|---|---|
+| N1 | A, B | hàng không đạt |
+| N2 | C, F | tắt C, F; độ phủ khoảng 43%, MS3 chưa đạt |
+
+Nguồn D, G viết sẵn và có test nhưng tắt ở hàng này.
 
 - **Không dùng lát `hai-khu-ghep` của PL35 để chấm**: lát này chia đều theo tầng, nên trong 159 mục máy gắn chỉ 13% thuộc GP, trong khi GP chiếm 63% số tin máy gắn. Lát vẫn giữ cho PL36.
 - **Người gắn không thấy đáp án của máy**: lát mới không điền nháp, và nhóm trên màn mang mã trung tính.
@@ -111,7 +114,7 @@ gắn sau lượt đọc bù.
 - **Quy nhãn về nút**: tên người gắn được quy về nút danh bạ của dự án bằng cùng bảng tên. Máy gắn toà đúng khi người ghi đúng toà đó; máy gắn vùng đúng khi người ghi đúng vùng đó, một vùng con của nó, hoặc một toà nằm trong nó. Không quy được hoặc người ghi «không nêu» thì tính máy sai.
 - **Dừng sớm**: một nhóm gặp lỗi thứ hai là đã hụt ngưỡng, dừng gắn nhãn nhóm đó.
 
-Tổng tối đa **330 bài**, khoảng 16 giờ 30 phút theo nhịp 3 phút mỗi bài đo được trên 38 lượt của một lát khác. Màn gắn nhãn hiện đòi đủ 17 ô cho mỗi bài, dù phép chấm chỉ đọc ô Toà và ô Phân khu. Thứ tự gắn: N1, N2, rồi N3.
+Tổng **220 bài**, khoảng 11 giờ theo nhịp 3 phút mỗi bài đo được trên 38 lượt của một lát khác. Màn gắn nhãn hiện đòi đủ 17 ô cho mỗi bài, dù phép chấm chỉ đọc ô Toà và ô Phân khu. Thứ tự gắn: N1, rồi N2.
 
 ## 5. Thứ tự thực hiện
 

@@ -2,7 +2,7 @@
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
 
-import { chonBaiDocBu, dongBangDanhSach, xetNacThu } from "./ghep-tin-danh-muc-doc-bu.mjs";
+import { chonBaiDocBu, chonBaiDocThem, dongBangDanhSach, xetNacThu } from "./ghep-tin-danh-muc-doc-bu.mjs";
 
 const banDoc = { label_id: "1", model: "m" };
 const vao = (tin, bai) => ({ tin, bai: new Map(Object.entries(bai)), danhBa: new Map([["1", {}], ["16", {}]]) });
@@ -40,3 +40,19 @@ test("nac-thu-dat-thi-doc-tiep", () => assert.deepEqual(xetNacThu({ so_bai: 20, 
 test("nac-thu-qua-nhieu-bai-hong-thi-dung", () => assert.match(xetNacThu({ so_bai: 20, ok: 17, usd: 0.03 })[0], /qua-nhieu-bai-hong 3\/20/));
 test("nac-thu-tien-moi-bai-qua-cao-thi-dung", () => assert.match(xetNacThu({ so_bai: 20, ok: 20, usd: 0.1 })[0], /tien-moi-bai/));
 test("nac-thu-khong-bai-nao-doc-duoc-thi-dung", () => assert.ok(xetNacThu({ so_bai: 20, ok: 0, usd: 0 }).some((l) => l.startsWith("khong-co-bai"))));
+
+// Lượt 2
+test("luot-2-doc-dung-bai-luat-doc-ra-du-tin-da-co-ban-doc-bai-khac", () => {
+  const v = vao([tin("t1", ["a", "b"])], { a: { chu: "bài dài nhất đã có bản đọc", banDoc }, b: { chu: "toà S1", banDoc: null } });
+  assert.deepEqual(chonBaiDocThem(v, kq({ t1: chua }, { a: { ly_do: "khong-neu" }, b: { ly_do: "chi-luat" } })).post_ids, ["b"]);
+});
+test("luot-2-moi-tin-mot-bai", () => {
+  const v = vao([tin("t1", ["a", "b"])], { a: { chu: "ngắn", banDoc: null }, b: { chu: "dài hơn hẳn", banDoc: null } });
+  assert.deepEqual(chonBaiDocThem(v, kq({ t1: chua }, { a: { ly_do: "chi-luat" }, b: { ly_do: "chi-luat" } })).post_ids, ["b"]);
+});
+for (const [ten, v, r] of [
+  ["luot-2-loai-tin-da-gan", vao([tin("t1", ["a"])], { a: { chu: "x", banDoc: null } }), kq({ t1: { status: "gan" } }, { a: { ly_do: "chi-luat" } })],
+  ["luot-2-loai-bai-da-doc", vao([tin("t1", ["a"])], { a: { chu: "x", banDoc } }), kq({ t1: chua }, { a: { ly_do: "chi-luat" } })],
+  ["luot-2-loai-bai-khong-neu", vao([tin("t1", ["a"])], { a: { chu: "x", banDoc: null } }), kq({ t1: chua }, { a: { ly_do: "khong-neu" } })],
+  ["luot-2-loai-tin-ngoai-hai-khu", vao([tin("t1", ["a"], "7")], { a: { chu: "x", banDoc: null } }), kq({ t1: chua }, { a: { ly_do: "chi-luat" } })],
+]) test(ten, () => assert.deepEqual(chonBaiDocThem(v, r).post_ids, [], `ô «${ten}»`));

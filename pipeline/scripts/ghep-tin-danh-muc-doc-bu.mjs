@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 // ghep-tin-danh-muc-doc-bu.mjs — PL20 (AC-10): danh sách bài cho lượt model đọc bù. Lệnh này không gọi model và không ghi DB.
-//   --lap [--ra <thư mục>]                     lập danh sách, đóng băng thành tệp có băm
-//   --kiem <tệp>                               kiểm danh sách trước lượt đọc (thoát 1, ghim mã bài khi sai)
+//   --lap [--vong 2] [--ra <thư mục>]          lập danh sách, đóng băng thành tệp có băm
+//   --kiem <tệp> [--vong 2]                    kiểm danh sách trước lượt đọc (thoát 1, ghim mã bài khi sai)
+// Lượt 1: tin chưa gắn, chưa có bản đọc nào. Lượt 2: tin chưa gắn có bài luật đọc ra toà, vùng mà chính bài đó chưa được đọc.
 //   --in <tệp> [--dau N | --bo-dau N]          in mã bài ngăn bằng dấu phẩy, để truyền cho lệnh đọc
 //   --kiem-thu <run_id> --so-bai N             kiểm nấc thử trước khi đọc cả lô (thoát 1 khi quá ngưỡng dừng)
 //   --sau-doc <tệp> --run-id <a,b> --tran-usd <số>   kiểm sau lượt đọc: tiền thật và mọi dòng thuộc danh sách
+//   --tong-tien --tran-usd <số>                tổng tiền mọi lượt đọc bù của PL20
 import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -34,6 +36,43 @@ export function chonBaiDocBu({ tin, bai, danhBa }, { theoTin, ketQuaBai }) {
     post_ids.push(coChu[0]);
   }
   return { post_ids, khong_chu };
+}
+
+/** Lượt 2: mỗi tin chưa gắn một bài mà luật đọc ra toà, vùng nhưng chính bài đó chưa có bản đọc; ưu tiên bài dài nhất. */
+export function chonBaiDocThem({ tin, bai, danhBa }, { theoTin, ketQuaBai }) {
+  const post_ids = [];
+  for (const t of tin) {
+    if (!danhBa.has(t.du_an) || theoTin.get(t.offer_id)?.status !== "chua_gan") continue;
+    const ds = (t.post_ids ?? []).filter((p) => bai.has(p) && !bai.get(p).banDoc && ketQuaBai.get(p)?.ly_do === "chi-luat");
+    if (!ds.length) continue;
+    ds.sort((a, b) => (bai.get(b).chu ?? "").length - (bai.get(a).chu ?? "").length || a.localeCompare(b));
+    post_ids.push(ds[0]);
+  }
+  return { post_ids, khong_chu: 0 };
+}
+
+/** Kiểm danh sách lượt 2. Trả các lỗi, mỗi lỗi ghim mã bài. */
+export async function kiemDocThem(c, postIds) {
+  const loi = [];
+  const vao = await docDauVao(c);
+  const { theoTin, ketQuaBai } = tinhGan(vao);
+  const tinCua = new Map(vao.tin.flatMap((t) => (t.post_ids ?? []).map((p) => [p, t])));
+  const daDoc = new Set((await c.query(
+    `SELECT DISTINCT post_id FROM silver_labels WHERE source_code = 'S03' AND post_id = ANY ($1) AND prompt_version = $2 AND probabilities ->> 'nguon' = 'doc-gop' AND json_ok`,
+    [postIds, PROMPT_VERSION_DOC])).rows.map((r) => r.post_id));
+  const daGap = new Map();
+  for (const p of postIds) {
+    const t = tinCua.get(p);
+    if (!t) { loi.push(`khong-co-tin ${p}`); continue; }
+    if (!vao.danhBa.has(t.du_an)) loi.push(`ngoai-pham-vi ${p}`);
+    if (!vao.bai.has(p)) loi.push(`bai-thu ${p}`);
+    if (theoTin.get(t.offer_id)?.status === "gan") loi.push(`tin-da-gan ${p}`);
+    if (daDoc.has(p)) loi.push(`da-co-ban-doc ${p}`);
+    if (vao.bai.has(p) && ketQuaBai.get(p)?.ly_do !== "chi-luat") loi.push(`khong-phai-bai-luat-doc-ra ${p}`);
+    if (daGap.has(t.offer_id)) loi.push(`hai-bai-cung-tin ${p} ${daGap.get(t.offer_id)}`);
+    daGap.set(t.offer_id, p);
+  }
+  return loi;
 }
 
 /** Danh sách đã sắp kèm băm: cùng dữ liệu ra cùng băm. */
@@ -93,6 +132,7 @@ export async function kiemSauDoc(c, postIds, runIds, tranUsd) {
   const ds = new Set(postIds);
   const loi = rows.filter((r) => !ds.has(r.post_id)).map((r) => `ngoai-danh-sach ${r.post_id}`);
   const usd = rows.reduce((s, r) => s + r.usd, 0);
+  if (!rows.length) loi.push(`khong-co-dong ${runIds.join(",")}`);
   if (usd > tranUsd) loi.push(`vuot-tran ${usd.toFixed(4)} USD > ${tranUsd} USD`);
   return { loi, usd, so_dong: rows.length };
 }
@@ -121,10 +161,11 @@ async function main() {
     await c.query("SET default_transaction_read_only = on");
     if (a.includes("--lap")) {
       const vao = await docDauVao(c);
-      const { post_ids, khong_chu } = chonBaiDocBu(vao, tinhGan(vao));
+      const vong2 = lay("--vong") === "2";
+      const { post_ids, khong_chu } = (vong2 ? chonBaiDocThem : chonBaiDocBu)(vao, tinhGan(vao));
       const x = dongBangDanhSach(post_ids);
       const ra = lay("--ra") ? path.resolve(lay("--ra")) : THU_MUC;
-      const tep = path.join(ra, `pl20-doc-bu-${x.sha256.slice(0, 12)}.json`);
+      const tep = path.join(ra, `pl20-doc-bu-${vong2 ? "v2-" : ""}${x.sha256.slice(0, 12)}.json`);
       if (!existsSync(tep)) { mkdirSync(ra, { recursive: true }); writeFileSync(tep, `${JSON.stringify(x, null, 1)}\n`); }
       console.log(`doc-bu: ${x.so_bai} bai · bo ${khong_chu} tin khong co chu · uoc ${(x.so_bai * 0.00145).toFixed(2)} USD, p95 ${(x.so_bai * 0.00192).toFixed(2)} USD`);
       console.log(`sha256 ${x.sha256}`);
@@ -133,10 +174,18 @@ async function main() {
     }
     if (lay("--kiem")) {
       const { post_ids } = docTep(lay("--kiem"));
-      const loi = await kiemTruocDoc(c, post_ids);
+      const loi = await (lay("--vong") === "2" ? kiemDocThem : kiemTruocDoc)(c, post_ids);
       for (const l of loi) console.error(`DO: ${l}`);
       console.log(loi.length ? `doc-bu: ${loi.length} loi` : `doc-bu: danh sach ${post_ids.length} bai dung`);
       return loi.length ? 1 : 0;
+    }
+    if (a.includes("--tong-tien")) {
+      const tran = Number(lay("--tran-usd"));
+      if (!Number.isFinite(tran)) { console.error("can --tran-usd"); return 2; }
+      const { rows: [r] } = await c.query(`SELECT count(*)::int AS n, coalesce(sum(cost_usd), 0)::float8 AS usd FROM silver_labels WHERE run_id LIKE 'pl20-doc-bu%'`);
+      console.log(`doc-bu: tong ${r.n} dong · ${r.usd.toFixed(4)} USD / tran ${tran} USD`);
+      if (!r.n || r.usd > tran) { console.error(r.n ? `DO: vuot-tran ${r.usd.toFixed(4)} USD > ${tran} USD` : "DO: khong-co-dong"); return 1; }
+      return 0;
     }
     if (lay("--kiem-thu")) {
       const so_bai = Number(lay("--so-bai"));

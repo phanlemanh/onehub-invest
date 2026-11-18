@@ -20,9 +20,28 @@ const tam = mkdtempSync(path.join(tmpdir(), "pl20-doc-bu-"));
 const c = new pg.Client({ connectionString: URL_DB });
 await c.connect();
 try {
+  // Lượt 2 đo trên bản chép đã gỡ bản đọc của chính lượt đó, để danh sách không rỗng.
+  await c.query(`DELETE FROM silver_labels WHERE run_id = 'pl20-doc-bu-2'`);
+  const tam2 = path.join(tam, "v2"); 
+  const lap2 = chay("--lap", "--vong", "2", "--ra", tam2);
+  dat("lượt 2: lập danh sách", lap2.status === 0, lap2.stderr);
+  const tep2 = path.join(tam2, readdirSync(tam2).find((f) => f.startsWith("pl20-doc-bu-v2-")));
+  const goc2 = JSON.parse(readFileSync(tep2, "utf8"));
+  dat("lượt 2: danh sách có bài", goc2.so_bai > 0);
+  const kiem2 = chay("--kiem", tep2, "--vong", "2");
+  dat("lượt 2: danh sách đúng thì xanh", kiem2.status === 0, kiem2.stderr);
+  const v2 = await docDauVao(c), k2 = tinhGan(v2);
+  const gan2 = v2.tin.find((t) => k2.theoTin.get(t.offer_id)?.status === "gan" && (t.post_ids ?? []).some((p) => v2.bai.has(p)));
+  const bai2 = gan2.post_ids.find((p) => v2.bai.has(p));
+  const f2 = path.join(tam2, "cay.json"); writeFileSync(f2, JSON.stringify(dongBangDanhSach([...goc2.post_ids, bai2])));
+  const r2c = chay("--kiem", f2, "--vong", "2");
+  dat("lượt 2: cấy tin đã gắn thì đỏ, ghim mã bài", r2c.status === 1 && r2c.stderr.includes(`tin-da-gan ${bai2}`), r2c.stderr.slice(0, 300));
+
+  // Lượt 1 đo trên bản chép đã gỡ bản đọc của cả hai lượt.
+  await c.query(`DELETE FROM silver_labels WHERE run_id LIKE 'pl20-doc-bu%'`);
   const lap = chay("--lap", "--ra", tam);
   dat("lập danh sách", lap.status === 0, lap.stderr);
-  const tep = path.join(tam, readdirSync(tam).find((f) => f.startsWith("pl20-doc-bu-")));
+  const tep = path.join(tam, readdirSync(tam).find((f) => /^pl20-doc-bu-[0-9a-f]/.test(f)));
   const goc = JSON.parse(readFileSync(tep, "utf8"));
   dat("danh sách có bài", goc.so_bai > 0);
   const kiem = chay("--kiem", tep);

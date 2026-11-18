@@ -1,4 +1,4 @@
-// ghep-tin-danh-muc-lat-nhan.test.mjs — PL20: rút mẫu ba nhóm nguồn cho lát hai-khu-ghep-b (AC-9).
+// ghep-tin-danh-muc-lat-nhan.test.mjs — PL20: rút mẫu hai nhóm nguồn cho lát hai-khu-ghep-b (AC-9).
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
 
@@ -21,12 +21,12 @@ const du = () => duLieu({ A: 200, B: 20, C: 60, F: 90, D: 70, G: 60 });
 test("du-110-bai-moi-nhom", () => {
   const { vao, kq } = du();
   const r = rutMau(vao, kq, { seed: "s" });
-  for (const n of ["n1", "n2", "n3"]) assert.equal(r.mau.filter((x) => x.stratum === n).length, 110, `nhóm ${n}`);
+  for (const n of ["n1", "n2"]) assert.equal(r.mau.filter((x) => x.stratum === n).length, 110, `nhóm ${n}`);
   assert.deepEqual(r.thieu, {});
 });
 test("nguon-vao-dung-nhom", () => {
   const { vao, kq } = du();
-  const nhom = { A: "n1", B: "n1", C: "n2", F: "n2", D: "n3", G: "n3" };
+  const nhom = { A: "n1", B: "n1", C: "n2", F: "n2" };
   for (const x of rutMau(vao, kq, { seed: "s" }).mau) assert.equal(x.stratum, nhom[x.nguon], `bài ${x.ref_id}`);
 });
 test("cung-hat-giong-cung-mau-khac-hat-giong-khac-mau", () => {
@@ -63,9 +63,13 @@ test("chi-lay-tin-da-gan-va-bai-co-chu", () => {
   assert.deepEqual(rutMau(vao, kq, { seed: "s", co: 3 }).mau.map((x) => x.ref_id), ["p-A-2"]);
 });
 test("nhom-thieu-bai-thi-bao-so-thieu", () => {
-  const { vao, kq } = duLieu({ A: 5, D: 2 });
+  const { vao, kq } = duLieu({ A: 5, C: 2 });
   const r = rutMau(vao, kq, { seed: "s", co: 5 });
-  assert.deepEqual(r.thieu, { n2: 5, n3: 3 });
+  assert.deepEqual(r.thieu, { n2: 3 });
+});
+test("nguon-da-tat-khong-vao-mau", () => {
+  const { vao, kq } = duLieu({ A: 2, D: 3, G: 3 });
+  assert.ok(rutMau(vao, kq, { seed: "s", co: 2 }).mau.every((x) => x.stratum === "n1"));
 });
 test("dong-bang-doi-mot-nut-thi-doi-bam", () => {
   const { vao, kq } = duLieu({ A: 3 });

@@ -8,8 +8,10 @@ import { chuanHoaTenToa as chuan } from "./danh-ba-vat-the.mjs";
 export const RULE = Object.freeze({
   cot: "ghep-toa-cot", cotChuan: "ghep-toa-cot-chuan", chuModel: "ghep-toa-chu-model", model: "ghep-toa-model",
 });
-/** Nguồn đang bật. Tắt một nguồn: bỏ rule_id khỏi danh sách này, lượt kế rút hết dòng của nguồn đó. */
-export const NGUON_BAT = Object.freeze([RULE.cot, RULE.cotChuan, RULE.chuModel, RULE.model]);
+export const TAT_CA_NGUON = Object.freeze([RULE.cot, RULE.cotChuan, RULE.chuModel, RULE.model]);
+/** Nguồn đang bật. Tắt một nguồn: bỏ rule_id khỏi danh sách này, lượt kế rút hết dòng của nguồn đó.
+ * RULE.model (D, G) tắt: chỉ có 81 tin, không đủ 110 bài để chấm (Mạnh chọn 18/11). */
+export const NGUON_BAT = Object.freeze([RULE.cot, RULE.cotChuan, RULE.chuModel]);
 
 const boDot = (s) => s.replace(/\./g, "");
 const boDau = (s) => String(s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/gi, "D").toUpperCase();

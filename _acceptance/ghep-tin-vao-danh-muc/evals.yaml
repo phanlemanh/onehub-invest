@@ -76,7 +76,7 @@ evals:
     cmd: bash _acceptance/ghep-tin-vao-danh-muc/probes/do-phu.sh
     paths: ["pipeline/scripts/ghep-tin-danh-muc*.mjs", "db/migrations/117_*.sql", "_acceptance/ghep-tin-vao-danh-muc/probes/dem-doc-lap.mjs"]
     expected: >
-      Trên bản chép DB máy thu sau lượt đọc bù, với các nguồn đã qua AC-9: in tử số, mẫu số, tách theo khu, mức gắn, nguồn, số trước và sau đọc bù; tỉ lệ từ 50%; lệch không quá 0,5% tử số so với probes/dem-doc-lap.mjs, bản viết lại luật từ
+      Trên bản chép DB máy thu sau hai lượt đọc bù, với nguồn A, B, C, F đang bật: in tử số, mẫu số, tách theo khu, mức gắn, nguồn, số trước và sau đọc bù; tỉ lệ từ 50%; lệch không quá 0,5% tử số so với probes/dem-doc-lap.mjs, bản viết lại luật từ
       design doc §3 do tác tử khác viết, lệnh kiểm tệp này không nhập pipeline/lib/ghep-tin-danh-muc; cấy dòng của rule_id khác thì tử số không đổi. Chiều đỏ: gỡ phát biểu của một khu ở bản sao thì lệnh thoát 1 và nêu lệch bao nhiêu tin.
 
   - id: E9
@@ -85,7 +85,7 @@ evals:
     cmd: bash _acceptance/ghep-tin-vao-danh-muc/probes/cham-tap-test.sh
     paths: ["pipeline/lib/ghep-tin-danh-muc*.mjs", "pipeline/scripts/ghep-tin-danh-muc*.mjs"]
     expected: >
-      Tính lại cận dưới Wilson của từng nhóm N1, N2, N3 từ đầu ra đóng băng có băm và nhãn thô, ghi evidence/cham-tap-test.md; thoát 0 khi N1, N2 từ 0,95 và đủ 110 bài; N3 chưa chấm hoặc hụt thì báo D, G phải tắt. Đỏ, thông điệp ghim lý do và tên nhóm, khi số lệch báo cáo, khi đầu ra của mã cuối
+      Tính lại cận dưới Wilson của từng nhóm N1, N2 từ đầu ra đóng băng có băm và nhãn thô, ghi evidence/cham-tap-test.md; thoát 0 khi cả hai nhóm từ 0,95 và đủ 110 bài. Đỏ, thông điệp ghim lý do và tên nhóm, khi số lệch báo cáo, khi đầu ra của mã cuối
       khác bản đóng băng trên một bài trong mẫu, hoặc khi thiếu cỡ mẫu. Đối chứng hai chiều trên cùng fixture: tập đúng hết đủ cỡ thì xanh, đổi nhãn cho một nhóm hụt ngưỡng thì đỏ đúng nhóm đó, đổi một nút trong đầu ra đóng băng thì đỏ vì băm.
 
   - id: E10
@@ -105,5 +105,5 @@ evals:
     layer: backend-effect
     paths: ["pipeline/scripts/ghep-tin-danh-muc*.mjs"]
     expected: >
-      Trước lượt đọc: danh sách đóng băng có băm khớp phép đếm độc lập, mỗi tin một bài, không bài thử, không tin đã gắn, không tin đã có bản đọc dg3-s03-v3. Sau lượt đọc trên DB máy thu: tiền cộng từ silver_labels theo run_id không vượt 5 USD, mọi dòng mang run_id đó
-      thuộc danh sách đóng băng, và chạy lại không sinh dòng mới. Chiều đỏ: cấy một bài thử hoặc một tin đã gắn vào danh sách thì lệnh thoát 1, thông điệp ghim mã bài.
+      Danh sách lượt 1 và lượt 2 đóng băng có băm, đúng định nghĩa của AC-10: mỗi tin một bài, không bài thử, không tin đã gắn; lượt 1 khớp phép đếm độc lập, lượt 2 chỉ gồm bài luật đọc ra mà chưa có bản đọc. Tổng tiền hai lượt cộng từ silver_labels theo run_id không vượt 5 USD,
+      mọi dòng mang run_id thuộc danh sách đóng băng, và chạy lại không sinh dòng mới. Chiều đỏ: cấy một bài thử hoặc một tin đã gắn vào danh sách thì lệnh thoát 1, thông điệp ghim mã bài.

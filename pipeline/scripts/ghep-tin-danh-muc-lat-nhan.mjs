@@ -2,7 +2,7 @@
 // ghep-tin-danh-muc-lat-nhan.mjs — PL20 (AC-9): rút lát nhãn hai-khu-ghep-b từ chính các tin máy gắn và đóng băng đầu ra của máy.
 //   --rut --seed <s> [--co 110] [--ra <thư mục>]   chỉ đọc; ghi tệp đóng băng có băm
 //   --nap <tệp>                                    ghi eval_label_items của lát (giám sát chạy trên DB máy thu); chạy lại không nhân dòng
-// Ba nhóm chấm riêng: n1 ô tên toà (A, B) · n2 chữ bài cùng model (C, F) · n3 chỉ model (D, G). Không điền nháp.
+// Hai nhóm chấm riêng: n1 ô tên toà (A, B) · n2 chữ bài cùng model (C, F). Nguồn D, G đang tắt. Không điền nháp.
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -15,7 +15,7 @@ import { textHash } from "../lib/eval-labels.mjs";
 import { docDauVao, tinhGan } from "../lib/ghep-tin-danh-muc-doc.mjs";
 
 export const LAT = "hai-khu-ghep-b";
-export const NHOM_CUA_NGUON = Object.freeze({ A: "n1", B: "n1", C: "n2", F: "n2", D: "n3", G: "n3" });
+export const NHOM_CUA_NGUON = Object.freeze({ A: "n1", B: "n1", C: "n2", F: "n2" });
 const THU_MUC = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../eval-sets");
 const bam = (s) => createHash("sha256").update(s).digest("hex");
 
@@ -24,10 +24,10 @@ const bam = (s) => createHash("sha256").update(s).digest("hex");
  * @returns {{ mau: object[], thieu: Record<string, number>, tong_the: Record<string, number> }}
  */
 export function rutMau({ tin, bai }, { theoTin, ketQuaBai }, { seed, co = 110, boBai = new Set() }) {
-  const theoNhom = { n1: [], n2: [], n3: [] };
+  const theoNhom = { n1: [], n2: [] };
   for (const t of tin) {
     const g = theoTin.get(t.offer_id);
-    if (g?.status !== "gan") continue;
+    if (g?.status !== "gan" || !NHOM_CUA_NGUON[g.nguon]) continue;
     const ds = (t.post_ids ?? []).filter((p) => ketQuaBai.get(p)?.nguon === g.nguon && !boBai.has(p) && (bai.get(p)?.chu ?? "").trim());
     if (!ds.length) continue;
     const p = ds.sort((a, b) => bam(`${seed}|${a}`).localeCompare(bam(`${seed}|${b}`)))[0];

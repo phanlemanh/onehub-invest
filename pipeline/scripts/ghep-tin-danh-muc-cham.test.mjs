@@ -29,7 +29,7 @@ for (const [ten, may, nhan, mong] of [
 /** Tập đủ cỡ: mỗi nhóm 110 bài, người ghi đúng như máy. */
 function tapDu() {
   const dong = [], nhan = new Map();
-  for (const [stratum, nguon] of [["n1", "A"], ["n2", "C"], ["n3", "D"]]) for (let i = 0; i < 110; i++) {
+  for (const [stratum, nguon] of [["n1", "A"], ["n2", "C"]]) for (let i = 0; i < 110; i++) {
     const ref_id = `${stratum}-${i}`;
     dong.push({ ref_id, stratum, nguon, muc: "toa", k: "bld_a", du_an: "1", rule_id: "r" });
     nhan.set(ref_id, [{ labeler_id: "m", building: "s1.02" }]);
@@ -42,7 +42,7 @@ test("du-co-dung-het-thi-dat", () => {
   const { dong, nhan } = tapDu();
   const r = chamLat({ dong, nhan, danhBa: hai });
   assert.equal(r.dat, true);
-  for (const n of ["n1", "n2", "n3"]) assert.equal(r.nhom[n].trang, "dat", `nhóm ${n}`);
+  for (const n of ["n1", "n2"]) assert.equal(r.nhom[n].trang, "dat", `nhóm ${n}`);
   assert.deepEqual(r.nguon_phai_tat, []);
 });
 test("mot-bai-sai-van-dat", () => {
@@ -58,19 +58,9 @@ test("hai-bai-sai-o-n2-thi-do-dung-n2", () => {
   assert.equal(r.nhom.n2.trang, "hut");
   assert.equal(r.nhom.n1.trang, "dat", "nhóm khác không bị kéo theo");
 });
-test("n3-hut-thi-tat-d-g-nhung-hang-van-xet", () => {
-  const { dong, nhan } = tapDu(); sai(nhan, "n3-0"); sai(nhan, "n3-1");
-  const r = chamLat({ dong, nhan, danhBa: hai });
-  assert.equal(r.dat, true);
-  assert.deepEqual(r.nguon_phai_tat, ["D", "G"]);
-});
-test("n3-chua-cham-thi-tat-d-g", () => {
-  const { dong, nhan } = tapDu();
-  for (let i = 0; i < 110; i++) nhan.delete(`n3-${i}`);
-  const r = chamLat({ dong, nhan, danhBa: hai });
-  assert.equal(r.nhom.n3.trang, "chua-du");
-  assert.equal(r.dat, true);
-  assert.deepEqual(r.nguon_phai_tat, ["D", "G"]);
+test("n2-hut-thi-nguon-c-f-phai-tat", () => {
+  const { dong, nhan } = tapDu(); sai(nhan, "n2-0"); sai(nhan, "n2-1");
+  assert.deepEqual(chamLat({ dong, nhan, danhBa: hai }).nguon_phai_tat, ["C", "F"]);
 });
 test("thieu-co-mau-n1-thi-do", () => {
   const { dong, nhan } = tapDu(); nhan.delete("n1-0");

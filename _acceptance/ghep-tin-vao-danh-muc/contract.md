@@ -42,12 +42,11 @@ model đọc bù. Hạng T3 vì có migration 117. Mọi số đo: design doc §
   snapshot nào đổi (gốc snapshot lấy từ cấu hình, số tệp lớn hơn 0), bài thử bị loại qua `loadStgPosts`, bước gắn chạy trong giao dịch riêng
   sau khi lượt nạp đã ghi và xong trong **60 giây**. Thiếu migration 117, hoặc bước gắn lỗi khi ghi: in đúng một dòng `JOB WARN [ghep-toa]`, số bài nạp bằng đối chứng
   không có bước gắn, lượt nạp vẫn thoát 0.
-- **AC-8** (số trên màn) Given bản chép DB máy thu sau lượt đọc bù, với các nguồn đã qua AC-9, When chạy bước gắn, Then số tin căn hộ S03 gắn được toà, phân khu, cụm đổi từ 0 lên **từ 50%** mẫu số toàn bộ tin căn hộ S03 (đích của MS3; đo trước đợt 2: 46,4%; ước sau
-  đợt 2: 53,8–57,2%), và lệch không quá **0,5% tử số** so với phép đếm độc lập: bản viết lại luật từ design doc §3 do một tác tử khác viết, không nhập hàm gắn; cấy dòng của `rule_id` khác thì tử số không đổi. Lệnh in tử số, mẫu số,
-  tách theo khu, mức gắn, nguồn, và số trước, sau lượt đọc bù.
-- **AC-9** (chất lượng) Given đầu ra máy đã đóng băng có băm lúc rút mẫu (bài, nút, nguồn), lát `hai-khu-ghep-b` không điền nháp, When chấm ba nhóm rút ngẫu nhiên theo tin từ chính các tin máy gắn sau lượt đọc bù: **N1** nguồn A, B · **N2** nguồn C, F · **N3** nguồn D, G, mỗi nhóm **110 bài**, Then cận dưới Wilson 95% của độ đúng từ **0,95** ở **từng nhóm**, với luật quy nhãn người về nút theo design doc §4;
-  lệnh tính lại từ nhãn thô và đỏ khi số lệch báo cáo, khi đầu ra của mã cuối khác bản đóng băng trên bài nào trong mẫu, hoặc khi chưa đủ cỡ mẫu. N1, N2 phải đạt. N3 chưa chấm hoặc hụt thì D, G tắt và hàng vẫn xét tiếp. Báo cáo tách riêng từng nguồn, mức toà với mức vùng, và theo khu. Hụt ngưỡng: không chỉnh luật rồi chấm lại trên tập này; lối ra theo câu hỏi đã chốt ở Cổng Phạm vi.
-- **AC-10** (đọc bù của đợt 2) Given DB máy thu, When lập danh sách đọc bù, Then danh sách gồm đúng các tin OP1, GP chưa gắn và chưa có bản đọc `dg3-s03-v3`, mỗi tin một bài, không bài thử, khớp phép đếm độc lập, và được đóng băng có băm trước lời gọi đầu. When chạy đọc bù trên DB máy thu với trần **5 USD**, Then tiền thật cộng từ `silver_labels` theo `run_id` không vượt trần, mọi dòng mang `run_id` đó thuộc đúng danh sách đóng băng, chạy lại không gọi lại bài đã đọc. Chiều đỏ: cấy một bài thử hoặc một tin đã gắn vào danh sách thì lệnh kiểm thoát 1, thông điệp ghim mã bài.
+- **AC-8** (số trên màn) Given bản chép DB máy thu sau hai lượt đọc bù, với nguồn A, B, C, F đang bật, When chạy bước gắn, Then số tin căn hộ S03 gắn được toà, phân khu, cụm đổi từ 0 lên **từ 50%** mẫu số toàn bộ tin căn hộ S03 (đích của MS3; đo sau lượt đọc bù đầu với D, G tắt: 49,2%; ước sau lượt đọc thêm: 51,8%), và lệch không quá **0,5% tử số** so với phép đếm độc lập: bản viết lại luật từ design doc §3 do một tác tử khác viết, không nhập hàm gắn; cấy dòng của `rule_id` khác thì tử số không đổi. Lệnh in tử số, mẫu số,
+  tách theo khu, mức gắn, nguồn, và số trước, sau từng lượt đọc bù.
+- **AC-9** (chất lượng) Given đầu ra máy đã đóng băng có băm lúc rút mẫu (bài, nút, nguồn), lát `hai-khu-ghep-b` không điền nháp, When chấm hai nhóm rút ngẫu nhiên theo tin từ chính các tin máy gắn sau hai lượt đọc bù: **N1** nguồn A, B · **N2** nguồn C, F, mỗi nhóm **110 bài**, Then cận dưới Wilson 95% của độ đúng từ **0,95** ở **từng nhóm**, với luật quy nhãn người về nút theo design doc §4;
+  lệnh tính lại từ nhãn thô và đỏ khi số lệch báo cáo, khi đầu ra của mã cuối khác bản đóng băng trên bài nào trong mẫu, hoặc khi chưa đủ cỡ mẫu. N1, N2 phải đạt. Nguồn D, G (chỉ có model) **tắt** ở hàng này theo lựa chọn của Mạnh ngày 18/11. Báo cáo tách riêng từng nguồn, mức toà với mức vùng, và theo khu. Hụt ngưỡng: không chỉnh luật rồi chấm lại trên tập này; lối ra theo câu hỏi đã chốt ở Cổng Phạm vi.
+- **AC-10** (đọc bù của đợt 2) Given DB máy thu, When lập danh sách, Then **lượt 1** gồm đúng các tin OP1, GP chưa gắn và chưa có bản đọc `dg3-s03-v3`, mỗi tin một bài; **lượt 2** gồm các tin OP1, GP chưa gắn có bài mà luật đọc ra toà hay vùng nhưng chính bài đó chưa có bản đọc, mỗi tin một bài; không bài thử; mỗi danh sách được đóng băng có băm trước lời gọi đầu. When chạy đọc bù trên DB máy thu, Then tổng tiền thật của hai lượt cộng từ `silver_labels` theo `run_id` không vượt **5 USD**, mọi dòng mang `run_id` đó thuộc đúng danh sách đóng băng, chạy lại không gọi lại bài đã đọc. Chiều đỏ: cấy một bài thử hoặc một tin đã gắn vào danh sách thì lệnh kiểm thoát 1, thông điệp ghim mã bài.
 
 ## Coverage
 
@@ -61,7 +60,7 @@ Trục và ô lấy từ bảng phủ ca của design doc §2, số đếm thậ
 - **Trục nhiều bài trên một tin**: cùng toà · hai toà · toà và vùng chứa nó · toà và vùng khác · hai vùng · hai nguồn cùng toà (AC-5).
 - **Trục lượt chạy**: lần đầu · chạy lại · dữ liệu đổi · bản đọc mới · tắt nguồn · thiếu migration · lỗi khi ghi (AC-6, AC-7).
 - **Trục đọc bù**: tin cần đọc · tin đã gắn · tin đã đọc · bài thử · chạm trần tiền · chạy lại (AC-10).
-- **Ô bỏ**: dự án khác OP1, GP và tin chưa có dự án không gắn, vì chưa có tập nhãn cho các dự án này; tin chỉ có luật đọc chữ mà model chưa xác nhận không gắn, vì hai bên chỉ đồng ý 83–91% trên nhóm tin khó.
+- **Ô bỏ**: nguồn D, G viết sẵn và có test nhưng tắt, vì chỉ có 81 tin, không đủ cỡ mẫu 110 bài; dự án khác OP1, GP và tin chưa có dự án không gắn, vì chưa có tập nhãn cho các dự án này; tin chỉ có luật đọc chữ mà model chưa xác nhận không gắn, vì hai bên chỉ đồng ý 83–91% trên nhóm tin khó.
 
 ## Đường đo
 
@@ -85,7 +84,7 @@ Trục và ô lấy từ bảng phủ ca của design doc §2, số đếm thậ
 
 - Lệnh đo của các eval nằm ở `_acceptance/ghep-tin-vao-danh-muc/probes/*.sh`; `_acceptance/config.yaml` là tệp bảo vệ, không sửa (P4-209).
 - PR gộp SAU DA40 (migration 113). Chạm `pipeline/mappings.yaml`, ba tệp vocab và `CONTEXT.md` chỉ sau khi DA40 vào main. Số migration do giám sát giữ.
-- AC-8, AC-9 chỉ đo được sau lượt đọc bù và buổi gắn nhãn người trên `/ops/labels`: tối đa 330 bài, khoảng 16 giờ 30 phút theo nhịp 3 phút mỗi bài. Một nhóm gặp lỗi thứ hai thì dừng gắn nhãn nhóm đó.
-- Hai lượt ghi lên DB máy thu trước khi PR gộp, do giám sát chạy, chữ ký Cổng Phạm vi phủ đúng hai lượt này: đọc bù (`silver_labels`, `ai_calls`, trần 5 USD) và nạp lát `hai-khu-ghep-b` (`eval_label_items`).
+- AC-8, AC-9 chỉ đo được sau lượt đọc bù và buổi gắn nhãn người trên `/ops/labels`: 220 bài, khoảng 11 giờ theo nhịp 3 phút mỗi bài trên màn 17 ô hiện tại. Một nhóm gặp lỗi thứ hai thì dừng gắn nhãn nhóm đó.
+- Các lượt ghi lên DB máy thu trước khi PR gộp, do giám sát chạy, chữ ký Cổng Phạm vi và lời chọn phương án 1 của Mạnh phủ đúng các lượt này: hai lượt đọc bù (`silver_labels`, `ai_calls`, tổng trần 5 USD) và nạp lát `hai-khu-ghep-b` (`eval_label_items`).
 - Lộ trình ghi «tập test đóng băng của PL35»; hàng này chấm trên lát mới vì lát PL35 chia đều theo tầng, trong 159 mục máy gắn chỉ 13% thuộc Grand Park, trong khi Grand Park chiếm 63% số tin máy gắn.
 - Ngưỡng UAT trong `opportunity.md` còn ghi «gắn trục» theo phạm vi cũ; ngưỡng mới chốt ở Cổng Phạm vi.
