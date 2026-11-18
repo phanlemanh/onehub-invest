@@ -46,8 +46,8 @@ evals:
     executor: script
     layer: backend-effect
     cmd: bash _acceptance/so-so-tren-man-theo-ngay/probes/app.sh SM1-AC-6
-    paths: [pipeline/push-ops-facts.mjs, app/src/lib/data-flow-queries.ts, app/tests/so-moc-s03*]
-    expected: "Khối dataFlow do push-ops-facts thật dựng mang milestones; getDataFlow chế độ cloud trả đúng giá trị; khối cũ thiếu khoá thành mảng rỗng; factsChan không báo chặn; lọc check_name khác s03-moc-ngay giữ nguyên mọi dòng kiểm khác và facts.milestones. Đột biến normalizeFacts bỏ khoá milestones làm ca đỏ."
+    paths: [pipeline/push-ops-facts.mjs, pipeline/sync-cloud.mjs, pipeline/sync-cloud.test.mjs, app/src/lib/data-flow-queries.ts, app/tests/so-moc-s03*]
+    expected: "Khối dataFlow do push-ops-facts thật dựng mang milestones; getDataFlow chế độ cloud trả đúng giá trị; khối cũ thiếu khoá thành mảng rỗng; factsChan không báo chặn; localReadSql thật của sync-cloud cho dq_check_results không trả dòng s03-moc-ngay đã cấy, số dòng kiểm khác trước và sau bằng nhau, leak gate và soát tầng A vẫn xanh, khối dataFlow mang đủ chuỗi ngày. Đột biến bỏ bộ lọc ở sync-cloud làm ca đỏ, thông điệp nêu s03-moc-ngay. Đột biến normalizeFacts bỏ khoá milestones làm ca đỏ."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E7
     criterion: AC-7

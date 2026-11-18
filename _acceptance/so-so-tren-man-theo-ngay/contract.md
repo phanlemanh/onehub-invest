@@ -3,7 +3,7 @@ schema_version: 1
 feature: Người vận hành mở /ops/data-flow và thấy mỗi con số mốc của S03 — có dự án, gắn toà, có hạng cấp dự án, có hạng cấp toà — theo từng ngày, kèm mức đổi so với hôm trước
 slug: so-so-tren-man-theo-ngay
 owner: phanlemanh@gmail.com
-risk_tier: T2
+risk_tier: T3
 surfaces: [db, pipeline, ui]
 status: approved
 approved_by: Mạnh
@@ -37,7 +37,7 @@ vùng «Số mốc S03 theo ngày» trên `/ops/data-flow`. Không thêm migrati
   giữ nguyên `id` và nội dung; When hai lượt làm tươi chạy đồng thời, Then ngày hôm nay vẫn đúng một dòng. Đột biến bỏ điều kiện ngày
   ở bước xoá và đột biến bỏ khoá advisory đều đỏ.
 - AC-6: Given khối `dataFlow` do `push-ops-facts` thật dựng từ DB có số mốc, When app ở chế độ cloud đọc, Then `milestones` tới màn
-  nguyên giá trị; khối cũ không có khoá này đọc thành mảng rỗng, không lỗi; bộ soát tầng A của lượt đẩy không báo chặn; loại nhãn `s03-moc-ngay` khỏi tập đồng bộ bảng giữ nguyên mọi dòng kiểm khác và không đổi `facts.milestones` (lối (b) của Hỏi-4 làm được).
+  nguyên giá trị; khối cũ không có khoá này đọc thành mảng rỗng, không lỗi; bộ soát tầng A của lượt đẩy không báo chặn; câu đọc thật của `sync-cloud` cho `dq_check_results` không mang dòng `s03-moc-ngay` nào, số dòng kiểm khác trước và sau bằng nhau, bộ soát tầng A của lượt đồng bộ vẫn sạch, và khối `dataFlow` mang đủ chuỗi ngày cho biểu đồ cloud (lối (b) Mạnh chọn ở Hỏi-4).
 - AC-7: Given ma trận chuỗi ngày viết trước, When tính ô số mốc, Then một assert mỗi ca: tăng, giảm, không đổi; thiếu đúng ngày hôm
   trước thì ghi «Chưa có số hôm trước»; ba ngày đã chốt bằng nhau thì đánh dấu đứng yên; hai ngày đã chốt bằng nhau thì không; hôm nay
   bằng hôm qua mà các ngày chốt có đổi thì không; ngày trống giữa chuỗi thì không; số 0 đứng yên theo câu trả lời Hỏi-1 ở Cổng Phạm vi. Ca đầu-cuối: 600 thật chạy qua bốn ngày ghim, đọc qua `getDataFlow`, màn hiện đúng mức đổi và cờ đúng ô.
@@ -88,7 +88,7 @@ Trục đếm từ DB máy thu 18/11, bảng phủ ca ở thiết kế §6.
 ## Notes
 
 Không có migration nên không có bước áp: lượt làm tươi kế sau khi PR gộp vào `main` tự ghi dòng đầu tiên. Sau đó chạy ON12-AC-5 trên DB
-máy thu theo luật đợt 30/10. Đường lên cloud chờ Hỏi-4. Nếu dòng đi qua bảng `dq_check_results`: bảng được tráo trọn theo máy thu nên không tích dòng, không có DDL cloud, `/ops/quality` trên cloud dùng cùng câu lọc nên không hiện dòng này.
+máy thu theo luật đợt 30/10. Đường lên cloud theo lối (b) của Hỏi-4: số mốc lên cloud trong khối `dataFlow`, dòng `s03-moc-ngay` không lên bảng `dq_check_results` của cloud. Lối này sửa `pipeline/sync-cloud.mjs`, thuộc vùng rủi ro cao, nên hàng lên T3 và có Cổng 1.5.
 
 Ảnh xem màn chụp trên DB thử `oneinvest_u2_sm1`: số của các ngày trước hôm dựng DB là số chèn tay để thấy đường và cờ đứng yên, không phải
 số đo. Bằng chứng số thật là phép đo trên bản chép DB máy thu (AC-9), không phải ảnh.
