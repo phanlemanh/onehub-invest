@@ -76,7 +76,7 @@ evals:
     layer: ui-observed
     paths: [app/src/lib/deals.ts, app/src/lib/deals-chi-tiet.ts, app/src/app/ops/deals/page.tsx, app/src/components/ops/deals-grid.tsx, app/src/components/ops/deals-cells.tsx]
     steps:
-      - "Bản chạy: dev server của worktree này trên cổng 3461, đọc DB máy thu chỉ đọc; đăng nhập vai quản trị. KHÔNG tạo hay sửa tệp nào trong cây ngoài evidence/. Trước khi chụp che SĐT, tên người bán, ảnh tin và email đăng nhập."
+      - "Bản chạy: dev server của phiên N1b trên cổng 3461, mã cùng thư mục app của commit được chấm, đọc DB máy thu chỉ đọc. Mở http://admin.localhost:3461 cho vai quản trị, http://viewer.localhost:3461 cho vai Người xem (không dùng 127.0.0.1); đăng nhập bằng tài khoản thử của từng vai. KHÔNG tạo hay sửa tệp nào trong cây ngoài evidence/. Trước khi chụp che SĐT, tên người bán, ảnh tin và email đăng nhập."
       - "Chạy node _acceptance/can-gia-tot-loc-xep-hang/probes/dem-tap-can.mjs, ghi kết quả vào observed. Mở /ops/deals ở 1280 px sáng, đo thời gian tới khi bảng có dòng → evidence/E10-step1.png (15/15 dòng đầu ghi «Giá tốt» và tên dự án; tab Tất cả, Cần xác minh khớp tong, can_xac_minh; chân bảng ghi 1–15 / tong; dưới 3 giây)"
       - "Chọn Vinhomes Ocean Park 1 trên bộ chọn vị trí, không gõ đường dẫn → evidence/E10-step2.png (tab Tất cả khớp lệnh đo với mã 1; URL có project=1)"
       - "Cùng màn ở chế độ tối → evidence/E10-step3.png (đọc được, nhãn hạng rõ)"
