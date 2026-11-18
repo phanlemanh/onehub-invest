@@ -133,6 +133,11 @@ _Avoid_: gắn toà, căn suy ra
 - Slug URL: — (số hiện trên trang Dòng chảy dữ liệu)
 _Avoid_: định vị toà (khi mới tới dự án), gắn dự án
 
+**Số mốc S03**: Bốn con số đo tiến độ của tin S03 đang rao, chốt mỗi ngày VN ở lượt làm tươi cuối ngày: «Có dự án» (đúng ô Định vị cấp dự án của S03), «Khớp toà» (tin khớp một nút toà của danh bạ), «Có hạng cấp dự án» (có điểm hạng ở cấp dự án, phân khu hoặc toà), «Có hạng cấp toà» (có điểm hạng ở cấp toà).
+- Code: `dq_check_results.check_name = 's03-moc-ngay'`, `facts.milestones` (`project_linked`, `building_linked`, `project_ranked`, `building_ranked`, mẫu số `offers_total`)
+- Slug URL: — (số hiện trên trang Dòng chảy dữ liệu)
+_Avoid_: KPI S03, chỉ số mốc
+
 **Gom cụm**: Máy gom các tin trông giống nhau (cùng vùng, loại, diện tích, giá) thành một cụm — công cụ gợi ý cho bước định vị, **không phải một bậc** và không đưa tin lên bậc nào. Trên trang Dòng chảy chỉ đếm tin nằm trong cụm có từ hai tin sống; cụm một tin không tính. Khác gom trùng (bài đăng lại, trùng nội dung gộp thành một tin — nằm trong B1).
 - Code: `clustered` (khối `dataFlow`), cụm ở bảng `properties` · RESO: không có
 - Slug URL: — (không có trang riêng; số hiện trên trang Dòng chảy dữ liệu)

@@ -263,10 +263,14 @@ export const BANG_TUY_CHON = new Map([
   ["offer_price_rank", "docs/ops/cloud-schema-catchup-2026-11-14-offer-price-rank.sql"],
 ]);
 
-/** Mệnh đề WHERE lọc bảng con theo cha sống (rỗng với bảng khác). */
+/** Dòng ở lại máy thu dù bảng có trong FILL. SM1: số mốc S03 lên cloud trong khối `dataFlow`, không màn cloud nào đọc dòng này (Hỏi-4, Mạnh 18/11). */
+export const LOCAL_ONLY_ROWS = { dq_check_results: `${q("check_name")} IS DISTINCT FROM 's03-moc-ngay'` };
+
+/** Mệnh đề WHERE của câu đọc local: bảng con theo cha sống, bảng có dòng chỉ ở máy thu thì loại dòng đó (rỗng với bảng khác). */
 export function childFilterSql(table) {
   const p = CHILD_OF_LIVE[table];
-  return p ? ` WHERE ${q(p[0])} IN (SELECT ${q(p[2])} FROM ${q(p[1])})` : "";
+  if (p) return ` WHERE ${q(p[0])} IN (SELECT ${q(p[2])} FROM ${q(p[1])})`;
+  return LOCAL_ONLY_ROWS[table] ? ` WHERE ${LOCAL_ONLY_ROWS[table]}` : "";
 }
 
 /** Câu đọc local của một bảng sync: danh sách cột đã lọc + lọc cha sống. */
