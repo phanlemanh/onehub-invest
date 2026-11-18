@@ -54,8 +54,9 @@ Số đo trên DB máy thu ngày 18/11, chỉ đọc. Số căn của gói 2 là
 | 2 | Toà S09 | Đã có bí danh, cùng toà chỉ S08 | 1 toà, 49 căn | Như dòng 1 | Như dòng 1 |
 | 3 | Toà S09 | Đã có bí danh, chưa có căn nào | 65 toà | Đúc căn mới (AC-7) | Như dòng 1 |
 | 4 | Dự án S09 | Đã nối danh bạ | 2 dự án | Chạy đủ bước | Như dòng 1 |
-| 5 | Dự án S09 | Trùng tên dự án có sẵn, chưa nối | 7 dự án, 113 dòng toà | Chờ DA42 nối; chưa nối thì ở stg | DA42, người duyệt nối |
-| 6 | Dự án S09 | Chưa có trong danh bạ | 335 dự án, 1.376 dòng toà | Chờ DA42; chưa nối thì ở stg | DA42 |
+| 5 | Dự án S09 | Trùng tên một dự án có sẵn, chưa nối | 9 dự án | Chờ DA42 nối; chưa nối thì ở stg | DA42, người duyệt nối |
+| 6 | Dự án S09 | Tên gần giống, cần người xem | 35 dự án | Chờ DA42; chưa nối thì ở stg | DA42, người duyệt nối |
+| 6b | Dự án S09 | Không thấy dự án nào trong danh bạ | 298 dự án | DA42 tạo nút ứng viên; chưa có thì ở stg | DA42 |
 | 7 | Tên toà | Trùng tên trong cùng dự án | 93 dòng toà | Đi theo uuid toà của DA42, không so tên ở hàng này | DA42 |
 | 8 | Căn có sẵn ở 110 toà trùng | Có toà, tầng, trục | 61.933 căn, mỗi bộ đúng một căn | So theo toà, tầng, số căn (AC-5) | Bước khử trùng |
 | 9 | Căn có sẵn ở 110 toà trùng | Không tách được trục | 4.088 căn | So theo mã căn đã chuẩn hoá, không khớp thì theo Hỏi-2 | Bước khử trùng, người duyệt thẻ |
