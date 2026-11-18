@@ -7,9 +7,14 @@ import { join } from "node:path";
 import { readFileSync } from "node:fs";
 import pg from "pg";
 import { GOC, apTep, taoDbThu, xoaDbThu } from "./db-thu-dbv.mjs";
+import { khoaKhu } from "../lib/s16-phan-khu.mjs";
 
 export const TEN = `oneinvest_dbv_s37_${process.pid}`;
 const MIG111 = join(GOC, "db/migrations/111_v_toa_nut_vung_s16.sql");
+const MIG114 = join(GOC, "db/migrations/114_v_toa_nut_vung_s16_bam.sql");
+// Migration của hàng: 111 (hai view) rồi 114 (v_toa_nut_vung khớp khu qua băm). Áp lại 111 thì phải áp lại 114.
+const apHang = () => { apTep(TEN, MIG111); apTep(TEN, MIG114); };
+const THAN_114 = () => readFileSync(MIG114, "utf8");
 const MIG097 = join(GOC, "db/migrations/097_stg_s09_item.sql");
 let db;
 
@@ -34,8 +39,8 @@ async function fixture() {
     `INSERT INTO asset_nodes (node_type, name, slug, parent_id, aliases, area_ids, dd_field, meta)
      VALUES ($1, $3, $2, $4, '{}', '{}', 'SubdivisionName', $5) RETURNING id::int AS id`, [type, slug, ten, parent, meta])).rows[0].id;
   P = await nut("project", "q37-p", "Q37 Dự án");
-  N16 = await nut("subzone", "q37-k1", "Q37 Khu 1", P, { s16_khu_ids: ["qp/K1"] });
-  N16B = await nut("subzone", "q37-k2", "Q37 Khu 2", P, { s16_khu_ids: ["qp/K2"] });
+  N16 = await nut("subzone", "q37-k1", "Q37 Khu 1", P, { s16_khu_ids: [khoaKhu("qp", "K1")] });
+  N16B = await nut("subzone", "q37-k2", "Q37 Khu 2", P, { s16_khu_ids: [khoaKhu("qp", "K2")] });
   for (const n of [1, 2, 3, 4]) {
     await db.query(`INSERT INTO buildings (building_key, region_node_id, upi, iso_region, catalog_tier)
                     VALUES ($1, $2, 'urn:onehub:upi:1:VN:VN-HN:' || $1, 'VN-HN', 'xac_minh')`, [bk(n), P]);
@@ -73,9 +78,9 @@ test("DA37-AC-1 111 áp hai lần không đổi; toà không S16 ra đúng như 
   await fixture();
   await db.query(THAN_097);
   const goc097 = await viewDef();
-  apTep(TEN, MIG111);
+  apHang();
   const lan1 = await viewDef();
-  apTep(TEN, MIG111);
+  apHang();
   assert.equal(await viewDef(), lan1, "DA37-AC-1 áp 111 lần hai đổi định nghĩa view");
   await db.query(`CREATE TEMP VIEW v097 AS ${THAN_097.replace(/^CREATE OR REPLACE VIEW v_toa_nut_vung AS/, "").replace(/;$/, "")}`);
   const khongS16 = `building_key NOT IN (SELECT object_key FROM registry_aliases WHERE source = 'S16' AND kind = 'ma_nguon')`;
@@ -87,19 +92,17 @@ test("DA37-AC-1 111 áp hai lần không đổi; toà không S16 ra đúng như 
   assert.deepEqual([await nutV(bk(1)), await nutV(bk(6)), await nutV(bk(7))],
     [{ id: P, nguon: "goc" }, { id: N09A, nguon: "s09_phan_khu" }, { id: NCUM, nguon: "s09_cum" }], "DA37-AC-1 toà chỉ S09 không đúng nhánh");
   // Chiều đỏ 2: 111 xếp phân khu S09 trên cụm S09 → toà 7 đổi nút
-  const goc111 = readFileSync(MIG111, "utf8");
-  await db.query(goc111.slice(0, goc111.indexOf("-- ---- 2.")).replace("COALESCE(pk16.id, cum.id, pk.id, b.region_node_id)", "COALESCE(pk16.id, pk.id, cum.id, b.region_node_id)"));
+  await db.query(THAN_114().replace("COALESCE(pk16.id, cum.id, pk.id, b.region_node_id)", "COALESCE(pk16.id, pk.id, cum.id, b.region_node_id)"));
   assert.ok(await lech("v_toa_nut_vung", "v097") > 0, "DA37-AC-1 chiều đỏ: xếp phân khu S09 trên cụm mà toà chỉ S09 không đổi nút");
-  apTep(TEN, MIG111);
+  apHang();
   // Chiều đỏ: tầng S16 bắt cả toà không bí danh S16 → toà 4 đổi nút
-  const hong = readFileSync(MIG111, "utf8").slice(0, readFileSync(MIG111, "utf8").indexOf("-- ---- 2."))
-    .replace("WHERE s16.khu IS NOT NULL AND n.meta -> 's16_khu_ids' ? s16.khu", "WHERE n.meta -> 's16_khu_ids' ? 'qp/K1'");
+  const hong = THAN_114().replace("WHERE s16.khu IS NOT NULL AND n.meta -> 's16_khu_ids' ? s16.khu", `WHERE n.meta -> 's16_khu_ids' ? '${khoaKhu("qp", "K1")}'`);
   await db.query(hong);
   assert.ok(await lech("v_toa_nut_vung", "v097") > 0, "DA37-AC-1 chiều đỏ: đột biến không làm toà không S16 đổi nút");
-  apTep(TEN, MIG111);
+  apHang();
   await db.query(THAN_097);
   assert.equal(await viewDef(), goc097, "DA37-AC-1 áp lại 097 không trả view cũ");
-  apTep(TEN, MIG111);
+  apHang();
 });
 
 test("DA37-AC-2 khu lấy từ bản thu có danh sách; toà hai khu không vào tầng S16 và được đếm", async () => {
@@ -110,12 +113,12 @@ test("DA37-AC-2 khu lấy từ bản thu có danh sách; toà hai khu không và
   const dem = (await db.query(`SELECT so FROM v_lech_cau_truc_s16 WHERE du_an = 'qp' AND loai = 'khu-nhieu'`)).rows[0]?.so;
   assert.equal(dem, 1, "DA37-AC-2 toà hai khu không được đếm");
   // Chiều đỏ: đọc khu từ bản mới nhất bất kể danh sách → toà 2 nhận K9 (không nút) → rơi về gốc
-  const hong = readFileSync(MIG111, "utf8").slice(0, readFileSync(MIG111, "utf8").indexOf("-- ---- 2."))
+  const hong = THAN_114()
     .replace("JOIN stg_s16_khu k ON k.snapshot_id = t.snapshot_id AND k.du_an = t.du_an AND k.khu_id = t.khu_id\n   WHERE a.kind = 'ma_nguon' AND a.source = 'S16' AND a.retired_at IS NULL\n     AND a.object_key LIKE 'bld\\_%'",
              "WHERE t.snapshot_id = 'q37__s16__khong' AND a.kind = 'ma_nguon' AND a.source = 'S16' AND a.retired_at IS NULL\n     AND a.object_key LIKE 'bld\\_%'");
   await db.query(hong);
   assert.notDeepEqual(await nut(bk(2)), { id: N16, nguon: "s16_phan_khu" }, "DA37-AC-2 chiều đỏ: khu từ bản không danh sách không bị bắt");
-  apTep(TEN, MIG111);
+  apHang();
 });
 
 test("DA37-AC-6 (view) đếm lệch cấu trúc theo cặp nguồn: tên toà S08 khác S16, toà hai khu", async () => {
@@ -171,9 +174,9 @@ test("DA37-AC-3 thẻ luật: xem chỉ đọc · băm lệch 0 ghi · áp đún
   const kq = await apTheLuat(db, { bam: the.bam, nguoi: "thử", noi: NOI2 });
   RULE = kq.rule_id;
   assert.equal(kq.so, 2);
-  const moi = (await db.query(`SELECT id::int, parent_id::int, node_type FROM asset_nodes WHERE meta -> 's16_khu_ids' ? 'q37-qp2/K5'`)).rows;
+  const moi = (await db.query(`SELECT id::int, parent_id::int, node_type FROM asset_nodes WHERE meta -> 's16_khu_ids' ? $1`, [khoaKhu("q37-qp2", "K5")])).rows;
   assert.deepEqual(moi.map((r) => [r.parent_id, r.node_type]), [[P2, "subzone"]], "DA37-AC-3 khu K5 không thành đúng một nút subzone dưới dự án");
-  assert.ok((await db.query(`SELECT 1 FROM asset_nodes WHERE id = $1 AND meta -> 's16_khu_ids' ? 'q37-qp2/K6'`, [NSAN])).rowCount, "DA37-AC-3 nút sẵn không nhận khu K6");
+  assert.ok((await db.query(`SELECT 1 FROM asset_nodes WHERE id = $1 AND meta -> 's16_khu_ids' ? $2`, [NSAN, khoaKhu("q37-qp2", "K6")])).rowCount, "DA37-AC-3 nút sẵn không nhận khu K6");
   assert.equal((await db.query(`SELECT count(*)::int AS n FROM project_link_rules WHERE source = 'S16'`)).rows[0].n, 1);
   const nutSau = await dem("asset_nodes");
   await assert.rejects(apTheLuat(db, { bam: the.bam, nguoi: "thử", noi: NOI2 }), /bam-lech/);
@@ -207,16 +210,15 @@ test("DA37-AC-6 (view, S09) sau áp thẻ luật: S09 xếp toà vào phân khu 
   await db.query(v2.replace(nhanh, " WHERE false AND EXISTS (SELECT 1 FROM v_s09_toa x JOIN registry_aliases s"));
   assert.notDeepEqual(await dong(), [{ du_an: "q37-qp2", cap_nguon: "S09-S16", loai: "phan-khu", so: 1 }],
     "đối chứng AC-6: bỏ nhánh S09 mà bảng vẫn có cặp S09 — thước không phân biệt «thiếu cặp S09»");
-  apTep(TEN, MIG111);
+  apHang();
 });
 
 test("DA37-AC-4 sau áp: S16 thắng S09; sau đảo về phân khu S09; chiều đỏ xếp S09 trên S16", async () => {
-  const nutK5 = (await db.query(`SELECT id::int FROM asset_nodes WHERE meta -> 's16_khu_ids' ? 'q37-qp2/K5'`)).rows[0].id;
+  const nutK5 = (await db.query(`SELECT id::int FROM asset_nodes WHERE meta -> 's16_khu_ids' ? $1`, [khoaKhu("q37-qp2", "K5")])).rows[0].id;
   assert.deepEqual(await nutCua(bk(5)), { id: nutK5, nguon: "s16_phan_khu" }, "DA37-AC-4 S09 thắng S16 sau áp");
-  const goc = readFileSync(MIG111, "utf8");
-  await db.query(goc.slice(0, goc.indexOf("-- ---- 2.")).replace("COALESCE(pk16.id, cum.id, pk.id, b.region_node_id)", "COALESCE(cum.id, pk.id, pk16.id, b.region_node_id)"));
+  await db.query(THAN_114().replace("COALESCE(pk16.id, cum.id, pk.id, b.region_node_id)", "COALESCE(cum.id, pk.id, pk16.id, b.region_node_id)"));
   assert.notEqual((await nutCua(bk(5))).id, nutK5, "DA37-AC-4 chiều đỏ: xếp S09 trên S16 mà toà vẫn ở phân khu S16");
-  apTep(TEN, MIG111);
+  apHang();
   await daoTheLuat(db, { ruleId: RULE, nguoi: "thử" });
   assert.deepEqual(await nutCua(bk(5)), { id: N09, nguon: "s09_phan_khu" }, "DA37-AC-4 sau đảo không về phân khu S09");
   const luat = (await db.query("SELECT dao_by, dao_at IS NOT NULL AS da FROM project_link_rules WHERE id = $1", [RULE])).rows[0];
@@ -413,4 +415,32 @@ test("DA37-AC-8 job đêm: tập khu = năm khu viết trước; in «S16: khoá
       "COALESCE(CASE WHEN n.node_type = 'project' THEN n.slug END, p.slug)"]] },
   ], (m) => m.buocVatTheDem(c, { log: () => {}, dungFn: boc }));
   assert.deepEqual(KHU5.filter((k) => !khuDung.includes(k)), ["q-khu-e"], "đối chứng AC-8: bỏ nhánh khu ông mà ca không nêu q-khu-e thiếu");
+});
+
+// ---- S4-r1 t1: mã khu S16 không nằm trong asset_nodes (bảng đi cloud) — meta chỉ mang băm (114) ----
+import { soatDuLieu, tokenS16 } from "../lib/s16-soat.mjs";
+
+test("DA37 thẻ luật áp xong: asset_nodes qua bộ soát S16 sạch (khu_id ≥4 ký tự); đối chứng: cấy khoá thô vào meta thì bộ soát dừng", async () => {
+  await db.query(`INSERT INTO stg_s16_khu (snapshot_id, du_an, khu_id, khu_ten) VALUES ($1, 'q37-qp2', 'KHUDAI0001', 'Khu Dài')`, [SNAP_DS]);
+  await db.query(`INSERT INTO stg_s16_toa (snapshot_id, du_an, khu_id, khu_nhan, toa_id, toa_ten) VALUES ($1, 'q37-qp2', 'KHUDAI0001', 'KHUDAI0001', 'TOADAI0001', 'TD1')`, [SNAP_DS]);
+  await db.query(`INSERT INTO buildings (building_key, region_node_id, upi, iso_region, catalog_tier)
+                  VALUES ($1, $2, 'urn:onehub:upi:1:VN:VN-HN:' || $1, 'VN-HN', 'xac_minh')`, [bk(8), P2]);
+  await db.query(`INSERT INTO registry_aliases (object_key, kind, value, source) VALUES ($1, 'ma_nguon', 'q37-qp2/TOADAI0001', 'S16')`, [bk(8)]);
+  const the = await dungTheLuat(db, { noi: NOI2 });
+  const kq = await apTheLuat(db, { bam: the.bam, nguoi: "thử", noi: NOI2 });
+  const doc = async () => new Map([["asset_nodes", (await db.query("SELECT row_to_json(x)::text AS j FROM asset_nodes x")).rows.map((r) => r.j)]]);
+  try {
+    const token = await tokenS16(db);
+    assert.ok(token.dinhDanh.has("KHUDAI0001"), "fixture: bộ soát không có token khu dài");
+    const nutDai = (await db.query(`SELECT id::int FROM asset_nodes WHERE meta -> 's16_khu_ids' ? $1`, [khoaKhu("q37-qp2", "KHUDAI0001")])).rows;
+    assert.equal(nutDai.length, 1, "fixture: khu dài không thành một nút");
+    assert.deepEqual(await nutCua(bk(8)), { id: nutDai[0].id, nguon: "s16_phan_khu" }, "DA37 view 114 không khớp toà vào nút qua băm khu");
+    assert.equal(soatDuLieu(await doc(), token), null, "DA37 asset_nodes sau áp thẻ luật còn mang mã khu S16");
+    // Đối chứng: ai đó ghi khoá thô `<du_an>/<khu_id>` vào meta → bộ soát dừng ở asset_nodes.meta
+    await db.query(`UPDATE asset_nodes SET meta = meta || jsonb_build_object('thu_tho', 'q37-qp2/KHUDAI0001') WHERE id = $1`, [nutDai[0].id]);
+    assert.deepEqual(soatDuLieu(await doc(), token), { bang: "asset_nodes", cot: "meta" }, "đối chứng: khoá thô trong meta mà bộ soát không dừng");
+    await db.query(`UPDATE asset_nodes SET meta = meta - 'thu_tho' WHERE id = $1`, [nutDai[0].id]);
+  } finally {
+    await daoTheLuat(db, { ruleId: kq.rule_id, nguoi: "thử" });
+  }
 });

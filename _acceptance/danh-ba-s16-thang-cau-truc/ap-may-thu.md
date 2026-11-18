@@ -1,9 +1,13 @@
 # Áp DA37 lên DB máy thu — năm thứ cho lời áp (ROADMAP §3 mục 50)
 
-Chữ ký Cổng Bằng chứng của hồ sơ này kèm lời áp những gì dưới đây lên **DB máy thu** (`oneinvest` :5433): migration **111**, một
+Chữ ký Cổng Bằng chứng của hồ sơ này kèm lời áp những gì dưới đây lên **DB máy thu** (`oneinvest` :5433): migration **111** và
+**114**, một
 lượt dựng năm khu theo luật «S16 thắng cấu trúc» (Q-B). **Áp thẻ luật phân khu S16 (bước 1c) KHÔNG nằm trong chữ ký**: đó là lời
-riêng của Mạnh, gõ sau khi đã xem thẻ — «Áp thẻ luật S16 <băm>» (khuôn thẻ luật DA32). Cloud không đổi: `v_toa_nut_vung`,
-`v_lech_cau_truc_s16` và bảng vật thể danh bạ không lên cloud.
+riêng của Mạnh, gõ sau khi đã xem thẻ — «Áp thẻ luật S16 <băm>» (khuôn thẻ luật DA32). **Cloud:** hai view và bảng vật thể danh bạ
+không lên cloud; nút phân khu mới mà thẻ luật đúc nằm trong `asset_nodes` nên lên cloud ở lượt đồng bộ kế (tên khu là thông tin
+dự án công khai — mục 38). `meta` của nút chỉ mang **băm** khoá khu (`s16_khu_ids`, `s16_khu_rule`), không mang mã khu S16 —
+mã ấy lấy bằng đăng nhập; bảng nối băm → khu thật là `stg_s16_khu`, chỉ ở máy thu (114, S4 vòng 1). Bộ soát S16 của sync-cloud
+không đổi và đo sạch trên bản chép (phần 2).
 
 **Điều kiện lúc áp.** Sau khi PR DA37 gộp và checkout chính `~/dev/onehub-invest` đã kéo `main`; GS chạy lệnh và báo số thật cạnh
 số chạy thử. Chạy bước 3 → 1d liền một mạch trong khung **22:05–23:55 giờ VN** (Chủ nhật 20:30–23:55): ngoài lượt nạp S03 15 phút
@@ -23,17 +27,21 @@ P(){ docker exec -i -e PGPASSWORD=oneinvest one-invest-db psql -U oneinvest -h l
 L=_acceptance/danh-ba-s16-thang-cau-truc/lui
 ```
 
-### 1a. Áp 111 (hai lần — lần hai phải sạch)
+### 1a. Áp 111 rồi 114 (mỗi tệp hai lần — lần hai phải sạch)
 
 ```bash
 P < db/migrations/111_v_toa_nut_vung_s16.sql
 P < db/migrations/111_v_toa_nut_vung_s16.sql
+P < db/migrations/114_v_toa_nut_vung_s16_bam.sql
+P < db/migrations/114_v_toa_nut_vung_s16_bam.sql
 Q "SELECT to_regclass('v_lech_cau_truc_s16') IS NOT NULL,
           (SELECT count(*) FROM v_toa_nut_vung WHERE nguon = 's16_phan_khu')"          # phải in t|0 (chưa có luật nào)
 ```
 
 111 chỉ có `CREATE OR REPLACE VIEW` cho `v_toa_nut_vung` (thêm cột nguồn `s16_phan_khu` đứng đầu, cùng tên, kiểu, thứ tự cột với
-bản 097) và `CREATE OR REPLACE VIEW v_lech_cau_truc_s16`. Không bảng, không chỉ mục, không đổi dòng nào. Trước bước 1c, view cho
+bản 097) và `CREATE OR REPLACE VIEW v_lech_cau_truc_s16`. 114 thay lại `v_toa_nut_vung` (cùng cột) để khớp khu qua băm
+`s16Ref('khu', du_an, khu_id)`. Không bảng, không chỉ mục, không đổi dòng nào. **Áp lại 111 thì phải áp lại 114** (111 đưa view về
+bản khớp khoá thô, không khớp nút nào của thẻ luật). Trước bước 1c, view cho
 đúng kết quả của bản 097 (không nút nào mang khoá khu S16).
 
 ### 1b. Dựng thẻ luật phân khu S16 — chỉ đọc
@@ -106,6 +114,7 @@ Lượt 18/11 (bản chép từ DB máy thu sáng 18/11, sau khi DA33 đã áp),
 | Khu S16 trên thẻ luật | — | **61** (GP 12, OP1 16, OP2 13, OP3 9, Smart City 11) |
 | Nút nhận | — | **61** = 51 nút mới + 10 nút sẵn; 0 mơ hồ |
 | Toà S16 mà nút vùng là dự án | **109** | **0** |
+| `asset_nodes` qua bộ soát S16 của sync-cloud (token khu, toà, căn ≥4 ký tự) | — | sạch (0 bảng dừng) |
 | Toà đổi `region_node_id` trong bảng `buildings` | — | 0 (toà vào phân khu qua view) |
 | Căn S08 gộp vào căn S16 (`merged`) | 0 | **2** (Grand Park) — lượt dựng đúc 2 căn S16, 2 bí danh |
 | Thẻ «căn S08 cùng mã nằm ở toà khác» | 2 pending | 2 `rejected`, ghi chú «S16 thắng cấu trúc (DA37)» |
@@ -147,7 +156,7 @@ bash $L/go-khoa.sh ~/onehub-backups/db/khoa-da37-<thời điểm>.tsv oneinvest
         # 3) khẳng định field_assertions của lượt → RÚT (retracted_at + 'lui-da37'; rào 045 cấm xoá — DA33 Ngoài-5)
         # 4) gỡ thẻ, bí danh, căn, trục, toà mới của lượt (rào tắt rồi bật lại trước COMMIT)
 DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest node pipeline/phan-khu-s16.mjs --dao <rule_id> --nguoi Mạnh
-P < $L/lui-111.sql                                         # view về bản 097, bỏ v_lech_cau_truc_s16
+P < $L/lui-111.sql                                         # view về bản 097 (lùi cả 111 lẫn 114), bỏ v_lech_cau_truc_s16
 bash $L/dau-van-tay.sh oneinvest | grep -v '^# du' | diff <(grep -v '^# du' ~/onehub-backups/db/van-tay-truoc-da37.txt) -
         # phải không in gì; dòng «# du» là phần dư có chủ đích (nút luật mang meta.nghi, dòng luật có dao_at)
 ```

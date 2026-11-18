@@ -13,13 +13,14 @@ import pg from "pg";
 import { GOC, MAY_CHU, apTep } from "./db-thu-dbv.mjs";
 import { dung } from "../danh-ba-vat-the.mjs";
 import { apTheLuat, daoTheLuat, dungTheLuat } from "../phan-khu-s16.mjs";
+import { soatDuLieu, tokenS16 } from "../lib/s16-soat.mjs";
 
 const TRONG = process.env.S37_THAT_TRONG === "1";
 const TEN = TRONG ? new URL(process.env.DATABASE_URL ?? "postgres://x/").pathname.slice(1) : null;
 const LUI = join(GOC, "_acceptance/danh-ba-s16-thang-cau-truc/lui");
 const KHU = ["vinhomes-ocean-park-1", "vinhomes-ocean-park-2", "vinhomes-ocean-park-3", "vinhomes-smart-city", "vinhomes-grand-park"];
 const MONG = { khu: 61, nut: 61, mo_ho: 0, toa_treo_truoc: 109, toa_treo_sau: 0, can_gop: 2, the_nghi: 2, mo_ho_cho: 38, trung_ten_cho: 20,
-  doi_goc: 0, khoa_lan_hai: 0, toa_mot_khu: 218, toa_nhieu_khu: 0 };
+  doi_goc: 0, khoa_lan_hai: 0, toa_mot_khu: 218, toa_nhieu_khu: 0, soat_asset_nodes: 0 };
 const loi = [];
 const o = (ten, thuc) => { const ok = Math.abs(thuc - MONG[ten]) === 0; console.log(`${ok ? "  " : "✗ "}${ten}: ${thuc} (kỳ vọng ${MONG[ten]})`); if (!ok) loi.push(ten); };
 const sh = (cmd, args, env = {}) => execFileSync(cmd, args, { cwd: GOC, encoding: "utf8", env: { ...process.env, ...env }, maxBuffer: 1 << 26 });
@@ -47,6 +48,7 @@ async function main() {
     o("toa_treo_truoc", await treo());
     const goc0 = await bamGoc();
     apTep(TEN, join(GOC, "db/migrations/111_v_toa_nut_vung_s16.sql"));
+    apTep(TEN, join(GOC, "db/migrations/114_v_toa_nut_vung_s16_bam.sql"));
     // E2b: khu của toà S16 từ bản thu có danh sách khu
     const k = await mot(`WITH t AS (SELECT a.object_key, count(DISTINCT st.du_an || '/' || st.khu_id) AS nk FROM registry_aliases a
         JOIN stg_s16_toa st ON st.du_an = split_part(a.value, '/', 1) AND st.toa_id = split_part(a.value, '/', 2)
@@ -64,6 +66,11 @@ async function main() {
     const tk = await dung(c, { khuSlugs: KHU, log: () => {}, runId: `dbv-s37-${Date.now()}` });
     const T1 = (await mot("SELECT now()::text AS t")).t;
     o("toa_treo_sau", await treo());
+    // asset_nodes đi cloud: sau áp thẻ luật, bộ soát S16 của sync-cloud (DA33) không bắt token nào (meta chỉ mang băm khu — 114)
+    const nodes = new Map([["asset_nodes", (await c.query("SELECT row_to_json(x)::text AS j FROM asset_nodes x")).rows.map((r) => r.j)]]);
+    const hit = soatDuLieu(nodes, await tokenS16(c));
+    o("soat_asset_nodes", hit ? 1 : 0);
+    if (hit) console.log(`  bộ soát dừng ở ${hit.bang}.${hit.cot}`);
     o("can_gop", Object.values(tk.s16.khu).reduce((a, t) => a + (t.can_s08_gop ?? 0), 0));
     const the2 = async (loai, st) => (await mot(`SELECT count(*)::int AS n FROM review_queue WHERE item_id LIKE 's16:%' AND evidence ->> 'loai' = $1 AND status = $2`, [loai, st])).n;
     o("the_nghi", await the2("can-lech-toa", "rejected"));

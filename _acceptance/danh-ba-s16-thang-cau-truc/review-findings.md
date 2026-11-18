@@ -75,3 +75,10 @@ Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm v
   Đề xuất: known-limits
 
 Cụm ngoài vùng phủ: cluster: n-a (không đo được — không eval nào khai paths, hoặc dưới ngưỡng cụm).
+
+## Ghi chú sau vòng 1 (P2, 18/11)
+
+- Mục ngoài hợp đồng mức cao «Áp thẻ luật S16 ghi khu_id vào asset_nodes.meta…» → **sửa trong vòng 2** theo lời giám sát (GS 18/11,
+  phương án băm; không chạm `pipeline/sync-cloud.mjs`): migration 114, `khoaKhu` = băm `s16Ref('khu', du_an, khu_id)`; ca itest
+  khu_id ≥4 ký tự + đối chứng cấy khoá thô; lượt đo thật thêm ô `soat_asset_nodes`.
+- Bảy mục trong hợp đồng (t3–t9) sửa ở vòng 2; mục «ten-toa so tên S09 thô» giữ đề xuất ghi Known limits, chờ Cổng Bằng chứng.

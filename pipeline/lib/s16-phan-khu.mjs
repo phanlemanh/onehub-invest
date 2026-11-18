@@ -3,9 +3,11 @@
 // trùng tên chuẩn hoá (một), mơ hồ (≥ hai nút trùng tên — không gán, không đúc), hay đúc mới.
 import { createHash } from "node:crypto";
 import { chuanHoaTenToa } from "./danh-ba-vat-the.mjs";
+import { s16Ref } from "./s16-danh-muc.mjs";
 
-/** Khoá khu S16 ghi vào asset_nodes.meta.s16_khu_ids — cùng khuôn view 111 đọc. */
-export const khoaKhu = (duAn, khuId) => `${duAn}/${khuId}`;
+/** Khoá khu S16 ghi vào asset_nodes.meta.s16_khu_ids: BĂM, không mã thô — asset_nodes đi cloud, mã khu S16 lấy bằng đăng nhập
+ *  (S4-r1 t1, GS 18/11). View 114 tính cùng băm từ stg_s16_khu (chỉ máy thu). */
+export const khoaKhu = (duAn, khuId) => s16Ref("khu", duAn, khuId);
 
 /**
  * @param {{du_an:string, khu_id:string, khu_ten:string|null, so_toa:number, du_an_node_id:number}[]} khuS16
@@ -20,8 +22,11 @@ export function keHoachPhanKhu(khuS16, nutSan) {
       const khoa = khoaKhu(k.du_an, k.khu_id);
       const con = nutSan.filter((n) => n.parent_id === k.du_an_node_id);
       const daCo = con.find((n) => (n.s16_khu_ids ?? []).includes(khoa));
-      const base = { du_an: k.du_an, khu_id: k.khu_id, khu_ten: String(k.khu_ten ?? k.khu_id), so_toa: k.so_toa, du_an_node_id: k.du_an_node_id };
+      const ten = String(k.khu_ten ?? "").trim();
+      const base = { du_an: k.du_an, khu_id: k.khu_id, khu_ten: ten, so_toa: k.so_toa, du_an_node_id: k.du_an_node_id };
       if (daCo) return { ...base, nut: "da-co", node_id: daCo.id };
+      // Khu không có tên công bố: không đúc nút (tên nút đi cloud — không lấy mã khu làm tên), để người xem.
+      if (!ten) return { ...base, nut: "mo-ho", node_id: null };
       const trung = con.filter((n) => chuanHoaTenToa(n.name) === chuanHoaTenToa(base.khu_ten));
       if (trung.length === 1) return { ...base, nut: "san", node_id: trung[0].id };
       if (trung.length > 1) return { ...base, nut: "mo-ho", node_id: null };
