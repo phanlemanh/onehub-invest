@@ -712,6 +712,12 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     - QĐ1: máy thu giữ **kho tư liệu** của dự án và chủ đầu tư (media, tài liệu bán hàng, văn bản pháp lý, hợp đồng mua bán) làm
       nguồn tư liệu cho người dùng. Mạnh «Đồng ý, chỉ công khai»: chỉ tài liệu công khai; hợp đồng chỉ bản mẫu, hợp đồng đã ký có
       thông tin người mua thì không thu, hoặc che hết trước khi lưu.
+      **Sửa đổi 18/11 (đảo phần người mua, hàng ZC12).** Phiên điều phối liên làn, giờ UTC: 09:25:27Z Mạnh hỏi «Hiện nay ảnh khi thu
+      mình có giảm kích thước hay không? Và các file media và tài liệu đi kèm?», trợ lý trả lời giấy tờ người mua «Không lưu tệp, chỉ
+      ghi là đã bỏ qua»; 09:34:26Z Mạnh gõ «Lưu luôn hợp đồng và giấy tờ người mua»; 09:35:20Z trợ lý hỏi «Lưu hợp đồng và giấy tờ
+      người mua theo cách nào?»; 09:36:13Z Mạnh chọn «Kho riêng, xoá được». Tức: hợp đồng đã ký và giấy tờ người mua lưu ở kho riêng mã
+      hoá trên máy thu, ngoài raw snapshot; không cloud, không model, không cổng, không kênh; xoá được từng tệp, có sổ xoá. Chưa chốt,
+      hỏi ở Cổng Phạm vi của ZC12: sao lưu ngoài máy, hạn giữ, ai được mở tệp, ý kiến pháp lý, tải lại tệp đã xoá ngày 12/11.
     - QĐ2: **video thu thử 2 tuần có trần dung lượng** (Mạnh «Thu thử có trần»); video vượt trần chỉ ghi đường dẫn và vài khung
       hình. Số trần chốt ở QĐ14. Chưa chốt: giữ bản gốc, bản nén hay chỉ khung hình — hết 2 tuần đo rồi trình.
     - QĐ3: **bản sao lưu mã hoá** (Mạnh «Cho, khoá giữ ở máy», trả lời câu «Có cho một bản sao lưu đã mã hoá ra kho ngoài máy
