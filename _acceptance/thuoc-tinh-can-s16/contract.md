@@ -5,7 +5,7 @@ slug: thuoc-tinh-can-s16
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli, ui]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-18
 design_doc: _acceptance/thuoc-tinh-can-s16/design.md
@@ -138,4 +138,17 @@ của bảng phủ ca §1 có số đếm từ DB máy thu; AC-11 so lại từn
   theo khuôn migration 113, nên chỗ ánh xạ sai của bộ nạp chỉ bị bắt ở E13 (so với số khoá từ tệp thu gốc).
 - Sau Cổng 1, Mạnh quyết trong phiên: nhà thấp tầng ghi sàn sử dụng + diện tích đất (`lot_size_area`, RESO LotSizeArea) thay
   cho thông thuỷ + tim tường (d-20261118T025028Z-17); số mẫu ocean-park-3 820 → 792 (GS, chờ Mạnh phê ở Cổng Bằng chứng).
-- Known limits: (trống tới S4)
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-19:
+  - Ngoài-1: Tài liệu giao diện thu thập trên nhánh chưa khai loại dữ liệu thuộc tính căn mà bộ nạp đã nhận.
+  - Ngoài-2: Tệp thu sai khuôn vẫn cho lượt nạp báo thành công với 0 dòng; dấu hiệu là số phủ bằng 0 trên màn.
+  - Ngoài-3: Khi đọc danh sách mã mơ hồ gặp lỗi, lệnh chạy thử vẫn in số mà không báo gì.
+  - Ngoài-4: Dòng hướng dẫn đầu tệp lùi 113 nói sai thứ tự; lệnh tự từ chối, hướng dẫn đúng ở tài liệu áp máy thu.
+  - Ngoài-5: Các nhãn mới về thuộc tính căn chưa có định nghĩa trong bảng từ vựng chung.
+  - Ngoài-6: Khi đọc danh sách mã mơ hồ lỗi, lệnh chạy thử in số sai mà vẫn thoát thành công.
+  - Ngoài-8: Với cấu hình biến môi trường lệch, lệnh ghi có thể nối tới máy khác với máy mà rào kiểm tra.
+  - Ngoài-9: Trang dự án không tải được thuộc tính thì không ghi nguyên nhân vào nhật ký máy chủ.
+  - Ngoài-10: Đơn giá theo m² của nhà thấp tầng mang nhãn «thông thuỷ» dù tính trên diện tích sàn.
+  - Ngoài-11: Bài kiểm tra chưa bắt được trường hợp view hiện nhầm giá trị kế thừa thay cho giá trị thu thật.
+  - Ngoài-12: Bài kiểm tra chưa đo khuôn của bảng chạy thử in ra, nên thừa hay thiếu cột vẫn báo đạt.
+  - Ngoài-13: Bài kiểm tra tự động dùng dữ liệu viết tay, chỗ bộ nạp thật ghi khác khuôn chỉ lộ khi đối chiếu trên dữ liệu thật.
+  - Ngoài-15: Việc soát tên nguồn thật trên trang dự án mới thử với một chữ mẫu, chưa thử toàn bộ tên đã đăng ký.

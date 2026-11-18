@@ -1,14 +1,14 @@
 ---
 schema_version: 2
 feature_slug: thuoc-tinh-can-s16
-verdict: PENDING-JUDGMENT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 9c9849c9510c8b13e240f8f093f9e86d74d64822
-human_signoff:
+human_signoff: Mạnh 2026-11-19
 ---
 
 # Evidence Report: thuoc-tinh-can-s16
@@ -146,7 +146,7 @@ human_signoff:
   run_id: minted-thuoc-tinh-can-s16-E10-r3
   exit_code: 0
   baseline: n-a
-  verifier: config:executors.ui-check
+  verifier: config:dev_server.start   # tác tử chấm lái trình duyệt trên bản dev của worktree (:3463); sửa nhãn lúc ký vì kho không có khoá executors.ui-check
   verified_at: 2026-11-18T12:47:29Z
   screenshot: evidence/E10-step1.png
   observed: |
@@ -157,7 +157,7 @@ human_signoff:
   run_id: minted-thuoc-tinh-can-s16-E12-r3
   exit_code: 0
   baseline: n-a
-  verifier: config:executors.ui-check
+  verifier: config:dev_server.start   # tác tử chấm lái trình duyệt trên bản dev của worktree (:3463); sửa nhãn lúc ký vì kho không có khoá executors.ui-check
   verified_at: 2026-11-18T12:47:29Z
   screenshot: evidence/E12-step1.png
   observed: |
@@ -170,7 +170,7 @@ human_signoff:
   judged_by: hội đồng ba góc nhìn (fresh context)
   verdict: PASS
   rationale: Đề xuất của hội đồng, chưa phải quyết định cuối; hợp đồng T3 đòi người chốt trực tiếp. Chi tiết từng góc nhìn ở mục Judge panels bên dưới.
-  human_override:  # chi nguoi ghi
+  human_override: Mạnh 2026-11-19 — Đạt
 
 ### Lệnh suite (hồi quy)
 
