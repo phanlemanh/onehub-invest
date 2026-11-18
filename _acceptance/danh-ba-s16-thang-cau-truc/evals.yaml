@@ -1,0 +1,72 @@
+schema_version: 1
+feature_slug: danh-ba-s16-thang-cau-truc
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.s37_db
+    expected: "Ca DA37-AC-1 trên DB thử dựng từ db/migrations (001…111): fixture viết trước có toà chỉ S09, toà chỉ gốc, toà có cả S09 và S16; 111 áp hai lần, định nghĩa view không đổi; với toà KHÔNG có bí danh S16, view 111 EXCEPT ALL view 097 (dựng tạm từ thân 097) hai chiều = 0 dòng; áp lại phần view của 097 trả định nghĩa cũ. Chiều đỏ: đột biến cho tầng S16 bắt cả toà không bí danh S16 thì EXCEPT ALL ≠ 0, ca đỏ nêu «toà không S16 đổi nút»"
+    paths: ["db/migrations/111_*", "pipeline/scripts/*s16-cau-truc*"]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.s37_db
+    expected: "Ca DA37-AC-2: toà ở hai bản thu, bản có danh sách khu và bản không (khu_id khác) → khu lấy từ bản có danh sách; toà có hai khu khác nhau trong hai bản có danh sách → không vào tầng S16, được đếm. Chiều đỏ: đột biến đọc khu từ v_s16_toa (bản mới nhất) thì toà ca một nhận khu sai, ca đỏ nêu «khu từ bản không danh sách»"
+    paths: ["db/migrations/111_*", "pipeline/scripts/*s16-cau-truc*"]
+  - id: E2b
+    criterion: AC-2
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.s37_that
+    expected: "Trên bản chép DB máy thu (sau DA33, xoá khi xong): 218/218 toà mang bí danh S16 có đúng một khu từ bản thu có danh sách khu; in theo dự án; chỉ in số"
+    paths: ["db/migrations/111_*", "pipeline/lib/s16*", "pipeline/phan-khu-s16.mjs", "pipeline/scripts/*s16-cau-truc*"]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.s37_db
+    expected: "Ca DA37-AC-3: --the in theo dự án khu → nút sẵn hay mới, số toà, mẫu, dòng cuối băm; đầu ra không chứa token toa_id/khu_id/mã căn của fixture hay tên nguồn thật (đối chứng dương: cấy một token vào đầu ra giả thì hàm soát bắt); --ap với băm đúng → mỗi khu đúng một nút subzone cha là dự án, nút sẵn trùng tên chuẩn hoá nhận khu thay vì đúc mới, một dòng project_link_rules nguồn S16; băm lệch → 0 dòng ghi ở asset_nodes, project_link_rules; áp lại → 0 nút mới; --dao → khu rời mọi nút, dòng luật có dao_by/dao_at. Chiều đỏ: đột biến bỏ so băm thì băm lệch vẫn ghi, ca đỏ nêu «băm lệch»"
+    paths: ["pipeline/phan-khu-s16.mjs", "pipeline/lib/s16*", "pipeline/scripts/*s16-cau-truc*"]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.s37_db
+    expected: "Ca DA37-AC-4: trước áp thẻ luật 0 dòng nguon='s16_phan_khu'; sau áp toà có cả S09 và S16 nhận nút phân khu S16 (assert id nút đúng khu, không chỉ khác null); sau đảo về nút S09. Chiều đỏ: đột biến xếp S09 trên S16 thì ca đỏ nêu «S09 thắng S16»"
+    paths: ["db/migrations/111_*", "pipeline/phan-khu-s16.mjs", "pipeline/scripts/*s16-cau-truc*"]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.s37_db
+    expected: "Ca DA37-AC-5 trên hai DB (S08 trước / S16 trước): mã X đúng một căn active ở toà S16 mang bí danh S16; căn S08 cũ status merged, merged_into = căn sống, bí danh S08 vẫn trên căn cũ; 0 thẻ can-lech-toa mới; thẻ can-lech-toa pending của mã X sang rejected kèm ghi chú; tập (mã → căn sống, bí danh, thẻ) hai DB bằng nhau. Chiều đỏ: đột biến giữ nhánh «lệch → thẻ» của DA33 thì ca đỏ nêu «thẻ lệch mới»"
+    paths: ["pipeline/lib/s16-dung.mjs", "pipeline/danh-ba-vat-the.mjs", "pipeline/scripts/*s16-cau-truc*"]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.s37_db
+    expected: "Ca DA37-AC-6: fixture có lệch toà (S08), lệch phân khu (S09) ở dự án có S16 → view đếm lệch có đúng các dòng (dự án, cặp nguồn, loại, số) viết trước; 0 thẻ mới ở dự án có S16; ca lệch tên toà có dòng riêng; đối chứng dương: cùng lệch ở dự án không có S16 ra đúng một thẻ. Chiều đỏ: đột biến bỏ cặp S09 khỏi view thì ca đỏ nêu «thiếu cặp S09»; đột biến chặn thẻ theo mọi dự án thì ca đỏ nêu «mất thẻ ngoài dự án S16»"
+    paths: ["db/migrations/111_*", "pipeline/scripts/*s16-cau-truc*"]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.s37_db
+    expected: "Ca DA37-AC-7: dựng lại hai lần sau AC-3, AC-5: băm (building_key, region_node_id) bằng nhau trước/sau; 0 khoá toà/trục/căn mới; 0 thẻ mới; thẻ can-mo-ho và toa-trung-ten không đổi trạng thái. Chiều đỏ: đột biến đúc lại căn S16 khi đã có bí danh thì ca đỏ nêu «khoá mới ở lần hai»"
+    paths: ["pipeline/lib/s16-dung.mjs", "pipeline/danh-ba-vat-the.mjs", "pipeline/scripts/*s16-cau-truc*"]
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.s37_db
+    expected: "Ca DA37-AC-8: buocVatTheDem trên DB có năm khu đã có toà dựng đúng năm slug (assert tập bằng nhau); đầu ra có một dòng «S16: khoá mới <n>, mốc <thời điểm giao dịch>» khớp created_at của dòng mới. Chiều đỏ: đột biến bỏ một khu khỏi tập thì ca đỏ nêu slug thiếu"
+    paths: ["pipeline/danh-ba-vat-the.mjs", "pipeline/lib/danh-ba-vat-the.mjs", "pipeline/scripts/*s16-cau-truc*"]
+  - id: E9
+    criterion: AC-9
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.s37_that
+    expected: "Trên bản chép DB máy thu: chụp dấu vân tay → áp chuỗi của hàng → ghi tệp khoá → đường lùi có đích (rút khẳng định của lượt bằng retracted_at + lý do, trả căn S08 về active, gỡ căn S16 mới của lượt, đảo thẻ luật, áp lại view 097) → dấu vân tay (lược đồ public; buildings, stacks, units, registry_aliases, review_queue, field_assertions trừ hai cột rút; v_toa_nut_vung) bằng nhau; thẻ can-lech-toa của lượt về pending với ghi chú cũ; phần dư đếm đúng (nút nghi, dòng luật có dao_at); số khẳng định đã rút = số của lượt; tệp khoá sai DB → thoát 4, không mở giao dịch. Chiều đỏ: bỏ bước trả thẻ thì lượt nêu «thẻ lệch không về pending»"
+    paths: ["_acceptance/danh-ba-s16-thang-cau-truc/lui/**", "pipeline/scripts/*s16-cau-truc*"]
+  - id: E10
+    criterion: AC-10
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.s37_that
+    expected: "Cùng script E2b: áp 111, --the rồi --ap với băm in ra, dựng năm khu; so từng ô với bảng kỳ vọng của AC-10 (khu 61; nút mới + nút nhận = 61; toà S16 có nút vùng là dự án 109 → 0; căn S08 merged 2; thẻ can-lech-toa rejected 2; can-mo-ho 38 và toa-trung-ten 20 còn pending; 0 buildings đổi region_node_id; dựng lần hai 0 khoá mới). Lệch một ô (±1) → thoát 1 nêu ô"
+    paths: ["db/migrations/111_*", "pipeline/phan-khu-s16.mjs", "pipeline/lib/s16*", "pipeline/danh-ba-vat-the.mjs", "pipeline/scripts/*s16-cau-truc*"]
