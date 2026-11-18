@@ -261,12 +261,16 @@ export function tenCan(d: DealChiTiet): string {
  * Căn còn thiếu gì. Chỉ nói ảnh, chữ bài khi vai được xem và đang ở máy thu, SĐT khi vai được xem: dữ liệu vắng vì
  * vai hay vì cloud không có nghĩa căn thiếu.
  */
-export function thieuGi(d: DealChiTiet, vai: { xemNoiDung: boolean; mayThu: boolean }): string[] {
+export function thieuGi(
+  d: Pick<DealChiTiet, "propertyType" | "areaM2" | "block" | "street" | "medianPerm2" | "postTextFull" | "sellerPhone" | "rank"> & { images: readonly unknown[] },
+  vai: { xemNoiDung: boolean; mayThu: boolean },
+): string[] {
   const out: string[] = [];
   if (!loaiHinh(d.propertyType)) out.push("Chưa rõ loại hình");
   if (!d.areaM2) out.push("Chưa có diện tích");
   if (vai.xemNoiDung && !d.block && !d.street) out.push("Chỉ biết phường, chưa có toà hay đường");
-  if (!d.medianPerm2) out.push("Chưa có thước phường");
+  // Tin thuê theo giá tháng có trung vị giá tháng, không có thước giá/m²: không tính là thiếu.
+  if (!d.medianPerm2 && !(d.rank?.metric === "gia-thang-pn" && d.rank.median)) out.push("Chưa có thước phường");
   if (vai.xemNoiDung && vai.mayThu) {
     if (d.images.length === 0) out.push("Chưa có ảnh");
     if (!d.postTextFull) out.push("Chưa có chữ bài");
@@ -274,6 +278,70 @@ export function thieuGi(d: DealChiTiet, vai: { xemNoiDung: boolean; mayThu: bool
   if (vai.xemNoiDung && !d.sellerPhone) out.push("Chưa có SĐT");
   return out;
 }
+
+/** Phần trăm in trên bảng danh sách: dấu phẩy thập phân. Câu trong sheet vẫn dùng `soPct`. */
+export const soPctVi = (pct: number): string => soPct(pct).replace(".", ",");
+
+/** Bán hay thuê trên URL; `rent` là `rent_lt` trong bảng hạng. */
+export type KindDeal = "sale" | "rent";
+export type TabTrang = "all" | TabDeal;
+/** Cỡ trang được chọn; giá trị khác trên URL về mặc định. */
+export const CO_TRANG_DEAL = [15, 25, 50] as const;
+const LOAI_LOC = ["apartment", "house", "land", "room", "commercial"] as const;
+
+/** Điều kiện của danh sách, đọc từ URL. Giá trị sai khuôn bị bỏ qua, không làm hỏng trang. */
+export type ThamSoDeal = {
+  location: string | null;
+  project: string | null;
+  type: string | null;
+  kind: KindDeal;
+  tab: TabTrang;
+  page: number;
+  size: number;
+};
+
+export function docThamSoDeal(sp: Record<string, string | string[] | undefined>): ThamSoDeal {
+  const mot = (k: string) => { const v = sp[k]; return typeof v === "string" ? v : Array.isArray(v) ? v[0] ?? null : null; };
+  const location = mot("location"), project = mot("project"), type = mot("type"), tab = mot("tab");
+  const page = Number(mot("page")), size = Number(mot("size"));
+  return {
+    location: location && /^vn(-[a-z0-9]+)*$/.test(location) ? location : null,
+    project: project && /^[0-9]{1,18}$/.test(project) ? project.replace(/^0+(?=\d)/, "") : null,
+    type: type && (LOAI_LOC as readonly string[]).includes(type) ? type : null,
+    kind: mot("kind") === "rent" ? "rent" : "sale",
+    tab: tab === "du" || tab === "xac-minh" || tab === "thieu" ? tab : "all",
+    page: Number.isInteger(page) && page >= 1 ? page : 1,
+    size: (CO_TRANG_DEAL as readonly number[]).includes(size) ? size : CO_TRANG_DEAL[0],
+  };
+}
+
+/** Đường dẫn của danh sách theo điều kiện; giá trị mặc định không ghi lên URL. */
+export function urlThamSoDeal(p: ThamSoDeal): string {
+  const q = new URLSearchParams();
+  if (p.location) q.set("location", p.location);
+  if (p.project) q.set("project", p.project);
+  if (p.type) q.set("type", p.type);
+  if (p.kind !== "sale") q.set("kind", p.kind);
+  if (p.tab !== "all") q.set("tab", p.tab);
+  if (p.page > 1) q.set("page", String(p.page));
+  if (p.size !== CO_TRANG_DEAL[0]) q.set("size", String(p.size));
+  const s = q.toString();
+  return s ? `/ops/deals?${s}` : "/ops/deals";
+}
+
+/** Một mục của cây vị trí; `value` là `area:<mã>`, `project:<mã>`, hay `nhom:<...>` cho hai nhánh không chọn được. */
+export type NutViTri = { value: string; label: string; count: number; children?: NutViTri[] };
+
+/** Phần phân trang của danh sách đọc ở máy chủ. */
+export type TrangDeal = {
+  thamSo: ThamSoDeal;
+  /** Số căn của từng tab trên toàn tập đã lọc. */
+  dem: Record<TabTrang, number>;
+  /** Số căn của tab đang mở. */
+  tong: number;
+  page: number;
+  cay: NutViTri[];
+};
 
 /** Biên diện tích của «căn cùng tiêu chí»: ±25% quanh căn đang xem. */
 export const BIEN_DIEN_TICH = 0.25;

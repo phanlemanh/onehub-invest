@@ -68,7 +68,7 @@ evals:
     executor: script
     cmd: bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-9
     paths: [app/src/app/ops/deals/page.tsx, app/src/components/ops/deals-cells.tsx, app/src/components/ops/deal-body.tsx, app/src/lib/deals-chi-tiet.ts, app/tests/deals-loc-xep-hang*]
-    expected: "HTML dựng thật của màn và sheet: không chứa «thước phường», không chứa câu mô tả cũ; 33.7 hiện thành «33,7»; cột nguồn chỉ khớp mẫu S0x. Đối chứng: chèn lại «thước phường» vào bản sao chuỗi thì ca đỏ."
+    expected: "HTML dựng thật của bảng danh sách và đầu trang: không chứa «thước phường», không chứa câu mô tả cũ; 33.7 hiện thành «33,7»; cột nguồn chỉ khớp mẫu S0x. Đối chứng: chèn lại «thước phường» vào bản sao chuỗi thì ca đỏ."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E10
     criterion: AC-10

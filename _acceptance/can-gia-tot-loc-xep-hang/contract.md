@@ -43,8 +43,8 @@ báo danh sách bị cắt, số đếm đúng tổng, tab trống có hành đ�
 - AC-8 (cross-layer): Given vai Người xem, When đọc bất kỳ trang nào, với bất kỳ điều kiện lọc nào, Then dữ liệu gửi xuống trình duyệt không có tên, số điện
   thoại, ảnh, chữ bài, địa chỉ dưới phường, và không có cột «Gọi ai»; vai Vận hành nhận đủ. Given lược đồ cloud không có bảng của máy thu, When mở màn, Then
   danh sách, số đếm, phân trang vẫn chạy và màn báo ảnh, chữ bài chỉ có ở máy thu.
-- AC-9: Given các chữ trên màn, When dựng màn, Then mô tả trang nói đúng tập đang hiện (không còn «Tin nội bộ S03, S05 rẻ hơn thước S06 cùng phường»), phần
-  trăm dùng dấu phẩy thập phân («−33,7%»), chữ UI không còn «thước phường», và nguồn chỉ hiện bằng mã `S0x`.
+- AC-9: Given bảng danh sách và đầu trang, When dựng màn, Then mô tả trang nói đúng tập đang hiện (không còn «Tin nội bộ S03, S05 rẻ hơn thước S06 cùng phường»), phần
+  trăm trên bảng dùng dấu phẩy thập phân («−33,7%»), bảng và đầu trang không còn chữ «thước phường», và nguồn chỉ hiện bằng mã `S0x`.
 - AC-10: Given DB máy thu, When mở màn không lọc, Then 15/15 dòng đầu là căn «Giá tốt» cấp dự án (hôm nay 0/15), số trên tab khớp `probes/dem-tap-can.mjs` (hôm nay tab ghi 30, lệnh
   đo ra 7.385), đi hết các trang được đúng `tong` mã phân biệt, và màn tải xong trong 3 giây. When chọn Vinhomes Ocean Park 1 trên bộ chọn, Then số trên tab bằng lệnh đo với mã `1`
   (hôm nay 189) và thứ tự đúng AC-1. Màn đọc được ở sáng, tối, khổ 390 px không cuộn ngang trang, và vai Người xem không thấy cột «Gọi ai».
@@ -80,6 +80,7 @@ Quét theo khuôn ma trận kiểm thử. Số trong ô đếm từ DB máy thu 
 - Đổi luật «thiếu gì» của tab «Còn thiếu» (tin S06 không có chữ bài luôn thuộc tab này).
 - Cỡ Badge của `PageHeader` dùng chung cho mọi trang.
 - Đổi API công khai `/v1/deals`, migration, bảng tính sẵn mới.
+- Chữ «thước phường» và số thập phân dấu chấm trong câu của sheet, trang một căn: các hồ sơ đã ký đang ghim nguyên văn, cần một hàng dọn từ vựng riêng.
 
 ## Notes
 

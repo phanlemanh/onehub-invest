@@ -4,6 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { DealsGrid } from "@/components/ops/deals-grid";
+import { DealsGridTrang } from "@/components/ops/deals-grid";
 import { DealsSkeleton } from "@/components/ops/deal-skeleton";
 import { LocalOnlyAlert } from "@/components/ops/local-only-alert";
 import { PageHeader } from "@/components/page/page-header";
@@ -15,6 +16,7 @@ import { dealHang, dealTheoVai, getDeals } from "@/lib/deals";
 // Tách dòng: hai ca test nguồn (SHS-AC-6, OD1-AC-9) chép trang và thay nguyên văn dòng import trên.
 import { getDuAn, getXacMinh, parseProject } from "@/lib/deals";
 import { NGAY_TOI_DA, NGUONG_VAO_PCT } from "@/lib/deals-chi-tiet";
+import { docThamSoDeal, type ThamSoDeal } from "@/lib/deals-chi-tiet";
 import { canAccessOps, xemNoiDungTin } from "@/lib/ops-access";
 import { loadPendingUnitMatches } from "@/lib/ops/review-cho-ghep";
 
@@ -98,18 +100,41 @@ async function DealsDuAnContent({ xemNoiDung, project }: { xemNoiDung: boolean; 
 }
 
 /**
+ * Danh sách đọc theo trang ở máy chủ (CG3): vị trí, loại hình, bán hay thuê, tab, trang nằm trên URL. Chưa có bảng hạng thì lùi về
+ * danh sách cũ. Căn ngoài trang đang xem mở bằng trang một căn.
+ */
+async function DealsTrangContent({ xemNoiDung, can, thamSo }: { xemNoiDung: boolean; can: string | null; thamSo: ThamSoDeal }) {
+  const { rows: tho, mayThu, trang } = await getDeals(undefined, NGUONG_VAO_PCT, { thamSo, xemNoiDung });
+  if (!trang) return <DealsContent xemNoiDung={xemNoiDung} can={can} />;
+  if (can && !tho.some((d) => d.offerId === can)) redirect(`/ops/deals/${encodeURIComponent(can)}`);
+  const rows = tho.map((d) => dealHang(dealTheoVai(d, { lienHe: xemNoiDung, noiDung: xemNoiDung }), { xemNoiDung, mayThu }));
+  const choGhep = await loadPendingUnitMatches(rows.map((d) => d.offerId));
+  return (
+    <>
+      {!mayThu && (
+        <LocalOnlyAlert title="Ảnh, chữ bài chỉ có ở máy thu">
+          Máy chủ chưa giữ hai phần này, nên căn không thiếu chúng. Mở cổng Ops trên máy thu để xem.
+        </LocalOnlyAlert>
+      )}
+      <DealsGridTrang rows={rows} moBanDau={can} xemNoiDung={xemNoiDung} mayThu={mayThu} choGhep={choGhep} trang={trang} />
+    </>
+  );
+}
+
+/**
  * /ops/deals — P4: căn giá tốt từ tín hiệu riêng P1 (S03/S05) đo bằng thước vải công khai P2 (median S06 cùng phường).
  * Nằm ở Ops vì lộ tín hiệu nội bộ. Ảnh, chữ bài, liên hệ, địa chỉ dưới phường từ vai Vận hành trở lên; vai Người xem không
  * nhận trường nào trong đó. Ảnh và chữ bài chỉ có ở máy thu (hồ sơ can-gia-tot-biet-can).
  */
-export default async function DealsPage({ searchParams }: { searchParams: Promise<{ can?: string; project?: string }> }) {
+export default async function DealsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const user = await getSessionUser();
   if (!user || !canAccessOps(user)) {
     return <p className="text-muted-foreground p-8 text-sm">Cần đăng nhập ops.</p>;
   }
-  const { can, project: thamSoDuAn } = await searchParams;
+  const sp = await searchParams;
+  const can = typeof sp.can === "string" ? sp.can : undefined;
   const xemNoiDung = xemNoiDungTin(user);
-  const project = parseProject(thamSoDuAn);
+  const project = parseProject(sp.project);
   const tenDuAn = project ? (await getDuAn(project))?.ten ?? null : null;
   return (
     <div className="flex flex-col gap-4">
@@ -117,14 +142,13 @@ export default async function DealsPage({ searchParams }: { searchParams: Promis
         crumbs={[{ label: "Vận hành", href: "/ops" }, { label: "Căn giá tốt" }]}
         title={tenDuAn ? `Căn giá tốt · ${tenDuAn}` : "Căn giá tốt"}
         stats={[`Giảm từ ${NGUONG_VAO_PCT}%`, `${NGAY_TOI_DA} ngày gần nhất`]}
-        description={project ? "Căn rẻ trong chính dự án: so với căn cùng dự án, cùng loại (và cùng số phòng ngủ khi đủ căn)." : "Tin nội bộ S03, S05 rẻ hơn thước S06 cùng phường."}
+        description={project ? "Căn rẻ trong chính dự án: so với căn cùng dự án, cùng loại (và cùng số phòng ngủ khi đủ căn)." : "Căn rẻ hơn trung vị của nhóm so sánh, căn cấp dự án đứng đầu."}
       />
-      {project && tenDuAn && <div className="flex"><BoLocDuAn /></div>}
       <RegionError what="danh sách căn">
         <Suspense fallback={<DealsSkeleton />}>
-          {project
+          {project && !tenDuAn
             ? <DealsDuAnContent xemNoiDung={xemNoiDung} project={project} />
-            : <DealsContent xemNoiDung={xemNoiDung} can={can ?? null} />}
+            : <DealsTrangContent xemNoiDung={xemNoiDung} can={can ?? null} thamSo={docThamSoDeal(sp)} />}
         </Suspense>
       </RegionError>
     </div>
