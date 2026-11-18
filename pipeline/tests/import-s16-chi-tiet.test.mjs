@@ -162,11 +162,11 @@ test("CT-5 chốt cho phép (khuôn S16-3): URL biến thể trỏ DB không ph�
   const dir = await sinh(itemsGia());
   const NGUOI = "oneinvest:" + "oneinvest"; // tách chuỗi cho scanner (khuôn import-s16.test)
   const r = spawnSync(process.execPath, [join(REPO, "pipeline", "import-s16-chi-tiet.mjs"), dir], {
-    env: { ...process.env, DATABASE_URL: `postgres://${NGUOI}@localhost:5433/oneinvest` },
+    env: { ...process.env, DATABASE_URL: `postgres://${NGUOI}@localhost:5433/oneinvest_khong_phai_suite` },
     encoding: "utf8",
   });
   assert.equal(r.status, 2, `rc phải 2, nhận ${r.status}; stderr=${r.stderr}`);
-  assert.match(r.stderr, /từ chối DB 'oneinvest'/, "thông điệp chốt chặn DB");
+  assert.match(r.stderr, /từ chối DB 'oneinvest_khong_phai_suite'/, "thông điệp chốt chặn DB");
 });
 
 test("CT-6 đối chứng dương chốt (khuôn S16-4): cùng URL kèm --may-thu → qua chốt, lỗi là lỗi kết nối", async () => {

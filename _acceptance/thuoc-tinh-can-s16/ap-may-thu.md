@@ -66,7 +66,7 @@ lệnh `--ghi` nay tự chạy `ANALYZE field_assertions`).
 ## 5. Lệnh kiểm sau
 
 ```bash
-node pipeline/tests/thuoc-tinh-can-s16-that.mjs        # bốn cột: đếm thẳng · view · chạy thử (khối mục 3) · bảng phủ ca; thoát 1 khi lệch
+TTC_DB_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest bash _acceptance/thuoc-tinh-can-s16/probes/kiem.sh that        # bốn cột: đếm thẳng · view · chạy thử (khối mục 3) · bảng phủ ca; thoát 1 khi lệch
 ```
 Rồi mở `/ops/registry/<id>` của grand-park, smart-city, ocean-park-3 trên Ops máy thu và đối chiếu ô phủ với khối mục 3
 (grand-park 37.589 có thuộc tính, smart-city 2.546, ocean-park-3 2.797 và 792 chưa vào danh bạ). Lệch thì dừng và báo, không tự

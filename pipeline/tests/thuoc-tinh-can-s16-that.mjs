@@ -7,12 +7,12 @@
 // thu gốc 18/11 — chỉ so khi snapshot là lượt 18/11).
 // Thoát: 0 khớp · 1 lệch (in ô) · 3 chưa áp 113 hay bảng nạp rỗng. Chỉ in số và tên dự án ngắn; không mã căn, không snapshot.
 import { readFileSync, existsSync, realpathSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
 
-const GOC = join(dirname(fileURLToPath(import.meta.url)), "../..");
-const HO_SO = join(GOC, "_acceptance/thuoc-tinh-can-s16");
+// Thư mục hồ sơ do probes/kiem.sh truyền vào: mã trong pipeline/ không tự trỏ sang _acceptance/.
+const HO_SO = process.env.TTC_HO_SO;
 const COT = ["noi", "living_area", "dien_tich_2", "bedrooms", "bathrooms", "direction_faces", "property_type", "gia_cdt"];
 
 /** Bảng §1 của bảng phủ ca: tên ngắn → ô (cột «Tim tường» = tim tường + đất sau Cổng 1). */
@@ -96,6 +96,7 @@ SELECT a.du_an, count(v.unit_key)::int AS noi,
 FROM a LEFT JOIN v ON v.unit_key = a.object_key LEFT JOIN g ON g.unit_key = a.object_key GROUP BY a.du_an`;
 
 async function main() {
+  if (!HO_SO) { console.error("thuoc-tinh-can-s16-that: thiếu TTC_HO_SO — chạy qua probes/kiem.sh that"); return 2; }
   const url = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
   const c = new pg.Client({ connectionString: url });
   await c.connect();
