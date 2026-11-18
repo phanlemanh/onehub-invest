@@ -28,12 +28,13 @@ node pipeline/scripts/thuoc-tinh-can-s16.mjs --ghi --db-that       # ghi phát b
 
 ## 3. Số chạy thử
 
-Đo 18/11 trên bản chép DB máy thu `oneinvest_p1_ttc` (tạo từ mẫu `oneinvest_suite_mau`, áp 113), bảng nạp được nạp bằng bộ nạp
-NHÁP của phiên từ tệp thu gốc sáng 18/11 (181.937 dòng). Khi bộ nạp thật của làn thu xong, chạy lại lệnh chạy thử trên bản chép
-và thay khối dưới nếu khác — số thật ở bước 5 phải bằng khối này.
+Đo 18/11 trên bản chép DB máy thu `oneinvest_p1_ttc` (tạo từ mẫu `oneinvest_suite_mau`, áp 113), bảng nạp lấy từ snapshot sv14
+`mngt-can-chi-tiet` của làn thu (95.798 item, băm 96/96 tệp khớp manifest) qua bộ nạp THỬ của phiên. **Điều kiện áp:** bộ nạp thật
+của làn thu (tin claudedp-1811-8) phải gộp trước, và lệnh chạy thử chạy lại trên bản chép bằng bộ nạp ấy phải ra đúng khối dưới;
+khác thì dừng và báo. Số thật ở bước 5 phải bằng khối này.
 
 Tổng: phát biểu 441.183 · căn danh bạ có thuộc tính 84.820 / 111.329 · căn có giá chủ đầu tư 11.852 · tầng lệch 41 · mã hai toà
-860 · mã có thuộc tính chưa có căn danh bạ 10.118. Diện tích thứ hai: tim tường 69.676 (cao tầng) + đất 15.144 (thấp tầng).
+862 (nhóm `mo_ho` của `v_s16_can`) · mã có thuộc tính chưa có căn danh bạ 10.116. Diện tích thứ hai: tim tường 69.676 (cao tầng) + đất 15.144 (thấp tầng).
 
 Thứ tự cột: nối · thông thuỷ/sàn · tim tường hoặc đất · PN · WC · hướng · loại hình · giá chủ đầu tư.
 

@@ -6,7 +6,8 @@ cd "$GOC"
 case "${1:-}" in
   ham)  exec node --test pipeline/tests/thuoc-tinh-can-s16.test.mjs ;;
   db)   exec node --test --test-concurrency=1 pipeline/tests/thuoc-tinh-can-s16.itest.mjs ;;
-  that) exec node pipeline/tests/thuoc-tinh-can-s16-that.mjs ;;
+  # that: mặc định đo trên bản chép oneinvest_p1_ttc (áp 113 + snapshot sv14 qua bộ nạp thử); sau khi áp máy thu đặt DATABASE_URL về DB máy thu
+  that) DATABASE_URL="${TTC_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p1_ttc}" exec node pipeline/tests/thuoc-tinh-can-s16-that.mjs ;;
   app)  cd app && exec node --import tsx --test --test-concurrency=1 tests/thuoc-tinh-can.test.tsx ;;
   *) echo "kiem.sh: dùng ham | db | that | app" >&2; exit 2 ;;
 esac
