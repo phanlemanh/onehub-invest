@@ -74,3 +74,4 @@
 {"ts":"2026-11-17T20:20:30Z","sha":"4dd65afc3bc1c385ddea27bea975b95dddb41faa","round":3,"kind":"round-tally","verdict":"REJECT","expected":14,"returned":14,"blocked":0}
 {"ts":"2026-11-17T20:20:30Z","sha":"4dd65afc3bc1c385ddea27bea975b95dddb41faa","round":3,"kind":"chot-truong-nguoi","human_signoff":0,"human_override":0,"bypass_ack":0,"verified_at":13}
 {"kind":"scripts-ci","ts":"2026-11-17T21:17:34.471Z","sha":"855e9eeed7752f090fc35417a553bfb21cab2e25","exit":0,"tests":535,"pass":528,"fail":0,"giay":57.6}
+{"kind":"scripts-ci","ts":"2026-11-18T04:57:29.765Z","sha":"f1e710244c191a2b885b2f5b2b095a15f4574d76","exit":0,"tests":535,"pass":528,"fail":0,"giay":87.3}
