@@ -5,9 +5,9 @@ slug: so-so-tren-man-theo-ngay
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [db, pipeline, ui]
-status: draft
-approved_by:
-approved_at:
+status: approved
+approved_by: Mạnh
+approved_at: 2026-11-18
 design_doc: docs/superpowers/specs/2026-11-18-so-so-tren-man-theo-ngay-design.md
 ---
 
