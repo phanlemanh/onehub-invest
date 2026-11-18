@@ -5,7 +5,7 @@ slug: danh-ba-s16-thang-cau-truc
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-18
 design_doc: docs/superpowers/specs/2026-11-17-danh-ba-s16-thang-cau-truc-design.md
@@ -173,3 +173,11 @@ Trục (quét bằng morphological-scan, preset entity-feature):
 - Hàng này không hứa thẻ hiện trên `/ops/review`: mọi AC đo trạng thái thẻ trong `review_queue`, không đo trang — trang ẩn mọi
   thẻ `entity_match` đang chờ theo quyết định đóng băng V7 (08/11); hiện thẻ danh bạ là hàng U2.
 - Ca app GS-AC-6 đỏ sẵn trên main sau DA33 (probe đếm nhầm 60 thẻ S16) — N1 sửa, không thuộc hàng này.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-18:
+  - Ngoài-1: Thước kiểm lại của DA33 từng báo đỏ giả sau khi áp vì đếm thiếu căn đã gộp; đã sửa ở vòng 4, ghi lại để lưu vết.
+  - Ngoài-2: Bước chép dữ liệu của thước DA33 từng bỏ căn đã gộp; đã sửa ở vòng 4, ghi lại để lưu vết.
+  - Ngoài-3: Bài test phép cộng từng thiếu ca cho đủ năm phần; đã bổ sung ở vòng 4, ghi lại để lưu vết.
+  - Ngoài-4: Một ca test từng có tên hứa nhiều hơn phép kiểm thật; đã bỏ ở vòng 4, ghi lại để lưu vết.
+  - Ngoài-5: Phân khu mới do S16 tạo chưa mang nhãn chuẩn RESO như phân khu do S09 tạo; người dùng không thấy khác trên màn.
+  - Ngoài-6: Đảo một luật phân khu dùng chung nút với luật khác có thể làm toà của luật còn lại rơi khỏi phân khu S16 mà không cảnh báo.
+  - Ngoài-7: Phép kiểm thẻ luật không in mã nội bộ chưa có ca chứng nó báo đỏ khi mã lọt ra; đầu ra hiện tại sạch.
