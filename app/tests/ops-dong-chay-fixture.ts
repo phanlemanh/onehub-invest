@@ -27,7 +27,7 @@ export const vn = (s: string) => new Date(`${s}+07:00`).toISOString()
 export const IN = "2026-10-24T09:00:00"
 export const OLD = "2026-10-10T09:00:00" // ngoài 7 ngày
 export const SNAP = "hanoi__zalo-agent__2026-10-24T090000"
-export const TABLES = ["stg_zalo_posts", "sale_offers", "property_offers", "stg_chotot_ads", "stg_abnb_listings", "listings", "areas", "enrichment_proposals", "review_queue"]
+export const TABLES = ["stg_zalo_posts", "sale_offers", "property_offers", "stg_chotot_ads", "stg_abnb_listings", "listings", "areas", "enrichment_proposals", "review_queue", "dq_check_results", "offer_price_rank"]
 
 // [post_id, snapshot_id, agent_id, group_name, posted_at, media, media_files]
 export type Post = [string, string, string, string, string, unknown, unknown]
