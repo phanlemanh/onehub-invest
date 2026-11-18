@@ -21,6 +21,7 @@ Ghi đường hai tệp và cỡ (không rỗng) vào mục «Nhật ký áp» d
 cd ~/dev/onehub-invest
 docker exec -i -e PGPASSWORD=oneinvest one-invest-db psql -U oneinvest -h localhost -d oneinvest -v ON_ERROR_STOP=1 < db/migrations/113_thuoc_tinh_can_s16.sql
 docker exec -i -e PGPASSWORD=oneinvest one-invest-db psql -U oneinvest -h localhost -d oneinvest -v ON_ERROR_STOP=1 < db/migrations/113_thuoc_tinh_can_s16.sql   # lần hai: chứng chạy lại an toàn
+docker exec -i -e PGPASSWORD=oneinvest one-invest-db psql -U oneinvest -h localhost -d oneinvest -v ON_ERROR_STOP=1 < db/migrations/118_v_s16_gia_cdt_loai_mo_ho.sql   # view giá loại mã mơ hồ toà; luôn áp SAU 113
 # (làn thu nạp snapshot vào stg_s16_can_chi_tiet)
 node pipeline/scripts/thuoc-tinh-can-s16.mjs                       # chạy thử: in bảng, không ghi — so với mục 3
 node pipeline/scripts/thuoc-tinh-can-s16.mjs --ghi --db-that       # ghi phát biểu + ANALYZE field_assertions
@@ -59,6 +60,7 @@ lệnh `--ghi` nay tự chạy `ANALYZE field_assertions`).
 - **Lùi lược đồ** chỉ khi CHƯA chạy `--ghi` (bảng phát biểu chỉ thêm, dòng đã rút vẫn mang mã trường mới nên CHECK của 096 không
   dựng lại được): `psql … < _acceptance/thuoc-tinh-can-s16/lui/113-lui.sql`. Tệp tự từ chối khi còn phát biểu mang trường của 113
   (đã thử trên DB dựng từ migrations 18/11: lùi → CHECK về bản 096, áp lại 113 được; có phát biểu → từ chối).
+- 118 chỉ thay thân view giá: lùi riêng 118 bằng cách áp lại khối view của 113; lùi lược đồ ở trên đã DROP view nên phủ cả 118.
 - Khôi phục từ sao lưu mục 1 nếu hai đường trên không đủ (`pg_restore --clean -t field_assertions -t ref_lookup`).
 
 ## 5. Lệnh kiểm sau

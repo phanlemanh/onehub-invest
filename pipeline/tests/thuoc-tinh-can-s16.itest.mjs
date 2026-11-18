@@ -16,6 +16,7 @@ import { GOC, apTep, taoDbThu, xoaDbThu } from "../scripts/db-thu-dbv.mjs";
 
 const TEN = `oneinvest_dbv_ttc_${process.pid}`;
 const MIG = join(GOC, "db/migrations/113_thuoc_tinh_can_s16.sql");
+const MIG118 = join(GOC, "db/migrations/118_v_s16_gia_cdt_loai_mo_ho.sql");
 const LENH = join(GOC, "pipeline/scripts/thuoc-tinh-can-s16.mjs");
 const DA = "q-da";
 const SNAP1 = "q__ttc__2026-11-18T010000000";
@@ -71,7 +72,7 @@ const DONG1 = [
   { ma: "QA5", tang: "9", pn: 2, bc: "NW", tt: 60, tim: 65, gia: 1_000_000_000 },
   { ma: "QA6", toa: "T1", tang: "14", pn: 2, bc: "NE", tt: 60, tim: 65, gia: 3_000_000_000 },
   { ma: "QA6", toa: "T2", tang: "14", pn: 2, bc: "NE", tt: 61, tim: 66, gia: 3_000_000_000 },
-  { ma: "QA7", tang: "15", pn: 2, bc: "NW", tt: 55, tim: 60 },
+  { ma: "QA7", tang: "15", pn: 2, bc: "NW", tt: 55, tim: 60, gia: 3_500_000_000 }, // mơ hồ toà CÓ giá: view giá không được trả
 ];
 
 const dauLuocDo = async () => createHash("sha256").update(JSON.stringify([
@@ -101,7 +102,8 @@ function banSao(tu, sang) {
 test("TTC-AC-1 113 áp lần hai không lỗi, lược đồ không đổi; CHECK = 096 + đúng bốn trường; chỉ thêm migration 113", async () => {
   const truoc = await dauLuocDo();
   apTep(TEN, MIG);
-  assert.equal(await dauLuocDo(), truoc, "TTC-AC-1 áp lại 113 đổi lược đồ");
+  apTep(TEN, MIG118); // 118 thay view giá của 113: áp lại đúng thứ tự
+  assert.equal(await dauLuocDo(), truoc, "TTC-AC-1 áp lại 113 rồi 118 đổi lược đồ");
   const d = (await q(`SELECT pg_get_constraintdef(oid) d FROM pg_constraint WHERE conname = 'field_assertions_field_chk'`))[0].d;
   const tap = [...d.matchAll(/'([a-z_]+)'::text/g)].map((m) => m[1]).sort();
   assert.deepEqual(tap, [...TRUONG_096, "living_area", "building_area_total", "direction_faces", "lot_size_area"].sort(), "TTC-AC-1 tập trường CHECK");
@@ -109,7 +111,7 @@ test("TTC-AC-1 113 áp lần hai không lỗi, lược đồ không đổi; CHEC
   try { base = execFileSync("git", ["merge-base", "HEAD", "origin/main"], { cwd: GOC, encoding: "utf8" }).trim(); } catch { /* CI nông */ }
   if (base) {
     const doi = execFileSync("git", ["diff", "--name-status", base, "--", "db/migrations"], { cwd: GOC, encoding: "utf8" }).trim().split("\n").filter(Boolean);
-    assert.deepEqual(doi, ["A\tdb/migrations/113_thuoc_tinh_can_s16.sql"], "TTC-AC-1 hàng này đổi migration khác ngoài 113");
+    assert.deepEqual(doi, ["A\tdb/migrations/113_thuoc_tinh_can_s16.sql", "A\tdb/migrations/118_v_s16_gia_cdt_loai_mo_ho.sql"], "TTC-AC-1 hàng này đổi migration khác ngoài 113, 118");
   }
   // chiều đỏ: bản sao bỏ IF NOT EXISTS của bảng nạp → áp lại lỗi
   const { tep, xoa } = banSao("CREATE TABLE IF NOT EXISTS stg_s16_can_chi_tiet", "CREATE TABLE stg_s16_can_chi_tiet");
@@ -204,6 +206,9 @@ test("TTC-AC-6 bộ phân xử: lần thu sau thắng, bỏ kế thừa và phá
   const r = (await q(`INSERT INTO field_assertions (resource_name, subject_key, field, value, evidence_tier, method, evidence, observed_at)
                        VALUES ('Unit', $1, 'bedrooms', '5', 'fact', 'hitl', '{"nguon":"S99"}', '2026-11-21T00:00:00Z') RETURNING id`, [can(1)]))[0];
   await db.query(`UPDATE field_assertions SET retracted_at = clock_timestamp(), retract_reason = 'ttc-thu' WHERE id = $1`, [r.id]);
+  // nguồn khác còn sống, cùng lớp, mốc cũ hơn: lần thu sau phải thắng nó (S16 cũ đã bị rút nên không còn là đối chứng)
+  await db.query(`INSERT INTO field_assertions (resource_name, subject_key, field, value, evidence_tier, method, evidence, observed_at)
+                  VALUES ('Unit', $1, 'living_area', '65', 'fact', 'hitl', '{"nguon":"S99"}', $2)`, [can(1), T1]);
   const doc = async (view) => (await q(`SELECT living_area::text, building_area_total::text, bedrooms_total, bathrooms_total_integer, direction_faces,
       property_sub_type, nguon, observed_at FROM ${view} WHERE unit_key = $1`, [can(1)]));
   const v = await doc("v_unit_thuoc_tinh");
@@ -220,15 +225,42 @@ test("TTC-AC-6 bộ phân xử: lần thu sau thắng, bỏ kế thừa và phá
   await db.query("DROP VIEW v_unit_thuoc_tinh_pha");
 });
 
+test("TTC-AC-6 lần thu sau thắng cả khi giá trị quay lại mức cũ, và căn góc đổi một hướng không mất hướng còn lại", async () => {
+  const ev = { nguon: "S16", snap_bam: "ttc" };
+  const luot = async (m, unit, field, values, luc) => {
+    await db.query("BEGIN");
+    await m.ghi(db, values.map((value) => ({ subject_key: unit, field, value, evidence: ev })), new Date(luc), "ttc-luot");
+    await db.query("COMMIT");
+  };
+  const doc = async (unit) => (await q(`SELECT living_area::text a, direction_faces h FROM v_unit_thuoc_tinh WHERE unit_key = $1`, [unit]))[0];
+  for (const [v, luc] of [["70", "2026-12-01T00:00:00Z"], ["72", "2026-12-02T00:00:00Z"], ["70", "2026-12-03T00:00:00Z"]]) await luot(lenh, can(3), "living_area", [v], luc);
+  assert.equal((await doc(can(3))).a, "70", "TTC-AC-6 A→B→A: lần thu sau không thắng");
+  await luot(lenh, can(3), "direction_faces", ["east", "north"], "2026-12-01T00:00:00Z");
+  await luot(lenh, can(3), "direction_faces", ["east", "south"], "2026-12-02T00:00:00Z");
+  assert.deepEqual((await doc(can(3))).h, ["east", "south"], "TTC-AC-6 căn góc đổi một hướng: mất hướng được xác nhận lại");
+  await luot(lenh, can(3), "direction_faces", ["east"], "2026-12-03T00:00:00Z");
+  assert.deepEqual((await doc(can(3))).h, ["east"], "TTC-AC-6 hướng nguồn đã bỏ vẫn còn");
+  // chiều đỏ: bỏ bước rút phát biểu cũ → A→B→A đứng ở B
+  const pha = await lenhPha("AND subject_key = ANY($1::text[]) AND observed_at < $2", "AND subject_key = ANY($1::text[]) AND observed_at < $2 AND false");
+  for (const [v, luc] of [["80", "2026-12-01T00:00:00Z"], ["82", "2026-12-02T00:00:00Z"], ["80", "2026-12-03T00:00:00Z"]]) await luot(pha, can(2), "living_area", [v], luc);
+  assert.equal((await doc(can(2))).a, "82", "TTC-AC-6 bỏ bước rút mà view vẫn đúng — phép đo không phân biệt");
+});
+
 test("TTC-AC-7 giá chủ đầu tư từ snapshot mới nhất theo căn; giá 0 và mã hai toà không có dòng; không phát biểu giá", async () => {
   const g = await q(`SELECT unit_key, list_price::text, gia_m2_thong_thuy::text FROM v_s16_gia_cdt ORDER BY 1`);
   assert.deepEqual(g, [{ unit_key: can(1), list_price: "2100000000", gia_m2_thong_thuy: String(Math.round(2_100_000_000 / 70)) }], "TTC-AC-7 dòng giá");
   assert.equal((await q(`SELECT count(*)::int n FROM field_assertions WHERE field ~ 'price'`))[0].n, 0, "TTC-AC-7 có phát biểu giá");
   // chiều đỏ: bản sao view lấy snapshot cũ nhất → giá cũ
-  const def = readFileSync(MIG, "utf8").match(/CREATE OR REPLACE VIEW v_s16_gia_cdt AS([\s\S]*?);\n/)[1];
+  const def = readFileSync(MIG118, "utf8").match(/CREATE OR REPLACE VIEW v_s16_gia_cdt AS([\s\S]*?);\n/)[1];
   const pha = def.replace("ORDER BY s.collected_at DESC NULLS LAST", "ORDER BY s.collected_at ASC NULLS LAST");
   assert.notEqual(pha, def, "TTC-AC-7 chỗ phá không còn trong view");
   await db.query(`CREATE VIEW v_s16_gia_cdt_pha AS ${pha}`);
   assert.equal((await q(`SELECT list_price::text p FROM v_s16_gia_cdt_pha WHERE unit_key = $1`, [can(1)]))[0].p, "2000000000", "TTC-AC-7 view phá vẫn ra giá mới nhất");
   await db.query("DROP VIEW v_s16_gia_cdt_pha");
+  // chiều đỏ: bỏ điều kiện mo_ho → mã mơ hồ toà QA7 có giá lọt vào view
+  const pha2 = def.replace("WHERE m.sale_price > 0 AND h.ma_can IS NULL", "WHERE m.sale_price > 0");
+  assert.notEqual(pha2, def, "TTC-AC-7 chỗ phá mo_ho không còn trong view");
+  await db.query(`CREATE VIEW v_s16_gia_cdt_pha2 AS ${pha2}`);
+  assert.equal((await q(`SELECT count(*)::int n FROM v_s16_gia_cdt_pha2 WHERE unit_key = $1`, [can(7)]))[0].n, 1, "TTC-AC-7 bỏ luật mo_ho mà QA7 vẫn không có giá — phép đo không phân biệt");
+  await db.query("DROP VIEW v_s16_gia_cdt_pha2");
 });

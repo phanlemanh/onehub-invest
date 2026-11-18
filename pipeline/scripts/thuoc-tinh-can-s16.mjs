@@ -76,9 +76,19 @@ export async function tinh(c, { snapshot = null } = {}) {
   return { chua_ap: false, bang, phat, snapshot: { bam, luc_thu: lucThu }, observed_at: lucThu ?? new Date() };
 }
 
-/** Chèn phát biểu (người gọi giữ giao dịch). Trả số dòng mới. */
+/**
+ * Ghi phát biểu của một lần thu (người gọi giữ giao dịch). Trả số dòng mới.
+ * «Lần thu sau thắng» (AC-6): khoá sống của phát biểu không chứa observed_at, nên giá trị được xác nhận lại sẽ giữ mốc cũ và thua
+ * giá trị khác của lần giữa. Vì vậy rút mọi phát biểu S16 cũ hơn lần thu này của đúng các căn có mặt, rồi chèn lại trọn bộ.
+ * Chạy lại cùng lần thu: không rút gì (cùng mốc), chèn 0 dòng.
+ */
 export async function ghi(c, phat, observedAt, runId) {
   if (!phat.length) return 0;
+  await c.query(
+    `UPDATE field_assertions SET retracted_at = clock_timestamp(), retract_reason = 'thay-boi-lan-thu-sau'
+      WHERE resource_name = 'Unit' AND method = 'source_field' AND evidence ->> 'nguon' = $3 AND retracted_at IS NULL
+        AND subject_key = ANY($1::text[]) AND observed_at < $2`,
+    [[...new Set(phat.map((p) => p.subject_key))], observedAt, NGUON_S16]);
   const res = await c.query(
     `INSERT INTO field_assertions (resource_name, subject_key, field, value, evidence_tier, method, method_version, evidence,
                                    observed_at, changed_by, run_id)

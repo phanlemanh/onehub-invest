@@ -11,14 +11,14 @@ evals:
     criterion: AC-1
     executor: script
     cmd: bash _acceptance/thuoc-tinh-can-s16/probes/kiem.sh db
-    expected: "Ca TTC-AC-1 trên DB của lượt (áp 001…113): áp 113 lần hai không lỗi, bản chụp information_schema.columns + pg_get_viewdef + pg_get_triggerdef + pg_get_constraintdef trước/sau lần hai bằng nhau; CHECK field_assertions_field_chk bằng đúng tập 096 + {living_area, building_area_total, direction_faces, lot_size_area} (so tập, không so chuỗi); git diff --name-only origin/main -- db/migrations chỉ có 113_*. Chiều đỏ: bản sao 113 bỏ IF NOT EXISTS ở CREATE TABLE → lần hai lỗi, ca đỏ nêu «áp lại 113»"
-    paths: ["db/migrations/113_*", "pipeline/tests/thuoc-tinh-can-s16*"]
+    expected: "Ca TTC-AC-1 trên DB của lượt (áp 001…113): áp 113 lần hai không lỗi, bản chụp information_schema.columns + pg_get_viewdef + pg_get_triggerdef + pg_get_constraintdef trước/sau lần hai bằng nhau; CHECK field_assertions_field_chk bằng đúng tập 096 + {living_area, building_area_total, direction_faces, lot_size_area} (so tập, không so chuỗi); git diff --name-only origin/main -- db/migrations chỉ có 113_* và 118_* (118 do GS cấp, P1-100). Chiều đỏ: bản sao 113 bỏ IF NOT EXISTS ở CREATE TABLE → lần hai lỗi, ca đỏ nêu «áp lại 113»"
+    paths: ["db/migrations/113_*", "db/migrations/118_*", "pipeline/tests/thuoc-tinh-can-s16*"]
   - id: E2
     criterion: AC-2
     executor: script
     cmd: bash _acceptance/thuoc-tinh-can-s16/probes/kiem.sh db
     expected: "Ca TTC-AC-2: tập cột stg_s16_can_chi_tiet bằng đúng danh sách viết trước của thiết kế §4.1 (so tập); không cột nào khớp /purchase|invest|loan|juridical|delivery|furniture|house_status/i; FK snapshot_id → airbnb_snapshots ON DELETE CASCADE (đọc pg_constraint); ba dòng vi phạm (ma_can rỗng, area_using -1, sale_price -1) mỗi dòng 23514 nêu tên ràng buộc. Chiều đỏ: thêm cột purchase_price vào bản sao → ca đỏ nêu tên cột"
-    paths: ["db/migrations/113_*"]
+    paths: ["db/migrations/113_*", "db/migrations/118_*"]
   - id: E3
     criterion: AC-3
     executor: test
@@ -43,13 +43,13 @@ evals:
     executor: script
     cmd: bash _acceptance/thuoc-tinh-can-s16/probes/kiem.sh db
     expected: "Ca TTC-AC-6: v_unit_thuoc_tinh trả đúng 1 dòng cho căn thử; living_area = giá trị lần thu sau; phát biểu registry_inherit (giá trị khác) và phát biểu đã rút không thắng; direction_faces = mảng hai mã của cùng lần thu; nguon = {S16}; observed_at = mốc lần thu sau. Chiều đỏ: đảo thứ tự observed_at trong bản sao view → ô «lần thu sau thắng» đỏ"
-    paths: ["db/migrations/113_*"]
+    paths: ["db/migrations/113_*", "db/migrations/118_*"]
   - id: E7
     criterion: AC-7
     executor: script
     cmd: bash _acceptance/thuoc-tinh-can-s16/probes/kiem.sh db
     expected: "Ca TTC-AC-7: v_s16_gia_cdt cho căn thử list_price = giá snapshot mới nhất, gia_m2_thong_thuy = list_price/area_using (làm tròn như thiết kế); mã giá 0 và mã hai toà: 0 dòng; SELECT count(*) FROM field_assertions WHERE field ~ 'price' = 0 sau --ghi; trục CHECK không có mã nào chứa 'price'. Chiều đỏ: đột biến view lấy snapshot cũ nhất → ca đỏ nêu «snapshot mới nhất»"
-    paths: ["db/migrations/113_*", "pipeline/scripts/thuoc-tinh-can-s16.mjs"]
+    paths: ["db/migrations/113_*", "db/migrations/118_*", "pipeline/scripts/thuoc-tinh-can-s16.mjs"]
   - id: E8
     criterion: AC-8
     executor: test
@@ -92,7 +92,7 @@ evals:
     layer: backend-effect
     cmd: bash _acceptance/thuoc-tinh-can-s16/probes/kiem.sh that
     expected: "Trên bản chép DB máy thu oneinvest_p1_ttc đã áp 113 và nạp snapshot sv14 (trước gộp; sau khi áp chạy lại với TTC_DB_URL trỏ DB máy thu — phiên chỉ-đọc, khoá lược đồ public): đếm độc lập trong script (không import pipeline/lib/thuoc-tinh-can-s16.mjs) căn có thuộc tính, có giá, chưa vào danh bạ theo dự án từ stg + bí danh; bảng bốn cột «đếm thẳng» / «v_unit_thuoc_tinh + v_s16_gia_cdt» / «chạy thử» (đọc từ ap-may-thu.md) / «bảng phủ ca §1» (số khoá trong bang-phu-ca.md, đếm từ tệp thu gốc 18/11, độc lập với bộ nạp) bằng nhau từng ô của năm dự án đã nối khi manifest snapshot là lượt 18/11 (ngưỡng lệch 0; lượt khác thì in cột thứ tư kèm cờ «khác lượt», không so); thoát 1 khi một ô lệch; tổng căn danh bạ có thuộc tính > 0 (đối chứng: trước áp script in 0 và thoát 3 «chưa áp»). Chỉ in số, không mã căn, không tên nguồn"
-    paths: ["db/migrations/113_*", "pipeline/lib/thuoc-tinh-can-s16.mjs", "pipeline/scripts/thuoc-tinh-can-s16.mjs", "pipeline/tests/thuoc-tinh-can-s16-that.mjs"]
+    paths: ["db/migrations/113_*", "db/migrations/118_*", "pipeline/lib/thuoc-tinh-can-s16.mjs", "pipeline/scripts/thuoc-tinh-can-s16.mjs", "pipeline/tests/thuoc-tinh-can-s16-that.mjs"]
   - id: E14
     criterion: AC-11
     executor: judgment
