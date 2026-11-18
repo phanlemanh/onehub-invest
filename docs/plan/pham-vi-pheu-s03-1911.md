@@ -16,6 +16,6 @@ dang: lan-va
 nguon: onehub-invest-tri-thuc:wiki/dot/pheu-s03-1911.md#af0d2cb3513d7708e9d311f14c1aa311ff65d302
 
 - `GT9` — tin S03 đọc từ bài chỉ có ảnh (kết quả lượt đọc gộp đêm đã có) tự vào kho thành tin rao, chống trùng với tin chữ, mang dấu «đọc từ ảnh» và rút được hàng loạt
-- `GT10` — bộ đọc S03 nhận tin có giá viết che («3.5xx», «9.xx tỷ») và giá đứng sau nhãn thanh toán «TTS:»
+- `GT10` — bộ đọc S03 nhận tin có giá che dạng thập phân («3.5xx», «9.xx tỷ») thành một số sàn, giá đứng sau nhãn thanh toán «TTS:» và giá viết chữ kiểu Unicode trang trí
 ```
 <!-- PHAM-VI-MA>>> -->
