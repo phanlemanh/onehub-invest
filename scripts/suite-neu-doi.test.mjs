@@ -455,8 +455,11 @@ test("SSL-AC-2 — dòng scripts-ci khi xanh và khi đỏ, --ho-so ghi run-log,
     for (let i = 0; i < 240 && !existsSync(ra); i++) await new Promise((res) => setTimeout(res, 500));
     const db2 = JSON.parse(readFileSync(ra, "utf8")).db;
     assert.equal(coDb(db2), true, `SSL-AC-2 đối chứng dương: DB ${db2} phải thấy được khi lượt còn chạy`);
+    const luc = Date.now();
     p.kill(sig);
     assert.equal(await xong, mong, `SSL-AC-2 bị ${sig} thì thoát ${mong}`);
+    // Tệp mẫu còn chờ 60 giây: lệnh chỉ thoát sớm khi đã ngắt được nhóm tiến trình của bước test.
+    assert.ok(Date.now() - luc < 20000, `SSL-AC-2 bị ${sig}: phải ngắt nhóm tiến trình của bước test, không chờ test tự xong (${Date.now() - luc} ms)`);
     assert.equal(coDb(db2), false, `SSL-AC-2 DB ${db2} phải bị xoá cả khi lệnh bị ${sig}`);
     const n = dongCuoi(out);
     assert.deepEqual([n.kind, n.sha, n.exit], ["scripts-ci", sha, mong], `SSL-AC-2 bị ${sig}: dòng cuối stdout phải là scripts-ci mang exit ${mong}`);
