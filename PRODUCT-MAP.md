@@ -13,7 +13,7 @@ flowchart TD
   B --> CD["Chờ duyệt phạm vi<br/>20 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
   GB --> DG["Đã giao<br/>204 việc"]
-  GB --> CN["Chờ phiên nghiệm thu<br/>133 việc"] --> GG{"Cổng Giá trị"}
+  GB --> CN["Chờ phiên nghiệm thu<br/>134 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
 
@@ -94,6 +94,7 @@ flowchart TD
 - /api/v1/ops/coverage trên máy chủ trả độ tươi từng nguồn S0x từ khối độ tươi máy thu đẩy lên (ADR-0014), có cờ tươi / cũ / chỉ đo ở máy thu, không trường nào chứa tên nguồn thật (`coverage-cloud-got-tang-a`)
 - Đặc trưng nhà của tin S06 (số nhà, mã căn, mặt tiền, ngang×dài, số tầng, WC, toạ độ) lên canonical qua phát biểu trường lớp sự thật có căn cứ — migration 061 (`dac-trung-nha-s06-len-canonical`)
 - Danh bạ đủ 3.321 xã, phường, đặc khu theo mã 5 số của Cục Thống kê trong areas dưới đúng 34 tỉnh; 10.033 tên xã cũ thành bí danh (441 xã cũ bị tách trả «cần chọn xã»); tin S03, S06 khớp tên xã hiện hành và tên xã cũ an toàn ở mọi tỉnh; reassign không xoá xã danh bạ; đo tin có xã trước/sau theo tỉnh (`danh-ba-phuong-xa-toan-quoc`)
+- Ở các dự án có S16, toà S16 vào phân khu của khu chủ đầu tư công bố trên cây danh bạ, S16 thắng về cấu trúc và lệch cấu trúc của nguồn khác thành số đếm thay vì thẻ (`danh-ba-s16-thang-cau-truc`)
 - Danh bạ có toà · trục · căn cao tầng Ocean Park 1 và Grand Park dựng từ danh mục S08 và phát biểu toà/mã căn trên tin, trên khung chung có UPI neo toà; 3 dòng asset_nodes building chuyển sang toà; chủ đầu tư ghi ở cấp toà (Building.BuilderName) (`danh-ba-toa-truc-can`)
 - Danh bạ vật thể dựng được toà ở cả 34 tỉnh/thành — mã tỉnh ISO qua bảng tra trong migration, UPI nhận mọi mã, chủ đầu tư ghi đúng phương pháp nguồn (`danh-ba-vat-the-toan-quoc`)
 - Các bản SQL chép định nghĩa bài thử (Luồng 7 ngày ở pipeline và app, Dòng chảy dữ liệu, thước dư lượng tin giả) nhận dấu noi-dung như testMarker, để số Ops và lệnh kiểm tin giả khớp tập transform đọc (`dau-noi-dung-sql-bai-thu`)
