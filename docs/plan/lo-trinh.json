@@ -6995,6 +6995,16 @@
         "TC4"
       ],
       "mo_lai_khi": "Làn thu báo lý do phủ thiếu và số lời gọi của lượt bù; nếu là việc thu thì giao làn thu, nếu là mã căn sai ở danh bạ thì thành hàng làn sản phẩm"
+    },
+    {
+      "ma": "GD11",
+      "dot": "giao-dien-2310",
+      "cau_giao": "/ops/deals dọn theo block data-grid, PageHeader, đủ trạng thái",
+      "ly_do": "Đóng cùng UI10 ngày 18/11: đã có trên main (phiên N1 đo); hai tiêu chí còn nợ chuyển sang CG3",
+      "phu": [
+        "GD11"
+      ],
+      "mo_lai_khi": "Không mở riêng: phần còn nợ giao cùng CG3"
     }
   ],
   "da_bac": [
