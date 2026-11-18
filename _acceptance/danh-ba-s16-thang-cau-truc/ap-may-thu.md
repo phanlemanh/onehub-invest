@@ -11,7 +11,7 @@ không đổi và đo sạch trên bản chép (phần 2).
 
 **Điều kiện lúc áp.** Sau khi PR DA37 gộp và checkout chính `~/dev/onehub-invest` đã kéo `main`; GS chạy lệnh và báo số thật cạnh
 số chạy thử. Chạy bước 3 → 1d liền một mạch trong khung **22:05–23:55 giờ VN** (Chủ nhật 20:30–23:55): ngoài lượt nạp S03 15 phút
-(07:00–22:00), S06 (05:30, 14:00), Zalo 00:00, các lượt `refresh-bait-gap` (00:00, 05:30, 06:00, 12:00, 14:00, 18:00). Lượt đêm
+(07:00–22:00), S06 (05:30, 14:00), job đêm 00:00, các lượt `refresh-bait-gap` (00:00, 05:30, 06:00, 12:00, 14:00, 18:00). Lượt đêm
 dựng S16 cho cả năm khu (sau DA33, `khuDaDung` trả năm khu) — nó chạy luật mới ngay khi mã đã ở `main`, kể cả khi bước 1d chưa
 chạy tay. Vì thế **gộp PR trong khung áp**, hoặc chấp nhận rằng lượt đêm đầu tiên sau gộp làm phần 1d (khi đó lấy mốc từ dòng log
 `S16: khoá mới n, mốc t` của job — xem 1d).
@@ -176,7 +176,7 @@ docker exec -i -e PGPASSWORD=oneinvest one-invest-db pg_restore -U oneinvest -h 
   < ~/onehub-backups/db/truoc-111-s16-<thời điểm>.dump
 ```
 
-**Giá:** mất mọi dòng ghi vào DB máy thu sau lúc sao lưu (lượt nạp S03, S06, Zalo, thẻ đã duyệt); nạp lại được từ bản thu gốc
+**Giá:** mất mọi dòng ghi vào DB máy thu sau lúc sao lưu (lượt nạp S03, S06, job đêm, thẻ đã duyệt); nạp lại được từ bản thu gốc
 nhưng tốn một lượt nạp và các bước sau nó.
 
 ## 5. Lệnh kiểm sau
