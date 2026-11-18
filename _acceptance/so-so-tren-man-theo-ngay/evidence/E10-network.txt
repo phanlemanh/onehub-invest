@@ -1,0 +1,4 @@
+Chay lai E10 (Browser pane, http://localhost:3461/ops/data-flow?window=all), 149 request app-origin, doc 100 cuoi: tat ca GET 200 OK
+(document /ops/data-flow?window=all 200; chunks _next/static 200; font woff2 200). Khong co XHR/fetch loi, khong co 4xx/5xx.
+Console: khong co error. Chi warn: font css preload khong dung (khong phai loi app), info React DevTools, log HMR.
+Third-party: khong co.

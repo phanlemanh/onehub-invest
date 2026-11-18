@@ -29,6 +29,7 @@ import {
   BANG_TUY_CHON,
   FILL as FILL_CG9,
   childFilterSql,
+  localReadSql,
 } from "./sync-cloud.mjs";
 
 // cloud-sync-atomic (_acceptance/cloud-sync-atomic) — lõi thuần của sync nguyên tử.
@@ -445,4 +446,13 @@ test("CG9-AC-8 cloud chưa có offer_price_rank: bỏ qua một dòng, không d�
   assert.ok(calls.some((s) => s.includes("relkind")), "đã qua bước kiểm kiểu bảng");
   const doiChung = cloudGia(() => "r", { thieu: ["offer_price_rank", "sellers"] });
   await assert.rejects(syncOnce({ local: null, exec: doiChung.exec, log: () => {} }), /cloud thiếu bảng: sellers/);
+});
+
+// so-so-tren-man-theo-ngay (_acceptance/so-so-tren-man-theo-ngay) — SM1-AC-6: số mốc S03 lên cloud trong khối dataFlow, dòng của bảng đo ở lại máy thu.
+test("SM1-AC-6 câu đọc dq_check_results loại đúng dòng s03-moc-ngay, bảng khác không đổi", () => {
+  const loc = ` WHERE "check_name" IS DISTINCT FROM 's03-moc-ngay'`;
+  assert.equal(childFilterSql("dq_check_results"), loc, "s03-moc-ngay phải ở lại máy thu");
+  assert.ok(localReadSql("dq_check_results", `"id"`).includes(`FROM "dq_check_results"${loc}) x`), "câu đọc thật phải mang bộ lọc");
+  assert.equal(childFilterSql("areas"), "", "bảng không khai lọc giữ nguyên");
+  assert.equal(childFilterSql("offer_price_rank"), ` WHERE "offer_id" IN (SELECT "offer_id" FROM "sale_offers")`, "lọc cha sống giữ nguyên");
 });
