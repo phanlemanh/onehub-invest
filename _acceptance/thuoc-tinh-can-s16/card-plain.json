@@ -1,35 +1,114 @@
 {
-  "feature_plain": "Mạnh mở trang một dự án trong Danh bạ Ops máy thu và thấy diện tích, phòng ngủ, WC, hướng, loại hình, giá chủ đầu tư của từng căn S16 (kèm nguồn S16 và ngày thu), cùng một ô cho biết bao nhiêu căn đã có thuộc tính.",
+  "feature_plain": "Người vận hành mở một dự án trong Danh bạ Ops máy thu và kiểm được diện tích, phòng ngủ, WC, hướng, loại hình, giá chủ đầu tư của từng căn, kèm nguồn và mốc thu.",
   "will_do": [
-    {"id": "AC-2", "p": "Sẽ có một bảng nạp riêng cho thuộc tính căn S16, giữ đúng các trường cần dùng; không có chỗ nào chứa giá mua, khoản vay hay tình trạng do chủ căn tự nhập."},
-    {"id": "AC-3", "p": "Sẽ chuyển dữ liệu nguồn thành thuộc tính căn theo một luật đọc được: số 0 hay ô trống nghĩa là «chưa có», căn cao tầng lấy hướng ban công, thấp tầng lấy hướng cửa, căn góc giữ hai hướng."},
-    {"id": "AC-4", "p": "Sẽ chỉ gắn thuộc tính cho căn đã có trong danh bạ qua mã căn S16; mã chưa có căn được đếm riêng theo dự án, không đoán."},
-    {"id": "AC-5", "p": "Sẽ có lệnh chạy thử in bảng số theo dự án trước khi ghi; chạy ghi lần hai không thêm dòng nào."},
-    {"id": "AC-6", "p": "Sẽ có một luật chọn khi nguồn nói khác nhau: lần thu sau thắng, phát biểu đã rút và phát biểu kế thừa không được tính."},
-    {"id": "AC-7", "p": "Sẽ đọc giá chủ đầu tư theo căn từ lần thu mới nhất, kèm giá trên m² thông thuỷ; giá không trở thành thuộc tính của căn."},
-    {"id": "AC-9", "p": "Sẽ hiện trong lưới toà của trang dự án: thông thuỷ, tim tường, phòng ngủ, WC, hướng, loại hình, giá chủ đầu tư, nhãn S16 và ngày thu; căn chưa có thì ghi «Chưa có thuộc tính»; lỗi đọc vẫn giữ lưới và có nút «Thử lại»."},
-    {"id": "AC-10", "p": "Sẽ có ô phủ đầu trang dự án: số căn có thuộc tính trên số căn trong danh bạ, số căn có giá, và số căn S16 có thuộc tính mà chưa vào danh bạ."},
-    {"id": "AC-11", "p": "Sẽ áp lên DB máy thu sau khi gộp, với đủ năm thứ (lệnh, số chạy thử, sao lưu, cách lùi, lệnh kiểm); số trên màn phải bằng bảng phủ ca (dự kiến 84.820 trên 111.329 căn có thuộc tính, 11.852 có giá)."}
+    {
+      "id": "AC-2",
+      "p": "Sẽ có một bảng nạp riêng cho thuộc tính căn S16, giữ đúng các trường cần dùng; không có chỗ nào chứa giá mua, khoản vay hay tình trạng do chủ căn tự nhập."
+    },
+    {
+      "id": "AC-3",
+      "p": "Sẽ chuyển dữ liệu nguồn thành thuộc tính căn theo một luật đọc được: số 0 hay ô trống nghĩa là «chưa có», căn cao tầng lấy hướng ban công, thấp tầng lấy hướng cửa, căn góc giữ hai hướng."
+    },
+    {
+      "id": "AC-4",
+      "p": "Sẽ chỉ gắn thuộc tính cho căn đã có trong danh bạ qua mã căn S16; mã chưa có căn được đếm riêng theo dự án, không đoán."
+    },
+    {
+      "id": "AC-5",
+      "p": "Sẽ có lệnh chạy thử in bảng số theo dự án trước khi ghi; chạy ghi lần hai không thêm dòng nào."
+    },
+    {
+      "id": "AC-6",
+      "p": "Sẽ có một luật chọn khi nguồn nói khác nhau: lần thu sau thắng, phát biểu đã rút và phát biểu kế thừa không được tính."
+    },
+    {
+      "id": "AC-7",
+      "p": "Sẽ đọc giá chủ đầu tư theo căn từ lần thu mới nhất, kèm giá trên m² thông thuỷ; giá không trở thành thuộc tính của căn."
+    },
+    {
+      "id": "AC-9",
+      "p": "Sẽ hiện trong lưới toà của trang dự án: thông thuỷ, tim tường, phòng ngủ, WC, hướng, loại hình, giá chủ đầu tư, nhãn S16 và ngày thu; căn chưa có thì ghi «Chưa có thuộc tính»; lỗi đọc vẫn giữ lưới và có nút «Thử lại»."
+    },
+    {
+      "id": "AC-10",
+      "p": "Sẽ có ô phủ đầu trang dự án: số căn có thuộc tính trên số căn trong danh bạ, số căn có giá, và số căn S16 có thuộc tính mà chưa vào danh bạ."
+    },
+    {
+      "id": "AC-11",
+      "p": "Sẽ áp lên DB máy thu sau khi gộp, với đủ năm thứ (lệnh, số chạy thử, sao lưu, cách lùi, lệnh kiểm); số trên màn phải bằng bảng phủ ca (dự kiến 84.820 trên 111.329 căn có thuộc tính, 11.852 có giá)."
+    }
   ],
   "wont_do": [
-    {"id": "AC-1", "p": "Sẽ KHÔNG sửa migration cũ nào hay đổi bảng căn, toà, bí danh; chỉ thêm migration 113, áp hai lần ra y nguyên."},
-    {"id": "AC-8", "p": "Chặn thuộc tính và giá S16 rời máy: không bảng hay view nào của hàng này vào danh sách đẩy lên cloud, có ca thử cấy để chứng bộ soát bắt được."},
-    {"id": "OOS-1", "p": "KHÔNG suy phòng ngủ, WC từ chữ kiểu căn (chữ mơ hồ) ở hàng này."},
-    {"id": "OOS-2", "p": "KHÔNG cho thuộc tính căn chảy xuống tin rao ở hàng này; khi làm sẽ hỏi lại chuyện lên cloud."},
-    {"id": "OOS-3", "p": "KHÔNG đặt giá chủ đầu tư cạnh giá tin rao — đó là hàng DA41 (so giá trên /ops/deals)."},
-    {"id": "OOS-4", "p": "KHÔNG thu bù năm dự án 0% và smart-city 11,5% — việc của làn thu (mục chờ TC4)."},
-    {"id": "OOS-5", "p": "KHÔNG đưa căn của bốn dự án S16 chưa nối vào danh bạ — việc của hàng nối dự án."},
-    {"id": "OOS-6", "p": "KHÔNG đẩy giá chủ đầu tư S16 lên cổng Invest hay cloud ở bản này (chờ câu Hỏi-1)."},
-    {"id": "OOS-7", "p": "KHÔNG đưa các trường chủ căn tự nhập, và KHÔNG lấy tầng theo nguồn (tầng của căn giữ như danh bạ đang có)."}
+    {
+      "id": "AC-1",
+      "p": "Sẽ KHÔNG sửa migration cũ nào hay đổi bảng căn, toà, bí danh; chỉ thêm migration 113, áp hai lần ra y nguyên."
+    },
+    {
+      "id": "AC-8",
+      "p": "Chặn thuộc tính và giá S16 rời máy: không bảng hay view nào của hàng này vào danh sách đẩy lên cloud, có ca thử cấy để chứng bộ soát bắt được."
+    },
+    {
+      "id": "OOS-1",
+      "p": "KHÔNG suy phòng ngủ, WC từ chữ kiểu căn (chữ mơ hồ) ở hàng này."
+    },
+    {
+      "id": "OOS-2",
+      "p": "KHÔNG cho thuộc tính căn chảy xuống tin rao ở hàng này; khi làm sẽ hỏi lại chuyện lên cloud."
+    },
+    {
+      "id": "OOS-3",
+      "p": "KHÔNG đặt giá chủ đầu tư cạnh giá tin rao — đó là hàng DA41 (so giá trên /ops/deals)."
+    },
+    {
+      "id": "OOS-4",
+      "p": "KHÔNG thu bù năm dự án 0% và smart-city 11,5% — việc của làn thu (mục chờ TC4)."
+    },
+    {
+      "id": "OOS-5",
+      "p": "KHÔNG đưa căn của bốn dự án S16 chưa nối vào danh bạ — việc của hàng nối dự án."
+    },
+    {
+      "id": "OOS-6",
+      "p": "KHÔNG đẩy giá chủ đầu tư S16 lên cổng Invest hay cloud ở bản này (chờ câu Hỏi-1)."
+    },
+    {
+      "id": "OOS-7",
+      "p": "KHÔNG đưa các trường chủ căn tự nhập, và KHÔNG lấy tầng theo nguồn (tầng của căn giữ như danh bạ đang có)."
+    }
   ],
   "coverage_plain": [
-    {"i": 0, "p": "Đã quét mọi trường × mọi dạng giá trị nguồn × mọi trạng thái nối căn × một hay hai lần thu × mọi đầu ra (bảng nạp, thuộc tính, giá, màn, cloud); mỗi ô của bảng phủ ca có số đếm từ DB máy thu, và AC-11 (áp máy thu) so lại từng ô."}
+    {
+      "i": 0,
+      "p": "Đã quét mọi trường × mọi dạng giá trị nguồn × mọi trạng thái nối căn × một hay hai lần thu × mọi đầu ra (bảng nạp, thuộc tính, giá, màn, cloud); mỗi ô của bảng phủ ca có số đếm từ DB máy thu, và AC-11 (áp máy thu) so lại từng ô."
+    }
   ],
   "gap_probe_plain": [
-    {"i": 0, "p": "Máy đã tự xếp nhóm shophouse (7.111 căn) vào «thương mại» mà chưa hỏi, trong khi câu phân loại shophouse còn chờ — nay thành câu Hỏi-4 cho anh quyết, ca kiểm ghim đúng nhánh anh chọn."},
-    {"i": 1, "p": "Chưa có phép so số trên màn với số đếm từ tệp thu gốc, nên bộ nạp sai cột vẫn lọt — đã thêm cột «bảng phủ ca» vào phép đo trên máy thu (lệch phải bằng 0 nếu đúng lượt thu 18/11)."},
-    {"i": 2, "p": "Lý do chọn cách lưu giá trích sai câu căn cứ — đã ghi lại: giá không là thuộc tính căn, màn đọc giá hiện hành, mọi lần thu vẫn giữ trong bảng nạp để dựng lịch sử giá sau."},
-    {"i": 3, "p": "Chưa nói rõ trang dự án biết dự án S16 nào của mình — đã chốt: lấy qua toà S16 của dự án; bốn dự án chưa nối sẽ ghi «Chưa có nguồn thuộc tính căn», mẫu soi đổi sang ocean-park-3 (820 căn chưa vào danh bạ)."},
-    {"i": 4, "p": "Trạng thái đang tải và lỗi đọc trên màn chưa có phép đo — đã thêm ca lỗi (lưới vẫn hiện, có «Thử lại») và hai ảnh chụp tải/lỗi."}
+    {
+      "i": 0,
+      "p": "Máy đã tự xếp nhóm shophouse (7.111 căn) vào «thương mại» mà chưa hỏi, trong khi câu phân loại shophouse còn chờ — nay thành câu Hỏi-4 cho anh quyết, ca kiểm ghim đúng nhánh anh chọn."
+    },
+    {
+      "i": 1,
+      "p": "Chưa có phép so số trên màn với số đếm từ tệp thu gốc, nên bộ nạp sai cột vẫn lọt — đã thêm cột «bảng phủ ca» vào phép đo trên máy thu (lệch phải bằng 0 nếu đúng lượt thu 18/11)."
+    },
+    {
+      "i": 2,
+      "p": "Lý do chọn cách lưu giá trích sai câu căn cứ — đã ghi lại: giá không là thuộc tính căn, màn đọc giá hiện hành, mọi lần thu vẫn giữ trong bảng nạp để dựng lịch sử giá sau."
+    },
+    {
+      "i": 3,
+      "p": "Chưa nói rõ trang dự án biết dự án S16 nào của mình — đã chốt: lấy qua toà S16 của dự án; bốn dự án chưa nối sẽ ghi «Chưa có nguồn thuộc tính căn», mẫu soi đổi sang ocean-park-3 (820 căn chưa vào danh bạ)."
+    },
+    {
+      "i": 4,
+      "p": "Trạng thái đang tải và lỗi đọc trên màn chưa có phép đo — đã thêm ca lỗi (lưới vẫn hiện, có «Thử lại») và hai ảnh chụp tải/lỗi."
+    }
+  ],
+  "decisions": [
+    {
+      "id": "E14",
+      "q": "Chấp nhận đo số thật trên màn ngay sau khi gộp và áp?",
+      "why": "Số trên máy thu chỉ có sau khi gộp và áp. Trên bản chép dữ liệu thật, cả 40 ô đối chiếu đều lệch 0; lệch khi áp thật thì dừng và báo."
+    }
   ]
 }
