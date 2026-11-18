@@ -5525,6 +5525,27 @@
         "app/src/components/ops/registry/**"
       ],
       "ghi_chu": "Hàng nhỏ, chung vùng màn với DA40 nên đứng sau DA40. 6 tiêu chí: giữ riêng vì là lỗi đọc của trang danh bạ, không thuộc kết quả của DA40 hay DA41."
+    },
+    {
+      "ma": "ZC12",
+      "slug": "kho-rieng-giay-to-nguoi-mua",
+      "dot": "kho-giay-to-nguoi-mua-1811",
+      "nhom": "kho-tu-lieu",
+      "phu": [
+        "KG1"
+      ],
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "dung_tren": [],
+      "cau_giao": "Tệp hợp đồng và giấy tờ người mua mà bộ lọc giữ lại được lưu vào kho riêng mã hoá trên máy thu, xoá được từng tệp, có sổ xoá",
+      "bat_khi": "Số tệp trong kho khớp sổ bộ lọc (đo 18/11: 24 mã bị giữ = 21 đã duyệt vào raw snapshot, không thuộc kho + 1 đã xoá 12/11 + 2 tệp luật căn cước vào kho; đích kho 2 tệp, thêm 1 nếu Cổng Phạm vi cho tải lại); 0 tệp hay byte nào của kho xuất hiện ở raw snapshot, DB, cloud, log, commit; 0 bản rõ còn ở thư mục chờ soát; lệnh xoá làm tệp không khôi phục được và ghi sổ băm, lý do, thời điểm; bộ soát đường cloud đỏ khi cấy một tệp kho",
+      "vi_sao": "Mạnh 18/11 09:34:26Z: «Lưu luôn hợp đồng và giấy tờ người mua»; 09:36:13Z chọn «Kho riêng, xoá được» (ROADMAP §3 mục 46 QĐ1). Raw snapshot bất biến nên tệp vào đó không xoá được.",
+      "vung": [
+        "collector/src/collectors",
+        "pipeline/sync-cloud.mjs"
+      ],
+      "ghi_chu": "RÀNG BUỘC: không tải tệp thật trước khi (a) LL soát mã đạt, (b) hàng qua Cổng Phạm vi có chữ Mạnh, (c) có GIAO triển khai riêng. Khoá mã hoá chỉ ở máy thu và một bản Mạnh giữ, không vào git, kênh, cloud. Không agent nào đọc nội dung tệp, chỉ băm và siêu dữ liệu. Làn thu (tin claudedp-1811-16): đưa bộ lọc từ script tải tạm vào collector, công cụ mã hoá. Mục Drive của collector/docs/DATA-CONTRACT.md (thêm kho riêng) sửa trong PR của chính hàng này, kèm hồ sơ _acceptance. Câu Cổng Phạm vi: kho có vào bản sao lưu ngoài máy không (mặc định không); hạn giữ; ai được mở tệp; ý kiến pháp lý trước khi dùng ngoài lưu trữ; có tải lại tệp có dấu vết người mua đã xoá 12/11 không."
     }
   ],
   "chan_troi": [

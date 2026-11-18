@@ -148,6 +148,8 @@ phải tên thư mục (script thu của S02/S05/S06 nằm trong `pipeline/`).
    Phạm vi: raw snapshot, kho gốc ảnh và tư liệu, bản dump DB. Mọi chỗ khác tầng A giữ nguyên.
    **Ngày sinh, giới tính người bán từ tra hồ sơ** (Mạnh chốt 2026-11-18 04:11Z, sửa đổi ADR-0007; ROADMAP §3 mục 55): lưu
    đầy đủ ở máy thu, KHÔNG lên cloud — cùng chế độ đường đi với tầng A; bộ soát đường cloud đỏ khi cấy một dòng.
+   **Giấy tờ người mua** (Mạnh chốt 2026-11-18 09:34Z, «Có, thêm vào» 09:53Z; ROADMAP §3 mục 46 QĐ1, hàng ZC12): hợp đồng đã ký và
+   giấy tờ người mua chỉ ở kho riêng mã hoá trên máy thu; không cloud, không model, không cổng, không kênh.
 7. **LLM-off-data-path**: LLM/agent chỉ gate/judge/extract kèm audit + evidence; quyết định
    ghi dữ liệu đi qua người (`/ops/review`) hoặc luật xác định.
 8. **An toàn Zalo**: agent KHÔNG BAO GIỜ gửi tin vào nhóm xã hội (lockdown 7 lớp + watchdog;
