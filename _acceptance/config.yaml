@@ -43,6 +43,8 @@ executors:
     tg1_db: "bash db/db-thu.sh oneinvest_suite_tg1 --chay node --test --test-concurrency=1 pipeline/tests/the-dia-chi-nhom.itest.mjs"   # the-dia-chi-nhom-s03 E1, E3 — áp 108, lệnh dựng nháp năm lớp
     tg1_lui: "bash db/db-thu.sh oneinvest_suite_tg1l --chay node --test --test-concurrency=1 pipeline/tests/the-dia-chi-nhom-lui.itest.mjs"   # the-dia-chi-nhom-s03 E9 — hồ sơ áp năm tệp + tệp lùi
     tg1_app: "cd app && bash ../db/db-thu.sh oneinvest_suite_tg1a --chay node --import tsx --test --test-concurrency=1 tests/the-dia-chi-nhom-app.itest.tsx"   # the-dia-chi-nhom-s03 E4, E6 — route card-decide, đọc thẻ, khoá nhóm
+    tg2_pipeline: "node --test pipeline/scripts/dong-dau-dia-chi.test.mjs pipeline/scripts/transform-zalo-loai-tin.test.mjs"   # dong-dau-dia-chi-luc-nap E2, E3 — hàm thuần sinh dòng phát biểu, ô bán/thuê của thẻ trong suyLoai
+    tg2_itest: "bash db/db-thu.sh oneinvest_suite_tg2 --chay node --test --test-concurrency=1 pipeline/tests/dia-chi-the-nhom.itest.mjs pipeline/tests/dong-dau-dia-chi.itest.mjs"   # dong-dau-dia-chi-luc-nap E4–E7, E9, E11 — bộ đọc thẻ + lượt nạp thật trên DB của riêng lượt
     dv7_db: "bash db/db-thu.sh oneinvest_suite_dv7 --chay node --test --test-concurrency=1 pipeline/tests/offer-project.itest.mjs"   # du-an-cua-tin-len-dinh-vi E1–E5 — áp 105 rồi fixture chín lớp trên DB của riêng lượt
     dv7_lui: "bash db/db-thu.sh oneinvest_suite_dv7l --chay node --test --test-concurrency=1 pipeline/tests/offer-project-lui.itest.mjs"   # du-an-cua-tin-len-dinh-vi E10 — hồ sơ áp năm tệp + tệp lùi chạy thật
     dv7_app: "cd app && bash ../db/db-thu.sh oneinvest_suite_dv7a --chay node --import tsx --test --test-concurrency=1 tests/offer-project-app.itest.tsx tests/thang-bac-db.itest.tsx"   # du-an-cua-tin-len-dinh-vi E11 — bên đọc bản ghi, bậc của app
@@ -353,6 +355,12 @@ executors:
   script:
     tg1_that_dem: "mkdir -p .acceptance-runs/the-dia-chi-nhom-s03 && node pipeline/scripts/the-dia-chi-nhom-that.mjs --dem --ghi .acceptance-runs/the-dia-chi-nhom-s03/so-chay-thu.md"   # the-dia-chi-nhom-s03 E7 — bản chép DB máy thu oneinvest_u1_tg1, áp 108 + dựng nháp
     tg1_that_chat_luong: "node pipeline/scripts/the-dia-chi-nhom-that.mjs --chat-luong"   # the-dia-chi-nhom-s03 E8 — 13 nhóm sổ một dự án, dựng nháp bỏ sổ
+    tg2_phu_the: "node pipeline/scripts/dong-dau-dia-chi-that.mjs --do-neu-cu --thuoc phu-the"   # dong-dau-dia-chi-luc-nap E1 · AC-1(a) — bản chép oneinvest_p4_tg2, kịch bản K1 khai trước
+    tg2_nguong_moc: "node pipeline/scripts/dong-dau-dia-chi-that.mjs --do-neu-cu --thuoc nguong-moc"   # dong-dau-dia-chi-luc-nap E1b · AC-1(b) — ô Định vị ≥ 90% cửa sổ all, in cả lượt nền
+    tg2_khong_tut: "node pipeline/scripts/dong-dau-dia-chi-that.mjs --do-neu-cu --thuoc khong-tut"   # dong-dau-dia-chi-luc-nap E10 · AC-8 — 0 bài rơi khỏi mot_du_an, so theo bài
+    tg2_chu_bai_that: "node pipeline/scripts/dong-dau-dia-chi-that.mjs --do-neu-cu --thuoc chu-bai-that"   # dong-dau-dia-chi-luc-nap E3b · AC-3 — chữ bài thắng trên tập thật, không fixture
+    tg2_phu_kind: "node pipeline/scripts/dong-dau-dia-chi-that.mjs --do-neu-cu --thuoc phu-kind"   # dong-dau-dia-chi-luc-nap E13 · AC-11 — 0 bài mất kind, in số bài lật chiều
+    tg2_quet_doc: "node pipeline/scripts/quet-doc-stg.mjs"   # dong-dau-dia-chi-luc-nap E8 · AC-6 — 0 câu đọc thẳng stg_zalo_posts
     dv7_that_doc: "node pipeline/scripts/offer-project-that.mjs --doc"   # du-an-cua-tin-len-dinh-vi E6 — DB máy thu, giao dịch READ ONLY
     dv7_that_hieu_nang: "node pipeline/scripts/offer-project-that.mjs --hieu-nang"   # du-an-cua-tin-len-dinh-vi E7 — DB máy thu, giao dịch lùi, tải < 14
     dv7_that_chay_thu: "mkdir -p .acceptance-runs/du-an-cua-tin-len-dinh-vi && node pipeline/scripts/offer-project-that.mjs --chay-thu --ghi .acceptance-runs/du-an-cua-tin-len-dinh-vi/so-chay-thu.md"   # du-an-cua-tin-len-dinh-vi E9 — áp 105 + 600 trong một giao dịch lùi
@@ -688,6 +696,10 @@ executors:
     s03_song_tron: "node scripts/canh-bao-s03-ngung-thu/acceptance.mjs tron"   # watchdog trọn vẹn: khoẻ, sự cố 09/11, lặp, hồi, tái phát, đêm
     s03_song_bien: "node scripts/canh-bao-s03-ngung-thu/acceptance.mjs bien"   # biên giờ 6/7/21/22, tuổi 1799/1800s, attempt 119/120s
     s03_song_syntax: "bash -n scripts/lib/s03-song.sh && bash -n scripts/zalo-watchdog.sh && echo SYNTAX OK"
+    # l6d-down-keo-dai-ly-do (VHZ1, D3) — heartbeat trọn vẹn trên HOME tạm + CLI giả ghi sổ (luật 8)
+    s03_hb_chan: "cd pipeline && node --test scripts/zalo-heartbeat-chan.test.mjs"   # 9 ca của ZCode
+    s03_hb_nghiem_thu: "node scripts/l6d-down-keo-dai-ly-do/acceptance.mjs"   # ma trận nhịp × lý do × tần suất × sổ lời gọi × đối chứng gỡ CLI giả × khuôn tệp trạng thái
+    s03_hb_syntax: "bash -n collector/scripts/zalo-heartbeat.sh && bash -n scripts/lib/s03-song.sh && bash -n scripts/zalo-watchdog.sh && echo SYNTAX OK"
     # s03-nap-nhanh (1011-3 nấc 1, liên làn làm thay ZCode 10/11) — bản chép tệp bọc nạp S03 trong cây tạm, node/sleep giả
     snn_test: "node --test scripts/s03-nap-nhanh.test.mjs"
     snn_regress: "node --test scripts/*-import-job.test.mjs scripts/*-import-job-lan.test.mjs scripts/enrich-buoc-job.test.mjs scripts/job-exit.test.mjs scripts/nap-argmax.test.mjs scripts/nap-ts-order.test.mjs scripts/s05-khoa-nap.test.mjs"
