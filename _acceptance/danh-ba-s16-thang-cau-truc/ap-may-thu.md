@@ -55,7 +55,18 @@ Lệnh in `thẻ: <n> khu, băm <hex>`. Thẻ liệt mỗi khu S16 một dòng: 
 cùng tên chuẩn hoá), «nút mới» (đúc khi áp), «mơ hồ» (trùng hai nút trở lên — không gán, cần người). Không in mã khu của nguồn.
 Gửi thẻ cho Mạnh. Số chạy thử ở phần 2: 61 khu, 0 mơ hồ.
 
-### 1c. Áp thẻ luật — CHỈ sau lời Mạnh «Áp thẻ luật S16 <băm>»
+### 1c. Áp thẻ luật — BƯỚC RIÊNG, CHỈ sau lời Mạnh gõ nguyên văn
+
+Chữ ký Cổng Bằng chứng **không** phủ bước này. GS chỉ chạy khi Mạnh đã gõ đúng câu dưới (chép được nguyên dòng):
+
+```text
+Áp thẻ luật S16 4111df3e7b406b99ee34834a4028370c3602e1df4a6c13fee98ad3104f19f20b
+```
+
+Băm trên đo ngày 18/11 12:15Z, chỉ đọc, trên chính DB máy thu và trên bản chép đã áp 111 + 114: hai nơi trùng nhau, 61 khu = 51 nút
+mới + 10 nút sẵn, 0 mơ hồ. Bước 1b phải in **đúng băm này**. In băm khác nghĩa là dữ liệu khu đã đổi: DỪNG, gửi thẻ mới cho Mạnh và
+chờ lời mới mang băm mới; lời cũ không còn hiệu lực. Chưa có lời thì dừng sau 1b, không chạy 1c và 1d; toà S16 còn treo dưới dự án
+(109) tới khi áp thẻ.
 
 ```bash
 DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest \
