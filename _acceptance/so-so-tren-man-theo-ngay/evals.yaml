@@ -75,7 +75,12 @@ evals:
     criterion: AC-10
     executor: ui-check
     layer: ui-observed
-    cmd: "Mở http://localhost:3461/ops/data-flow do phiên N1b giữ ở đúng sha đang chấm, trên DB thử oneinvest_u2_sm1, đăng nhập tài khoản ops thử"
+    steps:
+      - "Bản chạy: dev server :3461 do phiên N1b giữ, DB thử oneinvest_u2_sm1. KHÔNG tạo hay sửa tệp nào đang được git theo dõi, trừ ảnh trong evidence/."
+      - "Lấy tài khoản: chạy DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_u2_sm1 node scripts/dev-ops-account.mjs, rồi đăng nhập http://localhost:3461/login bằng email và mật khẩu trong .claude/ops-test-account.json; không in mật khẩu ra đầu ra."
+      - "Mở /ops/data-flow ở 1440 px sáng, chụp riêng vùng [data-milestone-trend] → evidence/E10-step1.png (không chụp thanh bên vì có email đăng nhập). Đọc bốn số trên ô, đối chiếu dòng s03-moc-ngay mới nhất của DB thử và ô Định vị của S03 trên màn chặng."
+      - "Cùng trang 1440 px tối, chụp riêng vùng → evidence/E10-step2.png"
+      - "Khổ 375 px sáng, chụp riêng vùng → evidence/E10-step3.png. Tìm phần tử tổ tiên gần nhất có overflow-x auto hoặc scroll của [data-milestone-trend], ghi tên phần tử, scrollWidth và clientWidth ở cả ba nút 7 ngày, 30 ngày, Toàn kho."
     paths: [app/src/components/ops/data-flow/milestone-trend.tsx, app/src/components/ops/data-flow/data-flow-view.tsx]
     expected: "Vùng «Số mốc S03 theo ngày» hiện bốn ô, số khớp dòng hôm nay trong DB và ô Định vị của màn chặng; đọc được ở sáng, tối và khổ 375px; không tràn ngang đo trên phần tử tổ tiên có overflow-x auto hoặc scroll bao quanh [data-milestone-trend] (scrollWidth không lớn hơn clientWidth), không đo trên document; chụp ảnh ba khổ vào evidence."
     evidence_required: [run_id, verifier, verified_at, screenshot, observed]
