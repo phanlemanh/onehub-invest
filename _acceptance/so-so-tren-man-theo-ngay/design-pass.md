@@ -24,3 +24,5 @@ Phiên xem màn riêng chụp trên DB thử, số các ngày trước là số 
 Giữ nguyên: rê chuột vào ngày trống không có gợi ý, «Toàn kho» vẽ 30 ngày, cờ xuống dòng ở khổ 1.280px.
 
 Chưa xem trên màn thật: trạng thái lỗi kèm nút «Thử lại», phủ bằng test dựng màn của AC-8.
+
+Chưa đo đúng: dòng «không cuộn ngang» trong `evidence/design-pass/nhan-xet.md` chỉ đo `document`, còn vùng cuộn thật của cổng Ops là khung trang. Ảnh 390px không thấy tràn; số đo đúng thuộc E10 của lượt chấm.
