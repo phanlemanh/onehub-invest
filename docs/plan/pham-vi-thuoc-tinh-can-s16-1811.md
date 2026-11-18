@@ -13,7 +13,7 @@ tin claudedp-1811-1); bộ nạp vào stg theo hợp đồng ấy; lượt bù c
 ```
 dot: thuoc-tinh-can-s16-1811
 dang: chuoi
-nguon: onehub-invest-tri-thuc:wiki/dot/thuoc-tinh-can-s16-1811.md#f57c4aeb615a2043f77a6b900700b35fbf93eb64
+nguon: onehub-invest-tri-thuc:wiki/dot/thuoc-tinh-can-s16-1811.md#62fdd5c5781f03e36d2a894bc8d58a73b3162684
 
 - `TC1` — thuộc tính căn S16 (diện tích thông thuỷ, tim tường, phòng ngủ, WC, hướng, loại hình, tầng, giá chủ đầu tư) vào stg qua migration 113 và gắn vào căn danh bạ theo trường RESO, có nguồn và mốc thu
 - `TC2` — trang dự án trong danh bạ Ops hiện thuộc tính từng căn và ô phủ theo dự án để kiểm tra

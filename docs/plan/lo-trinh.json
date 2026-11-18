@@ -5378,51 +5378,32 @@
       "dot": "thuoc-tinh-can-s16-1811",
       "nhom": "thuoc-tinh-can-s16",
       "phu": [
-        "TC1"
+        "TC1",
+        "TC2"
       ],
       "hang": "T3",
-      "vai": "nen",
-      "tieu_chi": 10,
+      "vai": "Người vận hành",
+      "tieu_chi": 11,
       "dung_tren": [
-        "DA33"
+        "DA33",
+        "DA36"
       ],
-      "cau_giao": "Mỗi căn S16 của danh bạ mang diện tích thông thuỷ, tim tường, phòng ngủ, WC, hướng, loại hình, tầng và giá chủ đầu tư theo trường RESO, có nguồn S16 và mốc thu, đọc được theo khoá căn",
-      "bat_khi": "Trên DB máy thu: snapshot thuộc tính căn của làn thu nạp vào stg qua migration 113, số dòng và số căn khớp manifest; số căn danh bạ có diện tích từ 0 lên khoảng 95.800 (đo 18/11: 95.798 căn khớp mã), có giá chủ đầu tư khoảng 14.900; căn lệch giữa các lần thử (362 diện tích) xử bằng luật có tên và đếm được; mã trùng hai toà không gắn nhầm căn; dữ liệu không rời máy (bộ soát sync-cloud đỏ khi cấy một dòng); chạy lại không đổi số",
-      "vi_sao": "Mạnh 18/11: «phân tích và đưa vào tiến trình pipeline». Bảng căn của danh bạ hôm nay chỉ có khoá, không căn nào có diện tích hay giá; lượt thu S16 sáng 18/11 có thuộc tính cho 95.798 căn, khớp 100% mã căn đã nối ở DA33.",
+      "cau_giao": "Người vận hành mở trang một dự án trong Danh bạ Ops máy thu và thấy diện tích thông thuỷ, tim tường, phòng ngủ, WC, hướng, loại hình, tầng, giá chủ đầu tư của từng căn S16 (nguồn S16, mốc thu) cùng ô phủ của dự án — thuộc tính lưu theo trường RESO, đọc được theo khoá căn",
+      "bat_khi": "Ô trên màn đổi trên dữ liệu thật của DB máy thu: ô phủ của dự án từ 0 lên đúng lệnh đếm (đo 18/11: grand-park 98,8%, smart-city 11,5%, star-city 0%), tổng căn có diện tích khoảng 95.800, có giá chủ đầu tư khoảng 14.900; snapshot của làn thu nạp qua migration 113 khớp manifest; căn lệch giữa các lần thử (362 diện tích) xử bằng luật có tên và đếm được; căn chưa có thuộc tính hiện trống có nhãn; dữ liệu không rời máy (bộ soát sync-cloud đỏ khi cấy một dòng); chạy lại không đổi số",
+      "vi_sao": "Mạnh 18/11: «phân tích và đưa vào tiến trình pipeline» và «Tôi muốn dữ liệu được hiển thị trong danh bạ để tôi có thể kiểm tra». Bảng căn của danh bạ hôm nay chỉ có khoá, không căn nào có diện tích hay giá; lượt thu S16 sáng 18/11 có thuộc tính cho 95.798 căn, khớp 100% mã căn đã nối ở DA33.",
       "vung": [
         "db/migrations",
         "pipeline/mappings.yaml",
         "pipeline/lib/s16-thuoc-tinh.mjs",
-        "pipeline/lib/danh-ba-vat-the.mjs"
-      ],
-      "ghi_chu": "Migration 113 (sổ số: 111 DA37, 112 cờ match_whole). Làn thu đóng gói snapshot + DATA-CONTRACT v14 (tin claudedp-1811-1) và viết bộ nạp — việc làn thu, không phải hàng (khuôn DA33). Chỗ chứa thuộc tính chọn ở S1 (ADR-0016 §3: thuộc tính đi qua phát biểu). Cổng Phạm vi hỏi Mạnh: hướng ban công mở rộng VN hay bỏ. Thứ tự gộp: sau DA37 và TG2 (chung tệp), S1 làm được ngay trên dữ liệu thật. Phân tích: research-local/s16/thuoc-tinh-can-phan-tich-1811.md (checkout chính)."
-    },
-    {
-      "ma": "DA41",
-      "slug": "danh-ba-hien-thuoc-tinh-can",
-      "dot": "thuoc-tinh-can-s16-1811",
-      "nhom": "thuoc-tinh-can-s16",
-      "phu": [
-        "TC2"
-      ],
-      "hang": "T2",
-      "vai": "Người vận hành",
-      "tieu_chi": 8,
-      "dung_tren": [
-        "DA40"
-      ],
-      "cau_giao": "Người vận hành mở trang một dự án trong danh bạ Ops và thấy diện tích, phòng ngủ, WC, hướng, loại hình, giá chủ đầu tư của từng căn trong lưới toà, cùng ô phủ của dự án (căn có thuộc tính trên căn trong danh bạ)",
-      "bat_khi": "Trên máy thu, /ops/registry/[nodeId] của ba dự án (một phủ cao, một phủ thấp, một chưa có) hiện đúng số trong DB: ô phủ khớp lệnh đếm (đo 18/11: 98,8% · 11,5% · 0%); căn chưa có thuộc tính hiện trống có nhãn, không hiện số giả; nhãn nguồn chỉ là mã S16",
-      "vi_sao": "Mạnh 18/11: «Tôi muốn dữ liệu được hiển thị trong danh bạ để tôi có thể kiểm tra». Trang dự án của danh bạ chỉ đọc, chỉ ở máy thu nên hiện được giá chủ đầu tư mà chưa cần câu lên cổng Invest.",
-      "vung": [
+        "pipeline/lib/danh-ba-vat-the.mjs",
         "app/src/app/ops/registry/**",
         "app/src/components/ops/registry/**",
         "app/src/lib/ops/registry/**"
       ],
-      "ghi_chu": "Hàng này là điểm Mạnh tự kiểm dữ liệu: đích là số trên màn khớp DB, không phải gộp. Chữ UI và nhãn từ CONTEXT.md; ReUI."
+      "ghi_chu": "Dãy P1 (GS xếp 18/11). Migration 113 (sổ số: 111 DA37, 112 cờ match_whole). 11 tiêu chí vì phần dữ liệu và phần màn là một kết quả Mạnh tự kiểm — tách thì hàng dữ liệu không có số trên màn để xong. Phần màn đứng trên DA36 (lớp đọc Danh bạ); S1 không chờ. Không đứng trên DA37 (DA37 không đổi unit_key). Làn thu đóng gói snapshot + DATA-CONTRACT v14 (tin claudedp-1811-1) và viết bộ nạp — việc làn thu, không phải hàng (khuôn DA33). Chỗ chứa thuộc tính chọn ở S1 (ADR-0016 §3: thuộc tính đi qua phát biểu). Cổng Phạm vi hỏi Mạnh: hướng ban công mở rộng VN hay bỏ. Chữ UI từ CONTEXT.md; ReUI. Phân tích: research-local/s16/thuoc-tinh-can-phan-tich-1811.md (checkout chính)."
     },
     {
-      "ma": "DA42",
+      "ma": "DA41",
       "slug": "gia-chu-dau-tu-canh-tin-rao",
       "dot": "thuoc-tinh-can-s16-1811",
       "nhom": "thuoc-tinh-can-s16",
