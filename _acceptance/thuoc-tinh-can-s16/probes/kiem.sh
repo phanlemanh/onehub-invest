@@ -7,6 +7,6 @@ case "${1:-}" in
   ham)  exec node --test pipeline/tests/thuoc-tinh-can-s16.test.mjs ;;
   db)   exec node --test --test-concurrency=1 pipeline/tests/thuoc-tinh-can-s16.itest.mjs ;;
   that) exec node pipeline/tests/thuoc-tinh-can-s16-that.mjs ;;
-  app)  cd app && exec bash ../db/db-thu.sh oneinvest_suite_ttc --chay node --import tsx --test --test-concurrency=1 tests/thuoc-tinh-can.test.tsx ;;
+  app)  cd app && exec node --import tsx --test --test-concurrency=1 tests/thuoc-tinh-can.test.tsx ;;
   *) echo "kiem.sh: dùng ham | db | that | app" >&2; exit 2 ;;
 esac
