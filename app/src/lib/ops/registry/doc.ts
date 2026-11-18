@@ -68,9 +68,10 @@ const CTE_CAY = `
   ),
   tinh AS (SELECT k.id, a.id AS tinh_id FROM khu k JOIN areas a ON a.id = k.goc WHERE a.parent_id IS NULL),
   can_toa AS (SELECT building_key, count(*)::int AS so_can FROM units WHERE status = 'active' GROUP BY 1),
+  -- Toà nằm ở nút vùng HIỆU LỰC (v_toa_nut_vung, 097: cụm S09, rồi phân khu S09, rồi cột gốc) — DA36.
   toa AS (
-    SELECT b.building_key, b.region_node_id, coalesce(c.so_can, 0) AS so_can
-    FROM buildings b LEFT JOIN can_toa c USING (building_key) WHERE b.status = 'active'
+    SELECT b.building_key, v.region_node_id, coalesce(c.so_can, 0) AS so_can
+    FROM buildings b JOIN v_toa_nut_vung v USING (building_key) LEFT JOIN can_toa c USING (building_key) WHERE b.status = 'active'
   )`
 
 const SQL_NUT = `

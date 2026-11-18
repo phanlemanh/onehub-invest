@@ -51,13 +51,13 @@ test("TDB-DC dải số, tổng cây, tin theo nguồn, danh mục khớp đếm
   assert.deepEqual(tong, kv, "TDB-DC dải số")
   console.log(`# TDB-DC dải số ${JSON.stringify(kv)}`)
 
-  // Tổng trên các dự án gốc: căn của toà có dự án tổ tiên, toà có dự án tổ tiên.
+  // Tổng trên các dự án gốc: căn của toà có dự án tổ tiên, toà có dự án tổ tiên — theo nút hiệu lực của toà (v_toa_nut_vung, DA36).
   const goc = d.nut.filter((n) => n.loai === "project" && n.parentId == null)
   const toaCoGoc = await so(`WITH RECURSIVE up AS (
       SELECT id AS nid, id AS cur, parent_id FROM asset_nodes
       UNION ALL SELECT u.nid, a.id, a.parent_id FROM up u JOIN asset_nodes a ON a.id = u.parent_id)
-    SELECT count(*) AS n FROM buildings b WHERE b.status = 'active' AND EXISTS (
-      SELECT 1 FROM up JOIN asset_nodes r ON r.id = up.cur WHERE up.nid = b.region_node_id AND r.parent_id IS NULL AND r.node_type = 'project')`)
+    SELECT count(*) AS n FROM buildings b JOIN v_toa_nut_vung v USING (building_key) WHERE b.status = 'active' AND EXISTS (
+      SELECT 1 FROM up JOIN asset_nodes r ON r.id = up.cur WHERE up.nid = v.region_node_id AND r.parent_id IS NULL AND r.node_type = 'project')`)
   assert.equal(goc.reduce((a, n) => a + n.soToa, 0), toaCoGoc, "TDB-DC tổng toà trên dự án gốc")
   assert.equal(goc.reduce((a, n) => a + n.soCan, 0), kv.can, "TDB-DC tổng căn trên dự án gốc")
 
