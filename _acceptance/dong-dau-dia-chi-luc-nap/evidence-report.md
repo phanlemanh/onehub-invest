@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 9936bb9b500d03734409ed13ed0315798473dc28
+verified_commit: 7d9d23f875ffd78f52225a044c0b7703ed27d766
 human_signoff: Mạnh 2026-11-18
 ---
 
@@ -232,3 +232,7 @@ Round 1: xem lịch sử round cũ trong run-log.
 Round 2: baseline được đo lần cuối ở round này.
 Round 3: E3 chạy và đạt; được mang sang round 4.
 Round 4: mọi eval đạt, E12 đề xuất PASS với cận trên Wilson 3,70% (0/100); chờ người ký ở Cổng 2.
+
+### Re-pin lần 1 — 2026-11-18, do hoá cũ do sửa vùng suite-neu-doi sau chữ ký (CI scripts S4V-AC-5) và nhận main a194e08e
+run_id: repin-20261118T023041Z-86088
+sha: 7d9d23f875ffd78f52225a044c0b7703ed27d766 · suites: 7 lệnh exit 0 · evals: 14/14 eval máy đạt kỳ vọng · ngoài làn máy: E12 (E12 không khai paths) · AC không có chốt máy: AC-10
