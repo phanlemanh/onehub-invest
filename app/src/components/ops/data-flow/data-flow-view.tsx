@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 import { CircleAlertIcon } from "lucide-react"
 
@@ -17,6 +18,7 @@ import type { SourceRoles } from "@/lib/source-labels"
 
 import { FlowSankey } from "./flow-sankey"
 import { KindMixChart } from "./kind-mix-chart"
+import { MilestoneTrend } from "./milestone-trend"
 import { QualityGrid } from "./quality-grid"
 import { groupRows, sourceRows } from "./quality-rows"
 import { RecordsGrid } from "./records-grid"
@@ -35,6 +37,7 @@ const DESCRIPTION = "Một tin đi từ bài nhận tới căn: chặng nào đa
 /** Dòng trạng thái số dưới đầu trang (DF1). Máy thu: mốc tính cũ nhất của bảng, quá 45′ thêm cảnh báo. Máy chủ: chữ chung của các trang Ops
  * (facts-status.tsx, ADR-0014) theo `computedAt` — số vắng hay lỗi thì nói rõ, không vẽ 0. */
 function FlowFactsStatus({ flow }: { flow: DataFlow }) {
+  const router = useRouter()
   if (flow.mode === "local") {
     if (flow.factsState === "none")
       return (
@@ -70,7 +73,12 @@ function FlowFactsStatus({ flow }: { flow: DataFlow }) {
       <Alert variant="destructive" data-flow-error="">
         <CircleAlertIcon aria-hidden="true" />
         <AlertTitle>Số dòng chảy không đo được</AlertTitle>
-        <AlertDescription>{flow.factsError ?? "không đo được"}</AlertDescription>
+        <AlertDescription className="flex flex-col items-start gap-2">
+          {flow.factsError ?? "không đo được"}
+          <Button size="sm" variant="outline" onClick={() => router.refresh()}>
+            Thử lại
+          </Button>
+        </AlertDescription>
       </Alert>
     )
   return (
@@ -132,6 +140,7 @@ export function DataFlowView({
       <FlowFactsStatus flow={flow} />
       {hasFacts ? (
         <>
+          <MilestoneTrend milestones={flow.milestones} windowDays={windowDays} />
           <FlowSankey sources={flow.sources} roles={roles} />
           <QualityGrid bySource={sourceRows(flow, roles, nowMs)} byGroup={groupRows(flow, roles, nowMs)} />
           <div className="grid grid-cols-1 items-stretch gap-4 xl:grid-cols-12">
