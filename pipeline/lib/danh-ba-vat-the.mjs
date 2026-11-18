@@ -106,10 +106,9 @@ export function keHoachDung({ dongS08, biDanh, phanKhuTheoKhu = new Map(), taoKh
     }
     if (d.subdivision) t.phan_khu.add(String(d.subdivision).toLowerCase());
     const canS16 = !biDanh.has(vCan) ? s16?.can.get(ma) : null;
-    if (canS16 && canS16.building_key !== t.key) {
-      lechS16.push({ du_an: canS16.du_an, ma, khoa_can: canS16.unit_key, khoa_toa: [canS16.building_key, t.key].sort() });
-      continue;
-    }
+    // DA37 Q-B: căn S16 cùng mã ở toà khác → căn S08 vẫn đúc ở toà S08 (trục, căn, bí danh S08 như thường) rồi gộp vào căn
+    // S16 (ganLechS16 sau khi ghi). S16 trước hay S08 trước cùng ra một trạng thái: căn S08 merged, bí danh S08 trên nó.
+    const lech = canS16 && canS16.building_key !== t.key;
     const vTruc = biDanhTruc(d.project_id, kq.toa, kq.truc);
     let s = truc.get(vTruc);
     if (!s) {
@@ -117,8 +116,10 @@ export function keHoachDung({ dongS08, biDanh, phanKhuTheoKhu = new Map(), taoKh
       s = { ...(trucS16 ? ganCo(vTruc, trucS16) : datKhoa(vTruc, "stk")), toa_key: t.key, project_id: d.project_id };
       truc.set(vTruc, s);
     }
-    can.set(vCan, { ...(canS16 ? ganCo(vCan, canS16.unit_key) : datKhoa(vCan, "unt")), toa_key: t.key, truc_key: s.key, tang: kq.tang,
-      project_id: d.project_id });
+    can.set(vCan, { ...(canS16 && !lech ? ganCo(vCan, canS16.unit_key) : datKhoa(vCan, "unt")), toa_key: t.key, truc_key: s.key,
+      tang: kq.tang, project_id: d.project_id });
+    if (lech) lechS16.push({ du_an: canS16.du_an, ma, khoa_s08: can.get(vCan).key, khoa_can: canS16.unit_key,
+      khoa_toa: [canS16.building_key, t.key].sort() });
   }
   for (const t of toa.values()) t.region_node_id = nutVungCuaToa(t, phanKhuTheoKhu);
   return {
