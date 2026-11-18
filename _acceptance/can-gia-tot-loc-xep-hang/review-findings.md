@@ -1,214 +1,164 @@
-# Review findings: can-gia-tot-loc-xep-hang (round 2)
+# Review findings: can-gia-tot-loc-xep-hang (round 3)
 
 ## Trong hợp đồng
 
-- **Lọc dự án chạy sau bước gộp căn nên làm rơi căn có tin thuộc dự án, số đếm lệch lệnh đo của hợp đồng**
-  AC: AC-5
-  file: `app/src/lib/deals.ts:455`
-  severity: high
-  source: bugs
-  detail: `dealsNheSql` gộp mỗi căn còn một tin đại diện (tin thấy sau cùng) bằng `DISTINCT ON (l.can_key)`, rồi `getDealsTrang` mới lọc `r.cap === "du_an" && r.nut === project` trên riêng tin đại diện đó. Căn có một tin thuộc dự án N nhưng tin đại diện thuộc dự án khác sẽ biến mất khỏi `?project=N`. Đường cũ `dealsSql({ duAn: true })` và probe `dem-tap-can.mjs` đều lọc dự án trong CTE `loc`, trước khi gộp. Đo trên DB máy thu, chỉ đọc, ngưỡng 5–50%: nút 251 (bán) có probe trả `tong: 5`, còn `getDealsTrang({ project: "251", kind: "sale" })` trả `tong: 4`. Bằng SQL so lọc trước và sau gộp, thuê lệch ở nút 184 (12 thành 9), 109 (6 thành 5), 93 (13 thành 12); tổng 6 căn trên 4 dự án. Trái dòng 76 của contract.md («Số trên tab bằng số của lệnh đo, không lọc và khi lọc một dự án») và AC-5 («chọn dự án lấy cả dự án ở mọi phường»). Lọc `location` cùng gốc lỗi: ở ngưỡng 15% có 4 căn bán và 37 căn thuê mang tin ở phường khác phường của tin đại diện. Hướng sửa: áp điều kiện dự án và vị trí trước khi gộp, cây vị trí đếm theo cùng luật để số trên mục vẫn bằng số căn khi chọn mục đó.
-  rationale: AC-5 yêu cầu chọn dự án lấy cả dự án và số mục bằng số căn khi chọn; Đường đo yêu cầu số tab bằng lệnh đo khi lọc một dự án, mà đo thực tế lệch (5 so với 4).
-
-- **Hình dạng 5, tuyên quét lớp nhưng chỉ có điểm-case: trục vai của AC-4 chỉ so offerId với chính nó, không thể đỏ**
-  AC: AC-4
-  file: `app/tests/deals-loc-xep-hang.test.tsx:185`
-  severity: high
-  source: measurement
-  detail: E4 hứa ma trận «mỗi tab × vai Người xem, Vận hành × lược đồ máy thu, cloud». Vòng vai ở dòng 181-188 chỉ chạy `TS()` (tab all, lược đồ máy thu), không lặp theo tab và không chạy trên lược đồ cloud. Dòng 185 so `hang.map(offerId)` với `x.rows.map(offerId)`, mà `hang` là `.map` của chính `x.rows` qua hai hàm spread giữ nguyên offerId. Dòng 186 tra `tabDong` bằng đúng các mã đó, trong khi `getDealsTrang` không nhận tham số vai. Đột biến thử trên bản chép: sửa `dealTheoVai` để vai Người xem mất `rank`, `discountPct`, `priceVnd`, `source`; cả 9 ca vẫn xanh.
-  rationale: AC-4 đòi đi hết các trang theo từng tab, cả hai vai và cả hai lược đồ, mà phép đo vai và lược đồ không thể đỏ.
-
-- **Hình dạng 4, assertion âm tính một mình: docThamSoDeal chỉ được đo chiều loại bỏ giá trị lạ**
-  AC: AC-5
-  file: `app/tests/deals-loc-xep-hang.test.tsx:271`
-  severity: high
-  source: measurement
-  detail: Dòng 270-271 chỉ kiểm giá trị lạ của `kind`, `type`, `tab`, `location`, `project` rơi về mặc định. Trong tệp, `docThamSoDeal` chỉ được gọi thêm ở dòng 219 cho `page`, `size`, nên không có đối chứng dương nào cho `location`, `project`, `type` hợp lệ hay `kind=rent`. Đột biến thử trên bản chép: cho `docThamSoDeal` luôn trả `location: null, project: null, type: null, kind: "sale"`, tức mọi bộ lọc trên URL bị bỏ; cả 9 ca vẫn xanh. E11 có gọi `docThamSoDeal({ project: "1" })` trên DB máy thu nhưng chỉ phủ `project`; `location`, `type`, `kind` không có phép đo tự động nào.
-  rationale: AC-5 hứa URL mang đúng vị trí hoặc dự án và mở lại cho cùng kết quả; phép đo không có đối chứng dương nên bỏ hết bộ lọc vẫn xanh.
-
-- **Hình dạng 2, fixture viết tay đúng khuôn bên đọc: tham số lọc của AC-5 bỏ qua bước đọc URL, mã vị trí của fixture bị chính bước đó từ chối**
-  AC: AC-5
-  file: `app/tests/deals-loc-xep-hang.test.tsx:229`
-  severity: medium
-  source: measurement
-  detail: AC-5 hứa URL mang đúng `location` hoặc `project` và mở lại URL cho cùng kết quả. Các ca ở dòng 229-233 và 247-251 dựng thẳng `ThamSoDeal` bằng `TS(...)`, không đi qua `urlThamSoDeal` rồi `docThamSoDeal`. Dòng 256 chỉ so chuỗi đầu ra của bên ghi với một chuỗi viết tay. Đo trên bản chép: `docThamSoDeal({ location })` trả `null` với cả `cg10-tinh`, `cg3-tinh2`, `cg10-a4`, `cg10-a1`, vì regex `^vn(-[a-z0-9]+)*$` không nhận các mã này, nên fixture hiện tại không thể đi trọn vòng ghi rồi đọc. Dữ liệu thật không bị ảnh hưởng: 224 mã phường và 4 mã tỉnh có hạng trên DB máy thu đều khớp regex. Lỗ hổng nằm ở phép đo.
-  rationale: AC-5 đòi vòng ghi rồi mở lại URL cho cùng kết quả, mà phép đo bỏ qua bước đọc URL.
-
-- **Hình dạng 3, assert chuỗi có mặt: nút «Xoá bộ lọc» của trạng thái lọc rỗng được thanh lọc làm thay**
-  AC: AC-7
-  file: `app/tests/deals-loc-xep-hang.test.tsx:286`
-  severity: medium
-  source: measurement
-  detail: AC-7 hứa trạng thái lọc rỗng có nút «Xoá bộ lọc», tức quan hệ giữa nút và vùng trống. Dòng 286 chỉ kiểm `h.includes(nut)` trên toàn HTML. Ca ở dòng 281 đặt `location: "vn-hanoi"`, nên `coLoc` đúng và `DealsBoLoc` tự in một nút «Xoá bộ lọc» khác (deals-grid.tsx dòng 330-332). Đột biến thử trên bản chép: xoá nút trong vùng trống ở deals-grid.tsx dòng 458; cả 9 ca vẫn xanh. Phép đo cần giới hạn trong phần tử `data-deals-trong`.
-  rationale: AC-7 hứa lọc rỗng có nút «Xoá bộ lọc» trong vùng trống; xoá nút đó vẫn xanh nên phép đo không giữ được AC.
-
-- **Hình dạng 4, assertion âm tính một mình: quét lộ khi mở căn ngoài trang không có đối chứng dương trên cùng dữ liệu**
+- **Hình dạng 1 (đo chỉ dẫn thay vì đầu ra): AC-8 tự ráp bước lọc theo vai trong test, không đo dữ liệu trang gửi xuống**
   AC: AC-8
-  file: `app/tests/deals-loc-xep-hang.test.tsx:320`
+  file: app/tests/deals-loc-xep-hang.test.tsx:337
+  severity: high
+  source: measurement
+  detail: Hàm `quet` (dòng 337) và `veTheoVai` (dòng 359) tự gọi `dealHang(dealTheoVai(d, { lienHe: vai, noiDung: vai }), ...)` ngay trong test, nên chỉ chứng minh hàm trong lib lọc đúng khi được gọi. Lời hứa của AC-8 và E8 là «dữ liệu gửi xuống trình duyệt», «đúng phần trang gửi xuống», mà chỗ quyết định là `DealsTrangContent` ở app/src/app/ops/deals/page.tsx:110. Đã thử trên bản chép: thay dòng 110 thành `dealHang(d, { xemNoiDung: true, mayThu })`, tức vai Người xem nhận đủ liên hệ và nội dung, cả 12 ca vẫn xanh. Đột biến ở dòng 346 chỉ sửa trong lib/deals.ts nên không phủ lời gọi của trang.
+
+- **Hình dạng 5 (tuyên quét lớp, thiếu ma trận viết trước): số tab «Đủ để gọi» và «Còn thiếu» không có kỳ vọng độc lập**
+  AC: AC-3
+  file: app/tests/deals-loc-xep-hang.test.tsx:167
+  severity: high
+  source: measurement
+  detail: E3 hứa «số viết tay từng tab: bốn số đúng» và AC-3 hứa hai tab này theo luật đầy đủ của `thieuGi`, nhưng ca CG3-AC-3 chỉ so `dem.all` và `dem["xac-minh"]` với tập độc lập. `dem.du` và `dem.thieu` chỉ đi qua phép cộng ở dòng 167 và phép so với chính kết quả của cùng hàm ở dòng 172-173, nên chia sai giữa hai tab vẫn đúng. Đã thử trên bản chép ba đột biến ở `getDealsTrang`: mọi căn thường vào «du», mọi căn thường vào «thieu», và xếp tab với `xemNoiDung: false`. Cả ba đều giữ 12/12 xanh. Ca cũng không có đột biến «đếm trong trang» mà E3 ghi.
+
+- **Hình dạng 5 (tuyên quét lớp, chỉ có điểm-case): AC-6 tuyên ma trận kind × type × vị trí nhưng chỉ có bốn ô rời**
+  AC: AC-6
+  file: app/tests/deals-loc-xep-hang.test.tsx:297
+  severity: high
+  source: measurement
+  detail: E6 hứa «Ma trận kind × type × vị trí viết trước, mỗi ô một assert về tập mã». Ca CG3-AC-6 chỉ có bán mặc định (dòng 294), thuê không lọc (297), nhà riêng × phường a4 của tin bán (298-299) và thuê × dự án hai, ô này chỉ kiểm thước chứ không kiểm tập mã (301-302). Không có ô thuê × loại hình nào so tập mã. Đã thử trên bản chép: đổi điều kiện ở deals.ts:377 thành `$3::text IS NULL OR h.kind <> 'sale' OR o.property_type = $3`, tức bộ lọc loại hình mất tác dụng với tin thuê, cả 12 ca vẫn xanh. Vòng lặp kind × type ở AC-5 không bắt được vì số trên cây và số khi chọn cùng đọc một điều kiện sai.
+
+- **Hình dạng 2 (fixture viết tay): lược đồ cloud giả vẫn còn bảng media, khác cloud thật**
+  AC: AC-8
+  file: app/tests/deals-loc-xep-hang.test.tsx:224
+  severity: high
+  source: measurement
+  detail: Dòng 224 dựng «lược đồ kiểu cloud» bằng cách chỉ đổi tên `stg_zalo_posts`, còn bảng `media` vẫn nằm trong DB thử. Cloud thật không có `media`: pipeline/sync-cloud.mjs:473-474 ghi bảng này chỉ ở máy thu và đưa vào danh sách soát rò. Vì vậy nhánh `cloud` của `dealsNheSql` không được đo phần bỏ đọc `media`. Đã thử trên bản chép: bỏ nhánh cloud của `coAnh` ở deals.ts:385 để bản cloud vẫn đọc `media`, cả 12 ca vẫn xanh. Khi fixture đổi tên thêm `media`, sản phẩm nguyên bản vẫn xanh còn đột biến này làm CG3-AC-4 đỏ, nên chính fixture là chỗ che lỗi.
+
+- **Hình dạng 1 (đo chỉ dẫn thay vì đầu ra): lời báo cloud chỉ được grep trong mã nguồn trang**
+  AC: AC-8
+  file: app/tests/deals-loc-xep-hang.test.tsx:376
   severity: medium
   source: measurement
-  detail: E8 yêu cầu căn ngoài trang: vai Người xem không chứa giá trị đã cấy, «vai Vận hành có (đối chứng dương)». Dòng 318-320 chỉ quét âm tính trên kết quả của `getDeal`. Đối chứng dương ở dòng 310-312 đo đường danh sách `getDealsTrang`, không đo `mot`. Đột biến thử trên bản chép: cho `getDeal` trả `sellerName`, `sellerPhone`, `street`, `block`, `floor`, `unit`, `streetNumber`, `district`, `postTextFull` đều `null`; cả 9 ca vẫn xanh, nên phép quét này vẫn đạt khi dữ liệu cấy không hề có mặt trong căn được mở.
-  rationale: AC-8 đòi vai Người xem không nhận dữ liệu nhạy cảm và vai Vận hành nhận đủ; phép quét không chứng minh dữ liệu cấy có mặt nên không đo được AC.
+  detail: Dòng 375-376 đọc page.tsx rồi kiểm chuỗi «Ảnh, chữ bài chỉ có ở máy thu» có mặt sau `async function DealsTrangContent`. AC-8 hứa màn báo câu này khi chạy trên lược đồ cloud, tức là phụ thuộc điều kiện `!mayThu`, mà phép grep không đo điều kiện đó. Đã thử trên bản chép: đảo page.tsx:114 thành `{mayThu && (`, khiến cloud mất lời báo còn máy thu lại hiện, cả 12 ca vẫn xanh.
+
+- **Hình dạng 1 (đo chỉ dẫn thay vì đầu ra): trạng thái đang tải chỉ được grep chuỗi trong page.tsx**
+  AC: AC-7
+  file: app/tests/deals-loc-xep-hang.test.tsx:331
+  severity: medium
+  source: measurement
+  detail: E7 hứa «Mỗi trạng thái ST-deals-* một ca trên HTML dựng thật», nhưng trạng thái tải chỉ được đo bằng `trang.includes("<Suspense fallback={<DealsSkeleton />}>")` trên văn bản nguồn. Đã thử trên bản chép: đổi thành `{/* <Suspense fallback={<DealsSkeleton />}> */}<Suspense fallback={null}>`, khung tải thật biến mất mà chuỗi vẫn còn trong chú thích, cả 12 ca vẫn xanh.
+
+- **Hình dạng 1 (đo chỉ dẫn thay vì đầu ra): đầu trang của AC-9 không được dựng, chỉ grep một câu cũ**
+  AC: AC-9
+  file: app/tests/deals-loc-xep-hang.test.tsx:387
+  severity: medium
+  source: measurement
+  detail: E9 hứa «HTML dựng thật của bảng danh sách và đầu trang» không chứa «thước phường». Biến `h` ở dòng 381 chỉ dựng `DealsGrid`, còn đầu trang chỉ được kiểm ở dòng 387 bằng phép grep nguyên văn một câu mô tả cũ trên page.tsx. Đã thử trên bản chép: đổi `description` ở page.tsx:147 thành «Căn rẻ hơn thước phường.», vi phạm thẳng AC-9, cả 12 ca vẫn xanh.
+
+- **Hình dạng 4 (âm tính một mình, đối chứng giả): đối chứng «thước phường» luôn đỏ bất kể sản phẩm**
+  AC: AC-9
+  file: app/tests/deals-loc-xep-hang.test.tsx:384
+  severity: medium
+  source: measurement
+  detail: Dòng 384 tự nối chữ «thước phường» vào chuỗi rồi khẳng định chuỗi đó chứa chữ này, nên `assert.throws` luôn đạt với mọi giá trị của `h`. Đối chứng này chỉ kiểm `String.includes`, không chứng minh phép âm tính ở dòng 383 đo đúng vùng có thể chứa chữ cũ. Fixture của dòng 381 chỉ có một dòng cấp dự án, và đầu trang nằm ngoài `h`, nên phép âm tính không có đối chứng dương thật.
+
+- **Hình dạng 3 (assert chuỗi có mặt khi lời hứa là quan hệ): «nguồn chỉ hiện mã S0x» chỉ kiểm có một mã trong HTML**
+  AC: AC-9
+  file: app/tests/deals-loc-xep-hang.test.tsx:385
+  severity: medium
+  source: measurement
+  detail: AC-9 và E9 hứa cột nguồn CHỈ hiện mã S0x, nhưng `/S0\d/.test(h)` chỉ cần một mã xuất hiện ở bất kỳ đâu trong toàn bộ HTML. Đã thử trên bản chép: đổi ô nguồn ở deals-grid.tsx:146 thành `{d.source} ten-nguon-that.example · ...`, tức in thêm tên nguồn ngay trong cột, cả 12 ca vẫn xanh. Phép đo cần so toàn bộ nội dung ô nguồn với khuôn mã.
+
+- **Hình dạng 3 (assert chuỗi có mặt khi lời hứa là quan hệ): «Còn thiếu» luôn khớp nhãn tab, và tabDong được viết tay**
+  AC: AC-3
+  file: app/tests/deals-loc-xep-hang.test.tsx:374
+  severity: medium
+  source: measurement
+  detail: Dòng 374 muốn chứng minh dòng của vai Người xem mang đúng tab, nhưng `conThieu.includes("Còn thiếu")` luôn đúng vì thanh tab của lưới cũng in nhãn này (deals-grid.tsx:54). Đã thử trên bản chép: đổi nhãn ở ô tình trạng (deals-grid.tsx:192) thành «Sai tab», cả 12 ca vẫn xanh. Đầu vào `tabDong: { x: "thieu" }` ở dòng 373 cũng viết tay (hình dạng 2), không lấy từ `getDealsTrang`, nên luật đầy đủ không đi trọn đường từ máy chủ tới ô hiển thị.
+
+- **Hình dạng 1 (đo chỉ dẫn thay vì đầu ra): ca lỗi thay mất bước tải lại trang rồi khẳng định trang tải lại**
+  AC: AC-7
+  file: app/tests/deals-loc-xep-hang-loi.test.tsx:64
+  severity: medium
+  source: measurement
+  detail: Dòng 64 dùng `cloneElement` tiêm `di` giả đè lên mặc định `window.location.assign`, rồi dòng 93 chỉ kiểm hàm giả nhận đúng URL, kèm thông điệp «phải tải lại trang». Hành vi thật của `DealsBoLocKhiLoi` (deals-grid.tsx:349) không bao giờ chạy. Đã thử trên bản chép: đổi mặc định thành `di = () => {}`, khiến đổi lọc khi lỗi không làm gì, cả 12 ca vẫn xanh. Tệp đã có sẵn kênh `loiDom` bắt được điều hướng thật, nên đo được đầu ra mà không cần tiêm.
+
+- **Hình dạng 5 (tuyên quét lớp, chỉ có điểm-case): probe ghi «mọi mục của cây» nhưng chỉ chọn lại một phần mục**
+  AC: AC-5
+  file: _acceptance/can-gia-tot-loc-xep-hang/probes/do-may-thu.mts:75
+  severity: medium
+  source: measurement
+  detail: E11 hứa «mọi mục của cây có số bằng số căn khi chọn mục đó», và dòng 75 in đúng tên đó. Nhưng `lech` (dòng 56-60) chỉ so số trên cây với SQL đếm riêng, không hề chọn mục. Bước đọc lại bằng `getDealsTrang` ở dòng 68-70 chỉ chạy trên `canDoc`, gồm các nút có căn nhiều tin cộng `project:251`. Các mục tỉnh không bao giờ vào `nutChon` (dòng 54-62) nên không có tỉnh nào được chọn lại. Kết quả «đạt» vì vậy rộng hơn phần đã đo thật.
+
+- **Hình dạng 4 (âm tính một mình): phép «không đổi trang bằng trình duyệt» không thể đỏ trong jsdom**
+  AC: AC-7
+  file: app/tests/deals-loc-xep-hang-loi.test.tsx:123
+  severity: low
+  source: measurement
+  detail: Dòng 123 khẳng định `window.location.href` không đổi sau khi đổi lọc. jsdom không thực hiện điều hướng: chạy thử trên jsdom 30.1.3 của kho, `location.assign` sang URL khác để `href` giữ nguyên và chỉ báo lỗi «Not implemented: navigation to another Document». Assert này vì vậy đúng với mọi sản phẩm và không có đối chứng dương. Chỉ dòng 122 mới có khả năng bắt điều hướng.
+
+- **Hình dạng 4 (âm tính một mình): đối chứng «không có lý do» ghim một thuộc tính mà không ca dương nào xác nhận**
+  AC: AC-2
+  file: app/tests/deals-loc-xep-hang.test.tsx:146
+  severity: low
+  source: measurement
+  detail: Dòng 146 kiểm `!duAn.includes("data-deal-ly-do")`, còn ca dương ở dòng 149 chỉ kiểm chữ lý do, không kiểm thuộc tính này, nên phép âm tính không được ghim với đầu ra thật. Đã thử trên bản chép: sửa deals-cells.tsx:31 để luôn in `{lyDo ?? "Chưa chấm được hạng giá"}` và bỏ thuộc tính, tức dòng không có lý do vẫn in chữ lý do, cả 12 ca vẫn xanh. E2 hứa đúng đối chứng «dòng không có lý do lùi cấp thì không có chữ lý do».
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **Tham số URL `location` lệch từ vựng chuẩn: mã khu vực phải là `area`**
-  Người dùng thấy gì: Đường dẫn của màn lọc dùng tên tham số khác với tên chuẩn của các trang còn lại. Link đã chia sẻ vẫn mở đúng, nhưng sau này đổi tên sẽ phải giữ cả hai dạng.
-  Căn cứ: Không mất hay lộ dữ liệu, người dùng thấy kết quả đúng; sửa sớm rẻ hơn nhiều so với sau khi link đã được chia sẻ, nhưng cần một hàng từ vựng riêng vì hợp đồng đã ký tên hiện tại.
+- **?project=<id> khi chưa có bảng hạng hiện toàn bộ danh sách dưới tiêu đề dự án, trái luật đã ghi trong deals.ts**
+  Người dùng thấy gì: Khi dữ liệu xếp hạng giá chưa có, mở một dự án cụ thể vẫn hiện căn của mọi dự án dưới tên dự án đó. Người vận hành có thể đọc nhầm danh sách.
+  Căn cứ: Chỉ xảy ra khi bảng hạng chưa được nạp, trên dữ liệu thật hiện có đủ; người dùng thấy ngay danh sách sai và không mất dữ liệu.
+  file: `app/src/app/ops/deals/page.tsx`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Tham số URL mới `location` lệch từ vựng chuẩn `area` của mã khu vực**
+  Người dùng thấy gì: Đường dẫn lọc theo khu vực dùng tên khác với các màn còn lại, nên link giữa màn có thể không dùng chung được. Người dùng không thấy lỗi trực tiếp.
+  Căn cứ: Chỉ là lệch tên gọi, không hỏng chức năng; đổi trước khi link lan ra thì rẻ, nhưng cần sửa cả hợp đồng.
   file: `app/src/lib/deals-chi-tiet.ts`
   severity: medium
   Đề xuất: new-contract
 
-- **Bộ chọn vị trí in mã thô «area:...» khi mở URL có vị trí không còn trong cây**
-  Người dùng thấy gì: Khi mở lại một link có vị trí mà bộ lọc loại hình hiện tại không có căn nào, ô chọn vị trí hiện mã kỹ thuật thay vì tên phường. Danh sách vẫn đúng.
-  Căn cứ: Chỉ là chữ hiển thị xấu, không mất hay lộ dữ liệu, người dùng chọn lại vị trí là hết; sửa không gấp.
+- **Giá trị `tab` trên URL là tiếng Việt (du, xac-minh, thieu)**
+  Người dùng thấy gì: Đường dẫn chọn tab dùng chữ không dấu tiếng Việt thay vì tiếng Anh. Màn vẫn chạy bình thường.
+  Căn cứ: Chỉ là quy ước đặt tên, không ảnh hưởng người dùng; đổi sau sẽ cần chuyển hướng cho link đã chia sẻ.
+  file: `app/src/lib/deals-chi-tiet.ts`
+  severity: low
+  Đề xuất: known-limits
+
+- **Nhãn cấp gốc của cây vị trí dùng «Tỉnh, thành», tên CONTEXT.md đã loại**
+  Người dùng thấy gì: Bộ chọn vị trí ghi «Tỉnh, thành» trong khi từ vựng chung của sản phẩm là «Thị trường». Chỉ lệch chữ.
+  Căn cứ: Hậu quả rất nhẹ, chỉ lệch từ vựng và trình đọc màn hình; sửa sau rẻ.
   file: `app/src/components/ops/deals-grid.tsx`
   severity: low
   Đề xuất: known-limits
 
-- **Crumb «Căn giá tốt» ở trang một căn thành vòng lặp: dealTrongDanhSach vẫn đo theo danh sách cũ (r1 · tệp đã đổi)**
-  Người dùng thấy gì: Từ trang một căn, bấm đường dẫn «Căn giá tốt» ở đầu trang có thể quay lại đúng trang đang xem thay vì về danh sách.
-  Căn cứ: Chỉ làm vòng điều hướng khó chịu, không mất hay lộ dữ liệu; người dùng bấm nút Quay lại hoặc vào danh sách bằng menu là ra.
+- **Crumb «Căn giá tốt» ở trang một căn quay lại chính trang đó, không về được danh sách**
+  Người dùng thấy gì: Từ trang một căn, bấm «Căn giá tốt» ở thanh đường dẫn có thể đưa lại đúng trang đang xem thay vì về danh sách. Người dùng phải tự bấm menu để về.
+  Căn cứ: Lỗi điều hướng thấy được và lặp lại, nhưng không mất dữ liệu và người dùng tự về được; cần quyết cách sửa nên tách việc riêng.
   file: `app/src/lib/deals.ts`
   severity: high
-  Đề xuất: known-limits
+  Đề xuất: new-contract
 
-- **?project=<id> khi chưa có bảng hạng hiện toàn bộ danh sách dưới tiêu đề của dự án (r1)**
-  Người dùng thấy gì: Khi chưa có bảng hạng, mở một dự án vẫn hiện căn của mọi dự án dưới tiêu đề tên dự án đó, dễ làm người xem hiểu nhầm.
-  Căn cứ: Chỉ xảy ra khi bảng hạng chưa được dựng, hiếm gặp và tự hết khi dữ liệu có; không mất dữ liệu, chỉ gây hiểu nhầm tạm thời.
+- **Chưa có dữ liệu bảng hạng: trang dự án hiện toàn bộ danh sách dưới tiêu đề của dự án**
+  Người dùng thấy gì: Khi chưa có dữ liệu xếp hạng, mở trang một dự án vẫn hiện căn của mọi dự án, kể cả khi chọn Cho thuê. Màn không báo gì.
+  Căn cứ: Chỉ xảy ra khi bảng hạng chưa có, người dùng tải lại sau khi dữ liệu nạp là hết; không mất dữ liệu.
   file: `app/src/app/ops/deals/page.tsx`
   severity: medium
   Đề xuất: known-limits
 
-- **Khi truy vấn lỗi thanh lọc biến mất, trái AC-7 và không dùng `leading` của RegionError (r1)**
-  Người dùng thấy gì: Khi tải danh sách bị lỗi, thanh lọc biến mất cùng khối báo lỗi, người dùng phải bấm Thử lại mới lọc tiếp được.
-  Căn cứ: Nhẹ: lỗi hiếm, bấm Thử lại là khôi phục, không mất dữ liệu.
-  file: `app/src/app/ops/deals/page.tsx`
-  severity: medium
-  Đề xuất: known-limits
-
-- **Nhãn «Độ tin» không phải nhãn chuẩn «Độ tin trích xuất» trong CONTEXT.md (r1)**
-  Người dùng thấy gì: Dòng ghi «Độ tin» có thể bị đọc nhầm thành độ tin của mức giá thay vì độ tin của việc trích xuất.
-  Căn cứ: Chỉ là chữ nhãn, không ảnh hưởng dữ liệu, sửa lúc nào cũng rẻ.
-  file: `app/src/components/ops/deals-cells.tsx`
-  severity: low
-  Đề xuất: known-limits
-
-- **Sheet tính «Căn cùng tiêu chí» và chuyển căn J/K chỉ trên trang đang xem, nên báo thiếu và báo sai «chưa có căn» (r1 · tệp đã đổi)**
-  Người dùng thấy gì: Trong khung chi tiết một căn, số căn cùng tiêu chí bị đếm thiếu và nút căn kế tắt ở cuối trang, nên có lúc báo chưa có căn dù thực tế có.
-  Căn cứ: Gây hiểu sai số liệu so sánh nhưng không mất hay lộ dữ liệu; người dùng vẫn xem được qua danh sách, và sửa đúng cách cần thiết kế riêng.
-  file: `app/src/components/ops/deals-grid.tsx`
+- **«Xem cả dự án» từ căn cho thuê mở danh sách Bán, thường ra rỗng**
+  Người dùng thấy gì: Đang xem một căn cho thuê, bấm «Xem cả dự án» lại mở danh sách Bán, nhiều dự án báo không có căn nào. Người dùng tưởng dự án không có tin.
+  Căn cứ: Hay gặp: 89/160 dự án có căn thuê ra rỗng, dễ gây hiểu nhầm; người dùng tự chuyển sang Cho thuê được, không mất dữ liệu.
+  file: `app/src/components/ops/deal-body.tsx`
   severity: medium
   Đề xuất: new-contract
 
-- **`?project=<id>` khi chưa có bảng hạng hiện toàn bộ danh sách dưới tiêu đề của dự án (r1)**
-  Người dùng thấy gì: Khi chưa có bảng hạng, mở một dự án vẫn hiện căn của mọi phường dưới tiêu đề tên dự án, không có báo lỗi.
-  Căn cứ: Chỉ xảy ra khi bảng hạng chưa dựng, tự hết khi có dữ liệu; gây hiểu nhầm tạm thời, không lộ hay mất dữ liệu.
-  file: `app/src/app/ops/deals/page.tsx`
-  severity: medium
-  Đề xuất: known-limits
-
-- **Đổi hai điều kiện lọc liên tiếp làm mất điều kiện đầu (r1 · tệp đã đổi)**
-  Người dùng thấy gì: Nếu chọn hai bộ lọc thật nhanh trước khi trang kịp tải, bộ lọc đầu có thể bị bỏ.
-  Căn cứ: Nhẹ: cửa sổ chưa tới một giây, người dùng thấy ngay và chọn lại được.
+- **Ô vị trí hiện mã thô khi vị trí đang lọc không có trong cây**
+  Người dùng thấy gì: Ở một số đường dẫn, ô chọn vị trí hiện mã kỹ thuật như «project:251» thay vì tên dự án. Chỉ xấu chữ.
+  Căn cứ: Chỉ ảnh hưởng nhãn, danh sách vẫn đúng; thường đi kèm lỗi liên kết ở mục trên.
   file: `app/src/components/ops/deals-grid.tsx`
   severity: low
   Đề xuất: known-limits
-
-- **Hình dạng 1, đo chỉ dẫn thay vì đầu ra: ca lỗi của AC-7 chỉ grep mã nguồn page.tsx, trong khi màn thật mất thanh lọc khi lỗi (r1 · tệp đã đổi)**
-  Người dùng thấy gì: Phép kiểm tự động ca lỗi tải danh sách chỉ đọc chữ trong mã, nên có thể không bắt được nếu màn lỗi hỏng.
-  Căn cứ: Là điểm yếu của kiểm thử, người dùng không thấy ngay; rủi ro thấp vì ca lỗi hiếm và có thể kiểm tay.
-  file: `app/tests/deals-loc-xep-hang.test.tsx`
-  severity: high
-  Đề xuất: known-limits
-
-- **Hình dạng 1, đo chỉ dẫn thay vì đầu ra: AC-8 tự chép chuỗi lọc theo vai trong test, không đo dữ liệu trang gửi xuống (r1 · tệp đã đổi)**
-  Người dùng thấy gì: Phép kiểm tự động việc ẩn tên, số điện thoại cho vai Người xem không chạy trên trang thật, nên có thể không phát hiện nếu bước ẩn bị gỡ nhầm.
-  Căn cứ: Nếu lỗi xảy ra thì lộ thông tin liên hệ cho vai thấp, nhưng hiện mã chạy đúng; nên bổ sung phép đo sớm cho rẻ.
-  file: `app/tests/deals-loc-xep-hang.test.tsx`
-  severity: high
-  Đề xuất: known-limits
-
-- **Hình dạng 3, assert có mặt trong khi lời hứa là quan hệ: số tab Đủ để gọi và Còn thiếu chỉ so với chính bộ phân loại đang được đo (r1 · tệp đã đổi)**
-  Người dùng thấy gì: Số trên hai tab «Đủ để gọi» và «Còn thiếu» chưa được kiểm độc lập, nên phân loại sai vẫn có thể qua kiểm tự động.
-  Căn cứ: Rủi ro là số tab lệch mà không ai biết, nhưng người vận hành đối chiếu được bằng tay.
-  file: `app/tests/deals-loc-xep-hang.test.tsx`
-  severity: high
-  Đề xuất: known-limits
-
-- **Hình dạng 2, fixture viết tay đúng khuôn bên đọc: AC-2 dựng dòng bằng dongMau và hang, không đi qua toDealRow (r1 · tệp đã đổi)**
-  Người dùng thấy gì: Phép kiểm dòng bảng không đi qua bước đọc dữ liệu thật, nên nếu lý do lùi cấp hay tên dự án bị mất thì có thể không bị bắt.
-  Căn cứ: Chỉ là khoảng trống kiểm thử; nếu hỏng, màn chỉ thiếu chữ giải thích, không mất hay lộ dữ liệu.
-  file: `app/tests/deals-loc-xep-hang.test.tsx`
-  severity: high
-  Đề xuất: known-limits
-
-- **Hình dạng 5, thiếu ma trận toàn phần: số trên cây vị trí chỉ đo ở Bán mặc định, không có trục kind × type (r1 · tệp đã đổi)**
-  Người dùng thấy gì: Số căn trên cây vị trí khi chọn Cho thuê hay đổi loại hình chưa được kiểm tự động, nên có thể sai mà không bị bắt.
-  Căn cứ: Nếu sai chỉ lệch số đếm trên cây, người dùng thấy và đối chiếu được, không lộ dữ liệu.
-  file: `app/tests/deals-loc-xep-hang.test.tsx`
-  severity: medium
-  Đề xuất: known-limits
-
-- **Hình dạng 5, thiếu ma trận toàn phần: E6 khai kind × type × vị trí nhưng chỉ có vài điểm-case (r1 · tệp đã đổi)**
-  Người dùng thấy gì: Việc kết hợp lọc Cho thuê với loại hình chưa được kiểm tự động, nên một lỗi lọc có thể lọt qua.
-  Căn cứ: Lỗi nếu có chỉ hiện sai danh sách, người dùng tự thấy và lọc lại, không mất hay lộ dữ liệu.
-  file: `app/tests/deals-loc-xep-hang.test.tsx`
-  severity: medium
-  Đề xuất: known-limits
-
-- **Hình dạng 4, assertion âm tính một mình: đối chứng «thước phường» chỉ thử String.includes trên chuỗi tự chèn (r1 · tệp đã đổi)**
-  Người dùng thấy gì: Phép kiểm không bắt lại được nếu chữ «thước phường» bị đưa trở lại bảng.
-  Căn cứ: Chỉ là chữ trên màn, nhẹ, người dùng không bị hại; nhìn mắt là thấy.
-  file: `app/tests/deals-loc-xep-hang.test.tsx`
-  severity: medium
-  Đề xuất: known-limits
-
-- **Hình dạng 3, assert chuỗi có mặt trong khi lời hứa là «chỉ»: cột nguồn chỉ được kiểm có S0x (r1 · tệp đã đổi)**
-  Người dùng thấy gì: Phép kiểm nguồn chỉ tìm mã S0x, nên nếu tên nguồn thật bị in thêm vào ô thì không bị bắt.
-  Căn cứ: Hậu quả nặng nếu xảy ra vì tên nguồn thật là thông tin cần giữ kín, nhưng hiện mã không in tên thật; thêm phép kiểm là rẻ.
-  file: `app/tests/deals-loc-xep-hang.test.tsx`
-  severity: medium
-  Đề xuất: known-limits
-
-- **Hình dạng 4, assertion âm tính một mình: đối chứng «không có lý do» ghim thuộc tính, không có đối chứng dương cho thuộc tính đó (r1 · tệp đã đổi)**
-  Người dùng thấy gì: Phép kiểm dòng không có lý do lùi cấp có thể không bắt được nếu dòng đó lại in một câu lý do thừa.
-  Căn cứ: Nhẹ: chỉ thừa chữ giải thích trên màn, không ảnh hưởng dữ liệu.
-  file: `app/tests/deals-loc-xep-hang.test.tsx`
-  severity: medium
-  Đề xuất: known-limits
-
-- **Hình dạng 1, đo chỉ dẫn thay vì đầu ra: lời báo cloud của AC-8 chỉ được grep trong mã nguồn (r1 · tệp đã đổi)**
-  Người dùng thấy gì: Phép kiểm lời báo «ảnh, chữ bài chỉ có ở máy thu» chỉ đọc chữ trong mã, nên có thể không bắt được nếu lời báo không hiện.
-  Căn cứ: Nhẹ: thiếu một dòng thông báo trên cloud, không mất hay lộ dữ liệu.
-  file: `app/tests/deals-loc-xep-hang.test.tsx`
-  severity: medium
-  Đề xuất: known-limits
-
-- **Hình dạng 1, đo chỉ dẫn thay vì đầu ra: `?can=` được thay bằng lời gọi thẳng getDeal (r1 · tệp đã đổi)**
-  Người dùng thấy gì: Phép kiểm mở căn nằm ngoài trang hiện tại không chạy đường chuyển hướng thật, nên có thể không bắt được nếu đường này hỏng.
-  Căn cứ: Nếu hỏng, người dùng không mở được căn từ liên kết; vào lại từ danh sách được nên hậu quả nhẹ.
-  file: `app/tests/deals-loc-xep-hang.test.tsx`
-  severity: medium
-  Đề xuất: known-limits
-
-- **Hình dạng 1, đo chỉ dẫn thay vì đầu ra: AC-9 kiểm đầu trang bằng grep mã nguồn, không dựng đầu trang (r1 · tệp đã đổi)**
-  Người dùng thấy gì: Phép kiểm mô tả đầu trang chỉ đọc chữ trong mã, không dựng đầu trang thật.
-  Căn cứ: Chỉ là chữ mô tả trên đầu trang, nhẹ, kiểm bằng mắt dễ.
-  file: `app/tests/deals-loc-xep-hang.test.tsx`
-  severity: medium
-  Đề xuất: known-limits
-
-- **Hình dạng 3, assert chuỗi có mặt: «Còn thiếu» luôn có sẵn từ nhãn tab nên không đo huy hiệu của dòng (r1 · tệp đã đổi)**
-  Người dùng thấy gì: Phép kiểm huy hiệu «Còn thiếu» trên dòng luôn xanh vì nhãn tab cũng có chữ này.
-  Căn cứ: Rất nhẹ: chỉ là nhãn nhỏ trên dòng, chi phí sửa lớn hơn hậu quả.
-  file: `app/tests/deals-loc-xep-hang.test.tsx`
-  severity: low
-  Đề xuất: wont-fix
-
-## Chưa adversarial-verify (refuter chết)
 
 Cụm ngoài vùng phủ: cluster: n-a (không đo được — không eval nào khai paths, hoặc dưới ngưỡng cụm).
 

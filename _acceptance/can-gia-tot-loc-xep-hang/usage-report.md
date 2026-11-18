@@ -54,3 +54,68 @@ wall: 3325s
 - **claude-sonnet-5-5**: 10 agent · 48 calls · out 34,721 · in 98 · cache_read 3,106,046 · cache_create 491,023
 - **claude-haiku-5-5**: 19 agent · 60 calls · out 27,009 · in 120 · cache_read 1,344,451 · cache_create 686,608
 
+### S4 round 3 — wf_7c1d1198-27f (42 agent, 176,409 out-tok)
+
+| label | model | calls | out | in | cache_read | s |
+|---|---|--:|--:|--:|--:|--:|
+| review:measurement | claude-opus-5-5 | 10 | 33,963 | 24 | 815,109 | 646 |
+| review:conventions | claude-opus-5-5 | 9 | 25,515 | 18 | 775,171 | 236 |
+| review:bugs | claude-opus-5-5 | 8 | 25,381 | 18 | 626,102 | 308 |
+| ui:E10 | claude-sonnet-5-5 | 31 | 17,972 | 62 | 3,429,276 | 246 |
+| synthesize:report | claude-sonnet-5-5 | 2 | 15,240 | 4 | 54,562 | 82 |
+| baseline:diffBase | claude-sonnet-5-5 | 3 | 10,027 | 6 | 92,694 | 68 |
+| triage | claude-sonnet-5-5 | 2 | 6,410 | 4 | 39,747 | 39 |
+| machine:node scripts/suite-neu-doi.mjs pipeline_ | claude-haiku-5-5 | 8 | 5,099 | 16 | 218,969 | 1044 |
+| machine:node scripts/suite-neu-doi.mjs app_ui -- | claude-haiku-5-5 | 5 | 3,207 | 10 | 106,435 | 708 |
+| machine:node scripts/suite-neu-doi.mjs pipeline_ | claude-haiku-5-5 | 6 | 2,298 | 12 | 142,792 | 849 |
+| machine:node scripts/suite-neu-doi.mjs portal_st | claude-haiku-5-5 | 2 | 1,974 | 4 | 33,850 | 7 |
+| machine:node scripts/suite-neu-doi.mjs ui_lint_r | claude-haiku-5-5 | 2 | 1,750 | 4 | 33,854 | 7 |
+| refute:deals-loc-xep-hang.test.tsx | claude-sonnet-5-5 | 5 | 1,620 | 10 | 148,747 | 15 |
+| refute:deals-loc-xep-hang.test.tsx | claude-sonnet-5-5 | 6 | 1,561 | 12 | 190,705 | 15 |
+| refute:deals-loc-xep-hang.test.tsx | claude-sonnet-5-5 | 3 | 1,463 | 8 | 70,244 | 13 |
+| refute:deals-loc-xep-hang.test.tsx | claude-sonnet-5-5 | 4 | 1,268 | 8 | 112,024 | 13 |
+| machine:node scripts/suite-neu-doi.mjs app -- 'c | claude-haiku-5-5 | 2 | 1,250 | 4 | 30,436 | 23 |
+| refute:deals-loc-xep-hang.test.tsx | claude-sonnet-5-5 | 3 | 1,210 | 6 | 70,467 | 10 |
+| machine:bash _acceptance/can-gia-tot-loc-xep-han | claude-haiku-5-5 | 2 | 1,196 | 4 | 33,844 | 9 |
+| refute:deals-loc-xep-hang.test.tsx | claude-sonnet-5-5 | 2 | 1,101 | 4 | 32,418 | 9 |
+| machine:node scripts/suite-neu-doi.mjs agent -- | claude-haiku-5-5 | 2 | 1,077 | 4 | 33,840 | 6 |
+| machine:bash _acceptance/can-gia-tot-loc-xep-han | claude-haiku-5-5 | 2 | 1,074 | 4 | 33,846 | 191 |
+| refute:deals-loc-xep-hang.test.tsx | claude-sonnet-5-5 | 4 | 878 | 8 | 101,499 | 9 |
+| refute:deals-loc-xep-hang.test.tsx | claude-sonnet-5-5 | 2 | 873 | 4 | 29,365 | 7 |
+| refute:deals-loc-xep-hang-loi.test.tsx | claude-sonnet-5-5 | 3 | 860 | 6 | 72,624 | 8 |
+| refute:deals-loc-xep-hang.test.tsx | claude-sonnet-5-5 | 2 | 854 | 4 | 32,456 | 8 |
+| machine:bash _acceptance/can-gia-tot-loc-xep-han | claude-haiku-5-5 | 2 | 854 | 4 | 33,846 | 81 |
+| machine:bash _acceptance/can-gia-tot-loc-xep-han | claude-haiku-5-5 | 2 | 796 | 4 | 33,846 | 81 |
+| refute:do-may-thu.mts | claude-sonnet-5-5 | 3 | 790 | 6 | 67,579 | 8 |
+| refute:deals-loc-xep-hang.test.tsx | claude-sonnet-5-5 | 2 | 753 | 4 | 32,430 | 7 |
+| machine:bash _acceptance/can-gia-tot-loc-xep-han | claude-haiku-5-5 | 2 | 742 | 4 | 33,846 | 81 |
+| machine:bash _acceptance/can-gia-tot-loc-xep-han | claude-haiku-5-5 | 2 | 741 | 4 | 33,846 | 81 |
+| refute:deals-loc-xep-hang-loi.test.tsx | claude-sonnet-5-5 | 3 | 738 | 6 | 68,854 | 8 |
+| machine:node "${CLAUDE_PLUGIN_ROOT:-$(node $HOME | claude-haiku-5-5 | 2 | 716 | 4 | 33,943 | 5 |
+| refute:deals-loc-xep-hang.test.tsx | claude-sonnet-5-5 | 3 | 716 | 6 | 67,388 | 8 |
+| machine:bash _acceptance/can-gia-tot-loc-xep-han | claude-haiku-5-5 | 2 | 703 | 4 | 33,846 | 81 |
+| machine:bash _acceptance/can-gia-tot-loc-xep-han | claude-haiku-5-5 | 2 | 701 | 4 | 33,846 | 81 |
+| machine:bash _acceptance/can-gia-tot-loc-xep-han | claude-haiku-5-5 | 2 | 698 | 4 | 33,846 | 81 |
+| machine:bash _acceptance/can-gia-tot-loc-xep-han | claude-haiku-5-5 | 2 | 696 | 4 | 33,846 | 81 |
+| machine:bash _acceptance/can-gia-tot-loc-xep-han | claude-haiku-5-5 | 2 | 678 | 4 | 33,846 | 81 |
+| refute:deals-loc-xep-hang.test.tsx | claude-sonnet-5-5 | 3 | 637 | 6 | 66,113 | 7 |
+| capture:provenance | claude-sonnet-5-5 | 2 | 329 | 4 | 29,182 | 4 |
+
+
+wall: 2785s
+
+| vai tro | agents | out | cache_read | wall s | bat dau | ket thuc |
+|---|--:|--:|--:|--:|---|---|
+| baseline | 1 | 10,027 | 92,694 | 68 | 19:25:31 | 19:26:39 |
+| review | 3 | 84,859 | 2,216,382 | 655 | 19:25:31 | 19:36:26 |
+| ui | 1 | 17,972 | 3,429,276 | 246 | 19:25:31 | 19:29:37 |
+| machine | 19 | 26,250 | 1,006,423 | 2645 | 19:25:31 | 20:09:36 |
+| triage | 1 | 6,410 | 39,747 | 39 | 20:09:36 | 20:10:14 |
+| refute | 15 | 15,322 | 1,162,913 | 16 | 20:10:14 | 20:10:31 |
+| capture | 1 | 329 | 29,182 | 4 | 20:10:31 | 20:10:34 |
+| synthesize | 1 | 15,240 | 54,562 | 82 | 20:10:34 | 20:11:56 |
+
+- **claude-opus-5-5**: 3 agent · 27 calls · out 84,859 · in 60 · cache_read 2,216,382 · cache_create 552,766
+- **claude-sonnet-5-5**: 20 agent · 88 calls · out 65,300 · in 178 · cache_read 4,808,374 · cache_create 859,433
+- **claude-haiku-5-5**: 19 agent · 51 calls · out 26,250 · in 102 · cache_read 1,006,423 · cache_create 689,115
+
