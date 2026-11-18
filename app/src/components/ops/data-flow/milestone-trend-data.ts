@@ -1,5 +1,5 @@
 import type { Milestone } from "@/lib/data-flow-queries"
-import { fmtInt } from "@/lib/format"
+import { fmtInt, vnDayKey, vnDayStart } from "@/lib/format"
 
 /** Bốn số mốc S03 (SM1), nhãn theo `CONTEXT.md` mục «Số mốc S03». */
 export type MilestoneKey = "project_linked" | "building_linked" | "project_ranked" | "building_ranked"
@@ -27,7 +27,7 @@ export type MilestoneTile = {
 }
 
 /** "2026-11-18" lùi `n` ngày lịch. */
-const dayBefore = (day: string, n: number) => new Date(Date.parse(`${day}T00:00:00Z`) - n * 86400000).toISOString().slice(0, 10)
+const dayBefore = (day: string, n: number) => vnDayKey(vnDayStart(day).getTime() - n * 86400000)
 
 /**
  * Ô số mốc từ chuỗi ngày. «Hôm nay» là ngày mới nhất có số. Đứng yên = ba ngày ĐÃ CHỐT liền nhau trước ngày đó có cùng một số, tức hai

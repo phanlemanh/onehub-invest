@@ -48,7 +48,7 @@ vùng «Số mốc S03 theo ngày» trên `/ops/data-flow`. Không thêm migrati
   lệch 0 so với đếm độc lập, `project_linked` khớp ô Định vị của S03, lượt có ghi số mốc chậm hơn bản 600 như `main` tối đa 2 giây và tối đa 20% (đo trên bản chép đã `ANALYZE`, trung vị ba vòng); ghi
   kết quả vào `.acceptance-runs/so-so-tren-man-theo-ngay/do-may-thu.md`.
 - AC-10: Given app chạy trên DB thử `oneinvest_u2_sm1` ở cổng 3461, When mở `/ops/data-flow`, Then vùng số mốc hiện bốn ô với số khớp dòng hôm nay
-  trong DB và khớp ô Định vị của màn chặng; đọc được ở sáng, tối và khổ điện thoại; khung cuộn của trang không tràn ngang (`scrollWidth` không lớn hơn `clientWidth`).
+  trong DB và khớp cột «Định vị (cấp dự án)» của dòng S03 trong bảng theo nguồn ở cửa sổ «Toàn kho»; đọc được ở sáng, tối và khổ điện thoại; khung cuộn của trang không tràn ngang (`scrollWidth` không lớn hơn `clientWidth`).
 
 ## Coverage
 
