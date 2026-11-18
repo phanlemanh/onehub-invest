@@ -79,17 +79,17 @@ const donSach = () => admin.query(`TRUNCATE sale_offer_records, offer_project, o
 
 let dem = 0;
 /** Một tin của ma trận: `duAn` true = một dự án, chuỗi = trạng thái khác; `cap`/`diem` là dòng hạng. */
-async function tin({ nguon = "S03", duAn = false, cap, diem = 50, nghi = false, ngayDau = LUC_D } = {}) {
+async function tin({ nguon = "S03", kind = "sale", duAn = false, cap, diem = 50, nghi = false, ngayDau = LUC_D } = {}) {
   const id = `sm1fx-${++dem}`;
   await admin.query(`INSERT INTO sale_offer_records (offer_id, kind, property_type, confidence, first_seen, last_seen, n_reposts, post_ids,
       source, field_provenance, offer_status, retired_at)
-    VALUES ($1, 'sale', 'apartment', 'medium', $2, $2, 1, '{}', $3, '{}', 'active', $4)`, [id, ngayDau, nguon, nghi ? LUC_D : null]);
+    VALUES ($1, $5, 'apartment', 'medium', $2, $2, 1, '{}', $3, '{}', 'active', $4)`, [id, ngayDau, nguon, nghi ? LUC_D : null, kind]);
   if (duAn) {
     await admin.query(`INSERT INTO offer_project (offer_id, source, project_node_id, status, evidence, n_posts, n_posts_with_project)
       VALUES ($1, $2, 1, $3, 'bai', 1, 1)`, [id, nguon, duAn === true ? "mot_du_an" : duAn]);
   }
   if (cap !== undefined) {
-    await admin.query(`INSERT INTO offer_price_rank (offer_id, kind, cap, hang_pct, run_id) VALUES ($1, 'sale', $2, $3, 'sm1')`, [id, cap, diem]);
+    await admin.query(`INSERT INTO offer_price_rank (offer_id, kind, cap, hang_pct, run_id) VALUES ($1, $4, $2, $3, 'sm1')`, [id, cap, diem, kind]);
   }
   return id;
 }
@@ -213,8 +213,10 @@ const MA_TRAN = [
   ["hạng phuong có điểm, không dự án", { cap: "phuong" }, [1, 0, 0, 0, 0]],
   ["không cấp hạng, không điểm", { duAn: true, cap: null, diem: null }, [1, 1, 0, 0, 0]],
   ["S03 đã nghỉ có dự án và hạng", { duAn: true, cap: "du_an", nghi: true }, [0, 0, 0, 0, 0]],
+  ["tin bán có dự án, hạng du_an", { kind: "sale", duAn: true, cap: "du_an" }, [1, 1, 0, 1, 0]],
+  ["tin thuê dài hạn có dự án, hạng du_an", { kind: "rent_lt", duAn: true, cap: "du_an" }, [1, 1, 0, 1, 0]],
 ];
-const TONG_MA_TRAN = [11, 8, 0, 3, 1];
+const TONG_MA_TRAN = [13, 10, 0, 5, 1];
 
 const soCua = (d) => COT.map((k) => d[k]);
 async function soCuaO(sql, dsTin) {
@@ -247,12 +249,31 @@ const DOT_BIEN_AC2 = [
   ["bỏ lọc nguồn", (s) => doi(s, /(LEFT JOIN offer_price_rank r ON r\.offer_id = o\.offer_id\n)\s*WHERE o\.source = 'S03'\n/, "$1"), /cột offers_total/],
   ["chỉ đếm cap = 'du_an'", (s) => doi(s, `r.cap IN ('du_an', 'phan_khu', 'toa')`, `r.cap = 'du_an'`), /cột project_ranked ô «hạng phan_khu có điểm»/],
   ["đếm cả hạng không điểm", (s) => doi(s, `'project_ranked', count(*) FILTER (WHERE r.hang_pct IS NOT NULL AND r.cap IN`, `'project_ranked', count(*) FILTER (WHERE r.cap IN`), /cột project_ranked ô «hạng du_an không điểm»/],
+  ["chỉ đếm tin bán", (s) => doi(s, `'project_ranked', count(*) FILTER (WHERE r.hang_pct IS NOT NULL AND r.cap IN`, `'project_ranked', count(*) FILTER (WHERE o.kind = 'sale' AND r.hang_pct IS NOT NULL AND r.cap IN`), /cột project_ranked ô «tin thuê dài hạn có dự án, hạng du_an»/],
 ];
 for (const [ten, pha, mau] of DOT_BIEN_AC2) {
   test(`SM1-AC-2 đột biến ${ten} thì đỏ, thông điệp nêu tên cột`, { timeout: 180_000 }, async () => {
     await assert.rejects(() => kiemMaTran(pha(SQL600)), mau);
   });
 }
+
+/** Bản 600 đã nối `toa_link` vào đúng các mã tin cho trước: hôm nay CTE này rỗng nên chiều dương của `building_linked` phải dựng bằng đột biến. */
+const noiToa = (sql, ids) => doi(sql, "toa_link AS (SELECT NULL::text AS offer_id WHERE false),",
+  `toa_link AS (SELECT unnest(ARRAY[${ids.map((x) => `'${x}'`).join(", ")}]::text[]) AS offer_id),`);
+async function kiemKhopToa(pha = (s) => s) {
+  await donSach();
+  const ids = [await tin({ duAn: true }), await tin({ nguon: "S05", duAn: true }), await tin({ duAn: true, nghi: true })];
+  await lamTuoi({ sql: pha(noiToa(SQL600, ids)) });
+  const d = JSON.parse((await dongNgay(NGAY_D))[0].detail);
+  assert.equal(d.building_linked, 1, `cột building_linked: ba tin khớp toà (S03 đang rao, S05, S03 đã nghỉ) phải đếm 1, thấy ${d.building_linked}`);
+}
+test("SM1-AC-2 đối chứng dương: nối toa_link vào ba tin thì building_linked = 1", { timeout: 60_000 }, async () => {
+  await kiemKhopToa();
+});
+test("SM1-AC-2 đột biến đặt cứng 0 cho building_linked trên bản đã nối toa_link thì đỏ, thông điệp nêu tên cột", { timeout: 60_000 }, async () => {
+  const pha = (s) => doi(s, `'building_linked', count(*) FILTER (WHERE m.toa_khop)`, `'building_linked', 0`);
+  await assert.rejects(() => kiemKhopToa(pha), /cột building_linked/);
+});
 
 // ---------- AC-3: chạy lại cùng ngày, ngày kế, một giao dịch ----------
 
@@ -289,6 +310,25 @@ test("SM1-AC-3 ngày lấy theo giờ VN: 00:30 VN thuộc ngày mới dù giờ
   await tin();
   await lamTuoi({ luc: "2026-11-18T17:30:00Z" });
   assert.equal(JSON.parse((await dongMoc())[0].detail).ngay, NGAY_D1);
+});
+
+async function kiemNuaDem(sql) {
+  await donSach();
+  await tin({ duAn: true });
+  await lamTuoi({ sql, luc: "2026-11-18T16:59:00Z" }); // 23:59 giờ VN ngày 18/11
+  const [truoc] = await dongMoc();
+  await tin({ duAn: true });
+  await lamTuoi({ sql, luc: "2026-11-18T17:01:00Z" }); // 00:01 giờ VN ngày 19/11
+  const ngay = (await dongMoc()).map((r) => JSON.parse(r.detail).ngay).sort();
+  assert.deepEqual(ngay, [NGAY_D, NGAY_D1], `ranh nửa đêm giờ VN: 23:59 và 00:01 phải ra hai ngày, thấy ${ngay.join(", ")}`);
+  assert.deepEqual((await dongNgay(NGAY_D))[0], truoc, "ranh nửa đêm giờ VN: dòng trước nửa đêm phải giữ nguyên");
+}
+test("SM1-AC-3 ranh nửa đêm giờ VN: 23:59 và 00:01 ra hai dòng khác ngày, dòng trước không đổi", { timeout: 60_000 }, async () => {
+  await kiemNuaDem(SQL600);
+});
+test("SM1-AC-3 đột biến lấy ngày theo UTC thì đỏ", { timeout: 60_000 }, async () => {
+  const pha = doi(SQL600, /AT TIME ZONE 'Asia\/Ho_Chi_Minh'\)::date AS d\n\)/, "AT TIME ZONE 'UTC')::date AS d\n)");
+  await assert.rejects(() => kiemNuaDem(pha), /ranh nửa đêm giờ VN: 23:59 và 00:01 phải ra hai ngày/);
 });
 
 const CHEN_LOI = /^COMMIT;$/m;

@@ -15,13 +15,15 @@ import ts from "typescript"
 import { captureOpsFacts, localDbUrl } from "../../pipeline/scripts/capture-ops-facts.mjs"
 import { makeOpsSchema, schemaUrl } from "../../pipeline/scripts/ops-facts-fixture.mjs"
 import type { DataFlow, FlowFacts, Milestone } from "../src/lib/data-flow-queries"
-import { NOW, ROOT, makeFlowSchema, refreshFlow } from "./ops-dong-chay-fixture"
+import { IN, NOW, OFFERS, ROOT, makeFlowSchema, refreshFlow, type Offer } from "./ops-dong-chay-fixture"
 
 const P = process.pid
 const S_LOCAL = `sm_local_${P}`
 const S_CLOUD = `sm_cloud_${P}`
 const S_CHAN = `sm_chan_${P}`
-const SCHEMAS = [S_LOCAL, S_CLOUD, S_CHAN]
+const S_BON_NGAY = `sm_bon_ngay_${P}`
+const S_GIU = `sm_giu_${P}`
+const SCHEMAS = [S_LOCAL, S_CLOUD, S_CHAN, S_BON_NGAY, S_GIU]
 process.env.DATABASE_URL = schemaUrl(S_CLOUD) // pool của app = máy chủ, đặt TRƯỚC mọi import động
 process.env.OPS_API_TOKEN = "sm-thu"
 delete process.env.VERCEL
@@ -43,6 +45,11 @@ Object.assign(globalThis, {
   cancelAnimationFrame: (id: number) => clearTimeout(id),
   getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
   MutationObserver: dom.window.MutationObserver,
+  IntersectionObserver: class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  },
   ResizeObserver: class {
     cb: ResizeObserverCallback
     constructor(cb: ResizeObserverCallback) {
@@ -57,6 +64,8 @@ Object.assign(globalThis, {
   matchMedia: () => ({ matches: false, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} }),
 })
 dom.window.matchMedia = (globalThis as unknown as { matchMedia: typeof dom.window.matchMedia }).matchMedia
+dom.window.HTMLElement.prototype.scrollIntoView = () => {}
+;(dom.window.Element.prototype as unknown as { getAnimations: () => unknown[] }).getAnimations = () => []
 Object.defineProperty(globalThis, "navigator", { value: dom.window.navigator, configurable: true })
 
 let currentRoot: { render: (n: ReactNode) => void; unmount: () => void } | null = null
@@ -138,6 +147,8 @@ const MONG = [...CU, HOM_NAY]
 
 const admin = new pg.Client({ connectionString: localDbUrl() })
 let daNoi = false
+let dangNoi: Promise<void> | null = null
+const noiAdmin = () => (dangNoi ??= admin.connect().then(() => void (daNoi = true)))
 const push = async (schema: string) =>
   (await captureOpsFacts({ env: { DATABASE_URL: schemaUrl(schema) } })) as { code: number; stdout: string; stderr: string; payload: Payload | null }
 async function chenMoc(schema: string, detail: unknown) {
@@ -156,8 +167,7 @@ async function dungMayThu(schema: string, extra: () => Promise<void> = async () 
 let sanSang: Promise<Payload> | null = null
 function chuanBi() {
   sanSang ??= (async () => {
-    await admin.connect()
-    daNoi = true
+    await noiAdmin()
     await dungMayThu(S_LOCAL)
     const r = await push(S_LOCAL)
     assert.equal(r.code, 0, r.stderr.slice(0, 600))
@@ -241,6 +251,48 @@ test("SM1-AC-6 đối chứng: tên nguồn cấy vào số mốc thì lượt �
   assert.match(r.stderr, /FACTS CHẶN \[tầng A\] blocks\.dataFlow\.windows\.\w+\.milestones/)
 })
 
+// Lối giữ ở máy thu: dòng số mốc không rời máy theo bảng chung, mọi dòng kiểm khác phải đi qua nguyên vẹn.
+const LOC_GIU = `SELECT id, check_name, entity, status, detail, checked_at FROM "${S_GIU}".dq_check_results WHERE check_name <> 's03-moc-ngay' ORDER BY id`
+const KIEM_KHAC = [
+  ["s03-floor-fill", "S03", "pass", JSON.stringify({ n: 1 })],
+  ["dq-kiem-khac", "x", "warn", "chữ không phải JSON"],
+  ["do1-giu-nhap", "S03", "pass", JSON.stringify({ ngay: NGAY })],
+]
+type DongKiem = { id: number; check_name: string }
+let sanGiu: Promise<DongKiem[]> | null = null
+function dungLoiGiu() {
+  sanGiu ??= (async () => {
+    await noiAdmin()
+    await dungMayThu(S_GIU)
+    const dong: DongKiem[] = []
+    for (const k of KIEM_KHAC)
+      dong.push((await admin.query(`INSERT INTO "${S_GIU}".dq_check_results (check_name, entity, status, detail) VALUES ($1, $2, $3, $4)
+        RETURNING id, check_name, entity, status, detail, checked_at`, k)).rows[0] as DongKiem)
+    return dong
+  })()
+  return sanGiu
+}
+const milestonesGiu = async () =>
+  (await admin.query(`SELECT time_window, facts -> 'milestones' AS m FROM "${S_GIU}".data_flow_snapshot ORDER BY time_window`)).rows
+async function kiemLoiGiu(locSql: string) {
+  const mong = await dungLoiGiu()
+  const truoc = await milestonesGiu()
+  const dong = (await admin.query(locSql)).rows as DongKiem[]
+  const mat = mong.filter((m) => !dong.some((d) => d.id === m.id)).map((m) => m.check_name)
+  assert.deepEqual(mat, [], `lối giữ làm mất dòng kiểm khác: ${mat.join(", ")}`)
+  assert.deepEqual(dong, mong, "lối giữ phải giữ nguyên id và nội dung mọi dòng kiểm khác")
+  assert.equal(dong.filter((d) => d.check_name === "s03-moc-ngay").length, 0, "lối giữ không được còn dòng s03-moc-ngay")
+  assert.deepEqual(await milestonesGiu(), truoc, "facts.milestones phải không đổi")
+  assert.deepEqual(truoc.map((r) => r.time_window), ["30d", "7d", "all"])
+  for (const r of truoc) assert.deepEqual(r.m, MONG, `facts.milestones cửa sổ ${r.time_window}`)
+}
+test("SM1-AC-6 lối giữ ở máy thu", { timeout: 180_000 }, async () => {
+  await kiemLoiGiu(LOC_GIU)
+})
+test("SM1-AC-6 lối giữ ở máy thu: đột biến lọc nhầm NOT LIKE 's03%' thì đỏ, thông điệp nêu s03-floor-fill", { timeout: 180_000 }, async () => {
+  await assert.rejects(() => kiemLoiGiu(doi(LOC_GIU, "check_name <> 's03-moc-ngay'", "check_name NOT LIKE 's03%'")), /s03-floor-fill/)
+})
+
 function kiemKhoiCu(normalize: (raw: FlowFacts) => FlowFacts) {
   const { milestones: _bo, ...cu } = { sources: [], days: [], groups: [], shortStay: {}, mix: {}, enrichPending: 0, milestones: [] }
   void _bo
@@ -287,6 +339,68 @@ test("SM1-AC-7 đột biến tính cả hôm nay vào đứng yên thì ca sáng
   const mod = await dataDotBien((s) => doi(s, "[at(1), at(2), at(3)]", "[at(0), at(1), at(2)]"))
   const ca = MA_TRAN_NGAY.find(([ten]) => ten.startsWith("sáng sớm"))!
   assert.throws(() => assert.deepEqual(ketCuc(mod, ca[1]), ca[2]), /dungYen/)
+})
+
+// Đầu-cuối: 600 thật qua bốn ngày liền, đọc bằng getDataFlow rồi dựng vùng số mốc. Bốn tin S03 cố định, số đổi giữa các ngày theo bảng viết trước.
+const NGAY_MS = 86400000
+const TIN_THEM: Offer[] = [
+  ["o4", "S03", "sale", "apartment", 3_000_000_000, 80, "vn-hanoi-a", IN, [], false],
+  ["o5", "S03", "rent_lt", "apartment", 9_000_000, 60, "vn-hanoi-a", IN, [], false],
+]
+const BON_NGAY: Milestone[] = [
+  { ngay: "2026-10-23", offers_total: 4, project_linked: 1, building_linked: 0, project_ranked: 2, building_ranked: 0 },
+  { ngay: "2026-10-24", offers_total: 4, project_linked: 2, building_linked: 0, project_ranked: 2, building_ranked: 1 },
+  { ngay: "2026-10-25", offers_total: 4, project_linked: 3, building_linked: 0, project_ranked: 2, building_ranked: 1 },
+  { ngay: "2026-10-26", offers_total: 4, project_linked: 3, building_linked: 0, project_ranked: 3, building_ranked: 1 },
+]
+/** Làm tươi bốn ngày, trả DataFlow đọc qua getDataFlow ở chế độ máy thu. */
+async function dungBonNgay(): Promise<DataFlow> {
+  await noiAdmin()
+  const s = `"${S_BON_NGAY}"`
+  await makeFlowSchema(admin, S_BON_NGAY, { offers: [...OFFERS, ...TIN_THEM] })
+  const duAn = (id: string) => admin.query(`INSERT INTO ${s}.offer_project (offer_id, source, project_node_id, status) VALUES ($1, 'S03', 1, 'mot_du_an')`, [id])
+  const hang = (id: string, cap: string) => admin.query(`INSERT INTO ${s}.offer_price_rank (offer_id, kind, cap, hang_pct, run_id) VALUES ($1, 'sale', $2, 40, 'sm')`, [id, cap])
+  const buoc = [
+    async () => {
+      await duAn("o1")
+      await hang("o1", "du_an")
+      await hang("o4", "du_an")
+    },
+    async () => {
+      await duAn("o2")
+      await admin.query(`UPDATE ${s}.offer_price_rank SET cap = 'toa' WHERE offer_id = 'o4'`)
+    },
+    async () => void (await duAn("o4")),
+    async () => void (await hang("o2", "du_an")),
+  ]
+  for (const [i, lam] of buoc.entries()) {
+    await lam()
+    await refreshFlow(S_BON_NGAY, { now: NOW - (3 - i) * NGAY_MS })
+  }
+  const c = new pg.Client({ connectionString: schemaUrl(S_BON_NGAY) })
+  await c.connect()
+  try {
+    const { getDataFlow } = await import("../src/lib/data-flow-queries")
+    return await getDataFlow("7d", { now: NOW, mode: "local", query: (text, values) => c.query(text, values) })
+  } finally {
+    await c.end()
+  }
+}
+test("SM1-AC-7 đầu-cuối bốn ngày: mức đổi từng ô, cờ đúng ô đứng yên, ô đối chứng không có cờ", { timeout: 120_000 }, async () => {
+  const flow = await dungBonNgay()
+  assert.deepEqual(flow.milestones, BON_NGAY, "chuỗi đọc qua getDataFlow phải đúng số viết trước")
+  const root = await dung(flow)
+  const CO = "Đứng yên 2 ngày"
+  const ketQua = Object.fromEntries(NHAN_O.map((n) => {
+    const o = txt(oCua(root, n))
+    return [n, { doi: /[+−]\d+ so với hôm trước|Không đổi so với hôm trước/.exec(o)?.[0], dungYen: o.includes(CO) }]
+  }))
+  assert.deepEqual(ketQua, {
+    "Có dự án": { doi: "Không đổi so với hôm trước", dungYen: false }, // ô đối chứng: hôm nay bằng hôm qua nhưng các ngày chốt có đổi
+    "Khớp toà": { doi: "Không đổi so với hôm trước", dungYen: true },
+    "Có hạng cấp dự án": { doi: "+1 so với hôm trước", dungYen: true },
+    "Có hạng cấp toà": { doi: "Không đổi so với hôm trước", dungYen: false },
+  })
 })
 
 // ---------- AC-8: năm DataFlow viết trước ----------
@@ -372,4 +486,27 @@ test("SM1-AC-8 có ô đứng yên: đúng ô đó mang cờ «Đứng yên 2 ng
   const root = await dung(DF_DUNG_YEN)
   assert.match(txt(oCua(root, "Có hạng cấp dự án")), /Đứng yên 2 ngày/)
   assert.doesNotMatch(txt(oCua(root, "Có dự án")), /Đứng yên 2 ngày/, "ô có số đổi không mang cờ")
+})
+
+test("SM1-AC-8 khung tải: đúng bốn ô, mỗi ô có Skeleton", { timeout: 60_000 }, async () => {
+  const { MilestoneTrendSkeleton } = await import("../src/components/ops/data-flow/milestone-trend")
+  const root = await render(<MilestoneTrendSkeleton />)
+  const luoi = root.querySelector(".grid")
+  assert.ok(luoi, "khung tải phải có lưới ô")
+  assert.deepEqual([...luoi.children].map((o) => o.querySelectorAll('[data-slot="skeleton"]').length > 0), [true, true, true, true])
+})
+test("SM1-AC-8 số dòng chảy lỗi trên cloud: Alert có nút Thử lại, không có vùng số mốc, không có chữ trạng thái trống", { timeout: 60_000 }, async () => {
+  const { DataFlowView } = await import("../src/components/ops/data-flow/data-flow-view")
+  const flow = {
+    ...DF_DU_NGAY, window: "7d", since: null, records: [], reviewPending: 0, mode: "cloud",
+    computedAt: null, factsState: "error", factsError: "khối lỗi",
+  } as DataFlow
+  const root = await render(<DataFlowView flow={flow} roles={{}} nowMs={NOW} xemBaiGoc />)
+  const alert = root.querySelector("[data-flow-error]")
+  assert.ok(alert, "phải có Alert lỗi của trang")
+  assert.match(txt(alert), /Số dòng chảy không đo được/)
+  assert.ok([...alert.querySelectorAll("button")].some((b) => txt(b) === "Thử lại"), "Alert phải có nút Thử lại")
+  assert.equal(root.querySelector("[data-milestone-trend]"), null, "không được hiện vùng số mốc")
+  assert.doesNotMatch(txt(root), /Số mốc S03 theo ngày/)
+  assert.doesNotMatch(txt(root), /Chưa có số mốc theo ngày/, "không được hiện chữ trạng thái trống")
 })

@@ -41,6 +41,8 @@ Mọi số đếm trên tin S03 đang rao (view `sale_offers`), tại lượt l�
 `push-ops-facts` đã chở nguyên `facts` của ba cửa sổ trong khối `dataFlow`, nên số mốc lên cloud mà không đổi tệp đó và không
 thêm bảng hay cột cloud. Khối cũ không có khoá `milestones` thì app đọc thành mảng rỗng.
 
+Dòng `s03-moc-ngay` cũng lên bảng `dq_check_results` của cloud qua `sync-cloud` có sẵn (bảng nằm trong `FILL`). Lượt đồng bộ tráo trọn bảng theo máy thu nên xoá rồi ghi ở máy thu không làm cloud tích dòng. Màn đọc số từ `facts`, không đọc dòng này ở cloud. Cho lên cloud hay không là câu Hỏi-4 của Cổng Phạm vi.
+
 ## 5. Mức đổi và cờ đứng yên
 
 Hàm thuần `milestoneTiles` (`milestone-trend-data.ts`), React chỉ đọc kết quả.

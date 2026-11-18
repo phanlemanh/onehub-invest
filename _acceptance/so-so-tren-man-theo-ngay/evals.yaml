@@ -15,7 +15,7 @@ evals:
     layer: backend-effect
     cmd: bash _acceptance/so-so-tren-man-theo-ngay/probes/db.sh SM1-AC-2
     paths: [pipeline/sql/600_data_flow.sql, pipeline/lib/than-600.mjs, pipeline/tests/so-moc-s03*]
-    expected: "Ma trận tin viết trước qua lượt làm tươi thật: mỗi ô một assert về offers_total, project_linked, building_linked, project_ranked, building_ranked. Ba đột biến trên chính câu 600 (bỏ lọc nguồn, chỉ cap du_an, đếm cả hạng không điểm) đỏ, thông điệp nêu tên cột."
+    expected: "Ma trận tin viết trước qua lượt làm tươi thật: mỗi ô một assert về offers_total, project_linked, building_linked, project_ranked, building_ranked, có ô bán, ô thuê và đối chứng dương nối toa_link cho building_linked = 1. Năm đột biến trên chính câu 600 (bỏ lọc nguồn, chỉ cap du_an, đếm cả hạng không điểm, chỉ đếm tin bán, đặt cứng building_linked bằng 0) đỏ, thông điệp nêu tên cột."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3
     criterion: AC-3
@@ -23,7 +23,7 @@ evals:
     layer: backend-effect
     cmd: bash _acceptance/so-so-tren-man-theo-ngay/probes/db.sh SM1-AC-3
     paths: [pipeline/sql/600_data_flow.sql, pipeline/refresh-data-flow.mjs, pipeline/tests/so-moc-s03*]
-    expected: "Ghim oneinvest.flow_now: làm tươi lại cùng ngày giữ một dòng, số mới; ngày kế thêm dòng, dòng cũ không đổi. Đột biến ném lỗi sau bước ghi: hai bảng giữ số cũ, thông điệp nêu giao dịch."
+    expected: "Ghim oneinvest.flow_now: làm tươi lại cùng ngày giữ một dòng, số mới; ngày kế thêm dòng, dòng cũ không đổi; 16:59Z và 17:01Z ra hai ngày VN khác nhau, đột biến lấy ngày UTC đỏ. Đột biến ném lỗi sau bước ghi: hai bảng giữ số cũ, thông điệp nêu giao dịch."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4
     criterion: AC-4
@@ -47,21 +47,21 @@ evals:
     layer: backend-effect
     cmd: bash _acceptance/so-so-tren-man-theo-ngay/probes/app.sh SM1-AC-6
     paths: [pipeline/push-ops-facts.mjs, app/src/lib/data-flow-queries.ts, app/tests/so-moc-s03*]
-    expected: "Khối dataFlow do push-ops-facts thật dựng mang milestones; getDataFlow chế độ cloud trả đúng giá trị; khối cũ thiếu khoá thành mảng rỗng; factsChan không báo chặn. Đột biến normalizeFacts bỏ khoá milestones làm ca đỏ."
+    expected: "Khối dataFlow do push-ops-facts thật dựng mang milestones; getDataFlow chế độ cloud trả đúng giá trị; khối cũ thiếu khoá thành mảng rỗng; factsChan không báo chặn; lọc check_name khác s03-moc-ngay giữ nguyên mọi dòng kiểm khác và facts.milestones. Đột biến normalizeFacts bỏ khoá milestones làm ca đỏ."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E7
     criterion: AC-7
     executor: test
     cmd: bash _acceptance/so-so-tren-man-theo-ngay/probes/app.sh SM1-AC-7
     paths: [app/src/components/ops/data-flow/milestone-trend-data.ts, app/tests/so-moc-s03*]
-    expected: "Ma trận chuỗi ngày viết trước, một assert mỗi ca: tăng, giảm, không đổi, thiếu ngày trước, ba ngày chốt bằng nhau, hai ngày chốt bằng nhau, hôm nay bằng hôm qua, ngày trống, số 0. Đột biến tính cả hôm nay vào đứng yên làm ca sáng sớm đỏ."
+    expected: "Ma trận chuỗi ngày viết trước, một assert mỗi ca: tăng, giảm, không đổi, thiếu ngày trước, ba ngày chốt bằng nhau, hai ngày chốt bằng nhau, hôm nay bằng hôm qua, ngày trống, số 0. Đột biến tính cả hôm nay vào đứng yên làm ca sáng sớm đỏ. Ca đầu-cuối: 600 thật qua bốn ngày ghim, getDataFlow, dựng vùng, đúng mức đổi và cờ đúng ô, có ô đối chứng không cờ."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E8
     criterion: AC-8
     executor: test
     cmd: bash _acceptance/so-so-tren-man-theo-ngay/probes/app.sh SM1-AC-8
     paths: [app/src/components/ops/data-flow/milestone-trend.tsx, app/src/components/ops/data-flow/milestone-trend-data.ts, app/src/components/ops/data-flow/data-flow-view.tsx, app/tests/so-moc-s03*]
-    expected: "Dựng vùng với năm DataFlow viết trước: đúng chữ từng trạng thái (trống có nút Tải lại, một ngày, đủ, đứng yên, khối thiếu khoá), bốn nhãn, phần trăm, bảng ẩn có số từng ngày. Đột biến đổi mẫu số phần trăm làm ca đỏ."
+    expected: "Dựng vùng với năm DataFlow viết trước: đúng chữ từng trạng thái (trống có nút Tải lại, một ngày, đủ, đứng yên, khối thiếu khoá), bốn nhãn, phần trăm, bảng ẩn có số từng ngày; khung tải bốn ô; số dòng chảy lỗi thì có cảnh báo và nút Thử lại, không có vùng số mốc. Đột biến đổi mẫu số phần trăm làm ca đỏ."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E9
     criterion: AC-9
