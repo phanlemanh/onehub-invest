@@ -9,11 +9,11 @@ reaction: nac-1 (anh-chup-qua-phien-phu)
 options:
 divergence: skipped — màn đã có khuôn bảng kèm sheet từ CG8–CG10, chỉ một khuôn khả dĩ
 ds_skill: onehub-ui
-states: [mac-dinh, du-an-1, cho-thue, tab-trong, cay-vi-tri, dang-tai]
+states: [mac-dinh, du-an-1, cho-thue, tab-trong, tab-con-thieu, cay-vi-tri, dang-tai]
 breakpoints: [mobile-390, desktop-1440]
 themes: [light, dark]
 patched: 9
-deferred: 1
+deferred: 2
 ---
 # design-pass — can-gia-tot-loc-xep-hang
 
@@ -63,6 +63,9 @@ Chưa xem trên màn: lỗi kèm «Thử lại», tập rỗng, lược đồ cl
 | cay-vi-tri · quan-tri | desktop-1440 | light | evidence/design-pass/cay-vi-tri--sang--quan-tri.jpg |
 | cay-vi-tri · quan-tri | mobile-390 | light | evidence/design-pass/cay-vi-tri--hep-390--quan-tri.jpg |
 | dang-tai · quan-tri | desktop-1440 | light | evidence/design-pass/dang-tai--sang--quan-tri.jpg |
+| tab-con-thieu · nguoi-xem | mobile-390 | light | evidence/design-pass/tab-con-thieu--hep-390--nguoi-xem.jpg |
+| tab-con-thieu · nguoi-xem | desktop-1440 | light | evidence/design-pass/tab-con-thieu--sang--nguoi-xem.jpg |
+| tab-con-thieu · nguoi-xem | desktop-1440 | dark | evidence/design-pass/tab-con-thieu--toi--nguoi-xem.jpg |
 
 ## Cảnh ngữ-cảnh
 
@@ -85,3 +88,4 @@ Chưa xem trên màn: lỗi kèm «Thử lại», tập rỗng, lược đồ cl
 ### Nhóm 2 — đòi-đổi-DS/component (chờ Gate 1)
 
 - Badge đầu trang 10 px nằm ở `PageHeader` dùng chung cho mọi trang, ngoài vòng này.
+- Khổ 390 px: mở thẳng tab «Còn thiếu» thì tab đang chọn nằm ngoài vùng nhìn của hàng tab, dòng không có nhãn tình trạng. Mức thấp, ghi giới hạn ở Cổng Bằng chứng.
