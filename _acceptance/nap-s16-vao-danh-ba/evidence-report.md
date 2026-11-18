@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 09f6e90a11d8bdeb2fc65cb4bcc6f7b97fded1a4
+verified_commit: 74d734c2230a61844ba582d92697db856a71cbb3
 human_signoff: Mạnh 2026-11-17
 ---
 
@@ -190,3 +190,7 @@ sha: c0854799fef194766dfae47171b1cd96c7d9f5d7 · suites: 7 lệnh exit 0 · eval
 ### Re-pin lần 2 — 2026-11-18, do gộp main vào nhánh DA37 trước Cổng Bằng chứng
 run_id: repin-20261118T112023Z-96541
 sha: 09f6e90a11d8bdeb2fc65cb4bcc6f7b97fded1a4 · suites: 7 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng
+
+### Re-pin lần 3 — 2026-11-18, do khai báo bốn tệp test cho view và phép đo của DA37 sau CI PR 490
+run_id: repin-20261118T133557Z-71268
+sha: 74d734c2230a61844ba582d92697db856a71cbb3 · suites: 7 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng
