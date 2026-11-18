@@ -5426,6 +5426,57 @@
         "pipeline/sql"
       ],
       "ghi_chu": "Chỉ Ops. Lên cổng Invest chờ Mạnh trả lời câu ở Cổng Phạm vi của DA40 (luật 5 sửa 08/11 cho giá chủ đầu tư của nguồn dự án công khai nhưng chưa gọi tên S16)."
+    },
+    {
+      "ma": "DA42",
+      "slug": "nap-s09-toa-tang-vao-danh-ba",
+      "dot": "danh-ba-can-s09-1811",
+      "nhom": "l04-danh-ba-toa",
+      "phu": [
+        "K1"
+      ],
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 10,
+      "dung_tren": [
+        "DA37",
+        "DA31"
+      ],
+      "cau_giao": "Dự án, toà, tầng và khu, căn thấp tầng của danh bạ căn S09 vào danh bạ mà không sinh toà, căn trùng với S16 và S08 đã có; khi hai nguồn cùng có một toà thì theo luật S16 thắng cấu trúc (DA37) và toà S09 thành bí danh",
+      "bat_khi": "Trên DB máy thu và trang Danh bạ Ops máy thu: snapshot gói 1 của S09 nạp vào stg qua migration 115, số dự án, toà, tầng, khu, căn thấp tầng khớp manifest; số toà và căn thấp tầng S09 trong danh bạ đi từ hiện trạng lên đúng lệnh đếm (đích chốt ở S1 từ bảng phủ ca, số làn thu đo 18/11: 928 toà, 91 khu); 0 toà hai UPI, 0 căn hai khoá với S16, S08; toà trùng thành bí danh, lệch lên thẻ; chạy lại không đổi số; mọi thứ rời máy chỉ mang mã S09",
+      "vi_sao": "Mạnh 18/11 04:06Z «Đồng ý» kế hoạch danh bạ căn S09. Danh bạ toà, căn hôm nay chủ yếu từ S16 và S08 ở các dự án của một chủ đầu tư; S09 có 221 dự án ở 14 tỉnh, 928 toà, không thiên một chủ đầu tư — mở danh bạ cho các dự án mà tin rao S03, S06 đang không gắn được toà.",
+      "vung": [
+        "db/migrations",
+        "pipeline/danh-ba-vat-the.mjs",
+        "pipeline/lib/danh-ba-vat-the.mjs",
+        "pipeline/lib/s09-danh-ba-can.mjs"
+      ],
+      "ghi_chu": "Dãy P2, sau khi DA37 gộp (GS xếp 18/11). Migration 115 (sổ số GS 18/11: 111+114 DA37, 112 U1, 113 DA40, 115 S09, 116 giữ tạm, kế 117). Khuôn DA33. Làn thu: thu gói 1 (đã cho thu ngay theo lời thường trực 13–14/11), DATA-CONTRACT tăng schemaVersion, bộ nạp stg — việc làn thu, không phải hàng. Mã bền S09 khác block_id insights S09 cũ: ánh xạ qua tên toà và mã dự án. S1 lập bảng phủ ca từ snapshot gói 1 và năm dự án mẫu trùng danh bạ (làn thu gửi, tin claudedp-1811-6)."
+    },
+    {
+      "ma": "DA43",
+      "slug": "nap-s09-can-cao-tang-vao-danh-ba",
+      "dot": "danh-ba-can-s09-1811",
+      "nhom": "l04-danh-ba-toa",
+      "phu": [
+        "K2"
+      ],
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "dung_tren": [
+        "DA42"
+      ],
+      "cau_giao": "Căn cao tầng của danh bạ căn S09 (mã TOÀ.TẦNG.CĂN) vào danh bạ dưới toà đã có mà không sinh căn trùng với S16 và S08; căn trùng thành bí danh của cùng căn",
+      "bat_khi": "Trên DB máy thu và trang Danh bạ Ops máy thu: snapshot gói 2 nạp khớp manifest; số căn cao tầng S09 trong danh bạ đi từ 0 lên đúng lệnh đếm (làn thu ước 18/11 khoảng 309 nghìn, dải 237–379 nghìn; đích chốt ở S1); 0 căn hai khoá; căn trùng mã S16, S08 thành bí danh, lệch tầng hoặc toà lên thẻ; chạy lại không đổi số",
+      "vi_sao": "Nhịp sau của DA42: toà, tầng đã vào danh bạ thì căn cao tầng đứng dưới đúng toà. Tách khỏi DA42 vì cỡ (gộp hai gói quá 12 tiêu chí) và vì gói 2 (khoảng 26 nghìn lời, khoảng 22 giờ) chỉ thu khi hàng này qua Cổng Phạm vi.",
+      "vung": [
+        "db/migrations",
+        "pipeline/danh-ba-vat-the.mjs",
+        "pipeline/lib/danh-ba-vat-the.mjs",
+        "pipeline/lib/s09-danh-ba-can.mjs"
+      ],
+      "ghi_chu": "Dãy P2, sau DA42. Làn thu thu gói 2 theo tỉnh, chia đêm, chỉ khi hàng này qua Cổng Phạm vi — Cổng Phạm vi chốt trường cần thu để khỏi thu thừa."
     }
   ],
   "chan_troi": [
