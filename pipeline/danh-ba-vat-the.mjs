@@ -119,10 +119,10 @@ export async function dung(c, {
     const { rows: bd } = await c.query(
       "SELECT value, object_key FROM registry_aliases WHERE retired_at IS NULL AND kind = 'ma_nguon' AND source = $1", [NGUON_DANH_MUC]);
     const biDanh = new Map(bd.map((r) => [r.value, r.object_key]));
-    // DA33 §5.5: toà, trục, căn S16 đã có của khu — bước S08 gắn bí danh vào chúng thay vì đúc; lệch toà → thẻ.
+    // DA33 §5.5: toà, trục, căn S16 đã có của khu — bước S08 gắn bí danh vào chúng thay vì đúc; lệch toà → căn S08 gộp vào căn
+    // S16 sau khi ghi (DA37 Q-B).
     const s16TheoKhu = await napS16TheoKhu(c, khuIds);
     const kh = keHoachDung({ dongS08: s08, biDanh, phanKhuTheoKhu, s16TheoKhu });
-    const ganLech = await ganLechS16(c, kh.lechS16);
 
     // Ghi: toà → trục → căn → bí danh.
     const toaMoi = kh.toa.filter((t) => t.moi);
@@ -149,6 +149,7 @@ export async function dung(c, {
                      SELECT k, 'ma_nguon', v, $3 FROM unnest($1::text[], $2::text[]) AS x(k, v)`,
                     [kh.biDanhMoi.map((b) => b.object_key), kh.biDanhMoi.map((b) => b.value), NGUON_DANH_MUC]);
     }
+    const ganLech = await ganLechS16(c, kh.lechS16);
     // Tên toà (S08) làm bí danh tên để khớp phát biểu trên tin.
     await c.query(`INSERT INTO registry_aliases (object_key, kind, value, source)
                    SELECT k, 'ten', v, $3 FROM unnest($1::text[], $2::text[]) AS x(k, v)
@@ -251,7 +252,7 @@ export async function dung(c, {
       ly_do_phuong: lyDoPhuong,
       s09,
       s16,
-      s08_lech_s16: ganLech.choNghi, s08_bi_danh_can_s16: ganLech.biDanh,
+      s08_lech_s16: ganLech.choNghi, s08_gop_vao_s16: ganLech.gop,
     };
   } catch (e) {
     await c.query("ROLLBACK").catch(() => {});

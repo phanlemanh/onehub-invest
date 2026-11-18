@@ -314,19 +314,17 @@ export async function napS16TheoKhu(c, khuIds) {
 }
 
 /**
- * Bước S08 đi sau S16, căn S16 cùng mã nằm ở toà khác (Q-B, DA37): S16 thắng — bí danh S08 gắn vào căn S16, thẻ lệch cũ
- * cho nghỉ; không đúc căn S08, không thẻ mới. Trả { biDanh, choNghi }.
+ * Bước S08 đi sau S16, căn S16 cùng mã nằm ở toà khác (Q-B, DA37): S16 thắng — căn S08 vừa đúc ở toà S08 (bí danh S08 trên
+ * nó) gộp vào căn S16, thẻ lệch cũ cho nghỉ; không thẻ mới. Cùng trạng thái với thứ tự S08 trước (buocS16 gộp). Gọi SAU khi
+ * ghi căn. Trả { gop, choNghi }.
  */
 export async function ganLechS16(c, lech) {
-  let biDanh = 0, choNghi = 0;
+  let gop = 0, choNghi = 0;
   for (const l of lech) {
-    const r = await c.query(
-      `INSERT INTO registry_aliases (object_key, kind, value, source)
-       SELECT $1, 'ma_nguon', $2, 'S08'
-        WHERE NOT EXISTS (SELECT 1 FROM registry_aliases WHERE source = 'S08' AND kind = 'ma_nguon' AND value = $2 AND retired_at IS NULL)`,
-      [l.khoa_can, l.v]);
-    biDanh += r.rowCount;
+    const r = await c.query("UPDATE units SET status = 'merged', merged_into = $2 WHERE unit_key = $1 AND status = 'active'",
+      [l.khoa_s08, l.khoa_can]);
+    gop += r.rowCount;
     choNghi += await choNghiTheLech(c, s16Ref(l.du_an, l.ma));
   }
-  return { biDanh, choNghi };
+  return { gop, choNghi };
 }

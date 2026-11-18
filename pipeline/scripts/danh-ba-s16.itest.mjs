@@ -369,16 +369,15 @@ test("DA33-AC-7 chiều đỏ: bỏ tra bí danh S16 trong bước S08 thì mã 
   assert.equal((await theoMa(c, "Q12-11-01")).so_can, 2, "đối chứng thứ tự: đột biến không làm mã chung thành hai căn");
 });
 
-test("DA33-AC-7 chiều đỏ (DA37 Q-B): bỏ bước gắn bí danh S08 vào căn S16 lệch toà thì căn sống thiếu bí danh S08", async () => {
+test("DA33-AC-7 chiều đỏ (DA37 Q-B): bỏ bước gộp căn S08 lệch toà vào căn S16 thì mã lệch thành hai căn sống", async () => {
   const c = await dbMoi("d2");
   await moiDuLieu(c, { s08: false });
   await chay(c);
   await moiDuLieu(c, { s16: false });
   await banDotBien([
-    { tep: "pipeline/danh-ba-vat-the.mjs", thay: [["const ganLech = await ganLechS16(c, kh.lechS16);", "const ganLech = { biDanh: 0, choNghi: 0 };"]] },
+    { tep: "pipeline/danh-ba-vat-the.mjs", thay: [["const ganLech = await ganLechS16(c, kh.lechS16);", "const ganLech = { gop: 0, choNghi: 0 };"]] },
   ], (m) => chayVoi(m, c));
-  const x = await theoMa(c, "Q12-11-05");
-  assert.equal(x.s08, 0, "đối chứng Q-B: đột biến bỏ gắn bí danh mà căn sống vẫn có bí danh S08");
+  assert.equal((await theoMa(c, "Q12-11-05")).so_can, 2, "đối chứng Q-B: đột biến bỏ gộp mà mã lệch vẫn một căn sống");
 });
 
 test("DA33-AC-6 chiều đỏ: bỏ tra căn S08 thì mã S08 cùng toà có căn trùng", async () => {
