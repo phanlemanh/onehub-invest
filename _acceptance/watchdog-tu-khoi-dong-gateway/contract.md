@@ -59,14 +59,15 @@ là stub ghi sổ; không lượt nào chạm `~/.openclaw` thật, gateway th�
   `osascript`, `curl`, `date`, `openclaw` dưới env lượt hoặc nằm trong thư mục tạm hoặc vắng; `$HOME/.openclaw/bin/openclaw`
   của lượt là CLI giả; bản chép không còn đường tuyệt đối nào tới checkout thật, `~/dev` hay `.openclaw` ngoài `$HOME`.
   Harness thoát 2 KHÔNG spawn watchdog khi HOME lượt là HOME thật, một stub vắng, hay CLI giả vắng (ca đỏ: gỡ stub
-  `launchctl` → từ chối, 0 spawn; gỡ CLI giả → từ chối, 0 spawn). Alerts log, `zalo-watchdog.log`, `zalo-watchdog-p1.log` thật
-  của checkout chính: phần có trước bộ giữ nguyên băm, phần nối thêm không chứa dòng nào của các lượt; `zalo-watchdog-p1-state`,
+  `launchctl` → từ chối, 0 spawn; gỡ CLI giả → từ chối, 0 spawn). Alerts log và `zalo-watchdog-p1.log` thật của checkout chính:
+  phần có trước bộ giữ nguyên băm, phần nối thêm không chứa dòng nào của các lượt; `zalo-watchdog.log` thật (watchdog thật cắt
+  về 500 dòng mỗi lượt): không chứa dòng nào của các lượt; `zalo-watchdog-p1-state`,
   `zalo-watchdog-p1-tat` thật và tệp trạng thái heartbeat thật: cùng trạng thái có/vắng và cùng băm trước và sau bộ.
 - AC-8: Given đủ điều kiện kickstart, When công tắc tắt bật — env `ZALO_WATCHDOG_P1_TAT=1` hoặc tệp
   `pipeline/logs/zalo-watchdog-p1-tat` — Then 0 lời kickstart; gỡ công tắc thì lượt kế khởi động lại (đối chứng dương).
 - AC-9: Given một lần tự khởi động lại đã xảy ra, When chạy `tail -1 pipeline/logs/zalo-watchdog-p1.log`, Then dòng in có
-  mốc ISO, chữ `VHZ2 kickstart`, số giây L6(b) đỏ, và `reason=<session|stopped|unknown>` khi tệp heartbeat có lý do (rỗng khi
-  vắng); dòng khớp khuôn `^\S+ VHZ2 kickstart — lý do: L6\(b\) đỏ [0-9]+s; heartbeat reason=(session|stopped|unknown)?$`.
+  mốc ISO, chữ `VHZ2 kickstart`, số giây L6(b) đỏ, và `reason=<session|stopped|unknown>` khi tệp heartbeat có lý do (`na` khi
+  vắng); dòng khớp khuôn `^\S+ VHZ2 kickstart — lý do: L6\(b\) đỏ [0-9]+s; heartbeat reason=(session|stopped|unknown|na)$`.
 - AC-10: Given nhánh này, When chạy 8 ca của ZCode (`zalo-watchdog-vhz2.test.mjs`), harness L6 (`s03_song_lib`,
   `s03_song_tron`, `s03_song_bien`), harness VHZ1 (`s03_hb_nghiem_thu`, `s03_hb_chan`) và kiểm cú pháp bash, Then tất cả xanh.
 

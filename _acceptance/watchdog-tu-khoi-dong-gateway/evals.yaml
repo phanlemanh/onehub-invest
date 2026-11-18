@@ -74,7 +74,7 @@ evals:
     executor: script
     cmd: config:executors.script.vhz2_nghiem_thu
     paths: [scripts/zalo-watchdog.sh, scripts/watchdog-tu-khoi-dong-gateway/acceptance.mjs]
-    expected: "exit 0; 'PASS SO-P1': tail -1 zalo-watchdog-p1.log khớp ^\\S+ VHZ2 kickstart — lý do: L6\\(b\\) đỏ [0-9]+s; heartbeat reason=(session|stopped|unknown)?$ ở ca 09/11 (reason=stopped), ca 13/11 (reason=session) và ca không có tệp heartbeat (reason rỗng)"
+    expected: "exit 0; 'PASS SO-P1': tail -1 zalo-watchdog-p1.log khớp ^\\S+ VHZ2 kickstart — lý do: L6\\(b\\) đỏ [0-9]+s; heartbeat reason=(session|stopped|unknown|na)$ ở ca 09/11 (reason=stopped), ca 13/11 (reason=session) và ca không có tệp heartbeat (reason=na)"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E10
