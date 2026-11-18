@@ -77,6 +77,22 @@
       "port": 3461
     },
     {
+      "name": "app-3461-cg3",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "SNAPSHOTS_DIR=../../../../collector/snapshots",
+        "npm",
+        "--prefix",
+        "/Users/manhphan/dev/onehub-invest/.claude/worktrees/ops-deals-data-grid/app",
+        "run",
+        "dev",
+        "--",
+        "-p",
+        "3461"
+      ],
+      "port": 3461
+    },
+    {
       "name": "app-3462-do1",
       "runtimeExecutable": "env",
       "runtimeArgs": [
