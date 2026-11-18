@@ -1,6 +1,5 @@
 "use client"
 
-import { useRouter } from "next/navigation"
 import { CircleAlertIcon, RotateCwIcon } from "lucide-react"
 
 import { PageHeader } from "@/components/page/page-header"
@@ -37,10 +36,7 @@ export type DuAnProps = {
 
 /** Ô phủ «căn có thuộc tính / căn trong danh bạ» — số đã đếm ở SQL, ở đây chỉ định dạng. */
 function oPhu(p: PhuThuocTinh | null) {
-  if (!p) return []
-  if (p.trangThai === "khong-nguon") {
-    return [{ title: "Thuộc tính căn", value: "—", footer: "Chưa có nguồn thuộc tính căn" }]
-  }
+  if (!p || p.trangThai === "khong-nguon") return []
   const thu = p.lanThu ? `S16 · thu ${fmtVnDate(p.lanThu)}` : "S16"
   return [
     { title: "Căn có thuộc tính", value: `${fmtInt(p.coThuocTinh)} / ${fmtInt(p.trongDanhBa)}`, footer: `Trên căn trong danh bạ · ${thu}` },
@@ -50,7 +46,6 @@ function oPhu(p: PhuThuocTinh | null) {
 }
 
 export function DuAnView(p: DuAnProps) {
-  const router = useRouter()
   const crumbs = [{ label: "Vận hành", href: "/ops" }, { label: "Danh bạ", href: "/ops/registry" }, { label: p.ten }]
   const tin = Object.entries(p.tin).filter(([, n]) => n > 0)
   const stats = [
@@ -73,10 +68,15 @@ export function DuAnView(p: DuAnProps) {
       <div data-registry-tong="">
         <StatTiles items={oSo} />
       </div>
-      {oPhu(p.phuThuocTinh).length > 0 && (
-        <div data-thuoc-tinh-phu={p.phuThuocTinh?.trangThai}>
+      {p.phuThuocTinh?.trangThai === "co" && (
+        <div data-thuoc-tinh-phu="co">
           <StatTiles items={oPhu(p.phuThuocTinh)} />
         </div>
+      )}
+      {p.phuThuocTinh?.trangThai === "khong-nguon" && (
+        <p className="text-muted-foreground text-sm" data-thuoc-tinh-phu="khong-nguon">
+          Chưa có nguồn thuộc tính căn cho dự án này.
+        </p>
       )}
       {p.loiThuocTinh && (
         <Alert variant="destructive" data-thuoc-tinh-loi="">
@@ -86,7 +86,7 @@ export function DuAnView(p: DuAnProps) {
             <p>Lưới toà và căn vẫn đúng; chỉ cột thuộc tính và ô phủ chưa đọc được.</p>
           </AlertDescription>
           <AlertAction>
-            <Button variant="outline" size="sm" onClick={() => router.refresh()}>
+            <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
               <RotateCwIcon data-icon="inline-start" aria-hidden="true" />
               Thử lại
             </Button>

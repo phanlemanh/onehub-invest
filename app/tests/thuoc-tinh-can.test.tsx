@@ -137,3 +137,38 @@ test("TTC-AC-10 chiều đỏ: bỏ điều kiện một toà khi đếm «chưa
   assert.ok(p.ok && p.data.trangThai === "co")
   assert.notEqual(p.data.chuaVaoDanhBa, 1, "TTC-AC-10 lớp đọc phá vẫn ra N đúng — phép đếm không phân biệt")
 })
+
+// ---- Mức màn (TTC-AC-9, AC-10): render tĩnh component thật với dữ liệu lớp đọc trả về ----
+const ttMau = (o: Partial<Lop.ThuocTinhCan> = {}): Lop.ThuocTinhCan => ({ unitKey: can(1), thongThuy: 68.5, timTuong: 74.9, datDat: null, phongNgu: 2, wc: 1,
+  huong: ["northeast", "northwest"], loaiHinh: "apartment", giaCdt: 2_000_000_000, giaM2ThongThuy: 29_197_080, nguon: ["S16"], lanThu: "2026-11-18T01:00:00.000Z", ...o })
+const hang = (k: string, tt: Lop.ThuocTinhCan | null | undefined) => ({ key: k, laCan: true, ten: k, phu: "", bac: "xac_minh", nguon: ["S16"], soTruc: null, soCan: null,
+  ...(tt === undefined ? {} : { thuocTinh: tt }) })
+
+test("TTC-AC-9 lưới toà: căn có thuộc tính hiện số, hướng, loại hình, giá, nhãn S16 + mốc thu; căn chưa có hiện nhãn; thấp tầng hiện sàn + đất", async () => {
+  const { renderToStaticMarkup } = await import("react-dom/server")
+  const { DuAnToaGrid } = await import("../src/components/ops/registry/du-an-toa-grid")
+  const { fmtVnDate } = await import("../src/lib/format")
+  const html = renderToStaticMarkup(<DuAnToaGrid rows={[hang("C1", ttMau()), hang("C2", null), hang("C3", ttMau({ datDat: 84, thongThuy: 285, timTuong: null, loaiHinh: "house", huong: ["southwest"], giaCdt: null, giaM2ThongThuy: null })), hang("C4", undefined)]} />)
+  for (const chu of ["68,5 m²", "Tim tường 74,9 m²", "Đông Bắc · Tây Bắc", "Căn hộ", "2 tỷ", "29,2 tr/m² thông thuỷ", `Thu ${fmtVnDate("2026-11-18T01:00:00.000Z")}`, "Chưa có thuộc tính", "285 m² sàn", "Đất 84 m²", "Nhà riêng", "Tây Nam"]) {
+    assert.ok(html.includes(chu), `TTC-AC-9 lưới thiếu «${chu}»`)
+  }
+  assert.equal((html.match(/Chưa có thuộc tính/g) ?? []).length, 1, "TTC-AC-9 nhãn «Chưa có thuộc tính» chỉ ở căn null (C4 không đọc thì trống)")
+  assert.match(html, /data-thuoc-tinh="nguon"[\s\S]*?S16/, "TTC-AC-9 thiếu nhãn nguồn S16 ở ô thuộc tính")
+})
+
+test("TTC-AC-9, AC-10 trang dự án: ô phủ ba trạng thái; lỗi đọc giữ lưới và hiện «Thử lại»; không lỗi thì không có cảnh báo", async () => {
+  const { renderToStaticMarkup } = await import("react-dom/server")
+  const { DuAnView } = await import("../src/components/ops/registry/du-an-view")
+  const goc = { ten: "Q DA", biDanh: [], bac: "xac_minh", tinh: null, nguon: ["S16"], maNoi: [], soPhanKhu: 0, soToa: 1, toaChuaCan: 0, soTruc: 0, soCan: 4, tin: {}, rows: [hang("C1", ttMau())] }
+  const co = renderToStaticMarkup(<DuAnView {...goc} phuThuocTinh={{ trangThai: "co", trongDanhBa: 38135, coThuocTinh: 37589, coGia: 1850, chuaVaoDanhBa: 2, lanThu: "2026-11-18T01:00:00.000Z" }} loiThuocTinh={false} />)
+  for (const chu of ["Căn có thuộc tính", "37.589 / 38.135", "Căn có giá chủ đầu tư", "1.850", "Chưa vào danh bạ", "Toà và căn"]) assert.ok(co.includes(chu), `TTC-AC-10 ô phủ thiếu «${chu}»`)
+  assert.ok(!co.includes("Thử lại"), "TTC-AC-9 không lỗi mà có cảnh báo")
+  const khong = renderToStaticMarkup(<DuAnView {...goc} phuThuocTinh={{ trangThai: "khong-nguon" }} loiThuocTinh={false} />)
+  assert.ok(khong.includes("Chưa có nguồn thuộc tính căn") && !khong.includes("Căn có thuộc tính"), "TTC-AC-10 dự án không nguồn")
+  const loi = renderToStaticMarkup(<DuAnView {...goc} phuThuocTinh={null} loiThuocTinh={true} />)
+  assert.ok(loi.includes("Không tải được thuộc tính căn") && loi.includes("Thử lại") && loi.includes("Toà và căn"), "TTC-AC-9 lỗi đọc: thiếu cảnh báo, «Thử lại» hay mất lưới")
+  // React chỉ định dạng số của SQL: hàm ô phủ không đếm hay cộng trên hàng căn
+  const nguon = readFileSync(join(APP, "src/components/ops/registry/du-an-view.tsx"), "utf8")
+  const oPhu = nguon.slice(nguon.indexOf("function oPhu"), nguon.indexOf("export function DuAnView"))
+  assert.ok(oPhu.length > 0 && !/\.reduce\(|\.filter\(|\.length/.test(oPhu), "TTC-AC-10 ô phủ tự đếm trên dữ liệu thô")
+})
