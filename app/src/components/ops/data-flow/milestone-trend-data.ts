@@ -62,3 +62,10 @@ export function deltaLabel(delta: number | null): string {
   if (delta === 0) return "Không đổi so với hôm trước"
   return `${delta > 0 ? "+" : "−"}${fmtInt(Math.abs(delta))} so với hôm trước`
 }
+
+/** Khoảng số của đường trong cửa sổ đang xem: mỗi ô tự co trục nên độ dốc không so được giữa các ô. */
+export function rangeLabel(series: MilestonePoint[]): string {
+  const values = series.flatMap((p) => (p.value === null ? [] : [p.value]))
+  const [low, high] = [Math.min(...values), Math.max(...values)]
+  return low === high ? `Cả khoảng: ${fmtInt(low)}` : `Thấp nhất ${fmtInt(low)} · cao nhất ${fmtInt(high)}`
+}

@@ -13,10 +13,10 @@ import { Skeleton } from "@/components/ui/skeleton"
 import type { Milestone } from "@/lib/data-flow-queries"
 import { fmtInt, fmtPct } from "@/lib/format"
 
-import { deltaLabel, milestoneTiles, type MilestoneTile } from "./milestone-trend-data"
+import { deltaLabel, milestoneTiles, rangeLabel, type MilestoneTile } from "./milestone-trend-data"
 
 const TITLE = "Số mốc S03 theo ngày"
-const DESCRIPTION = "Tin S03 đang rao đạt từng mốc, chốt ở lượt làm tươi cuối mỗi ngày (giờ VN)"
+const DESCRIPTION = "Tin S03 đang rao đạt từng mốc, chốt ở lượt làm tươi cuối mỗi ngày (giờ VN). Ngày chưa có số để trống."
 
 /** "2026-11-18" → "18/11". */
 const dayLabel = (d: string) => `${Number(d.slice(8, 10))}/${Number(d.slice(5, 7))}`
@@ -25,13 +25,32 @@ function TileChart({ tile }: { tile: MilestoneTile }) {
   const config = { value: { label: tile.label, theme: themeOf("flowOffers") } } satisfies ChartConfig
   const data = tile.series.map((p) => ({ day: dayLabel(p.day), value: p.value }))
   return (
-    <ChartContainer config={config} className="aspect-auto h-20 w-full">
-      <LineChart accessibilityLayer data={data} margin={{ top: 6, bottom: 0, left: 6, right: 6 }}>
+    <ChartContainer config={config} className="aspect-auto h-24 w-full">
+      <LineChart accessibilityLayer data={data} margin={{ top: 6, bottom: 6, left: 16, right: 16 }}>
         <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
-        <XAxis dataKey="day" hide />
+        <XAxis
+          dataKey="day"
+          ticks={[data[0].day, data[data.length - 1].day]}
+          interval={0}
+          height={20}
+          tickLine={false}
+          axisLine={false}
+          tick={{ fontSize: 12 }}
+        />
         {/* Mỗi ô một trục riêng: các mốc chênh nhau hàng nghìn lần. */}
         <YAxis hide domain={["auto", "auto"]} />
-        <ChartTooltip content={<ChartTooltipContent indicator="dot" />} />
+        <ChartTooltip
+          content={
+            <ChartTooltipContent
+              indicator="dot"
+              formatter={(value) => (
+                <span className="tabular-nums">
+                  {tile.label}: {fmtInt(Number(value))}
+                </span>
+              )}
+            />
+          }
+        />
         <Line dataKey="value" type="linear" stroke="var(--color-value)" strokeWidth={2} dot={{ r: 2 }} isAnimationActive={false} />
       </LineChart>
     </ChartContainer>
@@ -54,7 +73,11 @@ function Tile({ tile }: { tile: MilestoneTile }) {
         </div>
         <span className="text-muted-foreground text-xs tabular-nums">{deltaLabel(tile.delta)}</span>
       </div>
-      <TileChart tile={tile} />
+      <div className="flex flex-col gap-1">
+        <TileChart tile={tile} />
+        {/* Mỗi ô tự co trục nên phải nói rõ khoảng số, đường dốc không có nghĩa là tăng nhiều. */}
+        <span className="text-muted-foreground text-xs tabular-nums">{rangeLabel(tile.series)}</span>
+      </div>
     </FramePanel>
   )
 }
@@ -103,7 +126,7 @@ export function MilestoneTrendSkeleton() {
             <Skeleton className="h-4 w-24" />
             <Skeleton className="h-6 w-32" />
             <Skeleton className="h-4 w-40" />
-            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-24 w-full" />
           </FramePanel>
         ))}
       </div>
