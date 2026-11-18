@@ -75,7 +75,7 @@ evals:
     criterion: AC-10
     executor: ui-check
     layer: ui-observed
-    cmd: "Mở http://localhost:3462/ops/data-flow trên DB thử của AC-9, đăng nhập tài khoản ops thử"
+    cmd: "Mở http://localhost:3461/ops/data-flow do phiên N1b giữ ở đúng sha đang chấm, trên DB thử oneinvest_u2_sm1, đăng nhập tài khoản ops thử"
     paths: [app/src/components/ops/data-flow/milestone-trend.tsx, app/src/components/ops/data-flow/data-flow-view.tsx]
     expected: "Vùng «Số mốc S03 theo ngày» hiện bốn ô, số khớp dòng hôm nay trong DB và ô Định vị của màn chặng; đọc được ở sáng, tối và khổ 375px; không tràn ngang đo trên phần tử tổ tiên có overflow-x auto hoặc scroll bao quanh [data-milestone-trend] (scrollWidth không lớn hơn clientWidth), không đo trên document; chụp ảnh ba khổ vào evidence."
     evidence_required: [run_id, verifier, verified_at, screenshot, observed]
