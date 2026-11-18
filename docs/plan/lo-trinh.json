@@ -5371,6 +5371,61 @@
         "db/migrations"
       ],
       "ghi_chu": "Hạng T3 như DA32: đúc nút hàng loạt lên cloud. Lát mỏng của DA18 (nút ứng viên từ danh mục) và DA3 (bảng nối đầy đủ) cho S08, S09; hai hàng ấy giữ phần còn lại (S07, S11, khuôn chung, thẻ từng cặp). Dùng lại bảng thẻ luật của DA32 (migration 100). Sửa 17/11 (chuan-hoa-1711): thêm gộp năm cặp nút trùng — thẻ luật S06 «mã nguồn» đúc một nút cho mỗi mã, nên một dự án có hai mã thành hai nút và hạng giá cấp dự án chia đôi mẫu."
+    },
+    {
+      "ma": "DA40",
+      "slug": "thuoc-tinh-can-s16",
+      "dot": "thuoc-tinh-can-s16-1811",
+      "nhom": "thuoc-tinh-can-s16",
+      "phu": [
+        "TC1",
+        "TC2"
+      ],
+      "hang": "T3",
+      "vai": "Người vận hành",
+      "tieu_chi": 11,
+      "dung_tren": [
+        "DA33",
+        "DA36"
+      ],
+      "cau_giao": "Người vận hành mở trang một dự án trong Danh bạ Ops máy thu và thấy diện tích thông thuỷ, tim tường, phòng ngủ, WC, hướng, loại hình, tầng, giá chủ đầu tư của từng căn S16 (nguồn S16, mốc thu) cùng ô phủ của dự án — thuộc tính lưu theo trường RESO, đọc được theo khoá căn",
+      "bat_khi": "Ô trên màn đổi trên dữ liệu thật của DB máy thu: ô phủ của dự án từ 0 lên đúng lệnh đếm (đo 18/11: grand-park 98,8%, smart-city 11,5%, star-city 0%), tổng căn có diện tích khoảng 95.800, có giá chủ đầu tư khoảng 14.900; snapshot của làn thu nạp qua migration 113 khớp manifest; căn lệch giữa các lần thử (362 diện tích) xử bằng luật có tên và đếm được; căn chưa có thuộc tính hiện trống có nhãn; dữ liệu không rời máy (bộ soát sync-cloud đỏ khi cấy một dòng); chạy lại không đổi số",
+      "vi_sao": "Mạnh 18/11: «phân tích và đưa vào tiến trình pipeline» và «Tôi muốn dữ liệu được hiển thị trong danh bạ để tôi có thể kiểm tra». Bảng căn của danh bạ hôm nay chỉ có khoá, không căn nào có diện tích hay giá; lượt thu S16 sáng 18/11 có thuộc tính cho 95.798 căn, khớp 100% mã căn đã nối ở DA33.",
+      "vung": [
+        "db/migrations",
+        "pipeline/mappings.yaml",
+        "pipeline/lib/s16-thuoc-tinh.mjs",
+        "pipeline/lib/danh-ba-vat-the.mjs",
+        "app/src/app/ops/registry/**",
+        "app/src/components/ops/registry/**",
+        "app/src/lib/ops/registry/**"
+      ],
+      "ghi_chu": "Dãy P1 (GS xếp 18/11). Migration 113 (sổ số: 111 DA37, 112 cờ match_whole). 11 tiêu chí vì phần dữ liệu và phần màn là một kết quả Mạnh tự kiểm — tách thì hàng dữ liệu không có số trên màn để xong. Phần màn đứng trên DA36 (lớp đọc Danh bạ); S1 không chờ. Không đứng trên DA37 (DA37 không đổi unit_key). Làn thu đóng gói snapshot + DATA-CONTRACT v14 (tin claudedp-1811-1) và viết bộ nạp — việc làn thu, không phải hàng (khuôn DA33). Chỗ chứa thuộc tính chọn ở S1 (ADR-0016 §3: thuộc tính đi qua phát biểu). Cổng Phạm vi hỏi Mạnh: hướng ban công mở rộng VN hay bỏ. Chữ UI từ CONTEXT.md; ReUI. Phân tích: research-local/s16/thuoc-tinh-can-phan-tich-1811.md (checkout chính)."
+    },
+    {
+      "ma": "DA41",
+      "slug": "gia-chu-dau-tu-canh-tin-rao",
+      "dot": "thuoc-tinh-can-s16-1811",
+      "nhom": "thuoc-tinh-can-s16",
+      "phu": [
+        "TC3"
+      ],
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 9,
+      "dung_tren": [
+        "DA40"
+      ],
+      "cau_giao": "Người vận hành mở một tin trên /ops/deals và thấy giá chủ đầu tư S16 của đúng căn đó (hoặc trung vị cùng toà, cùng dải tầng khi tin chỉ gắn tới toà) đặt cạnh giá tin rao",
+      "bat_khi": "Trên máy thu: số tin bán căn hộ có mốc giá chủ đầu tư cạnh giá rao đếm được và hiện trên màn (đo lúc S1 của hàng, từ 0); số so chỉ tính ở pipeline/sql (precompute), React chỉ đọc; tin không gắn được căn hay toà hiện «chưa có giá chủ đầu tư», không ước",
+      "vi_sao": "Mỏ neo đợt mục 48: «dự án B, tháp X, tầng A — căn nào giá tốt nhất». 14.911 căn có giá chủ đầu tư là mặt bằng thứ hai cạnh mặt bằng tin rao.",
+      "vung": [
+        "app/src/app/ops/deals/**",
+        "app/src/components/ops/deals-grid.tsx",
+        "app/src/components/ops/deals-cells.tsx",
+        "pipeline/sql"
+      ],
+      "ghi_chu": "Chỉ Ops. Lên cổng Invest chờ Mạnh trả lời câu ở Cổng Phạm vi của DA40 (luật 5 sửa 08/11 cho giá chủ đầu tư của nguồn dự án công khai nhưng chưa gọi tên S16)."
     }
   ],
   "chan_troi": [
@@ -6831,6 +6886,16 @@
         "CH7"
       ],
       "mo_lai_khi": "Khi có hàng thứ ba cần cùng một hàm chuẩn hoá (sau PL20), hoặc đo được một con số trên màn lệch vì hai bước chuẩn hoá cùng một thứ khác luật"
+    },
+    {
+      "ma": "TC4",
+      "dot": "thuoc-tinh-can-s16-1811",
+      "cau_giao": "Lượt thu bù thuộc tính căn S16 cho các dự án phủ thấp (năm dự án 0%, một dự án 11,5% đo 18/11)",
+      "ly_do": "Chưa biết vì sao phủ thiếu — làn thu đang giải thích theo từng dự án và số lời gọi cần cho lượt bù (tin claudedp-1811-1 mục 3)",
+      "phu": [
+        "TC4"
+      ],
+      "mo_lai_khi": "Làn thu báo lý do phủ thiếu và số lời gọi của lượt bù; nếu là việc thu thì giao làn thu, nếu là mã căn sai ở danh bạ thì thành hàng làn sản phẩm"
     }
   ],
   "da_bac": [
