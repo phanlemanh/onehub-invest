@@ -32,6 +32,8 @@ const LOI_PIPELINE = [
   "_acceptance/lay-mau-khu-trung-theo-tin/**", "_acceptance/nhom-dang-ky-hai-lan-s03/**",
   "_acceptance/s03-len-cong/**", "_acceptance/tap-nhan-mau-ocp1/**", "_acceptance/truong-nhan-s03-081/**",
   "_acceptance/the-dia-chi-nhom-s03/ap-may-thu/**",
+  // pipeline/scripts/mau-bai-lac-du-an.test.mjs đọc hồ sơ mẫu v2 thật (khoá 100 mã, hạt giống, n) — đầu vào của test (TG2).
+  "_acceptance/dong-dau-dia-chi-luc-nap/evidence/mau-bai-lac-du-an-v2.md",
 ];
 
 export const VUNG = {

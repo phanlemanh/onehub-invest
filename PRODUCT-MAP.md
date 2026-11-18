@@ -13,7 +13,7 @@ flowchart TD
   B --> CD["Chờ duyệt phạm vi<br/>20 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
   GB --> DG["Đã giao<br/>204 việc"]
-  GB --> CN["Chờ phiên nghiệm thu<br/>132 việc"] --> GG{"Cổng Giá trị"}
+  GB --> CN["Chờ phiên nghiệm thu<br/>133 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
 
@@ -106,6 +106,7 @@ flowchart TD
 - Bài S03 ghi diện tích không đơn vị sau nhãn «Diện tích» hay bằng chữ kiểu Unicode được đọc ra area_m2 như bài ghi m² thường (`doc-so-m2-bi-sot`)
 - Người vận hành mở /ops/data-flow trên cloud và thấy số chặng bài → tin rao → căn theo nguồn và số tin từng bậc, cùng số với máy thu, không còn khung «Chỉ xem ở máy thu» (`dong-chay-len-cloud`)
 - Người vận hành mở /ops/data-flow ở máy thu khi bước làm tươi số dòng chảy hỏng quá 45 phút thì thấy cảnh báo số cũ như trên cloud, không phải số cũ trình bày như số mới (`dong-chay-so-cu-may-thu`)
+- Transform S03 ghi dự án, phường, phân khu và bán hay thuê từ thẻ địa chỉ của nhóm lên mọi tin ngay ở lượt nạp, thành phát biểu có căn cứ là thẻ nhóm và phiên bản thẻ; chữ bài nêu rõ dự án khác thì chữ bài thắng; sửa thẻ thì tin cũ của nhóm được tính lại (`dong-dau-dia-chi-luc-nap`)
 - Người vận hành mở «Kiểm chất lượng» trên /ops/quality thấy bản mới nhất của mỗi kiểm theo từng thực thể, số kiểm đếm đúng, và kết quả độ phủ không ghi «Đạt» xanh khi độ phủ 0% (`dq-moi-nhat-moi-kiem`)
 - Tin S03 mang phát biểu dự án (project_node_id) từ hai nguồn chắc — nhóm có đúng một dự án trong sổ nhóm, và tên dự án bài tự nêu khớp danh bạ; tin mâu thuẫn không ghi mà đưa người duyệt (`du-an-tren-tin-s03-tu-nhom-va-ten`)
 - Lệnh dựng danh bạ vật thể chạy được trên DB máy thu bằng cờ cho phép tường minh, kiểm slug khu, và có bước trong chạy đêm (`dung-danh-ba-may-thu`)
