@@ -5,10 +5,10 @@ slug: che-ten-nguon-khong-lay-tu-dau
 owner: phanlemanh@gmail.com
 risk_tier: T3      # nới bộ soát tầng A; chạm db/migrations và pipeline/sync-cloud.mjs (t3_paths)
 surfaces: [cli, data, ui]
-status: draft
+status: approved
 design_doc: _acceptance/che-ten-nguon-khong-lay-tu-dau/design.md
-approved_by:
-approved_at:
+approved_by: Mạnh
+approved_at: 2026-11-18
 ---
 
 # Acceptance Contract: che-ten-nguon-khong-lay-tu-dau
