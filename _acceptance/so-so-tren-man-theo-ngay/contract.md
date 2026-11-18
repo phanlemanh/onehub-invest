@@ -5,7 +5,7 @@ slug: so-so-tren-man-theo-ngay
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [db, pipeline, ui]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-18
 design_doc: docs/superpowers/specs/2026-11-18-so-so-tren-man-theo-ngay-design.md
@@ -98,3 +98,10 @@ Hạn chế đã biết từ lượt xem màn (`evidence/design-pass/nhan-xet.md
 - Rê chuột vào ngày trống không hiện gợi ý; bảng cho trình đọc màn hình vẫn đọc «Không có số».
 - Nút «Toàn kho» vẽ 30 ngày, giống nút «30 ngày», vì `facts.milestones` chỉ chở 30 ngày.
 - Ở khổ 1.280px cờ «Đứng yên 2 ngày» của ô «Có hạng cấp dự án» xuống dòng, cả hàng ô cao thêm 20px.
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-19:
+  - Ngoài-1: Bước định danh bản chạy của phép chấm màn chỉ so commit, nên chưa phát hiện được bản đang sửa dở chưa lưu.
+  - Ngoài-2: Phép chấm màn dùng bản chạy của phiên khác, chưa có bước buộc bản chạy vào đúng mã đang kiểm.
+  - Ngoài-3: Chưa có ca kiểm tự động khẳng định vùng Số mốc hiện trên trang Luồng dữ liệu khi có số.
+  - Ngoài-4: Bốn nhãn trên màn được so với bản chép tay trong test, chưa so trực tiếp với bảng thuật ngữ.
+  - Ngoài-5: Số «Khớp toà» chưa có phép đối chiếu độc lập với dữ liệu thật, vì bước gắn toà chưa làm nên số này luôn bằng 0.
