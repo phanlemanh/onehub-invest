@@ -6,8 +6,7 @@ import { pool } from "./db";
 import { VN_TZ, vnDayKey, vnDayStart } from "./format";
 import { lastMeaningfulLine } from "./last-log-line";
 import { logsDir, treeRoot } from "./log-root";
-import { maskSourceNames, type SourceNameEntry } from "./mask-source-names";
-import { docSourceNameEntries } from "./source-roles";
+import { docSourceNameEntriesVoi, maskSourceNames, type SourceNameEntry } from "./mask-source-names";
 import { sourceLabel, type SourceRoles } from "./source-labels";
 import {
   directoryCacheIsFresh,
@@ -280,7 +279,7 @@ async function registryForJobs(): Promise<{ roles: SourceRoles; names: SourceNam
     return {
       roles: Object.fromEntries(rows.filter((r) => r.label_vi).map((r) => [r.code, r.label_vi as string])),
       // che-ten-nguon-khong-lay-tu-dau: một hàm nạp chung (tên thật + định danh, kèm cờ match_whole)
-      names: await docSourceNameEntries(),
+      names: await docSourceNameEntriesVoi(pool),
     };
   } catch {
     return { roles: {}, names: [] };

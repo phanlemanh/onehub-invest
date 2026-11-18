@@ -3,7 +3,7 @@
 // đã đẩy. Không có cả hai → {} (trang vẫn dựng, nhãn là mã trần). Chỉ đọc code + label_vi — không bao giờ real_name.
 import { getFactsSourceRuns } from "./collections-queries"
 import { pool } from "./db"
-import type { SourceNameEntry } from "./mask-source-names"
+import { docSourceNameEntriesVoi, type SourceNameEntry } from "./mask-source-names"
 import type { SourceRoles } from "./source-labels"
 
 const toRoles = (rows: { code?: string | null; label_vi?: string | null }[]): SourceRoles =>
@@ -20,41 +20,10 @@ export async function getSourceRoles(): Promise<SourceRoles> {
   return toRoles(await getFactsSourceRuns())
 }
 
-type RegRow = { code: string; real_name: string | null; ids: string[] | null; match_whole: boolean }
-const CO_CO = "SELECT code, real_name, coalesce(source_ids, '{}') AS ids, match_whole FROM source_registry ORDER BY code"
-const KHONG_CO = "SELECT code, real_name, coalesce(source_ids, '{}') AS ids, false AS match_whole FROM source_registry ORDER BY code"
-
-/** Bản chép của pipeline/lib/source-name-entries.mjs (app không import pipeline) — che-ten-nguon-khong-lay-tu-dau.
- *  [{ code, realName, wholeOnly }]: mỗi token (tên thật và từng định danh) một mục, mang cờ match_whole (migration 112).
- *  CHỈ để che/soát tên trong chữ chạy, không bao giờ render. Thiếu cột (42703) → cờ false (che thừa); không có bảng
- *  (42P01) → []; lỗi khác → ném. */
+/** Local: hàm nạp chung (bản chép app nằm ở mask-source-names.ts cạnh lõi) trên pool của app — che-ten-nguon-khong-lay-tu-dau.
+ *  CHỈ để che/soát tên trong chữ chạy, không bao giờ render. */
 export async function docSourceNameEntries(): Promise<SourceNameEntry[]> {
-  let rows: RegRow[]
-  try {
-    ;({ rows } = await pool.query<RegRow>(CO_CO))
-  } catch (e) {
-    const code = (e as { code?: string })?.code
-    if (code === "42P01") return []
-    if (code !== "42703") throw e
-    try {
-      ;({ rows } = await pool.query<RegRow>(KHONG_CO))
-    } catch (e2) {
-      if ((e2 as { code?: string })?.code === "42P01") return []
-      throw e2
-    }
-  }
-  const out: SourceNameEntry[] = []
-  const seen = new Set<string>()
-  for (const r of rows) {
-    for (const t of [r.real_name, ...(r.ids ?? [])]) {
-      if (typeof t !== "string" || t.trim() === "") continue
-      const k = `${r.code}\u0000${t}`
-      if (seen.has(k)) continue
-      seen.add(k)
-      out.push({ code: r.code, realName: t, wholeOnly: r.match_whole === true })
-    }
-  }
-  return out
+  return docSourceNameEntriesVoi(pool)
 }
 
 export async function getSourceNameEntries(): Promise<SourceNameEntry[]> {

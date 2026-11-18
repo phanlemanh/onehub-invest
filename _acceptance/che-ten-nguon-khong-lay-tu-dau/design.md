@@ -31,9 +31,12 @@ GS chữa tạm bằng dữ liệu (tên viết liền, chỉ giữ slug), nên 
   `app/src/lib/source-roles.ts` (bản app — app không import pipeline). Hàm nạp trả mọi token (tên thật + định danh) mỗi token
   mang cờ của dòng. DB chưa áp 112 (thiếu cột) → mọi cờ false (che thừa). Không có bảng → [] (đóng chặt như hôm nay).
 - `tier-a-guard.entriesFromTokens` nhận cả token trần (cũ) lẫn `{ token, wholeOnly }`.
-- Bảy chỗ đọc chuyển qua hàm nạp, theo thứ tự GS: đường rời máy trước — `sync-cloud.mjs` (token cho leak gate),
-  `push-ops-facts.mjs` (hai câu đọc), `do-hang-ngay.mjs`; rồi chỗ hiển thị Ops — `offers-public.ts`, `collections-queries.ts`
-  (qua `docSourceNameEntries`); rồi thước — `scripts/lib/ops-local.mjs`, `scripts/quet-ten-nguon-html.mjs`.
+- Sáu chỗ đọc chuyển qua hàm nạp, theo thứ tự GS: đường rời máy trước — `sync-cloud.mjs` (token cho leak gate VÀ bước che
+  phía SQL `maskedSourceExpr`, đặt NULL cột mang tên nguồn), `push-ops-facts.mjs` (hai câu đọc), `do-hang-ngay.mjs` (+ một dòng
+  trong `lib/do-hang-ngay.mjs` để cờ tới bộ soát); rồi chỗ hiển thị Ops — `offers-public.ts`, `collections-queries.ts`; rồi thước
+  `scripts/quet-ten-nguon-html.mjs`. `scripts/lib/ops-local.mjs` không cần sửa: danh sách tên của nó do push-ops-facts truyền vào.
+- Bản app của hàm nạp nằm cạnh lõi ở `app/src/lib/mask-source-names.ts` (`docSourceNameEntriesVoi`) để bộ test pipeline nạp
+  được; `source-roles.docSourceNameEntries` gọi nó với pool của app.
 - Không chuyển (Known limits, chặn thừa không rò): `scripts/do-nen-hieu-nang/do.mjs`, `scripts/link-nguoi-ban-s03/ten-nguon.mjs`,
   `pipeline/scripts/check-s08-inventory.mjs`, `scripts/lib/tier-a-source-names.mjs` (hạt giống rút từ migration).
 

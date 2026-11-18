@@ -34,11 +34,11 @@ dùng tên giả cùng hình dạng; không tên nguồn thật nào trong hồ 
 - **AC-3** Given DB thử, When gọi hàm nạp chung (bản pipeline và bản app) ở ba trạng thái — đã áp 112 với một dòng giả
   `match_whole` = true · chưa áp 112 (thiếu cột) · không có bảng `source_registry`, Then lần lượt: mọi token (tên thật và từng
   định danh) mang đúng cờ của dòng; mọi cờ false và không lỗi (che thừa); danh sách rỗng (bộ che trả null, bộ soát dừng như hôm nay).
-- **AC-4** Given bảy chỗ đọc chuyển qua hàm nạp (sync-cloud, push-ops-facts, do-hang-ngay, offers-public, collections-queries,
-  ops-local, quet-ten-nguon-html), When soát mã và chạy bộ soát của sync-cloud và push-ops-facts trên tải giả, Then không chỗ
-  nào trong bảy còn tự đọc `real_name`/`source_ids` để dựng danh sách che; tải chứa tên dự án mang thương hiệu giả đi qua khi
+- **AC-4** Given sáu chỗ đọc chuyển qua hàm nạp (sync-cloud — cả bộ soát lẫn bước che phía SQL, push-ops-facts, do-hang-ngay,
+  offers-public, collections-queries, quet-ten-nguon-html; ops-local nhận danh sách tên từ push-ops-facts), When soát mã và chạy bộ soát của sync-cloud và push-ops-facts trên tải giả, Then không chỗ
+  nào trong sáu còn tự đọc `real_name`/`source_ids` để dựng danh sách che; tải chứa tên dự án mang thương hiệu giả đi qua khi
   dòng giả khai `match_whole`, bị chặn khi không khai; tải chứa cụm hai từ hay tên miền giả bị chặn ở cả hai — mỗi chỗ trong
-  bảy có một ca hành vi riêng (offers-public: giá trị người bán mang tên miền giả về NULL); và với sổ rỗng hay hàm nạp ném lỗi,
+  sáu có một ca hành vi riêng (offers-public: giá trị người bán mang tên miền giả về NULL); và với sổ rỗng hay hàm nạp ném lỗi,
   ba đường rời máy (sync-cloud, push-ops-facts, do-hang-ngay) dừng với mã khác 0 thay vì đẩy.
 - **AC-5** Given bản chép DB máy thu đã áp 112, When đếm lại log job, Then 60 dòng log mà chỉ biến thể từ đầu của định danh S05
   che được vẫn bị che (S05 không khai `match_whole`).
@@ -47,10 +47,10 @@ dùng tên giả cùng hình dạng; không tên nguồn thật nào trong hồ 
   cấy cụm hai từ có dấu cách và tên miền S16 vào một bảng thử thì bộ soát của sync-cloud bắt được (≥ 1); DB máy thu không đổi.
 - **AC-7** Given thư mục `ap-may-thu/`, Then có năm thứ: lệnh áp (112 rồi trả dòng S16 — giá trị lấy từ tệp cục bộ GS cấp,
   không chép vào hồ sơ), số chạy thử trên bản chép, sao lưu `source_registry` trước, tệp lùi (khôi phục dòng S16 TỪ bản sao
-  lưu, không viết cứng giá trị, rồi bỏ cột), lệnh kiểm sau (/ops/registry đúng tên dự án, một lượt sync-cloud chạy thử qua leak gate, ca cấy bị bắt); tệp lùi chạy
+  lưu, không viết cứng giá trị, rồi bỏ cột), lệnh kiểm sau (/ops/registry đúng tên dự án, lượt cloud-sync kế qua leak gate, ca cấy bị bắt); tệp lùi chạy
   thật trên DB thử: cột mất, áp lại 112 được.
-- **AC-9** Given tệp cục bộ GS cấp (tên thật + định danh S16), When dò mọi biến thể (đủ, viết liền, từ đầu của mỗi token, kể cả
-  dạng chữa tạm) trên mọi tệp của hồ sơ (`_acceptance/che-ten-nguon-khong-lay-tu-dau/**`, gồm đầu ra các phép kiểm và báo cáo
+- **AC-9** Given tệp cục bộ GS cấp (tên thật + định danh S16), When dò mọi biến thể còn bí mật (tên đủ, viết liền, mỗi định danh đủ và
+  viết liền, dạng chữa tạm — KHÔNG dò từ đầu đứng riêng vì Mạnh đã cho rời máy và nó có sẵn trong tên dự án công khai) trên mọi tệp của hồ sơ (`_acceptance/che-ten-nguon-khong-lay-tu-dau/**`, gồm đầu ra các phép kiểm và báo cáo
   bằng chứng), các tệp test và bảng ca, Then số chỗ trúng là 0; đối chứng: chèn tạm một biến thể vào bản sao một tệp thì ra ≥ 1.
   Mọi lệnh đo trên bản chép chỉ in mã và số.
 - **AC-8** (judgment) Given thẻ và hồ sơ, Then người duyệt đọc được bằng chữ thường đây là nới bộ soát tầng A, nới ở đâu, chỗ đọc
@@ -68,7 +68,7 @@ dùng tên giả cùng hình dạng; không tên nguồn thật nào trong hồ 
 
 - Trục loại biến thể: đủ · viết liền · từ đầu [thước CE: lõi `nameVariants`] — AC-2, AC-6.
 - Trục cờ dòng: khai · không khai · thiếu cột (chưa áp 112) · không có bảng [thước CE: ràng buộc (a) của GS] — AC-2, AC-3.
-- Trục chỗ đọc: rời máy (sync-cloud, push-ops-facts, do-hang-ngay) · hiển thị Ops (offers-public, collections-queries) · thước
+- Trục chỗ đọc: rời máy (sync-cloud soát + che SQL, push-ops-facts, do-hang-ngay) · hiển thị Ops (offers-public, collections-queries) · thước
   (ops-local, quet-ten-nguon-html) · chưa chuyển (bốn thước) [thước CE: danh sách kê ở `design.md`] — AC-4, Out of scope.
 - Trục nguồn trên DB máy thu: S16 (hại) · S05 (từ đầu là thứ duy nhất che 60 dòng) · còn lại [thước CE: bảng phủ ca] — AC-5, AC-6.
 - Trục không lộ: hồ sơ · test · bảng ca · đầu ra lượt chấm [thước CE: ADR-0007 tầng A, kho công khai] — AC-9.

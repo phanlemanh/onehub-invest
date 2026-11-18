@@ -192,3 +192,26 @@ describe("NT2-AC-10 bản tin thật, chế độ khô", () => {
     assert.match(r.stdout, /ops-facts khô: \d+ chỗ chặn/);
   });
 });
+
+// ---- che-ten-nguon-khong-lay-tu-dau AC-4: chỗ đọc sổ đi qua MỘT hàm nạp chung ----
+const CHO_DOC = [
+  "pipeline/sync-cloud.mjs", "pipeline/push-ops-facts.mjs", "pipeline/do-hang-ngay.mjs",
+  "app/src/lib/offers-public.ts", "app/src/lib/collections-queries.ts", "scripts/quet-ten-nguon-html.mjs",
+];
+// Câu SQL tự đọc tên/định danh từ sổ để dựng danh sách che: real_name hoặc source_ids trong cùng câu với FROM source_registry.
+const tuDocSo = (src) => /(real_name|source_ids)[^;`"]*FROM\s+source_registry/i.test(src);
+describe("che-ten AC-4 chỗ đọc qua hàm nạp chung", () => {
+  const REPO_GOC = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+  test("AC-4 sáu chỗ đọc không còn tự đọc real_name/source_ids từ source_registry; mỗi chỗ gọi hàm nạp chung", () => {
+    for (const f of CHO_DOC) {
+      const src = readFileSync(path.join(REPO_GOC, f), "utf8");
+      assert.equal(tuDocSo(src), false, `AC-4 chỗ đọc tự dựng danh sách che: ${f}`);
+      assert.match(src, /docSourceNameEntries/, `AC-4 ${f} không gọi hàm nạp chung`);
+    }
+  });
+  test("AC-4 chiều đỏ: chèn một câu SELECT real_name FROM source_registry vào bản sao → đỏ ghim «AC-4 chỗ đọc tự dựng danh sách che»", () => {
+    const src = readFileSync(path.join(REPO_GOC, CHO_DOC[0]), "utf8") + '\nconst x = "SELECT code, real_name FROM source_registry";\n';
+    assert.throws(() => assert.equal(tuDocSo(src), false, `AC-4 chỗ đọc tự dựng danh sách che: ${CHO_DOC[0]}`),
+      /AC-4 chỗ đọc tự dựng danh sách che/);
+  });
+});

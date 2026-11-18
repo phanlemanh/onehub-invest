@@ -60,3 +60,40 @@ export function maskSourceNames(text: string | null | undefined, entries: Source
   }
   return out + text.slice(at)
 }
+
+// ---- Hàm nạp sổ nguồn — bản chép của pipeline/lib/source-name-entries.mjs (che-ten-nguon-khong-lay-tu-dau) ----
+// [{ code, realName, wholeOnly }]: mỗi token (tên thật và từng định danh) một mục, mang cờ match_whole (migration 112).
+// Thiếu cột → cờ false (che thừa); không có bảng → []; lỗi khác → ném. Hỏi hình sổ trước, không bắt lỗi.
+type RegRow = { code: string; real_name: string | null; ids: string[] | null; match_whole: boolean }
+type Queryable = { query: (sql: string) => Promise<{ rows: unknown[] }> }
+export const SQL_SO_CO_CO =
+  "SELECT code, real_name, coalesce(source_ids, '{}') AS ids, match_whole FROM source_registry ORDER BY code"
+export const SQL_SO_KHONG_CO =
+  "SELECT code, real_name, coalesce(source_ids, '{}') AS ids, false AS match_whole FROM source_registry ORDER BY code"
+
+export function entriesFromRows(rows: RegRow[]): SourceNameEntry[] {
+  const out: SourceNameEntry[] = []
+  const seen = new Set<string>()
+  for (const r of rows) {
+    for (const t of [r.real_name, ...(r.ids ?? [])]) {
+      if (typeof t !== "string" || t.trim() === "") continue
+      const k = `${r.code}\u0000${t}`
+      if (seen.has(k)) continue
+      seen.add(k)
+      out.push({ code: r.code, realName: t, wholeOnly: r.match_whole === true })
+    }
+  }
+  return out
+}
+
+// Hỏi trước bảng và cột — không thử câu rồi bắt lỗi (câu lỗi làm hỏng giao dịch đang mở).
+export const SQL_SO_HINH = `SELECT to_regclass('source_registry') IS NOT NULL AS bang,
+  EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid = to_regclass('source_registry') AND attname = 'match_whole'
+          AND NOT attisdropped) AS cot`
+
+export async function docSourceNameEntriesVoi(q: Queryable): Promise<SourceNameEntry[]> {
+  const h = (await q.query(SQL_SO_HINH)).rows[0] as { bang?: boolean; cot?: boolean } | undefined
+  if (!h?.bang) return []
+  const rows = (await q.query(h.cot ? SQL_SO_CO_CO : SQL_SO_KHONG_CO)).rows as RegRow[]
+  return entriesFromRows(rows)
+}
