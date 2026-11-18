@@ -1,42 +1,132 @@
 {
- "feature_plain": "Khi kênh S03 treo trong một gateway vẫn đang chạy (kiểu 09/11), watchdog tự khởi động lại gateway một lần — chỉ khi mọi lớp an toàn Zalo xanh và không có lượt agent dở, tối đa 1 lần mỗi 6 giờ; phiên đã chết thì báo «cần quét QR» thay vì khởi động lại lặp. Không bao giờ tự quét QR, không đổi cấu hình.",
+ "feature_plain": "Watchdog tự khởi động lại gateway khi kênh S03 treo. Lượt chấm đạt 15/15 tiêu chí đã duyệt, nhưng soát mã phát hiện 3 lỗi ngoài hợp đồng đã dựng lại được: Ngoài-1/5 (phiên chết lần hai không còn báo cần QR), Ngoài-6 (có thể khởi động lại gateway đang khoẻ), Ngoài-7 (khởi động lại thất bại mà không ai biết).",
  "will_do": [
-  {"id":"AC-1","p":"Sẽ khởi động lại gateway đúng một lần khi kênh S03 treo từ 10 phút (biên 600 giây; 599 giây thì chưa), ghi sổ và cảnh báo."},
-  {"id":"AC-2","p":"Sẽ giữ trần 1 lần mỗi 6 giờ: lần thứ hai trong 6 giờ chỉ cảnh báo, không khởi động lại."},
-  {"id":"AC-3","p":"Sẽ báo «cần quét QR» một lần và thôi khởi động lại khi heartbeat (VHZ1) báo phiên chết; ghim cả ca lý do «chưa rõ» (Hỏi-1)."},
-  {"id":"AC-4","p":"Sẽ KHÔNG khởi động lại khi bất kỳ lớp an toàn Zalo nào đỏ hoặc có lượt agent dở — lớp an toàn tắt gateway như cũ."},
-  {"id":"AC-5","p":"Sẽ KHÔNG hồi sinh gateway đã chết hẳn — giữ nguyên hành vi hiện có, P1 chỉ cứu kênh treo trong gateway còn sống."},
-  {"id":"AC-6","p":"Sẽ KHÔNG gọi lệnh OpenClaw nào ngoài đọc trạng thái, không ghi cấu hình, không đăng nhập hay quét QR — kiểm cả lúc chạy lẫn đọc mã."},
-  {"id":"AC-7","p":"Sẽ đo toàn bộ trên bản chép với lệnh hệ thống giả; từ chối chạy nếu lệnh thật có thể bị gọi; tệp log và trạng thái thật của máy không đổi."},
-  {"id":"AC-8","p":"Sẽ tắt được ngay bằng một tệp công tắc hoặc biến môi trường."},
-  {"id":"AC-9","p":"Sẽ cho đọc lần tự khởi động gần nhất bằng một lệnh: tail -1 pipeline/logs/zalo-watchdog-p1.log."},
-  {"id":"AC-10","p":"Sẽ giữ xanh test của làn thu, các lớp canh S03 cũ và harness VHZ1."}
+  {
+   "id": "AC-1",
+   "p": "Sẽ khởi động lại gateway đúng một lần khi kênh S03 treo từ 10 phút (biên 600 giây; 599 giây thì chưa), ghi sổ và cảnh báo."
+  },
+  {
+   "id": "AC-2",
+   "p": "Sẽ giữ trần 1 lần mỗi 6 giờ: lần thứ hai trong 6 giờ chỉ cảnh báo, không khởi động lại."
+  },
+  {
+   "id": "AC-3",
+   "p": "Sẽ báo «cần quét QR» một lần và thôi khởi động lại khi heartbeat (VHZ1) báo phiên chết; ghim cả ca lý do «chưa rõ» (Hỏi-1)."
+  },
+  {
+   "id": "AC-4",
+   "p": "Sẽ KHÔNG khởi động lại khi bất kỳ lớp an toàn Zalo nào đỏ hoặc có lượt agent dở — lớp an toàn tắt gateway như cũ."
+  },
+  {
+   "id": "AC-5",
+   "p": "Sẽ KHÔNG hồi sinh gateway đã chết hẳn — giữ nguyên hành vi hiện có, P1 chỉ cứu kênh treo trong gateway còn sống."
+  },
+  {
+   "id": "AC-6",
+   "p": "Sẽ KHÔNG gọi lệnh OpenClaw nào ngoài đọc trạng thái, không ghi cấu hình, không đăng nhập hay quét QR — kiểm cả lúc chạy lẫn đọc mã."
+  },
+  {
+   "id": "AC-7",
+   "p": "Sẽ đo toàn bộ trên bản chép với lệnh hệ thống giả; từ chối chạy nếu lệnh thật có thể bị gọi; tệp log và trạng thái thật của máy không đổi."
+  },
+  {
+   "id": "AC-8",
+   "p": "Sẽ tắt được ngay bằng một tệp công tắc hoặc biến môi trường."
+  },
+  {
+   "id": "AC-9",
+   "p": "Sẽ cho đọc lần tự khởi động gần nhất bằng một lệnh: tail -1 pipeline/logs/zalo-watchdog-p1.log."
+  },
+  {
+   "id": "AC-10",
+   "p": "Sẽ giữ xanh test của làn thu, các lớp canh S03 cũ và harness VHZ1."
+  }
  ],
  "wont_do": [
-  {"id":"OOS-1","p":"Không đẩy cảnh báo ra ngoài máy thu — chờ VH1 (làn P3); vòng này cảnh báo dừng ở sổ cảnh báo + thông báo màn hình."},
-  {"id":"OOS-2","p":"Không vá gốc bộ hẹn khởi động lại trong OpenClaw (VHZ3)."},
-  {"id":"OOS-3","p":"Không bao giờ tự quét QR hay đổi cấu hình OpenClaw."},
-  {"id":"OOS-4","p":"Không khởi động lại gateway bằng tay hay nạp plist mới trong vòng này."},
-  {"id":"OOS-5","p":"Không hồi sinh gateway đã chết hẳn; khi ấy chỉ cảnh báo L6(d) của heartbeat báo từ 30 phút — đổi là hàng mới."}
+  {
+   "id": "OOS-1",
+   "p": "Không đẩy cảnh báo ra ngoài máy thu — chờ VH1 (làn P3); vòng này cảnh báo dừng ở sổ cảnh báo + thông báo màn hình."
+  },
+  {
+   "id": "OOS-2",
+   "p": "Không vá gốc bộ hẹn khởi động lại trong OpenClaw (VHZ3)."
+  },
+  {
+   "id": "OOS-3",
+   "p": "Không bao giờ tự quét QR hay đổi cấu hình OpenClaw."
+  },
+  {
+   "id": "OOS-4",
+   "p": "Không khởi động lại gateway bằng tay hay nạp plist mới trong vòng này."
+  },
+  {
+   "id": "OOS-5",
+   "p": "Không hồi sinh gateway đã chết hẳn; khi ấy chỉ cảnh báo L6(d) của heartbeat báo từ 30 phút — đổi là hàng mới."
+  }
  ],
  "coverage_plain": [
-  {"i":0,"p":"Thời gian kênh treo: chưa đỏ, 599 giây, 600 giây, hết đỏ — AC-1, AC-3."},
-  {"i":1,"p":"Trần 6 giờ: lần đầu, trước 6 giờ, đúng 6 giờ, mười lượt liền — AC-2."},
-  {"i":2,"p":"Lý do từ heartbeat thật: kênh dừng, phiên chết, chưa rõ, lên lại gỡ cờ — AC-1, AC-3, AC-9."},
-  {"i":3,"p":"Từng lớp an toàn Zalo đỏ và lượt agent dở — AC-4."},
-  {"i":4,"p":"Gateway còn chạy và chết hẳn — AC-5."},
-  {"i":5,"p":"An toàn Zalo: lệnh OpenClaw, lệnh launchctl, ghi cấu hình, đọc mã khối mới — AC-6."},
-  {"i":6,"p":"Phép đo cô lập: lệnh giả thắng, gỡ lệnh giả, HOME thật, biến môi trường, log và tệp trạng thái thật — AC-7."},
-  {"i":7,"p":"Công tắc tắt bằng biến, bằng tệp, gỡ công tắc — AC-8."},
-  {"i":8,"p":"Lệnh đọc lần tự khởi động gần nhất — AC-9."},
-  {"i":9,"p":"Hồi quy làn thu, lớp canh S03, VHZ1, cú pháp — AC-10."}
+  {
+   "i": 0,
+   "p": "Thời gian kênh treo: chưa đỏ, 599 giây, 600 giây, hết đỏ — AC-1, AC-3."
+  },
+  {
+   "i": 1,
+   "p": "Trần 6 giờ: lần đầu, trước 6 giờ, đúng 6 giờ, mười lượt liền — AC-2."
+  },
+  {
+   "i": 2,
+   "p": "Lý do từ heartbeat thật: kênh dừng, phiên chết, chưa rõ, lên lại gỡ cờ — AC-1, AC-3, AC-9."
+  },
+  {
+   "i": 3,
+   "p": "Từng lớp an toàn Zalo đỏ và lượt agent dở — AC-4."
+  },
+  {
+   "i": 4,
+   "p": "Gateway còn chạy và chết hẳn — AC-5."
+  },
+  {
+   "i": 5,
+   "p": "An toàn Zalo: lệnh OpenClaw, lệnh launchctl, ghi cấu hình, đọc mã khối mới — AC-6."
+  },
+  {
+   "i": 6,
+   "p": "Phép đo cô lập: lệnh giả thắng, gỡ lệnh giả, HOME thật, biến môi trường, log và tệp trạng thái thật — AC-7."
+  },
+  {
+   "i": 7,
+   "p": "Công tắc tắt bằng biến, bằng tệp, gỡ công tắc — AC-8."
+  },
+  {
+   "i": 8,
+   "p": "Lệnh đọc lần tự khởi động gần nhất — AC-9."
+  },
+  {
+   "i": 9,
+   "p": "Hồi quy làn thu, lớp canh S03, VHZ1, cú pháp — AC-10."
+  }
  ],
  "gap_probe_plain": [
-  {"i":0,"p":"Ca lý do «chưa rõ» làm khởi động lại lặp mà không báo QR chưa được đo và chưa hỏi anh — đã thành Hỏi-1 và có ca đo riêng."},
-  {"i":1,"p":"Phép đo chưa chặn CLI OpenClaw thật và có thể xanh rỗng — đã đưa CLI vào chốt, thêm đối chứng dương và ca đỏ."},
-  {"i":2,"p":"Căn cứ cho việc không hồi sinh gateway chết chưa đứng — đã dẫn đúng định nghĩa P1 và ghi ngoài phạm vi."},
-  {"i":3,"p":"Tệp trạng thái thật (cờ tắt, mốc trần, heartbeat) chưa được giữ nguyên — đã băm trước/sau và dựng môi trường từ đầu."},
-  {"i":4,"p":"Phép đọc mã khối mới có thể quét rỗng — đã ghim mốc, gồm hàm được gọi, thêm ba bản phá."}
+  {
+   "i": 0,
+   "p": "Ca lý do «chưa rõ» làm khởi động lại lặp mà không báo QR chưa được đo và chưa hỏi anh — đã thành Hỏi-1 và có ca đo riêng."
+  },
+  {
+   "i": 1,
+   "p": "Phép đo chưa chặn CLI OpenClaw thật và có thể xanh rỗng — đã đưa CLI vào chốt, thêm đối chứng dương và ca đỏ."
+  },
+  {
+   "i": 2,
+   "p": "Căn cứ cho việc không hồi sinh gateway chết chưa đứng — đã dẫn đúng định nghĩa P1 và ghi ngoài phạm vi."
+  },
+  {
+   "i": 3,
+   "p": "Tệp trạng thái thật (cờ tắt, mốc trần, heartbeat) chưa được giữ nguyên — đã băm trước/sau và dựng môi trường từ đầu."
+  },
+  {
+   "i": 4,
+   "p": "Phép đọc mã khối mới có thể quét rỗng — đã ghim mốc, gồm hàm được gọi, thêm ba bản phá."
+  }
  ],
  "scope_plain": "Năm việc để ngoài vòng này:"
 }
