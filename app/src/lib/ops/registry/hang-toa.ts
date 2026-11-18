@@ -43,7 +43,12 @@ export function dungHangToa(duAn: MotDuAn, id: number, entries: SourceNameEntry[
       key: t.key,
       laCan: false,
       ten: motTen(t.ten.map(che)).join(" · ") || (ma[0] ? che(ma[0]) : t.key),
-      phu: [t.nutId === id ? null : tenNut.get(t.nutId), ma.length > 0 ? `Mã ${ma.map(che).join(", ")}` : null].filter(Boolean).join(" · "),
+      // Nút hiệu lực đứng đầu; khi S09 xếp toà khác cột gốc thì nói ra nút gốc để người vận hành thấy nguồn của phân khu.
+      phu: [
+        t.nutId === id ? null : tenNut.get(t.nutId),
+        t.nutIdGoc != null && t.nutIdGoc !== t.nutId ? `S09 xếp lại, gốc: ${che(t.tenNutGoc ?? String(t.nutIdGoc))}` : null,
+        ma.length > 0 ? `Mã ${ma.map(che).join(", ")}` : null,
+      ].filter(Boolean).join(" · "),
       bac: t.bac,
       nguon: t.nguon,
       soTruc: t.soTruc,
