@@ -75,10 +75,12 @@ Quét theo khuôn ma trận kiểm thử. Số trong ô đếm từ DB máy thu 
 
 ## Out of scope
 
-- Chọn phân khu và toà trên cây: bảng hạng chưa có hai cấp này, tin chưa gắn toà tới khi PL20 xong. Mục «cắt/hoãn» chờ Mạnh quyết ở Cổng Phạm vi.
-- Lọc số phòng ngủ, diện tích, tầng, đường: tách hàng sau; tầng mới phủ 1% tin.
+- Hàng sau, theo lời Mạnh 18/11 «Hoãn phân khu, toà, số phòng ngủ, diện tích, tầng, đường sang hàng sau»: chọn phân khu và toà trên cây (bảng hạng chưa có hai cấp này, tin chưa gắn toà tới khi PL20 xong).
+- Hàng sau, cùng lời trên: lọc số phòng ngủ, diện tích, tầng, đường (tầng mới phủ 1% tin).
 - Đổi luật «thiếu gì» của tab «Còn thiếu» (tin S06 không có chữ bài luôn thuộc tab này).
 - Cỡ Badge của `PageHeader` dùng chung cho mọi trang.
+- Khổ 1.280 px còn phải cuộn ngang trong bảng để thấy cột «Thấy»; trang không cuộn ngang.
+- Trạng thái trống của danh sách lùi (khi chưa có bảng hạng) còn chữ «thước phường»: test của hồ sơ đã ký ghim câu này.
 - Đổi API công khai `/v1/deals`, migration, bảng tính sẵn mới.
 - Chữ «thước phường» và số thập phân dấu chấm trong câu của sheet, trang một căn: các hồ sơ đã ký đang ghim nguyên văn, cần một hàng dọn từ vựng riêng.
 

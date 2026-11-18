@@ -145,7 +145,7 @@ const COT_HANG: ColumnDef<DataGridFeatures, DealHangGhep> = {
   header: ({ column }) => <DataGridColumnHeader title="Hạng giá" column={column} />,
   cell: ({ row: { original: d } }) => <DealHangNhom d={d} />,
   enableSorting: false,
-  size: 240,
+  size: 220,
   meta: { headerClassName: "hidden md:table-cell", cellClassName: "hidden md:table-cell" },
 }
 

@@ -14,7 +14,7 @@ Pattern: none — khuôn records-grid của kho, chưa có block ReUI phủ tr�
 | bộ chọn vị trí | 3 | reui/cascader | chọn một nút trên cây nhiều cấp |
 | tab trạng thái | 3 | ui/tabs | đang có |
 | Bán, Cho thuê | 3 | ui/tabs | hai lựa chọn loại trừ, cùng kiểu với tab trạng thái |
-| lọc loại hình | 3 | reui/filters | đang có |
+| lọc loại hình | 3 | ui/select | một lựa chọn trong danh sách ngắn |
 | nhãn hạng trên dòng | 3 | reui/badge | trạng thái dùng Badge |
 | trạng thái trống | 3 | ui/empty | đang có |
 | trạng thái lỗi | 3 | RegionError | đang có |

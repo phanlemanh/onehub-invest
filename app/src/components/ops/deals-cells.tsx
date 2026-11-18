@@ -60,7 +60,7 @@ export function DiscountBar({ d, gon = false, donViCan = false }: { d: DealHang;
           : <>Thước {d.medianPerm2 ? chuGiaM2(d.medianPerm2) : "—"} · {d.rulerN ? `${fmtInt(d.rulerN)} ${donViCan ? "căn" : "tin"}` : "—"}</>}
       </span>
       {d.matBang && (
-        <span className="text-muted-foreground truncate text-xs tabular-nums" data-deal-mat-bang={d.matBang.trangThai}>
+        <span className="text-muted-foreground truncate text-xs tabular-nums" title={chuMatBang(d.matBang, d.rank?.metric ?? null)} data-deal-mat-bang={d.matBang.trangThai}>
           {chuMatBang(d.matBang, d.rank?.metric ?? null)}
         </span>
       )}
