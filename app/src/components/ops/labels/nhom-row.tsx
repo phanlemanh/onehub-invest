@@ -13,8 +13,17 @@ import { BASIS_NGAN, type FieldDef, type O } from "./nhom-fields"
 const DA_CHON = "text-xs data-pressed:bg-primary data-pressed:text-primary-foreground"
 
 /** Một hàng biểu mẫu: nhãn · giá trị · căn cứ · ô «Không suy ra được». Lỗi hiện ngay dưới hàng, giữ chữ đã gõ. */
-export function NhomRow({ d, o, loi, onChange }: { d: FieldDef; o: O; loi?: string; onChange: (patch: Partial<O>) => void }) {
-  const ten = FIELD_LABEL[d.id]
+export function NhomRow({ d, o, loi, onChange, nhan, boCanCu = false }: {
+  d: FieldDef
+  o: O
+  loi?: string
+  onChange: (patch: Partial<O>) => void
+  /** Nhãn riêng của ô trên lát có khai ô. */
+  nhan?: string
+  /** Lát có khai ô: không có căn cứ, vẫn giữ ô «Không suy ra được». */
+  boCanCu?: boolean
+}) {
+  const ten = nhan ?? FIELD_LABEL[d.id]
   return (
     <div className="flex min-w-0 flex-col gap-1" data-o={d.id} data-loi={loi ? "" : undefined}>
       <div className="grid min-w-0 grid-cols-1 gap-1.5 sm:grid-cols-[5rem_minmax(0,1fr)_auto] sm:items-center sm:gap-2">
@@ -56,7 +65,7 @@ export function NhomRow({ d, o, loi, onChange }: { d: FieldDef; o: O; loi?: stri
           <span />
         ) : (
           <div className="flex items-center gap-2">
-            <ToggleGroup
+            {boCanCu ? null : <ToggleGroup
               value={o.unknown ? [] : [o.basis]}
               onValueChange={(v: string[]) => {
                 if (v[0]) onChange({ basis: v[0] as Basis })
@@ -75,7 +84,7 @@ export function NhomRow({ d, o, loi, onChange }: { d: FieldDef; o: O; loi?: stri
                   <TooltipContent>{BASIS_LABEL[b.value]}</TooltipContent>
                 </Tooltip>
               ))}
-            </ToggleGroup>
+            </ToggleGroup>}
             <Tooltip>
               <TooltipTrigger render={<span className="inline-flex items-center" />}>
                 <Checkbox checked={o.unknown} onCheckedChange={(v) => onChange({ unknown: v === true })} aria-label={`${ten}: không suy ra được`} />

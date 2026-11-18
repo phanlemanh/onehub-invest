@@ -4,7 +4,7 @@ import { pool } from "./db"
 import { docGhep, type GhepHien } from "./labels-anh"
 import { docThe } from "./labels-cum"
 import { nhapTuDraft, type NhapMay } from "./labels-cuon-chieu"
-import { DA_GAN_CUA_TOI, type LabelRow } from "./labels-normalize"
+import { BASIS_KHONG_DOI, DA_GAN_CUA_TOI, msgHangSaiLat, oCuaLat, type LabelRow } from "./labels-normalize"
 import { maskSourceNames } from "./mask-source-names"
 import { getSourceNameEntries } from "./source-roles"
 
@@ -84,7 +84,8 @@ export async function tinKe(userId: string, lat: string, q: Q = pool, nhom: stri
     nguoiDang,
     nguoiDangId: the.nguoiDangId,
     postedAt: the.postedAt ? new Date(the.postedAt).toISOString() : null,
-    nhap: nhapTuDraft(r.draft),
+    // Lát có khai ô gắn mù: nháp máy không rời máy chủ, ở cả màn lẫn API.
+    nhap: oCuaLat(lat) ? null : nhapTuDraft(r.draft),
   }
 }
 
@@ -112,8 +113,10 @@ export async function nhomCuaLat(userId: string, lat: string, q: Q = pool): Prom
      ORDER BY tong DESC, n.stratum`,
     [userId, lat],
   )
-  return rows.map((r) => ({
-    unitCode: r.stratum, ten: r.group_name ?? r.stratum, tong: r.tong, cuaToi: r.cua_toi, conChoToi: r.con, choNguoiHai: r.cho,
+  // Lát có khai ô gắn mù: nhóm là nhóm so sánh của máy, chỉ mang tên trung tính. `tong` không đổi khi gắn nên số phần giữ nguyên.
+  const rutGon = oCuaLat(lat) !== null
+  return rows.map((r, i) => ({
+    unitCode: r.stratum, ten: rutGon ? `Phần ${i + 1}` : (r.group_name ?? r.stratum), tong: r.tong, cuaToi: r.cua_toi, conChoToi: r.con, choNguoiHai: r.cho,
   }))
 }
 
@@ -132,7 +135,14 @@ export type KetQuaGhi = { ok: true } | { ok: false; status: 400 | 409; error: st
  * Ghi một lượt (đủ các trường đã chuẩn hoá, kèm lý do nếu có) trong MỘT giao dịch. Khoá dòng tin (FOR UPDATE) trước khi đếm
  * người đã gắn, nên hai người ghi cùng lúc thì người sau thấy số đã đổi → 409. `c` là client riêng (pool.connect()).
  */
-export async function ghiNhan(c: Q, userId: string, lat: string, itemId: number, rows: LabelRow[], reason: string | null = null): Promise<KetQuaGhi> {
+export async function ghiNhan(c: Q, userId: string, lat: string, itemId: number, rowsVao: LabelRow[], reasonVao: string | null = null): Promise<KetQuaGhi> {
+  // Lát có khai ô: chỉ ghi đúng các ô của lát, căn cứ rỗng. Lát khác không được dùng căn cứ tạm của biểu mẫu rút gọn.
+  const cuaLat = oCuaLat(lat)
+  if (!cuaLat && rowsVao.some((r) => r.basis === BASIS_KHONG_DOI)) return { ok: false, status: 400, error: msgHangSaiLat(lat) }
+  const thieu = cuaLat?.find((f) => !rowsVao.some((r) => r.field === f))
+  if (thieu) return { ok: false, status: 400, error: `Thiếu ô ${thieu}` }
+  const rows = cuaLat ? rowsVao.filter((r) => cuaLat.includes(r.field)).map((r) => ({ ...r, basis: null })) : rowsVao
+  const reason = cuaLat ? null : reasonVao
   await c.query("BEGIN")
   try {
     const { rows: tin } = await c.query(
