@@ -1,0 +1,1 @@
+{"feature_plain":"Lệnh tạm dừng nguồn có hẹn bật lại sai kiểu không còn làm kẹt hàng lệnh của máy thu; job kéo lệnh tìm được node khi chạy dưới launchd; và token máy cấp được ngay từ máy thu, ghi vào tệp cấu hình trên dòng riêng."}

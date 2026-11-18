@@ -40,8 +40,9 @@ const NHAN = [
   ["assertion_field", "frontage_length", "Mặt tiền"], ["assertion_field", "lot_size_dimensions", "Ngang × dài"],
   ["assertion_field", "stories", "Số tầng"], ["assertion_field", "latitude", "Vĩ độ"], ["assertion_field", "longitude", "Kinh độ"],
   // danh-ba-toa-truc-can (082): hai trường của toà, phương pháp kế thừa, bí danh mã tại nguồn, bậc dòng danh mục.
-  ["assertion_field", "builder_name", "Chủ đầu tư"], ["assertion_field", "area_id", "Phường của toà"],
+  ["assertion_field", "builder_name", "Chủ đầu tư"], ["assertion_field", "area_id", "Phường"],
   ["assertion_field", "floor_raw", "Tầng"], ["assertion_field", "floor_band", "Dải tầng"],
+  ["assertion_field", "project_node_id", "Dự án"], ["assertion_field", "subzone_node_id", "Phân khu"],
   ["evidence_tier", "fact", "Sự thật"], ["evidence_tier", "observed", "Quan sát có trích dẫn"],
   ["evidence_tier", "inferred", "Suy luận"],
   ["assertion_method", "hitl", "Người quyết"], ["assertion_method", "source_field", "Trường có cấu trúc của nguồn"],
@@ -96,7 +97,7 @@ test("VB-AC-1 sổ thật: đủ 26 trục, đúng code + nhãn từng byte", ()
   const reg = loadRegister(SO_THAT);
   validateRegister(reg); // đối chứng dương: sổ thật không ném
   assert.deepEqual(reg.axes.map((a) => a.name), AXES);
-  assert.equal(NHAN.length, 125); // tang-tren-tin-s03 (095): +2 mã assertion_field, trục floor_band 3 mã; HD5 (061; giám sát duyệt P1-87): +7 mã assertion_field; SD3 thêm alias_kind sdt; enrich-nguoi-s03 (079) +4 mã liên lạc; link-nguoi-ban-s03 (080) +1 luật; truong-nhan-s03-081 +29 mã nhãn; danh-ba-toa-truc-can (082): +7 (builder_name, area_id, registry_inherit, ma_nguon, ba bậc catalog_tier)
+  assert.equal(NHAN.length, 127); // truong-du-an-tren-tin (096): +2 mã assertion_field, area_id «Phường»; tang-tren-tin-s03 (095): +2 mã assertion_field, trục floor_band 3 mã; HD5 (061; giám sát duyệt P1-87): +7 mã assertion_field; SD3 thêm alias_kind sdt; enrich-nguoi-s03 (079) +4 mã liên lạc; link-nguoi-ban-s03 (080) +1 luật; truong-nhan-s03-081 +29 mã nhãn; danh-ba-toa-truc-can (082): +7 (builder_name, area_id, registry_inherit, ma_nguon, ba bậc catalog_tier)
   // wanted-thanh-inquiry AC-1: yêu cầu là bên mua, đối xứng với listing bên bán.
   const li = reg.axes.find((a) => a.name === "listing_intent");
   assert.deepEqual(li.values.map((v) => v.code), ["offer", "inquiry", "not_listing", "unknown"]);

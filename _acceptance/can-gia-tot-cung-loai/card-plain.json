@@ -1,0 +1,32 @@
+{
+  "feature_plain": "Căn giá tốt chỉ so một tin với tin cùng loại hình (căn hộ với căn hộ, nhà với nhà) trong cùng phường, ở trang Ops, ở API nội bộ và ở API công khai; tin chưa rõ loại hình thì không có số giảm và trang ghi lý do.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ tính số giảm của mỗi tin bán theo thước của đúng loại hình trong phường — căn hộ, nhà, đất, thương mại mỗi loại một thước."},
+    {"id": "AC-2", "p": "Sẽ để trống số giảm cho tin chưa rõ loại, tin thuê và tin mà phường chưa đủ 5 căn cùng loại, kể cả khi phường có thước chung; job đếm số tin bị để trống theo từng lý do."},
+    {"id": "AC-3", "p": "Sẽ in trên thẻ /ops/deals đúng trung vị và số căn của thước cùng loại đã dùng để tính số giảm; tin chưa rõ loại không vào danh sách."},
+    {"id": "AC-4", "p": "Sẽ ghi lý do «Chưa rõ loại hình…» hoặc «Phường chưa đủ tin <loại>…» trên trang một căn, và câu chứng minh nói «thước căn hộ cùng phường»."},
+    {"id": "AC-5", "p": "Sẽ để API nội bộ /api/v1/deals trả số giảm theo thước cùng loại, không trả tin chưa rõ loại hay tin thuê."},
+    {"id": "AC-6", "p": "Sẽ để API công khai /v1/deals trả số giảm theo thước cùng loại, thêm trường loại hình, không trả tin chưa rõ loại hay tin thuê; các trường cũ giữ nguyên."},
+    {"id": "AC-7", "p": "Sẽ chứng minh trên bản chép toàn bộ dữ liệu máy thu: 0 tin lệch thước ở cả pipeline lẫn hai API, và trung vị số giảm của căn hộ về gần 0 (hiện 35,2%)."},
+    {"id": "AC-8", "p": "Sẽ hiện đúng câu chữ và đúng con số trên trang một căn ở Ops, đọc được ở sáng và tối."},
+    {"id": "AC-10", "p": "Sẽ kiểm (chỉ đọc) rằng thước trên cloud — nơi API công khai chạy — đúng là thước của máy thu và đủ bốn loại."}
+  ],
+  "wont_do": [
+    {"id": "AC-9", "p": "Sẽ KHÔNG thêm migration, không đổi đường đẩy dữ liệu lên cloud, không trả thêm thông tin liên lạc người bán, không ghi tên nguồn thật."},
+    {"id": "OOS-1", "p": "KHÔNG đổi mức giảm trung vị trên thẻ người bán — cần migration, để CG9."},
+    {"id": "OOS-2", "p": "KHÔNG so trong nhóm sâu hơn phường (dự án, toà, trục), theo số phòng ngủ, hay thước thuê — CG9 tới CG11."},
+    {"id": "OOS-3", "p": "KHÔNG mở lại API nội bộ /api/v1/deals cho người ngoài."},
+    {"id": "OOS-4", "p": "KHÔNG đổi các ngưỡng vào danh sách, cần xác minh, loại."},
+    {"id": "OOS-5", "p": "KHÔNG đẩy data-api ra repo công khai hay triển khai — anh gọi sync-public."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Loại hình × có/thiếu thước, cộng chưa rõ loại và trống loại: 10 ô viết trước, mỗi ô một phép kiểm, có bản cố tình dùng thước cũ để thấy đỏ (AC-1, AC-2)."},
+    {"i": 1, "p": "Bán thì chấm, thuê thì không — kiểm ở cả ba đường và trên dữ liệu thật (AC-2, AC-5, AC-6, AC-7)."},
+    {"i": 2, "p": "Năm chỗ đọc số giảm (pipeline, danh sách Ops, trang một căn, API nội bộ, API công khai) đều so với một phép tính lại độc lập (AC-1, AC-3, AC-5, AC-6)."},
+    {"i": 3, "p": "Toàn bộ tin bán thật trên bản chép DB máy thu, in mẫu số (AC-7)."},
+    {"i": 4, "p": "Câu chữ cho người: hàm lý do và câu chứng minh, rồi nhìn trên màn (AC-4, AC-8)."},
+    {"i": 5, "p": "Ranh giới: không migration, không đổi đẩy cloud, không lộ thêm liên lạc (AC-9)."},
+    {"i": 6, "p": "Triển khai: thước trên cloud khớp máy thu (AC-10)."}
+  ],
+  "scope_plain": "Những việc dưới đây cố ý để ngoài hàng này:"
+}

@@ -6,36 +6,17 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import pg from "pg";
 
 import { resolveContext, resolvePropertyType } from "../src/agents/context-resolver.js";
 import { parseEnrichOutput } from "../src/agents/enrich-text.js";
 import { runEnrich, type LlmFn } from "../src/enrich/run.js";
 import { withTx, insertOffer } from "./helpers/db.js";
+import { legacyType } from "./context-resolver-chung.js";
 
 const fixture = (f: string) => JSON.parse(readFileSync(join(import.meta.dirname, "fixtures", f), "utf8"));
 const CONFLICT: { group_name: string; cases: { offer_id: string; text: string; output: string }[] } =
   fixture("e1-conflict-cases.json");
 const LAND: { cases: { offer_id: string; group_name: string; text: string }[] } = fixture("e1-land-cases.json");
-
-/** Luật E1 loại BĐS TRƯỚC vòng enrich-hau-ky (context-resolver.ts @148c073) — chép đóng băng. */
-function legacyType(text: string, groupName: string | null): string | null {
-  const t = `${text} ${groupName ?? ""}`.toLowerCase();
-  const RULES: [RegExp, string][] = [
-    [/chung cư|căn hộ|cc |chcc|apartment|condo|studio/, "apartment"],
-    [/nhà mặt tiền|mặt phố|biệt thự|liền kề|nhà phố|nhà riêng|nhà ngõ|nhà hẻm/, "house"],
-    [/đất|nền|lô đất|diện tích đất/, "land"],
-    [/phòng trọ|phòng thuê|nhà trọ/, "room"],
-    [/văn phòng|mặt bằng kinh doanh|shop house/, "commercial"],
-  ];
-  for (const [re, type] of RULES) if (re.test(t)) return type;
-  return null;
-}
-
-/** Lối khác của Hỏi-4 (bị bác): quét mọi luật trên tin trước rồi mới tới tên nhóm. */
-function textFirstType(text: string, groupName: string | null): string | null {
-  return resolvePropertyType(text, null)?.type ?? (groupName ? resolvePropertyType("", groupName)?.type ?? null : null);
-}
 
 const NO_KEYWORD = "Cần bán gấp, giá tốt, liên hệ xem nhà trực tiếp";
 
@@ -97,29 +78,5 @@ test("AC-9 E1 đất từ nội dung tin", () => {
   assert.equal(n, 5);
 });
 
-test("AC-9 chỉ kết quả land đổi trên tin thật của DB local", async () => {
-  const c = new pg.Client({
-    connectionString: process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest",
-  });
-  await c.connect();
-  try {
-    const { rows } = await c.query(
-      `SELECT z.text, z.group_name FROM sale_offers o
-       JOIN LATERAL (SELECT left(s.text, 500) AS text, s.group_name FROM stg_zalo_posts s
-                     WHERE s.post_id = ANY (o.post_ids) ORDER BY s.captured_at DESC NULLS LAST LIMIT 1) z ON true
-       WHERE o.source IN ('S03', 'S05') AND o.kind = 'sale' AND length(z.text) > 20`,
-    );
-    assert.ok(rows.length > 100, `cần dữ liệu thật để đo (có ${rows.length} tin)`);
-    const diff = (rule: (t: string, g: string | null) => string | null) =>
-      rows.map((r) => [legacyType(r.text, r.group_name), rule(r.text, r.group_name)] as const).filter(([a, b]) => a !== b);
-    const changed = diff((t, g) => resolvePropertyType(t, g)?.type ?? null);
-    assert.ok(changed.length > 0, "đối chứng dương: luật mới phải đổi ít nhất một tin");
-    const notLand = changed.filter(([a, b]) => a !== "land" && b !== "land");
-    assert.deepEqual(notLand, [], "AC-9 đổi loại không phải land");
-    // Chiều đỏ: lối khác của Hỏi-4 đổi cả loại không phải land — thước bắt được.
-    const alt = diff(textFirstType).filter(([a, b]) => a !== "land" && b !== "land");
-    assert.ok(alt.length > 0, "thước «chỉ land đổi» phải đỏ với luật quét-tin-trước");
-  } finally {
-    await c.end();
-  }
-});
+// «AC-9 chỉ kết quả land đổi trên tin thật của DB local» dời sang probes/context-resolver-that.test.ts (ngoài suite chung,
+// hồ sơ l2-bao-thu-doi-probe-that); eval E9 của enrich-hau-ky khai superseded_by về AC-5 của hồ sơ đó.

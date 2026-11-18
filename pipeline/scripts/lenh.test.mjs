@@ -89,3 +89,62 @@ test("SL-AC-5 đối chứng đỏ: đột biến chỉ khớp khoá cấm từ 
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+// ---- Hồ sơ _acceptance/so-lenh-sua-sau-tv4: «SS-AC-1», «SS-AC-2» — resume_when sai kiểu bị chặn ở khuôn ----
+const NHANH_RW = 'if (type === "source.pause" && rw !== undefined && rw !== null && typeof rw !== "string") {';
+const goNhanh = (s) => {
+  assert.equal(s.split(NHANH_RW).length, 2, "không thấy đúng một nhánh resume_when để gỡ");
+  return s.replace(NHANH_RW, "if (false) {");
+};
+const SAI_KIEU = { ok: false, ly_do: "resume-when-sai-khuon" };
+/** Ma trận viết trước 9 ô: 4 sai kiểu, 5 hợp lệ. */
+function maTranRw() {
+  const o = [
+    ["rw so", pause({ reason: "x", resume_when: 5 }), SAI_KIEU],
+    ["rw true", pause({ reason: "x", resume_when: true }), SAI_KIEU],
+    ["rw doi tuong", pause({ reason: "x", resume_when: {} }), SAI_KIEU],
+    ["rw mang", pause({ reason: "x", resume_when: [] }), SAI_KIEU],
+    ["rw vang", pause({ reason: "x" }), { ok: true }],
+    ["rw null", pause({ reason: "x", resume_when: null }), { ok: true }],
+    ["rw rong", pause({ reason: "x", resume_when: "" }), { ok: true }],
+    ["rw trang", pause({ reason: "x", resume_when: "  " }), { ok: true }],
+    ["rw chu", pause({ reason: "x", resume_when: "khi hết hạn mức" }), { ok: true }],
+  ];
+  assert.equal(o.length, 9, "ma trận resume_when phải đủ 9 ô");
+  return o;
+}
+
+test("SS-AC-1 kiemLenh .mjs: resume_when số, đúng/sai, đối tượng, mảng bị chặn; vắng, null, chuỗi nhận (9 ô)", async () => {
+  const o = maTranRw();
+  for (const [ten, cmd, muon] of o) assert.deepEqual(M.kiemLenh(cmd), muon, `ô «${ten}»`);
+  // Đối chứng đỏ: bản sao gỡ nhánh resume_when thì đúng 4 ô sai kiểu lệch.
+  const dir = mkdtempSync(path.join(tmpdir(), "lenh-rw-"));
+  try {
+    for (const f of ["vong-doi.mjs", "loai-lenh.mjs"]) writeFileSync(path.join(dir, f), readFileSync(path.join(path.dirname(LENH_MJS), f), "utf8"));
+    writeFileSync(path.join(dir, "lenh.mjs"), goNhanh(readFileSync(LENH_MJS, "utf8")));
+    const D = await import(pathToFileURL(path.join(dir, "lenh.mjs")).href);
+    const lech = o.filter(([, cmd, muon]) => JSON.stringify(D.kiemLenh(cmd)) !== JSON.stringify(muon)).map(([ten]) => ten);
+    assert.deepEqual(lech, ["rw so", "rw true", "rw doi tuong", "rw mang"], "đối chứng đỏ resume-when-sai-khuon: ô lệch khác kỳ vọng");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("SS-AC-2 bản TS và bản .mjs trả giống hệt nhau trên 44 ô (9 ô resume_when + 35 ô SL-AC-5)", async () => {
+  const o = [...maTranRw(), ...maTran(), ...O_PAYLOAD];
+  assert.equal(o.length, 44, "hợp ma trận phải đúng 44 ô");
+  const T = await napTs();
+  for (const [ten, cmd] of o) assert.deepEqual(T.kiemLenh(cmd), M.kiemLenh(cmd), `ô «${ten}» lệch hai bản`);
+  // Đối chứng đỏ: bản sao lenh.ts gỡ nhánh thì đúng 4 ô lệch.
+  const dir = mkdtempSync(path.join(path.dirname(LENH_TS), ".lenh-rw-"));
+  try {
+    const tep = path.join(dir, "lenh.ts");
+    writeFileSync(tep, goNhanh(readFileSync(LENH_TS, "utf8")));
+    const { tsImport } = await import(pathToFileURL(path.join(DIR, "..", "..", "app", "node_modules", "tsx", "dist", "esm", "api", "index.mjs")).href);
+    const D = await tsImport(pathToFileURL(tep).href, import.meta.url);
+    const lech = o.filter(([, cmd]) => JSON.stringify(D.kiemLenh(cmd)) !== JSON.stringify(M.kiemLenh(cmd))).map(([ten]) => ten);
+    assert.deepEqual(lech, ["rw so", "rw true", "rw doi tuong", "rw mang"], `đối chứng đỏ: ô lệch ${lech.join(", ")}`);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

@@ -1,0 +1,194 @@
+schema_version: 1
+slug: dong-dau-dia-chi-luc-nap
+
+# Executor key tg2_* chưa có trong _acceptance/config.yaml — thêm ở việc đầu của S3 (contract «Notes»).
+# Mọi eval máy khai `paths` để carry-forward round delta biết eval nào phải chạy lại.
+
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.tg2_phu_the
+    paths:
+      - "pipeline/transform-zalo.mjs"
+      - "pipeline/lib/dia-chi-the-nhom.mjs"
+      - "pipeline/scripts/dong-dau-dia-chi-that.mjs"
+    expected: >
+      AC-1(a), thước hàng tự bảo đảm. Trên bản chép đã áp 108 + 109: 100% tin thuộc nhóm có thẻ da_duyet sống
+      được đóng dấu; lệnh in tử số, mẫu số của riêng tập ấy, mốc đo, và số đếm theo bài đầu tách khỏi theo tin;
+      thoát 0.
+      Chiều đỏ: gỡ dấu của một tin trong tập ấy ở bản sao thì lệnh thoát 1 và gọi tên offer_id thiếu dấu.
+
+  - id: E1b
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.tg2_nguong_moc
+    paths:
+      - "pipeline/transform-zalo.mjs"
+      - "pipeline/lib/dia-chi-the-nhom.mjs"
+      - "pipeline/scripts/dong-dau-dia-chi-that.mjs"
+    expected: >
+      AC-1(b), thước của mốc. Lệnh RIÊNG, mã thoát RIÊNG với E1 (không gộp lệnh): tỉ lệ tin S03 đang rao có
+      status='mot_du_an' đạt ngưỡng chốt ở Cổng Phạm vi; in tử số, mẫu số, mốc nền 5.438/6.637 = 81,93%.
+      Chiều đỏ: hạ dữ liệu bản chép xuống dưới ngưỡng thì lệnh thoát 1 và in đúng tỉ lệ thiếu.
+
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.tg2_itest
+    paths:
+      - "pipeline/lib/dia-chi-the-nhom.mjs"
+      - "pipeline/transform-zalo.mjs"
+    expected: >
+      Ma trận sáu ô trạng thái thẻ viết trước (nhap sống, da_duyet-nhận, da_duyet-sửa, bac, nhap nghỉ, không thẻ):
+      đúng hai ô da_duyet sống sinh phát biểu, bốn ô còn lại 0 dòng.
+      Chiều đỏ: đổi ô bac thành da_duyet trong bản sao thì ca đỏ, thông điệp ghim tên ô.
+
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.tg2_pipeline
+    paths:
+      - "pipeline/lib/dia-chi-the-nhom.mjs"
+    expected: >
+      Ma trận chín ô «chữ bài × thẻ»: mỗi bài nhận đúng một hoặc không dòng project_node_id; chữ bài có căn cứ
+      chu_bai kèm đoạn trích đã kiểm thắng thẻ; thẻ nhiều dự án không sinh dòng.
+      Chiều đỏ: ô «chữ nêu dự án khác» ra dự án của thẻ thì đỏ, thông điệp ghim mã bài và hai giá trị.
+
+  - id: E4
+    criterion: AC-3
+    layer: backend-effect
+    executor: test
+    cmd: config:executors.test.tg2_itest
+    paths:
+      - "pipeline/transform-zalo.mjs"
+      - "pipeline/lib/dia-chi-the-nhom.mjs"
+    expected: >
+      Trên lược đồ tạm có 108 + 109: chạy transform thật trên ma trận AC-3 rồi đọc field_assertions —
+      số dòng sống và giá trị khớp từng ô với kết quả hàm thuần của E3 (cross-layer, hàm thuần một mình không đủ).
+
+  - id: E5
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.tg2_itest
+    paths:
+      - "pipeline/transform-zalo.mjs"
+      - "pipeline/lib/dia-chi-the-nhom.mjs"
+    expected: >
+      Nhóm có thẻ da_duyet đủ bốn ô: ba trường ghi vào field_assertions đúng lớp inferred, phương pháp e1_rule,
+      rule_id dia-chi-the-nhom, method_version dong-dau-dia-chi@1, căn cứ mang the + ban + nguon_o;
+      kind ghi vào cột sale_offer_records; cột area_id và phuong_raw không đổi.
+      Chiều đỏ: bỏ khoá ban khỏi căn cứ thì ca đỏ, thông điệp ghim tên khoá.
+
+  - id: E6
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.tg2_itest
+    paths:
+      - "pipeline/transform-zalo.mjs"
+      - "pipeline/lib/dia-chi-the-nhom.mjs"
+    expected: >
+      Sửa thẻ từ bản n sang n+1 rồi chạy lại mà không có bài mới: dòng mang ban = n bị rút với lý do the-doi-ban,
+      dòng theo bản n+1 chèn cho mọi tin của nhóm; chạy lần ba với thẻ không đổi cho 0 chèn, 0 rút.
+      Chiều đỏ: bỏ bước rút thì số dòng sống của nhóm tăng gấp đôi và ca đỏ.
+
+  - id: E7
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.tg2_itest
+    paths:
+      - "pipeline/transform-zalo.mjs"
+      - "pipeline/lib/dia-chi-the-nhom.mjs"
+    expected: >
+      Bốn bài mang bốn dấu thử của test-posts.mjs cấy vào nhóm có thẻ da_duyet: 0 dòng sinh cho cả bốn.
+      Chiều đỏ: cấy một bài thử mà nó được đóng dấu thì ca đỏ, thông điệp ghim dấu nào lọt.
+
+  - id: E8
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.tg2_quet_doc
+    paths:
+      - "pipeline/transform-zalo.mjs"
+      - "pipeline/lib/dia-chi-the-nhom.mjs"
+    expected: >
+      Quét tĩnh tệp của hàng: 0 câu đọc stg_zalo_posts nằm ngoài loadStgPosts, thoát 0.
+      Chiều đỏ: thêm một câu FROM stg_zalo_posts trực tiếp vào bản sao thì thoát 1 và in đúng tệp:dòng.
+
+  - id: E9
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.tg2_itest
+    paths:
+      - "pipeline/transform-zalo.mjs"
+    expected: >
+      Ba ca lược đồ: không có group_address_cards · có bảng mà thiếu cột retired_at · đủ cả hai.
+      Hai ca đầu bỏ bước đóng dấu, in đúng một dòng nói vì sao, thoát 0, và các bước khác của transform không đổi.
+      Chiều đỏ: thoát khác 0 hoặc không in dòng nào thì ca đỏ.
+
+  - id: E3b
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.tg2_chu_bai_that
+    paths:
+      - "pipeline/transform-zalo.mjs"
+      - "pipeline/lib/dia-chi-the-nhom.mjs"
+      - "pipeline/scripts/dong-dau-dia-chi-that.mjs"
+    expected: >
+      Trên bản chép, KHÔNG dùng fixture: liệt kê trọn tập bài có căn cứ chu_bai kèm đoạn trích đã kiểm (164 bài
+      lúc đo 16/11) và tập tin nêu dự án khác dự án của nhóm (13 tin); assert 100% số ca ấy nhận dự án của CHỮ
+      BÀI, in post_id và offer_id của từng ca lệch; in cả cỡ hai tập để thấy nếu dữ liệu đổi.
+      Chiều đỏ: tắt nhánh chữ bài trong bản sao thì lệnh thoát 1 và liệt đủ số tin lệch.
+
+  - id: E10
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.tg2_khong_tut
+    paths:
+      - "pipeline/transform-zalo.mjs"
+      - "pipeline/lib/dia-chi-the-nhom.mjs"
+      - "pipeline/scripts/dong-dau-dia-chi-that.mjs"
+    expected: >
+      Trên bản chép: lệnh in số mot_du_an và số xung_dot trước và sau lượt nạp, SO THEO TẬP BÀI (post_id) chứ
+      không theo offer_id — kind nằm trong repostKey nên đổi kind đổi luôn offer_id; 0 bài rơi từ mot_du_an sang
+      xung_dot hay sang không-có-dòng, thoát 0.
+      Chiều đỏ: cấy một bài mang dự án khác vào một tin đang mot_du_an thì lệnh thoát 1 và gọi tên bài ấy.
+
+  - id: E11
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.tg2_itest
+    paths:
+      - "pipeline/transform-zalo.mjs"
+      - "pipeline/lib/dia-chi-the-nhom.mjs"
+    expected: >
+      Băm cây collector/snapshots/ trước và sau lượt nạp giống nhau; dòng sống của du-an-nhom-mot-du-an và
+      du-an-ten-bai trên đúng bài vừa đóng dấu bị rút với lý do thay-bang-the-nhom; bài không đóng dấu giữ nguyên.
+      Chiều đỏ: bài không đóng dấu mà bị rút thì ca đỏ, thông điệp ghim mã bài.
+
+  - id: E12
+    criterion: AC-10
+    executor: judgment
+    inputs:
+      - "_acceptance/dong-dau-dia-chi-luc-nap/evidence/mau-bai-lac-du-an-v2.md"
+      - "_acceptance/dong-dau-dia-chi-luc-nap/contract.md"
+    question: >
+      Chỉ đọc hai tệp trong inputs, không chạy lệnh, không xem diff. Mục «Đường đo» của hợp đồng khai ngưỡng cho
+      thước «tỉ lệ bài lạc dự án» và cỡ mẫu tối thiểu. Trong tệp mẫu nhãn người: (1) cận TRÊN của khoảng Wilson
+      95% là bao nhiêu, và nó có NHỎ HƠN HOẶC BẰNG ngưỡng ấy không? (2) cỡ mẫu thật có đạt cỡ mẫu tối thiểu
+      không, và nó có được khai TRƯỚC khi gắn nhãn không? (3) có đúng một câu kết luận bối cảnh nhóm đủ hay chưa
+      đủ làm mặc định, và câu ấy có khớp với kết quả so ở (1) không? (4) mỗi số đọc được nguồn của nó ngay trong
+      tệp chứ không phải mở DB? Cận trên vượt ngưỡng là CHƯA ĐẠT, dù ba câu còn lại đều có.
+
+  - id: E13
+    criterion: AC-11
+    executor: script
+    cmd: config:executors.script.tg2_phu_kind
+    paths:
+      - "pipeline/transform-zalo.mjs"
+      - "pipeline/lib/dia-chi-the-nhom.mjs"
+      - "pipeline/scripts/dong-dau-dia-chi-that.mjs"
+    expected: >
+      Trên bản chép: số tin S03 có kind rỗng SAU lượt nạp không lớn hơn TRƯỚC (mốc nền đo lại tại chỗ; 17/11 là
+      0 tin rỗng trên 6.649 tin); lệnh in riêng số tin lấy kind từ chữ bài, từ thẻ, từ nhánh boi-canh-nhom; VÀ
+      in số bài LẬT sale↔rent_lt, hai chiều tách nhau — khác 0 thì khai vào Known limits kèm số thật; thoát 0.
+      Chiều đỏ: tắt nhánh boi-canh-nhom trong bản sao thì lệnh thoát 1 và gọi đúng số tin rỗng sinh ra.

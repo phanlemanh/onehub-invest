@@ -1,0 +1,20 @@
+{
+ "feature_plain": "Bộ so tên đường của máy ghép căn và thẻ duyệt hiểu đúng năm kiểu ô đường viết bẩn có thật trong tin S06, và phép đo trên dữ liệu thật thôi chặn mọi lượt chấm của cả kho.",
+ "will_do": [
+  {"id":"AC-1","p":"Sẽ hiểu ô đường có dấu phẩy lặp sau ngõ/hẻm («Hẻm 5 ,,1/ Đường chùa Pháp thạnh») là cùng đường với tên phía sau."},
+  {"id":"AC-2","p":"Sẽ hiểu ô bắt đầu bằng số nhà rồi dấu phẩy («208, Nguyễn Hữu Cảnh, …») là đường Nguyễn Hữu Cảnh; đường đánh số vẫn không so."},
+  {"id":"AC-3","p":"Sẽ hiểu ô có ngõ/kiệt đứng giữa («Đường Kiệt 91 Lê Tân Trung», «Số nhà 17 ngõ 60 Dương Khuê») là đường phía sau; khác đường vẫn bị loại."},
+  {"id":"AC-4","p":"Sẽ coi bề rộng hẻm («hẻm 3,5m») và «822 /131A» là một phần chỉ vị trí, không thành tên đường rác."},
+  {"id":"AC-5","p":"Sẽ giữ thẻ duyệt và luật máy ra cùng kết quả ở mọi ca, cũ và mới."},
+  {"id":"AC-6","p":"Sẽ đưa phép đo trên dữ liệu thật ra khỏi bộ kiểm chung, và chặn ai thêm phép đo kiểu đó vào lại."},
+  {"id":"AC-7","p":"Sẽ chạy phép đo dữ liệu thật mỗi sáng trong /ops-check, báo ✅ hay ❌ kèm giá trị lệch và đếm theo kiểu viết."},
+  {"id":"AC-8","p":"Sẽ làm bộ kiểm agent xanh lại trên bản chép DB máy thu mới nhất — gỡ chặn cho các dãy khác."}
+ ],
+ "wont_do": [
+  {"id":"OOS-1","p":"Sẽ KHÔNG xử ba kiểu hiếm còn lại: gõ sai «kiêt», đuôi rác sau tên, số nhà dính chữ."},
+  {"id":"OOS-2","p":"Sẽ KHÔNG dùng model đọc tên đường, không sửa dữ liệu nguồn hay việc thu S06."},
+  {"id":"OOS-3","p":"Sẽ KHÔNG đẩy cảnh báo chủ động; ❌ chỉ hiện khi chạy /ops-check."},
+  {"id":"OOS-4","p":"Sẽ KHÔNG dời bốn phép đo dữ liệu thật khác trong lát này — chỉ khoá số lượng, dời ở hàng riêng (Hỏi-2)."},
+  {"id":"OOS-5","p":"Sẽ KHÔNG sửa hồ sơ đã ký nào; ba hồ sơ dùng phép đo cũ vẫn đo như lúc ký."}
+ ]
+}

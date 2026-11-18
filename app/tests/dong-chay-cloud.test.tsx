@@ -325,7 +325,9 @@ describe("DC-AC-1 bảng tính sẵn", () => {
       // Bảng 051 chưa áp lên public trước merge (lời dặn giám sát) → bảng TẠM cùng khuôn trong giao dịch, rồi ROLLBACK.
       const ddl = migration051().replace("CREATE TABLE IF NOT EXISTS data_flow_snapshot", "CREATE TEMP TABLE data_flow_snapshot")
       assert.notEqual(ddl, migration051(), "khuôn bảng tạm lệch 051")
-      const body = flowSql().replace(/^BEGIN;$/m, "").replace(/^COMMIT;$/m, "")
+      // DV7: DB local chưa áp 105 thì ô Định vị về CTE rỗng — đúng cách bộ chạy làm tươi làm (dinhViKhiCoView).
+      const { dinhViKhiCoView } = await import("../../pipeline/lib/than-600.mjs")
+      const body = (await dinhViKhiCoView(c, flowSql())).replace(/^BEGIN;$/m, "").replace(/^COMMIT;$/m, "")
       assert.ok(!/^\s*(BEGIN|COMMIT);/m.test(body), "600 còn BEGIN/COMMIT — không chạy được trong giao dịch ROLLBACK")
       await c.query("BEGIN")
       await c.query(ddl)
@@ -458,6 +460,8 @@ const ALLOWED_QUERIES: [string, RegExp][] = [
   // Thẻ Ghép căn đang chờ đóng băng (V7, hồ sơ dong-bang-stage-b-resolve): câu đếm mang vị từ loại trừ.
   ["thẻ chờ duyệt", /^SELECT count\(\*\) AS review FROM review_queue WHERE status = 'pending' AND NOT \(item_type = 'entity_match' AND status = 'pending'\)$/],
   ["Tin mới nhất", /row_number\(\) OVER \(PARTITION BY source ORDER BY first_seen DESC\) AS rn\s+FROM sale_offers WHERE first_seen >= \$1/],
+  // DV7: máy thu dò view offer_project (105) trước khi đánh mức định vị cho bản ghi — chỉ đọc danh mục, không đọc dữ liệu.
+  ["dò nguồn định vị", /^SELECT to_regclass\('offer_project'\) IS NOT NULL AS co$/],
 ]
 /** Câu nằm ngoài ma trận (rỗng = mọi câu thuộc một lớp cho phép, không lớp nào lặp). */
 function queryProblems(seen: string[]): string[] {

@@ -129,7 +129,7 @@ const JOBS = {
     },
     // TV2b vòng 3 (cong-tac-that): cổng vòng đời S06 chạy TRƯỚC mọi bước — node giả trả 0 (chạy); DB tắt thì cổng thoát ≠0 (fail-closed)
     // NH1 media-canonical-reso (Hỏi-3 = B, Mạnh 30/10): transform-media đứng ngay sau transform-chotot.
-    seq: ["vong-doi", "collect-chotot", "doc-vung-s06", "import-chotot", "transform-chotot", "transform-media", "refresh-bait-gap", "resolve-properties"],
+    seq: ["vong-doi", "collect-chotot", "doc-vung-s06", "import-chotot", "transform-chotot", "transform-media", "refresh-bait-gap", "resolve-properties", "xep-hang-gia"],
   },
   "apify-facebook-daily": {
     script: "scripts/apify-facebook-daily.sh",
@@ -138,7 +138,7 @@ const JOBS = {
       // mốc đúng khuôn TS_RE của tệp bọc (có gạch ngang) — khuôn cũ không gạch bị bỏ qua, import-airbnb không được gọi
       dirs: ["collector/snapshots/hanoi/hanoi__zalo-agent__2026-10-23T000000", "pipeline/logs"],
     },
-    seq: ["apify-facebook-collector", "import-airbnb", "transform-fb", "refresh-bait-gap"],
+    seq: ["apify-facebook-collector", "import-airbnb", "transform-fb", "refresh-bait-gap", "xep-hang-gia"],
   },
   "airdna-daily": {
     script: "scripts/airdna-daily.sh",
@@ -218,7 +218,12 @@ describe("AC-6 job_step", () => {
       assert.equal(r.stdout, "ra-out\n", "stdout của lệnh phải đi qua nguyên vẹn, không thêm dòng ghim");
       const ghim = r.stderr.split("\n").filter((l) => l.startsWith("JOB FAIL"));
       if (code === 0) {
-        assert.equal(r.stderr, "ra-err\n", "lệnh lành: stderr chỉ có đầu ra của lệnh");
+        // job-step-ghi-thoi-luong: mỗi bước nay có thêm ĐÚNG MỘT dòng ghim thời lượng ở stderr,
+        // kể cả bước lành. stdout vẫn không thêm byte nào (khẳng định ở trên).
+        const ghimGio = r.stderr.split("\n").filter((l) => l.startsWith("JOB STEP "));
+        assert.equal(ghimGio.length, 1, "lệnh lành: đúng một dòng ghim thời lượng ở stderr");
+        assert.equal(r.stderr, `ra-err\n${ghimGio[0]}\n`,
+          "lệnh lành: stderr chỉ có đầu ra của lệnh rồi dòng ghim thời lượng");
       } else {
         assert.deepEqual(ghim, [`JOB FAIL [demo] bước buoc-thu mã ${code}`], "lệnh hỏng: đúng một dòng ghim ở stderr");
         assert.ok(r.stderr.startsWith("ra-err\n"), "stderr của lệnh đi trước dòng ghim, nguyên vẹn");
@@ -229,8 +234,8 @@ describe("AC-6 job_step", () => {
 
 // ------------------------------------------------------------- AC-1, AC-2 --
 for (const [ac, job, steps] of [
-  ["AC-1", "chotot-daily", ["transform-chotot", "transform-media", "refresh-bait-gap", "resolve-properties"]],
-  ["AC-2", "apify-facebook-daily", ["transform-fb", "refresh-bait-gap"]],
+  ["AC-1", "chotot-daily", ["transform-chotot", "transform-media", "refresh-bait-gap", "resolve-properties", "xep-hang-gia"]],
+  ["AC-2", "apify-facebook-daily", ["transform-fb", "refresh-bait-gap", "xep-hang-gia"]],
 ]) {
   const J = JOBS[job];
   describe(`${ac} ${job}`, () => {

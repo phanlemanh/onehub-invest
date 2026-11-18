@@ -146,7 +146,11 @@ test("(5) bước thu lỗi → dòng ghim JOB FAIL [apify-facebook-daily] bư�
     { encoding: "utf8" },
   );
   assert.equal(r.status, 7, "job_step trả đúng mã thoát của lệnh");
-  assert.match(r.stderr.trim(), /^JOB FAIL \[apify-facebook-daily\] bước apify-facebook-collector mã 7$/);
+  // job-step-ghi-thoi-luong: bước nào cũng để lại một dòng JOB STEP trước dòng JOB FAIL.
+  // Ca này vẫn đòi dòng JOB FAIL NGUYÊN VĂN như cũ, chỉ tách nó ra khỏi dòng thời lượng.
+  const dongLoi = r.stderr.trim().split("\n").filter((l) => l.startsWith("JOB FAIL "));
+  assert.equal(dongLoi.length, 1, "đúng một dòng ghim JOB FAIL cho bước hỏng");
+  assert.match(dongLoi[0], /^JOB FAIL \[apify-facebook-daily\] bước apify-facebook-collector mã 7$/);
 });
 
 test("(6) chú thích đầu: không còn '4 lần/ngày'; nói đúng lịch 2 lượt/tuần", () => {

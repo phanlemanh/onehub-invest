@@ -1,0 +1,3 @@
+{"ts":"2026-11-17T16:40:00Z","round":2,"evalId":"E1","run_id":"gs-ac-6-the-khong-tin-a-E1-r2-20261117T164000Z","exit_code":0,"cmd":"bash _acceptance/gs-ac-6-the-khong-tin-a/probes/kiem.sh e1"}
+{"ts":"2026-11-17T16:40:02Z","round":2,"evalId":"E2","run_id":"gs-ac-6-the-khong-tin-a-E2-r2-20261117T164002Z","exit_code":0,"cmd":"bash _acceptance/gs-ac-6-the-khong-tin-a/probes/kiem.sh e2"}
+{"ts":"2026-11-17T16:40:03Z","round":2,"evalId":"E3","run_id":"gs-ac-6-the-khong-tin-a-E3-r2-20261117T164003Z","exit_code":0,"cmd":"bash _acceptance/gs-ac-6-the-khong-tin-a/probes/kiem.sh e3"}

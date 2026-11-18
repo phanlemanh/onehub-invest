@@ -1,0 +1,102 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Thẻ địa chỉ nhóm — ba lối ra</title>
+<style>
+ :root{--bg:#fff;--fg:#1a1a1a;--mu:#666;--bd:#e2e2e2;--hi:#f6f7f9;--ok:#0a7d4b;--wa:#9a6700;--er:#b42318;--ac:#1a56c4}
+ @media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#15171a;--fg:#e8e8e8;--mu:#9aa0a6;--bd:#30343a;--hi:#1d2025;--ok:#4ac98a;--wa:#e0b341;--er:#f07167;--ac:#6fa8ff}}
+ body{margin:0;padding:24px;background:var(--bg);color:var(--fg);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;max-width:860px}
+ h1{font-size:22px;margin:0 0 4px} h2{font-size:17px;margin:28px 0 8px;padding-top:14px;border-top:1px solid var(--bd)}
+ .sub{color:var(--mu);font-size:14px;margin:0 0 18px}
+ table{border-collapse:collapse;width:100%;margin:10px 0;font-size:14px}
+ th,td{border:1px solid var(--bd);padding:8px 10px;text-align:left;vertical-align:top}
+ th{background:var(--hi);font-weight:600}
+ .ok{color:var(--ok)} .wa{color:var(--wa)} .er{color:var(--er)}
+ .box{border:1px solid var(--bd);border-radius:8px;padding:12px 14px;margin:10px 0;background:var(--hi)}
+ .rec{border-left:4px solid var(--ac)}
+ pre{background:var(--hi);border:1px solid var(--bd);border-radius:6px;padding:12px;overflow-x:auto;font-size:13px;line-height:1.5}
+ code{font-size:13px}
+ .lbl{display:inline-block;font-size:12px;padding:1px 7px;border-radius:999px;border:1px solid var(--bd);color:var(--mu)}
+</style>
+<body>
+<h1>Thẻ địa chỉ nhóm — ba lối ra</h1>
+<p class="sub">Cổng Bằng chứng · vòng 6 · bậc rủi ro T3 (phải có chữ ký người) · nhánh <code>feat/the-dia-chi-nhom-s03</code> @ <code>f1ea2c71</code>, chưa đẩy</p>
+
+<p>Người vận hành mở một trang Ops mới, thấy mỗi nhóm Zalo đang thu có một thẻ địa chỉ máy dựng sẵn —
+dự án, phường và tỉnh, phân khu, nhóm này bán hay cho thuê — kèm số bài làm căn cứ, rồi nhận, sửa hay bác từng thẻ.</p>
+
+<h2>Vòng 6 cho ra gì</h2>
+<table>
+<tr><th>Điều này</th><th>Kết quả</th></tr>
+<tr><td>Lỗi <strong>trong</strong> bộ tiêu chí đã ký</td><td class="ok"><strong>Không còn cái nào</strong> (vòng 5 còn một)</td></tr>
+<tr><td>Phép kiểm máy</td><td>9 trên 10 đạt; một cái đỏ vì dữ liệu thử cũ, xem dưới</td></tr>
+<tr><td>Câu hỏi cho người chấm</td><td class="wa">Một câu chưa ngã ngũ (ô «Phường · tỉnh»)</td></tr>
+<tr><td>Việc ngoài bộ tiêu chí</td><td>9 mục mới + 13 mục từ vòng trước</td></tr>
+</table>
+
+<h2>Ba điều cần anh đọc trước khi chọn</h2>
+
+<div class="box">
+<p><strong>1. Mốc trong tiêu chí AC-7 (số nhóm có thẻ): 27 → 26.</strong></p>
+<p>Lệnh dựng thẻ nay gạt bài thử như mọi bước đọc khác của kho, nên số nhóm thật có bài là <strong>26</strong>,
+không phải 27 như lời tiêu chí anh đã ký hôm 15/11. Máy <em>không</em> tự sửa chữ trong tiêu chí đã ký — anh gật hay bác.</p>
+</div>
+
+<div class="box">
+<p><strong>2. Ô «Phường · tỉnh» — ba người chấm độc lập, hai người không chắc.</strong></p>
+<p>Tiêu chí đòi mỗi ô nói rõ lấy từ đâu và bao nhiêu bài. Bốn ô còn lại đều nói đủ.
+Riêng ô phường suy ra từ ô dự án nên chỉ ghi «theo dự án», không có số bài riêng — số bài của nó chính là 47 bài của ô dự án.</p>
+<p class="sub">Ở vòng 5 hội đồng đề xuất <strong>đạt</strong>; ở vòng 6 họ đề xuất <strong>chưa chắc</strong> (2 trên 3 không chắc). Đây là câu chỉ anh quyết được.</p>
+</div>
+
+<div class="box">
+<p><strong>3. Việc ngoài bộ tiêu chí: 9 mục mới, máy đề nghị xếp lại gần hết.</strong></p>
+<table>
+<tr><th>Máy đề nghị</th><th>Số mục</th><th>Nghĩa là</th></tr>
+<tr><td>Ghi vào hạn chế đã biết</td><td>8</td><td>Chấp nhận, ghi ra, phát hành bản này</td></tr>
+<tr><td>Không sửa</td><td>1</td><td>Không đáng mở việc</td></tr>
+</table>
+<p class="sub">Mức nặng: 1 nặng · 6 vừa · 2 nhẹ. Mục nặng nhất là «lệnh không gỡ thẻ của nhóm thôi đủ điều kiện» — chính là chỗ làm phép đo đỏ.</p>
+</div>
+
+<h2>Hai chỗ đỏ — cả hai là lệnh, không phải sản phẩm</h2>
+<table>
+<tr><th>Chỗ đỏ</th><th>Vì sao</th><th>Có phải lỗi của hàng này không</th></tr>
+<tr><td>Phép đo trên bản chép dữ liệu thật in <code>28 ≠ 26</code></td>
+    <td>Bản chép còn hai thẻ của hai nhóm toàn bài thử, dựng từ lượt chụp ảnh trước khi có bộ lọc. Lệnh không có đường gỡ thẻ của nhóm thôi đủ điều kiện.</td>
+    <td class="wa">Nửa — lỗ thật, nhưng chỉ lộ ra từ lần chạy thứ hai trở đi</td></tr>
+<tr><td>Bộ kiểm kiểu của giao diện đỏ</td>
+    <td>Thư mục làm việc này thiếu bộ kiểu Next sinh lúc build. 6 lỗi ở 6 tệp <strong>không</strong> nằm trong thay đổi của hàng.</td>
+    <td class="ok">Không — sinh kiểu xong thì sạch (đã thử: <code>npx next typegen</code> rồi kiểm kiểu, cả hai đều sạch)</td></tr>
+</table>
+
+<h2>Ba lối ra</h2>
+<pre>
+                      ┌─ (A) Ký luôn ──────── ký xong VẪN CHƯA áp được lên máy thu
+                      │
+  Anh chọn ───────────┼─ (B) Một vòng nữa ─── ★ giám sát khuyên · đóng ba việc · một lượt khoá
+                      │
+                      └─ (C) Ký và áp ngay ── ra số nhanh nhất · nhưng phải dựng lại bản chép trước
+</pre>
+
+<table>
+<tr><th>Lối</th><th>Làm gì</th><th>Đổi lại</th></tr>
+<tr><td><strong>A</strong></td><td>Ký trên kết quả hiện có</td>
+    <td class="er">Không khuyến nghị. Hồ sơ áp đòi đủ năm thứ, trong đó «số chạy thử» đang <strong>đỏ</strong> — nên chữ ký không phủ được việc áp bảng mới và chạy lệnh dựng thẻ trên máy thu. Ký xong vẫn chưa áp được.</td></tr>
+<tr><td><strong>B</strong> <span class="lbl">giám sát khuyên</span></td>
+    <td>Cho một vòng nữa, phạm vi đóng đúng ba việc:<br>
+        1. Sinh bộ kiểu giao diện trước khi chấm (chữa chỗ đỏ thứ hai — đã thử, chắc chắn chạy).<br>
+        2. Thêm đường xử thẻ của nhóm không còn trong tập — <strong>chỉ thẻ nháp chưa ai quyết</strong>; thẻ đã nhận, sửa hay bác giữ nguyên. Kèm một ca kiểm phải đỏ khi bỏ đường này đi.<br>
+        3. Chạy lại phép đo trên <strong>chính bản chép đang có 28 thẻ</strong>, kỳ vọng về 26 — biến chỗ đỏ thành phép thử thật.</td>
+    <td>Khoảng một lượt chấm (lượt 5 đo được 41 phút máy). Vượt trần 3 lượt — anh là người cho phép.</td></tr>
+<tr><td><strong>C</strong></td><td>Ký và áp lần đầu như hiện có; ghi «chưa có đường gỡ thẻ» vào hạn chế đã biết, mở một việc riêng</td>
+    <td>Nhanh nhất tới con số trên màn — máy thu chưa có bảng thẻ nên lần áp đầu ra đúng 26 = 26. Nhưng phải dựng lại «số chạy thử» trên một bản chép sạch để hồ sơ áp đủ năm thứ, và cam kết «số thẻ bằng số nhóm» chỉ đúng ở lần áp đầu.</td></tr>
+</table>
+
+<div class="box rec">
+<p><strong>Ở lối (B) có một câu nhỏ cần anh chọn luôn:</strong> thẻ của nhóm thôi đủ điều kiện nên <strong>cho nghỉ</strong> (giữ dòng, đánh dấu hết hiệu lực) hay <strong>xoá dòng</strong>?</p>
+<p>Máy đề nghị <strong>cho nghỉ</strong> — không xoá, hợp với nếp của kho là dữ liệu chỉ nghỉ chứ không mất.</p>
+</div>
+
+<h2>Trả lời</h2>
+<pre>mốc AC-7 27 → 26: ___ ; ô Phường · tỉnh đạt hay chưa: ___ ; lối ra (A / B / C): ___ ; nếu B, thẻ rời tập: cho nghỉ / xoá: ___</pre>
+<p class="sub">Trang này chỉ để đọc và quyết — nó không ghi gì. Chữ ký thật ghi bằng <code>/acceptance-gate:signoff the-dia-chi-nhom-s03</code>.</p>
+</body>

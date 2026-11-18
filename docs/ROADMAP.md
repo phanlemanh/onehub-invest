@@ -211,6 +211,7 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   hạ từ `admin` xuống vai Vận hành (thay lời «ảnh và chữ bài giữ `admin`» của SD4), vẫn chỉ ở máy thu; `dealTheoVai` bỏ trường trước khi vào trang, vai Người xem không nhận
   ảnh, chữ bài, tên, nhóm, số, toà, tầng, số căn, số nhà. Ngưỡng 5, 35, 50 và 45 ngày ở `lib/deals-chi-tiet.ts`, dùng chung cho SQL và chữ trên trang. Không migration, không thu thêm.
 - Sửa ba lỗi của Căn giá tốt (`_acceptance/can-gia-tot-sua-ba-loi`, Mạnh ký 04/11): chữ giữ chỗ `unknown` không còn hiện như tên ở `/ops/deals` và ở trang Bán, Cho thuê công khai (`lib/ten-tin.ts`, thẻ hiện «Chưa có tên», `unknown` không tính khi đếm tài khoản nhiều tên); căn đắt hơn thước ghi đúng lý do «Đắt hơn thước phường <số>%, không phải căn giá tốt»; crumb «Căn giá tốt» chỉ mang `?can=` khi căn còn trong kết quả `getDeals()`, nên không quay lại chính trang. Không migration, không đổi bố cục.
+- Bảng hạng giá (CG9, `_acceptance/bang-hang-gia-m2`, 14/11): migration 104 `offer_price_rank` — một dòng mỗi tin đang rao, bán và thuê, P1 và P2; `pipeline/xep-hang-gia.mjs` chạy `sql/420_price_rank.sql` sau bước định vị ở ba job đêm (mỗi căn một phiếu; phường × loại × bán/thuê, ± số phòng ngủ khi đủ 10; thuê thiếu m² so giá tháng cùng PN; ≥10 phiếu nhãn «Rẻ trong phường», 5–9 chỉ số, <5 không chấm; rẻ quá 35% mang «Cần xác minh», vẫn hiện). `/ops/deals` (cả S06), `/api/v1/deals`, `/v1/deals` (tham số `kind`, khối `rank`) đọc bảng; bảng chưa có hay rỗng thì lùi về thước CG8. Sync cloud chép bảng, cloud chưa áp DDL (`docs/ops/cloud-schema-catchup-2026-11-14-offer-price-rank.sql`) thì bỏ qua một dòng. Áp 104 lên máy thu và cloud là lời riêng của Mạnh.
 - DATA-CONTRACT v1–2: importer nhận cả hai; ảnh Zalo N1 (`meta.mediaFiles`) →
   `stg_zalo_posts.media_files` (migration 035, PII tầng A — chỉ local, test
   `pipeline/sync-pii.test.mjs` gác FILL).
@@ -361,7 +362,7 @@ không thêm tên nguồn thật (ADR-0007 sửa đổi 26/10); nhãn job, tên 
 - **Theo nhịp**: 15′ cloud-sync + ops-facts (`cloud-sync`) · 15′ tín hiệu sống S03 (`zalo-heartbeat`) · 5′ bộ canh
   (`zalo-watchdog`).
 - **Chạy liên tục** (KeepAlive): `kev-gate` :8009 · `collector-api` (đã chạy dưới launchd) · gateway OpenClaw.
-- **Không chạy dưới launchd**: backup (V1); `com.oneinvest.kev.plist` có tệp nhưng không nạp (`kev-gate` thay).
+- **Không chạy dưới launchd**: sao lưu ngoài máy (V1, `scripts/sao-luu-ngoai-may.sh` — công cụ có, chưa nạp lịch); `com.oneinvest.kev.plist` có tệp nhưng không nạp (`kev-gate` thay).
 
 ### 2.5 Số liệu hôm nay
 > ⚠ 23/10: 1.020/1.102 tin S03 trong `sale_offers` sinh từ snapshot giả `zalo-mock` (chỉ 82 tin thật) — số P1,
@@ -634,6 +635,10 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     095 — số tầng → `floor_raw` (RESO `UnitFloorLocation`, tra DD 2.1), dải «tầng thấp/trung/cao» → extension `floor_band`
     (`lower`·`middle`·`upper`, không có cột); 747 tầng S06 giữ bằng phát biểu legacy; DQ `s03-floor-fill`. DV4 nhận trọn phần tầng
     của SV2; SV2 khi nối lại chỉ còn hướng và phải giữ hai trường tầng trong CHECK. Áp 095 lên máy thu là lời riêng của Mạnh.
+    **DA2** `truong-du-an-tren-tin` (12/11, Mạnh duyệt Cổng Phạm vi và kế hoạch, T3): migration 096 — tin (resource Property) nhận
+    phát biểu `project_node_id` (RESO `SubdivisionName`, id nút `project`), `subzone_node_id` (extension, id nút `subzone` hay ba nút
+    `building` Grand Park tới DA1) và `area_id` (phường, trước chỉ ở Building); nhãn sổ «Phường». Chỉ phát biểu, chưa dựng cột,
+    bộ phân xử không đổi — GCQ2, DA9 đọc phát biểu. Migration sau phải giữ hai trường trong CHECK. Áp 096 lên máy thu là lời riêng của Mạnh.
 42. **Căn giá tốt theo vị trí** (09/11, Mạnh «Chốt theo đề xuất»; bản phạm vi `docs/plan/pham-vi-can-gia-tot-vi-tri-0911.md`, phân tích ở
     kho tri thức riêng `wiki/chu-de/can-gia-tot-vi-tri.md`): «giá tốt» = giá/m² nằm trong **20% thấp nhất** của nhóm so sánh, so với
     **trung vị**. Nhóm = nút vị trí sâu nhất đủ căn (toà → phân khu → dự án → phường) × loại hình × bán/thuê, thêm số phòng ngủ khi nhóm
@@ -643,6 +648,8 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     - Q3: giá tốt = top 20% **và** thấp hơn trung vị **từ 5%**; trần 35% → «Cần xác minh» giữ nguyên.
     - Q4: trung vị tính **chung P1 (S03, S05) và P2 (S06)**, mỗi căn một phiếu.
     - Q5: **CG8** (so cùng loại hình ở `/ops/deals` và `/v1/deals`) làm trước mọi hàng khác, tách khỏi PL26.
+    - **Sửa 14/11 (mục 48, QĐ4):** tin thuê thiếu m² so **giá thuê/tháng theo số phòng ngủ** trong nhóm thay giá/m²; tin thuê có m²
+      và tin bán giữ giá/m². QĐ3: căn đạt chuẩn lên Invest do máy tự hiện, chưa dựng rào.
     Số đo nền (DB máy thu 09/11): thước hiện nay gộp mọi loại hình theo phường, trung vị giá/m² căn hộ thấp hơn trung vị cả phường 45,5%
     (127 phường), nên căn hộ đúng giá hiện «rẻ» khoảng 45% cả trên API công khai. Ở cấp phường p20 thấp hơn trung vị 17,6%, ở cấp dự án
     5,3%. Hàng mới: CG8–CG14; viết lại CG3 (tra theo vị trí bất kỳ); CG2, CG4 chuyển khỏi hàng, CG9 gánh; CGP1 giao cùng CG11.
@@ -774,6 +781,141 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
       bộ thu tự nghỉ 24 giờ.
     - Gỡ dịch vụ model cục bộ bị trùng trong launchd (bật lại liên tục vì trùng cổng), giữ bản «gate». Đã gỡ 12/11.
     Hàng «lịch thu trên Ops» (xem đủ job, mã thoát, bật/tắt, đổi nhịp từ `/ops/collections`) mới là đề xuất, chưa cắt.
+48. **Mỏ neo đợt: «ở dự án B, tháp X, tầng A — căn nào giá tốt nhất»** (14/11, Mạnh «Đồng ý theo khuyến nghị» cho chín quyết định
+    QĐ1–QĐ9; quyết định nguồn S16 cùng ngày; S09 ngày 13/11; bản phạm vi `docs/plan/pham-vi-mo-neo-1411.md`, căn cứ ở kho tri thức
+    riêng `wiki/dot/mo-neo-1411.md`). Nguyên văn: «Đồng ý theo khuyến nghị, mục 2 lên invest chưa cần rào, rào chỉ dựng sau khi rõ
+    tôi trải nghiệm thực tế và đánh giá lại nếu cần thiết. Về giá thuê thông lệ thị trường đang so với nhu cầu như giá căn 2pn, 1pn
+    đây cũng là cách so nếu chưa có m2. Cũng bỏ rào sau khi lên thực tế đánh giá.»
+    - **Mỏ neo và ba nhịp** (QĐ9): nhịp 1 cấp dự án trên Ops (mốc MN1) → nhịp 2 cấp toà ở Ocean Park 1 và Grand Park (MN2) → nhịp 3
+      tầng, ngoài hai khu, lên Invest (MN3). Thước chính: số tin căn hộ đang rao được xếp hạng giá từ cấp dự án trở xuống và hiện
+      trên màn (14/11: 0). Việc đang làm giữ nguyên, xếp theo mỏ neo. Chỉnh lộ trình: tách DA3 hai lát, lát mỏng DA32 đi trước (QĐ5), tự mở
+      `registry_aliases` cho nút dự án bằng migration 100; DS2 đứng thẳng trên DA32, DA7 rời đường găng (GS quyết 14/11 theo mục 44
+      Hỏi-1);
+      PL20 thành nhịp toà, trục và căn ở PL36 (QĐ6); hàng nạp S16 DA33 (QĐ7). QĐ1, QĐ2 (lời ghi thật DV6 rồi DA5, sao lưu và chạy
+      thử lại trước) và QĐ8 (mở ngay CG9, gộp DA6) là việc vận hành, không vào lộ trình.
+    - **QĐ3 — lên Invest chưa dựng rào**: căn giá tốt lên Invest do máy tự hiện. Bỏ bước «gọi thử mẫu, đạt mới mở» và bỏ việc giấu căn
+      rẻ quá 35%; rào chỉ dựng sau khi Mạnh dùng thật và đánh giá lại. Giữ nghĩa «giá tốt» ở mục 42 (20% thấp nhất, dưới trung vị từ
+      5%, nhóm từ 10, từ cấp dự án trở xuống) vì đó là định nghĩa nhãn; căn rẻ quá 35% vẫn hiện với nhãn «Cần xác minh»; giữ dấu
+      «chưa xác minh» / «đã xác minh», dòng «so với N căn, thấp hơn trung vị X%» và thước đang dùng. CG7, CG14 không còn chờ
+      CG5 → CG6; CG5, CG6, CG13 chạy song song.
+    - **QĐ4 — thước tin thuê** (sửa mục 42): tin thuê thiếu m² so giá thuê/tháng theo số phòng ngủ trong nhóm (1PN với 1PN, 2PN với
+      2PN), đúng thông lệ thị trường; tin thuê có m² và tin bán giữ giá/m². Cùng ngưỡng 20% và 5%, nhóm từ 10. Chưa dựng rào; đánh giá
+      sau khi lên thật. Giao ở CG10, CG11.
+    - **Nguồn S16** (14/11, Mạnh «Cả phần đăng nhập»; «Phần đăng nhập là mã chính từ chủ đầu tư, nên sự tin cậy cao»): danh mục do
+      một chủ đầu tư tự công bố. Lời «Cả phần đăng nhập» trả lời câu «đưa dữ liệu S16 có sẵn vào đường ống tới đâu», nên mọi phần
+      đã có — danh mục, tin rao và mã căn lấy bằng đăng nhập — vào đường ống. Mã căn S16 là nguồn tin cậy cao nhất khi dựng cây
+      toà → căn ở các dự án của chủ đầu tư đó, xếp trên S08 và trên mã suy từ tin S03. **Chưa có lời**: thu định kỳ bằng phiên đăng
+      nhập; hiện mã căn lấy bằng đăng nhập lên cổng Invest hay API công khai; hiện tin rao S16 lên cổng — mặc định **chỉ nội bộ** tới
+      khi Mạnh nói khác. Trường nguồn và tên thư mục bản thu mang tên thật nên chỉ ở máy thu; mọi thứ rời máy đổi về `S16`. Phiên
+      đăng nhập, định danh tài khoản thu vẫn là tầng A (luật 6). Hàng DA33: bộ nạp `import-s16*` vào bảng stg là làn thu (ZCode viết,
+      Claude duyệt hợp đồng); Claude viết migration 103 và phần từ stg vào danh bạ.
+    - **Nguyên tắc thu chung** (14/11, Mạnh ở phiên liên làn): «nơi nào dùng API để thu được thì để làn thu thu nhanh và thu hết,
+      nơi nào chặn thì tuân thủ, không làm máy móc quá».
+    - **Nguồn S09** (13/11, Mạnh «Thu như vừa rồi, đó trách nhiệm của S09, nhiệm vụ của bạn là giao việc và kiểm tra kết quả và hỗ
+      trợ»): thu định kỳ qua đường API (miền API riêng), trách nhiệm ở nguồn; không trình lại câu robots, điều khoản. Luật thu chung
+      giữ: không đăng nhập, dừng khi gặp 403, 429 hay trang thử thách, không vượt chặn. Giữ bản thu ngày 13/11 kèm ghi chú phần meta
+      bị sửa (bản thu bất biến, luật 1: ghi chú đi kèm, không ghi đè).
+    Số đo nền (DB máy thu 14/11): tin căn hộ đang rao bán 11.716, thuê 24.900; nhóm dự án từ 10 tin phủ 5.082 tin bán và 6.710 tin
+    thuê; tính thử ra 855 căn bán, 1.280 căn thuê đạt chuẩn «giá tốt» ở cấp dự án; 268 mã dự án S06 phủ 11.045 tin; tin thuê S03
+    có m² 622/3.459; tầng có ở 17% tin bán, 6% tin thuê căn hộ S03. Hàng mới: DA32, DA33, DA34, PL36 và nợ RP1, FR1, PB1, IT4, IT6, IT5,
+    CI3; sửa lời DA3, DA7, PL20, CG7, CG10, CG14, GC2, TN1. AGENTS.md không đổi: S16 chưa có trong luật 5, 6 nên không mâu thuẫn.
+49. **Vận hành ổn định sau sự cố S03 đứt 34 giờ (13–14/11)** (14/11, phiên điều phối liên làn, Mạnh «Theo khuyến nghị» cho cả sáu
+    việc ở §7 của `docs/ops/de-xuat-van-hanh-on-dinh-1411.md`; bản phạm vi `docs/plan/pham-vi-van-hanh-on-dinh-1411.md`, căn cứ ở kho
+    tri thức riêng `wiki/dot/van-hanh-on-dinh-1411.md`). Sự cố: kênh S03 ngừng thu từ 13/11 00:54Z tới 14/11 khoảng 11:00Z, 0 bài.
+    Máy phát hiện đúng lúc (heartbeat DOWN, bộ canh L6) nhưng không lớp nào đẩy tin tới người — cảnh báo chỉ nằm trong tệp log và
+    một banner trên máy thu. Bộ tự khởi động lại của kênh hẹn lịch mà không chạy, rồi phiên mất hiệu lực nên phải quét QR lại.
+    - **D1 — kênh đẩy cảnh báo**: issue trong kho riêng tư trên GitHub, mọi nội dung qua bộ chặn tầng A (`tier-a-guard`). Hàng VH1.
+    - **P1 — watchdog tự khởi động lại gateway** khi bộ hẹn treo: trần 1 lần mỗi 6 giờ, chỉ khi mọi lớp lockdown xanh và không có
+      lượt agent dở; không bao giờ tự quét QR, không đổi cấu hình. Hàng VHZ2 (làn thu).
+    - **D2 — token chỉ-đọc cho dead-man** (GitHub Actions): đồng ý chủ trương; tạo và cất token do Mạnh làm theo quy trình secret,
+      agent không cầm token. Hàng VH4 chỉ mở vòng khi đã có token.
+    - **P2 — quy ước**: tài khoản thu S03 chỉ gateway dùng. Câu H1 (sáng 13/11 Mạnh có mở tài khoản ở nơi khác không) **chưa trả
+      lời**. Việc của người, không vào lộ trình.
+    - **Đăng nhập lại S02** (401 từ 13/11): việc tài khoản của Mạnh, không vào lộ trình.
+    - **P3 — vá gốc bộ hẹn khởi động lại** cài vào runtime gateway theo quy trình `docs/ops/runtime-map.md`. Hàng VHZ3 (làn thu).
+    D3–D8, R1, O1 trong quyền giám sát tự xếp. SLO độ tươi 72 giờ của S03 **giữ nguyên** (đã chốt, AU4); «nhịp sống» là thước riêng
+    thêm vào (D5, hàng VH2). Mốc VHM1, thứ tự VH1 (D1) → VH2 (D5) → VH3 (D4) → VH4 (D2) → VH5 (D6) → VH6 (R1) → VH7 (D8) → VH8 (O1);
+    làn thu VHZ1 (D3) → VHZ2 (P1) → VHZ3 (P3), VHZ4 (dòng chuẩn `AUTH FAIL [S0x]` của D7). Runbook một trang: §6 của tài liệu.
+50. **Mạnh ở cổng, giám sát chịu hiệu quả lộ trình** (15/11, Mạnh gõ ở phiên giám sát: «Tôi muốn chốt lại luật, tôi chỉ xuất hiện ở
+    các cổng, hiệu quả của lộ trình do bạn điều phối», rồi «Có, kèm luôn» cho câu về lời áp). Căn cứ: điều tra tiến độ chậm
+    `docs/research/dieu-tra-tien-do-cham-1511.md`. Tới sáng 15/11 màn «Chất lượng từng chặng» vẫn báo 0 tin định vị, trong khi
+    4.934/6.102 tin S03 đã mang dự án từ 14/11: ô trên màn nối vào bảng rỗng và không hàng nào trong lộ trình nối lại. Từ 05/11 gộp
+    140 PR, khoảng 23 nằm trên chuỗi định vị → giá; 43 là sửa cái vừa làm; 42% lượt chấm bị trả; 182 câu hỏi tới Mạnh trong 10 ngày.
+    - **Mạnh chỉ xuất hiện ở các cổng** (Phạm vi, 1.5, Bằng chứng, Đáng và phiên nghiệm thu).
+    - **Giám sát chịu hiệu quả lộ trình**: đường găng, cắt và gom hàng, thứ tự gộp, số dãy; báo bằng con số trên màn.
+    - **Hàng trên đường găng xong khi số trên màn đổi trên dữ liệu thật**, không xong ở «gộp».
+    - **Chữ ký Cổng Bằng chứng kèm lời áp lên DB máy thu** những gì hồ sơ ghi đủ năm thứ (lệnh áp, số chạy thử, sao lưu, cách
+      lùi, lệnh kiểm sau). Sửa câu «DDL và ghi dữ liệu thật cần lời riêng» ở các mục trước cho phần máy thu; cloud không đổi.
+    - **Vẫn cần lời riêng**: tiền, DDL hay ghi dữ liệu trên cloud, xoá dữ liệu và việc không lùi được, sửa luật an toàn.
+    - **Bảng phủ ca trước khi viết mã** cho transform, bước khớp, lời gọi ngoài.
+    Cùng ngày Mạnh cho ba lời ở phiên điều tra: «Có, cấp dự án» (dải diện tích suy ra theo dự án × số phòng ngủ là phát biểu «suy
+    ra» riêng, không ghi đè diện tích, không dùng để chia giá khi chấm giá tốt; gộp vào CG10), «Áp 104 và thẻ luật S06 luôn»,
+    «Gộp nhanh #457 và #456». Đường găng nhịp 1 (MN1): nguồn «dự án của tin» mọi nguồn + ô Định vị (hàng `du-an-cua-tin-len-dinh-vi`,
+    migration 105) → CG10 xếp hạng cấp dự án + lọc dự án trên `/ops/deals` (một lát). Hàng ngoài đường găng tạm dừng tới khi MN1
+    xong, trừ cảnh báo vận hành (VH1).
+51. **S03 là nguồn lõi; bối cảnh nhóm là mặc định cho địa chỉ của tin** (15/11, Mạnh gõ ở phiên rà soát lộ trình, rồi «Tôi đồng ý
+    duyệt cả hai»). S03 là tin của cộng đồng môi giới, đúng cách họ làm việc và tức thời; S06 là kênh quảng cáo nên giá có thể
+    lệch. Vì thế **thước chính đếm trên S03**, S06 là mặt bằng so sánh; không đặt đích bằng tổng số tin.
+    - **Sửa quyết định 24/10** (RV-Q4/H5 «ngữ cảnh nhóm chỉ phá hoà, không tự quyết») và nối tiếp «Cho ghi suy ra» 04/11: bài nằm
+      trong nhóm nào là dữ kiện. Thẻ địa chỉ của nhóm (dự án, phường và tỉnh, phân khu mặc định, bán hay thuê) là **mặc định**
+      cho tin của nhóm; chữ bài nêu rõ dự án khác thì chữ bài thắng.
+    - **Đóng dấu ở bước nạp** (transform), không ghi vào raw snapshot (luật 1), nên sửa thẻ nhóm thì tin cũ của nhóm tính lại.
+      Vẫn là luật xác định có căn cứ và phiên bản (luật 7); thẻ do người duyệt.
+    - Đo 15/11 trên máy thu: 32 nhóm S03 có bài, các nhóm trỏ tới 6 dự án; 15 nhóm ghi đúng một dự án chiếm 73% số bài; 73% tin
+      căn hộ S03 không nêu dự án trong chữ (đo 04/11). Chưa đo: tỉ lệ bài lạc dự án trong nhóm chuyên một dự án; độ lệch giá
+      S03 so S06 cùng dự án. Hàng: `TG1` (thẻ nhóm), `TG2` (đóng dấu lúc nạp), `CG15` (độ lệch hai nguồn).
+52. **Bỏ Kev** (15/11, Mạnh «Bỏ kev»). Từ 23/10 Kev chỉ gắn nhãn, không lọc; không bước nào trong `pipeline/` đọc nhãn ấy; lượt đọc
+    bằng model (PL34) đã phủ mọi bài S03 mới từ 10/11; Kev chiếm 22 GB RAM máy thu (đo 15/11). Rút mọi việc về Kev khỏi lộ trình
+    (`PL5`, `PL33`, `PH1`, `PH3`, `KC2`, `SH7` vào `da_bac`); ý định tin lấy từ lượt đọc bằng model. Gỡ khỏi hook là hàng `KV1`
+    (làn thu, T3 vì chạm vùng an toàn của kênh S03): sửa cùng lượt bộ canh an toàn, lớp máy móc trên `/ops/collections`,
+    `audit-all`, `push-ops-facts`, `docs/ops/runtime-map.md`. **Khởi động lại gateway và gỡ plist vẫn cần lời riêng của Mạnh.**
+    Nên đi cùng cảnh báo «lời gọi model hỏng hàng loạt» (VH1) vì bỏ Kev là hết nhãn dự phòng chạy tại máy. **Model đọc ảnh chưa
+    được duyệt** (Mạnh ngắt lời «Làm cả hai», chỉ chốt bỏ Kev): không bật khi chưa có lời riêng về tiền.
+53. **Đặt lại lộ trình: sáu mốc, mười một lát** (15/11, Mạnh duyệt hai lần ở phiên rà soát: khung mục tiêu, rồi «Chốt» bản lộ trình
+    cũ ↔ mới). Bản phạm vi `docs/plan/pham-vi-dat-lai-lo-trinh-1511.md`. Mục tiêu: chọn một dự án, xuống tới toà và tầng, và thấy
+    căn hộ nào giá tốt nhất theo tin S03, đặt cạnh mặt bằng S06 (giữ mỏ neo 14/11 của mục 48, đổi thước theo mục 51).
+    - **Sáu mốc, mỗi mốc một con số trên màn**, thay mười mốc cũ: `MS1` tin S03 có dự án ngay lúc nạp → `MS2` hạng giá cấp dự án
+      trên Ops (thay MN1) → `MS3` tin S03 tới toà, hạng cấp toà (thay MN2) → `MS4` một căn là một dòng → `MS5` lên Invest (thay
+      MN3); `MSV` vận hành S03 chạy song song (thay VHM1, thêm gỡ Kev). Mốc GCM1, DAM1, TVM1–TVM3, KHM1 bỏ.
+    - **Mười một lát** là giá trị `nhom` của hàng (`l01-the-dia-chi-nhom` … `l11-mat-bang-s06`). Thứ tự: L1 → L2 → L3 → L5 → L6 →
+      L7 → L10; L8 → L9 song song; L4 (danh bạ toà cho các dự án còn lại) mở khi có dãy rảnh, không chặn MS3 vì tin S03 đã có
+      dự án nằm gần hết ở hai dự án đã có toà; L11 (mặt bằng S06, danh bạ mở rộng, gồm DA7) sau MS3.
+    - **Thước MS1 là đúng con số ô «Định vị» trên màn** (view `offer_project` của DV7: tin có ít nhất một bài mang dự án, không
+      xung đột; chạy thử 15/11: 4.934). Phép đếm theo bài đầu của tin (4.260 / 6.295) là phép đo phụ.
+    - **Xếp lại 175 hàng chưa xong**: 73 giữ trong lát, 29 nền (`nen-giu-nha`, chỉ làm khi đỏ hay khi chặn một lát), 61 hoãn và
+      7 gộp thành mục chờ điều kiện có điều kiện mở lại, 5 bác. 16 mã chờ lỗi thời bác. 137 hàng đã xong không đổi. Thêm 9 hàng
+      và 12 mục chờ cho việc mục tiêu cần mà lộ trình chưa có và việc nợ ngoài lộ trình.
+    - Trạng thái thật của một hàng đọc cả trên nhánh đang làm, không chỉ trên `main`. Ngưỡng 90% (MS1) và 50% (MS3) là đề
+      xuất, chốt ở Cổng Phạm vi của hàng mang thước.
+54. **Cấu trúc danh bạ: nguồn chủ đầu tư S16 thắng về cấu trúc, cây Dự án → Phân khu → Toà** (17/11). Căn cứ: phân tích cấu
+    trúc danh bạ 17/11 (phiên phân tích, chỉ đọc DB máy thu 06:15–06:45Z; bản đầy đủ ở `research-local/`, không vào kho).
+    54/198 toà treo thẳng dưới dự án vì luật xếp phân khu lúc đúc chỉ xét nút `node_type = building` khớp tên tuyệt đối (view
+    `v_toa_nut_vung` của migration 097 đưa về 14, nhưng `/ops/registry` đọc cột gốc); 0/344 dự án có cha; 524 mã nguồn chưa nối
+    (S06 8, S08 172, S09 344), phần lớn vì thiếu nút, nhất là Hà Nội (11 nút dự án), và S09 chưa có bảng nối; trong mã không có
+    thang tin cậy: nguồn đúc trước thắng, lệch thì ra thẻ.
+    - **Ba câu Q-A, Q-B, Q-C** — Mạnh «Theo khuyến nghị cả ba câu» (gõ ở phiên phân tích, 07:57Z):
+      - **Q-A dự án con từ hậu tố khu S08.** Dự án S08 có hậu tố khu (OCP1, OCP2…) → máy đúc nút dự án con, gắn cha theo hậu
+        tố, qua thẻ luật Mạnh xem mẫu. Áp luật dự án con của mục 39 và luật nút ứng viên của mục 44 Hỏi-1.
+      - **Q-B S16 thắng về cấu trúc.** Ở dự án có S16, S16 tự thắng về toà, mã căn, căn thuộc toà nào, toà thuộc phân khu nào.
+        S08, S09 lệch thì giữ làm bí danh và đếm số lệch trên Ops, không ra thẻ từng cái. Giá, pháp lý và mọi thuộc tính khác
+        vẫn lệch → thẻ. **Sửa mô hình 11/11 §1.3 (mục 44)** «Không có thứ tự nguồn tự thắng» cho riêng phần cấu trúc ở dự án có
+        S16 (thang theo thuộc tính ở `docs/architecture/mo-hinh-danh-ba-du-an.md` §1.3). Hàng DA33 đi tiếp nguyên hành vi đã
+        ký (lệch → thẻ); hành vi mới là hàng nối tiếp dựng trên dữ liệu DA33, tính phân khu hiệu lực ở view `v_toa_nut_vung`
+        (cột gốc của toà giữ nguyên vì rào chỉ-thêm 082).
+      - **Q-C phân khu từ danh sách khu S16.** S16 đúc nút phân khu từ danh sách khu chủ đầu tư công bố, qua thẻ luật (mục 38:
+        phân khu là thông tin dự án công khai). Mã căn lấy bằng đăng nhập vẫn không lên cloud.
+    - **«Trong hệ VGP»** (Mạnh gõ ở phiên P4, theo nhật ký giám sát 01:32Z): khi đếm bài lạc dự án trong nhóm S03 (TG2 AC-10),
+      bài Masteri Centre Point và Lumière Boulevard tính trong hệ Grand Park. **Chỉ là cách chấm**, không gộp nút danh bạ; bài
+      có chữ nêu rõ hai dự án này mà khớp nút riêng vẫn giữ dự án của chữ.
+    - **«Có» sửa AC-9, AC-10 của DA33** (Mạnh gõ ở phiên P2, 06:09Z): bộ soát mã S16 soát mã toà và mã khu S16 ở mọi bảng sắp
+      đẩy lên cloud; mã căn S16 chỉ soát ở chỗ dữ liệu S16 chạm được (thẻ duyệt `review_queue`, bảng nút `asset_nodes`); bỏ
+      token toàn số. Lý do: lời cũ chặn trọn đồng bộ cloud ngay lượt đầu (69 dòng trúng, 47 mã trúng đều là mã căn người bán
+      ghi công khai hoặc số trùng định danh; 0 mã toà, 0 mã khu).
+    - **«Làm VHZ1 trước rồi VHZ2»** (Mạnh gõ ở phiên U2, theo nhật ký giám sát): hàng `l6d-down-keo-dai-ly-do` (VHZ1) trước,
+      `watchdog-tu-khoi-dong-gateway` (VHZ2) sau, thay phán gộp một hàng của giám sát.
+    - Hàng (bản phạm vi `docs/plan/pham-vi-danh-ba-cau-truc-1711.md`): DA36 `danh-ba-toa-theo-phan-khu-hieu-luc` (trang đọc
+      view, 54 → 14), DA37 `danh-ba-s16-thang-cau-truc` (Q-B + Q-C, sau DA33), DA38 `du-an-con-tu-hau-to-khu` (Q-A, sau DA8 ba
+      nút Grand Park của mục 39 Hỏi-2), DA39 `nut-ung-vien-s08-s09-ha-noi` (nút thiếu + bảng nối S09, lát mỏng của DA18, DA3).
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
@@ -781,6 +923,12 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 > AU1–AU12; lượt cắt chung 23/10 thêm `giao-dien-2310` UI1–UI17, `nen-tang-2310` NT1–NT7, `zcode-2310` ZC1–ZC5,
 > `san-pham-sau-2310` chờ điều kiện SH1–SH14; bối cảnh `docs/plan/BOI-CANH.md`). Các bảng track dưới đây là chỉ mục
 > lịch sử; đồng bộ với lộ trình ở hàng AU8.
+>
+> **Từ 14/11 (mục 48):** mỏ neo của đợt là «ở dự án B, tháp X, tầng A — căn nào giá tốt nhất»; ba mốc MN1 (cấp dự án trên Ops),
+> MN2 (cấp toà ở hai khu), MN3 (tầng, S16, Invest) đứng đầu `docs/plan/lo-trinh.json`, thứ tự hàng trong mốc là thứ tự làm.
+>
+> **Từ 15/11 (mục 51–53):** lộ trình đặt lại quanh S03. Sáu mốc `MS1`–`MS5` và `MSV` thay MN1–MN3 và VHM1; hàng gom theo
+> mười một lát (trường `nhom`). Bản phạm vi: `docs/plan/pham-vi-dat-lai-lo-trinh-1511.md`.
 
 ### Mục tiêu dữ liệu ra mắt 05/11 (Mạnh chốt 31/10, mức «thách thức»)
 
@@ -874,7 +1022,7 @@ Theo dõi: giám sát đợt báo một dòng mỗi ngày (hiện tại so với
 ### Track 5 — Vận hành
 | # | Việc | Trạng thái |
 |---|---|---|
-| V1 | Backup tuần mã hoá (cần BACKUP_DIR+BACKUP_PASS từ user) | ⏳ nợ cũ nhất |
+| V1 | Sao lưu ngoài máy mã hoá: `scripts/sao-luu-ngoai-may.sh` (restic, mã hoá trên máy thu, đích B2 — QĐ3/QĐ5/QĐ15 11/11) — `chay` hằng ngày (dump DB → backup raw snapshot + `collector/state` trừ tệp phiên/khoá + kho ảnh + dump → giữ 7/4/6), `kiem` tuần (≥50 tệp + dump so sha256), `kiem-db` tháng (khôi phục vào DB thử, so `so-dong.tsv`), bước chặn tệp xác nhận «đã cất bản khoá», `check-freshness` đỏ khi quá 36 giờ — `_acceptance/sao-luu-ma-hoa-b2` (T3) | 🔄 S4; chứng minh trên dữ liệu giả + kho cục bộ. Lượt gửi thật chờ luật 6 sửa, thùng + khoá B2 của Mạnh, lời Mạnh; nạp launchd sau hàng P4 (runtime-map); cảnh báo `/ops` hàng riêng |
 | V2 | sync-public sau mỗi milestone | 🔄 thủ công |
 | V3 | Soak đêm tự động; soi /ops mỗi sáng | 🔄 |
 | V4 | Siết quyền: cổng Ops đóng mặc định (role `ops`/`admin` hoặc `OPS_EMAILS`); `/api/zalo-media` chỉ ảnh trong `~/.openclaw/media` + `/tmp/openclaw` (realpath, không khớp tiền tố) — `_acceptance/ops-access-hardening` | ✅ Cổng 2 ký 23/10 — PR #5 (xếp chồng trên #3). Trước deploy: kiểm Vercel prod — user không phải admin cần `role='ops'` hoặc `OPS_EMAILS` |

@@ -200,6 +200,10 @@ echo "$HS_MAX" > "$HS_STATE"
 # Từ đây trở xuống là làn Claude (AU3 Ngoài-3): chạy đủ các bước như cũ nhưng thoát bằng mã của bước
 # hỏng ĐẦU TIÊN để launchd thấy lỗi.
 . "$ROOT/scripts/lib/job-step.sh"
+# job-step-ghi-thoi-luong: một bước gộp cho TẤT CẢ phần trên dòng ranh giới làn (lấy khoá + vòng nạp
+# tin + vòng nạp hồ sơ). $SECONDS là đồng hồ của shell, đếm từ lúc tệp bọc khởi động — nên đo được
+# phần ấy mà không phải chạm một dòng nào phía trên.
+job_step_ghi zalo-import-daily truoc-lan-claude "$HS_RC" "$SECONDS"
 if [ "$HS_RC" != "0" ]; then
   echo "JOB FAIL [zalo-import-daily] bước nap-ho-so mã $HS_RC" >&2
   JOB_RC=$HS_RC
@@ -214,11 +218,15 @@ SO_BO="$ROOT/pipeline/logs/zalo-import-bo-luot.state"
 BO_LUOT=0
 [ "$NHANH" = "1" ] && export PGOPTIONS="${PGOPTIONS:+$PGOPTIONS }-c lock_timeout=${S03_NHANH_LOCK_TIMEOUT:-10s}"
 buoc_nhanh() {
-  local job="$1" nhan="$2" ra rc
+  local job="$1" nhan="$2" ra rc t0 giay
   shift 2
   ra=$(mktemp)
+  t0=$(date +%s)
   "$@" 2>&1 | tee "$ra"
   rc=${PIPESTATUS[0]}
+  giay=$(( $(date +%s) - t0 ))
+  if [ "$giay" -lt 0 ]; then giay=0; fi
+  job_step_ghi "$job" "$nhan" "$rc" "$giay"
   if [ "$rc" -ne 0 ] && grep -qE 'lock timeout|55P03' "$ra"; then
     echo "BỎ LƯỢT [$job] bước $nhan: đụng khoá — lượt sau làm" >&2
     BO_LUOT=1
@@ -233,6 +241,7 @@ buoc() { if [ "$NHANH" = "1" ]; then buoc_nhanh "$@"; else job_run "$@"; fi; }
 buoc zalo-import-daily transform-zalo node "$ROOT/pipeline/transform-zalo.mjs"
 buoc zalo-import-daily transform-media node "$ROOT/pipeline/transform-media.mjs" S03 S05
 buoc zalo-import-daily refresh-bait-gap node "$ROOT/pipeline/refresh-bait-gap.mjs"
+buoc zalo-import-daily xep-hang-gia node "$ROOT/pipeline/xep-hang-gia.mjs"   # CG9: hạng giá sau định vị
 mkdir -p "$(dirname "$SO_BO")"
 # Lượt nhanh 15′ dừng ở đây: đọc gộp và enrich chỉ chạy ở lượt 00:00 (hàng s03-nap-nhanh). Khoá nạp nhả qua trap EXIT.
 if [ "$NHANH" = "1" ]; then

@@ -15,7 +15,11 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { after, before, describe, test } from "node:test";
 
-import { PROBES, SLO_HOURS, TIME_SOURCE, readFreshness } from "./lib/freshness.mjs";
+import { PROBES, SLO_HOURS, TIME_SOURCE, describe as moTa, readFreshness } from "./lib/freshness.mjs";
+import { SAO_LUU_SLO_GIO, docTrangThaiSaoLuu } from "./lib/sao-luu-ngoai-may.mjs";
+
+// Ca CLI chạy với thư mục trạng thái sao lưu RỖNG của riêng lượt (chưa bật) — không đọc ~/.oneinvest của máy chạy test.
+const SAO_LUU_RONG = mkdtempSync(path.join(tmpdir(), "freshness-sao-luu-"));
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const CLI = path.join(HERE, "check-freshness.mjs");
@@ -36,6 +40,8 @@ const IDS = {
   S05: ["canary-s05"],
   S06: ["canary-s06"],
   S08: ["canary-s08"],
+  S10: ["canary-s10"],
+  S11: ["canary-s11"],
 };
 const ALL_IDS = Object.values(IDS).flat();
 
@@ -68,6 +74,8 @@ function baseFixture() {
       { code: "S05", status: "active", ids: IDS.S05 },
       { code: "S06", status: "active", ids: IDS.S06 },
       { code: "S08", status: "active", ids: IDS.S08 },
+      { code: "S10", status: "active", ids: IDS.S10 },
+      { code: "S11", status: "active", ids: IDS.S11 },
     ],
     snapshots: [
       { id: "hanoi__s01a__1", city: "hanoi", source: IDS.S01[0], at: ago(24 * 9) },
@@ -81,6 +89,8 @@ function baseFixture() {
       { id: "hanoi__s06__1", city: "hanoi", source: IDS.S06[0], at: ago(10) },
       { id: "hcmc__s06__1", city: "hcmc", source: IDS.S06[0], at: ago(10) },
       { id: "vn__s08__1", city: "vn", source: IDS.S08[0], at: ago(2) },
+      { id: "vn__s10__1", city: "vn", source: IDS.S10[0], at: ago(3) },
+      { id: "vn__s11__1", city: "vn", source: IDS.S11[0], at: ago(4) },
     ],
     airdna: [{ id: "m1", country: "vn", at: ago(48) }],
     posts: [
@@ -224,8 +234,38 @@ describe("AC-5 SLO", () => {
     assert.equal(rows.filter((r) => r.code === "S04").length, 0, "S04 completed không được đo");
     assert.deepEqual(rows.filter((r) => r.code === "S07").map((r) => r.status), ["no-slo"], "mã active chưa khai SLO phải ra đúng một no-slo");
   });
-  test("AC-5 bảng SLO đúng năm giá trị giờ", () => {
-    assert.deepEqual(SLO_HOURS, { S01: 192, S02: 840, S03: 72, S05: 96, S06: 36, S08: 192 });
+  test("AC-5 bảng SLO đúng từng giá trị giờ", () => {
+    // khai-slo-s10-s11 AC-1: S10, S11 = 192 giờ (giám sát đợt duyệt 12/11).
+    assert.deepEqual(SLO_HOURS, { S01: 192, S02: 840, S03: 72, S05: 96, S06: 36, S08: 192, S10: 192, S11: 192 });
+  });
+});
+
+// ------------------------------------------------------- khai-slo-s10-s11 --
+describe("KSL S10, S11 có SLO", () => {
+  test("KSL-AC-2 bản thu S11 mới không làm S10 tươi; S10 mới không làm S11 tươi", async (t) => {
+    if (needDb(t)) return;
+    const f = baseFixture();
+    f.snapshots.find((x) => x.id === "vn__s10__1").at = ago(193);
+    f.snapshots.find((x) => x.id === "vn__s11__1").at = ago(1);
+    let rows = await freshnessOf(f);
+    assert.equal(one(rows, "S10", "vn").status, "stale", "S10 193 giờ phải quá hạn dù S11 mới thu");
+    assert.equal(one(rows, "S11", "vn").status, "fresh");
+    f.snapshots.find((x) => x.id === "vn__s10__1").at = ago(1);
+    f.snapshots.find((x) => x.id === "vn__s11__1").at = ago(193);
+    rows = await freshnessOf(f);
+    assert.equal(one(rows, "S10", "vn").status, "fresh");
+    assert.equal(one(rows, "S11", "vn").status, "stale", "S11 193 giờ phải quá hạn dù S10 mới thu");
+  });
+  test("KSL-AC-3 chưa có bản thu → none «chưa có dữ liệu», không còn no-slo", async (t) => {
+    if (needDb(t)) return;
+    const f = baseFixture();
+    f.snapshots = f.snapshots.filter((x) => x.id !== "vn__s10__1" && x.id !== "vn__s11__1");
+    const rows = await freshnessOf(f);
+    for (const code of ["S10", "S11"]) {
+      const m = rows.filter((r) => r.code === code);
+      assert.deepEqual(m.map((r) => [r.status, r.sloHours]), [["none", 192]], `${code} không bản thu`);
+      assert.equal(moTa(m[0]), `${code}: chưa có dữ liệu ở bảng nạp của nguồn`);
+    }
   });
 });
 
@@ -263,7 +303,7 @@ async function withSchema(f, fn) {
 function cli(schema, args = [], env = {}) {
   return new Promise((resolve) => {
     const c = spawn(process.execPath, [CLI, "--schema", schema, "--now", NOW.toISOString(), ...args], {
-      env: { ...process.env, WEBHOOK_URL: "", ...env },
+      env: { ...process.env, WEBHOOK_URL: "", SAO_LUU_THU_MUC: SAO_LUU_RONG, ...env },
     });
     let stdout = "";
     let stderr = "";
@@ -379,7 +419,7 @@ function chototSnapshot(ts, { city, finishedAt, listIds }) {
   mkdirSync(dir, { recursive: true });
   const items = listIds.map((id) => ({
     source: S06_PIPE,   // importer lọc theo trường này
-    payload: { list_id: id, region_v2: 0, category: 0, type: "s" },
+    payload: { list_id: id, region_v2: 13000, category: 0, type: "s" }, // mã vùng thật khác 0: bộ nạp 1411-23 coi region_v2 falsy là thiếu
     meta: { city },
     fetchedAt: finishedAt,
   }));
@@ -504,6 +544,8 @@ const EDGE = [
   ["S05", "hanoi", (f, h) => { f.snapshots.find((x) => x.id === "hanoi__s05agent__1").at = ago(h); }],
   ["S06", "hanoi", (f, h) => { f.snapshots.find((x) => x.id === "hanoi__s06__1").at = ago(h); }],
   ["S08", "vn", (f, h) => { f.snapshots.find((x) => x.id === "vn__s08__1").at = ago(h); }],
+  ["S10", "vn", (f, h) => { f.snapshots.find((x) => x.id === "vn__s10__1").at = ago(h); }],
+  ["S11", "vn", (f, h) => { f.snapshots.find((x) => x.id === "vn__s11__1").at = ago(h); }],
 ];
 let edgeRan = 0;
 describe("GT-AC-4 ma trận biên SLO", () => {
@@ -519,9 +561,9 @@ describe("GT-AC-4 ma trận biên SLO", () => {
       });
     }
   }
-  test("GT-AC-4 ma trận biên đủ 12 ca", () => {
+  test("GT-AC-4 ma trận biên đủ 16 ca", () => {
     assert.deepEqual(EDGE.map((e) => e[0]).sort(), Object.keys(SLO_HOURS).sort(), "ma trận phải phủ đúng mọi mã có SLO");
-    assert.equal(edgeRan, 12, `chỉ ${edgeRan}/12 ca biên đã chạy tới cuối`);
+    assert.equal(edgeRan, 16, `chỉ ${edgeRan}/16 ca biên đã chạy tới cuối`);
   });
 });
 
@@ -543,6 +585,8 @@ const TIME_MATRIX = {
   S05: "airbnb_snapshots.collected_at",
   S06: "airbnb_snapshots.collected_at",
   S08: "airbnb_snapshots.collected_at",
+  S10: "airbnb_snapshots.collected_at",
+  S11: "airbnb_snapshots.collected_at",
 };
 /** Cột mà SQL của probe thật sự lấy max — giải bí danh bảng từ FROM/JOIN. Trả danh sách lỗi có tên mã. */
 function timeColumnProblems(probes, declared) {
@@ -616,4 +660,48 @@ test("GT-AC-6 DB hiện tại (chẩn đoán, không chặn)", async (t) => {
     extra.push(`S06 nạp=${c6.nap?.toISOString?.() ?? "—"} thu=${c6.thu?.toISOString?.() ?? "—"} lệch-snapshot=${c6.lech}`);
   }
   t.diagnostic(`gt-live: thoát json=${js.code} chữ=${txt.code} · lỗi: ${bad} · ${extra.join(" · ")} · chấm lúc ${new Date().toISOString()}`);
+});
+
+describe("C12 sao lưu ngoài máy (sao-luu-ma-hoa-b2 AC-7)", () => {
+  const thu = (tt, { xacNhan = true, hong = false } = {}) => {
+    const d = mkdtempSync(path.join(tmpdir(), "c12-"));
+    if (xacNhan) writeFileSync(path.join(d, "da-cat-khoa"), "x\n");
+    if (tt) writeFileSync(path.join(d, "trang-thai.json"), hong ? "{\"ket_qua\": \"ok\", " : JSON.stringify(tt));
+    return { d, tepTrangThai: path.join(d, "trang-thai.json"), tepXacNhan: path.join(d, "da-cat-khoa") };
+  };
+  const okCach = (h) => ({ ket_qua: "ok", lan_ok_cuoi: ago(h) });
+  const doc = (x) => docTrangThaiSaoLuu({ tepTrangThai: x.tepTrangThai, tepXacNhan: x.tepXacNhan, now: NOW });
+  test("C12 SLO là 36 giờ", () => assert.equal(SAO_LUU_SLO_GIO, 36, "C12: SLO"));
+  test("C12a 35 giờ → ok", () => assert.deepEqual([doc(thu(okCach(35))).trangThai, doc(thu(okCach(35))).xau], ["ok", false], "C12a"));
+  test("C12b 37 giờ → quá hạn, xấu", () => assert.deepEqual([doc(thu(okCach(37))).trangThai, doc(thu(okCach(37))).xau], ["qua-han", true], "C12b"));
+  test("C12c lượt cuối lỗi → xấu dù bản tốt cuối còn mới", () => {
+    const r = doc(thu({ ket_qua: "loi", buoc_loi: "backup", lan_ok_cuoi: ago(2) }));
+    assert.deepEqual([r.trangThai, r.xau], ["loi", true], "C12c");
+    assert.match(r.dong, /backup/, "C12c: dòng nêu bước lỗi");
+  });
+  test("C12d chưa có tệp, chưa bật → chua-bat, không xấu", () => {
+    const r = doc(thu(null, { xacNhan: false }));
+    assert.deepEqual([r.trangThai, r.xau], ["chua-bat", false], "C12d");
+    assert.match(r.dong, /chưa bật/, "C12d: dòng");
+  });
+  test("C12e chưa có tệp mà đã bật → xấu", () => {
+    const r = doc(thu(null));
+    assert.deepEqual([r.trangThai, r.xau], ["chua-co-luot", true], "C12e");
+    assert.match(r.dong, /đã bật mà chưa có lượt/, "C12e: dòng");
+  });
+  test("C12e2 tệp trạng thái hỏng → loi, xấu", () => assert.deepEqual([doc(thu({}, { hong: true })).trangThai, doc(thu({}, { hong: true })).xau], ["loi", true], "C12e2"));
+  test("C12f lan_ok_cuoi ở tương lai (đồng hồ lùi) → ok, tuổi 0", () => {
+    const r = doc(thu(okCach(-5)));
+    assert.deepEqual([r.trangThai, r.tuoiGio, r.xau], ["ok", 0, false], "C12f");
+  });
+  test("C12 CLI: nguồn đều tươi, sao lưu 37 giờ → thoát 1, stderr nêu dòng sao lưu; 35 giờ → thoát 0", async (t) => {
+    if (needDb(t)) return;
+    const cu = thu(okCach(37));
+    const moi = thu(okCach(35));
+    const [r37, r35] = await withSchema(baseFixture(), async (s) => [await cli(s, [], { SAO_LUU_THU_MUC: cu.d }), await cli(s, [], { SAO_LUU_THU_MUC: moi.d })]);
+    assert.equal(r37.code, 1, `C12 CLI 37h: mã\n${r37.stderr}`);
+    assert.match(r37.stderr, /Sao lưu ngoài máy: quá hạn 36 giờ/, "C12 CLI 37h: stderr");
+    assert.equal(r35.code, 0, `C12 CLI 35h: mã\n${r35.stderr}`);
+    assert.match(r35.stdout, /Sao lưu ngoài máy: ok/, "C12 CLI 35h: stdout");
+  });
 });

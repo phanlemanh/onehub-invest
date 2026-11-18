@@ -176,7 +176,7 @@ function chotDailyThat(dbUrl) {
   writeFileSync(join(T, "pipeline/collect-chotot.mjs"), "process.exit(0);\n");
   writeFileSync(join(T, "pipeline/import-chotot.mjs"),
     `import { appendFileSync } from "node:fs"; import { basename, dirname } from "node:path";\nappendFileSync(${JSON.stringify(napLog)}, basename(dirname(process.argv[2])) + "\\n");\n`);
-  for (const f of ["transform-chotot", "transform-media", "refresh-bait-gap", "resolve-properties"]) {
+  for (const f of ["transform-chotot", "transform-media", "refresh-bait-gap", "resolve-properties", "xep-hang-gia"]) {
     writeFileSync(join(T, `pipeline/${f}.mjs`), "process.exit(0);\n");
   }
   for (const v of ["hanoi", "da-nang", "hcmc", "hp"]) {

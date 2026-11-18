@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 300e5b6dc44e54b3c6536915f2cf32049910a4dc
+verified_commit: b55b77caf65ae9a4bb41b87784a57676103dafe6
 human_signoff: Mạnh 2026-11-11
 ---
 
@@ -192,3 +192,7 @@ Khong co judgment item nao trong round nay: moi eval deu la executor test. Khong
 Round 1: da chay tren f1a8f9ca; ket qua round do xem run-log (cac run_id hau to r1). Tro lai thi cong sau luot cham 1.
 Round 2: tat ca 11 eval va 6 lenh suite xanh tren 300e5b6d; khong eval nao fail; failed_evals rong.
 
+
+### Re-pin lần 1 — 2026-11-11, do main mới (6f345276) + vòng sửa sau TV4 chạm lenh.mjs, lenh.ts, cap-token-may
+run_id: repin-20261111T150434Z-39410
+sha: b55b77caf65ae9a4bb41b87784a57676103dafe6 · suites: 6 lệnh exit 0 · evals: 11/11 eval máy đạt kỳ vọng

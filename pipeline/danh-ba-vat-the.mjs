@@ -21,6 +21,10 @@ import {
 } from "./lib/danh-ba-vat-the.mjs";
 import { basename } from "node:path";
 import { khoaNhomThat } from "./lib/eval-labels.mjs";
+import { NOI_KHU_S09 } from "./lib/s09-du-an.mjs";
+import { buocS09 } from "./lib/s09-dung.mjs";
+import { NOI_DU_AN_S16 } from "./lib/s16-danh-muc.mjs";
+import { buocS16, napS16TheoKhu, theLechS16 } from "./lib/s16-dung.mjs";
 
 export const KHU_MAC_DINH = Object.freeze(["vinhomes-ocean-park-1", "vinhomes-grand-park"]);
 const ISO = Object.freeze({ hanoi: "VN-HN", hcmc: "VN-SG" });
@@ -64,6 +68,7 @@ export async function napBangIso(c) {
  */
 export async function dung(c, {
   khuSlugs = KHU_MAC_DINH, tuDien = { giaTri: new Map(), ban: null, tep: null }, runId = `dbv-${Date.now()}`, log = console.log, isoTheo = null,
+  noiS09 = NOI_KHU_S09, noiS16 = NOI_DU_AN_S16,
 } = {}) {
   if (!Array.isArray(khuSlugs) || khuSlugs.length === 0) throw new LoiGoi("danh sách khu rỗng — không dựng gì");
   await c.query("BEGIN");
@@ -114,7 +119,10 @@ export async function dung(c, {
     const { rows: bd } = await c.query(
       "SELECT value, object_key FROM registry_aliases WHERE retired_at IS NULL AND kind = 'ma_nguon' AND source = $1", [NGUON_DANH_MUC]);
     const biDanh = new Map(bd.map((r) => [r.value, r.object_key]));
-    const kh = keHoachDung({ dongS08: s08, biDanh, phanKhuTheoKhu });
+    // DA33 §5.5: toà, trục, căn S16 đã có của khu — bước S08 gắn bí danh vào chúng thay vì đúc; lệch toà → thẻ.
+    const s16TheoKhu = await napS16TheoKhu(c, khuIds);
+    const kh = keHoachDung({ dongS08: s08, biDanh, phanKhuTheoKhu, s16TheoKhu });
+    const theLech = await theLechS16(c, kh.lechS16);
 
     // Ghi: toà → trục → căn → bí danh.
     const toaMoi = kh.toa.filter((t) => t.moi);
@@ -210,6 +218,11 @@ export async function dung(c, {
         [t.key, kq.area_id, JSON.stringify({ nut_vung: kq.nut_vung }), runId]);
       phuong += r.rowCount;
     }
+
+    // DA31: phân khu, cụm, toà S09 (sau bước S08, cùng giao dịch). Chưa áp 097 hay khu không có dòng S09 → bỏ qua có lý do.
+    const s09 = await buocS09(c, { khu, isoKhu, noi: noiS09, log });
+    // DA33: toà, căn S16 của khu đã nối (sau S08, S09; cùng giao dịch). Chưa áp 103 → bỏ qua có lý do.
+    const s16 = await buocS16(c, { khu, isoKhu, noi: noiS16, log });
     await c.query("COMMIT");
 
     const theoKhu = {};
@@ -236,6 +249,9 @@ export async function dung(c, {
       builder_name_moi: builder,
       phuong_moi: phuong,
       ly_do_phuong: lyDoPhuong,
+      s09,
+      s16,
+      s08_lech_s16: theLech,
     };
   } catch (e) {
     await c.query("ROLLBACK").catch(() => {});
@@ -293,13 +309,17 @@ export async function napBangXa(c, muc) {
  * @param {import("pg").Client} c
  * @param {{ tep?: string, thu?: boolean, rut?: boolean }} [o] rut=false chỉ cho chiều đỏ của test
  */
+// Nút dự án mà tệp xã quản: bỏ nút ứng viên do thẻ luật S06 đúc (catalog_tier mot_loi_khai, xã lấy từ tin lúc đúc — DA32),
+// qua to_jsonb để câu chạy được cả trên DB chưa áp migration 100 (hồ sơ sua-xa-bo-nut-ung-vien).
+export const SQL_NUT_SUA_XA = `SELECT n.id::int AS id, n.slug, n.area_ids FROM asset_nodes n
+  WHERE n.node_type = 'project' AND (to_jsonb(n) ->> 'catalog_tier') IS DISTINCT FROM 'mot_loi_khai' ORDER BY n.slug`;
+
 export async function suaXaNut(c, { tep = TEP_XA, thu = false, rut = true } = {}) {
   const tepXa = JSON.parse(readFileSync(tep, "utf8"));
   await c.query("BEGIN");
   try {
     await c.query("SELECT pg_advisory_xact_lock(hashtext($1))", [KHOA_CO_VAN]);
-    const { rows: nut } = await c.query(
-      "SELECT id::int AS id, slug, area_ids FROM asset_nodes WHERE node_type = 'project' ORDER BY slug");
+    const { rows: nut } = await c.query(SQL_NUT_SUA_XA);
     const loiTep = kiemTepXa(tepXa, nut.map((n) => n.slug));
     if (loiTep.length) throw new LoiGoi(loiTep.join("; "));
     const muc = tepXa.nut;

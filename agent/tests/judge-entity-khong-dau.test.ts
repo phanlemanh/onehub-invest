@@ -1,6 +1,6 @@
 // judge-entity-khong-dau.test.ts — hồ sơ duong-thang-n-khong-dau: ô đường viết không dấu (hay gõ sai dấu) cho ra đúng khoá
 // như dạng có dấu — «30 thang 4» ↔ «2 thang 4» khác đường, «3 thang 2» không bị coi số 3 là số nhà, «Ngo»/«Hem» là thiếu.
-// Tên ca mở đầu bằng mã AC (KD-AC-n). Không model; probe KD-AC-6 phần (b) chỉ SELECT trên DB máy thu, bỏ qua dưới CI.
+// Tên ca mở đầu bằng mã AC (KD-AC-n). Không model, không DB: probe KD-AC-6 phần (b) ở probes/khong-dau-that.test.ts.
 // Chiều đỏ: bản đột biến của judge-entity.ts bỏ đúng một dòng đưa-về-dạng-có-dấu, chép tạm cạnh tệp thật
 // (src/agents/.kd-<pid>-<n>.ts), xoá cuối lượt.
 import { after, before, test } from "node:test";
@@ -9,8 +9,8 @@ import { execFileSync } from "node:child_process";
 import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import { stripTypeScriptTypes } from "node:module";
 import { join } from "node:path";
-import pg from "pg";
 import { TR, cap, type Tin } from "./judge-chung.js";
+import { goSaiDauTienTo, kiemAc6 } from "./khong-dau-chung.js";
 import * as that from "../src/agents/judge-entity.js";
 
 type Mod = typeof that;
@@ -146,41 +146,8 @@ test("KD-AC-5 thẻ và luật cùng nhãn", () => {
 });
 
 // ---------- KD-AC-6: tập khoá không đổi khi bỏ dấu ----------
-/** Bỏ dấu viết riêng trong test (không dùng boDau của luật): NFD, bỏ U+0300–U+036F, đ/Đ/ð/Ð → d/D. */
-const boDauTest = (v: string) =>
-  v.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[đð]/g, "d").replace(/[ĐÐ]/g, "D");
-/** Bộ loại tự viết: trên dạng bỏ dấu viết thường, bỏ cụm vị trí + số nhà đầu chuỗi rồi xét tiền tố duong/pho (HD2). */
-function biLoai(v: string): boolean {
-  const s = boDauTest(v).toLowerCase().trim()
-    .replace(/^((so|ngo|ngach|hem|kiet)\.?\s*\d[\w/-]*[\s,]+)+/, "")
-    .replace(/^\d[\w/-]*\s+/, "");
-  return /^(duong|pho)[\s-]/.test(s);
-}
-/**
- * Tiền tố vị trí gõ sai dấu kèm số («kiêt 90 trần duy chiến», dữ liệu thật 04/11): khoaDuong chỉ nhận đúng dấu hoặc không dấu ở cụm kèm số, nên có dấu
- * giữ cả cụm còn không dấu thì bỏ. Đây là giới hạn đã biết, đếm riêng; các lớp dị biệt khác vẫn đỏ.
- */
-const goSaiDauTienTo = (v: string) => {
-  const m = v.normalize("NFC").trim().toLowerCase().match(/^(\p{L}+)\.?\s*\d/u);
-  return !!m && /^(?:so|ngo|ngach|hem|kiet)$/.test(boDauTest(m[1])) && !/^(?:số|so|ngõ|ngo|ngách|ngach|hẻm|hem|kiệt|kiet)$/.test(m[1]);
-};
-const khoa = (mod: Mod, v: string) => JSON.stringify([...mod.khoaDuong(v)].sort());
-function kiemAc6(mod: Mod, ds: string[]): { so: number; loai: number; lech: string[] } {
-  let so = 0;
-  let loai = 0;
-  const lech: string[] = [];
-  for (const v of ds) {
-    if (biLoai(v)) {
-      loai++;
-      continue;
-    }
-    so++;
-    if (khoa(mod, v) !== khoa(mod, boDauTest(v))) lech.push(v);
-  }
-  return { so, loai, lech };
-}
 const TU_DUNG = ["Ngõ", "Ngỏ", "30 Tháng 4", "123 Đường Láng", "Số 5 Dương Khuê"];
-test("KD-AC-6 có dấu = không dấu", async (t) => {
+test("KD-AC-6 có dấu = không dấu", () => {
   // (a) tập viết trước: 3 giá trị so, 2 giá trị bị loại (tiền tố đứng sau số nhà / cụm vị trí).
   assert.deepEqual(kiemAc6(that, TU_DUNG), { so: 3, loai: 2, lech: [] });
   assert.ok(kiemAc6(khongTran, ["Ngõ"]).lech.length === 1, "KD-AC-6 khoá đổi khi bỏ dấu: Ngõ");
@@ -190,21 +157,7 @@ test("KD-AC-6 có dấu = không dấu", async (t) => {
   assert.equal(goSaiDauTienTo("kiêt 90 trần duy chiến"), true);
   for (const v of ["kiệt 90 Trần Duy Chiến", "kiet 90 tran duy chien", "Ngõ", "Ngỏ", "Trần Duy Chiến"]) assert.equal(goSaiDauTienTo(v), false, `KD-AC-6 không được loại: ${v}`);
   assert.ok(kiemAc6(that, ["kiêt 90 trần duy chiến"]).lech.length === 1, "KD-AC-6 đối chứng: giá trị này thật sự lệch khi không loại");
-  // (b) dữ liệu thật trên máy thu.
-  if (process.env.CI) return t.skip("cần DB máy thu có tin thật — CI chỉ có lược đồ");
-  const c = new pg.Client({ connectionString: process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest" });
-  await c.connect();
-  try {
-    const { rows } = await c.query<{ v: string }>("SELECT DISTINCT street_raw AS v FROM sale_offers WHERE street_raw IS NOT NULL");
-    const saiDau = rows.map((r) => r.v).filter(goSaiDauTienTo);
-    const kq = kiemAc6(that, rows.map((r) => r.v).filter((v) => !goSaiDauTienTo(v)));
-    t.diagnostic(`KD-AC-6: ${kq.so} giá trị so · ${kq.loai} giá trị loại · ${kq.lech.length} lệch · ${saiDau.length} tiền tố gõ sai dấu đếm riêng`);
-    assert.ok(kq.so >= 100, `KD-AC-6 bàn đo quá ít: ${kq.so} giá trị`);
-    assert.deepEqual(kq.lech, [], "KD-AC-6 khoá đổi khi bỏ dấu trên dữ liệu thật");
-    assert.ok(kiemAc6(khongTran, rows.map((r) => r.v)).lech.length > 0 || kiemAc6(khongThang, rows.map((r) => r.v)).lech.length > 0, "KD-AC-6 dữ liệu thật không phân biệt bản trước vòng");
-  } finally {
-    await c.end();
-  }
+  // (b) dữ liệu thật: agent/probes/khong-dau-that.test.ts (ngoài suite chung — hồ sơ l2-bao-thu-doi-probe-that).
 });
 
 // ---------- KD-AC-7 (vế «không đổi»): vòng không sửa tệp test đã ký ----------

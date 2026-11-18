@@ -439,3 +439,91 @@ test("SL-AC-10 phanh, cloud lỗi, thiếu token: không đổi gì; plist hợp
   assert.match(x, /<key>StartInterval<\/key><integer>60<\/integer>/);
   assert.match(x, /<string>__ROOT__\/pipeline\/ops-apply\.mjs<\/string>/);
 });
+
+// ---- Hồ sơ _acceptance/so-lenh-sua-sau-tv4: «SS-AC-3», «SS-AC-4» — lệnh resume_when sai kiểu đã lọt không kẹt hàng ----
+const LIB = path.join(DIR, "..", "lib");
+const NHANH_RW = 'if (type === "source.pause" && rw !== undefined && rw !== null && typeof rw !== "string") {';
+/** Bản sao lenh.mjs gỡ nhánh resume_when, đặt cạnh lib/ để import tương đối vẫn trúng. Trả đường tệp. */
+function lenhGoNhanh() {
+  const goc = readFileSync(path.join(LIB, "lenh.mjs"), "utf8");
+  assert.equal(goc.split(NHANH_RW).length, 2, "không thấy đúng một nhánh resume_when để gỡ");
+  const tep = path.join(LIB, `.ss-lenh-${PID}.mjs`);
+  writeFileSync(tep, goc.replace(NHANH_RW, "if (false) {"));
+  return tep;
+}
+const rwSai = () => lenh("source.pause", "S05", { reason: "x", resume_when: 5 });
+const rwHopLe = () => lenh("source.pause", "S06", { reason: "het credit", resume_when: "khi het han muc" });
+
+test("SS-AC-3 apLenh: lệnh resume_when sai kiểu ghi failed không ném, nguồn giữ nguyên; lệnh sau vẫn áp", async () => {
+  const { c } = await mayThu("ss3");
+  await nguon(c, [["S05", "active"], ["S06", "active"]]);
+  const L1 = rwSai();
+  const L2 = rwHopLe();
+  const truoc = await dong(c, "S05");
+  const k1 = await apLenh(c, L1);
+  assert.deepEqual(
+    { outcome: k1.outcome, ly_do: k1.ly_do, before: k1.before, after: k1.after },
+    { outcome: "failed", ly_do: "resume-when-sai-khuon", before: null, after: null },
+  );
+  assert.deepEqual(await dong(c, "S05"), truoc, "nguồn S05 bị đổi");
+  assert.equal((await so(c, L1.idempotency_key)).length, 1);
+  const k2 = await apLenh(c, L2);
+  assert.equal(k2.outcome, "applied");
+  assert.equal((await dong(c, "S06")).status, "paused");
+  // Đối chứng đỏ: bản gỡ nhánh thì apLenh(L1) ném TypeError — kẹt hàng.
+  const tep = lenhGoNhanh();
+  try {
+    const D = await import(pathToFileURL(tep).href);
+    const { c: c2 } = await mayThu("ss3d");
+    await nguon(c2, [["S05", "active"]]);
+    const e = await loiCua(D.apLenh(c2, rwSai()));
+    assert.ok(e instanceof TypeError, `kẹt hàng: bản gỡ nhánh phải ném TypeError, được ${e}`);
+  } finally {
+    rmSync(tep, { force: true });
+  }
+});
+
+test("SS-AC-4 ops-apply hai lượt với [lệnh sai kiểu, lệnh hợp lệ]: không kẹt, lượt hai không áp lại", async () => {
+  const { S, c } = await mayThu("ss4");
+  await nguon(c, [["S05", "active"], ["S06", "active"]]);
+  const L1 = rwSai();
+  const L2 = rwHopLe();
+  const gia = await cloudGia({ lenhKeo: () => [L1, L2] });
+  const ch = cauHinh();
+  const nAudit = async () => (await c.query(`SELECT count(*)::int AS n FROM ops_audit`)).rows[0].n;
+  try {
+    const r1 = await chayApply(S, gia.url, ch);
+    assert.equal(r1.code, 0, r1.err);
+    const ketQua = gia.st.banTin.at(-1).results.map((x) => [x.idempotency_key, x.outcome, x.ly_do ?? null]);
+    assert.deepEqual(ketQua, [[L1.idempotency_key, "failed", "resume-when-sai-khuon"], [L2.idempotency_key, "applied", null]]);
+    const audit1 = await nAudit();
+    const r2 = await chayApply(S, gia.url, ch);
+    assert.equal(r2.code, 0, r2.err);
+    const nSo = (await c.query(`SELECT count(*)::int AS n FROM change_request_applies`)).rows[0].n;
+    assert.equal(nSo, 2, "lượt hai áp lại");
+    assert.equal(await nAudit(), audit1, "lượt hai thêm dòng ops_audit");
+  } finally {
+    await gia.dong();
+  }
+  // Đối chứng đỏ: ops-apply chạy với bản lenh gỡ nhánh thì lượt một thoát ≠ 0 và L2 không có dòng sổ áp.
+  const { S: S2, c: c2 } = await mayThu("ss4d");
+  await nguon(c2, [["S05", "active"], ["S06", "active"]]);
+  const M1 = rwSai();
+  const M2 = rwHopLe();
+  const gia2 = await cloudGia({ lenhKeo: () => [M1, M2] });
+  const tepLenh = lenhGoNhanh();
+  const tepApply = path.join(DIR, "..", `.ss-ops-apply-${PID}.mjs`);
+  try {
+    const goc = readFileSync(OPS_APPLY, "utf8");
+    assert.equal(goc.split('from "./lib/lenh.mjs"').length, 2);
+    writeFileSync(tepApply, goc.replace('from "./lib/lenh.mjs"', `from "./lib/${path.basename(tepLenh)}"`));
+    const r = await chayApply(S2, gia2.url, ch, tepApply);
+    assert.notEqual(r.code, 0, "đối chứng đỏ: bản gỡ nhánh phải kẹt hàng (thoát ≠ 0)");
+    assert.equal((await so(c2, M2.idempotency_key)).length, 0, "đối chứng đỏ: L2 không được áp khi hàng kẹt");
+  } finally {
+    await gia2.dong();
+    rmSync(tepLenh, { force: true });
+    rmSync(tepApply, { force: true });
+    rmSync(ch, { recursive: true, force: true });
+  }
+});

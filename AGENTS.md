@@ -186,6 +186,24 @@ kèm `_acceptance/<slug>/`. Tầng rủi ro, lệnh kiểm, `t3_paths`: `_accept
 `scripts/pre-merge-check.sh`, `scripts/product-map.mjs` … và `lib/*.cjs` là bản chép từ kit —
 không sửa tay, cập nhật bằng cách chép lại từ plugin. `PRODUCT-MAP.md` máy sinh.
 
+## Ai quyết gì: Mạnh ở cổng, giám sát chịu lộ trình (Mạnh chốt 2026-11-15, ROADMAP §3 mục 50)
+
+- **Mạnh chỉ xuất hiện ở các cổng**: Cổng Phạm vi, Cổng 1.5 (T3), Cổng Bằng chứng, Cổng Đáng và phiên nghiệm thu. Ngoài cổng,
+  agent không đem câu hỏi tới Mạnh; câu về cách làm thì gửi phiên giám sát.
+- **Phiên giám sát chịu hiệu quả lộ trình**: chọn việc theo đường găng của nhịp đang làm, cắt và gom hàng, thứ tự gộp, số dãy,
+  mở và dọn phiên. Báo tiến độ bằng con số trên màn, không bằng số PR đã gộp.
+- **Hàng trên đường găng xong khi con số trên màn đổi trên dữ liệu thật**, không xong ở «gộp». Hợp đồng ghi ô nào đổi, từ bao
+  nhiêu lên bao nhiêu, kèm lệnh đo. Hàng nền (test, CI, tài liệu) ghi rõ là miễn.
+- **Chữ ký Cổng Bằng chứng kèm luôn lời áp lên DB máy thu** đúng những gì hồ sơ đã ghi (migration, lượt ghi dữ liệu, thẻ luật).
+  Hồ sơ phải có đủ năm thứ: lệnh áp, số chạy thử, sao lưu trước, cách lùi, lệnh kiểm sau. Thiếu một thứ thì chữ ký không phủ
+  việc áp. Áp sau khi PR gộp, từ `main`; áp xong báo số thật cạnh số chạy thử; lệch thì dừng và báo, không tự sửa cho khớp.
+- **Vẫn cần lời riêng của Mạnh**: tiền; DDL hay ghi dữ liệu trên cloud (Supabase); xoá dữ liệu và mọi việc không lùi được; sửa
+  luật an toàn (tầng A, Zalo, raw snapshot). Các luật khác đang đòi lời riêng (gateway, plist launchd mới, khởi động lại dịch vụ
+  nền của máy, gỡ phanh `ops-apply`, sao lưu ra ngoài máy) giữ nguyên.
+- **Trước khi viết mã cho transform, bước khớp, lời gọi ngoài**: ở S1 lập bảng phủ ca (chiều × giá trị, số trong ô đếm từ DB máy
+  thu, không fixture viết tay; có cột «ai đọc đầu ra này phía sau»). Ô bỏ thì ghi «ngoài phạm vi, vì». Căn cứ:
+  `docs/research/dieu-tra-tien-do-cham-1511.md`.
+
 ## Lệnh
 
 ```bash

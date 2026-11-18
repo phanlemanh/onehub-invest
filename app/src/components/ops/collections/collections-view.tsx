@@ -3,7 +3,7 @@ import { LocalOnlyAlert } from "@/components/ops/local-only-alert"
 import { AttentionList, issuesOf } from "@/components/ops/collections/attention-list"
 import { CollectionsTiles } from "@/components/ops/collections/collections-tiles"
 import { feedSloSummary } from "@/components/ops/collections/feed-status"
-import { FeedsGrid } from "@/components/ops/collections/feeds-grid"
+import { NguonVaLenh } from "@/components/ops/collections/nguon-va-lenh"
 import { JobsGrid } from "@/components/ops/collections/jobs-grid"
 import { LockdownGrid } from "@/components/ops/collections/lockdown-grid"
 import { RotationPanel, ZaloPipePanel } from "@/components/ops/collections/pipe-panels"
@@ -23,6 +23,7 @@ import type {
 import { fmtInt, vnDayKey } from "@/lib/format"
 import { sloSummaryKey, sloSummaryText } from "@/lib/freshness"
 import { LOCKDOWN_LAYERS, type getLockdownStatus, type SourceFeedHealth } from "@/lib/ops-queries"
+import type { Vai } from "@/lib/auth"
 import type { CloudOpsView } from "@/lib/ops-cloud"
 import type { SourceRoles } from "@/lib/source-labels"
 
@@ -46,6 +47,9 @@ export type CollectionsData = {
   cloud?: CloudOpsView | null
   /** Cloud (ON5): «Luồng 7 ngày» dựng từ khối `luong7` (`getCloudFlowDays`); rỗng khi chưa có bản tin. */
   cloudDays?: CloudFlowDay[]
+  /** TV4b: vai và actor (`user:<id>`) của phiên — cột Thao tác và nút Duyệt; vắng → vai viewer, không hành động. */
+  vai?: Vai
+  actor?: string
 }
 
 /** ON6 (luật 5): số bản ghi S02 không rời server — hàng S02 truyền xuống component client (FeedsGrid, CollectionsTiles,
@@ -62,7 +66,7 @@ function anSoS02(feeds: SourceFeedHealth[]): SourceFeedHealth[] {
  */
 export function CollectionsView(props: CollectionsData) {
   if (props.cloud) return <CloudCollections {...props} cloud={props.cloud} />
-  const { days, funnel, jobs, rotation, zaloGroups, zaloAllowlist, zaloHealth, factsPushedAt, feedHealth, lockdown, nowMs, roles = {} } = props
+  const { days, funnel, jobs, rotation, zaloGroups, zaloAllowlist, zaloHealth, factsPushedAt, feedHealth, lockdown, nowMs, roles = {}, vai = "viewer", actor = "" } = props
   const factsAgeMin = factsPushedAt ? Math.round((nowMs - new Date(factsPushedAt).getTime()) / 60_000) : null
   const lastPostHours = zaloHealth.lastPostAt ? Math.round((nowMs - new Date(zaloHealth.lastPostAt).getTime()) / 3_600_000) : null
   const issues = issuesOf({ feeds: feedHealth, layers: lockdown.layers, agentTurnsToday: lockdown.agentTurnsToday, zalo: zaloHealth, groups: zaloGroups, factsAgeMin, nowMs, roles })
@@ -82,7 +86,8 @@ export function CollectionsView(props: CollectionsData) {
         <SyncActivity days={days} roles={roles} className="min-w-0 lg:col-span-2" />
         <AttentionList issues={issues} roles={roles} className="min-w-0" />
       </div>
-      <FeedsGrid feeds={anSoS02(feedHealth)} />
+      {/* Máy thu: lưới đọc source_registry trực tiếp — lệnh áp trước lúc render đã có trong số, mốc là lúc render. */}
+      <NguonVaLenh feeds={anSoS02(feedHealth)} vai={vai} actor={actor} factsPushedAt={new Date(nowMs).toISOString()} />
       <LockdownGrid layers={lockdown.layers} lastWatchdogAt={lockdown.lastWatchdogAt} />
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <ZaloPipePanel zalo={zaloHealth} funnel={funnel} lastPostHours={lastPostHours} roles={roles} />
@@ -108,7 +113,7 @@ const NEEDS_FACTS_REGIONS = ["Luồng 7 ngày", "tác vụ"]
  * `lockdown`, ON23; chưa có khối thì 8 lớp «Chỉ kiểm ở máy thu»), bảng luồng 7 ngày (khối `luong7`, ON5), bảng nhóm S03
  * (khối `s03`, ON4) và lưới job (luồng và job chỉ khi đã có bản tin, nhóm S03 chỉ khi có khối). Mọi vùng đo trực tiếp trên máy thu gộp về một Alert, để không vùng nào hiện «ổn», số 0
  * hay màu đạt khi máy chủ không đo được nó. */
-function CloudCollections({ funnel, jobs, feedHealth, nowMs, roles = {}, cloud, cloudDays = [] }: CollectionsData & { cloud: CloudOpsView }) {
+function CloudCollections({ funnel, jobs, feedHealth, nowMs, roles = {}, cloud, cloudDays = [], factsPushedAt, vai = "viewer", actor = "" }: CollectionsData & { cloud: CloudOpsView }) {
   const slo = feedSloSummary(feedHealth)
   const stale = cloud.state === "stale"
   const lockdown = cloud.lockdown
@@ -146,7 +151,7 @@ function CloudCollections({ funnel, jobs, feedHealth, nowMs, roles = {}, cloud, 
           s03Shown: s03 !== null,
         }}
       />
-      <FeedsGrid feeds={anSoS02(feedHealth)} stale={stale} />
+      <NguonVaLenh feeds={anSoS02(feedHealth)} stale={stale} vai={vai} actor={actor} factsPushedAt={cloud.measuredAt ?? factsPushedAt} />
       {cloud.state === "none" ? null : (
         <div id="luong" className="scroll-mt-4">
           <CloudFlowTable days={cloudDays} stale={stale} roles={roles} />
