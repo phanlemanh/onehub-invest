@@ -1,0 +1,104 @@
+{
+ "feature_plain": "Người gắn nhãn mở lát gắn toà chỉ phải điền hai ô Toà và Phân khu hoặc cụm thay vì 24 ô, các lát khác giữ nguyên.",
+ "will_do": [
+  {
+   "id": "AC-1",
+   "p": "Sẽ chỉ hiện hai ô Toà và «Phân khu hoặc cụm», mỗi ô chọn được «Không suy ra được», không còn ô căn cứ và ô Lý do."
+  },
+  {
+   "id": "AC-2",
+   "p": "Sẽ lưu được mọi trường hợp: có cả hai ô, chỉ một ô, hoặc không ô nào; mỗi bài luôn có đúng hai dòng nhãn."
+  },
+  {
+   "id": "AC-5",
+   "p": "Sẽ sang thẳng bài kế sau khi lưu, không hiện bất kỳ kết quả nào máy đã đọc."
+  },
+  {
+   "id": "AC-6",
+   "p": "Sẽ ghi các nhóm trong bộ chọn là «Phần 1, 2, 3»; chữ bài, ảnh, tên nhóm của bài đang gắn vẫn hiện."
+  },
+  {
+   "id": "AC-7",
+   "p": "Sẽ tính bài đã gắn khi đủ hai ô, tiến độ và bảng đồng thuận chỉ tính hai ô đó."
+  },
+  {
+   "id": "AC-9",
+   "p": "Sẽ báo lỗi ngay dưới ô còn trống, có «Thử lại» khi mất mạng mà không mất chữ đã gõ, gửi trùng không sinh dòng thừa."
+  }
+ ],
+ "wont_do": [
+  {
+   "id": "AC-3",
+   "p": "Chặn lượt lưu thiếu một trong hai ô: báo đúng ô, không ghi gì."
+  },
+  {
+   "id": "AC-4",
+   "p": "Sẽ KHÔNG để giá trị căn cứ tạm của biểu mẫu xuống dữ liệu; lát khác gửi giá trị này bị từ chối."
+  },
+  {
+   "id": "AC-8",
+   "p": "Sẽ KHÔNG đổi hành vi của bốn lát đang có; các bài kiểm đã ký giữ nguyên và vẫn đạt."
+  },
+  {
+   "id": "OOS-1",
+   "p": "Không sửa route API và không thêm cột dữ liệu."
+  },
+  {
+   "id": "OOS-2",
+   "p": "Không nạp lát hai-khu-ghep-b lên máy thu; việc này của dãy PL20."
+  },
+  {
+   "id": "OOS-3",
+   "p": "Không rút gọn các lát đang có."
+  }
+ ],
+ "scope_plain": "Những phần dưới đây không làm trong vòng này:",
+ "coverage_plain": [
+  {
+   "i": 0,
+   "p": "Số bài đếm trên dữ liệu máy thu ngày 18/11; lát mới chưa nạp nên kiểm trên lát giả."
+  },
+  {
+   "i": 2,
+   "p": "Phủ lát rút gọn và bốn lát đang có (AC-1 màn rút gọn, AC-8 lát cũ không đổi)."
+  },
+  {
+   "i": 3,
+   "p": "Phủ mọi cách điền hai ô, kể cả thiếu ô (AC-2 lưu, AC-3 chặn)."
+  },
+  {
+   "i": 4,
+   "p": "Phủ giá trị căn cứ tạm ở cả lát rút gọn và lát cũ (AC-4)."
+  },
+  {
+   "i": 5,
+   "p": "Phủ mọi chỗ có thể lộ kết quả máy: nháp, màn xem máy đọc, đường dẫn xem, tên nhóm (AC-5, AC-6)."
+  },
+  {
+   "i": 6,
+   "p": "Phủ các trạng thái trống, lỗi ô, đang lưu, mất mạng, hết bài (AC-9)."
+  }
+ ],
+ "gap_probe_plain": [
+  {
+   "i": 0,
+   "p": "Chưa kiểm đủ trạng thái đang lưu, mất mạng, hết bài và gửi trùng. Đã thêm các bước xem màn và một phép đo gửi trùng."
+  },
+  {
+   "i": 1,
+   "p": "Phép đo giá trị căn cứ tạm còn yếu và chưa chứng bài kiểm đã ký không bị sửa. Đã viết lại trên cả bốn lát, thêm lệnh so tệp kiểm."
+  },
+  {
+   "i": 2,
+   "p": "Chưa chứng lát gắn mù không lộ kết quả máy ở mọi chỗ trên trang. Đã thêm ba ca đường dẫn và quét toàn trang."
+  },
+  {
+   "i": 3,
+   "p": "Phép bấm giờ có thể chọn bài dễ để ra số đẹp. Đã quy định rút ngẫu nhiên từ bài thật và ghi đủ thông tin từng bài."
+  },
+  {
+   "i": 4,
+   "p": "Gắn mù và cách giữ hạng rủi ro từng được ghi là máy tự quyết. Đã chuyển thành câu hỏi cho anh trên thẻ."
+  }
+ ]
+}
