@@ -1,20 +1,68 @@
-{"feature_plain":"Ở năm dự án có danh mục chủ đầu tư (S16), toà hiện dưới đúng phân khu chủ đầu tư công bố thay vì treo thẳng dưới dự án; khi S08, S09 nói khác về toà, căn hay phân khu thì S16 thắng và phần lệch thành con số đếm, không thành hàng chục thẻ chờ duyệt.",
-"will_do":[
-{"id":"AC-1","p":"Sẽ thêm tầng S16 vào cách tính phân khu hiệu lực mà toà không có S16 vẫn y như hôm nay, và lùi được bằng cách áp lại định nghĩa cũ."},
-{"id":"AC-2","p":"Sẽ lấy khu của từng toà từ bản thu có danh sách khu, để không toà nào nhận một mã khu không có thật (218/218 toà đúng một khu)."},
-{"id":"AC-3","p":"Sẽ có lệnh thẻ luật phân khu S16: xem trước chỉ đọc kèm mã băm, áp đúng thẻ đã xem kèm tên người, và đảo được cả loạt."},
-{"id":"AC-4","p":"Sẽ chỉ đổi phân khu hiệu lực sau khi thẻ luật được áp; sau đó S16 thắng S09, và 109 toà S16 đang treo dưới dự án về 0."},
-{"id":"AC-5","p":"Sẽ để S16 thắng khi căn S08 cùng mã nằm ở toà khác: căn S08 gộp vào căn S16, hai thẻ lệch cũ cho nghỉ, không thẻ mới."},
-{"id":"AC-6","p":"Sẽ đếm lệch cấu trúc theo dự án và cặp nguồn thay vì ra thẻ ở dự án có S16; dự án không có S16 vẫn ra thẻ như cũ."},
-{"id":"AC-7","p":"Sẽ dựng lại hai lần không sinh gì mới, không đổi cột gốc của toà, và không đụng 58 thẻ S16 tự mâu thuẫn."},
-{"id":"AC-8","p":"Sẽ cho job đêm dựng đủ năm khu đã có toà và in một dòng mốc để lượt đêm lùi được."},
-{"id":"AC-9","p":"Sẽ có đường lùi có đích: rút khẳng định thay vì xoá, trả căn S08 và thẻ lệch về như trước, thử trên bản chép."},
-{"id":"AC-10","p":"Sẽ chạy trọn chuỗi trên bản chép DB máy thu và so tám ô với số đã đo: 61 khu, 61 nút, 109 → 0 toà treo, 2 căn gộp, 2 thẻ cho nghỉ, 38/20 thẻ giữ."}
-],
-"wont_do":[
-{"id":"OOS-1","p":"KHÔNG dựng dự án con từ hậu tố khu S08 — hàng riêng."},
-{"id":"OOS-2","p":"KHÔNG sửa trang Danh bạ trên Ops — hàng N1 đọc phân khu hiệu lực từ view của hàng này."},
-{"id":"OOS-3","p":"KHÔNG sửa bộ nạp S16 (kiểm băm, phiên bản tệp thu) — làn ZCode."},
-{"id":"OOS-4","p":"KHÔNG tự xử 38 thẻ mơ hồ và 20 thẻ trùng tên — giữ chờ người (Hỏi-1)."},
-{"id":"OOS-5","p":"KHÔNG đổi luật thẻ cho lệch giá, pháp lý, chủ đầu tư, tiến độ."}
-]}
+{
+  "feature_plain": "Ở các dự án có danh mục căn của chủ đầu tư (S16), người vận hành thấy mỗi toà nằm đúng phân khu chủ đầu tư công bố; nguồn khác lệch cấu trúc thì thành số đếm, không sinh thẻ duyệt. Lưu ý khi ký: thước đo của việc nạp S16 trước đó (DA33) đã được sửa để đếm theo hành vi mới này, lời tiêu chí của DA33 không đổi.",
+  "will_do": [
+    {
+      "id": "AC-1",
+      "p": "Sẽ thêm tầng S16 vào cách tính phân khu hiệu lực mà toà không có S16 vẫn y như hôm nay, và lùi được bằng cách áp lại định nghĩa cũ."
+    },
+    {
+      "id": "AC-2",
+      "p": "Sẽ lấy khu của từng toà từ bản thu có danh sách khu, để không toà nào nhận một mã khu không có thật (218/218 toà đúng một khu)."
+    },
+    {
+      "id": "AC-3",
+      "p": "Sẽ có lệnh thẻ luật phân khu S16: xem trước chỉ đọc kèm mã băm, áp đúng thẻ đã xem kèm tên người, và đảo được cả loạt."
+    },
+    {
+      "id": "AC-4",
+      "p": "Sẽ chỉ đổi phân khu hiệu lực sau khi thẻ luật được áp; sau đó S16 thắng S09, và 109 toà S16 đang treo dưới dự án về 0."
+    },
+    {
+      "id": "AC-5",
+      "p": "Sẽ để S16 thắng khi căn S08 cùng mã nằm ở toà khác: căn S08 gộp vào căn S16, hai thẻ lệch cũ cho nghỉ, không thẻ mới."
+    },
+    {
+      "id": "AC-6",
+      "p": "Sẽ đếm lệch cấu trúc theo dự án và cặp nguồn thay vì ra thẻ ở dự án có S16; dự án không có S16 vẫn ra thẻ như cũ."
+    },
+    {
+      "id": "AC-7",
+      "p": "Sẽ dựng lại hai lần không sinh gì mới, không đổi cột gốc của toà, và không đụng 58 thẻ S16 tự mâu thuẫn."
+    },
+    {
+      "id": "AC-8",
+      "p": "Sẽ cho job đêm dựng đủ năm khu đã có toà và in một dòng mốc để lượt đêm lùi được."
+    },
+    {
+      "id": "AC-9",
+      "p": "Sẽ có đường lùi có đích: rút khẳng định thay vì xoá, trả căn S08 và thẻ lệch về như trước, thử trên bản chép."
+    },
+    {
+      "id": "AC-10",
+      "p": "Sẽ chạy trọn chuỗi trên bản chép DB máy thu và so tám ô với số đã đo: 61 khu, 61 nút, 109 → 0 toà treo, 2 căn gộp, 2 thẻ cho nghỉ, 38/20 thẻ giữ."
+    }
+  ],
+  "wont_do": [
+    {
+      "id": "OOS-1",
+      "p": "KHÔNG dựng dự án con từ hậu tố khu S08 — hàng riêng."
+    },
+    {
+      "id": "OOS-2",
+      "p": "KHÔNG sửa trang Danh bạ trên Ops — hàng N1 đọc phân khu hiệu lực từ view của hàng này."
+    },
+    {
+      "id": "OOS-3",
+      "p": "KHÔNG sửa bộ nạp S16 (kiểm băm, phiên bản tệp thu) — làn ZCode."
+    },
+    {
+      "id": "OOS-4",
+      "p": "KHÔNG tự xử 38 thẻ mơ hồ và 20 thẻ trùng tên — giữ chờ người (Hỏi-1)."
+    },
+    {
+      "id": "OOS-5",
+      "p": "KHÔNG đổi luật thẻ cho lệch giá, pháp lý, chủ đầu tư, tiến độ."
+    }
+  ],
+  "scope_plain": "Không làm trong việc này: dự án con từ hậu tố khu S08, trang Danh bạ hiện số lệch, kiểm toàn vẹn bộ nạp S16, và 58 thẻ S16 đang chờ người."
+}
