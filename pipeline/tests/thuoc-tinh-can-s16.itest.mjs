@@ -91,13 +91,13 @@ function banSao(tu, sang) {
   return { tep, xoa: () => rmSync(dir, { recursive: true, force: true }) };
 }
 
-test("TTC-AC-1 113 áp lần hai không lỗi, lược đồ không đổi; CHECK = 096 + đúng ba trường; chỉ thêm migration 113", async () => {
+test("TTC-AC-1 113 áp lần hai không lỗi, lược đồ không đổi; CHECK = 096 + đúng bốn trường; chỉ thêm migration 113", async () => {
   const truoc = await dauLuocDo();
   apTep(TEN, MIG);
   assert.equal(await dauLuocDo(), truoc, "TTC-AC-1 áp lại 113 đổi lược đồ");
   const d = (await q(`SELECT pg_get_constraintdef(oid) d FROM pg_constraint WHERE conname = 'field_assertions_field_chk'`))[0].d;
   const tap = [...d.matchAll(/'([a-z_]+)'::text/g)].map((m) => m[1]).sort();
-  assert.deepEqual(tap, [...TRUONG_096, "living_area", "building_area_total", "direction_faces"].sort(), "TTC-AC-1 tập trường CHECK");
+  assert.deepEqual(tap, [...TRUONG_096, "living_area", "building_area_total", "direction_faces", "lot_size_area"].sort(), "TTC-AC-1 tập trường CHECK");
   let base = null;
   try { base = execFileSync("git", ["merge-base", "HEAD", "origin/main"], { cwd: GOC, encoding: "utf8" }).trim(); } catch { /* CI nông */ }
   if (base) {
@@ -152,8 +152,8 @@ test("TTC-AC-4, AC-5 chạy thử không ghi; --ghi chỉ căn có bí danh số
   assert.deepEqual(khuon.map((r) => ({ ...r, observed_at: r.observed_at.toISOString() })),
     [{ resource_name: "Unit", method: "source_field", evidence_tier: "fact", nguon: "S16", observed_at: new Date(T1).toISOString() }], "TTC-AC-5 khuôn phát biểu");
   assert.deepEqual((await q(`SELECT field, value FROM field_assertions WHERE subject_key = $1 ORDER BY field, value`, [can(2)])),
-    [{ field: "building_area_total", value: "95" }, { field: "direction_faces", value: "southwest" }, { field: "living_area", value: "90" },
-      { field: "property_type", value: "house" }], "TTC-AC-4 căn thấp tầng: hướng cửa, PN 0 bỏ, không tầng, không giá");
+    [{ field: "direction_faces", value: "southwest" }, { field: "living_area", value: "90" }, { field: "lot_size_area", value: "95" },
+      { field: "property_type", value: "house" }], "TTC-AC-4 căn thấp tầng: sàn + đất, hướng cửa, PN 0 bỏ, không tầng, không giá");
   const ev = (await q(`SELECT string_agg(evidence::text, ' ') t FROM field_assertions WHERE resource_name = 'Unit'`))[0].t;
   const soat = (t) => ["QA1", "QA2", "QA3", "T1", SNAP1, DA].filter((x) => t.includes(x));
   assert.deepEqual(soat(ev), [], "TTC-AC-5 evidence mang mã căn, mã toà, snapshot hay mã dự án");

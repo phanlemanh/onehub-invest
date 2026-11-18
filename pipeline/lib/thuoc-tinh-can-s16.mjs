@@ -2,7 +2,8 @@
 // Thiết kế: _acceptance/thuoc-tinh-can-s16/design.md §5. Không DB, không I/O.
 // Luật (ma trận ghim ở pipeline/tests/thuoc-tinh-can-s16.test.mjs):
 //   - giá trị có mặt trong dòng nguồn là của chủ đầu tư (trường rỗng ⇔ chủ căn được sửa — bảng phủ ca §2) → lớp fact;
-//   - diện tích > 0 → living_area / building_area_total; PN, WC > 0 → bedrooms / bathrooms; 0 hay trống = chưa có;
+//   - diện tích > 0 → living_area + building_area_total (cao tầng) hay lot_size_area (thấp tầng); PN, WC > 0 → bedrooms /
+//     bathrooms; 0 hay trống = chưa có;
 //   - loại hình: 11 mã → apartment / house / commercial (shophouse = commercial, Mạnh duyệt Hỏi-4 18/11); UNDEF, mã lạ → bỏ;
 //   - hướng: toà cao tầng lấy hướng ban công, thấp tầng lấy hướng cửa (Hỏi-2 18/11) → tám mã direction_faces; hai mã nối
 //     gạch (căn góc) → hai phát biểu; OTHER, trống, mã lạ → bỏ;
@@ -59,9 +60,14 @@ const chuoiSo = (n) => String(Number(n));
 export function phatBieuTuDong(r) {
   const phat = [];
   const bo = [];
-  for (const [cot, field] of [["area_using", "living_area"], ["area_building", "building_area_total"]]) {
+  const cao = String(r.height_type ?? "").trim().toUpperCase();
+  // Căn hộ cao tầng: thông thuỷ + tim tường. Nhà thấp tầng: sàn sử dụng + diện tích đất (Mạnh chốt 18/11 — đo trên bản chép
+  // máy thu: thấp tầng có area_using > area_building ở 99,8% dòng, trung vị 285 ↔ 84 m²).
+  const truongXay = cao === "HIGH_RISE" ? "building_area_total" : cao === "LOW_RISE" ? "lot_size_area" : null;
+  for (const [cot, field] of [["area_using", "living_area"], ["area_building", truongXay]]) {
     const v = so(r[cot]);
-    if (v !== null && Number.isFinite(v) && v > 0) phat.push({ field, value: chuoiSo(v) });
+    if (field === null) bo.push({ field: "building_area_total", ly_do: "khong-ro-cao-thap" });
+    else if (v !== null && Number.isFinite(v) && v > 0) phat.push({ field, value: chuoiSo(v) });
     else bo.push({ field, ly_do: v === null ? "trong" : "khong-duong" });
   }
   for (const [cot, field] of [["bedroom", "bedrooms"], ["bathroom", "bathrooms"]]) {
@@ -72,7 +78,6 @@ export function phatBieuTuDong(r) {
   const lh = String(r.property_type ?? "").trim().toUpperCase();
   if (LOAI_HINH_S16[lh]) phat.push({ field: "property_type", value: LOAI_HINH_S16[lh] });
   else bo.push({ field: "property_type", ly_do: lh === "" ? "trong" : lh === "UNDEF" ? "undef" : "ma-la" });
-  const cao = String(r.height_type ?? "").trim().toUpperCase();
   if (cao === "HIGH_RISE" || cao === "LOW_RISE") {
     const h = chuanHuong(cao === "HIGH_RISE" ? r.balcony_direction : r.direction);
     if (h.ma.length) for (const m of h.ma) phat.push({ field: "direction_faces", value: m });

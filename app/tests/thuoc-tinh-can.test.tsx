@@ -68,20 +68,21 @@ after(async () => {
 test("TTC-AC-9 lớp đọc trả đúng giá trị của bộ phân xử và view giá cho từng căn; căn không có thuộc tính không có dòng", async () => {
   const kq = await lop.docThuocTinhCan([B1, B2], db)
   if (!kq.ok) return assert.fail(`TTC-AC-9 lớp đọc lỗi: ${kq.loi}`)
-  const doc = (await db.query(`SELECT v.unit_key, v.living_area::float8 tt, v.building_area_total::float8 tim, v.bedrooms_total pn,
+  const doc = (await db.query(`SELECT v.unit_key, v.living_area::float8 tt, v.building_area_total::float8 tim, v.lot_size_area::float8 dat, v.bedrooms_total pn,
       v.bathrooms_total_integer wc, v.direction_faces h, v.property_sub_type lh, g.list_price::float8 gia, g.gia_m2_thong_thuy::float8 m2
       FROM v_unit_thuoc_tinh v LEFT JOIN v_s16_gia_cdt g USING (unit_key) ORDER BY 1`)).rows
   assert.deepEqual([...kq.data.keys()].sort(), [can(1), can(2), can(3)], "TTC-AC-9 tập căn có thuộc tính")
   for (const r of doc) {
     const x: Lop.ThuocTinhCan = kq.data.get(r.unit_key)!
-    assert.deepEqual([x.thongThuy, x.timTuong, x.phongNgu, x.wc, x.huong, x.loaiHinh, x.giaCdt, x.giaM2ThongThuy],
-      [r.tt, r.tim, r.pn, r.wc, r.h ?? [], r.lh, r.gia, r.m2], `TTC-AC-9 giá trị lệch ở ${r.unit_key}`)
+    assert.deepEqual([x.thongThuy, x.timTuong, x.datDat, x.phongNgu, x.wc, x.huong, x.loaiHinh, x.giaCdt, x.giaM2ThongThuy],
+      [r.tt, r.tim, r.dat, r.pn, r.wc, r.h ?? [], r.lh, r.gia, r.m2], `TTC-AC-9 giá trị lệch ở ${r.unit_key}`)
     assert.deepEqual(x.nguon, ["S16"], `TTC-AC-9 nguồn ở ${r.unit_key}`)
     assert.equal(x.lanThu, "2026-11-18T01:00:00.000Z", `TTC-AC-9 mốc thu ở ${r.unit_key}`)
   }
   // ba trường hợp biên của lõi tới tận lớp đọc: căn góc hai hướng, shophouse = commercial, PN/WC 0 = trống
   assert.deepEqual(kq.data.get(can(1))!.huong, ["northeast", "northwest"], "TTC-AC-9 căn góc")
   assert.equal(kq.data.get(can(2))!.loaiHinh, "commercial", "TTC-AC-9 shophouse")
+  assert.deepEqual([kq.data.get(can(2))!.datDat, kq.data.get(can(2))!.timTuong], [95, null], "TTC-AC-9 thấp tầng: đất thay tim tường")
   assert.equal(kq.data.get(can(2))!.phongNgu, null, "TTC-AC-9 PN 0 thành giá trị")
   assert.equal(kq.data.get(can(3))!.loaiHinh, null, "TTC-AC-9 UNDEF thành giá trị")
 })
@@ -131,7 +132,7 @@ test("TTC-AC-10 ô phủ bằng lệnh đếm độc lập; dự án không có 
 })
 
 test("TTC-AC-10 chiều đỏ: bỏ điều kiện một toà khi đếm «chưa vào danh bạ» → ô N lệch đếm độc lập", async () => {
-  const pha = await lopPha("GROUP BY 1, 2 HAVING count(DISTINCT c.toa) = 1", "GROUP BY 1, 2")
+  const pha = await lopPha("GROUP BY c.du_an, upper(btrim(c.ma_can)) HAVING count(DISTINCT c.toa) = 1", "GROUP BY c.du_an, upper(btrim(c.ma_can))")
   const p = await pha.docPhuThuocTinh([B1], db)
   assert.ok(p.ok && p.data.trangThai === "co")
   assert.notEqual(p.data.chuaVaoDanhBa, 1, "TTC-AC-10 lớp đọc phá vẫn ra N đúng — phép đếm không phân biệt")

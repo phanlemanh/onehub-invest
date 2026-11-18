@@ -29,6 +29,8 @@ export const MA_TRAN = [
   { o: "dt-0", d: D({ area_using: 0 }), f: "living_area", gt: [], ld: "khong-duong" },
   { o: "dt-thieu", d: D({ area_using: null }), f: "living_area", gt: [], ld: "trong" },
   { o: "tt-duong", d: D({ area_building: "74.90" }), f: "building_area_total", gt: ["74.9"], ld: null },
+  { o: "dat-thap-tang", d: D({ height_type: "LOW_RISE", area_building: 84 }), f: "lot_size_area", gt: ["84"], ld: null },
+  { o: "tt-thap-tang-khong-tim-tuong", d: D({ height_type: "LOW_RISE", area_building: 84 }), f: "building_area_total", gt: [], ld: null },
   { o: "pn-duong", d: D({ bedroom: 3 }), f: "bedrooms", gt: ["3"], ld: null },
   { o: "pn-0", d: D({ bedroom: 0 }), f: "bedrooms", gt: [], ld: "bang-0" },
   { o: "wc-duong", d: D({ bathroom: 2 }), f: "bathrooms", gt: ["2"], ld: null },
@@ -67,11 +69,11 @@ async function loiPha(tu, sang) {
 
 test("TTC-AC-3 ma trận nguồn → phát biểu: mọi ô đúng, số ô = số mong đợi", async () => {
   const loi = await import(pathToFileURL(TEP_LOI).href);
-  assert.equal(MA_TRAN.length, 13 + 4 + 4 + 10 + 0, "TTC-AC-3 số ô ma trận đổi mà không cập nhật");
+  assert.equal(MA_TRAN.length, 13 + 6 + 4 + 10, "TTC-AC-3 số ô ma trận đổi mà không cập nhật");
   assert.deepEqual(kiemMaTran(loi), [], "TTC-AC-3 ô sai");
   // không bao giờ phát biểu tầng hay giá
   const kq = loi.phatBieuTuDong({ ...D(), floor_number: "12", sale_price: 2_000_000_000 });
-  assert.deepEqual(kq.phat.filter((p) => !["living_area", "building_area_total", "bedrooms", "bathrooms", "property_type", "direction_faces"].includes(p.field)), [],
+  assert.deepEqual(kq.phat.filter((p) => !["living_area", "building_area_total", "lot_size_area", "bedrooms", "bathrooms", "property_type", "direction_faces"].includes(p.field)), [],
     "TTC-AC-3 phát biểu ngoài sáu trường");
 });
 

@@ -1,11 +1,17 @@
 "use client"
 
+import { useRouter } from "next/navigation"
+import { CircleAlertIcon, RotateCwIcon } from "lucide-react"
+
 import { PageHeader } from "@/components/page/page-header"
+import { Alert, AlertAction, AlertDescription, AlertTitle } from "@/components/reui/alert"
+import { Button } from "@/components/ui/button"
 import { StatTiles } from "@/components/page/stat-tiles"
-import { fmtInt } from "@/lib/format"
+import { fmtInt, fmtVnDate } from "@/lib/format"
 import { LABELS_VI } from "@/lib/vocab.generated"
 
 import type { HangToa } from "@/lib/ops/registry/hang-toa"
+import type { PhuThuocTinh } from "@/lib/ops/thuoc-tinh-can"
 
 import { DuAnToaGrid } from "./du-an-toa-grid"
 
@@ -24,9 +30,27 @@ export type DuAnProps = {
   soCan: number
   tin: Record<string, number>
   rows: HangToa[]
+  /** Ô phủ thuộc tính căn S16 (DA40); null khi đọc lỗi. */
+  phuThuocTinh: PhuThuocTinh | null
+  loiThuocTinh: boolean
+}
+
+/** Ô phủ «căn có thuộc tính / căn trong danh bạ» — số đã đếm ở SQL, ở đây chỉ định dạng. */
+function oPhu(p: PhuThuocTinh | null) {
+  if (!p) return []
+  if (p.trangThai === "khong-nguon") {
+    return [{ title: "Thuộc tính căn", value: "—", footer: "Chưa có nguồn thuộc tính căn" }]
+  }
+  const thu = p.lanThu ? `S16 · thu ${fmtVnDate(p.lanThu)}` : "S16"
+  return [
+    { title: "Căn có thuộc tính", value: `${fmtInt(p.coThuocTinh)} / ${fmtInt(p.trongDanhBa)}`, footer: `Trên căn trong danh bạ · ${thu}` },
+    { title: "Căn có giá chủ đầu tư", value: fmtInt(p.coGia), footer: "Giá niêm yết của chủ đầu tư, lần thu mới nhất" },
+    { title: "Chưa vào danh bạ", value: fmtInt(p.chuaVaoDanhBa), footer: "Căn S16 có thuộc tính mà chưa có căn danh bạ" },
+  ]
 }
 
 export function DuAnView(p: DuAnProps) {
+  const router = useRouter()
   const crumbs = [{ label: "Vận hành", href: "/ops" }, { label: "Danh bạ", href: "/ops/registry" }, { label: p.ten }]
   const tin = Object.entries(p.tin).filter(([, n]) => n > 0)
   const stats = [
@@ -49,6 +73,26 @@ export function DuAnView(p: DuAnProps) {
       <div data-registry-tong="">
         <StatTiles items={oSo} />
       </div>
+      {oPhu(p.phuThuocTinh).length > 0 && (
+        <div data-thuoc-tinh-phu={p.phuThuocTinh?.trangThai}>
+          <StatTiles items={oPhu(p.phuThuocTinh)} />
+        </div>
+      )}
+      {p.loiThuocTinh && (
+        <Alert variant="destructive" data-thuoc-tinh-loi="">
+          <CircleAlertIcon aria-hidden="true" />
+          <AlertTitle>Không tải được thuộc tính căn</AlertTitle>
+          <AlertDescription>
+            <p>Lưới toà và căn vẫn đúng; chỉ cột thuộc tính và ô phủ chưa đọc được.</p>
+          </AlertDescription>
+          <AlertAction>
+            <Button variant="outline" size="sm" onClick={() => router.refresh()}>
+              <RotateCwIcon data-icon="inline-start" aria-hidden="true" />
+              Thử lại
+            </Button>
+          </AlertAction>
+        </Alert>
+      )}
       <DuAnToaGrid rows={p.rows} />
     </div>
   )

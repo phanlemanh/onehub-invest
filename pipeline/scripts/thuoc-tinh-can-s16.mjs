@@ -15,7 +15,7 @@ import { createHash } from "node:crypto";
 import pg from "pg";
 import { NGUON_S16, gopKhoa, khoaCan, phatBieuTuDong } from "../lib/thuoc-tinh-can-s16.mjs";
 
-export const TRUONG = ["living_area", "building_area_total", "bedrooms", "bathrooms", "direction_faces", "property_type"];
+export const TRUONG = ["living_area", "building_area_total", "lot_size_area", "bedrooms", "bathrooms", "direction_faces", "property_type"];
 export const PHUONG_PHAP_BAN = "thuoc-tinh-can-s16@1";
 
 /** Đọc + tính, không ghi. Trả { bang, phat, chua_ap } — phat là các dòng sẵn để chèn. */
@@ -121,6 +121,8 @@ async function main() {
       moi = await ghi(c, kq.phat, kq.observed_at, `ttc-${Date.now()}`);
       await c.query("COMMIT");
       console.log(`ghi ${moi} dòng mới`);
+      // Lượt đầu chèn vài trăm nghìn phát biểu: thiếu thống kê thì câu đọc của trang Danh bạ chọn kế hoạch hàng phút (đo 18/11).
+      if (moi > 0) await c.query("ANALYZE field_assertions");
     } else {
       console.log("chạy thử — không ghi (thêm --ghi để ghi)");
     }

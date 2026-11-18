@@ -73,7 +73,7 @@ flowchart LR
    CHECK: `ma_can`, `du_an` không rỗng; diện tích ≥ 0; `sale_price` ≥ 0. Không đặt tên bảng/cột theo tên nguồn thật.
    Danh sách cột chốt cùng nháp DATA-CONTRACT v14 của làn thu — lệch thì làn thu đề xuất, migration theo (AGENTS «chỗ giáp ranh»).
 2. **Trục trường phát biểu**: `field_assertions_field_chk` = tập của 096 + `living_area`, `building_area_total`,
-   `direction_faces`. Trigger `field_assertions_vat_the_082` thay thân tại chỗ (như 096): ba trường mới chỉ ở `Unit` và
+   `direction_faces`, `lot_size_area` (nhà thấp tầng — Mạnh chốt sau Cổng 1). Trigger `field_assertions_vat_the_082` thay thân tại chỗ (như 096): ba trường mới chỉ ở `Unit` và
    `Property`. Trigger miền mới `field_assertions_gia_tri_113`: `living_area`, `building_area_total` là số > 0 và ≤ 100.000;
    `direction_faces` ∈ tám mã của trục `direction_faces`.
 3. **View `v_unit_thuoc_tinh`** — bộ phân xử của căn: một dòng mỗi căn có ít nhất một phát biểu Unit sống; mỗi trường lấy phát
@@ -91,7 +91,9 @@ flowchart LR
 - Lõi thuần `phatBieuTuDong(dong)` → danh sách `{field, value}` theo luật dưới; `gopKhoa(dongs)` gộp dòng cùng (dự án, toà, mã);
   không DB.
 - Luật trường (ma trận viết trước ở AC-3):
-  - `area_using` > 0 → `living_area`; `area_building` > 0 → `building_area_total` (m², số như nguồn).
+  - `area_using` > 0 → `living_area`; `area_building` > 0 → `building_area_total` ở toà cao tầng, `lot_size_area` (diện tích
+    đất) ở nhà thấp tầng (m², số như nguồn). Đo trên bản chép máy thu 18/11: thấp tầng có area_using > area_building ở 99,8%
+    dòng (trung vị 285 ↔ 84 m²) — Mạnh chốt «sàn sử dụng + diện tích đất».
   - `bedroom` > 0 → `bedrooms`; `bathroom` > 0 → `bathrooms`; 0 = chưa có, không phát biểu.
   - `property_type`: APARTMENT, PENT_HOUSE → `apartment`; ROW_HOUSE, SEMI_DETACHED_VILLA, DETACHED_VILLA, QUADRUPLE_VILLA →
     `house`; SHOP_HOUSE, ROW_SHOP_HOUSE, SEMI_DETACHED_SHOP, DETACHED_SHOP, COMMERCIAL_SERVICE (7.111 khoá) → `commercial` theo
@@ -126,7 +128,7 @@ giá trị `split_part(value,'/',1)` của bí danh `ma_nguon` S16 trên các **
 `v_toa_nut_vung`). N = khoá stg có thuộc tính thuộc tập ấy mà không có bí danh căn sống. Hệ quả: chỉ năm dự án đã nối (DA33 Hỏi-1)
 có ô N; bốn dự án S16 chưa nối (royal-island 4.412, global-gate 2.681, hai-van-bay 1.534, happy-home-trang-cat 704 khoá) không có
 toà S16 nên trang của chúng (nếu có nút) ghi «Chưa có nguồn thuộc tính căn» — số của chúng chỉ ở đầu ra lệnh chạy thử. Ví dụ dữ
-liệu thật cho ô N: ocean-park 817, ocean-park-3 820, ocean-park-2 8, grand-park 2.
+liệu thật cho ô N: ocean-park 817, ocean-park-3 792, grand-park 2 (mã hai toà không tính).
 
 <!-- <<<UX-SPEC-TEMPLATE -->
 ## Đặc tả UX

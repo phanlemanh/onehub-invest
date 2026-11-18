@@ -16,6 +16,8 @@ export type ThuocTinhCan = {
   unitKey: string
   thongThuy: number | null
   timTuong: number | null
+  /** Diện tích đất — chỉ nhà thấp tầng (Mạnh chốt 18/11); khi có, `thongThuy` là sàn sử dụng. */
+  datDat: number | null
   phongNgu: number | null
   wc: number | null
   /** Mã trục direction_faces (một hoặc hai — căn góc). */
@@ -37,19 +39,26 @@ export type KetQua<T> = { ok: true; data: T } | { ok: false; loi: string }
 
 const CO_113 = `SELECT to_regclass('public.v_unit_thuoc_tinh') IS NOT NULL AS co`
 
+// Hai view được nạp sẵn (MATERIALIZED) rồi nối băm: để planner đẩy danh sách căn vào view có hàm cửa sổ thì chạy vòng lặp
+// lồng hàng phút trên bản chép máy thu (đo 18/11); đọc trọn hai view mất khoảng một giây.
 const SQL_CAN = `
-SELECT u.unit_key, v.living_area::float8 AS thong_thuy, v.building_area_total::float8 AS tim_tuong,
+WITH can AS MATERIALIZED (SELECT u.unit_key FROM units u WHERE u.status = 'active' AND u.building_key = ANY($1::text[])),
+v AS MATERIALIZED (SELECT * FROM v_unit_thuoc_tinh),
+g AS MATERIALIZED (SELECT * FROM v_s16_gia_cdt)
+SELECT can.unit_key, v.living_area::float8 AS thong_thuy, v.building_area_total::float8 AS tim_tuong, v.lot_size_area::float8 AS dat,
        v.bedrooms_total AS phong_ngu, v.bathrooms_total_integer AS wc, coalesce(v.direction_faces, '{}') AS huong,
        v.property_sub_type AS loai_hinh, g.list_price::float8 AS gia, g.gia_m2_thong_thuy::float8 AS gia_m2,
        coalesce(v.nguon, CASE WHEN g.unit_key IS NOT NULL THEN ARRAY['S16'] END, '{}') AS nguon,
        greatest(v.observed_at, g.thu_luc) AS lan_thu
-  FROM units u
-  LEFT JOIN v_unit_thuoc_tinh v USING (unit_key)
-  LEFT JOIN v_s16_gia_cdt g USING (unit_key)
- WHERE u.status = 'active' AND u.building_key = ANY($1::text[]) AND (v.unit_key IS NOT NULL OR g.unit_key IS NOT NULL)`
+  FROM can
+  LEFT JOIN v ON v.unit_key = can.unit_key
+  LEFT JOIN g ON g.unit_key = can.unit_key
+ WHERE v.unit_key IS NOT NULL OR g.unit_key IS NOT NULL`
 
 const SQL_PHU = `
-WITH can AS (SELECT u.unit_key FROM units u WHERE u.status = 'active' AND u.building_key = ANY($1::text[])),
+WITH can AS MATERIALIZED (SELECT u.unit_key FROM units u WHERE u.status = 'active' AND u.building_key = ANY($1::text[])),
+v AS MATERIALIZED (SELECT * FROM v_unit_thuoc_tinh),
+g AS MATERIALIZED (SELECT unit_key FROM v_s16_gia_cdt),
 da AS (
   SELECT DISTINCT split_part(a.value, '/', 1) AS du_an FROM registry_aliases a
    WHERE a.object_key = ANY($1::text[]) AND a.source = 'S16' AND a.kind = 'ma_nguon' AND a.retired_at IS NULL
@@ -59,19 +68,21 @@ snap AS (
    WHERE EXISTS (SELECT 1 FROM stg_s16_can_chi_tiet x WHERE x.snapshot_id = s.snapshot_id)
    ORDER BY s.collected_at DESC NULLS LAST, s.snapshot_id DESC LIMIT 1
 ),
-khoa AS (
-  SELECT c.du_an, upper(btrim(c.ma_can)) AS ma FROM stg_s16_can_chi_tiet c JOIN snap USING (snapshot_id)
+khoa AS MATERIALIZED (
+  SELECT c.du_an || '/' || upper(btrim(c.ma_can)) AS gia_tri FROM stg_s16_can_chi_tiet c JOIN snap USING (snapshot_id)
    WHERE c.du_an IN (SELECT du_an FROM da)
-   GROUP BY 1, 2 HAVING count(DISTINCT c.toa) = 1
+   GROUP BY c.du_an, upper(btrim(c.ma_can)) HAVING count(DISTINCT c.toa) = 1
+),
+bi_danh AS MATERIALIZED (
+  SELECT a.value FROM registry_aliases a
+   WHERE a.source = 'S16' AND a.kind = 'ma_nguon' AND a.retired_at IS NULL AND a.object_key LIKE 'unt\\_%'
 )
 SELECT (SELECT count(*) FROM da)::int AS so_du_an,
        (SELECT count(*) FROM can)::int AS trong_danh_ba,
-       (SELECT count(*) FROM can JOIN v_unit_thuoc_tinh v USING (unit_key))::int AS co_thuoc_tinh,
-       (SELECT count(*) FROM can JOIN v_s16_gia_cdt g USING (unit_key))::int AS co_gia,
-       (SELECT count(*) FROM khoa k WHERE NOT EXISTS (
-          SELECT 1 FROM registry_aliases a WHERE a.source = 'S16' AND a.kind = 'ma_nguon' AND a.retired_at IS NULL
-             AND a.object_key LIKE 'unt\\_%' AND a.value = k.du_an || '/' || k.ma))::int AS chua_vao_danh_ba,
-       (SELECT max(v.observed_at) FROM can JOIN v_unit_thuoc_tinh v USING (unit_key)) AS lan_thu`
+       (SELECT count(*) FROM can JOIN v USING (unit_key))::int AS co_thuoc_tinh,
+       (SELECT count(*) FROM can JOIN g USING (unit_key))::int AS co_gia,
+       (SELECT count(*) FROM khoa k LEFT JOIN bi_danh b ON b.value = k.gia_tri WHERE b.value IS NULL)::int AS chua_vao_danh_ba,
+       (SELECT max(v.observed_at) FROM can JOIN v USING (unit_key)) AS lan_thu`
 
 const iso = (d: Date | string | null) => (d == null ? null : new Date(d).toISOString())
 
@@ -82,12 +93,12 @@ export async function docThuocTinhCan(toaKeys: string[], q: Q = pool): Promise<K
     const out = new Map<string, ThuocTinhCan>()
     if (!toaKeys.length || !(await q.query<{ co: boolean }>(CO_113)).rows[0]?.co) return { ok: true, data: out }
     const { rows } = await q.query<{
-      unit_key: string; thong_thuy: number | null; tim_tuong: number | null; phong_ngu: number | null; wc: number | null
+      unit_key: string; thong_thuy: number | null; tim_tuong: number | null; dat: number | null; phong_ngu: number | null; wc: number | null
       huong: string[]; loai_hinh: string | null; gia: number | null; gia_m2: number | null; nguon: string[]; lan_thu: Date | null
     }>(SQL_CAN, [toaKeys])
     for (const r of rows) {
       out.set(r.unit_key, {
-        unitKey: r.unit_key, thongThuy: r.thong_thuy, timTuong: r.tim_tuong, phongNgu: r.phong_ngu, wc: r.wc, huong: r.huong,
+        unitKey: r.unit_key, thongThuy: r.thong_thuy, timTuong: r.tim_tuong, datDat: r.dat, phongNgu: r.phong_ngu, wc: r.wc, huong: r.huong,
         loaiHinh: r.loai_hinh, giaCdt: r.gia, giaM2ThongThuy: r.gia_m2, nguon: r.nguon, lanThu: iso(r.lan_thu),
       })
     }

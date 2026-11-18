@@ -32,6 +32,10 @@ tính trong tệp thu; «Nối» = có TT và có căn danh bạ; «Chưa căn»
 | the-gallery-giang-vo | 199 | 0 | 0 | 0 | 0 | — | — | — | — | — | — | — | — |
 | **Tổng** | **147.266** | **111.329** | **95.798** | **84.820** | **10.978** | **84.820** | **84.820** | **78.548** | **24.975** | **67.893** | **82.980** | **11.852** | **41** |
 
+Sau Cổng 1 (d-20261118T025028Z-17): cột «Tim tường» chỉ còn căn hộ cao tầng (69.676); nhà thấp tầng ghi diện tích đất
+(15.144) — đo bằng lệnh chạy thử trên bản chép máy thu `oneinvest_p1_ttc` 18/11. Ô «chưa vào danh bạ» không tính mã hai toà:
+ocean-park-3 792 (+ 28 hai toà = 820 ở cột «Chưa căn» trên).
+
 Tổng phần trăm trên căn danh bạ: 84.820 / 111.329 = 76,2% có thuộc tính; 11.852 / 111.329 = 10,6% có giá chủ đầu tư.
 Trên toàn tệp thu: 95.798 khoá, 14.911 có giá — 3.059 giá nằm ở căn chưa có căn danh bạ.
 

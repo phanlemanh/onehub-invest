@@ -1,6 +1,6 @@
 -- 113_thuoc_tinh_can_s16.sql — DA40 thuoc-tinh-can-s16: thuộc tính căn S16 (chủ đầu tư) vào danh bạ.
 -- Thiết kế: _acceptance/thuoc-tinh-can-s16/design.md §4 · ADR-0016 §3 (thuộc tính vật thể là phát biểu), §7.1 (giá thuộc chào
--- bán, không phải sự thật của căn) · ADR-0011 (RESO-first: LivingArea, BuildingAreaTotal tra DD 2.1; direction_faces là trục
+-- bán, không phải sự thật của căn) · ADR-0011 (RESO-first: LivingArea, BuildingAreaTotal, LotSizeArea tra DD 2.1 — nhà thấp tầng ghi sàn sử dụng + đất, Mạnh chốt 18/11; direction_faces là trục
 -- local đã có, Mạnh chốt nghĩa 07/11 GN1).
 -- KHÔNG sync cloud: bảng nạp và hai view lấy từ dữ liệu S16 sau đăng nhập (ROADMAP §3 mục 48); sync-cloud.mjs chặn mọi bảng
 -- ^stg_s16 (pipeline/lib/s16-soat.mjs), field_assertions và view không nằm trong FILL. Chỉ DB local; áp máy thu sau gộp.
@@ -32,12 +32,12 @@ CREATE TABLE IF NOT EXISTS stg_s16_can_chi_tiet (
 );
 CREATE INDEX IF NOT EXISTS stg_s16_can_chi_tiet_ma_idx ON stg_s16_can_chi_tiet (du_an, upper(btrim(ma_can)));
 
--- 2. Trục trường phát biểu = tập của 096 + ba trường thuộc tính căn (sổ: pipeline/mappings.yaml trục assertion_field).
+-- 2. Trục trường phát biểu = tập của 096 + bốn trường thuộc tính căn (sổ: pipeline/mappings.yaml trục assertion_field).
 ALTER TABLE field_assertions DROP CONSTRAINT IF EXISTS field_assertions_field_chk;
 ALTER TABLE field_assertions ADD CONSTRAINT field_assertions_field_chk
-  CHECK (field IN ('property_type', 'bedrooms', 'bathrooms', 'street_raw', 'block_raw', 'offer_status', 'street_number', 'unit_number', 'frontage_length', 'lot_size_dimensions', 'stories', 'latitude', 'longitude', 'builder_name', 'area_id', 'floor_raw', 'floor_band', 'project_node_id', 'subzone_node_id', 'living_area', 'building_area_total', 'direction_faces'));
+  CHECK (field IN ('property_type', 'bedrooms', 'bathrooms', 'street_raw', 'block_raw', 'offer_status', 'street_number', 'unit_number', 'frontage_length', 'lot_size_dimensions', 'stories', 'latitude', 'longitude', 'builder_name', 'area_id', 'floor_raw', 'floor_band', 'project_node_id', 'subzone_node_id', 'living_area', 'building_area_total', 'direction_faces', 'lot_size_area'));
 
--- 3. Thay thân hàm trigger 082 tại chỗ (giữ tên hàm và trigger; luật 096 giữ nguyên chữ). Thêm: ba trường thuộc tính căn chỉ ở
+-- 3. Thay thân hàm trigger 082 tại chỗ (giữ tên hàm và trigger; luật 096 giữ nguyên chữ). Thêm: bốn trường thuộc tính căn chỉ ở
 --    Unit và Property (vật thể hoặc tin), không ở Building, Stack.
 CREATE OR REPLACE FUNCTION field_assertions_vat_the_082()
 RETURNS trigger LANGUAGE plpgsql AS $$
@@ -53,7 +53,7 @@ BEGIN
      OR (NEW.field <> 'builder_name' AND NEW.resource_name = 'Building' AND NEW.field <> 'area_id')
      OR (NEW.field = 'area_id' AND NEW.resource_name NOT IN ('Building', 'Property'))
      OR (NEW.field IN ('project_node_id', 'subzone_node_id') AND NEW.resource_name <> 'Property')
-     OR (NEW.field IN ('living_area', 'building_area_total', 'direction_faces') AND NEW.resource_name NOT IN ('Unit', 'Property')) THEN
+     OR (NEW.field IN ('living_area', 'building_area_total', 'direction_faces', 'lot_size_area') AND NEW.resource_name NOT IN ('Unit', 'Property')) THEN
     RAISE EXCEPTION 'field_assertions: trường % không thuộc resource %', NEW.field, NEW.resource_name;
   END IF;
   IF NEW.method = 'registry_inherit' AND NEW.evidence_tier <> 'inferred' THEN
@@ -75,11 +75,11 @@ BEGIN
   RETURN NEW;
 END $$;
 
--- 4. Miền giá trị của ba trường mới: diện tích là số m² dương ≤ 100.000; hướng là một trong tám mã của trục direction_faces.
+-- 4. Miền giá trị của bốn trường mới: diện tích là số m² dương ≤ 100.000; hướng là một trong tám mã của trục direction_faces.
 CREATE OR REPLACE FUNCTION field_assertions_gia_tri_113()
 RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
-  IF NEW.field IN ('living_area', 'building_area_total') THEN
+  IF NEW.field IN ('living_area', 'building_area_total', 'lot_size_area') THEN
     IF btrim(NEW.value) !~ '^[0-9]+(\.[0-9]+)?$' OR btrim(NEW.value)::numeric <= 0 OR btrim(NEW.value)::numeric > 100000 THEN
       RAISE EXCEPTION 'phát biểu % phải là số m² dương ≤ 100000: «%»', NEW.field, NEW.value;
     END IF;
@@ -98,7 +98,8 @@ CREATE TRIGGER field_assertions_gia_tri_113 BEFORE INSERT ON field_assertions
 INSERT INTO ref_lookup (lookup_name, lookup_value, standard_lookup_value, label_vi, is_local, sort_order) VALUES
   ('assertion_field', 'living_area', 'LivingArea', 'Diện tích thông thuỷ', false, 20),
   ('assertion_field', 'building_area_total', 'BuildingAreaTotal', 'Diện tích tim tường', false, 21),
-  ('assertion_field', 'direction_faces', NULL, 'Hướng', true, 22)
+  ('assertion_field', 'direction_faces', NULL, 'Hướng', true, 22),
+  ('assertion_field', 'lot_size_area', 'LotSizeArea', 'Diện tích đất', false, 23)
 ON CONFLICT (lookup_name, lookup_value) DO UPDATE SET standard_lookup_value = EXCLUDED.standard_lookup_value,
   label_vi = EXCLUDED.label_vi, is_local = EXCLUDED.is_local, sort_order = EXCLUDED.sort_order;
 
@@ -112,7 +113,7 @@ WITH song AS (
          CASE fa.evidence_tier WHEN 'fact' THEN 3 WHEN 'observed' THEN 2 ELSE 1 END AS bac
     FROM field_assertions fa
    WHERE fa.resource_name = 'Unit' AND fa.retracted_at IS NULL AND fa.method <> 'registry_inherit'
-     AND fa.field IN ('living_area', 'building_area_total', 'bedrooms', 'bathrooms', 'direction_faces', 'property_type')
+     AND fa.field IN ('living_area', 'building_area_total', 'lot_size_area', 'bedrooms', 'bathrooms', 'direction_faces', 'property_type')
 ), xep AS (
   SELECT s.*, rank() OVER (PARTITION BY unit_key, field ORDER BY bac DESC, observed_at DESC) AS hang,
          row_number() OVER (PARTITION BY unit_key, field ORDER BY bac DESC, observed_at DESC, id DESC) AS thu_tu
@@ -132,6 +133,7 @@ WITH song AS (
 SELECT t.unit_key,
        max(t.mot) FILTER (WHERE t.field = 'living_area')::numeric AS living_area,
        max(t.mot) FILTER (WHERE t.field = 'building_area_total')::numeric AS building_area_total,
+       max(t.mot) FILTER (WHERE t.field = 'lot_size_area')::numeric AS lot_size_area,
        max(t.mot) FILTER (WHERE t.field = 'bedrooms')::integer AS bedrooms_total,
        max(t.mot) FILTER (WHERE t.field = 'bathrooms')::integer AS bathrooms_total_integer,
        max(t.cac) FILTER (WHERE t.field = 'direction_faces') AS direction_faces,
@@ -158,6 +160,11 @@ WITH moi AS (
     FROM moi WHERE r = 1
    GROUP BY snapshot_id, du_an, ma
   HAVING count(DISTINCT toa) = 1
+), bi_danh AS MATERIALIZED (
+  -- Nạp sẵn để nối băm: chỉ mục một phần (source, kind, value) bỏ kind khỏi điều kiện tra nên vòng lặp lồng quét lại cả
+  -- trăm nghìn bí danh S16 mỗi lượt (đo trên bản chép máy thu 18/11: 34 giây).
+  SELECT a.value, a.object_key FROM registry_aliases a
+   WHERE a.source = 'S16' AND a.kind = 'ma_nguon' AND a.retired_at IS NULL AND a.object_key LIKE 'unt\_%'
 )
 SELECT a.object_key AS unit_key,
        m.sale_price AS list_price,
@@ -165,6 +172,5 @@ SELECT a.object_key AS unit_key,
        m.snapshot_id,
        m.thu_luc
   FROM mot_toa m
-  JOIN registry_aliases a ON a.source = 'S16' AND a.kind = 'ma_nguon' AND a.retired_at IS NULL
-                         AND a.object_key LIKE 'unt\_%' AND a.value = m.du_an || '/' || m.ma
+  JOIN bi_danh a ON a.value = m.du_an || '/' || m.ma
  WHERE m.sale_price > 0;

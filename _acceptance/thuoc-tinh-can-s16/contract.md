@@ -37,7 +37,7 @@ Given DB của riêng lượt đã áp 001…112,
 When áp `db/migrations/113_*.sql` hai lần,
 Then lần hai không lỗi và lược đồ không đổi (so bản chụp `information_schema` + định nghĩa view/trigger); có bảng
 `stg_s16_can_chi_tiet`, hai view `v_unit_thuoc_tinh`, `v_s16_gia_cdt`, CHECK `field_assertions_field_chk` = tập của 096 cộng
-đúng `living_area`, `building_area_total`, `direction_faces`; không migration cũ nào bị sửa (diff `db/migrations/` chỉ thêm 113);
+đúng `living_area`, `building_area_total`, `direction_faces`, `lot_size_area` (thêm sau Cổng 1, quyết định d-20261118T025028Z-17); không migration cũ nào bị sửa (diff `db/migrations/` chỉ thêm 113);
 `units`, `buildings`, `registry_aliases` không đổi định nghĩa.
 
 ### AC-2 — Bảng nạp giữ trường nguồn cần dùng, không có cột tài chính chủ căn
@@ -50,7 +50,7 @@ giá âm bị CHECK từ chối (23514); không cột hay tên bảng mang tên 
 ### AC-3 — Luật nguồn → phát biểu đúng trên ma trận viết trước
 Given lõi thuần `pipeline/lib/thuoc-tinh-can-s16.mjs` và ma trận viết trước một assert mỗi ô: 12 mã loại hình (năm mã shophouse/
 thương mại theo nhánh Mạnh chọn ở Hỏi-4) + UNDEF + mã lạ;
-diện tích dương / 0 / thiếu; PN, WC dương / 0; hướng cao tầng ↔ thấp tầng (lấy ban công ↔ cửa); NE / N_E / NORTH / XX_YY hai mã /
+diện tích dương / 0 / thiếu; cao tầng (tim tường) ↔ thấp tầng (diện tích đất); PN, WC dương / 0; hướng cao tầng ↔ thấp tầng (lấy ban công ↔ cửa); NE / N_E / NORTH / XX_YY hai mã /
 XX_XX / OTHER / rỗng / mã lạ; dòng ở hai toà,
 When gọi `phatBieuTuDong` và `gopKhoa`,
 Then mỗi ô ra đúng danh sách `{field, value}` của thiết kế §5 (0 phát biểu cho 0, rỗng, OTHER, UNDEF, mã lạ — kèm lý do đếm được);
@@ -92,7 +92,7 @@ Then danh sách thật không chứa bảng hay view nào trong bốn tên; danh
 ### AC-9 — Lưới toà hiện thuộc tính từng căn kèm nguồn và mốc thu (cross-layer)
 Given DB có phát biểu và giá cho căn của một dự án đã nối, và có căn chưa có thuộc tính,
 When người vận hành mở `/ops/registry/[nodeId]` của dự án, mở một toà,
-Then mỗi hàng căn có thuộc tính hiện thông thuỷ, tim tường (m²), PN, WC, hướng, loại hình (nhãn `CONTEXT.md`), giá chủ đầu tư
+Then mỗi hàng căn có thuộc tính hiện thông thuỷ, tim tường (m²) — nhà thấp tầng: sàn sử dụng và diện tích đất (sau Cổng 1, d-20261118T025028Z-17) — PN, WC, hướng, loại hình (nhãn `CONTEXT.md`), giá chủ đầu tư
 kèm giá/m², Badge `S16` và mốc thu; giá trị trên màn bằng giá trị `v_unit_thuoc_tinh` / `v_s16_gia_cdt` của đúng `unit_key`;
 căn chưa có thuộc tính hiện «Chưa có thuộc tính»; trang có Skeleton khi tải và lỗi nội tuyến kèm «Thử lại»; không chữ nào mang tên
 nguồn thật.
@@ -110,7 +110,7 @@ Given PR đã gộp, bộ nạp của làn thu đã nạp snapshot `mngt-can-chi
 When áp 113, chạy lệnh `--ghi` từ `main`, rồi mở trang dự án grand-park, smart-city, ocean-park-3 trên Ops máy thu,
 Then số thật bằng số chạy thử từng ô, và khi snapshot là lượt thu 18/11 thì cả hai bằng số khoá trong `bang-phu-ca.md` §1 (đếm
 từ tệp thu gốc, độc lập với bộ nạp): căn danh bạ có thuộc tính 0 → 84.820 / 111.329, có giá 0 → 11.852; grand-park 37.589 / 37.997,
-smart-city 2.546 / 22.119, ocean-park-3 2.797 / 4.599 kèm 820 chưa vào danh bạ; lệch thì dừng, báo, không tự sửa cho khớp; ảnh
+smart-city 2.546 / 22.119, ocean-park-3 2.797 / 4.599 kèm 792 chưa vào danh bạ; lệch thì dừng, báo, không tự sửa cho khớp; ảnh
 chụp ba trang nằm trong evidence.
 
 ## Coverage
@@ -136,4 +136,6 @@ của bảng phủ ca §1 có số đếm từ DB máy thu; AC-11 so lại từn
 - Tên dự án trong hồ sơ là tên ngắn (bỏ tiền tố thương hiệu của slug nguồn).
 - Giới hạn đo đã biết từ S1: bộ ghi thật của `stg_s16_can_chi_tiet` là bộ nạp của làn thu (chưa có); ca DB (E1–E7) dựng dòng stg
   theo khuôn migration 113, nên chỗ ánh xạ sai của bộ nạp chỉ bị bắt ở E13 (so với số khoá từ tệp thu gốc).
+- Sau Cổng 1, Mạnh quyết trong phiên: nhà thấp tầng ghi sàn sử dụng + diện tích đất (`lot_size_area`, RESO LotSizeArea) thay
+  cho thông thuỷ + tim tường (d-20261118T025028Z-17); số mẫu ocean-park-3 820 → 792 (GS, chờ Mạnh phê ở Cổng Bằng chứng).
 - Known limits: (trống tới S4)

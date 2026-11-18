@@ -84,7 +84,7 @@ evals:
     layer: ui-observed
     paths: ["app/src/components/ops/registry/**", "app/src/app/ops/registry/**"]
     steps: "Cùng bản chạy :3463 như E10. Mở trang dự án grand-park, smart-city, ocean-park-3 và một dự án không có toà S16; chụp ô phủ đầu trang → evidence/E12-step1..4.png (1280 sáng)."
-    expected: "grand-park và smart-city hiện «X / Y căn có thuộc tính» và «Z căn có giá chủ đầu tư»; ocean-park-3 hiện «820 căn S16 có thuộc tính chưa vào danh bạ» (số theo E13); dự án không có toà S16 hiện «Chưa có nguồn thuộc tính căn»; số khớp E13"
+    expected: "grand-park và smart-city hiện «X / Y căn có thuộc tính» và «Z căn có giá chủ đầu tư»; ocean-park-3 hiện «792 căn S16 có thuộc tính chưa vào danh bạ» (số theo E13); dự án không có toà S16 hiện «Chưa có nguồn thuộc tính căn»; số khớp E13"
     evidence_required: [screenshot, observed, verifier, verified_at]
   - id: E13
     criterion: AC-11
