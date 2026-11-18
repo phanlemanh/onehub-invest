@@ -34,8 +34,9 @@ export function quyNhan({ building, subzone }, d) {
 
 export function chamBai(may, nhan, d) {
   if (may.muc === "toa") return nhan.toa === may.k;
-  if (nhan.toa) return chuoiVung(d.vungCuaToa.get(nhan.toa), d).has(may.k);
-  return nhan.vung !== undefined && chuoiVung(nhan.vung, d).has(may.k);
+  // Danh bạ còn toà chưa có vùng: người ghi cả toà lẫn đúng vùng thì vẫn tính đúng.
+  if (nhan.vung !== undefined && chuoiVung(nhan.vung, d).has(may.k)) return true;
+  return nhan.toa !== undefined && chuoiVung(d.vungCuaToa.get(nhan.toa), d).has(may.k);
 }
 
 const cong = (o, k, dung) => { o[k] ??= { n: 0, dung: 0 }; o[k].n++; if (dung) o[k].dung++; };

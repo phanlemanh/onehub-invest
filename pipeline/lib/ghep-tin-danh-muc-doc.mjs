@@ -24,10 +24,11 @@ async function docDanhBa(c) {
          SELECT n.id, n.parent_id, n.name, n.aliases, con.sau + 1 FROM asset_nodes n JOIN con ON n.parent_id = con.id WHERE con.sau < 16)
        SELECT id::text, parent_id::text, name, aliases FROM con`, [id]);
     const { rows: toa } = await c.query(
-      `SELECT b.building_key AS key, b.upi, b.region_node_id::text AS vung,
+      // Nút vùng hiệu lực của toà lấy từ v_toa_nut_vung (DA36): nhiều toà có cột gốc gắn thẳng vào dự án nhưng thật ra thuộc một phân khu, cụm.
+      `SELECT b.building_key AS key, b.upi, v.region_node_id::text AS vung,
               array_agg(DISTINCT a.value) FILTER (WHERE a.kind = 'ten' AND a.retired_at IS NULL) AS ten
-         FROM buildings b LEFT JOIN registry_aliases a ON a.object_key = b.building_key
-        WHERE b.status = 'active' AND b.region_node_id = ANY ($1::bigint[])
+         FROM buildings b JOIN v_toa_nut_vung v USING (building_key) LEFT JOIN registry_aliases a ON a.object_key = b.building_key
+        WHERE b.status = 'active' AND v.region_node_id = ANY ($1::bigint[])
         GROUP BY 1, 2, 3`, [[id, ...nut.map((n) => n.id)]]);
     ra.set(id, dungDanhBa({
       toa: toa.map((b) => ({ key: b.key, upi: b.upi, vung_id: b.vung === id ? null : b.vung, ten: b.ten ?? [] })),

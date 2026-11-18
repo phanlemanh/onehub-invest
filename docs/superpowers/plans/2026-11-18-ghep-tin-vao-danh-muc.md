@@ -165,7 +165,7 @@ Phục vụ E4, E5 · `independent: false` · **chờ DA40 vào main**
 
 - [ ] **Step 1: Nhận main** (`git fetch origin && git merge origin/main`), xác nhận `db/migrations/113_*` có mặt.
 - [ ] **Step 2: Viết itest đỏ** cho AC-4 (hai mức, bốn `rule_id`, bốn trường của 113 vẫn ghi được, DB từ chối UPI lạ, toà ngừng hoạt động, resource khác `Property`) và AC-5 (năm ô, dòng của `rule_id` khác không vào view).
-- [ ] **Step 3: Viết migration bằng skill `/new-migration`**: chép nguyên danh sách trường của 113, thêm `universal_property_id`; thay thân `field_assertions_vat_the_082` giữ nguyên luật 113, thêm luật của trường mới; dựng view theo khuôn `offer_project`. Thêm mã vào `mappings.yaml` với `dd_lookup: UniversalPropertyId`, chạy `node pipeline/vocab.mjs --write`.
+- [ ] **Step 3: Viết migration bằng skill `/new-migration`**: chép nguyên danh sách trường của 113, thêm `universal_property_id`; thay thân `field_assertions_vat_the_082` giữ nguyên luật 113, thêm luật của trường mới; dựng view theo khuôn `offer_project`; quan hệ toà thuộc vùng đọc từ `v_toa_nut_vung` (nút hiệu lực của DA36), không đọc cột gốc `buildings.region_node_id`. Thêm mã vào `mappings.yaml` với `dd_lookup: UniversalPropertyId`, chạy `node pipeline/vocab.mjs --write`.
 - [ ] **Step 4: Chạy itest xanh.**
 
 Run: `bash db/db-thu.sh oneinvest_suite_pl20 --chay node --test pipeline/tests/ghep-tin-danh-muc-117.itest.mjs`

@@ -6,7 +6,7 @@ import { dungDanhBa } from "../lib/ghep-tin-danh-muc.mjs";
 import { chamBai, chamLat, docBaoCao, kiemDauRa, quyNhan, vietBaoCao } from "./ghep-tin-danh-muc-cham.mjs";
 
 const D = dungDanhBa({
-  toa: [{ key: "bld_a", upi: "u", vung_id: "101", ten: ["S1.02"] }, { key: "bld_b", upi: "u2", vung_id: "102", ten: ["S2.05"] }],
+  toa: [{ key: "bld_a", upi: "u", vung_id: "101", ten: ["S1.02"] }, { key: "bld_b", upi: "u2", vung_id: "102", ten: ["S2.05"] }, { key: "bld_c", upi: "u3", vung_id: null, ten: ["GOC1"] }],
   vung: [{ id: "101", cha_id: null, ten: ["The Sapphire 1"] }, { id: "102", cha_id: null, ten: ["The Paris"] }, { id: "103", cha_id: "101", ten: ["Sapphire Dong"] }],
 });
 const hai = new Map([["1", D]]);
@@ -24,6 +24,8 @@ for (const [ten, may, nhan, mong] of [
   ["may-vung-nguoi-ghi-toa-vung-khac", vung, { building: "s2.05" }, false],
   ["may-vung-nguoi-ghi-vung-khac", vung, { subzone: "the paris" }, false],
   ["may-vung-nguoi-khong-neu", vung, {}, false],
+  ["may-vung-nguoi-ghi-toa-chua-co-vung-va-dung-vung", vung, { building: "goc1", subzone: "the sapphire 1" }, true],
+  ["may-vung-nguoi-chi-ghi-toa-chua-co-vung", vung, { building: "goc1" }, false],
 ]) test(ten, () => assert.equal(chamBai(may, quyNhan(nhan, D), D), mong, `ô «${ten}»`));
 
 /** Tập đủ cỡ: mỗi nhóm 110 bài, người ghi đúng như máy. */

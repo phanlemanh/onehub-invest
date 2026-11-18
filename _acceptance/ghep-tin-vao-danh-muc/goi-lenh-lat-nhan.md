@@ -2,7 +2,7 @@
 
 **Lời duyệt:** Mạnh ký Cổng Phạm vi (`/acceptance-gate:approve ghep-tin-vao-danh-muc duyệt`) và chọn phương án 1 ngày 18/11: chấm hai nhóm nguồn, 220 bài. Hợp đồng ghi rõ chữ ký phủ lượt nạp lát này.
 
-**Điều kiện chạy:** cả hai lượt đọc bù đã xong (`goi-lenh-doc-bu.md`, `goi-lenh-doc-them.md`), và đã qua ít nhất một lượt nạp S03 sau khi đọc xong, để đầu ra của máy ổn định.
+**Điều kiện chạy:** cả hai lượt đọc bù đã xong (`goi-lenh-doc-bu.md`, `goi-lenh-doc-them.md`), đã qua ít nhất một lượt nạp S03 sau khi đọc xong, và **hàng danh bạ S16 đã áp xong lên máy thu**. Danh bạ đổi sau lúc rút mẫu thì đầu ra máy có thể khác bản đóng băng và phép chấm sẽ đỏ.
 
 **Ghi vào:** chỉ `eval_label_items`, lát `hai-khu-ghep-b`, trên DB máy thu. Không điền nháp, không gọi model.
 
@@ -23,7 +23,7 @@ cd "$W/pipeline" && node scripts/ghep-tin-danh-muc-lat-nhan.mjs --rut --seed pl2
 
 Thoát 0 khi đủ 110 bài mỗi nhóm. Nhóm nào thiếu thì **dừng, báo P4**.
 
-Số chạy thử sau lượt đọc bù đầu: `n1` 110, `n2` 110.
+Số chạy thử sau hai lượt đọc bù: 220 bài, `n1` 110 trên tổng thể 2.820 tin, `n2` 110 trên tổng thể 479 tin.
 
 ## 2. Sao lưu
 

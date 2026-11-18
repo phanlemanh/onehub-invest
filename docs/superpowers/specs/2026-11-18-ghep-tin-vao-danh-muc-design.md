@@ -84,7 +84,7 @@ Tắt một nguồn là bỏ `rule_id` đó khỏi danh sách nguồn bật tron
 
 **Migration 117**, viết chồng lên 113 của DA40 và giữ đủ bốn trường của 113: thêm `universal_property_id` vào ràng buộc trường, trigger
 chỉ nhận trường này ở `Property` và chỉ nhận UPI của toà đang hoạt động; view `offer_building` cho người đọc phía sau, theo khuôn
-`offer_project`: một tin một dòng, chỉ đọc dòng của bốn `rule_id` trên. Toà cùng vùng chứa nó ra mức toà; hai toà khác nhau, toà với
+`offer_project`: một tin một dòng, chỉ đọc dòng của bốn `rule_id` trên. Quan hệ toà thuộc vùng lấy từ `v_toa_nut_vung` (nút hiệu lực của DA36). Toà cùng vùng chứa nó ra mức toà; hai toà khác nhau, toà với
 vùng không chứa nó, hai vùng không lồng nhau đều là `xung_dot` và không tính là đã gắn.
 
 **Chạy định kỳ**: bước gắn chạy cuối lượt nạp S03 trong `transform-zalo.mjs`, để tin mới có toà sau mỗi 15 phút. Bước gắn dùng giao dịch riêng sau khi

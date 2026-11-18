@@ -7,6 +7,7 @@ import { after, before, test } from "node:test";
 import pg from "pg";
 
 import { chuanHoaTenToa } from "../lib/danh-ba-vat-the.mjs";
+import { TAT_CA_NGUON } from "../lib/ghep-tin-danh-muc.mjs";
 import { PROMPT_VERSION_DOC, docDauVao, tinhGan } from "../lib/ghep-tin-danh-muc-doc.mjs";
 
 const DB_URL = process.env.DATABASE_URL ?? "";
@@ -29,7 +30,8 @@ async function ca(fn) {
 const tinHaiBai = () => vao.tin.find((t) => vao.danhBa.has(t.du_an) && (t.post_ids ?? []).filter((p) => vao.bai.has(p)).length >= 2);
 
 test("moi-nguon-va-ly-do-co-tren-du-lieu-that", () => {
-  const nguon = new Set([...kq.ketQuaBai.values()].map((x) => x.nguon).filter(Boolean));
+  // Nguồn D, G đang tắt nhưng luật vẫn phải có dữ liệu thật để kiểm: bật đủ bốn nguồn cho riêng phép đếm này.
+  const nguon = new Set([...tinhGan(vao, { nguonBat: TAT_CA_NGUON }).ketQuaBai.values()].map((x) => x.nguon).filter(Boolean));
   for (const n of ["A", "B", "C", "D", "F", "G"]) assert.ok(nguon.has(n), `nguồn ${n} không có bài nào trên dữ liệu thật`);
   const ly = new Set([...kq.ketQuaBai.values()].map((x) => x.ly_do).filter(Boolean));
   for (const l of ["mo-ho", "ngoai-danh-ba", "chu-nhieu-toa", "bai-nhieu-can", "chi-luat", "trich-khong-co-ten", "khong-neu"]) assert.ok(ly.has(l), `lý do ${l} không có bài nào trên dữ liệu thật`);
@@ -74,6 +76,15 @@ test("bai-mat-dong-stg-bi-bo-qua-bai-khac-van-xet", async () => {
     assert.equal(r.ketQuaBai.has(p), false, `bài ${p} đã mất dòng stg mà vẫn có kết quả`);
     assert.ok(r.ketQuaBai.has(con[0]), `bài ${con[0]} của cùng tin phải vẫn được xét`);
   });
+});
+
+test("toa-mang-nut-vung-hieu-luc-khong-phai-cot-goc", async () => {
+  const { rows } = await c.query(
+    `SELECT v.building_key, v.region_node_id::text AS nut FROM v_toa_nut_vung v JOIN buildings b USING (building_key)
+      WHERE b.status = 'active' AND v.region_node_id IS DISTINCT FROM v.region_node_id_goc AND v.region_node_id IN (SELECT id FROM asset_nodes WHERE parent_id IN (1, 16))`);
+  assert.ok(rows.length > 0, "đối chứng: phải có toà mà nút hiệu lực khác cột gốc");
+  const d = (k) => [...vao.danhBa.values()].find((x) => x.vungCuaToa.has(k));
+  for (const r of rows) assert.equal(d(r.building_key)?.vungCuaToa.get(r.building_key), r.nut, `toà ${r.building_key} phải mang nút hiệu lực ${r.nut}`);
 });
 
 test("bi-danh-nghi-khong-con-trong-bang-ten", async () => {
