@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState, useTransition } from "react"
+import { useMemo, useState, useSyncExternalStore, useTransition } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useTable, type ColumnDef, type PaginationState, type SortingState } from "@tanstack/react-table"
@@ -20,7 +20,7 @@ import type { FilterField, FilterQuery } from "@/components/reui/filters/filters
 import { Frame, FrameFooter, FrameHeader, FramePanel } from "@/components/reui/frame"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { CO_TRANG_DEAL, type DealHang, loaiHinh, tabCua, type TabDeal, soPctVi, type ThamSoDeal, type TrangDeal, urlThamSoDeal } from "@/lib/deals-chi-tiet"
+import { chuGiaM2, CO_TRANG_DEAL, type DealHang, loaiHinh, tabCua, type TabDeal, soPctVi, type ThamSoDeal, type TrangDeal, urlThamSoDeal } from "@/lib/deals-chi-tiet"
 import { fmtCompact, fmtInt, fmtVnDate } from "@/lib/format"
 
 import { DealsBoLoc } from "./deals-bo-loc"
@@ -73,7 +73,7 @@ const COLUMNS: ColumnDef<DataGridFeatures, DealHangGhep>[] = [
     cell: ({ row: { original: d } }) => (
       <div className="flex flex-col items-end gap-0.5">
         <span className="text-sm font-medium tabular-nums">{d.priceVnd === null ? "—" : fmtCompact(d.priceVnd)}</span>
-        <span className="text-muted-foreground hidden text-xs tabular-nums md:inline">{d.pricePerm2 ? `${fmtInt(d.pricePerm2 / 1e6)} tr/m²` : "—"}</span>
+        <span className="text-muted-foreground hidden text-xs tabular-nums md:inline">{d.pricePerm2 ? chuGiaM2(d.pricePerm2) : "—"}</span>
         {/* Màn hẹp bỏ cột Giảm: mức giảm vào thẳng dưới giá, không phải cuộn ngang mới thấy lý do căn có mặt. */}
         <span className="text-xs font-medium tabular-nums md:hidden">−{soPctVi(d.discountPct ?? 0)}%</span>
       </div>
@@ -105,7 +105,7 @@ const COLUMNS: ColumnDef<DataGridFeatures, DealHangGhep>[] = [
   {
     id: "goi",
     accessorFn: (d) => d.sellerName ?? "",
-    header: "Gọi ai",
+    header: ({ column }) => <DataGridColumnHeader title="Gọi ai" column={column} />,
     cell: ({ row: { original: d } }) => (
       <div className="flex min-w-0 flex-col items-start gap-0.5">
         {d.tel && d.sdt ? (
@@ -142,14 +142,35 @@ const COLUMNS: ColumnDef<DataGridFeatures, DealHangGhep>[] = [
 const COT_HANG: ColumnDef<DataGridFeatures, DealHangGhep> = {
   id: "hang",
   accessorFn: (d) => d.rank?.label ?? "",
-  header: "Hạng giá",
+  header: ({ column }) => <DataGridColumnHeader title="Hạng giá" column={column} />,
   cell: ({ row: { original: d } }) => <DealHangNhom d={d} />,
   enableSorting: false,
-  size: 190,
+  size: 240,
   meta: { headerClassName: "hidden md:table-cell", cellClassName: "hidden md:table-cell" },
 }
 
+/** Cột ẩn theo khổ màn phải rời bảng thật, không chỉ ẩn bằng CSS: bề rộng bảng vẫn tính cột đã ẩn và đẩy cột Giá ra ngoài vùng nhìn. */
+const KHO_MAN = [["xl", "(min-width: 1280px)"], ["lg", "(min-width: 1024px)"], ["md", "(min-width: 768px)"]] as const
+type KhoMan = "xl" | "lg" | "md" | "sm"
+const AN_THEO_KHO: Record<KhoMan, Record<string, boolean>> = {
+  xl: {},
+  lg: { thay: false },
+  md: { goi: false, thay: false },
+  sm: { hang: false, giam: false, tinhTrang: false, goi: false, thay: false },
+}
+const coMatchMedia = () => typeof window !== "undefined" && typeof window.matchMedia === "function"
+const docKhoMan = (): KhoMan => (coMatchMedia() ? KHO_MAN.find(([, q]) => window.matchMedia(q).matches)?.[0] ?? "sm" : "xl")
+function theoDoiKhoMan(bao: () => void) {
+  if (!coMatchMedia()) return () => {}
+  const ds = KHO_MAN.map(([, q]) => window.matchMedia(q))
+  ds.forEach((m) => m.addEventListener("change", bao))
+  return () => ds.forEach((m) => m.removeEventListener("change", bao))
+}
+
 const cotTheoTrang = (cot: ColumnDef<DataGridFeatures, DealHangGhep>[]) => cot.flatMap((c) => {
+  if (c.id === "giam") {
+    return [{ ...c, enableSorting: false, cell: ({ row: { original: d } }: { row: { original: DealHangGhep } }) => <DiscountBar d={d} gon donViCan /> } as ColumnDef<DataGridFeatures, DealHangGhep>]
+  }
   if (c.id !== "can") return [{ ...c, enableSorting: false }]
   const goc = c.cell as (ctx: { row: { original: DealHangGhep } }) => React.ReactNode
   return [{
@@ -258,6 +279,7 @@ export function DealsGrid({ rows: tho, moBanDau = null, locBanDau, xemNoiDung, m
   // Vai Người xem không có liên hệ: bỏ hẳn cột, không ghi «Chưa có SĐT» vì căn không thiếu số.
   const cot = useMemo(() => (xemNoiDung ? COLUMNS : COLUMNS.filter((c) => c.id !== "goi")), [xemNoiDung])
   const cotHien = useMemo(() => (trang ? cotTheoTrang(cot) : cot), [cot, trang])
+  const khoMan = useSyncExternalStore(theoDoiKhoMan, docKhoMan, () => "xl" as KhoMan)
   const trangHien: PaginationState = trang ? { pageIndex: trang.page - 1, pageSize: trang.thamSo.size } : pagination
   const table = useTable({
     features: dataGridFeatures,
@@ -267,7 +289,7 @@ export function DealsGrid({ rows: tho, moBanDau = null, locBanDau, xemNoiDung, m
     enableRowSelection: true,
     manualPagination: Boolean(trang),
     ...(trang ? { rowCount: trang.tong } : {}),
-    state: { pagination: trangHien, sorting, rowSelection: vuaXem ? { [vuaXem]: true } : {} },
+    state: { pagination: trangHien, sorting, rowSelection: vuaXem ? { [vuaXem]: true } : {}, columnVisibility: trang ? AN_THEO_KHO[khoMan] : {} },
     onPaginationChange: trang
       ? (u) => {
           const moi = typeof u === "function" ? u(trangHien) : u
@@ -381,7 +403,10 @@ export function DealsGrid({ rows: tho, moBanDau = null, locBanDau, xemNoiDung, m
             </DataGridScrollArea>
           </FramePanel>
           <FrameFooter>
-            <DataGridPagination {...(trang ? { sizes: [...CO_TRANG_DEAL] } : {})} />
+            <DataGridPagination {...(trang ? {
+              sizes: [...CO_TRANG_DEAL],
+              info: `${fmtInt(trang.tong === 0 ? 0 : (trang.page - 1) * trang.thamSo.size + 1)}–${fmtInt(Math.min(trang.page * trang.thamSo.size, trang.tong))} / ${fmtInt(trang.tong)}`,
+            } : {})} />
           </FrameFooter>
         </Frame>
       </DataGrid>

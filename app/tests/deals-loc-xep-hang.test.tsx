@@ -135,6 +135,10 @@ test("CG3-AC-2 mỗi dòng ghi nhãn, nhóm so sánh, số căn, lý do lùi c�
   assert.ok(ve({}, { confidence: "medium" }).includes("Độ tin: trung bình"), "CG3-AC-2 sai độ tin");
   const thue = renderToStaticMarkup(<DiscountBar d={dongMau({ medianPerm2: null, rank: hang({ metric: "gia-thang-pn", median: 12e6 }) })} />);
   assert.ok(thue.includes("tr/tháng") && !thue.includes("tr/m²"), "CG3-AC-2 dòng thuê phải ghi tr/tháng");
+  const thueM2 = renderToStaticMarkup(<DiscountBar d={dongMau({ medianPerm2: 250_000, rank: hang({ median: 250_000 }) })} donViCan />);
+  assert.ok(thueM2.includes("250 nghìn/m²") && !thueM2.includes("0 tr/m²"), "CG3-AC-2 giá thuê dưới một triệu không được tròn về 0");
+  assert.ok(thueM2.includes("40 căn") && !thueM2.includes("40 tin"), "CG3-AC-2 cùng một nhóm phải cùng đơn vị căn");
+  assert.ok(ve({ reason: "pn-duoi-10" }).includes("trong dự án") && !ve({ reason: "pn-duoi-10" }).includes("trong phường"), "CG3-AC-2 dòng cấp dự án không được nói nhóm trong phường");
 });
 
 test("CG3-AC-3 số trên tab đếm trên toàn tập theo vai, Tất cả bằng tổng ba tab", async () => {
@@ -251,6 +255,8 @@ test("CG3-AC-7 trạng thái trống có hành động, thanh lọc vẫn đứn
   }
   const co = veLuoi(trangMau({ dem: { all: 1, du: 1, "xac-minh": 0, thieu: 0 }, tong: 1 }), [dongMau({ rank: hang({}) as never })]);
   assert.ok(!co.includes("Mục này chưa có căn."), "CG3-AC-7 đối chứng: có dữ liệu thì không có chữ trống");
+  const chan = veLuoi(trangMau({ dem: { all: 7385, du: 1, "xac-minh": 0, thieu: 7384 }, tong: 7385 }), [dongMau({ rank: hang({}) as never })]);
+  assert.ok(chan.includes("1–15 / 7.385"), "CG3-AC-3 chân bảng phải ghi khoảng đang hiện trên tổng, có dấu chấm ngăn nghìn");
   const trang = readFileSync(join(import.meta.dirname, "../src/app/ops/deals/page.tsx"), "utf8");
   assert.ok(trang.includes(`<RegionError what="danh sách căn">`) && trang.includes("<Suspense fallback={<DealsSkeleton />}>"), "CG3-AC-7 thiếu khung lỗi hay khung tải");
 });

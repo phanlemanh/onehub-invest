@@ -33,12 +33,14 @@ const CHU_CAY = {
   empty: "Không có vị trí khớp.",
   loading: "Đang tải",
   rootLevel: "Tỉnh, thành",
+  itemCount: () => "có mục con",
 }
 
 const sangNut = (n: NutViTri): CascaderNode => ({
   value: n.value,
   label: n.label,
-  count: n.count,
+  // Số căn đã ghi ở dòng mô tả; số 0 tắt con số trần cuối dòng của cây.
+  count: 0,
   description: `${fmtInt(n.count)} căn`,
   keywords: [n.label.normalize("NFD").replace(/\p{M}/gu, "").replace(/đ/g, "d").replace(/Đ/g, "D")],
   children: n.children?.map(sangNut),

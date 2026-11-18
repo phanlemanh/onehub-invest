@@ -73,6 +73,8 @@ const chuTrungVi = (v: number | null, metric: string | null): string => {
   if (metric === "gia-thang-pn") return `${fmtInt(v / 1e6)} tr/tháng`;
   return v < 1e6 ? `${fmtInt(v / 1e3)} nghìn/m²` : `${fmtInt(v / 1e6)} tr/m²`;
 };
+/** Giá theo m² trên bảng: từ một triệu ghi «tr/m²», dưới một triệu (giá thuê) ghi «nghìn/m²» để không tròn về 0. */
+export const chuGiaM2 = (v: number): string => (v < 1e6 ? `${fmtInt(v / 1e3)} nghìn/m²` : `${fmtInt(v / 1e6)} tr/m²`);
 /** Độ lệch có dấu, phẩy thập phân: «−4,1%» khi S03 rẻ hơn mặt bằng S06, «+3,0%» khi đắt hơn. */
 const chuLech = (pct: number): string => `${pct < 0 ? "−" : "+"}${fmtPct(Math.abs(pct) / 100)}`;
 
