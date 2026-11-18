@@ -103,6 +103,7 @@ test("AC-1 (b) vòng hồ sơ: TRAN_NAP=0 → TIMEOUT «tại hồ sơ», state 
   themSnap(root, "s03-ho-so", "2026-11-17T020202000");
   const r = await chay(root, { ZALO_IMPORT_TRAN_NAP: "0" });
   assert.match(r.out, /TIMEOUT: phần nạp vượt trần 0s tại hồ sơ 2026-11-17T020202000/);
+  assert.equal(r.status, 124, `AC-1 vòng hồ sơ phải thoát 124 — ${r.status}`);
   assert.equal(docState(root, "s03-ho-so.state"), "00000000T000000");
   assert.match(r.out, /^JOB FAIL \[zalo-import-daily\] bước nap-ho-so mã 124$/m);
   assert.deepEqual(docSo(root), []);
@@ -112,7 +113,8 @@ test("AC-1 (b) vòng hồ sơ: TRAN_NAP=0 → TIMEOUT «tại hồ sơ», state 
 const T1 = "2026-11-17T010000000", T2 = "2026-11-17T020000000";
 const kiemAC2a = (opts) => voiRoot(opts, async (root) => {
   themSnap(root, "zalo-agent", T1); themSnap(root, "zalo-agent", T2);
-  const r1 = await chay(root, { ZALO_IMPORT_TRAN_NAP: "1", NAP_NGU: "2" });
+  // Trần 5 giây: máy tải nặng script khởi động quá 1 giây thì trần 1 giây cắt trước cả snapshot đầu (S4 vòng 1, E8e).
+  const r1 = await chay(root, { ZALO_IMPORT_TRAN_NAP: "5", NAP_NGU: "6" });
   assert.equal(r1.status, 124, `lượt 1 phải 124 — ${r1.status}`);
   assert.deepEqual(docSo(root), [`vn__zalo-agent__${T1}`]);
   assert.equal(docState(root), T1, "AC-2 lượt sau bỏ sót snapshot (state lượt 1 vượt snapshot bị cắt)");
