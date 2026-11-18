@@ -23,7 +23,7 @@ evals:
     criterion: AC-3
     executor: test
     cmd: bash _acceptance/thuoc-tinh-can-s16/probes/kiem.sh ham
-    expected: "Ca TTC-AC-3: ma trận viết trước (12 loại hình + UNDEF + mã lạ; diện tích >0/0/thiếu; PN, WC >0/0; HIGH_RISE lấy balcony_direction, LOW_RISE lấy direction; NE, N_E, NORTH, NE_NW, NE_NE, OTHER, rỗng, mã lạ; khoá hai toà), số assert = số ô; mỗi ô so mảng {field,value} đầy đủ + lý do bỏ. Ô shophouse ghim đúng nhánh Hỏi-4 Mạnh chọn. Dòng mẫu theo khuôn cột của migration 113 (bộ ghi thật là bộ nạp làn thu, chưa có — giới hạn khai ở Notes; chỗ ánh xạ của bộ nạp do E13 bắt). Chiều đỏ: đột biến lấy direction cho HIGH_RISE → ô cao tầng đỏ nêu mã ô; đột biến coi 0 là PN hợp lệ → ô PN=0 đỏ"
+    expected: "Ca TTC-AC-3: ma trận viết trước (11 loại hình + UNDEF + mã lạ; diện tích >0/0/thiếu; PN, WC >0/0; HIGH_RISE lấy balcony_direction, LOW_RISE lấy direction; NE, N_E, NORTH, NE_NW, NE_NE, OTHER, rỗng, mã lạ; khoá hai toà), số assert = số ô; mỗi ô so mảng {field,value} đầy đủ + lý do bỏ. Ô shophouse ghim đúng nhánh Hỏi-4 Mạnh chọn. Dòng mẫu theo khuôn cột của migration 113 (bộ ghi thật là bộ nạp làn thu, chưa có — giới hạn khai ở Notes; chỗ ánh xạ của bộ nạp do E13 bắt). Chiều đỏ: đột biến lấy direction cho HIGH_RISE → ô cao tầng đỏ nêu mã ô; đột biến coi 0 là PN hợp lệ → ô PN=0 đỏ"
     paths: ["pipeline/lib/thuoc-tinh-can-s16.mjs", "pipeline/tests/thuoc-tinh-can-s16.test.mjs"]
   - id: E4
     criterion: AC-4
@@ -68,7 +68,7 @@ evals:
     executor: ui-check
     layer: ui-observed
     paths: ["app/src/components/ops/registry/**", "app/src/app/ops/registry/**", "app/src/lib/ops/thuoc-tinh-can.ts"]
-    steps: "Bản chạy: dev server của worktree dãy P1 ở cổng riêng :3463 (DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p1_ttc npm --prefix app run dev -- -p 3463 từ gốc worktree; không dùng :3456) — DB thử chép máy thu đã áp 113 và có phát biểu từ snapshot sv14. Tài khoản thử ops-test@local.test: DATABASE_URL như trên, node scripts/dev-ops-account.mjs (không in mật khẩu); ảnh chụp không được lộ email thật ở thanh bên. Mở /ops/registry, bấm grand-park; mở toà đầu có căn; chụp → evidence/E10-step1.png (1280 sáng); cùng màn tối → evidence/E10-step2.png; khổ 390 → evidence/E10-step3.png; mở một toà của ocean-park-2 có căn thiếu WC → evidence/E10-step4.png; tải lại trang với mạng chậm (DevTools throttling) và chụp lúc đang tải → evidence/E10-step5.png; đặt biến môi trường thử làm lớp đọc ném lỗi (cách đặt ghi ở tests/thuoc-tinh-can) và chụp → evidence/E10-step6.png. Không tạo hay sửa tệp nào trong cây."
+    steps: "Bản chạy: dev server của worktree dãy P1 ở cổng riêng :3463 (DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_dbv_ttc_gia npm --prefix app run dev -- -p 3463 từ gốc worktree; không dùng :3456) — DB thử DỮ LIỆU GIẢ, dựng bằng node _acceptance/thuoc-tinh-can-s16/probes/dung-db-gia.mjs (kho công khai: ảnh chứng không chụp dữ liệu S16 thật). Tài khoản thử ops-test@local.test: DATABASE_URL như trên, node scripts/dev-ops-account.mjs (không in mật khẩu); ảnh chụp không được lộ email thật ở thanh bên. Mở /ops/registry, bấm Khu Mẫu Alpha; mở toà AT1; chụp → evidence/E10-step1.png (1280 sáng); cùng màn tối → evidence/E10-step2.png; khổ 390 → evidence/E10-step3.png; mở toà BL1 của Khu Mẫu Beta (thấp tầng: sàn sử dụng + đất) và toà AT2 của Khu Mẫu Alpha (có căn thiếu WC) → evidence/E10-step4.png; tải lại trang với mạng chậm (DevTools throttling) và chụp lúc đang tải → evidence/E10-step5.png; đặt biến môi trường thử làm lớp đọc ném lỗi (cách đặt ghi ở tests/thuoc-tinh-can) và chụp → evidence/E10-step6.png. Không tạo hay sửa tệp nào trong cây."
     expected: "hàng căn hiện thông thuỷ / tim tường m², PN, WC, hướng (nhãn tiếng Việt), loại hình, giá chủ đầu tư + giá/m², Badge S16, mốc thu; căn thiếu trường hiện «—» ở đúng ô, căn không có thuộc tính hiện «Chưa có thuộc tính»; khổ 390 không cuộn ngang trang; step5 có Skeleton ở ô phủ và cột thuộc tính; step6 lưới toà vẫn hiện, có Alert «Thử lại»; không chữ nào là tên nguồn thật"
     evidence_required: [screenshot, observed, verifier, verified_at]
   - id: E11
@@ -83,8 +83,8 @@ evals:
     executor: ui-check
     layer: ui-observed
     paths: ["app/src/components/ops/registry/**", "app/src/app/ops/registry/**"]
-    steps: "Cùng bản chạy :3463 như E10. Mở trang dự án grand-park, smart-city, ocean-park-3 và một dự án không có toà S16; chụp ô phủ đầu trang → evidence/E12-step1..4.png (1280 sáng)."
-    expected: "grand-park và smart-city hiện «X / Y căn có thuộc tính» và «Z căn có giá chủ đầu tư»; ocean-park-3 hiện «792 căn S16 có thuộc tính chưa vào danh bạ» (số theo E13); dự án không có toà S16 hiện «Chưa có nguồn thuộc tính căn»; số khớp E13"
+    steps: "Cùng bản chạy :3463 như E10. Mở trang dự án Khu Mẫu Alpha, Khu Mẫu Beta, Khu Mẫu Gamma và Khu Mẫu Delta (không có toà S16) trên DB giả của E10; chụp ô phủ đầu trang → evidence/E12-step1..4.png (1280 sáng)."
+    expected: "Alpha hiện 22 / 24 căn có thuộc tính và 14 căn có giá chủ đầu tư; Beta 8 / 8 và 4; Gamma 10 / 10, 5 và 6 ở ô «Chưa vào danh bạ»; Delta hiện «Chưa có nguồn thuộc tính căn»; số khớp dòng X, Y, Z, N do dung-db-gia.mjs đếm độc lập. Số trên dữ liệu thật do E13 đo"
     evidence_required: [screenshot, observed, verifier, verified_at]
   - id: E13
     criterion: AC-11

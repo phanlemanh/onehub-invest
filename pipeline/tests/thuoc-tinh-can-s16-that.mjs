@@ -28,6 +28,37 @@ export function docBangPhuCa(md) {
   return out;
 }
 
+const SO_DU_AN = 5;
+
+/**
+ * So từng ô. Ma trận viết trước là năm dự án của khối chạy thử × tám cột: dự án vắng trong kết quả đếm, thiếu khối, thiếu cột so
+ * đều tính là lệch, không được biến mất khỏi phép so. `ten` đổi tên dự án trong DB ra tên ngắn của hồ sơ.
+ */
+export function soCacO({ thang, view, chayThu, bang, luot1811, ten = (d) => d }) {
+  const dong = [];
+  const thieu = [];
+  let lech = 0;
+  let soO = 0;
+  if (chayThu.size !== SO_DU_AN) { thieu.push(`khối chạy thử có ${chayThu.size}/${SO_DU_AN} dự án`); lech++; }
+  const theoTen = new Map(thang.map((r) => [ten(r.du_an), r]));
+  for (const r of thang) if (!chayThu.has(ten(r.du_an))) { thieu.push(ten(r.du_an)); lech++; }
+  for (const t of chayThu.keys()) {
+    const r = theoTen.get(t);
+    if (!r) { thieu.push(t); lech += COT.length; continue; }
+    for (const k of COT) {
+      soO++;
+      const v = view.get(r.du_an)?.[k] ?? 0;
+      const ct = chayThu.get(t)?.[k];
+      const bp = bang.get(t)?.[k];
+      const sai = r[k] !== v || ct !== v || (luot1811 && bp !== v);
+      if (sai) lech++;
+      dong.push([t, k, r[k], v, ct ?? "-", bp ?? "-"].join(" | ") + (sai ? "  ← LỆCH" : ""));
+    }
+  }
+  if (soO !== SO_DU_AN * COT.length) lech++;
+  return { dong, thieu, lech, soO };
+}
+
 const SQL_THANG = `
 WITH snap AS (SELECT s.snapshot_id, s.collected_at FROM airbnb_snapshots s
                WHERE EXISTS (SELECT 1 FROM stg_s16_can_chi_tiet x WHERE x.snapshot_id = s.snapshot_id)
@@ -88,22 +119,13 @@ async function main() {
     }
     const luot1811 = new Date(thang[0].luc_thu).toISOString().slice(0, 10) === "2026-11-18";
     const ten = (duAn) => [...bang.keys()].find((b) => duAn === b || duAn.endsWith(`-${b}`)) ?? "(khác)";
-    let lech = 0;
     console.log(`lượt thu ${luot1811 ? "18/11 — so cả bảng phủ ca" : "khác 18/11 — cột bảng phủ ca chỉ in, không so"} · cột chạy thử: ${chayThu.size ? "có" : "chưa có"}`);
     console.log(["du_an", "o", "dem_thang", "view", "chay_thu", "bang_phu_ca"].join(" | "));
-    for (const r of thang.sort((a, b) => b.noi - a.noi)) {
-      const t = ten(r.du_an);
-      for (const k of COT) {
-        const v = view.get(r.du_an)?.[k] ?? 0;
-        const ct = chayThu.get(t)?.[k];
-        const bp = bang.get(t)?.[k];
-        const sai = r[k] !== v || (ct !== undefined && ct !== v) || (luot1811 && bp !== undefined && bp !== v);
-        if (sai) lech++;
-        console.log([t, k, r[k], v, ct ?? "-", bp ?? "-"].join(" | ") + (sai ? "  ← LỆCH" : ""));
-      }
-    }
+    const { dong, thieu, lech, soO } = soCacO({ thang: [...thang].sort((a, b) => b.noi - a.noi), view, chayThu, bang, luot1811, ten });
+    for (const l of dong) console.log(l);
+    if (thieu.length) console.log(`thiếu hoặc lạ so với ma trận viết trước: ${thieu.join(", ")}  ← LỆCH`);
     const tong = [...view.values()].reduce((s, r) => s + r.noi, 0);
-    console.log(`tổng căn danh bạ có thuộc tính (view): ${tong} · ô lệch: ${lech}`);
+    console.log(`tổng căn danh bạ có thuộc tính (view): ${tong} · ô đã so: ${soO}/${SO_DU_AN * COT.length} · ô lệch: ${lech}`);
     return lech ? 1 : 0;
   } finally {
     await c.query("ROLLBACK").catch(() => {});

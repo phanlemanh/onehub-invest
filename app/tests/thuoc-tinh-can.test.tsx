@@ -9,9 +9,12 @@ import { tmpdir } from "node:os"
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
 import pg from "pg"
+import type { ReactElement } from "react"
 
 import { taoDbThu, xoaDbThu } from "../../pipeline/scripts/db-thu-dbv.mjs"
 import { ghi, tinh } from "../../pipeline/scripts/thuoc-tinh-can-s16.mjs"
+import type { DuAnProps } from "../src/components/ops/registry/du-an-view"
+import type { HangToa } from "../src/lib/ops/registry/hang-toa"
 import type * as Lop from "../src/lib/ops/thuoc-tinh-can"
 
 const APP = resolve(dirname(fileURLToPath(import.meta.url)), "..")
@@ -24,18 +27,26 @@ const B2 = `bld_${"9".padStart(26, "0")}`
 const can = (n: number) => `unt_${String(800 + n).padStart(26, "0")}`
 let db: pg.Client
 let lop: typeof Lop
+let nutDuAn: number
+const TOKEN_NGUON = "NguonThatQ"
 
 before(async () => {
-  db = new pg.Client({ connectionString: await taoDbThu(TEN) })
+  const url = await taoDbThu(TEN)
+  // pool của app đọc DATABASE_URL lúc nạp: đặt trước mọi import động để trang dự án thật đọc DB của lượt
+  process.env.DATABASE_URL = url
+  db = new pg.Client({ connectionString: url })
   await db.connect()
   lop = await import(pathToFileURL(TEP_LOP).href)
-  const nut = (await db.query(`INSERT INTO asset_nodes (node_type, name, slug, aliases, area_ids, dd_field, meta)
+  const nut = nutDuAn = (await db.query(`INSERT INTO asset_nodes (node_type, name, slug, aliases, area_ids, dd_field, meta)
     VALUES ('project', 'Q DA', 'q-da-ttca', '{}', '{}', 'SubdivisionName', '{}') RETURNING id::int AS id`)).rows[0].id
   for (const b of [B1, B2]) {
     await db.query(`INSERT INTO buildings (building_key, region_node_id, upi, iso_region, catalog_tier)
                     VALUES ($1, $2, 'urn:onehub:upi:1:VN:VN-HN:' || $1, 'VN-HN', 'xac_minh')`, [b, nut])
   }
   await db.query(`INSERT INTO registry_aliases (object_key, kind, value, source) VALUES ($1, 'ma_nguon', $2, 'S16')`, [B1, `${DA}/TOA1`])
+  // tên nguồn thật giả lập nằm trong tên toà: trang phải che thành mã trước khi rời máy chủ
+  await db.query(`INSERT INTO source_registry (code, real_name, label_vi, status, since) VALUES ('S99', $1, 'Nguồn thử', 'active', current_date)`, [TOKEN_NGUON])
+  await db.query(`INSERT INTO registry_aliases (object_key, kind, value, source) VALUES ($1, 'ten', $2, 'S16')`, [B1, `Toa ${TOKEN_NGUON} 1`])
   for (const [n, ma, b] of [[1, "QA1", B1], [2, "QA2", B1], [3, "QA3", B1], [4, "QA4", B1], [5, "QB1", B2]] as const) {
     await db.query(`INSERT INTO units (unit_key, building_key, floor, sub_id, catalog_tier) VALUES ($1, $2, '10', $1, 'xac_minh')`, [can(n), b])
     if (b === B1) await db.query(`INSERT INTO registry_aliases (object_key, kind, value, source) VALUES ($1, 'ma_nguon', $2, 'S16')`, [can(n), `${DA}/${ma}`])
@@ -67,6 +78,7 @@ before(async () => {
 })
 after(async () => {
   await db?.end().catch(() => {})
+  await (await import("../src/lib/db")).pool.end().catch(() => {})
   await xoaDbThu(TEN)
   await xoaDbThu(TEN_CU)
 })
@@ -163,15 +175,89 @@ test("TTC-AC-9 lưới toà: căn có thuộc tính hiện số, hướng, loạ
     assert.ok(html.includes(chu), `TTC-AC-9 lưới thiếu «${chu}»`)
   }
   assert.equal((html.match(/Chưa có thuộc tính/g) ?? []).length, 1, "TTC-AC-9 nhãn «Chưa có thuộc tính» chỉ ở căn null (C4 không đọc thì trống)")
-  assert.match(html, /data-thuoc-tinh="nguon"[\s\S]*?S16/, "TTC-AC-9 thiếu nhãn nguồn S16 ở ô thuộc tính")
+  // đo trong đúng ô «Thuộc tính từ»: cột «Nguồn» của hàng khác cũng có chữ S16
+  const oNguon = (h: string) => h.split('data-thuoc-tinh="nguon"').slice(1).map((d) => d.slice(0, d.indexOf("</td>")))
+  assert.deepEqual(oNguon(html).map((o) => o.includes(">S16<")), [true, true], "TTC-AC-9 thiếu nhãn nguồn S16 ở ô thuộc tính")
+  const khongNhan = renderToStaticMarkup(<DuAnToaGrid rows={[hang("C1", ttMau({ nguon: [] })), hang("C2", ttMau({ nguon: [] }))]} />)
+  assert.ok(khongNhan.includes(">S16<"), "TTC-AC-9 đối chứng: cột Nguồn của hàng phải còn S16")
+  assert.deepEqual(oNguon(khongNhan).map((o) => o.includes(">S16<")), [false, false], "TTC-AC-9 phép đo ô nguồn không phân biệt ô thiếu nhãn")
+})
+
+/** Hàng căn mà thuộc tính không phải của chính nó (so với lớp đọc theo unit_key); [] khi đường nối đúng. */
+function loiNoi(rows: HangToa[], data: Map<string, Lop.ThuocTinhCan>): string[] {
+  return rows.flatMap((t) => t.subRows ?? []).filter((c) => (c.thuocTinh ?? null) !== (data.get(c.key) ?? null)).map((c) => c.key)
+}
+
+test("TTC-AC-9 đường nối thật: trang dự án đọc DB của lượt, mỗi căn nhận đúng thuộc tính; tên nguồn đã che; lỗi đọc vẫn giữ lưới", async () => {
+  const { renderToStaticMarkup } = await import("react-dom/server")
+  const { DuAnContent } = await import("../src/components/ops/registry/du-an-content")
+  const { DuAnView } = await import("../src/components/ops/registry/du-an-view")
+  const { DuAnToaGrid } = await import("../src/components/ops/registry/du-an-toa-grid")
+  const el = (await DuAnContent({ id: nutDuAn })) as ReactElement<DuAnProps>
+  const toa = el.props.rows.find((r) => r.key === B1)
+  assert.ok(toa?.subRows?.length === 4, "TTC-AC-9 trang dự án không có bốn căn của toà")
+  const theoKey = new Map(toa.subRows.map((c) => [c.key, c]))
+  const sql = (await db.query(`SELECT living_area::float8 tt, bedrooms_total pn FROM v_unit_thuoc_tinh WHERE unit_key = $1`, [can(1)])).rows[0]
+  assert.deepEqual([theoKey.get(can(1))?.thuocTinh?.thongThuy, theoKey.get(can(1))?.thuocTinh?.phongNgu], [sql.tt, sql.pn], "TTC-AC-9 giá trị trên màn lệch view theo unit_key")
+  assert.equal(theoKey.get(can(4))?.thuocTinh, null, "TTC-AC-9 căn chưa có thuộc tính phải ra trạng thái chưa có")
+  assert.equal(el.props.loiThuocTinh, false, "TTC-AC-9 đọc được mà trang báo lỗi")
+  const luoi = renderToStaticMarkup(<DuAnToaGrid rows={toa.subRows} />)
+  for (const chu of ["68,5 m²", "Chưa có thuộc tính", ">S16<"]) assert.ok(luoi.includes(chu), `TTC-AC-9 HTML lưới thiếu «${chu}»`)
+  const trang = renderToStaticMarkup(<DuAnView {...el.props} />)
+  assert.ok(!trang.includes(TOKEN_NGUON) && !luoi.includes(TOKEN_NGUON), "TTC-AC-9 HTML lộ tên nguồn thật")
+  assert.ok(trang.includes("Toa S99 1"), "TTC-AC-9 đối chứng: tên toà phải hiện bản đã che")
+  process.env.ONEHUB_TTC_LOI_THU = "1"
+  try {
+    const loi = (await DuAnContent({ id: nutDuAn })) as ReactElement<DuAnProps>
+    const html = renderToStaticMarkup(<DuAnView {...loi.props} />)
+    assert.ok(loi.props.loiThuocTinh && html.includes("Thử lại") && html.includes("Toa S99 1"), "TTC-AC-9 lỗi nội tuyến: thiếu «Thử lại» hay mất lưới toà")
+    assert.ok(loi.props.rows.flatMap((r) => r.subRows ?? []).every((c) => c.thuocTinh === undefined), "TTC-AC-9 lỗi đọc mà căn vẫn mang thuộc tính")
+  } finally { delete process.env.ONEHUB_TTC_LOI_THU }
+})
+
+test("TTC-AC-9 chiều đỏ: đổi khoá nối unit_key → căn lệch thuộc tính; bỏ khối bắt lỗi → lỗi không còn nội tuyến", async () => {
+  const { docDuAn } = await import("../src/lib/ops/registry/du-an")
+  const { dungHangToa } = await import("../src/lib/ops/registry/hang-toa")
+  const duAn = await docDuAn(nutDuAn, db)
+  const kq = await lop.docThuocTinhCan([B1, B2], db)
+  assert.ok(duAn && kq.ok, "TTC-AC-9 đọc dự án thử lỗi")
+  assert.deepEqual(loiNoi(dungHangToa(duAn, nutDuAn, [], kq.data), kq.data), [], "TTC-AC-9 đường nối thật lệch unit_key")
+  const TEP_HANG = join(APP, "src/lib/ops/registry/hang-toa.ts")
+  const src = readFileSync(TEP_HANG, "utf8")
+  const TU = "thuocTinh.get(c.key) ?? null"
+  assert.ok(src.includes(TU), "TTC chỗ phá không còn trong hang-toa")
+  const dir = mkdtempSync(join(tmpdir(), "ttca-hang-"))
+  const tep = join(dir, "hang.ts")
+  writeFileSync(tep, src.replace(TU, 'thuocTinh.get(c.ma ?? "") ?? null').replace('"../../mask-source-names"', JSON.stringify(pathToFileURL(join(APP, "src/lib/mask-source-names.ts")).href)))
+  try {
+    const pha: { dungHangToa: typeof dungHangToa } = await import(pathToFileURL(tep).href)
+    assert.ok(loiNoi(pha.dungHangToa(duAn, nutDuAn, [], kq.data), kq.data).includes(can(1)), "TTC-AC-9 đổi khoá nối unit_key mà phép đo không đỏ")
+  } finally { rmSync(dir, { recursive: true, force: true }) }
+  const khongBat = await lopPha("} catch (e) {", "} catch (e) { throw e;")
+  process.env.ONEHUB_TTC_LOI_THU = "1"
+  try {
+    await assert.rejects(khongBat.docThuocTinhCan([B1], db), /lỗi thử/, "TTC-AC-9 bỏ khối bắt lỗi mà lỗi vẫn nội tuyến")
+  } finally { delete process.env.ONEHUB_TTC_LOI_THU }
 })
 
 test("TTC-AC-9, AC-10 trang dự án: ô phủ ba trạng thái; lỗi đọc giữ lưới và hiện «Thử lại»; không lỗi thì không có cảnh báo", async () => {
   const { renderToStaticMarkup } = await import("react-dom/server")
   const { DuAnView } = await import("../src/components/ops/registry/du-an-view")
   const goc = { ten: "Q DA", biDanh: [], bac: "xac_minh", tinh: null, nguon: ["S16"], maNoi: [], soPhanKhu: 0, soToa: 1, toaChuaCan: 0, soTruc: 0, soCan: 4, tin: {}, rows: [hang("C1", ttMau())] }
-  const co = renderToStaticMarkup(<DuAnView {...goc} phuThuocTinh={{ trangThai: "co", trongDanhBa: 38135, coThuocTinh: 37589, coGia: 1850, chuaVaoDanhBa: 2, lanThu: "2026-11-18T01:00:00.000Z" }} loiThuocTinh={false} />)
-  for (const chu of ["Căn có thuộc tính", "37.589 / 38.135", "Căn có giá chủ đầu tư", "1.850", "Chưa vào danh bạ", "Toà và căn"]) assert.ok(co.includes(chu), `TTC-AC-10 ô phủ thiếu «${chu}»`)
+  const co = renderToStaticMarkup(<DuAnView {...goc} phuThuocTinh={{ trangThai: "co", trongDanhBa: 38135, coThuocTinh: 37589, coGia: 1850, chuaVaoDanhBa: 27, lanThu: "2026-11-18T01:00:00.000Z" }} loiThuocTinh={false} />)
+  // quan hệ nhãn ↔ số: mỗi ô đọc số đứng trong chính ô đó, tráo hai ô thì đỏ
+  const NHAN = ["Căn có thuộc tính", "Căn có giá chủ đầu tư", "Chưa vào danh bạ"]
+  const soTheoO = (h: string) => {
+    const khoi = h.slice(h.indexOf('data-thuoc-tinh-phu="co"'))
+    const vt = NHAN.map((n) => khoi.indexOf(`>${n}<`))
+    assert.ok(vt.every((v) => v >= 0), "TTC-AC-10 ô phủ thiếu nhãn")
+    return Object.fromEntries(NHAN.map((n, i) => [n, khoi.slice(vt[i] + n.length + 2, vt[i + 1] ?? undefined).match(/>([\d.]+(?: \/ [\d.]+)?)</)?.[1]]))
+  }
+  const dungO = { "Căn có thuộc tính": "37.589 / 38.135", "Căn có giá chủ đầu tư": "1.850", "Chưa vào danh bạ": "27" }
+  assert.deepEqual(soTheoO(co), dungO, "TTC-AC-10 số không nằm đúng ô")
+  const trao = renderToStaticMarkup(<DuAnView {...goc} phuThuocTinh={{ trangThai: "co", trongDanhBa: 38135, coThuocTinh: 37589, coGia: 27, chuaVaoDanhBa: 1850, lanThu: null }} loiThuocTinh={false} />)
+  assert.notDeepEqual(soTheoO(trao), dungO, "TTC-AC-10 phép đo không phân biệt hai ô bị tráo số")
+  assert.ok(co.includes("Toà và căn"), "TTC-AC-10 trang mất lưới toà")
   assert.ok(!co.includes("Thử lại"), "TTC-AC-9 không lỗi mà có cảnh báo")
   const khong = renderToStaticMarkup(<DuAnView {...goc} phuThuocTinh={{ trangThai: "khong-nguon" }} loiThuocTinh={false} />)
   assert.ok(khong.includes("Chưa có nguồn thuộc tính căn") && !khong.includes("Căn có thuộc tính"), "TTC-AC-10 dự án không nguồn")
