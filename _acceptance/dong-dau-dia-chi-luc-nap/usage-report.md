@@ -151,3 +151,45 @@ wall: 2645s
 - **claude-sonnet-5-5**: 7 agent · 17 calls · out 19,488 · in 34 · cache_read 346,657 · cache_create 299,950
 - **claude-haiku-5-5**: 15 agent · 41 calls · out 24,908 · in 82 · cache_read 758,151 · cache_create 582,297
 
+### S4 round 4 — wf_2db60995-789 (22 agent, 79,876 out-tok)
+
+| label | model | calls | out | in | cache_read | s |
+|---|---|--:|--:|--:|--:|--:|
+| review:measurement | claude-opus-5-5 | 20 | 18,087 | 40 | 1,508,641 | 202 |
+| review:bugs | claude-opus-5-5 | 29 | 14,520 | 58 | 2,296,493 | 877 |
+| synthesize:report | claude-sonnet-5-5 | 5 | 7,038 | 10 | 203,473 | 41 |
+| review:conventions | claude-opus-5-5 | 11 | 5,849 | 22 | 521,642 | 63 |
+| machine:node scripts/suite-neu-doi.mjs pipeline_ | claude-haiku-5-5 | 9 | 5,662 | 18 | 247,081 | 1086 |
+| machine:bash db/db-thu.sh oneinvest_suite_tg2 -- | claude-haiku-5-5 | 6 | 4,718 | 12 | 140,178 | 862 |
+| machine:node scripts/suite-neu-doi.mjs app_ui -- | claude-haiku-5-5 | 7 | 4,356 | 14 | 178,521 | 707 |
+| machine:node scripts/suite-neu-doi.mjs pipeline_ | claude-haiku-5-5 | 9 | 3,694 | 18 | 246,896 | 1175 |
+| machine:node scripts/suite-neu-doi.mjs agent -- | claude-haiku-5-5 | 2 | 2,965 | 4 | 32,981 | 79 |
+| machine:node scripts/suite-neu-doi.mjs app -- 'c | claude-haiku-5-5 | 2 | 1,339 | 4 | 32,993 | 22 |
+| machine:node pipeline/scripts/dong-dau-dia-chi-t | claude-haiku-5-5 | 2 | 1,326 | 4 | 32,996 | 246 |
+| judge:E12:domain-correctness | claude-sonnet-5-5 | 2 | 1,236 | 4 | 29,542 | 10 |
+| judge:E12:operational-feasibility | claude-sonnet-5-5 | 2 | 1,188 | 4 | 33,160 | 9 |
+| judge:E12:spec-alignment | claude-sonnet-5-5 | 2 | 1,142 | 4 | 33,158 | 9 |
+| machine:node pipeline/scripts/dong-dau-dia-chi-t | claude-haiku-5-5 | 2 | 1,068 | 4 | 32,997 | 248 |
+| machine:node scripts/suite-neu-doi.mjs portal_st | claude-haiku-5-5 | 2 | 1,028 | 4 | 32,991 | 6 |
+| machine:node pipeline/scripts/dong-dau-dia-chi-t | claude-haiku-5-5 | 2 | 1,026 | 4 | 32,995 | 252 |
+| machine:node pipeline/scripts/dong-dau-dia-chi-t | claude-haiku-5-5 | 2 | 967 | 4 | 32,995 | 247 |
+| machine:node pipeline/scripts/dong-dau-dia-chi-t | claude-haiku-5-5 | 2 | 917 | 4 | 32,994 | 248 |
+| machine:node pipeline/scripts/quet-doc-stg.mjs | claude-haiku-5-5 | 2 | 728 | 4 | 32,971 | 4 |
+| machine:node scripts/suite-neu-doi.mjs ui_lint_r | claude-haiku-5-5 | 2 | 701 | 4 | 32,995 | 4 |
+| capture:provenance | claude-sonnet-5-5 | 2 | 321 | 4 | 28,438 | 3 |
+
+
+wall: 3125s
+
+| vai tro | agents | out | cache_read | wall s | bat dau | ket thuc |
+|---|--:|--:|--:|--:|---|---|
+| review | 3 | 38,456 | 4,326,776 | 879 | 23:40:22 | 23:55:01 |
+| machine | 14 | 30,495 | 1,142,584 | 3081 | 23:40:22 | 00:31:43 |
+| judge | 3 | 3,566 | 95,860 | 11 | 23:40:22 | 23:40:33 |
+| capture | 1 | 321 | 28,438 | 3 | 00:31:43 | 00:31:46 |
+| synthesize | 1 | 7,038 | 203,473 | 41 | 00:31:46 | 00:32:27 |
+
+- **claude-opus-5-5**: 3 agent · 60 calls · out 38,456 · in 120 · cache_read 4,326,776 · cache_create 384,185
+- **claude-sonnet-5-5**: 5 agent · 13 calls · out 10,925 · in 26 · cache_read 327,771 · cache_create 221,820
+- **claude-haiku-5-5**: 14 agent · 51 calls · out 30,495 · in 102 · cache_read 1,142,584 · cache_create 555,325
+
