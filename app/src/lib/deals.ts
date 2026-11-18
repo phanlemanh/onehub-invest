@@ -443,10 +443,10 @@ export function dungCayViTri(rows: DongNhe[]): NutViTri[] {
 }
 
 /**
- * Danh sách theo trang (CG3): đọc nhẹ toàn tập → xếp từng căn vào tab bằng đúng `thieuGi`, `tabCua` theo vai → lọc tab rồi mới cắt
+ * Danh sách theo trang (CG3): đọc nhẹ toàn tập → xếp từng căn vào tab bằng đúng `thieuGi`, `tabCua`, luật đầy đủ ở mọi vai → lọc tab rồi mới cắt
  * trang trên danh sách mã → đọc đầy đủ các mã của trang. Chưa có bảng hạng → null, trang lùi về danh sách cũ.
  */
-export async function getDealsTrang(thamSo: ThamSoDeal, xemNoiDung: boolean, minPct = NGUONG_VAO_PCT):
+export async function getDealsTrang(thamSo: ThamSoDeal, minPct = NGUONG_VAO_PCT):
   Promise<{ rows: DealRow[]; mayThu: boolean; trang: TrangDeal } | null> {
   if (!(await coBangHang())) return null;
   const { rows: nhe, mayThu } = await truyVan(dealsNheSql, [thamSo.kind === "rent" ? "rent_lt" : "sale", minPct, thamSo.type]);
@@ -464,7 +464,7 @@ export async function getDealsTrang(thamSo: ThamSoDeal, xemNoiDung: boolean, min
       postTextFull: r.co_chu === true ? "co" : null,
       sellerPhone: (r.seller_phone as string | null) ?? null,
       images: r.co_anh === true ? [1] : [],
-    }, { xemNoiDung, mayThu }),
+    }, { xemNoiDung: true, mayThu }),
   });
   const dem: Record<TabTrang, number> = { all: trongViTri.length, du: 0, "xac-minh": 0, thieu: 0 };
   const theoTab = trongViTri.map((r) => ({ r, tab: tabOf(r) }));
@@ -472,7 +472,9 @@ export async function getDealsTrang(thamSo: ThamSoDeal, xemNoiDung: boolean, min
   const chon = thamSo.tab === "all" ? trongViTri : theoTab.filter((x) => x.tab === thamSo.tab).map((x) => x.r);
   const page = Math.min(thamSo.page, Math.max(1, Math.ceil(chon.length / thamSo.size)));
   const cua = chon.slice((page - 1) * thamSo.size, page * thamSo.size);
-  const trang: TrangDeal = { thamSo: { ...thamSo, page }, dem, tong: chon.length, page, cay: dungCayViTri(nhe) };
+  const tabTheoMa = new Map(theoTab.map((x) => [x.r.offer_id as string, x.tab]));
+  const tabDong = Object.fromEntries(cua.map((r) => [r.offer_id as string, tabTheoMa.get(r.offer_id as string)!]));
+  const trang: TrangDeal = { thamSo: { ...thamSo, page }, dem, tong: chon.length, page, cay: dungCayViTri(nhe), tabDong };
   if (cua.length === 0) return { rows: [], mayThu, trang };
   const { rows: day } = await truyVan(dealsTheoMaSql, [cua.map((r) => r.offer_id)]);
   const theoMa = new Map(day.map((r) => [r.offer_id as string, r]));
@@ -485,11 +487,11 @@ export async function getDealsTrang(thamSo: ThamSoDeal, xemNoiDung: boolean, min
  * `project` (id nút dự án, đã qua `parseProject`) → chỉ tin cấp dự án của nút đó, giới hạn mặc định SO_CAN_DU_AN.
  * `thamSo` (CG3) → đọc theo trang ở máy chủ, kết quả mang `trang`; chưa có bảng hạng thì đọc như cũ, không có `trang`.
  */
-export async function getDeals(limit?: number, minDiscountPct = NGUONG_VAO_PCT, { project = null, thamSo, xemNoiDung = false }:
-  { project?: string | null; thamSo?: ThamSoDeal; xemNoiDung?: boolean } = {}):
+export async function getDeals(limit?: number, minDiscountPct = NGUONG_VAO_PCT, { project = null, thamSo }:
+  { project?: string | null; thamSo?: ThamSoDeal } = {}):
   Promise<{ rows: DealRow[]; mayThu: boolean; trang?: TrangDeal }> {
   if (thamSo) {
-    const theoTrang = await getDealsTrang(thamSo, xemNoiDung, minDiscountPct);
+    const theoTrang = await getDealsTrang(thamSo, minDiscountPct);
     if (theoTrang) return theoTrang;
   }
   const lim = limit ?? (project ? SO_CAN_DU_AN : SO_CAN_DANH_SACH);

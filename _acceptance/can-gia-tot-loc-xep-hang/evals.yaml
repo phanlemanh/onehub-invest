@@ -22,7 +22,7 @@ evals:
     layer: backend-effect
     cmd: bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-3
     paths: [app/src/lib/deals.ts, app/src/lib/deals-chi-tiet.ts, app/tests/deals-loc-xep-hang*]
-    expected: "Tập 37 căn với số viết tay từng tab: bốn số đúng, Tất cả = tổng ba tab, cùng tập đọc bằng vai Người xem cho số theo vai đó. Đột biến đếm trong trang thay vì toàn tập đỏ, thông điệp nêu tab lệch."
+    expected: "Tập 37 căn với số viết tay từng tab: bốn số đúng, Tất cả = tổng ba tab, dòng của vai Người xem mang đúng tab theo luật đầy đủ. Đột biến đếm trong trang thay vì toàn tập đỏ, thông điệp nêu tab lệch."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4
     criterion: AC-4

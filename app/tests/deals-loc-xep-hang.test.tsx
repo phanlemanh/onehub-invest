@@ -37,7 +37,7 @@ async function qua<T>(fn: () => Promise<T>): Promise<T> {
 /** Bản đột biến của lib/deals đang được đo; null là bản thật. */
 let dotBien: typeof m.deals | null = null;
 const dl = () => dotBien ?? m.deals;
-const doc = (t: ThamSoDeal, vai = true) => qua(() => dl().getDealsTrang(t, vai)).then((r) => r!);
+const doc = (t: ThamSoDeal) => qua(() => dl().getDealsTrang(t)).then((r) => r!);
 
 /** Chép lib/deals.ts, thay đúng một đoạn, chạy `fn` trên bản chép: ca phải đỏ đúng thông điệp. */
 async function phaiDo(tu: string, thanh: string, fn: () => Promise<void>, thongDiep: RegExp) {
@@ -55,10 +55,10 @@ async function phaiDo(tu: string, thanh: string, fn: () => Promise<void>, thongD
     rmSync(nha, { recursive: true, force: true });
   }
 }
-async function hetTrang(t: ThamSoDeal, vai = true) {
-  const dau = await doc({ ...t, page: 1 }, vai);
+async function hetTrang(t: ThamSoDeal) {
+  const dau = await doc({ ...t, page: 1 });
   const trang = [dau];
-  for (let p = 2; p <= Math.ceil(dau.trang.tong / t.size); p++) trang.push(await doc({ ...t, page: p }, vai));
+  for (let p = 2; p <= Math.ceil(dau.trang.tong / t.size); p++) trang.push(await doc({ ...t, page: p }));
   return { dau, trang, ma: trang.flatMap((x) => x.rows.map((d) => d.offerId)) };
 }
 
@@ -141,43 +141,43 @@ test("CG3-AC-2 mỗi dòng ghi nhãn, nhóm so sánh, số căn, lý do lùi c�
   assert.ok(ve({ reason: "pn-duoi-10" }).includes("trong dự án") && !ve({ reason: "pn-duoi-10" }).includes("trong phường"), "CG3-AC-2 dòng cấp dự án không được nói nhóm trong phường");
 });
 
-test("CG3-AC-3 số trên tab đếm trên toàn tập theo vai, Tất cả bằng tổng ba tab", async () => {
-  for (const vai of [true, false]) {
-    const { dau } = await hetTrang(TS(), vai);
+test("CG3-AC-3 số trên tab đếm trên toàn tập, như nhau ở mọi vai, Tất cả bằng tổng ba tab", async () => {
+  {
+    const { dau } = await hetTrang(TS());
     const { dem, tong } = dau.trang;
     assert.equal(dem.all, (await tapDocLap()).length, "CG3-AC-3 Tất cả lệch tập độc lập");
     assert.equal(dem.du + dem["xac-minh"] + dem.thieu, dem.all, "CG3-AC-3 ba tab không cộng đúng Tất cả");
     assert.equal(tong, dem.all, "CG3-AC-3 tổng của tab đang mở");
     assert.ok(dau.rows.length < dem.all, "CG3-AC-3 đối chứng: tập phải lớn hơn một trang, đếm trong trang sẽ lệch");
     for (const tab of ["du", "xac-minh", "thieu"] as const) {
-      const { ma } = await hetTrang(TS({ tab }), vai);
+      const { ma, trang } = await hetTrang(TS({ tab }));
       assert.equal(ma.length, dem[tab], `CG3-AC-3 tab ${tab} lệch số đếm`);
+      assert.ok(trang.every((x) => x.rows.every((d) => x.trang.tabDong[d.offerId] === tab)), `CG3-AC-3 dòng của tab ${tab} mang tab khác`);
     }
   }
   assert.equal((await doc(TS())).trang.dem["xac-minh"], (await tapDocLap()).filter((r) => r.xm).length, "CG3-AC-3 Cần xác minh lệch tập độc lập");
 });
 
 test("CG3-AC-4 đi hết các trang theo từng tab, vai và lược đồ: không trùng, không sót", async () => {
-  const kiem = async (vai: boolean) => {
+  const kiem = async () => {
     for (const tab of ["all", "du", "xac-minh", "thieu"] as TabTrang[]) {
-      const { dau, trang, ma } = await hetTrang(TS({ tab }), vai);
+      const { dau, trang, ma } = await hetTrang(TS({ tab }));
       assert.equal(ma.length, dau.trang.dem[tab], `CG3-AC-4 tab ${tab}: hợp các trang lệch số trên tab`);
       assert.equal(new Set(ma).size, ma.length, `CG3-AC-4 tab ${tab}: có căn lặp giữa các trang`);
       trang.slice(0, -1).forEach((x) => assert.equal(x.rows.length, 15, `CG3-AC-4 tab ${tab}: trang giữa thiếu dòng`));
     }
   };
-  await kiem(true);
-  await kiem(false);
+  await kiem();
   await phaiDo(
     "const cua = chon.slice((page - 1) * thamSo.size, page * thamSo.size);",
     "const cua = trongViTri.slice((page - 1) * thamSo.size, page * thamSo.size).filter((r) => chon.includes(r));",
-    () => kiem(true), /CG3-AC-4 tab (du|xac-minh|thieu): /);
+    () => kiem(), /CG3-AC-4 tab (du|xac-minh|thieu): /);
   const nhieuTin = (await hetTrang(TS())).ma.filter((id) => id.startsWith("a-can-"));
   assert.equal(nhieuTin.length, 1, "CG3-AC-4 căn ba tin phải hiện đúng một dòng");
   // Lược đồ kiểu cloud: lỗi thiếu bảng làm hỏng giao dịch đang mở, nên đổi tên bảng thật trên DB riêng của ca rồi trả lại.
   await c.query("ALTER TABLE stg_zalo_posts RENAME TO stg_zalo_posts_tam");
   try {
-    await kiem(true);
+    await kiem();
     assert.equal((await doc(TS())).mayThu, false, "CG3-AC-4 lược đồ cloud phải báo mayThu = false");
   } finally { await c.query("ALTER TABLE stg_zalo_posts_tam RENAME TO stg_zalo_posts"); }
   const tong = (await doc(TS())).trang.tong;
@@ -238,7 +238,7 @@ test("CG3-AC-6 bán hay thuê kết hợp loại hình và vị trí; giá trị
   assert.deepEqual([sai.kind, sai.type, sai.tab, sai.location, sai.project], ["sale", null, "all", null, null], "CG3-AC-6 giá trị lạ phải bị bỏ qua");
 });
 
-const trangMau = (o: Omit<Partial<TrangDeal>, "thamSo"> & { thamSo?: Partial<ThamSoDeal> }): TrangDeal => ({ dem: { all: 0, du: 0, "xac-minh": 0, thieu: 0 }, tong: 0, page: 1, cay: [], ...o, thamSo: TS(o.thamSo) });
+const trangMau = (o: Omit<Partial<TrangDeal>, "thamSo"> & { thamSo?: Partial<ThamSoDeal> }): TrangDeal => ({ dem: { all: 0, du: 0, "xac-minh": 0, thieu: 0 }, tong: 0, page: 1, cay: [], tabDong: {}, ...o, thamSo: TS(o.thamSo) });
 const veLuoi = (t: TrangDeal, rows: DealHang[] = [], xemNoiDung = true) =>
   renderToStaticMarkup(<DealsGrid rows={rows} xemNoiDung={xemNoiDung} mayThu trang={t} onDoi={() => {}} />);
 
@@ -263,7 +263,7 @@ test("CG3-AC-7 trạng thái trống có hành động, thanh lọc vẫn đứn
 
 test("CG3-AC-8 vai Người xem không nhận liên hệ, nội dung ở mọi trang và mọi điều kiện lọc", async () => {
   const quet = async (t: ThamSoDeal, vai: boolean) => {
-    const kq = await doc(t, vai);
+    const kq = await doc(t);
     return JSON.stringify(kq.rows.map((d) => dl().dealHang(dl().dealTheoVai(d, { lienHe: vai, noiDung: vai }), { xemNoiDung: vai, mayThu: kq.mayThu })));
   };
   const kiemXem = async () => {
@@ -283,6 +283,8 @@ test("CG3-AC-8 vai Người xem không nhận liên hệ, nội dung ở mọi t
   const t = trangMau({ dem: { all: 1, du: 1, "xac-minh": 0, thieu: 0 }, tong: 1 });
   assert.ok(!veLuoi(t, [dongMau({ rank: hang({}) as never })], false).includes("Gọi ai"), "CG3-AC-8 vai Người xem còn cột Gọi ai");
   assert.ok(veLuoi(t, [dongMau({ rank: hang({}) as never })], true).includes("Gọi ai"), "CG3-AC-8 đối chứng: vai Vận hành có cột Gọi ai");
+  const conThieu = veLuoi({ ...t, tabDong: { x: "thieu" } }, [dongMau({ rank: hang({}) as never })], false);
+  assert.ok(conThieu.includes("Còn thiếu") && !conThieu.includes("Đủ để gọi</span>"), "CG3-AC-8 vai Người xem phải thấy đúng tab theo luật đầy đủ");
   const nguon = readFileSync(join(import.meta.dirname, "../src/app/ops/deals/page.tsx"), "utf8");
   assert.ok(nguon.slice(nguon.indexOf("async function DealsTrangContent")).includes("Ảnh, chữ bài chỉ có ở máy thu"), "CG3-AC-8 danh sách theo trang thiếu lời báo cloud");
 });

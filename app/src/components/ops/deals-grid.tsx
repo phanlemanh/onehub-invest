@@ -167,7 +167,20 @@ function theoDoiKhoMan(bao: () => void) {
   return () => ds.forEach((m) => m.removeEventListener("change", bao))
 }
 
-const cotTheoTrang = (cot: ColumnDef<DataGridFeatures, DealHangGhep>[]) => cot.flatMap((c) => {
+const cotTheoTrang = (cot: ColumnDef<DataGridFeatures, DealHangGhep>[], tabDong: TrangDeal["tabDong"]) => cot.flatMap((c) => {
+  if (c.id === "tinhTrang") {
+    return [{
+      ...c,
+      enableSorting: false,
+      // Tab theo luật đầy đủ ở mọi vai; vai không xem được mục thiếu chỉ thấy «Còn thiếu», không thấy số mục.
+      cell: ({ row: { original: d } }: { row: { original: DealHangGhep } }) => {
+        const t = tabDong[d.offerId] ?? tabCua(d)
+        return t === "xac-minh" ? <Badge variant="warning-light">Cần xác minh</Badge>
+          : t === "thieu" ? <Badge variant="outline">{d.thieu.length > 0 ? `Thiếu ${d.thieu.length}` : "Còn thiếu"}</Badge>
+          : <Badge variant="success-light">Đủ để gọi</Badge>
+      },
+    } as ColumnDef<DataGridFeatures, DealHangGhep>]
+  }
   if (c.id === "giam") {
     return [{ ...c, enableSorting: false, cell: ({ row: { original: d } }: { row: { original: DealHangGhep } }) => <DiscountBar d={d} gon donViCan /> } as ColumnDef<DataGridFeatures, DealHangGhep>]
   }
@@ -278,7 +291,7 @@ export function DealsGrid({ rows: tho, moBanDau = null, locBanDau, xemNoiDung, m
 
   // Vai Người xem không có liên hệ: bỏ hẳn cột, không ghi «Chưa có SĐT» vì căn không thiếu số.
   const cot = useMemo(() => (xemNoiDung ? COLUMNS : COLUMNS.filter((c) => c.id !== "goi")), [xemNoiDung])
-  const cotHien = useMemo(() => (trang ? cotTheoTrang(cot) : cot), [cot, trang])
+  const cotHien = useMemo(() => (trang ? cotTheoTrang(cot, trang.tabDong) : cot), [cot, trang])
   const khoMan = useSyncExternalStore(theoDoiKhoMan, docKhoMan, () => "xl" as KhoMan)
   const trangHien: PaginationState = trang ? { pageIndex: trang.page - 1, pageSize: trang.thamSo.size } : pagination
   const table = useTable({

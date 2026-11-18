@@ -104,7 +104,7 @@ async function DealsDuAnContent({ xemNoiDung, project }: { xemNoiDung: boolean; 
  * danh sách cũ. Căn ngoài trang đang xem mở bằng trang một căn.
  */
 async function DealsTrangContent({ xemNoiDung, can, thamSo }: { xemNoiDung: boolean; can: string | null; thamSo: ThamSoDeal }) {
-  const { rows: tho, mayThu, trang } = await getDeals(undefined, NGUONG_VAO_PCT, { thamSo, xemNoiDung });
+  const { rows: tho, mayThu, trang } = await getDeals(undefined, NGUONG_VAO_PCT, { thamSo });
   if (!trang) return <DealsContent xemNoiDung={xemNoiDung} can={can} />;
   if (can && !tho.some((d) => d.offerId === can)) redirect(`/ops/deals/${encodeURIComponent(can)}`);
   const rows = tho.map((d) => dealHang(dealTheoVai(d, { lienHe: xemNoiDung, noiDung: xemNoiDung }), { xemNoiDung, mayThu }));

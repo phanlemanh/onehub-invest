@@ -341,6 +341,8 @@ export type TrangDeal = {
   dem: Record<TabTrang, number>;
   /** Số căn của tab đang mở. */
   tong: number;
+  /** Tab của từng căn trên trang, theo luật đầy đủ ở mọi vai. */
+  tabDong: Record<string, TabDeal>;
   page: number;
   cay: NutViTri[];
 };

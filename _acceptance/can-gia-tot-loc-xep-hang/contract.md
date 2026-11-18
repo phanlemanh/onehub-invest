@@ -26,7 +26,7 @@ báo danh sách bị cắt, số đếm đúng tổng, tab trống có hành đ�
   bảng, Then dòng ghi nhãn hạng đúng `NHAN_HANG`, tên nhóm so sánh (tên dự án hoặc tên phường), số căn trong nhóm, lý do lùi cấp khi có, và độ tin
   của tin; dòng thuê ghi trung vị «tr/tháng», không ghi «tr/m²».
 - AC-3 (cross-layer): Given tập căn lớn hơn một trang, When mở màn, Then số trên bốn tab đếm trên toàn tập đã lọc, «Tất cả» bằng tổng ba tab còn lại,
-  không có căn nào được đếm ở hai tab, số «Đủ để gọi» và «Còn thiếu» theo đúng `thieuGi` của vai đang xem, và chân bảng ghi khoảng đang hiện trên tổng
+  không có căn nào được đếm ở hai tab, số «Đủ để gọi» và «Còn thiếu» theo luật đầy đủ của `thieuGi`, như nhau ở mọi vai, và chân bảng ghi khoảng đang hiện trên tổng
   số căn (dạng «1–15 / 7.385»).
 - AC-4 (cross-layer): Given 37 căn, cỡ trang 15, có căn mang từ hai tin trở lên nằm ở biên trang, When đi hết các trang của từng tab, với vai Người xem và vai
   Vận hành, trên lược đồ máy thu và cloud, Then hợp các trang của mỗi tab đúng bằng số trên tab đó, không trùng, không sót, mỗi trang đủ 15 căn phân biệt trừ trang cuối, cùng thứ tự với
@@ -84,4 +84,4 @@ Quét theo khuôn ma trận kiểm thử. Số trong ô đếm từ DB máy thu 
 
 ## Notes
 
-- Hỏi Mạnh ở Cổng Phạm vi: thứ tự mặc định, đưa tin thuê vào vòng (1.488 tin bán, 3.940 tin thuê S03 cấp dự án), cắt phần sâu của cây, đóng UI10.
+- Mạnh đã chọn 18/11: căn Giá tốt cấp dự án lên đầu; đưa tin thuê vào, mặc định Bán; hoãn phân khu, toà, số phòng ngủ, diện tích, tầng, đường; đóng UI10; mọi vai đếm tab theo luật đầy đủ; nâng Next.js ở hàng riêng.

@@ -24,7 +24,7 @@ if (process.argv.includes("--doi-chung-thu-tu")) {
 }
 
 const t0 = Date.now();
-const dau = await getDealsTrang(docThamSoDeal({}), true);
+const dau = await getDealsTrang(docThamSoDeal({}));
 const ms = Date.now() - t0;
 const tap = dem();
 kiem("15/15 dòng đầu Giá tốt cấp dự án", dau.rows.length === 15 && dau.rows.every((d: any) => d.rank?.level === "du_an" && d.rank?.label === "gia-tot"), dau.rows.length);
@@ -32,13 +32,13 @@ kiem("tab Tất cả bằng lệnh đo", dau.trang.dem.all === tap.tong, [dau.tr
 kiem("tab Cần xác minh bằng lệnh đo", dau.trang.dem["xac-minh"] === tap.can_xac_minh, [dau.trang.dem["xac-minh"], tap.can_xac_minh]);
 kiem("ba tab cộng lại bằng Tất cả", dau.trang.dem.du + dau.trang.dem["xac-minh"] + dau.trang.dem.thieu === dau.trang.dem.all, dau.trang.dem);
 kiem("đọc dưới 3 giây", ms < 3000, ms);
-const op = await getDealsTrang(docThamSoDeal({ project: "1" }), true);
+const op = await getDealsTrang(docThamSoDeal({ project: "1" }));
 const dem1 = dem("1");
 kiem("dự án 1 bằng lệnh đo", op.trang.dem.all === dem1.tong, [op.trang.dem.all, dem1.tong]);
 
 const ma = new Set<string>();
 for (let page = 1; page <= Math.ceil(dau.trang.tong / 50); page++) {
-  const t = await getDealsTrang(docThamSoDeal({ page: String(page), size: "50" }), true);
+  const t = await getDealsTrang(docThamSoDeal({ page: String(page), size: "50" }));
   t.rows.forEach((d: any) => ma.add(d.offerId));
 }
 kiem("đi hết các trang đủ mã phân biệt", ma.size === dau.trang.tong, [ma.size, dau.trang.tong]);
