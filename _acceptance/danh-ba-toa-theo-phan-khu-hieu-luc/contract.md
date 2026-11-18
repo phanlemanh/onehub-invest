@@ -5,7 +5,7 @@ slug: danh-ba-toa-theo-phan-khu-hieu-luc
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: implemented
+status: machine-cleared
 design_doc: docs/superpowers/specs/2026-11-17-danh-ba-toa-theo-phan-khu-hieu-luc-design.md
 approved_by:
 approved_at:
@@ -73,3 +73,6 @@ Số trước DA33 (17/11 sáng): treo 54 → 14, tổng 198. Sau DA33 áp (15:0
 - Ngoài-2 (máy định tuyến 2026-11-17, đề xuất S4 known-limits): Trang Danh bạ có thể vẽ sai dòng chữ phụ của một toà có hai tên gọi mà bộ kiểm tự động vẫn báo xanh. Người vận hành sẽ chỉ thấy khi tự mở trang xem. — `app/tests/registry-toa-hieu-luc.test.tsx`
 - Ngoài-3 (máy định tuyến 2026-11-17, đề xuất S4 known-limits): Nếu phần nạp dữ liệu S09 sau này đổi cách đặt tên trường, bài kiểm vẫn xanh trong khi trang Danh bạ có thể xếp toà sai phân khu. Số đo trên dữ liệu thật vẫn bắt được lệch này, nhưng không chạy tự động khi gộp. — `app/tests/registry-toa-hieu-luc.test.tsx`
 - Ngoài-4 (máy định tuyến 2026-11-17, đề xuất S4 known-limits): Bài kiểm cho toà có gốc trùng phân khu hiệu lực khá lỏng: nếu dòng phụ của toà đó bị bỏ hẳn, bài kiểm vẫn xanh. Trên trang thật, toà này hiện không có dòng phụ, đúng như mong muốn. — `app/tests/registry-toa-hieu-luc.test.tsx`
+- Ngoài-1 (máy định tuyến 2026-11-18, đề xuất S4 known-limits): Nếu trang Danh bạ vẽ sai dòng chữ phụ của một toà có hai tên gọi từ nguồn, bộ kiểm tự động vẫn báo xanh. Người vận hành chỉ thấy khi tự mở trang xem. — `app/tests/registry-toa-hieu-luc.test.tsx`
+- Ngoài-2 (máy định tuyến 2026-11-18, đề xuất S4 known-limits): Nếu phần nạp dữ liệu S09 sau này đổi cách đặt tên trường, bài kiểm vẫn xanh trong khi trang Danh bạ có thể xếp toà sai phân khu. Số đo trên dữ liệu thật vẫn bắt được, nhưng không chạy tự động khi gộp. — `app/tests/registry-toa-hieu-luc.test.tsx`
+- Ngoài-3 (máy định tuyến 2026-11-18, đề xuất S4 known-limits): Phép kiểm xác nhận không toà nào bị chuyển sang dự án khác có thể báo 0 ngay cả khi câu đếm bị hỏng. Khi đó một toà nhảy sang dự án khác có thể không bị phát hiện. — `app/probes/registry-toa-hieu-luc.test.tsx`
