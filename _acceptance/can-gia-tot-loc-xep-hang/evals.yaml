@@ -98,3 +98,17 @@ evals:
     paths: [app/src/**]
     expected: "Typecheck và lint của app sạch, gồm luật onehub-ui."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E13
+    criterion: AC-9
+    executor: script
+    cmd: bash _acceptance/can-gia-tot-loc-xep-hang/probes/design-gate.sh
+    paths: [app/src/app/ops/deals/page.tsx, app/src/components/ops/deals-grid.tsx, app/src/components/ops/deals-bo-loc.tsx, app/src/components/ops/deals-cells.tsx]
+    expected: "exit 0; design gate chạy lần lượt trên bốn tệp giao diện của vòng, mỗi lần verdict PASS, không P0"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E14
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.design.floor
+    paths: [app/src/app/ops/deals/**, app/src/components/ops/deals-*.tsx]
+    expected: "exit 0; sàn thiết kế bậc M1 không báo hex thô mới trên tệp giao diện vòng chạm"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
