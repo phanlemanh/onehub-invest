@@ -64,7 +64,7 @@ Trục đếm từ DB máy thu 18/11, bảng phủ ca ở thiết kế §6.
 
 ## Đường đo
 
-- Ngưỡng «mỗi lượt đêm ghi một dòng, chạy lại không nhân dòng»: đếm dòng theo `snap_date` trên DB máy thu — AC-3, AC-9.
+- Ngưỡng «mỗi lượt đêm ghi một dòng, chạy lại không nhân dòng»: đếm dòng `s03-moc-ngay` theo `detail.ngay` trên DB máy thu — AC-3, AC-9.
 - Ngưỡng «số khớp màn chặng cùng thời điểm»: so dòng hôm nay với khối `facts` cùng `computed_at` — AC-4, AC-10.
 - Ngưỡng «số đứng yên hai ngày liền thì ô được đánh dấu»: hàm tính ô — AC-7, AC-8.
 
