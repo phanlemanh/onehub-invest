@@ -22,17 +22,17 @@ cd ~/dev/onehub-invest
 docker exec -i -e PGPASSWORD=oneinvest one-invest-db psql -U oneinvest -h localhost -d oneinvest -v ON_ERROR_STOP=1 < db/migrations/113_thuoc_tinh_can_s16.sql
 docker exec -i -e PGPASSWORD=oneinvest one-invest-db psql -U oneinvest -h localhost -d oneinvest -v ON_ERROR_STOP=1 < db/migrations/113_thuoc_tinh_can_s16.sql   # lần hai: chứng chạy lại an toàn
 docker exec -i -e PGPASSWORD=oneinvest one-invest-db psql -U oneinvest -h localhost -d oneinvest -v ON_ERROR_STOP=1 < db/migrations/118_v_s16_gia_cdt_loai_mo_ho.sql   # view giá loại mã mơ hồ toà; luôn áp SAU 113
-# (làn thu nạp snapshot vào stg_s16_can_chi_tiet)
+# Làn thu nạp snapshot vào stg_s16_can_chi_tiet theo lời GIAO triển khai riêng: node pipeline/import-s16-chi-tiet.mjs <thư mục snapshot> --may-thu
 node pipeline/scripts/thuoc-tinh-can-s16.mjs                       # chạy thử: in bảng, không ghi — so với mục 3
 node pipeline/scripts/thuoc-tinh-can-s16.mjs --ghi --db-that       # ghi phát biểu + ANALYZE field_assertions
 ```
 
 ## 3. Số chạy thử
 
-Đo 18/11 trên bản chép DB máy thu `oneinvest_p1_ttc` (tạo từ mẫu `oneinvest_suite_mau`, áp 113), bảng nạp lấy từ snapshot sv14
-`mngt-can-chi-tiet` của làn thu (95.798 item, băm 96/96 tệp khớp manifest) qua bộ nạp THỬ của phiên. **Điều kiện áp:** bộ nạp thật
-của làn thu (tin claudedp-1811-8) phải gộp trước, và lệnh chạy thử chạy lại trên bản chép bằng bộ nạp ấy phải ra đúng khối dưới;
-khác thì dừng và báo. Số thật ở bước 5 phải bằng khối này.
+Đo 18/11 trên bản chép DB máy thu (tạo từ mẫu `oneinvest_suite_mau`, áp 113 rồi 118), bảng nạp lấy từ snapshot sv14
+`mngt-can-chi-tiet` của làn thu (95.798 item) qua **bộ nạp thật** `pipeline/import-s16-chi-tiet.mjs` (đã tích hợp vào nhánh, nạp 95.798/95.798,
+bỏ 0, nạp lại 0 dòng mới). Thước E13 trên bản chép ấy: 40/40 ô, lệch 0. **Điều kiện áp:** nếu snapshot hay bộ nạp đổi trước lúc áp, lệnh chạy
+thử ở mục 2 phải ra đúng khối dưới; khác thì dừng và báo. Số thật ở bước 5 phải bằng khối này.
 
 Tổng: phát biểu 441.183 · căn danh bạ có thuộc tính 84.820 / 111.329 · căn có giá chủ đầu tư 11.852 · tầng lệch 41 · mã hai toà
 862 (nhóm `mo_ho` của `v_s16_can`) · mã có thuộc tính chưa có căn danh bạ 10.116. Diện tích thứ hai: tim tường 69.676 (cao tầng) + đất 15.144 (thấp tầng).
