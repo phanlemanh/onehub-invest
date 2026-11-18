@@ -4,6 +4,18 @@
 Điều kiện trước: bộ nạp của làn thu đã nạp snapshot `mngt-can-chi-tiet` vào `stg_s16_can_chi_tiet` (DATA-CONTRACT v14) —
 bộ nạp cần bảng của 113, nên thứ tự là: (1) áp 113 → (2) làn thu nạp → (3) chạy thử → (4) `--ghi` → (5) kiểm sau.
 
+## 0. Khung giờ, người chạy, việc sau khi áp
+
+- **Khung giờ áp:** 22:30–23:30 giờ máy thu (giờ Việt Nam). Lượt nạp S03 15 phút dừng lúc 22:00 và job `zalo-import` chạy lúc 00:00, nên khung này
+  không trùng job ghi lớn; `cloud-sync` (15 phút) và `ops-apply` (60 giây) vẫn chạy, 113 chờ khoá ngắn trên `field_assertions`. Quá 23:30 mà chưa xong
+  bước 2 thì dừng ở bước đang làm, báo giám sát, không chạy `--ghi` chồng lên job 00:00.
+- **Job đêm không làm thay bước nào:** không job launchd nào gọi bộ nạp hay lệnh `--ghi` của hàng này. Cả 113, 118, lượt nạp và `--ghi` đều chạy tay, một lần;
+  lần thu S16 về sau muốn lên màn thì phải chạy lại lượt nạp và `--ghi`.
+- **Bộ nạp:** `pipeline/import-s16-chi-tiet.mjs` của làn thu (@e0e3c1042) đã nằm trong nhánh này, vào `main` cùng PR.
+- **Ai chạy:** phiên P1 áp 113, 118, chạy thử, `--ghi` và lệnh kiểm sau. **ZCode** chạy lượt nạp thật lên máy thu theo lời GIAO triển khai riêng do điều phối liên
+  làn gửi, giữa bước áp 118 và bước chạy thử; P1 chờ `tin XONG` của lượt nạp rồi mới đi tiếp.
+- **Sau khi áp, GS báo mọi dãy gộp `main`:** DB chung đổi lược đồ thì nhánh chưa nhận `main` có thể đỏ test (áp 111 + 114 ngày 18/11 làm 12 ca app đỏ trên nhánh chưa nhận `main`).
+
 ## 1. Sao lưu trước
 
 ```bash
@@ -46,6 +58,8 @@ ocean-park-2 | 9791 | 9791 | 9791 | 9791 | 0 | 2492 | 9791 | 3
 ocean-park-3 | 2797 | 2797 | 2797 | 2797 | 0 | 2782 | 2797 | 0
 smart-city | 2546 | 2546 | 2546 | 2546 | 2476 | 2497 | 2502 | 0
 ```
+
+Khối số trên đo trước khi nhánh nhận PR #490 (toà S16 vào phân khu); hàng này chưa đo lại trên DB đã áp 111 + 114, nên lệnh chạy thử ở mục 2 là phép đối chiếu quyết định.
 
 Thời gian trên bản chép: `--ghi` 16 giây; trang dự án grand-park tải khoảng 4,5 giây sau `ANALYZE` (trước `ANALYZE` hàng phút —
 lệnh `--ghi` nay tự chạy `ANALYZE field_assertions`).
