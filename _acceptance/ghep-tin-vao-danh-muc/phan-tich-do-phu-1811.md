@@ -1,6 +1,8 @@
 # PL20 — Rà soát độ phủ gắn toà (18/11/2026)
 
-Đo chỉ đọc trên DB máy thu. Mẫu số: 6.389 tin căn hộ S03 (bán 2.368, thuê 4.021). Mức «vùng» gồm phân khu và cụm.
+> **Bảng dưới là lần rà soát đầu, không phải số để ký.** Lần này xét theo tin, tính mọi dự án và nhận mọi căn cứ của model. Luật sẽ ghi thật xét theo từng bài, chỉ tính Ocean Park 1 và Grand Park, chỉ nhận
+> bản đọc có đoạn trích chứa tên được gắn, và không gắn bài nêu nhiều toà hay rao nhiều căn. Đo theo luật đó trên 6.446 tin: **đợt 1 đạt 46,4%** (tin bán 50,8%; tới toà 35,3%, tới vùng 11,1%), đợt 2 đọc bù 1.724 tin, ước đạt
+> **53,8–57,2%**. Số dùng để ký nằm ở design doc §2.
 
 ## Thác gắn, từ chắc tới kém chắc
 

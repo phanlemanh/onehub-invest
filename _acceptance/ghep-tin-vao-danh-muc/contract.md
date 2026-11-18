@@ -1,6 +1,6 @@
 ---
 schema_version: 1
-feature: Tin căn hộ S03 của Ocean Park 1 và Grand Park được gắn vào toà của Danh bạ, hoặc phân khu, cụm khi bài chỉ nêu tới đó, bằng một phát biểu trường toà có căn cứ; người đọc phía sau lấy toà của tin từ một view
+feature: Tin căn hộ S03 của Ocean Park 1 và Grand Park được gắn vào toà của Danh bạ, hoặc phân khu, cụm khi bài chỉ nêu tới đó, từ ô tên toà, chữ bài và bản đọc của model, mỗi nhóm nguồn có căn cứ và tắt riêng được; người đọc phía sau lấy toà của tin từ một view
 slug: ghep-tin-vao-danh-muc
 owner: phanlemanh@gmail.com
 risk_tier: T3
@@ -16,52 +16,52 @@ design_doc: docs/superpowers/specs/2026-11-18-ghep-tin-vao-danh-muc-design.md
 ## Context
 
 Hàng PL20, nhịp toà của mốc MS3. Hôm nay 0 tin S03 gắn toà. Cổng Đáng: Mạnh «Làm cả ba» 12/11; phạm vi trục, căn trong
-`opportunity.md` đã chuyển sang PL36 ngày 14/11, phạm vi mới chốt ở Cổng Phạm vi này. Hạng T3 vì có migration 117. Mọi số đo:
-design doc §2, đếm trên DB máy thu ngày 18/11.
+`opportunity.md` đã chuyển sang PL36 ngày 14/11. Ở Cổng Phạm vi ngày 18/11 Mạnh không nhận ngưỡng 40% và chốt «Làm cả hai đợt»: đợt 1 gắn từ dữ liệu sẵn có, đợt 2 cho
+model đọc bù. Hạng T3 vì có migration 117. Mọi số đo: design doc §2, đếm trên DB máy thu ngày 18/11.
 
 ## Acceptance Criteria
 
-- **AC-1** (ma trận cột toà) Given ma trận viết trước gồm khớp một toà · khớp nhiều toà · khớp một nút phân khu, cụm · tên ngoài danh
-  bạ, When chạy hàm gắn, Then ra đúng toà · không gắn lý do `mo-ho` · đúng nút · không gắn lý do `ngoai-danh-ba`, một assert mỗi ô.
-  Chiều đỏ: cho ô `mo-ho` chọn toà đầu tiên thì ca đỏ, thông điệp ghim tên ô.
+- **AC-1** (ma trận ô tên toà) Given ma trận viết trước gồm khớp đúng một toà · khớp sau chuẩn hoá cách viết · khớp nhiều toà · khớp một vùng · tên ngoài danh
+  bạ · ô khớp một toà nhưng chữ bài nêu hai toà · ô khớp một toà nhưng model báo bài rao nhiều căn, When chạy hàm gắn, Then ra đúng toà nguồn A · đúng toà nguồn B · không gắn `mo-ho` · đúng vùng · không gắn `ngoai-danh-ba` · không gắn `chu-nhieu-toa` ·
+  không gắn `bai-nhieu-can`, một assert mỗi ô; `mo-ho` và `ngoai-danh-ba` không rơi xuống đọc chữ bài. Chiều đỏ: cho ô `mo-ho` chọn toà đầu tiên thì ca đỏ, thông điệp ghim tên ô.
 - **AC-2** (đúng dự án) Given mã toà trùng giữa hai dự án (S1 ở OP1 và GP) và tin thuộc khu khác, tin chưa có dự án, tin không phải căn
   hộ, When chạy hàm gắn, Then mã chỉ khớp toà của dự án của tin, và ba loại tin còn lại sinh 0 phát biểu.
-- **AC-3** (chỉ đọc cột toà, theo khuyến nghị Hỏi-1) Given tin có cột toà rỗng hoặc ngoài danh bạ mà chữ bài nêu tên một toà của danh bạ,
-  When chạy hàm gắn, Then không gắn và ghi lý do `khong-cot` hoặc `ngoai-danh-ba`. Chiều đỏ: bản đột biến đọc chữ bài thì ca đỏ, thông điệp
-  ghim mã bài.
+- **AC-3** (chữ bài và bản đọc của model) Given ô tên toà rỗng và ma trận luật đọc chữ × bản đọc: cùng một toà · khác toà · luật đọc được, model chưa đọc · luật không đọc được, model
+  nêu một toà có tên trong đoạn trích · model nêu một toà nhưng tên không nằm trong đoạn trích · cùng một vùng · model một mình nêu một vùng có tên trong đoạn trích, When chạy hàm gắn, Then ra nguồn C · không gắn `chu-model-khac` · không gắn `chi-luat` · nguồn D ·
+  không gắn `trich-khong-co-ten` · nguồn F · nguồn G. Bản đọc có căn cứ khác `chu_bai` hoặc đoạn trích chưa kiểm thì coi như model chưa đọc. Chiều đỏ: bản đột biến nhận căn cứ «kiến thức nghề» hoặc bỏ phép kiểm tên trong đoạn trích thì ca đỏ,
+  thông điệp ghim mã bài.
 - **AC-4** (khuôn phát biểu, cross-layer) Given migration 117 áp trên bản chép đã có 113, When ghi phát biểu, Then mức toà ghi
-  `universal_property_id` = `buildings.upi`, mức phân khu, cụm ghi `subzone_node_id`, cùng `rule_id = 'ghep-toa-danh-ba'`, lớp `inferred`,
-  phương pháp `e1_rule`, có căn cứ; bốn trường của 113 vẫn ghi được. Chiều đỏ: giá trị không phải UPI của toà đang hoạt động, hoặc
-  trường này trên resource khác `Property`, thì DB từ chối.
-- **AC-5** (0 tin gắn hai nơi, cross-layer) Given ma trận tin nhiều bài: hai toà khác nhau · toà và phân khu chứa nó · toà và phân khu không
-  chứa nó · hai phân khu khác nhau, When đọc `offer_building`, Then ô thứ hai ra mức toà, ba ô còn lại ra `status = 'xung_dot'`, không có nơi
-  gắn và không được tính là đã gắn; view chỉ đọc dòng của `rule_id = 'ghep-toa-danh-ba'`. Trên bản chép DB máy thu, lệnh in số tin `xung_dot` và
-  số này không vượt **1%** số tin đã gắn (đo trước: 9 tin nhiều bài ghi hai tên toà).
-- **AC-6** (chạy lại, đổi dữ liệu) Given đã chạy một lượt, When chạy lại không đổi gì, Then 0 chèn, 0 rút; When cột toà đổi sang toà khác, cột
-  về rỗng, tin đổi dự án, toà bị gộp hoặc ngừng hoạt động, Then dòng cũ bị rút, chỉ chèn dòng mới khi còn gắn được, bài có nhiều nhất một dòng sống.
+  `universal_property_id` = `buildings.upi`, mức vùng ghi `subzone_node_id`, lớp `inferred`, đúng cặp `rule_id` và phương pháp của từng nguồn theo design doc §3, có căn cứ; dòng dùng bản đọc của model
+  mang `label_id` và đoạn trích; bốn trường của 113 vẫn ghi được. Chiều đỏ: giá trị không phải UPI của toà đang hoạt động, hoặc trường này trên resource khác `Property`, thì DB từ chối.
+- **AC-5** (0 tin gắn hai nơi, cross-layer) Given ma trận tin nhiều bài: hai toà khác nhau · toà và vùng chứa nó · toà và vùng không
+  chứa nó · hai vùng không lồng nhau · hai nguồn cùng một toà, When đọc `offer_building`, Then ô thứ hai và ô thứ năm ra mức toà, ba ô còn lại ra `status = 'xung_dot'`, không có nơi
+  gắn và không được tính là đã gắn; view chỉ đọc dòng của bốn `rule_id` của hàng. Trên bản chép DB máy thu, lệnh in số tin `xung_dot` và số này không vượt **1%** số tin đã gắn (đo trước: 0,67%).
+- **AC-6** (chạy lại, đổi dữ liệu, tắt nguồn) Given đã chạy một lượt, When chạy lại không đổi gì, Then 0 chèn, 0 rút; When ô tên toà đổi sang toà khác, ô về rỗng, tin đổi dự án, toà bị gộp hoặc ngừng hoạt
+  động, bản đọc mới của model tới, Then dòng cũ bị rút, chỉ chèn dòng mới khi còn gắn được, bài có nhiều nhất một dòng sống mỗi trường; When tắt một nguồn, Then lượt kế rút hết dòng của đúng nguồn đó, dòng của nguồn khác không đổi.
 - **AC-7** (không phá lượt nạp) Given bản chép DB máy thu, When chạy lượt nạp có bước gắn, Then `offer_project` không đổi ở tin nào, không tệp
   snapshot nào đổi (gốc snapshot lấy từ cấu hình, số tệp lớn hơn 0), bài thử bị loại qua `loadStgPosts`, bước gắn chạy trong giao dịch riêng
-  sau khi lượt nạp đã ghi và xong trong **60 giây**. Thiếu migration 117, hoặc bước gắn lỗi khi ghi: in đúng một dòng, số bài nạp bằng đối chứng
+  sau khi lượt nạp đã ghi và xong trong **60 giây**. Thiếu migration 117, hoặc bước gắn lỗi khi ghi: in đúng một dòng `JOB WARN [ghep-toa]`, số bài nạp bằng đối chứng
   không có bước gắn, lượt nạp vẫn thoát 0.
-- **AC-8** (số trên màn) Given bản chép DB máy thu, When chạy bước gắn, Then số tin căn hộ S03 gắn được toà, phân khu, cụm đổi từ 0 lên đạt
-  **ngưỡng chốt ở Cổng Phạm vi (đề xuất 40%, trần đo được 43,8%)**, và lệch không quá **0,5%** so với phép đếm độc lập đi thẳng từ `block_raw`
-  và tên trong danh bạ, không gọi hàm gắn; cấy dòng của `rule_id` khác thì tử số không đổi. Lệnh in tử số, mẫu số, tách theo khu và mức gắn.
-- **AC-9** (chất lượng) Given luật gắn đã commit trước nhãn người đầu tiên của lát `hai-khu-ghep`, cỡ mẫu **chốt ở Cổng Phạm vi (đề xuất 110
-  bài máy gắn)** trước buổi gắn nhãn, và tập đóng băng có băm, When chấm các bài máy gắn, Then cận dưới Wilson 95% của độ đúng từ **0,95** trên
-  tập gộp; lệnh tính lại từ nhãn thô và đỏ khi số lệch báo cáo, khi commit luật muộn hơn nhãn đầu tiên, hoặc khi chưa đủ cỡ mẫu. Báo cáo tách
-  riêng mức toà với mức phân khu, cụm, và theo khu. Hụt ngưỡng: không chỉnh luật rồi chấm lại trên tập này; lối ra theo Hỏi-3.
+- **AC-8** (số trên màn) Given bản chép DB máy thu sau lượt đọc bù, với các nguồn đã qua AC-9, When chạy bước gắn, Then số tin căn hộ S03 gắn được toà, phân khu, cụm đổi từ 0 lên **từ 50%** mẫu số toàn bộ tin căn hộ S03 (đích của MS3; đo trước đợt 2: 46,4%; ước sau
+  đợt 2: 53,8–57,2%), và lệch không quá **0,5% tử số** so với phép đếm độc lập: bản viết lại luật từ design doc §3 do một tác tử khác viết, không nhập hàm gắn; cấy dòng của `rule_id` khác thì tử số không đổi. Lệnh in tử số, mẫu số,
+  tách theo khu, mức gắn, nguồn, và số trước, sau lượt đọc bù.
+- **AC-9** (chất lượng) Given đầu ra máy đã đóng băng có băm lúc rút mẫu (bài, nút, nguồn), lát `hai-khu-ghep-b` không điền nháp, When chấm ba nhóm rút ngẫu nhiên theo tin từ chính các tin máy gắn sau lượt đọc bù: **N1** nguồn A, B · **N2** nguồn C, F · **N3** nguồn D, G, mỗi nhóm **110 bài**, Then cận dưới Wilson 95% của độ đúng từ **0,95** ở **từng nhóm**, với luật quy nhãn người về nút theo design doc §4;
+  lệnh tính lại từ nhãn thô và đỏ khi số lệch báo cáo, khi đầu ra của mã cuối khác bản đóng băng trên bài nào trong mẫu, hoặc khi chưa đủ cỡ mẫu. N1, N2 phải đạt. N3 chưa chấm hoặc hụt thì D, G tắt và hàng vẫn xét tiếp. Báo cáo tách riêng từng nguồn, mức toà với mức vùng, và theo khu. Hụt ngưỡng: không chỉnh luật rồi chấm lại trên tập này; lối ra theo câu hỏi đã chốt ở Cổng Phạm vi.
+- **AC-10** (đọc bù của đợt 2) Given DB máy thu, When lập danh sách đọc bù, Then danh sách gồm đúng các tin OP1, GP chưa gắn và chưa có bản đọc `dg3-s03-v3`, mỗi tin một bài, không bài thử, khớp phép đếm độc lập, và được đóng băng có băm trước lời gọi đầu. When chạy đọc bù trên DB máy thu với trần **5 USD**, Then tiền thật cộng từ `silver_labels` theo `run_id` không vượt trần, mọi dòng mang `run_id` đó thuộc đúng danh sách đóng băng, chạy lại không gọi lại bài đã đọc. Chiều đỏ: cấy một bài thử hoặc một tin đã gắn vào danh sách thì lệnh kiểm thoát 1, thông điệp ghim mã bài.
 
 ## Coverage
 
 Trục và ô lấy từ bảng phủ ca của design doc §2, số đếm thật trên DB máy thu.
 
 - **Trục khu**: OP1 · GP · khu khác · chưa có dự án (AC-1, AC-2).
-- **Trục cột toà**: một toà · nhiều toà · phân khu, cụm · ngoài danh bạ · rỗng (AC-1, AC-3).
-- **Trục chữ bài khi cột rỗng**: có nêu toà · không nêu, đều không gắn ở lát này (AC-3).
+- **Trục ô tên toà**: khớp đúng · khớp sau chuẩn hoá · nhiều toà · vùng · ngoài danh bạ · rỗng (AC-1, AC-3).
+- **Trục bài nhiều căn, nhiều toà**: chữ nêu hai toà · model báo nhiều căn · bài một căn (AC-1).
+- **Trục chữ bài × bản đọc của model**: cùng kết quả · khác kết quả · chỉ luật · chỉ model có tên trong đoạn trích · chỉ model không có tên · căn cứ không được nhận (AC-3).
 - **Trục loại nhà**: căn hộ · loại khác (AC-2).
-- **Trục nhiều bài trên một tin**: cùng toà · hai toà · toà và phân khu chứa nó · toà và phân khu khác · hai phân khu (AC-5).
-- **Trục lượt chạy**: lần đầu · chạy lại · dữ liệu đổi · thiếu migration · lỗi khi ghi (AC-6, AC-7).
-- **Ô bỏ**: khu khác và chưa có dự án không gắn, vì danh bạ toà các dự án còn lại thuộc lát L4; 573 tin chỉ nêu toà trong chữ bài chờ Hỏi-1.
+- **Trục nhiều bài trên một tin**: cùng toà · hai toà · toà và vùng chứa nó · toà và vùng khác · hai vùng · hai nguồn cùng toà (AC-5).
+- **Trục lượt chạy**: lần đầu · chạy lại · dữ liệu đổi · bản đọc mới · tắt nguồn · thiếu migration · lỗi khi ghi (AC-6, AC-7).
+- **Trục đọc bù**: tin cần đọc · tin đã gắn · tin đã đọc · bài thử · chạm trần tiền · chạy lại (AC-10).
+- **Ô bỏ**: dự án khác OP1, GP và tin chưa có dự án không gắn, vì chưa có tập nhãn cho các dự án này; tin chỉ có luật đọc chữ mà model chưa xác nhận không gắn, vì hai bên chỉ đồng ý 83–91% trên nhóm tin khó.
 
 ## Đường đo
 
@@ -69,22 +69,23 @@ Trục và ô lấy từ bảng phủ ca của design doc §2, số đếm thậ
 |---|---|---|
 | Tin căn hộ S03 gắn toà, phân khu, cụm | `offer_building` trên mẫu số tin căn hộ S03 | AC-8 |
 | 0 tin gắn hai toà | `offer_building` đếm `status = 'xung_dot'` tách khỏi số đã gắn | AC-5 |
-| Cận dưới Wilson của gắn toà | tập đóng băng lát `hai-khu-ghep` | AC-9 |
+| Cận dưới Wilson của từng nhóm nguồn | đầu ra đóng băng và nhãn người của lát `hai-khu-ghep-b` | AC-9 |
 | Chạy lại không đổi | số chèn, số rút của lượt thứ hai | AC-6 |
+| Tiền đọc bù | `silver_labels.cost_usd` theo `run_id` | AC-10 |
 
 ## Out of scope
 
 - Gắn trục, căn và suy tầng từ mã căn (PL36).
-- Danh bạ toà của các dự án ngoài OP1, GP (lát L4); tách dự án con để gỡ tin mơ hồ (DA38).
+- Gắn tin của các dự án ngoài OP1, GP; tách dự án con để gỡ tin mơ hồ (DA38).
+- Lấp tên toà còn thiếu trong danh bạ (160 tin có ô tên toà ngoài danh bạ).
 - Sửa lỗi nháp nhãn của PL35 (`P4-208`).
-- Đọc toà từ chữ bài (theo khuyến nghị Hỏi-1, để hàng sau khi có tập nhãn riêng cho nguồn này).
 - Đưa toà của tin lên cloud hay cổng Invest.
 
 ## Notes
 
 - Lệnh đo của các eval nằm ở `_acceptance/ghep-tin-vao-danh-muc/probes/*.sh`; `_acceptance/config.yaml` là tệp bảo vệ, không sửa (P4-209).
-- PR gộp SAU DA40 (migration 113). Chạm `pipeline/mappings.yaml`, ba tệp vocab và `CONTEXT.md` chỉ sau khi DA40 vào main.
-- AC-9 chỉ đo được sau buổi gắn nhãn người trên `/ops/labels`.
-- Giới hạn của AC-9: màn gắn nhãn điền sẵn nháp của model (nếp Mạnh chốt 06/11), nên người gắn có thể bị nháp dẫn dắt; nháp độc lập với bộ gắn của
-  hàng này (PL35 AC-7), và 117 mục không có nháp được gắn từ ô trống.
-- Ngưỡng UAT trong `opportunity.md` còn ghi «gắn trục» theo phạm vi cũ; ngưỡng mới chốt ở Hỏi-3.
+- PR gộp SAU DA40 (migration 113). Chạm `pipeline/mappings.yaml`, ba tệp vocab và `CONTEXT.md` chỉ sau khi DA40 vào main. Số migration do giám sát giữ.
+- AC-8, AC-9 chỉ đo được sau lượt đọc bù và buổi gắn nhãn người trên `/ops/labels`: tối đa 330 bài, khoảng 16 giờ 30 phút theo nhịp 3 phút mỗi bài. Một nhóm gặp lỗi thứ hai thì dừng gắn nhãn nhóm đó.
+- Hai lượt ghi lên DB máy thu trước khi PR gộp, do giám sát chạy, chữ ký Cổng Phạm vi phủ đúng hai lượt này: đọc bù (`silver_labels`, `ai_calls`, trần 5 USD) và nạp lát `hai-khu-ghep-b` (`eval_label_items`).
+- Lộ trình ghi «tập test đóng băng của PL35»; hàng này chấm trên lát mới vì lát PL35 chia đều theo tầng, trong 159 mục máy gắn chỉ 13% thuộc Grand Park, trong khi Grand Park chiếm 63% số tin máy gắn.
+- Ngưỡng UAT trong `opportunity.md` còn ghi «gắn trục» theo phạm vi cũ; ngưỡng mới chốt ở Cổng Phạm vi.
