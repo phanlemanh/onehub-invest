@@ -80,3 +80,6 @@ Trục đếm từ DB máy thu 18/11, bảng phủ ca ở thiết kế §6.
 
 Không có migration nên không có bước áp: lượt làm tươi kế sau khi PR gộp vào `main` tự ghi dòng đầu tiên. Sau đó chạy ON12-AC-5 trên DB
 máy thu theo luật đợt 30/10.
+
+Ảnh xem màn chụp trên DB thử `oneinvest_u2_sm1`: số của các ngày trước hôm dựng DB là số chèn tay để thấy đường và cờ đứng yên, không phải
+số đo. Bằng chứng số thật là phép đo trên bản chép DB máy thu (AC-9), không phải ảnh.

@@ -16,7 +16,7 @@ Mọi số đếm trên tin S03 đang rao (view `sale_offers`), tại lượt l�
 |---|---|---|---|
 | Tin đang rao (mẫu số) | `offers_total` | tin S03 đang rao | 7.070 |
 | Có dự án | `project_linked` | đúng ô «Định vị» của S03 (`muc.located`) | 6.890 |
-| Gắn toà | `building_linked` | `muc.toa_khop` của 600, tự có số khi `toa_link` được nối | 0 |
+| Khớp toà | `building_linked` | `muc.toa_khop` của 600, tự có số khi `toa_link` được nối | 0 |
 | Có hạng cấp dự án | `project_ranked` | có điểm hạng (`hang_pct` khác rỗng) ở cấp dự án trở xuống: `cap` thuộc `du_an`, `phan_khu`, `toa` | 5.432 |
 | Có hạng cấp toà | `building_ranked` | có điểm hạng và `cap = 'toa'` | 0 |
 

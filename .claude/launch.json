@@ -155,6 +155,23 @@
         "--webpack"
       ],
       "port": 3460
+    },
+    {
+      "name": "app-3462-sm1-db-thu",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_u2_sm1",
+        "SNAPSHOTS_DIR=../../../../collector/snapshots",
+        "npm",
+        "--prefix",
+        "app",
+        "run",
+        "dev",
+        "--",
+        "-p",
+        "3462"
+      ],
+      "port": 3462
     }
   ]
 }
