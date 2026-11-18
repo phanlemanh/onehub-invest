@@ -1,98 +1,123 @@
+# Review findings: thuoc-tinh-can-s16 (round 3)
+
 ## Trong hợp đồng
 
-- **Hình dạng 2 — Fixture viết tay đúng khuôn bên đọc: lưới và trang dự án không đi qua đường nối thật từ lớp đọc tới màn**
-  file: `app/tests/thuoc-tinh-can.test.tsx:161`
-  severity: high
-  AC: AC-9
-  source: measurement
-  detail: Dòng 161 và 172-178 render DuAnToaGrid, DuAnView bằng props dựng tay (hang(), ttMau(), loiThuocTinh={true}, phuThuocTinh={...}). Kết quả của docThuocTinhCan không bao giờ đi qua dungHangToa(duAn, id, entries, thuocTinh) hay DuAnContent: trong app/tests chỉ tệp này nhắc tới thuocTinh, còn các lời gọi dungHangToa ở registry-chi-doc và registry-toa-hieu-luc đều không truyền đối số thuocTinh. Vì vậy phép nối thuocTinh.get(c.key) ở app/src/lib/ops/registry/hang-toa.ts và nhánh tt.ok ? tt.data : undefined, loiThuocTinh={!tt.ok || !phu.ok} ở du-an-content.tsx không có phép đo nào: đổi khoá nối khiến mọi căn thành «Chưa có thuộc tính» mà ca vẫn xanh. E9 (evals.yaml dòng 64) hứa đúng các chiều này: «HTML render của lưới (route thật)», «route vẫn 200», «đột biến đổi khoá nối unit_key ↔ stack → ca đỏ nêu unit_key», «đột biến bỏ khối bắt lỗi → ca đỏ nêu lỗi nội tuyến», và soát token tên nguồn từ source_registry; tệp test không có ca nào trong số đó.
-  rationale: AC-9 là AC cross-layer đòi giá trị trên màn bằng view của đúng unit_key; phép nối thật không có phép đo nào.
-
-- **Hình dạng 5 — Tuyên ma trận toàn phần nhưng mỗi ô chỉ soi một trường: phát biểu thừa lọt qua**
-  file: `pipeline/tests/thuoc-tinh-can-s16.test.mjs:55`
-  severity: high
-  AC: AC-3
-  source: measurement
-  detail: E3 hứa «mỗi ô so mảng {field,value} đầy đủ + lý do bỏ», nhưng kiemMaTran (dòng 55) chỉ so lay(kq, c.f) và lyDo(kq, c.f) của đúng một trường c.f; các trường khác của cùng dòng không được so. Dòng 76 chỉ kiểm trường nằm trong danh sách cho phép, mà danh sách này có lot_size_area. Đã chạy đột biến trên bản chép trong thư mục nháp: thêm vào phatBieuTuDong một phát biểu lot_size_area = area_building cho căn HIGH_RISE (căn hộ cao tầng bị gán diện tích đất, trái luật Mạnh chốt 18/11); cả 3 ca TTC-AC-3 vẫn xanh. Không ô nào đặt c.f = lot_size_area với dòng HIGH_RISE. Ngoài ra E3 ghi «12 loại hình» trong khi ma trận và LOAI_HINH_S16 chỉ có 11 mã, nên số ô viết trước không khớp lời hứa.
-  rationale: AC-3 đòi mỗi ô ra đúng danh sách {field,value}; đột biến thêm phát biểu thừa vẫn xanh nên AC không được bảo vệ.
-
-- **Hình dạng 5 — Thước E13 tuyên so từng ô của năm dự án nhưng không có ma trận viết trước, dự án vắng thì không bị so**
-  file: `pipeline/tests/thuoc-tinh-can-s16-that.mjs:94`
-  severity: high
-  AC: AC-11
-  source: measurement
-  detail: Vòng so ở dòng 94-104 chỉ duyệt các dự án có trong kết quả SQL_THANG. Dự án trong bang-phu-ca.md §1 hoặc khối chay-thu mà không có dòng nối (ví dụ bộ nạp bỏ sót cả ocean-park-3) thì không sinh ô nào, lech vẫn 0 và script thoát 0. Hai đường bỏ qua im lặng khác: ct !== undefined và bp !== undefined ở dòng 100 làm cột so biến mất khi ap-may-thu.md thiếu khối chay-thu, khi dòng sai số cột (dòng 86), hoặc khi tên dự án rơi vào «(khác)» ở dòng 90. E13 hứa bốn cột «bằng nhau từng ô của năm dự án đã nối» và «thoát 1 khi một ô lệch», nhưng không có assert số ô đã so = 5 dự án × 8 cột, cũng không kiểm đủ năm tên dự án.
-  rationale: AC-11 đòi số thật bằng từng ô khoá của ba dự án và lệch thì dừng; thước để dự án vắng lọt im lặng.
-
-- **Hình dạng 3 — Assert chuỗi có mặt cho ô phủ trong khi lời hứa là quan hệ nhãn ↔ số**
-  file: `app/tests/thuoc-tinh-can.test.tsx:174`
-  severity: medium
-  AC: AC-10
-  source: measurement
-  detail: Dòng 174 kiểm riêng lẻ co.includes("Căn có giá chủ đầu tư"), co.includes("1.850"), co.includes("Chưa vào danh bạ") trên toàn HTML. Lời hứa của AC-10 (E11, E12) là mỗi ô hiện đúng số của nó, tức quan hệ giữa nhãn và giá trị. Tráo value của hai ô coGia và chuaVaoDanhBa trong oPhu thì mọi chuỗi vẫn có mặt và ca vẫn xanh. Giá trị chuaVaoDanhBa: 2 của fixture hoàn toàn không được assert ở mức màn.
-  rationale: AC-10 đòi mỗi ô phủ hiện đúng X, Y, Z, N tương ứng nhãn; assert rời không bắt được tráo giá trị.
-
-- **Hình dạng 3 — Regex nhãn nguồn S16 khớp sang cột Nguồn của hàng khác, không chứng minh ô thuộc tính có Badge**
-  file: `app/tests/thuoc-tinh-can.test.tsx:166`
-  severity: medium
-  AC: AC-9
-  source: measurement
-  detail: assert.match(html, /data-thuoc-tinh="nguon"[\s\S]*?S16/) chỉ đòi có chữ S16 ở đâu đó phía sau thuộc tính, kể cả ngoài ô. Fixture hang() đặt nguon: ["S16"] ở cấp hàng nên cột «Nguồn» của hàng kế tiếp luôn cung cấp chữ này. Đã render DuAnToaGrid thật với ttMau({ nguon: [] }): 2 ô thuộc tính không ô nào chứa S16, regex vẫn khớp. Thông điệp «thiếu nhãn nguồn S16 ở ô thuộc tính» vì thế không đo được điều nó tuyên.
-  rationale: AC-9 đòi Badge S16 ở hàng căn có thuộc tính; regex không chứng minh được điều đó.
+Không có finding nào map được vào AC.
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **Ảnh chứng commit vào kho công khai làm lộ mã căn, toa_id và thuộc tính, giá S16 lấy bằng đăng nhập**
-  Người dùng thấy gì: Ảnh chụp màn hình dùng làm bằng chứng chứa mã căn và giá chủ đầu tư thật. Nếu đẩy lên kho công khai, người ngoài sẽ thấy dữ liệu chỉ được giữ trên máy thu.
-  Căn cứ: Nặng vì dữ liệu đã lên kho công khai thì không thu hồi được; hiện ảnh chưa đẩy lên nên còn kịp thay bằng ảnh đã che trước khi đẩy.
-  file: `_acceptance/thuoc-tinh-can-s16/evidence/E10-step1.png`
+- **Bộ nạp nhận schemaVersion 14 và kind mngt-can-chi-tiet nhưng DATA-CONTRACT trên nhánh chưa khai**
+  Người dùng thấy gì: Dữ liệu thuộc tính căn có thể vào hệ thống trước khi tài liệu giao diện thu thập ghi nhận hình dạng của nó, nên người đọc tài liệu sẽ thiếu thông tin về loại dữ liệu này.
+  Căn cứ: Chỉ là chuyện thứ tự gộp giữa hai làn, không làm sai số liệu nào trên màn và sửa sau chỉ là gộp thêm một mục tài liệu.
+  file: `pipeline/import-s16-chi-tiet.mjs`
   severity: high
-  Đề xuất: new-contract
+  Đề xuất: known-limits
 
-- **Migration 113 dựa vào DATA-CONTRACT v14 nhưng hợp đồng chưa khai kind và phiên bản này**
-  Người dùng thấy gì: Tài liệu giao diện giữa khâu thu và khâu xử lý chưa ghi loại dữ liệu mới này. Người vận hành không thấy gì khác, nhưng bên thu và bên xử lý có thể hiểu lệch nhau về cột.
-  Căn cứ: Nhẹ với người dùng vì màn hình không đổi; việc thuộc làn thu và đã được ghi là điều kiện phụ thuộc, bổ sung sau rẻ.
-  file: `db/migrations/113_thuoc_tinh_can_s16.sql`
+- **Bộ nạp báo thành công và COMMIT khi tệp items sai hình dạng hoặc không có dòng hợp lệ**
+  Người dùng thấy gì: Nếu tệp thu về sai khuôn, lượt nạp vẫn báo thành công với 0 dòng, nên người vận hành có thể tưởng dữ liệu đã đủ trong khi trang dự án không có thuộc tính nào.
+  Căn cứ: Không làm mất hay lộ dữ liệu; lỗi thể hiện ngay ở số phủ bằng 0 trên màn và chạy nạp lại được sau khi sửa tệp.
+  file: `pipeline/import-s16-chi-tiet.mjs`
   severity: medium
   Đề xuất: known-limits
 
-- **Cột «Thuộc tính từ» tự vẽ Badge nguồn thay vì dùng NguonBadges có sẵn**
-  Người dùng thấy gì: Nhãn nguồn S16 hiện hai màu khác nhau trên cùng một hàng căn. Chỉ lệch về giao diện, thông tin vẫn đúng.
-  Căn cứ: Rất nhẹ, chỉ thẩm mỹ, không mất hay lộ dữ liệu; sửa sau rẻ.
+- **Lỗi đọc v_s16_can bị nuốt nên chạy thử bỏ luật loại mã mơ hồ toà**
+  Người dùng thấy gì: Khi việc đọc danh sách mã mơ hồ gặp lỗi, lệnh chạy thử vẫn in số mà không báo gì, nên số đối chiếu trước khi áp có thể lệch mà người xem không biết.
+  Căn cứ: Chỉ xảy ra khi cơ sở dữ liệu lỗi bất thường, chạy thử không ghi gì, và bước đối chiếu với số đã ký ở khâu áp thật sẽ lộ lệch.
+  file: `pipeline/scripts/thuoc-tinh-can-s16.mjs`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Chỉ dẫn đầu tệp lùi 113 mâu thuẫn với điều kiện chặn của chính tệp**
+  Người dùng thấy gì: Người xử lý sự cố đọc dòng hướng dẫn đầu tệp lùi sẽ làm sai thứ tự và lệnh lùi sẽ từ chối chạy.
+  Căn cứ: Lệnh từ chối an toàn nên không mất dữ liệu, và hướng dẫn đúng đã có trong tài liệu áp máy thu, sửa một dòng chú thích là xong.
+  file: `_acceptance/thuoc-tinh-can-s16/lui/113-lui.sql`
+  severity: low
+  Đề xuất: known-limits
+
+- **Nhãn UI «thuộc tính căn» là khái niệm mới nhưng chưa có thuật ngữ trong CONTEXT.md**
+  Người dùng thấy gì: Một số nhãn mới trên trang dự án chưa có định nghĩa trong bảng từ vựng chung, nên các phiên làm sau có thể gọi cùng khái niệm bằng chữ khác nhau.
+  Căn cứ: Chỉ ảnh hưởng độ nhất quán chữ, người dùng không bị sai số liệu và thêm mục từ vựng sau rất rẻ.
   file: `app/src/components/ops/registry/du-an-toa-grid.tsx`
   severity: low
   Đề xuất: known-limits
 
-- **catch nuốt lỗi đọc v_s16_can: chạy thử coi mã mơ hồ toà là mã thường và in số sai**
-  Người dùng thấy gì: Nếu việc đọc dữ liệu căn gặp sự cố, lệnh chạy thử vẫn in ra bảng số mà không cảnh báo, và số đó sai. Người áp dữ liệu có thể đối chiếu với số sai.
-  Căn cứ: Chỉ xảy ra khi cơ sở dữ liệu hỏng và lệnh ghi thật vẫn báo lỗi lúc ghi; chạy lại là thấy, sửa rẻ nhưng không chặn việc ship.
+- **Nuốt lỗi đọc v_s16_can: chạy thử coi mã mơ hồ toà là mã thường và in số sai, thoát 0**
+  Người dùng thấy gì: Khi việc đọc danh sách mã mơ hồ lỗi, lệnh chạy thử in số sai mà vẫn báo thành công, nên người vận hành khó nhận ra số chạy thử không đáng tin.
+  Căn cứ: Chỉ xảy ra khi cơ sở dữ liệu lỗi, chạy thử không ghi gì và so với số khoá ở khâu áp thật sẽ phát hiện, nên có thể làm lại.
   file: `pipeline/scripts/thuoc-tinh-can-s16.mjs`
   severity: medium
   Đề xuất: known-limits
 
-- **Lý do lỗi của lớp đọc thuộc tính bị bỏ, không được ghi log ở đâu**
-  Người dùng thấy gì: Khi tải thuộc tính căn lỗi, màn hình chỉ báo chung chung và nguyên nhân không được lưu lại. Người vận hành khó biết vì sao lỗi.
-  Căn cứ: Nhẹ vì người dùng vẫn thấy lỗi và thử lại được; chỉ làm chẩn đoán chậm hơn, thêm log sau rẻ.
+- **Căn chuyển sang mơ hồ toà ở lần thu sau vẫn giữ phát biểu fact cũ**
+  Người dùng thấy gì: Nếu một căn về sau bị xếp vào nhóm mã mơ hồ, trang Danh bạ vẫn hiện diện tích, hướng, loại hình cũ của nó trong khi giá đã biến mất, nên người kiểm có thể thấy số không còn đúng.
+  Căn cứ: Chỉ xảy ra từ lượt thu thứ hai trở đi và với số ít căn đổi nhóm, nên chưa ảnh hưởng đợt áp đầu; sửa sau không mất dữ liệu nhưng cần một hàng riêng để thiết kế việc rút phát biểu.
+  file: `pipeline/scripts/thuoc-tinh-can-s16.mjs`
+  severity: medium
+  Đề xuất: new-contract
+
+- **Rào chặn máy chủ ngoài và rào --db-that kiểm khác với nơi pg thực sự kết nối**
+  Người dùng thấy gì: Trong một cấu hình biến môi trường lệch, lệnh ghi có thể nối tới máy khác với máy mà rào kiểm tra tưởng, nên dữ liệu S16 có nguy cơ ghi ra ngoài máy thu.
+  Căn cứ: Cần cấu hình lệch hiếm gặp do người vận hành tự đặt, nhưng hậu quả là dữ liệu nhạy cảm rời máy không rút lại được, nên nên ghi rõ và theo dõi.
+  file: `pipeline/scripts/thuoc-tinh-can-s16.mjs`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Lý do lỗi của lớp đọc thuộc tính bị bỏ, không log ở đâu**
+  Người dùng thấy gì: Khi trang dự án không tải được thuộc tính, người vận hành chỉ thấy thông báo chung và không ai biết nguyên nhân thật trong nhật ký máy chủ.
+  Căn cứ: Tải lại là thử lại được, không mất dữ liệu; chỉ làm chẩn đoán lỗi chậm hơn và thêm log sau rất rẻ.
   file: `app/src/components/ops/registry/du-an-content.tsx`
   severity: low
   Đề xuất: known-limits
 
-- **Rào chặn máy chủ ngoài kiểm PGHOST trong khi pg kết nối theo host của DATABASE_URL**
-  Người dùng thấy gì: Nếu hai biến cấu hình kết nối trỏ khác nhau, lệnh ghi có thể ghi dữ liệu S16 lên máy ngoài dù tưởng đã bị chặn.
-  Căn cứ: Hậu quả nặng nếu xảy ra nhưng cần cấu hình lệch bất thường trên máy thu; không có trong dùng thường ngày, sửa rẻ.
-  file: `pipeline/scripts/thuoc-tinh-can-s16.mjs`
+- **Giá theo m² của nhà thấp tầng bị gắn nhãn «thông thuỷ» dù mẫu số là sàn sử dụng**
+  Người dùng thấy gì: Với nhà thấp tầng, đơn giá trên mỗi m² hiện nhãn «thông thuỷ» nhưng thực ra tính trên diện tích sàn, nên người xem hiểu sai cơ sở tính.
+  Căn cứ: Con số đúng, chỉ nhãn sai ở nhóm nhà thấp tầng trên màn nội bộ của người vận hành, sửa sau rẻ và không mất dữ liệu.
+  file: `app/src/components/ops/registry/du-an-toa-grid.tsx`
   severity: low
   Đề xuất: known-limits
 
-- **Hình dạng 4 — Assertion âm tính không ghim tên ràng buộc và không có đối chứng dương**
-  Người dùng thấy gì: Bài kiểm từ chối dữ liệu xấu có thể xanh dù bị từ chối vì lý do khác. Chỉ ảnh hưởng độ chặt của bài kiểm, không ảnh hưởng người dùng.
-  Căn cứ: Nhẹ vì không đổi hành vi sản phẩm và không lộ hay mất dữ liệu; làm chặt bài kiểm sau rẻ.
+- **Hình dạng 4 — Assertion âm tính một mình: «registry_inherit không thắng» vẫn xanh khi bỏ bộ lọc của view**
+  Người dùng thấy gì: Bài kiểm tra có thể không phát hiện nếu về sau ai đó làm view hiện nhầm giá trị kế thừa thay cho giá trị thu thật.
+  Căn cứ: Hành vi hiện tại đúng và không ảnh hưởng người dùng ngay, rủi ro chỉ khi sửa view sau này, khi đó có thể bổ sung ca kiểm.
+  file: `pipeline/tests/thuoc-tinh-can-s16.itest.mjs`
+  severity: high
+  Đề xuất: known-limits
+
+- **Hình dạng 1 — Đo giá trị trung gian thay vì đầu ra: E5 hứa bảng in của lệnh nhưng không ca nào gọi inBang**
+  Người dùng thấy gì: Bảng chạy thử in ra có thể khác khuôn đã hứa (thừa hoặc thiếu cột) mà bài kiểm tra vẫn báo đạt.
+  Căn cứ: Số liệu trong bảng vẫn đúng, chỉ trình bày có thể lệch; người xem tự nhận ra và sửa sau không mất gì.
+  file: `_acceptance/thuoc-tinh-can-s16/evals.yaml`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Hình dạng 2 — Fixture viết tay đúng khuôn bên đọc: không có round-trip từ bộ nạp thật sang lệnh phát biểu**
+  Người dùng thấy gì: Bài kiểm tra tự động dùng dữ liệu viết tay nên có thể không bắt được chỗ bộ nạp thật ghi khác khuôn, mà chỉ lộ khi chạy trên dữ liệu thật.
+  Căn cứ: Giới hạn đã khai từ đầu và có bước đối chiếu với số khoá trên dữ liệu thật trước khi áp, nên lệch sẽ bị phát hiện chứ không âm thầm.
+  file: `pipeline/tests/thuoc-tinh-can-s16.itest.mjs`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Hình dạng 4 — Đối chứng giả: đột biến «bỏ khối bắt lỗi» chỉ kiểm chính đột biến, không kiểm ca lỗi nội tuyến**
+  Người dùng thấy gì: Một bài kiểm tra tự động chưa chứng minh được rằng thông báo lỗi trên trang sẽ biến mất khi ai đó bỏ khối xử lý lỗi.
+  Căn cứ: Người dùng không thấy hậu quả nào hiện tại, chỉ là bảo vệ chống lỗi tương lai yếu hơn mức ghi, chi phí viết lại bài đo vượt xa lợi ích.
+  file: `app/tests/thuoc-tinh-can.test.tsx`
+  severity: medium
+  Đề xuất: wont-fix
+
+- **Hình dạng 5 — Tuyên quét lớp nhưng chỉ có điểm-case: soát tên nguồn thật chỉ dò một token tự cấy**
+  Người dùng thấy gì: Việc soát tên nguồn thật trên trang dự án mới thử với một chữ mẫu, chưa thử với toàn bộ tên thật đã đăng ký, nên khả năng lọt tên nguồn chưa được loại trừ hoàn toàn.
+  Căn cứ: Chưa có bằng chứng tên nào lọt ra; nếu lọt thì chỉ hiện trên màn nội bộ máy thu, tự gỡ được, nhưng đây là luật bảo mật nên nên bổ sung bài đo sớm.
+  file: `app/tests/thuoc-tinh-can.test.tsx`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Hình dạng 4 — Assertion âm tính không ghim thông điệp: E2 hứa nêu tên ràng buộc, ca chỉ so mã 23514**
+  Người dùng thấy gì: Bài kiểm tra chỉ chắc dòng sai bị từ chối, chưa chắc bị từ chối bởi đúng quy tắc dự định.
+  Căn cứ: Dòng sai vẫn bị chặn nên dữ liệu không bị hỏng; chênh lệch chỉ ở độ chính xác của bài đo, không đáng công sửa.
   file: `pipeline/tests/thuoc-tinh-can-s16.itest.mjs`
   severity: low
-  Đề xuất: known-limits
+  Đề xuất: wont-fix
 
-## Chưa adversarial-verify (refuter chết)
-
-Cụm ngoài vùng phủ: cluster: n-a (không đo được — không eval nào khai paths, hoặc dưới ngưỡng cụm).
+⚠ Cụm ngoài vùng phủ: 4/16 lỗi rơi vào file không bộ đo nào phủ (pipeline/import-s16-chi-tiet.mjs, _acceptance/thuoc-tinh-can-s16/lui/113-lui.sql, _acceptance/thuoc-tinh-can-s16/evals.yaml) — dừng và quyết: mở rộng hợp đồng hay rút phạm vi.
