@@ -6,8 +6,8 @@ evals:
     executor: script
     layer: backend-effect
     cmd: bash _acceptance/so-so-tren-man-theo-ngay/probes/db.sh SM1-AC-1
-    paths: [db/migrations/118_*, pipeline/sync-cloud.mjs, pipeline/tests/so-moc-s03*]
-    expected: "Áp 118 hai lần trên DB của riêng lượt: khoá chính snap_date, năm cột số NOT NULL, computed_at; lần hai không lỗi, không đổi dòng; sync-cloud không liệt kê bảng. Chiều đỏ: thêm tên bảng vào bản chép danh sách sync thì ca đỏ, thông điệp nêu s03_milestone_daily."
+    paths: [pipeline/sql/600_data_flow.sql, app/src/lib/dq-checks.ts, app/src/lib/dq-labels.ts, pipeline/tests/so-moc-s03*]
+    expected: "Sau lượt làm tươi thật: đúng một dòng s03-moc-ngay, entity S03, status pass, detail JSON đúng sáu khoá; dqLatestSql không trả dòng này; dqCheckName có nhãn; git diff so với gốc nhánh không có tệp dưới db/migrations. Chiều đỏ: thêm khoá lạ vào detail hay bỏ nhãn thì ca đỏ, thông điệp nêu s03-moc-ngay."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E2
     criterion: AC-2
@@ -23,7 +23,7 @@ evals:
     layer: backend-effect
     cmd: bash _acceptance/so-so-tren-man-theo-ngay/probes/db.sh SM1-AC-3
     paths: [pipeline/sql/600_data_flow.sql, pipeline/refresh-data-flow.mjs, pipeline/tests/so-moc-s03*]
-    expected: "Ghim oneinvest.flow_now: làm tươi lại cùng ngày giữ một dòng, số mới, computed_at mới; ngày kế thêm dòng, dòng cũ không đổi. Đột biến ném lỗi sau bước ghi: hai bảng giữ số cũ, thông điệp nêu giao dịch."
+    expected: "Ghim oneinvest.flow_now: làm tươi lại cùng ngày giữ một dòng, số mới; ngày kế thêm dòng, dòng cũ không đổi. Đột biến ném lỗi sau bước ghi: hai bảng giữ số cũ, thông điệp nêu giao dịch."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4
     criterion: AC-4
@@ -31,15 +31,15 @@ evals:
     layer: backend-effect
     cmd: bash _acceptance/so-so-tren-man-theo-ngay/probes/db.sh SM1-AC-4
     paths: [pipeline/sql/600_data_flow.sql, pipeline/tests/so-moc-s03*]
-    expected: "Sau một lượt: project_linked = located, offers_total = offers của S03 cửa sổ all; computed_at trùng data_flow_snapshot; phần tử cuối facts.milestones bằng dòng hôm nay ở cả ba cửa sổ; bảng 35 dòng cho chuỗi 30 phần tử tăng dần. Đột biến lấy located từ cửa sổ 7d đỏ."
+    expected: "Sau một lượt: project_linked = located, offers_total = offers của S03 cửa sổ all; phần tử cuối facts.milestones bằng dòng hôm nay ở cả ba cửa sổ; 35 ngày có dòng cho chuỗi 30 phần tử tăng dần. Đột biến lấy located từ cửa sổ 7d đỏ."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E5
     criterion: AC-5
     executor: script
     layer: backend-effect
     cmd: bash _acceptance/so-so-tren-man-theo-ngay/probes/db.sh SM1-AC-5
-    paths: [pipeline/lib/than-600.mjs, pipeline/refresh-data-flow.mjs, pipeline/sql/600_data_flow.sql, pipeline/tests/so-moc-s03*]
-    expected: "Cùng dữ liệu, lượt không có bảng và lượt có bảng: lượt không bảng thoát bình thường, stderr đúng một dòng chứa «chưa áp 118», facts không có khoá milestones, mọi khoá khác bằng nhau. Đột biến bỏ bước gỡ đoạn MOC làm lượt không bảng lỗi và ca đỏ."
+    paths: [pipeline/sql/600_data_flow.sql, pipeline/tests/so-moc-s03*]
+    expected: "Dòng của kiểm khác cùng ngày và dòng s03-moc-ngay ngày khác giữ nguyên id và nội dung sau lượt làm tươi; hai lượt đồng thời để lại đúng một dòng hôm nay. Hai đột biến đỏ: bỏ điều kiện ngày ở bước xoá, bỏ khoá advisory."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E6
     criterion: AC-6
@@ -68,8 +68,8 @@ evals:
     executor: script
     layer: backend-effect
     cmd: bash _acceptance/so-so-tren-man-theo-ngay/probes/do-may-thu.sh
-    paths: [db/migrations/118_*, pipeline/sql/600_data_flow.sql, pipeline/refresh-data-flow.mjs, _acceptance/so-so-tren-man-theo-ngay/probes/do-may-thu*]
-    expected: "Bản chép DB máy thu, áp 118, làm tươi hai lần: một dòng hôm nay, bốn số lệch 0 so với SQL đếm độc lập, project_linked khớp ô Định vị S03, chênh thời gian tối đa 2 giây, in mẫu số, ghi .acceptance-runs/so-so-tren-man-theo-ngay/do-may-thu.md. Đối chứng đếm thiếu lọc nguồn phải lệch khác 0."
+    paths: [pipeline/sql/600_data_flow.sql, _acceptance/so-so-tren-man-theo-ngay/probes/do-may-thu*]
+    expected: "Bản chép DB máy thu, làm tươi hai lần: một dòng hôm nay, bốn số lệch 0 so với SQL đếm độc lập, project_linked khớp ô Định vị S03, chênh thời gian tối đa 2 giây, in mẫu số, ghi .acceptance-runs/so-so-tren-man-theo-ngay/do-may-thu.md. Đối chứng đếm thiếu lọc nguồn phải lệch khác 0."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E10
     criterion: AC-10

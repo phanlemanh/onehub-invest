@@ -1,7 +1,7 @@
 # Số mốc S03 theo ngày trên Dòng chảy dữ liệu (SM1) — thiết kế
 
 Hàng SM1 của `docs/plan/lo-trinh.json`, hồ sơ `_acceptance/so-so-tren-man-theo-ngay/`. Cổng Đáng: Mạnh «build» 18/11.
-Hạng T3 vì thêm migration 118 (`risk_tiers.t3_paths` có `db/migrations/**`); lộ trình ghi T2 khi chưa biết cần bảng.
+Hạng T2: không thêm migration, số ghi vào bảng đo có sẵn `dq_check_results`.
 
 ## 1. Vấn đề
 
@@ -25,16 +25,16 @@ Mọi số đếm trên tin S03 đang rao (view `sale_offers`), tại lượt l�
 
 ## 3. Lưu và ghi
 
-- Migration 118 tạo `s03_milestone_daily`, khoá chính `snap_date` (ngày giờ VN), năm cột số, `computed_at`. Chỉ ở máy thu,
-  không vào danh sách `sync-cloud`.
-- `600_data_flow.sql` ghi dòng của hôm nay bằng một CTE ghi dữ liệu (`INSERT … ON CONFLICT (snap_date) DO UPDATE`) trong CÙNG
-  câu lệnh dựng `data_flow_snapshot`. Số trên biểu đồ và số của màn chặng vì thế đọc cùng một ảnh dữ liệu, cùng `computed_at`.
-- Lượt làm tươi chạy mỗi 15 phút, nên dòng của ngày D là số của lượt cuối trước nửa đêm giờ VN. Chạy lại cùng ngày ghi đè
-  dòng đó, không sinh dòng mới. Ngày máy không chạy là ngày trống, không phải số 0.
-- `facts.milestones` mang 30 ngày gần nhất, tăng dần theo ngày. CTE ghi không thấy dòng vừa ghi, nên chuỗi = dòng cũ hơn hôm
-  nay + dòng `RETURNING` của hôm nay.
-- Đoạn ghi đứng trong cặp chú thích `/*<<<MOC*/ … /*MOC>>>*/`. Máy thu đã gộp mã mà chưa áp 118 thì `mocKhiCoBang`
-  (`pipeline/lib/than-600.mjs`) bỏ đoạn đó và báo một dòng stderr, lượt làm tươi vẫn xong, cùng khuôn `dinhViKhiCoView`.
+- Mỗi ngày VN một dòng `dq_check_results`: `check_name = 's03-moc-ngay'`, `entity = 'S03'`, `status = 'pass'`, `detail` là JSON gồm
+  `ngay` và năm số ở bảng trên. Đây là nếp của DO1, DO3 và SD5: bảng chỉ có khoá `id`, nên «một dòng mỗi ngày» do bên ghi giữ
+  bằng cách xoá dòng cùng `detail.ngay` rồi ghi lại trong một giao dịch.
+- `600_data_flow.sql` xoá và ghi dòng của hôm nay trong CÙNG câu lệnh dựng `data_flow_snapshot`, sau khi lấy khoá advisory của
+  giao dịch để hai lượt đồng thời không nhân dòng. Số trên biểu đồ và số của màn chặng vì thế đọc cùng một ảnh dữ liệu.
+- `ngay` lấy từ CTE `today` (giờ VN, ghim được bằng `oneinvest.flow_now`), không suy từ `checked_at`.
+- Lượt làm tươi chạy mỗi 15 phút, nên dòng của ngày D là số của lượt cuối trước nửa đêm giờ VN. Ngày máy không chạy là ngày trống.
+- `facts.milestones` mang 30 ngày gần nhất, tăng dần theo ngày: các dòng cũ hơn hôm nay cộng dòng vừa tính.
+- `/ops/quality`: bảng chung loại `s03-moc-ngay` như `do1-*`, `do3-*` để không lặp JSON thô; `dq-labels` vẫn có nhãn tiếng Việt
+  theo luật đợt 30/10.
 
 ## 4. Lên cloud
 
