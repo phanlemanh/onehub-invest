@@ -37,6 +37,16 @@ Chuẩn hoá chữ (bỏ dấu, SĐT, đọc giá) bị viết lại ở nhiều
 - **DA39**: gộp năm cặp nút dự án trùng cùng phường.
 - **GT2, GT5**: dùng băm nội dung ảnh có sẵn ở bảng nạp S03 làm tín hiệu ghép, gom trước khi nghĩ tới băm cảm nhận (luật 11).
 
+## Sửa 18/11 — đối chiếu mã
+
+- Mã CH1 trùng phạm vi **VM1** `s06-gan-tinh-theo-tung-tin` (đợt no-cat-hang-1311): lượt cắt 17/11 sót VM1 và đặt hàng DV8. Bỏ DV8;
+  `CH1` thành mục chờ «Không mở riêng: giao cùng VM1»; số đo, câu Cổng Phạm vi và lỗi đơn vị hecta (8 tin S06 lưu số hecta như m²)
+  chép vào VM1.
+- Mã CH2–CH7 là các điểm chưa có mã ở đâu sau khi đối chiếu toàn lộ trình; mỗi điểm thành mục chờ có lý do và điều kiện mở lại
+  đo được (luật 6 — không bỏ lặng).
+- Không cần mã (đo không thấy lệch, hay không đổi số trên màn): ràng buộc trùng (nguồn, mã) trên tin, khoá ngoại bài ↔ tin, căn
+  theo cụm không còn tin, nhãn nguồn của bảng bản thu (chỉ ở máy thu), bản thu cũ thiếu băm (bất biến).
+
 **Không vào bản phạm vi** (việc của người — liệt «Ra khỏi kho» ở mô tả PR): không có.
 
 <!-- <<<PHAM-VI-MA -->
@@ -46,5 +56,11 @@ dang: lan-va
 nguon: onehub-invest-tri-thuc:wiki/dot/chuan-hoa-1711.md#e9a336daa78ec9556018d5060688ed079f9733b6
 
 - `CH1` — tin S06 lấy tỉnh từ mã tỉnh thật của bảng nạp thay vì vùng thu gộp; tin tỉnh khác không vào phường trùng tên của HCM
+- `CH2` — tin có giá, giá/m² hay diện tích ngoài khoảng hợp lệ không vào bảng hạng giá
+- `CH3` — tin S06 có toạ độ điểm thật ngoài ranh phường được gán thì gán lại hay lên thẻ
+- `CH4` — mỗi tin mang độ chính xác của toạ độ (điểm thật, tâm dự án, đường, phường)
+- `CH5` — tin S06 lưu mã đường của nguồn để so nhà phố theo đường
+- `CH6` — các bảng còn ràng buộc mã nguồn một chữ số nhận nguồn từ S10
+- `CH7` — một thư viện chuẩn hoá chung cho pipeline, app, agent
 ```
 <!-- PHAM-VI-MA>>> -->

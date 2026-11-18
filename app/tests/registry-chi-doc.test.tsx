@@ -27,8 +27,11 @@ const sc = new pg.Client({ connectionString: schemaUrl(S) })
 const BANG = [
   "asset_nodes", "buildings", "stacks", "units", "registry_aliases", "project_links", "s08_project_links", "s10_project_links",
   "stg_s08_project", "stg_s09_item", "areas", "sale_offer_records", "field_assertions", "stg_chotot_ads", "source_registry",
+  // v_toa_nut_vung từ 111/114 đọc khu S16 từ hai bảng này (DA37); để trống vì ca ở đây không có toà S16.
+  "stg_s16_toa", "stg_s16_khu",
 ]
-const VIEW = ["sale_offers", "s06_offer_project", "offer_project", "v_s09_du_an_moi"]
+// v_s09_toa, v_toa_nut_vung (097) sau v_s09_du_an_moi: lớp đọc đặt toà ở nút vùng hiệu lực (DA36).
+const VIEW = ["sale_offers", "s06_offer_project", "offer_project", "v_s09_du_an_moi", "v_s09_toa", "v_toa_nut_vung"]
 /** Mười bảng danh bạ đếm trước/sau ở TDB-AC-6. */
 const BANG_DEM = ["asset_nodes", "buildings", "stacks", "units", "registry_aliases", "project_links", "s08_project_links", "s10_project_links", "stg_s08_project", "stg_s09_item"]
 
@@ -267,7 +270,7 @@ test("TDB-AC-2 ma trận sáu nút: số phân khu, toà, toà chưa có căn, c
   assert.equal(soAssert, 30)
   const dotDoc = (doi: [string, string][]) => banChep<DocMod>("src/lib/ops/registry/doc.ts", doi)
   // Chiều đỏ 1: bỏ lọc toà đang dùng → T3 đã gộp được đếm.
-  const d1 = theoId(await (await dotDoc([["FROM buildings b LEFT JOIN can_toa c USING (building_key) WHERE b.status = 'active'", "FROM buildings b LEFT JOIN can_toa c USING (building_key)"]])).docDanhBa(sc))
+  const d1 = theoId(await (await dotDoc([["FROM buildings b JOIN v_toa_nut_vung v USING (building_key) LEFT JOIN can_toa c USING (building_key) WHERE b.status = 'active'", "FROM buildings b JOIN v_toa_nut_vung v USING (building_key) LEFT JOIN can_toa c USING (building_key)"]])).docDanhBa(sc))
   assert.throws(() => assert.equal(d1.get(N.D1)?.soToa, 3, "TDB-AC-2 toà không active được đếm"), /TDB-AC-2 toà không active được đếm/)
   // Chiều đỏ 2: bỏ lọc căn đang dùng → căn nghỉ của T1 được đếm.
   const d2 = theoId(await (await dotDoc([["FROM units WHERE status = 'active' GROUP BY 1", "FROM units GROUP BY 1"]])).docDanhBa(sc))

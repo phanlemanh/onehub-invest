@@ -260,6 +260,9 @@ const NGOAI_LE = [
   { suite: "pipeline_b", duong: "_acceptance/sao-luu-ma-hoa-b2", ly_do: "như pipeline_a" },
   { suite: "pipeline_b", duong: "docs/superpowers/specs/2026-11-11-sao-luu-ma-hoa-b2-design.md", ly_do: "như pipeline_a" },
   { suite: "pipeline_b", duong: "PRODUCT-MAP.md", ly_do: "như pipeline_a" },
+  // DA37: lượt đo thật chạy ở eval E9 của hồ sơ, ngoài npm test của pipeline, nên suite không nạp thư mục đường lùi này.
+  { suite: "pipeline_a", duong: "_acceptance/danh-ba-s16-thang-cau-truc/lui", ly_do: "pipeline/scripts/danh-ba-s16-cau-truc-that.mjs: phép đo thật của eval, không phải tệp npm test chạy" },
+  { suite: "pipeline_b", duong: "_acceptance/danh-ba-s16-thang-cau-truc/lui", ly_do: "pipeline/scripts/danh-ba-s16-cau-truc-that.mjs: phép đo thật của eval, không phải tệp npm test chạy" },
   { suite: "pipeline_b", duong: "_acceptance/ma-du-an-s06-thanh-nut/evidence", ly_do: "như pipeline_a" },
 ];
 
