@@ -19,5 +19,6 @@ nguon: onehub-invest-tri-thuc:wiki/dot/thuoc-tinh-can-s16-1811.md#62fdd5c5781f03
 - `TC2` — trang dự án trong danh bạ Ops hiện thuộc tính từng căn và ô phủ theo dự án để kiểm tra
 - `TC3` — giá chủ đầu tư đặt cạnh giá tin rao trên cùng căn, toà, tầng cho thước giá tốt (mỏ neo mục 48)
 - `TC4` — lượt thu bù cho các dự án phủ thấp (năm dự án 0%, một dự án 11,5%)
+- `TC5` — trang Danh bạ Ops: cột Nguồn và ô Mã nguồn chưa nối tính cả S16 (bí danh S16 nằm ở toà, trục, căn; cột hôm nay chỉ đọc mã nối của nút dự án)
 ```
 <!-- PHAM-VI-MA>>> -->

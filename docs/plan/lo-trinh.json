@@ -29,7 +29,6 @@
       "loai": "phat-hanh",
       "dot": "dat-lai-lo-trinh-1511",
       "hang": [
-        "UI10",
         "DS2",
         "CG3",
         "CG10",
@@ -1153,26 +1152,6 @@
       ]
     },
     {
-      "ma": "UI10",
-      "cau_giao": "Người vận hành mở «Căn giá tốt» /ops/deals thấy PageHeader, bảng theo block data-grid, đủ trạng thái tải/trống/lỗi, liên hệ và nội dung tin theo vai",
-      "vai": "Người vận hành",
-      "tieu_chi": 9,
-      "vi_sao": "B5 của chuẩn UI. Đứng trên PL26 (cùng trang, đổi thước phường × loại). Không đụng AU2 (API).",
-      "hang": "T2",
-      "slug": "ops-deals-data-grid",
-      "dung_tren": [],
-      "nhom": "l03-hang-cap-du-an",
-      "dot": "giao-dien-2310",
-      "phu": [
-        "GD11"
-      ],
-      "vung": [
-        "app/src/app/ops/deals",
-        "app/src/components/ops/deal-card.tsx"
-      ],
-      "ghi_chu": "Bỏ dung_tren PL26 ở lượt cắt can-gia-tot-0311: bảng không cần thước mới, chung vùng thì lịch tự xếp nối tiếp; câu giao bỏ «cột tầng A chỉ admin» vì SD4 đã đổi. CG3 đứng trên hàng này. Gánh thêm hai tiêu chí của OH2. Đặt lại lộ trình 15/11: gánh thêm việc của OH2 (đã chuyển thành mục chờ «giao cùng UI10»)."
-    },
-    {
       "ma": "UI17",
       "cau_giao": "Lint UI ra 0 vi phạm khi không còn tệp eslint-suppressions.json",
       "vai": "nen",
@@ -1187,8 +1166,7 @@
         "UI4",
         "UI5",
         "UI6",
-        "UI7",
-        "UI10"
+        "UI7"
       ],
       "bat_khi": "Xoá eslint-suppressions.json: npm run lint xanh; bảng trước/sau ui-baseline-2026-10.md đủ cột; mọi trang có trạng thái tải",
       "nhom": "nen-giu-nha",
@@ -2769,9 +2747,8 @@
       "slug": "can-gia-tot-loc-xep-hang",
       "hang": "T2",
       "vai": "Người vận hành",
-      "tieu_chi": 10,
+      "tieu_chi": 12,
       "dung_tren": [
-        "UI10",
         "CG9"
       ],
       "phu": [
@@ -2781,9 +2758,11 @@
       "vi_sao": "Phiên nghiệm thu people-hien-so-goc 03/11: Mạnh chấm 3, «Không sử dụng được» (PR #282, docs/plan/pham-vi-can-gia-tot-0311.md). Nguyên văn: «Không nhìn theo được điều này thì ko thể sử dụng». Mở rộng 09/11 theo phân tích Căn giá tốt theo vị trí (bản phạm vi docs/plan/pham-vi-can-gia-tot-vi-tri-0911.md): câu hỏi là «ở vị trí X, thông số Y, căn nào giá tốt».",
       "vung": [
         "app/src/app/ops/deals",
-        "app/src/lib/deals.ts"
+        "app/src/lib/deals.ts",
+        "app/src/components/ops/deals-grid.tsx",
+        "app/src/components/ops/deals-cells.tsx"
       ],
-      "ghi_chu": "Viết lại ở lượt cắt can-gia-tot-vi-tri-0911: tra theo vị trí bất kỳ thay bộ lọc khu vực; đứng trên CG9 thay CG2. Truy vấn chỉ chọn tin nào hiện, không tính lại điểm (luật 10). Cấp dự án, toà đầy dần theo CG10, CG11; mỗi bộ lọc nói phủ bao nhiêu tin (09/11: tầng ở 6% tin S06 bán căn hộ, 0% S03). Hướng, view, nội thất thêm ở CG12. Ô Bán | Cho thuê thay phần giao diện của CG4."
+      "ghi_chu": "Viết lại ở lượt cắt can-gia-tot-vi-tri-0911: tra theo vị trí bất kỳ thay bộ lọc khu vực; đứng trên CG9 thay CG2. Truy vấn chỉ chọn tin nào hiện, không tính lại điểm (luật 10). Cấp dự án, toà đầy dần theo CG10, CG11; mỗi bộ lọc nói phủ bao nhiêu tin (09/11: tầng ở 6% tin S06 bán căn hộ, 0% S03). Hướng, view, nội thất thêm ở CG12. Ô Bán | Cho thuê thay phần giao diện của CG4. Sửa 18/11: dãy N1 (GS 18/11), gánh hai tiêu chí của UI10/OH2 (báo cắt danh sách 30 căn + số đếm tab; trạng thái trống có hành động); UI10 đóng vì phần còn lại đã có trên main. Ưu tiên phần màn của mốc MS2 (căn Giá tốt cấp dự án hiện trên màn mặc định, nhãn hạng, đếm toàn tập); lọc tới phân khu/toà cắt/hoãn nếu vượt 12."
     },
     {
       "dot": "can-gia-tot-0311",
@@ -5426,6 +5405,126 @@
         "pipeline/sql"
       ],
       "ghi_chu": "Chỉ Ops. Lên cổng Invest chờ Mạnh trả lời câu ở Cổng Phạm vi của DA40 (luật 5 sửa 08/11 cho giá chủ đầu tư của nguồn dự án công khai nhưng chưa gọi tên S16)."
+    },
+    {
+      "ma": "DA42",
+      "slug": "nap-s09-toa-tang-vao-danh-ba",
+      "dot": "danh-ba-can-s09-1811",
+      "nhom": "l04-danh-ba-toa",
+      "phu": [
+        "K1"
+      ],
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 10,
+      "dung_tren": [
+        "DA37",
+        "DA31"
+      ],
+      "cau_giao": "Dự án, toà, tầng và khu, căn thấp tầng của danh bạ căn S09 vào danh bạ mà không sinh toà, căn trùng với S16 và S08 đã có; khi hai nguồn cùng có một toà thì theo luật S16 thắng cấu trúc (DA37) và toà S09 thành bí danh",
+      "bat_khi": "Trên DB máy thu và trang Danh bạ Ops máy thu: snapshot gói 1 của S09 nạp vào stg qua migration 115, số dự án, toà, tầng, khu, căn thấp tầng khớp manifest; số toà và căn thấp tầng S09 trong danh bạ đi từ hiện trạng lên đúng lệnh đếm (đích chốt ở S1 từ bảng phủ ca, số làn thu đo 18/11: 928 toà, 91 khu); 0 toà hai UPI, 0 căn hai khoá với S16, S08; toà trùng thành bí danh, lệch lên thẻ; chạy lại không đổi số; mọi thứ rời máy chỉ mang mã S09",
+      "vi_sao": "Mạnh 18/11 04:06Z «Đồng ý» kế hoạch danh bạ căn S09. Danh bạ toà, căn hôm nay chủ yếu từ S16 và S08 ở các dự án của một chủ đầu tư; S09 có 221 dự án ở 14 tỉnh, 928 toà, không thiên một chủ đầu tư — mở danh bạ cho các dự án mà tin rao S03, S06 đang không gắn được toà.",
+      "vung": [
+        "db/migrations",
+        "pipeline/danh-ba-vat-the.mjs",
+        "pipeline/lib/danh-ba-vat-the.mjs",
+        "pipeline/lib/s09-danh-ba-can.mjs"
+      ],
+      "ghi_chu": "Dãy P2, sau khi DA37 gộp (GS xếp 18/11). Migration 115 (sổ số GS 18/11: 111+114 DA37, 112 U1, 113 DA40, 115 S09, 116 giữ tạm, kế 117). Khuôn DA33. Làn thu: thu gói 1 (đã cho thu ngay theo lời thường trực 13–14/11), DATA-CONTRACT tăng schemaVersion, bộ nạp stg — việc làn thu, không phải hàng. Mã bền S09 khác block_id insights S09 cũ: ánh xạ qua tên toà và mã dự án. S1 lập bảng phủ ca từ snapshot gói 1 và năm dự án mẫu trùng danh bạ (làn thu gửi, tin claudedp-1811-6)."
+    },
+    {
+      "ma": "DA43",
+      "slug": "nap-s09-can-cao-tang-vao-danh-ba",
+      "dot": "danh-ba-can-s09-1811",
+      "nhom": "l04-danh-ba-toa",
+      "phu": [
+        "K2"
+      ],
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "dung_tren": [
+        "DA42"
+      ],
+      "cau_giao": "Căn cao tầng của danh bạ căn S09 (mã TOÀ.TẦNG.CĂN) vào danh bạ dưới toà đã có mà không sinh căn trùng với S16 và S08; căn trùng thành bí danh của cùng căn",
+      "bat_khi": "Trên DB máy thu và trang Danh bạ Ops máy thu: snapshot gói 2 nạp khớp manifest; số căn cao tầng S09 trong danh bạ đi từ 0 lên đúng lệnh đếm (làn thu ước 18/11 khoảng 309 nghìn, dải 237–379 nghìn; đích chốt ở S1); 0 căn hai khoá; căn trùng mã S16, S08 thành bí danh, lệch tầng hoặc toà lên thẻ; chạy lại không đổi số",
+      "vi_sao": "Nhịp sau của DA42: toà, tầng đã vào danh bạ thì căn cao tầng đứng dưới đúng toà. Tách khỏi DA42 vì cỡ (gộp hai gói quá 12 tiêu chí) và vì gói 2 (khoảng 26 nghìn lời, khoảng 22 giờ) chỉ thu khi hàng này qua Cổng Phạm vi.",
+      "vung": [
+        "db/migrations",
+        "pipeline/danh-ba-vat-the.mjs",
+        "pipeline/lib/danh-ba-vat-the.mjs",
+        "pipeline/lib/s09-danh-ba-can.mjs"
+      ],
+      "ghi_chu": "Dãy P2, sau DA42. Làn thu thu gói 2 theo tỉnh, chia đêm, chỉ khi hàng này qua Cổng Phạm vi — Cổng Phạm vi chốt trường cần thu để khỏi thu thừa."
+    },
+    {
+      "ma": "EN3",
+      "slug": "tra-ho-so-zalo-vao-danh-ba-nguoi",
+      "dot": "tra-ho-so-zalo-1811",
+      "nhom": "danh-ba-nguoi",
+      "phu": [
+        "Z1"
+      ],
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 10,
+      "dung_tren": [
+        "HD13"
+      ],
+      "cau_giao": "Kết quả tra hồ sơ Zalo theo SĐT người bán trên tin rao nạp vào stg và nối vào danh bạ Người theo SĐT E.164 bằng phát biểu có căn cứ (nguồn tra, mốc tra, tươi hay cache); ngày sinh, giới tính lưu đầy đủ chỉ ở máy thu",
+      "bat_khi": "Trên DB máy thu và màn Ops máy thu: số người bán có hồ sơ Zalo đi từ 0 lên đúng lệnh đếm trên dữ liệu thật (đích chốt ở S1 từ bảng phủ ca; phía cầu 18/11: 13.730 SĐT distinct); kết quả nạp qua migration 116 khớp manifest; mỗi hồ sơ nối đúng một người theo SĐT E.164, SĐT nhiều người lên thẻ; bộ soát đường cloud (sync-cloud, leak gate) đỏ khi cấy một dòng mang ngày sinh hay giới tính; chạy lại không đổi số",
+      "vi_sao": "Mạnh 18/11 04:11Z: «Có» dùng tra hồ sơ cho SĐT người bán, giữ đầy đủ ngày sinh, giới tính cho chăm sóc khách hàng nhưng không lên cloud (ROADMAP §3 mục 55). Danh bạ Người hôm nay chỉ có tên, SĐT từ tin rao.",
+      "vung": [
+        "db/migrations",
+        "pipeline/sync-cloud.mjs",
+        "pipeline/lib/danh-ba-nguoi.mjs"
+      ],
+      "ghi_chu": "RÀNG BUỘC THỨ TỰ: không lượt tra thật nào, kể cả đo ở S1, trước khi lớp kiểm lockdown cho tài khoản tra (làn thu, tin claudedp-1811-10) chạy trên máy thu và docs/ops/runtime-map.md đã ghi; S1 đo bằng kết quả tra sẵn có của nhánh zcode/zalo-lookup-client nếu có, không tra mới. Migration 116 (sổ số GS 18/11). Làn thu: client, job tra theo nhịp, DATA-CONTRACT mới, bộ nạp stg — việc làn thu, không phải hàng. Câu Cổng Phạm vi: uid, tên hiển thị, ảnh đại diện từ tra hồ sơ xếp tầng nào (sửa đổi ADR-0007 18/11 chỉ nói ngày sinh, giới tính). Ngoài đường găng, sau các hàng MS3; dãy dự kiến U2 sau VHZ2, GS chốt lúc giao."
+    },
+    {
+      "ma": "EN4",
+      "slug": "api-tra-ho-so-zalo",
+      "dot": "tra-ho-so-zalo-1811",
+      "nhom": "danh-ba-nguoi",
+      "phu": [
+        "Z2"
+      ],
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "dung_tren": [
+        "EN3"
+      ],
+      "cau_giao": "Ứng dụng họ onehub gọi một API service tra hồ sơ Zalo theo SĐT và nhận hồ sơ đã tra, có xác thực, có trần tốc độ, và không bao giờ nhận ngày sinh, giới tính khi lời gọi đến từ ngoài máy thu",
+      "bat_khi": "Một ứng dụng thử của họ onehub gọi API, nhận đúng hồ sơ của SĐT đã tra; lời gọi không xác thực bị từ chối; lời gọi từ ngoài máy thu không có ngày sinh, giới tính trong phản hồi (ca đỏ cấy hai trường thì bộ soát đỏ); vượt trần tốc độ bị chặn có mã lỗi rõ",
+      "vi_sao": "Mạnh 18/11 04:11Z câu 1: «tôi muốn nó là một API service để các ứng dụng trong họ onehub có thể dùng».",
+      "vung": [
+        "data-api/src"
+      ],
+      "ghi_chu": "Câu của Cổng Phạm vi, KHÔNG tự chốt: (1) API chạy ở đâu và ai gọi — ứng dụng trên cloud gọi thì không được trả ngày sinh, giới tính ra khỏi máy thu; (2) thuộc cổng nào, xác thực thế nào — data-api công khai không hợp. vung ghi tạm data-api/src, đổi ở Cổng Phạm vi theo câu (2). Dãy dự kiến U2 sau EN3."
+    },
+    {
+      "ma": "DA44",
+      "slug": "danh-ba-cot-nguon-tinh-s16",
+      "dot": "thuoc-tinh-can-s16-1811",
+      "nhom": "l04-danh-ba-toa",
+      "phu": [
+        "TC5"
+      ],
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 6,
+      "dung_tren": [
+        "DA40"
+      ],
+      "cau_giao": "Người vận hành mở trang Danh bạ Ops và thấy cột Nguồn cùng ô Mã nguồn chưa nối tính cả S16",
+      "bat_khi": "Trên Danh bạ Ops máy thu: năm dự án đã có căn S16 hiện S16 ở cột Nguồn (hôm nay không dự án nào hiện); ô Mã nguồn chưa nối tính cả S16 và khớp lệnh đếm trên DB máy thu; nhãn chỉ là mã S16",
+      "vi_sao": "GS 18/11: năm dự án đã có khoảng 111 nghìn căn S16 nhưng cột Nguồn không hiện S16, vì bí danh S16 nằm ở toà, trục, căn còn cột chỉ đọc mã nối của nút dự án. Người xem danh bạ tưởng các dự án này chưa có S16.",
+      "vung": [
+        "app/src/lib/ops/registry/**",
+        "app/src/components/ops/registry/**"
+      ],
+      "ghi_chu": "Hàng nhỏ, chung vùng màn với DA40 nên đứng sau DA40. 6 tiêu chí: giữ riêng vì là lỗi đọc của trang danh bạ, không thuộc kết quả của DA40 hay DA41."
     }
   ],
   "chan_troi": [
@@ -5703,11 +5802,11 @@
       "ma": "OH2",
       "dot": "ops-noi-that-2410",
       "cau_giao": "«Căn giá tốt» có khung trang, đếm/lọc/phân trang, chữ không nhỏ hơn text-xs, câu người bán theo chốt 23/10",
-      "ly_do": "Trùng phạm vi UI10 (B5, đợt giao-dien-2310): PageHeader + data-grid + lint đã là câu giao của UI10; phần còn lại (câu «thông tin người đăng chỉ ở máy thu» lỗi thời, báo cắt danh sách) là tiêu chí thêm của UI10. 15/11: cùng việc với UI10.",
+      "ly_do": "Trùng phạm vi UI10 (B5, đợt giao-dien-2310): PageHeader + data-grid + lint đã là câu giao của UI10; phần còn lại (câu «thông tin người đăng chỉ ở máy thu» lỗi thời, báo cắt danh sách) là tiêu chí thêm của UI10. 15/11: cùng việc với UI10. 18/11: UI10 đóng vì đã có trên main; hai tiêu chí còn nợ chuyển sang CG3.",
       "phu": [
         "OPS-16"
       ],
-      "mo_lai_khi": "Không mở riêng: giao cùng UI10"
+      "mo_lai_khi": "Không mở riêng: giao cùng CG3"
     },
     {
       "dot": "tu-van-hanh-2510",
@@ -6896,6 +6995,16 @@
         "TC4"
       ],
       "mo_lai_khi": "Làn thu báo lý do phủ thiếu và số lời gọi của lượt bù; nếu là việc thu thì giao làn thu, nếu là mã căn sai ở danh bạ thì thành hàng làn sản phẩm"
+    },
+    {
+      "ma": "GD11",
+      "dot": "giao-dien-2310",
+      "cau_giao": "/ops/deals dọn theo block data-grid, PageHeader, đủ trạng thái",
+      "ly_do": "Đóng cùng UI10 ngày 18/11: đã có trên main (phiên N1 đo); hai tiêu chí còn nợ chuyển sang CG3",
+      "phu": [
+        "GD11"
+      ],
+      "mo_lai_khi": "Không mở riêng: phần còn nợ giao cùng CG3"
     }
   ],
   "da_bac": [
@@ -6982,6 +7091,10 @@
     {
       "ma": "GNH2",
       "ly_do": "Cắt ở lần đặt lại lộ trình 15/11: lớp bạc đã có (silver_labels)"
+    },
+    {
+      "ma": "UI10",
+      "ly_do": "Đóng 18/11 (GS): đã có trên main — phiên N1 đo /ops/deals có PageHeader, Frame + data-grid + filters + phân trang, DealsSkeleton, RegionError có Thử lại, cột liên hệ theo vai. Hai tiêu chí còn nợ (báo cắt danh sách 30 căn + số đếm tab; trạng thái trống có hành động) chuyển sang CG3."
     }
   ]
 }
