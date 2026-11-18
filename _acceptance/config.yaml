@@ -692,6 +692,8 @@ executors:
     s03_hb_chan: "cd pipeline && node --test scripts/zalo-heartbeat-chan.test.mjs"   # 9 ca của ZCode
     s03_hb_nghiem_thu: "node scripts/l6d-down-keo-dai-ly-do/acceptance.mjs"   # ma trận nhịp × lý do × tần suất × sổ lời gọi × đối chứng gỡ CLI giả × khuôn tệp trạng thái
     s03_hb_syntax: "bash -n collector/scripts/zalo-heartbeat.sh && bash -n scripts/lib/s03-song.sh && bash -n scripts/zalo-watchdog.sh && echo SYNTAX OK"
+    vhz2_chan: "cd pipeline && node --test scripts/zalo-watchdog-vhz2.test.mjs"
+    vhz2_nghiem_thu: "node scripts/watchdog-tu-khoi-dong-gateway/acceptance.mjs"
     # s03-nap-nhanh (1011-3 nấc 1, liên làn làm thay ZCode 10/11) — bản chép tệp bọc nạp S03 trong cây tạm, node/sleep giả
     snn_test: "node --test scripts/s03-nap-nhanh.test.mjs"
     snn_regress: "node --test scripts/*-import-job.test.mjs scripts/*-import-job-lan.test.mjs scripts/enrich-buoc-job.test.mjs scripts/job-exit.test.mjs scripts/nap-argmax.test.mjs scripts/nap-ts-order.test.mjs scripts/s05-khoa-nap.test.mjs"
