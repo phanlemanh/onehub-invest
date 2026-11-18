@@ -30,7 +30,7 @@ evals:
     layer: backend-effect
     cmd: bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-4
     paths: [app/src/lib/deals.ts, app/src/app/ops/deals/page.tsx, app/tests/deals-loc-xep-hang*]
-    expected: "37 căn, cỡ 15, có căn hai tin nằm ở biên trang: với mỗi tab × vai Người xem, Vận hành × lược đồ máy thu, cloud, hợp mọi trang đúng bằng số trên tab, không trùng, không sót, mỗi trang đủ 15 căn phân biệt trừ trang cuối; ma trận tham số viết trước (page=0, -1, abc, 999, size=7, size=abc) mỗi ô một assert; ?can= của căn ở trang 3 khi đang ở trang 1 vẫn mở được căn. Hai đột biến đỏ, thông điệp nêu tab lệch: bỏ khoá phụ mã tin khỏi ORDER BY; lọc tab sau khi đã cắt trang."
+    expected: "37 căn, cỡ 15, có căn hai tin nằm ở biên trang: với mỗi tab × vai Người xem, Vận hành × lược đồ máy thu, cloud, hợp mọi trang đúng bằng số trên tab, không trùng, không sót, mỗi trang đủ 15 căn phân biệt trừ trang cuối; ma trận tham số viết trước (page=0, -1, abc, 999, size=7, size=abc) mỗi ô một assert; ?can= của căn ở trang 3 khi đang ở trang 1 vẫn mở được căn. Đột biến lọc tab sau khi đã cắt trang đỏ, thông điệp nêu tab lệch."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E5
     criterion: AC-5
@@ -61,7 +61,7 @@ evals:
     layer: backend-effect
     cmd: bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-8
     paths: [app/src/lib/deals.ts, app/src/app/ops/deals/page.tsx, app/src/components/ops/deals-grid.tsx, app/tests/deals-loc-xep-hang*]
-    expected: "Dữ liệu trang 1 và trang 2 của vai Người xem, có lọc và không lọc: không có khoá nào mang giá trị tên, SĐT, ảnh, chữ bài, địa chỉ dưới phường đã cấy trong fixture; vai Vận hành có đủ (đối chứng dương cùng fixture). Vai Người xem mở ?can= của căn ngoài trang: HTML và dữ liệu RSC thật không chứa các giá trị đã cấy, vai Vận hành có (đối chứng dương). HTML của vai Người xem không có tiêu đề «Gọi ai», của vai Vận hành có. Lược đồ cloud: danh sách, số đếm, phân trang chạy, mayThu = false, HTML có đúng câu «Ảnh, chữ bài chỉ có ở máy thu». Đột biến bỏ bước lọc theo vai đỏ, thông điệp nêu trường lộ."
+    expected: "Dữ liệu trang 1 và trang 2 của vai Người xem, có lọc và không lọc: không có khoá nào mang giá trị tên, SĐT, ảnh, chữ bài, địa chỉ dưới phường đã cấy trong fixture; vai Vận hành có đủ (đối chứng dương cùng fixture). Vai Người xem mở căn ngoài trang: dữ liệu sau bước lọc theo vai, đúng phần trang gửi xuống trình duyệt, không chứa các giá trị đã cấy; vai Vận hành có (đối chứng dương). HTML của vai Người xem không có tiêu đề «Gọi ai», của vai Vận hành có. Lược đồ cloud: danh sách, số đếm, phân trang chạy, mayThu = false, nhánh danh sách theo trang mang đúng câu «Ảnh, chữ bài chỉ có ở máy thu». Đột biến bỏ bước lọc theo vai đỏ, thông điệp nêu trường lộ."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E9
     criterion: AC-9
