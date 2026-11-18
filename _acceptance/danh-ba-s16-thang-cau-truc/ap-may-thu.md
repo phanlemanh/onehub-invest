@@ -184,5 +184,12 @@ nhưng tốn một lượt nạp và các bước sau nó.
 Bước 1e. Số thật phải bằng số chạy thử ở phần 2; lệch thì DỪNG và báo, không tự sửa cho khớp. Báo số thật cạnh số chạy thử vào
 kênh của đợt.
 
-**Bài học sổ nguồn (GS, DA33):** mọi lệnh kiểm có tên ràng buộc dùng `conrelid = 'public.<bảng>'::regclass`; tên nguồn thật
-(`source_registry.real_name`, `source_ids`) là tầng A — không chép vào báo cáo, kênh hay PR.
+**Ba bài học khi GS áp DA33 (17/11) — giữ khi áp DA37:**
+
+1. Máy thu không có `pg_dump`/`psql` trên host: mọi lệnh DB ở hồ sơ này chạy qua `docker exec … one-invest-db` (hàm `Q`/`P`
+   ở phần 1, sao lưu và khôi phục ở phần 3, 4).
+2. DB máy thu còn lược đồ thử sót (`dbn_49473`) mang bảng trùng tên: mọi câu tra `pg_constraint`/`pg_class` theo tên trần phải
+   khoá lược đồ `public` — dùng `conrelid = 'public.<bảng>'::regclass` hoặc `relnamespace = 'public'::regnamespace`.
+3. KHÔNG điền tên nguồn nhiều từ hay tên miền vào `source_registry` để «cho đủ»: lõi che tên nguồn lấy từ đầu của tên, nên
+   một tên nhiều từ làm hỏng tên dự án trên Ops và chặn lượt đồng bộ cloud. DA37 không cần ghi gì vào bảng này; tên nguồn
+   thật (`real_name`, `source_ids`) là tầng A — không chép vào báo cáo, kênh hay PR.
