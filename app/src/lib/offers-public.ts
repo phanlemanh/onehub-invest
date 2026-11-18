@@ -1,8 +1,7 @@
 import { pool } from "./db";
 import { VN_TZ } from "./format";
 import { giaiMaKhuVuc } from "./ma-thi-truong";
-import { findSourceNames, type SourceNameEntry } from "./mask-source-names";
-import { docSourceNameEntries } from "./source-roles";
+import { docSourceNameEntriesVoi, findSourceNames, type SourceNameEntry } from "./mask-source-names";
 import {
   OFFER_HIDDEN_SOURCES,
   OFFER_MANY_NAMES,
@@ -83,7 +82,7 @@ async function sourceEntries(): Promise<SourceNameEntry[] | null> {
   const { rows } = await pool.query<{ r: string | null }>(`SELECT to_regclass('source_registry')::text AS r`);
   if (rows[0]?.r == null) return null;
   // che-ten-nguon-khong-lay-tu-dau: một hàm nạp chung (tên thật + định danh, kèm cờ match_whole)
-  return docSourceNameEntries();
+  return docSourceNameEntriesVoi(pool);
 }
 const mangDinhDanh = (v: string, entries: SourceNameEntry[] | null) =>
   entries !== null && (entries.length === 0 || findSourceNames(v, entries).length > 0);

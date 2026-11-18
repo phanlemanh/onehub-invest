@@ -62,7 +62,7 @@ before(async () => {
   await admin.query(`CREATE TABLE "${S}".ref_lookup (LIKE public.ref_lookup INCLUDING ALL)`)
   await admin.query(`CREATE TABLE "${S}".ref_field_lookup (LIKE public.ref_field_lookup INCLUDING ALL)`)
   await admin.query(`INSERT INTO "${S}".ref_lookup SELECT * FROM public.ref_lookup WHERE lookup_name IN ('assertion_method', 'evidence_tier')`)
-  await admin.query(`CREATE TABLE "${S}".source_registry (code text PRIMARY KEY, real_name text)`)
+  await admin.query(`CREATE TABLE "${S}".source_registry (code text PRIMARY KEY, real_name text, source_ids text[])`)
   await admin.query(`INSERT INTO "${S}".source_registry VALUES ('S07', 'Nguon That Dbn'), ('S03', NULL)`)
   await sc.connect()
   await sc.query(readFileSync(MIG, "utf8"))
