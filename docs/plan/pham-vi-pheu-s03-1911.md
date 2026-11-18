@@ -10,10 +10,10 @@ Việc đi kèm, không thành mã: lập và duyệt thẻ địa chỉ cho cá
 ```
 dot: pheu-s03-1911
 dang: lan-va
-nguon: onehub-invest-tri-thuc:wiki/dot/pheu-s03-1911.md#20c8f06d17cf1841192e52f713116ec863992c96
+nguon: onehub-invest-tri-thuc:wiki/dot/pheu-s03-1911.md#b7dac59223a337285243a0b78003f9a392003c1d
 
 - `GT9` — tin S03 đọc từ bài chỉ có ảnh (kết quả lượt đọc gộp đêm đã có) tự vào kho thành tin rao, chống trùng với tin chữ, mang dấu «đọc từ ảnh» và rút được hàng loạt
-- `GT10` — bước gom tin S03 không còn gộp các bài khác căn (khác toà, khu viết thường hoặc viết tắt) thành một tin
+- `GT10` — khoá gom tin S03 mang toà, khu đã chuẩn hoá và mã tin của môi giới, không còn gộp các bài khác căn thành một tin; bài cùng nguyên chữ do người khác đăng gộp một
 - `GT11` — bộ đọc S03 nhận tin có giá viết che («3.5xx», «9.xx tỷ») và giá đứng sau nhãn thanh toán «TTS:»
 ```
 <!-- PHAM-VI-MA>>> -->

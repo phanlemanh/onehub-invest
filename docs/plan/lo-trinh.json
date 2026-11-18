@@ -5575,7 +5575,7 @@
     },
     {
       "ma": "GT10",
-      "slug": "gom-khong-gop-khac-can",
+      "slug": "khoa-gom-toa-khu-s03",
       "dot": "pheu-s03-1911",
       "nhom": "l07-mot-can-mot-dong",
       "phu": [
@@ -5583,18 +5583,18 @@
       ],
       "hang": "T3",
       "vai": "nen",
-      "tieu_chi": 8,
+      "tieu_chi": 9,
       "dung_tren": [
         "GT5"
       ],
-      "cau_giao": "Bước gom tin S03 không còn gộp các bài khác căn thành một tin: toà, khu viết thường hoặc viết tắt (vd «GH» với «BE», «C» với «E») được chuẩn hoá từ danh bạ và vào khoá gom ở mọi dự án có nút toà, khu, không chỉ một khu đô thị",
-      "bat_khi": "Trên mẫu cặp bài khác chữ cùng khoá của một ngày thu bình thường, đo cùng cách soát 18/11 (40 cặp, 9 cặp khác căn, 23%), tỉ lệ cặp khác căn dưới ngưỡng chốt ở Cổng Phạm vi, kèm cận Wilson; 99 tin nghi gộp nhầm của từ điển toà, khu được tách hoặc có lý do; tách nhầm không tăng; mọi offer_id cũ có đường nối sang tin mới",
-      "vi_sao": "Soát phễu 19/11: 9/40 cặp bài khác chữ cùng khoá là căn khác nhau (23%, khoảng tin cậy 12–38%); trên 429 tin có cặp như vậy ngày 18/11, ước 50–160 tin đang gộp nhiều căn. Từ điển toà, khu: 99 tin nghi gộp nhầm toàn kho, đọc 30 thì 23 đúng, tức ít nhất khoảng 100 tin; từ điển chủ yếu phủ một khu đô thị nên là cận dưới.",
+      "cau_giao": "Khoá gom tin S03 mang toà, khu đã chuẩn hoá (không phân biệt hoa thường, «S702» và «S7.02» là một) và mã tin của môi giới, nên các bài khác toà, khu hoặc mã tin không còn gộp thành một tin; bài cùng nguyên chữ do người khác đăng gộp một",
+      "bat_khi": "Chạy thử khoá mới trên dữ liệu thật của máy thu (DB thử, không ghi kho) TRƯỚC khi áp, báo số tin đổi, tách, gộp; có cách lùi về khoá cũ và mọi offer_id cũ có đường nối sang tin mới; trên ngày 18/11 số tin S03 có bài trong ngày tăng theo ước của soát 19/11 (962 tin: kiểu «khác toà, khu hoặc mã tin» thiếu 132 tin, cộng các kiểu khác ước 152 tin gộp nhầm; chiều ngược ước thừa 38 tin), đọc lại mẫu kiểu «khác toà, khu hoặc mã tin» (54/54 gộp nhầm trước khi sửa) không còn gộp nhầm; tách nhầm không tăng",
+      "vi_sao": "Soát bước gom 19/11: 5.684 bài nhận ngày 18/11 thành 962 tin, ước số tin thật khoảng 1.350. 84 tin kiểu «khác toà, khu hoặc mã tin» (724 bài) đọc mẫu 54/54 gộp nhầm, thiếu 132 tin; cộng các kiểu khác ước 152 tin gộp nhầm; chiều ngược 34 cặp cùng nguyên chữ do người khác đăng là trùng thật, ước thừa 38 tin. Nguyên nhân: khi bài thiếu phường hoặc diện tích, khoá chỉ gồm loại tin, giá, số phòng, mã toà và người đăng; bộ bắt mã toà chỉ nhận chữ hoa kèm 1–2 chữ số nên bỏ sót «S702», «s10», «GH», «LBV C», «MCP», «Ori».",
       "vung": [
         "pipeline/transform-*.mjs",
         "pipeline/lib"
       ],
-      "ghi_chu": "Chồng gốc với GT5 (khoá gom hai tầng, chưa mở vòng): GT5 đưa phân khu và mã toà/căn vào khoá; GT10 đứng trên GT5, gánh phần còn lại đo được trên dữ liệu 18/11 — toà, khu viết thường, viết tắt ngoài từ điển phân khu của GT5 và mọi dự án có nút trong danh bạ. Nếu Cổng Phạm vi của GT5 gánh luôn phạm vi này thì GT10 chuyển thành mục chờ, không làm hai lần. Hạng T3: thành phần tin và offer_id đổi. LLM không vào khoá (luật 7)."
+      "ghi_chu": "Chồng gốc với GT5 (khoá gom hai tầng, chưa mở vòng): GT5 dựng khoá hai tầng với phân khu và mã toà/căn; GT10 đứng trên GT5, gánh toà, khu chuẩn hoá không phân biệt hoa thường, mã tin của môi giới và gộp bài cùng nguyên chữ khác người, đo trên dữ liệu 18/11. Nếu Cổng Phạm vi của GT5 gánh luôn phạm vi này thì GT10 chuyển thành mục chờ, không làm hai lần. Rổ hàng nhiều căn (ước thiếu 250–330 tin ngày 18/11) KHÔNG thuộc hàng này: là việc của PL18 (GT8 giữ rổ ngoài số tin). Hạng T3: thành phần tin và offer_id đổi; hồ sơ áp máy thu đủ năm thứ. LLM không vào khoá (luật 7)."
     },
     {
       "ma": "GT11",
