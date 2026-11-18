@@ -24,9 +24,24 @@ Người vận hành mở /ops/data-flow và thấy mỗi con số mốc của S
 
 Vì sao: Điều tra 15/11 ghi «chưa đo được»: không có lịch sử số trên màn theo ngày nên không biết hàng nào làm số tăng. Luật 15/11: hàng trên đường găng xong khi con số trên màn đổi.
 
+## Đo hiện trạng (18/11, DB máy thu, chỉ đọc)
+
+| Số mốc của S03 | Hôm nay | Nguồn số | Lịch sử theo ngày |
+|---|---|---|---|
+| Có dự án | 6.890 / 7.070 tin (97,45%) | ô «Định vị» trong `data_flow_snapshot`, lượt 04:43Z | Không có |
+| Gắn toà | 0 | chưa có bảng nối tin với toà (`toa_link` trong 600 đang rỗng) | Không có |
+| Có hạng cấp dự án | 5.428 tin, 1.119 tin nhãn «giá tốt» | `offer_price_rank`, `cap = 'du_an'`, lượt 04:50Z | Không có |
+| Có hạng cấp toà | 0 | chưa có giá trị `cap` cho toà | Không có |
+
+- Biểu đồ «Chặng theo ngày» hiện có đếm bài và tin MỚI theo ngày đăng. Nó không cho biết tổng số tin đạt mốc ở mỗi ngày, nên không trả lời được hàng nào làm số tăng.
+- `data_flow_snapshot` bị xoá và ghi lại mỗi 15 phút, nên không giữ được số của ngày trước.
+- Không dựng lại được quá khứ: `offer_project` và `offer_price_rank` chỉ giữ trạng thái hiện tại. Biểu đồ bắt đầu từ lượt ghi đầu tiên.
+- Số đếm trực tiếp lệch màn trong khoảng giữa hai lượt làm tươi (cùng lúc đo: 6.896 / 7.077 so với 6.890 / 7.070). Dòng theo ngày phải lấy từ đúng lượt làm tươi của màn thì mới khớp.
+- Lời giao ghi hạng cấp dự án 5.553 tin (1.145 có nhãn); phép đếm trên tin S03 đang rao ra 5.428 (1.119). Định nghĩa số này chốt ở Cổng Phạm vi.
+
 ## Ngưỡng chết / ngưỡng UAT
 
 - Câu hỏi phép đo trả lời: [đề xuất] đã đạt «Mỗi lượt đêm ghi một dòng số mốc; chạy lại cùng ngày không nhân dòng; số trên biểu đồ khớp số của màn chặng cùng thời điểm; số đứng yên hai ngày liền thì ô được đánh dấu» chưa?
 - Kết quả nào là SỐNG: [đề xuất] Mỗi lượt đêm ghi một dòng số mốc; chạy lại cùng ngày không nhân dòng; số trên biểu đồ khớp số của màn chặng cùng thời điểm; số đứng yên hai ngày liền thì ô được đánh dấu
 - Kết quả nào là CHẾT: [đề xuất] chưa đạt «Mỗi lượt đêm ghi một dòng số mốc; chạy lại cùng ngày không nhân dòng; số trên biểu đồ khớp số của màn chặng cùng thời điểm; số đứng yên hai ngày liền thì ô được đánh dấu» khi hết timebox
-- Timebox: …
+- Timebox: [đề xuất] ba lượt đêm liên tiếp sau khi hàng được gộp và áp lên máy thu
