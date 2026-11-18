@@ -1,0 +1,101 @@
+schema_version: 1
+feature_slug: thuoc-tinh-can-s16
+# Lệnh eval gói trong _acceptance/thuoc-tinh-can-s16/probes/kiem.sh (GS phán P1-92: không thêm khoá vào _acceptance/config.yaml).
+#   kiem.sh ham  = node --test pipeline/tests/thuoc-tinh-can-s16.test.mjs
+#   kiem.sh db   = node --test --test-concurrency=1 pipeline/tests/thuoc-tinh-can-s16.itest.mjs
+#                  (DB của lượt qua db/db-thu.sh oneinvest_suite_ttc --chay, bản mẫu oneinvest_suite_mau; xoá khi xong)
+#   kiem.sh that = node pipeline/tests/thuoc-tinh-can-s16-that.mjs (chỉ-đọc DB máy thu; chỉ in số; ngoài CI)
+#   kiem.sh app  = cd app && bash ../db/db-thu.sh oneinvest_suite_ttc --chay node --import tsx --test --test-concurrency=1 tests/thuoc-tinh-can.test.tsx
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: "bash _acceptance/thuoc-tinh-can-s16/probes/kiem.sh db"
+    expected: "Ca TTC-AC-1 trên DB của lượt (áp 001…113): áp 113 lần hai không lỗi, bản chụp information_schema.columns + pg_get_viewdef + pg_get_triggerdef + pg_get_constraintdef trước/sau lần hai bằng nhau; CHECK field_assertions_field_chk bằng đúng tập 096 + {living_area, building_area_total, direction_faces} (so tập, không so chuỗi); git diff --name-only origin/main -- db/migrations chỉ có 113_*. Chiều đỏ: bản sao 113 bỏ IF NOT EXISTS ở CREATE TABLE → lần hai lỗi, ca đỏ nêu «áp lại 113»"
+    paths: ["db/migrations/113_*", "pipeline/tests/thuoc-tinh-can-s16*"]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: "bash _acceptance/thuoc-tinh-can-s16/probes/kiem.sh db"
+    expected: "Ca TTC-AC-2: tập cột stg_s16_can_chi_tiet bằng đúng danh sách viết trước của thiết kế §4.1 (so tập); không cột nào khớp /purchase|invest|loan|juridical|delivery|furniture|house_status/i; FK snapshot_id → airbnb_snapshots ON DELETE CASCADE (đọc pg_constraint); ba dòng vi phạm (ma_can rỗng, area_using -1, sale_price -1) mỗi dòng 23514 nêu tên ràng buộc. Chiều đỏ: thêm cột purchase_price vào bản sao → ca đỏ nêu tên cột"
+    paths: ["db/migrations/113_*"]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: "bash _acceptance/thuoc-tinh-can-s16/probes/kiem.sh ham"
+    expected: "Ca TTC-AC-3: ma trận viết trước (12 loại hình + UNDEF + mã lạ; diện tích >0/0/thiếu; PN, WC >0/0; HIGH_RISE lấy balcony_direction, LOW_RISE lấy direction; NE, N_E, NORTH, NE_NW, NE_NE, OTHER, rỗng, mã lạ; khoá hai toà), số assert = số ô; mỗi ô so mảng {field,value} đầy đủ + lý do bỏ. Ô shophouse ghim đúng nhánh Hỏi-4 Mạnh chọn. Dòng mẫu theo khuôn cột của migration 113 (bộ ghi thật là bộ nạp làn thu, chưa có — giới hạn khai ở Notes; chỗ ánh xạ của bộ nạp do E13 bắt). Chiều đỏ: đột biến lấy direction cho HIGH_RISE → ô cao tầng đỏ nêu mã ô; đột biến coi 0 là PN hợp lệ → ô PN=0 đỏ"
+    paths: ["pipeline/lib/thuoc-tinh-can-s16.mjs", "pipeline/tests/thuoc-tinh-can-s16.test.mjs"]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: "bash _acceptance/thuoc-tinh-can-s16/probes/kiem.sh db"
+    expected: "Ca TTC-AC-4: ba căn có bí danh S16 sống nhận phát biểu (đếm theo unit_key = 3); mã bí danh nghỉ và mã không căn: 0 phát biểu, dòng «chưa có căn danh bạ» = 2 trong đầu ra lệnh; căn có floor_number nguồn khác units.floor: đếm «tầng lệch» = 1, không phát biểu floor_raw nào. Chiều đỏ: đột biến bỏ điều kiện retired_at IS NULL → mã bí danh nghỉ có phát biểu, ca đỏ nêu «bí danh đã nghỉ»"
+    paths: ["pipeline/lib/thuoc-tinh-can-s16.mjs", "pipeline/scripts/thuoc-tinh-can-s16.mjs", "db/migrations/113_*"]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    layer: backend-effect
+    cmd: "bash _acceptance/thuoc-tinh-can-s16/probes/kiem.sh db"
+    expected: "Ca TTC-AC-5: chạy thử in bảng có đúng cột của bang-phu-ca §1 và field_assertions không thêm dòng; --ghi lần một: số dòng mới = tổng phát biểu lần chạy thử, mọi dòng resource_name='Unit', method='source_field', evidence_tier='fact', evidence->>'nguon'='S16', observed_at = mốc snapshot; lần hai: 0 dòng mới; evidence::text không chứa token mã căn, mã toà của fixture (đối chứng dương: hàm soát bắt được khi cấy một mã vào evidence). Chiều đỏ: đột biến bỏ ON CONFLICT → lần hai lỗi khoá trùng, ca đỏ nêu «chạy lại»"
+    paths: ["pipeline/lib/thuoc-tinh-can-s16.mjs", "pipeline/scripts/thuoc-tinh-can-s16.mjs", "db/migrations/113_*"]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: "bash _acceptance/thuoc-tinh-can-s16/probes/kiem.sh db"
+    expected: "Ca TTC-AC-6: v_unit_thuoc_tinh trả đúng 1 dòng cho căn thử; living_area = giá trị lần thu sau; phát biểu registry_inherit (giá trị khác) và phát biểu đã rút không thắng; direction_faces = mảng hai mã của cùng lần thu; nguon = {S16}; observed_at = mốc lần thu sau. Chiều đỏ: đảo thứ tự observed_at trong bản sao view → ô «lần thu sau thắng» đỏ"
+    paths: ["db/migrations/113_*"]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: "bash _acceptance/thuoc-tinh-can-s16/probes/kiem.sh db"
+    expected: "Ca TTC-AC-7: v_s16_gia_cdt cho căn thử list_price = giá snapshot mới nhất, gia_m2_thong_thuy = list_price/area_using (làm tròn như thiết kế); mã giá 0 và mã hai toà: 0 dòng; SELECT count(*) FROM field_assertions WHERE field ~ 'price' = 0 sau --ghi; trục CHECK không có mã nào chứa 'price'. Chiều đỏ: đột biến view lấy snapshot cũ nhất → ca đỏ nêu «snapshot mới nhất»"
+    paths: ["db/migrations/113_*", "pipeline/scripts/thuoc-tinh-can-s16.mjs"]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: "bash _acceptance/thuoc-tinh-can-s16/probes/kiem.sh ham"
+    expected: "Ca TTC-AC-8: import FILL thật từ pipeline/sync-cloud.mjs; giao với {stg_s16_can_chi_tiet, field_assertions, v_unit_thuoc_tinh, v_s16_gia_cdt} rỗng; kiemBangDay([...FILL, 'stg_s16_can_chi_tiet']) === 'stg_s16_can_chi_tiet' (đối chứng dương); git diff origin/main -- pipeline/sync-cloud.mjs rỗng. Chiều đỏ: cấy 'v_s16_gia_cdt' vào bản sao FILL → ca đỏ nêu tên view"
+    paths: ["pipeline/sync-cloud.mjs", "pipeline/lib/s16-soat.mjs", "pipeline/tests/thuoc-tinh-can-s16.test.mjs"]
+  - id: E9
+    criterion: AC-9
+    executor: test
+    layer: backend-effect
+    cmd: "bash _acceptance/thuoc-tinh-can-s16/probes/kiem.sh app"
+    expected: "Ca TTC-AC-9: lớp đọc app/src/lib/ops/thuoc-tinh-can.ts trên DB của lượt (fixture qua lệnh --ghi thật, không chèn tay phát biểu) trả cho từng unit_key đúng giá trị của v_unit_thuoc_tinh/v_s16_gia_cdt đọc bằng SQL riêng trong ca; căn chưa có thuộc tính trả trạng thái 'chua-co'; HTML render của lưới (route thật) chứa nhãn «Chưa có thuộc tính», Badge S16 và không chứa tên nguồn thật (danh sách token từ source_registry của DB lượt). Ca lỗi: lớp đọc thuộc tính ném lỗi (đột biến qua biến môi trường thử) → route vẫn 200, HTML vẫn có lưới toà và có Alert chứa «Thử lại»; đột biến bỏ khối bắt lỗi → ca đỏ nêu «lỗi nội tuyến». Chiều đỏ: đột biến đổi khoá nối unit_key ↔ stack → giá trị lệch, ca đỏ nêu unit_key"
+    paths: ["app/src/lib/ops/thuoc-tinh-can.ts", "app/src/components/ops/registry/**", "app/src/app/ops/registry/**", "app/tests/thuoc-tinh-can*.tsx"]
+  - id: E10
+    criterion: AC-9
+    executor: ui-check
+    layer: ui-observed
+    paths: ["app/src/components/ops/registry/**", "app/src/app/ops/registry/**", "app/src/lib/ops/thuoc-tinh-can.ts"]
+    steps: "Bản chạy: dev server của worktree dãy P1 ở cổng riêng :3463 (npm --prefix app run dev -- -p 3463 từ gốc worktree; không dùng :3456), DB máy thu :5433 sau khi áp ở AC-11 (hoặc DB thử chép có phát biểu). Tài khoản thử: node scripts/dev-ops-account.mjs (không in mật khẩu). Mở /ops/registry, bấm grand-park; mở toà đầu có căn; chụp → evidence/E10-step1.png (1280 sáng); cùng màn tối → evidence/E10-step2.png; khổ 390 → evidence/E10-step3.png; mở một toà của ocean-park-2 có căn thiếu WC → evidence/E10-step4.png; tải lại trang với mạng chậm (DevTools throttling) và chụp lúc đang tải → evidence/E10-step5.png; đặt biến môi trường thử làm lớp đọc ném lỗi (cách đặt ghi ở tests/thuoc-tinh-can) và chụp → evidence/E10-step6.png. Không tạo hay sửa tệp nào trong cây."
+    expected: "hàng căn hiện thông thuỷ / tim tường m², PN, WC, hướng (nhãn tiếng Việt), loại hình, giá chủ đầu tư + giá/m², Badge S16, mốc thu; căn thiếu trường hiện «—» ở đúng ô, căn không có thuộc tính hiện «Chưa có thuộc tính»; khổ 390 không cuộn ngang trang; step5 có Skeleton ở ô phủ và cột thuộc tính; step6 lưới toà vẫn hiện, có Alert «Thử lại»; không chữ nào là tên nguồn thật"
+    evidence_required: [screenshot, observed, verifier, verified_at]
+  - id: E11
+    criterion: AC-10
+    executor: test
+    layer: backend-effect
+    cmd: "bash _acceptance/thuoc-tinh-can-s16/probes/kiem.sh app"
+    expected: "Ca TTC-AC-10: ô phủ của ba nút thử (dự án có thuộc tính, dự án có thuộc tính chưa căn, dự án không S16) bằng SQL đếm độc lập viết trong ca (không import lớp đọc): X căn có thuộc tính, Y căn danh bạ, Z căn có giá, N chưa vào danh bạ; dự án không S16 trả 'khong-nguon'; React component nhận số qua prop, không có phép cộng/đếm trên dữ liệu thô (grep kiểm tĩnh không thấy .length/.reduce trên hàng căn trong tệp ô phủ). Chiều đỏ: đột biến đếm căn có giá trong lớp đọc bằng điều kiện sai → ca đỏ nêu ô Z"
+    paths: ["app/src/lib/ops/thuoc-tinh-can.ts", "app/src/components/ops/registry/**", "app/tests/thuoc-tinh-can*.tsx"]
+  - id: E12
+    criterion: AC-10
+    executor: ui-check
+    layer: ui-observed
+    paths: ["app/src/components/ops/registry/**", "app/src/app/ops/registry/**"]
+    steps: "Cùng bản chạy :3463 như E10. Mở trang dự án grand-park, smart-city, ocean-park-3 và một dự án không có toà S16; chụp ô phủ đầu trang → evidence/E12-step1..4.png (1280 sáng)."
+    expected: "grand-park và smart-city hiện «X / Y căn có thuộc tính» và «Z căn có giá chủ đầu tư»; ocean-park-3 hiện «820 căn S16 có thuộc tính chưa vào danh bạ» (số theo E13); dự án không có toà S16 hiện «Chưa có nguồn thuộc tính căn»; số khớp E13"
+    evidence_required: [screenshot, observed, verifier, verified_at]
+  - id: E13
+    criterion: AC-11
+    executor: script
+    layer: backend-effect
+    cmd: "bash _acceptance/thuoc-tinh-can-s16/probes/kiem.sh that"
+    expected: "Trên DB máy thu (phiên chỉ-đọc, khoá lược đồ public): đếm độc lập trong script (không import pipeline/lib/thuoc-tinh-can-s16.mjs) căn có thuộc tính, có giá, chưa vào danh bạ theo dự án từ stg + bí danh; bảng bốn cột «đếm thẳng» / «v_unit_thuoc_tinh + v_s16_gia_cdt» / «chạy thử» (đọc từ ap-may-thu.md) / «bảng phủ ca §1» (số khoá trong bang-phu-ca.md, đếm từ tệp thu gốc 18/11, độc lập với bộ nạp) bằng nhau từng ô của năm dự án đã nối khi manifest snapshot là lượt 18/11 (ngưỡng lệch 0; lượt khác thì in cột thứ tư kèm cờ «khác lượt», không so); thoát 1 khi một ô lệch; tổng căn danh bạ có thuộc tính > 0 (đối chứng: trước áp script in 0 và thoát 3 «chưa áp»). Chỉ in số, không mã căn, không tên nguồn"
+    paths: ["db/migrations/113_*", "pipeline/lib/thuoc-tinh-can-s16.mjs", "pipeline/scripts/thuoc-tinh-can-s16.mjs", "pipeline/tests/thuoc-tinh-can-s16-that.mjs"]
+  - id: E14
+    criterion: AC-11
+    executor: judgment
+    inputs: ["_acceptance/thuoc-tinh-can-s16/ap-may-thu.md", "_acceptance/thuoc-tinh-can-s16/bang-phu-ca.md"]
+    question: "Tệp ap-may-thu.md có đủ năm thứ — lệnh áp, số chạy thử, sao lưu trước (đường tệp + thời điểm), cách lùi (lệnh rút phát biểu + tệp lùi migration), lệnh kiểm sau — và bảng «số thật cạnh số chạy thử» có từng ô của bang-phu-ca.md §1 cho năm dự án đã nối, với mỗi ô lệch (nếu có) được nêu kèm câu «dừng, báo» thay vì một số đã chỉnh?"
+    expected: "Đủ năm thứ; bảng số thật/chạy thử phủ mọi ô §1 của năm dự án đã nối; ô lệch nào cũng có dòng dừng-và-báo"
