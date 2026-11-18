@@ -22,7 +22,9 @@ import { BacBadge, NguonBadges } from "./registry-badges"
 
 type Tab = "all" | "chua-can"
 
-const so1 = (v: number) => v.toLocaleString("vi-VN", { maximumFractionDigits: 1 })
+const SO_1 = new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 1 })
+const SO_2 = new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 2 })
+const so1 = (v: number) => SO_1.format(v)
 const NHAN_HUONG = LABELS_VI.direction_faces as Record<string, string>
 const NHAN_LOAI = LABELS_VI.property_type as Record<string, string>
 const AN_HEP = { headerClassName: "hidden md:table-cell", cellClassName: "hidden md:table-cell" }
@@ -129,7 +131,7 @@ const COLUMNS: ColumnDef<DataGridFeatures, HangToa>[] = [
     header: "Giá chủ đầu tư",
     cell: ({ row }) => oThuocTinh(row.original, (t) => (t.giaCdt != null ? (
       <div className="flex flex-col gap-0.5" data-thuoc-tinh="gia-cdt">
-        <span className="text-sm tabular-nums">{(t.giaCdt / 1e9).toLocaleString("vi-VN", { maximumFractionDigits: 2 })} tỷ</span>
+        <span className="text-sm tabular-nums">{SO_2.format(t.giaCdt / 1e9)} tỷ</span>
         {t.giaM2ThongThuy != null && <span className="text-muted-foreground text-xs tabular-nums">{so1(t.giaM2ThongThuy / 1e6)} tr/m² thông thuỷ</span>}
       </div>
     ) : gach)),
