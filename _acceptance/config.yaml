@@ -348,10 +348,6 @@ executors:
     ns09_test: "bash db/db-thu.sh oneinvest_suite_nap_s09 --chay node --test pipeline/tests/import-s09.test.mjs"   # nap-s09 E1–E3 — bộ nạp S09 trên DB thử: nạp, nạp lại, ba lý do bỏ, chốt chặn và đối chứng --may-thu
     jst_unit: "node --test scripts/job-step-thoi-luong.test.mjs"   # job-step-ghi-thoi-luong E1–E9 — cây tạm chép job-step.sh + tệp bọc thật, node/sleep giả, không DB
     jst_regress: "node --test scripts/job-exit.test.mjs scripts/s03-nap-nhanh.test.mjs scripts/zalo-import-job.test.mjs scripts/zalo-import-job-nhe.test.mjs scripts/enrich-buoc-job.test.mjs"   # job-step-ghi-thoi-luong E10 — lưới hồi quy dòng cũ của năm bộ test job
-    tran_unit: "node --test --test-concurrency=1 scripts/zalo-import-tran.test.mjs"   # s03-tran-thoi-gian-luot-nap AC-1..AC-7 — bản sao script trong thư mục tạm, lượt detached nhóm riêng, fixture, DB cổng đóng
-    tran_unit_ci: "HOME=\"$(mktemp -d)\" node --test --test-concurrency=1 scripts/zalo-import-tran.test.mjs"   # s03-tran-thoi-gian-luot-nap AC-8 — như CI: HOME không có ~/.local/node-v24.21.0
-    tran_scripts_ci: "NODE_OPTIONS=\"$(node scripts/lib/ci-can-du-lieu.mjs scripts)\" node --test scripts/*.test.mjs"   # s03-tran-thoi-gian-luot-nap AC-8 — đúng lệnh bước test của ci-test.yml
-    tran_do_luot: "bash _acceptance/s03-tran-thoi-gian-luot-nap/ap-may-thu/do-luot-dem.test.sh"   # s03-tran-thoi-gian-luot-nap AC-9 — lệnh kiểm sau trên ba log mẫu
   script:
     tg1_that_dem: "mkdir -p .acceptance-runs/the-dia-chi-nhom-s03 && node pipeline/scripts/the-dia-chi-nhom-that.mjs --dem --ghi .acceptance-runs/the-dia-chi-nhom-s03/so-chay-thu.md"   # the-dia-chi-nhom-s03 E7 — bản chép DB máy thu oneinvest_u1_tg1, áp 108 + dựng nháp
     tg1_that_chat_luong: "node pipeline/scripts/the-dia-chi-nhom-that.mjs --chat-luong"   # the-dia-chi-nhom-s03 E8 — 13 nhóm sổ một dự án, dựng nháp bỏ sổ

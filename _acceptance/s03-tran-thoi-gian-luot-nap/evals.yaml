@@ -4,49 +4,49 @@ evals:
   - id: E1
     criterion: AC-1
     executor: test
-    cmd: config:executors.test.tran_unit
+    cmd: bash _acceptance/s03-tran-thoi-gian-luot-nap/probes/tran-unit.sh
     paths: [scripts/zalo-import-daily.sh, scripts/zalo-import-tran.test.mjs]
     expected: "exit 0; hai ca trên bản sao script (thư mục tạm, lượt detached nhóm riêng, DB cổng đóng), ZALO_IMPORT_TRAN_NAP=0. (a) vòng tin: một snapshot vn__zalo-agent__<ts> có manifest → stdout có dòng TIMEOUT phần nạp nêu đúng <ts>, mã thoát 124, apify-daily.state bằng 00000000T000000, bước nạp giả không được gọi, không dòng JOB STEP nào của bước transform-*. (b) vòng hồ sơ: không snapshot tin, một snapshot hồ sơ → dòng TIMEOUT phần nạp «tại hồ sơ <ts>», state hồ sơ giữ mốc cũ, dòng JOB FAIL bước nap-ho-so mã 124. Chiều đỏ cùng fixture: bản sao bỏ khối trần ở vòng tin → ca (a) đỏ ghim «AC-1 phần nạp không có trần»."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E2
     criterion: AC-2
     executor: test
-    cmd: config:executors.test.tran_unit
+    cmd: bash _acceptance/s03-tran-thoi-gian-luot-nap/probes/tran-unit.sh
     paths: [scripts/zalo-import-daily.sh, scripts/zalo-import-tran.test.mjs]
     expected: "exit 0; hai snapshot tin T1 < T2 có manifest, bước nạp giả (pipeline/import-airbnb.mjs trong thư mục tạm) nối tên snapshot vào một tệp sổ rồi ngủ thật 2 giây. (a) lượt 1 ZALO_IMPORT_TRAN_NAP=1 → mã 124, sổ = [T1], state = T1; lượt 2 trần mặc định → mã của lượt không phải 124, sổ = [T1, T2], state = T2. Bước nạp giả ghi thêm dòng «XONG <snapshot>» sau khi ngủ. (b) lượt 1 ZALO_IMPORT_TRAN_TONG=1, NAP_NGU=4 → mã 143, sổ KHÔNG có «XONG T1» (fixture ghim T1 đang nạp dở), state < T1; lượt 2 không có dòng «khoá còn sống», lấy khoá trong ≤ 7 giây, sổ kết thúc [T1, T2], có «XONG T1», state = T2. Chiều đỏ cùng fixture: bản sao đánh dấu snapshot bị cắt là đã nạp (MAXTS=$TS trước break) → ca (a) đỏ ghim «AC-2 lượt sau bỏ sót snapshot»; bản sao ghi state = $TS trước khi nạp → ca (b) đỏ ghim «AC-2 state vượt snapshot chưa nạp xong»."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3
     criterion: AC-3
     executor: test
-    cmd: config:executors.test.tran_unit
+    cmd: bash _acceptance/s03-tran-thoi-gian-luot-nap/probes/tran-unit.sh
     paths: [scripts/zalo-import-daily.sh, scripts/zalo-import-tran.test.mjs]
     expected: "exit 0; ZALO_IMPORT_TRAN_TONG=3, ZALO_IMPORT_CANH_BAO=1, ZALO_IMPORT_NODE_BIN = node đang chạy test, bước transform-zalo treo. Lượt chạy detached (nhóm riêng): đúng một dòng khớp /WARN: lượt đã chạy 1s/, đúng một dòng /TIMEOUT: lượt vượt trần 3s/, dòng WARN đứng trước dòng TIMEOUT, mã 143. Một tiến trình canh (node ngủ) do test spawn detached ở NHÓM KHÁC trước lượt → sau ca `process.kill(pid, 0)` vẫn thành công, rồi test tự dọn nó. Chiều đỏ cùng fixture: bản sao bỏ dòng WARN → ca đỏ ghim «AC-3 thiếu dòng WARN nửa trần»."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4
     criterion: AC-4
     executor: test
-    cmd: config:executors.test.tran_unit
+    cmd: bash _acceptance/s03-tran-thoi-gian-luot-nap/probes/tran-unit.sh
     paths: [scripts/zalo-import-daily.sh, scripts/zalo-import-tran.test.mjs]
     expected: "exit 0; ma trận ba kết cục viết trước, mỗi ô fixture thoát ngay, ZALO_IMPORT_NODE_BIN = node đang chạy test, trần tổng mặc định: (a) lượt 00:00 chạy tới enrich-run (doc-gop giả thoát 0, enrich hỏng vì thư mục agent rỗng); (b) lượt --luot-nhanh; (c) lượt 00:00 bước nạp giả thoát 1. Node đồng hồ chạy qua symlink <thư mục thử>/node-dong-ho (ZALO_IMPORT_NODE_BIN). Sau khi script thoát, test quét `ps -axo pid,command` TOÀN MÁY trong 10 giây: số dòng chứa đường symlink ấy về 0 ở cả ba ô — đếm theo dấu, không theo nhóm, nên đồng hồ đã setsid hay rời nhóm vẫn bị đếm. Mỗi ô còn ghim fixture tới đúng kết cục (dòng JOB STEP enrich-run · «lượt nhanh: bỏ đọc gộp» · «nạp fail tại»). Trên @99b2778e9 ô (a) đỏ ghim «AC-4 đồng hồ còn sống sau khi lượt thoát». Dọn: test SIGKILL cả nhóm của lượt sau ca dù xanh hay đỏ."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E5
     criterion: AC-5
     executor: test
-    cmd: config:executors.test.tran_unit
+    cmd: bash _acceptance/s03-tran-thoi-gian-luot-nap/probes/tran-unit.sh
     paths: [scripts/zalo-import-daily.sh, scripts/zalo-import-tran.test.mjs]
     expected: "exit 0; test spawn detached `bash -c '\"$0\"; echo NGUOI-GOI-SONG rc=$?' <bản sao script>` (script là con của bash ngoài, cùng nhóm, không phải trưởng nhóm), ZALO_IMPORT_TRAN_TONG=2, bước transform-zalo treo, ZALO_IMPORT_NODE_BIN = node đang chạy test. Ô viết trước: đầu ra có dòng TIMEOUT; có dòng /^NGUOI-GOI-SONG rc=[0-9]+$/ (thiếu → đỏ ghim «AC-5 trần TERM trúng người gọi»); bash ngoài thoát bằng mã, không bởi tín hiệu; dòng đúng là `NGUOI-GOI-SONG rc=143` (khác → đỏ ghim «AC-5 script không bị cắt bằng TERM»); trong 10 giây toàn máy không còn tiến trình mang đường fixture bước treo của thư mục thử (còn → đỏ ghim «AC-5 bước treo sống sau trần»). Trên @99b2778e9 đỏ ghim «AC-5 trần TERM trúng người gọi». Dọn: SIGKILL cả nhóm sau ca."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E6
     criterion: AC-6
     executor: test
-    cmd: config:executors.test.tran_unit
+    cmd: bash _acceptance/s03-tran-thoi-gian-luot-nap/probes/tran-unit.sh
     paths: [scripts/zalo-import-daily.sh, scripts/zalo-import-tran.test.mjs]
     expected: "exit 0; khoá pipeline/logs/apify-daily.state.lock mang pid của tiến trình test. (a) lượt 00:00, ZALO_IMPORT_CHO_KHOA=2 → dòng «khoá còn sống (PID <n>, lấy lúc <s>) — không gỡ», dòng «bận … job khác đang nạp?», mã 1, tệp lock/pid còn nguyên nội dung. (b) lượt --luot-nhanh → mã 0, không chạy bước nạp, khoá còn nguyên. (c) đối chứng: pid trong khoá là một tiến trình đã thoát → khoá bị gỡ, lượt chạy tới dòng JOB STEP truoc-lan-claude. Chiều đỏ cùng fixture: bản sao khôi phục điều kiện `[ \"$LUOT_NHANH\" = \"1\" ] &&` cũ và khoá >2 giờ → ca (a) đỏ ghim «AC-6 lượt 00:00 gỡ khoá đang sống»."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E7
     criterion: AC-7
     executor: test
-    cmd: config:executors.test.tran_unit
+    cmd: bash _acceptance/s03-tran-thoi-gian-luot-nap/probes/tran-unit.sh
     paths: [scripts/zalo-import-daily.sh, scripts/zalo-import-tran.test.mjs, pipeline/cron/com.oneinvest.zalo-import.plist, pipeline/cron/com.oneinvest.s03-nap-15phut.plist]
     expected: "exit 0; ZALO_IMPORT_NODE_BIN trỏ một node giả (tệp bash trong thư mục tạm) ghi TRAN_GIAY, CANH_GIAY, DO_KILL vào tệp rồi thoát. Ma trận viết trước: lượt 00:00 không đặt biến → 14400/7200; lượt --luot-nhanh không đặt biến → 1200/600; lượt 00:00 đặt ZALO_IMPORT_TRAN_TONG=100 → 100/50; đặt thêm ZALO_IMPORT_CANH_BAO=7 → 100/7. `git diff --quiet origin/main -- pipeline/cron` thoát 0. ZALO_IMPORT_NODE_BIN=/khong-co/node → stderr có «TRẦN THỜI GIAN TẮT», đủ các dòng JOB STEP của lượt như khi có đồng hồ, cùng mã thoát."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
@@ -81,21 +81,21 @@ evals:
   - id: E8e
     criterion: AC-8
     executor: test
-    cmd: config:executors.test.tran_unit_ci
+    cmd: bash _acceptance/s03-tran-thoi-gian-luot-nap/probes/tran-unit-ci.sh
     paths: [scripts/zalo-import-daily.sh, scripts/zalo-import-tran.test.mjs]
     expected: "exit 0 với HOME tạm không có ~/.local/node-v24.21.0 (như runner CI); không ca nào phụ thuộc node riêng của máy thu."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E8f
     criterion: AC-8
     executor: test
-    cmd: config:executors.test.tran_scripts_ci
+    cmd: bash _acceptance/s03-tran-thoi-gian-luot-nap/probes/scripts-ci.sh
     paths: [scripts/**]
     expected: "exit 0; trọn node --test scripts/*.test.mjs đúng lệnh bước test của .github/workflows/ci-test.yml."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E9
     criterion: AC-9
     executor: test
-    cmd: config:executors.test.tran_do_luot
+    cmd: bash _acceptance/s03-tran-thoi-gian-luot-nap/ap-may-thu/do-luot-dem.test.sh
     paths: [_acceptance/s03-tran-thoi-gian-luot-nap/ap-may-thu/**]
     expected: "exit 0, dòng cuối DO-LUOT-DEM OK; ba log mẫu viết trước: lượt 3 giờ → «10800 giây (3h00m) — ĐẠT» mã 0; lượt 5 giờ 38 phút không dòng cắt → «20280 giây (5h38m) — KHÔNG ĐẠT …» mã 1 (dòng của job con doc-gop-hang-ngay không cộng, chỉ lượt cuối được đo); lượt có dòng TIMEOUT → «ĐẠT (cắt trần)»; lượt 3 giờ có dòng «TRẦN THỜI GIAN TẮT» trước truoc-lan-claude → «KHÔNG ĐẠT (trần thời gian TẮT ở lượt này)» mã 1; dòng TẮT thuộc lượt cũ, lượt mới 3 giờ không có → «ĐẠT». Đối chứng đã chạy ở S1: bản sao bỏ nhánh TIMEOUT thì ô cắt trần đỏ. Thư mục ap-may-thu có README (năm bước: lệnh áp «có hiệu lực ở lượt kế», chạy thử, sao lưu = sha trước gộp, lùi = git revert, kiểm sau), chay-thu.md, lui.sh, do-luot-dem.sh."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
