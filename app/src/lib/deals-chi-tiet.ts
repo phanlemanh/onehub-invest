@@ -1,4 +1,4 @@
-import { LABELS_VI } from "./vocab.generated";
+import { LABELS_VI, PROPERTY_TYPE, VOCAB } from "./vocab.generated";
 import { fmtInt, fmtPct } from "./format";
 import type { ReviewImage } from "./ops/review-media";
 
@@ -289,7 +289,8 @@ export type KindDeal = "sale" | "rent";
 export type TabTrang = "all" | TabDeal;
 /** Cỡ trang được chọn; giá trị khác trên URL về mặc định. */
 export const CO_TRANG_DEAL = [15, 25, 50] as const;
-const LOAI_LOC = ["apartment", "house", "land", "room", "commercial"] as const;
+/** Loại hình lọc được: mọi loại của sổ từ vựng trừ «Chưa rõ». */
+export const LOAI_LOC: readonly string[] = VOCAB.property_type.filter((v) => v !== PROPERTY_TYPE.unknown);
 
 /** Điều kiện của danh sách, đọc từ URL. Giá trị sai khuôn bị bỏ qua, không làm hỏng trang. */
 export type ThamSoDeal = {
@@ -309,7 +310,7 @@ export function docThamSoDeal(sp: Record<string, string | string[] | undefined>)
   return {
     location: location && /^vn(-[a-z0-9]+)*$/.test(location) ? location : null,
     project: project && /^[0-9]{1,18}$/.test(project) ? project.replace(/^0+(?=\d)/, "") : null,
-    type: type && (LOAI_LOC as readonly string[]).includes(type) ? type : null,
+    type: type && LOAI_LOC.includes(type) ? type : null,
     kind: mot("kind") === "rent" ? "rent" : "sale",
     tab: tab === "du" || tab === "xac-minh" || tab === "thieu" ? tab : "all",
     page: Number.isInteger(page) && page >= 1 ? page : 1,

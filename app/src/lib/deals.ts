@@ -23,6 +23,7 @@ import { fmtPhone, telHref } from "./ops/people";
 import { tenTin } from "./ten-tin";
 import { buildMediaImages, loadOfferMedia } from "./ops/review-media";
 import { docSourceNameEntries } from "./source-roles";
+import { KIND } from "./vocab.generated";
 
 export { NGHI_NGO_PCT, repostLabel };
 
@@ -449,7 +450,7 @@ export function dungCayViTri(rows: DongNhe[]): NutViTri[] {
 export async function getDealsTrang(thamSo: ThamSoDeal, minPct = NGUONG_VAO_PCT):
   Promise<{ rows: DealRow[]; mayThu: boolean; trang: TrangDeal } | null> {
   if (!(await coBangHang())) return null;
-  const { rows: nhe, mayThu } = await truyVan(dealsNheSql, [thamSo.kind === "rent" ? "rent_lt" : "sale", minPct, thamSo.type]);
+  const { rows: nhe, mayThu } = await truyVan(dealsNheSql, [thamSo.kind === "rent" ? KIND.rent_lt : KIND.sale, minPct, thamSo.type]);
   const { location, project } = thamSo;
   const trongViTri = nhe.filter((r) => (!location || r.area_id === location || r.parent_id === location) && (!project || (r.cap === "du_an" && r.nut === project)));
   const tabOf = (r: DongNhe) => tabCua({
