@@ -288,3 +288,17 @@ Không đổi: mọi chỗ khác tầng A giữ nguyên — bốn thứ tầng A
 hay API công khai dưới dạng đọc được; mọi bộ che và bộ soát trên đường lên cloud giữ nguyên. Bản sao lưu sang đĩa ngoài cắm
 tại máy thu (§5 DR) không đổi. Nhà cung cấp kho ngoài: Backblaze B2, tài khoản riêng tách khỏi Supabase (ROADMAP §3 mục 46 QĐ5). Còn mở:
 chưa cắt hàng sao lưu.
+
+## Sửa đổi 2026-11-18 — ngày sinh, giới tính người bán từ tra hồ sơ: lưu đầy đủ ở máy thu, không lên cloud
+
+Mạnh trả lời ba câu riêng ở phiên điều phối liên làn, 18/11 04:11Z (ROADMAP §3 mục 55). Câu 2 hỏi «Ngày sinh và giới tính
+của người bán xử lý thế nào?», Mạnh trả lời nguyên văn: «Đây là thành viên của mạng lưới lưu trữ chung với thông tin profile
+để chăm sóc khách hàng. GIữ đầy đủ, nhưng không đưa 2 thông tin này lên cloud».
+
+- **Lưu đầy đủ ở máy thu:** ngày sinh và giới tính của người bán lấy từ tra hồ sơ Zalo theo SĐT trên tin rao.
+- **Không lên cloud:** hai trường này đi cùng chế độ đường đi với tầng A — không lên cloud, kho git công khai, cổng Invest
+  hay API công khai. Bộ soát trên đường lên cloud (`sync-cloud`, leak gate) phải đỏ khi cấy một dòng mang hai trường này.
+
+Không đổi: bốn thứ tầng A ở sửa đổi 26/10 giữ nguyên; tên, SĐT người bán vẫn là tầng C (sửa đổi 23/10, 02/11). Sửa đổi này
+chỉ nói về hai trường ngày sinh, giới tính từ tra hồ sơ; uid, tên hiển thị, ảnh đại diện từ tra hồ sơ xếp ở Cổng Phạm vi của
+hàng nạp (EN3).

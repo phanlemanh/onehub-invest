@@ -1,0 +1,119 @@
+schema_version: 1
+feature_slug: l6d-down-keo-dai-ly-do
+# Mọi eval chạy heartbeat trên HOME tạm với CLI giả ghi sổ từng lời gọi, osascript giả (luật 8).
+# Không chạm ~/.openclaw thật, gateway thật, nhóm thật. Harness tự từ chối (thoát 2) khi HOME của lượt là HOME thật.
+# Mỗi ca của harness in một dòng «PASS <mã ca> …» hoặc «FAIL <mã ca> …»; dòng cuối «NGHIEM THU PASS <n>/<n>».
+# Cặp hai chiều: mỗi chốt có ca đỏ trên cùng fixture (ca mang hậu tố -DO): harness phá vật trong bản chép và đòi chốt đỏ
+# với thông điệp ghim; ca -DO «PASS» nghĩa là thước đã đỏ đúng chỗ.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.s03_hb_nghiem_thu
+    paths: [collector/scripts/zalo-heartbeat.sh, scripts/lib/s03-song.sh, scripts/l6d-down-keo-dai-ly-do/acceptance.mjs]
+    expected: "exit 0; 'PASS NHIP' với số dòng L6(d) sau nhịp 1/2/3 = 0/1/1 và thông báo màn hình = 0/1/1; 'PASS TAI-PHAT': UP xoá tệp trạng thái, sự cố mới báo lại đúng 1 lần ở nhịp 2; 'PASS UP-MAU-THAT': mẫu status thật 17/11 (định danh tài khoản thay bằng default) → dòng log 'up accs=1/1', tệp trạng thái không tồn tại; 'PASS UP-MAU-THAT-DO': bản chép quay về grep thường (không -w) và mẫu 'disconnected' → chốt đỏ với thông điệp 'disconnected bị đọc là up'; 'PASS NHIP-DO': bản chép gỡ lời gọi song_d_down_kdai → chốt nhịp 2 đỏ với thông điệp 'L6(d) không bắn ở nhịp 2'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.script.s03_hb_chan
+    paths: [collector/scripts/zalo-heartbeat.sh, scripts/lib/s03-song.sh, pipeline/scripts/zalo-heartbeat-chan.test.mjs]
+    expected: "exit 0; 9 ca pass, 0 fail, 0 skip trên máy thu; gồm 'D3-1' (DOWN 2 nhịp → đúng 1 cảnh báo, nhịp 3 không lặp) và 'D3-2' (UP tự đóng, sự cố kế báo lại)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.s03_hb_nghiem_thu
+    paths: [collector/scripts/zalo-heartbeat.sh, scripts/lib/s03-song.sh, scripts/l6d-down-keo-dai-ly-do/acceptance.mjs]
+    expected: "exit 0; 'PASS PHAT-LAI-1311': dòng log có 'reason=session', tệp trạng thái có 'reason=session', L6(d) 1 dòng sau nhịp 2, song_c_notlinked trên đầu ra status 'linked' trả 1 (không bắn); 'PASS PHAT-LAI-1311-DO': bản chép đổi cụm khớp «Đăng nhập thất bại» → chốt đỏ với thông điệp 'reason khác session'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.s03_hb_nghiem_thu
+    paths: [collector/scripts/zalo-heartbeat.sh, scripts/l6d-down-keo-dai-ly-do/acceptance.mjs]
+    expected: "exit 0; 'PASS PHAT-LAI-0911' reason=stopped; 'PASS STATUS-TREO' thời lượng < 25 s, reason=unknown, 0 lời gọi lệnh nhóm trong nhịp; 'PASS NHOM-TREO' và 'PASS NHOM-IN-DO' < 25 s, reason=unknown; 'PASS STATUS-TREO-DO': bản chép gọi status trực tiếp không bọc trần → chốt thời lượng đỏ với thông điệp 'heartbeat vượt 25 s'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.script.s03_hb_chan
+    paths: [collector/scripts/zalo-heartbeat.sh, pipeline/scripts/zalo-heartbeat-chan.test.mjs]
+    expected: "exit 0; các ca 'D3-3' (reason=stopped), 'D3-6', 'D3-7', 'D3-8' (treo/in dở → reason=unknown, < ~25 s) pass"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.s03_hb_nghiem_thu
+    paths: [collector/scripts/zalo-heartbeat.sh, scripts/l6d-down-keo-dai-ly-do/acceptance.mjs]
+    expected: "exit 0; 'PASS TAN-SUAT': 4 nhịp DOWN liền trong giờ → 1 lời gọi lệnh nhóm; mốc lùi 3601 s → nhịp kế gọi lại (2); mốc lùi 3599 s → không gọi; nhịp không gọi giữ reason cũ; 'PASS UP-KHONG-GOI': 3 nhịp UP → 0 lời gọi lệnh nhóm, đúng 3 lời gọi status, drift-check giả được gọi (đối chứng dương cùng lượt); 'PASS TAN-SUAT-DO': bản chép bỏ chặn mốc → chốt đỏ với thông điệp 'lệnh nhóm gọi quá 1 lần/giờ'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.s03_hb_nghiem_thu
+    paths: [collector/scripts/zalo-heartbeat.sh, scripts/l6d-down-keo-dai-ly-do/acceptance.mjs]
+    expected: "exit 0; 'PASS SO-LOI-GOI': mọi dòng trong sổ CLI giả của mọi ca thuộc đúng hai dạng 'channels status' | 'directory groups list --channel zalouser', đếm dạng lạ = 0, tổng lời gọi > 0; 'PASS MA-CHI-DOC': mã heartbeat và s03-song.sh không có ghi vào openclaw.json, không lời gọi CLI (biến OPENCLAW, đường .openclaw/bin, tên openclaw) ngoài hai dạng; 'PASS MA-CHI-DOC-DO': bản chép chèn một lệnh ghi openclaw.json và một lời gọi CLI qua biến khác → chốt đỏ với thông điệp 'mã heartbeat có lệnh ghi cấu hình hoặc lời gọi CLI lạ'; 'PASS SO-LOI-GOI-DO': ca chèn lời gọi 'message send' vào bản chép → chốt đỏ với thông điệp 'lời gọi CLI ngoài danh sách cho phép'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.s03_hb_nghiem_thu
+    paths: [collector/scripts/zalo-heartbeat.sh, scripts/l6d-down-keo-dai-ly-do/acceptance.mjs]
+    expected: "exit 0; 'PASS CO-LAP': mọi lượt có PATH = thư mục giả + /usr/bin:/bin, command -v openclaw trong lượt nằm trong thư mục tạm, alerts log riêng của lượt; băm alerts log và pipe log thật của máy trước = sau cả bộ; 'PASS PATH-THAT-DO': PATH của lượt chứa một openclaw ngoài thư mục tạm (tệp canh giả lập) → từ chối, thông điệp 'PATH của lượt có openclaw ngoài thư mục tạm', tệp canh không bị chạy; 'PASS GO-CLI-GIA-DO': lượt không đặt ZALO_OPENCLAW_CLI trên HOME tạm → sổ lời gọi rỗng và chốt 'CLI giả đã được dùng' đỏ với thông điệp 'CLI giả không được gọi'; 'PASS HOME-THAT-DO': gọi hàm dựng lượt với HOME = HOME thật → từ chối, thông điệp 'từ chối chạy trên HOME thật', không spawn heartbeat"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E9
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.s03_hb_nghiem_thu
+    paths: [collector/scripts/zalo-heartbeat.sh, scripts/l6d-down-keo-dai-ly-do/acceptance.mjs]
+    expected: "exit 0; 'PASS KHUON-TRANG-THAI': ca 13/11 tệp trạng thái có ^nhip=2$, ^reason=session$, ^d$ và grep -q '^reason=session' thoát 0; ca 09/11 thoát 1; sau UP tệp không tồn tại; mọi dòng của tệp khớp ^(nhip=[0-9]+|reason=(session|stopped|unknown)|d)$; 'PASS TREO-SAU-SESSION': nhịp 1 session, nhịp 2 status treo, nhịp 3 trong giờ → tệp lần lượt reason=session, unknown, unknown và grep '^reason=session' thoát 0, 1, 1; 'PASS KHUON-DO': bản chép đổi khoá 'reason=' thành 'ly_do=' → chốt khuôn đỏ với thông điệp 'tệp trạng thái lệch khuôn VHZ2 đọc'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E10
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.script.s03_hb_chan
+    paths: [collector/scripts/zalo-heartbeat.sh, scripts/lib/s03-song.sh, pipeline/scripts/zalo-heartbeat-chan.test.mjs]
+    expected: "exit 0; 'D3-4' (UP gọi drift, DOWN không gọi) và 'D3-5' (UP mà post 202 cũ > 24 giờ → alert silent-gate) pass"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E11
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.script.s03_song_lib
+    paths: [scripts/lib/s03-song.sh, scripts/zalo-watchdog.sh]
+    expected: "exit 0; 7 ca L6 của watchdog pass với s03-song.sh đã thêm hàm (d)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E12
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.s03_song_tron
+    paths: [scripts/lib/s03-song.sh, scripts/zalo-watchdog.sh, scripts/canh-bao-s03-ngung-thu/acceptance.mjs]
+    expected: "exit 0; 'TRON PASS'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E13
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.s03_song_bien
+    paths: [scripts/lib/s03-song.sh, scripts/canh-bao-s03-ngung-thu/acceptance.mjs]
+    expected: "exit 0; 'BIEN PASS'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E14
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.s03_hb_syntax
+    paths: [collector/scripts/zalo-heartbeat.sh, scripts/lib/s03-song.sh, scripts/zalo-watchdog.sh]
+    expected: "exit 0; 'SYNTAX OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

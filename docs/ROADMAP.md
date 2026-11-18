@@ -916,6 +916,21 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     - Hàng (bản phạm vi `docs/plan/pham-vi-danh-ba-cau-truc-1711.md`): DA36 `danh-ba-toa-theo-phan-khu-hieu-luc` (trang đọc
       view, 54 → 14), DA37 `danh-ba-s16-thang-cau-truc` (Q-B + Q-C, sau DA33), DA38 `du-an-con-tu-hau-to-khu` (Q-A, sau DA8 ba
       nút Grand Park của mục 39 Hỏi-2), DA39 `nut-ung-vien-s08-s09-ha-noi` (nút thiếu + bảng nối S09, lát mỏng của DA18, DA3).
+55. **Tra hồ sơ Zalo từ SĐT người bán** (18/11). Làn thu đề xuất (tin BÁO zcode-1811-2): dịch vụ tra cứu độc lập trên máy
+    thu, một tài khoản Zalo riêng chỉ tra không chat, cache 7 ngày (dương) / 30 ngày (âm); 13.730 SĐT người bán distinct trên
+    tin rao. Ghi nhớ cũ 04/11 «chưa có quyết định dùng với SĐT người bán» hết hiệu lực. Mạnh trả lời ba câu riêng ở phiên điều
+    phối liên làn, 04:11Z, nguyên văn:
+    - **Câu 1 — dùng cho SĐT người bán trên tin rao:** «Có và tôi muốn nó là một API service để các ứng dụng trong họ onehub
+      có thể dùng».
+    - **Câu 2 — ngày sinh, giới tính:** «Đây là thành viên của mạng lưới lưu trữ chung với thông tin profile để chăm sóc
+      khách hàng. GIữ đầy đủ, nhưng không đưa 2 thông tin này lên cloud». Thành sửa đổi ADR-0007 ngày 18/11 và luật 6 của
+      `AGENTS.md`.
+    - **Câu 3 — tài khoản tra cứu vào lockdown Zalo 7 lớp:** «Có». Lớp kiểm và đoạn runtime-map là việc làn thu (tin
+      claudedp-1811-10); không lượt tra thật nào, kể cả đo, trước khi lớp này chạy trên máy thu và runtime-map đã ghi.
+    - Hàng (bản phạm vi `docs/plan/pham-vi-tra-ho-so-zalo-1811.md`): EN3 `tra-ho-so-zalo-vao-danh-ba-nguoi` (migration 116),
+      EN4 `api-tra-ho-so-zalo`. Câu còn mở của Cổng Phạm vi EN4: API chạy ở đâu, ai gọi (ứng dụng trên cloud không được nhận
+      ngày sinh, giới tính), thuộc cổng nào, xác thực thế nào — data-api công khai không hợp. Ngoài đường găng, sau các hàng
+      MS3; dãy dự kiến U2 sau VHZ2.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
