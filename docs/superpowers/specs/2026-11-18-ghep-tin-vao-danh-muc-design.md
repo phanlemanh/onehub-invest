@@ -108,10 +108,10 @@ gắn sau lượt đọc bù.
 - **Không dùng lát `hai-khu-ghep` của PL35 để chấm**: lát này chia đều theo tầng, nên trong 159 mục máy gắn chỉ 13% thuộc GP, trong khi GP chiếm 63% số tin máy gắn. Lát vẫn giữ cho PL36.
 - **Người gắn không thấy đáp án của máy**: lát mới không điền nháp, và nhóm trên màn mang mã trung tính.
 - **Đóng băng đầu ra máy**: lúc rút mẫu, ghi lại bài, nút được gắn, nguồn và băm. Lúc chấm, chạy lại mã cuối trên đúng các bài đó; đầu ra khác bản đóng băng thì chấm đỏ.
-- **Quy nhãn về nút**: tên người gắn được quy về nút danh bạ của dự án bằng cùng bảng tên. Máy gắn toà đúng khi người ghi đúng toà đó; máy gắn vùng đúng khi người ghi đúng vùng đó hoặc một toà nằm trong vùng đó. Không quy được hoặc người ghi «không nêu» thì tính máy sai.
+- **Quy nhãn về nút**: tên người gắn được quy về nút danh bạ của dự án bằng cùng bảng tên. Máy gắn toà đúng khi người ghi đúng toà đó; máy gắn vùng đúng khi người ghi đúng vùng đó, một vùng con của nó, hoặc một toà nằm trong nó. Không quy được hoặc người ghi «không nêu» thì tính máy sai.
 - **Dừng sớm**: một nhóm gặp lỗi thứ hai là đã hụt ngưỡng, dừng gắn nhãn nhóm đó.
 
-Tổng tối đa **330 bài**, khoảng 16 giờ 30 phút theo nhịp 3 phút mỗi bài đo trên một lát nhiều ô hơn. Thứ tự gắn: N1, N2, rồi N3.
+Tổng tối đa **330 bài**, khoảng 16 giờ 30 phút theo nhịp 3 phút mỗi bài đo được trên 38 lượt của một lát khác. Màn gắn nhãn hiện đòi đủ 17 ô cho mỗi bài, dù phép chấm chỉ đọc ô Toà và ô Phân khu. Thứ tự gắn: N1, N2, rồi N3.
 
 ## 5. Thứ tự thực hiện
 

@@ -55,7 +55,7 @@ export function dungDanhBa({ toa, vung }) {
 }
 
 /** Khớp một giá trị tên với danh bạ: toà trước vùng, đúng tên trước chuẩn hoá cách viết. */
-function khopTen(raw, d) {
+export function khopTen(raw, d) {
   const t = chuan(raw ?? "");
   if (!t) return { muc: "rong" };
   const a = d.tenToa.get(t);
@@ -163,7 +163,7 @@ function xetTheoThuTu(cot, chu, banDoc, d) {
 }
 
 /** Chuỗi vùng từ một nút lên gốc, gồm chính nó. */
-function chuoiVung(id, d) {
+export function chuoiVung(id, d) {
   const ra = new Set();
   for (let n = id, i = 0; n !== null && n !== undefined && i < 16; n = d.cha.get(n), i++) ra.add(n);
   return ra;

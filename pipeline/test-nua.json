@@ -105,6 +105,8 @@
     "tests/import-s09.test.mjs",
     "tests/import-s16.test.mjs",
     "scripts/ghep-tin-danh-muc.test.mjs",
-    "scripts/ghep-tin-danh-muc-doc-bu.test.mjs"
+    "scripts/ghep-tin-danh-muc-doc-bu.test.mjs",
+    "scripts/ghep-tin-danh-muc-lat-nhan.test.mjs",
+    "scripts/ghep-tin-danh-muc-cham.test.mjs"
   ]
 }
