@@ -5546,6 +5546,76 @@
         "pipeline/sync-cloud.mjs"
       ],
       "ghi_chu": "RÀNG BUỘC: không tải tệp thật trước khi (a) LL soát mã đạt, (b) hàng qua Cổng Phạm vi có chữ Mạnh, (c) có GIAO triển khai riêng. Khoá mã hoá chỉ ở máy thu và một bản Mạnh giữ, không vào git, kênh, cloud. Không agent nào đọc nội dung tệp, chỉ băm và siêu dữ liệu. Làn thu (tin claudedp-1811-16): đưa bộ lọc từ script tải tạm vào collector, công cụ mã hoá. Mục Drive của collector/docs/DATA-CONTRACT.md (thêm kho riêng) sửa trong PR của chính hàng này, kèm hồ sơ _acceptance. Câu Cổng Phạm vi: kho có vào bản sao lưu ngoài máy không (mặc định không); hạn giữ; ai được mở tệp; ý kiến pháp lý trước khi dùng ngoài lưu trữ; có tải lại tệp có dấu vết người mua đã xoá 12/11 không."
+    },
+    {
+      "ma": "GT9",
+      "slug": "bai-anh-thanh-tin-s03",
+      "dot": "pheu-s03-1911",
+      "nhom": "model",
+      "phu": [
+        "GT9"
+      ],
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 10,
+      "dung_tren": [
+        "PL34"
+      ],
+      "cau_giao": "Tin S03 đọc từ bài chỉ có ảnh — kết quả lượt đọc gộp đêm đã có trong silver_labels — tự vào kho thành tin rao khi có ý định chào, loại tin và giá; gom với tin chữ đã có của cùng người đăng hoặc cùng SĐT; mang dấu «đọc từ ảnh» kèm model, phiên bản lời nhắc, tệp ảnh và rút được hàng loạt",
+      "bat_khi": "Ô tin mới của S03 trên /ops/data-flow tăng khoảng 70–95 tin mỗi ngày thu bình thường so với bảng đo 12–17/11 (72–96 tin mới thật mỗi ngày), đo trên dữ liệu thật của máy thu; chạy lại hay gặp lại cùng tệp ảnh không sinh tin mới; mọi tin mang dấu «đọc từ ảnh» kèm model, phiên bản lời nhắc, tệp ảnh, và lệnh rút hàng loạt gỡ hết chúng; số tiền giảm và bảng tính giá của chủ đầu tư không thành giá tin",
+      "vi_sao": "Mạnh 18/11 22:23Z: «Tự vào kho» (đã được báo phải sửa luật 7 và chấp nhận khoảng 4% tin sai). Soát phễu 19/11: 12–17/11 bỏ lỡ 406 tin mới S03, bằng 34% của 1.201 tin mới đang có; ngày thu bình thường 72–96 tin. Mẫu 24 tin mới đúng 23 loại tin, giá, số phòng; tin sai là bảng tính giá của chủ đầu tư; mẫu 30 tệp có 1 tệp lấy số tiền giảm làm giá.",
+      "vung": [
+        "pipeline/lib/bai-anh-*",
+        "pipeline/scripts/bai-anh-*",
+        "db/migrations/119_*",
+        "AGENTS.md",
+        "docs/adr/**"
+      ],
+      "ghi_chu": "Sửa luật 7 (LLM-off-data-path) trong AGENTS.md, ADR và ROADMAP §3 đi CÙNG hàng này, chỉ mở cho đúng đường này; mọi chỗ khác luật 7 giữ. Hai câu Mạnh chưa quyết, đưa vào Cổng Phạm vi: (1) tin đọc từ ảnh có hiện lên cổng Invest không, hay chỉ ở kho máy thu; (2) có nạp bù tin đã bỏ lỡ không (406 tin của 12–17/11 và các ngày trước) — nếu có, nạp bù là một bước áp riêng có số chạy thử. Không gọi model thêm, không tiền mới; đổi lời nhắc hay model là hàng khác. Bài nhiều căn: luật riêng hoặc ghi «ngoài phạm vi, vì» ở Cổng Phạm vi. Ưu tiên mô-đun riêng gọi từ chuỗi đêm; phải sửa transform S03 thì khai ở Cổng Phạm vi (PL20 đang giữ tệp đó). Đề bài: .acceptance-runs/dieu-phoi-dot0-cam-mau/ban-giao/u2-bai-anh-thanh-tin-1911.md. Chồng ý với mục chờ KC4 (đọc ảnh bằng VLM): GT9 chỉ dùng kết quả đọc gộp đã có, không mở KC4."
+    },
+    {
+      "ma": "GT10",
+      "slug": "gom-khong-gop-khac-can",
+      "dot": "pheu-s03-1911",
+      "nhom": "l07-mot-can-mot-dong",
+      "phu": [
+        "GT10"
+      ],
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "dung_tren": [
+        "GT5"
+      ],
+      "cau_giao": "Bước gom tin S03 không còn gộp các bài khác căn thành một tin: toà, khu viết thường hoặc viết tắt (vd «GH» với «BE», «C» với «E») được chuẩn hoá từ danh bạ và vào khoá gom ở mọi dự án có nút toà, khu, không chỉ một khu đô thị",
+      "bat_khi": "Trên mẫu cặp bài khác chữ cùng khoá của một ngày thu bình thường, đo cùng cách soát 18/11 (40 cặp, 9 cặp khác căn, 23%), tỉ lệ cặp khác căn dưới ngưỡng chốt ở Cổng Phạm vi, kèm cận Wilson; 99 tin nghi gộp nhầm của từ điển toà, khu được tách hoặc có lý do; tách nhầm không tăng; mọi offer_id cũ có đường nối sang tin mới",
+      "vi_sao": "Soát phễu 19/11: 9/40 cặp bài khác chữ cùng khoá là căn khác nhau (23%, khoảng tin cậy 12–38%); trên 429 tin có cặp như vậy ngày 18/11, ước 50–160 tin đang gộp nhiều căn. Từ điển toà, khu: 99 tin nghi gộp nhầm toàn kho, đọc 30 thì 23 đúng, tức ít nhất khoảng 100 tin; từ điển chủ yếu phủ một khu đô thị nên là cận dưới.",
+      "vung": [
+        "pipeline/transform-*.mjs",
+        "pipeline/lib"
+      ],
+      "ghi_chu": "Chồng gốc với GT5 (khoá gom hai tầng, chưa mở vòng): GT5 đưa phân khu và mã toà/căn vào khoá; GT10 đứng trên GT5, gánh phần còn lại đo được trên dữ liệu 18/11 — toà, khu viết thường, viết tắt ngoài từ điển phân khu của GT5 và mọi dự án có nút trong danh bạ. Nếu Cổng Phạm vi của GT5 gánh luôn phạm vi này thì GT10 chuyển thành mục chờ, không làm hai lần. Hạng T3: thành phần tin và offer_id đổi. LLM không vào khoá (luật 7)."
+    },
+    {
+      "ma": "GT11",
+      "slug": "doc-gia-che-va-tts",
+      "dot": "pheu-s03-1911",
+      "nhom": "l05-doc-toa-tang-can",
+      "phu": [
+        "GT11"
+      ],
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "dung_tren": [],
+      "cau_giao": "Bộ đọc S03 nhận tin có giá viết che không có chữ tỷ hoặc chỉ che phần lẻ («3.5xx», «2.7xx», «9.xx tỷ», «7,X tỷ», «5.x tỉ») thành giá dạng khoảng, và nhận giá đứng sau nhãn thanh toán «TTS:» là giá chào",
+      "bat_khi": "Trên mẫu bài rơi của soát 18/11 (nhóm có giá có dấu hiệu, có giá thiếu dấu hiệu, có loại không đọc được giá), bài mang các dạng giá trên thành tin rao có giá; chạy lại toàn bộ bài S03 báo số tin mới thêm theo ngày cạnh ước 20–70 tin mỗi ngày; số ngữ cảnh không phải giá và bài Yêu cầu không thành tin rao; giá đọc đúng trước đó không tụt",
+      "vi_sao": "Soát phễu 19/11: đọc mẫu các nhóm bài rơi, khoảng 71 chữ mới mỗi ngày đáng lẽ thành tin, quy ra 20–70 tin mới mỗi ngày; toàn kho khoảng 1.500 chữ, tương đương 470–1.500 tin. Dạng sót hay gặp: giá che số, giá sau nhãn thanh toán «TTS: 9,382 tỷ» bị coi là khoản khác.",
+      "vung": [
+        "pipeline/transform-*.mjs",
+        "pipeline/parse.test.mjs"
+      ],
+      "ghi_chu": "Nối tiếp SV1 (đã ký, đã vá một phần giá che số): các dạng trên vẫn sót trên dữ liệu 18/11. Độ chắc vừa: tỉ lệ do một người đọc trên mẫu nhỏ. Chữ số trang trí («𝟑,𝟐 𝐭𝐲̉», «2️⃣.2️⃣ tỷ») và thiếu dấu hiệu nhà đất («2PN2w», «2 NGỦ») cùng gốc bộ đọc: gánh thêm hay để ngoài phạm vi chốt ở Cổng Phạm vi. Cùng tệp transform S03 với PL20, GT5, GT10: làm tuần tự."
     }
   ],
   "chan_troi": [
