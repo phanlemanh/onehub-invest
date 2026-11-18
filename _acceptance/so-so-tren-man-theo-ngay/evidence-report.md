@@ -6,7 +6,7 @@ failed_evals: []
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 69fa1c19b09caf4499e365cf3ea8efe78562b12e
+verified_commit: 4e2bcf0abc2ae5c2acd8f1a011536a3a2c12b5eb
 human_signoff:
 ---
 
@@ -119,7 +119,7 @@ human_signoff:
   run_id: minted-so-so-tren-man-theo-ngay-E10-r2
   exit_code: 0
   baseline: n-a
-  verifier: _acceptance/so-so-tren-man-theo-ngay/evals.yaml
+  verifier: config:executors.design.ui_check
   verified_at: 2026-11-18T15:01:35Z
   screenshot: evidence/E10-step1.png
   observed: |
@@ -183,3 +183,7 @@ none — every multi-run eval is uniform
 
 Round 1: E1-E6, E9 pass; carried forward to round 2.
 Round 2: E7, E8, E10 re-run and pass; verdict PASS.
+
+### Re-pin lần 1 — 2026-11-18, do nhận main fa182946c sau lượt chấm 2
+run_id: repin-20261118T183437Z-24160
+sha: 4e2bcf0abc2ae5c2acd8f1a011536a3a2c12b5eb · suites: 7 lệnh exit 0 · evals: 9/9 eval máy đạt kỳ vọng · ngoài làn máy: E10 · AC không có chốt máy: AC-10
