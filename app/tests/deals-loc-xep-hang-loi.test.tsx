@@ -5,12 +5,16 @@ import assert from "node:assert/strict";
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
-import { JSDOM } from "jsdom";
+import { JSDOM, VirtualConsole } from "jsdom";
 import React, { cloneElement, isValidElement, type ReactElement, type ReactNode } from "react";
 
 const APP = join(import.meta.dirname, "..");
 const thuMuc = join(APP, "tests", `.ban-chep-cg3-loi-${process.pid}`);
-const dom = new JSDOM("<!doctype html><div id=root></div>", { url: "http://may-thu/ops/deals", pretendToBeVisual: true });
+// DOM thử báo mọi lần tải lại trang qua kênh lỗi của nó: gom lại để đo «không tải lại trang».
+const loiDom: string[] = [];
+const kenhDom = new VirtualConsole();
+kenhDom.on("jsdomError", (e: Error) => { loiDom.push(e.message); });
+const dom = new JSDOM("<!doctype html><div id=root></div>", { url: "http://may-thu/ops/deals", pretendToBeVisual: true, virtualConsole: kenhDom });
 const w = dom.window as unknown as Omit<Window & typeof globalThis, "matchMedia"> & { ResizeObserver: unknown; matchMedia: unknown };
 class RO { observe() {} unobserve() {} disconnect() {} }
 w.ResizeObserver = RO;
@@ -21,6 +25,7 @@ Object.assign(globalThis, {
 });
 for (const k of Object.getOwnPropertyNames(w)) if (/^HTML\w*Element$|^(KeyboardEvent|MouseEvent|PointerEvent|Event|CustomEvent|Text|Node|Element|DocumentFragment|ShadowRoot|SVGElement|getSelection)$/.test(k)) Object.assign(globalThis, { [k]: (w as unknown as Record<string, unknown>)[k] });
 Object.defineProperty(globalThis, "navigator", { value: w.navigator, configurable: true });
+Object.assign(w.Element.prototype, { scrollIntoView() {}, getAnimations: () => [] });
 process.env.DATABASE_URL ??= "postgres://oneinvest:oneinvest@localhost:5433/oneinvest_suite_cg3_khong_dung";
 
 after(() => { rmSync(thuMuc, { recursive: true, force: true }); dom.window.close(); });
@@ -95,4 +100,26 @@ test("CG3-AC-7 đối chứng: không lọc thì ca lỗi không có nút Xoá b
   assert.ok(document.querySelector("[data-deals-bo-loc]"), "CG3-AC-7 ca lỗi không lọc mất thanh lọc");
   assert.equal(nut("Xoá bộ lọc"), undefined, "CG3-AC-7 không lọc thì không có Xoá bộ lọc");
   await go();
+});
+
+test("CG3-AC-7 đối chứng: đổi lọc khi KHÔNG lỗi đi bằng router, không tải lại trang", async () => {
+  const { DealsGridTrang } = await import("../src/components/ops/deals-grid");
+  const { createRoot } = await import("react-dom/client");
+  const { AppRouterContext } = await import("next/dist/shared/lib/app-router-context.shared-runtime");
+  const thamSo = { location: null, project: null, type: "house", kind: "sale", tab: "all", page: 1, size: 15 } as const;
+  const trang = { thamSo, dem: { all: 0, du: 0, "xac-minh": 0, thieu: 0 }, tong: 0, page: 1, cay: [], tabDong: {} };
+  const dayRouter: string[] = [];
+  const router = { refresh() {}, push: (u: string) => { dayRouter.push(u); }, replace() {}, back() {}, forward() {}, prefetch() {} };
+  document.body.innerHTML = "<div id=root></div>";
+  const root = createRoot(document.getElementById("root")!);
+  await React.act(async () => {
+    root.render(<AppRouterContext.Provider value={router as never}><DealsGridTrang rows={[]} xemNoiDung mayThu trang={trang as never} /></AppRouterContext.Provider>);
+  });
+  assert.equal(document.querySelector<HTMLButtonElement>('button[aria-label="Chọn vị trí"]')?.disabled, false, "CG3-AC-7 khi không lỗi ô vị trí phải bật");
+  loiDom.length = 0;
+  await React.act(async () => { nut("Cho thuê")!.click(); });
+  assert.deepEqual(dayRouter, ["/ops/deals?type=house&kind=rent"], "CG3-AC-7 đổi lọc khi không lỗi phải đi bằng router");
+  assert.deepEqual(loiDom.filter((m) => /navigation/i.test(m)), [], "CG3-AC-7 đổi lọc khi không lỗi không được tải lại trang");
+  assert.equal(window.location.href, "http://may-thu/ops/deals", "CG3-AC-7 đổi lọc khi không lỗi không được đổi trang bằng trình duyệt");
+  await React.act(async () => root.unmount());
 });
