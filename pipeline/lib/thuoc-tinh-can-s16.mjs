@@ -1,0 +1,108 @@
+// thuoc-tinh-can-s16.mjs — DA40 thuoc-tinh-can-s16: lõi thuần biến dòng stg_s16_can_chi_tiet thành phát biểu thuộc tính căn.
+// Thiết kế: _acceptance/thuoc-tinh-can-s16/design.md §5. Không DB, không I/O.
+// Luật (ma trận ghim ở pipeline/tests/thuoc-tinh-can-s16.test.mjs):
+//   - giá trị có mặt trong dòng nguồn là của chủ đầu tư (trường rỗng ⇔ chủ căn được sửa — bảng phủ ca §2) → lớp fact;
+//   - diện tích > 0 → living_area / building_area_total; PN, WC > 0 → bedrooms / bathrooms; 0 hay trống = chưa có;
+//   - loại hình: 11 mã → apartment / house / commercial (shophouse = commercial, Mạnh duyệt Hỏi-4 18/11); UNDEF, mã lạ → bỏ;
+//   - hướng: toà cao tầng lấy hướng ban công, thấp tầng lấy hướng cửa (Hỏi-2 18/11) → tám mã direction_faces; hai mã nối
+//     gạch (căn góc) → hai phát biểu; OTHER, trống, mã lạ → bỏ;
+//   - tầng, giá: không phát biểu (tầng ở units.floor; giá đọc qua view v_s16_gia_cdt — ADR-0016 §7.1);
+//   - một mã có dòng ở hai toà trở lên trong cùng snapshot → không phát biểu (nhóm mo_ho của v_s16_can, 0 căn danh bạ).
+
+export const NGUON_S16 = "S16";
+
+/** Loại hình nguồn → mã trục property_type. Mã ngoài bảng (UNDEF, mã lạ) không phát biểu. */
+export const LOAI_HINH_S16 = Object.freeze({
+  APARTMENT: "apartment",
+  PENT_HOUSE: "apartment",
+  ROW_HOUSE: "house",
+  SEMI_DETACHED_VILLA: "house",
+  DETACHED_VILLA: "house",
+  QUADRUPLE_VILLA: "house",
+  SHOP_HOUSE: "commercial",
+  ROW_SHOP_HOUSE: "commercial",
+  SEMI_DETACHED_SHOP: "commercial",
+  DETACHED_SHOP: "commercial",
+  COMMERCIAL_SERVICE: "commercial",
+});
+
+const HUONG = Object.freeze({
+  N: "north", S: "south", E: "east", W: "west",
+  NORTH: "north", SOUTH: "south", EAST: "east", WEST: "west",
+  NE: "northeast", NW: "northwest", SE: "southeast", SW: "southwest",
+});
+
+/** Chữ hướng nguồn → mảng mã direction_faces (rỗng khi bỏ) + lý do bỏ. */
+export function chuanHuong(chu) {
+  const s = String(chu ?? "").trim().toUpperCase();
+  if (s === "") return { ma: [], ly_do: "huong-trong" };
+  if (s === "OTHER") return { ma: [], ly_do: "huong-other" };
+  const phan = s.split("_");
+  // N_E, S_W…: hai chữ cái đơn là một hướng chéo viết tách
+  const gop = phan.length === 2 && phan.every((p) => /^[NSEW]$/.test(p)) ? [phan.join("")] : phan;
+  const ma = [];
+  for (const p of gop) {
+    const m = HUONG[p];
+    if (!m) return { ma: [], ly_do: "huong-ma-la" };
+    if (!ma.includes(m)) ma.push(m);
+  }
+  return { ma, ly_do: null };
+}
+
+const so = (v) => (v === null || v === undefined || v === "" ? null : Number(v));
+const chuoiSo = (n) => String(Number(n));
+
+/**
+ * Một dòng stg (cột của migration 113) → { phat: [{field, value}], bo: [{field, ly_do}] }.
+ * Không xét chuyện mã ở nhiều toà — việc của gopKhoa.
+ */
+export function phatBieuTuDong(r) {
+  const phat = [];
+  const bo = [];
+  for (const [cot, field] of [["area_using", "living_area"], ["area_building", "building_area_total"]]) {
+    const v = so(r[cot]);
+    if (v !== null && Number.isFinite(v) && v > 0) phat.push({ field, value: chuoiSo(v) });
+    else bo.push({ field, ly_do: v === null ? "trong" : "khong-duong" });
+  }
+  for (const [cot, field] of [["bedroom", "bedrooms"], ["bathroom", "bathrooms"]]) {
+    const v = so(r[cot]);
+    if (v !== null && Number.isInteger(v) && v > 0) phat.push({ field, value: String(v) });
+    else bo.push({ field, ly_do: v === null ? "trong" : "bang-0" });
+  }
+  const lh = String(r.property_type ?? "").trim().toUpperCase();
+  if (LOAI_HINH_S16[lh]) phat.push({ field: "property_type", value: LOAI_HINH_S16[lh] });
+  else bo.push({ field: "property_type", ly_do: lh === "" ? "trong" : lh === "UNDEF" ? "undef" : "ma-la" });
+  const cao = String(r.height_type ?? "").trim().toUpperCase();
+  if (cao === "HIGH_RISE" || cao === "LOW_RISE") {
+    const h = chuanHuong(cao === "HIGH_RISE" ? r.balcony_direction : r.direction);
+    if (h.ma.length) for (const m of h.ma) phat.push({ field: "direction_faces", value: m });
+    else bo.push({ field: "direction_faces", ly_do: h.ly_do });
+  } else {
+    bo.push({ field: "direction_faces", ly_do: "khong-ro-cao-thap" });
+  }
+  return { phat, bo };
+}
+
+/** Khoá mã căn: '<du_an>/<MÃ HOA>' — đúng khuôn giá trị bí danh ma_nguon S16 của căn (DA33). */
+export const khoaCan = (duAn, ma) => `${duAn}/${String(ma).trim().toUpperCase()}`;
+
+/**
+ * Gộp các dòng của một snapshot theo khoá mã căn. Trả Map khoá → { du_an, ma, toa: [..], dong, nhieu_toa }.
+ * dong = dòng đầu (theo `dong` nhỏ nhất) của toà duy nhất; dòng trùng cùng toà là bản lặp của cùng câu trả lời nguồn.
+ */
+export function gopKhoa(rows) {
+  const m = new Map();
+  for (const r of rows) {
+    const k = khoaCan(r.du_an, r.ma_can);
+    let g = m.get(k);
+    if (!g) m.set(k, (g = { du_an: r.du_an, ma: String(r.ma_can).trim().toUpperCase(), toa: [], dong: null }));
+    const toa = String(r.toa ?? "");
+    if (!g.toa.includes(toa)) g.toa.push(toa);
+    if (!g.dong || (r.dong ?? 0) < (g.dong.dong ?? 0)) g.dong = r;
+  }
+  for (const g of m.values()) {
+    g.toa.sort();
+    g.nhieu_toa = g.toa.length > 1;
+  }
+  return m;
+}

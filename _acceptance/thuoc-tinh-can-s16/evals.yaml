@@ -3,7 +3,7 @@ feature_slug: thuoc-tinh-can-s16
 # Lệnh eval gói trong _acceptance/thuoc-tinh-can-s16/probes/kiem.sh (GS phán P1-92: không thêm khoá vào _acceptance/config.yaml).
 #   kiem.sh ham  = node --test pipeline/tests/thuoc-tinh-can-s16.test.mjs
 #   kiem.sh db   = node --test --test-concurrency=1 pipeline/tests/thuoc-tinh-can-s16.itest.mjs
-#                  (DB của lượt qua db/db-thu.sh oneinvest_suite_ttc --chay, bản mẫu oneinvest_suite_mau; xoá khi xong)
+#                  (DB thử oneinvest_dbv_ttc_<pid> dựng từ db/migrations qua pipeline/scripts/db-thu-dbv.mjs; xoá khi xong)
 #   kiem.sh that = node pipeline/tests/thuoc-tinh-can-s16-that.mjs (chỉ-đọc DB máy thu; chỉ in số; ngoài CI)
 #   kiem.sh app  = cd app && bash ../db/db-thu.sh oneinvest_suite_ttc --chay node --import tsx --test --test-concurrency=1 tests/thuoc-tinh-can.test.tsx
 evals:
