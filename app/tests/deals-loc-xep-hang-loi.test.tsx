@@ -6,7 +6,7 @@ import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { JSDOM } from "jsdom";
-import React, { isValidElement, type ReactElement, type ReactNode } from "react";
+import React, { cloneElement, isValidElement, type ReactElement, type ReactNode } from "react";
 
 const APP = join(import.meta.dirname, "..");
 const thuMuc = join(APP, "tests", `.ban-chep-cg3-loi-${process.pid}`);
@@ -53,23 +53,26 @@ async function veKhiLoi(sp: Record<string, string>) {
   assert.ok(khung, "CG3-AC-7 trang không bọc danh sách trong khung lỗi");
   const Nem = () => { throw new Error("cg3-truy-van-loi"); };
   const di: string[] = [];
-  const router = { refresh() {}, push: (u: string) => { di.push(u); }, replace() {}, back() {}, forward() {}, prefetch() {} };
+  const dayRouter: string[] = [];
+  const router = { refresh() {}, push: (u: string) => { dayRouter.push(u); }, replace() {}, back() {}, forward() {}, prefetch() {} };
+  // Giữ nguyên phần tử thanh lọc trang trả về, chỉ thay bước tải lại trang vì DOM thử không điều hướng được.
+  const leading = cloneElement(khung.props.leading as ReactElement<{ di?: (u: string) => void }>, { di: (u: string) => { di.push(u); } });
   document.body.innerHTML = "<div id=root></div>";
   const root = createRoot(document.getElementById("root")!);
   const im = console.error;
   console.error = () => {};
   try {
     await React.act(async () => {
-      root.render(<AppRouterContext.Provider value={router as never}><RegionError {...(khung.props as { what: string })}><Nem /></RegionError></AppRouterContext.Provider>);
+      root.render(<AppRouterContext.Provider value={router as never}><RegionError what={khung.props.what as string} leading={leading}><Nem /></RegionError></AppRouterContext.Provider>);
     });
   } finally { console.error = im; }
-  return { di, go: () => React.act(async () => root.unmount()) };
+  return { di, dayRouter, go: () => React.act(async () => root.unmount()) };
 }
 
 const nut = (chu: string) => [...document.querySelectorAll<HTMLElement>("button, [role=tab]")].find((b) => b.textContent?.trim() === chu);
 
 test("CG3-AC-7 truy vấn lỗi: có Thử lại, thanh lọc vẫn đứng, ô vị trí tắt có lời giải thích", async () => {
-  const { di, go } = await veKhiLoi({ type: "house", location: "vn-hanoi" });
+  const { di, dayRouter, go } = await veKhiLoi({ type: "house", location: "vn-hanoi" });
   assert.ok(nut("Thử lại"), "CG3-AC-7 ca lỗi thiếu nút Thử lại");
   const boLoc = document.querySelector("[data-deals-bo-loc]");
   assert.ok(boLoc, "CG3-AC-7 ca lỗi mất thanh lọc");
@@ -82,7 +85,8 @@ test("CG3-AC-7 truy vấn lỗi: có Thử lại, thanh lọc vẫn đứng, ô 
   assert.match(giai?.textContent ?? "", /Thử lại/, "CG3-AC-7 ô vị trí tắt phải có lời giải thích");
   assert.ok(nut("Xoá bộ lọc"), "CG3-AC-7 ca lỗi vẫn phải bỏ được điều kiện đang lọc");
   await React.act(async () => { nut("Cho thuê")!.click(); });
-  assert.deepEqual(di, ["/ops/deals?type=house&kind=rent"], "CG3-AC-7 đổi Cho thuê khi lỗi phải đổi đường dẫn, bỏ vị trí của loại tin cũ");
+  assert.deepEqual(di, ["/ops/deals?type=house&kind=rent"], "CG3-AC-7 đổi Cho thuê khi lỗi phải tải lại trang theo điều kiện mới, bỏ vị trí của loại tin cũ");
+  assert.deepEqual(dayRouter, [], "CG3-AC-7 đổi điều kiện khi lỗi không được đi bằng router: khung lỗi không tự hết khi chỉ đổi tham số");
   await go();
 });
 

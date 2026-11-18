@@ -342,11 +342,12 @@ function DealsBoLoc({ thamSo, cay, onDoi }: { thamSo: ThamSoDeal; cay: NutViTri[
   )
 }
 
-/** Thanh lọc đứng cạnh khung lỗi của danh sách: đổi điều kiện để sang chỗ còn đọc được. */
-export function DealsBoLocKhiLoi({ thamSo }: { thamSo: ThamSoDeal }) {
-  const router = useRouter()
-  const [, chuyenTrang] = useTransition()
-  return <DealsBoLoc thamSo={thamSo} cay={null} onDoi={(p) => chuyenTrang(() => router.push(urlThamSoDeal({ ...thamSo, ...p }), { scroll: false }))} />
+/**
+ * Thanh lọc đứng cạnh khung lỗi của danh sách. Khung lỗi chỉ tự hết khi đổi đường dẫn gốc, không hết khi đổi tham số,
+ * nên đổi điều kiện ở đây tải lại cả trang để đọc lại danh sách theo điều kiện mới.
+ */
+export function DealsBoLocKhiLoi({ thamSo, di = (url) => window.location.assign(url) }: { thamSo: ThamSoDeal; di?: (url: string) => void }) {
+  return <DealsBoLoc thamSo={thamSo} cay={null} onDoi={(p) => di(urlThamSoDeal({ ...thamSo, ...p }))} />
 }
 
 type DealsGridProps = {
