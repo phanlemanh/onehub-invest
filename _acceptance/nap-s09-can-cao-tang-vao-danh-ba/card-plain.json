@@ -1,0 +1,112 @@
+{
+  "feature_plain": "Danh bạ có thêm khoảng 309 nghìn căn cao tầng (số ước, chốt khi có bản thu) ở các dự án S09, mỗi căn thật chỉ một dòng dù nhiều nguồn cùng có.",
+  "scope_plain": "Duyệt thẻ này là cho làn thu bắt đầu thu căn cao tầng, đúng bốn trường của mỗi căn kèm mã dự án, toà, tầng và bản kê có băm.",
+  "will_do": [
+    {
+      "id": "AC-1",
+      "p": "Sẽ nạp bản thu không nhân dòng, kể cả khi một tầng được thu lại nhiều đêm."
+    },
+    {
+      "id": "AC-2",
+      "p": "Sẽ đối chiếu số dự án, toà, tầng, căn đã nạp với số bản thu tự khai."
+    },
+    {
+      "id": "AC-3",
+      "p": "Sẽ đọc đúng toà, tầng, số căn từ mã căn, mã lạ thì bỏ ra và đếm lý do."
+    },
+    {
+      "id": "AC-4",
+      "p": "Sẽ chỉ đưa căn vào dưới toà đã có trong danh bạ và đã thu đủ mọi tầng."
+    },
+    {
+      "id": "AC-5",
+      "p": "Sẽ gộp căn S09 trùng căn S16, S08 thành một căn mang thêm mã S09."
+    },
+    {
+      "id": "AC-6",
+      "p": "Sẽ đưa căn không khớp ở toà đã có S16, S08 lên thẻ duyệt theo từng toà."
+    },
+    {
+      "id": "AC-7",
+      "p": "Sẽ tạo đủ căn cho các toà chỉ có S09."
+    },
+    {
+      "id": "AC-8",
+      "p": "Sẽ cho cùng kết quả khi chạy lại hoặc khi nguồn về theo thứ tự khác."
+    },
+    {
+      "id": "AC-10",
+      "p": "Sẽ dừng để Mạnh quyết nếu dưới 90% căn vào được danh bạ hoặc khớp sai quá 1%."
+    }
+  ],
+  "wont_do": [
+    {
+      "id": "AC-9",
+      "p": "Sẽ KHÔNG để tên thật của nguồn rời máy thu."
+    },
+    {
+      "id": "OOS-1",
+      "p": "Làn thu tự thu gói 2, viết hợp đồng dữ liệu và bộ nạp."
+    },
+    {
+      "id": "OOS-2",
+      "p": "Chưa áp lên dữ liệu máy thu ở bước này, việc áp theo hồ sơ riêng sau khi gộp."
+    },
+    {
+      "id": "OOS-3",
+      "p": "Nhà thấp tầng, nối dự án mới và toà mới thuộc hàng DA42 (toà, tầng S09)."
+    },
+    {
+      "id": "OOS-4",
+      "p": "Chưa có diện tích, phòng ngủ, hướng, giá vì nguồn này không trả các trường đó."
+    },
+    {
+      "id": "OOS-5",
+      "p": "Căn S09 chưa lên cloud và chưa hiện trên cổng Invest."
+    }
+  ],
+  "coverage_plain": [
+    {
+      "i": 0,
+      "p": "Dữ liệu vào: bản thu nạp đúng, số khớp, mã căn đọc đúng (AC-1, AC-2, AC-3)."
+    },
+    {
+      "i": 1,
+      "p": "Trong danh bạ: căn vào đúng toà, căn trùng gộp một, căn lệch lên thẻ, căn mới được tạo (AC-4 đến AC-7)."
+    },
+    {
+      "i": 2,
+      "p": "Vận hành: chạy lại, đổi thứ tự nguồn và chạy đêm đều không sinh thêm căn (AC-8)."
+    },
+    {
+      "i": 3,
+      "p": "An toàn: tên thật của nguồn không rời máy thu (AC-9)."
+    },
+    {
+      "i": 4,
+      "p": "Kết quả thật: mọi căn trong bản thu đều được đếm vào một phần, số trên trang Danh bạ đúng (AC-10)."
+    }
+  ],
+  "gap_probe_plain": [
+    {
+      "i": 0,
+      "p": "Bậc tin cậy của căn và cách so căn trùng chưa đủ căn cứ. Đã đưa bậc tin cậy thành câu hỏi cho Mạnh và ghi rõ cách so."
+    },
+    {
+      "i": 1,
+      "p": "Phép đo cuối có thể xanh dù rất ít căn vào danh bạ. Đã thêm ngưỡng tối thiểu và kiểm 200 cặp căn đã khớp."
+    },
+    {
+      "i": 2,
+      "p": "Chưa nói rõ khi S16 về sau S09 thì căn lệch xử thế nào. Đã khai luật và đo theo luật đó."
+    },
+    {
+      "i": 3,
+      "p": "Bản thu chưa đủ thông tin để biết toà đã thu trọn qua nhiều đêm. Đã yêu cầu ghi trạng thái từng tầng."
+    },
+    {
+      "i": 4,
+      "p": "Chưa ai kiểm thẻ căn lệch trên màn duyệt. Đã thêm bước mở thẻ và đối chiếu số."
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+schema_version: 1
+feature_slug: nap-s09-can-cao-tang-vao-danh-ba
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.s09_can_db
+    expected: "Fixture rút từ ba phản hồi mẫu thật của làn thu (đã che) nạp hai lần: lần một đúng số dòng hợp lệ, lần hai 0 dòng, item hỏng đếm theo lý do; ma trận bốn ô nhiều bản thu (lỗi rồi tốt, tốt rồi lỗi, tốt rồi rỗng, chưa gọi) assert trạng thái trọn và số căn không trùng từng ô. Chiều đỏ: sửa một byte tệp fixture thì lượt nạp thoát khác 0 với thông điệp «sai băm» và 0 dòng được ghi"
+    paths: ["db/migrations/*s09*", "pipeline/lib/s09-danh-ba-can.mjs", "pipeline/scripts/danh-ba-s09-can*"]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.s09_can_that
+    expected: "Trên DB thử chép máy thu, bộ đếm độc lập không import pipeline/lib/s09* in bảng ba cột stg, đếm thẳng, manifest cho dự án, toà, tầng gọi được, tầng rỗng, tầng lỗi, căn; ba cột bằng nhau từng ô. Chiều đỏ: bớt một item trong bản chép snapshot thì thoát 1 nêu đúng ô «căn». Chỉ in số"
+    paths: ["pipeline/lib/s09-danh-ba-can.mjs", "pipeline/scripts/danh-ba-s09-can*"]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.s09_can_ham
+    expected: "Ma trận tám ô viết trước, mỗi ô một assert giá trị trả về. Chiều đỏ: đột biến tách theo dấu chấm đầu tiên thì ô «tên toà có dấu chấm» đỏ, thông điệp nêu tên ô"
+    paths: ["pipeline/lib/s09-danh-ba-can.mjs", "pipeline/lib/s09-danh-ba-can.test.mjs"]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.s09_can_db
+    expected: "Ba toà fixture: toà đủ điều kiện có căn; toà không bí danh và toà có tầng lỗi 0 toà, 0 trục, 0 căn và hai bộ đếm lý do mỗi bộ bằng số căn của toà đó. Chiều đỏ: đột biến bỏ kiểm tầng lỗi thì ca đỏ nêu «toà chưa trọn»"
+    paths: ["pipeline/lib/s09-danh-ba-can.mjs", "pipeline/danh-ba-vat-the.mjs"]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.s09_can_db
+    expected: "Căn S16, S08, căn không trục mỗi căn nhận đúng một bí danh S09; SELECT số căn trong toà trước và sau bằng nhau; căn hai bí danh S09 bằng 0; mã S09 trỏ hai căn bằng 0. Chiều đỏ: đột biến bỏ bước tìm căn có sẵn thì ca đỏ nêu «căn trùng»"
+    paths: ["pipeline/lib/s09-danh-ba-can.mjs", "pipeline/danh-ba-vat-the.mjs", "pipeline/lib/danh-ba-vat-the.mjs"]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.s09_can_db
+    expected: "Theo lời Hỏi-2 đã ghi trong sổ: với khuyến nghị thì 0 căn mới, mỗi toà đúng một thẻ entity_match có số lệch theo loại, evidence không chứa mã căn hay tên toà của fixture (đối chứng dương: hàm soát bắt được khi cấy), chạy lại 0 thẻ mới. Chiều đỏ: đột biến đúc căn khi không khớp thì ca đỏ nêu «căn lệch»"
+    paths: ["pipeline/lib/s09-danh-ba-can.mjs", "pipeline/danh-ba-vat-the.mjs"]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.s09_can_db
+    expected: "Căn chuẩn có stack_key, floor đúng giá trị viết trước, catalog_tier mot_loi_khai; căn tầng ngoài khuôn có stack_key NULL và sub_id bằng unit_key; mỗi căn một bí danh S09. Chiều đỏ: đột biến ép tầng ngoài khuôn vào cột floor thì ca đỏ nêu «tầng ngoài khuôn»"
+    paths: ["pipeline/lib/s09-danh-ba-can.mjs", "pipeline/danh-ba-vat-the.mjs"]
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.s09_can_db
+    expected: "Hai DB riêng cùng fixture, hai thứ tự nạp: tập (mã nguồn, số căn, bí danh, số thẻ) bằng nhau; dựng thêm hai lần 0 khoá, 0 bí danh, 0 thẻ mới và băm tập căn bằng nhau; bước đêm không có bản thu mới không gửi câu đọc bảng căn S09. Chiều đỏ: đột biến bỏ tra căn S09 trong bước S16 thì DB hai có mã hai căn, ca đỏ nêu «thứ tự»"
+    paths: ["pipeline/lib/s09-danh-ba-can.mjs", "pipeline/lib/s16-dung.mjs", "pipeline/lib/danh-ba-vat-the.mjs", "pipeline/danh-ba-vat-the.mjs"]
+  - id: E9
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.s09_can_db
+    expected: "Danh sách đẩy của sync-cloud không có bảng stg căn S09, buildings, stacks, units; soát thẻ, log và tệp của hàng ra 0 tên thật. Chiều đỏ: cấy một chuỗi tên thật giả lập vào thẻ fixture thì bộ soát thoát khác 0, nêu bảng và cột, không in giá trị"
+    paths: ["pipeline/sync-cloud.mjs", "pipeline/lib/s09-danh-ba-can.mjs"]
+  - id: E10
+    criterion: AC-10
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.s09_can_that
+    expected: "Trên DB thử chép máy thu: tổng căn manifest bằng tổng sáu phần, mỗi phần một SELECT riêng; số căn cao tầng S09 trong danh bạ bằng số lệnh --dem in; căn hai khoá bằng 0; mã S09 trỏ hai căn bằng 0; chạy lại cùng số và 0 khoá mới; bốn ngưỡng của AC-10 in cạnh số đo; 200 cặp hạt giống cố định đối chiếu tầng với cột tầng gốc của stg_s16_can, sai không quá 1%. Chiều đỏ, mỗi đột biến thoát 1 nêu đúng tên: bỏ một phần khỏi phép cộng → phần thiếu; bộ tách loại mọi mã → «mã hỏng»; lệch tầng thêm 1 khi khớp → «sai khớp». Chỉ in số"
+    paths: ["pipeline/lib/s09-danh-ba-can.mjs", "pipeline/danh-ba-vat-the.mjs", "pipeline/scripts/danh-ba-s09-can*"]
+  - id: E11
+    criterion: AC-10
+    executor: ui-check
+    layer: ui-observed
+    paths: ["app/src/app/ops/registry/**", "app/src/lib/ops/registry/**"]
+    steps:
+      - "Chạy app ở cổng riêng, trỏ vào DB thử đã dựng của E10, đăng nhập bằng tài khoản ops thử của máy."
+      - "Mở /ops/registry, chụp ô tổng «Căn» → evidence/E11-tong.png."
+      - "Mở một dự án có căn S09 đúc mới, chụp số căn của dự án → evidence/E11-du-an.png."
+    expected: "Ô «Căn» trên trang bằng số căn trước khi dựng cộng số căn đúc mới mà E10 in; số căn của dự án đã mở bằng SELECT đếm căn của dự án đó trên cùng DB"
+    evidence_required: [screenshot, observed, verifier, verified_at]
+  - id: E12
+    criterion: AC-6
+    executor: ui-check
+    layer: ui-observed
+    paths: ["app/src/app/ops/review/**", "pipeline/lib/s09-danh-ba-can.mjs"]
+    steps:
+      - "Chạy app ở cổng riêng, trỏ vào DB thử đã dựng của E10, đăng nhập bằng tài khoản ops thử của máy."
+      - "Mở /ops/review, lọc thẻ ghép toà của S09, mở một thẻ, chụp → evidence/E12-the.png."
+    expected: "Thẻ hiện tên toà và số căn lệch theo loại, bằng SELECT trên cùng DB; không hiện tên thật của nguồn"
+    evidence_required: [screenshot, observed, verifier, verified_at]
