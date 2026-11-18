@@ -31,13 +31,23 @@ process.env.DATABASE_URL ??= "postgres://oneinvest:oneinvest@localhost:5433/onei
 after(() => { rmSync(thuMuc, { recursive: true, force: true }); dom.window.close(); });
 
 type Trang = { default: (p: { searchParams: Promise<Record<string, string>> }) => Promise<ReactNode> };
-async function napTrang(): Promise<Trang> {
+let nChep = 0;
+/** Chép trang thật, chỉ thay bước đọc phiên; `luoi` thay một đoạn của thanh lọc trên bản chép để đo chiều đỏ. */
+async function napTrang(luoi?: { tu: string; thanh: string }): Promise<Trang> {
   const goc = readFileSync(join(APP, "src/app/ops/deals/page.tsx"), "utf8");
   const tu = `import { getSessionUser } from "@/lib/auth";`;
   assert.ok(goc.includes(tu), "bản chép không áp được bước đọc phiên");
-  mkdirSync(thuMuc, { recursive: true });
-  const f = join(thuMuc, "trang.tsx");
-  writeFileSync(f, `import React from "react";\n${goc.replace(tu, `const getSessionUser = async () => ({ id: 1, email: "ops@local.test", role: "ops" }) as never;`)}`);
+  const nha = join(thuMuc, `lan-${++nChep}`);
+  mkdirSync(nha, { recursive: true });
+  let ma = goc.replace(tu, `const getSessionUser = async () => ({ id: 1, email: "ops@local.test", role: "ops" }) as never;`);
+  if (luoi) {
+    const nguon = readFileSync(join(APP, "src/components/ops/deals-grid.tsx"), "utf8");
+    assert.ok(nguon.includes(luoi.tu), `đột biến không áp được: ${luoi.tu}`);
+    writeFileSync(join(nha, "deals-grid.tsx"), nguon.replace(luoi.tu, luoi.thanh).replace(/from "\.\/(deals-cells|deal-cho-ghep|deal-sheet)"/g, `from "@/components/ops/$1"`));
+    ma = ma.replaceAll(`from "@/components/ops/deals-grid"`, `from "./deals-grid"`);
+  }
+  const f = join(nha, "trang.tsx");
+  writeFileSync(f, `import React from "react";\n${ma}`);
   return import(pathToFileURL(f).href);
 }
 
@@ -49,19 +59,19 @@ function timKhungLoi(n: ReactNode, RE: unknown): ReactElement<Record<string, unk
   return timKhungLoi((n.props as { children?: ReactNode }).children, RE);
 }
 
-async function veKhiLoi(sp: Record<string, string>) {
-  const trang = await napTrang();
+async function veKhiLoi(sp: Record<string, string>, { ghiUrl, luoi }: { ghiUrl?: (u: string) => void; luoi?: { tu: string; thanh: string } } = {}) {
+  const trang = await napTrang(luoi);
   const { RegionError } = await import("../src/components/states/region-error");
   const { createRoot } = await import("react-dom/client");
   const { AppRouterContext } = await import("next/dist/shared/lib/app-router-context.shared-runtime");
   const khung = timKhungLoi(await trang.default({ searchParams: Promise.resolve(sp) }), RegionError);
   assert.ok(khung, "CG3-AC-7 trang không bọc danh sách trong khung lỗi");
   const Nem = () => { throw new Error("cg3-truy-van-loi"); };
-  const di: string[] = [];
   const dayRouter: string[] = [];
   const router = { refresh() {}, push: (u: string) => { dayRouter.push(u); }, replace() {}, back() {}, forward() {}, prefetch() {} };
-  // Giữ nguyên phần tử thanh lọc trang trả về, chỉ thay bước tải lại trang vì DOM thử không điều hướng được.
-  const leading = cloneElement(khung.props.leading as ReactElement<{ di?: (u: string) => void }>, { di: (u: string) => { di.push(u); } });
+  // Mặc định giữ nguyên phần tử thanh lọc trang trả về. Riêng ca đọc đường dẫn đích mới ghi lại URL, vì DOM thử không cho biết nơi đến.
+  const goc = khung.props.leading as ReactElement<{ di?: (u: string) => void }>;
+  const leading = ghiUrl ? cloneElement(goc, { di: ghiUrl }) : goc;
   document.body.innerHTML = "<div id=root></div>";
   const root = createRoot(document.getElementById("root")!);
   const im = console.error;
@@ -71,13 +81,13 @@ async function veKhiLoi(sp: Record<string, string>) {
       root.render(<AppRouterContext.Provider value={router as never}><RegionError what={khung.props.what as string} leading={leading}><Nem /></RegionError></AppRouterContext.Provider>);
     });
   } finally { console.error = im; }
-  return { di, dayRouter, go: () => React.act(async () => root.unmount()) };
+  return { dayRouter, go: () => React.act(async () => root.unmount()) };
 }
 
 const nut = (chu: string) => [...document.querySelectorAll<HTMLElement>("button, [role=tab]")].find((b) => b.textContent?.trim() === chu);
 
 test("CG3-AC-7 truy vấn lỗi: có Thử lại, thanh lọc vẫn đứng, ô vị trí tắt có lời giải thích", async () => {
-  const { di, dayRouter, go } = await veKhiLoi({ type: "house", location: "vn-hanoi" });
+  const { go } = await veKhiLoi({ type: "house", location: "vn-hanoi" });
   assert.ok(nut("Thử lại"), "CG3-AC-7 ca lỗi thiếu nút Thử lại");
   const boLoc = document.querySelector("[data-deals-bo-loc]");
   assert.ok(boLoc, "CG3-AC-7 ca lỗi mất thanh lọc");
@@ -89,9 +99,30 @@ test("CG3-AC-7 truy vấn lỗi: có Thử lại, thanh lọc vẫn đứng, ô 
   const giai = document.getElementById(viTri.getAttribute("aria-describedby") ?? "");
   assert.match(giai?.textContent ?? "", /Thử lại/, "CG3-AC-7 ô vị trí tắt phải có lời giải thích");
   assert.ok(nut("Xoá bộ lọc"), "CG3-AC-7 ca lỗi vẫn phải bỏ được điều kiện đang lọc");
+  await go();
+});
+
+/** Bấm Cho thuê trên thanh lọc cạnh khung lỗi, không thay gì ở thanh lọc: trình duyệt phải tải lại trang, router không được đụng tới. */
+async function kiemTaiLaiKhiLoi(luoi?: { tu: string; thanh: string }) {
+  const { dayRouter, go } = await veKhiLoi({ type: "house", location: "vn-hanoi" }, { luoi });
+  loiDom.length = 0;
+  try {
+    await React.act(async () => { nut("Cho thuê")!.click(); });
+    assert.equal(loiDom.filter((m) => /navigation/i.test(m)).length, 1, "CG3-AC-7 đổi Cho thuê khi lỗi phải tải lại trang");
+    assert.deepEqual(dayRouter, [], "CG3-AC-7 đổi điều kiện khi lỗi không được đi bằng router: khung lỗi không tự hết khi chỉ đổi tham số");
+  } finally { await go(); }
+}
+
+test("CG3-AC-7 đổi lọc khi lỗi tải lại trang thật, chiều đỏ khi bước tải lại không chạy", async () => {
+  await kiemTaiLaiKhiLoi();
+  await assert.rejects(() => kiemTaiLaiKhiLoi({ tu: "di = (url) => window.location.assign(url)", thanh: "di = () => {}" }), /CG3-AC-7 đổi Cho thuê khi lỗi phải tải lại trang/);
+});
+
+test("CG3-AC-7 đường dẫn tải lại mang điều kiện mới, bỏ vị trí của loại tin cũ", async () => {
+  const den: string[] = [];
+  const { go } = await veKhiLoi({ type: "house", location: "vn-hanoi" }, { ghiUrl: (u) => { den.push(u); } });
   await React.act(async () => { nut("Cho thuê")!.click(); });
-  assert.deepEqual(di, ["/ops/deals?type=house&kind=rent"], "CG3-AC-7 đổi Cho thuê khi lỗi phải tải lại trang theo điều kiện mới, bỏ vị trí của loại tin cũ");
-  assert.deepEqual(dayRouter, [], "CG3-AC-7 đổi điều kiện khi lỗi không được đi bằng router: khung lỗi không tự hết khi chỉ đổi tham số");
+  assert.deepEqual(den, ["/ops/deals?type=house&kind=rent"], "CG3-AC-7 đường dẫn tải lại sai điều kiện");
   await go();
 });
 
@@ -120,6 +151,5 @@ test("CG3-AC-7 đối chứng: đổi lọc khi KHÔNG lỗi đi bằng router, 
   await React.act(async () => { nut("Cho thuê")!.click(); });
   assert.deepEqual(dayRouter, ["/ops/deals?type=house&kind=rent"], "CG3-AC-7 đổi lọc khi không lỗi phải đi bằng router");
   assert.deepEqual(loiDom.filter((m) => /navigation/i.test(m)), [], "CG3-AC-7 đổi lọc khi không lỗi không được tải lại trang");
-  assert.equal(window.location.href, "http://may-thu/ops/deals", "CG3-AC-7 đổi lọc khi không lỗi không được đổi trang bằng trình duyệt");
   await React.act(async () => root.unmount());
 });

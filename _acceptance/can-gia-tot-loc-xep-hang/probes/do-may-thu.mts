@@ -53,26 +53,30 @@ const lech: string[] = [];
 const nutChon: [string, Record<string, string>, number][] = [];
 for (const t of dau.trang.cay) {
   const maTinh = t.value.split(":")[1];
-  if (soCan((r: any) => r.area_id === maTinh || r.parent_id === maTinh) !== t.count) lech.push(t.value);
+  const soTinh = soCan((r: any) => r.area_id === maTinh || r.parent_id === maTinh);
+  if (soTinh !== t.count) lech.push(t.value);
+  nutChon.push([t.value, { location: maTinh }, t.count]);
   for (const n of t.children ?? []) for (const m of n.children ?? []) {
     const [loai, k] = m.value.split(":");
     const so = soCan((r: any) => (loai === "area" ? r.area_id === k : r.cap === "du_an" && r.nut === k));
     if (so !== m.count) lech.push(m.value);
-    nutChon.push([m.value, loai === "area" ? { location: k } : { project: k }, so]);
+    nutChon.push([m.value, loai === "area" ? { location: k } : { project: k }, m.count]);
   }
 }
-// Nút chứa căn có tin ở nhiều nút là chỗ lọc sau bước gộp từng làm rơi căn: đọc lại bằng đúng hàm của màn.
-const nutCuaCan = new Map<string, Set<string>>();
-for (const r of tin) for (const k of [`area:${r.area_id}`, ...(r.cap === "du_an" ? [`project:${r.nut}`] : [])]) nutCuaCan.set(r.can, (nutCuaCan.get(r.can) ?? new Set()).add(k));
-const nutNhieu = new Set([...nutCuaCan.values()].filter((x) => [...x].filter((k) => k.startsWith("area:")).length > 1 || [...x].filter((k) => k.startsWith("project:")).length > 1).flatMap((x) => [...x]));
-const canDoc = nutChon.filter(([v]) => nutNhieu.has(v) || v === "project:251");
+// Chọn lại từng mục của cây (tỉnh, phường, dự án) bằng đúng hàm đọc của màn: số trên tab phải bằng số in trên mục.
 const sai: string[] = [];
-for (const [v, sp, so] of canDoc) if ((await getDealsTrang(docThamSoDeal(sp))).trang.dem.all !== so) sai.push(v);
-kiem("nút có căn nhiều tin: số khi chọn bằng số đếm độc lập", sai.length === 0 && canDoc.length > 0, { doc: canDoc.length, sai: sai.slice(0, 5) });
+const hang = [...nutChon];
+await Promise.all(Array.from({ length: 4 }, async () => {
+  for (let x = hang.shift(); x; x = hang.shift()) {
+    const [v, sp, so] = x;
+    if ((await getDealsTrang(docThamSoDeal(sp))).trang.dem.all !== so) sai.push(v);
+  }
+}));
+kiem("mọi mục của cây: số khi chọn mục bằng số trên mục", sai.length === 0 && nutChon.length > 0, { doc: nutChon.length, tinh: dau.trang.cay.length, sai: sai.slice(0, 5) });
 const dem251 = dem("251");
 const op251 = await getDealsTrang(docThamSoDeal({ project: "251" }));
 kiem("dự án 251 bằng lệnh đo", op251.trang.dem.all === dem251.tong, [op251.trang.dem.all, dem251.tong]);
-kiem("mọi mục của cây có số bằng số căn khi chọn", lech.length === 0, lech.slice(0, 5));
+kiem("mọi mục của cây có số bằng số đếm độc lập", lech.length === 0, lech.slice(0, 5));
 kiem("tổng các tỉnh bằng tổng tập", dau.trang.cay.reduce((s: number, t: any) => s + t.count, 0) === tap.tong, dau.trang.cay.length);
 await pool.end();
 if (hong.length) { console.error(`HỎNG ${hong.length}: ${hong.join("; ")}`); process.exit(1); }
