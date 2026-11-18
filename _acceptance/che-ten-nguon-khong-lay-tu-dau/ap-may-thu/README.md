@@ -13,7 +13,8 @@
    - Xoá tệp cục bộ sau khi áp xong.
 3. **Số chạy thử:** `chay-thu.md` — lượt E5/E6 trên bản chép DB máy thu (`discovery/do-ban-chep.mjs`), điền ở S4.
 4. **Cách lùi:** `bash khoi-phuc-s16.sh <tệp sao lưu>` (đặt lại dòng S16 đúng như bản sao lưu — dạng chữa tạm, không viết
-   cứng giá trị) rồi `psql … -f lui-cot.sql` (bỏ cột). Áp lại 112 được.
+   cứng giá trị) rồi `psql … -f lui-cot.sql` (bỏ cột), đúng thứ tự này vì bước khôi phục cần cột còn đó. Áp lại 112 được.
+   Cả hai bước đã chạy thật trên DB thử (ca AC-7 của `source-name-entries.itest.mjs`).
 5. **Lệnh kiểm sau:**
    - /ops/registry trên máy thu: tên dự án mang thương hiệu S16 hiện nguyên (không còn «S16 …»);
    - lượt cloud-sync kế của job 15′ (sync-cloud không có chế độ chạy khô): `tail -50 ~/dev/onehub-invest/pipeline/logs/cloud-sync.log`

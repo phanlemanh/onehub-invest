@@ -3,6 +3,7 @@
 // từ có từ đầu trùng thương hiệu dự án giả «Lumora Park»; tên miền có nhãn đầu là từ chung «market») — không tên nguồn
 // thật nào trong tệp; mọi thông điệp chỉ nêu mã. Thứ tự ca có nghĩa (DB trước 112 → áp 112 → sau 112), chạy tuần tự.
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -195,6 +196,32 @@ test("AC-3 (c) không có bảng source_registry: hai bản hàm nạp trả []"
     assert.deepEqual(await appLoi.docSourceNameEntriesVoi(r), []);
     assert.equal(guardValues(["x"], []).length, 0);
   } finally { await r.end(); }
+});
+
+test("AC-7 sao lưu rồi khôi phục dòng S16 trên DB thử: về đúng bản sao lưu, cờ về false, kể cả khi S16 đã có đơn vị thu", async () => {
+  const AP = path.join(ROOT, "_acceptance", "che-ten-nguon-khong-lay-tu-dau", "ap-may-thu");
+  const home = mkdtempSync(path.join(tmpdir(), "cten-sao-luu-"));
+  const env = { ...process.env, HOME: home, DB_AP: new URL(URL_THU).pathname.slice(1) };
+  const dong = async () => JSON.stringify((await c.query(`SELECT to_jsonb(s) - 'match_whole' AS j, match_whole FROM source_registry s WHERE code = 'S16'`)).rows);
+  try {
+    const truoc = await dong();
+    const ra = execFileSync("bash", [path.join(AP, "sao-luu.sh")], { env, encoding: "utf8" });
+    const tep = ra.match(/đã sao lưu: (\S+)/)?.[1];
+    assert.ok(tep, "sao-luu.sh không báo tệp sao lưu");
+    // Đơn vị thu con: khoá ngoại tới source_registry làm cách xoá rồi chèn lại hỏng (ghim lý do dùng UPDATE).
+    // Mã đơn vị do trigger cấp và ràng buộc mã chỉ nhận S0x, nên tắt trigger người dùng + bỏ kiểm mã trong phạm vi DB thử này.
+    await c.query(`ALTER TABLE collection_units DISABLE TRIGGER USER`);
+    await c.query(`ALTER TABLE collection_units DROP CONSTRAINT collection_units_unit_code_chk`);
+    await c.query(`INSERT INTO collection_units (source_code, group_key, name, unit_code, unit_type, status, enabled)
+                   VALUES ('S16', 'cten-thu', 'thu', 'S16-N999', 'nhom', 'draft', false)`);
+    await c.query(`UPDATE source_registry SET real_name = $1, source_ids = $2, match_whole = true WHERE code = 'S16'`, [TEN, [MIEN]]);
+    assert.ok((await dong()) !== truoc, "bước đổi dòng S16 của ca không có tác dụng");
+    execFileSync("bash", [path.join(AP, "khoi-phuc-s16.sh"), tep], { env, encoding: "utf8" });
+    assert.ok((await dong()) === truoc, "AC-7 khôi phục: dòng S16 không về đúng bản sao lưu"); // so bằng boolean để lỗi không in giá trị
+  } finally {
+    await c.query(`DELETE FROM collection_units WHERE source_code = 'S16' AND group_key = 'cten-thu'`);
+    rmSync(home, { recursive: true, force: true });
+  }
 });
 
 test("AC-7 tệp lùi: chạy thật trên DB thử — cột mất, áp lại 112 được", async () => {

@@ -55,7 +55,7 @@ evals:
     executor: test
     cmd: bash _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/db.sh
     paths: [_acceptance/che-ten-nguon-khong-lay-tu-dau/ap-may-thu/**]
-    expected: "exit 0; thư mục ap-may-thu có README (năm bước: lệnh áp 112 + trả dòng S16 không chép giá trị, chạy thử, sao lưu source_registry, lùi, kiểm sau), lui.sql; lui.sql chạy thật trên DB thử đã áp 112: cột match_whole mất, áp lại 112 được, dòng S16 giả về dạng chữa tạm."
+    expected: "exit 0; thư mục ap-may-thu có README (năm bước: lệnh áp 112 + trả dòng S16 không chép giá trị, chạy thử, sao lưu source_registry, lùi, kiểm sau), sao-luu.sh, khoi-phuc-s16.sh, lui-cot.sql; chạy thật trên DB thử đã áp 112: sao lưu rồi đổi dòng S16 và khôi phục thì dòng S16 về đúng bản sao lưu, cờ về false, kể cả khi S16 đã có đơn vị thu con; lui-cot.sql làm cột match_whole mất, áp lại 112 được."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4c
     criterion: AC-4
