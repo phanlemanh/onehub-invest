@@ -1,0 +1,102 @@
+schema_version: 1
+slug: ghep-tin-vao-danh-muc
+
+# Lệnh đo nằm ở probes/*.sh của hồ sơ: _acceptance/config.yaml là tệp bảo vệ, giám sát không mở (P4-209).
+
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: bash _acceptance/ghep-tin-vao-danh-muc/probes/ham-gan.sh
+    paths: ["pipeline/lib/ghep-tin-danh-muc*.mjs"]
+    expected: >
+      Ma trận một assert mỗi ô: một toà, nhiều toà, phân khu cụm, ngoài danh bạ; giá trị mỗi ô rút từ block_raw thật và danh bạ thật trên bản chép
+      DB máy thu, kèm đối chứng dương. Chiều đỏ trên cùng fixture: bản đột biến chọn toà đầu tiên ở ô mơ hồ thì ca đỏ, thông điệp ghim tên ô.
+
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: bash _acceptance/ghep-tin-vao-danh-muc/probes/ham-gan.sh
+    paths: ["pipeline/lib/ghep-tin-danh-muc*.mjs"]
+    expected: >
+      Mã S1 của OP1 và GP ra hai toà khác nhau theo dự án của tin; tin khu khác, chưa có dự án, không phải căn hộ sinh 0 phát biểu. Chiều đỏ:
+      bỏ lọc theo dự án thì ca mã trùng đỏ, thông điệp ghim mã và hai dự án.
+
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: bash _acceptance/ghep-tin-vao-danh-muc/probes/ham-gan.sh
+    paths: ["pipeline/lib/ghep-tin-danh-muc*.mjs"]
+    expected: >
+      Cột rỗng hoặc ngoài danh bạ mà chữ bài nêu tên một toà thì không gắn, lý do khong-cot hoặc ngoai-danh-ba; đối chứng dương: cùng bài có cột
+      toà khớp thì gắn. Chiều đỏ: bản đột biến đọc chữ bài thì ca đỏ, thông điệp ghim mã bài.
+
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: bash _acceptance/ghep-tin-vao-danh-muc/probes/migration.sh
+    layer: backend-effect
+    paths: ["db/migrations/117_*.sql", "pipeline/lib/ghep-tin-danh-muc*.mjs", "pipeline/scripts/ghep-tin-danh-muc*.mjs"]
+    expected: >
+      Trên DB thử áp tới 113 rồi 117: ghi được hai mức phát biểu đúng khuôn và bốn trường của 113. Chiều đỏ: DB từ chối giá trị không phải UPI
+      của toà đang hoạt động và trường này trên resource khác Property, thông điệp ghim tên trường.
+
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: bash _acceptance/ghep-tin-vao-danh-muc/probes/xung-dot.sh
+    layer: backend-effect
+    paths: ["db/migrations/117_*.sql", "pipeline/scripts/ghep-tin-danh-muc*.mjs"]
+    expected: >
+      Bốn ô, một assert mỗi ô: hai toà khác nhau, toà với phân khu không chứa nó, hai phân khu khác nhau đều ra xung_dot và không tính đã gắn; toà
+      với phân khu chứa nó ra mức toà (đối chứng dương). Dòng của rule_id khác không vào view. Trên bản chép DB máy thu in số xung_dot, không vượt 1%
+      số tin đã gắn. Chiều đỏ: cấy hai toà vào một tin ở bản sao thì lệnh báo đúng offer_id.
+
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: bash _acceptance/ghep-tin-vao-danh-muc/probes/chay-lai.sh
+    paths: ["pipeline/lib/ghep-tin-danh-muc*.mjs", "pipeline/scripts/ghep-tin-danh-muc*.mjs"]
+    expected: >
+      Lượt hai 0 chèn 0 rút. Năm ca đổi dữ liệu, một assert mỗi ca: cột sang toà khác, cột về rỗng, tin đổi dự án, toà bị gộp, toà ngừng hoạt động;
+      dòng cũ bị rút, bài có nhiều nhất một dòng sống. Chiều đỏ: bỏ bước rút thì bài mang hai dòng sống và lệnh thoát 1, thông điệp ghim subject_key.
+
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: bash _acceptance/ghep-tin-vao-danh-muc/probes/khong-pha.sh
+    paths: ["pipeline/transform-zalo.mjs", "pipeline/scripts/ghep-tin-danh-muc*.mjs"]
+    expected: >
+      Trên bản chép: offer_project trước và sau lượt nạp giống nhau từng tin; băm snapshot không đổi, gốc snapshot lấy từ cấu hình và số tệp lớn hơn
+      0; bài thử sinh 0 dòng; bước gắn xong trong 60 giây. DB thiếu 117, hoặc cấy lỗi khi ghi: in đúng một dòng, số bài nạp bằng đối chứng không có
+      bước gắn, thoát 0. Chiều đỏ: cấy bài thử mà nó được gắn thì lệnh thoát 1.
+
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: bash _acceptance/ghep-tin-vao-danh-muc/probes/do-phu.sh
+    paths: ["pipeline/scripts/ghep-tin-danh-muc*.mjs", "db/migrations/117_*.sql"]
+    expected: >
+      Trên bản chép DB máy thu: in tử số, mẫu số, tách theo khu và mức gắn; tỉ lệ đạt ngưỡng chốt ở Cổng Phạm vi; lệch không quá 0,5% so với phép đếm
+      độc lập đi thẳng từ block_raw và tên trong danh bạ, không gọi hàm gắn; cấy dòng của rule_id khác thì tử số không đổi. Chiều đỏ: gỡ phát biểu của
+      một khu ở bản sao thì lệnh thoát 1 và nêu lệch bao nhiêu tin.
+
+  - id: E9
+    criterion: AC-9
+    executor: script
+    cmd: bash _acceptance/ghep-tin-vao-danh-muc/probes/cham-tap-test.sh
+    paths: ["pipeline/lib/ghep-tin-danh-muc*.mjs", "pipeline/scripts/ghep-tin-danh-muc*.mjs"]
+    expected: >
+      Tính lại cận dưới Wilson từ tệp đóng băng có băm và nhãn thô, ghi evidence/cham-tap-test.md, thoát 0 khi từ 0,95 và đủ cỡ mẫu đã chốt. Đỏ, thông
+      điệp ghim lý do, khi số lệch báo cáo, khi commit luật gắn muộn hơn nhãn người đầu tiên của lát, hoặc khi thiếu cỡ mẫu. Đối chứng hai chiều trên cùng
+      fixture: tập đúng hết đủ cỡ thì xanh, đổi một nhãn cho hụt ngưỡng thì đỏ.
+
+  - id: E10
+    criterion: AC-9
+    executor: judgment
+    inputs:
+      - _acceptance/ghep-tin-vao-danh-muc/contract.md
+      - _acceptance/ghep-tin-vao-danh-muc/evidence/cham-tap-test.md
+    question: >
+      Đối chiếu báo cáo chấm với AC-9 của hợp đồng: báo cáo có nêu cỡ mẫu đúng mức đã chốt, cận dưới Wilson của tập gộp, và số tách riêng mức toà với mức
+      phân khu, cụm và theo từng khu không? Nếu một phần có độ đúng thấp rõ rệt, báo cáo có nói ra không?

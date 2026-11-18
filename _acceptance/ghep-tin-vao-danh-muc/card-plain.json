@@ -1,0 +1,37 @@
+{
+  "feature_plain": "Tin rao căn hộ ở Ocean Park 1 và Grand Park biết mình thuộc toà nào, để sau đó so được giá giữa các căn trong cùng một toà.",
+  "will_do": [
+    { "id": "AC-1", "p": "Sẽ gắn tin vào toà khi tên toà người bán ghi khớp đúng một toà trong Danh bạ, và gắn vào phân khu hay cụm khi tên chỉ khớp tới đó." },
+    { "id": "AC-2", "p": "Sẽ chỉ so tên toà trong đúng dự án của tin, vì nhiều dự án có toà trùng tên như S1, S2." },
+    { "id": "AC-3", "p": "Sẽ chỉ đọc ô tên toà của tin ở lượt này; tin chỉ nêu toà trong phần chữ của bài chưa được gắn." },
+    { "id": "AC-4", "p": "Sẽ lưu mỗi lần gắn kèm căn cứ, và hệ thống từ chối mọi giá trị không phải một toà đang hoạt động." },
+    { "id": "AC-5", "p": "Sẽ không tính là đã gắn khi các bài của cùng một tin chỉ về hai nơi khác nhau, và báo số tin như vậy." },
+    { "id": "AC-6", "p": "Sẽ tự cập nhật khi tên toà trên tin đổi, tin đổi dự án, hoặc toà bị gộp hay ngừng hoạt động; chạy lại không sinh thêm gì." },
+    { "id": "AC-8", "p": "Sẽ đưa số tin căn hộ S03 gắn được toà, phân khu, cụm từ 0 lên mức anh chốt, đề xuất 40%, và đối chiếu bằng một phép đếm độc lập." },
+    { "id": "AC-9", "p": "Sẽ chấm độ đúng trên các bài có nhãn người, chỉ đạt khi cận dưới từ 95%, và luật gắn phải khoá trước buổi gắn nhãn." }
+  ],
+  "wont_do": [
+    { "id": "AC-7", "p": "Sẽ KHÔNG làm hỏng lượt nạp tin 15 phút: bước gắn có lỗi thì chỉ cảnh báo, tin vẫn nạp đủ và dự án của tin không đổi." },
+    { "id": "OOS-1", "p": "Chưa gắn tới trục, căn và chưa suy tầng từ mã căn; phần này thuộc việc kế tiếp." },
+    { "id": "OOS-2", "p": "Chưa làm các dự án khác ngoài hai khu này, và chưa gỡ 82 tin Grand Park có tên toà trùng." },
+    { "id": "OOS-3", "p": "Chưa sửa lỗi điền nháp nhãn của tập kiểm tra; lỗi này đi thành việc vá riêng." },
+    { "id": "OOS-4", "p": "Chưa đọc tên toà từ phần chữ của bài, trừ khi anh chọn khác ở câu hỏi 1." },
+    { "id": "OOS-5", "p": "Chưa đưa toà của tin lên cổng Invest hay cloud." }
+  ],
+  "coverage_plain": [
+    { "i": 0, "p": "Phủ cả hai khu đang làm và hai loại tin bị loại là khu khác, chưa có dự án (AC-1, AC-2 — gắn đúng khu)." },
+    { "i": 1, "p": "Phủ năm tình huống của ô tên toà: một toà, nhiều toà, phân khu hay cụm, tên lạ, để trống (AC-1, AC-3 — đọc ô tên toà)." },
+    { "i": 2, "p": "Tin để trống ô tên toà không được gắn dù phần chữ có nêu toà (AC-3 — chỉ đọc ô tên toà)." },
+    { "i": 3, "p": "Chỉ tin căn hộ được gắn, loại nhà khác bị bỏ qua (AC-2 — đúng loại nhà)." },
+    { "i": 4, "p": "Phủ năm cách các bài của một tin có thể khác nhau về toà và phân khu (AC-5 — không gắn hai nơi)." },
+    { "i": 5, "p": "Phủ lần chạy đầu, chạy lại, dữ liệu đổi, thiếu bản nâng cấp dữ liệu và lỗi khi ghi (AC-6, AC-7 — chạy bền)." },
+    { "i": 6, "p": "Cố ý chưa làm: dự án khác chưa có danh sách toà, và 573 tin chỉ nêu toà trong phần chữ chờ anh quyết ở câu hỏi 1." }
+  ],
+  "gap_probe_plain": [
+    { "i": 0, "p": "Thước chất lượng ban đầu chỉ dựa vào một báo cáo tự viết. Đã thêm bước máy tính lại từ nhãn người và kiểm luật được khoá trước buổi gắn nhãn." },
+    { "i": 1, "p": "Ngưỡng 45% ban đầu buộc phải đọc phần chữ của bài mà chưa đo được độ đúng. Đã đưa lên thành câu hỏi 1 và câu hỏi 3 cho anh quyết." },
+    { "i": 2, "p": "Bước gắn có thể làm hỏng lượt nạp tin nếu gặp lỗi. Đã tách riêng để lỗi chỉ cảnh báo, kèm giới hạn 60 giây." },
+    { "i": 3, "p": "Chưa xét tin có bài chỉ về toà và bài chỉ về phân khu khác. Đã thêm bốn tình huống và mức trần 1% số tin xung đột." },
+    { "i": 4, "p": "Một số phép kiểm có thể xanh giả, ví dụ kiểm trên thư mục rỗng. Đã đổi sang dữ liệu thật và thêm năm tình huống dữ liệu đổi." }
+  ]
+}
