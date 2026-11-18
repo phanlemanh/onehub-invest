@@ -29,7 +29,6 @@
       "loai": "phat-hanh",
       "dot": "dat-lai-lo-trinh-1511",
       "hang": [
-        "UI10",
         "DS2",
         "CG3",
         "CG10",
@@ -1153,26 +1152,6 @@
       ]
     },
     {
-      "ma": "UI10",
-      "cau_giao": "Người vận hành mở «Căn giá tốt» /ops/deals thấy PageHeader, bảng theo block data-grid, đủ trạng thái tải/trống/lỗi, liên hệ và nội dung tin theo vai",
-      "vai": "Người vận hành",
-      "tieu_chi": 9,
-      "vi_sao": "B5 của chuẩn UI. Đứng trên PL26 (cùng trang, đổi thước phường × loại). Không đụng AU2 (API).",
-      "hang": "T2",
-      "slug": "ops-deals-data-grid",
-      "dung_tren": [],
-      "nhom": "l03-hang-cap-du-an",
-      "dot": "giao-dien-2310",
-      "phu": [
-        "GD11"
-      ],
-      "vung": [
-        "app/src/app/ops/deals",
-        "app/src/components/ops/deal-card.tsx"
-      ],
-      "ghi_chu": "Bỏ dung_tren PL26 ở lượt cắt can-gia-tot-0311: bảng không cần thước mới, chung vùng thì lịch tự xếp nối tiếp; câu giao bỏ «cột tầng A chỉ admin» vì SD4 đã đổi. CG3 đứng trên hàng này. Gánh thêm hai tiêu chí của OH2. Đặt lại lộ trình 15/11: gánh thêm việc của OH2 (đã chuyển thành mục chờ «giao cùng UI10»)."
-    },
-    {
       "ma": "UI17",
       "cau_giao": "Lint UI ra 0 vi phạm khi không còn tệp eslint-suppressions.json",
       "vai": "nen",
@@ -1187,8 +1166,7 @@
         "UI4",
         "UI5",
         "UI6",
-        "UI7",
-        "UI10"
+        "UI7"
       ],
       "bat_khi": "Xoá eslint-suppressions.json: npm run lint xanh; bảng trước/sau ui-baseline-2026-10.md đủ cột; mọi trang có trạng thái tải",
       "nhom": "nen-giu-nha",
@@ -2769,9 +2747,8 @@
       "slug": "can-gia-tot-loc-xep-hang",
       "hang": "T2",
       "vai": "Người vận hành",
-      "tieu_chi": 10,
+      "tieu_chi": 12,
       "dung_tren": [
-        "UI10",
         "CG9"
       ],
       "phu": [
@@ -2781,9 +2758,11 @@
       "vi_sao": "Phiên nghiệm thu people-hien-so-goc 03/11: Mạnh chấm 3, «Không sử dụng được» (PR #282, docs/plan/pham-vi-can-gia-tot-0311.md). Nguyên văn: «Không nhìn theo được điều này thì ko thể sử dụng». Mở rộng 09/11 theo phân tích Căn giá tốt theo vị trí (bản phạm vi docs/plan/pham-vi-can-gia-tot-vi-tri-0911.md): câu hỏi là «ở vị trí X, thông số Y, căn nào giá tốt».",
       "vung": [
         "app/src/app/ops/deals",
-        "app/src/lib/deals.ts"
+        "app/src/lib/deals.ts",
+        "app/src/components/ops/deals-grid.tsx",
+        "app/src/components/ops/deals-cells.tsx"
       ],
-      "ghi_chu": "Viết lại ở lượt cắt can-gia-tot-vi-tri-0911: tra theo vị trí bất kỳ thay bộ lọc khu vực; đứng trên CG9 thay CG2. Truy vấn chỉ chọn tin nào hiện, không tính lại điểm (luật 10). Cấp dự án, toà đầy dần theo CG10, CG11; mỗi bộ lọc nói phủ bao nhiêu tin (09/11: tầng ở 6% tin S06 bán căn hộ, 0% S03). Hướng, view, nội thất thêm ở CG12. Ô Bán | Cho thuê thay phần giao diện của CG4."
+      "ghi_chu": "Viết lại ở lượt cắt can-gia-tot-vi-tri-0911: tra theo vị trí bất kỳ thay bộ lọc khu vực; đứng trên CG9 thay CG2. Truy vấn chỉ chọn tin nào hiện, không tính lại điểm (luật 10). Cấp dự án, toà đầy dần theo CG10, CG11; mỗi bộ lọc nói phủ bao nhiêu tin (09/11: tầng ở 6% tin S06 bán căn hộ, 0% S03). Hướng, view, nội thất thêm ở CG12. Ô Bán | Cho thuê thay phần giao diện của CG4. Sửa 18/11: dãy N1 (GS 18/11), gánh hai tiêu chí của UI10/OH2 (báo cắt danh sách 30 căn + số đếm tab; trạng thái trống có hành động); UI10 đóng vì phần còn lại đã có trên main."
     },
     {
       "dot": "can-gia-tot-0311",
@@ -5523,6 +5502,29 @@
         "data-api/src"
       ],
       "ghi_chu": "Câu của Cổng Phạm vi, KHÔNG tự chốt: (1) API chạy ở đâu và ai gọi — ứng dụng trên cloud gọi thì không được trả ngày sinh, giới tính ra khỏi máy thu; (2) thuộc cổng nào, xác thực thế nào — data-api công khai không hợp. vung ghi tạm data-api/src, đổi ở Cổng Phạm vi theo câu (2). Dãy dự kiến U2 sau EN3."
+    },
+    {
+      "ma": "DA44",
+      "slug": "danh-ba-cot-nguon-tinh-s16",
+      "dot": "thuoc-tinh-can-s16-1811",
+      "nhom": "l04-danh-ba-toa",
+      "phu": [
+        "TC5"
+      ],
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 6,
+      "dung_tren": [
+        "DA40"
+      ],
+      "cau_giao": "Người vận hành mở trang Danh bạ Ops và thấy cột Nguồn cùng ô Mã nguồn chưa nối tính cả S16",
+      "bat_khi": "Trên Danh bạ Ops máy thu: năm dự án đã có căn S16 hiện S16 ở cột Nguồn (hôm nay không dự án nào hiện); ô Mã nguồn chưa nối tính cả S16 và khớp lệnh đếm trên DB máy thu; nhãn chỉ là mã S16",
+      "vi_sao": "GS 18/11: năm dự án đã có khoảng 111 nghìn căn S16 nhưng cột Nguồn không hiện S16, vì bí danh S16 nằm ở toà, trục, căn còn cột chỉ đọc mã nối của nút dự án. Người xem danh bạ tưởng các dự án này chưa có S16.",
+      "vung": [
+        "app/src/lib/ops/registry/**",
+        "app/src/components/ops/registry/**"
+      ],
+      "ghi_chu": "Hàng nhỏ, chung vùng màn với DA40 nên đứng sau DA40. 6 tiêu chí: giữ riêng vì là lỗi đọc của trang danh bạ, không thuộc kết quả của DA40 hay DA41."
     }
   ],
   "chan_troi": [
@@ -5800,11 +5802,11 @@
       "ma": "OH2",
       "dot": "ops-noi-that-2410",
       "cau_giao": "«Căn giá tốt» có khung trang, đếm/lọc/phân trang, chữ không nhỏ hơn text-xs, câu người bán theo chốt 23/10",
-      "ly_do": "Trùng phạm vi UI10 (B5, đợt giao-dien-2310): PageHeader + data-grid + lint đã là câu giao của UI10; phần còn lại (câu «thông tin người đăng chỉ ở máy thu» lỗi thời, báo cắt danh sách) là tiêu chí thêm của UI10. 15/11: cùng việc với UI10.",
+      "ly_do": "Trùng phạm vi UI10 (B5, đợt giao-dien-2310): PageHeader + data-grid + lint đã là câu giao của UI10; phần còn lại (câu «thông tin người đăng chỉ ở máy thu» lỗi thời, báo cắt danh sách) là tiêu chí thêm của UI10. 15/11: cùng việc với UI10. 18/11: UI10 đóng vì đã có trên main; hai tiêu chí còn nợ chuyển sang CG3.",
       "phu": [
         "OPS-16"
       ],
-      "mo_lai_khi": "Không mở riêng: giao cùng UI10"
+      "mo_lai_khi": "Không mở riêng: giao cùng CG3"
     },
     {
       "dot": "tu-van-hanh-2510",
@@ -7079,6 +7081,10 @@
     {
       "ma": "GNH2",
       "ly_do": "Cắt ở lần đặt lại lộ trình 15/11: lớp bạc đã có (silver_labels)"
+    },
+    {
+      "ma": "UI10",
+      "ly_do": "Đóng 18/11 (GS): đã có trên main — phiên N1 đo /ops/deals có PageHeader, Frame + data-grid + filters + phân trang, DealsSkeleton, RegionError có Thử lại, cột liên hệ theo vai. Hai tiêu chí còn nợ (báo cắt danh sách 30 căn + số đếm tab; trạng thái trống có hành động) chuyển sang CG3."
     }
   ]
 }
