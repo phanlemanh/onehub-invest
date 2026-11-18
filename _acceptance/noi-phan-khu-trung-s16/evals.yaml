@@ -1,0 +1,73 @@
+schema_version: 1
+feature_slug: noi-phan-khu-trung-s16
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.nps_cay
+    expected: "exit 0; ca NPS-1: khoá khu nằm trên nút cháu của dự án và trên nút loại building đều ra «đã gán», 0 nút mới, nút nghỉ mang khoá không được tính. Chiều đỏ: chỉ xét con trực tiếp thì ca đỏ với thông điệp nêu khu bị đúc lại"
+    paths: ["pipeline/lib/s16-phan-khu.mjs", "pipeline/phan-khu-s16.mjs", "pipeline/scripts/phan-khu-s16-noi.itest.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.nps_s09
+    expected: "exit 0; ca NPS-2 đủ ba nhánh trên cùng fixture: toà S09 về một nút khác tên ra «nút sẵn» đúng nút đó, cụm thắng phân khu cha; toà rẽ hai nút ra «mơ hồ», không đúc; chỉ 1 trên 4 toà có S09 thì không nhận nút theo bằng chứng; không có S09 và tên không trùng ra «nút mới». Chiều đỏ: bỏ bằng chứng S09 thì nhánh một ra «nút mới»; bỏ sàn một nửa thì nhánh dưới sàn đỏ"
+    paths: ["pipeline/lib/s16-phan-khu.mjs", "pipeline/phan-khu-s16.mjs", "pipeline/scripts/phan-khu-s16-noi.itest.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.nps_the
+    expected: "exit 0; ca NPS-3: thẻ nối liệt đúng cặp đã cấy kèm số toà có bằng chứng trên tổng toà, ca rẽ hai nút và ca không có toà nằm ở mục không nối kèm lý do, băm đổi khi một cặp đổi, dựng thẻ không đổi dòng nào. Chiều đỏ: bỏ lọc ca rẽ hai nút thì ca đỏ"
+    paths: ["pipeline/lib/s16-phan-khu.mjs", "pipeline/phan-khu-s16.mjs", "pipeline/scripts/phan-khu-s16-noi.itest.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.nps_ap
+    expected: "exit 0; ca NPS-4: băm lệch ném «bam-lech», 0 dòng đổi; băm đúng chuyển khoá và bí danh về nút cũ, nút mới mang nghỉ và thành con của nút giữ lại, id nút cũ không đổi, đúng một dòng luật; toà về nút cũ qua view; áp lần hai không đổi gì. Chiều đỏ: không đổi nút cha thì ca đỏ"
+    paths: ["pipeline/lib/s16-phan-khu.mjs", "pipeline/phan-khu-s16.mjs", "pipeline/scripts/phan-khu-s16-noi.itest.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.nps_dao
+    expected: "exit 0; ca NPS-5: đảo trả nguyên nút cha, meta, bí danh của mọi nút trong cặp, view toà trùng trước khi áp, dòng luật mang người và giờ đảo, đảo lần hai ném «da-dao». Chiều đỏ: không trả nút cha thì phép so trước sau đỏ"
+    paths: ["pipeline/lib/s16-phan-khu.mjs", "pipeline/phan-khu-s16.mjs", "pipeline/scripts/phan-khu-s16-noi.itest.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.nps_ops
+    expected: "exit 0; từng hàm đọc của danh bạ Ops (danh sách, chi tiết dự án) và danh sách phân khu của thẻ địa chỉ không trả nút nghỉ, số phân khu không đếm nút nghỉ, nút thường cùng cha vẫn có mặt; truy vấn nút của cổng Invest và API công khai chỉ đọc nút dự án. Chiều đỏ: bỏ lọc nghỉ ở từng truy vấn thì ca tương ứng đỏ"
+    paths: ["app/src/lib/ops/registry/doc.ts", "app/src/lib/ops/registry/du-an.ts", "app/src/lib/the-dia-chi-nhom.ts", "app/src/lib/deals.ts", "data-api/src/routes/deals.ts", "app/tests/nut-nghi-tren-ops.test.tsx"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.nps_dem
+    expected: "exit 0; ca NPS-7 đủ ba loại nút giữ lại (phân khu con trực tiếp, cụm cháu, nút building): sau khi nối, lượt dựng đêm chạy hai lần: 0 khoá mới, 0 phân khu mới, số nút không đổi, toà vẫn ở nút cũ. Chiều đỏ: nút nghỉ còn là con trực tiếp của dự án, hoặc bước khớp chỉ tìm khoá ở con trực tiếp, thì ca của loại nút tương ứng đỏ"
+    paths: ["pipeline/lib/s16-phan-khu.mjs", "pipeline/phan-khu-s16.mjs", "pipeline/danh-ba-vat-the.mjs", "pipeline/lib/s09-dung.mjs", "pipeline/lib/s16-dung.mjs", "pipeline/scripts/phan-khu-s16-noi.itest.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.nps_cloud
+    expected: "exit 0; ca NPS-8: bộ soát S16 của đường cloud chạy sạch trên asset_nodes sau khi nối, meta chỉ mang băm khoá khu; đối chứng cấy một mã khu thô vào meta nút thì bộ soát dừng ở asset_nodes.meta"
+    paths: ["pipeline/lib/s16-phan-khu.mjs", "pipeline/phan-khu-s16.mjs", "pipeline/scripts/phan-khu-s16-noi.itest.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.nps_that
+    expected: "exit 0 trên bản chép DB máy thu, DB máy thu chỉ bị đọc: thẻ nối 7 cặp với bằng chứng 11/11, 15/15, 4/4, 3/3, 5/5, 6/7, 5/5; áp xong 50 toà đổi nút, 0 toà khác đổi; 41=11, 42=16, 40=4, 23=7, 43=5, 33=3, 27=5; bảy nút nghỉ 0 toà; toà S16 treo dưới dự án 0; thẻ luật dựng lại 61 khu đã gán, 0 mới; dựng lại đủ năm dự án (Ocean Park 1, 2, 3, Smart City, Grand Park) 0 khoá mới, tổng số nút bằng trước lượt dựng; đảo về đúng dấu vân tay trước áp"
+    paths: ["pipeline/lib/s16-phan-khu.mjs", "pipeline/phan-khu-s16.mjs", "pipeline/scripts/phan-khu-s16-noi-that.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.script.nps_kiem
+    expected: "exit 0; ca NPS-10: lệnh kiểm sau áp thoát 0 khi mọi nút giữ lại có toà và nút nghỉ không còn toà; thoát 1 và nêu đúng id nút khi một nút giữ lại rỗng, khi còn toà ở nút nghỉ, khi toà S16 còn treo dưới dự án, khi một nút chưa nghỉ khác nút giữ lại mang khoá khu của cặp đã nối"
+    paths: ["pipeline/lib/s16-phan-khu.mjs", "pipeline/phan-khu-s16.mjs", "pipeline/scripts/phan-khu-s16-noi.itest.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
