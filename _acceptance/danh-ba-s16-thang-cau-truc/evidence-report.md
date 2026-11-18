@@ -1,13 +1,13 @@
 ---
 schema_version: 2
 feature_slug: danh-ba-s16-thang-cau-truc
-verdict: REJECT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 674c0fc8fb06dd398778eeac86de9dcf4e663df1
+verified_commit: 2103ba717ac840ebc9ceb7470e3fdb37e227f428
 human_signoff:
 ---
 
@@ -30,151 +30,151 @@ human_signoff:
 ## Evidence
 
 - eval: E1
-  run_id: minted-danh-ba-s16-thang-cau-truc-E1-r1
+  run_id: minted-danh-ba-s16-thang-cau-truc-E1-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.s37_db
-  verified_at: 2026-11-18T00:33:55Z
+  verified_at: 2026-11-18T03:27:34Z
   output: |
-    node --test --test-concurrency=1 pipeline/scripts/danh-ba-s16-cau-truc.itest.mjs
-    ℹ duration_ms 10093.545458
+    lệnh: node --test --test-concurrency=1 pipeline/scripts/danh-ba-s16-cau-truc.itest.mjs
+    ℹ duration_ms 13740.559541
 
 - eval: E2
-  run_id: minted-danh-ba-s16-thang-cau-truc-E2-r1
+  run_id: minted-danh-ba-s16-thang-cau-truc-E2-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.s37_db
-  verified_at: 2026-11-18T00:33:55Z
+  verified_at: 2026-11-18T03:27:34Z
   output: |
-    node --test --test-concurrency=1 pipeline/scripts/danh-ba-s16-cau-truc.itest.mjs
-    ℹ duration_ms 10093.545458
+    lệnh: node --test --test-concurrency=1 pipeline/scripts/danh-ba-s16-cau-truc.itest.mjs
+    ℹ duration_ms 13740.559541
 
 - eval: E3
-  run_id: minted-danh-ba-s16-thang-cau-truc-E3-r1
+  run_id: minted-danh-ba-s16-thang-cau-truc-E3-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.s37_db
-  verified_at: 2026-11-18T00:33:55Z
+  verified_at: 2026-11-18T03:27:34Z
   output: |
-    node --test --test-concurrency=1 pipeline/scripts/danh-ba-s16-cau-truc.itest.mjs
-    ℹ duration_ms 10093.545458
+    lệnh: node --test --test-concurrency=1 pipeline/scripts/danh-ba-s16-cau-truc.itest.mjs
+    ℹ duration_ms 13740.559541
 
 - eval: E4
-  run_id: minted-danh-ba-s16-thang-cau-truc-E4-r1
+  run_id: minted-danh-ba-s16-thang-cau-truc-E4-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.s37_db
-  verified_at: 2026-11-18T00:33:55Z
+  verified_at: 2026-11-18T03:27:34Z
   output: |
-    node --test --test-concurrency=1 pipeline/scripts/danh-ba-s16-cau-truc.itest.mjs
-    ℹ duration_ms 10093.545458
+    lệnh: node --test --test-concurrency=1 pipeline/scripts/danh-ba-s16-cau-truc.itest.mjs
+    ℹ duration_ms 13740.559541
 
 - eval: E5
-  run_id: minted-danh-ba-s16-thang-cau-truc-E5-r1
+  run_id: minted-danh-ba-s16-thang-cau-truc-E5-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.s37_db
-  verified_at: 2026-11-18T00:33:55Z
+  verified_at: 2026-11-18T03:27:34Z
   output: |
-    node --test --test-concurrency=1 pipeline/scripts/danh-ba-s16-cau-truc.itest.mjs
-    ℹ duration_ms 10093.545458
+    lệnh: node --test --test-concurrency=1 pipeline/scripts/danh-ba-s16-cau-truc.itest.mjs
+    ℹ duration_ms 13740.559541
 
 - eval: E6
-  run_id: minted-danh-ba-s16-thang-cau-truc-E6-r1
+  run_id: minted-danh-ba-s16-thang-cau-truc-E6-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.s37_db
-  verified_at: 2026-11-18T00:33:55Z
+  verified_at: 2026-11-18T03:27:34Z
   output: |
-    node --test --test-concurrency=1 pipeline/scripts/danh-ba-s16-cau-truc.itest.mjs
-    ℹ duration_ms 10093.545458
+    lệnh: node --test --test-concurrency=1 pipeline/scripts/danh-ba-s16-cau-truc.itest.mjs
+    ℹ duration_ms 13740.559541
 
 - eval: E7
-  run_id: minted-danh-ba-s16-thang-cau-truc-E7-r1
+  run_id: minted-danh-ba-s16-thang-cau-truc-E7-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.s37_db
-  verified_at: 2026-11-18T00:33:55Z
+  verified_at: 2026-11-18T03:27:34Z
   output: |
-    node --test --test-concurrency=1 pipeline/scripts/danh-ba-s16-cau-truc.itest.mjs
-    ℹ duration_ms 10093.545458
+    lệnh: node --test --test-concurrency=1 pipeline/scripts/danh-ba-s16-cau-truc.itest.mjs
+    ℹ duration_ms 13740.559541
 
 - eval: E8
-  run_id: minted-danh-ba-s16-thang-cau-truc-E8-r1
+  run_id: minted-danh-ba-s16-thang-cau-truc-E8-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.s37_db
-  verified_at: 2026-11-18T00:33:55Z
+  verified_at: 2026-11-18T03:27:34Z
   output: |
-    node --test --test-concurrency=1 pipeline/scripts/danh-ba-s16-cau-truc.itest.mjs
-    ℹ duration_ms 10093.545458
+    lệnh: node --test --test-concurrency=1 pipeline/scripts/danh-ba-s16-cau-truc.itest.mjs
+    ℹ duration_ms 13740.559541
 
 - eval: E2b
-  run_id: minted-danh-ba-s16-thang-cau-truc-E2b-r1
+  run_id: minted-danh-ba-s16-thang-cau-truc-E2b-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.s37_that
-  verified_at: 2026-11-18T00:33:55Z
+  verified_at: 2026-11-18T03:27:34Z
   output: |
-    node pipeline/scripts/danh-ba-s16-cau-truc-that.mjs
+    lệnh: node pipeline/scripts/danh-ba-s16-cau-truc-that.mjs
     OK
 
 - eval: E9
-  run_id: minted-danh-ba-s16-thang-cau-truc-E9-r1
+  run_id: minted-danh-ba-s16-thang-cau-truc-E9-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.s37_that
-  verified_at: 2026-11-18T00:33:55Z
+  verified_at: 2026-11-18T03:27:34Z
   output: |
-    node pipeline/scripts/danh-ba-s16-cau-truc-that.mjs
+    lệnh: node pipeline/scripts/danh-ba-s16-cau-truc-that.mjs
     OK
 
 - eval: E10
-  run_id: minted-danh-ba-s16-thang-cau-truc-E10-r1
+  run_id: minted-danh-ba-s16-thang-cau-truc-E10-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.s37_that
-  verified_at: 2026-11-18T00:33:55Z
+  verified_at: 2026-11-18T03:27:34Z
   output: |
-    node pipeline/scripts/danh-ba-s16-cau-truc-that.mjs
+    lệnh: node pipeline/scripts/danh-ba-s16-cau-truc-that.mjs
     OK
 
 ### Lệnh suite (hồi quy)
 
 - cmd: node scripts/suite-neu-doi.mjs agent -- 'cd agent && npm test'
-  run_id: minted-danh-ba-s16-thang-cau-truc-SUITE-node_scripts_suite_neu_doi_mjs_agent_cd_-r1
+  run_id: minted-danh-ba-s16-thang-cau-truc-SUITE-node_scripts_suite_neu_doi_mjs_agent_cd_-r2
   exit_code: 0
-  verified_at: 2026-11-18T00:33:55Z
+  verified_at: 2026-11-18T03:27:34Z
 
 - cmd: node scripts/suite-neu-doi.mjs app -- 'cd app && npx tsc --noEmit && npm run lint'
-  run_id: minted-danh-ba-s16-thang-cau-truc-SUITE-lint-r1
+  run_id: minted-danh-ba-s16-thang-cau-truc-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-11-18T00:33:55Z
+  verified_at: 2026-11-18T03:27:34Z
 
 - cmd: node scripts/suite-neu-doi.mjs app_ui -- 'cd app && npm test'
-  run_id: minted-danh-ba-s16-thang-cau-truc-SUITE-node_scripts_suite_neu_doi_mjs_app_ui_cd-r1
+  run_id: minted-danh-ba-s16-thang-cau-truc-SUITE-node_scripts_suite_neu_doi_mjs_app_ui_cd-r2
   exit_code: 0
-  verified_at: 2026-11-18T00:33:55Z
+  verified_at: 2026-11-18T03:27:34Z
 
 - cmd: node scripts/suite-neu-doi.mjs pipeline_a -- 'cd pipeline && npm run test:a'
-  run_id: minted-danh-ba-s16-thang-cau-truc-SUITE-test_a-r1
+  run_id: minted-danh-ba-s16-thang-cau-truc-SUITE-test_a-r2
   exit_code: 0
-  verified_at: 2026-11-18T00:33:55Z
+  verified_at: 2026-11-18T03:27:34Z
 
 - cmd: node scripts/suite-neu-doi.mjs pipeline_b -- 'cd pipeline && npm run test:b'
-  run_id: minted-danh-ba-s16-thang-cau-truc-SUITE-test_b-r1
+  run_id: minted-danh-ba-s16-thang-cau-truc-SUITE-test_b-r2
   exit_code: 0
-  verified_at: 2026-11-18T00:33:55Z
+  verified_at: 2026-11-18T03:27:34Z
 
 - cmd: node scripts/suite-neu-doi.mjs ui_lint_rules -- 'cd app && npm run test:lint-rules'
-  run_id: minted-danh-ba-s16-thang-cau-truc-SUITE-test_lint_rules-r1
+  run_id: minted-danh-ba-s16-thang-cau-truc-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-11-18T00:33:55Z
+  verified_at: 2026-11-18T03:27:34Z
 
 - cmd: node scripts/suite-neu-doi.mjs portal_static -- 'node scripts/check-portal-compliance.mjs'
-  run_id: minted-danh-ba-s16-thang-cau-truc-SUITE-node_scripts_suite_neu_doi_mjs_portal_st-r1
+  run_id: minted-danh-ba-s16-thang-cau-truc-SUITE-node_scripts_suite_neu_doi_mjs_portal_st-r2
   exit_code: 0
-  verified_at: 2026-11-18T00:33:55Z
+  verified_at: 2026-11-18T03:27:34Z
 
 ## Known limits
 
@@ -182,18 +182,16 @@ human_signoff:
 
 ## Analyst
 
-none — moi eval feature deu red tren baseline (co phan biet)
+carried tu round 1 — baseline khong do lai round nay (evals.yaml khong doi tu lan baseline cuoi). Moi eval ghi baseline n-a.
 
-Lưu ý: không eval nào có baseline đo được (cả hai lệnh feature đều n-a), nên câu trên chỉ nghĩa là máy không phát hiện eval không-phân-biệt; không phải bằng chứng red. Thêm vào đó, review đã chỉ ra các ô eval hứa mà itest không phủ (xem review-findings.md, mục Trong hợp đồng: AC-1, AC-6, AC-8).
-
-Baseline khong do
-- node --test --test-concurrency=1 pipeline/scripts/danh-ba-s16-cau-truc.itest.mjs: bo qua baseline: tep pipeline/scripts/danh-ba-s16-cau-truc.itest.mjs co o cay dang kiem nhung chua co o merge-base d6b3d2b8ff17044468981bc2b146dab94a2a1c18 — eval moi, chay tren code cu khong phan biet gi
-- node pipeline/scripts/danh-ba-s16-cau-truc-that.mjs: bo qua baseline: tep pipeline/scripts/danh-ba-s16-cau-truc-that.mjs co o cay dang kiem nhung chua co o merge-base d6b3d2b8ff17044468981bc2b146dab94a2a1c18 — eval moi, chay tren code cu khong phan biet gi
+Eval không-phân-biệt: không có.
 
 ## Variance
 
-none — every multi-run eval is uniform
+none — mọi eval deterministic (một lần chạy), không có eval nhiều lần chạy.
 
 ## Iterations
 
-Round 1: mọi lệnh máy và suite chạy xong, không lệnh nào lỗi; verdict REJECT vì review tìm thấy findings trong hợp đồng (AC-1, AC-6, AC-7, AC-8): bằng chứng của E1, E6, E8 không phủ đúng ô eval đã khai và hành vi thứ tự S16-trước-S08 chưa khớp AC-5/AC-6/AC-7. Chi tiết ở review-findings.md. Trả lại implementation.
+Round 1: REJECT — hồ sơ S4 vòng 1 có 9 phát hiện xác nhận. Trả về triển khai.
+Round 2: toàn bộ 11 eval và 7 lệnh suite đạt, verdict PASS, trên commit 2103ba717ac840ebc9ceb7470e3fdb37e227f428.
+
