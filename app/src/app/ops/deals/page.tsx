@@ -4,7 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { DealsGrid } from "@/components/ops/deals-grid";
-import { DealsGridTrang } from "@/components/ops/deals-grid";
+import { DealsBoLocKhiLoi, DealsGridTrang } from "@/components/ops/deals-grid";
 import { DealsSkeleton } from "@/components/ops/deal-skeleton";
 import { LocalOnlyAlert } from "@/components/ops/local-only-alert";
 import { PageHeader } from "@/components/page/page-header";
@@ -136,6 +136,8 @@ export default async function DealsPage({ searchParams }: { searchParams: Promis
   const xemNoiDung = xemNoiDungTin(user);
   const project = parseProject(sp.project);
   const tenDuAn = project ? (await getDuAn(project))?.ten ?? null : null;
+  const thamSo = docThamSoDeal(sp);
+  const duAnLa = Boolean(project && !tenDuAn);
   return (
     <div className="flex flex-col gap-4">
       <PageHeader
@@ -144,11 +146,11 @@ export default async function DealsPage({ searchParams }: { searchParams: Promis
         stats={[`Giảm từ ${NGUONG_VAO_PCT}%`, `${NGAY_TOI_DA} ngày gần nhất`]}
         description={project ? "Căn rẻ trong chính dự án: so với căn cùng dự án, cùng loại (và cùng số phòng ngủ khi đủ căn)." : "Căn rẻ hơn trung vị của nhóm so sánh, căn cấp dự án đứng đầu."}
       />
-      <RegionError what="danh sách căn">
+      <RegionError what="danh sách căn" leading={duAnLa ? undefined : <DealsBoLocKhiLoi thamSo={thamSo} />}>
         <Suspense fallback={<DealsSkeleton />}>
           {project && !tenDuAn
             ? <DealsDuAnContent xemNoiDung={xemNoiDung} project={project} />
-            : <DealsTrangContent xemNoiDung={xemNoiDung} can={can ?? null} thamSo={docThamSoDeal(sp)} />}
+            : <DealsTrangContent xemNoiDung={xemNoiDung} can={can ?? null} thamSo={thamSo} />}
         </Suspense>
       </RegionError>
     </div>

@@ -16,7 +16,7 @@ const kiem = (ten: string, dat: boolean, chi: unknown) => { console.log(`${dat ?
 
 if (process.argv.includes("--doi-chung-thu-tu")) {
   const cu = dealsNheSql().replace("(g.cap = 'du_an') DESC, g.hang_pct ASC NULLS LAST, g.discount_pct DESC", "g.discount_pct DESC");
-  const { rows } = await pool.query(cu, ["sale", 5, null]);
+  const { rows } = await pool.query(cu, ["sale", 5, null, null, null]);
   const n = rows.slice(0, 15).filter((r: { cap: string }) => r.cap === "du_an").length;
   console.log(`đối chứng thứ tự cũ: ${n}/15 dòng đầu cấp dự án`);
   await pool.end();
@@ -43,16 +43,35 @@ for (let page = 1; page <= Math.ceil(dau.trang.tong / 50); page++) {
 }
 kiem("đi hết các trang đủ mã phân biệt", ma.size === dau.trang.tong, [ma.size, dau.trang.tong]);
 
-const { rows: nhe } = await pool.query(dealsNheSql(), ["sale", 5, null]);
+// Số căn của từng nút tính độc lập bằng SQL riêng: lọc tin theo nút trước, rồi đếm căn phân biệt.
+const { rows: tin } = await pool.query(`SELECT coalesce((SELECT min(po.property_id)::text FROM property_offers po WHERE po.offer_id = o.offer_id), o.offer_id) AS can,
+    o.area_id, a.parent_id, h.cap, h.nut
+  FROM offer_price_rank h JOIN sale_offers o ON o.offer_id = h.offer_id LEFT JOIN areas a ON a.id = o.area_id
+  WHERE h.kind = 'sale' AND h.nhan IS NOT NULL AND o.last_seen >= now() - interval '45 days' AND h.duoi_trung_vi_pct >= 5 AND h.duoi_trung_vi_pct <= 50`);
+const soCan = (loc: (r: any) => boolean) => new Set(tin.filter(loc).map((r: any) => r.can)).size;
 const lech: string[] = [];
+const nutChon: [string, Record<string, string>, number][] = [];
 for (const t of dau.trang.cay) {
-  if (nhe.filter((r: any) => `area:${r.parent_id ?? r.area_id}` === t.value).length !== t.count) lech.push(t.value);
+  const maTinh = t.value.split(":")[1];
+  if (soCan((r: any) => r.area_id === maTinh || r.parent_id === maTinh) !== t.count) lech.push(t.value);
   for (const n of t.children ?? []) for (const m of n.children ?? []) {
     const [loai, k] = m.value.split(":");
-    const so = nhe.filter((r: any) => (loai === "area" ? r.area_id === k : r.cap === "du_an" && r.nut === k)).length;
+    const so = soCan((r: any) => (loai === "area" ? r.area_id === k : r.cap === "du_an" && r.nut === k));
     if (so !== m.count) lech.push(m.value);
+    nutChon.push([m.value, loai === "area" ? { location: k } : { project: k }, so]);
   }
 }
+// Nút chứa căn có tin ở nhiều nút là chỗ lọc sau bước gộp từng làm rơi căn: đọc lại bằng đúng hàm của màn.
+const nutCuaCan = new Map<string, Set<string>>();
+for (const r of tin) for (const k of [`area:${r.area_id}`, ...(r.cap === "du_an" ? [`project:${r.nut}`] : [])]) nutCuaCan.set(r.can, (nutCuaCan.get(r.can) ?? new Set()).add(k));
+const nutNhieu = new Set([...nutCuaCan.values()].filter((x) => [...x].filter((k) => k.startsWith("area:")).length > 1 || [...x].filter((k) => k.startsWith("project:")).length > 1).flatMap((x) => [...x]));
+const canDoc = nutChon.filter(([v]) => nutNhieu.has(v) || v === "project:251");
+const sai: string[] = [];
+for (const [v, sp, so] of canDoc) if ((await getDealsTrang(docThamSoDeal(sp))).trang.dem.all !== so) sai.push(v);
+kiem("nút có căn nhiều tin: số khi chọn bằng số đếm độc lập", sai.length === 0 && canDoc.length > 0, { doc: canDoc.length, sai: sai.slice(0, 5) });
+const dem251 = dem("251");
+const op251 = await getDealsTrang(docThamSoDeal({ project: "251" }));
+kiem("dự án 251 bằng lệnh đo", op251.trang.dem.all === dem251.tong, [op251.trang.dem.all, dem251.tong]);
 kiem("mọi mục của cây có số bằng số căn khi chọn", lech.length === 0, lech.slice(0, 5));
 kiem("tổng các tỉnh bằng tổng tập", dau.trang.cay.reduce((s: number, t: any) => s + t.count, 0) === tap.tong, dau.trang.cay.length);
 await pool.end();

@@ -361,28 +361,39 @@ async function ganMatBang(rows: DealRow[]): Promise<DealRow[]> {
 /** Giới hạn danh sách khi lọc một dự án (CG10): không cắt 30 — Ocean Park 1 có 140 căn. */
 export const SO_CAN_DU_AN = 300;
 
+/** Mọi tin đủ điều kiện của danh sách theo trang, chưa gộp căn: nguồn chung của bước đọc nhẹ và cây vị trí. */
+const tinNheSql = () => `SELECT o.offer_id, o.area_id, o.post_ids, o.property_type, o.area_m2, o.block_raw, o.street_raw, o.seller_phone,
+              h.thuoc, h.trung_vi, coalesce(h.can_xac_minh, false) AS suspect, h.cap, h.nut, h.hang_pct,
+              h.duoi_trung_vi_pct AS discount_pct, pn.name AS ten_du_an, o.last_seen AS thay_cuoi, kv.parent_id AS cha,
+              coalesce((SELECT min(po.property_id)::text FROM property_offers po WHERE po.offer_id = o.offer_id), o.offer_id) AS can_key
+       FROM offer_price_rank h
+       JOIN sale_offers o ON o.offer_id = h.offer_id
+       ${NOI_TEN_DU_AN}
+       LEFT JOIN areas kv ON kv.id = o.area_id
+       WHERE h.kind = $1 AND h.nhan IS NOT NULL
+         AND o.last_seen >= now() - interval '${NGAY_TOI_DA} days'
+         AND h.duoi_trung_vi_pct >= $2
+         AND h.duoi_trung_vi_pct <= ${NGUONG_LOAI_PCT}
+         AND ($3::text IS NULL OR o.property_type = $3)`;
+
 /**
- * Bước đọc nhẹ của danh sách theo trang (CG3): toàn tập đã gộp mỗi căn một dòng, đã sắp thứ tự, mang đủ đầu vào của `thieuGi`.
+ * Bước đọc nhẹ của danh sách theo trang (CG3): tập đã lọc vị trí, gộp mỗi căn một dòng, đã sắp thứ tự, mang đủ đầu vào của `thieuGi`.
+ * Lọc vị trí chạy trước khi gộp: căn có một tin thuộc nút đang chọn vẫn hiện, dù tin thấy sau cùng của căn nằm ở nút khác.
  * Thứ tự: căn không cần xác minh trước, cấp dự án trước cấp phường, hạng phần trăm tăng dần, mức dưới trung vị giảm dần, mã tin.
  */
 export function dealsNheSql({ cloud = false }: { cloud?: boolean; coBang?: boolean } = {}): string {
   const coAnh = cloud ? "false" : `EXISTS (SELECT 1 FROM media m WHERE m.resource_record_key = g.offer_id AND (m.local_file IS NOT NULL OR m.media_url IS NOT NULL))`;
   const coChu = cloud ? "false" : `coalesce((SELECT z.text IS NOT NULL FROM stg_zalo_posts z WHERE z.post_id = ANY(g.post_ids) ORDER BY z.captured_at DESC LIMIT 1), false)`;
-  return `WITH loc AS (
-       SELECT o.offer_id, o.area_id, o.post_ids, o.property_type, o.area_m2, o.block_raw, o.street_raw, o.seller_phone,
-              h.thuoc, h.trung_vi, coalesce(h.can_xac_minh, false) AS suspect, h.cap, h.nut, h.hang_pct,
-              h.duoi_trung_vi_pct AS discount_pct, pn.name AS ten_du_an, o.last_seen AS thay_cuoi,
-              coalesce((SELECT min(po.property_id)::text FROM property_offers po WHERE po.offer_id = o.offer_id), o.offer_id) AS can_key
-       FROM offer_price_rank h
-       JOIN sale_offers o ON o.offer_id = h.offer_id
-       ${NOI_TEN_DU_AN}
-       WHERE h.kind = $1 AND h.nhan IS NOT NULL
-         AND o.last_seen >= now() - interval '${NGAY_TOI_DA} days'
-         AND h.duoi_trung_vi_pct >= $2
-         AND h.duoi_trung_vi_pct <= ${NGUONG_LOAI_PCT}
-         AND ($3::text IS NULL OR o.property_type = $3)
+  return `WITH tin AS (
+       ${tinNheSql()}
+     ), dem AS (
+       SELECT t.*, count(*) OVER (PARTITION BY t.can_key) AS so_tin FROM tin t
+     ), loc AS (
+       SELECT d.* FROM dem d
+       WHERE ($4::text IS NULL OR d.area_id = $4 OR d.cha = $4)
+         AND ($5::text IS NULL OR (d.cap = 'du_an' AND d.nut = $5))
      ), gom AS (
-       SELECT DISTINCT ON (l.can_key) l.*, count(*) OVER (PARTITION BY l.can_key) AS so_tin
+       SELECT DISTINCT ON (l.can_key) l.*
        FROM loc l
        ORDER BY l.can_key, l.thay_cuoi DESC, l.offer_id
      )
@@ -391,6 +402,17 @@ export function dealsNheSql({ cloud = false }: { cloud?: boolean; coBang?: boole
      LEFT JOIN areas a ON a.id = g.area_id
      LEFT JOIN areas pa ON pa.id = a.parent_id
      ORDER BY g.suspect, (g.cap = 'du_an') DESC, g.hang_pct ASC NULLS LAST, g.discount_pct DESC, g.offer_id`;
+}
+
+/** Vị trí của từng căn cho cây vị trí: một dòng cho mỗi nơi căn có tin, theo `kind`, `type` đang chọn. */
+export function dealsCaySql(): string {
+  return `WITH tin AS (
+       ${tinNheSql()}
+     )
+     SELECT DISTINCT t.can_key, t.area_id, t.cha AS parent_id, a.name AS phuong, pa.name AS ten_tinh, t.cap, t.nut, t.ten_du_an
+     FROM tin t
+     LEFT JOIN areas a ON a.id = t.area_id
+     LEFT JOIN areas pa ON pa.id = t.cha`;
 }
 
 /** Bước đọc đầy đủ của danh sách theo trang: chỉ các mã của trang đang xem. */
@@ -412,47 +434,54 @@ export function dealsTheoMaSql({ cloud = false }: { cloud?: boolean; coBang?: bo
 
 type DongNhe = Record<string, unknown>;
 
-/** Cây vị trí dựng từ chính tập căn: tỉnh, dưới tỉnh hai nhánh Phường và Dự án; số trên mục là số căn khi chọn mục đó. */
+/** Cây vị trí dựng từ vị trí của từng căn: tỉnh, dưới tỉnh hai nhánh Phường và Dự án; số trên mục là số căn khi chọn mục đó. */
 export function dungCayViTri(rows: DongNhe[]): NutViTri[] {
-  const tinh = new Map<string, { ten: string; n: number; phuong: Map<string, { ten: string; n: number }>; duAn: Map<string, { ten: string; n: number }> }>();
-  const cong = (m: Map<string, { ten: string; n: number }>, k: string, ten: string) => m.set(k, { ten, n: (m.get(k)?.n ?? 0) + 1 });
+  type Dem = { ten: string; can: Set<string> };
+  const tinh = new Map<string, Dem & { phuong: Map<string, Dem>; duAn: Map<string, Dem>; canPhuong: Set<string>; canDuAn: Set<string> }>();
+  const cong = (m: Map<string, Dem>, k: string, ten: string, can: string) => {
+    const x = m.get(k) ?? { ten, can: new Set<string>() };
+    x.can.add(can);
+    m.set(k, x);
+  };
   for (const r of rows) {
     const area = r.area_id as string | null;
     if (!area) continue;
+    const can = r.can_key as string;
     const cha = (r.parent_id as string | null) ?? null;
     const ma = cha ?? area;
-    const t = tinh.get(ma) ?? { ten: ((cha ? r.ten_tinh : r.phuong) as string | null) ?? ma, n: 0, phuong: new Map(), duAn: new Map() };
-    t.n += 1;
-    if (cha) cong(t.phuong, area, (r.phuong as string | null) ?? area);
-    if (r.cap === "du_an" && r.nut) cong(t.duAn, r.nut as string, (r.ten_du_an as string | null) ?? (r.nut as string));
+    const t = tinh.get(ma) ?? { ten: ((cha ? r.ten_tinh : r.phuong) as string | null) ?? ma, can: new Set<string>(), phuong: new Map(), duAn: new Map(), canPhuong: new Set<string>(), canDuAn: new Set<string>() };
+    t.can.add(can);
+    if (cha) { cong(t.phuong, area, (r.phuong as string | null) ?? area, can); t.canPhuong.add(can); }
+    if (r.cap === "du_an" && r.nut) { cong(t.duAn, r.nut as string, (r.ten_du_an as string | null) ?? (r.nut as string), can); t.canDuAn.add(can); }
     tinh.set(ma, t);
   }
-  const muc = (m: Map<string, { ten: string; n: number }>, tien: string): NutViTri[] =>
-    [...m.entries()].sort((a, b) => b[1].n - a[1].n || a[1].ten.localeCompare(b[1].ten, "vi"))
-      .map(([k, v]) => ({ value: `${tien}:${k}`, label: v.ten, count: v.n }));
-  const tong = (c: NutViTri[]) => c.reduce((s, x) => s + x.count, 0);
-  return [...tinh.entries()].sort((a, b) => b[1].n - a[1].n).map(([ma, t]) => {
+  const muc = (m: Map<string, Dem>, tien: string): NutViTri[] =>
+    [...m.entries()].sort((a, b) => b[1].can.size - a[1].can.size || a[1].ten.localeCompare(b[1].ten, "vi"))
+      .map(([k, v]) => ({ value: `${tien}:${k}`, label: v.ten, count: v.can.size }));
+  return [...tinh.entries()].sort((a, b) => b[1].can.size - a[1].can.size).map(([ma, t]) => {
     const phuong = muc(t.phuong, "area"), duAn = muc(t.duAn, "project");
     return {
-      value: `area:${ma}`, label: t.ten, count: t.n,
+      value: `area:${ma}`, label: t.ten, count: t.can.size,
       children: [
-        ...(duAn.length ? [{ value: `nhom:du-an:${ma}`, label: "Dự án", count: tong(duAn), children: duAn }] : []),
-        ...(phuong.length ? [{ value: `nhom:phuong:${ma}`, label: "Phường", count: tong(phuong), children: phuong }] : []),
+        ...(duAn.length ? [{ value: `nhom:du-an:${ma}`, label: "Dự án", count: t.canDuAn.size, children: duAn }] : []),
+        ...(phuong.length ? [{ value: `nhom:phuong:${ma}`, label: "Phường", count: t.canPhuong.size, children: phuong }] : []),
       ],
     };
   });
 }
 
 /**
- * Danh sách theo trang (CG3): đọc nhẹ toàn tập → xếp từng căn vào tab bằng đúng `thieuGi`, `tabCua`, luật đầy đủ ở mọi vai → lọc tab rồi mới cắt
+ * Danh sách theo trang (CG3): đọc nhẹ tập đã lọc vị trí → xếp từng căn vào tab bằng đúng `thieuGi`, `tabCua`, luật đầy đủ ở mọi vai → lọc tab rồi mới cắt
  * trang trên danh sách mã → đọc đầy đủ các mã của trang. Chưa có bảng hạng → null, trang lùi về danh sách cũ.
  */
 export async function getDealsTrang(thamSo: ThamSoDeal, minPct = NGUONG_VAO_PCT):
   Promise<{ rows: DealRow[]; mayThu: boolean; trang: TrangDeal } | null> {
   if (!(await coBangHang())) return null;
-  const { rows: nhe, mayThu } = await truyVan(dealsNheSql, [thamSo.kind === "rent" ? KIND.rent_lt : KIND.sale, minPct, thamSo.type]);
-  const { location, project } = thamSo;
-  const trongViTri = nhe.filter((r) => (!location || r.area_id === location || r.parent_id === location) && (!project || (r.cap === "du_an" && r.nut === project)));
+  const dieuKien = [thamSo.kind === "rent" ? KIND.rent_lt : KIND.sale, minPct, thamSo.type];
+  const [{ rows: nhe, mayThu }, { rows: viTriCan }] = await Promise.all([
+    truyVan(dealsNheSql, [...dieuKien, thamSo.location, thamSo.project]),
+    truyVan(dealsCaySql, dieuKien),
+  ]);
   const tabOf = (r: DongNhe) => tabCua({
     suspect: r.suspect === true,
     thieu: thieuGi({
@@ -467,15 +496,15 @@ export async function getDealsTrang(thamSo: ThamSoDeal, minPct = NGUONG_VAO_PCT)
       images: r.co_anh === true ? [1] : [],
     }, { xemNoiDung: true, mayThu }),
   });
-  const dem: Record<TabTrang, number> = { all: trongViTri.length, du: 0, "xac-minh": 0, thieu: 0 };
-  const theoTab = trongViTri.map((r) => ({ r, tab: tabOf(r) }));
+  const dem: Record<TabTrang, number> = { all: nhe.length, du: 0, "xac-minh": 0, thieu: 0 };
+  const theoTab = nhe.map((r) => ({ r, tab: tabOf(r) }));
   for (const { tab } of theoTab) dem[tab] += 1;
-  const chon = thamSo.tab === "all" ? trongViTri : theoTab.filter((x) => x.tab === thamSo.tab).map((x) => x.r);
+  const chon = thamSo.tab === "all" ? nhe : theoTab.filter((x) => x.tab === thamSo.tab).map((x) => x.r);
   const page = Math.min(thamSo.page, Math.max(1, Math.ceil(chon.length / thamSo.size)));
   const cua = chon.slice((page - 1) * thamSo.size, page * thamSo.size);
   const tabTheoMa = new Map(theoTab.map((x) => [x.r.offer_id as string, x.tab]));
   const tabDong = Object.fromEntries(cua.map((r) => [r.offer_id as string, tabTheoMa.get(r.offer_id as string)!]));
-  const trang: TrangDeal = { thamSo: { ...thamSo, page }, dem, tong: chon.length, page, cay: dungCayViTri(nhe), tabDong };
+  const trang: TrangDeal = { thamSo: { ...thamSo, page }, dem, tong: chon.length, page, cay: dungCayViTri(viTriCan), tabDong };
   if (cua.length === 0) return { rows: [], mayThu, trang };
   const { rows: day } = await truyVan(dealsTheoMaSql, [cua.map((r) => r.offer_id)]);
   const theoMa = new Map(day.map((r) => [r.offer_id as string, r]));

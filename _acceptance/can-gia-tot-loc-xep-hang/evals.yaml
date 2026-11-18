@@ -102,8 +102,8 @@ evals:
     criterion: AC-9
     executor: script
     cmd: bash _acceptance/can-gia-tot-loc-xep-hang/probes/design-gate.sh
-    paths: [app/src/app/ops/deals/page.tsx, app/src/components/ops/deals-grid.tsx, app/src/components/ops/deals-bo-loc.tsx, app/src/components/ops/deals-cells.tsx]
-    expected: "exit 0; design gate chạy lần lượt trên bốn tệp giao diện của vòng, mỗi lần verdict PASS, không P0"
+    paths: [app/src/app/ops/deals/page.tsx, app/src/components/ops/deals-grid.tsx, app/src/components/ops/deals-cells.tsx]
+    expected: "exit 0; design gate chạy lần lượt trên ba tệp giao diện của vòng (thanh lọc đã gộp vào deals-grid.tsx), mỗi lần verdict PASS, không P0"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E14
     criterion: AC-9

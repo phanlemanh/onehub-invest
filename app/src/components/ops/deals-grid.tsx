@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState, useSyncExternalStore, useTransition } from "react"
+import { useId, useMemo, useState, useSyncExternalStore, useTransition } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useTable, type ColumnDef, type PaginationState, type SortingState } from "@tanstack/react-table"
@@ -272,10 +272,13 @@ const sangNut = (n: NutViTri): CascaderNode => ({
   children: n.children?.map(sangNut),
 })
 
-/** Thanh lọc của danh sách đọc ở máy chủ: Bán hay Cho thuê, vị trí trên cây, loại hình. Mọi điều kiện nằm trên URL. */
-function DealsBoLoc({ trang, onDoi }: { trang: TrangDeal; onDoi: (p: Partial<ThamSoDeal>) => void }) {
-  const { thamSo } = trang
-  const items = useMemo(() => trang.cay.map(sangNut), [trang.cay])
+/**
+ * Thanh lọc của danh sách đọc ở máy chủ: Bán hay Cho thuê, vị trí trên cây, loại hình. Mọi điều kiện nằm trên URL.
+ * `cay` null khi truy vấn danh sách lỗi: cây đọc cùng lượt nên ô vị trí tắt, các điều kiện còn lại vẫn đổi được.
+ */
+function DealsBoLoc({ thamSo, cay, onDoi }: { thamSo: ThamSoDeal; cay: NutViTri[] | null; onDoi: (p: Partial<ThamSoDeal>) => void }) {
+  const items = useMemo(() => (cay ?? []).map(sangNut), [cay])
+  const moTaViTri = useId()
   const viTri = thamSo.project ? `project:${thamSo.project}` : thamSo.location ? `area:${thamSo.location}` : ""
   const coLoc = Boolean(viTri || thamSo.type)
   const chonViTri = (v: string) => {
@@ -290,7 +293,7 @@ function DealsBoLoc({ trang, onDoi }: { trang: TrangDeal; onDoi: (p: Partial<Tha
           <TabsTrigger value="rent">Cho thuê</TabsTrigger>
         </TabsList>
       </Tabs>
-      <Cascader
+      {cay ? <Cascader
         items={items}
         value={viTri}
         onValueChange={chonViTri}
@@ -314,7 +317,12 @@ function DealsBoLoc({ trang, onDoi }: { trang: TrangDeal; onDoi: (p: Partial<Tha
             <CascaderStatus />
           </CascaderPanel>
         </CascaderContent>
-      </Cascader>
+      </Cascader> : (
+        <>
+          <Button variant="outline" size="sm" disabled aria-label="Chọn vị trí" aria-describedby={moTaViTri}>{viTri ? "Vị trí đang chọn" : "Mọi vị trí"}</Button>
+          <span id={moTaViTri} className="text-muted-foreground text-xs">Danh sách vị trí hiện lại sau khi bấm Thử lại.</span>
+        </>
+      )}
       <Select
         value={thamSo.type ?? TAT_CA}
         items={O_LOAI}
@@ -332,6 +340,13 @@ function DealsBoLoc({ trang, onDoi }: { trang: TrangDeal; onDoi: (p: Partial<Tha
       )}
     </div>
   )
+}
+
+/** Thanh lọc đứng cạnh khung lỗi của danh sách: đổi điều kiện để sang chỗ còn đọc được. */
+export function DealsBoLocKhiLoi({ thamSo }: { thamSo: ThamSoDeal }) {
+  const router = useRouter()
+  const [, chuyenTrang] = useTransition()
+  return <DealsBoLoc thamSo={thamSo} cay={null} onDoi={(p) => chuyenTrang(() => router.push(urlThamSoDeal({ ...thamSo, ...p }), { scroll: false }))} />
 }
 
 type DealsGridProps = {
@@ -477,7 +492,7 @@ export function DealsGrid({ rows: tho, moBanDau = null, locBanDau, xemNoiDung, m
       >
         <Frame variant="default" spacing="sm" className="w-full">
           <FrameHeader data-truong-loc={fields.map((f) => f.id).join(" ")} className="flex flex-row flex-wrap items-center justify-between gap-3">
-            {trang && onDoi && <div className="w-full"><DealsBoLoc trang={trang} onDoi={onDoi} /></div>}
+            {trang && onDoi && <div className="w-full"><DealsBoLoc thamSo={trang.thamSo} cay={trang.cay} onDoi={onDoi} /></div>}
             <Tabs
               className="max-w-full min-w-0"
               value={tabHien}
