@@ -22,6 +22,8 @@ const sc = new pg.Client({ connectionString: schemaUrl(S) })
 const BANG = [
   "asset_nodes", "buildings", "stacks", "units", "registry_aliases", "project_links", "s08_project_links", "s10_project_links",
   "stg_s08_project", "stg_s09_item", "areas", "sale_offer_records", "field_assertions", "stg_chotot_ads", "source_registry",
+  // v_toa_nut_vung từ 111/114 đọc khu S16 từ hai bảng này (DA37); để trống vì ca ở đây không có toà S16.
+  "stg_s16_toa", "stg_s16_khu",
 ]
 const VIEW = ["sale_offers", "s06_offer_project", "offer_project", "v_s09_du_an_moi", "v_s09_toa", "v_toa_nut_vung"]
 
