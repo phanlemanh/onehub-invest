@@ -576,6 +576,62 @@ function caCoLap(tepLog, tepTt, chupTruoc) {
   ghi("CO-LAP", loi.length === 0, loi.length ? loi.join("; ") : `(${moiHop.length} hộp, ${tepLog.length} log thật giữ tiền tố, ${tepTt.length} tệp trạng thái thật không đổi)`);
 }
 
+// ---------------------------------------------------------------- ba lỗi chờ làn thu sửa (chế độ `mo-lai`)
+// Chạy riêng: `node scripts/watchdog-tu-khoi-dong-gateway/acceptance.mjs mo-lai`. ĐỎ SẴN trên mã @1be76ccc6, không thuộc bộ
+// mặc định (hợp đồng chưa đổi); bản sửa của làn thu phải làm cả ba xanh.
+async function caMoLai() {
+  const T = nowS();
+  // Ngoài-1/5: phiên chết lần hai vẫn phải cảnh báo CẦN QUÉT QR
+  {
+    const h = dungHop();
+    const qr = () => (h.alerts().match(/CẦN QUÉT QR/g) ?? []).length;
+    h.datHb("nhip=2\nreason=session\nd\n");
+    await nen(h, T, T - 300);
+    await h.chay(T + 300);
+    await h.chay(T + 600);
+    const lan1 = qr();
+    h.datHb(null); // heartbeat UP, kênh hồi
+    h.datGw([`${isoVN(T - 300)} [s03user] [default] auto-restart attempt 2/10 in 10s`, `${isoVN(T + 650)} [s03user] [default] starting s03user provider`]);
+    await h.chay(T + 900);
+    const T2 = T + 8 * 3600;
+    h.datHb("nhip=2\nreason=session\nd\n");
+    h.datTreo(T2 - 700);
+    await h.chay(T2);
+    await h.chay(T2 + 300);
+    kiem("QR-LAN-2", [[lan1 === 1, `sự cố 1: ${lan1} dòng, cần 1`], [qr() === 2, `sau sự cố 2: ${qr()} dòng CẦN QUÉT QR, cần 2`]]);
+  }
+  // Ngoài-6: gateway.log bị cắt (không còn dòng attempt) → L6(b) không đỏ → không được khởi động lại
+  {
+    const h = dungHop();
+    await nen(h, T, T - 300);
+    h.datGw([`${isoVN(T)} [gateway] log mới sau khi cắt`]);
+    await h.chay(T + 400);
+    kiem("LOG-CAT-KHONG-KICK", [
+      [h.kick() === 0, `${h.kick()} lời kickstart trên gateway khoẻ, cần 0`],
+      [!/^b-moc=/m.test(doc(join(h.logs, "zalo-watchdog-song-state"))), "b-moc còn trong tệp trạng thái khi L6(b) không đỏ"],
+    ]);
+  }
+  // Ngoài-7: kickstart thất bại phải có cảnh báo và không tiêu trần 6 giờ
+  {
+    const h = dungHop();
+    h.datHb("nhip=2\nreason=stopped\nd\n");
+    writeFileSync(join(h.bin, "launchctl"), `#!/bin/bash\necho "launchctl $*" >> "${h.so}"\nexit 5\n`);
+    await nen(h, T, T - 300);
+    await h.chay(T + 300);
+    const canhBao = /VHZ2.*thất bại/.test(h.alerts());
+    await h.chay(T + 900);
+    kiem("KICK-THAT-BAI", [
+      [canhBao, "alerts log không có dòng VHZ2 … thất bại"],
+      [h.kick() === 2, `lượt kế gọi lại: tổng ${h.kick()} lời, cần 2 (trần không bị tiêu khi lệnh thất bại)`],
+    ]);
+  }
+  const ma = ["QR-LAN-2", "LOG-CAT-KHONG-KICK", "KICK-THAT-BAI"];
+  for (const m of ma) console.log(ketQua.get(m) ?? `FAIL ${m} ca không chạy`);
+  const dat = ma.filter((m) => ketQua.get(m)?.startsWith("PASS")).length;
+  console.log(`MO LAI ${dat === ma.length ? "PASS" : "FAIL"} ${dat}/${ma.length}`);
+  process.exit(dat === ma.length ? 0 : 1);
+}
+
 // ---------------------------------------------------------------- chạy
 const THU_TU = [
   "KICK-0911", "BIEN-599", "BIEN-599-DO",
@@ -621,4 +677,5 @@ async function main() {
   process.exit(1);
 }
 
-main();
+if (process.argv[2] === "mo-lai") await caMoLai();
+else await main();

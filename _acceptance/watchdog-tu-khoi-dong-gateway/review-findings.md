@@ -93,3 +93,13 @@ Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm v
   Đề xuất: known-limits
 
 Cụm ngoài vùng phủ: cluster: n-a (không đo được — không eval nào khai paths, hoặc dưới ngưỡng cụm).
+
+## Đã dựng lại trên hộp cát — chờ làn thu sửa (MỞ LẠI qua LL)
+
+Lệnh dựng lại: `node scripts/watchdog-tu-khoi-dong-gateway/acceptance.mjs mo-lai` (đỏ sẵn trên @1be76ccc6, thoát 1, `MO LAI FAIL 0/3`).
+
+| Ca | Mục | Số đo trên mã hiện tại | Cần |
+|---|---|---|---|
+| `QR-LAN-2` | Ngoài-1, Ngoài-5 | 1 dòng «CẦN QUÉT QR» sau hai sự cố phiên chết | 2 |
+| `LOG-CAT-KHONG-KICK` | Ngoài-6 | 1 lời kickstart trên gateway khoẻ khi gateway.log bị cắt; `b-moc` còn lại | 0 lời, `b-moc` đã gỡ |
+| `KICK-THAT-BAI` | Ngoài-7 | Lệnh kickstart thoát 5: 0 dòng cảnh báo thất bại, lượt kế không gọi lại (tổng 1) | có cảnh báo, tổng 2 |
