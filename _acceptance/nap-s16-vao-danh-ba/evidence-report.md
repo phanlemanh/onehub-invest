@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: c0854799fef194766dfae47171b1cd96c7d9f5d7
+verified_commit: 09f6e90a11d8bdeb2fc65cb4bcc6f7b97fded1a4
 human_signoff: Mạnh 2026-11-17
 ---
 
@@ -186,3 +186,7 @@ Round 5: tat ca E1-E10 va 7 lenh suite xanh, khong judgment item, khong eval nga
 ### Re-pin lần 1 — 2026-11-18, do DA37 đổi itest, fixture và thước đếm căn gộp của DA33 (nhánh danh-ba-s16-thang-cau-truc)
 run_id: repin-20261118T095639Z-16691
 sha: c0854799fef194766dfae47171b1cd96c7d9f5d7 · suites: 7 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng
+
+### Re-pin lần 2 — 2026-11-18, do gộp main vào nhánh DA37 trước Cổng Bằng chứng
+run_id: repin-20261118T112023Z-96541
+sha: 09f6e90a11d8bdeb2fc65cb4bcc6f7b97fded1a4 · suites: 7 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng

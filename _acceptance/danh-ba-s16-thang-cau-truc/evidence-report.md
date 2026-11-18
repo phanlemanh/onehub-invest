@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 21200631067097b45ba7fd38feec619da220cbe5
+verified_commit: 09f6e90a11d8bdeb2fc65cb4bcc6f7b97fded1a4
 human_signoff:
 ---
 
@@ -188,3 +188,7 @@ Round 2: E1 đến E10 chạy và PASS; hồ sơ được mang sang các round s
 Round 3: PASS nhưng hạ về implemented vì một suite xanh giả; sửa ở commit e2da460c2 (thước DA33 chép căn đã gộp, đủ ma trận phép cộng, khai test vào nửa suite).
 Round 4: bảy lệnh suite chạy lại, đều PASS; E1 đến E10 mang từ round 2 vì delta không chạm paths của chúng.
 
+
+### Re-pin lần 1 — 2026-11-18, do gộp main vào nhánh DA37 trước Cổng Bằng chứng
+run_id: repin-20261118T112023Z-96541
+sha: 09f6e90a11d8bdeb2fc65cb4bcc6f7b97fded1a4 · suites: 7 lệnh exit 0 · evals: 11/11 eval máy đạt kỳ vọng
