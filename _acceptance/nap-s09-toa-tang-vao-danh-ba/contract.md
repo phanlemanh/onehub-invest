@@ -5,9 +5,9 @@ slug: nap-s09-toa-tang-vao-danh-ba
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli, ui]
-status: draft
-approved_by:
-approved_at:
+status: approved
+approved_by: Mạnh
+approved_at: 2026-11-18
 design_doc: docs/superpowers/specs/2026-11-18-nap-s09-toa-tang-vao-danh-ba-design.md
 ---
 
