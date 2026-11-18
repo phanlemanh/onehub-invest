@@ -235,7 +235,68 @@ Luật đọc:
 3. Tên tệp và nội dung có thể chứa SĐT người bán (tầng C) — giữ nguyên, collector không chuẩn hoá.
 4. Cùng `driveId` ở hai snapshot: lấy bản mới nhất theo `fetchedAt`; cùng `sha256` là cùng nội dung.
 
+## Nguồn S16 — thuộc tính căn làm giàu mã căn (`mngt-can-chi-tiet`, v14)
+
+Kind mới trong chuỗi `mngt-*` của S16 (các kind `mngt-khu/toa/can/…` của v12 chốt ở mục riêng khi duyệt).
+Snapshot đầu: `vn/vn__s16-…__2026-11-18T003057555` (đóng gói từ lượt enrich 17–18/11; id đầy đủ của nguồn
+chỉ ghi trong `source_registry` máy thu). Thu bằng API BFF read-only **sau phiên trình duyệt** (không gửi tin);
+endpoint và quy trình chi tiết nằm trong `coverage.notes` của manifest — không đưa vào kho.
+
+Hình dạng snapshot (chuẩn chung): `items-NNNN.json.gz` 1.000 item/tệp; manifest `schemaVersion 14`,
+`coverage.methods = {"property-prepare": <số lời gọi theo căn>}`, `coverage.notes` ghi phương pháp + cửa sổ
+lượt chạy + quy tắc dedupe. **Tệp phủ riêng** `phu-ma-thu-hong.txt`: mỗi dòng `mã_căn|du_an` — những mã đã thử
+mà API không trả dữ liệu, luỹ kế mọi lượt, KHÔNG phải items; bộ nạp bỏ qua khi bóc (chỉ items-*.json.gz).
+
+Item: `sourceId = "<du_an>|<MÃ CĂN viết hoa>"`, `kind = "mngt-can-chi-tiet"`, `fetchedAt` = mốc bắt đầu lượt
+chạy (thời điểm từng lời gọi riêng lẻ không lưu), `meta = { duAn, khu, toa }`. Payload giữ NGUYÊN 28 trường
+nguồn trả về — không bỏ, không đổi tên:
+
+| Trường | Ý nghĩa |
+|---|---|
+| `proj`, `khu`, `tower` | alias dự án / phân khu / tên toà (không gian với chuỗi `mngt-*` v12) |
+| `projectAlias`, `areaClusterAlias` | tham số gọi API (nguyên văn đã dùng) |
+| `heightType` | `HIGH_RISE` / thấp tầng — tham số toà |
+| `unitNumber` | mã căn nguyên văn nguồn |
+| `propertyType` | loại hình nguồn trả về cho lời gọi này |
+| `_propertyType` | ứng viên loại hình TA gửi mà khớp (dấu vết cách tìm, không phải dữ liệu nguồn) |
+| `floors`, `floorNumber` | tầng (nguồn trả chuỗi; `floors` thường rỗng) |
+| `bedroom`, `bathroom` | số phòng ngủ / WC — `0` là giá trị nguồn trả, không phân biệt «không có» |
+| `direction`, `balconyDirection` | hướng cửa chính / ban công (enum tiếng Anh viết hoa) |
+| `juridicalStatus`, `deliveryStatus`, `furnitureStatus`, `houseStatus` | trạng thái pháp lý / bàn giao / nội thất / nhà — luồng read-only thường trả rỗng, giữ nguyên để đối chứng |
+| `houseStyle` | kiểu nhà enum nguồn (`ONE_BEDROOM_1`, `TWO_BEDROOMS_1_1_TOILET`, …) |
+| `salePrice` | giá niêm yết VND; `0` = nguồn không công bố (đa số căn ngoài quỹ đang bán) |
+| `areaUsing`, `areaBuilding` | hai diện tích — **nghĩa xem dưới** |
+| `purchasePrice`, `purchaseDate`, `initialInvestmentCost`, `loanAmount`, `investmentCapital` | trường form «danh mục đầu tư» của nguồn; luồng read-only trả 0 — giữ nguyên làm bằng chứng hình dạng |
+| `editableFields` | danh sách trường form nguồn cho phép người dùng sửa — dấu vết luồng, không phải dữ liệu căn |
+
+**Nghĩa `areaUsing` / `areaBuilding`** (căn cứ tên trường + đo 181.937 dòng bản gốc):
+
+- API là prefill read-only của form tạo tin trên nguồn; cặp trường đi cùng «diện tích sử dụng» / «diện tích
+  xây dựng» quen thuộc của BĐS VN.
+- Căn hộ (`APARTMENT`, `PENT_HOUSE`): `areaUsing/areaBuilding` ổn định 0,89–0,93, median **0,919** — đúng
+  quan hệ *thông thuỷ* (`areaUsing`) so với *tim tường* (`areaBuilding`) của căn hộ Việt Nam (~92%).
+- Nhà đất (`ROW_HOUSE`, `SHOP_HOUSE`, biệt thự, `ROW_SHOP_HOUSE`): tỷ lệ 1,1–4,1, median 3,2–4,0 — khi đó
+  `areaBuilding` là diện tích **chiếm đất** (footprint), `areaUsing` là tổng diện tích sàn.
+- **Ghi chú mở**: nhãn tiếng Việt chính thức của hai trường trên giao diện nguồn chưa chụp được (trang chi tiết
+  căn cần phiên đăng nhập); nghĩa trên căn cứ tên trường + phân bố đo được. Khi chụp được nhãn, bổ sung chú
+  thích vào mục này KHÔNG đổi số phiên bản.
+
+Luật đọc:
+
+1. Dedupe khi đóng gói: mỗi (`du_an`, mã căn) dòng **lần chạy sau cùng** thắng (181.937 dòng gốc → 95.798 item);
+   362 căn xung đột diện tích giữa hai ứng viên loại hình, chênh ≤ ~1% — payload giữ nguyên, bộ đọc không tự chọn.
+2. Chưa có bộ nạp: chờ migration 111 (`stg_s16_can_chi_tiet`) của làn import; khi có, nạp theo khuôn
+   `import-s16` (kiểm schemaVersion + sha256 từng tệp, đọc items theo manifest.files).
+3. Nội bộ như toàn bộ S16 (ROADMAP §3 mục 48): không sync cloud — `sync-cloud` chặn `^stg_s16`.
+
 ## Lịch sử phiên bản
+
+- **schemaVersion 14 (2026-11-18, claudedp-1811-1 — S16 thuộc tính căn, kind `mngt-can-chi-tiet`, chưa có bộ nạp)**:
+  đóng gói lượt enrich 17–18/11 (95.798 căn, 9 dự án, 226 toà) thành snapshot chuẩn — payload giữ nguyên 28 trường
+  nguồn; tệp phủ riêng `phu-ma-thu-hong.txt` 7.788 mã thử hỏng luỹ kế; nghĩa `areaUsing`/`areaBuilding` chốt ở mục
+  S16 phía trên (căn hộ median 0,919 = thông thuỷ/tim tường; nhà đất `areaBuilding` = chiếm đất). Bộ nạp
+  `stg_s16_can_chi_tiet` chờ migration 111 của làn import — GIAO riêng sau. Số 14 kế tiếp 13 (S09); các kind
+  `mngt-*` v12 của S16 chốt mục riêng khi duyệt.
 
 - **schemaVersion 13 (2026-11-14, claudedp-1411-8 — S09 danh mục dự án khuôn API, bộ nạp `stg_s09_item`)**: nguồn
   `s09-du-an` (khuôn API, một lượt thu toàn danh mục `vn/vn__s09-du-an__<ISO>/`, `manifest.coverage.methods =
