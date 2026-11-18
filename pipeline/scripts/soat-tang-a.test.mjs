@@ -134,7 +134,7 @@ describe("NT2-AC-1…AC-5 push-ops-facts qua bộ soát", () => {
   });
 
   test("NT2-AC-5 không đọc được source_registry → chặn, 0 POST, dòng nói không có danh sách tên", async () => {
-    const f = mutantPush("reg-rong.mjs", (s) => s.replace(/REG\.names = reg\.filter\([^\n]+;/, "REG.names = [];"));
+    const f = mutantPush("reg-rong.mjs", (s) => s.replace("REG.names = await docSourceNameEntries(client);", "REG.names = [];"));
     const r = await captureOpsFacts({ script: f, logs: LOGS() });
     assert.notEqual(r.code, 0);
     assert.equal(r.posts, 0, "không có danh sách tên thì không được gửi");

@@ -41,7 +41,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
 import { fold, nameVariants } from "./lib/mask-source-names.mjs";
-import { entriesFromTokens, guardValues } from "./lib/tier-a-guard.mjs";
+import { docSourceNameEntries } from "./lib/source-name-entries.mjs";
+import { entriesFromTokens, guardValues, tokensFromEntries } from "./lib/tier-a-guard.mjs";
 import { kiemBangDay, soatDuLieu, thongDiepS16, tokenS16 } from "./lib/s16-soat.mjs";
 
 const REF = "smqpqiigzulwpmrsrhci";
@@ -203,7 +204,8 @@ const foldSql = (expr) => `translate(lower(normalize(${expr}, NFC)), ${lit(FOLD_
 /** Biểu thức SQL trả giá trị cột, hoặc NULL khi mang định danh nguồn. Khớp theo lõi của bộ soát: biến thể ≥ 4 ký tự trúng
  * ở mọi chỗ, ngắn hơn phải đứng riêng một từ. Thiếu token thì NULL hết (đóng chặt): không soát được thì không gửi. */
 export function maskedSourceExpr(col, tokens) {
-  const variants = [...new Set((tokens ?? []).filter(Boolean).flatMap((t) => nameVariants(t)))];
+  // Token trần (cũ) hoặc { token, wholeOnly } (cờ match_whole, migration 112): dòng khai cờ không sinh biến thể từ đầu.
+  const variants = [...new Set(entriesFromTokens(tokens).flatMap((e) => nameVariants(e.realName, { wholeOnly: e.wholeOnly })))];
   if (!variants.length) return "NULL::text";
   const whole = `' ' || regexp_replace(f, '[^[:alnum:]]', ' ', 'g') || ' '`;
   const hit = variants
@@ -696,13 +698,8 @@ export async function syncOnce({ local, exec, log = console.log, runId = newRunI
         [Object.values(SHRINK_AUDIT), SHRINK_AUDIT_HOURS],
       ));
     }
-    if (!tokens) {
-      const { rows } = await local.query(
-        `SELECT DISTINCT x FROM (SELECT real_name AS x FROM source_registry
-           UNION ALL SELECT unnest(source_ids) FROM source_registry) s WHERE length(x) > 0`,
-      );
-      tokens = rows.map((r) => r.x);
-    }
+    // Một hàm nạp chung (che-ten-nguon-khong-lay-tu-dau): mọi token của sổ kèm cờ match_whole; thiếu bảng → [] → dừng dưới.
+    if (!tokens) tokens = tokensFromEntries(await docSourceNameEntries(local));
     // Không có gì để soát = bộ chặn tầng A đang mở → dừng thay vì cho qua (fail-closed).
     if (!tokens.length) throw new PhaseError("scan", "không đọc được tên/định danh nguồn nào từ source_registry local — không soát được, không gửi");
     const { rows: lc } = await local.query(

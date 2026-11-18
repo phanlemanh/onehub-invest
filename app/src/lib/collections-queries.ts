@@ -7,6 +7,7 @@ import { VN_TZ, vnDayKey, vnDayStart } from "./format";
 import { lastMeaningfulLine } from "./last-log-line";
 import { logsDir, treeRoot } from "./log-root";
 import { maskSourceNames, type SourceNameEntry } from "./mask-source-names";
+import { docSourceNameEntries } from "./source-roles";
 import { sourceLabel, type SourceRoles } from "./source-labels";
 import {
   directoryCacheIsFresh,
@@ -275,12 +276,11 @@ async function probe(url: string): Promise<"yes" | "no"> {
 /** Local: vai trò (cho nhãn) + tên thật (chỉ để che dòng log, không rời hàm) từ source_registry; DB lỗi → rỗng. */
 async function registryForJobs(): Promise<{ roles: SourceRoles; names: SourceNameEntry[] }> {
   try {
-    const { rows } = await pool.query<{ code: string; label_vi: string | null; real_name: string | null }>(
-      "SELECT code, label_vi, real_name FROM source_registry",
-    );
+    const { rows } = await pool.query<{ code: string; label_vi: string | null }>("SELECT code, label_vi FROM source_registry");
     return {
       roles: Object.fromEntries(rows.filter((r) => r.label_vi).map((r) => [r.code, r.label_vi as string])),
-      names: rows.filter((r) => r.real_name).map((r) => ({ code: r.code, realName: r.real_name as string })),
+      // che-ten-nguon-khong-lay-tu-dau: một hàm nạp chung (tên thật + định danh, kèm cờ match_whole)
+      names: await docSourceNameEntries(),
     };
   } catch {
     return { roles: {}, names: [] };

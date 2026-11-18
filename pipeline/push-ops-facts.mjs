@@ -9,6 +9,7 @@ import path from "node:path";
 import pg from "pg";
 
 import { maskSourceNames } from "./lib/mask-source-names.mjs";
+import { docSourceNameEntries } from "./lib/source-name-entries.mjs";
 import { guardValues } from "./lib/tier-a-guard.mjs";
 
 import { tailLog } from "./lib/last-log-line.mjs";
@@ -218,9 +219,10 @@ async function main() {
   const { funnel, health, groups } = parseLog(logText);
   const client = new pg.Client({ connectionString: process.env.DATABASE_URL ?? LOCAL_URL });
   await client.connect();
-  const { rows: reg } = await client.query("SELECT code, label_vi, real_name FROM source_registry");
+  const { rows: reg } = await client.query("SELECT code, label_vi FROM source_registry");
   REG.roles = Object.fromEntries(reg.filter((r) => r.label_vi).map((r) => [r.code, r.label_vi]));
-  REG.names = reg.filter((r) => r.real_name).map((r) => ({ code: r.code, realName: r.real_name }));
+  // che-ten-nguon-khong-lay-tu-dau: một hàm nạp chung — tên thật + định danh, kèm cờ match_whole
+  REG.names = await docSourceNameEntries(client);
   const [jobs, rot, zalo, sourceRuns] = await Promise.all([
     scheduler(), rotation(client), zaloExtras(client, groups), sourceRunsQ(client),
   ]);
@@ -357,9 +359,9 @@ async function chiLenh(tep) {
   const payload = banTinLenh(Array.isArray(doc) ? doc : doc.results);
   const client = new pg.Client({ connectionString: process.env.DATABASE_URL ?? LOCAL_URL });
   await client.connect();
-  const { rows: reg } = await client.query("SELECT code, real_name FROM source_registry");
+  const names = await docSourceNameEntries(client);
   await client.end();
-  const chan = factsChan(payload, reg.filter((r) => r.real_name).map((r) => ({ code: r.code, realName: r.real_name })));
+  const chan = factsChan(payload, names);
   if (chan.length) {
     for (const l of chan) console.error(l);
     process.exitCode = 1;

@@ -20,11 +20,41 @@ export async function getSourceRoles(): Promise<SourceRoles> {
   return toRoles(await getFactsSourceRuns())
 }
 
-/** Local: [{ code, realName }] từ source_registry — CHỈ để che tên trong chữ chạy (mask-source-names), không bao giờ
- *  render. Cloud/DB lỗi → [] → bộ che trả null (đóng chặt). */
+type RegRow = { code: string; real_name: string | null; ids: string[] | null; match_whole: boolean }
+const CO_CO = "SELECT code, real_name, coalesce(source_ids, '{}') AS ids, match_whole FROM source_registry ORDER BY code"
+const KHONG_CO = "SELECT code, real_name, coalesce(source_ids, '{}') AS ids, false AS match_whole FROM source_registry ORDER BY code"
+
+/** Bản chép của pipeline/lib/source-name-entries.mjs (app không import pipeline) — che-ten-nguon-khong-lay-tu-dau.
+ *  [{ code, realName, wholeOnly }]: mỗi token (tên thật và từng định danh) một mục, mang cờ match_whole (migration 112).
+ *  CHỈ để che/soát tên trong chữ chạy, không bao giờ render. Thiếu cột (42703) → cờ false (che thừa); không có bảng
+ *  (42P01) → []; lỗi khác → ném. */
 export async function docSourceNameEntries(): Promise<SourceNameEntry[]> {
-  const { rows } = await pool.query<{ code: string; real_name: string | null }>("SELECT code, real_name FROM source_registry")
-  return rows.filter((r) => r.real_name).map((r) => ({ code: r.code, realName: r.real_name as string }))
+  let rows: RegRow[]
+  try {
+    ;({ rows } = await pool.query<RegRow>(CO_CO))
+  } catch (e) {
+    const code = (e as { code?: string })?.code
+    if (code === "42P01") return []
+    if (code !== "42703") throw e
+    try {
+      ;({ rows } = await pool.query<RegRow>(KHONG_CO))
+    } catch (e2) {
+      if ((e2 as { code?: string })?.code === "42P01") return []
+      throw e2
+    }
+  }
+  const out: SourceNameEntry[] = []
+  const seen = new Set<string>()
+  for (const r of rows) {
+    for (const t of [r.real_name, ...(r.ids ?? [])]) {
+      if (typeof t !== "string" || t.trim() === "") continue
+      const k = `${r.code}\u0000${t}`
+      if (seen.has(k)) continue
+      seen.add(k)
+      out.push({ code: r.code, realName: t, wholeOnly: r.match_whole === true })
+    }
+  }
+  return out
 }
 
 export async function getSourceNameEntries(): Promise<SourceNameEntry[]> {

@@ -14,12 +14,13 @@ export function fold(s) {
   return out;
 }
 
-/** Các biến thể đã gập của một tên: tên đủ, từ đầu (khi tên nhiều từ và từ đầu ≥ 4 ký tự), và bản viết liền. */
-export function nameVariants(realName) {
+/** Các biến thể đã gập của một tên: tên đủ, từ đầu (khi tên nhiều từ và từ đầu ≥ 4 ký tự), và bản viết liền.
+ *  `wholeOnly` (cờ source_registry.match_whole, migration 112): chỉ tên đủ và bản viết liền — không lấy từ đầu. Vắng = false. */
+export function nameVariants(realName, { wholeOnly = false } = {}) {
   const full = fold(realName.trim());
   const words = full.split(/[\s.\-_/]+/).filter(Boolean);
   const out = new Set([full, words.join("")]);
-  if (words.length > 1 && words[0].length >= 4) out.add(words[0]);
+  if (!wholeOnly && words.length > 1 && words[0].length >= 4) out.add(words[0]);
   return [...out].filter((v) => v.length >= 3);
 }
 
@@ -29,7 +30,7 @@ const isWordChar = (c) => c !== undefined && /[\p{L}\p{N}]/u.test(c);
  *  mọi chỗ (tên dính hậu tố như mã kênh, khoá nguồn); biến thể ngắn hơn phải đứng riêng một từ (không trúng giữa từ). */
 export function findSourceNames(text, entries) {
   const f = fold(text);
-  const cands = entries.flatMap(({ code, realName }) => nameVariants(realName).map((v) => ({ code, v })));
+  const cands = entries.flatMap(({ code, realName, wholeOnly }) => nameVariants(realName, { wholeOnly }).map((v) => ({ code, v })));
   cands.sort((a, b) => b.v.length - a.v.length);
   const hits = [];
   const taken = new Uint8Array(f.length);

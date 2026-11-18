@@ -2,7 +2,7 @@
 // ON7 `ops-nhan-ma-nguon`. Bản chép của pipeline/lib/mask-source-names.mjs (app không import pipeline); bảng ca
 // pipeline/scripts/mask-source-names.cases.json giữ hai bản khớp nhau. Danh sách tên rỗng → null (đóng chặt).
 
-export type SourceNameEntry = { code: string; realName: string }
+export type SourceNameEntry = { code: string; realName: string; wholeOnly?: boolean }
 
 /** Gập từng đơn vị mã về chữ thường không dấu, GIỮ độ dài để vị trí khớp trên bản gập trùng vị trí bản gốc. */
 export function fold(s: string): string {
@@ -15,12 +15,13 @@ export function fold(s: string): string {
   return out
 }
 
-/** Các biến thể đã gập của một tên: tên đủ, từ đầu (khi tên nhiều từ và từ đầu ≥ 4 ký tự), và bản viết liền. */
-export function nameVariants(realName: string): string[] {
+/** Các biến thể đã gập của một tên: tên đủ, từ đầu (khi tên nhiều từ và từ đầu ≥ 4 ký tự), và bản viết liền.
+ *  `wholeOnly` (cờ source_registry.match_whole, migration 112): chỉ tên đủ và bản viết liền — không lấy từ đầu. Vắng = false. */
+export function nameVariants(realName: string, { wholeOnly = false }: { wholeOnly?: boolean } = {}): string[] {
   const full = fold(realName.trim())
   const words = full.split(/[\s.\-_/]+/).filter(Boolean)
   const out = new Set([full, words.join("")])
-  if (words.length > 1 && words[0].length >= 4) out.add(words[0])
+  if (!wholeOnly && words.length > 1 && words[0].length >= 4) out.add(words[0])
   return [...out].filter((v) => v.length >= 3)
 }
 
@@ -29,7 +30,7 @@ const isWordChar = (c: string | undefined) => c !== undefined && /[\p{L}\p{N}]/u
 /** Mọi chỗ khớp tên: biến thể ≥ 4 ký tự khớp ở mọi chỗ; biến thể ngắn hơn phải đứng riêng một từ. */
 export function findSourceNames(text: string, entries: SourceNameEntry[]): { code: string; start: number; end: number }[] {
   const f = fold(text)
-  const cands = entries.flatMap(({ code, realName }) => nameVariants(realName).map((v) => ({ code, v })))
+  const cands = entries.flatMap(({ code, realName, wholeOnly }) => nameVariants(realName, { wholeOnly }).map((v) => ({ code, v })))
   cands.sort((a, b) => b.v.length - a.v.length)
   const hits: { code: string; start: number; end: number }[] = []
   const taken = new Uint8Array(f.length)
