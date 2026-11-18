@@ -157,7 +157,7 @@
       "port": 3460
     },
     {
-      "name": "app-3462-sm1-db-thu",
+      "name": "app-3461-sm1-db-thu",
       "runtimeExecutable": "env",
       "runtimeArgs": [
         "DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_u2_sm1",
@@ -169,9 +169,9 @@
         "dev",
         "--",
         "-p",
-        "3462"
+        "3461"
       ],
-      "port": 3462
+      "port": 3461
     }
   ]
 }
