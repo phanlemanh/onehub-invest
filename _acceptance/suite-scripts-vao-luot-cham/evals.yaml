@@ -12,7 +12,7 @@ evals:
     executor: test
     cmd: config:executors.test.sstl_tom_tat
     paths: ["scripts/suite-neu-doi.mjs", "scripts/suite-neu-doi.test.mjs"]
-    expected: "Ca SSL-AC-2 xanh: lệnh trên tệp mẫu xanh in dòng cuối JSON kind scripts-ci có sha = HEAD, exit 0, tests/pass/fail/giay là số; với --ho-so trỏ hồ sơ tạm, cùng dòng được nối vào run-log.jsonl của hồ sơ ấy; tệp mẫu đỏ → dòng có exit ≠ 0 và fail ≥ 1; --ho-so trỏ hồ sơ không tồn tại → thoát 2, run-log không được tạo; sau mỗi lượt và sau SIGTERM (thoát 143) DB oneinvest_ci_scripts_<pid> không còn."
+    expected: "Ca SSL-AC-2 xanh: lệnh trên tệp mẫu xanh in dòng cuối JSON kind scripts-ci có sha = HEAD, exit 0, tests/pass/fail/giay là số; với --ho-so trỏ hồ sơ tạm, cùng dòng được nối vào run-log.jsonl của hồ sơ ấy; tệp mẫu đỏ → dòng có exit ≠ 0 và fail ≥ 1; --ho-so trỏ hồ sơ không tồn tại → thoát 2, run-log không được tạo; sau mỗi lượt, sau SIGTERM (thoát 143) và SIGINT (thoát 130) DB oneinvest_ci_scripts_<pid> không còn, stdout thật có dòng cuối scripts-ci mang đúng mã thoát và run-log có đúng dòng ấy; createdb lỗi → thoát 2 kèm dòng scripts-ci và run-log; đỉnh đổi giữa lượt → dòng mang sha đọc trước khi chạy; tệp ngoài _acceptance/ → thoát 2, gọi tên tệp, không chạy test, vẫn có dòng scripts-ci."
   - id: E3
     criterion: AC-3
     executor: script

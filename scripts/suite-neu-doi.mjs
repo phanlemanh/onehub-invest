@@ -168,6 +168,19 @@ export function tomTatScripts(out, { sha, exit, giay }) {
   return { kind: "scripts-ci", ts: new Date().toISOString(), sha, exit, tests: so("tests"), pass: so("pass"), fail: so("fail"), giay };
 }
 
+// Tệp làm cây «bẩn» theo `git status --porcelain -z`: mọi thay đổi ngoài _acceptance/ (hồ sơ được phép đổi trong lượt, cùng
+// luật với dòng scripts-ci và làn ghim lại). Đổi tên/chép có thêm một mục đường cũ ngay sau.
+export function tepBan(z) {
+  const muc = z.split("\0"), ra = [];
+  for (let i = 0; i < muc.length; i++) {
+    if (muc[i].length < 4) continue;
+    const duong = [muc[i].slice(3)];
+    if (/[RC]/.test(muc[i].slice(0, 2))) duong.push(muc[++i]);
+    for (const d of duong) if (d && !d.startsWith("_acceptance/")) ra.push(d);
+  }
+  return ra;
+}
+
 const dx = (...a) => spawnSync("docker", ["exec", "-i", "-e", "PGPASSWORD=oneinvest", DB_CONTAINER, ...a], { encoding: "utf8" });
 
 // Shell của bước: job không khai `shell:` thì runner Linux chạy `bash -e {0}` — không pipefail. Lệch thì gọi tên trong
@@ -200,8 +213,35 @@ async function mainScripts(argv) {
   if (hoSo !== undefined && !(/^[a-z0-9][a-z0-9-]*$/.test(hoSo) && existsSync(path.join(root, "_acceptance", hoSo))))
     { console.error(`suite-neu-doi: hồ sơ «${hoSo}» không có ở ${root}/_acceptance`); return 2; }
   const tep = opt("--tep") ? opt("--tep").split(",").filter(Boolean) : null;
+  const batDau = Date.now();
+  const tongKet = boTongKet();
+  // sha đọc TRƯỚC khi chạy: luật gộp buộc kết quả vào đỉnh bằng trường này, đọc sau thì commit giữa lượt nhận kết quả của cây cũ.
+  let sha = null;
+  try { sha = git(root, "rev-parse", "HEAD").trim(); } catch { /* không phải kho git: bị từ chối ở bước kiểm cây */ }
+  // Mọi đường ra sau khi hồ sơ hợp lệ đi qua đây: luật gộp đọc dòng MỚI NHẤT, lượt hỏng không để dấu thì dòng xanh cũ vẫn thắng.
+  const ket = (ma) => {
+    const dong = JSON.stringify(tomTatScripts(tongKet.text(), { sha, exit: ma, giay: Math.round((Date.now() - batDau) / 100) / 10 }));
+    if (hoSo) appendFileSync(path.join(root, "_acceptance", hoSo, "run-log.jsonl"), dong + "\n");
+    console.log(dong);
+    return ma;
+  };
+  let ban;
+  try { ban = tepBan(git(root, "status", "--porcelain", "-z")); } catch (e) { console.error(`suite-neu-doi: không đọc được trạng thái cây ${root}: ${e.message}`); return ket(2); }
+  if (ban.length) { console.error(`suite-neu-doi: từ chối chạy trên cây bẩn (${ban.length} tệp ngoài _acceptance/): ${ban.slice(0, 10).join(", ")}`); return ket(2); }
   let buoc;
-  try { buoc = buocSuite(root); } catch (e) { console.error(`suite-neu-doi: ${e.message}`); return 2; }
+  try { buoc = buocSuite(root); } catch (e) { console.error(`suite-neu-doi: ${e.message}`); return ket(2); }
+  // Bước chạy trong nhóm tiến trình riêng: nhận tín hiệu thì ngắt cả nhóm (bash, node --test và con của nó) rồi đi tiếp đường
+  // ra chung để xoá DB và ghi dòng tóm tắt. spawnSync không làm được: trình xử lý tín hiệu chỉ chạy sau khi con xong.
+  let con = null, maNgat = 0;
+  const ngat = (sig, so) => process.on(sig, () => {
+    if (maNgat) return;
+    maNgat = 128 + so;
+    if (!con?.pid) return;
+    const nhom = con.pid;
+    try { process.kill(-nhom, "SIGTERM"); } catch { /* nhóm đã thoát */ }
+    setTimeout(() => { try { process.kill(-nhom, "SIGKILL"); } catch { /* nhóm đã thoát */ } }, 10000).unref();
+  });
+  ngat("SIGHUP", 1); ngat("SIGINT", 2); ngat("SIGTERM", 15);
   const ten = `oneinvest_ci_scripts_${process.pid}`;
   const ds = dx("psql", "-U", "oneinvest", "-h", "localhost", "-d", "oneinvest", "-At", "-c", "select datname from pg_database");
   for (const cu of dbMoCoi((ds.stdout || "").split("\n").map((x) => x.trim()), pidSong)) {
@@ -209,7 +249,7 @@ async function mainScripts(argv) {
     console.error(`suite-neu-doi: ${r.status === 0 ? "đã xoá" : "không xoá được"} DB mồ côi ${cu}`);
   }
   const tao = dx("createdb", "-U", "oneinvest", "-h", "localhost", ten);
-  if (tao.status !== 0) { console.error(`suite-neu-doi: không dựng được DB trống ${ten}: ${(tao.stderr || tao.error?.message || "").trim()}`); return 2; }
+  if (tao.status !== 0) { console.error(`suite-neu-doi: không dựng được DB trống ${ten}: ${(tao.stderr || tao.error?.message || "").trim()}`); return ket(2); }
   let daXoa = false;
   const xoa = () => {
     if (daXoa) return true;
@@ -218,23 +258,14 @@ async function mainScripts(argv) {
     if (r.status !== 0) console.error(`suite-neu-doi: KHÔNG xoá được DB ${ten}: ${(r.stderr || r.error?.message || "").trim()}`);
     return r.status === 0;
   };
-  // Bước chạy trong nhóm tiến trình riêng: nhận tín hiệu thì ngắt cả nhóm (bash, node --test và con của nó), xoá DB, thoát
-  // 128 + số hiệu. spawnSync không làm được: trình xử lý tín hiệu chỉ chạy sau khi con xong.
-  let con = null;
-  const ngat = (sig, so) => process.on(sig, () => {
-    if (con?.pid) { try { process.kill(-con.pid, "SIGTERM"); } catch { /* nhóm đã thoát */ } }
-    xoa(); process.exit(128 + so);
-  });
-  ngat("SIGHUP", 1); ngat("SIGINT", 2); ngat("SIGTERM", 15);
-  const batDau = Date.now();
   let ma = 0;
-  const tongKet = boTongKet();
   try {
     // NODE_TEST_CONTEXT: khi lệnh chạy từ trong một lượt `node --test`, biến ấy làm `node --test` lồng bên trong báo về
     // cha thay vì tự chạy tệp. Bước CI thật không có biến này.
     const { NODE_TEST_CONTEXT: _bo, ...goc } = process.env;
     const env = { ...goc, CI: "true", DATABASE_URL: dbUrl(ten) };
     for (const { ten: tb, lenh } of buoc) {
+      if (maNgat) break;
       let l = lenh;
       if (tb === "test") {
         if (!l.includes(GLOB_TEST)) { console.error(`suite-neu-doi: bước test không còn glob ${GLOB_TEST} — lệnh CI đã đổi`); ma = 2; break; }
@@ -249,6 +280,7 @@ async function mainScripts(argv) {
         con.on("error", () => xong({ status: 127, signal: null }));
       });
       con = null;
+      if (maNgat) break;
       if (k.signal) { ma = 128 + ({ SIGINT: 2, SIGKILL: 9, SIGTERM: 15 }[k.signal] ?? 1); break; }
       if (k.status !== 0) { console.error(`suite-neu-doi: bước «${tb}» thoát ${k.status}`); ma = k.status ?? 1; break; }
     }
@@ -256,12 +288,7 @@ async function mainScripts(argv) {
     // DB tạm rò lại trên server dùng chung: lượt chạy khô không được báo xanh.
     if (!xoa() && ma === 0) ma = 3;
   }
-  let sha = null;
-  try { sha = git(root, "rev-parse", "HEAD").trim(); } catch { /* không phải kho git */ }
-  const dong = JSON.stringify(tomTatScripts(tongKet.text(), { sha, exit: ma, giay: Math.round((Date.now() - batDau) / 100) / 10 }));
-  if (hoSo) appendFileSync(path.join(root, "_acceptance", hoSo, "run-log.jsonl"), dong + "\n");
-  console.log(dong);
-  return ma;
+  return ket(maNgat || ma);
 }
 
 function main(argv) {

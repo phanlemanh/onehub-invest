@@ -37,11 +37,12 @@ có phần tử mới chưa có dòng → đỏ gọi tên phần tử. Đầu r
 `CI=true`, và danh sách ca bị bỏ bằng danh sách của `ci-bo-qua.json` cho module `scripts`.
 
 ### AC-2 — Dòng tóm tắt máy đọc được, ghi vào run-log hồ sơ, DB luôn được dọn
-Given lệnh chạy xong (xanh hay đỏ) hoặc bị ngắt,
+Given lệnh chạy xong (xanh hay đỏ), bị ngắt, không dựng được DB, hoặc bị từ chối vì cây bẩn,
 When đọc đầu ra và hồ sơ,
-Then dòng cuối của stdout là một JSON `{"kind":"scripts-ci","ts","sha","exit","tests","pass","fail","giay"}`; với `--ho-so
-<slug>` cùng dòng ấy được nối vào `_acceptance/<slug>/run-log.jsonl`; `--ho-so` trỏ hồ sơ không tồn tại → thoát 2, không
-ghi gì; DB trống của lượt không còn sau khi lệnh thoát, kể cả khi bị SIGTERM (thoát 143).
+Then dòng cuối của stdout là một JSON `{"kind":"scripts-ci","ts","sha","exit","tests","pass","fail","giay"}` với `sha` là đỉnh
+đọc TRƯỚC khi chạy; với `--ho-so <slug>` cùng dòng ấy được nối vào `_acceptance/<slug>/run-log.jsonl`; `--ho-so` trỏ hồ sơ không
+tồn tại → thoát 2, không ghi gì; cây có thay đổi ngoài `_acceptance/` → thoát 2, gọi tên tệp, không chạy test; DB trống của lượt
+không còn sau khi lệnh thoát, kể cả khi bị SIGTERM (thoát 143) hay SIGINT (thoát 130).
 
 ### AC-3 — Tái hiện lần đỏ #471
 Given worktree tạm của đỉnh `5b02c3de` (cha của bản vá `8d5b75b1`),
@@ -116,3 +117,7 @@ khi máy yên) — E7 khai `long_running: 60`. Sửa lỗi AC-2 (giữ dòng t�
 do dữ liệu máy thu đổi sau khi DA33 nạp S16 vào danh bạ, không do mã của hàng: đối chứng main `55bcea7a2` đỏ y hệt, main
 `98fe528b1` (#479) xanh; nhánh nhận main `d6b3d2b8f` (giám sát cho, 18/11). (b) Lỗi trong hợp đồng AC-2: mẩu stdout cắt giữa
 «ℹ» (3 byte UTF-8) làm mất số ca — sửa ở `10676ade` (`setEncoding("utf8")`, ca đo khứ hồi theo byte).
+
+**Vòng 4 (18/11 21:47Z, REJECT).** Lượt bị ngắt và lượt createdb lỗi thoát mà không có dòng `scripts-ci`, trái AC-2. Mạnh cho vòng 5
+(«theo khuyến nghị cả ba», 22:10:46Z). Vòng 5 sửa bốn điểm: dòng tóm tắt khi bị ngắt, dòng tóm tắt khi createdb lỗi, đọc `sha`
+trước khi chạy, từ chối cây bẩn. Các ca chạy lệnh thật nay dùng worktree tạm sạch, không còn tạo hồ sơ giả trong `_acceptance/` thật.
