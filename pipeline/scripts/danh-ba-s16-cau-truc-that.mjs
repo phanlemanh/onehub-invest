@@ -1,8 +1,10 @@
 #!/usr/bin/env node
-// danh-ba-s16-cau-truc-that.mjs — DA37 danh-ba-s16-thang-cau-truc E2b, E9, E10: trên bản chép DB máy thu (db/db-thu.sh, xoá khi
-// xong) áp 111, dựng thẻ luật phân khu S16 rồi áp đúng băm, dựng năm khu; so tám ô với bảng kỳ vọng của AC-10; rồi chạy đường
+// danh-ba-s16-cau-truc-that.mjs — DA37 danh-ba-s16-thang-cau-truc E2b, E9, E10: trên bản chép DB máy thu áp 111, dựng thẻ luật phân khu S16 rồi áp đúng băm, dựng năm khu; so tám ô với bảng kỳ vọng của AC-10; rồi chạy đường
 // lùi có đích của hàng (lui/) và so dấu vân tay trước áp. DB máy thu chỉ bị đọc (pg_dump). Chỉ in số — không mã căn, toa_id,
 // khu_id hay tên nguồn. Lệch một ô → thoát 1 nêu ô.   Chạy ở máy thu: node pipeline/scripts/danh-ba-s16-cau-truc-that.mjs
+// Bản chép: script tự chạy lại mình qua `db/db-thu.sh oneinvest_suite_s37that --chay` — DB của lượt sinh bằng `createdb -T` từ
+// bản mẫu oneinvest_suite_mau (pg_dump DB máy thu một lần, giữ 24 giờ, dựng lại khi lược đồ đổi), xoá khi lệnh dừng. Không tự
+// pg_dump mỗi lượt (GS 18/11: DB máy thu sau DA33 chép mất 16 phút). Hàng khác đo trên bản chép dùng cùng khuôn.
 import { execFileSync, spawnSync } from "node:child_process";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -12,7 +14,8 @@ import { GOC, MAY_CHU, apTep } from "./db-thu-dbv.mjs";
 import { dung } from "../danh-ba-vat-the.mjs";
 import { apTheLuat, daoTheLuat, dungTheLuat } from "../phan-khu-s16.mjs";
 
-const TEN = `oneinvest_suite_s37that_${process.pid}`;
+const TRONG = process.env.S37_THAT_TRONG === "1";
+const TEN = TRONG ? new URL(process.env.DATABASE_URL ?? "postgres://x/").pathname.slice(1) : null;
 const LUI = join(GOC, "_acceptance/danh-ba-s16-thang-cau-truc/lui");
 const KHU = ["vinhomes-ocean-park-1", "vinhomes-ocean-park-2", "vinhomes-ocean-park-3", "vinhomes-smart-city", "vinhomes-grand-park"];
 const MONG = { khu: 61, nut: 61, mo_ho: 0, toa_treo_truoc: 109, toa_treo_sau: 0, can_gop: 2, the_nghi: 2, mo_ho_cho: 38, trung_ten_cho: 20,
@@ -25,7 +28,14 @@ const vanTay = () => sh("bash", [join(LUI, "dau-van-tay.sh"), TEN]).split("\n").
 const TOA16 = `SELECT DISTINCT object_key FROM registry_aliases WHERE source = 'S16' AND kind = 'ma_nguon' AND retired_at IS NULL
                 AND object_key LIKE 'bld\\_%' AND value ~ '^[^/]+/[^/]+$'`;
 async function main() {
-  sh("bash", [join(GOC, "db/db-thu.sh"), TEN]);
+  if (!TRONG) {
+    // Chạy lại chính mình trong DB của lượt; mã thoát của lượt là mã thoát của script.
+    const r = spawnSync("bash", [join(GOC, "db/db-thu.sh"), "oneinvest_suite_s37that", "--chay", process.execPath, ...process.argv.slice(1)],
+      { cwd: GOC, stdio: "inherit", env: { ...process.env, DATABASE_URL: "", S37_THAT_TRONG: "1" } });
+    process.exitCode = r.status ?? 1;
+    return;
+  }
+  if (!/^oneinvest_suite_s37that_[0-9]+$/.test(TEN)) { console.error(`từ chối: DB «${TEN}» không phải DB của lượt db-thu --chay`); process.exitCode = 2; return; }
   const c = new pg.Client({ connectionString: `${MAY_CHU}/${TEN}` });
   await c.connect();
   const mot = async (s, p = []) => (await c.query(s, p)).rows[0];
@@ -89,7 +99,6 @@ async function main() {
     rmSync(tam, { recursive: true, force: true });
   } finally {
     await c.end().catch(() => {});
-    spawnSync("bash", [join(GOC, "db/db-thu.sh"), TEN, "--xoa"], { cwd: GOC });
   }
   if (loi.length) { console.log(`LỆCH: ${loi.join(", ")}`); process.exitCode = 1; } else console.log("OK");
 }

@@ -95,8 +95,8 @@ Chạy lại bước 1d một lần nữa: `tong_ket` phải có `khoa_moi` 0 v�
 
 ## 2. Số chạy thử
 
-Lượt đo `node pipeline/scripts/danh-ba-s16-cau-truc-that.mjs` (E2b, E9, E10) trên bản chép DB máy thu (`db/db-thu.sh`, xoá khi
-xong): đúng chuỗi 111 → thẻ → áp băm → dựng năm khu → dựng lần hai → đường lùi có đích; DB máy thu chỉ bị đọc (pg_dump).
+Lượt đo `node pipeline/scripts/danh-ba-s16-cau-truc-that.mjs` (E2b, E9, E10) trên bản chép DB máy thu (`db/db-thu.sh … --chay`:
+DB của lượt sinh bằng `createdb -T` từ bản mẫu `oneinvest_suite_mau`, xoá khi xong): đúng chuỗi 111 → thẻ → áp băm → dựng năm khu → dựng lần hai → đường lùi có đích; DB máy thu chỉ bị đọc (pg_dump).
 
 Lượt 18/11 (bản chép từ DB máy thu sáng 18/11, sau khi DA33 đã áp), thoát 0, mọi ô khớp bảng kỳ vọng AC-10:
 
@@ -120,7 +120,7 @@ Lệch cấu trúc theo cặp nguồn (`v_lech_cau_truc_s16`, sau áp): Grand Pa
 **trùng** trước áp; phần dư có chủ đích: 51 nút luật mang `meta.nghi`, 1 dòng luật có `dao_at`. Đối chứng: sửa một thẻ lệch không
 về pending thì dấu vân tay bắt được (dòng `review_queue` lệch).
 
-Thời gian: cả lượt 16 phút, gần hết là bước chép DB; áp 111, thẻ, áp, dựng hai lần và lùi chạy trong vài chục giây.
+Thời gian: 75 giây khi bản mẫu còn tươi (tự pg_dump mỗi lượt như bản đầu: 16 phút); áp 111, thẻ, áp, dựng hai lần và lùi chiếm vài chục giây. Số không đổi sau vòng sửa 2 (cả hai căn lệch trên máy thu là thứ tự S08 trước).
 
 ## 3. Sao lưu trước áp
 
