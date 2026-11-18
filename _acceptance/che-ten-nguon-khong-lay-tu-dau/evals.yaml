@@ -1,0 +1,79 @@
+schema_version: 1
+feature_slug: che-ten-nguon-khong-lay-tu-dau
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: bash _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/db.sh
+    paths: [db/migrations/112_*.sql, pipeline/scripts/source-name-entries.itest.mjs]
+    expected: "exit 0; DB thử oneinvest_suite_cten áp mọi migration tới 111 rồi áp 112 hai lần: lần hai không lỗi; ảnh lược đồ (information_schema.columns của source_registry) trước và sau lần hai bằng nhau; cột match_whole kiểu boolean, is_nullable NO, column_default false; mọi dòng có sẵn mang false (đếm true = 0); FILL của pipeline/sync-cloud.mjs không chứa source_registry. Chiều đỏ cùng fixture: bản sao 112 bỏ IF NOT EXISTS → lần hai đỏ ghim «AC-1 112 không chạy lại được»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: bash _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/loi.sh
+    paths: [pipeline/lib/mask-source-names.mjs, app/src/lib/mask-source-names.ts, pipeline/scripts/mask-source-names.cases.json, pipeline/scripts/ops-nhan-ma-nguon.test.mjs, scripts/ops-nhan-ma-nguon.test.mjs]
+    expected: "exit 0; mọi ca của mask-source-names.cases.json chạy trên CẢ hai bản lõi và hai bản ra cùng chuỗi. Ca mới viết trước, nguồn giả S90 tên hai từ (từ đầu ≥ 4 ký tự trùng thương hiệu của tên dự án giả «<Thương hiệu> Park»), định danh là tên miền có nhãn đầu là một từ chung: wholeOnly=true → «dự án <Thương hiệu> Park» giữ nguyên; câu chứa đúng từ chung giữ nguyên; cụm hai từ ở bốn dạng (đủ, hoa, bỏ dấu, viết liền) thành S90; tên miền thành S90. Đối chứng cùng câu, cờ vắng và cờ false → thương hiệu bị che thành S90. Mọi ca cũ (kể cả «từ đầu của tên nhiều từ» của S05) ra đúng chuỗi như trên origin/main (rút bằng chạy bản lõi git show origin/main, không viết tay). Chiều đỏ cùng fixture: bản sao lõi bỏ qua wholeOnly → ca «dự án <Thương hiệu> Park» đỏ ghim «AC-2 thương hiệu dự án bị che nhầm»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: bash _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/db.sh
+    paths: [pipeline/lib/source-name-entries.mjs, app/src/lib/source-roles.ts, pipeline/scripts/source-name-entries.itest.mjs]
+    expected: "exit 0; ma trận viết trước ba trạng thái × hai bản hàm nạp (pipeline, app): (a) đã áp 112, thêm dòng giả S90 (tên hai từ + hai định danh) match_whole=true → mỗi token của S90 (3) mang wholeOnly true, mọi token dòng khác mang false, tập token = tên thật ∪ định danh của sổ (so với câu SELECT trực tiếp, không viết tay); (b) bảng có nhưng thiếu cột (lược đồ trước 112) → cùng tập token, mọi cờ false, không ném lỗi; (c) không có bảng → mảng rỗng. Chiều đỏ cùng fixture: bản sao hàm nạp đặt cờ mặc định true khi thiếu cột → ô (b) đỏ ghim «AC-3 thiếu cột phải che thừa»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4a
+    criterion: AC-4
+    executor: test
+    cmd: bash _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/soat.sh
+    paths: [pipeline/sync-cloud.mjs, pipeline/push-ops-facts.mjs, pipeline/do-hang-ngay.mjs, app/src/lib/offers-public.ts, app/src/lib/collections-queries.ts, scripts/lib/ops-local.mjs, scripts/quet-ten-nguon-html.mjs, pipeline/lib/tier-a-guard.mjs]
+    expected: "exit 0; soát mã bảy tệp viết trước: không tệp nào còn câu SQL đọc real_name hay source_ids từ source_registry để dựng danh sách che (mỗi tệp gọi hàm nạp chung); đối chứng dương: chèn tạm một câu SELECT real_name FROM source_registry vào bản sao một tệp → đỏ ghim «AC-4 chỗ đọc tự dựng danh sách che». guardValues trên tải giả với entries từ hàm nạp: tải chứa «dự án <Thương hiệu> Park» → 0 chỗ trúng khi S90 khai match_whole, ≥ 1 khi không khai; tải chứa cụm hai từ hay tên miền giả → ≥ 1 ở cả hai."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4b
+    criterion: AC-4
+    executor: test
+    cmd: bash _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/db.sh
+    paths: [pipeline/sync-cloud.mjs, pipeline/push-ops-facts.mjs, pipeline/lib/source-name-entries.mjs]
+    expected: "exit 0; trên DB thử có dòng giả S90 match_whole=true: hàm soát của sync-cloud (scanSourceNames qua token từ hàm nạp) cho qua một dòng sale_offers giả mang tên dự án «<Thương hiệu> Park», chặn dòng mang cụm hai từ và dòng mang tên miền; đặt match_whole=false → dòng tên dự án bị chặn (đối chứng). Bản tin push-ops-facts dựng trên cùng DB: chuỗi chứa tên dự án giả không bị che, chuỗi chứa cụm hai từ bị che thành S90."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: bash _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/ban-chep.sh
+    paths: [pipeline/lib/mask-source-names.mjs, pipeline/lib/source-name-entries.mjs, db/migrations/112_*.sql]
+    expected: "exit 0; trên bản chép DB máy thu oneinvest_u1_cten (pg_dump từ máy thu, áp 112): đếm log job như discovery/log-tu-dau.mjs nhưng dùng hàm nạp + lõi mới — dòng log CHỈ từ đầu của định danh S05 che được ≥ 60 (mốc 18/11: 60) và mọi dòng ấy vẫn bị findSourceNames bắt. In số, không in tên."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: bash _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/ban-chep.sh
+    paths: [pipeline/lib/mask-source-names.mjs, pipeline/lib/source-name-entries.mjs, pipeline/sync-cloud.mjs, db/migrations/112_*.sql]
+    expected: "exit 0; cùng bản chép, đặt dòng S16 về tên hai từ + tên miền đọc từ tệp cục bộ GS cấp (thiếu tệp → exit 2, không đoán), match_whole=true. Đếm bằng chính lõi + hàm nạp: nút asset_nodes kiểu project, registry_aliases và dòng các bảng FILL bị findSourceNames gán mã S16 → 0 cả ba (mốc trước: 8, 114.760, ≈ 1.320 + 3.355 dòng areas); đối chứng cùng bản chép, match_whole=false → số trúng ≥ mốc trước. Cấy một dòng vào bảng thử mang cụm hai từ có dấu cách và một dòng mang tên miền → hàm soát của sync-cloud bắt cả hai. Đếm checksum source_registry, asset_nodes, registry_aliases của DB máy thu trước và sau lượt: bằng nhau."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: bash _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/db.sh
+    paths: [_acceptance/che-ten-nguon-khong-lay-tu-dau/ap-may-thu/**]
+    expected: "exit 0; thư mục ap-may-thu có README (năm bước: lệnh áp 112 + trả dòng S16 không chép giá trị, chạy thử, sao lưu source_registry, lùi, kiểm sau), lui.sql; lui.sql chạy thật trên DB thử đã áp 112: cột match_whole mất, áp lại 112 được, dòng S16 giả về dạng chữa tạm."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4c
+    criterion: AC-4
+    executor: test
+    cmd: bash _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/db.sh
+    paths: [pipeline/sync-cloud.mjs, pipeline/push-ops-facts.mjs, pipeline/do-hang-ngay.mjs, app/src/lib/offers-public.ts, app/src/lib/collections-queries.ts, scripts/lib/ops-local.mjs, scripts/quet-ten-nguon-html.mjs, pipeline/lib/source-name-entries.mjs]
+    expected: "exit 0; ma trận viết trước bảy chỗ đọc × ba ca trên DB thử có dòng giả S90 (tên hai từ + tên miền, match_whole=true): «<Thương hiệu> Park» qua / không bị che; cụm hai từ bị che hoặc chặn; tên miền bị che hoặc chặn (offers-public: giá trị người bán mang tên miền về NULL; collections-queries: dòng log mang tên miền thành S90). Chiều đỏ: bản sao offers-public lọc bỏ token định danh → ca tên miền đỏ ghim «AC-4 chỗ đọc rơi token định danh». Đóng chặt: DB thử không có source_registry, và hàm nạp bị ép ném lỗi khác thiếu bảng → sync-cloud, push-ops-facts, do-hang-ngay mỗi đường thoát khác 0 với thông điệp ghim (sync-cloud «không soát được, không gửi»); đối chứng: có sổ thì cả ba chạy qua."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: bash _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/khong-ten-that.sh
+    paths: [_acceptance/che-ten-nguon-khong-lay-tu-dau/**, pipeline/scripts/mask-source-names.cases.json, pipeline/scripts/ops-nhan-ma-nguon.test.mjs, pipeline/scripts/soat-tang-a.test.mjs, pipeline/scripts/source-name-entries.itest.mjs, scripts/ops-nhan-ma-nguon.test.mjs]
+    expected: "exit 0; đọc tệp cục bộ GS cấp (thiếu → exit 2 «cần tệp tên thật S16 để dò», không bỏ qua); sinh mọi biến thể đã gập (đủ, viết liền, từ đầu của mỗi token, dạng chữa tạm = bản viết liền + slug) và dò trên bản gập của mọi tệp git theo dõi hoặc chưa theo dõi trong paths cùng .acceptance-runs/che-ten-nguon-khong-lay-tu-dau/** (đầu ra lượt chấm) → 0 chỗ trúng; in số chỗ trúng theo tệp, không in biến thể. Đối chứng dương: chép một tệp vào thư mục tạm và chèn một biến thể → phép dò trên bản tạm ra ≥ 1."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: judgment
+    inputs: [_acceptance/che-ten-nguon-khong-lay-tu-dau/contract.md, _acceptance/che-ten-nguon-khong-lay-tu-dau/design.md, _acceptance/che-ten-nguon-khong-lay-tu-dau/discovery/bang-phu-ca.md]
+    expected: "Người đọc không mở mã vẫn trả lời được: đây là nới bộ soát tầng A; nới ở đâu (dòng khai match_whole bỏ biến thể từ đầu); chỗ đọc nào chưa mang cờ và vì sao an toàn (che thừa, không rò); chuỗi nào trước bị chặn nay đi lên cloud (từ đầu của tên S16 và nhãn đầu tên miền S16 khi đứng riêng); số trước/sau trên DB máy thu."
+    evidence_required: [verdict, rationale, verifier, verified_at]
