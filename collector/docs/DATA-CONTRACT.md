@@ -285,18 +285,26 @@ Luật đọc:
 
 1. Dedupe khi đóng gói: mỗi (`du_an`, mã căn) dòng **lần chạy sau cùng** thắng (181.937 dòng gốc → 95.798 item);
    362 căn xung đột diện tích giữa hai ứng viên loại hình, chênh ≤ ~1% — payload giữ nguyên, bộ đọc không tự chọn.
-2. Chưa có bộ nạp: chờ migration 111 (`stg_s16_can_chi_tiet`) của làn import; khi có, nạp theo khuôn
-   `import-s16` (kiểm schemaVersion + sha256 từng tệp, đọc items theo manifest.files).
+2. Bộ nạp `pipeline/import-s16-chi-tiet.mjs` (claudedp-1811-8, khuôn `import-s16` sạch @928bf7914:
+   kiểm schemaVersion + sha256 từng tệp + manifest phải có tệp items, rollback cả lượt) ghi vào
+   `stg_s16_can_chi_tiet` của **migration 113** (làn import giữ số) đúng các cột: `du_an`, `khu`, `toa`
+   (lấy từ `meta`), `ma_can` (`unitNumber` nguyên văn), `dong` (số thứ tự item trong snapshot, từ 0,
+   phần khoá chính), `height_type`, `property_type`, `floor_number`, `bedroom`, `bathroom`,
+   `direction`, `balcony_direction`, `house_style`, `sale_price`, `area_using`, `area_building`,
+   `editable_fields` (text[]). KHÔNG nạp cột cho `purchasePrice`, `purchaseDate`,
+   `initialInvestmentCost`, `loanAmount`, `investmentCapital`, `juridicalStatus`, `deliveryStatus`,
+   `furnitureStatus`, `houseStatus` (trường chủ tự nhập — ở lại raw) và `_propertyType`,
+   `projectAlias`, `areaClusterAlias`, `floors` (cũng không nạp).
 3. Nội bộ như toàn bộ S16 (ROADMAP §3 mục 48): không sync cloud — `sync-cloud` chặn `^stg_s16`.
 
 ## Lịch sử phiên bản
 
-- **schemaVersion 14 (2026-11-18, claudedp-1811-1 — S16 thuộc tính căn, kind `mngt-can-chi-tiet`, chưa có bộ nạp)**:
+- **schemaVersion 14 (2026-11-18, claudedp-1811-1 — S16 thuộc tính căn, kind `mngt-can-chi-tiet`)**:
   đóng gói lượt enrich 17–18/11 (95.798 căn, 9 dự án, 226 toà) thành snapshot chuẩn — payload giữ nguyên 28 trường
   nguồn; tệp phủ riêng `phu-ma-thu-hong.txt` 7.788 mã thử hỏng luỹ kế; nghĩa `areaUsing`/`areaBuilding` chốt ở mục
   S16 phía trên (căn hộ median 0,919 = thông thuỷ/tim tường; nhà đất `areaBuilding` = chiếm đất). Bộ nạp
-  `stg_s16_can_chi_tiet` chờ migration 111 của làn import — GIAO riêng sau. Số 14 kế tiếp 13 (S09); các kind
-  `mngt-*` v12 của S16 chốt mục riêng khi duyệt.
+  `import-s16-chi-tiet` (claudedp-1811-8) ghi `stg_s16_can_chi_tiet` của migration 113 — bảng cột ở Luật đọc mục 2.
+  Số 14 kế tiếp 13 (S09); các kind `mngt-*` v12 của S16 chốt mục riêng khi duyệt.
 
 - **schemaVersion 13 (2026-11-14, claudedp-1411-8 — S09 danh mục dự án khuôn API, bộ nạp `stg_s09_item`)**: nguồn
   `s09-du-an` (khuôn API, một lượt thu toàn danh mục `vn/vn__s09-du-an__<ISO>/`, `manifest.coverage.methods =
