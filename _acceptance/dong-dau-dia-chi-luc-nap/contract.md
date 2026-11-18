@@ -5,7 +5,7 @@ slug: dong-dau-dia-chi-luc-nap
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-17
 design_doc: docs/superpowers/specs/2026-11-16-dong-dau-dia-chi-luc-nap-design.md
@@ -147,6 +147,22 @@ Quét theo preset test-matrix; trục và ô lấy từ bảng phủ ca của de
 - Ô «bài chỉ ảnh» của bảng phủ ca (xem Coverage).
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-18:
+  - Ngoài-1: Một đường đọc dữ liệu mới có thể, về lý thuyết, đọc cả bài thử mà thước kiểm tự động không báo. Hiện chưa có bài thử nào bị gắn dự án nhầm.
+  - Ngoài-2: Nếu người vận hành làm đúng từng chữ khi lùi mà chưa đặt biến kết nối, bước đầu xoá hết dự án trên tin còn bước sau báo lỗi, tin tạm không có dự án.
+  - Ngoài-3: Một số ô trong bảng kiểm tra dựng trạng thái mà hệ thống thật không bao giờ tạo ra, nên kết quả vài ô kiểm tra kém đáng tin hơn. Người dùng cuối không bị ảnh hưởng trực tiếp.
+  - Ngoài-4: Nếu người chạy đo lại trên bản chép đã dùng, số đo có thể trông đạt dù tin bị mất nhãn bán hay thuê. Đo trên bản chép mới dựng thì số đúng.
+  - Ngoài-5: Một phần mã định nghĩa «trong hệ» chỉ được test chứ không dùng khi đo, và có thể lệch nếu danh bạ dự án được đúc lại. Số đo tỉ lệ bài lạc không bị ảnh hưởng.
+  - Ngoài-6: Nếu một lượt đo bị ngắt giữa chừng, các lượt đo sau sẽ đứng im không báo gì cho tới khi người chạy xoá khoá thủ công.
+  - Ngoài-7: Test đọc tệp nhãn dùng tệp tự viết nên không bắt được trường hợp trang duyệt lưu khác khuôn; khi đó lệnh đo thật có thể lỗi hoặc đếm sai.
+  - Ngoài-8: Test chỉ kiểm tệp nhãn có đúng hạt giống chứ không kiểm tệp có đủ và đúng 100 bài của mẫu, nên không bắt được tệp thiếu bài.
+  - Ngoài-9: Test chưa chứng minh rằng khi DB đủ bảng thẻ thì không in cảnh báo thừa; nếu có in thừa thì chỉ là một dòng nhắc không đúng chỗ.
+  - Ngoài-10: Hôm nay tin vẫn hiện đúng. Nếu sau này ai đổi tên một luật cũ, việc thay bằng thẻ nhóm có thể lặng lẽ không chạy và một số tin bị báo xung đột dự án.
+  - Ngoài-11: Một lần chạy đo bị ngắt giữa chừng có thể làm các lần đo sau đứng im không báo gì, người chạy phải tự xoá tệp khoá. Dữ liệu tin và người dùng cuối không bị ảnh hưởng.
+  - Ngoài-12: Rào kiểm tra bài thử có thể báo xanh dù một câu truy vấn viết nhiều dòng đọc thẳng dữ liệu thô. Hiện chưa có bằng chứng bài thử nào bị đóng dấu nhầm.
+  - Ngoài-13: Nếu khuôn bảng gắn nhãn đổi, công cụ đọc nhãn có thể hỏng mà bài kiểm tra vẫn xanh, làm số đo bài lạc dự án sai đi.
+  - Ngoài hồ sơ chấm (GS, 17/11): bài nạp sau khi thôi chạy DV6 mà thẻ nhóm về sau bị bác thì không có dự án — chữa: chạy `du-an-tren-tin-s03.mjs --ghi` một lần sau khi bác thẻ.
 
 - Executor key cho các eval dưới đây **chưa có** trong `_acceptance/config.yaml`; lượt S1 này không được ghi tệp
   ấy (phạm vi giám sát giao), nên thêm chúng là việc đầu của S3.
