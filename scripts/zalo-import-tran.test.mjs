@@ -97,7 +97,7 @@ const kiemAC1Tin = (opts) => voiRoot(opts, async (root) => {
 });
 test("AC-1 (a) vòng tin: TRAN_NAP=0 → TIMEOUT nêu snapshot, 124, state giữ, không transform", () => kiemAC1Tin());
 test("AC-1 (a) chiều đỏ: bản sao bỏ khối trần vòng tin → đỏ ghim «AC-1 phần nạp không có trần»", () =>
-  assert.rejects(kiemAC1Tin({ bien: (s) => s.replace('if [ "$SECONDS" -ge "${ZALO_IMPORT_TRAN_NAP:-1800}" ]; then', "if false; then") }),
+  assert.rejects(kiemAC1Tin({ bien: (s) => s.replace('if [ "$SECONDS" -ge "$TRAN_NAP" ]; then', "if false; then") }),
     /AC-1 phần nạp không có trần/));
 test("AC-1 (b) vòng hồ sơ: TRAN_NAP=0 → TIMEOUT «tại hồ sơ», state hồ sơ giữ, JOB FAIL nap-ho-so mã 124", () => voiRoot({}, async (root) => {
   themSnap(root, "s03-ho-so", "2026-11-17T020202000");
@@ -125,7 +125,7 @@ const kiemAC2a = (opts) => voiRoot(opts, async (root) => {
 });
 test("AC-2 (a) cắt bởi trần nạp sau snapshot đầu → lượt sau nạp nốt, state tới snapshot cuối", () => kiemAC2a());
 test("AC-2 (a) chiều đỏ: bản sao đánh dấu snapshot bị cắt là đã nạp → đỏ ghim «AC-2 lượt sau bỏ sót snapshot»", () =>
-  assert.rejects(kiemAC2a({ bien: (s) => s.replace("    FAILED=124\n    break", '    MAXTS="$TS"; FAILED=124\n    break') }),
+  assert.rejects(kiemAC2a({ bien: (s) => s.replace("      FAILED=124\n      break", '      MAXTS="$TS"; FAILED=124\n      break') }),
     /AC-2 lượt sau bỏ sót snapshot/));
 const kiemAC2b = (opts) => voiRoot(opts, async (root) => {
   themSnap(root, "zalo-agent", T1); themSnap(root, "zalo-agent", T2);
@@ -201,7 +201,7 @@ const dungKhoa = (root, pid, tuoiGiay = 3 * 3600) => {
 const kiemAC6a = (opts) => voiRoot(opts, async (root) => {
   const k = dungKhoa(root, process.pid);
   const r = await chay(root, { ZALO_IMPORT_CHO_KHOA: "2" });
-  assert.match(r.out, /khoá còn sống \(PID \d+, lấy lúc \d+\) — không gỡ/, "AC-6 lượt 00:00 gỡ khoá đang sống");
+  assert.match(r.out, /khoá còn sống \(PID \d+, lấy lúc \d+(, tuổi \d+s)?\) — không gỡ/, "AC-6 lượt 00:00 gỡ khoá đang sống");
   assert.match(r.out, /khoá .* bận .*job khác đang nạp\?/);
   assert.equal(r.status, 1);
   assert.equal(readFileSync(join(k, "pid"), "utf8").trim(), String(process.pid), "khoá còn nguyên");
