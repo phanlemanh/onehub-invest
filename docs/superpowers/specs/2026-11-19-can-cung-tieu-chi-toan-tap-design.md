@@ -30,6 +30,7 @@ Tiêu chí giữ nguyên lời Mạnh ở hồ sơ `can-gia-tot-biet-can` (Cổn
 | Danh sách | Mở tab thì gọi một server action mới trong `app/src/app/ops/deals/` với mã căn và tham số URL. Action tự kiểm vai, đọc lại tập nhẹ, chọn căn cùng tiêu chí, xếp như hôm nay (không xác minh trước, giảm nhiều trước), đọc đầy đủ 20 căn đầu bằng `dealsTheoMaSql`, lọc theo vai bằng `dealTheoVai` + `dealHang` rồi trả về `{ tong, can }` |
 | «Xem mọi căn trong phường» | Cùng action, cờ `chiPhuong`; số của nút đã có sẵn trong `trang.cungTieuChi` |
 | Mở một căn trong danh sách | Căn có trong trang đang xem → mở sheet ở căn đó như hôm nay. Căn ngoài trang → mở trang một căn `/ops/deals/<mã>`, vì sheet cần ảnh, chữ bài, mặt bằng mà chỉ trang đang xem đã đọc |
+| Crumb «Căn giá tốt» ở trang một căn (Ngoài-3 của CG3) | Thay `dealTrongDanhSach` (dò 30 căn đầu của danh sách cũ) bằng việc tìm căn trong tập đọc nhẹ của `getDealsTrang` theo `kind` của căn: còn trong tập → `/ops/deals?kind=…&page=<trang chứa căn>&can=<mã>`; rời tập → `/ops/deals`. Hôm nay căn ngoài 30 căn đầu bị crumb đưa về `?can=`, danh sách không thấy căn trên trang 1 nên chuyển ngược về trang một căn |
 | Danh sách lùi (chưa có bảng hạng) | Giữ cách so trong `rows` như hôm nay; tab ghi rõ «trong danh sách đang tải» |
 
 **Phương án đã loại.** Tính sẵn danh sách 20 căn cho mọi dòng của trang và gửi cùng trang: 50 × 20 dòng đầy đủ, kèm ảnh, chữ bài,

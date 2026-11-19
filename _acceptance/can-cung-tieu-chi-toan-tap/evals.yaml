@@ -97,3 +97,11 @@ evals:
     paths: [app/src/app/ops/deals/**, app/src/components/ops/deal-*.tsx, app/src/components/ops/deals-*.tsx]
     expected: "exit 0; sàn thiết kế bậc M1 không báo hex thô mới trên tệp giao diện vòng chạm"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E13
+    criterion: AC-10
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/can-cung-tieu-chi-toan-tap/probes/doc.sh AC-10
+    paths: [app/src/lib/deals.ts, app/src/app/ops/deals/**, app/tests/can-cung-tieu-chi*]
+    expected: "Tập viết trước 37 căn, cỡ 15: bốn căn viết tay (trang 1, trang 3 ngoài 30 căn đầu của dealsSql cũ, căn thuê, căn rời tập), mỗi căn một assert về href của crumb trên HTML dựng thật của trang một căn (kind, page, can đúng; căn rời tập là /ops/deals), rồi dựng /ops/deals theo đúng href ấy: không redirect về trang một căn và căn đang mở là căn đó. Đối chứng dương cùng fixture: căn trang 1. Đột biến giữ dealTrongDanhSach cũ đỏ với căn trang 3, thông điệp nêu mã căn và href."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

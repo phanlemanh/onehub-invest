@@ -49,6 +49,9 @@ nào hiện, không tính lại điểm (luật 10). Thiết kế: `design_doc`.
   mã `1`, số «Căn cùng tiêu chí» của mọi dòng trang 1 ở cỡ 15 và 50 bằng lệnh đếm độc lập, `/ops/deals` trả HTML xong trong 3 giây và danh
   sách cùng tiêu chí của căn thuê có nhiều căn cùng tiêu chí nhất về trong 1,5 giây, trung vị ba lần khi máy yên (ghi tải máy);
   màn đọc được ở sáng, tối, 390 px không cuộn ngang trang, và vai Người xem không thấy cột «Gọi ai».
+- AC-10 (cross-layer): Given căn bán ở trang 3 của danh sách theo trang (ngoài 30 căn đầu của danh sách cũ), căn thuê, căn nằm ở trang 1, và căn
+  đã rời tập, When mở `/ops/deals/<mã>` rồi bấm crumb «Căn giá tốt», Then căn còn trong tập về danh sách đúng `kind` và đúng trang chứa căn, sheet mở ở
+  căn đó, không quay lại trang một căn; căn đã rời tập về `/ops/deals`. Gồm Ngoài-3 của CG3 — Mạnh chọn mở hợp đồng mới tại Cổng Bằng chứng CG3 19/11.
 
 ## Coverage
 
@@ -69,6 +72,7 @@ Quét theo khuôn ma trận kiểm thử. Số trong ô đếm từ DB máy thu 
 | Nơi chạy | máy thu · cloud | Số, danh sách | AC-7 |
 | Trạng thái tab | tải · có · trống · trống phường · lỗi · về muộn | Người vận hành | AC-8 |
 | Phép đo trên DB máy thu | một snapshot · máy yên | Người ký | AC-9 |
+| Crumb trang một căn (Ngoài-3 CG3) | căn trang 1 · căn trang 3 · căn thuê · căn rời tập | Người vận hành duyệt nhiều căn | AC-10 |
 
 Ô bỏ, ngoài phạm vi: tiêu chí số phòng ngủ, toà, tầng (lời Mạnh 18/11, hàng sau). `[GIẢ ĐỊNH]` không có dòng nào.
 
@@ -83,7 +87,6 @@ Quét theo khuôn ma trận kiểm thử. Số trong ô đếm từ DB máy thu 
 
 - Thêm tiêu chí số phòng ngủ, toà, tầng, đường vào «cùng tiêu chí» (lời Mạnh 18/11: hàng sau).
 - Đổi tiêu chí hay biên ±25% đã chốt 02/11.
-- Crumb «Căn giá tốt» ở trang một căn quay về chính trang đó (Ngoài-3 của CG3, hàng riêng).
 - Sheet đầy đủ (ảnh, chữ bài, mặt bằng) cho căn ở trang khác: căn ấy mở bằng trang một căn.
 - Danh sách lùi khi chưa có bảng hạng: giữ so trong danh sách đang tải.
 - Bảng tính sẵn, migration, API công khai `/v1/deals`.
