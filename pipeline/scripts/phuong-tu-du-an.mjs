@@ -2,7 +2,8 @@
 // (_acceptance/phuong-tu-du-an). Cột area_id của tin chỉ do resolve_offer_fields ghi (migration 099).
 //   node scripts/phuong-tu-du-an.mjs          # chạy thử: chỉ đếm, không ghi
 //   node scripts/phuong-tu-du-an.mjs --json   # như trên, số dạng máy đọc
-//   node scripts/phuong-tu-du-an.mjs --ghi    # ghi + rút phần hết căn cứ + phân xử tin bị chạm, một giao dịch — chờ lời Mạnh
+//   node scripts/phuong-tu-du-an.mjs --ghi    # ghi + rút phần hết căn cứ + phân xử tin bị chạm, một giao dịch
+//   node scripts/phuong-tu-du-an.mjs --ghi --noi-tiep   # bước của chuỗi nạp S03 (DA45): chỉ ghi khi lượt đầu đã áp tay
 // Chạy lại sau khi dự án trên bài hay phường của nút đổi = xét lại: phát biểu hết căn cứ bị rút (xet-lai-du-an).
 import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -77,10 +78,20 @@ async function tinBiCham(client, cham) {
 
 /**
  * @param {import("pg").Client} client
- * @param {{ghi?: boolean, json?: boolean, log?: (s: string) => void}} opts
+ * @param {{ghi?: boolean, json?: boolean, noiTiep?: boolean, log?: (s: string) => void}} opts
  */
-export async function chay(client, { ghi = false, json = false, log = console.log } = {}) {
+export async function chay(client, { ghi = false, json = false, noiTiep = false, log = console.log } = {}) {
   await kiemDb(client);
+  // DA45: chuỗi nạp gọi với noiTiep. Luật chưa có phát biểu sống nào nghĩa là lượt ghi đầu chưa được áp tay theo hồ sơ (hoặc đã
+  // lùi): không ghi gì, để gộp PR không tự ghi dữ liệu và lùi không bị lượt nạp kế ghi đè.
+  if (noiTiep) {
+    const { rows: [r] } = await client.query(
+      "SELECT EXISTS (SELECT 1 FROM field_assertions WHERE rule_id = $1 AND retracted_at IS NULL) AS co", [RULE]);
+    if (!r.co) {
+      log("phuong-tu-du-an: chưa áp lượt đầu — bỏ qua, không ghi");
+      return { dong: [], dem: {}, chen: 0, rut: 0, tin: 0, bo_qua: true };
+    }
+  }
   const kq = tinhPhuong(await docDuLieu(client));
   const d = kq.dem;
   if (json) log(JSON.stringify(d));
@@ -111,7 +122,7 @@ async function main(argv) {
   const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
   await client.connect();
   try {
-    await chay(client, { ghi: argv.includes("--ghi"), json: argv.includes("--json") });
+    await chay(client, { ghi: argv.includes("--ghi"), json: argv.includes("--json"), noiTiep: argv.includes("--noi-tiep") });
     return 0;
   } finally {
     await client.end();
