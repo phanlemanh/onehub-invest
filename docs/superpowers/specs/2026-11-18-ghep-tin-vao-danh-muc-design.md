@@ -59,7 +59,7 @@ dự án. Dừng ở bậc đầu tiên có kết quả:
 1. Tin không thuộc OP1 hay GP, hoặc không phải căn hộ: không gắn.
 2. Chữ bài nêu từ hai toà trở lên: không gắn, lý do `chu-nhieu-toa`. Model báo bài rao nhiều căn: không gắn, lý do `bai-nhieu-can`. Luật này đứng trước mọi nguồn, kể cả ô tên toà.
 3. Ô tên toà khớp đúng một toà hay một vùng: gắn (A); khớp sau chuẩn hoá cách viết: gắn (B).
-4. Ô tên toà khớp nhiều nơi: không gắn, lý do `mo-ho`. Ô có giá trị ngoài danh bạ: không gắn, lý do `ngoai-danh-ba`. Hai ca này không rơi xuống bậc sau.
+4. Ô tên toà khớp nhiều nơi: không gắn, lý do `mo-ho`, trừ ca tên trùng đúng một toà và đúng một vùng (mục «Cách hiểu đã chốt», điểm 3). Ô có giá trị ngoài danh bạ: không gắn, lý do `ngoai-danh-ba`. Hai ca này không rơi xuống bậc sau.
 5. Luật đọc được một toà: model cùng kết quả thì gắn (C); model khác thì không gắn, lý do `chu-model-khac`; model chưa đọc hoặc không nói thì không gắn, lý do `chi-luat`.
 6. Luật không đọc được toà, model nêu đúng một toà và tên toà nằm trong đoạn trích: gắn (D); tên không nằm trong đoạn trích: không gắn, lý do `trich-khong-co-ten`.
 7. Mức vùng làm như bước 5–6: nhiều vùng không gắn, luật và model cùng kết quả gắn (F), model một mình có tên trong đoạn trích gắn (G).
@@ -69,6 +69,19 @@ Hỏi-4). Căn cứ «kiến thức nghề», «ngữ cảnh nhóm», «ảnh» 
 khớp đúng một nút của dự án, rồi mới gắn.
 
 Tên chỉ so trong phạm vi dự án của tin, vì mã toà trùng giữa các dự án (S1, S2, BE1).
+
+**Cách hiểu đã chốt (sửa ngày 19/11, sau Cổng Phạm vi).** Phép đếm độc lập cho thấy bản trước để ngỏ các điểm dưới. Điểm 3 là thay đổi luật: theo chữ bản trước, tên trùng toà và vùng là `mo-ho`, độ phủ còn 3.203/6.558 = 48,84%. Ở Ocean Park 1, «S1», «S2» vừa là hai toà của cụm The Senique vừa là hai phân khu của The Sapphire. Đọc 30 tin mẫu, 13 tin nói về Sapphire, 1 tin nói rõ về Senique, 16 tin không nêu tên khu (`_acceptance/ghep-tin-vao-danh-muc/doc-mau-s1-s2-1911.md`), nên mức vùng không khẳng định một toà mà bài không nói rõ. Giới hạn: tin nói đúng về toà Senique S1, S2 chỉ gắn tới mức phân khu cho tới khi danh bạ có nút The Senique.
+
+1. **So tên.** Tên của toà là các bí danh loại `ten` còn hiệu lực của toà đang hoạt động; tên của vùng là tên và bí danh của mọi nút dưới dự án, trừ nút đã nghỉ (`meta.nghi = true`); nút đã nghỉ không nhận tên nhưng vẫn nằm trong cây khi xét toà thuộc vùng nào. Hai tên bằng nhau khi giống nhau sau khi bỏ dấu, bỏ khoảng trắng, gạch ngang, gạch dưới và viết hoa; dấu chấm được giữ. Không tự bỏ chữ «The»: «Origami» chỉ khớp «The Origami» khi danh bạ có bí danh đó. Tên dưới 2 ký tự sau chuẩn hoá không dùng; tên toà phải có ít nhất một chữ cái.
+2. **Khớp sau chuẩn hoá cách viết (B).** Có hai cách, thử sau khi không khớp đúng tên: bỏ dấu chấm khi so với tên toà (S102 là S1.02); hoặc lấy đoạn trước dấu chấm đầu tiên rồi so với toà, sau đó với vùng («PR5.13» là toà PR5, «S1.99» là vùng S1), vì đoạn sau là mã căn hay trục.
+3. **Tên trùng toà và vùng.** Tên khớp đúng một toà và đúng một vùng được hiểu là vùng ở mọi đường đọc (ô tên toà, chữ bài, bản đọc) và không được tính là tên toà ở bước «nêu từ hai toà». Kết quả phải giống nhau dù danh bạ còn hay đã gỡ dòng toà trùng tên. Một toà với nhiều vùng, hoặc nhiều toà, vẫn là `mo-ho`.
+4. **Đọc tên trong chữ bài.** Tìm mọi tên của dự án, không phân biệt dấu và hoa thường, hai đầu tên không dính chữ hay số khác. Tên nhiều từ được cách nhau một khoảng trắng. Mã căn dính sau tên toà, có hay không có dấu phân cách, vẫn đọc ra toà (S1.02.1508, S1.02-15XX08, BE11525); đuôi mã căn là 3–4 chữ số, hoặc dạng che số như 15XX08. Tên vùng không nhận đuôi này. Trong chữ bài, tên toà phải giữ dấu chấm như tên đã đăng ký; cách bỏ dấu chấm ở điểm 2 chỉ dùng cho ô tên toà và bản đọc. Vì vậy «S1006» ở Grand Park không đọc ra toà S10.06 và cũng không đọc ra vùng S1. Không đòi từ «toà» đứng trước tên.
+5. **Nêu từ hai toà.** Đếm số toà khác nhau đọc được trong chữ bài theo điểm 4; vùng không tính vào số này.
+6. **Bài rao nhiều căn.** Chỉ cần ô `multi_unit` của bản đọc có giá trị `yes`, không đòi căn cứ `chu_bai`, vì đây là luật chặn thận trọng.
+7. **Bản đọc của model.** Lấy bản mới nhất của bài ở phiên bản `dg3-s03-v3`, nguồn đọc gộp, JSON hợp lệ. Hai ô `building` và `subzone` đều đem so tên theo điểm 1–3: ô nào ra toà tính là model nêu toà, ô nào ra vùng tính là model nêu vùng, kể cả khi ô `building` ghi tên một vùng. `trich_ok` do bộ đọc đã kiểm, luật không kiểm lại.
+8. **Nguồn đang tắt.** Bài dừng ở bậc D hay G thì không gắn và không rơi xuống bậc sau.
+9. **Ô tên toà có nhiều giá trị.** Xét mọi phát biểu `block_raw` còn hiệu lực của bài; các giá trị chỉ tới hai nút khác nhau là `mo-ho`.
+10. **Phạm vi đếm.** Mẫu số là tin căn hộ S03 đang sống. Bài thử theo `testMarker` của `pipeline/lib/test-posts.mjs` không được xét, nhưng tin chứa nó vẫn nằm trong mẫu số.
 
 **Phát biểu trên từng bài** (`field_assertions`, resource `Property`, lớp `inferred`). Mỗi nhóm nguồn một `rule_id` để tắt riêng được:
 

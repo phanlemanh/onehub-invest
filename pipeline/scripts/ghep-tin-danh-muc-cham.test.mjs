@@ -28,6 +28,15 @@ for (const [ten, may, nhan, mong] of [
   ["may-vung-nguoi-chi-ghi-toa-chua-co-vung", vung, { building: "goc1" }, false],
 ]) test(ten, () => assert.equal(chamBai(may, quyNhan(nhan, D), D), mong, `ô «${ten}»`));
 
+// Phép chấm đi theo cây danh bạ: máy gắn phân khu S1, người ghi toà S1.05 thì chỉ đúng sau khi danh bạ nối hai phân khu.
+const canhCay = (cha) => dungDanhBa({
+  toa: [{ key: "bld_s105", upi: "u5", vung_id: "394", ten: ["S1.05"] }],
+  vung: [{ id: "41", cha_id: null, ten: ["S1"] }, { id: "394", cha_id: cha, ten: ["The Sapphire 1"] }],
+});
+for (const [ten, cha, mong] of [["may-vung-nguoi-ghi-toa-phan-khu-chua-noi", null, false], ["may-vung-nguoi-ghi-toa-phan-khu-da-noi", "41", true]]) {
+  test(ten, () => { const d = canhCay(cha); assert.equal(chamBai({ muc: "vung", k: "41" }, quyNhan({ building: "s1.05" }, d), d), mong); });
+}
+
 /** Tập đủ cỡ: mỗi nhóm 110 bài, người ghi đúng như máy. */
 function tapDu() {
   const dong = [], nhan = new Map();

@@ -19,10 +19,10 @@ async function docDanhBa(c) {
   for (const { id } of duAn) {
     const { rows: nut } = await c.query(
       `WITH RECURSIVE con AS (
-         SELECT n.id, n.parent_id, n.name, n.aliases, 1 AS sau FROM asset_nodes n WHERE n.parent_id = $1::bigint
+         SELECT n.id, n.parent_id, n.name, n.aliases, n.meta, 1 AS sau FROM asset_nodes n WHERE n.parent_id = $1::bigint
          UNION ALL
-         SELECT n.id, n.parent_id, n.name, n.aliases, con.sau + 1 FROM asset_nodes n JOIN con ON n.parent_id = con.id WHERE con.sau < 16)
-       SELECT id::text, parent_id::text, name, aliases FROM con`, [id]);
+         SELECT n.id, n.parent_id, n.name, n.aliases, n.meta, con.sau + 1 FROM asset_nodes n JOIN con ON n.parent_id = con.id WHERE con.sau < 16)
+       SELECT id::text, parent_id::text, name, aliases, COALESCE((meta ->> 'nghi')::boolean, false) AS nghi FROM con`, [id]);
     const { rows: toa } = await c.query(
       // Nút vùng hiệu lực của toà lấy từ v_toa_nut_vung (DA36): nhiều toà có cột gốc gắn thẳng vào dự án nhưng thật ra thuộc một phân khu, cụm.
       `SELECT b.building_key AS key, b.upi, v.region_node_id::text AS vung,
@@ -32,7 +32,8 @@ async function docDanhBa(c) {
         GROUP BY 1, 2, 3`, [[id, ...nut.map((n) => n.id)]]);
     ra.set(id, dungDanhBa({
       toa: toa.map((b) => ({ key: b.key, upi: b.upi, vung_id: b.vung === id ? null : b.vung, ten: b.ten ?? [] })),
-      vung: nut.map((n) => ({ id: n.id, cha_id: n.parent_id === id ? null : n.parent_id, ten: [n.name, ...(n.aliases ?? [])].filter(Boolean) })),
+      // Nút đã nghỉ không còn nhận tên nhưng vẫn ở trong cây, để toà và vùng con dưới nó đi lên được nút giữ lại.
+      vung: nut.map((n) => ({ id: n.id, cha_id: n.parent_id === id ? null : n.parent_id, ten: n.nghi ? [] : [n.name, ...(n.aliases ?? [])].filter(Boolean) })),
     }));
   }
   return ra;

@@ -87,6 +87,16 @@ test("toa-mang-nut-vung-hieu-luc-khong-phai-cot-goc", async () => {
   for (const r of rows) assert.equal(d(r.building_key)?.vungCuaToa.get(r.building_key), r.nut, `toà ${r.building_key} phải mang nút hiệu lực ${r.nut}`);
 });
 
+test("nut-vung-da-nghi-mat-ten-nhung-van-giu-cay", async () => {
+  const [duAn, ten, id] = [...vao.danhBa].flatMap(([k, d]) => [...d.tenVung].filter(([, ds]) => ds.size === 1).map(([t, ds]) => [k, t, [...ds][0]]))[0];
+  await ca(async () => {
+    await c.query(`UPDATE asset_nodes SET meta = coalesce(meta, '{}'::jsonb) || '{"nghi": true}'::jsonb WHERE id = $1::bigint`, [id]);
+    const d = (await docDauVao(c, { offerIds: [] })).danhBa.get(duAn);
+    assert.equal(d.tenVung.get(ten)?.has(id) ?? false, false, `nút nghỉ ${id} vẫn nhận tên ${ten}`);
+    assert.equal(d.cha.has(id), true, `nút nghỉ ${id} phải còn trong cây để toà dưới nó đi lên được`);
+  });
+});
+
 test("bi-danh-nghi-khong-con-trong-bang-ten", async () => {
   const { rows: [r] } = await c.query(
     `SELECT a.object_key, a.value FROM registry_aliases a JOIN buildings b ON b.building_key = a.object_key

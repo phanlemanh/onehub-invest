@@ -117,8 +117,69 @@ test("nguon-tat-khong-gan", () => {
 });
 
 // Phần gộp của AC-5
+// Tên trùng toà và vùng: ở OP1, «S1», «S2» là phân khu nhưng danh bạ còn hai dòng toà cùng tên treo thẳng dưới dự án.
+// Luật phải cho cùng kết quả khi hai dòng đó còn và khi đã được gỡ.
+const toaThat = [
+  { key: "bld_s101", upi: "urn:s101", vung_id: 41, ten: ["S1.01"] },
+  { key: "bld_s205", upi: "urn:s205", vung_id: 42, ten: ["S2.05"] },
+];
+const vungS = [{ id: 41, cha_id: null, ten: ["S1"] }, { id: 42, cha_id: null, ten: ["S2"] }];
+const CON_DONG_TOA = dungDanhBa({
+  toa: [...toaThat, { key: "bld_gia_s1", upi: "urn:gia1", vung_id: null, ten: ["S1"] }, { key: "bld_gia_s2", upi: "urn:gia2", vung_id: null, ten: ["S2"] }],
+  vung: vungS,
+});
+const DA_GO_DONG_TOA = dungDanhBa({ toa: toaThat, vung: vungS });
+
+moiO("trung-ten-toa-vung-o-cot-gan-muc-vung", { cot: ["S1"] }, { nguon: "A", muc: "vung", k: 41, rule_id: RULE.cot }, CON_DONG_TOA);
+moiO("trung-ten-toa-vung-ma-can-la-gan-muc-vung", { cot: ["S1.99"] }, { nguon: "B", muc: "vung", k: 41 }, CON_DONG_TOA);
+moiO("trung-ten-khong-dem-la-toa-thu-hai-trong-chu", { chu: "Bán căn S1.01 khu S1" }, { ly_do: "chi-luat" }, CON_DONG_TOA);
+moiO("hai-vung-trung-ten-khong-dem-la-hai-toa", { chu: "Có căn ở S1 và S2" }, { ly_do: "chu-nhieu-vung" }, CON_DONG_TOA);
+moiO("ten-toa-rieng-van-gan-muc-toa", { cot: ["S1.01"] }, { nguon: "A", muc: "toa", k: "bld_s101" }, CON_DONG_TOA);
+
+// Đuôi mã căn chỉ đi sau tên toà. «S1006» là toà S10.06, không phải vùng S1 cộng đuôi 006, dù model cũng đọc nhầm ra S1.
+test("ma-dinh-so-khong-doc-ra-vung-ngan", () => {
+  const kq = xetBai(bai({ chu: "Bán 1pn+ S1006 giá tốt", banDoc: banDoc({ building: oDoc("S1", "S1006"), subzone: oDoc("S1", "S1006") }) }), CON_DONG_TOA);
+  assert.equal(kq.muc, undefined, `không được gắn, nhận ${kq.muc}:${kq.k}`);
+  assert.equal(kq.ly_do, "nguon-tat");
+});
+moiO("ma-can-co-dau-sau-ten-toa-van-doc-ra-toa", { chu: "Bán căn S1.01.1508", banDoc: banDoc({ building: oDoc("S1.01", "S1.01.1508") }) }, { nguon: "C", muc: "toa", k: "bld_s101" }, CON_DONG_TOA);
+moiO("ma-can-dinh-lien-sau-ten-toa-van-doc-ra-toa", { chu: "Bán căn S1.011508", banDoc: banDoc({ building: oDoc("S1.01", "S1.011508") }) }, { nguon: "C", muc: "toa", k: "bld_s101" }, CON_DONG_TOA);
+moiO("ten-vung-dung-rieng-van-doc-ra-vung", { chu: "Bán căn khu S1 giá tốt", banDoc: banDoc({ subzone: oDoc("S1", "khu S1") }) }, { nguon: "F", muc: "vung", k: 41 }, CON_DONG_TOA);
+
+for (const [ten, vao] of [
+  ["o-cot", { cot: ["S1"] }],
+  ["o-cot-ma-can-la", { cot: ["S2.99"] }],
+  ["chu-va-model-cung-vung", { chu: "Bán căn khu S1 giá tốt", banDoc: banDoc({ subzone: oDoc("S1", "khu S1") }) }],
+  ["model-ghi-vao-o-toa", { chu: "Bán căn khu S1 giá tốt", banDoc: banDoc({ building: oDoc("S1", "khu S1") }) }],
+  ["chu-mot-toa-mot-vung", { chu: "Bán căn S1.01 khu S1" }],
+  ["chu-hai-vung", { chu: "Có căn ở S1 và S2" }],
+]) test(`trung-ten-cung-ket-qua-khi-con-va-da-go-dong-toa: ${ten}`, () => {
+  assert.deepEqual(xetBai(bai(vao), CON_DONG_TOA, { nguonBat: TAT_CA_NGUON }), xetBai(bai(vao), DA_GO_DONG_TOA, { nguonBat: TAT_CA_NGUON }));
+});
+
+// Trùng tên mà không phải đúng một toà với đúng một vùng thì vẫn là mơ hồ, theo bước 4 của thiết kế.
+const MOT_TOA_HAI_VUNG = dungDanhBa({
+  toa: [{ key: "bld_x", upi: "urn:x", vung_id: null, ten: ["X9"] }],
+  vung: [{ id: 1, cha_id: null, ten: ["X9"] }, { id: 2, cha_id: null, ten: ["X9"] }],
+});
+const HAI_TOA_MOT_VUNG = dungDanhBa({
+  toa: [{ key: "bld_x", upi: "urn:x", vung_id: null, ten: ["X9"] }, { key: "bld_y", upi: "urn:y", vung_id: null, ten: ["X9"] }],
+  vung: [{ id: 1, cha_id: null, ten: ["X9"] }],
+});
+moiO("mot-toa-hai-vung-trung-ten-la-mo-ho", { cot: ["X9"] }, { ly_do: "mo-ho" }, MOT_TOA_HAI_VUNG);
+moiO("mot-toa-hai-vung-ma-can-la-mo-ho", { cot: ["X9.99"] }, { ly_do: "mo-ho" }, MOT_TOA_HAI_VUNG);
+moiO("hai-toa-mot-vung-trung-ten-la-mo-ho", { cot: ["X9"] }, { ly_do: "mo-ho" }, HAI_TOA_MOT_VUNG);
+
 const T = (k) => ({ muc: "toa", k });
 const V = (k) => ({ muc: "vung", k });
+
+// Luật đi theo cây danh bạ, không biết id nút cụ thể: khi danh bạ nối phân khu chứa toà vào phân khu cùng tên S1, kết quả tự đúng.
+const canhCay = (cha) => dungDanhBa({
+  toa: [{ key: "bld_s105", upi: "urn:s105", vung_id: 394, ten: ["S1.05"] }],
+  vung: [{ id: 41, cha_id: null, ten: ["S1"] }, { id: 394, cha_id: cha, ten: ["The Sapphire 1"] }],
+});
+test("gop-toa-va-phan-khu-chua-noi-thi-xung-dot", () => assert.equal(gopTin([T("bld_s105"), V(41)], canhCay(null)).status, "xung_dot"));
+test("gop-toa-va-phan-khu-da-noi-ra-muc-toa", () => assert.deepEqual(gopTin([T("bld_s105"), V(41)], canhCay(41)), { status: "gan", muc: "toa", k: "bld_s105" }));
 for (const [ten, ds, mong] of [
   ["gop-hai-toa-khac-nhau", [T("bld_s101"), T("bld_s205")], { status: "xung_dot" }],
   ["gop-toa-va-vung-chua-no", [T("bld_s102"), V(101)], { status: "gan", muc: "toa", k: "bld_s102" }],

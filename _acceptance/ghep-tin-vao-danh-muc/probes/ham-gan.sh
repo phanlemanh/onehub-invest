@@ -26,11 +26,14 @@ dot_bien() { # tên · ca phải đỏ · chuỗi gốc · chuỗi thay
 }
 
 echo "== Đột biến"
-dot_bien chon-toa-dau-o-mo-ho "ô «cot-mo-ho»" 'if (a?.size > 1) return { muc: "mo_ho" };' 'if (a?.size > 1) return { muc: "toa", k: [...a][0], cach: "dung" };'
+dot_bien chon-toa-dau-o-mo-ho "ô «cot-mo-ho»" 'if (a?.size > 1 || (a?.size === 1 && v?.size > 1)) return { muc: "mo_ho" };' 'if (a?.size > 1) return { muc: "toa", k: [...a][0], cach: "dung" };'
 dot_bien bo-loc-du-an "mã S1.01 của tin dự án 16" 'const d = danhBaTheoDuAn.get(String(tin.du_an));' 'const d = danhBaTheoDuAn.has(String(tin.du_an)) ? [...danhBaTheoDuAn.values()][0] : undefined;'
 dot_bien nhan-kien-thuc-nghe "ô «can-cu-kien-thuc-nghe-coi-nhu-chua-doc»" 'x.cc === "chu_bai" && ' ''
 dot_bien bo-kiem-ten-trong-trich "ô «model-mot-minh-ten-ngoai-trich»" 'if (!coTenTrongTrich(x, k, d)) return { ly_do: "trich-khong-co-ten" };' ''
 dot_bien bo-chan-nhieu-toa "ô «cot-khop-nhung-chu-neu-hai-toa»" 'if (luat.t.size > 1) return { ly_do: "chu-nhieu-toa" };' ''
 dot_bien bo-chan-nhieu-can "ô «cot-khop-nhung-model-bao-nhieu-can»" 'if (banDoc?.multi_unit?.v === "yes") return { ly_do: "bai-nhieu-can" };' ''
+dot_bien toa-thang-vung-khi-trung-ten "ô «trung-ten-toa-vung-o-cot-gan-muc-vung»" ' && !laTenVung(t));' ');'
+dot_bien mot-toa-hai-vung-chon-toa "ô «mot-toa-hai-vung-trung-ten-la-mo-ho»" 'if (a?.size > 1 || (a?.size === 1 && v?.size > 1)) return { muc: "mo_ho" };' 'if (a?.size > 1) return { muc: "mo_ho" };'
+dot_bien vung-nhan-duoi-ma-can "ma-dinh-so-khong-doc-ra-vung-ngan" 're: ten.map((t) => mauTen(t)).filter(Boolean)' 're: ten.map((t) => mauTen(t, { duoiMaCan: true })).filter(Boolean)'
 rm -f /tmp/ham-gan-$$.log
-echo "XANH: ma trận và sáu đột biến"
+echo "XANH: ma trận và chín đột biến"

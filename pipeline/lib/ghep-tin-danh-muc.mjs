@@ -22,11 +22,15 @@ const gon = (s) => boDau(s).replace(/[^A-Z0-9]/g, "");
 const thoat = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const them = (m, k, v) => { (m.get(k) ?? m.set(k, new Set()).get(k)).add(v); };
 
-/** Mẫu dò một tên trong chữ bài; cho phép mã căn dính sau tên toà (S1.02.1508, S1.02-15XX08). */
-function mauTen(ten) {
+/**
+ * Mẫu dò một tên trong chữ bài. Chỉ tên toà được mang đuôi mã căn dính sau (S1.02.1508, S1.02-15XX08); tên vùng thì không,
+ * vì «S1006» là toà S10.06 chứ không phải vùng S1 cộng đuôi 006.
+ */
+function mauTen(ten, { duoiMaCan = false } = {}) {
   const tu = boDau(ten).replace(/[^A-Z0-9.]+/g, " ").trim().split(" ").filter(Boolean);
   if (!tu.length) return null;
-  return new RegExp(`(?<![A-Z0-9.])${tu.map(thoat).join(" ?")}(?:[ .-]?(?:[0-9]{3,4}|[0-9]{0,2}X{1,2}[0-9]{2}))?(?![A-Z0-9]|\\.[A-Z0-9])`);
+  const duoi = duoiMaCan ? "(?:[ .-]?(?:[0-9]{3,4}|[0-9]{0,2}X{1,2}[0-9]{2}))?" : "";
+  return new RegExp(`(?<![A-Z0-9.])${tu.map(thoat).join(" ?")}${duoi}(?![A-Z0-9]|\\.[A-Z0-9])`);
 }
 
 /**
@@ -38,10 +42,16 @@ export function dungDanhBa({ toa, vung }) {
   const d = { tenToa: new Map(), tenToaBoDot: new Map(), tenVung: new Map(), mauToa: [], mauVung: [], tenGon: new Map(),
     upi: new Map(), vungCuaToa: new Map(), cha: new Map() };
   const dungDuoc = (t) => chuan(t).length >= 2;
+  // Tên trùng đúng một toà và đúng một vùng được hiểu là vùng: người đăng ghi «S1» là nói cả phân khu, gắn mức vùng không khẳng định sai toà.
+  // Bỏ tên ấy khỏi toà ngay từ đây để ô tên toà, chữ bài và bản đọc cho cùng kết quả dù danh bạ còn hay đã gỡ dòng toà trùng tên.
+  const vungTheoTen = new Map(), toaTheoTen = new Map();
+  for (const v of vung) for (const t of v.ten ?? []) if (dungDuoc(t)) them(vungTheoTen, chuan(t), v.id);
+  for (const b of toa) for (const t of b.ten ?? []) if (dungDuoc(t)) them(toaTheoTen, chuan(t), b.key);
+  const laTenVung = (t) => vungTheoTen.get(chuan(t))?.size === 1 && toaTheoTen.get(chuan(t))?.size === 1;
   for (const b of toa) {
-    const ten = (b.ten ?? []).filter((t) => dungDuoc(t) && /[A-Z]/.test(chuan(t)));
+    const ten = (b.ten ?? []).filter((t) => dungDuoc(t) && /[A-Z]/.test(chuan(t)) && !laTenVung(t));
     for (const t of ten) { them(d.tenToa, chuan(t), b.key); them(d.tenToaBoDot, boDot(chuan(t)), b.key); }
-    d.mauToa.push({ k: b.key, re: ten.map(mauTen).filter(Boolean) });
+    d.mauToa.push({ k: b.key, re: ten.map((t) => mauTen(t, { duoiMaCan: true })).filter(Boolean) });
     d.tenGon.set(b.key, ten.map(gon).filter((g) => g.length >= 2));
     d.upi.set(b.key, b.upi);
     d.vungCuaToa.set(b.key, b.vung_id ?? null);
@@ -49,21 +59,24 @@ export function dungDanhBa({ toa, vung }) {
   for (const v of vung) {
     const ten = (v.ten ?? []).filter(dungDuoc);
     for (const t of ten) them(d.tenVung, chuan(t), v.id);
-    d.mauVung.push({ k: v.id, re: ten.map(mauTen).filter(Boolean) });
+    d.mauVung.push({ k: v.id, re: ten.map((t) => mauTen(t)).filter(Boolean) });
     d.tenGon.set(v.id, ten.map(gon).filter((g) => g.length >= 2));
     d.cha.set(v.id, v.cha_id ?? null);
   }
   return d;
 }
 
-/** Khớp một giá trị tên với danh bạ: toà trước vùng, đúng tên trước chuẩn hoá cách viết. */
+/**
+ * Khớp một giá trị tên với danh bạ: đúng tên trước chuẩn hoá cách viết. Tên trùng đúng một toà và đúng một vùng đã được
+ * dungDanhBa xếp về vùng; tên còn khớp cả toà lẫn nhiều vùng là mơ hồ.
+ */
 export function khopTen(raw, d) {
   const t = chuan(raw ?? "");
   if (!t) return { muc: "rong" };
   const a = d.tenToa.get(t);
-  if (a?.size === 1) return { muc: "toa", k: [...a][0], cach: "dung" };
-  if (a?.size > 1) return { muc: "mo_ho" };
   const v = d.tenVung.get(t);
+  if (a?.size > 1 || (a?.size === 1 && v?.size > 1)) return { muc: "mo_ho" };
+  if (a?.size === 1) return { muc: "toa", k: [...a][0], cach: "dung" };
   if (v?.size === 1) return { muc: "vung", k: [...v][0], cach: "dung" };
   if (v?.size > 1) return { muc: "mo_ho" };
   const b = d.tenToaBoDot.get(boDot(t));
@@ -72,9 +85,9 @@ export function khopTen(raw, d) {
   const dau = t.split(".")[0];
   if (dau !== t) {
     const x = d.tenToa.get(dau);
-    if (x?.size === 1) return { muc: "toa", k: [...x][0], cach: "chuan", ten_chuan: dau };
-    if (x?.size > 1) return { muc: "mo_ho" };
     const y = d.tenVung.get(dau);
+    if (x?.size > 1 || (x?.size === 1 && y?.size > 1)) return { muc: "mo_ho" };
+    if (x?.size === 1) return { muc: "toa", k: [...x][0], cach: "chuan", ten_chuan: dau };
     if (y?.size === 1) return { muc: "vung", k: [...y][0], cach: "chuan", ten_chuan: dau };
     if (y?.size > 1) return { muc: "mo_ho" };
   }
