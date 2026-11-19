@@ -100,5 +100,13 @@
    "i": 4,
    "p": "Gắn mù và cách giữ hạng rủi ro từng được ghi là máy tự quyết. Đã chuyển thành câu hỏi cho anh trên thẻ."
   }
- ]
+ ],
+ "decisions": [
+  {
+   "id": "E11",
+   "q": "Đo năm bài đầu, trung bình có dưới 45 giây một bài không?",
+   "why": "Máy không đo thay được: cần người bấm giờ trên lát thật, mà lát chỉ nạp lên máy thu sau khi gộp và có lời Mạnh. Hướng dẫn một trang ở huong-dan-do-thoi-gian.md."
+  }
+ ],
+ "analyst_plain": ""
 }
