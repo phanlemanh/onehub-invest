@@ -3,7 +3,7 @@
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
 
-import { docExpAppToken, kiemAppToken } from "../collectors/airdna-research.js";
+import { docExpAppToken, kiemAppToken, nemAuthFail } from "../collectors/airdna-research.js";
 
 const jwt = (payload: object) =>
   `eyJhbGciOiJIUzI1NiJ9.${Buffer.from(JSON.stringify(payload)).toString("base64url")}.chuky`;
@@ -29,9 +29,10 @@ test("1911-5: token rác/không payload → conLaiMs -Infinity, không ném", ()
 
 // ---- 1911-5 (MỞ LẠI): chặn trong appToken tách hàm thuần kiemAppToken — đột biến
 // đổi điều kiện hết hạn thành không-bao-giờ-đúng phải làm ĐỎ ĐÚNG CA dưới đây.
-test("1911-5 kiemAppToken: token HẾT HẠN → NÉM 'ĐÃ HẾT HẠN' kèm ngày", () => {
-  const exp = Math.floor(Date.now() / 1000) - 3_600;
-  assert.throws(() => kiemAppToken(jwt({ uid: "1", exp })), /ĐÃ HẾT HẠN 2026-/, "hết hạn phải ném kèm mốc");
+test("1911-5 kiemAppToken: token HẾT HẠN → NÉM 'ĐÃ HẾT HẠN' kèm ngày — GIẢ ĐỒNG HỒ NĂM 2027 vẫn xanh (không ghim năm)", () => {
+  const now = Date.parse("2027-06-15T00:00:00Z"); // mốc cố định — hết hạn tính theo now truyền vào
+  const exp = Math.floor(now / 1000) - 3_600;
+  assert.throws(() => kiemAppToken(jwt({ uid: "1", exp }), now), /ĐÃ HẾT HẠN 2027-06-1[45]T/, "hết hạn phải ném kèm mốc đúng giờ giả");
 });
 
 test("1911-5 kiemAppToken: token RÁC / exp thiếu → NÉM", () => {
@@ -44,4 +45,14 @@ test("1911-5 kiemAppToken: token CÒN HẠN → qua, trả dòng 'token OK' kèm
   const exp = Math.floor(Date.now() / 1000) + 1_800;
   const dong = kiemAppToken(jwt({ uid: "1", exp }));
   assert.match(dong, /token OK \(\d+ chars, hết hạn sau 30 phút\)/, "dòng OK phải khai hạn còn lại");
+});
+
+// ---- 1911-10: dừng vì kiemAppToken ném phải in «AUTH FAIL [S02] <ISO>» (bộ đo
+// độ tươi đọc dòng này — ca hết hạn trước đây lọt sót). Đột biến bỏ dòng log → đỏ.
+test("1911-10 nemAuthFail: ném lại lỗi gốc + in dòng AUTH FAIL [S02] kèm mốc ISO", () => {
+  const dong: unknown[] = [];
+  const loi = new Error("appToken ĐÃ HẾT HẠN 2027-06-14T23:00:00Z");
+  assert.throws(() => nemAuthFail((...a: unknown[]) => dong.push(...a), loi), (e: unknown) => e === loi, "ném lại ĐÚNG lỗi gốc");
+  assert.equal(dong.length, 1, "đúng một dòng log");
+  assert.match(String(dong[0]), /AUTH FAIL \[S02\] \d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/, "dòng AUTH FAIL [S02] kèm mốc ISO");
 });

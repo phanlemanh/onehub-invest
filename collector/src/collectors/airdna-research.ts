@@ -51,6 +51,14 @@ export function kiemAppToken(token: string, now: number = Date.now()): string {
   return `token OK (${token.length} chars, hết hạn sau ${Math.round(conLaiMs / 60000)} phút)`;
 }
 
+/** 1911-10: ném lỗi auth kèm dòng «AUTH FAIL [S02] <ISO>» — bộ đo độ tươi đọc
+ * dòng này; kiemAppToken ném (hết hạn/rác) phải qua đây, không chỉ nhánh 401
+ * sau refresh. Hàm thuần, đo được bằng đột biến bỏ dòng log. */
+export function nemAuthFail(log: (...a: unknown[]) => void, loi: unknown): never {
+  log(`AUTH FAIL [S02] ${new Date().toISOString()}`);
+  throw loi;
+}
+
 /** Mở profile 1 lần để lấy JWT (localStorage.auth.appToken) rồi đóng ngay. */
 async function appToken(log: (...a: unknown[]) => void): Promise<string> {
   const browser = await chromium.launchPersistentContext(PROFILE_DIR, {
@@ -76,7 +84,12 @@ async function appToken(log: (...a: unknown[]) => void): Promise<string> {
     // 1911-5: quyết định duyệt/từ chối token nằm trong kiemAppToken (hàm thuần,
     // đo được bằng đột biến) — hết hạn ném trước LỜI GỌI API nào (báo xanh giả
     // của 'token OK (327 chars)' hôm 19/11 đốt cả run 401).
-    const logDong = kiemAppToken(token);
+    let logDong: string;
+    try {
+      logDong = kiemAppToken(token);
+    } catch (e) {
+      nemAuthFail(log, e); // 1911-10: dừng vì hết hạn/rác cũng phải in AUTH FAIL
+    }
     log(logDong);
     return token;
   } finally {
