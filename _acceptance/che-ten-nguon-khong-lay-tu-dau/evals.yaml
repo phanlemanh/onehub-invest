@@ -82,5 +82,6 @@ evals:
     criterion: AC-8
     executor: judgment
     inputs: [_acceptance/che-ten-nguon-khong-lay-tu-dau/contract.md, _acceptance/che-ten-nguon-khong-lay-tu-dau/design.md, _acceptance/che-ten-nguon-khong-lay-tu-dau/discovery/bang-phu-ca.md]
+    question: "Chỉ đọc hợp đồng, thiết kế và bảng phủ ca, người duyệt có hiểu bằng chữ thường rằng đây là nới bộ soát tầng A, nới ở đâu, chỗ đọc nào chưa mang cờ (chặn thừa, không rò), và chuỗi nào trước bị chặn nay đi lên cloud, mà không cần mở mã không?"
     expected: "Người đọc không mở mã vẫn trả lời được: đây là nới bộ soát tầng A; nới ở đâu (dòng khai match_whole bỏ biến thể từ đầu); chỗ đọc nào chưa mang cờ và vì sao an toàn (che thừa, không rò); chuỗi nào trước bị chặn nay đi lên cloud (từ đầu của tên S16 và nhãn đầu tên miền S16 khi đứng riêng); số trước/sau trên DB máy thu."
     evidence_required: [verdict, rationale, verifier, verified_at]
