@@ -54,9 +54,22 @@ export function kiemAppToken(token: string, now: number = Date.now()): string {
 /** 1911-10: ném lỗi auth kèm dòng «AUTH FAIL [S02] <ISO>» — bộ đo độ tươi đọc
  * dòng này; kiemAppToken ném (hết hạn/rác) phải qua đây, không chỉ nhánh 401
  * sau refresh. Hàm thuần, đo được bằng đột biến bỏ dòng log. */
-export function nemAuthFail(log: (...a: unknown[]) => void, loi: unknown): never {
-  log(`AUTH FAIL [S02] ${new Date().toISOString()}`);
+export function nemAuthFail(log: (...a: unknown[]) => void, loi: unknown, now: number = Date.now()): never {
+  log(`AUTH FAIL [S02] ${new Date(now).toISOString()}`);
   throw loi;
+}
+
+/** 1911-10 (MỞ LẠI): TOÀN BỘ quyết định gom MỘT hàm thuần — appToken chỉ gọi hàm
+ * này: còn hạn → log dòng OK; hết hạn/rác → nemAuthFail (in AUTH FAIL [S02] rồi
+ * ném lại). Đo được bằng đột biến: bỏ bước nemAuthFail → ca duyetAppToken đỏ. */
+export function duyetAppToken(log: (...a: unknown[]) => void, token: string, now: number = Date.now()): string {
+  try {
+    const logDong = kiemAppToken(token, now);
+    log(logDong);
+    return logDong;
+  } catch (e) {
+    nemAuthFail(log, e, now);
+  }
 }
 
 /** Mở profile 1 lần để lấy JWT (localStorage.auth.appToken) rồi đóng ngay. */
@@ -81,16 +94,10 @@ async function appToken(log: (...a: unknown[]) => void): Promise<string> {
         return "";
       }
     });
-    // 1911-5: quyết định duyệt/từ chối token nằm trong kiemAppToken (hàm thuần,
-    // đo được bằng đột biến) — hết hạn ném trước LỜI GỌI API nào (báo xanh giả
-    // của 'token OK (327 chars)' hôm 19/11 đốt cả run 401).
-    let logDong: string;
-    try {
-      logDong = kiemAppToken(token);
-    } catch (e) {
-      nemAuthFail(log, e); // 1911-10: dừng vì hết hạn/rác cũng phải in AUTH FAIL
-    }
-    log(logDong);
+    // 1911-5 + 1911-10: toàn bộ duyệt/từ chối (kiểm exp + AUTH FAIL khi ném)
+    // nằm trong duyetAppToken — hàm thuần đo được bằng đột biến; hết hạn dừng
+    // trước LỜI GỌI API nào (báo xanh giả 'token OK (327 chars)' đốt cả run 401).
+    duyetAppToken(log, token);
     return token;
   } finally {
     await browser.close().catch(() => {});
