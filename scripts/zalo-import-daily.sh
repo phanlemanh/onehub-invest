@@ -56,34 +56,45 @@ LOCK_DIR="$STATE.lock"
 # 2510-31(2)(3): luc kiểm số trước khi tính tuổi (hỏng → coi khoá cũ); chỉ
 # thành công khi THẬT xoá được — rơi vào trần 60 lượt + sleep thay vì quay bận.
 go_khoa_cu() {
-  local pid="" luc=""
+  local pid="" luc="" chu=""
   [ -f "$LOCK_DIR/pid" ] && read -r pid < "$LOCK_DIR/pid"
   [ -f "$LOCK_DIR/luc" ] && read -r luc < "$LOCK_DIR/luc"
+  # 1911-2: CHỮ KÝ CHỦ KHOÁ = mốc bắt đầu tiến trình (ps lstart) ghi lúc LẤY khoá.
+  # Bản 2aad0b08d gỡ MỌI khoá già hơn 2h không xét PID → lượt nhanh gỡ khoá lượt
+  # 00:00 THẬT đang chạy (được tới trần tổng 4h, khoá tuổi 3h) → chồng lượt + trap
+  # EXIT lượt 00:00 xoá nốt khoá lượt nhanh. Phân biệt hai trường hợp bằng chữ ký:
+  # pid sống + CÙNG mốc bắt đầu = chủ thật (giữ suốt trần tổng); pid sống + KHÁC
+  # mốc = PID bị tiến trình khác DÙNG LẠI → khoá mồ côi, gỡ được (kể cả khoá trẻ).
+  if [ -f "$LOCK_DIR/chu" ]; then read -r chu < "$LOCK_DIR/chu"; chu=$(printf '%s' "$chu" | tr -s ' '); chu=${chu# }; chu=${chu% }; fi
   local goc_do_tuoi=0
-  # 1711-4: PID còn sống thì KHÔNG gỡ cho MỌI lượt (trước đây chỉ lượt nhanh
-  # được bảo vệ — lượt 00:00 sau gặp khoá của lượt 00:00 trước chạy dài >2h sẽ
-  # gỡ rồi nạp chồng). Lượt 00:00 đụng khoá sống: chờ tối đa 5′ rồi thoát 1 —
-  # không gỡ, không chồng lượt.
-  # 1711-4 lần 4 (c): TUỔI KHOÁ xét TRƯỚC PID — PID trong khoá có thể bị tiến
-  # trình khác dùng lại (kill -0 sống oan, mã lệnh cũ trả 1 TRƯỚC khi xét tuổi
-  # làm khoá 30h không bao giờ gỡ). Khoá già hơn 2h là khoá mồ côi bất kể PID
-  # (lượt dài nhất cũng dưới trần tổng 4h); khoá trẻ + PID sống = thật sự đang
-  # nạp, giữ nguyên hành vi chờ.
-  if [ -n "$luc" ] && [[ "$luc" =~ ^[0-9]+$ ]] && [ $(( $(date +%s) - luc )) -gt 7200 ]; then
-    echo "gỡ khoá mồ côi già hơn 2h (tuổi $(( $(date +%s) - luc ))s, PID ${pid:-?} có thể là PID tái dùng — không xét PID)"; goc_do_tuoi=1
-    rm -rf "$LOCK_DIR" 2>/dev/null
-    [ ! -e "$LOCK_DIR" ] && return 0
-    echo "⚠️ không gỡ được khoá $LOCK_DIR (quyền? NFS?) — giữ chờ" >&2
-    return 1
-  fi
+  local max_tuoi="${ZALO_IMPORT_TRAN_TONG:-14400}" # trần tổng lượt 00:00 = 4h — khoá cùng lượt sống tới đây
+  local tuoi=0
+  if [ -n "$luc" ] && [[ "$luc" =~ ^[0-9]+$ ]]; then tuoi=$(( $(date +%s) - luc )); fi
+  local chu_song="" pid_song=0
   if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
-    echo "khoá còn sống (PID $pid, lấy lúc ${luc:-?}) — không gỡ"
-    return 1
+    pid_song=1
+    chu_song=$(ps -o lstart= -p "$pid" 2>/dev/null | tr -s ' '); chu_song=${chu_song# }; chu_song=${chu_song% }
   fi
-  if [ -n "$pid" ] && ! kill -0 "$pid" 2>/dev/null; then
+  if [ -z "$pid" ]; then
+    echo "gỡ khoá không có PID (dở dang?)"; goc_do_tuoi=1
+  elif [ "$pid_song" = "0" ]; then
     echo "gỡ khoá cũ của PID $pid (tiến trình đã chết)"; goc_do_tuoi=1
+  elif [ -n "$chu" ] && [ -n "$chu_song" ] && [ "$chu_song" != "$chu" ]; then
+    echo "gỡ khoá mồ côi — PID $pid bị tiến trình khác DÙNG LẠI (mốc bắt đầu khác chữ ký, tuổi ${tuoi}s)"; goc_do_tuoi=1
+  elif [ "$tuoi" -gt "$max_tuoi" ]; then
+    if [ -n "$chu" ] && [ "$chu_song" = "$chu" ]; then
+      echo "gỡ khoá của lượt chạy thật đã VƯỢT trần tổng ${max_tuoi}s (PID $pid, tuổi ${tuoi}s — đồng hồ trần chết, kiểu đứt 34h)"; goc_do_tuoi=1
+    else
+      echo "gỡ khoá mồ côi quá trần tổng ${max_tuoi}s (PID ${pid:-?}, tuổi ${tuoi}s, không chữ ký)"; goc_do_tuoi=1
+    fi
   elif [ -n "$luc" ] && ! [[ "$luc" =~ ^[0-9]+$ ]]; then
     echo "gỡ khoá cũ — file luc không phải số (PID ${pid:-?}, giá trị lạ)"; goc_do_tuoi=1
+  else
+    # 1711-4: PID sống (chủ thật có chữ ký, hoặc khoá bản cũ chưa có chữ ký còn
+    # trong trần tổng) — KHÔNG gỡ: lượt 00:00 chờ tối đa 5′ rồi thoát 1, lượt
+    # nhanh bỏ lượt thoát 0 — không chồng lượt.
+    echo "khoá còn sống (PID $pid, lấy lúc ${luc:-?}, tuổi ${tuoi}s) — không gỡ"
+    return 1
   fi
   if [ "$goc_do_tuoi" = "1" ]; then
     rm -rf "$LOCK_DIR" 2>/dev/null
@@ -105,7 +116,12 @@ else
   done
 fi
 echo $$ > "$LOCK_DIR/pid"; date +%s > "$LOCK_DIR/luc"
-trap 'rm -rf "$LOCK_DIR" 2>/dev/null' EXIT
+# 1911-2: chữ ký chủ khoá — mốc bắt đầu tiến trình này (ps lstart); ps hỏng → tệp
+# rỗng → go_khoa_cu rơi nhánh không-chữ-ký (vẫn an toàn theo tuổi)
+{ ps -o lstart= -p $$ 2>/dev/null | tr -s ' ' > "$LOCK_DIR/chu"; } || true
+# 1911-2: trap chỉ xoá khoá CỦA CHÍNH MÌNH — lượt 00:00 bị gỡ khoá (lỗi cũ) rồi
+# thoát không được xoá nốt khoá lượt nhanh đã chiếm chỗ
+trap '[ -f "$LOCK_DIR/pid" ] && grep -qx "$$" "$LOCK_DIR/pid" 2>/dev/null && rm -rf "$LOCK_DIR" 2>/dev/null || true' EXIT
 
 # 1711-4: TRẦN TỔNG lượt (đồng hồ chết) — lượt 00:00 hôm 17/11 chạy ≈5h38m
 # (00:00→05:38 +07, exit 1 vì JOB FAIL doc-gop giữa chừng) mà không có trần
@@ -197,7 +213,7 @@ canh_gio() {
 PGID_LUOT="$(ps -o pgid= -p $$ | tr -d ' ')"
 canh_gio "$TRAN_TONG" "$CANH_BAO" "lượt" "-$PGID_LUOT"
 DONG_HO_TONG_PID="${DONG_HO_PID:-}" # PID riêng cho trap (khi node thật thiếu thì rỗng)
-trap '[ -n "$DONG_HO_TONG_PID" ] && kill "$DONG_HO_TONG_PID" 2>/dev/null; rm -rf "$LOCK_DIR" 2>/dev/null' EXIT
+trap '[ -n "$DONG_HO_TONG_PID" ] && kill "$DONG_HO_TONG_PID" 2>/dev/null; if [ -f "$LOCK_DIR/pid" ] && grep -qx "$$" "$LOCK_DIR/pid" 2>/dev/null; then rm -rf "$LOCK_DIR" 2>/dev/null; fi' EXIT
 LAST=$(cat "$STATE" 2>/dev/null || echo "00000000T000000")
 MAXTS="$LAST"
 FAILED=0

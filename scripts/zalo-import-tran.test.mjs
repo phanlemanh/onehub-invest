@@ -95,7 +95,7 @@ test("1711-4 (3): khoá PID sống không bị gỡ — lượt 00:00 chờ hế
   writeFileSync(join(khoa, "luc"), String(Math.floor(Date.now() / 1000)));
   try {
     const r = await chay(root, { ZALO_IMPORT_CHO_KHOA: "2" });
-    assert.match(r.out, /khoá còn sống \(PID \d+, lấy lúc \d+\) — không gỡ/, "không gỡ khoá PID sống (trước đây lượt 00:00 gỡ khoá >2h — lỗ chồng lượt)");
+    assert.match(r.out, /khoá còn sống \(PID \d+, lấy lúc \d+, tuổi \d+s\) — không gỡ/, "không gỡ khoá PID sống (trước đây lượt 00:00 gỡ khoá >2h — lỗ chồng lượt)");
     assert.match(r.out, /khoá .* bận .*job khác đang nạp\?/, "chờ hết cạn rồi từ chối");
     assert.equal(r.status, 1, "thoát 1 — JOB FAIL thấy được, KHÔNG nạp chồng");
     assert.ok(existsSync(khoa), "khoá còn nguyên sau khi thoát");
@@ -242,7 +242,7 @@ test("1711-4 lần 4 (c): khoá 30h mang PID TÁI DÙNG (còn sống) phải g�
   writeFileSync(join(khoa, "luc"), String(Math.floor(Date.now() / 1000 - 108_000))); // 30 giờ trước
   try {
     const r = await chay(root, {}, ["--luot-nhanh"]);
-    assert.match(r.out, /gỡ khoá mồ côi già hơn 2h/, "tuổi khoá xét TRƯỚC PID");
+    assert.match(r.out, /gỡ khoá mồ côi quá trần tổng/, "khoá 30h không chữ ký → mồ côi quá trần tổng 4h");
     assert.doesNotMatch(r.out, /khoá còn sống/, "CA LỎI (c): PID tái dùng không được coi là khoá sống (bản cũ trả 1 trước khi xét tuổi)");
     assert.equal(r.status, 0, `lượt nhanh chạy được ngay sau khi gỡ khoá mồ côi — thực tế ${r.status}`);
   } finally {
@@ -263,6 +263,47 @@ test("1711-4 lần 4 (d): hết hồ sơ chờ nạp không được báo 124 gi
     assert.doesNotMatch(r.out, /JOB FAIL \[zalo-import-daily\] bước nap-ho-so/, "không JOB FAIL nap-ho-so giả");
     assert.notEqual(r.status, 124, `không thoát 124 khi không còn hồ sơ chờ nạp — thực tế ${r.status}`);
     assert.equal(readFileSync(join(root, "pipeline", "logs", "s03-ho-so.state"), "utf8").trim(), ts, "con trỏ hồ sơ giữ nguyên");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+// ---- 1911-2 (MỞ LẠI kiểu giao mới): bản 2aad0b08d gỡ khoá 3h của lượt 00:00 THẬT
+// đang chạy (trần tổng 4h) → chồng lượt. Hai chiều: chủ thật (chữ ký khớp) giữ;
+// PID tái dùng (chữ ký lệch) gỡ kể cả khoá trẻ.
+const chuKyThat = (pid) =>
+  execFileSync("ps", ["-o", "lstart=", "-p", String(pid)], { encoding: "utf8" }).replace(/\s+/g, " ").trim();
+
+test("1911-2 chiều A: khoá tuổi 3 GIỜ của lượt đang chạy THẬT (pid sống + chữ ký khớp) → KHÔNG gỡ, lượt nhanh bỏ lượt, khoá còn của chủ", async () => {
+  const root = dungMoiNhanh();
+  const khoa = join(root, "pipeline", "logs", "apify-daily.state.lock");
+  mkdirSync(khoa, { recursive: true });
+  writeFileSync(join(khoa, "pid"), String(process.pid)); // pid sống = chính node test
+  writeFileSync(join(khoa, "luc"), String(Math.floor(Date.now() / 1000 - 10_800))); // 3 giờ trước
+  writeFileSync(join(khoa, "chu"), chuKyThat(process.pid) + "\n"); // chữ ký KHỚP
+  try {
+    const r = await chay(root, {}, ["--luot-nhanh"]);
+    assert.match(r.out, /khoá còn sống \(PID \d+, lấy lúc \d+, tuổi \d+s\) — không gỡ/, "nhận chủ thật qua chữ ký");
+    assert.doesNotMatch(r.out, /gỡ khoá/, "CA LỖ 1911-2: khoá 3h của lượt thật không được gỡ (bản 2aad0b08d gỡ mọi khoá >2h → chồng lượt)");
+    assert.equal(r.status, 0, "lượt nhanh bỏ lượt thoát 0");
+    assert.ok(existsSync(join(khoa, "pid")), "khoá còn nguyên");
+    assert.equal(readFileSync(join(khoa, "pid"), "utf8").trim(), String(process.pid), "khoá vẫn thuộc lượt 00:00");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("1911-2 chiều B: khoá TRẺ mang PID TÁI DÙNG (pid sống + chữ ký LỆCH) → gỡ được ngay, không chờ 2h", async () => {
+  const root = dungMoiNhanh();
+  const khoa = join(root, "pipeline", "logs", "apify-daily.state.lock");
+  mkdirSync(khoa, { recursive: true });
+  writeFileSync(join(khoa, "pid"), String(process.pid)); // pid sống
+  writeFileSync(join(khoa, "luc"), String(Math.floor(Date.now() / 1000))); // tuổi 0 — khoá trẻ
+  writeFileSync(join(khoa, "chu"), "Wed Jan  1 00:00:00 2020\n"); // chữ ký của tiến trình ĐÃ CHẾT (pid bị dùng lại)
+  try {
+    const r = await chay(root, {}, ["--luot-nhanh"]);
+    assert.match(r.out, /gỡ khoá mồ côi — PID \d+ bị tiến trình khác DÙNG LẠI/, "chữ ký lệch = PID tái dùng — gỡ kể cả khoá trẻ");
+    assert.doesNotMatch(r.out, /⏭ bỏ lượt/, "lượt nhanh chiếm được khoá sau khi dọn");
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
