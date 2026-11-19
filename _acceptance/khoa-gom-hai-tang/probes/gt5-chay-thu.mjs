@@ -34,7 +34,7 @@ try {
     console.log(`theo khu (id nút dự án): ${k.rows.map((r) => `${r.k} ${r.n}`).join(" · ")}`);
     const l = await c.query(`SELECT (SELECT count(*) FROM eval_label_items WHERE lat = 'hai-khu-ghep-b') bai,
                                     (SELECT count(DISTINCT r.offer_id) FROM sale_offer_records r JOIN eval_label_items e
-                                       ON e.lat = 'hai-khu-ghep-b' AND e.post_id = ANY(r.post_ids) WHERE r.source = 'S03' AND r.retired_at IS NULL) n`)
+                                       ON e.lat = 'hai-khu-ghep-b' AND e.ref_id = ANY(r.post_ids) WHERE r.source = 'S03' AND r.retired_at IS NULL) n`)
       .catch(() => ({ rows: [{ bai: "?", n: "?" }] }));
     console.log(`lát hai-khu-ghep-b: ${l.rows[0].bai} bài · chạm ${l.rows[0].n} tin (lát chưa nạp thì 0; tệp đóng băng PL20 rút sau DA46)`);
   } else if (lenh === "cat-lat") {

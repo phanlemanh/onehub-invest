@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # GT5 E10 (AC-10): không phá lượt nạp. Bản chép DB máy thu, công tắc bật:
 #   hai lượt nạp → lượt hai 0 tin đổi thành phần; in số tin trước/sau theo khu, số tin chạm lát hai-khu-ghep-b, thời gian bước gom;
-#   thư mục snapshot không đổi (băm tên + cỡ, số tệp > 0); số post thử bị gạt bằng nhau và > 0.
+#   snapshot: mọi tệp có trước lượt đo còn nguyên tên và cỡ (bộ thu máy thu vẫn ghi bản mới trong lúc đo — tệp mới đếm riêng); số post thử bị gạt bằng nhau và > 0.
 #   Phát lại theo lát ngày (7 ngày cuối của captured_at, mỗi ngày một lượt) → thành phần cuối bằng một lượt toàn bộ; mọi offer_id đổi
 #   giữa lát có đường nối; in số lần lật.
 # Chiều đỏ: đột biến khoá không tất định (độ giống chữ ngẫu nhiên) → lượt hai đổi tin, thoát 1 ghim offer_id.
@@ -14,9 +14,9 @@ F=pipeline/lib/gom-tin-hai-tang.mjs; RA="$(mktemp -d)"; cp "$F" "$RA/goc.mjs"
 tra_lai() { cp "$RA/goc.mjs" "$F"; for t in oneinvest_gt5_ct1 oneinvest_gt5_ct2 oneinvest_gt5_ct3 oneinvest_gt5_ct4; do node $D xoa $t >/dev/null 2>&1 || true; done; }
 trap tra_lai EXIT
 RC=0
-bam_snap() { [ -d "$SNAP" ] || { echo "khong-co 0"; return; }; local n h; n="$(find "$SNAP" -type f | wc -l | tr -d ' ')"; h="$(find "$SNAP" -type f -print0 | xargs -0 stat -f '%N %z' | sort | shasum -a 256 | cut -c1-16)"; echo "$h $n"; }
+ke_snap() { [ -d "$SNAP" ] || return 0; find "$SNAP" -type f -print0 | xargs -0 stat -f '%N %z' | sort; }
 nap() { local db=$1 nhan=$2; local t0=$SECONDS; DATABASE_URL="$(U "$db")" node pipeline/transform-zalo.mjs > "$RA/$nhan.txt" 2>&1 || { tail -5 "$RA/$nhan.txt"; echo "ĐỎ: transform lỗi ($nhan)"; exit 1; }; echo "  $nhan: $((SECONDS - t0))s · $(grep -o 'gom hai tầng: BẬT[^·]*' "$RA/$nhan.txt") · $(grep -o 'gạt [0-9]* post thử' "$RA/$nhan.txt")"; }
-SN0="$(bam_snap)"; echo "snapshot trước: $SN0"
+ke_snap > "$RA/snap0.txt"; echo "snapshot trước: $(wc -l < "$RA/snap0.txt" | tr -d " ") tệp"
 bash db/db-thu.sh oneinvest_gt5_ct1 >/dev/null || { echo "ĐỎ: không chép được DB thử"; exit 2; }
 DATABASE_URL="$(U oneinvest_gt5_ct1)" node $D chup "$RA/s0.json"
 node $D nhan oneinvest_gt5_ct1 oneinvest_gt5_ct3 >/dev/null; node $D nhan oneinvest_gt5_ct1 oneinvest_gt5_ct4 >/dev/null
@@ -50,7 +50,9 @@ nap oneinvest_gt5_ct2 dot1; DATABASE_URL="$(U oneinvest_gt5_ct2)" node $D chup "
 nap oneinvest_gt5_ct2 dot2; DATABASE_URL="$(U oneinvest_gt5_ct2)" node $D chup "$RA/d2.json"; cp "$RA/goc.mjs" "$F"
 if node $D so-sanh "$RA/d1.json" "$RA/d2.json" bang > "$RA/do.txt"; then cat "$RA/do.txt"; echo "ĐỎ: thước mù — khoá không tất định mà lượt hai không đổi"; RC=1
 else grep ĐỎ "$RA/do.txt" | sed 's/^ĐỎ/đạt (đột biến bị bắt)/'; fi
-SN1="$(bam_snap)"; echo "snapshot sau: $SN1"
-if [ "$SN0" = "$SN1" ] && [ "${SN0##* }" -gt 0 ]; then echo "đạt: snapshot không đổi (${SN0##* } tệp)"; else echo "ĐỎ: snapshot đổi hoặc rỗng"; RC=1; fi
+ke_snap > "$RA/snap1.txt"
+N0="$(wc -l < "$RA/snap0.txt" | tr -d ' ')"; MAT="$(comm -23 "$RA/snap0.txt" "$RA/snap1.txt" | wc -l | tr -d ' ')"; MOI="$(comm -13 "$RA/snap0.txt" "$RA/snap1.txt" | wc -l | tr -d ' ')"
+echo "snapshot sau: tệp cũ đổi hoặc mất $MAT · tệp mới (bộ thu ghi trong lúc đo) $MOI"
+if [ "$N0" -gt 0 ] && [ "$MAT" = 0 ]; then echo "đạt: không tệp snapshot cũ nào đổi ($N0 tệp)"; else echo "ĐỎ: snapshot cũ đổi hoặc mất ($MAT), hoặc thư mục rỗng"; comm -23 "$RA/snap0.txt" "$RA/snap1.txt" | head -3; RC=1; fi
 [ $RC = 0 ] && echo "XANH: chay-thu" || echo "ĐỎ: chay-thu"
 exit $RC
