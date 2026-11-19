@@ -5,7 +5,7 @@ slug: noi-phan-khu-trung-s16
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, web]
-status: approved
+status: implemented
 design_doc: docs/superpowers/specs/2026-11-19-noi-phan-khu-trung-s16-design.md
 approved_by: Mạnh
 approved_at: 2026-11-19T00:28:56Z
@@ -22,7 +22,7 @@ kèm băm của thẻ luật bổ sung.
 ## Criteria
 
 - AC-1: Given khoá khu S16 đã nằm trên một nút chưa nghỉ ở bất kỳ tầng nào của cây dự án, kể cả nút loại `building`, When dựng thẻ luật phân khu, Then khu đó ra «đã gán» và không có nút mới; nút đã nghỉ mang khoá thì không được tính là đã gán.
-- AC-2: Given khu S16 chưa gán, When dựng thẻ luật, Then khu nhận một nút khi ít nhất một nửa số toà của khu có S09 và mọi toà có S09 cùng về nút đó (cụm thắng phân khu cha); toà rẽ từ hai nút trở lên thì khu ra «mơ hồ» và không đúc; dưới một nửa số toà có S09 hoặc không có S09 thì giữ luật so tên hiện tại.
+- AC-2: Given khu S16 chưa gán, When dựng thẻ luật, Then khu chỉ tự nhận một nút khi khớp trọn 1–1: mọi toà có S09 cùng về nút đó (cụm thắng phân khu cha), nút đó không nhận toà từ khu S16 khác, có ít nhất 3 toà chung và ít nhất một nửa số toà của khu có S09; khu có bằng chứng S09 mà không đạt thì giữ luật so tên hiện tại và thẻ luật hiện cảnh báo nêu phân khu trùng, số toà và lý do; không có S09 thì giữ luật so tên, không cảnh báo.
 - AC-3: Given các nút do luật S16 đúc, When dựng thẻ nối, Then thẻ liệt từng cặp nút mới → nút cũ kèm số toà có bằng chứng trên tổng toà, liệt các ca không nối kèm lý do, in băm và không ghi gì vào DB.
 - AC-4: Given thẻ nối và băm, When áp, Then băm lệch thì không ghi gì; băm đúng thì khoá khu và bí danh chuyển về nút cũ, id nút cũ giữ nguyên, nút mới mang `meta.nghi` và thành con của nút giữ lại, ghi đúng một dòng luật, toà về nút cũ qua view, áp lần hai không đổi gì.
 - AC-5: Given một lượt nối đã áp, When đảo theo mã luật, Then nút cha, meta, bí danh của mọi nút trong cặp về đúng trước khi áp, view toà trùng trước khi áp, dòng luật ghi người và giờ đảo.

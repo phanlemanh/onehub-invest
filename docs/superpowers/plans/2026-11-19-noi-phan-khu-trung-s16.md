@@ -15,7 +15,7 @@
 - Không đổi `buildings.region_node_id`: rào chỉ-thêm 082.
 - `asset_nodes.meta` chỉ mang băm khoá khu (`khoaKhu`), không mang `khu_id`, `toa_id` S16 thô; thẻ và log không in mã thô.
 - Nguồn chỉ gọi bằng mã `S0x` trong mã, test, thông điệp commit.
-- Sàn bằng chứng: `co_s09 * 2 >= tong_toa` và mọi toà có S09 về đúng một nút; cụm (`s09_cum` + `s09_sector_id`) thắng phân khu (`s09_sector_ids`).
+- Luật tự nhận: khớp trọn 1–1, `co_s09 >= 3`, `co_s09 * 2 >= tong_toa`, mọi toà có S09 về đúng một nút và nút đó không nhận toà từ khu khác; ca khác chỉ cảnh báo; cụm (`s09_cum` + `s09_sector_id`) thắng phân khu (`s09_sector_ids`).
 - Không chạy ghi lên DB `oneinvest`; mọi phép đo ghi chạy trên DB thử.
 
 ## Review Focus
@@ -38,7 +38,7 @@ Phục vụ E1, E2. `independent: false`.
 - Modify: `pipeline/test-nua.json` (khai itest vào nửa nhẹ hơn nếu kho đếm tệp này)
 
 **Interfaces:**
-- Produces: `chonNutTheoBangChung(bc: {tong_toa:number, co_s09:number, nut:number[]}) => {nut:'san', node_id:number} | {nut:'mo-ho', node_id:null} | null`
+- Produces: `xetKhopTron(bc, soBanGhiCuaNut)` ở `pipeline/lib/khop-tron.mjs`
 - Produces: `keHoachPhanKhu(khuS16, nutSan, bangChung = new Map())`; `nutSan` có thêm `du_an_node_id`, `node_type`; `bangChung` khoá theo `khoaKhu(du_an, khu_id)`.
 - Produces: `docBangChung(client, noi) => Map<string, {tong_toa, co_s09, nut:number[]}>` trong `phan-khu-s16.mjs`.
 

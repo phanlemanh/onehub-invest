@@ -939,6 +939,37 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
       EN4 `api-tra-ho-so-zalo`. Câu còn mở của Cổng Phạm vi EN4: API chạy ở đâu, ai gọi (ứng dụng trên cloud không được nhận
       ngày sinh, giới tính), thuộc cổng nào, xác thực thế nào — data-api công khai không hợp. Ngoài đường găng, sau các hàng
       MS3; dãy dự kiến U2 sau VHZ2.
+56. **Duyệt nối nguồn danh mục theo loại căn cứ, một lần; phân khu chỉ tự nhận khi khớp trọn 1–1** (19/11). Căn cứ: DA46
+    `noi-phan-khu-trung-s16`. Thẻ luật phân khu S16 số 2 (DA37) đúc 7 nút trùng nơi với phân khu đã có, kéo 50 toà khỏi nút cũ, vì
+    bước khớp chỉ so tên. So tập toà S16 với S09 trên 61 khu (DB máy thu, chỉ đọc): 11 khu khớp 1–1, 3 khu chứa trọn nhiều nút, 0
+    khu chồng chéo, 47 khu không có toà chung. Mỗi nguồn mới đang tốn 6–7 hàng việc; S07, S11 và S12–S15 còn ở phía trước.
+    - **Câu đã trình** (phiên P2, trả lời lời Mạnh 02:08Z «khi bổ sung một nguồn có thể pipeline tự giải quyết được»), khuyến nghị
+      đồng ý cả hai:
+      - *Luật cho DA46:* «Khu chỉ tự nhận nút cũ khi toà khớp trọn 1–1 và có ít nhất 3 toà chung, các ca khác chỉ cảnh báo.»
+      - *Cách duyệt tự động:* «hiện thẻ luật duyệt theo từng nguồn (chốt 11/11). Muốn nguồn mới tự chạy, anh duyệt theo từng loại
+        căn cứ một lần, sau đó nguồn mới đạt ngưỡng chạy bóng thì được áp luôn.»
+    - **Lời Mạnh:** «Theo khuyến nghị» (phiên P2, 2026-11-19T02:21:44Z).
+    - **Quyết định 1, luật tự nhận phân khu.** Khu S16 chỉ tự nhận phân khu đã có khi: mọi toà có S09 của khu về một nút, nút đó
+      không nhận toà từ khu S16 khác, có ít nhất 3 toà chung, và ít nhất một nửa số toà của khu có S09. Ca có bằng chứng mà không
+      đạt thì giữ luật so tên và hiện cảnh báo trên thẻ luật. Phân khu trùng giữ nút cũ (rào chỉ-thêm 082 không cho đổi cột vùng của
+      toà), tên S16 thành bí danh của nút đó; tên hiển thị của nút chưa đổi. **Sửa mục 54 Q-C** ở chiều nút giữ lại.
+    - **Quyết định 2, duyệt theo loại căn cứ.** Mạnh duyệt mỗi loại căn cứ một lần, không duyệt lại cho từng nguồn. Nguồn mới đạt
+      ngưỡng ở lượt chạy bóng thì được áp theo căn cứ đã duyệt. **Sửa mục 44 Hỏi-1** («thẻ luật theo nguồn»).
+    - **Phạm vi áp dụng** của quyết định 2:
+      - *Loại căn cứ:* các căn cứ đang đi thẻ luật ở mô hình 11/11 §1.2 (K1, K2, K3, K5), căn cứ nhận nút ứng viên của Hỏi-1, và tập
+        toà chung khớp trọn 1–1 ở cấp phân khu.
+      - *Nguồn:* các nguồn danh mục đi qua khuôn chung bản ghi nguồn (S07, S08, S09, S10, S11 đến S16).
+      - *Hiệu lực:* chưa loại căn cứ nào được duyệt theo cách mới và chưa có bước chạy bóng. Cho tới khi Mạnh chốt ngưỡng, nguồn
+        mới vẫn đi thẻ luật như cũ. Việc nối 7 cặp của DA46 vẫn cần chữ ký riêng kèm băm thẻ nối.
+    - **Không đổi:**
+      - Mỗi loại căn cứ vẫn do Mạnh xem mẫu và duyệt lần đầu.
+      - Mẫu soát 20 cặp mỗi tuần chỉ để thấy trôi, không mở cổng tự nối (FRAMING §5).
+      - K4 và ca khó vẫn lên thẻ từng cặp; không nối khi lệch tỉnh.
+      - Lời khai từ tin (mã dự án S06, nhóm S03, tên trên tin) không thuộc phạm vi, vẫn đi DA7 và DA18.
+      - S16 thắng về cấu trúc (mục 54 Q-B). Giá, pháp lý, chủ đầu tư, tiến độ lệch vẫn lên thẻ.
+      - LLM không quyết định ghi dữ liệu (luật 7). Điều kiện lên Invest của mục 39 giữ nguyên.
+    - **Câu còn mở**, trình ở Cổng Phạm vi của hàng đầu tiên thuộc lớp hợp nhất nguồn: ngưỡng tự áp cho mỗi căn cứ; phần trùng với danh
+      bạ đã xác nhận có được làm tập đối chiếu không (đụng FRAMING §5); quan hệ cha–con do máy suy có qua thẻ luật lần đầu không.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 

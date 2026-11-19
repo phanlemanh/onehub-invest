@@ -9,7 +9,7 @@ không dùng bằng chứng S09 trên chính dòng toà. Vì vậy luật số 2
 ## Cách làm
 
 1. **Bước khớp** (`keHoachPhanKhu`): tìm khoá khu trên cả cây của dự án, mọi loại nút chưa nghỉ. Khu chưa gán thì xét bằng chứng S09
-   của các toà trong khu: ít nhất một nửa số toà của khu có S09 và mọi toà có S09 cùng về một nút (cụm thắng phân khu cha) thì nhận nút đó; rẽ từ hai nút trở lên thì «mơ hồ», không đúc; dưới một nửa hoặc không có bằng chứng thì giữ luật tên như cũ.
+   của các toà trong khu: máy chỉ tự nhận nút cũ khi khớp trọn 1–1: mọi toà có S09 cùng về một nút (cụm thắng phân khu cha), nút đó không nhận toà từ khu S16 khác, có ít nhất 3 toà chung và ít nhất một nửa số toà của khu có S09. Ca có bằng chứng mà không đạt thì giữ luật tên như cũ và hiện cảnh báo trên thẻ luật để người xem trước khi duyệt; S16 vẫn thắng cấu trúc (Mạnh chốt 19/11).
 2. **Thẻ luật bổ sung** (`phan-khu-s16.mjs --the-noi`, `--noi --bam`, `--dao-noi`, `--kiem-noi`): thẻ liệt từng cặp, số toà có bằng chứng
    trên tổng toà, và các ca không nối kèm lý do. Áp đúng băm: chuyển khoá khu và bí danh về nút cũ; nút mới mang `meta.nghi`, thành con
    của nút giữ lại, không xoá. Giữ id cũ vì 39 dòng `buildings.region_node_id` đang trỏ nút cũ và rào chỉ-thêm 082 cấm đổi cột đó.
@@ -30,7 +30,7 @@ Không có migration: dòng luật dùng bảng `project_link_rules` đã có, n
 | Grand Park | 382 The Beverly | 23 The Beverly | nút `building` | 6/7 |
 | Grand Park | 388 Glory Heights | 43 The Glory Heights | phân khu con trực tiếp | 5/5 |
 
-Sàn một nửa số toà chặn ca một toà có S09 kéo cả khu đi theo; tỉ lệ thấp nhất của bảy cặp là 6/7.
+Sàn 3 toà chung và một nửa số toà chặn ca vài toà kéo cả khu đi theo; bảy cặp có ít nhất 3 toà chung, tỉ lệ thấp nhất là 6/7. Quan hệ 1–1 giữ cho S16 chia nhỏ hơn S09 không bị gộp về một nút. Luật nằm ở hàm dùng chung `pipeline/lib/khop-tron.mjs`, không gắn nguồn, để DA42 và các nguồn sau gọi lại.
 
 ## Bảng phủ ca
 
