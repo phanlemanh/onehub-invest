@@ -323,15 +323,16 @@ const khuc = <T,>(a: T[], n: number): T[][] => Array.from({ length: Math.ceil(a.
 const soDongThan = (html: string) => (html.slice(html.indexOf("<tbody"), html.indexOf("</tbody>")).match(/<tr[\s>]/g) ?? []).length
 
 test("ON12-AC-5 bảng kiểm chất lượng trên DB local diễn giải đủ", async () => {
+  const { DQ_SHARED_TABLE_FILTER_SQL } = await import("../src/lib/dq-checks")
   const c = await canDb()
   let rows: { check_name: string; entity: string; status: string; detail: string | null; checked_at: string }[]
   try {
     // Cùng cột, cùng cửa sổ 7 ngày với trang /ops/quality — nhưng KHÔNG LIMIT: lời hứa là MỌI dòng kiểm được diễn giải.
-    // Dòng do1-* (DO1 đo hằng ngày) và do3-* (DO3 làm giàu) có khối riêng, bảng chung bỏ chúng (dqLatestSql) — ca này cũng bỏ.
+    // Dòng có khối riêng (do1-*, do3-*, s03-moc-ngay) bảng chung bỏ — ca này bỏ ĐÚNG điều kiện của bảng, không chép tay.
     rows = (
       await c.query(
         `SELECT check_name, entity, status, detail, checked_at::text FROM dq_check_results
-         WHERE checked_at > now() - interval '7 days' AND check_name NOT LIKE 'do1-%' AND check_name NOT LIKE 'do3-%' ORDER BY checked_at DESC`,
+         WHERE checked_at > now() - interval '7 days' AND ${DQ_SHARED_TABLE_FILTER_SQL} ORDER BY checked_at DESC`,
       )
     ).rows
   } finally {
