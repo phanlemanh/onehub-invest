@@ -87,7 +87,12 @@ async function call(
       ctx.log(`  ↻ 401 ${path} — refresh token`);
       await ctx.refreshToken();
       res = await doFetch();
-      if (res.status === 401) throw new Error(`401 sau refresh token — dừng chạy (${path})`);
+      if (res.status === 401) {
+        // 1711-1(a): dòng chuẩn máy đọc được khi xác thực hỏng — thước độ tươi làn
+        // Claude đọc dòng này để báo đỏ (SLO 35 ngày không thấy lượt 401 liền).
+        ctx.log(`AUTH FAIL [S02] ${new Date().toISOString()}`);
+        throw new Error(`401 sau refresh token — dừng chạy (${path})`);
+      }
     }
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = (await res.json()) as unknown;
