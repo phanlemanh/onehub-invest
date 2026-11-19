@@ -86,6 +86,30 @@ evals:
     paths: [pipeline/push-ops-facts.mjs, pipeline/scripts/push-ops-facts-import.test.mjs]
     expected: "exit 0; máy chủ thu giả trên 127.0.0.1 đếm lời gọi, HOME tạm có token giả, DATABASE_URL trỏ DB thử: tiến trình chỉ import tệp → 0 lời gọi, thoát 0; chạy tệp làm lệnh chính → đúng 1 lời gọi; chạy `--kho` → 0 lời gọi; chạy qua một symlink tới thư mục kho → đúng 1 lời gọi. Không ca nào dùng INGEST_URL mặc định. Chiều đỏ cùng fixture: bản sao tệp gọi main() không chốt → ca import đỏ ghim «AC-10 import đã gửi bản tin»."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11a
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.suite.app_ui
+    long_running: 60
+    paths: [pipeline/**, app/src/**, app/tests/**, scripts/**]
+    expected: "exit 0; bộ test giao diện app của kho xanh trên nhánh. Khai riêng để lượt chấm chờ đủ giờ: lượt 1 ba bộ này chạy quá 30 phút và không có mã thoát."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11b
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.suite.pipeline_a
+    long_running: 60
+    paths: [pipeline/**, app/src/**, app/tests/**, scripts/**]
+    expected: "exit 0; bộ pipeline nửa a của kho xanh trên nhánh. Khai riêng để lượt chấm chờ đủ giờ: lượt 1 ba bộ này chạy quá 30 phút và không có mã thoát."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11c
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.suite.pipeline_b
+    long_running: 60
+    paths: [pipeline/**, app/src/**, app/tests/**, scripts/**]
+    expected: "exit 0; bộ pipeline nửa b của kho xanh trên nhánh. Khai riêng để lượt chấm chờ đủ giờ: lượt 1 ba bộ này chạy quá 30 phút và không có mã thoát."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E8
     criterion: AC-8
     executor: judgment
