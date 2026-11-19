@@ -89,3 +89,54 @@ sửa cho khớp.
 ## Nhật ký áp
 
 (điền khi áp: thời điểm, sha `main`, đường + cỡ hai tệp sao lưu, đầu ra lệnh kiểm sau, số thật cạnh số chạy thử)
+
+### Số đối chiếu mới (thay khối mục 3 cho lượt áp này)
+
+Lời Mạnh ở phiên giám sát lúc 2026-11-19T02:39:41Z (mã câu hỏi h-20261119T004426Z-235), nguyên văn: «Nhận, theo khuyến nghị», trả lời câu «Nhận bộ số mới (+2 căn Grand Park) làm số đối chiếu cho lượt áp tối nay?». Khối đã ký ở mục 3 giữ nguyên; lượt áp này đối chiếu theo khối dưới.
+
+Đo 2026-11-19 00:37–00:42Z trên bản chép mới của DB máy thu, code `main` 0e76e7553: áp 113 hai lần, áp 118, bộ nạp thật nạp 95.798/95.798 (bỏ 0),
+chạy thử, `--ghi`, `kiem.sh that`. Bản chép đã xoá.
+
+Tổng: phát biểu 441.193 · căn danh bạ có thuộc tính 84.822 · căn có bí danh S16 111.331 · căn có giá chủ đầu tư 11.852 · tầng lệch 41 · mã hai toà
+trong snapshot 862 · mã có thuộc tính chưa có căn danh bạ 10.114. Diện tích thứ hai: tim tường 69.678 (cao tầng) + đất 15.144 (thấp tầng).
+
+Thứ tự cột: nối · thông thuỷ/sàn · tim tường hoặc đất · PN · WC · hướng · loại hình · giá chủ đầu tư.
+
+```chay-thu
+grand-park | 37591 | 37591 | 37591 | 35976 | 436 | 28316 | 36973 | 1850
+ocean-park | 32097 | 32097 | 32097 | 27440 | 22063 | 31808 | 30919 | 9999
+ocean-park-2 | 9791 | 9791 | 9791 | 9791 | 0 | 2492 | 9791 | 3
+ocean-park-3 | 2797 | 2797 | 2797 | 2797 | 0 | 2782 | 2797 | 0
+smart-city | 2546 | 2546 | 2546 | 2546 | 2476 | 2497 | 2502 | 0
+```
+
+Khác khối đã ký đúng 6 ô, đều ở grand-park và đều +2: nối, thông thuỷ, diện tích thứ hai, PN, hướng, loại hình.
+
+Lưu ý khi đối chiếu: `kiem.sh that` so với khối mục 3 và bảng phủ ca đã ký, nên sẽ thoát 1 và báo 6 ô lệch này. Theo lời trên, `kiem.sh that` đỏ đúng 6 ô grand-park đó thì không tính là lệch; bất kỳ ô đỏ nào khác thì dừng và báo giám sát.
+
+### Nguyên nhân chênh
+
+Job đêm 18/11 `zalo-import-daily`, bước dựng danh bạ chạy lần đầu trên mã của #490, đúc thêm 2 căn grand-park.
+`pipeline/logs/zalo-import.log` dòng 33259: «S16: khoá mới 2, mốc 2026-11-18T17:06:39.709908Z». Hai căn có `first_seen` đúng giây đó và có thuộc tính thật trong snapshot.
+
+### Lệnh đếm căn S16 đúc mới kể từ mốc (chạy ngay trước bước chạy thử)
+
+```bash
+docker exec -e PGPASSWORD=oneinvest one-invest-db psql -U oneinvest -h localhost -d oneinvest -Atc "SELECT count(*) FROM registry_aliases a WHERE a.source='S16' AND a.kind='ma_nguon' AND a.retired_at IS NULL AND a.object_key LIKE 'unt\_%' AND a.first_seen > '2026-11-18T17:06:39.709908Z'"
+```
+
+Kết quả đo 2026-11-19: 0 căn (tổng căn có bí danh S16: 111.331).
+
+Quy tắc khi lại chênh, theo lời trên: chênh thêm mà khớp đúng số căn S16 đúc mới ghi trong log «S16: khoá mới N» kể từ mốc 17:06:39Z ngày 18/11 thì vẫn áp và ghi rõ; chênh kiểu khác thì dừng.
+
+### Lượt thu lỗi
+
+Manifest snapshot ghi 6.456 lượt thu lỗi. Các lượt này không nằm trong khối số vì khối chỉ đếm 95.798 item thu được; căn tương ứng hiện «Chưa có thuộc tính» trên trang dự án.
+
+### Chạy thay bộ nạp (chỉ điền nếu giám sát báo «chạy thay» lúc 15:00Z)
+
+Lời Mạnh: «<nguyên văn>» (<thời điểm>, mã câu hỏi <mã>). Lệnh: `node pipeline/import-s16-chi-tiet.mjs <thư mục snapshot> --may-thu`, từ checkout chính ở `main`, sau khi áp 113 và 118.
+
+### Kết quả áp (điền khi áp)
+
+Thời điểm: <...> · sha `main`: <...> · hai tệp sao lưu (đường, cỡ): <...> · đầu ra lệnh kiểm sau: <...> · số thật cạnh số đối chiếu: <...>
