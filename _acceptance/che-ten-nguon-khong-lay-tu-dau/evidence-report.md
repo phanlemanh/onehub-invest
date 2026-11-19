@@ -1,22 +1,19 @@
 ---
 schema_version: 2
 feature_slug: che-ten-nguon-khong-lay-tu-dau
-verdict: BLOCKED
+verdict: REJECT
 failed_evals: []
-reason: |
-  Bốn lệnh chạy quá 30 phút (mốc long_running mặc định) mà chưa có dòng kết thúc; công cụ chuyển sang nền, không giết. Không suy được PASS hay FAIL, không chạy lại, không sửa code. Cần người xem tiến trình và chạy lại với hạn dài hơn hoặc khai long_running cho eval.
-  1) bash _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/dong-chat.sh (eval E4d): bắt đầu 07:24, hết mốc 07:54 giờ VN 19/11/2026. Task bnyxl5y3g, tệp đầu ra rỗng. Tiến trình còn sống lúc 07:45: dong-chat.sh (pid 84014) gọi scripts/check-cloud-sync.mjs pii (pid 84016), không rõ đã kẹt hay chưa. Cần quyết định dừng (TaskStop) hoặc cho chạy thêm và khai long_running.
-  2) node scripts/suite-neu-doi.mjs app_ui -- 'cd app && npm test': chạy từ khoảng 07:30, không xong trước 08:00; npm test trong app/ (pid 85900) còn sống. Không tìm thấy khai báo long_running riêng nên áp mặc định 30 phút.
-  3) node scripts/suite-neu-doi.mjs pipeline_a -- 'cd pipeline && npm run test:a': quá 30 phút, tệp đầu ra b252c4a0u.output rỗng. ps thấy hai tiến trình pipeline_a, một từ 8:00AM (lượt này) và một từ 8:17AM (không phải lượt này, không kill).
-  4) node scripts/suite-neu-doi.mjs pipeline_b -- 'cd pipeline && npm run test:b': bắt đầu 08:27, hết 30 phút lúc 08:57 mà chưa xong (pid 58317); chuyển nền sau trần 600s của công cụ; tệp đầu ra bgbe4iggz.output rỗng.
+reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 0af7392971aa0dfc25d4b85c9d927eb6f6f4af58
+verified_commit: 9849b88afdcee18b52347878bf83d195314de657
 human_signoff:
 ---
 
 # Evidence Report: che-ten-nguon-khong-lay-tu-dau
+
+Vòng 2. Mọi eval máy đều chạy xong với mã thoát 0, nhưng bước phân loại phạm vi giữ lại các phát hiện nằm trong hợp đồng (AC-2, AC-4, AC-6, AC-9, AC-10) nên tổng kết là REJECT. Chi tiết ở review-findings.md.
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
@@ -26,174 +23,189 @@ human_signoff:
 | E4a | AC-4 | test | PASS |
 | E4b | AC-4 | test | PASS |
 | E4c | AC-4 | test | PASS |
-| E4d | AC-4 | test | BLOCKED |
+| E4d | AC-4 | test | PASS |
 | E5 | AC-5 | script | PASS |
 | E6 | AC-6 | script | PASS |
 | E7 | AC-7 | test | PASS |
-| E8 | AC-8 | judgment | PENDING-JUDGMENT |
+| E8 | AC-8 | judgment | đề xuất PASS, chờ người |
 | E9 | AC-9 | test | PASS |
+| E10 | AC-10 | test | PASS |
+| E11a | AC-4 | test | PASS |
+| E11b | AC-4 | test | PASS |
+| E11c | AC-4 | test | PASS |
 
 ## Evidence
 
 - eval: E1
-  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E1-r1
+  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E1-r2
   exit_code: 0
   baseline: n-a
   verifier: _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/db.sh
-  verified_at: 2026-11-19T00:23:00Z
+  verified_at: 2026-11-19T03:05:08Z
   output: |
-    ℹ duration_ms 19523.359792
-    __EXIT=0
+    ℹ duration_ms 672.055208
 
 - eval: E3
-  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E3-r1
+  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E3-r2
   exit_code: 0
   baseline: n-a
   verifier: _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/db.sh
-  verified_at: 2026-11-19T00:23:00Z
+  verified_at: 2026-11-19T03:05:08Z
   output: |
-    ℹ duration_ms 19523.359792
-    __EXIT=0
+    ℹ duration_ms 672.055208
 
 - eval: E4b
-  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E4b-r1
+  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E4b-r2
   exit_code: 0
   baseline: n-a
   verifier: _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/db.sh
-  verified_at: 2026-11-19T00:23:00Z
+  verified_at: 2026-11-19T03:05:08Z
   output: |
-    ℹ duration_ms 19523.359792
-    __EXIT=0
+    ℹ duration_ms 672.055208
 
 - eval: E7
-  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E7-r1
+  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E7-r2
   exit_code: 0
   baseline: n-a
   verifier: _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/db.sh
-  verified_at: 2026-11-19T00:23:00Z
+  verified_at: 2026-11-19T03:05:08Z
   output: |
-    ℹ duration_ms 19523.359792
-    __EXIT=0
+    ℹ duration_ms 672.055208
 
 - eval: E4c
-  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E4c-r1
+  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E4c-r2
   exit_code: 0
   baseline: n-a
   verifier: _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/db.sh
-  verified_at: 2026-11-19T00:23:00Z
+  verified_at: 2026-11-19T03:05:08Z
   output: |
-    ℹ duration_ms 19523.359792
-    __EXIT=0
+    ℹ duration_ms 672.055208
 
 - eval: E2
-  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E2-r1
+  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E2-r2
   exit_code: 0
   baseline: n-a
   verifier: _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/loi.sh
-  verified_at: 2026-11-19T00:23:00Z
+  verified_at: 2026-11-19T03:05:08Z
   output: |
-    ℹ duration_ms 9400.868
-    __EXIT=0
+    ℹ duration_ms 3618.039458
 
 - eval: E4a
-  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E4a-r1
+  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E4a-r2
   exit_code: 0
   baseline: n-a
   verifier: _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/soat.sh
-  verified_at: 2026-11-19T00:23:00Z
+  verified_at: 2026-11-19T03:05:08Z
   output: |
-    ℹ duration_ms 138362.895042
-    __EXIT=0
+    ℹ duration_ms 31718.878833
 
 - eval: E5
-  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E5-r1
+  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E5-r2
   exit_code: 0
   baseline: n-a
   verifier: _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/ban-chep.sh
-  verified_at: 2026-11-19T00:23:00Z
+  verified_at: 2026-11-19T03:05:08Z
   output: |
-    thời gian 217 giây
-    __EXIT=0
+    thời gian 139 giây
 
 - eval: E6
-  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E6-r1
+  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E6-r2
   exit_code: 0
   baseline: n-a
   verifier: _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/ban-chep.sh
-  verified_at: 2026-11-19T00:23:00Z
+  verified_at: 2026-11-19T03:05:08Z
   output: |
-    thời gian 217 giây
-    __EXIT=0
+    thời gian 139 giây
 
 - eval: E4d
-  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E4d-r1
+  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E4d-r2
+  exit_code: 0
   baseline: n-a
   verifier: _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/dong-chat.sh
-  verified_at: 2026-11-19T00:23:00Z
-  status: BLOCKED (chưa xong sau 30 phút, không bị công cụ giết; không có mã thoát để khai)
+  verified_at: 2026-11-19T03:05:08Z
   output: |
-    Lệnh chưa xong trong 30 phút (mốc long_running mặc định). Chưa có dòng kết thúc. Tệp đầu ra bnyxl5y3g.output vẫn rỗng lúc 07:54.
+    ℹ duration_ms 2092.307167
 
 - eval: E9
-  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E9-r1
+  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E9-r2
   exit_code: 0
   baseline: n-a
   verifier: _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/khong-ten-that.sh
-  verified_at: 2026-11-19T00:23:00Z
+  verified_at: 2026-11-19T03:05:08Z
   output: |
-    khong-ten-that: 33 tệp, 8 biến thể, 0 chỗ trúng — ĐẠT
-    __EXIT=0
+    khong-ten-that: 42 tệp, 8 biến thể, 0 chỗ trúng — ĐẠT
+
+- eval: E10
+  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E10-r2
+  exit_code: 0
+  baseline: n-a
+  verifier: _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/khong-gui-khi-import.sh
+  verified_at: 2026-11-19T03:05:08Z
+  output: |
+    ℹ duration_ms 4420.691
+
+- eval: E11a
+  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E11a-r2
+  exit_code: 0
+  baseline: red
+  verifier: config:executors.suite.app_ui
+  verified_at: 2026-11-19T03:05:08Z
+  output: |
+    ℹ duration_ms 507198.288625
+
+- eval: E11b
+  run_id: bsfl898z3
+  exit_code: 0
+  baseline: red
+  verifier: config:executors.suite.pipeline_a
+  verified_at: 2026-11-19T03:05:08Z
+  output: |
+    ℹ duration_ms 910577.654208
+
+- eval: E11c
+  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E11c-r2
+  exit_code: 0
+  baseline: red
+  verifier: config:executors.suite.pipeline_b
+  verified_at: 2026-11-19T03:05:08Z
+  output: |
+    ℹ duration_ms 1063694.966125
 
 ### Judgment
 
-Đề xuất panel cho E8 (T3: mọi mục judgment cần người trực tiếp; human_override để trống).
-
 - eval: E8
-  judged_by: judge panel (fresh context) — đề xuất
-  proposal: PASS
-  votes:
-    - domain-correctness: PASS — Hợp đồng nói rõ đây là nới bộ soát tầng A (T3, cần lời Mạnh). Thiết kế nêu nới ở đâu: cột cờ match_whole theo dòng, chỉ S16 khai, sáu chỗ đọc chuyển qua hàm nạp chung. Chỗ chưa mang cờ (bốn thước ở Out of scope, DB thiếu cột 112) được nói là chặn thừa, không rò. Notes nêu hai chuỗi nay đi lên cloud: từ đầu của tên S16 (thương hiệu chủ đầu tư) và nhãn đầu của tên miền S16 (từ chung). Bảng phủ ca có số đo đi kèm.
-    - operational-feasibility: PASS — Hợp đồng (Notes, Context, Out of scope) và thiết kế nói bằng chữ thường rằng đây là nới bộ soát tầng A (T3, cần lời Mạnh ở Cổng 1). Chỗ nới là cờ match_whole chỉ cho dòng S16, và sáu chỗ đọc được chuyển sang hàm nạp. Bốn thước chưa mang cờ được kê tên và ghi «chặn thừa, không rò». Hai chuỗi trước bị chặn nay rời máy, nêu rõ là từ đầu của tên (thương hiệu chủ đầu tư) và nhãn đầu của tên miền, còn cụm hai từ, bản viết liền và tên miền đủ vẫn bị che. Con số trong bảng phủ ca lệch nhẹ (≈1.320 so với ≈4.700 dòng cloud ở bảng tổng hợp), nhưng không làm người duyệt hiểu sai.
-    - spec-alignment: PASS — Ba tệp đủ cho người duyệt hiểu không cần mở mã. Hợp đồng gọi thẳng đây là nới bộ soát tầng A (T3, ADR-0007) cho riêng dòng S16 khai match_whole. Mục Notes nêu hai chuỗi trước bị chặn nay rời máy không che: từ đầu của tên S16 khi đứng riêng và nhãn đầu của tên miền S16 khi đứng riêng, còn cụm hai từ, bản viết liền và tên miền đủ vẫn bị che. Thiết kế kê sáu chỗ đọc đã chuyển qua hàm nạp; hợp đồng và thiết kế kê bốn thước chưa mang cờ, ghi rõ là chặn thừa, không rò. Bảng phủ ca có số đo đếm trên DB máy thu cho từng ô.
-  verified_at: 2026-11-19T00:23:00Z
+  judged_by: hội đồng ba lăng kính (domain-correctness, operational-feasibility, spec-alignment), đề xuất PASS
+  verdict: PASS
+  rationale: Cả ba lăng kính cùng nhận định hợp đồng và thiết kế nói thẳng đây là nới bộ soát tầng A (T3, cần lời Mạnh), nêu nơi nới (cột match_whole theo dòng sổ, hàm nạp chung, sáu chỗ đọc), kê bốn chỗ đọc chưa mang cờ kèm lý do chặn thừa không rò, và nêu hai chuỗi trước bị chặn nay rời máy (từ đầu tên S16, nhãn đầu tên miền S16 khi đứng riêng).
   human_override:  # chi nguoi ghi
+
+- domain-correctness: PASS — đủ nội dung nới, nơi nới, chỗ chưa mang cờ, số đo trước/sau.
+- operational-feasibility: PASS — người duyệt hiểu được mà không mở mã.
+- spec-alignment: PASS — khớp hợp đồng và thiết kế.
+
+Hợp đồng là T3 nên mọi mục judgment cần người điền human_override ở Cổng 2; để trống.
 
 ### Lệnh suite (hồi quy)
 
 - cmd: node scripts/suite-neu-doi.mjs agent -- 'cd agent && npm test'
-  run_id: minted-che-ten-nguon-khong-lay-tu-dau-SUITE-node_scripts_suite_neu_doi_mjs_agent_cd_-r1
+  run_id: minted-che-ten-nguon-khong-lay-tu-dau-SUITE-node_scripts_suite_neu_doi_mjs_agent_cd_-r2
   exit_code: 0
-  verified_at: 2026-11-19T00:23:00Z
+  verified_at: 2026-11-19T03:05:08Z
 
 - cmd: node scripts/suite-neu-doi.mjs app -- 'cd app && npx tsc --noEmit && npm run lint'
-  run_id: minted-che-ten-nguon-khong-lay-tu-dau-SUITE-lint-r1
+  run_id: minted-che-ten-nguon-khong-lay-tu-dau-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-11-19T00:23:00Z
-
-- cmd: node scripts/suite-neu-doi.mjs app_ui -- 'cd app && npm test'
-  run_id: minted-che-ten-nguon-khong-lay-tu-dau-SUITE-node_scripts_suite_neu_doi_mjs_app_ui_cd-r1
-  verified_at: 2026-11-19T00:23:00Z
-  status: BLOCKED (chưa xong sau 30 phút; tệp đầu ra bh7f3zsr0.output rỗng đến 08:00:28 ngày 19/11/2026)
-
-- cmd: node scripts/suite-neu-doi.mjs pipeline_a -- 'cd pipeline && npm run test:a'
-  run_id: minted-che-ten-nguon-khong-lay-tu-dau-SUITE-test_a-r1
-  verified_at: 2026-11-19T00:23:00Z
-  status: BLOCKED (chưa xong sau hơn 30 phút; tiến trình node còn sống, đầu ra tạm rỗng)
-
-- cmd: node scripts/suite-neu-doi.mjs pipeline_b -- 'cd pipeline && npm run test:b'
-  run_id: minted-che-ten-nguon-khong-lay-tu-dau-SUITE-test_b-r1
-  verified_at: 2026-11-19T00:23:00Z
-  status: BLOCKED (chưa xong sau 30 phút; bắt đầu 08:27, pid 58317; tệp đầu ra bgbe4iggz.output rỗng)
+  verified_at: 2026-11-19T03:05:08Z
 
 - cmd: node scripts/suite-neu-doi.mjs ui_lint_rules -- 'cd app && npm run test:lint-rules'
-  run_id: minted-che-ten-nguon-khong-lay-tu-dau-SUITE-test_lint_rules-r1
+  run_id: minted-che-ten-nguon-khong-lay-tu-dau-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-11-19T00:23:00Z
+  verified_at: 2026-11-19T03:05:08Z
 
 - cmd: node scripts/suite-neu-doi.mjs portal_static -- 'node scripts/check-portal-compliance.mjs'
-  run_id: minted-che-ten-nguon-khong-lay-tu-dau-SUITE-node_scripts_suite_neu_doi_mjs_portal_st-r1
+  run_id: minted-che-ten-nguon-khong-lay-tu-dau-SUITE-node_scripts_suite_neu_doi_mjs_portal_st-r2
   exit_code: 0
-  verified_at: 2026-11-19T00:23:00Z
+  verified_at: 2026-11-19T03:05:08Z
 
 ## Known limits
 
@@ -201,20 +213,22 @@ human_signoff:
 
 ## Analyst
 
-none — moi eval feature deu red tren baseline (co phan biet)
+none — mọi eval feature đo được baseline (E11a, E11b, E11c) đều red trên baseline (có phân biệt).
 
-Baseline khong do
-- bash _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/db.sh: bo qua baseline: tep _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/db.sh co o cay dang kiem nhung chua co o merge-base ece3ebceb4b51ce1e2f0770fb2224d95928cfcc1 — eval moi, chay tren code cu khong phan biet gi
-- bash _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/loi.sh: bo qua baseline: tep _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/loi.sh co o cay dang kiem nhung chua co o merge-base ece3ebceb4b51ce1e2f0770fb2224d95928cfcc1 — eval moi, chay tren code cu khong phan biet gi
-- bash _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/soat.sh: bo qua baseline: tep _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/soat.sh co o cay dang kiem nhung chua co o merge-base ece3ebceb4b51ce1e2f0770fb2224d95928cfcc1 — eval moi, chay tren code cu khong phan biet gi
-- bash _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/ban-chep.sh: bo qua baseline: tep _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/ban-chep.sh co o cay dang kiem nhung chua co o merge-base ece3ebceb4b51ce1e2f0770fb2224d95928cfcc1 — eval moi, chay tren code cu khong phan biet gi
-- bash _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/dong-chat.sh: bo qua baseline: tep _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/dong-chat.sh co o cay dang kiem nhung chua co o merge-base ece3ebceb4b51ce1e2f0770fb2224d95928cfcc1 — eval moi, chay tren code cu khong phan biet gi
-- bash _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/khong-ten-that.sh: bo qua baseline: tep _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/khong-ten-that.sh co o cay dang kiem nhung chua co o merge-base ece3ebceb4b51ce1e2f0770fb2224d95928cfcc1 — eval moi, chay tren code cu khong phan biet gi
+Baseline không đo
+- bash _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/db.sh: bo qua baseline: tep _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/db.sh co o cay dang kiem nhung chua co o merge-base 13097168db0d8edccffeacc5938d0534def95a14 — eval moi, chay tren code cu khong phan biet gi
+- bash _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/loi.sh: bo qua baseline: tep _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/loi.sh co o cay dang kiem nhung chua co o merge-base 13097168db0d8edccffeacc5938d0534def95a14 — eval moi, chay tren code cu khong phan biet gi
+- bash _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/soat.sh: bo qua baseline: tep _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/soat.sh co o cay dang kiem nhung chua co o merge-base 13097168db0d8edccffeacc5938d0534def95a14 — eval moi, chay tren code cu khong phan biet gi
+- bash _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/ban-chep.sh: bo qua baseline: tep _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/ban-chep.sh co o cay dang kiem nhung chua co o merge-base 13097168db0d8edccffeacc5938d0534def95a14 — eval moi, chay tren code cu khong phan biet gi
+- bash _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/dong-chat.sh: bo qua baseline: tep _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/dong-chat.sh co o cay dang kiem nhung chua co o merge-base 13097168db0d8edccffeacc5938d0534def95a14 — eval moi, chay tren code cu khong phan biet gi
+- bash _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/khong-ten-that.sh: bo qua baseline: tep _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/khong-ten-that.sh co o cay dang kiem nhung chua co o merge-base 13097168db0d8edccffeacc5938d0534def95a14 — eval moi, chay tren code cu khong phan biet gi
+- bash _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/khong-gui-khi-import.sh: bo qua baseline: tep _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/khong-gui-khi-import.sh co o cay dang kiem nhung chua co o merge-base 13097168db0d8edccffeacc5938d0534def95a14 — eval moi, chay tren code cu khong phan biet gi
 
 ## Variance
 
-none — every multi-run eval is uniform
+none — mọi eval nhiều lần chạy đều đồng nhất (mọi eval chạy một lần, deterministic).
 
 ## Iterations
 
-Round 1: bốn lệnh (E4d dong-chat, app_ui, pipeline_a, pipeline_b) chạy quá 30 phút chưa xong, verdict BLOCKED, failed_evals rỗng. Cần chạy lại với hạn dài hơn hoặc khai long_running; chưa trả về cho implementation.
+Round 1: lịch sử vòng 1 nằm ở bản trước, không có trong dữ liệu vòng này.
+Round 2: mọi eval máy chạy xong, không eval nào đỏ; REJECT vì các phát hiện trong hợp đồng (cumTach thoát ký tự regex sai ở hai bản lõi gây hỏng im lặng AC-2; phép dò E9 bỏ sót tệp test AC-9; phép đếm E6 bỏ nhánh cụm tách dấu AC-6; ca push-ops-facts AC-4 và AC-10 chỉ đo 0 lời gọi, soát mã AC-4 chỉ phủ một dạng câu SQL). Trả về triển khai.
