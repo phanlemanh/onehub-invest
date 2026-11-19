@@ -1,20 +1,3 @@
-{
- "feature_plain": "Tên dự án trùng thương hiệu với một nguồn sẽ không còn bị che nhầm trên Ops và cloud, trong khi tên nguồn thật vẫn bị che ở mọi cách viết. Bản duyệt lại này vá thêm một lỗ lộ tên và chặn việc vô tình gửi bản tin lên cloud.",
- "scope_plain": "Duyệt lại vì lượt chấm đầu tìm ra hai việc mới. Mọi tiêu chí đã duyệt ngày 18/11 giữ nguyên, chỉ AC-2 được siết thêm và có thêm AC-10.",
- "will_do": [
-  {"id":"AC-2","p":"Sẽ che tên nguồn hai từ ở mọi cách viết: có dấu, không dấu, viết hoa, viết liền, và khi các từ nối bằng dấu nối, gạch dưới, dấu chấm, dấu gạch chéo, hai dấu cách hay xuống dòng. Đây là phần mới so với lần duyệt trước."},
-  {"id":"AC-3","p":"Sẽ che thừa thay vì để lọt khi sổ nguồn chưa có cột mới, và dừng như hôm nay khi không đọc được sổ."},
-  {"id":"AC-4","p":"Sẽ dùng một hàm đọc sổ nguồn chung cho sáu chỗ che và soát tên; các đường đưa dữ liệu lên cloud dừng lại nếu sổ rỗng hay đọc lỗi."},
-  {"id":"AC-5","p":"Sẽ giữ nguyên việc che 60 dòng log của nguồn S05 như hôm nay."},
-  {"id":"AC-6","p":"Sẽ đưa số chỗ che nhầm của S16 về 0 trên bản chép DB máy thu: 8 nút dự án, 114.760 bí danh và khoảng 1.320 dòng đi cloud."},
-  {"id":"AC-7","p":"Sẽ có đủ năm thứ để áp lên máy thu: lệnh áp, số chạy thử, sao lưu, cách lùi và lệnh kiểm sau."},
-  {"id":"AC-9","p":"Sẽ không để tên thật của S16 lọt vào hồ sơ, test hay đầu ra lượt chấm trên kho công khai."},
-  {"id":"AC-10","p":"Sẽ chỉ gửi bản tin vận hành lên cloud khi tệp được chạy như lệnh chính; việc nạp tệp để đọc mã không còn gửi gì. Đây là tiêu chí mới sau sự cố 19/11."}
- ],
- "wont_do": [
-  {"id":"AC-1","p":"Sẽ KHÔNG đưa sổ nguồn lên cloud, và cột mới không làm đổi dòng nào đang có."},
-  {"id":"OOS-1","p":"KHÔNG chuyển bốn công cụ đo còn lại sang hàm đọc chung; chúng chặn thừa chứ không làm lộ tên."},
-  {"id":"OOS-2","p":"KHÔNG đổi luật khớp từ, và KHÔNG khai cờ cho dòng nào khác S16."},
-  {"id":"OOS-3","p":"KHÔNG xử lý những chỗ tên đủ của S01–S04 đã trúng trong dữ liệu đi cloud; đó là hàng riêng nếu giám sát thấy cần."}
- ]
-}
+{"feature_plain":"Bộ che tên nguồn thôi coi thương hiệu dự án và một từ chung là tên nguồn S16, nên /ops/registry và bảng đi cloud hiện đúng tên dự án; tên hai từ, bản viết liền và tên miền của S16 vẫn bị che và chặn.",
+"decisions":[{"id":"E8","q":"Đọc thẻ, anh có hiểu đây là nới bộ soát tầng A, nới ở đâu không?","why":"Thẻ và hồ sơ nói: chỉ dòng S16 khai cờ được nới; hai chuỗi trước bị chặn nay lên cloud là thương hiệu đứng riêng và nhãn đầu tên miền đứng riêng; bốn thước chưa mang cờ thì chặn thừa, không rò."}],
+"analyst_plain":"Hội đồng giữ nguyên chấm của vòng 2 vì đầu vào không đổi."}
