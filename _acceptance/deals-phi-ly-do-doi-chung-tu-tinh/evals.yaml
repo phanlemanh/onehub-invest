@@ -1,0 +1,47 @@
+schema_version: 1
+feature_slug: deals-phi-ly-do-doi-chung-tu-tinh
+# Ca test mang tiền tố «DPD-AC-n», tệp app/tests/deals-phi-ly-do.test.tsx (lược đồ riêng trong BEGIN…ROLLBACK, khuôn của
+# deals-phi-ly.test.tsx). Lõi đo: doTrongGiaoDich(c, { refresh }) của scripts/deals-phi-ly-do.mjs.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [scripts/deals-phi-ly-do.mjs, app/tests/deals-phi-ly-do.test.tsx, pipeline/refresh-bait-gap.mjs, pipeline/lib/deal-plausibility.mjs, app/src/lib/deals.ts]
+    expected: "exit 0; ca 'DPD-AC-1' trên fixture (thước bịa năm căn, ba tin P1 hợp lý 80 m² 2PN giảm 30/20/10%, không tin phi lý nào trong danh sách trước lượt): mọi kiểm ok=true; kiểm có chuỗi 'đối chứng: bản chưa loại còn 1 tin phi lý' ok; kiểm 'luật loại bắt tin đối chứng t_dpd_00' ok (t_dpd_00 là tin giảm 30%, đầu danh sách); audit trong SAVEPOINT có offer_ids = [t_dpd_00]; sau lượt, t_dpd_00 còn area_m2 = 80 và kq.dau (tin đầu danh sách của phần đo chính) = t_dpd_00. Đối chứng dương của AC-2 trên CÙNG fixture"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [scripts/deals-phi-ly-do.mjs, app/tests/deals-phi-ly-do.test.tsx]
+    expected: "exit 0; ca 'DPD-AC-2' cùng fixture E1, refresh = refreshBaitGap THẬT chạy qua client bọc bỏ đúng hai câu ghi của luật loại (UPDATE … WHERE offer_id = ANY và INSERT ops_audit 'bait-gap:loai-phi-ly'); client bọc phải chặn đúng 2 câu (ghim số đếm, chặn 0 câu = ca đỏ có tên): số câu bị chặn = 2; kết quả dat=false; kiểm có tiền tố 'luật loại bắt tin đối chứng' ok=false — ghim bằng chuỗi, không chỉ đếm lỗi"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [scripts/deals-phi-ly-do.mjs, app/tests/deals-phi-ly-do.test.tsx]
+    expected: "exit 0; ca 'DPD-AC-3' thước bịa, không tin P1 nào: dat=false, có kiểm ok=false với chuỗi 'không dựng được tin đối chứng'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.deals_phi_ly_do
+    paths: [scripts/deals-phi-ly-do.mjs, pipeline/refresh-bait-gap.mjs, pipeline/lib/deal-plausibility.mjs, app/src/lib/deals.ts]
+    expected: "exit 0 trên DB local :5433; stdout có 'ok   đối chứng: bản chưa loại còn', 'ok   luật loại bắt tin đối chứng', 'ok   DB không đổi' (băm offer_id:bait_gap_pct:area_m2 + số dòng audit bait-gap:loai-phi-ly trước/sau bằng nhau) và dòng cuối 'deals-phi-ly-do: ĐẠT'. Chiều đỏ của cùng lệnh trước sửa: thoát 1 với 'FAIL đối chứng: bản chưa loại còn 0 tin phi lý' (đo 19/11, design.md)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [scripts/deals-phi-ly-do.mjs, app/tests/deals-phi-ly-do.test.tsx]
+    expected: "exit 0; ca 'DPD-AC-5' cùng fixture E1: tập tên kiểm chứa đúng 'không tin thiếu diện tích trong danh sách', 'không tin phòng quá nhỏ trong danh sách', tiền tố 'không tin phi lý nào trong danh sách', tiền tố 'đầu danh sách ≤ 35%' và tiền tố 'đối chứng: bản chưa loại còn'; mọi kiểm ấy ok=true"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [scripts/deals-phi-ly-do.mjs, app/tests/deals-phi-ly-do.test.tsx]
+    expected: "exit 0; ca 'DPD-AC-6' fixture hai tin hợp lý giảm 30% và 40%: kiểm 'đầu danh sách ≤ 35% (DB còn 1 tin ≤ 35%)' ok=true; không kiểm nào có tiền tố 'DB không còn tin đủ điều kiện'; kq.dau = tin 30%. Chiều đỏ ghi trong design.md: bản dựng đối chứng trên lượt đo chính đếm 0 tin ≤ 35% và rơi vào lối thoát"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
