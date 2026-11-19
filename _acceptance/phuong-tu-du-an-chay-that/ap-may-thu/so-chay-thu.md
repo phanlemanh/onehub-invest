@@ -62,8 +62,9 @@ phát biểu nào của luật, chỉ gọi `resolve_offer_fields` một lượt
 
 - tin S03 cột trống chưa có dấu: 544 · đổi `field_provenance` sau một lượt resolve: 267 · đổi `area_id`: 0
 
-Tức 267 tin mang dấu cũ chưa từng phân xử lại; lần gọi phân xử nào cũng làm mới `goi_y` của chúng, có hay không có luật phường. 13 tin lệch
-ở E6 là những tin trong số đó mà lượt lùi đụng tới. Cách đo AC-6 đang chờ Mạnh quyết (yêu cầu P3-209).
+Tức 267 tin mang dấu cũ chưa từng phân xử lại; lần gọi phân xử nào cũng làm mới `goi_y` của chúng, có hay không có luật phường. Bốn tin lệch ở E6 mà
+lượt chẩn đoán in ra (offer_b27e774df99e12cd, offer_15086031520e1c26, offer_4f5bded95b37c6bb, offer_62c4aa243ff4b1ac) đều nằm trong 267 tin ấy;
+chín tin còn lại chưa đối chiếu từng mã. Cách đo AC-6 đang chờ Mạnh quyết (yêu cầu P3-209).
 
 ## Ngay trước khi áp
 
