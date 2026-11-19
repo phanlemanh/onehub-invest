@@ -5,9 +5,9 @@ slug: can-gia-tot-loc-xep-hang
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui, api]
-status: implemented
-approved_by: Mạnh
-approved_at: 2026-11-18
+status: draft
+approved_by:
+approved_at:
 design_doc: docs/superpowers/specs/2026-11-18-can-gia-tot-loc-xep-hang-design.md
 ---
 
@@ -47,9 +47,17 @@ báo danh sách bị cắt, số đếm đúng tổng, tab trống có hành đ�
   danh sách, số đếm, phân trang vẫn chạy và màn báo ảnh, chữ bài chỉ có ở máy thu.
 - AC-9: Given bảng danh sách và đầu trang, When dựng màn, Then mô tả trang nói đúng tập đang hiện (không còn «Tin nội bộ S03, S05 rẻ hơn thước S06 cùng phường»), phần
   trăm trên bảng dùng dấu phẩy thập phân («−33,7%»), bảng và đầu trang không còn chữ «thước phường», và nguồn chỉ hiện bằng mã `S0x`.
-- AC-10: Given DB máy thu, When mở màn không lọc, Then 15/15 dòng đầu là căn «Giá tốt» cấp dự án (hôm nay 0/15), số trên tab khớp `probes/dem-tap-can.mjs` (hôm nay tab ghi 30, lệnh
-  đo ra 7.385), đi hết các trang được đúng `tong` mã phân biệt, và màn tải xong trong 3 giây. When chọn Vinhomes Ocean Park 1 trên bộ chọn, Then số trên tab bằng lệnh đo với mã `1`
-  (hôm nay 189) và thứ tự đúng AC-1. Màn đọc được ở sáng, tối, khổ 390 px không cuộn ngang trang, và vai Người xem không thấy cột «Gọi ai».
+## Known limits
+
+- AC-10 ra khỏi hợp đồng này (Mạnh chọn thu phạm vi sau lượt chấm 5, 2026-11-19T07:09:30Z, nguyên văn «Đồng ý theo lời khuyên»). Lời hứa cũ: trên DB máy thu,
+  màn không lọc có 15/15 dòng đầu là căn «Giá tốt» cấp dự án, số trên tab khớp `probes/dem-tap-can.mjs`, đi hết các trang được đúng `tong` mã phân biệt, màn tải xong
+  trong 3 giây, chọn Vinhomes Ocean Park 1 cho số bằng lệnh đo với mã `1`, màn đọc được ở sáng, tối, 390 px, và vai Người xem không thấy cột «Gọi ai». Hồ sơ này ship
+  KHÔNG có bằng chứng máy cho các điều đó.
+- Số đo riêng của lượt 5 (không phải bằng chứng đạt): bước đọc màn 699 ms ở tải máy 3,2 (trần 3 giây); 15/15 dòng đầu Giá tốt cấp dự án; tab Tất cả, Cần xác minh khớp
+  lệnh đo. Ba phép so (đi hết các trang, số trên mục cây khi chọn, số trên mục cây so số đếm độc lập) lệch 1 căn và 2 mục khi đo trên DB máy thu đang được ghi, và đạt đủ khi
+  chạy lại riêng ngay sau đó. Lint chạy riêng đạt; trong lượt chấm nó đỏ vì đọc tệp chép tạm của ca test bị xoá giữa chừng. Hội đồng lượt 5: 0 phát hiện trong hợp đồng.
+- Cam kết: AC-10 trở lại hợp đồng ở hàng CG17 (cùng màn, làm ngay sau, slug dự kiến `can-cung-tieu-chi-toan-tap`), với các phép so đọc trong một snapshot nhất quán
+  của DB và lint không quét tệp chép tạm của test.
 
 ## Coverage
 
@@ -72,8 +80,8 @@ Quét theo khuôn ma trận kiểm thử. Số trong ô đếm từ DB máy thu 
 
 ## Đường đo
 
-- Căn «Giá tốt» cấp dự án ở đầu màn mặc định: đếm trên màn, đối chiếu `probes/dem-tap-can.mjs` (AC-10).
-- Số trên tab bằng số của lệnh đo, không lọc và khi lọc một dự án (AC-3, AC-5, AC-10).
+- Căn «Giá tốt» cấp dự án ở đầu màn mặc định: đếm trên màn, đối chiếu `probes/dem-tap-can.mjs` (giới hạn đã biết, chuyển sang CG17).
+- Số trên tab bằng số tính độc lập, không lọc và khi lọc một dự án (AC-3, AC-5).
 
 ## Out of scope
 

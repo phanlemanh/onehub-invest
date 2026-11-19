@@ -70,27 +70,6 @@ evals:
     paths: [app/src/app/ops/deals/page.tsx, app/src/components/ops/deals-cells.tsx, app/src/components/ops/deal-body.tsx, app/src/lib/deals-chi-tiet.ts, app/tests/deals-loc-xep-hang*]
     expected: "HTML dựng thật của bảng danh sách và đầu trang: không chứa «thước phường», không chứa câu mô tả cũ; 33.7 hiện thành «33,7»; cột nguồn chỉ khớp mẫu S0x. Đối chứng: chèn lại «thước phường» vào bản sao chuỗi thì ca đỏ."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
-  - id: E10
-    criterion: AC-10
-    executor: ui-check
-    layer: ui-observed
-    paths: [app/src/lib/deals.ts, app/src/lib/deals-chi-tiet.ts, app/src/app/ops/deals/page.tsx, app/src/components/ops/deals-grid.tsx, app/src/components/ops/deals-cells.tsx]
-    steps:
-      - "Bản chạy: dev server của phiên N1b trên cổng 3461, mã cùng thư mục app của commit được chấm, đọc DB máy thu chỉ đọc. Mở http://admin.localhost:3461 cho vai quản trị, http://viewer.localhost:3461 cho vai Người xem (không dùng 127.0.0.1); đăng nhập bằng tài khoản thử của từng vai. KHÔNG tạo hay sửa tệp nào trong cây ngoài evidence/. Trước khi chụp che SĐT, tên người bán, ảnh tin và email đăng nhập."
-      - "Chạy node _acceptance/can-gia-tot-loc-xep-hang/probes/dem-tap-can.mjs, ghi kết quả vào observed. Mở /ops/deals ở 1280 px sáng, đo thời gian tới khi bảng có dòng → evidence/E10-step1.png (15/15 dòng đầu ghi «Giá tốt» và tên dự án; tab Tất cả, Cần xác minh khớp tong, can_xac_minh; chân bảng ghi 1–15 / tong; dưới 3 giây)"
-      - "Chọn Vinhomes Ocean Park 1 trên bộ chọn vị trí, không gõ đường dẫn → evidence/E10-step2.png (tab Tất cả khớp lệnh đo với mã 1; URL có project=1)"
-      - "Cùng màn ở chế độ tối → evidence/E10-step3.png (đọc được, nhãn hạng rõ)"
-      - "Khổ 390 px → evidence/E10-step4.png (trang không cuộn ngang, nhãn hạng nằm dưới tên căn)"
-      - "Đăng nhập tài khoản thử vai Người xem, mở /ops/deals ở 1280 px → evidence/E10-step5.png (không có cột Gọi ai, không ảnh tin)"
-    expected: "Năm khung trên bản chạy: căn Giá tốt cấp dự án đứng đầu, số trên màn khớp lệnh đo khi không lọc và khi lọc một dự án, đọc được ở sáng, tối, 390 px, vai Người xem không thấy liên hệ."
-  - id: E11
-    criterion: AC-10
-    executor: script
-    layer: backend-effect
-    cmd: bash _acceptance/can-gia-tot-loc-xep-hang/probes/do-may-thu.sh
-    paths: [app/src/lib/deals.ts, _acceptance/can-gia-tot-loc-xep-hang/probes/*]
-    expected: "Trên DB máy thu, chỉ đọc: gọi đúng hàm đọc của màn, 15/15 dòng đầu là Giá tốt cấp dự án; tong, can_xac_minh và số của dự án 1 bằng lệnh đo độc lập dem-tap-can.mjs; đi hết các trang được đúng tong mã phân biệt; mọi mục của cây có số bằng số căn khi chọn mục đó; thời gian đọc dưới 3 giây. Đối chứng --doi-chung-thu-tu (thứ tự cũ) ra 0/15 và thoát khác 0."
-    evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E12
     criterion: AC-9
     executor: script
