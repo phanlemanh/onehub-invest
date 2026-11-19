@@ -18,3 +18,12 @@ engine: xanh
 
 - nen luoi: 1 vi pham cua chinh vong (khong tinh)
 - VIOLATION [can-cung-tieu-chi-toan-tap]: status=implemented but no evidence-report.md
+
+## Chạy lại sau khi sửa (19/11, theo lời giám sát)
+
+Chỉ chạy lại hai suite đỏ, không chạy lại trọn đường nền.
+
+- pipeline_a @048fb19fe (sau khi thêm symlink agent/, data-api/node_modules): 371/371 đạt, 11:38–12:10Z.
+- app_ui @c59a60e7f: 1247 đạt, 0 đỏ (1256 ca), xong 12:20Z. Ba nguyên nhân đỏ trước đó đều của vòng: trang nhập `./actions`
+  tương đối (a42a28e25), dòng import trang một căn mà ca OD1-AC-9 thay nguyên văn, chữ «tab» và `actions.ts` chưa kê vào SCAN_FILES
+  (c59a60e7f, tệp ngoài vùng có duyệt N1-116).
