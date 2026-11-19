@@ -69,11 +69,11 @@ export default async function DealPage({ params }: { params: Promise<{ offerId: 
 }
 
 /**
- * Crumb «Căn giá tốt» (CG17 AC-10, Ngoài-3 của CG3): về đúng trang chứa căn của danh sách theo trang, sheet mở ở căn đó. Chưa có bảng hạng
- * thì dò danh sách cũ như trước; căn rời danh sách về trang đầu.
+ * Crumb «Căn giá tốt» (CG17 AC-10, Ngoài-3 của CG3): về đúng trang chứa căn của danh sách theo trang, sheet mở ở căn đó; căn không còn trong
+ * tập về trang đầu. Chưa có bảng hạng thì dò danh sách cũ như trước.
  */
 async function duongVeDanhSach(offerId: string, roiDanhSach: string | null): Promise<string> {
-  if (roiDanhSach) return "/ops/deals";
+  // Có bảng hạng thì chính danh sách theo trang quyết căn còn hay rời; cờ «rời danh sách» theo thước cũ chỉ dùng cho đường lùi.
   const o = await trangCuaCan(offerId);
   if (o === null) return "/ops/deals";
   if (o) {
@@ -83,5 +83,5 @@ async function duongVeDanhSach(offerId: string, roiDanhSach: string | null): Pro
     q.set("can", o.can);
     return `/ops/deals?${q.toString()}`;
   }
-  return (await dealTrongDanhSach(offerId)) ? `/ops/deals?can=${encodeURIComponent(offerId)}` : "/ops/deals";
+  return !roiDanhSach && (await dealTrongDanhSach(offerId)) ? `/ops/deals?can=${encodeURIComponent(offerId)}` : "/ops/deals";
 }
