@@ -93,3 +93,14 @@ Một tác tử mới, không đọc lịch sử sửa, chỉ nhận hợp đồ
 | PUSH-4 chạy khô luôn thoát 1 | `pipeline/push-ops-facts.mjs` | push | push=1 | 1: AC-10 chạy khô --kho → 0 lời gọi | chết |
 
 Đột biến sống: 0/31. Cây sau lượt: sạch.
+
+## Bổ sung vòng 4 (c389c0740) — bộ soát bảng ba cách soát
+
+SOAT-4 cũ (thay soát giá trị bằng soát chuỗi thô) không còn khuôn để đặt, nay tách thành ba đột biến, mỗi cái bỏ đúng một cách soát.
+Chạy riêng bộ `soat` (`node --test pipeline/scripts/soat-tang-a.test.mjs`) trên c389c0740:
+
+| Đột biến | Ca đỏ | Kết quả |
+|---|---|---|
+| SOAT-4 bỏ soát giá trị đã giải | cụm khai cờ trong cột ngoài nhóm người bán bị chặn (xuống dòng, tab, gạch ngang) | chết |
+| SOAT-5 bỏ soát chuỗi JSON thô | mọi mẫu cấy bản trên main chặn thì bản mới cũng chặn (mẫu hai phần tử mảng kề, giá trị rồi khoá kề) | chết |
+| SOAT-6 bỏ soát khoá lồng đã giải | khoá đỉnh · khoá lồng jsonb · khoá trong mảng: cụm xuống dòng bị chặn | chết |
