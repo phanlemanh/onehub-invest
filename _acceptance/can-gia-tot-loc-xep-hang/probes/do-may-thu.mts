@@ -23,9 +23,12 @@ if (process.argv.includes("--doi-chung-thu-tu")) {
   process.exit(n === 0 ? 3 : 0);
 }
 
+// Tải máy đi kèm phép đo thời gian, để người đọc biết số giây đo trong điều kiện nào.
+const taiTruoc = (await import("node:os")).loadavg().map((x) => x.toFixed(1));
 const t0 = Date.now();
 const dau = await getDealsTrang(docThamSoDeal({}));
 const ms = Date.now() - t0;
+console.log(`tải máy lúc đo (1, 5, 15 phút): ${taiTruoc.join(" · ")}`);
 const tap = dem();
 kiem("15/15 dòng đầu Giá tốt cấp dự án", dau.rows.length === 15 && dau.rows.every((d: any) => d.rank?.level === "du_an" && d.rank?.label === "gia-tot"), dau.rows.length);
 kiem("tab Tất cả bằng lệnh đo", dau.trang.dem.all === tap.tong, [dau.trang.dem.all, tap.tong]);
