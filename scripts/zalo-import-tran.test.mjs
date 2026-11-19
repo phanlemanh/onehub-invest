@@ -308,3 +308,32 @@ test("1911-2 chiều B: khoá TRẺ mang PID TÁI DÙNG (pid sống + chữ ký 
     rmSync(root, { recursive: true, force: true });
   }
 });
+
+test("1911-2 bổ sung (MỞ LẠI): thoát khi khoá đã ĐỔI CHỦ (pid file là PID khác) → trap KHÔNG xoá khoá của người khác", async () => {
+  const root = dungMoi();
+  // nạp giả 2s giữ lượt đủ lâu để can thiệp giữa chừng; transform fixture XONG ngay
+  for (const f of ["transform-zalo.mjs", "transform-media.mjs", "refresh-bait-gap.mjs", "xep-hang-gia.mjs"])
+    writeFileSync(join(root, "pipeline", f), "process.exit(0);\n");
+  writeFileSync(join(root, "pipeline", "import-airbnb.mjs"), NAP_GIA);
+  writeFileSync(join(root, "pipeline", "doc-gop-hang-ngay.sh"), "exit 0\n");
+  themSnap(root, "zalo-agent", "2026-11-19T010000000");
+  const khoa = join(root, "pipeline", "logs", "apify-daily.state.lock");
+  const chuMoi = spawn("sleep", ["8"]); // 'chủ mới' chiếm khoá sau khi lượt này quá trần tổng bị gỡ nhầm
+  try {
+    // lượt NHANH giữ khoá tới trap EXIT (nhánh 00:00 nhả khoá trước doc-gop — dòng
+    // «trap - EXIT; rm -rf» chủ ý cũ); trần tổng 30s để không cắt
+    const luot = chay(root, { ZALO_IMPORT_TRAN_TONG: "30", NAP_NGU: "2" }, ["--luot-nhanh"]);
+    // chờ script chiếm khoá rồi GHI ĐÈ pid/chu bằng chủ mới (giả lập khoá bị lượt khác chiếm)
+    for (let i = 0; i < 50 && !existsSync(join(khoa, "pid")); i++) await new Promise((r) => setTimeout(r, 100));
+    await new Promise((r) => setTimeout(r, 300));
+    writeFileSync(join(khoa, "pid"), `${chuMoi.pid}\n`);
+    writeFileSync(join(khoa, "chu"), "Wed Jan  1 00:00:00 2020\n");
+    const r = await luot;
+    assert.ok([0, 1].includes(r.status), `lượt kết thúc BÌNH THƯỜNG (thoát 0 hoặc mã bước-cuối-thiếu-fixture trong hộp cát) — thực tế ${r.status}; bị trần cắt (124/143/127) là EXIT trap không chạy`);
+    assert.ok(existsSync(join(khoa, "pid")), "CA LỖ: khoá ĐỔI CHỦ phải còn nguyên sau khi lượt cũ thoát (trap có điều kiện pid của mình)");
+    assert.equal(readFileSync(join(khoa, "pid"), "utf8").trim(), String(chuMoi.pid), "khoá vẫn thuộc chủ mới");
+  } finally {
+    chuMoi.kill("SIGKILL");
+    rmSync(root, { recursive: true, force: true });
+  }
+});
