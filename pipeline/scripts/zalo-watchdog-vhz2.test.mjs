@@ -308,12 +308,16 @@ test("1811-11(2) gateway.log bị cắt khi b-moc còn → hai nhánh return s�
   chayWd(env, root); // bản cũ: b-moc còn → A_OK → kick gateway KHỎE; bản mới: 0 kick
   assert.equal(kickSoDem(root), 0, "log cắt + b-moc cũ → KHÔNG kick gateway khỏe");
   assert.doesNotMatch(readFileSync(songState, "utf8"), /^b-moc=/m, "b-moc đã xoá ở nhánh return sớm (1811-11(2))");
-  // nhánh hai: attempt có nhưng ISO hỏng (moc_a rỗng) → return sớm thứ hai cũng phải sạch
+  // nhánh hai: attempt CÓ, ISO đúng khuôn nhưng NGÀY SAI → iso_a bắt được,
+  // song_moc_epoch trả rỗng (moc_a rỗng) → return sớm THỨ HAI cũng phải xoá b-moc
+  // (MỞ LẠI 1811-11: đuôi «.X» làm iso_a rỗng, ca rơi nhánh MỘT — nhánh hai chưa từng được đo;
+  //  LL đo đột biến: bỏ dòng xoá ở nhánh này thì b-moc còn nguyên mà ca vẫn xanh)
   writeFileSync(songState, `b-moc=${Math.floor(Date.now() / 1000) - 3600}\n`);
-  writeFileSync(gwLog, `${isoCu(5).replace(/\.[0-9]+/, ".X")} auto-restart attempt 9/10\n`); // ISO sai khuôn → song_moc_epoch rỗng
+  writeFileSync(gwLog, "2026-13-45T10:00:00.123+07:00 [s03user] [default] auto-restart attempt 9/10 in 10s\n");
   chayWd(env, root);
   chayWd(env, root);
   assert.equal(kickSoDem(root), 0, "nhánh moc_a rỗng cũng phải xoá b-moc — 0 kick");
+  assert.doesNotMatch(readFileSync(songState, "utf8"), /^b-moc=/m, "b-moc đã XOÁ ở nhánh moc_a rỗng (đột biến bỏ dòng xoá phải đỏ đúng ca này)");
   rmSync(home, { recursive: true, force: true }); rmSync(root, { recursive: true, force: true });
 });
 
@@ -339,9 +343,18 @@ test("1811-11(3) kickstart thất bại → sổ kickstart-lỗi kèm mã thoát
   assert.match(readFileSync(alerts, "utf8"), /trần thử lại sau kick lỗi \(900s\)/, "trần riêng chặn với lý do riêng");
   assert.equal((readFileSync(p1So, "utf8").match(/kickstart thất bại/g) ?? []).length, 1, "còn trong trần riêng 900s → không thử lại");
   // hết trần riêng (giả lập lan-loi thành 901s trước) → thử lại được, sổ lần 2
-  writeFileSync(p1State, readFileSync(p1State, "utf8").replace(/^lan-loi=(\d+)$/m, `lan-loi=${Math.floor(Date.now() / 1000) - 901}`));
+  writeFileSync(p1State, readFileSync(p1State, "utf8").replace(/^lan-loi=\d+$/gm, `lan-loi=${Math.floor(Date.now() / 1000) - 901}`));
   chayWd(env, root);
   assert.equal((readFileSync(p1So, "utf8").match(/kickstart thất bại/g) ?? []).length, 2, "hết trần riêng → thử lại (stub vẫn lỗi) — sổ lần 2");
-  assert.doesNotMatch(readFileSync(alerts, "utf8").replace(/^.*WARN VHZ2: đủ điều kiện.*$/m, ""), /quá trần 1 lần\/6 giờ.*(kick lần|lượt lỗi)/, "lượt lỗi không ăn vào trần 6 giờ");
+  // hết trần riêng lần nữa (run3 vừa làm mới lan-loi) rồi mới đo kick thành công
+  writeFileSync(p1State, readFileSync(p1State, "utf8").replace(/^lan-loi=\d+$/gm, `lan-loi=${Math.floor(Date.now() / 1000) - 901}`));
+  // phép đo thật «lượt lỗi không ăn trần 6 giờ» (MỞ LẠI 1811-11: assert cũ không chuỗi nào khớp được):
+  // cho kick kế THÀNH CÔNG — lan-loi đã >900s và lan= chưa từng ghi, kick phải được phép ngay;
+  // nếu lỗi tiêu trần 6h (bản cũ ghi lan= trước kick) thì lượt này bị chặn, không có dòng kickstart
+  writeFileSync(kick, "#!/bin/bash\nexit 0\n");
+  chmodSync(kick, 0o755);
+  chayWd(env, root);
+  assert.match(readFileSync(alerts, "utf8"), /VHZ2: kickstart gateway/, "lượt lỗi KHÔNG tiêu trần 6h — kick thành công kế vẫn được phép ngay");
+  assert.match(readFileSync(p1State, "utf8"), /^lan=\d+/m, "trần 6h chỉ bắt đầu tính từ kick THÀNH CÔNG đầu tiên");
   rmSync(home, { recursive: true, force: true }); rmSync(root, { recursive: true, force: true });
 });
