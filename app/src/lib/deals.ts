@@ -1,22 +1,28 @@
 import { pool } from "./db";
 import {
+  type CungTieuChi,
   type DealChiTiet,
   type DealHang,
+  type DongSo,
   type MatBang,
   type NutViTri,
   type TabTrang,
   type ThamSoDeal,
   type TrangDeal,
   cauChungMinh,
+  locCungTieuChi,
   lyDoRoi,
+  moTaCungTieuChi,
   NGAY_TOI_DA,
   NGHI_NGO_PCT,
   NGUONG_LOAI_PCT,
   NGUONG_VAO_PCT,
   repostLabel,
+  SO_CUNG_TOI_DA,
   tabCua,
   tenCan,
   thieuGi,
+  CO_TRANG_DEAL,
 } from "./deals-chi-tiet";
 import { maskSourceNames, type SourceNameEntry } from "./mask-source-names";
 import { fmtPhone, telHref } from "./ops/people";
@@ -470,6 +476,63 @@ export function dungCayViTri(rows: DongNhe[]): NutViTri[] {
   });
 }
 
+/** Ba tham số đầu của tập nhẹ: bán hay thuê, sàn mức giảm, loại hình. */
+const dieuKienTap = (thamSo: Pick<ThamSoDeal, "kind" | "type">, minPct = NGUONG_VAO_PCT) =>
+  [thamSo.kind === "rent" ? KIND.rent_lt : KIND.sale, minPct, thamSo.type];
+
+/** Một dòng đọc nhẹ thành một căn để so (CG17). */
+function dongSo(r: DongNhe): DongSo {
+  return {
+    offerId: r.offer_id as string,
+    canKey: r.can_key as string,
+    areaId: (r.area_id as string | null) ?? null,
+    propertyType: (r.property_type as string | null) ?? null,
+    areaM2: r.area_m2 === null || r.area_m2 === undefined ? null : Number(r.area_m2),
+    suspect: r.suspect === true,
+    discountPct: r.discount_pct === null || r.discount_pct === undefined ? null : Number(r.discount_pct),
+  };
+}
+
+/**
+ * Danh sách «Căn cùng tiêu chí» của một căn trên toàn tập đã lọc theo `kind`, `type`, `location`, `project` (CG17): tổng, và tối đa
+ * SO_CUNG_TOI_DA căn đầu đọc đầy đủ. `null` khi chưa có bảng hạng (sheet so trong danh sách đã tải như cũ). Căn không còn trong tập →
+ * tổng 0. Chưa lọc theo vai: người gọi lọc bằng `dealTheoVai`.
+ */
+export async function getCanCungTieuChi(offerId: string, thamSo: ThamSoDeal, chiPhuong = false, minPct = NGUONG_VAO_PCT):
+  Promise<{ moTa: string[]; bo: string[]; tong: number; rows: DealRow[]; mayThu: boolean } | null> {
+  if (!(await coBangHang())) return null;
+  const { rows: nhe, mayThu } = await truyVan(dealsNheSql, [...dieuKienTap(thamSo, minPct), thamSo.location, thamSo.project]);
+  const goc = nhe.find((r) => r.offer_id === offerId);
+  if (!goc) return { moTa: [], bo: [], tong: 0, rows: [], mayThu };
+  const { moTa, bo } = moTaCungTieuChi({ phuong: (goc.phuong as string | null) ?? null, propertyType: (goc.property_type as string | null) ?? null, areaM2: goc.area_m2 === null ? null : Number(goc.area_m2) }, chiPhuong);
+  const theoMaCan = new Map(nhe.map((r) => [r.offer_id as string, r]));
+  const can = locCungTieuChi(dongSo(goc), nhe.map(dongSo), chiPhuong);
+  const cua = can.slice(0, SO_CUNG_TOI_DA);
+  if (cua.length === 0) return { moTa, bo, tong: can.length, rows: [], mayThu };
+  const { rows: day } = await truyVan(dealsTheoMaSql, [cua.map((r) => r.offerId)]);
+  const theoMa = new Map(day.map((r) => [r.offer_id as string, r]));
+  const rows = cua.flatMap((r) => { const d = theoMa.get(r.offerId); return d ? [toDealRow({ ...d, so_tin: theoMaCan.get(r.offerId)?.so_tin })] : []; });
+  const xong = await hoanTat(await ganMatBang(rows), mayThu);
+  return { moTa, bo, tong: can.length, rows: xong.rows, mayThu: xong.mayThu };
+}
+
+/**
+ * Trang của danh sách chứa một căn, theo `kind` của căn, không lọc, cỡ mặc định (CG17 AC-10): crumb ở trang một căn về đúng chỗ thay vì
+ * dò 30 căn đầu của danh sách cũ. `null` khi căn không còn trong tập; `undefined` khi chưa có bảng hạng (người gọi lùi về cách cũ).
+ */
+export async function trangCuaCan(offerId: string): Promise<{ kind: "sale" | "rent"; page: number; can: string } | null | undefined> {
+  if (!(await coBangHang())) return undefined;
+  const { rows: k } = await pool.query(
+    `SELECT h.kind, coalesce((SELECT min(po.property_id)::text FROM property_offers po WHERE po.offer_id = h.offer_id), h.offer_id) AS can_key
+       FROM offer_price_rank h WHERE h.offer_id = $1 AND h.nhan IS NOT NULL`, [offerId]);
+  if (!k[0]) return null;
+  const kind = k[0].kind === KIND.rent_lt ? "rent" : "sale";
+  const { rows: nhe } = await truyVan(dealsNheSql, [...dieuKienTap({ kind, type: null }), null, null]);
+  const i = nhe.findIndex((r) => r.can_key === k[0].can_key);
+  if (i < 0) return null;
+  return { kind, page: Math.floor(i / CO_TRANG_DEAL[0]) + 1, can: nhe[i].offer_id as string };
+}
+
 /**
  * Danh sách theo trang (CG3): đọc nhẹ tập đã lọc vị trí → xếp từng căn vào tab bằng đúng `thieuGi`, `tabCua`, luật đầy đủ ở mọi vai → lọc tab rồi mới cắt
  * trang trên danh sách mã → đọc đầy đủ các mã của trang. Chưa có bảng hạng → null, trang lùi về danh sách cũ.
@@ -477,7 +540,7 @@ export function dungCayViTri(rows: DongNhe[]): NutViTri[] {
 export async function getDealsTrang(thamSo: ThamSoDeal, minPct = NGUONG_VAO_PCT):
   Promise<{ rows: DealRow[]; mayThu: boolean; trang: TrangDeal } | null> {
   if (!(await coBangHang())) return null;
-  const dieuKien = [thamSo.kind === "rent" ? KIND.rent_lt : KIND.sale, minPct, thamSo.type];
+  const dieuKien = dieuKienTap(thamSo, minPct);
   const [{ rows: nhe, mayThu }, { rows: viTriCan }] = await Promise.all([
     truyVan(dealsNheSql, [...dieuKien, thamSo.location, thamSo.project]),
     truyVan(dealsCaySql, dieuKien),
@@ -504,7 +567,13 @@ export async function getDealsTrang(thamSo: ThamSoDeal, minPct = NGUONG_VAO_PCT)
   const cua = chon.slice((page - 1) * thamSo.size, page * thamSo.size);
   const tabTheoMa = new Map(theoTab.map((x) => [x.r.offer_id as string, x.tab]));
   const tabDong = Object.fromEntries(cua.map((r) => [r.offer_id as string, tabTheoMa.get(r.offer_id as string)!]));
-  const trang: TrangDeal = { thamSo: { ...thamSo, page }, dem, tong: chon.length, page, cay: dungCayViTri(viTriCan), tabDong };
+  // Số «Căn cùng tiêu chí» của từng căn trên trang, đếm trên toàn tập đã lọc, mọi tab (CG17 Hỏi-2); không thêm câu SQL.
+  const tapSo = nhe.map(dongSo);
+  const cungTieuChi: Record<string, CungTieuChi> = Object.fromEntries(cua.map((r) => {
+    const d = dongSo(r);
+    return [d.offerId, { tieuChi: locCungTieuChi(d, tapSo).length, phuong: locCungTieuChi(d, tapSo, true).length }];
+  }));
+  const trang: TrangDeal = { thamSo: { ...thamSo, page }, dem, tong: chon.length, page, cay: dungCayViTri(viTriCan), tabDong, cungTieuChi };
   if (cua.length === 0) return { rows: [], mayThu, trang };
   const { rows: day } = await truyVan(dealsTheoMaSql, [cua.map((r) => r.offer_id)]);
   const theoMa = new Map(day.map((r) => [r.offer_id as string, r]));

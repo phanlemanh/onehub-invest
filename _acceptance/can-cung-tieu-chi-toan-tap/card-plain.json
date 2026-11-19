@@ -1,0 +1,29 @@
+{
+  "feature_plain": "Trong sheet một căn ở màn Căn giá tốt, tab «Căn cùng tiêu chí» đếm và liệt kê căn tương tự trên cả danh sách đang lọc, không chỉ 15 hay 50 căn của trang đang xem.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ ghi trên nhãn tab đúng số căn cùng phường, cùng loại hình, diện tích ±25% trên cả danh sách đang lọc; căn nhiều tin tính một lần."},
+    {"id": "AC-2", "p": "Sẽ liệt kê 20 căn giảm nhiều nhất lấy từ cả danh sách, kèm câu «Hiện 20 / N căn cùng tiêu chí»."},
+    {"id": "AC-3", "p": "Sẽ cho nút «Xem mọi căn trong phường» ghi số căn cả phường; «Chưa có căn» chỉ hiện khi thật sự không có căn nào."},
+    {"id": "AC-4", "p": "Sẽ nói rõ khi căn thiếu diện tích hay loại hình nên bỏ tiêu chí ấy."},
+    {"id": "AC-5", "p": "Sẽ đếm theo đúng bộ lọc bán hay thuê, loại hình, vị trí đang bật; đổi tab không đổi số."},
+    {"id": "AC-6", "p": "Sẽ mở sheet nếu căn bấm vào nằm trong trang đang xem, còn căn ở trang khác thì mở trang một căn."},
+    {"id": "AC-7", "p": "Sẽ không gửi tên, số điện thoại, ảnh, chữ bài cho vai Người xem; người chưa đăng nhập bị từ chối; cloud vẫn chạy."},
+    {"id": "AC-8", "p": "Sẽ có khung tải, lỗi kèm «Thử lại», trạng thái trống có nút; đổi căn nhanh bằng J/K không hiện nhầm danh sách của căn cũ."},
+    {"id": "AC-9", "p": "Sẽ chứng trên dữ liệu thật của máy thu những gì CG3 đã hứa (AC-10 cũ): căn Giá tốt cấp dự án đứng đầu, số khớp lệnh đếm, màn tải dưới 3 giây, sáng, tối, điện thoại, vai Người xem."},
+    {"id": "AC-10", "p": "Sẽ cho đường dẫn «Căn giá tốt» ở trang một căn đưa về đúng trang danh sách chứa căn, không quay lại chính trang đó (Ngoài-3 của CG3)."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "KHÔNG thêm số phòng ngủ, toà, tầng, đường vào tiêu chí so (anh đã để sang hàng sau ngày 18/11)."},
+    {"id": "OOS-2", "p": "KHÔNG đổi tiêu chí hay biên ±25% anh đã chốt ngày 02/11."},
+    {"id": "OOS-3", "p": "KHÔNG mở sheet đầy đủ cho căn ở trang khác; căn ấy mở bằng trang một căn."},
+    {"id": "OOS-4", "p": "KHÔNG đổi danh sách lùi lúc chưa có bảng hạng giá."},
+    {"id": "OOS-5", "p": "KHÔNG thêm bảng tính sẵn, đổi cấu trúc DB hay API công khai."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Nút «Xem mọi căn trong phường» chưa có trần, có thể gửi hàng trăm căn kèm ảnh xuống trình duyệt. Đã sửa: trần 20 căn kèm tổng, thêm ca 27 căn để đo."},
+    {"i": 1, "p": "Chưa rõ căn thiếu diện tích hay loại hình có được tính để so không. Đã sửa: giữ luật cũ (không tính), ghi vào tiêu chí và thêm ca đo."},
+    {"i": 2, "p": "Máy tự chọn tập để so mà chưa hỏi anh. Đã sửa: chuyển thành Hỏi-2 trên thẻ này."},
+    {"i": 3, "p": "Danh sách 20 căn có thể lặp một căn nhiều tin hay đổi thứ tự giữa hai lần mở. Đã sửa: thêm khoá thứ tự và ca đo căn hai tin."},
+    {"i": 4, "p": "Hứa màn tải dưới 3 giây mà chỉ đo bước đọc dữ liệu. Đã sửa: đo riêng thời gian màn trả về và thời gian mở tab."}
+  ]
+}

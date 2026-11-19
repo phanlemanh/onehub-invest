@@ -9,11 +9,11 @@ import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Sheet, SheetClose, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { canCungTieuChi, type DealHang } from "@/lib/deals-chi-tiet"
+import { canCungTieuChi, type CungTieuChi, type DealHang } from "@/lib/deals-chi-tiet"
 import { fmtCompact, fmtInt, fmtVnDate } from "@/lib/format"
 
 import { DealBody } from "./deal-body"
-import { DealSimilar } from "./deal-similar"
+import { DealSimilar, type TaiCung } from "./deal-similar"
 import { DiscountBar } from "./deals-cells"
 
 /**
@@ -22,8 +22,12 @@ import { DiscountBar } from "./deals-cells"
  */
 const trM2 = (v: number | null) => (v ? `${fmtInt(v / 1e6)} tr/m²` : null)
 
-export function DealSheet({ d, rows, xemNoiDung, mayThu, viTri, tong, onChuyen, onMoCan, onOpenChange, choGhep }: {
+export function DealSheet({ d, rows, xemNoiDung, mayThu, viTri, tong, onChuyen, onMoCan, onOpenChange, choGhep, cung, tai }: {
   d: DealHang | null
+  /** Hai số «Căn cùng tiêu chí» của căn đang mở, đếm trên toàn tập đã lọc (CG17); vắng → đếm trong `rows`. */
+  cung?: CungTieuChi
+  /** Đọc danh sách cùng tiêu chí ở máy chủ (CG17). */
+  tai?: TaiCung
   /** Thẻ Ghép căn còn chờ của căn đang mở (OD1 · ĐC7). */
   choGhep?: number[]
   rows: DealHang[]
@@ -38,7 +42,7 @@ export function DealSheet({ d, rows, xemNoiDung, mayThu, viTri, tong, onChuyen, 
 }) {
   // Giữ tab khi chuyển căn: đang duyệt so sánh thì căn kế vẫn ở tab so sánh.
   const [tab, setTab] = useState<"chi-tiet" | "cung-tieu-chi">("chi-tiet")
-  const soCung = d ? canCungTieuChi(d, rows).can.length : 0
+  const soCung = d ? (cung && tai ? cung.tieuChi : canCungTieuChi(d, rows).can.length) : 0
   return (
     <Sheet open={d !== null} onOpenChange={onOpenChange}>
       <SheetContent
@@ -92,7 +96,7 @@ export function DealSheet({ d, rows, xemNoiDung, mayThu, viTri, tong, onChuyen, 
             </SheetHeader>
             {/* key theo căn: đổi căn thì về đầu thân cuộn và trả lại trạng thái nới tiêu chí. */}
             <ScrollArea key={d.offerId} className="min-h-0 flex-1">
-              {tab === "chi-tiet" ? <DealBody d={d} xemNoiDung={xemNoiDung} mayThu={mayThu} beMat="sheet" choGhep={choGhep} /> : <DealSimilar d={d} rows={rows} onMo={onMoCan} />}
+              {tab === "chi-tiet" ? <DealBody d={d} xemNoiDung={xemNoiDung} mayThu={mayThu} beMat="sheet" choGhep={choGhep} /> : <DealSimilar d={d} rows={rows} onMo={onMoCan} cung={cung} tai={tai} />}
             </ScrollArea>
             {xemNoiDung && (
               <SheetFooter className="flex-row items-center justify-between gap-3 border-t">
