@@ -25,6 +25,19 @@ const CITY_MARKET: Record<string, string> = {
 
 const MONTHLY_METRICS = ["adr", "occupancy", "revenue", "revpar"] as const;
 
+/** 1911-5: giải mã phần exp của JWT appToken (KHÔNG kiểm chữ ký — chỉ đọc hạn).
+ * Token rỗng/không giải mã được → exp undefined; conLaiMs âm = đã hết hạn. */
+export function docExpAppToken(token: string): { exp?: number; conLaiMs: number } {
+  const phan = token.split(".")[1];
+  if (!phan) return { conLaiMs: Number.NEGATIVE_INFINITY };
+  try {
+    const json = JSON.parse(Buffer.from(phan, "base64url").toString("utf8")) as { exp?: number };
+    return { exp: json.exp, conLaiMs: json.exp ? json.exp * 1000 - Date.now() : Number.NEGATIVE_INFINITY };
+  } catch {
+    return { conLaiMs: Number.NEGATIVE_INFINITY };
+  }
+}
+
 /** Mở profile 1 lần để lấy JWT (localStorage.auth.appToken) rồi đóng ngay. */
 async function appToken(log: (...a: unknown[]) => void): Promise<string> {
   const browser = await chromium.launchPersistentContext(PROFILE_DIR, {
@@ -48,7 +61,15 @@ async function appToken(log: (...a: unknown[]) => void): Promise<string> {
       }
     });
     if (!token) throw new Error("không đọc được appToken từ .airdna-profile — cần login lại AirDNA");
-    log(`token OK (${token.length} chars)`);
+    // 1911-5: token đọc được vẫn có thể là token CŨ trong localStorage (phiên làm
+    // mới đã hết) — báo xanh giả. Kiểm exp TRƯỚC khi gọi 'token OK': hết hạn thì
+    // dừng ngay với đúng chẩn đoán, không đốt ~500 lời gọi 401.
+    const { exp, conLaiMs } = docExpAppToken(token);
+    if (exp === undefined || conLaiMs <= 0) {
+      const hetLuc = exp ? new Date(exp * 1000).toISOString() : "(không giải mã được exp)";
+      throw new Error(`appToken ĐÃ HẾT HẠN ${hetLuc} — phiên đăng nhập trong profile cũ/không làm mới, cần đăng nhập lại ĐÚNG profile này (localStorage còn token cũ là báo xanh giả)`);
+    }
+    log(`token OK (${token.length} chars, hết hạn sau ${Math.round(conLaiMs / 60000)} phút)`);
     return token;
   } finally {
     await browser.close().catch(() => {});
