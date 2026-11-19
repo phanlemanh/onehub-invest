@@ -5,10 +5,10 @@ slug: noi-phan-khu-trung-s16
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, web]
-status: draft
+status: approved
 design_doc: docs/superpowers/specs/2026-11-19-noi-phan-khu-trung-s16-design.md
-approved_by:
-approved_at:
+approved_by: Mạnh
+approved_at: 2026-11-19T00:28:56Z
 ---
 
 # Acceptance Contract: noi-phan-khu-trung-s16
