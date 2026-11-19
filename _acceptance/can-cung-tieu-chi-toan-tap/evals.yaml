@@ -1,0 +1,107 @@
+schema_version: 1
+slug: can-cung-tieu-chi-toan-tap
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/can-cung-tieu-chi-toan-tap/probes/doc.sh AC-1
+    paths: [app/src/lib/deals.ts, app/src/lib/deals-chi-tiet.ts, app/tests/can-cung-tieu-chi*]
+    expected: "Trên DB của riêng lượt, tập viết trước 57 căn bán (căn cùng tiêu chí ở trang 2 và 3, căn ở đúng 75% và 125% diện tích, căn ở 74% và 126%, hai phường trùng tên khác mã, một căn hai tin, một ứng viên không diện tích và một ứng viên chưa rõ loại hình cùng phường): ma trận viết tay mỗi dòng trang 1 × cỡ 15, 50 một assert, số trong trang.cungTieuChi bằng số viết tay. Đối chứng dương cùng fixture: căn ở 125% có mặt; ứng viên thiếu trường không được tính, có assert riêng. Đột biến trong bản sao (đếm trong trang thay vì toàn tập; so tên phường thay mã; loại theo mã tin thay can_key) đỏ, thông điệp nêu mã căn lệch và số mong đợi."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/can-cung-tieu-chi-toan-tap/probes/doc.sh AC-2
+    paths: [app/src/lib/deals.ts, app/src/lib/deals-chi-tiet.ts, app/src/app/ops/deals/**, app/src/components/ops/deal-similar.tsx, app/tests/can-cung-tieu-chi*]
+    expected: "Căn có 27 căn cùng tiêu chí trải ba trang, trong đó một căn hai tin nằm trong top 20 và hai căn bằng mức giảm ở vị trí 20, 21: action trả tong 27 và đúng 20 mã căn phân biệt viết tay theo thứ tự (không xác minh trước, giảm nhiều trước, mã căn), mỗi mã một assert thoả tiêu chí; HTML dựng thật của tab có «Hiện 20 / 27 căn cùng tiêu chí» và nhãn tab ghi 27. Đối chứng: căn có 5 căn thì không có câu «Hiện 20». Đột biến bỏ sắp xác minh-cuối đỏ, thông điệp nêu vị trí lệch đầu tiên; đột biến khử trùng theo mã tin đỏ, thông điệp nêu căn lặp."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/can-cung-tieu-chi-toan-tap/probes/doc.sh AC-3
+    paths: [app/src/lib/deals.ts, app/src/lib/deals-chi-tiet.ts, app/src/app/ops/deals/**, app/src/components/ops/deal-similar.tsx, app/src/components/ops/deal-sheet.tsx, app/tests/can-cung-tieu-chi*]
+    expected: "Bốn căn viết trước: (a) 0 cùng tiêu chí, 6 cùng phường; (b) 4 cùng tiêu chí, 9 cùng phường; (c) 0 và 0; (d) 27 cùng phường trải ba trang. Mỗi căn một assert: số và mã của «Xem mọi căn trong phường» bằng danh sách viết tay; HTML (a) có «Chưa có căn nào cùng tiêu chí» và nút ghi 6; (b) không có chữ trống, nút ghi 9; (c) chữ trống, không nút; (d) action trả tong 27 và đúng 20 mã viết tay, HTML có «Hiện 20 / 27 căn». Đột biến hiện trạng thái trống theo danh sách trong trang đỏ; đột biến trả đủ danh sách theo phường đỏ, thông điệp nêu số dòng trả về."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: bash _acceptance/can-cung-tieu-chi-toan-tap/probes/doc.sh AC-4
+    paths: [app/src/lib/deals-chi-tiet.ts, app/src/components/ops/deal-similar.tsx, app/tests/can-cung-tieu-chi*]
+    expected: "Ba căn viết trước (không diện tích, chưa rõ loại hình, chưa gắn phường): mỗi căn một assert về tập mã và câu bỏ tiêu chí trên HTML dựng thật; đối chứng: căn đủ trường không có câu bỏ tiêu chí."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/can-cung-tieu-chi-toan-tap/probes/doc.sh AC-5
+    paths: [app/src/lib/deals.ts, app/src/app/ops/deals/**, app/tests/can-cung-tieu-chi*]
+    expected: "Ma trận viết trước kind × type × vị trí (tỉnh, phường, dự án) × tab, mỗi ô một assert về số và tập mã cùng tiêu chí của một căn cố định; đổi tab không đổi số. Đột biến bỏ điều kiện project trong action đỏ, thông điệp nêu ô lệch."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: bash _acceptance/can-cung-tieu-chi-toan-tap/probes/doc.sh AC-6
+    paths: [app/src/components/ops/deals-grid.tsx, app/src/components/ops/deal-sheet.tsx, app/src/components/ops/deal-similar.tsx, app/tests/can-cung-tieu-chi*]
+    expected: "Bấm căn trong trang: căn đang mở đổi sang căn đó, trang bảng đúng; bấm căn ở trang khác: điều hướng tới /ops/deals/<mã>. Đối chứng: căn trong trang không điều hướng."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/can-cung-tieu-chi-toan-tap/probes/doc.sh AC-7
+    paths: [app/src/app/ops/deals/**, app/src/lib/deals.ts, app/tests/can-cung-tieu-chi*]
+    expected: "Gọi action thật: chưa đăng nhập và vai không có quyền Ops bị từ chối (không dữ liệu); vai Người xem: không khoá nào mang giá trị tên, SĐT, ảnh, chữ bài, địa chỉ dưới phường đã cấy; vai Vận hành có đủ (đối chứng dương cùng fixture). Lược đồ cloud: số và danh sách chạy. Đột biến bỏ bước lọc theo vai đỏ, thông điệp nêu trường lộ."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: bash _acceptance/can-cung-tieu-chi-toan-tap/probes/doc.sh AC-8
+    paths: [app/src/components/ops/deal-similar.tsx, app/src/components/ops/deal-sheet.tsx, app/tests/can-cung-tieu-chi*]
+    expected: "Mỗi trạng thái ST-cung-tieu-chi-* một ca trên HTML dựng thật, đúng chữ, đúng nút; lỗi rồi «Thử lại» gọi lại action; căn A về sau căn B thì tab chỉ có danh sách của B. Đối chứng: có dữ liệu thì không có chữ trống, không Skeleton."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/can-cung-tieu-chi-toan-tap/probes/do-may-thu.sh
+    paths: [app/src/lib/deals.ts, app/src/app/ops/deals/**, _acceptance/can-cung-tieu-chi-toan-tap/probes/*]
+    expected: "Trên DB máy thu, chỉ đọc, mọi câu trong MỘT snapshot REPEATABLE READ READ ONLY (tiến trình con nhận mã snapshot): gọi đúng hàm đọc của màn; 15/15 dòng đầu Giá tốt cấp dự án; số bốn tab và số dự án 1 bằng lệnh đếm độc lập; đi hết các trang được đúng tong mã phân biệt; số cùng tiêu chí mọi dòng trang 1 cỡ 15, 50 bằng lệnh đếm độc lập. Hai thời gian đo riêng sau các phép so, mỗi số ba lần, ghi tải máy: thời gian tới khi /ops/deals trả HTML xong (trung vị dưới 3 giây) và thời gian action cùng tiêu chí trên căn thuê có nhiều căn cùng tiêu chí nhất (trung vị dưới 1,5 giây). Đối chứng --doi-chung-trong-trang (đếm trong trang) ra số dòng hiện 0 như hôm nay và thoát khác 0."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-9
+    executor: ui-check
+    layer: ui-observed
+    paths: [app/src/lib/deals.ts, app/src/app/ops/deals/**, app/src/components/ops/deals-grid.tsx, app/src/components/ops/deal-sheet.tsx, app/src/components/ops/deal-similar.tsx]
+    steps:
+      - "Bản chạy: dev server cổng 3461 chạy mã app đúng sha 66cdddc65 của nhánh này (giám sát dựng từ worktree ops-deals-data-grid/app đưa về HEAD tách rời tại sha ấy, vì Turbopack không chạy được node_modules symlink của worktree này), DB máy thu chỉ đọc; đăng nhập vai quản trị. Ghi sha và thư mục chạy vào observed. KHÔNG tạo hay sửa tệp nào trong cây ngoài evidence/. Trước khi chụp che SĐT, tên người bán, ảnh tin và email đăng nhập."
+      - "Mở /ops/deals ở 1280 px sáng → evidence/E10-step1.png (15/15 dòng đầu ghi «Giá tốt» và tên dự án; chân bảng 1–15 / tong)"
+      - "Bấm dòng 1, mở tab «Căn cùng tiêu chí» → evidence/E10-step2.png (số trên nhãn tab khác 0 khi lệnh đếm khác 0; bảng có căn; câu «Hiện 20 / N» khi N > 20)"
+      - "Chọn Vinhomes Ocean Park 1 trên bộ chọn vị trí → evidence/E10-step3.png (tab Tất cả khớp lệnh đếm với mã 1; URL có project=1)"
+      - "Cùng màn ở chế độ tối → evidence/E10-step4.png; khổ 390 px → evidence/E10-step5.png (trang không cuộn ngang)"
+      - "Đăng nhập tài khoản thử vai Người xem, mở /ops/deals, mở sheet dòng 1 tab «Căn cùng tiêu chí» → evidence/E10-step6.png (không cột Gọi ai, không ảnh tin)"
+    expected: "Sáu khung trên bản chạy: căn Giá tốt cấp dự án đứng đầu, tab cùng tiêu chí đếm trên toàn tập, số khớp lệnh đếm khi không lọc và khi lọc một dự án, đọc được ở sáng, tối, 390 px, vai Người xem không thấy liên hệ."
+  - id: E11
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.suite.app
+    paths: [app/src/**]
+    expected: "Typecheck và lint của app sạch, gồm luật onehub-ui; lint không quét tệp chép tạm của ca test."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E12
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.design.floor
+    paths: [app/src/app/ops/deals/**, app/src/components/ops/deal-*.tsx, app/src/components/ops/deals-*.tsx]
+    expected: "exit 0; sàn thiết kế bậc M1 không báo hex thô mới trên tệp giao diện vòng chạm"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E13
+    criterion: AC-10
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/can-cung-tieu-chi-toan-tap/probes/doc.sh AC-10
+    paths: [app/src/lib/deals.ts, app/src/app/ops/deals/**, app/tests/can-cung-tieu-chi*]
+    expected: "Tập viết trước 37 căn, cỡ 15: bốn căn viết tay (trang 1, trang 3 ngoài 30 căn đầu của dealsSql cũ, căn thuê, căn rời tập), mỗi căn một assert về href của crumb trên HTML dựng thật của trang một căn (kind, page, can đúng; căn rời tập là /ops/deals), rồi dựng /ops/deals theo đúng href ấy: không redirect về trang một căn và căn đang mở là căn đó. Đối chứng dương cùng fixture: căn trang 1. Đột biến giữ dealTrongDanhSach cũ đỏ với căn trang 3, thông điệp nêu mã căn và href."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

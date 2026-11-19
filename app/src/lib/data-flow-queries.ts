@@ -95,6 +95,16 @@ export type GroupFlow = Branches & {
   latestAt: string | null;
 };
 
+/** Số mốc S03 của một ngày VN (SM1) — đúng các khoá của `dq_check_results.detail`, dòng `s03-moc-ngay`. */
+export type Milestone = {
+  ngay: string;
+  offers_total: number;
+  project_linked: number;
+  building_linked: number;
+  project_ranked: number;
+  building_ranked: number;
+};
+
 export type ShortStay = { received: number; stored: number; withWard: number; latestAt: string | null };
 
 export type KindMix = { sale: number; rentLt: number; shortStay: number };
@@ -162,11 +172,13 @@ export function normalizeFacts(raw: FlowFacts): FlowFacts {
       return { ...(d as FlowDay), unitLinked: nOrNull(d.unitLinked) ?? 0, ...branchesOf(d) };
     }),
     groups: ((raw.groups ?? []) as (GroupFlow & Record<string, unknown>)[]).map((g) => ({ ...(g as GroupFlow), ...branchesOf(g) })),
+    // Khối đời trước SM1 không có khoá này: đọc thành mảng rỗng, vùng số mốc hiện trạng thái trống.
+    milestones: raw.milestones ?? [],
   };
 }
 
 /** Phần tổng hợp của DataFlow — đúng các khoá 600_data_flow.sql ghi vào `facts` (danh sách đóng, khối lên cloud). */
-export const FLOW_FACT_KEYS = ["sources", "days", "groups", "shortStay", "mix", "enrichPending"] as const;
+export const FLOW_FACT_KEYS = ["sources", "days", "groups", "shortStay", "mix", "enrichPending", "milestones"] as const;
 export type FlowFacts = {
   sources: SourceFlow[];
   days: FlowDay[];
@@ -174,6 +186,8 @@ export type FlowFacts = {
   shortStay: ShortStay;
   mix: KindMix;
   enrichPending: number;
+  /** 30 ngày gần nhất, tăng dần theo ngày (SM1). */
+  milestones: Milestone[];
 };
 
 /** Trạng thái số tổng hợp: máy thu theo `computed_at` cũ nhất của bảng tính sẵn (`fresh`/`stale`/`none`); máy chủ theo
@@ -213,6 +227,7 @@ const EMPTY_FACTS: FlowFacts = {
   shortStay: { received: 0, stored: 0, withWard: 0, latestAt: null },
   mix: { sale: 0, rentLt: 0, shortStay: 0 },
   enrichPending: 0,
+  milestones: [],
 };
 
 /** «Tin mới nhất»: mỗi nguồn tối đa 150 tin (S06 ~500 tin/ngày không đẩy tin nhóm khép ra khỏi bảng). Máy thu kèm bài

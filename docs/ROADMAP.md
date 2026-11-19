@@ -167,6 +167,12 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   3166-2:VN cũ của tỉnh mang tên được giữ (Huế VN-26; bản chụp `pipeline/data/iso-3166-2-vn.json`); `buildings.iso_region` là khoá
   ngoại tới bảng, `upi` nhận mọi mã. Lệnh dựng suy ISO từ `area_ids` của khu, không đọc `meta.city` (ba khu Hưng Yên ghi `hanoi`);
   chưa áp 088 thì chỉ dựng lại khu đã có toà. Chủ đầu tư ghi `source_field` (tệp + băm). Chưa áp 088 lên máy thu.
+- Thuộc tính căn S16 trên Danh bạ Ops (DA40, `_acceptance/thuoc-tinh-can-s16`, migration 113 + 118, PR #491): bảng nạp
+  `stg_s16_can_chi_tiet` (DATA-CONTRACT v14, bộ nạp `pipeline/import-s16-chi-tiet.mjs`), `pipeline/scripts/thuoc-tinh-can-s16.mjs --ghi`
+  ghi phát biểu `source_field` cấp `Unit` (diện tích, PN, WC, hướng, loại hình, giá chủ đầu tư) cho căn danh bạ khớp mã căn S16; view
+  `v_unit_thuoc_tinh`, `v_s16_gia_cdt` (118 loại mã mơ hồ toà); trang `/ops/registry/<id>` hiện ô phủ «Căn có thuộc tính». **Đã áp
+  lên máy thu 19/11 15:30–15:52Z**: nạp 95.798, 441.193 phát biểu, 84.822 căn có thuộc tính / 111.331 căn có bí danh S16, khớp số đối
+  chiếu (nhật ký ở `docs/ops/nhat-ky-ap/2026-11-19-da40-thuoc-tinh-can-s16.md`). Không job đêm nào nạp lại hay ghi lại: lần thu S16 sau phải chạy tay. Chỉ local, không lên cloud.
 - Ngừng rao khi không thấy lại (V6, `_acceptance/tin-ngung-rao-khong-thay-lai`, migration 085, Q4 Mạnh 08/11): tin sống của S03,
   S05, S06 không thấy lại quá N = 21 ngày (`ngung_rao_sau_ngay`) trong khi nguồn vẫn thu thì nhận phát biểu `offer_status =
   withdrawn` lớp suy luận (`inferred`/`e1_rule`, `rule_id khong-thay-lai:<offer_id>`); đo tới mốc thu, không tới giờ chạy —
@@ -333,6 +339,8 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   sau làm; bỏ 8 lượt liền → JOB FAIL, thoát 75. Bảy bước đo của cloud-sync có job riêng `scripts/cloud-sync-do.sh` (mỗi
   giờ, plist chờ ZCode); `cloud-sync.sh` tự bỏ chúng khi job giờ vừa chạy trọn dưới 2 giờ, ngược lại tự chạy dưới cùng
   khoá. Đo 10/11 trên DB thử: transform-zalo + media + bait-gap ≈ 76 s/lượt — LT2 chưa cần.
+
+**Số mốc S03 theo ngày (SM1, 18/11):** lượt làm tươi `pipeline/sql/600_data_flow.sql` ghi mỗi ngày VN một dòng `s03-moc-ngay` vào `dq_check_results` (có dự án, khớp toà, có hạng cấp dự án, có hạng cấp toà, mẫu số là tin S03 đang rao) và chở 30 ngày trong `facts.milestones`; `/ops/data-flow` vẽ mức đổi và cờ đứng yên. Số lên cloud trong khối `dataFlow`; dòng của bảng đo ở lại máy thu (`LOCAL_ONLY_ROWS` của `pipeline/sync-cloud.mjs`, Mạnh chốt Hỏi-4).
 
 ### 2.3 Nguồn (source_registry + /ops/collections feed health)
 Đo 26/10 trên máy thu (`source_registry`, `launchctl list`, `airdna_markets`). Trạng thái theo vòng đời năm giá trị
@@ -1019,6 +1027,7 @@ Theo dõi: giám sát đợt báo một dòng mỗi ngày (hiện tại so với
 | V7 | Đóng băng Stage B + thẻ Ghép căn: không dựng cặp, không gieo thẻ, thẻ chờ không hiện và không vào số chờ; dữ liệu giữ nguyên — `_acceptance/dong-bang-stage-b-resolve` (T2) | 🔶 Mạnh duyệt Cổng Phạm vi 09/11 (Hỏi-1 A ẩn thẻ chờ, Hỏi-2 A không thêm chữ), đang chấm |
 | DV1 | Mọi nút dự án trỏ mã xã/phường hiện hành: tệp xã cũ có nguồn + `danh-ba-vat-the.mjs --sua-xa` — `_acceptance/nut-du-an-tro-xa-moi` (T2) | 🔶 Mạnh duyệt Cổng Phạm vi 10/11, đang làm; sau gộp: `--sua-xa --thu` rồi `--sua-xa --db-that` trên máy thu, dựng lại danh bạ, so số toà và UPI trước–sau là lời riêng của Mạnh (Hỏi-1) |
 | DA1 | Danh bạ vật thể dựng toà ở cả 34 tỉnh: bảng ISO trong migration 088, ISO suy từ khu vực, chủ đầu tư `source_field` — `_acceptance/danh-ba-vat-the-toan-quoc` (T3, 088) | 🔶 Mạnh duyệt Cổng Phạm vi và kế hoạch 10/11, đang làm; sau gộp: áp 088 lên máy thu là lời riêng của Mạnh (`pg_dump` trước) |
+| DA40 | Thuộc tính căn S16 (diện tích, PN, WC, hướng, loại hình, giá chủ đầu tư) trên Danh bạ Ops máy thu — `_acceptance/thuoc-tinh-can-s16` (T2, 113 + 118) | ✅ gộp PR #491; áp lên máy thu 19/11 15:30–15:52Z, số thật khớp số đối chiếu (+2 căn grand-park, lời Mạnh 02:39Z), nhật ký `docs/ops/nhat-ky-ap/2026-11-19-da40-thuoc-tinh-can-s16.md`; việc theo sau: DA48 rút thuộc tính khi căn thành mơ hồ toà |
 | G-3 | Kev-V media gate + VLM collage + LLM judge (≡ A2) | ⬜ |
 | R2-R4 | asset_nodes mở rộng (subzone/building; geo-polygon; dedup căn) | ⬜ |
 
