@@ -1,67 +1,69 @@
-# Review findings: can-gia-tot-loc-xep-hang (round 5)
+# Review findings: can-gia-tot-loc-xep-hang (round 6)
 
 ## Trong hợp đồng
 
-(không có)
+Không có.
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **Crumb của trang một căn vẫn hỏi danh sách cũ, nên căn ngoài trang 1 bị đẩy ngược lại chính trang đó**
-  Người dùng thấy gì: Ở trang chi tiết một căn, bấm đường dẫn «Căn giá tốt» ở đầu trang đôi khi đưa người dùng về lại chính trang căn đó thay vì về danh sách. Người dùng vẫn vào danh sách được bằng menu.
-  Căn cứ: Hậu quả nhẹ, không mất hay lộ dữ liệu, người dùng tự đi đường khác được ngay, và hợp đồng không hứa hành vi này.
-  file: `app/src/app/ops/deals/[offerId]/page.tsx`
+- **Tham số URL `location` mang mã khu vực, trái với CONTEXT.md vốn chốt tham số `area` cho mã khu vực; `type` không theo luật camelCase theo tên code**
+  Người dùng thấy gì: Đường dẫn của màn Căn giá tốt dùng tên tham số khác với từ vựng chung của dự án. Màn vẫn chạy đúng, nhưng link người vận hành đã lưu có thể phải đổi khi tên được thống nhất sau này.
+  Căn cứ: Chỉ là lệch tên gọi, không mất hay sai dữ liệu; chỉnh sớm rẻ hơn chỉnh khi đã có nhiều link lưu, và có thể gom vào một lượt dọn từ vựng.
+  file: `app/src/lib/deals-chi-tiet.ts`
   severity: medium
   Đề xuất: known-limits
 
-- **Chưa có bảng hạng thì `?project=<id hợp lệ>` (và `kind=rent`, `location`, `type`) hiện cả danh sách không lọc dưới tiêu đề của dự án**
-  Người dùng thấy gì: Khi chưa có dữ liệu xếp hạng giá (ví dụ máy chủ đám mây trước khi cập nhật), chọn một dự án hay chọn Cho thuê vẫn hiện danh sách bán chung của mọi phường dưới tên dự án. Người vận hành có thể đọc nhầm đó là căn của dự án.
-  Căn cứ: Chỉ xảy ra trong giai đoạn chưa có dữ liệu hạng, gây nhầm lẫn khi đọc nhưng không mất dữ liệu, và hết khi dữ liệu hạng được nạp.
+- **Định nghĩa «Căn giá tốt» trong CONTEXT.md vẫn chỉ gồm tin rao bán, trong khi danh sách nay có cả tin thuê**
+  Người dùng thấy gì: Tài liệu từ vựng vẫn mô tả Căn giá tốt chỉ có tin bán, trong khi màn đã hiện cả tin thuê. Người đọc tài liệu có thể hiểu sai phạm vi của màn.
+  Căn cứ: Chỉ ảnh hưởng người đọc tài liệu, không đụng đến số liệu trên màn; sửa lại bằng một dòng chữ bất cứ lúc nào.
   file: `app/src/app/ops/deals/page.tsx`
-  severity: medium
+  severity: low
   Đề xuất: known-limits
 
-- **Crumb «Căn giá tốt» ở trang một căn quay vòng về chính trang đó: dealTrongDanhSach vẫn đo theo danh sách 30 dòng cũ**
-  Người dùng thấy gì: Đường dẫn quay về danh sách ở trang một căn có thể đưa người dùng vòng lại chính trang đó với nhiều căn không nằm ở trang đầu. Phải đi về danh sách bằng cách khác.
-  Căn cứ: Gây phiền nhưng không sai dữ liệu, người dùng tự tránh được, và là điều hướng phụ ngoài các tiêu chí đã ký.
+- **Crumb «Căn giá tốt» ở trang một căn chuyển ngược về chính trang đó: dealTrongDanhSach vẫn dò theo danh sách cũ (top 30, xếp theo mức giảm)**
+  Người dùng thấy gì: Ở trang chi tiết một căn, nút quay lại «Căn giá tốt» với nhiều căn sẽ đưa người dùng ngược về chính trang căn đó thay vì danh sách. Người vận hành phải tự bấm đường khác để về danh sách.
+  Căn cứ: Gây phiền khi duyệt nhiều căn liên tiếp nhưng không mất dữ liệu và người dùng đi được bằng menu; sửa nằm ở màn trang một căn nên hợp làm thành việc riêng.
   file: `app/src/lib/deals.ts`
-  severity: medium
-  Đề xuất: known-limits
+  severity: high
+  Đề xuất: new-contract
 
-- **Chưa có bảng hạng thì lọc dự án, Cho thuê, vị trí, loại hình, tab bị bỏ mà không báo; tiêu đề vẫn ghi tên dự án**
-  Người dùng thấy gì: Khi chưa có dữ liệu xếp hạng, các bộ lọc dự án, vị trí, loại hình và Cho thuê bị bỏ qua mà màn không báo, nên người dùng thấy danh sách không đúng điều đã chọn.
-  Căn cứ: Chỉ trong giai đoạn chưa có dữ liệu hạng, không mất dữ liệu và tự hết khi dữ liệu được nạp, nhưng nên ghi rõ để người dùng không tin nhầm.
+- **Không có bảng hạng thì /ops/deals lặng lẽ bỏ mọi điều kiện trên URL (project, kind=rent, location, type, tab, page), tiêu đề vẫn ghi tên dự án**
+  Người dùng thấy gì: Khi chưa có bảng hạng giá, màn hiện toàn bộ tin bán mà không theo bộ lọc, dù tiêu đề vẫn ghi tên dự án đã chọn. Người vận hành có thể tưởng đang xem dự án đó trong khi đang xem tất cả.
+  Căn cứ: Chỉ xảy ra trước khi bảng hạng được nạp, là trạng thái tạm thời và đã được ghi vào phần ngoài phạm vi; không mất dữ liệu, hết khi bảng hạng có đủ.
   file: `app/src/app/ops/deals/page.tsx`
   severity: medium
   Đề xuất: known-limits
 
-- **thu-pha.mjs --chi kèm --write ghi thu-pha.md với tổng của cả 76 đột biến dù chỉ chạy một tiêu chí**
-  Người dùng thấy gì: Công cụ thử phá của đội có thể ghi bảng kết quả với tổng số sai khi chỉ chạy một phần. Người dùng cuối không thấy gì.
-  Căn cứ: Chỉ ảnh hưởng tài liệu nghiệm thu nội bộ, chạy đủ bộ thì đúng, sửa thì không cải thiện sản phẩm.
+- **thu-pha.mjs --write --chi ghi đè thu-pha.md bằng bảng một phần và in sai tổng số đột biến**
+  Người dùng thấy gì: Công cụ thử phá của hồ sơ nghiệm thu có thể ghi một bản báo cáo chỉ một phần nhưng ghi như đã chạy đủ. Người dùng cuối không bị ảnh hưởng, chỉ người đọc hồ sơ có thể hiểu sai.
+  Căn cứ: Chỉ xảy ra khi chạy công cụ bằng một tuỳ chọn hiếm, chạy lại đầy đủ là ra báo cáo đúng; không đáng mở việc.
   file: `_acceptance/can-gia-tot-loc-xep-hang/probes/thu-pha.mjs`
   severity: low
   Đề xuất: wont-fix
 
-- **Hình dạng 1 (đo CHỈ DẪN thay vì ĐẦU RA): E13 chạy design-gate chế độ dom trên mã nguồn .tsx, không trên HTML đã dựng**
-  Người dùng thấy gì: Phép kiểm giao diện tự động đọc mã nguồn chứ không đọc màn đã dựng, nên có thể báo sạch khi màu hay độ tương phản thực tế còn lỗi. Màn có thể cần mắt người soi thêm.
-  Căn cứ: Đây là khoảng hở của phép đo chứ chưa chứng tỏ màn sai, và người ký vẫn soi màn thật ở các khổ sáng, tối nên rủi ro thấp.
-  file: `_acceptance/can-gia-tot-loc-xep-hang/probes/design-gate.sh`
-  severity: medium
-  Đề xuất: known-limits
-
-- **Hình dạng 4 (assertion âm tính một mình, đối chứng không với tới được): «có dữ liệu thì không có chữ trống» chỉ dò chuỗi của trạng thái tab, mà fixture đang ở tab Tất cả**
-  Người dùng thấy gì: Một phép kiểm tự động chưa thực sự bắt được lỗi hiện chữ «trống» khi lẽ ra có dữ liệu. Màn hiện tại chưa thấy sai.
-  Căn cứ: Chỉ làm bài kiểm yếu đi, chưa có lỗi hiển thị thật, và người dùng nếu gặp thì tải lại là hết.
+- **Hình dạng 4 (assertion âm tính một mình): đột biến AC-1 trên bản sao SQL chỉ assert notDeepEqual, không có đối chứng dương, không kiểm phép thay đã áp**
+  Người dùng thấy gì: Một bài kiểm tra thứ tự danh sách có thể báo xanh dù phép thử không thật sự làm gì. Người dùng không thấy gì khác, nhưng lỗi thứ tự sau này có thể khó bị bắt hơn.
+  Căn cứ: Là điểm yếu của lưới an toàn chứ không phải lỗi đang hiện trên màn; phép thử đột biến ở công cụ khác vẫn gánh chiều đỏ, nên ghi lại là đủ.
   file: `app/tests/deals-loc-xep-hang.test.tsx`
   severity: low
   Đề xuất: known-limits
 
-- **Hình dạng 5 (tuyên quét LỚP nhưng ma trận thiếu phần tử): AC-8 mở căn ngoài trang không có assert nào về ảnh cho vai Người xem**
-  Người dùng thấy gì: Phép kiểm tự động chưa soi riêng ảnh khi vai Người xem mở một căn ngoài trang, nên nếu ảnh lọt ra thì chưa chắc bị bắt. Chưa có bằng chứng ảnh bị lộ.
-  Căn cứ: Nếu lộ thật thì ảnh tin rao là dữ liệu nhạy cảm theo vai, nhưng chưa có dấu hiệu lộ và bổ sung phép kiểm là việc nhỏ, không đòi tính năng mới.
+- **Hình dạng 4 (assertion âm tính một mình): đối chứng «điều kiện phải có dòng» của AC-8 luôn đúng, nên các assert «không lộ» có thể xanh trên danh sách rỗng**
+  Người dùng thấy gì: Bài kiểm tra việc không lộ tên, số điện thoại cho vai Người xem có thể xanh ngay cả khi danh sách rỗng, nên chưa chắc chứng minh đủ mọi điều kiện lọc. Màn thật chưa thấy lộ gì.
+  Căn cứ: Đây là độ tin cậy của phép đo chứ không phải lỗi lộ dữ liệu đang xảy ra; nên ghi rõ để lần siết sau bổ sung đối chứng.
   file: `app/tests/deals-loc-xep-hang.test.tsx`
   severity: medium
   Đề xuất: known-limits
+
+- **Hình dạng 5 (tuyên quét lớp, chỉ có điểm): «cây × kind × type» lặp trên mục do sản phẩm sinh, không có ma trận viết trước về tập mã**
+  Người dùng thấy gì: Bài kiểm tra số căn trên cây vị trí so số của màn với chính màn, nên một mục bị sót trên cây có thể không bị bắt. Hiện chưa thấy mục nào sai số.
+  Căn cứ: Là lỗ hổng phép đo, không phải sai số liệu đang thấy; hồ sơ đã ghi các phép so khi chọn mục thuộc giới hạn đã biết và hẹn lại ở hàng sau.
+  file: `app/tests/deals-loc-xep-hang.test.tsx`
+  severity: medium
+  Đề xuất: known-limits
+
+## Chưa adversarial-verify (refuter chết)
 
 Cụm ngoài vùng phủ: cluster: n-a (không đo được — không eval nào khai paths, hoặc dưới ngưỡng cụm).

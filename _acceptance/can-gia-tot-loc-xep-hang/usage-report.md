@@ -217,3 +217,49 @@ wall: 2717s
 - **claude-sonnet-5-5**: 4 agent · 26 calls · out 25,057 · in 52 · cache_read 2,185,160 · cache_create 269,277
 - **claude-haiku-5-5**: 19 agent · 50 calls · out 25,554 · in 102 · cache_read 973,644 · cache_create 689,021
 
+### S4 round 6 — wf_5efe6f79-495 (25 agent, 83,846 out-tok)
+
+| label | model | calls | out | in | cache_read | s |
+|---|---|--:|--:|--:|--:|--:|
+| review:bugs | claude-opus-5-5 | 16 | 13,595 | 36 | 1,126,268 | 145 |
+| review:conventions | claude-opus-5-5 | 23 | 12,990 | 46 | 1,661,406 | 143 |
+| baseline:diffBase | claude-sonnet-5-5 | 3 | 9,400 | 6 | 90,792 | 64 |
+| review:measurement | claude-opus-5-5 | 9 | 9,023 | 18 | 557,463 | 100 |
+| synthesize:report | claude-sonnet-5-5 | 2 | 8,196 | 4 | 47,426 | 43 |
+| machine:node scripts/suite-neu-doi.mjs pipeline_ | claude-haiku-5-5 | 9 | 4,186 | 18 | 255,653 | 1109 |
+| triage | claude-sonnet-5-5 | 2 | 3,639 | 4 | 35,184 | 26 |
+| machine:node scripts/suite-neu-doi.mjs app_ui -- | claude-haiku-5-5 | 2 | 2,522 | 4 | 3,416 | 574 |
+| machine:node scripts/suite-neu-doi.mjs pipeline_ | claude-haiku-5-5 | 7 | 2,423 | 14 | 177,107 | 900 |
+| machine:node scripts/suite-neu-doi.mjs portal_st | claude-haiku-5-5 | 2 | 2,041 | 4 | 33,746 | 8 |
+| machine:node scripts/suite-neu-doi.mjs ui_lint_r | claude-haiku-5-5 | 2 | 1,930 | 4 | 33,750 | 8 |
+| machine:bash _acceptance/can-gia-tot-loc-xep-han | claude-haiku-5-5 | 2 | 1,466 | 4 | 33,740 | 10 |
+| machine:bash _acceptance/can-gia-tot-loc-xep-han | claude-haiku-5-5 | 3 | 1,440 | 8 | 67,642 | 24 |
+| machine:bash _acceptance/can-gia-tot-loc-xep-han | claude-haiku-5-5 | 2 | 1,248 | 4 | 33,742 | 23 |
+| machine:node scripts/suite-neu-doi.mjs app -- 'c | claude-haiku-5-5 | 2 | 1,176 | 4 | 30,332 | 25 |
+| machine:bash _acceptance/can-gia-tot-loc-xep-han | claude-haiku-5-5 | 2 | 1,170 | 4 | 33,742 | 22 |
+| machine:bash _acceptance/can-gia-tot-loc-xep-han | claude-haiku-5-5 | 3 | 1,166 | 8 | 67,563 | 23 |
+| machine:bash _acceptance/can-gia-tot-loc-xep-han | claude-haiku-5-5 | 2 | 1,075 | 4 | 33,742 | 23 |
+| machine:bash _acceptance/can-gia-tot-loc-xep-han | claude-haiku-5-5 | 2 | 968 | 4 | 33,742 | 22 |
+| machine:bash _acceptance/can-gia-tot-loc-xep-han | claude-haiku-5-5 | 2 | 853 | 4 | 33,742 | 22 |
+| machine:bash _acceptance/can-gia-tot-loc-xep-han | claude-haiku-5-5 | 2 | 839 | 4 | 33,742 | 22 |
+| machine:bash _acceptance/can-gia-tot-loc-xep-han | claude-haiku-5-5 | 2 | 734 | 4 | 33,742 | 22 |
+| machine:node scripts/suite-neu-doi.mjs agent -- | claude-haiku-5-5 | 2 | 716 | 4 | 33,736 | 4 |
+| machine:node "${CLAUDE_PLUGIN_ROOT:-$(node $HOME | claude-haiku-5-5 | 2 | 715 | 4 | 33,839 | 6 |
+| capture:provenance | claude-sonnet-5-5 | 2 | 335 | 4 | 29,078 | 3 |
+
+
+wall: 2700s
+
+| vai tro | agents | out | cache_read | wall s | bat dau | ket thuc |
+|---|--:|--:|--:|--:|---|---|
+| review | 3 | 35,608 | 3,345,137 | 146 | 07:27:25 | 07:29:52 |
+| baseline | 1 | 9,400 | 90,792 | 64 | 07:27:25 | 07:28:30 |
+| machine | 18 | 26,668 | 1,006,718 | 2627 | 07:27:25 | 08:11:13 |
+| triage | 1 | 3,639 | 35,184 | 26 | 08:11:13 | 08:11:39 |
+| capture | 1 | 335 | 29,078 | 3 | 08:11:39 | 08:11:42 |
+| synthesize | 1 | 8,196 | 47,426 | 43 | 08:11:42 | 08:12:25 |
+
+- **claude-opus-5-5**: 3 agent · 48 calls · out 35,608 · in 100 · cache_read 3,345,137 · cache_create 326,835
+- **claude-sonnet-5-5**: 4 agent · 9 calls · out 21,570 · in 18 · cache_read 202,480 · cache_create 185,415
+- **claude-haiku-5-5**: 18 agent · 50 calls · out 26,668 · in 104 · cache_read 1,006,718 · cache_create 657,176
+
