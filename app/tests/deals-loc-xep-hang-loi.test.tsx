@@ -9,7 +9,8 @@ import { JSDOM, VirtualConsole } from "jsdom";
 import React, { cloneElement, isValidElement, type ReactElement, type ReactNode } from "react";
 
 const APP = join(import.meta.dirname, "..");
-const thuMuc = join(APP, "tests", `.ban-chep-cg3-loi-${process.pid}`);
+// Bản chép tạm nằm trong .next/cache: lint và tsc không quét chỗ này, nên chạy song song với lint không còn đọc phải tệp vừa xoá.
+const thuMuc = join(APP, ".next", "cache", `cg3-ban-chep-loi-${process.pid}`);
 // DOM thử báo mọi lần tải lại trang qua kênh lỗi của nó: gom lại để đo «không tải lại trang».
 const loiDom: string[] = [];
 const kenhDom = new VirtualConsole();

@@ -78,7 +78,8 @@ async function phaiDo(tu: string, thanh: string, fn: () => Promise<void>, thongD
 
 // Đo đúng phần trang gửi xuống: chép trang thật, chỉ thay bước đọc phiên, gọi thẳng component máy chủ rồi đọc props của lưới.
 const APP = join(import.meta.dirname, "..");
-const CHEP = join(import.meta.dirname, `.ban-chep-cg3-${process.pid}`);
+// Bản chép tạm nằm trong .next/cache: lint và tsc không quét chỗ này, nên chạy song song với lint không còn đọc phải tệp vừa xoá.
+const CHEP = join(import.meta.dirname, "..", ".next", "cache", `cg3-ban-chep-${process.pid}`);
 let nChep = 0;
 type Thay = { sau?: string; tu: string; thanh: string };
 type VaiTrang = "viewer" | "ops";
