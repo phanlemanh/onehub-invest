@@ -1,0 +1,58 @@
+schema_version: 1
+slug: phuong-tu-du-an-chay-that
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: node --test scripts/phuong-tu-du-an-chuoi.test.mjs
+    long_running: 15
+    paths: ["scripts/zalo-import-daily.sh", "scripts/phuong-tu-du-an-chuoi.test.mjs"]
+    expected: "Thứ tự ghi lại có phuong-tu-du-an --ghi --noi-tiep ngay sau transform-zalo và trước transform-media ở hai lượt; bước giả thoát 1 thì job khác 0 và bước sau vẫn chạy ở hai lượt; phiên thứ hai giữ khoá thật thì lượt nhanh in BỎ LƯỢT và lượt 00:00 trả mã khác 0. Chiều đỏ: bản sao script bỏ dòng bước thì ca đỏ gọi tên bước thiếu."
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: bash _acceptance/phuong-tu-du-an-chay-that/probes/tren-db-thu.sh chot-luot-dau
+    long_running: 30
+    paths: ["pipeline/scripts/phuong-tu-du-an.mjs", "_acceptance/phuong-tu-du-an-chay-that/probes/**"]
+    expected: "Chưa có phát biểu sống: 0 chèn, cột không đổi, thoát 0, in «chưa áp lượt đầu». Đã áp: cùng lệnh ghi được bài mới. Chiều đỏ: bỏ chốt trong bản sao thì probe đỏ gọi tên số dòng bị chèn."
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: bash _acceptance/phuong-tu-du-an-chay-that/probes/tren-db-thu.sh chay-lai
+    long_running: 40
+    paths: ["pipeline/scripts/phuong-tu-du-an.mjs", "pipeline/lib/phuong-tu-du-an.mjs", "pipeline/transform-zalo.mjs", "_acceptance/phuong-tu-du-an-chay-that/probes/**"]
+    expected: "Sau transform-zalo thật xen giữa, lần hai 0 chèn, 0 rút, 0 phân xử; số tin có phường không giảm. Chiều đỏ: probe xoá một phát biểu giữa hai lần thì lần hai báo chèn 1."
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: bash _acceptance/phuong-tu-du-an-chay-that/probes/tren-db-thu.sh tin-moi
+    long_running: 40
+    paths: ["pipeline/scripts/phuong-tu-du-an.mjs", "pipeline/transform-zalo.mjs", "_acceptance/phuong-tu-du-an-chay-that/probes/**"]
+    expected: "Bài mới qua transform-zalo thật có cột là phường của dự án, nhãn nguon = du-an; đối chứng dự án không phường giữ nguyên cột."
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: bash _acceptance/phuong-tu-du-an-chay-that/probes/tren-db-thu.sh ma-tran
+    long_running: 40
+    paths: ["pipeline/scripts/phuong-tu-du-an.mjs", "pipeline/lib/phuong-tu-du-an.mjs", "_acceptance/phuong-tu-du-an-chay-that/ma-tran-o.json", "_acceptance/phuong-tu-du-an-chay-that/probes/**"]
+    expected: "Số assert bằng số ô của ma-tran-o.json; 0 tin có phường bị đổi; tin nhiều dự án giữ cột; 20 tin lệch thẻ đi đúng lối đã chọn; 10 tin đổi tỉnh có trong so-chay-thu.md. Chiều đỏ: thêm một ô sai số thì probe đỏ gọi tên ô."
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: bash _acceptance/phuong-tu-du-an-chay-that/probes/tren-db-thu.sh ap-lui
+    long_running: 50
+    paths: ["_acceptance/phuong-tu-du-an-chay-that/ap-may-thu/**", "_acceptance/phuong-tu-du-an-chay-that/probes/**"]
+    expected: "Đủ năm thứ; sau khi lùi và chạy lại transform-zalo cùng bước phường, băm area_id, field_provenance và số phát biểu sống bằng trước khi áp. Chiều đỏ: bỏ bước rút phát biểu khi lùi thì băm lệch và probe đỏ gọi tên."
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: bash _acceptance/phuong-tu-du-an-chay-that/probes/tren-db-thu.sh thoi-gian
+    long_running: 40
+    paths: ["pipeline/scripts/phuong-tu-du-an.mjs", "_acceptance/phuong-tu-du-an-chay-that/ap-may-thu/so-chay-thu.md", "_acceptance/phuong-tu-du-an-chay-that/probes/**"]
+    expected: "Lượt lặp xong trong 60 giây; so-chay-thu.md có mốc thời gian, tử số, mẫu số toàn kho và cửa sổ 13–19/11, số giây lượt đầu. Chiều đỏ: thiếu một số thì probe đỏ gọi tên số thiếu."
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.scripts
+    long_running: 60
+    expected: "Bộ test scripts thoát 0; các suite còn lại do lượt chấm chạy theo suite_keys."

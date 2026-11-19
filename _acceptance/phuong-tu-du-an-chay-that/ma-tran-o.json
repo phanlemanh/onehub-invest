@@ -1,0 +1,18 @@
+{
+  "ghi_chu": "Ma trận viết trước của AC-5. Mỗi ô của bang-phu-ca.md một dòng. so_luc_do là số đếm chỉ đọc 19/11 trên sale_offer_records nguồn S03, chỉ để đối chiếu; ket_qua là điều probe phải chứng minh sau --ghi.",
+  "o": [
+    {"ma": "tinh-motphuong-thetrung", "cot": "tinh", "du_an": "mot-phuong", "the": "trung", "so_luc_do": 6795, "ket_qua": "nhan-phuong-du-an"},
+    {"ma": "tinh-motphuong-thekhac", "cot": "tinh", "du_an": "mot-phuong", "the": "khac", "so_luc_do": 20, "ket_qua": "theo-loi-cau-1"},
+    {"ma": "trong-motphuong-thetrung", "cot": "trong", "du_an": "mot-phuong", "the": "trung", "so_luc_do": 452, "ket_qua": "nhan-phuong-du-an"},
+    {"ma": "trong-motphuong-khongthe", "cot": "trong", "du_an": "mot-phuong", "the": "khong", "so_luc_do": 107, "ket_qua": "nhan-phuong-du-an"},
+    {"ma": "phuong-motphuong-khongthe", "cot": "phuong", "du_an": "mot-phuong", "the": "khong", "so_luc_do": 75, "ket_qua": "giu-nguyen-cot"},
+    {"ma": "phuong-khongduan-khongthe", "cot": "phuong", "du_an": "khong", "the": "khong", "so_luc_do": 3, "ket_qua": "giu-nguyen-cot"},
+    {"ma": "tinh-khongphuong-theco", "cot": "tinh", "du_an": "khong-phuong", "the": "co", "so_luc_do": 6, "ket_qua": "giu-nguyen-cot"},
+    {"ma": "tinh-khongduan-theco", "cot": "tinh", "du_an": "khong", "the": "co", "so_luc_do": 72, "ket_qua": "giu-nguyen-cot"},
+    {"ma": "tinh-khongduan-khongthe", "cot": "tinh", "du_an": "khong", "the": "khong", "so_luc_do": 9, "ket_qua": "giu-nguyen-cot"},
+    {"ma": "trong-khongduan-khongthe", "cot": "trong", "du_an": "khong", "the": "khong", "so_luc_do": 170, "ket_qua": "giu-nguyen-cot"},
+    {"ma": "trong-khongduan-theco", "cot": "trong", "du_an": "khong", "the": "co", "so_luc_do": 3, "ket_qua": "giu-nguyen-cot"},
+    {"ma": "tinh-nhieuduan-theco", "cot": "tinh", "du_an": "nhieu", "the": "co", "so_luc_do": 4, "ket_qua": "giu-nguyen-cot"},
+    {"ma": "trong-nhieuduan-theco", "cot": "trong", "du_an": "nhieu", "the": "co", "so_luc_do": 8, "ket_qua": "giu-nguyen-cot"}
+  ]
+}
