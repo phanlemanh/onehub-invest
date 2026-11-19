@@ -105,7 +105,7 @@
   {
    "id": "E11",
    "q": "Đo năm bài đầu, trung bình có dưới 45 giây một bài không?",
-   "why": "Máy không đo thay được: cần người bấm giờ trên lát thật, mà lát chỉ nạp lên máy thu sau khi gộp và có lời Mạnh. Hướng dẫn một trang ở huong-dan-do-thoi-gian.md."
+   "why": "Cần Mạnh hoặc đội gắn đo, máy không đo thay. Chỉ đo được sau khi lát hai-khu-ghep-b nạp lên máy thu (hàng P4-215, sau khi DA46 áp tối nay và PL20). Hai lối: ký bây giờ với E11 «đo sau», ghi Known limits có hạn; hoặc chờ đo xong rồi ký. Hướng dẫn đo một trang: huong-dan-do-thoi-gian.md."
   }
  ],
  "analyst_plain": ""
