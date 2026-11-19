@@ -5,10 +5,10 @@ slug: che-ten-nguon-khong-lay-tu-dau
 owner: phanlemanh@gmail.com
 risk_tier: T3      # nới bộ soát tầng A; chạm db/migrations và pipeline/sync-cloud.mjs (t3_paths)
 surfaces: [cli, data, ui]
-status: implemented
+status: draft
 design_doc: _acceptance/che-ten-nguon-khong-lay-tu-dau/design.md
-approved_by: Mạnh
-approved_at: 2026-11-18
+approved_by:
+approved_at:
 ---
 
 # Acceptance Contract: che-ten-nguon-khong-lay-tu-dau
@@ -29,7 +29,9 @@ dùng tên giả cùng hình dạng; không tên nguồn thật nào trong hồ 
 - **AC-2** Given bảng ca dùng chung của hai bản lõi cộng các ca mới với nguồn giả (tên hai từ, từ đầu trùng thương hiệu của
   tên dự án giả; tên miền có nhãn đầu là từ chung), When chạy cả bản pipeline lẫn bản app, Then hai bản ra cùng kết quả mọi ca;
   với `wholeOnly` = true: tên dự án giả mang thương hiệu giữ nguyên, câu chứa đúng từ chung giữ nguyên, cụm hai từ (có dấu,
-  không dấu, hoa) và tên miền bị thay bằng mã; với cờ vắng hay false (đối chứng): thương hiệu bị che như hôm nay; mọi ca cũ
+  không dấu, hoa, và các từ nối bằng dấu cách kép, xuống dòng, dấu nối, gạch dưới, dấu chấm hay dấu `/`, gồm cả dạng nằm trong
+  đường dẫn URL) và tên miền bị thay bằng mã — ở bộ che của hai bản lõi, bộ soát của sync-cloud và bước che phía SQL
+  (`maskedSourceExpr`); với cờ vắng hay false (đối chứng): thương hiệu bị che như hôm nay; mọi ca cũ
   (gồm «từ đầu của tên nhiều từ» của S05) không đổi một ký tự.
 - **AC-3** Given DB thử, When gọi hàm nạp chung (bản pipeline và bản app) ở ba trạng thái — đã áp 112 với một dòng giả
   `match_whole` = true · chưa áp 112 (thiếu cột) · không có bảng `source_registry`, Then lần lượt: mọi token (tên thật và từng
@@ -55,6 +57,7 @@ dùng tên giả cùng hình dạng; không tên nguồn thật nào trong hồ 
   Mọi lệnh đo trên bản chép chỉ in mã và số.
 - **AC-8** (judgment) Given thẻ và hồ sơ, Then người duyệt đọc được bằng chữ thường đây là nới bộ soát tầng A, nới ở đâu, chỗ đọc
   nào chưa mang cờ (chặn thừa, không rò), và chuỗi nào trước bị chặn nay đi lên cloud — không cần mở mã.
+- **AC-10** Given `pipeline/push-ops-facts.mjs` và một máy chủ thu giả đếm mọi lời gọi, When một tiến trình chỉ `import` tệp này (có token và `INGEST_URL` trỏ máy chủ giả), Then 0 lời gọi tới máy chủ giả, tiến trình thoát 0; When chạy tệp như lệnh chính, Then đúng 1 lời gọi (đối chứng), `--kho` thì 0 lời gọi; lệnh chạy qua symlink `~/dev/one-invest` của launchd vẫn được nhận là lệnh chính.
 
 ## Out of scope
 
@@ -67,6 +70,8 @@ dùng tên giả cùng hình dạng; không tên nguồn thật nào trong hồ 
 ## Coverage
 
 - Trục loại biến thể: đủ · viết liền · từ đầu [thước CE: lõi `nameVariants`] — AC-2, AC-6.
+- Trục dấu phân tách của cụm hai từ: một dấu cách · hai dấu cách · xuống dòng · dấu nối · gạch dưới · dấu chấm · dấu `/` [thước CE: bộ tách từ `/[\s.\-_/]+/` của lõi] — AC-2.
+- Trục cách nạp tệp đẩy cloud: import · lệnh chính · chạy khô · qua symlink launchd [thước CE: sự cố 19/11 và `scripts/cloud-sync.sh`] — AC-10.
 - Trục cờ dòng: khai · không khai · thiếu cột (chưa áp 112) · không có bảng [thước CE: ràng buộc (a) của GS] — AC-2, AC-3.
 - Trục chỗ đọc: rời máy (sync-cloud soát + che SQL, push-ops-facts, do-hang-ngay) · hiển thị Ops (offers-public, collections-queries) · thước
   (ops-local, quet-ten-nguon-html) · chưa chuyển (bốn thước) [thước CE: danh sách kê ở `design.md`] — AC-4, Out of scope.
@@ -86,4 +91,9 @@ dùng tên giả cùng hình dạng; không tên nguồn thật nào trong hồ 
   riêng (một từ chung). Cụm hai từ, bản viết liền và tên miền đủ vẫn bị che/chặn. Nới bộ soát tầng A cần lời Mạnh — Hỏi ở Cổng 1.
 
 - Ra khỏi kho: áp 112 và trả dòng S16 lên DB máy thu đi cùng chữ ký Cổng Bằng chứng; giá trị tên thật GS cấp qua tệp cục bộ lúc
-  áp, đọc xong xoá.
+  áp, xoá ngay sau bước kiểm sau (bước kiểm sau cần tệp này).
+
+- Mở lại Cổng Phạm vi ngày 19/11 vì S4 vòng 1 lộ hai việc. (1) Dòng khai `match_whole` để lọt cụm hai từ viết bằng dấu nối, gạch
+  dưới, dấu chấm hay dấu cách kép: thêm vào AC-2. (2) Sự cố 00:26:54Z ngày 19/11: tác tử chấm import `push-ops-facts.mjs`, tệp tự
+  chạy và đẩy một bản tin thật lên cloud, không có lời của Mạnh. Bản dựng lại không có tên nguồn thật; bản tin nằm trên cloud khoảng
+  15 phút rồi bị lượt định kỳ ghi đè: thêm AC-10 để import không còn gửi.

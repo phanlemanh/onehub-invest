@@ -1,18 +1,20 @@
 {
- "feature_plain": "Sổ nguồn được đánh dấu từng dòng «chỉ che nguyên cụm tên»: tên S16 thật (hai từ + tên miền) quay lại sổ mà /ops/registry không còn hiện «S16 <tên dự án>» và lượt đẩy lên cloud không bị chặn nhầm; các nguồn khác che y như hôm nay. Đây là NỚI bộ soát tầng A.",
+ "feature_plain": "Tên dự án trùng thương hiệu với một nguồn sẽ không còn bị che nhầm trên Ops và cloud, trong khi tên nguồn thật vẫn bị che ở mọi cách viết. Bản duyệt lại này vá thêm một lỗ lộ tên và chặn việc vô tình gửi bản tin lên cloud.",
+ "scope_plain": "Duyệt lại vì lượt chấm đầu tìm ra hai việc mới. Mọi tiêu chí đã duyệt ngày 18/11 giữ nguyên, chỉ AC-2 được siết thêm và có thêm AC-10.",
  "will_do": [
-  {"id":"AC-2","p":"Sẽ để nguyên tên dự án mang thương hiệu chủ đầu tư và từ chung «market», nhưng vẫn che cụm tên hai từ và tên miền của nguồn đã đánh dấu; nguồn không đánh dấu che y như hôm nay."},
-  {"id":"AC-3","p":"Sẽ đọc dấu «chỉ che nguyên cụm» qua một hàm chung; DB chưa có cột thì coi như không đánh dấu (che thừa), không có sổ thì danh sách rỗng."},
-  {"id":"AC-4","p":"Sẽ đưa bảy chỗ đọc sổ (ba đường lên cloud, hai chỗ hiện trên Ops, hai thước) qua hàm chung, mỗi chỗ có ca thử riêng; sổ rỗng hay đọc lỗi thì ba đường lên cloud dừng chứ không đẩy."},
-  {"id":"AC-5","p":"Sẽ giữ nguyên 60 dòng log của S05 mà hôm nay chỉ biến thể «từ đầu» che được."},
-  {"id":"AC-6","p":"Sẽ đưa số chỗ bị coi nhầm là tên S16 về 0 (từ 8 nút dự án, 114.760 bí danh, ≈ 1.320 dòng lên cloud, 3.355 dòng khu vực), đo trên bản chép DB máy thu; cấy cụm tên và tên miền S16 thì bộ soát vẫn bắt."},
-  {"id":"AC-7","p":"Sẽ có hồ sơ áp máy thu đủ năm thứ; tệp lùi khôi phục dòng S16 từ bản sao lưu, không viết cứng."},
-  {"id":"AC-9","p":"Sẽ chứng không một biến thể tên thật S16 nào nằm trong hồ sơ, test hay đầu ra lượt chấm (kho công khai)."}
+  {"id":"AC-2","p":"Sẽ che tên nguồn hai từ ở mọi cách viết: có dấu, không dấu, viết hoa, viết liền, và khi các từ nối bằng dấu nối, gạch dưới, dấu chấm, dấu gạch chéo, hai dấu cách hay xuống dòng. Đây là phần mới so với lần duyệt trước."},
+  {"id":"AC-3","p":"Sẽ che thừa thay vì để lọt khi sổ nguồn chưa có cột mới, và dừng như hôm nay khi không đọc được sổ."},
+  {"id":"AC-4","p":"Sẽ dùng một hàm đọc sổ nguồn chung cho sáu chỗ che và soát tên; các đường đưa dữ liệu lên cloud dừng lại nếu sổ rỗng hay đọc lỗi."},
+  {"id":"AC-5","p":"Sẽ giữ nguyên việc che 60 dòng log của nguồn S05 như hôm nay."},
+  {"id":"AC-6","p":"Sẽ đưa số chỗ che nhầm của S16 về 0 trên bản chép DB máy thu: 8 nút dự án, 114.760 bí danh và khoảng 1.320 dòng đi cloud."},
+  {"id":"AC-7","p":"Sẽ có đủ năm thứ để áp lên máy thu: lệnh áp, số chạy thử, sao lưu, cách lùi và lệnh kiểm sau."},
+  {"id":"AC-9","p":"Sẽ không để tên thật của S16 lọt vào hồ sơ, test hay đầu ra lượt chấm trên kho công khai."},
+  {"id":"AC-10","p":"Sẽ chỉ gửi bản tin vận hành lên cloud khi tệp được chạy như lệnh chính; việc nạp tệp để đọc mã không còn gửi gì. Đây là tiêu chí mới sau sự cố 19/11."}
  ],
  "wont_do": [
-  {"id":"AC-1","p":"Chặn đưa sổ nguồn lên cloud: cột mới chỉ ở máy thu, chạy lại migration không lỗi."},
-  {"id":"OOS-1","p":"KHÔNG chuyển bốn thước đo còn lại sang hàm chung — chúng chưa mang dấu thì che thừa (báo động giả), không rò."},
-  {"id":"OOS-2","p":"KHÔNG đổi luật biên từ hay ngưỡng 4 ký tự, KHÔNG đánh dấu dòng nào khác S16."},
-  {"id":"OOS-3","p":"KHÔNG xử lý ở đây những chỗ tên đủ S01–S04 đã trúng bảng lên cloud trên dữ liệu hiện tại — để hàng riêng nếu cần."}
+  {"id":"AC-1","p":"Sẽ KHÔNG đưa sổ nguồn lên cloud, và cột mới không làm đổi dòng nào đang có."},
+  {"id":"OOS-1","p":"KHÔNG chuyển bốn công cụ đo còn lại sang hàm đọc chung; chúng chặn thừa chứ không làm lộ tên."},
+  {"id":"OOS-2","p":"KHÔNG đổi luật khớp từ, và KHÔNG khai cờ cho dòng nào khác S16."},
+  {"id":"OOS-3","p":"KHÔNG xử lý những chỗ tên đủ của S01–S04 đã trúng trong dữ liệu đi cloud; đó là hàng riêng nếu giám sát thấy cần."}
  ]
 }

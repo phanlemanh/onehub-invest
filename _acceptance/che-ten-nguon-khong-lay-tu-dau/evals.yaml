@@ -13,7 +13,7 @@ evals:
     executor: test
     cmd: bash _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/loi.sh
     paths: [pipeline/lib/mask-source-names.mjs, app/src/lib/mask-source-names.ts, pipeline/scripts/mask-source-names.cases.json, pipeline/scripts/ops-nhan-ma-nguon.test.mjs, scripts/ops-nhan-ma-nguon.test.mjs]
-    expected: "exit 0; mọi ca của mask-source-names.cases.json chạy trên CẢ hai bản lõi và hai bản ra cùng chuỗi. Ca mới viết trước, nguồn giả S90 tên hai từ (từ đầu ≥ 4 ký tự trùng thương hiệu của tên dự án giả «<Thương hiệu> Park»), định danh là tên miền có nhãn đầu là một từ chung: wholeOnly=true → «dự án <Thương hiệu> Park» giữ nguyên; câu chứa đúng từ chung giữ nguyên; cụm hai từ ở bốn dạng (đủ, hoa, bỏ dấu, viết liền) thành S90; tên miền thành S90. Đối chứng cùng câu, cờ vắng và cờ false → thương hiệu bị che thành S90. Mọi ca cũ (kể cả «từ đầu của tên nhiều từ» của S05) ra đúng chuỗi như trên origin/main (rút bằng chạy bản lõi git show origin/main, không viết tay). Chiều đỏ cùng fixture: bản sao lõi bỏ qua wholeOnly → ca «dự án <Thương hiệu> Park» đỏ ghim «AC-2 thương hiệu dự án bị che nhầm»."
+    expected: "exit 0; mọi ca của mask-source-names.cases.json chạy trên CẢ hai bản lõi và hai bản ra cùng chuỗi. Ca mới viết trước, nguồn giả S90 tên hai từ (từ đầu ≥ 4 ký tự trùng thương hiệu của tên dự án giả «<Thương hiệu> Park»), định danh là tên miền có nhãn đầu là một từ chung: wholeOnly=true → «dự án <Thương hiệu> Park» giữ nguyên; câu chứa đúng từ chung giữ nguyên; cụm hai từ ở bốn dạng (đủ, hoa, bỏ dấu, viết liền) và ở sáu dấu phân tách (hai dấu cách, xuống dòng, dấu nối, gạch dưới, dấu chấm, dấu /, gồm dạng trong URL) thành S90 trên cả hai bản lõi, scanSourceNames của sync-cloud và maskedSourceExpr chạy thật trong SQL; tên miền thành S90. Đối chứng cùng câu, cờ vắng và cờ false → thương hiệu bị che thành S90. Mọi ca cũ (kể cả «từ đầu của tên nhiều từ» của S05) ra đúng chuỗi như trên origin/main (rút bằng chạy bản lõi git show origin/main, không viết tay). Chiều đỏ cùng fixture: bản sao lõi bỏ qua wholeOnly → ca «dự án <Thương hiệu> Park» đỏ ghim «AC-2 thương hiệu dự án bị che nhầm»."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3
     criterion: AC-3
@@ -77,6 +77,13 @@ evals:
     cmd: bash _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/khong-ten-that.sh
     paths: [_acceptance/che-ten-nguon-khong-lay-tu-dau/**, pipeline/scripts/mask-source-names.cases.json, pipeline/scripts/ops-nhan-ma-nguon.test.mjs, pipeline/scripts/soat-tang-a.test.mjs, pipeline/scripts/source-name-entries.itest.mjs, scripts/ops-nhan-ma-nguon.test.mjs]
     expected: "exit 0; đọc tệp cục bộ GS cấp (thiếu → exit 2 «cần tệp tên thật S16 để dò», không bỏ qua); sinh mọi biến thể BÍ MẬT đã gập (tên đủ, viết liền, mỗi định danh đủ và viết liền, dạng chữa tạm = tên viết liền + slug; không dò từ đầu đứng riêng — Mạnh cho rời máy) và dò trên bản gập của mọi tệp git theo dõi hoặc chưa theo dõi trong paths cùng .acceptance-runs/che-ten-nguon-khong-lay-tu-dau/** (đầu ra lượt chấm) → 0 chỗ trúng; in số chỗ trúng theo tệp, không in biến thể. Đối chứng dương: chép một tệp vào thư mục tạm và chèn một biến thể → phép dò trên bản tạm ra ≥ 1."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-10
+    executor: test
+    cmd: bash _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/khong-gui-khi-import.sh
+    paths: [pipeline/push-ops-facts.mjs, pipeline/scripts/push-ops-facts-import.test.mjs]
+    expected: "exit 0; máy chủ thu giả trên 127.0.0.1 đếm lời gọi, HOME tạm có token giả, DATABASE_URL trỏ DB thử: tiến trình chỉ import tệp → 0 lời gọi, thoát 0; chạy tệp làm lệnh chính → đúng 1 lời gọi; chạy `--kho` → 0 lời gọi; chạy qua một symlink tới thư mục kho → đúng 1 lời gọi. Không ca nào dùng INGEST_URL mặc định. Chiều đỏ cùng fixture: bản sao tệp gọi main() không chốt → ca import đỏ ghim «AC-10 import đã gửi bản tin»."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E8
     criterion: AC-8
