@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GT5 sửa phạm vi</title>
+<style>
+:root{--bg:#fbfbfa;--fg:#1d1d1b;--mut:#5e5e58;--line:#dcdcd6;--card:#fff;--do:#b42318;--xanh:#1f7a3f;--vang:#9a6700;--nhan:#eef3fb}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141413;--fg:#ecece8;--mut:#a3a39b;--line:#34342f;--card:#1c1c1a;--do:#f97066;--xanh:#5ccf8a;--vang:#e3b341;--nhan:#1e2836}}
+:root[data-theme="dark"]{--bg:#141413;--fg:#ecece8;--mut:#a3a39b;--line:#34342f;--card:#1c1c1a;--do:#f97066;--xanh:#5ccf8a;--vang:#e3b341;--nhan:#1e2836}
+*{box-sizing:border-box}
+body{margin:0;padding:24px 16px;background:var(--bg);color:var(--fg);font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+h1{font-size:20px;margin:0}h2{font-size:16px;margin:0 0 8px}
+.the{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px}
+.hoi{background:var(--nhan)}
+.mut{color:var(--mut);font-size:13px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600}
+.do{color:var(--do);font-weight:600}.xanh{color:var(--xanh);font-weight:600}.vang{color:var(--vang);font-weight:600}
+.cuon{overflow-x:auto}
+code{font-size:13px}
+ul{margin:6px 0;padding-left:20px}
+</style>
+</head>
+<body>
+<main>
+<header>
+<h1>GT5 — gom bài S03 hai tầng: sửa phạm vi</h1>
+<p class="mut">Cổng Phạm vi sửa đổi · dãy P4 · 20/11 · GS cho dừng trước lượt chấm vì lỗ của thiết kế và thước đã ký</p>
+</header>
+
+<section class="the hoi">
+<h2>Câu cần anh quyết</h2>
+<p>Khoá gom mới đã hết gộp nhầm, nhưng tách cùng một căn thành nhiều tin ở hơn nửa số căn được đăng lại. Thước tách nhầm đã ký (40 cặp
+audit) không nhìn thấy lớp này. Anh chọn lối nào: <b>A</b> giữ thiết kế, <b>B</b> sửa luật bài thiếu trường và thêm thước tách nhầm,
+hay <b>C</b> tạm gác GT5?</p>
+<p><b>Máy khuyên B</b> với ngưỡng chữ giống 0,3: trên số đã nhìn, gộp nhầm vẫn dưới 2%, tách nhầm giảm từ 52% xuống khoảng 27%.</p>
+</section>
+
+<section class="the">
+<h2>Số đo</h2>
+<div class="cuon"><table>
+<tr><th>Thước</th><th>Mẫu một (120 tin)</th><th>Mẫu hai (120 tin, tách rời)</th></tr>
+<tr><td>Gộp nhầm, khoá cũ → khoá mới (ngưỡng &lt; 5%)</td><td>27,1% → 21,2% [13,8–31,0]<br><span class="mut">bản mã có lỗi «ô trống = ô trống», đã sửa</span></td><td>32,1% → <span class="xanh">0,0%</span> [0–4,5]</td></tr>
+<tr><td>Tách nhầm 40 cặp audit (thước đã ký)</td><td>6 → 6</td><td>6 → 6</td></tr>
+<tr><td>Nhóm cùng căn bị tách thành ≥ 2 tin <span class="mut">(số tham khảo, ngoài thước đã ký)</span></td><td>—</td><td>0 → <span class="do">62/118 (52,5%)</span></td></tr>
+<tr><td>Tin S03 sống trên bản chép DB</td><td colspan="2">7.672 → 11.867</td></tr>
+</table></div>
+<p class="mut">Mẫu một không còn «giữ riêng»: 18 tin gộp nhầm của nó đã được đọc để tìm lỗi. Mẫu hai chấm một lần, sau bản sửa
+<code>84c73d751</code>. Mẫu hai có được tính là phép đo của AC-9 hay không là lời của anh.</p>
+</section>
+
+<section class="the">
+<h2>Vì sao tách nhiều</h2>
+<p>Trên 62 nhóm bị tách ở mẫu hai: 54 nhóm có mọi trường khớp (người, loại, giá, số phòng, diện tích, phân khu, mã), cùng thiếu đúng các
+trường giống nhau, chỉ khác chữ — tức là cùng căn được đăng lại có sửa lời. Thiết kế đã ký chỉ cho bài thiếu trường nhập vào tin đủ
+cả bốn trường, nên các bài này đứng riêng. Tám nhóm còn lại tách vì đổi loại tin hay đổi mã giữa các lần đăng.</p>
+</section>
+
+<section class="the">
+<h2>Ba lối</h2>
+<div class="cuon"><table>
+<tr><th>Lối</th><th>Làm gì</th><th>Được</th><th>Mất</th><th>Giờ máy</th></tr>
+<tr><td><b>A</b></td><td>Giữ thiết kế đã ký, ghi tách 52,5% vào giới hạn đã biết, đi lượt chấm.</td><td>Hết gộp nhầm (0/81).</td><td>Hơn nửa số căn đăng lại thành nhiều tin; Căn giá tốt hiện trùng căn.</td><td>~1 giờ</td></tr>
+<tr><td><b>B</b> <span class="mut">(khuyên)</span></td><td>Bài thiếu trường được nhập vào bài cùng người, cùng thiếu <i>đúng</i> các trường đó, các trường còn lại khớp, trong 7 ngày, chữ giống từ ngưỡng anh chốt. Thêm thước tách nhầm trên nhóm cùng căn; chấm trên mẫu ba mới.</td><td>Tách nhầm giảm mạnh, gộp nhầm vẫn thấp.</td><td>Thêm một mẫu ba và một vòng sửa; ngưỡng chữ giống thấp thì gộp nhầm nhích lên.</td><td>~2,5 giờ</td></tr>
+<tr><td><b>C</b></td><td>Tạm gác GT5, giữ khoá cũ trên máy thu.</td><td>Không đổi gì trên màn.</td><td>Gộp nhầm 27–32% còn nguyên.</td><td>0</td></tr>
+</table></div>
+</section>
+
+<section class="the">
+<h2>Lối B: số đã nhìn ở các ngưỡng</h2>
+<p class="mut">Ước bằng hàm gom thuần trên bài của hai mẫu (đã đọc mẫu nên đây là số đã nhìn, không phải số chấm).</p>
+<div class="cuon"><table>
+<tr><th>Ngưỡng chữ giống</th><th>Mẫu một: gộp nhầm · tách nhóm</th><th>Mẫu hai: gộp nhầm · tách nhóm</th></tr>
+<tr><td>A (thiết kế đã ký)</td><td>0/85 · 71/119</td><td>0/81 · 62/118</td></tr>
+<tr><td>0,9</td><td>0/85 · 68/119</td><td>0/81 · 61/118</td></tr>
+<tr><td>0,7</td><td>0/85 · 58/119</td><td>0/81 · 54/118</td></tr>
+<tr><td>0,5</td><td>1/85 · 45/119</td><td>0/81 · 47/118</td></tr>
+<tr><td><b>0,3</b></td><td>1/85 · 32/119</td><td>0/81 · 32/118</td></tr>
+<tr><td>bỏ ngưỡng chữ</td><td class="vang">12/85 · 19/119</td><td>3/81 · 20/118</td></tr>
+</table></div>
+<p>Nếu chọn B, máy đề xuất:</p>
+<ul>
+<li>Ngưỡng chữ giống <b>0,3</b>, cửa sổ 7 ngày giữ nguyên.</li>
+<li>Gộp nhầm giữ ngưỡng <b>&lt; 5%</b>.</li>
+<li>Thước mới: nhóm cùng căn (theo nhãn đồng thuận hai model) bị tách <b>≤ 35%</b>.</li>
+<li>Phép đo cuối trên <b>mẫu ba</b> tách rời mẫu một và hai, đóng băng trước, chấm một lần.</li>
+</ul>
+<p class="mut">Phần tách còn lại (khoảng 20 nhóm khi bỏ hẳn ngưỡng chữ) đến từ đổi loại tin, đổi mã và bài cách nhau quá 7 ngày. Việc
+nối đổi giá cùng căn là GT6.</p>
+</section>
+
+<section class="the">
+<h2>Phần khác của GT5 (không đổi)</h2>
+<ul>
+<li><span class="xanh">Xanh</span>: công tắc mặc định tắt (AC-1), đường nối mã tin cũ (AC-7, 0 mã treo), chạy thử hai lượt và phát lại theo ngày (AC-10).</li>
+<li><span class="vang">Chờ</span>: phân khu viết tắt (AC-5) chờ dãy danh bạ thêm bí danh <code>ori</code>, <code>rb</code>, <code>bs</code>, <code>gh</code> sau DA46.</li>
+<li>AC-5 chấm trên danh sách đóng băng 124 tin (21 theo tên + 103 theo viết tắt) thay số 12/160 của bảng phủ ca; xin anh phê ở cổng.</li>
+<li>Tiền: hai mẫu gán nhãn bằng tác tử con của phiên, 0 USD chi thêm (trần 3 USD).</li>
+</ul>
+</section>
+</main>
+</body>
+</html>
