@@ -5,9 +5,9 @@ slug: can-gia-tot-loc-xep-hang
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui, api]
-status: draft
-approved_by:
-approved_at:
+status: approved
+approved_by: Mạnh
+approved_at: 2026-11-19
 design_doc: docs/superpowers/specs/2026-11-18-can-gia-tot-loc-xep-hang-design.md
 ---
 
