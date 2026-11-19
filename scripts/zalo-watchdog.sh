@@ -378,6 +378,9 @@ if [ "${ZALO_WATCHDOG_P1_TAT:-0}" != "1" ] && [ ! -f "$P1_TAT_TEP" ]; then
   HB_STATE="${ZALO_HEARTBEAT_STATE:-$HOME/.openclaw/logs/.zalo-heartbeat-down}"
   if [ ! -f "$HB_STATE" ] && grep -q '^session=1' "$P1_STATE" 2>/dev/null; then
     grep -vx 'session=1' "$P1_STATE" > "${P1_STATE}.tmp" 2>/dev/null && mv "${P1_STATE}.tmp" "$P1_STATE" || rm -f "${P1_STATE}.tmp"
+    # 1811-11(1): gỡ cờ p1-qr CÙNG lúc gỡ session=1 — giữ lại thì sự cố phiên chết
+    # lần 2 không còn cảnh báo «CẦN QUÉT QR» (song_canh_bao chỉ báo một lần mỗi cờ)
+    song_hoi_xoa p1-qr "$SONG_STATE"
   fi
   B_MOC=$(grep -oE '^b-moc=[0-9]+' "$SONG_STATE" 2>/dev/null | cut -d= -f2 | tail -1)
   A_OK=0
@@ -392,18 +395,37 @@ if [ "${ZALO_WATCHDOG_P1_TAT:-0}" != "1" ] && [ ! -f "$P1_TAT_TEP" ]; then
       DU_TRAN=0
       LAN_P1=$(grep -oE '^lan=[0-9]+' "$P1_STATE" 2>/dev/null | cut -d= -f2 | tail -1)
       [ -n "$LAN_P1" ] && [ $(( NOW_P1 - LAN_P1 )) -lt 21600 ] && DU_TRAN=1
+      # 1811-11(3): sau kick LỖI phải đợi trần riêng (900s) trước khi thử lại — không
+      # thì lượt kick lỗi lặp mỗi nhịp 300s (nhịp launchd của watchdog). 900s = 3 nhịp
+      # watchdog = 1 nhịp heartbeat (900s): đủ một kết quả heartbeat mới để kết luận
+      # kick trước có hiệu lực; nhỏ hơn trần chính 6h nên không cản lượt kick hợp lệ kế.
+      LAN_LOI=$(grep -oE '^lan-loi=[0-9]+' "$P1_STATE" 2>/dev/null | cut -d= -f2 | tail -1)
+      [ -n "$LAN_LOI" ] && [ $(( NOW_P1 - LAN_LOI )) -lt 900 ] && DU_TRAN=1
       if [ "$DU_TRAN" = "1" ]; then
-        echo "$(date -Iseconds) WARN VHZ2: đủ điều kiện kickstart nhưng quá trần 1 lần/6 giờ — chỉ cảnh báo, không kick" >> "$ALERT_LOG"
-      else
-        echo "lan=$NOW_P1" >> "$P1_STATE"
-        echo "$(date -Iseconds) VHZ2: kickstart gateway — L6(b) đỏ $(( NOW_P1 - B_MOC ))s (≥10′), lockdown ok, L4d sạch" >> "$ALERT_LOG"
-        echo "$(date -Iseconds) VHZ2 kickstart — lý do: L6(b) đỏ $(( NOW_P1 - B_MOC ))s; heartbeat reason=$(grep -oE '^reason=[a-z]+' "$HB_STATE" 2>/dev/null | cut -d= -f2 | tail -1 || echo na)" >> "$P1_SO"
-        # heartbeat vẫn reason=session sau khi kick → đánh dấu không thử lại (lượt sau cảnh báo cần QR)
-        if grep -q '^reason=session' "$HB_STATE" 2>/dev/null; then
-          echo "session=1" >> "$P1_STATE"
+        if [ -n "$LAN_LOI" ] && [ $(( NOW_P1 - LAN_LOI )) -lt 900 ]; then
+          echo "$(date -Iseconds) WARN VHZ2: đủ điều kiện kickstart nhưng đang trong trần thử lại sau kick lỗi (900s) — không kick" >> "$ALERT_LOG"
+        else
+          echo "$(date -Iseconds) WARN VHZ2: đủ điều kiện kickstart nhưng quá trần 1 lần/6 giờ — chỉ cảnh báo, không kick" >> "$ALERT_LOG"
         fi
+      else
+        # 1811-11(3): đọc mã thoát LỆNH KICK — lan= chỉ ghi khi kick THÀNH CÔNG (lượt
+        # lỗi không tiêu trần 6h); lỗi thì sổ kickstart-lỗi + WARN alerts để D1 đẩy.
+        # Gọi trực tiếp $KICK_CMD (tách từ) để đọc $? — không bash -c (neo tĩnh AC-6 P1).
         KICK_CMD="${ZALO_WATCHDOG_KICKSTART:-launchctl kickstart -k gui/$(id -u)/ai.openclaw.gateway}"
-        bash -c "$KICK_CMD" >/dev/null 2>&1 || true
+        KICK_RC=$($KICK_CMD >/dev/null 2>&1; echo $?)
+        if [ "$KICK_RC" = "0" ]; then
+          echo "lan=$NOW_P1" >> "$P1_STATE"
+          echo "$(date -Iseconds) VHZ2: kickstart gateway — L6(b) đỏ $(( NOW_P1 - B_MOC ))s (≥10′), lockdown ok, L4d sạch" >> "$ALERT_LOG"
+          echo "$(date -Iseconds) VHZ2 kickstart — lý do: L6(b) đỏ $(( NOW_P1 - B_MOC ))s; heartbeat reason=$(grep -oE '^reason=[a-z]+' "$HB_STATE" 2>/dev/null | cut -d= -f2 | tail -1 || echo na)" >> "$P1_SO"
+          # heartbeat vẫn reason=session sau khi kick → đánh dấu không thử lại (lượt sau cảnh báo cần QR)
+          if grep -q '^reason=session' "$HB_STATE" 2>/dev/null; then
+            echo "session=1" >> "$P1_STATE"
+          fi
+        else
+          echo "$(date -Iseconds) WARN VHZ2: kickstart LỖI (mã thoát $KICK_RC) — KHÔNG tính trần 6 giờ, thử lại sau 900s" >> "$ALERT_LOG"
+          echo "$(date -Iseconds) VHZ2 kick lỗi — kickstart thất bại mã thoát $KICK_RC; lý do lúc gọi: L6(b) đỏ $(( NOW_P1 - B_MOC ))s" >> "$P1_SO"
+          echo "lan-loi=$NOW_P1" >> "$P1_STATE"
+        fi
       fi
     fi
   fi

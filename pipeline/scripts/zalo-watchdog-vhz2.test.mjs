@@ -262,3 +262,86 @@ test("CA ĐỎ VHZ2: gỡ điều kiện (a) L6(b) đỏ ≥10′ → ca kiểu 
   assert.equal(kickSoDem(root), 0, "chưa đủ đỏ ≥10′ → KHÔNG kick (gỡ điều kiện (a) sẽ làm ca này đỏ)");
   rmSync(home, { recursive: true, force: true }); rmSync(root, { recursive: true, force: true });
 });
+
+// ---- 1811-11: ba lỗi logic dãy tích hợp U2 soát ra — ba ca dưới ĐỎ trên bản cũ, XANH sau sửa ----
+
+test("1811-11(1) p1-qr gỡ CÙNG session=1: hai sự cố phiên chết → đúng 2 dòng «CẦN QUÉT QR» (bản cũ chỉ 1)", { skip: SKIP_KHONG_MAC }, () => {
+  const { home, root, env, gwLog } = dungMoi({ attemptTruoc: true });
+  mkdirSync(join(home, ".openclaw", "logs"), { recursive: true });
+  const hb = join(home, ".openclaw", "logs", ".zalo-heartbeat-down");
+  const songState = join(root, "pipeline", "logs", "zalo-watchdog-song-state");
+  const p1State = join(root, "pipeline", "logs", "zalo-watchdog-p1-state");
+  const alerts = join(root, "pipeline", "logs", "zalo-watchdog-alerts.log");
+  const qr = () => (readFileSync(alerts, "utf8").match(/CẦN QUÉT QR/g) ?? []).length;
+  // sự cố 1: phiên chết → kick + session=1; lượt kế → QR lần 1
+  writeFileSync(hb, "nhip=2\nreason=session\n");
+  chayWd(env, root); // init
+  writeFileSync(gwLog, readFileSync(gwLog, "utf8") + `${isoCu(700)} auto-restart attempt 1/10\n`);
+  chayWd(env, root); // đỏ + kick
+  chayWd(env, root); // session=1 → QR lần 1
+  assert.equal(kickSoDem(root), 1, "sự cố 1: đúng 1 kick");
+  assert.equal(qr(), 1, "sự cố 1: một dòng cần QR");
+  // hồi phục: heartbeat UP → session=1 VÀ p1-qr phải gỡ cùng lúc
+  rmSync(hb, { force: true });
+  chayWd(env, root);
+  assert.doesNotMatch(readFileSync(p1State, "utf8"), /^session=1$/m, "session=1 đã gỡ");
+  assert.doesNotMatch(readFileSync(songState, "utf8"), /^p1-qr$/m, "cờ p1-qr gỡ CÙNG session=1 (1811-11(1))");
+  // sự cố 2 sau 6h+ (giả lập bằng cách đẩy lan= về quá khứ): kick lần nữa + QR lần 2
+  writeFileSync(p1State, readFileSync(p1State, "utf8").replace(/^lan=(\d+)$/m, `lan=${Math.floor(Date.now() / 1000) - 21601}`));
+  writeFileSync(hb, "nhip=2\nreason=session\n");
+  writeFileSync(gwLog, readFileSync(gwLog, "utf8") + `${isoCu(700)} auto-restart attempt 2/10\n`);
+  chayWd(env, root); // đỏ + kick lần 2
+  chayWd(env, root); // session=1 → QR lần 2
+  assert.equal(kickSoDem(root), 2, "sự cố 2: kick lần nữa");
+  assert.equal(qr(), 2, "hai sự cố → đúng 2 dòng cần QR (bản cũ mất cảnh báo lần 2)");
+  rmSync(home, { recursive: true, force: true }); rmSync(root, { recursive: true, force: true });
+});
+
+test("1811-11(2) gateway.log bị cắt khi b-moc còn → hai nhánh return sớm của song_b_restart phải XOÁ b-moc, không kickstart gateway khỏe", { skip: SKIP_KHONG_MAC }, () => {
+  const { home, root, env, gwLog } = dungMoi({ attemptTruoc: false });
+  const songState = join(root, "pipeline", "logs", "zalo-watchdog-song-state");
+  chayWd(env, root); // init (sinh song-state)
+  // b-moc CŨ (1 giờ trước — sót từ sự cố trước) rồi log bị cắt (không còn dòng attempt nào)
+  writeFileSync(songState, `b-moc=${Math.floor(Date.now() / 1000) - 3600}\n`);
+  writeFileSync(gwLog, `${isoCu(5)} [gateway] dòng mới sau khi cắt\n`);
+  chayWd(env, root); // L6: iso_a rỗng → return sớm (bản cũ GIỮ b-moc; bản mới xoá)
+  chayWd(env, root); // bản cũ: b-moc còn → A_OK → kick gateway KHỎE; bản mới: 0 kick
+  assert.equal(kickSoDem(root), 0, "log cắt + b-moc cũ → KHÔNG kick gateway khỏe");
+  assert.doesNotMatch(readFileSync(songState, "utf8"), /^b-moc=/m, "b-moc đã xoá ở nhánh return sớm (1811-11(2))");
+  // nhánh hai: attempt có nhưng ISO hỏng (moc_a rỗng) → return sớm thứ hai cũng phải sạch
+  writeFileSync(songState, `b-moc=${Math.floor(Date.now() / 1000) - 3600}\n`);
+  writeFileSync(gwLog, `${isoCu(5).replace(/\.[0-9]+/, ".X")} auto-restart attempt 9/10\n`); // ISO sai khuôn → song_moc_epoch rỗng
+  chayWd(env, root);
+  chayWd(env, root);
+  assert.equal(kickSoDem(root), 0, "nhánh moc_a rỗng cũng phải xoá b-moc — 0 kick");
+  rmSync(home, { recursive: true, force: true }); rmSync(root, { recursive: true, force: true });
+});
+
+test("1811-11(3) kickstart thất bại → sổ kickstart-lỗi kèm mã thoát + WARN alerts, KHÔNG ghi lan= (không tiêu trần 6h), thử lại bị trần riêng 900s chặn", { skip: SKIP_KHONG_MAC }, () => {
+  const { home, root, env, gwLog } = dungMoi({ attemptTruoc: true });
+  const kick = join(root, "kick-stub.sh");
+  writeFileSync(kick, "#!/bin/bash\nexit 7\n"); // kick stub LỖI (thoát 7)
+  chmodSync(kick, 0o755);
+  const p1State = join(root, "pipeline", "logs", "zalo-watchdog-p1-state");
+  const p1So = join(root, "pipeline", "logs", "zalo-watchdog-p1.log");
+  const alerts = join(root, "pipeline", "logs", "zalo-watchdog-alerts.log");
+  chayWd(env, root); // init
+  writeFileSync(gwLog, readFileSync(gwLog, "utf8") + `${isoCu(700)} auto-restart attempt 1/10\n`);
+  chayWd(env, root); // đủ điều kiện → kick → stub lỗi 7
+  assert.match(readFileSync(p1So, "utf8"), /VHZ2 kick lỗi — kickstart thất bại mã thoát 7/, "sổ ghi kick-lỗi kèm mã thoát (bản cũ nuốt: sổ ghi đã kick)");
+  assert.doesNotMatch(readFileSync(p1So, "utf8"), /VHZ2 kickstart — lý do/, "sổ KHÔNG ghi dòng kickstart thành công cho lượt lỗi");
+  assert.match(readFileSync(alerts, "utf8"), /WARN VHZ2: kickstart LỖI/, "WARN alerts để D1 đẩy (bản cũ không cảnh báo)");
+  assert.doesNotMatch(readFileSync(p1State, "utf8"), /^lan=\d+/m, "lượt lỗi KHÔNG ghi lan= — không tiêu trần 6 giờ");
+  assert.match(readFileSync(p1State, "utf8"), /^lan-loi=\d+/m, "ghi lan-loi cho trần riêng");
+  // thử lại trong trần riêng 900s → bị chặn
+  writeFileSync(gwLog, readFileSync(gwLog, "utf8") + `${isoCu(800)} auto-restart attempt 2/10\n`);
+  chayWd(env, root);
+  assert.match(readFileSync(alerts, "utf8"), /trần thử lại sau kick lỗi \(900s\)/, "trần riêng chặn với lý do riêng");
+  assert.equal((readFileSync(p1So, "utf8").match(/kickstart thất bại/g) ?? []).length, 1, "còn trong trần riêng 900s → không thử lại");
+  // hết trần riêng (giả lập lan-loi thành 901s trước) → thử lại được, sổ lần 2
+  writeFileSync(p1State, readFileSync(p1State, "utf8").replace(/^lan-loi=(\d+)$/m, `lan-loi=${Math.floor(Date.now() / 1000) - 901}`));
+  chayWd(env, root);
+  assert.equal((readFileSync(p1So, "utf8").match(/kickstart thất bại/g) ?? []).length, 2, "hết trần riêng → thử lại (stub vẫn lỗi) — sổ lần 2");
+  assert.doesNotMatch(readFileSync(alerts, "utf8").replace(/^.*WARN VHZ2: đủ điều kiện.*$/m, ""), /quá trần 1 lần\/6 giờ.*(kick lần|lượt lỗi)/, "lượt lỗi không ăn vào trần 6 giờ");
+  rmSync(home, { recursive: true, force: true }); rmSync(root, { recursive: true, force: true });
+});

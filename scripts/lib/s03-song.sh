@@ -83,11 +83,16 @@ song_b_restart() {
   iso_a=$(grep "auto-restart attempt" "$gwlog" 2>/dev/null | tail -1 | grep -oE '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]+[+-][0-9]{2}:[0-9]{2}')
   if [ -z "$iso_a" ]; then
     song_hoi_xoa b "$state"
+    # 1811-11(2): log bị cắt thì bỏ luôn mốc b-moc cũ — giữ lại thì khối P1 tưởng L6(b)
+    # vẫn đỏ và kickstart gateway ĐANG KHỎE lặp mỗi 6 giờ (nhánh return sớm phải sạch
+    # như nhánh lành dòng cuối hàm: hoi_xoa + xoá b-moc)
+    sed -i '' '/^b-moc=/d' "$state" 2>/dev/null || true
     return 1
   fi
   moc_a=$(song_moc_epoch "$iso_a")
   if [ -z "$moc_a" ]; then
     song_hoi_xoa b "$state"
+    sed -i '' '/^b-moc=/d' "$state" 2>/dev/null || true
     return 1
   fi
   iso_s=$(grep "starting .* provider" "$gwlog" 2>/dev/null | tail -1 | grep -oE '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]+[+-][0-9]{2}:[0-9]{2}')
