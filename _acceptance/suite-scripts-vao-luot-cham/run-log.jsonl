@@ -108,3 +108,4 @@
 {"ts":"2026-11-18T20:58:29Z","sha":"21fb9500cbe9b47ab17c56f7311dc0b75bc8645a","round":4,"kind":"baseline","evals_hash":"99233d13b7b9ed928d25edf65107a39896be660c3f04bd8aec83ada781d5492b","non_discriminating":[{"cmd":"node --test --test-name-pattern=S4V-AC-6 scripts/suite-neu-doi.test.mjs && bash _acceptance/s4-suite-theo-vung/probes/cau-hinh-khong-doi.sh","evals":["E6"]}],"carried_from_round":3}
 {"ts":"2026-11-18T20:58:29Z","sha":"21fb9500cbe9b47ab17c56f7311dc0b75bc8645a","round":4,"kind":"round-tally","verdict":"REJECT","expected":14,"returned":14,"blocked":0}
 {"ts":"2026-11-18T20:58:29Z","sha":"21fb9500cbe9b47ab17c56f7311dc0b75bc8645a","round":4,"kind":"chot-truong-nguoi","human_signoff":0,"human_override":0,"bypass_ack":0,"verified_at":12}
+{"kind":"scripts-ci","ts":"2026-11-19T01:57:33.009Z","sha":"cfd8a8b1e095f8406837f0200ad59ca7d9a5bd07","exit":0,"tests":539,"pass":529,"fail":0,"giay":113.1}
