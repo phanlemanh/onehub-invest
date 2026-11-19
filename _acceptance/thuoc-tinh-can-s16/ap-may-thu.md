@@ -135,8 +135,49 @@ Manifest snapshot ghi 6.456 lượt thu lỗi. Các lượt này không nằm tr
 
 ### Chạy thay bộ nạp (chỉ điền nếu giám sát báo «chạy thay» lúc 15:00Z)
 
-Lời Mạnh: «<nguyên văn>» (<thời điểm>, mã câu hỏi <mã>). Lệnh: `node pipeline/import-s16-chi-tiet.mjs <thư mục snapshot> --may-thu`, từ checkout chính ở `main`, sau khi áp 113 và 118.
+Lời Mạnh: «Cho P1 chạy thay» — chỉ lệnh nạp, chỉ khi ZCode kẹt hoặc vắng (giám sát chuyển lúc 15:02Z ngày 19/11). ZCode đã nhận vòng
+1911-1 nhưng im từ 09:36Z; điều phối liên làn báo kênh (claudedp-1911-6) rồi nhắn P1 «được chạy thay» lúc 15:46Z. Lệnh:
+`DATABASE_URL=… node pipeline/import-s16-chi-tiet.mjs <thư mục snapshot sv14 thu 2026-11-18T00:30:57Z> --may-thu`, từ checkout chính ở
+`main` 6932c66d2, sau khi áp 113 và 118. Kết quả 15:46:49Z: «nạp 95798/95798 dòng stg_s16_can_chi_tiet (đọc 95798 item, snapshot 1 dòng
+airbnb_snapshots); bỏ 0 kind-lạ, 0 thiếu-du-an, 0 thiếu-mã-căn» — đúng kỳ vọng 95.798/0/0. (Lần gọi đầu thiếu `DATABASE_URL` nên dừng trước
+khi mở DB, không ghi gì.)
 
 ### Kết quả áp (điền khi áp)
 
-Thời điểm: <...> · sha `main`: <...> · hai tệp sao lưu (đường, cỡ): <...> · đầu ra lệnh kiểm sau: <...> · số thật cạnh số đối chiếu: <...>
+Người chạy: phiên P1, đợt dot0-cam-mau. Áp từ checkout chính ở `main` **6932c66d2** (sau #497).
+
+| Bước | Giờ (UTC, 19/11) | Kết quả |
+|---|---|---|
+| Kiểm trước | 15:00–15:30 | 113 chưa áp; 0 phát biểu S16 trên căn; lượt S03 15′ cuối (22:00 VN) xong trước khi áp; câu đọc `field_assertions` chạy dài lúc đó nằm trên DB thử `oneinvest_suite_*`, không khoá DB thật |
+| 1. Sao lưu | 15:30:09–15:30:13 | `state/sao-luu/truoc-113-20261119T153009Z.dump` 39.839.896 B · `state/sao-luu/luoc-do-truoc-113-20261119T153009Z.sql` 554.688 B |
+| 2. Áp 113 (hai lần), 118 | 15:30:21–15:30:22 | `ON_ERROR_STOP=1`, không lỗi; lần hai chạy lại sạch (`INSERT 0 4` như lần một) |
+| Nạp (chạy thay, mục trên) | 15:46:49 | 95.798/95.798, bỏ 0/0/0 |
+| Căn S16 đúc mới sau mốc 17:06:39Z | 15:46:53 | 0 (bí danh S16 sống 111.331) |
+| Chạy thử | 15:46:53–15:46:54 | khớp từng ô khối «Số đối chiếu mới» |
+| `--ghi --db-that` | 15:47:03–15:47:16 | ghi 441.193 dòng mới, kèm `ANALYZE field_assertions` |
+| 5. `kiem.sh that` | 15:47:16–15:47:20 | 40/40 ô, thoát 1, lệch đúng 6 ô grand-park (+2) đã được nhận; không ô nào khác |
+| 5. Mắt nhìn `/ops/registry` (dev :3456 máy thu, tài khoản ops thử) | ~15:52 | grand-park (id 16) «Căn có thuộc tính 37.591», giá chủ đầu tư 1.850, chưa vào danh bạ 0 · smart-city (id 4) 2.546 · ocean-park-3 (id 3) 2.797, chưa vào danh bạ 792; tải 4–6 giây |
+
+Số thật cạnh số đối chiếu (khối «Số đối chiếu mới»):
+
+| Chỉ số | Thật | Đối chiếu |
+|---|---|---|
+| Phát biểu | 441.193 | 441.193 |
+| Căn danh bạ có thuộc tính | 84.822 | 84.822 |
+| Căn có bí danh S16 | 111.331 | 111.331 |
+| Căn có giá chủ đầu tư | 11.852 | 11.852 |
+| Tầng lệch | 41 | 41 |
+| Mã hai toà trong snapshot | 862 | 862 |
+| Mã có thuộc tính chưa có căn danh bạ | 10.114 | 10.114 |
+| Tim tường + đất | 69.678 + 15.144 | 69.678 + 15.144 |
+
+```chay-thu-that
+grand-park | 37591 | 37591 | 37591 | 35976 | 436 | 28316 | 36973 | 1850
+ocean-park | 32097 | 32097 | 32097 | 27440 | 22063 | 31808 | 30919 | 9999
+ocean-park-2 | 9791 | 9791 | 9791 | 9791 | 0 | 2492 | 9791 | 3
+ocean-park-3 | 2797 | 2797 | 2797 | 2797 | 0 | 2782 | 2797 | 0
+smart-city | 2546 | 2546 | 2546 | 2546 | 2476 | 2497 | 2502 | 0
+```
+
+Đường lùi từ giờ: chỉ lùi dữ liệu (mục 4, câu UPDATE rút phát biểu S16) hoặc khôi phục từ sao lưu trên; lùi lược đồ `lui/113-lui.sql`
+không còn dùng được vì đã `--ghi`. Không job đêm nào chạy lại lượt nạp hay `--ghi` (mục 0): lần thu S16 sau muốn lên màn phải chạy tay lại.
