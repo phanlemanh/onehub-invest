@@ -30,9 +30,11 @@ Mạnh chọn thu phạm vi CG3 sau lượt chấm 5 (2026-11-19T07:09:30Z, «Đ
 trở lại ở hàng này: phép so trên DB máy thu đọc trong một snapshot nhất quán, đo thời gian tải khi máy yên, lint không quét tệp chép
 tạm của test, ảnh xem màn thật quay lại.
 
-## Ngưỡng nghiệm thu đề xuất
+## Ngưỡng chết / ngưỡng UAT
 
-- Trang 1, tin bán, không lọc, cỡ 15 và cỡ 50: số trên tab «Căn cùng tiêu chí» của mọi dòng bằng lệnh đếm độc lập trên toàn tập.
-  Đo 19/11 trên DB máy thu: hôm nay 12/15 và 44/50 dòng hiện 0; lệnh đếm toàn tập ra 1/15 và 5/50 dòng bằng 0.
-- «Chưa có căn nào cùng tiêu chí» chỉ hiện khi lệnh đếm ra 0.
-- Năm ý của AC-10 cũ của CG3 có bằng chứng máy trên DB máy thu.
+_Máy đề xuất, chờ chốt ở Cổng Phạm vi. Lệnh đo: `bash _acceptance/can-cung-tieu-chi-toan-tap/probes/do-may-thu.sh` (dựng ở S3), đọc DB máy thu trong một snapshot._
+
+- Câu hỏi phép đo trả lời: [đề xuất] mở sheet một căn, người vận hành có thấy đúng số căn tương tự trên cả danh sách đang lọc không?
+- Kết quả nào là SỐNG: [đề xuất] trang 1 tin bán không lọc, cỡ 15 và 50, số «Căn cùng tiêu chí» của mọi dòng bằng lệnh đếm độc lập (đo 19/11: hôm nay 12/15 và 44/50 dòng hiện 0, lệnh đếm ra 1/15 và 5/50); năm ý của AC-10 cũ CG3 có bằng chứng máy.
+- Kết quả nào là CHẾT: [đề xuất] còn một dòng hiện 0 trong khi lệnh đếm khác 0, hay «Chưa có căn» hiện khi lệnh đếm khác 0.
+- Timebox: một vòng
