@@ -162,6 +162,21 @@ if (che === "ap-lui") {
   kt(await bamS03() === b0, "sau khi lùi và chạy lại chuỗi: băm area_id + field_provenance của tin S03 bằng trước khi áp");
 }
 
+if (che === "doi-chung-resolve") {
+  // Đối chứng cho E6: chỉ gọi resolve_offer_fields trên tin S03 cột trống, KHÔNG có phát biểu nào của luật phường.
+  // Tin đổi ở đây là dấu cũ có từ trước, không do luật phường sinh ra. Chỉ in số, không đỏ.
+  kt(await soSong() === 0, "tiền đề: chưa có phát biểu sống của luật phường");
+  const snap = async () => new Map((await c.query(`SELECT offer_id, area_id, field_provenance -> 'area_id' fp FROM sale_offer_records WHERE source = 'S03'`)).rows
+    .map((r) => [r.offer_id, JSON.stringify([r.area_id, r.fp])]));
+  const ids = (await c.query(`SELECT offer_id FROM sale_offer_records WHERE source = 'S03' AND area_id IS NULL AND field_provenance -> 'area_id' IS NULL`)).rows.map((r) => r.offer_id);
+  const s0 = await snap();
+  await c.query("SELECT resolve_offer_fields($1::text[])", [ids]);
+  const s1 = await snap();
+  const doi = [...s0].filter(([k, v]) => s1.get(k) !== v).map(([k]) => k);
+  const doiCot = doi.filter((k) => JSON.parse(s0.get(k))[0] !== JSON.parse(s1.get(k))[0]);
+  console.log(`tin S03 cột trống chưa có dấu: ${ids.length} · đổi field_provenance sau một lượt resolve: ${doi.length} · đổi area_id: ${doiCot.length}`);
+}
+
 if (che === "thoi-gian") {
   const CUA_SO = `SELECT count(*) FILTER (WHERE a.region_type = 'submarket')::int co, count(*)::int tong FROM sale_offers s
     LEFT JOIN areas a ON a.id = s.area_id WHERE s.source = 'S03' AND s.first_seen >= '2026-11-13' AND s.first_seen < '2026-11-20'`;

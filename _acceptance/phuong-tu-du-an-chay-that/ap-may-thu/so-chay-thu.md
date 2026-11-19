@@ -51,6 +51,20 @@ Cột đang ghi tỉnh Hà Nội, dự án nằm ở phường thuộc Hưng Yê
 - offer_e4f10c5f16377036 vn-hanoi → vn-hung-yen
 - offer_e6880ed7eb1a9279 vn-hanoi → vn-hung-yen
 
+## Lùi qua chuỗi (E6) và phép đối chứng «chỉ gọi resolve»
+
+Lượt `tren-db-thu.sh ap-lui` (19/11 ~08:45Z, bản chép): sau sao lưu → áp → `lui.sql` → `transform-zalo` → `--ghi --noi-tiep`, phát biểu sống
+của luật về 0 và `area_id` của mọi tin S03 về đúng như trước khi áp; băm `area_id` + `field_provenance` lệch ở 13 tin, mọi chỗ lệch
+nằm trong `field_provenance.area_id.goi_y` (gợi ý từ thẻ nhóm, luật `dia-chi-the-nhom`), cột vẫn trống như trước.
+
+Đối chứng, không có luật phường: `bash _acceptance/phuong-tu-du-an-chay-that/probes/tren-db-thu.sh doi-chung-resolve` — trên bản chép chưa có
+phát biểu nào của luật, chỉ gọi `resolve_offer_fields` một lượt trên tin S03 cột trống chưa có dấu:
+
+- tin S03 cột trống chưa có dấu: 544 · đổi `field_provenance` sau một lượt resolve: 267 · đổi `area_id`: 0
+
+Tức 267 tin mang dấu cũ chưa từng phân xử lại; lần gọi phân xử nào cũng làm mới `goi_y` của chúng, có hay không có luật phường. 13 tin lệch
+ở E6 là những tin trong số đó mà lượt lùi đụng tới. Cách đo AC-6 đang chờ Mạnh quyết (yêu cầu P3-209).
+
 ## Ngay trước khi áp
 
 Điền lúc áp thật trên máy thu (README bước 2): mốc, tử số, mẫu số, cửa sổ 13–19/11 từ `kiem-sau.sql`.
