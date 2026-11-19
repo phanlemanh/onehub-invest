@@ -5,7 +5,7 @@ slug: can-cung-tieu-chi-toan-tap
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui, api]
-status: implemented
+status: machine-cleared
 approved_by: Mạnh
 approved_at: 2026-11-19
 design_doc: docs/superpowers/specs/2026-11-19-can-cung-tieu-chi-toan-tap-design.md
@@ -94,3 +94,16 @@ Quét theo khuôn ma trận kiểm thử. Số trong ô đếm từ DB máy thu 
 ## Known limits
 
 - Số trên nhãn tab là số của lần tải trang; sau một lượt nạp giữa chừng, danh sách khi mở tab có thể lệch vài căn so với nhãn. Danh sách ghi tổng của chính nó.
+
+## Notes
+
+- Ngoài-1 (máy định tuyến 2026-11-19, đề xuất S4 known-limits): Một tệp cấu hình tự sinh bị đổi lẫn vào thay đổi này. Người dùng không thấy gì khác, chỉ làm lịch sử thay đổi rối hơn. — `app/next-env.d.ts`
+- Ngoài-2 (máy định tuyến 2026-11-19, đề xuất S4 known-limits): Cách viết một số trang bị uốn theo bài kiểm thử, nên sau này ai sắp xếp lại mã có thể làm bài kiểm thử hỏng mà không rõ lý do. Người dùng cuối không thấy ảnh hưởng. — `app/src/app/ops/deals/[offerId]/page.tsx`
+- Ngoài-3 (máy định tuyến 2026-11-19, đề xuất S4 known-limits): Cùng một khuôn dữ liệu được khai ở hai chỗ, nếu sau này một bên đổi mà bên kia quên thì tab có thể hiện sai. Hiện hai bên đang khớp nên người dùng chưa gặp gì. — `app/src/components/ops/deal-similar.tsx`
+- Ngoài-4 (máy định tuyến 2026-11-19, đề xuất S4 known-limits): Một tệp tự sinh bị đổi lẫn vào thay đổi này và sẽ lật qua lại mỗi lần chạy. Người dùng không thấy ảnh hưởng nào. — `app/next-env.d.ts`
+- Ngoài-5 (máy định tuyến 2026-11-19, đề xuất S4 known-limits): Bài kiểm thử giao diện dùng dữ liệu tự viết nên nếu phần lấy dữ liệu đổi khuôn thì bài vẫn xanh trong khi tab có thể hiện sai số hoặc sai danh sách. Hiện chưa có bằng chứng tab hiện sai. — `app/tests/can-cung-tieu-chi-bam.test.tsx`
+- Ngoài-6 (máy định tuyến 2026-11-19, đề xuất S4 known-limits): Bài kiểm thử chỉ đổi từng bộ lọc một, nên lỗi chỉ xuất hiện khi kết hợp nhiều bộ lọc (ví dụ chọn dự án rồi đổi tab) có thể lọt qua. Người dùng khi đó có thể thấy số hoặc danh sách lệch. — `app/tests/can-cung-tieu-chi.test.tsx`
+- Ngoài-7 (máy định tuyến 2026-11-19, đề xuất S4 known-limits): Trường hợp căn chưa gắn phường chưa có bài kiểm thử riêng, nên nếu hiện sai câu «Chưa gắn phường» hay vẫn hiện nút mở rộng thì chưa ai biết. Đo thực tế cho thấy hiện chưa có căn nào như vậy. — `app/tests/can-cung-tieu-chi.test.tsx`
+- Ngoài-8 (máy định tuyến 2026-11-19, đề xuất S4 known-limits): Phép đo trên dữ liệu thật mới đối chiếu số của hai trong bốn tab, nên số ở hai tab còn lại chưa được kiểm độc lập. Người vận hành có thể thấy số lệch mà chưa ai phát hiện. — `_acceptance/can-cung-tieu-chi-toan-tap/probes/do-may-thu.mts`
+- Ngoài-9 (máy định tuyến 2026-11-19, đề xuất S4 known-limits): Bài kiểm thử cho nút quay về «Căn giá tốt» có thể chấp nhận một đường dẫn sai miễn khác đường dẫn cũ. Nếu lỗi quay về sai trang xảy ra, người vận hành sẽ bị đưa nhầm trang rồi phải tự điều hướng lại. — `app/tests/can-cung-tieu-chi.test.tsx`
+- Ngoài-10 (máy định tuyến 2026-11-19, đề xuất S4 known-limits): Ảnh chụp màn hình làm bằng chứng lấy từ một bản chạy ở thư mục khác tại một mốc cố định, nên thay đổi về sau không được phủ. Hiện mã giữa mốc đó và bản đang kiểm chưa khác nhau. — `_acceptance/can-cung-tieu-chi-toan-tap/evals.yaml`
