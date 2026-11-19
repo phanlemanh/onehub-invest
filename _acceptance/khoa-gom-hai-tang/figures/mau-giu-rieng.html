@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mẫu giữ riêng</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Lora:ital,wght@0,400;1,400&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper: #f5f5f5; --color-ink: #2d3142; --color-muted: #4f5d75; --color-accent: #eb6c36;
+      --font-sans: 'Geist', system-ui, sans-serif;
+      --font-serif: 'Instrument Serif', 'Lora', serif;
+      --font-mono: 'Geist Mono', ui-monospace, monospace;
+    }
+    body { font-family: var(--font-sans); background: var(--color-paper); color: var(--color-ink);
+      min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 3rem 2rem; }
+    .frame { max-width: 1200px; width: 100%; }
+    .eyebrow { font-family: var(--font-mono); font-size: 0.66rem; font-weight: 500; letter-spacing: 0.18em;
+      text-transform: uppercase; color: var(--color-muted); margin-bottom: 0.5rem; }
+    h1 { font-family: var(--font-serif); font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem); font-weight: 400;
+      letter-spacing: -0.02em; line-height: 1.15; color: var(--color-ink); margin-bottom: 1.5rem; }
+    svg { width: 100%; min-width: 900px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Hỏi-2 · Thước giữ riêng · AC-9</p>
+    <h1>Ba lối dựng nhãn cho mẫu giữ riêng</h1>
+
+    <svg viewBox="0 0 1000 500" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/></marker>
+      </defs>
+      <rect width="100%" height="100%" fill="#f5f5f5"/>
+
+      <!-- Connectors first -->
+      <path d="M240 196 H272 Q280 196 280 188 V84 Q280 76 288 76 H316" fill="none" stroke="#eb6c36" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+      <path d="M240 220 H316" fill="none" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+      <path d="M240 244 H272 Q280 244 280 252 V356 Q280 364 288 364 H316" fill="none" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+
+      <path d="M640 76 H692 Q700 76 700 84 V188 Q700 196 708 196 H756" fill="none" stroke="#eb6c36" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+      <path d="M640 220 H756" fill="none" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+      <path d="M640 364 H692 Q700 364 700 356 V252 Q700 244 708 244 H756" fill="none" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+
+      <!-- Source -->
+      <rect x="40" y="168" width="200" height="104" rx="6" fill="#f5f5f5"/>
+      <rect x="40" y="168" width="200" height="104" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <rect x="52" y="180" width="40" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="72" y="191" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">S03</text>
+      <text x="52" y="220" fill="#2d3142" font-size="13" font-weight="600" font-family="'Geist', sans-serif">Mẫu giữ riêng</text>
+      <text x="52" y="240" fill="#4f5d75" font-size="11" font-family="'Geist', sans-serif">200 bản chữ từ 12/11</text>
+      <text x="52" y="258" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace">chưa dùng để chỉnh luật</text>
+
+      <!-- Branch A (khuyến nghị) -->
+      <rect x="320" y="24" width="320" height="104" rx="6" fill="#f5f5f5"/>
+      <rect x="320" y="24" width="320" height="104" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <rect x="332" y="36" width="104" height="16" rx="2" fill="transparent" stroke="rgba(235,108,54,0.60)" stroke-width="0.8"/>
+      <text x="384" y="47" fill="#ba4513" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">A · KHUYẾN NGHỊ</text>
+      <text x="332" y="74" fill="#2d3142" font-size="13" font-weight="600" font-family="'Geist', sans-serif">Opus + Sonnet gom mù</text>
+      <text x="332" y="94" fill="#4f5d75" font-size="11" font-family="'Geist', sans-serif">Che tên nguồn → chỗ đồng thuận làm nhãn</text>
+      <text x="332" y="114" fill="#ba4513" font-size="9" font-family="'Geist Mono', monospace">≤ 3 USD · cần lời tiền + lời luật 6</text>
+
+      <!-- Branch B -->
+      <rect x="320" y="168" width="320" height="104" rx="6" fill="#f5f5f5"/>
+      <rect x="320" y="168" width="320" height="104" rx="6" fill="#ffffff" stroke="#4f5d75" stroke-width="1"/>
+      <rect x="332" y="180" width="24" height="16" rx="2" fill="transparent" stroke="rgba(79,93,117,0.40)" stroke-width="0.8"/>
+      <text x="344" y="191" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">B</text>
+      <text x="332" y="218" fill="#2d3142" font-size="13" font-weight="600" font-family="'Geist', sans-serif">Haiku + DeepSeek V4.1 Flash</text>
+      <text x="332" y="238" fill="#4f5d75" font-size="11" font-family="'Geist', sans-serif">Nguyên văn → người đọc phần bất đồng</text>
+      <text x="332" y="258" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace">~1–1,5 giờ · vài cent</text>
+
+      <!-- Branch C -->
+      <rect x="320" y="312" width="320" height="104" rx="6" fill="#f5f5f5"/>
+      <rect x="320" y="312" width="320" height="104" rx="6" fill="#ffffff" stroke="#4f5d75" stroke-width="1"/>
+      <rect x="332" y="324" width="24" height="16" rx="2" fill="transparent" stroke="rgba(79,93,117,0.40)" stroke-width="0.8"/>
+      <text x="344" y="335" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">C</text>
+      <text x="332" y="362" fill="#2d3142" font-size="13" font-weight="600" font-family="'Geist', sans-serif">Người đọc tay 60 tin</text>
+      <text x="332" y="382" fill="#4f5d75" font-size="11" font-family="'Geist', sans-serif">Không gọi model nào</text>
+      <text x="332" y="402" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace">~3 giờ · 0 USD</text>
+
+      <!-- Sink -->
+      <rect x="760" y="168" width="200" height="104" rx="6" fill="#f5f5f5"/>
+      <rect x="760" y="168" width="200" height="104" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <rect x="772" y="180" width="40" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="792" y="191" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">AC-9</text>
+      <text x="772" y="220" fill="#2d3142" font-size="13" font-weight="600" font-family="'Geist', sans-serif">Gộp nhầm &lt; 5%</text>
+      <text x="772" y="240" fill="#4f5d75" font-size="11" font-family="'Geist', sans-serif">đo trên mẫu giữ riêng</text>
+      <text x="772" y="258" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace">n ≥ 60</text>
+
+      <!-- Legend -->
+      <line x1="40" y1="448" x2="960" y2="448" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+      <text x="40" y="472" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">CHÚ GIẢI</text>
+      <line x1="120" y1="469" x2="152" y2="469" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="160" y="472" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Lối khuyến nghị</text>
+      <line x1="280" y1="469" x2="312" y2="469" stroke="#4f5d75" stroke-width="1"/>
+      <text x="320" y="472" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Lối khác</text>
+      <text x="420" y="472" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace">dòng cuối mỗi lối: thời gian · tiền · lời cần</text>
+    </svg>
+  </div>
+</body>
+</html>

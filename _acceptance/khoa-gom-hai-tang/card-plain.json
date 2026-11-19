@@ -1,0 +1,41 @@
+{
+  "feature_plain": "Bài đăng lại của cùng một người bán về cùng một căn gộp đúng vào một tin; hai căn khác phân khu hay khác mã toà, căn không còn bị gộp nhầm thành một tin trên Căn giá tốt.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ để cách gom mới sau một công tắc mặc định tắt: tắt thì mọi tin giữ nguyên như hôm nay (so với bản đang chạy), bật thì dùng cách gom mới."},
+    {"id": "AC-2", "p": "Sẽ coi các bài cùng người đăng, cùng nội dung (bỏ qua SĐT, đường link) là một bản tin; bài không rõ người đăng đứng riêng."},
+    {"id": "AC-3", "p": "Sẽ chỉ gộp hai bản tin khi khớp đủ bảy thứ: người đăng, loại tin, giá, số phòng, diện tích, phân khu, mã toà căn — kể cả nhóm tin đã có phường và diện tích (hôm nay nhóm này gộp cả bài của người khác)."},
+    {"id": "AC-4", "p": "Sẽ nhập bản tin thiếu thông tin vào một tin cùng người chỉ khi trong 7 ngày có đúng một tin khớp và nội dung giống từ 90%; không chắc thì để thành tin riêng."},
+    {"id": "AC-6", "p": "Sẽ đọc được mã toà, căn viết chữ thường và dài 1–4 chữ số (s1006, S203), và bỏ các chữ dễ nhầm như mốc tháng, m2, pn."},
+    {"id": "AC-7", "p": "Sẽ giữ đường nối cho mọi mã tin cũ: tin bị tách giữ mã cho phần nhiều bài nhất, tin bị nhập trỏ sang tin mới; xuất bảng đổi mã theo từng bài."},
+    {"id": "AC-9", "p": "Sẽ đo trên mẫu giữ riêng: tin gộp nhầm dưới 5% và tin tách nhầm không tăng, báo số trước và sau kèm khoảng tin cậy."}
+  ],
+  "wont_do": [
+    {"id": "AC-5", "p": "Sẽ KHÔNG bao giờ gộp hai bản tin nêu hai phân khu khác nhau; 172 tin đang bị gộp kiểu này được ghim danh sách và kiểm từng tin."},
+    {"id": "AC-8", "p": "Sẽ KHÔNG gộp bài rổ hàng, bài tìm mua (nhãn dạng bài của việc khác) với bài nào; model AI không quyết việc gộp."},
+    {"id": "AC-10", "p": "Sẽ KHÔNG làm hỏng lượt nạp đêm: chạy hai lần không đổi tin nào, nạp từng ngày ra cùng kết quả như nạp một lần, tệp gốc không đổi."},
+    {"id": "OOS-1", "p": "Không tách rổ hàng thành từng căn, không gắn nhãn dạng bài — việc khác lo, việc này chỉ đọc nhãn."},
+    {"id": "OOS-2", "p": "Không gộp các lần đổi giá của cùng căn thành một tin (việc kế), không nối hai môi giới cùng căn ở bậc tin."},
+    {"id": "OOS-3", "p": "Không làm màn xem tin gồm những bài nào và không làm thước đo hằng tuần."},
+    {"id": "OOS-4", "p": "Không sửa danh bạ, không tự thêm tên tắt phân khu vào danh bạ."},
+    {"id": "OOS-5", "p": "Không bật cách gom mới trên máy thu trong việc này — chỉ bật sau khi việc gắn tin vào toà chấm xong và việc nhãn dạng bài đã gộp."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Tin theo số bản tin bên trong (1, 2–3, 4–9, từ 10): đo bằng công tắc, mẫu chấm và lượt chạy thử (AC-1, AC-9, AC-10)."},
+    {"i": 1, "p": "Hai nhóm tin hôm nay gom theo hai cách (đủ và thiếu phường, diện tích): đều phải có người đăng trong cách gom (AC-3)."},
+    {"i": 2, "p": "Người đăng có tài khoản, chỉ có SĐT, không có gì, hay hai người trong một tin (AC-2, AC-3)."},
+    {"i": 3, "p": "Mã toà căn bộ cũ đọc được, chỉ bộ mới đọc được, và chữ dễ nhầm (AC-6)."},
+    {"i": 4, "p": "Phân khu khác theo tên danh bạ, khác theo tên tắt, một bên trống, cùng nhau (AC-5, AC-4)."},
+    {"i": 5, "p": "Bản tin thiếu từng loại thông tin, với không, một hay nhiều tin ứng viên, trong và ngoài 7 ngày (AC-4)."},
+    {"i": 6, "p": "Mã tin được giữ, bị tách, bị nghỉ, và bật rồi tắt lại (AC-7)."},
+    {"i": 7, "p": "Bài không có nhãn dạng bài, nhãn một căn, nhãn khác (AC-8)."},
+    {"i": 8, "p": "Công tắc vắng, tắt, bật, bật hai lần (AC-1, AC-10)."},
+    {"i": 9, "p": "Bỏ có tên: 104 tin thuộc dự án chưa có phân khu trong danh bạ chỉ dựa vào tên tắt; khác nội thất, khác giá nhỏ chưa tách (chờ Hỏi-3 và việc đổi giá)."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Lựa chọn công tắc được ghi như thể không còn đường nào khác, trong khi vẫn có đường giữ thay đổi chưa gộp tới khi việc gắn toà chấm xong. Đã đưa lên thẻ thành Hỏi-5 để anh chọn."},
+    {"i": 1, "p": "Phép kiểm «không gộp khác phân khu» dùng chính bộ đọc phân khu nên tên tắt bị bỏ sót sẽ cho kết quả xanh giả. Đã sửa: ghim trước danh sách 172 tin, kiểm từng tin, và đỏ khi bộ đọc không nhận ra phân khu."},
+    {"i": 2, "p": "«Giữ nguyên như hôm nay» chưa nói so với cái gì. Đã sửa: so với bản đang chạy trên nhánh chính, và thêm ca cố tình để bộ đọc mã mới lọt vào khi công tắc tắt phải ra đỏ."},
+    {"i": 3, "p": "Ngưỡng 5% chưa nói cỡ mẫu, cách đếm và ca bị loại. Đã sửa: đếm theo tin, ít nhất 60 tin, báo khoảng tin cậy, ca bị loại vì nhãn bất đồng không quá 20%."},
+    {"i": 4, "p": "Luật «đúng một tin ứng viên» chưa được thử khi bài tới dần theo từng lượt nạp. Đã sửa: phát lại dữ liệu theo từng ngày phải ra cùng kết quả cuối, mỗi lần đổi mã đều còn đường nối."}
+  ]
+}

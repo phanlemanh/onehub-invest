@@ -60,7 +60,10 @@ nội thất hay giá nhỏ, một tin mã nội bộ 5 chữ số, một tin t�
 - **Hỏi-1 — Bảng viết tắt phân khu ở đâu.** Khuyến nghị: thêm bí danh vào danh bạ (dãy danh bạ), GT5 chỉ đọc danh bạ. Lối khác: bảng
   trong mã GT5, nhanh hơn nhưng là bản sự thật thứ hai của danh bạ.
 - **Hỏi-2 — Thước giữ riêng.** Khuyến nghị: hai model lớn ngoài đường ống (Opus, Sonnet; Q4 cho phép) gom mù 200 bản chữ mới, lấy chỗ
-  đồng thuận làm nhãn, trần khoảng 3 USD. Lối khác: người đọc tay 60 tin, không tốn tiền model nhưng tốn khoảng 3 giờ.
+  đồng thuận làm nhãn. Cần hai lời riêng: (a) tiền thật, trần 3 USD; (b) luật 6 — hai model này không thuộc ba model được nhận chữ bài
+  nguyên văn, nên chữ bài che tên nguồn bằng `pipeline/lib/mask-source-names.mjs` (đóng chặt khi danh sách tên rỗng) trước khi gửi, có ca
+  kiểm quét payload (AC-9). Lối khác không tốn tiền, không ra ngoài ba model: Haiku và DeepSeek V4.1 Flash gom mù nguyên văn, người đọc tay
+  phần hai model bất đồng (ước 1–1,5 giờ). Lối thứ ba: người đọc tay 60 tin (khoảng 3 giờ). Không gọi model nào trước lời Mạnh.
 - **Hỏi-3 — Khác nội thất có tách không.** Khuyến nghị: không tách ở GT5, vì nội thất hay được viết lại giữa các lần đăng; ghi giới hạn.
 - **Hỏi-4 — Cửa sổ 7 ngày và ngưỡng chữ giống 0,9** cho bản chữ thiếu trường: chốt trên thước nền.
 

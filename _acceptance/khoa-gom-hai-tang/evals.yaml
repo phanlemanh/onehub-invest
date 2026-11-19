@@ -1,0 +1,108 @@
+schema_version: 1
+slug: khoa-gom-hai-tang
+
+# Lệnh đo nằm ở probes/*.sh của hồ sơ: _acceptance/config.yaml là tệp bảo vệ, không sửa.
+# Test đơn vị chạy trên fixture rút từ bài thật của bản chép DB máy thu; không fixture viết tay đúng khuôn bên đọc.
+
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: bash _acceptance/khoa-gom-hai-tang/probes/cong-tac.sh
+    layer: backend-effect
+    paths: ["pipeline/transform-zalo.mjs", "pipeline/lib/gom-tin*.mjs"]
+    expected: >
+      Trên bản chép DB máy thu: đường chuẩn là băm tập post_ids mỗi offer_id chạy từ sha main (worktree tạm, ghi sha); công tắc vắng và dòng mới
+      nhất bat=false đều cho băm bằng đường chuẩn trên mọi tin (in số tin); dòng mới nhất bat=true cho khoá hai tầng (số tin khác, đối chứng dương). Chiều đỏ: bản đột biến đọc dòng công tắc cũ
+      nhất, và bản đột biến cho bộ tìm mã mới chạy cả khi tắt, mỗi bản làm ca đỏ, thông điệp ghim mã dòng công tắc hay offer_id lệch.
+
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: bash _acceptance/khoa-gom-hai-tang/probes/ham-gom.sh
+    paths: ["pipeline/lib/gom-tin*.mjs"]
+    expected: >
+      Sáu ô tầng một, một assert mỗi ô, bài rút từ bài thật. Chiều đỏ: bản đột biến gộp bài khác người cùng chữ thì ô thứ tư đỏ, thông điệp ghim tên ô.
+
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: bash _acceptance/khoa-gom-hai-tang/probes/ham-gom.sh
+    paths: ["pipeline/lib/gom-tin*.mjs"]
+    expected: >
+      Bảy ô khác đúng một trường ra hai tin, ô khớp đủ bảy trường ra một tin (đối chứng dương), lặp ở cả hai nhánh phường và diện tích. Chiều đỏ:
+      bản đột biến bỏ người ở nhánh đủ phường và diện tích thì ô khác người đỏ, thông điệp ghim tên trường.
+
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: bash _acceptance/khoa-gom-hai-tang/probes/ham-gom.sh
+    paths: ["pipeline/lib/gom-tin*.mjs"]
+    expected: >
+      Ma trận trường thiếu × số ứng viên × cửa sổ × độ giống, một assert mỗi ô; ô bắc cầu (một bản chữ thiếu trường khớp hai tin đầy đủ) ra
+      hai tin đầy đủ không đổi. Chiều đỏ: bản đột biến nhận ứng viên đầu tiên khi có hai thì ô hai ứng viên đỏ, thông điệp ghim tên ô.
+
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: bash _acceptance/khoa-gom-hai-tang/probes/phan-khu.sh
+    layer: backend-effect
+    paths: ["pipeline/transform-zalo.mjs", "pipeline/lib/gom-tin*.mjs"]
+    expected: >
+      Ma trận đơn vị: tên danh bạ, bí danh, viết tắt, một bên rỗng, cùng tập, khác tập — khác tập không rỗng không chung tin ở mọi nhánh. Danh sách
+      offer_id của 172 tin (12 theo tên, 160 theo viết tắt) đóng băng có băm trước khi viết mã, lệnh kiểm băm; trên bản chép với công tắc bật,
+      một assert mỗi tin: bản chữ của nó nằm ở ít nhất hai tin; bộ đọc trả tập rỗng cho bài nào trong danh sách thì thoát 1, ghim chữ viết tắt. Chiều đỏ:
+      cấy một tin hai phân khu vào bản sao thì lệnh thoát 1, thông điệp ghim offer_id.
+
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: bash _acceptance/khoa-gom-hai-tang/probes/ham-gom.sh
+    paths: ["pipeline/lib/gom-tin*.mjs", "pipeline/transform-zalo.mjs"]
+    expected: >
+      Ma trận viết trước, số assert bằng số ô: mã chữ hoa, chữ thường, 1–4 chữ số, ba đuôi căn, mã tin môi giới ra đúng mã viết hoa; tám loại nhiễu
+      ra rỗng; S1006 và s1006 chung tin. Chiều đỏ: bỏ danh sách nhiễu thì ô nhiễu đỏ, thông điệp ghim chuỗi.
+
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: bash _acceptance/khoa-gom-hai-tang/probes/duong-noi.sh
+    layer: backend-effect
+    paths: ["pipeline/transform-zalo.mjs", "pipeline/lib/offer-key.mjs", "pipeline/lib/gom-tin*.mjs"]
+    expected: >
+      Trên bản chép DB máy thu: bật công tắc, chạy lượt nạp, lệnh in 0 offer_id cũ không có đường nối (sống hoặc superseded_by trỏ tin sống) và
+      xuất bảng đổi theo bài; tin tách thì phần nhiều bài nhất giữ id cũ. Tắt lại, chạy lượt nạp, vẫn 0 offer_id mất đường nối. Chiều đỏ: xoá
+      superseded_by của một tin nghỉ ở bản sao thì lệnh thoát 1, thông điệp ghim offer_id.
+
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: bash _acceptance/khoa-gom-hai-tang/probes/ham-gom.sh
+    paths: ["pipeline/lib/gom-tin*.mjs"]
+    expected: >
+      Ba ô dạng bài: vắng và mot_can gom như thường (đối chứng dương), dạng khác đứng riêng. Hàm khoá không nhận tham số bản đọc model: test gọi
+      khoá với bài có và không có silver_labels ra cùng kết quả. Chiều đỏ: bản đột biến gom cả bài dạng khác thì ô đó đỏ, thông điệp ghim dạng bài.
+
+  - id: E9
+    criterion: AC-9
+    executor: script
+    cmd: bash _acceptance/khoa-gom-hai-tang/probes/thuoc.sh
+    paths: ["pipeline/lib/gom-tin*.mjs", "pipeline/transform-zalo.mjs"]
+    expected: >
+      Lệnh đọc nhãn thô của mẫu giữ riêng và 40 cặp audit, chạy khoá cũ và khoá mới, in gộp nhầm, tách nhầm trước và sau kèm cận Wilson 95%;
+      đơn vị là tin nhiều bản chữ có nhãn cùng hoặc khác căn, n từ 60, ước lượng điểm; in số ca bị loại vì nhãn bất đồng; đạt khi gộp nhầm
+      dưới 5%, tách nhầm không tăng, n đủ và ca bị loại không quá 20%. Chiều đỏ: sửa một số trong báo cáo hoặc bớt một nhãn thì lệnh thoát 1,
+      thông điệp ghim thước. Khi mẫu giữ riêng dựng bằng model ngoài ba model của luật 6: lệnh quét payload đã gửi in 0 tên nguồn thật
+      (danh sách tên đọc từ source_registry local, rỗng thì đóng chặt); cấy một tên nguồn vào bản sao payload thì thoát 1, thông điệp ghim mã bài.
+
+  - id: E10
+    criterion: AC-10
+    executor: script
+    cmd: bash _acceptance/khoa-gom-hai-tang/probes/chay-thu.sh
+    layer: backend-effect
+    paths: ["pipeline/transform-zalo.mjs", "pipeline/lib/gom-tin*.mjs"]
+    expected: >
+      Trên bản chép DB máy thu, công tắc bật, hai lượt nạp: lượt hai 0 tin đổi thành phần; in số tin trước, sau theo khu, số tin chạm lát
+      hai-khu-ghep-b và tệp đóng băng PL20, thời gian bước gom; băm snapshot không đổi (số tệp lớn hơn 0); bài thử bị loại. Phát lại theo lát ngày ra cùng thành phần tin cuối với lượt toàn bộ, mọi offer_id đổi giữa lát có đường nối,
+      in số lần lật. Chiều đỏ: bản đột biến
+      khoá phụ thuộc thứ tự bài thì lượt hai đổi tin và lệnh thoát 1, thông điệp ghim offer_id.

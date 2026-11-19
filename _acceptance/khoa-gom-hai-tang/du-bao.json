@@ -1,0 +1,32 @@
+{
+  "ngay_tinh": "2026-11-19",
+  "hang": {
+    "ma": "GT5",
+    "gio_may": [
+      1.46,
+      7.67
+    ],
+    "phan_tram": 2.29
+  },
+  "moc": {
+    "ten": "MS4 — một căn một dòng",
+    "bat_dau": "2026-11-24",
+    "hoan_tat": "2026-11-25",
+    "gio_may": [
+      14.540000000000001,
+      50.38
+    ],
+    "gio_cho": 6.540000000000001,
+    "gio_cho_do": true,
+    "muc_tieu": null,
+    "hang": [
+      "HD2",
+      "GT2",
+      "GT4",
+      "GT0",
+      "GT5",
+      "GT6",
+      "GT7"
+    ]
+  }
+}
