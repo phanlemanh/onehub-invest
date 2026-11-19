@@ -42,7 +42,8 @@
     "scripts/vocab.test.mjs",
     "scripts/yeu-cau-ngan-sach.test.mjs",
     "tests/s08-danh-muc-nap.test.mjs",
-    "scripts/s16-bon-phan.test.mjs"
+    "scripts/s16-bon-phan.test.mjs",
+    "scripts/gom-tin-cong-tac.test.mjs"
   ],
   "b": [
     "parse.test.mjs",
