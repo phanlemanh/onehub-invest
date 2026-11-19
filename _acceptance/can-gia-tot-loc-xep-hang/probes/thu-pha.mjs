@@ -44,6 +44,10 @@ const DOT_BIEN = [
   ["AC-9", "bảng còn chữ thước phường", O, "Độ tin: {", "Độ tin thước phường: {", /CG3-AC-9 bảng còn chữ «thước phường»/],
   ["AC-9", "phần trăm dùng dấu chấm", O, "−{soPctVi(pct)}%", "−{pct.toFixed(1)}%", /CG3-AC-9 phần trăm phải dùng dấu phẩy/],
   ["AC-9", "cột nguồn in thêm tên nguồn", LUOI, "{d.source} · {fmtInt(d.nReposts)} lần", "{d.source} ten-nguon-that.example · {fmtInt(d.nReposts)} lần", /CG3-AC-9 cột nguồn chỉ được hiện mã S0x/],
+  // Ba lỗ phép đo của lượt chấm 4.
+  ["AC-4", "bỏ gộp căn trước khi cắt trang", DEALS, "SELECT DISTINCT ON (l.can_key) l.*\n       FROM loc l", "SELECT l.*\n       FROM loc l", /CG3-AC-4 (tab \w+(-\w+)?: |hợp các trang)/],
+  ["AC-6", "lọc Đất trả nhầm Căn hộ", DEALS, "AND h.duoi_trung_vi_pct <= ${NGUONG_LOAI_PCT}\n         AND ($3::text IS NULL OR o.property_type = $3)", "AND h.duoi_trung_vi_pct <= ${NGUONG_LOAI_PCT}\n         AND ($3::text IS NULL OR o.property_type = CASE WHEN $3 = 'land' THEN 'apartment' ELSE $3 END)", /CG3-AC-6 ô sale × land/],
+  ["AC-8", "vai Người xem nhận số điện thoại", DEALS, "{ sellerName: null, sellerPhone: null, groupName: null,", "{ sellerName: null, groupName: null,", /CG3-AC-8 (vai Người xem|mở căn ngoài trang) lộ số điện thoại/],
   // Các đột biến của lượt soát độc lập trước lượt chấm 4.
   ["AC-1", "đảo mức dưới trung vị khi cùng hạng", DEALS, "g.hang_pct ASC NULLS LAST, g.discount_pct DESC, g.offer_id`", "g.hang_pct ASC NULLS LAST, g.discount_pct ASC, g.offer_id`", /CG3-AC-1 sai thứ tự/],
   ["AC-1", "đảo mã tin khi cùng hạng, cùng mức", DEALS, "g.hang_pct ASC NULLS LAST, g.discount_pct DESC, g.offer_id`", "g.hang_pct ASC NULLS LAST, g.discount_pct DESC, g.offer_id DESC`", /CG3-AC-1 sai thứ tự/],
@@ -82,7 +86,7 @@ const DOT_BIEN = [
   ["AC-7", "lọc dự án rỗng báo tập rỗng", LUOI, "(trang.thamSo.location || trang.thamSo.project || trang.thamSo.type)", "(trang.thamSo.location || trang.thamSo.type)", /CG3-AC-7 lọc .+ ra rỗng phải báo lọc rỗng/],
   ["AC-7", "chỉ lọc loại hình mất nút bỏ lọc", LUOI, "const coLoc = Boolean(viTri || thamSo.type)", "const coLoc = Boolean(viTri)", /CG3-AC-7 chỉ lọc loại hình/],
   ["AC-7", "lỗi hạ tầng rơi về bản cloud", DEALS, "if (!thieuLuocDo(e)) throw e;\n    const { rows } = await pool.query(sql({ cloud: true, coBang }), values);", "const { rows } = await pool.query(sql({ cloud: true, coBang }), values);", /CG3-AC-7 lỗi hạ tầng phải tới khung lỗi/],
-  ["AC-8", "vai Người xem nhận tên nhóm", DEALS, "{ sellerName: null, sellerPhone: null, groupName: null, brokerNAds: null, brokerMedianGap: null }", "{ sellerName: null, sellerPhone: null, brokerNAds: null, brokerMedianGap: null }", /CG3-AC-8 vai Người xem lộ/],
+  ["AC-8", "vai Người xem nhận tên nhóm", DEALS, "{ sellerName: null, sellerPhone: null, groupName: null, brokerNAds: null, brokerMedianGap: null }", "{ sellerName: null, sellerPhone: null, brokerNAds: null, brokerMedianGap: null }", /CG3-AC-8 vai Người xem lộ «Nhóm Cấy Thử»/],
   ["AC-4", "bản cloud đọc số căn, số nhà", DEALS, '${cloud ? "NULL AS unit_number, NULL AS street_number" : "o.unit_number, o.street_number"},', "o.unit_number, o.street_number,", /unit_number/],
   ["AC-9", "mức giảm màn hẹp dùng dấu chấm", LUOI, "−{soPctVi(d.discountPct ?? 0)}%", "−{d.discountPct ?? 0}%", /CG3-AC-9 phần trăm phải dùng dấu phẩy|33,7/],
 ];
