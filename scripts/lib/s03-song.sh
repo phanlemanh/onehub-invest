@@ -38,6 +38,15 @@ song_chua_bao() {
   return 0
 }
 
+# <state> — bỏ mốc b-moc khỏi tệp trạng thái. Không dùng `sed -i ''` vì cú pháp đó chỉ chạy trên sed của macOS;
+# sed GNU (CI Linux) đọc '' là tên tệp lệnh, lỗi bị `|| true` nuốt và mốc cũ còn nguyên.
+song_xoa_b_moc() {
+  local state="$1"
+  [ -f "$state" ] || return 0
+  grep -v '^b-moc=' "$state" > "${state}.tmp" 2>/dev/null
+  mv "${state}.tmp" "$state" 2>/dev/null || rm -f "${state}.tmp"
+}
+
 # <điều> <state> — điều kiện hết đỏ: gỡ cờ để sự cố kế được báo lại.
 # KHÔNG dùng `grep -v && mv`: grep -v trả exit 1 khi kết quả rỗng (xoá hết
 # dòng — đúng ý ta) và && sẽ chặn mv, state không bao giờ xoá.
@@ -83,11 +92,16 @@ song_b_restart() {
   iso_a=$(grep "auto-restart attempt" "$gwlog" 2>/dev/null | tail -1 | grep -oE '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]+[+-][0-9]{2}:[0-9]{2}')
   if [ -z "$iso_a" ]; then
     song_hoi_xoa b "$state"
+    # 1811-11(2): log bị cắt thì bỏ luôn mốc b-moc cũ — giữ lại thì khối P1 tưởng L6(b)
+    # vẫn đỏ và kickstart gateway ĐANG KHỎE lặp mỗi 6 giờ (nhánh return sớm phải sạch
+    # như nhánh lành dòng cuối hàm: hoi_xoa + xoá b-moc)
+    song_xoa_b_moc "$state"
     return 1
   fi
   moc_a=$(song_moc_epoch "$iso_a")
   if [ -z "$moc_a" ]; then
     song_hoi_xoa b "$state"
+    song_xoa_b_moc "$state"
     return 1
   fi
   iso_s=$(grep "starting .* provider" "$gwlog" 2>/dev/null | tail -1 | grep -oE '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]+[+-][0-9]{2}:[0-9]{2}')
@@ -95,6 +109,7 @@ song_b_restart() {
   # đỏ khi đã quá 2′ kể từ attempt mà KHÔNG có starting provider nào SAU nó
   if [ $(( now - moc_a )) -ge 120 ]; then
     if [ -z "$moc_s" ] || [ "$moc_s" -le "$moc_a" ]; then
+      if ! grep -q '^b-moc=' "$state" 2>/dev/null; then echo "b-moc=$moc_a" >> "$state" 2>/dev/null; fi
       if song_chua_bao b "$state"; then
         song_canh_bao b "auto-restart hẹn khởi động lại nhưng $(( now - moc_a ))s (≥2′) không có dòng starting provider — bộ hẹn treo (kiểu sự cố 09/11)?" "$state" "$alog"
       fi
@@ -102,6 +117,7 @@ song_b_restart() {
     fi
   fi
   song_hoi_xoa b "$state"
+  song_xoa_b_moc "$state"
   return 1
 }
 

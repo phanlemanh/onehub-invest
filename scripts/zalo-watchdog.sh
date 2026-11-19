@@ -16,7 +16,7 @@
 # Fail closed: config đúng nhưng hành vi sai vẫn bị bắt bởi L4b.
 set -uo pipefail
 
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+ROOT="${ZALO_WATCHDOG_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}" # 1611-5(2): env override cho test cô lập
 CFG="$HOME/.openclaw/openclaw.json"
 HANDLER="$ROOT/collector/openclaw/handler.js"
 ALERT_LOG="$ROOT/pipeline/logs/zalo-watchdog-alerts.log"
@@ -356,3 +356,78 @@ echo "$(date -Iseconds) ok — bindings=0, mention-all, no bot, handler read-onl
   >> "$ROOT/pipeline/logs/zalo-watchdog.log"
 tail -500 "$ROOT/pipeline/logs/zalo-watchdog.log" > "$ROOT/pipeline/logs/zalo-watchdog.log.tmp" \
   && mv "$ROOT/pipeline/logs/zalo-watchdog.log.tmp" "$ROOT/pipeline/logs/zalo-watchdog.log"
+
+# VHZ2 (P1, claudedp-1411-33) — TỰ KHỞI ĐỘNG LẠI GATEWAY MỘT LẦN khi CẢ BA
+# điều kiện cùng lượt (bối cảnh: bộ tự khởi động lại kênh treo 3/10 lần —
+# 09/11 treo ~24h, 13/11 treo 34h):
+#   (a) L6(b) đỏ kéo dài ≥10′ (state dòng b-moc=<mốc attempt> do s03-song ghi);
+#   (b) MỌI lớp lockdown cùng lượt «ok» — tới được đây nghĩa là L2/L3/L3b/L1/
+#       L4b/L4d đã chạy hết mà không alert (alert exit 1 ngay khi vi phạm);
+#   (c) L4d không thấy lượt agent dở (như (b)).
+# Trần 1 lần/6 giờ — quá trần chỉ cảnh báo. Ghi sổ + alerts log để D1 đẩy.
+# Sau kickstart: heartbeat reason=session (phiên chết) → KHÔNG thử lại,
+# cảnh báo «cần QR» một lần mỗi sự cố; KHÔNG BAO GIỜ tự QR.
+# Kickstart qua env ZALO_WATCHDOG_KICKSTART (test thay stub); công tắc tắt:
+# env ZALO_WATCHDOG_P1_TAT=1 hoặc tệp pipeline/logs/zalo-watchdog-p1-tat.
+P1_TAT_TEP="$ROOT/pipeline/logs/zalo-watchdog-p1-tat"
+P1_STATE="$ROOT/pipeline/logs/zalo-watchdog-p1-state"
+P1_SO="$ROOT/pipeline/logs/zalo-watchdog-p1.log"
+if [ "${ZALO_WATCHDOG_P1_TAT:-0}" != "1" ] && [ ! -f "$P1_TAT_TEP" ]; then
+  NOW_P1=$(date +%s)
+  # heartbeat up (state heartbeat biến mất) → sự cố phiên kết thúc: gỡ cờ không-thử-lại
+  HB_STATE="${ZALO_HEARTBEAT_STATE:-$HOME/.openclaw/logs/.zalo-heartbeat-down}"
+  if [ ! -f "$HB_STATE" ] && grep -q '^session=1' "$P1_STATE" 2>/dev/null; then
+    grep -vx 'session=1' "$P1_STATE" > "${P1_STATE}.tmp" 2>/dev/null && mv "${P1_STATE}.tmp" "$P1_STATE" || rm -f "${P1_STATE}.tmp"
+    # 1811-11(1): gỡ cờ p1-qr CÙNG lúc gỡ session=1 — giữ lại thì sự cố phiên chết
+    # lần 2 không còn cảnh báo «CẦN QUÉT QR» (song_canh_bao chỉ báo một lần mỗi cờ)
+    song_hoi_xoa p1-qr "$SONG_STATE"
+  fi
+  B_MOC=$(grep -oE '^b-moc=[0-9]+' "$SONG_STATE" 2>/dev/null | cut -d= -f2 | tail -1)
+  A_OK=0
+  [ -n "$B_MOC" ] && [ $(( NOW_P1 - B_MOC )) -ge 600 ] && A_OK=1
+  # (b)+(c): tới được đây = mọi lớp lockdown và L4d đã chạy không alert (alert exit 1)
+  if [ "$A_OK" = "1" ]; then
+    if grep -q '^session=1' "$P1_STATE" 2>/dev/null; then
+      if song_chua_bao p1-qr "$SONG_STATE"; then
+        song_canh_bao p1-qr "kickstart xong nhưng heartbeat vẫn reason=session — phiên chết, CẦN QUÉT QR tay tại /ops/sources (VHZ2 không tự QR)" "$SONG_STATE" "$ALERT_LOG"
+      fi
+    else
+      DU_TRAN=0
+      LAN_P1=$(grep -oE '^lan=[0-9]+' "$P1_STATE" 2>/dev/null | cut -d= -f2 | tail -1)
+      [ -n "$LAN_P1" ] && [ $(( NOW_P1 - LAN_P1 )) -lt 21600 ] && DU_TRAN=1
+      # 1811-11(3): sau kick LỖI phải đợi trần riêng (900s) trước khi thử lại — không
+      # thì lượt kick lỗi lặp mỗi nhịp 300s (nhịp launchd của watchdog). 900s = 3 nhịp
+      # watchdog = 1 nhịp heartbeat (900s): đủ một kết quả heartbeat mới để kết luận
+      # kick trước có hiệu lực; nhỏ hơn trần chính 6h nên không cản lượt kick hợp lệ kế.
+      LAN_LOI=$(grep -oE '^lan-loi=[0-9]+' "$P1_STATE" 2>/dev/null | cut -d= -f2 | tail -1)
+      [ -n "$LAN_LOI" ] && [ $(( NOW_P1 - LAN_LOI )) -lt 900 ] && DU_TRAN=1
+      if [ "$DU_TRAN" = "1" ]; then
+        if [ -n "$LAN_LOI" ] && [ $(( NOW_P1 - LAN_LOI )) -lt 900 ]; then
+          echo "$(date -Iseconds) WARN VHZ2: đủ điều kiện kickstart nhưng đang trong trần thử lại sau kick lỗi (900s) — không kick" >> "$ALERT_LOG"
+        else
+          echo "$(date -Iseconds) WARN VHZ2: đủ điều kiện kickstart nhưng quá trần 1 lần/6 giờ — chỉ cảnh báo, không kick" >> "$ALERT_LOG"
+        fi
+      else
+        # 1811-11(3): đọc mã thoát LỆNH KICK — lan= chỉ ghi khi kick THÀNH CÔNG (lượt
+        # lỗi không tiêu trần 6h); lỗi thì sổ kickstart-lỗi + WARN alerts để D1 đẩy.
+        # Gọi trực tiếp $KICK_CMD (tách từ) để đọc $? — không bash -c (neo tĩnh AC-6 P1).
+        KICK_CMD="${ZALO_WATCHDOG_KICKSTART:-launchctl kickstart -k gui/$(id -u)/ai.openclaw.gateway}"
+        KICK_RC=$($KICK_CMD >/dev/null 2>&1; echo $?)
+        if [ "$KICK_RC" = "0" ]; then
+          echo "lan=$NOW_P1" >> "$P1_STATE"
+          echo "$(date -Iseconds) VHZ2: kickstart gateway — L6(b) đỏ $(( NOW_P1 - B_MOC ))s (≥10′), lockdown ok, L4d sạch" >> "$ALERT_LOG"
+          echo "$(date -Iseconds) VHZ2 kickstart — lý do: L6(b) đỏ $(( NOW_P1 - B_MOC ))s; heartbeat reason=$(grep -oE '^reason=[a-z]+' "$HB_STATE" 2>/dev/null | cut -d= -f2 | tail -1 || echo na)" >> "$P1_SO"
+          # heartbeat vẫn reason=session sau khi kick → đánh dấu không thử lại (lượt sau cảnh báo cần QR)
+          if grep -q '^reason=session' "$HB_STATE" 2>/dev/null; then
+            echo "session=1" >> "$P1_STATE"
+          fi
+        else
+          echo "$(date -Iseconds) WARN VHZ2: kickstart LỖI (mã thoát $KICK_RC) — KHÔNG tính trần 6 giờ, thử lại sau 900s" >> "$ALERT_LOG"
+          echo "$(date -Iseconds) VHZ2 kick lỗi — kickstart thất bại mã thoát $KICK_RC; lý do lúc gọi: L6(b) đỏ $(( NOW_P1 - B_MOC ))s" >> "$P1_SO"
+          echo "lan-loi=$NOW_P1" >> "$P1_STATE"
+        fi
+      fi
+    fi
+  fi
+fi
+
