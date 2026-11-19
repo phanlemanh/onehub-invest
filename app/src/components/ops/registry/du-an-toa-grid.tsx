@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useState, type ReactNode } from "react"
 import Link from "next/link"
 import { useTable, type ColumnDef, type ExpandedState, type PaginationState } from "@tanstack/react-table"
 
@@ -13,12 +13,29 @@ import { DataGridTable, DataGridTableRowExpand, getDataGridTreeIndentStyle } fro
 import { Frame, FrameDescription, FrameFooter, FrameHeader, FramePanel, FrameTitle } from "@/components/reui/frame"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { fmtInt } from "@/lib/format"
+import { fmtInt, fmtVnDate } from "@/lib/format"
 import type { HangToa } from "@/lib/ops/registry/hang-toa"
+import type { ThuocTinhCan } from "@/lib/ops/thuoc-tinh-can"
+import { LABELS_VI } from "@/lib/vocab.generated"
 
 import { BacBadge, NguonBadges } from "./registry-badges"
 
 type Tab = "all" | "chua-can"
+
+const SO_1 = new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 1 })
+const SO_2 = new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 2 })
+const so1 = (v: number) => SO_1.format(v)
+const NHAN_HUONG = LABELS_VI.direction_faces as Record<string, string>
+const NHAN_LOAI = LABELS_VI.property_type as Record<string, string>
+const AN_HEP = { headerClassName: "hidden md:table-cell", cellClassName: "hidden md:table-cell" }
+
+/** Ô thuộc tính của một hàng căn: toà và hàng không đọc (lỗi) thì trống; căn chưa có thuộc tính thì nhãn ở ô đầu. */
+function oThuocTinh(r: HangToa, ve: (t: ThuocTinhCan) => ReactNode, dau = false) {
+  if (!r.laCan || r.thuocTinh === undefined) return null
+  if (r.thuocTinh === null) return dau ? <Badge variant="outline">Chưa có thuộc tính</Badge> : null
+  return ve(r.thuocTinh)
+}
+const gach = <span className="text-muted-foreground text-sm">—</span>
 
 const COLUMNS: ColumnDef<DataGridFeatures, HangToa>[] = [
   {
@@ -63,6 +80,77 @@ const COLUMNS: ColumnDef<DataGridFeatures, HangToa>[] = [
     size: 110,
     meta: { headerClassName: "text-end", cellClassName: "text-end" },
   },
+  {
+    id: "dien-tich",
+    header: "Diện tích",
+    cell: ({ row }) => oThuocTinh(row.original, (t) => (
+      <div className="flex flex-col gap-0.5" data-thuoc-tinh="dien-tich">
+        {t.datDat != null ? (
+          <>
+            <span className="text-sm tabular-nums">{t.thongThuy != null ? `${so1(t.thongThuy)} m² sàn` : "—"}</span>
+            <span className="text-muted-foreground text-xs tabular-nums">Đất {so1(t.datDat)} m²</span>
+          </>
+        ) : (
+          <>
+            <span className="text-sm tabular-nums">{t.thongThuy != null ? `${so1(t.thongThuy)} m²` : "—"}</span>
+            {t.timTuong != null && <span className="text-muted-foreground text-xs tabular-nums">Tim tường {so1(t.timTuong)} m²</span>}
+          </>
+        )}
+      </div>
+    ), true),
+    size: 150,
+  },
+  {
+    id: "pn-wc",
+    header: "PN · WC",
+    cell: ({ row }) => oThuocTinh(row.original, (t) => (
+      <span className="text-sm tabular-nums" data-thuoc-tinh="pn-wc">{t.phongNgu ?? "—"} · {t.wc ?? "—"}</span>
+    )),
+    size: 90,
+  },
+  {
+    id: "huong",
+    header: "Hướng",
+    cell: ({ row }) => oThuocTinh(row.original, (t) => (t.huong.length ? (
+      <span className="text-sm" data-thuoc-tinh="huong">{t.huong.map((h) => NHAN_HUONG[h] ?? h).join(" · ")}</span>
+    ) : gach)),
+    size: 140,
+    meta: AN_HEP,
+  },
+  {
+    id: "loai-hinh",
+    header: "Loại hình",
+    cell: ({ row }) => oThuocTinh(row.original, (t) => (t.loaiHinh ? (
+      <span className="text-sm" data-thuoc-tinh="loai-hinh">{NHAN_LOAI[t.loaiHinh] ?? t.loaiHinh}</span>
+    ) : gach)),
+    size: 110,
+    meta: AN_HEP,
+  },
+  {
+    id: "gia-cdt",
+    header: "Giá chủ đầu tư",
+    cell: ({ row }) => oThuocTinh(row.original, (t) => (t.giaCdt != null ? (
+      <div className="flex flex-col gap-0.5" data-thuoc-tinh="gia-cdt">
+        <span className="text-sm tabular-nums">{SO_2.format(t.giaCdt / 1e9)} tỷ</span>
+        {t.giaM2ThongThuy != null && <span className="text-muted-foreground text-xs tabular-nums">{so1(t.giaM2ThongThuy / 1e6)} tr/m² thông thuỷ</span>}
+      </div>
+    ) : gach)),
+    size: 150,
+  },
+  {
+    id: "nguon-thuoc-tinh",
+    header: "Thuộc tính từ",
+    cell: ({ row }) => oThuocTinh(row.original, (t) => (
+      <div className="flex flex-col items-start gap-0.5" data-thuoc-tinh="nguon">
+        <div className="flex flex-wrap gap-1">
+          {t.nguon.map((n) => <Badge key={n} variant="info-light" translate="no">{n}</Badge>)}
+        </div>
+        {t.lanThu && <span className="text-muted-foreground text-xs">Thu {fmtVnDate(t.lanThu)}</span>}
+      </div>
+    )),
+    size: 120,
+    meta: AN_HEP,
+  },
 ]
 
 export function DuAnToaGrid({ rows }: { rows: HangToa[] }) {
@@ -104,7 +192,7 @@ export function DuAnToaGrid({ rows }: { rows: HangToa[] }) {
         <FrameHeader className="flex flex-col gap-3">
           <div className="flex min-w-0 flex-col gap-0.5">
             <FrameTitle role="heading" aria-level={2}>Toà và căn</FrameTitle>
-            <FrameDescription>Mở một toà để xem căn theo tầng và trục. Mã căn là mã tại nguồn.</FrameDescription>
+            <FrameDescription>Mở một toà để xem căn theo tầng và trục, kèm thuộc tính căn của chủ đầu tư. Mã căn là mã tại nguồn.</FrameDescription>
           </div>
           <Tabs value={tab} onValueChange={(v) => { setTab(v as Tab); setPagination((p) => ({ ...p, pageIndex: 0 })) }}>
             <TabsList variant="line" className="no-scrollbar max-w-full justify-start gap-5 overflow-x-auto">
