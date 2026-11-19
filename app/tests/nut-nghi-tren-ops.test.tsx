@@ -9,7 +9,12 @@ import { fileURLToPath } from "node:url"
 import pg from "pg"
 
 const APP = resolve(dirname(fileURLToPath(import.meta.url)), "..")
-const c = new pg.Client({ connectionString: process.env.DATABASE_URL })
+// Cùng quy ước can-gia-cung-loai-db.test.tsx: CI dựng DB trống từ migration ở :5433; máy local thiếu DATABASE_URL thì dừng,
+// không mặc định về DB dùng chung. Ca tự gieo dòng thử nên chạy được trên DB trống.
+const DB_URL = process.env.DATABASE_URL ?? (process.env.CI ? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest" : "")
+if (!DB_URL) throw new Error("nut-nghi-tren-ops.test: thiếu DATABASE_URL — chạy qua npm test (db/db-thu.sh --chay)")
+process.env.DATABASE_URL = DB_URL
+const c = new pg.Client({ connectionString: DB_URL })
 let P = 0, THUONG = 0, NGHI = 0, NGHI_CON_DU_AN = 0
 
 const nut = async (type: string, slug: string, ten: string, parent: number | null, meta: object) => (await c.query<{ id: number }>(
