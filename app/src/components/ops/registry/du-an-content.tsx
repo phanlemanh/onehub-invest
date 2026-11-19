@@ -5,6 +5,7 @@ import { maskSourceNames } from "@/lib/mask-source-names"
 import { dungCay } from "@/lib/ops/registry/cay"
 import { docDuAn } from "@/lib/ops/registry/du-an"
 import { dungHangToa } from "@/lib/ops/registry/hang-toa"
+import { docPhuThuocTinh, docThuocTinhCan } from "@/lib/ops/thuoc-tinh-can"
 import { getSourceNameEntries } from "@/lib/source-roles"
 
 import { RegistryView } from "./registry-view"
@@ -22,7 +23,10 @@ export async function DuAnContent({ id }: { id: number }) {
   const goc = dungCay(duAn.nut, {}, entries)[0]
   const nutGoc = duAn.nut.find((n) => n.id === id)
   if (!goc || !nutGoc) notFound()
-  const rows = dungHangToa(duAn, id, entries)
+  // Thuộc tính căn S16 (DA40): đọc theo đúng các toà của trang; lỗi đọc không làm hỏng lưới toà — trang hiện lỗi nội tuyến.
+  const toaKeys = duAn.toa.map((t) => t.key)
+  const [tt, phu] = await Promise.all([docThuocTinhCan(toaKeys), docPhuThuocTinh(toaKeys)])
+  const rows = dungHangToa(duAn, id, entries, tt.ok ? tt.data : undefined)
   const tinh = nutGoc.tinhId
   return (
     <DuAnView
@@ -39,6 +43,8 @@ export async function DuAnContent({ id }: { id: number }) {
       soCan={goc.soCan}
       tin={goc.tin}
       rows={rows}
+      phuThuocTinh={phu.ok ? phu.data : null}
+      loiThuocTinh={!tt.ok || !phu.ok}
     />
   )
 }

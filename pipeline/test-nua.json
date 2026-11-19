@@ -8,8 +8,12 @@
     "scripts/chia-nua.test.mjs",
     "scripts/chotot-thieu-moc.test.mjs",
     "scripts/dau-bai-thu-sql.test.mjs",
+    "scripts/db-thu-chot.test.mjs",
+    "scripts/do-lech-s03-s06.test.mjs",
     "scripts/do-ngan-sach-yeu-cau.test.mjs",
+    "scripts/dong-dau-dia-chi.test.mjs",
     "scripts/entrypoint-symlink.test.mjs",
+    "scripts/gia-tot-du-an.test.mjs",
     "scripts/goi-thang-anthropic.test.mjs",
     "scripts/hang-gia.test.mjs",
     "scripts/importer-schema-v5.test.mjs",
@@ -18,12 +22,14 @@
     "scripts/lenh.test.mjs",
     "scripts/luoc-do-rieng.test.mjs",
     "scripts/ma-can-s06-sach.test.mjs",
+    "scripts/mau-bai-lac-du-an.test.mjs",
     "scripts/nap-dvhc-cu.test.mjs",
     "scripts/nap-dvhc.test.mjs",
     "scripts/nap-lai-ba-luot-fk.test.mjs",
     "scripts/ops-facts-so-tong-hop.test.mjs",
     "scripts/phat-bieu.test.mjs",
     "scripts/phuong-tu-du-an.test.mjs",
+    "scripts/quet-doc-stg.test.mjs",
     "scripts/refresh-bait-gap-goi.test.mjs",
     "scripts/soat-tang-a.test.mjs",
     "scripts/tap-nhan-hai-khu.test.mjs",
@@ -36,9 +42,7 @@
     "scripts/vocab.test.mjs",
     "scripts/yeu-cau-ngan-sach.test.mjs",
     "tests/s08-danh-muc-nap.test.mjs",
-    "scripts/db-thu-chot.test.mjs",
-    "scripts/gia-tot-du-an.test.mjs",
-    "scripts/do-lech-s03-s06.test.mjs"
+    "scripts/s16-bon-phan.test.mjs"
   ],
   "b": [
     "parse.test.mjs",
@@ -101,6 +105,7 @@
     "sync-cloud.test.mjs",
     "sync-pii.test.mjs",
     "tests/import-s09.test.mjs",
-    "tests/import-s16.test.mjs"
+    "tests/import-s16.test.mjs",
+    "tests/import-s16-chi-tiet.test.mjs"
   ]
 }
