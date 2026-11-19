@@ -5,7 +5,7 @@ slug: thuoc-tinh-can-s16-rut-khi-mo-ho
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: approved
+status: implemented
 design_doc: docs/superpowers/specs/2026-11-19-thuoc-tinh-can-s16-rut-khi-mo-ho-design.md
 veto_state: mo
 veto_opened_at: 2026-11-19T01:27:22Z

@@ -44,6 +44,8 @@ export async function tinh(c, { snapshot = null } = {}) {
   const { rows: mh } = await c.query(
     `SELECT du_an || '/' || ma_can AS k FROM v_s16_can WHERE mo_ho`).catch(() => ({ rows: [] }));
   const moHo = new Set(mh.map((r) => r.k));
+  // Căn danh bạ đang mơ hồ toà: phát biểu S16 cũ của chúng phải rút (DA48), kể cả mã không còn trong snapshot này.
+  const canMoHo = new Set([...moHo].flatMap((k) => biDanh.get(k)?.unit_key ?? []));
   const danhBaTheoDuAn = new Map();
   for (const r of bd) { const d = r.value.split("/")[0]; danhBaTheoDuAn.set(d, (danhBaTheoDuAn.get(d) ?? 0) + 1); }
 
@@ -59,7 +61,12 @@ export async function tinh(c, { snapshot = null } = {}) {
   for (const g of gopKhoa(rows).values()) {
     const x = o(g.du_an);
     x.co_tt++;
-    if (g.nhieu_toa || moHo.has(khoaCan(g.du_an, g.ma))) { x.nhieu_toa++; continue; }
+    if (g.nhieu_toa || moHo.has(khoaCan(g.du_an, g.ma))) {
+      x.nhieu_toa++;
+      const mh1 = biDanh.get(khoaCan(g.du_an, g.ma));
+      if (mh1) canMoHo.add(mh1.unit_key);
+      continue;
+    }
     const can = biDanh.get(khoaCan(g.du_an, g.ma));
     if (!can) { x.chua_can++; continue; }
     x.noi++;
@@ -73,7 +80,24 @@ export async function tinh(c, { snapshot = null } = {}) {
     }
   }
   const bang = [...theoDuAn.values()].sort((a, b) => b.co_tt - a.co_tt || a.du_an.localeCompare(b.du_an));
-  return { chua_ap: false, bang, phat, snapshot: { bam, luc_thu: lucThu }, observed_at: lucThu ?? new Date() };
+  return { chua_ap: false, bang, phat, can_mo_ho: [...canMoHo], snapshot: { bam, luc_thu: lucThu }, observed_at: lucThu ?? new Date() };
+}
+
+const LOC_MO_HO = `resource_name = 'Unit' AND method = 'source_field'
+        AND evidence ->> 'nguon' = $1 AND retracted_at IS NULL AND subject_key = ANY($2::text[])`;
+
+/** Số căn mơ hồ còn phát biểu S16 sống và số phát biểu đó: phần lệnh --ghi sẽ rút. */
+export async function demMoHo(c, canMoHo) {
+  const { rows } = await c.query(`SELECT count(DISTINCT subject_key)::int AS can, count(*)::int AS phat_bieu FROM field_assertions WHERE ${LOC_MO_HO}`,
+    [NGUON_S16, canMoHo]);
+  return rows[0];
+}
+
+/** Rút mọi phát biểu S16 còn sống của căn đã thành mơ hồ toà (người gọi giữ giao dịch). Trả số dòng đã rút. */
+export async function rutMoHo(c, canMoHo) {
+  const res = await c.query(`UPDATE field_assertions SET retracted_at = clock_timestamp(), retract_reason = 'chuyen-mo-ho-toa' WHERE ${LOC_MO_HO}`,
+    [NGUON_S16, canMoHo]);
+  return res.rowCount;
 }
 
 /**
@@ -134,17 +158,21 @@ async function main() {
     console.log(`snapshot ${kq.snapshot.bam} · thu ${kq.snapshot.luc_thu ? new Date(kq.snapshot.luc_thu).toISOString() : "?"}`);
     console.log(inBang(kq.bang));
     console.log(`phat_bieu ${kq.phat.length}`);
+    const mh = await demMoHo(c, kq.can_mo_ho);
+    console.log(`rut_mo_ho ${mh.can} can ${mh.phat_bieu} phat_bieu`);
     let moi = 0;
+    let rut = 0;
     if (coGhi) {
+      rut = await rutMoHo(c, kq.can_mo_ho);
       moi = await ghi(c, kq.phat, kq.observed_at, `ttc-${Date.now()}`);
       await c.query("COMMIT");
-      console.log(`ghi ${moi} dòng mới`);
+      console.log(`ghi ${moi} dòng mới · rút ${rut} phát biểu vì mơ hồ toà`);
       // Lượt đầu chèn vài trăm nghìn phát biểu: thiếu thống kê thì câu đọc của trang Danh bạ chọn kế hoạch hàng phút (đo 18/11).
-      if (moi > 0) await c.query("ANALYZE field_assertions");
+      if (moi > 0 || rut > 0) await c.query("ANALYZE field_assertions");
     } else {
       console.log("chạy thử — không ghi (thêm --ghi để ghi)");
     }
-    if (a.includes("--json")) console.log(JSON.stringify({ bang: kq.bang, phat_bieu: kq.phat.length, ghi: moi }));
+    if (a.includes("--json")) console.log(JSON.stringify({ bang: kq.bang, phat_bieu: kq.phat.length, ghi: moi, rut_mo_ho: { ...mh, da_rut: rut } }));
   } catch (e) {
     if (coGhi) await c.query("ROLLBACK").catch(() => {});
     throw e;
