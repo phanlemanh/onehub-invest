@@ -346,17 +346,63 @@ export type TrangDeal = {
   tabDong: Record<string, TabDeal>;
   page: number;
   cay: NutViTri[];
+  /** Số căn cùng tiêu chí và số căn cùng phường của từng căn trên trang, đếm trên toàn tập đã lọc (CG17). */
+  cungTieuChi?: Record<string, CungTieuChi>;
 };
 
 /** Biên diện tích của «căn cùng tiêu chí»: ±25% quanh căn đang xem. */
 export const BIEN_DIEN_TICH = 0.25;
+/** Số căn tối đa tab «Căn cùng tiêu chí» liệt kê; tổng vẫn ghi đủ (CG17 Hỏi-1). */
+export const SO_CUNG_TOI_DA = 20;
+
+/** Hai số của tab «Căn cùng tiêu chí» cho một căn: theo đủ tiêu chí, và nới về cả phường. */
+export type CungTieuChi = { tieuChi: number; phuong: number };
+
+/** Một căn của tập để so: đủ trường cho tiêu chí và thứ tự, không kéo ảnh hay chữ bài (CG17). */
+export type DongSo = {
+  offerId: string;
+  canKey: string;
+  areaId: string | null;
+  propertyType: string | null;
+  areaM2: number | null;
+  suspect: boolean;
+  discountPct: number | null;
+};
+
+/** Mô tả tiêu chí đang so và tiêu chí bị bỏ vì căn thiếu trường. */
+export function moTaCungTieuChi(d: Pick<DealChiTiet, "phuong" | "propertyType" | "areaM2">, chiPhuong = false): { moTa: string[]; bo: string[] } {
+  if (!d.phuong) return { moTa: ["Chưa gắn phường"], bo: [] };
+  const loai = !chiPhuong ? loaiHinh(d.propertyType) : null;
+  const dt = !chiPhuong && d.areaM2 ? ([d.areaM2 * (1 - BIEN_DIEN_TICH), d.areaM2 * (1 + BIEN_DIEN_TICH)] as const) : null;
+  const moTa = [d.phuong, loai, dt ? `${Math.round(dt[0])}–${Math.round(dt[1])} m²` : null].filter((x): x is string => Boolean(x));
+  const bo = chiPhuong ? [] : [!loai ? "Chưa rõ loại hình nên không so loại hình" : null, !dt ? "Chưa có diện tích nên không so diện tích" : null].filter((x): x is string => Boolean(x));
+  return { moTa, bo };
+}
 
 /**
- * Căn cùng tiêu chí với căn đang xem, cùng thứ tự danh sách: căn cần xác minh đứng cuối, còn lại giảm nhiều trước. Mặc định cùng phường, cùng loại hình, diện tích ±25%;
- * `chiPhuong` nới về cùng phường. Không biết loại hình hay diện tích thì bỏ tiêu chí đó, và nói rõ trong `moTa`.
+ * Căn cùng tiêu chí trên toàn tập (CG17): cùng mã phường, cùng loại hình, diện tích ±25%; ứng viên thiếu loại hình hay diện tích không được
+ * tính khi căn đang xem có trường ấy (luật của `canCungTieuChi` đã ký 02/11). Loại chính căn theo mã căn. Thứ tự: căn cần xác minh cuối,
+ * giảm nhiều trước, mã căn tăng dần. `chiPhuong` nới về cùng phường. Căn chưa gắn phường không so với căn nào.
+ */
+export function locCungTieuChi<T extends DongSo>(d: DongSo, tap: T[], chiPhuong = false): T[] {
+  if (!d.areaId) return [];
+  const loai = !chiPhuong ? loaiHinh(d.propertyType) : null;
+  const dt = !chiPhuong && d.areaM2 ? ([d.areaM2 * (1 - BIEN_DIEN_TICH), d.areaM2 * (1 + BIEN_DIEN_TICH)] as const) : null;
+  return tap
+    .filter((r) => r.canKey !== d.canKey && r.areaId === d.areaId)
+    .filter((r) => !loai || loaiHinh(r.propertyType) === loai)
+    .filter((r) => !dt || (r.areaM2 !== null && r.areaM2 >= dt[0] && r.areaM2 <= dt[1]))
+    .sort((a, b) => Number(a.suspect) - Number(b.suspect) || (b.discountPct ?? 0) - (a.discountPct ?? 0) || (a.canKey < b.canKey ? -1 : a.canKey > b.canKey ? 1 : 0));
+}
+
+/**
+ * Căn cùng tiêu chí với căn đang xem, trong danh sách đã tải (đường lùi khi chưa có bảng hạng): cùng thứ tự danh sách, căn cần xác minh đứng
+ * cuối, còn lại giảm nhiều trước. Mặc định cùng phường, cùng loại hình, diện tích ±25%; `chiPhuong` nới về cùng phường. Không biết loại
+ * hình hay diện tích thì bỏ tiêu chí đó, và nói rõ trong `moTa`.
  */
 export function canCungTieuChi<T extends DealChiTiet>(d: T, rows: T[], chiPhuong = false): { moTa: string[]; bo: string[]; can: T[] } {
-  if (!d.phuong) return { moTa: ["Chưa gắn phường"], bo: [], can: [] };
+  const { moTa, bo } = moTaCungTieuChi(d, chiPhuong);
+  if (!d.phuong) return { moTa, bo, can: [] };
   const loai = !chiPhuong ? loaiHinh(d.propertyType) : null;
   const dt = !chiPhuong && d.areaM2 ? ([d.areaM2 * (1 - BIEN_DIEN_TICH), d.areaM2 * (1 + BIEN_DIEN_TICH)] as const) : null;
   const can = rows
@@ -364,8 +410,6 @@ export function canCungTieuChi<T extends DealChiTiet>(d: T, rows: T[], chiPhuong
     .filter((r) => !loai || loaiHinh(r.propertyType) === loai)
     .filter((r) => !dt || (r.areaM2 !== null && r.areaM2 >= dt[0] && r.areaM2 <= dt[1]))
     .sort((a, b) => Number(a.suspect) - Number(b.suspect) || (b.discountPct ?? 0) - (a.discountPct ?? 0));
-  const moTa = [d.phuong, loai, dt ? `${Math.round(dt[0])}–${Math.round(dt[1])} m²` : null].filter((x): x is string => Boolean(x));
-  const bo = chiPhuong ? [] : [!loai ? "Chưa rõ loại hình nên không so loại hình" : null, !dt ? "Chưa có diện tích nên không so diện tích" : null].filter((x): x is string => Boolean(x));
   return { moTa, bo, can };
 }
 
