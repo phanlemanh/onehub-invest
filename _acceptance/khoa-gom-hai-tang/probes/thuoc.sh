@@ -9,7 +9,7 @@ ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"; cd "$ROOT"
 D=_acceptance/khoa-gom-hai-tang/probes/gt5-db.mjs; K=_acceptance/khoa-gom-hai-tang/probes/gt5-thuoc.mjs
 GOC="$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")"
 MAU="${GT5_MAU:-$GOC/research-local/s03-gom-tin-giu-rieng-20261120}"; AUD="${GT5_AUDIT:-$GOC/research-local/s03-gom-tin-audit-20261109}"
-BC=_acceptance/khoa-gom-hai-tang/thuoc-ket-qua.json
+BC="${GT5_BC:-_acceptance/khoa-gom-hai-tang/thuoc-ket-qua.json}"  # mẫu hai: GT5_MAU=<thư mục mẫu hai> GT5_BC=…/thuoc-ket-qua-2.json
 U() { echo "postgres://oneinvest:oneinvest@localhost:5433/$1"; }
 [ -f "$MAU/payload.json" ] && [ -f "$AUD/sample_tach.csv" ] || { echo "ĐỎ: không thấy mẫu giữ riêng hay nhãn audit ở research-local của máy thu"; exit 2; }
 RA="$(mktemp -d)"; trap 'node $D xoa oneinvest_gt5_bat >/dev/null 2>&1 || true' EXIT

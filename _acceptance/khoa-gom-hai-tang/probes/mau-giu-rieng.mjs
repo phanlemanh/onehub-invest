@@ -5,7 +5,8 @@
 // maskSourceNames (danh sách tên từ source_registry local — rỗng thì dừng), cắt 600 ký tự, tối đa 6 bản chữ mỗi tin; KHÔNG offer_id,
 // post_id, người đăng. Quét lại toàn payload bằng findSourceNames: phải 0, không thì thoát 1 ghim mã bản chữ.
 // Hỏi-2 (Mạnh duyệt 20/11): Opus, Sonnet, tối đa 3 USD; không gọi model ở lệnh này.
-// Dùng: node mau-giu-rieng.mjs --audit <thư mục audit> --out <thư mục ra> [--so 75] [--seed gt5-giu-rieng-2011]
+// Dùng: node mau-giu-rieng.mjs --audit <thư mục audit> --out <thư mục ra> [--so 75] [--seed gt5-giu-rieng-2011] [--loai-map <map.json>…]
+//   --loai-map (lặp được): loại mọi tin đã dùng ở mẫu trước (offer_id trong map.json) — mẫu hai tách rời mẫu một (GS phán 20/11).
 import { createHash } from "node:crypto";
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -25,6 +26,9 @@ if (!AUDIT || !OUT || !existsSync(AUDIT)) { console.error("thiếu --audit (thư
 const cot = (tep, ten) => { const [h, ...d] = readFileSync(join(AUDIT, tep), "utf8").trim().split("\n"); const i = h.split(",").indexOf(ten);
   return d.map((l) => l.split(",")[i]); };
 const loai = new Set([...cot("sample_gop.csv", "offer_id"), ...cot("sample_tach.csv", "a"), ...cot("sample_tach.csv", "b"), ...cot("mau-gom-meta.csv", "offer")]);
+const loaiMap = process.argv.flatMap((x, i) => (process.argv[i - 1] === "--loai-map" ? [x] : []));
+for (const m of loaiMap) for (const r of JSON.parse(readFileSync(m, "utf8"))) loai.add(r.offer_id);
+if (loaiMap.length) console.log(`loại thêm tin của ${loaiMap.length} mẫu trước: tổng loại ${loai.size} offer_id`);
 
 const c = new pg.Client({ connectionString: process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest" });
 await c.connect();

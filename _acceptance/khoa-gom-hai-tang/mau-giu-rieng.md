@@ -16,3 +16,14 @@
   thêm**, trong trần 3 USD của Hỏi-2.
 - Token tác tử con theo báo của phiên: Opus 128.744 (75 tin) + 110.365 (45 tin) = 239.109; Sonnet 125.285 + 107.931 = 233.216.
 - Thứ tự an toàn: quét `findSourceNames` trên toàn payload ra 0 TRƯỚC khi tác tử con đọc; tác tử chỉ được đọc đúng tệp payload đã che.
+
+## Mẫu giữ riêng THỨ HAI (GS phán 20/11) — chấm MỘT lần, không lặp
+
+- Vì sao có mẫu hai: lượt chấm mẫu một (27,1% → 21,2%) bắt một lỗi hiện thực (ô trống «?» = «?» ở tầng hai, sửa ở 84c73d751); 18 tin
+  gộp nhầm của mẫu một đã được đọc để chẩn đoán, nên mẫu một KHÔNG còn «giữ riêng». Mẫu hai tính hay không tính là phép đo của AC-9 là
+  lời của Mạnh ở Cổng Bằng chứng.
+- Dựng 20/11 bằng `probes/mau-giu-rieng.mjs --loai-map <map mẫu một>`, cùng seed `gt5-giu-rieng-2011`: 120 tin kế trong 646 ứng viên còn
+  lại, 0 tin trùng mẫu một · 368 bản chữ · 64.194 ký tự · quét tên nguồn 0.
+- `payload.json` sha256 `18341fbee313249e533cc43b82cd31ef686efbb5cbc4211c674d68bbf999f326` · danh sách offer_id (đã sắp) sha256 `61aea604d03a16a07c2aa0cbc7489383acc2aa502990382fc11bb244eefb5eb5` — nội
+  dung ở `research-local/s03-gom-tin-giu-rieng-2-20261120/` (gitignored, máy thu).
+- Commit này đứng TRƯỚC mọi lượt chạy khoá mới trên mẫu hai. Hụt ngưỡng nữa thì DỪNG, không mẫu ba, đưa Mạnh.
