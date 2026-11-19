@@ -5,7 +5,7 @@ slug: on12-ac5-bo-dong-s03-moc-ngay
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: machine-cleared
 veto_state: mo
 veto_opened_at: 2026-11-19T17:22:10Z
 approved_by:
@@ -42,3 +42,10 @@ lượt chấm và ghim. Việc: một hằng điều kiện duy nhất cho bả
 - Đổi các ca khác đọc `dq_check_results` bằng câu riêng (nếu có) — không thuộc vụ main đỏ này.
 
 ## Notes
+
+- Ngoài-1 (máy định tuyến 2026-11-19, đề xuất S4 known-limits): Sau khi thay đổi này được gộp, phép kiểm chứng đối chiếu bản cũ không chạy lại được nữa và báo đỏ giả dù tính năng vẫn đúng. Người dùng cuối không bị ảnh hưởng, chỉ người soát lại hồ sơ về sau mới gặp. — `_acceptance/on12-ac5-bo-dong-s03-moc-ngay/probes/doi-chung.sh`
+- Ngoài-2 (máy định tuyến 2026-11-19, đề xuất S4 known-limits): Một dòng kiểm trong bộ nghiệm thu có thể báo xanh dù hằng bị xoá, nên nó không tự bắt được lỗi đó. Người dùng cuối không thấy gì khác, vì các phép kiểm chạy thật vẫn bắt được lỗi. — `_acceptance/on12-ac5-bo-dong-s03-moc-ngay/probes/pham-vi.sh`
+- Ngoài-3 (máy định tuyến 2026-11-19, đề xuất S4 known-limits): Bộ nghiệm thu chỉ chứng minh phía ca kiểm đọc chung một điều kiện, còn phía bảng chất lượng dữ liệu chỉ được kiểm bằng so khớp chữ. Nếu sau này hai nơi lệch nhau, bảng có thể hiện khác ca kiểm mà không bị bắt ngay. — `_acceptance/on12-ac5-bo-dong-s03-moc-ngay/probes/doi-chung.sh`
+- Ngoài-4 (máy định tuyến 2026-11-19, đề xuất S4 known-limits): Sau khi bản sửa được gộp, bước chứng minh «bản cũ từng đỏ» sẽ không còn đỏ nữa, nên chạy lại hồ sơ này trên nhánh chính sẽ báo thất bại dù mã không hỏng. Người dùng cuối không bị ảnh hưởng, chỉ người chấm lại hồ sơ gặp báo động giả. — `_acceptance/on12-ac5-bo-dong-s03-moc-ngay/probes/doi-chung.sh`
+- Ngoài-5 (máy định tuyến 2026-11-19, đề xuất S4 known-limits): Trong một số môi trường chạy (máy CI hoặc DB khác DB chung) bước chấm này có thể treo mãi không kết thúc. Người dùng cuối không thấy gì, chỉ lượt chấm bị kẹt. — `_acceptance/on12-ac5-bo-dong-s03-moc-ngay/probes/doi-chung.sh`
+- Ngoài-6 (máy định tuyến 2026-11-19, đề xuất S4 known-limits): Việc bảng chất lượng dữ liệu thật sự bỏ dòng mới chỉ được kiểm bằng việc đọc mã, chưa chạy thử trên dữ liệu. Nếu sau này có người sửa lệch, bảng có thể hiện thêm một dòng không cần thiết mà bước chấm không bắt được. — `_acceptance/on12-ac5-bo-dong-s03-moc-ngay/probes/pham-vi.sh`
