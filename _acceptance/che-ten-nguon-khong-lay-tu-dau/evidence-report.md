@@ -7,13 +7,11 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: e3dc3ce794fd2b73e8fda40d3e7e87fda214434f
+verified_commit: bf8279c302c67c6b2dd91d6b8d06282a8a8e3fe7
 human_signoff:
 ---
 
 # Evidence Report: che-ten-nguon-khong-lay-tu-dau
-
-Round 3. Mọi eval máy đều xanh. Còn một mục judgment (E8) chờ người chốt nên verdict tổng là PENDING-JUDGMENT.
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
@@ -27,156 +25,159 @@ Round 3. Mọi eval máy đều xanh. Còn một mục judgment (E8) chờ ngư�
 | E5 | AC-5 | script | PASS |
 | E6 | AC-6 | script | PASS |
 | E7 | AC-7 | test | PASS |
-| E8 | AC-8 | judgment | PENDING-HUMAN |
 | E9 | AC-9 | test | PASS |
 | E10 | AC-10 | test | PASS |
 | E11a | AC-4 | test | PASS |
 | E11b | AC-4 | test | PASS |
 | E11c | AC-4 | test | PASS |
+| E8 | AC-8 | judgment | PENDING (chờ người ở Cổng 2) |
 
 ## Evidence
 
 - eval: E1
-  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E1-r3
+  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E1-r4
   exit_code: 0
   baseline: n-a
   verifier: _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/db.sh
-  verified_at: 2026-11-19T04:59:33Z
+  verified_at: 2026-11-19T11:38:30Z
   output: |
-    ℹ duration_ms 3563.529125
+    probes/db.sh chạy một lượt, bao E1, E3, E4b, E7, E4c; 1/1 lượt đạt.
+    ℹ duration_ms 2454.788375
 
 - eval: E3
-  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E3-r3
+  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E3-r4
   exit_code: 0
   baseline: n-a
   verifier: _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/db.sh
-  verified_at: 2026-11-19T04:59:33Z
+  verified_at: 2026-11-19T11:38:30Z
   output: |
-    ℹ duration_ms 3563.529125
+    probes/db.sh chạy một lượt, 1/1 lượt đạt.
+    ℹ duration_ms 2454.788375
 
 - eval: E4b
-  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E4b-r3
+  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E4b-r4
   exit_code: 0
   baseline: n-a
   verifier: _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/db.sh
-  verified_at: 2026-11-19T04:59:33Z
+  verified_at: 2026-11-19T11:38:30Z
   output: |
-    ℹ duration_ms 3563.529125
+    probes/db.sh chạy một lượt, 1/1 lượt đạt.
+    ℹ duration_ms 2454.788375
 
 - eval: E7
-  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E7-r3
+  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E7-r4
   exit_code: 0
   baseline: n-a
   verifier: _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/db.sh
-  verified_at: 2026-11-19T04:59:33Z
+  verified_at: 2026-11-19T11:38:30Z
   output: |
-    ℹ duration_ms 3563.529125
+    probes/db.sh chạy một lượt, 1/1 lượt đạt.
+    ℹ duration_ms 2454.788375
 
 - eval: E4c
-  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E4c-r3
+  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E4c-r4
   exit_code: 0
   baseline: n-a
   verifier: _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/db.sh
-  verified_at: 2026-11-19T04:59:33Z
+  verified_at: 2026-11-19T11:38:30Z
   output: |
-    ℹ duration_ms 3563.529125
+    probes/db.sh chạy một lượt, 1/1 lượt đạt.
+    ℹ duration_ms 2454.788375
 
 - eval: E2
-  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E2-r3
+  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E2-r4
   exit_code: 0
   baseline: n-a
   verifier: _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/loi.sh
-  verified_at: 2026-11-19T04:59:33Z
+  verified_at: 2026-11-19T11:38:30Z
   output: |
-    ℹ duration_ms 6397.351458
+    ℹ duration_ms 5808.296375
 
 - eval: E4a
-  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E4a-r3
+  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E4a-r4
   exit_code: 0
   baseline: n-a
   verifier: _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/soat.sh
-  verified_at: 2026-11-19T04:59:33Z
+  verified_at: 2026-11-19T11:38:30Z
   output: |
-    ℹ duration_ms 52857.350458
+    ℹ duration_ms 56090.5795
 
 - eval: E5
-  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E5-r3
+  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E5-r4
   exit_code: 0
   baseline: n-a
   verifier: _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/ban-chep.sh
-  verified_at: 2026-11-19T04:59:33Z
+  verified_at: 2026-11-19T11:38:30Z
   output: |
-    thời gian 194 giây
+    thời gian 187 giây
 
 - eval: E6
-  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E6-r3
+  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E6-r4
   exit_code: 0
   baseline: n-a
   verifier: _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/ban-chep.sh
-  verified_at: 2026-11-19T04:59:33Z
+  verified_at: 2026-11-19T11:38:30Z
   output: |
-    thời gian 194 giây
+    thời gian 187 giây
 
 - eval: E4d
-  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E4d-r3
+  run_id: r4-l5-1-20261119113830
   exit_code: 0
   baseline: n-a
   verifier: _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/dong-chat.sh
-  verified_at: 2026-11-19T04:59:33Z
+  verified_at: 2026-11-19T11:38:30Z
   output: |
-    ℹ duration_ms 1266.6155
+    ℹ duration_ms 2065.366667
 
 - eval: E9
-  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E9-r3
+  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E9-r4
   exit_code: 0
   baseline: n-a
   verifier: _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/khong-ten-that.sh
-  verified_at: 2026-11-19T04:59:33Z
+  verified_at: 2026-11-19T11:38:30Z
   output: |
-    khong-ten-that: 87 tệp, 8 biến thể, 0 chỗ trúng — ĐẠT
+    khong-ten-that: 104 tệp, 8 biến thể, 0 chỗ trúng — ĐẠT
 
 - eval: E10
-  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E10-r3
+  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E10-r4
   exit_code: 0
   baseline: n-a
   verifier: _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/khong-gui-khi-import.sh
-  verified_at: 2026-11-19T04:59:33Z
+  verified_at: 2026-11-19T11:38:30Z
   output: |
-    ℹ duration_ms 7461.915167
+    ℹ duration_ms 6702.467833
 
 - eval: E11a
-  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E11a-r3
+  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E11a-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.suite.app_ui
-  verified_at: 2026-11-19T04:59:33Z
+  verified_at: 2026-11-19T11:38:30Z
   output: |
-    ℹ duration_ms 679903.533167
+    ℹ duration_ms 856367.119375
 
 - eval: E11b
-  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E11b-r3
+  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E11b-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.suite.pipeline_a
-  verified_at: 2026-11-19T04:59:33Z
+  verified_at: 2026-11-19T11:38:30Z
   output: |
-    ℹ duration_ms 1060433.281958
+    ℹ duration_ms 1012315.958
 
 - eval: E11c
-  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E11c-r3
+  run_id: minted-che-ten-nguon-khong-lay-tu-dau-E11c-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.suite.pipeline_b
-  verified_at: 2026-11-19T04:59:33Z
+  verified_at: 2026-11-19T11:38:30Z
   output: |
-    ℹ duration_ms 1147124.877875
-
-### Judgment
+    ℹ duration_ms 1324667.764625
 
 - eval: E8
-  judged_by: hội đồng ba lăng kính (domain-correctness, operational-feasibility, spec-alignment) — giữ nguyên từ round 2
-  verdict: PASS
-  rationale: Đề xuất của hội đồng, chưa phải quyết định. Panel giữ nguyên từ round 2 — inputs không đổi, không chấm lại; rationale xem round 2.
+  judged_by: hội đồng ba góc nhìn, giữ nguyên từ round 2 (inputs không đổi, không chấm lại)
+  verdict: PASS (đề xuất của máy, chưa phải quyết định)
+  rationale: Panel giữ nguyên từ round 2 — inputs không đổi, không chấm lại; rationale xem round 2. Ba góc nhìn domain-correctness, operational-feasibility, spec-alignment cùng đề xuất PASS (r2). Người quyết ở Cổng 2.
   votes:
     - domain-correctness: PASS (r2)
     - operational-feasibility: PASS (r2)
@@ -186,24 +187,24 @@ Round 3. Mọi eval máy đều xanh. Còn một mục judgment (E8) chờ ngư�
 ### Lệnh suite (hồi quy)
 
 - cmd: node scripts/suite-neu-doi.mjs agent -- 'cd agent && npm test'
-  run_id: minted-che-ten-nguon-khong-lay-tu-dau-SUITE-node_scripts_suite_neu_doi_mjs_agent_cd_-r3
+  run_id: minted-che-ten-nguon-khong-lay-tu-dau-SUITE-node_scripts_suite_neu_doi_mjs_agent_cd_-r4
   exit_code: 0
-  verified_at: 2026-11-19T04:59:33Z
+  verified_at: 2026-11-19T11:38:30Z
 
 - cmd: node scripts/suite-neu-doi.mjs app -- 'cd app && npx tsc --noEmit && npm run lint'
-  run_id: minted-che-ten-nguon-khong-lay-tu-dau-SUITE-lint-r3
+  run_id: minted-che-ten-nguon-khong-lay-tu-dau-SUITE-lint-r4
   exit_code: 0
-  verified_at: 2026-11-19T04:59:33Z
+  verified_at: 2026-11-19T11:38:30Z
 
 - cmd: node scripts/suite-neu-doi.mjs ui_lint_rules -- 'cd app && npm run test:lint-rules'
-  run_id: minted-che-ten-nguon-khong-lay-tu-dau-SUITE-test_lint_rules-r3
+  run_id: minted-che-ten-nguon-khong-lay-tu-dau-SUITE-test_lint_rules-r4
   exit_code: 0
-  verified_at: 2026-11-19T04:59:33Z
+  verified_at: 2026-11-19T11:38:30Z
 
 - cmd: node scripts/suite-neu-doi.mjs portal_static -- 'node scripts/check-portal-compliance.mjs'
-  run_id: minted-che-ten-nguon-khong-lay-tu-dau-SUITE-node_scripts_suite_neu_doi_mjs_portal_st-r3
+  run_id: minted-che-ten-nguon-khong-lay-tu-dau-SUITE-node_scripts_suite_neu_doi_mjs_portal_st-r4
   exit_code: 0
-  verified_at: 2026-11-19T04:59:33Z
+  verified_at: 2026-11-19T11:38:30Z
 
 ## Known limits
 
@@ -211,16 +212,15 @@ Round 3. Mọi eval máy đều xanh. Còn một mục judgment (E8) chờ ngư�
 
 ## Analyst
 
-carried tu round 2 — baseline khong do lai round nay
+carried tu round 2 — baseline khong do lai round nay. Cột baseline của mọi eval ghi n-a (round này không đo). Không có eval nào bị đánh dấu không-phân-biệt; lệnh suite xanh cả hai phía là regression-guard bình thường.
 
-Eval không-phân-biệt (green trên cả HEAD lẫn baseline): không có. Mọi block eval ghi baseline n-a vì round này không đo lại (evals.yaml không đổi từ lần baseline cuối). Lệnh suite xanh cả hai phía là regression-guard bình thường.
+Eval không-phân-biệt: không có.
 
 ## Variance
 
-none — mọi eval chạy một lần, kết quả đồng nhất.
+none — mọi eval chạy một lượt, không eval nào ngẫu nhiên hay flaky.
 
 ## Iterations
 
-Round 1: lượt chấm đầu, ba bộ test lớn chạy quá 30 phút không có mã thoát; khai riêng E11a, E11b, E11c để chờ đủ giờ.
-Round 2: lượt chấm S4 bị REJECT. Trả về triển khai; sửa che-ten thoát ký tự đặc biệt, siết các phép đo.
-Round 3: mọi eval máy xanh; E8 (judgment) chờ người chốt ở Cổng 2. Verdict PENDING-JUDGMENT.
+Round 1 đến 3: xem run-log.jsonl cùng thư mục.
+Round 4: mọi eval máy xanh trên cây bf8279c; E8 (judgment) chờ người ở Cổng 2; verdict PENDING-JUDGMENT.
