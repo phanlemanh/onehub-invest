@@ -1,14 +1,14 @@
 ---
 schema_version: 2
 feature_slug: che-ten-nguon-khong-lay-tu-dau
-verdict: PENDING-JUDGMENT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: bf8279c302c67c6b2dd91d6b8d06282a8a8e3fe7
-human_signoff:
+human_signoff: Mạnh 2026-11-19
 ---
 
 # Evidence Report: che-ten-nguon-khong-lay-tu-dau
@@ -182,7 +182,7 @@ human_signoff:
     - domain-correctness: PASS (r2)
     - operational-feasibility: PASS (r2)
     - spec-alignment: PASS (r2)
-  human_override:  # chi nguoi ghi
+  human_override: Mạnh 2026-11-19 — Đạt
 
 ### Lệnh suite (hồi quy)
 

@@ -5,7 +5,7 @@ slug: che-ten-nguon-khong-lay-tu-dau
 owner: phanlemanh@gmail.com
 risk_tier: T3      # nới bộ soát tầng A; chạm db/migrations và pipeline/sync-cloud.mjs (t3_paths)
 surfaces: [cli, data, ui]
-status: verified
+status: signed-off
 design_doc: _acceptance/che-ten-nguon-khong-lay-tu-dau/design.md
 approved_by: Mạnh
 approved_at: 2026-11-19
@@ -97,3 +97,8 @@ dùng tên giả cùng hình dạng; không tên nguồn thật nào trong hồ 
   dưới, dấu chấm hay dấu cách kép: thêm vào AC-2. (2) Sự cố 00:26:54Z ngày 19/11: tác tử chấm import `push-ops-facts.mjs`, tệp tự
   chạy và đẩy một bản tin thật lên cloud, không có lời của Mạnh. Bản dựng lại không có tên nguồn thật; bản tin nằm trên cloud khoảng
   15 phút rồi bị lượt định kỳ ghi đè: thêm AC-10 để import không còn gửi.
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-19:
+  - Ngoài-1: phép kiểm «bộ soát mới không lỏng hơn bản trên main» dùng lại chính lõi mới, nên một lần siết hẹp bộ soát sau này có thể lọt mà phép so không báo.
+  - Ngoài-2: test của bước đo hằng ngày dùng sổ nguồn dựng tay thay vì bảng thật, nên lệch cách đọc sổ nguồn có thể không làm test này đỏ.
+  - Ngoài-3: ca «hàm nạp làm rơi định danh» không đột biến hàm nạp thật, nên một hàm nạp rơi định danh có thể không làm ca này đỏ.
