@@ -17,6 +17,7 @@ export const SCAN_FILES = [
   "src/app/ops/data-flow/page.tsx",
   "src/app/ops/deals/[offerId]/loading.tsx",
   "src/app/ops/deals/[offerId]/page.tsx",
+  "src/app/ops/deals/actions.ts",
   "src/app/ops/deals/loading.tsx",
   "src/app/ops/deals/page.tsx",
   "src/app/ops/design/page.tsx",
