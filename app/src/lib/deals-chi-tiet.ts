@@ -1,4 +1,4 @@
-import { LABELS_VI } from "./vocab.generated";
+import { LABELS_VI, PROPERTY_TYPE, VOCAB } from "./vocab.generated";
 import { fmtInt, fmtPct } from "./format";
 import type { ReviewImage } from "./ops/review-media";
 
@@ -73,6 +73,8 @@ const chuTrungVi = (v: number | null, metric: string | null): string => {
   if (metric === "gia-thang-pn") return `${fmtInt(v / 1e6)} tr/tháng`;
   return v < 1e6 ? `${fmtInt(v / 1e3)} nghìn/m²` : `${fmtInt(v / 1e6)} tr/m²`;
 };
+/** Giá theo m² trên bảng: từ một triệu ghi «tr/m²», dưới một triệu (giá thuê) ghi «nghìn/m²» để không tròn về 0. */
+export const chuGiaM2 = (v: number): string => (v < 1e6 ? `${fmtInt(v / 1e3)} nghìn/m²` : `${fmtInt(v / 1e6)} tr/m²`);
 /** Độ lệch có dấu, phẩy thập phân: «−4,1%» khi S03 rẻ hơn mặt bằng S06, «+3,0%» khi đắt hơn. */
 const chuLech = (pct: number): string => `${pct < 0 ? "−" : "+"}${fmtPct(Math.abs(pct) / 100)}`;
 
@@ -261,12 +263,16 @@ export function tenCan(d: DealChiTiet): string {
  * Căn còn thiếu gì. Chỉ nói ảnh, chữ bài khi vai được xem và đang ở máy thu, SĐT khi vai được xem: dữ liệu vắng vì
  * vai hay vì cloud không có nghĩa căn thiếu.
  */
-export function thieuGi(d: DealChiTiet, vai: { xemNoiDung: boolean; mayThu: boolean }): string[] {
+export function thieuGi(
+  d: Pick<DealChiTiet, "propertyType" | "areaM2" | "block" | "street" | "medianPerm2" | "postTextFull" | "sellerPhone" | "rank"> & { images: readonly unknown[] },
+  vai: { xemNoiDung: boolean; mayThu: boolean },
+): string[] {
   const out: string[] = [];
   if (!loaiHinh(d.propertyType)) out.push("Chưa rõ loại hình");
   if (!d.areaM2) out.push("Chưa có diện tích");
   if (vai.xemNoiDung && !d.block && !d.street) out.push("Chỉ biết phường, chưa có toà hay đường");
-  if (!d.medianPerm2) out.push("Chưa có thước phường");
+  // Tin thuê theo giá tháng có trung vị giá tháng, không có thước giá/m²: không tính là thiếu.
+  if (!d.medianPerm2 && !(d.rank?.metric === "gia-thang-pn" && d.rank.median)) out.push("Chưa có thước phường");
   if (vai.xemNoiDung && vai.mayThu) {
     if (d.images.length === 0) out.push("Chưa có ảnh");
     if (!d.postTextFull) out.push("Chưa có chữ bài");
@@ -275,15 +281,128 @@ export function thieuGi(d: DealChiTiet, vai: { xemNoiDung: boolean; mayThu: bool
   return out;
 }
 
+/** Phần trăm in trên bảng danh sách: dấu phẩy thập phân. Câu trong sheet vẫn dùng `soPct`. */
+export const soPctVi = (pct: number): string => soPct(pct).replace(".", ",");
+
+/** Bán hay thuê trên URL; `rent` là `rent_lt` trong bảng hạng. */
+export type KindDeal = "sale" | "rent";
+export type TabTrang = "all" | TabDeal;
+/** Cỡ trang được chọn; giá trị khác trên URL về mặc định. */
+export const CO_TRANG_DEAL = [15, 25, 50] as const;
+/** Loại hình lọc được: mọi loại của sổ từ vựng trừ «Chưa rõ». */
+export const LOAI_LOC: readonly string[] = VOCAB.property_type.filter((v) => v !== PROPERTY_TYPE.unknown);
+
+/** Điều kiện của danh sách, đọc từ URL. Giá trị sai khuôn bị bỏ qua, không làm hỏng trang. */
+export type ThamSoDeal = {
+  location: string | null;
+  project: string | null;
+  type: string | null;
+  kind: KindDeal;
+  tab: TabTrang;
+  page: number;
+  size: number;
+};
+
+export function docThamSoDeal(sp: Record<string, string | string[] | undefined>): ThamSoDeal {
+  const mot = (k: string) => { const v = sp[k]; return typeof v === "string" ? v : Array.isArray(v) ? v[0] ?? null : null; };
+  const location = mot("location"), project = mot("project"), type = mot("type"), tab = mot("tab");
+  const page = Number(mot("page")), size = Number(mot("size"));
+  return {
+    location: location && /^vn(-[a-z0-9]+)*$/.test(location) ? location : null,
+    project: project && /^[0-9]{1,18}$/.test(project) ? project.replace(/^0+(?=\d)/, "") : null,
+    type: type && LOAI_LOC.includes(type) ? type : null,
+    kind: mot("kind") === "rent" ? "rent" : "sale",
+    tab: tab === "du" || tab === "xac-minh" || tab === "thieu" ? tab : "all",
+    page: Number.isInteger(page) && page >= 1 ? page : 1,
+    size: (CO_TRANG_DEAL as readonly number[]).includes(size) ? size : CO_TRANG_DEAL[0],
+  };
+}
+
+/** Đường dẫn của danh sách theo điều kiện; giá trị mặc định không ghi lên URL. */
+export function urlThamSoDeal(p: ThamSoDeal): string {
+  const q = new URLSearchParams();
+  if (p.location) q.set("location", p.location);
+  if (p.project) q.set("project", p.project);
+  if (p.type) q.set("type", p.type);
+  if (p.kind !== "sale") q.set("kind", p.kind);
+  if (p.tab !== "all") q.set("tab", p.tab);
+  if (p.page > 1) q.set("page", String(p.page));
+  if (p.size !== CO_TRANG_DEAL[0]) q.set("size", String(p.size));
+  const s = q.toString();
+  return s ? `/ops/deals?${s}` : "/ops/deals";
+}
+
+/** Một mục của cây vị trí; `value` là `area:<mã>`, `project:<mã>`, hay `nhom:<...>` cho hai nhánh không chọn được. */
+export type NutViTri = { value: string; label: string; count: number; children?: NutViTri[] };
+
+/** Phần phân trang của danh sách đọc ở máy chủ. */
+export type TrangDeal = {
+  thamSo: ThamSoDeal;
+  /** Số căn của từng tab trên toàn tập đã lọc. */
+  dem: Record<TabTrang, number>;
+  /** Số căn của tab đang mở. */
+  tong: number;
+  /** Tab của từng căn trên trang, theo luật đầy đủ ở mọi vai. */
+  tabDong: Record<string, TabDeal>;
+  page: number;
+  cay: NutViTri[];
+  /** Số căn cùng tiêu chí và số căn cùng phường của từng căn trên trang, đếm trên toàn tập đã lọc (CG17). */
+  cungTieuChi?: Record<string, CungTieuChi>;
+};
+
 /** Biên diện tích của «căn cùng tiêu chí»: ±25% quanh căn đang xem. */
 export const BIEN_DIEN_TICH = 0.25;
+/** Số căn tối đa tab «Căn cùng tiêu chí» liệt kê; tổng vẫn ghi đủ (CG17 Hỏi-1). */
+export const SO_CUNG_TOI_DA = 20;
+
+/** Hai số của tab «Căn cùng tiêu chí» cho một căn: theo đủ tiêu chí, và nới về cả phường. */
+export type CungTieuChi = { tieuChi: number; phuong: number };
+
+/** Một căn của tập để so: đủ trường cho tiêu chí và thứ tự, không kéo ảnh hay chữ bài (CG17). */
+export type DongSo = {
+  offerId: string;
+  canKey: string;
+  areaId: string | null;
+  propertyType: string | null;
+  areaM2: number | null;
+  suspect: boolean;
+  discountPct: number | null;
+};
+
+/** Mô tả tiêu chí đang so và tiêu chí bị bỏ vì căn thiếu trường. */
+export function moTaCungTieuChi(d: Pick<DealChiTiet, "phuong" | "propertyType" | "areaM2">, chiPhuong = false): { moTa: string[]; bo: string[] } {
+  if (!d.phuong) return { moTa: ["Chưa gắn phường"], bo: [] };
+  const loai = !chiPhuong ? loaiHinh(d.propertyType) : null;
+  const dt = !chiPhuong && d.areaM2 ? ([d.areaM2 * (1 - BIEN_DIEN_TICH), d.areaM2 * (1 + BIEN_DIEN_TICH)] as const) : null;
+  const moTa = [d.phuong, loai, dt ? `${Math.round(dt[0])}–${Math.round(dt[1])} m²` : null].filter((x): x is string => Boolean(x));
+  const bo = chiPhuong ? [] : [!loai ? "Chưa rõ loại hình nên không so loại hình" : null, !dt ? "Chưa có diện tích nên không so diện tích" : null].filter((x): x is string => Boolean(x));
+  return { moTa, bo };
+}
 
 /**
- * Căn cùng tiêu chí với căn đang xem, cùng thứ tự danh sách: căn cần xác minh đứng cuối, còn lại giảm nhiều trước. Mặc định cùng phường, cùng loại hình, diện tích ±25%;
- * `chiPhuong` nới về cùng phường. Không biết loại hình hay diện tích thì bỏ tiêu chí đó, và nói rõ trong `moTa`.
+ * Căn cùng tiêu chí trên toàn tập (CG17): cùng mã phường, cùng loại hình, diện tích ±25%; ứng viên thiếu loại hình hay diện tích không được
+ * tính khi căn đang xem có trường ấy (luật của `canCungTieuChi` đã ký 02/11). Loại chính căn theo mã căn. Thứ tự: căn cần xác minh cuối,
+ * giảm nhiều trước, mã căn tăng dần. `chiPhuong` nới về cùng phường. Căn chưa gắn phường không so với căn nào.
+ */
+export function locCungTieuChi<T extends DongSo>(d: DongSo, tap: T[], chiPhuong = false): T[] {
+  if (!d.areaId) return [];
+  const loai = !chiPhuong ? loaiHinh(d.propertyType) : null;
+  const dt = !chiPhuong && d.areaM2 ? ([d.areaM2 * (1 - BIEN_DIEN_TICH), d.areaM2 * (1 + BIEN_DIEN_TICH)] as const) : null;
+  return tap
+    .filter((r) => r.canKey !== d.canKey && r.areaId === d.areaId)
+    .filter((r) => !loai || loaiHinh(r.propertyType) === loai)
+    .filter((r) => !dt || (r.areaM2 !== null && r.areaM2 >= dt[0] && r.areaM2 <= dt[1]))
+    .sort((a, b) => Number(a.suspect) - Number(b.suspect) || (b.discountPct ?? 0) - (a.discountPct ?? 0) || (a.canKey < b.canKey ? -1 : a.canKey > b.canKey ? 1 : 0));
+}
+
+/**
+ * Căn cùng tiêu chí với căn đang xem, trong danh sách đã tải (đường lùi khi chưa có bảng hạng): cùng thứ tự danh sách, căn cần xác minh đứng
+ * cuối, còn lại giảm nhiều trước. Mặc định cùng phường, cùng loại hình, diện tích ±25%; `chiPhuong` nới về cùng phường. Không biết loại
+ * hình hay diện tích thì bỏ tiêu chí đó, và nói rõ trong `moTa`.
  */
 export function canCungTieuChi<T extends DealChiTiet>(d: T, rows: T[], chiPhuong = false): { moTa: string[]; bo: string[]; can: T[] } {
-  if (!d.phuong) return { moTa: ["Chưa gắn phường"], bo: [], can: [] };
+  const { moTa, bo } = moTaCungTieuChi(d, chiPhuong);
+  if (!d.phuong) return { moTa, bo, can: [] };
   const loai = !chiPhuong ? loaiHinh(d.propertyType) : null;
   const dt = !chiPhuong && d.areaM2 ? ([d.areaM2 * (1 - BIEN_DIEN_TICH), d.areaM2 * (1 + BIEN_DIEN_TICH)] as const) : null;
   const can = rows
@@ -291,8 +410,6 @@ export function canCungTieuChi<T extends DealChiTiet>(d: T, rows: T[], chiPhuong
     .filter((r) => !loai || loaiHinh(r.propertyType) === loai)
     .filter((r) => !dt || (r.areaM2 !== null && r.areaM2 >= dt[0] && r.areaM2 <= dt[1]))
     .sort((a, b) => Number(a.suspect) - Number(b.suspect) || (b.discountPct ?? 0) - (a.discountPct ?? 0));
-  const moTa = [d.phuong, loai, dt ? `${Math.round(dt[0])}–${Math.round(dt[1])} m²` : null].filter((x): x is string => Boolean(x));
-  const bo = chiPhuong ? [] : [!loai ? "Chưa rõ loại hình nên không so loại hình" : null, !dt ? "Chưa có diện tích nên không so diện tích" : null].filter((x): x is string => Boolean(x));
   return { moTa, bo, can };
 }
 

@@ -1,4 +1,5 @@
 import { maskSourceNames, type SourceNameEntry } from "../../mask-source-names"
+import type { ThuocTinhCan } from "../thuoc-tinh-can"
 import type { MotDuAn } from "./du-an"
 
 /**
@@ -14,6 +15,8 @@ export type HangToa = {
   nguon: string[]
   soTruc: number | null
   soCan: number | null
+  /** Thuộc tính căn S16 (DA40): chỉ hàng căn; `null` = căn chưa có thuộc tính; vắng = không đọc (toà, hay đọc lỗi). */
+  thuocTinh?: ThuocTinhCan | null
   subRows?: HangToa[]
 }
 
@@ -27,13 +30,14 @@ function motTen(ds: string[]): string[] {
 /** Mã dạng UUID (S09) không đọc được bằng mắt nên không hiện ở dòng mã. */
 const maDoc = (ds: string[]) => ds.filter((m) => !/^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(m))
 
-export function dungHangToa(duAn: MotDuAn, id: number, entries: SourceNameEntry[]): HangToa[] {
+export function dungHangToa(duAn: MotDuAn, id: number, entries: SourceNameEntry[], thuocTinh?: Map<string, ThuocTinhCan>): HangToa[] {
   const che = (s: string) => maskSourceNames(s, entries) ?? "—"
   const tenNut = new Map(duAn.nut.map((n) => [n.id, che(n.ten)]))
   const canTheoToa = new Map<string, HangToa[]>()
   for (const c of duAn.can) {
     const phu = [c.tang ? `Tầng ${c.tang}` : null, c.truc ? `Trục ${che(c.truc)}` : null].filter(Boolean).join(" · ")
-    const hang: HangToa = { key: c.key, laCan: true, ten: c.ma ? che(c.ma) : c.key, phu, bac: c.bac, nguon: c.nguon, soTruc: null, soCan: null }
+    const hang: HangToa = { key: c.key, laCan: true, ten: c.ma ? che(c.ma) : c.key, phu, bac: c.bac, nguon: c.nguon, soTruc: null, soCan: null,
+      ...(thuocTinh ? { thuocTinh: thuocTinh.get(c.key) ?? null } : {}) }
     canTheoToa.set(c.toaKey, [...(canTheoToa.get(c.toaKey) ?? []), hang])
   }
   return duAn.toa.map((t) => {
