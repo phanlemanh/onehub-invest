@@ -27,15 +27,28 @@ const MONTHLY_METRICS = ["adr", "occupancy", "revenue", "revpar"] as const;
 
 /** 1911-5: giải mã phần exp của JWT appToken (KHÔNG kiểm chữ ký — chỉ đọc hạn).
  * Token rỗng/không giải mã được → exp undefined; conLaiMs âm = đã hết hạn. */
-export function docExpAppToken(token: string): { exp?: number; conLaiMs: number } {
+export function docExpAppToken(token: string, now: number = Date.now()): { exp?: number; conLaiMs: number } {
   const phan = token.split(".")[1];
   if (!phan) return { conLaiMs: Number.NEGATIVE_INFINITY };
   try {
     const json = JSON.parse(Buffer.from(phan, "base64url").toString("utf8")) as { exp?: number };
-    return { exp: json.exp, conLaiMs: json.exp ? json.exp * 1000 - Date.now() : Number.NEGATIVE_INFINITY };
+    return { exp: json.exp, conLaiMs: json.exp ? json.exp * 1000 - now : Number.NEGATIVE_INFINITY };
   } catch {
     return { conLaiMs: Number.NEGATIVE_INFINITY };
   }
+}
+
+/** 1911-5 (MỞ LẠI): phần QUYẾT ĐỊNH tách hàm thuần (không cần trình duyệt) để đo
+ * được bằng đột biến: token rỗng / hết hạn / không giải mã được exp → NÉM với đúng
+ * chẩn đoán; token còn hạn → trả dòng log 'token OK …'. appToken chỉ gọi hàm này. */
+export function kiemAppToken(token: string, now: number = Date.now()): string {
+  if (!token) throw new Error("không đọc được appToken từ .airdna-profile — cần login lại AirDNA");
+  const { exp, conLaiMs } = docExpAppToken(token, now);
+  if (exp === undefined || conLaiMs <= 0) {
+    const hetLuc = exp ? new Date(exp * 1000).toISOString() : "(không giải mã được exp)";
+    throw new Error(`appToken ĐÃ HẾT HẠN ${hetLuc} — phiên đăng nhập trong profile cũ/không làm mới, cần đăng nhập lại ĐÚNG profile này (localStorage còn token cũ là báo xanh giả)`);
+  }
+  return `token OK (${token.length} chars, hết hạn sau ${Math.round(conLaiMs / 60000)} phút)`;
 }
 
 /** Mở profile 1 lần để lấy JWT (localStorage.auth.appToken) rồi đóng ngay. */
@@ -60,16 +73,11 @@ async function appToken(log: (...a: unknown[]) => void): Promise<string> {
         return "";
       }
     });
-    if (!token) throw new Error("không đọc được appToken từ .airdna-profile — cần login lại AirDNA");
-    // 1911-5: token đọc được vẫn có thể là token CŨ trong localStorage (phiên làm
-    // mới đã hết) — báo xanh giả. Kiểm exp TRƯỚC khi gọi 'token OK': hết hạn thì
-    // dừng ngay với đúng chẩn đoán, không đốt ~500 lời gọi 401.
-    const { exp, conLaiMs } = docExpAppToken(token);
-    if (exp === undefined || conLaiMs <= 0) {
-      const hetLuc = exp ? new Date(exp * 1000).toISOString() : "(không giải mã được exp)";
-      throw new Error(`appToken ĐÃ HẾT HẠN ${hetLuc} — phiên đăng nhập trong profile cũ/không làm mới, cần đăng nhập lại ĐÚNG profile này (localStorage còn token cũ là báo xanh giả)`);
-    }
-    log(`token OK (${token.length} chars, hết hạn sau ${Math.round(conLaiMs / 60000)} phút)`);
+    // 1911-5: quyết định duyệt/từ chối token nằm trong kiemAppToken (hàm thuần,
+    // đo được bằng đột biến) — hết hạn ném trước LỜI GỌI API nào (báo xanh giả
+    // của 'token OK (327 chars)' hôm 19/11 đốt cả run 401).
+    const logDong = kiemAppToken(token);
+    log(logDong);
     return token;
   } finally {
     await browser.close().catch(() => {});
