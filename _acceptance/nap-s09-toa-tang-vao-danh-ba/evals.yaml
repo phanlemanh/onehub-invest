@@ -11,7 +11,7 @@ evals:
     criterion: AC-2
     executor: script
     cmd: config:executors.script.s09_toa_that
-    expected: "Trên DB thử chép máy thu, bộ đếm độc lập không import pipeline/lib/s09* in bảng ba cột stg, đếm thẳng, manifest cho dự án, toà, tầng; bằng nhau từng ô. Chiều đỏ: bớt một trang căn của một khu trong bản chép thì thoát 1 nêu khu đó. Chỉ in số"
+    expected: "Trên DB thử chép máy thu, bộ đếm độc lập không import pipeline/lib/s09* in bảng ba cột stg, đếm thẳng, manifest cho dự án, toà, tầng; bằng nhau từng ô. Chiều đỏ: bớt một tầng của một toà trong bản chép thì thoát 1 nêu toà đó. Chỉ in số"
     paths: ["db/migrations/115_*", "pipeline/lib/s09-danh-ba-can.mjs", "pipeline/lib/s09-dung.mjs", "pipeline/danh-ba-vat-the.mjs", "pipeline/scripts/danh-ba-s09-toa*"]
   - id: E3
     criterion: AC-3
