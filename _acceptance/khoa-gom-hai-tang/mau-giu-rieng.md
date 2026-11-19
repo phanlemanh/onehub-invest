@@ -27,3 +27,7 @@
 - `payload.json` sha256 `18341fbee313249e533cc43b82cd31ef686efbb5cbc4211c674d68bbf999f326` · danh sách offer_id (đã sắp) sha256 `61aea604d03a16a07c2aa0cbc7489383acc2aa502990382fc11bb244eefb5eb5` — nội
   dung ở `research-local/s03-gom-tin-giu-rieng-2-20261120/` (gitignored, máy thu).
 - Commit này đứng TRƯỚC mọi lượt chạy khoá mới trên mẫu hai. Hụt ngưỡng nữa thì DỪNG, không mẫu ba, đưa Mạnh.
+- Nhãn mẫu hai: đường gọi = tác tử con của phiên Claude Code, không qua khoá API trả theo token (0 USD chi thêm). Token: Opus 167.301,
+  Sonnet 164.374. Hai model tự báo: Opus mot-can 83 · ro 26 · tim-mua 7 · khong-ro 4; Sonnet mot-can 85 · ro 24 · tim-mua 7 · khong-ro 4.
+  Băm nhãn thô (16 ký tự đầu sha256): nhan-opus.json `6a012f9c60debaab` · nhan-sonnet.json `3743df114f1e9962` — ghi TRƯỚC khi chấm.
+- Tổng hai mẫu: Opus 406.410 token, Sonnet 397.590 token; 0 USD chi thêm, trong trần 3 USD của Hỏi-2.
