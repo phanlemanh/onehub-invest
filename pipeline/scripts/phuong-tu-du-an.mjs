@@ -122,7 +122,10 @@ async function main(argv) {
   const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
   await client.connect();
   try {
-    await chay(client, { ghi: argv.includes("--ghi"), json: argv.includes("--json"), noiTiep: argv.includes("--noi-tiep") });
+    const json = argv.includes("--json");
+    const kq = await chay(client, { ghi: argv.includes("--ghi"), json, noiTiep: argv.includes("--noi-tiep") });
+    // --json: dòng cuối là đếm của chính lượt (chèn, rút, tin phân xử lại) — phép đo AC-3 đọc dòng này, không đọc số ròng
+    if (json) console.log(JSON.stringify({ chen: kq.chen, rut: kq.rut, tin: kq.tin, bo_qua: !!kq.bo_qua }));
     return 0;
   } finally {
     await client.end();
