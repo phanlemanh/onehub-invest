@@ -41,6 +41,15 @@ song_chua_bao() {
 # <điều> <state> — điều kiện hết đỏ: gỡ cờ để sự cố kế được báo lại.
 # KHÔNG dùng `grep -v && mv`: grep -v trả exit 1 khi kết quả rỗng (xoá hết
 # dòng — đúng ý ta) và && sẽ chặn mv, state không bao giờ xoá.
+# Bỏ mốc b-moc khỏi tệp trạng thái. Không dùng `sed -i ''` vì cú pháp đó chỉ chạy trên sed của macOS; sed GNU
+# (CI Linux) đọc '' là tên tệp lệnh, lỗi bị `|| true` nuốt và mốc cũ còn nguyên.
+song_xoa_b_moc() {
+  local state="$1"
+  [ -f "$state" ] || return 0
+  grep -v '^b-moc=' "$state" > "${state}.tmp" 2>/dev/null
+  mv "${state}.tmp" "$state" 2>/dev/null || rm -f "${state}.tmp"
+}
+
 song_hoi_xoa() {
   local dieu="$1" state="$2"
   if [ -f "$state" ] && grep -qx "$dieu" "$state" 2>/dev/null; then
@@ -86,13 +95,13 @@ song_b_restart() {
     # 1811-11(2): log bị cắt thì bỏ luôn mốc b-moc cũ — giữ lại thì khối P1 tưởng L6(b)
     # vẫn đỏ và kickstart gateway ĐANG KHỎE lặp mỗi 6 giờ (nhánh return sớm phải sạch
     # như nhánh lành dòng cuối hàm: hoi_xoa + xoá b-moc)
-    sed -i '' '/^b-moc=/d' "$state" 2>/dev/null || true
+    song_xoa_b_moc "$state"
     return 1
   fi
   moc_a=$(song_moc_epoch "$iso_a")
   if [ -z "$moc_a" ]; then
     song_hoi_xoa b "$state"
-    sed -i '' '/^b-moc=/d' "$state" 2>/dev/null || true
+    song_xoa_b_moc "$state"
     return 1
   fi
   iso_s=$(grep "starting .* provider" "$gwlog" 2>/dev/null | tail -1 | grep -oE '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]+[+-][0-9]{2}:[0-9]{2}')
@@ -108,7 +117,7 @@ song_b_restart() {
     fi
   fi
   song_hoi_xoa b "$state"
-  sed -i '' '/^b-moc=/d' "$state" 2>/dev/null || true
+  song_xoa_b_moc "$state"
   return 1
 }
 
