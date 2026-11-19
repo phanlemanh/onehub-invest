@@ -1,6 +1,6 @@
 # Bảng thử phá CG3
 
-Sinh bằng `node _acceptance/can-gia-tot-loc-xep-hang/probes/thu-pha.mjs --write` trên commit `3d94fe124ddf77ad30d8c95d5840b0a334de2168`. Mỗi dòng sửa một chỗ mã sản phẩm trên worktree tạm rồi chạy lệnh chấm của tiêu chí. «Đạt» là lệnh thoát khác 0 và thông điệp đỏ khớp cột ca đỏ; dòng đối chứng là cùng lệnh khi chưa đột biến.
+Sinh bằng `node _acceptance/can-gia-tot-loc-xep-hang/probes/thu-pha.mjs --write` trên commit `03177e6ec9fea15be05172b89825b3f7f5f3c9ee`. Mỗi dòng sửa một chỗ mã sản phẩm trên worktree tạm rồi chạy lệnh chấm của tiêu chí. «Đạt» là lệnh thoát khác 0 và thông điệp đỏ khớp cột ca đỏ; dòng đối chứng là cùng lệnh khi chưa đột biến.
 
 | Tiêu chí | Đột biến | Tệp | Ca đỏ (thông điệp) | Lệnh | Mã thoát | Kết quả |
 |---|---|---|---|---|---|---|
@@ -14,6 +14,7 @@ Sinh bằng `node _acceptance/can-gia-tot-loc-xep-hang/probes/thu-pha.mjs --writ
 | AC-2 | (không đột biến, đối chứng) | — | xanh | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-2` | 0 | đạt |
 | AC-2 | dòng không có lý do vẫn in chữ lý do | `components/ops/deals-cells.tsx` | CG3-AC-2 dòng không có lý do lùi cấp | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-2` | 1 | đạt |
 | AC-2 | bỏ số căn trong nhóm | `components/ops/deals-cells.tsx` | CG3-AC-2 dòng không có lý do lùi cấp | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-2` | 1 | đạt |
+| AC-2 | dòng thuê theo tháng ghi giá theo m² | `components/ops/deals-grid.tsx` | CG3-AC-2 dòng thuê theo tháng | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-2` | 1 | đạt |
 | AC-2 | mất tên dự án của nhóm | `lib/deals.ts` | CG3-AC-2 ô Hạng giá | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-2` | 1 | đạt |
 | AC-2 | mất lý do lùi cấp từ DB | `lib/deals.ts` | CG3-AC-2 ô Hạng giá | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-2` | 1 | đạt |
 | AC-2 | độ tin luôn cao | `lib/deals.ts` | CG3-AC-2 ô Hạng giá | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-2` | 1 | đạt |
@@ -26,6 +27,9 @@ Sinh bằng `node _acceptance/can-gia-tot-loc-xep-hang/probes/thu-pha.mjs --writ
 | AC-3 | đếm trong trang thay vì toàn tập | `lib/deals.ts` | CG3-AC-3 tab (du\|xac-minh\|thieu) lệch số | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-3` | 1 | đạt |
 | AC-3 | xếp tab theo vai không xem nội dung | `lib/deals.ts` | CG3-AC-3 tab (du\|thieu) lệch số | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-3` | 1 | đạt |
 | AC-3 | ô Tình trạng ghi sai tab | `components/ops/deals-grid.tsx` | CG3-AC-3 vai Người xem tab thieu: ô Tình trạng ghi sai | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-3` | 1 | đạt |
+| AC-3 | chân bảng ghi tổng của Tất cả ở tab khác | `components/ops/deals-grid.tsx` | CG3-AC-3 tab Còn thiếu: chân bảng | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-3` | 1 | đạt |
+| AC-3 | bỏ toà khi xét đủ | `lib/deals.ts` | CG3-AC-3 (căn có toà\|bảy căn mất một mục) | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-3` | 1 | đạt |
+| AC-3 | tin thuê có thước giá/m² bị tính là chưa có thước | `lib/deals.ts` | CG3-AC-3 tab (du\|thieu) lệch số tính độc lập \(rent\) | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-3` | 1 | đạt |
 | AC-3 | tab đếm trong trang trên trình duyệt | `components/ops/deals-grid.tsx` | CG3-AC-3 tab .+ ghi sai số | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-3` | 1 | đạt |
 | AC-3 | mọi tab in số Tất cả | `components/ops/deals-grid.tsx` | CG3-AC-3 tab .+ ghi sai số | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-3` | 1 | đạt |
 | AC-3 | đầu khoảng luôn là 1 | `components/ops/deals-grid.tsx` | CG3-AC-3 trang giữa phải ghi | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-3` | 1 | đạt |
@@ -36,6 +40,8 @@ Sinh bằng `node _acceptance/can-gia-tot-loc-xep-hang/probes/thu-pha.mjs --writ
 | AC-4 | (không đột biến, đối chứng) | — | xanh | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-4` | 0 | đạt |
 | AC-4 | lọc tab sau khi đã cắt trang | `lib/deals.ts` | CG3-AC-4 tab (du\|xac-minh\|thieu):  | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-4` | 1 | đạt |
 | AC-4 | bản cloud vẫn đọc bảng ảnh | `lib/deals.ts` | media | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-4` | 1 | đạt |
+| AC-4 | bỏ gộp căn trước khi cắt trang | `lib/deals.ts` | CG3-AC-4 (tab \w+(-\w+)?: \|hợp các trang) | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-4` | 1 | đạt |
+| AC-4 | cỡ 25, 50 chỉ hiện 15 căn | `lib/deals.ts` | CG3-AC-4 cỡ \d+ tab \w+(-\w+)?:  | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-4` | 1 | đạt |
 | AC-4 | đổi cỡ trang giữ nguyên trang | `components/ops/deals-grid.tsx` | CG3-AC-4 đổi cỡ trang phải về trang 1 | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-4` | 1 | đạt |
 | AC-4 | bảng không biết tổng số căn | `components/ops/deals-grid.tsx` | CG3-AC-4 (trang giữa phải sang\|phải có nút tới trang cuối) | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-4` | 1 | đạt |
 | AC-4 | đổi tab giữ nguyên trang | `components/ops/deals-grid.tsx` | CG3-AC-4 đổi tab phải về trang 1 | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-4` | 1 | đạt |
@@ -45,6 +51,7 @@ Sinh bằng `node _acceptance/can-gia-tot-loc-xep-hang/probes/thu-pha.mjs --writ
 | AC-5 | (không đột biến, đối chứng) | — | xanh | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-5` | 0 | đạt |
 | AC-5 | căn gắn thẳng tỉnh thuộc mọi phường | `lib/deals.ts` | CG3-AC-5 .+: sai tập căn | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-5` | 1 | đạt |
 | AC-5 | bỏ lọc dự án | `lib/deals.ts` | CG3-AC-5 .+: sai tập căn | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-5` | 1 | đạt |
+| AC-5 | số trên mục cây lệch số của mục | `components/ops/deals-grid.tsx` | CG3-AC-5 mục (tỉnh\|dự án) phải ghi đúng số căn | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-5` | 1 | đạt |
 | AC-5 | chọn vị trí không về trang 1 | `components/ops/deals-grid.tsx` | CG3-AC-5 chọn (tỉnh\|dự án\|phường) phải | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-5` | 1 | đạt |
 | AC-5 | bỏ nhánh Phường | `lib/deals.ts` | CG3-AC-5 tỉnh phải có hai nhánh | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-5` | 1 | đạt |
 | AC-5 | bỏ nhánh Dự án | `lib/deals.ts` | CG3-AC-5 tỉnh phải có hai nhánh | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-5` | 1 | đạt |
@@ -54,6 +61,7 @@ Sinh bằng `node _acceptance/can-gia-tot-loc-xep-hang/probes/thu-pha.mjs --writ
 | AC-6 | (không đột biến, đối chứng) | — | xanh | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-6` | 0 | đạt |
 | AC-6 | bỏ điều kiện bán hay thuê | `lib/deals.ts` | CG3-AC-6 mặc định phải là tin bán | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-6` | 1 | đạt |
 | AC-6 | lọc loại hình mất tác dụng với tin thuê | `lib/deals.ts` | CG3-AC-6 ô rent × (apartment\|house) × .+ sai tập | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-6` | 1 | đạt |
+| AC-6 | lọc Đất trả nhầm Căn hộ | `lib/deals.ts` | CG3-AC-6 ô sale × land | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-6` | 1 | đạt |
 | AC-6 | tab luôn sáng Bán | `components/ops/deals-grid.tsx` | CG3-AC-6 đang xem thuê thì Cho thuê phải sáng | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-6` | 1 | đạt |
 | AC-6 | chỉ còn hai loại hình | `components/ops/deals-grid.tsx` | CG3-AC-6 ô loại hình phải có đủ mọi loại | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-6` | 1 | đạt |
 | AC-6 | chọn loại hình không có tác dụng | `components/ops/deals-grid.tsx` | CG3-AC-6 chọn loại hình phải mang type | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-6` | 1 | đạt |
@@ -61,6 +69,7 @@ Sinh bằng `node _acceptance/can-gia-tot-loc-xep-hang/probes/thu-pha.mjs --writ
 | AC-7 | mất khung tải | `app/ops/deals/page.tsx` | CG3-AC-7 trang phải hiện khung tải | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-7` | 1 | đạt |
 | AC-7 | đổi lọc khi lỗi không làm gì | `components/ops/deals-grid.tsx` | CG3-AC-7 đổi Cho thuê khi lỗi phải tải lại trang | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-7` | 1 | đạt |
 | AC-7 | mất thanh lọc khi lỗi | `app/ops/deals/page.tsx` | CG3-AC-7 ca lỗi mất thanh lọc\|Cannot read properties of undefined | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-7` | 1 | đạt |
+| AC-7 | Xoá bộ lọc trên thanh lọc giữ loại hình, giữ trang | `components/ops/deals-grid.tsx` | CG3-AC-7 Xoá bộ lọc trên thanh lọc | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-7` | 1 | đạt |
 | AC-7 | nút Xem tất cả không làm gì | `components/ops/deals-grid.tsx` | CG3-AC-7 Xem tất cả phải về tab Tất cả | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-7` | 1 | đạt |
 | AC-7 | nút Xoá bộ lọc không làm gì | `components/ops/deals-grid.tsx` | CG3-AC-7 Xoá bộ lọc phải bỏ vị trí | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-7` | 1 | đạt |
 | AC-7 | tập rỗng dẫn sai trang | `components/ops/deals-grid.tsx` | CG3-AC-7 tập rỗng phải dẫn sang chất lượng dữ liệu | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-7` | 1 | đạt |
@@ -72,7 +81,8 @@ Sinh bằng `node _acceptance/can-gia-tot-loc-xep-hang/probes/thu-pha.mjs --writ
 | AC-8 | bỏ bước che liên hệ trong thư viện | `lib/deals.ts` | CG3-AC-8 vai Người xem lộ | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-8` | 1 | đạt |
 | AC-8 | trang một căn gửi đủ liên hệ | `app/ops/deals/[offerId]/page.tsx` | CG3-AC-8 mở căn ngoài trang lộ | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-8` | 1 | đạt |
 | AC-8 | đảo điều kiện lời báo cloud | `app/ops/deals/page.tsx` | CG3-AC-8 (máy thu không được báo\|lược đồ cloud phải báo) | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-8` | 1 | đạt |
-| AC-8 | vai Người xem nhận tên nhóm | `lib/deals.ts` | CG3-AC-8 vai Người xem lộ | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-8` | 1 | đạt |
+| AC-8 | vai Người xem nhận số điện thoại | `lib/deals.ts` | CG3-AC-8 (vai Người xem\|mở căn ngoài trang) lộ số điện thoại | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-8` | 1 | đạt |
+| AC-8 | vai Người xem nhận tên nhóm | `lib/deals.ts` | CG3-AC-8 vai Người xem lộ «Nhóm Cấy Thử» | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-8` | 1 | đạt |
 | AC-9 | (không đột biến, đối chứng) | — | xanh | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-9` | 0 | đạt |
 | AC-9 | đầu trang còn chữ thước phường | `app/ops/deals/page.tsx` | CG3-AC-9 đầu trang còn chữ «thước phường» | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-9` | 1 | đạt |
 | AC-9 | bảng còn chữ thước phường | `components/ops/deals-cells.tsx` | CG3-AC-9 bảng còn chữ «thước phường» | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-9` | 1 | đạt |
@@ -80,4 +90,4 @@ Sinh bằng `node _acceptance/can-gia-tot-loc-xep-hang/probes/thu-pha.mjs --writ
 | AC-9 | cột nguồn in thêm tên nguồn | `components/ops/deals-grid.tsx` | CG3-AC-9 cột nguồn chỉ được hiện mã S0x | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-9` | 1 | đạt |
 | AC-9 | mức giảm màn hẹp dùng dấu chấm | `components/ops/deals-grid.tsx` | CG3-AC-9 phần trăm phải dùng dấu phẩy\|33,7 | `bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-9` | 1 | đạt |
 
-Tổng: 66 đột biến, 0 chưa bắt được.
+Tổng: 76 đột biến, 0 chưa bắt được.
