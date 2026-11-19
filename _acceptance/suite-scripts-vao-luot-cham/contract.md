@@ -5,7 +5,7 @@ slug: suite-scripts-vao-luot-cham
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: machine-cleared
 veto_state: mo
 veto_opened_at: 2026-11-17T06:19:01Z
 approved_by:
@@ -121,3 +121,20 @@ do dữ liệu máy thu đổi sau khi DA33 nạp S16 vào danh bạ, không do 
 **Vòng 4 (18/11 21:47Z, REJECT).** Lượt bị ngắt và lượt createdb lỗi thoát mà không có dòng `scripts-ci`, trái AC-2. Mạnh cho vòng 5
 («theo khuyến nghị cả ba», 22:10:46Z). Vòng 5 sửa bốn điểm: dòng tóm tắt khi bị ngắt, dòng tóm tắt khi createdb lỗi, đọc `sha`
 trước khi chạy, từ chối cây bẩn. Các ca chạy lệnh thật nay dùng worktree tạm sạch, không còn tạo hồ sơ giả trong `_acceptance/` thật.
+- Ngoài-1 (máy định tuyến 2026-11-19, đề xuất S4 known-limits): Sau khi sửa cấu hình nghiệm thu mà chưa chạy lại, lệnh chạy khô vẫn có thể báo xanh cho một bản khác bản đã chạy. Người ký có thể tin nhầm là bộ test đã đạt trên bản cuối. — `scripts/suite-neu-doi.mjs`
+- Ngoài-3 (máy định tuyến 2026-11-19, đề xuất S4 known-limits): Bước kiểm bản Node có thể báo khớp trong khi bộ test thật chạy trên một bản Node khác, nên một lệch phiên bản có thể lọt qua cổng chạy khô. — `scripts/suite-neu-doi.test.mjs`
+- Ngoài-4 (máy định tuyến 2026-11-19, đề xuất S4 known-limits): Nếu CI đổi cách chạy một bước theo kiểu không nằm trong danh sách theo dõi, lệnh chạy khô sẽ không phát hiện và có thể lệch với CI. — `scripts/suite-neu-doi.test.mjs`
+- Ngoài-5 (máy định tuyến 2026-11-19, đề xuất S4 known-limits): Phép kiểm việc dọn cơ sở dữ liệu sau lượt đỏ có thể xanh dù lượt đỏ chưa dựng được DB, nên một lỗi dọn rác về sau có thể không bị bắt. — `scripts/suite-neu-doi.test.mjs`
+- Ngoài-6 (máy định tuyến 2026-11-19, đề xuất S4 known-limits): Nếu dòng tóm tắt ghi sai kết quả so với kết quả thật của lệnh, bài test hiện tại có thể không phát hiện, và luật gộp có thể đọc sai. — `scripts/suite-neu-doi.test.mjs`
+- Ngoài-7 (máy định tuyến 2026-11-19, đề xuất S4 known-limits): Nếu có commit mới hoặc sửa chưa commit trong lúc chạy kiểm tra, kết quả xanh có thể bị ghi cho một bản mã chưa hề được kiểm. Người gộp có thể tin nhầm là bản đó đã qua kiểm. — `scripts/suite-neu-doi.mjs`
+- Ngoài-8 (máy định tuyến 2026-11-19, đề xuất S4 known-limits): Nếu lỗi mất số ca khi đầu ra bị cắt giữa ký tự quay lại, bộ kiểm hiện tại có thể không báo đỏ. Người dùng sẽ thấy số ca sai trong dòng tóm tắt mà không có cảnh báo. — `scripts/suite-neu-doi.test.mjs`
+- Ngoài-9 (máy định tuyến 2026-11-19, đề xuất S4 known-limits): Nếu sau này ca kiểm cấu hình bị đổi tên hay xoá, bước kiểm vẫn báo xanh dù không kiểm gì. Cấu hình lượt chấm có thể bị đổi mà không ai hay. — `_acceptance/config.yaml`
+- Ngoài-10 (máy định tuyến 2026-11-19, đề xuất S4 known-limits): Nếu lượt kiểm đỏ làm rò cơ sở dữ liệu tạm, bộ kiểm không phát hiện. Các DB tạm thừa có thể tích lại trên máy. — `scripts/suite-neu-doi.test.mjs`
+- Ngoài-11 (máy định tuyến 2026-11-19, đề xuất S4 known-limits): Nếu ai đó đổi cách chạy các bước, lệnh cục bộ có thể chạy tiếp khi CI đã dừng. Kết quả cục bộ có thể xanh trong khi CI đỏ. — `scripts/suite-neu-doi.test.mjs`
+- Ngoài-12 (máy định tuyến 2026-11-19, đề xuất S4 known-limits): Nếu bộ sinh danh sách ca bỏ qua làm rơi mục, bộ kiểm vẫn báo xanh. Có thể chạy nhầm các ca cần dữ liệu thật và đỏ giả. — `scripts/suite-neu-doi.test.mjs`
+- Ngoài-13 (máy định tuyến 2026-11-19, đề xuất S4 known-limits): Bước tự dọn các DB tạm bị bỏ lại từ lượt trước chưa được kiểm thử đầu-cuối. Nếu nó hỏng, DB tạm thừa tích dần trên máy. — `scripts/suite-neu-doi.test.mjs`
+- Ngoài-15 (máy định tuyến 2026-11-19, đề xuất S4 known-limits): Khi môi trường kiểm tra hỏng, phép kiểm có thể báo kết quả sai lý do mà người xem không nhận ra ngay. Sản phẩm cho người dùng không bị ảnh hưởng. — `_acceptance/suite-scripts-vao-luot-cham/probes/tai-hien.sh`
+- Ngoài-16 (máy định tuyến 2026-11-19, đề xuất S4 known-limits): Phép kiểm chưa thử với đầu ra dài thật của một lượt đỏ, nên nếu định dạng khác dự kiến thì sổ ghi có thể thiếu số ca mà test vẫn xanh. — `scripts/suite-neu-doi.test.mjs`
+- Ngoài-17 (máy định tuyến 2026-11-19, đề xuất S4 known-limits): Nếu ai đó đổi một số thiết lập nhỏ của quy trình kiểm tự động, lệnh chạy thử cục bộ có thể không phát hiện sự lệch. Người dùng cuối không thấy ảnh hưởng. — `scripts/suite-neu-doi.test.mjs`
+- Ngoài-18 (máy định tuyến 2026-11-19, đề xuất S4 known-limits): Phép tái hiện lỗi cũ chưa có đối chứng chứng minh ca đỏ do đúng lỗi chứ không do môi trường. Người dùng cuối không bị ảnh hưởng. — `_acceptance/suite-scripts-vao-luot-cham/probes/tai-hien.sh`
+- Ngoài-19 (máy định tuyến 2026-11-19, đề xuất S4 known-limits): Phép kiểm cây xanh chỉ nhìn kết quả chạy, chưa soi số ca hỏng ghi trong dòng tóm tắt. Người dùng cuối không bị ảnh hưởng. — `_acceptance/config.yaml`
