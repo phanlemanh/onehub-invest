@@ -132,7 +132,7 @@ test("AC-4 sync-cloud: soát + che phía SQL — tên dự án qua khi khai cờ
 test("AC-2 che phía SQL: cụm hai từ ở mọi dấu phân tách về NULL, thương hiệu nối dấu giữ nguyên", async () => {
   await datCo(true);
   const tk = tokensFromEntries(await docSourceNameEntries(c));
-  for (const v of ["lumora-thinh", "LUMORA_THINH", "lumora.thinh", "lumora/thinh", "Lumora  Thịnh", "Lumora\nThịnh", "https://x.vn/lumora-thinh/p1"]) {
+  for (const v of ["lumora-thinh", "LUMORA_THINH", "lumora.thinh", "lumora/thinh", "Lumora  Thịnh", "Lumora\nThịnh", "https://x.vn/lumora-thinh/p1", "Lumora – Thịnh", "Lumora·Thịnh", "/Lumora%20Thinh/p1", "Lumora Thịnh".normalize("NFD")]) {
     assert.ok(scanSourceNames(v, tk), `AC-2 bộ soát bỏ lọt dạng thứ ${v.length}`);
     assert.equal(await sqlChe(tk, v), null, `AC-2 che phía SQL bỏ lọt dạng dài ${v.length}`);
   }

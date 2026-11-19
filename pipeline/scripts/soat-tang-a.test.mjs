@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 import { describe, test } from "node:test";
 import { findSourceNames, fold } from "../lib/mask-source-names.mjs";
 import { guardValues } from "../lib/tier-a-guard.mjs";
-import { scanSourceNames } from "../sync-cloud.mjs";
+import { assertNoSourceNames, scanSourceNames } from "../sync-cloud.mjs";
 import { sourceRegistrySeeds } from "../../scripts/lib/tier-a-source-names.mjs";
 import { captureOpsFacts, mutantPush, payloadLeaks } from "./capture-ops-facts.mjs";
 
@@ -41,6 +41,15 @@ describe("NT2-AC-6 một bộ soát", () => {
     }
     assert.ok(hits >= 6 && hits < withNames.length, `bảng ca phải có cả ca trúng lẫn ca không trúng (trúng ${hits}/${withNames.length})`);
   });
+});
+
+describe("che-ten AC-2: bộ soát bảng người bán soát từng giá trị đã giải JSON", () => {
+  const tk = [{ token: "Lumora Thịnh", wholeOnly: true }, { token: "market.lumorathinh.vn", wholeOnly: true }];
+  const dong = (v) => new Map([["sale_offers", [JSON.stringify({ offer_id: "o1", street_raw: v })]]]);
+  for (const v of ["ngõ Lumora\nThịnh 3", "ngõ Lumora\tThịnh 3", "ngõ Lumora – Thịnh 3"]) test(`cụm khai cờ trong cột ngoài nhóm người bán bị chặn (dài ${v.length})`, () => {
+    assert.throws(() => assertNoSourceNames(dong(v), tk), /định danh nguồn/, "AC-2 bộ soát bảng để lọt cụm qua chuỗi JSON");
+  });
+  test("đối chứng: tên mang thương hiệu đi qua", () => assert.doesNotThrow(() => assertNoSourceNames(dong("dự án Lumora Park"), tk)));
 });
 
 describe("che-ten AC-4: guardValues với dòng khai khớp nguyên cụm (tải giả)", () => {

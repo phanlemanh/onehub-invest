@@ -210,7 +210,7 @@ export function maskedSourceExpr(col, tokens) {
   if (!variants.length) return "NULL::text";
   // Dòng khớp nguyên cụm, tên nhiều từ: so trên bản đã bỏ dấu phân tách để bắt «ten-hai», «ten_hai», «ten  hai». Sai thì che thừa.
   const lien = [...new Set(entries.filter((e) => e.wholeOnly && /[\s.\-_/]/.test(e.realName.trim())).map((e) => fold(e.realName.trim()).replace(/[\s.\-_/]+/g, "")))].filter((v) => v.length >= 4);
-  const boDau = `regexp_replace(f, '[[:space:]._/-]+', '', 'g')`;
+  const boDau = `regexp_replace(f, '(%[0-9a-f]{2}|[^[:alnum:]])+', '', 'g')`;
   const whole = `' ' || regexp_replace(f, '[^[:alnum:]]', ' ', 'g') || ' '`;
   const hit = variants
     .map((v) => (v.length >= 4 ? `position(${lit(v)} in f) > 0` : `position(${lit(` ${v.replace(/[^\p{L}\p{N}]+/gu, " ")} `)} in ${whole}) > 0`))
@@ -415,7 +415,8 @@ export function scanSourceNames(text, tokens) {
 export function assertNoSourceNames(data, tokens) {
   for (const t of Object.keys(CLOUD_ALLOW)) {
     for (const j of data.get(RENAME(t)) ?? []) {
-      if (!scanSourceNames(j, tokens)) continue;
+      // Soát từng giá trị đã giải JSON: chuỗi JSON thoát xuống dòng thành «\\n», cụm «ten\\nhai» sẽ không khớp (phản biện 19/11).
+      if (!guardValues(JSON.parse(j), entriesFromTokens(tokens)).length) continue;
       const col = Object.entries(JSON.parse(j)).find(([, v]) => v != null && scanSourceNames(JSON.stringify(v), tokens))?.[0];
       throw new PhaseError(
         "scan",

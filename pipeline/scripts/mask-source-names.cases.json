@@ -427,6 +427,227 @@
           "wholeOnly": true
         }
       ]
+    },
+    {
+      "ten": "khớp nguyên cụm, phản biện 19/11: chữ tổ hợp (NFD)",
+      "in": "tin từ Lumora Thịnh nay",
+      "out": "tin từ S90 nay",
+      "names": [
+        {
+          "code": "S90",
+          "realName": "Lumora Thịnh",
+          "wholeOnly": true
+        },
+        {
+          "code": "S90",
+          "realName": "market.lumorathinh.vn",
+          "wholeOnly": true
+        }
+      ]
+    },
+    {
+      "ten": "khớp nguyên cụm, phản biện 19/11: gạch ngang ngắn",
+      "in": "tin Lumora – Thịnh nay",
+      "out": "tin S90 nay",
+      "names": [
+        {
+          "code": "S90",
+          "realName": "Lumora Thịnh",
+          "wholeOnly": true
+        },
+        {
+          "code": "S90",
+          "realName": "market.lumorathinh.vn",
+          "wholeOnly": true
+        }
+      ]
+    },
+    {
+      "ten": "khớp nguyên cụm, phản biện 19/11: gạch ngang dài",
+      "in": "tin Lumora—Thịnh nay",
+      "out": "tin S90 nay",
+      "names": [
+        {
+          "code": "S90",
+          "realName": "Lumora Thịnh",
+          "wholeOnly": true
+        },
+        {
+          "code": "S90",
+          "realName": "market.lumorathinh.vn",
+          "wholeOnly": true
+        }
+      ]
+    },
+    {
+      "ten": "khớp nguyên cụm, phản biện 19/11: dấu nối Unicode",
+      "in": "tin Lumora‐Thịnh nay",
+      "out": "tin S90 nay",
+      "names": [
+        {
+          "code": "S90",
+          "realName": "Lumora Thịnh",
+          "wholeOnly": true
+        },
+        {
+          "code": "S90",
+          "realName": "market.lumorathinh.vn",
+          "wholeOnly": true
+        }
+      ]
+    },
+    {
+      "ten": "khớp nguyên cụm, phản biện 19/11: dấu trừ",
+      "in": "tin Lumora−Thịnh nay",
+      "out": "tin S90 nay",
+      "names": [
+        {
+          "code": "S90",
+          "realName": "Lumora Thịnh",
+          "wholeOnly": true
+        },
+        {
+          "code": "S90",
+          "realName": "market.lumorathinh.vn",
+          "wholeOnly": true
+        }
+      ]
+    },
+    {
+      "ten": "khớp nguyên cụm, phản biện 19/11: chấm giữa",
+      "in": "tin Lumora·Thịnh nay",
+      "out": "tin S90 nay",
+      "names": [
+        {
+          "code": "S90",
+          "realName": "Lumora Thịnh",
+          "wholeOnly": true
+        },
+        {
+          "code": "S90",
+          "realName": "market.lumorathinh.vn",
+          "wholeOnly": true
+        }
+      ]
+    },
+    {
+      "ten": "khớp nguyên cụm, phản biện 19/11: dấu phẩy",
+      "in": "tin Lumora, Thịnh nay",
+      "out": "tin S90 nay",
+      "names": [
+        {
+          "code": "S90",
+          "realName": "Lumora Thịnh",
+          "wholeOnly": true
+        },
+        {
+          "code": "S90",
+          "realName": "market.lumorathinh.vn",
+          "wholeOnly": true
+        }
+      ]
+    },
+    {
+      "ten": "khớp nguyên cụm, phản biện 19/11: dấu hai chấm",
+      "in": "tin Lumora:Thịnh nay",
+      "out": "tin S90 nay",
+      "names": [
+        {
+          "code": "S90",
+          "realName": "Lumora Thịnh",
+          "wholeOnly": true
+        },
+        {
+          "code": "S90",
+          "realName": "market.lumorathinh.vn",
+          "wholeOnly": true
+        }
+      ]
+    },
+    {
+      "ten": "khớp nguyên cụm, phản biện 19/11: ký tự vô hình",
+      "in": "tin Lumora​Thịnh nay",
+      "out": "tin S90 nay",
+      "names": [
+        {
+          "code": "S90",
+          "realName": "Lumora Thịnh",
+          "wholeOnly": true
+        },
+        {
+          "code": "S90",
+          "realName": "market.lumorathinh.vn",
+          "wholeOnly": true
+        }
+      ]
+    },
+    {
+      "ten": "khớp nguyên cụm, phản biện 19/11: URL mã hoá %20",
+      "in": "xem /Lumora%20Thinh/p1",
+      "out": "xem /S90/p1",
+      "names": [
+        {
+          "code": "S90",
+          "realName": "Lumora Thịnh",
+          "wholeOnly": true
+        },
+        {
+          "code": "S90",
+          "realName": "market.lumorathinh.vn",
+          "wholeOnly": true
+        }
+      ]
+    },
+    {
+      "ten": "khớp nguyên cụm, phản biện 19/11: URL dấu cộng",
+      "in": "xem ?q=lumora+thinh",
+      "out": "xem ?q=S90",
+      "names": [
+        {
+          "code": "S90",
+          "realName": "Lumora Thịnh",
+          "wholeOnly": true
+        },
+        {
+          "code": "S90",
+          "realName": "market.lumorathinh.vn",
+          "wholeOnly": true
+        }
+      ]
+    },
+    {
+      "ten": "khớp nguyên cụm, phản biện 19/11: tên miền bỏ tiền tố",
+      "in": "mua ở zentrafy.vn nhé",
+      "out": "mua ở S91 nhé",
+      "names": [
+        {
+          "code": "S91",
+          "realName": "Kavex Holding",
+          "wholeOnly": true
+        },
+        {
+          "code": "S91",
+          "realName": "shop.zentrafy.vn",
+          "wholeOnly": true
+        }
+      ]
+    },
+    {
+      "ten": "khớp nguyên cụm, phản biện 19/11: tên miền bỏ tiền tố, viết hoa",
+      "in": "mua ở ZENTRAFY.VN nhé",
+      "out": "mua ở S91 nhé",
+      "names": [
+        {
+          "code": "S91",
+          "realName": "Kavex Holding",
+          "wholeOnly": true
+        },
+        {
+          "code": "S91",
+          "realName": "shop.zentrafy.vn",
+          "wholeOnly": true
+        }
+      ]
     }
   ]
 }

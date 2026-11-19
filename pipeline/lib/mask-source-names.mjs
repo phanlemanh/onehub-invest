@@ -21,6 +21,12 @@ export function nameVariants(realName, { wholeOnly = false } = {}) {
   const words = full.split(/[\s.\-_/]+/).filter(Boolean);
   const out = new Set([full, words.join("")]);
   if (!wholeOnly && words.length > 1 && words[0].length >= 4) out.add(words[0]);
+  // Tên miền khai cờ từ ba nhãn trở lên: thêm phần bỏ nhãn đầu («shop.ten.vn» → «ten.vn»), vì nhãn đầu là từ chung và tên miền
+  // gốc hay được viết không có nó (phản biện 19/11).
+  if (wholeOnly && full.includes(".") && !/\s/.test(full)) {
+    const nhan = full.split(".").filter(Boolean);
+    if (nhan.length >= 3) { const goc = nhan.slice(1).join("."); out.add(goc); out.add(goc.replace(/[\s.\-_/]+/g, "")); }
+  }
   return [...out].filter((v) => v.length >= 3);
 }
 
@@ -29,7 +35,24 @@ function cumTach(realName, wholeOnly) {
   if (!wholeOnly) return null;
   const words = fold(realName.trim()).split(/[\s.\-_/]+/).filter(Boolean);
   if (words.length < 2) return null;
-  return new RegExp(words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, (m) => `\\${m}`)).join("[\\s.\\-_/]+"), "gu");
+  return new RegExp(words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, (m) => `\\${m}`)).join(TACH), "gu");
+}
+
+// Dấu phân tách giữa các từ của cụm khai cờ: mọi ký tự không phải chữ, số, dấu tổ hợp (gạch ngang mọi loại, chấm giữa, ký tự vô
+// hình…) và mã URL «%XX» (phản biện 19/11).
+const TACH = "(?:[^\\p{L}\\p{N}\\p{M}]|%[0-9a-f]{2})+";
+
+/** Bản gập trên chữ đã chuẩn NFC, kèm vị trí trên chữ gốc: chữ gõ tổ hợp (NFD) vẫn khớp, vị trí che vẫn đúng chữ gốc. */
+function gapNfc(text) {
+  if (text === text.normalize("NFC")) return { f: fold(text), dau: null, cuoi: null };
+  let f = "";
+  const dau = [], cuoi = [];
+  for (const { segment, index } of new Intl.Segmenter("vi", { granularity: "grapheme" }).segment(text)) {
+    const g = fold(segment.normalize("NFC"));
+    for (let k = 0; k < g.length; k++) { dau.push(index); cuoi.push(index + segment.length); }
+    f += g;
+  }
+  return { f, dau, cuoi };
 }
 
 const isWordChar = (c) => c !== undefined && /[\p{L}\p{N}]/u.test(c);
@@ -37,7 +60,7 @@ const isWordChar = (c) => c !== undefined && /[\p{L}\p{N}]/u.test(c);
 /** Mọi chỗ khớp tên trong text: [{ code, start, end }] trên bản gập, ưu tiên khớp dài hơn. Biến thể ≥ 4 ký tự khớp ở
  *  mọi chỗ (tên dính hậu tố như mã kênh, khoá nguồn); biến thể ngắn hơn phải đứng riêng một từ (không trúng giữa từ). */
 export function findSourceNames(text, entries) {
-  const f = fold(text);
+  const { f, dau, cuoi } = gapNfc(text);
   const cands = entries.flatMap(({ code, realName, wholeOnly }) => nameVariants(realName, { wholeOnly }).map((v) => ({ code, v })));
   cands.sort((a, b) => b.v.length - a.v.length);
   const hits = [];
@@ -64,7 +87,8 @@ export function findSourceNames(text, entries) {
       i = f.indexOf(v, i + 1);
     }
   }
-  return hits.sort((a, b) => a.start - b.start);
+  const goc = dau && cuoi ? hits.map((h) => ({ code: h.code, start: dau[h.start], end: cuoi[h.end - 1] })) : hits;
+  return goc.sort((a, b) => a.start - b.start);
 }
 
 /** Thay mỗi tên thật trong text bằng mã S0x. Danh sách tên rỗng → null (đóng chặt). text null → null. */
