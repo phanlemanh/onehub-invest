@@ -31,3 +31,17 @@
   Sonnet 164.374. Hai model tự báo: Opus mot-can 83 · ro 26 · tim-mua 7 · khong-ro 4; Sonnet mot-can 85 · ro 24 · tim-mua 7 · khong-ro 4.
   Băm nhãn thô (16 ký tự đầu sha256): nhan-opus.json `6a012f9c60debaab` · nhan-sonnet.json `3743df114f1e9962` — ghi TRƯỚC khi chấm.
 - Tổng hai mẫu: Opus 406.410 token, Sonnet 397.590 token; 0 USD chi thêm, trong trần 3 USD của Hỏi-2.
+
+## Kết quả chấm (một lần mỗi mẫu)
+
+| Mẫu | Mã | n đồng thuận | Bất đồng | Gộp nhầm trước → sau [Wilson 95%] | Tách nhầm 40 cặp |
+|---|---|---:|---:|---|---|
+| Một (không còn giữ riêng: 18 tin lỗi đã đọc để chẩn đoán) | bản có lỗi «?» = «?» | 85 | 10,0% | 27,1% → 21,2% [13,8–31,0] | 6 → 6 |
+| Hai (tách rời mẫu một) | sau sửa 84c73d751 | 81 | 6,7% | 32,1% → **0,0%** [0,0–4,5] | 6 → 6 |
+
+Báo cáo số: `thuoc-ket-qua.json` (mẫu một), `thuoc-ket-qua-2.json` (mẫu hai); `thuoc.sh --kiem` tính lại từ nhãn thô.
+
+**Số tham khảo, ngoài thước của hợp đồng (đếm sau khi chấm, không dùng để chỉnh luật):** trên mẫu hai, 118 nhóm bản chữ cùng căn theo
+nhãn đồng thuận — khoá cũ tách 0 nhóm, khoá mới tách **62 nhóm (52,5%)** ra từ hai tin trở lên. Trên bản chép DB, số tin S03 sống
+7.672 → 11.867. Nguồn: luật thiết kế §2 — bản chữ thiếu một trong bốn trường chỉ nhập vào tin ĐỦ bốn trường; bài đăng lại cùng căn sửa
+chữ mà thiếu trường đứng riêng. Thước tách nhầm của AC-9 (40 cặp audit, 6 cặp cùng căn) không thấy được lớp này.

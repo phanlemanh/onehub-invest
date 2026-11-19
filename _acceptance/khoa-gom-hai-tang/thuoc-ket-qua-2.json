@@ -1,0 +1,49 @@
+{
+ "mau": {
+  "tin": 120,
+  "nhan_dong_thuan": 81,
+  "cung": 55,
+  "khac": 26,
+  "ngoai_don_vi": 31,
+  "bat_dong": 8,
+  "ti_le_bat_dong": 0.0667
+ },
+ "gop_nham": {
+  "truoc": {
+   "k": 26,
+   "n": 81,
+   "ti_le": 0.321,
+   "wilson95": [
+    0.2294,
+    0.4288
+   ]
+  },
+  "sau": {
+   "k": 0,
+   "n": 81,
+   "ti_le": 0,
+   "wilson95": [
+    0,
+    0.0453
+   ],
+   "tin": []
+  }
+ },
+ "tach_nham": {
+  "cap_cung": 6,
+  "truoc": {
+   "k": 6,
+   "wilson95": [
+    0.6097,
+    1
+   ]
+  },
+  "sau": {
+   "k": 6,
+   "wilson95": [
+    0.6097,
+    1
+   ]
+  }
+ }
+}
