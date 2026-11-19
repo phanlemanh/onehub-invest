@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 71d06f703ffb8b811f602f625e36f92ea6a769fd
+verified_commit: 4bee3a68de2ce4708ba4de78328c692022f43f88
 human_signoff:
 ---
 
@@ -239,3 +239,13 @@ none — every multi-run eval is uniform
 ## Iterations
 
 Round 1: E1 đến E15 đều đạt, bảy lệnh suite xanh, không có eval thất bại. Không cần trả về triển khai.
+
+### Re-pin lần 1 — 2026-11-19, do nhận bản sửa làn thu b97948b84 và main
+run_id: repin-20261119T064351Z-57571
+sha: 4bee3a68de2ce4708ba4de78328c692022f43f88 · suites: 7 lệnh exit 0 · evals: 15/15 eval máy đạt kỳ vọng
+
+#### Ghi chú lượt ghim lại ngày 19/11
+
+- Lượt `repin-20261119T064351Z-57571` chạy từ worktree `vhz2-watchdog` sau khi giám sát trỏ dãy U2 về đây. Hai lần xin khoá trước đó dừng vì hook của đợt không nhận thư mục phiên, khoá được nhả, không lượt nào chạy.
+- Sha được ghim `4bee3a68d` là đầu nhánh `feat/vhz2-watchdog-tu-khoi-dong-gateway`. Worktree của GT9 `bai-anh-thanh-tin-s03` sạch, không tệp hồ sơ nào của GT9 đổi trong lượt này.
+- Sau gộp, bộ canh tự khởi động lại vẫn TẮT theo `ap-may-thu.md`; bật là bước riêng theo lời Mạnh.
