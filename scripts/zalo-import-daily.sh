@@ -239,6 +239,9 @@ buoc_nhanh() {
 }
 buoc() { if [ "$NHANH" = "1" ]; then buoc_nhanh "$@"; else job_run "$@"; fi; }
 buoc zalo-import-daily transform-zalo node "$ROOT/pipeline/transform-zalo.mjs"
+# DA45 phuong-tu-du-an-chay-that: phường kế thừa từ dự án cho bài S03 (luật DA9). Đứng sau transform-zalo (bước ghi dự án lên bài),
+# trước xep-hang-gia (bước đọc phường). --noi-tiep: chỉ ghi khi lượt đầu đã áp tay theo hồ sơ; chưa áp hay đã lùi thì bỏ qua.
+buoc zalo-import-daily phuong-tu-du-an node "$ROOT/pipeline/scripts/phuong-tu-du-an.mjs" --ghi --noi-tiep
 buoc zalo-import-daily transform-media node "$ROOT/pipeline/transform-media.mjs" S03 S05
 buoc zalo-import-daily refresh-bait-gap node "$ROOT/pipeline/refresh-bait-gap.mjs"
 buoc zalo-import-daily xep-hang-gia node "$ROOT/pipeline/xep-hang-gia.mjs"   # CG9: hạng giá sau định vị

@@ -25,7 +25,7 @@ const MOC_CU = "2026-10-24T000000Z";
 // duyệt 30/10): enrich-run đứng cuối — lời «bốn bước» của media-canonical-reso#AC-10 thay bởi enrich-chay-sau-nap#AC-6.
 // pl34-lich-dem-sau-buoc (AC-1, Mạnh duyệt 09/11): doc-gop-hang-ngay sau nhả khoá nạp, trước enrich-run — lời «năm bước» của
 // enrich-chay-sau-nap#AC-6 thay bởi pl34-lich-dem-sau-buoc#AC-1.
-const NHAN = ["import-airbnb", "transform-zalo", "transform-media", "refresh-bait-gap", "xep-hang-gia", "doc-gop-hang-ngay", "enrich-run"];
+const NHAN = ["import-airbnb", "transform-zalo", "phuong-tu-du-an", "transform-media", "refresh-bait-gap", "xep-hang-gia", "doc-gop-hang-ngay", "enrich-run"];
 // Tệp giả của bước đọc gộp (pl34-lich-dem-sau-buoc): gọi qua node giả nên mang nhãn doc-gop-hang-ngay, nhận FAIL_STEPS như mọi
 // bước. Không chép bản thật (nó gọi node -e tính ngày rồi doc-gop-s03.ts hai lần); bản thật đo riêng ở ca PL34-AC-3 tệp thật.
 const DOC_GOP = "pipeline/doc-gop-hang-ngay.sh";
