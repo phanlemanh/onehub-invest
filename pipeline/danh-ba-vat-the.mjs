@@ -24,7 +24,7 @@ import { khoaNhomThat } from "./lib/eval-labels.mjs";
 import { NOI_KHU_S09 } from "./lib/s09-du-an.mjs";
 import { buocS09 } from "./lib/s09-dung.mjs";
 import { NOI_DU_AN_S16 } from "./lib/s16-danh-muc.mjs";
-import { buocS16, napS16TheoKhu, theLechS16 } from "./lib/s16-dung.mjs";
+import { buocS16, ganLechS16, napS16TheoKhu } from "./lib/s16-dung.mjs";
 
 export const KHU_MAC_DINH = Object.freeze(["vinhomes-ocean-park-1", "vinhomes-grand-park"]);
 const ISO = Object.freeze({ hanoi: "VN-HN", hcmc: "VN-SG" });
@@ -119,10 +119,10 @@ export async function dung(c, {
     const { rows: bd } = await c.query(
       "SELECT value, object_key FROM registry_aliases WHERE retired_at IS NULL AND kind = 'ma_nguon' AND source = $1", [NGUON_DANH_MUC]);
     const biDanh = new Map(bd.map((r) => [r.value, r.object_key]));
-    // DA33 §5.5: toà, trục, căn S16 đã có của khu — bước S08 gắn bí danh vào chúng thay vì đúc; lệch toà → thẻ.
+    // DA33 §5.5: toà, trục, căn S16 đã có của khu — bước S08 gắn bí danh vào chúng thay vì đúc; lệch toà → căn S08 gộp vào căn
+    // S16 sau khi ghi (DA37 Q-B).
     const s16TheoKhu = await napS16TheoKhu(c, khuIds);
     const kh = keHoachDung({ dongS08: s08, biDanh, phanKhuTheoKhu, s16TheoKhu });
-    const theLech = await theLechS16(c, kh.lechS16);
 
     // Ghi: toà → trục → căn → bí danh.
     const toaMoi = kh.toa.filter((t) => t.moi);
@@ -149,6 +149,7 @@ export async function dung(c, {
                      SELECT k, 'ma_nguon', v, $3 FROM unnest($1::text[], $2::text[]) AS x(k, v)`,
                     [kh.biDanhMoi.map((b) => b.object_key), kh.biDanhMoi.map((b) => b.value), NGUON_DANH_MUC]);
     }
+    const ganLech = await ganLechS16(c, kh.lechS16);
     // Tên toà (S08) làm bí danh tên để khớp phát biểu trên tin.
     await c.query(`INSERT INTO registry_aliases (object_key, kind, value, source)
                    SELECT k, 'ten', v, $3 FROM unnest($1::text[], $2::text[]) AS x(k, v)
@@ -251,7 +252,7 @@ export async function dung(c, {
       ly_do_phuong: lyDoPhuong,
       s09,
       s16,
-      s08_lech_s16: theLech,
+      s08_lech_s16: ganLech.choNghi, s08_gop_vao_s16: ganLech.gop,
     };
   } catch (e) {
     await c.query("ROLLBACK").catch(() => {});
@@ -264,7 +265,7 @@ export async function dung(c, {
  * chủ đầu tư (phát biểu builder_name là hitl — chỉ lệnh tay ghi). Đích ngoài máy này → ném trước câu truy vấn đầu tiên.
  * @param {import("pg").Client} c
  */
-export async function buocVatTheDem(c, { log = console.log } = {}) {
+export async function buocVatTheDem(c, { log = console.log, dungFn = dung } = {}) {
   const kq = kiemDich(c.connectionParameters, { dbThat: true });
   if (!kq.ok) throw new Error(`danh-ba-vat-the: ${kq.ly_do}`);
   if (!(await c.query("SELECT to_regclass('public.buildings') AS t")).rows[0].t) {
@@ -276,8 +277,9 @@ export async function buocVatTheDem(c, { log = console.log } = {}) {
     log("danh-ba-vat-the: bỏ qua — chưa dựng lần đầu (lần đầu là lệnh tay --db-that --sao-luu)");
     return { bo_qua: "chua-dung-lan-dau" };
   }
-  const tk = await dung(c, { khuSlugs, runId: `dbv-dem-${Date.now()}`, log });
+  const tk = await dungFn(c, { khuSlugs, runId: `dbv-dem-${Date.now()}`, log });
   log(`danh-ba-vat-the: đêm ${JSON.stringify({ khu: khuSlugs.length, khoa_moi: tk.khoa_moi })}`);
+  if (tk.s16?.moc) log(`S16: khoá mới ${tk.s16.khoa_moi}, mốc ${tk.s16.moc}`);
   return tk;
 }
 

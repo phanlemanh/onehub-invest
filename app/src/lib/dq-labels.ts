@@ -43,6 +43,7 @@ const TEN_KIEM: Record<string, string> = {
   // pipeline/do-lam-giau.mjs (DO3) — có khối «Làm giàu» riêng, bảng chung loại do3-* (dq-checks.ts)
   "do3-thay-doi": "Làm giàu: thay đổi theo ngày",
   "do3-kiem-nguoc": "Làm giàu: kiểm ngược tuần",
+  "s03-moc-ngay": "Số mốc S03 theo ngày", // pipeline/sql/600_data_flow.sql (SM1) — vẽ ở /ops/data-flow, bảng chung loại dòng này
 }
 const COT_ENUM: Record<string, string> = {
   kind: "loại tin",

@@ -133,6 +133,11 @@ _Avoid_: gắn toà, căn suy ra
 - Slug URL: — (số hiện trên trang Dòng chảy dữ liệu)
 _Avoid_: định vị toà (khi mới tới dự án), gắn dự án
 
+**Số mốc S03**: Bốn con số đo tiến độ của tin S03 đang rao, chốt mỗi ngày VN ở lượt làm tươi cuối ngày: «Có dự án» (đúng ô Định vị cấp dự án của S03), «Khớp toà» (tin khớp một nút toà của danh bạ), «Có hạng cấp dự án» (có điểm hạng ở cấp dự án, phân khu hoặc toà), «Có hạng cấp toà» (có điểm hạng ở cấp toà).
+- Code: `dq_check_results.check_name = 's03-moc-ngay'`, `facts.milestones` (`project_linked`, `building_linked`, `project_ranked`, `building_ranked`, mẫu số `offers_total`)
+- Slug URL: — (số hiện trên trang Dòng chảy dữ liệu)
+_Avoid_: KPI S03, chỉ số mốc
+
 **Gom cụm**: Máy gom các tin trông giống nhau (cùng vùng, loại, diện tích, giá) thành một cụm — công cụ gợi ý cho bước định vị, **không phải một bậc** và không đưa tin lên bậc nào. Trên trang Dòng chảy chỉ đếm tin nằm trong cụm có từ hai tin sống; cụm một tin không tính. Khác gom trùng (bài đăng lại, trùng nội dung gộp thành một tin — nằm trong B1).
 - Code: `clustered` (khối `dataFlow`), cụm ở bảng `properties` · RESO: không có
 - Slug URL: — (không có trang riêng; số hiện trên trang Dòng chảy dữ liệu)
@@ -495,7 +500,7 @@ Mọi enum dữ liệu (loại tin, loại hình, trạng thái chào…) khai �
 | Độ tin trích xuất | `confidence` | local | `sale_offers.confidence` | `high` «cao» · `medium` «trung bình» · `low` «thấp» |
 | Bậc giá | `price_tier` | local | `sale_offers.price_tier` | `P0` «giá giao dịch (P0)» · `P1` «giá nội bộ (P1)» · `P2` «giá công khai (P2)» |
 | Trường làm giàu | `enrich_field` | local | `enrichment_proposals.field` | `property_type` «Loại hình» · `bedrooms` «Phòng ngủ» · `bathrooms` «WC» · `street_raw` «Đường» · `block_raw` «Toà» |
-| Trường phát biểu | `assertion_field` | local | `field_assertions.field` | `property_type` «Loại hình» · `bedrooms` «Phòng ngủ» · `bathrooms` «WC» · `street_raw` «Đường» · `block_raw` «Toà» · `offer_status` «Trạng thái chào» · `street_number` «Số nhà» · `unit_number` «Mã căn» · `frontage_length` «Mặt tiền» · `lot_size_dimensions` «Ngang × dài» · `stories` «Số tầng» · `latitude` «Vĩ độ» · `longitude` «Kinh độ» · `builder_name` «Chủ đầu tư» · `area_id` «Phường» · `floor_raw` «Tầng» · `floor_band` «Dải tầng» · `project_node_id` «Dự án» · `subzone_node_id` «Phân khu» |
+| Trường phát biểu | `assertion_field` | local | `field_assertions.field` | `property_type` «Loại hình» · `bedrooms` «Phòng ngủ» · `bathrooms` «WC» · `street_raw` «Đường» · `block_raw` «Toà» · `offer_status` «Trạng thái chào» · `street_number` «Số nhà» · `unit_number` «Mã căn» · `frontage_length` «Mặt tiền» · `lot_size_dimensions` «Ngang × dài» · `stories` «Số tầng» · `latitude` «Vĩ độ» · `longitude` «Kinh độ» · `builder_name` «Chủ đầu tư» · `area_id` «Phường» · `floor_raw` «Tầng» · `floor_band` «Dải tầng» · `project_node_id` «Dự án» · `subzone_node_id` «Phân khu» · `living_area` «Diện tích thông thuỷ» · `building_area_total` «Diện tích tim tường» · `direction_faces` «Hướng» · `lot_size_area` «Diện tích đất» |
 | Lớp căn cứ | `evidence_tier` | local | `field_assertions.evidence_tier`, `party_roles.evidence_tier` | `fact` «Sự thật» · `observed` «Quan sát có trích dẫn» · `inferred` «Suy luận» |
 | Phương pháp phát biểu | `assertion_method` | local | `field_assertions.method`, `party_roles.method` | `hitl` «Người quyết» · `source_field` «Trường có cấu trúc của nguồn» · `parser` «Bộ đọc tin» · `e1_rule` «Luật E1» · `e2_llm` «LLM E2» · `legacy` «Giá trị có trước» · `registry_inherit` «Kế thừa từ danh bạ» |
 | Trạng thái danh bạ | `registry_status` | local | `parties.status`, `buildings.status`, `stacks.status`, `units.status` | `active` «Đang dùng» · `merged` «Đã gộp» · `split` «Đã tách» · `retired` «Đã nghỉ» |

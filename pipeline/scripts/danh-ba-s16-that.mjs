@@ -14,6 +14,7 @@ import { taoDbThu, xoaDbThu, MAY_CHU, GOC } from "./db-thu-dbv.mjs";
 import { dung } from "../danh-ba-vat-the.mjs";
 import { FILL } from "../sync-cloud.mjs";
 import { ALIAS_KIND } from "../lib/vocab.generated.mjs";
+import { duPhan } from "./s16-bon-phan.mjs";
 
 const NGUON_DB = process.env.DATABASE_URL ?? `${MAY_CHU}/oneinvest`;
 const TEN = `oneinvest_dbv_s16that_${process.pid}`;
@@ -107,7 +108,8 @@ async function main() {
     await chep(src, c, "stg_s08_inventory", "project_id IN (SELECT project_id FROM s08_project_links WHERE status = 'noi')");
     await chep(src, c, "buildings", "merged_into IS NULL");
     await chep(src, c, "stacks", "merged_into IS NULL");
-    await chep(src, c, "units", "merged_into IS NULL");
+    // Chép cả căn đã gộp: sau khi áp DA37 máy thu có căn S08 merged, bí danh S08 còn trên căn cũ; bỏ dòng này thì phần «gộp» đếm thiếu.
+    await chep(src, c, "units");
     await chep(src, c, "registry_aliases", `kind IN ('${ALIAS_KIND.ma_nguon}', '${ALIAS_KIND.ten}')`);
     await src.end();
     // Cột id tự tăng đã chép theo dòng: đẩy bộ đếm lên để dòng mới không trùng khoá.
@@ -171,6 +173,13 @@ async function main() {
                (SELECT count(*) FROM chung ch WHERE EXISTS (SELECT 1 FROM registry_aliases a JOIN registry_aliases b ON b.object_key = a.object_key
                    AND b.source = 'S08' AND b.kind = 'ma_nguon' AND upper(split_part(b.value, '/', 2)) = ch.ma
                  WHERE a.source = 'S16' AND a.kind = 'ma_nguon' AND a.value = ch.du_an || '/' || ch.ma AND a.object_key LIKE 'unt_%'))::int AS bi_danh,
+               -- DA37 AC-5: căn S08 lệch toà không ra thẻ nữa mà gộp vào căn S16 (merged_into); bí danh S08 ở lại căn cũ.
+               (SELECT count(*) FROM chung ch WHERE EXISTS (SELECT 1 FROM registry_aliases a
+                   JOIN units moi ON moi.unit_key = a.object_key AND moi.status = 'active'
+                   JOIN units cu ON cu.merged_into = moi.unit_key AND cu.status = 'merged'
+                   JOIN registry_aliases b ON b.object_key = cu.unit_key AND b.source = 'S08' AND b.kind = 'ma_nguon'
+                    AND upper(split_part(b.value, '/', 2)) = ch.ma
+                 WHERE a.source = 'S16' AND a.kind = 'ma_nguon' AND a.value = ch.du_an || '/' || ch.ma AND a.object_key LIKE 'unt_%'))::int AS gop,
                (SELECT count(*) FROM chung ch WHERE ch.mo_ho)::int AS mo_ho`,
         [id, Object.keys(await duAnCua(c, slug))]);
       const lech = (await mot(`SELECT count(*)::int AS n FROM review_queue WHERE evidence->>'loai' = 'can-lech-toa' AND item_id = ANY($1)`,
@@ -190,8 +199,8 @@ async function main() {
       const toaThe = canToa.filter((x) => x.toa_id && coThe.has(theCua(x))).length;
       const toaTheTrung = canToa.filter((x) => x.toa_id && theTrung.has(theCua(x))).length;
       console.log(`E10 · ${slug}: mã S08 có trong S16 nhưng S08 chưa thành căn (bộ tách S08 không tách được) — S16 đúc căn mới: ${r.chua_can}`);
-      console.log(`E10 · ${slug}: căn S08 có mã trong S16 ${r.tong} = bí danh ${r.bi_danh} + lệch toà ${lech} + mơ hồ ${r.mo_ho} + toà ra thẻ ${toaThe} (khớp nhiều ${toaThe - toaTheTrung} · trùng tên ${toaTheTrung}) (đo 14/11: ${SAN_S08[slug]})`);
-      kiem(r.bi_danh + lech + r.mo_ho + toaThe === r.tong, `E10 bốn phần ${slug}`);
+      console.log(`E10 · ${slug}: căn S08 có mã trong S16 ${r.tong} = bí danh ${r.bi_danh} + gộp vào căn S16 ${r.gop} + lệch toà ${lech} + mơ hồ ${r.mo_ho} + toà ra thẻ ${toaThe} (khớp nhiều ${toaThe - toaTheTrung} · trùng tên ${toaTheTrung}) (đo 14/11: ${SAN_S08[slug]})`);
+      kiem(duPhan({ tong: r.tong, biDanh: r.bi_danh, gop: r.gop, lech, moHo: r.mo_ho, toaThe }), `E10 bốn phần ${slug}`);
     }
 
     // Không hai khoá.

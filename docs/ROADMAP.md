@@ -334,6 +334,8 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   giờ, plist chờ ZCode); `cloud-sync.sh` tự bỏ chúng khi job giờ vừa chạy trọn dưới 2 giờ, ngược lại tự chạy dưới cùng
   khoá. Đo 10/11 trên DB thử: transform-zalo + media + bait-gap ≈ 76 s/lượt — LT2 chưa cần.
 
+**Số mốc S03 theo ngày (SM1, 18/11):** lượt làm tươi `pipeline/sql/600_data_flow.sql` ghi mỗi ngày VN một dòng `s03-moc-ngay` vào `dq_check_results` (có dự án, khớp toà, có hạng cấp dự án, có hạng cấp toà, mẫu số là tin S03 đang rao) và chở 30 ngày trong `facts.milestones`; `/ops/data-flow` vẽ mức đổi và cờ đứng yên. Số lên cloud trong khối `dataFlow`; dòng của bảng đo ở lại máy thu (`LOCAL_ONLY_ROWS` của `pipeline/sync-cloud.mjs`, Mạnh chốt Hỏi-4).
+
 ### 2.3 Nguồn (source_registry + /ops/collections feed health)
 Đo 26/10 trên máy thu (`source_registry`, `launchctl list`, `airdna_markets`). Trạng thái theo vòng đời năm giá trị
 `draft · active · paused · retired · completed` (CHECK từ 047, TV2a); script thu hỏi «có được thu» qua `isRunnable` (TV2b).
@@ -710,6 +712,12 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     - QĐ1: máy thu giữ **kho tư liệu** của dự án và chủ đầu tư (media, tài liệu bán hàng, văn bản pháp lý, hợp đồng mua bán) làm
       nguồn tư liệu cho người dùng. Mạnh «Đồng ý, chỉ công khai»: chỉ tài liệu công khai; hợp đồng chỉ bản mẫu, hợp đồng đã ký có
       thông tin người mua thì không thu, hoặc che hết trước khi lưu.
+      **Sửa đổi 18/11 (đảo phần người mua, hàng ZC12).** Phiên điều phối liên làn, giờ UTC: 09:25:27Z Mạnh hỏi «Hiện nay ảnh khi thu
+      mình có giảm kích thước hay không? Và các file media và tài liệu đi kèm?», trợ lý trả lời giấy tờ người mua «Không lưu tệp, chỉ
+      ghi là đã bỏ qua»; 09:34:26Z Mạnh gõ «Lưu luôn hợp đồng và giấy tờ người mua»; 09:35:20Z trợ lý hỏi «Lưu hợp đồng và giấy tờ
+      người mua theo cách nào?»; 09:36:13Z Mạnh chọn «Kho riêng, xoá được». Tức: hợp đồng đã ký và giấy tờ người mua lưu ở kho riêng mã
+      hoá trên máy thu, ngoài raw snapshot; không cloud, không model, không cổng, không kênh; xoá được từng tệp, có sổ xoá. Chưa chốt,
+      hỏi ở Cổng Phạm vi của ZC12: sao lưu ngoài máy, hạn giữ, ai được mở tệp, ý kiến pháp lý, tải lại tệp đã xoá ngày 12/11.
     - QĐ2: **video thu thử 2 tuần có trần dung lượng** (Mạnh «Thu thử có trần»); video vượt trần chỉ ghi đường dẫn và vài khung
       hình. Số trần chốt ở QĐ14. Chưa chốt: giữ bản gốc, bản nén hay chỉ khung hình — hết 2 tuần đo rồi trình.
     - QĐ3: **bản sao lưu mã hoá** (Mạnh «Cho, khoá giữ ở máy», trả lời câu «Có cho một bản sao lưu đã mã hoá ra kho ngoài máy
@@ -916,6 +924,21 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     - Hàng (bản phạm vi `docs/plan/pham-vi-danh-ba-cau-truc-1711.md`): DA36 `danh-ba-toa-theo-phan-khu-hieu-luc` (trang đọc
       view, 54 → 14), DA37 `danh-ba-s16-thang-cau-truc` (Q-B + Q-C, sau DA33), DA38 `du-an-con-tu-hau-to-khu` (Q-A, sau DA8 ba
       nút Grand Park của mục 39 Hỏi-2), DA39 `nut-ung-vien-s08-s09-ha-noi` (nút thiếu + bảng nối S09, lát mỏng của DA18, DA3).
+55. **Tra hồ sơ Zalo từ SĐT người bán** (18/11). Làn thu đề xuất (tin BÁO zcode-1811-2): dịch vụ tra cứu độc lập trên máy
+    thu, một tài khoản Zalo riêng chỉ tra không chat, cache 7 ngày (dương) / 30 ngày (âm); 13.730 SĐT người bán distinct trên
+    tin rao. Ghi nhớ cũ 04/11 «chưa có quyết định dùng với SĐT người bán» hết hiệu lực. Mạnh trả lời ba câu riêng ở phiên điều
+    phối liên làn, 04:11Z, nguyên văn:
+    - **Câu 1 — dùng cho SĐT người bán trên tin rao:** «Có và tôi muốn nó là một API service để các ứng dụng trong họ onehub
+      có thể dùng».
+    - **Câu 2 — ngày sinh, giới tính:** «Đây là thành viên của mạng lưới lưu trữ chung với thông tin profile để chăm sóc
+      khách hàng. GIữ đầy đủ, nhưng không đưa 2 thông tin này lên cloud». Thành sửa đổi ADR-0007 ngày 18/11 và luật 6 của
+      `AGENTS.md`.
+    - **Câu 3 — tài khoản tra cứu vào lockdown Zalo 7 lớp:** «Có». Lớp kiểm và đoạn runtime-map là việc làn thu (tin
+      claudedp-1811-10); không lượt tra thật nào, kể cả đo, trước khi lớp này chạy trên máy thu và runtime-map đã ghi.
+    - Hàng (bản phạm vi `docs/plan/pham-vi-tra-ho-so-zalo-1811.md`): EN3 `tra-ho-so-zalo-vao-danh-ba-nguoi` (migration 116),
+      EN4 `api-tra-ho-so-zalo`. Câu còn mở của Cổng Phạm vi EN4: API chạy ở đâu, ai gọi (ứng dụng trên cloud không được nhận
+      ngày sinh, giới tính), thuộc cổng nào, xác thực thế nào — data-api công khai không hợp. Ngoài đường găng, sau các hàng
+      MS3; dãy dự kiến U2 sau VHZ2.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
