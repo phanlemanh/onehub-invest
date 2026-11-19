@@ -236,3 +236,51 @@ describe("che-ten AC-4 chỗ đọc qua hàm nạp chung", () => {
       /AC-4 chỗ đọc tự dựng danh sách che/);
   });
 });
+
+describe("che-ten AC-4: bộ soát bảng không hẹp hơn bản trên main (S4 vòng 3, lời Mạnh 19/11 sửa ngay)", () => {
+  // Luật của bản trên main (origin/main b6be3c6f2, pipeline/sync-cloud.mjs assertNoSourceNames): soát chuỗi JSON thô của cả dòng,
+  // `if (!scanSourceNames(j, tokens)) continue;`. Chép lại ở đây làm thước, vì sau khi gộp main không còn bản cũ để so. Thước dùng lõi
+  // khớp hiện tại: phần nới có chủ đích của AC-2 (thương hiệu của dòng khai cờ) không tính là lọt; so ở đây là so HÌNH DẠNG soát.
+  const banMain = (j, tokens) => scanSourceNames(j, tokens) !== null;
+  const tk = [
+    { token: "Lumora Thịnh", wholeOnly: true },
+    { token: "market.lumorathinh.vn", wholeOnly: true },
+    { token: "Veridia Sàn", wholeOnly: false },
+  ];
+  const ten = ["Lumora Thịnh", "lumora thinh", "LUMORA THỊNH", "lumorathinh", "Lumora-Thịnh", "Lumora\nThịnh", "market.lumorathinh.vn",
+    "Veridia Sàn", "veridia", "veridiasan", "dự án Lumora Park", "ngõ 3 phố Huế"];
+  const cho = {
+    "giá trị": (n) => ({ offer_id: "o1", street_raw: n }),
+    "khoá đỉnh": (n) => ({ offer_id: "o1", [n]: 1 }),
+    "khoá lồng jsonb": (n) => ({ offer_id: "o1", raw: { meta: { [n]: true } } }),
+    "khoá trong mảng": (n) => ({ offer_id: "o1", raw: [{ a: 1 }, { [n]: "x" }] }),
+    "giá trị lồng": (n) => ({ offer_id: "o1", raw: { a: [n] } }),
+    // Hai mảnh kề nhau ghép thành cụm trong chuỗi thô («Lumora","Thịnh») — chỉ cách soát chuỗi thô của main bắt được.
+    "hai phần tử mảng kề": (n) => ({ offer_id: "o1", raw: n.split(/\s+/) }),
+    "giá trị rồi khoá kề": (n) => ({ offer_id: "o1", raw: { a: n.split(/\s+/)[0], [n.split(/\s+/).slice(1).join(" ") || "x"]: 1 } }),
+  };
+  const mau = Object.entries(cho).flatMap(([vi, f]) => ten.map((n) => ({ ca: `${vi} · ${JSON.stringify(n)}`, j: JSON.stringify(f(n)) })));
+  const chan = (j) => {
+    try {
+      assertNoSourceNames(new Map([["sale_offers", [j]]]), tk);
+      return false;
+    } catch (e) {
+      if (!/định danh nguồn/.test(e.message)) throw e;
+      return true;
+    }
+  };
+  test("mọi mẫu cấy bản trên main chặn thì bản mới cũng chặn", () => {
+    const main = mau.filter((m) => banMain(m.j, tk));
+    assert.ok(main.length >= 25, `thước phải bắt đủ mẫu (bắt ${main.length})`);
+    const lot = main.filter((m) => !chan(m.j)).map((m) => m.ca);
+    assert.deepEqual(lot, [], "bản mới để lọt thứ bản trên main bắt được");
+  });
+  for (const vi of ["khoá đỉnh", "khoá lồng jsonb", "khoá trong mảng"]) {
+    test(`${vi}: cụm hai từ, tên miền, cụm xuống dòng đều bị chặn`, () => {
+      for (const n of ["Lumora Thịnh", "market.lumorathinh.vn", "Lumora\nThịnh", "veridia"]) assert.ok(chan(JSON.stringify(cho[vi](n))), `lọt ${JSON.stringify(n)}`);
+    });
+  }
+  test("đối chứng: khoá mang thương hiệu (dòng khai cờ) và khoá thường đi qua", () => {
+    for (const n of ["dự án Lumora Park", "ngõ 3 phố Huế"]) for (const f of Object.values(cho)) assert.equal(chan(JSON.stringify(f(n))), false, n);
+  });
+});

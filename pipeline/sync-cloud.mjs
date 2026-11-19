@@ -411,13 +411,25 @@ export function scanSourceNames(text, tokens) {
   return hit ? hit.code : null;
 }
 
+/** Mọi khoá (mọi tầng) của một giá trị JSON đã giải — để bộ soát giá trị đi qua cả khoá của cột jsonb. */
+const khoaLong = (v) =>
+  Array.isArray(v) ? v.flatMap(khoaLong) : v && typeof v === "object" ? Object.entries(v).flatMap(([k, x]) => [k, ...khoaLong(x)]) : [];
+
 /** Soát payload bảng người bán trước khi gửi: trúng là dừng, không dòng nào rời máy. `data`: tên cloud → dòng JSON. */
 export function assertNoSourceNames(data, tokens) {
   for (const t of Object.keys(CLOUD_ALLOW)) {
     for (const j of data.get(RENAME(t)) ?? []) {
-      // Soát từng giá trị đã giải JSON: chuỗi JSON thoát xuống dòng thành «\\n», cụm «ten\\nhai» sẽ không khớp (phản biện 19/11).
-      if (!guardValues(JSON.parse(j), entriesFromTokens(tokens)).length) continue;
-      const col = Object.entries(JSON.parse(j)).find(([, v]) => v != null && scanSourceNames(JSON.stringify(v), tokens))?.[0];
+      // Hai cách soát, trúng một là dừng. (1) Chuỗi JSON thô — bắt cả KHOÁ lồng trong cột jsonb, như bản trước 19/11.
+      // (2) Từng giá trị đã giải JSON — chuỗi thô thoát xuống dòng thành «\\n», cụm «ten\\nhai» chỉ khớp sau khi giải (phản biện 19/11).
+      // Bỏ (1) là hẹp hơn bản cũ (S4 vòng 3, lời Mạnh 19/11 sửa ngay).
+      const row = JSON.parse(j);
+      // (3) Khoá lồng đã giải — khoá chứa xuống dòng thoát «\\n» thì (1) không thấy, (2) không đi qua khoá.
+      if (!scanSourceNames(j, tokens) && !guardValues(row, entriesFromTokens(tokens)).length && !guardValues(khoaLong(row), entriesFromTokens(tokens)).length) continue;
+      const col = Object.entries(row).find(
+        ([k, v]) =>
+          scanSourceNames(k, tokens) ||
+          (v != null && (scanSourceNames(JSON.stringify(v), tokens) || guardValues([v, khoaLong(v)], entriesFromTokens(tokens)).length)),
+      )?.[0];
       throw new PhaseError(
         "scan",
         `giá trị mang định danh nguồn (tầng A) ở ${t}.${col ?? "?"} — dừng trước khi gửi, không dòng nào rời máy`,
