@@ -3,8 +3,8 @@
 //
 // Tầng một — bản chữ: bài cùng người đăng và cùng chữ chuẩn hoá (normText sau gatSo) là một bản chữ. Người đăng = sender_id, không có
 //   thì SĐT trong bài; không có cả hai thì mỗi bài một bản chữ.
-// Tầng hai — tin: bản chữ chung tin khi khoá bằng nhau trên người · loại · giá · số phòng · diện tích · tập phân khu · tập mã (trường
-//   vắng là «?», hai bản chữ cùng vắng một trường vẫn bằng nhau).
+// Tầng hai — tin: bản chữ ĐỦ bốn trường (số phòng, diện tích, phân khu, mã) chung tin khi khoá bằng nhau trên người · loại · giá ·
+//   số phòng · diện tích · tập phân khu · tập mã. Bản chữ thiếu trường không khớp khoá với ai (ô trống không bằng ô trống).
 // Nhập tin thiếu trường: tin có trường vắng nhập vào một tin cùng người khi trong cửa sổ `cuaSoNgay` ngày có ĐÚNG MỘT tin ứng viên
 //   đủ hơn (mọi trường tin thiếu có cũng có ở ứng viên và bằng nhau, ứng viên có thêm ít nhất một trường) và chữ giống từ `nguongChu`.
 //   Không bắc cầu: chỉ nhập vào tin dựng từ khoá đầy đủ hơn ở tầng hai, mỗi tin thiếu nhập vào nhiều nhất một tin, nên không làm hai
@@ -81,16 +81,20 @@ export function gomHaiTang(baiDaDoc, { tuDien, gatSo, cuaSoNgay = 7, nguongChu =
     }
     b.items.push(it);
   }
-  // ---- Tầng hai: khoá bằng nhau ----
+  // ---- Tầng hai: khoá bằng nhau — CHỈ bản chữ đủ cả bốn trường (thiết kế §2) ----
+  // Sửa 20/11 (lỗi hiện thực bắt ở mẫu giữ riêng một): bản cũ coi ô trống «?» = «?» là khớp, nên hai bản chữ cùng thiếu diện tích,
+  // mã, phân khu của một môi giới gộp thành một tin. Thiết kế: bản chữ thiếu trường chỉ nhập vào tin ĐẦY ĐỦ qua luật bên dưới.
   const gt = (v) => (v == null ? "?" : Array.isArray(v) ? v.join(",") : String(v));
+  const du = (f) => TRUONG.every((k) => f[k] != null);
   const tin = new Map();
+  let soRieng = 0;
   for (const b of banChu.values()) {
-    const k2 = [b.nguoi, gt(b.f.loai), gt(b.f.gia), gt(b.f.pn), gt(b.f.dt), gt(b.f.pk), gt(b.f.ma)].join("|");
+    const k2 = du(b.f) ? [b.nguoi, gt(b.f.loai), gt(b.f.gia), gt(b.f.pn), gt(b.f.dt), gt(b.f.pk), gt(b.f.ma)].join("|") : `thieu:${soRieng++}`;
     let t = tin.get(k2);
     if (!t) { t = { k2, nguoi: b.nguoi, f: b.f, ban: [], vao: null }; tin.set(k2, t); }
     t.ban.push(b);
   }
-  // ---- Nhập tin thiếu trường vào đúng một tin đủ hơn ----
+  // ---- Nhập bản chữ thiếu trường vào đúng một tin đầy đủ ----
   const ds = [...tin.values()];
   const soCo = (f) => TRUONG.filter((k) => f[k] != null).length;
   const tg = (t) => t.ban.flatMap((b) => b.items.map((it) => thoiDiem(it.post)));
@@ -98,7 +102,7 @@ export function gomHaiTang(baiDaDoc, { tuDien, gatSo, cuaSoNgay = 7, nguongChu =
   const giongNhat = (a, b) => Math.max(...a.ban.flatMap((x) => b.ban.map((y) => doGiong(x.chu, y.chu))));
   const khop = (thieu, du) => {
     if (thieu.nguoi !== du.nguoi || thieu.f.loai !== du.f.loai || thieu.f.gia !== du.f.gia) return false;
-    if (soCo(du.f) <= soCo(thieu.f)) return false;
+    if (soCo(du.f) !== TRUONG.length) return false; // chỉ nhập vào tin đầy đủ
     for (const k of TRUONG) {
       if (thieu.f[k] == null) continue;
       if (du.f[k] == null || gt(du.f[k]) !== gt(thieu.f[k])) return false;

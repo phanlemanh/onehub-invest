@@ -23,7 +23,8 @@ PY
   else echo "ĐỎ: thước mù — đột biến «$1» không làm đỏ ô «$4»"; grep -E "^✖ " /tmp/gt5-dot.$$ | head -3; RC=1; fi
 }
 dot_bien "gộp khác người cùng chữ" 'const k1 = nguoi ? `${nguoi}|${chu}` : `bai:${it.post.post_id}`;' 'const k1 = chu;' "GT5-AC-2 ô 4"
-dot_bien "bỏ người khỏi khoá tầng hai" 'const k2 = [b.nguoi, gt(b.f.loai)' 'const k2 = ["*", gt(b.f.loai)' "GT5-AC-3 khác đúng trường người"
+dot_bien "bỏ người khỏi khoá tầng hai" '? [b.nguoi, gt(b.f.loai)' '? ["*", gt(b.f.loai)' "GT5-AC-3 khác đúng trường người"
+dot_bien "ô trống bằng ô trống ở tầng hai (lỗi mẫu một)" 'const k2 = du(b.f) ? [' 'const k2 = true ? [' "GT5-AC-4 hai bản chữ cùng thiếu trường"
 dot_bien "cho bắc cầu (nhập khi có từ một ứng viên)" 'if (ung.length === 1) t.vao = ung[0];' 'if (ung.length >= 1) t.vao = ung[0];' "GT5-AC-4 hai ứng viên"
 dot_bien "bỏ chặn dạng bài" 'if (it.dangBai != null && it.dangBai !== "mot_can")' 'if (false)' "GT5-AC-8 bài rổ hàng"
 rm -f /tmp/gt5-ham.$$ /tmp/gt5-dot.$$

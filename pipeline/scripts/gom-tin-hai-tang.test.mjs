@@ -83,6 +83,19 @@ test("GT5-AC-4 ngưỡng mặc định 0,9 và cửa sổ mặc định 7 ngày"
   assert.equal(soTin([bai({ text: DU }), thieuDt()]), 2);
 });
 
+test("GT5-AC-4 hai bản chữ cùng thiếu trường («?» = «?») không tự khớp ở tầng hai → 2 tin", () => {
+  // Thiết kế §2: bản chữ thiếu trường chỉ nhập vào tin ĐẦY ĐỦ qua luật 7 ngày, đúng một ứng viên, chữ giống từ 0,9.
+  // Ca từ mẫu giữ riêng một: môi giới đăng hai căn khác nhau cùng giá, cùng số phòng, cùng không ghi diện tích, mã, phân khu.
+  const a = bai({ text: "Cho thuê căn 2pn full đồ view hồ giá 11tr", kind: "rent_lt", gia: 11e6, dt: null });
+  const b = bai({ text: "Cho thuê căn 2pn nội thất cơ bản view nội khu giá 11tr", kind: "rent_lt", gia: 11e6, dt: null });
+  assert.equal(soTin([a, b]), 2);
+});
+test("GT5-AC-4 bản chữ thiếu trường không nhập vào tin cũng thiếu trường, dù chữ giống", () => {
+  const a = bai({ text: "Cho thuê căn 2pn full đồ view hồ giá 11tr nhà mới", kind: "rent_lt", gia: 11e6, dt: null });
+  const b = bai({ text: "Cho thuê căn 2pn full đồ view hồ giá 11tr nhà mới tinh", kind: "rent_lt", gia: 11e6, dt: null });
+  assert.equal(soTin([a, b], { nguongChu: 0 }), 2);
+});
+
 // ---- AC-5: phân khu không bao giờ chung tin ----
 test("GT5-AC-5 hai phân khu khác, cả hai không rỗng, mọi trường khác khớp → 2 tin", () =>
   assert.equal(soTin([bai({ text: "Bán ori S1006 2pn 69m2 giá 3,2 tỷ" }), bai({ text: "Bán rb S1006 2pn 69m2 giá 3,2 tỷ" })]), 2));
