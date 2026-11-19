@@ -1,0 +1,93 @@
+schema_version: 1
+slug: can-gia-tot-loc-xep-hang
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-1
+    paths: [app/src/lib/deals.ts, app/src/lib/deals-chi-tiet.ts, app/tests/deals-loc-xep-hang*]
+    expected: "Trên DB của riêng lượt, tập viết trước đủ bốn nhóm: danh sách mã trả về bằng đúng danh sách viết tay theo thứ tự AC-1. Đột biến trong bản sao câu truy vấn (bỏ ưu tiên cấp dự án; đảo chiều hạng phần trăm) đỏ, thông điệp nêu mã tin đầu tiên lệch."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-2
+    paths: [app/src/lib/deals-chi-tiet.ts, app/src/components/ops/deals-cells.tsx, app/src/components/ops/deals-grid.tsx, app/tests/deals-loc-xep-hang*]
+    expected: "Năm dòng viết trước, một assert mỗi dòng trên HTML dựng thật: nhãn, tên nhóm, số căn, lý do lùi cấp, độ tin đúng; dòng thuê có «tr/tháng» và không có «tr/m²»; đối chứng: dòng không có lý do lùi cấp thì không có chữ lý do."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-3
+    paths: [app/src/lib/deals.ts, app/src/lib/deals-chi-tiet.ts, app/tests/deals-loc-xep-hang*]
+    expected: "Tập 37 căn với số viết tay từng tab: bốn số đúng, Tất cả = tổng ba tab, dòng của vai Người xem mang đúng tab theo luật đầy đủ. Đột biến đếm trong trang thay vì toàn tập đỏ, thông điệp nêu tab lệch."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-4
+    paths: [app/src/lib/deals.ts, app/src/app/ops/deals/page.tsx, app/tests/deals-loc-xep-hang*]
+    expected: "37 căn, cỡ 15, có căn hai tin nằm ở biên trang: với mỗi tab × vai Người xem, Vận hành × lược đồ máy thu, cloud, hợp mọi trang đúng bằng số trên tab, không trùng, không sót, mỗi trang đủ 15 căn phân biệt trừ trang cuối; ma trận tham số viết trước (page=0, -1, abc, 999, size=7, size=abc) mỗi ô một assert; ?can= của căn ở trang 3 khi đang ở trang 1 vẫn mở được căn. Đột biến lọc tab sau khi đã cắt trang đỏ, thông điệp nêu tab lệch."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-5
+    paths: [app/src/lib/deals.ts, app/src/app/ops/deals/page.tsx, app/src/components/ops/deals-grid.tsx, app/tests/deals-loc-xep-hang*]
+    expected: "Ma trận viết trước: tỉnh, phường, dự án, dự án trải hai phường, căn gắn thẳng tỉnh, mã lạ, cây × kind × type; mỗi ô một assert về tập mã và số đếm; số trên mục cây bằng số căn khi chọn mục đó; tổng các tỉnh bằng tổng tập; ?project=<id> cho cùng tập với chọn dự án trên cây. Đột biến coi căn gắn thẳng tỉnh là thuộc mọi phường đỏ."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-6
+    paths: [app/src/lib/deals.ts, app/src/lib/deals-chi-tiet.ts, app/tests/deals-loc-xep-hang*]
+    expected: "Ma trận kind × type × vị trí viết trước, mỗi ô một assert về tập mã; không tham số thì chỉ tin bán; tin thuê thiếu m² có mặt và mang thước gia-thang-pn; kind=abc, type=abc bị bỏ qua. Đột biến bỏ điều kiện kind đỏ."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-7
+    paths: [app/src/app/ops/deals/page.tsx, app/src/app/ops/deals/loading.tsx, app/src/components/ops/deals-grid.tsx, app/tests/deals-loc-xep-hang*]
+    expected: "Mỗi trạng thái ST-deals-* một ca trên HTML dựng thật: đúng chữ và đúng nút; ba ca trống và ca lỗi vẫn có thanh lọc; đối chứng: có dữ liệu thì không có chữ trạng thái trống."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-8
+    paths: [app/src/lib/deals.ts, app/src/app/ops/deals/page.tsx, app/src/components/ops/deals-grid.tsx, app/tests/deals-loc-xep-hang*]
+    expected: "Dữ liệu trang 1 và trang 2 của vai Người xem, có lọc và không lọc: không có khoá nào mang giá trị tên, SĐT, ảnh, chữ bài, địa chỉ dưới phường đã cấy trong fixture; vai Vận hành có đủ (đối chứng dương cùng fixture). Vai Người xem mở căn ngoài trang: dữ liệu sau bước lọc theo vai, đúng phần trang gửi xuống trình duyệt, không chứa các giá trị đã cấy; vai Vận hành có (đối chứng dương). HTML của vai Người xem không có tiêu đề «Gọi ai», của vai Vận hành có. Lược đồ cloud: danh sách, số đếm, phân trang chạy, mayThu = false, nhánh danh sách theo trang mang đúng câu «Ảnh, chữ bài chỉ có ở máy thu». Đột biến bỏ bước lọc theo vai đỏ, thông điệp nêu trường lộ."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: script
+    cmd: bash _acceptance/can-gia-tot-loc-xep-hang/probes/doc.sh AC-9
+    paths: [app/src/app/ops/deals/page.tsx, app/src/components/ops/deals-cells.tsx, app/src/components/ops/deal-body.tsx, app/src/lib/deals-chi-tiet.ts, app/tests/deals-loc-xep-hang*]
+    expected: "HTML dựng thật của bảng danh sách và đầu trang: không chứa «thước phường», không chứa câu mô tả cũ; 33.7 hiện thành «33,7»; cột nguồn chỉ khớp mẫu S0x. Đối chứng: chèn lại «thước phường» vào bản sao chuỗi thì ca đỏ."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E12
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.suite.app
+    paths: [app/src/**]
+    expected: "Typecheck và lint của app sạch, gồm luật onehub-ui."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E13
+    criterion: AC-9
+    executor: script
+    cmd: bash _acceptance/can-gia-tot-loc-xep-hang/probes/design-gate.sh
+    paths: [app/src/app/ops/deals/page.tsx, app/src/components/ops/deals-grid.tsx, app/src/components/ops/deals-cells.tsx]
+    expected: "exit 0; design gate chạy lần lượt trên ba tệp giao diện của vòng (thanh lọc đã gộp vào deals-grid.tsx), mỗi lần verdict PASS, không P0"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E14
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.design.floor
+    paths: [app/src/app/ops/deals/**, app/src/components/ops/deals-*.tsx]
+    expected: "exit 0; sàn thiết kế bậc M1 không báo hex thô mới trên tệp giao diện vòng chạm"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

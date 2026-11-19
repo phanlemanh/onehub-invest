@@ -1,0 +1,153 @@
+// thuoc-tinh-can-s16.test.mjs — hồ sơ thuoc-tinh-can-s16 (DA40): ca «TTC-AC-3» (luật nguồn → phát biểu, ma trận viết trước)
+// và «TTC-AC-8» (thuộc tính, giá S16 không rời máy). Không DB. Chạy: bash _acceptance/thuoc-tinh-can-s16/probes/kiem.sh ham
+// Dòng mẫu theo khuôn cột của migration 113 (bộ ghi thật là bộ nạp của làn thu — giới hạn khai ở Notes của hợp đồng).
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
+import { copyFileSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+
+const TEP_LOI = join(dirname(fileURLToPath(import.meta.url)), "../lib/thuoc-tinh-can-s16.mjs");
+const GOC = join(dirname(fileURLToPath(import.meta.url)), "../..");
+const TRUONG_DU = ["living_area", "building_area_total", "lot_size_area", "bedrooms", "bathrooms", "property_type", "direction_faces"];
+/** Trọn phát biểu của dòng mẫu D() — mỗi ô chỉ khai phần khác (`f` và `khac`), nên phát biểu thừa ở trường khác cũng làm ô đỏ. */
+const NEN = { living_area: ["68.5"], building_area_total: ["74.9"], lot_size_area: [], bedrooms: ["2"], bathrooms: ["1"], property_type: ["apartment"], direction_faces: ["southeast"] };
+
+const D = (o = {}) => ({ du_an: "da-q", toa: "T1", ma_can: "Q1", dong: 0, height_type: "HIGH_RISE", property_type: "APARTMENT",
+  bedroom: 2, bathroom: 1, direction: "", balcony_direction: "SE", area_using: 68.5, area_building: 74.9, ...o });
+const lay = (kq, f) => kq.phat.filter((p) => p.field === f).map((p) => p.value);
+const lyDo = (kq, f) => kq.bo.find((b) => b.field === f)?.ly_do ?? null;
+
+/** Ma trận viết trước: mỗi ô một dòng, một mong đợi (trường, giá trị phát biểu, lý do bỏ). */
+export const MA_TRAN = [
+  ...[["APARTMENT", "apartment"], ["PENT_HOUSE", "apartment"], ["ROW_HOUSE", "house"], ["SEMI_DETACHED_VILLA", "house"],
+    ["DETACHED_VILLA", "house"], ["QUADRUPLE_VILLA", "house"], ["SHOP_HOUSE", "commercial"], ["ROW_SHOP_HOUSE", "commercial"],
+    ["SEMI_DETACHED_SHOP", "commercial"], ["DETACHED_SHOP", "commercial"], ["COMMERCIAL_SERVICE", "commercial"]]
+    .map(([m, v]) => ({ o: `loai-${m}`, d: D({ property_type: m }), f: "property_type", gt: [v], ld: null })),
+  { o: "loai-UNDEF", d: D({ property_type: "UNDEF" }), f: "property_type", gt: [], ld: "undef" },
+  { o: "loai-ma-la", d: D({ property_type: "CASTLE" }), f: "property_type", gt: [], ld: "ma-la" },
+  { o: "dt-duong", d: D({ area_using: 69.9 }), f: "living_area", gt: ["69.9"], ld: null },
+  { o: "dt-0", d: D({ area_using: 0 }), f: "living_area", gt: [], ld: "khong-duong" },
+  { o: "dt-thieu", d: D({ area_using: null }), f: "living_area", gt: [], ld: "trong" },
+  { o: "tt-duong", d: D({ area_building: "74.90" }), f: "building_area_total", gt: ["74.9"], ld: null },
+  { o: "dat-thap-tang", d: D({ height_type: "LOW_RISE", area_building: 84 }), f: "lot_size_area", gt: ["84"], ld: null, khac: { building_area_total: [], direction_faces: [] } },
+  { o: "tt-thap-tang-khong-tim-tuong", d: D({ height_type: "LOW_RISE", area_building: 84 }), f: "building_area_total", gt: [], ld: null, khac: { lot_size_area: ["84"], direction_faces: [] } },
+  { o: "pn-duong", d: D({ bedroom: 3 }), f: "bedrooms", gt: ["3"], ld: null },
+  { o: "pn-0", d: D({ bedroom: 0 }), f: "bedrooms", gt: [], ld: "bang-0" },
+  { o: "wc-duong", d: D({ bathroom: 2 }), f: "bathrooms", gt: ["2"], ld: null },
+  { o: "wc-0", d: D({ bathroom: 0 }), f: "bathrooms", gt: [], ld: "bang-0" },
+  { o: "huong-cao-tang", d: D({ height_type: "HIGH_RISE", balcony_direction: "NE", direction: "SW" }), f: "direction_faces", gt: ["northeast"], ld: null },
+  { o: "huong-thap-tang", d: D({ height_type: "LOW_RISE", balcony_direction: "NE", direction: "SW" }), f: "direction_faces", gt: ["southwest"], ld: null, khac: { building_area_total: [], lot_size_area: ["74.9"] } },
+  { o: "huong-N_E", d: D({ balcony_direction: "N_E" }), f: "direction_faces", gt: ["northeast"], ld: null },
+  { o: "huong-NORTH", d: D({ balcony_direction: "NORTH" }), f: "direction_faces", gt: ["north"], ld: null },
+  { o: "huong-hai-ma", d: D({ balcony_direction: "NE_NW" }), f: "direction_faces", gt: ["northeast", "northwest"], ld: null },
+  { o: "huong-lap", d: D({ balcony_direction: "NE_NE" }), f: "direction_faces", gt: ["northeast"], ld: null },
+  { o: "huong-OTHER", d: D({ balcony_direction: "OTHER" }), f: "direction_faces", gt: [], ld: "huong-other" },
+  { o: "huong-trong", d: D({ balcony_direction: "" }), f: "direction_faces", gt: [], ld: "huong-trong" },
+  { o: "huong-ma-la", d: D({ balcony_direction: "XYZ" }), f: "direction_faces", gt: [], ld: "huong-ma-la" },
+  { o: "huong-cao-thap-trong", d: D({ height_type: null }), f: "direction_faces", gt: [], ld: "khong-ro-cao-thap", khac: { building_area_total: [] } },
+];
+
+/** Ô hỏng của ma trận dưới một bản lõi; [] khi mọi ô đúng. */
+function kiemMaTran(loi) {
+  const hong = [];
+  for (const c of MA_TRAN) {
+    const kq = loi.phatBieuTuDong(c.d);
+    const mongDoi = { ...NEN, [c.f]: c.gt, ...c.khac };
+    const dung = TRUONG_DU.every((f) => JSON.stringify(lay(kq, f)) === JSON.stringify(mongDoi[f]));
+    const ngoai = kq.phat.some((p) => !TRUONG_DU.includes(p.field));
+    if (!dung || ngoai || lyDo(kq, c.f) !== c.ld) hong.push(c.o);
+  }
+  return hong;
+}
+
+/** Bản sao của lõi có một chỗ phá, nạp từ thư mục tạm. */
+async function loiPha(tu, sang) {
+  const src = readFileSync(TEP_LOI, "utf8");
+  assert.ok(src.includes(tu), `TTC chỗ phá không còn trong lõi: ${tu}`);
+  const dir = mkdtempSync(join(tmpdir(), "ttc-pha-"));
+  const tep = join(dir, "loi.mjs");
+  writeFileSync(tep, src.replace(tu, sang).replace('"./vocab.generated.mjs"', JSON.stringify(pathToFileURL(join(dirname(TEP_LOI), "vocab.generated.mjs")).href)));
+  try { return await import(pathToFileURL(tep).href); } finally { rmSync(dir, { recursive: true, force: true }); }
+}
+
+test("TTC-AC-3 ma trận nguồn → phát biểu: mọi ô đúng, số ô = số mong đợi", async () => {
+  const loi = await import(pathToFileURL(TEP_LOI).href);
+  assert.equal(MA_TRAN.length, 13 + 6 + 4 + 10, "TTC-AC-3 số ô ma trận đổi mà không cập nhật");
+  assert.deepEqual(kiemMaTran(loi), [], "TTC-AC-3 ô sai");
+  // không bao giờ phát biểu tầng hay giá
+  const kq = loi.phatBieuTuDong({ ...D(), floor_number: "12", sale_price: 2_000_000_000 });
+  assert.deepEqual(kq.phat.filter((p) => !["living_area", "building_area_total", "lot_size_area", "bedrooms", "bathrooms", "property_type", "direction_faces"].includes(p.field)), [],
+    "TTC-AC-3 phát biểu ngoài sáu trường");
+});
+
+test("TTC-AC-3 chiều đỏ: lấy hướng cửa cho cao tầng → ô huong-cao-tang đỏ; coi PN 0 là hợp lệ → ô pn-0 đỏ", async () => {
+  const p1 = await loiPha('cao === "HIGH_RISE" ? r.balcony_direction : r.direction', 'cao === "HIGH_RISE" ? r.direction : r.balcony_direction');
+  assert.ok(kiemMaTran(p1).includes("huong-cao-tang"), "TTC-AC-3 phá hướng mà ô cao tầng không đỏ");
+  const p2 = await loiPha("Number.isInteger(v) && v > 0", "Number.isInteger(v) && v >= 0");
+  assert.ok(kiemMaTran(p2).includes("pn-0"), "TTC-AC-3 phá PN 0 mà ô pn-0 không đỏ");
+  // phát biểu thừa ở trường khác trường của ô: căn cao tầng bị gán diện tích đất
+  const p3 = await loiPha("const lh = String(r.property_type", 'if (cao === "HIGH_RISE" && so(r.area_building) > 0) phat.push({ field: F.lot_size_area, value: chuoiSo(so(r.area_building)) });\n  const lh = String(r.property_type');
+  assert.ok(kiemMaTran(p3).includes("loai-APARTMENT"), "TTC-AC-3 phát biểu thừa lot_size_area cho cao tầng mà ma trận không đỏ");
+});
+
+test("TTC-AC-3 gộp khoá: trùng cùng toà gộp một; mã ở hai toà đánh dấu nhieu_toa; khoá viết hoa", async () => {
+  const { gopKhoa, khoaCan } = await import(pathToFileURL(TEP_LOI).href);
+  const m = gopKhoa([D({ dong: 3 }), D({ dong: 1 }), D({ ma_can: "q2", toa: "A" }), D({ ma_can: "Q2", toa: "B", dong: 5 })]);
+  assert.equal(m.size, 2, "TTC-AC-3 số khoá");
+  const g1 = m.get(khoaCan("da-q", "Q1"));
+  assert.equal(g1.nhieu_toa, false, "TTC-AC-3 trùng cùng toà bị coi là hai toà");
+  assert.equal(g1.dong.dong, 1, "TTC-AC-3 dòng đại diện phải là dòng nhỏ nhất");
+  const g2 = m.get("da-q/Q2");
+  assert.equal(g2.nhieu_toa, true, "TTC-AC-3 mã hai toà không bị đánh dấu");
+  assert.deepEqual(g2.toa, ["A", "B"], "TTC-AC-3 danh sách toà");
+});
+
+test("TTC-AC-8 bảng nạp, phát biểu và hai view S16 không ở danh sách đẩy cloud; bộ soát bắt khi cấy", async () => {
+  const { FILL } = await import(pathToFileURL(join(GOC, "pipeline/sync-cloud.mjs")).href);
+  const { kiemBangDay } = await import(pathToFileURL(join(GOC, "pipeline/lib/s16-soat.mjs")).href);
+  const CAM = ["stg_s16_can_chi_tiet", "field_assertions", "v_unit_thuoc_tinh", "v_s16_gia_cdt"];
+  const ten = FILL.map((x) => (typeof x === "string" ? x : x.table ?? x.name ?? x[0]));
+  assert.deepEqual(ten.filter((t) => CAM.includes(t)), [], "TTC-AC-8 bảng/view S16 nằm trong FILL");
+  assert.equal(kiemBangDay([...ten, "stg_s16_can_chi_tiet"]), "stg_s16_can_chi_tiet", "TTC-AC-8 bộ soát không bắt bảng nạp cấy vào");
+  // chiều đỏ của phép giao: cấy view giá vào bản sao danh sách → phép giao phải thấy
+  assert.deepEqual([...ten, "v_s16_gia_cdt"].filter((t) => CAM.includes(t)), ["v_s16_gia_cdt"], "TTC-AC-8 phép giao không thấy view cấy");
+  // hàng này không sửa sync-cloud.mjs (so với điểm rẽ nhánh khỏi main; không có main thì bỏ vế này)
+  let base = null;
+  try { base = execFileSync("git", ["merge-base", "HEAD", "origin/main"], { cwd: GOC, encoding: "utf8" }).trim(); } catch { /* CI nông */ }
+  if (base) {
+    const doi = execFileSync("git", ["diff", "--name-only", base, "--", "pipeline/sync-cloud.mjs"], { cwd: GOC, encoding: "utf8" }).trim();
+    assert.equal(doi, "", "TTC-AC-8 hàng này sửa sync-cloud.mjs");
+  }
+});
+
+// ---- Thước E13 (TTC-AC-11): logic so ô, không DB ----
+const COT_E13 = ["noi", "living_area", "dien_tich_2", "bedrooms", "bathrooms", "direction_faces", "property_type", "gia_cdt"];
+const O_E13 = Object.fromEntries(COT_E13.map((k) => [k, 10]));
+const TEN_E13 = ["a", "b", "c", "d", "e"];
+const dauVaoE13 = () => ({
+  thang: TEN_E13.map((t) => ({ du_an: t, ...O_E13 })),
+  view: new Map(TEN_E13.map((t) => [t, { ...O_E13 }])),
+  chayThu: new Map(TEN_E13.map((t) => [t, { ...O_E13 }])),
+  bang: new Map(TEN_E13.map((t) => [t, { ...O_E13 }])),
+  luot1811: true,
+});
+
+test("TTC-AC-11 thước so đủ 5 dự án × 8 cột; dự án vắng, thiếu khối chạy thử, thiếu cột bảng phủ ca hay lệch một ô đều đỏ", async () => {
+  const { soCacO } = await import(pathToFileURL(join(GOC, "pipeline/tests/thuoc-tinh-can-s16-that.mjs")).href);
+  const dung = soCacO(dauVaoE13());
+  assert.deepEqual([dung.lech, dung.soO, dung.thieu], [0, 40, []], "TTC-AC-11 đầu vào đúng phải 0 ô lệch trên 40 ô");
+  const vang = dauVaoE13(); vang.thang = vang.thang.filter((r) => r.du_an !== "c");
+  const kqVang = soCacO(vang);
+  assert.ok(kqVang.lech >= 8 && kqVang.thieu.includes("c"), "TTC-AC-11 dự án vắng trong kết quả đếm mà thước không đỏ");
+  const khongKhoi = dauVaoE13(); khongKhoi.chayThu = new Map();
+  assert.ok(soCacO(khongKhoi).lech > 0, "TTC-AC-11 thiếu khối chạy thử mà thước không đỏ");
+  const thieuBang = dauVaoE13(); thieuBang.bang.delete("d");
+  assert.ok(soCacO(thieuBang).lech > 0, "TTC-AC-11 lượt 18/11 thiếu dòng bảng phủ ca mà thước không đỏ");
+  const lech = dauVaoE13(); lech.view.get("b").gia_cdt = 9;
+  assert.equal(soCacO(lech).lech, 1, "TTC-AC-11 lệch đúng một ô phải đếm đúng một ô");
+  const la = dauVaoE13(); la.thang.push({ du_an: "khong-trong-so", ...O_E13 });
+  assert.ok(soCacO(la).thieu.includes("khong-trong-so"), "TTC-AC-11 dự án ngoài khối chạy thử mà thước không báo");
+});
