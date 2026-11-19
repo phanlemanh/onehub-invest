@@ -59,7 +59,7 @@ try {
     const al = (await c.query("SELECT value FROM registry_aliases WHERE value ~* $1", [loc])).rows;
     out.bi_danh = al.filter((r) => trung16(r.value)).length;
     let cloud = 0;
-    for (const t of FILL.filter((x) => !/^airdna_/.test(x))) {
+    for (const t of FILL) {
       const rows = (await c.query(`SELECT row_to_json(t)::text j FROM ${t} t WHERE row_to_json(t)::text ~* $1`, [loc])).rows;
       cloud += rows.filter((r) => Object.values(JSON.parse(r.j)).some((v) => v != null && trung16(typeof v === "string" ? v : JSON.stringify(v)))).length;
     }
@@ -71,10 +71,11 @@ try {
   console.log(`S16 cờ false (đối chứng): nút dự án ${sai.out.nut_du_an} · bí danh ${sai.out.bi_danh} · dòng bảng cloud ${sai.out.dong_cloud}`);
   console.log(`S16 cờ true: nút dự án ${dung.out.nut_du_an} · bí danh ${dung.out.bi_danh} · dòng bảng cloud ${dung.out.dong_cloud}`);
   ok(dung.out.nut_du_an === 0 && dung.out.bi_danh === 0 && dung.out.dong_cloud === 0, "E6 cờ true: 0 chỗ bị coi nhầm là tên S16");
-  ok(sai.out.nut_du_an >= 8 && sai.out.bi_danh >= 100000, "E6 đối chứng cờ false: số trúng ≥ mốc trước (8 nút, 114.760 bí danh)");
+  ok(sai.out.nut_du_an >= 8 && sai.out.bi_danh >= 114760 && sai.out.dong_cloud >= 1320, "E6 đối chứng cờ false: số trúng ≥ mốc trước (8 nút, 114.760 bí danh, 1.320 dòng cloud)");
   const tk = tokensFromEntries ? tokensFromEntries(dung.es) : [];
   ok(Boolean(scanSourceNames(`ngõ ${s16.real_name} 3`, tk)), "E6 cấy cụm hai từ có dấu cách → bộ soát sync-cloud bắt");
-  ok((s16.source_ids ?? []).filter((x) => x.includes(".")).every((d) => Boolean(scanSourceNames(`tải ${d} xong`, tk))), "E6 cấy tên miền → bộ soát sync-cloud bắt");
+  const mien = (s16.source_ids ?? []).filter((x) => x.includes("."));
+  ok(mien.length >= 1 && mien.every((d) => Boolean(scanSourceNames(`tải ${d} xong`, tk))), "E6 cấy tên miền → bộ soát sync-cloud bắt");
 
   // E5: log job — dòng CHỈ từ đầu của định danh S05 che được vẫn bị lõi mới bắt (S05 không khai cờ)
   const es = dung.es;

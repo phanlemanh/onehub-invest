@@ -12,7 +12,7 @@ evals:
     criterion: AC-2
     executor: test
     cmd: bash _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/loi.sh
-    paths: [pipeline/lib/mask-source-names.mjs, app/src/lib/mask-source-names.ts, pipeline/scripts/mask-source-names.cases.json, pipeline/scripts/ops-nhan-ma-nguon.test.mjs, scripts/ops-nhan-ma-nguon.test.mjs]
+    paths: [pipeline/lib/mask-source-names.mjs, app/src/lib/mask-source-names.ts, pipeline/sync-cloud.mjs, pipeline/scripts/source-name-entries.itest.mjs, pipeline/scripts/mask-source-names.cases.json, pipeline/scripts/ops-nhan-ma-nguon.test.mjs, scripts/ops-nhan-ma-nguon.test.mjs]
     expected: "exit 0; mọi ca của mask-source-names.cases.json chạy trên CẢ hai bản lõi và hai bản ra cùng chuỗi. Ca mới viết trước, nguồn giả S90 tên hai từ (từ đầu ≥ 4 ký tự trùng thương hiệu của tên dự án giả «<Thương hiệu> Park»), định danh là tên miền có nhãn đầu là một từ chung: wholeOnly=true → «dự án <Thương hiệu> Park» giữ nguyên; câu chứa đúng từ chung giữ nguyên; cụm hai từ ở bốn dạng (đủ, hoa, bỏ dấu, viết liền) và ở sáu dấu phân tách (hai dấu cách, xuống dòng, dấu nối, gạch dưới, dấu chấm, dấu /, gồm dạng trong URL) thành S90 trên cả hai bản lõi, scanSourceNames của sync-cloud và maskedSourceExpr chạy thật trong SQL; tên miền thành S90. Đối chứng cùng câu, cờ vắng và cờ false → thương hiệu bị che thành S90. Mọi ca cũ (kể cả «từ đầu của tên nhiều từ» của S05) ra đúng chuỗi như trên origin/main (rút bằng chạy bản lõi git show origin/main, không viết tay). Chiều đỏ cùng fixture: bản sao lõi bỏ qua wholeOnly → ca «dự án <Thương hiệu> Park» đỏ ghim «AC-2 thương hiệu dự án bị che nhầm»."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3
@@ -61,15 +61,16 @@ evals:
     criterion: AC-4
     executor: test
     cmd: bash _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/db.sh
-    paths: [pipeline/sync-cloud.mjs, pipeline/push-ops-facts.mjs, pipeline/do-hang-ngay.mjs, pipeline/lib/do-hang-ngay.mjs, app/src/lib/mask-source-names.ts, app/src/lib/offers-public.ts, app/src/lib/collections-queries.ts, scripts/quet-ten-nguon-html.mjs, pipeline/lib/source-name-entries.mjs, pipeline/scripts/source-name-entries.itest.mjs]
+    paths: [pipeline/sync-cloud.mjs, pipeline/push-ops-facts.mjs, pipeline/do-hang-ngay.mjs, pipeline/lib/do-hang-ngay.mjs, app/src/lib/mask-source-names.ts, app/src/lib/offers-public.ts, app/src/lib/collections-queries.ts, scripts/quet-ten-nguon-html.mjs, pipeline/lib/source-name-entries.mjs, pipeline/scripts/source-name-entries.itest.mjs, app/tests/che-ten-cho-doc-app.test.tsx]
     expected: "exit 0; DB thử có dòng giả S90 (tên hai từ + tên miền + slug, match_whole=true). Ma trận viết trước, mỗi chỗ đọc ba ca — «<Thương hiệu> Park» qua; cụm hai từ bị che/chặn; tên miền bị che/chặn: sync-cloud (scanSourceNames + maskedSourceExpr chạy thật trong SQL: tên dự án không bị đặt NULL khi khai cờ, bị đặt NULL khi không); push-ops-facts chạy TỆP THẬT qua máy chủ thu giả (captureOpsFacts, DATABASE_URL = DB thử): bản tin có tên dự án được gửi (1 POST), bản tin không mang chuỗi «lumora» khi dòng log nêu cụm tên hay tên miền; do-hang-ngay (chuoiCam + chanLo trên DB thử); bản app của hàm nạp + lõi cho offers-public, collections-queries; hàm nạp pipeline + lõi cho quet-ten-nguon-html. Đối chứng mỗi chỗ: match_whole=false → tên dự án bị chặn/che như cũ. Chiều đỏ: hàm nạp rơi token định danh → ca slug S90 đỏ ghim «AC-4 chỗ đọc rơi token định danh». Hàm nạp ném lỗi khác thiếu bảng/thiếu cột thì cả hai bản đều ném (không đổi thành rỗng)."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4d
     criterion: AC-4
     executor: test
+    long_running: 60
     cmd: bash _acceptance/che-ten-nguon-khong-lay-tu-dau/probes/dong-chat.sh
     paths: [pipeline/sync-cloud.mjs, pipeline/push-ops-facts.mjs, pipeline/do-hang-ngay.mjs, pipeline/lib/source-name-entries.mjs]
-    expected: "exit 0; ba ca đóng chặt sẵn có, chạy lại trên mã mới: sync-cloud (check-cloud-sync pii — source_registry rỗng → dừng pha scan, 0 dòng staging; cấy định danh nguồn vào sale_offers, properties, sellers → dừng trước khi nạp), push-ops-facts (NT2-AC-5 — danh sách tên rỗng → chặn, 0 POST), do-hang-ngay (DO1-AC-9 — sổ rỗng → «LO TEN NGUON», không ghi)."
+    expected: "exit 0; ba ca đóng chặt sẵn có, chạy lại trên mã mới: sync-cloud (check-cloud-sync allow — source_registry rỗng → dừng pha scan, 0 dòng staging; cấy định danh nguồn vào sale_offers, properties, sellers → dừng trước khi nạp), push-ops-facts (NT2-AC-5 — danh sách tên rỗng → chặn, 0 POST), do-hang-ngay (DO1-AC-9 — sổ rỗng → «LO TEN NGUON», không ghi)."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E9
     criterion: AC-9

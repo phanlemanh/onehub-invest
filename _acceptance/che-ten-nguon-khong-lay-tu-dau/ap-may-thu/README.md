@@ -10,7 +10,6 @@
    - `psql … -f db/migrations/112_source_registry_match_whole.sql` (chạy lại không lỗi);
    - `node _acceptance/che-ten-nguon-khong-lay-tu-dau/ap-may-thu/tra-s16.mjs` — đọc tệp cục bộ, `UPDATE source_registry SET
      real_name, source_ids, match_whole = true WHERE code = 'S16'` trong một giao dịch, in số dòng đổi (phải 1), không in giá trị.
-   - Xoá tệp cục bộ sau khi áp xong.
 3. **Số chạy thử:** `chay-thu.md` — lượt E5/E6 trên bản chép DB máy thu (`discovery/do-ban-chep.mjs`), điền ở S4.
 4. **Cách lùi:** `bash khoi-phuc-s16.sh <tệp sao lưu>` (đặt lại dòng S16 đúng như bản sao lưu — dạng chữa tạm, không viết
    cứng giá trị) rồi `psql … -f lui-cot.sql` (bỏ cột), đúng thứ tự này vì bước khôi phục cần cột còn đó. Áp lại 112 được.
@@ -22,3 +21,4 @@
    - `node _acceptance/che-ten-nguon-khong-lay-tu-dau/discovery/do-ban-chep.mjs` trên bản chép mới: cờ true 0 chỗ trúng nhầm,
      cấy cụm hai từ và tên miền S16 → bộ soát bắt.
    Lệch số chạy thử → dừng, báo GS, không tự sửa cho khớp.
+6. **Xoá tệp tên thật cục bộ** ngay sau bước 5, vì lệnh kiểm sau cần tệp này. Phải lùi thì cũng xoá sau khi lùi xong.

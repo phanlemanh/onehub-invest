@@ -129,6 +129,17 @@ test("AC-4 sync-cloud: soát + che phía SQL — tên dự án qua khi khai cờ
   assert.equal(await sqlChe(tk, DU_AN), null, "đối chứng: không khai cờ thì che phía SQL như cũ");
 });
 
+test("AC-2 che phía SQL: cụm hai từ ở mọi dấu phân tách về NULL, thương hiệu nối dấu giữ nguyên", async () => {
+  await datCo(true);
+  const tk = tokensFromEntries(await docSourceNameEntries(c));
+  for (const v of ["lumora-thinh", "LUMORA_THINH", "lumora.thinh", "lumora/thinh", "Lumora  Thịnh", "Lumora\nThịnh", "https://x.vn/lumora-thinh/p1"]) {
+    assert.ok(scanSourceNames(v, tk), `AC-2 bộ soát bỏ lọt dạng thứ ${v.length}`);
+    assert.equal(await sqlChe(tk, v), null, `AC-2 che phía SQL bỏ lọt dạng dài ${v.length}`);
+  }
+  assert.equal(await sqlChe(tk, "dự án Lumora-Park"), "dự án Lumora-Park", "AC-2 che phía SQL che nhầm thương hiệu nối dấu");
+  assert.equal(scanSourceNames("dự án Lumora-Park", tk), null, "AC-2 bộ soát chặn nhầm thương hiệu nối dấu");
+});
+
 test("AC-4 push-ops-facts THẬT (bộ soát bản tin; ops-local nhận names từ đây): tên dự án gửi được khi khai cờ, cụm tên chặn", async () => {
   const day = (dong) => ({ "airdna-daily.log": `2026-11-18T01:00:00 bắt đầu\n2026-11-18T01:01:00 ${dong}\n` });
   const chay = (dong) => captureOpsFacts({ logs: day(dong), env: { DATABASE_URL: URL_THU } });
@@ -136,14 +147,19 @@ test("AC-4 push-ops-facts THẬT (bộ soát bản tin; ops-local nhận names t
   const qua = await chay(DU_AN);
   assert.equal(qua.code, 0, `AC-4 push-ops-facts chặn nhầm tên dự án: ${qua.stderr.slice(0, 300).replace(/Lumora\S*/g, "…")}`);
   assert.equal(qua.posts, 1);
-  for (const dong of [`lỗi ${TEN}`, `lỗi ${MIEN}`]) {
+  assert.match(JSON.stringify(qua.payload), /dự án Lumora Park quận 9/, "AC-4 push-ops-facts che nhầm tên dự án trong bản tin");
+  for (const dong of [`lỗi ${TEN}`, `lỗi ${MIEN}`, "lỗi lumora-thinh"]) {
     const r = await chay(dong);
     const vet = JSON.stringify(r.payload ?? {});
-    assert.ok(r.posts === 0 || !/lumora/i.test(vet), "AC-4 push-ops-facts để lọt cụm tên/tên miền");
+    assert.ok(r.posts === 0 || !/lumora.?thinh|lumorathinh/i.test(vet.normalize("NFD").replace(/\p{M}/gu, "")), "AC-4 push-ops-facts để lọt cụm tên/tên miền");
   }
   await datCo(false);
   const cu = await chay(DU_AN);
-  assert.ok(cu.posts === 0 || !/Lumora Park/.test(JSON.stringify(cu.payload ?? {})), "đối chứng không cờ: thương hiệu bị che/chặn như cũ");
+  // Không khai cờ thì bộ soát bản tin có thể chặn cả bản tin (0 lời gọi); còn gửi thì thương hiệu phải đã thành mã.
+  if (cu.posts > 0) {
+    assert.doesNotMatch(JSON.stringify(cu.payload), /Lumora Park/, "đối chứng không cờ: thương hiệu bị che như cũ");
+    assert.match(JSON.stringify(cu.payload), /S90 Park/, "đối chứng không cờ: thương hiệu thay bằng mã");
+  } else assert.notEqual(cu.code, 0, "đối chứng không cờ: bị chặn thì phải thoát khác 0");
 });
 
 test("AC-4 do-hang-ngay (chuỗi cấm từ hàm nạp mang cờ vào bộ soát)", async () => {
@@ -166,6 +182,19 @@ test("AC-4 offers-public, collections-queries, quet-ten-nguon-html (bản app + 
   const pe = await docSourceNameEntries(c);
   assert.equal(pipeLoi.findSourceNames(DU_AN, pe).length, 0);
   assert.ok(pipeLoi.findSourceNames(`<td>${MIEN}</td>`, pe).length >= 1);
+});
+
+test("AC-4 quet-ten-nguon-html (hàm quét thật): tên dự án không bị báo khi khai cờ, cụm tên và tên miền bị báo; đối chứng cờ false", async () => {
+  const { quetHtml } = await import("../../scripts/quet-ten-nguon-html.mjs");
+  const trang = (chu) => `<html><head><title>x</title></head><body><h1>${chu}</h1></body></html>`;
+  const co = (r) => Object.keys(r.hien ?? {}).includes("S90");
+  await datCo(true);
+  const es = await docSourceNameEntries(c);
+  assert.equal(co(quetHtml(trang(DU_AN), es)), false, "AC-4 quet-ten-nguon-html báo nhầm tên dự án");
+  assert.equal(co(quetHtml(trang(`cron ${TEN}`), es)), true, "AC-4 quet-ten-nguon-html bỏ lọt cụm tên");
+  assert.equal(co(quetHtml(trang(`tải ${MIEN}`), es)), true, "AC-4 quet-ten-nguon-html bỏ lọt tên miền");
+  await datCo(false);
+  assert.equal(co(quetHtml(trang(DU_AN), await docSourceNameEntries(c))), true, "đối chứng không cờ: thương hiệu bị báo như cũ");
 });
 
 test("AC-4 chiều đỏ: hàm nạp lọc bỏ token định danh → ca tên miền đỏ ghim «AC-4 chỗ đọc rơi token định danh»", async () => {

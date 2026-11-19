@@ -43,6 +43,18 @@ describe("NT2-AC-6 một bộ soát", () => {
   });
 });
 
+describe("che-ten AC-4: guardValues với dòng khai khớp nguyên cụm (tải giả)", () => {
+  const co = (wholeOnly) => [{ code: "S90", realName: "Lumora Thịnh", wholeOnly }, { code: "S90", realName: "market.lumorathinh.vn", wholeOnly }];
+  test("tên dự án mang thương hiệu: 0 chỗ trúng khi khai cờ, ≥ 1 khi không khai", () => {
+    assert.equal(guardValues({ a: ["dự án Lumora Park"] }, co(true)).length, 0);
+    assert.ok(guardValues({ a: ["dự án Lumora Park"] }, co(false)).length >= 1);
+  });
+  for (const v of ["cron Lumora Thịnh", "tải market.lumorathinh.vn", "lumora-thinh"]) test(`cụm tên hay tên miền bị bắt ở cả hai trạng thái cờ (dài ${v.length})`, () => {
+    assert.ok(guardValues({ a: v }, co(true)).length >= 1);
+    assert.ok(guardValues({ a: v }, co(false)).length >= 1);
+  });
+});
+
 // ---- AC-1…AC-5, AC-10: push-ops-facts THẬT (và bản sao đột biến) chạy qua máy chủ thu tạm ----
 const LOGS = () => ({
   "airdna-daily.log": `2026-10-24T19:05:00 bắt đầu\n2026-10-24T19:06:00 ${name("S02")} rotation xong 6 market\n`,
