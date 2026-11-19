@@ -19,8 +19,8 @@ import { NGAY_TOI_DA, NGUONG_VAO_PCT } from "@/lib/deals-chi-tiet";
 import { docThamSoDeal, type ThamSoDeal } from "@/lib/deals-chi-tiet";
 import { canAccessOps, xemNoiDungTin } from "@/lib/ops-access";
 import { loadPendingUnitMatches } from "@/lib/ops/review-cho-ghep";
-
-import { layCanCungTieuChi } from "./actions";
+// Đường tuyệt đối: các ca test chép trang ra thư mục khác vẫn nạp được action.
+import { layCanCungTieuChi } from "@/app/ops/deals/actions";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Căn giá tốt" };

@@ -137,7 +137,7 @@ async function napChep(rel: string, thay?: Thay) {
   assert.ok(ma.includes(DONG_PHIEN), `bản chép ${rel} không áp được bước đọc phiên`);
   if (thay) { assert.ok(ma.includes(thay.tu), `đột biến không áp được: ${thay.tu}`); ma = ma.replace(thay.tu, thay.thanh); }
   ma = ma.replace(DONG_PHIEN, `const getSessionUser = async () => { const v = (globalThis as { __cg17Vai?: string | null }).__cg17Vai; return v ? ({ id: 1, email: v + "@cg17.test", role: v }) as never : null; };`)
-    .replace(`"use server";`, "").replace(`from "./actions"`, `from "${pathToFileURL(join(APP, "src/app/ops/deals/actions.ts")).href}"`);
+    .replace(`"use server";`, "");
   if (dotBienUrl) ma = ma.replaceAll(`from "@/lib/deals"`, `from "${dotBienUrl}"`);
   mkdirSync(CHEP, { recursive: true });
   const f = join(CHEP, `tep-${++nChep}.tsx`);

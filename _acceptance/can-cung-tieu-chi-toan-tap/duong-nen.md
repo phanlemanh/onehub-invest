@@ -1,0 +1,20 @@
+---
+slug: can-cung-tieu-chi-toan-tap
+at: 2026-11-19T11:19:03.871Z
+sha: 9c3686b903deebd9b5091b3be2588d8e0e891a66
+nen: do
+cong_cu: xanh
+suite: do
+luoi: xanh
+engine: xanh
+---
+
+## Dòng đỏ
+
+- nen suite: DO SAN executors.suite.app_ui ma 1
+- nen suite: DO SAN executors.suite.pipeline_a ma 1
+
+## Dòng vàng
+
+- nen luoi: 1 vi pham cua chinh vong (khong tinh)
+- VIOLATION [can-cung-tieu-chi-toan-tap]: status=implemented but no evidence-report.md

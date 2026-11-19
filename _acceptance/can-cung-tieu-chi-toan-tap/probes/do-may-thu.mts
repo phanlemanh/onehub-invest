@@ -102,7 +102,7 @@ try {
     const f = join(CHEP, "page.tsx");
     writeFileSync(f, `import React from "react";\n` + readFileSync(join(APP, "src/app/ops/deals/page.tsx"), "utf8")
       .replace(dong, `const getSessionUser = async () => ({ id: 1, email: "admin@do.test", role: "admin" }) as never;`)
-      .replace(`from "./actions"`, `from "${pathToFileURL(join(APP, "src/app/ops/deals/actions.ts")).href}"`));
+      );
     const trang = await import(pathToFileURL(f).href);
     const { AppRouterContext } = await import(pathToFileURL(join(APP, "node_modules/next/dist/shared/lib/app-router-context.shared-runtime.js")).href);
     const router = { refresh() {}, push() {}, replace() {}, back() {}, forward() {}, prefetch() {} };
