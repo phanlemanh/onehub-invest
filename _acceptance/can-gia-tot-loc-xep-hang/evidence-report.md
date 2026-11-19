@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: ba3febabca65d405c7afc0c232add9020f99d7ed
-human_signoff:
+human_signoff: Mạnh 2026-11-19
 ---
 
 # Evidence Report: can-gia-tot-loc-xep-hang

@@ -5,7 +5,7 @@ slug: can-gia-tot-loc-xep-hang
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui, api]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-19
 design_doc: docs/superpowers/specs/2026-11-18-can-gia-tot-loc-xep-hang-design.md
@@ -97,3 +97,10 @@ Quét theo khuôn ma trận kiểm thử. Số trong ô đếm từ DB máy thu 
 ## Notes
 
 - Mạnh đã chọn 18/11: căn Giá tốt cấp dự án lên đầu; đưa tin thuê vào, mặc định Bán; hoãn phân khu, toà, số phòng ngủ, diện tích, tầng, đường; đóng UI10; mọi vai đếm tab theo luật đầy đủ; nâng Next.js ở hàng riêng.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-19:
+  - Ngoài-1: Tham số URL `location`, `type` lệch từ vựng CONTEXT.md; gom vào lượt dọn từ vựng.
+  - Ngoài-2: Định nghĩa «Căn giá tốt» trong CONTEXT.md chưa có tin thuê.
+  - Ngoài-4: Chưa có bảng hạng thì màn bỏ mọi điều kiện URL mà tiêu đề vẫn ghi tên dự án.
+  - Ngoài-6: Đột biến AC-1 trên bản sao SQL chỉ assert khác, thiếu đối chứng dương.
+  - Ngoài-7: Đối chứng «có dòng» của AC-8 luôn đúng; assert «không lộ» có thể xanh trên danh sách rỗng.
+  - Ngoài-8: Phép so số trên cây vị trí lặp trên mục do sản phẩm sinh, chưa có ma trận viết trước.
