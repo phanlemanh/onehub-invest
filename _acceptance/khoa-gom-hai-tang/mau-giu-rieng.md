@@ -9,3 +9,10 @@
   (gitignored, máy thu).
 - Nhãn: Opus và Sonnet gom mù độc lập (Hỏi-2, Mạnh duyệt 20/11; ước chi phí < 1 USD, trần 3 USD). Nhãn = chỗ hai model đồng thuận.
 - Chấm MỘT lần sau Task 5; hụt ngưỡng thì báo, không chỉnh luật rồi chấm lại.
+
+## Chi phí thật của lượt gán nhãn (GS hỏi 20/11)
+
+- Hai lượt gán nhãn chạy bằng tác tử con của phiên Claude Code (model `opus`, `sonnet`), không qua khoá API trả theo token: **0 USD chi
+  thêm**, trong trần 3 USD của Hỏi-2.
+- Token tác tử con theo báo của phiên: Opus 128.744 (75 tin) + 110.365 (45 tin) = 239.109; Sonnet 125.285 + 107.931 = 233.216.
+- Thứ tự an toàn: quét `findSourceNames` trên toàn payload ra 0 TRƯỚC khi tác tử con đọc; tác tử chỉ được đọc đúng tệp payload đã che.
