@@ -211,7 +211,7 @@ const CHO_DOC = [
   "app/src/lib/offers-public.ts", "app/src/lib/collections-queries.ts", "scripts/quet-ten-nguon-html.mjs",
 ];
 // Câu SQL tự đọc tên/định danh từ sổ để dựng danh sách che: real_name hoặc source_ids trong cùng câu với FROM source_registry.
-const tuDocSo = (src) => /(real_name|source_ids)[^;`"]*FROM\s+source_registry/i.test(src);
+const tuDocSo = (src) => /(?:real_name|source_ids|\*)[^;`]*?\bFROM\s+(?:public\.)?"?source_registry\b/i.test(src);
 describe("che-ten AC-4 chỗ đọc qua hàm nạp chung", () => {
   const REPO_GOC = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
   test("AC-4 sáu chỗ đọc không còn tự đọc real_name/source_ids từ source_registry; mỗi chỗ gọi hàm nạp chung", () => {
@@ -221,8 +221,8 @@ describe("che-ten AC-4 chỗ đọc qua hàm nạp chung", () => {
       assert.match(src, /docSourceNameEntries/, `AC-4 ${f} không gọi hàm nạp chung`);
     }
   });
-  test("AC-4 chiều đỏ: chèn một câu SELECT real_name FROM source_registry vào bản sao → đỏ ghim «AC-4 chỗ đọc tự dựng danh sách che»", () => {
-    const src = readFileSync(path.join(REPO_GOC, CHO_DOC[0]), "utf8") + '\nconst x = "SELECT code, real_name FROM source_registry";\n';
+  for (const cau of ["SELECT code, real_name FROM source_registry", "SELECT real_name FROM public.source_registry", "SELECT * FROM source_registry", 'SELECT source_ids FROM "source_registry"']) test(`AC-4 chiều đỏ: chèn câu tự đọc sổ vào bản sao → đỏ ghim «AC-4 chỗ đọc tự dựng danh sách che» (${cau.length})`, () => {
+    const src = readFileSync(path.join(REPO_GOC, CHO_DOC[0]), "utf8") + `\nconst x = \`${cau}\`;\n`;
     assert.throws(() => assert.equal(tuDocSo(src), false, `AC-4 chỗ đọc tự dựng danh sách che: ${CHO_DOC[0]}`),
       /AC-4 chỗ đọc tự dựng danh sách che/);
   });

@@ -29,11 +29,16 @@ const VUNG = [
   "pipeline/scripts/source-name-entries.itest.mjs", "pipeline/scripts/do-hang-ngay.test.mjs", "scripts/ops-nhan-ma-nguon.test.mjs",
   ".acceptance-runs/che-ten-nguon-khong-lay-tu-dau",
 ];
+// Mọi tệp nhánh này thêm hay sửa so với nhánh chính, để tệp test mới không rơi ngoài phạm vi dò.
+const goc = execFileSync("git", ["merge-base", "HEAD", "origin/main"], { cwd: ROOT, encoding: "utf8" }).trim();
+const tepNhanh = execFileSync("git", ["diff", "--name-only", "--diff-filter=d", goc, "HEAD"], { cwd: ROOT, encoding: "utf8" }).split("\n").filter(Boolean);
+if (tepNhanh.length < 10) { console.log("danh sách tệp của nhánh quá ngắn: phép dò không đủ phạm vi"); process.exit(3); }
 const tep = [];
 const TUY_CHON = ".acceptance-runs/che-ten-nguon-khong-lay-tu-dau"; // chưa có lượt chấm thì chưa có thư mục này
 for (const v of VUNG) if (v !== TUY_CHON && !existsSync(path.join(ROOT, v))) { console.log("gốc quét thiếu: phép dò không đủ phạm vi"); process.exit(3); }
 const di = (p) => { if (!existsSync(p)) return; const s = statSync(p); if (s.isDirectory()) for (const x of readdirSync(p)) di(path.join(p, x)); else tep.push(p); };
-for (const v of VUNG) di(path.join(ROOT, v));
+for (const v of [...VUNG, ...tepNhanh]) di(path.join(ROOT, v));
+tep.splice(0, tep.length, ...new Set(tep));
 // đối chứng dương ngay trong lượt: chuỗi mang một biến thể phải đếm ≥ 1
 const tam = mkdtempSync(path.join(tmpdir(), "khong-ten-that-"));
 try {
@@ -46,5 +51,4 @@ try {
 let tong = 0;
 for (const f of tep) { const n = demTrung(readFileSync(f, "utf8")); if (n) { tong += n; console.log(`TRÚNG ${n} · ${path.relative(ROOT, f)}`); } }
 console.log(`khong-ten-that: ${tep.length} tệp, ${bien.length} biến thể, ${tong} chỗ trúng — ${tong === 0 ? "ĐẠT" : "KHÔNG ĐẠT"}`);
-void execFileSync;
 process.exit(tong === 0 ? 0 : 1);

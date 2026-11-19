@@ -30,7 +30,7 @@ function cumTach(realName: string, wholeOnly: boolean | undefined): RegExp | nul
   if (!wholeOnly) return null
   const words = fold(realName.trim()).split(/[\s.\-_/]+/).filter(Boolean)
   if (words.length < 2) return null
-  return new RegExp(words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\const isWordChar = (c: string | undefined)")).join("[\\s.\\-_/]+"), "gu")
+  return new RegExp(words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, (m) => `\\${m}`)).join("[\\s.\\-_/]+"), "gu")
 }
 
 const isWordChar = (c: string | undefined) => c !== undefined && /[\p{L}\p{N}]/u.test(c)

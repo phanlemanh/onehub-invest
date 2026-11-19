@@ -355,6 +355,78 @@
           "wholeOnly": true
         }
       ]
+    },
+    {
+      "ten": "khớp nguyên cụm, tên có ký tự đặc biệt: dấu +",
+      "in": "tin lumora+-thinh nay",
+      "out": "tin S90 nay",
+      "names": [
+        {
+          "code": "S90",
+          "realName": "Lumora+ Thịnh",
+          "wholeOnly": true
+        }
+      ]
+    },
+    {
+      "ten": "khớp nguyên cụm, tên có ký tự đặc biệt: dấu +, gạch dưới",
+      "in": "tin lumora+_thinh nay",
+      "out": "tin S90 nay",
+      "names": [
+        {
+          "code": "S90",
+          "realName": "Lumora+ Thịnh",
+          "wholeOnly": true
+        }
+      ]
+    },
+    {
+      "ten": "khớp nguyên cụm, tên có ký tự đặc biệt: ngoặc",
+      "in": "tin lumora (thinh)  x",
+      "out": "tin S90  x",
+      "names": [
+        {
+          "code": "S90",
+          "realName": "Lumora (Thịnh)",
+          "wholeOnly": true
+        }
+      ]
+    },
+    {
+      "ten": "khớp nguyên cụm, tên có ký tự đặc biệt: ngoặc, dấu nối",
+      "in": "tin lumora-(thinh) x",
+      "out": "tin S90 x",
+      "names": [
+        {
+          "code": "S90",
+          "realName": "Lumora (Thịnh)",
+          "wholeOnly": true
+        }
+      ]
+    },
+    {
+      "ten": "khớp nguyên cụm, tên có ký tự đặc biệt: dấu sao",
+      "in": "tin lumora*/thinh x",
+      "out": "tin S90 x",
+      "names": [
+        {
+          "code": "S90",
+          "realName": "Lumora* Thịnh",
+          "wholeOnly": true
+        }
+      ]
+    },
+    {
+      "ten": "khớp nguyên cụm, tên có ký tự đặc biệt: dấu đô la",
+      "in": "tin lumora$.thinh x",
+      "out": "tin S90 x",
+      "names": [
+        {
+          "code": "S90",
+          "realName": "Lumora$ Thịnh",
+          "wholeOnly": true
+        }
+      ]
     }
   ]
 }

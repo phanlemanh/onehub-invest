@@ -51,7 +51,9 @@ try {
     await c.query("UPDATE source_registry SET match_whole = $1 WHERE code = 'S16'", [co]);
     const es = await docSourceNameEntries(c);
     const e16 = es.filter((e) => e.code === "S16");
-    const loc = e16.flatMap((e) => nameVariants(e.realName, { wholeOnly: e.wholeOnly })).filter((v) => v.length >= 4).map(rx).join("|");
+    // Lọc sơ bộ phải nhìn thấy mọi dạng lõi bắt: thêm cụm nhiều từ nối bằng dấu phân tách.
+    const cumTach = e16.filter((e) => e.wholeOnly).map((e) => fold(e.realName.trim()).split(/[\s.\-_/]+/).filter(Boolean)).filter((w) => w.length > 1).map((w) => w.map(rx).join("[[:space:]._/-]+"));
+    const loc = [...e16.flatMap((e) => nameVariants(e.realName, { wholeOnly: e.wholeOnly })).filter((v) => v.length >= 4).map(rx), ...cumTach].join("|");
     const trung16 = (s) => findSourceNames(s ?? "", es).some((h) => h.code === "S16");
     const out = {};
     const nut = (await c.query("SELECT name FROM asset_nodes WHERE node_type = 'project' AND name ~* $1", [loc])).rows;
@@ -74,6 +76,8 @@ try {
   ok(sai.out.nut_du_an >= 8 && sai.out.bi_danh >= 114760 && sai.out.dong_cloud >= 1320, "E6 đối chứng cờ false: số trúng ≥ mốc trước (8 nút, 114.760 bí danh, 1.320 dòng cloud)");
   const tk = tokensFromEntries ? tokensFromEntries(dung.es) : [];
   ok(Boolean(scanSourceNames(`ngõ ${s16.real_name} 3`, tk)), "E6 cấy cụm hai từ có dấu cách → bộ soát sync-cloud bắt");
+  const tu = fold(s16.real_name.trim()).split(/\s+/);
+  ok(["-", "_", ".", "/", "  "].every((d) => Boolean(scanSourceNames(`x ${tu.join(d)} y`, tk))), "E6 cấy cụm hai từ ở các dấu phân tách → bộ soát sync-cloud bắt");
   const mien = (s16.source_ids ?? []).filter((x) => x.includes("."));
   ok(mien.length >= 1 && mien.every((d) => Boolean(scanSourceNames(`tải ${d} xong`, tk))), "E6 cấy tên miền → bộ soát sync-cloud bắt");
 

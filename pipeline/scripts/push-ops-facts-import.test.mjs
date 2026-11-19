@@ -39,6 +39,8 @@ test("AC-10 đối chứng: chạy tệp làm lệnh chính → đúng 1 lời g
 test("AC-10 chạy khô --kho → 0 lời gọi", async () => {
   const r = await captureOpsFacts({ args: ["--kho"] });
   assert.equal(r.posts, 0);
+  assert.equal(r.code, 0, r.stderr.slice(0, 300));
+  assert.match(r.stdout, /ops-facts khô: sạch, 0 chỗ chặn/, "AC-10 --kho phải dựng xong bản tin");
 });
 
 test("AC-10 chạy qua symlink như launchd (~/dev/one-invest) → vẫn là lệnh chính, đúng 1 lời gọi", () => voiTam(async (dir) => {

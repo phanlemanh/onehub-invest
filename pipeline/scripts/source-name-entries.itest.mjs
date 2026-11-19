@@ -151,7 +151,13 @@ test("AC-4 push-ops-facts THẬT (bộ soát bản tin; ops-local nhận names t
   for (const dong of [`lỗi ${TEN}`, `lỗi ${MIEN}`, "lỗi lumora-thinh"]) {
     const r = await chay(dong);
     const vet = JSON.stringify(r.payload ?? {});
-    assert.ok(r.posts === 0 || !/lumora.?thinh|lumorathinh/i.test(vet.normalize("NFD").replace(/\p{M}/gu, "")), "AC-4 push-ops-facts để lọt cụm tên/tên miền");
+    if (r.posts === 0) {
+      assert.notEqual(r.code, 0, "AC-4 push-ops-facts không gửi mà vẫn thoát 0");
+      assert.match(r.stderr, /FACTS CHẶN/, "AC-4 push-ops-facts không gửi vì lý do khác bộ soát");
+    } else {
+      assert.doesNotMatch(vet, /lumora/i, "AC-4 push-ops-facts để lọt cụm tên/tên miền");
+      assert.match(vet, /lỗi S90/, "AC-4 push-ops-facts không thay cụm tên bằng mã");
+    }
   }
   await datCo(false);
   const cu = await chay(DU_AN);
@@ -159,7 +165,10 @@ test("AC-4 push-ops-facts THẬT (bộ soát bản tin; ops-local nhận names t
   if (cu.posts > 0) {
     assert.doesNotMatch(JSON.stringify(cu.payload), /Lumora Park/, "đối chứng không cờ: thương hiệu bị che như cũ");
     assert.match(JSON.stringify(cu.payload), /S90 Park/, "đối chứng không cờ: thương hiệu thay bằng mã");
-  } else assert.notEqual(cu.code, 0, "đối chứng không cờ: bị chặn thì phải thoát khác 0");
+  } else {
+    assert.notEqual(cu.code, 0, "đối chứng không cờ: bị chặn thì phải thoát khác 0");
+    assert.match(cu.stderr, /FACTS CHẶN/, "đối chứng không cờ: chỉ bộ soát mới được chặn");
+  }
 });
 
 test("AC-4 do-hang-ngay (chuỗi cấm từ hàm nạp mang cờ vào bộ soát)", async () => {
