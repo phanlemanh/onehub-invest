@@ -1,0 +1,13 @@
+{
+  "ghi_chu": "Ma trận phần tử job scripts của ci-test.yml (AC-1): mỗi phần tử «tuong-duong» hay «mien: lý do». Viết tay 17/11.",
+  "ci": {
+    "uses actions/checkout": "mien: worktree chấm đã là bản checkout của nhánh",
+    "uses actions/setup-node": "mien: Node của máy cùng bản chính 24 (AC-1 kiểm)",
+    "run: cài phụ thuộc": "mien: worktree chấm đã nối node_modules của checkout chính qua dung-worktree-cham.sh",
+    "run: kiểm cú pháp .mjs": "tuong-duong: nguyên văn run của job, bash -e như runner Linux khi job không khai shell",
+    "run: dựng DB trống từ migration": "tuong-duong: nguyên văn run của job, DATABASE_URL trỏ DB trống oneinvest_ci_scripts_<pid>",
+    "run: test": "tuong-duong: nguyên văn run của job (NODE_OPTIONS từ ci-can-du-lieu.mjs scripts, node --test scripts/*.test.mjs), CI=true",
+    "services.postgres.image": "tuong-duong: kartoza/postgis:17-3.5 — ảnh của container one-invest-db",
+    "services.postgres.env": "mien: DB trống dựng bằng createdb trong cùng server, cùng người dùng oneinvest"
+  }
+}

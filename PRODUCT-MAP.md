@@ -12,7 +12,7 @@ flowchart TD
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>20 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>204 việc"]
+  GB --> DG["Đã giao<br/>205 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>136 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
@@ -384,6 +384,7 @@ flowchart TD
 - Bảng staging stg_s08_inventory cho danh mục căn S08 (migration 040) (`stg-s08-inventory`)
 - Nạp ảnh Zalo N1 (meta.mediaFiles) xuống stg_zalo_posts.media_files (`stg-zalo-media-files`)
 - Lệnh sửa mã xã của danh bạ vật thể (danh-ba-vat-the --sua-xa) bỏ qua nút dự án ứng viên do thẻ luật S06 đúc, để lệnh vẫn chạy được sau khi áp thẻ luật S06 lên máy thu (`sua-xa-bo-nut-ung-vien`)
+- Một lệnh chạy trọn bộ test scripts/ theo đúng các bước job CI, ngoài khoá s4, ghi dòng tóm tắt vào run-log hồ sơ (`suite-scripts-vao-luot-cham`) — đã giao — máy thông, cửa veto còn mở
 - Khoá Data API Supabase prod — thu quyền anon/authenticated, bật RLS mọi bảng public (migration 037) (`supabase-lock-anon-rls`)
 - Bộ tách ô đường (khoaDuong, luật judge và thẻ duyệt) xử đúng năm lớp đầu vào bẩn có thật trong DB máy thu, và ca probe đo dữ liệu thật ra khỏi suite chung sang chỗ chạy có người đọc (`tach-o-duong-dau-vao-ban`)
 - ảnh mẫu snapshot trong các bộ test scripts/ có manifest, theo cổng «chỉ nạp snapshot đã ghi xong» của 2510-8 (`test-anh-mau-co-manifest`) — đã giao — máy thông, cửa veto còn mở

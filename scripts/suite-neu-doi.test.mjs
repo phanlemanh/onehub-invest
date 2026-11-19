@@ -1,12 +1,13 @@
 // Thước của scripts/suite-neu-doi.mjs (hồ sơ s4-suite-theo-vung). Không DB.
-import { test } from "node:test";
+import { after, test } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { VUNG, quyetDinh, trongVung } from "./suite-neu-doi.mjs";
+import { BUOC_CI, SHELL_CI, VUNG, boTongKet, buocSuite, dbMoCoi, lechMoiTruong, quyetDinh, tepBan, tomTatScripts, trongVung } from "./suite-neu-doi.mjs";
+import { createRequire } from "node:module";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, "..");
@@ -323,4 +324,230 @@ test("S4V-AC-6 — executors.suite.* bọc nguyên văn lệnh hiện hành, sui
   const them = cfg.replace("\n  test:\n", '\n  test:\n    moi: "node --test x.test.mjs"\n');
   assert.notEqual(them, cfg);
   assert.deepEqual(kiem(them), [], "S4V-AC-6 thêm key executors.test mới mà đỏ");
+});
+
+// ── suite-scripts-vao-luot-cham: lệnh --chay-scripts chạy trọn bộ scripts theo đúng các bước job CI ─────────────
+const yamlLib = createRequire(path.join(ROOT, "app/package.json"))("js-yaml");
+const jobScripts = () => yamlLib.load(readFileSync(path.join(ROOT, ".github/workflows/ci-test.yml"), "utf8")).jobs.scripts;
+function phanTu(job) {
+  const out = (job.steps ?? []).map((s) => (s.uses ? `uses ${s.uses.split("@")[0]}` : `run: ${s.name}`));
+  for (const [svc, cfg] of Object.entries(job.services ?? {})) { out.push(`services.${svc}.image`); if (cfg.env) out.push(`services.${svc}.env`); }
+  for (const k of Object.keys(job.env ?? {})) out.push(`env.${k}`);
+  return out;
+}
+const MT_CI = () => JSON.parse(readFileSync(path.join(ROOT, "_acceptance/suite-scripts-vao-luot-cham/ma-tran.json"), "utf8")).ci;
+const lechCi = (job, ci) => { const pt = phanTu(job);
+  return [...pt.filter((p) => !Object.hasOwn(ci, p)).map((p) => `phần tử chưa có dòng: ${p}`), ...Object.keys(ci).filter((k) => !pt.includes(k)).map((k) => `dòng thừa: ${k}`)]; };
+const coDocker = () => spawnSync("docker", ["inspect", "-f", "{{.Config.Image}}", "one-invest-db"], { encoding: "utf8" });
+const coDb = (ten) => spawnSync("docker", ["exec", "-i", "-e", "PGPASSWORD=oneinvest", "one-invest-db", "psql", "-U", "oneinvest", "-h", "localhost", "-d", "oneinvest", "-At", "-c", `select count(*) from pg_database where datname='${ten}'`], { encoding: "utf8" }).stdout.trim() === "1";
+const dongCuoi = (out) => JSON.parse(out.trim().split("\n").pop());
+function tepMau(dir, { ra, cho = false, do_ = false, doiDinh = null }) {
+  const f = path.join(dir, `mau-${Math.random().toString(36).slice(2)}.test.mjs`);
+  writeFileSync(f, `import { test } from "node:test"; import assert from "node:assert"; import { writeFileSync } from "node:fs"; import { createRequire } from "node:module";
+const pg = createRequire(${JSON.stringify(path.join(ROOT, "app/package.json"))})("pg");
+test("ssl-mau", async () => { const c = new pg.Client({ connectionString: process.env.DATABASE_URL }); await c.connect();
+  const db = (await c.query("select current_database() as d")).rows[0].d; await c.end();
+  writeFileSync(${JSON.stringify(ra)}, JSON.stringify({ db, ci: process.env.CI, no: process.env.NODE_OPTIONS ?? "" }));
+  ${doiDinh ? `(await import("node:child_process")).execFileSync("bash", ["-c", ${JSON.stringify(`cd '${doiDinh}' && git update-ref HEAD "$(GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@local.test GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@local.test git commit-tree 'HEAD^{tree}' -p HEAD -m doi-dinh)"`)}]);` : ""}
+  ${cho ? "await new Promise((r) => setTimeout(r, 60000));" : ""} ${do_ ? 'assert.fail("ssl-mau đỏ cố ý");' : ""} });`);
+  return f;
+}
+
+// Cây sạch riêng cho các ca chạy lệnh thật: lệnh từ chối cây bẩn, còn cây đang chấm có thể đang có tệp của lượt khác. Hồ sơ
+// tạm cũng nằm trong cây này, không còn tạo trong _acceptance/ thật.
+let cayTam = null;
+function caySach() {
+  if (cayTam) return cayTam;
+  const goc = mkdtempSync(path.join(tmpdir(), "ssl-cay-")), wt = path.join(goc, "wt");
+  execFileSync("git", ["worktree", "add", "-q", "--detach", wt, "HEAD"], { cwd: ROOT, stdio: "ignore" });
+  cayTam = { goc, wt };
+  execFileSync("bash", [path.join(ROOT, "scripts/dung-worktree-cham.sh"), wt, "--khong-tsc"], { cwd: ROOT, stdio: "ignore" });
+  return cayTam;
+}
+after(() => {
+  if (!cayTam) return;
+  spawnSync("git", ["worktree", "remove", "--force", cayTam.wt], { cwd: ROOT });
+  rmSync(cayTam.goc, { recursive: true, force: true });
+});
+
+test("SSL-AC-1 ma trận — mọi phần tử job scripts có dòng; bước là nguyên văn run của job; ảnh DB và bản chính Node khớp", (t) => {
+  const job = jobScripts(), ci = MT_CI();
+  assert.deepEqual(lechCi(job, ci), [], "SSL-AC-1 ma trận ci lệch phần tử job scripts");
+  const tuong = Object.entries(ci).filter(([k, v]) => k.startsWith("run: ") && v.startsWith("tuong-duong")).map(([k]) => k.slice(5));
+  assert.deepEqual(tuong, BUOC_CI, "SSL-AC-1 bước tương đương của ma trận phải đúng BUOC_CI");
+  for (const b of buocSuite(ROOT)) assert.equal(b.lenh, job.steps.find((s) => s.name === b.ten).run.trim(), `SSL-AC-1 lệnh «${b.ten}» phải là nguyên văn run của job`);
+  const node = String(job.steps.find((s) => (s.uses ?? "").startsWith("actions/setup-node")).with["node-version"]);
+  assert.equal(process.versions.node.split(".")[0], node, "SSL-AC-1 bản chính Node lệch job");
+  const them = structuredClone(job); them.steps.push({ name: "bước lạ", run: "true" });
+  assert.deepEqual(lechCi(them, ci), ["phần tử chưa có dòng: run: bước lạ"], "SSL-AC-1 đối chứng: bước mới phải đỏ gọi tên");
+  const d = coDocker();
+  if (process.env.CI || d.status !== 0) return t.skip("không có container one-invest-db — chỉ kiểm được ảnh trên máy thu");
+  const may = d.stdout.trim();
+  assert.deepEqual(lechMoiTruong(job, may), [], "SSL-AC-1 ảnh DB hay shell của job lệch máy");
+  const doi = structuredClone(job); Object.values(doi.services)[0].image = "postgres:16";
+  assert.deepEqual(lechMoiTruong(doi, may), [`services.postgres.image: job postgres:16 ≠ máy ${may}`], "SSL-AC-1 đối chứng: đổi ảnh services phải lệch, gọi tên ảnh");
+  const sh = structuredClone(job); sh.defaults = { run: { shell: "bash" } };
+  assert.deepEqual(lechMoiTruong(sh, may), ["defaults.run.shell: bash"], "SSL-AC-1 đối chứng: job khai shell thì lệnh (bash -e) lệch");
+  assert.deepEqual(SHELL_CI, ["-e", "-c"], "SSL-AC-1 job không khai shell → bước chạy bash -e như runner Linux");
+});
+
+test("SSL-AC-2 dbMoCoi — DB của lượt có pid không còn sống bị xoá, của lượt đang sống và của chính mình giữ", () => {
+  const ds = ["oneinvest", "oneinvest_ci_scripts_11", "oneinvest_ci_scripts_22", "oneinvest_ci_scripts_33", "oneinvest_suite_kdm_11", "oneinvest_ci_scripts_x"];
+  assert.deepEqual(dbMoCoi(ds, (pid) => pid === 22, 33), ["oneinvest_ci_scripts_11"], "SSL-AC-2 chỉ DB của pid đã chết là mồ côi");
+  assert.deepEqual(dbMoCoi(ds, () => true, 33), [], "SSL-AC-2 mọi pid còn sống thì không xoá gì");
+});
+
+test("SSL-AC-1 đầu ra thật — test nối DB trống vừa dựng, thấy CI=true, ca bỏ đúng ci-bo-qua", (t) => {
+  if (process.env.CI || coDocker().status !== 0) return t.skip("cần docker và container one-invest-db của máy thu");
+  const dir = mkdtempSync(path.join(tmpdir(), "ssl1-")); t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const ra = path.join(dir, "ra.json");
+  const r = spawnSync(process.execPath, [LENH, "--chay-scripts", "--root", caySach().wt, "--tep", tepMau(dir, { ra })], { cwd: ROOT, encoding: "utf8" });
+  assert.equal(r.status, 0, `SSL-AC-1 lệnh thoát ${r.status}: ${(r.stderr || "").slice(-400)}`);
+  const o = JSON.parse(readFileSync(ra, "utf8"));
+  assert.match(o.db, /^oneinvest_ci_scripts_\d+$/, `SSL-AC-1 test phải nối DB trống vừa dựng, không phải ${o.db}`);
+  assert.equal(o.ci, "true", "SSL-AC-1 bước test phải thấy CI=true như runner GitHub");
+  const mong = spawnSync(process.execPath, ["scripts/lib/ci-can-du-lieu.mjs", "scripts"], { cwd: ROOT, encoding: "utf8", env: { ...process.env, CI: "true" } }).stdout.trim();
+  assert.equal(o.no.trim(), mong, "SSL-AC-1 NODE_OPTIONS phải đúng danh sách ca bỏ của ci-bo-qua.json cho scripts");
+});
+
+test("SSL-AC-2 — dòng scripts-ci khi xanh và khi đỏ, --ho-so ghi run-log, hồ sơ vắng thoát 2, DB luôn được dọn", async (t) => {
+  if (process.env.CI || coDocker().status !== 0) return t.skip("cần docker và container one-invest-db của máy thu");
+  const dir = mkdtempSync(path.join(tmpdir(), "ssl2-")); t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const { wt } = caySach();
+  const slug = `ssl2-tam-${process.pid}`, hs = path.join(wt, "_acceptance", slug);
+  mkdirSync(hs);
+  const sha = execFileSync("git", ["rev-parse", "HEAD"], { cwd: wt, encoding: "utf8" }).trim();
+  const chay = (f, them = []) => spawnSync(process.execPath, [LENH, "--chay-scripts", "--root", wt, "--tep", f, ...them], { cwd: ROOT, encoding: "utf8" });
+  const ra = path.join(dir, "ra.json");
+  const x = chay(tepMau(dir, { ra }), ["--ho-so", slug]);
+  const d = dongCuoi(x.stdout);
+  assert.equal(x.status, 0, `SSL-AC-2 lượt xanh phải thoát 0: ${(x.stderr || "").slice(-400)}`);
+  assert.deepEqual([d.kind, d.sha, d.exit, d.tests, d.pass, d.fail], ["scripts-ci", sha, 0, 1, 1, 0], "SSL-AC-2 dòng tóm tắt khi xanh");
+  assert.equal(typeof d.giay, "number");
+  const nhatKy = () => readFileSync(path.join(hs, "run-log.jsonl"), "utf8").trim().split("\n").map((l) => JSON.parse(l));
+  assert.deepEqual(nhatKy().at(-1), d, "SSL-AC-2 --ho-so phải nối đúng dòng tóm tắt vào run-log của hồ sơ");
+  assert.equal(coDb("oneinvest"), true, "SSL-AC-2 đối chứng dương: coDb phải thấy DB oneinvest");
+  assert.equal(coDb(JSON.parse(readFileSync(ra, "utf8")).db), false, "SSL-AC-2 DB phải bị xoá khi lệnh xong");
+  const dd = chay(tepMau(dir, { ra, do_: true }));
+  const dt = dongCuoi(dd.stdout);
+  assert.notEqual(dd.status, 0, "SSL-AC-2 tệp mẫu đỏ thì lệnh phải đỏ");
+  assert.ok(dt.exit !== 0 && dt.fail >= 1, `SSL-AC-2 dòng tóm tắt khi đỏ phải mang exit ≠ 0 và fail ≥ 1: ${JSON.stringify(dt)}`);
+  assert.equal(coDb(JSON.parse(readFileSync(ra, "utf8")).db), false, "SSL-AC-2 DB phải bị xoá cả sau lượt đỏ");
+  const v = spawnSync(process.execPath, [LENH, "--chay-scripts", "--root", wt, "--ho-so", "khong-co-ho-so-nay"], { cwd: ROOT, encoding: "utf8" });
+  assert.equal(v.status, 2, "SSL-AC-2 hồ sơ không tồn tại phải thoát 2");
+  assert.match(v.stderr, /hồ sơ «khong-co-ho-so-nay» không có ở/, "SSL-AC-2 thoát 2 phải gọi tên hồ sơ vắng");
+  assert.equal(existsSync(path.join(wt, "_acceptance/khong-co-ho-so-nay")), false, "SSL-AC-2 không được tạo hồ sơ hay run-log");
+  // cờ thiếu giá trị: thoát 2 trước khi chạy gì, run-log của hồ sơ có thật không thêm dòng
+  const truoc = readFileSync(path.join(hs, "run-log.jsonl"), "utf8");
+  for (const them of [["--ho-so"], ["--root"], ["--ho-so", "--root", wt]]) {
+    const th = spawnSync(process.execPath, [LENH, "--chay-scripts", ...them], { cwd: ROOT, encoding: "utf8" });
+    assert.equal(th.status, 2, `SSL-AC-2 ${them.join(" ")} thiếu giá trị phải thoát 2`);
+    assert.match(th.stderr, /thiếu giá trị/, "SSL-AC-2 thoát 2 phải gọi tên cờ thiếu giá trị");
+  }
+  assert.equal(readFileSync(path.join(hs, "run-log.jsonl"), "utf8"), truoc, "SSL-AC-2 cờ thiếu giá trị không được ghi run-log");
+  // bị ngắt giữa bước test: đọc stdout thật, dòng cuối vẫn là scripts-ci và run-log có đúng dòng ấy
+  const { spawn } = await import("node:child_process");
+  for (const [sig, mong] of [["SIGTERM", 143], ["SIGINT", 130]]) {
+    rmSync(ra, { force: true });
+    const p = spawn(process.execPath, [LENH, "--chay-scripts", "--root", wt, "--ho-so", slug, "--tep", tepMau(dir, { ra, cho: true })], { cwd: ROOT, stdio: ["ignore", "pipe", "ignore"] });
+    let out = ""; p.stdout.setEncoding("utf8"); p.stdout.on("data", (b) => { out += b; });
+    const xong = new Promise((res) => p.on("close", (c, s) => res(c ?? s)));
+    for (let i = 0; i < 240 && !existsSync(ra); i++) await new Promise((res) => setTimeout(res, 500));
+    const db2 = JSON.parse(readFileSync(ra, "utf8")).db;
+    assert.equal(coDb(db2), true, `SSL-AC-2 đối chứng dương: DB ${db2} phải thấy được khi lượt còn chạy`);
+    const luc = Date.now();
+    p.kill(sig);
+    assert.equal(await xong, mong, `SSL-AC-2 bị ${sig} thì thoát ${mong}`);
+    // Tệp mẫu còn chờ 60 giây: lệnh chỉ thoát sớm khi đã ngắt được nhóm tiến trình của bước test.
+    assert.ok(Date.now() - luc < 20000, `SSL-AC-2 bị ${sig}: phải ngắt nhóm tiến trình của bước test, không chờ test tự xong (${Date.now() - luc} ms)`);
+    assert.equal(coDb(db2), false, `SSL-AC-2 DB ${db2} phải bị xoá cả khi lệnh bị ${sig}`);
+    const n = dongCuoi(out);
+    assert.deepEqual([n.kind, n.sha, n.exit], ["scripts-ci", sha, mong], `SSL-AC-2 bị ${sig}: dòng cuối stdout phải là scripts-ci mang exit ${mong}`);
+    assert.deepEqual(nhatKy().at(-1), n, `SSL-AC-2 bị ${sig}: run-log phải có đúng dòng ấy`);
+  }
+});
+
+test("SSL-AC-2 createdb lỗi — vẫn in dòng scripts-ci và nối run-log", (t) => {
+  if (process.env.CI || coDocker().status !== 0) return t.skip("cần cây worktree của máy thu");
+  const dir = mkdtempSync(path.join(tmpdir(), "ssl2c-")); t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const { wt } = caySach();
+  const slug = `ssl2-cdb-${process.pid}`, hs = path.join(wt, "_acceptance", slug); mkdirSync(hs);
+  const bin = path.join(dir, "bin"); mkdirSync(bin);
+  writeFileSync(path.join(bin, "docker"), '#!/bin/bash\ncase " $* " in *" createdb "*) echo "createdb hỏng cố ý" >&2; exit 1;; esac\nexit 0\n', { mode: 0o755 });
+  const r = spawnSync(process.execPath, [LENH, "--chay-scripts", "--root", wt, "--ho-so", slug], { cwd: ROOT, encoding: "utf8", env: { ...process.env, PATH: `${bin}:${process.env.PATH}` } });
+  assert.equal(r.status, 2, "SSL-AC-2 createdb lỗi phải thoát 2");
+  assert.match(r.stderr, /không dựng được DB trống/, "SSL-AC-2 createdb lỗi phải gọi tên việc hỏng");
+  const n = dongCuoi(r.stdout);
+  assert.deepEqual([n.kind, n.exit, n.tests], ["scripts-ci", 2, null], "SSL-AC-2 createdb lỗi: dòng cuối là scripts-ci, exit 2, không bịa số ca");
+  assert.deepEqual(JSON.parse(readFileSync(path.join(hs, "run-log.jsonl"), "utf8").trim().split("\n").at(-1)), n, "SSL-AC-2 createdb lỗi: run-log phải có đúng dòng ấy");
+});
+
+test("SSL-AC-2 sha đọc trước khi chạy — đỉnh đổi giữa lượt thì dòng vẫn mang sha của cây đã chạy", (t) => {
+  if (process.env.CI || coDocker().status !== 0) return t.skip("cần docker và container one-invest-db của máy thu");
+  const dir = mkdtempSync(path.join(tmpdir(), "ssl2s-")); t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const { wt } = caySach();
+  const truoc = execFileSync("git", ["rev-parse", "HEAD"], { cwd: wt, encoding: "utf8" }).trim();
+  t.after(() => execFileSync("git", ["update-ref", "HEAD", truoc], { cwd: wt }));
+  const r = spawnSync(process.execPath, [LENH, "--chay-scripts", "--root", wt, "--tep", tepMau(dir, { ra: path.join(dir, "ra.json"), doiDinh: wt })], { cwd: ROOT, encoding: "utf8" });
+  assert.equal(r.status, 0, `SSL-AC-2 lượt đổi đỉnh phải chạy xong: ${(r.stderr || "").slice(-400)}`);
+  const sau = execFileSync("git", ["rev-parse", "HEAD"], { cwd: wt, encoding: "utf8" }).trim();
+  assert.notEqual(sau, truoc, "SSL-AC-2 đối chứng dương: đỉnh phải thật sự đổi giữa lượt");
+  assert.equal(dongCuoi(r.stdout).sha, truoc, "SSL-AC-2 dòng scripts-ci phải mang sha đọc trước khi chạy, không phải đỉnh mới");
+});
+
+test("SSL-AC-2 cây bẩn — tệp ngoài _acceptance/ thì từ chối, không chạy test, vẫn có dòng scripts-ci", (t) => {
+  if (process.env.CI || coDocker().status !== 0) return t.skip("cần docker và container one-invest-db của máy thu");
+  const dir = mkdtempSync(path.join(tmpdir(), "ssl2b-")); t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const { wt } = caySach();
+  const slug = `ssl2-ban-${process.pid}`, hs = path.join(wt, "_acceptance", slug); mkdirSync(hs);
+  const ban = path.join(wt, "scripts", `tam-ban-${process.pid}.txt`); writeFileSync(ban, "x\n"); t.after(() => rmSync(ban, { force: true }));
+  const ra = path.join(dir, "ra.json");
+  const r = spawnSync(process.execPath, [LENH, "--chay-scripts", "--root", wt, "--ho-so", slug, "--tep", tepMau(dir, { ra })], { cwd: ROOT, encoding: "utf8" });
+  assert.equal(r.status, 2, "SSL-AC-2 cây bẩn phải thoát 2");
+  assert.match(r.stderr, new RegExp(`cây bẩn.*tam-ban-${process.pid}\\.txt`, "s"), "SSL-AC-2 từ chối phải gọi tên tệp bẩn");
+  assert.equal(existsSync(ra), false, "SSL-AC-2 cây bẩn thì không được chạy test");
+  const n = dongCuoi(r.stdout);
+  assert.deepEqual([n.kind, n.exit, n.tests], ["scripts-ci", 2, null], "SSL-AC-2 cây bẩn: dòng cuối là scripts-ci, exit 2");
+  assert.deepEqual(JSON.parse(readFileSync(path.join(hs, "run-log.jsonl"), "utf8").trim().split("\n").at(-1)), n, "SSL-AC-2 cây bẩn: run-log phải có đúng dòng ấy");
+});
+
+test("SSL-AC-2 tepBan — chỉ tính tệp ngoài _acceptance/, đọc đúng đường có dấu và đổi tên", () => {
+  const z = (...a) => a.join("\0") + "\0";
+  assert.deepEqual(tepBan(""), [], "SSL-AC-2 cây sạch không có tệp bẩn");
+  assert.deepEqual(tepBan(z("?? _acceptance/a/s4-args.json", " M _acceptance/a/run-log.jsonl")), [], "SSL-AC-2 tệp trong _acceptance/ không tính");
+  assert.deepEqual(tepBan(z(" M app/next-env.d.ts", "?? scripts/tệp có dấu.txt")), ["app/next-env.d.ts", "scripts/tệp có dấu.txt"], "SSL-AC-2 sửa và tệp mới ngoài _acceptance/ đều tính");
+  assert.deepEqual(tepBan(z("R  scripts/moi.mjs", "scripts/cu.mjs")), ["scripts/moi.mjs", "scripts/cu.mjs"], "SSL-AC-2 đổi tên tính cả đường mới và đường cũ");
+  assert.deepEqual(tepBan(z("R  _acceptance/moi.md", "scripts/cu.mjs")), ["scripts/cu.mjs"], "SSL-AC-2 chuyển từ ngoài vào _acceptance/ vẫn tính đường cũ");
+  assert.deepEqual(tepBan(z("?? _acceptance_khac/a.txt")), ["_acceptance_khac/a.txt"], "SSL-AC-2 thư mục tên giống không được lọt");
+});
+
+test("SSL-AC-2 đọc pipe theo byte — mẩu cắt giữa «ℹ» không làm mất số ca", async () => {
+  const { spawn } = await import("node:child_process");
+  // một tiến trình con ghi dòng tổng kết từng byte một, có ngắt quãng để mỗi byte là một mẩu riêng của pipe
+  const src = `const b = Buffer.from("ℹ tests 7\\nℹ pass 5\\nℹ fail 2\\n"); (async () => { for (const x of b) { process.stdout.write(Buffer.from([x])); await new Promise((r) => setTimeout(r, 2)); } })();`;
+  const doc = async (giaiMa) => {
+    const c = spawn(process.execPath, ["-e", src]);
+    const t = boTongKet();
+    if (giaiMa) c.stdout.setEncoding("utf8");
+    c.stdout.on("data", (b) => t.nap(giaiMa ? b : String(b)));
+    await new Promise((r) => c.on("close", r));
+    return tomTatScripts(t.text(), { sha: "a", exit: 1, giay: 1 });
+  };
+  const dung = await doc(true);
+  assert.deepEqual([dung.tests, dung.pass, dung.fail], [7, 5, 2], "SSL-AC-2 setEncoding giữ số ca khi mẩu cắt giữa ký tự");
+  const sai = await doc(false);
+  assert.notDeepEqual([sai.tests, sai.pass, sai.fail], [7, 5, 2], "SSL-AC-2 đối chứng: giải mã từng mẩu riêng lẻ phải mất số ca");
+});
+
+test("SSL-AC-2 tomTatScripts — đọc số ca từ dòng tổng kết spec hay tap; không có dòng thì null", () => {
+  assert.deepEqual(tomTatScripts("ℹ tests 5\nℹ pass 4\nℹ fail 1\n", { sha: "a", exit: 1, giay: 2 }).fail, 1);
+  assert.deepEqual(tomTatScripts("# tests 3\n# pass 3\n# fail 0\n", { sha: "a", exit: 0, giay: 2 }).tests, 3);
+  // lượt đỏ dài: dòng tổng kết đứng trước khối «✖ failing tests» hàng chục KB, chảy qua theo mẩu cắt giữa dòng
+  const b = boTongKet(), ra = `✔ a\n✖ b\nℹ tests 40\nℹ pass 10\nℹ fail 30\n✖ failing tests:\n${"    at x (file:///y.mjs:1:1)\n".repeat(3000)}`;
+  for (let i = 0; i < ra.length; i += 777) b.nap(ra.slice(i, i + 777));
+  const dai = tomTatScripts(b.text(), { sha: "a", exit: 1, giay: 2 });
+  assert.ok(ra.length > 60000, "SSL-AC-2 mẫu phải dài hơn mọi bộ đệm đuôi");
+  assert.deepEqual([dai.tests, dai.pass, dai.fail], [40, 10, 30], "SSL-AC-2 lượt đỏ dài vẫn phải giữ số ca");
+  const k = tomTatScripts("bị giết giữa chừng", { sha: "a", exit: 143, giay: 2 });
+  assert.deepEqual([k.tests, k.pass, k.fail], [null, null, null], "SSL-AC-2 không có dòng tổng kết thì số ca phải null, không bịa 0");
 });
