@@ -40,6 +40,7 @@ import { LABELS_VI } from "@/lib/vocab.generated"
 import { DealHangNhom, DiscountBar, DealThumb } from "./deals-cells"
 import { DealChoGhep } from "./deal-cho-ghep"
 import { DealSheet } from "./deal-sheet"
+import type { KetQuaCung, TaiCung } from "./deal-similar"
 
 /**
  * /ops/deals — khuôn records-grid của kho (Frame + data-grid + @reui/filters, bấm hàng mở sheet), tab trạng thái có
@@ -365,6 +366,10 @@ type DealsGridProps = {
   /** Đổi điều kiện trên URL; chỉ có khi có `trang`. */
   onDoi?: (p: Partial<ThamSoDeal>) => void
   dangChuyen?: boolean
+  /** Server action đọc «Căn cùng tiêu chí» trên toàn tập đã lọc (CG17); chỉ dùng khi có `trang`. */
+  taiCung?: (offerId: string, thamSo: Partial<ThamSoDeal>, chiPhuong: boolean) => Promise<KetQuaCung | null>
+  /** Mở một căn không có trên trang đang xem: sang trang một căn (CG17 AC-6). */
+  onMoNgoai?: (id: string) => void
 }
 
 /** Danh sách đọc ở máy chủ: mọi điều kiện đi qua URL, bảng mờ đi trong lúc chờ trang mới. */
@@ -374,10 +379,11 @@ export function DealsGridTrang(props: DealsGridProps) {
   const { trang } = props
   if (!trang) return <DealsGrid {...props} />
   const onDoi = (p: Partial<ThamSoDeal>) => chuyenTrang(() => router.push(urlThamSoDeal({ ...trang.thamSo, ...p }), { scroll: false }))
-  return <DealsGrid {...props} onDoi={onDoi} dangChuyen={dangChuyen} />
+  const onMoNgoai = (id: string) => router.push(`/ops/deals/${encodeURIComponent(id)}`)
+  return <DealsGrid {...props} onDoi={onDoi} dangChuyen={dangChuyen} onMoNgoai={onMoNgoai} />
 }
 
-export function DealsGrid({ rows: tho, moBanDau = null, locBanDau, xemNoiDung, mayThu, choGhep = KHONG_CHO_GHEP, xacMinh, trang, onDoi, dangChuyen = false }: DealsGridProps) {
+export function DealsGrid({ rows: tho, moBanDau = null, locBanDau, xemNoiDung, mayThu, choGhep = KHONG_CHO_GHEP, xacMinh, trang, onDoi, dangChuyen = false, taiCung, onMoNgoai }: DealsGridProps) {
   const rows = useMemo<DealHangGhep[]>(() => tho.map((d) => (choGhep[d.offerId] ? { ...d, choGhep: choGhep[d.offerId] } : d)), [tho, choGhep])
   // Căn của tab «Cần xác minh» khi đếm trên toàn tập; sheet mở được cả căn chỉ có ở tab này.
   const xmRows = useMemo<DealHangGhep[] | null>(() => xacMinh?.rows ?? null, [xacMinh])
@@ -434,6 +440,11 @@ export function DealsGrid({ rows: tho, moBanDau = null, locBanDau, xemNoiDung, m
   const thuTu = table.getSortedRowModel().rows.map((r) => r.original)
   const viTri = thuTu.findIndex((d) => d.offerId === moId)
   const mo = moDuoc.find((d) => d.offerId === moId) ?? null
+  const thamSoTrang = trang?.thamSo
+  const tai = useMemo<TaiCung | undefined>(
+    () => (thamSoTrang && taiCung ? (id, chiPhuong) => taiCung(id, thamSoTrang, chiPhuong) : undefined),
+    [thamSoTrang, taiCung],
+  )
 
   const datMo = (id: string | null) => {
     setMoId(id)
@@ -445,6 +456,8 @@ export function DealsGrid({ rows: tho, moBanDau = null, locBanDau, xemNoiDung, m
   }
   // Mở một căn từ sheet: căn nằm ngoài lọc đang bật vẫn mở được, bảng chỉ dời trang khi căn có trong bảng.
   const moCan = (id: string) => {
+    // Danh sách theo trang: căn cùng tiêu chí nằm ở trang khác không có dữ liệu đầy đủ ở đây → mở trang một căn.
+    if (trang && !moDuoc.some((d) => d.offerId === id) && onMoNgoai) return onMoNgoai(id)
     datMo(id)
     const i = thuTu.findIndex((d) => d.offerId === id)
     if (i >= 0) setPagination((p) => ({ ...p, pageIndex: Math.floor(i / p.pageSize) }))
@@ -539,7 +552,7 @@ export function DealsGrid({ rows: tho, moBanDau = null, locBanDau, xemNoiDung, m
           </FrameFooter>
         </Frame>
       </DataGrid>
-      <DealSheet d={mo} rows={rows} choGhep={mo?.choGhep} xemNoiDung={xemNoiDung} mayThu={mayThu} viTri={viTri} tong={thuTu.length} onChuyen={chuyen} onMoCan={moCan} onOpenChange={(o) => !o && datMo(null)} />
+      <DealSheet d={mo} rows={rows} cung={mo ? trang?.cungTieuChi?.[mo.offerId] : undefined} tai={tai} choGhep={mo?.choGhep} xemNoiDung={xemNoiDung} mayThu={mayThu} viTri={viTri} tong={thuTu.length} onChuyen={chuyen} onMoCan={moCan} onOpenChange={(o) => !o && datMo(null)} />
     </>
   )
 }

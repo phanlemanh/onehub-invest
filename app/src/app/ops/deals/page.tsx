@@ -20,6 +20,8 @@ import { docThamSoDeal, type ThamSoDeal } from "@/lib/deals-chi-tiet";
 import { canAccessOps, xemNoiDungTin } from "@/lib/ops-access";
 import { loadPendingUnitMatches } from "@/lib/ops/review-cho-ghep";
 
+import { layCanCungTieuChi } from "./actions";
+
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Căn giá tốt" };
 
@@ -116,7 +118,7 @@ async function DealsTrangContent({ xemNoiDung, can, thamSo }: { xemNoiDung: bool
           Máy chủ chưa giữ hai phần này, nên căn không thiếu chúng. Mở cổng Ops trên máy thu để xem.
         </LocalOnlyAlert>
       )}
-      <DealsGridTrang rows={rows} moBanDau={can} xemNoiDung={xemNoiDung} mayThu={mayThu} choGhep={choGhep} trang={trang} />
+      <DealsGridTrang rows={rows} moBanDau={can} xemNoiDung={xemNoiDung} mayThu={mayThu} choGhep={choGhep} trang={trang} taiCung={layCanCungTieuChi} />
     </>
   );
 }

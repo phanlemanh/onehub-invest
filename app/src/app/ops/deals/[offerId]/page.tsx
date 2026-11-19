@@ -10,7 +10,7 @@ import { RegionError } from "@/components/states/region-error";
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { getSessionUser } from "@/lib/auth";
-import { dealHang, dealTheoVai, dealTrongDanhSach, getDeal } from "@/lib/deals";
+import { dealHang, dealTheoVai, dealTrongDanhSach, getDeal, trangCuaCan } from "@/lib/deals";
 import { chuGiam } from "@/lib/deals-chi-tiet";
 import { fmtCompact } from "@/lib/format";
 import { canAccessOps, xemNoiDungTin } from "@/lib/ops-access";
@@ -37,7 +37,7 @@ async function DealContent({ offerId, xemNoiDung }: { offerId: string; xemNoiDun
   const d = dealHang(dealTheoVai(deal, { lienHe: xemNoiDung, noiDung: xemNoiDung }), { xemNoiDung, mayThu });
   // `?can=` của căn ngoài danh sách đã tải chuyển ngược về đây, nên crumb chỉ mở sheet khi căn có trong danh sách.
   const choGhep = await loadPendingUnitMatches([d.offerId]);
-  const veDanhSach = !d.roiDanhSach && (await dealTrongDanhSach(d.offerId)) ? `/ops/deals?can=${encodeURIComponent(d.offerId)}` : "/ops/deals";
+  const veDanhSach = await duongVeDanhSach(d.offerId, d.roiDanhSach);
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
@@ -66,4 +66,22 @@ export default async function DealPage({ params }: { params: Promise<{ offerId: 
       </Suspense>
     </RegionError>
   );
+}
+
+/**
+ * Crumb «Căn giá tốt» (CG17 AC-10, Ngoài-3 của CG3): về đúng trang chứa căn của danh sách theo trang, sheet mở ở căn đó. Chưa có bảng hạng
+ * thì dò danh sách cũ như trước; căn rời danh sách về trang đầu.
+ */
+async function duongVeDanhSach(offerId: string, roiDanhSach: string | null): Promise<string> {
+  if (roiDanhSach) return "/ops/deals";
+  const o = await trangCuaCan(offerId);
+  if (o === null) return "/ops/deals";
+  if (o) {
+    const q = new URLSearchParams();
+    if (o.kind !== "sale") q.set("kind", o.kind);
+    if (o.page > 1) q.set("page", String(o.page));
+    q.set("can", o.can);
+    return `/ops/deals?${q.toString()}`;
+  }
+  return (await dealTrongDanhSach(offerId)) ? `/ops/deals?can=${encodeURIComponent(offerId)}` : "/ops/deals";
 }
