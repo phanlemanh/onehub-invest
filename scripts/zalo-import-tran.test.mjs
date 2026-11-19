@@ -6,8 +6,8 @@
 // (3) khoá PID sống không bị gỡ → lượt sau chờ rồi thoát 1, khoá còn nguyên.
 import test from "node:test";
 import assert from "node:assert/strict";
-import { spawn } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { spawn, execFileSync } from "node:child_process";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -36,9 +36,9 @@ const dungMoi = () => {
 // spawn DETACHED — bash có process group RIÊNG: TERM «cả nhóm» của đồng hồ
 // chết trong script không trúng node test; sau khi thoát, test kill nốt nhóm
 // để con mồ côi (node fixture nếu sót) không giữ pipe.
-const chay = (root, extraEnv = {}) =>
+const chay = (root, extraEnv = {}, args = []) =>
   new Promise((giai) => {
-    const con = spawn("bash", [join(root, "scripts", "zalo-import-daily.sh")], {
+    const con = spawn("bash", [join(root, "scripts", "zalo-import-daily.sh"), ...args], {
       encoding: "utf8",
       detached: true,
       env: { ...process.env, ...extraEnv },
@@ -175,6 +175,94 @@ test("CA ĐỎ L2 1711-4: script không trưởng nhóm chạm trần → CHỈ 
     assert.match(r.out, /TIMEOUT: lượt vượt trần 3s/, "dòng TIMEOUT của đồng hồ");
     assert.equal(r.status, 143, `script bị TERM → 143 — thực tế ${r.status} (node test còn sống chứng người gọi không trúng TERM)`);
     assert.ok(Date.now() - t0 < 60_000);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+// ---- 1711-4 lần 4 (MỞ LẠI của LL 1811 23:03Z): bốn lỗi còn lại — bốn ca dưới ĐỎ trên bản 7cb255c24 ----
+// fixture nạp giả: ghi tên snapshot vào sổ, ngủ NAP_NGU giây, thoát NAP_MA (khuôn harness tái hiện LL)
+const NAP_GIA = `import fs from "node:fs"; import p from "node:path"; const __dirname=p.dirname(new URL(import.meta.url).pathname);
+fs.mkdirSync(p.join(__dirname,"logs"),{recursive:true});
+fs.appendFileSync(p.join(__dirname,"logs","so-nap.txt"),p.basename(process.argv[2])+"\\n");
+const ngu=Number(process.env.NAP_NGU||0)*1000; setTimeout(()=>{process.exit(Number(process.env.NAP_MA||0))},ngu);\n`;
+const themSnap = (root, loai, ts) => {
+  const d = join(root, "collector", "snapshots", "vn", `vn__${loai}__${ts}`);
+  mkdirSync(d, { recursive: true });
+  writeFileSync(join(d, "manifest.json"), "{}\n");
+};
+const demTienTrinh = (dau) =>
+  execFileSync("ps", ["-axo", "pid=,command="], { encoding: "utf8" }).split("\n").filter((l) => l.includes(dau)).length;
+
+test("1711-4 lần 4 (a): trần tổng cắt giữa chuỗi vẫn TIẾN state (ghi tăng dần) — hai lượt không nạp lại cùng đoạn", async () => {
+  const root = dungMoi();
+  // transform fixture XONG NGAY (không trần transform cản) + nạp giả ngủ 1s/snapshot
+  for (const f of ["transform-zalo.mjs", "transform-media.mjs", "refresh-bait-gap.mjs", "xep-hang-gia.mjs"])
+    writeFileSync(join(root, "pipeline", f), "process.exit(0);\n");
+  writeFileSync(join(root, "pipeline", "import-airbnb.mjs"), NAP_GIA);
+  for (let i = 1; i <= 6; i++) themSnap(root, "zalo-agent", `2026-11-17T0${i}0000000`);
+  const soNap = () => (existsSync(join(root, "pipeline", "logs", "so-nap.txt"))
+    ? readFileSync(join(root, "pipeline", "logs", "so-nap.txt"), "utf8").trim().split("\n").filter(Boolean) : []);
+  try {
+    const state = () => readFileSync(join(root, "pipeline", "logs", "apify-daily.state"), "utf8").trim();
+    const r1 = await chay(root, { ZALO_IMPORT_TRAN_TONG: "4", NAP_NGU: "1" });
+    assert.equal(r1.status, 143, "trần tổng 4s cắt lượt 1 giữa chuỗi nạp (TERM nhóm) — thực tế " + r1.status);
+    assert.notEqual(state(), "00000000T000000", "CA LÕI (a): state phải TIẾN dù trần tổng cắt giữa chuỗi (bản cũ chỉ ghi cuối vòng → mất hết)");
+    const r2 = await chay(root, { ZALO_IMPORT_TRAN_TONG: "4", NAP_NGU: "1" });
+    assert.equal(state(), "2026-11-17T060000000", "lượt 2 chốt đủ 6 mốc");
+    const ds = soNap();
+    const duyNhat = new Set(ds);
+    assert.equal(duyNhat.size, 6, "đủ 6 snapshot duy nhất được nạp");
+    assert.ok(ds.length <= duyNhat.size + 1, "tối đa duy nhất MỘT snapshot biên bị nạp lại (cửa sổ giữa fixture-xong và ghi state) — bản cũ nạp lại CẢ CHUỖI: " + ds.length + " lượt nạp / " + duyNhat.size + " duy nhất");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("1711-4 lần 4 (b): bước phớt TERM phải chết bằng SIGKILL ân hạn — 30 giây sau khi lượt thoát không còn tiến trình bước", async () => {
+  const root = dungMoi();
+  writeFileSync(join(root, "pipeline", "transform-zalo.mjs"), 'process.on("SIGTERM", () => {}); setInterval(() => {}, 1000);\n');
+  try {
+    const dau = join(root, "pipeline", "transform-zalo.mjs");
+    const r = await chay(root, { ZALO_IMPORT_TRAN_TONG: "2" });
+    assert.equal(r.status, 143, "trần tổng cắt lượt");
+    await new Promise((g) => setTimeout(g, 25_000)); // ân hạn 20s + dự phòng
+    const con = demTienTrinh(dau);
+    assert.equal(con, 0, `CA LỎI (b): bước phớt TERM phải chết bằng SIGKILL ân hạn — còn ${con} tiến trình (bản cũ: đồng hồ TERM cả nhóm trúng chính nó → chết trước khi bắn KILL)`);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("1711-4 lần 4 (c): khoá 30h mang PID TÁI DÙNG (còn sống) phải gỡ theo TUỔI — lượt nhanh chạy được ngay", async () => {
+  const root = dungMoiNhanh();
+  const khoa = join(root, "pipeline", "logs", "apify-daily.state.lock");
+  mkdirSync(khoa, { recursive: true });
+  writeFileSync(join(khoa, "pid"), String(process.pid)); // PID sống (tiến trình test) — PID tái dùng
+  writeFileSync(join(khoa, "luc"), String(Math.floor(Date.now() / 1000 - 108_000))); // 30 giờ trước
+  try {
+    const r = await chay(root, {}, ["--luot-nhanh"]);
+    assert.match(r.out, /gỡ khoá mồ côi già hơn 2h/, "tuổi khoá xét TRƯỚC PID");
+    assert.doesNotMatch(r.out, /khoá còn sống/, "CA LỎI (c): PID tái dùng không được coi là khoá sống (bản cũ trả 1 trước khi xét tuổi)");
+    assert.equal(r.status, 0, `lượt nhanh chạy được ngay sau khi gỡ khoá mồ côi — thực tế ${r.status}`);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("1711-4 lần 4 (d): hết hồ sơ chờ nạp không được báo 124 giả — trần xét sau lọc, trước nạp thật", async () => {
+  const root = dungMoiNhanh();
+  writeFileSync(join(root, "pipeline", "import-airbnb.mjs"), NAP_GIA);
+  themSnap(root, "zalo-agent", "2026-11-17T010000000");
+  const ts = "2026-11-10T010101000";
+  themSnap(root, "s03-ho-so", ts);
+  writeFileSync(join(root, "pipeline", "logs", "s03-ho-so.state"), ts + "\n"); // hồ sơ đã nạp tới đây
+  try {
+    const r = await chay(root, { ZALO_IMPORT_TRAN_NAP: "1", NAP_NGU: "2" });
+    assert.doesNotMatch(r.out, /TIMEOUT: phần nạp vượt trần \d+s tại hồ sơ/, "CA LỎI (d): hết hồ sơ chờ nạp vẫn báo TIMEOUT hồ sơ (bản cũ: trần xét trước lọc)");
+    assert.doesNotMatch(r.out, /JOB FAIL \[zalo-import-daily\] bước nap-ho-so/, "không JOB FAIL nap-ho-so giả");
+    assert.notEqual(r.status, 124, `không thoát 124 khi không còn hồ sơ chờ nạp — thực tế ${r.status}`);
+    assert.equal(readFileSync(join(root, "pipeline", "logs", "s03-ho-so.state"), "utf8").trim(), ts, "con trỏ hồ sơ giữ nguyên");
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
