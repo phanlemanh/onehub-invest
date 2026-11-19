@@ -10,7 +10,7 @@ Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm v
 
 - **Lượt đóng dấu địa chỉ S03 vẫn nhận nút phân khu đã nghỉ từ thẻ địa chỉ nhóm đã duyệt**
   Người dùng thấy gì: Nếu một thẻ địa chỉ nhóm đã duyệt trỏ vào phân khu đã được nối đi, các bài mới nạp vẫn có thể bị gắn vào phân khu ẩn đó nên không hiện đúng chỗ trên danh bạ.
-  Căn cứ: Chỉ xảy ra khi có thẻ đã duyệt trỏ đúng vào phân khu bị nối; ít gặp, nhưng dữ liệu sai được ghi sẵn lên bài và phải sửa bằng một hàng riêng.
+  Căn cứ: Chỉ xảy ra khi có thẻ đã duyệt trỏ đúng vào phân khu bị nối; ít gặp, nhưng dữ liệu sai được ghi sẵn lên bài và phải sửa bằng một hàng riêng. Đếm trên DB máy thu ngày 19/11 (chỉ đọc): hiện có 0 thẻ địa chỉ nhóm và 0 tin trỏ vào bảy phân khu sắp nối (cả DB chỉ có 1 thẻ chọn phân khu, 464 phát biểu phân khu trên tin, đều trỏ nơi khác), nên hôm nay chưa có tin nào dính.
   file: `pipeline/lib/dia-chi-the-nhom.mjs`
   severity: medium
   Đề xuất: new-contract
