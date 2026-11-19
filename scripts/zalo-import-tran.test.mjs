@@ -258,7 +258,7 @@ test("1711-4 lần 4 (d): hết hồ sơ chờ nạp không được báo 124 gi
   themSnap(root, "s03-ho-so", ts);
   writeFileSync(join(root, "pipeline", "logs", "s03-ho-so.state"), ts + "\n"); // hồ sơ đã nạp tới đây
   try {
-    const r = await chay(root, { ZALO_IMPORT_TRAN_NAP: "1", NAP_NGU: "2" });
+    const r = await chay(root, { ZALO_IMPORT_TRAN_NAP: "4", NAP_NGU: "6" }); // nạp 6s > trần 4s: bản cũ chạm trần ngay đầu vòng hồ sơ; khởi động dưới tải cũng <4s nên bản mới không bao giờ 124 giả
     assert.doesNotMatch(r.out, /TIMEOUT: phần nạp vượt trần \d+s tại hồ sơ/, "CA LỎI (d): hết hồ sơ chờ nạp vẫn báo TIMEOUT hồ sơ (bản cũ: trần xét trước lọc)");
     assert.doesNotMatch(r.out, /JOB FAIL \[zalo-import-daily\] bước nap-ho-so/, "không JOB FAIL nap-ho-so giả");
     assert.notEqual(r.status, 124, `không thoát 124 khi không còn hồ sơ chờ nạp — thực tế ${r.status}`);
@@ -322,7 +322,7 @@ test("1911-2 bổ sung (MỞ LẠI): thoát khi khoá đã ĐỔI CHỦ (pid fil
   try {
     // lượt NHANH giữ khoá tới trap EXIT (nhánh 00:00 nhả khoá trước doc-gop — dòng
     // «trap - EXIT; rm -rf» chủ ý cũ); trần tổng 30s để không cắt
-    const luot = chay(root, { ZALO_IMPORT_TRAN_TONG: "30", NAP_NGU: "2" }, ["--luot-nhanh"]);
+    const luot = chay(root, { ZALO_IMPORT_TRAN_TONG: "30", NAP_NGU: "4" }, ["--luot-nhanh"]); // nạp 4s — cửa ghi đè chắc nằm giữa lượt
     // chờ script chiếm khoá rồi GHI ĐÈ pid/chu bằng chủ mới (giả lập khoá bị lượt khác chiếm)
     for (let i = 0; i < 50 && !existsSync(join(khoa, "pid")); i++) await new Promise((r) => setTimeout(r, 100));
     await new Promise((r) => setTimeout(r, 300));
