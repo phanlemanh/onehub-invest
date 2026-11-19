@@ -7,7 +7,7 @@ import { after, before, test } from "node:test";
 import pg from "pg";
 
 import { chuanHoaTenToa } from "../lib/danh-ba-vat-the.mjs";
-import { TAT_CA_NGUON } from "../lib/ghep-tin-danh-muc.mjs";
+import { TAT_CA_NGUON, chuoiVung, khopTen } from "../lib/ghep-tin-danh-muc.mjs";
 import { PROMPT_VERSION_DOC, docDauVao, tinhGan } from "../lib/ghep-tin-danh-muc-doc.mjs";
 
 const DB_URL = process.env.DATABASE_URL ?? "";
@@ -94,6 +94,39 @@ test("nut-vung-da-nghi-mat-ten-nhung-van-giu-cay", async () => {
     const d = (await docDauVao(c, { offerIds: [] })).danhBa.get(duAn);
     assert.equal(d.tenVung.get(ten)?.has(id) ?? false, false, `nút nghỉ ${id} vẫn nhận tên ${ten}`);
     assert.equal(d.cha.has(id), true, `nút nghỉ ${id} phải còn trong cây để toà dưới nó đi lên được`);
+  });
+});
+
+// DA46 nối bảy cặp phân khu trùng nơi: nút mới thành con của nút cũ và mang cờ nghỉ, id cũ được giữ.
+// Bản chép có thể chưa có nút mới của thẻ luật S16 nên ca tự dựng chúng trong giao dịch.
+const BAY_CAP = [
+  { moi: "394", cu: "41", du_an: "1", ten: "The Sapphire 1" }, { moi: "392", cu: "42", du_an: "1", ten: "The Sapphire 2" },
+  { moi: "391", cu: "40", du_an: "1", ten: "Ruby 1" }, { moi: "395", cu: "33", du_an: "1", ten: "London" },
+  { moi: "397", cu: "27", du_an: "1", ten: "Paris" }, { moi: "382", cu: "23", du_an: "16", ten: "The Beverly" },
+  { moi: "388", cu: "43", du_an: "16", ten: "Glory Heights" },
+];
+
+test("bay-cap-phan-khu-truoc-va-sau-khi-noi", async () => {
+  await ca(async () => {
+    for (const x of BAY_CAP) {
+      await c.query(`INSERT INTO asset_nodes (id, node_type, name, slug, parent_id) VALUES ($1::bigint, 'subzone', $2, $3, $4::bigint) ON CONFLICT (id) DO NOTHING`,
+        [x.moi, x.ten, `pl20-thu-${x.moi}`, x.du_an]);
+    }
+    const truoc = (await docDauVao(c, { offerIds: [] })).danhBa;
+    for (const x of BAY_CAP) assert.equal(chuoiVung(x.moi, truoc.get(x.du_an)).has(x.cu), false, `nút ${x.moi} đã nằm dưới ${x.cu} trước khi nối`);
+    assert.equal(khopTen("The Beverly", truoc.get("16")).muc, "mo_ho", "trước khi nối, The Beverly ở hai nút phải là mơ hồ");
+
+    for (const x of BAY_CAP) {
+      await c.query(`UPDATE asset_nodes SET parent_id = $2::bigint, meta = meta || '{"nghi": true}'::jsonb WHERE id = $1::bigint`, [x.moi, x.cu]);
+    }
+    const sau = (await docDauVao(c, { offerIds: [] })).danhBa;
+    for (const x of BAY_CAP) {
+      const d = sau.get(x.du_an);
+      assert.equal(chuoiVung(x.moi, d).has(x.cu), true, `nút ${x.moi} không đi lên được ${x.cu}`);
+      for (const [ten, ds] of d.tenVung) assert.equal(ds.has(x.moi), false, `nút nghỉ ${x.moi} vẫn nhận tên ${ten}`);
+    }
+    const k = khopTen("The Beverly", sau.get("16"));
+    assert.deepEqual([k.muc, k.k], ["vung", "23"], "sau khi nối, The Beverly chỉ còn trỏ nút giữ lại");
   });
 });
 
