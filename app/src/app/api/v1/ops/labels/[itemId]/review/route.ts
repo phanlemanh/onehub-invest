@@ -3,6 +3,8 @@ import { NextResponse } from "next/server"
 import { doiChieu, ghiTruongHop, type GhiTruongHop } from "@/lib/labels-luot-hai"
 import { pool } from "@/lib/db"
 import { kiemQuyen, xemNoiDungTin } from "@/lib/ops-access"
+import { oCuaLat } from "@/lib/labels-normalize"
+import { latCuaBai } from "@/lib/labels-queries"
 
 export const dynamic = "force-dynamic"
 
@@ -20,6 +22,14 @@ function chiMayThu() {
     : null
 }
 
+/** Lát có khai ô gắn mù, không có lượt hai: không trả đầu ra máy, không ghi trường hợp (lat-khai-o-can-gan AC-5). */
+async function latGanMu(itemId: number) {
+  const lat = await latCuaBai(itemId)
+  return lat !== null && oCuaLat(lat) !== null
+    ? NextResponse.json({ error: "Lát này gắn mù, không có lượt hai" }, { status: 404 })
+    : null
+}
+
 async function docMa(ctx: Ctx) {
   const id = Number((await ctx.params).itemId)
   return Number.isInteger(id) && id > 0 ? id : null
@@ -33,6 +43,8 @@ export async function GET(req: Request, ctx: Ctx) {
   if (!xemNoiDungTin(q.nguoi)) return NextResponse.json({ error: "forbidden" }, { status: 403 })
   const itemId = await docMa(ctx)
   if (!itemId) return NextResponse.json({ error: "Mã tin không hợp lệ" }, { status: 400 })
+  const mu = await latGanMu(itemId)
+  if (mu) return mu
   const kq = await doiChieu(q.nguoi!.id, itemId)
   if (!kq) return NextResponse.json({ error: "Chỉ xem được sau khi đã lưu nhãn bài này" }, { status: 403 })
   return NextResponse.json(kq)
@@ -45,6 +57,8 @@ export async function POST(req: Request, ctx: Ctx) {
   if (may) return may
   const itemId = await docMa(ctx)
   if (!itemId) return NextResponse.json({ error: "Mã tin không hợp lệ" }, { status: 400 })
+  const mu = await latGanMu(itemId)
+  if (mu) return mu
   const body = ((await req.json().catch(() => null)) ?? {}) as GhiTruongHop
   const kq = await ghiTruongHop(pool, q.nguoi!.id, itemId, body)
   if (!kq.ok) return NextResponse.json({ error: kq.error }, { status: kq.status })

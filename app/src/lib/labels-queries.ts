@@ -131,6 +131,12 @@ export async function baiDeGhi(itemId: number, q: Q = pool): Promise<{ text: str
 
 export type KetQuaGhi = { ok: true } | { ok: false; status: 400 | 409; error: string }
 
+/** Lát của một bài; null khi không có bài. Route lượt hai đọc để đóng lát gắn mù (lat-khai-o-can-gan AC-5). */
+export async function latCuaBai(itemId: number, q: Q = pool): Promise<string | null> {
+  const { rows } = await q.query(`SELECT lat FROM eval_label_items WHERE item_id = $1`, [itemId])
+  return (rows[0]?.lat as string | undefined) ?? null
+}
+
 /**
  * Ghi một lượt (đủ các trường đã chuẩn hoá, kèm lý do nếu có) trong MỘT giao dịch. Khoá dòng tin (FOR UPDATE) trước khi đếm
  * người đã gắn, nên hai người ghi cùng lúc thì người sau thấy số đã đổi → 409. `c` là client riêng (pool.connect()).

@@ -401,6 +401,38 @@ test("LK-AC-5 gắn mù: lưu xong sang bài kế, ?xem= không mở đầu ra m
   assert.equal((await tinKe(a.id, "s03-cuon-chieu", sc as never))?.nhap?.o.building, DANH_DAU)
 })
 
+test("LK-AC-5 route lượt hai đóng với lát có khai: GET, POST 404, không đầu ra máy, không dòng trường hợp", async () => {
+  await datLat()
+  const a = await taoNguoi(sc, "ops")
+  const { POST } = await route()
+  const REVIEW = "src/app/api/v1/ops/labels/[itemId]/review/route.ts"
+  type Review = typeof import("../src/app/api/v1/ops/labels/[itemId]/review/route")
+  const review = (await import("../src/app/api/v1/ops/labels/[itemId]/review/route")) as Review
+  const goi = (r: Review, cach: "GET" | "POST", itemId: number) =>
+    r[cach](new Request(`http://localhost/api/v1/ops/labels/${itemId}/review`, {
+      method: cach, headers: { cookie: a.cookie, "content-type": "application/json" },
+      ...(cach === "POST" ? { body: JSON.stringify({ case_kind: "bi-danh", request_id: `lk-${itemId}` }) } : {}),
+    }), { params: Promise.resolve({ itemId: String(itemId) }) })
+  const soTruongHop = async () => Number((await sc.query(`SELECT count(*) FROM eval_label_cases`)).rows[0].count)
+  assert.equal((await POST(postNhan(a.cookie, LAT_B, 1, luot("S5.03", "Rainbow")))).status, 200)
+  const g = await goi(review, "GET", 1)
+  assert.equal(g.status, 404, "lát có khai: GET lượt hai phải đóng")
+  assert.equal((await g.text()).toLowerCase().includes(DANH_DAU), false, "lát có khai: GET lượt hai lộ đầu ra máy")
+  const truoc = await soTruongHop()
+  assert.equal((await goi(review, "POST", 1)).status, 404, "lát có khai: POST lượt hai phải đóng")
+  assert.equal(await soTruongHop(), truoc, "lát có khai: POST lượt hai vẫn ghi dòng trường hợp")
+  // Đối chứng: lát không khai vẫn mở lượt hai, có đầu ra máy, ghi được trường hợp.
+  assert.equal((await POST(postNhan(a.cookie, "hai-khu-ghep", 7, DU))).status, 200)
+  const d = await goi(review, "GET", 7)
+  assert.equal(d.status, 200, "đối chứng: lát không khai phải mở lượt hai")
+  assert.ok((await d.text()).toLowerCase().includes(DANH_DAU), "đối chứng: lượt hai lát không khai phải có đầu ra máy")
+  assert.equal((await goi(review, "POST", 7)).status, 200, "đối chứng: lát không khai ghi được trường hợp")
+  assert.equal(await soTruongHop(), truoc + 1)
+  // Đột biến: gỡ bước chặn lát gắn mù → lượt hai của lát có khai mở lại.
+  const dot = await banDot<Review>(REVIEW, "return lat !== null && oCuaLat(lat) !== null", "return lat === \"__khong-lat__\"")
+  assert.equal((await goi(dot, "GET", 1)).status, 200, "đột biến gỡ chặn phải mở lại lượt hai của lát có khai")
+})
+
 test("LK-AC-6 bộ chọn ghi Phần 1, 2, 3; bài đang gắn vẫn có chữ bài và tên nhóm của nó", async () => {
   await datLat()
   const a = await taoNguoi(sc, "ops")
