@@ -67,3 +67,9 @@ evals:
       - "Mở một nút ứng viên S09, chụp toà và căn → evidence/E11-ung-vien.png."
     expected: "Ba ô tổng bằng SELECT đếm trên cùng DB; nút ứng viên hiện toà và số căn đúng, không hiện tên thật của nguồn"
     evidence_required: [screenshot, observed, verifier, verified_at]
+  - id: E12
+    criterion: AC-11
+    executor: script
+    cmd: config:executors.script.s09_toa_that
+    expected: "Trên DB thử chép máy thu sau khi dựng: timNutTrungNoi của pipeline/lib/khop-tron.mjs trả mảng rỗng trên mọi bản ghi S09 đang xét; số toà của từng nút đã có trước lượt không giảm. Chiều đỏ trên cùng bản chép: cấy một bản ghi nằm sai nút thì hàm trả đúng một dòng nêu nút đó."
+    paths: ["pipeline/lib/khop-tron.mjs", "pipeline/danh-ba-vat-the.mjs", "pipeline/scripts/danh-ba-s09-toa*"]

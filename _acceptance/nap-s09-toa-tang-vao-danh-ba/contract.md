@@ -82,6 +82,11 @@ Then:
   đỏ và dừng để người quyết, không tự nới;
 - số dự án, toà trên trang bằng câu đếm trên cùng DB; đích trên dữ liệu thật: 198 dự án có toà, 928 toà, 23.708 tầng; 0 toà hai UPI; bước S09 tạo 0 căn; chạy lại ra cùng số.
 
+### AC-11 — Không sinh nút trùng nơi
+Given DB thử chép DB máy thu đã dựng danh bạ với gói 1 S09,
+When đọc mọi bản ghi S09 đang xét kèm bằng chứng toà chung với nút đã có, rồi chạy `timNutTrungNoi` của luật khớp trọn dùng chung (`pipeline/lib/khop-tron.mjs`),
+Then hàm trả mảng rỗng: không nút S09 mới nào trùng nơi với nút đã có; mọi nút đã có trước lượt vẫn giữ ít nhất số toà như trước. Đối chứng dương: cấy một bản ghi nằm sai nút thì hàm trả đúng một dòng. Bước nối dùng chính luật khớp ấy, không có bộ khớp thứ hai.
+
 ## Coverage
 
 Trục quét theo preset entity-feature và risk-premortem cho «gói 1 S09 → danh bạ»:
@@ -90,9 +95,9 @@ Trục quét theo preset entity-feature và risk-premortem cho «gói 1 S09 → 
 - Cấp danh bạ: dự án (AC-3), toà (AC-4), cấu trúc S16 (AC-5), tầng (AC-6).
 - Vòng đời: chạy lại, thứ tự nguồn (AC-8).
 - Ranh giới: không lộ nguồn, nút ứng viên không lên Invest (AC-9).
-- Kết quả thật: các phần cộng đủ, số trên màn (AC-10).
+- Kết quả thật: các phần cộng đủ, số trên màn (AC-10), không nút trùng nơi (AC-11).
 
-Core: AC-1…AC-6, AC-8…AC-10. Bảng phủ ca đếm từ DB máy thu ở thiết kế §4.
+Core: AC-1…AC-6, AC-8…AC-11. Bảng phủ ca đếm từ DB máy thu ở thiết kế §4.
 
 Later: khu và căn thấp tầng (sau bản thu bù) · căn cao tầng (DA43) · nối tin vào nút ứng viên · thuộc tính căn.
 
@@ -103,6 +108,7 @@ Never: bước S09 đổi cột gốc của toà có sẵn, xoá hay gộp toà,
 - «Snapshot gói 1 nạp vào stg, số khớp manifest»: AC-2.
 - «Số dự án có toà, số toà và số tầng S09 đi từ hiện trạng lên đúng lệnh đếm»: AC-10, đích 198 dự án, 928 toà, 23.708 tầng.
 - «0 toà hai UPI»: AC-4, AC-10.
+- «0 nút S09 trùng nơi với nút đã có, nút cũ không rỗng đi»: AC-11.
 - «Toà trùng thành bí danh, lệch lên thẻ»: AC-4, AC-5.
 - «Chạy lại không đổi số»: AC-8, AC-10.
 - Lệnh đếm: `node pipeline/scripts/danh-ba-s09-toa-that.mjs --dem`, tạo ở bước thi công, chỉ đọc.
