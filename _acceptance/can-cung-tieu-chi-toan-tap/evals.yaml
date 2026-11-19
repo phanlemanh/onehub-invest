@@ -76,7 +76,7 @@ evals:
     layer: ui-observed
     paths: [app/src/lib/deals.ts, app/src/app/ops/deals/**, app/src/components/ops/deals-grid.tsx, app/src/components/ops/deal-sheet.tsx, app/src/components/ops/deal-similar.tsx]
     steps:
-      - "Bản chạy: dev server của worktree này trên cổng 3461, DB máy thu chỉ đọc; đăng nhập vai quản trị. KHÔNG tạo hay sửa tệp nào trong cây ngoài evidence/. Trước khi chụp che SĐT, tên người bán, ảnh tin và email đăng nhập."
+      - "Bản chạy: dev server cổng 3461 chạy mã app đúng sha 66cdddc65 của nhánh này (giám sát dựng từ worktree ops-deals-data-grid/app đưa về HEAD tách rời tại sha ấy, vì Turbopack không chạy được node_modules symlink của worktree này), DB máy thu chỉ đọc; đăng nhập vai quản trị. Ghi sha và thư mục chạy vào observed. KHÔNG tạo hay sửa tệp nào trong cây ngoài evidence/. Trước khi chụp che SĐT, tên người bán, ảnh tin và email đăng nhập."
       - "Mở /ops/deals ở 1280 px sáng → evidence/E10-step1.png (15/15 dòng đầu ghi «Giá tốt» và tên dự án; chân bảng 1–15 / tong)"
       - "Bấm dòng 1, mở tab «Căn cùng tiêu chí» → evidence/E10-step2.png (số trên nhãn tab khác 0 khi lệnh đếm khác 0; bảng có căn; câu «Hiện 20 / N» khi N > 20)"
       - "Chọn Vinhomes Ocean Park 1 trên bộ chọn vị trí → evidence/E10-step3.png (tab Tất cả khớp lệnh đếm với mã 1; URL có project=1)"
