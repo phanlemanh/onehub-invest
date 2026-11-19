@@ -7,7 +7,7 @@ evals:
     layer: backend-effect
     cmd: bash _acceptance/can-cung-tieu-chi-toan-tap/probes/doc.sh AC-1
     paths: [app/src/lib/deals.ts, app/src/lib/deals-chi-tiet.ts, app/tests/can-cung-tieu-chi*]
-    expected: "Trên DB của riêng lượt, tập viết trước 37 căn (căn cùng tiêu chí ở trang 2 và 3, căn ở đúng 75% và 125% diện tích, căn ở 74% và 126%, hai phường trùng tên khác mã, một căn hai tin, một ứng viên không diện tích và một ứng viên chưa rõ loại hình cùng phường): ma trận viết tay mỗi dòng trang 1 × cỡ 15, 50 một assert, số trong trang.cungTieuChi bằng số viết tay. Đối chứng dương cùng fixture: căn ở 125% có mặt; ứng viên thiếu trường không được tính, có assert riêng. Đột biến trong bản sao (đếm trong trang thay vì toàn tập; so tên phường thay mã; loại theo mã tin thay can_key) đỏ, thông điệp nêu mã căn lệch và số mong đợi."
+    expected: "Trên DB của riêng lượt, tập viết trước 57 căn bán (căn cùng tiêu chí ở trang 2 và 3, căn ở đúng 75% và 125% diện tích, căn ở 74% và 126%, hai phường trùng tên khác mã, một căn hai tin, một ứng viên không diện tích và một ứng viên chưa rõ loại hình cùng phường): ma trận viết tay mỗi dòng trang 1 × cỡ 15, 50 một assert, số trong trang.cungTieuChi bằng số viết tay. Đối chứng dương cùng fixture: căn ở 125% có mặt; ứng viên thiếu trường không được tính, có assert riêng. Đột biến trong bản sao (đếm trong trang thay vì toàn tập; so tên phường thay mã; loại theo mã tin thay can_key) đỏ, thông điệp nêu mã căn lệch và số mong đợi."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E2
     criterion: AC-2
