@@ -491,7 +491,10 @@ test("CG3-AC-4 đi hết các trang theo từng tab, vai và lược đồ: khô
   const daDung = new Set<string>();
   const bien: { tab: TabTrang; ids: string[]; can: number }[] = [];
   const goc = new Map<TabTrang, string[]>();
-  for (const tab of ["all", "du", "xac-minh", "thieu"] as TabTrang[]) goc.set(tab, (await hetTrang(TS({ tab }))).ma);
+  // Danh sách từng tab tính độc lập (thứ tự AC-1, tab theo luật đầy đủ), để sản phẩm hỏng không làm hỏng bước dựng căn biên.
+  const thuTuDoc = (await tapDocLap()).sort(thuTuDung).map((r) => r.offer_id), kyTab = await tabDocLap();
+  goc.set("all", thuTuDoc);
+  for (const tab of ["du", "xac-minh", "thieu"] as const) goc.set(tab, thuTuDoc.filter((id) => kyTab[tab].includes(id)));
   for (const tab of ["all", "du", "xac-minh", "thieu"] as TabTrang[]) {
     const ds = goc.get(tab)!;
     if (ds.length < 17) continue;
