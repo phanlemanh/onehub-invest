@@ -5,7 +5,7 @@ slug: noi-phan-khu-trung-s16
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, web]
-status: implemented
+status: verified
 design_doc: docs/superpowers/specs/2026-11-19-noi-phan-khu-trung-s16-design.md
 approved_by: Mạnh
 approved_at: 2026-11-19T00:28:56Z
@@ -61,3 +61,8 @@ Bảng phủ ca đếm trên DB máy thu nằm trong design doc. Trục và ca:
 
 - Áp lên DB máy thu cần chữ ký Cổng Bằng chứng kèm băm thẻ nối; hồ sơ áp phải đủ lệnh áp, số chạy thử, sao lưu trước, cách lùi, lệnh kiểm sau.
 - Điều kiện chặn với PL20: lát nhãn chỉ rút sau khi việc nối đã áp VÀ bản PL20 có lọc nút nghỉ đã vào `main`; PL20 chưa ở `main` nên hàng này không đo được truy vấn của nó, ca lọc nằm trong test của hàng PL20.
+- Ngoài-2 (máy định tuyến 2026-11-19, đề xuất S4 known-limits): Số toà có bằng chứng ghi trên thẻ nối có thể đếm dư một vài toà có mã bí danh dạng bất thường, khiến thẻ hiển thị hơi khác vị trí toà thật. — `pipeline/phan-khu-s16.mjs`
+- Ngoài-3 (máy định tuyến 2026-11-19, đề xuất S4 known-limits): Lệnh kiểm sau khi nối có thể báo lỗi dù việc nối đúng, vì còn vài toà vốn không thuộc cặp nào đang nằm dưới dự án, làm người vận hành phải bỏ qua cảnh báo. — `pipeline/phan-khu-s16.mjs`
+- Ngoài-4 (máy định tuyến 2026-11-19, đề xuất S4 known-limits): Nếu sau khi nối người vận hành lại đảo luật phân khu gốc, các khu vẫn dính vào phân khu cũ dù hệ thống báo đã đảo xong, và đảo tiếp lượt nối có thể làm chúng sống lại. — `pipeline/phan-khu-s16.mjs`
+- Ngoài-5 (máy định tuyến 2026-11-19, đề xuất S4 known-limits): Nếu người vận hành gõ nhầm lệnh đảo cho mã của lượt nối, các khu bị gỡ khỏi phân khu giữ lại mà không báo lỗi, rồi không đảo nối lại được nữa. — `pipeline/phan-khu-s16.mjs`
+- Ngoài-6 (máy định tuyến 2026-11-19, đề xuất S4 known-limits): Phép kiểm tự động nói API công khai chỉ đọc nút dự án nhưng thực tế không bắt được lỗi nếu sau này ai đó thêm truy vấn đọc cả phân khu nghỉ. — `app/tests/nut-nghi-tren-ops.test.tsx`
