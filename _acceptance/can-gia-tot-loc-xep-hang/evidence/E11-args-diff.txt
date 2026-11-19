@@ -1,0 +1,14 @@
+# Diff tệp args lượt chấm 5 so với bản s4-args.mjs sinh
+# Lý do: GS phán 19/11 để E11 không đo dưới tải do chính lượt chấm tạo ra. Chỉ thêm trường evalsChayRieng, không đổi ngưỡng 3 giây hay lệnh nào.
+--- s4-args.json (máy sinh)
++++ s4-args.json (dùng cho lượt 5)
+@@ -410,6 +410,9 @@
+       ],
+       "ref": "config:executors.design.floor"
+     }
++  ],
++  "evalsChayRieng": [
++    "E11"
+   ],
+   "evalsHash": "1be8ca1ae268c8c8e113a3f55966d5acd58d78a73da9d7c4a8ddcc58b470c83a",
+   "fileDoTrongDiff": [

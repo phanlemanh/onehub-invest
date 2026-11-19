@@ -1,0 +1,48 @@
+schema_version: 1
+slug: suite-scripts-vao-luot-cham
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.sstl_buoc_ci
+    paths: ["scripts/suite-neu-doi.mjs", "scripts/suite-neu-doi.test.mjs", ".github/workflows/ci-test.yml", "_acceptance/suite-scripts-vao-luot-cham/ma-tran.json"]
+    expected: "Ca SSL-AC-1 xanh: ma trận viết trước (ma-tran.json#ci) phủ MỌI bước run, khoá env và services.*.image của job scripts rút từ ci-test.yml, mỗi phần tử một assert «tương đương» hay «miễn: lý do»; các bước tương đương của lệnh là nguyên văn run của job; ảnh DB của job = ảnh của server nơi lệnh dựng DB trống, bản chính Node trùng. Đầu ra thật (chạy lệnh trên một tệp mẫu): test nối DB vừa dựng (không phải oneinvest), thấy CI=true, NODE_OPTIONS = đầu ra của ci-can-du-lieu.mjs scripts. Chiều đỏ cùng fixture: bản sao job thêm một bước run chưa có dòng → đỏ gọi tên bước; đổi ảnh services → lệch, gọi tên ảnh."
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.sstl_tom_tat
+    paths: ["scripts/suite-neu-doi.mjs", "scripts/suite-neu-doi.test.mjs"]
+    expected: "Ca SSL-AC-2 xanh: lệnh trên tệp mẫu xanh in dòng cuối JSON kind scripts-ci có sha = HEAD, exit 0, tests/pass/fail/giay là số; với --ho-so trỏ hồ sơ tạm, cùng dòng được nối vào run-log.jsonl của hồ sơ ấy; tệp mẫu đỏ → dòng có exit ≠ 0 và fail ≥ 1; --ho-so trỏ hồ sơ không tồn tại → thoát 2, run-log không được tạo; sau mỗi lượt, sau SIGTERM (thoát 143) và SIGINT (thoát 130) DB oneinvest_ci_scripts_<pid> không còn, stdout thật có dòng cuối scripts-ci mang đúng mã thoát và run-log có đúng dòng ấy; createdb lỗi → thoát 2 kèm dòng scripts-ci và run-log; đỉnh đổi giữa lượt → dòng mang sha đọc trước khi chạy; tệp ngoài _acceptance/ → thoát 2, gọi tên tệp, không chạy test, vẫn có dòng scripts-ci."
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.test.sstl_tai_hien_471
+    long_running: 40
+    paths: ["scripts/suite-neu-doi.mjs", "_acceptance/suite-scripts-vao-luot-cham/probes/tai-hien.sh"]
+    expected: "Probe tai-hien.sh 471 dựng worktree tạm ở 5b02c3de, chạy lệnh của HEAD với --root trỏ nó; thoát 0 khi lệnh thoát khác 0 và ca «(5) bước thu lỗi» của scripts/s05-khoa-nap.test.mjs nằm trong danh sách đỏ; in sha của lệnh và dòng tóm tắt; xoá worktree khi xong. Thoát 1 gọi tên đỉnh nếu lệnh xanh hoặc ca kỳ vọng không đỏ."
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.test.sstl_tai_hien_472
+    long_running: 40
+    paths: ["scripts/suite-neu-doi.mjs", "_acceptance/suite-scripts-vao-luot-cham/probes/tai-hien.sh"]
+    expected: "Probe tai-hien.sh 472 dựng worktree tạm ở f3fecd5f, chạy lệnh của HEAD với --root trỏ nó; thoát 0 khi lệnh thoát khác 0 và có ca DT-AC-7 của scripts/db-thu.test.mjs trong danh sách đỏ; in sha của lệnh và dòng tóm tắt; xoá worktree khi xong. Thoát 1 gọi tên đỉnh nếu lệnh xanh hoặc ca kỳ vọng không đỏ."
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.test.sstl_main_xanh
+    long_running: 30
+    paths: ["scripts/**", "db/migrations/**", ".github/workflows/ci-test.yml"]
+    expected: "Lệnh node scripts/suite-neu-doi.mjs --chay-scripts trên cây đang chấm thoát 0, dòng tóm tắt cuối có \"fail\":0."
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.sstl_cau_hinh
+    paths: ["_acceptance/config.yaml", "scripts/suite-neu-doi.test.mjs", "_acceptance/s4-suite-theo-vung/probes/cau-hinh-khong-doi.sh"]
+    expected: "Ca S4V-AC-6 xanh với bảy key không sửa và probe cau-hinh-khong-doi.sh xanh: dòng cũ bị xoá/sửa chỉ là suite_keys của gốc, mọi lệnh gốc nguyên byte."
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.scripts
+    long_running: 60
+    expected: "node --test scripts/*.test.mjs thoát 0."

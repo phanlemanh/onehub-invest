@@ -1,0 +1,148 @@
+{
+  "feature_plain": "Người vận hành mở «Căn giá tốt» thấy ngay căn giá tốt cấp dự án, chọn được tỉnh, phường, dự án, loại hình, bán hay thuê, và biết danh sách đang hiện bao nhiêu trên tổng số.",
+  "will_do": [
+    {
+      "id": "AC-1",
+      "p": "Sẽ xếp căn «Giá tốt» cấp dự án lên đầu, rồi tới căn cấp phường, căn cần xác minh đứng cuối."
+    },
+    {
+      "id": "AC-2",
+      "p": "Sẽ ghi trên từng dòng: nhãn hạng, nhóm so sánh, số căn trong nhóm, lý do lùi cấp và độ tin."
+    },
+    {
+      "id": "AC-3",
+      "p": "Sẽ đếm số trên bốn tab trên toàn bộ danh sách, như nhau ở mọi vai, và ghi đang hiện từ căn nào tới căn nào trên tổng số."
+    },
+    {
+      "id": "AC-4",
+      "p": "Sẽ chia trang đúng theo từng tab: đi hết các trang được đủ số căn trên tab, không trùng, không sót."
+    },
+    {
+      "id": "AC-5",
+      "p": "Sẽ cho chọn tỉnh, phường hoặc dự án trên cây vị trí, mỗi mục ghi đúng số căn, và gửi đường dẫn cho nhau được."
+    },
+    {
+      "id": "AC-6",
+      "p": "Sẽ lọc Bán hay Cho thuê và loại hình, kết hợp được với vị trí; mặc định là Bán."
+    },
+    {
+      "id": "AC-7",
+      "p": "Sẽ có nút hành động ở mọi trạng thái trống, khung chờ lúc tải, và nút «Thử lại» khi lỗi."
+    }
+  ],
+  "wont_do": [
+    {
+      "id": "AC-8",
+      "p": "Sẽ KHÔNG gửi tên, số điện thoại, ảnh, chữ bài, địa chỉ chi tiết xuống máy của vai Người xem, ở bất kỳ trang hay bộ lọc nào."
+    },
+    {
+      "id": "AC-9",
+      "p": "Sẽ KHÔNG còn câu mô tả sai và chữ «thước phường» trên bảng và đầu trang; phần trăm dùng dấu phẩy."
+    },
+    {
+      "id": "OOS-1",
+      "p": "Hoãn chọn phân khu, toà theo lời anh: bảng hạng chưa có hai cấp này, tin chưa gắn toà."
+    },
+    {
+      "id": "OOS-2",
+      "p": "Hoãn lọc số phòng ngủ, diện tích, tầng, đường theo lời anh."
+    },
+    {
+      "id": "OOS-3",
+      "p": "Không đổi luật «thiếu gì»: tin S06 không có chữ bài vẫn thuộc tab «Còn thiếu»."
+    },
+    {
+      "id": "OOS-4",
+      "p": "Không đổi cỡ nhãn nhỏ ở đầu trang, vì khung này dùng chung cho mọi trang."
+    },
+    {
+      "id": "OOS-5",
+      "p": "Khổ màn 1.280 px vẫn phải cuộn trong bảng mới thấy cột «Thấy»."
+    },
+    {
+      "id": "OOS-6",
+      "p": "Màn lùi khi chưa có bảng hạng còn chữ «thước phường», vì hồ sơ đã ký đang ghim câu này."
+    },
+    {
+      "id": "OOS-7",
+      "p": "Không đổi API công khai, không thêm bảng dữ liệu mới."
+    },
+    {
+      "id": "OOS-8",
+      "p": "Câu chữ trong ngăn chi tiết và trang một căn giữ nguyên, cần một hàng dọn từ vựng riêng."
+    }
+  ],
+  "scope_plain": "Những phần dưới đây không làm trong vòng này:",
+  "coverage_plain": [
+    {
+      "i": 0,
+      "p": "Số căn trong bảng đếm từ dữ liệu máy thu ngày 18/11, mỗi căn một dòng."
+    },
+    {
+      "i": 1,
+      "p": "Bộ lọc vị trí, loại hình, bán hay thuê kèm tổng kết quả theo mẫu chung của các trang bất động sản lớn."
+    },
+    {
+      "i": 3,
+      "p": "Phủ đủ bán, thuê ở cấp dự án và cấp phường (AC-1 thứ tự, AC-6 bán hay thuê)."
+    },
+    {
+      "i": 4,
+      "p": "Phủ căn cần xác minh của cả bán và thuê (AC-1 thứ tự, AC-3 số đếm)."
+    },
+    {
+      "i": 5,
+      "p": "Phủ ba cách so giá: bán theo m², thuê theo m², thuê theo tháng (AC-2 dòng, AC-6 lọc)."
+    },
+    {
+      "i": 6,
+      "p": "Phủ 4 tỉnh, 221 phường, 140 dự án, cả dự án trải nhiều phường và căn chỉ gắn tới tỉnh (AC-5 cây vị trí)."
+    },
+    {
+      "i": 7,
+      "p": "Phủ 493 căn có nhiều tin, mỗi căn chỉ hiện một dòng (AC-3 số đếm, AC-4 chia trang)."
+    },
+    {
+      "i": 8,
+      "p": "Phủ mọi loại hình đang có căn (AC-6 lọc)."
+    },
+    {
+      "i": 9,
+      "p": "Phủ ba vai: Người xem, Vận hành, Quản trị (AC-8 theo vai)."
+    },
+    {
+      "i": 10,
+      "p": "Phủ cả máy thu và bản cloud (AC-8)."
+    },
+    {
+      "i": 11,
+      "p": "Phủ các trạng thái tải, có dữ liệu, tab trống, lọc rỗng, danh sách rỗng, lỗi (AC-7)."
+    },
+    {
+      "i": 12,
+      "p": "Phần bỏ ngoài đã liệt ở mục không làm; không còn giả định nào chờ gạch."
+    }
+  ],
+  "gap_probe_plain": [
+    {
+      "i": 0,
+      "p": "Tab và chia trang có thể lệch nhau, khiến một trang thiếu dòng. Đã đổi cách làm: xếp căn vào tab trước rồi mới chia trang."
+    },
+    {
+      "i": 1,
+      "p": "Chưa rõ dự án trải nhiều phường hiện thế nào. Đã tách cây thành hai nhánh Phường và Dự án dưới mỗi tỉnh."
+    },
+    {
+      "i": 2,
+      "p": "Chưa kiểm vai Người xem khi mở một căn ngoài trang đang xem. Đã thêm ca kiểm và thêm khung ảnh vai Người xem."
+    },
+    {
+      "i": 3,
+      "p": "Chưa giải thích chênh lệch số tin và số căn. Đã ghi rõ 8.065 tin gộp còn 7.385 căn, và kiểm căn nhiều tin ở biên trang."
+    },
+    {
+      "i": 4,
+      "p": "Số nền có chỗ nghi mâu thuẫn. Đã đo lại, sửa số căn thuê và viết rõ mốc 15/15 áp cho màn không lọc."
+    }
+  ]
+}
