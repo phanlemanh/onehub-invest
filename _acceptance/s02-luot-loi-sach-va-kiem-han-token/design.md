@@ -1,11 +1,12 @@
 # S02: lượt lỗi sạch và kiểm hạn token — thiết kế tích hợp
 
-Hàng tích hợp làn thu (dãy P4, GS giao 20/11). Hai nhánh ZCode đã qua soát của liên làn (LL):
+Hàng tích hợp làn thu (dãy P4, GS giao 20/11). Ba nhánh ZCode đã qua soát của liên làn (LL):
 
 | Nhánh | Đỉnh | Việc |
 |---|---|---|
 | `zcode/s02-luot-loi-sach` | `0dc032fab` | (1711-1b) lượt thu ném lỗi giữ `.partial` ẩn, không sinh thư mục tên thật 0 items; (1711-1a) nhánh 401 sau refresh ghi dòng `AUTH FAIL [S02] <ISO>` trước khi ném |
 | `zcode/s02-apptoken-het-han` | `b49971757` | (1911-5) `kiemAppToken` hàm thuần: token rỗng, hết hạn, thiếu exp thì ném trước mọi lời gọi API; còn hạn thì log số phút còn lại |
+| `zcode/s02-auth-fail-kiem-han` | `26c008a2e` | (1911-10, nối trên b49971757) `duyetAppToken`: hết hạn/rác ghi `AUTH FAIL [S02]` rồi ném; ca test hết hạn giả đồng hồ, không ghim năm |
 
 ## Cách làm
 
@@ -29,9 +30,9 @@ Không có UI. Bốn phép đo của hồ sơ nằm ở `_acceptance/s02-luot-lo
 trên cùng fixture: `nguoi-doc.mjs` (--pha), `dot-bien-han.mjs` (bản đột biến), `noi-day.sh` (bốn bản chép: bỏ lời gọi kiểm hạn, cấy đường trả sớm, cấy lại dòng log cũ, bỏ dòng AUTH FAIL),
 `vung.sh` (cấy tệp ngoài vùng). Bộ test collector (`config:executors.test.collector`) chạy toàn bộ.
 
-## Giới hạn đã thấy, không sửa ở đây
+## Giới hạn đã thấy
 
-- Lượt dừng vì token hết hạn (`kiemAppToken` ném) không ghi dòng `AUTH FAIL [S02]` — dòng chỉ có ở nhánh 401 sau
-  refresh. Bộ đọc dòng này chưa có; khi dựng thước độ tươi theo dòng ấy thì hai đường phải chung một dấu. Báo LL.
-- Ca `apptoken-exp.test.ts` ghim năm `2026-` trong regex: từ 01/01/2027 ca «hết hạn 1 giờ trước» đỏ giả. Báo LL.
-- Ca `1711-1(a)` và AC-2 là phép đo tĩnh trên mã (dòng có mặt và đứng trước throw), không chạy nhánh 401. Hàm `call` không xuất ra nên không chạy hành vi được nếu không sửa mã thu.
+- Hai điểm ghi ở bản đầu (lượt dừng vì token hết hạn không ghi AUTH FAIL; ca test ghim năm 2026) đã sửa ở `zcode/s02-auth-fail-kiem-han`
+  (claudedp-1911-10) và gộp vào hàng này ngày 20/11.
+- Nhánh 401 sau refresh chỉ đo tĩnh (dòng có mặt và đứng trước throw). Hàm `call` không xuất ra nên không chạy hành vi được nếu không
+  sửa mã thu.
