@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 48829e29ab9ed515114e204607162cbc9c510bec
+verified_commit: 5e3c147b109f1ce594eb317ad7b5a2e407d1c573
 human_signoff: Mạnh 2026-11-19
 ---
 
@@ -173,3 +173,7 @@ none — every multi-run eval is uniform
 
 Round 1: E1-E10 deu pass, cac lenh suite hoi quy xanh. Chua co round truoc.
 
+
+### Re-pin lần 1 — 2026-11-19, do hoá cũ do gộp main (#497 đổi app/src/lib/deals.ts) sau chữ ký
+run_id: repin-20261119T135851Z-85335
+sha: 5e3c147b109f1ce594eb317ad7b5a2e407d1c573 · suites: 7 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng
