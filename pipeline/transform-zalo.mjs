@@ -3,8 +3,9 @@
 // Parser đo coverage: % tin có đủ (giá + diện tích + phường) cho confidence=high.
 // Export parsePost/matchPhuong cho bench-extraction dùng chung (C2) — nguồn
 // chân lý của parser là một, bench và transform không được fork logic.
-import { realpathSync } from "node:fs";
+import { mkdirSync, realpathSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
+import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
 
@@ -18,6 +19,9 @@ import { co095, retractRule, subjectKey, phatBieuLoaiHinh, phatBieuPhongNgu, pha
 import { assignStickyIds } from "./lib/offer-key.mjs";
 import { LUAT_DV6, LY_DO_RUT, RULE_ID as RULE_ID_THE, coBangThe, docNhanDuAn, docTheDaDuyet, phatBieuDiaChiNhom, rutTheCu, traLaiDV6 } from "./lib/dia-chi-the-nhom.mjs";
 import { normText } from "./lib/norm-text.mjs";
+import { congTacGom } from "./lib/gom-tin.mjs";
+import { gomHaiTang } from "./lib/gom-tin-hai-tang.mjs";
+import { docTuDienPhanKhu } from "./lib/gom-tin-phan-khu.mjs";
 import { ASSERTION_METHOD, CONFIDENCE, ENRICH_FIELD, FLOOR_BAND, KIND, PROPERTY_TYPE } from "./lib/vocab.generated.mjs";
 
 const DB_URL =
@@ -853,7 +857,7 @@ export async function docThiTruongNhom(client, khoaNhom = khoaNhomThat) {
 /** Phiên bản bộ đọc tầng (DV4) — method_version của phát biểu tầng. */
 export const TANG_VERSION = "transform-zalo@dv4";
 
-export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin = true, khoaNhom = khoaNhomThat, ganSo = ganSdtQuaNguoi } = {}) {
+export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin = true, khoaNhom = khoaNhomThat, ganSo = ganSdtQuaNguoi, gom, bangDoi } = {}) {
   // Phường theo thị trường của nhóm (N1): nhóm S03 khai market_codes ở sổ nhóm (collection_units, PL12) chỉ đối chiếu
   // phường của các thị trường đó; nhóm chưa khai (Hỏi-1, Mạnh duyệt 30/10) đối chiếu mọi thị trường có phường.
   const moiThiTruong = await docThiTruongCoPhuong(client);
@@ -936,10 +940,21 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
   console.log(`loại tin theo nguồn: ${JSON.stringify(nguonLoai)}`);
 
   // ---- Bước 4: gom repost theo khoá nội dung (repostKey); offer_id cấp ở bước 5 ----
+  // GT5 (khoa-gom-hai-tang): công tắc ops_audit `gom-tin:hai-tang`, mặc định tắt → khoá repostKey cũ nguyên văn. Bật → gom hai tầng
+  // (bản chữ → tin, lib/gom-tin-hai-tang.mjs). `gom` ("bat"|"tat") chỉ cho test và probe; vắng thì đọc công tắc.
+  const gomBat = (gom ?? (await congTacGom(client))) === "bat";
+  const tinCuaBai = new Map(); // post_id → số thứ tự tin hai tầng (chỉ khi bật)
+  if (gomBat) {
+    const tuDien = await docTuDienPhanKhu(client);
+    gomHaiTang(parsed.filter((pr) => pr.confidence !== "low"), { tuDien, gatSo })
+      .forEach((t, i) => { for (const it of t.items) tinCuaBai.set(it.post.post_id, i); });
+    console.log(`gom hai tầng: BẬT · ${tinCuaBai.size} bài · từ điển phân khu ${tuDien.length} cụm`);
+  }
   const dedup = new Map();
   for (const pr of parsed) {
     if (pr.confidence === "low") continue;
-    const key = createHash("sha256").update(repostKey(pr, pr.post)).digest("hex").slice(0, 16);
+    const khoaGom = gomBat ? `gt5|${tinCuaBai.get(pr.post.post_id)}` : repostKey(pr, pr.post);
+    const key = createHash("sha256").update(khoaGom).digest("hex").slice(0, 16);
     const offerId = `offer_${key}`;
     let o = dedup.get(offerId);
     if (!o) {
@@ -981,8 +996,20 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
   // Khoá dính (PL14, migration 044): nhóm theo nội dung chỉ để gom repost; offer_id lấy theo post — nhóm thừa kế khoá
   // của tin có chung nhiều post nhất, nhóm mới băm 'S03|<post neo>'. Đổi giá/DT/PN/parser không đổi offer_id.
   const nhom = [...dedup.values()];
+  // GT5: lượt bật đọc tin cũ (đang sống) của từng bài TRƯỚC khi ghi, để xuất bảng đổi theo bài sau khi cấp khoá.
+  const tinCu = gomBat ? new Map((await client.query(
+    `SELECT unnest(post_ids) AS post_id, offer_id FROM sale_offer_records WHERE source = 'S03' AND retired_at IS NULL`)).rows
+    .map((r) => [r.post_id, r.offer_id])) : null;
   const khoa = await assignStickyIds(client, "S03", nhom.map((o) => ({ posts: o.posts })));
   nhom.forEach((o, i) => { o.offerId = khoa[i].offer_id; o.osk = khoa[i].originating_system_key; });
+  if (gomBat) {
+    const doi = nhom.flatMap((o) => o.posts.filter((p) => (tinCu.get(p.post_id) ?? null) !== o.offerId)
+      .map((p) => `${p.post_id}\t${tinCu.get(p.post_id) ?? ""}\t${o.offerId}`));
+    const tep = bangDoi ?? `${dirname(fileURLToPath(import.meta.url))}/logs/gom-tin-doi-${new Date().toISOString().replace(/[:.]/g, "")}.tsv`;
+    mkdirSync(dirname(tep), { recursive: true });
+    writeFileSync(tep, `post_id\toffer_id_cu\toffer_id_moi\n${doi.map((d) => `${d}\n`).join("")}`);
+    console.log(`gom hai tầng: bảng đổi theo bài ${doi.length} dòng → ${tep}`);
+  }
   for (const o of nhom) {
     const phoneHash = o.phone
       ? createHash("sha256").update(o.phone).digest("hex").slice(0, 32)
