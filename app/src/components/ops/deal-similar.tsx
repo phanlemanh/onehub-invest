@@ -135,7 +135,7 @@ function DealSimilarToanTap({ d, onMo, cung, tai }: { d: DealHang; onMo: (id: st
         <Alert variant="destructive">
           <CircleAlertIcon aria-hidden="true" />
           <AlertTitle>Chưa tải được căn cùng tiêu chí</AlertTitle>
-          <AlertDescription>Thử lại sau giây lát; tab «Chi tiết» vẫn dùng được.</AlertDescription>
+          <AlertDescription>Thử lại sau giây lát; phần «Chi tiết» vẫn xem được.</AlertDescription>
           <AlertAction>
             <Button variant="outline" size="sm" onClick={() => setThu((x) => x + 1)}>
               <RotateCwIcon data-icon="inline-start" aria-hidden="true" />

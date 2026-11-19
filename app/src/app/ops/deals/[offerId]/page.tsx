@@ -10,7 +10,9 @@ import { RegionError } from "@/components/states/region-error";
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { getSessionUser } from "@/lib/auth";
-import { dealHang, dealTheoVai, dealTrongDanhSach, getDeal, trangCuaCan } from "@/lib/deals";
+import { dealHang, dealTheoVai, dealTrongDanhSach, getDeal } from "@/lib/deals";
+// Tách dòng: ca test OD1-AC-9 chép trang và thay nguyên văn dòng import trên.
+import { trangCuaCan } from "@/lib/deals";
 import { chuGiam } from "@/lib/deals-chi-tiet";
 import { fmtCompact } from "@/lib/format";
 import { canAccessOps, xemNoiDungTin } from "@/lib/ops-access";
