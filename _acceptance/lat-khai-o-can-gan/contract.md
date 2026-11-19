@@ -5,7 +5,7 @@ slug: lat-khai-o-can-gan
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui, api]
-status: approved
+status: implemented
 approved_by: Mạnh
 approved_at: 2026-11-18
 design_doc: docs/superpowers/specs/2026-11-18-lat-khai-o-can-gan-design.md
