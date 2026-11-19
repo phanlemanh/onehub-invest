@@ -151,7 +151,12 @@ if (che === "ap-lui") {
     let co = false; try { co = readFileSync(path.join(HS, "ap-may-thu", t), "utf8").trim().length > 0; } catch { /* vắng */ }
     kt(co, `hồ sơ áp có ${t}`);
   }
-  const b0 = await bamS03(); const n0 = await soSong();
+  // AC-6 (đổi lời 19/11, P3-209): area_id so nguyên văn; field_provenance so với bản trước khi áp đã phân xử lại một lượt
+  const bamCot = async () => createHash("sha256").update(JSON.stringify((await c.query(
+    `SELECT offer_id, area_id FROM sale_offer_records WHERE source = 'S03' ORDER BY offer_id`)).rows)).digest("hex");
+  const cot0 = await bamCot(); const n0 = await soSong(); const b0 = await bamS03();
+  // chụp trạng thái trước khi áp để dựng bản so «trước khi áp, phân xử lại một lượt» sau khi đo
+  await c.query(`CREATE TEMP TABLE pct_s0 AS SELECT offer_id, area_id, field_provenance FROM sale_offer_records WHERE source = 'S03'`);
   await apDau();
   kt(await bamS03() !== b0, "đối chứng: lượt ghi làm đổi cột tin S03");
   const lui = readFileSync(path.join(HS, "ap-may-thu/lui.sql"), "utf8");
@@ -159,7 +164,36 @@ if (che === "ap-lui") {
   transformZalo();
   lenh(["--ghi", "--noi-tiep"]);
   kt(await soSong() === n0, `sau khi lùi và chạy lại chuỗi: phát biểu sống của luật về ${n0} (được ${await soSong()})`);
-  kt(await bamS03() === b0, "sau khi lùi và chạy lại chuỗi: băm area_id + field_provenance của tin S03 bằng trước khi áp");
+  kt(await bamCot() === cot0, "sau khi lùi và chạy lại chuỗi: băm area_id của tin S03 bằng trước khi áp");
+  const b3 = await bamS03();
+  await c.query(`CREATE TEMP TABLE pct_s3 AS SELECT offer_id, area_id, field_provenance FROM sale_offer_records WHERE source = 'S03'`);
+  // Bản so: trạng thái trước khi áp, rồi phân xử lại một lượt đúng các tin mà lượt lùi đổi phát biểu (dòng của luật đã rút).
+  // Phát biểu của luật đã rút nên bộ phân xử không thấy chúng — kết quả là «trước khi áp, phân xử lại một lượt».
+  const { rows: dung } = await c.query(`SELECT DISTINCT r.offer_id FROM sale_offer_records r
+    JOIN field_assertions fa ON fa.subject_key = ANY (offer_subject_keys(r.source, r.originating_system_key, r.post_ids))
+     AND fa.rule_id = $1 WHERE r.source = 'S03'`, [RULE]);
+  await c.query(`UPDATE sale_offer_records r SET area_id = s.area_id, field_provenance = s.field_provenance FROM pct_s0 s WHERE s.offer_id = r.offer_id`);
+  kt(await bamS03() === b0, "dựng bản so: chép lại trạng thái trước khi áp đúng từng byte");
+  await c.query(`SELECT resolve_offer_fields($1::text[])`, [dung.map((x) => x.offer_id)]);
+  const bSo = await bamS03();
+  console.log(`bản so: phân xử lại ${dung.length} tin có phát biểu của luật; ${bSo === b0 ? "trùng" : "khác"} trạng thái trước khi áp nguyên văn`);
+  if (b3 !== bSo) {
+    // chẩn đoán: tin lệch, theo nhóm (có trong tập phân xử lại hay không) và khoá provenance lệch
+    const { rows: lech } = await c.query(`SELECT r.offer_id, r.offer_id = ANY ($1::text[]) AS trong_tap,
+        s.field_provenance -> 'area_id' AS sau_chuoi, r.field_provenance -> 'area_id' AS ban_so,
+        (SELECT array_agg(k) FROM (SELECT k FROM jsonb_object_keys(coalesce(s.field_provenance,'{}') || coalesce(r.field_provenance,'{}')) k
+          WHERE s.field_provenance -> k IS DISTINCT FROM r.field_provenance -> k) x) AS khoa
+      FROM sale_offer_records r JOIN pct_s3 s USING (offer_id)
+      WHERE r.source = 'S03' AND (r.area_id IS DISTINCT FROM s.area_id OR r.field_provenance IS DISTINCT FROM s.field_provenance)`,
+      [dung.map((x) => x.offer_id)]);
+    console.log(`lệch ${lech.length} tin: trong tập ${lech.filter((x) => x.trong_tap).length} · ngoài tập ${lech.filter((x) => !x.trong_tap).length}`);
+    for (const x of lech.slice(0, 5)) console.log(JSON.stringify(x).slice(0, 400));
+    const ids = [...new Set(lech.flatMap((x) => (x.sau_chuoi?.goi_y ?? []).flatMap((g) => g.ids)))];
+    const { rows: fa } = await c.query(`SELECT rule_id, method, retracted_at IS NOT NULL AS da_rut, retract_reason, count(*)::int n
+      FROM field_assertions WHERE id = ANY ($1::bigint[]) GROUP BY 1,2,3,4 ORDER BY 1,2,3`, [ids]);
+    console.log("phát biểu trong goi_y sau chuỗi của tin lệch: " + JSON.stringify(fa));
+  }
+  kt(b3 === bSo, "sau khi lùi và chạy lại chuỗi: băm area_id + field_provenance bằng bản trước khi áp đã phân xử lại một lượt");
 }
 
 if (che === "doi-chung-resolve") {

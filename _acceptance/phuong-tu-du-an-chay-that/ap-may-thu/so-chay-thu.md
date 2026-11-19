@@ -53,18 +53,28 @@ Cột đang ghi tỉnh Hà Nội, dự án nằm ở phường thuộc Hưng Yê
 
 ## Lùi qua chuỗi (E6) và phép đối chứng «chỉ gọi resolve»
 
-Lượt `tren-db-thu.sh ap-lui` (19/11 ~08:45Z, bản chép): sau sao lưu → áp → `lui.sql` → `transform-zalo` → `--ghi --noi-tiep`, phát biểu sống
-của luật về 0 và `area_id` của mọi tin S03 về đúng như trước khi áp; băm `area_id` + `field_provenance` lệch ở 13 tin, mọi chỗ lệch
-nằm trong `field_provenance.area_id.goi_y` (gợi ý từ thẻ nhóm, luật `dia-chi-the-nhom`), cột vẫn trống như trước.
+Cách đo theo lời Mạnh 19/11 (AC-6 đổi lời, yêu cầu P3-209): `area_id` so nguyên văn với trước khi áp; `area_id` + `field_provenance` so với
+bản trước khi áp đã phân xử lại một lượt (probe chép lại trạng thái trước khi áp rồi gọi `resolve_offer_fields` trên các tin có phát biểu
+của luật).
+
+Lượt `tren-db-thu.sh ap-lui` 19/11 ~16:55Z trên bản chép: sao lưu → áp → `lui.sql` → `transform-zalo` → `--ghi --noi-tiep`. Kết quả: phát
+biểu sống của luật về 0; băm `area_id` của mọi tin S03 bằng trước khi áp; băm `area_id` + `field_provenance` bằng bản so (7.441 tin phân xử
+lại). Lượt thử phá `ap-lui --bo-lui` (bỏ `lui.sql`) đỏ ở đúng hai chỗ: 80.279 phát biểu sống và băm `area_id` lệch.
+
+Hai vết thừa mà lượt đo bắt được, đã sửa trong `lui.sql` trước khi xin chấm:
+
+- 272 tin cột trống mất gợi ý `goi_y` của thẻ nhóm: lượt phân xử gỡ nhãn `du-an` bỏ cả khoá `field_provenance.area_id` (hàm 102). Sửa:
+  phân xử lại thêm một lượt để dựng lại `goi_y`.
+- 13 tin có phát biểu của luật mà không mang nhãn `du-an` (tin giữ nguyên cột): `goi_y` của chúng còn trỏ tới phát biểu đã rút vì lượt lùi
+  không phân xử lại chúng. Sửa: tập phân xử lại gồm cả mọi tin có phát biểu sống của luật.
 
 Đối chứng, không có luật phường: `bash _acceptance/phuong-tu-du-an-chay-that/probes/tren-db-thu.sh doi-chung-resolve` — trên bản chép chưa có
 phát biểu nào của luật, chỉ gọi `resolve_offer_fields` một lượt trên tin S03 cột trống chưa có dấu:
 
 - tin S03 cột trống chưa có dấu: 544 · đổi `field_provenance` sau một lượt resolve: 267 · đổi `area_id`: 0
 
-Tức 267 tin mang dấu cũ chưa từng phân xử lại; lần gọi phân xử nào cũng làm mới `goi_y` của chúng, có hay không có luật phường. Bốn tin lệch ở E6 mà
-lượt chẩn đoán in ra (offer_b27e774df99e12cd, offer_15086031520e1c26, offer_4f5bded95b37c6bb, offer_62c4aa243ff4b1ac) đều nằm trong 267 tin ấy;
-chín tin còn lại chưa đối chiếu từng mã. Cách đo AC-6 đang chờ Mạnh quyết (yêu cầu P3-209).
+Tức 267 tin mang dấu cũ chưa từng phân xử lại; lượt phân xử nào cũng làm mới `goi_y` của chúng, có hay không có luật phường. Vì thế bản so
+của AC-6 là «trước khi áp, phân xử lại một lượt», không phải trạng thái trước khi áp nguyên văn.
 
 ## Ngay trước khi áp
 

@@ -14,8 +14,8 @@
    `--ghi --noi-tiep` cho tin mới.
 4. **Lệnh kiểm sau:** `psql … -f _acceptance/phuong-tu-du-an-chay-that/ap-may-thu/kiem-sau.sql`. Đạt khi số tin S03 đang hiện có phường không thấp hơn
    số chạy thử ngay trước khi áp, và không vượt quá số ấy cộng số tin S03 nạp sau mốc chạy thử. Lệch thì dừng, báo, không tự sửa cho khớp.
-5. **Cách lùi:** `psql … -f _acceptance/phuong-tu-du-an-chay-that/ap-may-thu/lui.sql` (rút mọi phát biểu của luật, phân xử lại tin mang nhãn
-   `du-an`). Sau khi lùi, chuỗi nạp tự thôi ghi vì luật không còn dòng sống. Rồi chạy lại hạng giá `node pipeline/xep-hang-gia.mjs` để hạng
+5. **Cách lùi:** `psql … -f _acceptance/phuong-tu-du-an-chay-that/ap-may-thu/lui.sql` (rút mọi phát biểu của luật, phân xử lại hai lượt các tin
+   mang nhãn `du-an` hoặc có phát biểu của luật). Sau khi lùi, chuỗi nạp tự thôi ghi vì luật không còn dòng sống. Rồi chạy lại hạng giá `node pipeline/xep-hang-gia.mjs` để hạng
    giá theo vị trí về như cũ; lượt đồng bộ cloud kế tiếp mang giá trị đã lùi lên cloud — kiểm bằng `kiem-sau.sql` trên máy thu và ô «Có
    phường» ở `/ops` trên cloud sau lượt đồng bộ.
 

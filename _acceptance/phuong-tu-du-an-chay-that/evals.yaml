@@ -42,7 +42,7 @@ evals:
     cmd: bash _acceptance/phuong-tu-du-an-chay-that/probes/tren-db-thu.sh ap-lui
     long_running: 50
     paths: ["_acceptance/phuong-tu-du-an-chay-that/ap-may-thu/**", "_acceptance/phuong-tu-du-an-chay-that/probes/**"]
-    expected: "Đủ năm thứ; sau khi lùi và chạy lại transform-zalo cùng bước phường, băm area_id, field_provenance và số phát biểu sống bằng trước khi áp. Chiều đỏ: bỏ bước rút phát biểu khi lùi thì băm lệch và probe đỏ gọi tên."
+    expected: "Đủ năm thứ; sau khi lùi và chạy lại transform-zalo cùng bước phường, băm area_id và số phát biểu sống bằng trước khi áp, băm area_id + field_provenance bằng bản trước khi áp đã phân xử lại một lượt. Chiều đỏ: bỏ bước rút phát biểu khi lùi thì băm lệch và probe đỏ gọi tên."
   - id: E7
     criterion: AC-7
     executor: script

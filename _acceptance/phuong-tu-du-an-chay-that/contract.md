@@ -5,7 +5,7 @@ slug: phuong-tu-du-an-chay-that
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, db]
-status: approved
+status: implemented
 design_doc: docs/superpowers/specs/2026-11-19-phuong-tu-du-an-chay-that-design.md
 veto_state:
 veto_opened_at:
@@ -62,8 +62,9 @@ cùng một phường; 20 tin có phường theo thẻ khác phường theo dự
 ### AC-6 — Hồ sơ áp đủ năm thứ và lùi giữ được qua chuỗi
 Given thư mục `ap-may-thu/`,
 When chạy trên DB thử theo thứ tự sao lưu, áp, kiểm sau, lùi, rồi chạy lại `transform-zalo` và bước phường,
-Then có đủ lệnh áp, số chạy thử, sao lưu, cách lùi, lệnh kiểm sau; sau khi lùi và chạy lại chuỗi, băm `area_id`, `field_provenance` trên tin S03 và số phát biểu sống
-của luật bằng trạng thái trước khi áp; hồ sơ lùi kê lệnh chạy lại hạng giá và lệnh kiểm bản cloud.
+Then có đủ lệnh áp, số chạy thử, sao lưu, cách lùi, lệnh kiểm sau; sau khi lùi và chạy lại chuỗi, băm `area_id` trên tin S03 và số phát biểu sống của luật bằng
+trạng thái trước khi áp, còn băm `area_id`, `field_provenance` bằng trạng thái trước khi áp đã phân xử lại một lượt; hồ sơ lùi kê lệnh chạy lại hạng giá và lệnh kiểm
+bản cloud.
 
 ### AC-7 — Thời gian và số chạy thử đọc được
 Given DB thử chép từ máy thu,
@@ -96,5 +97,9 @@ Core → AC-1…AC-7. Later: đưa phát biểu phường từ thẻ nhóm vào 
 - Sửa migration 099, 102.
 
 ## Notes
+
+AC-6 đổi lời 19/11 theo lời Mạnh «theo khuyến nghị» (yêu cầu P3-209): `field_provenance` so với bản trước khi áp đã phân xử lại một lượt, vì 267 tin S03
+mang dấu cũ chưa từng phân xử lại; xem `ap-may-thu/so-chay-thu.md` mục «Lùi qua chuỗi».
+
 
 Hợp đồng DA9 ghi lượt ghi thật cần lời riêng của Mạnh; hàng này xin chữ ký Cổng Bằng chứng phủ lượt ghi. Xem `cau-cong-pham-vi.md`.
