@@ -5,7 +5,7 @@ slug: can-cung-tieu-chi-toan-tap
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui, api]
-status: approved
+status: implemented
 approved_by: Mạnh
 approved_at: 2026-11-19
 design_doc: docs/superpowers/specs/2026-11-19-can-cung-tieu-chi-toan-tap-design.md
