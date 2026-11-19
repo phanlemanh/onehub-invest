@@ -1,207 +1,360 @@
 {
- "note": "ON7 ops-nhan-ma-nguon AC-7 — bảng ca dùng chung cho bộ che bản pipeline và bản app. {Sxx:dạng} được thay LÚC CHẠY bằng tên thật của mã đó rút từ db/migrations (tệp này không chứa tên). Dạng: full (nguyên văn) · upper · fold (bỏ dấu, chữ thường) · joined (bỏ dấu, viết liền) · suffix (bỏ dấu, viết liền, dính hậu tố 'user'). Ca names: [] → kỳ vọng null. Ca «khớp nguyên cụm» (che-ten-nguon-khong-lay-tu-dau, migration 112): nguồn GIẢ S90 — tên hai từ có từ đầu trùng thương hiệu dự án giả «Lumora Park», tên miền có nhãn đầu là từ chung «market»; `names` mang cờ wholeOnly.",
- "cases": [
-  {
-   "ten": "tên đủ",
-   "in": "lỗi {S02:full} timeout",
-   "out": "lỗi S02 timeout"
-  },
-  {
-   "ten": "khác hoa thường",
-   "in": "fetch {S01:upper} 429",
-   "out": "fetch S01 429"
-  },
-  {
-   "ten": "bỏ dấu",
-   "in": "ads {S06:fold} ok",
-   "out": "ads S06 ok"
-  },
-  {
-   "ten": "viết liền",
-   "in": "nguồn {S06:joined}-ads xong",
-   "out": "nguồn S06-ads xong"
-  },
-  {
-   "ten": "dính hậu tố",
-   "in": "--channel {S03:suffix}",
-   "out": "--channel S03user"
-  },
-  {
-   "ten": "từ đầu của tên nhiều từ",
-   "in": "nhóm {S05:first} 3",
-   "out": "nhóm S05 3"
-  },
-  {
-   "ten": "hai tên một dòng",
-   "in": "{S01:full}/{S02:full} đối chiếu",
-   "out": "S01/S02 đối chiếu"
-  },
-  {
-   "ten": "tên ba ký tự giữa một từ khác",
-   "in": "x{S04:fold}y và {S04:full}",
-   "out": "x{S04:fold}y và S04"
-  },
-  {
-   "ten": "không có tên",
-   "in": "cloud-sync xong 12 bảng",
-   "out": "cloud-sync xong 12 bảng"
-  },
-  {
-   "ten": "danh sách tên rỗng",
-   "in": "lỗi {S02:full}",
-   "out": null,
-   "names": []
-  },
-  {
-   "ten": "khớp nguyên cụm: tên dự án mang thương hiệu giữ nguyên",
-   "in": "dự án Lumora Park quận 9",
-   "out": "dự án Lumora Park quận 9",
-   "names": [
+  "note": "ON7 ops-nhan-ma-nguon AC-7 — bảng ca dùng chung cho bộ che bản pipeline và bản app. {Sxx:dạng} được thay LÚC CHẠY bằng tên thật của mã đó rút từ db/migrations (tệp này không chứa tên). Dạng: full (nguyên văn) · upper · fold (bỏ dấu, chữ thường) · joined (bỏ dấu, viết liền) · suffix (bỏ dấu, viết liền, dính hậu tố 'user'). Ca names: [] → kỳ vọng null. Ca «khớp nguyên cụm» (che-ten-nguon-khong-lay-tu-dau, migration 112): nguồn GIẢ S90 — tên hai từ có từ đầu trùng thương hiệu dự án giả «Lumora Park», tên miền có nhãn đầu là từ chung «market»; `names` mang cờ wholeOnly.",
+  "cases": [
     {
-     "code": "S90",
-     "realName": "Lumora Thịnh",
-     "wholeOnly": true
+      "ten": "tên đủ",
+      "in": "lỗi {S02:full} timeout",
+      "out": "lỗi S02 timeout"
     },
     {
-     "code": "S90",
-     "realName": "market.lumorathinh.vn",
-     "wholeOnly": true
-    }
-   ]
-  },
-  {
-   "ten": "khớp nguyên cụm: từ chung đứng riêng giữ nguyên",
-   "in": "market mở cửa sáng nay",
-   "out": "market mở cửa sáng nay",
-   "names": [
-    {
-     "code": "S90",
-     "realName": "Lumora Thịnh",
-     "wholeOnly": true
+      "ten": "khác hoa thường",
+      "in": "fetch {S01:upper} 429",
+      "out": "fetch S01 429"
     },
     {
-     "code": "S90",
-     "realName": "market.lumorathinh.vn",
-     "wholeOnly": true
-    }
-   ]
-  },
-  {
-   "ten": "khớp nguyên cụm: cụm hai từ đủ dấu bị che",
-   "in": "nguồn Lumora Thịnh lỗi",
-   "out": "nguồn S90 lỗi",
-   "names": [
-    {
-     "code": "S90",
-     "realName": "Lumora Thịnh",
-     "wholeOnly": true
+      "ten": "bỏ dấu",
+      "in": "ads {S06:fold} ok",
+      "out": "ads S06 ok"
     },
     {
-     "code": "S90",
-     "realName": "market.lumorathinh.vn",
-     "wholeOnly": true
-    }
-   ]
-  },
-  {
-   "ten": "khớp nguyên cụm: cụm hai từ viết hoa bị che",
-   "in": "nguồn LUMORA THỊNH lỗi",
-   "out": "nguồn S90 lỗi",
-   "names": [
-    {
-     "code": "S90",
-     "realName": "Lumora Thịnh",
-     "wholeOnly": true
+      "ten": "viết liền",
+      "in": "nguồn {S06:joined}-ads xong",
+      "out": "nguồn S06-ads xong"
     },
     {
-     "code": "S90",
-     "realName": "market.lumorathinh.vn",
-     "wholeOnly": true
-    }
-   ]
-  },
-  {
-   "ten": "khớp nguyên cụm: cụm hai từ bỏ dấu bị che",
-   "in": "nguồn lumora thinh lỗi",
-   "out": "nguồn S90 lỗi",
-   "names": [
-    {
-     "code": "S90",
-     "realName": "Lumora Thịnh",
-     "wholeOnly": true
+      "ten": "dính hậu tố",
+      "in": "--channel {S03:suffix}",
+      "out": "--channel S03user"
     },
     {
-     "code": "S90",
-     "realName": "market.lumorathinh.vn",
-     "wholeOnly": true
-    }
-   ]
-  },
-  {
-   "ten": "khớp nguyên cụm: cụm viết liền bị che",
-   "in": "nguồn lumorathinh-ads xong",
-   "out": "nguồn S90-ads xong",
-   "names": [
-    {
-     "code": "S90",
-     "realName": "Lumora Thịnh",
-     "wholeOnly": true
+      "ten": "từ đầu của tên nhiều từ",
+      "in": "nhóm {S05:first} 3",
+      "out": "nhóm S05 3"
     },
     {
-     "code": "S90",
-     "realName": "market.lumorathinh.vn",
-     "wholeOnly": true
-    }
-   ]
-  },
-  {
-   "ten": "khớp nguyên cụm: tên miền bị che",
-   "in": "tải market.lumorathinh.vn xong",
-   "out": "tải S90 xong",
-   "names": [
-    {
-     "code": "S90",
-     "realName": "Lumora Thịnh",
-     "wholeOnly": true
+      "ten": "hai tên một dòng",
+      "in": "{S01:full}/{S02:full} đối chiếu",
+      "out": "S01/S02 đối chiếu"
     },
     {
-     "code": "S90",
-     "realName": "market.lumorathinh.vn",
-     "wholeOnly": true
-    }
-   ]
-  },
-  {
-   "ten": "đối chứng cờ vắng: thương hiệu bị che như cũ",
-   "in": "dự án Lumora Park quận 9",
-   "out": "dự án S90 Park quận 9",
-   "names": [
-    {
-     "code": "S90",
-     "realName": "Lumora Thịnh"
+      "ten": "tên ba ký tự giữa một từ khác",
+      "in": "x{S04:fold}y và {S04:full}",
+      "out": "x{S04:fold}y và S04"
     },
     {
-     "code": "S90",
-     "realName": "market.lumorathinh.vn"
-    }
-   ]
-  },
-  {
-   "ten": "đối chứng cờ false: thương hiệu bị che như cũ",
-   "in": "dự án Lumora Park quận 9",
-   "out": "dự án S90 Park quận 9",
-   "names": [
-    {
-     "code": "S90",
-     "realName": "Lumora Thịnh",
-     "wholeOnly": false
+      "ten": "không có tên",
+      "in": "cloud-sync xong 12 bảng",
+      "out": "cloud-sync xong 12 bảng"
     },
     {
-     "code": "S90",
-     "realName": "market.lumorathinh.vn",
-     "wholeOnly": false
+      "ten": "danh sách tên rỗng",
+      "in": "lỗi {S02:full}",
+      "out": null,
+      "names": []
+    },
+    {
+      "ten": "khớp nguyên cụm: tên dự án mang thương hiệu giữ nguyên",
+      "in": "dự án Lumora Park quận 9",
+      "out": "dự án Lumora Park quận 9",
+      "names": [
+        {
+          "code": "S90",
+          "realName": "Lumora Thịnh",
+          "wholeOnly": true
+        },
+        {
+          "code": "S90",
+          "realName": "market.lumorathinh.vn",
+          "wholeOnly": true
+        }
+      ]
+    },
+    {
+      "ten": "khớp nguyên cụm: từ chung đứng riêng giữ nguyên",
+      "in": "market mở cửa sáng nay",
+      "out": "market mở cửa sáng nay",
+      "names": [
+        {
+          "code": "S90",
+          "realName": "Lumora Thịnh",
+          "wholeOnly": true
+        },
+        {
+          "code": "S90",
+          "realName": "market.lumorathinh.vn",
+          "wholeOnly": true
+        }
+      ]
+    },
+    {
+      "ten": "khớp nguyên cụm: cụm hai từ đủ dấu bị che",
+      "in": "nguồn Lumora Thịnh lỗi",
+      "out": "nguồn S90 lỗi",
+      "names": [
+        {
+          "code": "S90",
+          "realName": "Lumora Thịnh",
+          "wholeOnly": true
+        },
+        {
+          "code": "S90",
+          "realName": "market.lumorathinh.vn",
+          "wholeOnly": true
+        }
+      ]
+    },
+    {
+      "ten": "khớp nguyên cụm: cụm hai từ viết hoa bị che",
+      "in": "nguồn LUMORA THỊNH lỗi",
+      "out": "nguồn S90 lỗi",
+      "names": [
+        {
+          "code": "S90",
+          "realName": "Lumora Thịnh",
+          "wholeOnly": true
+        },
+        {
+          "code": "S90",
+          "realName": "market.lumorathinh.vn",
+          "wholeOnly": true
+        }
+      ]
+    },
+    {
+      "ten": "khớp nguyên cụm: cụm hai từ bỏ dấu bị che",
+      "in": "nguồn lumora thinh lỗi",
+      "out": "nguồn S90 lỗi",
+      "names": [
+        {
+          "code": "S90",
+          "realName": "Lumora Thịnh",
+          "wholeOnly": true
+        },
+        {
+          "code": "S90",
+          "realName": "market.lumorathinh.vn",
+          "wholeOnly": true
+        }
+      ]
+    },
+    {
+      "ten": "khớp nguyên cụm: cụm viết liền bị che",
+      "in": "nguồn lumorathinh-ads xong",
+      "out": "nguồn S90-ads xong",
+      "names": [
+        {
+          "code": "S90",
+          "realName": "Lumora Thịnh",
+          "wholeOnly": true
+        },
+        {
+          "code": "S90",
+          "realName": "market.lumorathinh.vn",
+          "wholeOnly": true
+        }
+      ]
+    },
+    {
+      "ten": "khớp nguyên cụm: tên miền bị che",
+      "in": "tải market.lumorathinh.vn xong",
+      "out": "tải S90 xong",
+      "names": [
+        {
+          "code": "S90",
+          "realName": "Lumora Thịnh",
+          "wholeOnly": true
+        },
+        {
+          "code": "S90",
+          "realName": "market.lumorathinh.vn",
+          "wholeOnly": true
+        }
+      ]
+    },
+    {
+      "ten": "đối chứng cờ vắng: thương hiệu bị che như cũ",
+      "in": "dự án Lumora Park quận 9",
+      "out": "dự án S90 Park quận 9",
+      "names": [
+        {
+          "code": "S90",
+          "realName": "Lumora Thịnh"
+        },
+        {
+          "code": "S90",
+          "realName": "market.lumorathinh.vn"
+        }
+      ]
+    },
+    {
+      "ten": "đối chứng cờ false: thương hiệu bị che như cũ",
+      "in": "dự án Lumora Park quận 9",
+      "out": "dự án S90 Park quận 9",
+      "names": [
+        {
+          "code": "S90",
+          "realName": "Lumora Thịnh",
+          "wholeOnly": false
+        },
+        {
+          "code": "S90",
+          "realName": "market.lumorathinh.vn",
+          "wholeOnly": false
+        }
+      ]
+    },
+    {
+      "ten": "khớp nguyên cụm, dấu phân tách: hai dấu cách",
+      "in": "tin từ Lumora  Thịnh hôm nay",
+      "out": "tin từ S90 hôm nay",
+      "names": [
+        {
+          "code": "S90",
+          "realName": "Lumora Thịnh",
+          "wholeOnly": true
+        },
+        {
+          "code": "S90",
+          "realName": "market.lumorathinh.vn",
+          "wholeOnly": true
+        }
+      ]
+    },
+    {
+      "ten": "khớp nguyên cụm, dấu phân tách: xuống dòng",
+      "in": "tin từ Lumora\nThịnh hôm nay",
+      "out": "tin từ S90 hôm nay",
+      "names": [
+        {
+          "code": "S90",
+          "realName": "Lumora Thịnh",
+          "wholeOnly": true
+        },
+        {
+          "code": "S90",
+          "realName": "market.lumorathinh.vn",
+          "wholeOnly": true
+        }
+      ]
+    },
+    {
+      "ten": "khớp nguyên cụm, dấu phân tách: dấu nối",
+      "in": "tin từ lumora-thinh hôm nay",
+      "out": "tin từ S90 hôm nay",
+      "names": [
+        {
+          "code": "S90",
+          "realName": "Lumora Thịnh",
+          "wholeOnly": true
+        },
+        {
+          "code": "S90",
+          "realName": "market.lumorathinh.vn",
+          "wholeOnly": true
+        }
+      ]
+    },
+    {
+      "ten": "khớp nguyên cụm, dấu phân tách: gạch dưới",
+      "in": "tin từ LUMORA_THINH hôm nay",
+      "out": "tin từ S90 hôm nay",
+      "names": [
+        {
+          "code": "S90",
+          "realName": "Lumora Thịnh",
+          "wholeOnly": true
+        },
+        {
+          "code": "S90",
+          "realName": "market.lumorathinh.vn",
+          "wholeOnly": true
+        }
+      ]
+    },
+    {
+      "ten": "khớp nguyên cụm, dấu phân tách: dấu chấm",
+      "in": "tin từ lumora.thinh hôm nay",
+      "out": "tin từ S90 hôm nay",
+      "names": [
+        {
+          "code": "S90",
+          "realName": "Lumora Thịnh",
+          "wholeOnly": true
+        },
+        {
+          "code": "S90",
+          "realName": "market.lumorathinh.vn",
+          "wholeOnly": true
+        }
+      ]
+    },
+    {
+      "ten": "khớp nguyên cụm, dấu phân tách: gạch chéo",
+      "in": "tin từ lumora/thinh hôm nay",
+      "out": "tin từ S90 hôm nay",
+      "names": [
+        {
+          "code": "S90",
+          "realName": "Lumora Thịnh",
+          "wholeOnly": true
+        },
+        {
+          "code": "S90",
+          "realName": "market.lumorathinh.vn",
+          "wholeOnly": true
+        }
+      ]
+    },
+    {
+      "ten": "khớp nguyên cụm, dấu phân tách: trong URL",
+      "in": "xem https://x.vn/lumora-thinh/p1 nhé",
+      "out": "xem https://x.vn/S90/p1 nhé",
+      "names": [
+        {
+          "code": "S90",
+          "realName": "Lumora Thịnh",
+          "wholeOnly": true
+        },
+        {
+          "code": "S90",
+          "realName": "market.lumorathinh.vn",
+          "wholeOnly": true
+        }
+      ]
+    },
+    {
+      "ten": "khớp nguyên cụm, dấu phân tách: nhiều dấu liền nhau",
+      "in": "tin từ lumora - thinh hôm nay",
+      "out": "tin từ S90 hôm nay",
+      "names": [
+        {
+          "code": "S90",
+          "realName": "Lumora Thịnh",
+          "wholeOnly": true
+        },
+        {
+          "code": "S90",
+          "realName": "market.lumorathinh.vn",
+          "wholeOnly": true
+        }
+      ]
+    },
+    {
+      "ten": "khớp nguyên cụm: thương hiệu nối dấu với từ khác vẫn giữ nguyên",
+      "in": "dự án Lumora-Park quận 9",
+      "out": "dự án Lumora-Park quận 9",
+      "names": [
+        {
+          "code": "S90",
+          "realName": "Lumora Thịnh",
+          "wholeOnly": true
+        },
+        {
+          "code": "S90",
+          "realName": "market.lumorathinh.vn",
+          "wholeOnly": true
+        }
+      ]
     }
-   ]
-  }
- ]
+  ]
 }

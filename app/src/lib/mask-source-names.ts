@@ -25,6 +25,14 @@ export function nameVariants(realName: string, { wholeOnly = false }: { wholeOnl
   return [...out].filter((v) => v.length >= 3)
 }
 
+/** Dòng khớp nguyên cụm, tên nhiều từ: các từ nối bằng dãy dấu phân tách bất kỳ («ten-hai», «ten_hai», «ten  hai», đường dẫn URL). */
+function cumTach(realName: string, wholeOnly: boolean | undefined): RegExp | null {
+  if (!wholeOnly) return null
+  const words = fold(realName.trim()).split(/[\s.\-_/]+/).filter(Boolean)
+  if (words.length < 2) return null
+  return new RegExp(words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\const isWordChar = (c: string | undefined)")).join("[\\s.\\-_/]+"), "gu")
+}
+
 const isWordChar = (c: string | undefined) => c !== undefined && /[\p{L}\p{N}]/u.test(c)
 
 /** Mọi chỗ khớp tên: biến thể ≥ 4 ký tự khớp ở mọi chỗ; biến thể ngắn hơn phải đứng riêng một từ. */
@@ -34,6 +42,16 @@ export function findSourceNames(text: string, entries: SourceNameEntry[]): { cod
   cands.sort((a, b) => b.v.length - a.v.length)
   const hits: { code: string; start: number; end: number }[] = []
   const taken = new Uint8Array(f.length)
+  for (const { code, realName, wholeOnly } of entries) {
+    const re = cumTach(realName, wholeOnly)
+    if (!re) continue
+    for (const m of f.matchAll(re)) {
+      const end = m.index + m[0].length
+      if (taken.subarray(m.index, end).some(Boolean)) continue
+      hits.push({ code, start: m.index, end })
+      taken.fill(1, m.index, end)
+    }
+  }
   for (const { code, v } of cands) {
     let i = f.indexOf(v)
     while (i !== -1) {

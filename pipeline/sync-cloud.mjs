@@ -205,11 +205,16 @@ const foldSql = (expr) => `translate(lower(normalize(${expr}, NFC)), ${lit(FOLD_
  * ở mọi chỗ, ngắn hơn phải đứng riêng một từ. Thiếu token thì NULL hết (đóng chặt): không soát được thì không gửi. */
 export function maskedSourceExpr(col, tokens) {
   // Token trần (cũ) hoặc { token, wholeOnly } (cờ match_whole, migration 112): dòng khai cờ không sinh biến thể từ đầu.
-  const variants = [...new Set(entriesFromTokens(tokens).flatMap((e) => nameVariants(e.realName, { wholeOnly: e.wholeOnly })))];
+  const entries = entriesFromTokens(tokens);
+  const variants = [...new Set(entries.flatMap((e) => nameVariants(e.realName, { wholeOnly: e.wholeOnly })))];
   if (!variants.length) return "NULL::text";
+  // Dòng khớp nguyên cụm, tên nhiều từ: so trên bản đã bỏ dấu phân tách để bắt «ten-hai», «ten_hai», «ten  hai». Sai thì che thừa.
+  const lien = [...new Set(entries.filter((e) => e.wholeOnly && /[\s.\-_/]/.test(e.realName.trim())).map((e) => fold(e.realName.trim()).replace(/[\s.\-_/]+/g, "")))].filter((v) => v.length >= 4);
+  const boDau = `regexp_replace(f, '[[:space:]._/-]+', '', 'g')`;
   const whole = `' ' || regexp_replace(f, '[^[:alnum:]]', ' ', 'g') || ' '`;
   const hit = variants
     .map((v) => (v.length >= 4 ? `position(${lit(v)} in f) > 0` : `position(${lit(` ${v.replace(/[^\p{L}\p{N}]+/gu, " ")} `)} in ${whole}) > 0`))
+    .concat(lien.map((v) => `position(${lit(v)} in ${boDau}) > 0`))
     .join(" OR ");
   return `(SELECT CASE WHEN ${hit} THEN NULL ELSE ${q(col)} END FROM (SELECT ${foldSql(q(col))} AS f) m)`;
 }

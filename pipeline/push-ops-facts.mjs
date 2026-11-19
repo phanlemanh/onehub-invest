@@ -3,9 +3,11 @@
 // nhóm Zalo — những thứ đọc file/CLI chỉ có ở máy này).
 // Đi qua HTTPS (POST /api/v1/ops/ingest trên Vercel, Bearer cloud token).
 // Gọi từ cloud-sync.sh sau mỗi lần sync dữ liệu (15'/lần).
+import { realpathSync } from "node:fs";
 import { readFile, readdir, stat, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import pg from "pg";
 
 import { maskSourceNames } from "./lib/mask-source-names.mjs";
@@ -377,7 +379,13 @@ async function chiLenh(tep) {
   console.log(`ops-facts lệnh: gửi ${payload.results.length} kết quả, cập nhật ${kq.cap_nhat}, bỏ qua ${kq.bo_qua}`);
 }
 
-main().catch((e) => {
+// AC-10 che-ten-nguon-khong-lay-tu-dau (sự cố 19/11): chỉ gửi khi tệp là lệnh chính, import để đọc hàm không được gửi bản tin.
+// So theo realpath vì launchd chạy qua symlink ~/dev/one-invest.
+const laTepChinh = () => {
+  if (!process.argv[1]) return false;
+  try { return realpathSync(process.argv[1]) === fileURLToPath(import.meta.url); } catch { return false; }
+};
+if (laTepChinh()) main().catch((e) => {
   console.error(e);
   process.exit(1);
 });
