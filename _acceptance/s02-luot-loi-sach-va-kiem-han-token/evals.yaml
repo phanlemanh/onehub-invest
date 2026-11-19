@@ -1,0 +1,52 @@
+schema_version: 1
+slug: s02-luot-loi-sach-va-kiem-han-token
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.collector
+    expected: "exit 0; hai ca 1711-1(b) đạt — lượt ném lỗi chỉ còn '.partial' ẩn có manifest error, 0 items; lượt thành công đổi tên ra thư mục thật (đối chứng dương cùng tiến trình con)"
+    paths: [collector/src/core/**, collector/src/test/snapshot-loi-khong-tac-thu-muc.test.ts]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: "bash _acceptance/s02-luot-loi-sach-va-kiem-han-token/probes/noi-day.sh"
+    expected: "exit 0; dòng 'đạt: nhánh 401 sau refresh ghi AUTH FAIL [S02] trước khi ném', 'đạt: đúng một tệp bộ thu có dòng AUTH FAIL [S02]', và chiều đỏ 'đạt: chiều đỏ (bỏ AUTH FAIL) bắt đúng: ĐỎ: nhánh 401 sau refresh thiếu AUTH FAIL [S02] trước throw'"
+    paths: [collector/src/collectors/**]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    layer: backend-effect
+    cmd: "cd collector && npx tsc -p tsconfig.json && cd .. && node _acceptance/s02-luot-loi-sach-va-kiem-han-token/probes/nguoi-doc.mjs && ! node _acceptance/s02-luot-loi-sach-va-kiem-han-token/probes/nguoi-doc.mjs --pha"
+    expected: "lượt thường in 'đạt: CLI collect bắt lời từ chối của runCollector bằng process.exit(1)', 'đạt: lượt thành công thoát 0', 'đạt: lượt ném lỗi làm lệnh collect thoát 1 …', 'đạt: lượt hỏng không xoá tệp nào của bản thu cũ', 'đạt: lượt ném lỗi để lại đúng một .partial ẩn' và 'XANH: người đọc phía sau không thấy lượt hỏng'; lượt --pha in 'ĐỎ: dòng SNAP= của script đêm S02 chọn bản thu thành công …' kèm tên thư mục hỏng và thoát 1 — lệnh gộp thoát 0 chỉ khi cả hai chiều đúng"
+    paths: [collector/src/core/**, scripts/*-daily.sh]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: "cd collector && npx tsc -p tsconfig.json && cd .. && node _acceptance/s02-luot-loi-sach-va-kiem-han-token/probes/dot-bien-han.mjs"
+    expected: "exit 0; năm dòng 'đạt: bản thật · ô …' và dòng 'bản đột biến (bỏ chặn hết hạn) bị bắt ở ô: hết hạn 1 giờ …'; đột biến lọt thì in 'thước mù' và thoát 1"
+    paths: [collector/src/collectors/**]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: "bash _acceptance/s02-luot-loi-sach-va-kiem-han-token/probes/noi-day.sh"
+    expected: "exit 0; 'đạt: <n> câu return của appToken đều sau kiemAppToken', 'đạt: không còn dòng token OK cũ', và ba dòng chiều đỏ 'đạt: chiều đỏ (bỏ kiemAppToken|đường trả sớm) bắt đúng: ĐỎ: appToken có câu return không đi qua kiemAppToken', '… (dòng log cũ) bắt đúng: ĐỎ: appToken còn dòng log token OK cũ không kiểm hạn'"
+    paths: [collector/src/collectors/**]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: "bash _acceptance/s02-luot-loi-sach-va-kiem-han-token/probes/vung.sh"
+    paths: [collector/**, _acceptance/s02-luot-loi-sach-va-kiem-han-token/**]
+    expected: "exit 0; năm dòng 'đạt: có <tệp>', dòng chiều đỏ gọi tên pipeline/transform-ngoai-vung.mjs, 'XANH: mọi tệp đổi nằm trong vùng'; tệp ngoài vùng thì 'ĐỎ: tệp ngoài vùng: <tệp>'"
+  - id: E7
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.collector
+    expected: "exit 0; tsc không lỗi, mọi ca node --test của collector đạt (75 ca lúc tích hợp)"
+    paths: [collector/**]
+  - id: E8
+    criterion: AC-1
+    executor: script
+    cmd: 
+    expected: "cùng lệnh E3: 'đạt: lượt ném lỗi để lại đúng một .partial ẩn', 'đạt: manifest lỗi trong .partial giữ error và 0 items', 'đạt: lượt hỏng không xoá tệp nào của bản thu cũ (<n> tệp trước, mất 0)'; mất tệp thì dòng ĐỎ liệt tên tệp mất"
+    paths: [collector/src/core/**]

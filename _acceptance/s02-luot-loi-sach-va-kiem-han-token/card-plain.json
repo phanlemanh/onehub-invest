@@ -1,0 +1,31 @@
+{
+  "feature_plain": "Bộ thu S02 thôi báo xanh giả: lượt thu hỏng không còn để lại thư mục trông như bản thu thật, xác thực hỏng ghi một dòng dễ nhận ra, và token hết hạn làm lượt dừng ngay trước khi gọi API.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ cất lượt thu hỏng vào thư mục tạm ẩn kèm biên bản lỗi, không tạo thư mục bản thu thật nào và không xoá bản thu cũ; lượt thành công vẫn ra thư mục thật như cũ."},
+    {"id": "AC-2", "p": "Sẽ ghi dòng «AUTH FAIL [S02]» kèm giờ ngay trước khi dừng vì lỗi 401 sau khi đã làm mới token. Đo bằng đọc mã, không chạy thật nhánh này."},
+    {"id": "AC-3", "p": "Sẽ để bước chạy đêm S02 dừng khi lượt thu hỏng và vẫn chọn bản thu tốt gần nhất, không nạp lượt hỏng."},
+    {"id": "AC-4", "p": "Sẽ chặn token rỗng, token đã hết hạn và token không đọc được hạn, kèm lý do rõ; token còn hạn thì ghi số phút còn lại."},
+    {"id": "AC-5", "p": "Sẽ cho mọi lối ra của bước lấy token đi qua bước kiểm hạn, và bỏ dòng «token OK» cũ không kiểm hạn."},
+    {"id": "AC-6", "p": "Sẽ chỉ đổi đúng năm tệp của hai nhánh ZCode, và toàn bộ test bộ thu vẫn xanh."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "Không sửa cách thu S02. Lỗi về cách thu thì trả LL để mở lại cho ZCode."},
+    {"id": "OOS-2", "p": "Không làm thước độ tươi đọc dòng AUTH FAIL, vì kho chưa có bộ đọc nào."},
+    {"id": "OOS-3", "p": "Không triển khai bản dựng bộ thu lên máy thu. Việc này của ZCode, LL giao riêng."},
+    {"id": "OOS-4", "p": "Không dọn 29 thư mục bản thu rỗng đã có, vì bản thu gốc không được sửa hay xoá."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Lượt thu thành công và lượt thu hỏng giữa chừng (AC-1, AC-3)."},
+    {"i": 1, "p": "Năm trạng thái token: rỗng, hết hạn, hết hạn đúng lúc kiểm, thiếu hạn, còn hạn; và chỗ nối vào bước lấy token (AC-4, AC-5)."},
+    {"i": 2, "p": "Lỗi 401: làm mới token xong thì chạy tiếp như cũ; vẫn 401 sau khi làm mới thì ghi dòng AUTH FAIL (AC-2)."},
+    {"i": 3, "p": "Bên đọc phía sau: bước chạy đêm S02 (mã thoát và cách chọn bản thu) đo bằng chạy thật. Các bên đọc khác vốn bỏ qua thư mục ẩn hoặc đọc DB nên không đổi (AC-3)."},
+    {"i": 4, "p": "Hai ô để ngoài, có tên: lượt dừng vì token hết hạn chưa ghi dòng AUTH FAIL; nhánh 401 chỉ đo bằng đọc mã (đã báo LL)."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Tiêu chí AUTH FAIL hứa một hành vi nhưng chỉ đọc được mã. Đã sửa: tiêu chí nói rõ là đọc mã, thêm phép thử phá (bỏ dòng thì đỏ) và kiểm chỉ một tệp có dòng này."},
+    {"i": 1, "p": "Phép đo bước lấy token chỉ xét một lối ra. Đã sửa: mọi lối ra phải đi sau bước kiểm hạn; thêm ba bản phá (bỏ bước kiểm, cấy lối ra sớm, cấy lại dòng cũ), bản nào cũng phải đỏ đúng chỗ."},
+    {"i": 2, "p": "Chưa đo việc lệnh thu thoát với mã lỗi. Đã sửa: kiểm lệnh thu thoát 1 khi lượt hỏng, thoát 0 khi lượt tốt."},
+    {"i": 3, "p": "Chưa kể tên năm tệp được phép đổi. Đã sửa: liệt kê sẵn năm tệp, so với điểm tách nhánh."},
+    {"i": 4, "p": "Chưa đếm thư mục tạm và chưa kiểm bản thu cũ còn nguyên. Đã sửa: đếm đúng một thư mục tạm và kiểm mọi tệp cũ vẫn còn."}
+  ]
+}
