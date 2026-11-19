@@ -10,8 +10,12 @@
 //  - nhóm «ten»: có hai bản chữ với tập theo tên không rỗng và khác nhau. Nhóm «viet-tat»: không thuộc «ten», nhưng khác nhau khi
 //    tính cả viết tắt (cả hai tập không rỗng).
 // Dùng: node dong-bang-phan-khu.mjs [--db <url>] --out <tệp.json>
+//       node dong-bang-phan-khu.mjs [--db <url>] --kiem <tệp đóng băng.json>   (GS 20/11: không đóng băng lại)
+//   --kiem: (1) băm tệp khớp <tệp>.sha256, lệch → thoát 1 «tệp đóng băng bị sửa»; (2) in BĂM NỘI DUNG = sha256 của danh sách
+//   offer_id đã sắp + trường luat (không gồm sinh_luc); (3) tính lại danh sách theo cùng luật trên DB hiện tại, in số khớp và mục
+//   riêng «đổi vì dữ liệu» (tin mới, tin mất do lượt nạp sau ngày đóng băng) — không tính là sai, thoát 0.
 import { createHash } from "node:crypto";
-import { writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -25,7 +29,18 @@ const { fold } = await import(join(ROOT, "pipeline/lib/mask-source-names.mjs"));
 const arg = (k, d) => { const i = process.argv.indexOf(k); return i > 0 ? process.argv[i + 1] : d; };
 const DB = arg("--db", process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest");
 const OUT = arg("--out");
-if (!OUT) { console.error("thiếu --out"); process.exit(2); }
+const KIEM = arg("--kiem");
+if (!OUT && !KIEM) { console.error("thiếu --out hoặc --kiem"); process.exit(2); }
+/** Băm nội dung: danh sách offer_id đã sắp + luật đếm, không gồm giờ sinh. */
+export const bamNoiDung = (o) => createHash("sha256").update(JSON.stringify({ luat: o.luat, offer_id: o.tin.map((t) => t.offer_id).sort() })).digest("hex");
+let dongBang = null;
+if (KIEM) {
+  const raw = readFileSync(KIEM, "utf8");
+  const ghi = readFileSync(`${KIEM}.sha256`, "utf8").split(/\s+/)[0];
+  if (createHash("sha256").update(raw).digest("hex") !== ghi) { console.log(`ĐỎ: tệp đóng băng bị sửa (băm tệp lệch ${ghi.slice(0, 12)})`); process.exit(1); }
+  dongBang = JSON.parse(raw);
+  console.log(`tệp đóng băng: ${dongBang.tin.length} tin (tên ${dongBang.dem.ten}, viết tắt ${dongBang.dem["viet-tat"]}) · sinh lúc ${dongBang.sinh_luc} · băm nội dung ${bamNoiDung(dongBang)}`);
+}
 
 export const VIET_TAT = Object.freeze({ ori: "origami", rb: "rainbow", bs: "beverly solari", gh: "glory heights" });
 export const khoaTen = (ten) => fold(String(ten)).replace(/[^\p{L}\p{N}]+/gu, " ").trim().split(" ").filter((w, i, a) => !(w === "the")).join(" ");
@@ -97,6 +112,15 @@ for (const t of tin) {
 ket.sort((a, b) => a.offer_id.localeCompare(b.offer_id));
 const dem = { ten: ket.filter((x) => x.nhom === "ten").length, "viet-tat": ket.filter((x) => x.nhom === "viet-tat").length };
 const out = { sinh_luc: new Date().toISOString(), sha_main: sha, luat: "dong-bang-phan-khu.mjs (đầu tệp)", so_tin_xet: soTin, dem, tin: ket };
+if (KIEM) {
+  const cu = new Set(dongBang.tin.map((t) => t.offer_id)), moi = new Set(ket.map((t) => t.offer_id));
+  const khop = [...cu].filter((k) => moi.has(k)).length;
+  const mat = [...cu].filter((k) => !moi.has(k)), them = [...moi].filter((k) => !cu.has(k));
+  console.log(`tính lại trên DB hiện tại: ${ket.length} tin · khớp ${khop}/${cu.size}`);
+  console.log(`đổi vì dữ liệu (không tính là sai): tin mất ${mat.length}${mat.length ? ` (${mat.slice(0, 5).join(", ")})` : ""} · tin mới ${them.length}${them.length ? ` (${them.slice(0, 5).join(", ")})` : ""}`);
+  console.log("đạt: tệp đóng băng nguyên vẹn; danh sách chấm vẫn là bản đóng băng");
+  process.exit(0);
+}
 const json = JSON.stringify(out, null, 1) + "\n";
 writeFileSync(OUT, json);
 writeFileSync(`${OUT}.sha256`, `${createHash("sha256").update(json).digest("hex")}  ${OUT.split("/").pop()}\n`);
