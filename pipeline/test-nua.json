@@ -105,6 +105,7 @@
     "sync-cloud.test.mjs",
     "sync-pii.test.mjs",
     "tests/import-s09.test.mjs",
-    "tests/import-s16.test.mjs"
+    "tests/import-s16.test.mjs",
+    "tests/import-s16-chi-tiet.test.mjs"
   ]
 }
