@@ -1,5 +1,7 @@
 # Thiết kế DA42 — dự án, toà, tầng và thấp tầng S09 vào danh bạ
 
+> **Sửa phạm vi 19/11 (Mạnh: «Chỉ làm cao tầng»):** lượt này chỉ làm dự án, toà và tầng. Khu và căn thấp tầng trong tài liệu này để dành cho lượt sau khi có bản thu bù; bản thu 19/11 có 32.602/72.374 căn và 48/91 khu bị cắt ở 500 căn.
+
 Ngày 18/11/2026. Hàng DA42 `nap-s09-toa-tang-vao-danh-ba`, hạng T3, đợt `danh-ba-can-s09-1811`. Tài liệu dừng ở Cổng Phạm vi: chưa có
 mã thi công, migration thật hay lượt ghi DB máy thu.
 

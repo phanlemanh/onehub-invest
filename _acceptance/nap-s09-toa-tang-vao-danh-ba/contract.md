@@ -1,6 +1,6 @@
 ---
 schema_version: 1
-feature: Dự án, toà, tầng, khu và căn thấp tầng S09 vào danh bạ, toà và căn trùng S16, S08 thành bí danh, không sinh trùng
+feature: Dự án, toà và tầng S09 vào danh bạ, toà trùng S16, S08 thành bí danh, không sinh trùng
 slug: nap-s09-toa-tang-vao-danh-ba
 owner: phanlemanh@gmail.com
 risk_tier: T3
@@ -15,15 +15,15 @@ design_doc: docs/superpowers/specs/2026-11-18-nap-s09-toa-tang-vao-danh-ba-desig
 
 ## Context
 
-DA42 đưa gói 1 của S09 vào danh bạ. Danh bạ hôm nay có 344 dự án, 307 toà, 111.668 căn. Làn thu đo 18/11: 221 dự án, 928 toà, 23.708 tầng,
-91 khu thấp tầng; các số này chốt lại khi gói 1 về máy thu.
+DA42 đưa gói 1 của S09 vào danh bạ. Danh bạ hôm nay có 344 dự án, 307 toà, 111.668 căn. Gói 1 về máy thu 19/11: danh mục 221 dự án, trong đó
+198 dự án có toà; 928 toà; 23.708 tầng. Mạnh chốt 19/11 lượt này chỉ làm cao tầng, vì bản thu mới có 32.602/72.374 căn thấp tầng.
 
 Thi công chỉ bắt đầu sau khi DA37 vào `main` và gói 1 về. Migration số 115 đã giữ.
 
 ## Criteria
 
 ### AC-1 — Gói 1 nạp vào stg không nhân dòng
-Given DB của riêng lượt đã áp đủ migration và fixture rút từ phản hồi mẫu thật của làn thu, có item thiếu mã, khu nhiều trang, một tệp sai băm,
+Given DB của riêng lượt đã áp đủ migration và fixture rút từ phản hồi mẫu thật của làn thu, có item thiếu mã, một tệp sai băm,
 When nạp fixture hai lần qua hàm dùng chung,
 Then lần một ghi đúng số dòng hợp lệ, lần hai ghi 0 dòng; item hỏng đếm theo lý do; tệp sai băm làm lượt nạp dừng trước khi ghi; áp
 migration lần hai không lỗi.
@@ -31,8 +31,7 @@ migration lần hai không lỗi.
 ### AC-2 — Số trong stg khớp manifest bản thu thật
 Given DB thử chép từ DB máy thu và snapshot gói 1 thật,
 When nạp rồi chạy một bộ đếm độc lập đọc thẳng snapshot,
-Then số dự án, toà, tầng, khu, căn thấp tầng trong stg bằng số bộ đếm và số manifest; khu có số căn lấy được khác tổng nguồn báo thì lệch và
-nêu khu; lệch một ô thì thoát 1.
+Then số dự án, toà, tầng trong stg bằng số bộ đếm và số manifest; lệch một ô thì thoát 1.
 
 ### AC-3 — Dự án S09 đi đúng một trong bốn đường
 Given ma trận viết trước: dự án đã nối · trùng tên đúng một dự án · tên gần giống · không khớp,
@@ -59,17 +58,10 @@ Given toà có tầng thường, tầng có chữ «12B», tầng trùng tên kh
 When nạp gói 1,
 Then view tầng trả đúng một dòng mỗi mã tầng, giữ tên nguyên văn, kèm mã toà; DA43 đọc được số tầng phải thu của từng toà.
 
-### AC-7 — Khu và căn thấp tầng không sinh trùng
-Given khu thấp tầng có căn trùng mã căn S16, căn trùng mã căn S08, căn mới, căn mã hỏng,
-When chạy bước thấp tầng S09,
-Then khu và căn được dựng theo lời Hỏi-1 (khuyến nghị: mỗi khu một toà gom, căn không trục): số toà gom bằng số khu, từng căn nằm đúng khu; căn
-trùng nhận bí danh S09, 0 căn mới; mã khớp hai căn có sẵn thì 0 căn mới, 0 bí danh, đúng một thẻ; căn mới bậc `mot_loi_khai`; căn mã hỏng đếm
-theo lý do; 0 căn hai khoá.
-
 ### AC-8 — Chạy lại và đổi thứ tự nguồn không đổi kết quả
 Given cùng một bộ dòng S08, S16, S09,
 When dựng trên hai DB theo hai thứ tự rồi dựng thêm hai lần,
-Then hai DB có cùng tập toà, căn, bí danh và thẻ trên mọi mã chung; lần dựng lại sinh 0 khoá, 0 bí danh, 0 thẻ mới.
+Then hai DB có cùng tập toà, bí danh và thẻ trên mọi mã chung; lần dựng lại sinh 0 khoá, 0 bí danh, 0 thẻ mới.
 
 ### AC-9 — Mọi thứ rời máy chỉ mang mã S09
 Given DB thử có dữ liệu gói 1,
@@ -83,35 +75,34 @@ When dựng danh bạ rồi mở `/ops/registry`,
 Then:
 - tổng dự án trong manifest bằng tổng: giữ nối · chờ thẻ luật · chờ thẻ từng cặp · nút ứng viên; dự án có ở bản 13/11 mà gói 1 không có được đếm riêng;
 - tổng toà trong manifest bằng tổng các phần, mỗi phần một câu đếm riêng: thành bí danh · tạo mới · chờ thẻ · thuộc dự án chưa nối;
-- tổng căn thấp tầng trong manifest bằng tổng: thành bí danh · tạo mới · chờ thẻ · mã hỏng;
 - ngưỡng khai trước khi thấy số: tỉ lệ vào danh bạ = (thành bí danh + tạo mới) / (tổng toà − thuộc dự án chưa nối − chờ thẻ), ít nhất 95%; chờ thẻ
   không quá 10% số toà của dự án đã nối (bản 13/11 có 93 trong 1.665 dòng toà trùng tên, tức 5,6%); mã hỏng không quá 1%; ít nhất 99% trong 175 toà
   đã có bí danh mã cũ nối về đúng toà cũ;
 - độ đúng của bí danh đo bằng tín hiệu không phải tên: 0 cặp toà thành bí danh mà số tầng S09 lệch số tầng S16 quá 2. Vượt một ngưỡng thì lượt đo
   đỏ và dừng để người quyết, không tự nới;
-- số dự án, toà, căn trên trang bằng câu đếm trên cùng DB; 0 toà hai UPI, 0 căn hai khoá; chạy lại ra cùng số.
+- số dự án, toà trên trang bằng câu đếm trên cùng DB; đích trên dữ liệu thật: 198 dự án có toà, 928 toà, 23.708 tầng; 0 toà hai UPI; bước S09 tạo 0 căn; chạy lại ra cùng số.
 
 ## Coverage
 
 Trục quét theo preset entity-feature và risk-premortem cho «gói 1 S09 → danh bạ»:
 
 - Dữ liệu vào: nạp bản thu (AC-1), khớp manifest (AC-2).
-- Cấp danh bạ: dự án (AC-3), toà (AC-4), cấu trúc S16 (AC-5), tầng (AC-6), thấp tầng (AC-7).
+- Cấp danh bạ: dự án (AC-3), toà (AC-4), cấu trúc S16 (AC-5), tầng (AC-6).
 - Vòng đời: chạy lại, thứ tự nguồn (AC-8).
 - Ranh giới: không lộ nguồn, nút ứng viên không lên Invest (AC-9).
 - Kết quả thật: các phần cộng đủ, số trên màn (AC-10).
 
-Core: AC-1…AC-10. Bảng phủ ca đếm từ DB máy thu ở thiết kế §4.
+Core: AC-1…AC-6, AC-8…AC-10. Bảng phủ ca đếm từ DB máy thu ở thiết kế §4.
 
-Later: căn cao tầng (DA43) · nối tin vào nút ứng viên · thuộc tính căn.
+Later: khu và căn thấp tầng (sau bản thu bù) · căn cao tầng (DA43) · nối tin vào nút ứng viên · thuộc tính căn.
 
 Never: bước S09 đổi cột gốc của toà có sẵn, xoá hay gộp toà, căn có sẵn.
 
 ## Đường đo
 
 - «Snapshot gói 1 nạp vào stg, số khớp manifest»: AC-2.
-- «Số toà và căn thấp tầng S09 đi từ hiện trạng lên đúng lệnh đếm»: AC-10, đích chốt khi gói 1 về.
-- «0 toà hai UPI, 0 căn hai khoá»: AC-4, AC-7, AC-10.
+- «Số dự án có toà, số toà và số tầng S09 đi từ hiện trạng lên đúng lệnh đếm»: AC-10, đích 198 dự án, 928 toà, 23.708 tầng.
+- «0 toà hai UPI»: AC-4, AC-10.
 - «Toà trùng thành bí danh, lệch lên thẻ»: AC-4, AC-5.
 - «Chạy lại không đổi số»: AC-8, AC-10.
 - Lệnh đếm: `node pipeline/scripts/danh-ba-s09-toa-that.mjs --dem`, tạo ở bước thi công, chỉ đọc.
@@ -120,6 +111,7 @@ Never: bước S09 đổi cột gốc của toà có sẵn, xoá hay gộp toà,
 
 - Thu gói 1, DATA-CONTRACT và bộ nạp: việc của làn thu.
 - Áp migration và dựng trên DB máy thu: theo hồ sơ áp sau khi PR gộp.
+- Khu và căn thấp tầng: Mạnh chốt 19/11 «Chỉ làm cao tầng», vì bản thu thiếu 55% căn và 48/91 khu bị cắt; làm ở lượt sau khi có bản thu bù, theo lời Hỏi-1 đã duyệt.
 - Căn cao tầng: DA43.
 - Nối tin vào nút ứng viên và đưa nút ứng viên lên Invest.
 - Thuộc tính căn (diện tích, phòng ngủ, hướng, giá).

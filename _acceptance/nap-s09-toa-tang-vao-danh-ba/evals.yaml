@@ -11,7 +11,7 @@ evals:
     criterion: AC-2
     executor: script
     cmd: config:executors.script.s09_toa_that
-    expected: "Trên DB thử chép máy thu, bộ đếm độc lập không import pipeline/lib/s09* in bảng ba cột stg, đếm thẳng, manifest cho dự án, toà, tầng, khu, căn thấp tầng; bằng nhau từng ô. Chiều đỏ: bớt một trang căn của một khu trong bản chép thì thoát 1 nêu khu đó. Chỉ in số"
+    expected: "Trên DB thử chép máy thu, bộ đếm độc lập không import pipeline/lib/s09* in bảng ba cột stg, đếm thẳng, manifest cho dự án, toà, tầng; bằng nhau từng ô. Chiều đỏ: bớt một trang căn của một khu trong bản chép thì thoát 1 nêu khu đó. Chỉ in số"
     paths: ["db/migrations/115_*", "pipeline/lib/s09-danh-ba-can.mjs", "pipeline/lib/s09-dung.mjs", "pipeline/danh-ba-vat-the.mjs", "pipeline/scripts/danh-ba-s09-toa*"]
   - id: E3
     criterion: AC-3
@@ -37,12 +37,6 @@ evals:
     cmd: config:executors.script.s09_toa_db
     expected: "View tầng trả một dòng mỗi mã tầng, tên «12B» giữ nguyên văn, hai tầng trùng tên khác mã ra hai dòng, số tầng theo toà bằng giá trị viết trước. Chiều đỏ: đột biến gộp theo tên tầng thì ca đỏ nêu «trùng tên tầng»"
     paths: ["db/migrations/115_*", "pipeline/lib/s09-danh-ba-can.mjs", "pipeline/lib/s09-dung.mjs", "pipeline/danh-ba-vat-the.mjs", "pipeline/scripts/danh-ba-s09-toa*"]
-  - id: E7
-    criterion: AC-7
-    executor: script
-    cmd: config:executors.script.s09_toa_db
-    expected: "Theo lời Hỏi-1 trong sổ: số toà gom bằng số khu, từng căn nằm đúng khu; căn trùng S16, S08 nhận bí danh S09, số căn không đổi; mã khớp hai căn có 0 căn mới, 0 bí danh, đúng một thẻ; căn mới mot_loi_khai; căn mã hỏng đếm theo lý do; căn hai khoá bằng 0. Chiều đỏ: đột biến bỏ tra căn có sẵn thì ca đỏ nêu «căn trùng»; đột biến chọn căn đầu thì ca đỏ nêu «khớp hai»"
-    paths: ["db/migrations/115_*", "pipeline/lib/s09-danh-ba-can.mjs", "pipeline/lib/s09-dung.mjs", "pipeline/danh-ba-vat-the.mjs", "pipeline/scripts/danh-ba-s09-toa*"]
   - id: E8
     criterion: AC-8
     executor: script
@@ -60,7 +54,7 @@ evals:
     executor: script
     layer: backend-effect
     cmd: config:executors.script.s09_toa_that
-    expected: "Trên DB thử chép máy thu: ba phép cộng dự án, toà, căn thấp tầng bằng tổng manifest, mỗi phần một SELECT riêng; bốn ngưỡng in cạnh số đo theo đúng công thức ở AC-10; 0 cặp bí danh lệch số tầng S16 quá 2; toà hai UPI và căn hai khoá bằng 0; chạy lại cùng số. Chiều đỏ, mỗi đột biến thoát 1 nêu đúng tên: bỏ một phần → phần thiếu; nối mã mới sai toà → «nối mã cũ». Chỉ in số"
+    expected: "Trên DB thử chép máy thu: hai phép cộng dự án, toà bằng tổng manifest, mỗi phần một SELECT riêng; bốn ngưỡng in cạnh số đo theo đúng công thức ở AC-10; 0 cặp bí danh lệch số tầng S16 quá 2; toà hai UPI và căn hai khoá bằng 0; chạy lại cùng số. Chiều đỏ, mỗi đột biến thoát 1 nêu đúng tên: bỏ một phần → phần thiếu; nối mã mới sai toà → «nối mã cũ». Chỉ in số"
     paths: ["db/migrations/115_*", "pipeline/lib/s09-danh-ba-can.mjs", "pipeline/lib/s09-dung.mjs", "pipeline/danh-ba-vat-the.mjs", "pipeline/scripts/danh-ba-s09-toa*"]
   - id: E11
     criterion: AC-10
