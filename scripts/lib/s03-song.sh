@@ -38,11 +38,8 @@ song_chua_bao() {
   return 0
 }
 
-# <điều> <state> — điều kiện hết đỏ: gỡ cờ để sự cố kế được báo lại.
-# KHÔNG dùng `grep -v && mv`: grep -v trả exit 1 khi kết quả rỗng (xoá hết
-# dòng — đúng ý ta) và && sẽ chặn mv, state không bao giờ xoá.
-# Bỏ mốc b-moc khỏi tệp trạng thái. Không dùng `sed -i ''` vì cú pháp đó chỉ chạy trên sed của macOS; sed GNU
-# (CI Linux) đọc '' là tên tệp lệnh, lỗi bị `|| true` nuốt và mốc cũ còn nguyên.
+# <state> — bỏ mốc b-moc khỏi tệp trạng thái. Không dùng `sed -i ''` vì cú pháp đó chỉ chạy trên sed của macOS;
+# sed GNU (CI Linux) đọc '' là tên tệp lệnh, lỗi bị `|| true` nuốt và mốc cũ còn nguyên.
 song_xoa_b_moc() {
   local state="$1"
   [ -f "$state" ] || return 0
@@ -50,6 +47,9 @@ song_xoa_b_moc() {
   mv "${state}.tmp" "$state" 2>/dev/null || rm -f "${state}.tmp"
 }
 
+# <điều> <state> — điều kiện hết đỏ: gỡ cờ để sự cố kế được báo lại.
+# KHÔNG dùng `grep -v && mv`: grep -v trả exit 1 khi kết quả rỗng (xoá hết
+# dòng — đúng ý ta) và && sẽ chặn mv, state không bao giờ xoá.
 song_hoi_xoa() {
   local dieu="$1" state="$2"
   if [ -f "$state" ] && grep -qx "$dieu" "$state" 2>/dev/null; then
