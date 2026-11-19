@@ -48,6 +48,14 @@ const DOT_BIEN = [
   ["AC-4", "bỏ gộp căn trước khi cắt trang", DEALS, "SELECT DISTINCT ON (l.can_key) l.*\n       FROM loc l", "SELECT l.*\n       FROM loc l", /CG3-AC-4 (tab \w+(-\w+)?: |hợp các trang)/],
   ["AC-6", "lọc Đất trả nhầm Căn hộ", DEALS, "AND h.duoi_trung_vi_pct <= ${NGUONG_LOAI_PCT}\n         AND ($3::text IS NULL OR o.property_type = $3)", "AND h.duoi_trung_vi_pct <= ${NGUONG_LOAI_PCT}\n         AND ($3::text IS NULL OR o.property_type = CASE WHEN $3 = 'land' THEN 'apartment' ELSE $3 END)", /CG3-AC-6 ô sale × land/],
   ["AC-8", "vai Người xem nhận số điện thoại", DEALS, "{ sellerName: null, sellerPhone: null, groupName: null,", "{ sellerName: null, groupName: null,", /CG3-AC-8 (vai Người xem|mở căn ngoài trang) lộ số điện thoại/],
+  // Bảy chỗ hụt lượt phản biện độc lập trước lượt chấm 5 xác nhận.
+  ["AC-4", "cỡ 25, 50 chỉ hiện 15 căn", DEALS, "const cua = chon.slice((page - 1) * thamSo.size, page * thamSo.size);", "const cua = chon.slice((page - 1) * thamSo.size, page * thamSo.size);\n  cua.splice(15);", /CG3-AC-4 cỡ \d+ tab \w+(-\w+)?: /],
+  ["AC-5", "số trên mục cây lệch số của mục", LUOI, "description: `${fmtInt(n.count)} căn`,", "description: `${fmtInt(n.count + 1)} căn`,", /CG3-AC-5 mục (tỉnh|dự án) phải ghi đúng số căn/],
+  ["AC-7", "Xoá bộ lọc trên thanh lọc giữ loại hình, giữ trang", LUOI, "onClick={() => onDoi({ location: null, project: null, type: null, page: 1 })}>Xoá bộ lọc", "onClick={() => onDoi({ location: null, project: null })}>Xoá bộ lọc", /CG3-AC-7 Xoá bộ lọc trên thanh lọc/],
+  ["AC-2", "dòng thuê theo tháng ghi giá theo m²", LUOI, '{d.pricePerm2 ? chuGiaM2(d.pricePerm2) : "—"}', "{chuGiaM2(d.pricePerm2 ?? d.priceVnd ?? 0)}", /CG3-AC-2 dòng thuê theo tháng/],
+  ["AC-3", "chân bảng ghi tổng của Tất cả ở tab khác", LUOI, "/ ${fmtInt(trang.tong)}`", "/ ${fmtInt(trang.dem.all)}`", /CG3-AC-3 tab Còn thiếu: chân bảng/],
+  ["AC-3", "bỏ toà khi xét đủ", DEALS, "block: (r.block_raw as string | null) ?? null,\n      street: (r.street_raw", "block: null,\n      street: (r.street_raw", /CG3-AC-3 (căn có toà|bảy căn mất một mục)/],
+  ["AC-3", "tin thuê có thước giá/m² bị tính là chưa có thước", DEALS, 'medianPerm2: r.thuoc === "gia-m2" && r.trung_vi !== null ? Number(r.trung_vi) : null,', 'medianPerm2: r.thuoc === "gia-m2" && Number(r.trung_vi) >= 1e6 ? Number(r.trung_vi) : null,', /CG3-AC-3 tab (du|thieu) lệch số tính độc lập \(rent\)/],
   // Các đột biến của lượt soát độc lập trước lượt chấm 4.
   ["AC-1", "đảo mức dưới trung vị khi cùng hạng", DEALS, "g.hang_pct ASC NULLS LAST, g.discount_pct DESC, g.offer_id`", "g.hang_pct ASC NULLS LAST, g.discount_pct ASC, g.offer_id`", /CG3-AC-1 sai thứ tự/],
   ["AC-1", "đảo mã tin khi cùng hạng, cùng mức", DEALS, "g.hang_pct ASC NULLS LAST, g.discount_pct DESC, g.offer_id`", "g.hang_pct ASC NULLS LAST, g.discount_pct DESC, g.offer_id DESC`", /CG3-AC-1 sai thứ tự/],

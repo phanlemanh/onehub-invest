@@ -306,6 +306,7 @@ test("CG3-AC-2 dòng đọc từ DB hiện đúng nhãn, nhóm, số căn, lý d
           assert.equal(oHang[i].textContent, `${NHAN[r.nhan]}${nhom}· ${r.n} căn${lyDo}Độ tin: ${DO_TIN[r.confidence]}`, `CG3-AC-2 ô Hạng giá của ${d.offerId} sai`);
           const giam = Number(/^−(\d+(?:,\d+)?)%/.exec(oGiam[i].textContent ?? "")?.[1].replace(",", "."));
           assert.ok(Math.abs(giam - r.duoi) <= 0.05, `CG3-AC-2 mức giảm của ${d.offerId} phải là mức dưới trung vị`);
+          if (r.thuoc === "gia-thang-pn") assert.ok(!(oHang[i].parentElement?.textContent ?? "").includes("/m²"), `CG3-AC-2 dòng thuê theo tháng ${d.offerId} không được ghi giá theo m²`);
           if (r.thuoc === "gia-thang-pn") assert.ok(oGiam[i].textContent?.includes(`Trung vị ${fmtInt(r.trung_vi / 1e6)} tr/tháng · ${r.n} căn`), `CG3-AC-2 trung vị giá tháng của ${d.offerId} sai`);
           gap.add(`${r.cap}|${r.thuoc}|${r.ly_do ?? ""}|${r.confidence}`);
         });
@@ -352,41 +353,45 @@ test("CG3-AC-2 mỗi dòng ghi nhãn, nhóm so sánh, số căn, lý do lùi c�
 });
 
 /** Tab của từng căn tính độc lập từ cột thô, viết lại luật đầy đủ: thiếu một trong bảy mục thì vào «Còn thiếu». */
-async function tabDocLap(cloud = false) {
+async function tabDocLap(cloud = false, kind = "sale") {
   // Cloud không giữ ảnh, chữ bài: căn không bị tính là thiếu hai mục đó.
   const { rows } = await c.query(
     `SELECT o.offer_id, coalesce(h.can_xac_minh, false) AS xm, h.thuoc, h.trung_vi, o.property_type, o.area_m2, o.block_raw, o.street_raw, o.seller_phone,
             ${cloud ? "true" : "EXISTS (SELECT 1 FROM media a WHERE a.resource_record_key = o.offer_id AND (a.local_file IS NOT NULL OR a.media_url IS NOT NULL))"} AS anh,
             ${cloud ? "true" : "EXISTS (SELECT 1 FROM stg_zalo_posts z WHERE z.post_id = ANY(o.post_ids) AND z.text IS NOT NULL)"} AS chu
-       FROM offer_price_rank h JOIN sale_offers o ON o.offer_id = h.offer_id WHERE h.kind = 'sale'`);
+       FROM offer_price_rank h JOIN sale_offers o ON o.offer_id = h.offer_id WHERE h.kind = $1`, [kind]);
   const theoMa = new Map(rows.map((r) => [r.offer_id as string, r]));
   const tab = (r: (typeof rows)[number]) => {
     if (r.xm) return "xac-minh" as const;
     const duBay = LOAI.includes(r.property_type) && r.area_m2 && (r.block_raw || r.street_raw) && r.trung_vi !== null && r.anh && r.chu && r.seller_phone;
     return duBay ? "du" as const : "thieu" as const;
   };
-  const ma = (await tapDocLap()).map((r) => r.offer_id);
+  const ma = (await tapDocLap(kind)).map((r) => r.offer_id);
   const theoTab = { du: [] as string[], "xac-minh": [] as string[], thieu: [] as string[] };
   for (const id of ma) theoTab[tab(theoMa.get(id)!)].push(id);
   return theoTab;
 }
 
 test("CG3-AC-3 số trên tab đếm trên toàn tập, như nhau ở mọi vai, Tất cả bằng tổng ba tab", async () => {
+  // Bán và thuê, mỗi loại tin một tập: số từng tab tính độc lập bằng luật đầy đủ.
   const kiemSo = async (cloud = false) => {
-    const ky = await tabDocLap(cloud);
-    const { dau } = await hetTrang(TS());
-    const { dem, tong } = dau.trang;
-    assert.equal(dem.all, (await tapDocLap()).length, "CG3-AC-3 Tất cả lệch tập độc lập");
-    for (const tab of ["du", "xac-minh", "thieu"] as const) {
-      assert.equal(dem[tab], ky[tab].length, `CG3-AC-3 tab ${tab} lệch số tính độc lập`);
-      const { ma, trang } = await hetTrang(TS({ tab }));
-      assert.deepEqual([...ma].sort(), [...ky[tab]].sort(), `CG3-AC-3 tab ${tab} sai tập căn`);
-      assert.ok(trang.every((x) => x.rows.every((d) => x.trang.tabDong[d.offerId] === tab)), `CG3-AC-3 dòng của tab ${tab} mang tab khác`);
+    for (const [kind, kindDb] of [["sale", "sale"], ["rent", "rent_lt"]] as const) {
+      const ky = await tabDocLap(cloud, kindDb);
+      const { dau } = await hetTrang(TS({ kind }));
+      const { dem, tong } = dau.trang;
+      assert.equal(dem.all, (await tapDocLap(kindDb)).length, `CG3-AC-3 Tất cả lệch tập độc lập (${kind})`);
+      for (const tab of ["du", "xac-minh", "thieu"] as const) {
+        assert.equal(dem[tab], ky[tab].length, `CG3-AC-3 tab ${tab} lệch số tính độc lập (${kind})`);
+        const { ma, trang } = await hetTrang(TS({ kind, tab }));
+        assert.deepEqual([...ma].sort(), [...ky[tab]].sort(), `CG3-AC-3 tab ${tab} sai tập căn (${kind})`);
+        assert.ok(trang.every((x) => x.rows.every((d) => x.trang.tabDong[d.offerId] === tab)), `CG3-AC-3 dòng của tab ${tab} mang tab khác (${kind})`);
+      }
+      assert.equal(dem.du + dem["xac-minh"] + dem.thieu, dem.all, `CG3-AC-3 ba tab không cộng đúng Tất cả (${kind})`);
+      assert.equal(tong, dem.all, `CG3-AC-3 tổng của tab đang mở (${kind})`);
+      assert.ok(dau.rows.length < dem.all, `CG3-AC-3 đối chứng: tập phải lớn hơn một trang, đếm trong trang sẽ lệch (${kind})`);
+      if (kind === "sale") assert.ok(dem.du > 10 && dem["xac-minh"] > 0 && (cloud || dem.thieu > 0), "CG3-AC-3 đối chứng: fixture phải có căn ở các tab");
+      else assert.ok(dem.du > 0 && (cloud || dem.thieu > 0), "CG3-AC-3 đối chứng: tin thuê phải có căn đủ và căn thiếu");
     }
-    assert.equal(dem.du + dem["xac-minh"] + dem.thieu, dem.all, "CG3-AC-3 ba tab không cộng đúng Tất cả");
-    assert.equal(tong, dem.all, "CG3-AC-3 tổng của tab đang mở");
-    assert.ok(dau.rows.length < dem.all, "CG3-AC-3 đối chứng: tập phải lớn hơn một trang, đếm trong trang sẽ lệch");
-    assert.ok(dem.du > 9 && dem["xac-minh"] > 0 && (cloud || dem.thieu > 0), "CG3-AC-3 đối chứng: fixture phải có căn ở các tab");
   };
   await kiemSo();
   await trenCloud(async () => {
@@ -397,10 +402,11 @@ test("CG3-AC-3 số trên tab đếm trên toàn tập, như nhau ở mọi vai,
   await phaiDo("for (const { tab } of theoTab) dem[tab] += 1;", `for (const { tab } of theoTab) dem[tab === "thieu" ? "du" : tab] += 1;`, () => kiemSo(), /CG3-AC-3 tab du lệch số/);
   await phaiDo("for (const { tab } of theoTab) dem[tab] += 1;", `for (const { tab } of theoTab) dem[tab === "du" ? "thieu" : tab] += 1;`, () => kiemSo(), /CG3-AC-3 tab du lệch số/);
   await phaiDo("}, { xemNoiDung: true, mayThu }),", "}, { xemNoiDung: false, mayThu }),", () => kiemSo(), /CG3-AC-3 tab (du|thieu) lệch số/);
+  await phaiDo(`medianPerm2: r.thuoc === "gia-m2" && r.trung_vi !== null ? Number(r.trung_vi) : null,`, `medianPerm2: r.thuoc === "gia-m2" && Number(r.trung_vi) >= 1e6 ? Number(r.trung_vi) : null,`, () => kiemSo(), /CG3-AC-3 tab (du|thieu) lệch số tính độc lập \(rent\)/);
 
   // Bảy căn đang đủ, mỗi căn mất đúng một mục của luật đầy đủ: số viết tay là dời đúng bảy căn từ «Đủ để gọi» sang «Còn thiếu».
   const truoc = (await doc(TS())).trang.dem;
-  const [a, b, d, e, f, g, h, coDuong, anhMay] = (await tabDocLap()).du.filter((id) => !id.startsWith("a-can-") && !id.startsWith("g-"));
+  const [a, b, d, e, f, g, h, coDuong, anhMay, coToa] = (await tabDocLap()).du.filter((id) => !id.startsWith("a-can-") && !id.startsWith("g-"));
   await c.query("BEGIN");
   try {
     await c.query("UPDATE sale_offer_records SET property_type = 'unknown' WHERE offer_id = $1", [a]);
@@ -412,6 +418,7 @@ test("CG3-AC-3 số trên tab đếm trên toàn tập, như nhau ở mọi vai,
     await c.query("UPDATE sale_offer_records SET seller_phone = NULL WHERE offer_id = $1", [h]);
     // Hai căn vẫn đủ: chỉ có đường, không có toà; ảnh chỉ nằm trên máy thu.
     await c.query("UPDATE sale_offer_records SET block_raw = NULL WHERE offer_id = $1", [coDuong]);
+    await c.query("UPDATE sale_offer_records SET street_raw = NULL WHERE offer_id = $1", [coToa]);
     await c.query("UPDATE media SET media_url = NULL, local_file = 'cg3-snap/media/cg3.jpg' WHERE resource_record_key = $1", [anhMay]);
     const sau = (await doc(TS())).trang.dem;
     assert.deepEqual(sau, { all: truoc.all, du: truoc.du - 7, "xac-minh": truoc["xac-minh"], thieu: truoc.thieu + 7 }, "CG3-AC-3 bảy căn mất một mục phải dời đúng sang Còn thiếu");
@@ -420,10 +427,12 @@ test("CG3-AC-3 số trên tab đếm trên toàn tập, như nhau ở mọi vai,
     const kiemVanDu = async () => {
       const du = new Set((await hetTrang(TS({ tab: "du" }))).ma);
       assert.ok(du.has(coDuong), "CG3-AC-3 căn có đường, không có toà vẫn đủ");
+      assert.ok(du.has(coToa), "CG3-AC-3 căn có toà, không có đường vẫn đủ");
       assert.ok(du.has(anhMay), "CG3-AC-3 căn có ảnh trên máy thu vẫn đủ");
     };
     await kiemVanDu();
     await phaiDo("street: (r.street_raw as string | null) ?? null,\n      medianPerm2: r.thuoc", "street: null,\n      medianPerm2: r.thuoc", kiemVanDu, /CG3-AC-3 căn có đường/);
+    await phaiDo("block: (r.block_raw as string | null) ?? null,\n      street: (r.street_raw", "block: null,\n      street: (r.street_raw", kiemVanDu, /CG3-AC-3 căn có toà/);
     await phaiDo("AND (m.local_file IS NOT NULL OR m.media_url IS NOT NULL))`;\n  const coChu", "AND (m.media_url IS NOT NULL))`;\n  const coChu", kiemVanDu, /CG3-AC-3 căn có ảnh trên máy thu/);
 
     // Vai Người xem: dòng trang gửi xuống mang đúng tab, ô Tình trạng trên bảng dựng thật ghi đúng tab đó.
@@ -506,6 +515,17 @@ test("CG3-AC-4 đi hết các trang theo từng tab, vai và lược đồ: khô
     };
     await kiem();
     await kiemBien();
+    // Cỡ 25 và 50: đi hết các trang được đúng tập, mỗi trang đủ cỡ trừ trang cuối.
+    const kiemCo = async () => {
+      for (const size of [25, 50]) for (const tab of ["all", "thieu"] as TabTrang[]) {
+        const { ma, trang } = await hetTrang(TS({ tab, size }));
+        assert.deepEqual(ma, (await hetTrang(TS({ tab }))).ma, `CG3-AC-4 cỡ ${size} tab ${tab}: lệch tập hay thứ tự của cỡ 15`);
+        trang.slice(0, -1).forEach((x) => assert.equal(x.rows.length, size, `CG3-AC-4 cỡ ${size} tab ${tab}: trang giữa thiếu dòng`));
+        if (size === 25 && tab === "all") assert.ok(trang.length > 1, "đối chứng: cỡ 25 tab Tất cả phải có hơn một trang");
+      }
+    };
+    await kiemCo();
+    await phaiDo("const cua = chon.slice((page - 1) * thamSo.size, page * thamSo.size);", "const cua = chon.slice((page - 1) * thamSo.size, page * thamSo.size).slice(0, 15);", kiemCo, /CG3-AC-4 cỡ \d+ tab \w+: /);
     await phaiDo("return { ...d, ...lienHe, ...noiDung };", "return { ...d, ...lienHe, ...noiDung, ...(vai.lienHe ? {} : { rank: null, discountPct: null, priceVnd: null, source: null }) };", () => kiem(), /CG3-AC-4 tab all vai Người xem: dòng mất số của hạng/);
     await phaiDo("SELECT DISTINCT ON (l.can_key) l.*\n       FROM loc l", "SELECT l.*\n       FROM loc l", async () => { await kiemBien(); }, /CG3-AC-4 tab all: căn hai tin ở biên trang phải gộp một dòng/);
     await phaiDo(
@@ -692,7 +712,7 @@ test("CG3-AC-7 trạng thái trống có hành động, thanh lọc vẫn đứn
 
 test("CG3-AC-8 vai Người xem không nhận liên hệ, nội dung ở mọi trang và mọi điều kiện lọc", async () => {
   const CAY = [TEN, NHOM, DUONG, BAI, TOA, TANG, CAN, SO_NHA, QUAN];
-  const guiXuong = async (sp: Record<string, string>, vai: VaiTrang, thay?: Thay) => JSON.stringify((await veTrang(sp, vai, thay)).rows);
+  const guiXuong = async (sp: Record<string, string>, vai: VaiTrang, thay?: Thay) => JSON.stringify((await veTrang(sp, vai, thay)).props);
   const DIEU_KIEN: Record<string, string>[] = [{}, { page: "2" }, { project: String(d1) }, { project: String(d1), page: "2" }, { location: P("a1"), type: "apartment" }, { kind: "rent" }];
   const kiemXem = async (thay?: Thay) => {
     for (const sp of DIEU_KIEN) {

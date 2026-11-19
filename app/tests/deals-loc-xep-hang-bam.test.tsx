@@ -84,6 +84,11 @@ test("CG3-AC-3 bốn tab ghi đúng số của toàn tập, chân bảng ghi kho
   const cuoi = await dung(trangMau({ page: 7 }));
   assert.ok(document.body.textContent?.includes("91–100 / 100"), "CG3-AC-3 trang cuối phải chặn ở tổng số căn");
   await cuoi.go();
+  // Tab khác Tất cả: chân bảng và nút trang theo số của tab đang mở.
+  const thieu = await dung(trangMau({ tab: "thieu" }));
+  assert.ok(document.body.textContent?.includes("1–15 / 67"), "CG3-AC-3 tab Còn thiếu: chân bảng phải ghi trên tổng của tab");
+  assert.ok(theoChu("button", "5") && !theoChu("button", "6") && !theoChu("button", "7"), "CG3-AC-3 tab Còn thiếu: nút trang phải theo tổng của tab");
+  await thieu.go();
 });
 
 test("CG3-AC-4 sang trang theo tổng số căn; đổi cỡ trang hay đổi điều kiện về trang 1", async () => {
@@ -127,6 +132,18 @@ test("CG3-AC-5 chọn vị trí trên cây: đường dẫn mang đúng location
   assert.deepEqual(await chon({}, "Khu Bảy"), ["/ops/deals?project=7"], "CG3-AC-5 chọn dự án phải mang project, về trang 1");
   assert.deepEqual(await chon({ project: "7" }, "Phường Một"), ["/ops/deals?location=vn-t1-p1"], "CG3-AC-5 chọn phường phải bỏ project cũ");
   assert.deepEqual(await chon({ location: "vn-t1-p1" }, "Khu Bảy"), ["/ops/deals?project=7"], "CG3-AC-5 chọn dự án phải bỏ location cũ");
+  // Số căn ghi trên từng mục của cây đúng bằng số của mục đó.
+  const dem = await dung(trangMau());
+  await bam(document.querySelector('[aria-label="Chọn vị trí"]')!);
+  assert.equal(hang("Tỉnh Một")?.querySelector('[data-slot="cascader-item-description"]')?.textContent, "30 căn", "CG3-AC-5 mục tỉnh phải ghi đúng số căn");
+  const o = document.querySelector<HTMLInputElement>('[data-slot="cascader-input"]')!;
+  await React.act(async () => {
+    Object.getOwnPropertyDescriptor(w.HTMLInputElement.prototype, "value")!.set!.call(o, "Khu Bảy");
+    o.dispatchEvent(new w.Event("input", { bubbles: true }));
+  });
+  await React.act(async () => { await new Promise((r) => setTimeout(r, 30)); });
+  assert.equal(hang("Khu Bảy")?.querySelector('[data-slot="cascader-item-description"]')?.textContent, "10 căn", "CG3-AC-5 mục dự án phải ghi đúng số căn");
+  await dem.go();
   const hien = await dung(trangMau({ project: "7" }));
   assert.equal(document.querySelector('[aria-label="Chọn vị trí"]')?.textContent?.trim(), "Khu Bảy", "CG3-AC-5 ô chọn phải hiện mục đang chọn");
   await hien.go();
@@ -164,6 +181,11 @@ test("CG3-AC-7 nút của ba trạng thái trống làm đúng việc", async ()
   const chiLoai = await dung(trangMau({ type: "house" }));
   assert.ok(theoChu("[data-deals-bo-loc] button", "Xoá bộ lọc"), "CG3-AC-7 chỉ lọc loại hình vẫn phải bỏ được điều kiện trên thanh lọc");
   await chiLoai.go();
+  // Nút Xoá bộ lọc trên thanh lọc: bỏ vị trí, loại hình, về trang 1, giữ Cho thuê và tab.
+  const thanh = await dung(trangMau({ kind: "rent", tab: "du", location: "vn-t1-p1", type: "house", page: 3 }));
+  await bam(theoChu("[data-deals-bo-loc] button", "Xoá bộ lọc")!);
+  assert.deepEqual(thanh.day, ["/ops/deals?kind=rent&tab=du"], "CG3-AC-7 Xoá bộ lọc trên thanh lọc phải bỏ vị trí, loại hình, về trang 1");
+  await thanh.go();
   const c = await dung(trangMau({}, { dem: { all: 0, du: 0, "xac-minh": 0, thieu: 0 }, tong: 0 }), []);
   assert.equal(document.querySelector('[data-deals-trong="tap"] a')?.getAttribute("href"), "/ops/quality", "CG3-AC-7 tập rỗng phải dẫn sang chất lượng dữ liệu");
   await c.go();
