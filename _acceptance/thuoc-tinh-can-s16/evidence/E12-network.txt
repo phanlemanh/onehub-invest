@@ -1,0 +1,1 @@
+driver=ui-capture (playwright-cli), khong doc duoc network
