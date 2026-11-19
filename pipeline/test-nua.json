@@ -45,7 +45,8 @@
     "scripts/s16-bon-phan.test.mjs",
     "scripts/gom-tin-cong-tac.test.mjs",
     "scripts/gom-tin-ma.test.mjs",
-    "scripts/gom-tin-phan-khu.test.mjs"
+    "scripts/gom-tin-phan-khu.test.mjs",
+    "scripts/gom-tin-hai-tang.test.mjs"
   ],
   "b": [
     "parse.test.mjs",

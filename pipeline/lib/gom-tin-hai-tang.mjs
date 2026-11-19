@@ -1,0 +1,128 @@
+// gom-tin-hai-tang.mjs — GT5 khoa-gom-hai-tang: gom bài S03 thành tin theo hai tầng (hàm thuần, không DB, không model — luật 7).
+// Spec: docs/superpowers/specs/2026-11-19-khoa-gom-hai-tang-design.md §2. Mạnh duyệt Cổng Phạm vi + Gate 1.5 ngày 20/11.
+//
+// Tầng một — bản chữ: bài cùng người đăng và cùng chữ chuẩn hoá (normText sau gatSo) là một bản chữ. Người đăng = sender_id, không có
+//   thì SĐT trong bài; không có cả hai thì mỗi bài một bản chữ.
+// Tầng hai — tin: bản chữ chung tin khi khoá bằng nhau trên người · loại · giá · số phòng · diện tích · tập phân khu · tập mã (trường
+//   vắng là «?», hai bản chữ cùng vắng một trường vẫn bằng nhau).
+// Nhập tin thiếu trường: tin có trường vắng nhập vào một tin cùng người khi trong cửa sổ `cuaSoNgay` ngày có ĐÚNG MỘT tin ứng viên
+//   đủ hơn (mọi trường tin thiếu có cũng có ở ứng viên và bằng nhau, ứng viên có thêm ít nhất một trường) và chữ giống từ `nguongChu`.
+//   Không bắc cầu: chỉ nhập vào tin dựng từ khoá đầy đủ hơn ở tầng hai, mỗi tin thiếu nhập vào nhiều nhất một tin, nên không làm hai
+//   tin đầy đủ chung một tin. Hai tập phân khu khác nhau, cả hai không rỗng, không bao giờ chung tin.
+// Dạng bài (GT8): `pr.dangBai` có mặt và khác "mot_can" thì bài thành tin riêng.
+import { normText } from "./norm-text.mjs";
+import { maMoi } from "./gom-tin-ma.mjs";
+import { tapPhanKhu } from "./gom-tin-phan-khu.mjs";
+
+const NGAY = 86_400_000;
+const TRUONG = ["pn", "dt", "pk", "ma"]; // trường có thể vắng của khoá tầng hai
+
+const thoiDiem = (p) => (p.posted_at == null ? Number.POSITIVE_INFINITY : new Date(p.posted_at).getTime());
+const sapBai = (a, b) => thoiDiem(a.post) - thoiDiem(b.post) || String(a.post.post_id).localeCompare(String(b.post.post_id));
+
+/**
+ * Người đăng của một bài: `sender:<id>` (chuỗi rỗng coi như vắng) → `phone:<sđt đầu trong bài>` → null.
+ * @param {{ phones?: string[]|null, phone?: string|null }} pr @param {{ sender_id?: string|null }} post
+ */
+export function nguoiDang(pr, post) {
+  const s = post.sender_id == null ? "" : String(post.sender_id).trim();
+  if (s) return `sender:${s}`;
+  const p = pr.phones?.[0] ?? pr.phone ?? null;
+  return p ? `phone:${p}` : null;
+}
+
+/** Tập 3-gram từ của chữ đã chuẩn hoá (chữ dưới 3 từ thì lấy chính chuỗi). */
+function bo3(chu) {
+  const w = chu.split(" ").filter(Boolean);
+  if (w.length < 3) return new Set([w.join(" ")]);
+  const s = new Set();
+  for (let i = 0; i + 3 <= w.length; i++) s.add(`${w[i]} ${w[i + 1]} ${w[i + 2]}`);
+  return s;
+}
+
+/** Độ giống Jaccard trên 3-gram từ, 0..1. */
+export function doGiong(a, b) {
+  const A = bo3(a), B = bo3(b);
+  let chung = 0;
+  for (const x of A) if (B.has(x)) chung++;
+  const hop = A.size + B.size - chung;
+  return hop === 0 ? 1 : chung / hop;
+}
+
+const giaCua = (pr) => pr.priceVnd ?? pr.pricePerm2Vnd ?? null;
+
+/**
+ * Gom bài đã đọc thành tin.
+ * @param {Array<object>} baiDaDoc phần tử `{ ...pr, post }` như mảng `parsed` của transform-zalo bước 4 (đã bỏ bài confidence low);
+ *   cần `kind`, `priceVnd`|`pricePerm2Vnd`, `bedrooms`, `areaM2`, `unit`, `phones`, `dangBai?`, và `post.{post_id, posted_at, sender_id, text}`.
+ * @param {{ tuDien: Array<{cum: string, khoa: string}>, gatSo: (t: string) => string, cuaSoNgay?: number, nguongChu?: number }} opts
+ * @returns {Array<{ items: object[], banChu: number }>} mỗi tin: các bài sắp theo posted_at rồi post_id; thứ tự tin theo bài neo.
+ */
+export function gomHaiTang(baiDaDoc, { tuDien, gatSo, cuaSoNgay = 7, nguongChu = 0.9 }) {
+  if (typeof gatSo !== "function") throw new Error("gomHaiTang: thiếu gatSo");
+  // ---- Tầng một: bản chữ ----
+  const banChu = new Map(); // khoá tầng một → bản chữ
+  const rieng = []; // bài dạng khác mot_can: mỗi bài một tin
+  for (const it of [...baiDaDoc].sort(sapBai)) {
+    if (it.dangBai != null && it.dangBai !== "mot_can") { rieng.push({ items: [it], banChu: 1 }); continue; }
+    const chuGat = gatSo(it.post.text ?? "");
+    const chu = normText(chuGat);
+    const nguoi = nguoiDang(it, it.post);
+    const k1 = nguoi ? `${nguoi}|${chu}` : `bai:${it.post.post_id}`;
+    let b = banChu.get(k1);
+    if (!b) {
+      const ma = [...new Set([...maMoi(chuGat), ...(it.unit ? [String(it.unit).toUpperCase()] : [])])].sort();
+      const pk = tapPhanKhu(it.post.text ?? "", tuDien);
+      b = {
+        nguoi: nguoi ?? `bai:${it.post.post_id}`, chu, items: [],
+        f: { loai: it.kind ?? null, gia: giaCua(it), pn: it.bedrooms ?? null, dt: it.areaM2 ?? null, pk: pk.length ? pk : null, ma: ma.length ? ma : null },
+      };
+      banChu.set(k1, b);
+    }
+    b.items.push(it);
+  }
+  // ---- Tầng hai: khoá bằng nhau ----
+  const gt = (v) => (v == null ? "?" : Array.isArray(v) ? v.join(",") : String(v));
+  const tin = new Map();
+  for (const b of banChu.values()) {
+    const k2 = [b.nguoi, gt(b.f.loai), gt(b.f.gia), gt(b.f.pn), gt(b.f.dt), gt(b.f.pk), gt(b.f.ma)].join("|");
+    let t = tin.get(k2);
+    if (!t) { t = { k2, nguoi: b.nguoi, f: b.f, ban: [], vao: null }; tin.set(k2, t); }
+    t.ban.push(b);
+  }
+  // ---- Nhập tin thiếu trường vào đúng một tin đủ hơn ----
+  const ds = [...tin.values()];
+  const soCo = (f) => TRUONG.filter((k) => f[k] != null).length;
+  const tg = (t) => t.ban.flatMap((b) => b.items.map((it) => thoiDiem(it.post)));
+  const trongCuaSo = (a, b) => { const A = tg(a), B = tg(b); return A.some((x) => B.some((y) => Math.abs(x - y) <= cuaSoNgay * NGAY)); };
+  const giongNhat = (a, b) => Math.max(...a.ban.flatMap((x) => b.ban.map((y) => doGiong(x.chu, y.chu))));
+  const khop = (thieu, du) => {
+    if (thieu.nguoi !== du.nguoi || thieu.f.loai !== du.f.loai || thieu.f.gia !== du.f.gia) return false;
+    if (soCo(du.f) <= soCo(thieu.f)) return false;
+    for (const k of TRUONG) {
+      if (thieu.f[k] == null) continue;
+      if (du.f[k] == null || gt(du.f[k]) !== gt(thieu.f[k])) return false;
+    }
+    return true;
+  };
+  const theoNguoi = new Map();
+  for (const t of ds) theoNguoi.set(t.nguoi, [...(theoNguoi.get(t.nguoi) ?? []), t]);
+  for (const t of ds) {
+    if (soCo(t.f) === TRUONG.length || t.nguoi.startsWith("bai:")) continue;
+    const ung = (theoNguoi.get(t.nguoi) ?? []).filter((u) => u !== t && khop(t, u) && trongCuaSo(t, u) && giongNhat(t, u) >= nguongChu);
+    if (ung.length === 1) t.vao = ung[0];
+  }
+  // Tin đích không tự nhập tiếp (không bắc cầu): đích của một tin thiếu là tin chưa nhập vào đâu; đích đã nhập thì tin thiếu đứng riêng.
+  const ra = [];
+  const gop = new Map(); // tin đích → tin kết quả
+  for (const t of ds) if (!t.vao || t.vao.vao) gop.set(t, { items: t.ban.flatMap((b) => b.items), banChu: t.ban.length });
+  for (const t of ds) {
+    if (!t.vao || t.vao.vao) continue;
+    const dich = gop.get(t.vao);
+    dich.items.push(...t.ban.flatMap((b) => b.items));
+    dich.banChu += t.ban.length;
+  }
+  ra.push(...gop.values(), ...rieng);
+  for (const t of ra) t.items.sort(sapBai);
+  return ra.sort((a, b) => sapBai(a.items[0], b.items[0]));
+}
