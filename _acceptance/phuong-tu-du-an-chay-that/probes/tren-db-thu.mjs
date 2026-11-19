@@ -100,10 +100,12 @@ if (che === "chay-lai") {
 }
 
 if (che === "tin-moi") {
-  await apDau();
+  // phân ô TRƯỚC lượt ghi: sau lượt ghi mọi tin một-phường đã ở ô «phuong», không còn ứng viên
   const o = (await c.query(SQL_O)).rows;
+  await apDau();
   const mot = o.find((x) => x.o_da === "mot-phuong" && x.o_the !== "khac" && x.o_cot !== "phuong");
   const khong = o.find((x) => x.o_da === "khong-phuong");
+  if (!mot || !khong) { kt(false, `DB chép không có tin ứng viên (một-phường: ${!!mot}, không-phường: ${!!khong})`); await c.end(); process.exit(1); }
   // «tin mới»: đưa tin về trạng thái chưa nhận phường (rút phát biểu kế thừa, xoá dấu cột), rồi cho chuỗi thật chạy
   const { rows: [g] } = await c.query(`SELECT field_provenance -> 'area_id' ->> 'goc' AS goc FROM sale_offer_records WHERE offer_id = $1`, [mot.offer_id]);
   await c.query(`UPDATE field_assertions fa SET retracted_at = clock_timestamp(), retract_reason = 'pct-tin-moi'
@@ -139,6 +141,9 @@ if (che === "ma-tran") {
   kt(soAssert === M.length, `số phép kiểm bằng số ô (${soAssert}/${M.length})`);
   const doiTinh = truoc.filter((x) => x.o_cot === "tinh" && x.p && x.tinh_moi && x.tinh_moi !== x.tinh_cu && sau.get(x.offer_id) === x.p);
   console.log(`tin đổi tỉnh: ${doiTinh.length} — ${doiTinh.map((x) => `${x.offer_id} ${x.tinh_cu}→${x.tinh_moi}`).join("; ")}`);
+  let sct = ""; try { sct = readFileSync(path.join(HS, "ap-may-thu/so-chay-thu.md"), "utf8"); } catch { /* vắng */ }
+  const thieu = doiTinh.filter((x) => !sct.includes(x.offer_id));
+  kt(thieu.length === 0, `so-chay-thu.md liệt kê đủ ${doiTinh.length} tin đổi tỉnh${thieu.length ? ` — thiếu ${thieu.map((x) => x.offer_id).join(", ")}` : ""}`);
 }
 
 if (che === "ap-lui") {
@@ -158,8 +163,13 @@ if (che === "ap-lui") {
 }
 
 if (che === "thoi-gian") {
+  const CUA_SO = `SELECT count(*) FILTER (WHERE a.region_type = 'submarket')::int co, count(*)::int tong FROM sale_offers s
+    LEFT JOIN areas a ON a.id = s.area_id WHERE s.source = 'S03' AND s.first_seen >= '2026-11-13' AND s.first_seen < '2026-11-20'`;
+  const p0 = await soPhuong(); const w0 = (await c.query(CUA_SO)).rows[0];
   const r1 = await apDau();
   const r2 = lenh(["--ghi", "--noi-tiep"]);
+  const p1 = await soPhuong(); const w1 = (await c.query(CUA_SO)).rows[0];
+  console.log(`toàn kho: ${p0.co}/${p0.tong} → ${p1.co}/${p1.tong} · cửa sổ 13–19/11: ${w0.co}/${w0.tong} → ${w1.co}/${w1.tong}`);
   console.log(`giây lượt đầu: ${r1.giay.toFixed(1)} · giây lượt lặp: ${r2.giay.toFixed(1)}`);
   kt(r2.ma === 0 && r2.giay <= 60, `lượt lặp không có gì mới xong trong 60 giây (${r2.giay.toFixed(1)} giây)`);
   const sct = readFileSync(path.join(HS, "ap-may-thu/so-chay-thu.md"), "utf8");
