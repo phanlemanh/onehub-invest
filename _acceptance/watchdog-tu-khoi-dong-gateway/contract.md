@@ -110,3 +110,5 @@ triển khai: thời gian đứt trung vị khi bộ hẹn treo ≤ 15′ (nền
 - Triển khai: watchdog chạy theo launchd 5′ từ checkout chính → có hiệu lực ở lượt kế sau khi làn merge `git pull --ff-only`;
   không cần ZCode thao tác. Lùi tức thì: tạo tệp `pipeline/logs/zalo-watchdog-p1-tat`; lùi mã: revert commit gộp rồi pull.
   Kiểm sau: hai lệnh ở «Đường đo».
+- Trần thử lại sau kickstart lỗi: 900 giây (ba nhịp watchdog, một nhịp heartbeat), số mới so với lúc duyệt phạm vi, do làn thu chọn khi sửa lỗi Mạnh trả lại ngày 18/11.
+  Lượt kick lỗi không tiêu trần 6 giờ. Ca `KICK-THAT-BAI` của `acceptance.mjs mo-lai` đo biên 899 và 900 giây.

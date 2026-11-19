@@ -617,12 +617,17 @@ async function caMoLai() {
     h.datHb("nhip=2\nreason=stopped\nd\n");
     writeFileSync(join(h.bin, "launchctl"), `#!/bin/bash\necho "launchctl $*" >> "${h.so}"\nexit 5\n`);
     await nen(h, T, T - 300);
-    await h.chay(T + 300);
-    const canhBao = /VHZ2.*thất bại/.test(h.alerts());
-    await h.chay(T + 900);
+    await h.chay(T + 300); // lời kick đầu, launchctl trả mã 5
+    const canhBao = /WARN VHZ2: kickstart LỖI \(mã thoát 5\)/.test(h.alerts());
+    const khongTieuTran = !/^lan=/m.test(doc(join(h.logs, "zalo-watchdog-p1-state")));
+    await h.chay(T + 300 + 899); // còn trong trần thử lại 900 giây
+    const trongTran = h.kick();
+    await h.chay(T + 300 + 900); // vừa hết trần thử lại
     kiem("KICK-THAT-BAI", [
-      [canhBao, "alerts log không có dòng VHZ2 … thất bại"],
-      [h.kick() === 2, `lượt kế gọi lại: tổng ${h.kick()} lời, cần 2 (trần không bị tiêu khi lệnh thất bại)`],
+      [canhBao, "alerts log không có dòng «WARN VHZ2: kickstart LỖI (mã thoát 5)»"],
+      [khongTieuTran, "lượt kick lỗi đã ghi lan= nên tiêu trần 6 giờ"],
+      [trongTran === 1, `sau 899 giây: tổng ${trongTran} lời, cần 1 (đang trong trần thử lại 900 giây)`],
+      [h.kick() === 2, `sau 900 giây: tổng ${h.kick()} lời, cần 2 (hết trần thử lại thì gọi lại)`],
     ]);
   }
   const ma = ["QR-LAN-2", "LOG-CAT-KHONG-KICK", "KICK-THAT-BAI"];
