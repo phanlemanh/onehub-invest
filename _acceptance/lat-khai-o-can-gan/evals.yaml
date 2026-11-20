@@ -1,0 +1,121 @@
+schema_version: 1
+slug: lat-khai-o-can-gan
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: bash _acceptance/lat-khai-o-can-gan/probes/doc.sh AC-1
+    paths: [app/src/components/ops/labels/**, app/src/lib/labels-normalize.ts, app/tests/labels-lat-khai-o*]
+    expected: "Biểu mẫu dựng thật của lát có khai: đúng hai ô, nhãn «Phân khu hoặc cụm», có «Không suy ra được», không có ô căn cứ, không có ô Lý do, bộ đếm 0/2. Đối chứng cùng tệp: lát theo nhóm không khai vẫn đủ 24 ô."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/lat-khai-o-can-gan/probes/doc.sh AC-2
+    paths: [app/src/lib/labels-normalize.ts, app/src/lib/labels-queries.ts, app/tests/labels-lat-khai-o*]
+    expected: "Route thật trên lược đồ tạm, ma trận bốn tổ hợp viết trước, mỗi ô một assert trên dòng eval_labels: đúng hai dòng, not_stated, value chuẩn hoá, basis NULL, không dòng của ô khác. Đột biến bỏ bước lọc ô đỏ, thông điệp nêu ô thừa."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/lat-khai-o-can-gan/probes/doc.sh AC-3
+    paths: [app/src/lib/labels-normalize.ts, app/src/lib/labels-queries.ts, app/tests/labels-lat-khai-o*]
+    expected: "Route thật: thiếu building, thiếu subzone, để trống từng ô → 400 nêu đúng ô, số dòng eval_labels không đổi. Đối chứng: đủ hai ô → 200."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/lat-khai-o-can-gan/probes/doc.sh AC-4
+    paths: [app/src/lib/labels-normalize.ts, app/src/lib/labels-queries.ts, app/tests/labels-lat-khai-o*]
+    expected: "Hằng tạm không nằm trong BASIS; sau mọi ca lưu, SELECT trên eval_labels không có dòng mang hằng. Ma trận viết trước trên bốn lát không khai: lượt hợp lệ đủ ô với căn cứ thật → 200 (đối chứng dương); cùng lượt thay hằng ở một ô và ở mọi ô → 400, thông điệp nêu hằng, số dòng không đổi. Hai đột biến đỏ, thông điệp ghim: bỏ bước đặt basis rỗng (nêu giá trị lọt xuống DB); gỡ bước chặn lát không khai (nêu tên lát)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/lat-khai-o-can-gan/probes/doc.sh AC-5
+    paths: [app/src/components/ops/labels/**, app/tests/labels-lat-khai-o*]
+    expected: "Lát có khai có draft và đầu ra máy cấy chuỗi đánh dấu: biểu mẫu không điền nháp, không badge nháp; lưu xong đi tới đường dẫn bài kế, không có xem=. Ma trận ?xem= viết trước (bài đã lưu, bài chưa lưu, bài không tồn tại), mỗi ô một assert: trang là màn gắn của bài kế, HTML và props gửi xuống trình duyệt không chứa chuỗi đánh dấu. Đối chứng cùng fixture: lát không khai vẫn mở lượt hai và có chuỗi đánh dấu."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: bash _acceptance/lat-khai-o-can-gan/probes/doc.sh AC-6
+    paths: [app/src/components/ops/labels/**, app/tests/labels-lat-khai-o*]
+    expected: "Bộ chọn của lát có khai ghi Phần 1, Phần 2, Phần 3, không chứa tên nhóm cấy trong fixture; khung bài vẫn có chữ bài và tên nhóm của bài. Đối chứng: lát không khai vẫn ghi tên nhóm."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/lat-khai-o-can-gan/probes/doc.sh AC-7
+    paths: [app/src/lib/labels-queries.ts, app/src/components/ops/labels/**, app/tests/labels-lat-khai-o*]
+    expected: "Sau khi lưu: tinKe không trả lại bài đó, tienDo tăng đúng một, bảng đồng thuận dựng thật chỉ có hai hàng Toà và Phân khu hoặc cụm."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.test.gcn_app
+    paths: [app/src/lib/labels-normalize.ts, app/src/lib/labels-queries.ts, app/src/components/ops/labels/**, app/tests/labels-nhom.test.tsx]
+    expected: "Bộ test của lát theo nhóm 24 ô đã ký xanh."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.test.mgn_app
+    paths: [app/src/lib/labels-normalize.ts, app/src/lib/labels-queries.ts, app/src/components/ops/labels/**, app/tests/labels.test.tsx]
+    expected: "Bộ test của lát đời trước 9 ô đã ký xanh."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-9
+    executor: ui-check
+    layer: ui-observed
+    paths: [app/src/components/ops/labels/**]
+    steps:
+      - "Bản chạy: dev server do phiên N1b giữ, DB thử có lát giả hai-khu-ghep-b; KHÔNG ghi DB máy thu. Che email đăng nhập, tên người đăng và ảnh tin trước khi chụp."
+      - "Mở /ops/labels?lat=hai-khu-ghep-b ở 1280 px sáng → evidence/E10-step1.png (đúng hai ô, đếm 0/2)"
+      - "Bấm Lưu khi còn trống → evidence/E10-step2.png (lỗi ngay dưới từng ô)"
+      - "Điền hai ô rồi lưu → evidence/E10-step3.png (sang bài kế, không có màn xem máy đọc)"
+      - "Cùng màn ở chế độ tối → evidence/E10-step4.png; khổ 390 px → evidence/E10-step5.png (không cuộn ngang trang)"
+      - "Làm chậm mạng rồi bấm Lưu → evidence/E10-step6.png (nút «Đang lưu…»)"
+      - "Ngắt mạng rồi bấm Lưu → evidence/E10-step7.png (cảnh báo kèm «Thử lại», chữ đã gõ còn nguyên); nối lại, bấm «Thử lại» → sang bài kế"
+      - "Gắn hết bài của phần → evidence/E10-step8.png (trạng thái đã gắn hết)"
+    expected: "Tám khung trên bản chạy đúng các trạng thái, đọc được ở sáng, tối, 390 px."
+  - id: E11
+    criterion: AC-10
+    executor: judgment
+    inputs: [_acceptance/lat-khai-o-can-gan/evidence/do-thoi-gian.md]
+    question: "Tệp có ghi hạt giống, và với đủ 5 bài có mã bài, số ký tự, số ảnh, số giây không? Trung bình số giây có từ 45 trở xuống không?"
+    expected: "Đủ hạt giống và đủ bốn trường của 5 bài, trung bình không quá 45 giây; thiếu trường nào thì không đạt."
+  - id: E12
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.design.floor
+    paths: [app/src/components/ops/labels/**]
+    expected: "exit 0; sàn thiết kế bậc M1 không báo hex thô mới trên tệp giao diện vòng chạm"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E13
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.suite.app
+    paths: [app/src/**]
+    expected: "Typecheck và lint của app sạch."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E14
+    criterion: AC-9
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/lat-khai-o-can-gan/probes/doc.sh AC-9
+    paths: [app/src/lib/labels-queries.ts, app/tests/labels-lat-khai-o*]
+    expected: "Route thật: gửi cùng một lượt hai lần → lần hai trả 409, bài vẫn đúng hai dòng eval_labels. Đối chứng: lần đầu trả 200."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E15
+    criterion: AC-8
+    executor: script
+    cmd: bash _acceptance/lat-khai-o-can-gan/probes/kiem-test-da-ky.sh
+    paths: [app/tests/labels*]
+    expected: "exit 0; các tệp test đã ký của màn Gắn nhãn không đổi so với điểm rẽ khỏi main."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

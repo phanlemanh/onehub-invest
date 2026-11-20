@@ -11,7 +11,11 @@ export const NGUONG_DONG_THUAN = 0.9
 const fmtTiLe = (v: number) => new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 2 }).format(v)
 
 /** Bảng đồng thuận trên phần gắn trùng (view eval_label_agreement), mặc định chín trường của PL7. Chưa có cặp → «chưa đủ cặp», không 0. */
-export function AgreementTable({ rows, fields = LABEL_FIELDS }: { rows: DongThuanTruong[]; fields?: readonly LabelField[] }) {
+export function AgreementTable({ rows, fields = LABEL_FIELDS, nhan = (f) => FIELD_LABEL[f] }: {
+  rows: DongThuanTruong[]
+  fields?: readonly LabelField[]
+  nhan?: (f: LabelField) => string
+}) {
   const theoTruong = new Map(rows.map((r) => [r.field, r]))
   return (
     <Frame variant="default" spacing="sm" className="w-full" data-labels-agreement="">
@@ -38,7 +42,7 @@ export function AgreementTable({ rows, fields = LABEL_FIELDS }: { rows: DongThua
               const tiLe = r?.tiLe ?? null
               return (
                 <TableRow key={f} data-field={f}>
-                  <TableCell className="ps-5">{FIELD_LABEL[f]}</TableCell>
+                  <TableCell className="ps-5">{nhan(f)}</TableCell>
                   <TableCell className="text-end tabular-nums">{fmtInt(r?.capDu ?? 0)}</TableCell>
                   <TableCell className="text-end tabular-nums">{fmtInt(r?.khop ?? 0)}</TableCell>
                   <TableCell className="pe-5 text-end">
