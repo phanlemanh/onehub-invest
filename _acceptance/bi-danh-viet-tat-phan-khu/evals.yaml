@@ -64,3 +64,26 @@ evals:
     expected: "exit 0 trên bản chép DB máy thu, DB máy thu chỉ bị đọc: thẻ gán ori→44, rb→48, bs→387, gh→43, 0 không gán; áp xong lệnh đo in số tin đọc được phân khu trước và sau, tăng ít nhất 800, mỗi tên tắt có ít nhất ori 333 · rb 108 · bs 282 · gh 190 tin chỉ đọc được phân khu nhờ nó, 0 tin mất phân khu cũ; lệnh kiểm thoát 0; đảo về đúng dấu vân tay aliases và meta trước áp. Chiều đỏ: chạy trên DB tên không phải bản chép thì thoát 2 trước khi ghi; bỏ một tên khỏi bảng thì E9 đỏ và thông điệp nêu đúng tên đó"
     paths: ["pipeline/lib/phan-khu-s16-bi-danh.mjs","pipeline/scripts/bi-danh-viet-tat-phan-khu.mjs","pipeline/scripts/bi-danh-viet-tat-phan-khu-that.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.bdv_soat_nguon
+    expected: "exit 0 trên DB máy thu (chỉ đọc): bộ soát tên nguồn mới (docSourceNameEntries kèm cờ match_whole của 112, findSourceNames — cùng hàm sync-cloud và bộ che dùng) trúng 0 chỗ ở cả bốn tên tắt, ba dạng: đứng riêng, mảng tên của nút đích sau áp, giữa câu tin; in số đếm, không in tên nguồn. Chiều đỏ: `--doi-chung` thêm mục giả S99 mang «ori» thì trúng 3 chỗ, thoát 1, thông điệp nêu «ori» và S99"
+    paths: ["pipeline/lib/phan-khu-s16-bi-danh.mjs","pipeline/lib/source-name-entries.mjs","pipeline/lib/mask-source-names.mjs","pipeline/scripts/bi-danh-viet-tat-phan-khu-soat-nguon.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11a
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.suite.pipeline_a
+    long_running: 60
+    paths: [pipeline/**]
+    expected: "exit 0; bộ pipeline nửa a của kho xanh trên nhánh (đã nhận main a60adccb8). Khai riêng để lượt chấm chờ đủ giờ khi máy tải, theo khuôn che-ten (ca4a520da)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11b
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.suite.pipeline_b
+    long_running: 60
+    paths: [pipeline/**]
+    expected: "exit 0; bộ pipeline nửa b của kho xanh trên nhánh (đã nhận main a60adccb8). Khai riêng để lượt chấm chờ đủ giờ khi máy tải, theo khuôn che-ten (ca4a520da)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

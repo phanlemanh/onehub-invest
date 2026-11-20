@@ -15,3 +15,4 @@ Mỗi dòng: sửa đúng một nhánh trong bản làm việc, chạy `pipeline
 | E7 | áp không ghi tên vào `aliases` | BDV-3, BDV-5, BDV-6 (lượt phá chỉ in ba ca đỏ đầu) | tên nối vào cuối, bí danh cũ giữ thứ tự |
 | E8 | lệnh kiểm không đọc `aliases` | BDV-8 | thiếu tên phải nêu đúng nút |
 | E9 (fixture) | lệnh đo không bỏ tên tắt ở vế «trước» | BDV-9 | hai tin chỉ đọc được nhờ tên tắt |
+| E10 | mục giả S99 «ori» trong sổ nguồn (`--doi-chung`) | E10 thoát 1, 3 chỗ trúng | ori (đứng riêng): S99 |
