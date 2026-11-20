@@ -258,7 +258,7 @@ Luật đọc:
 | `toa` | `<du_an_id>` | `{code, data[toa]}` — `data` rỗng khi dự án không kích hoạt toà | `duAnId` · `duAnTen` · `duong` · `status` · `soToa` · `loi?` |
 | `tang` | `<toa_id>` | `{code, data[tang]}` — tên tầng nguyên văn («02», «12B») | `duAnId` · `toaId` · `toaTen` · `duong` · `status` · `soTang` · `loi?` |
 | `khu-thap-tang` | `<du_an_id>` | `{code, data[khu]}` — phân khu thấp tầng | `duAnId` · `duAnTen` · `duong` · `status` · `soKhu` · `loi?` |
-| `can-thap-tang` | `<khu_id>` | `{code, data[can]}` — `size=2000` một lời cả khu | `duAnId` · `khuId` · `khuTen` · `size` · `soCanNhan` · `canDuTrang` · `duong` · `status` · `loi?` |
+| `can-thap-tang` | `<khu_id>` | `{code, data[can]}` | bản 19/11: `duAnId` · `khuId` · `khuTen` · `size` · `soCanNhan` · `canDuTrang` · `duong` · `status` · `loi?` — các lượt bù 20/11: `duAnId` · `khuId` · `tienTo` · `tongNguon` · `soCanNhan` · `loi?` |
 
 `canDuTrang` (lượt bản đồ 19/11) ĐẶT THEO MỐC size=2000 nhưng nguồn cắt cứng **500/lời** nên cờ
 không bao giờ bật — bỏ từ lượt thu bù 20/11; đối soát đủ/thiếu bằng `meta.total` của phản hồi
@@ -267,6 +267,15 @@ cắt cứng 500/lời; `page/offset/from/skip/sort/order/house_type/size>500` B
 `property_number` là BỘ LỌC TIỀN TỐ mã căn (không phân biệt hoa/thường); phân trang thực tế =
 duyệt tiền tố (prefix-DFS) từ quan sát + quét lỗ giữa dải số; phần không truy được qua tiền tố
 khai trong bảng đối soát (đừng suy ra phần thiếu là gì).
+
+**Luật hợp căn (các lượt bù 20/11)**: cùng khu có NHIỀU item `can-thap-tang` (mỗi tiền tố duyệt
+một item, cùng `sourceId` = khu_id) và căn TRÙNG xuất hiện giữa các lá/lượt (tiền tố đè nhau do
+cấu trúc mã đan xen `NHÀ.LÔ-CĂN`/`NHÀ.LÔ-CĂN TRỰC TIẾP`/`LÔ SỐ 3 CHỮ SỐ` cùng không gian) —
+**bên đọc PHẢI hợp theo `data[].id`** (khử trùng id toàn khu), không cộng số `soCanNhan` giữa
+các item; đối soát đủ/thiếu bằng Σ id hợp so `tongNguon` (lượt 48 khu 20/11: khu lớn nhất gom
+hợp theo id 10.910 — số 10.974 trong tin XONG là đếm trùng tiền tố). `payload.meta` mang
+`{page, size, total}` của nguồn — `total` là tổng căn THẬT theo tiền tố, dùng để đối soát.
+Giữ nguyên khuôn `canDuTrang/size` chỉ để đọc bản 19/11 (bất biến).
 
 Khuôn MỘT item mỗi kind (tên dự án/toà/khu ĐÃ THAY bằng giả; uuid rút gọn; `{code,data}` giữ khuôn thật):
 
@@ -286,6 +295,15 @@ Khuôn MỘT item mỗi kind (tên dự án/toà/khu ĐÃ THAY bằng giả; uui
 {"source":"s09-danh-ba","kind":"can-thap-tang","sourceId":"00000000-0000-4000-8000-0000000000c1","fetchedAt":"2026-11-19T00:49:12.000Z",
  "meta":{"duAnId":"00000000-0000-4000-8000-000000000002","khuId":"00000000-0000-4000-8000-0000000000c1","khuTen":"<khu-gia>","size":2000,"soCanNhan":387,"canDuTrang":false,"duong":"/my-home/low-rises/sectors/{khuId}/properties?size=2000","status":200,"loi":null},
  "payload":{"code":200,"data":[{"id":"00000000-0000-4000-8000-0000000000d1","name":"NT1-01","code":"NT1-01","increment_number":1005259}]}}
+```
+
+Khuôn lượt bù 20/11 (cùng kind, MỘT item mỗi tiền tố duyệt; hợp căn theo `data[].id`):
+
+```json
+{"source":"s09-danh-ba","kind":"can-thap-tang","sourceId":"00000000-0000-4000-8000-0000000000c1","fetchedAt":"2026-11-20T00:52:30.000Z",
+ "meta":{"duAnId":"00000000-0000-4000-8000-000000000001","khuId":"00000000-0000-4000-8000-0000000000c1","tienTo":"NT1","tongNguon":740,"soCanNhan":220,"loi":null},
+ "payload":{"code":200,"data":[{"id":"00000000-0000-4000-8000-0000000000d1","name":"NT1-01","code":"NT1-01","increment_number":1005259}],
+            "meta":{"page":0,"size":500,"total":220}}}
 ```
 
 Khoá nối với S16/S08 (chi tiết số đo ở tệp kê local của lượt, không commit):
