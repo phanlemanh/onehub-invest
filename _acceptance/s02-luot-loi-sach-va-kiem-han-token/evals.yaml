@@ -47,7 +47,7 @@ evals:
   - id: E8
     criterion: AC-1
     executor: script
-    cmd: 
+    cmd: "cd collector && npx tsc -p tsconfig.json && cd .. && node _acceptance/s02-luot-loi-sach-va-kiem-han-token/probes/nguoi-doc.mjs && ! node _acceptance/s02-luot-loi-sach-va-kiem-han-token/probes/nguoi-doc.mjs --pha"
     expected: "cùng lệnh E3: 'đạt: lượt ném lỗi để lại đúng một .partial ẩn', 'đạt: manifest lỗi trong .partial giữ error và 0 items', 'đạt: lượt hỏng không xoá tệp nào của bản thu cũ (<n> tệp trước, mất 0)'; mất tệp thì dòng ĐỎ liệt tên tệp mất"
     paths: [collector/src/core/**]
   - id: E9
@@ -56,3 +56,27 @@ evals:
     cmd: "cd collector && npx tsc -p tsconfig.json && cd .. && node _acceptance/s02-luot-loi-sach-va-kiem-han-token/probes/dot-bien-han.mjs"
     expected: "cùng lệnh E4: 'đạt: bản thật · ô duyệt: hết hạn', 'đạt: bản thật · ô duyệt: rỗng' (ghi AUTH FAIL [S02] <ISO> rồi ném), 'đạt: bản thật · ô duyệt: còn hạn' (không AUTH FAIL), và 'đạt: bản đột biến (bỏ AUTH FAIL khi ném) bị bắt ở ô: duyệt: hết hạn …'"
     paths: [collector/src/collectors/**]
+  - id: E10a
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.suite.app_ui
+    long_running: 60
+    paths: [pipeline/**, app/src/**, app/tests/**, scripts/**]
+    expected: "exit 0; bộ test giao diện app của kho xanh trên nhánh (bọc suite-neu-doi: nhánh không đổi vùng của bộ thì bỏ qua, thoát 0). Khai riêng để lượt chấm chờ đủ giờ khi máy tải — theo khuôn ca4a520da của che-ten."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10b
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.suite.pipeline_a
+    long_running: 60
+    paths: [pipeline/**, app/src/**, app/tests/**, scripts/**]
+    expected: "exit 0; bộ pipeline nửa a của kho xanh trên nhánh (bọc suite-neu-doi: nhánh không đổi vùng của bộ thì bỏ qua, thoát 0). Khai riêng để lượt chấm chờ đủ giờ khi máy tải — theo khuôn ca4a520da của che-ten."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10c
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.suite.pipeline_b
+    long_running: 60
+    paths: [pipeline/**, app/src/**, app/tests/**, scripts/**]
+    expected: "exit 0; bộ pipeline nửa b của kho xanh trên nhánh (bọc suite-neu-doi: nhánh không đổi vùng của bộ thì bỏ qua, thoát 0). Khai riêng để lượt chấm chờ đủ giờ khi máy tải — theo khuôn ca4a520da của che-ten."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
