@@ -55,3 +55,6 @@ chữ mà thiếu trường đứng riêng. Thước tách nhầm của AC-9 (40
   `d0d99f79bac2dd55e0fe416009b83d1db4806a7d52c50843c23cf0d649e49c97` — nội dung ở `research-local/s03-gom-tin-giu-rieng-3-20261120/` (gitignored, máy thu).
 - Commit này đứng TRƯỚC khi gán nhãn và trước mọi lượt chạy khoá lối B trên mẫu ba. Thước: gộp nhầm < 5%, tách nhóm cùng căn ≤ 35%
   (`GT5_TACH_NHOM=1`), tách nhầm 40 cặp không tăng. Hụt ngưỡng thì DỪNG, không chỉnh luật rồi chấm lại, đưa Mạnh.
+- Nhãn mẫu ba: tác tử con của phiên Claude Code (0 USD chi thêm). Token: Opus 152.559, Sonnet 146.749. Hai model tự báo cùng: mot-can 100
+  · ro 13 · tim-mua 7 · khong-ro 0. Khuôn kiểm: đủ 120 tin, mỗi id bản chữ đúng một lần. Băm nhãn thô (16 ký tự đầu sha256):
+  nhan-opus.json `473684c4ff4dc3fe` · nhan-sonnet.json `d03396b3cedf7401` — ghi TRƯỚC khi chấm.
