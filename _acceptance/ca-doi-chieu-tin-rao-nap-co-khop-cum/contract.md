@@ -5,7 +5,7 @@ slug: ca-doi-chieu-tin-rao-nap-co-khop-cum
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-11-20T07:03:09Z
 approved_by:
@@ -56,3 +56,9 @@ hàm chung — không có lệch sản phẩm, không phải lỗi tầng A.
 ## Notes
 
 - Không sửa mã sản phẩm: `getPublicOffers` và `sync-cloud` đã đọc qua hàm chung từ che-ten.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-20:
+  - Ngoài-1: phép kiểm phạm vi dò từng dòng, câu đọc sổ nguồn viết xuống nhiều dòng có thể lọt.
+  - Ngoài-2: E1 trên máy thu vẫn xanh khi không có tin nào mang tên trùng đủ cụm.
+  - Ngoài-3: bước soát đầu ra `guardValues` chưa có phép thử chứng minh nó bắt được tên đủ cụm (lượt 2).
+  - Ngoài-4: cùng chỗ thiếu đối chứng dương cho `guardValues`, ghi ở lượt 1.
+  - Mù-1: bộ test pipeline_b (E5c, AC-4) không chạy xong ở cả ba lượt chấm; hàng gộp khi pipeline_b chưa xanh.

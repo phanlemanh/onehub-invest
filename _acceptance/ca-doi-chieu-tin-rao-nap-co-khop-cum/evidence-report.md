@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: d36c6803e53eb06d1aa2e24cd730cf4fedb699fd
-human_signoff:
+human_signoff: Mạnh 2026-11-20
 ---
 
 # Evidence Report: ca-doi-chieu-tin-rao-nap-co-khop-cum
