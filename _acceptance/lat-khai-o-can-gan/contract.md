@@ -5,7 +5,7 @@ slug: lat-khai-o-can-gan
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui, api]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-18
 design_doc: docs/superpowers/specs/2026-11-18-lat-khai-o-can-gan-design.md
@@ -52,3 +52,8 @@ tức khoảng 16 giờ 30 phút cho 330 bài. Lát chưa nạp lên DB máy thu
 - Sửa `app/src/app/api/v1/ops/labels/route.ts` và thêm cột DB khai ô theo lát.
 - Nạp lát `hai-khu-ghep-b` lên DB máy thu: việc của PL20.
 - Rút gọn các lát đang có.
+
+## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-20:
+  - Ngoài-1: Phép kiểm chỉ xác nhận lát có khai ô không hiện nháp máy; chưa có đối chứng dương cho thấy nháp vẫn hiện ở lát không khai, nên nếu nháp hỏng ở mọi lát thì phép kiểm này không báo.

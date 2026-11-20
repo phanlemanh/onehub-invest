@@ -1,14 +1,14 @@
 ---
 schema_version: 2
 feature_slug: lat-khai-o-can-gan
-verdict: PENDING-JUDGMENT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: b2ec09f4457bad50596f630b7f21a3641843ef1d
-human_signoff:
+human_signoff: Mạnh 2026-11-20
 ---
 
 # Evidence Report: lat-khai-o-can-gan
@@ -195,7 +195,7 @@ Round 2. Mọi eval máy và ui-check đều xanh; E11 (judgment) còn UNCERTAIN
   required_evidence:
     - Tệp /Users/manhphan/dev/onehub-invest/.claude/worktrees/can-cung-tieu-chi-toan-tap/_acceptance/lat-khai-o-can-gan/evidence/do-thoi-gian.md phải có ở đúng đường dẫn đó (sinh bởi lệnh đo E10/E11 hoặc chép từ worktree nhánh feat/lat-khai-o-can-gan).
     - Nội dung phải ghi hạt giống, đủ 5 dòng bài (mã bài, số ký tự, số ảnh, số giây) và trung bình số giây không quá 45.
-  human_override:  # chi nguoi ghi
+  human_override: Mạnh 2026-11-20 — Đạt
 
 ### Lệnh suite (hồi quy)
 
