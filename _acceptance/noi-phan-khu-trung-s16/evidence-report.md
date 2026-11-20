@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 5e3c147b109f1ce594eb317ad7b5a2e407d1c573
+verified_commit: dea499cfc4850d01fa3f92aac1bbf9ac3e56b9e1
 human_signoff: Mạnh 2026-11-19
 ---
 
@@ -177,3 +177,7 @@ Round 1: E1-E10 deu pass, cac lenh suite hoi quy xanh. Chua co round truoc.
 ### Re-pin lần 1 — 2026-11-19, do hoá cũ do gộp main (#497 đổi app/src/lib/deals.ts) sau chữ ký
 run_id: repin-20261119T135851Z-85335
 sha: 5e3c147b109f1ce594eb317ad7b5a2e407d1c573 · suites: 7 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng
+
+### Re-pin lần 2 — 2026-11-20, do hoá cũ do sửa 4 ca NPS-AC-6 (fallback DB của CI) và nhận main 972515aac
+run_id: repin-20261119T235221Z-64833
+sha: dea499cfc4850d01fa3f92aac1bbf9ac3e56b9e1 · suites: 7 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng
