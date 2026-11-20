@@ -2,9 +2,10 @@
 # Phép đo AC-6 (hồ sơ s02-luot-loi-sach-va-kiem-han-token): nhánh tích hợp chỉ đổi đúng vùng của hàng
 # (5 tệp collector của hai nhánh ZCode + hồ sơ). Chiều đỏ: cùng bộ lọc trên danh sách có cấy một
 # tệp ngoài vùng → ĐỎ ghim tên tệp.
+# LO-TRINH.html, PRODUCT-MAP.md là tệp sinh: luật kho bắt vẽ lại sau mỗi lần nhận main, và config khai chúng ngoài vật.
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"; cd "$ROOT"
-VUNG='^(collector/src/collectors/[a-z]+-research\.ts|collector/src/core/scheduler\.ts|collector/src/core/storage\.ts|collector/src/test/snapshot-loi-khong-tac-thu-muc\.test\.ts|collector/src/test/apptoken-exp\.test\.ts|_acceptance/s02-luot-loi-sach-va-kiem-han-token/.*)$'
+VUNG='^(collector/src/collectors/[a-z]+-research\.ts|collector/src/core/scheduler\.ts|collector/src/core/storage\.ts|collector/src/test/snapshot-loi-khong-tac-thu-muc\.test\.ts|collector/src/test/apptoken-exp\.test\.ts|LO-TRINH\.html|PRODUCT-MAP\.md|_acceptance/s02-luot-loi-sach-va-kiem-han-token/.*)$'
 BASE="$(git merge-base origin/main HEAD)" || { echo "ĐỎ: không tính được merge-base với origin/main"; exit 2; }
 loc() { grep -Ev "$VUNG" || true; }
 DS="$(git diff --name-only "$BASE" HEAD)"
