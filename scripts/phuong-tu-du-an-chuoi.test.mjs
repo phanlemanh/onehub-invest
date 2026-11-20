@@ -134,7 +134,7 @@ test("PCT-AC-1 lượt 00:00: bước báo lỗi khoá thì job khác 0, không 
   assert.doesNotMatch(r.out, /BỎ LƯỢT/, "PCT-AC-1 [00:00] lượt 00:00 không được bỏ lượt");
 });
 
-test("PCT-AC-1 lượt nhanh, khoá THẬT ở phiên thứ hai: bước bị ngắt vì lock_timeout, in BỎ LƯỢT, không tính vào mã thoát", async () => {
+test("PCT-AC-1 khoá THẬT ở phiên thứ hai: lượt nhanh in BỎ LƯỢT, không tính vào mã thoát; lượt 00:00 thoát khác 0 vì lock timeout", async () => {
   const pg = createRequire(path.join(REPO, "pipeline/package.json"))("pg");
   const mayChu = (process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest").replace(/\/[^/?]+(\?.*)?$/, "");
   const ten = `oneinvest_pct_khoa_${process.pid}`;
@@ -157,7 +157,16 @@ test("PCT-AC-1 lượt nhanh, khoá THẬT ở phiên thứ hai: bước bị ng
       await giu.query("BEGIN");
       await giu.query("LOCK TABLE field_assertions IN ACCESS EXCLUSIVE MODE");
       const r = chay(cay(), { env: { THAT_BUOC: BUOC, DATABASE_URL: `${mayChu}/${ten}`, S03_NHANH_LOCK_TIMEOUT: "1s" } });
+      // Lượt 00:00, cùng khoá thật: không có PGOPTIONS, bước tự đặt trần chờ (PTD_LOCK_TIMEOUT, mặc định 10 phút) nên thoát khác 0
+      // vì lock timeout chứ không chờ mãi (S4-r2). Thiếu trần thì lệnh treo tới hạn 120 giây của spawnSync: mã null, không có
+      // dòng «lock timeout» — ca đỏ.
+      const d = chay(cay(), { nhanh: false, env: { THAT_BUOC: BUOC, DATABASE_URL: `${mayChu}/${ten}`, PTD_LOCK_TIMEOUT: "1s" } });
       await giu.query("ROLLBACK");
+      assert.ok(Number.isInteger(d.code) && d.code !== 0, `PCT-AC-1 [00:00] khoá thật: job phải thoát khác 0 (được ${d.code}):\n${d.out.slice(-800)}`);
+      assert.match(d.out, /lock timeout/, "PCT-AC-1 [00:00] khoá thật: bước không dừng vì lock timeout");
+      assert.match(d.out, new RegExp(`JOB FAIL \\[zalo-import-daily\\] bước ${BUOC} mã`), "PCT-AC-1 [00:00] khoá thật: thiếu dòng JOB FAIL");
+      assert.doesNotMatch(d.out, /BỎ LƯỢT/, "PCT-AC-1 [00:00] khoá thật: lượt 00:00 không được bỏ lượt");
+      assert.ok(d.calls.includes("transform-media"), "PCT-AC-1 [00:00] khoá thật: bước sau không chạy");
       assert.equal(r.code, 0, `PCT-AC-1 khoá thật làm lượt nhanh thoát ${r.code}:\n${r.out.slice(-800)}`);
       assert.match(r.out, new RegExp(`BỎ LƯỢT \\[zalo-import-daily\\] bước ${BUOC}: đụng khoá`), "PCT-AC-1 khoá thật không ra BỎ LƯỢT");
       assert.ok(r.calls.includes("transform-media"), "PCT-AC-1 bước sau không chạy khi bước phường bị bỏ lượt");

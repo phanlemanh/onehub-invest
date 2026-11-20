@@ -105,6 +105,18 @@ export async function chay(client, { ghi = false, json = false, noiTiep = false,
   }
   await client.query("BEGIN");
   try {
+    // DA45 (S4-r2, lùi trùng lượt nạp): lui.sql giữ cùng khoá tư vấn này suốt giao dịch lùi. Lượt nối tiếp chờ khoá rồi xem lại,
+    // trong giao dịch, luật còn dòng sống không: lùi vừa commit thì bỏ qua, không chèn lại phát biểu đã rút.
+    await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [RULE]);
+    if (noiTiep) {
+      const { rows: [r] } = await client.query(
+        "SELECT EXISTS (SELECT 1 FROM field_assertions WHERE rule_id = $1 AND retracted_at IS NULL) AS co", [RULE]);
+      if (!r.co) {
+        await client.query("ROLLBACK");
+        log("phuong-tu-du-an: luật vừa lùi trong lúc lượt chờ khoá — bỏ qua, không ghi");
+        return { ...kq, chen: 0, rut: 0, tin: 0, bo_qua: true };
+      }
+    }
     const k = await ghiPhatBieu(client, kq.dong);
     const tin = await tinBiCham(client, k.cham);
     if (tin.length) await resolveOffers(client, tin);
@@ -122,6 +134,10 @@ async function main(argv) {
   const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
   await client.connect();
   try {
+    // Lượt 00:00 và lượt ghi tay không có lock_timeout từ PGOPTIONS (lượt nhanh có, 10 giây): đặt trần để bước đụng khoá thật
+    // thoát khác 0 thay vì chờ mãi (AC-1). Đã có trần từ PGOPTIONS thì giữ.
+    const { rows: [lt] } = await client.query("SELECT current_setting('lock_timeout') AS v");
+    if (lt.v === "0") await client.query("SELECT set_config('lock_timeout', $1, false)", [process.env.PTD_LOCK_TIMEOUT || "10min"]);
     const json = argv.includes("--json");
     const kq = await chay(client, { ghi: argv.includes("--ghi"), json, noiTiep: argv.includes("--noi-tiep") });
     // --json: dòng cuối là đếm của chính lượt (chèn, rút, tin phân xử lại) — phép đo AC-3 đọc dòng này, không đọc số ròng
