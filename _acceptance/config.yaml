@@ -1057,6 +1057,9 @@ executors:
     ns09_ranh_gioi: "node pipeline/scripts/nap-s09-ranh-gioi.mjs --base origin/main"   # nap-s09 E6 — vùng, tên nguồn, chia nửa test pipeline
     o5s_doi_chung: "bash _acceptance/on12-ac5-bo-dong-s03-moc-ngay/probes/doi-chung.sh"
     o5s_pham_vi: "bash _acceptance/on12-ac5-bo-dong-s03-moc-ngay/probes/pham-vi.sh"
+    tdc_may_thu: "bash _acceptance/ca-doi-chieu-tin-rao-nap-co-khop-cum/probes/may-thu.sh"   # ca-doi-chieu E1 — E4b xanh trên DB máy thu sau áp che-ten, chỉ đọc; ngoài CI
+    tdc_do_khi_pha: "bash _acceptance/ca-doi-chieu-tin-rao-nap-co-khop-cum/probes/do-khi-pha.sh"   # ca-doi-chieu E2, E3 — DB thử: cấy đủ cụm/từ đầu, phá về token trần đỏ ghim
+    tdc_pham_vi: "bash _acceptance/ca-doi-chieu-tin-rao-nap-co-khop-cum/probes/pham-vi.sh"   # ca-doi-chieu E4 — vùng của hàng, ca nạp qua hàm chung
   design:                                            # app/ là web UI
     # DOM mode cần jsdom: cài ở app/ (devDependency), trỏ bằng --jsdom app — thiếu cờ này mọi eval design ra BLOCKED.
     gate: "node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app"   # script tier (a11y/slop)
