@@ -5,15 +5,20 @@
 import { describe, test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import pg from "pg";
 
 import { SQL_RUT_THAY, writeAssertions } from "../lib/assert.mjs";
+import { chotDbThu } from "../lib/db-thu-chot.mjs";
 
+// Rào DB thử TRƯỚC mọi kết nối: tệp chạy ANALYZE field_assertions trong giao dịch, mà ANALYZE ghi reltuples/relpages
+// tại chỗ (không lùi theo ROLLBACK) — chính loại thay đổi có thể lật kế hoạch sản xuất (hồ sơ slt-dc-cham-va-giu-khoa-33033).
+// Chỉ nhận DB oneinvest_suite_* do db/db-thu.sh --chay cấp; thiếu DATABASE_URL thì bỏ qua cả tệp, sai tên thì thoát 2.
+const DB_URL = chotDbThu({ ten: "assert-rut-thay", khiThieu: "bo-qua" });
 const PIPE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const DB_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 
 /** Câu cũ trước hồ sơ (main a60adccb8) — chuẩn so tương đương và bản phá của chiều đỏ. */
 const SQL_GOC =
@@ -189,5 +194,17 @@ describe("TR-AC-3 không bậc hai ở mọi kế hoạch (ROLLBACK)", () => {
   }
   test("chiều đỏ TR-AC-3: câu cũ ép nested loop ở n=200000 → đỏ ghim «TR-AC-3 kế hoạch có Anti Join»", async () => {
     await assert.rejects(() => kiemKhongBacHai(SQL_GOC, CO_LON, { chiKeHoach: true }), /TR-AC-3 kế hoạch có Anti Join \(ép nested loop/);
+  });
+});
+
+describe("TR-RAO rào DB thử", () => {
+  test("TR-RAO chiều đỏ: DATABASE_URL trỏ DB «oneinvest» (cổng chết) → tệp từ chối, thoát 2, không mở kết nối nào", () => {
+    // Cổng 1 không có máy chủ: nếu tệp đi tới kết nối (hay ANALYZE) thì lỗi là ECONNREFUSED, không phải lời từ chối của rào.
+    const { NODE_TEST_CONTEXT: _bo, ...env } = process.env;
+    const r = spawnSync(process.execPath, [fileURLToPath(import.meta.url)], {
+      env: { ...env, DATABASE_URL: "postgres://localhost:1/oneinvest" }, encoding: "utf8", timeout: 30_000 });
+    assert.equal(r.status, 2, `TR-RAO rào không chặn DB chung: mã ${r.status} · ${r.stderr.slice(-300)}`);
+    assert.match(r.stderr, /assert-rut-thay: từ chối — DB 'oneinvest' không phải DB thử oneinvest_suite_\*/);
+    assert.doesNotMatch(r.stderr + r.stdout, /ECONNREFUSED|ANALYZE/, "TR-RAO tệp đã thử kết nối trước khi rào chặn");
   });
 });
