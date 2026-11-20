@@ -976,6 +976,50 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
       - LLM không quyết định ghi dữ liệu (luật 7). Điều kiện lên Invest của mục 39 giữ nguyên.
     - **Câu còn mở**, trình ở Cổng Phạm vi của hàng đầu tiên thuộc lớp hợp nhất nguồn: ngưỡng tự áp cho mỗi căn cứ; phần trùng với danh
       bạ đã xác nhận có được làm tập đối chiếu không (đụng FRAMING §5); quan hệ cha–con do máy suy có qua thẻ luật lần đầu không.
+58. **Đo nguồn không phải tin: hai họ nguồn, thẻ nguồn kho năm trục** (20/11; số 57 dành cho hàng GT9 đang mở). Căn cứ:
+    bản soát nguồn và đồng bộ trên Ops ngày 20/11 (11 phát hiện L1–L11). Gốc của chỗ «mờ» là việc «xong ở gộp» chưa chạy
+    thật: nạp S07 (DAZ3) và S10 (DA29) đã ký nhưng bảng `stg_*` 0 dòng, 93 và 239 bản thu chờ, không hàng nào sở hữu «chạy
+    thật kèm lịch»; S09 không có dòng trong sổ nguồn; S02 xanh giả. Mạnh trả lời bốn câu Cổng Phạm vi ở phiên rà soát, 02:27Z,
+    nguyên văn: «Theo khuyến nghị».
+    - **Hai họ nguồn.** *Luồng* là tin rao: S03, S05, S06. *Kho* là danh mục S07–S16, tham chiếu S01 và S02, nền S04.
+    - **Thẻ nguồn kho năm trục:** T1 vận hành · T2 phủ · T3 biến động · T4 chất lượng · T5 nối và giá trị. Nguồn mới chỉ khai
+      `family`, `cadence_hours`, `universe`, `stg_tables` trong `source_registry`.
+    - **Lời riêng cho đúng ba plist launchd mới: S07, S10, S16.** Nhịp do làn thu quyết. S11 không nằm trong lời này (nạp S11
+      vẫn hoãn, mục 53).
+    - **Tổng thể (`universe`)** lấy số nguồn tự công bố, kèm mốc và nơi lấy; chưa có thì để trống, không ước.
+    - **Bốn lát.** A: chạy thật (làn thu nạp bù và đặt lịch; sổ nguồn khai báo, migration 122). B: thước vận hành và biến
+      động, gồm kiểm co rút (migration 123, bước SQL 605). C: phễu và phủ, đi cùng các hàng danh bạ toà (DA39, DA42, DA44).
+      D: chất lượng kho (mở lại DA20), giữ sau MS3.
+    - **Không đổi:** hàng nguồn kho xong khi con số trên màn đổi trên dữ liệu thật (mục 50); cloud chỉ nhận số gộp và mã
+      `S0x`; tên nguồn thật vẫn tầng A.
+    - **Lỗ thấy thêm 20/11:** sổ nguồn máy thu thiếu dòng S09 và S17, nên bộ quét tên nguồn mù với hai nguồn này. Hàng sổ
+      nguồn khai báo thêm cả hai dòng; tên thật điền trên máy thu, không vào kho.
+59. **S05 bỏ Apify, thu bằng Playwright trên máy thu** (20/11). Mạnh chốt trực tiếp với làn thu, rồi xác nhận với giám sát
+    ~03:34Z (mã câu hỏi `h-20261120T030758Z-245`), nguyên văn: «Đã chốt, giao đi». Bộ thu chạy trên máy thu với profile riêng và tài khoản
+    thu riêng, chỉ đọc. Mở lại thu S05 theo đường mới trước mốc «giữ dừng tới 24/11» cũ. Bảy điều kiện phải đủ trước lượt
+    thu thật đầu tiên:
+    1. Chỉ được bấm nút đóng trong hộp thoại che trang. Ngoài ra không bấm, không gõ, không đăng, nhắn, thích hay xin vào nhóm.
+    2. Gặp đăng nhập lại, checkpoint, xác minh hay CAPTCHA thì dừng lượt, không vượt.
+    3. Có test cho nhận diện bị chặn, trần mỗi lượt và khuôn snapshot.
+    4. Danh sách nhóm nằm trong tệp cấu hình. Tài khoản thu, phiên và profile là tầng A.
+    5. Chỉ Mạnh tự đăng nhập.
+    6. Không qua OpenClaw hay gateway, không LLM, không plist mới; dùng lại lịch S05 cũ.
+    7. Không thu thật trước khi mã vào `main` và có tin GIAO triển khai.
+    - DATA-CONTRACT không đổi. Phía Claude: mở khoá nạp S05, SLO và trạng thái `source_registry` cùng nhịp tích hợp.
+    - Huỷ gói Apify là việc của Mạnh (tiền).
+60. **Một trình duyệt chuyên dụng cho mọi bộ thu, Mạnh không đụng tới** (20/11). Bốn bộ thu đang chung một ứng dụng trình
+    duyệt, mỗi bộ một profile rải ở chỗ khác nhau; đăng nhập phải qua lệnh riêng nên ba lần Mạnh đăng nhập S02 đều vào nhầm
+    chỗ, S02 đứt từ 28/10. Mạnh ~03:54Z (mã câu hỏi `h-20261120T034556Z-247`), nguyên văn: «Giao, theo thứ tự đó».
+    - **Phạm vi:** mọi bộ thu có trình duyệt — S01, S02, S05 mới, S06 phần lấy số.
+    - **Thứ tự ứng viên, làn thu đo rồi chọn:** (1) Chrome for Testing ghim bản; (2) Chrome kênh Beta cài riêng; (3) nếu cả
+      hai không qua chống bot thì giữ Google Chrome nhưng khoá «chỉ bộ thu».
+    - **Luật kèm:** bộ thu mới không ghi cứng kênh trình duyệt, chọn ở một chỗ cấu hình; profile bộ thu gom về một gốc ngoài
+      kho (tầng A); mỗi nguồn một lệnh đăng nhập, Mạnh tự đăng nhập; ứng viên được chọn phải có số đo qua chống bot.
+    - **Không dùng cho bộ thu:** ego lite và trình duyệt Mạnh dùng hằng ngày. Bộ thu tự mở profile riêng bằng Playwright, đó
+      là kho phiên khác.
+    - **Trạng thái 20/11:** Chrome for Testing bị chặn ở bước đăng nhập Google của S02, làn thu chuyển sang đo Chrome Beta;
+      bản cài nằm ngoài kho. Đăng nhập lại S02: Mạnh «Chờ trình duyệt mới». Khi chốt xong thì sửa bẫy kỹ thuật số 2 của
+      `AGENTS.md`.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 

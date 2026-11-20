@@ -5836,6 +5836,140 @@
         "pipeline/sql/600_data_flow.sql"
       ],
       "ghi_chu": "Chưa giao dãy. Cỡ 6, dưới mục tiêu: một ô; không gộp với DF8 vì tổng vượt 12. Chữ UI theo CONTEXT.md; ReUI."
+    },
+    {
+      "dot": "sau-soat-nguon-2011",
+      "ma": "DA51",
+      "slug": "bi-danh-viet-tat-phan-khu",
+      "nhom": "l04-danh-ba-toa",
+      "phu": [
+        "DA51"
+      ],
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "dung_tren": [
+        "DA46"
+      ],
+      "cau_giao": "Bốn tên viết tắt phân khu (ori, rb, bs, gh) vào bí danh của nút phân khu qua thẻ luật có băm, áp theo băm, đảo được, và bước đọc phân khu của GT5 lấy tên từ danh bạ",
+      "bat_khi": "Trên bản chép DB máy thu: thẻ gán ori→44, rb→48, bs→387, gh→43, 0 tên không gán; băm lệch thì không ghi gì; số tin S03 đọc được phân khu qua danh bạ tăng ít nhất 800 (đo sau khi DA46 áp thật: 958 → 1.843); đảo theo mã luật đưa bí danh về đúng như trước; lượt dựng đêm chạy lại hai lần không mất tên tắt, không đổi số nút",
+      "vi_sao": "Tin S03 ở Grand Park gọi phân khu bằng tên tắt mà danh bạ chưa có, nên bộ đọc phân khu của GT5 bỏ sót 864 tin. GT5 Hỏi-1, Mạnh duyệt 20/11.",
+      "vung": [
+        "pipeline/phan-khu-s16.mjs",
+        "pipeline/lib/phan-khu-s16*",
+        "pipeline/scripts/bi-danh-viet-tat-phan-khu*"
+      ]
+    },
+    {
+      "dot": "sau-soat-nguon-2011",
+      "ma": "ZC13",
+      "slug": "s02-luot-loi-sach-va-kiem-han-token",
+      "nhom": "collector",
+      "phu": [
+        "ZC13"
+      ],
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 6,
+      "dung_tren": [],
+      "cau_giao": "Lượt thu S02 ném lỗi không để lại thư mục bản thu tên thật, bộ thu dừng ngay khi token ứng dụng hết hạn, và xác thực hỏng ghi một dòng AUTH FAIL trước khi ném",
+      "bat_khi": "Test collector: lượt ném lỗi chỉ để lại đúng một thư mục tạm ẩn có manifest mang lỗi và 0 item, bản thu có sẵn còn nguyên; ma trận năm ô hạn token ném đúng bốn ô, ô còn hạn qua; dòng AUTH FAIL [S02] đứng trước lệnh ném ở cả hai đường; script đêm chọn bản thu thành công, lượt lỗi thoát 1",
+      "vi_sao": "29 thư mục bản thu S02 mang tên thật mà 0 item che lượt 401; ngày 19/11 dòng «token OK» là token đã hết hạn từ 26/10. Tích hợp ba nhánh của làn thu, Claude không sửa logic thu.",
+      "vung": [
+        "collector/src/collectors",
+        "collector/src/core",
+        "collector/src/test"
+      ]
+    },
+    {
+      "dot": "sau-soat-nguon-2011",
+      "ma": "NK1",
+      "slug": "so-nguon-kho-khai-bao",
+      "nhom": "do-luong",
+      "phu": [
+        "NK1"
+      ],
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 8,
+      "dung_tren": [],
+      "cau_giao": "Người vận hành chạy lệnh đo độ tươi và mở trang Thu thập thì thấy S16 hết «chưa khai SLO», S09 hiện thành một nguồn, S01 chỉ đo thị trường có lịch và S11 ở trạng thái tạm dừng",
+      "bat_khi": "Trên DB máy thu sau khi áp migration 122: `node scripts/check-freshness.mjs` hết dòng «S16 chưa khai SLO», hết hàng S01 của thị trường không có lịch, hết «S11 chưa có dữ liệu», có hàng S09; sổ nguồn có dòng S09 và S17 với tên thật điền trên máy thu, bộ soát tầng A của đường đẩy Ops nhận cả hai tên trước lượt đẩy kế; app và CLI đọc cùng một nhịp từ sổ",
+      "vi_sao": "Soát 20/11: nguồn kho «mờ» vì sổ nguồn không khai họ nguồn, nhịp, bảng nạp; S09 và S17 không có dòng nên vô hình với cả thước lẫn bộ quét tên nguồn. Lát A của ROADMAP §3 mục 58.",
+      "vung": [
+        "db/migrations/122_*",
+        "scripts/lib/freshness.mjs",
+        "scripts/check-freshness.mjs",
+        "app/src/lib/freshness.ts",
+        "app/src/lib/collections-queries.ts"
+      ]
+    },
+    {
+      "dot": "sau-soat-nguon-2011",
+      "ma": "NK2",
+      "slug": "thuoc-van-hanh-nguon-kho",
+      "nhom": "do-luong",
+      "phu": [
+        "NK2"
+      ],
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 9,
+      "dung_tren": [
+        "NK1"
+      ],
+      "cau_giao": "Người vận hành mở trang Thu thập và thấy mỗi nguồn kho một thẻ: lần thu gần nhất, số dòng nạp, biến động so với lần trước và cảnh báo khi kho co rút",
+      "bat_khi": "Trên trang Thu thập của Ops máy thu: mỗi nguồn khai họ «kho» có một thẻ, số trên thẻ khớp lệnh đếm trên DB máy thu; nguồn đã ký nạp mà bảng nạp 0 dòng hiện đỏ có lý do; cấy một lần thu ít dòng hơn lần trước thì cảnh báo co rút bật; cloud chỉ nhận số gộp và mã nguồn",
+      "vi_sao": "Lát B của ROADMAP §3 mục 58. Hôm nay nạp S07 và S10 đã ký nhưng bảng nạp 0 dòng mà không màn nào báo.",
+      "vung": [
+        "db/migrations/123_*",
+        "pipeline/sql/605_*",
+        "pipeline/push-ops-facts.mjs",
+        "app/src/app/ops/collections",
+        "app/src/lib/collections-api.ts"
+      ]
+    },
+    {
+      "dot": "sau-soat-nguon-2011",
+      "ma": "CG19",
+      "slug": "deals-cloud-tai-cham",
+      "nhom": "ops-deals",
+      "phu": [
+        "CG19"
+      ],
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 6,
+      "dung_tren": [],
+      "cau_giao": "Người vận hành mở trang Căn giá tốt trên cloud và thấy danh sách trong vài giây thay vì 60–100 giây",
+      "bat_khi": "Trên cloud: thời gian mở trang Căn giá tốt, đo ba lần, từ 60–100 giây (đo 20/11) xuống dưới ngưỡng chốt ở S1 sau khi đo EXPLAIN chỉ đọc; số căn trên trang không đổi so với trước; index trên cloud chỉ áp khi có lời riêng của Mạnh",
+      "vi_sao": "Sau khi bảng offer_price_rank lên cloud (20/11) trang có số thật — Bán 7.636, Cho thuê 9.912 — nhưng tải 60–100 giây.",
+      "vung": [
+        "app/src/app/ops/deals",
+        "app/src/lib/deals*.ts"
+      ]
+    },
+    {
+      "dot": "sau-soat-nguon-2011",
+      "ma": "TV19",
+      "slug": "ops-cloud-nhan-nguon-bang-ma",
+      "nhom": "ops-spl",
+      "phu": [
+        "TV19"
+      ],
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 6,
+      "dung_tren": [],
+      "cau_giao": "Người vận hành mở ba trang Nguồn, Thu thập, Chất lượng của Ops trên cloud và chỉ thấy mã nguồn kèm vai trò, không còn tên nguồn thật ở chữ hay trong DOM",
+      "bat_khi": "Test quét HTML của ba trang ở chế độ cloud bằng danh sách che của sổ nguồn: 0 chỗ có tên nguồn thật, kể cả id cột và khoá chuỗi biểu đồ; cấy lại một nhãn cũ thì test đỏ; trang Nguồn của máy thu vẫn hiện tên thật theo luật 6",
+      "vi_sao": "Soát 20/11, phát hiện L10: trang Nguồn trên cloud còn chữ tên thật ở mô tả và tiêu đề khung; trang Thu thập và Chất lượng còn id cột mang tên nguồn lọt ra DOM.",
+      "vung": [
+        "app/src/components/ops/sources",
+        "app/src/components/ops/collections-tables.tsx",
+        "app/src/components/ops/collections",
+        "app/src/components/ops/quality-tables.tsx"
+      ]
     }
   ],
   "chan_troi": [
@@ -7326,6 +7460,26 @@
         "DA50"
       ],
       "mo_lai_khi": "Làn thu báo xong bản thu bù thấp tầng, nhà phố của S09 (snapshot mới kèm manifest) và DA42 đã gộp; khi đó cắt thành hàng đứng trên DA42"
+    },
+    {
+      "ma": "NK3",
+      "dot": "sau-soat-nguon-2011",
+      "cau_giao": "Phễu và phủ của nguồn kho trên trang Thu thập (lát C)",
+      "ly_do": "Ô phủ chỉ có nghĩa khi bảng nối nguồn kho với danh bạ đã có thật; các hàng danh bạ toà DA39, DA42, DA44 chưa gộp",
+      "phu": [
+        "NK3"
+      ],
+      "mo_lai_khi": "DA42 và DA44 đã gộp và áp lên DB máy thu; khi đó cắt thành hàng đứng trên NK2"
+    },
+    {
+      "ma": "NK4",
+      "dot": "sau-soat-nguon-2011",
+      "cau_giao": "Chất lượng nguồn kho, mở lại DA20 (lát D)",
+      "ly_do": "Mạnh 20/11 «Theo khuyến nghị»: lát D giữ sau mốc MS3; kiểm co rút đã nằm ở lát B",
+      "phu": [
+        "NK4"
+      ],
+      "mo_lai_khi": "Mốc MS3 xong và NK2 đã chạy trên DB máy thu"
     }
   ],
   "da_bac": [
