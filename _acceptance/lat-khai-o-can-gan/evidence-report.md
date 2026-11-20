@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: b2ec09f4457bad50596f630b7f21a3641843ef1d
+verified_commit: fdba76aa6edfff4e6fbc0ed968850d3ec225a1e2
 human_signoff: Mạnh 2026-11-20
 ---
 
@@ -256,3 +256,7 @@ none — every multi-run eval is uniform
 
 Round 1: các bản ghi của round đầu nằm trong run-log.jsonl (hậu tố -r1); round này thay thế toàn bộ.
 Round 2: E1-E10, E12-E15 và các lệnh suite xanh; E11 (judgment, AC-10) còn UNCERTAIN vì thiếu tệp do-thoi-gian.md, chờ người quyết ở Cổng 2.
+
+### Re-pin lần 1 — 2026-11-20, do nhận main 718c893ca (#498, #499, #504, #505); E11 thiếu paths nên bộ lọc paths không áp
+run_id: repin-20261120T163439Z-21568
+sha: fdba76aa6edfff4e6fbc0ed968850d3ec225a1e2 · suites: 7 lệnh exit 0 · evals: 13/13 eval máy đạt kỳ vọng · ngoài làn máy: E10, E11 (E11 không khai paths) · AC không có chốt máy: AC-10
