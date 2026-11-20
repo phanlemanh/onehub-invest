@@ -83,7 +83,7 @@ WITH RECURSIVE ${CTE_CAY},
   ),
   dem_khu AS (
     SELECT t.anc AS node_id, count(*)::int AS so_phan_khu FROM to_tien t JOIN asset_nodes n ON n.id = t.node_id
-    WHERE t.node_id <> t.anc AND n.node_type IN ('subzone', 'building') GROUP BY t.anc
+    WHERE t.node_id <> t.anc AND n.node_type IN ('subzone', 'building') AND COALESCE((n.meta ->> 'nghi')::boolean, false) = false GROUP BY t.anc
   ),
   tin AS (
     SELECT project_node_id AS node_id, jsonb_object_agg(source, n) AS tin FROM (
@@ -108,6 +108,7 @@ LEFT JOIN dem_khu dk ON dk.node_id = n.id
 LEFT JOIN dem_toa dt ON dt.node_id = n.id
 LEFT JOIN tin ti ON ti.node_id = n.id
 LEFT JOIN nguon ng ON ng.node_id = n.id
+WHERE COALESCE((n.meta ->> 'nghi')::boolean, false) = false -- nút đã nối về nút khác (DA46) không hiện trên danh bạ
 ORDER BY n.id`
 
 type HangNut = {
@@ -130,7 +131,7 @@ const SQL_TONG = `
 SELECT
   (SELECT count(*) FROM asset_nodes WHERE node_type = 'project')::int AS du_an,
   (SELECT count(*) FROM asset_nodes WHERE node_type = 'project' AND catalog_tier = 'xac_minh')::int AS du_an_xac_minh,
-  (SELECT count(*) FROM asset_nodes WHERE node_type IN ('subzone', 'building'))::int AS phan_khu,
+  (SELECT count(*) FROM asset_nodes WHERE node_type IN ('subzone', 'building') AND COALESCE((meta ->> 'nghi')::boolean, false) = false)::int AS phan_khu,
   (SELECT count(*) FROM buildings WHERE status = 'active')::int AS toa,
   (SELECT count(*) FROM buildings b WHERE b.status = 'active'
      AND EXISTS (SELECT 1 FROM units u WHERE u.building_key = b.building_key AND u.status = 'active'))::int AS toa_co_can,

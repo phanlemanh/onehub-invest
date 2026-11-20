@@ -4,6 +4,7 @@
 // db/migrations (scripts/lib/tier-a-source-names.mjs), không viết cứng. Báo bằng mã S0x + trang, KHÔNG in tên.
 // Dùng: node scripts/quet-ten-nguon-html.mjs [--base <url>] [--trang /a,/b]   (BASE_URL cũng được; mặc định :3456)
 // Thoát: 0 sạch · 1 còn tên · 2 không đo được (không tới được, mã khác 200, hoặc trang không phải HTML có <h1>).
+import { docSourceNameEntries } from "../pipeline/lib/source-name-entries.mjs";
 import { realpathSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
@@ -146,8 +147,8 @@ async function docDb(log) {
   const seeds = sourceRegistrySeeds();
   try {
     return await voiDb(async (c) => {
-      const { rows } = await c.query("SELECT code, real_name FROM source_registry WHERE real_name IS NOT NULL");
-      const them = rows.map((r) => ({ code: r.code, realName: r.real_name }));
+      // che-ten-nguon-khong-lay-tu-dau: một hàm nạp chung (tên thật + định danh, kèm cờ match_whole)
+      const them = await docSourceNameEntries(c);
       const entries = [...seeds, ...them.filter((t) => !seeds.some((s) => s.code === t.code && s.realName === t.realName))];
       const ds = (await c.query("SELECT id, name FROM listings WHERE name IS NOT NULL ORDER BY id")).rows.filter((r) => findSourceNames(r.name, entries).length);
       log(`sổ tên: ${[...new Set(entries.map((e) => e.code))].sort().join(" ")} (migration + source_registry local) · ${ds.length} tiêu đề listing mang tên`);

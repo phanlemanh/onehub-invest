@@ -29,8 +29,10 @@
     "scripts/ops-facts-so-tong-hop.test.mjs",
     "scripts/phat-bieu.test.mjs",
     "scripts/phuong-tu-du-an.test.mjs",
+    "scripts/push-ops-facts-import.test.mjs",
     "scripts/quet-doc-stg.test.mjs",
     "scripts/refresh-bait-gap-goi.test.mjs",
+    "scripts/s16-bon-phan.test.mjs",
     "scripts/soat-tang-a.test.mjs",
     "scripts/tap-nhan-hai-khu.test.mjs",
     "scripts/test-posts.test.mjs",
@@ -42,7 +44,7 @@
     "scripts/vocab.test.mjs",
     "scripts/yeu-cau-ngan-sach.test.mjs",
     "tests/s08-danh-muc-nap.test.mjs",
-    "scripts/s16-bon-phan.test.mjs"
+    "scripts/khop-tron.test.mjs"
   ],
   "b": [
     "parse.test.mjs",

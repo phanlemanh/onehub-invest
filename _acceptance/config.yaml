@@ -145,6 +145,12 @@ executors:
     s4v_phu: "node --test --test-name-pattern=S4V-AC-5 scripts/suite-neu-doi.test.mjs"      # s4-suite-theo-vung E5 — quét kho thật
     s4v_cau_hinh: "node --test --test-name-pattern=S4V-AC-6 scripts/suite-neu-doi.test.mjs && bash _acceptance/s4-suite-theo-vung/probes/cau-hinh-khong-doi.sh"   # s4-suite-theo-vung E6
     s4v_dung_wt: "node --test scripts/dung-worktree-cham.test.mjs"   # s4-suite-theo-vung E7 — repo git tạm + worktree, không DB
+    sstl_buoc_ci: "bash _acceptance/suite-scripts-vao-luot-cham/probes/co-ca.sh SSL-AC-1" # suite-scripts-vao-luot-cham E1 — so phần tử job CI, đầu ra thật
+    sstl_tom_tat: "bash _acceptance/suite-scripts-vao-luot-cham/probes/co-ca.sh SSL-AC-2" # suite-scripts-vao-luot-cham E2 — dòng tóm tắt, run-log, dọn DB
+    sstl_tai_hien_471: "bash _acceptance/suite-scripts-vao-luot-cham/probes/tai-hien.sh 471"   # suite-scripts-vao-luot-cham E3 — đỉnh 5b02c3de phải đỏ s05-khoa-nap (5)
+    sstl_tai_hien_472: "bash _acceptance/suite-scripts-vao-luot-cham/probes/tai-hien.sh 472"   # suite-scripts-vao-luot-cham E4 — đỉnh f3fecd5f phải đỏ DT-AC-7
+    sstl_main_xanh: "node scripts/suite-neu-doi.mjs --chay-scripts"                            # suite-scripts-vao-luot-cham E5 — trọn bộ theo CI trên cây đang chấm phải xanh
+    sstl_cau_hinh: "node --test --test-name-pattern=S4V-AC-6 scripts/suite-neu-doi.test.mjs && bash _acceptance/s4-suite-theo-vung/probes/cau-hinh-khong-doi.sh"   # suite-scripts-vao-luot-cham E6 — bảy suite, lệnh cũ nguyên byte
     icc_test: "node --test scripts/install-cron-chi.test.mjs"   # install-cron-chi AC-1, AC-2, AC-4 — HOME giả + launchctl giả, không DB
     tsdt_mot: "node --test scripts/db-thu.test.mjs"   # test-suite-db-thu E1, E1b, E1c, E8 — docker giả, không DB; từ dau-luoc-do-ban-mau E8 tệp có thêm ca DL- cần Postgres :5433
     dau_luoc_do: "node --test --test-name-pattern=^DL- scripts/db-thu.test.mjs"   # dau-luoc-do-ban-mau E1–E7, E9 — Postgres :5433 thật, chỉ DB postgres và oneinvest_suite_dau_<pid>
@@ -1029,10 +1035,25 @@ executors:
     s09_ranh_gioi: "node pipeline/scripts/s09-ranh-gioi.mjs --base origin/main"   # toa-s09-hai-khu-vao-danh-ba E9 — vùng, tầng A, 097 áp hai lần
     s16_db: "node --test --test-concurrency=1 pipeline/scripts/danh-ba-s16.itest.mjs"   # nap-s16-vao-danh-ba E1, E3–E8 — itest tự dựng DB oneinvest_suite_s16_<pid> từ db/migrations, xoá khi xong
     s16_that: "node pipeline/scripts/danh-ba-s16-that.mjs"   # nap-s16-vao-danh-ba E2, E10 — ba bản thu thật trên DB thử chép máy thu, đếm độc lập, sync chạy thử đọc chỉ-đọc DB máy thu; ngoài CI
+    nps_cay: "node --test --test-concurrency=1 --test-name-pattern='^NPS-1:' pipeline/scripts/phan-khu-s16-noi.itest.mjs"   # noi-phan-khu-trung-s16 AC-1
+    nps_s09: "node --test --test-concurrency=1 --test-name-pattern='^NPS-2:' pipeline/scripts/phan-khu-s16-noi.itest.mjs"   # noi-phan-khu-trung-s16 AC-2
+    nps_the: "node --test --test-concurrency=1 --test-name-pattern='^NPS-3:' pipeline/scripts/phan-khu-s16-noi.itest.mjs"   # noi-phan-khu-trung-s16 AC-3
+    nps_ap: "node --test --test-concurrency=1 --test-name-pattern='^NPS-4:' pipeline/scripts/phan-khu-s16-noi.itest.mjs"   # noi-phan-khu-trung-s16 AC-4
+    nps_dao: "node --test --test-concurrency=1 --test-name-pattern='^NPS-5:' pipeline/scripts/phan-khu-s16-noi.itest.mjs"   # noi-phan-khu-trung-s16 AC-5
+    nps_dem: "node --test --test-concurrency=1 --test-name-pattern='^NPS-7:' pipeline/scripts/phan-khu-s16-noi.itest.mjs"   # noi-phan-khu-trung-s16 AC-7
+    nps_cloud: "node --test --test-concurrency=1 --test-name-pattern='^NPS-8:' pipeline/scripts/phan-khu-s16-noi.itest.mjs"   # noi-phan-khu-trung-s16 AC-8
+    nps_kiem: "node --test --test-concurrency=1 --test-name-pattern='^NPS-10:' pipeline/scripts/phan-khu-s16-noi.itest.mjs"   # noi-phan-khu-trung-s16 AC-10
+    nps_ops: "cd app && bash ../db/db-thu.sh oneinvest_suite_nps_ops --chay node --import tsx --test tests/nut-nghi-tren-ops.test.tsx"   # noi-phan-khu-trung-s16 AC-6
+    nps_that: "node pipeline/scripts/phan-khu-s16-noi-that.mjs"   # noi-phan-khu-trung-s16 AC-9 — bản chép DB máy thu, DB máy thu chỉ đọc
     s37_db: "node --test --test-concurrency=1 pipeline/scripts/danh-ba-s16-cau-truc.itest.mjs"   # danh-ba-s16-thang-cau-truc E1, E2–E8 — itest tự dựng DB oneinvest_dbv_s37_<pid> từ db/migrations, xoá khi xong
     s37_that: "node pipeline/scripts/danh-ba-s16-cau-truc-that.mjs"   # danh-ba-s16-thang-cau-truc E2b, E9, E10 — bản chép DB máy thu sau DA33, áp 111 + thẻ luật + dựng + đường lùi, chỉ in số; ngoài CI
     ns09_that: "node pipeline/scripts/nap-s09-that.mjs"   # nap-s09 E4 — bản chép DB máy thu, chạy lệnh nạp hai lần trên bản thu S09 13/11, số khớp DA31; ngoài CI
     ns09_ranh_gioi: "node pipeline/scripts/nap-s09-ranh-gioi.mjs --base origin/main"   # nap-s09 E6 — vùng, tên nguồn, chia nửa test pipeline
+    o5s_doi_chung: "bash _acceptance/on12-ac5-bo-dong-s03-moc-ngay/probes/doi-chung.sh"
+    o5s_pham_vi: "bash _acceptance/on12-ac5-bo-dong-s03-moc-ngay/probes/pham-vi.sh"
+    tdc_may_thu: "bash _acceptance/ca-doi-chieu-tin-rao-nap-co-khop-cum/probes/may-thu.sh"   # ca-doi-chieu E1 — E4b xanh trên DB máy thu sau áp che-ten, chỉ đọc; ngoài CI
+    tdc_do_khi_pha: "bash _acceptance/ca-doi-chieu-tin-rao-nap-co-khop-cum/probes/do-khi-pha.sh"   # ca-doi-chieu E2, E3 — DB thử: cấy đủ cụm/từ đầu, phá về token trần đỏ ghim
+    tdc_pham_vi: "bash _acceptance/ca-doi-chieu-tin-rao-nap-co-khop-cum/probes/pham-vi.sh"   # ca-doi-chieu E4 — vùng của hàng, ca nạp qua hàm chung
   design:                                            # app/ là web UI
     # DOM mode cần jsdom: cài ở app/ (devDependency), trỏ bằng --jsdom app — thiếu cờ này mọi eval design ra BLOCKED.
     gate: "node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app"   # script tier (a11y/slop)
