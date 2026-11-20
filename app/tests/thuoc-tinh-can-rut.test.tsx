@@ -74,7 +74,11 @@ test("RMH-AC-6 căn thành mơ hồ không còn thuộc tính ở lớp đọc, 
   await thu("q__rmha__2", "2026-11-19T01:00:00Z")
   await chayGhi()
   assert.deepEqual(await doc(), { can: [can(1)], co: 1 }, "RMH-AC-6 lớp đọc còn thấy căn đã thành mơ hồ")
-  await db.query(`INSERT INTO field_assertions (resource_name, subject_key, field, value, evidence_tier, method, evidence, observed_at)
-    VALUES ('Unit', $1, 'living_area', '70', 'fact', 'source_field', '{"nguon":"S16"}', '2026-11-19T02:00:00Z')`, [can(2)])
+  // Chiều đỏ: khôi phục đúng các phát biểu lệnh vừa rút — chép lại dòng do chính lệnh ghi thành dòng sống mới
+  // (bảng chỉ-thêm, không gỡ retracted_at), không chèn tay dòng theo khuôn của lớp đọc.
+  const khoiPhuc = await db.query(`INSERT INTO field_assertions (resource_name, subject_key, field, value, evidence_tier, method, evidence, observed_at)
+    SELECT resource_name, subject_key, field, value, evidence_tier, method, evidence, observed_at FROM field_assertions
+     WHERE subject_key = $1 AND retract_reason = 'chuyen-mo-ho-toa'`, [can(2)])
+  assert.ok((khoiPhuc.rowCount ?? 0) > 0, "RMH-AC-6 chiều đỏ: lệnh phải đã rút phát biểu của căn mơ hồ")
   assert.deepEqual(await doc(), { can: [can(1), can(2)], co: 2 }, "RMH-AC-6 phát biểu sống lại mà lớp đọc không thấy — phép đo không phân biệt")
 })

@@ -18,12 +18,25 @@ try {
   await c.query("SET default_transaction_read_only = on");
   const kq = await tinh(c);
   if (kq.chua_ap || !kq.snapshot) { console.error("that.mjs: DB chưa áp DA40 hoặc bảng nạp chưa có dòng"); process.exit(2); }
+  // Số 0 phải đến từ tập căn mơ hồ đọc đúng, không từ lỗi bị nuốt: đọc v_s16_can trực tiếp (không catch) và đếm độc lập
+  // số căn danh bạ mang mã mơ hồ bằng một câu nối riêng; tập của lệnh phải bằng đúng số đó (DB thật hôm nay: 0 căn, vì
+  // DA33 không đúc căn cho mã mơ hồ — bat_khi của hàng).
+  const moHoView = (await c.query(`SELECT count(*)::int AS n FROM v_s16_can WHERE mo_ho`)).rows[0].n;
+  const canMoHoDem = (await c.query(`SELECT count(DISTINCT a.object_key)::int AS n FROM registry_aliases a
+      JOIN v_s16_can v ON v.mo_ho AND a.value = v.du_an || '/' || v.ma_can
+     WHERE a.source = 'S16' AND a.kind = 'ma_nguon' AND a.retired_at IS NULL AND a.object_key LIKE 'unt\\_%'`)).rows[0].n;
+  dung("can_mo_ho_doc_dung", moHoView > 0 && kq.can_mo_ho.length === canMoHoDem,
+    `mã mơ hồ ở v_s16_can ${moHoView} · căn danh bạ mơ hồ: lệnh ${kq.can_mo_ho.length} · đếm độc lập ${canMoHoDem}`);
   const mh = await demMoHo(c, kq.can_mo_ho);
   dung("rut_mo_ho_can", mh.can === 0, `căn sẽ rút ${mh.can}`);
   const dem = (await c.query(`SELECT count(*)::int AS phat, count(DISTINCT subject_key)::int AS can FROM field_assertions
       WHERE resource_name = 'Unit' AND method = 'source_field' AND evidence ->> 'nguon' = 'S16' AND retracted_at IS NULL`)).rows[0];
-  const quaLoc = await demMoHo(c, (await c.query(`SELECT DISTINCT subject_key k FROM field_assertions WHERE resource_name = 'Unit' AND retracted_at IS NULL`)).rows.map((r) => r.k));
-  dung("phat_bieu_khop_bo_loc", dem.phat > 0 && quaLoc.phat_bieu === dem.phat, `bộ lọc ${quaLoc.phat_bieu} · đếm độc lập ${dem.phat}`);
+  // Đối chứng dương độc lập: lấy tập căn mang nguồn S16 qua đường khác hẳn bộ lọc rút (view đọc của Ops), bộ lọc phải
+  // bắt đúng từng căn đó và đúng số phát biểu S16 sống của chúng.
+  const canView = (await c.query(`SELECT unit_key FROM v_unit_thuoc_tinh WHERE 'S16' = ANY(nguon)`)).rows.map((r) => r.unit_key);
+  const quaLoc = await demMoHo(c, canView);
+  dung("phat_bieu_khop_bo_loc", canView.length > 0 && quaLoc.can === canView.length && quaLoc.phat_bieu === dem.phat,
+    `bộ lọc ${quaLoc.can} căn/${quaLoc.phat_bieu} phát biểu · view ${canView.length} căn · đếm thẳng ${dem.phat} phát biểu`);
   const view = (await c.query(`SELECT count(*)::int AS n FROM v_unit_thuoc_tinh`)).rows[0].n;
   dung("co_thuoc_tinh", view > 0 && view === dem.can, `view ${view} · đếm độc lập ${dem.can}`);
   const i = process.argv.indexOf("--co-thuoc-tinh");

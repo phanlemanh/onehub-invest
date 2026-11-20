@@ -117,7 +117,7 @@ test("RMH-AC-2 chỉ rút phần S16 của căn mơ hồ: căn thường giữ n
   const truoc = await song(1);
   assert.ok(truoc.length > 0, "RMH-AC-2 đối chứng: căn thường phải có phát biểu");
   const khac = (await q(`INSERT INTO field_assertions (resource_name, subject_key, field, value, evidence_tier, method, evidence, observed_at)
-    VALUES ('Unit', $1, 'bedrooms', '5', 'fact', 'hitl', '{"nguon":"S99"}', $2) RETURNING id`, [can(2), T[0]]))[0].id;
+    VALUES ('Unit', $1, 'bedrooms', '5', 'fact', 'source_field', '{"nguon":"S99"}', $2) RETURNING id`, [can(2), T[0]]))[0].id;
   await danhMoHo("QB2");
   await thu(T[1], [{ ma: "QB1" }, { ma: "QB2" }, { ma: "QB3" }, { ma: "QB4", tt: 82 }]);
   ghiOk();
