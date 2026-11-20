@@ -48,7 +48,8 @@ evals:
     executor: script
     cmd: config:executors.script.trt_san_xuat
     paths: [_acceptance/slt-dc-cham-va-giu-khoa-33033/probes/san-xuat.mjs]
-    status: not-run      # đo SAU gộp trên log máy thu (cần --tu-dong <số dòng lúc kéo main>, ghi ở ap-may-thu.md)
+    # đo SAU gộp trên log và DB máy thu (ba mốc --tu-dong, --chotot-tu-dong, --gop-luc ghi ở ap-may-thu.md)
+    status: not-run
     expected: "tự kiểm 'log có bước 400 s đỏ «LAT»'; 'transform-zalo: bốn bước … · trung vị <x> s' (x ≤ 123); 'transform-chotot: mã 0 · <y> s' (y ≤ 400); mỗi nguồn 'rút thay-boi-luot <S0x>: 2 giờ trước <a> · 2 giờ sau <b>' không 'VUOT'; cuối 'SAN XUAT OK'; should-NOT-fire: 'SAN XUAT DO', 'LAT'"
   - id: E8
     criterion: AC-8
