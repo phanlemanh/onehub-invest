@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: bf8279c302c67c6b2dd91d6b8d06282a8a8e3fe7
+verified_commit: ecd960aff3d1a1ec9acfdba012495bffce338da7
 human_signoff: Mạnh 2026-11-19
 ---
 
@@ -224,3 +224,7 @@ none — mọi eval chạy một lượt, không eval nào ngẫu nhiên hay fla
 
 Round 1 đến 3: xem run-log.jsonl cùng thư mục.
 Round 4: mọi eval máy xanh trên cây bf8279c; E8 (judgment) chờ người ở Cổng 2; verdict PENDING-JUDGMENT.
+
+### Re-pin lần 1 — 2026-11-20, do nhận main c62e47581 (gồm #498) sau chữ ký Cổng 2
+run_id: repin-20261120T030705Z-82819
+sha: ecd960aff3d1a1ec9acfdba012495bffce338da7 · suites: 7 lệnh exit 0 · evals: 15/15 eval máy đạt kỳ vọng · ngoài làn máy: E8 (E8 không khai paths) · AC không có chốt máy: AC-8
