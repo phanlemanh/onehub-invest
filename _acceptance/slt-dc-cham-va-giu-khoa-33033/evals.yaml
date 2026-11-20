@@ -35,14 +35,19 @@ evals:
     cmd: config:executors.script.trt_slt_dc_gio
     paths: [pipeline/lib/assert.mjs, pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs, _acceptance/slt-dc-cham-va-giu-khoa-33033/probes/do-gio.sh]
     long_running: 8
-    expected: "exit 0; 'tự kiểm thước giờ: hai chiều đúng'; 'ℹ fail 0'; '✔ SLT-DC-7, SLT-DC-9'; '✔ SLT-DC-10'; 'WALL <s> s (trần 360 s)' với s ≤ 360; cuối 'GIO OK'; should-NOT-fire: 'QUA TRAN', 'LENH DO'"
+    expected: "exit 0; 'tự kiểm thước giờ: hai chiều đúng'; 'ℹ fail 0'; '✔ SLT-DC-7, SLT-DC-9'; '✔ SLT-DC-10'; 'WALL <s> s (trần 480 s)' với s ≤ 480; cuối 'GIO OK'; should-NOT-fire: 'QUA TRAN', 'LENH DO'"
   - id: E6
     criterion: AC-6
-    executor: script
-    cmd: config:executors.script.trt_pipeline_b_gio
-    paths: [pipeline/**]
-    long_running: 30
-    expected: "exit 0; 'tự kiểm thước giờ: hai chiều đúng'; 'ℹ fail 0'; 'WALL <s> s (trần 1500 s)' với s ≤ 1500; cuối 'GIO OK'; should-NOT-fire: 'QUA TRAN', 'LENH DO'"
+    executor: test
+    cmd: config:executors.suite.pipeline_a
+    paths: [pipeline/**, db/**]
+    expected: "exit 0; 'ℹ fail 0' (nửa A, nay gồm SLT-DC và assert-rut-thay); số 'ℹ duration_ms <x>' ghi vào báo cáo — đích theo dõi ≤ 1.500 s khi máy yên, KHÔNG chặn"
+  - id: E9
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.suite.pipeline_b
+    paths: [pipeline/**, db/**]
+    expected: "exit 0; 'ℹ fail 0' (nửa B, đã bỏ SLT-DC); số 'ℹ duration_ms <x>' ghi vào báo cáo — đích theo dõi ≤ 1.500 s khi máy yên, KHÔNG chặn (đo 20/11 trước chia: 1.559 s)"
   - id: E7
     criterion: AC-7
     executor: script

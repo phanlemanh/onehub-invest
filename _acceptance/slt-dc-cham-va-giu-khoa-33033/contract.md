@@ -1,6 +1,6 @@
 ---
 schema_version: 1
-feature: "Câu rút «thay bởi lượt» của writeAssertions hết bậc hai ở mọi kế hoạch; ca đối chiếu SLT-DC nhả khoá 33033 khi hết trần, trần khớp thời gian thật — SLT-DC cả tệp dưới 6 phút, pipeline_b dưới 25 phút"
+feature: "Câu rút «thay bởi lượt» của writeAssertions hết bậc hai ở mọi kế hoạch; ca đối chiếu SLT-DC nhả khoá 33033 khi hết trần, trần khớp thời gian thật; hai nửa pipeline cân lại, xanh trọn"
 slug: slt-dc-cham-va-giu-khoa-33033
 owner: phanlemanh@gmail.com
 risk_tier: T2
@@ -53,11 +53,13 @@ Không migration, không DDL (GS 11:00Z). Không ANALYZE DB máy thu.
   Then phiên DB của ca bị cắt và 33033 rảnh — (a) trong 5 s, (b) trong 8 s sau trần; bản không truyền `signal` (như trước hồ sơ)
   đỏ ở cả (a) «SLT-DC-KHOA 33033 vẫn bị giữ» lẫn (b); `SHOW transaction_timeout` trong giao dịch của ca 7/9 và ca 10 bằng đúng
   trần + 30 s (lưới phía máy chủ khi tiến trình test chết hẳn).
-- AC-5 (trần khớp thời gian thật): Given DB của lượt, When chạy cả tệp SLT-DC, Then mọi ca xanh, cả tệp dưới 360 s (6 phút), và
-  trần ca đặt theo số đo ghi trong mã (20/11 máy yên: ca 7/9 232 s → trần 480 s; ca 10 24 s, có tải 52 s → trần 120 s; cả tệp 278 s)
-  — đo trong lượt chấm bằng lệnh chạy riêng sau mọi lệnh khác (`feature_loop.model_evals`) — 33033 không bị
-  một ca giữ quá trần của nó: N = 480 s (giám sát đồng ý 11:58Z; căn cứ ca 7/9 đo 232 s, trần ≈ 2 lần), lúc thường ≈ 232 s.
-- AC-6 (nửa B): Given DB của lượt, When chạy `cd pipeline && npm run test:b` tuần tự, Then xanh và dưới 1.500 s (25 phút).
+- AC-5 (trần khớp thời gian thật): Given DB của lượt, When chạy cả tệp SLT-DC (lệnh chạy riêng sau mọi lệnh khác của lượt chấm),
+  Then mọi ca xanh và cả tệp dưới 480 s (= trần ca 7/9 = N khoá 33033; đo 20/11 máy yên 278–291 s, có tải 353–435 s); trần ca
+  đặt theo số đo ghi trong mã (ca 7/9 232 s → trần 480 s; ca 10 24 s, có tải 52 s → trần 120 s) — 33033 không bị một ca giữ quá
+  trần của nó: N = 480 s (giám sát đồng ý 11:58Z), lúc thường ≈ 232 s.
+- AC-6 (hai nửa pipeline): Given cây của hàng (SLT-DC và assert-rut-thay chuyển sang nửa A trong `pipeline/test-nua.json`), When
+  chạy `pipeline_a` và `pipeline_b`, Then cả hai xanh trọn; thời gian từng nửa ghi vào hồ sơ (đo 20/11 trước chia: B 1.559 s).
+  Đích theo dõi ≤ 25′ mỗi nửa khi máy yên — KHÔNG chặn (giám sát 14:15Z).
 - AC-7 (sản xuất sau gộp): Given bản sửa đã vào main và checkout chính đã kéo, When lượt nạp 15′ chạy bốn lần liền và lượt S06
   đầu tiên chạy, Then bốn bước transform-zalo đều mã 0, trung vị ≤ 123 s, không bước nào > 300 s; bước transform-chotot đầu tiên
   mã 0 và ≤ 400 s (mốc trước gộp 201–276 s); số phát biểu rút «thay-boi-luot» mỗi nguồn trong 2 giờ sau lúc kéo main không vượt
@@ -85,8 +87,8 @@ phương pháp, trùng trong mảng, mảng rỗng.
 
 ## Đường đo
 
-Không có `opportunity.md` (hàng phát sinh từ giám sát). Điểm xong trên số thật: AC-5 (SLT-DC cả tệp < 6′), AC-6 (`pipeline_b`
-< 25′), AC-7 (bước transform-zalo sản xuất bốn lượt liền sau gộp).
+Không có `opportunity.md` (hàng phát sinh từ giám sát). Điểm xong trên số thật: AC-5 (SLT-DC cả tệp < 480 s), AC-6 (hai nửa
+pipeline xanh, thời gian ghi số — đích ≤ 25′ chỉ theo dõi), AC-7 (bước transform-zalo sản xuất bốn lượt liền sau gộp).
 
 ## Out of scope
 
@@ -97,6 +99,13 @@ Không có `opportunity.md` (hàng phát sinh từ giám sát). Điểm xong tr�
 
 ## Notes
 
+- **Đổi đích thời gian (giám sát 14:15Z, nhận lỗi của mình):** lời giao đặt «pipeline_b < 25′» và «SLT-DC < 6′» trước khi có số
+  đo dưới tải; hai lượt chấm đo dưới tải 1.559 s và 353–435 s. Nay AC-6 không chặn theo giờ (chỉ đòi xanh, ghi số), thước SLT-DC
+  cả tệp nâng 360 → 480 s. Phần vẫn CHẶN giữ nguyên: tương đương 0 lệch, không bậc hai, nhả 33033, rào DB thử, phạm vi.
+
+- Giới hạn đã biết: E4, E5 (thước giờ SLT-DC) khai vào `feature_loop.model_evals` chỉ để chạy riêng sau mọi lệnh khác — kit chưa
+  có khoá «chạy riêng» tách khỏi «eval gọi model thật»; tổng kết lượt đếm thừa 2 «eval model» và không chạy lại hai thước này khi
+  đỏ do tải (cùng giới hạn hồ sơ app-test-chap-chon-e4b-sap đã ghi).
 - Áp: không có bước áp DB — mã chạy từ checkout chính sau khi điều phối làn merge kéo main. AC-7 đo sau đó (`ap-may-thu.md`).
 - Lùi được: phát biểu rút nhầm không cần khôi phục tay — S03 (transform-zalo toàn bộ bài) và S06 (mọi tin của lượt) ghi lại TRỌN
   phát biểu mỗi lượt; sau revert, lượt kế chèn lại dòng sống cho giá trị đã rút nhầm (chỉ mục sống không chặn vì dòng cũ đã rút).

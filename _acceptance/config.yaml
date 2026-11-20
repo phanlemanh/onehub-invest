@@ -14,7 +14,7 @@ feature_loop:
   repin_retry: 1               # lệnh đỏ chạy lại đúng một lần, một mình; xanh lần hai → dòng pin gọi tên ca chập chờn
   repin_budget_min: 80         # trần mỗi lượt; vượt → thoát 4, không ghi pin, để lại repin-do «vuot-tran»
   do_san_tren_nen: true        # vòng khác gặp đúng cái đỏ đã có dòng nền trên main vẫn ghim, kèm nhãn «đỏ sẵn trên nền», không in «ĐẠT»
-  model_evals: [app-test-chap-chon-e4b-sap/E2, app-test-chap-chon-e4b-sap/E3, slt-dc-cham-va-giu-khoa-33033/E4, slt-dc-cham-va-giu-khoa-33033/E5, slt-dc-cham-va-giu-khoa-33033/E6]   # chạy riêng, tuần tự sau mọi lệnh khác (lenh-dai-chay-rieng); slt-dc E4–E6 là thước giờ, đè tải lượt chấm thì đo sai
+  model_evals: [app-test-chap-chon-e4b-sap/E2, app-test-chap-chon-e4b-sap/E3, slt-dc-cham-va-giu-khoa-33033/E4, slt-dc-cham-va-giu-khoa-33033/E5]   # chạy riêng, tuần tự sau mọi lệnh khác (lenh-dai-chay-rieng); slt-dc E4–E5 là thước giờ SLT-DC, đè tải lượt chấm thì đo sai — dùng khoá model_evals chỉ vì kit chưa có khoá «chạy riêng» (Known limits của hồ sơ)
 design_pass:
   ds_skill: onehub-ui
   # Hàng giao diện sửa thẳng route THẬT trên nhánh của hàng (host-embedded), không dựng route proto riêng.
@@ -361,8 +361,7 @@ executors:
     jst_regress: "node --test scripts/job-exit.test.mjs scripts/s03-nap-nhanh.test.mjs scripts/zalo-import-job.test.mjs scripts/zalo-import-job-nhe.test.mjs scripts/enrich-buoc-job.test.mjs"   # job-step-ghi-thoi-luong E10 — lưới hồi quy dòng cũ của năm bộ test job
   script:
     trt_tuong_duong: "bash db/db-thu.sh oneinvest_suite_trtd --chay node _acceptance/slt-dc-cham-va-giu-khoa-33033/probes/tuong-duong-ba-luot.mjs"   # slt-dc-cham-va-giu-khoa-33033 E2 — câu cũ và câu mới rút cùng tập id ở cả ba lượt transform của SLT-DC
-    trt_slt_dc_gio: "bash _acceptance/slt-dc-cham-va-giu-khoa-33033/probes/do-gio.sh 360 bash db/db-thu.sh oneinvest_suite_sltdc --chay node --test --test-concurrency=1 pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs"   # slt-dc-cham-va-giu-khoa-33033 E4, E5 — cả tệp SLT-DC dưới 6 phút, ca nhả khoá 33033
-    trt_pipeline_b_gio: "bash _acceptance/slt-dc-cham-va-giu-khoa-33033/probes/do-gio.sh 1500 bash -c 'cd pipeline && npm run test:b'"   # slt-dc-cham-va-giu-khoa-33033 E6 — nửa B tuần tự dưới 25 phút
+    trt_slt_dc_gio: "bash _acceptance/slt-dc-cham-va-giu-khoa-33033/probes/do-gio.sh 480 bash db/db-thu.sh oneinvest_suite_sltdc --chay node --test --test-concurrency=1 pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs"   # slt-dc-cham-va-giu-khoa-33033 E4, E5 — cả tệp SLT-DC dưới 480 s (= trần ca 7/9 và N khoá 33033), ca nhả khoá 33033
     trt_san_xuat: "node _acceptance/slt-dc-cham-va-giu-khoa-33033/probes/san-xuat.mjs"   # slt-dc-cham-va-giu-khoa-33033 E7 — bốn bước transform-zalo liền nhau sau gộp, chỉ đọc log
     trt_pham_vi: "bash _acceptance/slt-dc-cham-va-giu-khoa-33033/probes/pham-vi.sh"   # slt-dc-cham-va-giu-khoa-33033 E8 — tệp đổi chỉ trong vùng của hàng
     tg1_that_dem: "mkdir -p .acceptance-runs/the-dia-chi-nhom-s03 && node pipeline/scripts/the-dia-chi-nhom-that.mjs --dem --ghi .acceptance-runs/the-dia-chi-nhom-s03/so-chay-thu.md"   # the-dia-chi-nhom-s03 E7 — bản chép DB máy thu oneinvest_u1_tg1, áp 108 + dựng nháp

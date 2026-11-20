@@ -6,6 +6,7 @@
   ],
   "a": [
     "scripts/assert-rut-thay.test.mjs",
+    "scripts/transform-zalo-loai-tin-doi-chieu.test.mjs",
     "scripts/chia-nua.test.mjs",
     "scripts/chotot-thieu-moc.test.mjs",
     "scripts/dau-bai-thu-sql.test.mjs",
@@ -97,7 +98,6 @@
     "scripts/tang-tren-tin.test.mjs",
     "scripts/the-duyet-nguoi.test.mjs",
     "scripts/thu-so-s06.test.mjs",
-    "scripts/transform-zalo-loai-tin-doi-chieu.test.mjs",
     "scripts/va-doc-tin.test.mjs",
     "scripts/vn-day.test.mjs",
     "scripts/vocab-lint.test.mjs",
