@@ -3,17 +3,15 @@ schema_version: 2
 feature_slug: ca-doi-chieu-tin-rao-nap-co-khop-cum
 verdict: BLOCKED
 failed_evals: []
-reason: "Lệnh `node scripts/suite-neu-doi.mjs pipeline_b -- 'cd pipeline && npm run test:b'` chạy qua 30 phút chưa xong, chưa thấy dòng __EXIT= (khai long_running: 30 cho eval pipeline_b, mặc định vàng; chưa đối chiếu evals.yaml). Lệnh đã được chuyển nền sau 600 giây của công cụ, không phải bị công cụ giết. Tiến trình vẫn chạy: PID 39697, tệp đầu ra /private/tmp/claude-503/-Users-manhphan-dev-onehub-invest/0d21257c-48c4-4d63-bce1-14b468d2bfd9/tasks/bqsubhdks.output vẫn rỗng (0 byte); con node --test song song (PID 46573) đang chạy trong pipeline. Không có kết quả đạt/hỏng nào được xác nhận; không sửa code, không checkout/stash, không chạy lại. Cách xử lý: chạy lại với trần thời gian dài hơn."
+reason: "E5c (suite pipeline_b: node scripts/suite-neu-doi.mjs pipeline_b -- 'cd pipeline && npm run test:b') vượt thời lượng khai (long_running) — lệnh chờ trả __QUA_HAN, chưa có dòng __EXIT=. Chạy lại với thời hạn công cụ dài hơn, không phải lỗi mã."
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 3096de69760b3559c8f6ee85fb88d88430988b3e
+verified_commit: 1e1b23ee3f92d14bda1cf2c5e0563e91b7016658
 human_signoff:
 ---
 
 # Evidence Report: ca-doi-chieu-tin-rao-nap-co-khop-cum
-
-Round 1. Bốn eval của tính năng (E1 đến E4) đều xanh. Hồ sơ BLOCKED vì lệnh suite pipeline_b chưa ra dòng kết thúc; thêm một lệnh suite app_ui có một ca đỏ không gắn eval nào (xem mục Lệnh suite).
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
@@ -21,83 +19,97 @@ Round 1. Bốn eval của tính năng (E1 đến E4) đều xanh. Hồ sơ BLOCK
 | E2 | AC-2 | script | PASS |
 | E3 | AC-3 | script | PASS |
 | E4 | AC-4 | script | PASS |
+| E5a | AC-4 | test | PASS |
+| E5b | AC-4 | test | PASS |
+| E5c | AC-4 | test | BLOCKED |
 
 ## Evidence
 
 - eval: E1
-  run_id: r1-l1-1-20261120070417
+  run_id: minted-ca-doi-chieu-tin-rao-nap-co-khop-cum-E1-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.tdc_may_thu
-  verified_at: 2026-11-20T07:04:17Z
+  verified_at: 2026-11-20T08:04:47Z
   output: |
     MAY-THU OK
 
 - eval: E2
-  run_id: r1-l2-1-20261120070417
+  run_id: minted-ca-doi-chieu-tin-rao-nap-co-khop-cum-E2-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.tdc_do_khi_pha
-  verified_at: 2026-11-20T07:04:17Z
+  verified_at: 2026-11-20T08:04:47Z
   output: |
     DO-KHI-PHA OK
 
 - eval: E3
-  run_id: r1-l2-1-20261120070417
+  run_id: minted-ca-doi-chieu-tin-rao-nap-co-khop-cum-E3-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.tdc_do_khi_pha
-  verified_at: 2026-11-20T07:04:17Z
+  verified_at: 2026-11-20T08:04:47Z
   output: |
     DO-KHI-PHA OK
 
 - eval: E4
-  run_id: minted-ca-doi-chieu-tin-rao-nap-co-khop-cum-E4-r1
+  run_id: minted-ca-doi-chieu-tin-rao-nap-co-khop-cum-E4-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.tdc_pham_vi
-  verified_at: 2026-11-20T07:04:17Z
+  verified_at: 2026-11-20T08:04:47Z
   output: |
     PHAM-VI OK
+
+- eval: E5a
+  run_id: r2-l4-1-20261120080447
+  exit_code: 0
+  baseline: red
+  verifier: config:executors.suite.app_ui
+  verified_at: 2026-11-20T08:04:47Z
+  output: |
+    ℹ duration_ms 487251.7475
+
+- eval: E5b
+  run_id: r2-l5-1-20261120080447
+  exit_code: 0
+  baseline: red
+  verifier: config:executors.suite.pipeline_a
+  verified_at: 2026-11-20T08:04:47Z
+  output: |
+    ℹ duration_ms 951978.508
+
+- eval: E5c
+  run_id: minted-ca-doi-chieu-tin-rao-nap-co-khop-cum-E5c-r2
+  baseline: red
+  verifier: config:executors.suite.pipeline_b
+  verified_at: 2026-11-20T08:04:47Z
+  output: |
+    Không có mã thoát: lệnh vượt thời lượng khai (long_running), đầu ra dừng ở dòng __QUA_HAN.
+    Phần đuôi có ca tests/import-s16.test.mjs báo «Promise resolution is still pending but the event loop has already resolved» khi bị cắt ngang.
+    Đây là BLOCKED do hết giờ, không phải kết luận đỏ của ca; cần chạy lại với thời hạn dài hơn.
 
 ### Lệnh suite (hồi quy)
 
 - cmd: node scripts/suite-neu-doi.mjs agent -- 'cd agent && npm test'
-  run_id: minted-ca-doi-chieu-tin-rao-nap-co-khop-cum-SUITE-node_scripts_suite_neu_doi_mjs_agent_cd_-r1
+  run_id: minted-ca-doi-chieu-tin-rao-nap-co-khop-cum-SUITE-node_scripts_suite_neu_doi_mjs_agent_cd_-r2
   exit_code: 0
-  verified_at: 2026-11-20T07:04:17Z
+  verified_at: 2026-11-20T08:04:47Z
 
 - cmd: node scripts/suite-neu-doi.mjs app -- 'cd app && npx tsc --noEmit && npm run lint'
-  run_id: minted-ca-doi-chieu-tin-rao-nap-co-khop-cum-SUITE-lint-r1
+  run_id: minted-ca-doi-chieu-tin-rao-nap-co-khop-cum-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-11-20T07:04:17Z
-
-- cmd: node scripts/suite-neu-doi.mjs app_ui -- 'cd app && npm test'
-  run_id: minted-ca-doi-chieu-tin-rao-nap-co-khop-cum-SUITE-node_scripts_suite_neu_doi_mjs_app_ui_cd-r1
-  exit_code: 1
-  verified_at: 2026-11-20T07:04:17Z
-  note: 1265 ca, 1255 qua, 1 hong, 9 bo qua. Ca hong duy nhat la SCB-AC-2 trong tests/suite-chung-bo-ca.test.tsx ("TRAN BI DOI tin-rao-doi-chieu.test.tsx"). Lenh nay khong gan eval nao; ghi lai de nguoi quyet doc.
-
-- cmd: node scripts/suite-neu-doi.mjs pipeline_a -- 'cd pipeline && npm run test:a'
-  run_id: minted-ca-doi-chieu-tin-rao-nap-co-khop-cum-SUITE-test_a-r1
-  exit_code: 0
-  verified_at: 2026-11-20T07:04:17Z
-
-- cmd: node scripts/suite-neu-doi.mjs pipeline_b -- 'cd pipeline && npm run test:b'
-  run_id: minted-ca-doi-chieu-tin-rao-nap-co-khop-cum-SUITE-test_b-r1
-  exit_code: n/a (chưa có dòng kết thúc, tiến trình PID 39697 vẫn chạy)
-  verified_at: 2026-11-20T07:04:17Z
-  note: BLOCKED, xem reason ở frontmatter.
+  verified_at: 2026-11-20T08:04:47Z
 
 - cmd: node scripts/suite-neu-doi.mjs ui_lint_rules -- 'cd app && npm run test:lint-rules'
-  run_id: minted-ca-doi-chieu-tin-rao-nap-co-khop-cum-SUITE-test_lint_rules-r1
+  run_id: minted-ca-doi-chieu-tin-rao-nap-co-khop-cum-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-11-20T07:04:17Z
+  verified_at: 2026-11-20T08:04:47Z
 
 - cmd: node scripts/suite-neu-doi.mjs portal_static -- 'node scripts/check-portal-compliance.mjs'
-  run_id: minted-ca-doi-chieu-tin-rao-nap-co-khop-cum-SUITE-node_scripts_suite_neu_doi_mjs_portal_st-r1
+  run_id: minted-ca-doi-chieu-tin-rao-nap-co-khop-cum-SUITE-node_scripts_suite_neu_doi_mjs_portal_st-r2
   exit_code: 0
-  verified_at: 2026-11-20T07:04:17Z
+  verified_at: 2026-11-20T08:04:47Z
 
 ## Known limits
 
@@ -105,19 +117,19 @@ Round 1. Bốn eval của tính năng (E1 đến E4) đều xanh. Hồ sơ BLOCK
 
 ## Analyst
 
-none — không có eval nào xanh cả hai phía; cả bốn eval của tính năng đều không đo được baseline.
-
-Baseline không đo:
+Baseline khong do:
 - bash _acceptance/ca-doi-chieu-tin-rao-nap-co-khop-cum/probes/may-thu.sh: bo qua baseline: tep _acceptance/ca-doi-chieu-tin-rao-nap-co-khop-cum/probes/may-thu.sh co o cay dang kiem nhung chua co o merge-base a60adccb8a3e6f4004343d1c4e52e74313ba7a3f — eval moi, chay tren code cu khong phan biet gi
 - bash _acceptance/ca-doi-chieu-tin-rao-nap-co-khop-cum/probes/do-khi-pha.sh: bo qua baseline: tep _acceptance/ca-doi-chieu-tin-rao-nap-co-khop-cum/probes/do-khi-pha.sh co o cay dang kiem nhung chua co o merge-base a60adccb8a3e6f4004343d1c4e52e74313ba7a3f — eval moi, chay tren code cu khong phan biet gi
 - bash _acceptance/ca-doi-chieu-tin-rao-nap-co-khop-cum/probes/pham-vi.sh: bo qua baseline: tep _acceptance/ca-doi-chieu-tin-rao-nap-co-khop-cum/probes/pham-vi.sh co o cay dang kiem nhung chua co o merge-base a60adccb8a3e6f4004343d1c4e52e74313ba7a3f — eval moi, chay tren code cu khong phan biet gi
 
-Không có hội đồng chấm nào cho vòng này (cả bốn eval đều là script máy).
+Eval không-phân-biệt: none — mọi eval feature đo được baseline (E5a, E5b, E5c) đều red trên baseline (có phân biệt); E1–E4 không đo baseline (xem mục trên).
 
 ## Variance
 
-none — mọi eval chạy một lần, xác định.
+none — every multi-run eval is uniform
 
 ## Iterations
 
-Round 1: bốn eval E1 đến E4 xanh; pipeline_b chưa ra kết quả sau 30 phút (BLOCKED, cần chạy lại với trần thời gian dài hơn); app_ui có một ca đỏ SCB-AC-2 không gắn eval nào.
+Round 1: pipeline_b chạy quá 30 phút chưa có mã thoát; khai riêng E5a, E5b, E5c để lượt chấm chờ đủ giờ.
+Round 2: E1–E5b xanh; E5c (pipeline_b) lại vượt thời lượng khai, chưa có mã thoát — BLOCKED, cần chạy lại với thời hạn công cụ dài hơn.
+
