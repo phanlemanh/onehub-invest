@@ -10,7 +10,7 @@ import { Frame, FrameDescription, FrameHeader, FramePanel, FrameTitle } from "@/
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
 import { LAT_CUON_CHIEU } from "@/lib/labels-cuon-chieu"
 import type { DoiChieu, DongTruongHop } from "@/lib/labels-luot-hai"
-import { LABEL_FIELDS_NHOM } from "@/lib/labels-normalize"
+import { LABEL_FIELDS_NHOM, nhanO, oCuaLat } from "@/lib/labels-normalize"
 import type { DongThuanTruong, NhomCuaLat, TienDo, TinGan } from "@/lib/labels-queries"
 import { fmtInt, fmtVnDateTime } from "@/lib/format"
 
@@ -33,6 +33,7 @@ import { NguoiDang } from "./nguoi-dang"
 const CRUMBS = [{ label: "Vận hành", href: "/ops" }, { label: "Gắn nhãn" }]
 const DESCRIPTION = "Đọc chữ gốc của từng tin của lát và ghi chín trường lõi. Máy không cho thấy nó đã đọc ra gì."
 const DESCRIPTION_NHOM = "Gắn theo từng nhóm: ghi điều người trong nhóm hiểu, kèm căn cứ từng ô. Lưu xong mới thấy máy đọc gì."
+const DESCRIPTION_RUT_GON = "Đọc từng bài và ghi toà, phân khu hoặc cụm. Máy không cho thấy nó đã đọc ra gì."
 const DESCRIPTION_CUON_CHIEU = "Mẫu soát mỗi ngày 20 bài: máy đã điền nháp, anh giữ hoặc sửa từng ô rồi lưu. Số giữ nháp hiện ở Chất lượng dữ liệu."
 /** Lát mặc định của màn và lệnh lấy mẫu của nó. */
 export const LAT_THEO_NHOM = "s03-theo-nhom"
@@ -172,6 +173,7 @@ export function LabelsView(props: Props) {
   const g = nhom.find((n) => n.unitCode === chon) ?? null
   const hrefNhom = (ma: string) => `/ops/labels?lat=${encodeURIComponent(lat)}&nhom=${encodeURIComponent(ma)}`
   const cuonChieu = lat === LAT_CUON_CHIEU
+  const oLat = oCuaLat(lat)
   const hrefLat = `/ops/labels?lat=${encodeURIComponent(lat)}`
   const min = thapNhat(dongThuan)
   const stats =
@@ -188,7 +190,7 @@ export function LabelsView(props: Props) {
         crumbs={CRUMBS}
         title="Gắn nhãn"
         stats={stats}
-        description={cuonChieu ? DESCRIPTION_CUON_CHIEU : theoNhom || lat === LAT_THEO_NHOM ? DESCRIPTION_NHOM : DESCRIPTION}
+        description={oLat ? DESCRIPTION_RUT_GON : cuonChieu ? DESCRIPTION_CUON_CHIEU : theoNhom || lat === LAT_THEO_NHOM ? DESCRIPTION_NHOM : DESCRIPTION}
         actions={theoNhom && chon ? <ChonNhom nhom={nhom} chon={chon} hrefNhom={hrefNhom} /> : undefined}
       />
       {t.tong === 0 ? <LabelsEmpty lat={lat} /> : null}
@@ -213,8 +215,8 @@ export function LabelsView(props: Props) {
           <LabelForm key={tin.itemId} lat={lat} itemId={tin.itemId} />
         </div>
       ) : null}
-      {theoNhom ? <BangTruongHop rows={bang} /> : null}
-      {t.tong > 0 ? <AgreementTable rows={dongThuan} fields={theoNhom || cuonChieu ? LABEL_FIELDS_NHOM : undefined} /> : null}
+      {theoNhom && !oLat ? <BangTruongHop rows={bang} /> : null}
+      {t.tong > 0 ? <AgreementTable rows={dongThuan} fields={oLat ?? (theoNhom || cuonChieu ? LABEL_FIELDS_NHOM : undefined)} nhan={(f) => nhanO(lat, f)} /> : null}
     </div>
   )
 }
