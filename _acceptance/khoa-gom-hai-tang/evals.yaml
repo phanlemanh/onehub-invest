@@ -108,3 +108,27 @@ evals:
       hai-khu-ghep-b và tệp đóng băng PL20, thời gian bước gom; băm snapshot không đổi (số tệp lớn hơn 0); bài thử bị loại. Phát lại theo lát ngày ra cùng thành phần tin cuối với lượt toàn bộ, mọi offer_id đổi giữa lát có đường nối,
       in số lần lật. Chiều đỏ: bản đột biến
       khoá phụ thuộc thứ tự bài thì lượt hai đổi tin và lệnh thoát 1, thông điệp ghim offer_id.
+  - id: E11a
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.suite.app_ui
+    long_running: 60
+    paths: [pipeline/**, app/src/**, app/tests/**, scripts/**]
+    expected: "exit 0; bộ test giao diện app của kho xanh trên nhánh. Khai riêng để lượt chấm chờ đủ giờ khi máy tải — theo khuôn ca4a520da của che-ten."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11b
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.suite.pipeline_a
+    long_running: 60
+    paths: [pipeline/**, app/src/**, app/tests/**, scripts/**]
+    expected: "exit 0; bộ pipeline nửa a của kho xanh trên nhánh. Khai riêng để lượt chấm chờ đủ giờ khi máy tải — theo khuôn ca4a520da của che-ten."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11c
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.suite.pipeline_b
+    long_running: 60
+    paths: [pipeline/**, app/src/**, app/tests/**, scripts/**]
+    expected: "exit 0; bộ pipeline nửa b của kho xanh trên nhánh. Khai riêng để lượt chấm chờ đủ giờ khi máy tải — theo khuôn ca4a520da của che-ten."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
