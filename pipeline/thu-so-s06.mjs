@@ -290,7 +290,13 @@ async function main() {
   // KHÔNG spawn (spawn khi instance cũ còn sống làm Chrome mới nhường chỗ và
   // KÍCH HOẠT cửa sổ cũ — bộ thu chiếm trước màn hình từ 17:26 tới 17:4x VN).
   // Chỉ khi cổng chết mới spawn binary (không qua open — đỡ giật tiêu điểm).
-  const CHROME_BIN = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+  // 2011-5 trình duyệt chuyên dụng: chọn qua env như lớp collector/src/core/trinh-duyet.ts
+  // (chrome | cft | beta; mặc định chrome thường). Profile vẫn theo STATE_DIR của S06.
+  const UNG_VIEN = process.env.ONEHUB_TRINH_DUYET ?? "chrome";
+  const CHROME_BIN =
+    UNG_VIEN === "cft" ? (process.env.ONEHUB_BROWSER_CFT || (() => { throw new Error("thiếu ONEHUB_BROWSER_CFT"); })())
+    : UNG_VIEN === "beta" ? (process.env.ONEHUB_BROWSER_BETA || (() => { throw new Error("thiếu ONEHUB_BROWSER_BETA"); })())
+    : "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
   let chromeProc = null;
   const requireCollector = createRequire(join(ROOT, "collector", "package.json"));
   const { chromium } = requireCollector("playwright-core");
