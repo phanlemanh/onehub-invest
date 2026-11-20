@@ -13,7 +13,7 @@ flowchart TD
   B --> CD["Chờ duyệt phạm vi<br/>20 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
   GB --> DG["Đã giao<br/>206 việc"]
-  GB --> CN["Chờ phiên nghiệm thu<br/>138 việc"] --> GG{"Cổng Giá trị"}
+  GB --> CN["Chờ phiên nghiệm thu<br/>139 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
 
@@ -149,6 +149,7 @@ flowchart TD
 - Người gắn nhãn gõ giá có dấu chấm ngăn nghìn hay gửi đơn vị lạ thì bị chặn với lỗi dưới ô thay vì lưu sai 1000 lần, và mất mạng khi Lưu thì thấy thông báo (`nhan-gia-va-luu-loi-mang`)
 - Bảng nhóm S03 ghi đúng số nhóm đang bật trong danh sách cho phép và «Vào bảng thô» theo nhóm — ở máy thu đo trực tiếp, trên máy chủ đọc khối s03 máy thu đẩy lên; thiếu số thì «—», không 0 (`nhom-s03-tren-cloud`)
 - Mỗi dự án S08 của lát Ocean Park 1 và Grand Park nối vào đúng một khu đô thị, không còn bí danh dự án trùng mã toà, area_ids OCP1–3 khớp nguồn xác minh (`noi-du-an-s08-khu-do-thi`)
+- Bảy phân khu do thẻ luật S16 đúc trùng nơi với phân khu đã có được nối về nút cũ, và bước khớp không đúc nút trùng nữa (`noi-phan-khu-trung-s16`)
 - Mọi nút dự án trong danh bạ trỏ mã xã/phường hiện hành, suy từ xã cũ có nguồn qua bảng chuyển đổi chính thức (`nut-du-an-tro-xa-moi`)
 - Ô KPI ba trang Ops trên cloud đọc số máy local đẩy lên kèm mốc đo giờ VN; không có số thì «—» và «Chỉ đo ở máy local» một lần; số cũ quá 45′ thì báo, không badge xanh (`o-kpi-chi-do-local`)
 - Chế độ duyệt ở /ops/review báo lỗi ghi sau khi rời Hàng duyệt, giữ phím số chỉ quyết một thẻ, phím duyệt im khi hộp thoại khác đè lên sheet (`od2-phim-va-loi-ghi`)
