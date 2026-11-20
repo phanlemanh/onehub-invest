@@ -5,7 +5,7 @@ slug: slt-dc-cham-va-giu-khoa-33033
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [script]
-status: implemented
+status: machine-cleared
 veto_state: mo
 veto_opened_at: 2026-11-20T11:38:00Z
 design_doc: docs/superpowers/specs/2026-11-20-slt-dc-cham-va-giu-khoa-33033-design.md
@@ -110,3 +110,9 @@ pipeline xanh, thời gian ghi số — đích ≤ 25′ chỉ theo dõi), AC-7 
 - Lùi được: phát biểu rút nhầm không cần khôi phục tay — S03 (transform-zalo toàn bộ bài) và S06 (mọi tin của lượt) ghi lại TRỌN
   phát biểu mỗi lượt; sau revert, lượt kế chèn lại dòng sống cho giá trị đã rút nhầm (chỉ mục sống không chặn vì dòng cũ đã rút).
   Đếm rút theo nguồn trước/sau gộp (AC-7) là dấu phát hiện.
+- Ngoài-1 (máy định tuyến 2026-11-20, đề xuất S4 known-limits): Một dòng chú thích trong mã nói bài kiểm tra này chạy cả trên hệ thống kiểm tự động, nhưng thực tế nó chỉ chạy ở lượt chấm. Người đọc có thể tưởng có thêm một lớp bảo vệ mà thật ra không có. Người dùng cuối không bị ảnh hưởng. — `pipeline/scripts/assert-rut-thay.test.mjs`
+- Ngoài-2 (máy định tuyến 2026-11-20, đề xuất S4 known-limits): Phép kiểm so sánh kết quả cũ và mới có thể báo đạt dù một nguồn dữ liệu (ví dụ tin từ Facebook) không được đo lần nào, chỉ cần các nguồn khác gọi đủ số lần. Người đọc kết quả in ra vẫn có thể phát hiện, nên rủi ro thấp. — `_acceptance/slt-dc-cham-va-giu-khoa-33033/probes/tuong-duong-ba-luot.mjs`
+- Ngoài-3 (máy định tuyến 2026-11-20, đề xuất S4 known-limits): Lượt chấm sẽ báo thừa ba lần chạy dùng mô hình thật, trong khi các thước đo thời gian này không gọi mô hình nào. Thước giờ cũng không được chạy lại tự động khi đỏ vì máy đang tải. — `_acceptance/config.yaml`
+- Ngoài-4 (máy định tuyến 2026-11-20, đề xuất S4 known-limits): Thước giờ đỏ vì máy tải sẽ không được chạy lại tự động, và tổng kết đếm thừa ba lần gọi mô hình thật. Người chấm cần chạy lại bằng tay khi gặp đỏ do tải. — `_acceptance/config.yaml`
+- Ngoài-5 (máy định tuyến 2026-11-20, đề xuất S4 known-limits): Nếu có người chạy riêng bài kiểm này ngoài đường chạy chuẩn, nó có thể làm lệch số liệu thống kê trên cơ sở dữ liệu thật của máy thu. Hệ quả là các truy vấn sau đó có thể chọn cách chạy chậm hơn, nhưng dữ liệu không bị mất. — `pipeline/scripts/assert-rut-thay.test.mjs`
+- Ngoài-6 (máy định tuyến 2026-11-20, đề xuất S4 known-limits): Bài kiểm này có thể vẫn báo xanh dù bộ kiểm tra chống lộ tên người bán bị hỏng và không còn bắt được gì. Người dùng chưa gặp lỗi gì, nhưng một lỗi lộ thông tin sau này có thể không bị phát hiện sớm. — `app/tests/tin-rao-doi-chieu.test.tsx`
