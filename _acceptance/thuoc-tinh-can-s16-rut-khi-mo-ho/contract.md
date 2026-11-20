@@ -5,7 +5,7 @@ slug: thuoc-tinh-can-s16-rut-khi-mo-ho
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: machine-cleared
 design_doc: docs/superpowers/specs/2026-11-19-thuoc-tinh-can-s16-rut-khi-mo-ho-design.md
 veto_state: mo
 veto_opened_at: 2026-11-19T01:27:22Z
@@ -76,3 +76,7 @@ Quét hình thái làm tay. Trục **chuyển nhóm** (thường → mơ hồ ·
 ## Notes
 
 - Known limits: (trống tới S4)
+- Ngoài-1 (máy định tuyến 2026-11-20, đề xuất S4 known-limits): Khi nguồn dữ liệu căn bị lỗi lúc chạy thử, lệnh vẫn báo «không có căn nào cần rút» thay vì báo lỗi. Người vận hành có thể tin nhầm là mọi thứ ổn trước khi áp thật. — `pipeline/scripts/thuoc-tinh-can-s16.mjs`
+- Ngoài-2 (máy định tuyến 2026-11-20, đề xuất S4 known-limits): Phép kiểm số liệu thật có thể báo lệch nhầm trong một tình huống hiếm, làm người duyệt tưởng lệnh sai trong khi lệnh đúng. Người dùng cuối không thấy ảnh hưởng gì. — `_acceptance/thuoc-tinh-can-s16-rut-khi-mo-ho/probes/that.mjs`
+- Ngoài-3 (máy định tuyến 2026-11-20, đề xuất S4 known-limits): Một ca kiểm tự động có thể vẫn xanh dù lệnh bị hỏng hẳn theo kiểu nhất định, nên có thể bỏ sót một lỗi chạy lại sai. Hành vi thật cho người dùng không đổi. — `pipeline/tests/thuoc-tinh-can-s16-rut.itest.mjs`
+- Ngoài-4 (máy định tuyến 2026-11-20, đề xuất S4 known-limits): Phép kiểm trên máy thu đo phần đếm bên trong chứ không đo đúng dòng chữ lệnh in ra, nên chỗ nối giữa hai phần chưa được kiểm trực tiếp. Người dùng không thấy ảnh hưởng. — `_acceptance/thuoc-tinh-can-s16-rut-khi-mo-ho/probes/that.mjs`
