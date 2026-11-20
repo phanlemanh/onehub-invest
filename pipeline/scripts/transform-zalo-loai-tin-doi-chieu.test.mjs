@@ -104,12 +104,25 @@ describe("SLT-AC-9 sàn giá bán (thuần)", () => {
   });
 });
 
-// ---- DB máy thu: BEGIN … ROLLBACK ----
-async function withTx(fn) {
+// ---- DB của lượt (db-thu.sh) hay DB máy thu: BEGIN … ROLLBACK ----
+// Hết trần ca, node:test không huỷ promise: giao dịch cũ vẫn chạy và giữ 33033, ca sau trong cùng tệp đứng chờ nó (đo 20/11:
+// ca 10 chờ 24′). `signal` của ca bị huỷ lúc hết trần → cắt phiên DB của ca từ một kết nối khác (ROLLBACK, nhả khoá ngay).
+// `transaction_timeout` là lưới phía máy chủ khi tiến trình test chết hẳn (hồ sơ slt-dc-cham-va-giu-khoa-33033).
+export async function withTx(fn, { signal, tranGiay } = {}) {
   const c = new pg.Client({ connectionString: DB_URL });
   await c.connect();
+  const pid = c.processID;
+  const cat = async () => {
+    const k = new pg.Client({ connectionString: DB_URL });
+    try { await k.connect(); await k.query("SELECT pg_terminate_backend($1)", [pid]); } catch { /* phiên đã đóng */ }
+    finally { await k.end().catch(() => {}); }
+  };
+  const onAbort = () => { cat(); };
+  signal?.addEventListener("abort", onAbort, { once: true });
+  c.on("error", () => {}); // phiên bị cắt: lỗi đi qua câu đang chạy, không làm sập tiến trình
   try {
     await c.query("BEGIN");
+    if (tranGiay) await c.query(`SET LOCAL transaction_timeout = '${Math.ceil(tranGiay) + 30}s'`);
     await c.query("SELECT pg_advisory_xact_lock(33033)"); // cùng khoá với các test transform S03/S05
     if (!(await c.query(`SELECT to_regclass('sale_offer_records') IS NOT NULL AS ok`)).rows[0].ok) await c.query(MIG_044);
     await napPhatBieu(c);
@@ -118,10 +131,53 @@ async function withTx(fn) {
        ON CONFLICT (snapshot_id) DO NOTHING`, [SNAP]);
     return await fn(c);
   } finally {
+    signal?.removeEventListener("abort", onAbort);
     await c.query("ROLLBACK").catch(() => {});
-    await c.end();
+    await c.end().catch(() => {});
   }
 }
+
+/** Khoá 33033 có rảnh trong `giay` giây không (thử từ một kết nối riêng, mỗi 200 ms). */
+async function khoaRanhTrong(giay) {
+  const k = new pg.Client({ connectionString: DB_URL });
+  await k.connect();
+  try {
+    const het = Date.now() + giay * 1000;
+    do {
+      await k.query("BEGIN");
+      const { rows } = await k.query("SELECT pg_try_advisory_xact_lock(33033) AS ok");
+      await k.query("ROLLBACK");
+      if (rows[0].ok) return true;
+      await new Promise((r) => setTimeout(r, 200));
+    } while (Date.now() < het);
+    return false;
+  } finally { await k.end(); }
+}
+
+/** Mở withTx giữ 33033 rồi ngủ 15 s; huỷ `signal` sau khi khoá đã giữ; báo khoá có rảnh trong 5 s không. */
+async function kiemNhaKhoa(truyenSignal) {
+  const ac = new AbortController();
+  let daGiu;
+  const giu = new Promise((r) => { daGiu = r; });
+  const chay = withTx(async (c) => { daGiu(); await c.query("SELECT pg_sleep(15)"); },
+    { signal: truyenSignal ? ac.signal : undefined, tranGiay: 60 }).catch((e) => e);
+  await giu;
+  ac.abort();
+  const ranh = await khoaRanhTrong(5);
+  const loi = await chay; // bản lành: câu ngủ bị cắt (lỗi); bản phá: ngủ hết 15 s rồi ROLLBACK
+  if (!ranh) throw new Error("SLT-DC-KHOA 33033 vẫn bị giữ 5 s sau khi ca hết trần");
+  return loi;
+}
+
+describe("SLT-DC-KHOA ca hết trần nhả khoá 33033", () => {
+  test("SLT-DC-KHOA huỷ signal của ca → khoá 33033 rảnh trong 5 s, câu đang chạy bị cắt", { timeout: 60_000 }, async () => {
+    const loi = await kiemNhaKhoa(true);
+    assert.ok(loi instanceof Error, "SLT-DC-KHOA đối chứng: câu ngủ của ca không bị cắt");
+  });
+  test("chiều đỏ SLT-DC-KHOA: không truyền signal (như trước hồ sơ) → đỏ ghim «SLT-DC-KHOA 33033 vẫn bị giữ»", { timeout: 60_000 }, async () => {
+    await assert.rejects(() => kiemNhaKhoa(false), /SLT-DC-KHOA 33033 vẫn bị giữ/);
+  });
+});
 
 /** Tập Yêu cầu mẫu viết tay: có giá, PN, có cả tín hiệu bán — vẫn không được thành tin rao. */
 const YEU_CAU_MAU = [
@@ -189,8 +245,14 @@ function demNhomLech(nhom, chuCua) {
   return lech;
 }
 
+// Trần ca theo thời gian đo (20/11, DB của lượt, sau khi bỏ câu rút bậc hai): ca 7/9 232 s (ba lượt transform), ca 10 24 s,
+// cả tệp 278 s — trần ≈ 2–2,5 lần số đo. Hết trần thì withTx cắt phiên của ca: khoá 33033 không bị giữ quá trần
+// (hồ sơ slt-dc-cham-va-giu-khoa-33033).
+const TRAN_79 = 480_000;
+const TRAN_10 = 60_000;
+
 describe("SLT-DC đối chiếu trên DB máy thu (ROLLBACK)", () => {
-  test("SLT-DC-7, SLT-DC-9: tắt rồi bật suy loại, rồi tắt lại — cùng một transaction", { timeout: 1_200_000 }, async (t) => {
+  test("SLT-DC-7, SLT-DC-9: tắt rồi bật suy loại, rồi tắt lại — cùng một transaction", { timeout: TRAN_79 }, async (t) => {
     await withTx(async (c) => {
       const ycIds = await chenYeuCau(c);
       await chenThueTy(c);
@@ -244,10 +306,10 @@ describe("SLT-DC đối chiếu trên DB máy thu (ROLLBACK)", () => {
         // Đối chứng dương (bỏ đối soát = đọc cả tin đã rút): phải thấy các tin lượt bật đã tạo.
         assert.ok(banGhi >= 1, "SLT-DC-9 đối chứng dương: không tin suy loại nào được tạo ở lượt bật");
       });
-    });
+    }, { signal: t.signal, tranGiay: TRAN_79 / 1000 });
   });
 
-  test("SLT-DC-10 lát s03-loai-tin: lần một thêm n, lần hai cùng seed thêm 0, --thu thêm 0", { timeout: 600_000 }, async () => {
+  test("SLT-DC-10 lát s03-loai-tin: lần một thêm n, lần hai cùng seed thêm 0, --thu thêm 0", { timeout: TRAN_10 }, async (t) => {
     await withTx(async (c) => {
       const co = { lat: "s03-loai-tin", n: 30, seed: "slt-dc-10", nhom: null, trongGiaoDich: true };
       const { rows } = await c.query(`SELECT count(*)::int AS n FROM eval_label_items WHERE lat = $1`, [co.lat]);
@@ -260,6 +322,6 @@ describe("SLT-DC đối chiếu trên DB máy thu (ROLLBACK)", () => {
       assert.equal(hai.them, 0, `SLT-DC-10 lần hai cùng seed thêm ${hai.them}`);
       assert.equal(thu.them, 0, `SLT-DC-10 --thu thêm ${thu.them}`);
       for (const t of TANGS) assert.equal(mot.moiTang[t].chon, co.n / 3, `SLT-DC-10 tầng ${t} chọn ${mot.moiTang[t].chon}`);
-    });
+    }, { signal: t.signal, tranGiay: TRAN_10 / 1000 });
   });
 });

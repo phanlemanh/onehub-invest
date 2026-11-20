@@ -1,0 +1,58 @@
+schema_version: 1
+feature_slug: slt-dc-cham-va-giu-khoa-33033
+# Ca «TR-AC-n» ở pipeline/scripts/assert-rut-thay.test.mjs; ca «SLT-DC-KHOA» và trần ca ở
+# pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs. Mọi lệnh DB chạy trên DB của riêng lượt (db/db-thu.sh --chay).
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.trt_db
+    paths: [pipeline/lib/assert.mjs, pipeline/scripts/assert-rut-thay.test.mjs]
+    expected: "exit 0; '✔ TR-AC-1 sáu ca biên: tập id rút trùng câu cũ; mảng rỗng không chạy câu nào'; '✔ chiều đỏ TR-AC-1: bản phá `<> ALL` → `= ANY`'; should-NOT-fire: '✖ TR-AC-1', 'TR-AC-1 đối chứng dương'"
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.trt_tuong_duong
+    paths: [pipeline/lib/assert.mjs, _acceptance/slt-dc-cham-va-giu-khoa-33033/probes/tuong-duong-ba-luot.mjs]
+    long_running: 8
+    expected: "exit 0; ≥ 3 dòng 'lần gọi <k>: mảng <n> · cũ rút <a> · mới rút <a> · lệch 0'; cuối 'TUONG DUONG OK — <k> lần gọi'; should-NOT-fire: 'LECH'"
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.trt_db
+    paths: [pipeline/lib/assert.mjs, pipeline/scripts/assert-rut-thay.test.mjs]
+    expected: "exit 0; ba dòng '✔ TR-AC-3 n=10|n=1000|n=200000: ép nested loop và ép hash đều không Anti Join, dưới 30 s, rút đúng 5%' kèm dòng số 'TR-AC-3 n=200000: ép nested loop <x> s · ép hash <y> s'; '✔ chiều đỏ TR-AC-3: câu cũ ép nested loop ở n=200000'; should-NOT-fire: 'TR-AC-3 quá trần', '✖ TR-AC-3'"
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.trt_slt_dc_gio
+    paths: [pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs, _acceptance/slt-dc-cham-va-giu-khoa-33033/probes/do-gio.sh]
+    long_running: 8
+    expected: "exit 0; '✔ SLT-DC-KHOA huỷ signal của ca → khoá 33033 rảnh trong 5 s'; '✔ chiều đỏ SLT-DC-KHOA: không truyền signal'; should-NOT-fire: '✖ SLT-DC-KHOA'"
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.trt_slt_dc_gio
+    paths: [pipeline/lib/assert.mjs, pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs, _acceptance/slt-dc-cham-va-giu-khoa-33033/probes/do-gio.sh]
+    long_running: 8
+    expected: "exit 0; 'tự kiểm thước giờ: hai chiều đúng'; 'ℹ fail 0'; '✔ SLT-DC-7, SLT-DC-9'; '✔ SLT-DC-10'; 'WALL <s> s (trần 360 s)' với s ≤ 360; cuối 'GIO OK'; should-NOT-fire: 'QUA TRAN', 'LENH DO'"
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.trt_pipeline_b_gio
+    paths: [pipeline/**]
+    long_running: 30
+    expected: "exit 0; 'tự kiểm thước giờ: hai chiều đúng'; 'ℹ fail 0'; 'WALL <s> s (trần 1500 s)' với s ≤ 1500; cuối 'GIO OK'; should-NOT-fire: 'QUA TRAN', 'LENH DO'"
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.trt_san_xuat
+    paths: [_acceptance/slt-dc-cham-va-giu-khoa-33033/probes/san-xuat.mjs]
+    status: not-run      # đo SAU gộp trên log máy thu (cần --tu-dong <số dòng lúc kéo main>, ghi ở ap-may-thu.md)
+    expected: "tự kiểm 'log có bước 400 s đỏ «LAT»'; 'SAN XUAT OK — bốn bước … · trung vị ≤ 123 s'; should-NOT-fire: 'SAN XUAT DO', 'LAT'"
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.trt_pham_vi
+    paths: ["**"]
+    expected: "exit 0; 'tự kiểm: app/src/app/page.tsx → NGOAI PHAM VI'; mỗi tệp 'ok'; cuối 'PHAM-VI OK'; should-NOT-fire: 'NGOAI PHAM VI pipeline', 'TU KIEM HONG'"
