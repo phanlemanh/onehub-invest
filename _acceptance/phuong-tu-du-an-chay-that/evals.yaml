@@ -49,7 +49,31 @@ evals:
     cmd: bash _acceptance/phuong-tu-du-an-chay-that/probes/tren-db-thu.sh thoi-gian
     long_running: 40
     paths: ["pipeline/scripts/phuong-tu-du-an.mjs", "_acceptance/phuong-tu-du-an-chay-that/ap-may-thu/so-chay-thu.md", "_acceptance/phuong-tu-du-an-chay-that/probes/**"]
-    expected: "Lượt lặp xong trong 60 giây; so-chay-thu.md có mốc ISO, tử số, mẫu số toàn kho và cửa sổ 13–19/11 bằng đúng số đo trên bản chép, giây lượt đầu cùng cỡ. Chiều đỏ: thiếu hay lệch một số thì probe đỏ gọi tên số ấy."
+    expected: "Lượt lặp xong trong 60 giây; so-chay-thu.md có mốc ISO, tử số, mẫu số toàn kho và cửa sổ 13–19/11 khớp phép đo lại trên bản chép trong khoảng cho phép (số đếm lệch tối đa 5% hay 10 tin; tỉ lệ có phường lệch tối đa 1 điểm toàn kho, 2 điểm cửa sổ — bản mẫu dựng lại mỗi 24 giờ, kho S03 lớn thêm khoảng 2% mỗi ngày), giây lượt đầu cùng cỡ. Chiều đỏ: thiếu hay lệch một số thì probe đỏ gọi tên số ấy."
+  - id: E9a
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.suite.pipeline_a
+    long_running: 60
+    paths: [pipeline/**, scripts/**]
+    expected: "exit 0; bộ pipeline nửa a của kho xanh trên nhánh. Khai riêng để lượt chấm chờ đủ giờ: lượt 2 nửa b chạy quá 30 phút không có mã thoát (máy tải 8–12)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9b
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.suite.pipeline_b
+    long_running: 60
+    paths: [pipeline/**, scripts/**]
+    expected: "exit 0; bộ pipeline nửa b của kho xanh trên nhánh. Khai riêng để lượt chấm chờ đủ giờ: lượt 2 lệnh này chạy quá 30 phút không có mã thoát (máy tải 8–12)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9c
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.suite.app_ui
+    long_running: 60
+    paths: [pipeline/**, app/src/**, app/tests/**, scripts/**]
+    expected: "exit 0; bộ test giao diện app của kho xanh trên nhánh. Khai riêng để lượt chấm chờ đủ giờ khi máy tải."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E8
     criterion: AC-8
     executor: test

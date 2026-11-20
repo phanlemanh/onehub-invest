@@ -1,12 +1,12 @@
 // Phép đo DA45 trên DB thử chép từ máy thu (DATABASE_URL do db/db-thu.sh đặt). Mỗi chế độ in dòng «ok …»/«FAIL …», thoát 1 khi có FAIL.
 // Gốc kho suy từ vị trí tệp; lệnh thật chạy bằng tiến trình con như chuỗi nạp gọi.
-import { execFileSync, spawnSync } from "node:child_process";
+import { execFileSync, spawn, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { mkdtempSync, readdirSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { createRequire } from "node:module";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const DIR = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = execFileSync("git", ["-C", DIR, "rev-parse", "--show-toplevel"], { encoding: "utf8" }).trim();
@@ -14,6 +14,8 @@ const HS = path.join(ROOT, "_acceptance/phuong-tu-du-an-chay-that");
 const LENH = path.join(ROOT, "pipeline/scripts/phuong-tu-du-an.mjs");
 const pg = createRequire(path.join(ROOT, "pipeline/package.json"))("pg");
 const RULE = "phuong-tu-du-an";
+// luật đóng dấu dự án lúc nạp mà transform-zalo ghi (thẻ nhóm, DV6 từ chữ bài): bài sao từ bài có dự án theo các luật này nhận lại dự án
+const { RULE_ID: RULE_THE, LUAT_DV6 } = await import(pathToFileURL(path.join(ROOT, "pipeline/lib/dia-chi-the-nhom.mjs")).href);
 const che = process.argv[2];
 const thamSo = process.argv.slice(3);
 if (!process.env.DATABASE_URL || /\/oneinvest(\?|$)/.test(process.env.DATABASE_URL)) {
@@ -43,6 +45,14 @@ async function soPhuong() {
     FROM sale_offers s LEFT JOIN areas a ON a.id = s.area_id WHERE s.source = 'S03'`);
   return r;
 }
+/** Chạy lệnh ở nền (không chặn probe) — cho ca lùi trùng lượt nạp. */
+function chayNen(args) {
+  const ch = spawn(process.execPath, [LENH, ...args, "--json"], { env: process.env });
+  const kq = { xong: false, out: "" };
+  ch.stdout.on("data", (d) => { kq.out += d; }); ch.stderr.on("data", (d) => { kq.out += d; });
+  kq.p = new Promise((res) => ch.on("close", (ma) => { kq.xong = true; res({ ma, out: kq.out }); }));
+  return kq;
+}
 async function apDau() { const r = lenh(["--ghi"]); if (r.ma !== 0) throw new Error(`--ghi lượt đầu thoát ${r.ma}: ${r.out.slice(-400)}`); return r; }
 
 // Phân ô theo bảng phủ ca: SQL độc lập, viết trước, không gọi mã của lệnh.
@@ -65,6 +75,57 @@ SELECT t.offer_id, t.area_id cot, aw.parent_id tinh_moi, t.area_id AS tinh_cu, d
   CASE WHEN d.offer_id IS NULL THEN 'khong' WHEN d.so_da > 1 THEN 'nhieu' WHEN d.p IS NOT NULL THEN 'mot-phuong' ELSE 'khong-phuong' END o_da,
   CASE WHEN th.offer_id IS NULL THEN 'khong' WHEN d.p IS NULL OR d.so_da > 1 THEN 'co' WHEN th.vs = ARRAY[d.p] THEN 'trung' ELSE 'khac' END o_the
 FROM tin t LEFT JOIN da d USING (offer_id) LEFT JOIN the th USING (offer_id) LEFT JOIN areas aw ON aw.id = d.p`;
+
+/** Tin nguồn để sao thành bài mới (S4-r2, AC-4 đòi bài mới nạp qua transform-zalo thật): tin một bài, chữ bài không nêu phường
+ *  (khoá gom tính cả người đăng, nên bài sao mang người đăng mới thành tin mới), dự án do luật đóng dấu lúc nạp. */
+async function tinNguon(ids) {
+  const { rows } = await c.query(`SELECT r.offer_id, r.post_ids[1] AS post_id,
+      (SELECT array_agg(DISTINCT fa.value ORDER BY fa.value) FROM field_assertions fa
+        WHERE fa.subject_key = ANY (offer_subject_keys(r.source, r.originating_system_key, r.post_ids))
+          AND fa.field = 'project_node_id' AND fa.retracted_at IS NULL) AS du_an
+    FROM sale_offer_records r JOIN sale_offers s USING (offer_id)
+   WHERE r.offer_id = ANY ($1::text[]) AND cardinality(r.post_ids) = 1 AND s.phuong_raw IS NULL
+     AND EXISTS (SELECT 1 FROM field_assertions fa WHERE fa.subject_key = ANY (offer_subject_keys(r.source, r.originating_system_key, r.post_ids))
+                   AND fa.field = 'project_node_id' AND fa.retracted_at IS NULL AND fa.rule_id = ANY ($2::text[]))
+   ORDER BY (SELECT bool_or(fa.rule_id = $3) FROM field_assertions fa
+              WHERE fa.subject_key = ANY (offer_subject_keys(r.source, r.originating_system_key, r.post_ids))
+                AND fa.field = 'project_node_id' AND fa.retracted_at IS NULL) DESC NULLS LAST, r.offer_id
+   LIMIT 1`, [ids, [RULE_THE, ...LUAT_DV6], RULE_THE]);
+  return rows[0] ?? null;
+}
+/** Bài mới: sao bài nguồn vào stg_zalo_posts với mã bài, người đăng, giờ đăng mới — transform-zalo thật đọc nó như bài vừa nạp. */
+async function baiMoi(postId, hauTo) {
+  const cols = (await c.query(`SELECT column_name FROM information_schema.columns WHERE table_schema = current_schema()
+    AND table_name = 'stg_zalo_posts' ORDER BY ordinal_position`)).rows.map((x) => x.column_name);
+  const moi = `${postId}-pct-${hauTo}`;
+  const thay = { post_id: "$2", sender_id: "$3", posted_at: "clock_timestamp()", captured_at: "clock_timestamp()" };
+  const q = (k) => `"${k}"`;
+  const r = await c.query(`INSERT INTO stg_zalo_posts (${cols.map(q).join(", ")})
+    SELECT ${cols.map((k) => thay[k] ?? q(k)).join(", ")} FROM stg_zalo_posts WHERE post_id = $1 ORDER BY captured_at DESC LIMIT 1`,
+    [postId, moi, `pct-nguoi-${hauTo}`]);
+  if (r.rowCount !== 1) throw new Error(`không sao được bài ${postId}`);
+  // Nhãn đọc bài (silver_labels) gắn theo mã bài: dự án «chu_bai» của transform-zalo đọc từ đây. Sao nhãn của bài nguồn sang bài mới
+  // để bài mới mang đúng dự án như bài nguồn (đo 20/11: mọi dự án không có phường trên tin S03 đều từ chu_bai).
+  const nc = (await c.query(`SELECT column_name, column_default, data_type FROM information_schema.columns WHERE table_schema = current_schema()
+    AND table_name = 'silver_labels' ORDER BY ordinal_position`)).rows;
+  const giu = nc.filter((x) => !(x.column_name === "label_id" && x.column_default != null));
+  const chon = giu.map((x) => (x.column_name === "post_id" ? "$2::text" : x.column_name === "label_id" ? `${q("label_id")} || '-pct-${hauTo}'` : q(x.column_name)));
+  await c.query(`INSERT INTO silver_labels (${giu.map((x) => q(x.column_name)).join(", ")}) SELECT ${chon.join(", ")} FROM silver_labels WHERE post_id = $1`,
+    [postId, moi]);
+  return moi;
+}
+/** Tin đang chứa một bài, kèm dự án sống trên các bài của tin. */
+async function tinCuaBai(pid) {
+  return (await c.query(`SELECT r.offer_id, r.area_id, r.field_provenance -> 'area_id' ->> 'nguon' AS nguon, r.post_ids,
+      (SELECT array_agg(DISTINCT fa.value ORDER BY fa.value) FROM field_assertions fa
+        WHERE fa.subject_key = ANY (offer_subject_keys(r.source, r.originating_system_key, r.post_ids))
+          AND fa.field = 'project_node_id' AND fa.retracted_at IS NULL) AS du_an,
+      (SELECT count(*)::int FROM field_assertions fa
+        WHERE fa.subject_key = ANY (offer_subject_keys(r.source, r.originating_system_key, r.post_ids))
+          AND fa.rule_id = $2 AND fa.retracted_at IS NULL) AS song
+    FROM sale_offer_records r WHERE r.source = 'S03' AND $1 = ANY (r.post_ids)`, [pid, RULE])).rows[0] ?? null;
+}
+const tinS03 = async () => new Set((await c.query(`SELECT offer_id FROM sale_offer_records WHERE source = 'S03'`)).rows.map((x) => x.offer_id));
 
 /** Cấy hai tin nhiều dự án trên DB thử (dữ liệu thật có ít ca này): một ca dự án thứ hai cùng phường, một ca khác phường.
  *  Lấy tin một-phường có thẻ ở cột tỉnh và cột trống; chép mọi phát biểu project_node_id của tin sang nút dự án thứ hai. */
@@ -105,10 +166,20 @@ if (che === "chot-luot-dau") {
   await apDau();
   const n1 = await soSong();
   kt(n1 > 0, `đối chứng dương: lượt đầu áp tay ghi ${n1} phát biểu`);
-  // mô phỏng bài cần phát biểu mới: rút một dòng, lệnh nối tiếp phải ghi lại đúng một
-  await c.query(`UPDATE field_assertions SET retracted_at = clock_timestamp(), retract_reason = 'pct-thu' WHERE id = (SELECT min(id) FROM field_assertions WHERE rule_id = $1 AND retracted_at IS NULL)`, [RULE]);
-  const r2 = lenh(["--ghi", "--noi-tiep"]);
-  kt(r2.ma === 0 && await soSong() === n1, `đã áp: --noi-tiep ghi lại phát biểu còn thiếu (sống ${await soSong()}/${n1})`);
+  // bài mới thật (S4-r2): sao một bài của tin vừa nhận phường thành bài mới, transform-zalo thật nạp nó, lệnh nối tiếp ghi cho bài ấy
+  const ung = await tinNguon((await c.query(`SELECT offer_id FROM sale_offer_records
+    WHERE source = 'S03' AND field_provenance -> 'area_id' ->> 'nguon' = 'du-an'`)).rows.map((x) => x.offer_id));
+  if (!ung) kt(false, "DB chép không có tin nguồn để sao bài mới (tin một bài, dự án do luật đóng dấu lúc nạp)");
+  else {
+    const b = await baiMoi(ung.post_id, "chot");
+    transformZalo();
+    const t0 = await tinCuaBai(b);
+    kt(t0 && (t0.du_an ?? []).join() === ung.du_an.join() && t0.song === 0,
+      `tiền đề: bài mới ${b} qua transform-zalo mang dự án ${ung.du_an}, chưa có phát biểu của luật (được ${t0?.du_an}, ${t0?.song})`);
+    const r2 = lenh(["--ghi", "--noi-tiep"]);
+    const t1 = await tinCuaBai(b);
+    kt(r2.ma === 0 && t1?.song >= 1, `đã áp: --noi-tiep ghi phát biểu cho bài mới nạp qua transform-zalo (thoát ${r2.ma}, phát biểu sống của bài ${t1?.song})`);
+  }
 }
 
 if (che === "chay-lai") {
@@ -135,28 +206,30 @@ if (che === "chay-lai") {
 }
 
 if (che === "tin-moi") {
-  // phân ô TRƯỚC lượt ghi: sau lượt ghi mọi tin một-phường đã ở ô «phuong», không còn ứng viên
+  // S4-r2: bài mới THẬT — sao bài của tin có sẵn vào stg_zalo_posts (mã bài, người đăng, giờ đăng mới), transform-zalo thật nạp nó
+  // thành tin mới, rồi bước phường chạy như chuỗi gọi. Ứng viên và mốc đối chứng lấy TRƯỚC lượt ghi đầu.
   const o = (await c.query(SQL_O)).rows;
+  const nMot = await tinNguon(o.filter((x) => x.o_da === "mot-phuong" && x.o_the !== "khac" && x.o_cot !== "phuong").map((x) => x.offer_id));
+  const nKhong = await tinNguon(o.filter((x) => x.o_da === "khong-phuong").map((x) => x.offer_id));
+  if (!nMot || !nKhong) { kt(false, `DB chép không có tin nguồn (một-phường: ${!!nMot}, không-phường: ${!!nKhong})`); await c.end(); process.exit(1); }
+  const pMot = o.find((x) => x.offer_id === nMot.offer_id).p;
   await apDau();
-  const mot = o.find((x) => x.o_da === "mot-phuong" && x.o_the !== "khac" && x.o_cot !== "phuong");
-  const khong = o.find((x) => x.o_da === "khong-phuong");
-  if (!mot || !khong) { kt(false, `DB chép không có tin ứng viên (một-phường: ${!!mot}, không-phường: ${!!khong})`); await c.end(); process.exit(1); }
-  // «tin mới»: đưa tin về trạng thái chưa nhận phường (rút phát biểu kế thừa, xoá dấu cột), rồi cho chuỗi thật chạy
-  const { rows: [g] } = await c.query(`SELECT field_provenance -> 'area_id' ->> 'goc' AS goc FROM sale_offer_records WHERE offer_id = $1`, [mot.offer_id]);
-  await c.query(`UPDATE field_assertions fa SET retracted_at = clock_timestamp(), retract_reason = 'pct-tin-moi'
-    FROM sale_offer_records r WHERE r.offer_id = $1 AND fa.subject_key = ANY (offer_subject_keys(r.source, r.originating_system_key, r.post_ids))
-      AND fa.rule_id = $2 AND fa.retracted_at IS NULL`, [mot.offer_id, RULE]);
-  await c.query(`SELECT resolve_offer_fields(ARRAY[$1]::text[])`, [mot.offer_id]);
-  const truoc = (await c.query(`SELECT area_id FROM sale_offer_records WHERE offer_id = $1`, [mot.offer_id])).rows[0].area_id;
-  kt(truoc === (g.goc ?? null), `tin ${mot.offer_id} về cột gốc ${truoc} trước khi chạy chuỗi`);
-  const cotKhong = (await c.query(`SELECT area_id FROM sale_offer_records WHERE offer_id = $1`, [khong.offer_id])).rows[0].area_id;
+  const bMot = await baiMoi(nMot.post_id, "mot");
+  const bKhong = await baiMoi(nKhong.post_id, "khong");
+  const cu = await tinS03();
   transformZalo();
+  const t1 = await tinCuaBai(bMot); const k1 = await tinCuaBai(bKhong);
+  kt(t1 && !cu.has(t1.offer_id) && t1.post_ids.length === 1 && (t1.du_an ?? []).join() === nMot.du_an.join(),
+    `bài mới ${bMot} qua transform-zalo thành tin mới mang dự án ${nMot.du_an} (được ${t1?.offer_id}, ${t1?.du_an})`);
+  kt(t1 && t1.nguon !== "du-an" && t1.song === 0, `trước bước phường: tin mới chưa có phát biểu của luật, chưa mang nhãn du-an (cột ${t1?.area_id}, nhãn ${t1?.nguon})`);
+  kt(k1 && !cu.has(k1.offer_id) && k1.post_ids.length === 1 && (k1.du_an ?? []).join() === nKhong.du_an.join(),
+    `đối chứng: bài mới ${bKhong} qua transform-zalo thành tin mới mang dự án không có phường ${nKhong.du_an} (được ${k1?.offer_id}, ${k1?.du_an})`);
   const r = lenh(["--ghi", "--noi-tiep"]);
   kt(r.ma === 0, `bước phường thoát 0 (được ${r.ma})`);
-  const sau = (await c.query(`SELECT area_id, field_provenance -> 'area_id' ->> 'nguon' AS nguon FROM sale_offer_records WHERE offer_id = $1`, [mot.offer_id])).rows[0];
-  kt(sau.area_id === mot.p && sau.nguon === "du-an", `tin mới nhận phường dự án ${mot.p}, nhãn du-an (được ${sau.area_id}, ${sau.nguon})`);
-  const sauKhong = (await c.query(`SELECT area_id FROM sale_offer_records WHERE offer_id = $1`, [khong.offer_id])).rows[0].area_id;
-  kt(sauKhong === cotKhong, `đối chứng: tin thuộc dự án không có phường giữ cột ${cotKhong} (được ${sauKhong})`);
+  const t2 = await tinCuaBai(bMot); const k2 = await tinCuaBai(bKhong);
+  kt(t2?.area_id === pMot && t2?.nguon === "du-an", `tin mới nhận phường dự án ${pMot}, nhãn du-an (được ${t2?.area_id}, ${t2?.nguon})`);
+  kt(k1 && k2 && k2.area_id === k1.area_id && k2.nguon !== "du-an",
+    `đối chứng: tin mới thuộc dự án không có phường giữ cột ${k1?.area_id} (được ${k2?.area_id}, nhãn ${k2?.nguon})`);
 }
 
 if (che === "ma-tran") {
@@ -230,13 +303,42 @@ if (che === "ap-lui") {
   const duAn = (await c.query(`SELECT count(*)::int n FROM sale_offer_records WHERE field_provenance -> 'area_id' ->> 'nguon' = 'du-an'`)).rows[0].n;
   kt(Number(kv.co_phuong) === pk.co && Number(kv.tong) === pk.tong && Number(kv.phat_bieu_song) === nk && nk > 0 && Number(kv.tin_nhan_du_an) === duAn && duAn > 0,
     `kiem-sau.sql sau khi áp: có phường ${kv.co_phuong}/${kv.tong} (probe ${pk.co}/${pk.tong}), phát biểu sống ${kv.phat_bieu_song} (probe ${nk}), tin nhãn du-an ${kv.tin_nhan_du_an} (probe ${duAn})`);
-  // hồ sơ lùi kê lệnh chạy lại hạng giá và lệnh kiểm bản cloud
+  // README chạy được như ghi (S4-r2): dựng đúng lệnh `psql …` README định nghĩa, chỉ thay tên DB bằng DB thử, chạy lệnh kiểm sau
   const readme = readFileSync(path.join(HS, "ap-may-thu/README.md"), "utf8");
-  kt(/node pipeline\/xep-hang-gia\.mjs/.test(readme) && /kiem-sau\.sql/.test(readme) && /cloud/.test(readme),
-    "README bước lùi kê lệnh chạy lại hạng giá (xep-hang-gia.mjs) và lệnh kiểm bản cloud");
+  kt(!/psql … -f /.test(readme), "README không dùng `psql … -f <tệp>` (psql trong container không thấy tệp trên máy)");
+  const dinhNghia = /`psql …` = `([^`]+)`/.exec(readme)?.[1] ?? "";
+  const lenhKs = /4\. \*\*Lệnh kiểm sau:\*\* `psql … ([^`]+)`/.exec(readme)?.[1] ?? "";
+  const ksThat = spawnSync("bash", ["-c", `${dinhNghia.replace(/ -d oneinvest(?=\s|$)/, ` -d ${db}`)} ${lenhKs}`], { cwd: ROOT, encoding: "utf8" });
+  kt(/ -d oneinvest(\s|$)/.test(dinhNghia) && lenhKs && ksThat.status === 0 && new RegExp(`\\b${nk}\\b`).test(ksThat.stdout),
+    `README bước 4 chạy đúng như ghi trên DB thử: thoát ${ksThat.status}, in phat_bieu_song ${nk}${ksThat.status ? ` — ${`${ksThat.stderr}`.slice(-200)}` : ""}`);
+  // mục 5 (Cách lùi) tự đủ: lui.sql qua «<», kiểm sau lùi với phat_bieu_song = 0, chạy lại hạng giá, kiểm bản cloud
+  const d5 = readme.indexOf("5. **Cách lùi"); const muc5 = d5 < 0 ? "" : readme.slice(d5, readme.indexOf("`psql …` =", d5));
+  kt(/< _acceptance\/phuong-tu-du-an-chay-that\/ap-may-thu\/lui\.sql/.test(muc5) && /kiem-sau\.sql/.test(muc5) && /`phat_bieu_song` = 0/.test(muc5)
+      && /node pipeline\/xep-hang-gia\.mjs/.test(muc5) && /cloud/.test(muc5),
+    "README mục 5 (Cách lùi) kê lui.sql qua «<», kiem-sau.sql với phat_bieu_song = 0, lệnh chạy lại hạng giá và kiểm bản cloud");
   // Bước 4 — lùi
   const lui = readFileSync(path.join(HS, "ap-may-thu/lui.sql"), "utf8");
-  if (!thamSo.includes("--bo-lui")) await c.query(lui);
+  if (!thamSo.includes("--bo-lui")) {
+    // Lùi trùng lượt nạp (S4-r2): lùi đang giữ khoá của luật thì lượt nối tiếp khởi động lúc ấy phải chờ, rồi bỏ qua sau khi lùi
+    // commit — không chèn lại phát biểu vừa rút. Lượt nối tiếp qua chốt «đã áp» ngoài giao dịch (luật còn dòng sống) rồi mới chờ khoá.
+    const L = new pg.Client({ connectionString: process.env.DATABASE_URL });
+    await L.connect();
+    await L.query("BEGIN");
+    await L.query("SELECT pg_advisory_xact_lock(hashtext($1))", [RULE]);
+    const con = chayNen(["--ghi", "--noi-tiep"]);
+    let cho = false;
+    for (let i = 0; i < 600 && !cho && !con.xong; i++) {
+      await new Promise((r) => setTimeout(r, 1000));
+      cho = (await c.query(`SELECT count(*)::int n FROM pg_locks WHERE locktype = 'advisory' AND NOT granted`)).rows[0].n > 0;
+    }
+    kt(cho, "lùi trùng lượt nạp: lượt nối tiếp chờ khoá của luật trong lúc lùi giữ khoá");
+    await L.query(lui); // BEGIN của tệp chỉ cảnh báo (đang trong giao dịch); COMMIT của tệp commit cả giao dịch giữ khoá
+    await L.end();
+    const kn = await con.p;
+    const songN = await soSong();
+    kt(kn.ma === 0 && /"bo_qua":true/.test(kn.out) && songN === 0,
+      `lùi trùng lượt nạp: lượt nối tiếp thoát ${kn.ma}, ${/"bo_qua":true/.test(kn.out) ? "bỏ qua" : "KHÔNG bỏ qua"}, phát biểu sống sau lùi ${songN}`);
+  }
   transformZalo();
   lenh(["--ghi", "--noi-tiep"]);
   kt(await soSong() === n0, `sau khi lùi và chạy lại chuỗi: phát biểu sống của luật về ${n0} (được ${await soSong()})`);
@@ -305,8 +407,16 @@ if (che === "thoi-gian") {
   const [tu0, tu1] = so("Tử số toàn kho"); const [mau] = so("Mẫu số toàn kho");
   const [cs0, cs1, csMau] = so("Cửa sổ 13–19/11"); const [giay] = so("Giây lượt đầu");
   kt([tu0, tu1, mau, cs0, cs1, csMau, giay].every((x) => Number.isFinite(x)), `so-chay-thu.md đủ số: tử ${tu0} → ${tu1}, mẫu ${mau}, cửa sổ ${cs0} → ${cs1}/${csMau}, giây ${giay}`);
-  kt(mau === p1.tong && tu0 === p0.co && tu1 === p1.co, `tử số, mẫu số ghi (${tu0} → ${tu1}/${mau}) khớp phép đo trên bản chép (${p0.co} → ${p1.co}/${p1.tong})`);
-  kt(cs0 === w0.co && cs1 === w1.co && csMau === w1.tong, `cửa sổ 13–19/11 ghi (${cs0} → ${cs1}/${csMau}) khớp phép đo (${w0.co} → ${w1.co}/${w1.tong})`);
+  // S4-r2: số ghi trôi theo bản chép — db/db-thu.sh dựng lại bản mẫu mỗi 24 giờ hay khi lược đồ DB chung đổi, kho S03 lớn thêm
+  // khoảng 2% mỗi ngày (20/11: mẫu số 7.657 lúc 04:38Z, 7.795 lúc 05:5xZ sau một lần dựng lại). Nên so trong khoảng: số đếm lệch
+  // tối đa 5% (hay 10 tin với số nhỏ), tỉ lệ có phường lệch tối đa 1 điểm (toàn kho) và 2 điểm (cửa sổ). Ngoài khoảng vẫn đỏ, gọi tên số.
+  const gan = (ghi, do_) => Math.abs(ghi - do_) <= Math.max(10, 0.05 * do_);
+  const ti = (a, b) => (b ? (100 * a) / b : 0);
+  kt(gan(tu0, p0.co), `tử số trước lượt ghi: ghi ${tu0}, đo ${p0.co} (lệch tối đa 5% hay 10 tin)`);
+  kt(gan(mau, p1.tong), `mẫu số toàn kho: ghi ${mau}, đo ${p1.tong} (lệch tối đa 5%)`);
+  kt(Math.abs(ti(tu1, mau) - ti(p1.co, p1.tong)) <= 1, `tỉ lệ có phường toàn kho sau lượt ghi: ghi ${ti(tu1, mau).toFixed(1)}%, đo ${ti(p1.co, p1.tong).toFixed(1)}% (lệch tối đa 1 điểm)`);
+  kt(gan(cs0, w0.co) && gan(csMau, w1.tong), `cửa sổ 13–19/11: ghi ${cs0} trước, mẫu ${csMau}; đo ${w0.co}, ${w1.tong} (lệch tối đa 5% hay 10 tin)`);
+  kt(Math.abs(ti(cs1, csMau) - ti(w1.co, w1.tong)) <= 2, `tỉ lệ có phường cửa sổ 13–19/11 sau lượt ghi: ghi ${ti(cs1, csMau).toFixed(1)}%, đo ${ti(w1.co, w1.tong).toFixed(1)}% (lệch tối đa 2 điểm)`);
   kt(Math.abs(giay - r1.giay) <= Math.max(30, r1.giay), `giây lượt đầu ghi ${giay} cùng cỡ phép đo ${r1.giay.toFixed(1)}`);
 }
 

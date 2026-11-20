@@ -1,14 +1,14 @@
 # Số chạy thử — DA45 phuong-tu-du-an-chay-that
 
 Đo 20/11 trên DB thử do `db/db-thu.sh` chép (probe `tren-db-thu.sh thoi-gian`, `ma-tran`), lượt ghi đầu `--ghi` chạy thật trên bản chép.
-Bản chép là ảnh DB mẫu của bộ chạy thử, làm mới 20/11 (7.657 tin S03; lượt soát 19/11 trên bản chép cũ đếm 7.289), nên số trên máy thu lúc
+Bản chép là ảnh DB mẫu của bộ chạy thử, làm mới 20/11 (7.795 tin S03; lượt soát 19/11 trên bản chép cũ đếm 7.289), nên số trên máy thu lúc
 áp sẽ khác tương ứng. Lệnh đo: khối SQL ở mục Context của `contract.md`.
 
-- Mốc đo: 2026-11-20T04:38Z (bản chép) · máy thu chỉ đọc 2026-11-19T08:29Z
-- Tử số toàn kho: 78 → 7.409 tin S03 có phường thật sau lượt ghi đầu (bản chép)
-- Mẫu số toàn kho: 7.657 tin S03 (bản chép) — 96,8%
-- Cửa sổ 13–19/11: 21 → 1.539 trên 1.641 tin (bản chép)
-- Giây lượt đầu: 94,9 giây; lượt lặp không có gì mới 0,9 giây
+- Mốc đo: 2026-11-20T06:45Z (bản chép) · máy thu chỉ đọc 2026-11-19T08:29Z
+- Tử số toàn kho: 78 → 7.517 tin S03 có phường thật sau lượt ghi đầu (bản chép)
+- Mẫu số toàn kho: 7.795 tin S03 (bản chép) — 96,4%
+- Cửa sổ 13–19/11: 21 → 1.554 trên 1.659 tin (bản chép)
+- Giây lượt đầu: 109,2 giây; lượt lặp không có gì mới 1,6 giây
 
 ## Máy thu, chỉ đọc (trước khi áp)
 
@@ -17,26 +17,26 @@ Bản chép là ảnh DB mẫu của bộ chạy thử, làm mới 20/11 (7.657 
 - `node pipeline/scripts/phuong-tu-du-an.mjs --json` (chỉ đếm): 78.547 bài có dự án, 78.541 bài nhận phường, 0 dự án mâu thuẫn, 6 bài thuộc
   dự án không có phường.
 
-## Ô của bảng phủ ca (probe `ma-tran` 20/11, 14/14 ô đạt, phủ hết 8.072 tin S03 của bản chép)
+## Ô của bảng phủ ca (probe `ma-tran` 20/11 06:47Z, 14/14 ô đạt, phủ hết 8.210 tin S03 của bản chép)
 
 | Ô | Số tin | Kết quả |
 |---|---:|---|
-| tỉnh · một phường · thẻ trùng | 6.979 | nhận phường dự án |
-| tỉnh · một phường · thẻ khác | 103 | theo lối Hỏi-1: lấy theo dự án |
+| tỉnh · một phường · thẻ trùng | 7.064 | nhận phường dự án |
+| tỉnh · một phường · thẻ khác | 118 | theo lối Hỏi-1: lấy theo dự án |
 | trống · một phường · thẻ khác | 12 | theo lối Hỏi-1: lấy theo dự án (ô thêm ở S4) |
-| trống · một phường · thẻ trùng | 494 | nhận phường dự án |
+| trống · một phường · thẻ trùng | 502 | nhận phường dự án |
 | trống · một phường · không thẻ | 107 | nhận phường dự án |
-| phường · một phường · không thẻ | 80 | giữ nguyên cột |
-| phường · không dự án · không thẻ | 4 | giữ nguyên cột |
+| phường · một phường · không thẻ | 81 | giữ nguyên cột |
+| phường · không dự án · không thẻ | 3 | giữ nguyên cột |
 | tỉnh · dự án không phường · có thẻ | 6 | giữ nguyên cột |
 | tỉnh · không dự án · có thẻ | 74 | giữ nguyên cột |
-| tỉnh · không dự án · không thẻ | 9 | giữ nguyên cột |
-| trống · không dự án · không thẻ | 157 | giữ nguyên cột |
-| trống · không dự án · có thẻ | 33 | giữ nguyên cột |
+| tỉnh · không dự án · không thẻ | 10 | giữ nguyên cột |
+| trống · không dự án · không thẻ | 176 | giữ nguyên cột |
+| trống · không dự án · có thẻ | 43 | giữ nguyên cột |
 | tỉnh · nhiều dự án · có thẻ | 5 | giữ nguyên cột (4 tin thật + 1 tin cấy, hai dự án cùng phường) |
 | trống · nhiều dự án · có thẻ | 9 | giữ nguyên cột (8 tin thật + 1 tin cấy, hai dự án khác phường) |
 
-Ô «thẻ khác» cột tỉnh nay 103 tin (lúc soát Cổng Phạm vi là 20): probe 20/11 xếp «thẻ trùng» chỉ khi thẻ nêu đúng một phường và đó là
+Ô «thẻ khác» cột tỉnh nay 118 tin (lúc soát Cổng Phạm vi là 20): probe 20/11 xếp «thẻ trùng» chỉ khi thẻ nêu đúng một phường và đó là
 phường dự án; tin mà thẻ nêu hai phường nay vào «thẻ khác». Lối xử lý không đổi. Ô cột trống cùng loại (12 tin) thiếu trong bảng phủ ca lúc
 soát; phép kiểm phủ lớp của probe bắt được, thêm vào `bang-phu-ca.md` và `ma-tran-o.json`. Mọi tin vốn có cột cấp phường (84) giữ cột.
 

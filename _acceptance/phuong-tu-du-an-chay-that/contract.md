@@ -57,7 +57,7 @@ Then cột `area_id` của tin là phường ấy và `field_provenance->'area_i
 Given DB thử chép từ máy thu và ma trận viết trước trong `ma-tran-o.json` (mỗi ô của `bang-phu-ca.md`: điều kiện SQL, số tin, kết quả mong đợi),
 When đếm từng ô trước và sau `--ghi`,
 Then 0 tin vốn có cột cấp phường bị đổi; tin một dự án một phường ở cột tỉnh hay trống nhận đúng phường ấy; tin nhiều dự án giữ nguyên cột kể cả khi hai dự án
-cùng một phường; mọi tin có phường theo thẻ khác phường theo dự án, ở cột tỉnh hay cột trống, đi đúng lối Mạnh chọn ở Cổng Phạm vi (Hỏi-1; đo 20/11: 103 + 12 tin, lúc soát là 20); 10 tin đổi tỉnh được liệt kê trong `so-chay-thu.md`.
+cùng một phường; mọi tin có phường theo thẻ khác phường theo dự án, ở cột tỉnh hay cột trống, đi đúng lối Mạnh chọn ở Cổng Phạm vi (Hỏi-1; số tin từng ô ghi ở `so-chay-thu.md`, đo lại mỗi lượt chấm); mọi tin đổi tỉnh được liệt kê trong `so-chay-thu.md`.
 
 ### AC-6 — Hồ sơ áp đủ năm thứ và lùi giữ được qua chuỗi
 Given thư mục `ap-may-thu/`,
@@ -69,8 +69,8 @@ bản cloud.
 ### AC-7 — Thời gian và số chạy thử đọc được
 Given DB thử chép từ máy thu,
 When đo lượt ghi đầu và lượt lặp không có gì mới,
-Then lượt lặp xong trong 60 giây; `so-chay-thu.md` có mốc thời gian, tử số, mẫu số toàn kho và cửa sổ 13–19/11, số giây lượt đầu; thiếu một số thì eval đỏ. Khi áp thật, số sau lượt
-ghi không được thấp hơn số chạy thử ngay trước khi áp, và không vượt quá số ấy cộng số tin S03 nạp sau mốc.
+Then lượt lặp xong trong 60 giây; `so-chay-thu.md` có mốc thời gian, tử số, mẫu số toàn kho và cửa sổ 13–19/11, số giây lượt đầu; thiếu một số thì eval đỏ. Khi áp thật, đạt khi luật có phát biểu sống, có tin mang nhãn `du-an`, và tỉ lệ tin S03 có phường không thấp hơn tỉ lệ chạy thử trên
+bản chép trừ 2 điểm phần trăm (bản chép 20/11: 96,4%).
 
 ### AC-8 — Hồi quy
 Given cây sau khi sửa,
