@@ -328,7 +328,7 @@ async function doMotTin(c: pg.Client, duoi: string, nguoiBan: string) {
   return { thuoc, tran, api: rows[0].sellerName, guard: guardValues(rows[0], entries).length }
 }
 
-test("ca-doi-chieu: thước nạp qua hàm chung khớp sản phẩm trên dòng khai khớp nguyên cụm; token trần thì lệch", { skip: DB_THU, timeout: 120_000 }, async () => {
+test("ca-doi-chieu: thước nạp qua hàm chung khớp sản phẩm trên dòng khai khớp nguyên cụm; token trần thì lệch", { skip: DB_THU }, async () => {
   const c = new pg.Client({ connectionString: DB })
   await c.connect()
   const goc = pool.query
