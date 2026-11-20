@@ -3,11 +3,11 @@ schema_version: 2
 feature_slug: ca-doi-chieu-tin-rao-nap-co-khop-cum
 verdict: BLOCKED
 failed_evals: []
-reason: "E5c (suite pipeline_b: node scripts/suite-neu-doi.mjs pipeline_b -- 'cd pipeline && npm run test:b') vượt thời lượng khai (long_running) — lệnh chờ trả __QUA_HAN, chưa có dòng __EXIT=. Chạy lại với thời hạn công cụ dài hơn, không phải lỗi mã."
+reason: "node scripts/suite-neu-doi.mjs pipeline_b -- 'cd pipeline && npm run test:b' (eval E5c) vượt thời lượng khai (long_running) — lệnh chờ trả __QUA_HAN, chưa có dòng __EXIT. Cách xử lý: chạy lại với thời gian chờ của tool dài hơn, không phải sửa mã."
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 1e1b23ee3f92d14bda1cf2c5e0563e91b7016658
+verified_commit: d36c6803e53eb06d1aa2e24cd730cf4fedb699fd
 human_signoff:
 ---
 
@@ -15,13 +15,13 @@ human_signoff:
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
-| E1 | AC-1 | script | PASS |
-| E2 | AC-2 | script | PASS |
-| E3 | AC-3 | script | PASS |
-| E4 | AC-4 | script | PASS |
-| E5a | AC-4 | test | PASS |
-| E5b | AC-4 | test | PASS |
-| E5c | AC-4 | test | BLOCKED |
+| E1 | AC-1 | script | PASS (carry-forward từ round 2) |
+| E2 | AC-2 | script | PASS (carry-forward từ round 2) |
+| E3 | AC-3 | script | PASS (carry-forward từ round 2) |
+| E4 | AC-4 | script | PASS (carry-forward từ round 2) |
+| E5a | AC-4 | test | PASS (carry-forward từ round 2) |
+| E5b | AC-4 | test | PASS (carry-forward từ round 2) |
+| E5c | AC-4 | test | BLOCKED (vượt thời lượng khai, chưa có mã thoát) |
 
 ## Evidence
 
@@ -31,8 +31,9 @@ human_signoff:
   baseline: n-a
   verifier: config:executors.script.tdc_may_thu
   verified_at: 2026-11-20T08:04:47Z
+  carried_from_round: 2
   output: |
-    MAY-THU OK
+    carry-forward tu round 2 — delta khong cham paths cua eval
 
 - eval: E2
   run_id: minted-ca-doi-chieu-tin-rao-nap-co-khop-cum-E2-r2
@@ -40,8 +41,9 @@ human_signoff:
   baseline: n-a
   verifier: config:executors.script.tdc_do_khi_pha
   verified_at: 2026-11-20T08:04:47Z
+  carried_from_round: 2
   output: |
-    DO-KHI-PHA OK
+    carry-forward tu round 2 — delta khong cham paths cua eval
 
 - eval: E3
   run_id: minted-ca-doi-chieu-tin-rao-nap-co-khop-cum-E3-r2
@@ -49,8 +51,9 @@ human_signoff:
   baseline: n-a
   verifier: config:executors.script.tdc_do_khi_pha
   verified_at: 2026-11-20T08:04:47Z
+  carried_from_round: 2
   output: |
-    DO-KHI-PHA OK
+    carry-forward tu round 2 — delta khong cham paths cua eval
 
 - eval: E4
   run_id: minted-ca-doi-chieu-tin-rao-nap-co-khop-cum-E4-r2
@@ -58,58 +61,41 @@ human_signoff:
   baseline: n-a
   verifier: config:executors.script.tdc_pham_vi
   verified_at: 2026-11-20T08:04:47Z
+  carried_from_round: 2
   output: |
-    PHAM-VI OK
+    carry-forward tu round 2 — delta khong cham paths cua eval
 
 - eval: E5a
   run_id: r2-l4-1-20261120080447
   exit_code: 0
-  baseline: red
+  baseline: n-a
   verifier: config:executors.suite.app_ui
   verified_at: 2026-11-20T08:04:47Z
+  carried_from_round: 2
   output: |
-    ℹ duration_ms 487251.7475
+    carry-forward tu round 2 — delta khong cham paths cua eval
 
 - eval: E5b
   run_id: r2-l5-1-20261120080447
   exit_code: 0
-  baseline: red
+  baseline: n-a
   verifier: config:executors.suite.pipeline_a
   verified_at: 2026-11-20T08:04:47Z
+  carried_from_round: 2
   output: |
-    ℹ duration_ms 951978.508
+    carry-forward tu round 2 — delta khong cham paths cua eval
 
 - eval: E5c
-  run_id: minted-ca-doi-chieu-tin-rao-nap-co-khop-cum-E5c-r2
-  baseline: red
+  run_id: minted-ca-doi-chieu-tin-rao-nap-co-khop-cum-E5c-r3
+  baseline: n-a
   verifier: config:executors.suite.pipeline_b
-  verified_at: 2026-11-20T08:04:47Z
+  runs: 1
+  result: BLOCKED — lệnh chờ trả __QUA_HAN, chưa có dòng __EXIT trước khi hết thời lượng khai (long_running)
   output: |
-    Không có mã thoát: lệnh vượt thời lượng khai (long_running), đầu ra dừng ở dòng __QUA_HAN.
-    Phần đuôi có ca tests/import-s16.test.mjs báo «Promise resolution is still pending but the event loop has already resolved» khi bị cắt ngang.
-    Đây là BLOCKED do hết giờ, không phải kết luận đỏ của ca; cần chạy lại với thời hạn dài hơn.
-
-### Lệnh suite (hồi quy)
-
-- cmd: node scripts/suite-neu-doi.mjs agent -- 'cd agent && npm test'
-  run_id: minted-ca-doi-chieu-tin-rao-nap-co-khop-cum-SUITE-node_scripts_suite_neu_doi_mjs_agent_cd_-r2
-  exit_code: 0
-  verified_at: 2026-11-20T08:04:47Z
-
-- cmd: node scripts/suite-neu-doi.mjs app -- 'cd app && npx tsc --noEmit && npm run lint'
-  run_id: minted-ca-doi-chieu-tin-rao-nap-co-khop-cum-SUITE-lint-r2
-  exit_code: 0
-  verified_at: 2026-11-20T08:04:47Z
-
-- cmd: node scripts/suite-neu-doi.mjs ui_lint_rules -- 'cd app && npm run test:lint-rules'
-  run_id: minted-ca-doi-chieu-tin-rao-nap-co-khop-cum-SUITE-test_lint_rules-r2
-  exit_code: 0
-  verified_at: 2026-11-20T08:04:47Z
-
-- cmd: node scripts/suite-neu-doi.mjs portal_static -- 'node scripts/check-portal-compliance.mjs'
-  run_id: minted-ca-doi-chieu-tin-rao-nap-co-khop-cum-SUITE-node_scripts_suite_neu_doi_mjs_portal_st-r2
-  exit_code: 0
-  verified_at: 2026-11-20T08:04:47Z
+    test at tests/import-s16.test.mjs:1:1
+    tests/import-s16.test.mjs
+      'Promise resolution is still pending but the event loop has already resolved'
+    __QUA_HAN
 
 ## Known limits
 
@@ -117,19 +103,17 @@ human_signoff:
 
 ## Analyst
 
-Baseline khong do:
-- bash _acceptance/ca-doi-chieu-tin-rao-nap-co-khop-cum/probes/may-thu.sh: bo qua baseline: tep _acceptance/ca-doi-chieu-tin-rao-nap-co-khop-cum/probes/may-thu.sh co o cay dang kiem nhung chua co o merge-base a60adccb8a3e6f4004343d1c4e52e74313ba7a3f — eval moi, chay tren code cu khong phan biet gi
-- bash _acceptance/ca-doi-chieu-tin-rao-nap-co-khop-cum/probes/do-khi-pha.sh: bo qua baseline: tep _acceptance/ca-doi-chieu-tin-rao-nap-co-khop-cum/probes/do-khi-pha.sh co o cay dang kiem nhung chua co o merge-base a60adccb8a3e6f4004343d1c4e52e74313ba7a3f — eval moi, chay tren code cu khong phan biet gi
-- bash _acceptance/ca-doi-chieu-tin-rao-nap-co-khop-cum/probes/pham-vi.sh: bo qua baseline: tep _acceptance/ca-doi-chieu-tin-rao-nap-co-khop-cum/probes/pham-vi.sh co o cay dang kiem nhung chua co o merge-base a60adccb8a3e6f4004343d1c4e52e74313ba7a3f — eval moi, chay tren code cu khong phan biet gi
+carried tu round 2 — baseline khong do lai round nay
 
-Eval không-phân-biệt: none — mọi eval feature đo được baseline (E5a, E5b, E5c) đều red trên baseline (có phân biệt); E1–E4 không đo baseline (xem mục trên).
+Eval không-phân-biệt: không có.
 
 ## Variance
 
-none — every multi-run eval is uniform
+none — không eval nào chạy nhiều lần (runs bằng 1), không có pass_rate hỗn hợp.
 
 ## Iterations
 
-Round 1: pipeline_b chạy quá 30 phút chưa có mã thoát; khai riêng E5a, E5b, E5c để lượt chấm chờ đủ giờ.
-Round 2: E1–E5b xanh; E5c (pipeline_b) lại vượt thời lượng khai, chưa có mã thoát — BLOCKED, cần chạy lại với thời hạn công cụ dài hơn.
+Round 1: pipeline_b chạy quá 30 phút chưa có mã thoát — tách E5a, E5b, E5c để lượt chấm chờ đủ giờ.
+Round 2: BLOCKED — pipeline_b quá 60 phút; E1 đến E5b xanh.
+Round 3: BLOCKED — E5c (pipeline_b) vẫn vượt thời lượng khai, chưa có mã thoát; E1 đến E5b carry-forward từ round 2 vì delta không chạm paths của eval. Cần chạy lại E5c với thời gian chờ dài hơn.
 
