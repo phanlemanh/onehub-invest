@@ -7,7 +7,7 @@ risk_tier: T2
 surfaces: [script]
 status: implemented
 veto_state: mo
-veto_opened_at: 2026-11-20T12:40:00Z
+veto_opened_at: 2026-11-20T11:38:00Z
 design_doc: docs/superpowers/specs/2026-11-20-slt-dc-cham-va-giu-khoa-33033-design.md
 approved_by:
 approved_at:
@@ -55,14 +55,16 @@ Không migration, không DDL (GS 11:00Z). Không ANALYZE DB máy thu.
   trần + 30 s (lưới phía máy chủ khi tiến trình test chết hẳn).
 - AC-5 (trần khớp thời gian thật): Given DB của lượt, When chạy cả tệp SLT-DC, Then mọi ca xanh, cả tệp dưới 360 s (6 phút), và
   trần ca đặt theo số đo ghi trong mã (20/11: ca 7/9 232 s → trần 480 s; ca 10 24 s → trần 60 s; cả tệp 278 s) — 33033 không bị
-  một ca giữ quá trần của nó (N = trần ca, tối đa 480 s ở ca 7/9; lúc chạy thường ca giữ ≈ 232 s).
+  một ca giữ quá trần của nó: N = 480 s (giám sát đồng ý 11:58Z; căn cứ ca 7/9 đo 232 s, trần ≈ 2 lần), lúc thường ≈ 232 s.
 - AC-6 (nửa B): Given DB của lượt, When chạy `cd pipeline && npm run test:b` tuần tự, Then xanh và dưới 1.500 s (25 phút).
 - AC-7 (sản xuất sau gộp): Given bản sửa đã vào main và checkout chính đã kéo, When lượt nạp 15′ chạy bốn lần liền và lượt S06
   đầu tiên chạy, Then bốn bước transform-zalo đều mã 0, trung vị ≤ 123 s, không bước nào > 300 s; bước transform-chotot đầu tiên
   mã 0 và ≤ 400 s (mốc trước gộp 201–276 s); số phát biểu rút «thay-boi-luot» mỗi nguồn trong 2 giờ sau lúc kéo main không vượt
   3 lần cùng nguồn trong 2 giờ trước đó cộng 100 — đo sau gộp từ log và DB máy thu, chỉ đọc.
 - AC-8 (phạm vi): Given nhánh so với merge-base origin/main, When liệt kê tệp đổi, Then chỉ trong vùng của hàng (câu rút, test mới,
-  tệp SLT-DC, `test-nua.json`, hồ sơ, `_acceptance/config.yaml`, design doc, tệp máy sinh) — «PHAM-VI OK».
+  tệp SLT-DC, `lib/nap-045.mjs`, `test-nua.json`, hồ sơ, `_acceptance/config.yaml`, design doc, tệp máy sinh; cộng tệp của nhánh
+  U1 gộp vào theo ngoại lệ của giám sát: `app/tests/tin-rao-doi-chieu.test.tsx`, hồ sơ `ca-doi-chieu-tin-rao-nap-co-khop-cum`)
+  — «PHAM-VI OK».
 
 ## Coverage
 
