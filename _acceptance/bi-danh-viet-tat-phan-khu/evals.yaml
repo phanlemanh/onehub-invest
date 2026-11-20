@@ -1,0 +1,66 @@
+schema_version: 1
+feature_slug: bi-danh-viet-tat-phan-khu
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.bdv_dich
+    expected: "exit 0; ca BDV-1 trên một fixture: một ứng viên ra đúng nút; hai ứng viên cùng tên (một mang meta.s16_rule_id) ra nút không do luật đúc; nút nghỉ (cả con trực tiếp của dự án lẫn con của nút giữ lại) không bao giờ là đích; không có nút ra «không gán: khong-co-nut»; hai ứng viên cùng loại ra «không gán: nhieu-ung-vien»; nút cùng tên ở dự án khác không là ứng viên. Chiều đỏ: bỏ lọc nút nghỉ thì ca đỏ với thông điệp nêu id nút nghỉ bị chọn"
+    paths: ["pipeline/lib/phan-khu-s16-bi-danh.mjs","pipeline/scripts/bi-danh-viet-tat-phan-khu.mjs","pipeline/scripts/bi-danh-viet-tat-phan-khu.itest.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.bdv_the
+    expected: "exit 0; ca BDV-2: thẻ liệt bốn dòng tên tắt với id, tên, dự án, số tin chứa token đếm trên tin cấy; ca không gán kèm lý do; dựng hai lần cùng băm; băm đổi khi đích của một tên đổi; số dòng của asset_nodes và project_link_rules không đổi sau khi dựng. Chiều đỏ: băm không phủ đích thì ca «băm đổi khi đích đổi» đỏ"
+    paths: ["pipeline/lib/phan-khu-s16-bi-danh.mjs","pipeline/scripts/bi-danh-viet-tat-phan-khu.mjs","pipeline/scripts/bi-danh-viet-tat-phan-khu.itest.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.bdv_ap
+    expected: "exit 0; ca BDV-3: băm lệch ném «bam-lech» và 0 dòng đổi; băm đúng nối tên vào cuối aliases, bí danh cũ giữ thứ tự, id giữ, meta.bi_danh_viet_tat = {rule_id, them}, đúng một dòng project_link_rules can_cu S03-bi-danh-viet-tat-phan-khu; tên đã có sẵn không lặp và không vào them; áp lần hai trả khongDoi, 0 dòng đổi. Chiều đỏ: ghi cả tên đã có vào them thì ca đỏ"
+    paths: ["pipeline/lib/phan-khu-s16-bi-danh.mjs","pipeline/scripts/bi-danh-viet-tat-phan-khu.mjs","pipeline/scripts/bi-danh-viet-tat-phan-khu.itest.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.bdv_dao
+    expected: "exit 0; ca BDV-4: đảo trả aliases và meta của mọi nút về đúng dấu vân tay trước áp, dòng luật có dao_by và dao_at; đảo một rule_id của luật S16 hay lượt nối DA46 ném «khong-phai-luot-bi-danh» và 0 dòng đổi. Chiều đỏ: bỏ kiểm can_cu thì ca đảo nhầm đỏ"
+    paths: ["pipeline/lib/phan-khu-s16-bi-danh.mjs","pipeline/scripts/bi-danh-viet-tat-phan-khu.mjs","pipeline/scripts/bi-danh-viet-tat-phan-khu.itest.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.bdv_da46
+    expected: "exit 0; ca BDV-5 dùng apNoi, daoNoi thật của phan-khu-s16.mjs trên cặp cấy: áp bí danh trước rồi nối, nối trước rồi áp bí danh, và đảo nối sau khi áp bí danh — cả ba thứ tự nút giữ lại mang đúng tên tắt, nút nghỉ không mang; đảo bí danh không gỡ bí danh DA46 dồn về. Chiều đỏ: đảo bí danh gỡ theo tên thay vì theo them thì ca đỏ"
+    paths: ["pipeline/lib/phan-khu-s16-bi-danh.mjs","pipeline/scripts/bi-danh-viet-tat-phan-khu.mjs","pipeline/scripts/bi-danh-viet-tat-phan-khu.itest.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.bdv_doc
+    expected: "exit 0; ca BDV-6: docTenPhanKhu + luật khớp GT5 ra đúng khoá phân khu cho chữ «2pn ori 6tr» trong dự án của nút đích; cùng chữ ở tin dự án khác ra tập rỗng; «bs1» không khớp; nút nghỉ mang tên tắt không có trong kết quả docTenPhanKhu. Đối chứng dương: tên đầy đủ «the origami» ra cùng khoá; «rb» và «rainbow» ra cùng một khoá khi cây có cả 48 The Rainbow lẫn 389 Rainbow. Chiều đỏ: bỏ lọc nghỉ thì ca nút nghỉ đỏ"
+    paths: ["pipeline/lib/phan-khu-s16-bi-danh.mjs","pipeline/scripts/bi-danh-viet-tat-phan-khu.mjs","pipeline/scripts/bi-danh-viet-tat-phan-khu.itest.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.bdv_dem
+    expected: "exit 0; ca BDV-7: sau áp, chạy hai lần lượt dựng phân khu S16 (dungTheLuat + apLuat) và bước đêm danh bạ vật thể trên fixture có khu S16 — tên tắt vẫn trên nút đích, số nút không đổi; soatDuLieu của bộ soát S16 trên asset_nodes sạch; cấy một mã khu thô vào meta thì bộ soát dừng (đối chứng). Chiều đỏ: bước dựng ghi đè aliases thì ca đỏ"
+    paths: ["pipeline/lib/phan-khu-s16-bi-danh.mjs","pipeline/scripts/bi-danh-viet-tat-phan-khu.mjs","pipeline/scripts/bi-danh-viet-tat-phan-khu.itest.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.bdv_kiem
+    expected: "exit 0; ca BDV-8: lệnh kiểm thoát 0 khi mọi tên trên nút chưa nghỉ; thoát 1 nêu đúng id khi gỡ tay một tên khỏi nút đích, và khi nút đích mang meta.nghi. Chiều đỏ: kiểm chỉ đọc meta.them mà không đọc aliases thì ca thiếu tên đỏ"
+    paths: ["pipeline/lib/phan-khu-s16-bi-danh.mjs","pipeline/scripts/bi-danh-viet-tat-phan-khu.mjs","pipeline/scripts/bi-danh-viet-tat-phan-khu.itest.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.bdv_that
+    expected: "exit 0 trên bản chép DB máy thu, DB máy thu chỉ bị đọc: thẻ gán ori→44, rb→48, bs→387, gh→43, 0 không gán; áp xong lệnh đo in số tin đọc được phân khu trước và sau, tăng ít nhất 800, mỗi tên tắt có ít nhất ori 333 · rb 108 · bs 282 · gh 190 tin chỉ đọc được phân khu nhờ nó, 0 tin mất phân khu cũ; lệnh kiểm thoát 0; đảo về đúng dấu vân tay aliases và meta trước áp. Chiều đỏ: chạy trên DB tên không phải bản chép thì thoát 2 trước khi ghi; bỏ một tên khỏi bảng thì E9 đỏ và thông điệp nêu đúng tên đó"
+    paths: ["pipeline/lib/phan-khu-s16-bi-danh.mjs","pipeline/scripts/bi-danh-viet-tat-phan-khu.mjs","pipeline/scripts/bi-danh-viet-tat-phan-khu-that.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
