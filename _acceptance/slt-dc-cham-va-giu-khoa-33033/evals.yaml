@@ -28,7 +28,7 @@ evals:
     cmd: config:executors.script.trt_slt_dc_gio
     paths: [pipeline/lib/nap-045.mjs, pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs, _acceptance/slt-dc-cham-va-giu-khoa-33033/probes/do-gio.sh]
     long_running: 8
-    expected: "exit 0; '✔ SLT-DC-KHOA hết trần thật (node:test tự huỷ, v<…>) → 33033 rảnh trong 8 s' kèm 'SLT-DC-KHOA hết trần thật: 33033 rảnh sau <x> s'; '✔ chiều đỏ SLT-DC-KHOA hết trần thật: không truyền signal'; '✔ SLT-DC-KHOA lưới máy chủ' kèm 'trần 480 s → transaction_timeout 510s' và 'trần 60 s → transaction_timeout 90s'; '✔ SLT-DC-KHOA huỷ signal của ca → khoá 33033 rảnh trong 5 s'; '✔ chiều đỏ SLT-DC-KHOA: không truyền signal'; should-NOT-fire: '✖ SLT-DC-KHOA'"
+    expected: "exit 0; '✔ SLT-DC-KHOA hết trần thật (node:test tự huỷ, v<…>) → 33033 rảnh trong 8 s' kèm 'SLT-DC-KHOA hết trần thật: 33033 rảnh sau <x> s'; '✔ chiều đỏ SLT-DC-KHOA hết trần thật: không truyền signal'; 'SLT-DC-KHOA lưới máy chủ (ca 7/9): trần 480 s → transaction_timeout 510s' và 'SLT-DC-KHOA lưới máy chủ (ca 10): trần 120 s → transaction_timeout 150s' (đọc trong chính giao dịch của hai ca); '✔ chiều đỏ SLT-DC-KHOA lưới máy chủ'; '✔ SLT-DC-KHOA huỷ signal của ca → khoá 33033 rảnh trong 5 s'; '✔ chiều đỏ SLT-DC-KHOA: không truyền signal'; should-NOT-fire: '✖ SLT-DC-KHOA'"
   - id: E5
     criterion: AC-5
     executor: script

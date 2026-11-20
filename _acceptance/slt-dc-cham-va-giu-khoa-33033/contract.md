@@ -54,7 +54,8 @@ Không migration, không DDL (GS 11:00Z). Không ANALYZE DB máy thu.
   đỏ ở cả (a) «SLT-DC-KHOA 33033 vẫn bị giữ» lẫn (b); `SHOW transaction_timeout` trong giao dịch của ca 7/9 và ca 10 bằng đúng
   trần + 30 s (lưới phía máy chủ khi tiến trình test chết hẳn).
 - AC-5 (trần khớp thời gian thật): Given DB của lượt, When chạy cả tệp SLT-DC, Then mọi ca xanh, cả tệp dưới 360 s (6 phút), và
-  trần ca đặt theo số đo ghi trong mã (20/11: ca 7/9 232 s → trần 480 s; ca 10 24 s → trần 60 s; cả tệp 278 s) — 33033 không bị
+  trần ca đặt theo số đo ghi trong mã (20/11 máy yên: ca 7/9 232 s → trần 480 s; ca 10 24 s, có tải 52 s → trần 120 s; cả tệp 278 s)
+  — đo trong lượt chấm bằng lệnh chạy riêng sau mọi lệnh khác (`feature_loop.model_evals`) — 33033 không bị
   một ca giữ quá trần của nó: N = 480 s (giám sát đồng ý 11:58Z; căn cứ ca 7/9 đo 232 s, trần ≈ 2 lần), lúc thường ≈ 232 s.
 - AC-6 (nửa B): Given DB của lượt, When chạy `cd pipeline && npm run test:b` tuần tự, Then xanh và dưới 1.500 s (25 phút).
 - AC-7 (sản xuất sau gộp): Given bản sửa đã vào main và checkout chính đã kéo, When lượt nạp 15′ chạy bốn lần liền và lượt S06
