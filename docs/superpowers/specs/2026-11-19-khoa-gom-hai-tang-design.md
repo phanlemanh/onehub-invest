@@ -26,7 +26,10 @@ công tắc `danh-ba:gop-sdt` có sẵn. Tắt: khoá cũ, thành phần tin kh�
 Giá giữ trong khoá tới GT6. Người luôn có trong khoá ở mọi nhánh (sửa nhánh đủ phường và diện tích, theo Q1).
 
 - **Bản chữ thiếu trường** (số phòng, diện tích, phân khu hay mã) chỉ nhập vào một tin khi trong cửa sổ 7 ngày có **đúng một** tin ứng
-  viên cùng người khớp mọi trường bản chữ đó có, và chữ giống từ 0,9. Không có hay có nhiều ứng viên thì bản chữ thành tin riêng.
+  viên cùng người khớp mọi trường bản chữ đó có, và chữ giống từ 0,3. Không có hay có nhiều ứng viên thì bản chữ thành tin riêng.
+- **Bản chữ cùng thiếu** (Hỏi-6 lối B, Mạnh «GT5 chọn B» 20/11): bản chữ cùng người, cùng loại, cùng giá, thiếu đúng cùng các trường và
+  bằng nhau ở các trường có mặt chung tin khi có cặp bài trong 7 ngày và chữ giống từ 0,3. Lý do: mẫu hai cho thấy 54/62 nhóm cùng căn bị
+  tách là cùng căn đăng lại có sửa lời, cùng thiếu đúng các trường.
 - **Không bắc cầu:** bản chữ thiếu trường chỉ nhập vào tin đầy đủ, không làm hai tin đầy đủ chung một tin.
 - **Tập phân khu** đọc từ chữ bài: tên, bí danh của nút con dự án trong danh bạ (`asset_nodes`) và bảng viết tắt khai ở Cổng Phạm vi.
   Hai tập khác nhau, cả hai không rỗng, thì không bao giờ chung tin.

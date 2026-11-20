@@ -59,7 +59,7 @@ test("GT5-AC-3 nhánh đủ phường + diện tích vẫn có người: khác n
 // ---- AC-4: bản chữ thiếu trường ----
 const DU = "Bán căn Origami S1006 2pn 69m2 giá 3,2 tỷ full đồ view hồ";
 const thieuDt = (o = {}) => bai({ text: "Bán căn Origami S1006 2pn giá 3,2 tỷ full đồ view hồ", dt: null, ...o });
-test("GT5-AC-4 thiếu diện tích, đúng một ứng viên, chữ giống ≥ 0,9, trong 7 ngày → nhập", () => {
+test("GT5-AC-4 thiếu diện tích, đúng một ứng viên, chữ giống ≥ ngưỡng, trong 7 ngày → nhập", () => {
   const a = bai({ text: DU, ngay: 1 });
   const b = thieuDt({ ngay: 3 });
   assert.ok(doGiong(gatSo(a.post.text).toLowerCase(), "") >= 0); // hàm có mặt
@@ -78,9 +78,10 @@ test("GT5-AC-4 thiếu số phòng / phân khu / mã cũng nhập theo cùng lu�
   assert.equal(soTin([bai({ text: DU }), bai({ text: "Bán căn S1006 2pn 69m2 giá 3,2 tỷ full đồ view hồ" })], { nguongChu: 0.5 }), 1, "thiếu phân khu");
   assert.equal(soTin([bai({ text: DU }), bai({ text: "Bán căn Origami 2pn 69m2 giá 3,2 tỷ full đồ view hồ" })], { nguongChu: 0.5 }), 1, "thiếu mã");
 });
-test("GT5-AC-4 ngưỡng mặc định 0,9 và cửa sổ mặc định 7 ngày", () => {
-  // chữ giống hệt trừ phần thiếu: Jaccard 3-gram dưới 0,9 → không nhập ở ngưỡng mặc định
-  assert.equal(soTin([bai({ text: DU }), thieuDt()]), 2);
+test("GT5-AC-4 ngưỡng mặc định 0,3 (Hỏi-6 B, Mạnh 20/11) và cửa sổ mặc định 7 ngày", () => {
+  // chữ giống hệt trừ phần thiếu (Jaccard 3-gram ≈ 0,64) → nhập ở ngưỡng mặc định; chữ khác hẳn (≈ 0,12) → tin riêng
+  assert.equal(soTin([bai({ text: DU }), thieuDt()]), 1, "giống 0,64");
+  assert.equal(soTin([bai({ text: DU }), thieuDt({ text: "Cần bán gấp Origami S1006 2pn 3,2 tỷ liên hệ chủ nhà" })]), 2, "giống dưới 0,3");
 });
 
 test("GT5-AC-4 hai bản chữ cùng thiếu trường («?» = «?») không tự khớp ở tầng hai → 2 tin", () => {
@@ -88,13 +89,29 @@ test("GT5-AC-4 hai bản chữ cùng thiếu trường («?» = «?») không t�
   // Ca từ mẫu giữ riêng một: môi giới đăng hai căn khác nhau cùng giá, cùng số phòng, cùng không ghi diện tích, mã, phân khu.
   const a = bai({ text: "Cho thuê căn 2pn full đồ view hồ giá 11tr", kind: "rent_lt", gia: 11e6, dt: null });
   const b = bai({ text: "Cho thuê căn 2pn nội thất cơ bản view nội khu giá 11tr", kind: "rent_lt", gia: 11e6, dt: null });
-  assert.equal(soTin([a, b]), 2);
+  assert.equal(soTin([a, b]), 2); // chữ giống ≈ 0,12, dưới ngưỡng của luật cùng thiếu
 });
-test("GT5-AC-4 bản chữ thiếu trường không nhập vào tin cũng thiếu trường, dù chữ giống", () => {
-  const a = bai({ text: "Cho thuê căn 2pn full đồ view hồ giá 11tr nhà mới", kind: "rent_lt", gia: 11e6, dt: null });
-  const b = bai({ text: "Cho thuê căn 2pn full đồ view hồ giá 11tr nhà mới tinh", kind: "rent_lt", gia: 11e6, dt: null });
-  assert.equal(soTin([a, b], { nguongChu: 0 }), 2);
-});
+
+// ---- AC-4 (Hỏi-6 lối B, Mạnh «GT5 chọn B» 20/11): bản chữ cùng người, cùng thiếu ĐÚNG các trường, trường có mặt khớp ----
+const thue = (o = {}) => bai({ text: "Cho thuê căn 2pn full đồ view hồ giá 11tr nhà mới", kind: "rent_lt", gia: 11e6, dt: null, ...o });
+const thue2 = (o = {}) => thue({ text: "Cho thuê căn 2pn full đồ view hồ giá 11tr nhà mới tinh", ...o });
+test("GT5-AC-4 B cùng thiếu đúng các trường, chữ giống ≥ 0,3, trong 7 ngày → 1 tin", () => assert.equal(soTin([thue(), thue2({ ngay: 4 })]), 1));
+test("GT5-AC-4 B chữ giống dưới ngưỡng → 2 tin", () => assert.equal(soTin([thue(), thue2()], { nguongChu: 0.95 }), 2));
+test("GT5-AC-4 B ngoài cửa sổ 7 ngày → 2 tin", () => assert.equal(soTin([thue({ ngay: 1 }), thue2({ ngay: 9 })]), 2));
+test("GT5-AC-4 B tập trường thiếu khác nhau → 2 tin", () =>
+  assert.equal(soTin([thue(), thue2({ text: "Cho thuê căn full đồ view hồ giá 11tr nhà mới tinh", pn: null })]), 2));
+test("GT5-AC-4 B trường có mặt khác nhau (số phòng) → 2 tin", () =>
+  assert.equal(soTin([thue(), thue2({ text: "Cho thuê căn 3pn full đồ view hồ giá 11tr nhà mới tinh", pn: 3 })]), 2));
+test("GT5-AC-4 B khác giá → 2 tin", () => assert.equal(soTin([thue(), thue2({ gia: 12e6 })]), 2));
+test("GT5-AC-4 B khác loại tin → 2 tin", () => assert.equal(soTin([thue(), thue2({ kind: "sale" })]), 2));
+test("GT5-AC-4 B khác người → 2 tin", () => assert.equal(soTin([thue(), thue2({ sender: "u9" })]), 2));
+test("GT5-AC-4 B không người đăng (không sender, không SĐT) → 2 tin", () => assert.equal(soTin([thue({ sender: null }), thue2({ sender: null })]), 2));
+test("GT5-AC-4 B khác phân khu, cả hai cùng thiếu diện tích → 2 tin", () =>
+  assert.equal(soTin([bai({ text: "Bán ori S1006 2pn giá 3,2 tỷ full đồ", dt: null }), bai({ text: "Bán rb S1006 2pn giá 3,2 tỷ full đồ", dt: null })], { nguongChu: 0 }), 2));
+test("GT5-AC-4 B nhóm cùng thiếu vẫn nhập vào đúng một tin đầy đủ → 1 tin", () =>
+  assert.equal(soTin([bai({ text: DU }), thieuDt(), thieuDt({ text: "Bán căn Origami S1006 2pn giá 3,2 tỷ full đồ view hồ đẹp", ngay: 2 })]), 1));
+test("GT5-AC-4 B nhóm cùng thiếu, hai tin đầy đủ ứng viên → không bắc cầu", () =>
+  assert.equal(gom([bai({ text: DU, dt: 69 }), bai({ text: DU.replace("69m2", "75m2"), dt: 75 }), thieuDt(), thieuDt({ ngay: 2 })]).length, 3));
 
 // ---- AC-5: phân khu không bao giờ chung tin ----
 test("GT5-AC-5 hai phân khu khác, cả hai không rỗng, mọi trường khác khớp → 2 tin", () =>

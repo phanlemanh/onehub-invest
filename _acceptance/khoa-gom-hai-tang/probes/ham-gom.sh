@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# GT5 E2, E3, E4, E6, E8: chạy test hàm thuần (bộ tìm mã, tập phân khu, gom hai tầng) rồi BA bản đột biến của gom-tin-hai-tang.mjs —
+# GT5 E2, E3, E4, E6, E8: chạy test hàm thuần (bộ tìm mã, tập phân khu, gom hai tầng) rồi BẢY bản đột biến của gom-tin-hai-tang.mjs —
 # mỗi bản phải làm đỏ đúng ô của nó (thông điệp ghim tên ô); bản nào lọt → «thước mù», thoát 1. Tệp gốc được chép lại và băm kiểm
 # sau mỗi đột biến (trap EXIT), không để lại thay đổi trong cây.
 set -uo pipefail
@@ -26,6 +26,8 @@ dot_bien "gộp khác người cùng chữ" 'const k1 = nguoi ? `${nguoi}|${chu}
 dot_bien "bỏ người khỏi khoá tầng hai" '? [b.nguoi, gt(b.f.loai)' '? ["*", gt(b.f.loai)' "GT5-AC-3 khác đúng trường người"
 dot_bien "ô trống bằng ô trống ở tầng hai (lỗi mẫu một)" 'const k2 = du(b.f) ? [' 'const k2 = true ? [' "GT5-AC-4 hai bản chữ cùng thiếu trường"
 dot_bien "cho bắc cầu (nhập khi có từ một ứng viên)" 'if (ung.length === 1) t.vao = ung[0];' 'if (ung.length >= 1) t.vao = ung[0];' "GT5-AC-4 hai ứng viên"
+dot_bien "lối B: mẫu bỏ tập trường thiếu" '...TRUONG.map((k) => gt(t.f[k]))].join("|");' '].join("|");' "GT5-AC-4 B tập trường thiếu khác nhau"
+dot_bien "lối B: bỏ cửa sổ 7 ngày" 'if (ganNhau(nhom[i], nhom[j]) && giongCap' 'if (giongCap' "GT5-AC-4 B ngoài cửa sổ"
 dot_bien "bỏ chặn dạng bài" 'if (it.dangBai != null && it.dangBai !== "mot_can")' 'if (false)' "GT5-AC-8 bài rổ hàng"
 rm -f /tmp/gt5-ham.$$ /tmp/gt5-dot.$$
 [ $RC = 0 ] && echo "XANH: ham-gom" || echo "ĐỎ: ham-gom"

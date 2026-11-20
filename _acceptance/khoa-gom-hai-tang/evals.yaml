@@ -40,7 +40,9 @@ evals:
     paths: ["pipeline/lib/gom-tin*.mjs"]
     expected: >
       Ma trận trường thiếu × số ứng viên × cửa sổ × độ giống, một assert mỗi ô; ô bắc cầu (một bản chữ thiếu trường khớp hai tin đầy đủ) ra
-      hai tin đầy đủ không đổi. Chiều đỏ: bản đột biến nhận ứng viên đầu tiên khi có hai thì ô hai ứng viên đỏ, thông điệp ghim tên ô.
+      hai tin đầy đủ không đổi. Ma trận lối B (Hỏi-6): cùng thiếu đúng các trường × trường có mặt × giá × loại × người × cửa sổ × ngưỡng 0,3.
+      Chiều đỏ: bản đột biến nhận ứng viên đầu tiên khi có hai thì ô hai ứng viên đỏ; bản đột biến bỏ tập trường thiếu khỏi mẫu hay bỏ
+      cửa sổ 7 ngày của lối B thì ô của nó đỏ; thông điệp ghim tên ô.
 
   - id: E5
     criterion: AC-5
@@ -91,7 +93,7 @@ evals:
     expected: >
       Lệnh đọc nhãn thô của mẫu giữ riêng và 40 cặp audit, chạy khoá cũ và khoá mới, in gộp nhầm, tách nhầm trước và sau kèm cận Wilson 95%;
       đơn vị là tin nhiều bản chữ có nhãn cùng hoặc khác căn, n từ 60, ước lượng điểm; in số ca bị loại vì nhãn bất đồng; đạt khi gộp nhầm
-      dưới 5%, tách nhầm không tăng, n đủ và ca bị loại không quá 20%. Chiều đỏ: sửa một số trong báo cáo hoặc bớt một nhãn thì lệnh thoát 1,
+      dưới 5%, tách nhầm không tăng, n đủ và ca bị loại không quá 20%; trên mẫu ba (GT5_TACH_NHOM=1) thêm thước tách nhóm cùng căn ≤ 35%. Chiều đỏ: sửa một số trong báo cáo hoặc bớt một nhãn thì lệnh thoát 1,
       thông điệp ghim thước. Khi mẫu giữ riêng dựng bằng model ngoài ba model của luật 6: lệnh quét payload đã gửi in 0 tên nguồn thật
       (danh sách tên đọc từ source_registry local, rỗng thì đóng chặt); cấy một tên nguồn vào bản sao payload thì thoát 1, thông điệp ghim mã bài.
 

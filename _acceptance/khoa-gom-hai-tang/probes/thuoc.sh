@@ -14,7 +14,8 @@ U() { echo "postgres://oneinvest:oneinvest@localhost:5433/$1"; }
 [ -f "$MAU/payload.json" ] && [ -f "$AUD/sample_tach.csv" ] || { echo "ĐỎ: không thấy mẫu giữ riêng hay nhãn audit ở research-local của máy thu"; exit 2; }
 RA="$(mktemp -d)"; trap 'node $D xoa oneinvest_gt5_bat >/dev/null 2>&1 || true' EXIT
 GT5_GIU=1 GT5_RA="$RA" bash _acceptance/khoa-gom-hai-tang/probes/cong-tac.sh > "$RA/cong-tac.txt" 2>&1 || { tail -20 "$RA/cong-tac.txt"; echo "ĐỎ: cong-tac.sh không xanh, không chấm được"; exit 2; }
-CHAM() { DATABASE_URL="$(U oneinvest_gt5_bat)" node $K --mau "$1" --audit "$AUD" --truoc "$RA/s1.json" --sau "$RA/s4.json" "${@:2}"; }
+TN=(); [ "${GT5_TACH_NHOM:-0}" = 1 ] && TN=(--tach-nhom)  # mẫu ba: GT5_TACH_NHOM=1 bật thước tách nhóm ≤ 35% (Hỏi-6 B)
+CHAM() { DATABASE_URL="$(U oneinvest_gt5_bat)" node $K --mau "$1" --audit "$AUD" --truoc "$RA/s1.json" --sau "$RA/s4.json" ${TN[@]+"${TN[@]}"} "${@:2}"; }
 RC=0
 if [ -f "$BC" ]; then CHAM "$MAU" --kiem "$BC" || RC=1; else CHAM "$MAU" --ra "$BC" || RC=1; fi
 echo "== chiều đỏ 1: sửa một số trong bản sao báo cáo"

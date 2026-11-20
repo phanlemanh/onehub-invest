@@ -33,8 +33,10 @@ thành phần tin và `offer_id` đổi. Máy suy theo `t3_paths` ra T2 vì hàn
   phân khu · tập mã, cả ở nhánh đủ phường và diện tích, When gom, Then mỗi ô ra hai tin; hai bản chữ khớp đủ bảy trường ra một tin. Chiều đỏ:
   bỏ người khỏi nhánh đủ phường và diện tích (khoá cũ) thì ô khác người đỏ, thông điệp ghim tên trường.
 - **AC-4** (bản chữ thiếu trường) Given bản chữ thiếu số phòng, diện tích, phân khu hay mã, When gom, Then nhập vào tin cùng người khi trong
-  cửa sổ 7 ngày có đúng một tin ứng viên khớp mọi trường nó có và chữ giống từ 0,9; không ứng viên, từ hai ứng viên, ngoài cửa sổ, chữ giống
-  dưới ngưỡng thì thành tin riêng; bản chữ thiếu trường không nối hai tin đầy đủ thành một (không bắc cầu). Một assert mỗi ô.
+  cửa sổ 7 ngày có đúng một tin ứng viên khớp mọi trường nó có và chữ giống từ 0,3; không ứng viên, từ hai ứng viên, ngoài cửa sổ, chữ giống
+  dưới ngưỡng thì thành tin riêng; bản chữ thiếu trường không nối hai tin đầy đủ thành một (không bắc cầu). Bản chữ cùng người, cùng loại,
+  cùng giá, thiếu ĐÚNG cùng các trường, các trường có mặt bằng nhau, có cặp bài trong 7 ngày và chữ giống từ 0,3 thì chung tin (Hỏi-6 lối
+  B); khác tập trường thiếu, khác một trường có mặt, ngoài cửa sổ, dưới ngưỡng, không người đăng thì tin riêng. Một assert mỗi ô.
 - **AC-5** (phân khu không bao giờ chung tin, cross-layer) Given tập phân khu đọc từ chữ bài theo tên, bí danh của nút con dự án trong danh
   bạ và bảng viết tắt chốt ở Cổng Phạm vi, When hai bản chữ có tập phân khu khác nhau và cả hai không rỗng, Then không chung tin ở mọi nhánh
   khoá. Danh sách `offer_id` của 12 tin khác phân khu theo tên danh bạ và 160 tin theo viết tắt được đóng băng có băm trước khi viết mã; trên
@@ -50,7 +52,9 @@ thành phần tin và `offer_id` đổi. Máy suy theo `t3_paths` ra T2 vì hàn
 - **AC-8** (dạng bài) Given bài có nhãn dạng bài của GT8 khác `mot_can`, When gom với công tắc bật, Then bài đó không gộp với bài khác; bài không
   có nhãn hoặc nhãn `mot_can` gom như AC-2 tới AC-6. Model không vào khoá: khoá chỉ đọc chữ bài, người đăng, danh bạ.
 - **AC-9** (chất lượng) Given thước nền 120 nhãn audit 09–10/11 và mẫu giữ riêng chốt ở Cổng Phạm vi, When chạy khoá mới, Then
-  gộp nhầm (đơn vị: tin nhiều bản chữ có nhãn cùng hoặc khác căn, ước lượng điểm, n từ 60) dưới **5%** trên **mẫu giữ riêng**, tách nhầm trên 40 cặp không tăng so với khoá cũ; lệnh in số trước, sau, cận
+  gộp nhầm (đơn vị: tin nhiều bản chữ có nhãn cùng hoặc khác căn, ước lượng điểm, n từ 60) dưới **5%** trên **mẫu giữ riêng ba**, nhóm
+  cùng căn (nhãn đồng thuận hai model) bị tách thành từ hai tin **≤ 35%** trên mẫu ba, tách nhầm trên 40 cặp không tăng so với khoá cũ.
+  Mẫu ba tách rời mẫu một và hai, đóng băng có băm trước khi chấm, chấm một lần; số của mẫu một và hai là số đã nhìn (Hỏi-6). Lệnh in số trước, sau, cận
   Wilson 95% của từng thước, tính lại từ nhãn thô và đỏ khi số lệch báo cáo, khi n dưới 60, hay khi ca bị loại vì nhãn
   bất đồng vượt 20% mẫu (lệnh in số ca bị loại). Hụt ngưỡng: không chỉnh luật rồi chấm lại trên mẫu giữ riêng.
   Mẫu giữ riêng dựng bằng model ngoài ba model được nhận nguyên văn (luật 6) thì mọi bài gửi đi qua `pipeline/lib/mask-source-names.mjs` trước:

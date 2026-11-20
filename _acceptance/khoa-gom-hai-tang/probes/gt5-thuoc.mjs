@@ -5,7 +5,9 @@
 //   còn lại là bất đồng (bị loại, đếm). Đơn vị: tin cũ có nhãn đồng thuận; «gộp nhầm» = có tin trong thành phần đang xét chứa bài của
 //   hai nhóm nhãn khác nhau. Ước lượng điểm + cận Wilson 95%.
 //   Tách nhầm: 40 cặp audit 09–10/11 (sample_tach.csv + nhan-tach-40.csv); cặp nhãn «cung» mà hai tin cũ không chung một tin.
-//   Đạt: gộp nhầm sau < 5%, n ≥ 60, bất đồng ≤ 20% mẫu, tách nhầm sau ≤ trước. Quét payload: 0 tên nguồn thật (source_registry).
+//   Tách nhóm (--tach-nhom, Hỏi-6 lối B, Mạnh 20/11; mẫu ba trở đi): nhóm cùng căn của nhãn đồng thuận có bài nằm ở từ hai tin của
+//   thành phần đang xét; mẫu số = mọi nhóm của các tin có nhãn đồng thuận. Ngưỡng ≤ 35%.
+//   Đạt: gộp nhầm sau < 5%, n ≥ 60, bất đồng ≤ 20% mẫu, tách nhầm sau ≤ trước (và tách nhóm sau ≤ 35% khi có cờ). Quét payload: 0 tên nguồn thật (source_registry).
 // Dùng: node gt5-thuoc.mjs --mau <dir> --audit <dir> --truoc s1.json --sau s4.json --ra <bao-cao.json> | --kiem <bao-cao.json>
 //   (DATABASE_URL = DB thử oneinvest_gt5_* để đọc bài của cặp audit và tên nguồn)
 import { createHash } from "node:crypto";
@@ -18,10 +20,11 @@ const pg = (await import(join(ROOT, "pipeline/node_modules/pg/lib/index.js"))).d
 const { findSourceNames } = await import(join(ROOT, "pipeline/lib/mask-source-names.mjs"));
 const arg = (k) => { const i = process.argv.indexOf(k); return i > 0 ? process.argv[i + 1] : undefined; };
 const [MAU, AUDIT, TRUOC, SAU, RA, KIEM] = ["--mau", "--audit", "--truoc", "--sau", "--ra", "--kiem"].map(arg);
+const TACH_NHOM = process.argv.includes("--tach-nhom");
 const URL_ = process.env.DATABASE_URL ?? "";
 if (!/\/oneinvest_gt5_[a-z0-9_]+$/.test(URL_.replace(/\?.*$/, ""))) { console.error("ĐỎ: DATABASE_URL phải là DB thử oneinvest_gt5_*"); process.exit(2); }
 const J = (p) => JSON.parse(readFileSync(p, "utf8"));
-const NGUONG = { gopNham: 0.05, nToiThieu: 60, batDong: 0.2 };
+const NGUONG = { gopNham: 0.05, nToiThieu: 60, batDong: 0.2, tachNhom: 0.35 };
 
 function wilson(k, n) {
   if (!n) return [0, 1];
@@ -68,6 +71,15 @@ function gopNham(thanhPhan) {
   return { k, ds };
 }
 const [g0, g1] = [gopNham(T), gopNham(S)];
+function tachNhom(thanhPhan) {
+  let k = 0, tong = 0;
+  for (const x of nhan) x.nhom.forEach((g) => {
+    tong++;
+    const o = new Set(g.flatMap((id) => (map.get(id) ?? []).map((p) => thanhPhan.get(p)).filter(Boolean)));
+    if (o.size > 1) k++;
+  });
+  return { k, tong };
+}
 const n = nhan.length, soCung = nhan.filter((x) => x.nhom.length === 1).length;
 
 // ---- tách nhầm: 40 cặp audit ----
@@ -86,10 +98,15 @@ const bao = {
   gop_nham: { truoc: { k: g0.k, n, ti_le: n ? +(g0.k / n).toFixed(4) : null, wilson95: wilson(g0.k, n) }, sau: { k: g1.k, n, ti_le: n ? +(g1.k / n).toFixed(4) : null, wilson95: wilson(g1.k, n), tin: g1.ds } },
   tach_nham: { cap_cung: capCung.length, truoc: { k: t0, wilson95: wilson(t0, capCung.length) }, sau: { k: t1, wilson95: wilson(t1, capCung.length) } },
 };
+if (TACH_NHOM) {
+  const [a, b] = [tachNhom(T), tachNhom(S)];
+  bao.tach_nhom = { nhom: a.tong, truoc: { k: a.k, wilson95: wilson(a.k, a.tong) }, sau: { k: b.k, ti_le: a.tong ? +(b.k / a.tong).toFixed(4) : null, wilson95: wilson(b.k, b.tong) } };
+}
 const pc = (x) => `${(x * 100).toFixed(1)}%`;
 console.log(`mẫu ${bao.mau.tin} tin · nhãn đồng thuận ${n} (cùng căn ${soCung}, khác căn ${n - soCung}) · ngoài đơn vị ${ngoai} · bất đồng ${batDong} (${pc(bao.mau.ti_le_bat_dong)})`);
 console.log(`gộp nhầm: trước ${g0.k}/${n} = ${pc(g0.k / (n || 1))} [${bao.gop_nham.truoc.wilson95.map(pc).join("; ")}] → sau ${g1.k}/${n} = ${pc(g1.k / (n || 1))} [${bao.gop_nham.sau.wilson95.map(pc).join("; ")}]`);
 console.log(`tách nhầm (cặp audit nhãn cùng căn ${capCung.length}): trước ${t0} → sau ${t1}`);
+if (bao.tach_nhom) console.log(`tách nhóm cùng căn: trước ${bao.tach_nhom.truoc.k}/${bao.tach_nhom.nhom} → sau ${bao.tach_nhom.sau.k}/${bao.tach_nhom.nhom} = ${pc(bao.tach_nhom.sau.ti_le ?? 0)} [${bao.tach_nhom.sau.wilson95.map(pc).join("; ")}]`);
 
 if (KIEM) {
   const cu = J(KIEM);
@@ -103,4 +120,5 @@ chk(n >= NGUONG.nToiThieu, `n ${n} ≥ ${NGUONG.nToiThieu}`);
 chk(bao.mau.ti_le_bat_dong <= NGUONG.batDong, `bất đồng ${pc(bao.mau.ti_le_bat_dong)} ≤ 20%`);
 chk(n > 0 && g1.k / n < NGUONG.gopNham, `gộp nhầm sau ${pc(g1.k / (n || 1))} < 5%`);
 chk(t1 <= t0, `tách nhầm không tăng (${t0} → ${t1})`);
+if (bao.tach_nhom) chk(bao.tach_nhom.nhom > 0 && bao.tach_nhom.sau.k / bao.tach_nhom.nhom <= NGUONG.tachNhom, `tách nhóm sau ${pc(bao.tach_nhom.sau.ti_le ?? 0)} ≤ 35%`);
 process.exit(rc);
