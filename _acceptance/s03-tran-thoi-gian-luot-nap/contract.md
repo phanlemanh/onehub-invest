@@ -26,8 +26,9 @@ fixture thay bước pipeline, DB trỏ cổng đóng; lượt thử khởi deta
 ## Acceptance Criteria
 
 - **AC-1** Given bản sao script, một snapshot tin (hoặc hồ sơ) chưa nạp và `ZALO_IMPORT_TRAN_NAP=0`, When chạy lượt 00:00,
-  Then log có dòng TIMEOUT phần nạp nêu đúng snapshot, lượt thoát 124, state tin (hoặc state hồ sơ) giữ mốc cũ, và không
-  bước transform nào chạy; vòng tin và vòng hồ sơ mỗi vòng một ca.
+  Then log có dòng TIMEOUT phần nạp nêu đúng snapshot, lượt thoát 124, state tin (hoặc state hồ sơ) giữ mốc cũ. Vòng
+  tin bị cắt thì không bước transform nào chạy. Vòng hồ sơ bị cắt thì chuỗi tin vẫn chạy (luật 10/11 «hồ sơ hỏng không chặn
+  chuỗi tin»), mã thoát cuối vẫn là 124. Vòng tin và vòng hồ sơ mỗi vòng một ca.
 - **AC-2** Given hai snapshot tin chưa nạp và bước nạp giả ghi tên snapshot rồi ngủ, When lượt 1 bị cắt giữa chừng — (a) bởi
   trần nạp sau snapshot đầu, (b) bởi trần tổng trong lúc nạp snapshot đầu — rồi lượt 2 chạy với trần mặc định, Then lượt 2
   lấy khoá không phải chờ, nạp đúng các snapshot lượt 1 chưa ghi state, state cuối bằng snapshot sau cùng, và không snapshot
@@ -46,7 +47,7 @@ fixture thay bước pipeline, DB trỏ cổng đóng; lượt thử khởi deta
   00:00 in «khoá còn sống … không gỡ», thoát 1; lượt nhanh bỏ lượt thoát 0; khoá còn nguyên ở cả hai. Đối chứng: khoá mang
   PID đã chết thì bị gỡ và lượt chạy tiếp.
 - **AC-7** Given node giả ở `ZALO_IMPORT_NODE_BIN` ghi lại biến môi trường đồng hồ, When chạy lượt 00:00 và lượt nhanh không
-  đặt biến trần, Then trần/WARN lần lượt là 14400/7200 và 1200/600; đặt biến thì giá trị đặt thắng; `pipeline/cron/` và hai
+  đặt biến trần, Then trần/WARN lần lượt là 14400/7200 và 2400/1200 (lượt nhanh = trần nạp mặc định 1800 + 600); đặt biến thì giá trị đặt thắng; `pipeline/cron/` và hai
   plist không đổi so với origin/main; `ZALO_IMPORT_NODE_BIN` trỏ tệp không có thì log có dòng «TRẦN THỜI GIAN TẮT», lượt
   vẫn chạy đủ các bước, mã thoát như khi có đồng hồ.
 - **AC-8** Given cây làm việc của nhánh, When chạy các bộ test job cũ (lưới thời lượng JOB STEP gồm lưới phạm vi làn hai

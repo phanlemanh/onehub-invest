@@ -6,7 +6,7 @@ evals:
     executor: test
     cmd: bash _acceptance/s03-tran-thoi-gian-luot-nap/probes/tran-unit.sh
     paths: [scripts/zalo-import-daily.sh, scripts/zalo-import-tran.test.mjs]
-    expected: "exit 0; hai ca trên bản sao script (thư mục tạm, lượt detached nhóm riêng, DB cổng đóng), ZALO_IMPORT_TRAN_NAP=0. (a) vòng tin: một snapshot vn__zalo-agent__<ts> có manifest → stdout có dòng TIMEOUT phần nạp nêu đúng <ts>, mã thoát 124, apify-daily.state bằng 00000000T000000, bước nạp giả không được gọi, không dòng JOB STEP nào của bước transform-*. (b) vòng hồ sơ: không snapshot tin, một snapshot hồ sơ → dòng TIMEOUT phần nạp «tại hồ sơ <ts>», state hồ sơ giữ mốc cũ, dòng JOB FAIL bước nap-ho-so mã 124. Chiều đỏ cùng fixture: bản sao bỏ khối trần ở vòng tin → ca (a) đỏ ghim «AC-1 phần nạp không có trần»."
+    expected: "exit 0; hai ca trên bản sao script (thư mục tạm, lượt detached nhóm riêng, DB cổng đóng), ZALO_IMPORT_TRAN_NAP=0. (a) vòng tin: một snapshot vn__zalo-agent__<ts> có manifest → stdout có dòng TIMEOUT phần nạp nêu đúng <ts>, mã thoát 124, apify-daily.state bằng 00000000T000000, bước nạp giả không được gọi, không dòng JOB STEP nào của bước transform-*. (b) vòng hồ sơ: không snapshot tin, một snapshot hồ sơ → dòng TIMEOUT phần nạp «tại hồ sơ <ts>», state hồ sơ giữ mốc cũ, dòng JOB FAIL bước nap-ho-so mã 124, chuỗi tin vẫn chạy (có dòng JOB STEP của bước transform-*), mã thoát cuối 124. Chiều đỏ cùng fixture: bản sao bỏ khối trần ở vòng tin → ca (a) đỏ ghim «AC-1 phần nạp không có trần»."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E2
     criterion: AC-2
@@ -48,7 +48,7 @@ evals:
     executor: test
     cmd: bash _acceptance/s03-tran-thoi-gian-luot-nap/probes/tran-unit.sh
     paths: [scripts/zalo-import-daily.sh, scripts/zalo-import-tran.test.mjs, pipeline/cron/com.oneinvest.zalo-import.plist, pipeline/cron/com.oneinvest.s03-nap-15phut.plist]
-    expected: "exit 0; ZALO_IMPORT_NODE_BIN trỏ một node giả (tệp bash trong thư mục tạm) ghi TRAN_GIAY, CANH_GIAY, DO_KILL vào tệp rồi thoát. Ma trận viết trước: lượt 00:00 không đặt biến → 14400/7200; lượt --luot-nhanh không đặt biến → 1200/600; lượt 00:00 đặt ZALO_IMPORT_TRAN_TONG=100 → 100/50; đặt thêm ZALO_IMPORT_CANH_BAO=7 → 100/7. `git diff --quiet origin/main -- pipeline/cron` thoát 0. ZALO_IMPORT_NODE_BIN=/khong-co/node → stderr có «TRẦN THỜI GIAN TẮT», đủ các dòng JOB STEP của lượt như khi có đồng hồ, cùng mã thoát."
+    expected: "exit 0; ZALO_IMPORT_NODE_BIN trỏ một node giả (tệp bash trong thư mục tạm) ghi TRAN_GIAY, CANH_GIAY, DO_KILL vào tệp rồi thoát. Ma trận viết trước: lượt 00:00 không đặt biến → 14400/7200; lượt --luot-nhanh không đặt biến → 2400/1200; lượt 00:00 đặt ZALO_IMPORT_TRAN_TONG=100 → 100/50; đặt thêm ZALO_IMPORT_CANH_BAO=7 → 100/7. `git diff --quiet origin/main -- pipeline/cron` thoát 0. ZALO_IMPORT_NODE_BIN=/khong-co/node → stderr có «TRẦN THỜI GIAN TẮT», đủ các dòng JOB STEP của lượt như khi có đồng hồ, cùng mã thoát."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E8a
     criterion: AC-8

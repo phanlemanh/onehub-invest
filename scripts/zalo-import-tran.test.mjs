@@ -106,6 +106,7 @@ test("AC-1 (b) vòng hồ sơ: TRAN_NAP=0 → TIMEOUT «tại hồ sơ», state 
   assert.equal(r.status, 124, `AC-1 vòng hồ sơ phải thoát 124 — ${r.status}`);
   assert.equal(docState(root, "s03-ho-so.state"), "00000000T000000");
   assert.match(r.out, /^JOB FAIL \[zalo-import-daily\] bước nap-ho-so mã 124$/m);
+  assert.match(r.out, /^JOB STEP \[zalo-import-daily\] bước transform-/m, "AC-1 vòng hồ sơ bị cắt chặn chuỗi tin (luật 10/11)");
   assert.deepEqual(docSo(root), []);
 }));
 
@@ -237,7 +238,7 @@ const nodeGia = (root) => {
 };
 for (const [o, env, args, ke] of [
   ["00:00 mặc định", {}, [], "14400 7200"],
-  ["nhanh mặc định", {}, ["--luot-nhanh"], "1200 600"],
+  ["nhanh mặc định", {}, ["--luot-nhanh"], "2400 1200"],
   ["00:00 TRAN_TONG=100", { ZALO_IMPORT_TRAN_TONG: "100" }, [], "100 50"],
   ["00:00 TRAN_TONG=100 CANH_BAO=7", { ZALO_IMPORT_TRAN_TONG: "100", ZALO_IMPORT_CANH_BAO: "7" }, [], "100 7"],
 ]) {
