@@ -16,7 +16,7 @@ const PIPE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const DB_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 
 /** Câu cũ trước hồ sơ (main a60adccb8) — chuẩn so tương đương và bản phá của chiều đỏ. */
-export const SQL_GOC =
+const SQL_GOC =
   `WITH moi AS (SELECT DISTINCT s, f, m, assertion_value_key(v) AS vk
                   FROM unnest($1::text[], $2::text[], $3::text[], $4::text[]) AS t(s, f, m, v))
    UPDATE field_assertions fa SET retracted_at = clock_timestamp(), retract_reason = 'thay-boi-luot'
@@ -66,6 +66,7 @@ const CA = [
   ["bộ chỉ có ở mảng: không rút gì", [PB("TRT:e", "bedrooms", "2"), PB("TRT:a", "bathrooms", "1")]],
   ["chủ thể đã rút + khác phương pháp: chỉ rút đúng bộ parser", [PB("TRT:d", "bedrooms", "9"), PB("TRT:a", "bedrooms", "9")]],
   ["trùng hệt trong mảng", [PB("TRT:a", "bedrooms", "2"), PB("TRT:a", "bedrooms", "2"), PB("TRT:a", "bedrooms", " 2 ")]],
+  ["bộ chỉ ở bảng: TRT:c vắng khỏi mảng, giữ nguyên", [PB("TRT:a", "bedrooms", "2"), PB("TRT:a", "bedrooms", "3"), PB("TRT:a", "bedrooms", "4")]],
 ];
 
 async function napMoi() {
@@ -108,19 +109,29 @@ async function kiemTuongDuong(ghi) {
 }
 
 describe("TR-AC-1 câu rút mới tương đương câu cũ (ca biên, ROLLBACK)", () => {
-  test("TR-AC-1 sáu ca biên: tập id rút trùng câu cũ; mảng rỗng không chạy câu nào", async () => {
+  test("TR-AC-1 bảy ca biên: tập id rút trùng câu cũ; mảng rỗng không chạy câu nào", async () => {
     await kiemTuongDuong(writeAssertions);
-    // Đối chứng dương: ca đầu phải rút đúng một dòng (bedrooms=4 parser) — bộ so không ngồi trên hai tập rỗng.
-    await trongGiaoDich(async () => {
-      await napMoi();
-      const { cu } = await soTapRut(writeAssertions, CA[0][1]);
-      assert.equal(cu.length, 1, `TR-AC-1 đối chứng dương: ca «${CA[0][0]}» câu cũ rút ${cu.length}, cần 1`);
-    });
     const gia = { query: () => { throw new Error("không được gọi câu nào khi mảng rỗng"); } };
     assert.deepEqual(await writeAssertions(gia, [], { replaceOwn: true }), { inserted: 0, retracted: 0 });
   });
+  test("TR-AC-1 đối chứng dương: ca một rút đúng 1 dòng (bedrooms=4 parser), ca «chỉ ở bảng» rút 0", async () => {
+    // Bộ so không ngồi trên hai tập rỗng: ca đầu phải rút đúng một dòng; ca TRT:c (chỉ có ở bảng) không được rút gì.
+    for (const [ten, can] of [[CA[0][0], 1], ["bộ chỉ ở bảng: TRT:c vắng khỏi mảng, giữ nguyên", 0]]) {
+      await trongGiaoDich(async () => {
+        await napMoi();
+        const ca = CA.find(([t]) => t === ten);
+        const { cu, moi } = await soTapRut(writeAssertions, ca[1]);
+        assert.equal(cu.length, can, `TR-AC-1 đối chứng dương: ca «${ten}» câu cũ rút ${cu.length}, cần ${can}`);
+        assert.equal(moi.length, can, `TR-AC-1 đối chứng dương: ca «${ten}» câu mới rút ${moi.length}, cần ${can}`);
+      });
+    }
+  });
   test("chiều đỏ TR-AC-1: bản phá `<> ALL` → `= ANY` (rút nhầm dòng khớp) → đỏ ghim «TR-AC-1 tập rút lệch câu cũ»", async () => {
     const mod = await banDot([["fa.value_key <> ALL (k.vks)", "fa.value_key = ANY (k.vks)"]]);
+    await assert.rejects(() => kiemTuongDuong(mod.writeAssertions), /TR-AC-1 tập rút lệch câu cũ/);
+  });
+  test("chiều đỏ TR-AC-1: bản phá bỏ điều kiện phương pháp (rút sang bộ khác) → đỏ ghim «TR-AC-1 tập rút lệch câu cũ»", async () => {
+    const mod = await banDot([[" AND fa.method = k.m\n      AND fa.value_key <> ALL (k.vks)", "\n      AND fa.value_key <> ALL (k.vks)"]]);
     await assert.rejects(() => kiemTuongDuong(mod.writeAssertions), /TR-AC-1 tập rút lệch câu cũ/);
   });
 });

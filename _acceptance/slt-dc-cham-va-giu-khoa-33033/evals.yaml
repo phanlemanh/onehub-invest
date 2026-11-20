@@ -8,14 +8,14 @@ evals:
     executor: test
     cmd: config:executors.test.trt_db
     paths: [pipeline/lib/assert.mjs, pipeline/scripts/assert-rut-thay.test.mjs]
-    expected: "exit 0; '✔ TR-AC-1 sáu ca biên: tập id rút trùng câu cũ; mảng rỗng không chạy câu nào'; '✔ chiều đỏ TR-AC-1: bản phá `<> ALL` → `= ANY`'; should-NOT-fire: '✖ TR-AC-1', 'TR-AC-1 đối chứng dương'"
+    expected: "exit 0; '✔ TR-AC-1 bảy ca biên: tập id rút trùng câu cũ; mảng rỗng không chạy câu nào'; '✔ TR-AC-1 đối chứng dương: ca một rút đúng 1 dòng (bedrooms=4 parser), ca «chỉ ở bảng» rút 0'; '✔ chiều đỏ TR-AC-1: bản phá `<> ALL` → `= ANY`'; '✔ chiều đỏ TR-AC-1: bản phá bỏ điều kiện phương pháp'; should-NOT-fire: '✖ TR-AC-1'"
   - id: E2
     criterion: AC-2
     executor: script
     cmd: config:executors.script.trt_tuong_duong
     paths: [pipeline/lib/assert.mjs, _acceptance/slt-dc-cham-va-giu-khoa-33033/probes/tuong-duong-ba-luot.mjs]
-    long_running: 8
-    expected: "exit 0; ≥ 3 dòng 'lần gọi <k>: mảng <n> · cũ rút <a> · mới rút <a> · lệch 0'; cuối 'TUONG DUONG OK — <k> lần gọi'; should-NOT-fire: 'LECH'"
+    long_running: 15
+    expected: "exit 0; ≥ 5 dòng 'lần gọi <k> (<nguồn>): mảng <n> · cũ rút <a> · mới rút <a> · nhiễu: cũ <b> mới <b> · lệch 0 · câu mới <x> s' gồm ba dòng 'S03 suy loại', một 'S06 transform-chotot', một 'S05 transform-fb', mỗi x < 60; cuối 'TUONG DUONG OK — <k> lần gọi, rút thật <a> id, rút nhiễu <b> id, lệch 0' với b > 0; should-NOT-fire: 'LECH'"
   - id: E3
     criterion: AC-3
     executor: test
@@ -26,9 +26,9 @@ evals:
     criterion: AC-4
     executor: script
     cmd: config:executors.script.trt_slt_dc_gio
-    paths: [pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs, _acceptance/slt-dc-cham-va-giu-khoa-33033/probes/do-gio.sh]
+    paths: [pipeline/lib/nap-045.mjs, pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs, _acceptance/slt-dc-cham-va-giu-khoa-33033/probes/do-gio.sh]
     long_running: 8
-    expected: "exit 0; '✔ SLT-DC-KHOA huỷ signal của ca → khoá 33033 rảnh trong 5 s'; '✔ chiều đỏ SLT-DC-KHOA: không truyền signal'; should-NOT-fire: '✖ SLT-DC-KHOA'"
+    expected: "exit 0; '✔ SLT-DC-KHOA hết trần thật (node:test tự huỷ, v<…>) → 33033 rảnh trong 8 s' kèm 'SLT-DC-KHOA hết trần thật: 33033 rảnh sau <x> s'; '✔ chiều đỏ SLT-DC-KHOA hết trần thật: không truyền signal'; '✔ SLT-DC-KHOA lưới máy chủ' kèm 'trần 480 s → transaction_timeout 510s' và 'trần 60 s → transaction_timeout 90s'; '✔ SLT-DC-KHOA huỷ signal của ca → khoá 33033 rảnh trong 5 s'; '✔ chiều đỏ SLT-DC-KHOA: không truyền signal'; should-NOT-fire: '✖ SLT-DC-KHOA'"
   - id: E5
     criterion: AC-5
     executor: script
@@ -49,7 +49,7 @@ evals:
     cmd: config:executors.script.trt_san_xuat
     paths: [_acceptance/slt-dc-cham-va-giu-khoa-33033/probes/san-xuat.mjs]
     status: not-run      # đo SAU gộp trên log máy thu (cần --tu-dong <số dòng lúc kéo main>, ghi ở ap-may-thu.md)
-    expected: "tự kiểm 'log có bước 400 s đỏ «LAT»'; 'SAN XUAT OK — bốn bước … · trung vị ≤ 123 s'; should-NOT-fire: 'SAN XUAT DO', 'LAT'"
+    expected: "tự kiểm 'log có bước 400 s đỏ «LAT»'; 'transform-zalo: bốn bước … · trung vị <x> s' (x ≤ 123); 'transform-chotot: mã 0 · <y> s' (y ≤ 400); mỗi nguồn 'rút thay-boi-luot <S0x>: 2 giờ trước <a> · 2 giờ sau <b>' không 'VUOT'; cuối 'SAN XUAT OK'; should-NOT-fire: 'SAN XUAT DO', 'LAT'"
   - id: E8
     criterion: AC-8
     executor: script

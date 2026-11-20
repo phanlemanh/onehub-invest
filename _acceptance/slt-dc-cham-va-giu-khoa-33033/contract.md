@@ -5,7 +5,9 @@ slug: slt-dc-cham-va-giu-khoa-33033
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [script]
-status: draft
+status: implemented
+veto_state: mo
+veto_opened_at: 2026-11-20T12:40:00Z
 design_doc: docs/superpowers/specs/2026-11-20-slt-dc-cham-va-giu-khoa-33033-design.md
 approved_by:
 approved_at:
@@ -33,26 +35,32 @@ Không migration, không DDL (GS 11:00Z). Không ANALYZE DB máy thu.
 ## Criteria
 
 - AC-1 (tương đương, ca biên): Given phát biểu mồi `TRT:*` trên DB của lượt trong BEGIN … ROLLBACK, When gọi `writeAssertions(…,
-  { replaceOwn: true })` với sáu ca biên — một bộ (chủ thể, trường, phương pháp) nhiều khoá; khác dạng chữ và số (' LÁNG ' với
-  'Láng', '2' với '02'); `not_stated`; bộ chỉ có ở mảng; dòng đã rút từ trước cùng dòng khác phương pháp; trùng hệt trong mảng —
-  Then tập id bị rút trùng hệt tập id câu cũ rút trên cùng trạng thái (câu cũ ép `enable_nestloop = off`), 0 lệch; ca một rút
-  đúng một dòng (đối chứng dương); mảng rỗng không chạy câu nào; bản phá `<> ALL` → `= ANY` đỏ ghim «TR-AC-1 tập rút lệch câu cũ».
+  { replaceOwn: true })` với bảy ca biên — một bộ (chủ thể, trường, phương pháp) nhiều khoá; khác dạng chữ và số (' LÁNG ' với
+  'Láng', '2' với '02'); `not_stated`; bộ chỉ có ở mảng; dòng đã rút từ trước cùng dòng khác phương pháp; trùng hệt trong mảng;
+  bộ chỉ có ở bảng (TRT:c vắng khỏi mảng) — Then tập id bị rút trùng hệt tập id câu cũ rút trên cùng trạng thái (câu cũ ép
+  `enable_nestloop = off`), 0 lệch; đối chứng dương: ca một rút đúng 1 dòng, ca «chỉ ở bảng» rút 0, ở cả câu cũ lẫn câu mới;
+  mảng rỗng không chạy câu nào; hai bản phá (`<> ALL` → `= ANY`; bỏ điều kiện phương pháp) đều đỏ ghim «TR-AC-1 tập rút lệch câu cũ».
   Căn cứ `<> ALL` ≡ NOT EXISTS: cột `value` NOT NULL (045), nên `value_key` và mọi phần tử của mảng khoá không NULL.
-- AC-2 (tương đương, ba lượt thật): Given DB của lượt chép từ DB máy thu, When chạy chuỗi transform của SLT-DC-7/9 (suy loại tắt →
-  bật → tắt) trong một giao dịch ROLLBACK, Then ở mỗi lần gọi câu rút (≥ 3 lần) tập id câu cũ rút trùng tập id câu mới rút, lệch 0
-  — in «TUONG DUONG OK».
+- AC-2 (tương đương, lượt thật mọi nguồn): Given DB của lượt chép từ DB máy thu, When chạy trong một giao dịch ROLLBACK chuỗi
+  transform của SLT-DC-7/9 (S03 suy loại tắt → bật → tắt), rồi một lượt S06 (transform-chotot) và một lượt S05 (transform-fb),
+  Then ở mỗi lần gọi câu rút (≥ 5 lần) tập id câu cũ rút trùng tập id câu mới rút, lệch 0, với cả mảng thật lẫn mảng nhiễu (1/20
+  giá trị đổi — tổng rút nhiễu > 0 là đối chứng dương); câu mới mỗi lần dưới 60 s (gồm mảng S06 cỡ ~800 nghìn) — in «TUONG DUONG OK».
 - AC-3 (không bậc hai): Given n phát biểu sống `TRT:n` nạp trong giao dịch và mảng cùng cỡ đổi 5% giá trị, When EXPLAIN và chạy câu
   rút ở n = 10, 1.000, 200.000 dưới hai chế độ ép (tắt hash join + merge join; tắt nested loop + merge join), Then không kế hoạch nào
   có «Anti Join», mỗi lượt dưới 30 s và rút đúng n/20 dòng; câu cũ ép nested loop ở 200.000 đỏ ghim «TR-AC-3 kế hoạch có Anti Join».
-- AC-4 (nhả khoá khi hết trần): Given một ca SLT-DC mở giao dịch giữ 33033 và đang chạy câu dài, When `signal` của ca bị huỷ (đúng
-  việc node:test làm lúc hết trần), Then phiên DB của ca bị cắt và 33033 rảnh trong 5 s; bản không truyền `signal` (như trước hồ
-  sơ) đỏ ghim «SLT-DC-KHOA 33033 vẫn bị giữ»; mỗi giao dịch của ca còn `transaction_timeout` = trần ca + 30 s làm lưới phía máy chủ.
+- AC-4 (nhả khoá khi hết trần): Given một ca mở giao dịch giữ 33033 bằng `moGiaoDichGiuKhoa` (lib/nap-045.mjs) và đang chạy câu
+  dài, When (a) `signal` của ca bị huỷ, và (b) node:test TỰ hết trần một ca thật trong tệp test tạm (trần 2 s, không abort tay),
+  Then phiên DB của ca bị cắt và 33033 rảnh — (a) trong 5 s, (b) trong 8 s sau trần; bản không truyền `signal` (như trước hồ sơ)
+  đỏ ở cả (a) «SLT-DC-KHOA 33033 vẫn bị giữ» lẫn (b); `SHOW transaction_timeout` trong giao dịch của ca 7/9 và ca 10 bằng đúng
+  trần + 30 s (lưới phía máy chủ khi tiến trình test chết hẳn).
 - AC-5 (trần khớp thời gian thật): Given DB của lượt, When chạy cả tệp SLT-DC, Then mọi ca xanh, cả tệp dưới 360 s (6 phút), và
   trần ca đặt theo số đo ghi trong mã (20/11: ca 7/9 232 s → trần 480 s; ca 10 24 s → trần 60 s; cả tệp 278 s) — 33033 không bị
   một ca giữ quá trần của nó (N = trần ca, tối đa 480 s ở ca 7/9; lúc chạy thường ca giữ ≈ 232 s).
 - AC-6 (nửa B): Given DB của lượt, When chạy `cd pipeline && npm run test:b` tuần tự, Then xanh và dưới 1.500 s (25 phút).
-- AC-7 (sản xuất sau gộp): Given bản sửa đã vào main và checkout chính đã kéo, When lượt nạp 15′ chạy bốn lần liền, Then bốn bước
-  transform-zalo đều mã 0, trung vị ≤ 123 s và không bước nào > 300 s — đo sau gộp từ log máy thu, chỉ đọc.
+- AC-7 (sản xuất sau gộp): Given bản sửa đã vào main và checkout chính đã kéo, When lượt nạp 15′ chạy bốn lần liền và lượt S06
+  đầu tiên chạy, Then bốn bước transform-zalo đều mã 0, trung vị ≤ 123 s, không bước nào > 300 s; bước transform-chotot đầu tiên
+  mã 0 và ≤ 400 s (mốc trước gộp 201–276 s); số phát biểu rút «thay-boi-luot» mỗi nguồn trong 2 giờ sau lúc kéo main không vượt
+  3 lần cùng nguồn trong 2 giờ trước đó cộng 100 — đo sau gộp từ log và DB máy thu, chỉ đọc.
 - AC-8 (phạm vi): Given nhánh so với merge-base origin/main, When liệt kê tệp đổi, Then chỉ trong vùng của hàng (câu rút, test mới,
   tệp SLT-DC, `test-nua.json`, hồ sơ, `_acceptance/config.yaml`, design doc, tệp máy sinh) — «PHAM-VI OK».
 
@@ -87,3 +95,6 @@ Không có `opportunity.md` (hàng phát sinh từ giám sát). Điểm xong tr�
 ## Notes
 
 - Áp: không có bước áp DB — mã chạy từ checkout chính sau khi điều phối làn merge kéo main. AC-7 đo sau đó (`ap-may-thu.md`).
+- Lùi được: phát biểu rút nhầm không cần khôi phục tay — S03 (transform-zalo toàn bộ bài) và S06 (mọi tin của lượt) ghi lại TRỌN
+  phát biểu mỗi lượt; sau revert, lượt kế chèn lại dòng sống cho giá trị đã rút nhầm (chỉ mục sống không chặn vì dòng cũ đã rút).
+  Đếm rút theo nguồn trước/sau gộp (AC-7) là dấu phát hiện.

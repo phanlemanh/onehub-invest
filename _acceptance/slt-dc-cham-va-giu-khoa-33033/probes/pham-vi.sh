@@ -5,7 +5,7 @@ set -uo pipefail
 cd "$(dirname "$0")/../../.."
 cho_phep() {
   case "$1" in
-    pipeline/lib/assert.mjs|pipeline/scripts/assert-rut-thay.test.mjs|pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs|\
+    pipeline/lib/assert.mjs|pipeline/lib/nap-045.mjs|pipeline/scripts/assert-rut-thay.test.mjs|pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs|\
     pipeline/test-nua.json|_acceptance/config.yaml|_acceptance/slt-dc-cham-va-giu-khoa-33033/*|\
     docs/superpowers/specs/2026-11-20-slt-dc-cham-va-giu-khoa-33033-design.md|docs/superpowers/plans/2026-11-20-slt-dc-cham-va-giu-khoa-33033.md|\
     PRODUCT-MAP.md|LO-TRINH.html|docs/plan/lo-trinh.json) return 0 ;;
