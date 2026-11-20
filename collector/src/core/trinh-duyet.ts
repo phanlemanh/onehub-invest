@@ -45,6 +45,20 @@ export type CauHinhMo = {
   locale?: string;
 };
 
+/** 1911-5 (MỞ LẠI): hàm THUẦN dựng tuỳ chọn mở theo ứng viên — đo được bằng đột biến:
+ * cft/beta → executablePath ĐÚNG ĐƯỜNG và KHÔNG có channel; chrome → channel chrome
+ * và không executablePath. moTrinhDuyet/moTrinhDuyetTam chỉ gọi hàm này. */
+export function dungTuyChonMo(
+  ungVien: UngVien,
+  env: NodeJS.ProcessEnv,
+  cauHinh: CauHinhMo = {},
+): { executablePath?: string; channel?: string; headless: boolean; locale: string } {
+  const exec = duongThucThi(ungVien, env);
+  return exec
+    ? { executablePath: exec, headless: cauHinh.headless ?? false, locale: cauHinh.locale ?? "en-US" }
+    : { channel: "chrome", headless: cauHinh.headless ?? false, locale: cauHinh.locale ?? "en-US" };
+}
+
 /** Mở TRÌNH DUYỆT CHUYÊN DỤNG dạng persistent (phiên giữ giữa các lượt — S02/S05/S06).
  * executablePath theo ứng viên hiện tại; KHÔNG bao giờ dùng channel khi có đường riêng. */
 export async function moTrinhDuyet(
@@ -52,15 +66,11 @@ export async function moTrinhDuyet(
   cauHinh: CauHinhMo = {},
   env: NodeJS.ProcessEnv = process.env,
 ): Promise<BrowserContext> {
-  const ungVien = ungVienHienTai(env);
-  const exec = duongThucThi(ungVien, env);
+  const tuyChon = dungTuyChonMo(ungVienHienTai(env), env, cauHinh);
   const launchOpts: Parameters<BrowserType["launchPersistentContext"]>[1] = {
-    headless: cauHinh.headless ?? false,
+    ...tuyChon,
     viewport: cauHinh.viewport ?? { width: 1440, height: 900 },
-    locale: cauHinh.locale ?? "en-US",
   };
-  if (exec) (launchOpts as Record<string, unknown>).executablePath = exec;
-  else (launchOpts as Record<string, unknown>).channel = "chrome";
   return chromium.launchPersistentContext(nganProfile(maNguon, env), launchOpts);
 }
 
@@ -70,14 +80,11 @@ export async function moTrinhDuyetTam(
   cauHinh: CauHinhMo = {},
   env: NodeJS.ProcessEnv = process.env,
 ): Promise<Browser> {
-  const ungVien = ungVienHienTai(env);
-  const exec = duongThucThi(ungVien, env);
-  // launch thường (không persistent) không nhận viewport/locale ở LaunchOptions — bỏ qua
-  const { viewport: _vp, locale: _lc, ...cauHinhLaunch } = cauHinh;
+  const tuyChon = dungTuyChonMo(ungVienHienTai(env), env, cauHinh);
   const launchOpts: Parameters<BrowserType["launch"]>[0] = {
-    headless: cauHinhLaunch.headless ?? false,
+    ...tuyChon,
+    headless: tuyChon.headless,
   };
-  if (exec) (launchOpts as Record<string, unknown>).executablePath = exec;
-  else (launchOpts as Record<string, unknown>).channel = "chrome";
+  delete (launchOpts as Record<string, unknown>).locale;
   return chromium.launch(launchOpts);
 }

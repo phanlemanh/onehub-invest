@@ -281,7 +281,7 @@ async function main() {
   // cùng đường mạng, không đổi IP/proxy, không giả fingerprint (luật 0211-6).
   const CDP_PORT = Number(process.env.S06_CDP_PORT ?? 9230);
   const { spawn } = await import("node:child_process");
-  const profileDir = join(STATE_DIR, "chrome-profile");
+  const profileDir = process.env.ONEHUB_PROFILE_GOC ? join(process.env.ONEHUB_PROFILE_GOC, "s06") : join(STATE_DIR, "chrome-profile"); // 2011-5: ngăn s06 ở gốc profile ngoài kho
   await mkdir(profileDir, { recursive: true });
   // open -hna (-h = ẩn): cửa sổ không nhảy đè màn hình Mạnh (phàn nàn 2/11);
   // window-position ngoài màn hình + thu về Dock sau khi connect (tab CDP vẫn
