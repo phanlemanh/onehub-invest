@@ -7,7 +7,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { spawn, execFileSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -30,6 +30,9 @@ const dungMoi = () => {
   writeFileSync(join(root, "pipeline", "transform-media.mjs"), TREO);
   writeFileSync(join(root, "pipeline", "refresh-bait-gap.mjs"), TREO);
   writeFileSync(join(root, "pipeline", "xep-hang-gia.mjs"), TREO);
+  // Đồng hồ chạy bằng node đang chạy test (symlink như zalo-import-tran.test.mjs) — không phụ thuộc
+  // ~/.local/node-v24.21.0 của máy thu (runner CI không có) — sửa tích hợp s03-tran r3.
+  symlinkSync(process.execPath, join(root, "node-dong-ho"));
   return root;
 };
 
@@ -41,7 +44,7 @@ const chay = (root, extraEnv = {}, args = []) =>
     const con = spawn("bash", [join(root, "scripts", "zalo-import-daily.sh"), ...args], {
       encoding: "utf8",
       detached: true,
-      env: { ...process.env, ...extraEnv },
+      env: { ...process.env, ZALO_IMPORT_NODE_BIN: join(root, "node-dong-ho"), ...extraEnv },
     });
     let out = "";
     con.stdout.on("data", (d) => { out += d; });

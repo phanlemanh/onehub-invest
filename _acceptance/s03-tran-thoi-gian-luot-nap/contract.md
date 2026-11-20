@@ -91,3 +91,7 @@ fixture thay bước pipeline, DB trỏ cổng đóng; lượt thử khởi deta
 
 - Lỗ A, B (AC-4, AC-5) thuộc logic đồng hồ phía trên mốc làn → trả ZCode qua GS/LL (U1-1711-6, U1-1711-7); U1 chỉ sửa lỗ C
   ở tệp test.
+
+- Ma trận PL34-AC-4 (S4 r3, GS phán 20/11): danh sách tệp của test thêm tệp thứ 13 `scripts/zalo-import-tran-zcode.test.mjs`
+  (test trần của ZCode gộp vào nhánh, claudedp-1911-2); lời AC giữ nguyên — AC-4 của hồ sơ `pl34-lich-dem-sau-buoc` còn ghi
+  «bảy tệp», `expected` của E8b ghi «mười hai tệp». Đưa vào câu can-nguoi ở Cổng Bằng chứng.

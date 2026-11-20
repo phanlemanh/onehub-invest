@@ -110,6 +110,38 @@ test("AC-1 (b) vòng hồ sơ: TRAN_NAP=0 → TIMEOUT «tại hồ sơ», state 
   assert.deepEqual(docSo(root), []);
 }));
 
+// ---------- AC-9 bộ đo lượt đêm đọc đúng đầu ra THẬT của script (khứ hồi, không log viết tay) ----------
+// Log launchd = lượt 00:00 cũ đã xong (mẫu 3 giờ) nối với đầu ra thật của một lượt bị cắt ở phần nạp. Bộ đo phải chấm
+// LƯỢT MỚI (cắt trần), không chấm sang lượt cũ. Chiều đỏ cùng fixture: bản sao bộ đo bỏ hai luật «phần nạp» (bộ đọc trước r3).
+const DO_DEM = join(REPO, "_acceptance", "s03-tran-thoi-gian-luot-nap", "ap-may-thu", "do-luot-dem.sh");
+const LUOT_CU = readFileSync(join(dirname(DO_DEM), "mau", "luot-3h.log"), "utf8");
+const doDem = (root, log, bien) => {
+  const f = join(root, "zalo-import.log"); writeFileSync(f, log);
+  let sc = DO_DEM;
+  if (bien) { sc = join(root, "do-luot-dem.sh"); writeFileSync(sc, bien(readFileSync(DO_DEM, "utf8"))); }
+  try { return execFileSync("bash", [sc, f], { encoding: "utf8" }).trim(); } catch (e) { return String(e.stdout ?? "").trim(); }
+};
+const BO_LUAT_NAP = (s) => s.split("\n").filter((l) => !/^  \/TIMEOUT: phần nạp vượt trần/.test(l)).join("\n")
+  .replace("cat=cho_cat;", 'cat="";').replace("bat && /TIMEOUT: lượt vượt trần/", "bat && /TIMEOUT: lượt vượt trần|TIMEOUT: phần nạp vượt trần/");
+const kiemAC9 = (loai, ts, bien) => voiRoot({}, async (root) => {
+  themSnap(root, loai, ts);
+  const r = await chay(root, { ZALO_IMPORT_TRAN_NAP: "0" });
+  assert.match(r.out, /TIMEOUT: phần nạp vượt trần 0s/, "fixture: lượt phải bị cắt ở phần nạp");
+  const ra = doDem(root, LUOT_CU + r.out, bien);
+  assert.match(ra, /— ĐẠT \(cắt trần\)$/, `AC-9 chấm nhầm lượt cũ khi lượt mới bị cắt ở phần nạp — «${ra}»`);
+  assert.doesNotMatch(ra, /10800 giây/, `AC-9 chấm nhầm lượt cũ khi lượt mới bị cắt ở phần nạp — «${ra}»`);
+  return ra;
+});
+test("AC-9 khứ hồi: lượt cắt ở vòng tin (thoát trước truoc-lan-claude) → bộ đo chấm lượt mới «ĐẠT (cắt trần)»", async () => {
+  assert.match(await kiemAC9("zalo-agent", "2026-11-17T030303000"), /0 bước, 0 giây \(0h00m\) — ĐẠT \(cắt trần\)$/);
+});
+test("AC-9 khứ hồi: lượt cắt ở vòng hồ sơ (TIMEOUT in trước truoc-lan-claude) → bộ đo giữ dấu cắt trần", () =>
+  kiemAC9("s03-ho-so", "2026-11-17T040404000"));
+test("AC-9 chiều đỏ: bộ đo bỏ hai luật phần nạp → đỏ ghim «AC-9 chấm nhầm lượt cũ» ở cả hai vòng", async () => {
+  await assert.rejects(kiemAC9("zalo-agent", "2026-11-17T050505000", BO_LUAT_NAP), /AC-9 chấm nhầm lượt cũ/);
+  await assert.rejects(kiemAC9("s03-ho-so", "2026-11-17T060606000", BO_LUAT_NAP), /AC-9 chấm nhầm lượt cũ/);
+});
+
 // ---------- AC-2 bị cắt không mất, lượt sau bắt kịp ----------
 const T1 = "2026-11-17T010000000", T2 = "2026-11-17T020000000";
 const kiemAC2a = (opts) => voiRoot(opts, async (root) => {
