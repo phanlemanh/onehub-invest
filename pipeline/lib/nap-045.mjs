@@ -62,3 +62,39 @@ export async function napPhatBieu(client, { moCong = true } = {}) {
        WHERE NOT EXISTS (SELECT 1 FROM ops_audit WHERE action = 'phat-bieu:cat-chuyen')`);
   }
 }
+
+/**
+ * Mở giao dịch thử giữ khoá 33033 mà không giữ quá trần của ca (hồ sơ slt-dc-cham-va-giu-khoa-33033).
+ * Hết trần, node:test chỉ huỷ `signal` của ca chứ không huỷ promise: giao dịch cũ vẫn chạy và giữ 33033, ca sau đứng chờ.
+ * `signal` bị huỷ → cắt phiên của giao dịch bằng pg_terminate_backend từ một kết nối riêng (ROLLBACK, nhả khoá ngay).
+ * `tranGiay` → `transaction_timeout` = trần + 30 s: lưới phía máy chủ khi tiến trình test chết hẳn.
+ * @param {typeof import("pg")} pg
+ * @param {string} url
+ * @param {{ signal?: AbortSignal, tranGiay?: number }} [opts]
+ * @returns {Promise<{ c: import("pg").Client, dong: () => Promise<void> }>} gọi `dong()` trong finally (ROLLBACK + đóng)
+ */
+export async function moGiaoDichGiuKhoa(pg, url, { signal, tranGiay } = {}) {
+  const c = new pg.Client({ connectionString: url });
+  await c.connect();
+  c.on("error", () => {}); // phiên bị cắt: lỗi đi qua câu đang chạy, không làm sập tiến trình
+  const pid = c.processID;
+  const cat = async () => {
+    const k = new pg.Client({ connectionString: url });
+    try { await k.connect(); await k.query("SELECT pg_terminate_backend($1)", [pid]); } catch { /* phiên đã đóng */ }
+    finally { await k.end().catch(() => {}); }
+  };
+  const onAbort = () => { cat(); };
+  signal?.addEventListener("abort", onAbort, { once: true });
+  const dong = async () => {
+    signal?.removeEventListener("abort", onAbort);
+    await c.query("ROLLBACK").catch(() => {});
+    await c.end().catch(() => {});
+  };
+  try {
+    await c.query("BEGIN");
+    if (tranGiay) await c.query(`SET LOCAL transaction_timeout = '${Math.ceil(tranGiay) + 30}s'`);
+    await c.query("SELECT pg_advisory_xact_lock(33033)");
+    if (signal?.aborted) await cat();
+  } catch (e) { await dong(); throw e; }
+  return { c, dong };
+}
