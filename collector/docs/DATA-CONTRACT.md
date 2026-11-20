@@ -235,7 +235,7 @@ Luật đọc:
 3. Tên tệp và nội dung có thể chứa SĐT người bán (tầng C) — giữ nguyên, collector không chuẩn hoá.
 4. Cùng `driveId` ở hai snapshot: lấy bản mới nhất theo `fetchedAt`; cùng `sha256` là cùng nội dung.
 
-## Nguồn S09 `s09-danh-ba` — danh bạ căn my-home: bản đồ toà/tầng/thấp tầng (nháp v15, claudedp-1811-12)
+## Nguồn S09 `s09-danh-ba` — danh bạ căn <tên-phân-hệ>: bản đồ toà/tầng/thấp tầng (nháp v15, claudedp-1811-12)
 
 > **NHÁP — số 15 CHƯA GHIM**: v13 = S09 danh mục; v14 = S16 thuộc tính căn (nháp đang trên nhánh khác);
 > S17 cũng đang nháp cùng số 15. Số chốt lúc gộp, bên đọc nhận diện theo `source`, không theo số.
@@ -264,7 +264,7 @@ Luật đọc:
 không bao giờ bật — bỏ từ lượt thu bù 20/11; đối soát đủ/thiếu bằng `meta.total` của phản hồi
 (**tổng căn THẬT theo tiền tố** — vd khu 11.098 căn) so Σ mã gom. Đặc tả nguồn đã đo 20/11:
 cắt cứng 500/lời; `page/offset/from/skip/sort/order/house_type/size>500` BỊ PHỚT lờ;
-`property_number` là BỘ LỌC TIỀN TỐ mã căn (không phân biệt hoa/thường); phân trang thực tế =
+tham-số-con-trỏ của nguồn (bộ lọc tiền tố mã căn, không phân biệt hoa/thường); phân trang thực tế =
 duyệt tiền tố (prefix-DFS) từ quan sát + quét lỗ giữa dải số; phần không truy được qua tiền tố
 khai trong bảng đối soát (đừng suy ra phần thiếu là gì).
 
@@ -281,19 +281,19 @@ Khuôn MỘT item mỗi kind (tên dự án/toà/khu ĐÃ THAY bằng giả; uui
 
 ```json
 {"source":"s09-danh-ba","kind":"danh-muc","sourceId":"danh-muc","fetchedAt":"2026-11-19T00:49:00.000Z",
- "meta":{"duong":"/my-home/projects?fetch_all=true","status":200,"soDuAn":221,"loi":null},
+ "meta":{"duong":"/<phan-he>/<loai>/{id}?fetch_all=true","status":200,"soDuAn":221,"loi":null},
  "payload":{"code":200,"data":[{"id":"00000000-0000-4000-8000-000000000001","name":"<du-an-gia-1>","project_locations":[{"district":{"code":"001","name":"<quan-gia>"},"province":{"code":"01","name":"<tinh-gia>"}}],"channel_code":["AVM"],"demand_code":["SECONDARY_BUYING","SECONDARY_SELLING"]}]}}
 {"source":"s09-danh-ba","kind":"toa","sourceId":"00000000-0000-4000-8000-000000000001","fetchedAt":"2026-11-19T00:49:03.000Z",
- "meta":{"duAnId":"00000000-0000-4000-8000-000000000001","duAnTen":"<du-an-gia-1>","duong":"/my-home/buildings/{duAnId}","status":200,"soToa":4,"loi":null},
+ "meta":{"duAnId":"00000000-0000-4000-8000-000000000001","duAnTen":"<du-an-gia-1>","duong":"/<phan-he>/<loai>/{id}","status":200,"soToa":4,"loi":null},
  "payload":{"code":200,"data":[{"id":"00000000-0000-4000-8000-0000000000a1","name":"TA1"},{"id":"00000000-0000-4000-8000-0000000000a2","name":"TB2"}]}}
 {"source":"s09-danh-ba","kind":"tang","sourceId":"00000000-0000-4000-8000-0000000000a1","fetchedAt":"2026-11-19T00:49:06.000Z",
- "meta":{"duAnId":"00000000-0000-4000-8000-000000000001","toaId":"00000000-0000-4000-8000-0000000000a1","toaTen":"TA1","duong":"/my-home/floors/{toaId}","status":200,"soTang":29,"loi":null},
+ "meta":{"duAnId":"00000000-0000-4000-8000-000000000001","toaId":"00000000-0000-4000-8000-0000000000a1","toaTen":"TA1","duong":"/<phan-he>/<loai>/{id}","status":200,"soTang":29,"loi":null},
  "payload":{"code":200,"data":[{"id":"00000000-0000-4000-8000-0000000000b1","name":"02"},{"id":"00000000-0000-4000-8000-0000000000b2","name":"12B"}]}}
 {"source":"s09-danh-ba","kind":"khu-thap-tang","sourceId":"00000000-0000-4000-8000-000000000002","fetchedAt":"2026-11-19T00:49:09.000Z",
- "meta":{"duAnId":"00000000-0000-4000-8000-000000000002","duAnTen":"<du-an-gia-2>","duong":"/my-home/low-rises/projects/{duAnId}/sectors","status":200,"soKhu":1,"loi":null},
+ "meta":{"duAnId":"00000000-0000-4000-8000-000000000002","duAnTen":"<du-an-gia-2>","duong":"/<phan-he>/<loai>/{id}","status":200,"soKhu":1,"loi":null},
  "payload":{"code":200,"data":[{"id":"00000000-0000-4000-8000-0000000000c1","name":"<khu-gia>"}]}}
 {"source":"s09-danh-ba","kind":"can-thap-tang","sourceId":"00000000-0000-4000-8000-0000000000c1","fetchedAt":"2026-11-19T00:49:12.000Z",
- "meta":{"duAnId":"00000000-0000-4000-8000-000000000002","khuId":"00000000-0000-4000-8000-0000000000c1","khuTen":"<khu-gia>","size":2000,"soCanNhan":387,"canDuTrang":false,"duong":"/my-home/low-rises/sectors/{khuId}/properties?size=2000","status":200,"loi":null},
+ "meta":{"duAnId":"00000000-0000-4000-8000-000000000002","khuId":"00000000-0000-4000-8000-0000000000c1","khuTen":"<khu-gia>","size":2000,"soCanNhan":387,"canDuTrang":false,"duong":"/<phan-he>/<loai>/{id}?size=2000","status":200,"loi":null},
  "payload":{"code":200,"data":[{"id":"00000000-0000-4000-8000-0000000000d1","name":"NT1-01","code":"NT1-01","increment_number":1005259}]}}
 ```
 
@@ -311,12 +311,12 @@ Khoá nối với S16/S08 (chi tiết số đo ở tệp kê local của lượt
   so trực tiếp với cặp (`toa`, `ma_can`) của S16 và `property_code` của S08; tầng so được qua tên tầng nguyên văn.
 - Căn thấp tầng: khuôn `NHÀ.CĂN` (ví dụ `NT1-01`) — tiền tố nhà theo khu, không tách được tầng (không có tầng);
   so qua bảng tên nhà ↔ tên khu của dự án.
-- UUID dự án/toà/tầng/căn của my-home là quan hệ bền (khoá nối cấp cao nhất); **khác** namespace với
+- UUID dự án/toà/tầng/căn của nguồn là quan hệ bền (khoá nối cấp cao nhất); **khác** namespace với
   `insight_by_block[].id` của nguồn `s09-du-an` — ánh xạ qua (`du_an_id`, tên toà), không so uuid chéo.
 
 ## Lịch sử phiên bản
 
-- **schemaVersion 15 (2026-11-19, nháp claudedp-1811-12 — S09 danh bạ căn my-home, gói 1 bản đồ)**: thêm nguồn
+- **schemaVersion 15 (2026-11-19, nháp claudedp-1811-12 — S09 danh bạ căn <tên-phân-hệ>, gói 1 bản đồ)**: thêm nguồn
   `s09-danh-ba` (mục ở trên) với năm kind `danh-muc/toa/tang/khu-thap-tang/can-thap-tang`, payload nguyên văn
   `{code,data}`. NHÁP — số 15 chưa ghim (v14 = S16 thuộc tính căn đang nháp nhánh khác; S17 cũng nháp cùng số);
   bên đọc nhận diện theo `source`. Chưa có bộ nạp/migration (làn Claude giữ 115); gói 2 căn cao tầng theo tầng là
