@@ -1,65 +1,70 @@
-# Review findings: phuong-tu-du-an-chay-that (round 1)
-
 ## Trong hợp đồng
 
-- **Ô «nhiều dự án» của ma trận AC-5 đạt mà không có tin nào (0 tin), trong khi ma-tran-o.json ghi 4 và 8 tin lúc đo**
-  file: `_acceptance/phuong-tu-du-an-chay-that/probes/tren-db-thu.mjs:139`
-  severity: medium
-  AC: AC-5
-  source: conventions
-  detail: Chế độ `ma-tran` chấm từng ô bằng `kt(lech.length === 0, ...)`, nên ô có 0 tin vẫn tự đạt. so-chay-thu.md ghi hai ô `tinh-nhieuduan-theco` và `trong-nhieuduan-theco` đều là 0 tin, «chưa đo trên dữ liệu thật». Trong khi đó ma-tran-o.json ghi so_luc_do 4 và 8, và gap-probe/card-plain khẳng định nhóm nhiều dự án «đã viết trước ma trận» để có phép đo riêng. Nghĩa là AC-5 cho hai ô này đạt mà thực ra không đo gì. Hai số còn lệch nhau theo cách phân loại: ma trận đếm lúc soát là 4/8, còn probe đếm qua count(DISTINCT fa.value) ra 0. Theo luật bảng phủ ca (AGENTS «số trong ô đếm từ DB máy thu»; ô bỏ thì ghi «ngoài phạm vi, vì»), ô 0 tin phải hoặc làm probe đỏ / bắt buộc có ca fixture riêng, hoặc được khai ngoài phạm vi. Không nên để đạt âm thầm. Ngoài ra, phần expected của E5 trong evals.yaml vẫn ghi «20 tin lệch thẻ», «10 tin đổi tỉnh», trong khi số đo hiện là 19 và 9.
-
-- **Hình dạng 5 (quét lớp, đếm assert giả): «số assert bằng số ô» là phép so tự đúng**
-  file: `_acceptance/phuong-tu-du-an-chay-that/probes/tren-db-thu.mjs:141`
-  severity: high
-  AC: AC-5
-  source: measurement
-  detail: Ở chế độ ma-tran, `soAssert += 1` chạy đúng một lần trong mỗi vòng `for (const o of M)`, rồi `kt(soAssert === M.length, ...)`. Phép so này luôn đúng, kể cả khi ma trận thiếu ô hay probe phân ô sai. E5 hứa «Số assert bằng số ô của ma-tran-o.json» (mẫu P105), nhưng ở đây số assert được sinh ra từ chính danh sách ô, không đếm độc lập. Probe cũng không đối chiếu tổng số tin phân vào 13 ô với tổng tin S03 (7.724), nên không chứng minh ma trận phủ hết lớp.
-
-- **Hình dạng 4/5 (âm tính một mình, phủ lớp bằng điểm-case): ô rỗng tự xanh, tin ngoài 13 ô không được kiểm**
-  file: `_acceptance/phuong-tu-du-an-chay-that/probes/tren-db-thu.mjs:139`
-  severity: high
-  AC: AC-5
-  source: measurement
-  detail: `kt(lech.length === 0, ...)` chỉ kiểm rằng không có tin lệch. Probe không kiểm số tin trong ô (`tin.length`) với `so_luc_do`, cũng không đòi `> 0`. Nếu SQL_O phân ô sai, ô rỗng và vẫn xanh. AC-5 hứa «0 tin vốn có cột cấp phường bị đổi», nhưng không có phép kiểm chung nào trên mọi tin `o_cot = 'phuong'`. Probe chỉ kiểm qua hai ô `phuong-motphuong-khongthe` và `phuong-khongduan-khongthe`. Tin cột phường rơi vào tổ hợp không có trong ma-tran-o.json (ví dụ thẻ «trung», «co», dự án «nhieu») sẽ không bị lọc vào ô nào, nên đổi cột cũng không đỏ.
-
-- **Hình dạng 3 (đo một con số trong khi lời hứa là quan hệ): AC-3 «0 chèn, 0 rút, 0 phân xử» chỉ đo bằng số dòng sống ròng**
-  file: `_acceptance/phuong-tu-du-an-chay-that/probes/tren-db-thu.mjs:92`
-  severity: high
-  AC: AC-3
-  source: measurement
-  detail: Ở chế độ chay-lai, probe dùng `kt(await soSong() === n1, ...)` để chứng minh lần hai không chèn, không rút. Nhưng rút 1 rồi chèn 1 vẫn cho số ròng bằng n1. Kết quả JSON `kq` được parse nhưng bị bỏ (`void kq;`, dòng 99). Ở chế độ --json, lệnh chỉ log `dem`, không log `chen/rut/tin`, nên 0 chèn, 0 rút, 0 tin phân xử lại không được đo. Lời hứa «mọi tin đã nhận phường vẫn giữ phường» cũng chỉ đo bằng tổng đếm `p2.co >= p1.co` (dòng 94), không so theo từng tin. Tin A mất phường trong khi tin B nhận phường vẫn xanh.
-
-- **Hình dạng 1 (đo chỉ dẫn thay vì đầu ra): AC-6 kiểm sao-luu.sh, kiem-sau.sql bằng cách xem tệp có rỗng không**
-  file: `_acceptance/phuong-tu-du-an-chay-that/probes/tren-db-thu.mjs:151`
-  severity: medium
-  AC: AC-6
-  source: measurement
-  detail: AC-6 ghi «When chạy trên DB thử theo thứ tự sao lưu, áp, kiểm sau, lùi». Probe ap-lui chỉ `readFileSync(...).trim().length > 0` cho README.md, sao-luu.sh, kiem-sau.sql, so-chay-thu.md. sao-luu.sh và kiem-sau.sql không bao giờ được chạy. Probe chỉ thực thi lui.sql. Vì vậy một sao-luu.sh hỏng (ví dụ sai tên container, sai cột) vẫn xanh. Phần hứa «hồ sơ lùi kê lệnh chạy lại hạng giá và lệnh kiểm bản cloud» cũng không có assert nào.
-
-- **Hình dạng 4 (âm tính một mình): danh sách tin đổi tỉnh trong so-chay-thu.md xanh khi tập rỗng**
-  file: `_acceptance/phuong-tu-du-an-chay-that/probes/tren-db-thu.mjs:146`
-  severity: medium
-  AC: AC-5
-  source: measurement
-  detail: `kt(thieu.length === 0, ...)` với `thieu = doiTinh.filter((x) => !sct.includes(x.offer_id))`. Probe không đối chứng dương rằng `doiTinh.length` bằng 10 (con số AC-5 nêu) hay ít nhất > 0. Nếu SQL_O hoặc điều kiện `sau.get(x.offer_id) === x.p` không bắt được tin nào, phép kiểm vẫn xanh. Ngoài ra `sct.includes(offer_id)` chỉ là chuỗi có mặt ở bất kỳ đâu trong tệp, không kiểm cặp tỉnh cũ → tỉnh mới đi kèm.
-
-- **Hình dạng 3 (chuỗi có mặt thay cho số khớp phép đo): AC-7 chỉ dò dòng «- Khoá: \S» trong so-chay-thu.md**
-  file: `_acceptance/phuong-tu-du-an-chay-that/probes/tren-db-thu.mjs:226`
+- **E1 khẳng định «khoá thật thì lượt 00:00 trả mã khác 0», nhưng test chỉ dùng khoá giả, còn lượt 00:00 thật không có lock_timeout**
+  AC: AC-1
+  file: `_acceptance/phuong-tu-du-an-chay-that/evals.yaml:10`
   severity: low
-  AC: AC-7
+  source: conventions
+  detail: Phần expected của E1 ghi: «phiên thứ hai giữ khoá thật thì lượt nhanh in BỎ LƯỢT và lượt 00:00 trả mã khác 0». Trong scripts/phuong-tu-du-an-chuoi.test.mjs, khoá thật chỉ được đo ở lượt nhanh, nhờ S03_NHANH_LOCK_TIMEOUT. Ca 00:00 dùng node giả in chuỗi «lock timeout» (FAIL_STEPS `phuong-tu-du-an:1:khoa`). Lượt 00:00 thật không đặt lock_timeout (zalo-import-daily.sh:219 chỉ đặt khi NHANH=1). Vì vậy khi có khoá thật, bước này sẽ chờ vô hạn chứ không thoát khác 0. Bằng chứng nói nhiều hơn điều test đã chứng minh: nên sửa lời expected cho khớp, hoặc đo khoá thật ở lượt 00:00.
+
+- **Lệnh kiểm sau và lệnh lùi trong README dùng `psql -f <đường host>` qua `docker exec`, nên psql trong container không thấy tệp**
+  AC: AC-6
+  file: `_acceptance/phuong-tu-du-an-chay-that/ap-may-thu/README.md:17`
+  severity: high
+  source: bugs
+  detail: README định nghĩa `psql …` là `docker exec -i -e PGPASSWORD=oneinvest one-invest-db psql …`, rồi gọi `psql … -f _acceptance/phuong-tu-du-an-chay-that/ap-may-thu/lui.sql`, và gọi kiem-sau.sql theo cùng cách ở bước 2 và bước 4. Với `-f`, psql đọc tệp bên trong container. Container `one-invest-db` chỉ gắn volume `onehub_pgdata:/var/lib/postgresql` (đã kiểm bằng `docker inspect` và db/docker-compose.yml), không gắn kho. Vì vậy cả lệnh kiểm sau lẫn cách lùi sẽ báo `No such file or directory` trên máy thu. Các hồ sơ áp khác trong kho đều dùng chuyển hướng `< _acceptance/.../lui.sql`. Probe `ap-lui` không bắt được lỗi này: nó đọc lui.sql và kiem-sau.sql bằng `readFileSync` rồi chạy qua pg client, không chạy đúng lệnh README ghi. Hậu quả: trong năm thứ của hồ sơ, «cách lùi» và «lệnh kiểm sau» không chạy được như đang ghi. Sửa: thay `-f <tệp>` bằng `< <tệp>`, và nên thêm `-1` cho lui.sql như các hồ sơ khác.
+
+- **Hình dạng 2 (trạng thái dựng tay thay vì lấy từ bên ghi): «tin mới» của E4/AC-4 là tin cũ bị rút phát biểu bằng tay, không phải bài do transform-zalo nạp**
+  AC: AC-4
+  file: `_acceptance/phuong-tu-du-an-chay-that/probes/tren-db-thu.mjs:144`
+  severity: medium
   source: measurement
-  detail: Probe tính `p0/p1/w0/w1` và `r1.giay` nhưng chỉ in ra (dòng 221-222), không so với số ghi trong so-chay-thu.md. Phép kiểm `new RegExp(`^- ${k}: \S`, "m")` xanh với bất kỳ chữ nào sau dấu hai chấm (ví dụ «chưa đo»), nên «thiếu một số thì eval đỏ» không được bảo đảm. Probe cũng không kiểm được quan hệ giữa số ghi trong tệp và số đo trên DB thử.
+  detail: AC-4 hứa: «một bài S03 mới được nạp qua transform-zalo thật … chạy bước phường thì cột là phường ấy». Probe lại lấy một tin đã có sẵn (`o.find(...)`). Tin này đã qua apDau. Probe tự rút phát biểu của luật (UPDATE retract_reason='pct-tin-moi'), tự gọi resolve_offer_fields để đưa cột về goc, rồi mới chạy transformZalo() và `--ghi --noi-tiep`. Phát biểu project_node_id của tin có từ trước, transform-zalo trong lượt này không sinh ra nó. Bước phường thực ra chỉ đang ghi lại một phát biểu bị rút bằng tay. Cùng hình dạng ở chot-luot-dau dòng 108–111: «đã áp: cùng lệnh ghi được bài mới» được mô phỏng bằng cách rút dòng có id nhỏ nhất. Đường «bài mới đi từ transform-zalo» chưa được đo trên DB thử.
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **Chốt --noi-tiep đọc ngoài giao dịch, không khoá: lui.sql chạy xen lượt nạp 15′ bị ghi đè lặng lẽ và chuỗi tiếp tục ghi**
-  Người dùng thấy gì: Nếu phải lùi việc gán phường đúng lúc lượt nạp tự động đang chạy, lần lùi có thể bị ghi đè mà không báo lỗi và phường lại được gán lại cho các tin.
-  Căn cứ: Chỉ xảy ra khi lùi trùng đúng lúc nạp tự động, hiếm gặp, và dặn dừng lượt nạp trước khi lùi là đủ để tránh; dữ liệu gốc không mất.
-  file: `pipeline/scripts/phuong-tu-du-an.mjs`
+- **Lùi (lui.sql) có thể bị lượt nạp S03 đang chạy ghi đè: chuỗi chèn lại toàn bộ phát biểu ngay sau khi lùi commit**
+  Người dùng thấy gì: Nếu phải lùi đúng lúc một lượt nạp tin đang chạy, phường vừa lùi có thể bị ghi lại ngay, nên lùi coi như không xảy ra. Chỉ xảy ra khi lùi trùng giờ nạp; chạy lại lùi khi không có lượt nạp là xong.
+  Căn cứ: Hiếm gặp, không mất dữ liệu và người vận hành tự làm lại được; ghi lời dặn tránh giờ nạp là đủ.
+  file: `_acceptance/phuong-tu-du-an-chay-that/ap-may-thu/lui.sql`
   severity: medium
   Đề xuất: known-limits
 
-Cụm ngoài vùng phủ: cluster: n-a (không đo được — không eval nào khai paths, hoặc dưới ngưỡng cụm).
+- **Bước ghi dữ liệu mới chạy mỗi 15 phút nhưng pipeline/CLAUDE.md và docs/ops/runtime-map.md không ghi**
+  Người dùng thấy gì: Người vận hành gặp lỗi ở bước suy phường sẽ không có tài liệu nào để tra cách xử lý.
+  Căn cứ: Chỉ ảnh hưởng tốc độ xử lý sự cố, không mất dữ liệu, bổ sung tài liệu sau rất rẻ.
+  file: `scripts/zalo-import-daily.sh`
+  severity: low
+  Đề xuất: known-limits
+
+- **JST-AC-9 loại hẳn bước phuong-tu-du-an khỏi phép so với origin/main, và vẫn loại sau khi gộp**
+  Người dùng thấy gì: Một thước kiểm thời lượng các bước nạp bỏ qua bước suy phường, nên thay đổi về bước này sau khi gộp có thể không bị phát hiện bởi thước đó.
+  Căn cứ: Không ảnh hưởng người dùng, đã có thước khác canh thứ tự; gỡ bộ lọc sau khi gộp là việc nhỏ.
+  file: `scripts/job-step-thoi-luong.test.mjs`
+  severity: low
+  Đề xuất: known-limits
+
+- **Điều kiện đạt của lệnh kiểm sau so với số không cùng đại lượng, nên lượt áp đúng vẫn bị coi là lệch**
+  Người dùng thấy gì: Khi áp thật, phép kiểm sau có thể báo lệch dù lượt áp đúng, khiến người áp dừng lại và báo động giả.
+  Căn cứ: Không làm mất hay sai dữ liệu, chỉ gây dừng nhầm; nhưng nên làm rõ điều kiện trước khi áp thật.
+  file: `_acceptance/phuong-tu-du-an-chay-that/ap-may-thu/README.md`
+  severity: medium
+  Đề xuất: new-contract
+
+- **Hình dạng 3 (chỉ kiểm chuỗi có mặt): phép kiểm README ở ap-lui không gắn với bước lùi, chữ «cloud» khớp cả câu không liên quan**
+  Người dùng thấy gì: Nếu ai đó xoá lệnh kiểm bản cloud khỏi phần lùi, phép kiểm tự động vẫn báo xanh.
+  Căn cứ: Chỉ là lưới an toàn yếu, không ảnh hưởng người dùng trực tiếp; siết lại sau rẻ.
+  file: `_acceptance/phuong-tu-du-an-chay-that/probes/tren-db-thu.mjs`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Hình dạng 4 (chỉ kiểm âm, không có đối chứng dương): đối chứng «dự án không có phường giữ nguyên cột» của E4 chụp mốc SAU lượt ghi đầu, và tin ấy không đi qua đường «tin mới»**
+  Người dùng thấy gì: Một phép đối chứng phụ có thể bỏ sót việc tin không thuộc phường bị gán nhầm phường ở lượt ghi đầu.
+  Căn cứ: Đã có phép đo khác cùng chiều phủ ca này, sửa thêm không đáng chi phí.
+  file: `_acceptance/phuong-tu-du-an-chay-that/probes/tren-db-thu.mjs`
+  severity: low
+  Đề xuất: wont-fix
+
+⚠ Cụm ngoài vùng phủ: 2/9 lỗi rơi vào file không bộ đo nào phủ (_acceptance/phuong-tu-du-an-chay-that/evals.yaml, scripts/job-step-thoi-luong.test.mjs) — dừng và quyết: mở rộng hợp đồng hay rút phạm vi.

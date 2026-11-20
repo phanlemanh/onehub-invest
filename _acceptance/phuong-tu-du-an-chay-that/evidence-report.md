@@ -2,16 +2,18 @@
 schema_version: 2
 feature_slug: phuong-tu-du-an-chay-that
 verdict: BLOCKED
-failed_evals: ["E5","E8"]
-reason: "bash _acceptance/phuong-tu-du-an-chay-that/probes/tren-db-thu.sh ap-lui (E6): vuot thoi luong khai (long_running) — lenh cho tra __QUA_HAN, chua co dong __EXIT=. Chay lai voi tool timeout dai hon, khong phai loi code."
+failed_evals: ["E7"]
+reason: "Lệnh `node scripts/suite-neu-doi.mjs pipeline_b -- 'cd pipeline && npm run test:b'` chạy quá 30 phút chưa xong (khai long_running: 30 cho eval trong evals.yaml, không có khai báo riêng cho pipeline_b, mặc định 30 phút). Không phải bị công cụ giết; tiến trình nền đã được dừng sau ngưỡng."
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: d09b0c1018eeea45ebce2e89a434936e6f7f09e1
+verified_commit: 94b9b9353b68eb3fba906b6f7346c3ddf92a3652
 human_signoff:
 ---
 
 # Evidence Report: phuong-tu-du-an-chay-that
+
+Vòng 2. Verdict BLOCKED: suite pipeline_b không có kết quả vì quá ngưỡng thời gian; E7 chạy xong nhưng lệch số đo. Các lệnh suite app_ui và pipeline_a thoát khác 0, không gắn eval nào (xem mục Lệnh suite).
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
@@ -19,134 +21,132 @@ human_signoff:
 | E2 | AC-2 | script | PASS |
 | E3 | AC-3 | script | PASS |
 | E4 | AC-4 | script | PASS |
-| E5 | AC-5 | script | FAIL |
-| E6 | AC-6 | script | BLOCKED |
-| E7 | AC-7 | script | PASS |
-| E8 | AC-8 | test | FAIL |
+| E5 | AC-5 | script | PASS |
+| E6 | AC-6 | script | PASS |
+| E7 | AC-7 | script | FAIL |
+| E8 | AC-8 | test | PASS |
 
 ## Evidence
 
 - eval: E1
-  run_id: minted-phuong-tu-du-an-chay-that-E1-r1
+  run_id: minted-phuong-tu-du-an-chay-that-E1-r2
   exit_code: 0
   baseline: n-a
   verifier: scripts/phuong-tu-du-an-chuoi.test.mjs
-  verified_at: 2026-11-19T19:46:44Z
+  verified_at: 2026-11-20T05:29:47Z
   output: |
-    ℹ duration_ms 17833.241875
+    ℹ duration_ms 6232.324958
 
 - eval: E2
-  run_id: minted-phuong-tu-du-an-chay-that-E2-r1
+  run_id: minted-phuong-tu-du-an-chay-that-E2-r2
   exit_code: 0
   baseline: n-a
   verifier: _acceptance/phuong-tu-du-an-chay-that/probes/tren-db-thu.sh
-  verified_at: 2026-11-19T19:46:44Z
+  verified_at: 2026-11-20T05:29:47Z
   output: |
     ok   chot-luot-dau: đạt
 
 - eval: E3
-  run_id: minted-phuong-tu-du-an-chay-that-E3-r1
+  run_id: minted-phuong-tu-du-an-chay-that-E3-r2
   exit_code: 0
   baseline: n-a
   verifier: _acceptance/phuong-tu-du-an-chay-that/probes/tren-db-thu.sh
-  verified_at: 2026-11-19T19:46:44Z
+  verified_at: 2026-11-20T05:29:47Z
   output: |
     ok   chay-lai: đạt
 
 - eval: E4
-  run_id: minted-phuong-tu-du-an-chay-that-E4-r1
+  run_id: minted-phuong-tu-du-an-chay-that-E4-r2
   exit_code: 0
   baseline: n-a
   verifier: _acceptance/phuong-tu-du-an-chay-that/probes/tren-db-thu.sh
-  verified_at: 2026-11-19T19:46:44Z
+  verified_at: 2026-11-20T05:29:47Z
   output: |
     ok   tin-moi: đạt
 
 - eval: E5
-  run_id: minted-phuong-tu-du-an-chay-that-E5-r1
-  exit_code: 1
-  baseline: n-a
-  verifier: _acceptance/phuong-tu-du-an-chay-that/probes/tren-db-thu.sh
-  verified_at: 2026-11-19T19:46:44Z
-  output: |
-    ok   ô tinh-nhieuduan-theco: 0 tin, kết quả giu-nguyen-cot
-    ok   ô trong-nhieuduan-theco: 0 tin, kết quả giu-nguyen-cot
-    ok   số phép kiểm bằng số ô (13/13)
-    tin đổi tỉnh: 10
-    FAIL so-chay-thu.md liệt kê đủ 10 tin đổi tỉnh — thiếu offer_0ea3df84560c1949
-    FAIL 1 chỗ (ma-tran)
-
-- eval: E6
-  run_id: minted-phuong-tu-du-an-chay-that-E6-r1
-  exit_code: n-a (quá hạn, chưa có dòng kết thúc của lệnh)
-  baseline: n-a
-  verifier: _acceptance/phuong-tu-du-an-chay-that/probes/tren-db-thu.sh
-  verified_at: 2026-11-19T19:46:44Z
-  output: |
-    ok   đối chứng: lượt ghi làm đổi cột tin S03
-    ok   sau khi lùi và chạy lại chuỗi: phát biểu sống của luật về 0 (được 0)
-    ok   sau khi lùi và chạy lại chuỗi: băm area_id của tin S03 bằng trước khi áp
-    __QUA_HAN (công cụ cắt lệnh trước dòng tổng kết)
-
-- eval: E7
-  run_id: minted-phuong-tu-du-an-chay-that-E7-r1
+  run_id: minted-phuong-tu-du-an-chay-that-E5-r2
   exit_code: 0
   baseline: n-a
   verifier: _acceptance/phuong-tu-du-an-chay-that/probes/tren-db-thu.sh
-  verified_at: 2026-11-19T19:46:44Z
+  verified_at: 2026-11-20T05:29:47Z
   output: |
-    ok   thoi-gian: đạt
+    ok   ma-tran: đạt
+
+- eval: E6
+  run_id: minted-phuong-tu-du-an-chay-that-E6-r2
+  exit_code: 0
+  baseline: n-a
+  verifier: _acceptance/phuong-tu-du-an-chay-that/probes/tren-db-thu.sh
+  verified_at: 2026-11-20T05:29:47Z
+  output: |
+    ok   ap-lui: đạt
+
+- eval: E7
+  run_id: minted-phuong-tu-du-an-chay-that-E7-r2
+  exit_code: 1
+  baseline: n-a
+  verifier: _acceptance/phuong-tu-du-an-chay-that/probes/tren-db-thu.sh
+  verified_at: 2026-11-20T05:29:47Z
+  output: |
+    toàn kho: 78/7795 → 7517/7795 · cửa sổ 13–19/11: 21/1659 → 1554/1659
+    giây lượt đầu: 118.2 · giây lượt lặp: 3.3
+    ok   lượt lặp không có gì mới xong trong 60 giây (3.3 giây)
+    ok   so-chay-thu.md có mốc đo dạng ISO (yyyy-mm-ddThh:mmZ)
+    ok   so-chay-thu.md đủ số: tử 78 → 7409, mẫu 7657, cửa sổ 21 → 1539/1641, giây 94.9
+    FAIL tử số, mẫu số ghi (78 → 7409/7657) khớp phép đo trên bản chép (78 → 7517/7795)
+    FAIL cửa sổ 13–19/11 ghi (21 → 1539/1641) khớp phép đo (21 → 1554/1659)
+    ok   giây lượt đầu ghi 94.9 cùng cỡ phép đo 118.2
+    FAIL 2 chỗ (thoi-gian)
 
 - eval: E8
-  run_id: minted-phuong-tu-du-an-chay-that-E8-r1
-  exit_code: 1
+  run_id: minted-phuong-tu-du-an-chay-that-E8-r2
+  exit_code: 0
   baseline: red
   verifier: config:executors.test.scripts
-  verified_at: 2026-11-19T19:46:44Z
+  verified_at: 2026-11-20T05:29:47Z
   output: |
-    PL34-AC-4 tập tệp: mọi tệp test nhắc zalo-import-daily đúng bằng mười một tệp kê trước
-    AssertionError: số tệp thực 12, số tệp kê trước 11
-    (scripts/zalo-import-job.test.mjs:353; scripts/zalo-import-job-lan.test.mjs:71 cũng đỏ cùng nguyên nhân)
+    ℹ duration_ms 1365123.889834
 
 ### Lệnh suite (hồi quy)
 
 - cmd: node scripts/suite-neu-doi.mjs agent -- 'cd agent && npm test'
-  run_id: minted-phuong-tu-du-an-chay-that-SUITE-node_scripts_suite_neu_doi_mjs_agent_cd_-r1
+  run_id: minted-phuong-tu-du-an-chay-that-SUITE-node_scripts_suite_neu_doi_mjs_agent_cd_-r2
   exit_code: 0
-  verified_at: 2026-11-19T19:46:44Z
+  verified_at: 2026-11-20T05:29:47Z
 
 - cmd: node scripts/suite-neu-doi.mjs app -- 'cd app && npx tsc --noEmit && npm run lint'
-  run_id: minted-phuong-tu-du-an-chay-that-SUITE-lint-r1
+  run_id: minted-phuong-tu-du-an-chay-that-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-11-19T19:46:44Z
+  verified_at: 2026-11-20T05:29:47Z
 
 - cmd: node scripts/suite-neu-doi.mjs app_ui -- 'cd app && npm test'
-  run_id: minted-phuong-tu-du-an-chay-that-SUITE-node_scripts_suite_neu_doi_mjs_app_ui_cd-r1
-  exit_code: 0
-  verified_at: 2026-11-19T19:46:44Z
+  run_id: minted-phuong-tu-du-an-chay-that-SUITE-node_scripts_suite_neu_doi_mjs_app_ui_cd-r2
+  exit_code: 1
+  verified_at: 2026-11-20T05:29:47Z
+  note: không gắn eval nào. Hai ca đỏ trong đuôi đầu ra, đều đo trên DB máy thu: ops-nhan-ma-nguon-cloud (dựng lược đồ cloud, push-ops-facts thoát khác 0, in «FACTS CHẶN») và «E4b đối chiếu DB máy thu» (tin mang định danh không đọc lại được qua đường công khai, tin-rao-doi-chieu.test.tsx:95).
 
 - cmd: node scripts/suite-neu-doi.mjs pipeline_a -- 'cd pipeline && npm run test:a'
-  run_id: minted-phuong-tu-du-an-chay-that-SUITE-test_a-r1
-  exit_code: 0
-  verified_at: 2026-11-19T19:46:44Z
+  run_id: minted-phuong-tu-du-an-chay-that-SUITE-test_a-r2
+  exit_code: 1
+  verified_at: 2026-11-20T05:29:47Z
+  note: không gắn eval nào. Ca đỏ NT2-AC-10 (bản tin dựng từ log và cấu hình thật, chế độ khô) báo «FACTS CHẶN [tầng A]» ở nhóm S16 trong blocks.dataFlow.windows.7d.groups (soat-tang-a.test.mjs:185), cùng một ca đỏ ở dòng 167.
 
 - cmd: node scripts/suite-neu-doi.mjs pipeline_b -- 'cd pipeline && npm run test:b'
-  run_id: minted-phuong-tu-du-an-chay-that-SUITE-test_b-r1
+  run_id: minted-phuong-tu-du-an-chay-that-SUITE-test_b-r2
   exit_code: 1
-  verified_at: 2026-11-19T19:46:44Z
-  output: |
-    599 test, 597 đạt, 1 đỏ, 1 bỏ qua
-    NH-AC-10 chạy hằng đêm: scripts/zalo-import-daily.sh: bước media phải đứng ngay sau transform-zalo
+  verified_at: 2026-11-20T05:29:47Z
+  note: không có kết quả. Lệnh bị chuyển sang nền sau 600 giây, đến phút 31:18 vẫn chưa in dòng thoát, tệp đầu ra rỗng suốt quá trình; vượt ngưỡng 30 phút nên đã dừng. Đây là BLOCKED, không phải kết luận đỏ hay xanh.
 
 - cmd: node scripts/suite-neu-doi.mjs ui_lint_rules -- 'cd app && npm run test:lint-rules'
-  run_id: minted-phuong-tu-du-an-chay-that-SUITE-test_lint_rules-r1
+  run_id: minted-phuong-tu-du-an-chay-that-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-11-19T19:46:44Z
+  verified_at: 2026-11-20T05:29:47Z
 
 - cmd: node scripts/suite-neu-doi.mjs portal_static -- 'node scripts/check-portal-compliance.mjs'
-  run_id: minted-phuong-tu-du-an-chay-that-SUITE-node_scripts_suite_neu_doi_mjs_portal_st-r1
+  run_id: minted-phuong-tu-du-an-chay-that-SUITE-node_scripts_suite_neu_doi_mjs_portal_st-r2
   exit_code: 0
-  verified_at: 2026-11-19T19:46:44Z
+  verified_at: 2026-11-20T05:29:47Z
 
 ## Known limits
 
@@ -154,13 +154,9 @@ human_signoff:
 
 ## Analyst
 
-none — mọi eval feature đều đỏ trên baseline hoặc là eval mới (không có eval nào xanh cả hai phía).
+none — mọi eval feature đều red trên baseline (có phân biệt) hoặc không đo được baseline (xem dưới); không eval nào xanh cả hai phía.
 
-Lệnh đỏ không gắn eval: `node scripts/suite-neu-doi.mjs pipeline_b -- 'cd pipeline && npm run test:b'` (1 ca đỏ: NH-AC-10, bước media phải đứng ngay sau transform-zalo trong zalo-import-daily.sh; cùng gốc với E8 là thứ tự bước trong zalo-import-daily.sh sau khi chèn bước phường). Lệnh `node --test scripts/*.test.mjs` đỏ gắn E8. Lệnh `bash _acceptance/phuong-tu-du-an-chay-that/probes/tren-db-thu.sh ma-tran` đỏ gắn E5.
-
-Lệnh bị chặn: `bash _acceptance/phuong-tu-du-an-chay-that/probes/tren-db-thu.sh ap-lui` (E6) vượt thời lượng khai (long_running), lệnh chỉ trả __QUA_HAN, chưa có dòng __EXIT. Cách xử lý: chạy lại với tool timeout dài hơn.
-
-Baseline không đo:
+Baseline không đo
 - node --test scripts/phuong-tu-du-an-chuoi.test.mjs: bo qua baseline: tep scripts/phuong-tu-du-an-chuoi.test.mjs co o cay dang kiem nhung chua co o merge-base 972515aac047311b847426f13f4164dc0dd8a6ec — eval moi, chay tren code cu khong phan biet gi
 - bash _acceptance/phuong-tu-du-an-chay-that/probes/tren-db-thu.sh chot-luot-dau: bo qua baseline: tep _acceptance/phuong-tu-du-an-chay-that/probes/tren-db-thu.sh co o cay dang kiem nhung chua co o merge-base 972515aac047311b847426f13f4164dc0dd8a6ec — eval moi, chay tren code cu khong phan biet gi
 - bash _acceptance/phuong-tu-du-an-chay-that/probes/tren-db-thu.sh chay-lai: bo qua baseline: tep _acceptance/phuong-tu-du-an-chay-that/probes/tren-db-thu.sh co o cay dang kiem nhung chua co o merge-base 972515aac047311b847426f13f4164dc0dd8a6ec — eval moi, chay tren code cu khong phan biet gi
@@ -171,8 +167,9 @@ Baseline không đo:
 
 ## Variance
 
-none — mọi eval chạy nhiều lần đều đồng nhất (mọi eval chạy một lần).
+none — mọi eval nhiều lần chạy đều đồng nhất (mọi eval chạy một lần, xác định).
 
 ## Iterations
 
-Round 1: E5 và E8 đỏ, E6 bị chặn (quá hạn, cần chạy lại với timeout dài hơn). E5: so-chay-thu.md thiếu offer_0ea3df84560c1949 trong danh sách 10 tin đổi tỉnh. E8: PL34-AC-4 đếm 12 tệp test nhắc zalo-import-daily thay vì 11 đã kê, kèm NH-AC-10 ở pipeline_b về thứ tự bước media sau transform-zalo. Trả về cho khâu triển khai.
+Round 1: lịch sử vòng 1 nằm ở các commit trước (round 1 chỉnh phép đo AC-3/5/6/7 và kê tệp test vào PL34-AC-4).
+Round 2: BLOCKED — E7 đỏ vì so-chay-thu.md ghi tử số, mẫu số (78 → 7409/7657) và cửa sổ 13–19/11 (21 → 1539/1641) lệch số đo trên bản chép (78 → 7517/7795; 21 → 1554/1659); suite pipeline_b quá 30 phút chưa xong; suite app_ui và pipeline_a đỏ trên DB máy thu, không gắn eval. Trả về triển khai: cập nhật số trong so-chay-thu.md theo phép đo hiện tại, chạy lại pipeline_b với thời hạn dài hơn.
