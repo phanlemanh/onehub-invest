@@ -10,7 +10,8 @@ import pg from "pg"
 import { OFFER_RECENT_DAYS, OFFER_RENT_MAX_VND, OFFER_RENT_MIN_VND, OFFER_SALE_MIN_VND, OFFER_SORTS, parseOfferFilters, type OfferSort, type PublicOffer } from "../src/lib/offers-filters"
 import { getOfferPhone, getPublicOffers } from "../src/lib/offers-public"
 import { pool } from "../src/lib/db"
-import { guardValues, entriesFromTokens } from "../../pipeline/lib/tier-a-guard.mjs"
+import { guardValues, tokensFromEntries } from "../../pipeline/lib/tier-a-guard.mjs"
+import { docSourceNameEntries } from "../../pipeline/lib/source-name-entries.mjs"
 import { maskedSourceExpr } from "../../pipeline/sync-cloud.mjs"
 import { boQuaTrongSuiteChung } from "./helpers/suite-chung"
 
@@ -28,6 +29,24 @@ const LOCK_TIMEOUT = "SET lock_timeout = '30s'"
 pool.on("connect", (cl) => void cl.query(LOCK_TIMEOUT).catch(() => {}))
 after(() => pool.end())
 
+// Danh sách che nạp qua ĐÚNG hàm chung của sản phẩm (sync-cloud, offers-public), mang cờ match_whole (migration 112). Không tự
+// dựng token trần từ source_registry: token trần sinh biến thể từ đầu cho dòng khai «khớp nguyên cụm», nên thước coi tên người
+// bán chứa từ đầu là định danh trong khi sản phẩm (đúng theo lối B đã ký) không che — ca-doi-chieu-tin-rao-nap-co-khop-cum.
+async function napDanhSachChe(c: pg.Client) {
+  const entries = await docSourceNameEntries(c)
+  return { entries, tokens: tokensFromEntries(entries) }
+}
+
+// Tin đang hiện mà biểu thức che của sync coi tên người bán là định danh nguồn.
+async function tinMangDinhDanh(c: pg.Client, kind: string, tokens: unknown[]) {
+  const { rows } = await c.query(
+    `SELECT o.offer_id, o.area_id, a.parent_id FROM sale_offers o JOIN areas a ON a.id = o.area_id
+     WHERE ${HIEN} AND o.seller_name IS NOT NULL AND ${maskedSourceExpr("seller_name", tokens)} IS NULL`,
+    [kind],
+  )
+  return rows as { offer_id: string; area_id: string; parent_id: string }[]
+}
+
 test("E4b đối chiếu DB máy thu", { skip: process.env.CI ? "CI không có dữ liệu thu" : false, timeout: 300_000 }, async () => {
   const c = new pg.Client({ connectionString: DB })
   try {
@@ -44,10 +63,8 @@ test("E4b đối chiếu DB máy thu", { skip: process.env.CI ? "CI không có d
     // thấy deadlock. Từng câu tự nhả khoá; READ ONLY đặt theo phiên.
     await c.query(LOCK_TIMEOUT)
     await c.query("SET default_transaction_read_only = on")
-    const tokens: string[] = (await c.query(`SELECT DISTINCT x FROM (SELECT real_name AS x FROM source_registry
-      UNION ALL SELECT unnest(source_ids) FROM source_registry) s WHERE length(x) > 0`)).rows.map((r) => r.x)
-    assert.ok(tokens.length > 0, "source_registry rỗng: không đo được")
-    const entries = entriesFromTokens(tokens)
+    const { entries, tokens } = await napDanhSachChe(c)
+    assert.ok(entries.length > 0, "source_registry rỗng: không đo được")
     const dem = { dinhDanh: 0, phiLy: 0, tinAn: 0 }
 
     for (const tt of THI_TRUONG) {
@@ -80,12 +97,7 @@ test("E4b đối chiếu DB máy thu", { skip: process.env.CI ? "CI không có d
     // Tin mang định danh hiếm, có thể nằm ngoài trần trang: tìm bằng biểu thức của sync rồi đọc đúng tin đó qua đường công khai.
     let mangDinhDanh = 0
     for (const kind of LOAI) {
-      const { rows: ban } = await c.query(
-        `SELECT o.offer_id, o.area_id, a.parent_id FROM sale_offers o JOIN areas a ON a.id = o.area_id
-         WHERE ${HIEN} AND o.seller_name IS NOT NULL AND ${maskedSourceExpr("seller_name", tokens)} IS NULL`,
-        [kind],
-      )
-      for (const b of ban) {
+      for (const b of await tinMangDinhDanh(c, kind, tokens)) {
         let thay: PublicOffer | undefined
         for (let offset = 0; !thay && offset <= 960; offset += 50) {
           const trang = await getPublicOffers(b.parent_id, filters(`kind=${kind}&ward=${b.area_id}&limit=50&offset=${offset}`))
@@ -283,4 +295,68 @@ test("E4B-AC-7 khối đo thời gian của E4b giống hệt bản trước vò
   soTran(moi, goc)
   assert.throws(() => soTran(moi.replace("ms < 1000", "ms < 1500"), goc), /TRAN BI NOI/)
   assert.throws(() => khoiDo("không có ca E4b", "bản phá"), /KHONG CAT DUOC/)
+})
+
+// ---- ca-doi-chieu-tin-rao-nap-co-khop-cum: thước và sản phẩm đọc cùng một danh sách che ----
+// Chỉ trên DB thử, trong BEGIN…ROLLBACK, pool của app trỏ vào client giao dịch. Nguồn giả S90, tên giả hai từ khai cờ khớp
+// nguyên cụm (cùng hình dạng dòng S16 sau che-ten). Không đọc, không in tên nguồn thật.
+const DB_THU = /\/oneinvest_[a-z0-9_]+$/.test(DB) ? false : "cần DATABASE_URL trỏ DB thử"
+const MIG = (f: string) => readFileSync(join(import.meta.dirname, "../../db/migrations", f), "utf8")
+const TEN_GIA = "Lumora Thịnh"
+const TAG = `tdc_${process.pid}`
+
+async function gieoTinThu(c: pg.Client, duoi: string, nguoiBan: string) {
+  const id = `${TAG}_${duoi}`, post = `${TAG}_p_${duoi}`
+  await c.query(
+    `INSERT INTO sale_offer_records (offer_id, originating_system_key, source, kind, price_vnd, area_m2, price_perm2, confidence, first_seen, last_seen, n_reposts, post_ids, area_id, seller_name)
+     VALUES ($1, $2, 'S03', 'sale', 3e9, 60, 5e7, 'medium', now(), now(), 1, $3, 'vn-hanoi', $4)`, [id, post, [post], nguoiBan])
+  await c.query(`INSERT INTO field_assertions (subject_key, field, value, evidence_tier, method, method_version, rule_id, observed_at)
+                 VALUES ($1, 'property_type', 'apartment', 'fact', 'source_field', 'test-tdc', NULL, now())`, [`S03:${post}`])
+  await c.query("SELECT resolve_offer_fields($1)", [[id]])
+  return id
+}
+
+/** Một tin thử mang `nguoiBan`: [thước (hàm nạp chung) coi là định danh, thước token trần coi là định danh, API trả gì]. */
+async function doMotTin(c: pg.Client, duoi: string, nguoiBan: string) {
+  const id = await gieoTinThu(c, duoi, nguoiBan)
+  await c.query(`CREATE OR REPLACE TEMP VIEW sale_offers AS SELECT * FROM public.sale_offers WHERE offer_id = '${id}'`)
+  const { entries, tokens } = await napDanhSachChe(c)
+  const thuoc = (await tinMangDinhDanh(c, "sale", tokens)).length === 1
+  const tran = (await tinMangDinhDanh(c, "sale", entries.map((e) => e.realName))).length === 1
+  const { rows } = await getPublicOffers("vn-hanoi", filters("kind=sale&limit=5"))
+  assert.equal(rows.length, 1, `tin thử phải hiện trên đường đọc công khai — ${rows.length}`)
+  return { thuoc, tran, api: rows[0].sellerName, guard: guardValues(rows[0], entries).length }
+}
+
+test("ca-doi-chieu: thước nạp qua hàm chung khớp sản phẩm trên dòng khai khớp nguyên cụm; token trần thì lệch", { skip: DB_THU, timeout: 120_000 }, async () => {
+  const c = new pg.Client({ connectionString: DB })
+  await c.connect()
+  const goc = pool.query
+  try {
+    await c.query("BEGIN")
+    await c.query(MIG("112_source_registry_match_whole.sql"))
+    await c.query("UPDATE source_registry SET match_whole = false")
+    await c.query(`INSERT INTO source_registry (code, label_vi, real_name, source_ids, match_whole, status)
+                   VALUES ('S90', 'nguồn giả của test', $1, '{}', true, 'retired')
+                   ON CONFLICT (code) DO UPDATE SET real_name = $1, source_ids = '{}', match_whole = true`, [TEN_GIA])
+    await c.query(`INSERT INTO ops_audit (actor, action, detail) VALUES ('test:app', 'phat-bieu:cat-chuyen', '{}'::jsonb)`)
+    ;(pool as unknown as { query: unknown }).query = c.query.bind(c)
+
+    // Cấy tên đủ hai từ: sản phẩm che (API null), thước bắt, bộ soát đầu ra không trúng.
+    const du = await doMotTin(c, "du", TEN_GIA)
+    assert.equal(du.api, null, "tên đủ hai từ của nguồn lọt ra API")
+    assert.equal(du.thuoc, true, "thước không bắt tên đủ hai từ")
+    assert.equal(du.guard, 0)
+    // Cấy chỉ từ đầu: sản phẩm giữ nguyên (lối B đã ký), thước cũng không coi là định danh — E4b không đỏ giả.
+    const dau = await doMotTin(c, "dau", "Lumora Land")
+    assert.equal(dau.api, "Lumora Land", "API che nhầm tên chỉ mang từ đầu")
+    assert.equal(dau.thuoc, false, "thước coi tên chỉ mang từ đầu là định danh: lệch sản phẩm, E4b đỏ giả")
+    assert.equal(dau.guard, 0, "bộ soát đầu ra coi tên chỉ mang từ đầu là định danh")
+    // Đối chứng: token trần (cách dựng cũ của ca E4b) coi từ đầu là định danh — đúng lệch đã làm main đỏ.
+    assert.equal(dau.tran, true, "đối chứng: token trần phải bắt từ đầu, không thì ca này không phân biệt được")
+  } finally {
+    ;(pool as unknown as { query: unknown }).query = goc
+    await c.query("ROLLBACK").catch(() => {})
+    await c.end()
+  }
 })

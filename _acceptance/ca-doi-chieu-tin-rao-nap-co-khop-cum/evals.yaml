@@ -1,0 +1,34 @@
+schema_version: 1
+feature_slug: ca-doi-chieu-tin-rao-nap-co-khop-cum
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.tdc_may_thu
+    paths: [app/tests/tin-rao-doi-chieu.test.tsx, _acceptance/ca-doi-chieu-tin-rao-nap-co-khop-cum/probes/may-thu.sh]
+    long_running: 5
+    expected: "exit 0; dòng 'root <gốc> sha <sha>'; 'tien de: <n> dong khai khop nguyen cum, ten nhieu tu' với n ≥ 1; 'tin mang định danh đã đọc lại <N>'; 'E4b xanh'; cuối 'MAY-THU OK'; chiều đỏ: DB máy thu không có dòng khai khớp nguyên cụm → 'TIEN DE KHONG CO' exit 1, E4b đỏ → 'E4B DO' exit 1; should-NOT-fire: không 'THIEU DB MAY THU', 'TIEN DE KHONG CO', 'E4B DO'; không in tên nguồn"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.tdc_do_khi_pha
+    paths: [app/tests/tin-rao-doi-chieu.test.tsx, _acceptance/ca-doi-chieu-tin-rao-nap-co-khop-cum/probes/do-khi-pha.sh]
+    long_running: 3
+    expected: "exit 0; 'ban nhanh: ca-doi-chieu xanh (du hai tu → API null, tu dau → API nguyen, token tran bat tu dau)'; cuối 'DO-KHI-PHA OK'; should-NOT-fire: không 'BAN NHANH DO'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.tdc_do_khi_pha
+    paths: [app/tests/tin-rao-doi-chieu.test.tsx, _acceptance/ca-doi-chieu-tin-rao-nap-co-khop-cum/probes/do-khi-pha.sh]
+    long_running: 3
+    expected: "exit 0; 'pha ve token tran: ca-doi-chieu do «thuoc coi ten chi mang tu dau la dinh danh»'; cuối 'DO-KHI-PHA OK'; should-NOT-fire: không 'PHA KHONG AP DUOC', 'PHA KHONG DO'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.tdc_pham_vi
+    paths: ["app/**", "pipeline/**", _acceptance/ca-doi-chieu-tin-rao-nap-co-khop-cum/probes/pham-vi.sh]
+    expected: "exit 0; dòng 'root <gốc> sha <sha>'; mọi tệp đổi 'ok'; 'ok ca khong tu doc so nguon'; 'ok ca nap qua ham chung'; 'ok token giu co'; cuối 'PHAM-VI OK'; should-NOT-fire: không 'NGOAI PHAM VI', 'CA CON TU DOC SO NGUON', 'CA KHONG NAP QUA HAM CHUNG', 'TOKEN KHONG GIU CO'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
