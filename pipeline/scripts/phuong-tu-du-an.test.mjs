@@ -47,7 +47,8 @@ async function banDot(tep, cu, moi) {
   const dich = join(dir, tep);
   const src = readFileSync(dich, "utf8");
   assert.ok(src.includes(cu), `đột biến rỗng: không thấy chuỗi «${cu.slice(0, 60)}» trong ${tep}`);
-  writeFileSync(dich, src.replace(cu, moi));
+  // replaceAll: chốt «đã áp» và ROLLBACK có hai chỗ từ S4-r2 (xem lại trong giao dịch sau khoá tư vấn) — đột biến phải gỡ cả hai
+  writeFileSync(dich, src.replaceAll(cu, moi));
   return {
     lenh: await import(pathToFileURL(join(dir, "scripts/phuong-tu-du-an.mjs")).href),
     ghiTin: (await import(pathToFileURL(join(dir, "lib/write-offers.mjs")).href)).writeOffers,
