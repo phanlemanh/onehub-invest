@@ -50,3 +50,19 @@ evals:
     cmd: bash _acceptance/thuoc-tinh-can-s16-rut-khi-mo-ho/probes/kiem.sh that
     expected: "Chỉ đọc DB máy thu đã áp DA40: chạy thử in rut_mo_ho 0 can; đối chứng dương: số phát biểu sống khớp bộ lọc rút lớn hơn 0 và bằng phép đếm độc lập; số căn có thuộc tính lớn hơn 0 và bằng phép đếm thẳng trên v_unit_thuoc_tinh. Chiều đỏ: truyền số kỳ vọng sai một đơn vị làm lệnh thoát 1 và nêu tên số."
     paths: ["_acceptance/thuoc-tinh-can-s16-rut-khi-mo-ho/probes/**", "pipeline/scripts/thuoc-tinh-can-s16.mjs"]
+  - id: E9a
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.suite.pipeline_a
+    long_running: 60
+    paths: [pipeline/**]
+    expected: "exit 0; bộ pipeline nửa a của kho xanh trên nhánh. Khai riêng để lượt chấm chờ đủ giờ: lượt 1 nửa này chạy quá 30 phút và không có mã thoát; đo tuần tự trên máy yên 16 phút 11 giây."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9b
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.suite.pipeline_b
+    long_running: 60
+    paths: [pipeline/**]
+    expected: "exit 0; bộ pipeline nửa b của kho xanh trên nhánh. Khai riêng để lượt chấm chờ đủ giờ: lượt 1 nửa này chạy quá 30 phút và không có mã thoát; đo tuần tự trên máy yên 18 phút 28 giây."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
