@@ -26,14 +26,14 @@ evals:
     criterion: AC-4
     executor: script
     cmd: config:executors.script.bdv_dao
-    expected: "exit 0; ca BDV-4: đảo trả aliases và meta của mọi nút về đúng dấu vân tay trước áp, dòng luật có dao_by và dao_at; đảo một rule_id của luật S16 hay lượt nối DA46 ném «khong-phai-luot-bi-danh» và 0 dòng đổi. Chiều đỏ: bỏ kiểm can_cu thì ca đảo nhầm đỏ"
+    expected: "exit 0; ca BDV-4: đảo trả aliases và meta của mọi nút về đúng dấu vân tay trước áp (kể cả nút có sẵn tên tắt trước khi áp), dòng luật có dao_by và dao_at; đảo một rule_id của luật S16 hay lượt nối DA46 ném «khong-phai-luot-bi-danh» và 0 dòng đổi. Chiều đỏ: bỏ kiểm can_cu thì ca đảo nhầm đỏ; đảo gỡ mọi tên của bảng thay vì đúng danh sách them thì ca tên có sẵn đỏ"
     paths: ["pipeline/lib/phan-khu-s16-bi-danh.mjs","pipeline/scripts/bi-danh-viet-tat-phan-khu.mjs","pipeline/scripts/bi-danh-viet-tat-phan-khu.itest.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E5
     criterion: AC-5
     executor: script
     cmd: config:executors.script.bdv_da46
-    expected: "exit 0; ca BDV-5 dùng apNoi, daoNoi thật của phan-khu-s16.mjs trên cặp cấy: áp bí danh trước rồi nối, nối trước rồi áp bí danh, và đảo nối sau khi áp bí danh — cả ba thứ tự nút giữ lại mang đúng tên tắt, nút nghỉ không mang; đảo bí danh không gỡ bí danh DA46 dồn về. Chiều đỏ: đảo bí danh gỡ theo tên thay vì theo them thì ca đỏ"
+    expected: "exit 0; ca BDV-5 dùng apNoi, daoNoi thật của phan-khu-s16.mjs trên cặp cấy: áp bí danh trước rồi nối, nối trước rồi áp bí danh, và đảo nối sau khi áp bí danh — cả ba thứ tự nút giữ lại mang đúng tên tắt, nút nghỉ không mang; đảo bí danh không gỡ bí danh DA46 dồn về. Chiều đỏ: bỏ ưu tiên nút không do luật đúc thì ca áp-trước-rồi-nối đỏ (hai ứng viên, không gán)"
     paths: ["pipeline/lib/phan-khu-s16-bi-danh.mjs","pipeline/scripts/bi-danh-viet-tat-phan-khu.mjs","pipeline/scripts/bi-danh-viet-tat-phan-khu.itest.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E6
@@ -47,7 +47,7 @@ evals:
     criterion: AC-7
     executor: script
     cmd: config:executors.script.bdv_dem
-    expected: "exit 0; ca BDV-7: sau áp, chạy hai lần lượt dựng phân khu S16 (dungTheLuat + apLuat) và bước đêm danh bạ vật thể trên fixture có khu S16 — tên tắt vẫn trên nút đích, số nút không đổi; soatDuLieu của bộ soát S16 trên asset_nodes sạch; cấy một mã khu thô vào meta thì bộ soát dừng (đối chứng). Chiều đỏ: bước dựng ghi đè aliases thì ca đỏ"
+    expected: "exit 0; ca BDV-7: sau áp, chạy hai lần lượt dựng phân khu S16 (dungTheLuat + apLuat) và bước đêm danh bạ vật thể trên fixture có khu S16 — tên tắt vẫn trên nút đích, số nút không đổi; soatDuLieu của bộ soát S16 trên asset_nodes sạch; cấy một mã khu thô vào meta thì bộ soát dừng (đối chứng). Chiều đỏ: áp không ghi tên vào aliases thì ca đỏ ở lần dựng 1"
     paths: ["pipeline/lib/phan-khu-s16-bi-danh.mjs","pipeline/scripts/bi-danh-viet-tat-phan-khu.mjs","pipeline/scripts/bi-danh-viet-tat-phan-khu.itest.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E8
