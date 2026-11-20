@@ -2,9 +2,11 @@
 // ON7 `ops-nhan-ma-nguon`: AC-7 bộ che tên nguồn thật (bản pipeline + bản app trên cùng bảng ca) và AC-4 payload facts
 // do push-ops-facts thật đẩy. Tên thật lấy lúc chạy từ db/migrations — tệp này không chứa tên. Tên ca mở đầu bằng mã AC.
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { describe, test } from "node:test";
 import * as pipe from "../lib/mask-source-names.mjs";
 import * as app from "../../app/src/lib/mask-source-names.ts";
@@ -36,6 +38,32 @@ describe("ON7-AC-7 bộ che", () => {
       assert.equal(pipe.maskSourceNames(input, names), want, `bản pipeline sai ở ca «${c.ten}»`);
       assert.equal(app.maskSourceNames(input, names), want, `bản app sai ở ca «${c.ten}»`);
     }
+  });
+  test("AC-2 che-ten: mọi ca không mang cờ ra đúng chuỗi như bản lõi của origin/main (rút bằng git show, không viết tay)", async () => {
+    const goc = execFileSync("git", ["-C", path.join(HERE, "..", ".."), "show", "origin/main:pipeline/lib/mask-source-names.mjs"], { encoding: "utf8" });
+    const dir = mkdtempSync(path.join(tmpdir(), "cten-goc-"));
+    try {
+      writeFileSync(path.join(dir, "goc.mjs"), goc);
+      const cu = await import(pathToFileURL(path.join(dir, "goc.mjs")).href);
+      for (const c of cases.filter((x) => !(x.names ?? []).some((e) => "wholeOnly" in e))) {
+        const input = expand(c.in);
+        const names = c.names ?? ENTRIES;
+        assert.equal(pipe.maskSourceNames(input, names), cu.maskSourceNames(input, names), `ca «${c.ten}» lệch bản origin/main`);
+      }
+    } finally { rmSync(dir, { recursive: true, force: true }); }
+  });
+  test("AC-2 che-ten chiều đỏ: bản sao lõi bỏ qua wholeOnly → ca tên dự án đỏ ghim «AC-2 thương hiệu dự án bị che nhầm»", async () => {
+    const src = readFileSync(path.join(HERE, "..", "lib", "mask-source-names.mjs"), "utf8");
+    const bo = src.replace("nameVariants(realName, { wholeOnly })", "nameVariants(realName)");
+    assert.notEqual(bo, src, "khuôn đột biến không khớp mã nguồn lõi");
+    const dir = mkdtempSync(path.join(tmpdir(), "cten-dot-"));
+    try {
+      writeFileSync(path.join(dir, "dot.mjs"), bo);
+      const dot = await import(pathToFileURL(path.join(dir, "dot.mjs")).href);
+      const c = cases.find((x) => x.ten === "khớp nguyên cụm: tên dự án mang thương hiệu giữ nguyên");
+      assert.throws(() => assert.equal(dot.maskSourceNames(c.in, c.names), c.out, "AC-2 thương hiệu dự án bị che nhầm"),
+        /AC-2 thương hiệu dự án bị che nhầm/);
+    } finally { rmSync(dir, { recursive: true, force: true }); }
   });
   test("ON7-AC-7 tên ba ký tự giữa một từ khác không bị thay", () => {
     const short = SEEDS.find((s) => pipe.nameVariants(s.realName).some((v) => v.length < 4));

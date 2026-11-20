@@ -3,12 +3,15 @@
 // nhóm Zalo — những thứ đọc file/CLI chỉ có ở máy này).
 // Đi qua HTTPS (POST /api/v1/ops/ingest trên Vercel, Bearer cloud token).
 // Gọi từ cloud-sync.sh sau mỗi lần sync dữ liệu (15'/lần).
+import { realpathSync } from "node:fs";
 import { readFile, readdir, stat, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import pg from "pg";
 
 import { maskSourceNames } from "./lib/mask-source-names.mjs";
+import { docSourceNameEntries } from "./lib/source-name-entries.mjs";
 import { guardValues } from "./lib/tier-a-guard.mjs";
 
 import { tailLog } from "./lib/last-log-line.mjs";
@@ -218,9 +221,10 @@ async function main() {
   const { funnel, health, groups } = parseLog(logText);
   const client = new pg.Client({ connectionString: process.env.DATABASE_URL ?? LOCAL_URL });
   await client.connect();
-  const { rows: reg } = await client.query("SELECT code, label_vi, real_name FROM source_registry");
+  const { rows: reg } = await client.query("SELECT code, label_vi FROM source_registry");
   REG.roles = Object.fromEntries(reg.filter((r) => r.label_vi).map((r) => [r.code, r.label_vi]));
-  REG.names = reg.filter((r) => r.real_name).map((r) => ({ code: r.code, realName: r.real_name }));
+  // che-ten-nguon-khong-lay-tu-dau: một hàm nạp chung — tên thật + định danh, kèm cờ match_whole
+  REG.names = await docSourceNameEntries(client);
   const [jobs, rot, zalo, sourceRuns] = await Promise.all([
     scheduler(), rotation(client), zaloExtras(client, groups), sourceRunsQ(client),
   ]);
@@ -357,9 +361,9 @@ async function chiLenh(tep) {
   const payload = banTinLenh(Array.isArray(doc) ? doc : doc.results);
   const client = new pg.Client({ connectionString: process.env.DATABASE_URL ?? LOCAL_URL });
   await client.connect();
-  const { rows: reg } = await client.query("SELECT code, real_name FROM source_registry");
+  const names = await docSourceNameEntries(client);
   await client.end();
-  const chan = factsChan(payload, reg.filter((r) => r.real_name).map((r) => ({ code: r.code, realName: r.real_name })));
+  const chan = factsChan(payload, names);
   if (chan.length) {
     for (const l of chan) console.error(l);
     process.exitCode = 1;
@@ -375,7 +379,13 @@ async function chiLenh(tep) {
   console.log(`ops-facts lệnh: gửi ${payload.results.length} kết quả, cập nhật ${kq.cap_nhat}, bỏ qua ${kq.bo_qua}`);
 }
 
-main().catch((e) => {
+// AC-10 che-ten-nguon-khong-lay-tu-dau (sự cố 19/11): chỉ gửi khi tệp là lệnh chính, import để đọc hàm không được gửi bản tin.
+// So theo realpath vì launchd chạy qua symlink ~/dev/one-invest.
+const laTepChinh = () => {
+  if (!process.argv[1]) return false;
+  try { return realpathSync(process.argv[1]) === fileURLToPath(import.meta.url); } catch { return false; }
+};
+if (laTepChinh()) main().catch((e) => {
   console.error(e);
   process.exit(1);
 });
