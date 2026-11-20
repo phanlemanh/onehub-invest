@@ -5,7 +5,7 @@ slug: s02-luot-loi-sach-va-kiem-han-token
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, data]
-status: implemented
+status: verified
 veto_state: mo
 veto_opened_at: 2026-11-19T19:24:56Z
 approved_by:
@@ -77,3 +77,7 @@ Trục máy vẫn liệt để soi:
 
 - Lệnh đo nằm ở `_acceptance/s02-luot-loi-sach-va-kiem-han-token/probes/`; `_acceptance/config.yaml` là tệp bảo vệ, không sửa.
 - Phép đo cần `collector/dist` mới: lệnh eval build bằng `npx tsc -p tsconfig.json` trước.
+- Ngoài-1 (máy định tuyến 2026-11-20, đề xuất S4 known-limits): Tài liệu giao diện thu thập vẫn nói lượt thu lỗi để lại thư mục bản thu để chẩn đoán, trong khi thực tế nay nằm trong thư mục ẩn. Người đọc tài liệu có thể không tìm thấy manifest lỗi. — `collector/src/core/storage.ts`
+- Ngoài-2 (máy định tuyến 2026-11-20, đề xuất S4 known-limits): Nếu token có hạn dùng ghi sai định dạng, bộ thu vẫn báo token tốt dù có thể đã hỏng, và lượt thu sẽ thất bại muộn hơn. — `collector/src/collectors/airdna-research.ts`
+- Ngoài-4 (máy định tuyến 2026-11-20, đề xuất S4 known-limits): Chưa có lần chạy lệnh thu thật nào xác nhận lệnh thoát lỗi khi lượt thu hỏng, nên bằng chứng chỉ gián tiếp. — `_acceptance/s02-luot-loi-sach-va-kiem-han-token/probes/nguoi-doc.mjs`
+- Ngoài-5 (máy định tuyến 2026-11-20, đề xuất S4 known-limits): Phép thử âm tính có thể báo đạt vì một lỗi khác, nên chưa chứng minh chắc rằng chọn nhầm bản thu hỏng bị bắt. — `_acceptance/s02-luot-loi-sach-va-kiem-han-token/evals.yaml`

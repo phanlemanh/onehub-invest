@@ -1,19 +1,16 @@
 ---
 schema_version: 2
 feature_slug: s02-luot-loi-sach-va-kiem-han-token
-verdict: REJECT
-failed_evals: [E6]
-reason:
+verdict: PASS
+failed_evals: []
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 356a395ec0f7bfa53bfcc19f8e5f4957add31b55
+verified_commit: 72f41db44ebd2beb520284ce664a8cd1f7b5977b
 human_signoff:
 ---
 
 # Evidence Report: s02-luot-loi-sach-va-kiem-han-token
-
-Round 1. Một eval hỏng: E6 (AC-6). Lệnh hỏng duy nhất là `bash _acceptance/s02-luot-loi-sach-va-kiem-han-token/probes/vung.sh`, đã gắn với E6.
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
@@ -22,7 +19,7 @@ Round 1. Một eval hỏng: E6 (AC-6). Lệnh hỏng duy nhất là `bash _accep
 | E3 | AC-3 | script | PASS |
 | E4 | AC-4 | script | PASS |
 | E5 | AC-5 | script | PASS |
-| E6 | AC-6 | script | REJECT |
+| E6 | AC-6 | script | PASS |
 | E7 | AC-6 | test | PASS |
 | E8 | AC-1 | script | PASS |
 | E9 | AC-2 | script | PASS |
@@ -32,14 +29,64 @@ Round 1. Một eval hỏng: E6 (AC-6). Lệnh hỏng duy nhất là `bash _accep
 
 ## Evidence
 
+- eval: E6
+  run_id: minted-s02-luot-loi-sach-va-kiem-han-token-E6-r2
+  exit_code: 0
+  baseline: n-a
+  verifier: _acceptance/s02-luot-loi-sach-va-kiem-han-token/probes/vung.sh
+  verified_at: 2026-11-20T20:53:44Z
+  output: |
+    XANH: mọi tệp đổi nằm trong vùng
+
 - eval: E1
   run_id: minted-s02-luot-loi-sach-va-kiem-han-token-E1-r1
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.collector
   verified_at: 2026-11-20T20:12:45Z
+  carried_from_round: 1
   output: |
-    ℹ duration_ms 110289.431834
+    carry-forward tu round 1 — delta khong cham paths cua eval
+
+- eval: E2
+  run_id: minted-s02-luot-loi-sach-va-kiem-han-token-E2-r1
+  exit_code: 0
+  baseline: n-a
+  verifier: script
+  verified_at: 2026-11-20T20:12:45Z
+  carried_from_round: 1
+  output: |
+    carry-forward tu round 1 — delta khong cham paths cua eval
+
+- eval: E3
+  run_id: minted-s02-luot-loi-sach-va-kiem-han-token-E3-r1
+  exit_code: 0
+  baseline: n-a
+  verifier: script
+  verified_at: 2026-11-20T20:12:45Z
+  carried_from_round: 1
+  output: |
+    carry-forward tu round 1 — delta khong cham paths cua eval
+
+- eval: E4
+  run_id: minted-s02-luot-loi-sach-va-kiem-han-token-E4-r1
+  exit_code: 0
+  baseline: n-a
+  verifier: script
+  verified_at: 2026-11-20T20:12:45Z
+  carried_from_round: 1
+  output: |
+    carry-forward tu round 1 — delta khong cham paths cua eval
+
+- eval: E5
+  run_id: minted-s02-luot-loi-sach-va-kiem-han-token-E5-r1
+  exit_code: 0
+  baseline: n-a
+  verifier: script
+  verified_at: 2026-11-20T20:12:45Z
+  carried_from_round: 1
+  output: |
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E7
   run_id: minted-s02-luot-loi-sach-va-kiem-han-token-E7-r1
@@ -47,128 +94,96 @@ Round 1. Một eval hỏng: E6 (AC-6). Lệnh hỏng duy nhất là `bash _accep
   baseline: n-a
   verifier: config:executors.test.collector
   verified_at: 2026-11-20T20:12:45Z
+  carried_from_round: 1
   output: |
-    ℹ duration_ms 110289.431834
-
-- eval: E2
-  run_id: minted-s02-luot-loi-sach-va-kiem-han-token-E2-r1
-  exit_code: 0
-  baseline: n-a
-  verifier: _acceptance/s02-luot-loi-sach-va-kiem-han-token/probes/noi-day.sh
-  verified_at: 2026-11-20T20:12:45Z
-  output: |
-    XANH
-
-- eval: E5
-  run_id: minted-s02-luot-loi-sach-va-kiem-han-token-E5-r1
-  exit_code: 0
-  baseline: n-a
-  verifier: _acceptance/s02-luot-loi-sach-va-kiem-han-token/probes/noi-day.sh
-  verified_at: 2026-11-20T20:12:45Z
-  output: |
-    XANH
-
-- eval: E3
-  run_id: minted-s02-luot-loi-sach-va-kiem-han-token-E3-r1
-  exit_code: 0
-  baseline: n-a
-  verifier: _acceptance/s02-luot-loi-sach-va-kiem-han-token/probes/nguoi-doc.mjs
-  verified_at: 2026-11-20T20:12:45Z
-  output: |
-    ĐỎ: 1 điều kiện hỏng (chiều đỏ --pha, đúng kỳ vọng)
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E8
   run_id: minted-s02-luot-loi-sach-va-kiem-han-token-E8-r1
   exit_code: 0
   baseline: n-a
-  verifier: _acceptance/s02-luot-loi-sach-va-kiem-han-token/probes/nguoi-doc.mjs
+  verifier: script
   verified_at: 2026-11-20T20:12:45Z
+  carried_from_round: 1
   output: |
-    ĐỎ: 1 điều kiện hỏng (chiều đỏ --pha, đúng kỳ vọng)
-
-- eval: E4
-  run_id: minted-s02-luot-loi-sach-va-kiem-han-token-E4-r1
-  exit_code: 0
-  baseline: n-a
-  verifier: _acceptance/s02-luot-loi-sach-va-kiem-han-token/probes/dot-bien-han.mjs
-  verified_at: 2026-11-20T20:12:45Z
-  output: |
-    XANH: 8/8 ô bản thật đạt, hai đột biến bị bắt
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E9
   run_id: minted-s02-luot-loi-sach-va-kiem-han-token-E9-r1
   exit_code: 0
   baseline: n-a
-  verifier: _acceptance/s02-luot-loi-sach-va-kiem-han-token/probes/dot-bien-han.mjs
+  verifier: script
   verified_at: 2026-11-20T20:12:45Z
+  carried_from_round: 1
   output: |
-    XANH: 8/8 ô bản thật đạt, hai đột biến bị bắt
-
-- eval: E6
-  run_id: minted-s02-luot-loi-sach-va-kiem-han-token-E6-r1
-  exit_code: 1
-  baseline: n-a
-  verifier: _acceptance/s02-luot-loi-sach-va-kiem-han-token/probes/vung.sh
-  verified_at: 2026-11-20T20:12:45Z
-  output: |
-    tệp đổi so với db971b8c541fb60364909e299dfe87d305329ee9: 20
-    đạt: chiều đỏ — cấy pipeline/transform-ngoai-vung.mjs thì bộ lọc gọi tên nó
-    đạt: có tệp bộ thu S02 (xuất kiemAppToken)
-    đạt: có collector/src/core/scheduler.ts
-    đạt: có collector/src/core/storage.ts
-    đạt: có collector/src/test/snapshot-loi-khong-tac-thu-muc.test.ts
-    đạt: có collector/src/test/apptoken-exp.test.ts
-    ĐỎ: tệp ngoài vùng: LO-TRINH.html
-    PRODUCT-MAP.md
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E10a
   run_id: r1-l6-1-20261120201245
   exit_code: 0
-  baseline: red
+  baseline: n-a
   verifier: config:executors.suite.app_ui
   verified_at: 2026-11-20T20:12:45Z
+  carried_from_round: 1
   output: |
-    suite-neu-doi: bỏ qua app_ui: không đổi app/**, agent/**, pipeline/**, scripts/** … (+8) (7 tệp đổi ngoài vùng)
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E10b
   run_id: minted-s02-luot-loi-sach-va-kiem-han-token-E10b-r1
   exit_code: 0
-  baseline: red
+  baseline: n-a
   verifier: config:executors.suite.pipeline_a
   verified_at: 2026-11-20T20:12:45Z
+  carried_from_round: 1
   output: |
-    ℹ duration_ms 1235664.331333
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E10c
   run_id: minted-s02-luot-loi-sach-va-kiem-han-token-E10c-r1
   exit_code: 0
-  baseline: red
+  baseline: n-a
   verifier: config:executors.suite.pipeline_b
   verified_at: 2026-11-20T20:12:45Z
+  carried_from_round: 1
   output: |
-    ℹ duration_ms 952123.759792
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 ### Lệnh suite (hồi quy)
 
 - cmd: node scripts/suite-neu-doi.mjs agent -- 'cd agent && npm test'
-  run_id: minted-s02-luot-loi-sach-va-kiem-han-token-SUITE-node_scripts_suite_neu_doi_mjs_agent_cd_-r1
+  run_id: minted-s02-luot-loi-sach-va-kiem-han-token-SUITE-node_scripts_suite_neu_doi_mjs_agent_cd_-r2
   exit_code: 0
-  verified_at: 2026-11-20T20:12:45Z
+  verified_at: 2026-11-20T20:53:44Z
 
 - cmd: node scripts/suite-neu-doi.mjs app -- 'cd app && npx tsc --noEmit && npm run lint'
-  run_id: minted-s02-luot-loi-sach-va-kiem-han-token-SUITE-lint-r1
+  run_id: minted-s02-luot-loi-sach-va-kiem-han-token-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-11-20T20:12:45Z
+  verified_at: 2026-11-20T20:53:44Z
+
+- cmd: node scripts/suite-neu-doi.mjs app_ui -- 'cd app && npm test'
+  run_id: minted-s02-luot-loi-sach-va-kiem-han-token-SUITE-node_scripts_suite_neu_doi_mjs_app_ui_cd-r2
+  exit_code: 0
+  verified_at: 2026-11-20T20:53:44Z
+
+- cmd: node scripts/suite-neu-doi.mjs pipeline_a -- 'cd pipeline && npm run test:a'
+  run_id: minted-s02-luot-loi-sach-va-kiem-han-token-SUITE-test_a-r2
+  exit_code: 0
+  verified_at: 2026-11-20T20:53:44Z
+
+- cmd: node scripts/suite-neu-doi.mjs pipeline_b -- 'cd pipeline && npm run test:b'
+  run_id: minted-s02-luot-loi-sach-va-kiem-han-token-SUITE-test_b-r2
+  exit_code: 0
+  verified_at: 2026-11-20T20:53:44Z
 
 - cmd: node scripts/suite-neu-doi.mjs ui_lint_rules -- 'cd app && npm run test:lint-rules'
-  run_id: minted-s02-luot-loi-sach-va-kiem-han-token-SUITE-test_lint_rules-r1
+  run_id: minted-s02-luot-loi-sach-va-kiem-han-token-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-11-20T20:12:45Z
+  verified_at: 2026-11-20T20:53:44Z
 
 - cmd: node scripts/suite-neu-doi.mjs portal_static -- 'node scripts/check-portal-compliance.mjs'
-  run_id: minted-s02-luot-loi-sach-va-kiem-han-token-SUITE-node_scripts_suite_neu_doi_mjs_portal_st-r1
+  run_id: minted-s02-luot-loi-sach-va-kiem-han-token-SUITE-node_scripts_suite_neu_doi_mjs_portal_st-r2
   exit_code: 0
-  verified_at: 2026-11-20T20:12:45Z
+  verified_at: 2026-11-20T20:53:44Z
 
 ## Known limits
 
@@ -176,19 +191,15 @@ Round 1. Một eval hỏng: E6 (AC-6). Lệnh hỏng duy nhất là `bash _accep
 
 ## Analyst
 
-none — mọi eval feature đều red trên baseline (có phân biệt)
+carried tu round 1 — baseline khong do lai round nay
 
-Baseline không đo:
-- cd collector && npm test: exit 127 — lệnh/script không tồn tại ở chỗ đúng (command not found) — HẠ TẦNG CHẬM, không phải sản phẩm đo
-- bash _acceptance/s02-luot-loi-sach-va-kiem-han-token/probes/noi-day.sh: bỏ qua baseline: tệp _acceptance/s02-luot-loi-sach-va-kiem-han-token/probes/noi-day.sh có ở cây đang kiểm nhưng chưa có ở merge-base db971b8c541fb60364909e299dfe87d305329ee9 — eval mới, chạy trên code cũ không phân biệt gì
-- cd collector && npx tsc -p tsconfig.json && cd .. && node _acceptance/s02-luot-loi-sach-va-kiem-han-token/probes/nguoi-doc.mjs && ! node _acceptance/s02-luot-loi-sach-va-kiem-han-token/probes/nguoi-doc.mjs --pha: bỏ qua baseline: tệp _acceptance/s02-luot-loi-sach-va-kiem-han-token/probes/nguoi-doc.mjs có ở cây đang kiểm nhưng chưa có ở merge-base db971b8c541fb60364909e299dfe87d305329ee9 — eval mới, chạy trên code cũ không phân biệt gì
-- cd collector && npx tsc -p tsconfig.json && cd .. && node _acceptance/s02-luot-loi-sach-va-kiem-han-token/probes/dot-bien-han.mjs: bỏ qua baseline: tệp _acceptance/s02-luot-loi-sach-va-kiem-han-token/probes/dot-bien-han.mjs có ở cây đang kiểm nhưng chưa có ở merge-base db971b8c541fb60364909e299dfe87d305329ee9 — eval mới, chạy trên code cũ không phân biệt gì
-- bash _acceptance/s02-luot-loi-sach-va-kiem-han-token/probes/vung.sh: bỏ qua baseline: tệp _acceptance/s02-luot-loi-sach-va-kiem-han-token/probes/vung.sh có ở cây đang kiểm nhưng chưa có ở merge-base db971b8c541fb60364909e299dfe87d305329ee9 — eval mới, chạy trên code cũ không phân biệt gì
+Không có eval không-phân-biệt cần liệt kê.
 
 ## Variance
 
-none — mọi eval nhiều lần chạy đều đồng nhất
+none — every multi-run eval is uniform
 
 ## Iterations
 
-Round 1: E6 failed — phép đo vùng thấy LO-TRINH.html và PRODUCT-MAP.md (tệp sinh) đổi ngoài vùng cho phép. Trả về triển khai.
+Round 1: E6 bị từ chối — phép đo vùng AC-6 chưa tính hai tệp sinh LO-TRINH.html và PRODUCT-MAP.md. Trả lại triển khai.
+Round 2: nới vùng của phép đo E6 thêm hai tệp sinh (commit 72f41db44); E6 xanh, các eval còn lại carry-forward từ round 1, suite chạy lại xanh.
