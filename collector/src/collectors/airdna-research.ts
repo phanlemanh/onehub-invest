@@ -1,4 +1,5 @@
 import { chromium } from "playwright-core";
+import { moTrinhDuyet } from "../core/trinh-duyet.js";
 import type { Collector, RawItem, CoverageReport } from "../core/types.js";
 
 /**
@@ -74,12 +75,9 @@ export function duyetAppToken(log: (...a: unknown[]) => void, token: string, now
 
 /** Mở profile 1 lần để lấy JWT (localStorage.auth.appToken) rồi đóng ngay. */
 async function appToken(log: (...a: unknown[]) => void): Promise<string> {
-  const browser = await chromium.launchPersistentContext(PROFILE_DIR, {
-    channel: "chrome",
-    headless: false, // Turnstile chặn headless (AGENTS.md)
-    viewport: { width: 1440, height: 900 },
-    locale: "en-US",
-  });
+  // 2011-5: trình duyệt chuyên dụng qua lớp chung — ứng viên + ngăn profile chọn MỘT chỗ
+  // (ONEHUB_TRINH_DUYET/ONEHUB_BROWSER_*/ONEHUB_PROFILE_GOC), ngăn "s02" ngoài kho
+  const browser = await moTrinhDuyet("s02", { headless: false, locale: "en-US" });
   try {
     const page = await browser.newPage();
     await page.goto("https://app.airdna.co/data/vn", {

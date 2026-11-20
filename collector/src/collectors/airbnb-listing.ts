@@ -1,7 +1,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import { gunzipSync } from "node:zlib";
 import { join } from "node:path";
-import { chromium } from "playwright-core";
+import { moTrinhDuyetTam } from "../core/trinh-duyet.js";
 import type { Collector, RawItem } from "../core/types.js";
 
 /**
@@ -62,7 +62,7 @@ export const airbnbListing: Collector = {
     const defaultCi = new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10);
     const defaultCo = new Date(Date.now() + 32 * 864e5).toISOString().slice(0, 10);
 
-    const browser = await chromium.launch({ channel: "chrome", headless: false });
+    const browser = await moTrinhDuyetTam({ headless: false }); // 2011-5 trình duyệt chuyên dụng
     const page = await browser.newPage({
       locale: "vi-VN",
       viewport: { width: 1280, height: 800 },

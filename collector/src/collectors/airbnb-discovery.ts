@@ -1,4 +1,4 @@
-import { chromium } from "playwright-core";
+import { moTrinhDuyetTam } from "../core/trinh-duyet.js";
 import type { Collector, RawItem } from "../core/types.js";
 
 type Card = { href: string; title: string | null; price: string | null };
@@ -26,7 +26,7 @@ export const airbnbDiscovery: Collector = {
     const queryLabel = query === city.name ? "searchPaging" : `searchPaging:${query}`;
     const startUrl = `https://www.airbnb.com.vn/s/${encodeURIComponent(query)}/homes`;
 
-    const browser = await chromium.launch({ channel: "chrome", headless: false });
+    const browser = await moTrinhDuyetTam({ headless: false }); // 2011-5 trình duyệt chuyên dụng
     try {
       const page = await browser.newPage({
         locale: "vi-VN",
