@@ -22,7 +22,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { fmtVnDateTime } from "@/lib/format"
-import type { LabelField, LoiLuot, PriceUnit, RawLabels } from "@/lib/labels-normalize"
+import { luotRutGon, nhanO, oCuaLat, type LabelField, type LoiLuot, type PriceUnit, type RawLabels } from "@/lib/labels-normalize"
 import type { TinGan } from "@/lib/labels-queries"
 
 import { AnhBai } from "./anh-bai"
@@ -63,8 +63,11 @@ export function LabelFormNhom({
   diToi?: (href: string) => void
   baoTin?: (cau: string) => unknown
 }) {
+  // Lát có khai ô: chỉ các ô của lát, gắn mù, không căn cứ, không lượt hai.
+  const oLat = oCuaLat(lat)
+  const dsO = oLat ? oLat.flatMap((f) => TAT_CA_O.filter((d) => d.id === f)) : TAT_CA_O
   // Lát mẫu soát (DO1): điền sẵn nháp máy của cách đọc hiện; người giữ hay sửa từng ô rồi lưu.
-  const [nhapDau] = useState(() => (tin.nhap ? nhapVeO(tin.nhap) : null))
+  const [nhapDau] = useState(() => (tin.nhap && !oLat ? nhapVeO(tin.nhap) : null))
   const [cells, setCells] = useState<Partial<Record<LabelField, O>>>(nhapDau?.cells ?? {})
   const [donVi, setDonVi] = useState<PriceUnit>(nhapDau?.donVi ?? "ty")
   // Người tự bấm đơn vị thì Loại tin không ghi đè lựa chọn đó.
@@ -92,9 +95,9 @@ export function LabelFormNhom({
       boLoi(O_GIA)
     }
   }
-  const daDien = TAT_CA_O.filter((d) => cell(d.id).unknown || cell(d.id).value.trim()).length
-  const canLyDo = TAT_CA_O.some((d) => !d.noBasis && !cell(d.id).unknown && cell(d.id).value.trim() && cell(d.id).basis !== "chu_bai" && cell(d.id).basis !== "anh" && cell(d.id).basis !== "danh_muc_cdt")
-  const xong = daDien === TAT_CA_O.length
+  const daDien = dsO.filter((d) => cell(d.id).unknown || cell(d.id).value.trim()).length
+  const canLyDo = !oLat && TAT_CA_O.some((d) => !d.noBasis && !cell(d.id).unknown && cell(d.id).value.trim() && cell(d.id).basis !== "chu_bai" && cell(d.id).basis !== "anh" && cell(d.id).basis !== "danh_muc_cdt")
+  const xong = daDien === dsO.length
 
   async function luu(xacNhan = false) {
     const kind = cell("kind").unknown ? undefined : cell("kind").value
@@ -105,8 +108,8 @@ export function LabelFormNhom({
       setHoiGia({ cau, khoa })
       return
     }
-    const values: RawLabels = {}
-    for (const d of TAT_CA_O) {
+    const values: RawLabels = oLat ? luotRutGon(lat, cells) : {}
+    for (const d of oLat ? [] : TAT_CA_O) {
       const c = cell(d.id)
       if (c.unknown) values[d.id] = { not_stated: true }
       else values[d.id] = { value: c.value, ...(d.noBasis ? {} : { basis: c.basis }), ...(d.kind === "gia" ? { unit: donVi } : {}) }
@@ -122,7 +125,7 @@ export function LabelFormNhom({
         baoTin(cauTinKe(kq.error))
         diToi(hrefTinKe)
       } else if (kq.kind === "loi-may-chu") toast.error(kq.error)
-      else if (kq.kind === "da-luu") diToi(hrefXem)
+      else if (kq.kind === "da-luu") diToi(oLat ? hrefTinKe : hrefXem)
     } finally {
       setDangLuu(false)
     }
@@ -139,7 +142,7 @@ export function LabelFormNhom({
               {tin.postedAt ? ` · đăng ${fmtVnDateTime(tin.postedAt)}` : ""}
               {tin.doubleLabel ? " · tin gắn trùng (hai người)" : ""}
             </FrameDescription>
-            {tin.nhap ? (
+            {tin.nhap && !oLat ? (
               <div className="flex">
                 <Badge variant="info-light" data-labels-nhap={tin.nhap.cachDoc} className="wrap-anywhere whitespace-normal">
                   Nháp máy · {tin.nhap.cachDoc}
@@ -153,13 +156,15 @@ export function LabelFormNhom({
               </p>
             ) : null}
             <FrameDescription className="text-xs text-pretty">
-              Ghi điều người trong nhóm hiểu. Căn cứ: Chữ là chữ bài · Ảnh là ảnh trong bài · Nhóm là ngữ cảnh nhóm · Nghề là kiến thức nghề. Ô vuông: không suy ra được.
+              {oLat
+                ? "Ghi điều người trong nhóm hiểu. Ô vuông: không suy ra được."
+                : "Ghi điều người trong nhóm hiểu. Căn cứ: Chữ là chữ bài · Ảnh là ảnh trong bài · Nhóm là ngữ cảnh nhóm · Nghề là kiến thức nghề. Ô vuông: không suy ra được."}
             </FrameDescription>
           </div>
           <div className="flex shrink-0 items-center gap-2 sm:flex-col sm:items-end sm:gap-1">
             <Badge variant={xong ? "success-light" : "secondary"} className="tabular-nums">
               {xong ? <CheckCircle2Icon aria-hidden="true" /> : <CircleDashedIcon aria-hidden="true" />}
-              {daDien}/{TAT_CA_O.length}
+              {daDien}/{dsO.length}
             </Badge>
             {baiDai(tin.text) ? (
               <Button variant="link" size="xs" onClick={() => setMoRong((v) => !v)}>
@@ -169,6 +174,13 @@ export function LabelFormNhom({
           </div>
         </FrameHeader>
         <FramePanel>
+          {oLat ? (
+            <div className="flex min-w-0 flex-col gap-5" data-labels-rut-gon="">
+              {dsO.map((d) => (
+                <NhomRow nhan={nhanO(lat, d.id)} boCanCu key={d.id} d={d} o={cell(d.id)} loi={loi[d.id]} onChange={(p) => dat(d.id, p)} />
+              ))}
+            </div>
+          ) : (
           <div className="grid min-w-0 grid-cols-1 gap-x-8 gap-y-5 xl:grid-cols-2">
             {COT_KHOI.map((cot) => (
               <div key={cot[0]} className="flex min-w-0 flex-col gap-5">
@@ -225,15 +237,16 @@ export function LabelFormNhom({
               </div>
             ))}
           </div>
+          )}
         </FramePanel>
         <FrameFooter className="bg-muted sticky bottom-0 z-10 flex flex-col gap-3">
-          {matKetNoi ? <LuuLoiAlert onRetry={() => luu()} dangLuu={dangLuu} /> : null}
+          {matKetNoi ? <LuuLoiAlert onRetry={() => luu()} dangLuu={dangLuu} chuNut={oLat ? "Thử lại" : undefined} /> : null}
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <FrameDescription className="text-xs tabular-nums">
-              Đã điền {daDien}/{TAT_CA_O.length}. Lưu xong mới thấy máy đọc gì.
+              Đã điền {daDien}/{dsO.length}.{oLat ? "" : " Lưu xong mới thấy máy đọc gì."}
             </FrameDescription>
             <Button onClick={() => luu()} disabled={dangLuu}>
-              {dangLuu ? "Đang lưu…" : "Lưu và xem máy đọc"}
+              {dangLuu ? "Đang lưu…" : oLat ? "Lưu và sang bài kế" : "Lưu và xem máy đọc"}
             </Button>
           </div>
         </FrameFooter>

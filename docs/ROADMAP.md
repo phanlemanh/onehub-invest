@@ -167,6 +167,12 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   3166-2:VN cũ của tỉnh mang tên được giữ (Huế VN-26; bản chụp `pipeline/data/iso-3166-2-vn.json`); `buildings.iso_region` là khoá
   ngoại tới bảng, `upi` nhận mọi mã. Lệnh dựng suy ISO từ `area_ids` của khu, không đọc `meta.city` (ba khu Hưng Yên ghi `hanoi`);
   chưa áp 088 thì chỉ dựng lại khu đã có toà. Chủ đầu tư ghi `source_field` (tệp + băm). Chưa áp 088 lên máy thu.
+- Thuộc tính căn S16 trên Danh bạ Ops (DA40, `_acceptance/thuoc-tinh-can-s16`, migration 113 + 118, PR #491): bảng nạp
+  `stg_s16_can_chi_tiet` (DATA-CONTRACT v14, bộ nạp `pipeline/import-s16-chi-tiet.mjs`), `pipeline/scripts/thuoc-tinh-can-s16.mjs --ghi`
+  ghi phát biểu `source_field` cấp `Unit` (diện tích, PN, WC, hướng, loại hình, giá chủ đầu tư) cho căn danh bạ khớp mã căn S16; view
+  `v_unit_thuoc_tinh`, `v_s16_gia_cdt` (118 loại mã mơ hồ toà); trang `/ops/registry/<id>` hiện ô phủ «Căn có thuộc tính». **Đã áp
+  lên máy thu 19/11 15:30–15:52Z**: nạp 95.798, 441.193 phát biểu, 84.822 căn có thuộc tính / 111.331 căn có bí danh S16, khớp số đối
+  chiếu (nhật ký ở `docs/ops/nhat-ky-ap/2026-11-19-da40-thuoc-tinh-can-s16.md`). Không job đêm nào nạp lại hay ghi lại: lần thu S16 sau phải chạy tay. Chỉ local, không lên cloud.
 - Ngừng rao khi không thấy lại (V6, `_acceptance/tin-ngung-rao-khong-thay-lai`, migration 085, Q4 Mạnh 08/11): tin sống của S03,
   S05, S06 không thấy lại quá N = 21 ngày (`ngung_rao_sau_ngay`) trong khi nguồn vẫn thu thì nhận phát biểu `offer_status =
   withdrawn` lớp suy luận (`inferred`/`e1_rule`, `rule_id khong-thay-lai:<offer_id>`); đo tới mốc thu, không tới giờ chạy —
@@ -939,6 +945,81 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
       EN4 `api-tra-ho-so-zalo`. Câu còn mở của Cổng Phạm vi EN4: API chạy ở đâu, ai gọi (ứng dụng trên cloud không được nhận
       ngày sinh, giới tính), thuộc cổng nào, xác thực thế nào — data-api công khai không hợp. Ngoài đường găng, sau các hàng
       MS3; dãy dự kiến U2 sau VHZ2.
+56. **Duyệt nối nguồn danh mục theo loại căn cứ, một lần; phân khu chỉ tự nhận khi khớp trọn 1–1** (19/11). Căn cứ: DA46
+    `noi-phan-khu-trung-s16`. Thẻ luật phân khu S16 số 2 (DA37) đúc 7 nút trùng nơi với phân khu đã có, kéo 50 toà khỏi nút cũ, vì
+    bước khớp chỉ so tên. So tập toà S16 với S09 trên 61 khu (DB máy thu, chỉ đọc): 11 khu khớp 1–1, 3 khu chứa trọn nhiều nút, 0
+    khu chồng chéo, 47 khu không có toà chung. Mỗi nguồn mới đang tốn 6–7 hàng việc; S07, S11 và S12–S15 còn ở phía trước.
+    - **Câu đã trình** (phiên P2, trả lời lời Mạnh 02:08Z «khi bổ sung một nguồn có thể pipeline tự giải quyết được»), khuyến nghị
+      đồng ý cả hai:
+      - *Luật cho DA46:* «Khu chỉ tự nhận nút cũ khi toà khớp trọn 1–1 và có ít nhất 3 toà chung, các ca khác chỉ cảnh báo.»
+      - *Cách duyệt tự động:* «hiện thẻ luật duyệt theo từng nguồn (chốt 11/11). Muốn nguồn mới tự chạy, anh duyệt theo từng loại
+        căn cứ một lần, sau đó nguồn mới đạt ngưỡng chạy bóng thì được áp luôn.»
+    - **Lời Mạnh:** «Theo khuyến nghị» (phiên P2, 2026-11-19T02:21:44Z).
+    - **Quyết định 1, luật tự nhận phân khu.** Khu S16 chỉ tự nhận phân khu đã có khi: mọi toà có S09 của khu về một nút, nút đó
+      không nhận toà từ khu S16 khác, có ít nhất 3 toà chung, và ít nhất một nửa số toà của khu có S09. Ca có bằng chứng mà không
+      đạt thì giữ luật so tên và hiện cảnh báo trên thẻ luật. Phân khu trùng giữ nút cũ (rào chỉ-thêm 082 không cho đổi cột vùng của
+      toà), tên S16 thành bí danh của nút đó; tên hiển thị của nút chưa đổi. **Sửa mục 54 Q-C** ở chiều nút giữ lại.
+    - **Quyết định 2, duyệt theo loại căn cứ.** Mạnh duyệt mỗi loại căn cứ một lần, không duyệt lại cho từng nguồn. Nguồn mới đạt
+      ngưỡng ở lượt chạy bóng thì được áp theo căn cứ đã duyệt. **Sửa mục 44 Hỏi-1** («thẻ luật theo nguồn»).
+    - **Phạm vi áp dụng** của quyết định 2:
+      - *Loại căn cứ:* các căn cứ đang đi thẻ luật ở mô hình 11/11 §1.2 (K1, K2, K3, K5), căn cứ nhận nút ứng viên của Hỏi-1, và tập
+        toà chung khớp trọn 1–1 ở cấp phân khu.
+      - *Nguồn:* các nguồn danh mục đi qua khuôn chung bản ghi nguồn (S07, S08, S09, S10, S11 đến S16).
+      - *Hiệu lực:* chưa loại căn cứ nào được duyệt theo cách mới và chưa có bước chạy bóng. Cho tới khi Mạnh chốt ngưỡng, nguồn
+        mới vẫn đi thẻ luật như cũ. Việc nối 7 cặp của DA46 vẫn cần chữ ký riêng kèm băm thẻ nối.
+    - **Không đổi:**
+      - Mỗi loại căn cứ vẫn do Mạnh xem mẫu và duyệt lần đầu.
+      - Mẫu soát 20 cặp mỗi tuần chỉ để thấy trôi, không mở cổng tự nối (FRAMING §5).
+      - K4 và ca khó vẫn lên thẻ từng cặp; không nối khi lệch tỉnh.
+      - Lời khai từ tin (mã dự án S06, nhóm S03, tên trên tin) không thuộc phạm vi, vẫn đi DA7 và DA18.
+      - S16 thắng về cấu trúc (mục 54 Q-B). Giá, pháp lý, chủ đầu tư, tiến độ lệch vẫn lên thẻ.
+      - LLM không quyết định ghi dữ liệu (luật 7). Điều kiện lên Invest của mục 39 giữ nguyên.
+    - **Câu còn mở**, trình ở Cổng Phạm vi của hàng đầu tiên thuộc lớp hợp nhất nguồn: ngưỡng tự áp cho mỗi căn cứ; phần trùng với danh
+      bạ đã xác nhận có được làm tập đối chiếu không (đụng FRAMING §5); quan hệ cha–con do máy suy có qua thẻ luật lần đầu không.
+58. **Đo nguồn không phải tin: hai họ nguồn, thẻ nguồn kho năm trục** (20/11; số 57 dành cho hàng GT9 đang mở). Căn cứ:
+    bản soát nguồn và đồng bộ trên Ops ngày 20/11 (11 phát hiện L1–L11). Gốc của chỗ «mờ» là việc «xong ở gộp» chưa chạy
+    thật: nạp S07 (DAZ3) và S10 (DA29) đã ký nhưng bảng `stg_*` 0 dòng, 93 và 239 bản thu chờ, không hàng nào sở hữu «chạy
+    thật kèm lịch»; S09 không có dòng trong sổ nguồn; S02 xanh giả. Mạnh trả lời bốn câu Cổng Phạm vi ở phiên rà soát, 02:27Z,
+    nguyên văn: «Theo khuyến nghị».
+    - **Hai họ nguồn.** *Luồng* là tin rao: S03, S05, S06. *Kho* là danh mục S07–S16, tham chiếu S01 và S02, nền S04.
+    - **Thẻ nguồn kho năm trục:** T1 vận hành · T2 phủ · T3 biến động · T4 chất lượng · T5 nối và giá trị. Nguồn mới chỉ khai
+      `family`, `cadence_hours`, `universe`, `stg_tables` trong `source_registry`.
+    - **Lời riêng cho đúng ba plist launchd mới: S07, S10, S16.** Nhịp do làn thu quyết. S11 không nằm trong lời này (nạp S11
+      vẫn hoãn, mục 53).
+    - **Tổng thể (`universe`)** lấy số nguồn tự công bố, kèm mốc và nơi lấy; chưa có thì để trống, không ước.
+    - **Bốn lát.** A: chạy thật (làn thu nạp bù và đặt lịch; sổ nguồn khai báo, migration 122). B: thước vận hành và biến
+      động, gồm kiểm co rút (migration 123, bước SQL 605). C: phễu và phủ, đi cùng các hàng danh bạ toà (DA39, DA42, DA44).
+      D: chất lượng kho (mở lại DA20), giữ sau MS3.
+    - **Không đổi:** hàng nguồn kho xong khi con số trên màn đổi trên dữ liệu thật (mục 50); cloud chỉ nhận số gộp và mã
+      `S0x`; tên nguồn thật vẫn tầng A.
+    - **Lỗ thấy thêm 20/11:** sổ nguồn máy thu thiếu dòng S09 và S17, nên bộ quét tên nguồn mù với hai nguồn này. Hàng sổ
+      nguồn khai báo thêm cả hai dòng; tên thật điền trên máy thu, không vào kho.
+59. **S05 bỏ Apify, thu bằng Playwright trên máy thu** (20/11). Mạnh chốt trực tiếp với làn thu, rồi xác nhận với giám sát
+    ~03:34Z (mã câu hỏi `h-20261120T030758Z-245`), nguyên văn: «Đã chốt, giao đi». Bộ thu chạy trên máy thu với profile riêng và tài khoản
+    thu riêng, chỉ đọc. Mở lại thu S05 theo đường mới trước mốc «giữ dừng tới 24/11» cũ. Bảy điều kiện phải đủ trước lượt
+    thu thật đầu tiên:
+    1. Chỉ được bấm nút đóng trong hộp thoại che trang. Ngoài ra không bấm, không gõ, không đăng, nhắn, thích hay xin vào nhóm.
+    2. Gặp đăng nhập lại, checkpoint, xác minh hay CAPTCHA thì dừng lượt, không vượt.
+    3. Có test cho nhận diện bị chặn, trần mỗi lượt và khuôn snapshot.
+    4. Danh sách nhóm nằm trong tệp cấu hình. Tài khoản thu, phiên và profile là tầng A.
+    5. Chỉ Mạnh tự đăng nhập.
+    6. Không qua OpenClaw hay gateway, không LLM, không plist mới; dùng lại lịch S05 cũ.
+    7. Không thu thật trước khi mã vào `main` và có tin GIAO triển khai.
+    - DATA-CONTRACT không đổi. Phía Claude: mở khoá nạp S05, SLO và trạng thái `source_registry` cùng nhịp tích hợp.
+    - Huỷ gói Apify là việc của Mạnh (tiền).
+60. **Một trình duyệt chuyên dụng cho mọi bộ thu, Mạnh không đụng tới** (20/11). Bốn bộ thu đang chung một ứng dụng trình
+    duyệt, mỗi bộ một profile rải ở chỗ khác nhau; đăng nhập phải qua lệnh riêng nên ba lần Mạnh đăng nhập S02 đều vào nhầm
+    chỗ, S02 đứt từ 28/10. Mạnh ~03:54Z (mã câu hỏi `h-20261120T034556Z-247`), nguyên văn: «Giao, theo thứ tự đó».
+    - **Phạm vi:** mọi bộ thu có trình duyệt — S01, S02, S05 mới, S06 phần lấy số.
+    - **Thứ tự ứng viên, làn thu đo rồi chọn:** (1) Chrome for Testing ghim bản; (2) Chrome kênh Beta cài riêng; (3) nếu cả
+      hai không qua chống bot thì giữ Google Chrome nhưng khoá «chỉ bộ thu».
+    - **Luật kèm:** bộ thu mới không ghi cứng kênh trình duyệt, chọn ở một chỗ cấu hình; profile bộ thu gom về một gốc ngoài
+      kho (tầng A); mỗi nguồn một lệnh đăng nhập, Mạnh tự đăng nhập; ứng viên được chọn phải có số đo qua chống bot.
+    - **Không dùng cho bộ thu:** ego lite và trình duyệt Mạnh dùng hằng ngày. Bộ thu tự mở profile riêng bằng Playwright, đó
+      là kho phiên khác.
+    - **Trạng thái 20/11:** Chrome for Testing bị chặn ở bước đăng nhập Google của S02, làn thu chuyển sang đo Chrome Beta;
+      bản cài nằm ngoài kho. Đăng nhập lại S02: Mạnh «Chờ trình duyệt mới». Khi chốt xong thì sửa bẫy kỹ thuật số 2 của
+      `AGENTS.md`.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
@@ -1021,6 +1102,7 @@ Theo dõi: giám sát đợt báo một dòng mỗi ngày (hiện tại so với
 | V7 | Đóng băng Stage B + thẻ Ghép căn: không dựng cặp, không gieo thẻ, thẻ chờ không hiện và không vào số chờ; dữ liệu giữ nguyên — `_acceptance/dong-bang-stage-b-resolve` (T2) | 🔶 Mạnh duyệt Cổng Phạm vi 09/11 (Hỏi-1 A ẩn thẻ chờ, Hỏi-2 A không thêm chữ), đang chấm |
 | DV1 | Mọi nút dự án trỏ mã xã/phường hiện hành: tệp xã cũ có nguồn + `danh-ba-vat-the.mjs --sua-xa` — `_acceptance/nut-du-an-tro-xa-moi` (T2) | 🔶 Mạnh duyệt Cổng Phạm vi 10/11, đang làm; sau gộp: `--sua-xa --thu` rồi `--sua-xa --db-that` trên máy thu, dựng lại danh bạ, so số toà và UPI trước–sau là lời riêng của Mạnh (Hỏi-1) |
 | DA1 | Danh bạ vật thể dựng toà ở cả 34 tỉnh: bảng ISO trong migration 088, ISO suy từ khu vực, chủ đầu tư `source_field` — `_acceptance/danh-ba-vat-the-toan-quoc` (T3, 088) | 🔶 Mạnh duyệt Cổng Phạm vi và kế hoạch 10/11, đang làm; sau gộp: áp 088 lên máy thu là lời riêng của Mạnh (`pg_dump` trước) |
+| DA40 | Thuộc tính căn S16 (diện tích, PN, WC, hướng, loại hình, giá chủ đầu tư) trên Danh bạ Ops máy thu — `_acceptance/thuoc-tinh-can-s16` (T2, 113 + 118) | ✅ gộp PR #491; áp lên máy thu 19/11 15:30–15:52Z, số thật khớp số đối chiếu (+2 căn grand-park, lời Mạnh 02:39Z), nhật ký `docs/ops/nhat-ky-ap/2026-11-19-da40-thuoc-tinh-can-s16.md`; việc theo sau: DA48 rút thuộc tính khi căn thành mơ hồ toà |
 | G-3 | Kev-V media gate + VLM collage + LLM judge (≡ A2) | ⬜ |
 | R2-R4 | asset_nodes mở rộng (subzone/building; geo-polygon; dedup căn) | ⬜ |
 

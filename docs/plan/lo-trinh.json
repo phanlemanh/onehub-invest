@@ -3090,7 +3090,7 @@
       ],
       "dot": "gan-can-s03-0411",
       "nhom": "l10-invest",
-      "cau_giao": "Người xem mở danh sách Bán, Cho thuê trên cổng Invest và thấy tin S03 chưa ghi số m² hiện dải kèm nhãn «suy ra», tin này không vào lọc diện tích và không có giá/m²",
+      "cau_giao": "Người xem mở danh sách Bán, Cho thuê trên cổng Invest và thấy tin S03 chưa ghi số m² hiện dải kèm nhãn «suy ra», tin này không vào lọc diện tích và hiện Khoảng giá/m² có nhãn suy ra",
       "bat_khi": "Số tin thêm khớp đếm SQL độc lập; 0 tin đi tìm mua hay không phải tin rao lọt lên; lọc và sắp theo m² không đổi với tin có số",
       "vi_sao": "Đo 04/11: 2.100 tin S03 chỉ thiếu m² nên chưa lên cổng, đang hiện 1.259. Bỏ điều kiện m² cũng bỏ một lớp lọc vô tình, nên phải đi cùng nhãn ý định.",
       "vung": [
@@ -3102,7 +3102,7 @@
         "pipeline/sync-cloud.mjs",
         "CONTEXT.md"
       ],
-      "ghi_chu": "Ba câu của Mạnh chốt ở Cổng Phạm vi: tin có dải có đủ điều kiện hiện không (VISIBLE và bậc B1 đang đòi area_m2); tin thuê cận dưới 88,7% có chấp nhận không; có nhận dải mức nhóm không. DDL cloud xin duyệt trước khi gộp, Claude tự chạy qua Management API. Thuật ngữ nhãn vào CONTEXT.md cùng hàng. Đọc phát biểu (từ PL18 và bộ đọc luật), không đọc thẳng silver_labels (Q5 07/11)."
+      "ghi_chu": "Ba câu của Mạnh chốt ở Cổng Phạm vi: tin có dải có đủ điều kiện hiện không (VISIBLE và bậc B1 đang đòi area_m2); tin thuê cận dưới 88,7% có chấp nhận không; có nhận dải mức nhóm không. DDL cloud xin duyệt trước khi gộp, Claude tự chạy qua Management API. Thuật ngữ nhãn vào CONTEXT.md cùng hàng. Đọc phát biểu (từ PL18 và bộ đọc luật), không đọc thẳng silver_labels (Q5 07/11). Sửa 20/11: nhận phần Invest (hiện dải và khoảng giá/m² có nhãn suy ra, không vào lọc diện tích) và đồng bộ dải lên cloud từ CG16 — Hỏi-1, Mạnh duyệt Cổng Phạm vi CG16 19/11."
     },
     {
       "ma": "GC0",
@@ -5107,6 +5107,30 @@
       "ghi_chu": "Đứng trên luật «nhóm chuyên một dự án» của DV6. Không ghi vào raw snapshot (luật 1). Bảng phủ ca: loại nhóm (một dự án, nhiều dự án, chưa khai, ngoài sổ) × chữ bài (im, cùng dự án, dự án khác) × loại bài (tin rao, Yêu cầu, bài chỉ ảnh)."
     },
     {
+      "dot": "sau-ap-da40-2011",
+      "ma": "TG3",
+      "slug": "the-nhap-du-an-tu-ten-nhom",
+      "nhom": "l01-the-dia-chi-nhom",
+      "phu": [
+        "TG3"
+      ],
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 6,
+      "dung_tren": [
+        "TG1"
+      ],
+      "cau_giao": "Thẻ địa chỉ nhóm S03 dựng nháp lấy thêm dự án từ tên nhóm và bí danh chữ tắt (OCP1, OCP2-3…), ghi rõ nguồn là tên nhóm để người duyệt",
+      "bat_khi": "Trên DB máy thu: số thẻ nháp trống giảm từ 12/13 (đo 19/11) theo lệnh đếm, đích chốt ở S1 từ bảng phủ ca (≥7/12 nhóm có tên nói rõ dự án); dự án lấy từ tên nhóm mang nhãn nguồn «tên nhóm», khác nguồn «bài»; bí danh chữ tắt khớp danh bạ, không đoán khi mơ hồ; thẻ đã duyệt không đổi",
+      "vi_sao": "Đo 19/11 trên DB máy thu: 13 thẻ nháp, 12 trống; ≥7/12 nhóm có tên nói rõ dự án; bài trong nhóm chuyên dự án hiếm khi nêu tên dự án (0–1 bài mỗi nhóm khớp danh bạ), nên nháp dựng từ chữ bài của TG1 gần như luôn trống.",
+      "vung": [
+        "pipeline/lib/dia-chi-the-nhom.mjs",
+        "pipeline/lib",
+        "app/src/app/ops/sources"
+      ],
+      "ghi_chu": "Chưa giao dãy. Liên quan ON20 so-nhom-sua-tieu-de (tiêu đề chuẩn hoá của nhóm): khi ON20 có, tiêu đề chuẩn hoá là nguồn tên tốt hơn tên gốc — chốt ở Cổng Phạm vi có đọc thêm tiêu đề không. Nháp theo luật xác định, người duyệt thẻ (luật 7). Tên nhóm là tầng C; tên nguồn thật không vào thẻ (luật 6)."
+    },
+    {
       "ma": "CG15",
       "slug": "do-lech-s03-s06-canh-hang",
       "dot": "dat-lai-lo-trinh-1511",
@@ -5408,7 +5432,7 @@
         "pipeline/lib/danh-ba-vat-the.mjs",
         "pipeline/lib/s09-danh-ba-can.mjs"
       ],
-      "ghi_chu": "Dãy P2, sau khi DA37 gộp (GS xếp 18/11). Migration 115 (sổ số GS 18/11: 111+114 DA37, 112 U1, 113 DA40, 115 S09, 116 giữ tạm, kế 117). Khuôn DA33. Làn thu: thu gói 1 (đã cho thu ngay theo lời thường trực 13–14/11), DATA-CONTRACT tăng schemaVersion, bộ nạp stg — việc làn thu, không phải hàng. Mã bền S09 khác block_id insights S09 cũ: ánh xạ qua tên toà và mã dự án. S1 lập bảng phủ ca từ snapshot gói 1 và năm dự án mẫu trùng danh bạ (làn thu gửi, tin claudedp-1811-6)."
+      "ghi_chu": "Dãy P2, sau khi DA37 gộp (GS xếp 18/11). Migration 115 (sổ số GS 18/11: 111+114 DA37, 112 U1, 113 DA40, 115 S09, 116 giữ tạm, kế 117). Khuôn DA33. Làn thu: thu gói 1 (đã cho thu ngay theo lời thường trực 13–14/11), DATA-CONTRACT tăng schemaVersion, bộ nạp stg — việc làn thu, không phải hàng. Mã bền S09 khác block_id insights S09 cũ: ánh xạ qua tên toà và mã dự án. S1 lập bảng phủ ca từ snapshot gói 1 và năm dự án mẫu trùng danh bạ (làn thu gửi, tin claudedp-1811-6). Sửa 20/11: lượt này chỉ dự án, toà, tầng của cao tầng; khu, căn thấp tầng, nhà phố sang mục chờ DA50 (Mạnh 19/11 02:38Z «Cao tầng trước, thấp tầng nhà phố sau»). Thêm AC-11: không sinh nút trùng nơi, đo bằng timNutTrungNoi của pipeline/lib/khop-tron.mjs (hàm khớp trọn dùng chung, đến cùng DA46)."
     },
     {
       "ma": "DA43",
@@ -5620,6 +5644,29 @@
       "ghi_chu": "Dãy P2 đang làm; Cổng Phạm vi đã trình. Hạng T3: ghi dữ liệu danh bạ (nút phân khu) và đổi bước khớp. Rào chỉ-thêm 082 của buildings giữ nguyên. Không gộp, để người xem: các nút trùng giữa nút mới với nhau và nút không có toà (danh sách ở hồ sơ P2)."
     },
     {
+      "dot": "sau-ap-da40-2011",
+      "ma": "DA49",
+      "slug": "dong-dau-dia-chi-bo-nut-nghi",
+      "nhom": "l04-danh-ba-toa",
+      "phu": [
+        "DA49"
+      ],
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 4,
+      "dung_tren": [
+        "DA46"
+      ],
+      "cau_giao": "Lượt đóng dấu địa chỉ S03 bỏ qua nút phân khu nghỉ khi đọc thẻ địa chỉ nhóm đã duyệt (pipeline/lib/dia-chi-the-nhom.mjs)",
+      "bat_khi": "Ca cấy trên DB thử (thẻ đã duyệt trỏ nút phân khu mang dấu nghỉ) đỏ trước khi sửa, xanh sau: tin không nhận nút nghỉ; trên DB máy thu hôm nay 0 thẻ trỏ bảy nút nghỉ (đo 19/11) nên số trên màn không đổi; chạy lại không nhân dòng",
+      "vi_sao": "Mục Ngoài-1 ở Cổng Bằng chứng DA46: Mạnh chọn «mở hợp đồng mới» 19/11 13:55Z. Đo 19/11: 0 thẻ trỏ bảy nút nghỉ — rào cho tương lai.",
+      "vung": [
+        "pipeline/lib/dia-chi-the-nhom.mjs",
+        "pipeline/tests"
+      ],
+      "ghi_chu": "Chưa giao dãy. Miễn «số trên màn đổi»: rào, hôm nay 0 thẻ bị ảnh hưởng. Không migration. Cỡ 4, dưới mục tiêu: một lỗi hẹp đã có câu Mạnh riêng."
+    },
+    {
       "dot": "sau-soat-s03-1911",
       "ma": "DA47",
       "slug": "phan-khu-senique-toa-treo",
@@ -5680,7 +5727,7 @@
       "tieu_chi": 9,
       "dung_tren": [],
       "cau_giao": "Người vận hành mở /ops/data-flow và thấy hai số đủ trường lõi cạnh nhau — số thật và số tính cả dải diện tích suy ra, có nhãn riêng — nhãn nút thắt đọc số tính cả dải, còn thang bậc B0–B5 vẫn theo số thật",
-      "bat_khi": "Trên DB máy thu, cửa sổ 13–19/11 của S03: số tính cả dải từ 361 lên khoảng 1.046/1.285 (81%), số thật giữ 361; hai số khớp đếm SQL độc lập; bậc B0–B5 của tin S03 không đổi (B0 4.967, B1 51, B2 2.276 lúc đo); dải không ghi vào area_m2; mọi nơi giữ định nghĩa (600_data_flow.sql đoạn COMPLETE, data-level.ts, data-flow-queries.ts, hàm bậc 087 qua migration mới, B1 trong FRAMING.md) sửa cùng lúc và cho cùng số",
+      "bat_khi": "Trên DB máy thu, cửa sổ 13–19/11 của S03: số tính cả dải từ 361 lên khoảng 1.046/1.285 (81%), số thật giữ 361; hai số khớp đếm SQL độc lập; bậc B0–B5 của tin S03 không đổi (B0 4.967, B1 51, B2 2.276 lúc đo); dải không ghi vào area_m2; mọi nơi giữ định nghĩa (600_data_flow.sql đoạn COMPLETE, data-level.ts, data-flow-queries.ts, B1 trong FRAMING.md) sửa cùng lúc và cho cùng số",
       "vi_sao": "Mạnh «Tính, có nhãn riêng» (18/11 22:55Z) và «Duyệt cả hai» (23:12Z): dải diện tích suy ra được tính là đủ trường lõi, có nhãn riêng; giữ thang B0–B5 theo số thật. Soát 19/11: 780/1.285 tin S03 thiếu diện tích, 743 do bài không ghi; đổi định nghĩa B1 sẽ làm B2 của S03 từ 2.276 lên 6.244 mà không thêm số đo thật.",
       "vung": [
         "pipeline/sql/600_data_flow.sql",
@@ -5704,19 +5751,69 @@
       "vai": "Người vận hành",
       "tieu_chi": 11,
       "dung_tren": [],
-      "cau_giao": "Người vận hành mở một tin S03 thiếu m² trên Ops và thấy «Khoảng giá/m²» có nhãn «suy ra» dựng từ dải diện tích theo dự án hoặc toà × số phòng ngủ, và nhãn riêng «Giá tốt · suy ra» chỉ khi cả khoảng đạt ngưỡng giá tốt; cổng Invest hiện dải có nhãn sau khi dải lên cloud",
-      "bat_khi": "Trên DB máy thu: tin bán S03 thiếu m² mang «Giá tốt · suy ra» khớp đếm độc lập (đo 19/11: 66 tin); thước so chỉ dựng từ tin có m² thật; dải không dùng để chia giá khi chấm hạng (hạng hiện có không đổi); đọc lại mẫu mỗi tuần, độ đúng dưới 90% thì nhãn tắt; tin có m² thật vẫn một giá/m²; Invest chỉ hiện dải sau khi dải đồng bộ lên cloud, không vào lọc diện tích",
+      "cau_giao": "Người vận hành mở một tin S03 thiếu m² trên Ops và thấy «Khoảng giá/m²» có nhãn «suy ra» dựng từ dải diện tích theo dự án hoặc toà × số phòng ngủ, và nhãn riêng «Giá tốt · suy ra» chỉ khi cả khoảng đạt ngưỡng giá tốt",
+      "bat_khi": "Trên DB máy thu: tin bán S03 thiếu m² mang «Giá tốt · suy ra» khớp đếm độc lập (đo 19/11: 66 tin); thước so chỉ dựng từ tin có m² thật; dải không dùng để chia giá khi chấm hạng (hạng hiện có không đổi); đọc lại mẫu mỗi tuần, độ đúng dưới 90% thì nhãn tắt; tin có m² thật vẫn một giá/m²",
       "vi_sao": "Mạnh «Giá trên m2 sẽ thành Khoảng giá / m2» và «Duyệt cả hai» (18/11 23:12Z). Kiểm ngược 19/11: dải dự án × số phòng ngủ phủ 97%, m² thật trong dải 86%; giá/m² thật nằm trong khoảng 89% (301 tin bán); trên 1.486 tin bán có m² thật giả như thiếu, «cả khoảng đạt ngưỡng» gắn 125, đúng 116 (93%, 87–96%), điểm giữa dải chỉ 54%.",
       "vung": [
-        "pipeline/sql/421_project_area_band.sql",
-        "pipeline/sql/422_price_rank_du_an.sql",
+        "pipeline/sql/425_*",
+        "db/migrations/121_*",
+        "pipeline/xep-hang-gia.mjs",
         "app/src/app/ops/deals",
-        "app/src/components/ops/deals-cells.tsx",
-        "app/src/lib/deals-chi-tiet.ts",
-        "pipeline/sync-cloud.mjs",
+        "app/src/lib/deals*.ts",
         "docs/ROADMAP.md"
       ],
       "ghi_chu": "Sửa cùng hàng: ROADMAP §3 mục 50 (mở đúng cho nhãn riêng; migration 106 cấm dải chia giá khi chấm hạng), lời hàng GC3 (nay có khoảng giá/m²), định nghĩa trên màn Ops. Cỡ 11: phần Ops và phần dải lên Invest là một kết quả Mạnh đã duyệt chung; nếu Cổng Phạm vi tách phần Invest thì giao cùng GC3. Hạng T3: dữ liệu lên cloud và cổng Invest. DDL cloud xin duyệt trước khi gộp. Thuật ngữ «Khoảng giá/m²», «Giá tốt · suy ra» vào CONTEXT.md cùng hàng."
+    },
+    {
+      "dot": "sau-ap-da40-2011",
+      "ma": "CG17",
+      "slug": "can-cung-tieu-chi-toan-tap",
+      "nhom": "can-gia-tot",
+      "phu": [
+        "CG17"
+      ],
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 10,
+      "dung_tren": [
+        "CG3"
+      ],
+      "cau_giao": "Trong sheet Căn giá tốt, tab «Căn cùng tiêu chí» và nút «Xem mọi căn trong phường» đếm, liệt kê trên toàn tập đã lọc; đường dẫn Căn giá tốt ở trang một căn về đúng trang danh sách chứa căn",
+      "bat_khi": "Số «Căn cùng tiêu chí» của mọi dòng ở trang 1 cỡ 15 và cỡ 50 bằng số đếm trên toàn tập đã lọc (cùng mã phường, cùng loại hình, diện tích ±25%, không tính chính căn, căn hai tin tính một lần); danh sách tab lấy từ toàn tập; đo 19/11 trên tin bán: trang 1 cỡ 15 từ 12/15 dòng hiện 0 về đúng số đếm toàn tập",
+      "vi_sao": "Từ CG3 danh sách đọc theo trang ở máy chủ, nên tab «Căn cùng tiêu chí» chỉ so trong trang đang xem: đo 19/11 trang 1 cỡ 15 có 12/15 dòng hiện 0 trong khi lệnh đếm toàn tập ra 1/15. Cổng Đáng: Mạnh «Làm cả ba» 19/11 04:57Z.",
+      "vung": [
+        "app/src/app/ops/deals",
+        "app/src/components/ops/deal-similar.tsx",
+        "app/src/components/ops/deal-sheet.tsx",
+        "app/src/lib/deals.ts",
+        "app/src/lib/deals-chi-tiet.ts"
+      ],
+      "ghi_chu": "Đã gộp PR #501 ngày 19/11 (hồ sơ _acceptance/can-cung-tieu-chi-toan-tap/). Hàng ghi nhận sau gộp. Tiêu chí giữ lời Mạnh 02/11; chỉ đổi tập để so. Gánh AC-10 của CG3. Truy vấn chỉ chọn tin nào hiện, không tính lại điểm (luật 10). Phát hiện mức cao ngoài hợp đồng chuyển sang CG18."
+    },
+    {
+      "dot": "sau-ap-da40-2011",
+      "ma": "CG18",
+      "slug": "thuoc-can-gia-tot-du-bon-tab",
+      "nhom": "can-gia-tot",
+      "phu": [
+        "CG18"
+      ],
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 6,
+      "dung_tren": [
+        "CG17"
+      ],
+      "cau_giao": "Phép đo màn Căn giá tốt so đủ bốn tab trên dữ liệu thật, có ca kết hợp nhiều bộ lọc, ca căn chưa gắn phường, và ca giao diện đi qua đường lấy dữ liệu thật",
+      "bat_khi": "Mỗi tab trong bốn tab có ca so số trên màn với đếm SQL độc lập trên DB thử dựng từ dữ liệu thật; có ca kết hợp từ hai bộ lọc trở lên, ca căn chưa gắn phường, ca giao diện gọi đúng đường lấy dữ liệu thật (không giả lập lớp dữ liệu); mỗi ca mới đỏ khi phá đúng nhánh nó đo; miễn «số trên màn đổi»: hàng nền (test)",
+      "vi_sao": "Bốn phát hiện mức cao ngoài hợp đồng của CG17 (review-findings, máy định tuyến Known limits 19/11): phép đo trên dữ liệu thật tuyên «số bốn tab» nhưng chỉ so hai tab; test chỉ đổi từng bộ lọc một, không có ca kết hợp; thiếu ca căn chưa gắn phường; ca giao diện dùng dữ liệu viết tay, không đi qua action thật. Lỗ cùng kiểu ở CG3. Chưa có lỗi thật trên màn.",
+      "vung": [
+        "app/tests/can-cung-tieu-chi.test.tsx",
+        "app/tests/can-cung-tieu-chi-bam.test.tsx",
+        "app/tests/deals-loc-xep-hang.test.tsx",
+        "_acceptance/can-cung-tieu-chi-toan-tap/probes"
+      ],
+      "ghi_chu": "Hàng nền (test): miễn điều kiện «số trên màn đổi» (ROADMAP §3 mục 50). Chưa giao dãy. Không đổi mã sản phẩm; lỗi thật lộ ra khi đo thì mở hàng riêng. Lệnh phá dùng danh sách cho phép oneinvest_suite_*."
     },
     {
       "dot": "sau-soat-s03-1911",
@@ -5739,6 +5836,140 @@
         "pipeline/sql/600_data_flow.sql"
       ],
       "ghi_chu": "Chưa giao dãy. Cỡ 6, dưới mục tiêu: một ô; không gộp với DF8 vì tổng vượt 12. Chữ UI theo CONTEXT.md; ReUI."
+    },
+    {
+      "dot": "sau-soat-nguon-2011",
+      "ma": "DA51",
+      "slug": "bi-danh-viet-tat-phan-khu",
+      "nhom": "l04-danh-ba-toa",
+      "phu": [
+        "DA51"
+      ],
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "dung_tren": [
+        "DA46"
+      ],
+      "cau_giao": "Bốn tên viết tắt phân khu (ori, rb, bs, gh) vào bí danh của nút phân khu qua thẻ luật có băm, áp theo băm, đảo được, và bước đọc phân khu của GT5 lấy tên từ danh bạ",
+      "bat_khi": "Trên bản chép DB máy thu: thẻ gán ori→44, rb→48, bs→387, gh→43, 0 tên không gán; băm lệch thì không ghi gì; số tin S03 đọc được phân khu qua danh bạ tăng ít nhất 800 (đo sau khi DA46 áp thật: 958 → 1.843); đảo theo mã luật đưa bí danh về đúng như trước; lượt dựng đêm chạy lại hai lần không mất tên tắt, không đổi số nút",
+      "vi_sao": "Tin S03 ở Grand Park gọi phân khu bằng tên tắt mà danh bạ chưa có, nên bộ đọc phân khu của GT5 bỏ sót 864 tin. GT5 Hỏi-1, Mạnh duyệt 20/11.",
+      "vung": [
+        "pipeline/phan-khu-s16.mjs",
+        "pipeline/lib/phan-khu-s16*",
+        "pipeline/scripts/bi-danh-viet-tat-phan-khu*"
+      ]
+    },
+    {
+      "dot": "sau-soat-nguon-2011",
+      "ma": "ZC13",
+      "slug": "s02-luot-loi-sach-va-kiem-han-token",
+      "nhom": "collector",
+      "phu": [
+        "ZC13"
+      ],
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 6,
+      "dung_tren": [],
+      "cau_giao": "Lượt thu S02 ném lỗi không để lại thư mục bản thu tên thật, bộ thu dừng ngay khi token ứng dụng hết hạn, và xác thực hỏng ghi một dòng AUTH FAIL trước khi ném",
+      "bat_khi": "Test collector: lượt ném lỗi chỉ để lại đúng một thư mục tạm ẩn có manifest mang lỗi và 0 item, bản thu có sẵn còn nguyên; ma trận năm ô hạn token ném đúng bốn ô, ô còn hạn qua; dòng AUTH FAIL [S02] đứng trước lệnh ném ở cả hai đường; script đêm chọn bản thu thành công, lượt lỗi thoát 1",
+      "vi_sao": "29 thư mục bản thu S02 mang tên thật mà 0 item che lượt 401; ngày 19/11 dòng «token OK» là token đã hết hạn từ 26/10. Tích hợp ba nhánh của làn thu, Claude không sửa logic thu.",
+      "vung": [
+        "collector/src/collectors",
+        "collector/src/core",
+        "collector/src/test"
+      ]
+    },
+    {
+      "dot": "sau-soat-nguon-2011",
+      "ma": "NK1",
+      "slug": "so-nguon-kho-khai-bao",
+      "nhom": "do-luong",
+      "phu": [
+        "NK1"
+      ],
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 8,
+      "dung_tren": [],
+      "cau_giao": "Người vận hành chạy lệnh đo độ tươi và mở trang Thu thập thì thấy S16 hết «chưa khai SLO», S09 hiện thành một nguồn, S01 chỉ đo thị trường có lịch và S11 ở trạng thái tạm dừng",
+      "bat_khi": "Trên DB máy thu sau khi áp migration 122: `node scripts/check-freshness.mjs` hết dòng «S16 chưa khai SLO», hết hàng S01 của thị trường không có lịch, hết «S11 chưa có dữ liệu», có hàng S09; sổ nguồn có dòng S09 và S17 với tên thật điền trên máy thu, bộ soát tầng A của đường đẩy Ops nhận cả hai tên trước lượt đẩy kế; app và CLI đọc cùng một nhịp từ sổ",
+      "vi_sao": "Soát 20/11: nguồn kho «mờ» vì sổ nguồn không khai họ nguồn, nhịp, bảng nạp; S09 và S17 không có dòng nên vô hình với cả thước lẫn bộ quét tên nguồn. Lát A của ROADMAP §3 mục 58.",
+      "vung": [
+        "db/migrations/122_*",
+        "scripts/lib/freshness.mjs",
+        "scripts/check-freshness.mjs",
+        "app/src/lib/freshness.ts",
+        "app/src/lib/collections-queries.ts"
+      ]
+    },
+    {
+      "dot": "sau-soat-nguon-2011",
+      "ma": "NK2",
+      "slug": "thuoc-van-hanh-nguon-kho",
+      "nhom": "do-luong",
+      "phu": [
+        "NK2"
+      ],
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 9,
+      "dung_tren": [
+        "NK1"
+      ],
+      "cau_giao": "Người vận hành mở trang Thu thập và thấy mỗi nguồn kho một thẻ: lần thu gần nhất, số dòng nạp, biến động so với lần trước và cảnh báo khi kho co rút",
+      "bat_khi": "Trên trang Thu thập của Ops máy thu: mỗi nguồn khai họ «kho» có một thẻ, số trên thẻ khớp lệnh đếm trên DB máy thu; nguồn đã ký nạp mà bảng nạp 0 dòng hiện đỏ có lý do; cấy một lần thu ít dòng hơn lần trước thì cảnh báo co rút bật; cloud chỉ nhận số gộp và mã nguồn",
+      "vi_sao": "Lát B của ROADMAP §3 mục 58. Hôm nay nạp S07 và S10 đã ký nhưng bảng nạp 0 dòng mà không màn nào báo.",
+      "vung": [
+        "db/migrations/123_*",
+        "pipeline/sql/605_*",
+        "pipeline/push-ops-facts.mjs",
+        "app/src/app/ops/collections",
+        "app/src/lib/collections-api.ts"
+      ]
+    },
+    {
+      "dot": "sau-soat-nguon-2011",
+      "ma": "CG19",
+      "slug": "deals-cloud-tai-cham",
+      "nhom": "ops-deals",
+      "phu": [
+        "CG19"
+      ],
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 6,
+      "dung_tren": [],
+      "cau_giao": "Người vận hành mở trang Căn giá tốt trên cloud và thấy danh sách trong vài giây thay vì 60–100 giây",
+      "bat_khi": "Trên cloud: thời gian mở trang Căn giá tốt, đo ba lần, từ 60–100 giây (đo 20/11) xuống dưới ngưỡng chốt ở S1 sau khi đo EXPLAIN chỉ đọc; số căn trên trang không đổi so với trước; index trên cloud chỉ áp khi có lời riêng của Mạnh",
+      "vi_sao": "Sau khi bảng offer_price_rank lên cloud (20/11) trang có số thật — Bán 7.636, Cho thuê 9.912 — nhưng tải 60–100 giây.",
+      "vung": [
+        "app/src/app/ops/deals",
+        "app/src/lib/deals*.ts"
+      ]
+    },
+    {
+      "dot": "sau-soat-nguon-2011",
+      "ma": "TV19",
+      "slug": "ops-cloud-nhan-nguon-bang-ma",
+      "nhom": "ops-spl",
+      "phu": [
+        "TV19"
+      ],
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 6,
+      "dung_tren": [],
+      "cau_giao": "Người vận hành mở ba trang Nguồn, Thu thập, Chất lượng của Ops trên cloud và chỉ thấy mã nguồn kèm vai trò, không còn tên nguồn thật ở chữ hay trong DOM",
+      "bat_khi": "Test quét HTML của ba trang ở chế độ cloud bằng danh sách che của sổ nguồn: 0 chỗ có tên nguồn thật, kể cả id cột và khoá chuỗi biểu đồ; cấy lại một nhãn cũ thì test đỏ; trang Nguồn của máy thu vẫn hiện tên thật theo luật 6",
+      "vi_sao": "Soát 20/11, phát hiện L10: trang Nguồn trên cloud còn chữ tên thật ở mô tả và tiêu đề khung; trang Thu thập và Chất lượng còn id cột mang tên nguồn lọt ra DOM.",
+      "vung": [
+        "app/src/components/ops/sources",
+        "app/src/components/ops/collections-tables.tsx",
+        "app/src/components/ops/collections",
+        "app/src/components/ops/quality-tables.tsx"
+      ]
     }
   ],
   "chan_troi": [
@@ -7219,6 +7450,36 @@
         "GD11"
       ],
       "mo_lai_khi": "Không mở riêng: phần còn nợ giao cùng CG3"
+    },
+    {
+      "ma": "DA50",
+      "dot": "sau-ap-da40-2011",
+      "cau_giao": "Nạp căn thấp tầng, nhà phố của S09 vào danh bạ (phần thấp tầng tách khỏi DA42 nap-s09-toa-tang-vao-danh-ba)",
+      "ly_do": "Mạnh 19/11 02:38Z «Cao tầng trước, thấp tầng nhà phố sau»; chờ bản thu bù thấp tầng của làn thu",
+      "phu": [
+        "DA50"
+      ],
+      "mo_lai_khi": "Làn thu báo xong bản thu bù thấp tầng, nhà phố của S09 (snapshot mới kèm manifest) và DA42 đã gộp; khi đó cắt thành hàng đứng trên DA42"
+    },
+    {
+      "ma": "NK3",
+      "dot": "sau-soat-nguon-2011",
+      "cau_giao": "Phễu và phủ của nguồn kho trên trang Thu thập (lát C)",
+      "ly_do": "Ô phủ chỉ có nghĩa khi bảng nối nguồn kho với danh bạ đã có thật; các hàng danh bạ toà DA39, DA42, DA44 chưa gộp",
+      "phu": [
+        "NK3"
+      ],
+      "mo_lai_khi": "DA42 và DA44 đã gộp và áp lên DB máy thu; khi đó cắt thành hàng đứng trên NK2"
+    },
+    {
+      "ma": "NK4",
+      "dot": "sau-soat-nguon-2011",
+      "cau_giao": "Chất lượng nguồn kho, mở lại DA20 (lát D)",
+      "ly_do": "Mạnh 20/11 «Theo khuyến nghị»: lát D giữ sau mốc MS3; kiểm co rút đã nằm ở lát B",
+      "phu": [
+        "NK4"
+      ],
+      "mo_lai_khi": "Mốc MS3 xong và NK2 đã chạy trên DB máy thu"
     }
   ],
   "da_bac": [
