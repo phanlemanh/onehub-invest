@@ -48,7 +48,7 @@ Bảng phủ ca đếm trên DB máy thu ở design doc §2. Trục và ca:
 ## Đường đo
 
 - Số tin S03 đọc được phân khu qua danh bạ: `node pipeline/scripts/bi-danh-viet-tat-phan-khu.mjs --do --rule <id>` trên DB máy thu
-  sau khi áp, báo cạnh số chạy thử của AC-9 (sau DA46: 919 → 1.786), kèm số theo từng tên tắt. AC-9 bảo đảm lệnh đo và số chạy thử.
+  sau khi áp, báo cạnh số chạy thử của AC-9 (sau DA46: 919 → 1.786; đo lại sau khi DA46 áp thật 20/11 15:15Z: 958 → 1.843, từng tên 424 · 138 · 361 · 242), kèm số theo từng tên tắt. AC-9 bảo đảm lệnh đo và số chạy thử.
 - Tên tắt trên cloud: sau lượt đồng bộ đêm đầu tiên kể từ lúc áp, đếm `asset_nodes` ở cloud có bốn tên tắt trên đúng bốn nút đích
   (bước kiểm sau trong hồ sơ áp, design doc §4).
 

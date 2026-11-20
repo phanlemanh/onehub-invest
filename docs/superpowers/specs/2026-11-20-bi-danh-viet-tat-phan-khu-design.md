@@ -51,6 +51,10 @@ Soi ngữ cảnh (không ghi chữ bài): token đứng như tên phân khu («2
 | Hôm nay + bí danh | 1.830 | 864 | 40 | 0 |
 | Sau DA46 | 919 | — | — | — |
 | Sau DA46 + bí danh | 1.786 | 867 | 37 | 0 |
+| **Sau DA46, đo thật** (DA46 áp 15:06Z, luật 3; 7.744 tin) | 958 | — | — | — |
+| **Sau DA46 đo thật + bí danh** | **1.843** | **885** | 37 | **0** |
+
+**Đo thật sau DA46 (20/11 15:15Z, chỉ đọc trên DB máy thu):** bốn nút đích 44, 48, 387, 43 đều sống (không `meta.nghi`), con trực tiếp của dự án 16; thẻ gán đủ bốn, 0 không gán, băm `be14a012…76da4`. Số tin GT5 đọc được phân khu 958 → 1.843 (+885), tin chỉ đọc được nhờ từng tên ori 424 · rb 138 · bs 361 · gh 242, 0 tin mất phân khu cũ; token trong chữ ori 439 · rb 144 · bs 391 · gh 261. Nền 958 cao hơn dự kiến 919 vì tập tin nạp thêm từ 7.438 lên 7.744; mọi số vẫn trên sàn của AC-9 (tăng ≥ 800, ori 333 · rb 108 · bs 282 · gh 190). Lệnh: `_acceptance/bi-danh-viet-tat-phan-khu/probes/bang-phu-ca.mjs` và `--the`.
 
 **Ô đổi sau khi áp DA46:** nền giảm 966 → 919 vì nút 382 The Beverly thành con của toà 23 nên rời từ điển phân khu (47 tin
 mất tên «beverly»); không liên quan tên tắt. Mức giảm này chỉ nằm ở thước của GT5 (nhánh chưa gộp): trên `main` không bên đọc nào
