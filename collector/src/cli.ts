@@ -44,7 +44,9 @@ if (!city || !collector) usage();
 runCollector({
   city,
   collector,
-  snapshotRoot: `${ROOT}snapshots`,
+  // 2011-5 MỞ LẠI (2): lệnh thử từ nhánh ghi snapshot vào KHO CHÍNH qua env
+  // (mặc định giữ nguyên worktree — đổi chỉ khi chạy lệnh thử có kiểm)
+  snapshotRoot: process.env.ONEHUB_SNAPSHOT_ROOT ?? `${ROOT}snapshots`,
   stateDir: `${ROOT}state`,
 }).catch((err) => {
   console.error(err);
