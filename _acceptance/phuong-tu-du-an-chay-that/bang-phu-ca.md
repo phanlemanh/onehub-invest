@@ -7,6 +7,7 @@ phường; S05 30 (13 có phường); S06 119.432 (117.179 có phường). «Ph�
 |---|---|---|---:|---|---|
 | tỉnh | một dự án, một phường | trùng phường dự án | 6.795 | nhận phường | giá tốt theo vị trí, trường lõi, sync cloud, cổng Invest |
 | tỉnh | một dự án, một phường | khác phường dự án | 20 | **phải xem trước khi ghi** | như trên |
+| trống | một dự án, một phường | khác phường dự án | 12 (đo 20/11, thêm ở S4) | theo lối Hỏi-1: nhận phường dự án | như trên |
 | trống | một dự án, một phường | trùng phường dự án | 452 | nhận phường | như trên |
 | trống | một dự án, một phường | không có | 107 | nhận phường | như trên |
 | phường | một dự án, một phường | không có | 75 | giữ cột; 43 tin có phường khác phường dự án | như trên |

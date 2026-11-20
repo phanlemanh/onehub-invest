@@ -66,8 +66,8 @@ SELECT t.offer_id, t.area_id cot, aw.parent_id tinh_moi, t.area_id AS tinh_cu, d
   CASE WHEN th.offer_id IS NULL THEN 'khong' WHEN d.p IS NULL OR d.so_da > 1 THEN 'co' WHEN th.vs = ARRAY[d.p] THEN 'trung' ELSE 'khac' END o_the
 FROM tin t LEFT JOIN da d USING (offer_id) LEFT JOIN the th USING (offer_id) LEFT JOIN areas aw ON aw.id = d.p`;
 
-/** Cấy hai tin nhiều dự án trên DB thử (dữ liệu thật không còn ca này): một ca dự án thứ hai cùng phường, một ca khác phường.
- *  Lấy tin một-phường có thẻ ở cột tỉnh và cột trống; chép phát biểu project_node_id sang nút dự án thứ hai. */
+/** Cấy hai tin nhiều dự án trên DB thử (dữ liệu thật có ít ca này): một ca dự án thứ hai cùng phường, một ca khác phường.
+ *  Lấy tin một-phường có thẻ ở cột tỉnh và cột trống; chép mọi phát biểu project_node_id của tin sang nút dự án thứ hai. */
 async function cayNhieuDuAn() {
   const o = (await c.query(SQL_O)).rows;
   const ra = [];
@@ -85,9 +85,9 @@ async function cayNhieuDuAn() {
       const ins = await c.query(`INSERT INTO field_assertions (resource_name, subject_key, field, value, evidence_tier, method, method_version, rule_id, evidence, observed_at, run_id)
         SELECT fa.resource_name, fa.subject_key, fa.field, $2, fa.evidence_tier, fa.method, fa.method_version, fa.rule_id, fa.evidence, fa.observed_at, 'pct-cay-nhieu-du-an'
           FROM field_assertions fa JOIN sale_offer_records r ON fa.subject_key = ANY (offer_subject_keys(r.source, r.originating_system_key, r.post_ids))
-         WHERE r.offer_id = $1 AND fa.field = 'project_node_id' AND fa.retracted_at IS NULL AND fa.resource_name = 'Property'
-         ORDER BY fa.id LIMIT 1`, [x.offer_id, n2.id]);
-      if (ins.rowCount === 1) { ra.push({ offer_id: x.offer_id, cung }); break; }
+         WHERE r.offer_id = $1 AND fa.field = 'project_node_id' AND fa.retracted_at IS NULL AND fa.resource_name = 'Property'`, [x.offer_id, n2.id]);
+      // luật xét theo từng bài: cấy cho MỌI bài có phát biểu dự án của tin, không thì bài còn lại vẫn cho tin nhận phường
+      if (ins.rowCount >= 1) { ra.push({ offer_id: x.offer_id, cung }); break; }
     }
   }
   kt(ra.length === 2, `cấy đủ hai tin nhiều dự án (cùng phường, khác phường): ${ra.map((t) => t.offer_id).join(", ")}`);

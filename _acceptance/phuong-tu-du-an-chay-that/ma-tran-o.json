@@ -3,6 +3,7 @@
   "o": [
     {"ma": "tinh-motphuong-thetrung", "cot": "tinh", "du_an": "mot-phuong", "the": "trung", "so_luc_do": 6795, "ket_qua": "nhan-phuong-du-an"},
     {"ma": "tinh-motphuong-thekhac", "cot": "tinh", "du_an": "mot-phuong", "the": "khac", "so_luc_do": 20, "ket_qua": "theo-loi-cau-1"},
+    {"ma": "trong-motphuong-thekhac", "cot": "trong", "du_an": "mot-phuong", "the": "khac", "so_luc_do": 12, "ket_qua": "theo-loi-cau-1"},
     {"ma": "trong-motphuong-thetrung", "cot": "trong", "du_an": "mot-phuong", "the": "trung", "so_luc_do": 452, "ket_qua": "nhan-phuong-du-an"},
     {"ma": "trong-motphuong-khongthe", "cot": "trong", "du_an": "mot-phuong", "the": "khong", "so_luc_do": 107, "ket_qua": "nhan-phuong-du-an"},
     {"ma": "phuong-motphuong-khongthe", "cot": "phuong", "du_an": "mot-phuong", "the": "khong", "so_luc_do": 75, "ket_qua": "giu-nguyen-cot"},

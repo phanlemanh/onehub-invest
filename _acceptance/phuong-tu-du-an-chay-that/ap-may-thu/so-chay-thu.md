@@ -1,14 +1,14 @@
 # Số chạy thử — DA45 phuong-tu-du-an-chay-that
 
-Đo 19/11 trên DB thử do `db/db-thu.sh` chép (probe `tren-db-thu.sh thoi-gian`, `ma-tran`), lượt ghi đầu `--ghi` chạy thật trên bản chép.
-Bản chép là ảnh DB mẫu của bộ chạy thử, cũ hơn DB máy thu một ít (7.289 tin S03 so với 7.524 trên máy thu lúc 08:29Z), nên số
-trên máy thu sau khi áp sẽ cao hơn tương ứng. Lệnh đo: khối SQL ở mục Context của `contract.md`.
+Đo 20/11 trên DB thử do `db/db-thu.sh` chép (probe `tren-db-thu.sh thoi-gian`, `ma-tran`), lượt ghi đầu `--ghi` chạy thật trên bản chép.
+Bản chép là ảnh DB mẫu của bộ chạy thử, làm mới 20/11 (7.657 tin S03; lượt soát 19/11 trên bản chép cũ đếm 7.289), nên số trên máy thu lúc
+áp sẽ khác tương ứng. Lệnh đo: khối SQL ở mục Context của `contract.md`.
 
-- Mốc đo: 2026-11-19T08:30Z (bản chép) · máy thu chỉ đọc 2026-11-19T08:29Z
-- Tử số toàn kho: 72 → 7.060 tin S03 có phường thật sau lượt ghi đầu (bản chép)
-- Mẫu số toàn kho: 7.289 tin S03 (bản chép) — 96,9%
-- Cửa sổ 13–19/11: 15 → 1.190 trên 1.273 tin (bản chép)
-- Giây lượt đầu: 80,3 giây; lượt lặp không có gì mới 1,4 giây
+- Mốc đo: 2026-11-20T04:38Z (bản chép) · máy thu chỉ đọc 2026-11-19T08:29Z
+- Tử số toàn kho: 78 → 7.409 tin S03 có phường thật sau lượt ghi đầu (bản chép)
+- Mẫu số toàn kho: 7.657 tin S03 (bản chép) — 96,8%
+- Cửa sổ 13–19/11: 21 → 1.539 trên 1.641 tin (bản chép)
+- Giây lượt đầu: 94,9 giây; lượt lặp không có gì mới 0,9 giây
 
 ## Máy thu, chỉ đọc (trước khi áp)
 
@@ -17,31 +17,35 @@ trên máy thu sau khi áp sẽ cao hơn tương ứng. Lệnh đo: khối SQL �
 - `node pipeline/scripts/phuong-tu-du-an.mjs --json` (chỉ đếm): 78.547 bài có dự án, 78.541 bài nhận phường, 0 dự án mâu thuẫn, 6 bài thuộc
   dự án không có phường.
 
-## Ô của bảng phủ ca (probe `ma-tran`, 13/13 ô đạt)
+## Ô của bảng phủ ca (probe `ma-tran` 20/11, 14/14 ô đạt, phủ hết 8.072 tin S03 của bản chép)
 
 | Ô | Số tin | Kết quả |
 |---|---:|---|
-| tỉnh · một phường · thẻ trùng | 6.776 | nhận phường dự án |
-| tỉnh · một phường · thẻ khác | 19 | theo lối Hỏi-1: lấy theo dự án |
-| trống · một phường · thẻ trùng | 452 | nhận phường dự án |
+| tỉnh · một phường · thẻ trùng | 6.979 | nhận phường dự án |
+| tỉnh · một phường · thẻ khác | 103 | theo lối Hỏi-1: lấy theo dự án |
+| trống · một phường · thẻ khác | 12 | theo lối Hỏi-1: lấy theo dự án (ô thêm ở S4) |
+| trống · một phường · thẻ trùng | 494 | nhận phường dự án |
 | trống · một phường · không thẻ | 107 | nhận phường dự án |
-| phường · một phường · không thẻ | 75 | giữ nguyên cột |
-| phường · không dự án · không thẻ | 3 | giữ nguyên cột |
+| phường · một phường · không thẻ | 80 | giữ nguyên cột |
+| phường · không dự án · không thẻ | 4 | giữ nguyên cột |
 | tỉnh · dự án không phường · có thẻ | 6 | giữ nguyên cột |
-| tỉnh · không dự án · có thẻ | 72 | giữ nguyên cột |
+| tỉnh · không dự án · có thẻ | 74 | giữ nguyên cột |
 | tỉnh · không dự án · không thẻ | 9 | giữ nguyên cột |
-| trống · không dự án · không thẻ | 170 | giữ nguyên cột |
-| trống · không dự án · có thẻ | 3 | giữ nguyên cột |
-| tỉnh · nhiều dự án · có thẻ | 0 | giữ nguyên cột (chưa đo trên dữ liệu thật) |
-| trống · nhiều dự án · có thẻ | 0 | giữ nguyên cột (chưa đo trên dữ liệu thật) |
+| trống · không dự án · không thẻ | 157 | giữ nguyên cột |
+| trống · không dự án · có thẻ | 33 | giữ nguyên cột |
+| tỉnh · nhiều dự án · có thẻ | 5 | giữ nguyên cột (4 tin thật + 1 tin cấy, hai dự án cùng phường) |
+| trống · nhiều dự án · có thẻ | 9 | giữ nguyên cột (8 tin thật + 1 tin cấy, hai dự án khác phường) |
 
-Ô «thẻ khác» nay 19 tin (lúc soát Cổng Phạm vi là 20); dữ liệu đổi theo lượt nạp, lối xử lý không đổi.
+Ô «thẻ khác» cột tỉnh nay 103 tin (lúc soát Cổng Phạm vi là 20): probe 20/11 xếp «thẻ trùng» chỉ khi thẻ nêu đúng một phường và đó là
+phường dự án; tin mà thẻ nêu hai phường nay vào «thẻ khác». Lối xử lý không đổi. Ô cột trống cùng loại (12 tin) thiếu trong bảng phủ ca lúc
+soát; phép kiểm phủ lớp của probe bắt được, thêm vào `bang-phu-ca.md` và `ma-tran-o.json`. Mọi tin vốn có cột cấp phường (84) giữ cột.
 
-## Tin đổi tỉnh khi nhận phường dự án (9 tin; lúc soát Cổng Phạm vi là 10)
+## Tin đổi tỉnh khi nhận phường dự án (10 tin; lúc soát Cổng Phạm vi là 10)
 
 Cột đang ghi tỉnh Hà Nội, dự án nằm ở phường thuộc Hưng Yên — lượt ghi đưa tin sang phường của dự án:
 
 - offer_0bf1fc272f003f6a vn-hanoi → vn-hung-yen
+- offer_0ea3df84560c1949 vn-hanoi → vn-hung-yen
 - offer_53036c1b7bff7baf vn-hanoi → vn-hung-yen
 - offer_56195f0162f2dd47 vn-hanoi → vn-hung-yen
 - offer_725f0aef5c655696 vn-hanoi → vn-hung-yen
