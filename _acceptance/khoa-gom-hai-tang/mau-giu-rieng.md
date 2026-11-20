@@ -45,3 +45,13 @@ Báo cáo số: `thuoc-ket-qua.json` (mẫu một), `thuoc-ket-qua-2.json` (mẫ
 nhãn đồng thuận — khoá cũ tách 0 nhóm, khoá mới tách **62 nhóm (52,5%)** ra từ hai tin trở lên. Trên bản chép DB, số tin S03 sống
 7.672 → 11.867. Nguồn: luật thiết kế §2 — bản chữ thiếu một trong bốn trường chỉ nhập vào tin ĐỦ bốn trường; bài đăng lại cùng căn sửa
 chữ mà thiếu trường đứng riêng. Thước tách nhầm của AC-9 (40 cặp audit, 6 cặp cùng căn) không thấy được lớp này.
+
+## Mẫu giữ riêng THỨ BA (Hỏi-6 lối B, Mạnh «GT5 chọn B» 20/11) — chấm MỘT lần, không lặp
+
+- Dựng 20/11 bằng `probes/mau-giu-rieng.mjs --so 120 --loai-map <map mẫu một> --loai-map <map mẫu hai>`, cùng seed
+  `gt5-giu-rieng-2011`: 120 tin trong 531 ứng viên còn lại, 0 tin trùng mẫu một, 0 tin trùng mẫu hai · 372 bản chữ · 47.321 ký tự · quét
+  tên nguồn 0.
+- `payload.json` sha256 `67f8175b888e7beea29283f3f0d9c8a0b704c18ee221fedc60b13f0bdfc98d5b` · danh sách offer_id (đã sắp) sha256
+  `d0d99f79bac2dd55e0fe416009b83d1db4806a7d52c50843c23cf0d649e49c97` — nội dung ở `research-local/s03-gom-tin-giu-rieng-3-20261120/` (gitignored, máy thu).
+- Commit này đứng TRƯỚC khi gán nhãn và trước mọi lượt chạy khoá lối B trên mẫu ba. Thước: gộp nhầm < 5%, tách nhóm cùng căn ≤ 35%
+  (`GT5_TACH_NHOM=1`), tách nhầm 40 cặp không tăng. Hụt ngưỡng thì DỪNG, không chỉnh luật rồi chấm lại, đưa Mạnh.
