@@ -1,7 +1,7 @@
 import { pool } from "./db";
 import { VN_TZ } from "./format";
 import { giaiMaKhuVuc } from "./ma-thi-truong";
-import { findSourceNames, type SourceNameEntry } from "./mask-source-names";
+import { docSourceNameEntriesVoi, findSourceNames, type SourceNameEntry } from "./mask-source-names";
 import {
   OFFER_HIDDEN_SOURCES,
   OFFER_MANY_NAMES,
@@ -81,11 +81,8 @@ function whereOf(marketId: string | null, f: OfferFilters) {
 async function sourceEntries(): Promise<SourceNameEntry[] | null> {
   const { rows } = await pool.query<{ r: string | null }>(`SELECT to_regclass('source_registry')::text AS r`);
   if (rows[0]?.r == null) return null;
-  const { rows: names } = await pool.query<{ code: string; x: string }>(
-    `SELECT DISTINCT code, x FROM (SELECT code, real_name AS x FROM source_registry
-       UNION ALL SELECT code, unnest(source_ids) FROM source_registry) t WHERE x IS NOT NULL AND x <> ''`,
-  );
-  return names.map((n) => ({ code: n.code, realName: n.x }));
+  // che-ten-nguon-khong-lay-tu-dau: một hàm nạp chung (tên thật + định danh, kèm cờ match_whole)
+  return docSourceNameEntriesVoi(pool);
 }
 const mangDinhDanh = (v: string, entries: SourceNameEntry[] | null) =>
   entries !== null && (entries.length === 0 || findSourceNames(v, entries).length > 0);
