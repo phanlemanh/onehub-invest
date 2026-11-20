@@ -407,7 +407,7 @@ const TRUNG_TRON = new Set(["LABELER", "SDT"]);
  * trúc chỉ bị bắt khi trùng trọn một định danh dài (`TRUNG_TRON`) — tên người không bao giờ so trên nhãn do code sinh.
  * @param {string} s @param {{nhan: string, chuoi: string}[]} cam */
 export function trungCam(s, cam) {
-  const ten = entriesFromTokens(cam.filter((c) => c.nhan === "TEN NGUON").map((c) => c.chuoi));
+  const ten = entriesFromTokens(cam.filter((c) => c.nhan === "TEN NGUON").map((c) => ({ token: c.chuoi, wholeOnly: c.wholeOnly === true })));
   if (ten.length && guardValues([s], ten).length) return "TEN NGUON";
   const loai = loaiChuoi(s);
   const x = gapChu(loai === "chu-bai" ? s.slice(CHU_BAI.length) : s);
