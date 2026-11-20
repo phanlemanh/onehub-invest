@@ -5,14 +5,14 @@ evals:
     criterion: AC-1
     executor: script
     cmd: config:executors.script.bdv_dich
-    expected: "exit 0; ca BDV-1 trên một fixture: một ứng viên ra đúng nút; hai ứng viên cùng tên (một mang meta.s16_rule_id) ra nút không do luật đúc; nút nghỉ (cả con trực tiếp của dự án lẫn con của nút giữ lại) không bao giờ là đích; không có nút ra «không gán: khong-co-nut»; hai ứng viên cùng loại ra «không gán: nhieu-ung-vien»; nút cùng tên ở dự án khác không là ứng viên. Chiều đỏ: bỏ lọc nút nghỉ thì ca đỏ với thông điệp nêu id nút nghỉ bị chọn"
+    expected: "exit 0; ca BDV-1 trên một fixture: một ứng viên ra đúng nút; hai ứng viên cùng tên (một mang meta.s16_rule_id) ra nút không do luật đúc; nút nghỉ (cả con trực tiếp của dự án lẫn con của nút giữ lại) không bao giờ là đích; không có nút ra «không gán: khong-co-nut»; hai ứng viên cùng loại ra «không gán: nhieu-ung-vien»; nút cùng tên ở dự án khác không là ứng viên. Chiều đỏ: bỏ lọc nút nghỉ thì ca đỏ với thông điệp «nút nghỉ không là ứng viên, còn lại một nút»"
     paths: ["pipeline/lib/phan-khu-s16-bi-danh.mjs","pipeline/scripts/bi-danh-viet-tat-phan-khu.mjs","pipeline/scripts/bi-danh-viet-tat-phan-khu.itest.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E2
     criterion: AC-2
     executor: script
     cmd: config:executors.script.bdv_the
-    expected: "exit 0; ca BDV-2: thẻ liệt bốn dòng tên tắt với id, tên, dự án, số tin chứa token đếm trên tin cấy; ca không gán kèm lý do; dựng hai lần cùng băm; băm đổi khi đích của một tên đổi; số dòng của asset_nodes và project_link_rules không đổi sau khi dựng. Chiều đỏ: băm không phủ đích thì ca «băm đổi khi đích đổi» đỏ"
+    expected: "exit 0; ca BDV-2: thẻ liệt bốn dòng tên tắt với id, tên, dự án, số tin chứa token đếm trên tin cấy; ca không gán kèm lý do; dựng hai lần cùng băm; băm đổi khi đích của một tên đổi sang nút khác; số dòng của asset_nodes và project_link_rules không đổi sau khi dựng. Chiều đỏ: băm không phủ đích thì ca «băm đổi khi đích đổi» đỏ"
     paths: ["pipeline/lib/phan-khu-s16-bi-danh.mjs","pipeline/scripts/bi-danh-viet-tat-phan-khu.mjs","pipeline/scripts/bi-danh-viet-tat-phan-khu.itest.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3

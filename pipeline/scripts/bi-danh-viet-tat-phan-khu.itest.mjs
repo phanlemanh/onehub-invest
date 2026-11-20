@@ -96,9 +96,13 @@ test("BDV-2: thẻ liệt đích và số tin, ca không gán kèm lý do, băm 
   assert.match(a.markdown, new RegExp(`\\| ori \\| origami \\| ${ori} The Origami \\| ${d.slug} \\| 2 \\|`));
   assert.match(a.markdown, /\| zz \| khong ton tai \| .* \| không có nút phân khu mang tên này \|/);
   assert.match(a.markdown, new RegExp(`băm: ${a.bam}`));
+  // Đích đổi sang một nút khác (vẫn gán, cùng lý do rỗng): chỉ id nút khác nhau.
   await db.query("UPDATE asset_nodes SET meta = meta || '{\"nghi\": true}'::jsonb WHERE id = $1", [ori]);
+  const ori2 = await d.sub("Origami");
   const c = await dungThe(db, { bang, dem: false });
+  assert.equal(c.dong.find((x) => x.vt === "ori").node_id, ori2, "đối chứng: đích mới là nút khác");
   await db.query("UPDATE asset_nodes SET meta = meta - 'nghi' WHERE id = $1", [ori]);
+  await db.query("UPDATE asset_nodes SET meta = meta || '{\"nghi\": true}'::jsonb WHERE id = $1", [ori2]);
   assert.notEqual(c.bam, a.bam, "băm phải đổi khi đích của một tên đổi");
 });
 
@@ -133,7 +137,8 @@ test("BDV-4: đảo trả nguyên aliases và meta, ghi người và giờ; đ�
   const a = await d.sub("The Origami", { s09_sector_ids: ["y"] });
   const b = await d.sub("The Glory Heights");
   const c = await d.sub("The Rainbow", {}, ["the rainbow", "rb"]);
-  const bang = d.bang([["ori", "origami"], ["gh", "glory heights"], ["rb", "rainbow"]]);
+  // The Rainbow có sẵn «rb»; lượt này thêm «rbw» lên cùng nút — đảo chỉ được gỡ «rbw».
+  const bang = d.bang([["ori", "origami"], ["gh", "glory heights"], ["rb", "rainbow"], ["rbw", "rainbow"]]);
   const truoc = await chup([a, b, c]);
   const { bam } = await dungThe(db, { bang, dem: false });
   const { rule_id } = await apBiDanh(db, { bam, nguoi: "Mạnh", bang });
