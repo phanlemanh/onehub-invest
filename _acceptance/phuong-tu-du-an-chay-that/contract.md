@@ -57,7 +57,7 @@ Then cột `area_id` của tin là phường ấy và `field_provenance->'area_i
 Given DB thử chép từ máy thu và ma trận viết trước trong `ma-tran-o.json` (mỗi ô của `bang-phu-ca.md`: điều kiện SQL, số tin, kết quả mong đợi),
 When đếm từng ô trước và sau `--ghi`,
 Then 0 tin vốn có cột cấp phường bị đổi; tin một dự án một phường ở cột tỉnh hay trống nhận đúng phường ấy; tin nhiều dự án giữ nguyên cột kể cả khi hai dự án
-cùng một phường; 20 tin có phường theo thẻ khác phường theo dự án đi đúng lối Mạnh chọn ở Cổng Phạm vi; 10 tin đổi tỉnh được liệt kê trong `so-chay-thu.md`.
+cùng một phường; mọi tin có phường theo thẻ khác phường theo dự án, ở cột tỉnh hay cột trống, đi đúng lối Mạnh chọn ở Cổng Phạm vi (Hỏi-1; đo 20/11: 103 + 12 tin, lúc soát là 20); 10 tin đổi tỉnh được liệt kê trong `so-chay-thu.md`.
 
 ### AC-6 — Hồ sơ áp đủ năm thứ và lùi giữ được qua chuỗi
 Given thư mục `ap-may-thu/`,
