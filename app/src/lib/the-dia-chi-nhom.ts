@@ -102,7 +102,8 @@ export async function docDanhMucThe(db: Db = pool): Promise<DanhMucThe> {
     ),
     db.query<{ id: number; name: string; parent_id: number }>(
       `SELECT id::int AS id, name, parent_id::int AS parent_id FROM asset_nodes
-        WHERE node_type IN ('subzone', 'building') AND parent_id IS NOT NULL ORDER BY name`,
+        WHERE node_type IN ('subzone', 'building') AND parent_id IS NOT NULL
+          AND COALESCE((meta ->> 'nghi')::boolean, false) = false ORDER BY name`,
     ),
   ])
   return { projects: projects.rows, wards: wards.rows, subzones: subzones.rows }

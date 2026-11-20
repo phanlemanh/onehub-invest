@@ -12,6 +12,7 @@
 // (đổi thang là lần hạ một lần, không phải tụt bậc); mọi dòng do1-chuyen-bac mang thang + ngày áp. Chưa áp 087 → phần chuyển
 // bậc bỏ qua có tên (không đụng data_level_unit/change), bốn nhóm số còn lại vẫn chạy.
 // Bảng 083 chỉ ở máy thu; số gộp lên cloud qua dq_check_results (đã có trong FILL của sync-cloud.mjs). detail qua chanLo.
+import { docSourceNameEntries } from "./lib/source-name-entries.mjs";
 import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
@@ -336,11 +337,11 @@ export async function doHangNgay(client, { ngay = ngayVn(Date.now()), write = fa
 export async function chuoiCam(client, the, sl, tinSl) {
   const cam = [];
   // Tên nguồn thật và định danh nguồn (tầng A, cùng tập token với leak gate của sync-cloud). Rỗng = không soát được → dừng.
-  const { rows: reg } = await client.query(
-    `SELECT DISTINCT x FROM (SELECT real_name AS x FROM source_registry UNION ALL SELECT unnest(source_ids) FROM source_registry) s
-      WHERE length(x) > 0`);
+  // che-ten-nguon-khong-lay-tu-dau: cùng hàm nạp với sync-cloud — mỗi token mang cờ match_whole cho bộ soát (trungCam).
+  // Thiếu bảng → [] → dừng như cũ.
+  const reg = await docSourceNameEntries(client);
   if (!reg.length) throw new Error("LO TEN NGUON: source_registry không có tên nào để soát — không ghi");
-  for (const r of reg) cam.push({ nhan: "TEN NGUON", chuoi: r.x });
+  for (const e of reg) cam.push({ nhan: "TEN NGUON", chuoi: e.realName, wholeOnly: e.wholeOnly });
   const ids = the.map((t) => t.item_id);
   const { rows: lab } = await client.query("SELECT DISTINCT labeler_id FROM eval_labels WHERE item_id = ANY ($1)", [ids]);
   for (const r of lab) if (r.labeler_id?.length >= 6) cam.push({ nhan: "LABELER", chuoi: r.labeler_id });

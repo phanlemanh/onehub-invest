@@ -1,0 +1,26 @@
+schema_version: 1
+feature_slug: on12-ac5-bo-dong-s03-moc-ngay
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.o5s_doi_chung
+    paths: [app/tests/ops-nhan-theo-context.test.tsx, app/src/lib/dq-checks.ts, app/src/lib/dq-labels.ts, _acceptance/on12-ac5-bo-dong-s03-moc-ngay/probes/doi-chung.sh]
+    long_running: 5
+    expected: "exit 0; dòng 'root <gốc> sha <sha>'; 'cay dong s03-moc-ngay: <n> dong trong 7 ngay' với n ≥ 1; 'ban nhanh: ON12-AC-5 xanh'; 'ban origin/main: ON12-AC-5 do «dòng kiểm chưa diễn giải» nêu s03-moc-ngay'; cuối 'DOI CHUNG OK'; should-NOT-fire: không 'BAN NHANH DO', 'DOI CHUNG KHONG DO', 'CAY KHONG DUOC'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.o5s_doi_chung
+    paths: [app/tests/ops-nhan-theo-context.test.tsx, app/src/lib/dq-checks.ts, _acceptance/on12-ac5-bo-dong-s03-moc-ngay/probes/doi-chung.sh]
+    long_running: 5
+    expected: "exit 0; 'dot bien hang chung bo s03-moc-ngay: ON12-AC-5 do «dòng kiểm chưa diễn giải»'; cuối 'DOI CHUNG OK'; should-NOT-fire: không 'DOT BIEN KHONG AP DUOC', 'DOT BIEN KHONG DO'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.o5s_pham_vi
+    paths: ["app/**", _acceptance/on12-ac5-bo-dong-s03-moc-ngay/probes/pham-vi.sh]
+    expected: "exit 0; dòng 'root <gốc> sha <sha>'; mọi tệp đổi 'ok'; 'ok ca khong chep tay dieu kien loai'; 'ok ca doc hang chung'; 'ok dqLatestSql doc hang chung'; 'ok hang chung co s03-moc-ngay'; cuối 'PHAM-VI OK'; should-NOT-fire: không 'NGOAI PHAM VI', 'CA CON CHEP TAY DIEU KIEN LOAI', 'CA KHONG DOC HANG CHUNG', 'BANG KHONG DOC HANG CHUNG'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
