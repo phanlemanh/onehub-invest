@@ -53,7 +53,9 @@ Soi ngữ cảnh (không ghi chữ bài): token đứng như tên phân khu («2
 | Sau DA46 + bí danh | 1.786 | 867 | 37 | 0 |
 
 **Ô đổi sau khi áp DA46:** nền giảm 966 → 919 vì nút 382 The Beverly thành con của toà 23 nên rời từ điển phân khu (47 tin
-mất tên «beverly»); không liên quan tên tắt. Hàng này áp sau DA46, nên con số đích là cặp «Sau DA46». Số đo lại lúc áp, lệch
+mất tên «beverly»); không liên quan tên tắt. Mức giảm này chỉ nằm ở thước của GT5 (nhánh chưa gộp): trên `main` không bên đọc nào
+khớp chữ tin với từ điển phân khu, và DB máy thu 20/11 có 0 thẻ địa chỉ nhóm, 0 phát biểu trỏ bảy nút sắp nghỉ của DA46 (đếm chỉ
+đọc); ô số phân khu của trang Danh bạ Ops bỏ nút nghỉ là phần DA46 đã ký. Hàng này áp sau DA46, nên con số đích là cặp «Sau DA46». Số đo lại lúc áp, lệch
 vì dữ liệu nạp thêm thì báo cạnh số chạy thử.
 
 ## 3. Lựa chọn
@@ -100,13 +102,16 @@ phải sạch (meta không mang mã khu thô).
 
 ## 4. Hồ sơ áp lên DB máy thu (năm thứ)
 
+0. Trước khi áp: DA46 đã áp và `node pipeline/phan-khu-s16.mjs --kiem-noi <rule_id DA46>` thoát 0; thẻ bí danh dựng lúc ấy phải gán
+   đúng 44, 48, 387, 43, và cả bốn nút không nằm trong bảy nút nghỉ của DA46 (382, 388, 391, 392, 394, 395, 397) — lệch thì dừng.
 1. Lệnh áp: `node pipeline/scripts/bi-danh-viet-tat-phan-khu.mjs --the <tệp>` rồi `--ap --bam <băm> --nguoi Mạnh`, sau khi PR gộp,
-   từ `main`, sau khi DA46 đã áp.
+   từ `main`, sau bước 0.
 2. Số chạy thử: AC-9 trên bản chép DB máy thu (gán, số đo trước/sau, đảo).
 3. Sao lưu trước: `pg_dump -t asset_nodes -t project_link_rules`.
 4. Cách lùi: `--dao <rule_id> --nguoi <tên>`.
 5. Lệnh kiểm sau: `--kiem <rule_id>` và `--do --rule <rule_id>` (tổng và từng tên tắt); sau lượt đồng bộ đêm đầu tiên, đếm
-   bốn tên tắt trên `asset_nodes` ở cloud, so với máy thu.
+   bốn tên tắt trên `asset_nodes` ở cloud, so với máy thu — CHỈ ĐỌC, chạy sau lượt đêm; không gọi sync-cloud bằng tay để đẩy sớm.
+   Kỳ vọng trên cloud: 4 nút (44, 48, 387, 43), mỗi nút mang đúng một tên tắt của lượt.
 
 Độ đúng của từng lần khớp (tin «bs» có thật là Beverly Solari không) đo ở thước của GT5 (mẫu giữ riêng AC-9 của
 `khoa-gom-hai-tang`); hàng này chỉ bảo đảm tên tắt nằm đúng nút và khớp được tin.

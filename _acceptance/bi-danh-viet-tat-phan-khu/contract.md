@@ -63,3 +63,6 @@ Bảng phủ ca đếm trên DB máy thu ở design doc §2. Trục và ca:
 ## Notes
 
 - Áp lên DB máy thu cần chữ ký Cổng Bằng chứng kèm băm thẻ, sau DA46; hồ sơ áp ở design doc §4 đủ năm thứ.
+- Trước khi áp: DA46 đã áp, `--kiem-noi` của nó xanh, và bốn nút đích 44, 48, 387, 43 không nằm trong bảy nút nghỉ của DA46.
+- Cloud: 4 tên tắt sẽ lên cloud theo lượt đồng bộ `asset_nodes` đêm kế sau khi áp, kỳ vọng trên cloud là 4 nút (44, 48, 387, 43) mỗi
+  nút mang đúng một tên tắt; không gọi sync-cloud bằng tay; bước đếm trên cloud chỉ đọc, chạy sau lượt đêm (GS phán 20/11).
