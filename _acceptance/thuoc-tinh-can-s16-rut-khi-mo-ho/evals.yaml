@@ -1,0 +1,68 @@
+schema_version: 1
+feature_slug: thuoc-tinh-can-s16-rut-khi-mo-ho
+# Lệnh eval gói trong probes/kiem.sh: db = ca DB của lượt; app = lớp đọc của trang dự án; that = chỉ đọc DB máy thu.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: bash _acceptance/thuoc-tinh-can-s16-rut-khi-mo-ho/probes/kiem.sh db
+    expected: "Ca RMH-AC-1 trên DB của lượt: phát biểu mồi bằng lượt --ghi thật; lần thu sau căn vào nhóm mo_ho do chính v_s16_can trả ra, và ca riêng mã ở hai toà trong snapshot mà không có trong mo_ho; ở cả hai nhánh sau --ghi 0 phát biểu sống, mọi dòng rút mang chuyen-mo-ho-toa, view không có dòng. Chiều đỏ: bản sao lệnh bỏ bước rút làm ca đỏ với thông điệp RMH-AC-1."
+    paths: ["pipeline/scripts/thuoc-tinh-can-s16.mjs", "pipeline/tests/thuoc-tinh-can-s16-rut*"]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: bash _acceptance/thuoc-tinh-can-s16-rut-khi-mo-ho/probes/kiem.sh db
+    expected: "Ca RMH-AC-2: phát biểu mồi bằng lượt --ghi thật; đối chứng dương căn không đổi nhóm giữ nguyên tập phát biểu sống; phát biểu nguồn khác còn sống; căn đổi giá trị mang thay-boi-lan-thu-sau. Chiều đỏ: bản sao bỏ lọc nguồn làm ca nguồn khác đỏ."
+    paths: ["pipeline/scripts/thuoc-tinh-can-s16.mjs", "pipeline/tests/thuoc-tinh-can-s16-rut*"]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: bash _acceptance/thuoc-tinh-can-s16-rut-khi-mo-ho/probes/kiem.sh db
+    expected: "Ca RMH-AC-3: chạy lại cùng lần thu và lần thu mới mà căn vẫn mơ hồ đều in rút 0 và chèn 0 cho căn đó, số dòng field_assertions của căn không đổi. Chiều đỏ: bản sao bỏ điều kiện retracted_at IS NULL làm ca đỏ."
+    paths: ["pipeline/scripts/thuoc-tinh-can-s16.mjs", "pipeline/tests/thuoc-tinh-can-s16-rut*"]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: bash _acceptance/thuoc-tinh-can-s16-rut-khi-mo-ho/probes/kiem.sh db
+    expected: "Ca RMH-AC-4: đầu ra thật của lệnh chạy thử có dòng rut_mo_ho bằng phép đếm thẳng, căn mơ hồ không còn phát biểu sống không được đếm, băm bảng phát biểu trước sau bằng nhau; cấy lỗi ở bước chèn thì lệnh thoát khác 0 và phát biểu vẫn sống. Chiều đỏ: bản sao gọi rút ngoài giao dịch làm ca lỗi giữa chừng đỏ."
+    paths: ["pipeline/scripts/thuoc-tinh-can-s16.mjs", "pipeline/tests/thuoc-tinh-can-s16-rut*"]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: bash _acceptance/thuoc-tinh-can-s16-rut-khi-mo-ho/probes/kiem.sh db
+    expected: "Ca RMH-AC-5: ba lần thu thường, mơ hồ, thường; sau lần ba căn có lại đúng các trường của nguồn và view có dòng. Chiều đỏ: bản sao luôn coi căn là mơ hồ làm ca đỏ."
+    paths: ["pipeline/scripts/thuoc-tinh-can-s16.mjs", "pipeline/tests/thuoc-tinh-can-s16-rut*"]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: bash _acceptance/thuoc-tinh-can-s16-rut-khi-mo-ho/probes/kiem.sh app
+    expected: "Ca RMH-AC-6: gọi docThuocTinhCan và hàm đọc ô phủ thật trên DB của lượt sau khi lệnh thật rút căn; căn vắng trong kết quả, co_thuoc_tinh giảm đúng một. Chiều đỏ: khôi phục phát biểu làm ca đỏ."
+    paths: ["app/src/lib/ops/thuoc-tinh-can.ts", "app/tests/thuoc-tinh-can-rut*", "pipeline/scripts/thuoc-tinh-can-s16.mjs"]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: bash _acceptance/thuoc-tinh-can-s16-rut-khi-mo-ho/probes/kiem.sh ttc
+    expected: "Ca TTC-AC-1 xanh trên HEAD không có migration trong nhánh, trên cây tạm có thêm migration và trên main sau gộp. Bảng trạng thái diff viết trước: rỗng xanh, A xanh, M, D, R đỏ và nêu tên tệp; CHECK thiếu lot_size_area làm phép đo đỏ và nêu tên trường; CHECK có thêm trường lạ vẫn xanh."
+    paths: ["pipeline/tests/thuoc-tinh-can-s16.itest.mjs"]
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: bash _acceptance/thuoc-tinh-can-s16-rut-khi-mo-ho/probes/kiem.sh that
+    expected: "Chỉ đọc DB máy thu đã áp DA40: chạy thử in rut_mo_ho 0 can; đối chứng dương: số phát biểu sống khớp bộ lọc rút lớn hơn 0 và bằng phép đếm độc lập; số căn có thuộc tính lớn hơn 0 và bằng phép đếm thẳng trên v_unit_thuoc_tinh. Chiều đỏ: truyền số kỳ vọng sai một đơn vị làm lệnh thoát 1 và nêu tên số."
+    paths: ["_acceptance/thuoc-tinh-can-s16-rut-khi-mo-ho/probes/**", "pipeline/scripts/thuoc-tinh-can-s16.mjs"]
+  - id: E9a
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.suite.pipeline_a
+    long_running: 60
+    paths: [pipeline/**]
+    expected: "exit 0; bộ pipeline nửa a của kho xanh trên nhánh. Khai riêng để lượt chấm chờ đủ giờ: lượt 1 nửa này chạy quá 30 phút và không có mã thoát; đo tuần tự trên máy yên 16 phút 11 giây."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9b
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.suite.pipeline_b
+    long_running: 60
+    paths: [pipeline/**]
+    expected: "exit 0; bộ pipeline nửa b của kho xanh trên nhánh. Khai riêng để lượt chấm chờ đủ giờ: lượt 1 nửa này chạy quá 30 phút và không có mã thoát; đo tuần tự trên máy yên 18 phút 28 giây."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

@@ -90,6 +90,18 @@ const TRUONG_096 = ["property_type", "bedrooms", "bathrooms", "street_raw", "blo
   "frontage_length", "lot_size_dimensions", "stories", "latitude", "longitude", "builder_name", "area_id", "floor_raw", "floor_band",
   "project_node_id", "subzone_node_id"];
 
+// Hai phép đo không phụ thuộc trạng thái nhánh (DA48): DA40 đã gộp nên diff từ merge-base có thể rỗng hay có migration của hàng khác,
+// và migration sau được thêm trường vào CHECK.
+const TRUONG_CAN = [...TRUONG_096, "living_area", "building_area_total", "direction_faces", "lot_size_area"];
+function kiemMigration(dong) {
+  const sai = dong.filter((l) => !l.startsWith("A\t"));
+  assert.deepEqual(sai, [], `TTC-AC-1 migration đã commit bị đổi: ${sai.join(", ")}`);
+}
+function kiemTruong(tap) {
+  const thieu = TRUONG_CAN.filter((t) => !tap.includes(t));
+  assert.deepEqual(thieu, [], `TTC-AC-1 CHECK thiếu trường: ${thieu.join(", ")}`);
+}
+
 function banSao(tu, sang) {
   const src = readFileSync(MIG, "utf8");
   assert.ok(src.includes(tu), `TTC chỗ phá không còn trong 113: ${tu}`);
@@ -99,23 +111,34 @@ function banSao(tu, sang) {
   return { tep, xoa: () => rmSync(dir, { recursive: true, force: true }) };
 }
 
-test("TTC-AC-1 113 áp lần hai không lỗi, lược đồ không đổi; CHECK = 096 + đúng bốn trường; chỉ thêm migration 113", async () => {
+test("TTC-AC-1 113 áp lần hai không lỗi, lược đồ không đổi; CHECK có đủ 096 + bốn trường; không migration đã commit nào bị đổi", async () => {
   const truoc = await dauLuocDo();
   apTep(TEN, MIG);
   apTep(TEN, MIG118); // 118 thay view giá của 113: áp lại đúng thứ tự
   assert.equal(await dauLuocDo(), truoc, "TTC-AC-1 áp lại 113 rồi 118 đổi lược đồ");
   const d = (await q(`SELECT pg_get_constraintdef(oid) d FROM pg_constraint WHERE conname = 'field_assertions_field_chk'`))[0].d;
   const tap = [...d.matchAll(/'([a-z_]+)'::text/g)].map((m) => m[1]).sort();
-  assert.deepEqual(tap, [...TRUONG_096, "living_area", "building_area_total", "direction_faces", "lot_size_area"].sort(), "TTC-AC-1 tập trường CHECK");
+  kiemTruong(tap);
   let base = null;
   try { base = execFileSync("git", ["merge-base", "HEAD", "origin/main"], { cwd: GOC, encoding: "utf8" }).trim(); } catch { /* CI nông */ }
   if (base) {
     const doi = execFileSync("git", ["diff", "--name-status", base, "--", "db/migrations"], { cwd: GOC, encoding: "utf8" }).trim().split("\n").filter(Boolean);
-    assert.deepEqual(doi, ["A\tdb/migrations/113_thuoc_tinh_can_s16.sql", "A\tdb/migrations/118_v_s16_gia_cdt_loai_mo_ho.sql"], "TTC-AC-1 hàng này đổi migration khác ngoài 113, 118");
+    kiemMigration(doi);
   }
   // chiều đỏ: bản sao bỏ IF NOT EXISTS của bảng nạp → áp lại lỗi
   const { tep, xoa } = banSao("CREATE TABLE IF NOT EXISTS stg_s16_can_chi_tiet", "CREATE TABLE stg_s16_can_chi_tiet");
   try { assert.throws(() => apTep(TEN, tep), /already exists/, "TTC-AC-1 áp lại 113 bản phá mà không lỗi"); } finally { xoa(); }
+});
+
+test("TTC-AC-1 bảng trạng thái của hai phép đo: thêm thì xanh, sửa, xoá, đổi tên hay thiếu trường thì đỏ và nêu tên", () => {
+  const TEP = "db/migrations/096_x.sql";
+  for (const dong of [[], [`A\t${TEP}`]]) kiemMigration(dong);
+  for (const dong of [[`M\t${TEP}`], [`D\t${TEP}`], [`R100\t${TEP}\tdb/migrations/097_y.sql`]]) {
+    assert.throws(() => kiemMigration(dong), /096_x\.sql/, `TTC-AC-1 phép đo migration không đỏ với ${dong[0]}`);
+  }
+  kiemTruong(TRUONG_CAN);
+  kiemTruong([...TRUONG_CAN, "universal_property_id"]);
+  assert.throws(() => kiemTruong(TRUONG_CAN.filter((t) => t !== "lot_size_area")), /lot_size_area/, "TTC-AC-1 phép đo CHECK không đỏ khi thiếu trường");
 });
 
 const COT_STG = ["snapshot_id", "du_an", "khu", "toa", "ma_can", "dong", "height_type", "property_type", "floor_number", "bedroom", "bathroom",
