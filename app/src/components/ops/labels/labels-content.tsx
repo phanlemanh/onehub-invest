@@ -1,6 +1,7 @@
 import type { User } from "@/lib/auth"
 import { LAT_CUON_CHIEU } from "@/lib/labels-cuon-chieu"
 import { bangTruongHop, doiChieu } from "@/lib/labels-luot-hai"
+import { oCuaLat } from "@/lib/labels-normalize"
 import { dongThuan, nhomCuaLat, tienDo, tinKe } from "@/lib/labels-queries"
 import { BAC_VAI, QUYEN_OPS, vaiHieuLuc, xemNoiDungTin } from "@/lib/ops-access"
 
@@ -17,6 +18,7 @@ export async function LabelsContent({ user, lat, nhom, xem }: { user: User; lat:
   // Chữ gốc của tin là nội dung tin: chỉ vai đọc được nội dung (xemNoiDungTin) VÀ có quyền ghi nhãn mới nhận tin kế.
   const coGhi = xemNoiDungTin(user) && BAC_VAI[vaiHieuLuc(user)] >= BAC_VAI[QUYEN_OPS["label.write"].vai]
   // Lát mẫu soát (DO1) chia theo ngày, không theo nhóm: không có bộ chọn nhóm.
+  const rutGon = oCuaLat(lat) !== null
   const dsNhom = lat === LAT_CUON_CHIEU ? [] : await nhomCuaLat(user.id, lat)
   // Nhóm mặc định: nhóm đầu còn bài cho người này; ai gắn hết thì nhóm đầu.
   // Lát mẫu soát: ?nhom=<YYYY-MM-DD> chọn ngày rút (stratum); vắng thì mọi ngày.
@@ -28,8 +30,8 @@ export async function LabelsContent({ user, lat, nhom, xem }: { user: User; lat:
     tienDo(user.id, lat, undefined, chon ?? ngayCc),
     dongThuan(lat),
     coGhi ? tinKe(user.id, lat, undefined, chon ?? ngayCc) : Promise.resolve(null),
-    chon ? bangTruongHop(lat) : Promise.resolve([]),
-    coGhi && xem ? doiChieu(user.id, xem) : Promise.resolve(null),
+    chon && !rutGon ? bangTruongHop(lat) : Promise.resolve([]),
+    coGhi && xem && !rutGon ? doiChieu(user.id, xem) : Promise.resolve(null),
   ])
   return (
     <LabelsView mode="local" lat={lat} coGhi={coGhi} tienDo={tien} dongThuan={dong} tin={tin} nhom={dsNhom} chon={chon} bang={bang} luotHai={luotHai} />
