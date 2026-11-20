@@ -170,10 +170,26 @@ test("EC-AC-8 chiều đỏ: bỏ dòng nhả khoá → enrich chạy khi còn g
   assert.throws(() => kiemNhaKhoa(giu), /EC-AC-8 enrich chạy khi còn giữ khoá nạp/);
 });
 
-test("EC-AC-8 chiều đỏ: nhả khoá mà không gỡ trap → xoá khoá của job khác", () => {
-  const conTrap = dotBien(`trap - EXIT; rm -rf "$LOCK_DIR"\n`, `rm -rf "$LOCK_DIR"\n`);
-  assert.throws(() => kiemNhaKhoa(conTrap), /EC-AC-8 xoá khoá của job khác/);
+// Từ ZCode 1911-2 trap EXIT của zalo-import-daily.sh chỉ xoá khoá khi pid là của chính lượt (dòng trap kiểm pid) — có HAI
+// lớp chặn xoá khoá của job khác: `trap - EXIT` trước enrich và trap kiểm pid. Chiều đỏ phải bỏ cả hai lớp; mỗi lớp
+// một mình vẫn giữ khoá (hai dòng đối chứng một lớp dưới). Lời EC-AC-8 của hồ sơ enrich giữ nguyên (s03-tran r3, GS 20/11).
+const TRAP_KIEM_PID = `trap '[ -n "$DONG_HO_TONG_PID" ] && kill "$DONG_HO_TONG_PID" 2>/dev/null; if [ -f "$LOCK_DIR/pid" ] && grep -qx "$$" "$LOCK_DIR/pid" 2>/dev/null; then rm -rf "$LOCK_DIR" 2>/dev/null; fi' EXIT`;
+const TRAP_VO_DK = `trap '[ -n "$DONG_HO_TONG_PID" ] && kill "$DONG_HO_TONG_PID" 2>/dev/null; rm -rf "$LOCK_DIR" 2>/dev/null' EXIT`;
+const BO_GO_TRAP = [`trap - EXIT; rm -rf "$LOCK_DIR"\n`, `rm -rf "$LOCK_DIR"\n`];
+function dotBienNhieu(...cap) {
+  return cap.reduce((s, [cu, moi]) => { assert.ok(s.includes(cu), `đột biến không khớp chuỗi: ${cu}`); return s.replace(cu, moi); }, THAT);
+}
+
+test("EC-AC-8 chiều đỏ: bỏ cả gỡ trap lẫn kiểm pid → xoá khoá của job khác", () => {
+  const haiLop = dotBienNhieu(BO_GO_TRAP, [TRAP_KIEM_PID, TRAP_VO_DK]);
+  assert.throws(() => kiemNhaKhoa(haiLop), /EC-AC-8 xoá khoá của job khác/);
 });
+
+test("EC-AC-8 đối chứng một lớp (a): chỉ bỏ gỡ trap, trap còn kiểm pid → khoá job khác còn", () =>
+  kiemNhaKhoa(dotBienNhieu(BO_GO_TRAP)));
+
+test("EC-AC-8 đối chứng một lớp (b): còn gỡ trap, trap xoá vô điều kiện → khoá job khác còn", () =>
+  kiemNhaKhoa(dotBienNhieu([TRAP_KIEM_PID, TRAP_VO_DK])));
 
 // ── pl34-lich-dem-sau-buoc ──────────────────────────────────────────────────────────────────────────────────
 const DONG_DOC_GOP = 'job_run zalo-import-daily doc-gop-hang-ngay bash "$ROOT/pipeline/doc-gop-hang-ngay.sh"\n';

@@ -95,3 +95,7 @@ fixture thay bước pipeline, DB trỏ cổng đóng; lượt thử khởi deta
 - Ma trận PL34-AC-4 (S4 r3, GS phán 20/11): danh sách tệp của test thêm tệp thứ 13 `scripts/zalo-import-tran-zcode.test.mjs`
   (test trần của ZCode gộp vào nhánh, claudedp-1911-2); lời AC giữ nguyên — AC-4 của hồ sơ `pl34-lich-dem-sau-buoc` còn ghi
   «bảy tệp», `expected` của E8b ghi «mười hai tệp». Đưa vào câu can-nguoi ở Cổng Bằng chứng.
+
+- Đối chứng EC-AC-8 (`scripts/enrich-buoc-job.test.mjs`, S4 r3, GS phán 20/11): đổi vì trap EXIT của
+  `zalo-import-daily.sh` nay kiểm pid (ZCode 1911-2, dòng 124, 216) — chiều đỏ bỏ cả hai lớp (gỡ trap và kiểm pid), thêm
+  hai đối chứng một lớp; lời tiêu chí EC-AC-8 của hồ sơ enrich giữ nguyên. Gom cùng câu can-nguoi ma trận 13 tệp.
