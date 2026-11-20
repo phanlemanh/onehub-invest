@@ -551,12 +551,13 @@ test("DO1-AC-9 chặn rò không báo giả: mã khu vực, mã cách đọc, t�
 test("DO1-AC-9 chuoiCam dừng khi source_registry không có tên (không soát được thì không ghi)", async () => {
   const rong = { query: async () => ({ rows: [] }) };
   await assert.rejects(() => chuoiCam(rong, [], [], []), /LO TEN NGUON/);
-  // Có source_ids → vào danh sách soát (cùng tập token với leak gate sync-cloud).
+  // Có source_ids → vào danh sách soát (cùng tập token với leak gate sync-cloud) — qua hàm nạp chung, mang cờ match_whole
+  // (che-ten-nguon-khong-lay-tu-dau).
   let sql = "";
-  const co = { query: async (q) => { sql += q; return { rows: q.includes("source_registry") ? [{ x: "TEN_THAT_V" }, { x: "ma-nguon-v" }] : [] }; } };
+  const co = { query: async (q) => { sql += q; return { rows: q.includes("to_regclass") ? [{ bang: true, cot: true }] : q.includes("source_registry") ? [{ code: "S90", real_name: "TEN_THAT_V", ids: ["ma-nguon-v"], match_whole: true }] : [] }; } };
   const cam = await chuoiCam(co, [], [], []);
-  assert.match(sql, /unnest\(source_ids\)/);
-  assert.deepEqual(cam.filter((c) => c.nhan === "TEN NGUON").map((c) => c.chuoi), ["TEN_THAT_V", "ma-nguon-v"]);
+  assert.match(sql, /source_ids/);
+  assert.deepEqual(cam.filter((c) => c.nhan === "TEN NGUON").map((c) => [c.chuoi, c.wholeOnly]), [["TEN_THAT_V", true], ["ma-nguon-v", true]]);
 });
 import { resolveOffers, writeAssertions } from "../lib/assert.mjs";
 import { doHangNgay } from "../do-hang-ngay.mjs";

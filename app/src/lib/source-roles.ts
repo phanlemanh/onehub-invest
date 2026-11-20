@@ -3,7 +3,7 @@
 // đã đẩy. Không có cả hai → {} (trang vẫn dựng, nhãn là mã trần). Chỉ đọc code + label_vi — không bao giờ real_name.
 import { getFactsSourceRuns } from "./collections-queries"
 import { pool } from "./db"
-import type { SourceNameEntry } from "./mask-source-names"
+import { docSourceNameEntriesVoi, type SourceNameEntry } from "./mask-source-names"
 import type { SourceRoles } from "./source-labels"
 
 const toRoles = (rows: { code?: string | null; label_vi?: string | null }[]): SourceRoles =>
@@ -20,11 +20,10 @@ export async function getSourceRoles(): Promise<SourceRoles> {
   return toRoles(await getFactsSourceRuns())
 }
 
-/** Local: [{ code, realName }] từ source_registry — CHỈ để che tên trong chữ chạy (mask-source-names), không bao giờ
- *  render. Cloud/DB lỗi → [] → bộ che trả null (đóng chặt). */
+/** Local: hàm nạp chung (bản chép app nằm ở mask-source-names.ts cạnh lõi) trên pool của app — che-ten-nguon-khong-lay-tu-dau.
+ *  CHỈ để che/soát tên trong chữ chạy, không bao giờ render. */
 export async function docSourceNameEntries(): Promise<SourceNameEntry[]> {
-  const { rows } = await pool.query<{ code: string; real_name: string | null }>("SELECT code, real_name FROM source_registry")
-  return rows.filter((r) => r.real_name).map((r) => ({ code: r.code, realName: r.real_name as string }))
+  return docSourceNameEntriesVoi(pool)
 }
 
 export async function getSourceNameEntries(): Promise<SourceNameEntry[]> {
