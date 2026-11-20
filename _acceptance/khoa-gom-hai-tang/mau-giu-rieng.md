@@ -38,8 +38,9 @@
 |---|---|---:|---:|---|---|
 | Một (không còn giữ riêng: 18 tin lỗi đã đọc để chẩn đoán) | bản có lỗi «?» = «?» | 85 | 10,0% | 27,1% → 21,2% [13,8–31,0] | 6 → 6 |
 | Hai (tách rời mẫu một) | sau sửa 84c73d751 | 81 | 6,7% | 32,1% → **0,0%** [0,0–4,5] | 6 → 6 |
+| Ba (tách rời mẫu một, hai; Hỏi-6 lối B) | 76e59ac99 | 96 | 3,3% | 27,1% → **1,0%** [0,2–5,7] | 6 → 6 |
 
-Báo cáo số: `thuoc-ket-qua.json` (mẫu một), `thuoc-ket-qua-2.json` (mẫu hai); `thuoc.sh --kiem` tính lại từ nhãn thô.
+Báo cáo số: `thuoc-ket-qua.json` (mẫu một), `thuoc-ket-qua-2.json` (mẫu hai), `thuoc-ket-qua-3.json` (mẫu ba); `thuoc.sh --kiem` tính lại từ nhãn thô.
 
 **Số tham khảo, ngoài thước của hợp đồng (đếm sau khi chấm, không dùng để chỉnh luật):** trên mẫu hai, 118 nhóm bản chữ cùng căn theo
 nhãn đồng thuận — khoá cũ tách 0 nhóm, khoá mới tách **62 nhóm (52,5%)** ra từ hai tin trở lên. Trên bản chép DB, số tin S03 sống
@@ -58,3 +59,7 @@ chữ mà thiếu trường đứng riêng. Thước tách nhầm của AC-9 (40
 - Nhãn mẫu ba: tác tử con của phiên Claude Code (0 USD chi thêm). Token: Opus 152.559, Sonnet 146.749. Hai model tự báo cùng: mot-can 100
   · ro 13 · tim-mua 7 · khong-ro 0. Khuôn kiểm: đủ 120 tin, mỗi id bản chữ đúng một lần. Băm nhãn thô (16 ký tự đầu sha256):
   nhan-opus.json `473684c4ff4dc3fe` · nhan-sonnet.json `d03396b3cedf7401` — ghi TRƯỚC khi chấm.
+
+**Mẫu ba — thước tách nhóm cùng căn (Hỏi-6 B, ngưỡng ≤ 35%):** khoá cũ 0/133 → lối B **46/133 = 34,6%** [Wilson 27,0–43,0]. Đạt sát
+ngưỡng: ước lượng điểm dưới 35% nhưng cận trên vượt. Gộp nhầm 1/96 = 1,0%, cận trên 5,7% vượt 5% (thước hợp đồng là ước lượng điểm).
+Hai chỗ sát ngưỡng ghi lên thẻ Cổng Bằng chứng. Chấm một lần, lệnh `GT5_MAU=<mẫu ba> GT5_BC=…/thuoc-ket-qua-3.json GT5_TACH_NHOM=1 bash probes/thuoc.sh`.
