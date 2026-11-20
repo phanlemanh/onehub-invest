@@ -260,8 +260,13 @@ Luật đọc:
 | `khu-thap-tang` | `<du_an_id>` | `{code, data[khu]}` — phân khu thấp tầng | `duAnId` · `duAnTen` · `duong` · `status` · `soKhu` · `loi?` |
 | `can-thap-tang` | `<khu_id>` | `{code, data[can]}` — `size=2000` một lời cả khu | `duAnId` · `khuId` · `khuTen` · `size` · `soCanNhan` · `canDuTrang` · `duong` · `status` · `loi?` |
 
-`canDuTrang = soCanNhan >= size` — đụng trần thì có thể còn trang: đối chiếu tổng nguồn báo (nếu API trả
-tổng ở trường khác của phản hồi) trước khi coi là đủ; chưa có đường đếm riêng ở lượt bản đồ.
+`canDuTrang` (lượt bản đồ 19/11) ĐẶT THEO MỐC size=2000 nhưng nguồn cắt cứng **500/lời** nên cờ
+không bao giờ bật — bỏ từ lượt thu bù 20/11; đối soát đủ/thiếu bằng `meta.total` của phản hồi
+(**tổng căn THẬT theo tiền tố** — vd khu 11.098 căn) so Σ mã gom. Đặc tả nguồn đã đo 20/11:
+cắt cứng 500/lời; `page/offset/from/skip/sort/order/house_type/size>500` BỊ PHỚT lờ;
+`property_number` là BỘ LỌC TIỀN TỐ mã căn (không phân biệt hoa/thường); phân trang thực tế =
+duyệt tiền tố (prefix-DFS) từ quan sát + quét lỗ giữa dải số; phần không truy được qua tiền tố
+khai trong bảng đối soát (đừng suy ra phần thiếu là gì).
 
 Khuôn MỘT item mỗi kind (tên dự án/toà/khu ĐÃ THAY bằng giả; uuid rút gọn; `{code,data}` giữ khuôn thật):
 
