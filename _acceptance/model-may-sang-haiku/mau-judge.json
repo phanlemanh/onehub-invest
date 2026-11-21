@@ -1,0 +1,126 @@
+{
+ "chon": "md5(offer_a|offer_b), property_candidates needs_llm, hai tin còn trong sale_offers",
+ "luc": "2026-11-21T07:15:48.610Z",
+ "cap": [
+  {
+   "offer_a": "offer_341c510d1a43bf2e",
+   "offer_b": "offer_3144779a7604ce69"
+  },
+  {
+   "offer_a": "offer_b15a205a29c2895f",
+   "offer_b": "offer_0316de2943bea692"
+  },
+  {
+   "offer_a": "offer_341c510d1a43bf2e",
+   "offer_b": "offer_63b930b0d123b4cd"
+  },
+  {
+   "offer_a": "offer_1590533767038e23",
+   "offer_b": "offer_61a36a6f9bf3aa5b"
+  },
+  {
+   "offer_a": "offer_986e74cee9d0e052",
+   "offer_b": "offer_d850ad29f0978064"
+  },
+  {
+   "offer_a": "offer_c30e272606dd9f2f",
+   "offer_b": "offer_e2b9fe71eae5c1c2"
+  },
+  {
+   "offer_a": "offer_0cf9c1927ea8c6db",
+   "offer_b": "offer_0f5c49134a6cf34d"
+  },
+  {
+   "offer_a": "offer_9fdf3f4530e9b5fc",
+   "offer_b": "offer_b7ddf00102bbc4a3"
+  },
+  {
+   "offer_a": "offer_9fdf3f4530e9b5fc",
+   "offer_b": "offer_7250b4b5ec1955f8"
+  },
+  {
+   "offer_a": "offer_73d7573fc4ece7e0",
+   "offer_b": "offer_3128eb5bbdba0457"
+  },
+  {
+   "offer_a": "offer_85b360a7ba39ac83",
+   "offer_b": "offer_e88cbdc99f497515"
+  },
+  {
+   "offer_a": "offer_73d7573fc4ece7e0",
+   "offer_b": "offer_22b96d7cb5e6ca83"
+  },
+  {
+   "offer_a": "offer_c30e272606dd9f2f",
+   "offer_b": "offer_3d7799ef9ec1531d"
+  },
+  {
+   "offer_a": "offer_0cf9c1927ea8c6db",
+   "offer_b": "offer_dfdbccecd16ec790"
+  },
+  {
+   "offer_a": "offer_341c510d1a43bf2e",
+   "offer_b": "offer_074883e36ed0bf51"
+  },
+  {
+   "offer_a": "offer_ad3fd82d29507c99",
+   "offer_b": "offer_1e7c4106eeec7c8b"
+  },
+  {
+   "offer_a": "offer_0cf9c1927ea8c6db",
+   "offer_b": "offer_15273d261a2ad15e"
+  },
+  {
+   "offer_a": "offer_b15a205a29c2895f",
+   "offer_b": "offer_7e0054cb05c21795"
+  },
+  {
+   "offer_a": "offer_9fdf3f4530e9b5fc",
+   "offer_b": "offer_dfe4e3255bfafe2a"
+  },
+  {
+   "offer_a": "offer_73d17488b867b612",
+   "offer_b": "offer_91fefd2e39f51de6"
+  },
+  {
+   "offer_a": "offer_afae36cc01738125",
+   "offer_b": "offer_2a52098f5281c950"
+  },
+  {
+   "offer_a": "offer_85b360a7ba39ac83",
+   "offer_b": "offer_3128eb5bbdba0457"
+  },
+  {
+   "offer_a": "offer_1590533767038e23",
+   "offer_b": "offer_9f3cadcce6dc0105"
+  },
+  {
+   "offer_a": "offer_341c510d1a43bf2e",
+   "offer_b": "offer_aba358df0858fb29"
+  },
+  {
+   "offer_a": "offer_c30e272606dd9f2f",
+   "offer_b": "offer_d850ad29f0978064"
+  },
+  {
+   "offer_a": "offer_c30e272606dd9f2f",
+   "offer_b": "offer_725fdb4a2b82f1a7"
+  },
+  {
+   "offer_a": "offer_02ab78a7eaa0f905",
+   "offer_b": "offer_1cc02abba9b6a7c9"
+  },
+  {
+   "offer_a": "offer_afae36cc01738125",
+   "offer_b": "offer_0dea5ec3390bc282"
+  },
+  {
+   "offer_a": "offer_85b360a7ba39ac83",
+   "offer_b": "offer_ec5c2cd87eca7a90"
+  },
+  {
+   "offer_a": "offer_85195e7ccf2519d8",
+   "offer_b": "offer_9c165a0ec3c10e43"
+  }
+ ]
+}
