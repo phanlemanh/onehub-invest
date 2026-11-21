@@ -3,10 +3,10 @@ schema_version: 1
 slug: so-nguon-kho-khai-bao
 feature: Người vận hành chạy lệnh đo độ tươi và mở trang Thu thập thì thấy S16 hết «chưa khai SLO», S09 hiện thành một nguồn, S01 chỉ đo thị trường có lịch và S11 ở trạng thái tạm dừng
 owner: phanlemanh@gmail.com
-stage: discovery              # discovery | decided | archived
-decision:         # build | iterate | park | kill — người ký Cổng 0 điền
-decided_by: 
-decided_at:     # ISO UTC
+stage: decided                # discovery | decided | archived
+decision: build         # build | iterate | park | kill — người ký Cổng 0 điền
+decided_by: Mạnh 21/11 trả lời ở phiên U2, nguyên văn «Cổng Đáng NK1 so-nguon-kho-khai-bao: làm» — làm với ngưỡng và hạn U2 đề xuất
+decided_at: 2026-11-21T06:50:47Z     # ISO UTC
 prototype:
   base_commit:     # điểm cắt nhánh proto khỏi nhánh chính — guard diffBase khi keep
   disposition:     # keep | archive
