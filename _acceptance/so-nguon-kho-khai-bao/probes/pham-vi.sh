@@ -10,7 +10,7 @@ CHO_PHEP='^(db/migrations/122_source_registry_family_cadence\.sql'\
 '|scripts/lib/so-nguon-122\.mjs'\
 '|scripts/so-nguon-kho\.test\.mjs|scripts/check-freshness\.test\.mjs|scripts/freshness-parity\.test\.mjs|scripts/s05-slo\.test\.mjs'\
 '|scripts/bao-cao-ngay\.test\.mjs|app/tests/slo-mot-nguon\.test\.tsx|app/tests/o-kpi-chi-do-local\.test\.tsx'\
-'|pipeline/scripts/ops-facts-so-tong-hop\.test\.mjs|pipeline/scripts/ops-facts-fixture\.mjs|app/tests/ops-nhan-theo-context\.test\.tsx|app/tests/ops-cloud-khong-bang-nap\.test\.tsx'\
+'|pipeline/scripts/ops-facts-so-tong-hop\.test\.mjs|pipeline/scripts/ops-facts-fixture\.mjs|app/tests/ops-nhan-theo-context\.test\.tsx|app/tests/ops-cloud-khong-bang-nap\.test\.tsx|app/tests/quyen-bon-vai\.test\.tsx'\
 '|_acceptance/so-nguon-kho-khai-bao/.*|_acceptance/config\.yaml'\
 '|docs/superpowers/specs/2026-11-21-so-nguon-kho-khai-bao-design\.md|docs/superpowers/plans/2026-11-21-so-nguon-kho-khai-bao\.md'\
 '|PRODUCT-MAP\.md|LO-TRINH\.html)$'

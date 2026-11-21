@@ -175,6 +175,17 @@ const gia = (db, co) => {
   const sqls = [];
   return { sqls, query: async (sql) => (sqls.push(sql), sql.includes("current_database()") ? { rows: [{ db, co }] } : { rows: [] }) };
 };
+/** Sổ đã có cột → không làm gì ở MỌI DB (kể cả oneinvest, tên lạ): không ném, 0 câu DDL, chỉ một câu hỏi hình. */
+async function coCotLoi(mod) {
+  const out = [];
+  for (const db of ["oneinvest", "oneinvest_lan_khac", "postgres", "oneinvest_suite_x"]) {
+    const c = gia(db, true);
+    const kq = await mod.ap122NeuThieu(c).then((v) => v, (e) => `ném: ${e.message.slice(0, 40)}`);
+    if (kq !== false) out.push(`${db}: đã có cột mà không phải phép không (${kq})`);
+    if (c.sqls.length !== 1 || c.sqls.some((q) => /ALTER|INSERT|UPDATE|CREATE|DROP/.test(q))) out.push(`${db}: đã có cột mà chạy ${c.sqls.length - 1} câu thêm`);
+  }
+  return out;
+}
 /** Lỗi của bộ rào: mỗi mục gọi tên DB. Rỗng = rào đúng. */
 async function raoLoi(mod) {
   const out = [];
@@ -184,10 +195,7 @@ async function raoLoi(mod) {
     if (!loi || !/từ chối áp 122 vào DB «/.test(loi) || !loi.includes(db)) out.push(`${db}: không bị từ chối`);
     if (c.sqls.some((q) => q.includes("ALTER TABLE"))) out.push(`${db}: đã chạy SQL của 122`);
   }
-  for (const db of ["oneinvest", "oneinvest_suite_x"]) {
-    const c = gia(db, true);
-    if ((await mod.ap122NeuThieu(c)) !== false || c.sqls.length !== 1) out.push(`${db}: đã có cột mà vẫn làm`);
-  }
+  out.push(...(await coCotLoi(mod)));
   for (const db of ["oneinvest_suite_nk_123", "oneinvest_dbv_x"]) {
     const c = gia(db, false);
     if ((await mod.ap122NeuThieu(c)) !== true || !c.sqls.some((q) => q.includes(doc122().trim().slice(0, 200)))) out.push(`${db}: không áp chính tệp 122`);
@@ -216,3 +224,34 @@ describe("NK ap122NeuThieu", () => {
   });
 });
 
+test("NK ap122NeuThieu: đã có cột trên DB tên lạ (oneinvest, postgres) → không làm gì, 0 câu DDL", async () => {
+  assert.deepEqual(await coCotLoi(boDoc), []);
+});
+test("chiều đỏ ap122NeuThieu: đảo thứ tự (rào tên trước kiểm cột) thì ca «đã có cột» đỏ", async () => {
+  const goc = readFileSync(fileURLToPath(new URL("./lib/so-nguon-122.mjs", import.meta.url)), "utf8");
+  const kiemCot = "  if (r.co) return false;\n";
+  const rao = "  if (!DB_THU.test(r.db))\n    throw new Error(`ap122NeuThieu: từ chối áp 122 vào DB «${r.db}» — chỉ bản chép DB thử (oneinvest_suite_*, oneinvest_dbv_*)`);\n";
+  assert.ok(goc.includes(kiemCot) && goc.includes(rao), "khuôn phá lệch mã nguồn");
+  const pha = goc.replace(kiemCot, "").replace(rao, rao + kiemCot)
+    .replace('new URL("../../db/migrations/122_source_registry_family_cadence.sql", import.meta.url)', `new URL(${JSON.stringify(pathToFileURL(boDoc.TEP_122).href)})`);
+  const dir = mkdtempSync(path.join(tmpdir(), "nk-thu-tu-"));
+  try {
+    writeFileSync(path.join(dir, "so-nguon-122.mjs"), pha);
+    const mod = await import(pathToFileURL(path.join(dir, "so-nguon-122.mjs")).href);
+    const loi = await coCotLoi(mod);
+    assert.deepEqual(loi.map((x) => x.split(":")[0]), ["oneinvest", "oneinvest_lan_khac", "postgres"], loi.join(" | "));
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("NK ap122VaoSchema: từ chối public và tên rỗng, 0 câu SQL", async () => {
+  for (const s of ["public", ""]) {
+    const c = gia("oneinvest_suite_x", false);
+    await assert.rejects(boDoc.ap122VaoSchema(c, s), /chỉ lược đồ tạm/, `«${s}» phải bị từ chối`);
+    assert.equal(c.sqls.length, 0, `«${s}»: không được chạy câu nào`);
+  }
+  const c = gia("oneinvest_suite_x", false);
+  await boDoc.ap122VaoSchema(c, "nk_tam");
+  assert.ok(c.sqls.length === 1 && c.sqls[0].startsWith('SET search_path TO "nk_tam";') && c.sqls[0].includes(doc122().trim().slice(0, 200)), "áp chính tệp 122 trong lược đồ tạm");
+});

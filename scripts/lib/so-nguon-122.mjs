@@ -66,3 +66,11 @@ export async function ap122NeuThieu(c) {
   }
   return true;
 }
+
+/** Lược đồ test tự dựng bảng sổ theo khuôn migration cũ (vd «khuôn sau gộp» của pipeline/scripts/so-nhom-fixture.mjs, dừng ở
+ *  048): chạy CHÍNH tệp 122 trong lược đồ đó để sổ có cột mới như sau gộp. Chỉ lược đồ tạm — từ chối public. Bảng cần khoá chính
+ *  (ON CONFLICT (code) của 122). */
+export async function ap122VaoSchema(c, schema) {
+  if (!schema || schema === "public") throw new Error("ap122VaoSchema: chỉ lược đồ tạm, không public");
+  await c.query(`SET search_path TO "${schema}"; ${doc122()}; RESET search_path`);
+}

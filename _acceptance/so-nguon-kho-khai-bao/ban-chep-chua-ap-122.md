@@ -14,7 +14,14 @@
 Ca `NK ap122NeuThieu` + chiều đỏ «gỡ rào tên DB thì ca từ chối đỏ» ở `scripts/so-nguon-kho.test.mjs`. Mỗi tệp ngoài vùng đúng một
 dòng gọi, không đổi phép so nào:
 `pipeline/scripts/ops-facts-fixture.mjs` (makeOpsSchema), `app/tests/ops-nhan-theo-context.test.tsx` (ON12-AC-7),
-`app/tests/ops-cloud-khong-bang-nap.test.tsx` (OP-AC-2).
+`app/tests/ops-cloud-khong-bang-nap.test.tsx` (OP-AC-2), `app/tests/quyen-bon-vai.test.tsx` (tệp thứ tư, GS duyệt; gọi TRƯỚC
+`chupPublic` để ảnh chụp public không thấy 122 chen vào giữa).
+
+**Riêng QV-AC-2 (không phải chuyện bản chép chưa áp):** `quyen-bon-vai` dựng lược đồ «khuôn sau gộp» bằng `dungSauGop`
+(`pipeline/scripts/so-nhom-fixture.mjs`). Hàm này tự CREATE bảng sổ theo khuôn trước 047 rồi chạy 047, 048, nên sổ của lược đồ thiếu
+cột 122 cả sau khi máy thu áp. Chữa bằng dòng thứ hai trong cùng tệp, ngay sau `dungSauGop`: `ap122VaoSchema(admin, S)` chạy chính
+tệp 122 trong lược đồ tạm (từ chối `public` — ca `NK ap122VaoSchema`). Dòng này KHÔNG thành phép không sau áp: nó là một phần của
+khuôn sau gộp, tới khi `dungSauGop` tự chạy 122.
 
 ## Trước / sau (bản chép DB máy thu chưa áp 122, 21/11)
 
@@ -28,20 +35,20 @@ dòng gọi, không đổi phép so nào:
 | app/tests/ops-cloud-khong-bang-nap.test.tsx | OP-AC-2 | 1 đỏ | xanh |
 | app/tests/ops-facts-so-tong-hop.test.tsx | ON22-AC-3, ON22-AC-9 | 3 đỏ | xanh |
 | app/tests/ops-nhan-theo-context.test.tsx | ON12-AC-7 | 1 đỏ | xanh |
-| app/tests/quyen-bon-vai.test.tsx | QV-AC-2, QV-AC-10 | 2 đỏ | QV-AC-10 xanh; **QV-AC-2 còn đỏ** |
-| **9 tệp** | | **30 đỏ** | **29 xanh, 1 đỏ** |
+| app/tests/quyen-bon-vai.test.tsx | QV-AC-2, QV-AC-10 | 2 đỏ | xanh |
+| **9 tệp** | | **30 đỏ** | **30 xanh** |
 
-Lượt «sau»: 10 tệp (9 tệp trên + slo-mot-nguon), 169 ca, 168 xanh. QV-AC-2 gọi route coverage trên lược đồ đọc xuyên xuống
-`public` trước khi có tệp nào áp 122 vào bản chép: tệp chỉ gọi makeOpsSchema ở ca cuối, và các tệp chạy song song theo tiến trình
-riêng nên thứ tự không chắc. Sau khi máy thu áp, ca này tự xanh.
+Lượt «sau» (21/11 ~21:30 VN, `--test-concurrency=8`, `ONEHUB_SUITE_CHUNG=1` như `npm test`): 10 tệp (9 tệp trên + slo-mot-nguon),
+**169/169 xanh**.
 
 Pipeline và scripts cùng bản chép (`ops-facts-so-tong-hop.test.mjs`, `bao-cao-ngay.test.mjs`, `check-freshness`, `freshness-parity`,
 `s05-slo`, `so-nguon-kho`): 131/131 xanh.
 
 ## Known limits
 
-- Ba lời gọi `ap122NeuThieu` thành phép không khi 122 đã áp lên máy thu. GS sẽ cắt một hàng hạ tầng riêng sau chuyển máy («bản
-  chép DB thử tự nhận migration chưa áp», gỡ ba lời gọi). NK1 không làm việc đó.
+- Bốn lời gọi `ap122NeuThieu` thành phép không khi 122 đã áp lên máy thu. GS sẽ cắt một hàng hạ tầng riêng sau chuyển máy («bản
+  chép DB thử tự nhận migration chưa áp», gỡ bốn lời gọi). NK1 không làm việc đó. Lời gọi `ap122VaoSchema` của
+  `quyen-bon-vai` thì ở lại tới khi `dungSauGop` tự chạy 122.
 - Executor chạy thẳng trên DB chung `oneinvest` (không qua `db-thu.sh`), như `s08l_do`, `tl_bao_cao`, `check_freshness`: từ lúc
   gộp tới lúc áp, lượt chấm của hàng khác đã gộp main mới sẽ đỏ «áp migration 122». Checkout chính không bị ảnh hưởng, vì
   `ap-may-thu.md` áp trước khi kéo; khoảng này chỉ vài phút.

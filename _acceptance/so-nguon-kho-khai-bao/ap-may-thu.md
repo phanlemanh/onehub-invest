@@ -85,7 +85,7 @@ Báo giám sát đã xoá. Sau khi xoá, `tang-a.mjs` đọc tên từ sổ máy
 
 ## Sau áp
 
-Ba lời gọi `ap122NeuThieu` trong test (`ban-chep-chua-ap-122.md`) thành phép không khi 122 đã áp lên máy thu. Bản mẫu DB thử tự
+Bốn lời gọi `ap122NeuThieu` trong test (`ban-chep-chua-ap-122.md`) thành phép không khi 122 đã áp lên máy thu. Bản mẫu DB thử tự
 dựng lại vì dấu lược đồ đổi. GS cắt hàng hạ tầng riêng để gỡ chúng; NK1 không làm việc đó.
 
 Áp lại 122 sau khi lùi được (chạy thử: áp → lùi → `LUI OK`).
