@@ -90,8 +90,10 @@ Mỗi task: viết test đỏ trước, rồi mã, rồi commit. S4 xin lượt 
 
 **Giám sát (không cần Mạnh)**
 
-- **G1** — `_acceptance/config.yaml` chưa có hai khoá `script.s09_toa_db`, `script.s09_toa_that` mà evals đang trỏ. Tệp này
+- **G1 (đã xong)** — `_acceptance/config.yaml` chưa có hai khoá `script.s09_toa_db`, `script.s09_toa_that` mà evals đang trỏ. Tệp này
   ngoài vùng P1: xin anh thêm, hoặc cho phép P1 thêm đúng hai dòng.
-- **G2** — T3 chạm `pipeline/lib/s16-dung.mjs` (tra bí danh S09 mới trước khi đúc toà S16, chiều đỏ của E8), ngoài vùng hàng đã
+- **G2 (GS duyệt)** — T3 chạm `pipeline/lib/s16-dung.mjs` (tra bí danh S09 mới trước khi đúc toà S16, chiều đỏ của E8), ngoài vùng hàng đã
   ghi. Xin nới vùng.
-- **G3** — S3 cần bộ nạp `pipeline/import-s09-danh-ba.mjs` của ZCode lên `main`. Có thể làm T1–T3 trước; E1 chờ bộ nạp.
+- **G3 (GS đã quyết 21/11)** — bộ nạp của làn thu ở `origin/zcode/nap-s09-danh-ba` @c6609cc9b (3 tệp, LL soát đạt, test 9/9). Sau Cổng 1.5,
+  P1 `git merge` nhánh đó vào nhánh DA42 (không chép tệp, không sửa mã làn thu; lỗi logic thu thì báo GS trả ZCode), bộ nạp đi
+  trong PR và hồ sơ DA42, E1 đo trên gói 1 thật. Hồ sơ ghi dòng xuất xứ: nhánh, sha, người soát (LL), lệnh kiểm.
