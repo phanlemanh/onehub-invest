@@ -1,0 +1,56 @@
+schema_version: 1
+feature_slug: so-nguon-kho-khai-bao
+# Ca «NK-AC-n» ở scripts/so-nguon-kho.test.mjs (sổ, migration), scripts/check-freshness.test.mjs (CLI trên lược đồ cấy),
+# scripts/freshness-parity.test.mjs (hai bản chép) và app/tests/slo-mot-nguon.test.tsx (bảng Sức khoẻ nguồn dựng trọn).
+# Mọi lệnh DB chạy trên DB của riêng lượt (db/db-thu.sh --chay), không chạm DB máy thu.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.nk_db
+    paths: [db/migrations/122_*, scripts/so-nguon-kho.test.mjs]
+    expected: "exit 0; '✔ NK-AC-1 năm cột, CHECK và giá trị từng mã đúng bảng viết trước'; '✔ NK-AC-1 áp 122 lần hai: không ô nào đổi, match_whole giữ'; '✔ chiều đỏ NK-AC-1: family ngoài flow|stock bị CHECK chặn'; '✔ chiều đỏ NK-AC-1: bảng mong đợi lệch một nhịp thì ca đỏ gọi tên mã'; should-NOT-fire: '✖ NK-AC-1'"
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.nk_db
+    paths: [scripts/lib/freshness.mjs, app/src/lib/freshness.ts, scripts/check-freshness.test.mjs, scripts/freshness-parity.test.mjs]
+    expected: "exit 0; '✔ NK-AC-2 hai bản không còn hằng nhịp: nhịp đọc từ cadence_hours'; '✔ NK-AC-2 bảng mong đợi từng hàng (S01 hanoi, S02, S03, S06, S08, S10) khớp CLI và app'; '✔ NK-AC-2 S05, S11 paused không có hàng; đổi sang active thì có hàng (thông điệp gọi tên mã)'; '✔ NK-AC-2 sửa cadence_hours một mã: CLI và app cùng đổi'; '✔ NK-AC-2 sổ thiếu cột: hai bản ném lỗi gọi tên migration 122'; '✔ chiều đỏ NK-AC-2: bản phá đọc hằng cũ thì ca đổi nhịp đỏ'; parity xanh; should-NOT-fire: '✖ NK-AC-2', '✖ AC-'"
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.nk_db
+    paths: [scripts/lib/freshness.mjs, app/src/lib/freshness.ts, scripts/check-freshness.test.mjs]
+    expected: "exit 0; '✔ NK-AC-3 S16 đo qua stg_tables: tuổi từ snapshot có dòng stg_s16_can_chi_tiet, source ngoài source_ids'; '✔ NK-AC-3 S09 có hàng, tuổi từ stg_s09_item'; '✔ NK-AC-3 snapshot chỉ có dòng ở bảng ngoài stg_tables không được tính'; '✔ NK-AC-3 tên bảng sai khuôn hay không có thật: hàng chưa có dữ liệu kèm lý do, không chạy SQL mang tên đó'; '✔ chiều đỏ NK-AC-3: bỏ lọc stg_tables thì ca bảng ngoài đỏ'; should-NOT-fire: '✖ NK-AC-3'"
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.nk_db
+    paths: [scripts/lib/freshness.mjs, app/src/lib/freshness.ts, scripts/check-freshness.test.mjs, scripts/freshness-parity.test.mjs]
+    expected: "exit 0; '✔ NK-AC-4 S01 measured_markets {hanoi}: chỉ hàng hanoi ở CLI và app'; '✔ NK-AC-4 measured_markets NULL: mọi thành phố có dữ liệu như trước'; '✔ chiều đỏ NK-AC-4: bỏ lọc thị trường thì hcmc, vn hiện lại'; should-NOT-fire: '✖ NK-AC-4'"
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.nk_app
+    paths: [app/src/lib/freshness.ts, app/src/lib/ops-queries.ts, app/src/lib/collections-queries.ts, app/tests/slo-mot-nguon.test.tsx]
+    expected: "exit 0; '✔ NK-AC-5 bảng Sức khoẻ nguồn dựng trọn: có hàng S09, không S01/hcmc, S01/vn, không S11, không «chưa khai SLO» của S16'; '✔ chiều đỏ NK-AC-5: S09 không có stg_tables thì hàng S09 vắng'; '✔ SL-AC-2'; should-NOT-fire: '✖ NK-AC-5', '✖ SL-AC'"
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.nk_tang_a
+    paths: ["**"]
+    expected: "exit 0; dòng 'danh sách tên: S09 <a> mục, S17 <b> mục, kể cả biến thể gập (nguồn: tệp cục bộ|sổ máy thu)' với a > 0, b > 0; 'tự kiểm: cấy từng biến thể vào bản chép migration → mỗi biến thể TRÚNG' (chỉ mã và số chỗ, không tên); phạm vi quét gồm tệp đổi của nhánh và mọi tệp trong _acceptance/so-nguon-kho-khai-bao/; mỗi tệp đổi 'ok'; 'migration 122: S09, S17 real_name NULL, source_ids rỗng'; cuối 'TANG-A OK'; should-NOT-fire: 'TRUNG', 'TU KIEM HONG', 'KHONG CO DANH SACH'"
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.nk_may_thu
+    paths: [_acceptance/so-nguon-kho-khai-bao/probes/may-thu.mjs]
+    # đo SAU gộp và áp trên DB máy thu (ap-may-thu.md bước kiểm); chỉ chạy được ở máy thu, làn ghim lại và CI không chạy
+    status: not-run
+    expected: "exit 0; 'S16: có hàng, không «chưa khai SLO»'; 'S01: chỉ hanoi'; 'S11: không hàng'; 'S09: có hàng'; 'app (checkout chính) và CLI: <n> hàng, lệch 0'; 'bộ soát tầng A: S09 <a> mục, S17 <b> mục' với a > 0, b > 0; cuối 'MAY THU OK'; should-NOT-fire: 'MAY THU DO'"
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.nk_pham_vi
+    paths: ["**"]
+    expected: "exit 0; 'tự kiểm: app/src/app/page.tsx → NGOAI PHAM VI'; mỗi tệp 'ok'; cuối 'PHAM-VI OK'; should-NOT-fire: 'NGOAI PHAM VI scripts', 'NGOAI PHAM VI app', 'TU KIEM HONG'"
