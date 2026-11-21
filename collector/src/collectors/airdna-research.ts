@@ -25,6 +25,53 @@ const CITY_MARKET: Record<string, string> = {
 
 const MONTHLY_METRICS = ["adr", "occupancy", "revenue", "revpar"] as const;
 
+/** 1911-5: giải mã phần exp của JWT appToken (KHÔNG kiểm chữ ký — chỉ đọc hạn).
+ * Token rỗng/không giải mã được → exp undefined; conLaiMs âm = đã hết hạn. */
+export function docExpAppToken(token: string, now: number = Date.now()): { exp?: number; conLaiMs: number } {
+  const phan = token.split(".")[1];
+  if (!phan) return { conLaiMs: Number.NEGATIVE_INFINITY };
+  try {
+    const json = JSON.parse(Buffer.from(phan, "base64url").toString("utf8")) as { exp?: number };
+    return { exp: json.exp, conLaiMs: json.exp ? json.exp * 1000 - now : Number.NEGATIVE_INFINITY };
+  } catch {
+    return { conLaiMs: Number.NEGATIVE_INFINITY };
+  }
+}
+
+/** 1911-5 (MỞ LẠI): phần QUYẾT ĐỊNH tách hàm thuần (không cần trình duyệt) để đo
+ * được bằng đột biến: token rỗng / hết hạn / không giải mã được exp → NÉM với đúng
+ * chẩn đoán; token còn hạn → trả dòng log 'token OK …'. appToken chỉ gọi hàm này. */
+export function kiemAppToken(token: string, now: number = Date.now()): string {
+  if (!token) throw new Error("không đọc được appToken từ .airdna-profile — cần login lại AirDNA");
+  const { exp, conLaiMs } = docExpAppToken(token, now);
+  if (exp === undefined || conLaiMs <= 0) {
+    const hetLuc = exp ? new Date(exp * 1000).toISOString() : "(không giải mã được exp)";
+    throw new Error(`appToken ĐÃ HẾT HẠN ${hetLuc} — phiên đăng nhập trong profile cũ/không làm mới, cần đăng nhập lại ĐÚNG profile này (localStorage còn token cũ là báo xanh giả)`);
+  }
+  return `token OK (${token.length} chars, hết hạn sau ${Math.round(conLaiMs / 60000)} phút)`;
+}
+
+/** 1911-10: ném lỗi auth kèm dòng «AUTH FAIL [S02] <ISO>» — bộ đo độ tươi đọc
+ * dòng này; kiemAppToken ném (hết hạn/rác) phải qua đây, không chỉ nhánh 401
+ * sau refresh. Hàm thuần, đo được bằng đột biến bỏ dòng log. */
+export function nemAuthFail(log: (...a: unknown[]) => void, loi: unknown, now: number = Date.now()): never {
+  log(`AUTH FAIL [S02] ${new Date(now).toISOString()}`);
+  throw loi;
+}
+
+/** 1911-10 (MỞ LẠI): TOÀN BỘ quyết định gom MỘT hàm thuần — appToken chỉ gọi hàm
+ * này: còn hạn → log dòng OK; hết hạn/rác → nemAuthFail (in AUTH FAIL [S02] rồi
+ * ném lại). Đo được bằng đột biến: bỏ bước nemAuthFail → ca duyetAppToken đỏ. */
+export function duyetAppToken(log: (...a: unknown[]) => void, token: string, now: number = Date.now()): string {
+  try {
+    const logDong = kiemAppToken(token, now);
+    log(logDong);
+    return logDong;
+  } catch (e) {
+    nemAuthFail(log, e, now);
+  }
+}
+
 /** Mở profile 1 lần để lấy JWT (localStorage.auth.appToken) rồi đóng ngay. */
 async function appToken(log: (...a: unknown[]) => void): Promise<string> {
   const browser = await chromium.launchPersistentContext(PROFILE_DIR, {
@@ -47,8 +94,10 @@ async function appToken(log: (...a: unknown[]) => void): Promise<string> {
         return "";
       }
     });
-    if (!token) throw new Error("không đọc được appToken từ .airdna-profile — cần login lại AirDNA");
-    log(`token OK (${token.length} chars)`);
+    // 1911-5 + 1911-10: toàn bộ duyệt/từ chối (kiểm exp + AUTH FAIL khi ném)
+    // nằm trong duyetAppToken — hàm thuần đo được bằng đột biến; hết hạn dừng
+    // trước LỜI GỌI API nào (báo xanh giả 'token OK (327 chars)' đốt cả run 401).
+    duyetAppToken(log, token);
     return token;
   } finally {
     await browser.close().catch(() => {});
@@ -87,7 +136,12 @@ async function call(
       ctx.log(`  ↻ 401 ${path} — refresh token`);
       await ctx.refreshToken();
       res = await doFetch();
-      if (res.status === 401) throw new Error(`401 sau refresh token — dừng chạy (${path})`);
+      if (res.status === 401) {
+        // 1711-1(a): dòng chuẩn máy đọc được khi xác thực hỏng — thước độ tươi làn
+        // Claude đọc dòng này để báo đỏ (SLO 35 ngày không thấy lượt 401 liền).
+        ctx.log(`AUTH FAIL [S02] ${new Date().toISOString()}`);
+        throw new Error(`401 sau refresh token — dừng chạy (${path})`);
+      }
     }
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = (await res.json()) as unknown;
