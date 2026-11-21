@@ -64,3 +64,7 @@ giới hạn đã biết; bước gom tách thành hàng riêng.
 
 Bốn tin mới gắn vào nút 48 «The Rainbow» khi danh bạ còn nút 389 «Rainbow» cùng khu. Không sửa danh bạ trong vòng này; ghi vào danh
 sách dọn danh bạ sau PL20 (GS giữ hàng chờ).
+
+Đo lại sau DA51 (21/11, chỉ đọc): bài «nhiều vùng» trên DB máy thu tăng 168 → 1.401, phần lớn là cặp «389 Rainbow + S1–S5» (khoảng
+800 lượt bài) và bài rao nêu nhiều phân khu cùng lúc. Gộp 389 vào 48 trong bộ nhớ (không sửa danh bạ): gắn được 3.941 → 4.042 (+101)
+trên DB máy thu, 3.862 → 3.966 (+104) trên bản chép `oneinvest_p4_pl20_cham`. GS đưa dọn cặp 48/389 lên đầu danh sách dọn danh bạ.

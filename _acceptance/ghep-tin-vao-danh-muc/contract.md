@@ -110,3 +110,21 @@ Trục và ô lấy từ bảng phủ ca của design doc §2, số đếm thậ
     trên DB máy thu; so cả 220 bài với bản cũ thì E9 đỏ vì việc đã duyệt chứ không vì máy sai.
   - Thẻ #12245 (n1): GS sửa theo lời Mạnh 06:17:38Z 21/11 («s1» → «the sapphire 1»), không thuộc nhóm lưu trước hay sau duyệt lô; khâu
     tỉ lệ sửa nháp tính nó là «GS sửa theo lời Mạnh», không phải Mạnh sửa nháp.
+  - Lát `hai-khu-ghep-c` (rút khoảng 08:37Z 21/11 trên DB máy thu sau khi DA51 áp lúc 08:33:52Z; mã 13fddf504; seed `pl20-v2-20261121`;
+    sha256 `c42fa719a731ae12ccaa97bba5cdbd74a9c6f471d75b01112a119d1471ad5658`; 110 bài): cùng cách rút với lát `-b` (theo tỉ lệ tổng
+    thể hiện hành), tổng thể n2 540 tin, cơ cấu F 89 · C 21 so với F 79 · C 31 ở lát `-b`. F tăng vì luật vòng 2 và bốn bí danh DA51
+    làm thêm tin đọc được phân khu. GS phán 21/11 giữ cơ cấu này: ép hạn ngạch cũ là đổi phương pháp sau khi thấy số. Lát loại mọi bài
+    của hai lát trước; 6 tin trùng tin của lát `-b` qua bài khác (`offer_6c2f32e8…`, `offer_dd8d70d4…`, `offer_ee1fd961…`,
+    `offer_ff31ddf0…`, `offer_652cf6aa…`, `offer_bab76edf…`); hai tin của bài lỗi đã sửa luật (#12274 `offer_4cd0e821…`, #12295
+    `offer_f0b9bd7f…`) không có trong lát dưới bài nào.
+  - DA51 trên 220 bài đóng băng: n1 không đổi; n2 đổi thêm một bài (`b0f1a09a`, «studio ori s10»): bí danh «ori» đọc ra nút 44 The
+    Origami, là cha của nút 50 S10, nên bài thành «nhiều vùng» và thôi gắn (vòng 1 gắn đúng F/50). Không đổi luật — xem giới hạn đã biết
+    dưới đây.
+- Known limits — ghi trước Cổng Bằng chứng (21/11, GS phán):
+  - Chữ bài nêu cả phân khu cha lẫn phân khu con cùng nhánh (như «ori s10») được tính là nhiều vùng và không gắn. Trên DB máy thu
+    105 tin có bài như vậy, 5 tin vì thế chưa gắn (100 tin gắn được qua bài khác); thử luật «lấy nút sâu nhất» chỉ cứu 4 tin nên không
+    đổi luật.
+  - Danh bạ còn cặp nút trùng 48 «The Rainbow» · 389 «Rainbow»: phân khu S1–S5 nằm dưới 48, nên bài «Rainbow S2» thành nhiều vùng.
+    Đây là phần lớn mức tăng bài «nhiều vùng» 168 → 1.401 sau DA51. Gộp 389 vào 48 (đo trong bộ nhớ, chỉ đọc, không sửa danh bạ) cho
+    thêm 101 tin gắn trên DB máy thu (3.941 → 4.042, xung đột 21 → 23) và 104 tin trên bản chép (3.862 → 3.966). Dọn cặp này đứng
+    đầu danh sách dọn danh bạ sau PL20 (GS giữ hàng).
