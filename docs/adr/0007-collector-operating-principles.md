@@ -302,3 +302,24 @@ của người bán xử lý thế nào?», Mạnh trả lời nguyên văn: «�
 Không đổi: bốn thứ tầng A ở sửa đổi 26/10 giữ nguyên; tên, SĐT người bán vẫn là tầng C (sửa đổi 23/10, 02/11). Sửa đổi này
 chỉ nói về hai trường ngày sinh, giới tính từ tra hồ sơ; uid, tên hiển thị, ảnh đại diện từ tra hồ sơ xếp ở Cổng Phạm vi của
 hàng nạp (EN3).
+
+## Sửa đổi 2026-11-21 — trợ lý gắn nhãn trong phiên được đọc bài để điền nháp
+
+Mạnh chốt «Theo khuyến nghị cả bốn câu» ở phiên phân tích «người ở biên», 21/11 01:05Z (ROADMAP §3 mục 61). Câu 4 gồm việc
+ghi «trợ lý gắn nhãn trong phiên» vào ADR này. Thực tế đã có từ 06/11 (Mạnh chốt «trợ lý điền nháp, Mạnh duyệt») và 20/11
+(«trợ lý gắn nhãn làm trọn quy trình»): một phiên Claude Code trên máy thu đọc bài cần gắn và điền nháp cho người duyệt. Sửa
+đổi 06/11 chỉ nêu ba model đọc tin của đường ống; sửa đổi này gọi tên trường hợp thứ hai.
+
+- **Ai:** trợ lý trong phiên Claude Code chạy trên máy thu, do người mở và ngồi cùng hoặc duyệt theo lô. Không phải bước
+  tự chạy của đường ống.
+- **Được đọc để điền nháp và soạn bảng lô:** chữ bài, ảnh tin, tên nhóm, và tên nguồn thật khi nó in sẵn trong chữ hay ảnh
+  của bài (như sửa đổi 06/11); danh bạ; thẻ địa chỉ nhóm.
+- **Không đọc, không gửi:** hồ sơ người dùng app, định danh tài khoản thu, phiên, khoá, ảnh QR, profile trình duyệt; bảng
+  giải mã `source_registry` (`real_name`, `source_ids`).
+- **Không mang ra khỏi máy thu:** nháp, sổ đối chiếu nháp với nhãn lưu, bảng lô. Chúng ở thư mục gitignored của máy thu,
+  không vào kho công khai, cloud hay kênh liên phiên trên GitHub.
+- **Lát giữ mù:** trợ lý gắn nhãn không đọc đầu ra của đường ống trên lát đang dùng để chấm chính đường ống đó.
+
+Không đổi: bốn thứ tầng A ở sửa đổi 26/10; danh sách ba model đọc tin của đường ống ở sửa đổi 06/11 (model khác cho đường
+ống vẫn cần lời mới của Mạnh); luật 7. Trợ lý không ghi dữ liệu canonical. Ai bấm Lưu nhãn, lưu vào đâu, ghi lại thế nào:
+ROADMAP §3 mục 61 (nấc tự chủ, lớp chờ) và hàng NB2.
