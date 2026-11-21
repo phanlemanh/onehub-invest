@@ -18,10 +18,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFile, writeFile, mkdtemp, rm } from "node:fs/promises";
+import { readFileSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { spawn } from "node:child_process";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const DUONG_SCRIPT = fileURLToPath(new URL("./thu-nhom-s05.mjs", import.meta.url));
 const { parseArgs, docNhomTuCauHinh, nhanDienChan, hopNhat, khuonMessage } = await import(
@@ -34,6 +35,22 @@ const docLoi = async () => {
   e.code = "ENOENT";
   throw e;
 };
+
+// bản chép hỏng cạnh bản thật (đột biến) — tim là cặp hoặc mảng các cặp [tim, thay]
+async function banChep(tim, thay, chay) {
+  const goc = readFileSync(DUONG_SCRIPT, "utf8");
+  const doi = Array.isArray(tim) ? tim : [[tim, thay]];
+  let moi = goc;
+  for (const [t, th] of doi) moi = moi.replace(t, th);
+  assert.notEqual(moi, goc, "bản chép không đổi được — mẫu thay đã lệch mã");
+  const ban = join(dirname(DUONG_SCRIPT), `.ban-${process.pid}-${Math.random().toString(36).slice(2)}-thu-nhom-s05.mjs`);
+  writeFileSync(ban, moi);
+  try {
+    return await chay(await import(pathToFileURL(ban).href));
+  } finally {
+    rmSync(ban, { force: true });
+  }
+}
 
 // ─── (a) nhận chặn (điều 2) ───
 test("a/nhận-chặn: checkpoint URL → dừng", () => {
@@ -163,6 +180,87 @@ test("t/điều-4-5: nhóm từ tệp cấu hình; --dang-nhap không gõ hộp 
   const ma = await readFile(DUONG_SCRIPT, "utf8");
   assert.match(ma, /docNhomTuCauHinh\(/);
   assert.match(ma, /--dang-nhap/);
+});
+
+// ─── (f) MỞ LẠI 2011-4: ca HÀNH VI «chặn → DỪNG lượt, thoát ≠0» bằng page GIẢ ───
+const { chayCacNhom } = await import(`file://${DUONG_SCRIPT}`);
+
+function taoPageGia({ checkpointTuCuon = Infinity } = {}) {
+  const truyen = { soGoto: 0, soWheel: 0, soText: 0 };
+  const page = {
+    goto: async () => { truyen.soGoto++; },
+    url: () => "https://nguon/groups/g1",
+    textContent: async () => {
+      truyen.soText++;
+      return truyen.soWheel >= checkpointTuCuon
+        ? "Hãy xác minh rằng bạn là người thật"
+        : "Bán căn nhà 2 tỷ — liên hệ 09xx";
+    },
+    evaluate: async () => [],
+    mouse: { wheel: async () => { truyen.soWheel++; } },
+    on: () => {}, off: () => {},
+    locator: () => ({ ariaSnapshot: async () => "" }),
+  };
+  return { page, truyen };
+}
+const NHOM_GIA = [
+  { id: "g1", ten: "n1", url: "https://nguon/groups/g1" },
+  { id: "g2", ten: "n2", url: "https://nguon/groups/g2" },
+];
+const GIA_DEPS = (page) => ({
+  nhomCauHinh: NHOM_GIA,
+  page,
+  hetTranTong: () => false,
+  ngu: async () => {},
+  ghiTomTat: async () => {},
+  out: () => {},
+  thamSo: { maxScroll: 6, tranBai: 50 },
+});
+
+test("f/hành-vi-chặn: checkpoint ở lần cuộn thứ 2 → dừng ngay (wheel đúng 1), không sang nhóm 2, thoát 3, ghi lý do", async () => {
+  const { page, truyen } = taoPageGia({ checkpointTuCuon: 1 });
+  const tomTatDaGhi = [];
+  const ket = await chayCacNhom({ ...GIA_DEPS(page), ghiTomTat: async (_n, _k, chan) => tomTatDaGhi.push(chan) });
+  assert.equal(ket.exitCode, 3, "thoát ≠0 khi chặn");
+  assert.equal(truyen.soWheel, 1, "cuộn đúng 1 lần rồi dừng — không cuộn tiếp");
+  assert.equal(truyen.soGoto, 1, "KHÔNG sang nhóm kế");
+  assert.ok(ket.chan?.chan, "trả lý do chặn");
+  assert.match(String(tomTatDaGhi[0]), /CHẶN/);
+});
+test("f/hành-vi-không-chặn: trang lành → chạy đủ nhóm, thoát 0", async () => {
+  const { page, truyen } = taoPageGia();
+  const ket = await chayCacNhom(GIA_DEPS(page));
+  assert.equal(ket.exitCode, 0);
+  assert.equal(truyen.soGoto, 2);
+  assert.equal(truyen.soWheel, 7 * 2); // s=0..6 mỗi nhóm → 7 lần
+});
+test("f/A-đỏ: bỏ break/return daChan → không dừng sớm (cuộn hết trần, sang nhóm 2)", async () => {
+  const { page, truyen } = taoPageGia({ checkpointTuCuon: 1 });
+  await banChep(
+    [
+      ["    if (daChan) break; // dừng ngay, không cuộn tiếp, không thử lại\n", ""],
+      ["  if (daChan) return daChan;\n", ""],
+    ],
+    null,
+    async (mo) => {
+      const ket = await mo.chayCacNhom(GIA_DEPS(page));
+      // bản hỏng KHÔNG dừng ngay khi phát hiện chặn: cuộn tiếp trần 7 lần nhóm 1
+      // và sang nhóm 2 — khác chặt với bản chuẩn (wheel 1, goto 1)
+      assert.equal(truyen.soWheel, 7, "cuộn trần bất chấp chặn (bản chuẩn chỉ 1)");
+      assert.equal(truyen.soGoto, 2, "sang nhóm 2 bất chấp chặn (bản chuẩn chỉ 1)");
+    },
+  );
+});
+test("f/B-đỏ: exitCode 3 đổi thành 0 → ca thoát ≠0 đỏ", async () => {
+  const { page } = taoPageGia({ checkpointTuCuon: 1 });
+  await banChep(
+    `      return { exitCode: 3, chan: ket };`,
+    `      return { exitCode: 0, chan: ket };`,
+    async (mo) => {
+      const ket = await mo.chayCacNhom(GIA_DEPS(page));
+      assert.equal(ket.exitCode, 0, "bản hỏng trả 0 dù chặn — ca xanh (thoát ≠0) phía trên phải đỏ khi áp");
+    },
+  );
 });
 
 // ─── script con --tu-kho (không trình duyệt) — quy ước *_NODE_BIN (GS 2011-18) ───

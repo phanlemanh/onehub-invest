@@ -391,24 +391,18 @@ async function main() {
       process.exitCode = 1;
       return;
     }
-
-    for (const nhom of nhomCauHinh) {
-      if (hetTranTong()) {
-        out("⏹ hết trần tổng 8′ — dừng trước nhóm kế tiếp");
-        break;
-      }
-      const urlNhom = nhom.url ?? `${webBase}${nhom.duong}`;
-      const ket = await thuMotNhom(context, page, nhom, urlNhom, hetTranTong, ngu, webBase);
-      if (ket.chan) {
-        // điều 2: chặn → DỪNG CẢ LƯỢT, không thử nhóm kế, không thử lại
-        out(`⛔ DỪNG LƯỢT — ${ket.lyDo}`);
-        await ghiTomTat(nhom, ket, "CHẶN: " + ket.lyDo);
-        process.exitCode = 3;
-        return;
-      }
-      out(ket.tomTat);
-      await ghiTomTat(nhom, ket, null);
-    }
+    // điều 2: vòng các nhóm — chặn ở nhóm nào thì DỪNG CẢ LƯỢT (exitCode 3),
+    // KHÔNG thử nhóm kế, KHÔNG thử lại; hàm TRẢ exitCode để đo bằng page giả
+    const ket = await chayCacNhom({
+      nhomCauHinh,
+      page,
+      hetTranTong,
+      ngu,
+      ghiTomTat,
+      out,
+      thamSo: { maxScroll: ARGS.maxScroll, tranBai: ARGS.tranBai },
+    });
+    process.exitCode = ket.exitCode;
   } catch (e) {
     out("❌", e.message);
     process.exitCode = 1;
@@ -417,7 +411,31 @@ async function main() {
   }
 }
 
-async function thuMotNhom(context, page, nhom, urlNhom, hetTranTong, ngu, webBase) {
+/** Vòng thu các nhóm — tách hàm (MỞ LẠI 2011-4): đo được bằng page GIẢ trả nội dung
+ *  checkpoint ở lần cuộn thứ k; trả { exitCode } — chặn → 3, hết trần/hết nhóm → 0. */
+export async function chayCacNhom({ nhomCauHinh, page, hetTranTong, ngu, ghiTomTat, out = console.log, thamSo }) {
+  const webBase = process.env.S05_WEB_BASE ?? "";
+  for (const nhom of nhomCauHinh) {
+    if (hetTranTong()) {
+      out("⏹ hết trần tổng 8′ — dừng trước nhóm kế tiếp");
+      break;
+    }
+    const urlNhom = nhom.url ?? `${webBase}${nhom.duong}`;
+    const ket = await thuMotNhom(page, nhom, urlNhom, hetTranTong, ngu, thamSo);
+    if (ket.chan) {
+      // điều 2: chặn → DỪNG CẢ LƯỢT, không thử nhóm kế, không thử lại
+      out(`⛔ DỪNG LƯỢT — ${ket.lyDo}`);
+      await ghiTomTat(nhom, ket, "CHẶN: " + ket.lyDo);
+      return { exitCode: 3, chan: ket };
+    }
+    out(ket.tomTat);
+    await ghiTomTat(nhom, ket, null);
+  }
+  return { exitCode: 0, chan: null };
+}
+
+async function thuMotNhom(page, nhom, urlNhom, hetTranTong, ngu, thamSo = {}) {
+  const batDau = Date.now();
   const storyTuMang = [];
   const mauMang = [];
   const onResp = async (res) => {
@@ -479,7 +497,9 @@ async function thuMotNhom(context, page, nhom, urlNhom, hetTranTong, ngu, webBas
   bocVaoMap(await bocDom(page));
 
   let daChan = null;
-  for (let s = 0; s <= ARGS.maxScroll && !hetTranTong(); s++) {
+  const maxScroll = thamSo.maxScroll ?? ARGS.maxScroll;
+  const tranBai = thamSo.tranBai ?? ARGS.tranBai;
+  for (let s = 0; s <= maxScroll && !hetTranTong(); s++) {
     // điều 1: chỉ bấm nút Đóng nằm TRONG hộp thoại đang che trang — không gì khác
     await page
       .evaluate(() => {
@@ -493,12 +513,12 @@ async function thuMotNhom(context, page, nhom, urlNhom, hetTranTong, ngu, webBas
     await page.mouse.wheel(0, 1_600 + Math.floor(Math.random() * 500));
     await ngu(1_800 + Math.floor(Math.random() * 900));
     bocVaoMap(await bocDom(page));
-    out(`   ${nhom.id} scroll ${s + 1}/${ARGS.maxScroll} · graphql ${storyTuMang.length} · dom ${domMap.size}`);
+    out(`   ${nhom.id} scroll ${s + 1}/${maxScroll} · graphql ${storyTuMang.length} · dom ${domMap.size}`);
   }
   page.off("response", onResp);
   if (daChan) return daChan;
 
-  const bai = hopNhat(storyTuMang, [...domMap.values()], ARGS.tranBai);
+  const bai = hopNhat(storyTuMang, [...domMap.values()], tranBai);
 
   if (ARGS.chan) {
     await mkdir(OUT_DIR, { recursive: true });
@@ -519,7 +539,7 @@ async function thuMotNhom(context, page, nhom, urlNhom, hetTranTong, ngu, webBas
     `nhóm: ${key} (${nhom.ten})`,
     `bài lấy: ${bai.length} (graphql ${bai.filter((p) => p.nguon === "graphql").length} / dom ${bai.filter((p) => p.nguon === "dom").length})`,
     `phủ trường: text ${dem("text")}/${bai.length} · author ${dem("author")}/${bai.length} · time ${dem("time_unix")}/${bai.length} · permalink ${dem("permalink")}/${bai.length} · images ${dem("images")}/${bai.length}`,
-    `trần: nhóm ${ARGS.tranNhom} · bài ${ARGS.tranBai} · scroll ${ARGS.maxScroll} · tổng ${Math.round((Date.now() - batDau) / 1000)}s`,
+    `trần: nhóm ${ARGS.tranNhom} · bài ${tranBai} · scroll ${maxScroll} · tổng ${Math.round((Date.now() - batDau) / 1000)}s`,
     `nạp: ${ARGS.gui ? "SẼ GỬI /agent-report" : "KHÔNG — chỉ file thử research-local (điều 7)"}`,
   ].join("\n");
 

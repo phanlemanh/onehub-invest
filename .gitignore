@@ -42,3 +42,6 @@ CLAUDE.local.md
 
 # resolve-so-stage-a: bản resolve-properties cũ rút từ git khi so (tự dọn, kể cả khi bị ngắt)
 pipeline/.resolve-cu.*.tmp.mjs
+
+# công cụ MCP phiên — rác worktree, không vào kho
+.playwright-mcp/
