@@ -4,6 +4,8 @@
 //   --cham <tệp đóng băng> --doi-chieu <báo cáo.md>  tính lại và đỏ khi số khác báo cáo
 //   --cham <tệp đóng băng> --tien-do                 in tiến độ gắn nhãn, không kết luận
 //   thêm --nhap <csv>: tính tỉ lệ «Mạnh sửa nháp» theo nhóm (so nháp trợ lý với nhãn đã lưu trong DB)
+//   vòng 2: --cham <tệp lát -b> --cham-n2 <tệp lát -c> --db-n1 <url bản chép>  n1 chấm lát -b trên bản chép lúc chấm vòng 1, n2 chấm
+//           lát mới trên DATABASE_URL; mỗi lát so đầu ra mã cuối với tệp đóng băng của chính nó; --nhap-n2 <csv> cho sổ nháp lát mới
 // Chỉ đọc DB. Máy gắn toà đúng khi người ghi đúng toà đó. Máy gắn vùng đúng khi người ghi đúng vùng đó, vùng con của nó, hay một toà
 // nằm trong nó. Không quy được về danh bạ hoặc người ghi «không nêu» thì tính máy sai.
 import { readFileSync, realpathSync, writeFileSync } from "node:fs";
@@ -66,8 +68,20 @@ export function chamLat({ dong, nhan, danhBa }) {
     // 110 bài chỉ chịu được một bài sai: từ bài sai thứ hai là đã hụt, dừng gắn nhãn nhóm đó.
     g.trang = g.sai >= 2 ? "hut" : g.n < CO_MAU ? "chua-du" : g.wilson >= NGUONG ? "dat" : "hut";
   }
+  return ketLuan(nhom);
+}
+
+function ketLuan(nhom) {
   const nguon_phai_tat = Object.entries(nhom).filter(([, g]) => g.trang !== "dat").flatMap(([n]) => NGUON_CUA_NHOM[n]);
   return { dat: NHOM_BAT_BUOC.every((n) => nhom[n].trang === "dat"), nguon_phai_tat, nhom };
+}
+
+/**
+ * Vòng 2 AC-9: n1 chấm trên lát vòng 1, n2 trên lát mới. Mỗi nhóm lấy từ lượt chấm của chính lát nó, ngưỡng và cỡ mẫu không đổi.
+ * @param {object} n1 nhóm n1 của lượt chấm lát vòng 1 · @param {object} n2 nhóm n2 của lượt chấm lát mới
+ */
+export function gopKetQua(n1, n2) {
+  return ketLuan({ n1, n2 });
 }
 
 /** Đọc sổ nháp của trợ lý (CSV, dòng «#» là chú thích): item_id → ô toà, ô khu và cờ Mạnh tự quyết. */
@@ -150,7 +164,7 @@ const pt = (a, b) => (b ? `${((100 * a) / b).toFixed(1)}%` : "n/a");
 
 /** Báo cáo cho người đọc, kèm khối số để lần sau đối chiếu. */
 export function vietBaoCao(r, sha256) {
-  const dong = ["# PL20 — Chấm độ đúng trên lát hai-khu-ghep-b", "", `Tệp đầu ra máy đóng băng: \`${sha256}\`. Ngưỡng: cận dưới Wilson 95% từ ${NGUONG}, mỗi nhóm ${CO_MAU} bài.`, "",
+  const dong = [`# PL20 — Chấm độ đúng trên lát ${r.lat ?? LAT}`, "", `Tệp đầu ra máy đóng băng: ${r.tep ?? `\`${sha256}\``}. Ngưỡng: cận dưới Wilson 95% từ ${NGUONG}, mỗi nhóm ${CO_MAU} bài.`, "",
     `**Kết luận: ${r.dat ? "đạt" : "chưa đạt"}.** Nguồn phải tắt: ${r.nguon_phai_tat.join(", ") || "không có"}.`, "",
     "| Nhóm | Nguồn | Đã chấm | Đúng | Sai | Cận dưới Wilson | Trạng thái |", "|---|---|---:|---:|---:|---:|---|"];
   for (const [n, g] of Object.entries(r.nhom)) dong.push(`| ${n} | ${NGUON_CUA_NHOM[n].join(", ")} | ${g.n}/${g.tong} | ${g.dung} | ${g.sai} | ${g.wilson ?? "n/a"} | ${g.trang} |`);
@@ -180,31 +194,48 @@ export function docBaoCao(md) {
   return JSON.parse(m[1]);
 }
 
+/** Đọc một lát: đầu ra mã cuối phải khớp tệp đóng băng trên các bài của nhóm được chấm, rồi lấy nhãn thô của lát. */
+async function docLat(c, tep, { lat, nhom }) {
+  const dong = tep.dong.filter((x) => !nhom || x.stratum === nhom);
+  const vao = await docDauVao(c, { offerIds: dong.map((x) => x.offer_id) });
+  const loi = kiemDauRa(dong, tinhGan(vao).ketQuaBai);
+  const { rows } = await c.query(
+    `SELECT i.ref_id, i.item_id, l.labeler_id, l.field, CASE WHEN l.not_stated THEN NULL ELSE l.value END AS value, l.labeled_at
+       FROM eval_labels l JOIN eval_label_items i USING (item_id) WHERE i.lat = $1 AND l.field IN ('building', 'subzone')`, [lat]);
+  const theoNguoi = new Map();
+  for (const r of rows) { const k = `${r.ref_id}|${r.labeler_id}`; const x = theoNguoi.get(k) ?? { ref_id: r.ref_id, item_id: r.item_id, labeler_id: r.labeler_id }; x[r.field] = r.value; if (r.labeled_at && (!x.labeled_at || r.labeled_at > x.labeled_at)) x.labeled_at = r.labeled_at; theoNguoi.set(k, x); }
+  const nhan = new Map();
+  for (const x of theoNguoi.values()) nhan.set(x.ref_id, [...(nhan.get(x.ref_id) ?? []), x]);
+  return { dong, nhan, danhBa: vao.danhBa, loi };
+}
+
+const moDb = async (url) => { const c = new pg.Client({ connectionString: url }); await c.connect(); await c.query("SET default_transaction_read_only = on"); return c; };
+
 async function main() {
   const a = process.argv.slice(2);
   const lay = (k) => { const i = a.indexOf(k); return i < 0 ? undefined : a[i + 1]; };
-  if (!lay("--cham")) { console.error("lenh: --cham <tep dong bang> [--ra <md> | --doi-chieu <md> | --tien-do]"); return 2; }
+  if (!lay("--cham")) { console.error("lenh: --cham <tep dong bang> [--cham-n2 <tep lat moi> --db-n1 <url>] [--ra <md> | --doi-chieu <md> | --tien-do]"); return 2; }
   const tep = docTepMau(lay("--cham")); // băm sai thì ném
-  const c = new pg.Client({ connectionString: process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest" });
-  await c.connect();
+  const tep2 = lay("--cham-n2") ? docTepMau(lay("--cham-n2")) : null;
+  const url = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
+  // Vòng 2: n1 đọc trên bản chép DB lúc chấm vòng 1 (danh bạ trước DA51), n2 trên DB hiện hành.
+  const c1 = await moDb(tep2 ? (lay("--db-n1") ?? url) : url);
+  const c2 = tep2 ? await moDb(url) : null;
   try {
-    await c.query("SET default_transaction_read_only = on");
-    const vao = await docDauVao(c, { offerIds: tep.dong.map((x) => x.offer_id) });
-    const loi = kiemDauRa(tep.dong, tinhGan(vao).ketQuaBai);
+    const l1 = await docLat(c1, tep, { lat: LAT, nhom: tep2 ? "n1" : null });
+    const l2 = tep2 ? await docLat(c2, tep2, { lat: tep2.lat, nhom: "n2" }) : null;
+    const loi = [...l1.loi, ...(l2?.loi ?? [])];
     for (const l of loi.slice(0, 20)) console.error(`DO: ${l}`);
     if (loi.length) { console.error(`DO: ${loi.length} bai co dau ra khac ban dong bang`); return 1; }
-    const { rows } = await c.query(
-      `SELECT i.ref_id, i.item_id, l.labeler_id, l.field, CASE WHEN l.not_stated THEN NULL ELSE l.value END AS value, l.labeled_at
-         FROM eval_labels l JOIN eval_label_items i USING (item_id) WHERE i.lat = $1 AND l.field IN ('building', 'subzone')`, [LAT]);
-    const theoNguoi = new Map();
-    for (const r of rows) { const k = `${r.ref_id}|${r.labeler_id}`; const x = theoNguoi.get(k) ?? { ref_id: r.ref_id, item_id: r.item_id, labeler_id: r.labeler_id }; x[r.field] = r.value; if (r.labeled_at && (!x.labeled_at || r.labeled_at > x.labeled_at)) x.labeled_at = r.labeled_at; theoNguoi.set(k, x); }
-    const nhan = new Map();
-    for (const x of theoNguoi.values()) nhan.set(x.ref_id, [...(nhan.get(x.ref_id) ?? []), x]);
-    const r = chamLat({ dong: tep.dong, nhan, danhBa: vao.danhBa });
-    if (lay("--nhap")) {
-      const nhap = docNhap(readFileSync(lay("--nhap"), "utf8"));
-      r.sua_nhap = tiLeSua({ dong: tep.dong, nhan, nhap });
-      r.loai_the = tachLoaiThe({ dong: tep.dong, nhan, nhap, danhBa: vao.danhBa });
+    const r1 = chamLat(l1);
+    const r = l2 ? gopKetQua(r1.nhom.n1, chamLat(l2).nhom.n2) : r1;
+    if (l2) { r.lat = `${LAT} (n1) · ${tep2.lat} (n2)`; r.tep = `\`${tep.sha256}\` (n1) · \`${tep2.sha256}\` (n2)`; }
+    for (const [k, l, n] of [["--nhap", l1, tep2 ? "n1" : null], ["--nhap-n2", l2, "n2"]]) {
+      if (!lay(k) || !l) continue;
+      const nhap = docNhap(readFileSync(lay(k), "utf8"));
+      const t = tiLeSua({ dong: l.dong, nhan: l.nhan, nhap }), u = tachLoaiThe({ dong: l.dong, nhan: l.nhan, nhap, danhBa: l.danhBa });
+      r.sua_nhap = { ...(r.sua_nhap ?? {}), ...(n ? { [n]: t[n] } : t) };
+      r.loai_the = { ...(r.loai_the ?? {}), ...(n ? { [n]: u[n] } : u) };
     }
     for (const [n, g] of Object.entries(r.nhom)) console.log(`${n}: da cham ${g.n}/${g.tong} · dung ${g.dung} · sai ${g.sai} · wilson ${g.wilson ?? "n/a"} · ${g.trang}${g.sai >= 2 ? " · DUNG GAN NHAN NHOM NAY" : ""}`);
     for (const [n, g] of Object.entries(r.nhom)) for (const s of g.ds_sai) console.log(`  may sai ${n} ${s.ref_id}: may ${s.may} · nguoi ${s.nhan.map((l) => `${l.building ?? "-"}/${l.subzone ?? "-"} -> ${JSON.stringify(l.quy)}`).join(" ; ")}`);
@@ -219,7 +250,8 @@ async function main() {
     console.log(r.dat ? `DAT · nguon phai tat: ${r.nguon_phai_tat.join(", ") || "khong"}` : "CHUA DAT");
     return r.dat ? 0 : 1;
   } finally {
-    await c.end();
+    await c1.end();
+    await c2?.end();
   }
 }
 

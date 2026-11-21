@@ -2,7 +2,9 @@
 // ghep-tin-danh-muc-lat-nhan.mjs — PL20 (AC-9): rút lát nhãn hai-khu-ghep-b từ chính các tin máy gắn và đóng băng đầu ra của máy.
 //   --rut --seed <s> [--co 110] [--ra <thư mục>]   chỉ đọc; ghi tệp đóng băng có băm
 //   --nap <tệp>                                    ghi eval_label_items của lát (giám sát chạy trên DB máy thu); chạy lại không nhân dòng
+//   --rut --lat hai-khu-ghep-c --nhom n2 --seed <s>  vòng 2 AC-9: lát mới chỉ cho nhóm hụt, bỏ mọi bài của hai lát trước; tệp ghi sha mã
 // Hai nhóm chấm riêng: n1 ô tên toà (A, B) · n2 chữ bài cùng model (C, F). Nguồn D, G đang tắt. Không điền nháp.
+import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -15,6 +17,10 @@ import { textHash } from "../lib/eval-labels.mjs";
 import { docDauVao, tinhGan } from "../lib/ghep-tin-danh-muc-doc.mjs";
 
 export const LAT = "hai-khu-ghep-b";
+/** Lát của vòng 2 AC-9 (n2 hụt ở vòng 1, lối ra d-20261118T080511Z-35). */
+export const LAT_VONG_2 = "hai-khu-ghep-c";
+/** Bài của các lát này không rút lại. */
+const LAT_DA_DUNG = ["hai-khu-ghep", LAT];
 export const NHOM_CUA_NGUON = Object.freeze({ A: "n1", B: "n1", C: "n2", F: "n2" });
 const THU_MUC = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../eval-sets");
 const bam = (s) => createHash("sha256").update(s).digest("hex");
@@ -23,11 +29,11 @@ const bam = (s) => createHash("sha256").update(s).digest("hex");
  * Mỗi nhóm rút ngẫu nhiên theo tin, mỗi tin một bài do chính nguồn của tin gắn. `boBai`: bài của lát khác, không lấy lại.
  * @returns {{ mau: object[], thieu: Record<string, number>, tong_the: Record<string, number> }}
  */
-export function rutMau({ tin, bai }, { theoTin, ketQuaBai }, { seed, co = 110, boBai = new Set() }) {
-  const theoNhom = { n1: [], n2: [] };
+export function rutMau({ tin, bai }, { theoTin, ketQuaBai }, { seed, co = 110, boBai = new Set(), nhom: chiNhom = null }) {
+  const theoNhom = Object.fromEntries((chiNhom ?? ["n1", "n2"]).map((n) => [n, []]));
   for (const t of tin) {
     const g = theoTin.get(t.offer_id);
-    if (g?.status !== "gan" || !NHOM_CUA_NGUON[g.nguon]) continue;
+    if (g?.status !== "gan" || !theoNhom[NHOM_CUA_NGUON[g.nguon]]) continue;
     const ds = (t.post_ids ?? []).filter((p) => ketQuaBai.get(p)?.nguon === g.nguon && !boBai.has(p) && (bai.get(p)?.chu ?? "").trim());
     if (!ds.length) continue;
     const p = ds.sort((a, b) => bam(`${seed}|${a}`).localeCompare(bam(`${seed}|${b}`)))[0];
@@ -53,9 +59,9 @@ export function rutMau({ tin, bai }, { theoTin, ketQuaBai }, { seed, co = 110, b
 }
 
 /** Đầu ra máy đã sắp kèm băm: đổi một nút là đổi băm. */
-export function dongBangMau(mau, seed) {
+export function dongBangMau(mau, seed, { lat = LAT, ma } = {}) {
   const dong = [...mau].sort((a, b) => a.ref_id.localeCompare(b.ref_id)).map((x) => Object.fromEntries(Object.keys(x).sort().map((k) => [k, x[k]])));
-  return { lat: LAT, seed, sha256: bamDong(dong), so_bai: dong.length, dong };
+  return { lat, seed, ...(ma ? { ma } : {}), sha256: bamDong(dong), so_bai: dong.length, dong };
 }
 
 /** Đọc tệp đóng băng và kiểm băm. */
@@ -77,11 +83,16 @@ async function main() {
       if (!seed) { console.error("can --seed"); return 2; }
       await c.query("SET default_transaction_read_only = on");
       const vao = await docDauVao(c);
-      const { rows } = await c.query(`SELECT ref_id FROM eval_label_items WHERE lat = 'hai-khu-ghep'`);
-      const r = rutMau(vao, tinhGan(vao), { seed, co: Number(lay("--co") ?? 110), boBai: new Set(rows.map((x) => x.ref_id)) });
-      const x = dongBangMau(r.mau, seed);
+      const lat = lay("--lat") ?? LAT;
+      const { rows } = await c.query(`SELECT ref_id FROM eval_label_items WHERE lat = ANY ($1)`, [lat === LAT ? ["hai-khu-ghep"] : LAT_DA_DUNG]);
+      const nhom = lay("--nhom") ? lay("--nhom").split(",") : null;
+      const r = rutMau(vao, tinhGan(vao), { seed, co: Number(lay("--co") ?? 110), boBai: new Set(rows.map((x) => x.ref_id)), nhom });
+      // Mã cuối sinh tệp: cây bẩn ngoài tệp sinh thì sha không nói đúng mã, dừng.
+      const ma = lat === LAT ? undefined : execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
+      if (ma && execFileSync("git", ["status", "--porcelain", "--", "lib", "scripts"], { encoding: "utf8" }).trim()) { console.error("lat-nhan: lib/ hay scripts/ còn sửa chưa commit"); return 2; }
+      const x = dongBangMau(r.mau, seed, { lat, ma });
       const ra = lay("--ra") ? path.resolve(lay("--ra")) : THU_MUC;
-      const tep = path.join(ra, `${LAT}-dau-ra-${x.sha256.slice(0, 12)}.json`);
+      const tep = path.join(ra, `${lat}-dau-ra-${x.sha256.slice(0, 12)}.json`);
       if (!existsSync(tep)) { mkdirSync(ra, { recursive: true }); writeFileSync(tep, `${JSON.stringify(x, null, 1)}\n`); }
       console.log(`lat-nhan: ${x.so_bai} bai · tong the ${JSON.stringify(r.tong_the)} · thieu ${JSON.stringify(r.thieu)}`);
       console.log(`sha256 ${x.sha256}`);
@@ -92,20 +103,21 @@ async function main() {
       const x = docTepMau(lay("--nap"));
       await c.query("BEGIN");
       try {
-        const { rows } = await c.query(`SELECT ref_id FROM eval_label_items WHERE lat = $1`, [LAT]);
+        const lat = x.lat ?? LAT;
+        const { rows } = await c.query(`SELECT ref_id FROM eval_label_items WHERE lat = $1`, [lat]);
         const ds = new Set(x.dong.map((d) => d.ref_id));
         const la = rows.filter((r) => !ds.has(r.ref_id)).map((r) => r.ref_id);
         if (la.length) throw new Error(`lat-nhan: lát đã có ${la.length} bài ngoài tệp đóng băng, ví dụ ${la[0]}`);
         let them = 0;
         for (const d of x.dong) them += (await c.query(
           `INSERT INTO eval_label_items (lat, source_code, ref_id, text_hash, split, double_label, seed, stratum)
-           VALUES ($1, 'S03', $2, $3, 'test', false, $4, $5) ON CONFLICT DO NOTHING`, [LAT, d.ref_id, d.text_hash, x.seed, d.stratum])).rowCount;
+           VALUES ($1, 'S03', $2, $3, 'test', false, $4, $5) ON CONFLICT DO NOTHING`, [lat, d.ref_id, d.text_hash, x.seed, d.stratum])).rowCount;
         await c.query("COMMIT");
-        console.log(`lat-nhan: them ${them}/${x.so_bai} bai vao lat ${LAT}`);
+        console.log(`lat-nhan: them ${them}/${x.so_bai} bai vao lat ${lat}`);
       } catch (e) { await c.query("ROLLBACK").catch(() => {}); throw e; }
       return 0;
     }
-    console.error("lenh: --rut --seed <s> [--co N] [--ra <thu muc>] | --nap <tep>");
+    console.error("lenh: --rut --seed <s> [--lat <slug> --nhom n2] [--co N] [--ra <thu muc>] | --nap <tep>");
     return 2;
   } finally {
     await c.end();

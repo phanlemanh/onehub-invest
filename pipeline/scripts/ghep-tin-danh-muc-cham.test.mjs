@@ -3,7 +3,7 @@ import { strict as assert } from "node:assert";
 import { test } from "node:test";
 
 import { dungDanhBa } from "../lib/ghep-tin-danh-muc.mjs";
-import { chamBai, chamLat, docBaoCao, docNhap, kiemDauRa, quyNhan, tachLoaiThe, tiLeSua, vietBaoCao } from "./ghep-tin-danh-muc-cham.mjs";
+import { chamBai, chamLat, docBaoCao, docNhap, gopKetQua, kiemDauRa, quyNhan, tachLoaiThe, tiLeSua, vietBaoCao } from "./ghep-tin-danh-muc-cham.mjs";
 
 const D = dungDanhBa({
   toa: [{ key: "bld_a", upi: "u", vung_id: "101", ten: ["S1.02"] }, { key: "bld_b", upi: "u2", vung_id: "102", ten: ["S2.05"] }, { key: "bld_c", upi: "u3", vung_id: null, ten: ["GOC1"] }],
@@ -174,4 +174,13 @@ test("tach-so-theo-loai-the-va-bat-gio-luu-truoc-duyet", () => {
   assert.deepEqual(t.n2["duyet-lo-truoc-luu"], { n: 2, dung: 2, ds: ["r", "s"], luu_truoc_gio_duyet: ["s"] }, "lưu trước giờ duyệt thì ghim mã bài");
   const r = chamLat({ dong, nhan, danhBa: hai }); r.loai_the = t;
   assert.match(vietBaoCao(r, "abc"), /n2 \| luu-truoc-duyet-hoi-to \| 1 \| 0 .*\| q \|/);
+});
+
+// Vòng 2 AC-9: n1 lấy từ lượt chấm lát vòng 1, n2 từ lát mới; ngưỡng, cỡ mẫu không đổi, hai nhóm đều phải đạt.
+test("vong-2-gop-n1-lat-cu-n2-lat-moi", () => {
+  const g = (dung, sai) => ({ ...chamLat({ dong: [], nhan: new Map(), danhBa: hai }).nhom.n1, n: dung + sai, dung, sai, trang: sai >= 2 ? "hut" : "dat" });
+  assert.deepEqual(gopKetQua(g(109, 1), g(110, 0)).dat, true);
+  const r = gopKetQua(g(109, 1), g(108, 2));
+  assert.equal(r.dat, false); assert.deepEqual(r.nguon_phai_tat, ["C", "F"]);
+  assert.equal(gopKetQua(g(108, 2), g(110, 0)).nguon_phai_tat.join(), "A,B");
 });

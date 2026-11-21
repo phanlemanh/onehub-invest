@@ -96,3 +96,17 @@ Trục và ô lấy từ bảng phủ ca của design doc §2, số đếm thậ
     - 11 thẻ trợ lý lưu trước lời duyệt: #12209–#12219, lúc 00:10–00:11Z. Mạnh duyệt bù lúc 00:13:23Z, nguyên văn «Duyệt hết».
     - 94 thẻ trợ lý lưu sau lời duyệt, chia 9 lô: «Duyệt lô 2» đến «Duyệt lô 10», lúc 00:17:54, 00:19:30, 00:20:49, 00:23:28, 00:24:21, 00:25:22, 00:26:09, 00:27:11, 00:28:40Z. Mạnh không sửa thẻ nào trong các lô. Hai lời duyệt liền nhau cách 1–3 phút, mỗi lô khoảng 10 thẻ.
     - Trợ lý soạn lô từ 350 ký tự đầu chữ bài cùng thẻ nhóm; không mở ảnh, không đọc đầu ra đường ống.
+- **Đổi sau khi thấy số (vòng 1 AC-9, 21/11).** Vòng 1 trên lát `hai-khu-ghep-b`: n1 109/110 (cận dưới Wilson 0,9503, đạt),
+  n2 108/110 (0,9361, hụt). Theo lối ra đã chốt (d-20261118T080511Z-35), n2 sang vòng 2, hạn 27/11; kết quả vòng 1 giữ nguyên, không
+  xoá, không thay. Đã đổi sau khi thấy số, GS duyệt 21/11, chữ AC-9 và chữ `expected` của E9 không đổi (0,95, đủ 110 bài mỗi nhóm, khác
+  bản đóng băng một bài là đỏ):
+  - Luật gắn (`pipeline/lib/ghep-tin-danh-muc.mjs`): bài rao nhiều căn không gắn ở mọi nguồn, đọc trên chữ còn dấu, số căn có chữ chỉ
+    lượng đứng trước; tên dài nhất thắng, chữ «The» đầu tên được bỏ khi tên trần không thuộc nút khác. Vì: hai bài n2/F sai ở vòng 1
+    (#12274 «Beverly Solari» gắn The Beverly, #12295 «LBV – MCP sẵn 8 căn» trái d-20261118T080151Z-27). Trên 220 bài đóng băng chỉ hai
+    bài này đổi; bảng tin đổi gắn trên toàn bộ tin: `vong-2-doi-gan.md`.
+  - Lệnh chấm và `probes/cham-tap-test.sh`: n1 chấm lát `-b` trên bản chép DB `oneinvest_p4_pl20_cham` (dựng 06:21Z 21/11, sau khi GS
+    sửa thẻ #12245 theo lời Mạnh; băm danh bạ `7157d5db91f39df124317ac964aaf880`), n2 chấm lát mới `hai-khu-ghep-c` trên DB hiện hành;
+    mỗi lát so đầu ra mã cuối với tệp đóng băng của chính nó. Vì: mã vòng 2 đổi đầu ra hai bài n2 của lát `-b`, và DA51 sắp đổi danh bạ
+    trên DB máy thu; so cả 220 bài với bản cũ thì E9 đỏ vì việc đã duyệt chứ không vì máy sai.
+  - Thẻ #12245 (n1): GS sửa theo lời Mạnh 06:17:38Z 21/11 («s1» → «the sapphire 1»), không thuộc nhóm lưu trước hay sau duyệt lô; khâu
+    tỉ lệ sửa nháp tính nó là «GS sửa theo lời Mạnh», không phải Mạnh sửa nháp.

@@ -78,3 +78,21 @@ test("dong-bang-doi-mot-nut-thi-doi-bam", () => {
   const b = dongBangMau(m.map((x, i) => (i ? x : { ...x, k: "bld_khac" })), "s");
   assert.notEqual(a.sha256, b.sha256);
 });
+
+// Vòng 2 AC-9: lát mới chỉ cho nhóm hụt, bỏ bài của các lát trước, tệp mang tên lát và sha mã.
+test("vong-2-chi-rut-nhom-n2-va-bo-bai-lat-cu", () => {
+  const { vao, kq } = duLieu({ A: 200, C: 120, F: 120 });
+  const cu = rutMau(vao, kq, { seed: "s" }).mau.filter((x) => x.stratum === "n2").map((x) => x.ref_id);
+  const r = rutMau(vao, kq, { seed: "s2", nhom: ["n2"], boBai: new Set(cu) });
+  assert.equal(r.mau.length, 110);
+  assert.ok(r.mau.every((x) => x.stratum === "n2"), "chỉ nhóm n2");
+  assert.ok(r.mau.every((x) => !cu.includes(x.ref_id)), "không lấy lại bài của lát cũ");
+  assert.deepEqual(Object.keys(r.tong_the), ["n2"]);
+});
+test("vong-2-tep-dong-bang-mang-lat-va-sha-ma-ma-bam-chi-theo-dong", () => {
+  const { vao, kq } = duLieu({ F: 3 });
+  const m = rutMau(vao, kq, { seed: "s", co: 3, nhom: ["n2"] }).mau;
+  const a = dongBangMau(m, "s", { lat: "hai-khu-ghep-c", ma: "abc" });
+  assert.equal(a.lat, "hai-khu-ghep-c"); assert.equal(a.ma, "abc");
+  assert.equal(a.sha256, dongBangMau(m, "s").sha256, "sha mã không vào băm đầu ra");
+});
