@@ -5,7 +5,7 @@ slug: phuong-tu-du-an-chay-that
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, db]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-19-phuong-tu-du-an-chay-that-design.md
 veto_state:
 veto_opened_at:
@@ -108,3 +108,10 @@ Hợp đồng DA9 ghi lượt ghi thật cần lời riêng của Mạnh; hàng 
 - Ngoài-4 (máy định tuyến 2026-11-20, đề xuất S4 known-limits): Một bài kiểm thử có thể báo xanh vì chuỗi gãy sớm chứ không phải vì lỗi khoá như tên ca nói. Chuỗi nạp chạy thật không bị ảnh hưởng. — `scripts/phuong-tu-du-an-chuoi.test.mjs`
 - Ngoài-5 (máy định tuyến 2026-11-20, đề xuất S4 known-limits): Bài kiểm thử chưa xác nhận hai bước cuối của lượt 00:00 vẫn chạy khi một bước giữa lỗi. Nếu sau này có người sửa chuỗi làm hai bước ấy bị bỏ thì bài kiểm thử sẽ không phát hiện. — `scripts/phuong-tu-du-an-chuoi.test.mjs`
 - Ngoài-6 (máy định tuyến 2026-11-20, đề xuất S4 known-limits): Bài kiểm thử về việc lượt nhanh bỏ qua khi có phiên khác giữ khoá chỉ chạy trên một kho dựng tay đơn giản, nên chưa chứng minh cho đường chạy hằng ngày sau lượt áp đầu. Hành vi thật chưa thấy sai. — `scripts/phuong-tu-du-an-chuoi.test.mjs`
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-21:
+  - Ngoài-1: Bài kiểm thử trên DB thử chặn DB bằng danh sách cấm thay vì danh sách cho phép, nên chạy sai môi trường có thể ghi thử vào kho khác.
+  - Ngoài-3: Bài kiểm thử lùi trùng lượt nạp có thể xanh mà phần xem lại trong giao dịch không thật sự chạy.
+  - Ngoài-4: Bài kiểm thử lượt 00:00 báo lỗi khoá có thể xanh vì chuỗi gãy sớm chứ không vì lỗi khoá.
+  - Ngoài-5: Bài kiểm thử chưa xác nhận hai bước cuối của lượt 00:00 vẫn chạy khi một bước giữa lỗi.
+  - Ngoài-6: Bài kiểm thử lượt nhanh bỏ qua khi có khoá chỉ chạy trên kho dựng tay, chưa phủ đường chạy sau lượt áp đầu.
+- Ngoài-2 mở hợp đồng mới (Mạnh, Cổng Bằng chứng 2026-11-21): chuỗi tự tắt im lặng khi một lượt rút sạch phát biểu — hàng riêng ghi công tắc «đã áp» bằng dòng nhật ký và cảnh báo khi rút sạch.
