@@ -50,7 +50,7 @@ export function kiemMappings(mappingsText, sql) {
  * Ném khi script đêm không có đúng một bước transform-media cho nguồn, đứng ngay sau bước transform của nguồn.
  * Bước gọi qua `job_run` hoặc `buoc` (zalo-import-daily: `buoc` chia lượt nhanh/lượt đủ, hàng s03-len-nhanh-nac-1).
  */
-export function kiemBuocDem(script, ten, { job, transform, nguon }) {
+export function kiemBuocDem(script, ten, { job, transform, nguon, chen = null }) {
   const dong = script.split("\n");
   const goi = (l) => /^(job_run|buoc) /.exec(l)?.[1];
   const media = dong.flatMap((l, i) => (/\btransform-media\b/.test(l) && goi(l) ? [i] : []));
@@ -58,12 +58,22 @@ export function kiemBuocDem(script, ten, { job, transform, nguon }) {
   const g = goi(dong[media[0]]);
   const mong = `${g} ${job} transform-media node "$ROOT/pipeline/transform-media.mjs" ${nguon}`;
   if (dong[media[0]] !== mong) throw new Error(`${ten}: bước media phải là «${mong}»`);
-  if (!dong[media[0] - 1]?.startsWith(`${g} ${job} ${transform} `)) throw new Error(`${ten}: bước media phải đứng ngay sau ${transform}`);
+  // `chen` (DA45, AC-1 ký 19/11): đúng MỘT bước tên ấy được đứng giữa transform và media — bước lạ, hai bước, hay đảo thứ tự vẫn đỏ.
+  let truoc = media[0] - 1;
+  if (chen) {
+    // bước khai chen có mặt đúng một lần trong script, và đúng ở chỗ liền trước media
+    const viTri = dong.flatMap((l, i) => (l.startsWith(`${g} ${job} ${chen} `) ? [i] : []));
+    if (viTri.length !== 1 || viTri[0] !== truoc) truoc = -1;
+    else truoc -= 1;
+  }
+  if (!dong[truoc]?.startsWith(`${g} ${job} ${transform} `)) {
+    throw new Error(`${ten}: bước media phải đứng ngay sau ${transform}${chen ? ` (hoặc sau đúng một bước ${chen} liền sau ${transform})` : ""}`);
+  }
 }
 
 const DEM = [
   ["scripts/chotot-daily.sh", { job: "chotot-daily", transform: "transform-chotot", nguon: "S06" }],
-  ["scripts/zalo-import-daily.sh", { job: "zalo-import-daily", transform: "transform-zalo", nguon: "S03 S05" }],
+  ["scripts/zalo-import-daily.sh", { job: "zalo-import-daily", transform: "transform-zalo", nguon: "S03 S05", chen: "phuong-tu-du-an" }],
 ];
 
 test("NH-AC-1 mappings khai bảng media", () => {
@@ -86,4 +96,26 @@ test("NH-AC-10 chạy hằng đêm", () => {
   const dir = mkdtempSync(path.join(tmpdir(), "nh1-dem-"));
   writeFileSync(path.join(dir, "chotot-daily.sh"), l.join("\n"));
   assert.throws(() => kiemBuocDem(readFileSync(path.join(dir, "chotot-daily.sh"), "utf8"), rel, kv), /scripts\/chotot-daily\.sh: bước media phải đứng ngay sau transform-chotot/);
+});
+
+test("NH-AC-10 bước chen giữa (DA45): đúng một bước phuong-tu-du-an được nhận; bước lạ, hai bước, đảo thứ tự đều đỏ", () => {
+  const [rel, kv] = DEM[1];
+  const goc = doc(rel);
+  kiemBuocDem(goc, rel, kv);
+  const l = goc.split("\n");
+  const iP = l.findIndex((x) => x.startsWith("buoc zalo-import-daily phuong-tu-du-an "));
+  const iT = iP - 1;
+  assert.ok(l[iT].startsWith("buoc zalo-import-daily transform-zalo "), "bản gốc: phuong-tu-du-an liền sau transform-zalo");
+  const sua = (f) => { const x = [...l]; f(x); return x.join("\n"); };
+  const loi = /scripts\/zalo-import-daily\.sh: bước media phải đứng ngay sau transform-zalo/;
+  // 1) bước lạ thay chỗ phuong-tu-du-an
+  assert.throws(() => kiemBuocDem(sua((x) => { x[iP] = x[iP].replace("phuong-tu-du-an", "buoc-la"); }), rel, kv), loi);
+  // 2) hai bước chen giữa (thêm một bước lạ sau phuong-tu-du-an)
+  assert.throws(() => kiemBuocDem(sua((x) => { x.splice(iP + 1, 0, 'buoc zalo-import-daily buoc-la node "$ROOT/x.mjs"'); }), rel, kv), loi);
+  // 2b) hai bước phuong-tu-du-an
+  assert.throws(() => kiemBuocDem(sua((x) => { x.splice(iP, 0, x[iP]); }), rel, kv), loi);
+  // 3) đảo thứ tự: phuong-tu-du-an lên trước transform-zalo
+  assert.throws(() => kiemBuocDem(sua((x) => { [x[iT], x[iP]] = [x[iP], x[iT]]; }), rel, kv), loi);
+  // không khai `chen` (như chotot-daily) thì chính bước phuong-tu-du-an cũng đỏ
+  assert.throws(() => kiemBuocDem(goc, rel, { ...kv, chen: null }), loi);
 });

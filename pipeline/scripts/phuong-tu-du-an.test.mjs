@@ -47,7 +47,8 @@ async function banDot(tep, cu, moi) {
   const dich = join(dir, tep);
   const src = readFileSync(dich, "utf8");
   assert.ok(src.includes(cu), `đột biến rỗng: không thấy chuỗi «${cu.slice(0, 60)}» trong ${tep}`);
-  writeFileSync(dich, src.replace(cu, moi));
+  // replaceAll: chốt «đã áp» và ROLLBACK có hai chỗ từ S4-r2 (xem lại trong giao dịch sau khoá tư vấn) — đột biến phải gỡ cả hai
+  writeFileSync(dich, src.replaceAll(cu, moi));
   return {
     lenh: await import(pathToFileURL(join(dir, "scripts/phuong-tu-du-an.mjs")).href),
     ghiTin: (await import(pathToFileURL(join(dir, "lib/write-offers.mjs")).href)).writeOffers,
@@ -498,4 +499,37 @@ test("PTD-AC-8 chiều đỏ: bỏ ROLLBACK", { skip: BO_DB }, async () => {
   cli(urlCua(c), ["--ghi"], { PTD_LOI_SAU_LO: "1" }, lenhDot);
   await assert.rejects(async () => assert.deepEqual(await trangThai(c), t1, "PTD-AC-8 ghi dở khi lỗi giữa chừng"),
     /PTD-AC-8 ghi dở khi lỗi giữa chừng/);
+});
+
+// ---------- DA45 phuong-tu-du-an-chay-that: chốt --noi-tiep của chuỗi nạp (PCT-AC-2) ----------
+async function fxPct2(c) {
+  const D1 = await nut(c, "D1", [W("w1")]);
+  await duAn(c, "P1", D1);
+  await tin(c, "T-P1", ["P1"], TINH);
+  return { D1 };
+}
+async function kiemPct2(c, lenh = LENH) {
+  const { D1 } = await fxPct2(c);
+  const t0 = await trangThai(c);
+  const r = cli(urlCua(c), ["--ghi", "--noi-tiep"], {}, lenh);
+  assert.equal(r.status, 0, `PCT-AC-2 chưa áp lượt đầu phải thoát 0: ${r.stderr}`);
+  assert.deepEqual(await trangThai(c), t0, "PCT-AC-2 chuỗi tự ghi khi lượt đầu chưa áp");
+  assert.match(r.stdout, /chưa áp lượt đầu/, "PCT-AC-2 phải in «chưa áp lượt đầu»");
+  // đối chứng dương: lượt đầu áp tay, rồi bài mới đi qua chuỗi nhận phường
+  assert.equal(cli(urlCua(c), ["--ghi"], {}, lenh).status, 0);
+  assert.equal((await cot(c, "T-P1")).area_id, W("w1"), "PCT-AC-2 lượt đầu không cho phường");
+  await duAn(c, "P2", D1);
+  await tin(c, "T-P2", ["P2"], TINH);
+  const r2 = cli(urlCua(c), ["--ghi", "--noi-tiep"], {}, lenh);
+  assert.equal(r2.status, 0, r2.stderr);
+  assert.equal(cua(await dong(c), "P2").length, 1, "PCT-AC-2 đã áp mà bài mới không nhận phát biểu");
+  assert.equal((await cot(c, "T-P2")).area_id, W("w1"), "PCT-AC-2 đã áp mà tin mới không nhận phường");
+}
+test("PCT-AC-2 chuỗi không tự chạy lượt ghi đầu; đã áp thì bài mới nhận phường", { skip: BO_DB }, async () => {
+  await kiemPct2(await xoa());
+});
+test("PCT-AC-2 chiều đỏ: bỏ chốt lượt đầu", { skip: BO_DB }, async () => {
+  await banDot("scripts/phuong-tu-du-an.mjs", "if (!r.co) {", "if (false) {");
+  const lenhDot = join(tam.at(-1), "p", "scripts/phuong-tu-du-an.mjs");
+  await assert.rejects(kiemPct2(await xoa(), lenhDot), /PCT-AC-2 chuỗi tự ghi khi lượt đầu chưa áp/);
 });

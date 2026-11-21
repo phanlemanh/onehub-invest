@@ -1,0 +1,30 @@
+{
+  "feature_plain": "Tin rao S03 nhận phường của dự án mà tin thuộc về: lượt đầu áp tay có hồ sơ, sau đó mỗi lượt nạp tự làm cho tin mới.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ chạy bước suy phường ngay sau bước đọc tin S03 trong cả lượt nạp 15 phút lẫn lượt nửa đêm; bước này lỗi thì các bước sau vẫn chạy và lượt báo lỗi."},
+    {"id": "AC-2", "p": "Sẽ KHÔNG tự ghi gì khi lượt đầu chưa được áp tay: gộp PR xong, tin chưa đổi phường."},
+    {"id": "AC-3", "p": "Sẽ chạy lại mỗi lượt mà không thêm dòng trùng và không làm tin mất phường đã nhận."},
+    {"id": "AC-4", "p": "Sẽ cho tin mới thuộc dự án nằm trọn một phường có phường ngay trong lượt nạp của nó."},
+    {"id": "AC-5", "p": "Sẽ KHÔNG đổi phường của tin đã có phường; từng nhóm tin trong bảng phủ ca ra đúng kết quả đã viết trước."},
+    {"id": "AC-6", "p": "Sẽ có hồ sơ áp đủ năm thứ, và lùi xong thì tin về đúng như trước kể cả sau lượt nạp kế tiếp."},
+    {"id": "AC-7", "p": "Sẽ chạy xong trong 60 giây khi không có gì mới, và ghi số chạy thử để đối chiếu khi áp thật."},
+    {"id": "AC-8", "p": "Sẽ giữ mọi bộ test hiện có xanh."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "Không sửa ô «Có phường» trên màn: việc của hàng DF7, nên ô ấy chưa phản ánh số mới cho tới khi DF7 xong."},
+    {"id": "OOS-2", "p": "Không làm cho tin S05, S06: luật chỉ đọc dự án trên bài S03, còn S06 đã có phường ở 98% tin."},
+    {"id": "OOS-3", "p": "Không đưa phường ghi trên thẻ nhóm vào tin, trừ khi anh chọn khác ở Hỏi-3."},
+    {"id": "OOS-4", "p": "Không sửa hai migration 099 và 102 đã ký."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Đã đếm từ DB máy thu mọi tổ hợp: tin đang có phường, tỉnh hay trống × có một dự án, nhiều dự án hay không × thẻ nhóm trùng, khác hay không nói phường × lượt đầu, chạy lại, tin mới, lùi (AC-1…AC-7)."},
+    {"i": 1, "p": "Làm ngay AC-1…AC-7; để sau việc đưa phường của thẻ nhóm vào tin; không bao giờ đổi luật DA9 hay hai migration đã ký."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Bản nháp cũ để lượt nạp 15 phút tự ghi khoảng 75.000 dòng ngay sau khi gộp, trước cả bước sao lưu. Đã thêm chốt: chuỗi chỉ tự chạy sau khi lượt đầu được áp tay."},
+    {"i": 1, "p": "Cách lùi chưa chứng minh được là lượt nạp kế tiếp không ghi đè lại. Đã thêm phép đo chạy lại chuỗi sau khi lùi, và hồ sơ lùi kê cả hạng giá với bản trên cloud."},
+    {"i": 2, "p": "Nhóm 20 tin thẻ nói khác dự án và nhóm tin nhiều dự án chưa có phép đo riêng. Đã viết trước ma trận từng nhóm với kết quả mong đợi."},
+    {"i": 3, "p": "Phép đo cũ chạy bước suy phường đứng riêng, không qua bước đọc tin thật. Đã đổi sang chạy thật cả chuỗi, có giữ khoá thật ở phiên thứ hai."},
+    {"i": 4, "p": "Con số xong việc chưa có dung sai và cửa sổ 7 ngày bị trôi. Đã khai dung sai bằng số, ghim cửa sổ 13–19/11, và phép đo đọc tệp số chạy thử."}
+  ]
+}
