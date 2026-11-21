@@ -40,7 +40,7 @@ const modelLoi = (err: Error) =>
       throw err;
     },
   });
-const agent = (name: string): AgentConfig => ({ name, model: "qwen27b", systemPrompt: "thử", tools: {}, budget: 1 });
+const agent = (name: string): AgentConfig => ({ name, systemPrompt: "thử", tools: {}, budget: 1 });
 
 let db: pg.Client;
 // Hàm kiểm dùng chung cho ca thật và ca đối chứng — đối chứng chạy ĐÚNG hàm này trên vật hỏng.

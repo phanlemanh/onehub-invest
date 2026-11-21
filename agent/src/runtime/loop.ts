@@ -8,14 +8,15 @@ import { generateText, stepCountIs, type Tool, type LanguageModel } from "ai";
 import { writeFile, mkdir } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { offload } from "./context.js";
-import { getModel, qwenParams, type ModelName } from "./models.js";
+import { modelGateway, modelParams } from "./models.js";
+import { modelCuaAgent, tuyChonGateway } from "./model-agent.js";
 import { recordCallDb, soToken, tenLop, type RecordCall } from "./ai-call-log.js";
 
 export type AgentTool = Tool<Record<string, unknown>>;
 
+/** Model của agent KHÔNG khai ở đây: runAgent đọc agent/config/model-agent.json theo `name` (MH1, AC-2). */
 export type AgentConfig = {
   name: string;
-  model: ModelName;
   systemPrompt: string;
   tools: Record<string, AgentTool>;
   budget?: number; // max steps (default 8)
@@ -33,6 +34,9 @@ export type LoopResult = {
   steps: number;
   tracePath: string;
   toolCalls: { name: string; args: Record<string, unknown> }[];
+  /** Mã model đã gọi (mã Gateway khi lấy từ tệp cấu hình) và số token của lời gọi — để trần tiền và căn cứ đề xuất. */
+  model: string;
+  usage: { inputTokens: number | null; outputTokens: number | null };
 };
 
 export type LoopHooks = {
@@ -41,7 +45,7 @@ export type LoopHooks = {
   onToolResult?: (name: string, result: unknown) => void;
 };
 
-/** Phụ thuộc tiêm được (test): model thay cho getModel(config.model), writer sổ cuộc gọi AI thay cho ghi DB. */
+/** Phụ thuộc tiêm được (test): model thay cho model của tệp cấu hình, writer sổ cuộc gọi AI thay cho ghi DB. */
 export type LoopDeps = {
   model?: LanguageModel;
   recordCall?: RecordCall;
@@ -79,10 +83,12 @@ export async function runAgent(
   const budget = config.budget ?? 8;
   const trace: StepRecord[] = [];
   const toolCalls: { name: string; args: Record<string, unknown> }[] = [];
-  const model: LanguageModel = deps.model ?? getModel(config.model);
+  // Model từ tệp cấu hình theo tên agent; tệp sai hay agent thiếu khoá → LoiCauHinhModel trước lời gọi đầu (AC-2).
+  const cauHinh = deps.model ? null : modelCuaAgent(config.name);
+  const model: LanguageModel = deps.model ?? modelGateway(cauHinh!.gateway);
   const recordCall = deps.recordCall ?? recordCallDb;
-  // Tên model vào sổ: id thật của model (khớp bảng giá ai_model_prices), không phải bí danh ModelName.
-  const modelId = typeof model === "string" ? model : (model as { modelId?: string }).modelId ?? config.model;
+  // Tên model vào sổ: id thật của model (mã Gateway, khớp bảng giá ai_model_prices).
+  const modelId = typeof model === "string" ? model : (model as { modelId?: string }).modelId ?? cauHinh?.gateway ?? "?";
   const tracePath = tracePathFor(config.name);
   const t0 = performance.now();
 
@@ -94,7 +100,7 @@ export async function runAgent(
     type: "model",
     data: {
       agent: config.name,
-      model: config.model,
+      model: modelId,
       budget,
       tools: toolNames,
       inputLength: input.length,
@@ -111,7 +117,9 @@ export async function runAgent(
       prompt: input,
       tools: config.tools,
       stopWhen: stepCountIs(budget),
-      ...qwenParams,
+      ...modelParams,
+      // Cờ Gateway không giữ dữ liệu, không huấn luyện — cùng hàm tuyChonGui của PL30 (AC-3).
+      ...(cauHinh ? { providerOptions: tuyChonGateway(cauHinh.gateway) } : {}),
       // AI SDK 7: mỗi bước mang cả mảng toolCalls / toolResults (không còn stepType/toolName/toolArgs của bản cũ).
       onStepFinish: ({ toolCalls: calls, toolResults }) => {
         const stepNum = trace.filter((t) => t.type === "model").length;
@@ -188,6 +196,8 @@ export async function runAgent(
       steps: result.steps?.length ?? 0,
       tracePath,
       toolCalls: finalToolCalls.length > 0 ? finalToolCalls : toolCalls,
+      model: modelId,
+      usage: { inputTokens, outputTokens },
     };
   } catch (err) {
     trace.push({
