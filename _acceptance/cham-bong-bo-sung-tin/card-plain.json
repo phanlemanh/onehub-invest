@@ -1,0 +1,44 @@
+{
+  "feature_plain": "Cho mỗi thẻ «Bổ sung tin» còn đề xuất, hai model đọc lại bài gốc độc lập, máy so với đề xuất bằng luật cố định và đánh dấu thẻ nào phải lên người — không ghi gì vào tin, không đóng thẻ.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ cho 786 thẻ còn đề xuất mỗi thẻ hai lần đọc của hai model khác nhau (Haiku và DeepSeek nếu anh duyệt Hỏi-1); thẻ «Để sau» không đọc."},
+    {"id": "AC-4", "p": "Sẽ xếp mỗi đề xuất vào: khớp (hai lần đọc cùng ra đúng đề xuất) hay ca biên (bỏ trống, hai lần đọc lệch nhau, hai lần đọc cùng bác, hoặc thẻ có hai giá trị cho một ô)."},
+    {"id": "AC-5", "p": "Sẽ để nguyên mọi dòng tin, đề xuất, thẻ duyệt — thước băm trọn bảng trước và sau mỗi lượt."},
+    {"id": "AC-6", "p": "Sẽ ghi một dòng sổ gọi AI cho mỗi lời gọi model, kể cả lời gọi lỗi."},
+    {"id": "AC-7", "p": "Sẽ không gọi lại model cho thẻ đã đọc xong; lượt bị lỗi hay dừng giữa chừng chạy tiếp được mà không tốn lại."},
+    {"id": "AC-8", "p": "Sẽ dừng trước lời gọi làm vượt trần tiền của lượt, và chấm thẻ có ô số WC, phòng ngủ trước."},
+    {"id": "AC-9", "p": "Sẽ in bảng số ca biên theo ô và nguồn, số thẻ đủ hai lần đọc trên tổng, lời gọi lỗi tách riêng, và tiền đã tiêu."},
+    {"id": "AC-10", "p": "Sẽ kê 232 thẻ không còn đề xuất theo lý do, kèm lệnh đếm lại; không đóng thẻ nào."}
+  ],
+  "wont_do": [
+    {"id": "AC-2", "p": "Sẽ KHÔNG cho model thấy giá trị đề xuất hay kết quả của lần đọc kia; model đọc bài gốc đầy đủ, không phải bản cắt 300 ký tự trên thẻ."},
+    {"id": "AC-3", "p": "Chặn kết quả có trích không có trong bài, loại hình lạ hay số phòng không phải số — tính như model bỏ trống."},
+    {"id": "OOS-1", "p": "Không chấp thuận, bác, đóng thẻ hay áp đề xuất nào — đó là NB5 và người."},
+    {"id": "OOS-2", "p": "Không dựng bảng lô hay nút chấp thuận lô ở Hàng duyệt (NB5)."},
+    {"id": "OOS-3", "p": "Chưa bắt ca toà chưa có trong danh bạ (B3) và ca nối, tách danh bạ (B4)."},
+    {"id": "OOS-4", "p": "Không xử lý 232 thẻ không còn đề xuất — chỉ kê."},
+    {"id": "OOS-5", "p": "Không thêm bảng DB cho kết quả (nếu anh chọn tệp ở Hỏi-3)."},
+    {"id": "OOS-6", "p": "Không làm thẻ cài lỗi (NB7) hay xuất xứ nhãn (NB2)."}
+  ],
+  "scope_plain": "Hàng chỉ chấm bóng; mọi quyết trên thẻ để lại cho NB5 và người.",
+  "coverage_plain": [
+    {"i": 0, "p": "Độ phủ đếm trên DB máy thu 21/11, chín trục; mỗi giá trị có ít nhất một tiêu chí hoặc một dòng ngoài phạm vi."},
+    {"i": 2, "p": "Năm ô: loại hình 597, số WC 220, toà 178, phòng ngủ 67, đường 16 đề xuất — AC-1, AC-4, AC-9."},
+    {"i": 3, "p": "Hai nguồn đề xuất: model 986, luật 92 — báo cáo tách theo nguồn (AC-9)."},
+    {"i": 4, "p": "Thẻ chờ còn đề xuất 786, «Để sau» 4 (không đọc), chờ không đề xuất 232 (chỉ kê) — AC-1, AC-10."},
+    {"i": 5, "p": "Mọi kết cục hai lần đọc: khớp, rỗng (thật, trích giả, loại lạ, không phải số), lệch nhau, cùng bác — AC-3, AC-4."},
+    {"i": 6, "p": "94 thẻ có hai giá trị cho cùng ô — cờ ca biên (AC-4)."},
+    {"i": 7, "p": "Ô tin đã có giá trị quan sát (phòng ngủ 59, toà 25, loại hình 4): nhãn «ô đã có», áp sẽ bị bỏ qua — AC-4."},
+    {"i": 8, "p": "Bài S03 768 thẻ, S05 18 thẻ, đọc bài gốc đầy đủ — AC-1, AC-2."},
+    {"i": 9, "p": "Lỗi model, vượt trần, chạy lại — AC-5 đến AC-8."},
+    {"i": 10, "p": "Thứ được ghi: chỉ sổ gọi AI; tin, đề xuất, thẻ không đổi — AC-5, AC-6."},
+    {"i": 11, "p": "Ai đọc đầu ra: NB5 (bảng lô, mẫu 75 thẻ), anh ở bảng lô, lệnh đếm của NB3."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Cách «đọc mù» được ghi là máy quyết, nhưng khung chưa chọn nó — đã chuyển thành Hỏi-4 cho anh."},
+    {"i": 1, "p": "Thiết kế và phép đo lệch nhau về một lời gọi là một thẻ hay một đề xuất — đã chốt một thẻ × một model (1.572 lời gọi)."},
+    {"i": 2, "p": "Thước «không ghi tin» chỉ xem vài cột và bỏ sót bảng phát biểu — đã đổi sang băm trọn mọi bảng ở cả chế độ thử và áp."},
+    {"i": 3, "p": "Lời gọi lỗi có thể bị đếm như model bỏ trống và không được chạy lại — đã tách cột lỗi, chạy lại đúng phần lỗi."},
+    {"i": 4, "p": "Thước «lời nhắc không lộ đề xuất» sẽ đỏ oan vì bài gốc có sẵn giá trị — đã đo phần ngoài khối bài, thêm thẻ canh."}
+  ]
+}
