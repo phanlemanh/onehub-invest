@@ -4,13 +4,15 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { spawn } from "node:child_process";
+import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import pg from "pg";
 
 import { chonMauPhanTang, layMau, LAT_PHAN_TANG } from "../label-sample.mjs";
-import { napPhatBieu } from "../lib/nap-045.mjs";
+import { moGiaoDichGiuKhoa, napPhatBieu } from "../lib/nap-045.mjs";
 import { loadStgPosts } from "../lib/test-posts.mjs";
 import { parsePost, runTransformZalo, tangLoai } from "../transform-zalo.mjs";
 
@@ -104,13 +106,12 @@ describe("SLT-AC-9 sàn giá bán (thuần)", () => {
   });
 });
 
-// ---- DB máy thu: BEGIN … ROLLBACK ----
-async function withTx(fn) {
-  const c = new pg.Client({ connectionString: DB_URL });
-  await c.connect();
+// ---- DB của lượt (db-thu.sh) hay DB máy thu: BEGIN … ROLLBACK ----
+// Giao dịch mở bằng moGiaoDichGiuKhoa (lib/nap-045.mjs): hết trần ca thì phiên bị cắt, 33033 nhả ngay; transaction_timeout là
+// lưới phía máy chủ (hồ sơ slt-dc-cham-va-giu-khoa-33033). Đo 20/11 trước hồ sơ: ca 10 chờ ca 7/9 đã hết trần 24′.
+async function withTx(fn, { signal, tranGiay } = {}) {
+  const { c, dong } = await moGiaoDichGiuKhoa(pg, DB_URL, { signal, tranGiay });
   try {
-    await c.query("BEGIN");
-    await c.query("SELECT pg_advisory_xact_lock(33033)"); // cùng khoá với các test transform S03/S05
     if (!(await c.query(`SELECT to_regclass('sale_offer_records') IS NOT NULL AS ok`)).rows[0].ok) await c.query(MIG_044);
     await napPhatBieu(c);
     await c.query(
@@ -118,10 +119,101 @@ async function withTx(fn) {
        ON CONFLICT (snapshot_id) DO NOTHING`, [SNAP]);
     return await fn(c);
   } finally {
-    await c.query("ROLLBACK").catch(() => {});
-    await c.end();
+    await dong();
   }
 }
+
+/** Lưới phía máy chủ của giao dịch ĐANG MỞ `c`: transaction_timeout phải bằng trần ca + 30 s (gọi trong chính ca 7/9, ca 10). */
+async function kiemLuoi(c, tranGiay, ten) {
+  const v = (await c.query("SHOW transaction_timeout")).rows[0].transaction_timeout;
+  console.log(`SLT-DC-KHOA lưới máy chủ (${ten}): trần ${tranGiay} s → transaction_timeout ${v}`);
+  if (v !== `${tranGiay + 30}s`) throw new Error(`SLT-DC-KHOA lưới máy chủ lệch (${ten}): trần ${tranGiay} s mà transaction_timeout ${v}`);
+}
+
+/** Khoá 33033 có rảnh trong `giay` giây không (thử từ một kết nối riêng, mỗi 200 ms). */
+async function khoaRanhTrong(giay) {
+  const k = new pg.Client({ connectionString: DB_URL });
+  await k.connect();
+  try {
+    const het = Date.now() + giay * 1000;
+    do {
+      await k.query("BEGIN");
+      const { rows } = await k.query("SELECT pg_try_advisory_xact_lock(33033) AS ok");
+      await k.query("ROLLBACK");
+      if (rows[0].ok) return true;
+      await new Promise((r) => setTimeout(r, 200));
+    } while (Date.now() < het);
+    return false;
+  } finally { await k.end(); }
+}
+
+/** Mở withTx giữ 33033 rồi ngủ 7 s; huỷ `signal` sau khi khoá đã giữ; báo khoá có rảnh trong 5 s không. */
+async function kiemNhaKhoa(truyenSignal) {
+  const ac = new AbortController();
+  let daGiu;
+  const giu = new Promise((r) => { daGiu = r; });
+  const chay = withTx(async (c) => { daGiu(); await c.query("SELECT pg_sleep(7)"); },
+    { signal: truyenSignal ? ac.signal : undefined, tranGiay: 60 }).catch((e) => e);
+  await giu;
+  ac.abort();
+  const ranh = await khoaRanhTrong(5);
+  const loi = await chay; // bản lành: câu ngủ bị cắt (lỗi); bản phá: ngủ hết 7 s rồi ROLLBACK
+  if (!ranh) throw new Error("SLT-DC-KHOA 33033 vẫn bị giữ 5 s sau khi ca hết trần");
+  return loi;
+}
+
+/** Chạy một tệp test tạm có ca trần 2 s ngủ 12 s trong giao dịch giữ 33033 (node:test tự hết trần, không abort tay); trả số
+ * giây từ lúc ca hết trần tới khi 33033 rảnh, hoặc null nếu 8 s sau vẫn bị giữ. `truyenSignal=false` là bản trước hồ sơ. */
+async function doHetTranThat(truyenSignal) {
+  const dir = mkdtempSync(path.join(PIPE, "scripts", ".slt-dc-khoa-"));
+  const f = path.join(dir, "khoa.test.mjs");
+  const nap = pathToFileURL(path.join(PIPE, "lib/nap-045.mjs")).href;
+  writeFileSync(f, `import { test } from "node:test";
+import pg from ${JSON.stringify(createRequire(path.join(PIPE, "package.json")).resolve("pg"))};
+import { moGiaoDichGiuKhoa } from ${JSON.stringify(nap)};
+test("ca trần 2 s", { timeout: 2000 }, async (t) => {
+  const { c, dong } = await moGiaoDichGiuKhoa(pg.default ?? pg, process.env.DATABASE_URL, ${truyenSignal ? "{ signal: t.signal, tranGiay: 2 }" : "{}"});
+  try { await c.query("SELECT pg_sleep(12)"); } finally { await dong(); }
+});
+`);
+  // Bỏ NODE_TEST_CONTEXT của bộ chạy cha: còn biến này thì `node --test` con chờ giao thức của cha, không chạy ca.
+  const { NODE_TEST_CONTEXT: _bo, ...env } = process.env;
+  const con = spawn(process.execPath, ["--test", f], { env: { ...env, DATABASE_URL: DB_URL }, stdio: "ignore" });
+  try {
+    // chờ khoá bị giữ (ca đã vào giao dịch), rồi đo từ mốc hết trần
+    const t0 = Date.now();
+    while (await khoaRanhTrong(0)) { if (Date.now() - t0 > 15_000) throw new Error("SLT-DC-KHOA tệp tạm không giữ được 33033"); await new Promise((r) => setTimeout(r, 100)); }
+    const mocGiu = Date.now();
+    await new Promise((r) => setTimeout(r, 2000)); // trần của ca
+    return (await khoaRanhTrong(8)) ? (Date.now() - mocGiu - 2000) / 1000 : null;
+  } finally {
+    con.kill("SIGKILL");
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+describe("SLT-DC-KHOA ca hết trần nhả khoá 33033", () => {
+  test(`SLT-DC-KHOA hết trần thật (node:test tự huỷ, ${process.version}) → 33033 rảnh trong 8 s`, { timeout: 60_000 }, async () => {
+    const giay = await doHetTranThat(true);
+    assert.ok(giay !== null, "SLT-DC-KHOA hết trần thật: 33033 vẫn bị giữ 8 s sau khi ca hết trần");
+    console.log(`SLT-DC-KHOA hết trần thật: 33033 rảnh sau ${giay.toFixed(1)} s`);
+  });
+  test("chiều đỏ SLT-DC-KHOA hết trần thật: không truyền signal → 33033 vẫn bị giữ", { timeout: 60_000 }, async () => {
+    assert.equal(await doHetTranThat(false), null, "SLT-DC-KHOA chiều đỏ: bản không signal mà khoá vẫn rảnh — thước không phân biệt");
+  });
+  test("chiều đỏ SLT-DC-KHOA lưới máy chủ: giao dịch mở không khai trần → kiemLuoi đỏ ghim «SLT-DC-KHOA lưới máy chủ lệch»", { timeout: 60_000 }, async () => {
+    const { c, dong } = await moGiaoDichGiuKhoa(pg, DB_URL, {});
+    try { await assert.rejects(() => kiemLuoi(c, TRAN_79 / 1000, "bản không khai trần"), /SLT-DC-KHOA lưới máy chủ lệch/); }
+    finally { await dong(); }
+  });
+  test("SLT-DC-KHOA huỷ signal của ca → khoá 33033 rảnh trong 5 s, câu đang chạy bị cắt", { timeout: 60_000 }, async () => {
+    const loi = await kiemNhaKhoa(true);
+    assert.ok(loi instanceof Error, "SLT-DC-KHOA đối chứng: câu ngủ của ca không bị cắt");
+  });
+  test("chiều đỏ SLT-DC-KHOA: không truyền signal (như trước hồ sơ) → đỏ ghim «SLT-DC-KHOA 33033 vẫn bị giữ»", { timeout: 60_000 }, async () => {
+    await assert.rejects(() => kiemNhaKhoa(false), /SLT-DC-KHOA 33033 vẫn bị giữ/);
+  });
+});
 
 /** Tập Yêu cầu mẫu viết tay: có giá, PN, có cả tín hiệu bán — vẫn không được thành tin rao. */
 const YEU_CAU_MAU = [
@@ -189,9 +281,16 @@ function demNhomLech(nhom, chuCua) {
   return lech;
 }
 
+// Trần ca theo thời gian đo (20/11, DB của lượt, sau khi bỏ câu rút bậc hai): máy yên ca 7/9 232 s, ca 10 24 s, cả tệp 278 s;
+// máy đang chạy lượt chấm song song ca 7/9 337 s, ca 10 52 s. Trần ≈ 1,4–2 lần số đo khi có tải. Hết trần thì withTx cắt phiên
+// của ca: khoá 33033 không bị giữ quá trần (hồ sơ slt-dc-cham-va-giu-khoa-33033).
+const TRAN_79 = 480_000;
+const TRAN_10 = 120_000;
+
 describe("SLT-DC đối chiếu trên DB máy thu (ROLLBACK)", () => {
-  test("SLT-DC-7, SLT-DC-9: tắt rồi bật suy loại, rồi tắt lại — cùng một transaction", { timeout: 1_200_000 }, async (t) => {
+  test("SLT-DC-7, SLT-DC-9: tắt rồi bật suy loại, rồi tắt lại — cùng một transaction", { timeout: TRAN_79 }, async (t) => {
     await withTx(async (c) => {
+      await kiemLuoi(c, TRAN_79 / 1000, "ca 7/9");
       const ycIds = await chenYeuCau(c);
       await chenThueTy(c);
       const { posts } = await loadStgPosts(c, "zalo");
@@ -244,11 +343,12 @@ describe("SLT-DC đối chiếu trên DB máy thu (ROLLBACK)", () => {
         // Đối chứng dương (bỏ đối soát = đọc cả tin đã rút): phải thấy các tin lượt bật đã tạo.
         assert.ok(banGhi >= 1, "SLT-DC-9 đối chứng dương: không tin suy loại nào được tạo ở lượt bật");
       });
-    });
+    }, { signal: t.signal, tranGiay: TRAN_79 / 1000 });
   });
 
-  test("SLT-DC-10 lát s03-loai-tin: lần một thêm n, lần hai cùng seed thêm 0, --thu thêm 0", { timeout: 600_000 }, async () => {
+  test("SLT-DC-10 lát s03-loai-tin: lần một thêm n, lần hai cùng seed thêm 0, --thu thêm 0", { timeout: TRAN_10 }, async (t) => {
     await withTx(async (c) => {
+      await kiemLuoi(c, TRAN_10 / 1000, "ca 10");
       const co = { lat: "s03-loai-tin", n: 30, seed: "slt-dc-10", nhom: null, trongGiaoDich: true };
       const { rows } = await c.query(`SELECT count(*)::int AS n FROM eval_label_items WHERE lat = $1`, [co.lat]);
       assert.equal(rows[0].n, 0, "SLT-DC-10 lát s03-loai-tin đã có dòng trên DB — đo lần một không sạch");
@@ -260,6 +360,6 @@ describe("SLT-DC đối chiếu trên DB máy thu (ROLLBACK)", () => {
       assert.equal(hai.them, 0, `SLT-DC-10 lần hai cùng seed thêm ${hai.them}`);
       assert.equal(thu.them, 0, `SLT-DC-10 --thu thêm ${thu.them}`);
       for (const t of TANGS) assert.equal(mot.moiTang[t].chon, co.n / 3, `SLT-DC-10 tầng ${t} chọn ${mot.moiTang[t].chon}`);
-    });
+    }, { signal: t.signal, tranGiay: TRAN_10 / 1000 });
   });
 });

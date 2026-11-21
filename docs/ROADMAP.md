@@ -167,6 +167,12 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   3166-2:VN cũ của tỉnh mang tên được giữ (Huế VN-26; bản chụp `pipeline/data/iso-3166-2-vn.json`); `buildings.iso_region` là khoá
   ngoại tới bảng, `upi` nhận mọi mã. Lệnh dựng suy ISO từ `area_ids` của khu, không đọc `meta.city` (ba khu Hưng Yên ghi `hanoi`);
   chưa áp 088 thì chỉ dựng lại khu đã có toà. Chủ đầu tư ghi `source_field` (tệp + băm). Chưa áp 088 lên máy thu.
+- Thuộc tính căn S16 trên Danh bạ Ops (DA40, `_acceptance/thuoc-tinh-can-s16`, migration 113 + 118, PR #491): bảng nạp
+  `stg_s16_can_chi_tiet` (DATA-CONTRACT v14, bộ nạp `pipeline/import-s16-chi-tiet.mjs`), `pipeline/scripts/thuoc-tinh-can-s16.mjs --ghi`
+  ghi phát biểu `source_field` cấp `Unit` (diện tích, PN, WC, hướng, loại hình, giá chủ đầu tư) cho căn danh bạ khớp mã căn S16; view
+  `v_unit_thuoc_tinh`, `v_s16_gia_cdt` (118 loại mã mơ hồ toà); trang `/ops/registry/<id>` hiện ô phủ «Căn có thuộc tính». **Đã áp
+  lên máy thu 19/11 15:30–15:52Z**: nạp 95.798, 441.193 phát biểu, 84.822 căn có thuộc tính / 111.331 căn có bí danh S16, khớp số đối
+  chiếu (nhật ký ở `docs/ops/nhat-ky-ap/2026-11-19-da40-thuoc-tinh-can-s16.md`). Không job đêm nào nạp lại hay ghi lại: lần thu S16 sau phải chạy tay. Chỉ local, không lên cloud.
 - Ngừng rao khi không thấy lại (V6, `_acceptance/tin-ngung-rao-khong-thay-lai`, migration 085, Q4 Mạnh 08/11): tin sống của S03,
   S05, S06 không thấy lại quá N = 21 ngày (`ngung_rao_sau_ngay`) trong khi nguồn vẫn thu thì nhận phát biểu `offer_status =
   withdrawn` lớp suy luận (`inferred`/`e1_rule`, `rule_id khong-thay-lai:<offer_id>`); đo tới mốc thu, không tới giờ chạy —
@@ -552,7 +558,8 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
       (Mạnh 06/11; tập test mù hoãn tới PL21 theo mục 32).
     - Hoãn và Không chắc không bắt lý do; đáp án hoặc chip tính là lý do. Hoàn tác 5 giây cho mọi hạng mục, kể cả Ghép căn.
     - Thẻ luật: quyết một lần cho cả loạt thẻ cùng căn cứ luật E1, kèm năm bài mẫu, có nhật ký và đảo được — là sửa luật
-      xác định (§1 luật 7), khác duyệt hàng loạt đã loại ở GD10.
+      xác định (§1 luật 7), khác duyệt hàng loạt đã loại ở GD10. *(Sửa 21/11: chấp thuận lô có điều kiện mở lại cho «Bổ
+      sung tin», và tập mở cổng PL21 đã chốt — xem mục 61.)*
     - Hàng tồn Bổ sung tin không trả lại hàng loạt: máy rút thẻ trùng giá trị đang lưu, phần còn lại duyệt tay.
     - Khuôn giao diện lấy từ ReUI (gói Pro), không tự vẽ. Hàng OD1–OD7; OD2–OD5 là nấc 1 của PL23.
 36. **S01 dừng sau nấc 1, thử lại theo lịch** (07/11, Mạnh «Dừng S01» rồi «duyệt lịch s01»): lượt 1 thu 40 căn, 12.410 đêm
@@ -939,6 +946,144 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
       EN4 `api-tra-ho-so-zalo`. Câu còn mở của Cổng Phạm vi EN4: API chạy ở đâu, ai gọi (ứng dụng trên cloud không được nhận
       ngày sinh, giới tính), thuộc cổng nào, xác thực thế nào — data-api công khai không hợp. Ngoài đường găng, sau các hàng
       MS3; dãy dự kiến U2 sau VHZ2.
+56. **Duyệt nối nguồn danh mục theo loại căn cứ, một lần; phân khu chỉ tự nhận khi khớp trọn 1–1** (19/11). Căn cứ: DA46
+    `noi-phan-khu-trung-s16`. Thẻ luật phân khu S16 số 2 (DA37) đúc 7 nút trùng nơi với phân khu đã có, kéo 50 toà khỏi nút cũ, vì
+    bước khớp chỉ so tên. So tập toà S16 với S09 trên 61 khu (DB máy thu, chỉ đọc): 11 khu khớp 1–1, 3 khu chứa trọn nhiều nút, 0
+    khu chồng chéo, 47 khu không có toà chung. Mỗi nguồn mới đang tốn 6–7 hàng việc; S07, S11 và S12–S15 còn ở phía trước.
+    - **Câu đã trình** (phiên P2, trả lời lời Mạnh 02:08Z «khi bổ sung một nguồn có thể pipeline tự giải quyết được»), khuyến nghị
+      đồng ý cả hai:
+      - *Luật cho DA46:* «Khu chỉ tự nhận nút cũ khi toà khớp trọn 1–1 và có ít nhất 3 toà chung, các ca khác chỉ cảnh báo.»
+      - *Cách duyệt tự động:* «hiện thẻ luật duyệt theo từng nguồn (chốt 11/11). Muốn nguồn mới tự chạy, anh duyệt theo từng loại
+        căn cứ một lần, sau đó nguồn mới đạt ngưỡng chạy bóng thì được áp luôn.»
+    - **Lời Mạnh:** «Theo khuyến nghị» (phiên P2, 2026-11-19T02:21:44Z).
+    - **Quyết định 1, luật tự nhận phân khu.** Khu S16 chỉ tự nhận phân khu đã có khi: mọi toà có S09 của khu về một nút, nút đó
+      không nhận toà từ khu S16 khác, có ít nhất 3 toà chung, và ít nhất một nửa số toà của khu có S09. Ca có bằng chứng mà không
+      đạt thì giữ luật so tên và hiện cảnh báo trên thẻ luật. Phân khu trùng giữ nút cũ (rào chỉ-thêm 082 không cho đổi cột vùng của
+      toà), tên S16 thành bí danh của nút đó; tên hiển thị của nút chưa đổi. **Sửa mục 54 Q-C** ở chiều nút giữ lại.
+    - **Quyết định 2, duyệt theo loại căn cứ.** Mạnh duyệt mỗi loại căn cứ một lần, không duyệt lại cho từng nguồn. Nguồn mới đạt
+      ngưỡng ở lượt chạy bóng thì được áp theo căn cứ đã duyệt. **Sửa mục 44 Hỏi-1** («thẻ luật theo nguồn»).
+    - **Phạm vi áp dụng** của quyết định 2:
+      - *Loại căn cứ:* các căn cứ đang đi thẻ luật ở mô hình 11/11 §1.2 (K1, K2, K3, K5), căn cứ nhận nút ứng viên của Hỏi-1, và tập
+        toà chung khớp trọn 1–1 ở cấp phân khu.
+      - *Nguồn:* các nguồn danh mục đi qua khuôn chung bản ghi nguồn (S07, S08, S09, S10, S11 đến S16).
+      - *Hiệu lực:* chưa loại căn cứ nào được duyệt theo cách mới và chưa có bước chạy bóng. Cho tới khi Mạnh chốt ngưỡng, nguồn
+        mới vẫn đi thẻ luật như cũ. Việc nối 7 cặp của DA46 vẫn cần chữ ký riêng kèm băm thẻ nối.
+    - **Không đổi:**
+      - Mỗi loại căn cứ vẫn do Mạnh xem mẫu và duyệt lần đầu.
+      - Mẫu soát 20 cặp mỗi tuần chỉ để thấy trôi, không mở cổng tự nối (FRAMING §5).
+      - K4 và ca khó vẫn lên thẻ từng cặp; không nối khi lệch tỉnh.
+      - Lời khai từ tin (mã dự án S06, nhóm S03, tên trên tin) không thuộc phạm vi, vẫn đi DA7 và DA18.
+      - S16 thắng về cấu trúc (mục 54 Q-B). Giá, pháp lý, chủ đầu tư, tiến độ lệch vẫn lên thẻ.
+      - LLM không quyết định ghi dữ liệu (luật 7). Điều kiện lên Invest của mục 39 giữ nguyên.
+    - **Câu còn mở**, trình ở Cổng Phạm vi của hàng đầu tiên thuộc lớp hợp nhất nguồn: ngưỡng tự áp cho mỗi căn cứ; phần trùng với danh
+      bạ đã xác nhận có được làm tập đối chiếu không (đụng FRAMING §5); quan hệ cha–con do máy suy có qua thẻ luật lần đầu không.
+58. **Đo nguồn không phải tin: hai họ nguồn, thẻ nguồn kho năm trục** (20/11; số 57 dành cho hàng GT9 đang mở). Căn cứ:
+    bản soát nguồn và đồng bộ trên Ops ngày 20/11 (11 phát hiện L1–L11). Gốc của chỗ «mờ» là việc «xong ở gộp» chưa chạy
+    thật: nạp S07 (DAZ3) và S10 (DA29) đã ký nhưng bảng `stg_*` 0 dòng, 93 và 239 bản thu chờ, không hàng nào sở hữu «chạy
+    thật kèm lịch»; S09 không có dòng trong sổ nguồn; S02 xanh giả. Mạnh trả lời bốn câu Cổng Phạm vi ở phiên rà soát, 02:27Z,
+    nguyên văn: «Theo khuyến nghị».
+    - **Hai họ nguồn.** *Luồng* là tin rao: S03, S05, S06. *Kho* là danh mục S07–S16, tham chiếu S01 và S02, nền S04.
+    - **Thẻ nguồn kho năm trục:** T1 vận hành · T2 phủ · T3 biến động · T4 chất lượng · T5 nối và giá trị. Nguồn mới chỉ khai
+      `family`, `cadence_hours`, `universe`, `stg_tables` trong `source_registry`.
+    - **Lời riêng cho đúng ba plist launchd mới: S07, S10, S16.** Nhịp do làn thu quyết. S11 không nằm trong lời này (nạp S11
+      vẫn hoãn, mục 53).
+    - **Tổng thể (`universe`)** lấy số nguồn tự công bố, kèm mốc và nơi lấy; chưa có thì để trống, không ước.
+    - **Bốn lát.** A: chạy thật (làn thu nạp bù và đặt lịch; sổ nguồn khai báo, migration 122). B: thước vận hành và biến
+      động, gồm kiểm co rút (migration 123, bước SQL 605). C: phễu và phủ, đi cùng các hàng danh bạ toà (DA39, DA42, DA44).
+      D: chất lượng kho (mở lại DA20), giữ sau MS3.
+    - **Không đổi:** hàng nguồn kho xong khi con số trên màn đổi trên dữ liệu thật (mục 50); cloud chỉ nhận số gộp và mã
+      `S0x`; tên nguồn thật vẫn tầng A.
+    - **Lỗ thấy thêm 20/11:** sổ nguồn máy thu thiếu dòng S09 và S17, nên bộ quét tên nguồn mù với hai nguồn này. Hàng sổ
+      nguồn khai báo thêm cả hai dòng; tên thật điền trên máy thu, không vào kho.
+59. **S05 bỏ Apify, thu bằng Playwright trên máy thu** (20/11). Mạnh chốt trực tiếp với làn thu, rồi xác nhận với giám sát
+    ~03:34Z (mã câu hỏi `h-20261120T030758Z-245`), nguyên văn: «Đã chốt, giao đi». Bộ thu chạy trên máy thu với profile riêng và tài khoản
+    thu riêng, chỉ đọc. Mở lại thu S05 theo đường mới trước mốc «giữ dừng tới 24/11» cũ. Bảy điều kiện phải đủ trước lượt
+    thu thật đầu tiên:
+    1. Chỉ được bấm nút đóng trong hộp thoại che trang. Ngoài ra không bấm, không gõ, không đăng, nhắn, thích hay xin vào nhóm.
+    2. Gặp đăng nhập lại, checkpoint, xác minh hay CAPTCHA thì dừng lượt, không vượt.
+    3. Có test cho nhận diện bị chặn, trần mỗi lượt và khuôn snapshot.
+    4. Danh sách nhóm nằm trong tệp cấu hình. Tài khoản thu, phiên và profile là tầng A.
+    5. Chỉ Mạnh tự đăng nhập.
+    6. Không qua OpenClaw hay gateway, không LLM, không plist mới; dùng lại lịch S05 cũ.
+    7. Không thu thật trước khi mã vào `main` và có tin GIAO triển khai.
+    - DATA-CONTRACT không đổi. Phía Claude: mở khoá nạp S05, SLO và trạng thái `source_registry` cùng nhịp tích hợp.
+    - Huỷ gói Apify là việc của Mạnh (tiền).
+60. **Một trình duyệt chuyên dụng cho mọi bộ thu, Mạnh không đụng tới** (20/11). Bốn bộ thu đang chung một ứng dụng trình
+    duyệt, mỗi bộ một profile rải ở chỗ khác nhau; đăng nhập phải qua lệnh riêng nên ba lần Mạnh đăng nhập S02 đều vào nhầm
+    chỗ, S02 đứt từ 28/10. Mạnh ~03:54Z (mã câu hỏi `h-20261120T034556Z-247`), nguyên văn: «Giao, theo thứ tự đó».
+    - **Phạm vi:** mọi bộ thu có trình duyệt — S01, S02, S05 mới, S06 phần lấy số.
+    - **Thứ tự ứng viên, làn thu đo rồi chọn:** (1) Chrome for Testing ghim bản; (2) Chrome kênh Beta cài riêng; (3) nếu cả
+      hai không qua chống bot thì giữ Google Chrome nhưng khoá «chỉ bộ thu».
+    - **Luật kèm:** bộ thu mới không ghi cứng kênh trình duyệt, chọn ở một chỗ cấu hình; profile bộ thu gom về một gốc ngoài
+      kho (tầng A); mỗi nguồn một lệnh đăng nhập, Mạnh tự đăng nhập; ứng viên được chọn phải có số đo qua chống bot.
+    - **Không dùng cho bộ thu:** ego lite và trình duyệt Mạnh dùng hằng ngày. Bộ thu tự mở profile riêng bằng Playwright, đó
+      là kho phiên khác.
+    - **Trạng thái 20/11:** Chrome for Testing bị chặn ở bước đăng nhập Google của S02, làn thu chuyển sang đo Chrome Beta;
+      bản cài nằm ngoài kho. Đăng nhập lại S02: Mạnh «Chờ trình duyệt mới». Khi chốt xong thì sửa bẫy kỹ thuật số 2 của
+      `AGENTS.md`.
+61. **Người ở biên: thang tự chủ nấc 0–4, duyệt theo bảng lô** (21/11). Căn cứ: `docs/research/nguoi-o-bien-khung-2111.md`
+    (khung, kiểm kê, đánh giá, thiết kế, lộ trình). Sáng 21/11 Mạnh gắn lát nhãn `hai-khu-ghep-b` cùng trợ lý (model lớn điền
+    nháp hai ô Toà, Phân khu). Nhóm đầu 110 thẻ Mạnh nhìn và lưu từng thẻ: giữ nguyên nháp 105, tự quyết 5, sửa ngược 0 (tỉ lệ
+    giữ nháp, chưa phải độ đúng; khoảng Wilson 95%: 89,8%–98,0%). Nhóm sau 110 thẻ có 105 thẻ trợ lý lưu sau khi Mạnh duyệt theo
+    bảng lô; bảng nhãn chỉ có một mã người gắn nên DB không tách được hai loại nhãn. Cùng lúc Hàng duyệt chờ 1.117 thẻ, bảy ngày
+    vào 267, người quyết 0; trong 2,01 triệu phát biểu dữ liệu người ghi trực tiếp 2 dòng.
+    - **Lời Mạnh, nguyên văn** (21/11):
+      - Nhận định mở đầu, ở phiên gắn nhãn: «Có một điều tôi thấy bạn gắn thẻ rất chính xác, tôi nghĩ bạn gắn hết được và tôi sẽ
+        nhìn từng cái xong chấp thuận một lượt. Điều này chỉ chứng minh một hướng là một model lớn như opus 5.5 hoàn toàn có thể
+        hỗ trợ gắn tag với semi con người và dần model càng thông minh hơn và chính xác hơn thì tỉ lệ người thấp dần. Tôi nghĩ
+        đây mới là cách đúng để thực hiện không chỉ trong gắn nhãn và cả phê duyệt. Con người chỉ nằm biên».
+      - Ở phiên phân tích, ~00:51Z: «Tôi xem n2 thì với những gì hiện lên thì hoàn toàn tin cậy».
+      - ~00:53Z: «Và một điều nữa là cách duyệt lô lúc mới nãy rất dễ dàng, vì duyệt từng thẻ tôi phải đảo mắt liên tục và nhận
+        ra nó là cái gì tìm ở đâu? Nhưng khi duyệt lô thì mọi thứ được sắp xếp có quy tắc thì việc kiểm nó đã nhanh hơn rất
+        nhiều. Sự tin cậy bản thân tôi cũng cao hơn.»
+      - ~00:55Z: «Duyệt theo lô còn có một điểm đó là thấy rõ bằng chứng và suy luận việc đọc như vậy rất dễ nếu claude sai thì
+        thấy ngay».
+      - 01:05Z, trả lời bốn câu đã trình kèm khuyến nghị: «Theo khuyến nghị cả bốn câu».
+    - **Quyết định 1, chấp thuận lô ở Hàng duyệt.** Người được chấp thuận cả một lô thẻ khi lô có đủ ba thứ: ca biên đã tách
+      riêng, mẫu ngẫu nhiên 75 thẻ đã soát, và lệnh rút cả lô. Áp cho hạng mục «Bổ sung tin», bắt đầu ở ô số (số WC, số phòng
+      ngủ); ô loại hình và toà chỉ nhận lô khi mẫu 75 thẻ không có lỗi nào. **Sửa mục 35** ở câu «duyệt hàng loạt đã loại ở
+      GD10». Đường quyết thẻ hiện chỉ nhận người, từng thẻ, kèm lý do: dùng được sau khi có hàng thi công.
+    - **Quyết định 2, tập mở cổng tự áp (PL21).** Tập test đóng băng gồm nhãn người duyệt nháp, mỗi dòng ghi xuất xứ; độ đúng
+      hiệu chỉnh bằng hệ số bắt lỗi của người duyệt, đo bằng thẻ cài lỗi. Nhãn «máy lưu, người duyệt lô» dùng theo lời duyệt
+      của Mạnh và báo tách, vào tập mở cổng khi cách duyệt lô có hệ số bắt lỗi riêng. Nhãn gắn mù vẫn dùng được, không cần hiệu
+      chỉnh. **Sửa FRAMING §5** ở chỗ để ngỏ «tập mù hay mẫu nháp» và mục 32, 35 ở chỗ hoãn tới PL21.
+    - **Quyết định 3, thẻ cài lỗi.** Từ lát gắn nhãn và lô duyệt kế tiếp, 8–10% số thẻ mang nháp sai có chủ ý, sinh bằng luật
+      xác định; người duyệt biết có, không biết thẻ nào. Thẻ cài không vào tập nhãn. Hai loại, đo riêng: «suy luận sai từ
+      trích đúng» và «trích thiếu phần bài nói khác».
+    - **Quyết định 4, thang tự chủ theo loại việc.** Năm nấc: nấc 0 người làm hết; nấc 1 máy nháp, người duyệt và lưu từng ca;
+      nấc 2 máy gắn hết lô vào lớp chờ, người soát ca biên và mẫu rồi chấp thuận lô; nấc 3 máy tự áp, người quyết ca biên và
+      kiểm mẫu sau; nấc 4 máy tự áp, người vào khi thước trôi bật đỏ. Mỗi loại việc một nấc theo từng ô (loại việc × trường ×
+      phân khúc); lên nấc là một chữ ký của Mạnh ở cổng cho mỗi ô, tụt nấc máy tự làm rồi báo; đổi model hay lời nhắc là một
+      lần đo lại, không phải lý do lên nấc.
+      - *Không bao giờ quá nấc 1:* ký cổng (Phạm vi, 1.5, Bằng chứng, Đáng, phiên nghiệm thu), tiền, DDL hay ghi dữ liệu trên
+        cloud, xoá dữ liệu và việc không lùi được, sửa luật an toàn (tầng A, an toàn nhóm xã hội, raw snapshot), mọi việc gửi tin vào nhóm xã hội (luật 8).
+      - *Máy chỉ bấm Lưu vào lớp chờ.* Từ nấc 2, nhãn hay quyết định của máy nằm ở lớp chờ cho tới khi người chấp thuận; bảng
+        nhãn và bảng thẻ ghi được ai bấm Lưu, model nào, nấc lúc lưu, giờ người duyệt. Nhãn chưa có giờ người duyệt không vào
+        tập đóng băng. Trong lúc chưa có lớp chờ (hàng NB2), gắn nhãn tiếp tục duyệt theo bảng lô như sáng 21/11, sổ của phiên
+        gắn nhãn ở máy thu là bản ghi tạm về ai lưu, lô nào, giờ duyệt.
+      - *Bảng lô là bề mặt duyệt của nấc 2:* một dòng một thẻ, cột cố định, bằng chứng và suy luận nằm ngay trên dòng, dòng nào
+        cũng mở được thẻ gốc. Màn duyệt và màn gắn nhãn dựng theo bảng này, không thêm nút «duyệt hết» lên màn từng thẻ.
+      - `AGENTS.md` luật 7 giữ nguyên câu chữ, thêm câu dẫn tới mục này. ADR-0007 thêm sửa đổi 21/11 «trợ lý gắn nhãn trong
+        phiên».
+    - **Ca biên** (lên người từng ca ở mọi nấc): máy bỏ trống hoặc trả «không suy ra được»; hai lần đọc độc lập lệch nhau, hoặc
+      chữ bài trái thẻ địa chỉ nhóm, hoặc hai nguồn danh bạ lệch; giá trị chưa có tiền lệ (chưa quy được về danh bạ, nguồn hay
+      loại căn cứ lần đầu); ca hiếm mà đắt có tên (nối, tách nút danh bạ, gộp hai căn, đổi dự án của cả một nhóm). Điểm tự tin
+      model tự khai không dùng để chia ca (review phân loại §3.1 điều 4).
+    - **Không đổi:**
+      - Luật 7: LLM chỉ phát biểu kèm trích dẫn; ghi dữ liệu qua người hoặc luật xác định. Nấc 3 đi đường «luật xác định» của
+        PL21 (ô đã đo đạt ngưỡng F3), không mở ngoại lệ mới.
+      - Ngưỡng F3 (A 0,95 · B 0,90 · C 0,80, cận dưới Wilson 95%).
+      - Mục 50: Mạnh ở cổng; lời riêng cho tiền, cloud, xoá dữ liệu, luật an toàn.
+      - Mục 56: K4 và ca khó vẫn lên thẻ từng cặp; mỗi loại căn cứ vẫn do Mạnh duyệt lần đầu.
+      - Tầng A; ba model đọc tin của đường ống (ADR-0007 sửa 06/11).
+      - Mẫu soát cuốn chiếu vẫn chỉ để thấy trôi.
+    - **Câu còn mở**, chốt ở Cổng Phạm vi của từng hàng: ngưỡng lên nấc (đề xuất: từ 100 thẻ đã duyệt ở nấc 1, sửa ngược ≤ 3%,
+      hệ số bắt lỗi ≥ 0,7, tỉ lệ soát ≥ 70%, 4 tuần không tụt trước nấc 4); cỡ mẫu theo nấc (đề xuất: 75 thẻ mỗi lô ở nấc 2, 30
+      thẻ mỗi tuần mỗi ô ở nấc 3); cách ghi «ai bấm Lưu» khi trợ lý thao tác qua phiên Ops của người (đường lưu riêng cho trợ
+      lý chạm quyền Ops); xếp ô số WC, toà vào nhóm F3 nào; 232 thẻ «Bổ sung tin» chờ mà không còn đề xuất nối vào là gì.
+    - **Hàng:** đợt `nguoi-o-bien-2111`, cắt ở lượt riêng: NB1 chấm bóng hàng «Bổ sung tin» và chấp thuận lô; NB2 xuất xứ nhãn,
+      lớp chờ, thẻ cài lỗi (có migration, T3); NB3 mở PL21 cho một ô; NB4 ngưỡng chạy bóng thẻ luật danh bạ (câu còn mở của
+      mục 56), sau MS3. Ngoài đường găng MS3; giám sát xếp dãy.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
@@ -1021,6 +1166,7 @@ Theo dõi: giám sát đợt báo một dòng mỗi ngày (hiện tại so với
 | V7 | Đóng băng Stage B + thẻ Ghép căn: không dựng cặp, không gieo thẻ, thẻ chờ không hiện và không vào số chờ; dữ liệu giữ nguyên — `_acceptance/dong-bang-stage-b-resolve` (T2) | 🔶 Mạnh duyệt Cổng Phạm vi 09/11 (Hỏi-1 A ẩn thẻ chờ, Hỏi-2 A không thêm chữ), đang chấm |
 | DV1 | Mọi nút dự án trỏ mã xã/phường hiện hành: tệp xã cũ có nguồn + `danh-ba-vat-the.mjs --sua-xa` — `_acceptance/nut-du-an-tro-xa-moi` (T2) | 🔶 Mạnh duyệt Cổng Phạm vi 10/11, đang làm; sau gộp: `--sua-xa --thu` rồi `--sua-xa --db-that` trên máy thu, dựng lại danh bạ, so số toà và UPI trước–sau là lời riêng của Mạnh (Hỏi-1) |
 | DA1 | Danh bạ vật thể dựng toà ở cả 34 tỉnh: bảng ISO trong migration 088, ISO suy từ khu vực, chủ đầu tư `source_field` — `_acceptance/danh-ba-vat-the-toan-quoc` (T3, 088) | 🔶 Mạnh duyệt Cổng Phạm vi và kế hoạch 10/11, đang làm; sau gộp: áp 088 lên máy thu là lời riêng của Mạnh (`pg_dump` trước) |
+| DA40 | Thuộc tính căn S16 (diện tích, PN, WC, hướng, loại hình, giá chủ đầu tư) trên Danh bạ Ops máy thu — `_acceptance/thuoc-tinh-can-s16` (T2, 113 + 118) | ✅ gộp PR #491; áp lên máy thu 19/11 15:30–15:52Z, số thật khớp số đối chiếu (+2 căn grand-park, lời Mạnh 02:39Z), nhật ký `docs/ops/nhat-ky-ap/2026-11-19-da40-thuoc-tinh-can-s16.md`; việc theo sau: DA48 rút thuộc tính khi căn thành mơ hồ toà |
 | G-3 | Kev-V media gate + VLM collage + LLM judge (≡ A2) | ⬜ |
 | R2-R4 | asset_nodes mở rộng (subzone/building; geo-polygon; dedup căn) | ⬜ |
 

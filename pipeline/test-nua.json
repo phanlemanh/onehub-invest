@@ -5,6 +5,8 @@
     "Tệp test mới: xếp vào nửa nhẹ hơn. Đo lại thời lượng: THOI_LUONG_TEP=<tệp> npm run test:a (xem chay-nua.mjs)."
   ],
   "a": [
+    "scripts/assert-rut-thay.test.mjs",
+    "scripts/transform-zalo-loai-tin-doi-chieu.test.mjs",
     "scripts/chia-nua.test.mjs",
     "scripts/chotot-thieu-moc.test.mjs",
     "scripts/dau-bai-thu-sql.test.mjs",
@@ -29,8 +31,10 @@
     "scripts/ops-facts-so-tong-hop.test.mjs",
     "scripts/phat-bieu.test.mjs",
     "scripts/phuong-tu-du-an.test.mjs",
+    "scripts/push-ops-facts-import.test.mjs",
     "scripts/quet-doc-stg.test.mjs",
     "scripts/refresh-bait-gap-goi.test.mjs",
+    "scripts/s16-bon-phan.test.mjs",
     "scripts/soat-tang-a.test.mjs",
     "scripts/tap-nhan-hai-khu.test.mjs",
     "scripts/test-posts.test.mjs",
@@ -42,7 +46,7 @@
     "scripts/vocab.test.mjs",
     "scripts/yeu-cau-ngan-sach.test.mjs",
     "tests/s08-danh-muc-nap.test.mjs",
-    "scripts/s16-bon-phan.test.mjs"
+    "scripts/khop-tron.test.mjs"
   ],
   "b": [
     "parse.test.mjs",
@@ -94,7 +98,6 @@
     "scripts/tang-tren-tin.test.mjs",
     "scripts/the-duyet-nguoi.test.mjs",
     "scripts/thu-so-s06.test.mjs",
-    "scripts/transform-zalo-loai-tin-doi-chieu.test.mjs",
     "scripts/va-doc-tin.test.mjs",
     "scripts/vn-day.test.mjs",
     "scripts/vocab-lint.test.mjs",

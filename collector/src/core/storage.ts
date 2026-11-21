@@ -108,7 +108,7 @@ export class SnapshotWriter {
     return { sha256, bytes: bytes.length };
   }
 
-  async finalize(coverage: CoverageReport, error?: string): Promise<SnapshotManifest> {
+  async finalize(coverage: CoverageReport, error?: string, opts?: { giuTam?: boolean }): Promise<SnapshotManifest> {
     const manifest: SnapshotManifest = {
       schemaVersion: this.schemaVersion,
       snapshotId: this.snapshotId,
@@ -124,6 +124,10 @@ export class SnapshotWriter {
     await writeFile(join(this.partial, "manifest.json"), JSON.stringify(manifest, null, 2));
     // 2510-8: manifest là file CUỐI — ghi xong mới rename tạm → tên thật
     // (cùng filesystem vì cùng cha). Từ đây thư mục tên thật luôn trọn vẹn.
+    // 1711-1(b): lượt NÉM lỗi toàn phần (0 items) giữ '.partial' ẩn, KHÔNG
+    // rename — thư mục tên thật 0 items trông như bản thu thật, đếm bản thu
+    // không lộ ra lỗi (29 thư mục bản thu của S02). Không xoá gì (luật 1).
+    if (opts?.giuTam) return manifest;
     await rename(this.partial, this.dir);
     return manifest;
   }
