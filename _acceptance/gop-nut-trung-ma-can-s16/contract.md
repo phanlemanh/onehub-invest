@@ -5,7 +5,7 @@ slug: gop-nut-trung-ma-can-s16
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: approved
+status: implemented
 approved_by: Mạnh
 approved_at: 2026-11-21
 design_doc: docs/superpowers/specs/2026-11-21-gop-nut-trung-ma-can-s16-design.md
