@@ -5,7 +5,7 @@ slug: s02-luot-loi-sach-va-kiem-han-token
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, data]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-11-19T19:24:56Z
 approved_by:
@@ -81,3 +81,9 @@ Trục máy vẫn liệt để soi:
 - Ngoài-2 (máy định tuyến 2026-11-20, đề xuất S4 known-limits): Nếu token có hạn dùng ghi sai định dạng, bộ thu vẫn báo token tốt dù có thể đã hỏng, và lượt thu sẽ thất bại muộn hơn. — `collector/src/collectors/airdna-research.ts`
 - Ngoài-4 (máy định tuyến 2026-11-20, đề xuất S4 known-limits): Chưa có lần chạy lệnh thu thật nào xác nhận lệnh thoát lỗi khi lượt thu hỏng, nên bằng chứng chỉ gián tiếp. — `_acceptance/s02-luot-loi-sach-va-kiem-han-token/probes/nguoi-doc.mjs`
 - Ngoài-5 (máy định tuyến 2026-11-20, đề xuất S4 known-limits): Phép thử âm tính có thể báo đạt vì một lỗi khác, nên chưa chứng minh chắc rằng chọn nhầm bản thu hỏng bị bắt. — `_acceptance/s02-luot-loi-sach-va-kiem-han-token/evals.yaml`
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-21:
+  - Ngoài-1: Tài liệu giao diện thu thập vẫn nói lượt thu lỗi để lại thư mục bản thu, trong khi bản thu lỗi nay nằm trong thư mục tạm ẩn.
+  - Ngoài-2: Token có hạn dùng ghi sai định dạng vẫn được báo là tốt; lượt thu sẽ hỏng muộn hơn.
+  - Ngoài-4: Chưa có lần chạy lệnh thu thật xác nhận lệnh thoát lỗi khi lượt thu hỏng; bằng chứng là đọc mã CLI thật.
+  - Ngoài-5: Phép thử âm của việc chọn nhầm bản thu hỏng có thể đạt vì một lỗi khác.
+- Ngoài-3 (token hết hạn giữa lượt bị nuốt, ra bản thu rỗng trông như thành công): Mạnh chọn mở hợp đồng mới ở Cổng Bằng chứng 2026-11-21 — việc riêng ở làn thu.

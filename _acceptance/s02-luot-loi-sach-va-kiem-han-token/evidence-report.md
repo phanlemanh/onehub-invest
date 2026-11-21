@@ -7,7 +7,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 72f41db44ebd2beb520284ce664a8cd1f7b5977b
-human_signoff:
+human_signoff: Mạnh 2026-11-21
 ---
 
 # Evidence Report: s02-luot-loi-sach-va-kiem-han-token
@@ -52,7 +52,7 @@ human_signoff:
   run_id: minted-s02-luot-loi-sach-va-kiem-han-token-E2-r1
   exit_code: 0
   baseline: n-a
-  verifier: script
+  verifier: _acceptance/s02-luot-loi-sach-va-kiem-han-token/probes/noi-day.sh
   verified_at: 2026-11-20T20:12:45Z
   carried_from_round: 1
   output: |
@@ -62,7 +62,7 @@ human_signoff:
   run_id: minted-s02-luot-loi-sach-va-kiem-han-token-E3-r1
   exit_code: 0
   baseline: n-a
-  verifier: script
+  verifier: _acceptance/s02-luot-loi-sach-va-kiem-han-token/probes/nguoi-doc.mjs
   verified_at: 2026-11-20T20:12:45Z
   carried_from_round: 1
   output: |
@@ -72,7 +72,7 @@ human_signoff:
   run_id: minted-s02-luot-loi-sach-va-kiem-han-token-E4-r1
   exit_code: 0
   baseline: n-a
-  verifier: script
+  verifier: _acceptance/s02-luot-loi-sach-va-kiem-han-token/probes/dot-bien-han.mjs
   verified_at: 2026-11-20T20:12:45Z
   carried_from_round: 1
   output: |
@@ -82,7 +82,7 @@ human_signoff:
   run_id: minted-s02-luot-loi-sach-va-kiem-han-token-E5-r1
   exit_code: 0
   baseline: n-a
-  verifier: script
+  verifier: _acceptance/s02-luot-loi-sach-va-kiem-han-token/probes/noi-day.sh
   verified_at: 2026-11-20T20:12:45Z
   carried_from_round: 1
   output: |
@@ -102,7 +102,7 @@ human_signoff:
   run_id: minted-s02-luot-loi-sach-va-kiem-han-token-E8-r1
   exit_code: 0
   baseline: n-a
-  verifier: script
+  verifier: _acceptance/s02-luot-loi-sach-va-kiem-han-token/probes/nguoi-doc.mjs
   verified_at: 2026-11-20T20:12:45Z
   carried_from_round: 1
   output: |
@@ -112,7 +112,7 @@ human_signoff:
   run_id: minted-s02-luot-loi-sach-va-kiem-han-token-E9-r1
   exit_code: 0
   baseline: n-a
-  verifier: script
+  verifier: _acceptance/s02-luot-loi-sach-va-kiem-han-token/probes/dot-bien-han.mjs
   verified_at: 2026-11-20T20:12:45Z
   carried_from_round: 1
   output: |
