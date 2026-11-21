@@ -152,6 +152,9 @@ phải tên thư mục (script thu của S02/S05/S06 nằm trong `pipeline/`).
    giấy tờ người mua chỉ ở kho riêng mã hoá trên máy thu; không cloud, không model, không cổng, không kênh.
 7. **LLM-off-data-path**: LLM/agent chỉ gate/judge/extract kèm audit + evidence; quyết định
    ghi dữ liệu đi qua người (`/ops/review`) hoặc luật xác định.
+   **Thang tự chủ nấc 0–4** (Mạnh chốt 2026-11-21, ROADMAP §3 mục 61): mỗi loại việc gắn hay duyệt một nấc, lên nấc là chữ ký
+   của Mạnh cho từng ô; từ nấc 2 máy chỉ bấm Lưu vào lớp chờ và DB ghi ai lưu, model, nấc, giờ người duyệt. Không bao giờ quá
+   nấc 1: ký cổng, tiền, cloud, xoá dữ liệu, luật an toàn, gửi tin nhóm xã hội.
 8. **An toàn Zalo**: agent KHÔNG BAO GIỜ gửi tin vào nhóm xã hội (lockdown 7 lớp + watchdog;
    đã có 2 sự cố). Đừng đụng cấu hình OpenClaw khi chưa đọc `docs/ops/runtime-map.md`.
 9. **Cổng (portals.md)**: mọi trang thuộc Invest (`/vn/**`, công khai) hoặc Ops (`/ops/**`,

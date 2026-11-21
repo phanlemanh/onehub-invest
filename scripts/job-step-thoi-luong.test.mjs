@@ -722,12 +722,17 @@ test("JST-AC-2-bc ba ô của lưới làn dùng chung một hàm tách khối; 
 });
 
 // ---------------------------------------------------------------- JST-AC-9 --
+// Bước thêm vào chuỗi bởi hồ sơ khác, sau vòng này, có phép đo thứ tự riêng: CHỈ khi bản origin/main chưa có bước ấy thì loại nó
+// khỏi phép so, để nhánh thêm bước không đỏ trước khi gộp. Gộp xong, origin/main có bước → không loại gì, phép so đủ như cũ.
+// phuong-tu-du-an: hồ sơ phuong-tu-du-an-chay-that (DA45), ca PCT-AC-1.
+const BUOC_HO_SO_KHAC = new Set(["phuong-tu-du-an"]);
+const boBuocKhac = (goi, goc) => goi.filter((b) => !BUOC_HO_SO_KHAC.has(b) || goc.includes(b));
 test("JST-AC-9 hai lượt: dãy lời gọi và mã thoát bằng bản origin/main, cột nhanh đúng", () => {
   for (const [ten, args, nhanh] of [["nhanh", ["--luot-nhanh"], 1], ["00:00", [], 0]]) {
     const r = chayBoc(cayBoc(), args);
     const g = chayBoc(cayBoc(banGoc()), args);
 
-    assert.deepEqual(r.goi, g.goi, `[${ten}] dãy lời gọi phải bằng bản origin/main`);
+    assert.deepEqual(boBuocKhac(r.goi, g.goi), boBuocKhac(g.goi, g.goi), `[${ten}] dãy lời gọi phải bằng bản origin/main`);
     assert.equal(r.ma, g.ma, `[${ten}] mã thoát phải bằng bản origin/main`);
     assert.ok(r.goi.length > 0, `[${ten}] bản đối chứng phải gọi ít nhất một bước`);
 

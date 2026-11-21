@@ -2,7 +2,8 @@
 // (_acceptance/phuong-tu-du-an). Cột area_id của tin chỉ do resolve_offer_fields ghi (migration 099).
 //   node scripts/phuong-tu-du-an.mjs          # chạy thử: chỉ đếm, không ghi
 //   node scripts/phuong-tu-du-an.mjs --json   # như trên, số dạng máy đọc
-//   node scripts/phuong-tu-du-an.mjs --ghi    # ghi + rút phần hết căn cứ + phân xử tin bị chạm, một giao dịch — chờ lời Mạnh
+//   node scripts/phuong-tu-du-an.mjs --ghi    # ghi + rút phần hết căn cứ + phân xử tin bị chạm, một giao dịch
+//   node scripts/phuong-tu-du-an.mjs --ghi --noi-tiep   # bước của chuỗi nạp S03 (DA45): chỉ ghi khi lượt đầu đã áp tay
 // Chạy lại sau khi dự án trên bài hay phường của nút đổi = xét lại: phát biểu hết căn cứ bị rút (xet-lai-du-an).
 import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -77,10 +78,20 @@ async function tinBiCham(client, cham) {
 
 /**
  * @param {import("pg").Client} client
- * @param {{ghi?: boolean, json?: boolean, log?: (s: string) => void}} opts
+ * @param {{ghi?: boolean, json?: boolean, noiTiep?: boolean, log?: (s: string) => void}} opts
  */
-export async function chay(client, { ghi = false, json = false, log = console.log } = {}) {
+export async function chay(client, { ghi = false, json = false, noiTiep = false, log = console.log } = {}) {
   await kiemDb(client);
+  // DA45: chuỗi nạp gọi với noiTiep. Luật chưa có phát biểu sống nào nghĩa là lượt ghi đầu chưa được áp tay theo hồ sơ (hoặc đã
+  // lùi): không ghi gì, để gộp PR không tự ghi dữ liệu và lùi không bị lượt nạp kế ghi đè.
+  if (noiTiep) {
+    const { rows: [r] } = await client.query(
+      "SELECT EXISTS (SELECT 1 FROM field_assertions WHERE rule_id = $1 AND retracted_at IS NULL) AS co", [RULE]);
+    if (!r.co) {
+      log("phuong-tu-du-an: chưa áp lượt đầu — bỏ qua, không ghi");
+      return { dong: [], dem: {}, chen: 0, rut: 0, tin: 0, bo_qua: true };
+    }
+  }
   const kq = tinhPhuong(await docDuLieu(client));
   const d = kq.dem;
   if (json) log(JSON.stringify(d));
@@ -94,6 +105,18 @@ export async function chay(client, { ghi = false, json = false, log = console.lo
   }
   await client.query("BEGIN");
   try {
+    // DA45 (S4-r2, lùi trùng lượt nạp): lui.sql giữ cùng khoá tư vấn này suốt giao dịch lùi. Lượt nối tiếp chờ khoá rồi xem lại,
+    // trong giao dịch, luật còn dòng sống không: lùi vừa commit thì bỏ qua, không chèn lại phát biểu đã rút.
+    await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [RULE]);
+    if (noiTiep) {
+      const { rows: [r] } = await client.query(
+        "SELECT EXISTS (SELECT 1 FROM field_assertions WHERE rule_id = $1 AND retracted_at IS NULL) AS co", [RULE]);
+      if (!r.co) {
+        await client.query("ROLLBACK");
+        log("phuong-tu-du-an: luật vừa lùi trong lúc lượt chờ khoá — bỏ qua, không ghi");
+        return { ...kq, chen: 0, rut: 0, tin: 0, bo_qua: true };
+      }
+    }
     const k = await ghiPhatBieu(client, kq.dong);
     const tin = await tinBiCham(client, k.cham);
     if (tin.length) await resolveOffers(client, tin);
@@ -111,7 +134,14 @@ async function main(argv) {
   const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
   await client.connect();
   try {
-    await chay(client, { ghi: argv.includes("--ghi"), json: argv.includes("--json") });
+    // Lượt 00:00 và lượt ghi tay không có lock_timeout từ PGOPTIONS (lượt nhanh có, 10 giây): đặt trần để bước đụng khoá thật
+    // thoát khác 0 thay vì chờ mãi (AC-1). Đã có trần từ PGOPTIONS thì giữ.
+    const { rows: [lt] } = await client.query("SELECT current_setting('lock_timeout') AS v");
+    if (lt.v === "0") await client.query("SELECT set_config('lock_timeout', $1, false)", [process.env.PTD_LOCK_TIMEOUT || "10min"]);
+    const json = argv.includes("--json");
+    const kq = await chay(client, { ghi: argv.includes("--ghi"), json, noiTiep: argv.includes("--noi-tiep") });
+    // --json: dòng cuối là đếm của chính lượt (chèn, rút, tin phân xử lại) — phép đo AC-3 đọc dòng này, không đọc số ròng
+    if (json) console.log(JSON.stringify({ chen: kq.chen, rut: kq.rut, tin: kq.tin, bo_qua: !!kq.bo_qua }));
     return 0;
   } finally {
     await client.end();
