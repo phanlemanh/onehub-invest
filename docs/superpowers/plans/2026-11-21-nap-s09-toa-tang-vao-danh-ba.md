@@ -4,6 +4,14 @@ Hồ sơ `_acceptance/nap-s09-toa-tang-vao-danh-ba/` (T3, Cổng Phạm vi Mạn
 thêm AC-11 19/11). Thiết kế: `docs/superpowers/specs/2026-11-18-nap-s09-toa-tang-vao-danh-ba-design.md`. Kế hoạch này chờ
 **Cổng 1.5** (Mạnh duyệt) trước khi viết mã.
 
+## 0. Trạng thái trước cổng
+
+- **T1–T3 đã viết trước cổng theo lời GS, chưa chạy itest, chưa gộp, chưa áp** (nhánh `feat/nap-s09-toa-tang-vao-danh-ba`
+  @43b2fe114, chưa đẩy). Mạnh sửa kế hoạch thì phần đã viết làm lại theo kế hoạch mới.
+- **Ghi dữ liệu hằng đêm lên DB máy thu:** sau khi áp 115 + 125, MỌI lượt dựng danh bạ, kể cả bước đêm `buocVatTheDem`, sẽ đúc
+  nút ứng viên S09 và toà S09 trên DB máy thu. Hồ sơ áp ghi số chạy thử trên bản chép (bao nhiêu nút, toà, thẻ chờ), cách tắt và
+  cách lùi (T8).
+
 ## 1. Bảng phủ ca — đo lại ngày 21/11 trên DB máy thu và snapshot gói 1 thật
 
 Bản thu gói 1: `vn__s09-danh-ba__2026-11-19T004959637` (1.462 item: danh mục 1, `toa` 221, `tang` 928, `khu-thap-tang` 221,
@@ -37,14 +45,14 @@ vào nút ứng viên · thuộc tính căn.
   migration 115 đúng bảng GS chốt 20/11 18:38Z. E1 gọi hàm của bộ nạp đó với fixture rút từ snapshot thật (đã thay tên).
 - **Dự án** dùng lại hạ tầng của DA32 (migration 100): `project_links` (source `S09`, mã dự án nguồn), `project_link_rules`
   cho thẻ luật theo nguồn, `review_queue entity_match` cho thẻ từng cặp. Nút ứng viên là `asset_nodes` project `mot_loi_khai`,
-  bí danh `node:<id>` `ma_nguon` = `danh-ba/<du_an_id>`. Ca trùng tên một nút `mot_loi_khai` của S06 vẫn đi thẻ luật, không
+  bí danh `node:<id>` `ma_nguon` = `danh-ba-du-an/<du_an_id>`. Ca trùng tên một nút `mot_loi_khai` của S06 vẫn đi thẻ luật, không
   đúc nút thứ hai (AC-11).
 - **Nút ứng viên không lên Invest**: không nối tin nên không có trang Invest nào đọc nó (giống 324 nút ứng viên S06). `asset_nodes`
   vẫn đồng bộ cloud, theo ROADMAP §3 mục 38 (thông tin dự án là công khai). E9 kiểm 0 tin trỏ nút ứng viên S09.
 - **Toà**: so tên bằng `khoaTenS09` trong các toà của nút dự án (cùng câu với DA31). Bí danh mới `ma_nguon` =
-  `danh-ba/<toa_id>`, namespace riêng nên 0 mã trỏ hai toà. Mã cũ `<pid>/<block_id>` nối qua (dự án, tên toà). Toà mới gắn
+  `danh-ba-toa/<toa_id>`, namespace riêng nên 0 mã trỏ hai toà. Mã cũ `<pid>/<block_id>` nối qua (dự án, tên toà). Toà mới gắn
   vào nút dự án (gói 1 không có phân khu), bậc `mot_loi_khai`. Số tầng của toà S09 = số dòng `tang`.
-- **Thứ tự nguồn (AC-8)**: bước S09 gói 1 chạy sau bước S09 cũ và trước S16. Bước S16 tra bí danh `danh-ba/…` trước khi đúc toà.
+- **Thứ tự nguồn (AC-8)**: bước S09 gói 1 chạy sau bước S09 cũ và trước S16. Bước S16 tra bí danh `danh-ba-toa/…` trước khi gắn toà: lệch tầng thì thẻ mã chung, toà S16 đúc riêng.
 - **Lệnh đếm** `pipeline/scripts/danh-ba-s09-toa-that.mjs --dem` chỉ đọc, không import `pipeline/lib/s09*`.
 
 ## 3. Task (tuần tự, cùng giao dịch dựng)
@@ -52,12 +60,19 @@ vào nút ứng viên · thuộc tính căn.
 | Task | Tệp | Lệnh kiểm từng task | Phục vụ | independent |
 |---|---|---|---|---|
 | T1 Migration 115: bảng `stg_s09_danh_ba` (cột, PK, FK đúng bản GS), index `(snapshot_id, kind, source_id)`, view `v_s09_db_toa`, `v_s09_db_tang` (bản thu mới nhất mỗi `source_id`, trải `data[]`) | `db/migrations/115_stg_s09_danh_ba.sql` | áp hai lần trên DB thử, `\d` không đổi | E1, E6 | false |
+| T1b Migration 125 sửa cột `ma_tinh` của `v_s09_db_du_an` (115 đọc `province.code`, bản thu thật ghi `province_code`; 115 đã commit nên không sửa) | `db/migrations/125_v_s09_db_du_an_ma_tinh.sql` | ca T1: `ma_tinh` khác rỗng trên gói 1 thật, đỏ khi chỉ áp 115 | E1, E10 | false |
 | T2 Hàm thuần: đọc dự án, toà, tầng từ dòng view; xếp dự án bốn đường; xét toà (khớp một, hai, trùng tên, mã cũ, luật S16) | `pipeline/lib/s09-danh-ba-can.mjs` + `.test.mjs` | `node --test pipeline/lib/s09-danh-ba-can.test.mjs` | E3–E6 | false |
 | T3 Bước dựng `buocS09DanhBa` gọi trong `dung()`; S16 tra bí danh S09 mới | `pipeline/lib/s09-dung.mjs`, `pipeline/danh-ba-vat-the.mjs`, `pipeline/lib/s16-dung.mjs` (xem G2) | `config:executors.script.s09_toa_db` | E3–E5, E8 | false |
 | T4 Itest trên DB thử của lượt, fixture rút từ snapshot thật, mỗi ca có đột biến đỏ đúng tên | `pipeline/scripts/danh-ba-s09-toa.itest.mjs`, `pipeline/tests/fixtures/s09-danh-ba/` | `config:executors.script.s09_toa_db` | E1, E3–E6, E8, E9 | false |
 | T5 Lệnh đếm và lượt đo thật trên DB thử chép máy thu: manifest, phép cộng phần, bốn ngưỡng, `timNutTrungNoi` | `pipeline/scripts/danh-ba-s09-toa-that.mjs` | `config:executors.script.s09_toa_that` | E2, E10, E12 | false |
 | T6 Soát ranh giới: không tên thật, danh sách đẩy cloud, nút ứng viên 0 tin | trong T4 | như T4 | E9 | false |
 | T7 Ảnh `/ops/registry` trên DB của E10 | `_acceptance/…/evidence/` | ui-check | E11 | false |
+
+| T8 Hồ sơ áp năm thứ (lệnh áp 115 + 125, số chạy thử trên bản chép, sao lưu trước, cách lùi, lệnh kiểm sau), kèm câu ghi dữ liệu hằng đêm ở §0 và cách tắt bước S09 gói 1 | `_acceptance/…/` | soát tay | Cổng Bằng chứng | false |
+
+**Known limit đã biết trước:** 11 dự án gói 1 mang mã tỉnh cũ 74, 77 (trước sáp nhập) không có trong `iso_regions` nên toà của
+chúng không đúc được; bước dựng đếm riêng `khong_iso`. Hồ sơ ghi danh sách mã dự án và số toà bị bỏ. Bảng đổi mã tỉnh cũ → mới là
+một hàng riêng (P1 cắt), không làm trong DA42.
 
 Mỗi task: viết test đỏ trước, rồi mã, rồi commit. S4 xin lượt `s4` của đợt.
 
