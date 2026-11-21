@@ -558,7 +558,8 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
       (Mạnh 06/11; tập test mù hoãn tới PL21 theo mục 32).
     - Hoãn và Không chắc không bắt lý do; đáp án hoặc chip tính là lý do. Hoàn tác 5 giây cho mọi hạng mục, kể cả Ghép căn.
     - Thẻ luật: quyết một lần cho cả loạt thẻ cùng căn cứ luật E1, kèm năm bài mẫu, có nhật ký và đảo được — là sửa luật
-      xác định (§1 luật 7), khác duyệt hàng loạt đã loại ở GD10.
+      xác định (§1 luật 7), khác duyệt hàng loạt đã loại ở GD10. *(Sửa 21/11: chấp thuận lô có điều kiện mở lại cho «Bổ
+      sung tin», và tập mở cổng PL21 đã chốt — xem mục 61.)*
     - Hàng tồn Bổ sung tin không trả lại hàng loạt: máy rút thẻ trùng giá trị đang lưu, phần còn lại duyệt tay.
     - Khuôn giao diện lấy từ ReUI (gói Pro), không tự vẽ. Hàng OD1–OD7; OD2–OD5 là nấc 1 của PL23.
 36. **S01 dừng sau nấc 1, thử lại theo lịch** (07/11, Mạnh «Dừng S01» rồi «duyệt lịch s01»): lượt 1 thu 40 căn, 12.410 đêm
@@ -1020,6 +1021,69 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     - **Trạng thái 20/11:** Chrome for Testing bị chặn ở bước đăng nhập Google của S02, làn thu chuyển sang đo Chrome Beta;
       bản cài nằm ngoài kho. Đăng nhập lại S02: Mạnh «Chờ trình duyệt mới». Khi chốt xong thì sửa bẫy kỹ thuật số 2 của
       `AGENTS.md`.
+61. **Người ở biên: thang tự chủ nấc 0–4, duyệt theo bảng lô** (21/11). Căn cứ: `docs/research/nguoi-o-bien-khung-2111.md`
+    (khung, kiểm kê, đánh giá, thiết kế, lộ trình). Sáng 21/11 Mạnh gắn lát nhãn `hai-khu-ghep-b` cùng trợ lý (model lớn điền
+    nháp hai ô Toà, Phân khu). Nhóm đầu 110 thẻ Mạnh nhìn và lưu từng thẻ: giữ nguyên nháp 105, tự quyết 5, sửa ngược 0 (tỉ lệ
+    giữ nháp, chưa phải độ đúng; khoảng Wilson 95%: 89,8%–98,0%). Nhóm sau 110 thẻ có 105 thẻ trợ lý lưu sau khi Mạnh duyệt theo
+    bảng lô; bảng nhãn chỉ có một mã người gắn nên DB không tách được hai loại nhãn. Cùng lúc Hàng duyệt chờ 1.117 thẻ, bảy ngày
+    vào 267, người quyết 0; trong 2,01 triệu phát biểu dữ liệu người ghi trực tiếp 2 dòng.
+    - **Lời Mạnh, nguyên văn** (21/11):
+      - Nhận định mở đầu, ở phiên gắn nhãn: «Có một điều tôi thấy bạn gắn thẻ rất chính xác, tôi nghĩ bạn gắn hết được và tôi sẽ
+        nhìn từng cái xong chấp thuận một lượt. Điều này chỉ chứng minh một hướng là một model lớn như opus 5.5 hoàn toàn có thể
+        hỗ trợ gắn tag với semi con người và dần model càng thông minh hơn và chính xác hơn thì tỉ lệ người thấp dần. Tôi nghĩ
+        đây mới là cách đúng để thực hiện không chỉ trong gắn nhãn và cả phê duyệt. Con người chỉ nằm biên».
+      - Ở phiên phân tích, ~00:51Z: «Tôi xem n2 thì với những gì hiện lên thì hoàn toàn tin cậy».
+      - ~00:53Z: «Và một điều nữa là cách duyệt lô lúc mới nãy rất dễ dàng, vì duyệt từng thẻ tôi phải đảo mắt liên tục và nhận
+        ra nó là cái gì tìm ở đâu? Nhưng khi duyệt lô thì mọi thứ được sắp xếp có quy tắc thì việc kiểm nó đã nhanh hơn rất
+        nhiều. Sự tin cậy bản thân tôi cũng cao hơn.»
+      - ~00:55Z: «Duyệt theo lô còn có một điểm đó là thấy rõ bằng chứng và suy luận việc đọc như vậy rất dễ nếu claude sai thì
+        thấy ngay».
+      - 01:05Z, trả lời bốn câu đã trình kèm khuyến nghị: «Theo khuyến nghị cả bốn câu».
+    - **Quyết định 1, chấp thuận lô ở Hàng duyệt.** Người được chấp thuận cả một lô thẻ khi lô có đủ ba thứ: ca biên đã tách
+      riêng, mẫu ngẫu nhiên 75 thẻ đã soát, và lệnh rút cả lô. Áp cho hạng mục «Bổ sung tin», bắt đầu ở ô số (số WC, số phòng
+      ngủ); ô loại hình và toà chỉ nhận lô khi mẫu 75 thẻ không có lỗi nào. **Sửa mục 35** ở câu «duyệt hàng loạt đã loại ở
+      GD10». Đường quyết thẻ hiện chỉ nhận người, từng thẻ, kèm lý do: dùng được sau khi có hàng thi công.
+    - **Quyết định 2, tập mở cổng tự áp (PL21).** Tập test đóng băng gồm nhãn người duyệt nháp, mỗi dòng ghi xuất xứ; độ đúng
+      hiệu chỉnh bằng hệ số bắt lỗi của người duyệt, đo bằng thẻ cài lỗi. Nhãn «máy lưu, người duyệt lô» dùng theo lời duyệt
+      của Mạnh và báo tách, vào tập mở cổng khi cách duyệt lô có hệ số bắt lỗi riêng. Nhãn gắn mù vẫn dùng được, không cần hiệu
+      chỉnh. **Sửa FRAMING §5** ở chỗ để ngỏ «tập mù hay mẫu nháp» và mục 32, 35 ở chỗ hoãn tới PL21.
+    - **Quyết định 3, thẻ cài lỗi.** Từ lát gắn nhãn và lô duyệt kế tiếp, 8–10% số thẻ mang nháp sai có chủ ý, sinh bằng luật
+      xác định; người duyệt biết có, không biết thẻ nào. Thẻ cài không vào tập nhãn. Hai loại, đo riêng: «suy luận sai từ
+      trích đúng» và «trích thiếu phần bài nói khác».
+    - **Quyết định 4, thang tự chủ theo loại việc.** Năm nấc: nấc 0 người làm hết; nấc 1 máy nháp, người duyệt và lưu từng ca;
+      nấc 2 máy gắn hết lô vào lớp chờ, người soát ca biên và mẫu rồi chấp thuận lô; nấc 3 máy tự áp, người quyết ca biên và
+      kiểm mẫu sau; nấc 4 máy tự áp, người vào khi thước trôi bật đỏ. Mỗi loại việc một nấc theo từng ô (loại việc × trường ×
+      phân khúc); lên nấc là một chữ ký của Mạnh ở cổng cho mỗi ô, tụt nấc máy tự làm rồi báo; đổi model hay lời nhắc là một
+      lần đo lại, không phải lý do lên nấc.
+      - *Không bao giờ quá nấc 1:* ký cổng (Phạm vi, 1.5, Bằng chứng, Đáng, phiên nghiệm thu), tiền, DDL hay ghi dữ liệu trên
+        cloud, xoá dữ liệu và việc không lùi được, sửa luật an toàn (tầng A, an toàn nhóm xã hội, raw snapshot), mọi việc gửi tin vào nhóm xã hội (luật 8).
+      - *Máy chỉ bấm Lưu vào lớp chờ.* Từ nấc 2, nhãn hay quyết định của máy nằm ở lớp chờ cho tới khi người chấp thuận; bảng
+        nhãn và bảng thẻ ghi được ai bấm Lưu, model nào, nấc lúc lưu, giờ người duyệt. Nhãn chưa có giờ người duyệt không vào
+        tập đóng băng. Trong lúc chưa có lớp chờ (hàng NB2), gắn nhãn tiếp tục duyệt theo bảng lô như sáng 21/11, sổ của phiên
+        gắn nhãn ở máy thu là bản ghi tạm về ai lưu, lô nào, giờ duyệt.
+      - *Bảng lô là bề mặt duyệt của nấc 2:* một dòng một thẻ, cột cố định, bằng chứng và suy luận nằm ngay trên dòng, dòng nào
+        cũng mở được thẻ gốc. Màn duyệt và màn gắn nhãn dựng theo bảng này, không thêm nút «duyệt hết» lên màn từng thẻ.
+      - `AGENTS.md` luật 7 giữ nguyên câu chữ, thêm câu dẫn tới mục này. ADR-0007 thêm sửa đổi 21/11 «trợ lý gắn nhãn trong
+        phiên».
+    - **Ca biên** (lên người từng ca ở mọi nấc): máy bỏ trống hoặc trả «không suy ra được»; hai lần đọc độc lập lệch nhau, hoặc
+      chữ bài trái thẻ địa chỉ nhóm, hoặc hai nguồn danh bạ lệch; giá trị chưa có tiền lệ (chưa quy được về danh bạ, nguồn hay
+      loại căn cứ lần đầu); ca hiếm mà đắt có tên (nối, tách nút danh bạ, gộp hai căn, đổi dự án của cả một nhóm). Điểm tự tin
+      model tự khai không dùng để chia ca (review phân loại §3.1 điều 4).
+    - **Không đổi:**
+      - Luật 7: LLM chỉ phát biểu kèm trích dẫn; ghi dữ liệu qua người hoặc luật xác định. Nấc 3 đi đường «luật xác định» của
+        PL21 (ô đã đo đạt ngưỡng F3), không mở ngoại lệ mới.
+      - Ngưỡng F3 (A 0,95 · B 0,90 · C 0,80, cận dưới Wilson 95%).
+      - Mục 50: Mạnh ở cổng; lời riêng cho tiền, cloud, xoá dữ liệu, luật an toàn.
+      - Mục 56: K4 và ca khó vẫn lên thẻ từng cặp; mỗi loại căn cứ vẫn do Mạnh duyệt lần đầu.
+      - Tầng A; ba model đọc tin của đường ống (ADR-0007 sửa 06/11).
+      - Mẫu soát cuốn chiếu vẫn chỉ để thấy trôi.
+    - **Câu còn mở**, chốt ở Cổng Phạm vi của từng hàng: ngưỡng lên nấc (đề xuất: từ 100 thẻ đã duyệt ở nấc 1, sửa ngược ≤ 3%,
+      hệ số bắt lỗi ≥ 0,7, tỉ lệ soát ≥ 70%, 4 tuần không tụt trước nấc 4); cỡ mẫu theo nấc (đề xuất: 75 thẻ mỗi lô ở nấc 2, 30
+      thẻ mỗi tuần mỗi ô ở nấc 3); cách ghi «ai bấm Lưu» khi trợ lý thao tác qua phiên Ops của người (đường lưu riêng cho trợ
+      lý chạm quyền Ops); xếp ô số WC, toà vào nhóm F3 nào; 232 thẻ «Bổ sung tin» chờ mà không còn đề xuất nối vào là gì.
+    - **Hàng:** đợt `nguoi-o-bien-2111`, cắt ở lượt riêng: NB1 chấm bóng hàng «Bổ sung tin» và chấp thuận lô; NB2 xuất xứ nhãn,
+      lớp chờ, thẻ cài lỗi (có migration, T3); NB3 mở PL21 cho một ô; NB4 ngưỡng chạy bóng thẻ luật danh bạ (câu còn mở của
+      mục 56), sau MS3. Ngoài đường găng MS3; giám sát xếp dãy.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
