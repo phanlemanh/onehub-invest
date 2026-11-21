@@ -572,8 +572,8 @@ _Avoid_: log AI, LLM usage, chi phí model (chưa nói đơn vị)
 
 **Gắn nhãn**: Việc người đọc chữ gốc của một tin rao trong một lát và ghi giá trị đúng cho 24 ô theo nhóm (ý định tin, loại
 tin, loại hình, dự án, toà, giá, diện tích, phòng, mô tả căn…). Từ 06/11 (Mạnh chốt) gắn theo cách «máy nháp, người feedback»:
-máy điền nháp, người giữ hay sửa từng ô; đo bằng tỉ lệ giữ/sửa nháp (DO1). Gắn mù và gắn hai người đã dừng; tập test gắn mù
-đóng băng quyết lại khi mở PL21 (ROADMAP §3 mục 32, 35). Trang `/ops/labels` (PL7), chỉ ở máy thu. (Bản PL7 đầu: chín trường lõi,
+máy điền nháp, người giữ hay sửa từng ô; đo bằng tỉ lệ giữ/sửa nháp (DO1). Gắn mù và gắn hai người đã dừng; tập mở cổng
+tự áp PL21 chốt 21/11 là nhãn người duyệt nháp có ghi xuất xứ (ROADMAP §3 mục 61, sửa mục 32, 35). Trang `/ops/labels` (PL7), chỉ ở máy thu. (Bản PL7 đầu: chín trường lõi,
 gắn mù, 20% tin hai người gắn — lát đời trước vẫn mở bằng `?lat=`.)
 - Code: `eval_label_items`, `label.write`, `label-sample.mjs` · RESO: —
 - Slug URL: `labels`
@@ -585,9 +585,35 @@ là đề xuất, không phải giá trị chuẩn (luật 7). PL18 biến nó t
 _Avoid_: lớp nhãn bạc (dành cho nhãn nháp Opus của GNH2, chưa chốt), nhãn AI
 
 **Nhãn nháp Opus**: Nhãn do model lớn gắn dưới `labeler_id` riêng trong `eval_labels` để người soát ngẫu nhiên (đề xuất GNH2,
-Mạnh chưa chốt). Khác nhãn bạc (kết quả máy đọc) và nhãn đánh giá (người gắn).
+Mạnh chưa chốt; hướng «máy lưu vào lớp chờ, ghi ai lưu» chốt 21/11 ở ROADMAP §3 mục 61, cách ghi quyết ở hàng NB2). Khác nhãn bạc (kết quả máy đọc) và nhãn đánh giá (người gắn).
 - Code: `eval_labels` (labeler_id riêng, GNH2) · RESO: —
 _Avoid_: nhãn bạc, silver
+
+**Nấc tự chủ**: Mức máy được tự làm ở một loại việc gắn hay duyệt, từ nấc 0 (người làm hết) tới nấc 4 (máy tự áp, người chỉ
+xem cảnh báo); gắn với từng ô (loại việc × trường × phân khúc), lên nấc bằng chữ ký của Mạnh, tụt nấc máy tự làm rồi báo
+(ROADMAP §3 mục 61). Ký cổng, tiền, cloud, xoá dữ liệu, luật an toàn, gửi tin nhóm xã hội không quá nấc 1.
+- Code: — (chưa có; hàng NB2) · RESO: —
+_Avoid_: N0–N4 (đã dùng cho bậc năng lực), mức tự động, autonomy level
+
+**Ca biên**: Ca phải lên người từng ca ở mọi nấc tự chủ: máy bỏ trống, hai lần đọc độc lập lệch nhau, giá trị chưa có tiền lệ,
+hoặc ca hiếm mà đắt có tên (nối, tách nút danh bạ, gộp hai căn). Bắt bằng luật xác định, không bằng điểm tự tin model tự khai.
+- Code: — · RESO: —
+_Avoid_: edge case, ca khó (dành cho mục 56), ngoại lệ
+
+**Bảng lô**: Bề mặt duyệt của nấc 2: một dòng một thẻ, cột cố định, bằng chứng và suy luận của máy nằm ngay trên dòng, dòng nào
+cũng mở được thẻ gốc; người soát ca biên và mẫu rồi chấp thuận cả lô (ROADMAP §3 mục 61). Khác duyệt hàng loạt không đọc.
+- Code: — (chưa có; hàng NB1, NB2) · RESO: —
+_Avoid_: duyệt hàng loạt, bulk approve, duyệt hết
+
+**Lớp chờ**: Chỗ nhãn hay quyết định của máy nằm cho tới khi người chấp thuận lô; chưa có giờ người duyệt thì chưa là nhãn,
+không vào tập đóng băng.
+- Code: — (chưa có; hàng NB2) · RESO: —
+_Avoid_: staging nhãn, nhãn tạm
+
+**Thẻ cài lỗi**: Thẻ mang nháp sai có chủ ý, sinh bằng luật xác định, trộn 8–10% vào lát gắn nhãn hay lô duyệt; người duyệt biết
+có, không biết thẻ nào. Cho ra **hệ số bắt lỗi** = số thẻ cài người sửa / số thẻ cài; thẻ cài không vào tập nhãn.
+- Code: — (chưa có; hàng NB2) · RESO: —
+_Avoid_: honeypot, câu vàng, thẻ bẫy
 
 **Mẫu soát cuốn chiếu**: 20 bài rút ngẫu nhiên mỗi ngày từ bài nhận, kể cả bài máy không nhận là tin rao; màn hiện nháp máy,
 người giữ hay sửa. Ra tỉ lệ giữ nháp và tỉ lệ tin rao bị bỏ sót theo tuần — số có neo, chỉ để thấy trôi, không mở cổng tự áp
