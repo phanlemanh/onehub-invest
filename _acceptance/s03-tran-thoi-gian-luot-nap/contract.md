@@ -99,3 +99,7 @@ fixture thay bước pipeline, DB trỏ cổng đóng; lượt thử khởi deta
 - Đối chứng EC-AC-8 (`scripts/enrich-buoc-job.test.mjs`, S4 r3, GS phán 20/11): đổi vì trap EXIT của
   `zalo-import-daily.sh` nay kiểm pid (ZCode 1911-2, dòng 124, 216) — chiều đỏ bỏ cả hai lớp (gỡ trap và kiểm pid), thêm
   hai đối chứng một lớp; lời tiêu chí EC-AC-8 của hồ sơ enrich giữ nguyên. Gom cùng câu can-nguoi ma trận 13 tệp.
+
+- Nhận main 3c529c0b4 (DA45 #515, 21/11): ma trận PL34-AC-4 thành 14 tệp (DA45 thêm `scripts/phuong-tu-du-an-chuoi.test.mjs`);
+  test trần ZCode thêm fixture `pipeline/scripts/phuong-tu-du-an.mjs` (xong ngay) và trỏ node đồng hồ cho ca L1, L2 (hai ca tự
+  `spawn`, sót ở mục 1 r3). Lời AC giữ nguyên; gom cùng câu can-nguoi ma trận ở Cổng Bằng chứng.
