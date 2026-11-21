@@ -46,3 +46,44 @@ wall: 3107s
 - **claude-opus-5-5**: 3 agent · 38 calls · out 23,209 · in 78 · cache_read 2,549,589 · cache_create 272,779
 - **claude-haiku-5-5**: 15 agent · 53 calls · out 33,826 · in 106 · cache_read 1,218,605 · cache_create 646,277
 
+### S4 round 3 — wf_85e5056a-b4d (21 agent, 66,077 out-tok)
+
+| label | model | calls | out | in | cache_read | s |
+|---|---|--:|--:|--:|--:|--:|
+| review:bugs | claude-opus-5-5 | 10 | 8,146 | 22 | 484,758 | 99 |
+| machine:node scripts/suite-neu-doi.mjs pipeline_ | claude-haiku-5-5 | 17 | 7,955 | 34 | 587,802 | 1717 |
+| review:measurement | claude-opus-5-5 | 12 | 7,512 | 26 | 641,315 | 96 |
+| synthesize:report | claude-sonnet-5-5 | 2 | 7,137 | 4 | 47,358 | 39 |
+| machine:bash _acceptance/s03-tran-thoi-gian-luot | claude-haiku-5-5 | 13 | 6,791 | 26 | 416,689 | 1536 |
+| machine:node scripts/suite-neu-doi.mjs pipeline_ | claude-haiku-5-5 | 9 | 5,406 | 18 | 260,137 | 1047 |
+| review:conventions | claude-opus-5-5 | 7 | 5,124 | 14 | 300,123 | 61 |
+| machine:node --test scripts/job-exit.test.mjs sc | claude-haiku-5-5 | 2 | 2,544 | 4 | 35,211 | 34 |
+| machine:bash _acceptance/s03-tran-thoi-gian-luot | claude-haiku-5-5 | 2 | 2,532 | 4 | 35,159 | 71 |
+| machine:node scripts/suite-neu-doi.mjs app_ui -- | claude-haiku-5-5 | 3 | 1,916 | 6 | 41,911 | 613 |
+| triage | claude-sonnet-5-5 | 2 | 1,706 | 4 | 35,152 | 13 |
+| machine:node --test scripts/job-step-thoi-luong. | claude-haiku-5-5 | 2 | 1,696 | 4 | 35,139 | 31 |
+| machine:node scripts/suite-neu-doi.mjs app -- 'c | claude-haiku-5-5 | 2 | 1,196 | 4 | 35,164 | 27 |
+| machine:node scripts/suite-neu-doi.mjs portal_st | claude-haiku-5-5 | 2 | 972 | 4 | 35,162 | 5 |
+| machine:bash db/db-thu.sh oneinvest_suite_zik -- | claude-haiku-5-5 | 2 | 950 | 4 | 6,600 | 489 |
+| machine:bash _acceptance/s03-tran-thoi-gian-luot | claude-haiku-5-5 | 2 | 915 | 4 | 35,168 | 9 |
+| machine:node scripts/suite-neu-doi.mjs agent -- | claude-haiku-5-5 | 2 | 869 | 4 | 31,852 | 161 |
+| machine:node --test scripts/zalo-import-job-lan. | claude-haiku-5-5 | 2 | 835 | 4 | 35,139 | 46 |
+| machine:node scripts/suite-neu-doi.mjs ui_lint_r | claude-haiku-5-5 | 2 | 748 | 4 | 35,166 | 4 |
+| machine:bash _acceptance/s03-tran-thoi-gian-luot | claude-haiku-5-5 | 2 | 737 | 4 | 35,162 | 66 |
+| capture:provenance | claude-sonnet-5-5 | 2 | 390 | 4 | 30,604 | 3 |
+
+
+wall: 3630s
+
+| vai tro | agents | out | cache_read | wall s | bat dau | ket thuc |
+|---|--:|--:|--:|--:|---|---|
+| review | 3 | 20,782 | 1,426,196 | 101 | 08:19:39 | 08:21:20 |
+| machine | 15 | 36,062 | 1,661,461 | 3575 | 08:19:39 | 09:19:14 |
+| triage | 1 | 1,706 | 35,152 | 13 | 09:19:14 | 09:19:27 |
+| capture | 1 | 390 | 30,604 | 3 | 09:19:27 | 09:19:30 |
+| synthesize | 1 | 7,137 | 47,358 | 39 | 09:19:30 | 09:20:09 |
+
+- **claude-opus-5-5**: 3 agent · 29 calls · out 20,782 · in 62 · cache_read 1,426,196 · cache_create 207,402
+- **claude-haiku-5-5**: 15 agent · 64 calls · out 36,062 · in 128 · cache_read 1,661,461 · cache_create 660,117
+- **claude-sonnet-5-5**: 3 agent · 6 calls · out 9,233 · in 12 · cache_read 113,114 · cache_create 134,872
+

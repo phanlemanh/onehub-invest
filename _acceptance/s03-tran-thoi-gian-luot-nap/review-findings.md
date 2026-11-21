@@ -1,47 +1,49 @@
-# Review findings: s03-tran-thoi-gian-luot-nap (round 2)
+# Review findings: s03-tran-thoi-gian-luot-nap (round 3)
 
 ## Trong hợp đồng
 
-- **Bộ test chép từ ZCode phụ thuộc node của máy thu, đỏ trên CI (job scripts)**
-  file: `scripts/zalo-import-tran-zcode.test.mjs:77`
-  severity: high
-  AC: AC-8
-  source: conventions
-  detail: Tệp mới này nằm trong glob `scripts/*.test.mjs` mà job `scripts` của .github/workflows/ci-test.yml chạy, và không có mục nào trong scripts/ci-bo-qua.json. Hàm `chay` (dòng 38-55) không đặt ZALO_IMPORT_NODE_BIN, nên script rơi về `$HOME/.local/node-v24.21.0/bin/node`. Runner CI không có node ở đó, nên canh_gio in «TRẦN THỜI GIAN TẮT» và không dựng đồng hồ. Các ca cần đồng hồ (1711-4 (2), CA ĐỎ L2, lần 4 (a), lần 4 (b)…) treo tới hết chốt 90 giây rồi đỏ. Đã chạy lại như CI bằng `HOME=$(mktemp -d) node --test --test-name-pattern='1711-4 \(2\)' scripts/zalo-import-tran-zcode.test.mjs`: kết quả ✖ sau 90008ms, AssertionError «WARN một lần ở ngưỡng», output có dòng «không có node thật … TRẦN THỜI GIAN TẮT». Tệp zalo-import-tran.test.mjs của hồ sơ đã có cách làm đúng (dòng 6, 64): trỏ ZALO_IMPORT_NODE_BIN tới symlink về process.execPath. Bản chép này bỏ qua cách đó. Bảng chạy thử trong chay-thu.md (566 đạt) được đo trước khi thêm tệp này, nên không phủ nó.
-
-- **Hình dạng 2 (fixture viết tay đúng khuôn bên đọc): log mẫu của do-luot-dem đặt dòng TIMEOUT sau truoc-lan-claude, trong khi script thật in TIMEOUT phần nạp TRƯỚC dòng đó**
-  file: `_acceptance/s03-tran-thoi-gian-luot-nap/ap-may-thu/do-luot-dem.sh:13`
-  severity: high
-  AC: AC-9
-  source: measurement
-  detail: Bộ đọc chỉ ghi nhận TIMEOUT khi `bat` đã bật (`bat && /TIMEOUT: lượt vượt trần|TIMEOUT: phần nạp vượt trần/`), và mỗi dòng truoc-lan-claude lại đặt `cat=""`. Trong scripts/zalo-import-daily.sh, cả hai dòng «TIMEOUT: phần nạp vượt trần … tại snapshot» (dòng 269, sau đó `exit $FAILED` ở dòng 289) lẫn «… tại hồ sơ» (dòng 326) đều in ra TRƯỚC `job_step_ghi … truoc-lan-claude` (dòng 351). Vòng tin bị cắt thì lượt thoát mà không in truoc-lan-claude. Hệ quả: dòng TIMEOUT bị tính cho lượt 00:00 CŨ, nên lượt cũ báo «ĐẠT (cắt trần)», còn lượt bị cắt không bao giờ được đo. Dòng TIMEOUT hồ sơ thì bị dòng truoc-lan-claude ngay sau xoá mất. Nhánh «TIMEOUT của phần nạp» mà phần mô tả đầu tệp hứa vì vậy không bao giờ chạm tới đúng lượt của nó. Tình huống trần tổng cắt khi lượt còn ở pha nạp cũng hỏng theo cách tương tự. Năm log mẫu trong mau/ đều viết tay theo khuôn của bộ đọc: luot-cat-tran.log đặt TIMEOUT «lượt» sau transform-zalo, và không mẫu nào có TIMEOUT phần nạp. Không mẫu nào lấy từ đầu ra của script thật, nên do-luot-dem.test.sh xanh dù phép đo sai trên log thật. Lệnh kiểm sau ở README bước 5 dựa vào đúng phép đo này.
-
-- **Hình dạng 5 (ma trận viết trước lệch tập thật): PL34-AC-4 kê 12 tệp nhưng nhánh có 13 tệp nhắc zalo-import-daily, nên E8b đỏ**
-  file: `scripts/zalo-import-job.test.mjs:354`
-  severity: high
-  AC: AC-8
-  source: measurement
-  detail: Diff thêm scripts/zalo-import-tran.test.mjs vào TEP_NHAC và đổi `assert.equal(thay.length, 12, …)`. Cùng nhánh đó, lần merge 4ea9c848e còn đưa vào scripts/zalo-import-tran-zcode.test.mjs, tệp này có chuỗi «zalo-import-daily» (dòng 16). Chạy `node --test --test-name-pattern=PL34-AC-4 scripts/zalo-import-job.test.mjs` trên HEAD cho ra lỗi liệt kê cả zalo-import-tran-zcode.test.mjs và zalo-import-tran.test.mjs, tức 13 tệp. Ma trận không được cập nhật theo tập phần tử thật, trong khi evals.yaml E8b vẫn hứa «PL34-AC-4 đếm đúng mười hai tệp». Bộ test E8b (config jst_regress) và lệnh trọn scripts của E8f vì vậy không thể xanh.
+(không có)
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **Chữ ký chủ khoá `ps -o lstart=` đổi theo locale và TZ, có thể gỡ nhầm khoá của lượt đang chạy thật**
+- **do-luot-dem.sh vẫn tính dòng «TIMEOUT: lượt vượt trần» của lượt bị trần tổng cắt ở pha nạp cho lượt 00:00 CŨ, nên lượt cũ báo nhầm «ĐẠT (cắt trần)»**
+  Người dùng thấy gì: Sau một lượt đêm bị cắt giữa lúc đang nạp, phép kiểm buổi sáng có thể báo lượt cũ là đạt trong khi lượt vừa bị cắt không được đo. Người vận hành có thể tin nhầm là mọi thứ ổn.
+  Căn cứ: Chỉ ảnh hưởng tới phép kiểm sau khi áp, không làm mất hay sai dữ liệu, và người kiểm có thể đọc thẳng nhật ký để đối chiếu nên hậu quả nhẹ.
+  file: `_acceptance/s03-tran-thoi-gian-luot-nap/ap-may-thu/do-luot-dem.sh`
+  severity: medium
+  Đề xuất: known-limits
+
+- **do-luot-dem.sh bỏ qua lượt 00:00 thoát sớm (FAILED=1/exit 3), chấm nhầm sang lượt cũ và để cờ TẮT dính sang lượt sau**
+  Người dùng thấy gì: Khi lượt nửa đêm dừng sớm vì dữ liệu chưa sẵn sàng hoặc lỗi, phép kiểm buổi sáng có thể lấy số của đêm trước hoặc báo đỏ giả cho lượt sau. Người vận hành có thể bị đánh lạc hướng khi đọc kết quả.
+  Căn cứ: Đây là sai lệch của công cụ đo, không đụng tới dữ liệu và chỉ gây nhầm lẫn tạm thời, kiểm lại bằng cách đọc nhật ký là được; sửa sau cũng không đắt.
+  file: `_acceptance/s03-tran-thoi-gian-luot-nap/ap-may-thu/do-luot-dem.sh`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Hình dạng 4: ca (d) chỉ có assertion âm tính, không có đối chứng dương**
+  Người dùng thấy gì: Một ca kiểm tự động có thể vẫn báo xanh dù lượt nạp dừng sớm hơn dự kiến, nên lỗi cũ có thể lọt qua mà không ai biết. Người dùng cuối không thấy ảnh hưởng trực tiếp.
+  Căn cứ: Chỉ làm yếu một lớp kiểm tự động, không làm mất hay sai dữ liệu của người dùng, và có thể bổ sung chặt hơn bất cứ lúc nào.
+  file: `scripts/zalo-import-tran-zcode.test.mjs`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Chữ ký chủ khoá `ps -o lstart=` đổi theo locale và TZ, có thể gỡ nhầm khoá của lượt đang chạy thật (r2 · tệp đã đổi)**
   Người dùng thấy gì: Nếu lượt nạp chạy tay hoặc từ công cụ khác có múi giờ hay ngôn ngữ khác lượt 00:00 đang chạy, nó có thể coi lượt đang chạy là đã chết và chạy chồng lên, nạp trùng dữ liệu Zalo.
   Căn cứ: Chỉ xảy ra khi chạy tay trong lúc lượt đêm đang chạy, hiếm; hậu quả là nạp chồng chứ không mất dữ liệu, và lượt sau tự bắt kịp, nên có thể ghi nhận rồi sửa sau.
   file: `scripts/zalo-import-daily.sh`
   severity: medium
   Đề xuất: known-limits
 
-- **go_khoa_cu gỡ ngay khoá vừa tạo nhưng chưa ghi PID, hai lượt nạp chạy chồng nhau**
+- **go_khoa_cu gỡ ngay khoá vừa tạo nhưng chưa ghi PID, hai lượt nạp chạy chồng nhau (r2 · tệp đã đổi)**
   Người dùng thấy gì: Hai lượt nạp bắt đầu gần như cùng lúc có thể cùng chạy chồng nhau, làm nạp trùng dữ liệu Zalo.
   Căn cứ: Khe thời gian chỉ vài phần nghìn giây nên rất hiếm gặp, hậu quả là nạp chồng không mất dữ liệu và lượt sau bắt kịp được, nhưng sửa không đắt.
   file: `scripts/zalo-import-daily.sh`
   severity: medium
   Đề xuất: known-limits
 
-- **Hình dạng 4 (assertion âm tính đứng một mình): ca (d) «hết hồ sơ không báo 124 giả» không có đối chứng dương rằng lượt đã đi tới vòng hồ sơ**
+- **Hình dạng 4 (assertion âm tính đứng một mình): ca (d) «hết hồ sơ không báo 124 giả» không có đối chứng dương rằng lượt đã đi tới vòng hồ sơ (r2 · tệp đã đổi)**
   Người dùng thấy gì: Bộ kiểm có một ca có thể xanh dù lượt nạp chết sớm, nên có thể bỏ lọt lỗi trần báo cắt nhầm khi hồ sơ đã nạp hết.
   Căn cứ: Chỉ làm bộ kiểm yếu đi chứ không ảnh hưởng người dùng trực tiếp; thêm một điều kiện đối chứng là việc rẻ, làm sau được.
   file: `scripts/zalo-import-tran-zcode.test.mjs`
@@ -76,7 +78,7 @@ Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm v
   severity: medium
   Đề xuất: known-limits
 
-- **do-luot-dem.sh chấm nhầm lượt trước khi lượt đêm nay dừng sớm (r1)**
+- **do-luot-dem.sh chấm nhầm lượt trước khi lượt đêm nay dừng sớm (r1 · tệp đã đổi)**
   Người dùng thấy gì: Công cụ đo thời lượng lượt đêm có thể báo ĐẠT bằng số của đêm trước khi lượt đêm nay dừng sớm vì lỗi.
   Căn cứ: Chỉ làm số đo sau áp lạc quan trong ca hiếm, người đọc log vẫn thấy lỗi thật, không mất dữ liệu.
   file: `_acceptance/s03-tran-thoi-gian-luot-nap/ap-may-thu/do-luot-dem.sh`
@@ -97,7 +99,7 @@ Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm v
   severity: medium
   Đề xuất: known-limits
 
-- **do-luot-dem.sh kết luận ĐẠT bằng số của lượt cũ khi lượt đêm mới thoát sớm (r1)**
+- **do-luot-dem.sh kết luận ĐẠT bằng số của lượt cũ khi lượt đêm mới thoát sớm (r1 · tệp đã đổi)**
   Người dùng thấy gì: Công cụ đo có thể báo ĐẠT cho một đêm mà lượt nạp hỏng sớm, vì đang đọc số của lượt cũ.
   Căn cứ: Chỉ làm bước kiểm sau áp lạc quan trong ca hiếm; lỗi thật vẫn hiện trong log, không ảnh hưởng dữ liệu.
   file: `_acceptance/s03-tran-thoi-gian-luot-nap/ap-may-thu/do-luot-dem.sh`
@@ -111,7 +113,7 @@ Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm v
   severity: medium
   Đề xuất: known-limits
 
-- **Hình dạng 2 — Fixture viết tay đúng khuôn bên đọc: log mẫu của do-luot-dem không round-trip từ script thật, che lỗi chấm sai lượt bị cắt ở phần nạp (r1)**
+- **Hình dạng 2 — Fixture viết tay đúng khuôn bên đọc: log mẫu của do-luot-dem không round-trip từ script thật, che lỗi chấm sai lượt bị cắt ở phần nạp (r1 · tệp đã đổi)**
   Người dùng thấy gì: Công cụ đo thời lượng lượt đêm có thể báo ĐẠT sai đúng ở ca sự cố 5 giờ 38 khi lượt bị cắt ở phần nạp, vì log mẫu không giống log thật.
   Căn cứ: Chỉ làm bước kiểm sau áp kém tin cậy ở một số ca cắt, không mất dữ liệu; người đọc log vẫn thấy dòng cắt.
   file: `_acceptance/s03-tran-thoi-gian-luot-nap/ap-may-thu/do-luot-dem.test.sh`
