@@ -3,6 +3,7 @@
 //   --cham <tệp đóng băng> [--ra <báo cáo.md>]       thoát 0 khi cả N1, N2 đạt
 //   --cham <tệp đóng băng> --doi-chieu <báo cáo.md>  tính lại và đỏ khi số khác báo cáo
 //   --cham <tệp đóng băng> --tien-do                 in tiến độ gắn nhãn, không kết luận
+//   thêm --nhap <csv>: tính tỉ lệ «Mạnh sửa nháp» theo nhóm (so nháp trợ lý với nhãn đã lưu trong DB)
 // Chỉ đọc DB. Máy gắn toà đúng khi người ghi đúng toà đó. Máy gắn vùng đúng khi người ghi đúng vùng đó, vùng con của nó, hay một toà
 // nằm trong nó. Không quy được về danh bạ hoặc người ghi «không nêu» thì tính máy sai.
 import { readFileSync, realpathSync, writeFileSync } from "node:fs";
@@ -46,7 +47,7 @@ const cong = (o, k, dung) => { o[k] ??= { n: 0, dung: 0 }; o[k].n++; if (dung) o
  */
 export function chamLat({ dong, nhan, danhBa }) {
   const nhom = {};
-  for (const n of Object.keys(NGUON_CUA_NHOM)) nhom[n] = { tong: 0, n: 0, dung: 0, sai: 0, chua_gan: 0, lech: [], theo_nguon: {}, theo_muc: {}, theo_khu: {} };
+  for (const n of Object.keys(NGUON_CUA_NHOM)) nhom[n] = { tong: 0, n: 0, dung: 0, sai: 0, chua_gan: 0, lech: [], ds_sai: [], theo_nguon: {}, theo_muc: {}, theo_khu: {} };
   for (const x of dong) {
     const g = nhom[x.stratum];
     g.tong++;
@@ -56,6 +57,8 @@ export function chamLat({ dong, nhan, danhBa }) {
     const kq = ds.map((l) => chamBai(x, quyNhan(l, d), d));
     if (new Set(kq).size > 1) { g.lech.push(x.ref_id); continue; }
     g.n++; if (kq[0]) g.dung++; else g.sai++;
+    // Bài máy sai giữ cách quy nhãn để người soát lỗ danh bạ trước khi kết luận.
+    if (!kq[0]) g.ds_sai.push({ ref_id: x.ref_id, may: `${x.muc}/${x.k}`, nhan: ds.map((l) => ({ building: l.building ?? null, subzone: l.subzone ?? null, quy: quyNhan(l, d) })) });
     cong(g.theo_nguon, x.nguon, kq[0]); cong(g.theo_muc, x.muc, kq[0]); cong(g.theo_khu, String(x.du_an), kq[0]);
   }
   for (const g of Object.values(nhom)) {
@@ -65,6 +68,70 @@ export function chamLat({ dong, nhan, danhBa }) {
   }
   const nguon_phai_tat = Object.entries(nhom).filter(([, g]) => g.trang !== "dat").flatMap(([n]) => NGUON_CUA_NHOM[n]);
   return { dat: NHOM_BAT_BUOC.every((n) => nhom[n].trang === "dat"), nguon_phai_tat, nhom };
+}
+
+/** Đọc sổ nháp của trợ lý (CSV, dòng «#» là chú thích): item_id → ô toà, ô khu và cờ Mạnh tự quyết. */
+export function docNhap(text) {
+  const dong = [];
+  for (const line of text.split("\n")) {
+    if (!line.trim() || line.startsWith("#")) continue;
+    const f = []; let cur = "", q = false;
+    for (const ch of line) { if (ch === '"') { q = !q; continue; } if (ch === "," && !q) { f.push(cur); cur = ""; continue; } cur += ch; }
+    f.push(cur); dong.push(f);
+  }
+  const [h, ...r] = dong;
+  const c = (k) => h.indexOf(k);
+  const m = new Map();
+  for (const f of r) {
+    // «(KO)» là nháp «không nêu»; ô có «(Mạnh …» là Mạnh tự quyết ô đó, không tính là giữ nháp.
+    const o = (v) => ((v ?? "").trim() === "(KO)" ? "" : (v ?? ""));
+    const toa = o(f[c("de_xuat_toa")]), khu = o(f[c("de_xuat_khu")]);
+    const sua = f[c("manh_sua")] ?? "";
+    // Cách gắn đọc từ cột ghi chú của sổ: trợ lý lưu trước lời duyệt (Mạnh duyệt hồi tố), lưu sau lời duyệt lô, còn lại Mạnh từng thẻ.
+    const loai = /trước lời duyệt|hồi tố/.test(sua) ? "luu-truoc-duyet-hoi-to" : /sau duyệt lô/.test(sua) ? "duyet-lo-truoc-luu" : "manh-tung-the";
+    const gio = sua.match(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ/g);
+    m.set(f[c("item_id")], { toa, khu, tu_quyet: /\(Mạnh/.test(toa) || /\(Mạnh/.test(khu), loai, gio_duyet: gio ? gio[gio.length - 1] : null });
+  }
+  return m;
+}
+
+const chuan = (v) => (v ?? "").trim().toLowerCase();
+
+/** Tỉ lệ Mạnh sửa nháp theo nhóm: so ô nháp với nhãn đã lưu trong DB, không tin cột tự khai của sổ. */
+export function tiLeSua({ dong, nhan, nhap }) {
+  const ra = {};
+  for (const n of Object.keys(NGUON_CUA_NHOM)) ra[n] = { co_nhap: 0, giu: 0, sua: 0, tu_quyet: 0, ds_sua: [], ds_tu_quyet: [] };
+  for (const x of dong) {
+    const g = ra[x.stratum];
+    for (const l of nhan.get(x.ref_id) ?? []) {
+      const p = nhap.get(String(l.item_id));
+      if (!p) { g.khong_nhap = (g.khong_nhap ?? 0) + 1; continue; }
+      g.co_nhap++;
+      if (p.tu_quyet) { g.tu_quyet++; g.ds_tu_quyet.push(x.ref_id); continue; }
+      if (chuan(p.toa) === chuan(l.building) && chuan(p.khu) === chuan(l.subzone)) g.giu++;
+      else { g.sua++; g.ds_sua.push(x.ref_id); }
+    }
+  }
+  return ra;
+}
+
+export const LOAI_THE = ["manh-tung-the", "duyet-lo-truoc-luu", "luu-truoc-duyet-hoi-to"];
+
+/** Số chấm theo cách gắn thẻ; ghim bài có giờ lưu (eval_labels.labeled_at) sớm hơn giờ duyệt ghi trong sổ. */
+export function tachLoaiThe({ dong, nhan, nhap, danhBa }) {
+  const ra = {};
+  for (const n of Object.keys(NGUON_CUA_NHOM)) { ra[n] = {}; for (const l of LOAI_THE) ra[n][l] = { n: 0, dung: 0, ds: [], luu_truoc_gio_duyet: [] }; }
+  for (const x of dong) {
+    const ds = nhan.get(x.ref_id) ?? [];
+    if (ds.length !== 1) continue; // chưa gắn hoặc nhiều người: chamLat đã báo
+    const l = ds[0], p = nhap.get(String(l.item_id));
+    const o = ra[x.stratum][p?.loai ?? "manh-tung-the"];
+    const d = danhBa.get(String(x.du_an));
+    o.n++; o.ds.push(x.ref_id);
+    if (chamBai(x, quyNhan(l, d), d)) o.dung++;
+    if (p?.gio_duyet && l.labeled_at && new Date(l.labeled_at) < new Date(p.gio_duyet)) o.luu_truoc_gio_duyet.push(x.ref_id);
+  }
+  return ra;
 }
 
 /** So đầu ra của mã cuối với bản đóng băng; mỗi lỗi ghim mã bài. */
@@ -91,6 +158,17 @@ export function vietBaoCao(r, sha256) {
     dong.push("", `## ${ten}`, "", "| Nhóm | Phần | Đã chấm | Đúng | Tỉ lệ |", "|---|---|---:|---:|---:|");
     for (const [n, g] of Object.entries(r.nhom)) for (const [k, v] of Object.entries(g[khoa])) dong.push(`| ${n} | ${k} | ${v.n} | ${v.dung} | ${pt(v.dung, v.n)} |`);
   }
+  dong.push("", "## Bài máy sai — soát lỗ danh bạ trước khi kết luận", "", "| Nhóm | Bài | Máy gắn | Người ghi (toà · khu) | Quy về danh bạ |", "|---|---|---|---|---|");
+  const quyChu = (q) => (q.toa || q.vung ? [q.toa && `toa=${q.toa}`, q.vung && `vung=${q.vung}`].filter(Boolean).join(" ") : "không quy được");
+  for (const [n, g] of Object.entries(r.nhom)) for (const s of g.ds_sai) for (const l of s.nhan) dong.push(`| ${n} | ${s.ref_id} | ${s.may} | ${l.building ?? "—"} · ${l.subzone ?? "—"} | ${quyChu(l.quy)} |`);
+  if (r.sua_nhap) {
+    dong.push("", "## Mạnh sửa nháp của trợ lý", "", "| Nhóm | Có nháp | Giữ nguyên | Sửa | Mạnh tự quyết | Tỉ lệ sửa |", "|---|---:|---:|---:|---:|---:|");
+    for (const [n, t] of Object.entries(r.sua_nhap)) dong.push(`| ${n} | ${t.co_nhap} | ${t.giu} | ${t.sua} | ${t.tu_quyet} | ${pt(t.sua + t.tu_quyet, t.co_nhap)} |`);
+  }
+  if (r.loai_the) {
+    dong.push("", "## Số theo cách gắn thẻ", "", "| Nhóm | Cách gắn | Bài | Đúng | Tỉ lệ | Lưu trước giờ duyệt |", "|---|---|---:|---:|---:|---|");
+    for (const [n, o] of Object.entries(r.loai_the)) for (const [l, v] of Object.entries(o)) if (v.n) dong.push(`| ${n} | ${l} | ${v.n} | ${v.dung} | ${pt(v.dung, v.n)} | ${v.luu_truoc_gio_duyet.join(", ") || "—"} |`);
+  }
   dong.push("", "## Số để đối chiếu", "", "```json", JSON.stringify(r), "```", "");
   return dong.join("\n");
 }
@@ -116,14 +194,21 @@ async function main() {
     for (const l of loi.slice(0, 20)) console.error(`DO: ${l}`);
     if (loi.length) { console.error(`DO: ${loi.length} bai co dau ra khac ban dong bang`); return 1; }
     const { rows } = await c.query(
-      `SELECT i.ref_id, l.labeler_id, l.field, CASE WHEN l.not_stated THEN NULL ELSE l.value END AS value
+      `SELECT i.ref_id, i.item_id, l.labeler_id, l.field, CASE WHEN l.not_stated THEN NULL ELSE l.value END AS value, l.labeled_at
          FROM eval_labels l JOIN eval_label_items i USING (item_id) WHERE i.lat = $1 AND l.field IN ('building', 'subzone')`, [LAT]);
     const theoNguoi = new Map();
-    for (const r of rows) { const k = `${r.ref_id}|${r.labeler_id}`; const x = theoNguoi.get(k) ?? { ref_id: r.ref_id, labeler_id: r.labeler_id }; x[r.field] = r.value; theoNguoi.set(k, x); }
+    for (const r of rows) { const k = `${r.ref_id}|${r.labeler_id}`; const x = theoNguoi.get(k) ?? { ref_id: r.ref_id, item_id: r.item_id, labeler_id: r.labeler_id }; x[r.field] = r.value; if (r.labeled_at && (!x.labeled_at || r.labeled_at > x.labeled_at)) x.labeled_at = r.labeled_at; theoNguoi.set(k, x); }
     const nhan = new Map();
     for (const x of theoNguoi.values()) nhan.set(x.ref_id, [...(nhan.get(x.ref_id) ?? []), x]);
     const r = chamLat({ dong: tep.dong, nhan, danhBa: vao.danhBa });
+    if (lay("--nhap")) {
+      const nhap = docNhap(readFileSync(lay("--nhap"), "utf8"));
+      r.sua_nhap = tiLeSua({ dong: tep.dong, nhan, nhap });
+      r.loai_the = tachLoaiThe({ dong: tep.dong, nhan, nhap, danhBa: vao.danhBa });
+    }
     for (const [n, g] of Object.entries(r.nhom)) console.log(`${n}: da cham ${g.n}/${g.tong} · dung ${g.dung} · sai ${g.sai} · wilson ${g.wilson ?? "n/a"} · ${g.trang}${g.sai >= 2 ? " · DUNG GAN NHAN NHOM NAY" : ""}`);
+    for (const [n, g] of Object.entries(r.nhom)) for (const s of g.ds_sai) console.log(`  may sai ${n} ${s.ref_id}: may ${s.may} · nguoi ${s.nhan.map((l) => `${l.building ?? "-"}/${l.subzone ?? "-"} -> ${JSON.stringify(l.quy)}`).join(" ; ")}`);
+    for (const [n, t] of Object.entries(r.sua_nhap ?? {})) console.log(`${n}: co nhap ${t.co_nhap} · giu ${t.giu} · sua ${t.sua} · tu quyet ${t.tu_quyet}${t.khong_nhap ? ` · khong co nhap ${t.khong_nhap}` : ""}`);
     if (a.includes("--tien-do")) return 0;
     if (lay("--doi-chieu")) {
       const cu = docBaoCao(readFileSync(lay("--doi-chieu"), "utf8"));
