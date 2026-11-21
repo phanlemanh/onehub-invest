@@ -5,7 +5,7 @@ slug: so-nguon-kho-khai-bao
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, ui]
-status: implemented
+status: verified
 design_doc: docs/superpowers/specs/2026-11-21-so-nguon-kho-khai-bao-design.md
 approved_by: Mạnh
 approved_at: 2026-11-21
@@ -81,3 +81,11 @@ ngoài phạm vi ghi «ngoài phạm vi, vì …» ngay trong bảng. Không ch�
   chạy) → điền S09, S17 → kéo main. Mã mới ném lỗi khi sổ chưa có cột (AC-2), nên không kéo trước khi áp. Lùi: lùi mã trước (revert
   + kéo), DB sau. Cloud không gọi `readFreshness` (không có `source_registry`; đọc khối `freshness` đẩy lên), nên không có lỗi phía cloud.
 - Hai tệp `tam/s09-mien.txt`, `tam/s17-mien.txt` (ZCode ghi, LL kiểm) dùng đúng một lần lúc điền rồi xoá; không in, không commit.
+- Ngoài-1 (máy định tuyến 2026-11-21, đề xuất S4 known-limits): Nếu người vận hành tự bật lại một nguồn đã tạm dừng hoặc cố ý bỏ trống nhịp rồi áp lại bản cập nhật sổ nguồn, các lựa chọn đó bị đặt lại về giá trị ban đầu. Hiện chỉ có lượt áp hai lần liền nhau theo hồ sơ nên chưa ai gặp. — `db/migrations/122_source_registry_family_cadence.sql`
+- Ngoài-3 (máy định tuyến 2026-11-21, đề xuất S4 known-limits): Trong khoảng sau khi áp bản cập nhật mà chưa điền tên thật cho hai nguồn mới, trang danh sách nguồn có thể hiện ô tên trống không có nhãn giải thích. — `app/src/components/ops/sources/registry-table.tsx`
+- Ngoài-5 (máy định tuyến 2026-11-21, đề xuất S4 known-limits): Nếu người vận hành cố ý tắt đo một nguồn bằng cách để trống rồi áp lại bản cập nhật, nguồn đó sẽ được đo lại như cũ. — `db/migrations/122_source_registry_family_cadence.sql`
+- Ngoài-6 (máy định tuyến 2026-11-21, đề xuất S4 known-limits): Bài kiểm tự động cho các ô phủ thị trường có thể vẫn xanh dù bộ đọc trả về rỗng, nên chưa chứng minh chắc việc ẩn S01 hcmc và S11 trên màn. — `app/tests/slo-mot-nguon.test.tsx`
+- Ngoài-7 (máy định tuyến 2026-11-21, đề xuất S4 known-limits): Bài kiểm chỉ bảo đảm S11 không hiện «Chưa có dữ liệu», chưa chứng minh nó hiện đúng nhãn «Ngừng» trên màn. — `app/tests/slo-mot-nguon.test.tsx`
+- Ngoài-8 (máy định tuyến 2026-11-21, đề xuất S4 known-limits): Bài kiểm bảng Sức khoẻ nguồn chỉ thấy mã S09, S16 có mặt đâu đó trong trang, chưa chắc hàng S16 không mang nhãn «Chưa khai SLO». — `app/tests/slo-mot-nguon.test.tsx`
+- Ngoài-9 (máy định tuyến 2026-11-21, đề xuất S4 known-limits): Bài kiểm có thể xanh dù bản chép dữ liệu thiếu một vài nguồn, khi đó nhịp và thị trường đo của nguồn thiếu không được kiểm. — `scripts/so-nguon-kho.test.mjs`
+- Ngoài-10 (máy định tuyến 2026-11-21, đề xuất S4 known-limits): Phép tự kiểm của bộ soát tên nguồn thật luôn xanh theo cách dựng, nên chưa chứng minh được nó bắt các cách viết tên khác nhau như hoa thường, khoảng trắng, tên miền đầy đủ. — `_acceptance/so-nguon-kho-khai-bao/probes/tang-a.mjs`
