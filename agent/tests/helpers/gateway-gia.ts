@@ -24,7 +24,10 @@ const nghe = async (sv: Server) => {
 
 /** Gateway giả theo khuôn trả lời của provider gateway (ai 7): content · finishReason · usage. */
 export async function moGateway(macDinh: TraLoi = { text: "{}", vao: 100, ra: 20 }): Promise<MayGia> {
-  const may: Omit<MayGia, "url" | "dong"> = {
+  // Một đối tượng duy nhất: máy chủ đọc chính `may.macDinh`, `may.hang` — test gán lại chúng thì máy chủ thấy ngay.
+  const may = {
+    url: "",
+    dong: async () => {},
     yeuCau: [],
     hang: [],
     macDinh,
@@ -32,7 +35,7 @@ export async function moGateway(macDinh: TraLoi = { text: "{}", vao: 100, ra: 20
       may.yeuCau.length = 0;
       may.hang.length = 0;
     },
-  };
+  } as MayGia;
   const sv = createServer((req, res) => {
     let s = "";
     req.on("data", (d) => (s += d));
@@ -62,7 +65,9 @@ export async function moGateway(macDinh: TraLoi = { text: "{}", vao: 100, ra: 20
     });
   });
   const cong = await nghe(sv);
-  return { ...may, url: `http://127.0.0.1:${cong}/gw`, dong: () => new Promise((r) => sv.close(() => r())) } as MayGia;
+  may.url = `http://127.0.0.1:${cong}/gw`;
+  may.dong = () => new Promise((r) => sv.close(() => r()));
+  return may;
 }
 
 /** Máy giả cổng MTPLX: đếm mọi yêu cầu, trả 500. Sau MH1 không lệnh nào được gọi tới nó. */

@@ -1,5 +1,6 @@
-// vlm-anh-s03.test.ts — hồ sơ _acceptance/vlm-anh-tin-s03, phần không cần DB: thân yêu cầu thật của ba model (VLM-AC-3), bài hết ảnh
-// (VLM-AC-2b), đọc trả lời, gộp nhãn, trần chi phí. Máy chủ HTTP giả thay Gateway và MTPLX, không gọi mạng, không cần khoá.
+// vlm-anh-s03.test.ts — hồ sơ _acceptance/vlm-anh-tin-s03, phần không cần DB: thân yêu cầu thật của hai model qua Gateway (VLM-AC-3),
+// bài hết ảnh (VLM-AC-2b), đọc trả lời, gộp nhãn, trần chi phí. Máy chủ HTTP giả thay Vercel AI Gateway, không gọi mạng, không cần khoá
+// (model Qwen local qua MTPLX gỡ ở MH1 model-may-sang-haiku, 21/11).
 // Chữ bài viết tay, số điện thoại là số giả, ảnh là byte tự sinh trong thư mục tạm.
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
@@ -21,18 +22,13 @@ const sv = createServer((req, res) => {
     const p = traLoi();
     res.setHeader("content-type", "application/json");
     if (p.status) { res.writeHead(p.status); res.end(JSON.stringify({ error: { message: "canh-thong-diep-loi", type: "internal_server_error" } })); return; }
-    if ((req.url ?? "").includes("/language-model")) {
-      res.end(JSON.stringify({ content: [{ type: "text", text: p.text }], finishReason: { unified: "stop", raw: "stop" }, usage: { inputTokens: { total: 1600, noCache: 1600 }, outputTokens: { total: 200, text: 200 } }, warnings: [], ...(p.cost ? { providerMetadata: { gateway: { cost: p.cost } } } : {}) }));
-    } else {
-      res.end(JSON.stringify({ id: "x", object: "chat.completion", created: 1, model: "m", choices: [{ index: 0, message: { role: "assistant", content: p.text }, finish_reason: "stop" }], usage: { prompt_tokens: 1600, completion_tokens: 200, total_tokens: 1800 } }));
-    }
+    res.end(JSON.stringify({ content: [{ type: "text", text: p.text }], finishReason: { unified: "stop", raw: "stop" }, usage: { inputTokens: { total: 1600, noCache: 1600 }, outputTokens: { total: 200, text: 200 } }, warnings: [], ...(p.cost ? { providerMetadata: { gateway: { cost: p.cost } } } : {}) }));
   });
 });
 await new Promise<void>((r) => sv.listen(0, "127.0.0.1", r));
 const CONG = (sv.address() as AddressInfo).port;
 process.env.AI_GATEWAY_BASE_URL = `http://127.0.0.1:${CONG}/gw`;
 process.env.AI_GATEWAY_API_KEY = "khoa-gia";
-process.env.MTPLX_URL = `http://127.0.0.1:${CONG}/v1`;
 (globalThis as { AI_SDK_LOG_WARNINGS?: boolean }).AI_SDK_LOG_WARNINGS = false;
 const { CAU_HOI, chayLo, coUrl, DEEPSEEK_MODEL, docTraLoi, gopNhan, hoiAnh, hoiTuTep, PROMPT_SHA, TEN_MODEL, tuyChonGateway, uocMotAnh, VLM_MODELS } = await import("../src/agents/vlm-anh-s03.js");
 const { docCo } = await import("../scripts/vlm-anh-run.js");
@@ -63,8 +59,7 @@ function anhTrongThan(j: any): string[] {
   const goBo = (s: string) => s.replace(/^data:[^,]*,/, "");
   // Gateway gửi tệp dạng { type: "data", data: <base64> } của giao diện model v4.
   const gw = (j.prompt ?? []).flatMap((m: any) => (Array.isArray(m.content) ? m.content : [])).filter((p: any) => p.type === "file").map((p: any) => goBo(String(p.data?.data ?? p.data)));
-  const chat = (j.messages ?? []).flatMap((m: any) => (Array.isArray(m.content) ? m.content : [])).filter((p: any) => p.type === "image_url").map((p: any) => goBo(String(p.image_url.url)));
-  return [...gw, ...chat];
+  return gw;
 }
 
 function dungAnh(t: { after: (f: () => void) => void }) {
@@ -79,7 +74,7 @@ function dungAnh(t: { after: (f: () => void) => void }) {
   return { goc, bytes, tep, sha256 };
 }
 
-test("VLM-AC-3 ba model: mỗi thân một ảnh đúng byte cộng câu hỏi cố định, cờ Gateway đúng, không lộ trường nào", async (t) => {
+test("VLM-AC-3 hai model: mỗi thân một ảnh đúng byte cộng câu hỏi cố định, cờ Gateway đúng, không lộ trường nào", async (t) => {
   const { bytes, tep, sha256 } = dungAnh(t);
   const bai = { ...DONG_STG, text_hash: "h", ly_do: ["thieu_gia"], anh: [{ sha256, tep, mime: "image/jpeg", nguon: "ghep", so_bai_dung_chung: 1 }] };
   // Đối chứng dương: dòng mồi chứa đủ giá trị canh, nên «không lộ» dưới đây là thước thật.
@@ -87,9 +82,8 @@ test("VLM-AC-3 ba model: mỗi thân một ảnh đúng byte cộng câu hỏi c
   for (const c of CANH) assert.ok(goc.includes(c), `VLM-AC-3 fixture thiếu giá trị canh ${c}`);
 
   const MA_TRAN = [
-    { m: "haiku", gw: true, id: "anthropic/claude-haiku-5.5", only: undefined },
-    { m: "deepseek", gw: true, id: DEEPSEEK_MODEL, only: ["baseten"] },
-    { m: "qwen", gw: false, id: undefined, only: undefined },
+    { m: "haiku", id: "anthropic/claude-haiku-5.5", only: undefined },
+    { m: "deepseek", id: DEEPSEEK_MODEL, only: ["baseten"] },
   ] as const;
   assert.equal(MA_TRAN.length, VLM_MODELS.length);
   assert.equal(DEEPSEEK_MODEL, "deepseek/deepseek-v4.1-flash-1017");
@@ -104,16 +98,12 @@ test("VLM-AC-3 ba model: mỗi thân một ảnh đúng byte cộng câu hỏi c
     assert.deepEqual(anhTrongThan(y.json), [b64], `VLM-AC-3 ${x.m} ảnh trong thân sai byte hoặc sai số lượng`);
     assert.ok(y.than.includes(JSON.stringify(CAU_HOI).slice(1, -1)), `VLM-AC-3 ${x.m} thiếu câu hỏi cố định`);
     kiemKhongLo(y.than);
-    if (x.gw) {
-      assert.equal(y.model, x.id, "VLM-AC-3 model Gateway sai");
-      const go = y.json.providerOptions?.gateway;
-      assert.equal(go?.zeroDataRetention, true, "VLM-AC-3 thiếu cờ không giữ dữ liệu");
-      assert.equal(go?.disallowPromptTraining, true, "VLM-AC-3 thiếu cờ không huấn luyện");
-      assert.deepEqual(go?.only, x.only, "VLM-AC-3 danh sách nhà cung cấp sai");
-    } else {
-      assert.ok(y.url.endsWith("/chat/completions"), "VLM-AC-3 Qwen không đi MTPLX");
-      assert.equal(y.json.chat_template_kwargs?.enable_thinking, false, "VLM-AC-3 Qwen còn bật suy nghĩ");
-    }
+    assert.ok(y.url.includes("/language-model"), `VLM-AC-3 ${x.m} không đi Gateway`);
+    assert.equal(y.model, x.id, "VLM-AC-3 model Gateway sai");
+    const go = y.json.providerOptions?.gateway;
+    assert.equal(go?.zeroDataRetention, true, "VLM-AC-3 thiếu cờ không giữ dữ liệu");
+    assert.equal(go?.disallowPromptTraining, true, "VLM-AC-3 thiếu cờ không huấn luyện");
+    assert.deepEqual(go?.only, x.only, "VLM-AC-3 danh sách nhà cung cấp sai");
   }
 });
 
@@ -136,7 +126,7 @@ test("VLM-AC-3 phần chữ còn URL: 0 yêu cầu, error_kind lo-url; câu hỏ
   assert.equal(yeuCau.length, 0, "VLM-AC-3 có yêu cầu đi khi chữ còn URL");
   // Đối chứng: cùng ảnh, câu hỏi sạch thì có yêu cầu đi.
   traLoi = () => ({ text: TRA_TOT });
-  await hoiTuTep("qwen", { recordCall: khongGhi })({ tep, mime: "image/jpeg" });
+  await hoiTuTep("haiku", { recordCall: khongGhi })({ tep, mime: "image/jpeg" });
   assert.equal(yeuCau.length, 1);
 });
 
@@ -157,14 +147,14 @@ test("VLM-AC-2b bài hết ảnh: 0 yêu cầu, không có dòng nhãn", { skip:
   assert.equal(tap.length, 0, "VLM-AC-2b bài hết ảnh vẫn vào tập đọc");
   assert.equal(loai[0].ly_do, "het-anh");
   yeuCau.length = 0;
-  const kq = await chayLo({ model: "qwen", bai: tap, runId: "r", tranUsd: 1, hoi: hoiTuTep("qwen", { recordCall: khongGhi }), ghi: null });
+  const kq = await chayLo({ model: "haiku", bai: tap, runId: "r", tranUsd: 1, hoi: hoiTuTep("haiku", { recordCall: khongGhi }), ghi: null });
   assert.equal(yeuCau.length, 0, "VLM-AC-2b có yêu cầu tới model");
   assert.equal(kq.dong.length, 0, "VLM-AC-2b có dòng nhãn");
   // Đối chứng: cùng bài, entry trỏ tệp thật thì có ảnh và có yêu cầu.
   const { tap: co } = lib.chonTapDoc([post], media([{ file: `media/${TEP_CANH}`, sha256 }]), { goc });
   assert.equal(co[0].anh[0].tep, tep);
   traLoi = () => ({ text: TRA_TOT });
-  await chayLo({ model: "qwen", bai: co, runId: "r", tranUsd: 1, hoi: hoiTuTep("qwen", { recordCall: khongGhi }), ghi: null });
+  await chayLo({ model: "haiku", bai: co, runId: "r", tranUsd: 1, hoi: hoiTuTep("haiku", { recordCall: khongGhi }), ghi: null });
   assert.equal(yeuCau.length, 1);
 });
 
@@ -210,10 +200,12 @@ test("VLM-AC-6 trần: dừng trước ảnh vượt, trả lời không kèm ch
   const du = await chayLo({ model: "haiku", bai, runId: "r", tranUsd: 1, hoi, ghi: null });
   assert.equal(goi, 3, "VLM-AC-6 đối chứng: trần rộng phải chạy hết");
   assert.equal(du.dungTran, false);
-  // Qwen miễn phí: trần 0 vẫn chạy.
+  // Trần 0 với Haiku (có giá): ước ảnh đầu đã vượt trần → không gọi model nào, không có dòng.
   goi = 0;
-  await chayLo({ model: "qwen", bai, runId: "r", tranUsd: 0, hoi: async () => { goi += 1; return { ...docTraLoi(TRA_TOT), error_kind: null, latency_ms: 1, cost_usd: null, chi_usd: 0 }; }, ghi: null });
-  assert.equal(goi, 3);
+  const khong = await chayLo({ model: "haiku", bai, runId: "r", tranUsd: 0, hoi, ghi: null });
+  assert.equal(goi, 0, "VLM-AC-6 trần 0 vẫn gọi model");
+  assert.equal(khong.dungTran, true);
+  assert.equal(khong.dong.length, 0);
 });
 
 test("VLM-AC-6 lỗi 500 qua Gateway: error_kind là tên lớp, không chép thông điệp; một yêu cầu, không thử lại ngầm; ai_calls có dòng", async () => {
@@ -228,11 +220,15 @@ test("VLM-AC-6 lỗi 500 qua Gateway: error_kind là tên lớp, không chép th
   assert.equal(k.chi_usd, 0);
 });
 
-test("VLM-AC-6 cờ: thiếu --model hoặc ngoài ba model thì lỗi; tên model ghi sổ phân biệt ba model; Qwen không có cờ Gateway", () => {
+test("VLM-AC-6 cờ: thiếu --model hoặc ngoài hai model thì lỗi (qwen không còn được duyệt); tên model ghi sổ phân biệt hai model; model nào cũng có cờ Gateway", () => {
   assert.throws(() => docCo([]), /--model/);
   assert.throws(() => docCo(["--model", "decisions"]), /--model/);
+  assert.throws(() => docCo(["--model", "qwen"]), /model không được duyệt/);
   assert.equal(docCo(["--model", "deepseek"]).model, "deepseek");
-  assert.equal(docCo(["--model", "qwen", "--gold", "x"]).thu, true);
-  assert.equal(new Set(Object.values(TEN_MODEL)).size, 3);
-  assert.equal(tuyChonGateway("qwen"), undefined);
+  assert.equal(docCo(["--model", "haiku", "--gold", "x"]).thu, true);
+  assert.equal(new Set(Object.values(TEN_MODEL)).size, VLM_MODELS.length);
+  for (const m of VLM_MODELS) {
+    const go = tuyChonGateway(m).gateway;
+    assert.deepEqual([go.zeroDataRetention, go.disallowPromptTraining], [true, true], `VLM-AC-6 ${m} thiếu cờ Gateway`);
+  }
 });
