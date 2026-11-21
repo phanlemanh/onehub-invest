@@ -263,7 +263,7 @@ function gia(o: { loiTai?: number[]; canh?: boolean; nemNeuGoi?: boolean } = {})
   return { goi, fn };
 }
 /** Lời gọi theo thẻ: model giả không thấy mã thẻ (lời nhắc không mang offer_id), nên đối chiếu qua chữ bài. */
-const theCua = (g: Goi, ds: TheFx[]) => ds.find((t) => t.text && ranh(g.user) === t.text)?.ma ?? "?";
+const theCua = (g: Goi, ds: TheFx[]) => ds.find((t) => t.text && (ranh(g.user) === t.text || t.text.startsWith(ranh(g.user))))?.ma ?? "?";
 const tam = () => mkdtempSync(join(tmpdir(), "nb1-"));
 const docJsonl = (p: string) => (existsSync(p) ? readFileSync(p, "utf8").split("\n").filter(Boolean).map((l) => JSON.parse(l)) : []);
 const ghiDb = (c: PgClient): import("../src/runtime/ai-call-log.js").RecordCall => async (r) => {
@@ -544,8 +544,8 @@ test("AC-10 kê thẻ chờ không đề xuất theo loại × đề xuất cùn
       ["gia+y_dinh", "da-bo-qua", "doc-toan-bo", 1], ["y_dinh", "da-ap", "enrich", 1], ["y_dinh", "khong-co", "doc-toan-bo", 1],
       ["y_dinh", "khong-co", "enrich", 1],
     ];
-    assert.deepEqual(k.dong.map((d) => [d.loai, d.de_xuat_cung_tin, d.luot, d.so]), mong);
     assert.equal(k.tong, 7, `tổng lệch: ${k.tong}, mong 7`);
+    assert.deepEqual(k.dong.map((d) => [d.loai, d.de_xuat_cung_tin, d.luot, d.so]), mong);
     assert.equal(k.tong_sql, 7);
     const h1 = (await c.query(`SELECT md5(string_agg(id || ':' || status, ',' ORDER BY id)) h FROM review_queue`)).rows[0].h;
     assert.equal(h1, h0, "review_queue đổi");

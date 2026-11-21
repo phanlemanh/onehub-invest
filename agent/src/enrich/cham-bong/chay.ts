@@ -90,7 +90,8 @@ function ghiKetQua(dir: string, runId: string, ds: TheCham[], c: CauHinhCham, co
   const dong: string[] = [];
   let du = 0;
   for (const t of ds) {
-    const lan = c.model.map((m) => co(khoaDung(t, m, c.prompt_version)));
+    // Chỉ lời đọc thành công là kết quả (kho chỉ nhận lời đọc ok; lọc lại để tệp kết quả không bao giờ dựng từ lời lỗi).
+    const lan = c.model.map((m) => { const l = co(khoaDung(t, m, c.prompt_version)); return l?.doc.ok ? l : undefined; });
     const duHai = lan.every(Boolean);
     if (duHai) du++;
     for (const p of t.de_xuat) {
