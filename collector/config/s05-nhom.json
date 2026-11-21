@@ -1,0 +1,15 @@
+{
+  "_ghi_chu": "Danh sách nhóm nguồn S05 (điều 4 GIAO 2011-4). Tên nhóm cộng đồng là tầng C — được ghi. Đường nhóm là khuôn công khai /groups/<id>; gốc URL nguồn lấy từ env S05_WEB_BASE lúc chạy (tầng A runtime, không nằm trong kho). Chỉ nhận nhóm công khai hoặc tài khoản thu đã là thành viên do người phụ trách tự tham gia. Đồng bộ với source_groups (máy thu, status active) ngày 21/11.",
+  "nhom": [
+    {
+      "id": "1573989412657228",
+      "ten": "1573989412657228",
+      "duong": "/groups/1573989412657228"
+    },
+    {
+      "id": "bdsvinhomeocp",
+      "ten": "bdsvinhomeocp",
+      "duong": "/groups/bdsvinhomeocp"
+    }
+  ]
+}

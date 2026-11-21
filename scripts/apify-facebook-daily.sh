@@ -18,7 +18,15 @@ export AGENT_API_KEYS="$AGENT_KEY"
 # nằm TRƯỚC phần source ở dưới).
 . "$ROOT/scripts/lib/job-step.sh"
 THU_RC=0
-job_step apify-facebook-daily apify-facebook-collector node "$ROOT/pipeline/apify-facebook-collector.mjs" || THU_RC=$?
+# 2011-4: nhánh chọn bước thu — S05_THU_LOCAL=1 dùng bộ thu Playwright local
+# (khuôn cũ /agent-report KHÔNG đổi DC; bật là thuộc bước triển khai sau gộp,
+# không bật trong nhánh). Mặc định giữ bước dịch vụ ngoài như cũ.
+if [ "${S05_THU_LOCAL:-0}" = "1" ]; then
+  export S05_AGENT_ID="${S05_AGENT_ID:-apify-facebook}"  # giá trị khuôn cũ lớp lọc transform nhận
+  job_step apify-facebook-daily s05-thu-local node "$ROOT/collector/scripts/thu-nhom-s05.mjs" --gui || THU_RC=$?
+else
+  job_step apify-facebook-daily apify-facebook-collector node "$ROOT/pipeline/apify-facebook-collector.mjs" || THU_RC=$?
+fi
 # 2510-4: KHÔNG nuốt mã thoát của bước thu — S05 active mà thu hỏng (vd 402)
 # thì vẫn nạp snapshot sẵn có + transform, nhưng trả mã ≠0 ở CUỐI lượt.
 if [ "$THU_RC" != 0 ]; then
