@@ -1,0 +1,32 @@
+{
+  "feature_plain": "Bốn bộ đọc tin bằng AI (bổ sung trường cho tin, giải thích cặp ghép căn, nhãn bạc, đọc ảnh) thôi dùng model chạy trên máy thu và chuyển sang Haiku 5.5 trên cloud, để máy thu mới không cần model máy nữa.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ chạy đủ năm lệnh có gọi AI mà không lời nào tới model máy (cổng 8000); mã chạy thật không còn nhắc tới model máy."},
+    {"id": "AC-3", "p": "Sẽ gửi mọi lời gọi kèm cờ «nhà cung cấp không giữ dữ liệu, không dùng để huấn luyện»."},
+    {"id": "AC-4", "p": "Sẽ chỉ gửi chữ bài và vài trường của tin; tên, số điện thoại người bán và tên nhóm không rời máy ngoài phần có sẵn trong chữ bài."},
+    {"id": "AC-5", "p": "Sẽ dừng một lượt trước khi tiền tiêu vượt trần, báo đã chi bao nhiêu, và ghi số token mỗi lời gọi vào sổ."},
+    {"id": "AC-8", "p": "Sẽ đo một lần trên 100 tin và 30 cặp cố định: Haiku trả kết quả đọc được bao nhiêu phần trăm, khớp Qwen cũ bao nhiêu theo từng trường, tốn bao nhiêu tiền."},
+    {"id": "AC-10", "p": "Sẽ ghi đề xuất bổ sung trường vào hàng duyệt đúng như trước khi kết quả đến từ Haiku."},
+    {"id": "AC-9", "p": "Sẽ giữ xanh toàn bộ bộ kiểm hiện có."}
+  ],
+  "wont_do": [
+    {"id": "AC-2", "p": "Sẽ KHÔNG gọi model nào nếu tệp chọn model thiếu, hỏng hay chọn model ngoài ba model đã duyệt."},
+    {"id": "AC-6", "p": "Sẽ KHÔNG còn cho chạy nhãn bạc và đọc ảnh bằng Qwen."},
+    {"id": "AC-7", "p": "Sẽ KHÔNG còn đòi có dòng Qwen tốt khi kiểm lô đọc ảnh."},
+    {"id": "OOS-1", "p": "KHÔNG đụng Kev trong móc nối của nguồn chat cộng đồng (S03), bộ canh và sổ vận hành: làn thu gỡ cùng việc gỡ Kev."},
+    {"id": "OOS-2", "p": "KHÔNG đụng công cụ đo tay dùng Ollama và chữ «qwen27b» trong dữ liệu giả của một bài thử."},
+    {"id": "OOS-3", "p": "KHÔNG sửa bộ lọc model máy trong báo cáo ngày: còn dòng cũ trong cửa sổ 7 ngày."},
+    {"id": "OOS-4", "p": "KHÔNG thêm giá Haiku vào bảng giá trong DB và chưa mở đường gọi thẳng Anthropic cho hai bộ đọc này."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Đã kê tám chỗ gọi AI (bổ sung trường, giải thích cặp, nhãn bạc, đọc ảnh, kiểm lô ảnh, bộ chọn model, chạy thử, báo cáo ngày) theo sáu chiều: model nào, gửi gì, cờ giữ dữ liệu, tiền, lỗi cấu hình, ai đọc kết quả. Mỗi chiều có ít nhất một tiêu chí (AC-1 tới AC-10)."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Câu hỏi về lượt đo thật từng ghi «lùi được» dù gửi 130 chữ bài ra cloud, không thu lại được — đã sửa thành «khó đảo»."},
+    {"i": 1, "p": "Lời hứa «mã không còn nhắc Qwen» va với một bài thử có chữ «qwen27b» giả — đã ghim danh sách loại trừ đóng và cách kiểm tệp ngoài danh sách."},
+    {"i": 2, "p": "Lượt đo không đặt ngưỡng khớp từng trường mà câu hỏi bật chạy lại dựa vào nó — đã nói rõ độ khớp chỉ để anh đọc, và thêm lối «xem bảng rồi mới bật»."},
+    {"i": 3, "p": "Chưa có kiểm đường ghi đề xuất với kết quả kiểu Haiku — đã thêm tiêu chí AC-10; soát mã: chuỗi đêm không kiểm cổng 8000, không chỗ nào lọc theo tên model."},
+    {"i": 4, "p": "Kiểm dữ liệu gửi đi dựng tay thay vì đọc qua truy vấn thật — đã chuyển sang chạy trên DB thử qua đúng truy vấn của hai bộ đọc."}
+  ],
+  "decisions_plain": []
+}
