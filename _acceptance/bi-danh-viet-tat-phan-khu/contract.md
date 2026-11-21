@@ -5,7 +5,7 @@ slug: bi-danh-viet-tat-phan-khu
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-11-20T01:36:02Z
 approved_by:
@@ -66,3 +66,9 @@ Bảng phủ ca đếm trên DB máy thu ở design doc §2. Trục và ca:
 - Trước khi áp: DA46 đã áp, `--kiem-noi` của nó xanh, và bốn nút đích 44, 48, 387, 43 không nằm trong bảy nút nghỉ của DA46.
 - Cloud: 4 tên tắt sẽ lên cloud theo lượt đồng bộ `asset_nodes` đêm kế sau khi áp, kỳ vọng trên cloud là 4 nút (44, 48, 387, 43) mỗi
   nút mang đúng một tên tắt; không gọi sync-cloud bằng tay; bước đếm trên cloud chỉ đọc, chạy sau lượt đêm (GS phán 20/11).
+- Sau chữ ký còn một lượt ghim lại vì main đổi (#511, DA45); lượt áp DB máy thu (thẻ bí danh, băm be14a012…76da4) do GS chạy sau khi PR gộp, từ main.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-21:
+  - Ngoài-1: Lệnh đo với mã lượt gõ sai hoặc đã đảo in «tăng 0» và thoát 0 thay vì báo lỗi.
+  - Ngoài-2: Lệnh kiểm trên một lượt đã đảo báo lỗi «khong-nut» và thoát 1 dù dữ liệu đã về đúng.
+  - Ngoài-3: Chưa có ca thử riêng cho nút nghỉ là con của nút giữ lại khi chọn đích.
+  - Ngoài-4: Chưa có ca thử riêng cho việc từ chối đảo nhầm mã lượt nối DA46.
