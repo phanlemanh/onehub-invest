@@ -5,7 +5,7 @@ slug: so-nguon-kho-khai-bao
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, ui]
-status: approved
+status: implemented
 design_doc: docs/superpowers/specs/2026-11-21-so-nguon-kho-khai-bao-design.md
 approved_by: Mạnh
 approved_at: 2026-11-21
