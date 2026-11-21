@@ -1,0 +1,120 @@
+// s09-danh-ba-can.mjs — DA42 nap-s09-toa-tang-vao-danh-ba: luật xác định đưa dự án, toà, tầng của gói 1 S09 (nguồn
+// s09-danh-ba, bảng stg_s09_danh_ba của 115) vào danh bạ. Hàm thuần, không DB — bước dựng (s09-dung.mjs) đọc DB rồi gọi vào đây.
+// Thiết kế: docs/superpowers/specs/2026-11-18-nap-s09-toa-tang-vao-danh-ba-design.md §5 · kế hoạch 2026-11-21 §2.
+// Không chứa tên nguồn hay tên miền thật. Không ghi gì: mọi kết cục là một hành động để bên gọi thực thi.
+import { chuanKhop, chuanTen } from "./noi-du-an-s06-lop.mjs";
+import { khoaTenS09 } from "./s09-du-an.mjs";
+
+export const NGUON_S09 = "S09";
+
+/** Bí danh ma_nguon của gói 1: namespace riêng, khác `<pid>/<block_id>` của DA31 (chỉ mục duy nhất source+kind+value). */
+export const MA_DU_AN = (duAnId) => `danh-ba-du-an/${duAnId}`;
+export const MA_TOA = (toaId) => `danh-ba-toa/${toaId}`;
+
+/** Lệch số tầng cho phép giữa S09 và S16 trước khi coi là hai toà khác nhau (AC-5). */
+export const NGUONG_TANG = 2;
+/** Tên gần giống: hai tên bỏ dấu dài ít nhất ngần này ký tự và bằng nhau hoặc chứa nhau. */
+export const DO_DAI_GAN = 8;
+
+/** Bốn đường của dự án (AC-3). */
+export const DUONG = Object.freeze({ daNoi: "da_noi", theLuat: "the_luat", theCap: "the_cap", ungVien: "ung_vien" });
+
+const tenCua = (n) => [n.name, ...(n.aliases ?? [])].filter((t) => typeof t === "string" && t.trim() !== "");
+
+/**
+ * Xếp một dự án S09 vào một trong bốn đường.
+ * @param {{du_an_id:string, ten:string}} da
+ * @param {{id:number, name:string, aliases?:string[]|null}[]} nut  nút project của danh bạ (không gồm nút ứng viên S09 của chính lượt)
+ * @param {{ noiCung?: Map<string, number>, link?: {status:string, asset_node_id:number|null, la_ung_vien?:boolean}|null,
+ *           luatDuyet?: boolean, theCap?: {status:'approved'|'rejected'|string, node_id?:number|null}|null }} [o]
+ *   noiCung: dự án đã nối bằng tay (NOI_KHU_S09) → id nút · link: dòng project_links S09 hiện có · luatDuyet: thẻ luật nguồn S09
+ *   đang hiệu lực (project_link_rules chưa đảo) · theCap: thẻ từng cặp của dự án này nếu có.
+ * @returns {{duong:string, node_id?:number, ung_vien_cua?:number[], ly_do?:string, noi:boolean}}
+ */
+export function phanLopDuAn(da, nut, { noiCung = new Map(), link = null, luatDuyet = false, theCap = null } = {}) {
+  // Nút ứng viên đã đúc cho chính dự án này ở lượt trước: giữ, không xét lại (chạy lại không đúc nút thứ hai).
+  if (link?.la_ung_vien && link.asset_node_id != null) return { duong: DUONG.ungVien, node_id: Number(link.asset_node_id), noi: true };
+  if (noiCung.has(da.du_an_id)) return { duong: DUONG.daNoi, node_id: noiCung.get(da.du_an_id), noi: true };
+  const k = chuanKhop(da.ten);
+  const trung = k ? nut.filter((n) => tenCua(n).some((t) => chuanKhop(t) === k)).map((n) => n.id) : [];
+  const uniq = [...new Set(trung)].sort((a, b) => a - b);
+  if (uniq.length === 1) {
+    return luatDuyet
+      ? { duong: DUONG.theLuat, node_id: uniq[0], noi: true }
+      : { duong: DUONG.theLuat, node_id: uniq[0], ly_do: "cho-the-luat", noi: false };
+  }
+  let ung = uniq;
+  if (ung.length === 0) {
+    const kt = chuanTen(da.ten);
+    if (kt.length >= DO_DAI_GAN) {
+      ung = [...new Set(nut.filter((n) => tenCua(n).some((t) => {
+        const x = chuanTen(t);
+        return x.length >= DO_DAI_GAN && (x === kt || x.includes(kt) || kt.includes(x));
+      })).map((n) => n.id))].sort((a, b) => a - b);
+    }
+  }
+  if (ung.length) {
+    // Thẻ từng cặp: người chọn đúng một nút thì nối; từ chối hay chưa duyệt thì chưa nối.
+    if (theCap?.status === "approved" && theCap.node_id != null && ung.includes(Number(theCap.node_id))) {
+      return { duong: DUONG.theCap, node_id: Number(theCap.node_id), ung_vien_cua: ung, noi: true };
+    }
+    return { duong: DUONG.theCap, ung_vien_cua: ung, ly_do: theCap?.status === "rejected" ? "the-tu-choi" : "cho-the-cap", noi: false };
+  }
+  return { duong: DUONG.ungVien, noi: true };
+}
+
+/** So số tầng S09 với số tầng có căn của S16; null khi một bên không có số. */
+export function lechTangS16(soS09, soS16) {
+  if (!Number.isFinite(soS09) || !Number.isFinite(soS16) || soS09 <= 0 || soS16 <= 0) return null;
+  return Math.abs(soS09 - soS16) > NGUONG_TANG;
+}
+
+/**
+ * Xét các toà S09 của một dự án đã nối (AC-4, AC-5).
+ * @param {{toa_id:string, ten:string, so_tang:number}[]} toaS09
+ * @param {{building_key:string, ten:string[], ma_cu:boolean, s16:boolean, so_tang_s16:number|null}[]} toaCo  toà active của nút dự án;
+ *   ma_cu: mang bí danh `<pid>/<block_id>` của DA31 · s16: mang bí danh S16 · so_tang_s16: số tầng có căn
+ * @param {Map<string,string>} maMoi  `danh-ba-toa/<id>` đã có → building_key
+ * @returns {{toa_id:string, ten:string, ten_chuan:string, loai:'da_noi'|'bi_danh'|'tao_moi'|'the', ly_do?:string,
+ *            building_key?:string, building_keys?:string[], khong_so?:boolean}[]}
+ */
+export function xetToa(toaS09, toaCo, maMoi = new Map()) {
+  const demTen = new Map();
+  for (const t of toaS09) { const k = khoaTenS09(t.ten); if (k) demTen.set(k, (demTen.get(k) ?? 0) + 1); }
+  const theoTen = new Map();
+  for (const b of toaCo) {
+    for (const t of b.ten) {
+      const k = khoaTenS09(t);
+      if (!k) continue;
+      const s = theoTen.get(k) ?? new Map();
+      s.set(b.building_key, b);
+      theoTen.set(k, s);
+    }
+  }
+  return toaS09.map((t) => {
+    const ten_chuan = khoaTenS09(t.ten);
+    const co = { toa_id: t.toa_id, ten: t.ten, ten_chuan };
+    const daCo = maMoi.get(MA_TOA(t.toa_id));
+    if (daCo) return { ...co, loai: "da_noi", building_key: daCo };
+    if (!ten_chuan) return { ...co, loai: "the", ly_do: "khong-ten" };
+    if (demTen.get(ten_chuan) > 1) return { ...co, loai: "the", ly_do: "trung-ten-trong-du-an" };
+    const khop = [...(theoTen.get(ten_chuan)?.values() ?? [])].sort((a, b) => a.building_key.localeCompare(b.building_key));
+    if (khop.length === 0) return { ...co, loai: "tao_moi" };
+    if (khop.length > 1) return { ...co, loai: "the", ly_do: "khop-hai", building_keys: khop.map((b) => b.building_key) };
+    const b = khop[0];
+    const lech = lechTangS16(t.so_tang, b.so_tang_s16);
+    if (lech === true) return { ...co, loai: "the", ly_do: "lech-tang-s16", building_keys: [b.building_key] };
+    return { ...co, loai: "bi_danh", building_key: b.building_key, ...(b.s16 && lech === null ? { khong_so: true } : {}) };
+  });
+}
+
+/** Gom kết cục xetToa thành bộ đếm (AC-10 phép cộng phần). */
+export function demToa(kq) {
+  const d = { da_noi: 0, bi_danh: 0, tao_moi: 0, the: 0, khong_so: 0, the_theo_ly_do: {} };
+  for (const x of kq) {
+    d[x.loai]++;
+    if (x.khong_so) d.khong_so++;
+    if (x.loai === "the") d.the_theo_ly_do[x.ly_do] = (d.the_theo_ly_do[x.ly_do] ?? 0) + 1;
+  }
+  return d;
+}
