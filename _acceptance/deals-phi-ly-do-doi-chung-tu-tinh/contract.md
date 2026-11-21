@@ -83,4 +83,11 @@ Không có `opportunity.md` (hàng phát sinh từ lỗi đo) — không có ng�
 
 ## Notes
 
+Lịch sử chấm S4 (ba round, hết trần):
+- r1 (sha 35bdbca78) REJECT do va chạm hạ tầng: lệnh suite `cd app && npx tsc --noEmit && npm run lint` thoát 2 vì ESLint gặp ENOENT trên tệp tạm `app/tests/.od1-cu-*` của test ops-duyet-nhip chạy song song. Chạy lại riêng lúc máy yên: tsc 0, lint 0.
+- r2 (sha 35bdbca78) REJECT do lỗi thật AC-2: lệnh đo đọc dòng audit `bait-gap:loai-phi-ly` mới nhất của cả bảng, nên luật loại hỏng có thể bị một đêm cũ che. Đã sửa ở 9435f0264 (chỉ đọc dòng có id lớn hơn mốc trước lượt refresh) kèm ca test «DPD-AC-2 … dòng audit cũ … không che lượt đỏ», đỏ trên bản cũ, xanh sau sửa.
+- r3 (sha 9435f0264) REJECT do va chạm hạ tầng: cùng lệnh suite thoát 2, ESLint gặp ENOENT trên `app/tests/.opl-cu-54213-0.tsx` của test ops-duyet-phim-va-loi-ghi. Sáu eval E1–E6 đạt, không finding trong hợp đồng. Chạy lại riêng trên cùng sha: tsc 0, lint 0 (0 lỗi, 5 cảnh báo cũ).
+- Sửa gốc va chạm (theo giám sát, 21/11): `app/eslint.config.mjs` thay danh sách ignore lẻ bằng mẫu chung `**/.*-cu-*` và `**/.*-cu-*/**` (phủ 16 kiểu tên hiện có). Chứng hai chiều bằng `npm run lint` với ba tệp cố ý sai (`const a: any`): mẫu mới → chỉ tệp tên thường `tests/xyz-thuong-lint.ts` bị bắt (1 lỗi), `tests/.xyz-cu-1.ts` và `tests/.xyz-cu-2/a.ts` bị bỏ qua; bỏ hai dòng mẫu → cả ba bị bắt (3 lỗi); gỡ tệp thử → 0 lỗi.
+- Lượt 4 chỉ mở khi Mạnh cho (vượt trần chấm là lời riêng của Mạnh).
+
 Known limits:
