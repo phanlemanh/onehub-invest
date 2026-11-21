@@ -5,7 +5,7 @@ slug: cham-bong-bo-sung-tin
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [script]
-status: approved
+status: implemented
 approved_by: Mạnh
 approved_at: 2026-11-21
 design_doc: docs/superpowers/specs/2026-11-21-cham-bong-bo-sung-tin-design.md
