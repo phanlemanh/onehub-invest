@@ -63,7 +63,7 @@ evals:
     layer: backend-effect
     cmd: bash _acceptance/cham-bong-bo-sung-tin/probes/cham.sh AC-8
     paths: [agent/src/enrich/cham-bong/**, agent/scripts/cham-bong-bo-sung-tin.ts, agent/config/cham-bong-bo-sung-tin.json, agent/tests/cham-bong-bo-sung-tin.test.ts]
-    expected: "Model giả lập trả token cố định, đơn giá từ tệp cấu hình; trần đặt bằng chi phí của đúng 7 lời gọi cộng nửa lời gọi: lượt dừng sau lời gọi thứ 7, không có lời gọi thứ 8, tổng chi phí ghi bằng số tính tay, số thẻ đã chấm và còn lại khớp. Thứ tự thẻ: mọi thẻ có đề xuất số WC đứng trước thẻ có ô ưu tiên cao nhất là phòng ngủ, rồi toà, đường, loại hình (assert trên chuỗi lời gọi đã bắt, thứ tự viết tay). Đối chứng dương: trần đủ lớn chạy đủ 20 lời gọi. Đột biến kiểm trần sau khi gọi đỏ, thông điệp nêu lời gọi thứ 8."
+    expected: "Model giả lập trả token cố định, giá token từ tệp cấu hình; trần đặt bằng chi phí của đúng 7 lời gọi cộng nửa lời gọi: lượt dừng sau lời gọi thứ 7, không có lời gọi thứ 8, tổng chi phí ghi bằng số tính tay, số thẻ đã chấm và còn lại khớp. Thứ tự thẻ: mọi thẻ có đề xuất số WC đứng trước thẻ có ô ưu tiên cao nhất là phòng ngủ, rồi toà, đường, loại hình (assert trên chuỗi lời gọi đã bắt, thứ tự viết tay). Đối chứng dương: trần đủ lớn chạy đủ 20 lời gọi. Đột biến kiểm trần sau khi gọi đỏ, thông điệp nêu lời gọi thứ 8."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E9
     criterion: AC-9

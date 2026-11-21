@@ -5,9 +5,9 @@ slug: cham-bong-bo-sung-tin
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [script]
-status: draft
-approved_by:
-approved_at:
+status: approved
+approved_by: Mạnh
+approved_at: 2026-11-21
 design_doc: docs/superpowers/specs/2026-11-21-cham-bong-bo-sung-tin-design.md
 ---
 
@@ -46,7 +46,7 @@ biên — KHÔNG ghi tin, không đóng thẻ, không đổi đề xuất. Ngư�
 - AC-7: Given lượt đã chạy (trọn, có lời gọi lỗi, hay dừng vì trần), When chạy lại với cùng chữ bài, tập ô, model và phiên bản lời
   nhắc, Then chỉ những cặp thẻ × model chưa có kết quả thành công được gọi lại; cặp đã thành công không gọi lại, không sinh dòng kết
   quả mới và không sinh dòng sổ gọi mới; đổi phiên bản lời nhắc thì đọc lại tất cả.
-- AC-8: Given trần chi phí của lượt, When lời gọi kế tiếp làm tổng chi phí (tính từ token thật và bảng đơn giá) vượt trần, Then lượt
+- AC-8: Given trần chi phí của lượt, When lời gọi kế tiếp làm tổng chi phí (tính từ token thật và bảng giá token của model) vượt trần, Then lượt
   dừng trước lời gọi đó, ghi số thẻ đã chấm, số còn lại và tổng chi phí; thẻ được chấm theo thứ tự ô ưu tiên cao nhất mà thẻ có đề
   xuất: số WC, phòng ngủ, toà, đường, loại hình.
 - AC-9: Given tệp kết quả, When chạy lệnh báo cáo, Then in bảng ô × kết cục × nguồn (E1, E2) với số ca biên, số `o_da_co`, số đề
