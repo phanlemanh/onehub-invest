@@ -30,6 +30,11 @@ const dungMoi = () => {
   writeFileSync(join(root, "pipeline", "transform-media.mjs"), TREO);
   writeFileSync(join(root, "pipeline", "refresh-bait-gap.mjs"), TREO);
   writeFileSync(join(root, "pipeline", "xep-hang-gia.mjs"), TREO);
+  // DA45 (#515) chen bước pipeline/scripts/phuong-tu-du-an.mjs giữa transform-zalo và transform-media — fixture cùng
+  // khuôn để chuỗi không vấp MODULE_NOT_FOUND (sửa tích hợp s03-tran r3 sau khi nhận main 3c529c0b4). Fixture XONG NGAY:
+  // ca cần treo đã treo ở transform-zalo đứng trước; ca nào đổi transform thành xong ngay thì bước phường cũng không cản.
+  mkdirSync(join(root, "pipeline", "scripts"), { recursive: true });
+  writeFileSync(join(root, "pipeline", "scripts", "phuong-tu-du-an.mjs"), "process.exit(0);\n");
   // Đồng hồ chạy bằng node đang chạy test (symlink như zalo-import-tran.test.mjs) — không phụ thuộc
   // ~/.local/node-v24.21.0 của máy thu (runner CI không có) — sửa tích hợp s03-tran r3.
   symlinkSync(process.execPath, join(root, "node-dong-ho"));
@@ -123,6 +128,9 @@ const dungMoiNhanh = () => {
   mkdirSync(join(root, "collector", "snapshots"), { recursive: true });
   for (const f of ["transform-zalo.mjs", "transform-media.mjs", "refresh-bait-gap.mjs", "xep-hang-gia.mjs"])
     writeFileSync(join(root, "pipeline", f), fixtureNhanh);
+  mkdirSync(join(root, "pipeline", "scripts"), { recursive: true }); // DA45: bước phường — như dungMoi
+  writeFileSync(join(root, "pipeline", "scripts", "phuong-tu-du-an.mjs"), fixtureNhanh);
+  symlinkSync(process.execPath, join(root, "node-dong-ho")); // như dungMoi — sửa tích hợp s03-tran r3
   return root;
 };
 
@@ -135,7 +143,7 @@ test("CA ĐỎ L1 1711-4: script xong sớm → node đồng hồ không mồ c�
     // stdout/stderr pipe → promise không giải quyết trong 30s → late=true → đỏ
     const con = spawn("bash", [join(root, "scripts", "zalo-import-daily.sh")], {
       encoding: "utf8",
-      env: { ...process.env, ZALO_IMPORT_TRAN_TONG: "1200", ZALO_IMPORT_CANH_BAO: "600", CONDUCT_WINDOW: "off", CONDUCT_JITTER: "0" },
+      env: { ...process.env, ZALO_IMPORT_NODE_BIN: join(root, "node-dong-ho"), ZALO_IMPORT_TRAN_TONG: "1200", ZALO_IMPORT_CANH_BAO: "600", CONDUCT_WINDOW: "off", CONDUCT_JITTER: "0" },
     });
     let out = "";
     con.stdout.on("data", (d) => { out += d; });
@@ -161,7 +169,7 @@ test("CA ĐỎ L2 1711-4: script không trưởng nhóm chạm trần → CHỈ 
     // KHÔNG detached — script cùng nhóm node test: TERM nhầm nhóm sẽ giết node test
     const con = spawn("bash", [join(root, "scripts", "zalo-import-daily.sh")], {
       encoding: "utf8",
-      env: { ...process.env, ZALO_IMPORT_TRAN_TONG: "3", ZALO_IMPORT_CANH_BAO: "1", CONDUCT_WINDOW: "off", CONDUCT_JITTER: "0" },
+      env: { ...process.env, ZALO_IMPORT_NODE_BIN: join(root, "node-dong-ho"), ZALO_IMPORT_TRAN_TONG: "3", ZALO_IMPORT_CANH_BAO: "1", CONDUCT_WINDOW: "off", CONDUCT_JITTER: "0" },
     });
     let out = "";
     con.stdout.on("data", (d) => { out += d; });
