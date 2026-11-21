@@ -5,7 +5,10 @@ import { createHash } from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
 import type { AddressInfo } from "node:net";
-import pg from "pg";
+import { createRequire } from "node:module";
+import { join } from "node:path";
+// pg nằm ở agent/node_modules — tệp này ở ngoài agent/ nên mượn bộ giải của gói agent.
+const pg = createRequire(join(import.meta.dirname, "../../../agent/package.json"))("pg");
 import { runAgent } from "../../../agent/src/runtime/loop.js";
 import { modelCuaAgent, taoTran } from "../../../agent/src/runtime/model-agent.js";
 import { enrichTextAgent, buildEnrichInput } from "../../../agent/src/agents/enrich-text.js";

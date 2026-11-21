@@ -39,7 +39,7 @@ evals:
     executor: test
     cmd: cd agent && node --import tsx --test tests/model-agent.test.ts
     paths: ["agent/src/agents/nhan-bac-s03.ts", "agent/src/agents/vlm-anh-s03.ts", "agent/scripts/nhan-bac-run.ts", "agent/scripts/vlm-anh-run.ts", "agent/tests/model-agent.test.ts"]
-    expected: "Chạy CLI thật nhan-bac-run và vlm-anh-run với --model qwen (máy giả ở cả hai cổng): thoát 2, stderr có «model không được duyệt», hai máy giả nhận 0 yêu cầu; --model haiku --thu thoát 0 và Gateway giả nhận yêu cầu. Chiều đỏ: thêm lại qwen vào danh sách backend trong bản sao thì ca đỏ «AC-6 qwen còn chạy»."
+    expected: "Chạy CLI thật nhan-bac-run và vlm-anh-run với --model qwen (Gateway giả và máy giả MTPLX): thoát 2, đầu ra có «model không được duyệt», hai máy giả nhận 0 yêu cầu; danh sách model của hai lệnh không còn qwen và docCo(--model haiku) đọc được haiku (lượt chạy haiku --thu qua Gateway giả đo ở E1 và itest vlm-anh-s03-db). Chiều đỏ: thêm lại qwen vào danh sách backend thì ca đỏ «MH1 AC-6 qwen còn chạy»."
   - id: E7
     criterion: AC-7
     executor: test
@@ -59,7 +59,7 @@ evals:
     cmd: bash db/db-thu.sh oneinvest_suite_mh1t --chay node --import tsx --test --test-concurrency=1 agent/tests/tran-tien-agent.itest.ts
     long_running: 10
     paths: ["agent/scripts/enrich-run.ts", "agent/src/enrich/run.ts", "agent/src/agents/enrich-text.ts", "agent/src/runtime/**", "agent/tests/tran-tien-agent.itest.ts"]
-    expected: "Năm tin cấy thiếu trường, Gateway giả trả năm đầu ra thô viết trước (hai JSON trần, hai JSON trong khối mã, một chuỗi không phải JSON); sau enrich-run --offers: số dòng enrichment_proposals e2_llm và số đề xuất được áp bằng đúng bảng kỳ vọng viết trước trong test, cột model là anthropic/claude-haiku-5.5, tin đầu ra hỏng có lỗi ghi như trước và 0 đề xuất. Chiều đỏ: bản sao parseEnrichOutput chỉ nhận JSON trần thì ca đỏ «AC-10 thiếu đề xuất của đầu ra khối mã»."
+    expected: "Năm tin cấy thiếu trường, Gateway giả trả năm đầu ra thô viết trước (hai JSON trần, hai cùng JSON trong khối mã, một chuỗi không phải JSON); sau enrich-run --offers: bộ đề xuất e2_llm (trường, giá trị, lối) của mỗi tin khối mã bằng đúng bộ của tin JSON trần và khác rỗng, cột model là anthropic/claude-haiku-5.5, tin đầu ra hỏng 0 đề xuất và tổng kết đếm «không đọc được 1», số «đã áp» của tổng kết bằng số dòng đã áp trong DB. Chiều đỏ: bản sao parseEnrichOutput chỉ nhận JSON trần thì ca đỏ «AC-10 thiếu đề xuất của đầu ra khối mã»."
   - id: E9a
     criterion: AC-9
     executor: test
