@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: a98b1608e55bcf588dd83b72c0a7bacdb9e2bba6
+verified_commit: bf767536ce88989967c60e2dc76514950922f533
 human_signoff: Mạnh 2026-11-21
 ---
 
@@ -184,3 +184,7 @@ Round 3: tat ca eval E1-E9c va E8 xanh, khong co judgment item; ket qua PASS. Li
 ### Re-pin lần 1 — 2026-11-21, do hoá cũ do nhận main db971b8c5 (DA48) trước commit chữ ký
 run_id: repin-20261121T002433Z-93361
 sha: a98b1608e55bcf588dd83b72c0a7bacdb9e2bba6 · suites: 7 lệnh exit 0 · evals: 11/11 eval máy đạt kỳ vọng
+
+### Re-pin lần 2 — 2026-11-21, do hoá cũ do nhận main d4df3343a (#511 collector) sau lượt ghim 1
+run_id: repin-20261121T032833Z-42901
+sha: bf767536ce88989967c60e2dc76514950922f533 · suites: 7 lệnh exit 0 · evals: 11/11 eval máy đạt kỳ vọng
