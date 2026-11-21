@@ -508,6 +508,7 @@ test("ON12-AC-7 mọi giá trị đang có trên DB local có nhãn", async () =
   // Mọi lần chạm DB local dùng chung đi qua thuLaiDbTam: lỗi DB tạm thời (hết suất kết nối, deadlock khi phiên khác chạy DDL)
   // thử lại có giới hạn (hồ sơ test-nen-on22-on12).
   const c = await canDb()
+  await (await import("../../scripts/lib/so-nguon-122.mjs")).ap122NeuThieu(c) // NK1: bản chép DB thử chưa áp 122 thì áp (phép không sau khi máy thu áp)
   try {
     const st = (await thuLaiDbTam(() => c.query<{ v: string }>(`SELECT DISTINCT status v FROM source_registry`))).rows.map((r) => r.v)
     const pt = (await thuLaiDbTam(() => c.query<{ v: string }>(`SELECT DISTINCT property_type v FROM sale_offers WHERE property_type IS NOT NULL`))).rows.map((r) => r.v)

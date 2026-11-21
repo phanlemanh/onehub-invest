@@ -83,4 +83,9 @@ Báo giám sát đã xoá. Sau khi xoá, `tang-a.mjs` đọc tên từ sổ máy
 3. Đối chiếu: `bash _acceptance/so-nguon-kho-khai-bao/ap-may-thu/kiem-lui.sh <tệp sao lưu bước 1>` → `LUI OK` (bảng trùng bản sao
    lưu). Lệch thì khôi phục từ bản sao lưu bằng tay, có giám sát.
 
+## Sau áp
+
+Ba lời gọi `ap122NeuThieu` trong test (`ban-chep-chua-ap-122.md`) thành phép không khi 122 đã áp lên máy thu. Bản mẫu DB thử tự
+dựng lại vì dấu lược đồ đổi. GS cắt hàng hạ tầng riêng để gỡ chúng; NK1 không làm việc đó.
+
 Áp lại 122 sau khi lùi được (chạy thử: áp → lùi → `LUI OK`).

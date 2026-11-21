@@ -3,9 +3,14 @@
 // có lịch; áp lần hai không đổi ô nào. Áp 122 lên public của DB của riêng lượt (bản chép, xoá khi lệnh dừng) — từ chối chạy
 // trên DB chung `oneinvest`. Chỉ in mã nguồn, không in real_name/source_ids.
 import assert from "node:assert/strict";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { after, before, describe, test } from "node:test";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
+import * as boDoc from "./lib/so-nguon-122.mjs";
 import { cadenceMap122, doc122, nhip122 } from "./lib/so-nguon-122.mjs";
 
 const require = createRequire(new URL("../app/package.json", import.meta.url));
@@ -163,3 +168,51 @@ describe("NK-AC-1 migration 122", () => {
     assert.deepEqual(soVoiMong(rows.filter((r) => r.code !== "S09")), ["S09: không có dòng"]);
   });
 });
+
+// ---- ap122NeuThieu (GS duyệt 21/11): bản chép DB thử chưa áp 122 thì áp CHÍNH tệp 122; DB khác mà thiếu cột thì ném lỗi ----
+/** Client giả: câu hỏi hình trả {db, co}; ghi mọi câu SQL. */
+const gia = (db, co) => {
+  const sqls = [];
+  return { sqls, query: async (sql) => (sqls.push(sql), sql.includes("current_database()") ? { rows: [{ db, co }] } : { rows: [] }) };
+};
+/** Lỗi của bộ rào: mỗi mục gọi tên DB. Rỗng = rào đúng. */
+async function raoLoi(mod) {
+  const out = [];
+  for (const db of ["oneinvest", "oneinvest_lan_khac", "postgres"]) {
+    const c = gia(db, false);
+    const loi = await mod.ap122NeuThieu(c).then(() => null, (e) => e.message);
+    if (!loi || !/từ chối áp 122 vào DB «/.test(loi) || !loi.includes(db)) out.push(`${db}: không bị từ chối`);
+    if (c.sqls.some((q) => q.includes("ALTER TABLE"))) out.push(`${db}: đã chạy SQL của 122`);
+  }
+  for (const db of ["oneinvest", "oneinvest_suite_x"]) {
+    const c = gia(db, true);
+    if ((await mod.ap122NeuThieu(c)) !== false || c.sqls.length !== 1) out.push(`${db}: đã có cột mà vẫn làm`);
+  }
+  for (const db of ["oneinvest_suite_nk_123", "oneinvest_dbv_x"]) {
+    const c = gia(db, false);
+    if ((await mod.ap122NeuThieu(c)) !== true || !c.sqls.some((q) => q.includes(doc122().trim().slice(0, 200)))) out.push(`${db}: không áp chính tệp 122`);
+  }
+  return out;
+}
+describe("NK ap122NeuThieu", () => {
+  test("NK ap122NeuThieu: DB thiếu cột mà không phải DB thử thì ném lỗi gọi tên DB; đã có cột thì không làm gì; DB thử thì áp chính tệp 122", async () => {
+    assert.deepEqual(await raoLoi(boDoc), []);
+  });
+  test("chiều đỏ ap122NeuThieu: gỡ rào tên DB thì ca từ chối đỏ", async () => {
+    const goc = readFileSync(fileURLToPath(new URL("./lib/so-nguon-122.mjs", import.meta.url)), "utf8");
+    const rao = "  if (!DB_THU.test(r.db))\n    throw new Error(";
+    assert.ok(goc.includes(rao), "khuôn phá lệch mã nguồn");
+    const pha = goc.replace(rao, "  if (false)\n    throw new Error(")
+      .replace('new URL("../../db/migrations/122_source_registry_family_cadence.sql", import.meta.url)', `new URL(${JSON.stringify(pathToFileURL(boDoc.TEP_122).href)})`);
+    const dir = mkdtempSync(path.join(tmpdir(), "nk-rao-"));
+    try {
+      writeFileSync(path.join(dir, "so-nguon-122.mjs"), pha);
+      const mod = await import(pathToFileURL(path.join(dir, "so-nguon-122.mjs")).href);
+      assert.deepEqual(await raoLoi(mod), ["oneinvest: không bị từ chối", "oneinvest: đã chạy SQL của 122", "oneinvest_lan_khac: không bị từ chối",
+        "oneinvest_lan_khac: đã chạy SQL của 122", "postgres: không bị từ chối", "postgres: đã chạy SQL của 122"]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
