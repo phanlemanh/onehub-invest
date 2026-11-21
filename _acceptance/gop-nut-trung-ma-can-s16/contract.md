@@ -5,7 +5,7 @@ slug: gop-nut-trung-ma-can-s16
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: machine-cleared
 approved_by: Mạnh
 approved_at: 2026-11-21
 design_doc: docs/superpowers/specs/2026-11-21-gop-nut-trung-ma-can-s16-design.md
@@ -77,3 +77,7 @@ Bảng phủ ca đếm trên DB máy thu ở design doc §2. Trục và ca:
 - Cloud: 389 nghỉ và đổi cha lên cloud theo lượt đồng bộ `asset_nodes` đêm kế sau khi áp, như DA46 và DA51; không gọi sync-cloud bằng tay;
   bước đếm trên cloud chỉ đọc, chạy sau lượt đêm. Đảo bằng `--dao-noi` rồi lượt đêm kế đưa cloud về như trước.
 - Số P4 báo «khoảng 800 lượt bài nhiều vùng do cặp 48/389» không khớp khi đo lại: số bài nhiều vùng của bộ đọc PL20 không đổi khi gộp (1.409).
+- Ngoài-1 (máy định tuyến 2026-11-21, đề xuất S4 known-limits): Nếu mã căn hay tên toà có khoảng trắng thừa hoặc khác chữ hoa thường, hệ thống có thể bỏ sót một cặp phân khu đáng lẽ được gộp, và để nguyên hai nút trùng. — `pipeline/phan-khu-s16.mjs`
+- Ngoài-2 (máy định tuyến 2026-11-21, đề xuất S4 known-limits): Khu có mã căn giữ chỗ sẽ không được gộp tự động và chỉ hiện là chưa đủ bằng chứng, mà không nói rõ lý do. — `pipeline/phan-khu-s16.mjs`
+- Ngoài-4 (máy định tuyến 2026-11-21, đề xuất S4 known-limits): Phép kiểm tự động chưa chứng minh được rằng nó sẽ báo lỗi nếu ca cần người bị nối nhầm, nên một lỗi như vậy sau này có thể lọt qua. — `pipeline/scripts/phan-khu-s16-ma-can.itest.mjs`
+- Ngoài-5 (máy định tuyến 2026-11-21, đề xuất S4 known-limits): Chưa có phép thử riêng cho trường hợp nút phân khu đã nghỉ, nên nếu hệ thống nối nhầm vào nút đã nghỉ thì chưa chắc được phát hiện. — `pipeline/scripts/phan-khu-s16-ma-can.itest.mjs`

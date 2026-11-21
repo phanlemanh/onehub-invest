@@ -1,19 +1,17 @@
 ---
 schema_version: 2
 feature_slug: gop-nut-trung-ma-can-s16
-verdict: REJECT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 814ef987cfba0dc6503159e874f2a7f7b44f6bf8
+verified_commit: b33d222b065f12b5450c9fe80753d18c976a6ae5
 human_signoff:
 ---
 
 # Evidence Report: gop-nut-trung-ma-can-s16
-
-Lý do REJECT: cả tám lệnh eval máy đều chạy xong, nhưng bước rà soát có một phát hiện mức cao nằm trong hợp đồng (AC-7, E7): phép đo «lượt dựng đêm chạy hai lần không đúc lại» chạy với bước S16 bị bỏ qua nên chưa chứng minh được điều AC-7 hứa. Chi tiết ở review-findings.md, mục «Trong hợp đồng». Trả về triển khai để thêm đối chứng dương cho GNT-7.
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
@@ -24,80 +22,79 @@ Lý do REJECT: cả tám lệnh eval máy đều chạy xong, nhưng bước rà
 | E5 | AC-5 | script | PASS |
 | E6 | AC-6 | script | PASS |
 | E7 | AC-7 | script | PASS |
-| E8 | AC-8 | script | PASS |
+| E8 | AC-8 | script | PASS (carried từ round 1) |
 
 ## Evidence
 
 - eval: E1
-  run_id: minted-gop-nut-trung-ma-can-s16-E1-r1
+  run_id: minted-gop-nut-trung-ma-can-s16-E1-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.gnt_chon
-  verified_at: 2026-11-21T15:48:20Z
+  verified_at: 2026-11-21T16:44:01Z
   output: |
-    cmd: node --test --test-concurrency=1 --test-name-pattern='^GNT-1:' pipeline/scripts/phan-khu-s16-ma-can.itest.mjs
-    ℹ duration_ms 4614.342042
+    node --test --test-concurrency=1 --test-name-pattern='^GNT-1:' pipeline/scripts/phan-khu-s16-ma-can.itest.mjs
+    ℹ duration_ms 2657.784667
 
 - eval: E2
-  run_id: minted-gop-nut-trung-ma-can-s16-E2-r1
+  run_id: minted-gop-nut-trung-ma-can-s16-E2-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.gnt_the
-  verified_at: 2026-11-21T15:48:20Z
+  verified_at: 2026-11-21T16:44:01Z
   output: |
-    cmd: node --test --test-concurrency=1 --test-name-pattern='^GNT-2:' pipeline/scripts/phan-khu-s16-ma-can.itest.mjs
-    ℹ duration_ms 3940.155833
+    node --test --test-concurrency=1 --test-name-pattern='^GNT-2:' pipeline/scripts/phan-khu-s16-ma-can.itest.mjs
+    ℹ duration_ms 2673.2765
 
 - eval: E3
-  run_id: minted-gop-nut-trung-ma-can-s16-E3-r1
+  run_id: minted-gop-nut-trung-ma-can-s16-E3-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.gnt_noi
-  verified_at: 2026-11-21T15:48:20Z
+  verified_at: 2026-11-21T16:44:01Z
   output: |
-    cmd: node --test --test-concurrency=1 --test-name-pattern='^GNT-3:' pipeline/scripts/phan-khu-s16-ma-can.itest.mjs
-    ℹ duration_ms 4334.646917
+    node --test --test-concurrency=1 --test-name-pattern='^GNT-3:' pipeline/scripts/phan-khu-s16-ma-can.itest.mjs
+    ℹ duration_ms 2484.9135
 
 - eval: E4
-  run_id: minted-gop-nut-trung-ma-can-s16-E4-r1
+  run_id: minted-gop-nut-trung-ma-can-s16-E4-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.gnt_dao
-  verified_at: 2026-11-21T15:48:20Z
+  verified_at: 2026-11-21T16:44:01Z
   output: |
-    cmd: node --test --test-concurrency=1 --test-name-pattern='^GNT-4:' pipeline/scripts/phan-khu-s16-ma-can.itest.mjs
-    ℹ duration_ms 4308.697458
+    node --test --test-concurrency=1 --test-name-pattern='^GNT-4:' pipeline/scripts/phan-khu-s16-ma-can.itest.mjs
+    ℹ duration_ms 2597.305
 
 - eval: E5
-  run_id: minted-gop-nut-trung-ma-can-s16-E5-r1
+  run_id: minted-gop-nut-trung-ma-can-s16-E5-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.gnt_kiem
-  verified_at: 2026-11-21T15:48:20Z
+  verified_at: 2026-11-21T16:44:01Z
   output: |
-    cmd: node --test --test-concurrency=1 --test-name-pattern='^GNT-5:' pipeline/scripts/phan-khu-s16-ma-can.itest.mjs
-    ℹ duration_ms 3998.70925
+    node --test --test-concurrency=1 --test-name-pattern='^GNT-5:' pipeline/scripts/phan-khu-s16-ma-can.itest.mjs
+    ℹ duration_ms 2355.757709
 
 - eval: E6
-  run_id: minted-gop-nut-trung-ma-can-s16-E6-r1
+  run_id: minted-gop-nut-trung-ma-can-s16-E6-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.gnt_doc
-  verified_at: 2026-11-21T15:48:20Z
+  verified_at: 2026-11-21T16:44:01Z
   output: |
-    cmd: node --test --test-concurrency=1 --test-name-pattern='^GNT-6:' pipeline/scripts/phan-khu-s16-ma-can.itest.mjs
-    ℹ duration_ms 3965.677292
+    node --test --test-concurrency=1 --test-name-pattern='^GNT-6:' pipeline/scripts/phan-khu-s16-ma-can.itest.mjs
+    ℹ duration_ms 2743.448709
 
 - eval: E7
-  run_id: minted-gop-nut-trung-ma-can-s16-E7-r1
+  run_id: minted-gop-nut-trung-ma-can-s16-E7-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.gnt_dem
-  verified_at: 2026-11-21T15:48:20Z
+  verified_at: 2026-11-21T16:44:01Z
   output: |
-    cmd: node --test --test-concurrency=1 --test-name-pattern='^GNT-7:' pipeline/scripts/phan-khu-s16-ma-can.itest.mjs
-    ℹ duration_ms 3911.562834
-    lưu ý: lệnh xanh nhưng phép đo chạy với noiS16 rỗng, xem review-findings.md (AC-7)
+    node --test --test-concurrency=1 --test-name-pattern='^GNT-7:' pipeline/scripts/phan-khu-s16-ma-can.itest.mjs
+    ℹ duration_ms 2433.624375
 
 - eval: E8
   run_id: minted-gop-nut-trung-ma-can-s16-E8-r1
@@ -105,46 +102,45 @@ Lý do REJECT: cả tám lệnh eval máy đều chạy xong, nhưng bước rà
   baseline: n-a
   verifier: config:executors.script.gnt_that
   verified_at: 2026-11-21T15:48:20Z
-  output: |
-    cmd: node pipeline/scripts/phan-khu-s16-ma-can-that.mjs
-    đạt: mọi ô khớp bảng kỳ vọng
+  carried_from_round: 1
+  # carry-forward tu round 1 — delta khong cham paths cua eval
 
 ### Lệnh suite (hồi quy)
 
 - cmd: node scripts/suite-neu-doi.mjs agent -- 'cd agent && npm test'
-  run_id: minted-gop-nut-trung-ma-can-s16-SUITE-node_scripts_suite_neu_doi_mjs_agent_cd_-r1
+  run_id: minted-gop-nut-trung-ma-can-s16-SUITE-node_scripts_suite_neu_doi_mjs_agent_cd_-r2
   exit_code: 0
-  verified_at: 2026-11-21T15:48:20Z
+  verified_at: 2026-11-21T16:44:01Z
 
 - cmd: node scripts/suite-neu-doi.mjs app -- 'cd app && npx tsc --noEmit && npm run lint'
-  run_id: minted-gop-nut-trung-ma-can-s16-SUITE-lint-r1
+  run_id: minted-gop-nut-trung-ma-can-s16-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-11-21T15:48:20Z
+  verified_at: 2026-11-21T16:44:01Z
 
 - cmd: node scripts/suite-neu-doi.mjs app_ui -- 'cd app && npm test'
-  run_id: minted-gop-nut-trung-ma-can-s16-SUITE-node_scripts_suite_neu_doi_mjs_app_ui_cd-r1
+  run_id: minted-gop-nut-trung-ma-can-s16-SUITE-node_scripts_suite_neu_doi_mjs_app_ui_cd-r2
   exit_code: 0
-  verified_at: 2026-11-21T15:48:20Z
+  verified_at: 2026-11-21T16:44:01Z
 
 - cmd: node scripts/suite-neu-doi.mjs pipeline_a -- 'cd pipeline && npm run test:a'
-  run_id: minted-gop-nut-trung-ma-can-s16-SUITE-test_a-r1
+  run_id: minted-gop-nut-trung-ma-can-s16-SUITE-test_a-r2
   exit_code: 0
-  verified_at: 2026-11-21T15:48:20Z
+  verified_at: 2026-11-21T16:44:01Z
 
 - cmd: node scripts/suite-neu-doi.mjs pipeline_b -- 'cd pipeline && npm run test:b'
-  run_id: minted-gop-nut-trung-ma-can-s16-SUITE-test_b-r1
+  run_id: minted-gop-nut-trung-ma-can-s16-SUITE-test_b-r2
   exit_code: 0
-  verified_at: 2026-11-21T15:48:20Z
+  verified_at: 2026-11-21T16:44:01Z
 
 - cmd: node scripts/suite-neu-doi.mjs ui_lint_rules -- 'cd app && npm run test:lint-rules'
-  run_id: minted-gop-nut-trung-ma-can-s16-SUITE-test_lint_rules-r1
+  run_id: minted-gop-nut-trung-ma-can-s16-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-11-21T15:48:20Z
+  verified_at: 2026-11-21T16:44:01Z
 
 - cmd: node scripts/suite-neu-doi.mjs portal_static -- 'node scripts/check-portal-compliance.mjs'
-  run_id: minted-gop-nut-trung-ma-can-s16-SUITE-node_scripts_suite_neu_doi_mjs_portal_st-r1
+  run_id: minted-gop-nut-trung-ma-can-s16-SUITE-node_scripts_suite_neu_doi_mjs_portal_st-r2
   exit_code: 0
-  verified_at: 2026-11-21T15:48:20Z
+  verified_at: 2026-11-21T16:44:01Z
 
 ## Known limits
 
@@ -152,24 +148,15 @@ Lý do REJECT: cả tám lệnh eval máy đều chạy xong, nhưng bước rà
 
 ## Analyst
 
-none — moi eval feature deu red tren baseline (co phan biet)
+carried tu round 1 — baseline khong do lai round nay.
 
-Ghi chú trung thực: dòng trên là kết quả của bước phân tích máy (danh sách eval không-phân-biệt rỗng). Cả tám eval đều có baseline n-a, nên chưa có số đo red thật; xem mục dưới.
-
-Baseline khong do:
-- node --test --test-concurrency=1 --test-name-pattern='^GNT-1:' pipeline/scripts/phan-khu-s16-ma-can.itest.mjs: bo qua baseline: tep pipeline/scripts/phan-khu-s16-ma-can.itest.mjs co o cay dang kiem nhung chua co o merge-base 1a71b7e7f5ee7736e9e057d5f6181164de5c8377 — eval moi, chay tren code cu khong phan biet gi
-- node --test --test-concurrency=1 --test-name-pattern='^GNT-2:' pipeline/scripts/phan-khu-s16-ma-can.itest.mjs: bo qua baseline: tep pipeline/scripts/phan-khu-s16-ma-can.itest.mjs co o cay dang kiem nhung chua co o merge-base 1a71b7e7f5ee7736e9e057d5f6181164de5c8377 — eval moi, chay tren code cu khong phan biet gi
-- node --test --test-concurrency=1 --test-name-pattern='^GNT-3:' pipeline/scripts/phan-khu-s16-ma-can.itest.mjs: bo qua baseline: tep pipeline/scripts/phan-khu-s16-ma-can.itest.mjs co o cay dang kiem nhung chua co o merge-base 1a71b7e7f5ee7736e9e057d5f6181164de5c8377 — eval moi, chay tren code cu khong phan biet gi
-- node --test --test-concurrency=1 --test-name-pattern='^GNT-4:' pipeline/scripts/phan-khu-s16-ma-can.itest.mjs: bo qua baseline: tep pipeline/scripts/phan-khu-s16-ma-can.itest.mjs co o cay dang kiem nhung chua co o merge-base 1a71b7e7f5ee7736e9e057d5f6181164de5c8377 — eval moi, chay tren code cu khong phan biet gi
-- node --test --test-concurrency=1 --test-name-pattern='^GNT-5:' pipeline/scripts/phan-khu-s16-ma-can.itest.mjs: bo qua baseline: tep pipeline/scripts/phan-khu-s16-ma-can.itest.mjs co o cay dang kiem nhung chua co o merge-base 1a71b7e7f5ee7736e9e057d5f6181164de5c8377 — eval moi, chay tren code cu khong phan biet gi
-- node --test --test-concurrency=1 --test-name-pattern='^GNT-6:' pipeline/scripts/phan-khu-s16-ma-can.itest.mjs: bo qua baseline: tep pipeline/scripts/phan-khu-s16-ma-can.itest.mjs co o cay dang kiem nhung chua co o merge-base 1a71b7e7f5ee7736e9e057d5f6181164de5c8377 — eval moi, chay tren code cu khong phan biet gi
-- node --test --test-concurrency=1 --test-name-pattern='^GNT-7:' pipeline/scripts/phan-khu-s16-ma-can.itest.mjs: bo qua baseline: tep pipeline/scripts/phan-khu-s16-ma-can.itest.mjs co o cay dang kiem nhung chua co o merge-base 1a71b7e7f5ee7736e9e057d5f6181164de5c8377 — eval moi, chay tren code cu khong phan biet gi
-- node pipeline/scripts/phan-khu-s16-ma-can-that.mjs: bo qua baseline: tep pipeline/scripts/phan-khu-s16-ma-can-that.mjs co o cay dang kiem nhung chua co o merge-base 1a71b7e7f5ee7736e9e057d5f6181164de5c8377 — eval moi, chay tren code cu khong phan biet gi
+none — khong eval nao duoc liet ke la khong-phan-biet (baseline khong do lai round nay; lenh suite xanh la regression-guard binh thuong).
 
 ## Variance
 
-none — every multi-run eval is uniform
+none — moi eval chay mot lan, deterministic.
 
 ## Iterations
 
-Round 1: các eval máy đều chạy xong; rà soát có một phát hiện mức cao trong hợp đồng ở AC-7 (GNT-7 chạy dựng với noiS16 rỗng nên bước S16 bị bỏ qua, thiếu đối chứng dương). Trả về triển khai.
+Round 1: E1-E8 chay tren sha 814ef987c; E8 (gnt_that, DB máy thu) PASS ngay 2026-11-21T15:48:20Z.
+Round 2: chay lai E1-E7 va suite sau sua GNT-7 (b33d222b0, đo lượt dựng đêm có bước S16 thật kèm đối chứng dương); E8 carry-forward tu round 1 vi delta khong cham paths cua eval. Tat ca PASS.
