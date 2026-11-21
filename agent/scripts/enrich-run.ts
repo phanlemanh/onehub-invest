@@ -57,7 +57,8 @@ async function main() {
   await c.connect();
   resetContextCache();
   const runId = `enrich-${new Date().toISOString()}`;
-  console.log(`═══ ENRICH RUN ${DRY ? "(DRY — E1 only, 0 LLM, 0 ghi)" : "(E1+E2 → đề xuất)"} · ${runId} · model ${m.gateway} · trần ${tran.tranUsd} USD ═══`);
+  console.log(`═══ ENRICH RUN ${DRY ? "(DRY — E1 only, 0 LLM, 0 ghi)" : "(E1+E2 → đề xuất)"} · ${runId} ═══`);
+  console.log(`model ${m.gateway} · trần ${tran.tranUsd} USD`);
 
   // Mỗi tin một giao dịch: lỗi ở một tin chỉ lui lại tin đó.
   const giaoDich: GiaoDich = async (fn) => {
