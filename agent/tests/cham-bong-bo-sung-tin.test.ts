@@ -239,10 +239,10 @@ async function gieo(c: PgClient, ds: TheFx[]): Promise<Map<string, number>> {
 const ranh = (u: string) => u.slice(u.indexOf(PR.RANH_BAI.mo) + PR.RANH_BAI.mo.length + 1, u.indexOf(PR.RANH_BAI.dong) - 1);
 const docTu = (f: string, bai: string): unknown => {
   const m = {
-    bathrooms: /(\d+)WC/.exec(bai), bedrooms: /(\d+)PN/.exec(bai), block_raw: /toà (\S+?)[ .,]/.exec(bai), street_raw: /đường ([^.,]+)/.exec(bai),
+    bathrooms: /(\d+)WC/.exec(bai), bedrooms: /(\d+)PN/.exec(bai), block_raw: /toà ([A-Za-z0-9]+(?:\.[0-9]+)?)/.exec(bai), street_raw: /đường ([^.,]+)/.exec(bai),
   }[f as "bathrooms"];
   if (f === "property_type") return bai.includes("căn hộ") ? { v: "apartment", trich: "căn hộ", can_cu: "bài ghi căn hộ" } : bai.includes("nhà phố") ? { v: "house", trich: "nhà phố", can_cu: "x" } : null;
-  return m ? { v: m[1], trich: m[0].replace(/[ .,]$/, ""), can_cu: "bài ghi thẳng" } : null;
+  return m ? { v: m[1], trich: m[0], can_cu: "bài ghi thẳng" } : null;
 };
 type Goi = { model: string; ma: string; system: string; user: string };
 /** Model giả lập xác định: đọc ô từ khối bài bằng biểu thức; `loiTai` = số thứ tự lời gọi (1-based) ném lỗi 500; `canh` = lần đọc đầu
@@ -468,5 +468,86 @@ test("AC-1 bài nhiều post_ids lấy bản mới nhất; thẻ mất tin hay m
       const { rows: [r] } = await c.query(`SELECT assertion_value_key($1) AS k`, [v]);
       assert.equal(KC.khoaGiaTri(v), r.k, `khoaGiaTri(${JSON.stringify(v)}) lệch assertion_value_key`);
     }
+  });
+});
+
+// ================= Task 4: báo cáo, kê thẻ trống =================
+const BC = (await import(`../src/enrich/${SRC}/bao-cao.js`)) as typeof import("../src/enrich/cham-bong/bao-cao.js");
+const KE = (await import(`../src/enrich/${SRC}/ke-the-trong.js`)) as typeof import("../src/enrich/cham-bong/ke-the-trong.js");
+
+test("AC-9 báo cáo từ tệp sau lượt có 2 lời gọi lỗi: bảng ô × kết cục × nguồn viết tay, cột chưa đủ, tổng 13", async () => {
+  await withTx(async (c) => {
+    await gieo(c, E1);
+    const thuMuc = tam();
+    const tk = await chayE1(c, { goi: gia({ loiTai: [4, 11] }).fn, thuMuc });
+    const b = BC.baoCao(CHAY.thuMucLuot(thuMuc, tk.run_id));
+    // Lời gọi 4 = DeepSeek của c06 (3 đề xuất), lời gọi 11 = Haiku của c09 (1 đề xuất) → 4 đề xuất chưa đủ hai kết quả.
+    const mong: [string, string, string, number][] = [
+      ["bathrooms", "khop", "e2_llm", 1], ["bathrooms", "khop", "e1_rule", 1], ["bathrooms", "chua_du", "e2_llm", 1],
+      ["bedrooms", "khop", "e2_llm", 1], ["bedrooms", "chua_du", "e2_llm", 1],
+      ["block_raw", "khop", "e1_rule", 1], ["block_raw", "chua_du", "e2_llm", 1],
+      ["street_raw", "khop", "e2_llm", 1],
+      ["property_type", "khop", "e1_rule", 1], ["property_type", "khop", "e2_llm", 2], ["property_type", "bac_dong_thuan", "e1_rule", 1],
+      ["property_type", "chua_du", "e2_llm", 1],
+    ];
+    let tong = 0;
+    for (const f of KC.THU_TU_O) for (const cot of BC.COT) for (const n of ["e1_rule", "e2_llm"] as const) {
+      const ky = mong.find((m) => m[0] === f && m[1] === cot && m[2] === n)?.[3] ?? 0;
+      assert.equal(b.o[f][cot][n], ky, `ô ${f} × ${cot} × ${n}: ${b.o[f][cot][n]}, mong ${ky}`);
+      tong += b.o[f][cot][n];
+    }
+    assert.equal(tong, 13, `tổng lệch: ${tong}, mong 13`);
+    assert.equal(b.o.bathrooms.bo_trong.e2_llm + b.o.bedrooms.bo_trong.e2_llm, 0, "lời gọi lỗi bị gộp vào bo_trong");
+    assert.deepEqual(b.ca_bien, { bathrooms: 0, bedrooms: 0, block_raw: 0, street_raw: 0, property_type: 2 });
+    assert.equal(b.o_da_co, 1);
+    assert.equal(b.tong.the_du, 8);
+    assert.equal(b.tong.so_the, 10);
+    assert.equal(b.tong.goi_moi, 20);
+    assert.equal(b.tong.vao, 18000);
+    assert.equal(b.tong.ra, 1800);
+    assert.ok(Math.abs(b.tong.usd - (9 * C_H + 9 * C_D)) < 1e-12, `chi phí ${b.tong.usd}`);
+    const chu = BC.inBaoCao(b);
+    assert.match(chu, /Thẻ đủ hai kết quả \/ thẻ chờ còn đề xuất: 8\/10/);
+    // In lại không gọi model: baoCao chỉ nhận thư mục lượt, không có đường gọi model hay DB.
+    assert.doesNotThrow(() => BC.baoCao(CHAY.thuMucLuot(thuMuc, tk.run_id)));
+  });
+});
+
+/** 7 thẻ chờ không đề xuất: [mã, loại đối chiếu, trạng thái đề xuất cùng tin, lượt sinh]. */
+const TRONG: [string, string[], string | null, string][] = [
+  ["t1", ["y_dinh"], null, "doc-toan-bo-2026-11-03T16:55:24.062Z"],
+  ["t2", ["gia"], null, "doc-toan-bo-2026-11-04T01:00:00.000Z"],
+  ["t3", ["dien_tich"], "applied", "enrich-2026-11-10T00:00:00Z"],
+  ["t4", ["gia", "y_dinh"], "skipped", "doc-toan-bo-2026-11-05T00:00:00Z"],
+  ["t5", ["y_dinh"], "applied", "enrich-2026-11-12T00:00:00Z"],
+  ["t6", ["gia"], "skipped", "enrich-2026-11-13T00:00:00Z"],
+  ["t7", ["y_dinh"], null, "enrich-2026-11-14T00:00:00Z"],
+];
+
+test("AC-10 kê thẻ chờ không đề xuất theo loại × đề xuất cùng tin × lượt sinh; tổng bằng câu đếm; không thẻ nào đổi", async () => {
+  await withTx(async (c) => {
+    await gieo(c, E1.slice(0, 2));
+    for (const [ma, loai, st, run] of TRONG) {
+      const offer = `nb1_${ma}`;
+      await insertOffer(c, { offer_id: offer, post_ids: [] });
+      await c.query(`INSERT INTO review_queue (item_type, item_id, title, status, evidence) VALUES ('agent_output', $1, 't', 'pending', $2::jsonb)`,
+        [`enrich:${offer}`, JSON.stringify({ offer_id: offer, run_id: run, doi_chieu: loai.map((l) => ({ loai: l })) })]);
+      if (st) {
+        const pid = await insertProposal(c, { offer_id: offer, field: "bathrooms", value: "2", review_id: null });
+        await c.query(`UPDATE enrichment_proposals SET status = $2 WHERE id = $1`, [pid, st]);
+      }
+    }
+    const h0 = (await c.query(`SELECT md5(string_agg(id || ':' || status, ',' ORDER BY id)) h FROM review_queue`)).rows[0].h;
+    const k = await KE.keTheTrong((s, a) => c.query(s, a as unknown[]));
+    const mong = [
+      ["dien_tich", "da-ap", "enrich", 1], ["gia", "da-bo-qua", "enrich", 1], ["gia", "khong-co", "doc-toan-bo", 1],
+      ["gia+y_dinh", "da-bo-qua", "doc-toan-bo", 1], ["y_dinh", "da-ap", "enrich", 1], ["y_dinh", "khong-co", "doc-toan-bo", 1],
+      ["y_dinh", "khong-co", "enrich", 1],
+    ];
+    assert.deepEqual(k.dong.map((d) => [d.loai, d.de_xuat_cung_tin, d.luot, d.so]), mong);
+    assert.equal(k.tong, 7, `tổng lệch: ${k.tong}, mong 7`);
+    assert.equal(k.tong_sql, 7);
+    const h1 = (await c.query(`SELECT md5(string_agg(id || ':' || status, ',' ORDER BY id)) h FROM review_queue`)).rows[0].h;
+    assert.equal(h1, h0, "review_queue đổi");
   });
 });
