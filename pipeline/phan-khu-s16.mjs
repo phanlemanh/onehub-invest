@@ -150,18 +150,42 @@ export async function apTheLuat(client, { bam, nguoi, noi = NOI_DU_AN_S16 }) {
   }
 }
 
-/** Kế hoạch + thẻ nối nút do luật S16 đúc về nút đã có. Chỉ đọc. */
-export async function dungKeHoachNoi(client, { noi = NOI_DU_AN_S16 } = {}) {
+/**
+ * Mã căn và tên toà S16 theo khoá khu, lấy bản snapshot mới nhất của từng khu (DA53). Chỉ trong bộ nhớ: không in, không ghi —
+ * mã căn S16 lấy bằng đăng nhập. Tên toà để xét tiền tố mã căn.
+ * @returns {Promise<Map<string, {ma:Set<string>, toa:Set<string>}>>}
+ */
+export async function docMaCan(client) {
+  const { rows } = await client.query(`
+    WITH moi AS (SELECT du_an, khu_id, max(snapshot_id) AS s FROM stg_s16_khu GROUP BY 1, 2)
+    SELECT t.du_an, t.khu_id, t.toa_ten, c.ma_can
+      FROM moi JOIN stg_s16_toa t ON t.snapshot_id = moi.s AND t.du_an = moi.du_an AND t.khu_id = moi.khu_id
+      JOIN stg_s16_can c ON c.snapshot_id = t.snapshot_id AND c.du_an = t.du_an AND c.toa_id = t.toa_id`);
+  const ra = new Map();
+  for (const r of rows) {
+    const k = khoaKhu(r.du_an, r.khu_id);
+    const x = ra.get(k) ?? { ma: new Set(), toa: new Set() };
+    x.ma.add(r.ma_can);
+    if (r.toa_ten) x.toa.add(r.toa_ten);
+    ra.set(k, x);
+  }
+  return ra;
+}
+
+/** Kế hoạch + thẻ nối nút do luật S16 đúc về nút đã có. Chỉ đọc. Căn cứ: toà S09 (DA46), rồi mã căn S16 (DA53). */
+// `chiS09`: bỏ căn cứ mã căn — chỉ để phép đo DA46 (phan-khu-s16-noi-that.mjs) đo đúng luật nó đã ký.
+export async function dungKeHoachNoi(client, { noi = NOI_DU_AN_S16, chiS09 = false } = {}) {
   const duAn = await docNutDuAn(client, noi);
   const cay = await docCayDuAn(client, [...duAn.values()].map((d) => d.id));
   const laLuat = (n) => n.meta?.nguon === NGUON && n.meta?.s16_rule_id != null;
   const nutLuat = cay.filter(laLuat).map((n) => ({ id: n.id, du_an_node_id: n.du_an_node_id, name: n.name, khoa: n.s16_khu_ids }));
-  const keHoach = keHoachNoi(nutLuat, await docBangChung(client), cay.filter((n) => !laLuat(n)));
+  const nutKhac = cay.filter((n) => !laLuat(n)).map((n) => ({ id: n.id, du_an_node_id: n.du_an_node_id, name: n.name, node_type: n.node_type, khoa: n.s16_khu_ids }));
+  const keHoach = keHoachNoi(nutLuat, await docBangChung(client), nutKhac, chiS09 ? new Map() : await docMaCan(client));
   return { ...keHoach, markdown: dungTheNoi(keHoach, new Map(cay.map((n) => [n.id, n.name]))) };
 }
 
 /** Áp thẻ nối đúng băm. Băm đã áp rồi → không đổi. Băm lệch → ném «bam-lech», không ghi gì. */
-export async function apNoi(client, { bam, nguoi, noi = NOI_DU_AN_S16 }) {
+export async function apNoi(client, { bam, nguoi, noi = NOI_DU_AN_S16, chiS09 = false }) {
   if (!/^[0-9a-f]{64}$/.test(String(bam ?? ""))) throw new Error("bam-sai-khuon: cần --bam <64 hex>");
   if (!String(nguoi ?? "").trim()) throw new Error("thieu-nguoi: cần --nguoi <tên>");
   await client.query("BEGIN");
@@ -171,7 +195,7 @@ export async function apNoi(client, { bam, nguoi, noi = NOI_DU_AN_S16 }) {
     const { rows: daAp } = await client.query(
       "SELECT id::int AS id FROM project_link_rules WHERE source = $1 AND can_cu = $2 AND mau_bam = $3 AND dao_at IS NULL", [NGUON, CAN_CU_NOI, bam]);
     if (daAp.length) { ok = true; return { rule_id: daAp[0].id, khongDoi: true, so: 0 }; }
-    const kh = await dungKeHoachNoi(client, { noi });
+    const kh = await dungKeHoachNoi(client, { noi, chiS09 });
     if (kh.bam !== bam) throw new Error(`bam-lech: thẻ hiện tại ${kh.bam}, băm khai ${bam} — dựng thẻ mới rồi xem lại`);
     if (!kh.cap.length) { ok = true; return { rule_id: null, khongDoi: true, so: 0 }; }
     const { rows: [luat] } = await client.query(
@@ -318,7 +342,7 @@ async function main(argv) {
     } else if (a["the-noi"]) {
       const kh = await dungKeHoachNoi(client);
       writeFileSync(a["the-noi"], kh.markdown);
-      console.log(`thẻ nối: ${kh.cap.length} cặp, ${kh.khong_noi.length} ca không nối, băm ${kh.bam} → ${a["the-noi"]}`);
+      console.log(`thẻ nối: ${kh.cap.length} cặp, ${kh.can_nguoi.length} ca cần người chọn, ${kh.khong_noi.length} ca không nối, băm ${kh.bam} → ${a["the-noi"]}`);
     } else if (a.noi) {
       const kq = await apNoi(client, { bam: a.bam, nguoi: a.nguoi });
       console.log(kq.khongDoi ? "đã nối, không đổi" : `đã nối lượt ${kq.rule_id}: ${kq.so} cặp`);
