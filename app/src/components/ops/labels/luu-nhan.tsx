@@ -50,16 +50,16 @@ export const diTrang = (href: string) => window.location.assign(href)
 export const cauTinKe = (error: string) => `${error} — chuyển tin kế`
 
 /** Lỗi mạng khi Lưu: tại chỗ, có «Lưu lại» (luật ReUI: lỗi vùng dữ liệu kèm Thử lại). */
-export function LuuLoiAlert({ onRetry, dangLuu }: { onRetry: () => void; dangLuu: boolean }) {
+export function LuuLoiAlert({ onRetry, dangLuu, chuNut = "Lưu lại" }: { onRetry: () => void; dangLuu: boolean; chuNut?: string }) {
   return (
     <Alert variant="destructive" data-labels-mat-ket-noi="">
       <CircleAlertIcon aria-hidden="true" />
       <AlertTitle>Không chắc đã lưu — mất kết nối tới máy thu</AlertTitle>
-      <AlertDescription>Chữ đã gõ còn nguyên. Khi có mạng, bấm «Lưu lại».</AlertDescription>
+      <AlertDescription>Chữ đã gõ còn nguyên. Khi có mạng, bấm «{chuNut}».</AlertDescription>
       <AlertAction>
         <Button variant="outline" size="sm" onClick={onRetry} disabled={dangLuu}>
           <RotateCwIcon data-icon="inline-start" aria-hidden="true" />
-          Lưu lại
+          {chuNut}
         </Button>
       </AlertAction>
     </Alert>

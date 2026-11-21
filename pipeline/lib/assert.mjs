@@ -14,6 +14,22 @@ const COT = ["subject_key", "field", "value", "evidence_tier", "method", "method
   "observed_at", "changed_by", "run_id"];
 
 /**
+ * Câu rút «thay bởi lượt» của `replaceOwn` ($1 chủ thể, $2 trường, $3 phương pháp, $4 giá trị — bốn mảng song song).
+ * Gom giá trị mới theo (chủ thể, trường, phương pháp) thành một mảng khoá, rút phát biểu sống cùng bộ mà khoá không nằm
+ * trong mảng. Không dùng NOT EXISTS: planner ước bảng tạm từ unnest quá thấp (nối ra 1 dòng thay vì hàng trăm nghìn) và
+ * có lúc chọn Nested Loop Anti Join quét lại bảng tạm cho mỗi dòng — bậc hai, mảng 213 nghìn dòng chạy quá 3 phút
+ * (đo 20/11, hồ sơ slt-dc-cham-va-giu-khoa-33033). Lọc `<> ALL` trên từng dòng nối thì tuyến tính ở mọi kế hoạch.
+ * `<> ALL` đúng nghĩa NOT EXISTS vì `value` NOT NULL nên `value_key` và mọi phần tử của `vks` không NULL.
+ */
+export const SQL_RUT_THAY =
+  `WITH k AS (SELECT s, f, m, array_agg(DISTINCT assertion_value_key(v)) AS vks
+                FROM unnest($1::text[], $2::text[], $3::text[], $4::text[]) AS t(s, f, m, v) GROUP BY s, f, m)
+   UPDATE field_assertions fa SET retracted_at = clock_timestamp(), retract_reason = 'thay-boi-luot'
+     FROM k
+    WHERE fa.retracted_at IS NULL AND fa.subject_key = k.s AND fa.field = k.f AND fa.method = k.m
+      AND fa.value_key <> ALL (k.vks)`;
+
+/**
  * Ghi lô phát biểu bằng một câu INSERT … unnest (chạy lại không nhân dòng — chỉ mục sống của 045).
  * `replaceOwn`: trước khi ghi, rút phát biểu sống cùng (chủ thể, trường, phương pháp) mà giá trị khác lượt này
  * (lý do 'thay-boi-luot') — một bộ đọc chạy lại ra giá trị mới thì thay chính nó, không thành bất đồng.
@@ -38,15 +54,7 @@ export async function writeAssertions(client, rows, { replaceOwn = false } = {})
   }
   let retracted = 0;
   if (replaceOwn) {
-    const res = await client.query(
-      `WITH moi AS (SELECT DISTINCT s, f, m, assertion_value_key(v) AS vk
-                      FROM unnest($1::text[], $2::text[], $3::text[], $4::text[]) AS t(s, f, m, v))
-       UPDATE field_assertions fa SET retracted_at = clock_timestamp(), retract_reason = 'thay-boi-luot'
-         FROM (SELECT s, f, m FROM moi GROUP BY s, f, m) k
-        WHERE fa.retracted_at IS NULL AND fa.subject_key = k.s AND fa.field = k.f AND fa.method = k.m
-          AND NOT EXISTS (SELECT 1 FROM moi x WHERE x.s = k.s AND x.f = k.f AND x.m = k.m AND x.vk = fa.value_key)`,
-      [cols.subject_key, cols.field, cols.method, cols.value],
-    );
+    const res = await client.query(SQL_RUT_THAY, [cols.subject_key, cols.field, cols.method, cols.value]);
     retracted = res.rowCount;
   }
   const res = await client.query(

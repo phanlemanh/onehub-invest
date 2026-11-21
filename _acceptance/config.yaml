@@ -14,7 +14,7 @@ feature_loop:
   repin_retry: 1               # lệnh đỏ chạy lại đúng một lần, một mình; xanh lần hai → dòng pin gọi tên ca chập chờn
   repin_budget_min: 80         # trần mỗi lượt; vượt → thoát 4, không ghi pin, để lại repin-do «vuot-tran»
   do_san_tren_nen: true        # vòng khác gặp đúng cái đỏ đã có dòng nền trên main vẫn ghim, kèm nhãn «đỏ sẵn trên nền», không in «ĐẠT»
-  model_evals: [app-test-chap-chon-e4b-sap/E2, app-test-chap-chon-e4b-sap/E3]
+  model_evals: [app-test-chap-chon-e4b-sap/E2, app-test-chap-chon-e4b-sap/E3, slt-dc-cham-va-giu-khoa-33033/E4, slt-dc-cham-va-giu-khoa-33033/E5]   # chạy riêng, tuần tự sau mọi lệnh khác (lenh-dai-chay-rieng); slt-dc E4–E5 là thước giờ SLT-DC, đè tải lượt chấm thì đo sai — dùng khoá model_evals chỉ vì kit chưa có khoá «chạy riêng» (Known limits của hồ sơ)
 design_pass:
   ds_skill: onehub-ui
   # Hàng giao diện sửa thẳng route THẬT trên nhánh của hàng (host-embedded), không dựng route proto riêng.
@@ -45,6 +45,7 @@ executors:
     tg1_app: "cd app && bash ../db/db-thu.sh oneinvest_suite_tg1a --chay node --import tsx --test --test-concurrency=1 tests/the-dia-chi-nhom-app.itest.tsx"   # the-dia-chi-nhom-s03 E4, E6 — route card-decide, đọc thẻ, khoá nhóm
     tg2_pipeline: "node --test pipeline/scripts/dong-dau-dia-chi.test.mjs pipeline/scripts/transform-zalo-loai-tin.test.mjs"   # dong-dau-dia-chi-luc-nap E2, E3 — hàm thuần sinh dòng phát biểu, ô bán/thuê của thẻ trong suyLoai
     tg2_itest: "bash db/db-thu.sh oneinvest_suite_tg2 --chay node --test --test-concurrency=1 pipeline/tests/dia-chi-the-nhom.itest.mjs pipeline/tests/dong-dau-dia-chi.itest.mjs"   # dong-dau-dia-chi-luc-nap E4–E7, E9, E11 — bộ đọc thẻ + lượt nạp thật trên DB của riêng lượt
+    trt_db: "bash db/db-thu.sh oneinvest_suite_trt --chay node --test --test-concurrency=1 pipeline/scripts/assert-rut-thay.test.mjs"   # slt-dc-cham-va-giu-khoa-33033 E1, E3 — câu rút thay bởi lượt: tương đương + không bậc hai, ROLLBACK trên DB của lượt
     dv7_db: "bash db/db-thu.sh oneinvest_suite_dv7 --chay node --test --test-concurrency=1 pipeline/tests/offer-project.itest.mjs"   # du-an-cua-tin-len-dinh-vi E1–E5 — áp 105 rồi fixture chín lớp trên DB của riêng lượt
     dv7_lui: "bash db/db-thu.sh oneinvest_suite_dv7l --chay node --test --test-concurrency=1 pipeline/tests/offer-project-lui.itest.mjs"   # du-an-cua-tin-len-dinh-vi E10 — hồ sơ áp năm tệp + tệp lùi chạy thật
     dv7_app: "cd app && bash ../db/db-thu.sh oneinvest_suite_dv7a --chay node --import tsx --test --test-concurrency=1 tests/offer-project-app.itest.tsx tests/thang-bac-db.itest.tsx"   # du-an-cua-tin-len-dinh-vi E11 — bên đọc bản ghi, bậc của app
@@ -359,6 +360,10 @@ executors:
     jst_unit: "node --test scripts/job-step-thoi-luong.test.mjs"   # job-step-ghi-thoi-luong E1–E9 — cây tạm chép job-step.sh + tệp bọc thật, node/sleep giả, không DB
     jst_regress: "node --test scripts/job-exit.test.mjs scripts/s03-nap-nhanh.test.mjs scripts/zalo-import-job.test.mjs scripts/zalo-import-job-nhe.test.mjs scripts/enrich-buoc-job.test.mjs"   # job-step-ghi-thoi-luong E10 — lưới hồi quy dòng cũ của năm bộ test job
   script:
+    trt_tuong_duong: "bash db/db-thu.sh oneinvest_suite_trtd --chay node _acceptance/slt-dc-cham-va-giu-khoa-33033/probes/tuong-duong-ba-luot.mjs"   # slt-dc-cham-va-giu-khoa-33033 E2 — câu cũ và câu mới rút cùng tập id ở cả ba lượt transform của SLT-DC
+    trt_slt_dc_gio: "bash _acceptance/slt-dc-cham-va-giu-khoa-33033/probes/do-gio.sh 480 bash db/db-thu.sh oneinvest_suite_sltdc --chay node --test --test-concurrency=1 pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs"   # slt-dc-cham-va-giu-khoa-33033 E4, E5 — cả tệp SLT-DC dưới 480 s (= trần ca 7/9 và N khoá 33033), ca nhả khoá 33033
+    trt_san_xuat: "node _acceptance/slt-dc-cham-va-giu-khoa-33033/probes/san-xuat.mjs"   # slt-dc-cham-va-giu-khoa-33033 E7 — bốn bước transform-zalo liền nhau sau gộp, chỉ đọc log
+    trt_pham_vi: "bash _acceptance/slt-dc-cham-va-giu-khoa-33033/probes/pham-vi.sh"   # slt-dc-cham-va-giu-khoa-33033 E8 — tệp đổi chỉ trong vùng của hàng
     tg1_that_dem: "mkdir -p .acceptance-runs/the-dia-chi-nhom-s03 && node pipeline/scripts/the-dia-chi-nhom-that.mjs --dem --ghi .acceptance-runs/the-dia-chi-nhom-s03/so-chay-thu.md"   # the-dia-chi-nhom-s03 E7 — bản chép DB máy thu oneinvest_u1_tg1, áp 108 + dựng nháp
     tg1_that_chat_luong: "node pipeline/scripts/the-dia-chi-nhom-that.mjs --chat-luong"   # the-dia-chi-nhom-s03 E8 — 13 nhóm sổ một dự án, dựng nháp bỏ sổ
     tg2_phu_the: "node pipeline/scripts/dong-dau-dia-chi-that.mjs --do-neu-cu --thuoc phu-the"   # dong-dau-dia-chi-luc-nap E1 · AC-1(a) — bản chép oneinvest_p4_tg2, kịch bản K1 khai trước
@@ -1045,6 +1050,16 @@ executors:
     nps_kiem: "node --test --test-concurrency=1 --test-name-pattern='^NPS-10:' pipeline/scripts/phan-khu-s16-noi.itest.mjs"   # noi-phan-khu-trung-s16 AC-10
     nps_ops: "cd app && bash ../db/db-thu.sh oneinvest_suite_nps_ops --chay node --import tsx --test tests/nut-nghi-tren-ops.test.tsx"   # noi-phan-khu-trung-s16 AC-6
     nps_that: "node pipeline/scripts/phan-khu-s16-noi-that.mjs"   # noi-phan-khu-trung-s16 AC-9 — bản chép DB máy thu, DB máy thu chỉ đọc
+    bdv_dich: "node --test --test-concurrency=1 --test-name-pattern='^BDV-1:' pipeline/scripts/bi-danh-viet-tat-phan-khu.itest.mjs"   # bi-danh-viet-tat-phan-khu AC-1
+    bdv_the: "node --test --test-concurrency=1 --test-name-pattern='^BDV-2:' pipeline/scripts/bi-danh-viet-tat-phan-khu.itest.mjs"   # bi-danh-viet-tat-phan-khu AC-2
+    bdv_ap: "node --test --test-concurrency=1 --test-name-pattern='^BDV-3:' pipeline/scripts/bi-danh-viet-tat-phan-khu.itest.mjs"   # bi-danh-viet-tat-phan-khu AC-3
+    bdv_dao: "node --test --test-concurrency=1 --test-name-pattern='^BDV-4:' pipeline/scripts/bi-danh-viet-tat-phan-khu.itest.mjs"   # bi-danh-viet-tat-phan-khu AC-4
+    bdv_da46: "node --test --test-concurrency=1 --test-name-pattern='^BDV-5:' pipeline/scripts/bi-danh-viet-tat-phan-khu.itest.mjs"   # bi-danh-viet-tat-phan-khu AC-5
+    bdv_doc: "node --test --test-concurrency=1 --test-name-pattern='^BDV-6:' pipeline/scripts/bi-danh-viet-tat-phan-khu.itest.mjs"   # bi-danh-viet-tat-phan-khu AC-6
+    bdv_dem: "node --test --test-concurrency=1 --test-name-pattern='^BDV-7:' pipeline/scripts/bi-danh-viet-tat-phan-khu.itest.mjs"   # bi-danh-viet-tat-phan-khu AC-7
+    bdv_kiem: "node --test --test-concurrency=1 --test-name-pattern='^BDV-8:' pipeline/scripts/bi-danh-viet-tat-phan-khu.itest.mjs"   # bi-danh-viet-tat-phan-khu AC-8
+    bdv_that: "node pipeline/scripts/bi-danh-viet-tat-phan-khu-that.mjs"   # bi-danh-viet-tat-phan-khu AC-9 — bản chép DB máy thu, DB máy thu chỉ đọc
+    bdv_soat_nguon: "node pipeline/scripts/bi-danh-viet-tat-phan-khu-soat-nguon.mjs"   # bi-danh-viet-tat-phan-khu AC-7 — bộ soát tên nguồn (match_whole) trên bốn tên tắt, DB máy thu chỉ đọc
     s37_db: "node --test --test-concurrency=1 pipeline/scripts/danh-ba-s16-cau-truc.itest.mjs"   # danh-ba-s16-thang-cau-truc E1, E2–E8 — itest tự dựng DB oneinvest_dbv_s37_<pid> từ db/migrations, xoá khi xong
     s37_that: "node pipeline/scripts/danh-ba-s16-cau-truc-that.mjs"   # danh-ba-s16-thang-cau-truc E2b, E9, E10 — bản chép DB máy thu sau DA33, áp 111 + thẻ luật + dựng + đường lùi, chỉ in số; ngoài CI
     ns09_that: "node pipeline/scripts/nap-s09-that.mjs"   # nap-s09 E4 — bản chép DB máy thu, chạy lệnh nạp hai lần trên bản thu S09 13/11, số khớp DA31; ngoài CI

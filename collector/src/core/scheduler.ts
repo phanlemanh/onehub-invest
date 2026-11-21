@@ -72,9 +72,13 @@ export async function runCollector(opts: RunOptions): Promise<void> {
     );
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
+    // 1711-1(b): lượt ném lỗi toàn phần giữ '.partial' ẩn (manifest lỗi nằm
+    // trong đó) — không sinh thư mục tên thật 0 items trông như bản thu thật
+    // (29 thư mục bản thu của S02 khiến đếm bản thu không lộ ra lỗi).
     await writer.finalize(
       { discovered: 0, captured: 0, failed: 0, methods: {}, notes: ["run failed"] },
       message,
+      { giuTam: true },
     );
     await checkpoint.save();
     log("FAILED:", message);
