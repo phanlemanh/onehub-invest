@@ -32,6 +32,9 @@ export async function doTrongGiaoDich(c, { refresh = refreshBaitGap, log = conso
   };
   const danhSach = async () => (await c.query(dealsSql(), PARAMS)).rows.map(toDealRow);
   const chayDem = async () => {
+    // Chỉ đọc dòng audit do CHÍNH lượt refresh này ghi: bước đêm không ghi audit khi không loại tin nào, nên đọc «dòng mới
+    // nhất» sẽ trả kết quả của một đêm cũ và che luật loại hỏng (review S4 r2 t1/t2, AC-2).
+    const moc = (await c.query(`SELECT coalesce(max(id), 0) AS m FROM ops_audit`)).rows[0].m;
     const log0 = console.log;
     console.log = () => {}; // nhật ký của bước đêm không thuộc phép đo
     try {
@@ -40,7 +43,8 @@ export async function doTrongGiaoDich(c, { refresh = refreshBaitGap, log = conso
       console.log = log0;
     }
     return (await c.query(
-      `SELECT detail FROM ops_audit WHERE action = 'bait-gap:loai-phi-ly' ORDER BY id DESC LIMIT 1`,
+      `SELECT detail FROM ops_audit WHERE action = 'bait-gap:loai-phi-ly' AND id > $1 ORDER BY id DESC LIMIT 1`,
+      [moc],
     )).rows[0]?.detail ?? { total: 0, by_reason: {}, offer_ids: [] };
   };
 

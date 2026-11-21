@@ -143,6 +143,23 @@ test("DPD-AC-2 luật loại hỏng: lượt đo đỏ, gọi tên", { timeout: 
   });
 });
 
+test("DPD-AC-2 luật loại hỏng: dòng audit cũ đã có tin đối chứng không che lượt đỏ", { timeout: 120_000 }, async () => {
+  await withTx(async (c) => {
+    await seed(c);
+    // Dòng audit của «một đêm cũ» đã chứa đúng tin đối chứng: đọc dòng mới nhất toàn bảng sẽ xanh giả khi luật hỏng.
+    await c.query(
+      `INSERT INTO ops_audit (actor, action, env, detail) VALUES ('refresh-bait-gap', 'bait-gap:loai-phi-ly', 'local', $1)`,
+      [JSON.stringify({ total: 1, by_reason: { "thieu-dien-tich": 1 }, offer_ids: [ids[0]] })],
+    );
+    soChan = 0;
+    const kq = await doTrongGiaoDich(c, { refresh: demBoLuat, log: im });
+    assert.equal(soChan, 2, "DPD-AC-2 client bọc không chặn đúng hai câu ghi của luật loại");
+    assert.equal(kq.dat, false, "DPD-AC-2 dòng audit cũ che luật loại hỏng: lượt đo vẫn đạt");
+    assert.deepEqual(tim(kq.kiem, "luật loại bắt tin đối chứng").map((k) => k.ok), [false],
+      "DPD-AC-2 kiểm «luật loại bắt tin đối chứng» đọc dòng audit cũ");
+  });
+});
+
 test("DPD-AC-3 danh sách rỗng: không giả đạt", { timeout: 120_000 }, async () => {
   await withTx(async (c) => {
     await thuoc(c);
