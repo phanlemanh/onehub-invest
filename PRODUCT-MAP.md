@@ -12,7 +12,7 @@ flowchart TD
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>21 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>211 việc"]
+  GB --> DG["Đã giao<br/>212 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>141 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
@@ -232,6 +232,7 @@ flowchart TD
 - backfill ảnh Zalo xét cả snapshot zalo-agent schemaVersion 3, không chỉ v2 (`backfill-zalo-media-v3`)
 - Bước bait gap của refresh-bait-gap chạy trong một giao dịch có khoá advisory chung — lượt nạp S03, S06 không ghi chồng, đụng khoá hay lỗi giữa chừng không để bait_gap_pct của tin P1 về rỗng (`bait-gap-mot-giao-dich`)
 - Bật gói dieu-phoi ở cấp kho — thêm dieu-phoi@acceptance-gate-kit vào enabledPlugins của .claude/settings.json, cùng nguồn marketplace với các gói kit khác, không đổi gì khác (`bat-dieu-phoi-cap-du-an`)
+- Bốn tên viết tắt phân khu (ori, rb, bs, gh) vào danh bạ qua thẻ luật có băm, đảo được, để GT5 đọc phân khu từ danh bạ (`bi-danh-viet-tat-phan-khu`)
 - Bộ canh kênh S03 tắt gateway khi có lượt agent mới dù lượt đó chạy nhanh, nhờ đếm trên kho phiên thay vì dò chuỗi trong log (`bo-canh-dem-luot-agent`)
 - ca E4b đối chiếu tin rao nạp danh sách che qua hàm chung có cờ khớp nguyên cụm — main thôi đỏ sau khi áp che-ten (`ca-doi-chieu-tin-rao-nap-co-khop-cum`)
 - Người vận hành thấy đúng tên người đăng, đúng lý do rời danh sách của căn đắt hơn thước, và đường về danh sách không quay lại chính trang một căn (`can-gia-tot-sua-ba-loi`)
