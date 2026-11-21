@@ -47,3 +47,20 @@ Bản đầu của luật (a) đọc trên chữ đã bỏ dấu và chưa đòi
 «S2.12 căn», «S1.12 căn 08», «cắt lỗ 200 căn» (5 tin). Bản đầu của luật (b) bỏ «The» ở mọi tên nên
 chữ «Rainbow» khớp cả hai nút «The Rainbow» và «Rainbow», làm 10 tin mất gắn. Hai lỗi đã sửa trước khi commit; mỗi lỗi có một ca test
 đỏ khi phá đúng nhánh.
+
+## Lỗi bước gom tin phía trên, ngoài phạm vi PL20
+
+Hai tin mới gắn (`offer_3820b17570210cf1`, `offer_41f37d29fbd6f3a6`) có bài được gắn đọc đúng «Phân khu: The Beverly Solari», nhưng
+tin gom thêm các bài của cùng người đăng thuộc phân khu khác (Masteri Centre Point, Glory Heights, Lumiere Boulevard). Lỗi nằm ở bước
+gom bài thành tin, không ở luật gắn. GS phán 21/11: không chặn việc rút lát n2; tin nào rơi vào lát mới thì chấm như mọi bài khác.
+
+Đếm trên bản chép (chỉ đọc), 7.441 tin căn hộ S03, 6.759 tin có khu trong danh bạ, 5.227 tin gom từ hai bài có chữ trở lên: **ít nhất
+25 tin** gom bài thuộc từ hai phân khu trở lên. Cách đếm: mỗi bài chỉ tính khi chữ bài nêu đúng một phân khu của danh bạ (bỏ phân khu
+cha của phân khu khác cùng bài); tin được đếm khi các bài nêu từ hai phân khu khác nhau, không cái nào là cha của cái kia. Đây là cận
+dưới: phân khu không có trong danh bạ của khu (như Masteri Centre Point với tin `offer_3820b…`) không đếm được. Lên Cổng Bằng chứng làm
+giới hạn đã biết; bước gom tách thành hàng riêng.
+
+## Danh bạ còn cặp nút trùng — dọn sau PL20
+
+Bốn tin mới gắn vào nút 48 «The Rainbow» khi danh bạ còn nút 389 «Rainbow» cùng khu. Không sửa danh bạ trong vòng này; ghi vào danh
+sách dọn danh bạ sau PL20 (GS giữ hàng chờ).
