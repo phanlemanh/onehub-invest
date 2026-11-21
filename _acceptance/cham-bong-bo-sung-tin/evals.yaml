@@ -1,0 +1,92 @@
+schema_version: 1
+slug: cham-bong-bo-sung-tin
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/cham-bong-bo-sung-tin/probes/cham.sh AC-1
+    paths: [agent/src/enrich/cham-bong/**, agent/scripts/cham-bong-bo-sung-tin.ts, agent/tests/cham-bong-bo-sung-tin.test.ts]
+    expected: "Trên DB của riêng lượt, tập viết trước 14 thẻ: 10 thẻ chờ với đề xuất chờ phủ đủ năm ô và hai nguồn E1/E2 (một thẻ ba đề xuất khác ô, một thẻ hai đề xuất cùng ô loại hình khác giá trị, một thẻ S05), 1 thẻ «Để sau» có đề xuất chờ, 1 thẻ chờ có đề xuất đã áp, 2 thẻ chờ không đề xuất. Model giả lập xác định. Ma trận viết tay: mỗi thẻ chờ còn đề xuất một assert «đúng 2 lời gọi, hai model khác nhau, cả hai trong MODEL_DUYET» (10 thẻ → 20 lời gọi); mỗi đề xuất chờ một assert «đúng hai kết quả» (13 đề xuất → 26 kết quả), hai đề xuất cùng ô có kết quả lấy từ cùng lần đọc; thẻ «Để sau», đề xuất đã áp và thẻ không đề xuất một assert «0 lời gọi, 0 kết quả». Mỗi kết quả có giá trị khác rỗng một assert có trích và căn cứ. Đột biến trong bản sao (đọc cả thẻ «Để sau»; một model đọc hai lần; gọi một lần mỗi đề xuất) đỏ, thông điệp nêu mã thẻ và số lời gọi."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/cham-bong-bo-sung-tin/probes/cham.sh AC-2
+    paths: [agent/src/enrich/cham-bong/**, agent/tests/cham-bong-bo-sung-tin.test.ts]
+    expected: "Với mọi thẻ của tập E1, lời nhắc thật bộ dựng gửi tới model giả lập (bắt tại lớp gọi, không dựng lại trong test) chứa nguyên văn chữ bài gốc dài hơn 300 ký tự của thẻ cài sẵn bên trong khối có ranh giới cố định, và chứa tên các ô cần đọc. Phần lời nhắc ngoài khối bài không chứa giá trị đề xuất, tên model đề xuất, hay giá trị lần đọc kia (lần đọc đầu trả chuỗi canh «GIATRI_CANH_<thẻ>»). Thêm ba thẻ canh có giá trị đề xuất «DEXUAT_CANH_<thẻ>» không có trong bài: chuỗi canh vắng trên TOÀN BỘ lời nhắc. Mỗi kết quả có băm lời nhắc bằng băm tính lại từ lời nhắc đã bắt. Đối chứng dương: thẻ khop có giá trị đề xuất «2» nằm trong khối bài vẫn xanh. Đột biến chèn giá trị đề xuất vào lời nhắc đỏ, thông điệp nêu mã thẻ và chuỗi bị lộ; đột biến dùng chữ cắt 300 ký tự đỏ."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/cham-bong-bo-sung-tin/probes/cham.sh AC-3
+    paths: [agent/src/enrich/cham-bong/**, agent/tests/cham-bong-bo-sung-tin.test.ts]
+    expected: "Ma trận viết tay 8 ca, mỗi ca một assert: trích có thật → giữ giá trị; trích không có trong bài → rỗng lý do trich-gia; trích chỉ khác hoa thường và khoảng trắng → giữ; loại hình trong từ vựng → giữ; loại hình ngoài từ vựng → rỗng ngoai-tu-vung; số WC «2» → giữ; số WC «2-3» → rỗng khong-phai-so; model trả rỗng → rỗng lý do khong-suy-ra. Đột biến bỏ kiểm trích đỏ, thông điệp nêu ca trich-gia."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/cham-bong-bo-sung-tin/probes/cham.sh AC-4
+    paths: [agent/src/enrich/cham-bong/**, agent/tests/cham-bong-bo-sung-tin.test.ts]
+    expected: "Ma trận toàn phần viết trước: lần đọc 1 × lần đọc 2 trên {bằng đề xuất, khác đề xuất A, khác đề xuất B, rỗng} = 16 ô cặp đọc × có/không cờ lech_tren_the × có/không o_da_co = 64 assert, mỗi ô một kết cục viết tay (khop chỉ khi cả hai bằng đề xuất; bo_trong khi có rỗng; lech_hai_lan khi hai giá trị hợp lệ khác nhau, kể cả A/B; bac_dong_thuan khi hai bằng nhau khác đề xuất) và cờ ca biên viết tay. Lời gọi lỗi không sinh kết cục (một assert). So khoá: «02» với «2», «Căn hộ» với «căn hộ» là bằng. Đối chứng dương: 4 ô khop không cờ lech_tren_the không có cờ ca biên. Đột biến so chuỗi thô thay assertion_value_key đỏ, thông điệp nêu ô «02/2»; đột biến xếp A/B thành bac_dong_thuan đỏ; đột biến bỏ cờ lech_tren_the khỏi định nghĩa ca biên đỏ."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/cham-bong-bo-sung-tin/probes/cham.sh AC-5
+    paths: [agent/src/enrich/cham-bong/**, agent/scripts/cham-bong-bo-sung-tin.ts, agent/tests/cham-bong-bo-sung-tin.test.ts]
+    expected: "Trên DB của riêng lượt với tập E1: băm trọn từng dòng của mọi bảng thường trong lược đồ public trừ ai_calls trước = sau ở năm lượt: chế độ thử trọn, chế độ áp trọn, chế độ áp với model giả lập ném lỗi ở thẻ thứ 3, chế độ áp dừng vì trần, chế độ thử dừng vì trần; ở chế độ thử băm ai_calls cũng bằng. Đối chứng dương trên cùng fixture: một UPDATE sale_offers.bathrooms và một INSERT field_assertions chạy ngoài bộ chạy làm thước đỏ, thông điệp nêu tên bảng đổi. Đột biến trong bản sao cho bộ chạy ở chế độ áp gọi apply_enrichment trên một đề xuất: đỏ, thông điệp nêu bảng đổi."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/cham-bong-bo-sung-tin/probes/cham.sh AC-6
+    paths: [agent/src/enrich/cham-bong/**, agent/scripts/cham-bong-bo-sung-tin.ts, agent/tests/cham-bong-bo-sung-tin.test.ts]
+    expected: "Tập E1, model giả lập trả lỗi ở đúng 2 lời gọi: số dòng sổ gọi bằng số lời gọi (20), 18 ok và 2 lỗi có tên lớp lỗi, mỗi dòng viec cham-bong-bo-sung-tin, model có tiền tố đường, trace mang mã lượt. Chế độ thử: 20 dòng trong tệp sổ, 0 dòng thêm vào bảng ai_calls; chế độ áp: 20 dòng thêm vào bảng ai_calls, 0 dòng tệp. Đột biến bỏ ghi sổ khi lỗi đỏ, thông điệp nêu số dòng thiếu."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/cham-bong-bo-sung-tin/probes/cham.sh AC-7
+    paths: [agent/src/enrich/cham-bong/**, agent/scripts/cham-bong-bo-sung-tin.ts, agent/tests/cham-bong-bo-sung-tin.test.ts]
+    expected: "Bốn ca trên tập E1, mỗi ca đếm lời gọi model giả lập, dòng kết quả và dòng sổ trước và sau: (a) chạy hai lần liên tiếp — lần hai 0 lời gọi, số dòng không đổi; (b) sau lượt E6 có 2 lời gọi lỗi, lần hai gọi đúng 2 lời gọi đó; (c) sau lượt E8 dừng ở lời gọi thứ 7, lần hai gọi đúng 13 lời gọi còn lại và không gọi lại 7 lời gọi đã xong; (d) đổi phiên bản lời nhắc gọi lại đủ 20; đổi chữ bài của đúng một thẻ chỉ gọi lại 2 lời gọi của thẻ đó. Đột biến bỏ khoá băm đỏ, thông điệp nêu số lời gọi lặp; đột biến lưu kết quả lỗi vào khoá đỏ ở ca (b)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/cham-bong-bo-sung-tin/probes/cham.sh AC-8
+    paths: [agent/src/enrich/cham-bong/**, agent/scripts/cham-bong-bo-sung-tin.ts, agent/config/cham-bong-bo-sung-tin.json, agent/tests/cham-bong-bo-sung-tin.test.ts]
+    expected: "Model giả lập trả token cố định, đơn giá từ tệp cấu hình; trần đặt bằng chi phí của đúng 7 lời gọi cộng nửa lời gọi: lượt dừng sau lời gọi thứ 7, không có lời gọi thứ 8, tổng chi phí ghi bằng số tính tay, số thẻ đã chấm và còn lại khớp. Thứ tự thẻ: mọi thẻ có đề xuất số WC đứng trước thẻ có ô ưu tiên cao nhất là phòng ngủ, rồi toà, đường, loại hình (assert trên chuỗi lời gọi đã bắt, thứ tự viết tay). Đối chứng dương: trần đủ lớn chạy đủ 20 lời gọi. Đột biến kiểm trần sau khi gọi đỏ, thông điệp nêu lời gọi thứ 8."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/cham-bong-bo-sung-tin/probes/cham.sh AC-9
+    paths: [agent/src/enrich/cham-bong/**, agent/scripts/cham-bong-bo-sung-tin.ts, agent/tests/cham-bong-bo-sung-tin.test.ts]
+    expected: "Từ tệp kết quả của tập E1 sau lượt có 2 lời gọi lỗi: lệnh báo cáo in bảng ô × kết cục × nguồn bằng bảng viết tay (mỗi ô một assert), cột «chưa đủ hai kết quả» đếm đúng các đề xuất của thẻ có lời gọi lỗi và không cộng vào bo_trong, dòng «thẻ đủ hai kết quả / thẻ chờ còn đề xuất» bằng số viết tay, số o_da_co, số lời gọi, token và chi phí viết tay; tổng các ô bằng 13. Chạy báo cáo với model giả lập ném lỗi nếu bị gọi: không lỗi. Đột biến đếm theo thẻ thay vì theo đề xuất đỏ, thông điệp nêu tổng lệch; đột biến gộp lỗi vào bo_trong đỏ."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-10
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/cham-bong-bo-sung-tin/probes/cham.sh AC-10
+    paths: [agent/src/enrich/cham-bong/**, agent/scripts/cham-bong-bo-sung-tin.ts, agent/tests/cham-bong-bo-sung-tin.test.ts]
+    expected: "Tập viết trước 7 thẻ chờ không đề xuất phủ loại đối chiếu y_dinh, gia, dien_tich, gia+y_dinh × đề xuất cùng tin không có / đã áp / đã bỏ qua × hai lượt sinh: bảng kê bằng bảng viết tay, tổng 7 bằng số câu SQL in kèm đếm; thẻ chờ còn đề xuất không lọt vào bảng. Trạng thái review_queue trước = sau. Đột biến lấy cả thẻ có đề xuất đỏ, thông điệp nêu tổng lệch."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-1
+    executor: script
+    layer: backend-effect
+    status: not-run
+    cmd: bash _acceptance/cham-bong-bo-sung-tin/probes/thu-30.sh
+    paths: [agent/src/enrich/cham-bong/**, agent/scripts/cham-bong-bo-sung-tin.ts, agent/config/cham-bong-bo-sung-tin.json]
+    expected: "Lượt thử thật 30 thẻ trên DB máy thu (chỉ đọc), hai model thật, sổ gọi vào tệp: 30 thẻ đủ hai kết quả cho mọi đề xuất chờ, mỗi giá trị có trích có thật trong bài, băm ba bảng trước = sau, chi phí ghi ≤ 0,1 USD; in bảng kết cục theo ô. Chạy một lần ở S4 sau khi Cổng Phạm vi duyệt tiền; không lặp ở làn ghim lại (tốn tiền, đổi theo dữ liệu thật)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
