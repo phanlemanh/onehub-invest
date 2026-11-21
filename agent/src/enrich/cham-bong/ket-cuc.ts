@@ -1,8 +1,12 @@
 // ket-cuc.ts — NB1 cham-bong-bo-sung-tin: luật XÁC ĐỊNH tính kết cục của một đề xuất từ hai lần đọc mù (design §1, AC-4).
 // Không model nào quyết kết cục (luật 7). So giá trị theo khoá giống hệt assertion_value_key của migration 045.
 
+import { ENRICH_FIELD } from "../../vocab.generated.js";
+
 /** Năm ô của hàng «Bổ sung tin», theo thứ tự ưu tiên chấm (AC-8: ô số trước, rồi toà, đường, loại hình). */
-export const THU_TU_O = ["bathrooms", "bedrooms", "block_raw", "street_raw", "property_type"] as const;
+export const THU_TU_O = [
+  ENRICH_FIELD.bathrooms, ENRICH_FIELD.bedrooms, ENRICH_FIELD.block_raw, ENRICH_FIELD.street_raw, ENRICH_FIELD.property_type,
+] as const;
 export type OCham = (typeof THU_TU_O)[number];
 export const laOCham = (x: string): x is OCham => (THU_TU_O as readonly string[]).includes(x);
 

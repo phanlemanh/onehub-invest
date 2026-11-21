@@ -1,10 +1,11 @@
 // doc-db.ts — NB1 cham-bong-bo-sung-tin: đọc thẻ «Bổ sung tin» chờ còn đề xuất chờ, bài gốc đầy đủ và giá trị tin hiện có. Mọi đọc
 // DB máy thu chạy trong giao dịch READ ONLY (AC-5); bộ chạy chỉ nhận hàm `truy`, không nhận kết nối ghi.
 import pg from "pg";
+import { ASSERTION_METHOD } from "../../vocab.generated.js";
 import { laOCham, THU_TU_O, type OCham } from "./ket-cuc.js";
 
 export type Truy = (sql: string, args?: unknown[]) => Promise<{ rows: any[] }>;
-export type DeXuat = { id: number; field: OCham; value: string; source: "e1_rule" | "e2_llm"; o_da_co: boolean };
+export type DeXuat = { id: number; field: OCham; value: string; source: typeof ASSERTION_METHOD.e1_rule | typeof ASSERTION_METHOD.e2_llm; o_da_co: boolean };
 export type TheCham = { review_id: number; offer_id: string; source: string; text: string; group_name: string | null; de_xuat: DeXuat[] };
 export type BoQua = { review_id: number; ly_do: "khong-tin" | "khong-bai" };
 

@@ -9,9 +9,12 @@ import { join } from "node:path";
 
 const AGENT = join(import.meta.dirname, "../../../agent");
 const GOC = join(AGENT, "src/enrich/cham-bong");
-const BAN = join(AGENT, "src/enrich/cham-bong.dot-bien");
 const AC = process.argv[2];
 if (!/^AC-\d+$/.test(AC ?? "")) { console.error("dùng: dot-bien.mjs AC-n"); process.exit(2); }
+// Mỗi lượt một thư mục bản sao riêng (theo AC và pid): lượt chấm chạy các AC song song, thư mục chung thì lượt này xoá bản sao
+// lượt kia đang nạp (S4 r1: ERR_MODULE_NOT_FOUND, đột biến «thước vẫn xanh» vì nạp nhầm bản sao của AC khác).
+const TEN_BAN = `cham-bong.dot-bien-${AC.toLowerCase()}-${process.pid}`;
+const BAN = join(AGENT, "src/enrich", TEN_BAN);
 
 /** [AC, tên, tệp, chuỗi tìm (đúng một lần), chuỗi thay, thông điệp ghim (regex trên đầu ra test)] */
 const DB = [
@@ -60,7 +63,7 @@ for (const [ac, ten, tep, tim, thay, ghim0] of DB.filter((d) => d[0] === AC)) {
       if (s.split(a).length !== 2) throw new Error(`đột biến «${ten}»: không thấy đúng một chỗ «${a.slice(0, 60)}» trong ${t}`);
       writeFileSync(p, s.replace(a, b));
     }
-    const r = chayTest("cham-bong.dot-bien");
+    const r = chayTest(TEN_BAN);
     const ghim = ghim0 ?? GHIM_KEP[ten];
     if (r.code === 0) { console.log(`HỎNG đột biến «${ten}»: thước vẫn xanh`); hong++; }
     else if (!ghim.test(r.out)) { console.log(`HỎNG đột biến «${ten}»: đỏ nhưng không có thông điệp ghim ${ghim}\n${r.out.slice(-2000)}`); hong++; }

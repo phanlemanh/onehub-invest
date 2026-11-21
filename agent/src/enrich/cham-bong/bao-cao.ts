@@ -3,6 +3,7 @@
 // chạy (không cộng vào bo_trong), số ca biên, số o_da_co, số thẻ đủ hai kết quả trên số thẻ chờ còn đề xuất lúc chạy, lời gọi, token, chi phí.
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { ASSERTION_METHOD } from "../../vocab.generated.js";
 import type { DongKetCuc, TongKet } from "./chay.js";
 import { KET_CUC, THU_TU_O, type KetCuc } from "./ket-cuc.js";
 
@@ -36,7 +37,7 @@ export function inBaoCao(b: BangBaoCao): string {
   const t = b.tong;
   const hang = ["ô | nguồn | " + COT.join(" | ")];
   for (const f of THU_TU_O) {
-    for (const n of ["e1_rule", "e2_llm"] as const) {
+    for (const n of [ASSERTION_METHOD.e1_rule, ASSERTION_METHOD.e2_llm] as const) {
       const so = COT.map((c) => b.o[f][c][n]);
       if (so.some(Boolean)) hang.push(`${f} | ${n} | ${so.join(" | ")}`);
     }

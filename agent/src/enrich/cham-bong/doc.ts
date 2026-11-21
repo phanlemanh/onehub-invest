@@ -7,6 +7,7 @@ import { soToken, type RecordCall } from "../../runtime/ai-call-log.js";
 import { chuoiLoi, phanLoaiLoi } from "../../runtime/loi-nha-cung-cap.js";
 import { DUONG_ANTHROPIC, KHOA_DUONG, modelSo, tuyChonGui, type Duong } from "../doc-gop-s03/cau-hinh.js";
 import { tachJson, taoAnthropicMacDinh, taoModelGateway } from "../doc-gop-s03/doc.js";
+import { ENRICH_FIELD } from "../../vocab.generated.js";
 import { trichCoThat } from "../luat-trich-dan.js";
 import type { ModelCham } from "./cau-hinh.js";
 import type { Doc, OCham } from "./ket-cuc.js";
@@ -49,7 +50,7 @@ export function kiemO(f: OCham, raw: unknown, chu: string): OKetQua {
   const trich = typeof o.trich === "string" ? o.trich : "";
   const can_cu = typeof o.can_cu === "string" ? o.can_cu : "";
   if (f === "property_type" && !LOAI_HINH.includes(v)) return { ...RONG("ngoai-tu-vung"), trich, can_cu };
-  if ((f === "bathrooms" || f === "bedrooms") && !/^\d+$/.test(v)) return { ...RONG("khong-phai-so"), trich, can_cu };
+  if ((f === ENRICH_FIELD.bathrooms || f === ENRICH_FIELD.bedrooms) && !/^\d+$/.test(v)) return { ...RONG("khong-phai-so"), trich, can_cu };
   if (!trichCoThat(trich, chu)) return { ...RONG("trich-gia"), trich, can_cu };
   return { v, ly_do: null, trich, can_cu };
 }
