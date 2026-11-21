@@ -193,3 +193,36 @@ for (const [ten, ds, mong] of [
   const kq = gopTin(ds, OP1);
   for (const [k, v] of Object.entries(mong)) assert.equal(kq[k], v, `ô «${ten}»: ${k} = ${kq[k]}, cần ${v}`);
 });
+
+// Vòng 2 AC-9 (21/11). (b) Tên dài nhất thắng, chữ «The» đầu tên được bỏ: bài #12274 «Beverly Solari» bị gắn The Beverly.
+// (a) Bài rao nhiều căn không gắn ở mọi nguồn, đọc trên chữ còn dấu: bài #12295 «LBV – MCP sẵn 8 căn», model báo không nhiều căn.
+const GP2 = dungDanhBa({
+  toa: [],
+  vung: [
+    { id: 23, cha_id: null, ten: ["The Beverly", "Beverly"] },
+    { id: 387, cha_id: null, ten: ["The Beverly Solari"] },
+    { id: 21, cha_id: null, ten: ["Lumiere Boulevard", "LBV"] },
+  ],
+});
+const vungModel = (v, trich) => banDoc({ subzone: oDoc(v, trich) });
+moiO("ten-dai-beverly-solari-khong-roi-ve-beverly", { chu: "Giá tốt Beverly Solari 1PN+ 46,7m2", banDoc: vungModel("The Beverly", "Giá tốt Beverly Solari") },
+  { ly_do: "chu-model-khac" }, GP2);
+moiO("ten-ngan-beverly-mot-minh-van-gan", { chu: "Bán căn Beverly 2PN view hồ", banDoc: vungModel("The Beverly", "Bán căn Beverly 2PN") },
+  { nguon: "F", muc: "vung", k: 23 }, GP2);
+moiO("chu-the-dau-ten-duoc-bo", { chu: "Cần bán Beverly Solari 1PN", banDoc: vungModel("The Beverly Solari", "Cần bán Beverly Solari") },
+  { nguon: "F", muc: "vung", k: 387 }, GP2);
+moiO("nhieu-can-so-dem", { chu: "LBV – MCP SẴN 8 CĂN CHO THUÊ 2PN FULL", banDoc: vungModel("Lumière Boulevard", "LBV – MCP SẴN 8 CĂN") },
+  { ly_do: "bai-nhieu-can" }, GP2);
+moiO("nhieu-can-hai-can", { chu: "Bán 2 căn liền kề Lumiere Boulevard", banDoc: vungModel("Lumiere Boulevard", "Bán 2 căn liền kề Lumiere Boulevard") },
+  { ly_do: "bai-nhieu-can" }, GP2);
+moiO("nhieu-can-chu-nhieu", { chu: "Có nhiều căn Lumiere Boulevard cho thuê", banDoc: vungModel("Lumiere Boulevard", "nhiều căn Lumiere Boulevard") },
+  { ly_do: "bai-nhieu-can" }, GP2);
+moiO("can-thu-2-can-ra-khong-phai-nhieu-can", { chu: "không có căn thứ 2 Cần ra gấp 2pn Lumiere Boulevard", banDoc: vungModel("Lumiere Boulevard", "2pn Lumiere Boulevard") },
+  { nguon: "F", muc: "vung", k: 21 }, GP2);
+moiO("nhieu-can-chan-ca-o-ten-toa", { cot: ["S1.02"], chu: "Sẵn 3 căn S1.02 giá tốt" }, { ly_do: "bai-nhieu-can" });
+moiO("so-tang-va-ma-toa-truoc-chu-can-khong-phai-nhieu-can", { cot: ["S1.02"], chu: "toà S1.02 tầng 16 căn số 10, s1.02 căn 3n2wc" }, { nguon: "A", muc: "toa", k: "bld_s102" });
+// Danh bạ còn hai nút «The Rainbow» và «Rainbow»: chữ «Rainbow» vẫn chỉ về nút «Rainbow», không thành nhiều vùng.
+const GP3 = dungDanhBa({ toa: [], vung: [{ id: 48, cha_id: null, ten: ["The Rainbow"] }, { id: 389, cha_id: null, ten: ["Rainbow"] }] });
+moiO("bo-the-khong-dung-ten-tran-cua-nut-khac", { chu: "Cho thuê 1PN+ Rainbow full", banDoc: vungModel("Rainbow", "1PN+ Rainbow") }, { nguon: "F", muc: "vung", k: 389 }, GP3);
+moiO("ten-dai-the-rainbow-thang-rainbow", { chu: "Phân khu : The Rainbow 2PN", banDoc: vungModel("The Rainbow", "Phân khu : The Rainbow") }, { nguon: "F", muc: "vung", k: 48 }, GP3);
+moiO("co-2-can-ban-khong-phai-nhieu-can", { cot: ["S1.02"], chu: "Ai có 2 cần bán gấp thì liên hệ, căn S1.02" }, { nguon: "A", muc: "toa", k: "bld_s102" });

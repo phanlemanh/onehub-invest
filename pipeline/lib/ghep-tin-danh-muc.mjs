@@ -13,6 +13,12 @@ export const TAT_CA_NGUON = Object.freeze([RULE.cot, RULE.cotChuan, RULE.chuMode
  * RULE.model (D, G) tắt: chỉ có 81 tin, không đủ 110 bài để chấm (Mạnh chọn 18/11). */
 export const NGUON_BAT = Object.freeze([RULE.cot, RULE.cotChuan, RULE.chuModel]);
 
+/** Chữ bài rao từ hai căn trở lên: «sẵn 8 căn», «2 căn», «nhiều căn» (vòng 2 AC-9, bài #12295). */
+// Đọc trên chữ còn dấu: bỏ dấu thì «căn» trùng «cần» («căn thứ 2 Cần ra gấp»). Số căn phải có chữ chỉ lượng đứng ngay trước
+// («sẵn 8 căn», «bán 2 căn»), để «tầng 16 căn số 10», «S2.12 căn», «cắt lỗ 200 căn» không bị tính là nhiều căn.
+const LUONG = "sẵn|còn|có|bán|thuê|gửi|nhận|quỹ|tổng|gồm|hơn|trên|list";
+const MAU_NHIEU_CAN = new RegExp(`(?<![\\p{L}\\p{N}])(?:(?:${LUONG}) (?:[2-9]|[1-9][0-9]{1,2}) ?căn|nhiều căn)(?![\\p{L}\\p{N}])`, "u");
+export const chuNhieuCan = (chu) => MAU_NHIEU_CAN.test(String(chu ?? "").normalize("NFC").toLowerCase().replace(/\s+/g, " "));
 const boDot = (s) => s.replace(/\./g, "");
 const boDau = (s) => String(s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/gi, "D").toUpperCase();
 /** Chữ để dò tên: giữ chữ, số, dấu chấm; có khoảng trắng hai đầu. */
@@ -26,11 +32,14 @@ const them = (m, k, v) => { (m.get(k) ?? m.set(k, new Set()).get(k)).add(v); };
  * Mẫu dò một tên trong chữ bài. Chỉ tên toà được mang đuôi mã căn dính sau (S1.02.1508, S1.02-15XX08); tên vùng thì không,
  * vì «S1006» là toà S10.06 chứ không phải vùng S1 cộng đuôi 006.
  */
-function mauTen(ten, { duoiMaCan = false } = {}) {
+function mauTen(ten, { duoiMaCan = false, boThe = false } = {}) {
   const tu = boDau(ten).replace(/[^A-Z0-9.]+/g, " ").trim().split(" ").filter(Boolean);
   if (!tu.length) return null;
   const duoi = duoiMaCan ? "(?:[ .-]?(?:[0-9]{3,4}|[0-9]{0,2}X{1,2}[0-9]{2}))?" : "";
-  return new RegExp(`(?<![A-Z0-9.])${tu.map(thoat).join(" ?")}${duoi}(?![A-Z0-9]|\\.[A-Z0-9])`);
+  // «The Beverly Solari» thường viết «Beverly Solari»: chữ THE đầu tên được bỏ (vòng 2 AC-9, bài #12274).
+  const dau = boThe && tu.length > 1 && tu[0] === "THE" ? `(?:THE ?)?` : null;
+  const than = (dau ? tu.slice(1) : tu).map(thoat).join(" ?");
+  return new RegExp(`(?<![A-Z0-9.])${dau ?? ""}${than}${duoi}(?![A-Z0-9]|\\.[A-Z0-9])`, "g");
 }
 
 /**
@@ -47,11 +56,13 @@ export function dungDanhBa({ toa, vung }) {
   const vungTheoTen = new Map(), toaTheoTen = new Map();
   for (const v of vung) for (const t of v.ten ?? []) if (dungDuoc(t)) them(vungTheoTen, chuan(t), v.id);
   for (const b of toa) for (const t of b.ten ?? []) if (dungDuoc(t)) them(toaTheoTen, chuan(t), b.key);
+  // Chữ THE đầu tên được bỏ khi tên trần không thuộc nút khác: danh bạ còn cặp «The Rainbow» · «Rainbow» là hai nút.
+  const boThe = (t, k) => /^the\s+\S/i.test(t.trim()) && [vungTheoTen, toaTheoTen].every((m) => [...(m.get(chuan(t.trim().slice(4))) ?? [])].every((x) => x === k));
   const laTenVung = (t) => vungTheoTen.get(chuan(t))?.size === 1 && toaTheoTen.get(chuan(t))?.size === 1;
   for (const b of toa) {
     const ten = (b.ten ?? []).filter((t) => dungDuoc(t) && /[A-Z]/.test(chuan(t)) && !laTenVung(t));
     for (const t of ten) { them(d.tenToa, chuan(t), b.key); them(d.tenToaBoDot, boDot(chuan(t)), b.key); }
-    d.mauToa.push({ k: b.key, re: ten.map((t) => mauTen(t, { duoiMaCan: true })).filter(Boolean) });
+    d.mauToa.push({ k: b.key, re: ten.map((t) => mauTen(t, { duoiMaCan: true, boThe: boThe(t, b.key) })).filter(Boolean) });
     d.tenGon.set(b.key, ten.map(gon).filter((g) => g.length >= 2));
     d.upi.set(b.key, b.upi);
     d.vungCuaToa.set(b.key, b.vung_id ?? null);
@@ -59,7 +70,7 @@ export function dungDanhBa({ toa, vung }) {
   for (const v of vung) {
     const ten = (v.ten ?? []).filter(dungDuoc);
     for (const t of ten) them(d.tenVung, chuan(t), v.id);
-    d.mauVung.push({ k: v.id, re: ten.map((t) => mauTen(t)).filter(Boolean) });
+    d.mauVung.push({ k: v.id, re: ten.map((t) => mauTen(t, { boThe: boThe(t, v.id) })).filter(Boolean) });
     d.tenGon.set(v.id, ten.map(gon).filter((g) => g.length >= 2));
     d.cha.set(v.id, v.cha_id ?? null);
   }
@@ -103,9 +114,16 @@ function tenDangKy(d, key, daBoDot) {
 /** Tên toà, vùng mà luật dò được trong chữ bài. */
 function docChu(chu, d) {
   const s = chuDo(chu);
+  // Mỗi chỗ khớp một khoảng [a, b). Tên dài nhất thắng: chỗ khớp nằm gọn trong chỗ khớp dài hơn của nút khác bị bỏ
+  // («Beverly» trong «Beverly Solari»).
+  const khop = [];
+  for (const [loai, ds] of [["t", d.mauToa], ["v", d.mauVung]])
+    for (const x of ds) for (const r of x.re) for (const m of s.matchAll(r)) khop.push({ loai, k: x.k, a: m.index, b: m.index + m[0].length });
   const t = new Set(), v = new Set();
-  for (const b of d.mauToa) if (b.re.some((r) => r.test(s))) t.add(b.k);
-  for (const x of d.mauVung) if (x.re.some((r) => r.test(s))) v.add(x.k);
+  for (const x of khop) {
+    if (khop.some((y) => y.k !== x.k && y.a <= x.a && y.b >= x.b && y.b - y.a > x.b - x.a)) continue;
+    (x.loai === "t" ? t : v).add(x.k);
+  }
   return { t, v };
 }
 
@@ -159,6 +177,7 @@ function xetTheoThuTu(cot, chu, banDoc, d) {
   const luat = docChu(chu, d);
   if (luat.t.size > 1) return { ly_do: "chu-nhieu-toa" };
   if (banDoc?.multi_unit?.v === "yes") return { ly_do: "bai-nhieu-can" };
+  if (chuNhieuCan(chu)) return { ly_do: "bai-nhieu-can" };
 
   const cots = cot.map((raw) => ({ raw, ...khopTen(raw, d) })).filter((x) => x.muc !== "rong");
   const khop = cots.filter((x) => x.muc === "toa" || x.muc === "vung");
