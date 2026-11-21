@@ -5,7 +5,7 @@ slug: cham-bong-bo-sung-tin
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [script]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-21
 design_doc: docs/superpowers/specs/2026-11-21-cham-bong-bo-sung-tin-design.md
@@ -97,3 +97,13 @@ Ngưỡng của ô cơ hội (lấy từ `bat_khi` của hàng), đo sau lượt
 ## Known limits
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-21:
+  - Ngoài-1: `--tran`, `--gioi-han` gõ sai không bị kiểm: trần tiền tắt lặng lẽ, giới hạn sai cho lượt rỗng vẫn báo xong.
+  - Ngoài-2: Ghi sổ gọi lỗi thì mất lần đọc đã trả tiền và lượt dừng giữa chừng; chạy lại phải trả tiền đọc lại.
+  - Ngoài-3: Cùng gốc Ngoài-1: `--tran` không hợp lệ bỏ trần, `--gioi-han` không hợp lệ cho lượt rỗng thoát 0.
+  - Ngoài-4: Nhà cung cấp không trả số token thì lời gọi tính 0 USD, báo cáo chi phí thấp hơn thật.
+  - Ngoài-5: Chế độ áp: ghi `ai_calls` lỗi sau lời gọi đã trả tiền thì mất kết quả và chi phí lần đó.
+  - Ngoài-6: Thước AC-4 khai ma trận 64 ô nhưng chiều `o_da_co` không đi vào hàm được đo; lỗi tương lai ở đó vẫn xanh.
+  - Ngoài-7: Thước AC-7 chỉ đếm số lời gọi chạy lại, không xác nhận đúng cặp thẻ × model nào.
+  - Ngoài-8: Thước AC-2 «không lộ đề xuất» là assert âm không có đối chứng dương.
