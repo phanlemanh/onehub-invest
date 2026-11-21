@@ -8,7 +8,7 @@ import { join } from "node:path";
 import pg from "pg";
 import { GOC, apTep, taoDbThu, xoaDbThu } from "./db-thu-dbv.mjs";
 import { dung } from "../danh-ba-vat-the.mjs";
-import { apNoi, daoNoi, dungKeHoachNoi, dungTheLuat, kiemNoi } from "../phan-khu-s16.mjs";
+import { apNoi, apTheLuat, daoNoi, dungKeHoachNoi, dungTheLuat, kiemNoi } from "../phan-khu-s16.mjs";
 import { dungTheNoi, keHoachNoi, khoaKhu, xetMaCan } from "../lib/s16-phan-khu.mjs";
 import { soatDuLieu, tokenS16 } from "../lib/s16-soat.mjs";
 import { docTenPhanKhu } from "../lib/phan-khu-s16-bi-danh.mjs";
@@ -304,13 +304,30 @@ test("GNT-7: lượt dựng đêm chạy hai lần không đúc lại; bộ soá
   const x = await cum("t7");
   await noiMaCan(x);
   const truoc = (await demBang()).nut;
-  for (const lan of [1, 2]) {
-    const kq = await dung(db, { khuSlugs: [x.c.slug], isoTheo: () => "VN-HN", noiS09: {}, noiS16: {}, log: () => {}, runId: `gnt-${lan}` });
-    assert.equal(kq.khoa_moi, 0, `lần ${lan}: không có khoá mới trên nút khác`);
+  // Nút chưa nghỉ mang khoá khu KA hay KB: sau nối chỉ được là nút giữ.
+  const mangKhoa = async () => (await db.query(`SELECT id::int AS id FROM asset_nodes WHERE COALESCE((meta ->> 'nghi')::boolean, false) = false
+    AND meta -> 's16_khu_ids' ?| $1::text[] ORDER BY id`, [[x.c.khoa("KA"), x.c.khoa("KB")]])).rows.map((r) => r.id);
+  const soPhanKhu = async () => (await db.query("SELECT count(*)::int AS n FROM asset_nodes WHERE node_type = 'subzone'")).rows[0].n;
+  const pk0 = await soPhanKhu();
+  // Lượt dựng đêm dùng đúng bảng nối dự án S16 của dự án thử, để bước S16 chạy trên nó (không bỏ dự án).
+  const lan = [];
+  for (const i of [1, 2]) {
+    lan.push(await dung(db, { khuSlugs: [x.c.slug], isoTheo: () => "VN-HN", noiS09: {}, noiS16: x.c.noi, log: () => {}, runId: `gnt-${i}` }));
+    const { dong, bam } = await dungTheLuat(db, { noi: x.c.noi });
+    assert.deepEqual(dong.map((d) => [d.khu_id, d.nut, d.node_id]).sort(), [["KA", "da-co", x.cu], ["KB", "da-co", x.cu]], `lần ${i}: dựng phân khu S16 phải ra đã gán, không nút mới`);
+    assert.equal((await apTheLuat(db, { bam, nguoi: "itest", noi: x.c.noi })).khongDoi, true, `lần ${i}: áp thẻ phân khu S16 không được đổi gì`);
+    assert.deepEqual(await mangKhoa(), [x.cu], `lần ${i}: khoá khu chỉ ở nút giữ ${x.cu}`);
   }
-  const { dong } = await dungTheLuat(db, { noi: x.c.noi });
-  assert.deepEqual(dong.map((d) => [d.khu_id, d.nut, d.node_id]).sort(), [["KA", "da-co", x.cu], ["KB", "da-co", x.cu]], "dựng phân khu S16 không đúc nút mới");
+  // Đối chứng dương: bước S16 thật sự chạm dự án thử (lần một dựng căn mới), rồi lần hai không thêm khoá nào.
+  assert.ok(lan[0].s16?.khu?.[x.c.slug], "đối chứng: bước S16 phải chạy trên dự án thử, không nằm ở mục bỏ dự án");
+  assert.ok(lan[0].s16.khoa_moi > 0, `đối chứng: lần một phải dựng khoá S16 mới, được ${lan[0].s16.khoa_moi}`);
+  assert.equal(lan[1].s16.khoa_moi, 0, "lần hai không có khoá S16 mới");
+  assert.equal(await soPhanKhu(), pk0, "số nút phân khu không đổi qua hai lượt");
   assert.equal((await demBang()).nut, truoc, "số nút không đổi");
+  // Chiều đỏ: một nút khác mang lại khoá khu đã chuyển thì phép đo nêu id nút ấy.
+  const lai = await nut("subzone", x.c.ten("lai"), "Rainbow đúc lại", x.c.P, { s16_khu_ids: [x.c.khoa("KB")] });
+  assert.deepEqual(await mangKhoa(), [x.cu, lai].sort((a, b) => a - b), `chiều đỏ: phép đo phải nêu nút đúc lại ${lai}`);
+  await db.query("UPDATE asset_nodes SET meta = meta || '{\"nghi\": true}'::jsonb WHERE id = $1", [lai]);
   for (const k of [...x.toaA, ...x.toaB]) assert.equal(await nutVung(k), x.cu, "toà vẫn ở nút giữ");
   const soat = async () => soatDuLieu(new Map([["asset_nodes", (await db.query("SELECT row_to_json(a)::text AS j FROM asset_nodes a")).rows.map((r) => r.j)]]), await tokenS16(db));
   assert.equal(await soat(), null, "asset_nodes sau nối chỉ mang băm khoá khu");
