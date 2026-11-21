@@ -15,3 +15,12 @@ Tệp tên ở bước 3 là tệp GIẢ trong thư mục tạm của phiên (`N
 Số hàng ở bước 5 (mốc 21/11 14:17Z): S01/hanoi tươi 145 giờ (nhịp 192), S16/vn tươi 85 giờ (192), S09/vn **quá hạn** 194 giờ (192 —
 lần thu duy nhất 13/11 12:09Z). Trước khi điền tên (bản chép chưa có tên), cùng máy đo in «THIẾU bộ soát tầng A: S09 0 mục,
 S17 0 mục» và `MAY THU DO` — chiều đỏ của dòng tầng A.
+
+## Chạy khô bước 3 (`--thu`) — 21/11 17:40Z, bản chép `oneinvest_suite_nkkho` (xoá sau lượt)
+
+| Lượt | Kết quả |
+|---|---|
+| tệp giả, `--thu` | thoát 0, «CHẠY KHÔ … S09 sẽ đổi 1 dòng (1 tên miền), S17 sẽ đổi 1 dòng (1 tên miền)»; sau lượt hai dòng vẫn `real_name` NULL, `source_ids` rỗng, `match_whole` false |
+| tệp giả, ghi thật | thoát 0, hai dòng có tên, 1 tên miền, `match_whole` true |
+| tệp giả, `--thu` lần hai | thoát 1, «S09: số dòng đổi 0 ≠ 1 … lùi cả hai» |
+| tệp thật, `--thu` | thoát 0, «S09 sẽ đổi 1 dòng (2 tên miền), S17 sẽ đổi 1 dòng (6 tên miền)» — không in giá trị |

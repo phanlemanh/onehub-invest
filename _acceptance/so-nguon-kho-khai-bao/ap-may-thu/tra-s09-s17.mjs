@@ -3,12 +3,14 @@
 // dòng 1 = tên thật → real_name; dòng có dấu chấm, không bắt đầu bằng «/» = tên miền → source_ids; dòng bắt đầu bằng «/» (tiền tố
 // đường dẫn API, từ chung) bỏ. match_whole = true (khuôn S16, hồ sơ che-ten). Một giao dịch; chỉ điền dòng còn trống tên; mỗi mã
 // phải đổi đúng 1 dòng, không thì lùi cả hai. In số dòng, số mục — không in giá trị.
+// `--thu`: chạy khô — cùng câu UPDATE trong cùng giao dịch, in số dòng sẽ đổi, rồi LUÔN lùi (ROLLBACK), không ghi gì.
 import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 const pg = createRequire(path.join(ROOT, "pipeline", "package.json"))("pg");
+const THU = process.argv.includes("--thu");
 const TAM = process.env.NK_TAM ?? "/Users/manhphan/dev/onehub-invest/.acceptance-runs/dieu-phoi-dot0-cam-mau/tam";
 
 export function docTep(text) {
@@ -38,6 +40,12 @@ for (const ma of ["S09", "S17"]) {
     console.log(`${ma}: số dòng đổi ${r.rowCount} ≠ 1 (chưa áp 122, hay tên đã điền) — lùi cả hai, dừng`);
     process.exit(1);
   }
+}
+if (THU) {
+  await c.query("ROLLBACK");
+  await c.end();
+  console.log(`CHẠY KHÔ (đã lùi, không ghi): S09 sẽ đổi 1 dòng (${gia.S09.source_ids.length} tên miền), S17 sẽ đổi 1 dòng (${gia.S17.source_ids.length} tên miền)`);
+  process.exit(0);
 }
 await c.query("COMMIT");
 await c.end();

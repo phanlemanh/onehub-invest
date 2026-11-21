@@ -35,8 +35,14 @@ Lần hai không đổi ô nào (ca NK-AC-1). Rồi điền tên S09, S17:
 ## 3. Điền tên thật S09, S17
 
 ```bash
-node _acceptance/so-nguon-kho-khai-bao/ap-may-thu/tra-s09-s17.mjs
+node _acceptance/so-nguon-kho-khai-bao/ap-may-thu/tra-s09-s17.mjs --thu   # chạy khô: in số dòng sẽ đổi, luôn lùi, không ghi
+node _acceptance/so-nguon-kho-khai-bao/ap-may-thu/tra-s09-s17.mjs         # ghi thật
 ```
+
+Chạy khô mong đợi (đo 21/11 17:40Z trên bản chép đã áp 122, tệp thật): «CHẠY KHÔ (đã lùi, không ghi): S09 sẽ đổi 1 dòng (2 tên miền),
+S17 sẽ đổi 1 dòng (6 tên miền)». Khác số này → dừng, báo giám sát. Đường tệp tên mặc định là đường tuyệt đối của thư mục đợt
+(`/Users/manhphan/dev/onehub-invest/.acceptance-runs/dieu-phoi-dot0-cam-mau/tam`), nên chạy từ worktree nhánh hay checkout chính
+đều đọc cùng tệp; `NK_TAM` chỉ dùng cho chạy thử với tệp giả.
 
 Một giao dịch: `UPDATE … SET real_name, source_ids, match_whole = true WHERE code = $1 AND real_name IS NULL` cho từng mã, mỗi mã
 phải đúng 1 dòng, không thì lùi cả hai. Dòng 1 của tệp → `real_name`; dòng tên miền → `source_ids`; dòng bắt đầu bằng «/» (tiền tố
