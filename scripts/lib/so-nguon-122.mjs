@@ -40,3 +40,46 @@ export async function themCot122(c, schema, sql) {
   if (/ALTER TABLE source_registry/.test(ddl)) throw new Error("so-nguon-122: còn ALTER chưa gắn schema");
   await c.query(ddl);
 }
+
+/** Lược đồ cấy dựng sổ bằng LIKE/AS SELECT rồi tự chèn dòng: thêm cột 122 và điền nhịp, họ theo migration 122 cho dòng còn
+ *  trống nhịp — đúng như sổ sau áp, không đổi trạng thái, thị trường hay dòng nào khác. */
+export async function nhipFixture122(c, schema, sql) {
+  await themCot122(c, schema, sql);
+  const n = nhip122(sql);
+  const codes = Object.keys(n);
+  await c.query(
+    `UPDATE "${schema}".source_registry r SET cadence_hours = v.c, family = coalesce(r.family, v.f)
+       FROM unnest($1::text[], $2::text[], $3::int[]) AS v(code, f, c)
+      WHERE r.code = v.code AND r.cadence_hours IS NULL`,
+    [codes, codes.map((k) => n[k].family), codes.map((k) => n[k].cadence_hours)],
+  );
+}
+
+/** Test đọc DB THẬT qua bản chép của riêng lượt (db/db-thu.sh --chay): bản chép từ máy thu chưa áp 122 thì áp vào public
+ *  của chính bản chép — đúng trạng thái máy thu sau áp. Không bao giờ chạm DB chung `oneinvest` (trả false, để nguyên). */
+export async function ap122NeuThieu(c) {
+  const { rows: [r] } = await c.query(
+    `SELECT current_database() AS db,
+            EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid = to_regclass('public.source_registry') AND attname = 'cadence_hours'
+                    AND NOT attisdropped) AS co`,
+  );
+  if (r.co || r.db === "oneinvest") return false;
+  // Nhiều tệp test cùng bản chép (app chạy song song) → một bên áp, bên kia chờ rồi thấy đã có cột.
+  await c.query("SELECT pg_advisory_lock(122122)");
+  try {
+    await c.query(`SET search_path TO public; ${doc122()}; RESET search_path`);
+  } finally {
+    await c.query("SELECT pg_advisory_unlock(122122)");
+  }
+  return true;
+}
+
+/** Sổ chép bằng `CREATE TABLE … AS SELECT * FROM public.source_registry` (không khoá chính): dựng khoá chính rồi chạy CHÍNH
+ *  migration 122 trong schema đó — sổ chép thành sổ sau áp (bản chép đã áp thì 122 không đổi ô nào). */
+export async function ap122VaoSchema(c, schema) {
+  const { rows: [k] } = await c.query(
+    `SELECT EXISTS (SELECT 1 FROM pg_index WHERE indrelid = to_regclass($1) AND indisprimary) AS co`, [`"${schema}".source_registry`],
+  );
+  if (!k.co) await c.query(`ALTER TABLE "${schema}".source_registry ADD PRIMARY KEY (code)`);
+  await c.query(`SET search_path TO "${schema}"; ${doc122()}; RESET search_path`);
+}

@@ -202,6 +202,9 @@ describe("gom() trên DB local (chỉ đọc)", async () => {
   let ok = true;
   try {
     await client.connect();
+    // NK1: bản chép DB máy thu của riêng lượt chưa áp 122 thì áp vào chính bản chép (DB chung oneinvest không bị chạm).
+    const { ap122NeuThieu } = await import("./lib/so-nguon-122.mjs");
+    await ap122NeuThieu(client);
   } catch {
     ok = false;
   }
