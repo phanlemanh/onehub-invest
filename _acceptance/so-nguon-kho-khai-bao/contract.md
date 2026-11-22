@@ -5,7 +5,7 @@ slug: so-nguon-kho-khai-bao
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, ui]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-21-so-nguon-kho-khai-bao-design.md
 approved_by: Mạnh
 approved_at: 2026-11-21
@@ -89,3 +89,12 @@ ngoài phạm vi ghi «ngoài phạm vi, vì …» ngay trong bảng. Không ch�
 - Ngoài-8 (máy định tuyến 2026-11-21, đề xuất S4 known-limits): Bài kiểm bảng Sức khoẻ nguồn chỉ thấy mã S09, S16 có mặt đâu đó trong trang, chưa chắc hàng S16 không mang nhãn «Chưa khai SLO». — `app/tests/slo-mot-nguon.test.tsx`
 - Ngoài-9 (máy định tuyến 2026-11-21, đề xuất S4 known-limits): Bài kiểm có thể xanh dù bản chép dữ liệu thiếu một vài nguồn, khi đó nhịp và thị trường đo của nguồn thiếu không được kiểm. — `scripts/so-nguon-kho.test.mjs`
 - Ngoài-10 (máy định tuyến 2026-11-21, đề xuất S4 known-limits): Phép tự kiểm của bộ soát tên nguồn thật luôn xanh theo cách dựng, nên chưa chứng minh được nó bắt các cách viết tên khác nhau như hoa thường, khoảng trắng, tên miền đầy đủ. — `_acceptance/so-nguon-kho-khai-bao/probes/tang-a.mjs`
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-22:
+  - Ngoài-1: Áp lại bản cập nhật sổ nguồn sẽ đặt lại về giá trị ban đầu nguồn mà người vận hành tự bật lại sau tạm dừng, hay ô nhịp cố ý bỏ trống.
+  - Ngoài-3: Khoảng sau áp mà chưa điền tên thật, trang danh sách nguồn có thể hiện ô tên trống không có nhãn giải thích.
+  - Ngoài-5: Nguồn mà người vận hành cố ý tắt đo bằng cách để trống sẽ được đo lại khi áp lại bản cập nhật.
+  - Ngoài-6: Bài kiểm các ô phủ thị trường có thể xanh dù bộ đọc trả rỗng, nên chưa chứng chắc việc ẩn S01 hcmc và S11 trên màn.
+  - Ngoài-7: Bài kiểm chỉ bảo đảm S11 không hiện «Chưa có dữ liệu», chưa chứng nó hiện đúng nhãn «Ngừng».
+  - Ngoài-8: Bài kiểm bảng Sức khoẻ nguồn chỉ thấy mã S09, S16 có mặt trong trang, chưa chắc hàng S16 không mang nhãn «Chưa khai SLO».
+  - Ngoài-9: Bài kiểm có thể xanh dù bản chép thiếu vài nguồn; khi đó nhịp và thị trường đo của nguồn thiếu không được kiểm.
+  - Ngoài-10: Phép tự kiểm của bộ soát tên nguồn thật chưa chứng nó bắt các cách viết khác nhau của cùng một tên.
