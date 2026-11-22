@@ -151,7 +151,9 @@ async function dungMotDuAn(c, { du_an, k, iso, taoKhoa, ra }) {
     const id = toaCuaCan(r);
     if (id) tangS16.set(id, new Set([...(tangS16.get(id) ?? []), r.tang]));
   }
-  const lechVoiS09 = (key, toaId) => s09Toa.has(key) && lechTangS16(s09Toa.get(key).so_tang, tangS16.get(toaId)?.size ?? null) === true;
+  // Luật lệch một chiều của AC-5 (Q1 Cổng 1.5): S09 ít hơn số tầng có căn quá 2, hoặc S16 có căn ở tầng S09 không kê (không so tầng 1).
+  const lechVoiS09 = (key, toaId) => s09Toa.has(key) && lechTangS16({ so: s09Toa.get(key).so_tang, ten: s09Toa.get(key).tang },
+    { so: tangS16.get(toaId)?.size ?? null, ten: tangS16.get(toaId) ?? null }) === true;
   const nhomTen = new Map();
   for (const t of toaS16) { const n = chuanHoaTenToa(t.toa_ten); nhomTen.set(n, (nhomTen.get(n) ?? 0) + 1); }
   // Toà S16 trùng tên chuẩn hoá trong dự án (GS quyết 17/11 theo AC-7): máy không phân biệt được nên không đúc, không gắn,
@@ -178,9 +180,9 @@ async function dungMotDuAn(c, { du_an, k, iso, taoKhoa, ra }) {
       tk.toa_trung_ten++;
       tk.can_cho_trung_ten += so;
     } else if (khop.length === 1 && lechVoiS09(khop[0], t.toa_id)) {
-      // DA42: toà có sẵn mang bí danh S09 gói 1 mà số tầng lệch quá ngưỡng — có thể là hai toà thật cùng tên: thẻ (cùng mã thẻ
+      // DA42: toà có sẵn mang bí danh S09 gói 1 mà lệch tầng theo AC-5 — có thể là hai toà thật cùng tên: thẻ (cùng mã thẻ
       // bước S09 phát), 0 bí danh, toà S16 đúc riêng như khi S16 dựng trước.
-      tk.the_moi += await theS09(c, theLechTangS16(s09Toa.get(khop[0]).toa_id), "S09: toà cùng tên với toà S16 nhưng lệch số tầng",
+      tk.the_moi += await theS09(c, theLechTangS16(s09Toa.get(khop[0]).toa_id), "S09: toà cùng tên với toà S16 nhưng lệch tầng",
         { loai: "toa-lech-tang-s16", so_tang_s09: s09Toa.get(khop[0]).so_tang, building_keys: [] });
       if (so > 0) {
         const key = taoKhoa("bld");

@@ -2,7 +2,7 @@
 // Tên dự án, toà trong fixture là tên giả.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { DUONG, MA_TOA, demToa, lechTangS16, phanLopDuAn, xetToa } from "./s09-danh-ba-can.mjs";
+import { DUONG, MA_TOA, TANG_KHONG_SO, chuanTenTang, demToa, lechTangS16, phanLopDuAn, xetToa } from "./s09-danh-ba-can.mjs";
 
 const NUT = [
   { id: 10, name: "Khu Đô Thị Sao Mai", aliases: ["sao mai city"] },
@@ -77,24 +77,46 @@ test("DA42-AC-4 khớp một thành bí danh, khớp hai lên thẻ, không kh�
     the_theo_ly_do: { "khop-hai": 1, "trung-ten-trong-du-an": 2 } });
 });
 
-test("DA42-AC-5 toà S16: tầng khớp thành bí danh, lệch quá 2 lên thẻ (hai toà cùng tên), không so được thành bí danh đếm riêng", () => {
+test("DA42-AC-5 toà S16: tầng khớp thành bí danh, S09 ít tầng hơn quá 2 lên thẻ (hai toà cùng tên), không so được thành bí danh đếm riêng", () => {
   const kq = xetToa([
-    { toa_id: "a1", ten: "A1", so_tang: 27 },  // 27 vs 25: khớp
-    { toa_id: "a1b", ten: "S1.01", so_tang: 34 }, // 34 vs 30: lệch 4
+    { toa_id: "a1", ten: "A1", so_tang: 27 },  // S09 nhiều hơn 2 tầng (tầng đế): khớp
+    { toa_id: "a1b", ten: "S1.01", so_tang: 26 }, // 26 vs 30: S09 ít hơn 4 → lệch
     { toa_id: "a2", ten: "A2", so_tang: 18 },  // S16 không có số tầng
   ], TOA_CO);
   const theo = Object.fromEntries(kq.map((x) => [x.toa_id, x]));
   assert.equal(theo.a1.loai, "bi_danh");
-  assert.equal(theo.a1b.loai, "the", "hai toà cùng tên: lệch tầng mà vẫn thành bí danh");
+  assert.equal(theo.a1b.loai, "the", "hai toà cùng tên: S09 ít tầng hơn quá 2 mà vẫn thành bí danh");
   assert.equal(theo.a1b.ly_do, "lech-tang-s16");
   assert.equal(theo.a2.loai, "bi_danh"); assert.equal(theo.a2.khong_so, true);
   assert.equal(demToa(kq).khong_so, 1);
 });
 
-test("DA42-AC-5 ngưỡng tầng: đúng 2 không lệch, 3 lệch, thiếu số trả null", () => {
-  assert.equal(lechTangS16(32, 30), false);
-  assert.equal(lechTangS16(33, 30), true);
-  assert.equal(lechTangS16(27, 30), true);
+test("DA42-AC-5 Q1 lệch một chiều: S09 nhiều tầng hơn S16 (tầng đế) vẫn thành bí danh", () => {
+  // Đo thật 21/11: 22 toà lệch quá 2 theo luật cũ, cả 22 đều S09 nhiều hơn 3–8 tầng. Luật hai chiều thì ca này đỏ.
+  const kq = xetToa([{ toa_id: "e1", ten: "A1", so_tang: 33 }], TOA_CO); // 33 vs 25
+  assert.equal(kq[0].loai, "bi_danh", "S09 nhiều tầng hơn S16 bị coi là hai toà khác nhau");
+});
+
+test("DA42-AC-5 Q1 tên tầng: S16 có căn ở tầng S09 không kê thì lên thẻ; chỉ thiếu tầng 1 thì không", () => {
+  const co = [{ building_key: "bld_T", ten: ["T1"], ma_cu: false, s16: true, so_tang_s16: 5, tang_s16: ["1", "02", "3", "4", "5"] }];
+  const s09 = (tang) => [{ toa_id: "t", ten: "T1", so_tang: tang.length, tang }];
+  // S09 kê từ tầng 2, S16 có căn tầng 1: không lệch (24 trong 29 toà thật ở bảng phủ ca).
+  assert.equal(xetToa(s09(["2", "3", "4", "5", "6"]), co)[0].loai, "bi_danh", "chỉ thiếu tầng 1 mà lên thẻ");
+  // S09 đặt tên tầng tránh số («3A» thay «4»): S16 có căn tầng 4 không có trong S09 → thẻ.
+  const r = xetToa(s09(["2", "3", "3A", "5", "6"]), co)[0];
+  assert.equal(r.loai, "the", "S16 có căn ở tầng S09 không kê mà vẫn thành bí danh");
+  assert.equal(r.ly_do, "lech-tang-s16");
+});
+
+test("DA42-AC-5 ngưỡng tầng: một chiều, đúng 2 không lệch, 3 lệch, thiếu số trả null", () => {
+  assert.equal(lechTangS16(28, 30), false, "S09 ít hơn đúng 2");
+  assert.equal(lechTangS16(27, 30), true, "S09 ít hơn 3");
+  assert.equal(lechTangS16(33, 30), false, "S09 nhiều hơn 3 không phải lệch");
   assert.equal(lechTangS16(0, 30), null);
   assert.equal(lechTangS16(30, null), null);
+  assert.equal(lechTangS16({ so: null, ten: ["2", "3"] }, { so: null, ten: ["02", "3"] }), false, "«02» và «2» là một tầng");
+  assert.equal(lechTangS16({ so: null, ten: ["2", "3"] }, { so: null, ten: ["1", "2"] }), false, "tầng 1 không đem so");
+  assert.equal(lechTangS16({ so: null, ten: ["2", "3"] }, { so: null, ten: ["12b"] }), true);
+  assert.equal(chuanTenTang(" 12b "), "12B"); assert.equal(chuanTenTang("0"), "0"); assert.equal(chuanTenTang(""), null);
+  assert.ok(TANG_KHONG_SO.has("1"));
 });

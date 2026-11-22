@@ -63,17 +63,47 @@ export function phanLopDuAn(da, nut, { noiCung = new Map(), link = null, luatDuy
   return { duong: DUONG.ungVien, noi: true };
 }
 
-/** So số tầng S09 với số tầng có căn của S16; null khi một bên không có số. */
-export function lechTangS16(soS09, soS16) {
-  if (!Number.isFinite(soS09) || !Number.isFinite(soS16) || soS09 <= 0 || soS16 <= 0) return null;
-  return Math.abs(soS09 - soS16) > NGUONG_TANG;
+/** Tầng không đem so ở vế tên tầng: S09 kê từ tầng 2, S16 có căn tầng 1 (ki-ốt, shophouse) — Q1 Cổng 1.5, Mạnh duyệt 22/11. */
+export const TANG_KHONG_SO = new Set(["1"]);
+
+/** Chuẩn tên tầng để so giữa hai nguồn: bỏ khoảng trắng, viết hoa, bỏ số 0 đứng đầu («02» → «2», «12b» → «12B»). */
+export const chuanTenTang = (t) => {
+  const s = String(t ?? "").replace(/\s+/g, "").toUpperCase();
+  return s === "" ? null : s.replace(/^0+(?=[0-9A-Z])/, "");
+};
+
+const tapTang = (ds) => new Set([...(ds ?? [])].map(chuanTenTang).filter((x) => x != null));
+const veTang = (x) => (typeof x === "number" || x == null ? { so: x ?? null, ten: null } : x);
+
+/**
+ * Toà S09 và toà S16 cùng tên có lệch tầng không (AC-5, Q1 Cổng 1.5 22/11). Lệch MỘT CHIỀU: S09 kê mọi tầng, S16 chỉ có tầng có
+ * căn, nên S09 nhiều tầng hơn (tầng đế, kỹ thuật) KHÔNG là tín hiệu khác toà. Lệch khi:
+ *   (a) S09 ít hơn số tầng có căn của S16 quá NGUONG_TANG; hoặc
+ *   (b) S16 có căn ở một tầng mà danh sách tầng S09 không kê, sau chuẩn tên, không so các tầng trong TANG_KHONG_SO.
+ * Mỗi bên là `{ so, ten }` (ten: danh sách tên tầng) hoặc một số (chỉ có số tầng). null khi không có gì để so.
+ * @param {{so?:number|null, ten?:Iterable<string>|null}|number|null} s09
+ * @param {{so?:number|null, ten?:Iterable<string>|null}|number|null} s16
+ * @returns {boolean|null}
+ */
+export function lechTangS16(s09, s16) {
+  const a = veTang(s09), b = veTang(s16);
+  const soA = Number.isFinite(a.so) && a.so > 0 ? a.so : null;
+  const soB = Number.isFinite(b.so) && b.so > 0 ? b.so : null;
+  const tenA = tapTang(a.ten), tenB = tapTang(b.ten);
+  const soDuoc = soA != null && soB != null;
+  const tenDuoc = tenA.size > 0 && tenB.size > 0;
+  if (!soDuoc && !tenDuoc) return null;
+  if (soDuoc && soB - soA > NGUONG_TANG) return true;
+  if (tenDuoc && [...tenB].some((f) => !TANG_KHONG_SO.has(f) && !tenA.has(f))) return true;
+  return false;
 }
 
 /**
  * Xét các toà S09 của một dự án đã nối (AC-4, AC-5).
- * @param {{toa_id:string, ten:string, so_tang:number}[]} toaS09
- * @param {{building_key:string, ten:string[], ma_cu:boolean, s16:boolean, so_tang_s16:number|null}[]} toaCo  toà active của nút dự án;
- *   ma_cu: mang bí danh `<pid>/<block_id>` của DA31 · s16: mang bí danh S16 · so_tang_s16: số tầng có căn
+ * @param {{toa_id:string, ten:string, so_tang:number, tang?:string[]}[]} toaS09  tang: tên các tầng S09 kê
+ * @param {{building_key:string, ten:string[], ma_cu:boolean, s16:boolean, so_tang_s16:number|null, tang_s16?:string[]|null}[]} toaCo
+ *   toà active của nút dự án; ma_cu: mang bí danh `<pid>/<block_id>` của DA31 · s16: mang bí danh S16 · so_tang_s16: số tầng có
+ *   căn · tang_s16: tên các tầng có căn
  * @param {Map<string,string>} maMoi  `danh-ba-toa/<id>` đã có → building_key
  * @returns {{toa_id:string, ten:string, ten_chuan:string, loai:'da_noi'|'bi_danh'|'tao_moi'|'the', ly_do?:string,
  *            building_key?:string, building_keys?:string[], khong_so?:boolean}[]}
@@ -102,7 +132,7 @@ export function xetToa(toaS09, toaCo, maMoi = new Map()) {
     if (khop.length === 0) return { ...co, loai: "tao_moi" };
     if (khop.length > 1) return { ...co, loai: "the", ly_do: "khop-hai", building_keys: khop.map((b) => b.building_key) };
     const b = khop[0];
-    const lech = lechTangS16(t.so_tang, b.so_tang_s16);
+    const lech = lechTangS16({ so: t.so_tang, ten: t.tang }, { so: b.so_tang_s16, ten: b.tang_s16 });
     if (lech === true) return { ...co, loai: "the", ly_do: "lech-tang-s16", building_keys: [b.building_key] };
     return { ...co, loai: "bi_danh", building_key: b.building_key, ...(b.s16 && lech === null ? { khong_so: true } : {}) };
   });

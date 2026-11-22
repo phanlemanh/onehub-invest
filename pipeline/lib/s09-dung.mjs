@@ -189,28 +189,34 @@ export async function buocS09(c, { khu, isoKhu, noi = NOI_KHU_S09, log = console
 /** Mã thẻ cặp toà S09 lệch tầng với S16: cùng một mã dù bước S09 hay bước S16 phát hiện (AC-8). */
 export const theLechTangS16 = (toaId) => `s09-toa-lech-s16:${toaId}`;
 
-/** Số tầng có căn của toà S16 theo tên chuẩn trong các dự án S16 của nút (đọc stg, không phụ thuộc đã dựng hay chưa). */
+/** Tầng có căn của toà S16 theo tên chuẩn trong các dự án S16 của nút: `{ so, ten }` (số tầng, tên các tầng có căn) — đọc stg,
+ * không phụ thuộc đã dựng hay chưa. */
 export async function soTangS16TheoTen(c, nodeSlug, noiS16 = NOI_DU_AN_S16) {
   const duAn = Object.entries(noiS16).filter(([, s]) => s === nodeSlug).map(([d]) => d);
   const ra = new Map();
   if (!duAn.length || !(await c.query("SELECT to_regclass('public.v_s16_can') AS t")).rows[0].t) return ra;
   const { rows } = await c.query(
-    "SELECT toa_ten, count(DISTINCT tang)::int AS n FROM v_s16_can WHERE du_an = ANY($1) AND NOT COALESCE(mo_ho, false) AND tang IS NOT NULL GROUP BY 1",
+    "SELECT toa_ten, array_agg(DISTINCT tang::text) AS ds FROM v_s16_can WHERE du_an = ANY($1) AND NOT COALESCE(mo_ho, false) AND tang IS NOT NULL GROUP BY 1",
     [duAn]);
-  for (const r of rows) { const k = chuanHoaTenToa(r.toa_ten); ra.set(k, Math.max(ra.get(k) ?? 0, r.n)); }
+  for (const r of rows) {
+    const k = chuanHoaTenToa(r.toa_ten);
+    const ten = new Set([...(ra.get(k)?.ten ?? []), ...(r.ds ?? [])]);
+    ra.set(k, { so: ten.size, ten });
+  }
   return ra;
 }
 
-/** Số tầng S09 của các toà mang bí danh gói 1, theo building_key (bước S16 tra trước khi gắn toà S09). */
+/** Số tầng và tên tầng S09 của các toà mang bí danh gói 1, theo building_key (bước S16 tra trước khi gắn toà S09). */
 export async function soTangS09TheoToa(c, buildingKeys) {
   const ra = new Map();
   if (!buildingKeys.length || !(await c.query("SELECT to_regclass('public.v_s09_db_tang') AS t")).rows[0].t) return ra;
   const { rows } = await c.query(
-    `SELECT a.object_key, substring(a.value FROM 13) AS toa_id, (SELECT count(*)::int FROM v_s09_db_tang f WHERE f.toa_id = substring(a.value FROM 13)) AS n
+    `SELECT a.object_key, substring(a.value FROM 13) AS toa_id, (SELECT count(*)::int FROM v_s09_db_tang f WHERE f.toa_id = substring(a.value FROM 13)) AS n,
+            (SELECT array_agg(f.tang_ten ORDER BY f.thu_tu) FROM v_s09_db_tang f WHERE f.toa_id = substring(a.value FROM 13)) AS tang
        FROM registry_aliases a
       WHERE a.retired_at IS NULL AND a.source = $1 AND a.kind = 'ma_nguon' AND a.value LIKE 'danh-ba-toa/%' AND a.object_key = ANY($2)`,
     [NGUON_S09, buildingKeys]);
-  for (const r of rows) ra.set(r.object_key, { toa_id: r.toa_id, so_tang: r.n });
+  for (const r of rows) ra.set(r.object_key, { toa_id: r.toa_id, so_tang: r.n, tang: r.tang ?? [] });
   return ra;
 }
 
@@ -225,27 +231,41 @@ export async function theMuc(c, itemId, title, evidence) {
 }
 
 /**
+ * DB đã áp 115 (bảng stg + view) và 125 (view dự án đọc province_code) chưa. Trả true, hoặc số migration còn thiếu.
+ * 125 không thêm đối tượng mới nên nhận biết bằng định nghĩa view.
+ * @returns {Promise<true|"115"|"125">}
+ */
+export async function daAp115Va125(c) {
+  const { rows: [r] } = await c.query(
+    `SELECT to_regclass('public.stg_s09_danh_ba') IS NOT NULL AND to_regclass('public.v_s09_db_toa') IS NOT NULL
+            AND to_regclass('public.v_s09_db_tang') IS NOT NULL AND to_regclass('public.v_s09_db_du_an') IS NOT NULL AS c115,
+            COALESCE(pg_get_viewdef(to_regclass('public.v_s09_db_du_an')) LIKE '%province_code%', false) AS c125`);
+  if (!r.c115) return "115";
+  if (!r.c125) return "125";
+  return true;
+}
+
+/**
  * @param {import("pg").Client} c — trong giao dịch của dung()
  * @param {{ noi?: Record<string,string>, noiS16?: Record<string,string>, log?: (s:string)=>void, taoKhoa?: (t:string)=>string }} o
  *   noi: dự án S09 đã nối bằng tay (mã dự án → slug nút) — cùng bảng NOI_KHU_S09 của DA31.
  */
 export async function buocS09DanhBa(c, { noi = NOI_KHU_S09, noiS16 = NOI_DU_AN_S16, log = console.log, taoKhoa = (t) => moiKhoa(t) } = {}) {
-  if (!(await c.query("SELECT to_regclass('public.stg_s09_danh_ba') AS t")).rows[0].t) {
-    log("danh-ba-vat-the: S09 gói 1 bỏ qua — DB chưa áp 115 (không có stg_s09_danh_ba)");
-    return { bo_qua: "chua-ap-115" };
+  // Gộp khác áp (kế hoạch §2, T3b): launchd chạy mã từ main, nên lượt dựng đêm có thể tới trước khi DB máy thu áp 115 + 125.
+  // Thiếu một trong hai thì bỏ bước S09 gói 1, ghi một dòng, các bước khác của lượt dựng chạy như cũ.
+  const ap = await daAp115Va125(c);
+  if (ap !== true) {
+    log(`danh-ba-vat-the: S09 gói 1 bỏ qua — DB chưa áp ${ap}`);
+    return { bo_qua: `chua-ap-${ap}` };
   }
-  const { rows: duAn } = await c.query(
-    `SELECT d ->> 'id' AS du_an_id, d ->> 'name' AS ten,
-            COALESCE(d -> 'project_locations' -> 0 ->> 'province_code', d -> 'project_locations' -> 0 -> 'province' ->> 'code') AS ma_tinh
-       FROM (SELECT payload FROM v_s09_db_item_moi WHERE kind = 'danh-muc' ORDER BY fetched_at DESC NULLS LAST, snapshot_id DESC LIMIT 1) m
-       CROSS JOIN LATERAL jsonb_array_elements(m.payload -> 'data') d
-      WHERE NULLIF(btrim(d ->> 'id'), '') IS NOT NULL ORDER BY 1`);
+  const { rows: duAn } = await c.query("SELECT du_an_id, ten, ma_tinh FROM v_s09_db_du_an ORDER BY 1");
   if (!duAn.length) { log("danh-ba-vat-the: S09 gói 1 bỏ qua — chưa có danh mục"); return { bo_qua: "chua-co-danh-muc" }; }
   const { rows: toaRows } = await c.query(
-    `SELECT t.du_an_id, t.toa_id, t.toa_ten, t.thu_tu, (SELECT count(*)::int FROM v_s09_db_tang f WHERE f.toa_id = t.toa_id) AS so_tang
+    `SELECT t.du_an_id, t.toa_id, t.toa_ten, t.thu_tu, (SELECT count(*)::int FROM v_s09_db_tang f WHERE f.toa_id = t.toa_id) AS so_tang,
+            (SELECT array_agg(f.tang_ten ORDER BY f.thu_tu) FROM v_s09_db_tang f WHERE f.toa_id = t.toa_id) AS tang
        FROM v_s09_db_toa t ORDER BY t.du_an_id, t.thu_tu`);
   const toaTheoDuAn = new Map();
-  for (const r of toaRows) toaTheoDuAn.set(r.du_an_id, [...(toaTheoDuAn.get(r.du_an_id) ?? []), { toa_id: r.toa_id, ten: r.toa_ten, so_tang: r.so_tang }]);
+  for (const r of toaRows) toaTheoDuAn.set(r.du_an_id, [...(toaTheoDuAn.get(r.du_an_id) ?? []), { toa_id: r.toa_id, ten: r.toa_ten, so_tang: r.so_tang, tang: r.tang ?? [] }]);
 
   const { rows: iso } = await c.query("SELECT admin_code, iso_region FROM iso_regions").catch(() => ({ rows: [] }));
   const isoTheoMa = new Map(iso.map((r) => [r.admin_code, r.iso_region]));
@@ -349,7 +369,10 @@ export async function buocS09DanhBa(c, { noi = NOI_KHU_S09, noiS16 = NOI_DU_AN_S
         GROUP BY b.building_key`, [d.node_id, NGUON_S09]);
     const tangS16 = await soTangS16TheoTen(c, nutTheoId.get(d.node_id)?.slug, noiS16);
     const toaCo = toaKhu.map((b) => ({ building_key: b.building_key, ten: b.ten ?? [], ma_cu: !!b.ma_cu, s16: !!b.s16,
-      so_tang_s16: b.s16 ? ((b.ten ?? []).map((t) => tangS16.get(chuanHoaTenToa(t))).find((x) => x != null) ?? null) : null }));
+      ...(() => {
+        const s = b.s16 ? ((b.ten ?? []).map((t) => tangS16.get(chuanHoaTenToa(t))).find((x) => x != null) ?? null) : null;
+        return { so_tang_s16: s?.so ?? null, tang_s16: s ? [...s.ten] : null };
+      })() }));
     for (const x of xetToa(ds, toaCo, maMoi)) {
       const t = ds.find((y) => y.toa_id === x.toa_id);
       if (x.loai === "da_noi") { ra.toa.da_noi++; continue; }
@@ -364,7 +387,7 @@ export async function buocS09DanhBa(c, { noi = NOI_KHU_S09, noiS16 = NOI_DU_AN_S
       let taoRieng = x.loai === "tao_moi";
       if (x.loai === "the") {
         if (x.ly_do === "lech-tang-s16") {
-          ra.the_moi += await theMuc(c, theLechTangS16(x.toa_id), "S09: toà cùng tên với toà S16 nhưng lệch số tầng",
+          ra.the_moi += await theMuc(c, theLechTangS16(x.toa_id), "S09: toà cùng tên với toà S16 nhưng lệch tầng",
             { loai: "toa-lech-tang-s16", so_tang_s09: t.so_tang, building_keys: x.building_keys });
           ra.toa.lech_tang_tao_rieng++;
           taoRieng = true; // có thể là hai toà thật cùng tên: 0 bí danh, toà S09 đúc riêng (giống thứ tự S09 trước rồi S16)
@@ -376,9 +399,9 @@ export async function buocS09DanhBa(c, { noi = NOI_KHU_S09, noiS16 = NOI_DU_AN_S
         }
       } else {
         // Toà mới trùng tên với toà S16 còn ở stg (chưa dựng): so tầng ngay, để thứ tự S09 trước hay S16 trước cho cùng thẻ.
-        const lech = lechTangS16(t.so_tang, tangS16.get(chuanHoaTenToa(x.ten_chuan)) ?? null);
+        const lech = lechTangS16({ so: t.so_tang, ten: t.tang }, tangS16.get(chuanHoaTenToa(x.ten_chuan)) ?? null);
         if (lech === true) {
-          ra.the_moi += await theMuc(c, theLechTangS16(x.toa_id), "S09: toà cùng tên với toà S16 nhưng lệch số tầng",
+          ra.the_moi += await theMuc(c, theLechTangS16(x.toa_id), "S09: toà cùng tên với toà S16 nhưng lệch tầng",
             { loai: "toa-lech-tang-s16", so_tang_s09: t.so_tang, building_keys: [] });
           ra.toa.lech_tang_tao_rieng++;
         }
