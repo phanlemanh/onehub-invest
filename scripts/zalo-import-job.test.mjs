@@ -25,7 +25,7 @@ const MOC_CU = "2026-10-24T000000Z";
 // duyệt 30/10): enrich-run đứng cuối — lời «bốn bước» của media-canonical-reso#AC-10 thay bởi enrich-chay-sau-nap#AC-6.
 // pl34-lich-dem-sau-buoc (AC-1, Mạnh duyệt 09/11): doc-gop-hang-ngay sau nhả khoá nạp, trước enrich-run — lời «năm bước» của
 // enrich-chay-sau-nap#AC-6 thay bởi pl34-lich-dem-sau-buoc#AC-1.
-const NHAN = ["import-airbnb", "transform-zalo", "transform-media", "refresh-bait-gap", "xep-hang-gia", "doc-gop-hang-ngay", "enrich-run"];
+const NHAN = ["import-airbnb", "transform-zalo", "phuong-tu-du-an", "transform-media", "refresh-bait-gap", "xep-hang-gia", "doc-gop-hang-ngay", "enrich-run"];
 // Tệp giả của bước đọc gộp (pl34-lich-dem-sau-buoc): gọi qua node giả nên mang nhãn doc-gop-hang-ngay, nhận FAIL_STEPS như mọi
 // bước. Không chép bản thật (nó gọi node -e tính ngày rồi doc-gop-s03.ts hai lần); bản thật đo riêng ở ca PL34-AC-3 tệp thật.
 const DOC_GOP = "pipeline/doc-gop-hang-ngay.sh";
@@ -325,6 +325,7 @@ const TEP_NHAC = [
   "scripts/job-step-thoi-luong.test.mjs",   // job-step-ghi-thoi-luong: dòng ghim thời lượng
   "scripts/nap-argmax.test.mjs",
   "scripts/nap-ts-order.test.mjs",
+  "scripts/phuong-tu-du-an-chuoi.test.mjs",   // DA45: bước phường trong chuỗi nạp S03
   "scripts/zalo-import-job-khoa.itest.mjs",
   "scripts/zalo-import-job-lan.test.mjs",
   "scripts/zalo-import-job-nhe.test.mjs",
@@ -348,9 +349,9 @@ function soTepNhac(thay, ke) {
   assert.deepEqual(thay, [...ke].sort(), "PL34-AC-4 tập tệp kê có tệp không còn nhắc zalo-import-daily");
 }
 
-test("PL34-AC-4 tập tệp: mọi tệp test nhắc zalo-import-daily đúng bằng mười một tệp kê trước (s03-len-nhanh-nac-1 thêm hai, CG9 thêm một, job-step-ghi-thoi-luong thêm một); thiếu một thì đỏ gọi tên", () => {
+test("PL34-AC-4 tập tệp: mọi tệp test nhắc zalo-import-daily đúng bằng mười hai tệp kê trước (s03-len-nhanh-nac-1 thêm hai, CG9 thêm một, job-step-ghi-thoi-luong thêm một, DA45 thêm một); thiếu một thì đỏ gọi tên", () => {
   const thay = quetTepNhac();
-  assert.equal(thay.length, 11, `PL34-AC-4 số tệp quét: ${thay.join(", ")}`);
+  assert.equal(thay.length, 12, `PL34-AC-4 số tệp quét: ${thay.join(", ")}`);
   soTepNhac(thay, TEP_NHAC);
   assert.throws(() => soTepNhac(thay, TEP_NHAC.filter((f) => f !== "scripts/nap-argmax.test.mjs")),
     /PL34-AC-4 tệp test nhắc zalo-import-daily chưa kê: scripts\/nap-argmax\.test\.mjs/);
