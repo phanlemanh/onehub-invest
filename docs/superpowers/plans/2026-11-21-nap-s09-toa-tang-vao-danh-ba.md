@@ -131,7 +131,15 @@ Mỗi task: viết test đỏ trước, rồi mã, rồi commit. S4 xin lượt 
    Thêm một dòng kiểm: `SELECT count(*) FROM stg_s09_danh_ba WHERE snapshot_id = 'vn__s09-danh-ba__2026-11-19T211829028'` phải
    bằng 0; khác 0 thì dừng, báo giám sát.
    Sau lượt dựng đầu: chuông `node pipeline/scripts/danh-ba-s09-chuong-ten-lech.mjs` phải in 0 (S16 đã ở stg lúc S09 dựng); LL/GS
-   chạy lại nó sau mỗi lượt nạp S16 mới tới khi DA57 gộp. Số chạy thử trên bản chép: điền ở T5. Lượt dựng đêm sau áp + nạp nhưng TRƯỚC khi mã DA42 vào main: không đổi (chưa
+   chạy lại nó sau mỗi lượt nạp S16 mới tới khi DA57 gộp. Số chạy thử trên bản chép (T5, 22/11): 0.
+
+   **Số chạy thử T5** (22/11 ~08:50Z, `node pipeline/scripts/danh-ba-s09-toa-that.mjs --tran-phut 40` trên bản chép từ bản mẫu
+   oneinvest_suite_mau, 61 giây, ĐẠT): nạp 6.951 dòng, bỏ 0, bản hỏng 0 dòng · E2 dự án 221·221·221, toà 928·928·928, tầng
+   23.708·23.708·23.708 · dự án 221 = nối tay 2 + ứng viên 170 + chờ thẻ luật 13 + chờ thẻ cặp 36 (232 dự án bản 13/11 không có
+   trong gói 1) · toà 928 = bí danh 110 + tạo mới 547 + chờ thẻ 8 + thuộc dự án chưa nối 247 + khong_iso 16 · tỉ lệ vào 0,9762 ·
+   chờ thẻ 0,0117 · mã hỏng 0 · mã cũ 109/110 = 0,9909 · gom 65 · bí danh lệch tầng 0 · 198 dự án có toà, 928 toà, 23.708 tầng ·
+   0 toà hai UPI · S09 tạo 0 căn · E12 0 nút trùng nơi, 0 nút giảm toà, đối chứng cấy 1 dòng · chạy lại cùng số. Ba chiều đỏ
+   (`--bot-tang`, `--bo-phan`, `--noi-sai-toa`) chạy sau khi MH1 chấm xong (giám sát giữ s4). Lượt dựng đêm sau áp + nạp nhưng TRƯỚC khi mã DA42 vào main: không đổi (chưa
    mã nào trên main đọc bảng này). Sau khi DA42 vào main: lượt dựng đầu theo lệnh kiểm của AC-10.
 6. **Cách lùi**: `DROP VIEW v_s09_db_tang, v_s09_db_toa, v_s09_db_du_an, v_s09_db_item_moi; DROP TABLE stg_s09_danh_ba;` — là XOÁ
    dữ liệu stg (nạp lại được từ raw bất biến), nên cần lời riêng của Mạnh khi dùng. Lùi riêng bước dựng S09 gói 1: xem cách tắt ở §0.

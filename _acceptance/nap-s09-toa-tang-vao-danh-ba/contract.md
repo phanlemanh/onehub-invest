@@ -146,6 +146,8 @@ vì S16 đã ở stg lúc S09 dựng); trên DB máy thu hiện tại (chưa áp
 Known limits:
 - **Mã tỉnh cũ (`khong_iso`)**: 11 dự án gói 1 mang mã tỉnh cũ 74, 77 (trước sáp nhập), không có trong `iso_regions`, nên 28 toà
   của chúng không đúc được; bước dựng đếm riêng ở `khong_iso`. Đổi mã tỉnh cũ sang mới là một hàng riêng, không làm trong DA42.
+  Đo T5 ngày 22/11 trên bản chép: `khong_iso` = 16 toà thuộc dự án ĐÃ NỐI; 12 toà còn lại của 28 thuộc dự án chưa nối nên nằm ở
+  phần «thuộc dự án chưa nối» của phép cộng toà. Hàng đổi mã tỉnh là DA54.
   Danh sách (mã dự án nguồn · mã tỉnh · số toà), đo 22/11 trên bản thu 2026-11-19:
   85f78e95-9dc7-d503-de5d-c320c0dfb176 · 74 · 2 — 110b7c52-d42c-8bdf-f3cf-d6dd1d34342f · 74 · 4 —
   be6469a1-e656-12bc-8f92-f9aff6bbeff3 · 74 · 1 — 6763a3be-a57f-6ddb-b668-6d7e6cc1141a · 77 · 3 —
