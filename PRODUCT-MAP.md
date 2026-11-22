@@ -12,7 +12,7 @@ flowchart TD
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>21 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>215 việc"]
+  GB --> DG["Đã giao<br/>216 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>142 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
@@ -431,6 +431,7 @@ flowchart TD
 - ZC3 nối tiếp — watchdog Zalo quét nốt đuôi log ngày cũ khi xoay ngày (`watchdog-l4b-cuoi-ngay`)
 - bộ canh Zalo không còn tắt nhầm gateway vì quét lại lịch sử khi tệp log gateway bị coi là «tệp mới» (`watchdog-l4b-history`)
 - Ngân sách Yêu cầu đọc đúng khoảng có phần lẻ viết rời ở đầu dưới, và lệnh đo ngân sách có đối chứng đỏ cho cả bốn lý do đỏ (`yc1-khoang-le-va-doi-chung-do`)
+- Ca đối chứng ZL-AC-3 của bộ test job Zalo đúng ở mọi thế cây — main sau gộp, nhánh đổi phần nạp, nhánh đổi phần khác của tệp bọc — nên bộ scripts xanh trên main và mọi PR không còn đỏ job scripts (`zl-ac-3-doi-chung-dung-tren-main`) — đã giao — máy thông, cửa veto còn mở
 
 ## Đã nghiệm thu giá trị
 
