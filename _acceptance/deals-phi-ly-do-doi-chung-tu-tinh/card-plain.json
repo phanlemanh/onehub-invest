@@ -1,14 +1,13 @@
-{"feature_plain":"Lệnh đo «Căn giá tốt» tự tạo một tin phi lý tạm trong lúc đo để chứng luật loại còn chạy, nên không còn báo lỗi oan sau mỗi đêm mà vẫn báo đỏ khi luật loại hỏng.",
-"will_do":[{"id":"AC-1","p":"Sẽ đạt trên dữ liệu đã qua bước đêm: tạm xoá diện tích của tin đầu danh sách, đòi luật loại bắt đúng tin ấy, rồi trả tin về nguyên trạng trước khi đo chính (AC-1)."},
-{"id":"AC-4","p":"Sẽ chạy đạt trên DB máy thu và chứng DB không đổi sau lượt đo (đếm, băm giá giảm và diện tích, số dòng nhật ký loại) (AC-4)."}],
-"wont_do":[{"id":"AC-2","p":"Chặn: luật loại hỏng thì lượt đo đỏ và gọi tên «luật loại bắt tin đối chứng», dù dữ liệu không có tin phi lý thật (AC-2)."},
-{"id":"AC-3","p":"Sẽ KHÔNG giả đạt khi danh sách rỗng: báo đỏ «không dựng được tin đối chứng» (AC-3)."},
-{"id":"AC-5","p":"Sẽ KHÔNG đổi nghĩa các kiểm cũ: vẫn kiểm không tin thiếu diện tích, phòng quá nhỏ, phi lý, và đầu danh sách ≤ 35% (AC-5)."},
-{"id":"AC-6","p":"Sẽ KHÔNG làm mất tin đầu danh sách của phần đo chính: tin tạm được trả về trước khi kiểm ≤ 35% (AC-6)."},
-{"id":"OOS-1","p":"Không chuyển lệnh đo sang danh sách mới (CG9) mà trang đang dùng — việc riêng."},
-{"id":"OOS-2","p":"Không sửa bước đêm hay luật loại — luật đúng, chỉ phép đối chứng sai."},
-{"id":"OOS-3","p":"Không đổi trần giảm 50% của danh sách."}],
-"coverage_plain":[{"i":0,"p":"Không quét không gian: chỉ một phép đối chứng của một lệnh đo; ba trạng thái dữ liệu (có tin, luật hỏng, danh sách rỗng) là AC-1..AC-3, cộng chạy thật (AC-4), giữ nghĩa cũ (AC-5), không chạm danh sách đo chính (AC-6)."}],
-"gap_probe_plain":[{"i":0,"p":"Bản đầu sửa tin thật ngay trên lượt đo chính nên kiểm «đầu danh sách ≤ 35%» đọc sai — đã chuyển phần đối chứng vào một điểm lùi riêng và thêm AC-6."},
-{"i":1,"p":"Kiểm «DB không đổi» chưa phủ diện tích và nhật ký loại — đã thêm cả hai vào băm (AC-4)."},
-{"i":2,"p":"Ca luật hỏng dùng bản chép tay của bước đêm — đã đổi sang bước đêm thật chỉ bị chặn đúng hai câu ghi của luật loại."}]}
+{
+  "feature_plain": "Lệnh đo Căn giá tốt tự dựng một tin phi lý làm đối chứng rồi lùi lại, nên không còn báo đỏ oan trên dữ liệu đã qua bước đêm mà vẫn báo đỏ khi luật loại tin hỏng.",
+  "decisions": [
+    {"id": "Ngoài-1", "q": "Chấp nhận lint chạy chồng test vẫn có thể đỏ giả, sửa ở hàng riêng?", "why": "Mẫu bỏ qua mới chỉ phủ một họ tên tệp tạm; còn hơn mười kiểu khác (.pas-dot, .agm-dot, .kta, .tg1-pha, .au12-mut…). Giám sát đã cắt hàng HT1 dời tệp tạm ra khỏi cây mã."},
+    {"id": "Ngoài-2", "q": "Chấp nhận chú thích cấu hình lint nói quá mức phủ, sửa cùng HT1?", "why": "Chú thích ghi mẫu chung «phủ cả kiểu sau này», thực tế chỉ phủ tên có đoạn «-cu-»."},
+    {"id": "Ngoài-3", "q": "Chấp nhận các kiểm cũ của lệnh đo mới chỉ được thử ở chiều xanh?", "why": "Lệnh đo vẫn chạy đúng; chỉ là bài test chưa chứng kiểm cũ sẽ báo đỏ khi có tin phi lý lọt vào."},
+    {"id": "Ngoài-4", "q": "Ghi nhận lỗi đọc audit cũ, đã sửa ở lượt 3?", "why": "Đã sửa ở 9435f0264: lệnh đo chỉ đọc dòng audit do chính lượt chạy ghi, có ca test đỏ trên bản cũ."},
+    {"id": "Ngoài-5", "q": "Ghi nhận lỗi số «loại N tin» lấy từ đêm cũ, đã sửa cùng lượt 3?", "why": "Cùng gốc với Ngoài-4, cùng bản sửa."},
+    {"id": "Ngoài-6", "q": "Chấp nhận lệnh đo không bắt trường hợp luật loại quá tay?", "why": "Hợp đồng chỉ hứa bắt đúng tin đối chứng; loại thừa còn có các kiểm khác trên số liệu thật."},
+    {"id": "ký hay trả", "q": "Ký Cổng Bằng chứng để gộp hàng này?", "why": "Sáu tiêu chí đạt, bảy bộ kiểm xanh; không có bước áp nào lên DB máy thu."}
+  ],
+  "analyst_plain": ""
+}
