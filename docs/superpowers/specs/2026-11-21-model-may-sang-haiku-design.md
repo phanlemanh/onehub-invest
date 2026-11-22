@@ -39,7 +39,8 @@ vào lời gọi; lý do luật chỉ gửi chữ `cau` (vd «giá/m² sát nhau
    `runAgent` lấy model của agent từ tệp này. Mặc định Haiku.
 2. **Đường gọi** (sửa 22/11, Mạnh chọn «(b) Anthropic thẳng» sau khi ví trả trước Gateway cạn 21/11): model có `duong` và `tu_lui`
    cùng khuôn `agent/config/doc-gop-s03.json`; bảng của kho cho Haiku `duong: ["anthropic", "gateway"]`, `tu_lui: true`. Đường
-   `anthropic` gọi Messages API qua `@anthropic-ai/sdk` (agent không công cụ: `enrich-text`, `judge-entity`, `smoke-echo`); gặp lớp dừng
+   `anthropic` gọi Messages API qua `@anthropic-ai/sdk` (`enrich-text`, `judge-entity` không công cụ; `smoke-echo` có tool `get_time`
+   nên đường thẳng có vòng tool tự viết: `stop_reason: tool_use` → chạy tool → `tool_result`, tối đa `budget` lời); gặp lớp dừng
    (`laLopDung` của `runtime/loi-nha-cung-cap.ts`: hết tiền, khoá sai) thì lời ấy và các lời kế đi Gateway, in một dòng `chuyen-duong`.
    Gateway gửi kèm `providerOptions` của `tuyChonGui` (không giữ dữ liệu, không huấn luyện); đường thẳng không có cờ theo lời gọi tương
    đương — cùng chế độ bộ đọc gộp, Mạnh chấp nhận cho hai agent này. Thiếu khoá làm không còn đường nào → mã 5 trước lời gọi đầu.
@@ -54,6 +55,23 @@ vào lời gọi; lý do luật chỉ gửi chữ `cau` (vd «giá/m² sát nhau
    trên mẫu, so với đầu ra Qwen đã lưu, không gọi MTPLX. Thước: enrich — tỉ lệ JSON đọc được, và theo từng trường (loại hình, phòng
    ngủ, phòng tắm, đường, dự án, toà) tỉ lệ trùng giá trị với đề xuất Qwen; judge — tỉ lệ có lời giải thích hợp lệ, kết luận luật
    không đổi. Chạy SAU khi Mạnh duyệt Cổng Phạm vi, trần 1 USD.
+
+### Dữ liệu rời máy theo đường thẳng (AC-3, AC-4)
+
+Mỗi lời gọi thẳng API Anthropic chỉ mang năm khoá trong thân (E3 kiểm tập con), cộng `tools` cho `smoke-echo`:
+
+| Khoá | `enrich-text` | `judge-entity` | `smoke-echo` |
+|---|---|---|---|
+| `model` | `claude-haiku-5-5` | `claude-haiku-5-5` | `claude-haiku-5-5` |
+| `system` | lời dặn cố định của agent | lời dặn cố định của agent | lời dặn cố định |
+| `messages` | chữ bài ≤ 500 ký tự + khối bối cảnh (nhóm đã giải về khu vực) | các dòng thuộc danh sách nhãn dòng của judge (giá, diện tích, vị trí, căn cứ luật) | câu hỏi giờ + kết quả tool |
+| `max_tokens` | 4096 | 4096 | 4096 |
+| `tools` | — | — | `get_time` (không tham số) |
+
+Không gửi: tên, SĐT người bán, tên nhóm ở cột ngoài chữ bài (E4 kiểm trên thân yêu cầu thật), hồ sơ user app, định danh tài khoản thu,
+phiên/khoá. Đường thẳng **không có cờ không giữ dữ liệu, không huấn luyện theo từng lời gọi** như `providerOptions.gateway` của Gateway;
+dữ liệu đi theo thoả thuận tổ chức với Anthropic — cùng chế độ bộ đọc gộp (`goi-thang-anthropic`), Mạnh chấp nhận cho hai agent này
+22/11. Lùi về chế độ có cờ bằng cấu hình: đặt `duong: ["gateway"]` cho Haiku trong `agent/config/model-agent.json`, không đổi mã.
 
 ## Ngoài phạm vi
 
