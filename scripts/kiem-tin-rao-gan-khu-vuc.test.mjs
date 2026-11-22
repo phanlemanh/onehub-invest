@@ -20,17 +20,19 @@ const SCRIPT = path.join(ROOT, "scripts/kiem-tin-rao-gan-khu-vuc.mjs");
 // Mỗi lượt chạy trên DB của riêng lượt (db/db-thu.sh --chay chép từ bản mẫu, xoá khi xong), không trên DB dùng chung:
 // trên `oneinvest` các job khác (nạp 15 phút) ghi property_offers trong lúc đo làm băm ROLLBACK lệch, và hai lượt song song
 // tranh khoá 33033 tới quá giờ (do-san-sl1-kdm S4 r1). Trên CI db-thu.sh chạy thẳng lệnh (ca nằm trong ci-bo-qua.json).
-// Một lượt ~3,5 phút khi máy rảnh, 7:40 khi các dãy khác đang chấm — trần mỗi lượt 900 giây.
+// Một lượt ~3,5 phút khi máy rảnh, 7:40 khi các dãy khác đang chấm. HT5 (22/11): lượt nền nay chạy với bộ phân xử hiện hành
+// (có phần 099) nên chậm hơn (142 → 229 giây khi rảnh); lượt chấm S4 r1 chạy hai bản KDM song song và lượt vượt 900 giây
+// (tiến trình con bị giết, mã 143) — trần mỗi lượt 1.800 giây.
 const DB_THU = path.join(ROOT, "db/db-thu.sh");
 const chayLenh = (...args) => {
   const r = spawnSync("bash", [DB_THU, "oneinvest_suite_kdm", "--chay", process.execPath, SCRIPT, ...args],
-    { cwd: ROOT, encoding: "utf8", timeout: 900_000 });
+    { cwd: ROOT, encoding: "utf8", timeout: 1_800_000 });
   return { code: r.status, out: `${r.stdout}${r.stderr}` };
 };
 const chay = (...args) => chayLenh("--thu", ...args);
 const dongMoi = (out) => [...out.matchAll(/^mồi (S0\d) (offer_\w+) → /gm)].map((m) => ({ nguon: m[1], id: m[2] }));
 
-test("KDM-AC-3 ba chiều trên cùng DB", { timeout: 2_700_000 }, () => {
+test("KDM-AC-3 ba chiều trên cùng DB", { timeout: 5_400_000 }, () => {
   const xanh = chay();
   assert.equal(xanh.code, 0, `bản thường phải exit 0:\n${xanh.out}`);
   assert.match(xanh.out, /^ok {3}trạng thái trước có 6 tin mồi trỏ khu vực không hợp lệ \(\+ \d+ tin thật\)$/m);
@@ -181,7 +183,7 @@ test("HT5-AC-1 mọi migration định nghĩa hay chèn vào resolve_offer_field
   assert.deepEqual(thieuTrongChuoi(CHUOI_PHAN_XU, moi), ["998", "999"]);
 });
 
-test("HT5-AC-2 napPhatBieu giữ đúng bộ phân xử DB đang chạy, không cấy phần chèn DB chưa có; hai chiều đỏ gọi tên hàm", { timeout: 2_700_000 }, () => {
+test("HT5-AC-2 napPhatBieu giữ đúng bộ phân xử DB đang chạy, không cấy phần chèn DB chưa có; hai chiều đỏ gọi tên hàm", { timeout: 5_400_000 }, () => {
   const xanh = chayLenh("--phan-xu");
   assert.equal(xanh.code, 0, `--phan-xu phải exit 0:\n${xanh.out}`);
   assert.match(xanh.out, /^ok {3}bộ phân xử sau napPhatBieu bằng bản DB đang chạy \(resolve_offer_area_du_an\(text\[\]\) [0-9a-f]{32} · resolve_offer_fields\(text\[\]\) [0-9a-f]{32}\)$/m);

@@ -21,7 +21,7 @@ evals:
     executor: test
     cmd: node --test --test-name-pattern=KDM-AC-3 scripts/kiem-tin-rao-gan-khu-vuc.test.mjs
     paths: [pipeline/lib/nap-045.mjs, scripts/kiem-tin-rao-gan-khu-vuc.mjs, scripts/kiem-tin-rao-gan-khu-vuc.test.mjs]
-    long_running: 40
+    long_running: 90
     expected: "exit 0, «✔ KDM-AC-3 ba chiều trên cùng DB»: bản thường thoát 0 với «ok   lượt nền: 0 tin có phường hợp lệ …» và «kiem-tin-rao-gan: PASS»; --pha khong-sua, --pha mo-loc thoát 1 đúng dòng FAIL cũ."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4
@@ -63,5 +63,5 @@ evals:
     executor: test
     cmd: config:executors.test.scripts
     paths: [scripts/**, pipeline/lib/nap-045.mjs]
-    long_running: 45
+    long_running: 120
     expected: "node --test scripts/*.test.mjs thoát 0."
