@@ -12,7 +12,7 @@ flowchart TD
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>21 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>213 việc"]
+  GB --> DG["Đã giao<br/>217 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>141 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
@@ -238,6 +238,7 @@ flowchart TD
 - Người vận hành thấy đúng tên người đăng, đúng lý do rời danh sách của căn đắt hơn thước, và đường về danh sách không quay lại chính trang một căn (`can-gia-tot-sua-ba-loi`)
 - Căn của tin chung bài đăng nhận theo khi đề xuất làm giàu được áp hay hoàn tác — migration 066 mở rộng chuỗi cập nhật căn của 063, kèm sửa một lần phần lệch đã có (`can-theo-tin-khi-phan-xu-lai`)
 - Bộ canh S03 thêm lớp L6 kiểm sống — cảnh báo khi S03 ngừng thu (không snapshot mới ban ngày, tự khởi động lại treo, not linked), không kill gateway (`canh-bao-s03-ngung-thu`)
+- Mỗi thẻ «Bổ sung tin» còn đề xuất có kết quả chấm bóng của hai lần đọc độc lập kèm trích dẫn, thẻ hai lần đọc lệch hay máy bỏ trống được đánh dấu ca biên, và không dòng tin nào đổi (`cham-bong-bo-sung-tin`)
 - Sổ nguồn khai được từng dòng «khớp nguyên cụm» — bộ che và bộ soát tên nguồn không còn coi từ đầu (thương hiệu dự án, từ chung) là tên nguồn cho dòng đã khai, dòng S16 trả về tên hai từ + tên miền mà /ops/registry và sync-cloud không che nhầm, còn mọi dòng khác (kể cả S05) che y như hôm nay (`che-ten-nguon-khong-lay-tu-dau`)
 - Vai Người xem không dò được bí danh đã che qua ô tìm của /ops/people — máy chủ bỏ ?q= và trang ẩn ô tìm với vai dưới Vận hành (`che-tim-bi-danh-viewer`)
 - Thước đồng bộ cloud (check-cloud-sync) chạy lại được trên máy thu đã áp 060 và 059 — sellers dựng thành bảng theo 022, bỏ trigger lịch sử khỏi bản dump (`check-cloud-sync-sellers-view`)
@@ -292,6 +293,7 @@ flowchart TD
 - 2410-1 — mốc thu captured_at của stg Zalo và Chợ Tốt luôn là giờ thu snapshot, nạp lại không làm sai, có script khôi phục kèm sao lưu (`giu-captured-at`)
 - Ngôn ngữ chuẩn — CONTEXT.md, luật đặt tên, bối cảnh sản phẩm, test slug route (`glossary-context`)
 - Đọc gộp S03 và nháp nhãn PL35 có thêm đường gọi Haiku thẳng API Anthropic song song Vercel AI Gateway (thứ tự và tự lùi bằng bảng chọn), ghi rõ lỗi nhà cung cấp và dừng sớm khi hết tiền (`goi-thang-anthropic`)
+- Gộp nút phân khu do luật S16 đúc vào nút sẵn có bằng bằng chứng mã căn S16, qua thẻ nối có băm của DA46, đảo được (`gop-nut-trung-ma-can-s16`) — đã giao — máy thông, bằng chứng xanh-sạch
 - probe GS-AC-6 của the-so-gia-tri-song chỉ xét thẻ ghép căn có bên (evidence.<bên>.offer_id là chuỗi), không nhận nhầm thẻ danh bạ DA33 là «tin rời kho» (`gs-ac-6-the-khong-tin-a`) — đã giao — máy thông, cửa veto còn mở
 - guard-edits lấy gốc theo kho chứa tệp — luật chặn sửa migration đã commit chạy cả khi tệp ở worktree khác (`guard-edits-goc-theo-tep`)
 - ZC6 nối tiếp — hook Zalo giữ tin lại hàng đợi khi khoá collector sai (401/403/404) và có trần thời gian cho cả lượt xả (`hook-spool-nghiem-ngat`)
@@ -369,6 +371,7 @@ flowchart TD
 - Lượt nạp S03 mỗi 15 phút ban ngày (7:00–22:00) — nạp → transform → media → refresh, khoá bận thì bỏ lượt; lượt 00:00 giữ nguyên sáu bước (`s03-nap-nhanh`) — đã giao — máy thông, cửa veto còn mở
 - Nới luật trích dẫn căn hộ S03 thêm dạng số phòng và studio, xử lại đề xuất đã bỏ bằng nhãn đã đọc, không gọi model (`s03-noi-luat-trich-dan`)
 - bộ nạp S03 lọc U+0000 khỏi mọi chuỗi trước khi ghi stg_zalo_posts — gỡ kẹt nạp đêm từ 29/10 (`s03-null-byte`) — đã giao — máy thông, cửa veto còn mở
+- Lượt nạp S03 có trần thời gian — lượt 00:00 không chạy quá 4 giờ, phần nạp không quá 30 phút, lượt bị cắt không mất snapshot nào và lượt sau nạp nốt, khoá của lượt đang chạy không bị gỡ, trần không bao giờ dừng nhầm tiến trình ngoài lượt (`s03-tran-thoi-gian-luot-nap`)
 - S05 có đệm cửa sổ thu 5 ngày, khoá nạp không văng hay quay bận, bước thu lỗi có dòng ghim (`s05-khoa-nap`)
 - Kho khớp lịch S06 2 lượt mỗi ngày đã cài trên máy thu — plist chotot trong main mang mốc 05:30 và 14:00, không va lịch job khác (`s06-hai-luot-ngay-gop-main`)
 - bộ thu S06 nhận mã tỉnh params.region bên cạnh region_v2, để bật được vùng mà mã cũ không hoạt động (`s06-region-tinh`)
@@ -428,6 +431,7 @@ flowchart TD
 - ZC3 nối tiếp — watchdog Zalo quét nốt đuôi log ngày cũ khi xoay ngày (`watchdog-l4b-cuoi-ngay`)
 - bộ canh Zalo không còn tắt nhầm gateway vì quét lại lịch sử khi tệp log gateway bị coi là «tệp mới» (`watchdog-l4b-history`)
 - Ngân sách Yêu cầu đọc đúng khoảng có phần lẻ viết rời ở đầu dưới, và lệnh đo ngân sách có đối chứng đỏ cho cả bốn lý do đỏ (`yc1-khoang-le-va-doi-chung-do`)
+- Ca đối chứng ZL-AC-3 của bộ test job Zalo đúng ở mọi thế cây — main sau gộp, nhánh đổi phần nạp, nhánh đổi phần khác của tệp bọc — nên bộ scripts xanh trên main và mọi PR không còn đỏ job scripts (`zl-ac-3-doi-chung-dung-tren-main`) — đã giao — máy thông, cửa veto còn mở
 
 ## Đã nghiệm thu giá trị
 
