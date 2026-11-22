@@ -95,17 +95,18 @@ test("DA42 kind lạ: dòng kind mới (S09 ngoài Hà Nội, quỹ căn) cùng 
   }
 });
 
-test("DA42 kind lạ: toà kind `toa` của dự án ngoài danh mục gói 1 không vào bước dựng", async () => {
+// View toà KHÔNG lọc theo danh mục: theo thiết kế 115, DA43 đọc mọi toà đã thu. Ca này đo đúng điều đó (đỏ nếu ai lọc view toà
+// theo danh mục gói 1). Bước dựng không có rào riêng cho toà ngoài danh mục: các vòng của nó chỉ đi qua dự án trong danh mục, nên
+// không dựng được dữ liệu làm một rào như vậy thành khác biệt — giám sát 22/11, phương án (b), bỏ rào thay vì giữ mã không ca nào chạm.
+test("DA42 kind lạ: view toà giữ toà kind `toa` của dự án ngoài danh mục gói 1, danh mục không đổi", async () => {
   const truoc = await chup();
   await db.query("BEGIN");
   try {
     await dongStg(SNAP_LA, 101, KIND_GOI_1.toa, "q42-p9", [{ id: "q42-t8", name: "Tòa Z" }], T_LA);
-    await dongStg(SNAP_LA, 102, KIND_GOI_1.tang, "q42-t8", [{ id: "q42-f8", name: "02" }], T_LA, { duAnId: "q42-p9" });
     const sau = await chupTrongGiaoDich();
-    // View toà theo kind nên có dòng mới (đúng thiết kế 115: DA43 đọc mọi toà đã thu); bước dựng chỉ xét dự án trong danh mục.
-    assert.equal(sau.views.toa.length, truoc.views.toa.length + 1);
-    assert.deepEqual(sau.views.du_an, truoc.views.du_an);
-    assert.deepEqual(sau.ra, truoc.ra, "toà của dự án ngoài danh mục gói 1 lọt vào bước dựng");
+    assert.deepEqual(sau.views.toa.map((r) => r.toa_id), [...truoc.views.toa.map((r) => r.toa_id), "q42-t8"],
+      "view toà phải giữ toà của dự án ngoài danh mục (DA43 đọc mọi toà đã thu)");
+    assert.deepEqual(sau.views.du_an, truoc.views.du_an, "danh mục gói 1 đổi khi có toà của dự án ngoài danh mục");
   } finally {
     await db.query("ROLLBACK");
   }
