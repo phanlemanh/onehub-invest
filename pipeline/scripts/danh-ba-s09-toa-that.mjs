@@ -8,6 +8,9 @@
 //     --bo-phan <p>   bỏ một phần khỏi phép cộng toà (bi_danh|tao_moi|cho_the|chua_noi|khong_iso) → E10 nêu phần thiếu
 //     --noi-sai-toa   trỏ mã mới của hai toà mã cũ sang toà khác → E10 nêu «nối mã cũ»
 //   --chi-tiet-ma-cu  in toà mã cũ (mẫu số 110) chưa nối mã mới: khoá toà, mã cũ S09, tên toà, và toà gói 1 cùng tên (kết cục)
+//   --doi-soat-ma-cu  chia toà gói 1 đi nhánh mã cũ theo lớp toà có sẵn (mẫu số / gom), in toà gom nhận mã mới
+//   --giu-db          T7/E11: dựng DB GIỮ LẠI oneinvest_s09ui từ bản mẫu (createdb -T), chạy trọn lượt trên đó, không xoá — để mở app
+//                     ở cổng riêng chụp /ops/registry. Xoá sau khi chụp: bash db/db-thu.sh oneinvest_s09ui --xoa
 // Bản chép: script tự chạy lại mình qua `db/db-thu.sh oneinvest_suite_s09that --chay` — DB của lượt sinh bằng `createdb -T` từ bản
 // mẫu oneinvest_suite_mau (cùng khuôn danh-ba-s16-cau-truc-that.mjs của DA37), xoá khi lệnh dừng.
 import { spawnSync } from "node:child_process";
@@ -36,15 +39,27 @@ const NGUONG = { ti_le_vao: 0.95, cho_the_toi_da: 0.10, ma_hong_toi_da: 0.01, ma
 const loi = [];
 const o = (ten, thuc, ok, ghi = "") => { console.log(`${ok ? "  " : "✗ "}${ten}: ${thuc}${ghi ? ` (${ghi})` : ""}`); if (!ok) loi.push(ten); };
 
+const DB_GIU = "oneinvest_s09ui";
 if (!TRONG) {
-  const r = spawnSync("bash", [join(GOC, "db/db-thu.sh"), "oneinvest_suite_s09that", "--chay", process.execPath, ...process.argv.slice(1)],
-    { cwd: GOC, stdio: "inherit", env: { ...process.env, S09_THAT_TRONG: "1" }, timeout: TRAN_PHUT * 60_000, killSignal: "SIGTERM" });
+  let r;
+  if (co("--giu-db")) {
+    const dx = (...a) => spawnSync("docker", ["exec", "-e", "PGPASSWORD=oneinvest", "one-invest-db", ...a], { encoding: "utf8" });
+    dx("dropdb", "-U", "oneinvest", "-h", "localhost", "--if-exists", "--force", DB_GIU);
+    const t = dx("createdb", "-U", "oneinvest", "-h", "localhost", "-T", "oneinvest_suite_mau", DB_GIU);
+    if (t.status !== 0) { console.error(`danh-ba-s09-toa-that: không dựng được ${DB_GIU} từ bản mẫu: ${t.stderr.trim()}`); process.exit(2); }
+    r = spawnSync(process.execPath, process.argv.slice(1), { cwd: GOC, stdio: "inherit", timeout: TRAN_PHUT * 60_000, killSignal: "SIGTERM",
+      env: { ...process.env, S09_THAT_TRONG: "1", DATABASE_URL: `${MAY_CHU}/${DB_GIU}` } });
+    console.log(`danh-ba-s09-toa-that: GIỮ ${DB_GIU} cho E11 — app: DATABASE_URL=${MAY_CHU}/${DB_GIU}; xoá sau khi chụp: bash db/db-thu.sh ${DB_GIU} --xoa`);
+  } else {
+    r = spawnSync("bash", [join(GOC, "db/db-thu.sh"), "oneinvest_suite_s09that", "--chay", process.execPath, ...process.argv.slice(1)],
+      { cwd: GOC, stdio: "inherit", env: { ...process.env, S09_THAT_TRONG: "1" }, timeout: TRAN_PHUT * 60_000, killSignal: "SIGTERM" });
+  }
   if (r.error?.code === "ETIMEDOUT" || r.signal === "SIGTERM") { console.error(`danh-ba-s09-toa-that: vượt trần ${TRAN_PHUT} phút`); process.exit(4); }
   process.exit(r.status ?? 1);
 }
 
 const TEN = new URL(process.env.DATABASE_URL ?? "postgres://x/").pathname.slice(1);
-if (!/^oneinvest_suite_s09that_[0-9]+$/.test(TEN)) { console.error(`từ chối: DB «${TEN}» không phải DB của lượt db-thu --chay`); process.exit(2); }
+if (!/^oneinvest_suite_s09that_[0-9]+$/.test(TEN) && TEN !== DB_GIU) { console.error(`từ chối: DB «${TEN}» không phải DB của lượt db-thu --chay`); process.exit(2); }
 const URL_THU = `${MAY_CHU}/${TEN}`;
 const c = new pg.Client({ connectionString: URL_THU });
 await c.connect();
