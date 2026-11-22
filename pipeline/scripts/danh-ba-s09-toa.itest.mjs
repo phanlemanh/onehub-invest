@@ -13,6 +13,7 @@ import pg from "pg";
 import { taoDbThu, xoaDbThu } from "./db-thu-dbv.mjs";
 import { buocS09DanhBa } from "../lib/s09-dung.mjs";
 import { KIND_GOI_1, SOURCE_ID_DANH_MUC_GOI_1 } from "../lib/s09-danh-ba-can.mjs";
+import { khoaKhu } from "../lib/s16-phan-khu.mjs";
 
 export const TEN = `oneinvest_dbv_s09t_${process.pid}`;
 let db;
@@ -347,6 +348,111 @@ test("DA42 E4 (AC-4): toà khớp một thành bí danh, mã cũ nhận mã mớ
     await dungE4(dot);
     const loi = await loiE4(nutId);
     assert.ok(loi.some((l) => l.startsWith("khớp hai")), `đột biến chọn toà đầu khi khớp hai phải đỏ nêu «khớp hai»: ${JSON.stringify(loi)}`);
+  } finally {
+    await db.query("ROLLBACK");
+  }
+});
+
+// ---- E5 (AC-5): dự án có S16 giữ cấu trúc của S16 --------------------------------------------------------------------------
+// Nút q42-e5n có hai phân khu: N16 (khu K1 của S16) và N09 (sector sec5 của S09 DA31). Năm toà S16 dưới nút, mỗi toà một ca tầng
+// (giá trị viết trước, tầng có căn của S16 ↔ tầng S09 kê):
+//   K khớp (2–5 ↔ 02–05) · L lệch (2–10 ↔ 02–05: S09 ít hơn 5 tầng) · X S09 nhiều hơn (2–4 ↔ 02–08) · Y chỉ thiếu tầng 1 (1–5 ↔ 02–05)
+//   · N không so được (S16 không có căn). Toà K còn mang mã cũ S09 DA31 trỏ sector sec5 → S09 ghi phân khu N09, S16 ghi N16.
+const NOI_E5 = { "q42-e5": "q42-e5n" }, NOI16_E5 = { q5: "q42-e5n" };
+const dungE5 = (buoc = buocS09DanhBa) => buoc(db, { noi: NOI_E5, noiS16: NOI16_E5, log: () => {}, taoKhoa: taoKhoaThu });
+const bkE5 = (k) => `bld_${("E5" + "KLXYN".indexOf(k)).padStart(26, "0")}`; // khoá Crockford: không chữ I, L, O, U
+const TANG16_E5 = { K: [2, 3, 4, 5], L: [2, 3, 4, 5, 6, 7, 8, 9, 10], X: [2, 3, 4], Y: [1, 2, 3, 4, 5], N: [] };
+const TANG09_E5 = { K: ["02", "03", "04", "05"], L: ["02", "03", "04", "05"], X: ["02", "03", "04", "05", "06", "07", "08"], Y: ["02", "03", "04", "05"], N: ["02", "03"] };
+const LECH_PHAN_KHU_E5 = 1; // viết trước: một toà (K) S09 xếp vào phân khu khác S16
+
+async function fixtureE5() {
+  const nut = async (type, slug, ten, parent, meta) => (await db.query(
+    `INSERT INTO asset_nodes (node_type, name, slug, parent_id, aliases, area_ids, dd_field, meta)
+     VALUES ($1, $3, $2, $4, '{}', '{}', 'SubdivisionName', $5) RETURNING id::int AS id`, [type, slug, ten, parent, meta])).rows[0].id;
+  const P = await nut("project", "q42-e5n", "Q42 E5 Dự án", null, {});
+  const N16 = await nut("subzone", "q42-e5-k1", "Q42 E5 Khu 1", P, { s16_khu_ids: [khoaKhu("q5", "K1")] });
+  const N09 = await nut("subzone", "q42-e5-s09", "Q42 E5 S09", P, { s09_sector_ids: ["sec5"] });
+  for (const sn of ["q42-s16", "q42-s09cu"]) {
+    await db.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ($1, 'vn', 'S16', '{}')`, [sn]);
+  }
+  await db.query(`INSERT INTO stg_s16_khu (snapshot_id, du_an, khu_id, khu_ten) VALUES ('q42-s16', 'q5', 'K1', 'Khu 1')`);
+  for (const k of Object.keys(TANG16_E5)) {
+    await db.query(`INSERT INTO buildings (building_key, region_node_id, upi, iso_region, catalog_tier)
+                    VALUES ($1, $2, 'urn:onehub:upi:1:VN:VN-HN:' || $1, 'VN-HN', 'xac_minh')`, [bkE5(k), P]);
+    await db.query(`INSERT INTO registry_aliases (object_key, kind, value, source) VALUES ($1, 'ma_nguon', $2, 'S16'), ($1, 'ten', $3, 'S16')`,
+      [bkE5(k), `q5/T${k}`, `E5 ${k}`]);
+    await db.query(`INSERT INTO stg_s16_toa (snapshot_id, du_an, khu_id, khu_nhan, toa_id, toa_ten) VALUES ('q42-s16', 'q5', 'K1', 'K1', $1, $2)`,
+      [`T${k}`, `E5 ${k}`]);
+    for (const t of TANG16_E5[k]) {
+      await db.query(`INSERT INTO stg_s16_can (snapshot_id, du_an, khu_nhan, toa_id, toa_ten, tang, ma_can, pha)
+                      VALUES ('q42-s16', 'q5', 'K1', $1, $2, $3, $4, 1)`, [`T${k}`, `E5 ${k}`, String(t), `E5${k}-${t}01`]);
+    }
+  }
+  // Mã cũ DA31 của toà K: sector sec5 → S09 ghi phân khu N09.
+  await db.query(`INSERT INTO stg_s09_item (snapshot_id, source_id, kind, payload) VALUES ('q42-s09cu', 'p5', 'du-an', $1)`,
+    [{ chiTiet: { meta: { code: "200" }, data: { id: "p5", insight_by_block: [{ id: "b5", block_code: "E5K", sector_uuid: "sec5" }] } } }]);
+  await db.query(`INSERT INTO registry_aliases (object_key, kind, value, source) VALUES ($1, 'ma_nguon', 'p5/b5', 'S09')`, [bkE5("K")]);
+  // Gói 1.
+  await dongStg(SNAP_GOI_1, 501, KIND_GOI_1.danhMuc, SOURCE_ID_DANH_MUC_GOI_1, [duAn("q42-e5", "Q42 E5 S09")], "2026-11-20T02:00:00Z");
+  await dongStg(SNAP_GOI_1, 502, KIND_GOI_1.toa, "q42-e5", Object.keys(TANG09_E5).map((k) => ({ id: `q42-e5-${k}`, name: `E5 ${k}` })), "2026-11-20T02:00:00Z");
+  let dong = 503;
+  for (const [k, ds] of Object.entries(TANG09_E5)) {
+    await dongStg(SNAP_GOI_1, dong++, KIND_GOI_1.tang, `q42-e5-${k}`, ds.map((t) => ({ id: `q42-e5-${k}-${t}`, name: t })), "2026-11-20T02:00:00Z",
+      { duAnId: "q42-e5" });
+  }
+  return { P, N16, N09 };
+}
+
+/** Lỗi của E5 so với giá trị viết trước; rỗng = đạt. */
+async function loiE5(N, ra) {
+  const q = async (sql, a = []) => (await db.query(sql, a)).rows;
+  const loi = [];
+  const vk = (await q("SELECT region_node_id::int AS n, nguon FROM v_toa_nut_vung WHERE building_key = $1", [bkE5("K")]))[0];
+  if (vk?.n !== N.N16 || vk?.nguon !== "s16_phan_khu") loi.push(`S16 thắng: toà K không giữ phân khu S16 (nút ${vk?.n}, nguồn ${vk?.nguon})`);
+  const lech = (await q("SELECT so FROM v_lech_cau_truc_s16 WHERE du_an = 'q5' AND cap_nguon = 'S09-S16' AND loai = 'phan-khu'"))[0]?.so ?? 0;
+  if (lech !== LECH_PHAN_KHU_E5) loi.push(`số lệch phân khu S09-S16 là ${lech}, viết trước ${LECH_PHAN_KHU_E5}`);
+  const bd = Object.fromEntries((await q(
+    "SELECT value, object_key FROM registry_aliases WHERE source = 'S09' AND kind = 'ma_nguon' AND value LIKE 'danh-ba-toa/q42-e5-%'")).map((r) => [r.value, r.object_key]));
+  for (const k of ["K", "X", "Y", "N"]) if (bd[`danh-ba-toa/q42-e5-${k}`] !== bkE5(k)) loi.push(`toà ${k} phải thành bí danh của toà S16 cùng tên`);
+  if (bd["danh-ba-toa/q42-e5-L"] === bkE5("L")) loi.push("hai toà cùng tên: toà L lệch tầng mà thành bí danh của toà S16");
+  const theL = (await q("SELECT count(*)::int AS n FROM review_queue WHERE item_type = 'entity_match' AND item_id = 's09-toa-lech-s16:q42-e5-L'"))[0].n;
+  if (theL !== 1) loi.push(`hai toà cùng tên: toà L có ${theL} thẻ lệch tầng, phải đúng 1`);
+  const theKhac = (await q(`SELECT count(*)::int AS n FROM review_queue WHERE item_type = 'entity_match'
+                              AND item_id LIKE 's09-toa-lech-s16:q42-e5-%' AND item_id <> 's09-toa-lech-s16:q42-e5-L'`))[0].n;
+  if (theKhac) loi.push(`${theKhac} thẻ lệch tầng cho toà không lệch (K, X, Y, N)`);
+  if (ra && ra.toa.khong_so !== 1) loi.push(`bộ đếm toà không so được là ${ra.toa.khong_so}, viết trước 1 (toà N)`);
+  return loi;
+}
+
+test("DA42 E5 (AC-5): S16 giữ phân khu, lệch đếm theo cặp nguồn, luật lệch tầng một chiều; đỏ khi S09 trên S16 và khi bỏ so tầng", async () => {
+  await db.query("BEGIN");
+  try {
+    const N = await fixtureE5();
+    await db.query("SAVEPOINT e5");
+    const ra = await dungE5();
+    assert.deepEqual(await loiE5(N, ra), []);
+
+    // Chiều đỏ 1: view nút vùng xếp phân khu S09 trên S16.
+    const than = readFileSync(join(import.meta.dirname, "../../db/migrations/114_v_toa_nut_vung_s16_bam.sql"), "utf8");
+    const viewS09Truoc = than.slice(than.indexOf("CREATE OR REPLACE VIEW v_toa_nut_vung"))
+      .replace("COALESCE(pk16.id, cum.id, pk.id, b.region_node_id)", "COALESCE(cum.id, pk.id, pk16.id, b.region_node_id)")
+      .replace("CASE WHEN pk16.id IS NOT NULL THEN 's16_phan_khu' WHEN cum.id IS NOT NULL THEN 's09_cum'\n            WHEN pk.id IS NOT NULL THEN 's09_phan_khu' ELSE 'goc' END",
+               "CASE WHEN cum.id IS NOT NULL THEN 's09_cum' WHEN pk.id IS NOT NULL THEN 's09_phan_khu'\n            WHEN pk16.id IS NOT NULL THEN 's16_phan_khu' ELSE 'goc' END");
+    assert.notEqual(viewS09Truoc, than.slice(than.indexOf("CREATE OR REPLACE VIEW v_toa_nut_vung")), "đột biến view không khớp 114");
+    await db.query("SAVEPOINT e5v");
+    await db.query(viewS09Truoc);
+    const loi1 = await loiE5(N, ra);
+    assert.ok(loi1.some((l) => l.startsWith("S16 thắng")), `đột biến S09 trên S16 phải đỏ nêu «S16 thắng»: ${JSON.stringify(loi1)}`);
+    await db.query("ROLLBACK TO SAVEPOINT e5v");
+
+    // Chiều đỏ 2: bỏ so số tầng (mọi toà cùng tên thành bí danh).
+    await db.query("ROLLBACK TO SAVEPOINT e5");
+    const dot = await buocDotBien([[
+      "const lech = lechTangS16({ so: t.so_tang, ten: t.tang }, { so: b.so_tang_s16, ten: b.tang_s16 });",
+      "const lech = false;"]]);
+    const ra2 = await dungE5(dot);
+    const loi2 = await loiE5(N, ra2);
+    assert.ok(loi2.some((l) => l.startsWith("hai toà cùng tên")), `đột biến bỏ so tầng phải đỏ nêu «hai toà cùng tên»: ${JSON.stringify(loi2)}`);
   } finally {
     await db.query("ROLLBACK");
   }
