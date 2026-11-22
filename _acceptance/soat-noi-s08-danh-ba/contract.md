@@ -47,7 +47,8 @@ không khớp, từ chối có lý do; áp theo băm, đảo được. Căn cứ
 - AC-4: Given một lượt đã áp, When đảo theo mã lượt, Then bí danh của lượt nghỉ, dòng `noi` về `chua_noi` «dao-luat», nút ứng viên
   còn nguyên, dòng luật ghi người và giờ đảo; đảo lần hai báo «da-dao», không ghi.
 - AC-5: Given đã áp, When chạy lệnh kiểm của lượt, Then thoát 0 khi không mã nào trỏ hai nút, không cặp mã–nút lệch tỉnh và mọi dự án
-  của tập có dòng trạng thái; cấy một trong ba lỗi thì thoát 1 nêu loại lỗi và số đếm, không in mã.
+  của tập có dòng trạng thái; cấy lệch tỉnh hay thiếu dòng trạng thái thì thoát 1 nêu loại lỗi và số đếm, không in mã; một mã trỏ
+  hai nút bị chỉ mục duy nhất `registry_aliases_ma_nguon_uq` của DB từ chối ngay lúc ghi.
 - AC-6: Given dự án S08 nối ở bảng tay hay ở bảng luật, vào nút có sẵn hay nút ứng viên, When màn `/ops/registry` đọc danh bạ, Then
   chân ô «Mã nguồn chưa nối» hiện cho S08 hai số tách nhau — chưa nối / đã nạp, và số đã nối vào nút ứng viên; dự án nối ở hai bảng
   đếm một lần; danh sách chưa nối không chứa dự án đã nối ở bảng nào và mang lý do của bảng luật.

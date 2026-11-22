@@ -26,14 +26,14 @@ evals:
     criterion: AC-4
     executor: script
     cmd: config:executors.script.ns8_dao
-    expected: "exit 0; ca NS8-4: đảo lượt: bí danh của lượt retired, dòng noi về chua_noi dao-luat, số nút không đổi, dòng luật có dao_by và dao_at; đảo lần hai ném «da-dao». Chiều đỏ: đảo không nghỉ bí danh thì ca đỏ nêu số bí danh còn sống"
+    expected: "exit 0; ca NS8-4: đảo lượt: bí danh của lượt retired, dòng noi về chua_noi dao-luat, số nút không đổi, dòng luật có dao_by và dao_at; đảo lần hai ném «da-dao». Đối chứng dương trên cùng fixture: trước đảo phép đếm bí danh sống của lượt bằng 4, sau đảo bằng 0"
     paths: ["pipeline/noi-du-an-s08-luat.mjs", "pipeline/scripts/noi-du-an-s08-luat.itest.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E5
     criterion: AC-5
     executor: script
     cmd: config:executors.script.ns8_kiem
-    expected: "exit 0; ca NS8-5: sau áp lệnh kiểm thoát 0; cấy lần lượt một mã có bí danh sống ở hai nút, một cặp mã–nút lệch tỉnh, một dự án thiếu dòng trạng thái → mỗi lần thoát 1 nêu đúng loại lỗi và số đếm, không in mã"
+    expected: "exit 0; ca NS8-5: áp lại sau đảo không đúc nút mới; sau áp lệnh kiểm thoát 0; cấy một cặp mã–nút lệch tỉnh, một dự án thiếu dòng trạng thái → mỗi lần kiemLuot đếm 1 và lệnh kiểm thoát 1 nêu đúng loại lỗi, không in mã; hoàn lại thì về 0; cấy một mã trỏ hai nút thì DB từ chối với registry_aliases_ma_nguon_uq"
     paths: ["pipeline/noi-du-an-s08-luat.mjs", "pipeline/scripts/noi-du-an-s08-luat.itest.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E6
