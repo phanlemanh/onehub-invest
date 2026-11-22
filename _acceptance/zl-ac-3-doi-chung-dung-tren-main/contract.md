@@ -5,7 +5,9 @@ slug: zl-ac-3-doi-chung-dung-tren-main
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: draft
+status: implemented
+veto_state: mo
+veto_opened_at: 2026-11-22T02:52:30Z
 design_doc: docs/superpowers/specs/2026-11-22-zl-ac-3-doi-chung-dung-tren-main-design.md
 approved_by:
 approved_at:
