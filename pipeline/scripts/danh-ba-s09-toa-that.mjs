@@ -7,6 +7,7 @@
 //     --bot-tang      bớt một tầng của một toà trong stg bản chép → E2 nêu toà đó
 //     --bo-phan <p>   bỏ một phần khỏi phép cộng toà (bi_danh|tao_moi|cho_the|chua_noi|khong_iso) → E10 nêu phần thiếu
 //     --noi-sai-toa   trỏ mã mới của hai toà mã cũ sang toà khác → E10 nêu «nối mã cũ»
+//   --chi-tiet-ma-cu  in toà mã cũ (mẫu số 110) chưa nối mã mới: khoá toà, mã cũ S09, tên toà, và toà gói 1 cùng tên (kết cục)
 // Bản chép: script tự chạy lại mình qua `db/db-thu.sh oneinvest_suite_s09that --chay` — DB của lượt sinh bằng `createdb -T` từ bản
 // mẫu oneinvest_suite_mau (cùng khuôn danh-ba-s16-cau-truc-that.mjs của DA37), xoá khi lệnh dừng.
 import { spawnSync } from "node:child_process";
@@ -172,12 +173,16 @@ try {
   }
 
   if (co("--noi-sai-toa")) {
-    // Hai toà mã cũ (một toà chỉ hạ tỉ lệ xuống 109/110 = 99,09%, vẫn trên ngưỡng 99%): mã mới trỏ sang toà khác.
-    await c.query(`UPDATE registry_aliases x SET object_key = (SELECT building_key FROM buildings WHERE building_key <> x.object_key ORDER BY building_key LIMIT 1)
-                    WHERE x.ctid IN (SELECT y.ctid FROM registry_aliases y WHERE y.source = 'S09' AND y.kind = 'ma_nguon' AND y.value LIKE 'danh-ba-toa/%'
-                                       AND EXISTS (SELECT 1 FROM registry_aliases m WHERE m.object_key = y.object_key AND m.source = 'S09'
-                                                     AND m.kind = 'ma_nguon' AND m.value NOT LIKE 'danh-ba-toa/%')
-                                     ORDER BY y.value LIMIT 2)`);
+    // Hai toà mã cũ (một toà chỉ hạ tỉ lệ xuống 109/110 = 99,09%, vẫn trên ngưỡng 99%): nghỉ mã mới trên toà mã cũ rồi gắn mã đó vào
+    // toà khác — bảng bí danh chỉ cho thêm và nghỉ một lần (trigger danh_ba_chi_them của 055), không UPDATE được object_key.
+    const sai = await q(`SELECT y.id, y.value, y.object_key FROM registry_aliases y WHERE y.source = 'S09' AND y.kind = 'ma_nguon' AND y.retired_at IS NULL
+                           AND y.value LIKE 'danh-ba-toa/%' AND EXISTS (SELECT 1 FROM registry_aliases m WHERE m.object_key = y.object_key
+                             AND m.source = 'S09' AND m.kind = 'ma_nguon' AND m.value NOT LIKE 'danh-ba-toa/%') ORDER BY y.value LIMIT 2`);
+    for (const r of sai) {
+      await c.query("UPDATE registry_aliases SET retired_at = now() WHERE id = $1", [r.id]);
+      await c.query(`INSERT INTO registry_aliases (object_key, kind, value, source)
+                     SELECT building_key, 'ma_nguon', $1, 'S09' FROM buildings WHERE building_key <> $2 ORDER BY building_key LIMIT 1`, [r.value, r.object_key]);
+    }
   }
   const p = await doPhan();
   console.log("E10 · dự án:");
@@ -202,6 +207,27 @@ try {
   o("nối mã cũ", `${p.ma_cu_dung}/${p.ma_cu_mau_so} = ${dung99.toFixed(4)}`, dung99 >= NGUONG.ma_cu_dung, `ngưỡng ≥ ${NGUONG.ma_cu_dung}`);
   o("ma_cu_gom (đếm riêng, chuyển DA50)", p.ma_cu_gom, p.ma_cu_gom === DICH.ma_cu_gom, `viết trước ${DICH.ma_cu_gom}`);
   o("bi_danh_lech_tang", p.bi_danh_lech_tang, p.bi_danh_lech_tang === 0, "phải 0");
+  if (co("--chi-tiet-ma-cu")) {
+    const ds = await q(`
+      SELECT m.object_key, m.value AS ma_cu, split_part(m.value, '/', 1) AS du_an_cu,
+             (SELECT array_agg(t.value ORDER BY t.value) FROM registry_aliases t WHERE t.object_key = m.object_key AND t.kind = 'ten' AND t.retired_at IS NULL) AS ten
+        FROM registry_aliases m
+       WHERE m.source = 'S09' AND m.kind = 'ma_nguon' AND m.retired_at IS NULL AND m.value NOT LIKE 'danh-ba-toa/%' AND m.object_key = ANY($1)
+         AND (EXISTS (SELECT 1 FROM units u WHERE u.building_key = m.object_key)
+              OR EXISTS (SELECT 1 FROM registry_aliases s WHERE s.object_key = m.object_key AND s.source = 'S16' AND s.kind = 'ma_nguon' AND s.retired_at IS NULL))
+         AND NOT EXISTS (SELECT 1 FROM registry_aliases b WHERE b.object_key = m.object_key AND b.source = 'S09' AND b.value LIKE 'danh-ba-toa/%')`, [[...BEFORE]]);
+    for (const r of ds) {
+      console.log(`  mã cũ chưa nối: ${r.object_key} · ${r.ma_cu} · tên ${JSON.stringify(r.ten ?? [])}`);
+      const goi1 = await q(`SELECT t.toa_id, t.toa_ten, l.status, l.ly_do, a.object_key AS noi_ve,
+                                   (SELECT string_agg(q.item_id, ',') FROM review_queue q WHERE q.item_type = 'entity_match'
+                                      AND (q.item_id = 's09-toa-lech-s16:' || t.toa_id OR q.evidence -> 'toa_ids' ? t.toa_id)) AS the
+                              FROM v_s09_db_toa t LEFT JOIN project_links l ON l.source = 'S09' AND l.source_project_id = t.du_an_id
+                              LEFT JOIN registry_aliases a ON a.source = 'S09' AND a.kind = 'ma_nguon' AND a.value = 'danh-ba-toa/' || t.toa_id
+                             WHERE t.du_an_id = $1 ORDER BY t.thu_tu`, [r.du_an_cu]);
+      for (const g of goi1) console.log(`    gói 1 cùng dự án: ${g.toa_id} «${g.toa_ten}» · dự án ${g.status ?? "?"}${g.ly_do ? `/${g.ly_do}` : ""} · nối về ${g.noi_ve ?? "—"} · thẻ ${g.the ?? "—"}`);
+      if (!goi1.length) console.log("    gói 1 không có dự án này (mã dự án cũ không nằm trong danh mục gói 1)");
+    }
+  }
   console.log("E10 · đích dữ liệu thật:");
   o("du_an_co_toa", p.du_an_co_toa, p.du_an_co_toa === DICH.du_an_co_toa, `đích ${DICH.du_an_co_toa}`);
   o("toa", p.toa_tong, p.toa_tong === DICH.toa, `đích ${DICH.toa}`);
