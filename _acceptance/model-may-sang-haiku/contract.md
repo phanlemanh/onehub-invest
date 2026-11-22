@@ -5,12 +5,12 @@ slug: model-may-sang-haiku
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, db]
-status: draft
+status: approved
 design_doc: docs/superpowers/specs/2026-11-21-model-may-sang-haiku-design.md
 veto_state:
 veto_opened_at:
-approved_by:
-approved_at:
+approved_by: Mạnh
+approved_at: 2026-11-22
 ---
 
 # Acceptance Contract: model-may-sang-haiku
