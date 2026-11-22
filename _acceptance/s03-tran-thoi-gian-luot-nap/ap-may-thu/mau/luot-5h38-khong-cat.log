@@ -1,0 +1,7 @@
+JOB STEP [zalo-import-daily] bước truoc-lan-claude mã 0 giây 60 nhanh 0
+JOB STEP [zalo-import-daily] bước enrich-run mã 0 giây 60 nhanh 0
+JOB STEP [zalo-import-daily] bước truoc-lan-claude mã 0 giây 300 nhanh 0
+JOB STEP [zalo-import-daily] bước transform-zalo mã 0 giây 900 nhanh 0
+JOB STEP [zalo-import-daily] bước doc-gop-hang-ngay mã 1 giây 18000 nhanh 0
+JOB FAIL [zalo-import-daily] bước doc-gop-hang-ngay mã 1
+JOB STEP [zalo-import-daily] bước enrich-run mã 0 giây 1080 nhanh 0
