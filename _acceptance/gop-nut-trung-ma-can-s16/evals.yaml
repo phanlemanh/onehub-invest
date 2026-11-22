@@ -1,0 +1,59 @@
+schema_version: 1
+feature_slug: gop-nut-trung-ma-can-s16
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.gnt_chon
+    expected: "exit 0; ca GNT-1 trên một fixture cấy chín loại nút luật: qua S09 (giữ luật DA46, căn cứ toa-s09), S09 chỉ A mà mã căn chỉ B (căn cứ toa-s09, nút giữ A), mã căn đủ tiền tố và 3 mã trùng (nối, căn cứ ma-can-s16), đủ tiền tố mà 2 mã trùng (cần người chọn), mã khớp cả nút cha lẫn nút con (cần người chọn), toà «S1» cạnh mã «S10.01» (mã không tính là mang tiền tố), tiền tố một phần (không nối, dưới ngưỡng mã căn), ứng viên duy nhất là nút do luật đúc hay đã nghỉ (không nối), không mã căn (không nối). Chiều đỏ trên cùng fixture: hạ ngưỡng trùng về 0, bỏ đòi đủ tiền tố, bỏ đòi đúng một ứng viên, bỏ ranh giới sau tên toà, xét mã căn trước S09, hay nhận ứng viên do luật đúc thì ca tương ứng đỏ với thông điệp nêu id nút"
+    paths: ["pipeline/lib/s16-phan-khu.mjs", "pipeline/phan-khu-s16.mjs", "pipeline/scripts/phan-khu-s16-ma-can.itest.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.gnt_the
+    expected: "exit 0; ca GNT-2: thẻ nối in cột căn cứ và số trùng / mang tiền tố / tổng cho cặp mã căn, có mục «cần người chọn»; dựng hai lần cùng băm; băm đổi khi loại căn cứ một cặp đổi; số dòng bảng không đổi sau khi dựng; chữ thẻ không chứa mã khu, toà, căn thô đã cấy. Chiều đỏ: in mã căn thô vào thẻ thì ca đỏ nêu mã"
+    paths: ["pipeline/lib/s16-phan-khu.mjs", "pipeline/phan-khu-s16.mjs", "pipeline/scripts/phan-khu-s16-ma-can.itest.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.gnt_noi
+    expected: "exit 0; ca GNT-3: băm lệch ném «bam-lech», 0 dòng đổi; băm đúng: nút luật nghỉ, cha = nút giữ, khoá khu sang nút giữ, bí danh nối cuối giữ thứ tự cũ, id nút giữ không đổi, đúng một dòng luật; nút «cần người chọn» không đổi một byte; nối lần hai không đổi gì. Chiều đỏ: cho nối ca cần người thì ca đỏ nêu id nút"
+    paths: ["pipeline/lib/s16-phan-khu.mjs", "pipeline/phan-khu-s16.mjs", "pipeline/scripts/phan-khu-s16-ma-can.itest.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.gnt_dao
+    expected: "exit 0; ca GNT-4: trên fixture có một lượt nối DA46 và một lượt bí danh đã áp trên chính nút giữ, nối mã căn rồi đảo: dấu vân tay aliases, meta, parent_id mọi nút bằng trước nối; tên tắt của lượt bí danh còn trên nút giữ; lượt nối DA46 không đổi; dòng luật có người và giờ đảo. Chiều đỏ: đảo gỡ hết bí danh thêm sau nối thì ca đỏ nêu tên tắt bị mất"
+    paths: ["pipeline/lib/s16-phan-khu.mjs", "pipeline/phan-khu-s16.mjs", "pipeline/scripts/phan-khu-s16-ma-can.itest.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.gnt_kiem
+    expected: "exit 0; ca GNT-5: sau nối, --kiem-noi lượt mới, --kiem-noi lượt DA46 và --kiem lượt bí danh đều thoát 0; sau đảo lượt mới, hai lệnh sau vẫn 0. Chiều đỏ: chuyển toà sang nút nghỉ sau nối thì --kiem-noi lượt mới thoát 1 nêu id nút"
+    paths: ["pipeline/lib/s16-phan-khu.mjs", "pipeline/phan-khu-s16.mjs", "pipeline/scripts/bi-danh-viet-tat-phan-khu.mjs", "pipeline/scripts/phan-khu-s16-ma-can.itest.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.gnt_doc
+    expected: "exit 0; ca GNT-6: sau nối, docTenPhanKhu không trả nút nghỉ và bí danh của nó ra nút giữ; v_toa_nut_vung đưa toà khu đã chuyển về nút giữ; số phân khu chưa nghỉ bớt đúng số cặp nối. Chiều đỏ: bỏ đổi cha của nút nghỉ thì toà còn ở nút nghỉ và ca đỏ"
+    paths: ["pipeline/lib/s16-phan-khu.mjs", "pipeline/phan-khu-s16.mjs", "pipeline/lib/phan-khu-s16-bi-danh.mjs", "pipeline/scripts/phan-khu-s16-ma-can.itest.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.gnt_dem
+    expected: "exit 0; ca GNT-7: sau nối, dựng phân khu S16 và danh bạ vật thể chạy hai lần: 0 nút mới, 0 khoá khu mới trên nút khác, toà vẫn ở nút giữ; bộ soát S16 đường cloud sạch trên asset_nodes, và đối chứng cấy mã khu thô vào meta thì bộ soát dừng ở asset_nodes.meta"
+    paths: ["pipeline/lib/s16-phan-khu.mjs", "pipeline/phan-khu-s16.mjs", "pipeline/danh-ba-vat-the.mjs", "pipeline/scripts/phan-khu-s16-ma-can.itest.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.gnt_that
+    expected: "exit 0 trên bản chép DB máy thu (db-thu.sh chép rồi xoá): thẻ nối 389→48 căn cứ ma-can-s16 (16 tiền tố, 8 trùng), 398→42 cần người, 396 không nối, 0 cặp mã căn khác; sau nối toà 48 = 18, 389 = 0, phân khu chưa nghỉ Grand Park 12; bộ gắn PL20 ghim sha e27d1e690, đo trước và sau trên cùng sha, in sha: tăng ≥ 80 tin gắn, «chữ và model khác nút» giảm ≥ 80, xung đột tăng ≤ 5; đảo về đúng dấu vân tay trước nối. Lệch một ô thì thoát 1 nêu ô. Ngoài CI"
+    paths: ["pipeline/lib/s16-phan-khu.mjs", "pipeline/phan-khu-s16.mjs", "pipeline/scripts/phan-khu-s16-ma-can-that.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

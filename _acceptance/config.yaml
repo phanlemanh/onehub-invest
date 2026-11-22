@@ -1050,6 +1050,24 @@ executors:
     nps_kiem: "node --test --test-concurrency=1 --test-name-pattern='^NPS-10:' pipeline/scripts/phan-khu-s16-noi.itest.mjs"   # noi-phan-khu-trung-s16 AC-10
     nps_ops: "cd app && bash ../db/db-thu.sh oneinvest_suite_nps_ops --chay node --import tsx --test tests/nut-nghi-tren-ops.test.tsx"   # noi-phan-khu-trung-s16 AC-6
     nps_that: "node pipeline/scripts/phan-khu-s16-noi-that.mjs"   # noi-phan-khu-trung-s16 AC-9 — bản chép DB máy thu, DB máy thu chỉ đọc
+    bdv_dich: "node --test --test-concurrency=1 --test-name-pattern='^BDV-1:' pipeline/scripts/bi-danh-viet-tat-phan-khu.itest.mjs"   # bi-danh-viet-tat-phan-khu AC-1
+    bdv_the: "node --test --test-concurrency=1 --test-name-pattern='^BDV-2:' pipeline/scripts/bi-danh-viet-tat-phan-khu.itest.mjs"   # bi-danh-viet-tat-phan-khu AC-2
+    bdv_ap: "node --test --test-concurrency=1 --test-name-pattern='^BDV-3:' pipeline/scripts/bi-danh-viet-tat-phan-khu.itest.mjs"   # bi-danh-viet-tat-phan-khu AC-3
+    bdv_dao: "node --test --test-concurrency=1 --test-name-pattern='^BDV-4:' pipeline/scripts/bi-danh-viet-tat-phan-khu.itest.mjs"   # bi-danh-viet-tat-phan-khu AC-4
+    bdv_da46: "node --test --test-concurrency=1 --test-name-pattern='^BDV-5:' pipeline/scripts/bi-danh-viet-tat-phan-khu.itest.mjs"   # bi-danh-viet-tat-phan-khu AC-5
+    bdv_doc: "node --test --test-concurrency=1 --test-name-pattern='^BDV-6:' pipeline/scripts/bi-danh-viet-tat-phan-khu.itest.mjs"   # bi-danh-viet-tat-phan-khu AC-6
+    bdv_dem: "node --test --test-concurrency=1 --test-name-pattern='^BDV-7:' pipeline/scripts/bi-danh-viet-tat-phan-khu.itest.mjs"   # bi-danh-viet-tat-phan-khu AC-7
+    bdv_kiem: "node --test --test-concurrency=1 --test-name-pattern='^BDV-8:' pipeline/scripts/bi-danh-viet-tat-phan-khu.itest.mjs"   # bi-danh-viet-tat-phan-khu AC-8
+    bdv_that: "node pipeline/scripts/bi-danh-viet-tat-phan-khu-that.mjs"   # bi-danh-viet-tat-phan-khu AC-9 — bản chép DB máy thu, DB máy thu chỉ đọc
+    bdv_soat_nguon: "node pipeline/scripts/bi-danh-viet-tat-phan-khu-soat-nguon.mjs"   # bi-danh-viet-tat-phan-khu AC-7 — bộ soát tên nguồn (match_whole) trên bốn tên tắt, DB máy thu chỉ đọc
+    gnt_chon: "node --test --test-concurrency=1 --test-name-pattern='^GNT-1:' pipeline/scripts/phan-khu-s16-ma-can.itest.mjs"   # gop-nut-trung-ma-can-s16 AC-1
+    gnt_the: "node --test --test-concurrency=1 --test-name-pattern='^GNT-2:' pipeline/scripts/phan-khu-s16-ma-can.itest.mjs"   # gop-nut-trung-ma-can-s16 AC-2
+    gnt_noi: "node --test --test-concurrency=1 --test-name-pattern='^GNT-3:' pipeline/scripts/phan-khu-s16-ma-can.itest.mjs"   # gop-nut-trung-ma-can-s16 AC-3
+    gnt_dao: "node --test --test-concurrency=1 --test-name-pattern='^GNT-4:' pipeline/scripts/phan-khu-s16-ma-can.itest.mjs"   # gop-nut-trung-ma-can-s16 AC-4
+    gnt_kiem: "node --test --test-concurrency=1 --test-name-pattern='^GNT-5:' pipeline/scripts/phan-khu-s16-ma-can.itest.mjs"   # gop-nut-trung-ma-can-s16 AC-5
+    gnt_doc: "node --test --test-concurrency=1 --test-name-pattern='^GNT-6:' pipeline/scripts/phan-khu-s16-ma-can.itest.mjs"   # gop-nut-trung-ma-can-s16 AC-6
+    gnt_dem: "node --test --test-concurrency=1 --test-name-pattern='^GNT-7:' pipeline/scripts/phan-khu-s16-ma-can.itest.mjs"   # gop-nut-trung-ma-can-s16 AC-7
+    gnt_that: "node pipeline/scripts/phan-khu-s16-ma-can-that.mjs"   # gop-nut-trung-ma-can-s16 AC-8 — bản chép DB máy thu, DB máy thu chỉ đọc
     s37_db: "node --test --test-concurrency=1 pipeline/scripts/danh-ba-s16-cau-truc.itest.mjs"   # danh-ba-s16-thang-cau-truc E1, E2–E8 — itest tự dựng DB oneinvest_dbv_s37_<pid> từ db/migrations, xoá khi xong
     s37_that: "node pipeline/scripts/danh-ba-s16-cau-truc-that.mjs"   # danh-ba-s16-thang-cau-truc E2b, E9, E10 — bản chép DB máy thu sau DA33, áp 111 + thẻ luật + dựng + đường lùi, chỉ in số; ngoài CI
     ns09_that: "node pipeline/scripts/nap-s09-that.mjs"   # nap-s09 E4 — bản chép DB máy thu, chạy lệnh nạp hai lần trên bản thu S09 13/11, số khớp DA31; ngoài CI
