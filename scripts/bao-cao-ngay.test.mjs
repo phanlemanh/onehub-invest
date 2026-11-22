@@ -208,8 +208,9 @@ describe("gom() trên DB local (chỉ đọc)", async () => {
   test("ra đủ số chính, không để giao dịch mở", { skip: !ok && "không kết nối được DB local" }, async () => {
     const { gom } = await import("./bao-cao-ngay.mjs");
     // NK1: bản chép DB thử chưa áp 122 thì áp; DB khác mà thiếu cột thì ném lỗi (phép không sau khi máy thu áp).
-    await (await import("./lib/so-nguon-122.mjs")).ap122NeuThieu(client);
     try {
+      // Trong try: DB thiếu cột mà không phải DB thử thì hàm ném — finally vẫn đóng client, lượt test không treo.
+      await (await import("./lib/so-nguon-122.mjs")).ap122NeuThieu(client);
       const kq = await gom(client);
       for (const id of ["NS1", "F3", "F5", "P1", "P2a", "H1", "Q1"]) assert.ok(id in kq.so, id);
       const [{ s }] = (await client.query("SELECT current_setting('transaction_read_only') s")).rows;

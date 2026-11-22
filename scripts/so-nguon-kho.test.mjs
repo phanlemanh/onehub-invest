@@ -69,27 +69,42 @@ const SO = `SELECT code, status, family, cadence_hours, universe, stg_tables, me
 let c = null;
 let dbErr = null;
 let truoc = null;
-before(async () => {
-  try {
-    c = new pg.Client({ connectionString: DB_URL });
-    await c.connect();
-  } catch (e) {
-    dbErr = e.message;
-    c = null;
-    return;
-  }
-  const { rows: [{ db }] } = await c.query("SELECT current_database() AS db");
-  if (db === "oneinvest") throw new Error("so-nguon-kho.test: không áp 122 lên DB chung oneinvest — chạy qua db/db-thu.sh --chay");
-  truoc = (await c.query("SELECT code FROM source_registry ORDER BY code")).rows.map((r) => r.code);
-  await c.query(doc122());
-});
-after(async () => c?.end());
 const needDb = (t) => {
   if (!c) t.skip(`BỎ QUA — DB không tới (${dbErr}); eval đòi ok nên lượt này CHƯA đạt`);
   return !c;
 };
 
 describe("NK-AC-1 migration 122", () => {
+  // Móc DB nằm TRONG khối: ca thuần (ap122NeuThieu, ap122VaoSchema trên client giả) không phụ thuộc DB, nên rào tên DB ném
+  // không huỷ chúng. Bốn ca của khối cần DB của riêng lượt (db-thu --chay) — trên CI chúng nằm trong scripts/ci-bo-qua.json.
+  before(async () => {
+    try {
+      c = new pg.Client({ connectionString: DB_URL });
+      await c.connect();
+    } catch (e) {
+      dbErr = e.message;
+      c = null;
+      return;
+    }
+    const { rows: [{ db }] } = await c.query("SELECT current_database() AS db");
+    if (db === "oneinvest") {
+      await c.end();
+      c = null;
+      // CI: DB trống của job tên đúng «oneinvest»; bốn ca đã lọc theo ci-bo-qua.json — không áp gì, không ném.
+      if (process.env.CI === "true") {
+        dbErr = "CI: cần DB của riêng lượt (db-thu --chay)";
+        return;
+      }
+      throw new Error("so-nguon-kho.test: không áp 122 lên DB chung oneinvest — chạy qua db/db-thu.sh --chay");
+    }
+    truoc = (await c.query("SELECT code FROM source_registry ORDER BY code")).rows.map((r) => r.code);
+    await c.query(doc122());
+  });
+  after(async () => {
+    await c?.end();
+    c = null;
+  });
+
   test("NK-AC-1 năm cột, CHECK và giá trị từng mã đúng bảng viết trước", async (t) => {
     if (needDb(t)) return;
     const { rows: cot } = await c.query(

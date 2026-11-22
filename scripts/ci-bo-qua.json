@@ -275,6 +275,26 @@
       "tep": "scripts/sao-luu-ngoai-may.test.mjs",
       "ca": "giữ phiên bản và khoá kho (AC-9)",
       "ly_do": "cần restic thật (brew, chỉ có trên máy thu) — runner ubuntu của CI không cài; ca bước chặn và quét lệnh dùng restic giả vẫn chạy"
+    },
+    {
+      "tep": "scripts/so-nguon-kho.test.mjs",
+      "ca": "NK-AC-1 năm cột, CHECK và giá trị từng mã đúng bảng viết trước",
+      "ly_do": "cần DB của riêng lượt (db-thu --chay): áp migration 122 lên public của bản chép; rào tên DB từ chối DB chung «oneinvest» — tên DB của job CI"
+    },
+    {
+      "tep": "scripts/so-nguon-kho.test.mjs",
+      "ca": "NK-AC-1 áp 122 lần hai: không ô nào đổi, match_whole giữ",
+      "ly_do": "cần DB của riêng lượt (db-thu --chay): áp migration 122 lên public của bản chép; rào tên DB từ chối DB chung «oneinvest» — tên DB của job CI"
+    },
+    {
+      "tep": "scripts/so-nguon-kho.test.mjs",
+      "ca": "chiều đỏ NK-AC-1: family ngoài flow|stock bị CHECK chặn",
+      "ly_do": "cần DB của riêng lượt (db-thu --chay): áp migration 122 lên public của bản chép; rào tên DB từ chối DB chung «oneinvest» — tên DB của job CI"
+    },
+    {
+      "tep": "scripts/so-nguon-kho.test.mjs",
+      "ca": "chiều đỏ NK-AC-1: bảng mong đợi lệch một nhịp thì ca đỏ gọi tên mã",
+      "ly_do": "cần DB của riêng lượt (db-thu --chay): áp migration 122 lên public của bản chép; rào tên DB từ chối DB chung «oneinvest» — tên DB của job CI"
     }
   ]
 }
