@@ -73,8 +73,45 @@ test("DA42-AC-4 khớp một thành bí danh, khớp hai lên thẻ, không kh�
   assert.equal(theo.t4.loai, "tao_moi");
   assert.equal(theo.t5.ly_do, "trung-ten-trong-du-an"); assert.equal(theo.t6.ly_do, "trung-ten-trong-du-an");
   assert.equal(theo.t7.loai, "da_noi"); assert.equal(theo.t7.building_key, "bld_Q");
-  assert.deepEqual(demToa(kq), { da_noi: 1, bi_danh: 2, tao_moi: 1, the: 3, khong_so: 0,
+  assert.deepEqual(demToa(kq), { da_noi: 1, bi_danh: 2, tao_moi: 1, the: 3, khong_so: 0, theo_ma_cu: 0,
     the_theo_ly_do: { "khop-hai": 1, "trung-ten-trong-du-an": 2 } });
+});
+
+// Mã cũ trước tên (giám sát duyệt 22/11). Ca gốc: một toà có sẵn mang hai mã block cùng tên; gói 1 kê hai toà cùng tên đó.
+test("DA42-AC-4 mã cũ trước tên: hai block cùng tên mang mã cũ → cả hai nối về toà mã cũ, 0 thẻ, không gắn tên", () => {
+  const co = [{ building_key: "bld_OS", ten: ["OS2"], ma_cu: true, ma_cu_ds: ["p9/b1", "p9/b2"], s16: false, so_tang_s16: null }];
+  const kq = xetToa([{ toa_id: "b1", ten: "OS2", so_tang: 20 }, { toa_id: "b2", ten: "OS2", so_tang: 20 }], co);
+  assert.deepEqual(kq.map((x) => [x.loai, x.building_key, x.theo_ma_cu]), [["bi_danh", "bld_OS", true], ["bi_danh", "bld_OS", true]],
+    "hai block cùng tên mang mã cũ phải nối về toà mã cũ (không lên thẻ trùng tên)");
+  assert.equal(demToa(kq).the, 0);
+  assert.equal(demToa(kq).theo_ma_cu, 2);
+});
+
+test("DA42-AC-4 đối chứng: hai block cùng tên KHÔNG mang mã cũ vẫn lên thẻ trùng tên", () => {
+  const co = [{ building_key: "bld_OS", ten: ["OS2"], ma_cu: false, ma_cu_ds: [], s16: false, so_tang_s16: null }];
+  const kq = xetToa([{ toa_id: "b1", ten: "OS2", so_tang: 20 }, { toa_id: "b2", ten: "OS2", so_tang: 20 }], co);
+  assert.deepEqual(kq.map((x) => x.ly_do), ["trung-ten-trong-du-an", "trung-ten-trong-du-an"]);
+});
+
+test("DA42-AC-4 xung đột hai căn cứ: mã cũ trỏ toà A, tên khớp duy nhất toà B ≠ A → thẻ, không tự nối theo bên nào", () => {
+  const co = [
+    { building_key: "bld_A", ten: ["X1"], ma_cu: true, ma_cu_ds: ["p9/b1"], s16: false, so_tang_s16: null },
+    { building_key: "bld_B", ten: ["Y1"], ma_cu: false, ma_cu_ds: [], s16: false, so_tang_s16: null },
+  ];
+  const r = xetToa([{ toa_id: "b1", ten: "Y1", so_tang: 20 }], co)[0];
+  assert.equal(r.loai, "the"); assert.equal(r.ly_do, "xung-dot-ma-cu-ten"); assert.deepEqual(r.building_keys, ["bld_A", "bld_B"]);
+  // Tên khớp đúng toà mang mã cũ: không xung đột.
+  assert.equal(xetToa([{ toa_id: "b1", ten: "X1", so_tang: 20 }], co)[0].building_key, "bld_A");
+});
+
+test("DA42-AC-4 mã cũ trỏ hai toà → thẻ; mã cũ vẫn chịu luật lệch tầng S16", () => {
+  const hai = [
+    { building_key: "bld_A", ten: ["X1"], ma_cu: true, ma_cu_ds: ["p9/b1"], s16: false, so_tang_s16: null },
+    { building_key: "bld_B", ten: ["X2"], ma_cu: true, ma_cu_ds: ["p9/b1"], s16: false, so_tang_s16: null },
+  ];
+  assert.equal(xetToa([{ toa_id: "b1", ten: "X1", so_tang: 20 }], hai)[0].ly_do, "ma-cu-hai-toa");
+  const s16 = [{ building_key: "bld_A", ten: ["X1"], ma_cu: true, ma_cu_ds: ["p9/b1"], s16: true, so_tang_s16: 30 }];
+  assert.equal(xetToa([{ toa_id: "b1", ten: "X1", so_tang: 20 }], s16)[0].ly_do, "lech-tang-s16");
 });
 
 test("DA42-AC-5 toà S16: tầng khớp thành bí danh, S09 ít tầng hơn quá 2 lên thẻ (hai toà cùng tên), không so được thành bí danh đếm riêng", () => {

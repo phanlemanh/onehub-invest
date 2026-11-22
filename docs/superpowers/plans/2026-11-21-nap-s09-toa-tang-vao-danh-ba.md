@@ -76,7 +76,18 @@ vào nút ứng viên · thuộc tính căn.
   tự: mã nguồn so kèm nguồn, bí danh tên so theo giá trị (chỉ mục duy nhất của tên không xét nguồn — DA33/DA37). Thêm kịch bản
   **thứ tự đến** (S09 về và dựng trước, S16 về sau): bước S16 tra bí danh S09 nên ra cùng mã nguồn và thẻ với S16-trước; đột biến
   bỏ tra thì đỏ. **Giới hạn**: ở thứ tự đến này, toà S09 đúc trước khi biết lệch vẫn giữ bí danh tên của nó (S16 đúc toà riêng,
-  không gỡ tên toà S09). Ứng viên mục «Ngoài hợp đồng»: lượt sau có thể gắn nhầm theo tên đó. Dự án ngoài Hà Nội và căn quỹ căn là phạm vi hàng sau (DA43/DA50), không vào DA42.
+  không gỡ tên toà S09). Ứng viên mục «Ngoài hợp đồng»: lượt sau có thể gắn nhầm theo tên đó.
+- **LỆCH KẾ HOẠCH — mã cũ trước tên (22/11, giám sát duyệt, ghi để Cổng Bằng chứng hiện ra cho Mạnh)**: kế hoạch đã duyệt ở Cổng
+  1.5 cho toà gói 1 nối theo tên (AC-4). Đo T5 trên bản chép ra «nối mã cũ» 109/110; toà lệch là ca gốc: toà
+  `bld_01M6XQYGS7HSHT6TZCC179JP1X` (dự án S09 `e9932857-bf1d-e587-1674-464b129516ed`) mang HAI mã cũ DA31 với block
+  `eaf10264-d593-efda-2e30-6fb904e12d71` và `5f0a9893-7ba5-8c40-f3cb-9201007be863` — nguồn có hai block cùng tên, DA31 đã gộp vào
+  một toà; gói 1 kê hai toà cùng tên đó nên luật tên ra thẻ «trùng tên trong dự án», 0 bí danh. Mã toà gói 1 trùng ĐÚNG phần block
+  của mã cũ (cùng một nguồn) — căn cứ mạnh hơn trùng tên, và làm đúng chữ AC-4 («toà đã có bí danh mã cũ nhận thêm bí danh mã mới
+  trên đúng toà đó») ở chính ca luật tên làm hỏng. Thêm nhánh trong `xetToa`, chạy TRƯỚC so tên: đúng một toà mang mã cũ có block
+  = mã toà → bí danh MÃ trên toà đó (không gắn bí danh tên), luật lệch tầng S16 vẫn áp; mã cũ trỏ toà A mà tên khớp duy nhất toà
+  B ≠ A → thẻ «xung đột mã cũ – tên», không tự nối theo bên nào; mã cũ trỏ hai toà → thẻ. Không đổi chữ tiêu chí. Ca test: bốn ca
+  unit (hai block cùng tên mang mã cũ → cả hai về toà mã cũ, 0 thẻ; đối chứng không mã cũ vẫn thẻ trùng tên; xung đột; mã cũ hai
+  toà và lệch tầng) và ca W trong itest E4; bỏ nhánh thì đỏ. Mong đợi trên bản chép: 110/110, thẻ toà 8 → 7, mọi số khác giữ. Dự án ngoài Hà Nội và căn quỹ căn là phạm vi hàng sau (DA43/DA50), không vào DA42.
 
 ## 3. Task (tuần tự, cùng giao dịch dựng)
 

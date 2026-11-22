@@ -153,6 +153,9 @@ try {
     p.ma_cu_mau_so = await mot(`SELECT count(*)::int FROM ${MA_CU} m WHERE ${coCan}`, [truoc]);
     p.ma_cu_dung = await mot(`SELECT count(*)::int FROM ${MA_CU} m WHERE ${coCan} AND EXISTS (SELECT 1 FROM ${BD} b WHERE b.object_key = m.object_key)`, [truoc]);
     p.ma_cu_gom = await mot(`SELECT count(*)::int FROM ${MA_CU} m WHERE NOT ${coCan}`, [truoc]);
+    // Mã cũ trước tên (giám sát duyệt 22/11): xung đột hai căn cứ (mã cũ → A, tên duy nhất → B ≠ A) và mã cũ trỏ hai toà ra thẻ.
+    p.xung_dot_ma_cu_ten = await mot("SELECT count(*)::int FROM review_queue WHERE item_type = 'entity_match' AND evidence ->> 'loai' = 'toa-xung-dot-ma-cu-ten'");
+    p.ma_cu_hai_toa = await mot("SELECT count(*)::int FROM review_queue WHERE item_type = 'entity_match' AND evidence ->> 'loai' = 'toa-ma-cu-hai-toa'");
     p.hai_upi = await mot("SELECT count(*)::int FROM (SELECT upi FROM buildings GROUP BY upi HAVING count(*) > 1) x");
     p.can_s09 = await mot("SELECT count(*)::int FROM units u JOIN registry_aliases a ON a.object_key = u.unit_key WHERE a.source = 'S09'");
     // 0 cặp bí danh lệch tầng theo luật AC-5, tính lại độc lập (không dùng lechTangS16): S16 nhiều hơn S09 quá 2 tầng có căn, hoặc S16
@@ -207,6 +210,9 @@ try {
   o("nối mã cũ", `${p.ma_cu_dung}/${p.ma_cu_mau_so} = ${dung99.toFixed(4)}`, dung99 >= NGUONG.ma_cu_dung, `ngưỡng ≥ ${NGUONG.ma_cu_dung}`);
   o("ma_cu_gom (đếm riêng, chuyển DA50)", p.ma_cu_gom, p.ma_cu_gom === DICH.ma_cu_gom, `viết trước ${DICH.ma_cu_gom}`);
   o("bi_danh_lech_tang", p.bi_danh_lech_tang, p.bi_danh_lech_tang === 0, "phải 0");
+  o("xung_dot_ma_cu_ten (thẻ, mong đợi 0)", p.xung_dot_ma_cu_ten, true);
+  o("ma_cu_hai_toa (thẻ)", p.ma_cu_hai_toa, true);
+  o("toa_theo_ma_cu (bước dựng)", kq1?.s09_goi1?.toa?.theo_ma_cu ?? "?", true);
   if (co("--chi-tiet-ma-cu")) {
     const ds = await q(`
       SELECT m.object_key, m.value AS ma_cu, split_part(m.value, '/', 1) AS du_an_cu,

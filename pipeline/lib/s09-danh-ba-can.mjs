@@ -109,12 +109,18 @@ export function lechTangS16(s09, s16) {
 /**
  * Xét các toà S09 của một dự án đã nối (AC-4, AC-5).
  * @param {{toa_id:string, ten:string, so_tang:number, tang?:string[]}[]} toaS09  tang: tên các tầng S09 kê
- * @param {{building_key:string, ten:string[], ma_cu:boolean, s16:boolean, so_tang_s16:number|null, tang_s16?:string[]|null}[]} toaCo
- *   toà active của nút dự án; ma_cu: mang bí danh `<pid>/<block_id>` của DA31 · s16: mang bí danh S16 · so_tang_s16: số tầng có
- *   căn · tang_s16: tên các tầng có căn
+ * @param {{building_key:string, ten:string[], ma_cu:boolean, ma_cu_ds?:string[], s16:boolean, so_tang_s16:number|null, tang_s16?:string[]|null}[]} toaCo
+ *   toà active của nút dự án; ma_cu: mang bí danh `<pid>/<block_id>` của DA31 · ma_cu_ds: các giá trị mã cũ đó · s16: mang bí danh
+ *   S16 · so_tang_s16: số tầng có căn · tang_s16: tên các tầng có căn
  * @param {Map<string,string>} maMoi  `danh-ba-toa/<id>` đã có → building_key
  * @returns {{toa_id:string, ten:string, ten_chuan:string, loai:'da_noi'|'bi_danh'|'tao_moi'|'the', ly_do?:string,
- *            building_key?:string, building_keys?:string[], khong_so?:boolean}[]}
+ *            building_key?:string, building_keys?:string[], khong_so?:boolean, theo_ma_cu?:boolean}[]}
+ *
+ * Mã cũ trước tên (giám sát duyệt 22/11, lệch kế hoạch §2 có lý do): mã toà gói 1 trùng đúng phần block của mã cũ DA31
+ * `<du_an>/<block_id>` (cùng một nguồn) là căn cứ mạnh hơn trùng tên. Toà gói 1 mà đúng một toà có sẵn mang mã cũ ấy thì nhận bí
+ * danh MÃ trên toà đó (không gắn bí danh tên), kể cả khi hai toà gói 1 cùng tên — ca luật tên ra thẻ «trùng tên trong dự án» (ca
+ * gốc: toà mang hai mã block cùng tên, 22/11). Mã cũ trỏ toà A mà tên khớp duy nhất toà B ≠ A → thẻ «xung đột mã cũ – tên», không
+ * tự nối theo bên nào. Luật lệch tầng S16 vẫn áp.
  */
 export function xetToa(toaS09, toaCo, maMoi = new Map()) {
   const demTen = new Map();
@@ -129,18 +135,42 @@ export function xetToa(toaS09, toaCo, maMoi = new Map()) {
       theoTen.set(k, s);
     }
   }
+  // Toà có sẵn theo phần block của mã cũ DA31 (`<du_an>/<block_id>` → block_id).
+  const theoMaCu = new Map();
+  for (const b of toaCo) {
+    for (const v of b.ma_cu_ds ?? []) {
+      const blk = String(v).split("/").pop();
+      if (!blk) continue;
+      const s = theoMaCu.get(blk) ?? new Map();
+      s.set(b.building_key, b);
+      theoMaCu.set(blk, s);
+    }
+  }
+  const soTang = (t, b) => lechTangS16({ so: t.so_tang, ten: t.tang }, { so: b.so_tang_s16, ten: b.tang_s16 });
   return toaS09.map((t) => {
     const ten_chuan = khoaTenS09(t.ten);
     const co = { toa_id: t.toa_id, ten: t.ten, ten_chuan };
     const daCo = maMoi.get(MA_TOA(t.toa_id));
     if (daCo) return { ...co, loai: "da_noi", building_key: daCo };
+    const cu = [...(theoMaCu.get(t.toa_id)?.values() ?? [])];
+    if (cu.length > 1) return { ...co, loai: "the", ly_do: "ma-cu-hai-toa", building_keys: cu.map((b) => b.building_key).sort() };
+    if (cu.length === 1) {
+      const a = cu[0];
+      const theoTenDuyNhat = ten_chuan ? [...(theoTen.get(ten_chuan)?.values() ?? [])] : [];
+      if (theoTenDuyNhat.length === 1 && theoTenDuyNhat[0].building_key !== a.building_key) {
+        return { ...co, loai: "the", ly_do: "xung-dot-ma-cu-ten", building_keys: [a.building_key, theoTenDuyNhat[0].building_key].sort() };
+      }
+      const lech = soTang(t, a);
+      if (lech === true) return { ...co, loai: "the", ly_do: "lech-tang-s16", building_keys: [a.building_key] };
+      return { ...co, loai: "bi_danh", building_key: a.building_key, theo_ma_cu: true, ...(a.s16 && lech === null ? { khong_so: true } : {}) };
+    }
     if (!ten_chuan) return { ...co, loai: "the", ly_do: "khong-ten" };
     if (demTen.get(ten_chuan) > 1) return { ...co, loai: "the", ly_do: "trung-ten-trong-du-an" };
     const khop = [...(theoTen.get(ten_chuan)?.values() ?? [])].sort((a, b) => a.building_key.localeCompare(b.building_key));
     if (khop.length === 0) return { ...co, loai: "tao_moi" };
     if (khop.length > 1) return { ...co, loai: "the", ly_do: "khop-hai", building_keys: khop.map((b) => b.building_key) };
     const b = khop[0];
-    const lech = lechTangS16({ so: t.so_tang, ten: t.tang }, { so: b.so_tang_s16, ten: b.tang_s16 });
+    const lech = soTang(t, b);
     if (lech === true) return { ...co, loai: "the", ly_do: "lech-tang-s16", building_keys: [b.building_key] };
     return { ...co, loai: "bi_danh", building_key: b.building_key, ...(b.s16 && lech === null ? { khong_so: true } : {}) };
   });
@@ -148,10 +178,11 @@ export function xetToa(toaS09, toaCo, maMoi = new Map()) {
 
 /** Gom kết cục xetToa thành bộ đếm (AC-10 phép cộng phần). */
 export function demToa(kq) {
-  const d = { da_noi: 0, bi_danh: 0, tao_moi: 0, the: 0, khong_so: 0, the_theo_ly_do: {} };
+  const d = { da_noi: 0, bi_danh: 0, tao_moi: 0, the: 0, khong_so: 0, theo_ma_cu: 0, the_theo_ly_do: {} };
   for (const x of kq) {
     d[x.loai]++;
     if (x.khong_so) d.khong_so++;
+    if (x.theo_ma_cu) d.theo_ma_cu++;
     if (x.loai === "the") d.the_theo_ly_do[x.ly_do] = (d.the_theo_ly_do[x.ly_do] ?? 0) + 1;
   }
   return d;

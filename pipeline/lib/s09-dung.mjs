@@ -305,7 +305,7 @@ export async function buocS09DanhBa(c, { noi = NOI_KHU_S09, noiS16 = NOI_DU_AN_S
   }));
 
   const ra = { du_an: { da_noi: 0, the_luat_cho: 0, the_luat_noi: 0, the_cap_cho: 0, the_cap_noi: 0, ung_vien_moi: 0, ung_vien_giu: 0 },
-    toa: { da_noi: 0, bi_danh: 0, tao_moi: 0, the: 0, khong_so: 0, lech_tang_tao_rieng: 0, thuoc_du_an_chua_noi: 0, khong_iso: 0 },
+    toa: { da_noi: 0, bi_danh: 0, theo_ma_cu: 0, tao_moi: 0, the: 0, khong_so: 0, lech_tang_tao_rieng: 0, thuoc_du_an_chua_noi: 0, khong_iso: 0 },
     the_moi: 0, the_luat: [] };
   const datLink = async (pid, status, nodeId, lyDo, canCu) => c.query(
     `INSERT INTO project_links (source, source_project_id, asset_node_id, status, can_cu, ly_do, rule_id, updated_at)
@@ -372,6 +372,7 @@ export async function buocS09DanhBa(c, { noi = NOI_KHU_S09, noiS16 = NOI_DU_AN_S
       `SELECT b.building_key,
               array_remove(array_agg(DISTINCT a.value) FILTER (WHERE a.kind = 'ten'), NULL) AS ten,
               bool_or(a.source = $2 AND a.kind = 'ma_nguon' AND a.value NOT LIKE 'danh-ba-toa/%') AS ma_cu,
+              array_remove(array_agg(DISTINCT a.value) FILTER (WHERE a.source = $2 AND a.kind = 'ma_nguon' AND a.value NOT LIKE 'danh-ba-toa/%'), NULL) AS ma_cu_ds,
               bool_or(a.source = 'S16' AND a.kind = 'ma_nguon') AS s16
          FROM buildings b
          JOIN asset_nodes n ON n.id = b.region_node_id
@@ -381,7 +382,7 @@ export async function buocS09DanhBa(c, { noi = NOI_KHU_S09, noiS16 = NOI_DU_AN_S
         WHERE b.status = 'active' AND $1 IN (n.id, p.id, g.id)
         GROUP BY b.building_key`, [d.node_id, NGUON_S09]);
     const tangS16 = await soTangS16TheoTen(c, nutTheoId.get(d.node_id)?.slug, noiS16);
-    const toaCo = toaKhu.map((b) => ({ building_key: b.building_key, ten: b.ten ?? [], ma_cu: !!b.ma_cu, s16: !!b.s16,
+    const toaCo = toaKhu.map((b) => ({ building_key: b.building_key, ten: b.ten ?? [], ma_cu: !!b.ma_cu, ma_cu_ds: b.ma_cu_ds ?? [], s16: !!b.s16,
       ...(() => {
         const s = b.s16 ? ((b.ten ?? []).map((t) => tangS16.get(chuanHoaTenToa(t))).find((x) => x != null) ?? null) : null;
         return { so_tang_s16: s?.so ?? null, tang_s16: s ? [...s.ten] : null };
@@ -391,10 +392,13 @@ export async function buocS09DanhBa(c, { noi = NOI_KHU_S09, noiS16 = NOI_DU_AN_S
       if (x.loai === "da_noi") { ra.toa.da_noi++; continue; }
       if (x.loai === "bi_danh") {
         await c.query("INSERT INTO registry_aliases (object_key, kind, value, source) VALUES ($1, 'ma_nguon', $2, $3)", [x.building_key, MA_TOA(x.toa_id), NGUON_S09]);
-        await c.query(`INSERT INTO registry_aliases (object_key, kind, value, source) VALUES ($1, 'ten', $2, $3)
-                       ON CONFLICT (object_key, kind, value) WHERE kind = 'ten' DO NOTHING`, [x.building_key, x.ten_chuan, NGUON_S09]);
+        // Nhánh mã cũ chỉ gắn bí danh MÃ: căn cứ là mã block, không phải tên (toà mang mã cũ đã có tên của nó).
+        if (!x.theo_ma_cu) {
+          await c.query(`INSERT INTO registry_aliases (object_key, kind, value, source) VALUES ($1, 'ten', $2, $3)
+                         ON CONFLICT (object_key, kind, value) WHERE kind = 'ten' DO NOTHING`, [x.building_key, x.ten_chuan, NGUON_S09]);
+        }
         maMoi.set(MA_TOA(x.toa_id), x.building_key);
-        ra.toa.bi_danh++; if (x.khong_so) ra.toa.khong_so++;
+        ra.toa.bi_danh++; if (x.khong_so) ra.toa.khong_so++; if (x.theo_ma_cu) ra.toa.theo_ma_cu++;
         continue;
       }
       let taoRieng = x.loai === "tao_moi";

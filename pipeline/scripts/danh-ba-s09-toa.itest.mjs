@@ -303,15 +303,18 @@ async function fixtureE4() {
   const nutId = (await db.query(
     `INSERT INTO asset_nodes (node_type, name, slug, aliases, area_ids, dd_field, meta)
      VALUES ('project', 'Q42 E4 Dự án', 'q42-e4n', '{}', '{}', 'SubdivisionName', '{}') RETURNING id::int AS id`)).rows[0].id;
-  const toa = [["A", "S08", "s08-du-an/a"], ["C", "S09", "q42-e4/blk-c"], ["H1", "S08", "s08-du-an/h1"], ["H2", "S08", "s08-du-an/h2"], ["S", "S16", "q42/S"]];
+  // W: toà mang HAI mã cũ DA31 có block trùng mã toà gói 1 (ca gốc OS2 ngày 22/11: hai block cùng tên đã gộp vào một toà).
+  const toa = [["A", "S08", "s08-du-an/a"], ["C", "S09", "q42-e4/blk-c"], ["H1", "S08", "s08-du-an/h1"], ["H2", "S08", "s08-du-an/h2"], ["S", "S16", "q42/S"],
+    ["W", "S09", "q42-e4/q42-e4-W6"]];
   for (const [k, nguon, ma] of toa) {
     await db.query(`INSERT INTO buildings (building_key, region_node_id, upi, iso_region, catalog_tier)
                     VALUES ($1, $2, 'urn:onehub:upi:1:VN:VN-HN:' || $1, 'VN-HN', 'xac_minh')`, [bkE4(k), nutId]);
     await db.query("INSERT INTO registry_aliases (object_key, kind, value, source) VALUES ($1, 'ma_nguon', $2, $3)", [bkE4(k), ma, nguon]);
     await db.query("INSERT INTO registry_aliases (object_key, kind, value, source) VALUES ($1, 'ten', $2, $3)", [bkE4(k), `E4 ${k.replace(/[0-9]$/, "")}`, nguon]);
   }
+  await db.query("INSERT INTO registry_aliases (object_key, kind, value, source) VALUES ($1, 'ma_nguon', 'q42-e4/q42-e4-W7', 'S09')", [bkE4("W")]);
   await dongStg(SNAP_GOI_1, 401, KIND_GOI_1.danhMuc, SOURCE_ID_DANH_MUC_GOI_1, [duAn("q42-e4", "Q42 E4 S09")], "2026-11-20T01:00:00Z");
-  await dongStg(SNAP_GOI_1, 402, KIND_GOI_1.toa, "q42-e4", ["A", "C", "H", "D", "D", "M"].map((k, j) => ({ id: `q42-e4-${k}${j}`, name: `E4 ${k}` })),
+  await dongStg(SNAP_GOI_1, 402, KIND_GOI_1.toa, "q42-e4", ["A", "C", "H", "D", "D", "M", "W", "W"].map((k, j) => ({ id: `q42-e4-${k}${j}`, name: `E4 ${k}` })),
     "2026-11-20T01:00:00Z");
   return nutId;
 }
@@ -328,6 +331,9 @@ async function loiE4(nutId) {
   if (bd["danh-ba-toa/q42-e4-C1"] !== bkE4("C")) loi.push("mã cũ: toà C không nhận mã mới trên đúng building_key có mã cũ");
   if (bd["danh-ba-toa/q42-e4-H2"]) loi.push("khớp hai: toà H thành bí danh của một trong hai toà cùng tên");
   if (bd["danh-ba-toa/q42-e4-D3"] || bd["danh-ba-toa/q42-e4-D4"]) loi.push("trùng tên: toà D trùng tên trong dự án được gắn hay đúc");
+  if (bd["danh-ba-toa/q42-e4-W6"] !== bkE4("W") || bd["danh-ba-toa/q42-e4-W7"] !== bkE4("W")) loi.push("mã cũ: hai block cùng tên mang mã cũ không nối về toà mã cũ");
+  const tenS09W = (await q("SELECT count(*)::int AS n FROM registry_aliases WHERE object_key = $1 AND kind = 'ten' AND source = 'S09' AND value = 'E4W'", [bkE4("W")]))[0].n;
+  if (tenS09W) loi.push("mã cũ: nhánh mã cũ gắn bí danh tên");
   const the = (await q("SELECT item_id FROM review_queue WHERE item_type = 'entity_match' AND item_id LIKE 's09-toa-db:q42-e4/%'")).map((r) => r.item_id).sort();
   if (!the.includes("s09-toa-db:q42-e4/E4H")) loi.push("khớp hai: không có thẻ cho toà H");
   if (!the.includes("s09-toa-db:q42-e4/E4D")) loi.push("trùng tên: không có thẻ cho toà D");
@@ -340,7 +346,7 @@ async function loiE4(nutId) {
   return loi;
 }
 
-test("DA42 E4 (AC-4): toà khớp một thành bí danh, mã cũ nhận mã mới, khớp hai và trùng tên ra thẻ, không khớp đúc một toà; đỏ khi khớp hai chọn toà đầu", async () => {
+test("DA42 E4 (AC-4): toà khớp một thành bí danh, mã cũ nhận mã mới (cả hai block cùng tên), khớp hai và trùng tên ra thẻ, không khớp đúc một toà; đỏ khi khớp hai chọn toà đầu, khi bỏ nhánh mã cũ", async () => {
   await db.query("BEGIN");
   try {
     const nutId = await fixtureE4();
@@ -348,9 +354,9 @@ test("DA42 E4 (AC-4): toà khớp một thành bí danh, mã cũ nhận mã mớ
     await dungE4();
     assert.deepEqual(await loiE4(nutId), []);
     const dem = async () => (await db.query("SELECT count(*)::int AS n FROM buildings WHERE region_node_id = $1", [nutId])).rows[0].n;
-    assert.equal(await dem(), 6, "số toà của nút: 5 có sẵn + 1 toà M");
+    assert.equal(await dem(), 7, "số toà của nút: 6 có sẵn + 1 toà M");
     await dungE4();
-    assert.equal(await dem(), 6, "dựng lại sinh thêm toà");
+    assert.equal(await dem(), 7, "dựng lại sinh thêm toà");
     assert.deepEqual(await loiE4(nutId), []);
 
     // Chiều đỏ: khớp hai thì chọn toà đầu (bỏ nhánh thẻ «khop-hai»).
@@ -360,6 +366,13 @@ test("DA42 E4 (AC-4): toà khớp một thành bí danh, mã cũ nhận mã mớ
     await dungE4(dot);
     const loi = await loiE4(nutId);
     assert.ok(loi.some((l) => l.startsWith("khớp hai")), `đột biến chọn toà đầu khi khớp hai phải đỏ nêu «khớp hai»: ${JSON.stringify(loi)}`);
+
+    // Chiều đỏ: bỏ nhánh mã cũ trước tên — hai block cùng tên của W rơi về luật tên, lên thẻ trùng tên.
+    await db.query("ROLLBACK TO SAVEPOINT e4");
+    const dot2 = await buocDotBien([["    if (cu.length === 1) {", "    if (false) {"]]);
+    await dungE4(dot2);
+    const loi2 = await loiE4(nutId);
+    assert.ok(loi2.some((l) => l.startsWith("mã cũ")), `đột biến bỏ nhánh mã cũ phải đỏ nêu «mã cũ»: ${JSON.stringify(loi2)}`);
   } finally {
     await db.query("ROLLBACK");
   }
@@ -460,8 +473,8 @@ test("DA42 E5 (AC-5): S16 giữ phân khu, lệch đếm theo cặp nguồn, lu�
     // Chiều đỏ 2: bỏ so số tầng (mọi toà cùng tên thành bí danh).
     await db.query("ROLLBACK TO SAVEPOINT e5");
     const dot = await buocDotBien([[
-      "const lech = lechTangS16({ so: t.so_tang, ten: t.tang }, { so: b.so_tang_s16, ten: b.tang_s16 });",
-      "const lech = false;"]]);
+      "const soTang = (t, b) => lechTangS16({ so: t.so_tang, ten: t.tang }, { so: b.so_tang_s16, ten: b.tang_s16 });",
+      "const soTang = () => false;"]]);
     const ra2 = await dungE5(dot);
     const loi2 = await loiE5(N, ra2);
     assert.ok(loi2.some((l) => l.startsWith("hai toà cùng tên")), `đột biến bỏ so tầng phải đỏ nêu «hai toà cùng tên»: ${JSON.stringify(loi2)}`);
