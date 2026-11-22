@@ -27,5 +27,5 @@ evals:
     executor: script
     cmd: config:executors.script.ht3_pham_vi
     paths: [app/tests/do-lam-giau.test.tsx, app/tests/sellers-chip.test.tsx]
-    expected: "exit 0; in «SCOPE OK». Tệp ngoài danh sách (vd app/src/lib/deals.ts, scripts/lib/ci-can-du-lieu.mjs) → «NGOAI PHAM VI: <tệp>», thoát 1."
+    expected: "exit 0; in «SCOPE OK». Danh sách gồm cả phần HT4 gộp vào (pipeline/scripts/nap-dvhc-cu.test.mjs, hồ sơ px1-ac-10-so-dung-tin-gan-theo-ten). Tệp ngoài danh sách (vd app/src/lib/deals.ts, scripts/lib/ci-can-du-lieu.mjs) → «NGOAI PHAM VI: <tệp>», thoát 1."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]

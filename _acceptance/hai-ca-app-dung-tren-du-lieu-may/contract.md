@@ -47,7 +47,8 @@ soát.
   số tin → «SD-AC-6 số suy hiện số tin khác danh bạ của số».
 - **AC-3** Given thế CI (`CI=true`, không `DATABASE_URL`), When chạy hai tệp, Then thoát 0, hai ca DB bỏ qua có tên, 0 đỏ.
 - **AC-4** Given diff của nhánh, Then chỉ đổi `app/tests/do-lam-giau.test.tsx`, `app/tests/sellers-chip.test.tsx`, hồ sơ này,
-  bản thiết kế và `_acceptance/config.yaml`; không sửa `dealsSql`, không khai vào `ci-can-du-lieu`/`do_san_tren_nen`.
+  bản thiết kế, `_acceptance/config.yaml`, và phần HT4 gộp vào theo GS (`pipeline/scripts/nap-dvhc-cu.test.mjs`, hồ sơ
+  `px1-ac-10-so-dung-tin-gan-theo-ten` cùng bản thiết kế của nó); không sửa `dealsSql`, không khai vào `ci-can-du-lieu`/`do_san_tren_nen`.
 
 ## Out of scope
 
