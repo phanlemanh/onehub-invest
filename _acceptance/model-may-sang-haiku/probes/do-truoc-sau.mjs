@@ -3,7 +3,7 @@
 // mẫu cố định. Ba chế độ:
 //   --chon-mau            đọc DB máy thu (chỉ đọc), ghi mau-enrich.json (100 tin có đề xuất e2_llm của qwen27b) và mau-judge.json
 //                         (30 cặp ghép căn chờ), chọn theo băm md5 của khoá — lặp lại cho cùng tập khi dữ liệu không đổi.
-//   --chay --tran-usd 1   chạy Haiku thật qua Gateway (do-truoc-sau-chay.mts, mọi kết nối DB chỉ đọc), ghi so-truoc-sau.json + .md.
+//   --chay --tran-usd 1   chạy Haiku thật theo bảng model-agent.json — Anthropic thẳng trước, lùi Gateway (do-truoc-sau-chay.mts, mọi kết nối DB chỉ đọc), ghi so-truoc-sau.json + .md.
 //   --kiem                (eval E8) không gọi model: băm mẫu khớp, đủ 100 + 30 đầu ra, tính lại tỉ lệ từ đầu ra thô và so với bảng .md.
 // Phá thử: --kiem --mau-thieu bỏ một đầu ra enrich → đỏ «AC-8 cỡ mẫu 99 khác 100»; --kiem --bang-lech sửa một tỉ lệ → đỏ «bảng lệch».
 import { createHash } from "node:crypto";
