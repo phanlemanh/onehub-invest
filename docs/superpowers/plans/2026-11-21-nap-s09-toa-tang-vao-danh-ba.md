@@ -11,6 +11,8 @@ thêm AC-11 19/11). Thiết kế: `docs/superpowers/specs/2026-11-18-nap-s09-toa
 - **Ghi dữ liệu hằng đêm lên DB máy thu:** sau khi áp 115 + 125, MỌI lượt dựng danh bạ, kể cả bước đêm `buocVatTheDem`, sẽ đúc
   nút ứng viên S09 và toà S09 trên DB máy thu. Hồ sơ áp ghi số chạy thử trên bản chép (bao nhiêu nút, toà, thẻ chờ), cách tắt và
   cách lùi (T8).
+- **Không áp 115/125 lên DB máy thu trong ngày thứ Hai 23/11** (chuyển máy thu). DA42 áp ở máy mới sau khi kiểm chuyển máy xanh;
+  số chạy thử dựng lại ngay trước khi áp, vì danh bạ đổi giữa chừng (DA51 đã áp 21/11; DA53 gộp nút Grand Park chờ áp sau PL20).
 
 ## 1. Bảng phủ ca — đo lại ngày 21/11 trên DB máy thu và snapshot gói 1 thật
 
@@ -54,6 +56,13 @@ vào nút ứng viên · thuộc tính căn.
   vào nút dự án (gói 1 không có phân khu), bậc `mot_loi_khai`. Số tầng của toà S09 = số dòng `tang`.
 - **Thứ tự nguồn (AC-8)**: bước S09 gói 1 chạy sau bước S09 cũ và trước S16. Bước S16 tra bí danh `danh-ba-toa/…` trước khi gắn toà: lệch tầng thì thẻ mã chung, toà S16 đúc riêng.
 - **Lệnh đếm** `pipeline/scripts/danh-ba-s09-toa-that.mjs --dem` chỉ đọc, không import `pipeline/lib/s09*`.
+- **Thang nấc 0–4 (ROADMAP §3 mục 61) không áp**: bước đúc nút và toà của DA42 là luật xác định, không có LLM — đúng vế «luật
+  xác định» của luật 7. Thang nấc nói về việc giao cho máy phán đoán của người (nhãn, duyệt) có model.
+- **Thẻ luật ghi loại căn cứ** (19/11 mục 2, «duyệt theo loại căn cứ»): thẻ vẫn mở theo nguồn S09 (ngưỡng tự áp theo loại căn cứ
+  còn là câu mở), nhưng ghi rõ loại căn cứ «trùng tên chuẩn hoá đúng một nút» để lần duyệt này tính là duyệt loại căn cứ ấy.
+- **Gộp khác áp — lượt dựng đêm khi 115/125 chưa áp**: launchd chạy mã từ main, nên sau khi PR gộp mà DB máy thu chưa có view
+  của 115/125 thì `buocS09DanhBa` **bỏ bước, ghi một dòng log, trả mã 0**; các bước khác của lượt dựng chạy như cũ. Có ca test:
+  DB thiếu view → lượt dựng xong, 0 dòng S09, có dòng log; đột biến bỏ rào → ca đỏ (lượt dựng ném lỗi).
 
 ## 3. Task (tuần tự, cùng giao dịch dựng)
 
@@ -63,12 +72,16 @@ vào nút ứng viên · thuộc tính căn.
 | T1b Migration 125 sửa cột `ma_tinh` của `v_s09_db_du_an` (115 đọc `province.code`, bản thu thật ghi `province_code`; 115 đã commit nên không sửa) | `db/migrations/125_v_s09_db_du_an_ma_tinh.sql` | ca T1: `ma_tinh` khác rỗng trên gói 1 thật, đỏ khi chỉ áp 115 | E1, E10 | false |
 | T2 Hàm thuần: đọc dự án, toà, tầng từ dòng view; xếp dự án bốn đường; xét toà (khớp một, hai, trùng tên, mã cũ, luật S16) | `pipeline/lib/s09-danh-ba-can.mjs` + `.test.mjs` | `node --test pipeline/lib/s09-danh-ba-can.test.mjs` | E3–E6 | false |
 | T3 Bước dựng `buocS09DanhBa` gọi trong `dung()`; S16 tra bí danh S09 mới | `pipeline/lib/s09-dung.mjs`, `pipeline/danh-ba-vat-the.mjs`, `pipeline/lib/s16-dung.mjs` (xem G2) | `config:executors.script.s09_toa_db` | E3–E5, E8 | false |
+| T3b Rào «view chưa có thì bỏ bước» trong `buocS09DanhBa`, kèm ca test hai chiều (§2) | `pipeline/lib/s09-dung.mjs` | trong T4 | gộp khác áp | false |
 | T4 Itest trên DB thử của lượt, fixture rút từ snapshot thật, mỗi ca có đột biến đỏ đúng tên | `pipeline/scripts/danh-ba-s09-toa.itest.mjs`, `pipeline/tests/fixtures/s09-danh-ba/` | `config:executors.script.s09_toa_db` | E1, E3–E6, E8, E9 | false |
 | T5 Lệnh đếm và lượt đo thật trên DB thử chép máy thu: manifest, phép cộng phần, bốn ngưỡng, `timNutTrungNoi` | `pipeline/scripts/danh-ba-s09-toa-that.mjs` | `config:executors.script.s09_toa_that` | E2, E10, E12 | false |
 | T6 Soát ranh giới: không tên thật, danh sách đẩy cloud, nút ứng viên 0 tin | trong T4 | như T4 | E9 | false |
 | T7 Ảnh `/ops/registry` trên DB của E10 | `_acceptance/…/evidence/` | ui-check | E11 | false |
 
-| T8 Hồ sơ áp năm thứ (lệnh áp 115 + 125, số chạy thử trên bản chép, sao lưu trước, cách lùi, lệnh kiểm sau), kèm câu ghi dữ liệu hằng đêm ở §0 và cách tắt bước S09 gói 1 | `_acceptance/…/` | soát tay | Cổng Bằng chứng | false |
+| T8 Hồ sơ áp năm thứ (lệnh áp 115 + 125, số chạy thử trên bản chép, sao lưu trước, cách lùi, lệnh kiểm sau), kèm câu ghi dữ liệu hằng đêm ở §0 và cách tắt bước S09 gói 1. Thứ tự áp: áp 115 + 125 → làn thu nạp gói 1 vào `stg_s09_danh_ba` trên DB máy thu (ghi `stg_*` là việc ZCode, giao qua liên làn, `--may-thu`) → lượt dựng đầu → lệnh kiểm sau. Áp ở máy thu mới, không trong ngày 23/11; số chạy thử dựng lại ngay trước khi áp | `_acceptance/…/` | soát tay | Cổng Bằng chứng | false |
+
+**Soát tầng A sau NK1:** NK1 (migration 122) đưa tên thật của S09 vào sổ nguồn. Khi NK1 đã áp, chạy lại phép soát E9 trên nhánh
+DA42 — lúc đó bộ soát mới biết tên S09, nên fixture rút từ bản thu và tên miền trong bản thu là chỗ dễ lộ nhất.
 
 **Known limit đã biết trước:** 11 dự án gói 1 mang mã tỉnh cũ 74, 77 (trước sáp nhập) không có trong `iso_regions` nên toà của
 chúng không đúc được; bước dựng đếm riêng `khong_iso`. Hồ sơ ghi danh sách mã dự án và số toà bị bỏ. Bảng đổi mã tỉnh cũ → mới là
@@ -80,13 +93,29 @@ Mỗi task: viết test đỏ trước, rồi mã, rồi commit. S4 xin lượt 
 
 **Mạnh (Cổng 1.5)**
 
-- **Q1 — Tín hiệu số tầng của AC-5.** Đo thật: 22 trong 137 toà khớp tên với S16 lệch quá 2 tầng, và cả 22 đều là S09 có
-  NHIỀU tầng hơn số tầng đang có căn (3–8 tầng: tầng đế, tầng kỹ thuật không bán căn). Giữ luật «lệch quá 2» thì 22 toà đó ra
-  thẻ (16% toà có S16), vượt trần chờ thẻ 10% của AC-10. **Khuyến nghị:** chỉ coi là lệch khi S09 ÍT hơn số tầng có căn của S16
-  quá 2, hoặc có tầng có căn S16 không nằm trong danh sách tầng S09 sau khi chuẩn tên tầng. Đổi câu chữ AC-5 và E5 cho khớp.
+- **Q1 — Tín hiệu số tầng của AC-5.** Đo thật 21–22/11 trên 137 toà khớp tên có S16:
+  - Luật cũ «lệch quá 2 tầng» bắt 22 toà (16%), **cả 22 đều là S09 nhiều tầng hơn** (3–8 tầng đế, kỹ thuật không bán căn) —
+    vượt trần thẻ chờ 10% của AC-10.
+  - Vế một của khuyến nghị (S09 **ít** hơn số tầng có căn của S16 quá 2): **0 toà**.
+  - Vế hai (S16 có căn ở tầng mà S09 không kê): 29 toà nếu so nguyên tên tầng. 24 trong 29 chỉ thiếu **tầng 1** — S09 kê từ
+    tầng 2, S16 có căn tầng 1 (ki-ốt, shophouse). Không so tầng 1 thì còn 5 toà: 2 toà thiếu một tầng (tầng 2; tầng 27), 1 toà
+    thiếu hai tầng (13, 14), 2 toà thiếu bốn tầng (4, 7, 13, 14 — S09 đặt tên tầng kiểu 5A, 8A, tránh số).
+
+  | Lối | Toà ra thẻ / 137 |
+  |---|---:|
+  | Luật cũ (lệch quá 2, hai chiều) | 22 (16%) |
+  | (i) Vế một ra thẻ; vế hai chỉ đếm, không thẻ | 0 |
+  | (ii) Vế một + vế hai ra thẻ khi thiếu ≥ 1 tầng (không so tầng 1) | 5 (3,6%) |
+  | (ii) … khi thiếu ≥ 2 tầng | 3 (2,2%) |
+  | (ii) … khi thiếu ≥ 3 tầng | 2 (1,5%) |
+  | (ii) … thiếu ≥ 1 tầng, so cả tầng 1 | 29 (21%) |
+
+  **Khuyến nghị:** (ii) với N = 1, không so tầng 1 — 5 toà lên thẻ, dưới trần 10%, và 5 toà này là đúng những toà đáng người
+  nhìn (tên tầng hai nguồn khác hẳn). Đổi câu chữ AC-5 và E5 cho khớp; vế hai chạy sau khi chuẩn tên tầng.
 - **Q2 — Mẫu số của ngưỡng «≥99% trong 175 toà mã cũ».** 65 trong 175 toà mang mã cũ là toà gom không có căn, không có S16 và
   không có trong danh sách toà gói 1 (thuộc phần thấp tầng). Đo thật: 109 trong 110 toà còn lại nhận mã mới (99,1%).
-  **Khuyến nghị:** mẫu số là 110 toà mã cũ có căn hoặc có S16; 65 toà gom đếm riêng, chuyển DA50.
+  **Khuyến nghị:** mẫu số là 110 toà mã cũ có căn hoặc có S16; 65 toà gom là **một số đếm riêng** trong hồ sơ và lệnh đo
+  (không rời mẫu số lặng lẽ), chuyển DA50.
 
 **Giám sát (không cần Mạnh)**
 
