@@ -1,0 +1,12 @@
+{
+ "feature_plain": "Sửa ca kiểm PX1-AC-10 cho đúng: so bộ gán khu theo tên với giá trị đường ống ghi theo tên, không so với khu đã được lớp phường kế thừa từ dự án đè lên sau đó; ca in số tin đem so và mốc tin bị đè, có chiều đỏ.",
+ "will_do": [
+  {"id":"AC-1","p":"Sẽ so tin S03 với giá trị nguồn ghi (G của migration 099), lệch 0; in số tin đem so, số tin bị đè, số tin trỏ xã đã gỡ; đỏ khi tập so co quá 30%, khi nhãn đè mất giá trị gốc, hay khi có tin lệch mà không bị đè."},
+  {"id":"AC-2","p":"Sẽ đỏ khi phá ánh xạ tên → khu, khi tập so rỗng hay dưới sàn, và khi so lại với cột đã bị đè."},
+  {"id":"AC-3","p":"Sẽ bỏ qua có tên ở CI (không có bản chép thật), như hiện nay."}
+ ],
+ "wont_do": [
+  {"id":"OOS-1","p":"KHÔNG sửa phép đo AC-9 của PX1 (nap-dvhc-do.mjs) dù cũng so với cột — việc kế."},
+  {"id":"OOS-2","p":"KHÔNG đụng cách phân xử khi dấu nhóm và phường kế thừa khác nhau (4 tin)."}
+ ]
+}
