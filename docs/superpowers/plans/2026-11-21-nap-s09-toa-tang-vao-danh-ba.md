@@ -100,25 +100,26 @@ Mỗi task: viết test đỏ trước, rồi mã, rồi commit. S4 xin lượt 
 1. **Lệnh áp**: 115 rồi 125, mỗi tệp hai lần (lần hai chứng idempotent), `psql -v ON_ERROR_STOP=1`. Áp ở máy thu mới sau khi lượt
    kiểm chuyển máy xanh, không trong ngày 23/11.
 2. **Số chạy thử**: trên DB thử chép máy thu — `\d stg_s09_danh_ba` và định nghĩa bốn view giống nhau giữa lần áp một và hai; rồi
-   nạp bốn bản thu bằng bộ nạp, đếm như mục 5. Dựng lại ngay trước khi áp.
+   nạp ba bản thu hợp lệ bằng bộ nạp, đếm như mục 5. Dựng lại ngay trước khi áp.
 3. **Sao lưu trước**: không có dữ liệu cũ để sao lưu — bảng và view đều mới. Ghi bằng chứng trước áp:
    `SELECT to_regclass('public.stg_s09_danh_ba'), to_regclass('public.v_s09_db_item_moi'), to_regclass('public.v_s09_db_du_an'),
    to_regclass('public.v_s09_db_toa'), to_regclass('public.v_s09_db_tang')` trả toàn rỗng.
-4. **Nạp**: ZCode nạp qua liên làn, `pipeline/import-s09-danh-ba.mjs <thư mục> --may-thu`, bốn bản thu `vn__s09-danh-ba__*`. Đối chiếu
-   22/11 bằng chính hàm đọc của bộ nạp (`docSnapshot`, không DB): cả bốn bản manifest không ghi `error`, băm khớp, mọi item là
-   object — bộ nạp KHÔNG từ chối bản nào, kể cả `2026-11-19T211829028` (4 item `can-thap-tang`, mã 200, cùng một khu, trang 105 và
-   411 căn lặp hai lần). Bản đó có hỏng về nội dung hay không là chuyện của làn thu; với DA42 nó vô hại vì DA42 không đọc kind
-   `can-thap-tang`.
+4. **Nạp**: ZCode nạp qua liên làn, `pipeline/import-s09-danh-ba.mjs <thư mục> --may-thu`, gọi ĐÍCH DANH ba bản:
+   `vn__s09-danh-ba__2026-11-19T004959637`, `…2026-11-20T015947402`, `…2026-11-20T052953464`. KHÔNG nạp
+   `2026-11-19T211829028`: ZCode khai đó là lượt hỏng «không nạp» (LL báo 22/11). Manifest của nó không ghi `error`, nên bộ nạp KHÔNG
+   tự từ chối — đối chiếu 22/11 bằng chính hàm đọc của bộ nạp (`docSnapshot`, không DB): băm khớp, 4 item `can-thap-tang` mã 200,
+   cùng một khu, trang 105 và 411 căn lặp hai lần. Lỡ nạp thì số căn không sai (transform hợp theo `data[].id`) và DA42 không đọc
+   kind `can-thap-tang`, nhưng lệnh kiểm mục 5 sẽ lệch 4 dòng — dừng và báo, không sửa cho khớp.
 5. **Lệnh kiểm sau** (đếm theo kind khớp manifest, `SELECT snapshot_id, kind, count(*) FROM stg_s09_danh_ba GROUP BY 1, 2`):
 
    | Bản thu | danh-muc | toa | khu-thap-tang | tang | can-thap-tang | Tổng = `counts.items` |
    |---|---|---|---|---|---|---|
    | 2026-11-19T004959637 | 1 | 221 | 221 | 928 | 91 | 1.462 |
-   | 2026-11-19T211829028 | 0 | 0 | 0 | 0 | 4 | 4 |
+   | 2026-11-19T211829028 — KHÔNG nạp | 0 | 0 | 0 | 0 | 0 | 0 (bản thu có 4) |
    | 2026-11-20T015947402 | 0 | 0 | 0 | 0 | 2.868 | 2.868 |
    | 2026-11-20T052953464 | 0 | 0 | 0 | 0 | 2.621 | 2.621 |
 
-   Tổng 6.955 dòng. Chạy bộ nạp lần hai: 0 dòng mới. Lượt dựng đêm sau áp + nạp nhưng TRƯỚC khi mã DA42 vào main: không đổi (chưa
+   Tổng 6.951 dòng (= 1.462 + 2.868 + 2.621). Chạy bộ nạp lần hai: 0 dòng mới. Lượt dựng đêm sau áp + nạp nhưng TRƯỚC khi mã DA42 vào main: không đổi (chưa
    mã nào trên main đọc bảng này). Sau khi DA42 vào main: lượt dựng đầu theo lệnh kiểm của AC-10.
 6. **Cách lùi**: `DROP VIEW v_s09_db_tang, v_s09_db_toa, v_s09_db_du_an, v_s09_db_item_moi; DROP TABLE stg_s09_danh_ba;` — là XOÁ
    dữ liệu stg (nạp lại được từ raw bất biến), nên cần lời riêng của Mạnh khi dùng. Lùi riêng bước dựng S09 gói 1: xem cách tắt ở §0.
