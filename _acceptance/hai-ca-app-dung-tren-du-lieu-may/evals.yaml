@@ -29,3 +29,24 @@ evals:
     paths: [app/tests/do-lam-giau.test.tsx, app/tests/sellers-chip.test.tsx]
     expected: "exit 0; in «SCOPE OK». Danh sách gồm cả phần HT4 gộp vào (pipeline/scripts/nap-dvhc-cu.test.mjs, hồ sơ px1-ac-10-so-dung-tin-gan-theo-ten). Tệp ngoài danh sách (vd app/src/lib/deals.ts, scripts/lib/ci-can-du-lieu.mjs) → «NGOAI PHAM VI: <tệp>», thoát 1."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.ht4_that
+    paths: [pipeline/scripts/nap-dvhc-cu.test.mjs]
+    expected: "exit 0 trên DB của riêng lượt chép từ bản mẫu DB máy thu: ca «PX1-AC-10 gán S06, S03 bằng code mới = giá trị nguồn ghi» đạt, dòng «# PX1-AC-10 đem so: S06 … · S03 … (trong đó … so với giá trị nguồn ghi …) · cột bị đè … theo nhãn {…}» có S03 ≥ 1500 và «trong đó … so với giá trị nguồn ghi» ≥ 1300, in số tin trỏ xã đã gỡ, lệch 0, 0 tin có nhãn đè thiếu khoá goc; dòng «# PX1-AC-10 so với cột như cũ: lệch N, ngoài tập bị đè 0»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.ht4_that
+    paths: [pipeline/scripts/nap-dvhc-cu.test.mjs]
+    expected: "exit 0: ca «PX1-AC-10 chiều đỏ: phá ánh xạ tên → khu thì lệch trên chính tập so; tập so rỗng thì ném» đạt — phá ánh xạ cho lệch > 0, tập rỗng ném «PX1-AC-10 tập so rỗng», cắt S03 còn 10 tin ném «tập so S03 10 dưới sàn 1500», so với cột (bỏ G) lệch > 0 với tập so với G ≥ 1300, xoá khoá goc của một tin có nhãn thì docGiaTriNguonGhi nêu đúng tin đó."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.ht4_ci
+    paths: [pipeline/scripts/nap-dvhc-cu.test.mjs, _acceptance/hai-ca-app-dung-tren-du-lieu-may/probes/px1-the-ci.mjs]
+    expected: "exit 0; in {\"skipped\":5,\"pass\":0,\"fail\":0,\"bo_qua_co_ly_do\":5} trên DB dựng từ db/migrations; lệch số thì thoát 1."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

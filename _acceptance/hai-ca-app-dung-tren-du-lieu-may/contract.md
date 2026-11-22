@@ -50,17 +50,33 @@ soát.
   bản thiết kế, `_acceptance/config.yaml`, và phần HT4 gộp vào theo GS (`pipeline/scripts/nap-dvhc-cu.test.mjs`, hồ sơ
   `px1-ac-10-so-dung-tin-gan-theo-ten` cùng bản thiết kế của nó); không sửa `dealsSql`, không khai vào `ci-can-du-lieu`/`do_san_tren_nen`.
 
+- **AC-5** (PX1-AC-10, gộp từ HT4 của P2) Given bản chép DB máy thu đưa về «chưa 084», When chạy ca so trong
+  `pipeline/scripts/nap-dvhc-cu.test.mjs`, Then tin S06 so với cột như cũ, tin S03 so với G (giá trị nguồn ghi của 099), lệch 0;
+  ca in số tin đem so (S06, S03, S03 so với G), số tin trỏ xã danh bạ đã gỡ (không so) và số tin S03 sống có cột bị đè theo nhãn;
+  tập S03 đem so ≥ 1.500 và tập so với G ≥ 1.300 (≈ 70% số đo 22/11), dưới sàn thì đỏ nêu số; so với cột như cũ thì mọi tin lệch
+  đều thuộc tập bị đè (đối soát 22/11: lệch 1.900 = tập bị đè 1.900, ngoài 0); mọi tin có nhãn đè phải còn khoá `goc` (NULL hợp
+  lệ), thiếu khoá thì đỏ nêu số tin.
+- **AC-6** (PX1-AC-10) Given cùng bản chép, When phá ánh xạ tên → khu, gọi so với tập rỗng, hay so với cột như cũ, Then lần lượt:
+  lệch > 0; ném «PX1-AC-10 tập so rỗng»; cắt tập S03 còn 10 tin thì ném «tập so S03 10 dưới sàn 1500»; so với cột (bỏ G) lệch > 0
+  với tập so với G đủ sàn; xoá khoá `goc` của một tin có nhãn thì bộ đọc nêu đúng tin đó.
+- **AC-7** (PX1-AC-10) Given DB dựng từ migration (thế CI, < 34 thị trường), When chạy tệp ca, Then mọi ca PX1-AC-10 bỏ qua với lý
+  do «không có bản chép thật», 0 đạt, 0 đỏ.
+
 ## Out of scope
 
 - Ghim ô chưa gắn lên đầu bảng lát (đổi `lam-giau-bang.tsx`) — hàng giao diện riêng.
 - Ba câu về số suy cho dãy N1 (mục Ngoài hợp đồng dưới).
 - Sửa `dealsSql` hay thêm cột số suy vào nó.
+- Phép đo AC-9 của PX1 (`pipeline/scripts/nap-dvhc-do.mjs`) cũng so với cột, sẽ lệch giả tương tự — việc kế (P2 nêu).
+- 4 tin có phường dấu nhóm khác phường kế thừa — hành vi phân xử của DA45, không thuộc ca PX1-AC-10.
 
 ## Coverage
 
 - Trục nguồn dữ liệu: DB thử chép dữ liệu máy · DB CI (bỏ qua) [thước CE: câu giao GS] — AC-1, AC-2, AC-3.
 - Trục nhóm số (SD-AC-6): số thật · số suy đã có người · số suy chưa có người [thước CE: đo 22/11] — AC-2.
-- Trục phân trang (DO3-AC-7): ≤10 ô · >10 ô [thước CE: pageSize 10 của BangLuoi] — AC-1.
+- Trục phân trang (DO3-AC-7): ô chưa gắn trong · ngoài 10 dòng đầu [thước CE: pageSize 10 của BangLuoi] — AC-1.
+- Trục PX1-AC-10 (gộp HT4): tin S06 · S03 không bị đè · S03 bị đè · xã danh bạ đã gỡ; chiều đỏ ánh xạ hỏng · tập rỗng · bỏ G ·
+  nhãn thiếu goc; thế CI [thước CE: hồ sơ HT4 của P2, phụ lục phu-luc-ht4-*] — AC-5, AC-6, AC-7.
 
 ## Đường đo
 
@@ -74,3 +90,8 @@ Hàng nền (test): miễn số trên màn. Thước thay: hai ca xanh trên DB 
 - Giao diện: ô chưa gắn bị đẩy khỏi trang 1 khi >10 phường có số (hôm nay 28 ô có số, trang 1 hiện 10) — có ghim lên đầu không.
 
 ## Notes
+
+- HT4 (px1-ac-10-so-dung-tin-gan-theo-ten, P2) gộp vào hàng này theo GS 22/11 vì hai hàng khoá chéo (HT3 vấp PX1-AC-10, HT4
+  vấp SD-AC-6/DO3-AC-7). Sổ và gap-probe của HT4 giữ làm phụ lục (`phu-luc-ht4-*`); thiết kế ở
+  `docs/superpowers/specs/2026-11-22-px1-ac-10-so-dung-tin-gan-theo-ten-design.md`. Vì sao lọt (P2): ca đỏ ngầm từ 18–21/11 vì
+  CI bỏ qua và bản mẫu DB thử dựng trước khi TG2, DA45 ghi khu vào dữ liệu thật.
