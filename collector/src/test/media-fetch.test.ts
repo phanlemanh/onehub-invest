@@ -196,3 +196,12 @@ test("media: redirect cùng host tải bình thường; redirect ra host ngoài 
   assert.equal(outEntry.error, "redirect-host");
   assert.equal(outEntry.file, undefined);
 });
+
+// ZC9 (2211-16): host R2 của người đăng S03 vào danh sách cho phép mặc định.
+// LỆNH PHÁ (bản chép hỏng): xoá `"r2.dev"` khỏi DEFAULTS.allowedHostSuffixes
+// trong src/core/media-fetch.ts → ca này ĐỎ.
+test("ZC9: DEFAULTS cho phép suffix r2.dev (ảnh người đăng S03 tự lưu Cloudflare R2)", async () => {
+  const ma = readFileSync(join(import.meta.dirname, "../../src/core/media-fetch.ts"), "utf8");
+  assert.match(ma, /allowedHostSuffixes:\s*\["zdn\.vn",\s*R2_SUFFIX_ZC9\]/, "DEFAULTS phải gồm zdn.vn + hằng R2");
+  assert.match(ma, /R2_SUFFIX_ZC9\s*=\s*"r2\.dev"/, "hằng R2 phải đúng suffix r2.dev");
+});
