@@ -50,7 +50,7 @@ async function chup() {
   let n = 0;
   await db.query("BEGIN");
   try {
-    const ra = await buocS09DanhBa(db, { noi: {}, noiS16: {}, log: () => {}, taoKhoa: (t) => `${t}_q42_${String(++n).padStart(20, "0")}` });
+    const ra = await buocS09DanhBa(db, { noi: {}, noiS16: {}, log: () => {}, taoKhoa: (t) => `${t}_${String(++n).padStart(26, "0")}` });
     return { views, ra };
   } finally {
     await db.query("ROLLBACK");
@@ -122,7 +122,7 @@ async function chupTrongGiaoDich() {
   let n = 0;
   await db.query("SAVEPOINT q42");
   try {
-    const ra = await buocS09DanhBa(db, { noi: {}, noiS16: {}, log: () => {}, taoKhoa: (t) => `${t}_q42_${String(++n).padStart(20, "0")}` });
+    const ra = await buocS09DanhBa(db, { noi: {}, noiS16: {}, log: () => {}, taoKhoa: (t) => `${t}_${String(++n).padStart(26, "0")}` });
     return { views, ra };
   } finally {
     await db.query("ROLLBACK TO SAVEPOINT q42");
