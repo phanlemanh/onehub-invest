@@ -103,7 +103,7 @@ function cli(agentDir: string, args: string[], limit = 50): Promise<KetQua> {
   return new Promise((resolve, reject) => {
     const p = spawn(process.execPath, ["--import", "tsx", "scripts/enrich-run.ts", ...args], {
       cwd: agentDir,
-      env: { ...process.env, DATABASE_URL: DB, AI_GATEWAY_BASE_URL: `http://127.0.0.1:${port}/gw`, AI_GATEWAY_API_KEY: "khoa-gia", LIMIT: String(limit) },
+      env: { ...process.env, DATABASE_URL: DB, AI_GATEWAY_BASE_URL: `http://127.0.0.1:${port}/gw`, AI_GATEWAY_API_KEY: "khoa-gia", ANTHROPIC_API_KEY: "", LIMIT: String(limit) },
     });
     let out = "";
     p.stdout.on("data", (d) => (out += d));

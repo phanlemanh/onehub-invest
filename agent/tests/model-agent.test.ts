@@ -7,8 +7,8 @@ import { spawn } from "node:child_process";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { moGateway, moMtplx, type MayGia } from "./helpers/gateway-gia.js";
-import { runAgent, type AgentConfig } from "../src/runtime/loop.js";
+import { moAnthropic, moGateway, moMtplx, type MayAnthropic, type MayGia } from "./helpers/gateway-gia.js";
+import { datLaiDuong, runAgent, type AgentConfig } from "../src/runtime/loop.js";
 import { DUONG_CAU_HINH, LoiCauHinhModel, kiemCauHinhModel, modelCuaAgent, napCauHinhModel } from "../src/runtime/model-agent.js";
 import { modelGateway } from "../src/runtime/models.js";
 import { tuyChonGui } from "../src/enrich/doc-gop-s03/cau-hinh.js";
@@ -38,6 +38,7 @@ after(async () => {
 afterEach(() => {
   delete process.env.MODEL_AGENT_CAU_HINH;
   gw.datLai();
+  datLaiDuong();
 });
 
 /** Bảng mẫu hợp lệ; `doi` sửa một phần để dựng ca. */
@@ -60,10 +61,12 @@ const ghiTep = (chu: string) => {
 const dungBang = (b: unknown) => (process.env.MODEL_AGENT_CAU_HINH = ghiTep(JSON.stringify(b)));
 
 // ---------- AC-2 ----------
-test("MH1 AC-2 bảng của kho: enrich-text, judge-entity gán Haiku, trần 0,5 và 1 USD (Hỏi-1 Mạnh duyệt 21/11)", () => {
+test("MH1 AC-2 bảng của kho: enrich-text, judge-entity gán Haiku, trần 0,5 và 1 USD (Hỏi-1 Mạnh duyệt 21/11), đường Anthropic thẳng rồi Gateway, tự lùi (Mạnh 22/11)", () => {
   const c = napCauHinhModel(DUONG_CAU_HINH);
-  assert.deepEqual(modelCuaAgent("enrich-text", c), { khoa: "haiku", gateway: HAIKU, gia: { vao: 0.1, ra: 0.5 }, tranUsd: 0.5 });
-  assert.deepEqual(modelCuaAgent("judge-entity", c), { khoa: "haiku", gateway: HAIKU, gia: { vao: 0.1, ra: 0.5 }, tranUsd: 1 });
+  const duong = { duong: ["anthropic", "gateway"], tuLui: true };
+  assert.deepEqual(modelCuaAgent("enrich-text", c), { khoa: "haiku", gateway: HAIKU, gia: { vao: 0.1, ra: 0.5 }, tranUsd: 0.5, ...duong });
+  assert.deepEqual(modelCuaAgent("judge-entity", c), { khoa: "haiku", gateway: HAIKU, gia: { vao: 0.1, ra: 0.5 }, tranUsd: 1, ...duong });
+  assert.deepEqual(modelCuaAgent("smoke-echo", c), { khoa: "haiku", gateway: HAIKU, gia: { vao: 0.1, ra: 0.5 }, tranUsd: 0.01, ...duong });
 });
 
 test("MH1 AC-2 đổi khoá model trong tệp thì lời gọi mang mã Gateway mới, mã agent không đổi", async () => {
@@ -87,6 +90,8 @@ const CA_LOI: { ten: string; tep: () => string; mau: RegExp }[] = [
   { ten: "mã ngoài danh sách", tep: () => ghiTep(JSON.stringify(bang((b) => (b.model.glm.gateway = "openai/gpt-6-luna")))), mau: /ngoài danh sách duyệt/ },
   { ten: "agent không có khoá", tep: () => ghiTep(JSON.stringify(bang((b) => delete b.agent["enrich-text"]))), mau: /agent enrich-text không có khoá/ },
   { ten: "giá âm", tep: () => ghiTep(JSON.stringify(bang((b) => (b.model.haiku.gia_ra = -1)))), mau: /giá thiếu hay âm/ },
+  { ten: "đường lạ", tep: () => ghiTep(JSON.stringify(bang((b) => (b.model.haiku.duong = ["bedrock"])))), mau: /duong "bedrock"/ },
+  { ten: "đường anthropic cho model không phải Claude", tep: () => ghiTep(JSON.stringify(bang((b) => { b.model.glm.duong = "anthropic"; b.agent["enrich-text"].model = "glm"; }))), mau: /không có đường anthropic/ },
 ];
 test("MH1 AC-2 năm ca lỗi cấu hình: dừng trước lời gọi đầu, thông điệp gọi tên ca, Gateway nhận 0 yêu cầu", async () => {
   for (const ca of CA_LOI) {
@@ -139,6 +144,35 @@ test("chiều đỏ MH1 AC-3: lời gọi không qua tệp cấu hình (model ti
   const cauHinhRong: AgentConfig = { name: "khong-co-khoa", systemPrompt: "thử", tools: {}, budget: 1 };
   await runAgent(cauHinhRong, "thử", {}, { model: modelGateway(HAIKU), recordCall: khongGhi });
   assert.throws(() => kiemCo(gw.yeuCau), /MH1 AC-3 thiếu cờ không giữ dữ liệu/);
+});
+
+/** Khoá được phép trong thân yêu cầu đường thẳng (AC-3, Mạnh chấp nhận 22/11 không có cờ theo lời gọi như đọc gộp). */
+const KHOA_THANG = new Set(["model", "system", "messages", "max_tokens", "temperature"]);
+/** Hàm kiểm dùng chung: mọi thân yêu cầu Anthropic chỉ mang khoá trong KHOA_THANG. */
+function kiemThanThang(yeuCau: MayAnthropic["yeuCau"]) {
+  assert.ok(yeuCau.length > 0, "MH1 AC-3 không có yêu cầu thẳng nào để kiểm");
+  for (const y of yeuCau) for (const k of Object.keys(y.than)) if (!KHOA_THANG.has(k)) assert.fail(`AC-3 đường thẳng mang trường lạ ${k}`);
+}
+test("MH1 AC-3 đường thẳng: thân yêu cầu enrich-text, judge-entity chỉ có model, system, messages, max_tokens", async () => {
+  const an = await moAnthropic({ text: '{"property_type":"apartment","confidence":0.8}', vao: 120, ra: 30 });
+  const cu = { url: process.env.ANTHROPIC_BASE_URL, khoa: process.env.ANTHROPIC_API_KEY };
+  process.env.ANTHROPIC_BASE_URL = an.url;
+  process.env.ANTHROPIC_API_KEY = "khoa-gia";
+  try {
+    dungBang(bang((b) => (b.model.haiku.duong = ["anthropic", "gateway"])));
+    await runAgent(enrichTextAgent, "thử", {}, { recordCall: khongGhi });
+    await runAgent(judgeEntityAgent, "thử", {}, { recordCall: khongGhi });
+    assert.equal(an.yeuCau.length, 2);
+    assert.equal(gw.yeuCau.length, 0, "MH1 AC-3 đường thẳng xanh mà vẫn gọi Gateway");
+    kiemThanThang(an.yeuCau);
+    // Chiều đỏ trên bản sao thân yêu cầu: thêm một khoá lạ thì hàm kiểm đỏ gọi tên khoá.
+    const saoHong = { ...an.yeuCau[0], than: { ...an.yeuCau[0].than, metadata: { user_id: "x" } } };
+    assert.throws(() => kiemThanThang([saoHong]), /AC-3 đường thẳng mang trường lạ metadata/);
+  } finally {
+    if (cu.url === undefined) delete process.env.ANTHROPIC_BASE_URL; else process.env.ANTHROPIC_BASE_URL = cu.url;
+    if (cu.khoa === undefined) delete process.env.ANTHROPIC_API_KEY; else process.env.ANTHROPIC_API_KEY = cu.khoa;
+    await an.dong();
+  }
 });
 
 // ---------- AC-6 ----------

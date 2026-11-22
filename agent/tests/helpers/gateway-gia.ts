@@ -96,3 +96,59 @@ export function chuCuaYeuCau(y: YeuCau): string {
   di(y.than.prompt ?? y.than);
   return out.join("\n");
 }
+
+/** Anthropic giả theo khuôn Messages API (MH1, đường thẳng): SDK @anthropic-ai/sdk thật trỏ tới qua ANTHROPIC_BASE_URL = `url`.
+ * Ghi từng yêu cầu (mã model trong thân), trả theo hàng đợi kịch bản; `status` → thân lỗi `{type:"error", error:{type}}` với
+ * `kieu` (mặc định theo mã: 402 billing_error, 401 authentication_error, còn lại api_error). `retry-after-ms: 0` để SDK thử lại
+ * ngay với 429/5xx (402/401 SDK không thử lại). `toolUse` trả một khối tool_use (stop_reason tool_use) thay cho chữ. */
+export type TraLoiAnthropic = TraLoi & { kieu?: string; toolUse?: { name: string; input: Record<string, unknown> } };
+export type MayAnthropic = Omit<MayGia, "hang" | "macDinh"> & { hang: TraLoiAnthropic[]; macDinh: TraLoiAnthropic };
+export async function moAnthropic(macDinh: TraLoiAnthropic = { text: "{}", vao: 100, ra: 20 }): Promise<MayAnthropic> {
+  const may = {
+    url: "",
+    dong: async () => {},
+    yeuCau: [],
+    hang: [],
+    macDinh,
+    datLai() {
+      may.yeuCau.length = 0;
+      may.hang.length = 0;
+    },
+  } as MayAnthropic;
+  let soTin = 0;
+  const sv = createServer((req, res) => {
+    let s = "";
+    req.on("data", (d) => (s += d));
+    req.on("end", () => {
+      let than: Record<string, unknown> = {};
+      try {
+        than = JSON.parse(s);
+      } catch {
+        /* giữ chữ thô */
+      }
+      may.yeuCau.push({ url: req.url ?? "", model: String(than.model ?? ""), than, thanChu: s });
+      const p = may.hang.shift() ?? may.macDinh;
+      res.setHeader("content-type", "application/json");
+      res.setHeader("retry-after-ms", "0");
+      if (p.status) {
+        const kieu = p.kieu ?? (p.status === 402 ? "billing_error" : p.status === 401 ? "authentication_error" : "api_error");
+        res.writeHead(p.status);
+        res.end(JSON.stringify({ type: "error", error: { type: kieu, message: "anthropic gia: loi" } }));
+        return;
+      }
+      soTin += 1;
+      const content = p.toolUse
+        ? [{ type: "tool_use", id: `toolu_gia_${soTin}`, name: p.toolUse.name, input: p.toolUse.input }]
+        : [{ type: "text", text: p.text }];
+      res.end(JSON.stringify({
+        id: `msg_gia_${soTin}`, type: "message", role: "assistant", model: String(than.model ?? ""), content,
+        stop_reason: p.toolUse ? "tool_use" : "end_turn", stop_sequence: null,
+        usage: { input_tokens: p.vao ?? 100, output_tokens: p.ra ?? 20 },
+      }));
+    });
+  });
+  const cong = await nghe(sv);
+  may.url = `http://127.0.0.1:${cong}`;
+  may.dong = () => new Promise((r) => sv.close(() => r()));
+  return may;
+}

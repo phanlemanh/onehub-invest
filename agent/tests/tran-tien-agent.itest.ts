@@ -10,19 +10,22 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import pg from "pg";
 import { insertOffer } from "./helpers/db.js";
-import { moGateway, moMtplx, type MayGia } from "./helpers/gateway-gia.js";
+import { moAnthropic, moMtplx, type MayAnthropic } from "./helpers/gateway-gia.js";
 
 const DB = process.env.DATABASE_URL ?? "";
 if (!/\/oneinvest_suite_[a-z0-9_]+$/.test(DB)) throw new Error(`từ chối: DB thử phải là oneinvest_suite_<…> (DATABASE_URL=${DB || "<trống>"})`);
 const AGENT = join(import.meta.dirname, "..");
 const HAIKU = "anthropic/claude-haiku-5.5";
+/** ai_calls.model của đường thẳng: `<đường>:<mã gọi>`; mã gọi Messages API của Haiku 5.5. */
+const SO_HAIKU = "anthropic:claude-haiku-5-5";
+const MA_GOI = "claude-haiku-5-5";
 const TIEN_TO = `mh1t${Date.now().toString(36)}`;
-let gw: MayGia;
+let gw: MayAnthropic; // máy giả của đường đầu theo bảng của kho: Anthropic thẳng (MH1, Mạnh 22/11)
 let mtplx: Awaited<ReturnType<typeof moMtplx>>;
 let db: pg.Client;
 
 before(async () => {
-  gw = await moGateway();
+  gw = await moAnthropic();
   mtplx = await moMtplx();
   db = new pg.Client({ connectionString: DB, application_name: "tran-tien-agent-itest" });
   await db.connect();
@@ -54,7 +57,7 @@ function cli(agentDir: string, args: string[]): Promise<{ ma: number | null; out
   return new Promise((resolve, reject) => {
     const p = spawn(process.execPath, ["--import", "tsx", "scripts/enrich-run.ts", ...args], {
       cwd: agentDir,
-      env: { ...process.env, DATABASE_URL: DB, AI_GATEWAY_BASE_URL: gw.url, AI_GATEWAY_API_KEY: "khoa-gia", MTPLX_URL: mtplx.url, LIMIT: "50" },
+      env: { ...process.env, DATABASE_URL: DB, ANTHROPIC_BASE_URL: gw.url, ANTHROPIC_API_KEY: "khoa-gia", AI_GATEWAY_BASE_URL: "http://127.0.0.1:9/gw-khong-dung", AI_GATEWAY_API_KEY: "khoa-gia", MTPLX_URL: mtplx.url, LIMIT: "50" },
     });
     let out = "";
     p.stdout.on("data", (d) => (out += d));
@@ -106,9 +109,9 @@ test("MH1 AC-5 enrich-run --tran-usd đủ hai lời gọi: chạy đúng 2, tho
   kiemTran(kq, gw.yeuCau.length, 2);
   const { rows } = await db.query(
     `SELECT model, input_tokens, output_tokens FROM ai_calls WHERE viec = 'enrich-text' AND at >= $1 ORDER BY id`, [luc]);
-  assert.deepEqual(rows.map((r) => [r.model, r.input_tokens, r.output_tokens]), [[HAIKU, 100000, 1000], [HAIKU, 100000, 1000]],
+  assert.deepEqual(rows.map((r) => [r.model, r.input_tokens, r.output_tokens]), [[SO_HAIKU, 100000, 1000], [SO_HAIKU, 100000, 1000]],
     "MH1 AC-5 ai_calls không đủ 2 dòng mã Haiku kèm token");
-  assert.ok(gw.yeuCau.every((y) => y.model === HAIKU));
+  assert.ok(gw.yeuCau.every((y) => y.model === MA_GOI));
   // Trần lớn: chạy hết ba tin còn lại, thoát 0.
   gw.datLai();
   gw.macDinh = { text: TRA_JSON, vao: 100, ra: 20 };

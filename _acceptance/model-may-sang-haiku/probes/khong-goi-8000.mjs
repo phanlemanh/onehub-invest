@@ -2,11 +2,13 @@
 // khong-goi-8000.mjs — MH1 model-may-sang-haiku AC-1: không lời gọi nào tới MTPLX (:8000) khi chạy đủ bộ lệnh có gọi model của làn
 // Claude, và mã sản xuất không còn nhắc MTPLX. Chạy trên DB thử của riêng lượt:
 //   bash db/db-thu.sh oneinvest_suite_mh1 --chay node _acceptance/model-may-sang-haiku/probes/khong-goi-8000.mjs
-// Dựng Gateway giả (đếm yêu cầu theo lệnh) và máy giả ở cổng MTPLX_URL (đếm mọi yêu cầu), gieo hai tin S03 và một cặp ghép căn,
+// Dựng Anthropic giả (khuôn Messages API, qua ANTHROPIC_BASE_URL — đường đầu của bảng agent/config/model-agent.json từ 22/11),
+// Gateway giả (đếm yêu cầu theo lệnh) và máy giả ở cổng MTPLX_URL (đếm mọi yêu cầu), gieo hai tin S03 và một cặp ghép căn,
 // chạy năm lệnh: enrich-run --offers, chấm cặp của judge-run (chamMotLuot — CLI judge-run đóng băng V7 nên đo qua hàm nó dùng),
 // nhan-bac-run --model haiku --thu, vlm-anh-run --model haiku --thu, smoke. Rồi quét mã theo danh sách loại trừ đóng.
 // Cờ phá thử (chiều đỏ): --cay-qwen thêm một lệnh gọi thẳng MTPLX_URL → đỏ «AC-1 <lệnh> gọi MTPLX <n> lần»;
-//   --cay-chuoi cấy qwen27b vào một tệp tạm dưới scripts/ → đỏ gọi tên tệp. Tệp cấy xoá khi probe dừng.
+//   --cay-chuoi cấy qwen27b vào một tệp tạm dưới scripts/ và một tệp tạm dưới agent/src → đỏ gọi tên từng tệp. Tệp cấy xoá khi
+//   probe dừng. Lệnh đi thẳng Anthropic theo bảng của kho (enrich-run, judge-run, smoke) phải có anthropic ≥ 1.
 import { spawn } from "node:child_process";
 import { createServer } from "node:http";
 import { createRequire } from "node:module";
@@ -45,6 +47,30 @@ const gw = createServer((req, res) => {
     }));
   });
 });
+// Anthropic giả: thân có `tools` mà tin cuối là chữ người dùng → trả một khối tool_use cho tool đầu (smoke đòi gọi tool); còn lại
+// trả chữ JSON như Gateway giả.
+const demAn = new Map();
+let soTin = 0;
+const an = createServer((req, res) => {
+  let s = "";
+  req.on("data", (d) => (s += d));
+  req.on("end", () => {
+    demAn.set(lenhHienTai, (demAn.get(lenhHienTai) ?? 0) + 1);
+    let than = {};
+    try { than = JSON.parse(s); } catch { /* giữ rỗng */ }
+    const cuoi = Array.isArray(than.messages) ? than.messages[than.messages.length - 1] : null;
+    const doiTool = Array.isArray(than.tools) && than.tools.length && typeof cuoi?.content === "string";
+    soTin += 1;
+    res.setHeader("content-type", "application/json");
+    res.end(JSON.stringify({
+      id: `msg_gia_${soTin}`, type: "message", role: "assistant", model: String(than.model ?? ""),
+      content: doiTool
+        ? [{ type: "tool_use", id: `toolu_gia_${soTin}`, name: than.tools[0].name, input: {} }]
+        : [{ type: "text", text: '{"property_type":"apartment","confidence":0.8,"giai_thich":"thử"}' }],
+      stop_reason: doiTool ? "tool_use" : "end_turn", stop_sequence: null, usage: { input_tokens: 50, output_tokens: 10 },
+    }));
+  });
+});
 const demMt = new Map();
 const mt = createServer((req, res) => {
   req.resume();
@@ -55,8 +81,14 @@ const mt = createServer((req, res) => {
   });
 });
 const URL_GW = `http://127.0.0.1:${await nghe(gw)}/gw`;
+const URL_AN = `http://127.0.0.1:${await nghe(an)}`;
 const URL_MT = `http://127.0.0.1:${await nghe(mt)}/v1`;
-const ENV = { ...process.env, DATABASE_URL: DB, AI_GATEWAY_BASE_URL: URL_GW, AI_GATEWAY_API_KEY: "khoa-gia", MTPLX_URL: URL_MT };
+const ENV = {
+  ...process.env, DATABASE_URL: DB, AI_GATEWAY_BASE_URL: URL_GW, AI_GATEWAY_API_KEY: "khoa-gia", ANTHROPIC_BASE_URL: URL_AN,
+  ANTHROPIC_API_KEY: "khoa-gia", MTPLX_URL: URL_MT,
+};
+/** Lệnh đi qua runAgent theo bảng của kho: đường đầu là Anthropic thẳng. */
+const DI_THANG = new Set(["enrich-run --offers", "judge-run (chamMotLuot)", "smoke"]);
 
 // ---- gieo ----
 const db = new pg.Client({ connectionString: DB, application_name: "mh1-khong-goi-8000" });
@@ -115,11 +147,16 @@ for (const [ten, args] of LENH) {
   const kq = await chay(ten, args);
   const m = demMt.get(ten) ?? 0;
   const g = demGw.get(ten) ?? 0;
-  console.log(`${ten}: mtplx ${m} · gateway ${g} · mã ${kq.ma}`);
+  const a = demAn.get(ten) ?? 0;
+  console.log(`${ten}: mtplx ${m} · anthropic ${a} · gateway ${g} · mã ${kq.ma}`);
+  const duoi = `(mã ${kq.ma}): ${kq.out.slice(-300).replace(/\s+/g, " ")}`;
   if (m > 0) loi.push(`AC-1 ${ten} gọi MTPLX ${m} lần`);
-  if (g < 1 && ten !== "cay-qwen (phá thử)") loi.push(`AC-1 ${ten} không gọi Gateway (mã ${kq.ma}): ${kq.out.slice(-300).replace(/\s+/g, " ")}`);
+  if (ten === "cay-qwen (phá thử)") continue;
+  if (a + g < 1) loi.push(`AC-1 ${ten} không gọi model cloud nào ${duoi}`);
+  if (DI_THANG.has(ten) && a < 1) loi.push(`AC-1 ${ten} không đi Anthropic thẳng theo bảng của kho ${duoi}`);
 }
 gw.close();
+an.close();
 mt.close();
 
 // ---- quét mã sản xuất ----
@@ -128,10 +165,13 @@ const MAU = /MTPLX_URL|qwen27b|127\.0\.0\.1:8000/;
 /** Danh sách loại trừ đóng (AC-1): tệp test và chữ trong dữ liệu giả của một bài thử. */
 const LOAI_TEP = new Set(["scripts/smoke-review-queue.mjs"]);
 const laTest = (p) => /\.(test|itest)\.[cm]?[jt]sx?$/.test(p);
-let tepCay = null;
+const tepCay = [];
 if (CAY_CHUOI) {
-  tepCay = join(GOC, "scripts", `mh1-cay-${Date.now().toString(36)}.mjs`);
-  writeFileSync(tepCay, `// tệp cấy phá thử\nconst m = "qwen27b";\n`);
+  for (const thu of ["scripts", "agent/src"]) {
+    const t = join(GOC, thu, `mh1-cay-${Date.now().toString(36)}.mjs`);
+    writeFileSync(t, `// tệp cấy phá thử\nconst m = "qwen27b";\n`);
+    tepCay.push(t);
+  }
 }
 let loai = 0;
 const di = (d) => {
@@ -150,7 +190,7 @@ const di = (d) => {
 try {
   for (const v of VUNG) di(join(GOC, v));
 } finally {
-  if (tepCay) rmSync(tepCay, { force: true });
+  for (const t of tepCay) rmSync(t, { force: true });
   rmSync(tam, { recursive: true, force: true });
 }
 console.log(`quét mã: ${VUNG.join(", ")} · loại ${loai} tệp (danh sách loại trừ đóng: tệp test, ${[...LOAI_TEP].join(", ")})`);
@@ -158,4 +198,4 @@ if (loi.length) {
   for (const l of loi) console.error(`ĐỎ ${l}`);
   process.exit(1);
 }
-console.log("AC-1 ĐẠT: 0 lời gọi MTPLX, mỗi lệnh gọi Gateway, mã sản xuất sạch");
+console.log("AC-1 ĐẠT: 0 lời gọi MTPLX, mỗi lệnh gọi model cloud (enrich-run, judge-run, smoke đi Anthropic thẳng), mã sản xuất sạch");

@@ -8,7 +8,7 @@ import { spawn } from "node:child_process";
 import { join } from "node:path";
 import pg from "pg";
 import { insertOffer } from "./helpers/db.js";
-import { moGateway, type MayGia } from "./helpers/gateway-gia.js";
+import { moAnthropic, type MayAnthropic } from "./helpers/gateway-gia.js";
 
 const DB = process.env.DATABASE_URL ?? "";
 if (!/\/oneinvest_suite_[a-z0-9_]+$/.test(DB)) throw new Error(`từ chối: DB thử phải là oneinvest_suite_<…> (DATABASE_URL=${DB || "<trống>"})`);
@@ -17,12 +17,15 @@ const TIEN_TO = `mh1g${Date.now().toString(36)}`;
 const NGUOI_BAN = "Trần Văn Cấy";
 const SDT = "0912345678";
 const NHOM = "Nhóm Cấy Tên Riêng MH1";
-let gw: MayGia;
+let gw: MayAnthropic;
 let db: pg.Client;
 
 before(async () => {
-  gw = await moGateway({ text: '{"property_type":"apartment","confidence":0.8}', vao: 100, ra: 20 });
-  process.env.AI_GATEWAY_BASE_URL = gw.url;
+  // Bảng của kho: Haiku đi thẳng Anthropic trước (MH1, Mạnh 22/11) — máy giả của đường đó ghi thân yêu cầu.
+  gw = await moAnthropic({ text: '{"property_type":"apartment","confidence":0.8}', vao: 100, ra: 20 });
+  process.env.ANTHROPIC_BASE_URL = gw.url;
+  process.env.ANTHROPIC_API_KEY = "khoa-gia";
+  process.env.AI_GATEWAY_BASE_URL = "http://127.0.0.1:9/gw-khong-dung";
   process.env.AI_GATEWAY_API_KEY = "khoa-gia";
   db = new pg.Client({ connectionString: DB, application_name: "du-lieu-gui-agent-itest" });
   await db.connect();
@@ -65,9 +68,10 @@ function kiemThan(prompt: string, nhan: string[], chuBai: string[], ten: string)
   assert.ok(chuBai.some((c) => prompt.includes(c.slice(0, 60))), `MH1 AC-4 ${ten} thiếu chữ bài (đối chứng dương)`);
 }
 
-/** Phần prompt của người dùng (không tính system prompt cố định của agent). */
-const promptNguoiDung = (y: MayGia["yeuCau"][number]) => {
-  const p = (y.than.prompt as { role: string; content: unknown }[] | undefined) ?? [];
+/** Phần prompt của người dùng (không tính system prompt cố định của agent): `messages` của Messages API (đường thẳng), `prompt`
+ * của Gateway. */
+const promptNguoiDung = (y: MayAnthropic["yeuCau"][number]) => {
+  const p = ((y.than.messages ?? y.than.prompt) as { role: string; content: unknown }[] | undefined) ?? [];
   return p
     .filter((m) => m.role === "user")
     .flatMap((m) => (typeof m.content === "string" ? [m.content] : Array.isArray(m.content) ? m.content : []))
@@ -80,7 +84,7 @@ test("MH1 AC-4 enrich-run thật (OFFER_SELECT) chỉ gửi chữ bài ≤ 500 k
   gw.datLai();
   const kq = await new Promise<{ ma: number | null; out: string }>((resolve, reject) => {
     const p = spawn(process.execPath, ["--import", "tsx", "scripts/enrich-run.ts", "--offers", ids.join(",")], {
-      cwd: AGENT, env: { ...process.env, DATABASE_URL: DB, AI_GATEWAY_BASE_URL: gw.url, AI_GATEWAY_API_KEY: "khoa-gia" },
+      cwd: AGENT, env: { ...process.env, DATABASE_URL: DB, ANTHROPIC_BASE_URL: gw.url, ANTHROPIC_API_KEY: "khoa-gia", AI_GATEWAY_BASE_URL: "http://127.0.0.1:9/gw-khong-dung", AI_GATEWAY_API_KEY: "khoa-gia" },
     });
     let out = "";
     p.stdout.on("data", (d) => (out += d));

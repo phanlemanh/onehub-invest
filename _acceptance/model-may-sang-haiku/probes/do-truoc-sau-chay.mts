@@ -1,5 +1,6 @@
 // do-truoc-sau-chay.mts — MH1 AC-8, phần gọi model thật (chạy qua `do-truoc-sau.mjs --chay`, cwd agent/, PGOPTIONS chỉ đọc).
-// Haiku 5.5 qua Gateway, model theo agent/config/model-agent.json; sổ cuộc gọi AI không ghi DB (recordCall gom tại chỗ) — lượt đo
+// Haiku 5.5 theo agent/config/model-agent.json (Anthropic thẳng trước, lùi sang Gateway — Mạnh 22/11); sổ cuộc gọi AI không ghi DB
+// (recordCall gom tại chỗ, đếm theo đường) — lượt đo
 // không ghi gì vào DB máy thu. Trần tiền theo đối số, dừng trước lời gọi vượt trần. Máy giả ở cổng MTPLX_URL đếm yêu cầu (phải 0).
 import { createHash } from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
@@ -34,12 +35,16 @@ if (ro !== "on") throw new Error(`từ chối: phiên DB không chỉ đọc (de
 
 const m = modelCuaAgent(enrichTextAgent.name);
 const tran = taoTran(tranUsd, m.gia);
-const khongGhi = async () => {};
 const mauEnrich = JSON.parse(readFileSync(TEP.mauEnrich, "utf8")).tin as { offer_id: string }[];
 const mauJudge = JSON.parse(readFileSync(TEP.mauJudge, "utf8")).cap as { offer_a: string; offer_b: string }[];
 const kq = {
   luc: new Date().toISOString(), model: m.gateway, mau_sha: { enrich: sha(TEP.mauEnrich), judge: sha(TEP.mauJudge) },
-  enrich: [] as unknown[], judge: [] as unknown[], chi_usd: 0, mtplx: 0, het_tran: false,
+  enrich: [] as unknown[], judge: [] as unknown[], chi_usd: 0, mtplx: 0, het_tran: false, duong: {} as Record<string, number>,
+};
+/** Đếm lời gọi theo `<đường>:<mã gọi>` (cả lời hỏng trước khi lùi), không ghi DB. */
+const khongGhi = async (r: { model: string; ok: boolean }) => {
+  const k = `${r.model}${r.ok ? "" : " (lỗi)"}`;
+  kq.duong[k] = (kq.duong[k] ?? 0) + 1;
 };
 
 for (const t of mauEnrich) {
@@ -55,7 +60,7 @@ for (const t of mauEnrich) {
   try {
     const r = await runAgent(enrichTextAgent, vao, {}, { recordCall: khongGhi });
     tran.ghi(r.usage.inputTokens, r.usage.outputTokens);
-    kq.enrich.push({ offer_id: t.offer_id, raw: r.output, usage: r.usage });
+    kq.enrich.push({ offer_id: t.offer_id, raw: r.output, usage: r.usage, duong: r.duong });
   } catch (e) {
     kq.enrich.push({ offer_id: t.offer_id, raw: null, loi: e instanceof Error ? e.name : "Error" });
   }
@@ -69,7 +74,7 @@ for (const p of mauJudge) {
   try {
     const r = await runAgent(judgeEntityAgent, vao, {}, { recordCall: khongGhi });
     tran.ghi(r.usage.inputTokens, r.usage.outputTokens);
-    kq.judge.push({ cap: p, raw: r.output, usage: r.usage, ket_luan_truoc: truoc, ket_luan_sau: apNguong(pair).same_house });
+    kq.judge.push({ cap: p, raw: r.output, usage: r.usage, duong: r.duong, ket_luan_truoc: truoc, ket_luan_sau: apNguong(pair).same_house });
   } catch (e) {
     kq.judge.push({ cap: p, raw: null, loi: e instanceof Error ? e.name : "Error", ket_luan_truoc: truoc, ket_luan_sau: truoc });
   }
@@ -82,6 +87,7 @@ writeFileSync(TEP.json, JSON.stringify(kq, null, 1) + "\n");
 const so = tinhSo(kq, JSON.parse(readFileSync(TEP.mauEnrich, "utf8")).tin);
 writeFileSync(TEP.md, bangMd(so, kq) + "\n");
 const loi = kiemNguong(so);
+console.log(`đường: ${Object.entries(kq.duong).map(([k, n]) => `${k} ${n}`).join(" · ") || "—"}`);
 console.log(`cỡ mẫu ${so.coEnrich} + ${so.coJudge} · JSON ${so.jsonPct} % · giải thích ${so.giaiPct} % · kết luận đổi ${so.ketLuanDoi} · chi ${so.chiUsd} USD · MTPLX ${so.mtplx}${kq.het_tran ? " · DỪNG VÌ TRẦN" : ""}`);
 for (const l of loi) console.error(`ĐỎ ${l}`);
 process.exit(loi.length ? 1 : 0);
