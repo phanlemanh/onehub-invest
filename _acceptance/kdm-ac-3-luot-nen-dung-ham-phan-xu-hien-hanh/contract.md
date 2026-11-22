@@ -64,3 +64,7 @@ Gốc đo được: `napPhatBieu` nạp lại thân `resolve_offer_fields` của
 - Soát `phat-bieu-cat-chuyen.mjs --thu` 22/11 (so-cat-chuyen.md): main f962afade và nhánh in giống hệt (S03 property_type
   8160 → 8164, bedrooms 8237 → 8239, block_raw 4639 → 4641; S05 bedrooms 29 → 32; S06 không đổi; legacy mới 1; 0 dòng lệch giữa
   hai bản); cả hai thoát 1 «LỆCH — không ghi» — đỏ sẵn của công cụ trên dữ liệu hôm nay, không do HT5.
+- Mù-1 (suite `pipeline_a` không có mã thoát ở lượt chấm S4 r2 thử lại — bộ chấm bỏ chờ ở phút 30): bằng chứng NGOÀI lượt chấm,
+  không thay cho S4 — `nice -n 19 node scripts/suite-neu-doi.mjs pipeline_a -- 'cd pipeline && npm run test:a'` trên đầu nhánh
+  394af89ae, 2026-11-22T17:02:57Z: mã thoát 0, 434 ca pass / 0 fail / 0 cancelled, 1.559 giây (nhật ký
+  `.acceptance-runs/ht5/pipeline-a-ngoai-luot.log`). Cùng lệnh này (E6a) đã xanh ở S4 r1.
