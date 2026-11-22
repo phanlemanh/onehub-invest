@@ -64,7 +64,7 @@ Mỗi lời gọi thẳng API Anthropic chỉ mang năm khoá trong thân (E3 ki
 |---|---|---|---|
 | `model` | `claude-haiku-5-5` | `claude-haiku-5-5` | `claude-haiku-5-5` |
 | `system` | lời dặn cố định của agent | lời dặn cố định của agent | lời dặn cố định |
-| `messages` | chữ bài ≤ 500 ký tự + khối bối cảnh (nhóm đã giải về khu vực) | các dòng thuộc danh sách nhãn dòng của judge (giá, diện tích, vị trí, căn cứ luật) | câu hỏi giờ + kết quả tool |
+| `messages` | «TIN ĐĂNG:» chữ bài ≤ 500 ký tự + khối «BỐI CẢNH (từ tên nhóm Zalo)» đã giải (dự án, khu vực, loại hình, mã toà — không tên nhóm) | hai tin A, B: giá, diện tích, giá/m², phường, loại, tiêu đề, nội dung; kết luận và lý do của luật | câu hỏi giờ + kết quả tool |
 | `max_tokens` | 4096 | 4096 | 4096 |
 | `tools` | — | — | `get_time` (không tham số) |
 
