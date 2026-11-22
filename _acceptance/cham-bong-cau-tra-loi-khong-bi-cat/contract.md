@@ -5,7 +5,7 @@ slug: cham-bong-cau-tra-loi-khong-bi-cat
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [script]
-status: approved
+status: implemented
 approved_by: Mạnh
 approved_at: 2026-11-22
 design_doc: docs/superpowers/specs/2026-11-22-cham-bong-cau-tra-loi-khong-bi-cat-design.md
