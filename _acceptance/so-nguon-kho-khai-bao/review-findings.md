@@ -78,4 +78,11 @@ Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm v
   severity: medium
   Đề xuất: known-limits
 
+- **Ghi sau chữ ký (giám sát dò 22/11 07:13Z): ap122NeuThieu nằm ngoài try/finally nên ca «gom() trên DB local» treo khi chạy trên DB thiếu cột 122 mà không phải bản chép thử**
+  Người dùng thấy gì: Chạy `node --test scripts/*.test.mjs` thẳng trên DB máy thu (chưa áp 122) thì lượt test treo vô hạn ở `scripts/bao-cao-ngay.test.mjs`, không báo đỏ: hàm ném lỗi đúng thiết kế nhưng `client.end()` không chạy nên kết nối giữ mãi. Hàm không ghi gì lên DB máy thu. Lượt chấm và CI chạy trên bản chép thử nên không gặp.
+  Căn cứ: Hết khi máy thu áp 122 (lời gọi thành phép không); sửa bây giờ phải ghim lại 68 phút trong khi giám sát đang giữ main. Giám sát đưa vào hàng hạ tầng sau chuyển máy, cùng việc gỡ các lời gọi `ap122NeuThieu`.
+  file: `scripts/bao-cao-ngay.test.mjs`
+  severity: low
+  Đề xuất: new-contract
+
 Cụm ngoài vùng phủ: cluster: n-a (không đo được — không eval nào khai paths, hoặc dưới ngưỡng cụm).
