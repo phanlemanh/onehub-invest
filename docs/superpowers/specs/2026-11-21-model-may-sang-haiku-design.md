@@ -37,8 +37,13 @@ vào lời gọi; lý do luật chỉ gửi chữ `cau` (vd «giá/m² sát nhau
    `phien_ban`, `mac_dinh`, bảng `model` (mã Gateway, giá vào, giá ra theo USD mỗi triệu token), bảng `agent` (tên agent → khoá model).
    Mã model phải thuộc danh sách đóng `MODEL_DUYET` của `agent/src/enrich/doc-gop-s03/cau-hinh.ts`; sai thì dừng trước lời gọi đầu.
    `runAgent` lấy model của agent từ tệp này. Mặc định Haiku.
-2. **Đường gọi**: Gateway (`getModel("haiku")` đã có). Gửi kèm `providerOptions` của `tuyChonGui` (không giữ dữ liệu, không huấn luyện).
-   Đường API Anthropic thẳng của PL30 không mở ở hàng này.
+2. **Đường gọi** (sửa 22/11, Mạnh chọn «(b) Anthropic thẳng» sau khi ví trả trước Gateway cạn 21/11): model có `duong` và `tu_lui`
+   cùng khuôn `agent/config/doc-gop-s03.json`; bảng của kho cho Haiku `duong: ["anthropic", "gateway"]`, `tu_lui: true`. Đường
+   `anthropic` gọi Messages API qua `@anthropic-ai/sdk` (agent không công cụ: `enrich-text`, `judge-entity`, `smoke-echo`); gặp lớp dừng
+   (`laLopDung` của `runtime/loi-nha-cung-cap.ts`: hết tiền, khoá sai) thì lời ấy và các lời kế đi Gateway, in một dòng `chuyen-duong`.
+   Gateway gửi kèm `providerOptions` của `tuyChonGui` (không giữ dữ liệu, không huấn luyện); đường thẳng không có cờ theo lời gọi tương
+   đương — cùng chế độ bộ đọc gộp, Mạnh chấp nhận cho hai agent này. Thiếu khoá làm không còn đường nào → mã 5 trước lời gọi đầu.
+   `ai_calls.model` = `<đường>:<mã gọi>` (`modelSo` của PL30); cột `model` của đề xuất giữ mã model `anthropic/claude-haiku-5.5`.
 3. **Gỡ Qwen**: bỏ `qwen27b`, `qwen27b-khong-nghi`, `MTPLX_URL` khỏi `models.ts`; bỏ backend `qwen` khỏi nhãn bạc và đọc ảnh (CLI
    `--model qwen` trả mã 2 «model không được duyệt»); `smoke.ts` dùng Haiku; `kiemLoThat` thôi đòi dòng Qwen.
 4. **Trần tiền**: `enrich-run` và `judge-run` nhận `--tran-usd` (mặc định theo câu Hỏi-1). Chi phí mỗi lời gọi = token vào × giá vào
@@ -55,4 +60,3 @@ vào lời gọi; lý do luật chỉ gửi chữ `cau` (vd «giá/m² sát nhau
 Kev trong hook S03 (`collector/openclaw/handler.js`), bộ canh, `docs/ops/runtime-map.md`, dò `kev` ở `pipeline/push-ops-facts.mjs`,
 plist `kev-gate` — làn thu, đi cùng việc gỡ Kev. `pipeline/scripts/bench-extraction.mjs` (Ollama :11434, công cụ đo tay, không phải
 MTPLX). `scripts/smoke-review-queue.mjs` (chữ «qwen27b» chỉ là dữ liệu giả của thẻ). Thêm dòng giá Haiku vào `ai_model_prices` (ghi DB).
-Đường API Anthropic thẳng cho enrich và judge.
