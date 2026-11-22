@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: b3b2ee9d068b14588661edb50f2a5e926a1ae88a
+verified_commit: 956208c194a5e9819770f2a987c7a947faab12a8
 human_signoff: Mạnh 2026-11-22
 ---
 
@@ -154,3 +154,7 @@ none — mọi eval chạy nhiều lần đều đồng nhất (mọi eval chạ
 ## Iterations
 
 Round 1: mọi eval chạy được đều đạt (E7 không chạy theo hồ sơ); không có panel chấm nên không có mục chờ người.
+
+### Re-pin lần 1 — 2026-11-22, do ghim lại sau chữ ký, nhận main b28bdbd3d (HT2)
+run_id: repin-20261122T051751Z-81706
+sha: 956208c194a5e9819770f2a987c7a947faab12a8 · suites: 7 lệnh exit 0 · evals: 7/7 eval máy đạt kỳ vọng · không chạy theo hồ sơ: E7 · AC không có chốt máy: AC-7
