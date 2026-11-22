@@ -1,0 +1,21 @@
+{
+ "feature_plain": "Nối 185 dự án S08 vào danh bạ bằng một thẻ luật Mạnh xem trước khi áp: dự án trùng tên với nút sẵn có cùng tỉnh thì nối vào nút đó, dự án chưa có nút thì tạo nút ứng viên, ca còn lại từ chối có lý do; màn Ops tách số nối vào nút sẵn có với số nối vào nút ứng viên.",
+ "will_do": [
+  {"id":"AC-1","p":"Sẽ xếp mỗi dự án S08 vào đúng một ngả: giữ nối tay, nối nút sẵn có khi tên trùng hẳn và cùng tỉnh, chờ người chọn khi chỉ gần giống hay trùng nút chưa rõ tỉnh, tạo nút ứng viên khi không khớp, từ chối khi thiếu tỉnh hay là dự án con."},
+  {"id":"AC-2","p":"Sẽ in thẻ luật ghi loại căn cứ từng ngả, đủ mọi dòng nối và từ chối, không lộ mã dự án nguồn, cùng một mã băm mỗi lần dựng."},
+  {"id":"AC-3","p":"Sẽ chỉ ghi khi đúng băm Mạnh đã xem; chỉ thêm nút mới, dòng nối và bí danh, không sửa nút nào đang có."},
+  {"id":"AC-4","p":"Sẽ đảo được cả lượt bằng một lệnh, giữ nút ứng viên, gỡ mọi dòng nối."},
+  {"id":"AC-6","p":"Sẽ hiện trên màn danh bạ Ops số S08 chưa nối và số đã nối vào nút ứng viên, tách khỏi số nối vào nút sẵn có."},
+  {"id":"AC-7","p":"Sẽ chạy thử trọn trên bản chép DB máy thu: S08 nối nút sẵn có 8 → 17, nối nút ứng viên 0 → 163, chưa nối 177 → 5; băm DA53 và bộ gắn PL20 không đổi."}
+ ],
+ "wont_do": [
+  {"id":"AC-5","p":"Chặn lượt có mã trỏ hai nút, lệch tỉnh hay thiếu dòng trạng thái: lệnh kiểm báo lỗi."},
+  {"id":"OOS-1","p":"KHÔNG tạo toà, trục, căn cho dự án S08 mới nối — hàng sau, vì đổi cây toà ở Grand Park, Ocean Park."},
+  {"id":"OOS-2","p":"KHÔNG tạo dự án con cho 1 dự án mang hậu tố khu — chờ bước Q-A riêng."},
+  {"id":"OOS-3","p":"KHÔNG chuyển 8 dòng nối tay cũ sang thẻ luật."},
+  {"id":"OOS-4","p":"KHÔNG ghép chéo với S07, S16; với S09 chỉ bảo đảm không tạo nút trùng."},
+  {"id":"OOS-5","p":"KHÔNG gắn tin vào nút ứng viên, không đưa nút ứng viên lên trang Invest."},
+  {"id":"OOS-6","p":"KHÔNG tạo thẻ duyệt từng cặp trên /ops/review (hôm nay 0 ca)."},
+  {"id":"OOS-7","p":"KHÔNG áp lên DB máy thu trong hàng này — cần lời riêng của Mạnh kèm băm."}
+ ]
+}

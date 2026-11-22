@@ -1,0 +1,62 @@
+schema_version: 1
+feature_slug: soat-noi-s08-danh-ba
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.ns8_lop
+    expected: "exit 0; ma trận viết trước mười lăm ca, mỗi ca một ngả và lý do: giữ tay, giữ nút đúc S08, tên rỗng giả, hậu tố khu (OCP1), không tỉnh, trùng hẳn một nút cùng tỉnh (nối, căn cứ S08-ten-chuan-cung-tinh), trùng hẳn nút ứng viên S06 cùng tỉnh (nối), trùng hẳn hai nút (nhieu-ung-vien), trùng hẳn một nút chưa biết tỉnh (nut-khong-tinh, không đúc), chỉ chứa bí danh ≥ 8 ký tự (gan-giong, không nối), bí danh 7 ký tự (không chạm, đúc), nút trùng tên khác tỉnh (đúc), «X_TT» và «TMDV X» về cùng nút với «X», hai dự án cùng tên gốc cùng tỉnh chung một nhóm đúc còn khác tỉnh thì hai nhóm, nút do luật S08 đúc không là ứng viên. Chiều đỏ trên cùng fixture: bỏ ràng buộc cùng tỉnh, nhận chứa-tên làm nối, bỏ xét nút chưa biết tỉnh, bỏ ngưỡng 8 ký tự, bỏ bỏ-hậu-tố TT, nhận nút do luật S08 đúc làm ứng viên — mỗi phép phá đỏ đúng ca, thông điệp nêu tên ca"
+    paths: ["pipeline/lib/noi-du-an-s08-lop.mjs", "pipeline/scripts/noi-du-an-s08-lop.test.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.ns8_the
+    expected: "exit 0; ca NS8-2 trên DB thử: thẻ có tổng theo ngả bằng số ngả của bộ xếp, có chữ loại căn cứ cho từng ngả, in đủ mọi dòng nối nút có sẵn, thẻ từng cặp, từ chối; dựng hai lần cùng băm, dấu vân tay mọi bảng danh bạ không đổi sau khi dựng; chữ thẻ không chứa mã dự án S08 nào đã cấy; đổi tỉnh một dự án thì băm đổi; đổi nút đích (giữ ngả nối) thì băm đổi và áp với băm cũ ném bam-lech, 0 dòng đổi. Chiều đỏ: in mã dự án vào thẻ thì ca đỏ nêu mã"
+    paths: ["pipeline/lib/noi-du-an-s08-lop.mjs", "pipeline/noi-du-an-s08-luat.mjs", "pipeline/scripts/noi-du-an-s08-luat.itest.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.ns8_ap
+    expected: "exit 0; ca NS8-3: băm lệch ném «bam-lech», 0 dòng đổi; băm đúng: một dòng luật S08, mỗi dự án một dòng project_links S08 mang rule_id và can_cu theo ngả, bí danh ma_nguon S08 ở registry_aliases cho dự án nối (đúng số dự án nối, mọi bí danh có sẵn giữ nguyên), nút đúc mot_loi_khai có area_ids và meta.diem, meta không chứa mã dự án; dấu vân tay dòng asset_nodes có sẵn và s08_project_links không đổi; áp lần hai trả khongDoi. Chiều đỏ: bản áp ghi bí danh vào cột aliases của nút có sẵn thì ca đỏ nêu id nút"
+    paths: ["pipeline/lib/noi-du-an-s08-lop.mjs", "pipeline/noi-du-an-s08-luat.mjs", "pipeline/scripts/noi-du-an-s08-luat.itest.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.ns8_dao
+    expected: "exit 0; ca NS8-4: đảo lượt: bí danh của lượt retired, dòng noi về chua_noi dao-luat, số nút không đổi, dòng luật có dao_by và dao_at; đảo lần hai ném «da-dao». Chiều đỏ: đảo không nghỉ bí danh thì ca đỏ nêu số bí danh còn sống"
+    paths: ["pipeline/noi-du-an-s08-luat.mjs", "pipeline/scripts/noi-du-an-s08-luat.itest.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.ns8_kiem
+    expected: "exit 0; ca NS8-5: sau áp lệnh kiểm thoát 0; cấy lần lượt một mã có bí danh sống ở hai nút, một cặp mã–nút lệch tỉnh, một dự án thiếu dòng trạng thái → mỗi lần thoát 1 nêu đúng loại lỗi và số đếm, không in mã"
+    paths: ["pipeline/noi-du-an-s08-luat.mjs", "pipeline/scripts/noi-du-an-s08-luat.itest.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.ns8_app
+    expected: "exit 0; ca RS8 trên lược đồ tạm, dòng nối dựng bằng chính apTheLuat của pipeline (không chèn tay khuôn bên đọc): năm dự án S08 (nối tay, nối luật vào nút có sẵn, nối luật vào nút đúc, chưa nối luật có lý do, chưa có dòng nào) → danh mục S08 da_nap 5, da_noi 3, noi_ung_vien 1; chân ô của oSo có «S08 2/5» và «1 vào nút ứng viên»; danh sách chưa nối có đúng hai dự án, dự án chưa nối luật mang lý do của bảng luật; dự án có noi ở cả hai bảng đếm một lần. Chiều đỏ: bản chép SQL cũ (chỉ bảng tay) cho da_noi 1, ca đỏ nêu số"
+    paths: ["app/src/lib/ops/registry/doc.ts", "app/src/components/ops/registry/registry-view.tsx", "pipeline/noi-du-an-s08-luat.mjs", "app/tests/registry-s08-luat.test.tsx"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.ns8_that
+    expected: "exit 0 trên bản chép DB máy thu (db-thu.sh chép rồi xoá): mỗi ngả của thẻ bằng số đếm lại của probes/bang-phu.mjs trên cùng bản chép, in cả hai; ô S08 đọc bằng docDanhBa: nối nút có sẵn 8 → bằng 8 + ngả nối, nối nút ứng viên 0 → bằng ngả đúc, chưa nối → bằng ngả từ chối + thẻ từng cặp; dòng asset_nodes có sẵn và s08_project_links cùng vân tay trước áp, sau áp, sau đảo; nút ứng viên S08: 0 dòng offer_project, 0 dòng offer_price_rank cấp dự án; băm thẻ nối DA53 (dungKeHoachNoi) và ba số bộ gắn PL20 ở sha e27d1e690 bằng nhau trước và sau áp; lượt cấy một nút ứng viên S09 chưa biết tỉnh trùng tên một dự án S08 trước khi dựng thẻ thì dự án đó ra the-cap nut-khong-tinh, số nút đúc giảm đúng 1; lệnh kiểm thoát 0; sau đảo ba ô về số trước áp. Lệch một ô thì thoát 1 nêu ô. Ngoài CI"
+    paths: ["pipeline/lib/noi-du-an-s08-lop.mjs", "pipeline/noi-du-an-s08-luat.mjs", "pipeline/scripts/noi-du-an-s08-that.mjs", "app/src/lib/ops/registry/doc.ts", "_acceptance/soat-noi-s08-danh-ba/probes/bang-phu.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-6
+    executor: ui-check
+    layer: ui-observed
+    paths: ["app/src/components/ops/registry/registry-view.tsx", "app/src/lib/ops/registry/doc.ts"]
+    steps:
+      - "Mở /ops/registry trên bản chạy dev (máy thu, tài khoản ops thử) sau khi áp thẻ trên DB thử của lượt chấm"
+      - "Đọc chân ô «Mã nguồn chưa nối»"
+    expected: "Chân ô hiện phần S08 dạng «S08 <chưa nối>/<đã nạp>» kèm «<n> vào nút ứng viên», hai số khác nhau, chữ không tràn ô ở khổ hẹp 375 px, sáng và tối; ảnh chụp lưu ở evidence/"
+    evidence_required: [run_id, screenshot, observed, verified_at]
