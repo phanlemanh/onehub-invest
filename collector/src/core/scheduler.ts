@@ -61,6 +61,22 @@ export async function runCollector(opts: RunOptions): Promise<void> {
       log,
       paths: { snapshotRoot, stateDir },
     });
+    // 2211-19: hết việc (hàng đợi rỗng) — KHÔNG ghi snapshot rỗng. Trước đây
+    // mỗi vòng lượt tuần để lại một snapshot 0 item → kho raw thêm rác và
+    // thước «bản 0 item» đỏ giả. Bỏ '.partial' vừa tạo, in dòng HET-VIEC để
+    // script gọi ngoài dừng vòng theo DÒNG IN (không soi manifest).
+    if (
+      items.length === 0 &&
+      coverage.captured === 0 &&
+      coverage.notes?.some((n) => /không còn việc/.test(n))
+    ) {
+      await writer.boLe();
+      checkpoint.set("lastRunAt", new Date().toISOString());
+      checkpoint.set(budgetKey, { date: budget.date, used: budget.used });
+      await checkpoint.save();
+      log("HET-VIEC: hàng đợi rỗng — không ghi snapshot");
+      return;
+    }
     await writer.write(items);
     const manifest = await writer.finalize(coverage);
     checkpoint.set("lastRunAt", manifest.finishedAt);

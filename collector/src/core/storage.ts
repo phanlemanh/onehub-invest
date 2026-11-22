@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { gzipSync } from "node:zlib";
-import { mkdir, rename, writeFile } from "node:fs/promises";
+import { mkdir, rename, rm, writeFile } from "node:fs/promises";
 import { existsSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import type { CoverageReport, ManifestFile, RawItem, SnapshotManifest } from "./types.js";
@@ -106,6 +106,13 @@ export class SnapshotWriter {
     const sha256 = createHash("sha256").update(bytes).digest("hex");
     this.files.push({ name, sha256, bytes: bytes.length });
     return { sha256, bytes: bytes.length };
+  }
+
+  /** 2211-19: bỏ lượt — xoá thư mục .partial vừa tạo (chưa ghi gì vào đó).
+   * Dùng khi lượt kết thúc không có việc/hàng đợi rỗng: không để lại thư mục
+   * rỗng ẩn vĩnh viễn, không tạo snapshot 0 item. */
+  async boLe(): Promise<void> {
+    await rm(this.partial, { recursive: true, force: true }).catch(() => {});
   }
 
   async finalize(coverage: CoverageReport, error?: string, opts?: { giuTam?: boolean }): Promise<SnapshotManifest> {

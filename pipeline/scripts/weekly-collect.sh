@@ -24,7 +24,9 @@ if [ "${SKIP_COLLECT:-0}" != "1" ]; then
   for i in $(seq 1 20); do
     out=$(cd "$COLLECTOR_DIR" && npm run collect -- collect --city "$CITY" --source airbnb-listing 2>&1)
     echo "$out" | grep -E "\[airbnb-listing" | tail -1
-    if echo "$out" | grep -q "không còn việc"; then
+    # 2211-19: dừng theo DÒNG IN của bộ thu (HET-VIEC — scheduler in khi hàng
+    # đợi rỗng, đồng thời bộ thu không ghi snapshot rỗng nữa), không soi manifest.
+    if echo "$out" | grep -q "HET-VIEC"; then
       echo "hết listing cần fetch"
       break
     fi
