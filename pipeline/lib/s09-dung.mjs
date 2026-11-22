@@ -260,10 +260,11 @@ export async function buocS09DanhBa(c, { noi = NOI_KHU_S09, noiS16 = NOI_DU_AN_S
   }
   const { rows: duAn } = await c.query("SELECT du_an_id, ten, ma_tinh FROM v_s09_db_du_an ORDER BY 1");
   if (!duAn.length) { log("danh-ba-vat-the: S09 gói 1 bỏ qua — chưa có danh mục"); return { bo_qua: "chua-co-danh-muc" }; }
+  // Chỉ toà của dự án có trong danh mục gói 1: toà của dự án ngoài danh mục (kể cả nếu bản thu khác ghi cùng kind `toa`) không vào.
   const { rows: toaRows } = await c.query(
     `SELECT t.du_an_id, t.toa_id, t.toa_ten, t.thu_tu, (SELECT count(*)::int FROM v_s09_db_tang f WHERE f.toa_id = t.toa_id) AS so_tang,
             (SELECT array_agg(f.tang_ten ORDER BY f.thu_tu) FROM v_s09_db_tang f WHERE f.toa_id = t.toa_id) AS tang
-       FROM v_s09_db_toa t ORDER BY t.du_an_id, t.thu_tu`);
+       FROM v_s09_db_toa t WHERE t.du_an_id IN (SELECT du_an_id FROM v_s09_db_du_an) ORDER BY t.du_an_id, t.thu_tu`);
   const toaTheoDuAn = new Map();
   for (const r of toaRows) toaTheoDuAn.set(r.du_an_id, [...(toaTheoDuAn.get(r.du_an_id) ?? []), { toa_id: r.toa_id, ten: r.toa_ten, so_tang: r.so_tang, tang: r.tang ?? [] }]);
 

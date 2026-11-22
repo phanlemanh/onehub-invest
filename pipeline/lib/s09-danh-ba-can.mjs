@@ -7,6 +7,14 @@ import { khoaTenS09 } from "./s09-du-an.mjs";
 
 export const NGUON_S09 = "S09";
 
+/**
+ * Kind của gói 1 mà DA42 đọc — danh sách DƯƠNG (giám sát 22/11). Bảng stg_s09_danh_ba không CHECK kind: bản thu S09 ngoài Hà Nội
+ * và quỹ căn có giá nạp chung bảng với kind mới, là phạm vi hàng sau. View của 115/125 lọc bằng đẳng thức theo đúng các giá trị
+ * này; danh mục gói 1 ghim thêm source_id. Ca test «kind lạ» ở pipeline/scripts/danh-ba-s09-toa.itest.mjs.
+ */
+export const KIND_GOI_1 = Object.freeze({ danhMuc: "danh-muc", toa: "toa", tang: "tang" });
+export const SOURCE_ID_DANH_MUC_GOI_1 = "danh-muc";
+
 /** Bí danh ma_nguon của gói 1: namespace riêng, khác `<pid>/<block_id>` của DA31 (chỉ mục duy nhất source+kind+value). */
 export const MA_DU_AN = (duAnId) => `danh-ba-du-an/${duAnId}`;
 export const MA_TOA = (toaId) => `danh-ba-toa/${toaId}`;

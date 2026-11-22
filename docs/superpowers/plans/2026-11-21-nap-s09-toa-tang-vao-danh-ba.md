@@ -63,6 +63,12 @@ vào nút ứng viên · thuộc tính căn.
 - **Gộp khác áp — lượt dựng đêm khi 115/125 chưa áp**: launchd chạy mã từ main, nên sau khi PR gộp mà DB máy thu chưa có view
   của 115/125 thì `buocS09DanhBa` **bỏ bước, ghi một dòng log, trả mã 0**; các bước khác của lượt dựng chạy như cũ. Có ca test:
   DB thiếu view → lượt dựng xong, 0 dòng S09, có dòng log; đột biến bỏ rào → ca đỏ (lượt dựng ném lỗi).
+- **Kind liệt kê dương** (giám sát 22/11, sau khi Mạnh mở thu S09 ngoài Hà Nội và quỹ căn có giá — nạp chung `stg_s09_danh_ba`
+  với kind mới): DA42 chỉ đọc ba kind gói 1 (`KIND_GOI_1` trong `s09-danh-ba-can.mjs`). View toà, tầng của 115 đã lọc bằng đẳng
+  thức; 125 ghim thêm `source_id = 'danh-muc'` cho danh mục (đo 22/11: bản thu 19/11 có đúng một item danh-muc, source_id
+  `danh-muc`); bước dựng chỉ đọc toà của dự án có trong danh mục gói 1. Ca test trong T4: chèn dòng kind lạ (và danh mục cùng
+  kind khác source_id) → ba view và kết quả bước dựng không đổi, kèm chiều đỏ ngay trên cùng dữ liệu (lọc loại trừ, danh mục
+  không ghim thì lọt). Dự án ngoài Hà Nội và căn quỹ căn là phạm vi hàng sau (DA43/DA50), không vào DA42.
 
 ## 3. Task (tuần tự, cùng giao dịch dựng)
 
