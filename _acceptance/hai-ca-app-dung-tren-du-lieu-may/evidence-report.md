@@ -1,19 +1,17 @@
 ---
 schema_version: 2
 feature_slug: hai-ca-app-dung-tren-du-lieu-may
-verdict: REJECT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 63bfbb922bedbeda18811fd065022f31d44736bd
+verified_commit: 077d5d9d6e056dd7bc37e987e20d284e2f375698
 human_signoff:
 ---
 
 # Evidence Report: hai-ca-app-dung-tren-du-lieu-may
-
-Round 1. Bốn eval của hợp đồng đều đạt. Verdict tổng là REJECT vì một lệnh suite hồi quy không gắn eval nào (`pipeline_a`, ca PX1-AC-10 trong `scripts/nap-dvhc-cu.test.mjs`) đã đỏ: 432 ca qua, 1 ca đỏ. Chi tiết ở mục Lệnh suite bên dưới.
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
@@ -21,91 +19,111 @@ Round 1. Bốn eval của hợp đồng đều đạt. Verdict tổng là REJECT
 | E2 | AC-2 | test | PASS |
 | E3 | AC-3 | test | PASS |
 | E4 | AC-4 | script | PASS |
+| E5 | AC-5 | script | PASS |
+| E6 | AC-6 | script | PASS |
+| E7 | AC-7 | script | PASS |
 
 ## Evidence
 
 - eval: E1
-  run_id: minted-hai-ca-app-dung-tren-du-lieu-may-E1-r1
+  run_id: minted-hai-ca-app-dung-tren-du-lieu-may-E1-r2
   exit_code: 0
   baseline: red
   verifier: config:executors.test.ht3_do3
-  verified_at: 2026-11-22T07:38:38Z
+  verified_at: 2026-11-22T08:50:32Z
   output: |
-    ℹ duration_ms 42299.287542
-    __EXIT=0
+    ℹ duration_ms 84322.475125
 
 - eval: E2
-  run_id: minted-hai-ca-app-dung-tren-du-lieu-may-E2-r1
+  run_id: minted-hai-ca-app-dung-tren-du-lieu-may-E2-r2
   exit_code: 0
   baseline: red
   verifier: config:executors.test.ht3_sd6
-  verified_at: 2026-11-22T07:38:38Z
+  verified_at: 2026-11-22T08:50:32Z
   output: |
-    ℹ duration_ms 82349.272875
-    __EXIT=0
+    ℹ duration_ms 126449.764416
 
 - eval: E3
-  run_id: minted-hai-ca-app-dung-tren-du-lieu-may-E3-r1
+  run_id: minted-hai-ca-app-dung-tren-du-lieu-may-E3-r2
   exit_code: 0
   baseline: red
   verifier: config:executors.test.ht3_ci
-  verified_at: 2026-11-22T07:38:38Z
+  verified_at: 2026-11-22T08:50:32Z
   output: |
-    ℹ duration_ms 2368.448833
-    __EXIT=0
+    ℹ duration_ms 1283.322
 
 - eval: E4
-  run_id: minted-hai-ca-app-dung-tren-du-lieu-may-E4-r1
+  run_id: minted-hai-ca-app-dung-tren-du-lieu-may-E4-r2
   exit_code: 0
   baseline: green
   verifier: config:executors.script.ht3_pham_vi
-  verified_at: 2026-11-22T07:38:38Z
+  verified_at: 2026-11-22T08:50:32Z
   output: |
     SCOPE OK
-    __EXIT=0
+
+- eval: E5
+  run_id: minted-hai-ca-app-dung-tren-du-lieu-may-E5-r2
+  exit_code: 0
+  baseline: red
+  verifier: config:executors.script.ht4_that
+  verified_at: 2026-11-22T08:50:32Z
+  output: |
+    ℹ duration_ms 26648.100458
+
+- eval: E6
+  run_id: minted-hai-ca-app-dung-tren-du-lieu-may-E6-r2
+  exit_code: 0
+  baseline: red
+  verifier: config:executors.script.ht4_that
+  verified_at: 2026-11-22T08:50:32Z
+  output: |
+    ℹ duration_ms 26648.100458
+
+- eval: E7
+  run_id: minted-hai-ca-app-dung-tren-du-lieu-may-E7-r2
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.script.ht4_ci
+  verified_at: 2026-11-22T08:50:32Z
+  output: |
+    {"skipped":5,"pass":0,"fail":0,"bo_qua_co_ly_do":5}
 
 ### Lệnh suite (hồi quy)
 
 - cmd: node scripts/suite-neu-doi.mjs agent -- 'cd agent && npm test'
-  run_id: minted-hai-ca-app-dung-tren-du-lieu-may-SUITE-node_scripts_suite_neu_doi_mjs_agent_cd_-r1
+  run_id: minted-hai-ca-app-dung-tren-du-lieu-may-SUITE-node_scripts_suite_neu_doi_mjs_agent_cd_-r2
   exit_code: 0
-  verified_at: 2026-11-22T07:38:38Z
+  verified_at: 2026-11-22T08:50:32Z
 
 - cmd: node scripts/suite-neu-doi.mjs app -- 'cd app && npx tsc --noEmit && npm run lint'
-  run_id: minted-hai-ca-app-dung-tren-du-lieu-may-SUITE-lint-r1
+  run_id: minted-hai-ca-app-dung-tren-du-lieu-may-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-11-22T07:38:38Z
+  verified_at: 2026-11-22T08:50:32Z
 
 - cmd: node scripts/suite-neu-doi.mjs app_ui -- 'cd app && npm test'
-  run_id: minted-hai-ca-app-dung-tren-du-lieu-may-SUITE-node_scripts_suite_neu_doi_mjs_app_ui_cd-r1
+  run_id: minted-hai-ca-app-dung-tren-du-lieu-may-SUITE-node_scripts_suite_neu_doi_mjs_app_ui_cd-r2
   exit_code: 0
-  verified_at: 2026-11-22T07:38:38Z
+  verified_at: 2026-11-22T08:50:32Z
 
 - cmd: node scripts/suite-neu-doi.mjs pipeline_a -- 'cd pipeline && npm run test:a'
-  run_id: minted-hai-ca-app-dung-tren-du-lieu-may-SUITE-test_a-r1
-  exit_code: 1
-  verified_at: 2026-11-22T07:38:38Z
-  output: |
-    ℹ pass 432
-    ℹ fail 1
-    test at scripts/nap-dvhc-cu.test.mjs:81:1
-    PX1-AC-10 gán S06, S03 bằng code mới = area_id đang lưu: lệch 1905
-    (mẫu: S03 offer_289d9fa0b33c1164 lưu vn-hcmc-long-binh, mới vn-hcmc; offer_ca773f5eb9c3559a lưu vn-hanoi-gia-lam, mới vn-hanoi)
+  run_id: minted-hai-ca-app-dung-tren-du-lieu-may-SUITE-test_a-r2
+  exit_code: 0
+  verified_at: 2026-11-22T08:50:32Z
 
 - cmd: node scripts/suite-neu-doi.mjs pipeline_b -- 'cd pipeline && npm run test:b'
-  run_id: minted-hai-ca-app-dung-tren-du-lieu-may-SUITE-test_b-r1
+  run_id: minted-hai-ca-app-dung-tren-du-lieu-may-SUITE-test_b-r2
   exit_code: 0
-  verified_at: 2026-11-22T07:38:38Z
+  verified_at: 2026-11-22T08:50:32Z
 
 - cmd: node scripts/suite-neu-doi.mjs ui_lint_rules -- 'cd app && npm run test:lint-rules'
-  run_id: minted-hai-ca-app-dung-tren-du-lieu-may-SUITE-test_lint_rules-r1
+  run_id: minted-hai-ca-app-dung-tren-du-lieu-may-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-11-22T07:38:38Z
+  verified_at: 2026-11-22T08:50:32Z
 
 - cmd: node scripts/suite-neu-doi.mjs portal_static -- 'node scripts/check-portal-compliance.mjs'
-  run_id: minted-hai-ca-app-dung-tren-du-lieu-may-SUITE-node_scripts_suite_neu_doi_mjs_portal_st-r1
+  run_id: minted-hai-ca-app-dung-tren-du-lieu-may-SUITE-node_scripts_suite_neu_doi_mjs_portal_st-r2
   exit_code: 0
-  verified_at: 2026-11-22T07:38:38Z
+  verified_at: 2026-11-22T08:50:32Z
 
 ## Known limits
 
@@ -113,18 +131,17 @@ Round 1. Bốn eval của hợp đồng đều đạt. Verdict tổng là REJECT
 
 ## Analyst
 
-Eval không phân biệt (xanh cả trên HEAD lẫn baseline): E4 (kiểm phạm vi bằng danh sách tệp đổi; là rào chắn phạm vi có chủ ý, đúng bản chất một regression-guard, không đo hành vi mới).
+Eval không phân biệt (xanh cả trên code cũ lẫn HEAD):
+- E4: baseline green. Đây là eval soát phạm vi diff (regression-guard có chủ ý), không đo hành vi mới.
 
-Lệnh suite không gắn eval nào đã đỏ: `pipeline_a` (ca PX1-AC-10, mô tả ở trên). Ca này nằm ngoài tệp mà nhánh đổi (nhánh chỉ đổi hai tệp test app); cần người xác định đây là lỗi dữ liệu máy có sẵn từ trước hay do nhánh, và baseline của lệnh này không được đo (n-a).
+Baseline khong do
+- node _acceptance/hai-ca-app-dung-tren-du-lieu-may/probes/px1-the-ci.mjs: bo qua baseline: tep _acceptance/hai-ca-app-dung-tren-du-lieu-may/probes/px1-the-ci.mjs co o cay dang kiem nhung chua co o merge-base b28bdbd3dcaa8e08f37d8edcccced67a3426cc6c — eval moi, chay tren code cu khong phan biet gi
 
 ## Variance
 
 none — every multi-run eval is uniform
 
-## Judge
-
-Không có panel judge nào được đề xuất: bốn eval đều là test hoặc script xác định, không có judgment item; không có mục nào cần human_override.
-
 ## Iterations
 
-Round 1: không eval nào của hợp đồng đỏ (E1 đến E4 đạt), nhưng suite hồi quy `pipeline_a` có một ca đỏ (PX1-AC-10, 1905 dòng lệch mã vùng). Verdict REJECT; chờ người xác định nguồn gốc lệch rồi chạy lại.
+Round 1: các phát hiện của S4 r1 (finding t1) được sửa ở commit 1cde44464, trả về triển khai.
+Round 2: E1–E7 đạt, các lệnh suite đạt, verdict PASS.

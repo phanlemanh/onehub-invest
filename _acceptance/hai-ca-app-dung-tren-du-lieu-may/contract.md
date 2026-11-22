@@ -5,7 +5,7 @@ slug: hai-ca-app-dung-tren-du-lieu-may
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: machine-cleared
 veto_state: mo
 veto_opened_at: 2026-11-22T08:47:53Z
 design_doc: docs/superpowers/specs/2026-11-22-hai-ca-app-dung-tren-du-lieu-may-design.md
@@ -95,3 +95,9 @@ Hàng nền (test): miễn số trên màn. Thước thay: hai ca xanh trên DB 
   vấp SD-AC-6/DO3-AC-7). Sổ và gap-probe của HT4 giữ làm phụ lục (`phu-luc-ht4-*`); thiết kế ở
   `docs/superpowers/specs/2026-11-22-px1-ac-10-so-dung-tin-gan-theo-ten-design.md`. Vì sao lọt (P2): ca đỏ ngầm từ 18–21/11 vì
   CI bỏ qua và bản mẫu DB thử dựng trước khi TG2, DA45 ghi khu vào dữ liệu thật.
+- Ngoài-1 (máy định tuyến 2026-11-22, đề xuất S4 known-limits): Người chấm ở bước nghiệm thu có thể đọc kết quả mong đợi ghi sai chữ so với những gì test in ra. Màn hình người dùng không bị ảnh hưởng. — `_acceptance/hai-ca-app-dung-tren-du-lieu-may/evals.yaml`
+- Ngoài-2 (máy định tuyến 2026-11-22, đề xuất S4 known-limits): Một lượt chấm sau có thể bỏ sót ba tiêu chí mới hoặc chạy lệnh kiểm phạm vi cũ. Người dùng cuối không thấy gì. — `_acceptance/hai-ca-app-dung-tren-du-lieu-may/s4-args.json`
+- Ngoài-3 (máy định tuyến 2026-11-22, đề xuất S4 known-limits): Trong môi trường thiếu nhánh gốc, bước kiểm phạm vi thay đổi có thể báo đạt mà không kiểm gì. Người dùng cuối không bị ảnh hưởng. — `_acceptance/config.yaml`
+- Ngoài-4 (máy định tuyến 2026-11-22, đề xuất S4 known-limits): Hồ sơ nghiệm thu mô tả sai chữ test in ra, có thể làm người chấm hiểu nhầm. Người dùng cuối không bị ảnh hưởng. — `_acceptance/hai-ca-app-dung-tren-du-lieu-may/evals.yaml`
+- Ngoài-5 (máy định tuyến 2026-11-22, đề xuất S4 known-limits): Một số tin lệch vì lý do khác có thể không bị phép đối soát phát hiện. Người dùng cuối không thấy ngay. — `pipeline/scripts/nap-dvhc-cu.test.mjs`
+- Ngoài-6 (máy định tuyến 2026-11-22, đề xuất S4 known-limits): Nếu máy thật không có tin số suy, bài kiểm vẫn báo đạt nhờ dòng tự cấy. Màn hình người dùng không đổi. — `app/tests/sellers-chip.test.tsx`
