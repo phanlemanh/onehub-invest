@@ -1,0 +1,4 @@
+JOB STEP [zalo-import-daily] bước truoc-lan-claude mã 0 giây 300 nhanh 0
+JOB STEP [zalo-import-daily] bước transform-zalo mã 0 giây 900 nhanh 0
+⚠️ [zalo-import-daily] WARN: lượt đã chạy 7200s (trần 14400s) — vẫn chưa xong
+❌ [zalo-import-daily] TIMEOUT: lượt vượt trần 14400s — gửi TERM để dừng sạch
