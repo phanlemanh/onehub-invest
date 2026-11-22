@@ -121,3 +121,21 @@ Never: bước S09 đổi cột gốc của toà có sẵn, xoá hay gộp toà,
 - Căn cao tầng: DA43.
 - Nối tin vào nút ứng viên và đưa nút ứng viên lên Invest.
 - Thuộc tính căn (diện tích, phòng ngủ, hướng, giá).
+
+## Notes
+
+Xuất xứ bộ nạp: `pipeline/import-s09-danh-ba.mjs` và test của nó là mã làn thu, gộp nguyên nhánh `origin/zcode/nap-s09-danh-ba`
+@c6609cc9b vào nhánh DA42 ngày 22/11 (merge 8b8bfa163, không chép tệp, không sửa mã). Người soát: phiên điều phối liên làn (LL),
+đạt, test 9/9. Lệnh kiểm: `cd pipeline && bash ../db/db-thu.sh oneinvest_suite_pipeline --chay node --test import-s09-danh-ba.test.mjs`.
+Lỗi logic thu phát hiện ở DA42 thì báo giám sát để trả làn thu, không sửa tại chỗ.
+
+Known limits:
+- **Mã tỉnh cũ (`khong_iso`)**: 11 dự án gói 1 mang mã tỉnh cũ 74, 77 (trước sáp nhập), không có trong `iso_regions`, nên 28 toà
+  của chúng không đúc được; bước dựng đếm riêng ở `khong_iso`. Đổi mã tỉnh cũ sang mới là một hàng riêng, không làm trong DA42.
+  Danh sách (mã dự án nguồn · mã tỉnh · số toà), đo 22/11 trên bản thu 2026-11-19:
+  85f78e95-9dc7-d503-de5d-c320c0dfb176 · 74 · 2 — 110b7c52-d42c-8bdf-f3cf-d6dd1d34342f · 74 · 4 —
+  be6469a1-e656-12bc-8f92-f9aff6bbeff3 · 74 · 1 — 6763a3be-a57f-6ddb-b668-6d7e6cc1141a · 77 · 3 —
+  ec4d0b77-2c91-08fd-989e-5493d6b88542 · 74 · 3 — 1ac2650b-caba-5d43-459c-cd4b80407f3d · 74 · 3 —
+  74db731f-ed69-c0f0-85c6-f5668a50e8a3 · 74 · 4 — a98b8230-3aae-44bd-18af-5601cd38b02e · 74 · 2 —
+  745d3571-b53c-e0b5-afd0-47173d9e6225 · 74 · 2 — 476a937c-3e24-c330-5f97-a1fa22951b5f · 77 · 2 —
+  b4a5a02c-ab42-b573-8d04-4a06b709ef43 · 74 · 2.
