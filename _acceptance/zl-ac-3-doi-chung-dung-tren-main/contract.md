@@ -5,7 +5,7 @@ slug: zl-ac-3-doi-chung-dung-tren-main
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: machine-cleared
 veto_state: mo
 veto_opened_at: 2026-11-22T02:52:30Z
 design_doc: docs/superpowers/specs/2026-11-22-zl-ac-3-doi-chung-dung-tren-main-design.md
@@ -67,3 +67,7 @@ Hàng nền (test): miễn «số trên màn đổi». Thước thay: bộ `scri
   `origin/main` = HEAD của bản gộp đó, để mọi phép so merge-base chạy như trên main sau khi gộp.
 
 ## Notes
+
+- Ngoài-2 (máy định tuyến 2026-11-22, đề xuất S4 known-limits): Công cụ soát phạm vi thay đổi bỏ sót phần cuối tệp kiểm thử, nên một sửa đổi lọt vào đó sẽ không bị báo. Người dùng cuối không thấy ảnh hưởng, chỉ là lưới an toàn của đội hẹp hơn lời mô tả. — `_acceptance/zl-ac-3-doi-chung-dung-tren-main/probes/pham-vi.mjs`
+- Ngoài-3 (máy định tuyến 2026-11-22, đề xuất S4 known-limits): Công cụ soát phạm vi không so phần dựng môi trường của bộ kiểm thử, nên sửa ở đó có thể lọt mà vẫn báo giữ nguyên. Người dùng cuối không bị ảnh hưởng, chỉ độ tin cậy của lời khẳng định trong hồ sơ giảm. — `_acceptance/zl-ac-3-doi-chung-dung-tren-main/probes/pham-vi.mjs`
+- Ngoài-4 (máy định tuyến 2026-11-22, đề xuất S4 known-limits): Công cụ kiểm tra chỉ xét kết quả chạy thành công, không xác nhận đúng thế cây và đúng số ca. Người dùng cuối không bị ảnh hưởng, chỉ có khả năng báo xanh khi thế đo lệch. — `_acceptance/zl-ac-3-doi-chung-dung-tren-main/probes/ba-the.mjs`
