@@ -1068,6 +1068,8 @@ executors:
     gnt_doc: "node --test --test-concurrency=1 --test-name-pattern='^GNT-6:' pipeline/scripts/phan-khu-s16-ma-can.itest.mjs"   # gop-nut-trung-ma-can-s16 AC-6
     gnt_dem: "node --test --test-concurrency=1 --test-name-pattern='^GNT-7:' pipeline/scripts/phan-khu-s16-ma-can.itest.mjs"   # gop-nut-trung-ma-can-s16 AC-7
     gnt_that: "node pipeline/scripts/phan-khu-s16-ma-can-that.mjs"   # gop-nut-trung-ma-can-s16 AC-8 — bản chép DB máy thu, DB máy thu chỉ đọc
+    ht4_that: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_ht4 --chay node --test --test-concurrency=1 scripts/nap-dvhc-cu.test.mjs"   # px1-ac-10-so-dung-tin-gan-theo-ten E1, E2 — bản chép DB máy thu của riêng lượt
+    ht4_ci: "node _acceptance/px1-ac-10-so-dung-tin-gan-theo-ten/probes/the-ci.mjs"   # px1-ac-10-so-dung-tin-gan-theo-ten E3 — DB dựng từ migration, mọi ca bỏ qua có tên
     s37_db: "node --test --test-concurrency=1 pipeline/scripts/danh-ba-s16-cau-truc.itest.mjs"   # danh-ba-s16-thang-cau-truc E1, E2–E8 — itest tự dựng DB oneinvest_dbv_s37_<pid> từ db/migrations, xoá khi xong
     s37_that: "node pipeline/scripts/danh-ba-s16-cau-truc-that.mjs"   # danh-ba-s16-thang-cau-truc E2b, E9, E10 — bản chép DB máy thu sau DA33, áp 111 + thẻ luật + dựng + đường lùi, chỉ in số; ngoài CI
     ns09_that: "node pipeline/scripts/nap-s09-that.mjs"   # nap-s09 E4 — bản chép DB máy thu, chạy lệnh nạp hai lần trên bản thu S09 13/11, số khớp DA31; ngoài CI
