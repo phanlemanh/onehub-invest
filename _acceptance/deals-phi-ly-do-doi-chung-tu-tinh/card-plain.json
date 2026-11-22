@@ -1,0 +1,13 @@
+{
+  "feature_plain": "Lệnh đo Căn giá tốt tự dựng một tin phi lý làm đối chứng rồi lùi lại, nên không còn báo đỏ oan trên dữ liệu đã qua bước đêm mà vẫn báo đỏ khi luật loại tin hỏng.",
+  "decisions": [
+    {"id": "Ngoài-1", "q": "Chấp nhận lint chạy chồng test vẫn có thể đỏ giả, sửa ở hàng riêng?", "why": "Mẫu bỏ qua mới chỉ phủ một họ tên tệp tạm; còn hơn mười kiểu khác (.pas-dot, .agm-dot, .kta, .tg1-pha, .au12-mut…). Giám sát đã cắt hàng HT1 dời tệp tạm ra khỏi cây mã."},
+    {"id": "Ngoài-2", "q": "Chấp nhận chú thích cấu hình lint nói quá mức phủ, sửa cùng HT1?", "why": "Chú thích ghi mẫu chung «phủ cả kiểu sau này», thực tế chỉ phủ tên có đoạn «-cu-»."},
+    {"id": "Ngoài-3", "q": "Chấp nhận các kiểm cũ của lệnh đo mới chỉ được thử ở chiều xanh?", "why": "Lệnh đo vẫn chạy đúng; chỉ là bài test chưa chứng kiểm cũ sẽ báo đỏ khi có tin phi lý lọt vào."},
+    {"id": "Ngoài-4", "q": "Ghi nhận lỗi đọc audit cũ, đã sửa ở lượt 3?", "why": "Đã sửa ở 9435f0264: lệnh đo chỉ đọc dòng audit do chính lượt chạy ghi, có ca test đỏ trên bản cũ."},
+    {"id": "Ngoài-5", "q": "Ghi nhận lỗi số «loại N tin» lấy từ đêm cũ, đã sửa cùng lượt 3?", "why": "Cùng gốc với Ngoài-4, cùng bản sửa."},
+    {"id": "Ngoài-6", "q": "Chấp nhận lệnh đo không bắt trường hợp luật loại quá tay?", "why": "Hợp đồng chỉ hứa bắt đúng tin đối chứng; loại thừa còn có các kiểm khác trên số liệu thật."},
+    {"id": "ký hay trả", "q": "Ký Cổng Bằng chứng để gộp hàng này?", "why": "Sáu tiêu chí đạt, bảy bộ kiểm xanh; không có bước áp nào lên DB máy thu."}
+  ],
+  "analyst_plain": ""
+}
