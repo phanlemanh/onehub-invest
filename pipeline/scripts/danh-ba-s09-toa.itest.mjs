@@ -10,8 +10,11 @@ import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import pg from "pg";
-import { taoDbThu, xoaDbThu } from "./db-thu-dbv.mjs";
-import { buocS09DanhBa } from "../lib/s09-dung.mjs";
+import { apTep, taoDbThu, xoaDbThu } from "./db-thu-dbv.mjs";
+import { napDanhBaThuMuc } from "../import-s09-danh-ba.mjs";
+import { cpSync, mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { SQL_CHUONG_TEN_LECH, buocS09DanhBa } from "../lib/s09-dung.mjs";
 import { KIND_GOI_1, SOURCE_ID_DANH_MUC_GOI_1 } from "../lib/s09-danh-ba-can.mjs";
 import { buocS16 } from "../lib/s16-dung.mjs";
 import { createHash } from "node:crypto";
@@ -34,8 +37,10 @@ const dongStg = (snap, dong, kind, sourceId, data, fetchedAt, meta = {}) => db.q
 
 const duAn = (id, ten) => ({ id, name: ten, project_locations: [{ province: "Hà Nội", province_code: "01" }] });
 
+let URL_THU;
 before(async () => {
-  db = new pg.Client({ connectionString: await taoDbThu(TEN) });
+  URL_THU = await taoDbThu(TEN);
+  db = new pg.Client({ connectionString: URL_THU });
   await db.connect();
   for (const s of [SNAP_GOI_1, SNAP_LA]) {
     await db.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ($1, 'vn', 's09-danh-ba', '{}')`, [s]);
@@ -557,6 +562,9 @@ test("DA42 E8 (AC-8): hai DB hai thứ tự nguồn cùng toà, căn, bí danh, 
     assert.ok(a1.the.some((t) => t.includes("s09-toa-lech-s16:q42-e8-B")), "tiền đề: toà B lệch tầng phải có thẻ");
     assert.ok(giongNoiDung(a1, a2), `thứ tự: hai thứ tự nguồn ra khác nhau\n${JSON.stringify({ s09Truoc: a1, s16Truoc: a2 }, null, 1)}`);
     // Dựng thêm hai lần: 0 khoá, 0 bí danh, 0 thẻ mới; băm tập khoá giữ nguyên.
+    const chuong = async (c) => (await c.query(SQL_CHUONG_TEN_LECH)).rows[0].so_toa;
+    assert.equal(await chuong(db), 0, "chuông: cùng bộ dòng stg, S09 trước — không toà nào giữ tên khi lệch");
+    assert.equal(await chuong(db2), 0, "chuông: cùng bộ dòng stg, S16 trước — không toà nào giữ tên khi lệch");
     for (const [c, P, s09Truoc, a] of [[db, P1, true, a1], [db2, P2, false, a2]]) {
       await thuTu(c, P, s09Truoc); await thuTu(c, P, s09Truoc);
       const b = await anhE8(c);
@@ -574,6 +582,8 @@ test("DA42 E8 (AC-8): hai DB hai thứ tự nguồn cùng toà, căn, bí danh, 
       return anhE8(db);
     };
     const a3 = await denSau();
+    // Chuông kêu đúng ca DA57 sẽ sửa: S16 về sau, toà B của S09 giữ tên «E8 B».
+    assert.equal((await db.query(SQL_CHUONG_TEN_LECH)).rows[0].so_toa, 1, "chuông: thứ tự đến S16 về sau phải đếm đúng toà B");
     assert.equal(quyetDinh(a3), quyetDinh(a2), `thứ tự đến: S16 về sau S09 ra khác quyết định với S16 trước\n${JSON.stringify({ s16VeSau: a3, s16Truoc: a2 }, null, 1)}`);
 
     // Chiều đỏ: bước S16 bỏ tra bí danh S09 gói 1 — kịch bản thứ tự đến ra khác.
@@ -661,6 +671,52 @@ test("DA42 E9 (AC-9): danh sách đẩy không có stg gói 1 và bảng vật t
     void N3;
   } finally {
     await db.query("ROLLBACK");
+  }
+});
+
+// ---- E1 (AC-1): gói 1 nạp vào stg không nhân dòng ----------------------------------------------------------------------------
+// Fixture pipeline/tests/fixtures/s09-danh-ba: tập con của bản thu gói 1 thật ngày 19/11 (che meta.duong), 7 item tốt
+// (1 danh-muc · 2 toa · 2 tang · 1 khu-thap-tang · 1 can-thap-tang) + 3 item hỏng (phi-object, thiếu kind, thiếu sourceId).
+const FIXTURE_E1 = join(import.meta.dirname, "../tests/fixtures/s09-danh-ba");
+const SNAP_E1 = "vn__s09-danh-ba__fixture-e1";
+const MIG = (n) => join(import.meta.dirname, "../../db/migrations", n);
+
+test("DA42 E1 (AC-1): fixture thật nạp hai lần — lần một đúng số dòng, lần hai 0; item hỏng đếm theo lý do; áp 115, 125 lần hai không đổi lược đồ; đỏ khi sai băm", async () => {
+  const luocDo = async () => (await db.query(`SELECT
+      (SELECT string_agg(column_name || ':' || data_type, ',' ORDER BY ordinal_position) FROM information_schema.columns WHERE table_name = 'stg_s09_danh_ba') AS cot,
+      (SELECT string_agg(conname, ',' ORDER BY conname) FROM pg_constraint WHERE conrelid = 'stg_s09_danh_ba'::regclass) AS rang_buoc,
+      (SELECT string_agg(c.relname || '=' || md5(pg_get_viewdef(c.oid)), ',' ORDER BY c.relname) FROM pg_class c WHERE c.relname LIKE 'v_s09_db_%') AS view`)).rows[0];
+  const demDong = async (sn) => (await db.query("SELECT count(*)::int AS n FROM stg_s09_danh_ba WHERE snapshot_id = $1", [sn])).rows[0].n;
+  const tam = mkdtempSync(join(tmpdir(), "s09t-e1-"));
+  try {
+    const r1 = await napDanhBaThuMuc(FIXTURE_E1, URL_THU);
+    assert.equal(r1.ghi, 7, "lần một: số dòng ghi");
+    assert.equal(r1.bo, 3);
+    assert.deepEqual(r1.boTheoLyDo, { phi_object: 1, thieu_kind: 1, thieu_source_id: 1 }, "item hỏng đếm theo lý do");
+    const r2 = await napDanhBaThuMuc(FIXTURE_E1, URL_THU);
+    assert.equal(r2.ghi, 0, "lần hai ghi thêm dòng");
+    assert.equal(r2.soCoSan, 7);
+    assert.equal(await demDong(SNAP_E1), 7);
+    const theoKind = Object.fromEntries((await db.query("SELECT kind, count(*)::int AS n FROM stg_s09_danh_ba WHERE snapshot_id = $1 GROUP BY 1", [SNAP_E1])).rows.map((r) => [r.kind, r.n]));
+    assert.deepEqual(theoKind, { "danh-muc": 1, toa: 2, tang: 2, "khu-thap-tang": 1, "can-thap-tang": 1 });
+
+    // Áp 115 rồi 125 lần hai: không lỗi, lược đồ bảng và định nghĩa view không đổi.
+    const truoc = await luocDo();
+    apTep(TEN, MIG("115_stg_s09_danh_ba.sql"));
+    apTep(TEN, MIG("125_v_s09_db_du_an_ma_tinh.sql"));
+    assert.deepEqual(await luocDo(), truoc, "áp 115, 125 lần hai đổi lược đồ");
+
+    // Chiều đỏ: sửa một byte của tệp items (manifest đổi snapshotId để đếm riêng) → ném «sai băm», 0 dòng.
+    cpSync(FIXTURE_E1, tam, { recursive: true });
+    const tepItems = join(tam, "items-0001.json.gz");
+    const b = readFileSync(tepItems); b[b.length - 5] ^= 0xff; writeFileSync(tepItems, b);
+    const mf = JSON.parse(readFileSync(join(tam, "manifest.json"), "utf8"));
+    writeFileSync(join(tam, "manifest.json"), JSON.stringify({ ...mf, snapshotId: `${SNAP_E1}-hong` }));
+    await assert.rejects(napDanhBaThuMuc(tam, URL_THU), /sai băm/, "sửa một byte mà bộ nạp không báo «sai băm»");
+    assert.equal(await demDong(`${SNAP_E1}-hong`), 0, "lượt sai băm vẫn ghi dòng");
+  } finally {
+    rmSync(tam, { recursive: true, force: true });
+    await db.query("DELETE FROM airbnb_snapshots WHERE snapshot_id LIKE $1", [`${SNAP_E1}%`]);
   }
 });
 

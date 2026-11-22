@@ -52,7 +52,7 @@ export function docSnapshot(thuMuc) {
   const items = tepItems.flatMap((f) => {
     const buf = readFileSync(join(thuMuc, f.name));
     if (createHash("sha256").update(buf).digest("hex") !== f.sha256) {
-      throw new Error(`checksum sai: ${f.name}`);
+      throw new Error(`checksum sai (sai băm): ${f.name}`);
     }
     const d = JSON.parse(gunzipSync(buf).toString("utf8"));
     return Array.isArray(d) ? d : d.items;
@@ -83,15 +83,22 @@ export async function napDanhBaThuMuc(thuMuc, db) {
     // (2) dòng stg — mọi item mọi kind, nguyên vẹn payload/meta; dong = chỉ số toàn cục từ 1
     let ghi = 0;
     let bo = 0;
+    // Lý do bỏ (AC-1 của DA42 «item hỏng đếm theo lý do»). Item thiếu kind/sourceId KHÔNG ghi chuỗi rỗng — bảng của 115 có
+    // CHECK btrim(kind|source_id) <> '', một dòng rỗng làm cả lượt ROLLBACK (lỗi tích hợp, P1 sửa 22/11 theo GS + LL).
+    const boTheoLyDo = { phi_object: 0, thieu_kind: 0, thieu_source_id: 0 };
     const hang = [];
     for (let i = 0; i < items.length; i++) {
       const it = items[i];
-      if (!it || typeof it !== "object" || Array.isArray(it)) { bo++; continue; }
+      if (!it || typeof it !== "object" || Array.isArray(it)) { bo++; boTheoLyDo.phi_object++; continue; }
+      const kind = String(it.kind ?? "").trim() === "" ? null : String(it.kind);
+      const sourceId = String(it.sourceId ?? "").trim() === "" ? null : String(it.sourceId);
+      if (kind === null) { bo++; boTheoLyDo.thieu_kind++; continue; }
+      if (sourceId === null) { bo++; boTheoLyDo.thieu_source_id++; continue; }
       hang.push([
         snapshotId,
         i + 1, // dong BẮT ĐẦU TỪ 1 (điểm chốt GS) — đếm mọi item kể cả bị bỏ
-        String(it.kind ?? ""),
-        String(it.sourceId ?? ""),
+        kind,
+        sourceId,
         it.payload ?? {},
         it.meta ?? {},
         it.fetchedAt ?? null,
@@ -112,9 +119,10 @@ export async function napDanhBaThuMuc(thuMuc, db) {
     const soLap = hang.length - ghi;
     console.log(
       `s09-danh-ba nạp: ${ghi}/${hang.length} dòng stg_s09_danh_ba (đọc ${items.length} item; ` +
-      `bỏ ${bo} item phi-object; nạp lại bỏ trùng ${soLap}; đã có sẵn ${soCoSan} dòng trước lượt)`,
+      `bỏ ${bo} item: phi_object ${boTheoLyDo.phi_object}, thieu_kind ${boTheoLyDo.thieu_kind}, ` +
+      `thieu_source_id ${boTheoLyDo.thieu_source_id}; nạp lại bỏ trùng ${soLap}; đã có sẵn ${soCoSan} dòng trước lượt)`,
     );
-    return { ghi, bo, soCoSan, soLap, soDoc: items.length, snapshotId };
+    return { ghi, bo, boTheoLyDo, soCoSan, soLap, soDoc: items.length, snapshotId };
   } catch (err) {
     await client.query("ROLLBACK").catch(() => {});
     throw err;

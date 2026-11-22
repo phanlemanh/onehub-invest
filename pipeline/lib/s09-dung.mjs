@@ -189,6 +189,18 @@ export async function buocS09(c, { khu, isoKhu, noi = NOI_KHU_S09, log = console
 /** Mã thẻ cặp toà S09 lệch tầng với S16: cùng một mã dù bước S09 hay bước S16 phát hiện (AC-8). */
 export const theLechTangS16 = (toaId) => `s09-toa-lech-s16:${toaId}`;
 
+/**
+ * Chuông báo tới khi DA57 gộp (giám sát 22/11): số toà S09 gói 1 còn mang bí danh TÊN mà đã có thẻ lệch tầng với toà S16 cùng tên.
+ * Thẻ lệch chỉ phát khi đã phát hiện lệch, nên sau bản sửa cờ lechTang con số này chỉ khác 0 khi S16 về SAU lượt dựng S09 (toà
+ * S09 đúc trước khi biết lệch giữ tên của nó — lượt sau có thể gắn nhầm theo tên). Chỉ đọc. Lệnh: pipeline/scripts/danh-ba-s09-chuong-ten-lech.mjs.
+ */
+export const SQL_CHUONG_TEN_LECH = `
+SELECT count(DISTINCT m.object_key)::int AS so_toa
+  FROM registry_aliases m
+  JOIN registry_aliases t ON t.object_key = m.object_key AND t.kind = 'ten' AND t.retired_at IS NULL
+  JOIN review_queue q ON q.item_type = 'entity_match' AND q.item_id = 's09-toa-lech-s16:' || substring(m.value FROM 13)
+ WHERE m.source = 'S09' AND m.kind = 'ma_nguon' AND m.retired_at IS NULL AND m.value LIKE 'danh-ba-toa/%'`;
+
 /** Tầng có căn của toà S16 theo tên chuẩn trong các dự án S16 của nút: `{ so, ten }` (số tầng, tên các tầng có căn) — đọc stg,
  * không phụ thuộc đã dựng hay chưa. */
 export async function soTangS16TheoTen(c, nodeSlug, noiS16 = NOI_DU_AN_S16) {

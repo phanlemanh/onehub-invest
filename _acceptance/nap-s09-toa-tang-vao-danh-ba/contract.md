@@ -129,6 +129,20 @@ Xuất xứ bộ nạp: `pipeline/import-s09-danh-ba.mjs` và test của nó là
 đạt, test 9/9. Lệnh kiểm: `cd pipeline && bash ../db/db-thu.sh oneinvest_suite_pipeline --chay node --test import-s09-danh-ba.test.mjs`.
 Lỗi logic thu phát hiện ở DA42 thì báo giám sát để trả làn thu, không sửa tại chỗ.
 
+Sửa tích hợp bộ nạp (22/11, giám sát và LL cùng phán «P1 sửa như lỗi tích hợp»; LL xác nhận ZCode không sửa dở tệp): item thiếu
+`kind` hay `sourceId` từng được ghi thành chuỗi rỗng, đụng CHECK của 115 và làm cả lượt ROLLBACK. Nay bỏ item đó, đếm theo lý do
+(`phi_object`, `thieu_kind`, `thieu_source_id`), lượt nạp tiếp tục; thông điệp sai băm thêm chữ «sai băm». Không đổi cách đọc bản
+thu, khuôn item hay DATA-CONTRACT. Ca test «thiếu-mã» (đỏ khi gỡ lọc) trong `import-s09-danh-ba.test.mjs`, test bộ nạp 10/10. Đo
+22/11 bằng hàm đọc của bộ nạp: ba bản thu thật sẽ nạp (19T004959637, 20T015947402, 20T052953464) có **0** item thiếu kind, 0 thiếu
+sourceId, 0 phi-object — sửa này là rào cho bản thu sau, không đổi số của lượt áp thật (6.951 dòng).
+
+Ngoài hợp đồng, trỏ hàng DA57 `go-bi-danh-ten-toa-s09-khi-s16-lech-tang` (giám sát cắt 22/11): khi S16 về SAU lượt dựng S09, toà
+S09 đúc trước khi biết lệch tầng vẫn giữ bí danh tên (bước S16 phát thẻ, đúc toà riêng, không gỡ tên toà S09) — lượt sau có thể
+gắn nhầm theo tên. Kế hoạch thu toàn bộ nguồn kho đưa S16 của khoảng 163 dự án về sau S09, đúng thứ tự này. Chuông báo chỉ đọc tới
+khi DA57 gộp: `node pipeline/scripts/danh-ba-s09-chuong-ten-lech.mjs` (thoát 1 khi khác 0), chạy sau mỗi lượt nạp S16 mới. Itest E8
+chứng chuông hai chiều (0 khi cùng bộ dòng stg, 1 ở kịch bản S16 về sau). Số chạy thử trên bản chép DB máy thu ghi ở T5 (mong đợi 0
+vì S16 đã ở stg lúc S09 dựng); trên DB máy thu hiện tại (chưa áp 115/125) lệnh in 0.
+
 Known limits:
 - **Mã tỉnh cũ (`khong_iso`)**: 11 dự án gói 1 mang mã tỉnh cũ 74, 77 (trước sáp nhập), không có trong `iso_regions`, nên 28 toà
   của chúng không đúc được; bước dựng đếm riêng ở `khong_iso`. Đổi mã tỉnh cũ sang mới là một hàng riêng, không làm trong DA42.

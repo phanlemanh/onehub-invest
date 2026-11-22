@@ -38,6 +38,7 @@ evals:
     expected: "View tầng trả một dòng mỗi mã tầng, tên «12B» giữ nguyên văn, hai tầng trùng tên khác mã ra hai dòng, số tầng theo toà bằng giá trị viết trước. Chiều đỏ: đột biến gộp theo tên tầng thì ca đỏ nêu «trùng tên tầng»"
     paths: ["db/migrations/115_*", "pipeline/lib/s09-danh-ba-can.mjs", "pipeline/lib/s09-dung.mjs", "pipeline/danh-ba-vat-the.mjs", "pipeline/scripts/danh-ba-s09-toa*"]
   - id: E8
+    # Cách so (22/11, giám sát duyệt): bí danh TÊN so theo giá trị, không so nguồn — chỉ mục duy nhất của tên là (đối tượng, loại, giá trị) từ DA33/DA37, nguồn ghi trước giữ; mã nguồn so kèm nguồn. Thêm kịch bản «thứ tự đến» (S16 về sau S09) để chiều đỏ «bỏ tra bí danh S09 trong bước S16» phân biệt được.
     criterion: AC-8
     executor: script
     cmd: config:executors.script.s09_toa_db

@@ -9,6 +9,8 @@
 //      ca "từ-chối-error ĐỎ" (bản hỏng đọc được snapshot có error).
 //   T3 (nạp lại không đổi số dòng): trong napDanhBaThuMuc xoá
 //      `ON CONFLICT (snapshot_id, dong) DO NOTHING` → ca "nạp-lại ĐỎ" (lượt 2 trùng PK ném).
+//   T4 (item thiếu mã, DA42 AC-1): trong napDanhBaThuMuc bỏ hai dòng lọc thieu_kind/thieu_source_id →
+//      ca "thiếu-mã ĐỎ" (bản hỏng ghi chuỗi rỗng, CHECK của 115 làm cả lượt ROLLBACK).
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { gzipSync } from "node:zlib";
@@ -121,6 +123,48 @@ test("dong-từ-1: dong 1 và 3 chiếm, dong 2 hở (item phi-object bị bỏ 
       assert.equal(hong2.rows.length, 0);
     } finally { await c.end(); }
   } finally { rmSync(thuMuc, { recursive: true, force: true }); }
+});
+
+test("thiếu-mã: item thiếu kind, item thiếu sourceId lẫn item tốt → item tốt vào, hai item kia đếm theo lý do; T4-đỏ khi bỏ lọc", async (t) => {
+  const client = new pg.Client({ connectionString: DB_URL, connectionTimeoutMillis: 2000 });
+  try { await client.connect(); } catch { t.skip("DB của lượt không chạy"); return; }
+  // CHECK như migration 115 (bảng tự dựng ở ca 0/setup không có): thiếu CHECK thì chuỗi rỗng lọt và ca đỏ không đỏ.
+  await client.query(`DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'stg_s09_danh_ba_kind_check') THEN
+      ALTER TABLE stg_s09_danh_ba ADD CONSTRAINT stg_s09_danh_ba_kind_check CHECK (btrim(kind) <> ''); END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'stg_s09_danh_ba_source_id_check') THEN
+      ALTER TABLE stg_s09_danh_ba ADD CONSTRAINT stg_s09_danh_ba_source_id_check CHECK (btrim(source_id) <> ''); END IF;
+  END $$`);
+  await client.end();
+  const thieuKind = { ...it2, kind: "  " };
+  const thieuSid = { ...it2, sourceId: undefined };
+  const dem = async (id) => {
+    const c = new pg.Client({ connectionString: DB_URL });
+    await c.connect();
+    try { return (await c.query(`SELECT dong, kind, source_id FROM stg_s09_danh_ba WHERE snapshot_id=$1 ORDER BY dong`, [id])).rows; }
+    finally { await c.end(); }
+  };
+  const a = taoSnapshot([[thieuKind, it1, thieuSid]]);
+  try {
+    const r = await napDanhBaThuMuc(a.thuMuc, DB_URL);
+    assert.equal(r.ghi, 1);
+    assert.equal(r.bo, 2);
+    assert.deepEqual(r.boTheoLyDo, { phi_object: 0, thieu_kind: 1, thieu_source_id: 1 });
+    const rows = await dem(a.manifest.snapshotId);
+    assert.deepEqual(rows.map((x) => [Number(x.dong), x.kind, x.source_id]), [[2, "can-thap-tang", "khu-a"]]); // dong 1, 3 hở
+  } finally { rmSync(a.thuMuc, { recursive: true, force: true }); }
+  // T4-đỏ: bản chép bỏ lọc → lượt nạp ném vì CHECK, 0 dòng.
+  const b = taoSnapshot([[thieuKind, it1, thieuSid]]);
+  try {
+    await banChep(
+      `      if (kind === null) { bo++; boTheoLyDo.thieu_kind++; continue; }\n      if (sourceId === null) { bo++; boTheoLyDo.thieu_source_id++; continue; }\n`,
+      "",
+      async (m) => {
+        // Bỏ lọc thì giá trị rỗng/thiếu đụng ràng buộc của bảng (CHECK của 115 hay NOT NULL) → cả lượt ROLLBACK.
+        await assert.rejects(m.napDanhBaThuMuc(b.thuMuc, DB_URL), /violates (check|not-null) constraint/, "T4-đỏ: bỏ lọc mà lượt nạp không ném");
+      });
+    assert.equal((await dem(b.manifest.snapshotId)).length, 0, "T4-đỏ: lượt hỏng vẫn để lại dòng");
+  } finally { rmSync(b.thuMuc, { recursive: true, force: true }); }
 });
 
 test("thứ-tự-tệp: manifest trộn items-2 trước items-1 — dong vẫn theo TÊN tăng dần", async (t) => {
