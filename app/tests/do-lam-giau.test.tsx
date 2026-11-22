@@ -212,11 +212,17 @@ test("DO3-AC-7 khối Làm giàu: mỗi đường một hàng, chưa chạy, kh�
     const boChuaGan = structuredClone(data)
     for (const d of boChuaGan.duong) for (const lat of Object.values(d.homNay?.lat ?? {})) delete (lat as { phuong?: { o: Record<string, number> } }).phuong?.o["khong-tin-hieu"]
     assert.throws(() => soatChuaGan(latThayDoi(boChuaGan.duong, "phuong")), /DO3-AC-7 ô chưa gắn không có trong bảng lát/)
-    // Hiện trạng có chủ ý: >10 ô có số thì ô chưa gắn KHÔNG ở trang 1. Ngày ô ấy được ghim lên đầu, assert này báo để sửa ca.
-    const soOCoSo = dongPhuong.filter((r) => r.o !== "__tong__" && r.o !== "khong-tin-hieu" && r.o !== "chua-co-danh-ba").length
-    console.log(`DO3-AC-7 lát phường: ${soOCoSo} ô có số (trang 1 hiện 10)`)
-    if (soOCoSo > 10) assert.ok(!oPhuong.includes("khong-tin-hieu"), `DO3-AC-7 hiện trạng đổi: ô chưa gắn đã lên trang 1 dù có ${soOCoSo} ô có số`)
-    else assert.ok(oPhuong.includes("khong-tin-hieu"), "DO3-AC-7 ô chưa gắn không ở trang 1 dù bảng chưa quá một trang")
+    // Hiện trạng có chủ ý: trang 1 = 10 dòng đầu của mô hình dòng (BangLuoi phân trang thẳng trên latThayDoi, không sắp lại).
+    // Vị trí thật của ô chưa gắn quyết nó có ở trang 1 không — không đếm tổng ô có số (dòng nối theo đường và nhóm). Ngày ô ấy
+    // được ghim lên đầu, nhánh «không ở trang 1» đổi và assert này báo để sửa ca có chủ ý.
+    const viTri = dongPhuong.findIndex((r) => r.o === "khong-tin-hieu")
+    console.log(`DO3-AC-7 lát phường: ${dongPhuong.length} dòng, ô chưa gắn ở dòng ${viTri + 1} (trang 1 hiện 10)`)
+    assert.equal(oPhuong.includes("khong-tin-hieu"), viTri < 10, `DO3-AC-7 DOM trang 1 lệch mô hình dòng: ô chưa gắn ở dòng ${viTri + 1}`)
+    // Chốt hiện trạng: trong đường của nó, ô chưa gắn đứng SAU các ô có số (phanRa xếp ô có số trước). Ghim lên đầu → đỏ ở đây.
+    const duongCG = dongPhuong[viTri].duong
+    const dauDuong = dongPhuong.findIndex((r) => r.duong === duongCG)
+    if (dongPhuong.some((r) => r.duong === duongCG && r.o !== "__tong__" && !["khong-tin-hieu", "chua-co-danh-ba"].includes(r.o)))
+      assert.ok(viTri > dauDuong, `DO3-AC-7 hiện trạng đổi: ô chưa gắn đã lên đầu đường ${duongCG}`)
     assert.ok(dongPhuong.some((r) => kq.areas.includes(r.o)), "có ô phường của tin bịa")
     assert.ok(p.html.includes(areaNames[kq.areas[0]] ?? "\u0000") || p.html.includes(areaNames[kq.areas[1]] ?? "\u0000"), "ô phường hiện tên")
     assert.notEqual(p.html, v.html)
