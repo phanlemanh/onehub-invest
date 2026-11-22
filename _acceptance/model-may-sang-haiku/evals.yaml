@@ -29,14 +29,14 @@ evals:
   - id: E4
     criterion: AC-4
     executor: script
-    cmd: bash db/db-thu.sh oneinvest_suite_mh1g --chay node --import tsx --test --test-concurrency=1 agent/tests/du-lieu-gui-agent.itest.ts
+    cmd: cd agent && bash ../db/db-thu.sh oneinvest_suite_mh1g --chay node --import tsx --test --test-concurrency=1 tests/du-lieu-gui-agent.itest.ts
     long_running: 10
     paths: ["agent/src/agents/enrich-text.ts", "agent/src/agents/judge-entity.ts", "agent/src/tools/native.ts", "agent/src/enrich/run.ts", "agent/scripts/enrich-run.ts", "agent/scripts/judge-run.ts", "agent/tests/du-lieu-gui-agent.itest.ts"]
     expected: "Trên DB thử: hai tin S03 cấy tên người bán, SĐT người bán, tên nhóm vào cột ngoài chữ bài, một cặp property_candidates của chúng; chạy enrich-run --offers và judge-run thật (OFFER_SELECT, queryPair) với máy giả của đường theo bảng của kho ghi thân yêu cầu. Thân enrich chỉ có chữ bài ≤ 500 ký tự và khối bối cảnh; thân judge chỉ có các dòng thuộc danh sách nhãn dòng viết trước của design doc; tên, SĐT người bán và tên nhóm không xuất hiện; đối chứng dương: chữ bài cấy xuất hiện nguyên văn. Chiều đỏ: bản sao buildJudgeInput thêm dòng người bán thì ca đỏ gọi tên trường lộ."
   - id: E5
     criterion: AC-5
     executor: script
-    cmd: bash db/db-thu.sh oneinvest_suite_mh1t --chay node --import tsx --test --test-concurrency=1 agent/tests/tran-tien-agent.itest.ts
+    cmd: cd agent && bash ../db/db-thu.sh oneinvest_suite_mh1t --chay node --import tsx --test --test-concurrency=1 tests/tran-tien-agent.itest.ts
     long_running: 10
     paths: ["agent/scripts/enrich-run.ts", "agent/scripts/judge-run.ts", "agent/src/runtime/**", "agent/config/model-agent.json", "agent/tests/tran-tien-agent.itest.ts"]
     expected: "Máy giả của đường trả số token cố định; enrich-run và judge-run với --tran-usd đủ cho đúng k lời gọi: chạy đúng k lời gọi, thoát 4, dòng tổng kết nêu đã chi và trần; ai_calls có k dòng mang <đường>:<mã gọi> (anthropic:claude-haiku-5-5 theo bảng của kho) và token vào, ra; trần đủ lớn thì thoát 0 và chạy hết tập. Chiều đỏ: bỏ kiểm trần trong bản sao thì ca đỏ «AC-5 chạy k+1 lời gọi khi trần chỉ đủ k»."
@@ -62,7 +62,7 @@ evals:
   - id: E10
     criterion: AC-10
     executor: script
-    cmd: bash db/db-thu.sh oneinvest_suite_mh1t --chay node --import tsx --test --test-concurrency=1 agent/tests/tran-tien-agent.itest.ts
+    cmd: cd agent && bash ../db/db-thu.sh oneinvest_suite_mh1t --chay node --import tsx --test --test-concurrency=1 tests/tran-tien-agent.itest.ts
     long_running: 10
     paths: ["agent/scripts/enrich-run.ts", "agent/src/enrich/run.ts", "agent/src/agents/enrich-text.ts", "agent/src/runtime/**", "agent/tests/tran-tien-agent.itest.ts"]
     expected: "Năm tin cấy thiếu trường, Gateway giả trả năm đầu ra thô viết trước (hai JSON trần, hai cùng JSON trong khối mã, một chuỗi không phải JSON); sau enrich-run --offers: bộ đề xuất e2_llm (trường, giá trị, lối) của mỗi tin khối mã bằng đúng bộ của tin JSON trần và khác rỗng, cột model là anthropic/claude-haiku-5.5, tin đầu ra hỏng 0 đề xuất và tổng kết đếm «không đọc được 1», số «đã áp» của tổng kết bằng số dòng đã áp trong DB. Chiều đỏ: bản sao parseEnrichOutput chỉ nhận JSON trần thì ca đỏ «AC-10 thiếu đề xuất của đầu ra khối mã»."
