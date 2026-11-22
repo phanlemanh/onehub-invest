@@ -88,43 +88,121 @@ const tenGan = (t) => String(t ?? "").normalize("NFD").replace(/[\u0300-\u036f]/
   .replace(/^the\s+/, "").replace(/[^a-z0-9]/g, "");
 
 /**
- * Kế hoạch nối nút do luật S16 đúc về nút đã có. Hàm thuần.
+ * Mã căn `ma` có «mang tiền tố» một toà trong `toa` không: bắt đầu bằng tên toà và ngay sau là dấu chấm, hoặc tên toà có dấu chấm
+ * và ngay sau là chữ số (toà «S1» không nhận «S10.01»; toà «S1.01» nhận «S1.0105»). DA53 AC-1.
+ */
+export function mangTienTo(ma, toa, { ranhGioi = true } = {}) {
+  for (const t of toa) {
+    if (!t || !ma.startsWith(t)) continue;
+    if (!ranhGioi) return true;
+    const r = ma.slice(t.length);
+    if (r.startsWith(".") || (t.includes(".") && /^[0-9]/.test(r))) return true;
+  }
+  return false;
+}
+
+/**
+ * Bằng chứng mã căn S16 của một nút luật (DA53). Hàm thuần; mã căn chỉ nằm trong bộ nhớ, kết quả chỉ mang số đếm.
+ * @param {Set<string>} ma  mã căn của mọi khu nút luật mang
+ * @param {{id:number, ma:Set<string>, toa:Set<string>}[]} ungVien  nút cùng dự án, không do luật đúc, chưa nghỉ, có mã căn
+ * @param {{san?:number, duTienTo?:boolean, motUngVien?:boolean, ranhGioi?:boolean}} [tuy]  tham số chỉ để đối chứng đỏ của test
+ * @returns {null|{ket:'khop'|'can-nguoi'|'duoi-nguong', nut:number[], ly_do?:string, trung:number, tien_to:number, tong:number}}
+ *   null: không ứng viên nào có mã trùng hay mang tiền tố
+ */
+export function xetMaCan(ma, ungVien, { san = SAN_PHAN_TU_CHUNG, duTienTo = true, motUngVien = true, ranhGioi = true } = {}) {
+  const tong = ma.size;
+  if (!tong) return null;
+  const dem = ungVien.map((u) => {
+    let trung = 0, tienTo = 0;
+    for (const m of ma) { if (u.ma.has(m)) trung++; if (mangTienTo(m, u.toa, { ranhGioi })) tienTo++; }
+    return { id: u.id, trung, tien_to: tienTo };
+  }).filter((d) => d.trung || d.tien_to).sort((a, b) => b.tien_to - a.tien_to || b.trung - a.trung || a.id - b.id);
+  if (!dem.length) return null;
+  const du = duTienTo ? dem.filter((d) => d.tien_to === tong) : dem;
+  const kq = (ket, ds, ly_do) => ({ ket, nut: ds.map((d) => d.id).sort((a, b) => a - b), ...(ly_do ? { ly_do } : {}),
+    trung: ds[0].trung, tien_to: ds[0].tien_to, tong });
+  if (!du.length) return kq("duoi-nguong", [dem[0]], "duoi-nguong-ma-can");
+  if (du.length > 1 && motUngVien) return kq("can-nguoi", du, "nhieu-ung-vien");
+  if (du[0].trung < san) return kq("can-nguoi", [du[0]], "it-trung");
+  return kq("khop", [du[0]]);
+}
+
+/**
+ * Kế hoạch nối nút do luật S16 đúc về nút đã có. Hàm thuần. Bằng chứng S09 xét trước (luật DA46); khớp thì mã căn không đổi
+ * được kết quả. Không khớp thì xét mã căn S16 (DA53): khớp → nối, căn cứ `ma-can-s16`; đủ tiền tố mà ít trùng hay nhiều ứng
+ * viên → `can_nguoi`, không nối.
  * @param {{id:number, du_an_node_id:number, name:string, khoa:string[]}[]} nutLuat  nút chưa nghỉ do luật S16 đúc
  * @param {Map<string, {tong_toa:number, co_s09:number, nut:number[]}>} bangChung  theo khoá khu
- * @param {{id:number, du_an_node_id:number, name:string}[]} nutKhac  nút chưa nghỉ còn lại của các dự án
+ * @param {{id:number, du_an_node_id:number, name:string, node_type?:string, khoa?:string[]}[]} nutKhac  nút chưa nghỉ còn lại
+ *   của các dự án; chỉ nút phân khu (subzone) mang khoá khu làm ứng viên mã căn
+ * @param {Map<string, {ma:Set<string>, toa:Set<string>}>} [maCan]  mã căn và tên toà theo khoá khu
+ * @param {{xetMa?:Function, s09Truoc?:boolean}} [tuy]  chỉ để đối chứng đỏ của test
  */
-export function keHoachNoi(nutLuat, bangChung, nutKhac) {
-  const cap = [], khongNoi = [];
+export function keHoachNoi(nutLuat, bangChung, nutKhac, maCan = new Map(), { xetMa = xetMaCan, s09Truoc = true } = {}) {
+  const cap = [], khongNoi = [], canNguoi = [];
   const daLiet = new Set();
   const moiNut = [...nutLuat, ...nutKhac];
   const soKhuCuaNut = demBanGhiTheoNut(bangChung.values());
+  const gom = (khoa) => {
+    const ma = new Set(), toa = new Set();
+    for (const k of khoa ?? []) { const x = maCan.get(k); if (x) { x.ma.forEach((m) => ma.add(m)); x.toa.forEach((t) => toa.add(t)); } }
+    return { ma, toa };
+  };
+  const ungVienCua = (n) => nutKhac.filter((x) => x.du_an_node_id === n.du_an_node_id && x.khoa?.length && (x.node_type ?? "subzone") === "subzone")
+    .map((x) => ({ id: x.id, ...gom(x.khoa) })).filter((x) => x.ma.size);
   for (const n of [...nutLuat].sort((a, b) => a.id - b.id)) {
     const ds = n.khoa.map((k) => bangChung.get(k)).filter(Boolean);
     const bc = { tong_toa: ds.reduce((t, x) => t + x.tong_toa, 0), co_s09: ds.reduce((t, x) => t + x.co_s09, 0), nut: ds.flatMap((x) => x.nut) };
     const xet = xetKhopTron(banGhiKhop(bc), soKhuCuaNut);
+    const maXet = maCan.size ? xetMa(gom(n.khoa).ma, ungVienCua(n)) : null;
+    const khoa = [...n.khoa].sort();
+    const noiMa = () => cap.push({ moi_id: n.id, cu_id: maXet.nut[0], khoa, can_cu: "ma-can-s16", trung: maXet.trung, tien_to: maXet.tien_to, tong: maXet.tong });
+    if (!s09Truoc && maXet?.ket === "khop") { noiMa(); continue; }
     if (xet?.ket === "khop") {
-      cap.push({ moi_id: n.id, cu_id: xet.node_id, khoa: [...n.khoa].sort(), co_s09: bc.co_s09, tong_toa: bc.tong_toa });
+      cap.push({ moi_id: n.id, cu_id: xet.node_id, khoa, can_cu: "toa-s09", co_s09: bc.co_s09, tong_toa: bc.tong_toa });
+      continue;
+    }
+    // S09 cảnh báo chỉ về nút khác nút mã căn chọn: hai căn cứ lệch nhau, để người chọn.
+    if (maXet?.ket === "khop" && xet && !xet.nut.includes(maXet.nut[0])) {
+      canNguoi.push({ moi_id: n.id, nut: [...new Set([...xet.nut, ...maXet.nut])].sort((a, b) => a - b), ly_do: "lech-can-cu", trung: maXet.trung, tien_to: maXet.tien_to, tong: maXet.tong });
+      continue;
+    }
+    if (maXet?.ket === "khop") { noiMa(); continue; }
+    if (maXet?.ket === "can-nguoi") {
+      canNguoi.push({ moi_id: n.id, nut: maXet.nut, ly_do: maXet.ly_do, trung: maXet.trung, tien_to: maXet.tien_to, tong: maXet.tong });
       continue;
     }
     if (xet) { khongNoi.push({ moi_id: n.id, ly_do: xet.ly_do, voi_id: xet.nut.length === 1 ? xet.nut[0] : null }); continue; }
+    if (maXet?.ket === "duoi-nguong") {
+      khongNoi.push({ moi_id: n.id, ly_do: maXet.ly_do, voi_id: maXet.nut[0], trung: maXet.trung, tien_to: maXet.tien_to, tong: maXet.tong });
+      continue;
+    }
     const gan = moiNut.find((x) => x.id !== n.id && x.du_an_node_id === n.du_an_node_id && tenGan(x.name) === tenGan(n.name));
     if (!gan || daLiet.has(`${gan.id}:${n.id}`)) continue;
     daLiet.add(`${n.id}:${gan.id}`);
     khongNoi.push({ moi_id: n.id, ly_do: bc.tong_toa === 0 ? "khong-toa" : "gan-ten", voi_id: gan.id });
   }
-  const bam = createHash("sha256").update(JSON.stringify({ cap, khongNoi })).digest("hex");
-  return { cap, khong_noi: khongNoi, bam };
+  const bam = createHash("sha256").update(JSON.stringify({ cap, khongNoi, canNguoi })).digest("hex");
+  return { cap, khong_noi: khongNoi, can_nguoi: canNguoi, bam };
 }
 
-const LY_DO_KHONG_NOI = { "re-hai-nut": "toà rẽ từ hai nút trở lên, cần người chọn", "nhieu-ban-ghi": "nút này nhận toà từ nhiều khu", "it-chung": `chưa đủ ${SAN_PHAN_TU_CHUNG} toà chung`, "duoi-san": "dưới một nửa số toà có S09", "khong-toa": "chưa có toà làm bằng chứng", "gan-ten": "chỉ gần tên, không có bằng chứng toà" };
+const LY_DO_KHONG_NOI = { "re-hai-nut": "toà rẽ từ hai nút trở lên, cần người chọn", "nhieu-ban-ghi": "nút này nhận toà từ nhiều khu", "it-chung": `chưa đủ ${SAN_PHAN_TU_CHUNG} toà chung`, "duoi-san": "dưới một nửa số toà có S09", "khong-toa": "chưa có toà làm bằng chứng", "gan-ten": "chỉ gần tên, không có bằng chứng toà", "duoi-nguong-ma-can": "dưới ngưỡng mã căn: chỉ một phần mã căn mang tiền tố toà của nút kia" };
+const LY_DO_CAN_NGUOI = { "it-trung": `mọi mã căn mang tiền tố toà của một nút nhưng dưới ${SAN_PHAN_TU_CHUNG} mã trùng hẳn`, "nhieu-ung-vien": "mã căn khớp từ hai nút trở lên", "lech-can-cu": "toà S09 chỉ về nút khác nút mã căn chọn" };
+const CAN_CU = { "toa-s09": "toà S09", "ma-can-s16": "mã căn S16" };
+const soMa = (x) => `${x.trung} trùng / ${x.tien_to} tiền tố / ${x.tong}`;
 
-/** Thẻ nối dạng markdown: từng cặp, số toà làm bằng chứng, ca không nối. KHÔNG in khu_id hay toa_id. */
-export function dungTheNoi({ cap, khong_noi: khongNoi, bam }, tenNut = new Map()) {
+/** Thẻ nối dạng markdown: từng cặp kèm căn cứ và số đếm, ca cần người chọn, ca không nối. KHÔNG in khu_id, toa_id hay mã căn. */
+export function dungTheNoi({ cap, khong_noi: khongNoi, can_nguoi: canNguoi = [], bam }, tenNut = new Map()) {
   const ten = (id) => `${id} ${tenNut.get(id) ?? ""}`.trim();
-  const d = ["# Thẻ nối phân khu S16", "", "| Nút mới | Nút giữ lại | Toà có S09 / tổng toà |", "|---|---|---|"];
-  for (const c of cap) d.push(`| ${ten(c.moi_id)} | ${ten(c.cu_id)} | ${c.co_s09}/${c.tong_toa} |`);
+  const d = ["# Thẻ nối phân khu S16", "", "| Nút mới | Nút giữ lại | Căn cứ | Toà có S09 / tổng toà · mã căn trùng / tiền tố / tổng |", "|---|---|---|---|"];
+  for (const c of cap) {
+    const so = c.can_cu === "ma-can-s16" ? `mã căn ${soMa(c)}` : `${c.co_s09}/${c.tong_toa}`;
+    d.push(`| ${ten(c.moi_id)} | ${ten(c.cu_id)} | ${CAN_CU[c.can_cu] ?? c.can_cu} | ${so} |`);
+  }
+  d.push("", "## Cần người chọn", "", "| Nút | Ứng viên | Mã căn | Vì sao |", "|---|---|---|---|");
+  for (const k of canNguoi) d.push(`| ${ten(k.moi_id)} | ${k.nut.map(ten).join(", ")} | ${soMa(k)} | ${LY_DO_CAN_NGUOI[k.ly_do] ?? k.ly_do} |`);
   d.push("", "## Không nối", "", "| Nút | Gần với | Vì sao |", "|---|---|---|");
-  for (const k of khongNoi) d.push(`| ${ten(k.moi_id)} | ${k.voi_id == null ? "-" : ten(k.voi_id)} | ${LY_DO_KHONG_NOI[k.ly_do]} |`);
-  d.push("", `Tổng: ${cap.length} cặp nối · ${khongNoi.length} ca không nối`, "", `băm: ${bam}`);
+  for (const k of khongNoi) d.push(`| ${ten(k.moi_id)} | ${k.voi_id == null ? "-" : ten(k.voi_id)} | ${LY_DO_KHONG_NOI[k.ly_do] ?? k.ly_do}${k.tong ? ` (${soMa(k)})` : ""} |`);
+  d.push("", `Tổng: ${cap.length} cặp nối · ${canNguoi.length} ca cần người chọn · ${khongNoi.length} ca không nối`, "", `băm: ${bam}`);
   return d.join("\n") + "\n";
 }
