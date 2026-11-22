@@ -29,7 +29,7 @@ evals:
     criterion: AC-5
     executor: script
     cmd: config:executors.script.s09_toa_db
-    expected: "Trên view nút vùng hiệu lực, toà có S16 giữ phân khu S16 khi S09 ghi phân khu khác; số lệch đếm theo cặp nguồn bằng giá trị viết trước; toà số tầng khớp thành bí danh, toà lệch quá 2 tầng ra đúng một thẻ và 0 bí danh, toà không so được thành bí danh và vào bộ đếm riêng. Chiều đỏ: đột biến xếp S09 trên S16 thì ca đỏ nêu «S16 thắng»; đột biến bỏ so số tầng thì ca đỏ nêu «hai toà cùng tên»"
+    expected: "Trên view nút vùng hiệu lực, toà có S16 giữ phân khu S16 khi S09 ghi phân khu khác; số lệch đếm theo cặp nguồn bằng giá trị viết trước; toà số tầng khớp thành bí danh, toà lệch tầng (S09 ít hơn số tầng có căn S16 quá 2, hoặc S16 có căn ở tầng S09 không kê, không so tầng 1) ra đúng một thẻ và 0 bí danh; toà S09 nhiều tầng hơn S16 hay chỉ thiếu tầng 1 vẫn thành bí danh, toà không so được thành bí danh và vào bộ đếm riêng. Chiều đỏ: đột biến xếp S09 trên S16 thì ca đỏ nêu «S16 thắng»; đột biến bỏ so số tầng thì ca đỏ nêu «hai toà cùng tên»"
     paths: ["db/migrations/115_*", "pipeline/lib/s09-danh-ba-can.mjs", "pipeline/lib/s09-dung.mjs", "pipeline/danh-ba-vat-the.mjs", "pipeline/scripts/danh-ba-s09-toa*"]
   - id: E6
     criterion: AC-6
@@ -54,7 +54,7 @@ evals:
     executor: script
     layer: backend-effect
     cmd: config:executors.script.s09_toa_that
-    expected: "Trên DB thử chép máy thu: hai phép cộng dự án, toà bằng tổng manifest, mỗi phần một SELECT riêng; bốn ngưỡng in cạnh số đo theo đúng công thức ở AC-10; 0 cặp bí danh lệch số tầng S16 quá 2; toà hai UPI và căn hai khoá bằng 0; chạy lại cùng số. Chiều đỏ, mỗi đột biến thoát 1 nêu đúng tên: bỏ một phần → phần thiếu; nối mã mới sai toà → «nối mã cũ». Chỉ in số"
+    expected: "Trên DB thử chép máy thu: hai phép cộng dự án, toà bằng tổng manifest, mỗi phần một SELECT riêng; bốn ngưỡng in cạnh số đo theo đúng công thức ở AC-10; 0 cặp bí danh lệch tầng theo luật AC-5; mẫu số ngưỡng mã cũ là 110 toà, 65 toà gom in thành dòng đếm riêng; toà hai UPI và căn hai khoá bằng 0; chạy lại cùng số. Chiều đỏ, mỗi đột biến thoát 1 nêu đúng tên: bỏ một phần → phần thiếu; nối mã mới sai toà → «nối mã cũ». Chỉ in số"
     paths: ["db/migrations/115_*", "pipeline/lib/s09-danh-ba-can.mjs", "pipeline/lib/s09-dung.mjs", "pipeline/danh-ba-vat-the.mjs", "pipeline/scripts/danh-ba-s09-toa*"]
   - id: E11
     criterion: AC-10

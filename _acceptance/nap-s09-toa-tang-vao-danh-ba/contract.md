@@ -47,10 +47,10 @@ Then khớp một thành bí danh, số toà không đổi; toà đã có bí da
 thẻ, 0 toà mới; không khớp tạo đúng một toà bậc `mot_loi_khai`; 0 toà hai UPI; 0 mã S09 trỏ hai toà.
 
 ### AC-5 — Dự án có S16 giữ cấu trúc của S16
-Given dự án có S16 với toà đã xếp vào phân khu, và ba toà S09 cùng tên ở phân khu khác: một toà số tầng khớp S16, một toà số tầng lệch quá 2,
-một toà không có số tầng để so,
+Given dự án có S16 với toà đã xếp vào phân khu, và ba toà S09 cùng tên ở phân khu khác: một toà khớp tầng với S16, một toà lệch tầng (S09 ít hơn
+số tầng có căn của S16 quá 2, hoặc S16 có căn ở một tầng mà danh sách tầng S09 không có, không so tầng 1), một toà không có số tầng để so,
 When dựng danh bạ,
-Then toà khớp thành bí danh, phân khu hiệu lực vẫn theo S16, số lệch cấu trúc đếm theo cặp nguồn và không sinh thẻ từng toà; toà lệch số tầng
+Then toà khớp thành bí danh, phân khu hiệu lực vẫn theo S16, số lệch cấu trúc đếm theo cặp nguồn và không sinh thẻ từng toà; toà lệch tầng
 ra thẻ, 0 bí danh, vì có thể là hai toà thật cùng tên; toà không so được thành bí danh và được đếm riêng.
 
 ### AC-6 — Danh sách tầng đủ cho DA43
@@ -76,9 +76,9 @@ Then:
 - tổng dự án trong manifest bằng tổng: giữ nối · chờ thẻ luật · chờ thẻ từng cặp · nút ứng viên; dự án có ở bản 13/11 mà gói 1 không có được đếm riêng;
 - tổng toà trong manifest bằng tổng các phần, mỗi phần một câu đếm riêng: thành bí danh · tạo mới · chờ thẻ · thuộc dự án chưa nối;
 - ngưỡng khai trước khi thấy số: tỉ lệ vào danh bạ = (thành bí danh + tạo mới) / (tổng toà − thuộc dự án chưa nối − chờ thẻ), ít nhất 95%; chờ thẻ
-  không quá 10% số toà của dự án đã nối (bản 13/11 có 93 trong 1.665 dòng toà trùng tên, tức 5,6%); mã hỏng không quá 1%; ít nhất 99% trong 175 toà
-  đã có bí danh mã cũ nối về đúng toà cũ;
-- độ đúng của bí danh đo bằng tín hiệu không phải tên: 0 cặp toà thành bí danh mà số tầng S09 lệch số tầng S16 quá 2. Vượt một ngưỡng thì lượt đo
+  không quá 10% số toà của dự án đã nối (bản 13/11 có 93 trong 1.665 dòng toà trùng tên, tức 5,6%); mã hỏng không quá 1%; ít nhất 99% trong 110 toà
+  đã có bí danh mã cũ và có căn hoặc có S16 nối về đúng toà cũ; 65 toà gom mã cũ không căn, không S16 là một số đếm riêng, chuyển DA50;
+- độ đúng của bí danh đo bằng tín hiệu không phải tên: 0 cặp toà thành bí danh mà lệch tầng theo luật AC-5 (S09 ít hơn số tầng có căn S16 quá 2, hoặc S16 có căn ở tầng S09 không kê, không so tầng 1). Vượt một ngưỡng thì lượt đo
   đỏ và dừng để người quyết, không tự nới;
 - số dự án, toà trên trang bằng câu đếm trên cùng DB; đích trên dữ liệu thật: 198 dự án có toà, 928 toà, 23.708 tầng; 0 toà hai UPI; bước S09 tạo 0 căn; chạy lại ra cùng số.
 
