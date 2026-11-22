@@ -1,0 +1,31 @@
+schema_version: 1
+feature_slug: hai-ca-app-dung-tren-du-lieu-may
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.ht3_do3
+    paths: [app/tests/do-lam-giau.test.tsx]
+    expected: "exit 0; «ℹ fail 0», hai ca DO3-AC-7 «✔». Dòng in «DO3-AC-7 lát phường: <n> ô có số (trang 1 hiện 10)». Trong ca: soatChuaGan(latThayDoi(data.duong, \"phuong\")) qua; bản dữ liệu lát bị xoá ô «khong-tin-hieu» → assert.throws ghim «DO3-AC-7 ô chưa gắn không có trong bảng lát»; n > 10 → ô chưa gắn không có trong DOM trang 1 (có → đỏ ghim «DO3-AC-7 hiện trạng đổi»)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.ht3_sd6
+    paths: [app/tests/sellers-chip.test.tsx]
+    expected: "exit 0; «✔ SD-AC-6»; dòng «SD-AC-6 số thật <a>, số suy có số tin <b>, số suy null <c>» với a, b, c > 0 (một nhóm 0 → đỏ «probe không đo được»). Ba tin tự cấy có mặt trong dealsSql đọc không trần (vắng → đỏ ghim «tin tự cấy … không vào dealsSql»). Chiều đỏ 1: view sellers bản đột biến nối khoá băm → assert.rejects ghim «SD-AC-6 tin có SĐT thiếu số tin người bán». Chiều đỏ 2: tin số suy mới bị gán broker_n_ads = 3 → assert.throws ghim «SD-AC-6 số suy hiện số tin khác danh bạ của số: … t_sd1_chip_suy_…»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.ht3_ci
+    paths: [app/tests/do-lam-giau.test.tsx, app/tests/sellers-chip.test.tsx]
+    expected: "exit 0; «ℹ fail 0», «ℹ skipped 2»: DO3-AC-7 (mỗi đường) «﹣ … thiếu DATABASE_URL» và SD-AC-6 «﹣ … CI chỉ có lược đồ»; ca DO3-AC-7 «trống, lỗi tại chỗ» vẫn «✔»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.ht3_pham_vi
+    paths: [app/tests/do-lam-giau.test.tsx, app/tests/sellers-chip.test.tsx]
+    expected: "exit 0; in «SCOPE OK». Tệp ngoài danh sách (vd app/src/lib/deals.ts, scripts/lib/ci-can-du-lieu.mjs) → «NGOAI PHAM VI: <tệp>», thoát 1."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
