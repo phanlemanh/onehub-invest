@@ -7,7 +7,7 @@ risk_tier: T2
 surfaces: [cli]
 status: implemented
 veto_state: mo
-veto_opened_at: 2026-11-22T06:21:38Z
+veto_opened_at: 2026-11-22T08:47:53Z
 design_doc: docs/superpowers/specs/2026-11-22-hai-ca-app-dung-tren-du-lieu-may-design.md
 approved_by:
 approved_at:
