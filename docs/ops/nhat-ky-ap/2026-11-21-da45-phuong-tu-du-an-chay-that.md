@@ -69,8 +69,27 @@ Nguồn: `pipeline/logs/s03-nap-15phut.log`. Lượt nạp nhanh cuối cùng tr
 - Bước phường nằm đúng giữa `transform-zalo` và `transform-media`, như AC-1.
 - Ngưỡng thời gian của AC-7 là lượt lặp xong trong 60 giây; hai lượt thật chạy 2–3 giây.
 
+## (4) Kiểm sau một đêm (22/11)
+
+Giám sát chạy `kiem-sau.sql` trên DB máy thu sáng 22/11, chỉ đọc. Dãy P3 đọc log để đối chiếu bước phường và `sync-cloud`.
+
+| Dòng đếm | Lúc áp (21/11) | Sau một đêm (22/11) |
+|---|---|---|
+| Tin S03 có phường | 7.858 / 8.144 (96,49 %) | **7.986 / 8.295 (96,27 %)** |
+| Cửa sổ 13–19/11 | 1.585 / 1.665 | 1.585 / 1.665 |
+| Phát biểu sống | 87.104 | 90.257 |
+| Tin nhãn `du-an` | 8.141 | 8.267 |
+
+- Tỉ lệ có phường 96,27 %, vẫn trên ngưỡng AC-7 là 94,4 %. Cửa sổ 13–19/11 giữ nguyên, tức các lượt nạp sau không làm mất phường của tin cũ.
+- **Lượt 00:00 đầy đủ đầu tiên** (`zalo-import.log`, chế độ `nhanh 0`):
+  - bước `phuong-tu-du-an` mã 0, 2 giây, nằm giữa `transform-zalo` (mã 0, 91 giây) và `transform-media` (mã 0, 10 giây);
+  - đầu ra: bài có dự án 89.998 · nhận phường 89.992 · dự án mâu thuẫn 0 · đã ghi 511 phát biểu, rút 0, phân xử lại 149 tin;
+  - không có `JOB FAIL`, không có `BỎ LƯỢT` ở bước phường.
+- **`sync-cloud`** (`cloud-sync.log`): bốn lượt gần nhất 1.142–1.298 giây, không dài hơn dải bảy lượt trước áp (1.293–1.489 giây). Lượt 1.653 giây
+  lúc áp không lặp lại, nên mục theo dõi ở (2) đóng.
+
 ## Theo dõi
 
 - Ngoài-2 (Mạnh chọn «mở hợp đồng mới» ở Cổng Bằng chứng): chuỗi tự tắt mà không báo gì khi một lượt rút sạch phát biểu. Hàng riêng, giám sát
   cắt sau.
-- Lượt 00:00 đầu tiên (22/11) chạy bước phường ở chế độ đầy đủ. Lượt ấy JOB FAIL ở bước phường thì báo giám sát, không tự sửa.
+- ~~Lượt 00:00 đầu tiên (22/11) chạy bước phường ở chế độ đầy đủ~~: đã chạy, mã 0, xem (4).
