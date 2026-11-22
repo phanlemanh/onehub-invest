@@ -14,6 +14,11 @@ thêm AC-11 19/11). Thiết kế: `docs/superpowers/specs/2026-11-18-nap-s09-toa
 - **Không áp 115/125 lên DB máy thu trong ngày thứ Hai 23/11** (chuyển máy thu). DA42 áp ở máy mới sau khi kiểm chuyển máy xanh;
   số chạy thử dựng lại ngay trước khi áp, vì danh bạ đổi giữa chừng (DA51 đã áp 21/11; DA53 gộp nút Grand Park chờ áp sau PL20).
 
+**TẠM DỪNG 22/11 10:15Z** (giám sát, vì hạn mức tuần — không phải chất lượng). Dừng ở: T4 xong (`s09_toa_db` 23/23), T5 xong và
+ĐẠT trên bản chép kèm ba chiều đỏ, nhánh mã cũ trước tên xong (lệch kế hoạch §2), T8 nháp đủ năm thứ. Việc kế khi giám sát nhắn «mở
+lại DA42», theo thứ tự: (1) T7 ảnh `/ops/registry` — `node pipeline/scripts/danh-ba-s09-toa-that.mjs --giu-db` rồi app cổng riêng trỏ
+`oneinvest_s09ui`, chụp, xoá DB; (2) chạy lại E9 sau khi NK1 áp; (3) nhận main có HT3 (và HT4); (4) S4 sau MH1. Nhánh chưa đẩy.
+
 ## 1. Bảng phủ ca — đo lại ngày 21/11 trên DB máy thu và snapshot gói 1 thật
 
 Bản thu gói 1: `vn__s09-danh-ba__2026-11-19T004959637` (1.462 item: danh mục 1, `toa` 221, `tang` 928, `khu-thap-tang` 221,
