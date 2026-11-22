@@ -213,6 +213,26 @@ try {
   o("xung_dot_ma_cu_ten (thẻ, mong đợi 0)", p.xung_dot_ma_cu_ten, true);
   o("ma_cu_hai_toa (thẻ)", p.ma_cu_hai_toa, true);
   o("toa_theo_ma_cu (bước dựng)", kq1?.s09_goi1?.toa?.theo_ma_cu ?? "?", true);
+  if (co("--doi-soat-ma-cu")) {
+    // Đối soát «mẫu số mã cũ (toà có sẵn) ↔ toà gói 1 đi nhánh mã cũ»: mỗi toà gói 1 nối về toà mang mã cũ có block = toa_id.
+    const ds = await q(`
+      WITH mc AS (SELECT m.object_key, split_part(m.value, '/', 2) AS blk FROM registry_aliases m
+                   WHERE m.source = 'S09' AND m.kind = 'ma_nguon' AND m.retired_at IS NULL AND m.value NOT LIKE 'danh-ba-toa/%' AND m.object_key = ANY($1)),
+      lop AS (SELECT DISTINCT object_key,
+                     (EXISTS (SELECT 1 FROM units u WHERE u.building_key = mc.object_key) OR EXISTS (SELECT 1 FROM registry_aliases s
+                        WHERE s.object_key = mc.object_key AND s.source = 'S16' AND s.kind = 'ma_nguon' AND s.retired_at IS NULL)) AS mau_so
+                FROM mc)
+      SELECT CASE WHEN l.mau_so THEN 'mau_so' ELSE 'gom' END AS lop, count(*)::int AS toa_goi1, count(DISTINCT mc.object_key)::int AS toa_co_san,
+             count(*) FILTER (WHERE a.object_key = mc.object_key)::int AS toa_goi1_noi_dung
+        FROM v_s09_db_toa t JOIN mc ON mc.blk = t.toa_id JOIN lop l ON l.object_key = mc.object_key
+        LEFT JOIN registry_aliases a ON a.source = 'S09' AND a.kind = 'ma_nguon' AND a.retired_at IS NULL AND a.value = 'danh-ba-toa/' || t.toa_id
+       WHERE t.du_an_id IN (SELECT du_an_id FROM v_s09_db_du_an)
+       GROUP BY 1 ORDER BY 1`, [[...BEFORE]]);
+    for (const r of ds) console.log(`  đối soát mã cũ · lớp ${r.lop}: toà có sẵn ${r.toa_co_san} · toà gói 1 trỏ về ${r.toa_goi1} · trong đó đã nối đúng ${r.toa_goi1_noi_dung}`);
+    const maCuSo = await q(`SELECT (SELECT count(*)::int FROM registry_aliases m WHERE m.source = 'S09' AND m.kind = 'ma_nguon' AND m.retired_at IS NULL
+                                     AND m.value NOT LIKE 'danh-ba-toa/%' AND m.object_key = ANY($1)) AS ma_cu_ma`, [[...BEFORE]]);
+    console.log(`  đối soát mã cũ · tổng số MÃ cũ (mọi toà có sẵn): ${maCuSo[0].ma_cu_ma}`);
+  }
   if (co("--chi-tiet-ma-cu")) {
     const ds = await q(`
       SELECT m.object_key, m.value AS ma_cu, split_part(m.value, '/', 1) AS du_an_cu,
