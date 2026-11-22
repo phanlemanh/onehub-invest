@@ -12,7 +12,7 @@ flowchart TD
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>21 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>217 việc"]
+  GB --> DG["Đã giao<br/>218 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>141 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
@@ -296,6 +296,7 @@ flowchart TD
 - Gộp nút phân khu do luật S16 đúc vào nút sẵn có bằng bằng chứng mã căn S16, qua thẻ nối có băm của DA46, đảo được (`gop-nut-trung-ma-can-s16`) — đã giao — máy thông, bằng chứng xanh-sạch
 - probe GS-AC-6 của the-so-gia-tri-song chỉ xét thẻ ghép căn có bên (evidence.<bên>.offer_id là chuỗi), không nhận nhầm thẻ danh bạ DA33 là «tin rời kho» (`gs-ac-6-the-khong-tin-a`) — đã giao — máy thông, cửa veto còn mở
 - guard-edits lấy gốc theo kho chứa tệp — luật chặn sửa migration đã commit chạy cả khi tệp ở worktree khác (`guard-edits-goc-theo-tep`)
+- Hai ca test app (DO3-AC-7, SD-AC-6) đúng trên dữ liệu máy — không còn đỏ vì dữ liệu thật đổi, vẫn đỏ đúng khi điều chúng canh bị phá (`hai-ca-app-dung-tren-du-lieu-may`) — đã giao — máy thông, cửa veto còn mở
 - ZC6 nối tiếp — hook Zalo giữ tin lại hàng đợi khi khoá collector sai (401/403/404) và có trần thời gian cho cả lượt xả (`hook-spool-nghiem-ngat`)
 - ZC6 — hook Zalo giữ tin trong hàng đợi cục bộ khi collector chết rồi gửi lại, không làm treo gateway (`hook-zalo-spool`)
 - job hằng ngày S06 không còn xoá số và tên người bán đã thu; bộ thu số gọi mỗi tài khoản một lần (`hop-dong-nguoi-ban-s06`)
