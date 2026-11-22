@@ -33,7 +33,7 @@ export type MediaFetchOptions = {
 // vẫn 200) — đưa vào danh sách cho phép mặc định. Cách lùi: revert commit
 // này rồi rebuild + khởi động lại collector API.
 const R2_SUFFIX_ZC9 = "r2.dev";
-const DEFAULTS = {
+export const DEFAULTS = {
   allowedHostSuffixes: ["zdn.vn", R2_SUFFIX_ZC9],
   maxBytes: 10 * 1024 * 1024,
   timeoutMs: 10_000,
@@ -44,7 +44,7 @@ const DEFAULTS = {
 
 const EXT_RE = /\.(jpe?g|png|webp|gif|bmp)(?:[?#]|$)/i;
 
-function hostAllowed(hostWithPort: string, suffixes: string[]): boolean {
+export function hostAllowed(hostWithPort: string, suffixes: string[]): boolean {
   const host = hostWithPort.toLowerCase().replace(/:\d+$/, "");
   return suffixes.some(
     (s) => host === s.toLowerCase() || host.endsWith("." + s.toLowerCase()),
