@@ -70,7 +70,13 @@ vào nút ứng viên · thuộc tính căn.
   riêng: giám sát 22/11 phương án (b), rào không dựng được dữ liệu làm khác biệt thì bỏ, không giữ mã không ca nào chạm). Ca test
   trong T4: (1) chèn dòng kind lạ (và danh mục cùng kind khác source_id) → ba view và kết quả bước dựng không đổi; đỏ khi 125 bỏ
   ghim source_id, kèm chiều đỏ ngay trên cùng dữ liệu (lọc loại trừ thì lọt); (2) toà kind `toa` của dự án ngoài danh mục → view
-  toà có thêm dòng, danh mục không đổi; đỏ khi view toà lọc theo danh mục (DA43 đọc mọi toà). Dự án ngoài Hà Nội và căn quỹ căn là phạm vi hàng sau (DA43/DA50), không vào DA42.
+  toà có thêm dòng, danh mục không đổi; đỏ khi view toà lọc theo danh mục (DA43 đọc mọi toà).
+- **Thứ tự nguồn (E8, 22/11)**: itest bắt một lỗi thật của bước S09 — S09 dựng trước, phát hiện toà lệch tầng với toà S16 còn ở
+  stg, đúc toà riêng nhưng vẫn gắn tên làm bí danh; S16 dựng trước thì toà ấy không có tên. Đã sửa (cờ `lechTang`). So hai thứ
+  tự: mã nguồn so kèm nguồn, bí danh tên so theo giá trị (chỉ mục duy nhất của tên không xét nguồn — DA33/DA37). Thêm kịch bản
+  **thứ tự đến** (S09 về và dựng trước, S16 về sau): bước S16 tra bí danh S09 nên ra cùng mã nguồn và thẻ với S16-trước; đột biến
+  bỏ tra thì đỏ. **Giới hạn**: ở thứ tự đến này, toà S09 đúc trước khi biết lệch vẫn giữ bí danh tên của nó (S16 đúc toà riêng,
+  không gỡ tên toà S09). Ứng viên mục «Ngoài hợp đồng»: lượt sau có thể gắn nhầm theo tên đó. Dự án ngoài Hà Nội và căn quỹ căn là phạm vi hàng sau (DA43/DA50), không vào DA42.
 
 ## 3. Task (tuần tự, cùng giao dịch dựng)
 

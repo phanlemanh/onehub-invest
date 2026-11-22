@@ -386,11 +386,13 @@ export async function buocS09DanhBa(c, { noi = NOI_KHU_S09, noiS16 = NOI_DU_AN_S
         continue;
       }
       let taoRieng = x.loai === "tao_moi";
+      let lechTang = false; // toà đúc riêng vì lệch tầng với toà S16 cùng tên (đã dựng hay còn ở stg): không mang tên làm bí danh
       if (x.loai === "the") {
         if (x.ly_do === "lech-tang-s16") {
           ra.the_moi += await theMuc(c, theLechTangS16(x.toa_id), "S09: toà cùng tên với toà S16 nhưng lệch tầng",
             { loai: "toa-lech-tang-s16", so_tang_s09: t.so_tang, building_keys: x.building_keys });
           ra.toa.lech_tang_tao_rieng++;
+          lechTang = true;
           taoRieng = true; // có thể là hai toà thật cùng tên: 0 bí danh, toà S09 đúc riêng (giống thứ tự S09 trước rồi S16)
         } else {
           ra.the_moi += await theMuc(c, `s09-toa-db:${d.du_an_id}/${x.ten_chuan || x.toa_id}`, `S09: toà ${x.ly_do}`,
@@ -405,6 +407,7 @@ export async function buocS09DanhBa(c, { noi = NOI_KHU_S09, noiS16 = NOI_DU_AN_S
           ra.the_moi += await theMuc(c, theLechTangS16(x.toa_id), "S09: toà cùng tên với toà S16 nhưng lệch tầng",
             { loai: "toa-lech-tang-s16", so_tang_s09: t.so_tang, building_keys: [] });
           ra.toa.lech_tang_tao_rieng++;
+          lechTang = true;
         }
       }
       if (taoRieng) {
@@ -413,8 +416,9 @@ export async function buocS09DanhBa(c, { noi = NOI_KHU_S09, noiS16 = NOI_DU_AN_S
         await c.query(`INSERT INTO buildings (building_key, region_node_id, upi, iso_region, catalog_tier) VALUES ($1, $2, $3, $4, 'mot_loi_khai')`,
           [key, d.node_id, upiToa(d.iso, key), d.iso]);
         await c.query("INSERT INTO registry_aliases (object_key, kind, value, source) VALUES ($1, 'ma_nguon', $2, $3)", [key, MA_TOA(x.toa_id), NGUON_S09]);
-        // Toà lệch tầng không mang tên làm bí danh: không để bước S16 hay lượt sau gắn nhầm theo tên.
-        if (x.loai !== "the") {
+        // Toà lệch tầng không mang tên làm bí danh: không để bước S16 hay lượt sau gắn nhầm theo tên — cả khi S09 dựng trước và
+        // phát hiện lệch với toà S16 còn ở stg (E8: thiếu điều này thì hai thứ tự nguồn ra khác bí danh tên).
+        if (!lechTang && x.loai !== "the") {
           await c.query(`INSERT INTO registry_aliases (object_key, kind, value, source) VALUES ($1, 'ten', $2, $3)
                          ON CONFLICT (object_key, kind, value) WHERE kind = 'ten' DO NOTHING`, [key, x.ten_chuan, NGUON_S09]);
         }

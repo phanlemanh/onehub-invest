@@ -13,6 +13,8 @@ import pg from "pg";
 import { taoDbThu, xoaDbThu } from "./db-thu-dbv.mjs";
 import { buocS09DanhBa } from "../lib/s09-dung.mjs";
 import { KIND_GOI_1, SOURCE_ID_DANH_MUC_GOI_1 } from "../lib/s09-danh-ba-can.mjs";
+import { buocS16 } from "../lib/s16-dung.mjs";
+import { createHash } from "node:crypto";
 import { khoaKhu } from "../lib/s16-phan-khu.mjs";
 
 export const TEN = `oneinvest_dbv_s09t_${process.pid}`;
@@ -455,6 +457,129 @@ test("DA42 E5 (AC-5): S16 giữ phân khu, lệch đếm theo cặp nguồn, lu�
     assert.ok(loi2.some((l) => l.startsWith("hai toà cùng tên")), `đột biến bỏ so tầng phải đỏ nêu «hai toà cùng tên»: ${JSON.stringify(loi2)}`);
   } finally {
     await db.query("ROLLBACK");
+  }
+});
+
+// ---- E8 (AC-8): chạy lại và đổi thứ tự nguồn không đổi kết quả --------------------------------------------------------------
+// Hai DB riêng cùng fixture: DB một dựng S09 gói 1 rồi S16, DB hai S16 rồi S09. Toà A khớp tầng (2–5 ↔ 02–05), toà B lệch
+// (2–10 ↔ 02–05) — đúng chỗ thứ tự có thể làm khác kết quả nếu bước S16 không tra bí danh S09.
+/** Bản chép ẩn của một module lib (đã thay), import trực tiếp; xoá ngay sau import. */
+async function modDotBien(tep, thay) {
+  const ten = `.s09t-cu-${process.pid}-${++demDotBien}-${tep}`;
+  let ma = readFileSync(join(LIB, tep), "utf8");
+  for (const [a, b] of thay) {
+    if (!ma.includes(a)) throw new Error(`đột biến không khớp mã hiện tại: ${a.slice(0, 60)}`);
+    ma = ma.replace(a, b);
+  }
+  writeFileSync(join(LIB, ten), ma);
+  try { return await import(pathToFileURL(join(LIB, ten)).href); } finally { rmSync(join(LIB, ten), { force: true }); }
+}
+
+const SLUG_E8 = "q42-e8n";
+const TANG_E8 = { A: { s16: [2, 3, 4, 5], s09: ["02", "03", "04", "05"] }, B: { s16: [2, 3, 4, 5, 6, 7, 8, 9, 10], s09: ["02", "03", "04", "05"] } };
+
+async function nutE8(c) {
+  return (await c.query(`INSERT INTO asset_nodes (node_type, name, slug, aliases, area_ids, dd_field, meta)
+                         VALUES ('project', 'Q42 E8 Dự án', $1, '{}', '{}', 'SubdivisionName', '{}') RETURNING id::int AS id`, [SLUG_E8])).rows[0].id;
+}
+async function napS16E8(c) {
+  await c.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ('q42-e8-s16', 'vn', 'S16', '{}')`);
+  await c.query(`INSERT INTO stg_s16_khu (snapshot_id, du_an, khu_id, khu_ten) VALUES ('q42-e8-s16', 'q8', 'K1', 'Khu 1')`);
+  for (const [k, t] of Object.entries(TANG_E8)) {
+    await c.query(`INSERT INTO stg_s16_toa (snapshot_id, du_an, khu_id, khu_nhan, toa_id, toa_ten) VALUES ('q42-e8-s16', 'q8', 'K1', 'K1', $1, $2)`,
+      [`T${k}`, `E8 ${k}`]);
+    for (const f of t.s16) {
+      await c.query(`INSERT INTO stg_s16_can (snapshot_id, du_an, khu_nhan, toa_id, toa_ten, tang, ma_can, pha)
+                     VALUES ('q42-e8-s16', 'q8', 'K1', $1, $2, $3, $4, 1)`, [`T${k}`, `E8 ${k}`, String(f), `E8${k}-${f}01`]);
+    }
+  }
+}
+async function napS09E8(c) {
+  await c.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ('q42-e8-goi1', 'vn', 's09-danh-ba', '{}')`);
+  const ghi = (dong, kind, sid, data, meta = {}) => c.query(
+    `INSERT INTO stg_s09_danh_ba (snapshot_id, dong, kind, source_id, payload, meta, fetched_at) VALUES ('q42-e8-goi1', $1, $2, $3, $4::jsonb, $5::jsonb, '2026-11-21T00:00:00Z')`,
+    [dong, kind, sid, JSON.stringify({ code: "200", data }), JSON.stringify(meta)]);
+  await ghi(1, KIND_GOI_1.danhMuc, SOURCE_ID_DANH_MUC_GOI_1, [duAn("q42-e8", "Q42 E8 S09")]);
+  await ghi(2, KIND_GOI_1.toa, "q42-e8", Object.keys(TANG_E8).map((k) => ({ id: `q42-e8-${k}`, name: `E8 ${k}` })));
+  let dong = 3;
+  for (const [k, t] of Object.entries(TANG_E8)) await ghi(dong++, KIND_GOI_1.tang, `q42-e8-${k}`, t.s09.map((f) => ({ id: `q42-e8-${k}-${f}`, name: f })), { duAnId: "q42-e8" });
+}
+
+const buoc09E8 = (c) => buocS09DanhBa(c, { log: () => {}, taoKhoa: taoKhoaThu, noi: { "q42-e8": SLUG_E8 }, noiS16: { q8: SLUG_E8 } });
+const buoc16E8 = (c, P, b16 = buocS16) => b16(c, { log: () => {}, taoKhoa: taoKhoaThu, khu: new Map([[P, { id: P, slug: SLUG_E8 }]]),
+  isoKhu: new Map([[P, "VN-HN"]]), noi: { q8: SLUG_E8 } });
+const thuTu = async (c, P, s09Truoc, b16 = buocS16) => {
+  if (s09Truoc) { await buoc09E8(c); await buoc16E8(c, P, b16); } else { await buoc16E8(c, P, b16); await buoc09E8(c); }
+};
+
+/** Ảnh nội dung (không phụ thuộc khoá sinh): toà và căn theo chữ ký bí danh, thẻ theo mã; kèm số đếm và băm tập khoá. */
+async function anhE8(c) {
+  const q = async (sql) => (await c.query(sql)).rows;
+  // Bí danh tên so theo giá trị, không theo nguồn: chỉ mục duy nhất của bí danh tên là (đối tượng, loại, giá trị), nguồn nào ghi
+  // trước thì giữ (thiết kế từ DA33/DA37), nên nguồn của cùng một tên đổi theo thứ tự là đúng thiết kế. Mã nguồn so kèm nguồn.
+  const sig = Object.fromEntries((await q(`SELECT b.building_key AS k,
+                                                  string_agg(CASE WHEN a.kind = 'ten' THEN 'ten|' || a.value ELSE a.source || '|' || a.kind || '|' || a.value END,
+                                                             ';' ORDER BY a.kind, a.source, a.value) AS s
+                                             FROM buildings b LEFT JOIN registry_aliases a ON a.object_key = b.building_key AND a.retired_at IS NULL
+                                            GROUP BY 1`)).map((r) => [r.k, r.s ?? ""]));
+  const toa = Object.values(sig).sort();
+  const can = (await q(`SELECT u.building_key AS b, string_agg(a.source || '|' || a.value, ';' ORDER BY a.source, a.value) AS s
+                          FROM units u LEFT JOIN registry_aliases a ON a.object_key = u.unit_key AND a.retired_at IS NULL
+                         GROUP BY u.unit_key, u.building_key`)).map((r) => `${r.s ?? ""}@${sig[r.b] ?? "?"}`).sort();
+  const the = (await q("SELECT item_type || '|' || item_id || '|' || status AS t FROM review_queue")).map((r) => r.t).sort();
+  const dem = (await q(`SELECT (SELECT count(*) FROM buildings)::int AS toa, (SELECT count(*) FROM units)::int AS can,
+                               (SELECT count(*) FROM stacks)::int AS truc, (SELECT count(*) FROM registry_aliases)::int AS bi_danh,
+                               (SELECT count(*) FROM review_queue)::int AS the`))[0];
+  const bam = createHash("sha256").update(Object.keys(sig).sort().join("\n")).digest("hex");
+  return { toa, can, the, dem, bam };
+}
+const quyetDinh = (a) => JSON.stringify([a.toa.map((x) => x.split(";").filter((y) => !y.startsWith("ten|")).join(";")).sort(), a.the]);
+const giongNoiDung = (a, b) => JSON.stringify([a.toa, a.can, a.the]) === JSON.stringify([b.toa, b.can, b.the]);
+
+test("DA42 E8 (AC-8): hai DB hai thứ tự nguồn cùng toà, căn, bí danh, thẻ; dựng lại 0 mới; đỏ khi bước S16 bỏ tra bí danh S09", async () => {
+  const TEN2 = `${TEN}_b`;
+  const db2 = new pg.Client({ connectionString: await taoDbThu(TEN2) });
+  await db2.connect();
+  try {
+    await db.query("BEGIN"); await db2.query("BEGIN");
+    const P1 = await nutE8(db), P2 = await nutE8(db2);
+    await db.query("SAVEPOINT e8nut");
+    await napS16E8(db); await napS09E8(db); await napS16E8(db2); await napS09E8(db2);
+    await db.query("SAVEPOINT e8"); await db2.query("SAVEPOINT e8");
+    await thuTu(db, P1, true); await thuTu(db2, P2, false);
+    const a1 = await anhE8(db), a2 = await anhE8(db2);
+    assert.ok(a1.toa.length >= 3, `tiền đề: phải có toà A và hai toà B (lệch tầng), thấy ${a1.toa.length}`);
+    assert.ok(a1.the.some((t) => t.includes("s09-toa-lech-s16:q42-e8-B")), "tiền đề: toà B lệch tầng phải có thẻ");
+    assert.ok(giongNoiDung(a1, a2), `thứ tự: hai thứ tự nguồn ra khác nhau\n${JSON.stringify({ s09Truoc: a1, s16Truoc: a2 }, null, 1)}`);
+    // Dựng thêm hai lần: 0 khoá, 0 bí danh, 0 thẻ mới; băm tập khoá giữ nguyên.
+    for (const [c, P, s09Truoc, a] of [[db, P1, true, a1], [db2, P2, false, a2]]) {
+      await thuTu(c, P, s09Truoc); await thuTu(c, P, s09Truoc);
+      const b = await anhE8(c);
+      assert.deepEqual(b.dem, a.dem, "dựng lại sinh khoá, bí danh hay thẻ mới");
+      assert.equal(b.bam, a.bam, "dựng lại đổi tập khoá toà");
+    }
+
+    // Thứ tự ĐẾN của nguồn: S09 gói 1 về và dựng trước, S16 về sau (bước S09 chưa thấy S16 nên chưa biết B lệch). Bước S16 phải
+    // tra bí danh S09 để ra cùng quyết định với S16-trước: B của S09 không mang mã S16, có thẻ lệch tầng, toà S16 đúc riêng.
+    // So mã nguồn và thẻ; tên không so ở đây (giới hạn ghi ở kế hoạch §2: toà S09 đúc trước khi biết lệch giữ tên của nó).
+    const denSau = async (b16 = buocS16) => {
+      await db.query("ROLLBACK TO SAVEPOINT e8nut");
+      await napS09E8(db); await buoc09E8(db);
+      await napS16E8(db); await buoc16E8(db, P1, b16);
+      return anhE8(db);
+    };
+    const a3 = await denSau();
+    assert.equal(quyetDinh(a3), quyetDinh(a2), `thứ tự đến: S16 về sau S09 ra khác quyết định với S16 trước\n${JSON.stringify({ s16VeSau: a3, s16Truoc: a2 }, null, 1)}`);
+
+    // Chiều đỏ: bước S16 bỏ tra bí danh S09 gói 1 — kịch bản thứ tự đến ra khác.
+    const { buocS16: b16Hong } = await modDotBien("s16-dung.mjs", [[
+      "const s09Toa = await soTangS09TheoToa(c, khoaToaKhu);", "const s09Toa = new Map();"]]);
+    const a4 = await denSau(b16Hong);
+    assert.notEqual(quyetDinh(a4), quyetDinh(a2), "thứ tự: đột biến bỏ tra bí danh S09 trong bước S16 mà thứ tự đến vẫn ra cùng quyết định");
+  } finally {
+    await db.query("ROLLBACK").catch(() => {}); await db2.query("ROLLBACK").catch(() => {});
+    await db2.end().catch(() => {});
+    await xoaDbThu(TEN2);
   }
 });
 
