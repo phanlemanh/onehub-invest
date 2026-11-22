@@ -6,6 +6,9 @@
 // không CHECK kind). Ba view của gói 1 và bước dựng phải lọc kind liệt kê dương (KIND_GOI_1), nên dòng kind lạ không đổi kết quả.
 import { after, before, test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync, rmSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 import pg from "pg";
 import { taoDbThu, xoaDbThu } from "./db-thu-dbv.mjs";
 import { buocS09DanhBa } from "../lib/s09-dung.mjs";
@@ -144,6 +147,133 @@ test("DA42 E6 (AC-6): view tầng một dòng mỗi mã tầng, giữ tên nguy�
        ORDER BY i.source_id, f ->> 'name', o`);
     const loi = await loiViewTang();
     assert.ok(loi.some((l) => l.includes("trùng tên tầng")), `đột biến gộp theo tên tầng phải đỏ nêu «trùng tên tầng»: ${JSON.stringify(loi)}`);
+  } finally {
+    await db.query("ROLLBACK");
+  }
+});
+
+// ---- Đột biến mã JS cho chiều đỏ -----------------------------------------------------------------------------------------
+// Chép s09-danh-ba-can.mjs (đã thay) và s09-dung.mjs (trỏ import sang bản chép) thành tệp ẩn `.s09t-cu-*` CÙNG thư mục lib để
+// import tương đối còn đúng; import xong thì xoá (ESM nạp trọn đồ thị trước khi import() trả về). Mẫu tên khớp `.*-cu-*` đã bỏ qua.
+const LIB = join(import.meta.dirname, "../lib");
+let demDotBien = 0;
+async function buocDotBien(thay) {
+  const n = ++demDotBien;
+  const tenCan = `.s09t-cu-${process.pid}-${n}-can.mjs`, tenDung = `.s09t-cu-${process.pid}-${n}-dung.mjs`;
+  let can = readFileSync(join(LIB, "s09-danh-ba-can.mjs"), "utf8");
+  for (const [a, b] of thay) {
+    if (!can.includes(a)) throw new Error(`đột biến không khớp mã hiện tại: ${a.slice(0, 60)}`);
+    can = can.replace(a, b);
+  }
+  const dung = readFileSync(join(LIB, "s09-dung.mjs"), "utf8").replace('from "./s09-danh-ba-can.mjs"', `from "./${tenCan}"`);
+  writeFileSync(join(LIB, tenCan), can);
+  writeFileSync(join(LIB, tenDung), dung);
+  try {
+    return (await import(pathToFileURL(join(LIB, tenDung)).href)).buocS09DanhBa;
+  } finally {
+    rmSync(join(LIB, tenCan), { force: true });
+    rmSync(join(LIB, tenDung), { force: true });
+  }
+}
+
+// ---- E3 (AC-3): dự án S09 đi đúng một trong bốn đường ----------------------------------------------------------------------
+// Ma trận viết trước: pn đã nối tay (NOI) · pt trùng tên đúng một nút · pg tên gần giống (chứa nhau, ≥ 8 ký tự) · pu không khớp.
+const T_E3 = "2026-11-20T00:00:00Z";
+const E3 = { pn: "Q42 Đã Nối S09", pt: "Q42 Trùng Tên Một", pg: "Q42 Gần Giống Khu Đô Thị", pu: "Q42 Không Khớp Gì Hết" };
+const NOI_E3 = { "q42-pn": "q42-noi" };
+let demKhoa = 0;
+const taoKhoaThu = (t) => `${t}_${String(++demKhoa).padStart(26, "0")}`;
+const dungE3 = (buoc = buocS09DanhBa) => buoc(db, { noi: NOI_E3, noiS16: {}, log: () => {}, taoKhoa: taoKhoaThu });
+
+async function fixtureE3() {
+  const nut = async (slug, ten) => (await db.query(
+    `INSERT INTO asset_nodes (node_type, name, slug, aliases, area_ids, dd_field, meta)
+     VALUES ('project', $2, $1, '{}', '{}', 'SubdivisionName', '{}') RETURNING id::int AS id`, [slug, ten])).rows[0].id;
+  const N = { noi: await nut("q42-noi", "Q42 Đã Nối Tay"), trung: await nut("q42-trung", "Q42 Trùng Tên Một"),
+              gan: await nut("q42-gan", "Q42 Gần Giống Khu Đô Thị Lớn") };
+  await dongStg(SNAP_GOI_1, 301, KIND_GOI_1.danhMuc, SOURCE_ID_DANH_MUC_GOI_1,
+    Object.entries(E3).map(([k, ten]) => duAn(`q42-${k}`, ten)), T_E3);
+  let dong = 302;
+  for (const k of Object.keys(E3)) await dongStg(SNAP_GOI_1, dong++, KIND_GOI_1.toa, `q42-${k}`, [{ id: `q42-t-${k}`, name: `E3 Tòa ${k}` }], T_E3);
+  return N;
+}
+
+/** Trạng thái sau một lượt dựng: link theo mã, nút ứng viên, thẻ, số toà theo nút. */
+async function docE3() {
+  const q = async (sql, a = []) => (await db.query(sql, a)).rows;
+  const link = Object.fromEntries((await q(
+    "SELECT source_project_id AS p, status, asset_node_id::int AS n, can_cu, ly_do FROM project_links WHERE source = 'S09' AND source_project_id LIKE 'q42-%'"))
+    .map((r) => [r.p, r]));
+  const ungVien = await q(`SELECT n.id::int AS id, n.catalog_tier, (SELECT count(*)::int FROM offer_project o WHERE o.project_node_id = n.id) AS tin
+                             FROM asset_nodes n JOIN registry_aliases a ON a.object_key = 'node:' || n.id
+                            WHERE a.source = 'S09' AND a.kind = 'ma_nguon' AND a.value LIKE 'danh-ba-du-an/q42-%'`);
+  const the = Object.fromEntries((await q("SELECT item_id, status, evidence FROM review_queue WHERE item_type = 'entity_match' AND item_id LIKE 's09-%'"))
+    .map((r) => [r.item_id, r]));
+  const toa = Object.fromEntries((await q("SELECT region_node_id::int AS n, count(*)::int AS c FROM buildings GROUP BY 1")).map((r) => [r.n, r.c]));
+  return { link, ungVien, the, toa };
+}
+
+/** Lỗi của trạng thái «chưa duyệt thẻ nào» so với ma trận viết trước; rỗng = đạt. */
+function loiE3ChuaDuyet(st, N) {
+  const loi = [], L = st.link;
+  if (L["q42-pn"]?.status !== "noi" || L["q42-pn"]?.n !== N.noi) loi.push("đã nối: pn không giữ nối về nút nối tay");
+  if (L["q42-pt"]?.status !== "chua_noi" || L["q42-pt"]?.ly_do !== "cho-the-luat") loi.push("trùng tên: pt phải chưa nối, chờ thẻ luật");
+  if (!Object.keys(st.the).some((k) => k.startsWith("s09-luat-du-an:") && JSON.stringify(st.the[k].evidence?.cap ?? []).includes("q42-pt")))
+    loi.push("trùng tên: không có thẻ luật theo nguồn mang pt");
+  if (L["q42-pg"]?.status !== "chua_noi") loi.push("gần giống: pg đã nối khi thẻ từng cặp chưa duyệt");
+  if (st.the["s09-du-an:q42-pg"]?.status !== "pending") loi.push("gần giống: không có thẻ từng cặp đang chờ cho pg");
+  if (st.ungVien.length !== 1) loi.push(`không khớp: ${st.ungVien.length} nút ứng viên, phải đúng 1`);
+  const uv = st.ungVien[0];
+  if (uv && (uv.catalog_tier !== "mot_loi_khai" || L["q42-pu"]?.n !== uv.id)) loi.push("không khớp: nút ứng viên sai bậc hay pu không nối về nó");
+  if (uv && uv.tin !== 0) loi.push("nút ứng viên có tin trong offer_project");
+  if ((st.toa[N.trung] ?? 0) !== 0 || (st.toa[N.gan] ?? 0) !== 0) loi.push("dự án chờ thẻ có toà mới");
+  if ((st.toa[N.noi] ?? 0) !== 1) loi.push(`đã nối: nút nối tay có ${st.toa[N.noi] ?? 0} toà, phải 1`);
+  return loi;
+}
+
+test("DA42 E3 (AC-3): bốn đường của dự án, ba trạng thái thẻ từng cặp; đỏ khi tự nối tên gần giống", async () => {
+  await db.query("BEGIN");
+  try {
+    const N = await fixtureE3();
+    await db.query("SAVEPOINT e3");
+    await dungE3();
+    const st1 = await docE3();
+    assert.deepEqual(loiE3ChuaDuyet(st1, N), []);
+    // Dựng lại khi chưa duyệt: không thêm nút ứng viên, không thêm toà.
+    await dungE3();
+    const st1b = await docE3();
+    assert.equal(st1b.ungVien.length, 1, "dựng lại sinh nút ứng viên thứ hai");
+    assert.deepEqual(st1b.toa, st1.toa, "dựng lại khi chưa duyệt đổi số toà");
+
+    // Duyệt thẻ từng cặp → dựng lại: pg nối về nút gần giống, toà vào đúng nút đó; dựng thêm lần nữa 0 toà trùng.
+    await db.query("UPDATE review_queue SET status = 'approved' WHERE item_type = 'entity_match' AND item_id = 's09-du-an:q42-pg'");
+    await dungE3();
+    const st2 = await docE3();
+    assert.equal(st2.link["q42-pg"]?.status, "noi", "duyệt thẻ từng cặp mà pg vẫn chưa nối");
+    assert.equal(st2.link["q42-pg"]?.n, N.gan);
+    assert.equal(st2.link["q42-pg"]?.can_cu, "the-cap");
+    assert.equal(st2.toa[N.gan], 1, "duyệt thẻ rồi dựng lại: toà của pg không vào đúng nút");
+    await dungE3();
+    assert.deepEqual((await docE3()).toa, st2.toa, "dựng thêm sau duyệt sinh toà trùng");
+
+    // Từ chối thẻ: vẫn không nối, 0 toà.
+    await db.query("ROLLBACK TO SAVEPOINT e3");
+    await dungE3();
+    await db.query("UPDATE review_queue SET status = 'rejected' WHERE item_type = 'entity_match' AND item_id = 's09-du-an:q42-pg'");
+    await dungE3();
+    const st3 = await docE3();
+    assert.equal(st3.link["q42-pg"]?.status, "chua_noi", "thẻ từ chối mà pg vẫn nối");
+    assert.equal(st3.link["q42-pg"]?.ly_do, "the-tu-choi");
+    assert.equal(st3.toa[N.gan] ?? 0, 0);
+
+    // Chiều đỏ: đột biến tự nối mọi tên gần giống (bỏ điều kiện thẻ đã duyệt).
+    await db.query("ROLLBACK TO SAVEPOINT e3");
+    const dot = await buocDotBien([[
+      'if (theCap?.status === "approved" && theCap.node_id != null && ung.includes(Number(theCap.node_id))) {\n      return { duong: DUONG.theCap, node_id: Number(theCap.node_id), ung_vien_cua: ung, noi: true };',
+      'if (true) {\n      return { duong: DUONG.theCap, node_id: ung[0], ung_vien_cua: ung, noi: true };']]);
+    await dungE3(dot);
+    const loi = loiE3ChuaDuyet(await docE3(), N);
+    assert.ok(loi.some((l) => l.startsWith("gần giống")), `đột biến tự nối tên gần giống phải đỏ nêu «gần giống»: ${JSON.stringify(loi)}`);
   } finally {
     await db.query("ROLLBACK");
   }
