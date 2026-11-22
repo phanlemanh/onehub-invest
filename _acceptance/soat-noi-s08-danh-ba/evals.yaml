@@ -40,7 +40,7 @@ evals:
     criterion: AC-6
     executor: script
     cmd: config:executors.script.ns8_app
-    expected: "exit 0; ca RS8 trên lược đồ tạm, dòng nối dựng bằng chính apTheLuat của pipeline (không chèn tay khuôn bên đọc): năm dự án S08 (nối tay, nối luật vào nút có sẵn, nối luật vào nút đúc, chưa nối luật có lý do, chưa có dòng nào) → danh mục S08 da_nap 5, da_noi 3, noi_ung_vien 1; chân ô của oSo có «S08 2/5» và «1 vào nút ứng viên»; danh sách chưa nối có đúng hai dự án, dự án chưa nối luật mang lý do của bảng luật; dự án có noi ở cả hai bảng đếm một lần. Chiều đỏ: bản chép SQL cũ (chỉ bảng tay) cho da_noi 1, ca đỏ nêu số"
+    expected: "exit 0; ca RS8 trên DB của riêng lượt, trong giao dịch ROLLBACK, dòng nối dựng bằng chính apTheLuat của pipeline (không chèn tay khuôn bên đọc): năm dự án S08 (nối tay, nối luật vào nút có sẵn và cũng có dòng tay, nối luật vào nút đúc, từ chối khong-tinh, nạp sau lượt áp chưa có dòng nào) → docDanhBa cho S08 daNap 5, daNoi 3, chuaNoi 2, noiUngVien 1; chân ô của oSo có «S08 2/5 (1 vào nút ứng viên)»; danh sách chưa nối S08 đúng hai dự án, dự án từ chối mang lý do khong-tinh của bảng luật. Chiều đỏ: bản chép doc.ts chỉ đếm bảng tay cho daNoi 2, ca đỏ nêu số"
     paths: ["app/src/lib/ops/registry/doc.ts", "app/src/components/ops/registry/registry-view.tsx", "pipeline/noi-du-an-s08-luat.mjs", "app/tests/registry-s08-luat.test.tsx"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E7
