@@ -27,6 +27,13 @@ có suite `app_ui` đều vấp hai ca này. Nguyên nhân đo được:
   không có dòng người bán khi số chưa có người. Đọc không trần: 170 tin bán P1 số suy, 149 có số tin (số ấy đã có người trong
   danh bạ qua tin trực tiếp khác), 21 null. Tin tự cấy của ca cũ mang loại hình «unknown» nên chưa bao giờ vào dealsSql.
 
+Hai phép đếm số suy (đo 22/11 trên DB máy thu, chỉ đọc): 170 tin = mọi tin bán P1 số suy có `bait_gap_pct` (149 có số tin, 21
+null). Lọc dần theo đúng điều kiện của `dealsSql`: có thước cùng phường × loại hình → 170; thấy trong 45 ngày → 170; mức giảm
+0–50% dưới thước → **65** (54 có số tin, 11 null). 105 tin bị loại vì `bait_gap_pct` âm (giá cao hơn thước) hoặc trên 50% (thước
+mỏng) — không phải tin Căn giá tốt, màn không hiện. Ca in 67 = 65 + hai tin số suy tự cấy (55 = 54 + 1, 12 = 11 + 1). Vậy ca
+soát ĐÚNG tập tin màn Căn giá tốt hiện (dealsSql không trần), không bỏ sót tin nào trên màn; 105 tin ngoài tập không có chip để
+soát.
+
 ## Acceptance Criteria
 
 - **AC-1** Given DB thử chép dữ liệu máy, When chạy `tests/do-lam-giau.test.tsx`, Then thoát 0; ca DO3-AC-7 soát ô chưa gắn

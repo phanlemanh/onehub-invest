@@ -24,3 +24,10 @@ chưa có người; màn hiện «Chưa rõ số tin» khi null. `dealsSql` khô
 
 Số đo hôm nay: 170 tin bán P1 số suy (đều S03 «s03-qua-nguoi-dang»), 149 có số tin, 21 null; trong tập dealsSql 45 ngày: 522
 số thật, 55 số suy có số tin, 12 số suy null.
+
+Hai phép đếm số suy (đo 22/11 trên DB máy thu, chỉ đọc): 170 tin = mọi tin bán P1 số suy có `bait_gap_pct` (149 có số tin, 21
+null). Lọc dần theo đúng điều kiện của `dealsSql`: có thước cùng phường × loại hình → 170; thấy trong 45 ngày → 170; mức giảm
+0–50% dưới thước → **65** (54 có số tin, 11 null). 105 tin bị loại vì `bait_gap_pct` âm (giá cao hơn thước) hoặc trên 50% (thước
+mỏng) — không phải tin Căn giá tốt, màn không hiện. Ca in 67 = 65 + hai tin số suy tự cấy (55 = 54 + 1, 12 = 11 + 1). Vậy ca
+soát ĐÚNG tập tin màn Căn giá tốt hiện (dealsSql không trần), không bỏ sót tin nào trên màn; 105 tin ngoài tập không có chip để
+soát.
