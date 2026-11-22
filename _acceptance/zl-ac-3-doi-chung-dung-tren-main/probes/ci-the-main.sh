@@ -2,7 +2,7 @@
 # Chạy đúng bước test của job `scripts` trong .github/workflows/ci-test.yml (dòng 159–160) ở THẾ MAIN: bản clone tạm của
 # kho tại HEAD, refs/remotes/origin/main = HEAD (merge-base = HEAD, như main sau gộp). Môi trường như CI: env -i, CI=true,
 # HOME tạm (không có ~/.local/node-v24.21.0), PATH chỉ có node/npm + /usr/bin:/bin, DATABASE_URL = DB thử của riêng lượt
-# (bash db/db-thu.sh … --chay — không chạm DB oneinvest của máy thu). Thoát = mã của `node --test scripts/*.test.mjs`.
+# (bash db/db-thu.sh … --chay — không chạm DB oneinvest của máy thu), docker trong PATH như runner. Thoát = mã của `node --test scripts/*.test.mjs`.
 set -u
 REPO="$(cd "$(dirname "$0")/../../.." && pwd)"
 [ -z "$(git -C "$REPO" status --porcelain -- scripts)" ] || { echo "ci-the-main: scripts/ có thay đổi chưa commit"; exit 2; }
@@ -13,6 +13,8 @@ git clone -q --no-checkout "file://$REPO" "$C" && git -C "$C" checkout -q --deta
 git -C "$REPO" config --local --get-all secrets.allowed | while IFS= read -r v; do git -C "$C" config --add secrets.allowed "$v"; done
 for m in app pipeline agent; do ln -s "$REPO/$m/node_modules" "$C/$m/node_modules"; done
 NB=$(dirname "$(readlink -f "$(command -v node)")"); for x in node npm npx; do ln -s "$NB/$x" "$B/$x"; done
+# Runner ubuntu của CI có docker trong PATH (/usr/bin); máy dev để docker ở chỗ khác — chép đúng một symlink.
+D=$(command -v docker) && ln -s "$D" "$B/docker"
 echo "ci-the-main: HEAD=$HEAD merge-base=$(git -C "$C" merge-base HEAD origin/main) node=$("$B/node" -v)"
 cd "$C" || exit 2
 cat > "$T/trong.sh" <<'IN'
