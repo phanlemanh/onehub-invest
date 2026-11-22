@@ -33,6 +33,8 @@ for (const the of ["main", "nap", "khac"]) {
   execFileSync("git", ["clone", "-q", "--no-checkout", `file://${REPO}`, c], { stdio: "ignore" });
   git(c, "checkout", "-q", "--detach", HEAD);
   git(c, "update-ref", "refs/remotes/origin/main", HEAD);
+  // Commit mô phỏng chạm dòng DATABASE_URL của DB dev: chép đúng danh sách cho phép git-secrets của kho (không tắt hook).
+  for (const v of git(REPO, "config", "--local", "--get-all", "secrets.allowed").trim().split("\n").filter(Boolean)) git(c, "config", "--add", "secrets.allowed", v);
   for (const m of ["app", "pipeline", "agent"]) { try { symlinkSync(path.join(REPO, m, "node_modules"), path.join(c, m, "node_modules")); } catch {} }
   const s = readFileSync(path.join(c, SCRIPT), "utf8");
   if (the === "nap") { const n = s.replace("for try in 1 2 3 4 5; do", "for try in 1 2 3 4 5; do # sửa phần nạp"); if (n === s) { console.error("ba-the: thế nap không sửa được"); process.exit(2); } writeFileSync(path.join(c, SCRIPT), n); commit(c, "mô phỏng: sửa phần nạp"); }
