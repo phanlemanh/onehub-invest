@@ -5,7 +5,7 @@ slug: deals-phi-ly-do-doi-chung-tu-tinh
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by:
 approved_at:
 veto_state: mo
@@ -91,3 +91,11 @@ Lịch sử chấm S4 (ba round, hết trần):
 - Lượt 4 chỉ mở khi Mạnh cho (vượt trần chấm là lời riêng của Mạnh).
 
 Known limits:
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-22:
+  - Ngoài-1: Lint chạy cùng lúc với test vẫn có thể đỏ giả ở các kiểu tệp tạm không theo dạng «.<mã>-cu-*» (.pas-dot, .agm-dot, .kta, .tg1-pha, .au12-mut…); sửa ở hàng hạ tầng HT1.
+  - Ngoài-2: Chú thích trong app/eslint.config.mjs nói mẫu chung phủ cả kiểu tên sau này — thực tế chỉ phủ tên có đoạn «-cu-»; sửa cùng HT1.
+  - Ngoài-3: Các kiểm cũ của lệnh đo (AC-5) mới được thử ở chiều xanh, chưa có ca chứng chúng báo đỏ khi tin phi lý lọt vào danh sách.
+  - Ngoài-4: Lệnh đo từng đọc dòng audit mới nhất toàn bảng — đã sửa ở 9435f0264, ghi để lịch sử đủ.
+  - Ngoài-5: Số «loại N tin» từng có thể là của đêm cũ — cùng bản sửa 9435f0264.
+  - Ngoài-6: Lệnh đo kiểm tin đối chứng «có trong» danh sách bị loại, không kiểm luật loại có loại thừa tin hợp lý.
+
