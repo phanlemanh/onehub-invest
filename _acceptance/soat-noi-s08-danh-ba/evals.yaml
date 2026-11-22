@@ -56,7 +56,8 @@ evals:
     layer: ui-observed
     paths: ["app/src/components/ops/registry/registry-view.tsx", "app/src/lib/ops/registry/doc.ts"]
     steps:
-      - "Mở /ops/registry trên bản chạy dev (máy thu, tài khoản ops thử) sau khi áp thẻ trên DB thử của lượt chấm"
-      - "Đọc chân ô «Mã nguồn chưa nối»"
+      - "DB thử oneinvest_p2_ns8 (bản chép DB máy thu 22/11, đã áp thẻ luật S08 bằng pipeline/noi-du-an-s08-luat.mjs --ap) có sẵn ở :5433; nếu đã bị xoá thì dựng lại: bash db/db-thu.sh oneinvest_p2_ns8, rồi DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_ns8 node pipeline/noi-du-an-s08-luat.mjs --the /tmp/the.md và --ap --bam <băm dòng cuối> --nguoi cham-ui"
+      - "Chạy bản dev của worktree trỏ DB đó ở cổng 3465 (DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_ns8 npm --prefix app run dev -- -p 3465); tài khoản ops thử: DATABASE_URL như trên node scripts/dev-ops-account.mjs, đọc email/mật khẩu ở .claude/ops-test-account.json của worktree, không in mật khẩu"
+      - "Đăng nhập /login rồi mở /ops/registry; đọc chân ô «Mã nguồn chưa nối» ở khổ rộng chế độ tối và khổ 375 px chế độ sáng; tắt bản dev khi xong"
     expected: "Chân ô hiện phần S08 dạng «S08 <chưa nối>/<đã nạp>» kèm «<n> vào nút ứng viên», hai số khác nhau, chữ không tràn ô ở khổ hẹp 375 px, sáng và tối; ảnh chụp lưu ở evidence/"
     evidence_required: [run_id, screenshot, observed, verified_at]
