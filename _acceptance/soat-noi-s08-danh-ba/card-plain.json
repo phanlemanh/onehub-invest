@@ -6,7 +6,7 @@
   {"id":"AC-3","p":"Sẽ chỉ ghi khi đúng băm Mạnh đã xem; chỉ thêm nút mới, dòng nối và bí danh, không sửa nút nào đang có."},
   {"id":"AC-4","p":"Sẽ đảo được cả lượt bằng một lệnh, giữ nút ứng viên, gỡ mọi dòng nối."},
   {"id":"AC-6","p":"Sẽ hiện trên màn danh bạ Ops số S08 chưa nối và số đã nối vào nút ứng viên, tách khỏi số nối vào nút sẵn có."},
-  {"id":"AC-7","p":"Sẽ chạy thử trọn trên bản chép DB máy thu: S08 nối nút sẵn có 8 → 17, nối nút ứng viên 0 → 163, chưa nối 177 → 5; băm DA53 và bộ gắn PL20 không đổi."}
+  {"id":"AC-7","p":"Sẽ chạy thử trọn trên bản chép DB máy thu: S08 nối nút đã xác minh 8 → 14, nối nút ứng viên 0 → 166, chưa nối 177 → 5; băm DA53 và bộ gắn PL20 không đổi."}
  ],
  "wont_do": [
   {"id":"AC-5","p":"Chặn lượt có mã trỏ hai nút, lệch tỉnh hay thiếu dòng trạng thái: lệnh kiểm báo lỗi."},

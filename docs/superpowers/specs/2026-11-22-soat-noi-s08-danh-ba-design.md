@@ -100,16 +100,21 @@ Bảng tay `s08_project_links` giữ nguyên. Hai bảng không chồng nhau: th
 Hai ô trên màn `/ops/registry` (chân ô «Mã nguồn chưa nối», phần S08), đọc bằng chính `docDanhBa` của app trên bản chép DB máy thu
 (`pipeline/scripts/noi-du-an-s08-that.mjs`):
 
-- S08 nối vào nút có sẵn: **8 → 17** (8 tay + 9 theo tên chuẩn cùng tỉnh);
-- S08 nối vào nút ứng viên: **0 → 163** (158 nút mới, chưa ai xác minh);
+- S08 nối vào nút đã xác minh: **8 → 14** (8 tay + 6 trong 9 dự án nối theo tên chuẩn cùng tỉnh);
+- S08 nối vào nút ứng viên: **0 → 166** (163 dự án vào 158 nút mới đúc, cộng 3 dự án nối vào nút ứng viên do thẻ S06 đúc —
+  Capital Square, FourS Tower, Mizuki Park; màn đếm theo hạng nút `mot_loi_khai`, nên mọi nút chưa ai xác minh đứng chung một số);
 - S08 chưa nối: **177 → 5**.
+
+Đo trên bản chép 22/11 (E7): đúng ba số trên; băm thẻ nối DA53 `e5c1a467…` không đổi; bộ gắn PL20 4.012 gắn · 21 xung đột · 117
+«chữ và model khác nút» trước và sau như nhau; 0 tin gắn, 0 hạng giá trên nút ứng viên S08; nút có sẵn nhận bí danh S08: Capital
+Square, FourS Tower, Mizuki Park, The Global City, Vinhomes Ocean Park 1, 2, 3, Vinhomes Smart City.
 
 Số chạy thử có thể nhích theo lượt nạp S08 tuần (CN 06:30); E7 so đúng số đếm lại của bảng phủ trên cùng bản chép, không so số cứng.
 
 ## 7. Áp lên DB máy thu
 
-Cần lời riêng của Mạnh kèm băm thẻ. Thứ tự áp: **PL20 qua Cổng Bằng chứng → DA53 → DA55**, vì lượt này thêm khoảng 158 nút
-`asset_nodes`. E7 đo băm thẻ nối DA53 (`dungKeHoachNoi`) trước và sau áp DA55 trên bản chép. Nếu bằng nhau, DA55 không chạm băm
+Cần lời riêng của Mạnh kèm băm thẻ. Thứ tự áp: **PL20 qua Cổng Bằng chứng → DA53 → DA55** là thứ tự an toàn, vì lượt này thêm khoảng 158 nút
+`asset_nodes`; E7 22/11 cho thấy băm DA53 và bộ gắn PL20 không đổi, nên GS có thể đổi thứ tự. E7 đo băm thẻ nối DA53 (`dungKeHoachNoi`) trước và sau áp DA55 trên bản chép. Nếu bằng nhau, DA55 không chạm băm
 DA53 và thứ tự giữa hai hàng tự do; nếu lệch, giữ thứ tự trên. E7 cũng đo bộ gắn PL20 trước và sau áp: số gắn, xung đột, «chữ và
 model khác nút» phải bằng nhau. Hồ sơ áp năm thứ:
 

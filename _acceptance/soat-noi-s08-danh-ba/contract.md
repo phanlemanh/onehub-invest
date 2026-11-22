@@ -55,7 +55,8 @@ không khớp, từ chối có lý do; áp theo băm, đảo được. Căn cứ
 - AC-7: Given bản chép DB máy thu, When chạy trọn chuỗi thẻ, áp, kiểm, đo, đảo, Then:
   - mỗi ngả của thẻ bằng đúng số đếm lại của bảng phủ trên cùng bản chép (22/11: giữ tay 8, nối nút có sẵn 9, thẻ từng cặp 0, đúc 163
     dự án vào 158 nút, khong-tinh 4, du-an-con 1);
-  - đọc bằng `docDanhBa` của app: S08 nối vào nút có sẵn 8 → 17, vào nút ứng viên 0 → 163, chưa nối 177 → 5;
+  - đọc bằng `docDanhBa` của app: S08 nối vào nút đã xác minh 8 → 14, vào nút ứng viên (mọi nút `mot_loi_khai`, kể cả nút S06 đúc) 0 → 166,
+    chưa nối 177 → 5;
   - dòng `asset_nodes` có sẵn và `s08_project_links` không đổi qua áp và đảo; nút ứng viên S08 có 0 tin gắn và 0 hạng giá cấp dự án;
   - băm thẻ nối DA53 và ba số của bộ gắn PL20 (gắn, xung đột, «chữ và model khác nút») bằng nhau trước và sau áp;
   - nút ứng viên S09 cấy cùng tên, chưa biết tỉnh, trước lượt thì dự án đó ra thẻ từng cặp, không đúc; sau đảo ba ô về số trước áp.
@@ -75,7 +76,7 @@ Bảng phủ ca đếm trên DB máy thu ở design doc §2. Trục và ca:
 
 - Chân ô «Mã nguồn chưa nối» ở `/ops/registry`, phần S08 (`SQL_DANH_MUC` của `app/src/lib/ops/registry/doc.ts`, `oSo` của
   `registry-view.tsx`): `cd app && node --import tsx ../pipeline/scripts/noi-du-an-s08-that.mjs` trên bản chép DB máy thu, đọc bằng
-  `docDanhBa`. Ô đổi: nối nút có sẵn 8 → 17, nối nút ứng viên 0 → 163, chưa nối 177 → 5. AC-6, AC-7 bảo đảm.
+  `docDanhBa`. Ô đổi: nối nút đã xác minh 8 → 14, nối nút ứng viên 0 → 166, chưa nối 177 → 5. AC-6, AC-7 bảo đảm.
 - Sau khi áp trên máy thu: sáng hôm sau đếm chỉ đọc trên cloud số nút `meta.nguon = 'S08'` (design doc §7 bước 5).
 
 ## Out of scope
