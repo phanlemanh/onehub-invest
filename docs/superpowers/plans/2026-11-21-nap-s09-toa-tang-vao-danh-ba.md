@@ -119,7 +119,9 @@ Mỗi task: viết test đỏ trước, rồi mã, rồi commit. S4 xin lượt 
    | 2026-11-20T015947402 | 0 | 0 | 0 | 0 | 2.868 | 2.868 |
    | 2026-11-20T052953464 | 0 | 0 | 0 | 0 | 2.621 | 2.621 |
 
-   Tổng 6.951 dòng (= 1.462 + 2.868 + 2.621). Chạy bộ nạp lần hai: 0 dòng mới. Lượt dựng đêm sau áp + nạp nhưng TRƯỚC khi mã DA42 vào main: không đổi (chưa
+   Tổng 6.951 dòng (= 1.462 + 2.868 + 2.621). Chạy bộ nạp lần hai: 0 dòng mới.
+   Thêm một dòng kiểm: `SELECT count(*) FROM stg_s09_danh_ba WHERE snapshot_id = 'vn__s09-danh-ba__2026-11-19T211829028'` phải
+   bằng 0; khác 0 thì dừng, báo giám sát. Lượt dựng đêm sau áp + nạp nhưng TRƯỚC khi mã DA42 vào main: không đổi (chưa
    mã nào trên main đọc bảng này). Sau khi DA42 vào main: lượt dựng đầu theo lệnh kiểm của AC-10.
 6. **Cách lùi**: `DROP VIEW v_s09_db_tang, v_s09_db_toa, v_s09_db_du_an, v_s09_db_item_moi; DROP TABLE stg_s09_danh_ba;` — là XOÁ
    dữ liệu stg (nạp lại được từ raw bất biến), nên cần lời riêng của Mạnh khi dùng. Lùi riêng bước dựng S09 gói 1: xem cách tắt ở §0.
