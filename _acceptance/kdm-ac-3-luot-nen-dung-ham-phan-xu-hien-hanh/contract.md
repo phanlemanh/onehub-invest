@@ -5,7 +5,7 @@ slug: kdm-ac-3-luot-nen-dung-ham-phan-xu-hien-hanh
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: approved
+status: implemented
 veto_state: mo
 veto_opened_at: 2026-11-22T12:15:01Z
 design_doc: _acceptance/kdm-ac-3-luot-nen-dung-ham-phan-xu-hien-hanh/design.md
