@@ -11,7 +11,7 @@ import { taoDbThu, xoaDbThu } from "./db-thu-dbv.mjs";
 import { buocS09DanhBa } from "../lib/s09-dung.mjs";
 import { KIND_GOI_1, SOURCE_ID_DANH_MUC_GOI_1 } from "../lib/s09-danh-ba-can.mjs";
 
-export const TEN = `oneinvest_dbv_s42_${process.pid}`;
+export const TEN = `oneinvest_dbv_s09t_${process.pid}`;
 let db;
 
 const SNAP_GOI_1 = "q42__s09-danh-ba__goi1", SNAP_LA = "q42__s09-danh-ba__kind-la";
@@ -107,6 +107,43 @@ test("DA42 kind lạ: view toà giữ toà kind `toa` của dự án ngoài danh
     assert.deepEqual(sau.views.toa.map((r) => r.toa_id), [...truoc.views.toa.map((r) => r.toa_id), "q42-t8"],
       "view toà phải giữ toà của dự án ngoài danh mục (DA43 đọc mọi toà đã thu)");
     assert.deepEqual(sau.views.du_an, truoc.views.du_an, "danh mục gói 1 đổi khi có toà của dự án ngoài danh mục");
+  } finally {
+    await db.query("ROLLBACK");
+  }
+});
+
+// ---- E6 (AC-6): danh sách tầng đủ cho DA43 -------------------------------------------------------------------------------
+// Giá trị viết trước: toà q42-t3 có bốn mã tầng — «02», «12B», và hai tầng cùng tên «15» khác mã — nên DA43 phải thu 4 tầng.
+const TANG_T3 = [{ id: "q42-f31", name: "02" }, { id: "q42-f32", name: "12B" }, { id: "q42-f33", name: "15" }, { id: "q42-f34", name: "15" }];
+const SO_TANG_T3 = 4;
+
+/** Lỗi của view tầng cho toà q42-t3 so với giá trị viết trước; rỗng = đạt. */
+async function loiViewTang() {
+  const loi = [];
+  const { rows } = await db.query("SELECT tang_id, tang_ten, toa_id, du_an_id FROM v_s09_db_tang WHERE toa_id = 'q42-t3' ORDER BY thu_tu");
+  if (rows.length !== SO_TANG_T3) loi.push(`số tầng toà q42-t3 là ${rows.length}, viết trước ${SO_TANG_T3} (trùng tên tầng bị gộp?)`);
+  const ma = rows.map((r) => r.tang_id);
+  if (new Set(ma).size !== ma.length) loi.push("một mã tầng ra nhiều dòng");
+  if (!rows.some((r) => r.tang_ten === "12B")) loi.push("tên «12B» không giữ nguyên văn");
+  if (rows.filter((r) => r.tang_ten === "15").length !== 2) loi.push("trùng tên tầng: hai mã cùng tên «15» phải ra hai dòng");
+  if (rows.some((r) => r.toa_id !== "q42-t3" || r.du_an_id !== "q42-p1")) loi.push("thiếu mã toà hay mã dự án trên dòng tầng");
+  return loi;
+}
+
+test("DA42 E6 (AC-6): view tầng một dòng mỗi mã tầng, giữ tên nguyên văn, hai tầng trùng tên ra hai dòng; đỏ khi view gộp theo tên", async () => {
+  await db.query("BEGIN");
+  try {
+    await dongStg(SNAP_GOI_1, 201, KIND_GOI_1.tang, "q42-t3", TANG_T3, T0, { duAnId: "q42-p1" });
+    assert.deepEqual(await loiViewTang(), []);
+    // Chiều đỏ: view tầng gộp theo tên tầng (DISTINCT ON tên) — cùng cột, cùng thứ tự cột.
+    await db.query(`CREATE OR REPLACE VIEW v_s09_db_tang AS
+      SELECT DISTINCT ON (i.source_id, f ->> 'name') i.source_id AS toa_id, i.meta ->> 'duAnId' AS du_an_id, f ->> 'id' AS tang_id,
+             f ->> 'name' AS tang_ten, o::int AS thu_tu, i.snapshot_id
+        FROM v_s09_db_item_moi i CROSS JOIN LATERAL jsonb_array_elements(i.payload -> 'data') WITH ORDINALITY AS x(f, o)
+       WHERE i.kind = 'tang' AND NULLIF(btrim(f ->> 'id'), '') IS NOT NULL
+       ORDER BY i.source_id, f ->> 'name', o`);
+    const loi = await loiViewTang();
+    assert.ok(loi.some((l) => l.includes("trùng tên tầng")), `đột biến gộp theo tên tầng phải đỏ nêu «trùng tên tầng»: ${JSON.stringify(loi)}`);
   } finally {
     await db.query("ROLLBACK");
   }
