@@ -16,6 +16,8 @@ import { enrichTextAgent, buildEnrichInput } from "../../../agent/src/agents/enr
 import { judgeEntityAgent, buildJudgeInput, apNguong } from "../../../agent/src/agents/judge-entity.js";
 import { resolveContext } from "../../../agent/src/agents/context-resolver.js";
 import { queryPair } from "../../../agent/src/tools/native.js";
+import { noiDungThe } from "../../../agent/scripts/judge-run.js";
+import { parseGiaiThich } from "../../../agent/src/agents/judge-entity.js";
 // @ts-expect-error — mô-đun .mjs không có kiểu
 import { TEP, tinhSo, bangMd, kiemNguong } from "./do-truoc-sau.mjs";
 
@@ -68,15 +70,19 @@ for (const t of mauEnrich) {
 for (const p of mauJudge) {
   const pair = await queryPair(p.offer_a, p.offer_b, c);
   if (!pair) { kq.judge.push({ cap: p, raw: null, loi: "khong-doc-duoc-cap" }); continue; }
-  const truoc = apNguong(pair).same_house;
-  const vao = buildJudgeInput(pair, apNguong(pair));
+  const luat = apNguong(pair);
+  const truoc = luat.same_house;
+  const vao = buildJudgeInput(pair, luat);
   if (!tran.coTheGoi(vao)) { kq.het_tran = true; break; }
   try {
     const r = await runAgent(judgeEntityAgent, vao, {}, { recordCall: khongGhi });
     tran.ghi(r.usage.inputTokens, r.usage.outputTokens);
-    kq.judge.push({ cap: p, raw: r.output, usage: r.usage, duong: r.duong, ket_luan_truoc: truoc, ket_luan_sau: apNguong(pair).same_house });
+    const giai = parseGiaiThich(r.output);
+    const sau = noiDungThe(luat, giai, { model: null, trace: null, ok: giai !== null, loi: giai === null ? "sai-khuon" : null }).ketLuan;
+    kq.judge.push({ cap: p, raw: r.output, usage: r.usage, duong: r.duong, ket_luan_truoc: truoc, ket_luan_sau: sau });
   } catch (e) {
-    kq.judge.push({ cap: p, raw: null, loi: e instanceof Error ? e.name : "Error", ket_luan_truoc: truoc, ket_luan_sau: truoc });
+    const sau = noiDungThe(luat, null, { model: null, trace: null, ok: false, loi: e instanceof Error ? e.name : "Error" }).ketLuan;
+    kq.judge.push({ cap: p, raw: null, loi: e instanceof Error ? e.name : "Error", ket_luan_truoc: truoc, ket_luan_sau: sau });
   }
 }
 await c.end();

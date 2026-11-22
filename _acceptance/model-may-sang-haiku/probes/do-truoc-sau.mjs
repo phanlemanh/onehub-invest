@@ -5,7 +5,10 @@
 //                         (30 cặp ghép căn chờ), chọn theo băm md5 của khoá — lặp lại cho cùng tập khi dữ liệu không đổi.
 //   --chay --tran-usd 1   chạy Haiku thật theo bảng model-agent.json — Anthropic thẳng trước, lùi Gateway (do-truoc-sau-chay.mts, mọi kết nối DB chỉ đọc), ghi so-truoc-sau.json + .md.
 //   --kiem                (eval E8) không gọi model: băm mẫu khớp, đủ 100 + 30 đầu ra, tính lại tỉ lệ từ đầu ra thô và so với bảng .md.
-// Phá thử: --kiem --mau-thieu bỏ một đầu ra enrich → đỏ «AC-8 cỡ mẫu 99 khác 100»; --kiem --bang-lech sửa một tỉ lệ → đỏ «bảng lệch».
+// Phá thử: --kiem --mau-thieu bỏ một đầu ra enrich → đỏ «AC-8 cỡ mẫu 99 khác 100»; --kiem --bang-lech sửa một tỉ lệ → đỏ «bảng lệch»;
+// --kiem --cay-ket-luan cho kết luận thẻ đọc theo lời giải thích của model → đỏ «AC-8 kết luận luật đổi <n>».
+// «Kết luận luật đổi» = kết luận luật tính trước lời gọi (ket_luan_truoc) so với kết luận thẻ sẽ mang sau khi đọc đầu ra thô của
+// model qua hàm dựng thẻ thật của judge-run (noiDungThe, qua ket-luan-the.mts) — --kiem tính lại, không tin cột ket_luan_sau đã lưu.
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
@@ -152,7 +155,20 @@ async function chonMau() {
   }
 }
 
-function kiem({ mauThieu = false, bangLech = false } = {}) {
+/** Kết luận thẻ sẽ mang sau khi đọc đầu ra model — qua hàm dựng thẻ thật của judge-run (ket-luan-the.mts), không tin cột lưu sẵn. */
+function ketLuanThe(cay) {
+  const r = spawnSync(process.execPath, ["--import", "tsx", join(HO_SO, "probes/ket-luan-the.mts"), TEP.json, ...(cay ? ["--cay-ket-luan"] : [])], {
+    cwd: join(GOC, "agent"), encoding: "utf8",
+  });
+  if (r.status !== 0) return { loi: `AC-8 không tính được kết luận thẻ (mã ${r.status}): ${String(r.stderr).slice(-300)}` };
+  try {
+    return { ra: JSON.parse(r.stdout) };
+  } catch {
+    return { loi: "AC-8 không đọc được kết luận thẻ" };
+  }
+}
+
+function kiem({ mauThieu = false, bangLech = false, cayKetLuan = false } = {}) {
   const loi = [];
   if (!existsSync(TEP.json) || !existsSync(TEP.md)) {
     console.error("ĐỎ AC-8 chưa có so-truoc-sau.json / .md — lượt đo thật chưa chạy");
@@ -163,6 +179,10 @@ function kiem({ mauThieu = false, bangLech = false } = {}) {
   if (kq.mau_sha?.enrich !== sha(TEP.mauEnrich)) loi.push("AC-8 băm mau-enrich.json khác lúc đo");
   if (kq.mau_sha?.judge !== sha(TEP.mauJudge)) loi.push("AC-8 băm mau-judge.json khác lúc đo");
   const mau = JSON.parse(readFileSync(TEP.mauEnrich, "utf8")).tin;
+  const kl = ketLuanThe(cayKetLuan);
+  if (kl.loi) loi.push(kl.loi);
+  else if (kl.ra.length !== kq.judge.length) loi.push(`AC-8 kết luận thẻ ${kl.ra.length} khác ${kq.judge.length} cặp`);
+  else kq.judge.forEach((j, i) => (j.ket_luan_sau = kl.ra[i]));
   const so = tinhSo(kq, mau);
   loi.push(...kiemNguong(so));
   let md = readFileSync(TEP.md, "utf8");
@@ -180,7 +200,7 @@ const isMain = process.argv[1] && fileURLToPath(import.meta.url) === process.arg
 if (isMain) {
   const a = process.argv.slice(2);
   if (a.includes("--chon-mau")) await chonMau();
-  else if (a.includes("--kiem")) kiem({ mauThieu: a.includes("--mau-thieu"), bangLech: a.includes("--bang-lech") });
+  else if (a.includes("--kiem")) kiem({ mauThieu: a.includes("--mau-thieu"), bangLech: a.includes("--bang-lech"), cayKetLuan: a.includes("--cay-ket-luan") });
   else if (a.includes("--chay")) {
     const i = a.indexOf("--tran-usd");
     const tran = i >= 0 ? a[i + 1] : String(NGUONG.tranUsd);

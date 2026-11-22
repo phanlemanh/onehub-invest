@@ -94,6 +94,13 @@ function canCu(kq: KetQuaLuat, giai: string | null, c: Pick<Cham, "model" | "tra
   return phan.join(" · ");
 }
 
+/** Nội dung thẻ duyệt từ kết luận của luật và lời giải thích model — MỘT hàm cho cả hai nhánh ghi (cập nhật, gieo) và cho
+ *  phép đo AC-8 của MH1 (kết luận ghi lên thẻ sau khi đọc đầu ra model phải bằng kết luận luật trước lời gọi). */
+export function noiDungThe(kq: KetQuaLuat, giai: string | null, cuocGoi: Pick<Cham, "model" | "trace" | "ok" | "loi">, luc = new Date().toISOString()) {
+  const cham: Cham = { phien_ban_nguong: PHIEN_BAN_NGUONG, ket_luan: kq.same_house, ly_do: kq.ly_do, lech: kq.lech, ...cuocGoi, luc };
+  return { ketLuan: cham.ket_luan, lyDo: canCu(kq, giai, cuocGoi), cham };
+}
+
 /** Dữ liệu hai tin trên thẻ — đúng bộ khoá thẻ seed 029 (bên đọc /ops/review). */
 export function evidenceThe(p: PairData) {
   const tin = (t: PairData["a"] | PairData["b"]) => ({
@@ -237,18 +244,10 @@ export async function chamMotLuot(
       break;
     }
     const { giai, cuocGoi } = await giaiThich(pair, kq, deps);
-    const cham: Cham = {
-      phien_ban_nguong: PHIEN_BAN_NGUONG,
-      ket_luan: kq.same_house,
-      ly_do: kq.ly_do,
-      lech: kq.lech,
-      ...cuocGoi,
-      luc: new Date().toISOString(),
-    };
-    const lyDo = canCu(kq, giai, cuocGoi);
+    const { ketLuan, lyDo, cham } = noiDungThe(kq, giai, cuocGoi);
     if (the.length > 0) {
       const { rowCount } = await db.query(SQL_CAP_NHAT, [
-        kq.same_house,
+        ketLuan,
         lyDo,
         JSON.stringify(cham),
         the.map((t) => t.id),
@@ -260,7 +259,7 @@ export async function chamMotLuot(
         `INSERT INTO review_queue (item_type, item_id, title, evidence, ai_suggestion, ai_reasoning, ai_confidence)
          VALUES ('entity_match', $1, $2, $3::jsonb, $4, $5, NULL)
          ON CONFLICT DO NOTHING`,
-        [`pair:${a}|${b}`, tieuDe(pair), JSON.stringify({ ...evidenceThe(pair), cham }), kq.same_house, lyDo],
+        [`pair:${a}|${b}`, tieuDe(pair), JSON.stringify({ ...evidenceThe(pair), cham }), ketLuan, lyDo],
       );
       dem.sinh++;
     }

@@ -9,6 +9,7 @@ import { join } from "node:path";
 import pg from "pg";
 import { insertOffer } from "./helpers/db.js";
 import { moAnthropic, type MayAnthropic } from "./helpers/gateway-gia.js";
+import { apNguong } from "../src/agents/judge-entity.js";
 
 const DB = process.env.DATABASE_URL ?? "";
 if (!/\/oneinvest_suite_[a-z0-9_]+$/.test(DB)) throw new Error(`từ chối: DB thử phải là oneinvest_suite_<…> (DATABASE_URL=${DB || "<trống>"})`);
@@ -36,12 +37,16 @@ after(async () => {
   await gw?.dong();
 });
 
-/** Hai tin S03: chữ bài không chứa người bán; tên, SĐT người bán ở cột tin, tên nhóm ở cột bài. */
+/** Dấu cấy SAU ký tự thứ 500 của chữ bài tin dài: bước cắt 500 ký tự mất thì dấu này lọt vào thân yêu cầu. */
+const QUA_500 = "DAUQUA500MH1";
+/** Hai tin S03: chữ bài không chứa người bán; tên, SĐT người bán ở cột tin, tên nhóm ở cột bài. `dai`: chữ bài tin a dài
+ *  ~700 ký tự, dấu QUA_500 nằm sau ký tự thứ 500 (đối chứng dương của «chữ bài ≤ 500 ký tự»). */
 let soLan = 0;
-async function gieoHaiTin(): Promise<{ ids: string[]; chu: string[] }> {
+async function gieoHaiTin({ dai = false } = {}): Promise<{ ids: string[]; chu: string[] }> {
   const lan = ++soLan;
   const ids = [`${TIEN_TO}_${lan}a`, `${TIEN_TO}_${lan}b`];
   const chu = ids.map((id) => `Bán căn hộ 2pn 70m2 giá 3,2 tỷ phố Ba Đình, sẵn sổ — mã ${id}`);
+  if (dai) chu[0] = `${chu[0]} ${"nhà đẹp gần hồ, nội thất đủ, ".repeat(18)}${QUA_500} hết bài`;
   for (const [i, id] of ids.entries()) {
     await db.query(`INSERT INTO stg_zalo_posts (post_id, snapshot_id, text, group_name) VALUES ($1, 'mh1g', $2, $3)`, [`p_${id}`, chu[i], NHOM]);
     await insertOffer(db, { offer_id: id, post_ids: [`p_${id}`], property_type: "unknown" });
@@ -52,17 +57,18 @@ async function gieoHaiTin(): Promise<{ ids: string[]; chu: string[] }> {
 }
 
 /** Nhãn dòng của thân judge viết trước theo design doc (buildJudgeInput): mọi dòng không rỗng phải bắt đầu bằng một nhãn. */
-const NHAN_JUDGE = ["So sánh 2 tin đăng:", "TIN A (", "TIN B (", "- Giá:", "- Diện tích:", "- Giá/m²:", "- Phường:", "- Loại:", "- Nội dung:", "- Tiêu đề:", "KẾT LUẬN CỦA MÁY:", "LÝ DO:", "- "];
+const NHAN_JUDGE = ["So sánh 2 tin đăng:", "TIN A (", "TIN B (", "- Giá:", "- Diện tích:", "- Giá/m²:", "- Phường:", "- Loại:", "- Nội dung:", "- Tiêu đề:", "KẾT LUẬN CỦA MÁY:", "LÝ DO:"];
 /** Nhãn dòng của thân enrich (buildEnrichInput): chữ bài sau «TIN ĐĂNG:», rồi khối bối cảnh suy từ tên nhóm. */
 const NHAN_ENRICH = ["TIN ĐĂNG:", "BỐI CẢNH (từ tên nhóm Zalo):", "- Nhóm Zalo thuộc dự án:", "- Nhóm CÓ THỂ thuộc", "- Khu vực:", "- Loại hình từ nhóm:", "- Mã tòa phát hiện:"];
 
-/** Hàm kiểm dùng chung (ca thật và chiều đỏ): prompt chỉ có dòng thuộc nhãn đã kê; người bán, SĐT, tên nhóm không lộ; chữ bài có mặt. */
-function kiemThan(prompt: string, nhan: string[], chuBai: string[], ten: string) {
+/** Hàm kiểm dùng chung (ca thật và chiều đỏ): prompt chỉ có dòng thuộc nhãn đã kê hoặc đúng nguyên văn một dòng trong
+ *  `chinhXac` (lý do của luật cho cặp này — không nhãn bắt-mọi); người bán, SĐT, tên nhóm không lộ; chữ bài có mặt. */
+function kiemThan(prompt: string, nhan: string[], chuBai: string[], ten: string, chinhXac: string[] = []) {
   for (const lo of [NGUOI_BAN, SDT, NHOM]) if (prompt.includes(lo)) assert.fail(`MH1 AC-4 ${ten} lộ trường «${lo}»`);
   const dong = prompt.split("\n").map((d) => d.trim()).filter(Boolean);
   const laChuBai = (d: string) => chuBai.some((c) => d === c || c.startsWith(d) || d.includes(c.slice(0, 40)));
   for (const d of dong) {
-    if (laChuBai(d)) continue;
+    if (laChuBai(d) || chinhXac.includes(d)) continue;
     if (!nhan.some((n) => d.startsWith(n))) assert.fail(`MH1 AC-4 ${ten} có dòng ngoài danh sách: «${d.slice(0, 80)}»`);
   }
   assert.ok(chuBai.some((c) => prompt.includes(c.slice(0, 60))), `MH1 AC-4 ${ten} thiếu chữ bài (đối chứng dương)`);
@@ -80,7 +86,8 @@ const promptNguoiDung = (y: MayAnthropic["yeuCau"][number]) => {
 };
 
 test("MH1 AC-4 enrich-run thật (OFFER_SELECT) chỉ gửi chữ bài ≤ 500 ký tự và khối bối cảnh", async () => {
-  const { ids, chu } = await gieoHaiTin();
+  const { ids, chu } = await gieoHaiTin({ dai: true });
+  assert.ok(chu[0].length > 600 && chu[0].indexOf(QUA_500) > 500, "MH1 AC-4 tin dài phải có dấu sau ký tự 500");
   gw.datLai();
   const kq = await new Promise<{ ma: number | null; out: string }>((resolve, reject) => {
     const p = spawn(process.execPath, ["--import", "tsx", "scripts/enrich-run.ts", "--offers", ids.join(",")], {
@@ -98,6 +105,11 @@ test("MH1 AC-4 enrich-run thật (OFFER_SELECT) chỉ gửi chữ bài ≤ 500 k
     assert.ok(p.length <= 500 + 600, "MH1 AC-4 enrich gửi quá dài");
     kiemThan(p, NHAN_ENRICH, chu, "enrich");
   }
+  // Chữ bài ≤ 500 ký tự: thân của tin dài có đúng 500 ký tự đầu (đối chứng dương) và không có dấu nằm sau ký tự 500.
+  const dai = gw.yeuCau.map(promptNguoiDung).find((p) => p.includes(ids[0]));
+  assert.ok(dai, "MH1 AC-4 không thấy lời gọi của tin dài");
+  assert.ok(dai!.includes(chu[0].slice(0, 500)), "MH1 AC-4 thân tin dài thiếu 500 ký tự đầu của chữ bài");
+  assert.ok(!dai!.includes(QUA_500), "MH1 AC-4 enrich gửi chữ bài quá 500 ký tự");
 });
 
 test("MH1 AC-4 judge (chamMotLuot + queryPair thật) chỉ gửi các dòng đã kê; chiều đỏ: thêm dòng người bán thì đỏ gọi tên trường", async () => {
@@ -114,7 +126,14 @@ test("MH1 AC-4 judge (chamMotLuot + queryPair thật) chỉ gửi các dòng đ�
   const y = gw.yeuCau.find((x) => chu.some((c) => x.thanChu.includes(c.slice(-20))))!;
   assert.ok(y, "MH1 AC-4 không tìm thấy lời gọi judge của cặp cấy");
   const p = promptNguoiDung(y);
-  kiemThan(p, NHAN_JUDGE, chu.map((c) => c.slice(0, 200)), "judge");
+  // Dòng «- <lý do>» chỉ qua khi đúng nguyên văn một lý do luật tính cho chính cặp này (buildJudgeInput in `- ${l.cau}`).
+  const pair = await queryPair(ids[0], ids[1], db);
+  assert.ok(pair, "MH1 AC-4 không đọc được cặp cấy");
+  const lyDo = apNguong(pair!).ly_do.map((l) => `- ${l.cau}`);
+  assert.ok(lyDo.length > 0 && lyDo.every((d) => p.includes(d)), "MH1 AC-4 thân judge thiếu dòng lý do của luật (đối chứng dương)");
+  kiemThan(p, NHAN_JUDGE, chu.map((c) => c.slice(0, 200)), "judge", lyDo);
   // Chiều đỏ trên cùng thân: thêm một dòng người bán như một bản buildJudgeInput hỏng → hàm kiểm đỏ gọi tên trường.
-  assert.throws(() => kiemThan(`${p}\n- Người bán: ${NGUOI_BAN}`, NHAN_JUDGE, chu, "judge"), /MH1 AC-4 judge lộ trường «Trần Văn Cấy»/);
+  assert.throws(() => kiemThan(`${p}\n- Người bán: ${NGUOI_BAN}`, NHAN_JUDGE, chu, "judge", lyDo), /MH1 AC-4 judge lộ trường «Trần Văn Cấy»/);
+  // Chiều đỏ thứ hai: dòng «- …» mang giá trị KHÔNG cấy (trường lộ mới) → đỏ vì ngoài danh sách nhãn, không nhờ ba chuỗi cấy.
+  assert.throws(() => kiemThan(`${p}\n- Ghi chú người đăng: gọi giờ hành chính`, NHAN_JUDGE, chu, "judge", lyDo), /MH1 AC-4 judge có dòng ngoài danh sách: «- Ghi chú người đăng/);
 });

@@ -134,6 +134,12 @@ test("chiều đỏ MH1 AC-5: bản sao bỏ điểm dừng trần → hàm ki�
 // ---------- AC-10 ----------
 /** Năm đầu ra thô viết trước: hai JSON trần, hai cùng JSON bọc khối mã, một chuỗi không phải JSON. */
 const NAM_DAU_RA = [TRA_JSON, TRA_JSON, "```json\n" + TRA_JSON + "\n```", "Đây là kết quả:\n```json\n" + TRA_JSON + "\n```", "Tôi không chắc về tin này."];
+/** Bộ đề xuất e2_llm viết trước cho một tin đọc được TRA_JSON (trường, giá trị, lối) — mọi tin đọc được phải ra đúng bộ này. */
+const DE_XUAT_KY_VONG = [["bedrooms", "2", "review"], ["property_type", "apartment", "review"]];
+/** Số viết trước cho năm tin của AC-10: đề xuất LLM đi lối duyệt (luật 7 — LLM không tự áp), nên «đã áp» 0 và «chờ duyệt»
+ *  bằng bốn tin đọc được × hai trường = 8; DB phải có đúng 8 dòng e2_llm chờ duyệt của năm tin. */
+const DA_AP_KY_VONG = 0;
+const CHO_DUYET_KY_VONG = 8;
 
 test("MH1 AC-10 đường ghi đề xuất với đầu ra dạng Haiku: khối mã ghi như JSON trần, đầu ra hỏng 0 đề xuất, cột model mã Haiku", async () => {
   const ids = await gieo(5);
@@ -154,17 +160,19 @@ test("MH1 AC-10 đường ghi đề xuất với đầu ra dạng Haiku: khối 
   const khoiMa = [...theoTin].filter(([, o]) => o.includes("```")).map(([id]) => id);
   const hong = [...theoTin].filter(([, o]) => !o.includes("{")).map(([id]) => id);
   assert.deepEqual([tran.length, khoiMa.length, hong.length], [2, 2, 1]);
-  const mau = (await deXuat(tran[0])).map((r) => [r.field, r.value_key, r.route]);
-  assert.ok(mau.length > 0, "MH1 AC-10 đầu ra JSON trần không sinh đề xuất nào");
   for (const id of [...tran, ...khoiMa]) {
     const rs = await deXuat(id);
-    assert.deepEqual(rs.map((r) => [r.field, r.value_key, r.route]), mau, `MH1 AC-10 thiếu đề xuất của đầu ra khối mã (${id})`);
+    assert.deepEqual(rs.map((r) => [r.field, r.value_key, r.route]), DE_XUAT_KY_VONG, `MH1 AC-10 thiếu đề xuất của đầu ra khối mã (${id})`);
     assert.ok(rs.every((r) => r.model === HAIKU), `MH1 AC-10 cột model khác mã Haiku (${id})`);
   }
   assert.equal((await deXuat(hong[0])).length, 0, "MH1 AC-10 đầu ra hỏng vẫn sinh đề xuất");
   assert.match(kq.out, /không đọc được 1/, "MH1 AC-10 tổng kết không đếm đầu ra hỏng");
-  // Số đề xuất được áp trong tổng kết bằng số dòng đã áp trong DB của bốn tin.
+  // Số đề xuất được áp: tổng kết và DB cùng bằng số viết trước (không chỉ bằng nhau — 0 = 0 không chứng gì).
   const daAp = Number(kq.out.match(/đã áp: (\d+)/)?.[1] ?? NaN);
   const apDb = Number((await db.query(`SELECT count(*) n FROM enrichment_proposals WHERE offer_id = ANY($1) AND applied_at IS NOT NULL`, [ids])).rows[0].n);
-  assert.equal(daAp, apDb, `MH1 AC-10 tổng kết «đã áp ${daAp}» khác DB ${apDb}`);
+  assert.deepEqual([daAp, apDb], [DA_AP_KY_VONG, DA_AP_KY_VONG], `MH1 AC-10 «đã áp» tổng kết ${daAp}, DB ${apDb} — kỳ vọng ${DA_AP_KY_VONG}`);
+  // Đối chứng dương cho đường ghi: số chờ duyệt của tổng kết và DB cùng bằng số viết trước (khác 0).
+  const choDuyet = Number(kq.out.match(/chờ duyệt: (\d+)/)?.[1] ?? NaN);
+  const choDb = Number((await db.query(`SELECT count(*) n FROM enrichment_proposals WHERE offer_id = ANY($1) AND source = 'e2_llm' AND route = 'review' AND status = 'queued'`, [ids])).rows[0].n);
+  assert.deepEqual([choDuyet, choDb], [CHO_DUYET_KY_VONG, CHO_DUYET_KY_VONG], `MH1 AC-10 «chờ duyệt» tổng kết ${choDuyet}, DB ${choDb} — kỳ vọng ${CHO_DUYET_KY_VONG}`);
 });
