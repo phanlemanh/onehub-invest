@@ -15,6 +15,11 @@ import { buocS09DanhBa } from "../lib/s09-dung.mjs";
 import { KIND_GOI_1, SOURCE_ID_DANH_MUC_GOI_1 } from "../lib/s09-danh-ba-can.mjs";
 import { buocS16 } from "../lib/s16-dung.mjs";
 import { createHash } from "node:crypto";
+import { execFileSync } from "node:child_process";
+import { FILL } from "../sync-cloud.mjs";
+import { guardValues } from "../lib/tier-a-guard.mjs";
+import { docSourceNameEntries } from "../lib/source-name-entries.mjs";
+import { phanLop } from "../lib/noi-du-an-s06-lop.mjs";
 import { khoaKhu } from "../lib/s16-phan-khu.mjs";
 
 export const TEN = `oneinvest_dbv_s09t_${process.pid}`;
@@ -580,6 +585,82 @@ test("DA42 E8 (AC-8): hai DB hai thứ tự nguồn cùng toà, căn, bí danh, 
     await db.query("ROLLBACK").catch(() => {}); await db2.query("ROLLBACK").catch(() => {});
     await db2.end().catch(() => {});
     await xoaDbThu(TEN2);
+  }
+});
+
+// ---- E9 (AC-9): mọi thứ rời máy chỉ mang mã S09 ----------------------------------------------------------------------------
+// Bảng không bao giờ lên cloud: stg gói 1 và ba bảng vật thể (cùng bí danh).
+const BANG_CAM_E9 = [/^stg_/, "buildings", "stacks", "units", "registry_aliases"];
+const bangCamTrongDay = (fill) => fill.filter((t) => BANG_CAM_E9.some((m) => (m instanceof RegExp ? m.test(t) : m === t)));
+// Tệp của hàng (diff so nhánh chính) đem soát tên thật.
+const VUNG_E9 = [/^db\/migrations\/1(15|25)_/, /^pipeline\/lib\/s09-(danh-ba-can|dung)/, /^pipeline\/lib\/s16-dung/, /^pipeline\/import-s09-danh-ba/,
+  /^pipeline\/scripts\/danh-ba-s09-toa/, /^docs\/superpowers\/(plans|specs)\/2026-11-(18|21)-nap-s09-toa-tang/, /^_acceptance\/nap-s09-toa-tang-vao-danh-ba\//];
+
+/** Chỗ trúng tên nguồn → «bảng.cột» hay «tệp»; KHÔNG giá trị. */
+const noiTrung = (h) => h.path.replace(/\[\d+\]/g, "").split(".").slice(0, 2).join(".");
+
+test("DA42 E9 (AC-9): danh sách đẩy không có stg gói 1 và bảng vật thể; nút ứng viên không qua điều kiện gắn tin; thẻ, log, tệp 0 tên thật; đỏ khi cấy tên", async () => {
+  // 1. Danh sách đẩy của sync-cloud.
+  assert.deepEqual(bangCamTrongDay(FILL), [], "danh sách đẩy cloud có bảng cấm");
+  assert.deepEqual(bangCamTrongDay([...FILL, "stg_s09_danh_ba", "buildings"]), ["stg_s09_danh_ba", "buildings"], "chiều đỏ: bộ kiểm bảng cấm phải bắt");
+
+  // 2. Danh sách tên nguồn thật: DB máy thu, chỉ đọc; đọc không được hay rỗng thì đỏ (không âm thầm bỏ phần soát).
+  const may = new pg.Client({ connectionString: process.env.S09_MAY_THU ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest" });
+  await may.connect();
+  let entries, dinhDanh;
+  try {
+    await may.query("SET default_transaction_read_only = on");
+    entries = await docSourceNameEntries(may);
+    // Định danh lược đồ có từ trước hàng (tên bảng, cột — vd airbnb_snapshots) không phải chỗ lộ tên nguồn: bỏ khỏi TỆP và LOG trước
+    // khi dò, như s09-ranh-gioi.mjs của DA31. Thẻ (đi cloud qua review_queue) soát nguyên văn.
+    dinhDanh = new Set((await may.query(`SELECT table_name AS t FROM information_schema.tables WHERE table_schema = 'public'
+                                          UNION SELECT column_name FROM information_schema.columns WHERE table_schema = 'public'`)).rows.map((r) => r.t));
+  } finally { await may.end(); }
+  const boDinhDanh = (t) => String(t).replace(/[A-Za-z0-9_]+/g, (w) => (dinhDanh.has(w) ? " " : w));
+  assert.ok(entries.length > 0, "không đọc được danh sách tên nguồn (source_registry) — phần soát tên không chạy được");
+
+  await db.query("BEGIN");
+  try {
+    // 3. Dựng các fixture có thẻ (E3: thẻ luật, thẻ cặp, nút ứng viên · E4: thẻ toà · E5: thẻ lệch tầng), giữ log.
+    const log = [];
+    const N3 = await fixtureE3();
+    await buocS09DanhBa(db, { noi: NOI_E3, noiS16: {}, log: (x) => log.push(x), taoKhoa: taoKhoaThu });
+    await fixtureE4();
+    await buocS09DanhBa(db, { noi: NOI_E4, noiS16: {}, log: (x) => log.push(x), taoKhoa: taoKhoaThu });
+    await fixtureE5();
+    await buocS09DanhBa(db, { noi: NOI_E5, noiS16: NOI16_E5, log: (x) => log.push(x), taoKhoa: taoKhoaThu });
+    const the = (await db.query("SELECT item_id, title, evidence, decision_note FROM review_queue ORDER BY item_id")).rows;
+    assert.ok(the.length >= 5, `tiền đề: phải có thẻ để soát, thấy ${the.length}`);
+
+    // 4. Nút ứng viên không qua điều kiện gắn tin (bộ gắn S06 bỏ nút bậc mot_loi_khai; S03 cùng luật ở du-an-tren-tin-s03.mjs).
+    const uv = (await db.query(`SELECT n.id::int AS id, n.name, n.catalog_tier FROM asset_nodes n JOIN registry_aliases a ON a.object_key = 'node:' || n.id
+                                 WHERE a.source = 'S09' AND a.value = 'danh-ba-du-an/q42-pu'`)).rows[0];
+    assert.equal(uv?.catalog_tier, "mot_loi_khai");
+    const ma = { ma: "e9", ten: uv.name, tinh: ["01"], xaNhieu: "", soTin: 3, dlatM: 0 };
+    assert.notEqual(phanLop(ma, [{ ...uv, tinh: "01" }]).node_id, uv.id, "nút ứng viên S09 được bộ gắn tin S06 nhận");
+    assert.equal(phanLop(ma, [{ ...uv, catalog_tier: "xac_minh", tinh: "01" }]).node_id, uv.id, "chiều đỏ: cùng nút bậc xác minh phải được nhận");
+
+    // 5. Soát tên thật: thẻ, log, tệp của hàng. Báo chỗ trúng, không giá trị.
+    const tep = execFileSync("git", ["-C", join(import.meta.dirname, "../.."), "diff", "--name-only", "origin/main...HEAD"], { encoding: "utf8" })
+      .split("\n").filter((f) => VUNG_E9.some((re) => re.test(f)));
+    assert.ok(tep.length > 0, "tiền đề: phải có tệp của hàng để soát");
+    const noiDungTep = Object.fromEntries(tep.map((f) => {
+      try { return [f, boDinhDanh(readFileSync(join(import.meta.dirname, "../..", f), "utf8"))]; } catch { return [f, ""]; }
+    }));
+    const trung = guardValues({ review_queue: the, log: log.map(boDinhDanh), tep: noiDungTep }, entries);
+    assert.deepEqual(trung.map(noiTrung), [], "thẻ, log hay tệp của hàng mang tên nguồn thật");
+
+    // Chiều đỏ: cấy một tên nguồn GIẢ LẬP vào thẻ → bộ soát nêu bảng và cột, không in giá trị.
+    const GIA = "zz-nguon-gia-lap-e9";
+    await db.query("UPDATE review_queue SET evidence = evidence || jsonb_build_object('ghi', $1::text) WHERE item_id = (SELECT min(item_id) FROM review_queue)", [`bài từ ${GIA}`]);
+    const the2 = (await db.query("SELECT item_id, title, evidence, decision_note FROM review_queue ORDER BY item_id")).rows;
+    const trung2 = guardValues({ review_queue: the2 }, [...entries, { code: "S99", realName: GIA, wholeOnly: false }]);
+    const bao = trung2.map(noiTrung);
+    assert.deepEqual(bao, ["review_queue.evidence"], "chiều đỏ: cấy tên giả lập vào thẻ phải bị bắt ở review_queue.evidence");
+    assert.ok(!JSON.stringify(trung2).includes(GIA), "bộ soát in giá trị trúng");
+    void N3;
+  } finally {
+    await db.query("ROLLBACK");
   }
 });
 
