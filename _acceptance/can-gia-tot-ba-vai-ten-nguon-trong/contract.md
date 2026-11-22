@@ -5,7 +5,7 @@ slug: can-gia-tot-ba-vai-ten-nguon-trong
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [script]
-status: approved
+status: implemented
 veto_state: mo
 veto_opened_at: 2026-11-22T08:50:00Z
 approved_by:
