@@ -23,7 +23,7 @@ import {
   type KetQuaLuat,
 } from "../src/agents/judge-entity.js";
 import { queryPair, type PairData } from "../src/tools/native.js";
-import { LoiCauHinhModel, modelCuaAgent, taoTran, tranTuArgv, uocTokenVao, type Tran } from "../src/runtime/model-agent.js";
+import { LoiCauHinhModel, LoiThieuKhoa, khoaThieuAgent, modelCuaAgent, taoTran, tranTuArgv, uocTokenVao, type Tran } from "../src/runtime/model-agent.js";
 
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
@@ -79,7 +79,7 @@ async function giaiThich(
       cuocGoi: { model: daGhi()?.model ?? null, trace: daGhi()?.trace ?? res.tracePath, ok: giai !== null, loi: giai === null ? "sai-khuon" : null },
     };
   } catch (e) {
-    if (e instanceof LoiCauHinhModel) throw e;
+    if (e instanceof LoiCauHinhModel || e instanceof LoiThieuKhoa) throw e;
     deps.tran?.ghi(uocTokenVao(vao), 0);
     return { giai: null, cuocGoi: { model: daGhi()?.model ?? null, trace: daGhi()?.trace ?? null, ok: false, loi: tenLop(e) } };
   }
@@ -281,6 +281,9 @@ async function main() {
   // Model, giá, trần đọc trước khi mở DB: tệp cấu hình sai → mã 2 (MH1 AC-2). --tran-usd vắng → tran_usd của judge-entity.
   const m = modelCuaAgent(judgeEntityAgent.name);
   const tran = taoTran(tranTuArgv(process.argv, m.tranUsd), m.gia);
+  // Thiếu khoá của mọi đường gọi được → mã 5 trước lời gọi đầu, chưa mở DB (MH1 AC-2). --khong-llm không gọi model.
+  const thieu = khongLlm ? [] : khoaThieuAgent(m);
+  if (thieu.length) throw new LoiThieuKhoa(thieu);
   const c = new pg.Client({ connectionString: DB_URL });
   await c.connect();
   try {
@@ -301,4 +304,8 @@ async function main() {
 }
 
 const isMain = process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url);
-if (isMain) main().catch((e) => { console.error(e instanceof LoiCauHinhModel ? e.message : e); process.exit(e instanceof LoiCauHinhModel ? 2 : 1); });
+if (isMain) main().catch((e) => {
+  const biet = e instanceof LoiCauHinhModel || e instanceof LoiThieuKhoa;
+  console.error(biet ? e.message : e);
+  process.exit(e instanceof LoiThieuKhoa ? 5 : e instanceof LoiCauHinhModel ? 2 : 1);
+});

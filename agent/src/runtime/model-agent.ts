@@ -1,19 +1,25 @@
 // model-agent.ts — MH1 model-may-sang-haiku: model của từng agent chạy qua runAgent chọn bằng tệp agent/config/model-agent.json
 // (cùng khuôn bảng PL30). Mã model phải thuộc danh sách đóng MODEL_DUYET (ADR-0007 sửa đổi 06/11); tệp sai thì dừng trước lời gọi
-// đầu. Đường gọi là Vercel AI Gateway, kèm cờ không giữ dữ liệu, không huấn luyện (tuyChonGui). Giá USD mỗi triệu token, dùng cho
-// trần tiền mỗi lượt (Mạnh duyệt Cổng Phạm vi 21/11: 0,5 USD mỗi lượt enrich, 1 USD mỗi lượt judge).
+// đầu. Giá USD mỗi triệu token, dùng cho trần tiền mỗi lượt (Mạnh duyệt Cổng Phạm vi 21/11: 0,5 USD mỗi lượt enrich, 1 USD mỗi
+// lượt judge). Đường gọi (Mạnh 22/11 «Anthropic thẳng»): mỗi model có `duong` như bảng của bộ đọc gộp — "gateway" (Vercel AI
+// Gateway, kèm cờ không giữ dữ liệu, không huấn luyện của tuyChonGui) hay "anthropic" (API Anthropic thẳng, không có cờ theo lời
+// gọi — Mạnh chấp nhận như đọc gộp); `tu_lui` true thì thiếu khoá hay gặp lớp dừng (hết tiền, khoá sai) lùi sang đường kế.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { MODEL_DUYET, tuyChonGui } from "../enrich/doc-gop-s03/cau-hinh.js";
+import { DUONG, DUONG_ANTHROPIC, KHOA_DUONG, MODEL_DUYET, dsDuong, tuyChonGui, type Duong } from "../enrich/doc-gop-s03/cau-hinh.js";
+
+export type { Duong };
 
 export const DUONG_CAU_HINH = join(import.meta.dirname, "../../config/model-agent.json");
 
 export type Gia = { vao: number; ra: number };
-export type ModelAgent = { khoa: string; gateway: string; gia: Gia; tranUsd: number };
+/** `duong`: các đường theo thứ tự thử; `tuLui`: lùi sang đường kế khi thiếu khoá hay gặp lớp dừng. */
+export type ModelAgent = { khoa: string; gateway: string; gia: Gia; tranUsd: number; duong: Duong[]; tuLui: boolean };
 type CauHinhModelAgent = {
   phien_ban: 1;
   mac_dinh: string;
-  model: Record<string, { gateway: string; gia_vao: number; gia_ra: number }>;
+  tu_lui?: boolean;
+  model: Record<string, { gateway: string; gia_vao: number; gia_ra: number; duong?: Duong | Duong[] }>;
   agent: Record<string, { model: string; tran_usd: number }>;
 };
 
@@ -39,7 +45,14 @@ export function kiemCauHinhModel(x: unknown): CauHinhModelAgent {
       throw new LoiCauHinhModel(`model ${k} dùng ${JSON.stringify(m.gateway)} ngoài danh sách duyệt (${MODEL_DUYET.join(", ")})`);
     }
     if (!laSoKhongAm(m.gia_vao) || !laSoKhongAm(m.gia_ra)) throw new LoiCauHinhModel(`model ${k} có giá thiếu hay âm`);
+    const ds = dsDuong(m.duong);
+    if (!ds.length || new Set(ds).size !== ds.length) throw new LoiCauHinhModel(`model ${k} có duong ${JSON.stringify(m.duong)} rỗng hay lặp`);
+    for (const d of ds) {
+      if (!(DUONG as readonly unknown[]).includes(d)) throw new LoiCauHinhModel(`model ${k} có duong ${JSON.stringify(d)} — chỉ ${DUONG.join(" | ")}`);
+      if (d === "anthropic" && !DUONG_ANTHROPIC[m.gateway]) throw new LoiCauHinhModel(`model ${k} (${m.gateway}) không có đường anthropic`);
+    }
   }
+  if (x.tu_lui !== undefined && typeof x.tu_lui !== "boolean") throw new LoiCauHinhModel(`tu_lui phải là true/false, nhận ${JSON.stringify(x.tu_lui)}`);
   if (typeof x.mac_dinh !== "string" || !(x.mac_dinh in x.model)) {
     throw new LoiCauHinhModel(`mac_dinh ${JSON.stringify(x.mac_dinh)} không phải khoá model đã khai`);
   }
@@ -76,7 +89,31 @@ export function modelCuaAgent(ten: string, cauHinh: CauHinhModelAgent = napCauHi
   const a = cauHinh.agent[ten];
   if (!a) throw new LoiCauHinhModel(`agent ${ten} không có khoá trong tệp cấu hình`);
   const m = cauHinh.model[a.model];
-  return { khoa: a.model, gateway: m.gateway, gia: { vao: m.gia_vao, ra: m.gia_ra }, tranUsd: a.tran_usd };
+  return {
+    khoa: a.model, gateway: m.gateway, gia: { vao: m.gia_vao, ra: m.gia_ra }, tranUsd: a.tran_usd,
+    duong: dsDuong(m.duong), tuLui: cauHinh.tu_lui === true,
+  };
+}
+
+/** Thiếu khoá: không còn đường nào gọi được — lệnh dừng trước lời gọi đầu, mã thoát 5 (AC-2). */
+export class LoiThieuKhoa extends Error {
+  constructor(readonly khoa: string[]) {
+    super(`model-agent: thiếu khoá ${khoa.join(", ")} — không gọi model`);
+    this.name = "LoiThieuKhoa";
+  }
+}
+
+/** Đường gọi được theo khoá có trong môi trường. Không tự lùi: chỉ đường đầu (thiếu khoá của nó → rỗng). Tự lùi: mọi đường có
+ * khoá, giữ thứ tự. */
+export function duongCoKhoa(m: Pick<ModelAgent, "duong" | "tuLui">, env: NodeJS.ProcessEnv = process.env): Duong[] {
+  const co = (d: Duong) => !!env[KHOA_DUONG[d]];
+  return m.tuLui ? m.duong.filter(co) : co(m.duong[0]) ? [m.duong[0]] : [];
+}
+
+/** Tên biến khoá còn thiếu khi không đường nào gọi được (rỗng = đủ), xếp theo tên. */
+export function khoaThieuAgent(m: Pick<ModelAgent, "duong" | "tuLui">, env: NodeJS.ProcessEnv = process.env): string[] {
+  if (duongCoKhoa(m, env).length) return [];
+  return [...new Set((m.tuLui ? m.duong : [m.duong[0]]).map((d) => KHOA_DUONG[d]))].sort();
 }
 
 /** Tuỳ chọn gửi kèm lời gọi Gateway của agent (cờ không giữ dữ liệu, không huấn luyện) — cùng hàm của PL30. */
