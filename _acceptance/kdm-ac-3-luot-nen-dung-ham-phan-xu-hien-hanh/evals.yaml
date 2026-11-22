@@ -1,0 +1,67 @@
+schema_version: 1
+feature_slug: kdm-ac-3-luot-nen-dung-ham-phan-xu-hien-hanh
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: node --test --test-name-pattern=HT5-AC-1 scripts/kiem-tin-rao-gan-khu-vuc.test.mjs
+    paths: [pipeline/lib/nap-045.mjs, scripts/kiem-tin-rao-gan-khu-vuc.test.mjs, db/migrations/**]
+    expected: "exit 0, «✔ HT5-AC-1». Ma trận viết trước BANG_PHAN_XU (11 tệp: 045/059/061 dinh-nghia · 068/069/095/099 chen · 063/066 goi · 096/102 nhac) bằng tập mọi migration có chữ resolve_offer_fields (khác → đỏ «HT5-AC-1 tập migration … khác bảng viết trước»); phanLoaiPhanXu xếp đúng 11/11 (sai → «HT5-AC-1 bộ phân loại xếp sai <tệp>»); CHUOI_PHAN_XU = tập dinh-nghia + chen; chiều đỏ trong ca: bỏ 099 → [\"099\"], thêm 998 (FUNCTION public.resolve_offer_fields) + 999 (::regprocedure) → [\"998\",\"999\"]."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: node --test --test-name-pattern=HT5-AC-2 scripts/kiem-tin-rao-gan-khu-vuc.test.mjs
+    paths: [pipeline/lib/nap-045.mjs, pipeline/lib/nap-068.mjs, scripts/kiem-tin-rao-gan-khu-vuc.mjs, scripts/kiem-tin-rao-gan-khu-vuc.test.mjs]
+    long_running: 25
+    expected: "exit 0, «✔ HT5-AC-2». Trên bản chép db-thu: --phan-xu thoát 0 với dòng «ok   bộ phân xử sau napPhatBieu bằng bản DB đang chạy (resolve_offer_area_du_an(text[]) <md5> · resolve_offer_fields(text[]) <md5>)» và «ok   DB chưa có phần chèn 068, 099: napPhatBieu không cấy thêm phần chèn»; --phan-xu --pha bo-099 thoát 1 với «FAIL … khác bản DB đang chạy: resolve_offer_fields(text[]) (»; --phan-xu --pha bo-tra-du-an thoát 1 với «FAIL … khác bản DB đang chạy: resolve_offer_area_du_an(text[]) (» (chỉ hàm ấy)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: node --test --test-name-pattern=KDM-AC-3 scripts/kiem-tin-rao-gan-khu-vuc.test.mjs
+    paths: [pipeline/lib/nap-045.mjs, scripts/kiem-tin-rao-gan-khu-vuc.mjs, scripts/kiem-tin-rao-gan-khu-vuc.test.mjs]
+    long_running: 40
+    expected: "exit 0, «✔ KDM-AC-3 ba chiều trên cùng DB»: bản thường thoát 0 với «ok   lượt nền: 0 tin có phường hợp lệ …» và «kiem-tin-rao-gan: PASS»; --pha khong-sua, --pha mo-loc thoát 1 đúng dòng FAIL cũ."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: node --test --test-name-pattern=HT5-AC-3 scripts/kiem-tin-rao-gan-khu-vuc.test.mjs
+    paths: [pipeline/lib/nap-045.mjs, scripts/kiem-tin-rao-gan-khu-vuc.mjs, scripts/kiem-tin-rao-gan-khu-vuc.test.mjs]
+    long_running: 20
+    expected: "exit 0, «✔ HT5-AC-3»: --thu --pha bo-099 thoát 1, có dòng «FAIL lượt nền: <n ≥ 1> tin có phường hợp lệ ở DB thật bị gỡ hay đổi khu vực», không có «phép đo dừng giữa chừng»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: CI=true node scripts/lib/ci-can-du-lieu.mjs scripts 2>&1 | grep -c 'HT5-AC-3' && ! (CI=true node scripts/lib/ci-can-du-lieu.mjs scripts 2>&1 | grep -E 'HT5-AC-(1|2)') && node --test scripts/ci-test-module.test.mjs
+    paths: [scripts/ci-bo-qua.json, scripts/kiem-tin-rao-gan-khu-vuc.test.mjs]
+    expected: "exit 0: dòng bỏ qua «HT5-AC-3 …» có mặt (đếm 1), không dòng bỏ qua HT5-AC-1/HT5-AC-2, ci-test-module.test.mjs «ℹ fail 0»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: node _acceptance/kdm-ac-3-luot-nen-dung-ham-phan-xu-hien-hanh/probes/so-cat-chuyen.mjs --kiem
+    paths: [pipeline/lib/nap-045.mjs, pipeline/phat-bieu-cat-chuyen.mjs, _acceptance/kdm-ac-3-luot-nen-dung-ham-phan-xu-hien-hanh/so-cat-chuyen.md, _acceptance/kdm-ac-3-luot-nen-dung-ham-phan-xu-hien-hanh/probes/**]
+    expected: "exit 0: so-cat-chuyen.md có hai khối đầu ra (main f962afade, nhánh) của phat-bieu-cat-chuyen.mjs --thu trên bản chép db-thu, cùng mã thoát (khác → đỏ «AC-7 mã thoát hai lượt khác nhau»); mọi dòng chứa số khác nhau giữa hai khối nằm trong bảng «Dòng lệch» kèm lý do không rỗng. Chiều đỏ: --kiem --bo-ly-do (xoá lý do một dòng lệch trong bản đọc) → đỏ «AC-7 dòng lệch thiếu lý do»; nếu không có dòng lệch → --kiem --cay-lech (cấy một dòng lệch không lý do) → đỏ cùng thông điệp."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6a
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.suite.pipeline_a
+    paths: [pipeline/**]
+    expected: "Nửa A của pipeline thoát 0."
+  - id: E6b
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.suite.pipeline_b
+    paths: [pipeline/**]
+    expected: "Nửa B của pipeline thoát 0."
+  - id: E6c
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.scripts
+    paths: [scripts/**, pipeline/lib/nap-045.mjs]
+    long_running: 45
+    expected: "node --test scripts/*.test.mjs thoát 0."
