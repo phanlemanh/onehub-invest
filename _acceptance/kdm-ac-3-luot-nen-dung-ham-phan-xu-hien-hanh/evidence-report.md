@@ -1,149 +1,153 @@
 ---
 schema_version: 2
 feature_slug: kdm-ac-3-luot-nen-dung-ham-phan-xu-hien-hanh
-verdict: REJECT
-failed_evals: ["E3","E6c"]
-reason:
+verdict: BLOCKED
+failed_evals: []
+reason: "E6c (node --test scripts/*.test.mjs): lenh dai CHUA XONG — tac tu dung cho o __CHUA_XONG, chua co dong __EXIT= (cuoi dau ra la ca RF-4 va chieu do tep boc, khong co dong tong ket). Khong phai loi code; chay lai voi tran thoi gian cong cu dai hon."
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: d5ec9ed7ab86c30dd6a5fc18de1dd17be4fab162
+verified_commit: 4d75ae0b2fd601cc9b468573992ff1e9eaa2fcae
 human_signoff:
 ---
 
 # Evidence Report: kdm-ac-3-luot-nen-dung-ham-phan-xu-hien-hanh
 
+Round 2. Cac eval E1-E5 chay lai trong round nay; E7, E6a, E6b mang tu round 1 (delta khong cham paths cua chung); E6c bi chan vi lenh dai chua xong.
+
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
 | E1 | AC-1 | test | PASS |
 | E2 | AC-2 | test | PASS |
-| E3 | AC-3 | test | FAIL |
+| E3 | AC-3 | test | PASS |
 | E4 | AC-4 | test | PASS |
 | E5 | AC-5 | script | PASS |
-| E7 | AC-7 | script | PASS |
-| E6a | AC-6 | test | PASS |
-| E6b | AC-6 | test | PASS |
-| E6c | AC-6 | test | FAIL |
+| E7 | AC-7 | script | PASS (carry-forward round 1) |
+| E6a | AC-6 | test | PASS (carry-forward round 1) |
+| E6b | AC-6 | test | PASS (carry-forward round 1) |
+| E6c | AC-6 | test | BLOCKED |
 
 ## Evidence
 
 - eval: E1
-  run_id: minted-kdm-ac-3-luot-nen-dung-ham-phan-xu-hien-hanh-E1-r1
+  run_id: minted-kdm-ac-3-luot-nen-dung-ham-phan-xu-hien-hanh-E1-r2
   exit_code: 0
   baseline: green
   verifier: scripts/kiem-tin-rao-gan-khu-vuc.test.mjs
-  verified_at: 2026-11-22T13:41:33Z
+  verified_at: 2026-11-22T14:54:49Z
   output: |
     node --test --test-name-pattern=HT5-AC-1 scripts/kiem-tin-rao-gan-khu-vuc.test.mjs
-    ℹ duration_ms 137.391
+    ℹ duration_ms 88.633917
 
 - eval: E2
-  run_id: minted-kdm-ac-3-luot-nen-dung-ham-phan-xu-hien-hanh-E2-r1
+  run_id: minted-kdm-ac-3-luot-nen-dung-ham-phan-xu-hien-hanh-E2-r2
   exit_code: 0
   baseline: green
   verifier: scripts/kiem-tin-rao-gan-khu-vuc.test.mjs
-  verified_at: 2026-11-22T13:41:33Z
+  verified_at: 2026-11-22T14:54:49Z
   output: |
     node --test --test-name-pattern=HT5-AC-2 scripts/kiem-tin-rao-gan-khu-vuc.test.mjs
-    ℹ duration_ms 87897.051459
+    ℹ duration_ms 66855.470291
 
 - eval: E3
-  run_id: minted-kdm-ac-3-luot-nen-dung-ham-phan-xu-hien-hanh-E3-r1
-  exit_code: 1
+  run_id: minted-kdm-ac-3-luot-nen-dung-ham-phan-xu-hien-hanh-E3-r2
+  exit_code: 0
   baseline: n-a
   verifier: scripts/kiem-tin-rao-gan-khu-vuc.test.mjs
-  verified_at: 2026-11-22T13:41:33Z
+  verified_at: 2026-11-22T14:54:49Z
   output: |
     node --test --test-name-pattern=KDM-AC-3 scripts/kiem-tin-rao-gan-khu-vuc.test.mjs
-    Ca chạy hết lượt nền và phần mồi (offers ghi: 8352, S05 offers ghi: 30, stg có giá+DT: 129764)
-    nhưng khẳng định mã thoát của tiến trình con thất bại: 143 !== 0
-    tại scripts/kiem-tin-rao-gan-khu-vuc.test.mjs:35 (ERR_ASSERTION, actual 143, expected 0)
+    ℹ duration_ms 1790458.72475
 
 - eval: E4
-  run_id: minted-kdm-ac-3-luot-nen-dung-ham-phan-xu-hien-hanh-E4-r1
+  run_id: minted-kdm-ac-3-luot-nen-dung-ham-phan-xu-hien-hanh-E4-r2
   exit_code: 0
   baseline: green
   verifier: scripts/kiem-tin-rao-gan-khu-vuc.test.mjs
-  verified_at: 2026-11-22T13:41:33Z
+  verified_at: 2026-11-22T14:54:49Z
   output: |
     node --test --test-name-pattern=HT5-AC-3 scripts/kiem-tin-rao-gan-khu-vuc.test.mjs
-    ℹ duration_ms 413873.613917
+    ℹ duration_ms 388856.915834
 
 - eval: E5
-  run_id: minted-kdm-ac-3-luot-nen-dung-ham-phan-xu-hien-hanh-E5-r1
+  run_id: minted-kdm-ac-3-luot-nen-dung-ham-phan-xu-hien-hanh-E5-r2
   exit_code: 0
   baseline: red
   verifier: scripts/lib/ci-can-du-lieu.mjs
-  verified_at: 2026-11-22T13:41:33Z
+  verified_at: 2026-11-22T14:54:49Z
   output: |
-    dòng bỏ qua HT5-AC-3 có mặt, không có dòng bỏ qua HT5-AC-1 hay HT5-AC-2
-    node --test scripts/ci-test-module.test.mjs
-    ℹ duration_ms 34862.896875
+    dong bo qua HT5-AC-3 co mat, khong dong bo qua HT5-AC-1/HT5-AC-2; ci-test-module.test.mjs
+    ℹ duration_ms 21361.415916
 
 - eval: E7
   run_id: minted-kdm-ac-3-luot-nen-dung-ham-phan-xu-hien-hanh-E7-r1
   exit_code: 0
-  baseline: n-a
-  verifier: _acceptance/kdm-ac-3-luot-nen-dung-ham-phan-xu-hien-hanh/probes/so-cat-chuyen.mjs
+  verifier: scripts/phat-bieu-cat-chuyen.mjs
   verified_at: 2026-11-22T13:41:33Z
-  output: |
-    hai khối 2 · dòng lệch 0
+  carried_from_round: 1
+  note: carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E6a
   run_id: minted-kdm-ac-3-luot-nen-dung-ham-phan-xu-hien-hanh-E6a-r1
   exit_code: 0
-  baseline: n-a
   verifier: config:executors.suite.pipeline_a
   verified_at: 2026-11-22T13:41:33Z
-  output: |
-    ℹ duration_ms 2022861.154667
+  carried_from_round: 1
+  note: carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E6b
   run_id: minted-kdm-ac-3-luot-nen-dung-ham-phan-xu-hien-hanh-E6b-r1
   exit_code: 0
-  baseline: n-a
   verifier: config:executors.suite.pipeline_b
   verified_at: 2026-11-22T13:41:33Z
-  output: |
-    ℹ duration_ms 1372040.620375
+  carried_from_round: 1
+  note: carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E6c
-  run_id: minted-kdm-ac-3-luot-nen-dung-ham-phan-xu-hien-hanh-E6c-r1
-  exit_code: 1
-  baseline: n-a
+  run_id: minted-kdm-ac-3-luot-nen-dung-ham-phan-xu-hien-hanh-E6c-r2
   verifier: config:executors.test.scripts
-  verified_at: 2026-11-22T13:41:33Z
+  status: BLOCKED (cannotRun) — lenh dai chua xong, dau ra dung o __CHUA_XONG, khong co dong tong ket
   output: |
-    node --test scripts/*.test.mjs
-    Cùng một chỗ gãy với E3: kiem-tin-rao-gan-khu-vuc.test.mjs:35 khẳng định mã thoát của tiến trình con
-    thất bại: 143 !== 0 (ERR_ASSERTION, actual 143, expected 0)
+    ✔ RF-4 mọi nhãn bước tệp bọc truyền vào đều không chứa khoảng trắng (255.437625ms)
+    ✔ chiều đỏ tệp bọc: bản đột biến làm đúng ca tương ứng đỏ (1591.108333ms)
+    __CHUA_XONG
 
 ### Lệnh suite (hồi quy)
 
 - cmd: node scripts/suite-neu-doi.mjs agent -- 'cd agent && npm test'
-  run_id: minted-kdm-ac-3-luot-nen-dung-ham-phan-xu-hien-hanh-SUITE-node_scripts_suite_neu_doi_mjs_agent_cd_-r1
+  run_id: minted-kdm-ac-3-luot-nen-dung-ham-phan-xu-hien-hanh-SUITE-node_scripts_suite_neu_doi_mjs_agent_cd_-r2
   exit_code: 0
-  verified_at: 2026-11-22T13:41:33Z
+  verified_at: 2026-11-22T14:54:49Z
 
 - cmd: node scripts/suite-neu-doi.mjs app -- 'cd app && npx tsc --noEmit && npm run lint'
-  run_id: minted-kdm-ac-3-luot-nen-dung-ham-phan-xu-hien-hanh-SUITE-lint-r1
+  run_id: minted-kdm-ac-3-luot-nen-dung-ham-phan-xu-hien-hanh-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-11-22T13:41:33Z
+  verified_at: 2026-11-22T14:54:49Z
 
 - cmd: node scripts/suite-neu-doi.mjs app_ui -- 'cd app && npm test'
-  run_id: minted-kdm-ac-3-luot-nen-dung-ham-phan-xu-hien-hanh-SUITE-node_scripts_suite_neu_doi_mjs_app_ui_cd-r1
+  run_id: minted-kdm-ac-3-luot-nen-dung-ham-phan-xu-hien-hanh-SUITE-node_scripts_suite_neu_doi_mjs_app_ui_cd-r2
   exit_code: 0
-  verified_at: 2026-11-22T13:41:33Z
+  verified_at: 2026-11-22T14:54:49Z
+
+- cmd: node scripts/suite-neu-doi.mjs pipeline_a -- 'cd pipeline && npm run test:a'
+  run_id: minted-kdm-ac-3-luot-nen-dung-ham-phan-xu-hien-hanh-SUITE-test_a-r2
+  exit_code: 0
+  verified_at: 2026-11-22T14:54:49Z
+
+- cmd: node scripts/suite-neu-doi.mjs pipeline_b -- 'cd pipeline && npm run test:b'
+  run_id: minted-kdm-ac-3-luot-nen-dung-ham-phan-xu-hien-hanh-SUITE-test_b-r2
+  exit_code: 0
+  verified_at: 2026-11-22T14:54:49Z
 
 - cmd: node scripts/suite-neu-doi.mjs ui_lint_rules -- 'cd app && npm run test:lint-rules'
-  run_id: minted-kdm-ac-3-luot-nen-dung-ham-phan-xu-hien-hanh-SUITE-test_lint_rules-r1
+  run_id: minted-kdm-ac-3-luot-nen-dung-ham-phan-xu-hien-hanh-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-11-22T13:41:33Z
+  verified_at: 2026-11-22T14:54:49Z
 
 - cmd: node scripts/suite-neu-doi.mjs portal_static -- 'node scripts/check-portal-compliance.mjs'
-  run_id: minted-kdm-ac-3-luot-nen-dung-ham-phan-xu-hien-hanh-SUITE-node_scripts_suite_neu_doi_mjs_portal_st-r1
+  run_id: minted-kdm-ac-3-luot-nen-dung-ham-phan-xu-hien-hanh-SUITE-node_scripts_suite_neu_doi_mjs_portal_st-r2
   exit_code: 0
-  verified_at: 2026-11-22T13:41:33Z
+  verified_at: 2026-11-22T14:54:49Z
 
 ## Known limits
 
@@ -151,24 +155,20 @@ human_signoff:
 
 ## Analyst
 
-Eval không phân biệt (xanh cả trên HEAD lẫn baseline, chứng minh harness chứ chưa chứng minh tính năng; nên viết lại để assert hành vi mới hoặc xác nhận là regression-guard có chủ ý):
-- E1 (node --test --test-name-pattern=HT5-AC-1 scripts/kiem-tin-rao-gan-khu-vuc.test.mjs)
-- E2 (node --test --test-name-pattern=HT5-AC-2 scripts/kiem-tin-rao-gan-khu-vuc.test.mjs)
-- E4 (node --test --test-name-pattern=HT5-AC-3 scripts/kiem-tin-rao-gan-khu-vuc.test.mjs)
+Eval khong-phan-biet (pass tren ca HEAD lan baseline; kiem tra regression-guard co chu y hay can viet lai de assert hanh vi moi):
+- E1 (node --test --test-name-pattern=HT5-AC-1 scripts/kiem-tin-rao-gan-khu-vuc.test.mjs): baseline green
+- E2 (node --test --test-name-pattern=HT5-AC-2 scripts/kiem-tin-rao-gan-khu-vuc.test.mjs): baseline green
+- E4 (node --test --test-name-pattern=HT5-AC-3 scripts/kiem-tin-rao-gan-khu-vuc.test.mjs): baseline green
 
-Baseline khong do:
+Baseline khong do
 - node --test --test-name-pattern=KDM-AC-3 scripts/kiem-tin-rao-gan-khu-vuc.test.mjs: baseline vuot tran 180 giay/lenh — da dung ca cay tien trinh; BLOCKED ha tang, khong phai ket qua cua code cu
-- node _acceptance/kdm-ac-3-luot-nen-dung-ham-phan-xu-hien-hanh/probes/so-cat-chuyen.mjs --kiem: bo qua baseline: tep _acceptance/kdm-ac-3-luot-nen-dung-ham-phan-xu-hien-hanh/probes/so-cat-chuyen.mjs co o cay dang kiem nhung chua co o merge-base f962afade8ce5122a9f0b5975dba28db7c31eeb1 — eval moi, chay tren code cu khong phan biet gi
-- node scripts/suite-neu-doi.mjs pipeline_a -- 'cd pipeline && npm run test:a': baseline vuot tran 180 giay/lenh — da dung ca cay tien trinh; BLOCKED ha tang, khong phai ket qua cua code cu
-- node scripts/suite-neu-doi.mjs pipeline_b -- 'cd pipeline && npm run test:b': baseline vuot tran 115 giay/lenh — da dung ca cay tien trinh; BLOCKED ha tang, khong phai ket qua cua code cu
-- node --test scripts/*.test.mjs: het tran tong 480 giay cua lane baseline truoc khi toi lenh nay — khong chay
-
-Lệnh fail không gắn eval: không có. Hai lệnh fail đều gắn eval (E3 và E6c); cả hai gãy cùng một chỗ, ca KDM-AC-3 trong scripts/kiem-tin-rao-gan-khu-vuc.test.mjs dòng 35, nơi tiến trình con trả mã 143 thay vì 0.
+- node --test scripts/*.test.mjs: baseline vuot tran 180 giay/lenh — da dung ca cay tien trinh; BLOCKED ha tang, khong phai ket qua cua code cu
 
 ## Variance
 
-none — mọi eval chạy một lần, đều xác định (runs 1), không eval nào có pass_rate lẫn lộn.
+none — moi eval nhieu lan chay deu dong nhat (moi eval chay 1 lan, deterministic)
 
 ## Iterations
 
-Round 1: E3, E6c failed — ca KDM-AC-3 ba chiều trên cùng DB khẳng định mã thoát tiến trình con là 0 nhưng nhận 143; E6c gãy cùng ca này khi chạy trọn scripts/*.test.mjs. Returned to implementation.
+Round 1: E7, E6a, E6b dat; cac eval con lai chay lai o round 2 do delta cham paths cua chung.
+Round 2: E1-E5 dat; E6c BLOCKED — lenh node --test scripts/*.test.mjs chua xong trong tran thoi gian cong cu (khong co dong tong ket), can chay lai voi tran dai hon.
