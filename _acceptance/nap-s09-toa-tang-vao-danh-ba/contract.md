@@ -143,6 +143,13 @@ khi DA57 gộp: `node pipeline/scripts/danh-ba-s09-chuong-ten-lech.mjs` (thoát 
 chứng chuông hai chiều (0 khi cùng bộ dòng stg, 1 ở kịch bản S16 về sau). Số chạy thử trên bản chép DB máy thu ghi ở T5 (mong đợi 0
 vì S16 đã ở stg lúc S09 dựng); trên DB máy thu hiện tại (chưa áp 115/125) lệnh in 0.
 
+Mã cũ trước tên (22/11, giám sát duyệt, lệch kế hoạch ghi ở kế hoạch §2): nối mã cũ **110/110 trên mẫu số AC-10** (toà có sẵn mang
+mã cũ và có căn hoặc có S16). Ngoài mẫu số, **1/65 toà gom** cũng mang mã mới theo mã cũ — DA50 cần biết: toà
+`bld_01M7CQJNMM7VVZ2H2CFNTB14Z7` ← mã toà gói 1 `2c002fd6-f303-5b2b-7931-69657cdc905f`; nó đã là bí danh từ trước theo tên (tên
+trùng, duy nhất trong nút), nhánh mã cũ chỉ đổi đường đi. Đối soát đủ số ở kế hoạch §3 T8 (lớp mẫu số 110 ← 111 toà gói 1, lớp gom
+1 ← 1, 112 = 111 + 1, tổng mã cũ 176 = 110 + 65 + 1, 64 toà gom không trùng mã nào). Ca gốc của nhánh: toà
+`bld_01M6XQYGS7HSHT6TZCC179JP1X` mang hai mã block `eaf10264-d593-efda-2e30-6fb904e12d71` và `5f0a9893-7ba5-8c40-f3cb-9201007be863`.
+
 Known limits:
 - **Mã tỉnh cũ (`khong_iso`)**: 11 dự án gói 1 mang mã tỉnh cũ 74, 77 (trước sáp nhập), không có trong `iso_regions`, nên 28 toà
   của chúng không đúc được; bước dựng đếm riêng ở `khong_iso`. Đổi mã tỉnh cũ sang mới là một hàng riêng, không làm trong DA42.

@@ -150,7 +150,17 @@ Mỗi task: viết test đỏ trước, rồi mã, rồi commit. S4 xin lượt 
    trong gói 1) · toà 928 = bí danh 110 + tạo mới 547 + chờ thẻ 8 + thuộc dự án chưa nối 247 + khong_iso 16 · tỉ lệ vào 0,9762 ·
    chờ thẻ 0,0117 · mã hỏng 0 · mã cũ 109/110 = 0,9909 · gom 65 · bí danh lệch tầng 0 · 198 dự án có toà, 928 toà, 23.708 tầng ·
    0 toà hai UPI · S09 tạo 0 căn · E12 0 nút trùng nơi, 0 nút giảm toà, đối chứng cấy 1 dòng · chạy lại cùng số. Ba chiều đỏ
-   (`--bot-tang`, `--bo-phan`, `--noi-sai-toa`) chạy sau khi MH1 chấm xong (giám sát giữ s4). Lượt dựng đêm sau áp + nạp nhưng TRƯỚC khi mã DA42 vào main: không đổi (chưa
+   (`--bot-tang`, `--bo-phan cho_the`, `--noi-sai-toa`) đã chạy ngoài khoá theo lời giám sát: đỏ đúng tên lần lượt «E2 tầng toà
+   2a249409», «phần thiếu: cho_the», «nối mã cũ 107/110».
+
+   **Số chạy thử T5 sau nhánh mã cũ trước tên** (22/11, ĐẠT): như trên, chỉ khác — toà bí danh 110 → **112**, toà chờ thẻ 8 → **6**
+   (số THẺ giảm 1: hai toà OS2 chung một thẻ), tỉ lệ vào **0,9763**, chờ thẻ **0,0088**, nối mã cũ **110/110**, xung đột mã cũ –
+   tên 0, mã cũ hai toà 0, chuông 0. Phép cộng toà khớp cả hai lượt: trước 110 + 547 + 8 + 247 + 16 = 928; sau 112 + 547 + 6 + 247
+   + 16 = 928. **Đối soát «110 mã cũ ↔ 112 toà»** (`--doi-soat-ma-cu`): mẫu số 110 đếm TOÀ CÓ SẴN, không đếm mã · lớp mẫu số 110
+   toà ← 111 toà gói 1 (OS2: một toà, hai block) · lớp gom 1 ← 1 · 112 = 111 + 1 · tổng MÃ cũ 176 = 110 + 65 + 1 (mã thứ hai của
+   OS2) · 64 toà gom không trùng mã nào của gói 1. Toà gom ấy (`bld_01M7CQJNMM7VVZ2H2CFNTB14Z7` ← mã toà gói 1
+   `2c002fd6-f303-5b2b-7931-69657cdc905f`) ĐÃ là bí danh trước nhánh mã cũ (tên trùng, toà duy nhất mang tên đó trong nút): nhánh mới
+   chỉ đổi đường đi của nó, không thêm bí danh — vì vậy trước nhánh bí danh 110 = 109 trong mẫu số + 1 ngoài mẫu số. Lượt dựng đêm sau áp + nạp nhưng TRƯỚC khi mã DA42 vào main: không đổi (chưa
    mã nào trên main đọc bảng này). Sau khi DA42 vào main: lượt dựng đầu theo lệnh kiểm của AC-10.
 6. **Cách lùi**: `DROP VIEW v_s09_db_tang, v_s09_db_toa, v_s09_db_du_an, v_s09_db_item_moi; DROP TABLE stg_s09_danh_ba;` — là XOÁ
    dữ liệu stg (nạp lại được từ raw bất biến), nên cần lời riêng của Mạnh khi dùng. Lùi riêng bước dựng S09 gói 1: xem cách tắt ở §0.

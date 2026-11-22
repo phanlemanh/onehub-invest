@@ -232,6 +232,18 @@ try {
     const maCuSo = await q(`SELECT (SELECT count(*)::int FROM registry_aliases m WHERE m.source = 'S09' AND m.kind = 'ma_nguon' AND m.retired_at IS NULL
                                      AND m.value NOT LIKE 'danh-ba-toa/%' AND m.object_key = ANY($1)) AS ma_cu_ma`, [[...BEFORE]]);
     console.log(`  đối soát mã cũ · tổng số MÃ cũ (mọi toà có sẵn): ${maCuSo[0].ma_cu_ma}`);
+    // Toà gom nhận mã mới: in khoá, mã toà gói 1, tên hai bên — để biết trước nhánh mã cũ nó đã nối theo tên hay chưa.
+    const gom = await q(`
+      SELECT m.object_key, t.toa_id, t.toa_ten, t.du_an_id,
+             (SELECT array_agg(x.value ORDER BY x.value) FROM registry_aliases x WHERE x.object_key = m.object_key AND x.kind = 'ten' AND x.retired_at IS NULL) AS ten_co_san,
+             (SELECT count(*)::int FROM buildings b2 JOIN registry_aliases x2 ON x2.object_key = b2.building_key AND x2.kind = 'ten' AND x2.retired_at IS NULL
+               WHERE upper(regexp_replace(x2.value, '\\s', '', 'g')) = upper(regexp_replace(t.toa_ten, '\\s', '', 'g'))
+                 AND b2.region_node_id = (SELECT region_node_id FROM buildings WHERE building_key = m.object_key)) AS toa_cung_ten_cung_nut
+        FROM registry_aliases m JOIN v_s09_db_toa t ON split_part(m.value, '/', 2) = t.toa_id
+       WHERE m.source = 'S09' AND m.kind = 'ma_nguon' AND m.retired_at IS NULL AND m.value NOT LIKE 'danh-ba-toa/%' AND m.object_key = ANY($1)
+         AND NOT EXISTS (SELECT 1 FROM units u WHERE u.building_key = m.object_key)
+         AND NOT EXISTS (SELECT 1 FROM registry_aliases s WHERE s.object_key = m.object_key AND s.source = 'S16' AND s.kind = 'ma_nguon' AND s.retired_at IS NULL)`, [[...BEFORE]]);
+    for (const g of gom) console.log(`  đối soát mã cũ · toà gom: ${g.object_key} ← gói 1 ${g.toa_id} «${g.toa_ten}» · tên toà có sẵn ${JSON.stringify(g.ten_co_san ?? [])} · toà cùng tên cùng nút ${g.toa_cung_ten_cung_nut}`);
   }
   if (co("--chi-tiet-ma-cu")) {
     const ds = await q(`
