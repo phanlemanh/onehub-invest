@@ -1,26 +1,81 @@
 {
   "feature_plain": "Lượt chấm bóng «Bổ sung tin» không còn cắt cụt câu trả lời của model: thẻ nhiều ô được viết dài hơn, và lời gọi nào vẫn bị cắt thì sổ ghi rõ «bị cắt» thay vì «trả sai khuôn».",
   "will_do": [
-    {"id": "AC-1", "p": "Sẽ cho mỗi lời gọi một trần độ dài câu trả lời theo số ô của thẻ: 1 ô 1.000, 2 ô 1.600, 3 ô 2.200, 4 ô 2.800, 5 ô 3.400 token, ở cả đường Anthropic lẫn Gateway."},
-    {"id": "AC-2", "p": "Sẽ nhận ra lời gọi bị cắt vì hết độ dài và ghi lỗi «bi-cat»; lần đọc ấy không được dùng lại, không sinh kết cục, kể cả khi phần chữ đã có trông như hợp lệ."},
-    {"id": "AC-3", "p": "Sẽ vẫn ghi «json-hong» cho câu trả lời không bị cắt mà sai khuôn, để hai loại lỗi không lẫn nhau."},
-    {"id": "AC-4", "p": "Sẽ đếm lời gọi lỗi theo lý do trong tổng kết lượt và in một dòng trong báo cáo, để biết ngay bao nhiêu lời gọi bị cắt."},
-    {"id": "AC-5", "p": "Sẽ ước tiền lời gọi đầu theo trần độ dài của chính thẻ đó, để trần tiền của lượt dừng đúng chỗ."},
-    {"id": "AC-6", "p": "Sẽ giữ nguyên lời nhắc, nên 57 lần đọc đã trả tiền ở lượt 1 được dùng lại; lượt 2 trên cùng 30 thẻ chỉ gọi lại 3 cặp lỗi (đo trên kho thật của máy thu)."},
-    {"id": "AC-7", "p": "Sẽ tính trên DB máy thu (chỉ đọc) mức chi cao nhất của 30 thẻ với trần mới, theo từng model, và nó phải ≤ 0,1 USD."}
+    {
+      "id": "AC-1",
+      "p": "Sẽ cho mỗi lời gọi một trần độ dài câu trả lời theo số ô của thẻ: 1 ô 1.000, 2 ô 1.600, 3 ô 2.200, 4 ô 2.800, 5 ô 3.400 token, ở cả đường Anthropic lẫn Gateway."
+    },
+    {
+      "id": "AC-2",
+      "p": "Sẽ nhận ra lời gọi bị cắt vì hết độ dài và ghi lỗi «bi-cat»; lần đọc ấy không được dùng lại, không sinh kết cục, kể cả khi phần chữ đã có trông như hợp lệ."
+    },
+    {
+      "id": "AC-3",
+      "p": "Sẽ vẫn ghi «json-hong» cho câu trả lời không bị cắt mà sai khuôn, để hai loại lỗi không lẫn nhau."
+    },
+    {
+      "id": "AC-4",
+      "p": "Sẽ đếm lời gọi lỗi theo lý do trong tổng kết lượt và in một dòng trong báo cáo, để biết ngay bao nhiêu lời gọi bị cắt."
+    },
+    {
+      "id": "AC-5",
+      "p": "Sẽ ước tiền lời gọi đầu theo trần độ dài của chính thẻ đó, để trần tiền của lượt dừng đúng chỗ."
+    },
+    {
+      "id": "AC-6",
+      "p": "Sẽ giữ nguyên lời nhắc, nên 57 lần đọc đã trả tiền ở lượt 1 được dùng lại; lượt 2 trên cùng 30 thẻ chỉ gọi lại 3 cặp lỗi (đo trên kho thật của máy thu)."
+    },
+    {
+      "id": "AC-7",
+      "p": "Sẽ tính trên DB máy thu (chỉ đọc) mức chi cao nhất của 30 thẻ với trần mới, theo từng model, và nó phải ≤ 0,1 USD."
+    },
+    {
+      "id": "AC-8",
+      "p": "Sẽ in một dòng rõ «dừng vì trần» kèm số thẻ đủ, số thẻ còn thiếu và tiền đã chi khi rào chi dừng lượt sớm, để thiếu thẻ không trông như lỗi đọc."
+    }
   ],
   "wont_do": [
-    {"id": "OOS-1", "p": "KHÔNG sửa lời nhắc loại hình (lượt 1: 0/8 khớp) — hàng riêng sau lượt 2 nếu cần."},
-    {"id": "OOS-2", "p": "KHÔNG ép lý do ngắn trong lời nhắc ở hàng này (xem Hỏi-2)."},
-    {"id": "OOS-3", "p": "KHÔNG tự gọi lại lời gọi bị cắt với trần cao hơn trong cùng lượt."},
-    {"id": "OOS-4", "p": "KHÔNG đổi trần 0,1 USD của lượt thử 30 thẻ — số đó Mạnh đã ký."},
-    {"id": "OOS-5", "p": "KHÔNG chạy lượt thử thật 2 trong lúc chấm — lượt tốn tiền ấy chạy sau khi gộp, theo lời GS."}
+    {
+      "id": "OOS-1",
+      "p": "KHÔNG sửa lời nhắc loại hình (lượt 1: 0/8 khớp) — hàng riêng sau lượt 2 nếu cần."
+    },
+    {
+      "id": "OOS-2",
+      "p": "KHÔNG ép lý do ngắn trong lời nhắc ở hàng này (xem Hỏi-2)."
+    },
+    {
+      "id": "OOS-3",
+      "p": "KHÔNG tự gọi lại lời gọi bị cắt với trần cao hơn trong cùng lượt."
+    },
+    {
+      "id": "OOS-4",
+      "p": "KHÔNG đổi trần 0,1 USD của lượt thử 30 thẻ — số đó Mạnh đã ký."
+    },
+    {
+      "id": "OOS-5",
+      "p": "KHÔNG chạy lượt thử thật 2 trong lúc chấm — lượt tốn tiền ấy chạy sau khi gộp, theo lời GS."
+    }
   ],
   "coverage_plain": [
-    {"i": 0, "p": "Phủ bốn trục của một lời gọi; mỗi giá trị có ít nhất một tiêu chí."},
-    {"i": 2, "p": "Số ô trên thẻ 1–5: trần độ dài (AC-1), ước tiền (AC-5), mức chi cao nhất (AC-7)."},
-    {"i": 3, "p": "Hai đường gọi Anthropic và Gateway: trần truyền đúng và nhận ra bị cắt ở cả hai (AC-1, AC-2)."},
-    {"i": 4, "p": "Bốn cách một lời gọi kết thúc: đọc được, sai khuôn, bị cắt, lỗi nhà cung cấp (AC-2, AC-3, AC-4)."},
-    {"i": 5, "p": "Sau khi sửa: chạy lại không đọc lại phần đã trả tiền, và tiền 30 thẻ trong trần (AC-6, AC-7)."}
+    {
+      "i": 0,
+      "p": "Phủ bốn trục của một lời gọi; mỗi giá trị có ít nhất một tiêu chí."
+    },
+    {
+      "i": 2,
+      "p": "Số ô trên thẻ 1–5: trần độ dài (AC-1), ước tiền (AC-5), mức chi cao nhất (AC-7)."
+    },
+    {
+      "i": 3,
+      "p": "Hai đường gọi Anthropic và Gateway: trần truyền đúng và nhận ra bị cắt ở cả hai (AC-1, AC-2)."
+    },
+    {
+      "i": 4,
+      "p": "Bốn cách một lời gọi kết thúc: đọc được, sai khuôn, bị cắt, lỗi nhà cung cấp (AC-2, AC-3, AC-4)."
+    },
+    {
+      "i": 5,
+      "p": "Sau khi sửa: chạy lại không đọc lại phần đã trả tiền, tiền 30 thẻ trong trần, và lượt dừng vì trần nói rõ lý do (AC-6, AC-7, AC-8)."
+    }
   ]
 }

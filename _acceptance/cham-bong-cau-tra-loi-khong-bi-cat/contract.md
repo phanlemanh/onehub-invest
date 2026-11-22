@@ -36,6 +36,9 @@ tiết lượt 1: `luot-1.md`. Thiết kế: `design_doc`.
 - AC-7: Given 30 thẻ đầu theo thứ tự ưu tiên trên DB máy thu (chỉ đọc), When tính mức chi cao nhất với trần token ra mới (mọi
   lời gọi chạm trần, token vào ước theo ký tự lời nhắc, bảng giá cấu hình), Then in mức ấy theo từng model và tổng ≤ 0,1 USD
   (trần lệnh của E11 NB1, không đổi).
+- AC-8: Given rào chi của lượt dừng trước lời gọi có thể vượt trần (mức chi cao nhất 30 thẻ ~0,085 sát trần 0,1), When in báo
+  cáo lượt, Then báo cáo có một dòng nói rõ lượt dừng vì trần kèm trần, số thẻ đủ hai kết quả trên số thẻ, số thẻ còn thiếu và tiền
+  đã chi — không để thiếu thẻ trông như lỗi đọc; lượt trọn không có dòng ấy.
 
 ## Coverage
 
@@ -46,7 +49,7 @@ Quét theo bốn trục của lời gọi (thước: mỗi ô có AC hay dòng O
 | Số ô trên thẻ | 1 · 2 · 3 · 4 · 5 | AC-1, AC-5, AC-7 |
 | Đường gọi | Anthropic · Gateway | AC-1, AC-2 |
 | Kết thúc lời gọi | dừng tự nhiên + JSON đúng · dừng tự nhiên + JSON hỏng · hết token (JSON tách được hay không) · lỗi nhà cung cấp | AC-2, AC-3, AC-4 |
-| Lượt sau sửa | chạy lại cùng lời nhắc · tiền của 30 thẻ | AC-6, AC-7 |
+| Lượt sau sửa | chạy lại cùng lời nhắc · tiền của 30 thẻ · dừng vì trần | AC-6, AC-7, AC-8 |
 
 Ai đọc đầu ra phía sau: probe E11 của NB1 (`thu-30.sh`, lượt 2 sau gộp); NB5 (bảng lô) đọc tệp kết quả; GS đọc báo cáo lượt.
 

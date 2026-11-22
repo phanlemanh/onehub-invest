@@ -65,3 +65,11 @@ evals:
     paths: [agent/src/enrich/cham-bong/**, agent/config/cham-bong-bo-sung-tin.json]
     expected: "Trên máy thu, chỉ đọc: lấy 30 review_id của lượt 1 từ state/cham-bong-bo-sung-tin/cb-2026-11-22T052458782Z/ket-qua.jsonl, đọc thẻ hiện tại từ DB oneinvest (giao dịch chỉ đọc), tính khoaDung × hai model bằng mã của nhánh và tra trong state/cham-bong-bo-sung-tin/kho.jsonl (đúng kho lượt 2 sẽ mở). In số cặp trúng / số cặp; thẻ rời hàng hay đổi chữ in riêng có lý do. Đạt khi mọi cặp có lời đọc thành công ở lượt 1 và thẻ còn nguyên đều trúng (đích 57/57); thiếu cặp nào → thoát 1, thông điệp nêu review_id × model."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-8
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/cham-bong-cau-tra-loi-khong-bi-cat/probes/cham.sh AC-8
+    paths: [agent/src/enrich/cham-bong/**, agent/tests/cham-bong-cau-tra-loi-khong-bi-cat.test.ts]
+    expected: "Lượt trên Truy giả 3 thẻ, trần tiền 1,5 × ước lời gọi đầu: lượt dừng vì trần, báo cáo có dòng «DỪNG VÌ TRẦN <trần> USD … thẻ đủ hai kết quả k/3, còn 3−k thẻ chưa đủ, đã chi … USD» với k < 3 (regex ghim số thẻ). Đối chứng dương: cùng 3 thẻ không trần → đủ 3/3, không có dòng dừng vì trần. Đột biến bỏ dòng dừng vì trần đỏ, thông điệp «thiếu dòng rõ lý do»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
