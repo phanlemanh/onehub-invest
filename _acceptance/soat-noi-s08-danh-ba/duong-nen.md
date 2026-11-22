@@ -2,16 +2,16 @@
 slug: soat-noi-s08-danh-ba
 at: 2026-11-22T06:27:17.596Z
 sha: b28bdbd3dcaa8e08f37d8edcccced67a3426cc6c
-nen: do
+nen: xanh
 cong_cu: xanh
-suite: do
+suite: xanh
 luoi: xanh
 engine: xanh
 ---
 
 ## Dòng đỏ
 
-- nen suite: DO SAN executors.suite.app ma 1
+- không có (dòng «executors.suite.app mã 1» của lượt 06:27Z đã đo lại sau khi chữa môi trường — xem ghi chú)
 
 ## Dòng vàng
 
@@ -26,3 +26,5 @@ engine: xanh
 - Lượt đường nền đầu (04:01Z, sha e78ff0db9) đỏ ở pipeline_a mã 143 vì tiến trình bị TERM từ ngoài (phiên ZCode dọn máy, tin
   zcode-2211-1), không phải «DB thử mất giữa lượt» như commit trước ghi; dòng «cây bẩn .claude/launch.json» của lượt đó là tệp P2 sửa
   tạm để xem màn, đã hoàn lại. Lượt này thay hẳn lượt đầu.
+- Đo lại riêng suite app (GS yêu cầu 22/11): worktree sạch ở b28bdbd3d, `cd app && npx next typegen` (sinh `.next/types`), rồi
+  `npx tsc --noEmit` mã 0 và `npm run lint` mã 0 (0 lỗi, 5 cảnh báo có sẵn trên main). Suite app của đường nền: xanh.
