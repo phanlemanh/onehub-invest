@@ -5,7 +5,7 @@ slug: s03-tran-thoi-gian-luot-nap
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-11-17T14:27:07Z
 design_doc: _acceptance/s03-tran-thoi-gian-luot-nap/design.md
@@ -103,3 +103,22 @@ fixture thay bước pipeline, DB trỏ cổng đóng; lượt thử khởi deta
 - Nhận main 3c529c0b4 (DA45 #515, 21/11): ma trận PL34-AC-4 thành 14 tệp (DA45 thêm `scripts/phuong-tu-du-an-chuoi.test.mjs`);
   test trần ZCode thêm fixture `pipeline/scripts/phuong-tu-du-an.mjs` (xong ngay) và trỏ node đồng hồ cho ca L1, L2 (hai ca tự
   `spawn`, sót ở mục 1 r3). Lời AC giữ nguyên; gom cùng câu can-nguoi ma trận ở Cổng Bằng chứng.
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-22:
+  - Ngoài-1: lệnh kiểm sau áp `do-luot-dem.sh` có thể báo «ĐẠT (cắt trần)» cho lượt 00:00 cũ khi một lượt bị trần tổng cắt ở pha nạp; đọc kèm đuôi log (README 5a, 5b).
+  - Ngoài-2: lượt 00:00 thoát sớm thì `do-luot-dem.sh` chấm sang lượt cũ và cờ «trần tắt» có thể dính sang lượt sau; đọc kèm đuôi log.
+  - Ngoài-3: test ca (d) của ZCode chỉ có assert âm tính.
+  - Ngoài-4: chữ ký khoá theo giờ khởi tiến trình đổi theo ngôn ngữ, múi giờ của máy; máy thu giữ cố định.
+  - Ngoài-5: khoá vừa tạo, chưa ghi PID có thể bị lượt khác gỡ trong một cửa sổ rất hẹp.
+  - Ngoài-6: trùng Ngoài-3.
+  - Ngoài-7: khoá mang PID tái dùng — đã sửa ở r2, không còn hạn chế.
+  - Ngoài-8: lượt nhanh không tiến khi tồn đọng lớn — đã sửa ở r2; đứt trên ~4 giờ tin lên chậm thêm một nhịp 15′, không kẹt.
+  - Ngoài-9: đồng hồ chết khi launchd TERM cả nhóm — đã sửa ở r2, không còn hạn chế.
+  - Ngoài-10: README kiểm sau áp grep dấu không còn — đã sửa trong hồ sơ áp (5b đọc dòng trần thật).
+  - Ngoài-11: trùng Ngoài-2.
+  - Ngoài-12: như Ngoài-8 — đã sửa ở r2.
+  - Ngoài-13: vòng hồ sơ báo 124 giả — đã sửa ở r2, không còn hạn chế.
+  - Ngoài-14: trùng Ngoài-2.
+  - Ngoài-15: lệnh kiểm đồng hồ sót tự khớp chính nó — đã sửa trong hồ sơ áp (5c, có đối chứng dương).
+  - Ngoài-16: log mẫu của `do-luot-dem` cho ca trần tổng cắt ở pha nạp chưa sinh từ script thật (cùng gốc Ngoài-1).
+  - Ngoài-17: README chỉ có assert âm tính — đã sửa trong hồ sơ áp (5b đòi luot ≥ 1, 5c đòi một dòng khi lượt đang chạy).
