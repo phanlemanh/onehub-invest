@@ -157,10 +157,10 @@ test("DA42 E6 (AC-6): view tầng một dòng mỗi mã tầng, giữ tên nguy�
 // import tương đối còn đúng; import xong thì xoá (ESM nạp trọn đồ thị trước khi import() trả về). Mẫu tên khớp `.*-cu-*` đã bỏ qua.
 const LIB = join(import.meta.dirname, "../lib");
 let demDotBien = 0;
-async function buocDotBien(thay) {
+async function buocDotBien(thay, tep = "s09-danh-ba-can.mjs") {
   const n = ++demDotBien;
   const tenCan = `.s09t-cu-${process.pid}-${n}-can.mjs`, tenDung = `.s09t-cu-${process.pid}-${n}-dung.mjs`;
-  let can = readFileSync(join(LIB, "s09-danh-ba-can.mjs"), "utf8");
+  let can = readFileSync(join(LIB, tep), "utf8");
   for (const [a, b] of thay) {
     if (!can.includes(a)) throw new Error(`đột biến không khớp mã hiện tại: ${a.slice(0, 60)}`);
     can = can.replace(a, b);
@@ -274,6 +274,79 @@ test("DA42 E3 (AC-3): bốn đường của dự án, ba trạng thái thẻ t�
     await dungE3(dot);
     const loi = loiE3ChuaDuyet(await docE3(), N);
     assert.ok(loi.some((l) => l.startsWith("gần giống")), `đột biến tự nối tên gần giống phải đỏ nêu «gần giống»: ${JSON.stringify(loi)}`);
+  } finally {
+    await db.query("ROLLBACK");
+  }
+});
+
+// ---- E4 (AC-4): toà không sinh trùng ----------------------------------------------------------------------------------------
+// Dự án q42-e4 nối tay về nút q42-e4n; nút có sẵn năm toà: A (S08), C (mã cũ DA31 của S09), H1 và H2 (cùng tên H), S (S16).
+// Gói 1 có toà A (khớp một), C (mã cũ), H (khớp hai), hai toà D (trùng tên trong dự án), M (không khớp).
+const NOI_E4 = { "q42-e4": "q42-e4n" };
+const dungE4 = (buoc = buocS09DanhBa) => buoc(db, { noi: NOI_E4, noiS16: {}, log: () => {}, taoKhoa: taoKhoaThu });
+const bkE4 = (k) => `bld_${("E4" + k).padStart(26, "0")}`;
+
+async function fixtureE4() {
+  const nutId = (await db.query(
+    `INSERT INTO asset_nodes (node_type, name, slug, aliases, area_ids, dd_field, meta)
+     VALUES ('project', 'Q42 E4 Dự án', 'q42-e4n', '{}', '{}', 'SubdivisionName', '{}') RETURNING id::int AS id`)).rows[0].id;
+  const toa = [["A", "S08", "s08-du-an/a"], ["C", "S09", "q42-e4/blk-c"], ["H1", "S08", "s08-du-an/h1"], ["H2", "S08", "s08-du-an/h2"], ["S", "S16", "q42/S"]];
+  for (const [k, nguon, ma] of toa) {
+    await db.query(`INSERT INTO buildings (building_key, region_node_id, upi, iso_region, catalog_tier)
+                    VALUES ($1, $2, 'urn:onehub:upi:1:VN:VN-HN:' || $1, 'VN-HN', 'xac_minh')`, [bkE4(k), nutId]);
+    await db.query("INSERT INTO registry_aliases (object_key, kind, value, source) VALUES ($1, 'ma_nguon', $2, $3)", [bkE4(k), ma, nguon]);
+    await db.query("INSERT INTO registry_aliases (object_key, kind, value, source) VALUES ($1, 'ten', $2, $3)", [bkE4(k), `E4 ${k.replace(/[0-9]$/, "")}`, nguon]);
+  }
+  await dongStg(SNAP_GOI_1, 401, KIND_GOI_1.danhMuc, SOURCE_ID_DANH_MUC_GOI_1, [duAn("q42-e4", "Q42 E4 S09")], "2026-11-20T01:00:00Z");
+  await dongStg(SNAP_GOI_1, 402, KIND_GOI_1.toa, "q42-e4", ["A", "C", "H", "D", "D", "M"].map((k, j) => ({ id: `q42-e4-${k}${j}`, name: `E4 ${k}` })),
+    "2026-11-20T01:00:00Z");
+  return nutId;
+}
+
+/** Lỗi của kết cục toà so với giá trị viết trước; rỗng = đạt. */
+async function loiE4(nutId) {
+  const q = async (sql, a = []) => (await db.query(sql, a)).rows;
+  const loi = [];
+  const moi = await q("SELECT building_key, catalog_tier FROM buildings WHERE region_node_id = $1 AND building_key NOT LIKE 'bld_%E4%'", [nutId]);
+  if (moi.length !== 1 || moi[0].catalog_tier !== "mot_loi_khai") loi.push(`không khớp: ${moi.length} toà mới, phải đúng 1 toà bậc mot_loi_khai`);
+  const bd = Object.fromEntries((await q(
+    "SELECT value, object_key FROM registry_aliases WHERE source = 'S09' AND kind = 'ma_nguon' AND value LIKE 'danh-ba-toa/q42-e4-%'")).map((r) => [r.value, r.object_key]));
+  if (bd["danh-ba-toa/q42-e4-A0"] !== bkE4("A")) loi.push("khớp một: toà A không thành bí danh của toà S08 có sẵn");
+  if (bd["danh-ba-toa/q42-e4-C1"] !== bkE4("C")) loi.push("mã cũ: toà C không nhận mã mới trên đúng building_key có mã cũ");
+  if (bd["danh-ba-toa/q42-e4-H2"]) loi.push("khớp hai: toà H thành bí danh của một trong hai toà cùng tên");
+  if (bd["danh-ba-toa/q42-e4-D3"] || bd["danh-ba-toa/q42-e4-D4"]) loi.push("trùng tên: toà D trùng tên trong dự án được gắn hay đúc");
+  const the = (await q("SELECT item_id FROM review_queue WHERE item_type = 'entity_match' AND item_id LIKE 's09-toa-db:q42-e4/%'")).map((r) => r.item_id).sort();
+  if (!the.includes("s09-toa-db:q42-e4/E4H")) loi.push("khớp hai: không có thẻ cho toà H");
+  if (!the.includes("s09-toa-db:q42-e4/E4D")) loi.push("trùng tên: không có thẻ cho toà D");
+  if (the.length !== 2) loi.push(`số thẻ toà ${the.length}, phải 2 (mỗi ca một thẻ)`);
+  const haiUpi = (await q("SELECT count(*)::int AS n FROM (SELECT upi FROM buildings GROUP BY upi HAVING count(*) > 1) x"))[0].n;
+  if (haiUpi) loi.push(`${haiUpi} UPI trỏ hai toà`);
+  const haiToa = (await q(`SELECT count(*)::int AS n FROM (SELECT value FROM registry_aliases WHERE source = 'S09' AND kind = 'ma_nguon'
+                             AND value LIKE 'danh-ba-toa/%' AND retired_at IS NULL GROUP BY value HAVING count(DISTINCT object_key) > 1) x`))[0].n;
+  if (haiToa) loi.push(`${haiToa} mã S09 trỏ hai toà`);
+  return loi;
+}
+
+test("DA42 E4 (AC-4): toà khớp một thành bí danh, mã cũ nhận mã mới, khớp hai và trùng tên ra thẻ, không khớp đúc một toà; đỏ khi khớp hai chọn toà đầu", async () => {
+  await db.query("BEGIN");
+  try {
+    const nutId = await fixtureE4();
+    await db.query("SAVEPOINT e4");
+    await dungE4();
+    assert.deepEqual(await loiE4(nutId), []);
+    const dem = async () => (await db.query("SELECT count(*)::int AS n FROM buildings WHERE region_node_id = $1", [nutId])).rows[0].n;
+    assert.equal(await dem(), 6, "số toà của nút: 5 có sẵn + 1 toà M");
+    await dungE4();
+    assert.equal(await dem(), 6, "dựng lại sinh thêm toà");
+    assert.deepEqual(await loiE4(nutId), []);
+
+    // Chiều đỏ: khớp hai thì chọn toà đầu (bỏ nhánh thẻ «khop-hai»).
+    await db.query("ROLLBACK TO SAVEPOINT e4");
+    const dot = await buocDotBien([[
+      '    if (khop.length > 1) return { ...co, loai: "the", ly_do: "khop-hai", building_keys: khop.map((b) => b.building_key) };\n', '']]);
+    await dungE4(dot);
+    const loi = await loiE4(nutId);
+    assert.ok(loi.some((l) => l.startsWith("khớp hai")), `đột biến chọn toà đầu khi khớp hai phải đỏ nêu «khớp hai»: ${JSON.stringify(loi)}`);
   } finally {
     await db.query("ROLLBACK");
   }
