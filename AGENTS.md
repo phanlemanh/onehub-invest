@@ -51,9 +51,14 @@ phải tên thư mục (script thu của S02/S05/S06 nằm trong `pipeline/`).
 | **ZCode — thu thập** (nguồn → raw snapshot → `stg_*`) | `collector/` (kể cả `openclaw/`) · trong `pipeline/`: `collect-*`, `import-*`, `apify-*`, `airdna-rotate.mjs`, `fetch-data.sh`, `import.sh`, `cron/*.plist` · trong `scripts/`: `*-daily.sh` (bước thu/nạp), `install-*`, `zalo-*.sh` · `collector/docs/DATA-CONTRACT.md` |
 | **Claude Code — phần còn lại** (`stg_*` → canonical → sản phẩm) | `transform-*` trở đi trong `pipeline/` (`sql/`, `mappings.yaml`, `resolve-properties`, `reassign-areas`, `sync-cloud`, `push-ops-facts`…) · `db/` · `agent/` · `app/` · `data-api/` · `tools/` · `scripts/` còn lại · `docs/` nền · `_acceptance/` |
 
+- **Ba phiên ZCode** (Mạnh chốt 2026-11-24, `docs/research/tach-zcode-nhieu-phien-2411.md`): **ZV** vận hành (tên kênh `zcode`,
+  `~/dev/onehub-invest-zcode` — DUY NHẤT chạm gateway, `~/.openclaw`, launchd, collector API, `scripts/zalo-*.sh`) · **ZT** tin
+  rao S01/S02/S05/S06 (`zt`, `~/dev/onehub-zt`) · **ZK** nguồn kho S07–S17 (`zk`, `~/dev/onehub-zk`). Một kênh, ba tên nhận;
+  nhánh `zcode/zv-…|zt-…|zk-…`; LL vẫn là đầu mối duy nhất với cả ba.
+
 - **Git**: checkout chính `~/dev/onehub-invest` luôn đứng ở `main` — launchd chạy code
   từ đây (qua symlink `~/dev/one-invest`). Không agent nào checkout nhánh khác trong đó.
-  ZCode làm ở worktree `~/dev/onehub-invest-zcode`, nhánh `zcode/<việc>`; Claude ở
+  ZCode làm ở worktree của từng phiên (`~/dev/onehub-invest-zcode`, `~/dev/onehub-zt`, `~/dev/onehub-zk`), nhánh `zcode/<việc>`; Claude ở
   `.claude/worktrees/`, nhánh `feat|fix|…/<việc>`. Worktree mới thiếu file gitignored:
   chép `.env` theo `.worktreeinclude`. Hook git (`core.hooksPath` = `.git/hooks-onehub`,
   chuyển tiếp git-secrets) chặn mọi commit/merge-commit trong checkout chính.

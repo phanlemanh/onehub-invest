@@ -64,7 +64,25 @@ $T zcode TRẢ <mã> "<lý do>" --chuyen claudedp
 
 **Hook đưa tin** (từ 25/10): `~/dev/onehub-coord/bin/zcode-hook` gắn ở `~/.zcode/cli/config.json`
 → tin mới tự hiện khi mở phiên, mỗi lời nhắc của Mạnh và tối đa 5 phút một lần giữa lượt; kết lượt khi
-còn GIAO/HỎI chưa NHẬN thì bị chặn một lần. Làm việc bằng MỘT phiên ZCode ở `~/dev/onehub-invest-zcode`.
+còn GIAO/HỎI chưa NHẬN thì bị chặn một lần.
+
+### Ba phiên ZCode (từ 2026-11-24)
+
+Thay `zcode` trong các lệnh trên bằng tên bên của phiên mình. Hook tự chọn bên theo thư mục project; phiên đứng ở thư mục khác
+không đụng kênh (vì `doc` đánh dấu đã đọc).
+
+| Phiên | Bên | Project | Phạm vi |
+|---|---|---|---|
+| ZV vận hành | `zcode` | `~/dev/onehub-invest-zcode` | gateway + hook S03, watchdog, nạp đêm, plist, collector API; mã lõi `collector/src/core/`, `collector/openclaw/`, `scripts/zalo-*.sh`, `scripts/*-daily.sh`, `pipeline/cron/` |
+| ZT tin rao | `zt` | `~/dev/onehub-zt` | S01, S02, S05, S06 + trình duyệt chuyên dụng: bộ thu và bộ nạp của các nguồn này |
+| ZK nguồn kho | `zk` | `~/dev/onehub-zk` | S07, S08, S09, S10, S16, S17: bộ thu và bộ nạp của các nguồn này |
+
+- Mỗi phiên có một lịch đọc kênh riêng (`CronCreate` gắn vào chính task): ZV và ZT mỗi 20′, ZK mỗi 30′.
+- Nhánh `zcode/zv-<việc>`, `zcode/zt-<việc>`, `zcode/zk-<việc>`; việc mới thì `git worktree add ~/dev/onehub-wt/<bên>-<việc>`.
+- **Chỉ ZV** chạm gateway, `~/.openclaw`, launchd, collector API, `scripts/zalo-*.sh`, và chỉ theo lời GIAO triển khai. ZT, ZK
+  cần sửa mã lõi thì `HỎI --chan`.
+- Không đẩy nhánh khi `pgrep -f 'git-secrets|git push'` chưa rỗng; LL xếp lượt đẩy.
+- Không chạy bộ nặng (test suite, nạp lớn, build) khi tải 1 phút ≥ 12 hoặc trong khung 05:30–06:30 và 14:00–14:45 VN.
 
 ### Mười điều claudedp mong đợi
 
