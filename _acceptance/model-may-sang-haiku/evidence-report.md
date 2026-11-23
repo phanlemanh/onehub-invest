@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 8275b089fc12a9a116123c97431ed6f34b9d1316
-human_signoff:
+human_signoff: Mạnh 2026-11-23
 ---
 
 # Evidence Report: model-may-sang-haiku
@@ -36,7 +36,7 @@ human_signoff:
   run_id: r3-l1-1-20261123021221
   exit_code: 0
   baseline: n-a
-  verifier: agent/tests/tran-tien-agent.itest.ts
+  verifier: config:executors.test.mh1_tran_tien
   verified_at: 2026-11-23T02:12:21Z
   output: |
     cd agent && bash ../db/db-thu.sh oneinvest_suite_mh1t --chay node --import tsx --test --test-concurrency=1 tests/tran-tien-agent.itest.ts
@@ -47,7 +47,7 @@ human_signoff:
   run_id: r3-l1-1-20261123021221
   exit_code: 0
   baseline: n-a
-  verifier: agent/tests/tran-tien-agent.itest.ts
+  verifier: config:executors.test.mh1_tran_tien
   verified_at: 2026-11-23T02:12:21Z
   output: |
     cùng lệnh với E5 (một tệp itest phủ cả AC-5 và AC-10)
@@ -76,7 +76,7 @@ human_signoff:
 - eval: E2
   run_id: minted-model-may-sang-haiku-E2-r2
   exit_code: 0
-  verifier: agent/tests/model-agent.test.ts
+  verifier: config:executors.test.mh1_model_agent
   verified_at: 2026-11-23T00:45:32Z
   carried_from_round: 2
   # carry-forward tu round 2 — delta khong cham paths cua eval
@@ -84,7 +84,7 @@ human_signoff:
 - eval: E2b
   run_id: minted-model-may-sang-haiku-E2b-r2
   exit_code: 0
-  verifier: agent/tests/duong-goi-agent.test.ts
+  verifier: config:executors.test.mh1_duong_goi
   verified_at: 2026-11-23T00:45:32Z
   carried_from_round: 2
   # carry-forward tu round 2 — delta khong cham paths cua eval
@@ -92,7 +92,7 @@ human_signoff:
 - eval: E3
   run_id: minted-model-may-sang-haiku-E3-r2
   exit_code: 0
-  verifier: agent/tests/model-agent.test.ts
+  verifier: config:executors.test.mh1_model_agent
   verified_at: 2026-11-23T00:45:32Z
   carried_from_round: 2
   # carry-forward tu round 2 — delta khong cham paths cua eval
@@ -100,7 +100,7 @@ human_signoff:
 - eval: E4
   run_id: minted-model-may-sang-haiku-E4-r2
   exit_code: 0
-  verifier: agent/tests/du-lieu-gui-agent.itest.ts
+  verifier: config:executors.test.mh1_du_lieu_gui
   verified_at: 2026-11-23T00:45:32Z
   carried_from_round: 2
   # carry-forward tu round 2 — delta khong cham paths cua eval
@@ -108,7 +108,7 @@ human_signoff:
 - eval: E6
   run_id: minted-model-may-sang-haiku-E6-r2
   exit_code: 0
-  verifier: agent/tests/model-agent.test.ts
+  verifier: config:executors.test.mh1_model_agent
   verified_at: 2026-11-23T00:45:32Z
   carried_from_round: 2
   # carry-forward tu round 2 — delta khong cham paths cua eval

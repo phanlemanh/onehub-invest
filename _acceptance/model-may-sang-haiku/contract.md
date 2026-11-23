@@ -5,7 +5,7 @@ slug: model-may-sang-haiku
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, db]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-21-model-may-sang-haiku-design.md
 veto_state:
 veto_opened_at:
@@ -102,3 +102,11 @@ và hook S03 (làn thu). Quét hình thái bỏ: xem dòng sổ `descope` «bỏ
 - Thêm dòng giá Haiku vào `ai_model_prices`.
 
 ## Notes
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-23:
+  - Ngoài-1: Tài liệu hướng dẫn nói tin gửi đi luôn có cờ không giữ dữ liệu, nhưng đường gọi mặc định không có cờ này. Người đọc có thể tin dữ liệu được bảo vệ hơn thực tế.
+  - Ngoài-2: Nếu sau này có agent dùng công cụ, tham số do model trả về sẽ không được kiểm trước khi chạy. Hiện chưa agent thật nào bị ảnh hưởng.
+  - Ngoài-3: Khi chạy bộ kiểm trước/sau qua một đường dẫn có liên kết tắt, nó có thể báo xanh mà thực ra không kiểm gì. Người ký nghiệm thu có thể tin nhầm là đạt.
+  - Ngoài-4: Ước tính tiền trước mỗi lời gọi bỏ sót phần hướng dẫn hệ thống, nên trần tiền có thể bị vượt một lượng rất nhỏ.
+  - Ngoài-5: Bộ kiểm không phân biệt được cắt đúng 500 ký tự với cắt dài hơn một chút, nên nếu mã lệch ngưỡng thì có thể gửi thêm vài chục ký tự chữ bài mà không bị phát hiện.
+  - Ngoài-6: Một số ít tin rao nhiều căn khiến model trả danh sách, và hệ thống sẽ coi là không đọc được nên không ghi đề xuất cho các tin đó.
+  - AC-5 (nêu trên thẻ trước khi ký): với judge-run chỉ đo được số lời gọi và mức trần qua chamMotLuot; «thoát 4, dòng tổng kết, dòng ai_calls» chưa đo cho judge-run vì CLI judge-run đóng băng (V7) — đo đủ khi bỏ đóng băng.
