@@ -1,0 +1,96 @@
+schema_version: 1
+slug: model-may-sang-haiku
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: bash db/db-thu.sh oneinvest_suite_mh1 --chay node _acceptance/model-may-sang-haiku/probes/khong-goi-8000.mjs
+    long_running: 20
+    paths: ["agent/src/**", "agent/scripts/**", "agent/config/**", "pipeline/lib/vlm-anh.mjs", "scripts/bao-cao-ngay.mjs", "_acceptance/model-may-sang-haiku/probes/**"]
+    expected: "Probe dựng máy giả ở cổng MTPLX_URL (đếm yêu cầu), Anthropic giả (khuôn Messages API, qua ANTHROPIC_BASE_URL) và Gateway giả, chạy năm lệnh enrich-run --offers, judge-run, nhan-bac-run --model haiku --thu, vlm-anh-run --model haiku --thu, npm run smoke trên DB thử; in một dòng mỗi lệnh «<lệnh>: mtplx 0 · anthropic <a> · gateway <g>» với a + g ≥ 1 (enrich-run, judge-run, smoke đi Anthropic giả theo bảng của kho: a ≥ 1), và quét mã sản xuất không còn MTPLX_URL, qwen27b, 127.0.0.1:8000 trừ danh sách loại trừ đóng (tệp *.test.*, *.itest.*, scripts/smoke-review-queue.mjs), in «loại <k> tệp». Chiều đỏ: cấy qwen27b vào một tệp tạm khác dưới scripts/ thì đỏ gọi tên tệp; --cay-qwen trỏ một lệnh về getModel cũ trong bản sao thì probe đỏ «AC-1 <lệnh> gọi MTPLX <n> lần»; --cay-chuoi cấy chuỗi qwen27b vào một tệp tạm dưới agent/src thì đỏ gọi tên tệp."
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: cd agent && node --import tsx --test tests/model-agent.test.ts
+    paths: ["agent/src/runtime/**", "agent/config/model-agent.json", "agent/tests/model-agent.test.ts"]
+    expected: "Ma trận viết trước: tệp mẫu gán enrich-text cho haiku → lời gọi Gateway giả mang anthropic/claude-haiku-5.5; đổi sang glm → zai/glm-5.3-flash, mã agent không đổi; năm ca lỗi (tệp thiếu, JSON hỏng, mã ngoài MODEL_DUYET, agent không có khoá, giá âm) mỗi ca dừng trước lời gọi đầu với thông điệp gọi tên ca, Gateway giả nhận 0 yêu cầu. Chiều đỏ: ca bỏ kiểm MODEL_DUYET trong bản sao thì ca «mã ngoài danh sách» đỏ."
+  - id: E2b
+    criterion: AC-2
+    executor: test
+    cmd: cd agent && node --import tsx --test tests/duong-goi-agent.test.ts
+    paths: ["agent/src/runtime/**", "agent/config/model-agent.json", "agent/scripts/enrich-run.ts", "agent/scripts/judge-run.ts", "agent/tests/duong-goi-agent.test.ts"]
+    expected: "Anthropic giả (khuôn Messages API) và Gateway giả trong tiến trình test, ba ca viết trước. (1) duong [anthropic, gateway], tu_lui true, Anthropic giả trả 402 hết tiền ở lời 1: lời 1 lùi sang Gateway và đọc được, lời 2 đi thẳng Gateway, Anthropic giả nhận đúng 1 yêu cầu, dòng chuyen-duong in đúng một lần, recordCall lời 1 mang gateway:anthropic/claude-haiku-5.5; đường thẳng xanh thì recordCall mang anthropic:claude-haiku-5-5. (2) tu_lui false, không ANTHROPIC_API_KEY: enrich-run CLI thoát 5, cả hai máy giả nhận 0 yêu cầu. (3) thiếu khoá của mọi đường với tu_lui true: thoát 5, 0 yêu cầu. Chiều đỏ: bản sao bỏ lùi thì ca (1) đỏ «AC-2 không lùi sang gateway»; bỏ kiểm khoá thì ca (2) đỏ «AC-2 gọi khi thiếu khoá»."
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: cd agent && node --import tsx --test tests/model-agent.test.ts
+    paths: ["agent/src/runtime/**", "agent/src/agents/enrich-text.ts", "agent/src/agents/judge-entity.ts", "agent/tests/model-agent.test.ts"]
+    expected: "Thân yêu cầu Gateway giả của enrich-text và judge-entity có providerOptions.gateway.zeroDataRetention = true và disallowPromptTraining = true, so bằng chính kết quả tuyChonGui(mã model); thân yêu cầu Anthropic giả có tập khoá con của {model, system, messages, max_tokens, temperature}. Chiều đỏ: gọi runAgent không truyền tuỳ chọn thì ca đỏ «AC-3 thiếu cờ không giữ dữ liệu»; thêm một khoá lạ vào thân yêu cầu thẳng trong bản sao thì ca đỏ «AC-3 đường thẳng mang trường lạ <khoá>»."
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: cd agent && bash ../db/db-thu.sh oneinvest_suite_mh1g --chay node --import tsx --test --test-concurrency=1 tests/du-lieu-gui-agent.itest.ts
+    long_running: 10
+    paths: ["agent/src/agents/enrich-text.ts", "agent/src/agents/judge-entity.ts", "agent/src/tools/native.ts", "agent/src/enrich/run.ts", "agent/scripts/enrich-run.ts", "agent/scripts/judge-run.ts", "agent/tests/du-lieu-gui-agent.itest.ts"]
+    expected: "Trên DB thử: hai tin S03 cấy tên người bán, SĐT người bán, tên nhóm vào cột ngoài chữ bài, một cặp property_candidates của chúng; chạy enrich-run --offers và judge-run thật (OFFER_SELECT, queryPair) với máy giả của đường theo bảng của kho ghi thân yêu cầu. Thân enrich chỉ có chữ bài ≤ 500 ký tự và khối bối cảnh — một tin cấy chữ bài ~700 ký tự có dấu sau ký tự 500: thân có đúng 500 ký tự đầu, không có dấu; thân judge chỉ có các dòng thuộc danh sách nhãn dòng viết trước của design doc, dòng «- …» chỉ qua khi đúng nguyên văn một lý do luật tính cho chính cặp (không nhãn bắt-mọi); tên, SĐT người bán và tên nhóm không xuất hiện; đối chứng dương: chữ bài cấy và các dòng lý do xuất hiện nguyên văn. Chiều đỏ: thêm dòng người bán thì đỏ gọi tên trường lộ; thêm dòng «- Ghi chú người đăng: …» không mang giá trị cấy thì đỏ «có dòng ngoài danh sách»; bỏ cả hai lớp cắt 500 ký tự thì ca enrich đỏ."
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: cd agent && bash ../db/db-thu.sh oneinvest_suite_mh1t --chay node --import tsx --test --test-concurrency=1 tests/tran-tien-agent.itest.ts
+    long_running: 10
+    paths: ["agent/scripts/enrich-run.ts", "agent/scripts/judge-run.ts", "agent/src/runtime/**", "agent/config/model-agent.json", "agent/tests/tran-tien-agent.itest.ts"]
+    expected: "Máy giả của đường trả số token cố định; enrich-run và judge-run với --tran-usd đủ cho đúng k lời gọi: chạy đúng k lời gọi, thoát 4, dòng tổng kết nêu đã chi và trần; ai_calls có k dòng mang <đường>:<mã gọi> (anthropic:claude-haiku-5-5 theo bảng của kho) và token vào, ra; trần đủ lớn thì thoát 0 và chạy hết tập. Nhánh judge-run (chamMotLuot, CLI judge-run đóng băng V7) trên ba cặp cần LLM với trần đủ hai lời: đúng 2 lời gọi mã Haiku, dem.hetTran ghi đã chi 0,021 và trần 0,022. Chiều đỏ: bỏ kiểm trần trong bản sao thì ca đỏ «AC-5 chạy k+1 lời gọi khi trần chỉ đủ k»; bỏ điểm dừng trần trong bản sao judge-run thì đỏ «AC-5 judge-run chạy 3 lời gọi khi trần chỉ đủ 2»."
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: cd agent && node --import tsx --test tests/model-agent.test.ts
+    paths: ["agent/src/agents/nhan-bac-s03.ts", "agent/src/agents/vlm-anh-s03.ts", "agent/scripts/nhan-bac-run.ts", "agent/scripts/vlm-anh-run.ts", "agent/tests/model-agent.test.ts"]
+    expected: "Chạy CLI thật nhan-bac-run và vlm-anh-run với --model qwen (Gateway giả và máy giả MTPLX): thoát 2, đầu ra có «model không được duyệt», hai máy giả nhận 0 yêu cầu; danh sách model của hai lệnh không còn qwen và docCo(--model haiku) đọc được haiku (lượt chạy haiku --thu qua Gateway giả đo ở E1 và itest vlm-anh-s03-db). Chiều đỏ: thêm lại qwen vào danh sách backend thì ca đỏ «MH1 AC-6 qwen còn chạy»."
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: node --test pipeline/tests/vlm-anh.test.mjs
+    paths: ["pipeline/lib/vlm-anh.mjs", "pipeline/tests/vlm-anh.test.mjs"]
+    expected: "kiemLoThat trên tập chỉ có dòng Haiku tốt trả mảng không chứa lý do model; tập không dòng tốt nào trả «chưa có dòng model tốt»; tập rỗng giữ lý do cũ. Chiều đỏ: giữ điều kiện tiền tố mtplx: thì ca Haiku đỏ."
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: node _acceptance/model-may-sang-haiku/probes/do-truoc-sau.mjs --kiem
+    long_running: 5
+    paths: ["agent/src/agents/enrich-text.ts", "agent/src/agents/judge-entity.ts", "agent/src/runtime/**", "agent/config/model-agent.json", "_acceptance/model-may-sang-haiku/mau-enrich.json", "_acceptance/model-may-sang-haiku/mau-judge.json", "_acceptance/model-may-sang-haiku/probes/do-truoc-sau.mjs", "_acceptance/model-may-sang-haiku/probes/ket-luan-the.mts", "agent/scripts/judge-run.ts"]
+    expected: "Lượt đo thật chạy MỘT lần ở S3 sau khi Cổng Phạm vi duyệt (`--chay --tran-usd 1`: DB máy thu phiên READ ONLY, Haiku thật theo bảng của kho (Anthropic thẳng, lùi sang Gateway) trên 100 tin và 30 cặp của hai tệp mẫu, ghi từng đầu ra thô vào so-truoc-sau.json kèm băm hai tệp mẫu, và bảng vào so-truoc-sau.md). Eval chạy `--kiem`, không gọi model: kiểm băm mẫu khớp, đủ 100 + 30 đầu ra, tính lại các tỉ lệ từ đầu ra thô và so với bảng; thoát 0 khi JSON ≥ 95 %, giải thích ≥ 95 %, kết luận đổi 0, chi ≤ 1 USD, cổng MTPLX giả 0 yêu cầu trong lượt đo. «Kết luận đổi» = kết luận luật tính trước lời gọi so với kết luận thẻ sẽ mang sau khi đầu ra thô của model đi qua hàm dựng thẻ thật của judge-run (noiDungThe, probes/ket-luan-the.mts) — --kiem tính lại, không tin cột lưu sẵn. Chiều đỏ: --mau-thieu bỏ một đầu ra thì đỏ «AC-8 cỡ mẫu 99 khác 100»; sửa một tỉ lệ trong bảng thì đỏ «AC-8 bảng lệch đầu ra thô»; --cay-ket-luan cho kết luận thẻ đọc theo lời giải thích của model thì đỏ «AC-8 kết luận luật đổi <n>»."
+  - id: E10
+    criterion: AC-10
+    executor: script
+    cmd: cd agent && bash ../db/db-thu.sh oneinvest_suite_mh1t --chay node --import tsx --test --test-concurrency=1 tests/tran-tien-agent.itest.ts
+    long_running: 10
+    paths: ["agent/scripts/enrich-run.ts", "agent/src/enrich/run.ts", "agent/src/agents/enrich-text.ts", "agent/src/runtime/**", "agent/tests/tran-tien-agent.itest.ts"]
+    expected: "Năm tin cấy thiếu trường, Gateway giả trả năm đầu ra thô viết trước (hai JSON trần, hai cùng JSON trong khối mã, một chuỗi không phải JSON); sau enrich-run --offers: bộ đề xuất e2_llm (trường, giá trị, lối) của mỗi tin khối mã bằng đúng bộ của tin JSON trần và khác rỗng, cột model là anthropic/claude-haiku-5.5, tin đầu ra hỏng 0 đề xuất và tổng kết đếm «không đọc được 1», bộ đề xuất của mỗi tin đọc được bằng bộ viết trước [bedrooms 2 review, property_type apartment review]; «đã áp» của tổng kết và DB cùng bằng 0 (đề xuất LLM đi lối duyệt) và «chờ duyệt» của tổng kết và DB cùng bằng 8 viết trước. Chiều đỏ: bản sao parseEnrichOutput chỉ nhận JSON trần thì ca đỏ «AC-10 thiếu đề xuất của đầu ra khối mã»."
+  - id: E9a
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.suite.agent
+    long_running: 40
+    paths: ["agent/**"]
+    expected: "cd agent && npm test thoát 0."
+  - id: E9b
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.suite.pipeline_a
+    long_running: 60
+    paths: ["pipeline/**"]
+    expected: "Nửa A của pipeline thoát 0."
+  - id: E9c
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.suite.pipeline_b
+    long_running: 60
+    paths: ["pipeline/**"]
+    expected: "Nửa B của pipeline thoát 0."
+  - id: E9d
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.scripts
+    long_running: 120
+    paths: ["scripts/**", "agent/scripts/enrich-run.ts"]
+    expected: "node --test scripts/*.test.mjs thoát 0."

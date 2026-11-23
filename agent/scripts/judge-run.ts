@@ -23,6 +23,7 @@ import {
   type KetQuaLuat,
 } from "../src/agents/judge-entity.js";
 import { queryPair, type PairData } from "../src/tools/native.js";
+import { LoiCauHinhModel, LoiThieuKhoa, khoaThieuAgent, modelCuaAgent, taoTran, tranTuArgv, uocTokenVao, type Tran } from "../src/runtime/model-agent.js";
 
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
@@ -32,6 +33,8 @@ export type ChamDeps = {
   model?: LanguageModel;
   recordCall?: RecordCall;
   khongLlm?: boolean;
+  /** Trần tiền của lượt (MH1 AC-5): lời gọi kế có thể vượt trần thì dừng vòng trước lời gọi ấy, ghi dem.hetTran. */
+  tran?: Tran;
 };
 
 export type Cham = {
@@ -66,14 +69,18 @@ async function giaiThich(
     await so(r);
   };
   const daGhi = () => ban as AiCallRecord | null;
+  const vao = buildJudgeInput(pair, kq);
   try {
-    const res = await runAgent(judgeEntityAgent, buildJudgeInput(pair, kq), {}, { model: deps.model, recordCall: boc });
+    const res = await runAgent(judgeEntityAgent, vao, {}, { model: deps.model, recordCall: boc });
+    deps.tran?.ghi(res.usage.inputTokens ?? uocTokenVao(vao), res.usage.outputTokens);
     const giai = parseGiaiThich(res.output);
     return {
       giai,
       cuocGoi: { model: daGhi()?.model ?? null, trace: daGhi()?.trace ?? res.tracePath, ok: giai !== null, loi: giai === null ? "sai-khuon" : null },
     };
   } catch (e) {
+    if (e instanceof LoiCauHinhModel || e instanceof LoiThieuKhoa) throw e;
+    deps.tran?.ghi(uocTokenVao(vao), 0);
     return { giai: null, cuocGoi: { model: daGhi()?.model ?? null, trace: daGhi()?.trace ?? null, ok: false, loi: tenLop(e) } };
   }
 }
@@ -85,6 +92,13 @@ function canCu(kq: KetQuaLuat, giai: string | null, c: Pick<Cham, "model" | "tra
   if (c.model) phan.push(c.ok ? `LLM ${c.model}` : `LLM ${c.model} lỗi ${c.loi}`);
   if (c.model && c.trace) phan.push(`trace ${basename(c.trace)}`);
   return phan.join(" · ");
+}
+
+/** Nội dung thẻ duyệt từ kết luận của luật và lời giải thích model — MỘT hàm cho cả hai nhánh ghi (cập nhật, gieo) và cho
+ *  phép đo AC-8 của MH1 (kết luận ghi lên thẻ sau khi đọc đầu ra model phải bằng kết luận luật trước lời gọi). */
+export function noiDungThe(kq: KetQuaLuat, giai: string | null, cuocGoi: Pick<Cham, "model" | "trace" | "ok" | "loi">, luc = new Date().toISOString()) {
+  const cham: Cham = { phien_ban_nguong: PHIEN_BAN_NGUONG, ket_luan: kq.same_house, ly_do: kq.ly_do, lech: kq.lech, ...cuocGoi, luc };
+  return { ketLuan: cham.ket_luan, lyDo: canCu(kq, giai, cuocGoi), cham };
 }
 
 /** Dữ liệu hai tin trên thẻ — đúng bộ khoá thẻ seed 029 (bên đọc /ops/review). */
@@ -157,7 +171,11 @@ export const SQL_TRA_LAI = `WITH ${KHOA_CAP},
      RETURNING 1)
    SELECT id, item_id FROM tra`;
 
-export type DemLuot = { sinh: number; capNhat: number; boQua: number; loi: number; roiKho: number; rut: number; traLai: number };
+export type DemLuot = {
+  sinh: number; capNhat: number; boQua: number; loi: number; roiKho: number; rut: number; traLai: number;
+  /** Lượt dừng vì lời gọi kế có thể vượt trần tiền (MH1 AC-5); null khi chạy hết tập. */
+  hetTran: { daChiUsd: number; tranUsd: number } | null;
+};
 
 const tieuDe = (p: PairData) =>
   `Cùng căn? ${p.a.phuong ?? "?"} ${p.a.areaM2 ?? 0}m² ↔ ${p.b.areaM2 ?? 0}m² (score ${p.score})`;
@@ -166,7 +184,7 @@ export async function chamMotLuot(
   db: pg.ClientBase,
   deps: ChamDeps,
 ): Promise<DemLuot> {
-  const dem: DemLuot = { sinh: 0, capNhat: 0, boQua: 0, loi: 0, roiKho: 0, rut: 0, traLai: 0 };
+  const dem: DemLuot = { sinh: 0, capNhat: 0, boQua: 0, loi: 0, roiKho: 0, rut: 0, traLai: 0, hetTran: null };
   const caps = new Map<string, [string, string]>();
   const them = (a: string, b: string) => {
     const k = [a, b].sort().join("|");
@@ -221,19 +239,15 @@ export async function chamMotLuot(
       continue;
     }
     const kq = apNguong(pair);
+    if (!deps.khongLlm && deps.tran && !deps.tran.coTheGoi(buildJudgeInput(pair, kq))) {
+      dem.hetTran = { daChiUsd: deps.tran.daChi(), tranUsd: deps.tran.tranUsd };
+      break;
+    }
     const { giai, cuocGoi } = await giaiThich(pair, kq, deps);
-    const cham: Cham = {
-      phien_ban_nguong: PHIEN_BAN_NGUONG,
-      ket_luan: kq.same_house,
-      ly_do: kq.ly_do,
-      lech: kq.lech,
-      ...cuocGoi,
-      luc: new Date().toISOString(),
-    };
-    const lyDo = canCu(kq, giai, cuocGoi);
+    const { ketLuan, lyDo, cham } = noiDungThe(kq, giai, cuocGoi);
     if (the.length > 0) {
       const { rowCount } = await db.query(SQL_CAP_NHAT, [
-        kq.same_house,
+        ketLuan,
         lyDo,
         JSON.stringify(cham),
         the.map((t) => t.id),
@@ -245,7 +259,7 @@ export async function chamMotLuot(
         `INSERT INTO review_queue (item_type, item_id, title, evidence, ai_suggestion, ai_reasoning, ai_confidence)
          VALUES ('entity_match', $1, $2, $3::jsonb, $4, $5, NULL)
          ON CONFLICT DO NOTHING`,
-        [`pair:${a}|${b}`, tieuDe(pair), JSON.stringify({ ...evidenceThe(pair), cham }), kq.same_house, lyDo],
+        [`pair:${a}|${b}`, tieuDe(pair), JSON.stringify({ ...evidenceThe(pair), cham }), ketLuan, lyDo],
       );
       dem.sinh++;
     }
@@ -263,20 +277,34 @@ async function main() {
   console.log(JUDGE_RUN_DONG_BANG);
   if (JUDGE_RUN_DONG_BANG) return;
   const khongLlm = process.argv.includes("--khong-llm");
+  // Model, giá, trần đọc trước khi mở DB: tệp cấu hình sai → mã 2 (MH1 AC-2). --tran-usd vắng → tran_usd của judge-entity.
+  const m = modelCuaAgent(judgeEntityAgent.name);
+  const tran = taoTran(tranTuArgv(process.argv, m.tranUsd), m.gia);
+  // Thiếu khoá của mọi đường gọi được → mã 5 trước lời gọi đầu, chưa mở DB (MH1 AC-2). --khong-llm không gọi model.
+  const thieu = khongLlm ? [] : khoaThieuAgent(m);
+  if (thieu.length) throw new LoiThieuKhoa(thieu);
   const c = new pg.Client({ connectionString: DB_URL });
   await c.connect();
   try {
-    const dem = await chamMotLuot(c, { queryPair, khongLlm });
+    const dem = await chamMotLuot(c, { queryPair, khongLlm, tran });
     const { rows } = await c.query(CAU_DEM_THIEU_THE);
     console.log(`═══ JUDGE RUN XONG ═══`);
     console.log(`thẻ mới ${dem.sinh} | cập nhật ${dem.capNhat} | bỏ qua (người đã quyết) ${dem.boQua} | lỗi đọc cặp ${dem.loi}`);
     console.log(`cặp có tin rời kho ${dem.roiKho} · thẻ rút ${dem.rut} · thẻ trả lại ${dem.traLai}`);
     console.log(`cặp needs_llm chưa có thẻ: ${rows[0].n}`);
     console.log(`→ Mở /ops/review để phán quyết`);
+    if (dem.hetTran) {
+      console.log(`✗ hết trần: đã chi ${dem.hetTran.daChiUsd.toFixed(4)} USD / trần ${dem.hetTran.tranUsd} USD — dừng trước lời gọi kế`);
+      process.exitCode = 4;
+    }
   } finally {
     await c.end();
   }
 }
 
 const isMain = process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url);
-if (isMain) main().catch((e) => { console.error(e); process.exit(1); });
+if (isMain) main().catch((e) => {
+  const biet = e instanceof LoiCauHinhModel || e instanceof LoiThieuKhoa;
+  console.error(biet ? e.message : e);
+  process.exit(e instanceof LoiThieuKhoa ? 5 : e instanceof LoiCauHinhModel ? 2 : 1);
+});

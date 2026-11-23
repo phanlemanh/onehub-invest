@@ -246,8 +246,8 @@ test("EC-AC-3 ma trận LLM × ghi", async () => {
     await voiDotBien<{ maThoat: typeof maThoat }, void>(
       "tong-ket.ts",
       [
-        "  if (d.loiGhi.length > 0) return 2;\n  if (d.llmGoi > 0 && 2 * hong(d) >= d.llmGoi) return 3;",
-        "  if (d.llmGoi > 0 && 2 * hong(d) >= d.llmGoi) return 3;\n  if (d.loiGhi.length > 0) return 2;",
+        "  if (d.loiGhi.length > 0) return 2;\n  if (d.hetTran) return 4;\n  if (d.llmGoi > 0 && 2 * hong(d) >= d.llmGoi) return 3;",
+        "  if (d.llmGoi > 0 && 2 * hong(d) >= d.llmGoi) return 3;\n  if (d.loiGhi.length > 0) return 2;\n  if (d.hetTran) return 4;",
       ],
       async (m) => assert.throws(() => kiemMaTran(o, m.maThoat), /chết LLM che lỗi ghi/),
     );

@@ -252,10 +252,14 @@ test("VLM-AC-9 JSON hỏng chỉ đếm trả lời hỏng thật; lỗi mạng 
   assert.deepEqual(d.models[0].loiTheoLop, { AI_APICallError: 2, "json-hong": 1 });
 });
 
-test("VLM-AC-9 kiểm lô thật: thiếu dòng Qwen tốt hoặc tập rỗng thì có lý do; đủ thì rỗng", () => {
+test("VLM-AC-9 / MH1 AC-7 kiểm lô thật: tập chỉ có dòng Haiku tốt thì đạt; không dòng tốt nào hoặc tập rỗng thì có lý do", () => {
   const tap = [baiGia("a", ["thieu_gia"], ["s"])];
-  assert.deepEqual(kiemLoThat(demNhan(tap, [dongNhan("a", "mtplx:y", { price_vnd: 1, anh: [{ sha256: "s" }] })])), []);
-  assert.ok(kiemLoThat(demNhan(tap, [dongNhan("a", "gateway:x", { price_vnd: 1, anh: [{ sha256: "s" }] })])).length > 0, "VLM-AC-9 chỉ có model cloud mà vẫn đạt");
+  const HAIKU = "gateway:anthropic/claude-haiku-5.5";
+  // MH1 AC-7: không còn dòng Qwen nào mà vẫn đạt — không lý do nào nhắc model.
+  assert.deepEqual(kiemLoThat(demNhan(tap, [dongNhan("a", HAIKU, { price_vnd: 1, anh: [{ sha256: "s" }] })])), [], "MH1 AC-7 lô chỉ có Haiku tốt mà còn lý do");
+  // Đối chứng: dòng Haiku chỉ có ảnh lỗi (không dòng tốt nào) → lý do «chưa có dòng model tốt».
+  const loi = kiemLoThat(demNhan(tap, [dongNhan("a", HAIKU, { anh: [{ sha256: "s", error_kind: "AI_APICallError" }] }, "AI_APICallError")]));
+  assert.ok(loi.includes("chưa có dòng model tốt"), `MH1 AC-7 không dòng tốt mà thiếu lý do: ${JSON.stringify(loi)}`);
   assert.ok(kiemLoThat(demNhan(tap, [])).length > 0, "VLM-AC-9 chưa có lô mà vẫn đạt");
   assert.ok(kiemLoThat(demNhan([], [])).length > 0);
 });

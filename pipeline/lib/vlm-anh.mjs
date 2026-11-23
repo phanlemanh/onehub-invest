@@ -289,12 +289,12 @@ export function demNhan(tap, rows) {
   return { tapDoc: tap.length, theoLyDo, luotAnh: tap.reduce((s, b) => s + b.anh.length, 0), anhKhacNhau: sha.size, models };
 }
 
-/** Lý do lô thật chưa đạt, rỗng là đạt: tập đọc > 0, ≥ 1 dòng Qwen tốt, các nhóm cộng bằng tập đọc. */
+/** Lý do lô thật chưa đạt, rỗng là đạt: tập đọc > 0, ≥ 1 dòng tốt của một model bất kỳ, các nhóm cộng bằng tập đọc.
+ *  MH1 model-may-sang-haiku (21/11): thôi đòi dòng Qwen (MTPLX) — model máy đã gỡ, lô thật chạy bằng model Gateway. */
 export function kiemLoThat(d) {
   const out = [];
   if (d.tapDoc <= 0) out.push("tập đọc rỗng");
-  const qwen = d.models.filter((m) => m.model.startsWith("mtplx:"));
-  if (!qwen.some((m) => m.tot >= 1)) out.push("chưa có dòng Qwen tốt");
+  if (!d.models.some((m) => m.tot >= 1)) out.push("chưa có dòng model tốt");
   for (const m of d.models) if (m.tot + m.rong + m.loi + m.chuaDoc !== d.tapDoc) out.push(`nhóm của ${m.model} không cộng bằng tập đọc`);
   return out;
 }
