@@ -17,7 +17,8 @@
 #   cleanup        lượt `restart` thoát lỗi giữa chừng (exit trong hàm, và return rồi mới exit) và lượt bị
 #                  SIGTERM vẫn không để sót au7-dind-*.
 #   live           CHỈ ĐỌC máy này: one-invest-db đang chạy với policy unless-stopped|always; LaunchAgent
-#                  homebrew.mxcl.colima có RunAtLoad=true và đang nạp trong launchctl.
+#                  của colima (nhãn homebrew.mxcl.colima ở brew cũ, sh.brew.colima ở brew mới — máy thu Mac mini
+#                  24/11; ghi đè bằng COLIMA_LABEL) có RunAtLoad=true và đang nạp trong launchctl.
 #   live-selftest  bộ đọc của live chạy trên bản chép plist + JSON inspect thật đã làm hỏng phải đỏ.
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -26,7 +27,15 @@ MODE="${1:-}"
 COMPOSE="$ROOT/db/docker-compose.yml"
 BASE="${AU7_BASE:-f3cff1f}"
 DB=one-invest-db
-PLIST="$HOME/Library/LaunchAgents/homebrew.mxcl.colima.plist"
+# Nhãn LaunchAgent của colima đổi theo bản Homebrew: brew services cũ ghi homebrew.mxcl.colima, bản mới ghi
+# sh.brew.colima. Chọn nhãn có tệp plist; không tệp nào có thì giữ nhãn cũ để thông điệp FAIL nêu đúng chỗ thiếu.
+if [ -z "${COLIMA_LABEL:-}" ]; then
+  COLIMA_LABEL=homebrew.mxcl.colima
+  for l in homebrew.mxcl.colima sh.brew.colima; do
+    [ -f "$HOME/Library/LaunchAgents/$l.plist" ] && { COLIMA_LABEL=$l; break; }
+  done
+fi
+PLIST="$HOME/Library/LaunchAgents/$COLIMA_LABEL.plist"
 DIND_IMG=docker:28-dind
 APP_IMG=alpine:3.20
 FAIL=0
@@ -81,10 +90,10 @@ check_live() { # $1 = JSON docker inspect, $2 = plist, $3 = 1 khi đọc máy th
   ral=$(plutil -extract RunAtLoad raw -o - "$2" 2>/dev/null || echo "(vắng)")
   [ "$ral" = true ] && pass "colima RunAtLoad=true" || fail "colima RunAtLoad=$ral"
   if [ "${3:-0}" = 1 ]; then
-    if launchctl list homebrew.mxcl.colima >/dev/null 2>&1; then
-      pass "homebrew.mxcl.colima đang nạp trong launchctl"
+    if launchctl list "$COLIMA_LABEL" >/dev/null 2>&1; then
+      pass "$COLIMA_LABEL đang nạp trong launchctl"
     else
-      fail "homebrew.mxcl.colima không nạp trong launchctl"
+      fail "$COLIMA_LABEL không nạp trong launchctl"
     fi
   fi
 }
