@@ -608,6 +608,15 @@ executors:
     db_autostart_cleanup: "bash scripts/check-db-autostart.sh cleanup"     # lượt lỗi / SIGTERM giữa chừng vẫn dọn dind; DB thật không bị khởi động lại
     db_autostart_live_selftest: "bash scripts/check-db-autostart.sh live-selftest"   # bộ đọc live trên bản chép plist + inspect thật đã làm hỏng
     # db-vao-volume (P2, yêu cầu P2-74 giám sát duyệt 29/10) — dữ liệu DB local nằm trong volume có tên
+    # db-chi-nghe-noi-bo-va-chinh-postgres (HT8): DB chỉ nghe 127.0.0.1, tham số Postgres qua biến môi trường của ảnh kartoza
+    db_noi_bo_static: "bash scripts/check-db-noi-bo.sh static"
+    db_noi_bo_mutation: "bash scripts/check-db-noi-bo.sh mutation"
+    db_noi_bo_cong: "bash scripts/check-db-noi-bo.sh cong"                 # container tạm nc ht8-cong-*; cần IP LAN (en0/en1)
+    db_noi_bo_soat: "bash scripts/check-db-noi-bo.sh soat"                 # ghi evidence/soat-ben-noi.txt của hồ sơ
+    db_noi_bo_tham_so: "bash scripts/check-db-noi-bo.sh tham-so"           # nặng: container Postgres tạm ht8-ts-*, volume onehub_ht8_*
+    db_noi_bo_do: "bash scripts/check-db-noi-bo.sh do"                     # nặng: chép hai bảng lớn (đọc one-invest-db read-only), đo trước/sau
+    db_noi_bo_cu_khong_gay: "bash scripts/check-db-noi-bo.sh cu-khong-gay"
+    db_noi_bo_live: "bash scripts/check-db-noi-bo.sh live-ba"              # bộ đọc live trên one-invest-db + hai container tạm
     db_volume_static: "bash scripts/db-volume-check.sh static"         # compose gộp: volume có tên gắn ở thư mục chứa DEFAULT_DATADIR của ảnh
     db_volume_mutation: "bash scripts/db-volume-check.sh mutation"     # năm bản compose hỏng đỏ với thông điệp ghim; bản lành xanh
     db_volume_tap_duot: "bash scripts/db-volume-check.sh tap-duot"     # cần docker + ảnh kartoza/postgis:17-3.5; container onehub-tapduot-* cổng riêng, không chạm one-invest-db
