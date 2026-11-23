@@ -1,4 +1,4 @@
-// A1 smoke — chạy agent "echo" thật qua Qwen 27B MTPLX, 1 tool get_time.
+// A1 smoke — chạy agent "echo" thật qua model của agent smoke-echo trong agent/config/model-agent.json (Haiku 5.5, Gateway), 1 tool get_time.
 // Verify: model trả lời + tool gọi + trace JSONL ghi đúng.
 import { tool } from "ai";
 import { z } from "zod";
@@ -7,7 +7,6 @@ import { runAgent } from "../src/runtime/loop.js";
 
 const echoAgent = {
   name: "smoke-echo",
-  model: "qwen27b" as const,
   systemPrompt: `Bạn là trợ lý thử nghiệm. Khi được hỏi giờ, PHẢI gọi tool get_time trước rồi trả lời dựa trên kết quả. Trả lời ngắn gọn tiếng Việt.`,
   tools: {
     get_time: tool({
@@ -19,7 +18,7 @@ const echoAgent = {
   budget: 3,
 };
 
-console.log("── chạy smoke Qwen 27B...");
+console.log("── chạy smoke (model theo agent/config/model-agent.json)...");
 const result = await runAgent(echoAgent, "Bây giờ là mấy giờ?");
 
 console.log("── output:", result.output.slice(0, 200));

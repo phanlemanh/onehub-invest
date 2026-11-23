@@ -1,6 +1,6 @@
 // nhan-bac-s03.ts — KC1 `nhan-bac-model-lon-s03`: nhãn bạc cho một bài S03 — ý định tin (offer · inquiry · not_listing ·
-// unknown), bán/thuê, xác suất, câu trích. Ba backend qua lớp model có sẵn (runtime/models.ts): Qwen local (MTPLX),
-// Claude Haiku 5.5 và OpenAI Decisions qua Vercel AI Gateway (Mạnh 01/11). Mỗi lần gọi ghi một dòng ai_calls (PL29).
+// unknown), bán/thuê, xác suất, câu trích. Hai backend qua lớp model có sẵn (runtime/models.ts): Claude Haiku 5.5 và
+// OpenAI Decisions qua Vercel AI Gateway (Mạnh 01/11). Backend Qwen local (MTPLX) gỡ ở MH1 model-may-sang-haiku (21/11). Mỗi lần gọi ghi một dòng ai_calls (PL29).
 // Luật 7: chỉ ra đề xuất — người gọi ghi vào bảng silver_labels, không đụng canonical.
 // stripPII, prompt và parseReply chép từ nhánh ZCode `zcode/classify-s03` @ce75ba2e (pipeline/classify-s03.mjs).
 import { generateText, experimental_evaluate as evaluate, type LanguageModel } from "ai";
@@ -10,12 +10,11 @@ import { recordCallDb, soToken, tenLop, type RecordCall } from "../runtime/ai-ca
 
 export const PROMPT_VERSION = "nb-s03-v2"; // v2: thêm dòng bài-không-chữ (Haiku trả văn xuôi cho bài chỉ có ảnh/link)
 export const VIEC = "nhan-bac-s03";
-export type Backend = "qwen" | "haiku" | "decisions";
-export const BACKENDS: readonly Backend[] = ["qwen", "haiku", "decisions"];
+export type Backend = "haiku" | "decisions";
+export const BACKENDS: readonly Backend[] = ["haiku", "decisions"];
 
 /** Tên model ghi vào silver_labels.model và ai_calls.model. */
 export const TEN_MODEL: Record<Backend, string> = {
-  qwen: "mtplx:qwen3.8-27b-local",
   haiku: `gateway:${GATEWAY_MODEL.haiku}`,
   decisions: `gateway:${GATEWAY_MODEL.luna}`,
 };
@@ -60,7 +59,7 @@ export type Nhan = {
 const LA_INTENT = new Set<string>([LISTING_INTENT.offer, LISTING_INTENT.inquiry, LISTING_INTENT.not_listing]);
 const LA_KIND = new Set<string>([KIND.sale, KIND.rent_lt]);
 
-/** Đọc trả lời chữ (Qwen, Haiku) — JSON hỏng / giá trị lạ → unknown; trích so với chữ ĐÃ GẠT (ZCode). */
+/** Đọc trả lời chữ (Haiku) — JSON hỏng / giá trị lạ → unknown; trích so với chữ ĐÃ GẠT (ZCode). */
 export function parseReply(raw: string, originalText: string) {
   let obj: Record<string, unknown> | null = null;
   try {
@@ -108,7 +107,7 @@ export const CAU_HOI_DECISIONS = {
   },
 } as const;
 
-/** Chi phí thật Gateway trả (providerMetadata.gateway.cost), null khi không có (Qwen local). */
+/** Chi phí thật Gateway trả (providerMetadata.gateway.cost), null khi không có. */
 export function chiPhi(meta: unknown): number | null {
   const v = Number((meta as { gateway?: { cost?: unknown } } | undefined)?.gateway?.cost);
   return Number.isFinite(v) && v >= 0 ? v : null;
@@ -151,7 +150,7 @@ export async function hoiBai(backend: Backend, text: string, opts: HoiOpts = {})
       };
     } else {
       const r = await generateText({
-        model: opts.languageModel ?? getModel(backend === "qwen" ? "qwen27b-khong-nghi" : "haiku"),
+        model: opts.languageModel ?? getModel("haiku"),
         system: SYSTEM,
         prompt: sach,
         temperature: 0,
@@ -200,7 +199,7 @@ export async function hoiBai(backend: Backend, text: string, opts: HoiOpts = {})
 // ==== chạy một lô (lệnh agent/scripts/nhan-bac-run.ts) ====
 
 /** Giá token 31/10/2026 (USD / 1 triệu token) — chỉ để ƯỚC trước khi gửi; tổng thật cộng chi phí Gateway trả về. */
-export const GIA = { haiku: { vao: 0.1, ra: 0.5 }, decisions: { vao: 0.1, ra: 0 }, qwen: { vao: 0, ra: 0 } } as const;
+export const GIA = { haiku: { vao: 0.1, ra: 0.5 }, decisions: { vao: 0.1, ra: 0 } } as const;
 /** Ước chi phí một bài (USD): ~3,5 ký tự/token, ~80 token ra. */
 export function uocChiPhi(backend: Backend, text: string): number {
   const vao = (SYSTEM.length + stripPII(text).length) / 3.5;

@@ -1,0 +1,648 @@
+{
+ "chon": "md5(offer_id), đề xuất e2_llm qwen27b, tin còn trong sale_offers",
+ "luc": "2026-11-21T07:15:48.610Z",
+ "tin": [
+  {
+   "offer_id": "offer_d617db1810bb5c4c",
+   "qwen": {
+    "bathrooms": "1"
+   }
+  },
+  {
+   "offer_id": "offer_dfcfc1769a01a398",
+   "qwen": {
+    "street_raw": "nguyễn hữu thọ",
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_a247fb6e6f43baca",
+   "qwen": {
+    "bedrooms": "3",
+    "street_raw": "đx 013",
+    "property_type": "house"
+   }
+  },
+  {
+   "offer_id": "offer_c8f59f8580efd5bb",
+   "qwen": {
+    "property_type": "house"
+   }
+  },
+  {
+   "offer_id": "offer_c239ed526f6b836e",
+   "qwen": {
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_f69fb4efbd3b38c6",
+   "qwen": {
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_f0d6daa6417405d8",
+   "qwen": {
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_e2093973debe3001",
+   "qwen": {
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_5c29faf8aa383050",
+   "qwen": {
+    "bathrooms": "2",
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_e7ceb59e2b54b624",
+   "qwen": {
+    "bedrooms": "1",
+    "block_raw": "vip m3",
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_356380d6234cbd80",
+   "qwen": {
+    "bathrooms": "2",
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_30a8d08be9280d53",
+   "qwen": {
+    "block_raw": "m3",
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_46e8fd84d478280c",
+   "qwen": {
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_d92f217534906639",
+   "qwen": {
+    "bathrooms": "2",
+    "block_raw": "s9.01",
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_85efe5c3a0754e20",
+   "qwen": {
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_db4e6093ecdab584",
+   "qwen": {
+    "block_raw": "gh",
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_937027dc54951cfc",
+   "qwen": {
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_fc8323f7f16debcb",
+   "qwen": {
+    "bathrooms": "2",
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_87f0e78d90b94f80",
+   "qwen": {
+    "block_raw": "gh5",
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_7cb33fd5b78b6db8",
+   "qwen": {
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_195fccb096f0a2b2",
+   "qwen": {
+    "block_raw": "s1.05"
+   }
+  },
+  {
+   "offer_id": "offer_23906035d6d8f16b",
+   "qwen": {
+    "bathrooms": "2",
+    "property_type": "house"
+   }
+  },
+  {
+   "offer_id": "offer_b579c54ffd4387a8",
+   "qwen": {
+    "bathrooms": "1"
+   }
+  },
+  {
+   "offer_id": "offer_8e669233201b7f98",
+   "qwen": {
+    "block_raw": "be"
+   }
+  },
+  {
+   "offer_id": "offer_fdf20fc73cd70407",
+   "qwen": {
+    "block_raw": "s5",
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_d9d8c5ebdc9a4007",
+   "qwen": {
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_f909acf2950fce42",
+   "qwen": {
+    "block_raw": "tc3"
+   }
+  },
+  {
+   "offer_id": "offer_3f46971d8406ddeb",
+   "qwen": {
+    "block_raw": "origami"
+   }
+  },
+  {
+   "offer_id": "offer_9cb0d924418ce154",
+   "qwen": {
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_7ecda705b0f072a0",
+   "qwen": {
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_8fe35d0d43ff45a7",
+   "qwen": {
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_ee2e9731c6e7a9bb",
+   "qwen": {
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_fa6d573044b845e3",
+   "qwen": {
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_b910cf9107384ae6",
+   "qwen": {
+    "bathrooms": "2",
+    "block_raw": "origami",
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_f31c64c5df9507b6",
+   "qwen": {
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_cb5ba7a33109e744",
+   "qwen": {
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_87ca29a374130ac8",
+   "qwen": {
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_e9217930f2efa81b",
+   "qwen": {
+    "block_raw": "gh2"
+   }
+  },
+  {
+   "offer_id": "offer_66dac5b8036ae21f",
+   "qwen": {
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_4059e2ae972d1c51",
+   "qwen": {
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_1b9f9fae6e489a40",
+   "qwen": {
+    "block_raw": "rainbow"
+   }
+  },
+  {
+   "offer_id": "offer_9d74c5304919aae2",
+   "qwen": {
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_9a9469253a838cec",
+   "qwen": {
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_c9555589af675ab8",
+   "qwen": {
+    "block_raw": "s9",
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_cd55f479904e39fb",
+   "qwen": {
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_e75b9a530f035df1",
+   "qwen": {
+    "bathrooms": "2",
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_fb19efb2cc965714",
+   "qwen": {
+    "block_raw": "bs15",
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_a1558a3cce038dfe",
+   "qwen": {
+    "property_type": "house"
+   }
+  },
+  {
+   "offer_id": "offer_1a29cd8d8cd76566",
+   "qwen": {
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_dff5362fca51a340",
+   "qwen": {
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_853f231e1233052a",
+   "qwen": {
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_8f909a859b486bee",
+   "qwen": {
+    "bathrooms": "1"
+   }
+  },
+  {
+   "offer_id": "offer_7ea6106fdd0db4fd",
+   "qwen": {
+    "block_raw": "rainbow"
+   }
+  },
+  {
+   "offer_id": "offer_562359205db63c1d",
+   "qwen": {
+    "bathrooms": "1"
+   }
+  },
+  {
+   "offer_id": "offer_4620a294e1428481",
+   "qwen": {
+    "bathrooms": "2"
+   }
+  },
+  {
+   "offer_id": "offer_09803b561bbd1571",
+   "qwen": {
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_9d125632ab823566",
+   "qwen": {
+    "bathrooms": "2"
+   }
+  },
+  {
+   "offer_id": "offer_a9c76f5093f6f7b7",
+   "qwen": {
+    "bathrooms": "1",
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_e6880ed7eb1a9279",
+   "qwen": {
+    "block_raw": "masterise trinity square (mts)"
+   }
+  },
+  {
+   "offer_id": "offer_dd599975390ba737",
+   "qwen": {
+    "bathrooms": "2",
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_5a00bdc103944455",
+   "qwen": {
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_1c44f9642449a135",
+   "qwen": {
+    "bathrooms": "2"
+   }
+  },
+  {
+   "offer_id": "offer_2ac36e62720c8fee",
+   "qwen": {
+    "bathrooms": "1"
+   }
+  },
+  {
+   "offer_id": "offer_c25ad01101098c77",
+   "qwen": {
+    "block_raw": "solari"
+   }
+  },
+  {
+   "offer_id": "offer_c3aeab6299bba11f",
+   "qwen": {
+    "block_raw": "rainbow"
+   }
+  },
+  {
+   "offer_id": "offer_4a7dff5b17957711",
+   "qwen": {
+    "block_raw": "gs6",
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_c2941a7e343ee1d9",
+   "qwen": {
+    "block_raw": "s1",
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_cab1cd895316b2b4",
+   "qwen": {
+    "block_raw": "c1z1"
+   }
+  },
+  {
+   "offer_id": "offer_0155449965466f73",
+   "qwen": {
+    "block_raw": "be"
+   }
+  },
+  {
+   "offer_id": "offer_004bf9daa49fe470",
+   "qwen": {
+    "bathrooms": "2"
+   }
+  },
+  {
+   "offer_id": "offer_a2faf4a5e37446b0",
+   "qwen": {
+    "bathrooms": "2"
+   }
+  },
+  {
+   "offer_id": "offer_800f512e2ef381c1",
+   "qwen": {
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_e4371f9115460077",
+   "qwen": {
+    "block_raw": "sa3"
+   }
+  },
+  {
+   "offer_id": "offer_dc43ce5cdea33697",
+   "qwen": {
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_51e34e5a0f63aa14",
+   "qwen": {
+    "bathrooms": "2",
+    "street_raw": "lê văn lương",
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_597f6d56c3be9bf6",
+   "qwen": {
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_b58083843cd6ee9b",
+   "qwen": {
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_5fcef11a51d8fa63",
+   "qwen": {
+    "block_raw": "rainbow"
+   }
+  },
+  {
+   "offer_id": "offer_929242d61e34c312",
+   "qwen": {
+    "block_raw": "s6",
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_fcc8aa10efc6b982",
+   "qwen": {
+    "block_raw": "bs9",
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_b6fcef6eddb598de",
+   "qwen": {
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_ded1078c8205ca2e",
+   "qwen": {
+    "bathrooms": "2",
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_e41d187e4526c368",
+   "qwen": {
+    "block_raw": "tc3",
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_7e9a20b3c1855656",
+   "qwen": {
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_63fc7b7d71776476",
+   "qwen": {
+    "bathrooms": "1"
+   }
+  },
+  {
+   "offer_id": "offer_e42db44f190e147c",
+   "qwen": {
+    "bathrooms": "2",
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_89eaa1f9c5279948",
+   "qwen": {
+    "block_raw": "s9.02",
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_706f2db42338601c",
+   "qwen": {
+    "bathrooms": "2",
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_0788a15f6dc14e52",
+   "qwen": {
+    "bathrooms": "2",
+    "block_raw": "origami",
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_ecb9998104d76f80",
+   "qwen": {
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_d87d2f194b0a645f",
+   "qwen": {
+    "bathrooms": "2",
+    "property_type": "house"
+   }
+  },
+  {
+   "offer_id": "offer_a9dfcdb7b8e17c2c",
+   "qwen": {
+    "bathrooms": "1",
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_1fd21f1be1febe8e",
+   "qwen": {
+    "block_raw": "bs",
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_6b24688ea2278751",
+   "qwen": {
+    "block_raw": "sf",
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_399cfe51bc57bd7e",
+   "qwen": {
+    "bathrooms": "1"
+   }
+  },
+  {
+   "offer_id": "offer_ba2a51297aac72a2",
+   "qwen": {
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_58059f36ca0e3510",
+   "qwen": {
+    "bathrooms": "2",
+    "block_raw": "mcp",
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_9c728d3cb63c04a2",
+   "qwen": {
+    "street_raw": "xuân phương",
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_2492dc3fca667629",
+   "qwen": {
+    "property_type": "apartment"
+   }
+  },
+  {
+   "offer_id": "offer_3b5f3d2057bf9886",
+   "qwen": {
+    "property_type": "apartment"
+   }
+  }
+ ]
+}

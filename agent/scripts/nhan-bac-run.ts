@@ -1,10 +1,10 @@
 // nhan-bac-run.ts — KC1 `nhan-bac-model-lon-s03`: lệnh nhãn bạc S03. Đọc bài stg_zalo_posts (gạt bài thử bằng
-// loadStgPosts của pipeline), hỏi một backend (Qwen local · Haiku 5.5 / Decisions qua Vercel AI Gateway), ghi nhãn vào
+// loadStgPosts của pipeline), hỏi một backend (Haiku 5.5 / Decisions qua Vercel AI Gateway), ghi nhãn vào
 // silver_labels — không ghi canonical (luật 7). Logic ở src/agents/nhan-bac-s03.ts — script này chỉ nối CLI + DB.
 // Khoá cloud: AI_GATEWAY_API_KEY (người chạy nạp .env). Mỗi lần gọi một dòng ai_calls; trace JSONL ở agent/traces/.
 //
 // Chạy:
-//   npx tsx scripts/nhan-bac-run.ts --model qwen --limit 200            # nhãn 200 bài chưa có nhãn của model
+//   npx tsx scripts/nhan-bac-run.ts --model haiku --limit 200            # nhãn 200 bài chưa có nhãn của model
 //   npx tsx scripts/nhan-bac-run.ts --model haiku --since 2026-10-01 --tran-usd 5
 //   npx tsx scripts/nhan-bac-run.ts --model decisions --gold research-local/s03-gold-61.jsonl   # đo, không ghi
 //   --thu: không ghi DB. --gold <tệp JSONL {post_id, listing_intent, kind}>: đo trên tập vàng (ngầm --thu).
@@ -27,7 +27,7 @@ export type Co = { model: Backend; limit: number; since: string | null; thu: boo
 export function docCo(argv: string[]): Co {
   const lay = (k: string) => { const i = argv.indexOf(`--${k}`); return i >= 0 ? argv[i + 1] : undefined; };
   const model = lay("model") as Backend;
-  if (!BACKENDS.includes(model)) throw new Error(`nhan-bac-run: --model phải là ${BACKENDS.join(" | ")}`);
+  if (!BACKENDS.includes(model)) throw new Error(`nhan-bac-run: model không được duyệt: ${JSON.stringify(model ?? null)} — --model phải là ${BACKENDS.join(" | ")}`);
   const limit = Number(lay("limit") ?? 200);
   const tranUsd = Number(lay("tran-usd") ?? 5);
   if (!Number.isInteger(limit) || limit <= 0) throw new Error("nhan-bac-run: --limit phải là số nguyên dương");
