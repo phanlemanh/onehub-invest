@@ -1,0 +1,35 @@
+{
+  "feature_plain": "Kho dữ liệu của máy thu thôi mở cửa ra mạng gia đình/văn phòng — chỉ chính máy thu nối được — và được cấp thêm bộ nhớ để các lượt nạp, tính toán chạy nhanh hơn.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ khai trong tệp cấu hình DB: cổng chỉ mở cho chính máy thu, cùng bốn mức bộ nhớ mới và vùng nhớ chung 1 GB; mọi thứ khác giữ nguyên."},
+    {"id": "AC-2", "p": "Sẽ có bộ kiểm bắt được sáu cách viết sai cấu hình (mở cổng ra ngoài, quên mức bộ nhớ, viết tham số kiểu ảnh không nhận…)."},
+    {"id": "AC-4", "p": "Sẽ chứng trên một DB tạm rằng bộ số mới thật sự có hiệu lực, kể cả khi tạo lại trên dữ liệu có sẵn, và lùi về bộ số cũ được."},
+    {"id": "AC-5", "p": "Sẽ đo thời gian các truy vấn nạp, tính toán tiêu biểu trước và sau khi đổi, trên bản chép dữ liệu thật, và ghi bảng số vào hồ sơ áp."},
+    {"id": "AC-6", "p": "Sẽ soát hết các chương trình đang nối vào DB để chắc không chương trình nào trên máy thu mất kết nối."},
+    {"id": "AC-7", "p": "Sẽ giữ hai bộ kiểm DB cũ (tự khởi động, dữ liệu trong ổ riêng) vẫn chạy đúng, và lượt tập dượt của chúng không giành cổng của DB thật."},
+    {"id": "AC-8", "p": "Sẽ có một lệnh kiểm chỉ đọc cho biết DB thật đang mở ra ngoài hay không và đang chạy bộ số nào — dùng làm lệnh kiểm sau khi áp."},
+    {"id": "AC-9", "p": "Sẽ ghi vào sổ vận hành cách DB được khoá, vì sao, cách đổi bộ số, và hồ sơ áp đủ năm thứ cho anh ký."}
+  ],
+  "wont_do": [
+    {"id": "AC-3", "p": "Chặn mọi máy khác trong mạng nối vào DB — đã thử trên DB tạm: nối từ máy thu được, nối qua địa chỉ mạng bị từ chối."},
+    {"id": "OOS-1", "p": "KHÔNG đổi mật khẩu DB và luật ai được nối trong DB ở việc này — chạm mọi chương trình, để một việc riêng."},
+    {"id": "OOS-2", "p": "KHÔNG tách các DB thử khỏi DB thật ở việc này — đã có việc riêng HT9."},
+    {"id": "OOS-3", "p": "KHÔNG đổi cấu hình máy ảo chạy Docker — đo cho thấy không cần."},
+    {"id": "OOS-4", "p": "KHÔNG tự áp lên máy thu: tạo lại DB làm DB dừng khoảng 10 giây, chờ lời riêng của anh theo hồ sơ áp."}
+  ],
+  "scope_plain": "Những việc dưới đây cố ý để ngoài lần này:",
+  "coverage_plain": [
+    {"i": 0, "p": "Đường lộ ra ngoài: chặn ở cổng của máy thu (AC-1 cấu hình, AC-3 thử thật, AC-8 kiểm sau áp); mạng nội bộ của Docker giữ nguyên cho sao lưu; mật khẩu để việc sau."},
+    {"i": 1, "p": "Đường đưa bộ số vào DB: qua biến môi trường mà ảnh DB đọc (AC-1, AC-4); cách viết ảnh không nhận bị bộ kiểm bắt (AC-2); khởi động lại đơn thuần không đổi bộ số — có ghi trong sổ (AC-9)."},
+    {"i": 2, "p": "Ai đang nối DB: chương trình trên máy thu, chương trình chạy trong Docker, máy khác trong mạng (AC-6; máy khác là câu Hỏi-1)."},
+    {"i": 3, "p": "Cách chứng: đọc cấu hình, cấy lỗi, DB tạm hai chiều, đo trước/sau, đọc máy thật chỉ đọc, bộ kiểm cũ không gãy."},
+    {"i": 4, "p": "Mọi phép đo chạy trên DB tạm, không chạm DB thật và không chiếm cổng của nó (AC-3, AC-4, AC-7)."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Chưa đo các chương trình nối bằng tên «localhost» (có thể đi đường IPv6) — đã thêm ca nối bằng đúng thư viện của lượt nạp đêm."},
+    {"i": 1, "p": "DB tạm chỉ đi đường dựng mới, chưa đi đúng đường áp trên dữ liệu có sẵn và chưa thử lùi — đã thêm bốn bước trên cùng ổ dữ liệu."},
+    {"i": 2, "p": "Bảng đo trước/sau có thể chạy trên dữ liệu quá nhỏ nên vô nghĩa — đã ghim hai bảng lớn thật (ít nhất 90% số dòng), bắt truy vấn song song thật, và có phép thử ngược cho vùng nhớ chung."},
+    {"i": 3, "p": "Lệnh kiểm sau áp chưa từng chạy ra xanh trước khi áp — đã cho nó chạy trên DB tạm dựng từ cấu hình mới (phải xanh) và cấu hình cũ (phải đỏ)."},
+    {"i": 4, "p": "Chưa ai chấm việc liệt đủ các chương trình nối DB, và lệnh soát bỏ sót vài dạng địa chỉ — đã mở rộng lệnh soát và thêm một bước chấm đối chiếu."}
+  ]
+}
