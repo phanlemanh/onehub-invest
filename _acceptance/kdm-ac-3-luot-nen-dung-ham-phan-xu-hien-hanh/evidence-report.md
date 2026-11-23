@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: b9aeeabaef03b41d6318d7f79735bd0eee42afb1
-human_signoff:
+human_signoff: Mạnh 2026-11-23
 ---
 
 # Evidence Report: kdm-ac-3-luot-nen-dung-ham-phan-xu-hien-hanh

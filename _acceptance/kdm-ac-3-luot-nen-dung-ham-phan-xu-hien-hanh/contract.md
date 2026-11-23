@@ -5,7 +5,7 @@ slug: kdm-ac-3-luot-nen-dung-ham-phan-xu-hien-hanh
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-11-22T12:15:01Z
 design_doc: _acceptance/kdm-ac-3-luot-nen-dung-ham-phan-xu-hien-hanh/design.md
@@ -68,3 +68,18 @@ Gốc đo được: `napPhatBieu` nạp lại thân `resolve_offer_fields` của
   không thay cho S4 — `nice -n 19 node scripts/suite-neu-doi.mjs pipeline_a -- 'cd pipeline && npm run test:a'` trên đầu nhánh
   394af89ae, 2026-11-22T17:02:57Z: mã thoát 0, 434 ca pass / 0 fail / 0 cancelled, 1.559 giây (nhật ký
   `.acceptance-runs/ht5/pipeline-a-ngoai-luot.log`). Cùng lệnh này (E6a) đã xanh ở S4 r1.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-23:
+  - Ngoài-1: Một lần thêm migration mới có thể làm bước kiểm danh sách báo xanh dù bộ nạp lại chưa áp phần mới. Bước so bản hàm trên dữ liệu thật vẫn bắt được, nên chỉ chậm phát hiện một nhịp.
+  - Ngoài-2: Người chạy công cụ kiểm có thể gõ nhầm tổ hợp tuỳ chọn và nhận kết quả xanh trông như đã kiểm chiều đỏ. Không ảnh hưởng dữ liệu thật hay người dùng cuối.
+  - Ngoài-3: Nếu phép so bị ngắt giữa chừng, hai tệp tạm có thể nằm lại trong thư mục mã nguồn và phải xoá tay. Không ảnh hưởng người dùng.
+  - Ngoài-4: Phép so sánh trước và sau bản sửa có thể không thấy khi số tin bị lệch thay đổi lớn mà mười dòng đầu vẫn giống. Kết luận không đổi đầu ra khi đó yếu hơn vẻ ngoài.
+  - Ngoài-5: Nếu cấu trúc tệp đổi, phép so có thể lặng lẽ so bản với chính nó và báo xanh giả. Chỉ ảnh hưởng độ tin cậy của bằng chứng nội bộ.
+  - Ngoài-6: Lời hứa trong tên ca kiểm rộng hơn thứ nó thật sự kiểm, nên người đọc có thể tin bộ nạp lại đã được ép cập nhật khi chưa. Dữ liệu và người dùng không bị ảnh hưởng.
+  - Ngoài-7: Phép kiểm cuối chỉ đọc lại bản ghi đã lưu, nên nếu mã đổi sau đó mà không chạy lại phép so, nó vẫn báo xanh trên số cũ.
+  - Ngoài-8: Một ô kiểm có thể báo xanh mà chưa chứng minh được trạng thái thiếu phần chèn đã thật sự dựng, nên độ tin cậy của ô đó thấp hơn vẻ ngoài. Không ảnh hưởng dữ liệu người dùng.
+  - Ngoài-9: Chú thích trong công cụ đo hứa một lớp canh mạnh hơn thực tế. Người đọc sau này có thể tin rằng thêm migration mới sẽ luôn bị bắt, trong khi thực ra chỉ có phép so bản hàm ở ca khác bắt được.
+  - Ngoài-10: Nếu người chạy công cụ đo gõ nhầm tổ hợp tuỳ chọn, công cụ có thể báo xanh dù đang ở chiều thử lỗi, hoặc chạy một chiều chưa được khai. Chỉ ảnh hưởng người vận hành công cụ nội bộ.
+  - Ngoài-11: Ca kiểm danh sách migration chỉ đo lời khai, không đo việc nạp lại thật. Một migration mới có thể làm ca này xanh dù chưa được áp lại, và chỉ ca so bản hàm sau đó mới bắt được.
+  - Ngoài-12: Phép kiểm so sánh hai bản cắt chuyển chỉ đọc tệp ghi kết quả cũ, không chạy lại. Nếu mã đổi sau đó làm kết quả lệch thì phép kiểm này vẫn báo xanh.
+  - Ngoài-13: Một ô kiểm có thể báo xanh dù bước dựng trạng thái thử không thật sự gỡ được phần cần gỡ. Khi đó ô này không chứng minh được điều nó nói.
+  - Mù-1: suite pipeline_a không có mã thoát ở lượt chấm S4 r2 thử lại (bộ chấm bỏ chờ); ship với bằng chứng ngoài lượt chấm 434/0.
