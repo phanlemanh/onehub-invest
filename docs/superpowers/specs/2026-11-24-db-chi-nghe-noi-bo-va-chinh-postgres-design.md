@@ -97,9 +97,10 @@ Hai bộ kiểm compose cũ phải sửa theo, không thì đỏ oan hoặc gây
 
 ## 6. Áp (chỉ sau gộp, có lời riêng của Mạnh)
 
-Áp = `docker compose -f db/docker-compose.yml up -d` từ checkout chính → container tạo lại, DB dừng ~10 giây, cấu hình sinh lại.
+Áp = `docker compose -f db/docker-compose.yml up -d --force-recreate db` từ checkout chính → container tạo lại, DB dừng ~10 giây, cấu hình sinh lại.
 Đây là khởi động lại dịch vụ nền: cần lời riêng của Mạnh; hồ sơ `_acceptance/<slug>/ap-may-thu.md` ghi đủ năm thứ và khung
-giờ ngoài lượt job. Máy không tự chạy `docker compose up`.
+giờ ngoài lượt job, và lệnh kiểm sau: `SHOW shared_buffers` (cùng ba tham số kia), `df -h /dev/shm` trong container, `lsof`
+cổng 5433 chỉ nghe 127.0.0.1 — gói trong `bash scripts/check-db-noi-bo.sh live`. Máy không tự chạy `docker compose up`.
 
 ## Out of scope
 

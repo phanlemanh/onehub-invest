@@ -101,4 +101,9 @@ Hàng nền, không ô cơ hội — miễn bảng ngưỡng. Số trên màn c�
 
 ## Notes
 
+- **Lệch lời giao (GS đồng ý 24/11, có số đo — design §2):** (1) tham số Postgres đi biến môi trường của ảnh kartoza
+  (`SHARED_BUFFERS`, `WORK_MEM`, `MAINTENANCE_WORK_MEM`, `EXTRA_CONF`) thay `command: -c` — entrypoint của ảnh không chuyển
+  `-c` cho postgres; (2) thêm `shm_size: 1gb` — `/dev/shm` mặc định 64 MB; (3) áp phải TẠO LẠI container
+  (`docker compose -f db/docker-compose.yml up -d --force-recreate db`), `docker restart` không sinh lại cấu hình. Hồ sơ áp
+  kiểm sau bằng `SHOW shared_buffers`, `df /dev/shm` trong container và `lsof` cổng 5433 chỉ nghe 127.0.0.1.
 - Không có bề mặt UI → không design-pass, không đặc tả UX, không eval ui-check (sổ quyết định).
