@@ -309,6 +309,24 @@ lạnh, hạn giữ bản lùi): `docs/ops/db-volume.md`.
 - Trong 7 ngày giữ bản lùi: không chạy `docker compose` từ checkout/worktree còn compose cũ (project `db`) — nó có thể
   xoá bản lùi.
 
+## DB chỉ nghe nội bộ + tham số Postgres (2026-11-24, `_acceptance/db-chi-nghe-noi-bo-va-chinh-postgres/`, HT8)
+
+- **Chỉ nghe 127.0.0.1:5433.** `db/docker-compose.yml` khai `"127.0.0.1:5433:5432"`. Trước đó khai trần `"5433:5432"` và bộ
+  chuyển cổng ssh của colima nghe `*:5433` — máy khác trong LAN nối được DB bằng mật khẩu mặc định, mà DB có hồ sơ user app
+  (tầng A; audit máy thu 24/11 A1). Đo 24/11: colima tôn trọng IP khai trong `ports:` (khai 127.0.0.1 → IP LAN bị từ chối).
+  Bên nối trên máy (`localhost:5433`), sao lưu/khôi phục (`--network container:`), `docker exec` không đổi. Cần nối từ máy
+  khác thì dùng đường hầm: `ssh -L 5433:127.0.0.1:5433 <máy thu>`.
+- **Tham số** (audit A8, VM colima 32 GB): `SHARED_BUFFERS: 8GB`, `WORK_MEM: 64MB`, `MAINTENANCE_WORK_MEM: 1GB`,
+  `EXTRA_CONF: "effective_cache_size = 20GB"`, `shm_size: 1gb`. Đi **biến môi trường** của ảnh kartoza — ảnh ghi chúng ra
+  `postgis.conf`/`extra.conf` lúc khởi động; ảnh KHÔNG nhận `command: -c …` (entrypoint bọc `gosu` sai). `shm_size` vì truy
+  vấn song song cấp vùng nhớ chung ở `/dev/shm` (mặc định Docker 64 MB).
+- **Đổi tham số = tạo lại container:** `docker compose -f db/docker-compose.yml up -d --force-recreate db` (DB dừng ~10 giây).
+  `docker restart` KHÔNG sinh lại cấu hình (tệp khoá cấu hình ở lớp container). Đây là khởi động lại dịch vụ nền: cần lời riêng
+  của Mạnh, theo `ap-may-thu.md` của hồ sơ; agent không tự chạy. Lưu ý: `scripts/setup.sh`, `scripts/migrate-export.sh`,
+  `pipeline/import.sh` có `docker compose up -d` — chạy tay chúng sau khi compose đổi cũng là tạo lại container.
+- **Kiểm (chỉ đọc):** `bash scripts/check-db-noi-bo.sh live` — Mac chỉ nghe `127.0.0.1:5433`, nối IP LAN bị từ chối, client
+  `pg` nối `localhost` được, `SHOW` bốn tham số bằng compose, `/dev/shm` 1.0G.
+
 ## Transform S03/S05 và migration enrich (chốt 2026-10-23, `_acceptance/enrich-hau-ky/`)
 
 - Từ vòng enrich-hau-ky, `transform-zalo.mjs` / `transform-fb.mjs` KHÔNG còn `DELETE FROM sale_offers`
