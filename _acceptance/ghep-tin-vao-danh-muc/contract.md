@@ -128,3 +128,7 @@ Trục và ô lấy từ bảng phủ ca của design doc §2, số đếm thậ
     Đây là phần lớn mức tăng bài «nhiều vùng» 168 → 1.401 sau DA51. Gộp 389 vào 48 (đo trong bộ nhớ, chỉ đọc, không sửa danh bạ) cho
     thêm 101 tin gắn trên DB máy thu (3.941 → 4.042, xung đột 21 → 23) và 104 tin trên bản chép (3.862 → 3.966). Dọn cặp này đứng
     đầu danh sách dọn danh bạ sau PL20 (GS giữ hàng).
+  - **AC-9 nhóm n2 hụt ngưỡng ở vòng 2 — Mạnh nhận số thô (24/11, «PL20 AC-9: chọn lối 1»).** Chấm lại trên máy mới 24/11 khớp
+    23/11: n1 109/110 (0,9503, đạt), n2 108/110 (0,9361, hụt; báo cáo `cham-vong-2-may-moi-2411.md`). Hai bài n2 sai (#12663,
+    #12711) đều là cặp nút 389/48 ở trên; nguồn C, F giữ bật; DA53 áp sau cổng. Nhãn n2 là «trợ lý đề xuất, người duyệt theo lô»
+    (thẻ cài bắt 0/11), không phải người đọc độc lập. Không chấm lại trên lát này.
