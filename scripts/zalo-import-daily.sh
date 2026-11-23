@@ -418,6 +418,10 @@ trap - EXIT; rm -rf "$LOCK_DIR"
 # (job_run không dừng khi bước trước hỏng — chỉ giữ JOB_RC). Vẫn trước
 # enrich-run; trước mau-soat là mốc mềm (tự vớt ≤0,05 USD). Trần mặc định 20.
 job_run zalo-import-daily doc-gop-hang-ngay bash "$ROOT/pipeline/doc-gop-hang-ngay.sh"
-enrich_run() { (cd "$ROOT/agent" && LIMIT="${ENRICH_LIMIT:-50}" node --import tsx scripts/enrich-run.ts); }
+# MH1 model-may-sang-haiku: enrich gọi Haiku qua Vercel AI Gateway — cần AI_GATEWAY_API_KEY trong .env của kho, nạp bằng --env-file như
+# bước đọc gộp (pipeline/doc-gop-hang-ngay.sh). ${ENRICH_ENV[@]+…}: /bin/bash 3.2 coi mảng rỗng là biến chưa đặt dưới `set -u`.
+ENRICH_ENV=()
+[ -f "$ROOT/.env" ] && ENRICH_ENV=(--env-file="$ROOT/.env")
+enrich_run() { (cd "$ROOT/agent" && LIMIT="${ENRICH_LIMIT:-50}" node ${ENRICH_ENV[@]+"${ENRICH_ENV[@]}"} --import tsx scripts/enrich-run.ts); }
 job_run zalo-import-daily enrich-run enrich_run
 exit "$JOB_RC"

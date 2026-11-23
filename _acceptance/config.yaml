@@ -110,6 +110,10 @@ executors:
     dgs_thuan: "cd agent && node --import tsx --test tests/doc-gop-s03.test.ts"   # chon-model-theo-o E1, E2, E3, E6, E8, E10 — Gateway giả, không DB
     gta_agent: "cd agent && bash ../db/db-thu.sh oneinvest_suite_gta --chay node --import tsx --test --test-concurrency=1 tests/goi-thang-anthropic.test.ts"   # goi-thang-anthropic E1–E6 — máy chủ Anthropic giả + Gateway giả, DB của riêng lượt
     gta_pipeline: "node --test pipeline/scripts/goi-thang-anthropic.test.mjs"   # goi-thang-anthropic E7, E8 — tiến trình con giả, máy chủ Anthropic giả, không DB
+    mh1_model_agent: "cd agent && node --import tsx --test tests/model-agent.test.ts"   # model-may-sang-haiku E2, E3, E6 — Gateway giả, Anthropic giả trong tiến trình, không DB
+    mh1_duong_goi: "cd agent && node --import tsx --test tests/duong-goi-agent.test.ts"   # model-may-sang-haiku E2b — lùi đường, thiếu khoá mã 5
+    mh1_du_lieu_gui: "cd agent && bash ../db/db-thu.sh oneinvest_suite_mh1g --chay node --import tsx --test --test-concurrency=1 tests/du-lieu-gui-agent.itest.ts"   # model-may-sang-haiku E4 — DB của riêng lượt
+    mh1_tran_tien: "cd agent && bash ../db/db-thu.sh oneinvest_suite_mh1t --chay node --import tsx --test --test-concurrency=1 tests/tran-tien-agent.itest.ts"   # model-may-sang-haiku E5, E10 — DB của riêng lượt
     dgs_db: "cd agent && bash ../db/db-thu.sh oneinvest_suite_dgs --chay node --import tsx --test --test-concurrency=1 tests/doc-gop-s03-db.itest.ts"   # chon-model-theo-o E4, E5, E7, E9 — Gateway giả, DB của riêng lượt
     dgs_so_that: "cd agent && DGS_SO_THAT=1 node --import tsx --test --test-name-pattern=DGS-AC-10 tests/doc-gop-s03.test.ts"   # chon-model-theo-o E10 — đọc tóm tắt lượt chấm Haiku thật
     ddb_pipeline: "node --test pipeline/do-danh-ba-sdt.test.mjs"   # do-danh-ba-sdt E1 — hàm thuần năm số, không DB

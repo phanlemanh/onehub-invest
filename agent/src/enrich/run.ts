@@ -9,7 +9,8 @@
 import type pg from "pg";
 
 import type { ContextResult } from "../agents/context-resolver.js";
-import { needsLLM, type EnrichResult } from "../agents/enrich-text.js";
+import { buildEnrichInput, needsLLM, type EnrichResult } from "../agents/enrich-text.js";
+import type { Tran } from "../runtime/model-agent.js";
 import {
   llmFieldsFromEnrich, routeFields, summarizeRun, type BuildingNode, type EnrichField, type Routed,
 } from "./route.js";
@@ -64,6 +65,8 @@ export type RunEnrichOpts = {
   buildings?: BuildingNode[];
   /** Vắng → giaoDichSavepoint(client). */
   giaoDich?: GiaoDich;
+  /** Trần tiền của lượt (MH1 AC-5): lời gọi kế có thể vượt trần thì dừng vòng trước lời gọi ấy, ghi dem.hetTran. */
+  tran?: Tran;
 };
 
 type OfferRow = {
@@ -263,6 +266,10 @@ export async function runEnrich(opts: RunEnrichOpts): Promise<{
     const ctx = await opts.resolve(o.group_name, text);
     // --dry: chỉ E1, 0 lượt gọi model, 0 lần ghi.
     const canLLM = !opts.dry && needsLLM(ctx, text);
+    if (canLLM && opts.tran && !opts.tran.coTheGoi(buildEnrichInput(text, ctx))) {
+      dem.hetTran = { daChiUsd: opts.tran.daChi(), tranUsd: opts.tran.tranUsd };
+      break;
+    }
     const llmRes = canLLM ? await opts.llm(text, ctx) : null;
     if (llmRes) {
       dem.llmGoi++;

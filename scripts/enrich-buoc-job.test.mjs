@@ -33,7 +33,9 @@ step=node
 for a in "$@"; do case "$a" in *.mjs|*.js|*.ts) step="$(basename "$a")"; step="\${step%.*}"; break;; esac; done
 echo "$step" >> "$CALLS"
 if [ -d "$LOCKP" ]; then khoa=co; else khoa=khong; fi
-echo "$step|$PWD|\${LIMIT:-}|$khoa" >> "$SEEN"
+ef=""
+for a in "$@"; do case "$a" in --env-file=*) ef="\${a#--env-file=}";; esac; done
+echo "$step|$PWD|\${LIMIT:-}|$khoa|$ef" >> "$SEEN"
 if [ "$step" = enrich-run ] && [ "\${FAKE_OTHER_LOCK:-}" = 1 ]; then
   mkdir "$LOCKP" && echo ${PID_KHAC} > "$LOCKP/pid"
 fi
@@ -87,8 +89,8 @@ function chay(root, { fail = "", limit, khoaKhac = false } = {}) {
   const r = spawnSync("/bin/bash", [path.join(root, SCRIPT)], { cwd: root, env, encoding: "utf8", timeout: 60_000 });
   const doc = (f) => readFileSync(f, "utf8").split("\n").filter(Boolean);
   const thay = Object.fromEntries(doc(seen).map((l) => {
-    const [buoc, cwd, lim, khoa] = l.split("|");
-    return [buoc, { cwd, lim, khoa }];
+    const [buoc, cwd, lim, khoa, envFile] = l.split("|");
+    return [buoc, { cwd, lim, khoa, envFile }];
   }));
   return {
     root, code: r.status, stderr: r.stderr, calls: doc(calls), thay,
@@ -118,6 +120,25 @@ test("EC-AC-6 dãy bước: lành → sáu bước (pl34-lich-dem-sau-buoc AC-1)
   const hong = chay(cay(), { fail: "import-airbnb:2" });
   assert.equal(hong.code, 1, hong.stderr);
   assert.deepEqual(hong.calls, ["import-airbnb"], "EC-AC-6 nạp hỏng mà vẫn chạy bước sau");
+});
+
+// MH1 model-may-sang-haiku: enrich gọi Gateway nên phải nạp .env của kho (khoá AI_GATEWAY_API_KEY), cùng cách bước đọc gộp.
+function kiemEnvFile(noiDung) {
+  const root = cay(noiDung);
+  writeFileSync(path.join(root, ".env"), "AI_GATEWAY_API_KEY=gia\n");
+  const r = chay(root);
+  assert.equal(r.code, 0, r.stderr);
+  if (r.thay["enrich-run"].envFile !== path.join(root, ".env")) assert.fail(`MH1 enrich-run thiếu --env-file của .env kho (nhận «${r.thay["enrich-run"].envFile}»)`);
+}
+test("MH1 enrich-run trong chuỗi nạp chạy node --env-file=<kho>/.env; kho không có .env vẫn chạy (mảng rỗng dưới set -u)", () => {
+  kiemEnvFile(THAT);
+  const r = chay(cay());
+  assert.equal(r.code, 0, r.stderr);
+  assert.equal(r.thay["enrich-run"].envFile, "", "MH1 không có .env mà vẫn truyền --env-file");
+});
+test("chiều đỏ MH1: bỏ --env-file khỏi bước enrich → đỏ «enrich-run thiếu --env-file»", () => {
+  const cut = dotBien('node ${ENRICH_ENV[@]+"${ENRICH_ENV[@]}"} --import tsx scripts/enrich-run.ts', "node --import tsx scripts/enrich-run.ts");
+  assert.throws(() => kiemEnvFile(cut), /MH1 enrich-run thiếu --env-file/);
 });
 
 test("EC-AC-6 chiều đỏ: bỏ dòng job_run enrich-run → thiếu bước enrich-run", () => {

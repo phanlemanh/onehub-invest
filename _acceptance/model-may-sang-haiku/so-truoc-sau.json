@@ -1,0 +1,1338 @@
+{
+ "luc": "2026-11-22T02:10:13.911Z",
+ "model": "anthropic/claude-haiku-5.5",
+ "mau_sha": {
+  "enrich": "85e68ecf9628a587f7aa7d223dd5af8c23950748e68451a94c86223eadad86a5",
+  "judge": "86fc1814619f94479ff6c180f8503c033077af2607ebaf49575276242577b1eb"
+ },
+ "enrich": [
+  {
+   "offer_id": "offer_d617db1810bb5c4c",
+   "raw": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 0,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": \"H2\",\n  \"features\": [\"studio\", \"27.24 m²\", \"hướng Tây Bắc\", \"full nội thất\", \"sẵn sổ\", \"đang có khách thuê\", \"phù hợp đầu tư cho thuê\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.8\n}",
+   "usage": {
+    "inputTokens": 774,
+    "outputTokens": 517
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_dfcfc1769a01a398",
+   "raw": "```json\n{\n  \"property_type\": \"unknown\",\n  \"bedrooms\": null,\n  \"bathrooms\": null,\n  \"street\": \"Nguyễn Hữu Thọ\",\n  \"address_detail\": null,\n  \"project_name\": \"Celesta Gold\",\n  \"building\": null,\n  \"features\": [\"giá từ 98 triệu/m²\", \"59 tiện ích\", \"miễn phí quản lý 2 năm\", \"booking 100 triệu/sản phẩm\", \"ưu đãi booking sớm 2%\", \"mặt tiền\", \"tuyển cộng tác viên sale\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.5\n}\n```",
+   "usage": {
+    "inputTokens": 845,
+    "outputTokens": 623
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_a247fb6e6f43baca",
+   "raw": "{\n  \"property_type\": \"house\",\n  \"bedrooms\": 3,\n  \"bathrooms\": null,\n  \"street\": \"DX13 (Đường ĐX 013)\",\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": null,\n  \"features\": [\"1 lầu\", \"sân đậu ô tô\", \"mặt tiền 9m\", \"diện tích 60m² ODT\", \"đang hoàn thiện\", \"gần chợ\", \"gần trường cấp 1, 2, 3\", \"giá 3 tỷ 950 triệu/căn\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.75\n}",
+   "usage": {
+    "inputTokens": 905,
+    "outputTokens": 845
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_c8f59f8580efd5bb",
+   "raw": "```json\n{\n  \"property_type\": \"house\",\n  \"bedrooms\": 1,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": null,\n  \"features\": [],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.4\n}\n```",
+   "usage": {
+    "inputTokens": 593,
+    "outputTokens": 527
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_c239ed526f6b836e",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Masteri West Heights\",\n  \"building\": \"R1\",\n  \"features\": [\"độc quyền\", \"hướng Tây Nam\", \"nội thất bàn giao CĐT\", \"sẵn sổ\", \"sẵn pass\", \"diện tích 71,7 m²\", \"giá 4,63 tỷ thu về\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.8\n}\n```",
+   "usage": {
+    "inputTokens": 714,
+    "outputTokens": 633
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_f69fb4efbd3b38c6",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 1,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": \"S1.07\",\n  \"features\": [\"1PN+ (có thêm phòng đa năng)\", \"bếp rèm\", \"hướng Tây Nam\", \"view hồ bơi nội khu\", \"sẵn sổ\", \"sẵn pass thẻ xem nhà\", \"giá 1,98 tỷ bao tất cả phí\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.7\n}\n```",
+   "usage": {
+    "inputTokens": 729,
+    "outputTokens": 619
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_f0d6daa6417405d8",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Masteri West Heights\",\n  \"building\": null,\n  \"features\": [\"full đồ\", \"đồ cơ bản CĐT\", \"nhiều căn 2PN từ 55m đến 69m\", \"giá từ 8.5tr đến 15tr\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.5\n}\n```",
+   "usage": {
+    "inputTokens": 1017,
+    "outputTokens": 1112
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_e2093973debe3001",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Vinhomes Grand Park\",\n  \"building\": \"Rainbow S3\",\n  \"features\": [\"sẵn sổ\", \"ban công hướng Đông Bắc\", \"view nội khu\", \"69m²\", \"2PN+\", \"xem nhà sẵn pass\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.85\n}\n```",
+   "usage": {
+    "inputTokens": 735,
+    "outputTokens": 642
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_5c29faf8aa383050",
+   "raw": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": 2,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Zurich\",\n  \"building\": \"ZR3xx14\",\n  \"features\": [\"hướng Đông Bắc\", \"view công viên nội khu\", \"diện tích 74.8 m²\", \"đơn giá 59 triệu/m²\", \"thanh toán theo tiến độ\", \"đóng 27 triệu/tháng đến tháng 5/2028\", \"vốn khoảng 1,8 tỷ\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.8\n}",
+   "usage": {
+    "inputTokens": 686,
+    "outputTokens": 1052
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_e7ceb59e2b54b624",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 1,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": \"M3\",\n  \"features\": [\"view VinUni\", \"tầng cao\", \"view thoáng\", \"giảm giá\", \"tòa VIP\"],\n  \"urgency\": \"bán gấp\",\n  \"confidence\": 0.6\n}\n```",
+   "usage": {
+    "inputTokens": 679,
+    "outputTokens": 707
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_356380d6234cbd80",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": 2,\n  \"street\": null,\n  \"address_detail\": \"Tòa PR5\",\n  \"project_name\": \"The Paris (Vinhomes Ocean Park 1)\",\n  \"building\": \"PR5\",\n  \"features\": [\"63m2\", \"tầng trung\", \"sẵn HĐMB\", \"view đẹp\"],\n  \"urgency\": \"bán gấp\",\n  \"confidence\": 0.9\n}\n```",
+   "usage": {
+    "inputTokens": 715,
+    "outputTokens": 798
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_30a8d08be9280d53",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": null,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Masteri\",\n  \"building\": \"M3\",\n  \"features\": [],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.5\n}\n```",
+   "usage": {
+    "inputTokens": 736,
+    "outputTokens": 652
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_46e8fd84d478280c",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 1,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Masteri West Heights\",\n  \"building\": \"BE1\",\n  \"features\": [\"view công viên nội khu\", \"hướng Tây Nam\", \"đã nhận nhà\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.85\n}\n```",
+   "usage": {
+    "inputTokens": 716,
+    "outputTokens": 319
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_d92f217534906639",
+   "raw": "```json\n[\n  {\n    \"property_type\": \"apartment\",\n    \"bedrooms\": 2,\n    \"bathrooms\": 2,\n    \"street\": null,\n    \"address_detail\": null,\n    \"project_name\": \"Vinhomes Grand Park\",\n    \"building\": \"S9.01\",\n    \"features\": [],\n    \"urgency\": \"bình thường\",\n    \"confidence\": 0.9\n  },\n  {\n    \"property_type\": \"apartment\",\n    \"bedrooms\": 2,\n    \"bathrooms\": 2,\n    \"street\": null,\n    \"address_detail\": null,\n    \"project_name\": \"Vinhomes Grand Park\",\n    \"building\": \"S9.01\",\n    \"features\": [\"full nội thất\"],\n    \"urgency\": \"bình thường\",\n    \"confidence\": 0.9\n  },\n  {\n    \"property_type\": \"apartment\",\n    \"bedrooms\": 2,\n    \"bathrooms\": null,\n    \"street\": null,\n    \"address_detail\": null,\n    \"project_name\": \"Vinhomes Grand Park\",\n    \"building\": \"S2.05\",\n    \"features\": [\"full nội thất\", \"2pn+\"],\n    \"urgency\": \"bình thường\",\n    \"confidence\": 0.7\n  }\n]\n```",
+   "usage": {
+    "inputTokens": 688,
+    "outputTokens": 856
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_85efe5c3a0754e20",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Vinhomes Grand Park\",\n  \"building\": \"S5\",\n  \"features\": [\"nội thất cơ bản\", \"sẵn sổ\", \"giá bao phí (btp)\"],\n  \"urgency\": \"bán gấp\",\n  \"confidence\": 0.85\n}\n```",
+   "usage": {
+    "inputTokens": 660,
+    "outputTokens": 484
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_db4e6093ecdab584",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Vinhomes\",\n  \"building\": \"GH (chưa rõ, có thể là mã tòa hoặc phân khu)\",\n  \"features\": [\"tầng trung\", \"hướng Đông Nam\", \"tặng full nội thất\", \"giá 3.2 tỷ bao thuế phí\", \"sẵn căn\", \"môi giới\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.75\n}\n```",
+   "usage": {
+    "inputTokens": 601,
+    "outputTokens": 784
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_937027dc54951cfc",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": \"Mã căn ZR3.x02\",\n  \"project_name\": null,\n  \"building\": \"ZR3\",\n  \"features\": [\"view sông\", \"nội thất nguyên bản\", \"sẵn sổ đỏ\", \"sẵn pass\", \"diện tích 66m2\", \"hướng TN\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.8\n}\n```",
+   "usage": {
+    "inputTokens": 678,
+    "outputTokens": 861
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_fc8323f7f16debcb",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": 2,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Phân khu Metro\",\n  \"building\": \"ZR3\",\n  \"features\": [\"view sông san hô\", \"hướng Tây Bắc\", \"nội thất full\", \"sẵn sổ\", \"không phí sang tên\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.8\n}\n```",
+   "usage": {
+    "inputTokens": 716,
+    "outputTokens": 883
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_87f0e78d90b94f80",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 1,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Vinhomes Grand Park\",\n  \"building\": \"GH5\",\n  \"features\": [\"full nội thất\", \"sẵn sổ\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.85\n}\n```",
+   "usage": {
+    "inputTokens": 660,
+    "outputTokens": 507
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_7cb33fd5b78b6db8",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 1,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Masteri West Heights\",\n  \"building\": \"GS6\",\n  \"features\": [\"cho thuê\", \"đồ cơ bản\", \"47m2\", \"7.5 triệu/tháng\", \"1 ngủ +\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.6\n}\n```",
+   "usage": {
+    "inputTokens": 1052,
+    "outputTokens": 664
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_195fccb096f0a2b2",
+   "raw": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 1,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Vinhomes Grand Park\",\n  \"building\": \"S1.05\",\n  \"features\": [\"sẵn sổ\", \"không vay ngân hàng\", \"tặng nội thất\", \"tầng thấp\", \"phân khu The Rainbow\", \"có slot ô tô (điều kiện sử dụng cần kiểm tra)\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.9\n}",
+   "usage": {
+    "inputTokens": 948,
+    "outputTokens": 524
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_23906035d6d8f16b",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 3,\n  \"bathrooms\": 2,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Vinhomes Grand Park\",\n  \"building\": \"S502\",\n  \"features\": [\"sẵn sổ\", \"hướng Tây Bắc\", \"tặng bếp rèm\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.9\n}\n```",
+   "usage": {
+    "inputTokens": 690,
+    "outputTokens": 452
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_b579c54ffd4387a8",
+   "raw": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 0,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Vinhomes Grand Park\",\n  \"building\": \"S1 Raibown\",\n  \"features\": [\"studio\", \"34m2\", \"sẵn sổ\", \"giá 1430 tỷ (có thể gõ nhầm, nhiều khả năng 1.43 tỷ)\", \"bTP (chưa rõ nghĩa)\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.7\n}",
+   "usage": {
+    "inputTokens": 634,
+    "outputTokens": 872
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_8e669233201b7f98",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 0,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": \"BE\",\n  \"features\": [\"tầng cao\", \"sẵn sổ\", \"full nội thất\", \"giá all in\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.6\n}\n```",
+   "usage": {
+    "inputTokens": 601,
+    "outputTokens": 452
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_fdf20fc73cd70407",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 3,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": \"S5\",\n  \"features\": [\"độc quyền\", \"full nội thất\", \"sẵn sổ\", \"giá 3.2 tỷ\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.7\n}\n```",
+   "usage": {
+    "inputTokens": 598,
+    "outputTokens": 664
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_d9d8c5ebdc9a4007",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 1,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": null,\n  \"features\": [\"bancon\", \"view vườn Nhật\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.6\n}\n```",
+   "usage": {
+    "inputTokens": 700,
+    "outputTokens": 718
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_f909acf2950fce42",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Masteri West Heights\",\n  \"building\": \"TC3\",\n  \"features\": [\"cho thuê\", \"chuyển nhượng\", \"nội thất cơ bản (NB)\", \"đồ cơ bản (ĐCB)\", \"full nội thất\", \"giá rẻ\", \"đăng nhiều căn\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.6\n}\n```",
+   "usage": {
+    "inputTokens": 1053,
+    "outputTokens": 792
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_3f46971d8406ddeb",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Vinhomes Grand Park\",\n  \"building\": \"ORIGAMI\",\n  \"features\": [\"sẵn sổ\", \"nội thất như ảnh\", \"giá 3 tỷ\", \"BTP bên bán\", \"69m2\", \"có pass xem nhà 24/24\"],\n  \"urgency\": \"bán gấp\",\n  \"confidence\": 0.85\n}\n```",
+   "usage": {
+    "inputTokens": 737,
+    "outputTokens": 759
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_9cb0d924418ce154",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 1,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": \"căn LD3.0702\",\n  \"project_name\": \"Vinhomes Ocean Park 1\",\n  \"building\": \"LD3\",\n  \"features\": [\"chính chủ\", \"view quảng trường ga metro\", \"2 ban công\", \"hướng Đông Bắc\", \"đã vào tiền\", \"đã nhận nhà\", \"có thương lượng\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.85\n}\n```",
+   "usage": {
+    "inputTokens": 859,
+    "outputTokens": 468
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_7ecda705b0f072a0",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Vinhomes Grand Park - Gloryheight\",\n  \"building\": \"GH1\",\n  \"features\": [\"view đối diện Vincom\", \"59m2\", \"giá 3.95 tỷ bao thuế phí\", \"không vay ngân hàng\", \"nhà trống\", \"sẵn pass\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.8\n}\n```",
+   "usage": {
+    "inputTokens": 917,
+    "outputTokens": 799
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_8fe35d0d43ff45a7",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": null,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Vinhomes Smart City\",\n  \"building\": null,\n  \"features\": [\"full nội thất\", \"sẵn sổ\", \"tầng trung\", \"giá rẻ hơn 2024\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.6\n}\n```",
+   "usage": {
+    "inputTokens": 697,
+    "outputTokens": 784
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_ee2e9731c6e7a9bb",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Lumiere Boulevard (LBV)\",\n  \"building\": null,\n  \"features\": [\n    \"tìm mua\",\n    \"diện tích 69m2 hoặc 80m2\",\n    \"tầng 6-20\",\n    \"hướng đông nam hoặc đông bắc\",\n    \"không lấy hướng tây bắc\",\n    \"giá 4.3 tỷ\",\n    \"quay đầu (có thể thương lượng)\",\n    \"gh bs (chưa rõ nghĩa)\",\n    \"mcp (chưa rõ nghĩa)\"\n  ],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.7\n}\n```",
+   "usage": {
+    "inputTokens": 611,
+    "outputTokens": 1238
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_fa6d573044b845e3",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 1,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": \"căn 2x21, tòa S2.08\",\n  \"project_name\": \"Vinhomes Ocean Park 1\",\n  \"building\": \"S2.08\",\n  \"features\": [\"diện tích 43m2\", \"hướng Đông Bắc\", \"tầng đẹp\", \"nội thất full\", \"giá 2.33 tỷ net\", \"sổ đang thế chấp, khách tất toán để sang tên\", \"sẵn pass\", \"giá rẻ\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.8\n}\n```",
+   "usage": {
+    "inputTokens": 805,
+    "outputTokens": 866
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_b910cf9107384ae6",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": 2,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Vinhomes Grand Park\",\n  \"building\": \"Origami\",\n  \"features\": [\"view nội khu\", \"view hồ cá\", \"sẵn sổ\", \"nhà trống\", \"mới 100%\", \"giá 2.75 tỷ\", \"BTP (chưa rõ nghĩa)\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.8\n}\n```",
+   "usage": {
+    "inputTokens": 789,
+    "outputTokens": 868
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_f31c64c5df9507b6",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 3,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": \"Mã căn ZR1.xx20\",\n  \"project_name\": null,\n  \"building\": \"ZR1\",\n  \"features\": [\"diện tích 104m2\", \"hướng ĐN - ĐB\", \"full đồ\", \"sẵn sổ\", \"để trống xem hẹn trước\", \"giá 8.600 (thương lượng)\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.8\n}\n```",
+   "usage": {
+    "inputTokens": 790,
+    "outputTokens": 616
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_cb5ba7a33109e744",
+   "raw": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 3,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Vinhomes Grand Park\",\n  \"building\": \"GH2\",\n  \"features\": [\"ký trực tiếp CĐT\", \"thanh toán giãn 180 ngày\", \"giá 4,53 tỷ\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.85\n}",
+   "usage": {
+    "inputTokens": 753,
+    "outputTokens": 409
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_87ca29a374130ac8",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": 2,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Đảo Ngọc Trai\",\n  \"building\": null,\n  \"features\": [\"view hồ\", \"hướng Đông Nam - Đông Bắc\", \"diện tích 64.8 m2\", \"nội thất full\", \"sẵn sổ\", \"không vay\", \"không cho thuê\", \"giá 5.130 thu về\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.8\n}\n```",
+   "usage": {
+    "inputTokens": 634,
+    "outputTokens": 1191
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_e9217930f2efa81b",
+   "raw": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Glory Heights\",\n  \"building\": \"GH1, GH2, GH3, GH5, GH6\",\n  \"features\": [\"giá bao hết\", \"view Vincom\", \"full nội thất\", \"giá rẻ nhất thị trường\", \"giỏ hàng nhiều căn\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.85\n}",
+   "usage": {
+    "inputTokens": 931,
+    "outputTokens": 649
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_66dac5b8036ae21f",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 1,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Masteri West Heights\",\n  \"building\": \"LD1\",\n  \"features\": [\"view công viên nội khu\", \"hướng Đông Bắc\", \"đã nhận nhà\", \"1 phòng làm việc (1N+1)\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.9\n}\n```",
+   "usage": {
+    "inputTokens": 722,
+    "outputTokens": 499
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_4059e2ae972d1c51",
+   "raw": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 1,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Vinhomes Ocean Park 1\",\n  \"building\": \"S1.05\",\n  \"features\": [\"1 ngủ + 1 phòng linh hoạt (1N+)\", \"diện tích 48m2\", \"hướng Đông Bắc\", \"nguyên bản\", \"giá 2.25 tỷ net\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.8\n}",
+   "usage": {
+    "inputTokens": 686,
+    "outputTokens": 630
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_1b9f9fae6e489a40",
+   "raw": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 3,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Vinhomes Grand Park\",\n  \"building\": \"Rainbow\",\n  \"features\": [\"sẵn sổ\", \"bao thuế phí\", \"3 căn\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.85\n}",
+   "usage": {
+    "inputTokens": 639,
+    "outputTokens": 550
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_9d74c5304919aae2",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 1,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Vinhomes Smart City\",\n  \"building\": \"G2\",\n  \"features\": [\"tầng trung\", \"48m2\", \"giá 3.2 tỷ\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.8\n}\n```",
+   "usage": {
+    "inputTokens": 634,
+    "outputTokens": 489
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_9a9469253a838cec",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 1,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": \"LD3\",\n  \"features\": [\"hướng Tây Nam\", \"view trường học\", \"thoáng\", \"đã nhận nhà\", \"xem nhà hẹn trước\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.8\n}\n```",
+   "usage": {
+    "inputTokens": 770,
+    "outputTokens": 562
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_c9555589af675ab8",
+   "raw": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": \"S9\",\n  \"features\": [\"full nội thất\", \"sẵn sổ\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.6\n}",
+   "usage": {
+    "inputTokens": 598,
+    "outputTokens": 377
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_cd55f479904e39fb",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 3,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Vinhomes Grand Park\",\n  \"building\": \"S502\",\n  \"features\": [\"bếp rèm\", \"sẵn sổ\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.85\n}\n```",
+   "usage": {
+    "inputTokens": 642,
+    "outputTokens": 550
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_e75b9a530f035df1",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": 2,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"The Origami\",\n  \"building\": \"S9.02\",\n  \"features\": [\"sẵn sổ\", \"không vay\", \"hướng Tây Bắc\", \"view ngoại khu\", \"sẵn pass\", \"diện tích 59m2\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.85\n}\n```",
+   "usage": {
+    "inputTokens": 670,
+    "outputTokens": 722
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_fb19efb2cc965714",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 1,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Beverly Solari\",\n  \"building\": \"BS15\",\n  \"features\": [\"full nội thất\", \"sẵn sổ\", \"có dòng tiền 7tr/tháng\", \"giá 2,3 tỷ bao thuế phí\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.85\n}\n```",
+   "usage": {
+    "inputTokens": 660,
+    "outputTokens": 629
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_a1558a3cce038dfe",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 1,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": \"S1\",\n  \"features\": [\"full nội thất\", \"giá all in\"],\n  \"urgency\": \"bán gấp\",\n  \"confidence\": 0.6\n}\n```",
+   "usage": {
+    "inputTokens": 627,
+    "outputTokens": 459
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_1a29cd8d8cd76566",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": \"BS9\",\n  \"features\": [\"hướng đông nam\", \"sẵn sổ\", \"bếp rèm tặng\", \"view hồ bơi\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.6\n}\n```",
+   "usage": {
+    "inputTokens": 640,
+    "outputTokens": 611
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_dff5362fca51a340",
+   "raw": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 0,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Masteri West Heights\",\n  \"building\": \"S2.06\",\n  \"features\": [\"studio\", \"36.4m2\", \"hướng Đông Bắc\", \"full nội thất\", \"sẵn sổ\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.85\n}",
+   "usage": {
+    "inputTokens": 789,
+    "outputTokens": 398
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_853f231e1233052a",
+   "raw": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 1,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": null,\n  \"features\": [\"sẵn sổ\", \"full nội thất\", \"hướng Tây Nam\", \"diện tích 43m2\", \"xem hẹn trước\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.7\n}",
+   "usage": {
+    "inputTokens": 656,
+    "outputTokens": 506
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_8f909a859b486bee",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": \"S1.03\",\n  \"features\": [\"tầng 20\", \"full đồ\", \"đang cho thuê\", \"ban công hướng Đông Bắc\", \"thoáng mát\", \"gần trường học\", \"gần công viên\", \"gần nhà để xe\", \"BQL trong tòa\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.8\n}\n```",
+   "usage": {
+    "inputTokens": 708,
+    "outputTokens": 729
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_7ea6106fdd0db4fd",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": null,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Vinhomes Grand Park\",\n  \"building\": \"S2.02\",\n  \"features\": [\"sẵn pass thẻ\", \"sang nhượng giỏ hàng\", \"nhiều căn studio/1PN+/2PN1WC\", \"full nội thất\", \"nhà trống\", \"giá bán trọn gói\", \"còn deal\", \"phân khu Rainbow\", \"tòa S1/S2/S3\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.5\n}\n```",
+   "usage": {
+    "inputTokens": 955,
+    "outputTokens": 789
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_562359205db63c1d",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": 1,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Lumiere Boulevard (Vinhomes Grand Park)\",\n  \"building\": null,\n  \"features\": [\"view hồ bơi\", \"hướng Đông Nam\", \"sẵn sổ\", \"thiết kế 1PN+ thành 2PN\"],\n  \"urgency\": \"bán gấp\",\n  \"confidence\": 0.85\n}\n```",
+   "usage": {
+    "inputTokens": 844,
+    "outputTokens": 529
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_4620a294e1428481",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": 2,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": \"H2\",\n  \"features\": [\"sẵn sổ\", \"không vay ngân hàng\", \"nội thất full\", \"hướng đông bắc\", \"diện tích 54m2\", \"xem nhà hẹn trước\", \"giá bán 4380 net\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.6\n}\n```",
+   "usage": {
+    "inputTokens": 719,
+    "outputTokens": 625
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_09803b561bbd1571",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 3,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": \"LD1xx15\",\n  \"project_name\": null,\n  \"building\": \"LD1\",\n  \"features\": [\"view công viên Green Park\", \"hướng Tây Nam, Đông Nam\", \"nhận nhà T10/2026\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.6\n}\n```",
+   "usage": {
+    "inputTokens": 700,
+    "outputTokens": 798
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_9d125632ab823566",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": 2,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Masteri West Heights\",\n  \"building\": \"LD2xx08\",\n  \"features\": [\"hướng Tây Nam\", \"tầng trung\", \"view nội khu\", \"giá thu về\", \"nhận nhà T9/2026\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.85\n}\n```",
+   "usage": {
+    "inputTokens": 706,
+    "outputTokens": 724
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_a9c76f5093f6f7b7",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 1,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": \"BS15\",\n  \"features\": [\"full nội thất\", \"sẵn sổ\", \"không vay\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.6\n}\n```",
+   "usage": {
+    "inputTokens": 568,
+    "outputTokens": 679
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_e6880ed7eb1a9279",
+   "raw": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": null,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Masterise Trinity Square\",\n  \"building\": null,\n  \"features\": [\"hàng hiệu\", \"view hoàng hôn\", \"tiến độ\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.75\n}",
+   "usage": {
+    "inputTokens": 662,
+    "outputTokens": 779
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_dd599975390ba737",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": 2,\n  \"street\": null,\n  \"address_detail\": \"Căn 17, tầng trung\",\n  \"project_name\": \"Masteri West Heights\",\n  \"building\": \"PR1\",\n  \"features\": [\"căn góc\", \"thông thủy 64m²\", \"ban công Đông Nam – Tây Nam\", \"view trực diện Sông San Hô\", \"nhận nhà 07/2027\", \"có thương lượng giá\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.9\n}\n```",
+   "usage": {
+    "inputTokens": 798,
+    "outputTokens": 676
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_5a00bdc103944455",
+   "raw": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": null,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": \"GH1\",\n  \"features\": [\"sẵn sổ\", \"view Vincom\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.7\n}",
+   "usage": {
+    "inputTokens": 615,
+    "outputTokens": 355
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_1c44f9642449a135",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": 2,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Paris\",\n  \"building\": \"PR6xx26\",\n  \"features\": [\"hướng Đông Bắc\", \"view hồ điều hoà Gia Lâm\", \"view công viên\", \"diện tích 59.9 m²\", \"nhận nhà T4/2027\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.8\n}\n```",
+   "usage": {
+    "inputTokens": 688,
+    "outputTokens": 753
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_2ac36e62720c8fee",
+   "raw": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 0,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": \"Căn A2.xx08 (số căn đã che)\",\n  \"project_name\": \"The Cityon\",\n  \"building\": \"A2\",\n  \"features\": [\"studio\", \"diện tích thông thủy 31,49m²\", \"hướng view Tây Bắc\", \"view Ocean Park 1\", \"view thành phố\", \"giá sau ưu đãi khoảng 1,922 tỷ đã gồm VAT và kinh phí bảo trì\", \"quà tặng Early Bird 100 triệu đồng\", \"đặt cọc 50 triệu\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.8\n}",
+   "usage": {
+    "inputTokens": 905,
+    "outputTokens": 554
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_c25ad01101098c77",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 1,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Vinhomes Grand Park\",\n  \"building\": \"Solari\",\n  \"features\": [\"sẵn sổ\", \"bao thuế phí\", \"bếp rèm\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.85\n}\n```",
+   "usage": {
+    "inputTokens": 673,
+    "outputTokens": 415
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_c3aeab6299bba11f",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 0,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Vinhomes Grand Park\",\n  \"building\": \"Rainbow\",\n  \"features\": [\"sẵn sổ\", \"hướng Tây Nam\", \"full nội thất\", \"sẵn hợp đồng thuê\", \"giá đã bao thuế phí\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.8\n}\n```",
+   "usage": {
+    "inputTokens": 721,
+    "outputTokens": 454
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_4a7dff5b17957711",
+   "raw": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 1,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Masteri West Heights\",\n  \"building\": \"GS6, I1, A1, A3, G2, G3\",\n  \"features\": [\"cho thuê\", \"chuyển nhượng\", \"đồ cơ bản (ĐCB)\", \"giá rẻ\", \"nhiều căn 1 ngủ +\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.6\n}",
+   "usage": {
+    "inputTokens": 1054,
+    "outputTokens": 1049
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_c2941a7e343ee1d9",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Vinhomes Grand Park\",\n  \"building\": \"S1\",\n  \"features\": [\"sẵn sổ\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.8\n}\n```",
+   "usage": {
+    "inputTokens": 634,
+    "outputTokens": 422
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_cab1cd895316b2b4",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 0,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": \"Mã căn C1Z1.2608A\",\n  \"project_name\": \"Trinity\",\n  \"building\": \"C1Z1\",\n  \"features\": [\"studio\", \"giá net 1,6 tỷ\", \"gốc tiến độ 1,986 tỷ\", \"quỹ đầu tư độc quyền\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.8\n}\n```",
+   "usage": {
+    "inputTokens": 710,
+    "outputTokens": 731
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_0155449965466f73",
+   "raw": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 0,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Vinhomes Grand Park\",\n  \"building\": null,\n  \"features\": [\"full gỗ\", \"tầng cao\", \"studio\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.7\n}",
+   "usage": {
+    "inputTokens": 623,
+    "outputTokens": 406
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_004bf9daa49fe470",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": 2,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Vinhomes Smart City\",\n  \"building\": \"SA2\",\n  \"features\": [\"full đồ\", \"view thoáng\"],\n  \"urgency\": \"bán gấp\",\n  \"confidence\": 0.9\n}\n```",
+   "usage": {
+    "inputTokens": 691,
+    "outputTokens": 278
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_a2faf4a5e37446b0",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": 2,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Beverly\",\n  \"building\": \"Be1\",\n  \"features\": [\"tầng đẹp\", \"view thoáng\", \"hướng Đông Bắc\", \"diện tích 54,4m2\", \"giá 3,2x tỷ\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.6\n}\n```",
+   "usage": {
+    "inputTokens": 725,
+    "outputTokens": 1037
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_800f512e2ef381c1",
+   "raw": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": \"PR5\",\n  \"features\": [\"hướng Tây Bắc\", \"view nội khu\", \"diện tích 62,4m²\", \"giá 3,6 tỷ\", \"trả chậm theo tiến độ 2 năm\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.8\n}",
+   "usage": {
+    "inputTokens": 749,
+    "outputTokens": 592
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_e4371f9115460077",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": null,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Vinhomes Smart City\",\n  \"building\": null,\n  \"features\": [\"chuyển nhượng\", \"giá tốt\", \"nội thất full (một số căn)\", \"studio\", \"1 ngủ\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.6\n}\n```",
+   "usage": {
+    "inputTokens": 1013,
+    "outputTokens": 915
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_dc43ce5cdea33697",
+   "raw": "```json\n[\n  {\n    \"property_type\": \"unknown\",\n    \"bedrooms\": null,\n    \"bathrooms\": null,\n    \"street\": null,\n    \"address_detail\": null,\n    \"project_name\": \"Vinhomes Đan Phượng\",\n    \"building\": null,\n    \"features\": [],\n    \"urgency\": \"bình thường\",\n    \"confidence\": 0.5\n  },\n  {\n    \"property_type\": \"apartment\",\n    \"bedrooms\": null,\n    \"bathrooms\": null,\n    \"street\": null,\n    \"address_detail\": null,\n    \"project_name\": \"New Masteri Lake Side - Vinhomes Ocean Park 1\",\n    \"building\": null,\n    \"features\": [\"new\"],\n    \"urgency\": \"bình thường\",\n    \"confidence\": 0.6\n  },\n  {\n    \"property_type\": \"apartment\",\n    \"bedrooms\": null,\n    \"bathrooms\": null,\n    \"street\": null,\n    \"address_detail\": null,\n    \"project_name\": \"Vinhomes Cổ Loa\",\n    \"building\": null,\n    \"features\": [\"new\", \"cao tầng\"],\n    \"urgency\": \"bình thường\",\n    \"confidence\": 0.7\n  },\n  {\n    \"property_type\": \"house\",\n    \"bedrooms\": null,\n    \"bathrooms\": null,\n    \"street\": null,\n    \"address_detail\": null,\n    \"project_name\": \"Vinhomes Cổ Loa\",\n    \"building\": null,\n    \"features\": [\"new\", \"thấp tầng\", \"update\"],\n    \"urgency\": \"bình thường\",\n    \"confidence\": 0.7\n  },\n  {\n    \"property_type\": \"house\",\n    \"bedrooms\": null,\n    \"bathrooms\": null,\n    \"street\": null,\n    \"address_detail\": null,\n    \"project_name\": \"Biệt thự Vinhomes Ocean Park 1\",\n    \"building\": null,\n    \"features\": [\"biệt thự\", \"update\"],\n    \"urgency\": \"bình thường\",\n    \"confidence\": 0.8\n  },\n  {\n    \"property_type\": \"house\",\n    \"bedrooms\": null,\n    \"bathrooms\": null,\n    \"street\": null,\n    \"address_detail\": null,\n    \"project_name\": \"Biệt thự Vinhomes Ocean Park 2\",\n    \"building\": null,\n    \"features\": [\"biệt thự\", \"update\"],\n    \"urgency\": \"bình thường\",\n    \"confidence\": 0.8\n  },\n  {\n    \"property_type\": \"house\",\n    \"bedrooms\": null,\n    \"bathrooms\": null,\n    \"street\": null,\n    \"address_detail\": null,\n    \"project_name\": \"Biệt thự Vinhomes Ocean Park 3\",\n    \"building\": null,\n    \"features\": [\"biệt thự\", \"update\"],\n    \"urgency\": \"bình thường\",\n    \"confidence\": 0.8\n  },\n  {\n    \"property_type\": \"house\",\n    \"bedrooms\": null,\n    \"bathrooms\": null,\n    \"street\": null,\n    \"address_detail\": null,\n    \"project_name\": \"Vinhomes Vũ Yên Royal Island\",\n    \"building\": null,\n    \"features\": [\"biệt thự\", \"update\"],\n    \"urgency\": \"bình thường\",\n    \"confidence\": 0.8\n  },\n  {\n    \"property_type\": \"apartment\",\n    \"bedrooms\": null,\n    \"bathrooms\": null,\n    \"street\": null,\n    \"address_detail\": null,\n    \"project_name\": \"Vinhomes Ocean Park 1\",\n    \"building\": \"Sapphire S1, S2\",\n    \"features\": [\"cao tầng\"],\n    \"urgency\": \"bình thường\",\n    \"confidence\": 0.8\n  },\n  {\n    \"property_type\": \"apartment\",\n    \"bedrooms\": null,\n    \"bathrooms\": null,\n    \"street\": null,\n    \"address_detail\": null,\n    \"project_name\": \"Beverly - Vinhomes Ocean Park 1\",\n    \"building\": null,\n    \"features\": [\"cao tầng\"],\n    \"urgency\": \"bình thường\",\n    \"confidence\": 0.7\n  },\n  {\n    \"property_type\": \"apartment\",\n    \"bedrooms\": null,\n    \"bathrooms\": null,\n    \"street\": null,\n    \"address_detail\": null,\n    \"project_name\": \"The Paris - Vinhomes Ocean Park 1\",\n    \"building\": null,\n    \"features\": [\"chung cư\", \"update\"],\n    \"urgency\": \"bình thường\",\n    \"confidence\": 0.7\n  },\n  {\n    \"property_type\": \"unknown\",\n    \"bedrooms\": null,\n    \"bathrooms\": null,\n    \"street\": null,\n    \"address_detail\": null,\n    \"project_name\": null,\n    \"building\": null,\n    \"features\": [\"tin bị cắt, không đủ thông tin\"],\n    \"urgency\": \"bình thường\",\n    \"confidence\": 0.1\n  }\n]\n```",
+   "usage": {
+    "inputTokens": 904,
+    "outputTokens": 2760
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_51e34e5a0f63aa14",
+   "raw": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": 2,\n  \"street\": \"Lê Văn Lương\",\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": null,\n  \"features\": [\"full nội thất\", \"giao thông thuận tiện\", \"tiện ích đa dạng\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.8\n}",
+   "usage": {
+    "inputTokens": 683,
+    "outputTokens": 392
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_597f6d56c3be9bf6",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 1,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Vinhomes Grand Park\",\n  \"building\": null,\n  \"features\": [\"full nội thất\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.7\n}\n```",
+   "usage": {
+    "inputTokens": 638,
+    "outputTokens": 311
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_b58083843cd6ee9b",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Masteri West Heights\",\n  \"building\": \"S1, S2, S3, S4, I5, Sola, SA, GS, Mas, Lumiere\",\n  \"features\": [\"2PN\", \"full đồ\", \"NB\", \"ĐCB CĐT\", \"nhiều căn 55-63m2\", \"giá 8.5-15 triệu\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.6\n}\n```",
+   "usage": {
+    "inputTokens": 1018,
+    "outputTokens": 1072
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_5fcef11a51d8fa63",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Vinhomes Grand Park\",\n  \"building\": \"Rainbow\",\n  \"features\": [\"sẵn sổ\"],\n  \"urgency\": \"bán gấp\",\n  \"confidence\": 0.85\n}\n```",
+   "usage": {
+    "inputTokens": 646,
+    "outputTokens": 558
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_929242d61e34c312",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 1,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Vinhomes Grand Park\",\n  \"building\": \"S6\",\n  \"features\": [\"full nội thất\", \"sẵn sổ\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.9\n}\n```",
+   "usage": {
+    "inputTokens": 675,
+    "outputTokens": 280
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_fcc8aa10efc6b982",
+   "raw": "```json\n[\n  {\n    \"property_type\": \"apartment\",\n    \"bedrooms\": 3,\n    \"bathrooms\": null,\n    \"street\": null,\n    \"address_detail\": \"Căn S101\",\n    \"project_name\": \"Vinhomes Grand Park\",\n    \"building\": \"S\",\n    \"features\": [\"BTP\", \"bếp rèm\"],\n    \"urgency\": \"bình thường\",\n    \"confidence\": 0.8\n  },\n  {\n    \"property_type\": \"apartment\",\n    \"bedrooms\": 3,\n    \"bathrooms\": null,\n    \"street\": null,\n    \"address_detail\": \"Căn S106\",\n    \"project_name\": \"Vinhomes Grand Park\",\n    \"building\": \"S\",\n    \"features\": [\"BTP\", \"view hồ bơi\"],\n    \"urgency\": \"bình thường\",\n    \"confidence\": 0.8\n  },\n  {\n    \"property_type\": \"apartment\",\n    \"bedrooms\": 3,\n    \"bathrooms\": null,\n    \"street\": null,\n    \"address_detail\": \"Căn S107\",\n    \"project_name\": \"Vinhomes Grand Park\",\n    \"building\": \"S\",\n    \"features\": [\"view sông\", \"full nội thất\"],\n    \"urgency\": \"bình thường\",\n    \"confidence\": 0.8\n  },\n  {\n    \"property_type\": \"apartment\",\n    \"bedrooms\": 3,\n    \"bathrooms\": null,\n    \"street\": null,\n    \"address_detail\": \"Căn S202\",\n    \"project_name\": \"Vinhomes Grand Park\",\n    \"building\": \"S\",\n    \"features\": [\"BTP\"],\n    \"urgency\": \"bình thường\",\n    \"confidence\": 0.8\n  },\n  {\n    \"property_type\": \"apartment\",\n    \"bedrooms\": 3,\n    \"bathrooms\": null,\n    \"street\": null,\n    \"address_detail\": \"Căn S502\",\n    \"project_name\": \"Vinhomes Grand Park\",\n    \"building\": \"S\",\n    \"features\": [\"BTP\", \"bếp rèm\"],\n    \"urgency\": \"bình thường\",\n    \"confidence\": 0.8\n  },\n  {\n    \"property_type\": \"apartment\",\n    \"bedrooms\": 3,\n    \"bathrooms\": null,\n    \"street\": null,\n    \"address_detail\": \"Căn S1002\",\n    \"project_name\": \"Vinhomes Grand Park\",\n    \"building\": \"S\",\n    \"features\": [\"BTP\"],\n    \"urgency\": \"bình thường\",\n    \"confidence\": 0.8\n  },\n  {\n    \"property_type\": \"apartment\",\n    \"bedrooms\": 3,\n    \"bathrooms\": null,\n    \"street\": null,\n    \"address_detail\": \"Căn S801\",\n    \"project_name\": \"Vinhomes Grand Park\",\n    \"building\": \"S\",\n    \"features\": [\"BTP\"],\n    \"urgency\": \"bình thường\",\n    \"confidence\": 0.8\n  },\n  {\n    \"property_type\": \"apartment\",\n    \"bedrooms\": 3,\n    \"bathrooms\": null,\n    \"street\": null,\n    \"address_detail\": \"Căn S902\",\n    \"project_name\": \"Vinhomes Grand Park\",\n    \"building\": \"S\",\n    \"features\": [\"full nội thất\"],\n    \"urgency\": \"bình thường\",\n    \"confidence\": 0.8\n  },\n  {\n    \"property_type\": \"apartment\",\n    \"bedrooms\": 3,\n    \"bathrooms\": null,\n    \"street\": null,\n    \"address_detail\": \"Căn S802\",\n    \"project_name\": \"Vinhomes Grand Park\",\n    \"building\": \"S\",\n    \"features\": [\"3PN+\", \"BTP\"],\n    \"urgency\": \"bình thường\",\n    \"confidence\": 0.8\n  },\n  {\n    \"property_type\": \"apartment\",\n    \"bedrooms\": 3,\n    \"bathrooms\": null,\n    \"street\": null,\n    \"address_detail\": \"Căn BS9\",\n    \"project_name\": \"Vinhomes Grand Park\",\n    \"building\": \"BS9\",\n    \"features\": [\"BTP\"],\n    \"urgency\": \"bình thường\",\n    \"confidence\": 0.8\n  },\n  {\n    \"property_type\": \"apartment\",\n    \"bedrooms\": 3,\n    \"bathrooms\": null,\n    \"street\": null,\n    \"address_detail\": \"Căn GH3\",\n    \"project_name\": \"Vinhomes Grand Park\",\n    \"building\": \"GH3\",\n    \"features\": [\"BTP\"],\n    \"urgency\": \"bình thường\",\n    \"confidence\": 0.8\n  },\n  {\n    \"property_type\": \"apartment\",\n    \"bedrooms\": 3,\n    \"bathrooms\": null,\n    \"street\": null,\n    \"address_detail\": \"Căn GH2\",\n    \"project_name\": \"Vinhomes Grand Park\",\n    \"building\": \"GH2\",\n    \"features\": [\"BTP\"],\n    \"urgency\": \"bình thường\",\n    \"confidence\": 0.8\n  }\n]\n```",
+   "usage": {
+    "inputTokens": 1012,
+    "outputTokens": 2794
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_b6fcef6eddb598de",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": \"PR6\",\n  \"features\": [\"diện tích 62.9m2\", \"giá 3.6 tỷ\", \"hướng ĐB/TB\", \"TTTĐ (thanh toán theo tiến độ)\", \"nhận nhà T4/2027\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.7\n}\n```",
+   "usage": {
+    "inputTokens": 789,
+    "outputTokens": 588
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_ded1078c8205ca2e",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": 2,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Vinhomes Smart City\",\n  \"building\": \"G6\",\n  \"features\": [\"tầng đẹp\", \"hướng Đông Nam\", \"giá thu về 3.3 tỷ\", \"55m2\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.85\n}\n```",
+   "usage": {
+    "inputTokens": 641,
+    "outputTokens": 490
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_e41d187e4526c368",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Vinhomes Smart City\",\n  \"building\": \"TC3\",\n  \"features\": [\"cho thuê\", \"chuyển nhượng\", \"nội thất full\", \"nội thất cơ bản\", \"nhiều căn\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.6\n}\n```",
+   "usage": {
+    "inputTokens": 1041,
+    "outputTokens": 933
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_7e9a20b3c1855656",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 1,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"GoldKimLand\",\n  \"building\": \"S1\",\n  \"features\": [\"full nội thất\", \"ban công hướng Tây Bắc\", \"view đẹp\", \"thoáng\", \"sẵn sổ\", \"xem nhà sẵn\", \"gần công viên\", \"gần Vinschool\", \"gần Vincom\", \"gần ga Metro\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.6\n}\n```",
+   "usage": {
+    "inputTokens": 878,
+    "outputTokens": 785
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_63fc7b7d71776476",
+   "raw": "{\n  \"property_type\": \"unknown\",\n  \"bedrooms\": 2,\n  \"bathrooms\": 1,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": null,\n  \"features\": [\"nội thất cơ bản\", \"giá tốt\"],\n  \"urgency\": \"bán gấp\",\n  \"confidence\": 0.6\n}",
+   "usage": {
+    "inputTokens": 640,
+    "outputTokens": 392
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_e42db44f190e147c",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": 2,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": \"H2\",\n  \"features\": [\"nội thất full\", \"hướng Đông Bắc\", \"sẵn sổ\", \"không vay ngân hàng\", \"xem nhà hẹn trước\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.7\n}\n```",
+   "usage": {
+    "inputTokens": 713,
+    "outputTokens": 663
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_89eaa1f9c5279948",
+   "raw": "[\n  {\n    \"property_type\": \"apartment\",\n    \"bedrooms\": 3,\n    \"bathrooms\": null,\n    \"street\": null,\n    \"address_detail\": null,\n    \"project_name\": \"Vinhomes Grand Park\",\n    \"building\": \"S9.02\",\n    \"features\": [\"nội thất cơ bản\", \"hợp đồng mua bán (HDMB)\", \"hướng Tây Bắc\"],\n    \"urgency\": \"bán gấp\",\n    \"confidence\": 0.9\n  },\n  {\n    \"property_type\": \"apartment\",\n    \"bedrooms\": 2,\n    \"bathrooms\": 2,\n    \"street\": null,\n    \"address_detail\": \"tầng trung\",\n    \"project_name\": \"Vinhomes Grand Park\",\n    \"building\": \"BS8\",\n    \"features\": [\"nội thất cơ bản\", \"sẵn sổ\"],\n    \"urgency\": \"bình thường\",\n    \"confidence\": 0.9\n  },\n  {\n    \"property_type\": \"apartment\",\n    \"bedrooms\": 2,\n    \"bathrooms\": 2,\n    \"street\": null,\n    \"address_detail\": \"tầng thấp\",\n    \"project_name\": \"Vinhomes Grand Park\",\n    \"building\": \"BS8\",\n    \"features\": [\"nội thất cơ bản\", \"sẵn sổ\"],\n    \"urgency\": \"bình thường\",\n    \"confidence\": 0.9\n  },\n  {\n    \"property_type\": \"apartment\",\n    \"bedrooms\": 2,\n    \"bathrooms\": 2,\n    \"street\": null,\n    \"address_detail\": \"tầng cao\",\n    \"project_name\": \"Vinhomes Grand Park\",\n    \"building\": \"BS9\",\n    \"features\": [\"nội thất cơ bản\", \"sẵn sổ\"],\n    \"urgency\": \"bình thường\",\n    \"confidence\": 0.9\n  }\n]",
+   "usage": {
+    "inputTokens": 871,
+    "outputTokens": 1317
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_706f2db42338601c",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": 2,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": \"GH3\",\n  \"features\": [\"full nội thất\", \"giá bao tất phí\"],\n  \"urgency\": \"bán gấp\",\n  \"confidence\": 0.75\n}\n```",
+   "usage": {
+    "inputTokens": 672,
+    "outputTokens": 392
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_0788a15f6dc14e52",
+   "raw": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": 2,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Vinhomes Grand Park\",\n  \"building\": \"Origami\",\n  \"features\": [\"tầng trung\", \"view thoáng\"],\n  \"urgency\": \"bán gấp\",\n  \"confidence\": 0.9\n}",
+   "usage": {
+    "inputTokens": 644,
+    "outputTokens": 424
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_ecb9998104d76f80",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 1,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": \"S6\",\n  \"features\": [\"bếp rèm\", \"hướng Đông Nam\", \"view đường vành đai\", \"sẵn sổ\", \"sẵn pass\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.75\n}\n```",
+   "usage": {
+    "inputTokens": 739,
+    "outputTokens": 682
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_d87d2f194b0a645f",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 3,\n  \"bathrooms\": 2,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Lumiere Boulevard\",\n  \"building\": null,\n  \"features\": [\"97m2\", \"giá 6.5 tỷ\", \"bao thuế phí\", \"sẵn sổ\", \"hỗ trợ tất toán hoặc chuyển khoản vay\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.8\n}\n```",
+   "usage": {
+    "inputTokens": 716,
+    "outputTokens": 740
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_a9dfcdb7b8e17c2c",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": 1,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Vinhomes Grand Park\",\n  \"building\": null,\n  \"features\": [\"sẵn sổ\", \"sổ hồng cầm tay\", \"sẵn nội thất bếp\", \"sẵn rèm\"],\n  \"urgency\": \"bán gấp\",\n  \"confidence\": 0.9\n}\n```",
+   "usage": {
+    "inputTokens": 698,
+    "outputTokens": 446
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_1fd21f1be1febe8e",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 0,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Vinhomes Grand Park\",\n  \"building\": null,\n  \"features\": [\"full nội thất\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.6\n}\n```",
+   "usage": {
+    "inputTokens": 697,
+    "outputTokens": 453
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_6b24688ea2278751",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Ecopark\",\n  \"building\": \"SF\",\n  \"features\": [\"view sông\", \"tầng trung\", \"diện tích 60m2\", \"giá 3.7 tỷ\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.7\n}\n```",
+   "usage": {
+    "inputTokens": 641,
+    "outputTokens": 352
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_399cfe51bc57bd7e",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 0,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Vinhomes Ocean Park 1\",\n  \"building\": \"S1\",\n  \"features\": [\"studio\", \"33m2\", \"full đồ\", \"sẵn sổ\", \"hướng Đông Bắc\", \"nội thất như ảnh\", \"xem nhà dễ\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.9\n}\n```",
+   "usage": {
+    "inputTokens": 811,
+    "outputTokens": 625
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_ba2a51297aac72a2",
+   "raw": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Lumiere Boulevard\",\n  \"building\": null,\n  \"features\": [\"full nội thất\", \"view vành đai\"],\n  \"urgency\": \"bán gấp\",\n  \"confidence\": 0.8\n}",
+   "usage": {
+    "inputTokens": 575,
+    "outputTokens": 715
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_58059f36ca0e3510",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": 2,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Vinhomes Grand Park\",\n  \"building\": \"MCP\",\n  \"features\": [\"căn góc\", \"nội thất đầy đủ\", \"hướng Tây Nam\", \"view nội khu\", \"xem nhà hẹn trước\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.75\n}\n```",
+   "usage": {
+    "inputTokens": 732,
+    "outputTokens": 585
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_9c728d3cb63c04a2",
+   "raw": "{\n  \"property_type\": \"house\",\n  \"bedrooms\": null,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": \"Phường Xuân Phương (chưa có số nhà, hẻm cụ thể)\",\n  \"project_name\": null,\n  \"building\": null,\n  \"features\": [\"sổ đỏ\", \"chính chủ\", \"sẵn sàng giao dịch\", \"nhà đẹp\", \"4 tầng\", \"diện tích 30m2\", \"mặt tiền 4m\"],\n  \"urgency\": \"bán gấp\",\n  \"confidence\": 0.6\n}",
+   "usage": {
+    "inputTokens": 654,
+    "outputTokens": 957
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_2492dc3fca667629",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Lumi Hà Nội\",\n  \"building\": null,\n  \"features\": [\"diện tích 54m²\", \"hướng Đông Nam\", \"giá 4 tỷ\", \"chuyển nhượng\"],\n  \"urgency\": \"bán gấp\",\n  \"confidence\": 0.8\n}\n```",
+   "usage": {
+    "inputTokens": 938,
+    "outputTokens": 458
+   },
+   "duong": "anthropic"
+  },
+  {
+   "offer_id": "offer_3b5f3d2057bf9886",
+   "raw": "```json\n{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 1,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": null,\n  \"features\": [\"full nội thất\", \"hướng Đông Nam\", \"view hồ bơi\", \"sẵn sổ\", \"sẵn pass thẻ xem nhà\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.7\n}\n```",
+   "usage": {
+    "inputTokens": 674,
+    "outputTokens": 502
+   },
+   "duong": "anthropic"
+  }
+ ],
+ "judge": [
+  {
+   "cap": {
+    "offer_a": "offer_341c510d1a43bf2e",
+    "offer_b": "offer_3144779a7604ce69"
+   },
+   "raw": "{\"giai_thich\":\"Máy kết luận hai tin là cùng một căn vì giá/m² gần nhau (56.7 triệu so với 52.1 triệu), diện tích khớp trong sai số (47.6 m² và 48 m²), cùng khu vực Gia Lâm và cùng loại hình căn hộ. Giá bán tổng của hai tin chênh nhau (2.70 tỷ và 2.50 tỷ), nên người duyệt có thể cần kiểm tra thêm thông tin liên hệ hoặc hình ảnh để xác nhận.\"}",
+   "usage": {
+    "inputTokens": 711,
+    "outputTokens": 383
+   },
+   "duong": "anthropic",
+   "ket_luan_truoc": "yes",
+   "ket_luan_sau": "yes"
+  },
+  {
+   "cap": {
+    "offer_a": "offer_b15a205a29c2895f",
+    "offer_b": "offer_0316de2943bea692"
+   },
+   "raw": "{\"giai_thich\":\"Máy kết luận hai tin là khác căn. Diện tích (54,5 m² và 55 m²), giá/m² (52,0 và 49,1 triệu) và phường đều khớp hoặc gần nhau, cùng loại hình căn hộ. Điểm khác biệt quyết định là số phòng ngủ: tin A ghi 1 phòng ngủ + 1, tin B ghi 2 phòng ngủ.\"}",
+   "usage": {
+    "inputTokens": 725,
+    "outputTokens": 314
+   },
+   "duong": "anthropic",
+   "ket_luan_truoc": "no",
+   "ket_luan_sau": "no"
+  },
+  {
+   "cap": {
+    "offer_a": "offer_341c510d1a43bf2e",
+    "offer_b": "offer_63b930b0d123b4cd"
+   },
+   "raw": "{\"giai_thich\":\"Máy kết luận hai tin là cùng một căn dựa trên các lý do: giá/m² gần nhau (56.7 triệu so với 53.5 triệu), diện tích khớp trong sai số (47.6 m² so với 43 m²), cùng phường Gia Lâm và cùng loại hình căn hộ. Người duyệt nên lưu ý rằng hướng nhà (Đông Bắc so với Đông Nam) và thông tin dự án (tin B nêu Vinhomes Ocean Park, tin A không nêu) không nằm trong lý do của máy.\"}",
+   "usage": {
+    "inputTokens": 710,
+    "outputTokens": 580
+   },
+   "duong": "anthropic",
+   "ket_luan_truoc": "yes",
+   "ket_luan_sau": "yes"
+  },
+  {
+   "cap": {
+    "offer_a": "offer_1590533767038e23",
+    "offer_b": "offer_61a36a6f9bf3aa5b"
+   },
+   "raw": "{\"giai_thich\":\"Máy kết luận hai tin là cùng một căn vì giá và diện tích khớp nhau (cùng 3,50 tỷ, 63 m², giá/m² 55,6 triệu), cùng phường Gia Lâm và cùng loại căn hộ. Lưu ý tin B ghi phường là 'Xã Gia Lâm' trong khi tin A ghi 'gia-lam', nhưng đây chỉ là khác biệt cách viết tên đơn vị hành chính.\"}",
+   "usage": {
+    "inputTokens": 697,
+    "outputTokens": 180
+   },
+   "duong": "anthropic",
+   "ket_luan_truoc": "yes",
+   "ket_luan_sau": "yes"
+  },
+  {
+   "cap": {
+    "offer_a": "offer_986e74cee9d0e052",
+    "offer_b": "offer_d850ad29f0978064"
+   },
+   "raw": "{\"giai_thich\":\"Máy kết luận hai tin là cùng một căn vì giá/m² khá gần nhau (64,4 triệu so với 67,1 triệu), diện tích được coi là khớp trong sai số, cùng phường Gia Lâm và cùng loại hình chung cư. Người duyệt nên lưu ý diện tích chênh 6,5 m² (74,5 so với 68 m²) và tên dự án khác nhau (PARIS Ocean Park so với Zenpark) khi kiểm tra lại.\"}",
+   "usage": {
+    "inputTokens": 704,
+    "outputTokens": 535
+   },
+   "duong": "anthropic",
+   "ket_luan_truoc": "yes",
+   "ket_luan_sau": "yes"
+  },
+  {
+   "cap": {
+    "offer_a": "offer_c30e272606dd9f2f",
+    "offer_b": "offer_e2b9fe71eae5c1c2"
+   },
+   "raw": "{\"giai_thich\":\"Máy kết luận chưa chắc vì hai tin có diện tích khớp trong sai số, cùng phường Gia Lâm và cùng loại căn hộ, nhưng giá/m² lệch vừa (60.4 triệu so với 50.8 triệu). Tin A nêu khu Paris và tin B nêu VinHomes Ocean Park, nên người duyệt cần kiểm tra thêm dự án và thông tin căn để xác nhận.\"}",
+   "usage": {
+    "inputTokens": 722,
+    "outputTokens": 506
+   },
+   "duong": "anthropic",
+   "ket_luan_truoc": "unsure",
+   "ket_luan_sau": "unsure"
+  },
+  {
+   "cap": {
+    "offer_a": "offer_0cf9c1927ea8c6db",
+    "offer_b": "offer_0f5c49134a6cf34d"
+   },
+   "raw": "{\"giai_thich\":\"Máy kết luận chưa chắc vì hai tin có giá/m² sát nhau (55.1 tr và 48.2 tr), diện tích khớp trong sai số (59.9 m² và 60 m²) và cùng phường Gia Lâm. Tuy nhiên, tin A không ghi loại hình, nên chưa đủ căn cứ để khẳng định đây là cùng một căn nhà.\"}",
+   "usage": {
+    "inputTokens": 675,
+    "outputTokens": 330
+   },
+   "duong": "anthropic",
+   "ket_luan_truoc": "unsure",
+   "ket_luan_sau": "unsure"
+  },
+  {
+   "cap": {
+    "offer_a": "offer_9fdf3f4530e9b5fc",
+    "offer_b": "offer_b7ddf00102bbc4a3"
+   },
+   "raw": "{\"giai_thich\":\"Máy kết luận hai tin là khác căn vì diện tích khác nhau (54,4 m² so với 48,5 m²), loại hình khác nhau (nhà so với căn hộ) và số phòng ngủ khác nhau (2N so với 1N), dù giá/m² và phường khá gần nhau.\"}",
+   "usage": {
+    "inputTokens": 710,
+    "outputTokens": 118
+   },
+   "duong": "anthropic",
+   "ket_luan_truoc": "no",
+   "ket_luan_sau": "no"
+  },
+  {
+   "cap": {
+    "offer_a": "offer_9fdf3f4530e9b5fc",
+    "offer_b": "offer_7250b4b5ec1955f8"
+   },
+   "raw": "{\"giai_thich\":\"Máy kết luận hai tin là khác căn vì loại hình khác nhau (nhà riêng so với căn hộ) và giá/m² lệch vừa phải (58,8 tr so với 49,1 tr), dù diện tích (54,4 m² và 55 m²) khớp trong sai số và hai tin cùng thuộc khu vực Gia Lâm. Người duyệt nên đối chiếu thêm loại hình và giá để xác nhận.\"}",
+   "usage": {
+    "inputTokens": 707,
+    "outputTokens": 168
+   },
+   "duong": "anthropic",
+   "ket_luan_truoc": "no",
+   "ket_luan_sau": "no"
+  },
+  {
+   "cap": {
+    "offer_a": "offer_73d7573fc4ece7e0",
+    "offer_b": "offer_3128eb5bbdba0457"
+   },
+   "raw": "{\"giai_thich\":\"Máy kết luận hai tin là cùng một căn vì giá/m² của hai tin khá sát nhau (55,1 tr và 61,2 tr), diện tích được máy đánh giá là khớp trong sai số (54,4 m² và 49 m²), hai tin cùng phường Gia Lâm và cùng loại hình căn hộ. Người duyệt nên lưu ý diện tích hai tin chênh khoảng 5 m².\"}",
+   "usage": {
+    "inputTokens": 676,
+    "outputTokens": 455
+   },
+   "duong": "anthropic",
+   "ket_luan_truoc": "yes",
+   "ket_luan_sau": "yes"
+  },
+  {
+   "cap": {
+    "offer_a": "offer_85b360a7ba39ac83",
+    "offer_b": "offer_e88cbdc99f497515"
+   },
+   "raw": "{\"giai_thich\":\"Máy kết luận hai tin là cùng một căn vì giá/m² khá sát nhau (56.7 tr so với 62.8 tr), diện tích được coi là khớp trong sai số (47.6 m² so với 43 m²), và cả hai cùng phường Gia Lâm cùng loại hình căn hộ. Người duyệt nên lưu ý tiêu đề tin B ghi tên dự án Masteri Waterfront, còn tin A ghi mã LD2 và view hồ điều hoà, nên cần đối chiếu thêm nếu muốn xác nhận.\"}",
+   "usage": {
+    "inputTokens": 707,
+    "outputTokens": 425
+   },
+   "duong": "anthropic",
+   "ket_luan_truoc": "yes",
+   "ket_luan_sau": "yes"
+  },
+  {
+   "cap": {
+    "offer_a": "offer_73d7573fc4ece7e0",
+    "offer_b": "offer_22b96d7cb5e6ca83"
+   },
+   "raw": "{\"giai_thich\":\"Máy kết luận hai tin là khác căn vì diện tích khác nhau rõ rệt (54,4 m² so với 63 m²) và số phòng ngủ cũng khác (1 ngủ so với 2 ngủ), dù giá/m² và phường khá gần nhau. Vì vậy người duyệt nên coi đây là hai căn riêng biệt, không gộp thành một tin.\"}",
+   "usage": {
+    "inputTokens": 681,
+    "outputTokens": 148
+   },
+   "duong": "anthropic",
+   "ket_luan_truoc": "no",
+   "ket_luan_sau": "no"
+  },
+  {
+   "cap": {
+    "offer_a": "offer_c30e272606dd9f2f",
+    "offer_b": "offer_3d7799ef9ec1531d"
+   },
+   "raw": "{\"giai_thich\":\"Máy kết luận hai tin là khác căn. Hai tin có giá/m² sát nhau, diện tích khớp trong sai số, cùng phường và cùng loại hình. Tuy nhiên, lý do quyết định là hai tin thuộc hai tòa khác nhau.\"}",
+   "usage": {
+    "inputTokens": 717,
+    "outputTokens": 273
+   },
+   "duong": "anthropic",
+   "ket_luan_truoc": "no",
+   "ket_luan_sau": "no"
+  },
+  {
+   "cap": {
+    "offer_a": "offer_0cf9c1927ea8c6db",
+    "offer_b": "offer_dfdbccecd16ec790"
+   },
+   "raw": "{\"giai_thich\":\"Máy kết luận chưa chắc vì giá/m² của hai tin khá sát nhau (55,1 tr và 51,6 tr), diện tích khớp trong sai số (59,9 m² và 63 m²), và cả hai cùng phường Gia Lâm. Tuy nhiên, tin A không có thông tin loại hình rõ ràng (ghi là unknown), nên người duyệt cần tự đối chiếu thêm trước khi kết luận cùng một căn.\"}",
+   "usage": {
+    "inputTokens": 670,
+    "outputTokens": 423
+   },
+   "duong": "anthropic",
+   "ket_luan_truoc": "unsure",
+   "ket_luan_sau": "unsure"
+  },
+  {
+   "cap": {
+    "offer_a": "offer_341c510d1a43bf2e",
+    "offer_b": "offer_074883e36ed0bf51"
+   },
+   "raw": "{\"giai_thich\":\"Máy kết luận hai tin là cùng một căn vì giá/m² gần nhau (56.7 và 57.0 triệu), diện tích khớp trong sai số (47.6 m² và 43 m²), cùng phường Gia Lâm và cùng loại hình căn hộ. Lưu ý: diện tích chênh khoảng 4.6 m² và giá bán chênh khá lớn (2.70 tỷ so với 2.45 tỷ), nên người duyệt nên đối chiếu thêm mã căn và thông tin dự án trước khi xác nhận.\"}",
+   "usage": {
+    "inputTokens": 702,
+    "outputTokens": 208
+   },
+   "duong": "anthropic",
+   "ket_luan_truoc": "yes",
+   "ket_luan_sau": "yes"
+  },
+  {
+   "cap": {
+    "offer_a": "offer_ad3fd82d29507c99",
+    "offer_b": "offer_1e7c4106eeec7c8b"
+   },
+   "raw": "{\"giai_thich\":\"Máy kết luận hai tin là cùng một căn dựa trên bốn lý do: giá/m² hai tin khá sát nhau (55.1 triệu và 50.5 triệu), diện tích khớp trong sai số, cùng phường Gia Lâm và cùng loại hình căn hộ. Người duyệt nên đối chiếu thêm thông tin dự án vì tiêu đề tin B ghi VinHomes Ocean Park, còn tin A không nêu tên dự án.\"}",
+   "usage": {
+    "inputTokens": 750,
+    "outputTokens": 426
+   },
+   "duong": "anthropic",
+   "ket_luan_truoc": "yes",
+   "ket_luan_sau": "yes"
+  },
+  {
+   "cap": {
+    "offer_a": "offer_0cf9c1927ea8c6db",
+    "offer_b": "offer_15273d261a2ad15e"
+   },
+   "raw": "{\"giai_thich\":\"Máy kết luận chưa chắc vì hai tin có giá/m² khá sát nhau (55,1 tr và 52,3 tr), diện tích được coi là khớp trong sai số (59,9 m² và 64 m²), và cùng phường Gia Lâm. Tuy nhiên tin A thiếu loại hình (unknown), nên chưa đủ cơ sở để khẳng định cùng một căn nhà; người duyệt nên đối chiếu thêm tên dự án và thông tin căn hộ trước khi quyết định.\"}",
+   "usage": {
+    "inputTokens": 685,
+    "outputTokens": 393
+   },
+   "duong": "anthropic",
+   "ket_luan_truoc": "unsure",
+   "ket_luan_sau": "unsure"
+  },
+  {
+   "cap": {
+    "offer_a": "offer_b15a205a29c2895f",
+    "offer_b": "offer_7e0054cb05c21795"
+   },
+   "raw": "{\"giai_thich\":\"Máy kết luận hai tin là khác căn vì diện tích khác nhau rõ rệt (54,5 m² so với 63 m²) và số phòng ngủ khác nhau (1 ngủ + 1 so với 2 PN). Dù cùng phường, cùng loại hình căn hộ và giá/m² khá gần nhau (52 triệu so với 50 triệu), các dữ liệu về diện tích và cấu trúc phòng không khớp.\"}",
+   "usage": {
+    "inputTokens": 730,
+    "outputTokens": 290
+   },
+   "duong": "anthropic",
+   "ket_luan_truoc": "no",
+   "ket_luan_sau": "no"
+  },
+  {
+   "cap": {
+    "offer_a": "offer_9fdf3f4530e9b5fc",
+    "offer_b": "offer_dfe4e3255bfafe2a"
+   },
+   "raw": "{\"giai_thich\":\"Máy kết luận hai tin là khác căn dù giá/m² và diện tích khá sát nhau và cùng phường, vì loại hình khác nhau (tin A là house, tin B là apartment). Tin A mô tả nhà 2 ngủ view biệt thự Ngọc Trai, còn tin B là căn hộ 2PN Vinhomes Ocean Park, nên người duyệt nên xem đây là hai bất động sản khác nhau.\"}",
+   "usage": {
+    "inputTokens": 708,
+    "outputTokens": 168
+   },
+   "duong": "anthropic",
+   "ket_luan_truoc": "no",
+   "ket_luan_sau": "no"
+  },
+  {
+   "cap": {
+    "offer_a": "offer_73d17488b867b612",
+    "offer_b": "offer_91fefd2e39f51de6"
+   },
+   "raw": "{\"giai_thich\":\"Máy kết luận hai tin là cùng một căn vì giá/m² của hai tin khá sát nhau (57.4 triệu và 53.1 triệu), diện tích khớp trong sai số (62.9 m² và 64 m²), cùng phường Gia Lâm và cùng loại hình căn hộ. Tổng giá hai tin có chênh lệch (3.61 tỷ và 3.40 tỷ), nhưng lý do này không nằm trong các tiêu chí máy đã dùng để kết luận.\"}",
+   "usage": {
+    "inputTokens": 672,
+    "outputTokens": 388
+   },
+   "duong": "anthropic",
+   "ket_luan_truoc": "yes",
+   "ket_luan_sau": "yes"
+  },
+  {
+   "cap": {
+    "offer_a": "offer_afae36cc01738125",
+    "offer_b": "offer_2a52098f5281c950"
+   },
+   "raw": "{\"giai_thich\":\"Máy kết luận hai tin là khác căn. Giá/m² (56.7 và 53.9 triệu) khá sát nhau, diện tích khớp trong sai số và cùng phường Gia Lâm, nhưng loại hình khác nhau (house và apartment), và tin B có tiêu đề ghi căn hộ The Paris - Vinhomes Ocean Park 1, nên người duyệt nên kiểm tra lại loại hình và dự án trước khi kết luận.\"}",
+   "usage": {
+    "inputTokens": 730,
+    "outputTokens": 291
+   },
+   "duong": "anthropic",
+   "ket_luan_truoc": "no",
+   "ket_luan_sau": "no"
+  },
+  {
+   "cap": {
+    "offer_a": "offer_85b360a7ba39ac83",
+    "offer_b": "offer_3128eb5bbdba0457"
+   },
+   "raw": "{\"giai_thich\":\"Máy kết luận hai tin là cùng một căn vì giá/m² của hai tin khá sát nhau (56,7 và 61,2 triệu), diện tích khớp trong sai số (47,6 và 49 m²), cùng phường Gia Lâm và cùng loại hình căn hộ. Tổng giá bán khác nhau (2,70 và 3,00 tỷ) nhưng không nằm trong các lý do máy dùng để đưa ra kết luận này.\"}",
+   "usage": {
+    "inputTokens": 709,
+    "outputTokens": 443
+   },
+   "duong": "anthropic",
+   "ket_luan_truoc": "yes",
+   "ket_luan_sau": "yes"
+  },
+  {
+   "cap": {
+    "offer_a": "offer_1590533767038e23",
+    "offer_b": "offer_9f3cadcce6dc0105"
+   },
+   "raw": "{\"giai_thich\":\"Máy kết luận hai tin là cùng một căn vì giá/m² sát nhau (55,6 so với 60,5 triệu), diện tích khớp trong sai số (63 so với 57 m²), và cùng phường, cùng loại hình căn hộ. Người duyệt nên lưu ý tin A ghi tòa \\\"Beverly\\\" còn tin B ghi \\\"Zurich\\\" nên cần kiểm tra thêm tên tòa.\"}",
+   "usage": {
+    "inputTokens": 714,
+    "outputTokens": 685
+   },
+   "duong": "anthropic",
+   "ket_luan_truoc": "yes",
+   "ket_luan_sau": "yes"
+  },
+  {
+   "cap": {
+    "offer_a": "offer_341c510d1a43bf2e",
+    "offer_b": "offer_aba358df0858fb29"
+   },
+   "raw": "{\"giai_thich\":\"Máy kết luận hai tin là cùng một căn dựa trên: giá/m² gần nhau (56.7 triệu và 57.7 triệu), diện tích được máy coi là khớp trong sai số (47.6 m² và 43 m²), cùng phường Gia Lâm và cùng loại hình căn hộ. Tổng giá bán khác nhau (2.70 tỷ và 2.48 tỷ) nhưng không nằm trong lý do máy đưa ra.\"}",
+   "usage": {
+    "inputTokens": 698,
+    "outputTokens": 301
+   },
+   "duong": "anthropic",
+   "ket_luan_truoc": "yes",
+   "ket_luan_sau": "yes"
+  },
+  {
+   "cap": {
+    "offer_a": "offer_c30e272606dd9f2f",
+    "offer_b": "offer_d850ad29f0978064"
+   },
+   "raw": "{\"giai_thich\":\"Máy kết luận hai tin là cùng một căn dựa trên các lý do: giá/m² của hai tin sát nhau (60.4 và 67.1 triệu), diện tích khớp trong sai số cho phép (62.9 m² và 68 m²), cùng phường Gia Lâm và cùng loại hình căn hộ. Tin B nêu rõ tên dự án Zenpark, trong khi tin A chỉ ghi khu Paris.\"}",
+   "usage": {
+    "inputTokens": 710,
+    "outputTokens": 432
+   },
+   "duong": "anthropic",
+   "ket_luan_truoc": "yes",
+   "ket_luan_sau": "yes"
+  },
+  {
+   "cap": {
+    "offer_a": "offer_c30e272606dd9f2f",
+    "offer_b": "offer_725fdb4a2b82f1a7"
+   },
+   "raw": "{\"giai_thich\":\"Máy kết luận hai tin là cùng một căn vì giá/m² gần nhau (60,4 triệu và 59,1 triệu), diện tích khớp trong sai số (62,9 m² và 66 m²), cùng phường Gia Lâm và cùng loại hình căn hộ. Lưu ý, lý do của máy không xét tên dự án: tin A ghi \\\"khu Paris\\\", tin B ghi \\\"VinHomes Ocean Park\\\", nên người duyệt nên đối chiếu thêm.\"}",
+   "usage": {
+    "inputTokens": 707,
+    "outputTokens": 556
+   },
+   "duong": "anthropic",
+   "ket_luan_truoc": "yes",
+   "ket_luan_sau": "yes"
+  },
+  {
+   "cap": {
+    "offer_a": "offer_02ab78a7eaa0f905",
+    "offer_b": "offer_1cc02abba9b6a7c9"
+   },
+   "raw": "{\"giai_thich\":\"Máy kết luận hai tin là cùng một căn nhà vì diện tích đều là 80 m², giá/m² chênh nhau rất nhỏ (52.5 so với 52.3 triệu), cùng thuộc phường Cầu Giấy và cùng loại hình căn hộ. Tin A không có nội dung mô tả nên kết luận chỉ dựa trên các trường số liệu và vị trí.\"}",
+   "usage": {
+    "inputTokens": 550,
+    "outputTokens": 154
+   },
+   "duong": "anthropic",
+   "ket_luan_truoc": "yes",
+   "ket_luan_sau": "yes"
+  },
+  {
+   "cap": {
+    "offer_a": "offer_afae36cc01738125",
+    "offer_b": "offer_0dea5ec3390bc282"
+   },
+   "raw": "{\"giai_thich\":\"Máy kết luận hai tin là khác căn. Dù giá/m² (56.7 và 57.8 triệu) và diện tích (75.9 và 83 m²) khá gần nhau và cùng khu vực, hai tin khác loại hình (house và apartment) và khác số phòng ngủ (2N+1 và 3PN), nên không phải cùng một căn nhà.\"}",
+   "usage": {
+    "inputTokens": 733,
+    "outputTokens": 304
+   },
+   "duong": "anthropic",
+   "ket_luan_truoc": "no",
+   "ket_luan_sau": "no"
+  },
+  {
+   "cap": {
+    "offer_a": "offer_85b360a7ba39ac83",
+    "offer_b": "offer_ec5c2cd87eca7a90"
+   },
+   "raw": "{\"giai_thich\":\"Máy kết luận hai tin là cùng một căn dựa trên các lý do: giá/m² sát nhau (56.7 tr và 65.8 tr), diện tích khớp trong sai số (47.6 m² và 45.6 m²), cùng phường Gia Lâm và cùng loại hình căn hộ. Tin A và tin B đều thuộc loại căn hộ tại Gia Lâm.\"}",
+   "usage": {
+    "inputTokens": 706,
+    "outputTokens": 392
+   },
+   "duong": "anthropic",
+   "ket_luan_truoc": "yes",
+   "ket_luan_sau": "yes"
+  },
+  {
+   "cap": {
+    "offer_a": "offer_85195e7ccf2519d8",
+    "offer_b": "offer_9c165a0ec3c10e43"
+   },
+   "raw": "{\"giai_thich\":\"Máy kết luận hai tin là khác căn. Giá/m² (72,4 tr và 78,7 tr), diện tích (76 m² và 80 m²), phường và loại hình đều gần nhau hoặc giống nhau, nhưng số phòng ngủ khác nhau nên máy không ghép thành cùng một căn. Tin B có tiêu đề ghi \\\"6,xT\\\" và không có nội dung mô tả để đối chiếu thêm.\"}",
+   "usage": {
+    "inputTokens": 568,
+    "outputTokens": 430
+   },
+   "duong": "anthropic",
+   "ket_luan_truoc": "no",
+   "ket_luan_sau": "no"
+  }
+ ],
+ "chi_usd": 0.04942740000000001,
+ "mtplx": 0,
+ "het_tran": false,
+ "duong": {
+  "anthropic:claude-haiku-5-5": 130
+ }
+}
