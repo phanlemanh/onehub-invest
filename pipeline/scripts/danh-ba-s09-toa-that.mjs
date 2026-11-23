@@ -11,10 +11,15 @@
 //   --doi-soat-ma-cu  chia toà gói 1 đi nhánh mã cũ theo lớp toà có sẵn (mẫu số / gom), in toà gom nhận mã mới
 //   --giu-db          T7/E11: dựng DB GIỮ LẠI oneinvest_s09ui từ bản mẫu (createdb -T), chạy trọn lượt trên đó, không xoá — để mở app
 //                     ở cổng riêng chụp /ops/registry. Xoá sau khi chụp: bash db/db-thu.sh oneinvest_s09ui --xoa
+//   --dem             lệnh đếm CHỈ ĐỌC (hợp đồng §Đường đo; lệnh kiểm sau của hồ sơ áp): chạy thẳng trên DATABASE_URL (máy này, kể cả máy
+//                     thu `oneinvest`), giao dịch read-only — không áp, không nạp, không dựng; in E2, E10, E12 và chuông như lượt bản chép.
+//     --ghi-truoc <tệp>  (cùng --dem) chỉ ghi khoá toà và số toà mỗi nút dự án hiện có ra tệp rồi thoát — chạy NGAY TRƯỚC lượt dựng đầu.
+//     --truoc <tệp>      (cùng --dem) tệp đã ghi trước lượt dựng: mốc để tách toà «bí danh» với «tạo mới» và đo «nút không giảm toà».
+//   DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest node pipeline/scripts/danh-ba-s09-toa-that.mjs --dem --truoc <tệp>
 // Bản chép: script tự chạy lại mình qua `db/db-thu.sh oneinvest_suite_s09that --chay` — DB của lượt sinh bằng `createdb -T` từ bản
 // mẫu oneinvest_suite_mau (cùng khuôn danh-ba-s16-cau-truc-that.mjs của DA37), xoá khi lệnh dừng.
 import { spawnSync } from "node:child_process";
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { gunzipSync } from "node:zlib";
 import pg from "pg";
@@ -40,7 +45,11 @@ const loi = [];
 const o = (ten, thuc, ok, ghi = "") => { console.log(`${ok ? "  " : "✗ "}${ten}: ${thuc}${ghi ? ` (${ghi})` : ""}`); if (!ok) loi.push(ten); };
 
 const DB_GIU = "oneinvest_s09ui";
-if (!TRONG) {
+const DEM = co("--dem");
+if (DEM && (co("--giu-db") || co("--bot-tang") || co("--noi-sai-toa") || arg("--bo-phan"))) {
+  console.error("từ chối: --dem chỉ đọc, không đi cùng --giu-db, --bot-tang, --noi-sai-toa, --bo-phan"); process.exit(2);
+}
+if (!TRONG && !DEM) {
   let r;
   if (co("--giu-db")) {
     const dx = (...a) => spawnSync("docker", ["exec", "-e", "PGPASSWORD=oneinvest", "one-invest-db", ...a], { encoding: "utf8" });
@@ -59,19 +68,41 @@ if (!TRONG) {
 }
 
 const TEN = new URL(process.env.DATABASE_URL ?? "postgres://x/").pathname.slice(1);
-if (!/^oneinvest_suite_s09that_[0-9]+$/.test(TEN) && TEN !== DB_GIU) { console.error(`từ chối: DB «${TEN}» không phải DB của lượt db-thu --chay`); process.exit(2); }
+if (DEM) {
+  // Chỉ đọc nên được trỏ DB máy thu; vẫn chỉ máy này (cùng MAY_CHU với lượt bản chép), không máy chủ ngoài.
+  if (!/^oneinvest(_[a-z0-9_]+)?$/.test(TEN)) { console.error(`từ chối: --dem cần DATABASE_URL tới DB oneinvest* trên máy này (đang «${TEN}»)`); process.exit(2); }
+} else if (!/^oneinvest_suite_s09that_[0-9]+$/.test(TEN) && TEN !== DB_GIU) { console.error(`từ chối: DB «${TEN}» không phải DB của lượt db-thu --chay`); process.exit(2); }
 const URL_THU = `${MAY_CHU}/${TEN}`;
 const c = new pg.Client({ connectionString: URL_THU });
 await c.connect();
 const q = async (sql, a = []) => (await c.query(sql, a)).rows;
 const mot = async (sql, a = []) => Object.values((await q(sql, a))[0] ?? {})[0];
+// Mốc trước lượt dựng: khoá toà có sẵn và số toà mỗi nút dự án (đi lên cây tới nút project).
+const SQL_TOA_THEO_NUT = `
+    WITH RECURSIVE g AS (SELECT b.building_key, n.id AS cur, n.node_type, n.parent_id FROM buildings b JOIN asset_nodes n ON n.id = b.region_node_id
+                         UNION ALL SELECT g.building_key, n.id, n.node_type, n.parent_id FROM g JOIN asset_nodes n ON n.id = g.parent_id WHERE g.node_type <> 'project')
+    SELECT cur AS nut, count(*)::int AS n FROM g WHERE node_type = 'project' GROUP BY 1`;
+if (DEM) await c.query("SET default_transaction_read_only = on");
+if (DEM && arg("--ghi-truoc")) {
+  try {
+    const buildings = (await q("SELECT building_key FROM buildings ORDER BY 1")).map((r) => r.building_key);
+    const toaTheoNut = Object.fromEntries((await q(SQL_TOA_THEO_NUT)).map((r) => [r.nut, r.n]));
+    writeFileSync(arg("--ghi-truoc"), JSON.stringify({ db: TEN, luc: new Date().toISOString(), buildings, toa_theo_nut: toaTheoNut }));
+    console.log(`danh-ba-s09-toa-that --dem: ghi mốc trước lượt dựng — ${buildings.length} toà, ${Object.keys(toaTheoNut).length} nút dự án`);
+  } finally { await c.end(); }
+  process.exit(0);
+}
+const MOC = DEM ? (arg("--truoc") ? JSON.parse(readFileSync(arg("--truoc"), "utf8")) : null) : null;
+if (DEM && !MOC) { await c.end(); console.error("từ chối: --dem cần --truoc <tệp> (ghi bằng --ghi-truoc ngay trước lượt dựng đầu)"); process.exit(2); }
 
 try {
-  // ---- 1. Áp 115 + 125 (hai lần), nạp ba bản thu ----
-  for (const f of ["115_stg_s09_danh_ba.sql", "125_v_s09_db_du_an_ma_tinh.sql"]) {
-    apTep(TEN, join(GOC, "db/migrations", f)); apTep(TEN, join(GOC, "db/migrations", f));
+  // ---- 1. Áp 115 + 125 (hai lần), nạp ba bản thu ----  (--dem: bỏ, chỉ đếm cái đã có)
+  if (!DEM) {
+    for (const f of ["115_stg_s09_danh_ba.sql", "125_v_s09_db_du_an_ma_tinh.sql"]) {
+      apTep(TEN, join(GOC, "db/migrations", f)); apTep(TEN, join(GOC, "db/migrations", f));
+    }
+    for (const b of BAN_THU) await napDanhBaThuMuc(join(SNAP, b), URL_THU);
   }
-  for (const b of BAN_THU) await napDanhBaThuMuc(join(SNAP, b), URL_THU);
   o("dong_ban_hong", await mot("SELECT count(*)::int FROM stg_s09_danh_ba WHERE snapshot_id = $1", [BAN_HONG]), true);
   if (co("--bot-tang")) {
     await c.query(`UPDATE stg_s09_danh_ba SET payload = jsonb_set(payload, '{data}', (payload -> 'data') - (jsonb_array_length(payload -> 'data') - 1))
@@ -119,12 +150,11 @@ try {
   o("E2 ô lệch", lechO, lechO === 0);
 
   // ---- 3. Dựng danh bạ (hai lần: lần hai phải ra cùng số) ----
-  const BEFORE = new Set((await q("SELECT building_key FROM buildings")).map((r) => r.building_key));
-  const toaTheoNutTruoc = new Map((await q(`
-    WITH RECURSIVE g AS (SELECT b.building_key, n.id AS cur, n.node_type, n.parent_id FROM buildings b JOIN asset_nodes n ON n.id = b.region_node_id
-                         UNION ALL SELECT g.building_key, n.id, n.node_type, n.parent_id FROM g JOIN asset_nodes n ON n.id = g.parent_id WHERE g.node_type <> 'project')
-    SELECT cur AS nut, count(*)::int AS n FROM g WHERE node_type = 'project' GROUP BY 1`)).map((r) => [r.nut, r.n]));
-  const kq1 = await dung(c, { khuSlugs: [...KHU_MAC_DINH], log: () => {} });
+  const BEFORE = DEM ? new Set(MOC.buildings) : new Set((await q("SELECT building_key FROM buildings")).map((r) => r.building_key));
+  // Khoá nút là chuỗi ở cả hai đường (tệp mốc JSON và truy vấn), để so trước/sau không lệch kiểu.
+  const toaTheoNutTruoc = DEM ? new Map(Object.entries(MOC.toa_theo_nut))
+    : new Map((await q(SQL_TOA_THEO_NUT)).map((r) => [String(r.nut), r.n]));
+  const kq1 = DEM ? null : await dung(c, { khuSlugs: [...KHU_MAC_DINH], log: () => {} });
 
   async function doPhan() {
     const p = {};
@@ -227,7 +257,7 @@ try {
   o("bi_danh_lech_tang", p.bi_danh_lech_tang, p.bi_danh_lech_tang === 0, "phải 0");
   o("xung_dot_ma_cu_ten (thẻ, mong đợi 0)", p.xung_dot_ma_cu_ten, true);
   o("ma_cu_hai_toa (thẻ)", p.ma_cu_hai_toa, true);
-  o("toa_theo_ma_cu (bước dựng)", kq1?.s09_goi1?.toa?.theo_ma_cu ?? "?", true);
+  if (!DEM) o("toa_theo_ma_cu (bước dựng)", kq1?.s09_goi1?.toa?.theo_ma_cu ?? "?", true);
   if (co("--doi-soat-ma-cu")) {
     // Đối soát «mẫu số mã cũ (toà có sẵn) ↔ toà gói 1 đi nhánh mã cũ»: mỗi toà gói 1 nối về toà mang mã cũ có block = toa_id.
     const ds = await q(`
@@ -287,7 +317,7 @@ try {
   o("tang", p.tang, p.tang === DICH.tang, `đích ${DICH.tang}`);
   o("hai_upi", p.hai_upi, p.hai_upi === 0, "phải 0");
   o("can_s09_tao", p.can_s09, p.can_s09 === 0, "bước S09 tạo 0 căn");
-  o("buoc_s09_bo_qua", kq1?.s09_goi1?.bo_qua ?? "không", !kq1?.s09_goi1?.bo_qua);
+  if (!DEM) o("buoc_s09_bo_qua", kq1?.s09_goi1?.bo_qua ?? "không", !kq1?.s09_goi1?.bo_qua);
 
   // ---- 4. E12 (AC-11): khớp trọn, không nút trùng nơi; nút đã có không mất toà ----
   const banGhi = await q(`
@@ -304,25 +334,24 @@ try {
      GROUP BY l.asset_node_id, l.source_project_id`, [[...BEFORE]]);
   const trung = timNutTrungNoi(banGhi.map((r) => ({ ...r, nut: r.nut.map(Number) })));
   o("E12 nút trùng nơi", trung.length, trung.length === 0);
-  const toaTheoNutSau = new Map((await q(`
-    WITH RECURSIVE g AS (SELECT b.building_key, n.id AS cur, n.node_type, n.parent_id FROM buildings b JOIN asset_nodes n ON n.id = b.region_node_id
-                         UNION ALL SELECT g.building_key, n.id, n.node_type, n.parent_id FROM g JOIN asset_nodes n ON n.id = g.parent_id WHERE g.node_type <> 'project')
-    SELECT cur AS nut, count(*)::int AS n FROM g WHERE node_type = 'project' GROUP BY 1`)).map((r) => [r.nut, r.n]));
+  const toaTheoNutSau = new Map((await q(SQL_TOA_THEO_NUT)).map((r) => [String(r.nut), r.n]));
   const giam = [...toaTheoNutTruoc].filter(([n, so]) => (toaTheoNutSau.get(n) ?? 0) < so).length;
   o("E12 nút đã có bị giảm toà", giam, giam === 0);
   // Đối chứng dương trên cùng bản chép: cấy một bản ghi nằm ở nút 0 mà ba toà trỏ về một nút có thật → đúng một dòng nêu nút 0.
-  const nutThat = [...toaTheoNutTruoc.keys()][0];
+  const nutThat = Number([...toaTheoNutTruoc.keys()][0]);
   const cay = timNutTrungNoi([...banGhi.map((r) => ({ ...r, nut: r.nut.map(Number) })), { node_id: 0, tong: 3, co_bang_chung: 3, nut: [nutThat, nutThat, nutThat] }]);
   o("E12 đối chứng cấy bản ghi sai nút", cay.length, cay.length === 1 && cay[0].node_id === 0, "phải đúng 1 dòng nêu nút cấy");
 
   // ---- 5. Chuông DA57 (số chạy thử cho T8) và chạy lại cùng số ----
   o("chuong_ten_lech (T8, mong đợi 0)", await mot(SQL_CHUONG_TEN_LECH), true);
-  await dung(c, { khuSlugs: [...KHU_MAC_DINH], log: () => {} });
-  const p2 = await doPhan();
-  const khac = Object.keys(p).filter((k) => JSON.stringify(p[k]) !== JSON.stringify(p2[k]));
-  o("E10 chạy lại cùng số", khac.length ? `khác: ${khac.join(", ")}` : "giống", khac.length === 0);
+  if (!DEM) {
+    await dung(c, { khuSlugs: [...KHU_MAC_DINH], log: () => {} });
+    const p2 = await doPhan();
+    const khac = Object.keys(p).filter((k) => JSON.stringify(p[k]) !== JSON.stringify(p2[k]));
+    o("E10 chạy lại cùng số", khac.length ? `khác: ${khac.join(", ")}` : "giống", khac.length === 0);
+  }
 } finally {
   await c.end();
 }
-console.log(loi.length ? `danh-ba-s09-toa-that: LỆCH ${loi.length} ô — ${loi.join(", ")}` : "danh-ba-s09-toa-that: ĐẠT");
+console.log(loi.length ? `danh-ba-s09-toa-that${DEM ? " --dem" : ""}: LỆCH ${loi.length} ô — ${loi.join(", ")}` : `danh-ba-s09-toa-that${DEM ? " --dem" : ""}: ĐẠT`);
 process.exit(loi.length ? 1 : 0);
