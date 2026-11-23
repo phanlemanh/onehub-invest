@@ -70,23 +70,27 @@ evals:
     criterion: AC-9
     executor: test
     cmd: config:executors.suite.agent
+    long_running: 40
     paths: ["agent/**"]
     expected: "cd agent && npm test thoát 0."
   - id: E9b
     criterion: AC-9
     executor: test
     cmd: config:executors.suite.pipeline_a
+    long_running: 60
     paths: ["pipeline/**"]
     expected: "Nửa A của pipeline thoát 0."
   - id: E9c
     criterion: AC-9
     executor: test
     cmd: config:executors.suite.pipeline_b
+    long_running: 60
     paths: ["pipeline/**"]
     expected: "Nửa B của pipeline thoát 0."
   - id: E9d
     criterion: AC-9
     executor: test
     cmd: config:executors.test.scripts
+    long_running: 120
     paths: ["scripts/**", "agent/scripts/enrich-run.ts"]
     expected: "node --test scripts/*.test.mjs thoát 0."
