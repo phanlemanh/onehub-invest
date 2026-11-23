@@ -1,5 +1,5 @@
 // enrich-cli.itest.ts — hồ sơ enrich-chay-sau-nap: CLI enrich-run THẬT (tiến trình con) trên DB thử, với máy chủ LLM
-// giả kiểu OpenAI chạy trong tiến trình test. Đuôi .itest.ts: `npm test` không quét — chạy qua executor
+// giả kiểu Vercel AI Gateway chạy trong tiến trình test (MH1 model-may-sang-haiku: thay máy giả kiểu OpenAI của MTPLX). Đuôi .itest.ts: `npm test` không quét — chạy qua executor
 // enrich_cli_thu (dựng DB thử bằng db/db-thu.sh rồi trỏ ENRICH_DB_THU vào nó).
 // Ghi THẬT vào DB thử (bản sao bỏ đi); từ chối mọi DB không mang tên oneinvest_<…> — không bao giờ :5433/oneinvest.
 // Chiều đỏ: chép agent/ (node_modules symlink) ra thư mục tạm, đột biến một chỗ, chạy cùng ca → phải đỏ đúng thông điệp.
@@ -36,9 +36,10 @@ let soi: pg.Client;
 
 function traLoi(content: string) {
   return {
-    id: "chatcmpl-gia", object: "chat.completion", created: Math.floor(Date.now() / 1000), model: "qwen3.8-27b-local",
-    choices: [{ index: 0, message: { role: "assistant", content }, finish_reason: "stop" }],
-    usage: { prompt_tokens: 10, completion_tokens: 10, total_tokens: 20 },
+    content: [{ type: "text", text: content }],
+    finishReason: { unified: "stop", raw: "stop" },
+    usage: { inputTokens: { total: 10, noCache: 10 }, outputTokens: { total: 10, text: 10 } },
+    warnings: [],
   };
 }
 
@@ -102,7 +103,7 @@ function cli(agentDir: string, args: string[], limit = 50): Promise<KetQua> {
   return new Promise((resolve, reject) => {
     const p = spawn(process.execPath, ["--import", "tsx", "scripts/enrich-run.ts", ...args], {
       cwd: agentDir,
-      env: { ...process.env, DATABASE_URL: DB, MTPLX_URL: `http://127.0.0.1:${port}/v1`, LIMIT: String(limit) },
+      env: { ...process.env, DATABASE_URL: DB, AI_GATEWAY_BASE_URL: `http://127.0.0.1:${port}/gw`, AI_GATEWAY_API_KEY: "khoa-gia", ANTHROPIC_API_KEY: "", LIMIT: String(limit) },
     });
     let out = "";
     p.stdout.on("data", (d) => (out += d));
@@ -120,7 +121,7 @@ const soTrong = (out: string, nhan: string) => Number(out.match(new RegExp(`${nh
 /** Chép agent/ ra thư mục tạm (node_modules symlink), thay một chuỗi trong một tệp; trả thư mục. */
 function dotBien(tep: string, cu: string, moi: string): string {
   const d = mkdtempSync(join(tmpdir(), "enrich-cli-dot-bien-"));
-  for (const x of ["src", "scripts", "package.json", "tsconfig.json"]) cpSync(join(AGENT, x), join(d, x), { recursive: true });
+  for (const x of ["src", "scripts", "config", "package.json", "tsconfig.json"]) cpSync(join(AGENT, x), join(d, x), { recursive: true });
   symlinkSync(join(AGENT, "node_modules"), join(d, "node_modules"));
   const p = join(d, tep);
   const src = readFileSync(p, "utf8");

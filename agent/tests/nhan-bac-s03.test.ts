@@ -192,15 +192,13 @@ test("chiều đỏ NB-AC-6: bản đột biến gọi model không bắt lỗi 
 });
 
 // ---------- NB-AC-7: ba backend qua lớp model có sẵn ----------
-test("NB-AC-7 getModel/getDecisionModel trả model Gateway đúng tên; Qwen giữ MTPLX", () => {
+test("NB-AC-7 getModel/getDecisionModel trả model Gateway đúng tên", () => {
   const h = getModel("haiku") as { modelId: string; provider: string };
   assert.equal(h.modelId, "anthropic/claude-haiku-5.5");
   assert.match(h.provider, /gateway/);
   const d = getDecisionModel() as unknown as { modelId: string; provider: string };
   assert.equal(d.modelId, "openai/gpt-6-luna-decisions");
   assert.match(d.provider, /gateway/);
-  const q = getModel("qwen27b") as { modelId: string };
-  assert.equal(q.modelId, "qwen3.8-27b-local");
   assert.equal(TEN_MODEL.haiku, "gateway:anthropic/claude-haiku-5.5");
 });
 
@@ -228,13 +226,12 @@ test("chiều đỏ NB-AC-7: trả lời đổi tên câu hỏi intent → đỏ
   assert.throws(() => { if (n.listing_intent !== "offer") assert.fail(`NB-AC-7 đọc sai trả lời Decisions: ${n.listing_intent}/${n.error_kind}`); },
     /NB-AC-7 đọc sai trả lời Decisions/);
 });
-test("NB-AC-7 Qwen và Haiku đọc ra cùng hình nhãn; Haiku mang chi phí Gateway, Qwen không", async () => {
+test("NB-AC-7 Haiku đọc ra hình nhãn và mang chi phí Gateway (MH1: backend Qwen đã gỡ)", async () => {
   const tra = '{"intent":"offer","kind":"sale","confidence":0.8,"quote":"3,2 tỷ"}';
-  const q = await hoiBai("qwen", "Bán 2PN 3,2 tỷ", { languageModel: modelChu(tra), recordCall: async () => {} });
   const h = await hoiBai("haiku", "Bán 2PN 3,2 tỷ", { languageModel: modelChu(tra, [], "0.00004100"), recordCall: async () => {} });
   const hinh = (x: Nhan) => [x.listing_intent, x.kind, x.probability, x.quote, x.quote_ok, x.json_ok];
-  assert.deepEqual(hinh(q), hinh(h));
-  assert.deepEqual([q.model, q.cost_usd, h.model, h.cost_usd], [TEN_MODEL.qwen, null, TEN_MODEL.haiku, 0.000041]);
+  assert.deepEqual(hinh(h), ["offer", "sale", 0.8, "3,2 tỷ", true, true]);
+  assert.deepEqual([h.model, h.cost_usd], [TEN_MODEL.haiku, 0.000041]);
 });
 
 // ---------- NB-AC-8: đo trên tập vàng ----------
@@ -319,29 +316,4 @@ test("chiều đỏ NB-AC-9: bản đột biến kiểm trần SAU khi gửi →
   assert.throws(() => kiemTran(dem.n, true), /NB-AC-9 vượt trần chi phí/);
 });
 
-// ---------- NB-AC-7 (bổ sung S4 tập vàng): Qwen nhãn bạc tắt suy nghĩ như classify-s03 ----------
-import { generateText as goiThat } from "ai";
-import { getModel as layModel } from "../src/runtime/models.js";
-async function thanGui(ten: "qwen27b" | "qwen27b-khong-nghi") {
-  const cu = globalThis.fetch;
-  let than: Record<string, unknown> = {};
-  globalThis.fetch = (async (_u: unknown, init?: RequestInit) => {
-    than = JSON.parse(String(init?.body));
-    return new Response(JSON.stringify({ id: "x", object: "chat.completion", created: 0, model: "m",
-      choices: [{ index: 0, message: { role: "assistant", content: "{}" }, finish_reason: "stop" }],
-      usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 } }), { headers: { "content-type": "application/json" } });
-  }) as typeof fetch;
-  try { await goiThat({ model: layModel(ten), prompt: "p", temperature: 0 }); } finally { globalThis.fetch = cu; }
-  return than;
-}
-test("NB-AC-7 Qwen nhãn bạc gửi chat_template_kwargs.enable_thinking=false; bản qwen27b thường không đổi", async () => {
-  const t = await thanGui("qwen27b-khong-nghi");
-  assert.deepEqual(t.chat_template_kwargs, { enable_thinking: false }, "NB-AC-7 Qwen nhãn bạc còn bật suy nghĩ");
-  assert.equal(t.temperature, 0);
-  const thuong = await thanGui("qwen27b");
-  assert.equal(thuong.chat_template_kwargs, undefined, "NB-AC-7 bản qwen27b thường bị đổi theo");
-});
-test("chiều đỏ NB-AC-7: thân của bản qwen27b thường → bộ kiểm tắt-suy-nghĩ đỏ", async () => {
-  const t = await thanGui("qwen27b");
-  assert.throws(() => assert.deepEqual(t.chat_template_kwargs, { enable_thinking: false }, "NB-AC-7 Qwen nhãn bạc còn bật suy nghĩ"), /NB-AC-7 Qwen nhãn bạc còn bật suy nghĩ/);
-});
+// MH1 model-may-sang-haiku (21/11): hai ca «Qwen nhãn bạc tắt suy nghĩ» gỡ cùng backend Qwen.

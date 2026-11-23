@@ -1,5 +1,6 @@
 // vlm-anh-s03.ts — KC3 `vlm-anh-tin-s03`: đọc từng ảnh của bài S03 mà chữ không đủ, gộp thành một nhãn bạc nguồn «ảnh» cho mỗi bài,
-// và chấm trên phiếu gắn tay. Ba model: Qwen local (MTPLX), Claude Haiku 5.5 và DeepSeek V4.1 Flash 1017 qua Vercel AI Gateway.
+// và chấm trên phiếu gắn tay. Hai model: Claude Haiku 5.5 và DeepSeek V4.1 Flash 1017 qua Vercel AI Gateway (model Qwen local qua
+// MTPLX gỡ ở MH1 model-may-sang-haiku, 21/11).
 // Mỗi yêu cầu chỉ có câu hỏi cố định và đúng một ảnh; chữ bài, URL, SĐT, tên nhóm, định danh snapshot, tên tệp không đi theo (luật 6).
 // Ảnh tự in tên nguồn thì máy không gạt được: vòng này gắn nhãn `lo_nguon` và đếm, không chặn (Mạnh 02/11).
 // Luật 7: chỉ ra đề xuất — người gọi ghi vào bảng silver_labels, không đụng canonical. Mỗi lần gọi một dòng ai_calls.
@@ -13,13 +14,12 @@ import { chiPhi, stripPII } from "./nhan-bac-s03.js";
 
 export const PROMPT_VERSION = "vlm-s03-v1";
 export const VIEC = "vlm-anh-s03";
-export type VlmModel = "qwen" | "haiku" | "deepseek";
-export const VLM_MODELS: readonly VlmModel[] = ["qwen", "haiku", "deepseek"];
+export type VlmModel = "haiku" | "deepseek";
+export const VLM_MODELS: readonly VlmModel[] = ["haiku", "deepseek"];
 export const DEEPSEEK_MODEL = "deepseek/deepseek-v4.1-flash-1017";
 
 /** Tên model ghi vào silver_labels.model và ai_calls.model. */
 export const TEN_MODEL: Record<VlmModel, string> = {
-  qwen: "mtplx:qwen3.8-27b-local",
   haiku: `gateway:${GATEWAY_MODEL.haiku}`,
   deepseek: `gateway:${DEEPSEEK_MODEL}`,
 };
@@ -40,13 +40,12 @@ export const PROMPT_SHA = createHash("sha256").update(CAU_HOI).digest("hex");
 
 /** Cờ gửi kèm qua Gateway: không giữ dữ liệu, không dùng huấn luyện; DeepSeek chỉ qua Baseten (Hỏi-3 đã chốt). */
 export function tuyChonGateway(m: VlmModel) {
-  if (m === "qwen") return undefined;
   const chung = { zeroDataRetention: true, disallowPromptTraining: true };
   return { gateway: m === "deepseek" ? { ...chung, only: ["baseten"] } : chung };
 }
 
 /** Giá token đo 02/11 (USD / 1 triệu token) — để ước trước khi gửi và tính khi trả lời không kèm chi phí. */
-export const GIA: Record<VlmModel, { vao: number; ra: number }> = { qwen: { vao: 0, ra: 0 }, haiku: { vao: 0.1, ra: 0.5 }, deepseek: { vao: 0.3, ra: 1.2 } };
+export const GIA: Record<VlmModel, { vao: number; ra: number }> = { haiku: { vao: 0.1, ra: 0.5 }, deepseek: { vao: 0.3, ra: 1.2 } };
 const USD = (m: VlmModel, vao: number, ra: number) => (vao * GIA[m].vao + ra * GIA[m].ra) / 1e6;
 /** Ước một ảnh: ~1600 token vào, ~200 token ra. */
 export const uocMotAnh = (m: VlmModel) => USD(m, 1600, 200);
@@ -115,21 +114,7 @@ export function docTraLoi(raw: string): NoiDungAnh & { json_ok: boolean } {
 export type KetQuaAnh = NoiDungAnh & { sha256?: string; json_ok: boolean; error_kind: string | null; latency_ms: number; cost_usd: number | null; chi_usd: number };
 export type HoiOpts = { recordCall?: RecordCall; languageModel?: LanguageModel; cauHoi?: string; trace?: string | null };
 
-/** @ai-sdk/openai 2 chưa hiểu dạng tệp của ai 7 ({type:"data",data}), chèn "[object Object]" vào thân yêu cầu; gỡ vỏ trước khi tới provider. */
-function qwenCoAnh(): LanguageModel {
-  type Goi = { prompt: { content: unknown }[] };
-  const goc = getModel("qwen27b-khong-nghi") as unknown as { doGenerate(o: Goi): unknown };
-  const goVo = (p: { type?: string; data?: { type?: string; data?: unknown } }) => (p.type === "file" && p.data?.type === "data" ? { ...p, data: p.data.data } : p);
-  return new Proxy(goc, {
-    get(t, k) {
-      if (k !== "doGenerate") return Reflect.get(t, k);
-      return (o: Goi) => t.doGenerate({ ...o, prompt: o.prompt.map((m) => (Array.isArray(m.content) ? { ...m, content: m.content.map(goVo) } : m)) });
-    },
-  }) as unknown as LanguageModel;
-}
-
 function moHinh(m: VlmModel): LanguageModel {
-  if (m === "qwen") return qwenCoAnh();
   if (m === "haiku") return getModel("haiku");
   return createGateway({ baseURL: process.env.AI_GATEWAY_BASE_URL || undefined, apiKey: process.env.AI_GATEWAY_API_KEY })(DEEPSEEK_MODEL);
 }

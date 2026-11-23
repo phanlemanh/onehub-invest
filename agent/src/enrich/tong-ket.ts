@@ -19,10 +19,12 @@ export type DemLuot = {
   llmKhongDoc: number;
   /** Tin ghi hỏng — giao dịch của tin đã lui lại. */
   loiGhi: { offer_id: string; loi: string }[];
+  /** Lượt dừng vì lời gọi kế có thể vượt trần tiền (MH1 AC-5); null khi chạy hết tập. */
+  hetTran: { daChiUsd: number; tranUsd: number } | null;
 };
 
 export function demRong(): DemLuot {
-  return { tin: 0, deXuatMoi: 0, daAp: 0, choDuyet: 0, the: 0, llmGoi: 0, llmLoi: 0, llmKhongDoc: 0, loiGhi: [] };
+  return { tin: 0, deXuatMoi: 0, daAp: 0, choDuyet: 0, the: 0, llmGoi: 0, llmLoi: 0, llmKhongDoc: 0, loiGhi: [], hetTran: null };
 }
 
 const hong = (d: DemLuot) => d.llmLoi + d.llmKhongDoc;
@@ -30,10 +32,11 @@ const hong = (d: DemLuot) => d.llmLoi + d.llmKhongDoc;
 /**
  * Mã thoát (Hỏi-1, Mạnh duyệt 30/10): có tin ghi hỏng → 2, luôn thắng 3 (lỗi ghi không bị LLM che);
  * LLM hỏng (lỗi + không đọc được) từ một nửa số lời gọi, số gọi ≥ 1 → 3; còn lại 0.
- * Mã 1 (hỏng ngoài vòng tin) do CLI đặt.
+ * Mã 1 (hỏng ngoài vòng tin) do CLI đặt. Dừng vì trần tiền (MH1 AC-5) → 4, sau lỗi ghi.
  */
-export function maThoat(d: DemLuot): 0 | 2 | 3 {
+export function maThoat(d: DemLuot): 0 | 2 | 3 | 4 {
   if (d.loiGhi.length > 0) return 2;
+  if (d.hetTran) return 4;
   if (d.llmGoi > 0 && 2 * hong(d) >= d.llmGoi) return 3;
   return 0;
 }
@@ -45,6 +48,7 @@ export function dongTongKet(d: DemLuot): string[] {
     `LLM hỏng ${h}/${d.llmGoi} (lỗi ${d.llmLoi} · không đọc được ${d.llmKhongDoc})`,
   ];
   if (h > 0 && 2 * h < d.llmGoi) dong.push(`⚠ LLM hỏng ${h}/${d.llmGoi}`);
+  if (d.hetTran) dong.push(`✗ hết trần: đã chi ${d.hetTran.daChiUsd.toFixed(4)} USD / trần ${d.hetTran.tranUsd} USD — dừng trước lời gọi kế`);
   if (d.loiGhi.length > 0) {
     dong.push(`✗ ghi lỗi ${d.loiGhi.length} tin: ${d.loiGhi.map((l) => `${l.offer_id}(${l.loi})`).join(", ")}`);
   }

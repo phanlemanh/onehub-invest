@@ -69,15 +69,13 @@ const eslintConfig = defineConfig([
     "src/components/blocks/**",
     // Bản sao nguyên văn maplibre-gl/dist (đã minify), xem lib/map-worker.ts.
     "public/maplibre-gl-worker.mjs",
-    // Bản chép tạm của ca thử công tắc nhóm thu (tests/cong-tac-nhom-go, scripts/cong-tac-ghim.itest): tạo rồi xoá giữa
-    // lượt, lint chạy chồng thì liệt kê được mà mở không thấy (ENOENT).
-    "**/.route-cu-*",
-    "**/.gb-cu-*",
+    // Bản chép tạm của các test chạy song song: mỗi test chép tệp app vào app/tests/.<mã>-cu-<pid>… (tệp hoặc thư mục; ca
+    // công tắc nhóm thu chép .route-cu-* vào ngay thư mục route) rồi xoá giữa lượt — lint chạy chồng thì liệt kê được mà mở
+    // không thấy (ENOENT). Mười sáu kiểu tên hiện có (.aso, .dbn, .dd, .df6, .gb, .gs, .nd, .od1, .od2, .opl, .route, .td,
+    // .tdb, .tpl, .tth, .vt) đều theo dạng «.<mã>-cu-»; một mẫu chung phủ cả kiểu sau này. Tệp tên thường không khớp mẫu.
+    "**/.*-cu-*",
+    "**/.*-cu-*/**",
     "**/.cgt-*",
-    "**/.dbn-cu-*",
-    "**/.tpl-cu-*",
-    // Bản chép tạm của tests/viewer-the-duyet (đối chứng dương), cùng lý do.
-    "**/.vt-cu-*",
   ]),
 ]);
 

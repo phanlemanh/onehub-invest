@@ -260,7 +260,6 @@ export function lyDoChu(kq: KetQuaLuat): string {
 
 export const judgeEntityAgent: AgentConfig = {
   name: "judge-entity",
-  model: "qwen27b",
   systemPrompt: `Bạn hỗ trợ người duyệt bất động sản Việt Nam.
 Máy đã kết luận theo luật cố định rằng hai tin đăng có phải CÙNG MỘT CĂN NHÀ hay không, kèm các lý do đo được.
 Nhiệm vụ của bạn: viết từ một đến ba câu tiếng Việt giải thích kết luận ấy cho người duyệt, dựa trên dữ liệu và lý do được đưa.
