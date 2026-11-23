@@ -12,7 +12,7 @@ flowchart TD
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>21 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>216 việc"]
+  GB --> DG["Đã giao<br/>220 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>141 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
@@ -267,6 +267,7 @@ flowchart TD
 - Tự kiểm live của DB local đo đủ bốn nhánh dữ liệu, gồm volume khác tên (`db-volume-check-volume-khac-ten`)
 - Thước live của DB local không đòi bản lùi tồn tại mãi (`db-volume-live-ban-lui`)
 - danh-ba-vat-the.itest.mjs xanh lại trên main — fixture theo luật ISO một tỉnh, phép đo lũy đẳng 082 trên DB dừng ở 082 (`dbv-itest-xanh-lai-tren-main`) — đã giao — máy thông, cửa veto còn mở
+- Lệnh đo Căn giá tốt (scripts/deals-phi-ly-do.mjs) tự dựng tin phi lý đối chứng trong giao dịch, nên đối chứng không đỏ oan trên DB đã qua bước đêm mà vẫn đỏ khi luật loại hỏng (`deals-phi-ly-do-doi-chung-tu-tinh`)
 - test DB theo lược đồ sau 044 — DP-AC-5 xoá cột PII trên bảng bản ghi, test không áp lại 044 khi DB đã có (`deals-phi-ly-test-theo-view`)
 - tài khoản ops thử chỉ ở DB local cho máy tự đăng nhập dev (`dev-ops-account`) — đã giao — máy thông, cửa veto còn mở
 - Biểu đồ «Chặng theo ngày» trên /ops/data-flow vẽ đủ mọi ngày của cửa sổ, ngày nguồn im là điểm 0 (`df0-chang-theo-ngay-diem-0`)
@@ -299,6 +300,7 @@ flowchart TD
 - Gộp nút phân khu do luật S16 đúc vào nút sẵn có bằng bằng chứng mã căn S16, qua thẻ nối có băm của DA46, đảo được (`gop-nut-trung-ma-can-s16`) — đã giao — máy thông, bằng chứng xanh-sạch
 - probe GS-AC-6 của the-so-gia-tri-song chỉ xét thẻ ghép căn có bên (evidence.<bên>.offer_id là chuỗi), không nhận nhầm thẻ danh bạ DA33 là «tin rời kho» (`gs-ac-6-the-khong-tin-a`) — đã giao — máy thông, cửa veto còn mở
 - guard-edits lấy gốc theo kho chứa tệp — luật chặn sửa migration đã commit chạy cả khi tệp ở worktree khác (`guard-edits-goc-theo-tep`)
+- Hai ca test app (DO3-AC-7, SD-AC-6) đúng trên dữ liệu máy — không còn đỏ vì dữ liệu thật đổi, vẫn đỏ đúng khi điều chúng canh bị phá (`hai-ca-app-dung-tren-du-lieu-may`) — đã giao — máy thông, cửa veto còn mở
 - ZC6 nối tiếp — hook Zalo giữ tin lại hàng đợi khi khoá collector sai (401/403/404) và có trần thời gian cho cả lượt xả (`hook-spool-nghiem-ngat`)
 - ZC6 — hook Zalo giữ tin trong hàng đợi cục bộ khi collector chết rồi gửi lại, không làm treo gateway (`hook-zalo-spool`)
 - job hằng ngày S06 không còn xoá số và tên người bán đã thu; bộ thu số gọi mỗi tài khoản một lần (`hop-dong-nguoi-ban-s06`)
@@ -309,6 +311,7 @@ flowchart TD
 - Itest nạp lại migration cũ xanh lại trên DB đã có 095 — phép đo về migration X chạy trên DB dừng ở X, bộ nạp lại không bao giờ thu hẹp ràng buộc trường, bền với 096 (`itest-nap-lai-migration-cu-sau-095`)
 - Lưới phạm vi làn của JST-AC-8 đo trên bản chép — hai ô đột biến dựng diff từ hai tệp tạm bằng git diff --no-index thay vì ghi vào scripts/zalo-import-daily.sh thật trong cây làm việc (`job-step-do-tren-ban-chep`) — đã giao — máy thông, cửa veto còn mở
 - Ghi thời lượng từng bước của job nạp — job_step, job_run và buoc_nhanh in một dòng ghim JOB STEP ra stderr (job, bước, mã, giây, cột nhanh), kèm một bước gộp truoc-lan-claude đo phần lấy khoá và nạp của zalo-import-daily.sh; phép đo không mở hay ghi tệp nào (`job-step-ghi-thoi-luong`)
+- Lượt nền KDM-AC-3 chạy với bộ phân xử resolve_offer_fields đang có trong DB — napPhatBieu áp lại phần chèn 068 và 099 sau khi nạp lại 045 (`kdm-ac-3-luot-nen-dung-ham-phan-xu-hien-hanh`)
 - ZC1 nối tiếp — cứng hoá ingest của collector API (media rác không làm hỏng lô, id tin chữ giữ nguyên, payload nguyên vẹn) (`kev-nhan-cung-hoa`)
 - sửa thước kiểm kev-nhan đỏ sẵn trên main — tên thư mục giả theo khuôn PL1 và chữ log Kev hỏng theo ZC6 (`kev-nhan-thuoc-sau-pl1`)
 - PL4 — hook Zalo đẩy mọi tin tới collector kèm điểm Kev (meta.kev), không bỏ tin theo điểm (`kev-thanh-nhan`)
@@ -330,6 +333,7 @@ flowchart TD
 - Người vận hành đọc «Luồng 7 ngày qua» trên /ops/collections thấy mỗi cột đếm đúng thứ nhãn nói — tin rao đúng nguồn, đủ 7 ngày từ số máy thu đẩy lên, cột không có số trên máy chủ ghi «Chỉ ở máy thu» (`luong-7-ngay-dung-so`)
 - Ca «M2-AC-10 chỉ thêm hai dòng config» so cặp commit cố định 3b3a33e5^→3b3a33e5 thay vì merge-base origin/main, để bộ test design-floor không đỏ trên main sau khi gộp hay trên nhánh khác sửa config.yaml (`m2-ac10-so-cap-co-dinh`)
 - Hai test DB (agent AC-10, app the-duyet «public đã bị chạm») không đỏ theo tải của DB local dùng chung, không nới assertion (`main-xanh-duoi-tai-db`)
+- Chuyển mọi agent làn Claude từ Qwen trên MTPLX sang Haiku 5.5 cloud (Anthropic thẳng, lùi sang Gateway), đổi model bằng cấu hình (`model-may-sang-haiku`)
 - Kiểm N1 đêm của danh bạ SĐT không đếm người đã tách là «chưa gộp», nên không đỏ vĩnh viễn sau lần tách đầu tiên (`n1-dem-nguoi-tach`)
 - Bộ nạp S09 của làn thu vào main — bản thu S09 khuôn API nạp được vào stg_s09_item (097) bằng lõi DA31, chạy lại không nhân dòng, chỉ ghi DB máy thu khi có cờ tường minh (`nap-s09`)
 - Dọn luật hỏi quyền rộng — rào push main chuyển sang branch protection GitHub như crm/kit (`narrow-ask-rules`)
