@@ -39,7 +39,7 @@ evals:
     cmd: cd agent && bash ../db/db-thu.sh oneinvest_suite_mh1t --chay node --import tsx --test --test-concurrency=1 tests/tran-tien-agent.itest.ts
     long_running: 10
     paths: ["agent/scripts/enrich-run.ts", "agent/scripts/judge-run.ts", "agent/src/runtime/**", "agent/config/model-agent.json", "agent/tests/tran-tien-agent.itest.ts"]
-    expected: "Máy giả của đường trả số token cố định; enrich-run và judge-run với --tran-usd đủ cho đúng k lời gọi: chạy đúng k lời gọi, thoát 4, dòng tổng kết nêu đã chi và trần; ai_calls có k dòng mang <đường>:<mã gọi> (anthropic:claude-haiku-5-5 theo bảng của kho) và token vào, ra; trần đủ lớn thì thoát 0 và chạy hết tập. Chiều đỏ: bỏ kiểm trần trong bản sao thì ca đỏ «AC-5 chạy k+1 lời gọi khi trần chỉ đủ k»."
+    expected: "Máy giả của đường trả số token cố định; enrich-run và judge-run với --tran-usd đủ cho đúng k lời gọi: chạy đúng k lời gọi, thoát 4, dòng tổng kết nêu đã chi và trần; ai_calls có k dòng mang <đường>:<mã gọi> (anthropic:claude-haiku-5-5 theo bảng của kho) và token vào, ra; trần đủ lớn thì thoát 0 và chạy hết tập. Nhánh judge-run (chamMotLuot, CLI judge-run đóng băng V7) trên ba cặp cần LLM với trần đủ hai lời: đúng 2 lời gọi mã Haiku, dem.hetTran ghi đã chi 0,021 và trần 0,022. Chiều đỏ: bỏ kiểm trần trong bản sao thì ca đỏ «AC-5 chạy k+1 lời gọi khi trần chỉ đủ k»; bỏ điểm dừng trần trong bản sao judge-run thì đỏ «AC-5 judge-run chạy 3 lời gọi khi trần chỉ đủ 2»."
   - id: E6
     criterion: AC-6
     executor: test

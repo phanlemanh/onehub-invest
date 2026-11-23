@@ -176,3 +176,58 @@ test("MH1 AC-10 đường ghi đề xuất với đầu ra dạng Haiku: khối 
   const choDb = Number((await db.query(`SELECT count(*) n FROM enrichment_proposals WHERE offer_id = ANY($1) AND source = 'e2_llm' AND route = 'review' AND status = 'queued'`, [ids])).rows[0].n);
   assert.deepEqual([choDuyet, choDb], [CHO_DUYET_KY_VONG, CHO_DUYET_KY_VONG], `MH1 AC-10 «chờ duyệt» tổng kết ${choDuyet}, DB ${choDb} — kỳ vọng ${CHO_DUYET_KY_VONG}`);
 });
+
+// ---------- AC-5, nhánh judge-run (MH1 S4 r2 t5: trần của judge-run chưa có phép đo) ----------
+/** Hàm kiểm dùng chung cho ca thật và chiều đỏ trần của judge-run (chamMotLuot). */
+function kiemTranJudge(dem: { hetTran: { daChiUsd: number; tranUsd: number } | null }, soGoi: number, k: number) {
+  if (soGoi > k) assert.fail(`MH1 AC-5 judge-run chạy ${soGoi} lời gọi khi trần chỉ đủ ${k}`);
+  assert.equal(soGoi, k, `MH1 AC-5 judge-run số lời gọi ${soGoi} khác ${k}`);
+  assert.ok(dem.hetTran, "MH1 AC-5 judge-run không ghi hetTran khi dừng vì trần");
+  assert.equal(dem.hetTran!.tranUsd, Number(TRAN_HAI_LOI));
+  assert.ok(Math.abs(dem.hetTran!.daChiUsd - 0.021) < 1e-9, `MH1 AC-5 judge-run đã chi ${dem.hetTran!.daChiUsd} khác 0,021`);
+}
+
+/** Ba cặp ghép căn cần LLM từ sáu tin mới; gác mọi cặp và thẻ chờ khác của DB thử để chỉ chấm ba cặp này. */
+async function gieoBaCap(): Promise<string[]> {
+  const ids = await gieo(6);
+  for (const id of ids) await db.query(`UPDATE sale_offer_records SET price_vnd = 3200000000, area_m2 = 70 WHERE offer_id = $1`, [id]);
+  for (let i = 0; i < 6; i += 2) {
+    await db.query(`INSERT INTO property_candidates (offer_a, offer_b, score, status) VALUES ($1, $2, 0.7, 'needs_llm')`, [ids[i], ids[i + 1]]);
+  }
+  await db.query(`UPDATE property_candidates SET status = 'pending' WHERE status = 'needs_llm' AND NOT (offer_a = ANY($1) AND offer_b = ANY($1))`, [ids]);
+  await db.query(`UPDATE review_queue SET status = 'deferred', decided_by = 'mh1-gac' WHERE item_type = 'entity_match' AND status IN ('pending', 'deferred') AND decided_by IS DISTINCT FROM 'mh1-gac'`);
+  return ids;
+}
+
+async function chamVoiTran(agentDir: string) {
+  process.env.DATABASE_URL = DB;
+  process.env.ANTHROPIC_BASE_URL = gw.url;
+  process.env.ANTHROPIC_API_KEY = "khoa-gia";
+  process.env.AI_GATEWAY_BASE_URL = "http://127.0.0.1:9/gw-khong-dung";
+  process.env.AI_GATEWAY_API_KEY = "khoa-gia";
+  const { chamMotLuot } = await import(join(agentDir, "scripts/judge-run.ts"));
+  const { queryPair } = await import(join(agentDir, "src/tools/native.ts"));
+  const { modelCuaAgent, taoTran } = await import(join(agentDir, "src/runtime/model-agent.ts"));
+  const tran = taoTran(Number(TRAN_HAI_LOI), modelCuaAgent("judge-entity").gia);
+  return chamMotLuot(db, { queryPair: (a: string, b: string) => queryPair(a, b, db), recordCall: async () => {}, tran });
+}
+
+test("MH1 AC-5 judge-run (chamMotLuot) với trần đủ hai lời gọi: chạy đúng 2 trên 3 cặp, ghi hetTran với đã chi và trần", async () => {
+  await gieoBaCap();
+  gw.datLai();
+  gw.macDinh = { text: '{"giai_thich":"Hai tin cùng giá và diện tích."}', vao: 100000, ra: 1000 };
+  const dem = await chamVoiTran(AGENT);
+  kiemTranJudge(dem, gw.yeuCau.length, 2);
+  assert.ok(gw.yeuCau.every((y) => y.model === MA_GOI), "MH1 AC-5 judge-run gọi mã khác Haiku");
+  assert.equal(mtplx.dem(), 0, "MH1 AC-5 judge-run đã gọi MTPLX");
+});
+
+test("chiều đỏ MH1 AC-5 judge-run: bản sao bỏ điểm dừng trần → hàm kiểm đỏ «judge-run chạy 3 lời gọi khi trần chỉ đủ 2»", async () => {
+  await voiDotBien("scripts/judge-run.ts", "if (!deps.khongLlm && deps.tran && !deps.tran.coTheGoi(", "if (false && !deps.khongLlm && deps.tran && !deps.tran.coTheGoi(", async (d) => {
+    await gieoBaCap();
+    gw.datLai();
+    gw.macDinh = { text: '{"giai_thich":"Hai tin cùng giá và diện tích."}', vao: 100000, ra: 1000 };
+    const dem = await chamVoiTran(d);
+    assert.throws(() => kiemTranJudge(dem, gw.yeuCau.length, 2), /MH1 AC-5 judge-run chạy 3 lời gọi khi trần chỉ đủ 2/);
+  });
+});
