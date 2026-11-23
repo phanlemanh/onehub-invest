@@ -7,6 +7,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { napLai061 } from "./nap-061.mjs";
+import { daCoPhanGiu068, MIG_068 } from "./nap-068.mjs";
 import { napLai095 } from "./nap-095.mjs";
 
 const MIG = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../db/migrations/045_phat_bieu_va_phan_xu.sql"), "utf8");
@@ -36,6 +37,42 @@ const MIG_066 = existsSync(TEP_066) ? readFileSync(TEP_066, "utf8") : "";
 export const HAM_066 = MIG_066 ? MIG_066.slice(0, MIG_066.indexOf("-- 4. Sửa dữ liệu một lần")) : "";
 export const KHOI_SUA_066 = MIG_066 ? MIG_066.slice(MIG_066.indexOf("-- 4. Sửa dữ liệu một lần")) : "";
 
+// 068 (giữ khoá seller_phone) và 099 (phường suy từ dự án, DA45) không chép thân resolve_offer_fields mà đọc định nghĩa đang chạy
+// rồi CHÈN cạnh mốc — nạp lại 045 xoá phần chèn ấy. 099 tự ghi: «migration sau ghi đè resolve_offer_fields thì áp lại 099 (cùng
+// 068)». Thiếu bước này, lượt --thu chạy transform với bộ phân xử cũ hơn DB đang dùng (KDM-AC-3 lượt nền gỡ 7.951 tin, HT5).
+const MIG_099 = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../db/migrations/099_phuong_tu_du_an.sql"), "utf8");
+
+/**
+ * Mọi migration định nghĩa hay chèn vào resolve_offer_fields, theo đúng thứ tự chuỗi nạp lại của napPhatBieu (045 → 059 →
+ * 061 + 069 → 095 → 068 → 099). Ca canh HT5 (scripts/kiem-tin-rao-gan-khu-vuc.test.mjs) đối chiếu danh sách này với mọi tệp
+ * trong db/migrations có `FUNCTION resolve_offer_fields` hay `to_regprocedure('resolve_offer_fields` — thêm migration mới chạm
+ * hàm mà quên nạp lại ở đây thì đỏ gọi tên tệp.
+ */
+export const CHUOI_PHAN_XU = ["045", "059", "061", "069", "095", "068", "099"];
+
+/** Phần chèn đang có trong DB, đọc TRƯỚC khi nạp lại 045: chỉ áp lại thứ DB đã có (bộ phân xử hiện hành, không hơn không kém). */
+async function docPhanChen(client) {
+  const { rows } = await client.query(`SELECT
+      pg_get_functiondef(to_regprocedure('resolve_offer_fields(text[])')) AS phan_xu,
+      pg_get_functiondef(to_regprocedure('resolve_offer_area_du_an(text[])')) AS du_an`);
+  return {
+    co068: rows[0].phan_xu ? await daCoPhanGiu068(client) : false,
+    // 099 chèn lời gọi resolve_offer_area_du_an vào thân bộ phân xử; 102 định nghĩa lại hàm ấy (không chèn mốc).
+    co099: rows[0].phan_xu?.includes("resolve_offer_area_du_an") ?? false,
+    duAn: rows[0].du_an,
+  };
+}
+
+/** Áp lại phần chèn 068 rồi 099 sau chuỗi nạp lại; 099 định nghĩa lại resolve_offer_area_du_an bản cũ nên trả lại đúng bản DB
+ *  đang có (bản 102 nếu đã áp — «áp lại 099 sau 102 thì phải áp lại 102»). */
+async function napLaiPhanChen(client, truoc, boQuaChen = []) {
+  if (truoc.co068 && !boQuaChen.includes("068")) await client.query(MIG_068);
+  if (truoc.co099 && !boQuaChen.includes("099")) {
+    await client.query(MIG_099);
+    if (truoc.duAn && !boQuaChen.includes("tra-du-an")) await client.query(truoc.duAn);
+  }
+}
+
 /** Gọi ngay sau mọi lần nạp lại 045 trong giao dịch: DB đã áp 059 → nạp lại phần 059 mà 045 vừa đè, rồi hàm 063. */
 export async function napLai059(client) {
   if (!SAU_045_CUA_059) return;
@@ -48,14 +85,18 @@ export async function napLai059(client) {
 
 /**
  * @param {import("pg").Client} client đang ở trong giao dịch
- * @param {{ moCong?: boolean }} [opts] moCong=false: chỉ nạp 045, để cổng như DB (ca đo cổng)
+ * @param {{ moCong?: boolean, boQuaChen?: string[] }} [opts] moCong=false: chỉ nạp 045, để cổng như DB (ca đo cổng);
+ *   boQuaChen: CHỈ cho chiều đỏ của thước (kiem-tin-rao-gan-khu-vuc --pha …) — bỏ áp lại phần chèn có số ấy ("068", "099"),
+ *   hay bỏ bước trả lại bản resolve_offer_area_du_an đang chạy sau khi áp lại 099 ("tra-du-an")
  */
-export async function napPhatBieu(client, { moCong = true } = {}) {
+export async function napPhatBieu(client, { moCong = true, boQuaChen = [] } = {}) {
   const { rows } = await client.query("SELECT to_regclass('field_assertions') IS NOT NULL AS co");
+  const truoc = await docPhanChen(client);
   await client.query(rows[0].co ? HAM : MIG);
   await napLai059(client);
   await napLai061(client);
   await napLai095(client);
+  await napLaiPhanChen(client, truoc, boQuaChen);
   if (moCong) {
     await client.query(`INSERT INTO ops_audit (actor, action, env, detail)
       SELECT 'test:phat-bieu', 'phat-bieu:cat-chuyen', 'local', '{"giao_dich_thu": true}'::jsonb

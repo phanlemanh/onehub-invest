@@ -1,0 +1,7 @@
+⚠️ [zalo-import-daily] không có node thật (/x/node) — TRẦN THỜI GIAN TẮT cho lượt này
+JOB STEP [zalo-import-daily] bước truoc-lan-claude mã 0 giây 60 nhanh 0
+JOB STEP [zalo-import-daily] bước truoc-lan-claude mã 0 giây 120 nhanh 0
+JOB STEP [zalo-import-daily] bước transform-zalo mã 0 giây 600 nhanh 0
+JOB STEP [doc-gop-hang-ngay] bước hom-qua mã 0 giây 7000 nhanh 0
+JOB STEP [zalo-import-daily] bước doc-gop-hang-ngay mã 0 giây 7200 nhanh 0
+JOB STEP [zalo-import-daily] bước enrich-run mã 0 giây 2880 nhanh 0

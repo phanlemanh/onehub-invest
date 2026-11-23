@@ -51,12 +51,12 @@ async function main() {
     const vt0 = await vanTay();
     const toa0 = await toaTheoNut();
     const nut0 = await soNut();
-    const kh = await dungKeHoachNoi(c);
+    const kh = await dungKeHoachNoi(c, { chiS09: true });
     o("cap", kh.cap.map((x) => [x.moi_id, x.cu_id, x.co_s09, x.tong_toa]), CAP);
     o("doi_chung_the_khong_ghi", await vanTay(), vt0);
     console.log(`  ca không nối: ${kh.khong_noi.length}`);
 
-    const kq = await apNoi(c, { bam: kh.bam, nguoi: "do-thu" });
+    const kq = await apNoi(c, { bam: kh.bam, nguoi: "do-thu", chiS09: true });
     o("so_cap_ap", kq.so, CAP.length);
     const toa1 = await toaTheoNut();
     const doi = [...toa1].filter(([k, v]) => toa0.get(k) !== v);

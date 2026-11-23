@@ -443,16 +443,38 @@ const banGoc = () =>
   spawnSync("git", ["show", `origin/main:${BOC}`], { cwd: REPO, encoding: "utf8" }).stdout;
 
 /**
- * Hàm thuần dùng chung cho cả ba ô của lưới phạm vi làn: nhận văn bản diff -U0 (theo ref hay --no-index đều in
- * cùng khuôn đầu khối `@@ -N[,M] +…`), trả các đầu khối bắt đầu ở dòng ≤ số dòng của mốc.
+ * Hàm thuần dùng chung cho mọi ô của lưới phạm vi làn: nhận văn bản diff -U0 (theo ref hay --no-index đều in cùng
+ * khuôn đầu khối `@@ -N[,M] +…`), trả mọi đầu khối kèm dòng bắt đầu ở bản gốc.
  */
-function khoiTrenMoc(diff, socMoc) {
-  const lan = [];
+function khoiCuaDiff(diff) {
+  const khoi = [];
   for (const d of diff.split("\n")) {
     const m = /^@@ -(\d+)/.exec(d);
-    if (m && Number(m[1]) <= socMoc) lan.push(d);
+    if (m) khoi.push({ dau: d, dong: Number(m[1]) });
   }
-  return lan;
+  return khoi;
+}
+
+/** Các đầu khối bắt đầu ở dòng ≤ số dòng của mốc — phía làn ZCode (khoá, nạp, trần thời gian). */
+function khoiTrenMoc(diff, socMoc) {
+  return khoiCuaDiff(diff).filter((k) => k.dong <= socMoc).map((k) => k.dau);
+}
+
+/** Các đầu khối bắt đầu sau dòng mốc — phía làn Claude (transform, đọc gộp, enrich). */
+function khoiDuoiMoc(diff, socMoc) {
+  return khoiCuaDiff(diff).filter((k) => k.dong > socMoc).map((k) => k.dau);
+}
+
+/**
+ * Luật lưới làn trên một diff (u1 17/11, GS duyệt U1-1711-5): một nhánh được sửa MỘT phía của mốc, không được sửa
+ * cả hai. Chiều cố định cũ (cấm phía trên) đúng cho hồ sơ job-step lúc nó còn mở, nhưng sau khi gộp nó chạy trên MỌI
+ * nhánh và làm đỏ nhánh làn ZCode sửa đúng vùng của mình — cùng loại lỗi với ca «cấm migration» của #472. Trả rỗng khi
+ * hợp luật, trả mọi đầu khối của cả hai phía khi phạm.
+ */
+function khoiPhamHaiPhia(diff, socMoc) {
+  const tren = khoiTrenMoc(diff, socMoc);
+  const duoi = khoiDuoiMoc(diff, socMoc);
+  return tren.length > 0 && duoi.length > 0 ? [...tren, ...duoi] : [];
 }
 
 /** Bản origin/main của tệp bọc, KIỂM mã thoát và đầu ra — thiếu ref thì ném chứ không trả chuỗi rỗng. */
@@ -481,7 +503,7 @@ function kiemRanhGioiLan() {
   const diff = spawnSync("git", ["diff", "-U0", "origin/main", "--", BOC], {
     cwd: REPO, encoding: "utf8", timeout: 30_000,
   }).stdout;
-  return { lan: khoiTrenMoc(diff, socMoc), socMoc };
+  return { lan: khoiPhamHaiPhia(diff, socMoc), socMoc };
 }
 
 /**
@@ -503,6 +525,27 @@ function voiDongChen(truocMoc) {
   const r = spawnSync("git", ["diff", "--no-index", "-U0", pGoc, pSua], { encoding: "utf8", timeout: 30_000 });
   assert.ok(r.status === 0 || r.status === 1, `git diff --no-index lỗi (mã ${r.status}): ${r.stderr}`);
   return khoiTrenMoc(r.stdout, socMoc);
+}
+
+/**
+ * Đối chứng của ô (i): chèn vào BẢN CHÉP ở phía trên mốc, phía dưới mốc, hay cả hai, rồi chấm bằng CHÍNH luật hai phía
+ * của ô (i). Cùng nếp bản chép — không một byte nào vào cây làm việc.
+ */
+function voiChenHaiPhia(tren, duoi) {
+  const goc = banGocChat();
+  const socMoc = soDongMoc(goc);
+  const dong = goc.split("\n");
+  const i = socMoc - 1;
+  if (duoi) dong.splice(i + 2, 0, "# dòng chèn tạm dưới mốc của phép đo JST-AC-8");
+  if (tren) dong.splice(i - 1, 0, "# dòng chèn tạm trên mốc của phép đo JST-AC-8");
+  const thu = mkdtempSync(path.join(SCRATCH, "lan2-"));
+  const banGocTam = path.join(thu, "goc-hai-phia.sh");
+  const banSuaTam = path.join(thu, "sua-hai-phia.sh");
+  writeFileSync(banGocTam, goc);
+  writeFileSync(banSuaTam, dong.join("\n"));
+  const r = spawnSync("git", ["diff", "--no-index", "-U0", banGocTam, banSuaTam], { encoding: "utf8", timeout: 30_000 });
+  assert.ok(r.status === 0 || r.status === 1, `git diff --no-index lỗi (mã ${r.status}): ${r.stderr}`);
+  return khoiPhamHaiPhia(r.stdout, socMoc);
 }
 
 // ---------------------------------------------------------------- JST-AC-7 --
@@ -551,11 +594,17 @@ test("JST-AC-8 bước truoc-lan-claude: đứng trước mọi bước transfor
     `cấy ngủ 2s vào vòng nạp phải cho giây ≥ 2:\n${cham.err}`);
 });
 
-test("JST-AC-8 lưới phạm vi làn: cây hiện tại xanh, chèn dưới mốc xanh, chèn trên mốc đỏ", () => {
-  assert.deepEqual(kiemRanhGioiLan().lan, [], "JST-AC-8 sửa phần trên ranh giới làn Claude — ô cây hiện tại");
+test("JST-AC-8 lưới phạm vi làn: cây hiện tại không sửa cả hai phía mốc; tách khối đúng phía; chèn cả hai phía đỏ", () => {
+  assert.deepEqual(kiemRanhGioiLan().lan, [], "JST-AC-8 sửa cả hai phía ranh giới làn — ô cây hiện tại");
+  // ô (ii)/(iii): bộ tách khối xếp đúng phía (giữ nguyên từ #473)
   assert.deepEqual(voiDongChen(false), [], "chèn DƯỚI mốc phải xanh");
   assert.ok(voiDongChen(true).length > 0,
     "chèn TRÊN mốc phải đỏ — JST-AC-8 sửa phần trên ranh giới làn Claude");
+  // đối chứng của ô (i): một phía thì xanh — cả làn ZCode lẫn làn Claude; cả hai phía thì đỏ
+  assert.deepEqual(voiChenHaiPhia(true, false), [], "chèn chỉ TRÊN mốc (làn ZCode) phải xanh");
+  assert.deepEqual(voiChenHaiPhia(false, true), [], "chèn chỉ DƯỚI mốc (làn Claude) phải xanh");
+  assert.ok(voiChenHaiPhia(true, true).length >= 2,
+    "chèn cả hai phía phải đỏ — JST-AC-8 sửa cả hai phía ranh giới làn");
 });
 
 // ------------------------------------------------ job-step-do-tren-ban-chep --
@@ -643,6 +692,7 @@ test("JST-AC-2-bc ba ô của lưới làn dùng chung một hàm tách khối; 
   const that0 = chupTep(that);
   const nguon = readFileSync(path.join(REPO, TEST_TEP), "utf8");
   const LAN = "JST-AC-8 sửa phần trên ranh giới làn Claude";
+  const HAI = "JST-AC-8 sửa cả hai phía ranh giới làn";
   const THIEU = "JST-AC-8 không đọc được bản origin/main của tệp bọc";
   const DAU_HAM = "function khoiTrenMoc" + "(diff, socMoc) {";
 
@@ -656,10 +706,12 @@ test("JST-AC-2-bc ba ô của lưới làn dùng chung một hàm tách khối; 
   assert.notEqual(r2.ma, 0, `chiều đỏ: hàm trả rỗng mà ca lưới vẫn xanh:\n${r2.ra}`);
   assert.ok(r2.ra.includes(`chèn TRÊN mốc phải đỏ — ${LAN}`), `ô (iii) phải đỏ với thông điệp ghim:\n${r2.ra}`);
 
-  // hàm luôn trả một khối giả → ô (i) đỏ: ô cây hiện tại đi qua CÙNG hàm
-  const r3 = chayLuoiTrong(khoTam(doiMot(nguon, DAU_HAM, `${DAU_HAM}\n  return ["@@ -1 +1 @@ khối giả"];`)));
-  assert.notEqual(r3.ma, 0, `chiều đỏ: hàm trả khối giả mà ca lưới vẫn xanh:\n${r3.ra}`);
-  assert.ok(r3.ra.includes(`${LAN} — ô cây hiện tại`), `ô (i) phải đỏ với thông điệp ghim:\n${r3.ra}`);
+  // bộ tách khối dùng chung luôn trả hai khối giả, một mỗi phía → ô (i) đỏ: ô cây hiện tại đi qua CÙNG bộ tách
+  const DAU_TACH = "function khoiCuaDiff" + "(diff) {";
+  const r3 = chayLuoiTrong(khoTam(doiMot(nguon, DAU_TACH,
+    `${DAU_TACH}\n  return [{ dau: "@@ -1 +1 @@ khối giả", dong: 1 }, { dau: "@@ -99999 +99999 @@ khối giả", dong: 99999 }];`)));
+  assert.notEqual(r3.ma, 0, `chiều đỏ: bộ tách trả khối giả hai phía mà ca lưới vẫn xanh:\n${r3.ra}`);
+  assert.ok(r3.ra.includes(`${HAI} — ô cây hiện tại`), `ô (i) phải đỏ với thông điệp ghim:\n${r3.ra}`);
 
   // bỏ lời kiểm mã thoát của git show → ca thiếu origin/main mất lời báo có tên
   const r4 = chayLuoiTrong(khoTam(doiMot(nguon, "if (r.status !== 0 " + "|| !r.stdout) {", "if (false) {"),

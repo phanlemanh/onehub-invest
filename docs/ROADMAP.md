@@ -50,6 +50,10 @@
    *(23/10: Mạnh nêu cần AI Gateway chọn model theo việc + biết chi phí — đề xuất sửa luật này ở review
    phân loại §0.4 M1, chờ Mạnh chốt.)* **Ngoại lệ có tên (07/11, §3 mục 33):** đọc tin S03 dùng ba model cloud
    qua Vercel AI Gateway (ADR-0007 sửa 06/11), chọn model theo ô bằng bảng `agent/config/doc-gop-s03.json`.
+   **Sửa 21/11 (MH1 `_acceptance/model-may-sang-haiku`, Mạnh «Dùng toàn bộ sang cloud model haiku 5.5, không mang sang»):** bỏ Qwen
+   trên MTPLX :8000 khỏi mọi đường của làn Claude; agent (`enrich-text`, `judge-entity`, `smoke-echo`) chạy Haiku 5.5 cloud, model đổi
+   bằng `agent/config/model-agent.json`, trần tiền mỗi lượt. Đường gọi (Mạnh 22/11): Anthropic thẳng trước, lùi sang Gateway khi hết
+   tiền hay khoá sai; nhãn bạc và đọc ảnh bỏ backend `qwen`.
 7. **Đơn vị nghĩ là CĂN NHÀ**: "Một Căn Nhà" (entity properties) là đơn vị
    phân tích; nguồn chỉ là evidence.
 8. **Đo trước khi build**: không graph/vector/infra mới trước khi số liệu
@@ -117,6 +121,7 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
 - S03 lên cổng (SL1 `_acceptance/s03-len-cong`, 03/11): tin không nói phường mang khu vực cấp thị trường qua `transform-zalo.mjs`, không ghép căn ở `resolve-properties.mjs` và tính vào đúng thị trường ở 500, 610; migration 069 cho riêng `property_type` nhận giá trị suy khi chỉ có một ứng viên (`tier: inferred`); thẻ tin S03 có nhãn «Chưa xác minh». Sổ nhóm nháp nằm ở `research-local/`, chưa được duyệt và chưa áp.
 - VLM đọc ảnh tin S03 (KC3 `_acceptance/vlm-anh-tin-s03`, 02/11): chọn bài mà chữ còn thiếu giá, loại hình hoặc dấu hiệu tin rao, đọc mỗi ảnh khác nhau một lần bằng
   Qwen trên máy (`agent/scripts/vlm-anh-run.ts`, chọn bài và đếm ở `pipeline/vlm-anh-s03.mjs`), ghi đề xuất vào `silver_labels` nguồn ảnh, không ghi canonical và không lên cloud.
+  Từ MH1 (21/11) backend `qwen` đã gỡ: `--model qwen` trả mã 2, đọc ảnh chạy `--model haiku`.
   Lô thật 100 bài: tốt 48, rỗng 51, lỗi 1, lấp đúng lý do thiếu 9, chỉ 1 dòng có giá; JSON hỏng 0, `lo-url` 0, ước 2,3 giờ hết tập đọc 2.406 bài (`docs/research/s03-vlm-anh-do.md`).
   Haiku và DeepSeek chỉ chấm phiếu mẫu Mạnh đã xem (`--gold`), chưa chạy thật nên chưa model nào có số độ đúng. Ảnh lộ nguồn gắn nhãn, không chặn.
 - Cầm máu số liệu S03 (N1 `_acceptance/s03-cam-mau-so-lieu`, 30/10): `parsePost` đọc số trên chữ đã gạt URL và SĐT (`gatSo`),
@@ -1135,6 +1140,7 @@ Theo dõi: giám sát đợt báo một dòng mỗi ngày (hiện tại so với
 | M4 | form hồ sơ + export JSON (consent, user-owned) | ⬜ |
 | M5 | pgvector — chỉ khi đo thấy cần | ⬜ kháng cự |
 | HITL | /ops/review Review Queue (12 entity_match seeded) | ✅ c6eea64 |
+| MH1 | agent làn Claude sang Haiku 5.5 cloud (bỏ Qwen/MTPLX), model theo `agent/config/model-agent.json`, Anthropic thẳng rồi Gateway, trần tiền mỗi lượt; đo thật 130 lời: JSON 96 %, giải thích 100 %, kết luận đổi 0, 0,049 USD | 🔶 chờ chấm S4 (`_acceptance/model-may-sang-haiku/`) |
 | M-3 | enrich qua đề xuất: `enrichment_proposals` (033) + luật xác định + thẻ `agent_output` /ops/review; E1 trái LLM → thẻ đối chiếu chọn một bên | ✅ PR #14 (`_acceptance/enrich-qua-de-xuat/`) |
 | M-3b | hậu kỳ enrich: đề xuất sống qua nạp lại (039 + `writeOffers`, khoá ngoại RESTRICT) · hoàn tác có audit (036 + `enrich-revert`) · E1 không suy land từ tên nhóm | 🔶 chờ Cổng Bằng chứng (`_acceptance/enrich-hau-ky/`); sau merge: áp 036 → 039 lên DB local TRƯỚC lượt nạp đêm kế, rồi hoàn tác 639/644 (Hỏi-2) |
 | R-PL | Review kiến trúc phân loại + enrich (`docs/architecture/classification-enrich-review.md`, khung `docs/product/FRAMING.md`): sổ 20 lỗi (L01–L20), kiến trúc đích, việc theo làn; khung RESO ở ADR-0013 | 🔶 FRAMING đã duyệt; chờ Mạnh quyết Q2–Q12 (Q1 Kev thành nhãn đã chốt) |

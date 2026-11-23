@@ -1,0 +1,9 @@
+{
+  "phien_ban": 1,
+  "prompt_version": "cb-v1",
+  "tran_usd": 3,
+  "model": [
+    { "khoa": "haiku", "gateway": "anthropic/claude-haiku-5.5", "duong": ["anthropic", "gateway"], "gia_vao": 0.1, "gia_ra": 0.5 },
+    { "khoa": "deepseek", "gateway": "deepseek/deepseek-v4.1-flash-1017", "duong": ["gateway"], "gia_vao": 0.3, "gia_ra": 1.2 }
+  ]
+}

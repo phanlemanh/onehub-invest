@@ -6,6 +6,12 @@
 //           tên phường nền của tin → chụp trước → lượt đo → chụp sau; băm các bảng transform ghi trước/sau ngoài
 //           transaction. Thiết kế: docs/superpowers/specs/2026-10-26-do-khu-vuc-tu-dung-moi-design.md §2.
 //   --pha khong-sua | mo-loc   chiều đỏ cho test: bỏ lượt đo | sáu khu vực mồi mang meta phường hợp lệ trong lượt đo.
+//   --pha bo-099   chiều đỏ HT5: nạp phát biểu mà KHÔNG áp lại phần chèn 099 → lượt nền chạy với bộ phân xử cũ hơn DB, đo
+//                  lượt nền rồi dừng (không chạy mồi).
+//   --phan-xu [--pha bo-099 | bo-tra-du-an]   HT5: trong một giao dịch ROLLBACK, md5 của resolve_offer_fields và
+//                  resolve_offer_area_du_an trước và sau napPhatBieu phải bằng nhau — lượt --thu dùng đúng bộ phân xử DB đang
+//                  chạy; rồi dựng trạng thái «DB chưa có phần chèn 068, 099» (napPhatBieu bỏ hai bước ấy) và đòi napPhatBieu
+//                  KHÔNG cấy thêm chúng (md5 giữ nguyên, thân hàm không có lời gọi resolve_offer_area_du_an).
 //   (mặc định) chỉ đọc: in số tin đang trỏ khu vực không hợp lệ theo nguồn.
 // Từ chối DB không phải localhost. Chạy: node scripts/kiem-tin-rao-gan-khu-vuc.mjs [--thu [--pha <chiều>]]
 import { realpathSync } from "node:fs";
@@ -25,7 +31,15 @@ const pg = createRequire(path.join(ROOT, "app/package.json"))("pg");
 
 const DB_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 const NGUON = ["S03", "S05", "S06"];
-const PHA = ["khong-sua", "mo-loc"];
+const PHA = ["khong-sua", "mo-loc", "bo-099", "bo-tra-du-an"];
+/** Tuỳ chọn napPhatBieu của từng chiều đỏ HT5. */
+const NAP_PHA = { "bo-099": { boQuaChen: ["099"] }, "bo-tra-du-an": { boQuaChen: ["tra-du-an"] } };
+/** Dừng sau lượt nền (chiều đỏ bo-099): không phải lỗi phép đo. */
+const DUNG_SAU_NEN = Symbol("dung-sau-nen");
+/** Hai hàm của bộ phân xử mà lượt --thu phải dùng đúng bản DB đang chạy (HT5). */
+const HAM_PHAN_XU = ["resolve_offer_fields(text[])", "resolve_offer_area_du_an(text[])"];
+const md5PhanXu = async (c) => (await c.query(
+  `SELECT f, md5(pg_get_functiondef(to_regprocedure(f))) AS h FROM unnest($1::text[]) f ORDER BY f`, [HAM_PHAN_XU])).rows;
 
 // Bảng ba transform và reconcile_stale_offers (migration 044) ghi — rút từ câu INSERT/UPDATE/DELETE của
 // pipeline/transform-*.mjs, pipeline/lib/write-offers.mjs và hàm SQL; areas vì phép đo chèn khu vực mồi.
@@ -91,6 +105,7 @@ const baTransform = async (c) => {
 
 async function main() {
   const THU = process.argv.includes("--thu");
+  const PHAN_XU = process.argv.includes("--phan-xu");
   const iPha = process.argv.indexOf("--pha");
   const pha = iPha > 0 ? process.argv[iPha + 1] : null;
   if (pha && !PHA.includes(pha)) {
@@ -113,7 +128,30 @@ async function main() {
   await c.connect();
   const coMa = await coDanhBa(c);
   try {
-    if (!THU) {
+    if (PHAN_XU) {
+      if (pha) console.log(`chiều đỏ: --pha ${pha}`);
+      await c.query("BEGIN");
+      try {
+        await c.query("SELECT pg_advisory_xact_lock(33033)");
+        const truocNap = await md5PhanXu(c);
+        await napPhatBieu(c, NAP_PHA[pha] ?? {});
+        const sauNap = await md5PhanXu(c);
+        const doi = truocNap.filter((r, i) => r.h !== sauNap[i].h).map((r) => r.f);
+        check(doi.length === 0 && truocNap.every((r) => r.h),
+          `bộ phân xử sau napPhatBieu ${doi.length ? `khác bản DB đang chạy: ${doi.join(", ")}` : "bằng bản DB đang chạy"} (${truocNap.map((r) => `${r.f} ${r.h ?? "vắng"}`).join(" · ")})`);
+        // DB chưa có phần chèn: dựng bằng chính napPhatBieu bỏ hai bước, rồi nạp lại thường — không được cấy thêm 068, 099.
+        await napPhatBieu(c, { boQuaChen: ["068", "099"] });
+        const chuaChen = await md5PhanXu(c);
+        await napPhatBieu(c);
+        const sauChuaChen = await md5PhanXu(c);
+        const { rows: [th] } = await c.query(`SELECT pg_get_functiondef(to_regprocedure('resolve_offer_fields(text[])')) AS d`);
+        const cay = chuaChen.filter((r, i) => r.h !== sauChuaChen[i].h).map((r) => r.f);
+        check(cay.length === 0 && !th.d.includes("resolve_offer_area_du_an"),
+          `DB chưa có phần chèn 068, 099: napPhatBieu ${cay.length || th.d.includes("resolve_offer_area_du_an") ? `cấy thêm phần chèn: ${cay.join(", ") || "lời gọi resolve_offer_area_du_an"}` : "không cấy thêm phần chèn"}`);
+      } finally {
+        await c.query("ROLLBACK");
+      }
+    } else if (!THU) {
       const bad = await khongHopLe(c, await chup(c, coMa));
       for (const s of NGUON) console.log(`${s}: ${bad.filter((o) => o.source === s).length} tin trỏ khu vực không hợp lệ`);
       check(bad.length === 0, `${bad.length} tin trỏ khu vực không hợp lệ (chỉ đọc)`);
@@ -125,7 +163,7 @@ async function main() {
       try {
         await c.query("SELECT pg_advisory_xact_lock(33033)");
         // PL15: transform đi qua phát biểu + phân xử — nạp 045 và mở cổng cắt chuyển trong giao dịch.
-        await napPhatBieu(c);
+        await napPhatBieu(c, NAP_PHA[pha] ?? {});
         const chupGoc = await chup(c, coMa);
 
         // ---- Lượt nền: lời hứa đã ký của E8 (tin-rao-gan-khu-vuc-dung) trên DB thật ----
@@ -138,6 +176,7 @@ async function main() {
           const nghi = [...chupGoc.values()].filter((o) => o.source === s && !nen.has(o.offer_id)).length;
           console.log(`${s}: ${nghi} tin bị cho nghỉ`);
         }
+        if (pha === "bo-099") throw DUNG_SAU_NEN;
 
         // ---- Mồi: hai tin có phường hợp lệ ở Hà Nội mỗi nguồn, mỗi tin một khu vực mồi đúng tên phường nền ----
         const { rows: ung } = await c.query(
@@ -211,7 +250,7 @@ async function main() {
         sauGo.set(mau.offer_id, { ...sau.get(mau.offer_id), area_id: null });
         check(lech(truoc, sauGo, boMoi).includes(mau.offer_id), `tin mồi bị gỡ nhãn → thước báo đỏ (${mau.offer_id})`);
       } catch (e) {
-        check(false, `phép đo dừng giữa chừng: ${e.message}`);
+        if (e !== DUNG_SAU_NEN) check(false, `phép đo dừng giữa chừng: ${e.message}`);
       } finally {
         await c.query("ROLLBACK");
       }
