@@ -12,8 +12,8 @@ flowchart TD
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>21 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>210 việc"]
-  GB --> CN["Chờ phiên nghiệm thu<br/>140 việc"] --> GG{"Cổng Giá trị"}
+  GB --> DG["Đã giao<br/>220 việc"]
+  GB --> CN["Chờ phiên nghiệm thu<br/>141 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
 
@@ -165,6 +165,7 @@ flowchart TD
 - Bảng phát biểu append-only và bộ phân xử ba lớp dựng cột canonical kèm provenance, chạy lại ra y nguyên (`phat-bieu-va-phan-xu`)
 - Thẻ duyệt ghép căn và luật chấm đọc trọn các cách ghi phường số (`phuong-so`)
 - DA9 — tin gắn dự án nằm trọn một xã nhận phường suy ra từ dự án (phát biểu area_id kế thừa + bộ phân xử đưa vào cột khi tin chỉ tới tỉnh hay trống), không đè phường đã có (`phuong-tu-du-an`)
+- Cho bước suy phường từ dự án chạy thật và nối vào chuỗi nạp S03 (`phuong-tu-du-an-chay-that`)
 - Proxy ảnh tin /api/zalo-media chỉ phục vụ ảnh raster an toàn (jpeg/png/webp/gif); SVG và kiểu ảnh lạ trả 415; mọi phản hồi ảnh mang nosniff + CSP sandbox (`proxy-anh-chan-svg`)
 - Mọi route /api/v1/ops/** kiểm vai theo một bảng bốn vai (viewer, ops, admin, owner) ở ops-access.ts, và mỗi thao tác ghi đúng một dòng ops_audit mang id người thật trong cùng transaction (`quyen-bon-vai-mot-cho`)
 - Quyết định trên thẻ ghép căn chỉ ghi khi chạm đúng một ứng viên còn chờ; không chạm được thì route trả lỗi có tên, thẻ vẫn chờ, không dòng nào được ghi (`quyet-dinh-phai-cham-ung-vien`)
@@ -235,11 +236,13 @@ flowchart TD
 - backfill ảnh Zalo xét cả snapshot zalo-agent schemaVersion 3, không chỉ v2 (`backfill-zalo-media-v3`)
 - Bước bait gap của refresh-bait-gap chạy trong một giao dịch có khoá advisory chung — lượt nạp S03, S06 không ghi chồng, đụng khoá hay lỗi giữa chừng không để bait_gap_pct của tin P1 về rỗng (`bait-gap-mot-giao-dich`)
 - Bật gói dieu-phoi ở cấp kho — thêm dieu-phoi@acceptance-gate-kit vào enabledPlugins của .claude/settings.json, cùng nguồn marketplace với các gói kit khác, không đổi gì khác (`bat-dieu-phoi-cap-du-an`)
+- Bốn tên viết tắt phân khu (ori, rb, bs, gh) vào danh bạ qua thẻ luật có băm, đảo được, để GT5 đọc phân khu từ danh bạ (`bi-danh-viet-tat-phan-khu`)
 - Bộ canh kênh S03 tắt gateway khi có lượt agent mới dù lượt đó chạy nhanh, nhờ đếm trên kho phiên thay vì dò chuỗi trong log (`bo-canh-dem-luot-agent`)
 - ca E4b đối chiếu tin rao nạp danh sách che qua hàm chung có cờ khớp nguyên cụm — main thôi đỏ sau khi áp che-ten (`ca-doi-chieu-tin-rao-nap-co-khop-cum`)
 - Người vận hành thấy đúng tên người đăng, đúng lý do rời danh sách của căn đắt hơn thước, và đường về danh sách không quay lại chính trang một căn (`can-gia-tot-sua-ba-loi`)
 - Căn của tin chung bài đăng nhận theo khi đề xuất làm giàu được áp hay hoàn tác — migration 066 mở rộng chuỗi cập nhật căn của 063, kèm sửa một lần phần lệch đã có (`can-theo-tin-khi-phan-xu-lai`)
 - Bộ canh S03 thêm lớp L6 kiểm sống — cảnh báo khi S03 ngừng thu (không snapshot mới ban ngày, tự khởi động lại treo, not linked), không kill gateway (`canh-bao-s03-ngung-thu`)
+- Mỗi thẻ «Bổ sung tin» còn đề xuất có kết quả chấm bóng của hai lần đọc độc lập kèm trích dẫn, thẻ hai lần đọc lệch hay máy bỏ trống được đánh dấu ca biên, và không dòng tin nào đổi (`cham-bong-bo-sung-tin`)
 - Sổ nguồn khai được từng dòng «khớp nguyên cụm» — bộ che và bộ soát tên nguồn không còn coi từ đầu (thương hiệu dự án, từ chung) là tên nguồn cho dòng đã khai, dòng S16 trả về tên hai từ + tên miền mà /ops/registry và sync-cloud không che nhầm, còn mọi dòng khác (kể cả S05) che y như hôm nay (`che-ten-nguon-khong-lay-tu-dau`)
 - Vai Người xem không dò được bí danh đã che qua ô tìm của /ops/people — máy chủ bỏ ?q= và trang ẩn ô tìm với vai dưới Vận hành (`che-tim-bi-danh-viewer`)
 - Thước đồng bộ cloud (check-cloud-sync) chạy lại được trên máy thu đã áp 060 và 059 — sellers dựng thành bảng theo 022, bỏ trigger lịch sử khỏi bản dump (`check-cloud-sync-sellers-view`)
@@ -264,6 +267,7 @@ flowchart TD
 - Tự kiểm live của DB local đo đủ bốn nhánh dữ liệu, gồm volume khác tên (`db-volume-check-volume-khac-ten`)
 - Thước live của DB local không đòi bản lùi tồn tại mãi (`db-volume-live-ban-lui`)
 - danh-ba-vat-the.itest.mjs xanh lại trên main — fixture theo luật ISO một tỉnh, phép đo lũy đẳng 082 trên DB dừng ở 082 (`dbv-itest-xanh-lai-tren-main`) — đã giao — máy thông, cửa veto còn mở
+- Lệnh đo Căn giá tốt (scripts/deals-phi-ly-do.mjs) tự dựng tin phi lý đối chứng trong giao dịch, nên đối chứng không đỏ oan trên DB đã qua bước đêm mà vẫn đỏ khi luật loại hỏng (`deals-phi-ly-do-doi-chung-tu-tinh`)
 - test DB theo lược đồ sau 044 — DP-AC-5 xoá cột PII trên bảng bản ghi, test không áp lại 044 khi DB đã có (`deals-phi-ly-test-theo-view`)
 - tài khoản ops thử chỉ ở DB local cho máy tự đăng nhập dev (`dev-ops-account`) — đã giao — máy thông, cửa veto còn mở
 - Biểu đồ «Chặng theo ngày» trên /ops/data-flow vẽ đủ mọi ngày của cửa sổ, ngày nguồn im là điểm 0 (`df0-chang-theo-ngay-diem-0`)
@@ -293,8 +297,10 @@ flowchart TD
 - 2410-1 — mốc thu captured_at của stg Zalo và Chợ Tốt luôn là giờ thu snapshot, nạp lại không làm sai, có script khôi phục kèm sao lưu (`giu-captured-at`)
 - Ngôn ngữ chuẩn — CONTEXT.md, luật đặt tên, bối cảnh sản phẩm, test slug route (`glossary-context`)
 - Đọc gộp S03 và nháp nhãn PL35 có thêm đường gọi Haiku thẳng API Anthropic song song Vercel AI Gateway (thứ tự và tự lùi bằng bảng chọn), ghi rõ lỗi nhà cung cấp và dừng sớm khi hết tiền (`goi-thang-anthropic`)
+- Gộp nút phân khu do luật S16 đúc vào nút sẵn có bằng bằng chứng mã căn S16, qua thẻ nối có băm của DA46, đảo được (`gop-nut-trung-ma-can-s16`) — đã giao — máy thông, bằng chứng xanh-sạch
 - probe GS-AC-6 của the-so-gia-tri-song chỉ xét thẻ ghép căn có bên (evidence.<bên>.offer_id là chuỗi), không nhận nhầm thẻ danh bạ DA33 là «tin rời kho» (`gs-ac-6-the-khong-tin-a`) — đã giao — máy thông, cửa veto còn mở
 - guard-edits lấy gốc theo kho chứa tệp — luật chặn sửa migration đã commit chạy cả khi tệp ở worktree khác (`guard-edits-goc-theo-tep`)
+- Hai ca test app (DO3-AC-7, SD-AC-6) đúng trên dữ liệu máy — không còn đỏ vì dữ liệu thật đổi, vẫn đỏ đúng khi điều chúng canh bị phá (`hai-ca-app-dung-tren-du-lieu-may`) — đã giao — máy thông, cửa veto còn mở
 - ZC6 nối tiếp — hook Zalo giữ tin lại hàng đợi khi khoá collector sai (401/403/404) và có trần thời gian cho cả lượt xả (`hook-spool-nghiem-ngat`)
 - ZC6 — hook Zalo giữ tin trong hàng đợi cục bộ khi collector chết rồi gửi lại, không làm treo gateway (`hook-zalo-spool`)
 - job hằng ngày S06 không còn xoá số và tên người bán đã thu; bộ thu số gọi mỗi tài khoản một lần (`hop-dong-nguoi-ban-s06`)
@@ -305,6 +311,7 @@ flowchart TD
 - Itest nạp lại migration cũ xanh lại trên DB đã có 095 — phép đo về migration X chạy trên DB dừng ở X, bộ nạp lại không bao giờ thu hẹp ràng buộc trường, bền với 096 (`itest-nap-lai-migration-cu-sau-095`)
 - Lưới phạm vi làn của JST-AC-8 đo trên bản chép — hai ô đột biến dựng diff từ hai tệp tạm bằng git diff --no-index thay vì ghi vào scripts/zalo-import-daily.sh thật trong cây làm việc (`job-step-do-tren-ban-chep`) — đã giao — máy thông, cửa veto còn mở
 - Ghi thời lượng từng bước của job nạp — job_step, job_run và buoc_nhanh in một dòng ghim JOB STEP ra stderr (job, bước, mã, giây, cột nhanh), kèm một bước gộp truoc-lan-claude đo phần lấy khoá và nạp của zalo-import-daily.sh; phép đo không mở hay ghi tệp nào (`job-step-ghi-thoi-luong`)
+- Lượt nền KDM-AC-3 chạy với bộ phân xử resolve_offer_fields đang có trong DB — napPhatBieu áp lại phần chèn 068 và 099 sau khi nạp lại 045 (`kdm-ac-3-luot-nen-dung-ham-phan-xu-hien-hanh`)
 - ZC1 nối tiếp — cứng hoá ingest của collector API (media rác không làm hỏng lô, id tin chữ giữ nguyên, payload nguyên vẹn) (`kev-nhan-cung-hoa`)
 - sửa thước kiểm kev-nhan đỏ sẵn trên main — tên thư mục giả theo khuôn PL1 và chữ log Kev hỏng theo ZC6 (`kev-nhan-thuoc-sau-pl1`)
 - PL4 — hook Zalo đẩy mọi tin tới collector kèm điểm Kev (meta.kev), không bỏ tin theo điểm (`kev-thanh-nhan`)
@@ -326,6 +333,7 @@ flowchart TD
 - Người vận hành đọc «Luồng 7 ngày qua» trên /ops/collections thấy mỗi cột đếm đúng thứ nhãn nói — tin rao đúng nguồn, đủ 7 ngày từ số máy thu đẩy lên, cột không có số trên máy chủ ghi «Chỉ ở máy thu» (`luong-7-ngay-dung-so`)
 - Ca «M2-AC-10 chỉ thêm hai dòng config» so cặp commit cố định 3b3a33e5^→3b3a33e5 thay vì merge-base origin/main, để bộ test design-floor không đỏ trên main sau khi gộp hay trên nhánh khác sửa config.yaml (`m2-ac10-so-cap-co-dinh`)
 - Hai test DB (agent AC-10, app the-duyet «public đã bị chạm») không đỏ theo tải của DB local dùng chung, không nới assertion (`main-xanh-duoi-tai-db`)
+- Chuyển mọi agent làn Claude từ Qwen trên MTPLX sang Haiku 5.5 cloud (Anthropic thẳng, lùi sang Gateway), đổi model bằng cấu hình (`model-may-sang-haiku`)
 - Kiểm N1 đêm của danh bạ SĐT không đếm người đã tách là «chưa gộp», nên không đỏ vĩnh viễn sau lần tách đầu tiên (`n1-dem-nguoi-tach`)
 - Bộ nạp S09 của làn thu vào main — bản thu S09 khuôn API nạp được vào stg_s09_item (097) bằng lõi DA31, chạy lại không nhân dòng, chỉ ghi DB máy thu khi có cờ tường minh (`nap-s09`)
 - Dọn luật hỏi quyền rộng — rào push main chuyển sang branch protection GitHub như crm/kit (`narrow-ask-rules`)
@@ -361,6 +369,7 @@ flowchart TD
 - Ảnh tin trên thẻ hàng duyệt /ops/review (dải ảnh + phóng to, nối loadReviewMedia) (`review-card-photos`)
 - Backend ảnh tin cho hàng duyệt /ops/review (route /api/zalo-media + loader ảnh theo thẻ) (`review-media-backend`)
 - Đưa view ruler v_ruler_p2_area + v_ruler_p2 vào migration và hướng dẫn bắt kịp schema cloud (`ruler-p2-views-migration`)
+- Tích hợp ba nhánh ZCode cho bộ thu S02: lượt thu ném lỗi giữ thư mục tạm ẩn; bộ thu dừng ngay khi appToken hết hạn; xác thực hỏng (401 sau refresh, token hết hạn hay rác) ghi dòng AUTH FAIL (`s02-luot-loi-sach-va-kiem-han-token`)
 - Bài S03 có «<số> năm/nữ» (cho vay, tuyển dụng) không bị coi là dấu hiệu phòng ngủ «<số>n» nên không thành tin rao; viết tắt phòng ngủ thật («2n1wc», «1n1k») vẫn nhận như cũ (`s03-cho-vay-khong-phai-bds`) — đã giao — máy thông, cửa veto còn mở
 - Tin rao S03 thôi gộp nhầm bài của nhiều người khi thiếu phường/diện tích, và cột «Luồng 7 ngày» đếm đúng tập bài transform đọc (`s03-gop-trung-dung`)
 - S03 lên nhanh nấc 1 (phần Claude) — lượt nạp nhanh 15′ đặt lock_timeout ngắn cho ba bước transform, đụng khoá DB thì bỏ lượt và báo khi bỏ 8 lượt liền; bảy bước đo dời khỏi cloud-sync sang job mỗi giờ với cờ tự nhận (`s03-len-nhanh-nac-1`)
@@ -369,6 +378,7 @@ flowchart TD
 - Lượt nạp S03 mỗi 15 phút ban ngày (7:00–22:00) — nạp → transform → media → refresh, khoá bận thì bỏ lượt; lượt 00:00 giữ nguyên sáu bước (`s03-nap-nhanh`) — đã giao — máy thông, cửa veto còn mở
 - Nới luật trích dẫn căn hộ S03 thêm dạng số phòng và studio, xử lại đề xuất đã bỏ bằng nhãn đã đọc, không gọi model (`s03-noi-luat-trich-dan`)
 - bộ nạp S03 lọc U+0000 khỏi mọi chuỗi trước khi ghi stg_zalo_posts — gỡ kẹt nạp đêm từ 29/10 (`s03-null-byte`) — đã giao — máy thông, cửa veto còn mở
+- Lượt nạp S03 có trần thời gian — lượt 00:00 không chạy quá 4 giờ, phần nạp không quá 30 phút, lượt bị cắt không mất snapshot nào và lượt sau nạp nốt, khoá của lượt đang chạy không bị gỡ, trần không bao giờ dừng nhầm tiến trình ngoài lượt (`s03-tran-thoi-gian-luot-nap`)
 - S05 có đệm cửa sổ thu 5 ngày, khoá nạp không văng hay quay bận, bước thu lỗi có dòng ghim (`s05-khoa-nap`)
 - Kho khớp lịch S06 2 lượt mỗi ngày đã cài trên máy thu — plist chotot trong main mang mốc 05:30 và 14:00, không va lịch job khác (`s06-hai-luot-ngay-gop-main`)
 - bộ thu S06 nhận mã tỉnh params.region bên cạnh region_v2, để bật được vùng mà mã cũ không hoạt động (`s06-region-tinh`)
@@ -428,6 +438,7 @@ flowchart TD
 - ZC3 nối tiếp — watchdog Zalo quét nốt đuôi log ngày cũ khi xoay ngày (`watchdog-l4b-cuoi-ngay`)
 - bộ canh Zalo không còn tắt nhầm gateway vì quét lại lịch sử khi tệp log gateway bị coi là «tệp mới» (`watchdog-l4b-history`)
 - Ngân sách Yêu cầu đọc đúng khoảng có phần lẻ viết rời ở đầu dưới, và lệnh đo ngân sách có đối chứng đỏ cho cả bốn lý do đỏ (`yc1-khoang-le-va-doi-chung-do`)
+- Ca đối chứng ZL-AC-3 của bộ test job Zalo đúng ở mọi thế cây — main sau gộp, nhánh đổi phần nạp, nhánh đổi phần khác của tệp bọc — nên bộ scripts xanh trên main và mọi PR không còn đỏ job scripts (`zl-ac-3-doi-chung-dung-tren-main`) — đã giao — máy thông, cửa veto còn mở
 
 ## Đã nghiệm thu giá trị
 
