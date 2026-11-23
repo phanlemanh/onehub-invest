@@ -1,0 +1,78 @@
+schema_version: 1
+slug: doc-gop-song-song-va-luot-bu
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.agent
+    long_running: 25
+    paths: ["agent/src/enrich/doc-gop-s03/**", "agent/tests/doc-gop-song-song.test.ts"]
+    expected: "Ca HT6-AC-1 trong agent/tests/doc-gop-song-song.test.ts xanh: model giả trễ cố định, 40 bài; songSong 4 → đang bay lớn nhất đúng 4 và thời gian < 1/2 bản tuần tự; songSong 1 → lớn nhất 1; chayLuot không truyền songSong → 1. Chiều đỏ ghim trong ca: bộ đếm đọc từ model giả (không từ chayLuot) — thay pool bằng Promise.all không trần thì lớn nhất = 40 và ca đỏ với thông điệp «HT6-AC-1 đang bay lớn nhất»."
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.agent
+    long_running: 25
+    paths: ["agent/src/enrich/doc-gop-s03/**", "agent/tests/doc-gop-song-song.test.ts"]
+    expected: "Ca HT6-AC-2 xanh: 20 bài × 0,01 USD, trần 0,055, songSong 4 → chi ≤ 0,055, gọi ≤ 5, chayHangNgay mã 3 + dòng CHAM TRAN DOC GOP HANG NGAY, goi + con_lai = can_goi. Chiều đỏ: bỏ phần giữ chỗ (chỉ so tiền đã chi) thì 4 lời phát cùng lúc vượt trần — ca đỏ với «HT6-AC-2 vượt trần»."
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.agent
+    long_running: 25
+    paths: ["agent/src/enrich/doc-gop-s03/**", "agent/tests/doc-gop-song-song.test.ts"]
+    expected: "Ca HT6-AC-3 xanh cả ba nhánh: tu_lui → đúng 1 dòng chuyen-duong, mọi bài có nhãn đúng một lần; không lùi → không lời nào phát sau lỗi 402 (gọi ≤ đang bay lúc lỗi + đã xong), mã 4; 401 → mã 1. Chiều đỏ: bỏ cờ dừng thì lời vẫn phát sau 402 — ca đỏ «HT6-AC-3 phát sau lớp dừng»."
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.agent
+    long_running: 25
+    paths: ["agent/src/enrich/doc-gop-s03/**", "agent/tests/doc-gop-song-song.test.ts"]
+    expected: "Ca HT6-AC-4 xanh: 3 lời đầu 429 → lượt chạy hết bài còn lại, 3 bài không nhãn, 3 dòng ai_calls lớp han-muc, đang bay lớn nhất ngay sau lỗi < 4, rồi sau quãng không lỗi (thời gian tiêm nhỏ cho test) đang bay lại đạt 4. Chiều đỏ: bỏ nhánh hạ nhịp thì ca đỏ «HT6-AC-4 không hạ nhịp»; bỏ nhánh tăng lại thì ca đỏ «HT6-AC-4 không tăng lại nhịp»."
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.agent
+    long_running: 25
+    paths: ["agent/src/enrich/doc-gop-s03/**", "agent/tests/doc-gop-song-song.test.ts"]
+    expected: "Ca HT6-AC-5 (DB của riêng lượt, BEGIN…ROLLBACK) xanh: tập (post_id, model, json_ok) của silver_labels bằng nhau giữa songSong 1 và 4; số dòng ai_calls = số lời gọi; không cặp (bài, model) gọi hai lần. Đối chứng dương: tập không rỗng và có cả json_ok true lẫn false."
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.agent
+    long_running: 25
+    paths: ["agent/src/enrich/doc-gop-s03/**", "agent/scripts/doc-gop-s03.ts", "pipeline/doc-gop-hang-ngay.sh", "agent/tests/doc-gop-song-song.test.ts", "agent/tests/doc-gop-hang-ngay.test.ts"]
+    expected: "Ca HT6-AC-6 xanh: (a) chayHangNgay với hetGio rơi giữa lượt → 0 lời phát sau mốc, lời đang bay được ghi, mã 75, dòng JOB WARN [doc-gop-hang-ngay] het-gio có số còn lại; chạy lại đọc đúng phần còn lại; (b) doc-gop-hang-ngay.sh với node giả: cả hai bước nhận CÙNG --het-gio, nhận --song-song 4 mặc định và mốc = bây giờ + 9000 s; bước hôm qua in het-gio thì hôm kia bỏ với dòng «het-gio: bo buoc hom-kia», tệp thoát 75 và dòng bỏ mang ngày hôm kia + «con lai <n>» với n đúng số cần gọi của fixture (chiều đỏ: dòng thiếu ngày hay số thì ca đỏ «HT6-AC-6 dòng bỏ hôm kia»); bước hôm qua xong bình thường mà hôm kia hết giờ thì tệp cũng thoát 75; mã lỗi 3/4 của bước vẫn thắng 75. Chiều đỏ: bỏ kiểm mốc trước khi phát → lời phát sau mốc, ca đỏ «HT6-AC-6 phát sau mốc»."
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.agent
+    long_running: 25
+    paths: ["agent/src/enrich/doc-gop-s03/**", "agent/scripts/doc-gop-s03.ts", "agent/tests/doc-gop-song-song.test.ts"]
+    expected: "Ca HT6-AC-7 xanh: bu --thu trên ba ngày 2001 → in từng ngày + dòng «bu tong», 0 lời model, 0 dòng ghi, không đòi khoá; chạy thật đọc ngày cũ trước, run_id có «-bu-», chi tính vào trần ngày chi chung; --tu sai khuôn, --tu > --den, khoảng > 14 ngày → thoát 2 trước khi nối DB (DATABASE_URL trỏ cổng chết vẫn thoát 2, không ECONNREFUSED)."
+  - id: E7b
+    criterion: AC-7
+    executor: script
+    cmd: bash _acceptance/doc-gop-song-song-va-luot-bu/probes/bu-thu-may-thu.sh
+    paths: ["agent/src/enrich/doc-gop-s03/**", "agent/scripts/doc-gop-s03.ts", "_acceptance/doc-gop-song-song-va-luot-bu/probes/bu-thu-may-thu.sh"]
+    expected: "Trên DB máy thu: bu --tu 2026-11-22 --den 2026-11-24 --thu thoát 0, có dòng hang-ngay 2026-11-22, 2026-11-23 và dòng «bu tong»; in «ok bu --thu». Chiều đỏ: trên main (chưa có lệnh bu) lệnh thoát 2 và probe in FAIL."
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.agent
+    long_running: 25
+    paths: ["agent/src/enrich/doc-gop-s03/**", "agent/scripts/doc-gop-s03.ts", "agent/tests/doc-gop-song-song.test.ts"]
+    expected: "Ca HT6-AC-9 xanh: lượt đầu giữ khoá (model giả treo tới khi test nhả), lượt hai khởi động → mã 6, dòng «JOB FAIL [doc-gop-s03] dang-co-luot-khac», 0 lời model, 0 dòng silver_labels mới; --thu lúc khoá đang giữ vẫn thoát 0; đối chứng dương: chạy lại sau khi lượt đầu xong → gọi model bình thường. Chiều đỏ: bỏ bước lấy khoá thì lượt hai gọi model — ca đỏ «HT6-AC-9 chạy chồng»."
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.agent
+    long_running: 25
+    paths: ["agent/**", "pipeline/doc-gop-hang-ngay.sh"]
+    expected: "Suite agent xanh trọn (các ca PL30, PL34, goi-thang-anthropic giữ nguyên); suite scripts (enrich-buoc-job, job-step) do lượt chấm chạy theo suite_keys cũng xanh."
+  - id: E8b
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.jst_regress
+    paths: ["pipeline/doc-gop-hang-ngay.sh", "scripts/zalo-import-daily.sh", "scripts/lib/job-step.sh"]
+    expected: "Năm bộ test job của chuỗi đêm (job-exit, s03-nap-nhanh, zalo-import-job, zalo-import-job-nhe, enrich-buoc-job) xanh sau khi đổi pipeline/doc-gop-hang-ngay.sh."
