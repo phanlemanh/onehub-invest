@@ -11,7 +11,7 @@
 | OpenClaw Desktop (/Applications) | Không cần cho vận hành — headless làm được tất | ❌ (user được phép remove) | Không cài thêm Login Items |
 | ~/dev/openclaw (source 4.4G) | **Tham chiếu source để vá plugin** (đang đứng nhánh `fix/zalouser-plugin-hooks` = v2026.10.5 + port pluginHooks) | ✅ GIỮ (dev) | KHÔNG chạy production từ đây |
 | Zalo PC app / Zalo Web (Chrome) | **KHÔNG liên quan thu thập** — provider zca-js poll server Zalo trực tiếp bằng session QR-link | ❌ | Tiện cá nhân của user, muốn dùng thì dùng |
-| collector :9210, MTPLX :8000 | Hạ tầng phụ thuộc hook | ✅ | launchd KeepAlive đã có (K1: cổng chấm nhãn đã bỏ — mục 52) |
+| collector :9210 | Hạ tầng phụ thuộc hook | ✅ | launchd KeepAlive đã có (K1: cổng chấm nhãn đã bỏ — mục 52) |
 
 ## Chuỗi tin Zalo (đúng như đã verify)
 
