@@ -1,0 +1,52 @@
+schema_version: 1
+feature_slug: hai-ca-app-dung-tren-du-lieu-may
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.ht3_do3
+    paths: [app/tests/do-lam-giau.test.tsx]
+    expected: "exit 0; «ℹ fail 0», hai ca DO3-AC-7 «✔». Dòng in «DO3-AC-7 lát phường: <n> ô có số (trang 1 hiện 10)». Trong ca: soatChuaGan(latThayDoi(data.duong, \"phuong\")) qua; bản dữ liệu lát bị xoá ô «khong-tin-hieu» → assert.throws ghim «DO3-AC-7 ô chưa gắn không có trong bảng lát»; n > 10 → ô chưa gắn không có trong DOM trang 1 (có → đỏ ghim «DO3-AC-7 hiện trạng đổi»)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.ht3_sd6
+    paths: [app/tests/sellers-chip.test.tsx]
+    expected: "exit 0; «✔ SD-AC-6»; dòng «SD-AC-6 số thật <a>, số suy có số tin <b>, số suy null <c>» với a, b, c > 0 (một nhóm 0 → đỏ «probe không đo được»). Ba tin tự cấy có mặt trong dealsSql đọc không trần (vắng → đỏ ghim «tin tự cấy … không vào dealsSql»). Chiều đỏ 1: view sellers bản đột biến nối khoá băm → assert.rejects ghim «SD-AC-6 tin có SĐT thiếu số tin người bán». Chiều đỏ 2: tin số suy mới bị gán broker_n_ads = 3 → assert.throws ghim «SD-AC-6 số suy hiện số tin khác danh bạ của số: … t_sd1_chip_suy_…»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.ht3_ci
+    paths: [app/tests/do-lam-giau.test.tsx, app/tests/sellers-chip.test.tsx]
+    expected: "exit 0; «ℹ fail 0», «ℹ skipped 2»: DO3-AC-7 (mỗi đường) «﹣ … thiếu DATABASE_URL» và SD-AC-6 «﹣ … CI chỉ có lược đồ»; ca DO3-AC-7 «trống, lỗi tại chỗ» vẫn «✔»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.ht3_pham_vi
+    paths: [app/tests/do-lam-giau.test.tsx, app/tests/sellers-chip.test.tsx]
+    expected: "exit 0; in «SCOPE OK». Danh sách gồm cả phần HT4 gộp vào (pipeline/scripts/nap-dvhc-cu.test.mjs, hồ sơ px1-ac-10-so-dung-tin-gan-theo-ten). Tệp ngoài danh sách (vd app/src/lib/deals.ts, scripts/lib/ci-can-du-lieu.mjs) → «NGOAI PHAM VI: <tệp>», thoát 1."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.ht4_that
+    paths: [pipeline/scripts/nap-dvhc-cu.test.mjs]
+    expected: "exit 0 trên DB của riêng lượt chép từ bản mẫu DB máy thu: ca «PX1-AC-10 gán S06, S03 bằng code mới = giá trị nguồn ghi» đạt, dòng «# PX1-AC-10 đem so: S06 … · S03 … (trong đó … so với giá trị nguồn ghi …) · cột bị đè … theo nhãn {…}» có S03 ≥ 1500 và «trong đó … so với giá trị nguồn ghi» ≥ 1300, in số tin trỏ xã đã gỡ, lệch 0, 0 tin có nhãn đè thiếu khoá goc; dòng «# PX1-AC-10 so với cột như cũ: lệch N, ngoài tập bị đè 0»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.ht4_that
+    paths: [pipeline/scripts/nap-dvhc-cu.test.mjs]
+    expected: "exit 0: ca «PX1-AC-10 chiều đỏ: phá ánh xạ tên → khu thì lệch trên chính tập so; tập so rỗng thì ném» đạt — phá ánh xạ cho lệch > 0, tập rỗng ném «PX1-AC-10 tập so rỗng», cắt S03 còn 10 tin ném «tập so S03 10 dưới sàn 1500», so với cột (bỏ G) lệch > 0 với tập so với G ≥ 1300, xoá khoá goc của một tin có nhãn thì docGiaTriNguonGhi nêu đúng tin đó."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.ht4_ci
+    paths: [pipeline/scripts/nap-dvhc-cu.test.mjs, _acceptance/hai-ca-app-dung-tren-du-lieu-may/probes/px1-the-ci.mjs]
+    expected: "exit 0; in {\"skipped\":5,\"pass\":0,\"fail\":0,\"bo_qua_co_ly_do\":5} trên DB dựng từ db/migrations; lệch số thì thoát 1."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

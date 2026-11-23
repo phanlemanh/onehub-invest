@@ -19,15 +19,17 @@ traces/        *.jsonl — gitignored
 ```bash
 npx tsc --noEmit      # lưu ý: loop.ts/models.ts đang có 2 lỗi TS tồn đọng (AI SDK đổi type)
 npm test              # node --test tests/
-npm run smoke         # vòng chạy thật qua MTPLX
+npm run smoke         # vòng chạy thật qua Vercel AI Gateway (model của smoke-echo trong config/model-agent.json)
 ```
 
 ## Luật
 
 - **LLM-off-data-path**: agent chỉ gate/judge/extract, ghi kết quả kèm evidence vào
   bảng đề xuất/review — KHÔNG UPDATE dữ liệu canonical trực tiếp.
-- **Local-first**: Qwen 27B qua MTPLX (`MTPLX_URL`, mặc định `http://127.0.0.1:8000/v1`,
-  chỉ chat completions); Kev-4B gate :8009. Cloud model chỉ cho dữ liệu phi-PII.
+- **Model cloud, chọn bằng cấu hình** (MH1, Mạnh 21/11 «Dùng toàn bộ sang cloud model haiku 5.5, không mang sang»): agent chạy
+  qua `runAgent` lấy model ở `config/model-agent.json` theo tên agent (mặc định Haiku 5.5 qua Vercel AI Gateway, mã thuộc danh
+  sách duyệt của PL30, cờ không giữ dữ liệu, trần tiền mỗi lượt). Không còn model máy (MTPLX :8000). Dữ liệu gửi model theo
+  luật 6 (AGENTS.md) — không hồ sơ user app, định danh tài khoản thu, phiên/khoá.
 - Không LangGraph; không thêm graph/vector store trước khi đo thấy cần (M5).
 - Mọi bước runtime phải để lại trace JSONL.
 - Agent không bao giờ có tool gửi tin vào Zalo/nhóm xã hội.

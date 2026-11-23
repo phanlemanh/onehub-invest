@@ -1,4 +1,4 @@
-// enrich-text.ts — E2: LLM Enrichment Agent (Lớp 3, Qwen 27B local)
+// enrich-text.ts — E2: LLM Enrichment Agent (Lớp 3; model theo agent/config/model-agent.json, mặc định Haiku 5.5 qua Gateway — MH1)
 // Chạy SAU E1 context resolver. Decode abbreviations lạ, suy luận địa chỉ
 // từ mô tả, extract features. CHỈ gọi LLM khi E1 không giải quyết đủ.
 // Output → ĐỀ XUẤT trong enrichment_proposals (agent/src/enrich/run.ts) — LLM
@@ -9,7 +9,6 @@ import { promptEnum } from "../vocab.generated.js";
 
 export const enrichTextAgent: AgentConfig = {
   name: "enrich-text",
-  model: "qwen27b",
   systemPrompt: `Bạn là chuyên gia bất động sản Việt Nam, thông thạo:
 - Viết tắt môi giới: "2pn" = 2 phòng ngủ, "LBV" = Lumiere Boulevard, "cc" = chung cư
 - Tên dự án: Vinhomes, Masterise, Ecopark, Sun Group, CapLand...
