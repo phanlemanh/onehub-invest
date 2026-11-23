@@ -96,6 +96,7 @@ export function docNhap(text) {
   const [h, ...r] = dong;
   const c = (k) => h.indexOf(k);
   const m = new Map();
+  if (c("o") >= 0 && c("tro_ly_de_xuat") >= 0) return docNhapDai(r, c, m);
   for (const f of r) {
     // «(KO)» là nháp «không nêu»; ô có «(Mạnh …» là Mạnh tự quyết ô đó, không tính là giữ nháp.
     const o = (v) => ((v ?? "").trim() === "(KO)" ? "" : (v ?? ""));
@@ -105,6 +106,28 @@ export function docNhap(text) {
     const loai = /trước lời duyệt|hồi tố/.test(sua) ? "luu-truoc-duyet-hoi-to" : /sau duyệt lô/.test(sua) ? "duyet-lo-truoc-luu" : "manh-tung-the";
     const gio = sua.match(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ/g);
     m.set(f[c("item_id")], { toa, khu, tu_quyet: /\(Mạnh/.test(toa) || /\(Mạnh/.test(khu), loai, gio_duyet: gio ? gio[gio.length - 1] : null });
+  }
+  return m;
+}
+
+/**
+ * Sổ dạng dài (lát hai-khu-ghep-c): một dòng một ô, đề xuất «giá trị (Căn cứ)», «KO» là không nêu. Ô thẻ cài ghi giá trị cài ở
+ * cột đề xuất và «thẻ cài» ở cột kết quả: bài đó đếm riêng là thẻ cài, không tính vào giữ hay sửa nháp.
+ */
+function docNhapDai(r, c, m) {
+  const gt = (v) => { const s = (v ?? "").replace(/\s*\([^)]*\)\s*$/, "").trim(); return s === "KO" ? "" : s; };
+  for (const f of r) {
+    const o = f[c("o")];
+    if (o !== "building" && o !== "subzone") continue;
+    const id = f[c("item_id")], kq = f[c("ket_qua_Manh")] ?? "";
+    const x = m.get(id) ?? { toa: "", khu: "", tu_quyet: false, the_cai: false, loai: "manh-tung-the", gio_duyet: null };
+    x[o === "building" ? "toa" : "khu"] = gt(f[c("tro_ly_de_xuat")]);
+    if (/thẻ cài/.test(kq)) x.the_cai = true;
+    if (/Mạnh (tự|sửa)/.test(kq)) x.tu_quyet = true;
+    if (/sau «Duyệt lô/.test(kq)) x.loai = "duyet-lo-truoc-luu";
+    const gio = kq.match(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ/g);
+    if (gio) x.gio_duyet = gio[gio.length - 1];
+    m.set(id, x);
   }
   return m;
 }
@@ -121,6 +144,7 @@ export function tiLeSua({ dong, nhan, nhap }) {
       const p = nhap.get(String(l.item_id));
       if (!p) { g.khong_nhap = (g.khong_nhap ?? 0) + 1; continue; }
       g.co_nhap++;
+      if (p.the_cai) { g.the_cai = (g.the_cai ?? 0) + 1; continue; }
       if (p.tu_quyet) { g.tu_quyet++; g.ds_tu_quyet.push(x.ref_id); continue; }
       if (chuan(p.toa) === chuan(l.building) && chuan(p.khu) === chuan(l.subzone)) g.giu++;
       else { g.sua++; g.ds_sua.push(x.ref_id); }
@@ -176,8 +200,8 @@ export function vietBaoCao(r, sha256) {
   const quyChu = (q) => (q.toa || q.vung ? [q.toa && `toa=${q.toa}`, q.vung && `vung=${q.vung}`].filter(Boolean).join(" ") : "không quy được");
   for (const [n, g] of Object.entries(r.nhom)) for (const s of g.ds_sai) for (const l of s.nhan) dong.push(`| ${n} | ${s.ref_id} | ${s.may} | ${l.building ?? "—"} · ${l.subzone ?? "—"} | ${quyChu(l.quy)} |`);
   if (r.sua_nhap) {
-    dong.push("", "## Mạnh sửa nháp của trợ lý", "", "| Nhóm | Có nháp | Giữ nguyên | Sửa | Mạnh tự quyết | Tỉ lệ sửa |", "|---|---:|---:|---:|---:|---:|");
-    for (const [n, t] of Object.entries(r.sua_nhap)) dong.push(`| ${n} | ${t.co_nhap} | ${t.giu} | ${t.sua} | ${t.tu_quyet} | ${pt(t.sua + t.tu_quyet, t.co_nhap)} |`);
+    dong.push("", "## Mạnh sửa nháp của trợ lý", "", "| Nhóm | Có nháp | Giữ nguyên | Sửa | Mạnh tự quyết | Thẻ cài (đếm riêng) | Tỉ lệ sửa (trừ thẻ cài) |", "|---|---:|---:|---:|---:|---:|---:|");
+    for (const [n, t] of Object.entries(r.sua_nhap)) dong.push(`| ${n} | ${t.co_nhap} | ${t.giu} | ${t.sua} | ${t.tu_quyet} | ${t.the_cai ?? 0} | ${pt(t.sua + t.tu_quyet, t.co_nhap - (t.the_cai ?? 0))} |`);
   }
   if (r.loai_the) {
     dong.push("", "## Số theo cách gắn thẻ", "", "| Nhóm | Cách gắn | Bài | Đúng | Tỉ lệ | Lưu trước giờ duyệt |", "|---|---|---:|---:|---:|---|");
@@ -239,7 +263,7 @@ async function main() {
     }
     for (const [n, g] of Object.entries(r.nhom)) console.log(`${n}: da cham ${g.n}/${g.tong} · dung ${g.dung} · sai ${g.sai} · wilson ${g.wilson ?? "n/a"} · ${g.trang}${g.sai >= 2 ? " · DUNG GAN NHAN NHOM NAY" : ""}`);
     for (const [n, g] of Object.entries(r.nhom)) for (const s of g.ds_sai) console.log(`  may sai ${n} ${s.ref_id}: may ${s.may} · nguoi ${s.nhan.map((l) => `${l.building ?? "-"}/${l.subzone ?? "-"} -> ${JSON.stringify(l.quy)}`).join(" ; ")}`);
-    for (const [n, t] of Object.entries(r.sua_nhap ?? {})) console.log(`${n}: co nhap ${t.co_nhap} · giu ${t.giu} · sua ${t.sua} · tu quyet ${t.tu_quyet}${t.khong_nhap ? ` · khong co nhap ${t.khong_nhap}` : ""}`);
+    for (const [n, t] of Object.entries(r.sua_nhap ?? {})) console.log(`${n}: co nhap ${t.co_nhap} · giu ${t.giu} · sua ${t.sua} · tu quyet ${t.tu_quyet}${t.the_cai ? ` · the cai ${t.the_cai}` : ""}${t.khong_nhap ? ` · khong co nhap ${t.khong_nhap}` : ""}`);
     if (a.includes("--tien-do")) return 0;
     if (lay("--doi-chieu")) {
       const cu = docBaoCao(readFileSync(lay("--doi-chieu"), "utf8"));

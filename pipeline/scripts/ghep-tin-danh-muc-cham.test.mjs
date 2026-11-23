@@ -154,6 +154,34 @@ test("ti-le-manh-sua-tinh-tu-nhan-trong-db-theo-nhom", () => {
   assert.deepEqual(t.n2, { co_nhap: 0, giu: 0, sua: 0, tu_quyet: 0, ds_sua: [], ds_tu_quyet: [], khong_nhap: 1 });
 });
 
+// Sổ lát hai-khu-ghep-c: một dòng một ô; ô thẻ cài đếm riêng, không thành «sửa nháp».
+const CSV_DAI = `item_id,o,nhap_may,tro_ly_de_xuat,can_cu,do_chac,ket_qua_Manh,gio
+# chú thích, có phẩy
+1,subzone,trống,the rainbow (Nghề),«Rainbow»,cao,"giữ đề xuất; lưu bởi trợ lý sau «Duyệt lô c1»; khớp",2026-11-22T10:20:06Z
+1,building,trống,KO,bài không nêu,cao,"giữ đề xuất; lưu bởi trợ lý sau «Duyệt lô c1»; khớp",2026-11-22T10:20:06Z
+1,bedrooms,trống,2 (Chữ),«2PN»,cao,"giữ đề xuất",2026-11-22T10:20:06Z
+2,subzone,trống,the beverly solari (Nghề),«The Beverly»,cao,"thẻ cài LỌT: bảng gửi the beverly solari, đúng = the beverly; lưu giá trị đúng sau «Duyệt #2»",2026-11-22T10:20:06Z
+2,building,trống,b (Chữ),«Toà B»,cao,"giữ đề xuất; lưu bởi trợ lý sau «Duyệt lô c1»",2026-11-22T10:20:06Z
+3,subzone,trống,s2 (Chữ),«S2»,vừa,"Mạnh sửa thành s1 2026-11-22T11:00:00Z",2026-11-22T10:20:06Z
+`;
+test("doc-nhap-dang-dai-tach-the-cai", () => {
+  const m = docNhap(CSV_DAI);
+  assert.equal(m.size, 3);
+  assert.deepEqual(m.get("1"), { toa: "", khu: "the rainbow", tu_quyet: false, the_cai: false, loai: "duyet-lo-truoc-luu", gio_duyet: null });
+  assert.deepEqual([m.get("2").toa, m.get("2").khu, m.get("2").the_cai], ["b", "the beverly solari", true]);
+  assert.deepEqual([m.get("3").tu_quyet, m.get("3").gio_duyet], [true, "2026-11-22T11:00:00Z"]);
+  const dong = [{ ref_id: "a", stratum: "n2" }, { ref_id: "b", stratum: "n2" }, { ref_id: "c", stratum: "n2" }];
+  const nhan = new Map([
+    ["a", [{ item_id: 1, building: null, subzone: "the rainbow" }]],
+    ["b", [{ item_id: 2, building: "b", subzone: "the beverly" }]],
+    ["c", [{ item_id: 3, building: null, subzone: "s1" }]],
+  ]);
+  const t = tiLeSua({ dong, nhan, nhap: m }).n2;
+  assert.deepEqual([t.co_nhap, t.giu, t.sua, t.tu_quyet, t.the_cai], [3, 1, 0, 1, 1], "thẻ cài không đếm là sửa nháp");
+  const r = chamLat({ dong: [], nhan: new Map(), danhBa: hai }); r.sua_nhap = { n2: t };
+  assert.match(vietBaoCao(r, "abc"), /\| n2 \| 3 \| 1 \| 0 \| 1 \| 1 \| 50\.0% \|/);
+});
+
 // n2 gắn theo ba cách: Mạnh từng thẻ · duyệt lô rồi mới lưu · lưu trước rồi duyệt hồi tố. Số chấm tách theo cách gắn.
 test("tach-so-theo-loai-the-va-bat-gio-luu-truoc-duyet", () => {
   const dong = [
