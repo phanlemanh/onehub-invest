@@ -199,6 +199,11 @@ không sửa tay, cập nhật bằng cách chép lại từ plugin. `PRODUCT-MA
   agent không đem câu hỏi tới Mạnh; câu về cách làm thì gửi phiên giám sát.
 - **Phiên giám sát chịu hiệu quả lộ trình**: chọn việc theo đường găng của nhịp đang làm, cắt và gom hàng, thứ tự gộp, số dãy,
   mở và dọn phiên. Báo tiến độ bằng con số trên màn, không bằng số PR đã gộp.
+- **Phiên giám sát toàn quyền điều phối và gộp, và phải tham gia quyết định cùng các phiên** (Mạnh chốt 2026-11-24, ROADMAP §3
+  mục 62; quyền đi theo vai, không theo phiên hay tài khoản): xếp, cắt, chuyển hàng; mở, thay và dọn phiên; thứ tự gộp và quyết
+  định gộp PR đủ điều kiện; áp lên DB máy thu đúng hồ sơ đã ký. Phiên hỏi cách làm, kẹt, lệch số hay tranh tài nguyên thì giám
+  sát phán ngay kèm lý do và ghi sổ, không chuyển câu đó lên Mạnh và không để phiên tự chờ. Hiệu quả của mốc và lộ trình là
+  trách nhiệm của giám sát. Danh sách «vẫn cần lời riêng của Mạnh» bên dưới không đổi.
 - **Hàng trên đường găng xong khi con số trên màn đổi trên dữ liệu thật**, không xong ở «gộp». Hợp đồng ghi ô nào đổi, từ bao
   nhiêu lên bao nhiêu, kèm lệnh đo. Hàng nền (test, CI, tài liệu) ghi rõ là miễn.
 - **Chữ ký Cổng Bằng chứng kèm luôn lời áp lên DB máy thu** đúng những gì hồ sơ đã ghi (migration, lượt ghi dữ liệu, thẻ luật).
