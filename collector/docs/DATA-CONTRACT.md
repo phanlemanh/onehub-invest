@@ -342,11 +342,22 @@ Khoá nối với S16/S08 (chi tiết số đo ở tệp kê local của lượt
 - Nhịp 300–400 ms một lời (mức nguồn đã chịu được); trần lời gọi và trần thời gian phải khai mỗi lần chạy. 403, 429,
   trang thử thách, hết phiên, quá trần → dừng cả lượt, không gửi thêm lời nào. Lỗi mạng và 5xx thử lại sau 5 s, 15 s,
   30 s rồi tính là thất bại của riêng bản ghi đó. Chạy như tiến trình của phiên, chưa có lịch. Lời cần phiên gặp lỗi
-  mạng được hỏi lại bằng chính một lời cần phiên trước khi kết luận hết phiên.
+  mạng được hỏi lại bằng chính một lời cần phiên trước khi kết luận hết phiên. Lỗi tạm ghi kèm câu chữ lỗi gốc của
+  vận chuyển (đủ nhận «Failed to fetch», «signal timed out», việc trong trang đã mất).
+- **Dừng một lượt đang chạy**: tạo tệp rỗng tên `DUNG` trong thư mục trạng thái của bộ thu — lượt dừng ở lời kế tiếp
+  như mọi lần dừng khác (chốt phần đã lấy, lưu trạng thái, lý do `operator-stop`, không ghi nhận là bị chặn), rồi tệp
+  được xoá. KHÔNG giết tiến trình: `ego-browser nodejs` chỉ là máy khách mỏng, mã của pha chạy trong dịch vụ trình
+  duyệt, sống thêm khoảng 40 s và tranh tab với lượt kế (đo 24/11). Hai lượt không dùng cùng một tab một lúc.
 - **Tăng tốc có khoá (Mạnh 24/11)**: từ mốc ngày 2 bộ thu gửi được tối đa 4 lời một đợt (nhiều fetch đồng thời trong
   trang; đo: hai lời đồng thời xong sau 4,9 s thay vì 8,4 s) và nhịp tới 150 ms. Số lần bị chặn (403, 429) ghi vào
   trạng thái bộ thu: bị chặn một lần thì chỉ còn nhịp 350 ms một luồng; bị chặn hai lần thì không chạy nữa, chờ
   người quyết.
+- **Trình duyệt hủy một lần chạy trong trang sau 15 s** (đo 24/11) nên bộ thu KHÔNG chờ lời gọi bên trong một lần
+  chạy: bắt đầu lời gọi rồi hỏi kết quả bằng các lần chạy rất ngắn; hạn chờ một lời là 60 s. Hệ quả: bản ghi máy
+  chủ trả chậm vẫn lấy được (id 52 và 1705 của thấp tầng về sau khoảng 12 s, thân chỉ vài KB: lúc bộ thu còn chờ
+  lời gọi trong lần chạy thì cả lượt vỡ ở 15 s, lúc chặn lời ở 10 s thì hai id này thành lỗi). Tốc độ đo 24/11:
+  chi tiết căn một luồng nhịp 350 ms khoảng 1,1 s một lời; chi tiết thấp tầng ba luồng nhịp 250 ms khoảng 0,6 s một
+  id, id rỗng mất bấy nhiêu — thời gian là do độ trễ của máy chủ, không theo cỡ phản hồi.
 - Phạm vi PII: hồ sơ thửa, căn, dự án chỉ có thuộc tính vật thể (không tên, SĐT chủ sở hữu). Không có lớp người bán ⇒
   RawItem không mang `seller`.
 
@@ -359,7 +370,7 @@ Khoá nối với S16/S08 (chi tiết số đo ở tệp kê local của lượt
 | `du_an_detail` | `du-an-<id>` | `{ detail, filterOptions, gallery }` — phản hồi gốc của một dự án: hồ sơ, cây lựa chọn toà → tầng → hướng → diện tích, thư viện ảnh. `gallery` là `null` khi thư viện lấy lỗi (ảnh không nằm trong mốc ngày 1) — hồ sơ và cây toà vẫn đủ | `request {id}` · `coBangCan` (`true` \| `false` \| `null`) · `galleryLoi` (chỉ khi `gallery` là `null`: lý do) |
 | `can_ho_list` | `du-an-<id>-toa-<toà>-trang-<n>[-lot-<k>]` | `{ json }` — một trang liệt kê căn theo toà: `data.content[]` (mỗi mục `text` = mã căn, `sub_text` = toà, tầng, diện tích, hướng, loại căn) cùng `totalElements`, `totalPages`; nguồn chịu 100 mục một trang (đo 24/11). Hậu tố `-lot-<k>` chỉ có ở lượt quét kế từ lượt hai | `request {project_id, thap, text, page, size}` · `tongCan` (số DÒNG nguồn công bố) · `soTrang` · `soMuc` · `lot` (lượt quét, từ 1) · `maMoi` (số mã mới gặp ở trang này) |
 | `can_ho_toa` | `du-an-<id>-toa-<toà>` | `{ maCan: […] }` — mã căn duy nhất của một toà sau khi gộp mọi trang, mọi lượt | `request {project_id, thap}` · `tongCan` · `maDuNhieu` · `soLot` · `khop` (`maDuNhieu = tongCan`) · `laToaChungMinh` |
-| `can_ho_du_an` | `du-an-<id>` | `{ toa: [{ thap, maDuNhieu, tongDong, soLot }] }` — bản gộp căn của một dự án mẫu, ghi một lần | `request {id}` · `soToa` · `maDuNhieu` · `tongDong` · `soCanNguon` (số `so_can` trong chi tiết dự án; `null` khi không đọc được) · `khop` (`maDuNhieu = soCanNguon`; `null` khi không có số) · `khopTongDong` |
+| `can_ho_du_an` | `du-an-<id>` | `{ toa: [{ thap, maDuNhieu, tongDong, soLot }] }` — bản gộp căn của một dự án mẫu, ghi lại sau mỗi lượt chạy của pha căn hộ ⇒ có thể có nhiều bản cho một dự án, bên đọc lấy bản mới nhất theo `fetchedAt` | `request {id}` · `soToa` · `maDuNhieu` · `tongDong` · `soCanNguon` (số `so_can` trong chi tiết dự án; `null` khi không đọc được) · `khop` (`maDuNhieu = soCanNguon`; `null` khi không có số) · `khopTongDong` |
 | `can_ho_detail` | `du-an-<id>-can-<mã căn>` | `{ json }` — hồ sơ một căn (`data.properties`: `ma_can`, `ma_can_tren_cua` là mã trên cửa, tháp, tầng, diện tích, đơn giá thẩm định, trạng thái giao dịch, ngày duyệt…) | `request {project_id, ma_can}` · `toa` · `khopMaCan: true` |
 | `thua` | `thua-<mã địa chính>` | `{ json }` — hồ sơ thửa theo toạ độ: đa giác ranh giới, kích thước, tiếp giáp đường, đơn giá đất theo trạng thái quy hoạch, mã hành chính cũ và mới | `request {latitude, longitude, loaiTimKiem}` · `phuongPhap` (`grid` \| `suggest`) · `khuVuc` · `ogcFid` · `soTo` · `soThua` · `dienTich` · `duong` · `maPhuong` · `maQuan` · `maThanhPho` |
 | `thua_goi_y` | `goi-y-<khu>-<tên đường>` | `{ json }` — gợi ý thửa theo tên đường: `data[0].items[]`, mỗi mục có `id` và `extra {latitude, longitude, dien_tich, chieu_rong, chieu_dai}` | `request {term, size}` · `khuVuc` · `soMuc` |
@@ -393,9 +404,15 @@ Luật đọc:
    (namespace, id). Chi tiết thấp tầng PHẢI lấy có cờ riêng (`for_house=true`) trên cùng một đường — đo 24/11: không
    có cờ, cùng id trả một dự án căn hộ khác (id 1804: «Star Villa Sơn Trà» so với «Nhà công vụ Bộ tổng tham mưu»). Với
    id không có bản ghi thấp tầng, cờ trả `data: null`. Không có lời liệt kê riêng cho thấp tầng (gợi ý chỉ khớp theo từ
-   trọn vẹn), nên `phuongPhap = id-sweep`: quét từng id có cờ; đo 24/11: id 1804 có bản ghi, 1850/1900/2400/2508 rỗng.
-   `du_an_thap_tang` chỉ ghi khi `data.estate_type` là `du_an_nha_dat`. Danh sách của mốc ngày 1 (`du_an_list`,
-   `du_an_detail`) KHÔNG gồm các dự án này.
+   trọn vẹn), nên `phuongPhap = id-sweep`: quét từng id có cờ. `du_an_thap_tang` chỉ ghi khi `data.estate_type` là
+   `du_an_nha_dat`. Danh sách của mốc ngày 1 (`du_an_list`, `du_an_detail`) KHÔNG gồm các dự án này.
+   **Kết quả quét 24/11 — danh sách thấp tầng TRỌN theo id tới 3575** (id lớn nhất của danh sách căn hộ): dải 1–1850 có
+   1.603 id mang dự án thấp tầng (87%) và 247 id rỗng; dải 1851–3575 (1.725 id) rỗng hết; 0 lỗi. Id thấp tầng nhỏ nhất
+   7, lớn nhất 1814. Theo thành phố/tỉnh của nguồn: TP.HCM 558, Hà Nội 237, Đồng Nai 231, Bình Dương 218, Long An 192,
+   Đà Nẵng 81, Bình Phước 63; 6 bản ghi không có vị trí (toạ độ 0, trống thành phố: id 518, 975, 976, 977, 1685, 1721).
+   `loai_du_an` rỗng ở mọi bản ghi; `tinh_trang` chỉ có `null` (853) hoặc `da_ban_giao` (750). Mốc sau quét tiếp từ id
+   3576 và quét lại các id đã rỗng nếu nghi nguồn bổ sung bản ghi vào dải cũ. `du_an_goi_y_thap_tang` (kind gợi ý có
+   cờ) tồn tại trong bộ thu nhưng mốc này không ghi bản nào — quét theo id đã đủ.
 7. **Tên miền thật có trong payload** (link ảnh, link quyết định, kho ảnh nguồn): raw ở local được phép; `stg_s17_*` thì
    không — cùng luật với S07 mục 1. Payload thửa có link ký số tạm thời (hết hạn sau 24 giờ): bên đọc không dựa vào.
 8. *(mốc ngày 2)* **Liệt kê trọn toà.** Thứ tự trang của lời liệt kê không ổn định — đo 24/11: toà P12 một lượt quét ra
@@ -403,12 +420,15 @@ Luật đọc:
    tối đa 8 lượt, lượt không thêm được mã thì dừng. `can_ho_toa.khop` = số mã duy nhất bằng `tongCan` (số DÒNG của lời
    liệt kê). **`so_can` trong chi tiết dự án không phải tổng của danh sách** (đo: dự án 1004 ghi 2.432, mã duy nhất
    2.475; dự án 684 ghi 1.172, mã duy nhất 833) — `can_ho_du_an.khop` chỉ để đối chiếu, không dùng làm chứng minh.
+   Kết quả hai dự án mẫu của mốc ngày 2 (1004, 684; 9 toà): 3.308 dòng = 3.308 mã duy nhất, 9/9 toà khớp, 14 lượt
+   quét (nhiều nhất 3 lượt ở toà P11).
 9. *(mốc ngày 2)* **Tra chi tiết căn khớp theo ĐOẠN ĐẦU của từng từ trong mã và trả đúng MỘT kết quả theo thứ tự cố
    định** — đo 24/11: gửi «320 Tòa Park 12» nhận «3204 Tòa Park 12»; gửi «3312 Tòa Park 12» nhận «3312A Tòa Park 12»;
    gửi «320» nhận một căn của toà khác. Căn có mã là đoạn đầu của mã khác (toà P12: 41 trên 719) không gọi trúng được
    bằng cách nào đã thử. Bộ thu đối chiếu `ma_can` của phản hồi với mã đã gửi: lệch thì KHÔNG ghi và ghi nhận thất bại
    ở trạng thái bộ thu (báo số trong lượt XONG). Những căn này có ở `can_ho_list` và `can_ho_toa` (mã và `sub_text`)
-   nhưng không có `can_ho_detail`.
+   nhưng không có `can_ho_detail`. Số đo hai dự án mẫu: 3.195 mã có chi tiết (96,6%), 113 mã không gọi trúng (3,4%) —
+   tất cả ở dự án 1004 (P12 32, P11 23, P10 29, P9 29); dự án 684 có đủ 833/833.
 10. *(mốc ngày 2)* **Thửa.** Định danh bền là mã địa chính (`ogc_fid`): một thửa đúng một item `thua`, dù gặp ở nhiều
    điểm hay hai phương pháp; `soTrung` đếm số điểm trúng thửa đã có. Điểm không nằm trong thửa nào: nguồn trả
    `data: null` (nhanh, khoảng 0,1 s), không có item, tính vào `soKhongCo`. Điểm hỏi lỗi được ghi ở trạng thái bộ thu,
@@ -425,12 +445,15 @@ Luật đọc:
 
 ## Lịch sử phiên bản
 
-- **schemaVersion 17 (2026-11-24, claudedp-2411-20 — S17 `s17-thua-dinh-gia`, mốc ngày 1)**: thêm nguồn
-  `s17-thua-dinh-gia` với chín kind — năm kind của mốc ngày 1 (`static_config`, `gia_ubnd`, `tile_coverage`, `du_an_list`,
-  `du_an_detail`) và bốn kind của mốc ngày 2 (`can_ho_list`, `can_ho_detail`, `thua`, `mix_gia`, chưa thu). RawItem không
-  thêm trường chung. Một lượt thu cho ra nhiều snapshot nhỏ; `manifest.schemaVersion = 17`. Bộ thu ở
-  `collector/src/collectors/s17-thua-dinh-gia/`, chạy tay như tiến trình của phiên. Chưa có bộ nạp và migration (làn
-  Claude giữ số 128 tạm); bản nháp gốc và số đo ở tư liệu local của phiên S17.
+- **schemaVersion 17 (2026-11-24, claudedp-2411-20 và -21 — S17 `s17-thua-dinh-gia`)**: thêm nguồn
+  `s17-thua-dinh-gia` với 15 kind — năm kind của mốc ngày 1 (`static_config`, `gia_ubnd`, `tile_coverage`,
+  `du_an_list`, `du_an_detail`), chín kind của mốc ngày 2 (`can_ho_list`, `can_ho_toa`, `can_ho_du_an`,
+  `can_ho_detail`, `thua`, `thua_goi_y`, `thua_khu_vuc`, `du_an_thap_tang`, `du_an_goi_y_thap_tang`) và `mix_gia`
+  (vẫn là thiết kế, chưa thu). Bản nháp của mốc ngày 1 kê bốn kind cho mốc ngày 2; định nghĩa 17 được hoàn tất ở
+  mốc ngày 2, TRƯỚC khi có bên đọc và migration, nên không tăng số. RawItem không thêm trường chung. Một lượt thu
+  cho ra nhiều snapshot nhỏ; `manifest.schemaVersion = 17`. Bộ thu ở `collector/src/collectors/s17-thua-dinh-gia/`,
+  chạy tay như tiến trình của phiên. Chưa có bộ nạp và migration (làn Claude giữ số 128 tạm); bản nháp gốc và số đo
+  ở tư liệu local của phiên S17.
 
 - **schemaVersion 15 (2026-11-19, nháp claudedp-1811-12 — S09 danh bạ căn, gói 1 bản đồ)**: thêm nguồn
   `s09-danh-ba` (mục ở trên) với năm kind `danh-muc/toa/tang/khu-thap-tang/can-thap-tang`, payload nguyên văn
