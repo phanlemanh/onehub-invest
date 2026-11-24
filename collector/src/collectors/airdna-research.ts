@@ -1,5 +1,5 @@
 import { chromium } from "playwright-core";
-import type { Collector, RawItem, CoverageReport } from "../core/types.js";
+import type { CollectContext, Collector, RawItem, CoverageReport } from "../core/types.js";
 
 /**
  * AirDNA Market Research collector v2 (E2 C1 — market → submarket → listing một cây).
@@ -16,6 +16,17 @@ import type { Collector, RawItem, CoverageReport } from "../core/types.js";
  */
 const PROFILE_DIR = new URL("../../.airdna-profile/", import.meta.url).pathname;
 const API = "https://api.airdna.co/api/explorer";
+
+/**
+ * Lỗi XÁC THỰC: token hết hạn hay không đọc được, hoặc 401 cả sau khi làm mới token.
+ * Phải dừng CẢ LƯỢT và ném ra khỏi call() — không được coi là lỗi thường (ctx.failed++ rồi đi tiếp).
+ */
+export class LoiXacThuc extends Error {
+  constructor(thongBao: string) {
+    super(thongBao);
+    this.name = "LoiXacThuc";
+  }
+}
 
 const CITY_MARKET: Record<string, string> = {
   hanoi: "47",
@@ -42,11 +53,11 @@ export function docExpAppToken(token: string, now: number = Date.now()): { exp?:
  * được bằng đột biến: token rỗng / hết hạn / không giải mã được exp → NÉM với đúng
  * chẩn đoán; token còn hạn → trả dòng log 'token OK …'. appToken chỉ gọi hàm này. */
 export function kiemAppToken(token: string, now: number = Date.now()): string {
-  if (!token) throw new Error("không đọc được appToken từ .airdna-profile — cần login lại AirDNA");
+  if (!token) throw new LoiXacThuc("không đọc được appToken từ .airdna-profile — cần login lại AirDNA");
   const { exp, conLaiMs } = docExpAppToken(token, now);
   if (exp === undefined || conLaiMs <= 0) {
     const hetLuc = exp ? new Date(exp * 1000).toISOString() : "(không giải mã được exp)";
-    throw new Error(`appToken ĐÃ HẾT HẠN ${hetLuc} — phiên đăng nhập trong profile cũ/không làm mới, cần đăng nhập lại ĐÚNG profile này (localStorage còn token cũ là báo xanh giả)`);
+    throw new LoiXacThuc(`appToken ĐÃ HẾT HẠN ${hetLuc} — phiên đăng nhập trong profile cũ/không làm mới, cần đăng nhập lại ĐÚNG profile này (localStorage còn token cũ là báo xanh giả)`);
   }
   return `token OK (${token.length} chars, hết hạn sau ${Math.round(conLaiMs / 60000)} phút)`;
 }
@@ -140,7 +151,7 @@ async function call(
         // 1711-1(a): dòng chuẩn máy đọc được khi xác thực hỏng — thước độ tươi làn
         // Claude đọc dòng này để báo đỏ (SLO 35 ngày không thấy lượt 401 liền).
         ctx.log(`AUTH FAIL [S02] ${new Date().toISOString()}`);
-        throw new Error(`401 sau refresh token — dừng chạy (${path})`);
+        throw new LoiXacThuc(`401 sau refresh token — dừng chạy (${path})`);
       }
     }
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -155,8 +166,13 @@ async function call(
       meta: { apiPath: path },
     };
   } catch (err) {
+    // 2411-7: MỌI lỗi xác thực đều ném ra để dừng cả lượt — kể cả lỗi refreshToken() ném giữa chừng
+    // («appToken ĐÃ HẾT HẠN …»: profile giữ token cũ, không tự làm mới). Trước đây chỉ ném lại lỗi có
+    // chữ đầu «401 sau refresh token», nên lỗi hết hạn rơi xuống dưới, bị nuốt: lượt chạy nốt, mỗi lời
+    // lại 401, lại mở trình duyệt lấy token (đo 24/11: 18 lời API, 16 lần lấy token, 15 dòng AUTH FAIL,
+    // rồi kết thúc «bình thường»). Nhớ theo LỚP lỗi, không theo chữ đầu thông báo.
+    if (err instanceof LoiXacThuc) throw err;
     const msg = err instanceof Error ? err.message : String(err);
-    if (msg.startsWith("401 sau refresh token")) throw err; // abort cả run
     ctx.failed++;
     ctx.log(`  ✗ ${method} ${path}: ${msg}`);
     return null;
@@ -165,149 +181,158 @@ async function call(
 
 const monthlyBody = { filters: [], currency: "vnd", granularity: "monthly", period: 12 };
 
-export const airdnaResearch: Collector = {
-  id: "airdna-research",
-  description: "AirDNA Market Research v2 — active explorer API (market → submarket → listing)",
-  requestsPerSecond: 0.3,
-  async collect(ctx) {
-    const { city, rateLimit, log } = ctx;
-    const markets = (process.env.AIRDNA_MARKETS ?? CITY_MARKET[city.id] ?? "")
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-    if (!markets.length) throw new Error(`city ${city.id} chưa có mapping market id — dùng AIRDNA_MARKETS=<id>`);
+/**
+ * Một lượt thu. Token lấy qua `layToken` (mặc định mở profile đọc JWT) để test chạy được không trình duyệt.
+ * Lỗi xác thực (token hết hạn giữa lượt, 401 cả sau khi làm mới) NÉM ra khỏi hàm — scheduler ghi manifest lỗi.
+ */
+export async function thuMotLuot(
+  ctx: CollectContext,
+  layToken: (log: (...a: unknown[]) => void) => Promise<string>,
+): Promise<{ items: RawItem[]; coverage: CoverageReport }> {
+  const { city, rateLimit, log } = ctx;
+  const markets = (process.env.AIRDNA_MARKETS ?? CITY_MARKET[city.id] ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (!markets.length) throw new Error(`city ${city.id} chưa có mapping market id — dùng AIRDNA_MARKETS=<id>`);
 
-    const subLimit = Number(process.env.AIRDNA_SUB_LIMIT ?? 0); // 0 = không giới hạn
-    const wantSubListings = process.env.AIRDNA_SUB_LISTINGS !== "0";
+  const subLimit = Number(process.env.AIRDNA_SUB_LIMIT ?? 0); // 0 = không giới hạn
+  const wantSubListings = process.env.AIRDNA_SUB_LISTINGS !== "0";
 
-    let token = await appToken(log);
-    const items: RawItem[] = [];
-    const cctx: CallCtx = {
-      rateLimit,
-      log,
-      failed: 0,
-      getToken: () => token,
-      refreshToken: async () => {
-        token = await appToken(log);
-      },
-    };
-    const methods: Record<string, number> = {};
-    const push = (it: RawItem | null, kind: string) => {
-      if (!it) return;
-      items.push({ ...it, kind: `airdna-v2-${kind}` });
-      methods[kind] = (methods[kind] ?? 0) + 1;
-    };
+  let token = await layToken(log);
+  const items: RawItem[] = [];
+  const cctx: CallCtx = {
+    rateLimit,
+    log,
+    failed: 0,
+    getToken: () => token,
+    refreshToken: async () => {
+      token = await layToken(log);
+    },
+  };
+  const methods: Record<string, number> = {};
+  const push = (it: RawItem | null, kind: string) => {
+    if (!it) return;
+    items.push({ ...it, kind: `airdna-v2-${kind}` });
+    methods[kind] = (methods[kind] ?? 0) + 1;
+  };
 
-    for (const m of markets) {
-      log(`market ${m}:`);
-      // ---- Cấp market ----
-      push(await call("GET", `/v1/market/${m}`, null, cctx), "market");
+  for (const m of markets) {
+    log(`market ${m}:`);
+    // ---- Cấp market ----
+    push(await call("GET", `/v1/market/${m}`, null, cctx), "market");
+    push(
+      await call("POST", `/v2/market/${m}/overview/market_score`, {}, cctx),
+      "score",
+    );
+    push(
+      await call(
+        "POST",
+        `/v1/market/${m}/submarkets`,
+        {
+          filters: [],
+          sort_order: "market_score",
+          currency: "vnd",
+          pagination: { page_size: 250, offset: 0 },
+          include_geoms: false,
+          compute_metrics: true,
+          metrics: ["market_score"],
+        },
+        cctx,
+      ),
+      "submarkets",
+    );
+    for (const metric of MONTHLY_METRICS) {
       push(
-        await call("POST", `/v2/market/${m}/overview/market_score`, {}, cctx),
-        "score",
+        await call("POST", `/v1/market/${m}/metrics/${metric}`, monthlyBody, cctx),
+        "timeseries",
       );
-      push(
-        await call(
-          "POST",
-          `/v1/market/${m}/submarkets`,
-          {
-            filters: [],
-            sort_order: "market_score",
-            currency: "vnd",
-            pagination: { page_size: 250, offset: 0 },
-            include_geoms: false,
-            compute_metrics: true,
-            metrics: ["market_score"],
-          },
-          cctx,
-        ),
-        "submarkets",
+    }
+    push(
+      await call(
+        "POST",
+        `/v2/market/${m}/metrics/listing_count`,
+        { filters: [], granularity: "monthly", period: 36 },
+        cctx,
+      ),
+      "timeseries",
+    );
+    // map_listings: paginate tới hết (HCMC > 15k listings → 1 page bị cắt)
+    for (let offset = 0; ; offset += 15000) {
+      const it = await call(
+        "POST",
+        offset === 0 ? `/v1/market/${m}/map_listings` : `/v1/market/${m}/map_listings@${offset}`,
+        { filters: [], currency: "vnd", sort_order: "revenue", pagination: { page_size: 15000, offset } },
+        cctx,
       );
+      push(it, "map-listings");
+      const rows =
+        ((it?.payload as { data?: { payload?: { listings?: unknown[] } } })?.data?.payload?.listings
+          ?.length) ?? 0;
+      if (rows < 15000) break;
+    }
+
+    // ---- Cấp submarket ----
+    const subsItem = items.find(
+      (it) => it.kind === "airdna-v2-submarkets" && it.meta?.apiPath === `/v1/market/${m}/submarkets`,
+    );
+    const subs = (subsItem?.payload as { data?: { payload?: { submarkets?: { id: number | string }[] } } })
+      ?.data?.payload?.submarkets ?? [];
+    const list = subLimit > 0 ? subs.slice(0, subLimit) : subs;
+    log(`  ${subs.length} submarket (lấy ${list.length})`);
+    for (const s of list) {
+      const sid = String(s.id);
+      push(await call("GET", `/v1/submarket/${sid}`, null, cctx), "submarket");
       for (const metric of MONTHLY_METRICS) {
         push(
-          await call("POST", `/v1/market/${m}/metrics/${metric}`, monthlyBody, cctx),
+          await call("POST", `/v1/submarket/${sid}/metrics/${metric}`, monthlyBody, cctx),
           "timeseries",
         );
       }
       push(
         await call(
           "POST",
-          `/v2/market/${m}/metrics/listing_count`,
+          `/v2/submarket/${sid}/metrics/listing_count`,
           { filters: [], granularity: "monthly", period: 36 },
           cctx,
         ),
         "timeseries",
       );
-      // map_listings: paginate tới hết (HCMC > 15k listings → 1 page bị cắt)
-      for (let offset = 0; ; offset += 15000) {
-        const it = await call(
-          "POST",
-          offset === 0 ? `/v1/market/${m}/map_listings` : `/v1/market/${m}/map_listings@${offset}`,
-          { filters: [], currency: "vnd", sort_order: "revenue", pagination: { page_size: 15000, offset } },
-          cctx,
-        );
-        push(it, "map-listings");
-        const rows =
-          ((it?.payload as { data?: { payload?: { listings?: unknown[] } } })?.data?.payload?.listings
-            ?.length) ?? 0;
-        if (rows < 15000) break;
-      }
-
-      // ---- Cấp submarket ----
-      const subsItem = items.find(
-        (it) => it.kind === "airdna-v2-submarkets" && it.meta?.apiPath === `/v1/market/${m}/submarkets`,
+      push(
+        await call("POST", `/v2/submarket/${sid}/future/rates`, { filters: [], currency: "vnd", period: 6, granularity: "daily" }, cctx),
+        "future-rates",
       );
-      const subs = (subsItem?.payload as { data?: { payload?: { submarkets?: { id: number | string }[] } } })
-        ?.data?.payload?.submarkets ?? [];
-      const list = subLimit > 0 ? subs.slice(0, subLimit) : subs;
-      log(`  ${subs.length} submarket (lấy ${list.length})`);
-      for (const s of list) {
-        const sid = String(s.id);
-        push(await call("GET", `/v1/submarket/${sid}`, null, cctx), "submarket");
-        for (const metric of MONTHLY_METRICS) {
-          push(
-            await call("POST", `/v1/submarket/${sid}/metrics/${metric}`, monthlyBody, cctx),
-            "timeseries",
-          );
-        }
+      if (wantSubListings) {
         push(
           await call(
             "POST",
-            `/v2/submarket/${sid}/metrics/listing_count`,
-            { filters: [], granularity: "monthly", period: 36 },
+            `/v1/submarket/${sid}/listings`,
+            { filters: [], sort_order: "revenue", currency: "vnd", pagination: { page_size: 50, offset: 0 } },
             cctx,
           ),
-          "timeseries",
+          "sub-listings",
         );
-        push(
-          await call("POST", `/v2/submarket/${sid}/future/rates`, { filters: [], currency: "vnd", period: 6, granularity: "daily" }, cctx),
-          "future-rates",
-        );
-        if (wantSubListings) {
-          push(
-            await call(
-              "POST",
-              `/v1/submarket/${sid}/listings`,
-              { filters: [], sort_order: "revenue", currency: "vnd", pagination: { page_size: 50, offset: 0 } },
-              cctx,
-            ),
-            "sub-listings",
-          );
-        }
       }
     }
+  }
 
-    const discovered = 9 * markets.length;
-    log(`tổng: ${items.length} items, ${cctx.failed} lỗi`);
-    return {
-      items,
-      coverage: {
-        discovered,
-        captured: items.length,
-        failed: cctx.failed,
-        methods,
-        notes: [`markets: ${markets.join(",")}`, `token: profile .airdna-profile`],
-      },
-    };
-  },
+  const discovered = 9 * markets.length;
+  log(`tổng: ${items.length} items, ${cctx.failed} lỗi`);
+  return {
+    items,
+    coverage: {
+      discovered,
+      captured: items.length,
+      failed: cctx.failed,
+      methods,
+      notes: [`markets: ${markets.join(",")}`, `token: profile .airdna-profile`],
+    },
+  };
+}
+
+export const airdnaResearch: Collector = {
+  id: "airdna-research",
+  description: "AirDNA Market Research v2 — active explorer API (market → submarket → listing)",
+  requestsPerSecond: 0.3,
+  collect: (ctx) => thuMotLuot(ctx, appToken),
 };
