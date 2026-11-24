@@ -5,7 +5,7 @@ slug: db-chi-nghe-noi-bo-va-chinh-postgres
 owner: phanlemanh@gmail.com
 risk_tier: T2      # db/docker-compose.yml + scripts/ + docs — không chạm t3_paths
 surfaces: [config, docs]
-status: approved
+status: implemented
 design_doc: docs/superpowers/specs/2026-11-24-db-chi-nghe-noi-bo-va-chinh-postgres-design.md
 approved_by: Mạnh
 approved_at: 2026-11-24
