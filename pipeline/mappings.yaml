@@ -474,6 +474,7 @@ enums:
       - { code: building_area_total, label_vi: Diện tích tim tường, dd_lookup: BuildingAreaTotal }   # DA40 (113): căn hộ cao tầng
       - { code: direction_faces, label_vi: Hướng }   # DA40 (113): trục local direction_faces, tám mã
       - { code: lot_size_area, label_vi: Diện tích đất, dd_lookup: LotSizeArea }   # DA40 (113): nhà thấp tầng
+      - { code: universal_property_id, label_vi: Toà của tin, dd_lookup: UniversalPropertyId }   # PL20 (117): resource Property, UPI của toà đang hoạt động (ADR-0016 §5)
   evidence_tier:
     term_vi: Lớp căn cứ
     dd_field: null
