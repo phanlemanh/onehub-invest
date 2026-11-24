@@ -1090,8 +1090,8 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
       hệ số bắt lỗi ≥ 0,7, tỉ lệ soát ≥ 70%, 4 tuần không tụt trước nấc 4); cỡ mẫu theo nấc (đề xuất: 75 thẻ mỗi lô ở nấc 2, 30
       thẻ mỗi tuần mỗi ô ở nấc 3); cách ghi «ai bấm Lưu» khi trợ lý thao tác qua phiên Ops của người (đường lưu riêng cho trợ
       lý chạm quyền Ops); xếp ô số WC, toà vào nhóm F3 nào; 232 thẻ «Bổ sung tin» chờ mà không còn đề xuất nối vào là gì.
-      *(24/11: Mạnh cho đóng các thẻ này theo luật, đo lại còn 230 thẻ; câu «vì sao đề xuất của chúng mất» còn mở, hàng
-      đóng thẻ NB9 phải ghi câu trả lời trước khi đóng — xem mục 63.)*
+      *(Trả lời 24/11, đo lại còn 230 thẻ: đây là thẻ đối chiếu, chưa từng có đề xuất nào — bộ làm giàu dựng thẻ khi tin có
+      đối chiếu lệch: lệch ý định 124, lệch giá 103, lệch diện tích 5. Không đóng theo luật; sang NB5 xử theo nhóm — xem mục 63.)*
     - **Hàng:** đợt `nguoi-o-bien-2111`, cắt ở lượt riêng: NB1 chấm bóng hàng «Bổ sung tin» và chấp thuận lô; NB2 xuất xứ nhãn,
       lớp chờ, thẻ cài lỗi (có migration, T3); NB3 mở PL21 cho một ô; NB4 ngưỡng chạy bóng thẻ luật danh bạ (câu còn mở của
       mục 56), sau MS3. Ngoài đường găng MS3; giám sát xếp dãy.
@@ -1129,9 +1129,12 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
         có điều gì mâu thuẫn thì giải quyết trước khi chốt.»
       - 02:48Z, đáp đề xuất «dừng tự ghi mới»: «Nếu không tự ghi thì lại kẹt?»
       - 02:56Z, trả lời ba điểm đã trình kèm khuyến nghị: «Chốt cả ba».
-    - **Đóng 462 thẻ theo luật.** 232 thẻ mà mọi đề xuất trùng giá trị tin đang có (đúng mục 35 «máy rút thẻ trùng giá trị đang
-      lưu») và 230 thẻ không còn đề xuất nào đang chờ. Máy đóng thẻ, ghi lý do, không đổi dữ liệu tin. Hàng đóng thẻ ghi vì sao
-      230 thẻ mất đề xuất trước khi đóng (câu còn mở của mục 61).
+    - **Dọn thẻ tồn: máy đóng 232 thẻ, không phải 462.** Lời «Cho đóng 462 thẻ» dựa trên mô tả của phiên tư vấn: 232 thẻ mà mọi
+      đề xuất trùng giá trị tin đang có (đúng mục 35 «máy rút thẻ trùng giá trị đang lưu») và 230 thẻ «không còn đề xuất». Hàng
+      đóng thẻ (NB9) đo lại cùng ngày: 230 thẻ ấy là **thẻ đối chiếu chưa từng có đề xuất** (lệch ý định 124, lệch giá 103, lệch
+      diện tích 5), tức còn điều để quyết. Giám sát phán theo hướng hẹp hơn lời đã cho: NB9 chỉ đóng 232 thẻ trùng giá trị, máy
+      ghi lý do, không đổi dữ liệu tin; 230 thẻ đối chiếu sang NB5, xử theo nhóm của quyết định 1 (ba kiểu lệch là ba quyết
+      định) và NB5 ghi lại phán quyết đối chiếu. Câu còn mở của mục 61 về các thẻ này đã có trả lời.
     - **Quyết định 1, ca chưa chắc xử theo nhóm.** Ô nhóm A dưới ngưỡng và giá trị chưa quy được về danh bạ không sinh mỗi tin
       một thẻ: một ứng viên danh bạ hoặc một kiểu lệch là một quyết định cho mọi tin cùng nhóm, kể cả tin về sau. Tin vẫn hiện
       «chưa biết» ở ô đó tới khi có quyết định, trừ quyết định 2. **Sửa mục 61** ở câu ca biên «lên người từng ca» và cột «dưới

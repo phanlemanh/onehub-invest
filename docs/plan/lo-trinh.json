@@ -6005,10 +6005,10 @@
       "dung_tren": [
         "NB1"
       ],
-      "cau_giao": "Người vận hành mở Hàng duyệt, chọn «Bổ sung tin», thấy các thẻ ô số xếp thành bảng lô có bằng chứng và suy luận trên từng dòng cùng ca biên tách riêng, soát mẫu 75 thẻ rồi chấp thuận cả lô một lần và rút được cả lô; thẻ lệch giá trị đang có xếp theo kiểu lệch để quyết một lần cho cả nhóm",
+      "cau_giao": "Người vận hành mở Hàng duyệt, chọn «Bổ sung tin», thấy các thẻ ô số xếp thành bảng lô có bằng chứng và suy luận trên từng dòng cùng ca biên tách riêng, soát mẫu 75 thẻ rồi chấp thuận cả lô một lần và rút được cả lô; thẻ lệch giá trị đang có và thẻ đối chiếu xếp theo kiểu lệch để quyết một lần cho cả nhóm, phán quyết đối chiếu được ghi lại",
       "bat_khi": "Trên Ops máy thu: ô «Chờ duyệt» của «Bổ sung tin» từ 786 (đo 21/11) xuống mức đích chốt ở S1 sau lượt chấm bóng; mỗi lô ghi mã lô, người chấp thuận, giờ, cỡ mẫu và số lỗi mẫu; lô có lỗi mẫu vượt ngưỡng không chấp thuận được; ô loại hình và toà chỉ nhận lô khi mẫu 75 thẻ không lỗi; lệnh rút theo mã lô đưa tin và đề xuất về đúng như trước; ca biên không vào lô",
       "vi_sao": "Mục 61 quyết định 1 (sửa mục 35). Đường quyết thẻ hiện chỉ nhận người, từng thẻ, kèm lý do; bảng lô là bề mặt duyệt Mạnh thấy kiểm nhanh và tin hơn (21/11).",
-      "ghi_chu": "Sửa 24/11 (mục 63 quyết định 1): ca chưa chắc xử theo nhóm, không mỗi tin một thẻ. Đo 24/11 sau khi tách 462 thẻ đóng theo luật: 230 thẻ có đề xuất lệch giá trị đang có (122 tin đang «apartment» bị đề xuất «house»), khoảng 190 thẻ ô số còn trống, 167 thẻ toà chờ PL20. Số 786 ở bat_khi là mốc 21/11; mức đích chốt lại ở S1.",
+      "ghi_chu": "Sửa 24/11 (mục 63 quyết định 1): ca chưa chắc xử theo nhóm, không mỗi tin một thẻ. Đo 24/11 trên 1.047 thẻ chờ, sau khi NB9 đóng 232 thẻ trùng giá trị đang lưu còn 815, gồm bốn tập rời nhau: (a) 230 thẻ đối chiếu chưa từng có đề xuất (lệch ý định 124, lệch giá 103, lệch diện tích 5) — ba kiểu lệch là ba quyết định, hàng này ghi phán quyết đối chiếu; (b) 230 thẻ có đề xuất loại hình hoặc phòng ngủ lệch giá trị đang có (122 tin đang «apartment» bị đề xuất «house») — tập khác với (a), trùng số là ngẫu nhiên; (c) khoảng 190 thẻ ô số còn trống (180 số WC); (d) 167 thẻ toà chờ PL20. Phần (a) làm cỡ hàng có thể vượt 10 tiêu chí, chốt ở S1. Số 786 ở bat_khi là mốc 21/11; mức đích chốt lại ở S1.",
       "vung": [
         "app/src/app/ops/review",
         "app/src/components/ops/review*",
@@ -6398,7 +6398,7 @@
         "db/migrations/129_*",
         "pipeline/lib/tu-ap*"
       ],
-      "ghi_chu": "Giám sát xếp sau hàng đóng 462 thẻ «Bổ sung tin» theo luật (NB9 của đợt đang chạy, không có trong tệp này). Số migration 129 là số tạm giám sát giữ. Lô đo bù (khoảng 80 thẻ loại hình có thẻ cài, một lát nhãn có tên toà) là việc của Mạnh ở phiên gắn nhãn, hạn hai tuần, không thuộc hàng. Lên nấc chính thức vẫn là chữ ký riêng cho từng ô (mục 61)."
+      "ghi_chu": "Giám sát xếp sau hàng đóng 232 thẻ «Bổ sung tin» trùng giá trị đang lưu (NB9 của đợt đang chạy, không có trong tệp này). Số migration 129 là số tạm giám sát giữ. Lô đo bù (khoảng 80 thẻ loại hình có thẻ cài, một lát nhãn có tên toà) là việc của Mạnh ở phiên gắn nhãn, hạn hai tuần, không thuộc hàng. Lên nấc chính thức vẫn là chữ ký riêng cho từng ô (mục 61)."
     },
     {
       "dot": "phe-duyet-may-2411",

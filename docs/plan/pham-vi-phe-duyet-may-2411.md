@@ -14,8 +14,8 @@ thứ hai dùng model khác họ trong ba model đã chốt), `NB5` (thêm xử 
 mục 63), `DA18` (chỉ đếm giá trị đọc từ chính bài có trích dẫn).
 
 Việc đi kèm, không thành mã (ra khỏi kho, liệt ở mô tả PR): Mạnh duyệt một lô đo bù khoảng 80 thẻ loại hình máy đã tự ghi, có
-trộn thẻ cài lỗi, và một lát nhãn có tên toà, ở phiên gắn nhãn, trong hạn hai tuần của mục 63. Hàng đóng 462 thẻ «Bổ sung tin»
-theo luật do giám sát cắt riêng trong đợt đang chạy.
+trộn thẻ cài lỗi, và một lát nhãn có tên toà, ở phiên gắn nhãn, trong hạn hai tuần của mục 63. Hàng đóng 232 thẻ «Bổ sung tin»
+trùng giá trị đang lưu (NB9) do giám sát cắt riêng trong đợt đang chạy; 230 thẻ đối chiếu sang NB5.
 
 <!-- <<<PHAM-VI-MA -->
 ```
