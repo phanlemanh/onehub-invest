@@ -12,7 +12,7 @@ flowchart TD
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>21 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>222 việc"]
+  GB --> DG["Đã giao<br/>223 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>142 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
@@ -324,6 +324,7 @@ flowchart TD
 - Trang /ops gọi đúng tên thị trường vùng mới của S06 (Đà Nẵng, Hải Phòng, Khánh Hoà) khi bảng khu vực còn giữ mã dài — bản tạm ở app tới khi đổi mã khu vực (`khu-vuc-vung-moi-s06`)
 - Kiểm danh bạ không đỏ giả với số ghép S06, và test nạp lại migration cũ chạy được sau khi áp 070 (`kiem-do-sau-ap-070-sua`)
 - Bước bóc số nhà trước dấu phẩy (L2) của bộ tách ô đường chỉ bóc khi đoạn sau là tiền tố tên đường; năm probe dữ liệu thật còn lại ra khỏi suite chung agent và app sang chỗ chạy có người đọc; agent/probes vào tsconfig (`l2-bao-thu-doi-probe-that`)
+- Lát nhãn trục hai-khu-truc của PL36 trên /ops/labels chỉ hiện hai ô Toà và Trục, như lát có khai ô, và vẫn hiện nháp của trợ lý cho hai ô đó, để Mạnh duyệt 110 bài nhanh (`lat-hai-khu-truc-khai-o`) — đã giao — máy thông, cửa veto còn mở
 - Người gắn nhãn mở một lát có khai danh sách ô cần gắn thì chỉ thấy và chỉ phải điền các ô đó; lát không khai thì màn y như hiện nay (`lat-khai-o-can-gan`)
 - Lấy mẫu nhãn khử trùng theo tin của pipeline và chữ đã gạt URL, gạt bài thử và sự kiện, label-ghep dựng lại dấu trùng mà không xoá dấu ẩn tay (`lay-mau-khu-trung-theo-tin`)
 - Danh sách tệp bản đồ được dùng hex (MAP_FILES) viết trước chỉ ghim chữ ở một module chung; LB-AC-1 và DHT-AC-5 cùng đọc nó (`lb-ac-1-map-files-mot-nguon`)
