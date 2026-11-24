@@ -13,13 +13,13 @@
 import { spawn } from "node:child_process";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { realpathSync } from "node:fs";
 import { ConfigError, loadConfig, PHASE_ROLES, rolePath, type Role, type S17Config } from "./config.js";
 import type { Caps } from "./client.js";
-import { DEFAULT_PACE_MS, MIN_PACE_MS, executePhase, type ExecResult } from "./runner.js";
+import { DEFAULT_PACE_MS, MIN_PACE_MS, buildExecOptions, executePhase, type ExecResult } from "./runner.js";
 import type { GridEntry, ParcelArea, Phase } from "./run.js";
 import { nodeTransport } from "./transport-node.js";
 
@@ -156,16 +156,29 @@ export function checkConfigForPhase(config: S17Config, o: CliOptions): void {
 }
 
 /**
- * Nội dung tệp tuỳ chọn chuyển cho tiến trình ego — tách thành hàm để test được: pha qua ego phải mang
- * cờ đọc số dư (lượt thật 24/11 thiếu cờ này nên chỉ gửi một lời) và tên cookie phiên.
+ * Nội dung tệp tuỳ chọn chuyển cho tiến trình ego — tách thành hàm để test được. Tiến trình ấy không chạy
+ * trong thư mục của người gọi và không thấy biến môi trường của Shell, nên MỌI đường dẫn tệp phải tuyệt đối
+ * (lượt thật 24/11: lưới thửa đưa bằng đường tương đối nên tiến trình không mở được). `goc` là gốc gói
+ * collector để quy đổi đường tương đối.
  */
 export function egoOptions(
   o: CliOptions,
   config: S17Config,
   paths: { statePath: string; logPath: string; resultPath: string },
-  grid?: GridEntry[],
+  goc: string = COLLECTOR_ROOT,
 ): Record<string, unknown> {
-  return { ...o, snapshotRoot: o.snapshotsRoot, config, ...paths, grid, cookieName: config.session?.cookieName, checkBalance: o.via === "ego" };
+  const tuyetDoi = (p: string | undefined): string | undefined => (p === undefined ? undefined : resolve(goc, p));
+  return {
+    ...o, // mọi trường của bản kê đi nguyên (concurrency, listOnly, projects, proveBuilding, lowriseSweep, …)
+    snapshotRoot: resolve(o.snapshotsRoot),
+    config,
+    ...paths,
+    grid: tuyetDoi(o.grid),
+    parcelsGrid: tuyetDoi(o.parcelsGrid),
+    lowriseTermsFile: tuyetDoi(o.lowriseTermsFile),
+    cookieName: config.session?.cookieName,
+    checkBalance: o.via === "ego",
+  };
 }
 
 /** Dòng tóm tắt in ra màn: chỉ số đếm và lý do, không URL, không số dư. */
@@ -214,22 +227,12 @@ export async function main(
 
   if (o.via === "node") {
     const r = await executePhase({
+      ...buildExecOptions({
+        config, snapshotRoot: o.snapshotsRoot, statePath, logPath, caps: o.caps, paceMs: o.paceMs, batchItems: o.batchItems,
+        checkBalance: false, grid, listSize: o.listSize, tileZoom: o.tileZoom, parcels, concurrency: o.concurrency, lowriseTerms,
+      }),
       phase: o.phase,
-      config,
       transport: nodeTransport(),
-      snapshotRoot: o.snapshotsRoot,
-      statePath,
-      logPath,
-      caps: o.caps,
-      paceMs: o.paceMs,
-      batchItems: o.batchItems,
-      checkBalance: false,
-      grid,
-      listSize: o.listSize,
-      tileZoom: o.tileZoom,
-      parcels,
-      concurrency: o.concurrency,
-      lowriseTerms,
     });
     io.out(JSON.stringify(summarize(r)));
     return r.ok ? 0 : 3;
@@ -238,7 +241,7 @@ export async function main(
   // Pha cần phiên: sinh tiến trình ego-browser nodejs; script trong trang do ego.ts giữ.
   const optionsPath = join(o.stateDir, "ego-options.json");
   const resultPath = join(o.stateDir, "ego-result.json");
-  await writeFile(optionsPath, JSON.stringify(egoOptions(o, config, { statePath, logPath, resultPath }, grid)));
+  await writeFile(optionsPath, JSON.stringify(egoOptions(o, config, { statePath, logPath, resultPath })));
   const egoModule = JSON.stringify(new URL("./ego.js", import.meta.url).href);
   const bootstrap = `const m = await import(${egoModule}); process.exit(await m.main({ claimTaskSpace, takeOverTaskSpace, taskSpace, listTaskSpaces }, ${JSON.stringify(optionsPath)}));`;
   const code = await new Promise<number>((resolve) => {

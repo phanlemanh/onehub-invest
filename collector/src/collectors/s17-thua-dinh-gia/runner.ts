@@ -65,6 +65,26 @@ export type ExecResult = {
   balanceAfter?: number;
 };
 
+/** Những gì bản kê chạy quy định cho một lượt — trừ pha, vận chuyển và đồng hồ (nơi gọi đặt). */
+export type ExecSpec = Omit<ExecOptions, "phase" | "transport" | "transportMany" | "env">;
+const CAC_TRUONG_KE = [
+  "config", "snapshotRoot", "statePath", "logPath", "caps", "paceMs", "batchItems", "checkBalance", "grid", "listSize",
+  "tileZoom", "emptyTileBytes", "projects", "proveBuilding", "apartmentPageSize", "listOnly", "parcels", "lowriseTerms",
+  "lowriseSweep", "concurrency",
+] as const satisfies readonly (keyof ExecSpec)[];
+
+/**
+ * Dựng tuỳ chọn của trình điều khiển từ bản kê chạy: chỉ giữ các trường đã biết, MỌI trường đi nguyên vẹn.
+ * Dùng chung cho đường Node và đường tiến trình trình duyệt, để không trường nào bị bỏ lại ở ranh giới tiến
+ * trình (lỗi thật 24/11: ba lần thiếu tham số khi chuyển sang tiến trình trình duyệt — thư mục snapshot,
+ * cờ đọc số dư, dải id thấp tầng).
+ */
+export function buildExecOptions(spec: ExecSpec): ExecSpec {
+  const out: Record<string, unknown> = {};
+  for (const k of CAC_TRUONG_KE) if (spec[k] !== undefined) out[k] = spec[k];
+  return out as ExecSpec;
+}
+
 export async function loadState(path: string): Promise<RunState> {
   let text: string;
   try {

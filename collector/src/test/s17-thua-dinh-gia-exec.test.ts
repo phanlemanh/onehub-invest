@@ -8,7 +8,8 @@ import { ConfigError, loadConfig } from "../collectors/s17-thua-dinh-gia/config.
 import { RunStopped, type Response } from "../collectors/s17-thua-dinh-gia/client.js";
 import { executePhase } from "../collectors/s17-thua-dinh-gia/runner.js";
 import { emptyState } from "../collectors/s17-thua-dinh-gia/run.js";
-import { summarize } from "../collectors/s17-thua-dinh-gia/main.js";
+import { egoOptions, parseCli, summarize } from "../collectors/s17-thua-dinh-gia/main.js";
+import { buildExecOptions } from "../collectors/s17-thua-dinh-gia/runner.js";
 
 /**
  * Trình điều khiển một pha: đọc số dư trước và sau lượt (bằng chứng không tiêu điểm), lưu trạng thái ra
@@ -304,4 +305,72 @@ test("summarize: lượt dừng giữa chừng chưa đọc số dư sau thì đ
   assert.equal("soDuKhongDoi" in line, true);
   assert.equal(line.soDuKhongDoi, undefined, "chưa có số sau thì không kết luận gì");
   assert.equal(summarize({ ok: true, snapshots: [], calls: 3, blocks: 0, balanceBefore: 20, balanceAfter: 20 } as unknown as Awaited<ReturnType<typeof executePhase>>).soDuKhongDoi, true);
+});
+
+// ---------- mọi tuỳ chọn đều đi qua ranh giới tiến trình (lỗi thật 24/11: thiếu snapshotRoot, thiếu số dư, thiếu dải id thấp tầng) ----------
+
+test("buildExecOptions: mọi trường của bản kê đi nguyên vẹn sang tuỳ chọn của trình điều khiển", () => {
+  // Mỗi trường một giá trị nhận diện riêng; sau đó kiểm đúng giá trị ấy ở đầu ra.
+  const ke = {
+    config: loadConfig(JSON.stringify(FAKE_CONFIG)),
+    snapshotRoot: "/goc/snapshot",
+    statePath: "/trang-thai/s.json",
+    logPath: "/nhat-ky/l.jsonl",
+    caps: { calls: 41, minutes: 7 },
+    paceMs: 211,
+    batchItems: 13,
+    checkBalance: true,
+    grid: [{ marketId: "vn-a", name: "A", tiles: ["17/1/1"] }],
+    parcels: [{ khuVucId: "vn-k", ten: "K", dienTichKm2: 1, buocM: 30, diem: [[21, 105] as [number, number]] }],
+    lowriseTerms: ["Villa"],
+    lowriseSweep: { from: 3, to: 9 },
+    concurrency: 4,
+    listOnly: true,
+    projects: ["1004"],
+    proveBuilding: "P12",
+    apartmentPageSize: 77,
+    tileZoom: 19,
+    emptyTileBytes: 1234,
+    listSize: 55,
+  };
+  const o = buildExecOptions(ke) as Record<string, unknown>;
+  assert.equal(o.phase, undefined, "pha do nơi gọi đặt");
+  assert.equal(o.snapshotRoot, "/goc/snapshot");
+  assert.equal(o.statePath, "/trang-thai/s.json");
+  assert.equal(o.logPath, "/nhat-ky/l.jsonl");
+  assert.deepEqual(o.caps, { calls: 41, minutes: 7 });
+  assert.equal(o.paceMs, 211);
+  assert.equal(o.batchItems, 13);
+  assert.equal(o.checkBalance, true);
+  assert.equal(o.grid, ke.grid);
+  assert.equal(o.parcels, ke.parcels);
+  assert.deepEqual(o.lowriseTerms, ["Villa"]);
+  assert.deepEqual(o.lowriseSweep, { from: 3, to: 9 });
+  assert.equal(o.concurrency, 4);
+  assert.equal(o.listOnly, true);
+  assert.deepEqual(o.projects, ["1004"]);
+  assert.equal(o.proveBuilding, "P12");
+  assert.equal(o.apartmentPageSize, 77);
+  assert.equal(o.tileZoom, 19);
+  assert.equal(o.emptyTileBytes, 1234);
+  assert.equal(o.listSize, 55);
+  assert.equal(o.transport, undefined, "vận chuyển do nơi gọi đặt (Node hay trình duyệt)");
+  // Không trường nào của bản kê bị bỏ sót: mọi khoá của ke (trừ config) đều có mặt trong đầu ra.
+  for (const k of Object.keys(ke)) if (k !== "config") assert.ok(k in o, `thiếu trường ${k}`);
+});
+
+test("main: đường dẫn tệp đưa cho tiến trình trình duyệt phải tuyệt đối (tiến trình ấy không chạy trong thư mục của người gọi)", () => {
+  const goc = "/goc/du-an/collector";
+  const v = parseCli([
+    "--phase", "parcels", "--space", "4", "--caps-calls", "10", "--caps-minutes", "5", "--snapshots-root", "/goc/snap",
+    "--parcels-grid", "state/luoi-thua.json", "--thap-tang-terms", "tu-khoa.json", "--grid", "state/luoi-tile.json",
+  ]);
+  const cfg = loadConfig(JSON.stringify(FAKE_CONFIG));
+  const o = egoOptions(v, cfg, { statePath: "/tmp/s.json", logPath: "/tmp/l.jsonl", resultPath: "/tmp/r.json" }, goc);
+  assert.equal(o.parcelsGrid, `${goc}/state/luoi-thua.json`);
+  assert.equal(o.lowriseTermsFile, `${goc}/tu-khoa.json`);
+  assert.equal(o.grid, `${goc}/state/luoi-tile.json`, "lưới tile cũng là tệp");
+  assert.equal(o.snapshotRoot, "/goc/snap");
+  assert.equal(o.lowriseSweep, undefined);
+  assert.equal(o.config, cfg);
 });

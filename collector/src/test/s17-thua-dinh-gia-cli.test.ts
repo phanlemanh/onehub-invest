@@ -72,11 +72,13 @@ test("checkConfigForPhase: pha cần phiên đòi tên cookie phiên trong cấu
 
 test("egoOptions: pha qua ego phải mang cờ đọc số dư và tên cookie phiên (lượt thật 24/11 thiếu cờ này)", () => {
   const config = loadConfig(JSON.stringify({ ...CONFIG_DU_AN, session: { cookieName: "PHIEN_GIA" } }));
-  const via = parseCli([...base, "--phase", "projects", "--space", "4"]);
-  const opts = egoOptions(via, config, { statePath: "/tmp/s.json", logPath: "/tmp/l.jsonl", resultPath: "/tmp/r.json" }, [{ marketId: "vn-a", name: "A", tiles: [] }]);
+  const via = parseCli([...base, "--phase", "lowrise", "--space", "4", "--thap-tang-id-tu", "1", "--thap-tang-id-den", "1850"]);
+  const opts = egoOptions(via, config, { statePath: "/tmp/s.json", logPath: "/tmp/l.jsonl", resultPath: "/tmp/r.json" });
+  assert.deepEqual(opts.lowriseSweep, { from: 1, to: 1850 }, "dải id quét thấp tầng đi sang tiến trình trình duyệt");
   assert.equal(opts.checkBalance, true);
   assert.equal(opts.cookieName, "PHIEN_GIA");
   assert.equal(opts.spaceId, 4);
+  assert.equal(opts.via, "ego");
   assert.equal(opts.statePath, "/tmp/s.json");
   assert.equal(opts.snapshotRoot, "/tmp/snap", "thư mục snapshot phải sang được tiến trình ego (lượt thật 24/11 thiếu, mất 4 trang)");
   assert.equal(opts.resultPath, "/tmp/r.json");

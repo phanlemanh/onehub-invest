@@ -11,7 +11,7 @@
 import { RunStopped, type Caps, type Transport, type TransportMany } from "./client.js";
 import type { S17Config } from "./config.js";
 import type { Response } from "./client.js";
-import { executePhase, type ExecResult } from "./runner.js";
+import { buildExecOptions, executePhase, type ExecResult } from "./runner.js";
 import type { GridEntry, ParcelArea, Phase } from "./run.js";
 
 type EgoPage = {
@@ -54,6 +54,8 @@ export type EgoOptions = {
   concurrency?: number;
   parcelsGrid?: string;
   lowriseTermsFile?: string;
+  /** Mốc ngày 2 — dải id quét dự án thấp tầng. */
+  lowriseSweep?: { from: number; to: number };
 };
 
 type InPageResult = { status: number; contentType: string | null; body: string; bytes?: number; networkError?: string };
@@ -157,27 +159,16 @@ export async function main(api: EgoApi, optionsPath: string): Promise<number> {
   };
 
   try {
+    // Bản kê đi qua buildExecOptions chung với đường Node: không trường nào bị bỏ lại ở ranh giới tiến trình.
     const r = await executePhase({
+      ...buildExecOptions({
+        ...opts,
+        parcels: opts.parcelsGrid === undefined ? undefined : (JSON.parse(await fs.readFile(opts.parcelsGrid, "utf8")) as ParcelArea[]),
+        lowriseTerms: opts.lowriseTermsFile === undefined ? undefined : (JSON.parse(await fs.readFile(opts.lowriseTermsFile, "utf8")) as string[]),
+      }),
       phase: opts.phase,
-      config: opts.config,
       transport,
-      snapshotRoot: opts.snapshotRoot,
-      statePath: opts.statePath,
-      logPath: opts.logPath,
-      caps: opts.caps,
-      paceMs: opts.paceMs,
-      batchItems: opts.batchItems,
-      checkBalance: opts.checkBalance,
-      grid: opts.grid,
-      listSize: opts.listSize,
-      tileZoom: opts.tileZoom,
-      projects: opts.projects,
-      proveBuilding: opts.proveBuilding,
-      listOnly: opts.listOnly,
-      concurrency: opts.concurrency ?? 1,
       transportMany,
-      parcels: opts.parcelsGrid === undefined ? undefined : (JSON.parse(await fs.readFile(opts.parcelsGrid, "utf8")) as ParcelArea[]),
-      lowriseTerms: opts.lowriseTermsFile === undefined ? undefined : (JSON.parse(await fs.readFile(opts.lowriseTermsFile, "utf8")) as string[]),
       env,
     });
     await writeResult(r satisfies ExecResult);
