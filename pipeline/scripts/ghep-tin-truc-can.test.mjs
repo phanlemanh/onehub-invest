@@ -43,6 +43,10 @@ moiO("ma-dang-tang-can", { toa: "bld_s209", ma: ["S2.091710"] }, { muc: "can", s
 moiO("ma-co-dau-ngan-gp-tu-chu-bai", { toa: "bld_gp_s205", chu: "Cho thuê căn 3PN toà S2.05.24.17 full nội thất" },
   { muc: "can", stack: "stk_gp_s205_17", tang: "24", unit: "unt_gp_s205_2417", rule_id: RULE.ma }, GP);
 moiO("ma-gach-ngang-gp-tu-chu-bai", { toa: "bld_gp_s503", chu: "🌻Mã căn: S5.03-22.06 🌻Loại căn: 2pn" }, { muc: "can", unit: "unt_gp_s503_2206" }, GP);
+moiO("tang-che-mot-phan", { toa: "bld_ld2", ma: ["LD22X03"] }, { muc: "truc", stack: "stk_ld2_03", tang: null, rule_id: RULE.truc });
+test("tầng che một phần có dấu chấm (BE3.1x13)", () => {
+  assert.deepEqual(tachMa("BE3.1x13", [{ ten: "BE3", key: "k" }]), { toa: "k", tenToa: "BE3", tang: null, truc: "13", dang: "truc" });
+});
 moiO("toa-lech", { toa: "bld_ld2", ma: ["LD3XX03"] }, { ly_do: "toa-lech" });
 moiO("ma-khong-toa", { toa: "bld_ld2", ma: ["0x18"] }, { ly_do: "ma-khong-toa" });
 moiO("ma-la", { toa: "bld_be6", ma: ["be601.s13"] }, { ly_do: "ma-la" });

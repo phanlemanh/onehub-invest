@@ -1131,6 +1131,13 @@ async function main() {
     } catch (e) {
       console.warn(`JOB WARN [ghep-toa] ${e.message}`);
     }
+    // PL36: gắn tin đã có toà xuống trục, căn, ngay sau bước gắn toà, trong giao dịch riêng; lỗi chỉ là một dòng cảnh báo.
+    try {
+      const { buocGhepCan } = await import("./lib/ghep-tin-truc-can-ghi.mjs");
+      await buocGhepCan(client);
+    } catch (e) {
+      console.warn(`JOB WARN [ghep-can] ${e.message}`);
+    }
   } finally {
     await client.end();
   }

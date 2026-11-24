@@ -41,7 +41,8 @@ export function tachMa(raw, tenToa) {
   if (!best) return { ly_do: "ma-khong-toa" };
   const duoi = s.slice(best.n.length).replace(/^[.-]/, "");
   let m;
-  if ((m = /^X{1,2}[.-]?([0-9]{1,2}[A-Z]?)$/.exec(duoi))) {
+  // Tầng che hẳn («XX») hay che một phần («1x», «2X» — biết hàng chục, che hàng đơn vị): chỉ biết trục.
+  if ((m = /^(?:[0-9]X|X{1,2})[.-]?([0-9]{1,2}[A-Z]?)$/.exec(duoi))) {
     return { toa: best.key, tenToa: best.ten, tang: null, truc: chuanTruc(m[1]), dang: "truc" };
   }
   if ((m = /^([0-9]{1,2}[A-Z]?)[.-]([0-9]{1,2}[A-Z]?)$/.exec(duoi)) || (m = /^([0-9]{1,2}A?)([0-9]{2}[A-Z]?)$/.exec(duoi))) {
