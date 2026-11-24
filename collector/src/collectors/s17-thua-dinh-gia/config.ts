@@ -69,7 +69,8 @@ export const PROBE_ROLE: Role = "asset-type";
 export const SESSION_PROBE_ROLE: Role = "data-available";
 
 /** Vai mà mỗi pha của mốc ngày 1 sẽ gọi (không kể lời đối chiếu và số dư). */
-export const PHASE_ROLES: Record<"reference" | "tile-mask" | "projects" | "session-check" | "apartments", readonly Role[]> = {
+export const PHASE_ROLES: Record<"reference" | "tile-mask" | "projects" | "session-check" | "apartments" | "parcels", readonly Role[]> = {
+  parcels: ["parcel-profile", "parcel-suggest"],
   apartments: ["project-detail", "apartment-list", "apartment-detail"],
   reference: ["full-config", "province-catalog", "attribute-dictionary", "legal-docs", "asset-type", "confidence", "land-purpose", "land-price-by-district"],
   "tile-mask": ["full-config"],

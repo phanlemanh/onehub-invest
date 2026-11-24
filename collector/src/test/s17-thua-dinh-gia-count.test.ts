@@ -59,6 +59,33 @@ test("readSourceSnapshots + countSnapshots: đếm từng kind qua manifest, b�
   }
 });
 
+test("countSnapshots: tóm tắt căn hộ và thửa của mốc ngày 2 (toà khớp, căn khớp mã, thửa theo phương pháp, mỗi km²)", () => {
+  const mk = (kind: string, sourceId: string, payload: unknown, meta: Record<string, unknown>) => ({ kind, sourceId, payload, meta });
+  const c = countSnapshots([
+    {
+      snapshotId: "a",
+      currentScheme: true,
+      manifest: { error: undefined, startedAt: "2026-11-24T10:00:00.000Z", coverage: { methods: { can_ho_toa: 2, can_ho_detail: 3, thua: 3, thua_goi_y: 1, thua_khu_vuc: 1 } } } as never,
+      items: [
+        mk("can_ho_toa", "du-an-1004-toa-p12", { maCan: ["a"] }, { khop: true, tongCan: 719, maDuNhieu: 719 }),
+        mk("can_ho_toa", "du-an-1004-toa-p9", { maCan: ["a"] }, { khop: false, tongCan: 519, maDuNhieu: 501 }),
+        mk("can_ho_detail", "du-an-1004-can-a", {}, { khopMaCan: true }),
+        mk("can_ho_detail", "du-an-1004-can-b", {}, { khopMaCan: true }),
+        mk("can_ho_detail", "du-an-1004-can-c", {}, { khopMaCan: false }),
+        mk("thua", "thua-1", {}, { phuongPhap: "grid" }),
+        mk("thua", "thua-2", {}, { phuongPhap: "grid" }),
+        mk("thua", "thua-3", {}, { phuongPhap: "suggest" }),
+        mk("thua_goi_y", "goi-y-x", {}, { soMuc: 15 }),
+        mk("thua_khu_vuc", "khu-vuc-x", { soThuaLuoi: 2, soThuaGoiY: 1 }, { thuaMoiKm2: 4, loiMoiKm2: 16, tongLoi: 8, soThua: 3, request: { dienTichKm2: 0.5 } }),
+      ],
+    },
+  ]);
+  // codes đếm theo số mã thật trong payload.maCan (fixture mỗi toà một mã); rows là tổng dòng nguồn công bố.
+  assert.deepEqual(c.apartmentBuilding, { total: 2, khop: 1, codes: 2, rows: 1238 }, "toà khớp: 719/719; toà P9 501/519 không khớp");
+  assert.deepEqual(c.apartmentDetail, { ok: 2, mismatch: 1 });
+  assert.deepEqual(c.parcel, { grid: 2, suggest: 1, areas: 1, areaKm2: 0.5, calls: 8, perKm2: 4, callsPerKm2: 16 }, "mật độ tính theo thửa tìm được bằng lưới (2 thửa / 0,5 km²)");
+});
+
 test("countSnapshots: nguồn chưa có gì thì trả số không, không ném", () => {
   const c = countSnapshots([]);
   assert.equal(c.snapshots, 0);

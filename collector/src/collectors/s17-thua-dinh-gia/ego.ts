@@ -8,10 +8,11 @@
  * «tiếp tục»; bị từ chối là ĐIỂM DỪNG CỨNG — không thử lại, không đi đường vòng, báo lại (mã 4).
  * KHÔNG tải lại hay điều hướng tab: URL tra cứu có sẵn kết quả làm ứng dụng tự gọi biến thể trả phí.
  */
-import { RunStopped, type Caps, type Transport } from "./client.js";
+import { RunStopped, type Caps, type Transport, type TransportMany } from "./client.js";
 import type { S17Config } from "./config.js";
+import type { Response } from "./client.js";
 import { executePhase, type ExecResult } from "./runner.js";
-import type { GridEntry, Phase } from "./run.js";
+import type { GridEntry, ParcelArea, Phase } from "./run.js";
 
 type EgoPage = {
   label: string;
@@ -49,6 +50,9 @@ export type EgoOptions = {
   projects?: string[];
   proveBuilding?: string;
   listOnly?: boolean;
+  /** Mốc ngày 2 — số lời một đợt (1 = tuần tự) và tệp lưới khu thí điểm của pha thửa. */
+  concurrency?: number;
+  parcelsGrid?: string;
 };
 
 type InPageResult = { status: number; contentType: string | null; body: string; bytes?: number; networkError?: string };
@@ -73,6 +77,34 @@ const IN_PAGE_FETCH = async (input: { url: string; headerJson: string; cookieNam
   } catch (e) {
     return { status: 0, contentType: null, body: "", networkError: String(e).slice(0, 160) };
   }
+};
+
+/**
+ * Nhiều lời trong MỘT lần chạy trong trang: các fetch cùng chạy, lời i bắt đầu sau i × staggerMs (đo 24/11: hai
+ * lời đồng thời xong sau 4,9 s thay vì 8,4 s). Tự chứa; phiên chỉ đi thẳng vào header của chính lời gọi.
+ */
+const IN_PAGE_FETCH_MANY = async (input: { items: Array<{ url: string; headerJson: string; cookieName: string }>; staggerMs: number }): Promise<InPageResult[]> => {
+  const g = globalThis as unknown as {
+    fetch(url: string, init: object): Promise<{ status: number; headers: { get(k: string): string | null }; text(): Promise<string>; arrayBuffer(): Promise<ArrayBuffer> }>;
+    document: { cookie: string };
+    AbortSignal: { timeout(ms: number): unknown };
+  };
+  const mot = async (it: { url: string; headerJson: string; cookieName: string }, delayMs: number): Promise<InPageResult> => {
+    if (delayMs > 0) await new Promise((r) => setTimeout(r, delayMs));
+    const headers = JSON.parse(it.headerJson) as Record<string, string>;
+    const m = new RegExp(`(?:^|;\\s*)${it.cookieName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}=([^;]+)`).exec(g.document.cookie);
+    if (m) headers.Authorization = `Bearer ${decodeURIComponent(m[1])}`;
+    try {
+      const res = await g.fetch(it.url, { headers, credentials: "omit", signal: g.AbortSignal.timeout(60_000) });
+      const contentType = res.headers.get("content-type") ?? "";
+      if (/json|text|javascript|xml|form/i.test(contentType)) return { status: res.status, contentType, body: await res.text() };
+      const buf = await res.arrayBuffer();
+      return { status: res.status, contentType, body: "", bytes: buf.byteLength };
+    } catch (e) {
+      return { status: 0, contentType: null, body: "", networkError: String(e).slice(0, 160) };
+    }
+  };
+  return Promise.all(input.items.map((it, i) => mot(it, i * input.staggerMs)));
 };
 
 export async function main(api: EgoApi, optionsPath: string): Promise<number> {
@@ -102,10 +134,25 @@ export async function main(api: EgoApi, optionsPath: string): Promise<number> {
   }
   const page = tab.label ? task.page(tab.label) : await task.adopt(tab.page);
 
-  const transport: Transport = async (url, headers) => {
-    const r = (await page.evaluate(IN_PAGE_FETCH, { url, headerJson: JSON.stringify(headers), cookieName: opts.cookieName ?? "" })) as InPageResult;
+  const xuLy = (r: InPageResult): Response => {
     if (r.networkError) throw new TypeError(r.networkError);
     return { status: r.status, contentType: r.contentType ?? "", body: r.body, bytes: r.bytes };
+  };
+  const transport: Transport = async (url, headers) =>
+    xuLy((await page.evaluate(IN_PAGE_FETCH, { url, headerJson: JSON.stringify(headers), cookieName: opts.cookieName ?? "" })) as InPageResult);
+  // Vận chuyển một đợt: lỗi mạng của một lời thành Error (lớp gọi phân loại), không làm hỏng cả đợt.
+  const transportMany: TransportMany = async (requests, staggerMs) => {
+    const rs = (await page.evaluate(IN_PAGE_FETCH_MANY, {
+      items: requests.map((r) => ({ url: r.url, headerJson: JSON.stringify(r.headers), cookieName: opts.cookieName ?? "" })),
+      staggerMs,
+    })) as InPageResult[];
+    return rs.map((r) => {
+      try {
+        return xuLy(r);
+      } catch (e) {
+        return e instanceof Error ? e : new Error(String(e));
+      }
+    });
   };
 
   try {
@@ -126,6 +173,9 @@ export async function main(api: EgoApi, optionsPath: string): Promise<number> {
       projects: opts.projects,
       proveBuilding: opts.proveBuilding,
       listOnly: opts.listOnly,
+      concurrency: opts.concurrency ?? 1,
+      transportMany,
+      parcels: opts.parcelsGrid === undefined ? undefined : (JSON.parse(await fs.readFile(opts.parcelsGrid, "utf8")) as ParcelArea[]),
       env,
     });
     await writeResult(r satisfies ExecResult);

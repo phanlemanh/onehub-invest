@@ -1,0 +1,146 @@
+import { strict as assert } from "node:assert";
+import { test } from "node:test";
+
+import { loadConfig } from "../collectors/s17-thua-dinh-gia/config.js";
+import { ConfigError } from "../collectors/s17-thua-dinh-gia/config.js";
+import { RunStopped, S17Client, TemporaryFailure, type Response, type TransportMany } from "../collectors/s17-thua-dinh-gia/client.js";
+
+/**
+ * S17 mốc ngày 2: gửi NHIỀU lời một đợt (đo 24/11: hai lời hồ sơ thửa đồng thời trong trang xong sau 4,9 s
+ * thay vì 8,4 s tuần tự; Mạnh cho tăng tốc thận trọng). Mọi khoá của lớp gọi vẫn giữ: trần, nhịp, dừng cả
+ * lượt khi bị chặn, hỏi phiên khi lỗi mạng, thử lại đúng luật. Dữ liệu GIẢ, máy chủ .test.
+ */
+
+const FAKE_CONFIG = {
+  hosts: { api: "https://api.gia.test", agent: "https://agent.gia.test", web: "https://web.gia.test" },
+  paths: {
+    "parcel-profile": "/v2.x/parcel-profile",
+    "project-list": "/v2.x/projects",
+    "data-available": "/v2.x/data-available",
+    "asset-type": "/v2.x/asset-type",
+    balance: "/v2.x/balance",
+  },
+};
+
+const json = (body: unknown, status = 200): Response => ({ status, contentType: "application/json", body: JSON.stringify(body) });
+const loiMang = new TypeError("Failed to fetch");
+
+type Ke = { client: S17Client; sent: string[]; dot: string[][]; slept: number[] };
+
+/** `answer(url)` trả phản hồi hoặc ném lỗi mạng. `many`: có vận chuyển theo đợt hay không. */
+function makeClient(
+  answer: (url: string, i: number) => Response | Promise<Response>,
+  o: { caps?: { calls: number; minutes: number }; paceMs?: number; many?: boolean } = {},
+): Ke {
+  const sent: string[] = [];
+  const dot: string[][] = [];
+  const slept: number[] = [];
+  let t = 1_000_000;
+  const single = async (url: string): Promise<Response> => {
+    sent.push(url);
+    return answer(url, sent.length);
+  };
+  const many: TransportMany = async (list) => {
+    dot.push(list.map((r) => r.url));
+    return Promise.all(
+      list.map(async (r) => {
+        try {
+          return await single(r.url);
+        } catch (e) {
+          return e as Error;
+        }
+      }),
+    );
+  };
+  const client = new S17Client({
+    config: loadConfig(JSON.stringify(FAKE_CONFIG)),
+    caps: o.caps ?? { calls: 100, minutes: 60 },
+    paceMs: o.paceMs ?? 0,
+    now: () => t,
+    sleep: async (ms: number) => {
+      slept.push(ms);
+      t += ms;
+    },
+    transport: single,
+    ...(o.many ? { transportMany: many } : {}),
+  });
+  return { client, sent, dot, slept };
+}
+
+const reasonOf = (e: unknown): string => (e instanceof RunStopped ? e.reason : e instanceof TemporaryFailure ? "temporary" : String(e));
+const task = (lat: number) => ({ role: "parcel-profile" as const, params: { latitude: lat, longitude: 105.85 } });
+
+test("getJsonMany: gửi theo đợt, mỗi đợt tối đa `concurrency` lời, kết quả đúng thứ tự", async () => {
+  const ke = makeClient((url) => json({ status: true, data: { lat: new URL(url).searchParams.get("latitude") } }), { many: true });
+  const r = await ke.client.getJsonMany<{ data: { lat: string } }>([task(1), task(2), task(3), task(4), task(5)], 2);
+  assert.deepEqual(
+    r.map((x) => (x.ok ? x.value.data.lat : "lỗi")),
+    ["1", "2", "3", "4", "5"],
+  );
+  assert.deepEqual(
+    ke.dot.map((d) => d.length),
+    [2, 2],
+    "hai đợt hai lời, lời thứ năm đi riêng",
+  );
+  assert.equal(ke.sent.length, 5);
+  assert.equal(ke.client.calls, 5, "mỗi lời tính vào trần");
+});
+
+test("getJsonMany: một lời trong đợt gặp 403 → dừng cả lượt, đợt sau không gửi, mọi lời chưa xong nhận lỗi bị chặn", async () => {
+  let i = 0;
+  const ke = makeClient(() => (++i === 2 ? json({ message: "denied" }, 403) : json({ status: true, data: { ok: 1 } })), { many: true });
+  const r = await ke.client.getJsonMany([task(1), task(2), task(3), task(4), task(5)], 2);
+  assert.deepEqual(
+    r.map((x) => (x.ok ? "ok" : reasonOf(x.error))),
+    ["ok", "blocked", "blocked", "blocked", "blocked"],
+  );
+  assert.equal(ke.dot.length, 1, "chỉ có đợt đầu tiên được gửi");
+  assert.equal(ke.client.blocks, 1);
+});
+
+test("getJsonMany: một lời lỗi mạng mà phiên vẫn sống → chỉ lời đó được thử lại một lần rồi nhận lỗi tạm; lời khác vẫn ra kết quả", async () => {
+  const ke = makeClient((url) => {
+    if (new URL(url).searchParams.get("latitude") === "2") throw loiMang;
+    return json({ status: true, data: { ok: 1 } });
+  }, { many: true, paceMs: 10 });
+  const r = await ke.client.getJsonMany([task(1), task(2), task(3), task(4)], 2);
+  assert.deepEqual(
+    r.map((x) => (x.ok ? "ok" : reasonOf(x.error))),
+    ["ok", "temporary", "ok", "ok"],
+  );
+  assert.equal(ke.sent.filter((u) => u.includes("latitude=2")).length, 2, "lời lỗi được thử lại đúng một lần");
+  assert.equal(ke.client.calls, 7, "4 lời đầu + 2 lần hỏi kiểm phiên (mỗi lần lỗi một lần) + 1 lần thử lại");
+});
+
+test("getJsonMany: tôn trọng trần lời gọi — không gửi quá trần, phần vượt nhận lỗi quá trần", async () => {
+  const ke = makeClient(() => json({ status: true, data: {} }), { many: true, caps: { calls: 3, minutes: 60 } });
+  const r = await ke.client.getJsonMany([task(1), task(2), task(3), task(4), task(5)], 2);
+  assert.deepEqual(
+    r.map((x) => (x.ok ? "ok" : reasonOf(x.error))),
+    ["ok", "ok", "ok", "call-cap", "call-cap"],
+  );
+  assert.equal(ke.sent.length, 3);
+});
+
+test("getJsonMany: lỗi cấu hình (vai chưa khai đường) thì từ chối trước khi gửi lời nào", async () => {
+  const ke = makeClient(() => json({ status: true, data: {} }), { many: true });
+  await assert.rejects(ke.client.getJsonMany([task(1), { role: "market-price", params: { lat: 1, lng: 2 } }], 2), ConfigError);
+  assert.equal(ke.sent.length, 0);
+});
+
+test("getJsonMany: không có vận chuyển theo đợt thì gửi tuần tự, kết quả không đổi", async () => {
+  const ke = makeClient((url) => json({ status: true, data: { lat: new URL(url).searchParams.get("latitude") } }));
+  const r = await ke.client.getJsonMany<{ data: { lat: string } }>([task(1), task(2), task(3)], 2);
+  assert.deepEqual(
+    r.map((x) => (x.ok ? x.value.data.lat : "lỗi")),
+    ["1", "2", "3"],
+  );
+  assert.equal(ke.dot.length, 0, "không có đợt nào");
+});
+
+test("getJsonMany: concurrency ngoài 1–4 hoặc rỗng thì từ chối", async () => {
+  const ke = makeClient(() => json({ status: true, data: {} }), { many: true });
+  await assert.rejects(ke.client.getJsonMany([task(1)], 0), ConfigError);
+  await assert.rejects(ke.client.getJsonMany([task(1)], 5), ConfigError);
+  assert.deepEqual(await ke.client.getJsonMany([], 2), []);
+});

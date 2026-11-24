@@ -16,8 +16,23 @@ import { ConfigError, PROBE_ROLE, ROLES, SESSION_PROBE_ROLE, rolePath, type Role
 
 export type Response = { status: number; contentType: string; body: string; /** Số byte của thân khi vận chuyển không trả thân chữ (tile ảnh). */ bytes?: number };
 export type Transport = (url: string, headers: Record<string, string>) => Promise<Response>;
+/** Gửi nhiều lời trong MỘT đợt (vd nhiều fetch đồng thời trong trang), lời i bắt đầu sau i × staggerMs. Mỗi phần tử: phản hồi hoặc lỗi mạng. */
+export type TransportMany = (requests: Array<{ url: string; headers: Record<string, string> }>, staggerMs: number) => Promise<Array<Response | Error>>;
+export type ManyResult<T> = { ok: true; value: T } | { ok: false; error: Error };
+/** Số lời tối đa một đợt (Mạnh cho tăng tốc thận trọng 24/11: «2 luồng»; trần bốn). */
+const MAX_CONCURRENCY = 4;
 export type Caps = { calls: number; minutes: number };
-export type StopReason = "blocked" | "session-expired" | "call-cap" | "time-cap" | "network-down" | "balance-spent" | "balance-unreadable" | "proof-failed";
+export type StopReason =
+  | "blocked"
+  | "session-expired"
+  | "call-cap"
+  | "time-cap"
+  | "network-down"
+  | "balance-spent"
+  | "balance-unreadable"
+  | "proof-failed"
+  | "fast-after-block"
+  | "blocked-twice";
 
 export class RunStopped extends Error {
   constructor(
@@ -59,6 +74,8 @@ export type ClientOptions = {
   caps: Caps;
   /** Nhịp nghỉ trước mỗi lời gửi (ms) — trong mức nguồn đã chịu được (0,3–0,4 s/lời). */
   paceMs: number;
+  /** Vận chuyển theo đợt cho đường nhiều lời; thiếu thì gửi tuần tự bằng `transport`. */
+  transportMany?: TransportMany;
 };
 
 export class S17Client {
@@ -143,17 +160,61 @@ export class S17Client {
   }
 
   /**
-   * Gửi một lời, giữ trần và nhịp, phân loại kết quả:
-   * - 403, 429 → dừng cả lượt (bị chặn); 401 → hết phiên; 2xx–4xx còn lại → trả cho người gọi xử lý;
-   * - lỗi mạng hoặc 5xx: lời cần phiên được đối chiếu phiên trước (classifySessionFailure). Phiên còn sống
-   *   thì lỗi là của RIÊNG bản ghi: thử lại một lần sau 5 s rồi trả lỗi tạm. Mạng hỏng thì thử lại ba lần
-   *   (5 s, 15 s, 30 s). Mười lỗi tạm liền nhau → dừng cả lượt.
+   * Phân loại kết quả thô của MỘT lời (dùng chung cho đường một lời và đường nhiều lời):
+   * - "ok": 2xx–4xx (4xx do người gọi xử lý);
+   * - { ownRecord }: lỗi mạng hoặc 5xx. Lời cần phiên được đối chiếu phiên trước (classifySessionFailure);
+   *   ownRecord = phiên còn sống nên lỗi thuộc về riêng bản ghi;
+   * - ném RunStopped: bị chặn (403, 429), hết phiên (401), hoặc do lời đối chiếu phát hiện.
    */
+  private async classify(res: Response | null, needsSession: boolean, role: string): Promise<"ok" | { ownRecord: boolean }> {
+    if (res && res.status === 403) {
+      this.blocks++;
+      throw this.stop("blocked", `nguồn trả 403 ở vai "${role}"`);
+    }
+    if (res && res.status === 429) {
+      this.blocks++;
+      throw this.stop("blocked", `nguồn trả 429 ở vai "${role}"`);
+    }
+    if (res && res.status === 401) throw this.stop("session-expired", `nguồn trả 401 ở vai "${role}"`);
+    if (res && res.status < 500) return "ok";
+    let ownRecord = false; // phiên vẫn sống: lỗi thuộc về riêng bản ghi này
+    if (!res && needsSession) {
+      const verdict = await this.classifySessionFailure(role);
+      if (verdict instanceof RunStopped) throw verdict;
+      ownRecord = verdict === "session-alive";
+    }
+    return { ownRecord };
+  }
+
+  /**
+   * Quyết định sau một lần thất bại (mạng hoặc 5xx): còn lượt thử thì trả null (kể một lần thử lại); hết lượt thì
+   * trả lỗi tạm; mười lỗi tạm liền nhau thì dừng cả lượt. Lỗi của riêng bản ghi (phiên sống) chỉ thử lại MỘT lần
+   * sau 5 s; mạng hỏng thì ba lần (5 s, 15 s, 30 s).
+   */
+  private retryOrFail(ownRecord: boolean, res: Response | null, role: string, attempt: number): TemporaryFailure | null {
+    const retriesAllowed = ownRecord ? 1 : RETRY_WAITS_MS.length;
+    if (attempt < retriesAllowed) {
+      this.retries++;
+      return null;
+    }
+    this.consecutiveFailures++;
+    if (this.consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
+      throw this.stop("network-down", `${MAX_CONSECUTIVE_FAILURES} lời thất bại liền nhau`);
+    }
+    return new TemporaryFailure(`vai "${role}" lỗi ${res ? `HTTP ${res.status}` : "mạng"} sau ${attempt} lần thử lại`);
+  }
+
+  /** Đợi trước một lời: lượt thử lại thì nghỉ theo thang, rồi luôn nghỉ nhịp. */
+  private async waitBefore(attempt: number): Promise<void> {
+    if (attempt > 0) await this.o.sleep(RETRY_WAITS_MS[Math.min(attempt - 1, RETRY_WAITS_MS.length - 1)]);
+    await this.o.sleep(this.o.paceMs);
+  }
+
+  /** Thời điểm gọi `attempt` tính từ 0. Giữ trần, nhịp, dừng cả lượt; thử lại theo classify/retryOrFail. */
   private async sendWithRetry(needsSession: boolean, role: string, url: string): Promise<Response> {
     for (let attempt = 0; ; attempt++) {
       this.assertRunning();
-      if (attempt > 0) await this.o.sleep(RETRY_WAITS_MS[Math.min(attempt - 1, RETRY_WAITS_MS.length - 1)]);
-      await this.o.sleep(this.o.paceMs);
+      await this.waitBefore(attempt);
       this.calls++;
       let res: Response | null = null;
       try {
@@ -161,35 +222,41 @@ export class S17Client {
       } catch {
         res = null;
       }
-      if (res && res.status === 403) {
-        this.blocks++;
-        throw this.stop("blocked", `nguồn trả 403 ở vai "${role}"`);
-      }
-      if (res && res.status === 429) {
-        this.blocks++;
-        throw this.stop("blocked", `nguồn trả 429 ở vai "${role}"`);
-      }
-      if (res && res.status === 401) throw this.stop("session-expired", `nguồn trả 401 ở vai "${role}"`);
-      if (res && res.status < 500) {
+      const verdict = await this.classify(res, needsSession, role);
+      if (verdict === "ok") {
         this.consecutiveFailures = 0;
-        return res;
+        return res as Response;
       }
-      // Lỗi mạng hoặc 5xx
-      let ownRecord = false; // phiên vẫn sống: lỗi thuộc về riêng bản ghi này
-      if (!res && needsSession) {
-        const verdict = await this.classifySessionFailure(role);
-        if (verdict instanceof RunStopped) throw verdict;
-        ownRecord = verdict === "session-alive";
+      const failure = this.retryOrFail(verdict.ownRecord, res, role, attempt);
+      if (failure) throw failure;
+    }
+  }
+
+  /** Gửi một đợt: nhiều lời mới đi qua vận chuyển theo đợt; một lời thì đi đường một lời. Mỗi phần tử: phản hồi hoặc lỗi mạng. */
+  private async sendWave(list: Array<{ url: string; headers: Record<string, string> }>, staggerMs: number): Promise<Array<Response | Error>> {
+    if (list.length > 1 && this.o.transportMany) return this.o.transportMany(list, staggerMs);
+    const out: Array<Response | Error> = [];
+    for (const r of list) {
+      try {
+        out.push(await this.o.transport(r.url, r.headers));
+      } catch (e) {
+        out.push(e instanceof Error ? e : new Error(String(e)));
       }
-      const retriesAllowed = ownRecord ? 1 : RETRY_WAITS_MS.length;
-      if (attempt >= retriesAllowed) {
-        this.consecutiveFailures++;
-        if (this.consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
-          throw this.stop("network-down", `${MAX_CONSECUTIVE_FAILURES} lời thất bại liền nhau`);
-        }
-        throw new TemporaryFailure(`vai "${role}" lỗi ${res ? `HTTP ${res.status}` : "mạng"} sau ${attempt} lần thử lại`);
-      }
-      this.retries++;
+    }
+    return out;
+  }
+
+  /** Đổi một phản hồi thành JSON: HTML thay JSON là trang thử thách (dừng cả lượt); 4xx là lỗi của riêng bản ghi. */
+  private parseJson<T>(res: Response, role: string): T {
+    if (!/json/i.test(res.contentType)) {
+      this.blocks++;
+      throw this.stop("blocked", `nguồn trả trang không phải JSON (${res.contentType || "không rõ kiểu"}) ở vai "${role}"`);
+    }
+    if (res.status < 200 || res.status >= 300) throw new HttpStatusError(res.status, role);
+    try {
+      return JSON.parse(res.body) as T;
+    } catch {
+      throw new TemporaryFailure(`thân phản hồi không phải JSON ở vai "${role}"`);
     }
   }
 
@@ -209,17 +276,73 @@ export class S17Client {
 
   /** Gọi và phân tích JSON. HTML thay cho JSON là trang thử thách → dừng cả lượt; 4xx → lỗi của bản ghi đó. */
   async getJson<T = unknown>(role: Role, params: Record<string, string | number | undefined> = {}): Promise<T> {
-    const res = await this.getRaw(role, params);
-    if (!/json/i.test(res.contentType)) {
-      this.blocks++;
-      throw this.stop("blocked", `nguồn trả trang không phải JSON (${res.contentType || "không rõ kiểu"}) ở vai "${role}"`);
+    return this.parseJson<T>(await this.getRaw(role, params), role);
+  }
+
+  /**
+   * Gửi NHIỀU lời, tối đa `concurrency` lời một đợt (đo 24/11: hai lời đồng thời trong trang rút được một nửa
+   * thời gian). Mọi khoá của lớp gọi vẫn giữ: kiểm đủ URL trước khi gửi gì; trần và nhịp tính cho TỪNG lời; bị
+   * chặn hay hết phiên thì dừng cả lượt, phần chưa gửi nhận lỗi dừng; lỗi mạng/5xx của một lời chỉ làm chính lời
+   * đó thử lại theo đúng luật. Kết quả về đúng thứ tự lời vào; hàm không ném RunStopped giữa chừng.
+   */
+  async getJsonMany<T = unknown>(
+    tasks: ReadonlyArray<{ role: Role; params?: Record<string, string | number | undefined> }>,
+    concurrency = 1,
+  ): Promise<Array<ManyResult<T>>> {
+    if (!Number.isInteger(concurrency) || concurrency < 1 || concurrency > MAX_CONCURRENCY) {
+      throw new ConfigError(`concurrency phải là số nguyên từ 1 đến ${MAX_CONCURRENCY}`);
     }
-    if (res.status < 200 || res.status >= 300) throw new HttpStatusError(res.status, role);
-    try {
-      return JSON.parse(res.body) as T;
-    } catch {
-      throw new TemporaryFailure(`thân phản hồi không phải JSON ở vai "${role}"`);
+    const reqs = tasks.map((t) => ({ role: t.role, url: this.url(t.role, t.params ?? {}) })); // sai cấu hình → không gửi gì
+    const out: Array<ManyResult<T> | undefined> = new Array(reqs.length);
+    const attempts = new Map<number, number>();
+    let pending = reqs.map((_, i) => i);
+    for (let round = 0; pending.length; round++) {
+      for (let i = 0; i < pending.length; i += concurrency) {
+        const wave: number[] = [];
+        for (const idx of pending.slice(i, i + concurrency)) {
+          if (this.stopped) {
+            out[idx] = { ok: false, error: this.stopped };
+            continue;
+          }
+          try {
+            this.assertRunning();
+          } catch (e) {
+            out[idx] = { ok: false, error: e as Error };
+            continue;
+          }
+          await this.waitBefore(attempts.get(idx) ?? 0);
+          this.calls++;
+          wave.push(idx);
+        }
+        if (!wave.length) continue;
+        const list = wave.map((idx) => ({ url: reqs[idx].url, headers: this.headers }));
+        const raw = await this.sendWave(list, this.o.paceMs);
+        for (let k = 0; k < wave.length; k++) {
+          const idx = wave[k];
+          const role = String(reqs[idx].role);
+          const res = raw[k] instanceof Error ? null : (raw[k] as Response);
+          try {
+            const verdict = await this.classify(res, ROLES[reqs[idx].role].needsSession, role);
+            if (verdict === "ok") {
+              this.consecutiveFailures = 0;
+              out[idx] = { ok: true, value: this.parseJson<T>(res as Response, role) };
+            } else {
+              const failure = this.retryOrFail(verdict.ownRecord, res, role, attempts.get(idx) ?? 0);
+              if (failure) out[idx] = { ok: false, error: failure };
+              else attempts.set(idx, (attempts.get(idx) ?? 0) + 1);
+            }
+          } catch (e) {
+            out[idx] = { ok: false, error: e as Error };
+          }
+        }
+      }
+      pending = pending.filter((idx) => out[idx] === undefined);
+      if (round >= RETRY_WAITS_MS.length + 1) {
+        for (const idx of pending) out[idx] = { ok: false, error: new TemporaryFailure("quá số vòng thử lại") };
+        break;
+      }
     }
+    return out as Array<ManyResult<T>>;
   }
 
   /**

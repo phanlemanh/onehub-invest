@@ -1,12 +1,13 @@
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { ConfigError, loadConfig } from "../collectors/s17-thua-dinh-gia/config.js";
 import { RunStopped, type Response } from "../collectors/s17-thua-dinh-gia/client.js";
 import { executePhase } from "../collectors/s17-thua-dinh-gia/runner.js";
+import { emptyState } from "../collectors/s17-thua-dinh-gia/run.js";
 import { summarize } from "../collectors/s17-thua-dinh-gia/main.js";
 
 /**
@@ -171,6 +172,93 @@ test("executePhase: lỗi ngoài dự kiến (cấu hình thiếu đường) kh�
     ConfigError,
   );
   assert.equal(h.sent.length, 0, "thiếu đường thì không gửi gì");
+}));
+
+// ---------- tăng tốc có khoá (Mạnh 24/11: bị chặn lần một thì lùi về nhịp cũ, lần hai thì dừng) ----------
+
+const FAKE_CONFIG_TANG_TOC = {
+  ...FAKE_CONFIG,
+  paths: { ...FAKE_CONFIG.paths, "full-config": "/v2.x/configuration" },
+};
+/** Nguồn lành cho pha mặt nạ: cấu hình đầy đủ có cơ sở tile, tile có dữ liệu. */
+const nguonLanh = async (url: string): Promise<Response> =>
+  new URL(url).pathname.endsWith("/configuration") ? json(env({ boundaries_conf: { _boundaries_black: "https://tiles.gia.test/data/ranh_thua" } })) : json(env({ ok: 1 }));
+
+test("tăng tốc: chưa từng bị chặn thì được chạy nhanh (nhiều luồng, nhịp ngắn)", async () => withTmp(async (dir) => {
+  const r = await executePhase({
+    phase: "tile-mask",
+    config: loadConfig(JSON.stringify(FAKE_CONFIG_TANG_TOC)),
+    transport: nguonLanh,
+    snapshotRoot: join(dir, "snapshots"),
+    statePath: join(dir, "state.json"),
+    logPath: join(dir, "run.log.jsonl"),
+    caps: { calls: 100, minutes: 60 },
+    paceMs: 150,
+    concurrency: 4,
+    batchItems: 100,
+    checkBalance: false,
+    grid: [{ marketId: "vn-a", name: "A", tiles: ["17/1/1"] }],
+    env: { sleep: async () => undefined, now: () => new Date("2026-11-24T04:00:00.000Z") },
+  });
+  assert.equal(r.ok, true);
+  assert.equal(JSON.parse(await readFile(join(dir, "state.json"), "utf8")).blockedRuns, 0);
+}));
+
+test("tăng tốc: bị chặn một lần thì ghi vào trạng thái; lần sau chỉ còn nhịp cũ một luồng", async () => withTmp(async (dir) => {
+  const statePath = join(dir, "state.json");
+  const base = {
+    phase: "tile-mask" as const,
+    config: loadConfig(JSON.stringify(FAKE_CONFIG_TANG_TOC)),
+    snapshotRoot: join(dir, "snapshots"),
+    statePath,
+    logPath: join(dir, "run.log.jsonl"),
+    caps: { calls: 100, minutes: 60 },
+    batchItems: 100,
+    checkBalance: false,
+    grid: [{ marketId: "vn-a", name: "A", tiles: ["17/1/1"] }],
+    env: { sleep: async () => undefined, now: () => new Date("2026-11-24T04:00:00.000Z") },
+  };
+  // Lượt 1: nguồn trả 403 → bị chặn
+  const r1 = await executePhase({ ...base, transport: async () => json({ message: "denied" }, 403), paceMs: 200, concurrency: 2 });
+  assert.equal(r1.stopReason, "blocked");
+  assert.equal(JSON.parse(await readFile(statePath, "utf8")).blockedRuns, 1, "ghi lại một lần bị chặn");
+  // Lượt 2 (tăng tốc): từ chối ngay, không gửi gì
+  const sent: string[] = [];
+  const r2 = await executePhase({ ...base, paceMs: 200, concurrency: 2, transport: async (url) => {
+    sent.push(url);
+    return nguonLanh(url);
+  } });
+  assert.equal(r2.stopReason, "fast-after-block", "đã bị chặn một lần thì không được tăng tốc nữa");
+  assert.equal(sent.length, 0);
+  // Lượt 2 (nhịp cũ, một luồng): được chạy
+  const r3 = await executePhase({ ...base, paceMs: 350, concurrency: 1, transport: nguonLanh });
+  assert.equal(r3.ok, true);
+}));
+
+test("tăng tốc: bị chặn hai lần thì dừng hẳn, kể cả nhịp cũ — chờ người quyết", async () => withTmp(async (dir) => {
+  const statePath = join(dir, "state.json");
+  await writeFile(statePath, JSON.stringify({ ...emptyState(), blockedRuns: 2 }));
+  const sent: string[] = [];
+  const r = await executePhase({
+    phase: "tile-mask",
+    config: loadConfig(JSON.stringify(FAKE_CONFIG_TANG_TOC)),
+    transport: async (url) => {
+      sent.push(url);
+      return nguonLanh(url);
+    },
+    snapshotRoot: join(dir, "snapshots"),
+    statePath,
+    logPath: join(dir, "run.log.jsonl"),
+    caps: { calls: 100, minutes: 60 },
+    paceMs: 350,
+    concurrency: 1,
+    batchItems: 100,
+    checkBalance: false,
+    grid: [{ marketId: "vn-a", name: "A", tiles: ["17/1/1"] }],
+    env: { sleep: async () => undefined, now: () => new Date("2026-11-24T04:00:00.000Z") },
+  });
+  assert.equal(r.stopReason, "blocked-twice");
+  assert.equal(sent.length, 0, "không gửi lời nào");
 }));
 
 test("RunStopped mang tên lớp để nhận diện ở ranh giới tiến trình", () => {

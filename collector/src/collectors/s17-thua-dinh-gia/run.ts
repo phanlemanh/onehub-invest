@@ -9,7 +9,7 @@ import { HttpStatusError, RunStopped, TemporaryFailure, type S17Client } from ".
 import { hasApartmentTable, makeItem, projectIdOf, tileBases } from "./kinds.js";
 import type { BatchWriter } from "./store.js";
 
-export type Phase = "session-check" | "reference" | "tile-mask" | "projects" | "apartments";
+export type Phase = "session-check" | "reference" | "tile-mask" | "projects" | "apartments" | "parcels";
 
 /** Một tỉnh trong lưới tile đã chọn sẵn (chỉ điểm nằm trên đất), sinh ngoài bộ thu từ bảng địa giới. */
 export type GridEntry = { marketId: string; name: string; tiles: string[] };
@@ -40,12 +40,47 @@ export type RunState = {
   apartmentSoCan: Record<string, number | null>;
   /** Mốc ngày 2 — dự án đã ghi bản gộp. */
   apartmentDuAnGop: string[];
+  /**
+   * Số lượt đã bị nguồn chặn (403, 429). Mạnh 24/11: được tăng tốc thận trọng; bị chặn lần một thì chỉ còn
+   * nhịp cũ một luồng, lần hai thì dừng hẳn chờ người quyết.
+   */
+  blockedRuns: number;
+  /** Mốc ngày 2 — mã địa chính của thửa đã ghi (khử trùng toàn cục). */
+  parcelSeen: string[];
+  /** Mốc ngày 2 — điểm đã hỏi hồ sơ: "<khu>|<phương pháp>|lat,lng". */
+  parcelPointDone: string[];
+  /** Mốc ngày 2 — khu đã ghi bản gộp. */
+  parcelKhuDone: string[];
+  /** Mốc ngày 2 — tên đường đã gợi ý: "<khu>|<tên đường>". */
+  parcelStreetDone: string[];
+  /** Mốc ngày 2 — điểm hoặc tên đường hỏi lỗi, kèm lý do. */
+  parcelLoi: Record<string, string>;
+  /** Mốc ngày 2 — số đếm dồn của từng khu. */
+  parcelKhu: Record<string, ParcelStats>;
+  /** Mốc ngày 2 — tên đường gặp được trong khu. */
+  parcelDuong: Record<string, string[]>;
 };
+
+/** Số đếm dồn của một khu thí điểm. */
+export type ParcelStats = {
+  soDiemLuoi: number;
+  soDiemGoiY: number;
+  soThuaLuoi: number;
+  soThuaGoiY: number;
+  soTrung: number;
+  soKhongCo: number;
+  soLoi: number;
+  soCauGoiY: number;
+  soLoiGoiY: number;
+};
+const parcelStatsRong = (): ParcelStats => ({ soDiemLuoi: 0, soDiemGoiY: 0, soThuaLuoi: 0, soThuaGoiY: 0, soTrung: 0, soKhongCo: 0, soLoi: 0, soCauGoiY: 0, soLoiGoiY: 0 });
 
 export function emptyState(): RunState {
   return {
     listDone: false, listNextPage: 0, projectIds: [], detailDone: [], detailFailed: {}, priceDone: [], tileDone: [],
     apartmentCodes: {}, apartmentBuildings: {}, apartmentDetailDone: [], apartmentDetailFailed: {}, apartmentProved: false, apartmentToa: {}, apartmentSoCan: {}, apartmentDuAnGop: [],
+    parcelSeen: [], parcelPointDone: [], parcelKhuDone: [], parcelStreetDone: [], parcelLoi: {}, parcelKhu: {}, parcelDuong: {},
+    blockedRuns: 0,
   };
 }
 
@@ -72,7 +107,14 @@ export type RunOptions = {
   apartmentPageSize?: number;
   /** Chỉ liệt kê các toà và ghi bản gộp dự án: không cổng chứng minh, không lấy căn (để đo trước khi quyết). */
   listOnly?: boolean;
+  /** Mốc ngày 2 — các khu thí điểm của pha thửa. */
+  parcels?: ParcelArea[];
+  /** Số lời một đợt cho đường nhiều lời (1 = tuần tự). */
+  concurrency?: number;
 };
+
+/** Một khu thí điểm của pha thửa: lưới toạ độ sinh ngoài bộ thu từ đa giác khu trên máy thu. */
+export type ParcelArea = { khuVucId: string; ten: string; dienTichKm2: number; buocM: number; diem: Array<[number, number]> };
 
 /** «2,432» → 2432; không đọc được → null. */
 export function parseCount(text: unknown): number | null {
@@ -89,13 +131,18 @@ type ApartmentListEnvelope = Envelope<{ content?: Array<{ text?: unknown; sub_te
  */
 const MAX_APARTMENT_LOT = 8;
 
-/** Chữ dùng trong sourceId: chữ thường, khoảng trắng thành gạch nối, dấu câu thành gạch nối. */
+/**
+ * Chữ dùng trong sourceId: ASCII, chữ thường, khoảng trắng và dấu câu thành gạch nối; tiếng Việt bỏ dấu
+ * («Hàng Đào» → hang-dao, «3312A Tòa Park 12» → 3312a-toa-park-12).
+ */
 export function sourceIdSlug(text: string): string {
   return text
     .normalize("NFC")
-    .trim()
+    .replace(/[Đđ]/g, "d")
+    .normalize("NFD")
+    .replace(/[\p{M}]+/gu, "")
     .toLowerCase()
-    .replace(/[^\p{L}\p{N}]+/gu, "-")
+    .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 }
 
@@ -478,6 +525,182 @@ async function apartments(o: RunOptions): Promise<PhaseSummary> {
   };
 }
 
+/** Một đợt hồ sơ thửa: tối đa PARCEL_CHUNK điểm một lần (rồi chốt xuống đĩa). */
+const PARCEL_CHUNK = 40;
+/** Mỗi khu hỏi gợi ý tối đa MAX_SUGGEST_TERMS tên đường, lặp tối đa MAX_SUGGEST_ROUNDS vòng. */
+const MAX_SUGGEST_TERMS = 40;
+const MAX_SUGGEST_ROUNDS = 3;
+const diemKey = (khu: string, phuongPhap: string, lat: number, lng: number): string => `${khu}|${phuongPhap}|${lat},${lng}`;
+
+/**
+ * Mốc ngày 2, pha thửa: quét lưới toạ độ (mỗi điểm hỏi hồ sơ thửa ở toạ độ đó), lấy tên đường từ những thửa
+ * vừa có rồi hỏi gợi ý theo tên đường để thêm toạ độ, hỏi tiếp. Khử trùng toàn cục theo mã địa chính (ogc_fid —
+ * bền); một thửa một item. Điểm hỏi lỗi được ghi lại và không hỏi lại; bị chặn hay hết phiên thì dừng, điểm chưa
+ * xong không được đánh dấu.
+ */
+async function parcels(o: RunOptions): Promise<PhaseSummary> {
+  const started = o.client.calls;
+  const cacKhu = o.parcels ?? [];
+  if (!cacKhu.length) throw new ConfigError("pha thửa cần ít nhất một khu thí điểm (--parcels-grid)");
+  for (const k of cacKhu) {
+    if (!/^[a-z0-9-]+$/.test(k.khuVucId) || !(k.dienTichKm2 > 0) || !k.diem.length) {
+      throw new ConfigError(`khu thí điểm «${k.khuVucId}» khai sai: id chữ thường, diện tích > 0, có ít nhất một điểm`);
+    }
+  }
+  const concurrency = o.concurrency ?? 1;
+  if (!Number.isInteger(concurrency) || concurrency < 1 || concurrency > 4) throw new ConfigError("concurrency phải là số nguyên từ 1 đến 4");
+  const at = () => (o.now ?? (() => new Date()))().toISOString();
+  let items = 0;
+  let failed = 0;
+
+  const hoiHoSo = async (khu: ParcelArea, phuongPhap: "grid" | "suggest", diem: Array<[number, number]>): Promise<void> => {
+    const st = o.state.parcelKhu[khu.khuVucId];
+    const con = diem.filter(([lat, lng]) => !o.state.parcelPointDone.includes(diemKey(khu.khuVucId, phuongPhap, lat, lng)));
+    for (let i = 0; i < con.length; i += PARCEL_CHUNK) {
+      const part = con.slice(i, i + PARCEL_CHUNK);
+      const ketQua = await o.client.getJsonMany<Envelope>(
+        part.map(([latitude, longitude]) => ({ role: "parcel-profile" as const, params: { loaiTimKiem: "nha_pho", latitude, longitude } })),
+        concurrency,
+      );
+      let dung: RunStopped | null = null;
+      for (let k = 0; k < part.length; k++) {
+        const [lat, lng] = part[k];
+        const key = diemKey(khu.khuVucId, phuongPhap, lat, lng);
+        const r = ketQua[k];
+        if (!r.ok) {
+          if (r.error instanceof RunStopped) {
+            dung = r.error; // điểm này và mọi điểm sau chưa xong
+            break;
+          }
+          st.soLoi++;
+          failed++;
+          o.state.parcelLoi[key] = r.error.message;
+          o.state.parcelPointDone.push(key);
+          continue;
+        }
+        if (phuongPhap === "grid") st.soDiemLuoi++;
+        else st.soDiemGoiY++;
+        const props = (r.value?.data as { properties?: Record<string, unknown> } | null)?.properties;
+        const ogc = props?.ogc_fid;
+        if (ogc === undefined || ogc === null || ogc === "") {
+          st.soKhongCo++; // điểm không nằm trong thửa nào (đo 24/11: nguồn trả data null, ~0,1 s)
+        } else {
+          const id = String(ogc);
+          if (o.state.parcelSeen.includes(id)) st.soTrung++;
+          else {
+            o.state.parcelSeen.push(id);
+            if (phuongPhap === "grid") st.soThuaLuoi++;
+            else st.soThuaGoiY++;
+            const duong = String(props?.vi_tri_duong ?? "").trim();
+            if (duong && !(o.state.parcelDuong[khu.khuVucId] ?? []).includes(duong)) (o.state.parcelDuong[khu.khuVucId] ??= []).push(duong);
+            await o.writer.add(
+              makeItem(
+                "thua",
+                `thua-${id}`,
+                { json: r.value },
+                {
+                  request: { latitude: lat, longitude: lng, loaiTimKiem: "nha_pho" },
+                  phuongPhap,
+                  khuVuc: khu.khuVucId,
+                  ogcFid: id,
+                  soTo: props?.so_to ?? null,
+                  soThua: props?.so_thua ?? null,
+                  dienTich: props?.dien_tich ?? null,
+                  duong: duong || null,
+                  maPhuong: props?.ma_phuong ?? null,
+                  maQuan: props?.ma_quan ?? null,
+                  maThanhPho: props?.ma_thanh_pho ?? null,
+                },
+                at(),
+              ),
+            );
+            items++;
+          }
+        }
+        o.state.parcelPointDone.push(key);
+      }
+      await commit(o); // phần đã xong trong đợt này được chốt và ghi nhận trước khi báo dừng
+      if (dung) throw dung;
+    }
+  };
+
+  for (const khu of cacKhu) {
+    if (o.state.parcelKhuDone.includes(khu.khuVucId)) continue;
+    const st = (o.state.parcelKhu[khu.khuVucId] ??= parcelStatsRong());
+    await hoiHoSo(khu, "grid", khu.diem);
+    // Gợi ý theo tên đường gặp được trong khu (nguồn nắp khoảng 15 mục mỗi từ khoá).
+    for (let vong = 0; vong < MAX_SUGGEST_ROUNDS && st.soCauGoiY + st.soLoiGoiY < MAX_SUGGEST_TERMS; vong++) {
+      const duongMoi = (o.state.parcelDuong[khu.khuVucId] ?? []).filter((d) => !o.state.parcelStreetDone.includes(`${khu.khuVucId}|${d}`));
+      duongMoi.splice(MAX_SUGGEST_TERMS - st.soCauGoiY - st.soLoiGoiY);
+      if (!duongMoi.length) break;
+      const diemMoi = new Map<string, [number, number]>();
+      for (const term of duongMoi) {
+        try {
+          const body = await o.client.getJson<Envelope>("parcel-suggest", { term, size: 50 });
+          const muc = listOf(body?.data).flatMap((g) => listOf((g as { items?: unknown }).items));
+          await o.writer.add(makeItem("thua_goi_y", `goi-y-${khu.khuVucId}-${sourceIdSlug(term)}`, { json: body }, { request: { term, size: 50 }, khuVuc: khu.khuVucId, soMuc: muc.length }, at()));
+          items++;
+          st.soCauGoiY++;
+          for (const m of muc) {
+            const ex = (m as { extra?: { latitude?: unknown; longitude?: unknown } }).extra ?? {};
+            const lat = Number(ex.latitude);
+            const lng = Number(ex.longitude);
+            if (Number.isFinite(lat) && Number.isFinite(lng) && lat !== 0) diemMoi.set(`${lat},${lng}`, [lat, lng]);
+          }
+        } catch (e) {
+          if (e instanceof RunStopped) {
+            await commit(o);
+            throw e;
+          }
+          st.soLoiGoiY++;
+          failed++;
+          o.state.parcelLoi[`${khu.khuVucId}|goi-y|${term}`] = e instanceof Error ? e.message : String(e);
+        }
+        o.state.parcelStreetDone.push(`${khu.khuVucId}|${term}`);
+        await commit(o);
+      }
+      await hoiHoSo(khu, "suggest", [...diemMoi.values()]);
+      o.log({ suKien: "thua-goi-y", khuVuc: khu.khuVucId, vong, soDuong: duongMoi.length, soDiemMoi: diemMoi.size });
+    }
+    const tongLoi = st.soDiemLuoi + st.soDiemGoiY + st.soCauGoiY;
+    const soThua = st.soThuaLuoi + st.soThuaGoiY;
+    await o.writer.add(
+      makeItem(
+        "thua_khu_vuc",
+        `khu-vuc-${khu.khuVucId}`,
+        { ...st },
+        {
+          request: { dienTichKm2: khu.dienTichKm2, buocM: khu.buocM, soDiemLuuGiac: khu.diem.length },
+          ten: khu.ten,
+          thuaMoiKm2: Math.round((st.soThuaLuoi / khu.dienTichKm2) * 10) / 10,
+          loiMoiKm2: Math.round((tongLoi / khu.dienTichKm2) * 10) / 10,
+          tongLoi,
+          soThua,
+        },
+        at(),
+      ),
+    );
+    items++;
+    o.state.parcelKhuDone.push(khu.khuVucId);
+    await commit(o);
+    o.log({ suKien: "thua-khu-xong", khuVuc: khu.khuVucId, ...st, tongLoi });
+  }
+  return {
+    phase: o.phase,
+    calls: o.client.calls - started,
+    items,
+    failed,
+    so: {
+      soKhu: cacKhu.filter((k) => o.state.parcelKhuDone.includes(k.khuVucId)).length,
+      soThua: o.state.parcelSeen.length,
+      soDiemLuoi: Object.values(o.state.parcelKhu).reduce((n, x) => n + x.soDiemLuoi, 0),
+      soDiemGoiY: Object.values(o.state.parcelKhu).reduce((n, x) => n + x.soDiemGoiY, 0),
+      soCauGoiY: Object.values(o.state.parcelKhu).reduce((n, x) => n + x.soCauGoiY, 0),
+      soLoi: Object.values(o.state.parcelKhu).reduce((n, x) => n + x.soLoi, 0),
+    },
+  };
+}
+
 export async function runPhase(o: RunOptions): Promise<PhaseSummary> {
   switch (o.phase) {
     case "session-check":
@@ -490,6 +713,8 @@ export async function runPhase(o: RunOptions): Promise<PhaseSummary> {
       return projects(o);
     case "apartments":
       return apartments(o);
+    case "parcels":
+      return parcels(o);
   }
 }
 

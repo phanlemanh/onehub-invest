@@ -7,10 +7,10 @@
 import { appendFileSync } from "node:fs";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
-import { S17Client, RunStopped, type Caps, type Response, type StopReason, type Transport } from "./client.js";
-import type { S17Config } from "./config.js";
+import { S17Client, RunStopped, type Caps, type Response, type StopReason, type Transport, type TransportMany } from "./client.js";
+import { ConfigError, type S17Config } from "./config.js";
 import { assertBalanceUnchanged } from "./kinds.js";
-import { emptyState, runPhase, type GridEntry, type Phase, type PhaseSummary, type RunState } from "./run.js";
+import { emptyState, runPhase, type GridEntry, type ParcelArea, type Phase, type PhaseSummary, type RunState } from "./run.js";
 import { BatchWriter } from "./store.js";
 
 export type Env = { sleep: (ms: number) => Promise<void>; now: () => Date };
@@ -36,8 +36,18 @@ export type ExecOptions = {
   proveBuilding?: string;
   apartmentPageSize?: number;
   listOnly?: boolean;
+  /** Mốc ngày 2 — các khu thí điểm của pha thửa. */
+  parcels?: ParcelArea[];
+  /** Số lời một đợt cho đường nhiều lời (1 = tuần tự). Mặc định 1. */
+  concurrency?: number;
+  transportMany?: TransportMany;
   env?: Env;
 };
+
+/** Nhịp mặc định — mức nguồn đã chịu được (0 lần bị chặn ở 350 ms suốt 24/11). */
+export const DEFAULT_PACE_MS = 350;
+/** Nhịp nhanh nhất được phép khi tăng tốc (Mạnh 24/11). */
+export const MIN_PACE_MS = 150;
 
 export type ExecResult = {
   ok: boolean;
@@ -95,9 +105,22 @@ export async function executePhase(o: ExecOptions): Promise<ExecResult> {
   const env = o.env ?? realEnv;
   const state = await loadState(o.statePath);
   const log = makeLogger(o.logPath);
+  // Tăng tốc có khoá (Mạnh 24/11: «gặp 429/403 thì lùi ngay về nhịp cũ, lần hai thì dừng»): đã bị chặn
+  // hai lần thì không chạy nữa, chờ người quyết; đã bị chặn một lần thì chỉ còn nhịp cũ, một luồng.
+  const concurrency = o.concurrency ?? 1;
+  if (!Number.isInteger(concurrency) || concurrency < 1 || concurrency > 4) throw new ConfigError("concurrency phải là số nguyên từ 1 đến 4");
+  const fast = concurrency > 1 || o.paceMs < DEFAULT_PACE_MS;
+  const khoaTangToc: RunStopped | null =
+    state.blockedRuns >= 2
+      ? new RunStopped("blocked-twice", `nguồn đã chặn hai lần (${state.blockedRuns}) — dừng hẳn, chờ người quyết`)
+      : fast && state.blockedRuns >= 1
+        ? new RunStopped("fast-after-block", `nguồn đã chặn một lần — chỉ được chạy nhịp ${DEFAULT_PACE_MS} ms, một luồng`)
+        : null;
+
   const client = new S17Client({
     config: o.config,
     transport: o.transport,
+    ...(o.transportMany ? { transportMany: o.transportMany } : {}),
     sleep: env.sleep,
     now: () => env.now().getTime(),
     caps: o.caps,
@@ -110,6 +133,7 @@ export async function executePhase(o: ExecOptions): Promise<ExecResult> {
   let balanceBefore: number | undefined;
   let balanceAfter: number | undefined;
   try {
+    if (khoaTangToc) throw khoaTangToc; // trả về như mọi lần dừng khác, không gửi lời nào
     if (o.checkBalance) balanceBefore = await readBalanceOrStop(client, "trước");
     const summary = await runPhase({
       phase: o.phase,
@@ -127,6 +151,8 @@ export async function executePhase(o: ExecOptions): Promise<ExecResult> {
       proveBuilding: o.proveBuilding,
       apartmentPageSize: o.apartmentPageSize,
       listOnly: o.listOnly,
+      parcels: o.parcels,
+      concurrency: o.concurrency,
     });
     if (o.checkBalance) {
       balanceAfter = await readBalanceOrStop(client, "sau");
@@ -151,7 +177,14 @@ export async function executePhase(o: ExecOptions): Promise<ExecResult> {
       balanceBefore,
       balanceAfter,
     });
-    if (e instanceof RunStopped) return { ok: false, stopReason: e.reason, message, ...base(), balanceBefore, balanceAfter };
+    if (e instanceof RunStopped) {
+      // Một lần bị chặn (403, 429) được ghi vào trạng thái để khoá tăng tốc ở các lượt sau.
+      if (e.reason === "blocked") {
+        state.blockedRuns = (state.blockedRuns ?? 0) + 1;
+        await saveState(o.statePath, state);
+      }
+      return { ok: false, stopReason: e.reason, message, ...base(), balanceBefore, balanceAfter };
+    }
     throw e;
   }
 }

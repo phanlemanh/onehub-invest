@@ -17,8 +17,8 @@ test("parseCli: thiếu trần lời gọi hoặc trần thời gian thì từ c
   assert.throws(() => parseCli(base.map((a) => (a === "1000" ? "0" : a))), /dương/, "trần phải là số dương");
 });
 
-test("parseCli: nhịp ngoài 300–400 ms bị từ chối; trong mức thì nhận", () => {
-  assert.throws(() => parseCli([...base, "--pace-ms", "200"]));
+test("parseCli: nhịp ngoài 150–400 ms bị từ chối; trong mức thì nhận", () => {
+  assert.throws(() => parseCli([...base, "--pace-ms", "100"]));
   assert.throws(() => parseCli([...base, "--pace-ms", "500"]));
   assert.equal(parseCli([...base, "--pace-ms", "350"]).paceMs, 350);
   assert.equal(parseCli(base).paceMs, 350, "mặc định 350 ms — giữa mức đã đo");
@@ -43,6 +43,24 @@ const CONFIG_DU_AN = {
   hosts: { api: "https://api.gia.test", agent: "https://agent.gia.test", web: "https://web.gia.test" },
   paths: { "project-list": "/v2.x/projects", "project-detail": "/v2.x/projects/{id}", "building-tree": "/v2.x/projects/{id}/tree", gallery: "/v2.x/gallery/{id}", "data-available": "/v2.x/data-available", "asset-type": "/v2.x/asset-type", balance: "/v2.x/balance", "full-config": "/v2.x/configuration" },
 };
+
+test("parseCli: nhịp nhanh nhất khi tăng tốc là 150 ms (Mạnh 24/11); dưới đó vẫn từ chối", () => {
+  assert.throws(() => parseCli([...base, "--pace-ms", "100"]));
+  assert.equal(parseCli([...base, "--pace-ms", "150"]).paceMs, 150);
+  assert.equal(parseCli(base).paceMs, 350, "mặc định vẫn là nhịp cũ");
+});
+
+test("parseCli: pha thửa cần phiên, cần lưới khu thí điểm; số luồng trong 1–4", () => {
+  const thua = [...base, "--phase", "parcels"];
+  assert.throws(() => parseCli(thua), /space/);
+  assert.throws(() => parseCli([...thua, "--space", "4"]), /parcels-grid/);
+  const p = parseCli([...thua, "--space", "4", "--parcels-grid", "/tmp/luoi-thua.json", "--luong-song", "3", "--pace-ms", "200"]);
+  assert.equal(p.via, "ego");
+  assert.equal(p.concurrency, 3);
+  assert.equal(p.parcelsGrid, "/tmp/luoi-thua.json");
+  assert.equal(parseCli(base).concurrency, 1, "mặc định một luồng");
+  assert.throws(() => parseCli([...thua, "--space", "4", "--parcels-grid", "/tmp/luoi-thua.json", "--luong-song", "5"]), /1 đến 4/);
+});
 
 test("checkConfigForPhase: pha cần phiên đòi tên cookie phiên trong cấu hình local; pha công khai không cần", () => {
   const config = CONFIG_DU_AN;
