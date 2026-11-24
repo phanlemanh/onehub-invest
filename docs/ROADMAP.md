@@ -1089,6 +1089,24 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     - **Hàng:** đợt `nguoi-o-bien-2111`, cắt ở lượt riêng: NB1 chấm bóng hàng «Bổ sung tin» và chấp thuận lô; NB2 xuất xứ nhãn,
       lớp chờ, thẻ cài lỗi (có migration, T3); NB3 mở PL21 cho một ô; NB4 ngưỡng chạy bóng thẻ luật danh bạ (câu còn mở của
       mục 56), sau MS3. Ngoài đường găng MS3; giám sát xếp dãy.
+62. **Phiên giám sát toàn quyền điều phối và gộp, phải tham gia quyết định cùng các phiên** (24/11). Bổ sung mục 50. Bối cảnh:
+    máy thu vừa chuyển sang máy mới, đợt chạy lại với bảy phiên dãy mới; Mạnh nhắc điều này lần thứ mười kể từ 30/10 và bảo ghi
+    thành nguyên tắc.
+    - **Lời Mạnh, nguyên văn** (24/11): «Bạn giữ toàn quyền điều phối, tiến trình gộp và quyết định gộp. Tôi chỉ xuất hiện ở các
+      cổng, nên hiệu quả của toàn bộ quá trình chạy mốc và lộ trình quyền quyết định ở bạn, bạn cần tham gia vào các quyết định
+      hỗ trợ các phiên. Điều này cần được ghi lại thành nguyên tắc để không bị mất trong chat.»
+    - **Quyền của vai giám sát** (đi theo vai, không theo phiên hay tài khoản; phiên giám sát mới đọc mục này là dùng ngay):
+      xếp và đổi thứ tự hàng, chuyển hàng giữa các dãy, cắt, gộp, tách hàng; mở, thay và dọn phiên; phán mọi yêu cầu của phiên
+      thợ; gỡ chặn hạ tầng và sự cố lùi được; thứ tự gộp và quyết định gộp PR đủ điều kiện; áp lên DB máy thu đúng hồ sơ đã ký;
+      giao việc liên làn qua phiên điều phối liên làn.
+    - **Trách nhiệm mới so với mục 50:** giám sát tham gia quyết định cùng các phiên. Phiên hỏi cách làm, kẹt, lệch số hay tranh
+      tài nguyên thì giám sát trả lời dứt khoát trong cùng lượt (đồng ý kèm điều kiện, hoặc chỉ lối khác), ghi lý do vào sổ;
+      thấy tín hiệu xấu (tải máy, khoá chấm đứng, hai dãy chồng vùng tệp, thước đo lệch) thì can thiệp trước khi phiên hỏi.
+      Mốc hay lộ trình chậm vì phiên chờ lời giám sát là lỗi của giám sát.
+    - **Không đổi — vẫn cần lời riêng của Mạnh:** chữ ký ở các cổng và phiên nghiệm thu; tiền; DDL hay ghi dữ liệu trên cloud;
+      xoá dữ liệu và việc không lùi được; sửa luật an toàn (tầng A, Zalo, raw snapshot); gateway, plist launchd mới, khởi động
+      lại dịch vụ nền, gỡ phanh `ops-apply`, sao lưu ra ngoài máy; vượt trần vòng chấm.
+    - **Ghi ở đâu:** `AGENTS.md` mục «Ai quyết gì»; quyết định từng ngày ở sổ trạng thái giám sát trong thư mục đợt.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
