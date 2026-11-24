@@ -5,7 +5,7 @@ slug: lat-hai-khu-truc-khai-o
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: approved
+status: implemented
 veto_state: mo
 veto_opened_at: 2026-11-24T14:49:27Z
 approved_by:
