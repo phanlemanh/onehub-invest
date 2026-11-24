@@ -1,12 +1,24 @@
 ## Trong hợp đồng
 
-Không có finding nào được map vào AC.
+Không có finding nào.
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-(Round này không có muc moi; 6 muc round truoc duoc may tu chen nhan "(r<N>)".)
+- **Eval E10 dẫn sha 70bcecb3a, nhưng nhánh không chứa sha này**
+  Người dùng thấy gì: Hồ sơ nghiệm thu ghi một mã commit không có trên nhánh, nên người đọc hay công cụ kiểm có thể tưởng thiếu thay đổi. Tính năng chạy đúng, nội dung đã nằm trên nhánh dưới mã khác.
+  Căn cứ: Chỉ là chú thích sai trong hồ sơ, không ảnh hưởng người dùng hay dữ liệu, và người đọc đối chiếu nội dung là thấy ngay.
+  file: `_acceptance/cham-bong-cau-tra-loi-khong-bi-cat/evals.yaml`
+  severity: low
+  Đề xuất: wont-fix
+
+- **khoa-trung.mjs xanh rỗng khi lượt cũ không có dòng «doc» nào**
+  Người dùng thấy gì: Phép kiểm xem lượt chạy lại có gọi lại những thẻ đã trả tiền hay không có thể báo đạt khi lượt cũ không có dữ liệu để so. Khi đó người ký có thể tin nhầm là đã kiểm, dù thực tế chưa so thẻ nào.
+  Căn cứ: Không làm mất dữ liệu hay tốn tiền thêm; chỉ có nguy cơ báo đạt giả trong tình huống hiếm là nạp nhầm lượt cũ, và người ký nhìn dòng 0/0 là phát hiện.
+  file: `_acceptance/cham-bong-cau-tra-loi-khong-bi-cat/probes/khoa-trung.mjs`
+  severity: low
+  Đề xuất: known-limits
 
 - **Probe E7 (tran-30.mjs) chép lại công thức ước chi thay vì gọi uocDau của bộ chạy (r1)**
   Người dùng thấy gì: Phép đo mức chi cao nhất của 30 thẻ dùng một bản công thức chép riêng. Nếu sau này công thức thật đổi mà bản chép không đổi theo, con số báo vẫn xanh nhưng có thể không còn đúng với số tiền lượt chạy thật tính.
@@ -52,4 +64,4 @@ Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm v
 
 ## Chưa adversarial-verify (refuter chết)
 
-Cụm ngoài vùng phủ: cluster: n-a (không đo được — không eval nào khai paths, hoặc dưới ngưỡng cụm).
+⚠ Cụm ngoài vùng phủ: 2/2 lỗi rơi vào file không bộ đo nào phủ (_acceptance/cham-bong-cau-tra-loi-khong-bi-cat/evals.yaml, _acceptance/cham-bong-cau-tra-loi-khong-bi-cat/probes/khoa-trung.mjs) — dừng và quyết: mở rộng hợp đồng hay rút phạm vi.
