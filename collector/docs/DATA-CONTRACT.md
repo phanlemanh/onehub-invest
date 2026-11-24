@@ -237,8 +237,8 @@ Luật đọc:
 
 ## Nguồn S09 `s09-danh-ba` — danh bạ căn: bản đồ toà/tầng/thấp tầng (nháp v15, claudedp-1811-12)
 
-> **NHÁP — số 15 CHƯA GHIM**: v13 = S09 danh mục; v14 = S16 thuộc tính căn (nháp đang trên nhánh khác);
-> S17 cũng đang nháp cùng số 15. Số chốt lúc gộp, bên đọc nhận diện theo `source`, không theo số.
+> **NHÁP — số 15 CHƯA GHIM**: v13 = S09 danh mục; v14 = S16 thuộc tính căn (nháp đang trên nhánh khác).
+> S17 đã nhận số 17 riêng (claudedp-2411-20). Số 15 chốt lúc gộp, bên đọc nhận diện theo `source`, không theo số.
 
 - Thư mục `vn/vn__s09-danh-ba__<id>/`; **không đăng nhập**, API danh bạ công khai (client `publicRequester`);
   `manifest.coverage.methods = {"danh-ba-cong-khai-http": n}`. Script thu ở `research-local/` (mang tên miền), không
@@ -314,7 +314,77 @@ Khoá nối với S16/S08 (chi tiết số đo ở tệp kê local của lượt
 - UUID dự án/toà/tầng/căn của nguồn này là quan hệ bền (khoá nối cấp cao nhất); **khác** namespace với
   `insight_by_block[].id` của nguồn `s09-du-an` — ánh xạ qua (`du_an_id`, tên toà), không so uuid chéo.
 
+## Nguồn S17 `s17-thua-dinh-gia` — thửa đất định giá, căn hộ, dự án (v17, claudedp-2411-20)
+
+> Mốc ngày 1 (24–25/11/2026) thu phần chắc: bảng tham chiếu, dự án, mặt nạ vùng có ranh thửa. Bốn kind có phiên còn
+> lại (`can_ho_list`, `can_ho_detail`, `thua`, `mix_gia`) thuộc mốc ngày 2 (claudedp-2411-21): khuôn của bốn kind này
+> là thiết kế, hiện đánh «chưa thu». Mã bộ thu: `collector/src/collectors/s17-thua-dinh-gia/`.
+
+- Thư mục `vn/vn__s17-thua-dinh-gia__<id>/`. **Một lượt thu = nhiều snapshot nhỏ** (50 item, hay 5 dự án, mỗi lô)
+  ghi ngay khi lấy được: gãy giữa lượt (bị chặn, hết phiên, quá trần) chỉ mất lô đang dở; `manifest.error` ghi lý do
+  dừng. `manifest.schemaVersion = 17`; `coverage.notes` của mọi snapshot mang đúng `S17 khuôn 2 (mốc ngày 1, claudedp-2411-20)`.
+- **Hai chế độ thu**:
+  - *công khai* — `static_config`, `gia_ubnd`, `tile_coverage`: gọi bằng fetch thường kèm header Origin của trang
+    nguồn, không mang phiên;
+  - *có phiên* — `du_an_list`, `du_an_detail` (và bốn kind của mốc ngày 2): gọi TRONG TAB của hồ sơ nơi Mạnh đã đăng
+    nhập (trình duyệt ego lite), phiên do chính trang gắn. Thông tin phiên là tầng A: không rời trình duyệt, không vào
+    snapshot, không vào log.
+- **Đường API không nằm trong hợp đồng lẫn trong code.** Bộ thu gọi theo *vai* (`project-list`, `project-detail`,
+  `building-tree`, `gallery`, `land-price-by-district`…); đường thật đọc từ tệp local ngoài git
+  (`~/.oneinvest/s17-thua-dinh-gia.json`); mỗi vai chỉ nhận đúng tên tham số đã khai. Đường hay tham số ngoài danh
+  sách bị từ chối trước khi gửi. `sourceId` và `kind` dùng chữ trung tính, không mang tên đường.
+- Nhịp 300–400 ms một lời (mức nguồn đã chịu được); trần lời gọi và trần thời gian phải khai mỗi lần chạy. 403, 429,
+  trang thử thách, hết phiên, quá trần → dừng cả lượt, không gửi thêm lời nào. Lỗi mạng và 5xx thử lại sau 5 s, 15 s,
+  30 s rồi tính là thất bại của riêng bản ghi đó. Chạy như tiến trình của phiên, chưa có lịch.
+- Phạm vi PII: hồ sơ thửa, căn, dự án chỉ có thuộc tính vật thể (không tên, SĐT chủ sở hữu). Không có lớp người bán ⇒
+  RawItem không mang `seller`.
+
+| `kind` | `sourceId` | `payload` (nguyên văn) | `meta` |
+|---|---|---|---|
+| `static_config` | `static-cau-hinh-day-du` · `static-danh-muc-tinh` · `static-danh-muc-quan-<mã tỉnh>` · `static-tu-dien-thuoc-tinh-<1\|2\|3>` · `static-giay-to-phap-ly-<1\|2>` · `static-loai-tai-san` · `static-do-tin-cay` · `static-muc-dich-su-dung-dat` | `{ json }` — phản hồi gốc của một bảng tham chiếu | `request` (tham số đã gửi) · `congKhai: true` · `soPhanTu` (số phần tử cấp trên) · `soTinh` (danh mục tỉnh) · `soQuan` (danh mục quận của một tỉnh) |
+| `gia_ubnd` | `ubnd-<mã quận>` | `{ json }` — bảng đơn giá đất theo vị trí của một quận; `data` rỗng khi quận không có bảng | `request {districtCode, provinceCode}` · `congKhai: true` · `soViTri` |
+| `tile_coverage` | `coverage-<id tỉnh>` (`id` của `areas` cấp market) | `{ tiles: ["z/x/y", …] }` — tile ranh thửa mức 17 CÓ DỮ LIỆU trong số các điểm đã quét của tỉnh; không lưu ảnh | `request {zoom}` · `congKhai: true` · `ten` · `soDiemQuet` · `trong` · `rong` · `vang` · `loi` |
+| `du_an_list` | `trang-<n>` (tính từ 1) | `{ json }` — một trang danh sách dự án: `data.projects.content[]` cùng `totalElements`, `totalPages` | `request {query, page, size}` · `tongDuAn` · `soTrang` · `soMuc` · `khongId` (mục không có id) |
+| `du_an_detail` | `du-an-<id>` | `{ detail, filterOptions, gallery }` — ba phản hồi gốc của một dự án: hồ sơ, cây lựa chọn toà → tầng → hướng → diện tích, thư viện ảnh | `request {id}` · `coBangCan` (`true` \| `false` \| `null`) |
+| `can_ho_list` *(chưa thu)* | `du-an-<id>-toa-<toà>-trang-<n>` | `{ json }` — một trang liệt kê căn theo toà | `request {project_id, thap, page, size}` |
+| `can_ho_detail` *(chưa thu)* | `du-an-<id>-can-<ma_can>` | `{ json }` — hồ sơ một căn | `request {project_id, ma_can}` · `khopMaCan` |
+| `thua` *(chưa thu)* | `thua-<mã địa chính>` | `{ json }` — hồ sơ thửa theo toạ độ: đa giác ranh giới, kích thước, tiếp giáp đường, đơn giá đất theo trạng thái quy hoạch | `request` · `phuongPhap` (`suggest` \| `grid`) |
+| `mix_gia` *(chưa thu)* | `toado-<lat>-<lng>` | `{ json }` — đơn giá thị trường theo toạ độ | `request` · `ganThua` |
+
+Luật đọc:
+
+1. **Đếm một kind** = cộng `counts.items` theo `coverage.methods[<kind>]` qua mọi snapshot S17 mang dấu hiệu `S17 khuôn 2`
+   trong `coverage.notes`. Snapshot S17 KHÔNG mang dấu hiệu này là bản ghi lúc dựng bộ thu sáng 24/11 (`sourceId` khuôn
+   1) — bên đọc bỏ qua.
+2. `tile_coverage`: `trong` = tile có dữ liệu; `rong` = tile rỗng (1.784 byte); `vang` = tile không tồn tại; `loi` = lỗi
+   tạm. `soDiemQuet` = số điểm đã quét của tỉnh. Điểm quét là lưới bước 34 tile (khoảng 10 km) CHỈ trên đất, 34 tỉnh
+   hiện hành. Mặt nạ nói «vùng này có dữ liệu», KHÔNG phải ranh giới phủ.
+3. `gia_ubnd` với `soViTri = 0`: đã hỏi và nguồn không có bảng cho quận đó — khác với chưa hỏi.
+4. `du_an_list`: một dự án = một `id` trong `data.projects.content[]`; id trùng giữa các trang chỉ tính một lần.
+   `meta.tongDuAn` là tổng nguồn công bố — đối chiếu với số id duy nhất.
+5. `du_an_detail`: một item gom ba phản hồi của một dự án. Dự án lấy lỗi không có item; danh sách đó nằm ở trạng thái
+   bộ thu trên máy thu và được báo trong lượt XONG. `coBangCan = null` khi chi tiết không mang cờ — bên đọc không suy
+   ra `false`. Ảnh dự án CHƯA tải: payload chỉ có link.
+6. **Hai namespace dự án** (`du_an` căn hộ và `du_an_nha_dat` thấp tầng) trùng dải id: khoá dài hạn là cặp
+   (namespace, id). Chi tiết thấp tầng cần cờ riêng trên cùng một đường (phát hiện tĩnh từ mã ứng dụng 24/11, chưa đo).
+7. **Tên miền thật có trong payload** (link ảnh, link quyết định, kho ảnh nguồn): raw ở local được phép; `stg_s17_*` thì
+   không — cùng luật với S07 mục 1. Payload thửa có link ký số tạm thời (hết hạn sau 24 giờ): bên đọc không dựa vào.
+8. *(mốc ngày 2)* `can_ho_detail`: tham số để tra một căn là `ma_can`; đối chiếu `ma_can` trong phản hồi với `ma_can` đã
+   gửi, lệch thì bỏ. Liệt kê căn theo toà có thứ tự trang không ổn định: quét hết mọi trang, khử trùng theo mã căn.
+9. *(mốc ngày 2)* Thửa: định danh bền là mã địa chính (`ogc_fid`); khử trùng giữa các phương pháp theo mã này.
+
+**Việc kèm bên one-invest (làn Claude, DA58)**: ALLOWLIST thêm `s17-thua-dinh-gia`; migration `stg_s17_*` (sổ số giữ
+128 tạm). Mẫu snapshot thật lấy từ thư mục snapshot của máy thu (thư mục `vn/vn__s17-thua-dinh-gia__*` mang dấu hiệu
+`S17 khuôn 2`), không qua kênh.
+
 ## Lịch sử phiên bản
+
+- **schemaVersion 17 (2026-11-24, claudedp-2411-20 — S17 `s17-thua-dinh-gia`, mốc ngày 1)**: thêm nguồn
+  `s17-thua-dinh-gia` với chín kind — năm kind của mốc ngày 1 (`static_config`, `gia_ubnd`, `tile_coverage`, `du_an_list`,
+  `du_an_detail`) và bốn kind của mốc ngày 2 (`can_ho_list`, `can_ho_detail`, `thua`, `mix_gia`, chưa thu). RawItem không
+  thêm trường chung. Một lượt thu cho ra nhiều snapshot nhỏ; `manifest.schemaVersion = 17`. Bộ thu ở
+  `collector/src/collectors/s17-thua-dinh-gia/`, chạy tay như tiến trình của phiên. Chưa có bộ nạp và migration (làn
+  Claude giữ số 128 tạm); bản nháp gốc và số đo ở tư liệu local của phiên S17.
 
 - **schemaVersion 15 (2026-11-19, nháp claudedp-1811-12 — S09 danh bạ căn, gói 1 bản đồ)**: thêm nguồn
   `s09-danh-ba` (mục ở trên) với năm kind `danh-muc/toa/tang/khu-thap-tang/can-thap-tang`, payload nguyên văn
