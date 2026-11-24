@@ -97,7 +97,7 @@ evals:
     executor: test
     cmd: config:executors.suite.pipeline_a
     long_running: 90
-    paths: [db/**, scripts/**]
+    paths: ["db/docker-compose.yml", "scripts/check-db-noi-bo.sh", "scripts/check-db-autostart.sh", "scripts/db-volume-check.sh", "pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs"]
     expected: "exit 0; nửa A bộ test pipeline (suite lượt chấm kéo theo vì nhánh chạm db/ và scripts/; khai ở đây chỉ để có long_running 90 — trên Mac mini nửa A ~41′, vượt trần chờ 30′ mặc định), 0 fail; nhánh mang 70bcecb3a (trần ca SLT-DC-7/9 480 → 900 s)."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
@@ -106,6 +106,6 @@ evals:
     executor: test
     cmd: config:executors.suite.pipeline_b
     long_running: 90
-    paths: [db/**, scripts/**]
+    paths: ["db/docker-compose.yml", "scripts/check-db-noi-bo.sh", "scripts/check-db-autostart.sh", "scripts/db-volume-check.sh", "pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs"]
     expected: "exit 0; nửa B bộ test pipeline (suite lượt chấm, khai ở đây chỉ để có long_running 90), 0 fail."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
