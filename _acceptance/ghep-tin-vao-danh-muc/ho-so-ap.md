@@ -211,3 +211,9 @@ Số tin tăng từ 7.992 lên 8.057 vì lượt nạp S03 giữa lúc chạy th
 
 Cờ để lại cho PL36: câu kiểm thứ tư của mục 5 (join `offer_building` × `offer_project`, đếm tin đã gắn mà dự án chưa
 một) chạy quá 120 giây trên máy thu. PL36 và CG11 sẽ đọc view này, nên S1 của PL36 đo thời gian và đề xuất cách xử.
+
+Sự cố sau áp (24/11, khoảng 13:30Z): suite `pipeline_b` đỏ trên máy thu. Ba tệp test áp lại nguyên 113 lên DB của lượt chép từ
+máy thu (`import-s16-chi-tiet.test`, `ghep-tin-danh-muc-117.itest`, `ghep-tin-danh-muc-ghi.itest`). CHECK của 113 thiếu
+`universal_property_id`, nên ADD CONSTRAINT đỏ 23514 — đúng điều mục 4 đã cảnh báo, «sau 117 không áp lại 113». CI dùng DB trống
+nên vẫn xanh. Đã sửa riêng phần test ở nhánh `fix/test-ap-lai-113-sau-117` (ae771835a): nạp lại 113 bằng `sqlNapLaiDayDu`, và
+`ghep-tin-danh-muc-ghi` rút dòng gắn toà sẵn có trên DB của riêng lượt. Kết quả: bản chép thật 38/38, DB trống 6/6.
