@@ -35,5 +35,29 @@ evals:
     paths: ["app/src/lib/labels-normalize.ts", "app/src/lib/labels-queries.ts", "app/src/components/ops/labels/label-form-nhom.tsx", "app/tests/labels-lat-hai-khu-truc.test.tsx"]
     expected: >
       Ca HT21-AC-4: nhapChoLat (máy chủ) trả nháp của hai-khu-truc lọc về building, stack; null cho hai-khu-ghep-b; giữ nguyên cho
-      lát không khai; null khi nháp không còn ô của lát. Biểu mẫu dựng thật điền sẵn hai ô và hiện «Nháp máy» cho hai-khu-truc, không
-      cho hai-khu-ghep-b. Chiều đỏ trên cùng tệp: bản đưa hai-khu-ghep-b vào danh sách có nháp thì phép so gắn mù đỏ, gọi tên lát.
+      lát không khai; null khi nháp không còn ô của lát. Biểu mẫu dựng thật nhận ĐÚNG đầu ra nhapChoLat: điền sẵn hai ô và hiện «Nháp
+      máy» cho hai-khu-truc, không gì cho hai-khu-ghep-b. Chiều đỏ trên cùng tệp: bản đưa hai-khu-ghep-b vào danh sách có nháp (chép ra
+      thư mục tạm cùng labels-queries.ts) làm đỏ đúng phép so gắn mù của ca xanh, thông điệp gọi tên lát.
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: bash _acceptance/lat-hai-khu-truc-khai-o/probes/test.sh
+    paths: ["app/src/lib/labels-normalize.ts", "app/src/components/ops/labels/labels-view.tsx", "app/tests/labels-lat-hai-khu-truc.test.tsx"]
+    expected: >
+      Ca HT21-AC-5: moTaLatKhaiO("hai-khu-truc") nêu Toà, Trục và «Các ô đã điền sẵn nháp máy — sửa chỗ sai rồi lưu»; hai-khu-ghep-b
+      giữ câu cũ; lát không khai trả null; labels-view.tsx chọn câu qua moTaLatKhaiO. Chiều đỏ: bản dùng câu cố định cho mọi lát khai ô
+      thì phép so «nháp máy» của hai-khu-truc đỏ.
+  - id: E6
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.suite.pipeline_a
+    long_running: 90
+    paths: ["app/src/lib/labels-normalize.ts", "app/src/lib/labels-queries.ts", "app/src/components/ops/labels/label-form-nhom.tsx", "app/src/components/ops/labels/labels-view.tsx", "app/src/app/api/v1/ops/labels/[itemId]/review/route.ts"]
+    expected: "exit 0; nửa A bộ test pipeline (suite của lượt chấm, khai ở đây chỉ để có long_running 90 — trên Mac mini nửa A vượt trần chờ 30′ mặc định, S4 vòng 1 BLOCKED), 0 fail."
+  - id: E7
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.suite.pipeline_b
+    long_running: 90
+    paths: ["app/src/lib/labels-normalize.ts", "app/src/lib/labels-queries.ts", "app/src/components/ops/labels/label-form-nhom.tsx", "app/src/components/ops/labels/labels-view.tsx", "app/src/app/api/v1/ops/labels/[itemId]/review/route.ts"]
+    expected: "exit 0; nửa B bộ test pipeline (suite của lượt chấm, khai ở đây chỉ để có long_running 90), 0 fail."

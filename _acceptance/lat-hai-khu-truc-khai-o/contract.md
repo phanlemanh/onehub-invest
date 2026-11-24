@@ -34,6 +34,11 @@ Hàng HT21, hàng nền của PL36 AC-10 (GS giao 24/11). Lát `hai-khu-truc` đ
   vẫn gắn mù (không nháp ở máy chủ lẫn màn); lát không khai giữ nguyên nháp. Chiều đỏ: bản đưa `hai-khu-ghep-b` vào danh sách có nháp
   thì phép đo gắn mù đỏ, thông điệp gọi tên lát. Lý do ngoại lệ: Mạnh bỏ đo mù cho lát này (24/11, lối 3 của PL36 — trợ lý nháp,
   Mạnh duyệt); thước đo người duyệt là thẻ cài lỗi (8–10%) thay cho gắn mù.
+- **AC-5** (mô tả đầu trang theo lát) Given trang `/ops/labels` của một lát có khai ô, When hiện câu mô tả đầu trang, Then lát
+  `hai-khu-truc` ghi đúng hai ô của lát (Toà, Trục) và nói rõ các ô đã điền sẵn nháp máy, người duyệt sửa chỗ sai rồi lưu; lát gắn
+  mù (`hai-khu-ghep-b`) giữ câu cũ «… Máy không cho thấy nó đã đọc ra gì»; lát không khai dùng câu của nó. Chiều đỏ: bản dùng một câu
+  cố định cho mọi lát khai ô thì ca `hai-khu-truc` đỏ. (Nâng phạm vi theo phán của GS 24/11 sau S4 vòng 1: câu cũ chỉ dẫn sai người
+  duyệt đúng ở lát này.)
 
 ## Coverage
 

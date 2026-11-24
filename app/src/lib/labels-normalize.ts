@@ -138,6 +138,16 @@ const NHAN_THEO_LAT: Readonly<Record<string, Partial<Record<LabelField, string>>
 /** Nhãn của một ô trên màn của lát. */
 export const nhanO = (lat: string, f: LabelField): string => NHAN_THEO_LAT[lat]?.[f] ?? FIELD_LABEL[f]
 /**
+ * Câu mô tả đầu trang của lát có khai ô (HT21 AC-5). Lát có nháp nói rõ các ô đã điền sẵn nháp máy, người duyệt sửa chỗ sai rồi
+ * lưu; lát gắn mù giữ câu cũ. Lát không khai ô trả null (màn dùng câu của nó).
+ */
+export function moTaLatKhaiO(lat: string): string | null {
+  const o = oCuaLat(lat)
+  if (!o) return null
+  if (!LAT_KHAI_O_CO_NHAP.has(lat)) return "Đọc từng bài và ghi toà, phân khu hoặc cụm. Máy không cho thấy nó đã đọc ra gì."
+  return `Đọc từng bài và ghi ${o.map((f) => nhanO(lat, f)).join(", ")}. Các ô đã điền sẵn nháp máy — sửa chỗ sai rồi lưu.`
+}
+/**
  * Căn cứ tạm của lát có khai ô. Route gọi `chuanHoaLuot` không kèm tên lát nên bộ kiểm không tự biết lát; `ghiNhan` biết tên lát:
  * chỉ lát có khai mới được gửi giá trị này, và nó không bao giờ xuống DB.
  */

@@ -63,7 +63,7 @@ export function LabelFormNhom({
   diToi?: (href: string) => void
   baoTin?: (cau: string) => unknown
 }) {
-  // Lát có khai ô: chỉ các ô của lát, gắn mù, không căn cứ, không lượt hai.
+  // Lát có khai ô: chỉ các ô của lát, không căn cứ, không lượt hai; gắn mù trừ lát trong LAT_KHAI_O_CO_NHAP (HT21, có nháp).
   const oLat = oCuaLat(lat)
   const dsO = oLat ? oLat.flatMap((f) => TAT_CA_O.filter((d) => d.id === f)) : TAT_CA_O
   // Lát mẫu soát (DO1): điền sẵn nháp máy của cách đọc hiện; người giữ hay sửa từng ô rồi lưu.

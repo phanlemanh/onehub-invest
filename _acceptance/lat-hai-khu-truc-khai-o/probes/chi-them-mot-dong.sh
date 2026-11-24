@@ -4,9 +4,10 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 cd "$ROOT"
 BASE="$(git merge-base HEAD origin/main)"
-TAM="$ROOT/app/src/lib/.ht21-goc-$$.ts"
-trap 'rm -f "$TAM"' EXIT
-git show "$BASE:app/src/lib/labels-normalize.ts" > "$TAM"
+# Bản của nhánh chính chép ra thư mục tạm (không ghi cạnh mã thật); import tương đối trỏ về tệp thật.
+THU="$(mktemp -d -t ht21-goc)"; TAM="$THU/labels-normalize.ts"
+trap 'rm -rf "$THU"' EXIT
+git show "$BASE:app/src/lib/labels-normalize.ts" | sed "s#from \"\./#from \"$ROOT/app/src/lib/#g" > "$TAM"
 cd app && node --import tsx -e '
   const [goc, moi] = await Promise.all([import(process.argv[1]), import("./src/lib/labels-normalize.ts")]);
   const a = goc.O_THEO_LAT, b = moi.O_THEO_LAT;
