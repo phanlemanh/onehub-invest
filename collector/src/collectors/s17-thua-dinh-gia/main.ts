@@ -103,7 +103,8 @@ export function parseCli(argv: string[]): CliOptions {
 
 /** Vai mà pha này sẽ gọi — kiểm đủ đường trong cấu hình local TRƯỚC khi gửi lời nào. */
 export function rolesOfPhase(phase: Phase, checkBalance: boolean): Role[] {
-  return checkBalance ? [...PHASE_ROLES[phase], "asset-type", "balance"] : [...PHASE_ROLES[phase]];
+  // Pha có phiên còn cần hai vai đối chiếu (kiểm phiên, công khai) và số dư.
+  return checkBalance ? [...PHASE_ROLES[phase], "asset-type", "data-available", "balance"] : [...PHASE_ROLES[phase]];
 }
 
 /** Kiểm cấu hình đủ cho pha này TRƯỚC khi gửi lời nào: đường của mọi vai, và tên cookie phiên nếu pha cần phiên. */

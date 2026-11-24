@@ -19,6 +19,7 @@ const FAKE_CONFIG = {
     "asset-type": "/v2.x/asset-type",
     "data-available": "/v2.x/data-available",
     balance: "/v2.x/balance",
+    gallery: "/v2.x/gallery/{id}",
   },
 };
 
@@ -160,24 +161,39 @@ test("401: dừng vì hết phiên, mọi lời sau không gửi", async () => {
   assert.equal(sent.length, 1);
 });
 
-test("lời cần phiên lỗi mạng mà lời công khai vẫn chạy: tính là hết phiên", async () => {
-  // Nguồn trả 401 không kèm CORS nên trong trang chỉ thấy lỗi mạng; đối chiếu với một lời công khai.
+test("lời cần phiên lỗi mạng, lời kiểm phiên cũng lỗi mà lời công khai vẫn chạy: tính là hết phiên", async () => {
+  // Nguồn trả 401 không kèm CORS nên trong trang chỉ thấy lỗi mạng. Muốn biết phiên chết thì phải hỏi
+  // chính một lời cần phiên — hỏi lời công khai thì không phân biệt được với «riêng bản ghi này lỗi».
   const { client, sent } = makeClient((_i, url) => {
-    if (url.endsWith("/data-available")) throw new TypeError("Failed to fetch");
+    if (url.endsWith("/data-available") || url.includes("/projects?")) throw new TypeError("Failed to fetch");
     return json({ status: true, data: [] });
   });
-  const e = await client.getJson("data-available", {}).then(() => null, (x: unknown) => x);
+  const e = await client.getJson("project-list", { page: 0 }).then(() => null, (x: unknown) => x);
   assert.equal(reasonOf(e), "session-expired");
-  assert.deepEqual(sent, ["https://api.gia.test/v2.x/data-available", "https://api.gia.test/v2.x/asset-type"], "một lời phiên + một lời công khai đối chiếu");
+  assert.deepEqual(sent, ["https://api.gia.test/v2.x/projects?page=0", "https://api.gia.test/v2.x/data-available", "https://api.gia.test/v2.x/asset-type"], "một lời phiên + một lời kiểm phiên + một lời công khai đối chiếu");
 });
 
-test("lỗi mạng cả hai: thử lại sau 5s, 15s, 30s rồi trả lỗi tạm, không dừng lượt", async () => {
+test("lời cần phiên lỗi mạng mà phiên vẫn sống: thử lại một lần sau 5s rồi tính là lỗi của riêng bản ghi, không dừng lượt", async () => {
+  // Lượt thật 24/11 14:23: một lời thư viện ảnh lỗi mạng, bộ thu đoán nhầm là hết phiên và dừng cả lượt ở 1.690/2.508.
+  const { client, sent, slept } = makeClient((_i, url) => {
+    if (url.includes("/gallery/")) throw new TypeError("Failed to fetch");
+    return json({ status: true, data: [] });
+  });
+  const e = await client.getJson("gallery", { id: 7 }).then(() => null, (x: unknown) => x);
+  assert.ok(e instanceof TemporaryFailure, `phải là lỗi của riêng bản ghi, nhận ${String(e)}`);
+  assert.equal(sent.filter((u) => u.includes("/gallery/")).length, 2, "hai lần thử lời ấy");
+  assert.equal(sent.filter((u) => u.endsWith("/data-available")).length, 2, "mỗi lần hỏi một lời kiểm phiên");
+  assert.equal(sent.length, 4);
+  assert.deepEqual(slept.filter((ms) => ms > 0), [5000]);
+});
+
+test("lời cần phiên lỗi mạng, cả lời kiểm phiên lẫn lời công khai đều lỗi: là mạng, đi hết thang thử lại", async () => {
   const { client, sent, slept } = makeClient(() => {
     throw new TypeError("Failed to fetch");
   });
-  const e = await client.getJson("data-available", {}).then(() => null, (x: unknown) => x);
-  assert.ok(e instanceof TemporaryFailure, `phải là TemporaryFailure, nhận ${String(e)}`);
-  assert.equal(sent.length, 8, "4 lần thử lời phiên, mỗi lần kèm một lời công khai đối chiếu");
+  const e = await client.getJson("gallery", { id: 7 }).then(() => null, (x: unknown) => x);
+  assert.ok(e instanceof TemporaryFailure, `mạng hỏng không được tính là hết phiên, nhận ${String(e)}`);
+  assert.equal(sent.length, 12, "4 lần thử, mỗi lần kèm một lời kiểm phiên và một lời công khai");
   assert.deepEqual(slept.filter((ms) => ms > 0), [5000, 15000, 30000]);
 });
 

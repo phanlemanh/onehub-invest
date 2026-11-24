@@ -43,7 +43,7 @@ const env = (data: unknown) => ({ status: true, message: null, data, pagination:
 const EMPTY_TILE_BYTES = 1784;
 
 /** Nguồn giả: trả theo URL. `override` thay thế phản hồi theo vị trí lời gọi (tính từ 1). */
-function fakeSource(override: Record<number, () => Response> = {}): { client: S17Client; sent: string[] } {
+function fakeSource(override: Record<number, () => Response> = {}, failWhen?: (url: string) => boolean): { client: S17Client; sent: string[] } {
   const sent: string[] = [];
   const answer = (url: string): Response => {
     const u = new URL(url);
@@ -78,6 +78,7 @@ function fakeSource(override: Record<number, () => Response> = {}): { client: S1
       sent.push(url);
       const i = sent.length;
       if (override[i]) return override[i]();
+      if (failWhen?.(url)) throw new TypeError("Failed to fetch");
       return answer(url);
     },
   });
@@ -367,13 +368,31 @@ test("session-check: đúng một lời, trả phiên còn sống", async () => 
   assert.equal(out.alive, true);
 });
 
-test("session-check: lỗi mạng mà lời công khai vẫn chạy → hết phiên, không thử lại", async () => {
-  const { client, sent } = fakeSource({ 1: () => { throw new TypeError("Failed to fetch"); } });
+test("session-check: lời phiên và lời kiểm phiên đều lỗi mạng mà lời công khai vẫn chạy → hết phiên, không thử lại", async () => {
+  // Lời 1 là lời kiểm phiên, lời 2 là lời đối chiếu phiên; cả hai lỗi, rồi một lời công khai đối chiếu là đủ để kết luận.
+  const { client, sent } = fakeSource({ 1: () => { throw new TypeError("Failed to fetch"); }, 2: () => { throw new TypeError("Failed to fetch"); } });
   const r = rig();
   const e = await runPhase({ phase: "session-check", client, writer: new BatchWriter({ root: join(tmpdir(), "s17-khong-ghi"), maxItems: 1, phase: "check" }), ...r.rig, state: r.state }).then(() => null, (x: unknown) => x);
   assert.ok(e instanceof RunStopped && e.reason === "session-expired");
-  assert.equal(sent.length, 2, "một lời phiên + một lời công khai đối chiếu, rồi dừng");
+  assert.equal(sent.length, 3, "một lời phiên + một lời kiểm phiên + một lời công khai đối chiếu, rồi dừng");
 });
+
+test("projects: thư viện ảnh lỗi (phiên vẫn sống) thì vẫn ghi dự án, gallery để null; chi tiết và cây toà mới là bắt buộc", async () => withTmp(async (root) => {
+  // Lượt thật 24/11: thư viện ảnh của một dự án lỗi mạng; không được mất hồ sơ và cây toà của dự án ấy.
+  const { client } = fakeSource({}, (url) => url.includes("/gallery/"));
+  const w = new BatchWriter({ root, maxItems: 100, phase: "projects" });
+  const r = rig();
+  const summary = await runPhase({ phase: "projects", client, writer: w, ...r.rig, state: r.state });
+  await w.flush();
+  const detail = (await readSnapshots(root)).flatMap((x) => x.items).filter((it) => it.kind === "du_an_detail");
+  assert.deepEqual(detail.map((it) => it.sourceId), ["du-an-1", "du-an-3"], "dự án vẫn được ghi");
+  assert.equal(detail[0].payload.gallery, null);
+  assert.equal(typeof detail[0].meta?.galleryLoi, "string");
+  assert.deepEqual(Object.keys(detail[0].payload.detail).sort(), ["data", "extra", "message", "pagination", "status"], "hồ sơ còn nguyên");
+  assert.equal(detail[0].payload.filterOptions.data[0].ten_toa, "A", "cây toà còn nguyên");
+  assert.equal(summary.failed, 1, "chỉ dự án 2 (chi tiết 404) tính là thất bại");
+  assert.deepEqual(r.state.detailDone, ["1", "3"]);
+}));
 
 // ---------- trạng thái chỉ được lưu khi dữ liệu đã xuống đĩa ----------
 

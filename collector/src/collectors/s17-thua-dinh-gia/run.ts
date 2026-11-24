@@ -231,8 +231,19 @@ async function projects(o: RunOptions): Promise<PhaseSummary> {
     try {
       const detail = await o.client.getJson<Envelope>("project-detail", { id });
       const filterOptions = await o.client.getJson<Envelope>("building-tree", { id });
-      const gallery = await o.client.getJson<Envelope>("gallery", { id });
-      await o.writer.add(makeItem("du_an_detail", `du-an-${id}`, { detail, filterOptions, gallery }, { request: { id }, coBangCan: hasApartmentTable(detail) }, at()));
+      // Thư viện ảnh là phần phụ (ảnh không nằm trong mốc ngày 1): lỗi thì vẫn giữ hồ sơ và cây toà,
+      // ghi lý do vào meta.galleryLoi. Chỉ bị chặn hay hết phiên mới dừng cả lượt.
+      let gallery: Envelope | null = null;
+      let galleryLoi: string | undefined;
+      try {
+        gallery = await o.client.getJson<Envelope>("gallery", { id });
+      } catch (e) {
+        if (e instanceof RunStopped) throw e;
+        galleryLoi = e instanceof Error ? e.message : String(e);
+      }
+      await o.writer.add(
+        makeItem("du_an_detail", `du-an-${id}`, { detail, filterOptions, gallery }, { request: { id }, coBangCan: hasApartmentTable(detail), ...(galleryLoi ? { galleryLoi } : {}) }, at()),
+      );
       o.state.detailDone.push(id);
       items++;
     } catch (e) {

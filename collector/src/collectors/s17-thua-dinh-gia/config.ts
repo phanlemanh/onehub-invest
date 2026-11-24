@@ -63,8 +63,10 @@ export const ROLES: Record<Role, RoleSpec> = {
   balance: { host: "agent", query: [], needsSession: true },
 };
 
-/** Vai công khai, nhẹ — dùng đối chiếu khi một lời cần phiên gặp lỗi mạng. */
+/** Vai công khai, nhẹ — đối chiếu khi lời kiểm phiên cũng gặp lỗi mạng. */
 export const PROBE_ROLE: Role = "asset-type";
+/** Vai cần phiên, nhẹ — hỏi đầu tiên khi một lời cần phiên gặp lỗi mạng: chạy được nghĩa là phiên còn sống. */
+export const SESSION_PROBE_ROLE: Role = "data-available";
 
 /** Vai mà mỗi pha của mốc ngày 1 sẽ gọi (không kể lời đối chiếu và số dư). */
 export const PHASE_ROLES: Record<"reference" | "tile-mask" | "projects" | "session-check", readonly Role[]> = {

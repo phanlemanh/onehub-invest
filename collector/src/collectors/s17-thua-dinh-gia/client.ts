@@ -12,7 +12,7 @@
  * Vận chuyển (transport) được tiêm vào: test dùng hàm giả; chạy thật dùng fetch của Node cho phần
  * công khai và fetch trong trang của hồ sơ đăng nhập cho phần cần phiên (phiên không rời trình duyệt).
  */
-import { ConfigError, PROBE_ROLE, ROLES, rolePath, type Role, type S17Config } from "./config.js";
+import { ConfigError, PROBE_ROLE, ROLES, SESSION_PROBE_ROLE, rolePath, type Role, type S17Config } from "./config.js";
 
 export type Response = { status: number; contentType: string; body: string; /** Số byte của thân khi vận chuyển không trả thân chữ (tile ảnh). */ bytes?: number };
 export type Transport = (url: string, headers: Record<string, string>) => Promise<Response>;
@@ -118,19 +118,37 @@ export class S17Client {
     }
   }
 
-  /** Một lời công khai, nhẹ: true khi nguồn vẫn trả (2xx–4xx), false khi lỗi mạng hay 5xx. */
-  private async probe(): Promise<boolean> {
+  /** Gửi một lời đối chiếu, tính vào trần lời gọi. Trả phản hồi hoặc null khi lỗi mạng. */
+  private async sendProbe(role: Role): Promise<Response | null> {
     this.assertRunning();
     await this.o.sleep(this.o.paceMs);
     this.calls++;
     try {
-      const r = await this.o.transport(this.url(PROBE_ROLE, {}), this.headers);
-      return r.status >= 200 && r.status < 500;
+      return await this.o.transport(this.url(role, {}), this.headers);
     } catch {
-      return false;
+      return null;
     }
   }
 
+  /**
+   * Khi một lời cần phiên gặp lỗi mạng, phải hỏi chính một lời cần phiên: nguồn trả 401 không kèm CORS nên
+   * trong trang chỉ thấy lỗi mạng. Lời kiểm phiên chạy được → phiên còn sống, lỗi là của riêng bản ghi.
+   * Lời kiểm phiên cũng lỗi → hỏi tiếp một lời công khai: công khai chạy mà phiên không chạy là HẾT PHIÊN;
+   * cả hai lỗi là mạng hỏng. (Lượt thật 24/11: hỏi mỗi lời công khai nên đoán nhầm hết phiên ở 1.690/2.508.)
+   */
+  private async classifySessionFailure(roleLabel: string): Promise<"session-alive" | "network" | RunStopped> {
+    if (await this.sendProbe(SESSION_PROBE_ROLE)) return "session-alive";
+    if (await this.sendProbe(PROBE_ROLE)) return this.stop("session-expired", `lời cần phiên "${roleLabel}" và lời kiểm phiên đều lỗi mạng trong khi lời công khai vẫn chạy`);
+    return "network";
+  }
+
+  /**
+   * Gửi một lời, giữ trần và nhịp, phân loại kết quả:
+   * - 403, 429 → dừng cả lượt (bị chặn); 401 → hết phiên; 2xx–4xx còn lại → trả cho người gọi xử lý;
+   * - lỗi mạng hoặc 5xx: lời cần phiên được đối chiếu phiên trước (classifySessionFailure). Phiên còn sống
+   *   thì lỗi là của RIÊNG bản ghi: thử lại một lần sau 5 s rồi trả lỗi tạm. Mạng hỏng thì thử lại ba lần
+   *   (5 s, 15 s, 30 s). Mười lỗi tạm liền nhau → dừng cả lượt.
+   */
   private async sendWithRetry(needsSession: boolean, role: string, url: string): Promise<Response> {
     for (let attempt = 0; ; attempt++) {
       this.assertRunning();
@@ -157,15 +175,19 @@ export class S17Client {
         return res;
       }
       // Lỗi mạng hoặc 5xx
-      if (!res && needsSession && (await this.probe())) {
-        throw this.stop("session-expired", `lời cần phiên "${role}" lỗi mạng trong khi lời công khai vẫn chạy`);
+      let ownRecord = false; // phiên vẫn sống: lỗi thuộc về riêng bản ghi này
+      if (!res && needsSession) {
+        const verdict = await this.classifySessionFailure(role);
+        if (verdict instanceof RunStopped) throw verdict;
+        ownRecord = verdict === "session-alive";
       }
-      if (attempt >= RETRY_WAITS_MS.length) {
+      const retriesAllowed = ownRecord ? 1 : RETRY_WAITS_MS.length;
+      if (attempt >= retriesAllowed) {
         this.consecutiveFailures++;
         if (this.consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
           throw this.stop("network-down", `${MAX_CONSECUTIVE_FAILURES} lời thất bại liền nhau`);
         }
-        throw new TemporaryFailure(`vai "${role}" lỗi ${res ? `HTTP ${res.status}` : "mạng"} sau ${RETRY_WAITS_MS.length} lần thử lại`);
+        throw new TemporaryFailure(`vai "${role}" lỗi ${res ? `HTTP ${res.status}` : "mạng"} sau ${attempt} lần thử lại`);
       }
       this.retries++;
     }
