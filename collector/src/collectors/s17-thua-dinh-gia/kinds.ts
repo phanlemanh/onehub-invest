@@ -9,6 +9,17 @@ export function makeItem(kind: string, sourceId: string, payload: unknown, meta:
 }
 
 /**
+ * `status: false` trong envelope là nguồn BÁO LỖI dù HTTP 200 — KHÔNG được đọc là «không có bản ghi» hay «không có
+ * thửa» (lượt soát 24/11: một lỗi mềm như vậy sẽ đánh dấu cả dải id là rỗng mà lượt vẫn báo thành công). Bản ghi rỗng
+ * thật có `status: true` (đo 24/11: 71 byte). Dừng cả lượt, không đoán tiếp.
+ */
+export function assertNoSoftError(body: unknown, noi: string): void {
+  if (body && typeof body === "object" && (body as { status?: unknown }).status === false) {
+    throw new RunStopped("source-error", `nguồn trả status false ở ${noi}: ${String((body as { message?: unknown }).message ?? "").slice(0, 160)}`);
+  }
+}
+
+/**
  * Cơ sở URL của các lớp tile, lấy từ cấu hình đầy đủ của chính nguồn (khoá `boundaries_conf`).
  * Tên lớp = đoạn cuối của đường (ranh_thua, ranh_thua_i, heatmap, du_an, qhxd, qhsdd). Không đoán cứng.
  */

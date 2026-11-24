@@ -88,7 +88,7 @@ async function readItems(root: string) {
 function chay(root: string, state: RunState, ke: ReturnType<typeof nguon>, terms: string[]) {
   const w = new BatchWriter({ root, maxItems: 100, phase: "lowrise" });
   const run = () =>
-    runPhase({ phase: "lowrise", client: ke.client, writer: w, state, save: async () => undefined, log: () => undefined, now: () => new Date("2026-11-24T10:00:00.000Z"), lowriseTerms: terms }).then(async (s) => {
+    runPhase({ phase: "lowrise", client: ke.client, writer: w, state, save: async () => assert.equal(w.pendingCount, 0, "trạng thái chỉ được lưu khi bộ đệm của trình ghi đã rỗng"), log: () => undefined, now: () => new Date("2026-11-24T10:00:00.000Z"), lowriseTerms: terms }).then(async (s) => {
       await w.flush();
       return s;
     });
@@ -110,6 +110,7 @@ test("lowrise: gợi ý theo từ khoá có cờ for_house → gom id namespace 
   const ct = items.filter((it) => it.kind === "du_an_thap_tang");
   assert.deepEqual(ct.map((it) => it.sourceId).sort(), ["du-an-nha-dat-1793", "du-an-nha-dat-1804"], "id 1804 gặp ở hai từ khoá chỉ lấy một lần; id 77 ngoài namespace bị bỏ");
   assert.equal(ct[0].meta.estateType, "du_an_nha_dat");
+  assert.equal(ct[0].meta.phuongPhap, "suggest", "dự án tìm qua từ khoá ghi rõ phương pháp");
   assert.equal(ct[0].payload.json.data.properties.ten_du_an, ct[0].meta.ten, "payload là phản hồi gốc");
   assert.deepEqual([...ct.find((it) => it.sourceId === "du-an-nha-dat-1804")!.meta.tuCacTuKhoa].sort(), ["Furama", "Villa"]);
   assert.ok(ke.daCoh.length === 4 && ke.daCoh.every((x) => x.startsWith("suggest") || x.startsWith("detail:")), "cả gợi ý lẫn chi tiết đều mang cờ for_house");
@@ -187,7 +188,7 @@ function nguonQuet(quet: Quet, o: { many?: boolean; chanId?: number; loiId?: num
 const quet = (root: string, state: RunState, ke: ReturnType<typeof nguonQuet>, sweep: { from: number; to: number }, o: { concurrency?: number; writer?: BatchWriter; log?: (e: Record<string, unknown>) => void } = {}) => {
   const w = o.writer ?? new BatchWriter({ root, maxItems: 100, phase: "lowrise" });
   const run = () =>
-    runPhase({ phase: "lowrise", client: ke.client, writer: w, state, save: async () => undefined, log: o.log ?? (() => undefined), now: () => new Date("2026-11-24T10:00:00.000Z"), lowriseSweep: sweep, concurrency: o.concurrency ?? 1 }).then(async (s) => {
+    runPhase({ phase: "lowrise", client: ke.client, writer: w, state, save: async () => assert.equal(w.pendingCount, 0, "trạng thái chỉ được lưu khi bộ đệm của trình ghi đã rỗng"), log: o.log ?? (() => undefined), now: () => new Date("2026-11-24T10:00:00.000Z"), lowriseSweep: sweep, concurrency: o.concurrency ?? 1 }).then(async (s) => {
       await w.flush();
       return s;
     });

@@ -145,3 +145,38 @@ test("getJsonMany: concurrency ngoài 1–4 hoặc rỗng thì từ chối", asy
   await assert.rejects(ke.client.getJsonMany([task(1)], 5), ConfigError);
   assert.deepEqual(await ke.client.getJsonMany([], 2), []);
 });
+
+test("getJsonMany: nghỉ thử lại xong mà đã quá trần thời gian thì không gửi nữa", async () => {
+  const ke = makeClient(() => json({ status: false }, 503), { many: true, caps: { calls: 100, minutes: 0.1 } });
+  const r = await ke.client.getJsonMany([task(1)], 1);
+  assert.equal(((r[0] as unknown) as { error: RunStopped }).error.reason, "time-cap");
+  // Lần một (t=0) và lần hai (t=5, còn trong trần 6 giây): mỗi lần một lời (5xx có phản hồi nên không hỏi đối chiếu); nghỉ 15 giây → t=20 quá trần.
+  assert.equal(ke.sent.length, 2, "không gửi gì sau khi nghỉ xong đã quá trần");
+});
+
+test("getJsonMany: giữ nhịp trước mỗi lời (kể cả lời kiểm phiên) và đúng thang nghỉ trước mỗi lần thử lại", async () => {
+  let lan = 0;
+  const ke = makeClient(() => {
+    if (++lan === 2) throw new TypeError("Failed to fetch");
+    return json({ status: true, data: { ok: 1 } });
+  }, { many: true, paceMs: 7 });
+  const r = await ke.client.getJsonMany([task(1), task(2), task(3)], 2);
+  assert.deepEqual(r.map((x) => (x.ok ? "ok" : reasonOf(x.error))), ["ok", "ok", "ok"], "lời lỗi được thử lại một lần rồi thành công");
+  assert.deepEqual(ke.slept, [7, 7, 7, 7, 5000, 7], "đợt một: hai nhịp; lời kiểm phiên của lời lỗi: một nhịp; lời thứ ba: một nhịp; thử lại: 5 giây rồi một nhịp");
+});
+
+test("getJsonMany: đang bị chặn giữa đợt mà một lời khác lỗi mạng → không gửi thêm lời kiểm phiên nào; mọi lời nhận lỗi dừng", async () => {
+  const ke = makeClient((url) => {
+    const lat = new URL(url).searchParams.get("latitude");
+    if (lat === "1") return json({ message: "denied" }, 403);
+    if (lat === "2") throw new TypeError("Failed to fetch");
+    return json({ status: true, data: {} });
+  }, { many: true });
+  const r = await ke.client.getJsonMany([task(1), task(2), task(3), task(4)], 2);
+  assert.deepEqual(
+    r.map((x) => (x.ok ? "ok" : reasonOf(x.error))),
+    ["blocked", "blocked", "blocked", "blocked"],
+  );
+  assert.equal(ke.sent.filter((u) => u.includes("/data-available") || u.includes("/asset-type")).length, 0, "không gửi lời kiểm phiên nào sau khi bị chặn");
+  assert.equal(ke.client.calls, 2, "chỉ hai lời của đợt đầu tiên được gửi");
+});

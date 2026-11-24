@@ -1,12 +1,12 @@
 /**
- * Bốn pha của bộ thu S17 (mốc ngày 1, claudedp-2411-20): kiểm phiên · bảng tham chiếu · mặt nạ tile ·
- * dự án (danh sách → chi tiết + cây toà + thư viện ảnh). Trạng thái (`state`) được lưu sau từng bước
+ * Bảy pha của bộ thu S17 (mốc ngày 1 và 2, claudedp-2411-20 và -21): kiểm phiên · bảng tham chiếu · mặt nạ
+ * tile · dự án (danh sách → chi tiết + cây toà + thư viện ảnh) · căn hộ · thửa · dự án thấp tầng. Trạng thái (`state`) được lưu sau từng bước
  * nên dừng giữa chừng rồi chạy lại chỉ làm phần còn lại. Mọi lời gọi đi qua S17Client (trần, dừng khi
  * bị chặn); mọi item đi qua BatchWriter (lô nhỏ, schemaVersion 17).
  */
 import { ConfigError } from "./config.js";
 import { HttpStatusError, RunStopped, TemporaryFailure, type S17Client } from "./client.js";
-import { hasApartmentTable, makeItem, projectIdOf, tileBases } from "./kinds.js";
+import { assertNoSoftError, hasApartmentTable, makeItem, projectIdOf, tileBases } from "./kinds.js";
 import type { BatchWriter } from "./store.js";
 
 export type Phase = "session-check" | "reference" | "tile-mask" | "projects" | "apartments" | "parcels" | "lowrise";
@@ -28,7 +28,7 @@ export type RunState = {
   /** Mốc ngày 2 — toà đã liệt kê xong: "<id dự án>/<toà>" → danh sách mã căn duy nhất. */
   apartmentCodes: Record<string, string[]>;
   /** Mốc ngày 2 — toà đã ghi bản gộp: "<id dự án>/<toà>" → số dòng nguồn công bố cho toà, số lượt quét, có khớp không. */
-  apartmentBuildings: Record<string, { tongDong: number; soLot: number; khop: boolean }>;
+  apartmentBuildings: Record<string, { tongDong: number; soLot: number; khop: boolean; rong?: boolean }>;
   /** Mốc ngày 2 — căn đã có chi tiết, và căn lấy lỗi: "<id dự án>/<mã căn>". */
   apartmentDetailDone: string[];
   apartmentDetailFailed: Record<string, string>;
@@ -45,6 +45,8 @@ export type RunState = {
    * nhịp cũ một luồng, lần hai thì dừng hẳn chờ người quyết.
    */
   blockedRuns: number;
+  /** Số dư đã biết gần nhất (chỉ ở máy): đối chiếu với số dư trước lượt kế, vì lượt dừng giữa chừng không đọc được số sau. */
+  soDuLanCuoi?: number;
   /** Mốc ngày 2 — mã địa chính của thửa đã ghi (khử trùng toàn cục). */
   parcelSeen: string[];
   /** Mốc ngày 2 — điểm đã hỏi hồ sơ: "<khu>|<phương pháp>|lat,lng". */
@@ -80,8 +82,10 @@ export type ParcelStats = {
   soLoi: number;
   soCauGoiY: number;
   soLoiGoiY: number;
+  /** MỌI lời đã dùng cho khu này (cả lượt chạy trước): hồ sơ, gợi ý, lời kiểm phiên, thử lại. */
+  loi: number;
 };
-const parcelStatsRong = (): ParcelStats => ({ soDiemLuoi: 0, soDiemGoiY: 0, soThuaLuoi: 0, soThuaGoiY: 0, soTrung: 0, soKhongCo: 0, soLoi: 0, soCauGoiY: 0, soLoiGoiY: 0 });
+const parcelStatsRong = (): ParcelStats => ({ soDiemLuoi: 0, soDiemGoiY: 0, soThuaLuoi: 0, soThuaGoiY: 0, soTrung: 0, soKhongCo: 0, soLoi: 0, soCauGoiY: 0, soLoiGoiY: 0, loi: 0 });
 
 export function emptyState(): RunState {
   return {
@@ -164,7 +168,7 @@ export function sourceIdSlug(text: string): string {
  * ổn định (mục trôi giữa các trang) nên mã duy nhất có thể thiếu: thiếu thì quét thêm lượt, tối đa
  * MAX_APARTMENT_LOT. Kết quả: số mã duy nhất so với tổng nguồn công bố.
  */
-async function listApartments(o: RunOptions, projectId: string, building: string): Promise<{ codes: string[]; total: number; lots: number; khop: boolean }> {
+async function listApartments(o: RunOptions, projectId: string, building: string): Promise<{ codes: string[]; total: number; lots: number; khop: boolean; rong: boolean }> {
   const at = () => (o.now ?? (() => new Date()))().toISOString();
   const size = o.apartmentPageSize ?? 100;
   const unique = new Set<string>();
@@ -177,6 +181,7 @@ async function listApartments(o: RunOptions, projectId: string, building: string
     while (page < totalPages) {
       const request = { thap: building, text: building, project_id: projectId, page, size };
       const body = await o.client.getJson<ApartmentListEnvelope>("apartment-list", request);
+      assertNoSoftError(body, `lời liệt kê căn của toà ${building} (dự án ${projectId})`);
       const content = body?.data?.content ?? [];
       totalPages = Number(body?.data?.totalPages ?? 0);
       total = Number(body?.data?.totalElements ?? 0);
@@ -201,9 +206,12 @@ async function listApartments(o: RunOptions, projectId: string, building: string
     }
     // Hết lượt: khớp thì dừng. Một lượt KHÔNG thêm được mã nào nghĩa là thiếu mã là có hệ thống (dòng
     // trùng trong chính lời liệt kê, đo 24/11), không phải trôi trang — quét nữa cũng vô ích.
-    if (unique.size >= total || (lots >= 2 && fresh === 0)) break;
+    // Liệt kê không trả dòng nào, hoặc không có mã nào, KHÔNG phải «khớp»: 0 = 0 là chứng minh rỗng (lượt soát 24/11).
+    const coDuLieu = total > 0 && unique.size > 0;
+    if (!coDuLieu || unique.size >= total || (lots >= 2 && fresh === 0)) break;
   }
-  return { codes: [...unique], total, lots: Math.min(lots, MAX_APARTMENT_LOT), khop: unique.size === total };
+  const khop = total > 0 && unique.size > 0 && unique.size === total;
+  return { codes: [...unique], total, lots: Math.min(lots, MAX_APARTMENT_LOT), khop, rong: !khop && unique.size === 0 };
 }
 
 type Envelope<T = unknown> = { status?: boolean; message?: string | null; data?: T; pagination?: unknown; extra?: unknown };
@@ -452,15 +460,26 @@ async function apartments(o: RunOptions): Promise<PhaseSummary> {
       buildings++;
       if (r.khop) buildingsKhop++;
       o.state.apartmentCodes[key] = r.codes;
-      o.state.apartmentBuildings[key] = { tongDong: r.total, soLot: r.lots, khop: r.khop };
+      o.state.apartmentBuildings[key] = { tongDong: r.total, soLot: r.lots, khop: r.khop, rong: r.rong };
       await commit(o);
       o.log({ suKien: "toa-liet-ke", duAn: projectId, toa: building, tongDong: r.total, maDuNhieu: r.codes.length, soLot: r.lots, khop: r.khop, chungMinh: isProof });
-      if (isProof && !r.khop && !o.listOnly) {
-        throw new RunStopped("proof-failed", `toà ${building} của dự án ${projectId}: ${r.codes.length} mã duy nhất trên tổng ${r.total} nguồn công bố sau ${r.lots} lượt quét`);
-      }
-      // Chỉ đánh dấu «đã chứng minh» khi thực sự khớp (chế độ chỉ liệt kê không cổng nhưng cũng không tính là chứng minh).
-      if (isProof && r.khop) o.state.apartmentProved = true;
     }
+    // Cổng chứng minh đứng SAU cả hai đường (vừa liệt kê hay đã có trong trạng thái). Lượt soát 24/11: cổng nằm trong
+    // nhánh «chưa có» nên chạy lại sau proof-failed đi thẳng vào lấy căn (0 lời liệt kê, 4 căn, trả ok).
+    // Chế độ chỉ liệt kê không có cổng nhưng cũng không được tính là chứng minh.
+    if (!isProof || o.listOnly) return;
+    const toa = o.state.apartmentBuildings[key];
+    if (!toa.khop) {
+      const soMa = o.state.apartmentCodes[key]?.length ?? 0;
+      throw new RunStopped(
+        "proof-failed",
+        toa.rong
+          ? `toà ${building} của dự án ${projectId}: lời liệt kê không trả dòng nào (tổng nguồn công bố ${toa.tongDong}) — không có gì để chứng minh`
+          : `toà ${building} của dự án ${projectId}: ${soMa} mã duy nhất trên tổng ${toa.tongDong} nguồn công bố sau ${toa.soLot} lượt quét`,
+      );
+    }
+    // Chỉ đánh dấu «đã chứng minh» khi thực sự khớp.
+    o.state.apartmentProved = true;
   };
 
   for (const projectId of projectIds) {
@@ -571,6 +590,7 @@ async function parcels(o: RunOptions): Promise<PhaseSummary> {
     const con = diem.filter(([lat, lng]) => !o.state.parcelPointDone.includes(diemKey(khu.khuVucId, phuongPhap, lat, lng)));
     for (let i = 0; i < con.length; i += PARCEL_CHUNK) {
       const part = con.slice(i, i + PARCEL_CHUNK);
+      const mocDot = o.client.calls;
       const ketQua = await o.client.getJsonMany<Envelope>(
         part.map(([latitude, longitude]) => ({ role: "parcel-profile" as const, params: { loaiTimKiem: "nha_pho", latitude, longitude } })),
         concurrency,
@@ -590,6 +610,12 @@ async function parcels(o: RunOptions): Promise<PhaseSummary> {
           o.state.parcelLoi[key] = r.error.message;
           o.state.parcelPointDone.push(key);
           continue;
+        }
+        try {
+          assertNoSoftError(r.value, `hồ sơ thửa ở toạ độ ${lat},${lng}`);
+        } catch (e) {
+          dung = e as RunStopped; // lỗi mềm của nguồn: không được đọc là «không có thửa»
+          break;
         }
         if (phuongPhap === "grid") st.soDiemLuoi++;
         else st.soDiemGoiY++;
@@ -632,6 +658,7 @@ async function parcels(o: RunOptions): Promise<PhaseSummary> {
         }
         o.state.parcelPointDone.push(key);
       }
+      st.loi += o.client.calls - mocDot; // mọi lời của đợt này: hồ sơ, lời kiểm phiên, thử lại
       await commit(o); // phần đã xong trong đợt này được chốt và ghi nhận trước khi báo dừng
       if (dung) throw dung;
     }
@@ -648,6 +675,7 @@ async function parcels(o: RunOptions): Promise<PhaseSummary> {
       if (!duongMoi.length) break;
       const diemMoi = new Map<string, [number, number]>();
       for (const term of duongMoi) {
+        const moc = o.client.calls;
         try {
           const body = await o.client.getJson<Envelope>("parcel-suggest", { term, size: 50 });
           const muc = listOf(body?.data).flatMap((g) => listOf((g as { items?: unknown }).items));
@@ -669,13 +697,14 @@ async function parcels(o: RunOptions): Promise<PhaseSummary> {
           failed++;
           o.state.parcelLoi[`${khu.khuVucId}|goi-y|${term}`] = e instanceof Error ? e.message : String(e);
         }
+        st.loi += o.client.calls - moc;
         o.state.parcelStreetDone.push(`${khu.khuVucId}|${term}`);
         await commit(o);
       }
       await hoiHoSo(khu, "suggest", [...diemMoi.values()]);
       o.log({ suKien: "thua-goi-y", khuVuc: khu.khuVucId, vong, soDuong: duongMoi.length, soDiemMoi: diemMoi.size });
     }
-    const tongLoi = st.soDiemLuoi + st.soDiemGoiY + st.soCauGoiY;
+    const tongLoi = st.loi; // MỌI lời đã dùng cho khu này, kể cả lượt chạy trước: không bỏ ra điểm lỗi, lời kiểm phiên, thử lại
     const soThua = st.soThuaLuoi + st.soThuaGoiY;
     await o.writer.add(
       makeItem(
@@ -768,6 +797,12 @@ async function lowrise(o: RunOptions): Promise<PhaseSummary> {
           loiDot++;
           continue;
         }
+        try {
+          assertNoSoftError(r.value, `chi tiết thấp tầng id ${id}`);
+        } catch (e) {
+          dung = e as RunStopped; // lỗi mềm của nguồn: không được đọc là «id rỗng»
+          break;
+        }
         const d = r.value?.data as { estate_type?: unknown; properties?: { ten_du_an?: unknown } } | null | undefined;
         if (d === null || d === undefined) {
           khongCo++;
@@ -795,6 +830,7 @@ async function lowrise(o: RunOptions): Promise<PhaseSummary> {
     if (o.state.lowriseTermsDone.includes(term)) continue;
     try {
       const body = await o.client.getJson<Envelope>("project-suggest", { term, for_house: "true", size: 50 });
+      assertNoSoftError(body, `gợi ý thấp tầng theo từ khoá «${term}»`);
       const muc = listOf(body?.data).flatMap((g) => listOf((g as { items?: unknown }).items));
       const thapTang = muc.filter((m) => (m as { source?: unknown }).source === LOWRISE_NAMESPACE && String((m as { id?: unknown }).id ?? "").trim());
       ngoai += muc.length - thapTang.length;
@@ -827,7 +863,7 @@ async function lowrise(o: RunOptions): Promise<PhaseSummary> {
         failed++;
       } else {
         const ten = String(((body?.data as { properties?: { ten_du_an?: unknown } } | null)?.properties)?.ten_du_an ?? "");
-        await o.writer.add(makeItem("du_an_thap_tang", `du-an-nha-dat-${id}`, { json: body }, { request: { id, for_house: "true" }, estateType: estate, ten, tuCacTuKhoa: [...(o.state.lowriseTermsOf[id] ?? [])] }, at()));
+        await o.writer.add(makeItem("du_an_thap_tang", `du-an-nha-dat-${id}`, { json: body }, { request: { id, for_house: "true" }, phuongPhap: "suggest", estateType: estate, ten, tuCacTuKhoa: [...(o.state.lowriseTermsOf[id] ?? [])] }, at()));
         o.state.lowriseDone.push(id);
         items++;
       }

@@ -249,6 +249,69 @@ test("yêu cầu dừng giữa một đợt nhiều lời: phần chưa gửi c�
   assert.deepEqual(r2.map((x) => (x.ok ? "ok" : (x.error as RunStopped).reason)), ["operator-stop", "operator-stop", "operator-stop"]);
 });
 
+test("lời kiểm phiên trả 403 → dừng cả lượt là BỊ CHẶN và đếm bị chặn; không gửi thêm lời (lượt soát 24/11: phản hồi của lời kiểm phiên chưa bao giờ được phân loại)", async () => {
+  const { client, sent } = makeClient((_i, url) => {
+    if (new URL(url).pathname.endsWith("/data-available")) return json({ message: "denied" }, 403);
+    throw new TypeError("Failed to fetch");
+  });
+  const e = await client.getJson("gallery", { id: 7 }).then(() => null, (x: unknown) => x);
+  assert.ok(e instanceof RunStopped, String(e));
+  assert.equal(e.reason, "blocked");
+  assert.equal(client.blocks, 1);
+  assert.equal(sent.length, 2, "lời chính và một lời kiểm phiên; dừng ngay");
+});
+
+test("lời kiểm phiên trả 429 → bị chặn; 401 → hết phiên; trang HTML → bị chặn (trang thử thách)", async () => {
+  const thuong = (phanHoi: Response) => makeClient((_i, url) => {
+    if (new URL(url).pathname.endsWith("/data-available")) return phanHoi;
+    throw new TypeError("Failed to fetch");
+  });
+  const a = thuong(json({ message: "slow down" }, 429));
+  assert.equal(((await a.client.getJson("gallery", { id: 7 }).catch((x: unknown) => x)) as RunStopped).reason, "blocked");
+  assert.equal(a.client.blocks, 1);
+  const b = thuong(json({}, 401));
+  assert.equal(((await b.client.getJson("gallery", { id: 7 }).catch((x: unknown) => x)) as RunStopped).reason, "session-expired");
+  const c = thuong({ status: 200, contentType: "text/html", body: "<html>captcha</html>" });
+  assert.equal(((await c.client.getJson("gallery", { id: 7 }).catch((x: unknown) => x)) as RunStopped).reason, "blocked");
+  assert.equal(c.client.blocks, 1);
+});
+
+test("lời kiểm phiên trả 5xx → không kết luận được gì về phiên: đi thang thử lại như mạng hỏng, không dừng oan là hết phiên", async () => {
+  const { client, sent } = makeClient((_i, url) => {
+    const duong = new URL(url).pathname;
+    if (duong.endsWith("/data-available")) return json({}, 503);
+    if (duong.endsWith("/asset-type")) return json({});
+    throw new TypeError("Failed to fetch");
+  });
+  const e = await client.getJson("gallery", { id: 7 }).then(() => null, (x: unknown) => x);
+  assert.ok(e instanceof TemporaryFailure, `phải là lỗi tạm của riêng bản ghi, nhận ${String(e)}`);
+  assert.equal(sent.some((u) => u.includes("/asset-type")), false, "lời kiểm phiên 5xx không dẫn tới kết luận hết phiên");
+  assert.equal(sent.filter((u) => u.includes("/gallery")).length, 4, "đi hết ba lần thử lại như mạng hỏng — nếu coi 5xx là phiên còn sống thì chỉ thử lại một lần (2 lời)");
+});
+
+test("nghỉ thử lại xong mà đã quá trần thời gian thì KHÔNG gửi nữa (lượt soát 24/11: lời gửi ở giây 64,5 với trần 60 giây)", async () => {
+  let t = 0;
+  const sent: string[] = [];
+  const client = new S17Client({
+    config: loadConfig(JSON.stringify(FAKE_CONFIG)),
+    caps: { calls: 100, minutes: 0.1 },
+    paceMs: 0,
+    now: () => t,
+    sleep: async (ms) => {
+      t += ms;
+    },
+    transport: async (url) => {
+      sent.push(url);
+      return json({}, 503);
+    },
+  });
+  // 0,1 phút = 6 giây: lỗi ở t=0 → nghỉ 5 giây → gửi lần hai ở t=5 (còn trong trần) → lỗi → nghỉ 15 giây → t=20: quá trần.
+  const e = await client.getJson("project-list").then(() => null, (x: unknown) => x);
+  assert.ok(e instanceof RunStopped, String(e));
+  assert.equal(e.reason, "time-cap");
+  assert.equal(sent.length, 2, "không gửi lần thứ ba sau khi nghỉ xong đã quá trần");
+});
+
 test("10 lỗi tạm liên tiếp: dừng lượt", async () => {
   const { client } = makeClient(() => {
     throw new TypeError("Failed to fetch");

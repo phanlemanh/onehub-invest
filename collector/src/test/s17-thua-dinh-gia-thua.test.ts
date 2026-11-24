@@ -124,6 +124,7 @@ function chay(root: string, state: RunState, ke: Ke, parcels: ParcelArea[], o: {
       writer: w,
       state,
       save: async () => {
+        assert.equal(w.pendingCount, 0, "trạng thái chỉ được lưu khi bộ đệm của trình ghi đã rỗng");
         saves++;
       },
       log: () => undefined,
@@ -274,3 +275,30 @@ test("sourceIdSlug: ASCII, không dấu, ổn định", () => {
   assert.equal(sourceIdSlug("Nguyễn Du / Lê Lợi"), "nguyen-du-le-loi");
   assert.match(sourceIdSlug("Đặng Văn Bạch"), /^[a-z0-9-]+$/);
 });
+
+test("hai khu thí điểm: mỗi khu hỏi lưới của MÌNH rồi gợi ý theo tên đường gặp trong khu mình; mỗi khu một bản gộp; thửa gặp ở cả hai khu chỉ ghi một lần", async () => withTmp(async (root) => {
+  const ke = nguon({
+    taiDiem: {
+      "1,1": { ogc: "100", duong: "Hàng Đào", soTo: "1", soThua: "2", dienTich: 50 },
+      "2,2": { ogc: "200", duong: "Lý Thường Kiệt", soTo: "3", soThua: "4", dienTich: 60 },
+      "1.5,1.5": { ogc: "300", duong: "Trần Hưng Đạo", soTo: "5", soThua: "6", dienTich: 70 },
+    },
+    goiY: { "Hàng Đào": [{ lat: 3, lng: 3 }], "Lý Thường Kiệt": [{ lat: 1, lng: 1 }] },
+  });
+  const state = emptyState();
+  const a: ParcelArea = { ...khu([[1, 1]]), khuVucId: "vn-hanoi-hoan-kiem" };
+  const b: ParcelArea = { ...khu([[2, 2], [1.5, 1.5]]), khuVucId: "vn-hcmc-an-phu-o-thu-diem" };
+  await chay(root, state, ke, [a, b]).run();
+  const items = await readItems(root);
+  assert.deepEqual(items.filter((it) => it.kind === "thua").map((it) => it.sourceId).sort(), ["thua-100", "thua-200", "thua-300"], "ba thửa, mỗi thửa một item dù thửa 100 gặp lại ở khu hai qua gợi ý");
+  assert.deepEqual(items.filter((it) => it.kind === "thua_goi_y").map((it) => it.sourceId), [
+    "goi-y-vn-hanoi-hoan-kiem-hang-dao",
+    "goi-y-vn-hcmc-an-phu-o-thu-diem-ly-thuong-kiet",
+    "goi-y-vn-hcmc-an-phu-o-thu-diem-tran-hung-dao",
+  ]);
+  const gop = items.filter((it) => it.kind === "thua_khu_vuc");
+  assert.deepEqual(gop.map((it) => it.sourceId), ["khu-vuc-vn-hanoi-hoan-kiem", "khu-vuc-vn-hcmc-an-phu-o-thu-diem"]);
+  assert.deepEqual([gop[0].payload.soThuaLuoi, gop[0].payload.soCauGoiY, gop[0].payload.soDiemGoiY], [1, 1, 1]);
+  assert.deepEqual([gop[1].payload.soThuaLuoi, gop[1].payload.soCauGoiY, gop[1].payload.soDiemGoiY, gop[1].payload.soTrung], [2, 2, 1, 1]);
+  assert.deepEqual(state.parcelKhuDone, ["vn-hanoi-hoan-kiem", "vn-hcmc-an-phu-o-thu-diem"]);
+}));

@@ -82,7 +82,7 @@ test("countSnapshots: tóm tắt căn hộ và thửa của mốc ngày 2 (toà 
   ]);
   // codes đếm theo số mã thật trong payload.maCan (fixture mỗi toà một mã); rows là tổng dòng nguồn công bố.
   assert.deepEqual(c.apartmentBuilding, { total: 2, khop: 1, codes: 2, rows: 1238 }, "toà khớp: 719/719; toà P9 501/519 không khớp");
-  assert.deepEqual(c.apartmentDetail, { ok: 2, mismatch: 1 });
+  assert.deepEqual(c.apartmentDetail, { ok: 2 }, "chỉ bản khớp mã mới được ghi vào kho; mục không khớp (nếu có) không đếm là «đã lấy»");
   assert.deepEqual(c.parcel, { grid: 2, suggest: 1, areas: 1, areaKm2: 0.5, calls: 8, perKm2: 4, callsPerKm2: 16 }, "mật độ tính theo thửa tìm được bằng lưới (2 thửa / 0,5 km²)");
 });
 

@@ -33,7 +33,9 @@ export type StopReason =
   | "proof-failed"
   | "fast-after-block"
   | "blocked-twice"
-  | "operator-stop";
+  | "operator-stop"
+  | "another-run"
+  | "source-error";
 
 export class RunStopped extends Error {
   constructor(
@@ -144,16 +146,38 @@ export class S17Client {
     }
   }
 
-  /** Gửi một lời đối chiếu, tính vào trần lời gọi. Trả phản hồi hoặc null khi lỗi mạng. */
-  private async sendProbe(role: Role): Promise<Response | null> {
+  /**
+   * Gửi một lời đối chiếu, tính vào trần lời gọi. "ok": nguồn trả JSON bình thường (2xx–4xx); "fail": lỗi mạng;
+   * "unknown": 5xx, không kết luận được gì về phiên. Phản hồi của lời kiểm phiên CŨNG được phân loại — 403, 429, trang
+   * thử thách là bị chặn, 401 là hết phiên (lượt soát 24/11: lời kiểm phiên trả 403 vẫn bị coi là «phiên còn sống»,
+   * lượt gửi thêm 40 lời sau khi nguồn bắt đầu từ chối, và khoá tăng tốc không bao giờ bật).
+   */
+  private async sendProbe(role: Role): Promise<"ok" | "fail" | "unknown"> {
     this.assertRunning();
     await this.o.sleep(this.o.paceMs);
+    this.assertRunning(); // nghỉ nhịp xong có thể đã có yêu cầu dừng hoặc đã quá trần
     this.calls++;
+    let res: Response | null = null;
     try {
-      return await this.o.transport(this.url(role, {}), this.headers);
+      res = await this.o.transport(this.url(role, {}), this.headers);
     } catch {
-      return null;
+      res = null;
     }
+    return this.phanLoaiKiem(role, res);
+  }
+
+  private phanLoaiKiem(role: Role, res: Response | null): "ok" | "fail" | "unknown" {
+    if (!res) return "fail";
+    if (res.status === 403 || res.status === 429) {
+      this.blocks++;
+      throw this.stop("blocked", `nguồn trả ${res.status} ở lời kiểm phiên "${role}"`);
+    }
+    if (res.status === 401) throw this.stop("session-expired", `nguồn trả 401 ở lời kiểm phiên "${role}"`);
+    if (!/json/i.test(res.contentType)) {
+      this.blocks++;
+      throw this.stop("blocked", `lời kiểm phiên "${role}" trả trang không phải JSON (${res.contentType || "không rõ kiểu"})`);
+    }
+    return res.status < 500 ? "ok" : "unknown";
   }
 
   /**
@@ -163,8 +187,10 @@ export class S17Client {
    * cả hai lỗi là mạng hỏng. (Lượt thật 24/11: hỏi mỗi lời công khai nên đoán nhầm hết phiên ở 1.690/2.508.)
    */
   private async classifySessionFailure(roleLabel: string): Promise<"session-alive" | "network" | RunStopped> {
-    if (await this.sendProbe(SESSION_PROBE_ROLE)) return "session-alive";
-    if (await this.sendProbe(PROBE_ROLE)) return this.stop("session-expired", `lời cần phiên "${roleLabel}" và lời kiểm phiên đều lỗi mạng trong khi lời công khai vẫn chạy`);
+    const phien = await this.sendProbe(SESSION_PROBE_ROLE);
+    if (phien === "ok") return "session-alive";
+    if (phien === "unknown") return "network"; // 5xx ở lời kiểm phiên: không nói được gì về phiên, đi thang thử lại như mạng hỏng
+    if ((await this.sendProbe(PROBE_ROLE)) === "ok") return this.stop("session-expired", `lời cần phiên "${roleLabel}" và lời kiểm phiên đều lỗi mạng trong khi lời công khai vẫn chạy`);
     return "network";
   }
 
@@ -228,6 +254,7 @@ export class S17Client {
     for (let attempt = 0; ; attempt++) {
       this.assertRunning();
       await this.waitBefore(attempt);
+      this.assertRunning(); // nghỉ thử lại xong có thể đã quá trần thời gian hoặc đã có yêu cầu dừng
       this.calls++;
       let res: Response | null = null;
       let loiMang = "";
@@ -321,11 +348,12 @@ export class S17Client {
           }
           try {
             this.assertRunning();
+            await this.waitBefore(attempts.get(idx) ?? 0);
+            this.assertRunning(); // nghỉ thử lại xong có thể đã quá trần thời gian hoặc đã có yêu cầu dừng
           } catch (e) {
             out[idx] = { ok: false, error: e as Error };
             continue;
           }
-          await this.waitBefore(attempts.get(idx) ?? 0);
           this.calls++;
           wave.push(idx);
         }

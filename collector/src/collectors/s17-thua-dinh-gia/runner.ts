@@ -4,7 +4,7 @@
  * và log Ở MÁY. Dùng chung cho hai đường vận chuyển: fetch của Node (phần công khai) và fetch trong
  * trang của hồ sơ đăng nhập (phần cần phiên — ego.ts).
  */
-import { appendFileSync, existsSync } from "node:fs";
+import { appendFileSync, closeSync, existsSync, openSync, readFileSync, unlinkSync, writeSync } from "node:fs";
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { S17Client, RunStopped, type Caps, type Response, type StopReason, type Transport, type TransportMany } from "./client.js";
@@ -56,6 +56,12 @@ export const DEFAULT_PACE_MS = 350;
  * trình duyệt, vẫn sống thêm khoảng 40 s và tranh tab với lượt kế (đo 24/11 18:09).
  */
 export const STOP_FILE = "DUNG";
+/**
+ * Tệp khoá của một lượt đang chạy, trong thư mục trạng thái: một thư mục trạng thái chỉ MỘT lượt một lúc (hai lượt
+ * cùng ghi `state.json` đè tiến độ và cả số lần bị chặn của nhau). Tạo với cờ `wx` nên chỉ một lượt giành được;
+ * ghi pid của lượt. Khoá của tiến trình đã chết là khoá mồ côi, lượt kế dọn và lấy lại.
+ */
+export const LOCK_FILE = "DANG-CHAY.lock";
 /** Nhịp nhanh nhất được phép khi tăng tốc (Mạnh 24/11). */
 export const MIN_PACE_MS = 150;
 
@@ -131,6 +137,51 @@ async function readBalanceOrStop(client: S17Client, when: "trước" | "sau"): P
   }
 }
 
+const conSong = (pid: number): boolean => {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (e) {
+    return (e as NodeJS.ErrnoException).code === "EPERM"; // tiến trình sống nhưng không phải của mình
+  }
+};
+
+function acquireRunLock(path: string): void {
+  for (let lan = 0; lan < 3; lan++) {
+    try {
+      const fd = openSync(path, "wx");
+      writeSync(fd, JSON.stringify({ pid: process.pid, luc: new Date().toISOString() }));
+      closeSync(fd);
+      return;
+    } catch (e) {
+      if ((e as NodeJS.ErrnoException).code !== "EEXIST") throw e;
+      let pid: unknown;
+      try {
+        pid = (JSON.parse(readFileSync(path, "utf8")) as { pid?: unknown }).pid;
+      } catch {
+        pid = undefined;
+      }
+      if (typeof pid === "number" && conSong(pid)) {
+        throw new RunStopped("another-run", `thư mục trạng thái đang được một lượt khác giữ (${LOCK_FILE}, pid ${pid}) — một thư mục trạng thái chỉ một lượt một lúc`);
+      }
+      try {
+        unlinkSync(path); // khoá mồ côi
+      } catch {
+        /* lượt khác vừa dọn giúp */
+      }
+    }
+  }
+  throw new RunStopped("another-run", `thư mục trạng thái đang được lượt khác giữ (${LOCK_FILE})`);
+}
+
+function releaseRunLock(path: string): void {
+  try {
+    unlinkSync(path);
+  } catch {
+    /* đã sạch */
+  }
+}
+
 export async function executePhase(o: ExecOptions): Promise<ExecResult> {
   const env = o.env ?? realEnv;
   const state = await loadState(o.statePath);
@@ -148,6 +199,7 @@ export async function executePhase(o: ExecOptions): Promise<ExecResult> {
         : null;
 
   const stopPath = join(dirname(o.statePath), STOP_FILE);
+  const lockPath = join(dirname(o.statePath), LOCK_FILE);
   const client = new S17Client({
     config: o.config,
     transport: o.transport,
@@ -164,9 +216,22 @@ export async function executePhase(o: ExecOptions): Promise<ExecResult> {
   const base = () => ({ snapshots: [...writer.snapshotIds], calls: client.calls, blocks: client.blocks });
   let balanceBefore: number | undefined;
   let balanceAfter: number | undefined;
+  let giuKhoa = false;
   try {
     if (khoaTangToc) throw khoaTangToc; // trả về như mọi lần dừng khác, không gửi lời nào
-    if (o.checkBalance) balanceBefore = await readBalanceOrStop(client, "trước");
+    // Một thư mục trạng thái chỉ MỘT lượt một lúc.
+    acquireRunLock(lockPath);
+    giuKhoa = true;
+    if (o.checkBalance) {
+      balanceBefore = await readBalanceOrStop(client, "trước");
+      // Lượt trước có thể dừng trước khi đọc được số sau → đối chiếu với số dư đã biết gần nhất.
+      const daBiet = state.soDuLanCuoi;
+      if (daBiet !== undefined && balanceBefore < daBiet) {
+        throw new RunStopped("balance-spent", `số dư trước lượt (${balanceBefore}) thấp hơn số dư đã biết gần nhất (${daBiet})`);
+      }
+      if (daBiet !== undefined && balanceBefore > daBiet) log({ suKien: "so-du-cao-hon", tu: daBiet, len: balanceBefore });
+      state.soDuLanCuoi = balanceBefore;
+    }
     const summary = await runPhase({
       phase: o.phase,
       client,
@@ -191,8 +256,10 @@ export async function executePhase(o: ExecOptions): Promise<ExecResult> {
     if (o.checkBalance) {
       balanceAfter = await readBalanceOrStop(client, "sau");
       assertBalanceUnchanged(balanceBefore ?? NaN, balanceAfter);
+      state.soDuLanCuoi = balanceAfter;
     }
     await writer.flush();
+    await save();
     log({ suKien: "ket-qua", ok: true, started, finished: env.now().toISOString(), ...summary, calls: client.calls, blocks: client.blocks, balanceBefore, balanceAfter });
     return { ok: true, summary, ...base(), balanceBefore, balanceAfter };
   } catch (e) {
@@ -212,9 +279,15 @@ export async function executePhase(o: ExecOptions): Promise<ExecResult> {
       balanceAfter,
     });
     if (e instanceof RunStopped) {
-      // Một lần bị chặn (403, 429) được ghi vào trạng thái để khoá tăng tốc ở các lượt sau.
-      if (e.reason === "blocked") {
-        state.blockedRuns = (state.blockedRuns ?? 0) + 1;
+      if (giuKhoa) {
+        // Một lần bị chặn (403, 429) được ghi vào trạng thái để khoá tăng tốc ở các lượt sau. Nguồn trả 403/429 mà
+        // không kèm CORS thì trong trang chỉ thấy là lỗi mạng (đo 24/11 với 401) — lượt Nhanh mà mười lời thất bại
+        // liền cũng tính là một lần bị chặn, thận trọng hơn là không bao giờ bật được khoá.
+        if (e.reason === "blocked" || (e.reason === "network-down" && fast)) {
+          state.blockedRuns = (state.blockedRuns ?? 0) + 1;
+        }
+        // Phần đã chốt ở lần chốt khi dừng được ghi nhận SAU khi chốt xong: lượt sau không phải lấy lại.
+        if (o.checkBalance && balanceBefore !== undefined && state.soDuLanCuoi === undefined) state.soDuLanCuoi = balanceBefore;
         await saveState(o.statePath, state);
       }
       if (e.reason === "operator-stop") {
@@ -225,6 +298,8 @@ export async function executePhase(o: ExecOptions): Promise<ExecResult> {
       return { ok: false, stopReason: e.reason, message, ...base(), balanceBefore, balanceAfter };
     }
     throw e;
+  } finally {
+    if (giuKhoa) releaseRunLock(lockPath);
   }
 }
 

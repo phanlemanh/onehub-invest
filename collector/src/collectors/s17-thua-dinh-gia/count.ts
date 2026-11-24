@@ -36,8 +36,8 @@ export type Counts = {
   tile: { provinces: number; scanned: number; withData: number; empty: number; absent: number; error: number } | null;
   /** Mốc ngày 2 — toà đã liệt kê: số toà, số toà khớp tổng dòng, tổng mã duy nhất, tổng dòng. */
   apartmentBuilding: { total: number; khop: number; codes: number; rows: number } | null;
-  /** Mốc ngày 2 — căn đã lấy: mã căn trong phản hồi khớp hay lệch với mã đã gửi. */
-  apartmentDetail: { ok: number; mismatch: number } | null;
+  /** Mốc ngày 2 — căn đã lấy. Chỉ bản khớp mã mới được ghi vào kho; số không gọi trúng nằm ở trạng thái bộ thu, không đếm được từ kho. */
+  apartmentDetail: { ok: number } | null;
   /** Mốc ngày 2 — thửa theo phương pháp và số đo mỗi km² (lấy từ bản gộp khu). */
   parcel: { grid: number; suggest: number; areas: number; areaKm2: number; calls: number; perKm2: number; callsPerKm2: number } | null;
   firstAt: string;
@@ -102,9 +102,8 @@ export function countSnapshots(snaps: SourceSnapshot[]): Counts {
         toa.codes += Array.isArray((it.payload as { maCan?: unknown[] })?.maCan) ? (it.payload as { maCan: unknown[] }).maCan.length : 0;
         toa.rows += num(it.meta?.tongCan);
       } else if (it.kind === "can_ho_detail") {
-        can ??= { ok: 0, mismatch: 0 };
+        can ??= { ok: 0 };
         if (it.meta?.khopMaCan === true) can.ok++;
-        else can.mismatch++;
       } else if (it.kind === "thua") {
         thua ??= { grid: 0, suggest: 0, areas: 0, areaKm2: 0, calls: 0, perKm2: 0, callsPerKm2: 0 };
         if (it.meta?.phuongPhap === "suggest") thua.suggest++;
@@ -153,7 +152,7 @@ function render(c: Counts, kind: string | undefined): string {
     if (kind === "du_an_list" && c.projectIdsUnique !== null) lines.push(`  id dự án duy nhất: ${c.projectIdsUnique} · tổng nguồn công bố: ${c.tongDuAn}`);
     if (kind === "du_an_thap_tang") lines.push(`  dự án thấp tầng: ${c.byKind[kind] ?? 0}`);
     if (kind === "can_ho_toa" && c.apartmentBuilding) lines.push(`  toà: ${c.apartmentBuilding.total} · khớp tổng dòng: ${c.apartmentBuilding.khop} · mã duy nhất: ${c.apartmentBuilding.codes} · dòng: ${c.apartmentBuilding.rows}`);
-    if (kind === "can_ho_detail" && c.apartmentDetail) lines.push(`  khớp mã căn: ${c.apartmentDetail.ok} · lệch mã: ${c.apartmentDetail.mismatch}`);
+    if (kind === "can_ho_detail" && c.apartmentDetail) lines.push(`  khớp mã căn: ${c.apartmentDetail.ok} (chỉ bản khớp mới được ghi; số không gọi trúng nằm ở trạng thái bộ thu)`);
     if (kind === "thua" && c.parcel) lines.push(`  lưới: ${c.parcel.grid} · gợi ý: ${c.parcel.suggest} · khu: ${c.parcel.areas} (${c.parcel.areaKm2} km²) · lời: ${c.parcel.calls} · thửa/km²: ${c.parcel.perKm2} · lời/km²: ${c.parcel.callsPerKm2}`);
     if (kind === "tile_coverage" && c.tile) {
       lines.push(`  tỉnh: ${c.tile.provinces} · điểm quét: ${c.tile.scanned} · có dữ liệu: ${c.tile.withData} · rỗng: ${c.tile.empty} · vắng: ${c.tile.absent} · lỗi: ${c.tile.error}`);

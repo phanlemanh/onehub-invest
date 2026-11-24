@@ -108,6 +108,7 @@ const chay = (root: string, state: RunState, n: Nguon, o: { projects?: string[];
     writer: w,
     state,
     save: async () => {
+      assert.equal(w.pendingCount, 0, "trạng thái chỉ được lưu khi bộ đệm của trình ghi đã rỗng");
       saves++;
     },
     log: () => undefined,
@@ -301,4 +302,28 @@ test("snapshot của pha căn hộ mang dấu hiệu khuôn 2", async () => with
   const dir = join(root, "vn");
   const m = JSON.parse(await readFile(join(dir, (await readdir(dir))[0], "manifest.json"), "utf8"));
   assert.deepEqual(m.coverage.notes, [S17_NOTES]);
+}));
+
+test("chạy lại sau proof-failed: toà chứng minh vẫn không khớp thì dừng lại ở cổng chứng minh, KHÔNG đi vào lấy căn (lượt soát 24/11: lượt hai gửi 0 lời liệt kê, lấy 4 căn, trả ok)", async () => withTmp(async (root) => {
+  const n: Nguon = { toa: ["A"], trang: { A: [[["c1", "c2"]]] }, tong: 5 };
+  const ke = dungNguonTheoLot(n);
+  const state = emptyState();
+  state.apartmentToa["1"] = ["A"];
+  state.apartmentCodes["1/A"] = ["c1", "c2"];
+  state.apartmentBuildings["1/A"] = { tongDong: 5, soLot: 8, khop: false };
+  const e = await chay(root, state, n, { projects: ["1"], prove: "A", client: ke.client }).then(() => null, (x: unknown) => x);
+  assert.ok(e instanceof RunStopped, String(e));
+  assert.equal(e.reason, "proof-failed");
+  assert.equal(ke.sent.filter((u) => u.includes("/apartment-detail")).length, 0, "chưa chứng minh được thì không lấy căn");
+  assert.equal(state.apartmentProved, false);
+}));
+
+test("liệt kê rỗng (0 dòng, 0 mã) KHÔNG được tính là khớp: toà chứng minh dừng với lý do «không có gì để chứng minh»", async () => withTmp(async (root) => {
+  const n: Nguon = { toa: ["A"], trang: { A: [[[]]] }, tong: 0 };
+  const state = emptyState();
+  const e = await chay(root, state, n, { projects: ["1"], prove: "A" }).then(() => null, (x: unknown) => x);
+  assert.ok(e instanceof RunStopped, String(e));
+  assert.equal(e.reason, "proof-failed");
+  assert.match(e.message, /không trả dòng nào/);
+  assert.equal(state.apartmentProved, false, "chứng minh rỗng không phải chứng minh");
 }));

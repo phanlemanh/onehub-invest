@@ -68,7 +68,7 @@ export const PROBE_ROLE: Role = "asset-type";
 /** Vai cần phiên, nhẹ — hỏi đầu tiên khi một lời cần phiên gặp lỗi mạng: chạy được nghĩa là phiên còn sống. */
 export const SESSION_PROBE_ROLE: Role = "data-available";
 
-/** Vai mà mỗi pha của mốc ngày 1 sẽ gọi (không kể lời đối chiếu và số dư). */
+/** Vai mà mỗi pha sẽ gọi (không kể lời đối chiếu và số dư). */
 export const PHASE_ROLES: Record<"reference" | "tile-mask" | "projects" | "session-check" | "apartments" | "parcels" | "lowrise", readonly Role[]> = {
   parcels: ["parcel-profile", "parcel-suggest"],
   lowrise: ["project-suggest", "project-detail"],

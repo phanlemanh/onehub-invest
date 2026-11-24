@@ -1,8 +1,8 @@
 /**
- * Điểm vào của bộ thu S17 (mốc ngày 1, claudedp-2411-20).
+ * Điểm vào của bộ thu S17 (mốc ngày 1 và 2, claudedp-2411-20 và -21).
  *
- *   node collector/dist/collectors/s17-thua-dinh-gia/main.js --phase <reference|tile-mask|projects|session-check>
- *        --snapshots-root <thư mục snapshot> --caps-calls <số> --caps-minutes <số> [--pace-ms 300..400] [--space <id>]
+ *   node collector/dist/collectors/s17-thua-dinh-gia/main.js --phase <reference|tile-mask|projects|session-check|apartments|parcels|lowrise>
+ *        --snapshots-root <thư mục snapshot> --caps-calls <số> --caps-minutes <số> [--pace-ms 150..400] [--space <id>] [--luong-song 1..4]
  *
  * - Trần lời gọi và trần thời gian PHẢI khai mỗi lần chạy; nhịp kẹp trong mức nguồn đã chịu được.
  * - Pha công khai (reference, tile-mask) chạy ngay trong tiến trình này bằng fetch của Node, không mang phiên.
@@ -158,14 +158,15 @@ export function checkConfigForPhase(config: S17Config, o: CliOptions): void {
 /**
  * Nội dung tệp tuỳ chọn chuyển cho tiến trình ego — tách thành hàm để test được. Tiến trình ấy không chạy
  * trong thư mục của người gọi và không thấy biến môi trường của Shell, nên MỌI đường dẫn tệp phải tuyệt đối
- * (lượt thật 24/11: lưới thửa đưa bằng đường tương đối nên tiến trình không mở được). `goc` là gốc gói
- * collector để quy đổi đường tương đối.
+ * (lượt thật 24/11: lưới thửa đưa bằng đường tương đối nên tiến trình không mở được). `goc` là gốc để quy đổi
+ * đường tương đối: mặc định là thư mục GỌI lệnh, đúng chỗ `main()` đọc cùng tệp ấy (lượt soát 24/11: mặc định cũ là
+ * gốc gói collector nên gọi từ gốc kho thì tệp đọc được ở đây mà tiến trình kia không mở được).
  */
 export function egoOptions(
   o: CliOptions,
   config: S17Config,
   paths: { statePath: string; logPath: string; resultPath: string },
-  goc: string = COLLECTOR_ROOT,
+  goc: string = process.cwd(),
 ): Record<string, unknown> {
   const tuyetDoi = (p: string | undefined): string | undefined => (p === undefined ? undefined : resolve(goc, p));
   return {
