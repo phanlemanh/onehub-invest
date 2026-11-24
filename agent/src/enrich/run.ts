@@ -82,6 +82,11 @@ export type RunEnrichOpts = {
   giaoDich?: GiaoDich;
   /** Trần tiền của lượt (MH1 AC-5): lời gọi kế có thể vượt trần thì dừng vòng trước lời gọi ấy, ghi dem.hetTran. */
   tran?: Tran;
+  /**
+   * NB11: chặn tự áp đường corroborated theo LƯỢT GỌI. Vắng → true (chặn; an toàn khi bên gọi mới quên khai). enrich-run (lượt
+   * hằng đêm) khai true tường minh; false chỉ để test giữ hành vi cũ. Lượt đọc toàn bộ không đi qua runEnrich nên không đổi.
+   */
+  chanTuApCanCu?: boolean;
 };
 
 type OfferRow = {
@@ -295,7 +300,7 @@ export async function runEnrich(opts: RunEnrichOpts): Promise<{
       else if (!llmRes.result) dem.llmKhongDoc++;
     }
     const held = await heldFields(c, o.offer_id);
-    const rs = chanTuApCanCu(routeFields({
+    const rsGoc = routeFields({
       current: {
         property_type: o.property_type, bedrooms: o.bedrooms, bathrooms: o.bathrooms,
         street_raw: o.street_raw, block_raw: o.block_raw,
@@ -305,7 +310,8 @@ export async function runEnrich(opts: RunEnrichOpts): Promise<{
       buildings,
       held,
       inferredFields: o.loai_suy ? new Set<EnrichField>(["property_type"]) : undefined,
-    }));
+    });
+    const rs: RoutedDem[] = opts.chanTuApCanCu === false ? rsGoc : chanTuApCanCu(rsGoc);
     routed.push(rs);
     if (opts.dry) continue;
 

@@ -81,6 +81,22 @@ test("E3 AC-3 E1 direct ở lượt đêm vẫn áp", async () => {
   });
 });
 
+test("E5 AC-5 tham số theo lượt gọi: chanTuApCanCu=false giữ đường áp cũ (đối chứng hai phía)", async () => {
+  await withTx(async (c) => {
+    const a = await tin(c);
+    await runEnrich({ client: c, runId: `enrich-nb11-cu`, dry: false, limit: 50, offerIds: [a], chanTuApCanCu: false,
+      llm: llmWith(kq({ property_type: "apartment" })), resolve: resolveWith({ propertyType: "apartment" }) });
+    assert.deepEqual((await deXuat(c, a, "property_type")).map((p) => [p.route, p.status, p.corroborated_by]),
+      [["corroborated", "applied", "e1"]], "tắt chặn thì phải áp như trước");
+    assert.equal((await dongTin(c, a)).property_type, "apartment");
+    const b = await tin(c);
+    await runEnrich({ client: c, runId: `enrich-nb11-vang`, dry: false, limit: 50, offerIds: [b],
+      llm: llmWith(kq({ property_type: "apartment" })), resolve: resolveWith({ propertyType: "apartment" }) });
+    assert.deepEqual((await deXuat(c, b, "property_type")).map((p) => [p.route, p.status]), [["review", "queued"]],
+      "bên gọi không khai thì mặc định chặn");
+  });
+});
+
 test("E6 AC-6 bản chép DB: một lượt đêm ghi 0 dòng applied có corroborated_by", async () => {
   await withTx(async (c) => {
     const { rows } = await c.query(`SELECT offer_id FROM sale_offers

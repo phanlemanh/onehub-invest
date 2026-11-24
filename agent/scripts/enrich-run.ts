@@ -79,6 +79,7 @@ async function main() {
 
   try {
     const { routed, summary, dem, chuyenThe } = await runEnrich({
+      chanTuApCanCu: true, // NB11: lượt hằng đêm không tự áp đề xuất có căn cứ tới khi NB10 làm phiếu độc lập
       client: c, runId, dry: DRY, limit: Number.isFinite(LIMIT) ? LIMIT : 50, offerIds: OFFERS,
       llm, resolve: resolveContext, giaoDich, tran,
     });
