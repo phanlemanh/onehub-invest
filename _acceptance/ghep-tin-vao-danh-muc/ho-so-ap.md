@@ -109,6 +109,20 @@ tệp snapshot không đổi; bài thử không được gắn (chiều đỏ: c
 
 **Đường lùi trên bản chép** (`probes/lui.sh`):
 
+**Lượt 24/11 07:05Z, mã đã ký `2c16483d9`** (bản chép DB máy thu, áp 113 → 118 → 117 → gắn → `lui-117.sql` → so → áp lại), thoát 0, 53 giây:
+
+| Ô | Số |
+|---|---|
+| Lượt gắn đầu | 4.193 / 7.992 tin gắn · 23 xung đột · chèn **48.354** dòng · rút 0 |
+| Sau `lui-117.sql` | 0 dòng sống của bốn `rule_id` (rút 48.354) · view `offer_building` không còn |
+| Bước gắn sau lùi | đúng một dòng `JOB WARN [ghep-toa] chưa áp migration 117, bỏ qua lượt gắn`, không ghi |
+| So về như trước: dấu ngoài hàng (mọi phát biểu `rule_id` khác kể cả đã rút, `offer_project`, tin S03) | trùng trước lượt gắn · 8.813 tin S03 |
+| Áp lại 117 sau lùi | gắn lại đúng 48.354 dòng sống |
+| Chiều đỏ: bản lùi chỉ bỏ view | thoát 1, «sau lùi còn 48354 dòng sống của bốn rule_id» |
+
+Không về đúng như trước ở ba chỗ, có chủ đích (mục 4 «Phần dư»): CHECK trục trường và thân trigger 082 của 117, dòng `ref_lookup`
+`universal_property_id`, và các dòng đã rút vẫn nằm trong bảng (rào chỉ-thêm 045). Số dòng chèn khi áp thật xấp xỉ **48.354**.
+
 Lượt 19/11 (bản mẫu `oneinvest_suite_mau`, chép từ DB máy thu trong 24 giờ), thoát 0:
 
 | Ô | Số |
