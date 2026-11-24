@@ -273,7 +273,7 @@ test("E8 AC-8 đường xử lại skipped của doc-toan-bo không bốc đề 
 test("E9 AC-9 hai câu đếm «quyết» chỉ tính thẻ do người quyết", async () => {
   const dongBang = /THE_DONG_BANG_SQL\s*=\s*"([^"]+)"/.exec(readFileSync(path.join(ROOT, "app/src/lib/ops/review-dong-bang.ts"), "utf8"))[1];
   const nguonTrang = readFileSync(path.join(ROOT, "app/src/lib/ops/review-dau-trang.ts"), "utf8");
-  const viTuTs = /THE_NGUOI_QUYET_SQL = "([^"]+)"/.exec(nguonTrang)[1].replace(/\\\\/g, "\\");
+  const viTuTs = /THE_NGUOI_QUYET_SQL =\s*"([^"]+)"/.exec(nguonTrang)[1];
   assert.equal(viTuTs, THE_NGUOI_QUYET_SQL, "vị từ «thẻ do người quyết» lệch giữa app và báo cáo ngày");
   const DAU_TRANG = /DAU_TRANG_SQL = `([\s\S]*?)`;/.exec(nguonTrang)[1]
     .replace("${KHONG_DONG_BANG_SQL}", `NOT ${dongBang}`).replace("${THE_NGUOI_QUYET_SQL}", viTuTs);

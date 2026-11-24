@@ -6,11 +6,10 @@ import { pool } from "@/lib/db";
 import { KHONG_DONG_BANG_SQL } from "./review-dong-bang";
 
 /**
- * Thẻ do NGƯỜI quyết (NB9): route decide ghi `decided_by = user.id`, mọi mã người dùng mang tiền tố `usr_`. Máy đóng thẻ ghi
- * tên máy (`may:dong-the-theo-luat`, `transform:S0x`, `may-da37`, `dung-nguoi`, `nap-lai-nguoi`, `kich-ban-K1`) — không tính
- * «Đã quyết». Chép NGUYÊN VĂN ở scripts/bao-cao-ngay.mjs (test NB9 E9 so chuỗi).
+ * Thẻ do NGƯỜI quyết (NB9): loại mọi tên máy ghi `decided_by` (`may:…` gồm `may:dong-the-theo-luat`, `transform:S0x`,
+ * `may-da37`, `dung-nguoi`, `nap-lai-nguoi`, `kich-ban-K1`) — tên máy mới phải thêm vào đây. `decided_by` rỗng tính là người. Chép NGUYÊN VĂN ở scripts/bao-cao-ngay.mjs (test NB9 E9 so chuỗi).
  */
-export const THE_NGUOI_QUYET_SQL = "decided_by LIKE 'usr\\_%'";
+export const THE_NGUOI_QUYET_SQL = "NOT (coalesce(decided_by, '') LIKE ANY (ARRAY['may:%', 'transform:%', 'may-da37', 'dung-nguoi', 'nap-lai-nguoi', 'kich-ban-K1']))";
 
 export type DauTrang = { cho: number; quaHan: number; homNay: number };
 

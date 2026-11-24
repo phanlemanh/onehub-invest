@@ -103,8 +103,10 @@ Quét mọi tệp đọc `review_queue` trong `app/src`, `agent/src`, `pipeline`
 
 Tên máy ghi `decided_by` tìm được (DB máy thu `SELECT decided_by, count(*) … GROUP BY 1` 24/11 và quét code): `dung-nguoi` 16,
 `may-da37` 2, `transform:S03` 6, `transform:S05` 2, `nap-lai-nguoi`, `kich-ban-K1` (chỉ trong code), `may:dong-the-theo-luat` (NB9).
-Mã người: `usr_…` 18 thẻ; 0 thẻ đã quyết mà `decided_by` rỗng. Vì vậy vị từ chọn chiều dương `decided_by LIKE 'usr\_%'` — tên máy
-mới về sau tự không được đếm (GS 24/11 gộp việc này vào NB9).
+Mã người: `usr_…` 18 thẻ; 0 thẻ đã quyết mà `decided_by` rỗng. Vị từ là chiều LOẠI danh sách tên máy trên (`NOT (coalesce(decided_by,
+'') LIKE ANY (ARRAY['may:%','transform:%','may-da37','dung-nguoi','nap-lai-nguoi','kich-ban-K1']))`): chiều dương `usr_%` làm đỏ hai
+test có sẵn dựng thẻ người quyết với `decided_by` rỗng (`app/tests/ops-duyet-hop-hang-muc.test.tsx`) hay `hitl:dbs`
+(`app/tests/review-dong-bang.test.tsx`). Giới hạn: tên máy mới phải thêm vào mảng (GS 24/11 gộp việc này vào NB9).
 
 ## Đường đo
 
