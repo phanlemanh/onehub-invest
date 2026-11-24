@@ -38,8 +38,7 @@ LL nêu: gỡ khối canh không có test canh) và bộ kiểm sau áp cho máy
   bên đọc log đang dùng, mang `kev=off`, và log không còn dòng «kev null» hay `skip p=`.
 - AC-4: Given các ca bảo vệ hook đã ký trước (spool rồi phát lại, collector trả 4xx, collector treo, trần 50 tệp spool, khoá
   giữ khi lỗi xác thực, trần thời gian, lỗi tạm thời), When chạy lại trên hook không Kev, Then mọi ca vẫn đạt và hook vẫn chạy
-  tự đủ (không import ngoài) và qua kiểm L1 (không API gửi tin); bộ test của hook chạy với HOME và spool tạm, không ghi
-  log, không đọc khoá, không rút spool trong `~/.openclaw` thật.
+  tự đủ (không import ngoài) và qua kiểm L1 (không API gửi tin).
 - AC-5: Given watchdog `scripts/zalo-watchdog.sh` của nhánh, When soát tĩnh, Then không còn lời gọi, cảnh báo hay thông báo
   nào về `:8009`, nhịp «ok — …» ghi `kev:off (K1)`, cú pháp bash hợp lệ, và lớp L1 vẫn bắt một handler có API gửi tin;
   chèn lại khối canh `:8009` vào bản chép thì chốt đỏ với thông điệp ghim.
@@ -54,6 +53,10 @@ LL nêu: gỡ khối canh không có test canh) và bộ kiểm sau áp cho máy
   số chạy thử · sao lưu trước · cách lùi · lệnh kiểm sau), có dòng khởi động lại gateway kèm «lời riêng của Mạnh» và khung giờ
   cấm áp; mỗi mục có lệnh hay con số thật; và `kiem-sau.sh` chấm đúng tám bộ log mẫu (một ĐẠT, bảy KHÔNG ĐẠT đúng lý do, gồm
   lớp lockdown vỡ) cùng log sinh từ writer thật: hook + watchdog của nhánh → ĐẠT, của main (còn Kev) → KHÔNG ĐẠT đúng lý do.
+- AC-10: Given bộ test của hook (`collector/openclaw/handler.test.mjs`) chạy trên máy thu có `~/.openclaw` thật, When chạy
+  bộ, Then hook trong bộ dùng HOME và spool tạm đặt trước khi import — không ghi log, không đọc khoá, không rút spool trong
+  `~/.openclaw` thật (cỡ log hook thật không đổi qua một lượt); bỏ dòng gán HOME tạm thì bộ dừng trước khi import với thông
+  điệp ghim «HOME tạm không có hiệu lực».
 
 ## Out of scope
 
@@ -79,6 +82,7 @@ LL nêu: gỡ khối canh không có test canh) và bộ kiểm sau áp cho máy
 - Trục bề mặt còn nhắc Kev: mã hook · watchdog · plist · tài liệu hook và runtime-map · Ops/audit/push-ops-facts (ngoài phạm
   vi, KEV2) [thước CE: `git grep -e 8009 -e kev-gate`] — AC-1, AC-5, AC-6, AC-8.
 - Trục áp lên máy thu: trước (sao lưu) · làm (chép + khởi động lại) · kiểm sau · lùi [thước CE: checklist LL 24/11] — AC-9.
+- Trục nơi phép đo chạy: hộp cát HOME tạm · HOME thật của máy thu [thước CE: phát hiện 24/11, 99 dòng giả trong log hook thật] — AC-10.
 
 ## Đường đo
 

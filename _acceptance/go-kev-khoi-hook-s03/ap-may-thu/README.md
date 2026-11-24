@@ -20,7 +20,9 @@ Người làm: phiên ZCode vận hành (ZV) theo lời GIAO triển khai của 
    L=~/dev/onehub-invest/pipeline/logs
    { echo "$G"; wc -c < ~/.openclaw/logs/oneinvest-zalo-pipe.log; wc -c < "$L/zalo-watchdog.log"; wc -c < "$L/zalo-watchdog-alerts.log"; } > /tmp/kev1-moc.txt
    ```
-   Lưu ý: watchdog cắt `zalo-watchdog.log` còn 500 dòng mỗi nhịp — mốc byte của tệp này có thể trôi; mục 5 vì vậy chỉ đọc 3 dòng cuối của nó.
+   Lưu ý: log hook thật đang có 99 dòng `post 202 … kev=off` GIẢ (nhóm `t1`, `conv-*`, `c`; từ 21/11) do bản cũ của
+   `collector/openclaw/handler.test.mjs` chạy với HOME thật — để nguyên, không xoá (không ai sửa `~/.openclaw` ngoài bước áp);
+   bộ kiểm sau áp chỉ đọc phần log sinh SAU mốc byte nên không đếm chúng. Watchdog cắt `zalo-watchdog.log` còn 500 dòng mỗi nhịp — mốc byte của tệp này có thể trôi; mục 5 vì vậy chỉ đọc 3 dòng cuối của nó.
 4. **Cách lùi** (≈1′, không đụng dữ liệu). Hook: `cp "$H/handler.js.bak-$G" "$H/handler.js" && cp "$H/HOOK.md.bak-$G" "$H/HOOK.md"` rồi `launchctl kickstart -k gui/$(id -u)/ai.openclaw.gateway` (cùng lời riêng của Mạnh). Hook cũ chạy được khi không có Kev (fail-open, chỉ thêm «kev null»). Watchdog: `git revert -m 1 <sha commit gộp>` trên một nhánh, PR lùi, gộp, `git -C ~/dev/onehub-invest pull --ff-only origin main`. Không cần dựng lại Kev.
 5. **Lệnh kiểm sau.** Trong 30′ sau bước 1.4, chỉ đọc phần log sinh sau mốc:
    ```bash
