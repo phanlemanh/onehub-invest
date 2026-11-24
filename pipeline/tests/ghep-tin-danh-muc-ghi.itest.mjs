@@ -8,6 +8,8 @@ import { pathToFileURL } from "node:url";
 
 import pg from "pg";
 
+import { sqlNapLaiDayDu } from "../lib/nap-view-song.mjs";
+
 import { writeAssertions } from "../lib/assert.mjs";
 import { NGUON_BAT, RULE, TAT_CA_NGUON } from "../lib/ghep-tin-danh-muc.mjs";
 import { docDauVao, tinhGan } from "../lib/ghep-tin-danh-muc-doc.mjs";
@@ -36,7 +38,10 @@ const baiNguon = (nguon, muc) => [...dau.kq.ketQuaBai].filter(([, x]) => x.nguon
 before(async () => {
   c = new pg.Client({ connectionString: DB_URL });
   await c.connect();
-  for (const t of ["113_thuoc_tinh_can_s16.sql", "118_v_s16_gia_cdt_loai_mo_ho.sql", "117_ghep_toa_tren_tin.sql"]) await c.query(mig(t));
+  // DB chép từ máy thu đã có 117: nạp lại 113 giữ trục phát biểu sống (CHECK của 113 thiếu universal_property_id, sự cố 24/11).
+  for (const t of ["113_thuoc_tinh_can_s16.sql", "118_v_s16_gia_cdt_loai_mo_ho.sql", "117_ghep_toa_tren_tin.sql"]) await c.query(await sqlNapLaiDayDu(c, mig(t)));
+  // DB chép từ máy thu đã có dòng gắn toà của lượt áp thật (24/11): rút chúng trên DB của riêng lượt để lượt đầu đo đúng việc chèn.
+  await c.query(`UPDATE field_assertions SET retracted_at = now(), retract_reason = 'thu-pl20-dau' WHERE retracted_at IS NULL AND rule_id = ANY ($1::text[])`, [[...TAT_CA_NGUON]]);
   dau = await luot();
 });
 after(async () => { await c?.end(); });
