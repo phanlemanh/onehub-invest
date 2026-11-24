@@ -349,7 +349,7 @@ Khoá nối với S16/S08 (chi tiết số đo ở tệp kê local của lượt
 | `gia_ubnd` | `ubnd-<mã quận>` | `{ json }` — bảng đơn giá đất theo vị trí của một quận; `data` rỗng khi quận không có bảng | `request {districtCode, provinceCode}` · `congKhai: true` · `soViTri` |
 | `tile_coverage` | `coverage-<id tỉnh>` (`id` của `areas` cấp market) | `{ tiles: ["z/x/y", …] }` — tile ranh thửa mức 17 CÓ DỮ LIỆU trong số các điểm đã quét của tỉnh; không lưu ảnh | `request {zoom}` · `congKhai: true` · `ten` · `soDiemQuet` · `trong` · `rong` · `vang` · `loi` |
 | `du_an_list` | `trang-<n>` (tính từ 1) | `{ json }` — một trang danh sách dự án: `data.projects.content[]` (mỗi mục có `id`, `estate_type`, `loai_du_an`, `tinh_trang`, `properties`) cùng `totalElements`, `totalPages`; đo 24/11: 2.508 dự án, 26 trang | `request {query, page, size}` · `tongDuAn` · `soTrang` · `soMuc` · `khongId` (mục không có id) |
-| `du_an_detail` | `du-an-<id>` | `{ detail, filterOptions, gallery }` — ba phản hồi gốc của một dự án: hồ sơ, cây lựa chọn toà → tầng → hướng → diện tích, thư viện ảnh | `request {id}` · `coBangCan` (`true` \| `false` \| `null`) |
+| `du_an_detail` | `du-an-<id>` | `{ detail, filterOptions, gallery }` — phản hồi gốc của một dự án: hồ sơ, cây lựa chọn toà → tầng → hướng → diện tích, thư viện ảnh. `gallery` là `null` khi thư viện lấy lỗi (ảnh không nằm trong mốc ngày 1) — hồ sơ và cây toà vẫn đủ | `request {id}` · `coBangCan` (`true` \| `false` \| `null`) · `galleryLoi` (chỉ khi `gallery` là `null`: lý do) |
 | `can_ho_list` *(chưa thu)* | `du-an-<id>-toa-<toà>-trang-<n>` | `{ json }` — một trang liệt kê căn theo toà | `request {project_id, thap, page, size}` |
 | `can_ho_detail` *(chưa thu)* | `du-an-<id>-can-<ma_can>` | `{ json }` — hồ sơ một căn | `request {project_id, ma_can}` · `khopMaCan` |
 | `thua` *(chưa thu)* | `thua-<mã địa chính>` | `{ json }` — hồ sơ thửa theo toạ độ: đa giác ranh giới, kích thước, tiếp giáp đường, đơn giá đất theo trạng thái quy hoạch | `request` · `phuongPhap` (`suggest` \| `grid`) |
@@ -369,9 +369,11 @@ Luật đọc:
 4. `du_an_list`: một dự án = một `id` trong `data.projects.content[]`; id trùng giữa các trang chỉ tính một lần.
    `meta.tongDuAn` là tổng nguồn công bố — đối chiếu với số id duy nhất. Mục danh sách đã mang `properties`: nhiều
    trường của chi tiết có sẵn ở đây.
-5. `du_an_detail`: một item gom ba phản hồi của một dự án. Dự án lấy lỗi không có item; danh sách đó nằm ở trạng thái
+5. `du_an_detail`: một item gom ba phản hồi của một dự án. Đo 24/11: 2.508 item cho 2.508 id của danh sách; 2.043
+   dự án có bảng căn (`coBangCan = true`), 465 không có. Dự án lấy lỗi không có item; danh sách đó nằm ở trạng thái
    bộ thu trên máy thu và được báo trong lượt XONG. `coBangCan = null` khi chi tiết không mang cờ — bên đọc không suy
-   ra `false`. Ảnh dự án CHƯA tải: payload chỉ có link.
+   ra `false`. Thư viện ảnh chỉ là phần phụ của mốc này: lỗi thì `gallery` là `null` và `meta.galleryLoi` ghi lý do;
+   đếm dự án có bảng căn KHÔNG phụ thuộc thư viện. Ảnh dự án CHƯA tải: payload chỉ có link.
 6. **Hai namespace dự án** (`du_an` căn hộ và `du_an_nha_dat` thấp tầng) trùng dải id: khoá dài hạn là cặp
    (namespace, id). Chi tiết thấp tầng cần cờ riêng trên cùng một đường (phát hiện tĩnh từ mã ứng dụng 24/11, chưa đo).
 7. **Tên miền thật có trong payload** (link ảnh, link quyết định, kho ảnh nguồn): raw ở local được phép; `stg_s17_*` thì
