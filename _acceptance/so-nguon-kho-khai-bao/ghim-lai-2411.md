@@ -30,3 +30,5 @@ không chạm tệp test hay transform đó). Tải máy lúc đó 10–11.
 
 Ca xanh khi chạy riêng nhưng dùng 87–89 % trần 480 s trên máy mới (máy mới chậm hơn máy cũ khoảng 1,5 lần), nên khi chạy chung trong
 pipeline_a dưới tải thì vượt trần. Việc nới trần ca là hàng riêng, ngoài hợp đồng NK1.
+
+Sau sửa trần 900 s (chạy riêng, 02:0xZ): ca 7/9 464,9 s ✔, 15/15 pass; dòng lưới «SLT-DC-KHOA lưới máy chủ (ca 7/9): trần 900 s → transaction_timeout 930s».
