@@ -28,6 +28,7 @@ toàn ở OP1 (≈ 37% tin mức toà của OP1); khoảng 30 tin xuống mức 
 |---|---|---|---|
 | Mức của tin ở `offer_building` | toà · vùng · xung đột | 2.830 · 1.402 · 23 | PL36 chỉ đi tiếp từ mức toà |
 | Dạng mã căn trong bài | trục · tầng+căn · khác · không có | 454 · 31 · 24 · 2.337 tin | luật §3 |
+| Mã có dấu ngăn của GP (`S2.05.24.17`) từ chữ bài | bài · mã khác nhau | 76 bài · khoảng 11 mã (47 bài là một tin đăng lặp) | luật §3; ngưỡng và số báo GP đếm theo mã khác nhau |
 | Tiền tố toà trong mã | khớp toà đã gắn · toà khác cùng dự án · không có tiền tố | đo ở chạy khô | luật `toa-lech`, `ma-khong-toa` |
 | Trục trong danh bạ | khớp đúng một · không khớp | 442 · 12 tin | gắn trục |
 | Căn trong danh bạ (trục + tầng) | có · không | đo ở chạy khô | gắn căn |
