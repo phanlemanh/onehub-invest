@@ -7,6 +7,8 @@ import { after, before, test } from "node:test";
 
 import pg from "pg";
 
+import { sqlNapLaiDayDu } from "../lib/nap-view-song.mjs";
+
 const DB_URL = process.env.DATABASE_URL ?? "";
 if (!/\/oneinvest_suite_[a-z0-9_]+$/.test(DB_URL)) throw new Error("ghep-tin-danh-muc-117.itest: cần DATABASE_URL trỏ DB của riêng lượt oneinvest_suite_*");
 
@@ -18,7 +20,8 @@ let c, toa, toaKhac, vungLa, vungLa2, longNhau, tin;
 before(async () => {
   c = new pg.Client({ connectionString: DB_URL });
   await c.connect();
-  for (const t of ["113_thuoc_tinh_can_s16.sql", "118_v_s16_gia_cdt_loai_mo_ho.sql", "117_ghep_toa_tren_tin.sql"]) await c.query(mig(t));
+  // DB chép từ máy thu đã có 117: nạp lại 113 giữ trục phát biểu sống (CHECK của 113 thiếu universal_property_id, sự cố 24/11).
+  for (const t of ["113_thuoc_tinh_can_s16.sql", "118_v_s16_gia_cdt_loai_mo_ho.sql", "117_ghep_toa_tren_tin.sql"]) await c.query(await sqlNapLaiDayDu(c, mig(t)));
   const dong = async (sql, p = []) => (await c.query(sql, p)).rows;
   [toa, toaKhac] = await dong(`SELECT b.building_key, b.upi, v.region_node_id::text AS vung FROM buildings b JOIN v_toa_nut_vung v USING (building_key)
                                  JOIN asset_nodes n ON n.id = v.region_node_id WHERE b.status = 'active' AND n.node_type <> 'project' ORDER BY 1 LIMIT 2`);
