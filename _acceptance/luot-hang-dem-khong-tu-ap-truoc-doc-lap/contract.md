@@ -74,6 +74,21 @@ SELECT run_id, count(*) FILTER (WHERE status='applied' AND corroborated_by IS NO
 
 Trước sửa: trung bình 11,4 dòng tự áp có căn cứ mỗi lượt. Sau: 0.
 
+Số đếm lô đêm đã tự áp (DB máy thu 24/11, `run_id LIKE 'enrich-%'`, 26 lượt 30/10–21/11): 297 = 187 (loại hình × e1) + 108 (toà × e1)
++ 2 (toà × asset_nodes), mọi dòng `status='applied'`, `corroborated_by IS NOT NULL`:
+
+```sql
+SELECT field, split_part(corroborated_by, ':', 1) can_cu, count(*), count(DISTINCT run_id) luot
+  FROM enrichment_proposals WHERE run_id LIKE 'enrich-%' AND route = 'corroborated' AND status = 'applied' GROUP BY 1, 2;
+```
+
+Bằng chứng lượt đọc toàn bộ vẫn tự áp như cũ: E5 vế (4) chạy ca có sẵn «LS1-AC-3» của `agent/tests/doc-toan-bo-db.itest.ts`.
+
+## Bước sau gộp
+
+- GS gỡ `ENRICH_LIMIT=0` (Mạnh cho đặt 03:41Z 24/11 để bộ làm giàu đêm xử 0 tin trong lúc chờ hàng này) — N1 không đụng plist.
+- Đo lượt đêm đầu tiên sau gỡ bằng câu ở «Đường đo»: 0 dòng tự áp có căn cứ.
+
 ## Out of scope
 
 - Phiếu thứ hai độc lập, bỏ đáp án E1 khỏi lời nhắc, ghi tạm có hạn, rút lô 297 giá trị cũ (NB10).
