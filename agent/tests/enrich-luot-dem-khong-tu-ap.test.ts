@@ -31,8 +31,10 @@ const dongTin = async (c: pg.Client, id: string) =>
   (await c.query(`SELECT property_type, block_raw FROM sale_offers WHERE offer_id = $1`, [id])).rows[0];
 const deXuat = async (c: pg.Client, id: string, field: string) =>
   (await c.query(`SELECT * FROM enrichment_proposals WHERE offer_id = $1 AND field = $2 ORDER BY id`, [id, field])).rows;
+// subject_key theo apply_enrichment (066): source || ':' || coalesce(originating_system_key, post_ids[1]) — không phải offer_id.
 const soFa = async (c: pg.Client, id: string) =>
-  Number((await c.query(`SELECT count(*) FROM field_assertions WHERE subject_key = $1`, [id])).rows[0].count);
+  Number((await c.query(`SELECT count(*) FROM field_assertions fa JOIN sale_offers so ON so.offer_id = $1
+    WHERE fa.subject_key = so.source || ':' || coalesce(so.originating_system_key, so.post_ids[1])`, [id])).rows[0].count);
 const theCho = async (c: pg.Client, id: string) =>
   (await c.query(`SELECT evidence FROM review_queue WHERE item_id = $1 AND status = 'pending'`, [`enrich:${id}`])).rows[0];
 

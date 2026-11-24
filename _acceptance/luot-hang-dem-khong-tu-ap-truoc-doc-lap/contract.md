@@ -5,7 +5,7 @@ slug: luot-hang-dem-khong-tu-ap-truoc-doc-lap
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [script]
-status: approved
+status: implemented
 approved_by:
 approved_at:
 veto_state: mo
