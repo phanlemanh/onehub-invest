@@ -467,7 +467,8 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
    lát dọc) · lát đầu = OCP1 · Q4/Q9 (ngữ cảnh nhóm chỉ suy luận, Q4 sửa bởi mục 30; thẻ duyệt không hiện độ tự tin) · M1 = model local mặc
    định, cloud khi số đo cho thấy local không đủ; M3 hoãn tới PH4 · Mạnh và đội gắn nhãn khi PL7 xong · chạy F6 · L0 theo thứ
    tự ZC6 → ZC4 → hook Kev v3. Kèm: **PL3 gộp vào PL23**; **`pipeline/mappings.yaml` là nguồn danh sách trường duy nhất**;
-   C2–C4 cắt cùng lúc, phần UI của PL9 gộp vào C4.
+   C2–C4 cắt cùng lúc, phần UI của PL9 gộp vào C4. *(Sửa 24/11, mục 63: vế «chỉ tự áp ô đã đo» của Q5 thêm lối «ghi tạm, đo
+   sau, có hạn»; tự áp chính thức vẫn cần ô đã đo.)*
 
 20. **Kho tri thức riêng tư đi kèm** (26/10, Mạnh duyệt «đặt tên là onehub-invest-tri-thuc để phân biệt với các kho khác
    và duyệt theo khuyến nghị»): `phanlemanh/onehub-invest-tri-thuc` chỉ phục vụ onehub-invest; khai `tri_thuc` với
@@ -1073,10 +1074,13 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     - **Ca biên** (lên người từng ca ở mọi nấc): máy bỏ trống hoặc trả «không suy ra được»; hai lần đọc độc lập lệch nhau, hoặc
       chữ bài trái thẻ địa chỉ nhóm, hoặc hai nguồn danh bạ lệch; giá trị chưa có tiền lệ (chưa quy được về danh bạ, nguồn hay
       loại căn cứ lần đầu); ca hiếm mà đắt có tên (nối, tách nút danh bạ, gộp hai căn, đổi dự án của cả một nhóm). Điểm tự tin
-      model tự khai không dùng để chia ca (review phân loại §3.1 điều 4).
+      model tự khai không dùng để chia ca (review phân loại §3.1 điều 4). *(Sửa 24/11, mục 63 quyết định 1: ca «chưa quy
+      được về danh bạ» và ô nhóm A dưới ngưỡng lên người theo nhóm, một ứng viên danh bạ hay một kiểu lệch là một quyết
+      định, không mỗi tin một ca.)*
     - **Không đổi:**
       - Luật 7: LLM chỉ phát biểu kèm trích dẫn; ghi dữ liệu qua người hoặc luật xác định. Nấc 3 đi đường «luật xác định» của
-        PL21 (ô đã đo đạt ngưỡng F3), không mở ngoại lệ mới.
+        PL21 (ô đã đo đạt ngưỡng F3), không mở ngoại lệ mới. *(Bổ sung 24/11, mục 63 quyết định 3: ô chưa đo được ghi tạm
+        theo bốn điều kiện; ghi tạm không phải lên nấc.)*
       - Ngưỡng F3 (A 0,95 · B 0,90 · C 0,80, cận dưới Wilson 95%).
       - Mục 50: Mạnh ở cổng; lời riêng cho tiền, cloud, xoá dữ liệu, luật an toàn.
       - Mục 56: K4 và ca khó vẫn lên thẻ từng cặp; mỗi loại căn cứ vẫn do Mạnh duyệt lần đầu.
@@ -1086,6 +1090,8 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
       hệ số bắt lỗi ≥ 0,7, tỉ lệ soát ≥ 70%, 4 tuần không tụt trước nấc 4); cỡ mẫu theo nấc (đề xuất: 75 thẻ mỗi lô ở nấc 2, 30
       thẻ mỗi tuần mỗi ô ở nấc 3); cách ghi «ai bấm Lưu» khi trợ lý thao tác qua phiên Ops của người (đường lưu riêng cho trợ
       lý chạm quyền Ops); xếp ô số WC, toà vào nhóm F3 nào; 232 thẻ «Bổ sung tin» chờ mà không còn đề xuất nối vào là gì.
+      *(Trả lời 24/11, đo lại còn 230 thẻ: đây là thẻ đối chiếu, chưa từng có đề xuất nào — bộ làm giàu dựng thẻ khi tin có
+      đối chiếu lệch: lệch ý định 124, lệch giá 103, lệch diện tích 5. Không đóng theo luật; sang NB5 xử theo nhóm — xem mục 63.)*
     - **Hàng:** đợt `nguoi-o-bien-2111`, cắt ở lượt riêng: NB1 chấm bóng hàng «Bổ sung tin» và chấp thuận lô; NB2 xuất xứ nhãn,
       lớp chờ, thẻ cài lỗi (có migration, T3); NB3 mở PL21 cho một ô; NB4 ngưỡng chạy bóng thẻ luật danh bạ (câu còn mở của
       mục 56), sau MS3. Ngoài đường găng MS3; giám sát xếp dãy.
@@ -1107,6 +1113,81 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
       xoá dữ liệu và việc không lùi được; sửa luật an toàn (tầng A, Zalo, raw snapshot); gateway, plist launchd mới, khởi động
       lại dịch vụ nền, gỡ phanh `ops-apply`, sao lưu ra ngoài máy; vượt trần vòng chấm.
     - **Ghi ở đâu:** `AGENTS.md` mục «Ai quyết gì»; quyết định từng ngày ở sổ trạng thái giám sát trong thư mục đợt.
+
+63. **Phê duyệt bằng máy ở khối lượng lớn: ca chưa chắc theo nhóm, toà như bài viết, ghi tạm đo sau có hạn** (24/11). Căn cứ:
+    audit phân loại và làm giàu sáng 24/11 và phiên tư vấn phê duyệt cùng ngày (chỉ đọc DB máy thu); diễn tiến và bảng rà mâu
+    thuẫn ở trang tri thức của đợt `phe-duyet-may-2411`. Đo 24/11: Hàng duyệt chờ 1.047 thẻ «Bổ sung tin», tuổi trung bình 16
+    ngày, 21 ngày qua người quyết 6 thẻ; bộ làm giàu đã tự ghi 2.290 giá trị (2.180 loại hình, 110 toà) khi luật và model cùng
+    đáp án, ở ô chưa đo, trái mục 19 Q5. Luật «đo xong mới ghi» đứng cạnh một thước chưa có (lớp xuất xứ nhãn NB2 chưa dựng, thẻ
+    cài lỗi bắt 0/35) nên không ô nào lên được nấc và mọi giá trị dồn về người.
+    - **Lời Mạnh, nguyên văn** (24/11, phiên tư vấn phê duyệt):
+      - 01:53Z: «Cho đóng 462 thẻ».
+      - 02:12Z: «Đầu tiên dọn trước. Sau đó sẽ nghĩ về giải pháp vì nếu số lượng volume lớn thì không thể duyệt bằng tay được.»
+      - 02:31Z, đáp đề xuất «ngoài danh bạ thì máy không tự ghi»: «Bản chất danh bạ cũng là nguồn sống cần cải thiện theo thời
+        gian giống như mô hình một ngôi nhà, phân loại và làm giàu,...nên tôi nghĩ Không được cực đoan hoá mà là một tiến trình.»
+      - 02:35Z: «Kiểm lại trước khi tôi chốt và rà soát mô hình phân loại enrich, một ngồi nhà và những quyết định mới nhất xem
+        có điều gì mâu thuẫn thì giải quyết trước khi chốt.»
+      - 02:48Z, đáp đề xuất «dừng tự ghi mới»: «Nếu không tự ghi thì lại kẹt?»
+      - 02:56Z, trả lời ba điểm đã trình kèm khuyến nghị: «Chốt cả ba».
+    - **Dọn thẻ tồn: máy đóng 232 thẻ, không phải 462.** Lời «Cho đóng 462 thẻ» dựa trên mô tả của phiên tư vấn: 232 thẻ mà mọi
+      đề xuất trùng giá trị tin đang có (đúng mục 35 «máy rút thẻ trùng giá trị đang lưu») và 230 thẻ «không còn đề xuất». Hàng
+      đóng thẻ (NB9) đo lại cùng ngày: 230 thẻ ấy là **thẻ đối chiếu chưa từng có đề xuất** (lệch ý định 124, lệch giá 103, lệch
+      diện tích 5; chưa có dòng nhật ký quyết định nào), tức còn điều để quyết. Giám sát phán khoảng 03:10Z cùng ngày, theo hướng
+      hẹp hơn lời đã cho: NB9 chỉ đóng 232 thẻ trùng giá trị, máy
+      ghi lý do, không đổi dữ liệu tin; 230 thẻ đối chiếu sang NB5, xử theo nhóm của quyết định 1 (ba kiểu lệch là ba quyết
+      định) và NB5 ghi lại phán quyết đối chiếu. Câu còn mở của mục 61 về các thẻ này đã có trả lời.
+    - **Quyết định 1, ca chưa chắc xử theo nhóm.** Ô nhóm A dưới ngưỡng và giá trị chưa quy được về danh bạ không sinh mỗi tin
+      một thẻ: một ứng viên danh bạ hoặc một kiểu lệch là một quyết định cho mọi tin cùng nhóm, kể cả tin về sau. Tin vẫn hiện
+      «chưa biết» ở ô đó tới khi có quyết định, trừ quyết định 2. **Sửa mục 61** ở câu ca biên «lên người từng ca» và cột «dưới
+      ngưỡng» nhóm A của F3 (`mo-hinh-pipeline-mot-can-nha.md` §1.2, review phân loại §3.3).
+    - **Quyết định 2, toà và phân khu hiện như bài viết.** Ô toà, phân khu chưa đối chiếu được với danh bạ: trang tin hiện
+      nguyên văn kèm nhãn «theo tin đăng, chưa đối chiếu»; giá trị này không dùng để so sánh giá theo toà và không gắn nút danh
+      bạ. **Sửa** hành vi dưới ngưỡng nhóm A của F3 cho riêng hai ô này. Nhãn mới vào `CONTEXT.md` cùng hàng PL37.
+    - **Quyết định 3, ghi tạm, đo sau, có hạn.** Máy được tự ghi trước khi ô có số đo khi đủ bốn điều kiện: (1) hai phiếu độc
+      lập trùng nhau (luật và model, hoặc hai model khác họ), có trích dẫn; (2) mỗi đợt ghi có mã lô và lệnh rút cả lô; (3) giá
+      trị ghi tạm không tính là «đã đo», không làm căn lên bậc B3; (4) đo bù trong hạn hai tuần bằng lô nhãn có thẻ cài, không
+      đạt hoặc quá hạn thì ô tự tụt và rút lô. Áp ngay cho đường tự ghi đang chạy (không tắt) và là lối chung cho các ô về sau.
+      - *Độc lập, đo 24/11* (giám sát đọc mã, phiên tư vấn đếm trên DB máy thu): 2.290 giá trị đến từ hai đường. Lượt đọc toàn
+        bộ 03–05/11 ghi 1.993 loại hình; model nhận chữ bài đã gạt tên nhóm, không thấy đáp án của luật, nên hai phiếu độc lập.
+        Lượt làm giàu hằng đêm ghi 187 loại hình và cả 110 toà; lời nhắc của nó mang «loại hình từ nhóm» và «mã toà phát
+        hiện» của luật (`agent/src/agents/enrich-text.ts`), nên model trùng luật ở đường này **chưa phải hai phiếu độc lập**,
+        chưa đạt điều kiện (1). Đường hằng đêm đứng từ 23/11.
+      - *NB10 sửa chỗ đó:* phiếu thứ hai phải độc lập — bỏ hai dòng đáp án của luật khỏi lời nhắc và giữ tên dự án, hoặc lấy
+        phiếu thứ hai từ đọc gộp vốn không thấy đáp án của luật; chốt ở S1 của NB10. 297 giá trị của lượt hằng đêm mang mã lô
+        riêng «trước độc lập»; cả hai lô vẫn là ghi tạm chưa đo, lô đo bù quyết giữ hay rút. Giám sát giữ đường không tắt.
+      - *Lượt hằng đêm chờ sửa xong* (Mạnh, 24/11 03:35Z, đáp câu «lượt hằng đêm có được tự ghi tiếp trước khi sửa xong độc
+        lập không»: **«Chờ sửa xong»**; sửa vế «không tắt» ở dòng trên cho riêng lượt này). Lượt làm giàu hằng đêm không tự áp
+        theo đường có căn cứ (model trùng luật, model trùng tên toà của danh bạ) cho tới khi NB10 được áp lên máy thu; trong
+        lúc chờ, các đề xuất ấy đi thẻ và xử theo nhóm (quyết định 1). Lượt đọc toàn bộ không đổi. 297 giá trị đã ghi giữ
+        nguyên, lô đo bù quyết. Hàng NB11 dựng chốt chặn này; NB10 mở lại tự ghi khi phiếu thứ hai đã độc lập.
+      - *Hạn đo bù* tính hai tuần từ ngày NB10 được áp lên máy thu; trước ngày đó chưa có cờ ghi tạm và chưa có cơ chế tự
+        tụt. Thứ tự lô đo bù: lát nhãn có tên toà trước (hiện chưa có bài nhãn nào nối được, thiếu thì 110 toà tự rút), rồi lô
+        khoảng 80 thẻ loại hình.
+      **Sửa mục 19** (Q5 «chỉ tự áp ô đã đo»), luật phân xử 4 và lời hàng PL21. Ghi tạm không phải lên nấc: lên nấc chính thức
+      vẫn là một chữ ký của Mạnh cho từng ô (mục 61).
+    - **Số đo kèm theo** (24/11, so với nhãn do trợ lý nháp và Mạnh duyệt, chưa hiệu chỉnh hệ số bắt lỗi): phần loại hình máy
+      tự ghi nối được với nhãn đúng 56/56 (52 của lượt đọc toàn bộ, 4 của lượt hằng đêm), cần 73 nhãn không sai để cận dưới Wilson
+      đạt 0,95; phần toà tự ghi chưa có bài nhãn
+      nào nối được. Trên toàn bộ tin có nhãn: loại hình 190/196 (cận dưới 93,5%, chưa đạt nhóm A), số phòng ngủ 188/189 (cận
+      dưới 97,1%, đạt ngưỡng số của nhóm B). Ô đầu tiên xin lên nấc là số phòng ngủ; số WC chờ sửa lời nhắc.
+    - **Không đổi:**
+      - Luật 7 và danh sách «không bao giờ quá nấc 1» của mục 61; tầng A.
+      - Ba model đọc tin của đường ống (mục 33); model lớn chỉ làm thước và trợ lý trong phiên (mục 41 Q4, mục 61). Lần đọc thứ
+        hai trên đường ống dùng model khác họ trong ba model đó.
+      - Thước mở cổng: nhãn người duyệt nháp kèm hệ số bắt lỗi đo bằng thẻ cài (mục 61 quyết định 2).
+      - Không lập thang tin cậy mới: lớp căn cứ của phát biểu và bậc dòng danh mục (xác minh · suy ra mạnh · một lời khai) giữ
+        nguyên; điểm tự tin model tự khai không là căn cứ.
+      - Nút ứng viên danh bạ chỉ nối tin và lên Invest sau thẻ luật hoặc người duyệt (mục 44, DA18); lời khai từ tin vẫn ngoài
+        phạm vi «duyệt theo loại căn cứ» của mục 56.
+      - «Không tự nuôi» (ADR-0016): giá trị tin thừa hưởng từ thẻ nhóm hay danh bạ không đếm làm bằng chứng cho ứng viên danh bạ.
+      - Nối vào danh bạ là luật xác định, làm sau khi có tin (mục 41, PL20); model chép nguyên văn kèm trích.
+    - **Để ngoài, chưa quyết:** kênh người dùng báo sai trên cổng Invest (đụng tầng A về hồ sơ người dùng); mục danh bạ tự lên
+      bậc từ tin (chờ DA18 có số); nhà phố và đất nền (mục 22 giữ nguyên).
+    - **Hàng** (bản phạm vi `docs/plan/pham-vi-phe-duyet-may-2411.md`): NB11 `luot-hang-dem-khong-tu-ap-truoc-doc-lap` (T2,
+      làm trước) · NB10 `ghi-tam-do-sau-co-han` (T3) · PL37
+      `hien-toa-phan-khu-nguyen-van` (T2). Sửa lời: NB3 (ô đầu là số phòng ngủ), NB5 (xử theo nhóm, theo kiểu lệch), PL21 (thêm
+      lối ghi tạm), DA18 (chỉ đếm giá trị đọc từ chính bài). Việc của Mạnh, ngoài hàng: một buổi duyệt lô đo bù khoảng 80 thẻ
+      loại hình có trộn thẻ cài lỗi và một lát nhãn có tên toà.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
