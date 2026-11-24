@@ -43,3 +43,45 @@ wall: 4923s
 - **claude-sonnet-5-5**: 7 agent · 22 calls · out 23,135 · in 44 · cache_read 567,885 · cache_create 296,498
 - **claude-opus-5-5**: 3 agent · 19 calls · out 12,165 · in 38 · cache_read 702,477 · cache_create 163,626
 
+
+### S4 vòng 2 — wf_94aea8de-c6d (20 agent, 86,114 out-tok)
+
+| label | model | calls | out | in | cache_read | s |
+|---|---|--:|--:|--:|--:|--:|
+| machine:node scripts/suite-neu-doi.mjs pipeline_ | claude-haiku-5-5 | 30 | 29,059 | 60 | 1,606,001 | 2914 |
+| machine:node scripts/suite-neu-doi.mjs pipeline_ | claude-haiku-5-5 | 17 | 17,390 | 34 | 771,047 | 1515 |
+| baseline:diffBase | claude-sonnet-5-5 | 3 | 7,618 | 6 | 91,168 | 200 |
+| synthesize:report | claude-sonnet-5-5 | 2 | 6,827 | 4 | 46,401 | 39 |
+| review:conventions | claude-opus-5-5 | 10 | 4,531 | 20 | 477,299 | 51 |
+| review:bugs | claude-opus-5-5 | 8 | 4,027 | 16 | 358,866 | 44 |
+| review:measurement | claude-opus-5-5 | 3 | 2,751 | 6 | 81,982 | 28 |
+| machine:node scripts/suite-neu-doi.mjs app_ui -- | claude-haiku-5-5 | 2 | 2,701 | 4 | 3,381 | 612 |
+| triage | claude-sonnet-5-5 | 2 | 2,458 | 4 | 36,037 | 20 |
+| machine:node scripts/suite-neu-doi.mjs app -- 'c | claude-haiku-5-5 | 2 | 1,387 | 4 | 36,872 | 29 |
+| machine:node scripts/suite-neu-doi.mjs agent -- | claude-haiku-5-5 | 2 | 1,006 | 4 | 36,860 | 175 |
+| machine:node scripts/suite-neu-doi.mjs portal_st | claude-haiku-5-5 | 2 | 932 | 4 | 36,870 | 7 |
+| machine:bash _acceptance/luot-hang-dem-khong-tu- | claude-haiku-5-5 | 2 | 830 | 4 | 36,877 | 74 |
+| machine:bash _acceptance/luot-hang-dem-khong-tu- | claude-haiku-5-5 | 2 | 795 | 4 | 36,877 | 74 |
+| machine:node scripts/suite-neu-doi.mjs ui_lint_r | claude-haiku-5-5 | 2 | 794 | 4 | 36,874 | 5 |
+| machine:bash _acceptance/luot-hang-dem-khong-tu- | claude-haiku-5-5 | 2 | 749 | 4 | 36,877 | 74 |
+| machine:bash _acceptance/luot-hang-dem-khong-tu- | claude-haiku-5-5 | 2 | 694 | 4 | 36,877 | 76 |
+| machine:bash _acceptance/luot-hang-dem-khong-tu- | claude-haiku-5-5 | 2 | 619 | 4 | 36,877 | 84 |
+| machine:bash _acceptance/luot-hang-dem-khong-tu- | claude-haiku-5-5 | 2 | 573 | 4 | 36,877 | 73 |
+| capture:provenance | claude-sonnet-5-5 | 2 | 373 | 4 | 32,231 | 5 |
+
+
+wall: 5322s
+
+| vai tro | agents | out | cache_read | wall s | bat dau | ket thuc |
+|---|--:|--:|--:|--:|---|---|
+| baseline | 1 | 7,618 | 91,168 | 200 | 12:20:01 | 12:23:21 |
+| machine | 13 | 57,529 | 2,749,167 | 5257 | 12:20:01 | 13:47:38 |
+| review | 3 | 11,309 | 918,147 | 73 | 12:20:01 | 12:21:13 |
+| triage | 1 | 2,458 | 36,037 | 20 | 13:47:38 | 13:47:58 |
+| capture | 1 | 373 | 32,231 | 5 | 13:47:58 | 13:48:04 |
+| synthesize | 1 | 6,827 | 46,401 | 39 | 13:48:04 | 13:48:42 |
+
+- **claude-haiku-5-5**: 13 agent · 69 calls · out 57,529 · in 138 · cache_read 2,749,167 · cache_create 535,916
+- **claude-sonnet-5-5**: 4 agent · 9 calls · out 17,276 · in 18 · cache_read 205,837 · cache_create 184,122
+- **claude-opus-5-5**: 3 agent · 21 calls · out 11,309 · in 42 · cache_read 918,147 · cache_create 184,182
+

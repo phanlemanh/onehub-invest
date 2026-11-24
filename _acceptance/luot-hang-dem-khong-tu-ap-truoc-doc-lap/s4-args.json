@@ -1,19 +1,19 @@
 {
-  "generated_at": "2026-11-24T09:05:36Z",
-  "generated_sha": "eaabc80df385156bdaa9cd9090536b565fa6e6eb",
+  "generated_at": "2026-11-24T12:19:15Z",
+  "generated_sha": "a45fc694c9dab087ac240db8c1928386bc7cf5c0",
   "mainBranchInfo": {
     "branch": "main",
     "source": "remote"
   },
   "slug": "luot-hang-dem-khong-tu-ap-truoc-doc-lap",
-  "round": 1,
+  "round": 2,
   "riskTier": "T2",
   "evals": [
     {
       "id": "E1",
       "criterion": "AC-1",
       "cmd": "bash _acceptance/luot-hang-dem-khong-tu-ap-truoc-doc-lap/probes/chay.sh AC-1",
-      "expected": "\"Tin thật thiếu loại hình, E1 giả lập trả 'apartment', LLM giả lập trả 'apartment': đề xuất e2_llm route review, status queued, corroborated_by NULL, evidence.trung_luat='e1'; 0 dòng field_assertions mới cho offer; sale_offers.property_type vẫn NULL; thẻ agent_output chờ của tin có ô property_type. Cấy ngược (bản sao run.ts bỏ đổi route): đỏ với thông điệp «lượt hằng đêm tự áp đề xuất trùng luật: <offer>».\"",
+      "expected": "\"Tin thiếu loại hình, E1 giả lập trả 'apartment', LLM giả lập trả 'apartment': đề xuất e2_llm route review, status queued, corroborated_by NULL, evidence.trung_luat='e1'; 0 dòng field_assertions mới cho offer; sale_offers.property_type vẫn 'unknown' (tin tổng hợp trong giao dịch); thẻ agent_output chờ của tin có ô property_type. Ca có assert.fail «lượt hằng đêm tự áp đề xuất trùng luật: <offer>» khi bất kỳ đề xuất nào applied; chiều đỏ là ca E5 (chanTuApCanCu=false → applied).\"",
       "executor": "script",
       "expectedExit": 0,
       "paths": [
@@ -183,21 +183,23 @@
     "node scripts/suite-neu-doi.mjs ui_lint_rules -- 'cd app && npm run test:lint-rules'",
     "node scripts/suite-neu-doi.mjs portal_static -- 'node scripts/check-portal-compliance.mjs'"
   ],
-  "diffBase": "be765e6a527738d8afbeaf2e88e9e63210bc49f2",
+  "diffBase": "5e85f3d8a1895a152def8bc276a7779975729a01",
   "repoRoot": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/luot-hang-dem-khong-tu-ap-truoc-doc-lap",
   "personasPath": "/Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.37.0/skills/acceptance/references/judge-personas.md",
   "templatePath": "/Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.37.0/skills/acceptance/references/evidence-report-template.md",
   "toolKillRule": "# TOOL-KILL-RULE — lệnh bị công cụ ngắt KHÔNG phải lệnh fail\n\n**Nguồn duy nhất** của luật «hết giờ không phải trượt» cho MỌI đường chạy lệnh\nkiểm của kit. Hai đường tiêu thụ, cùng đọc khối marker dưới đây, không chép tay:\n\n- **Vòng lặp tính năng** (plugin feature-loop): skill `feature-loop` đọc file này\n  (resolve qua `resolve-plugin.mjs --require skills/acceptance/references/tool-kill-rule.md`)\n  và truyền NGUYÊN VĂN vào `args.toolKillRule` của workflow\n  `acceptance-verify.js`; workflow rút khối marker và nội suy vào prompt của mọi\n  agent chạy lệnh (machine · ui-check · baseline). Thiếu args hoặc không rút\n  được marker → workflow trả BLOCKED có tên, không chạy không luật.\n- **Đường VERIFY độc lập** (skill `acceptance` Phase 3): phiên điều phối chép khối\n  marker VERBATIM vào prompt của phiên tươi VERIFY, cùng nếp «Network truth».\n\nVì sao có luật: verifier chạy lệnh qua Bash tool có trần thời gian mặc định\n(~120 s) NGẮN hơn nhiều suite; lệnh bị công cụ giết trả exit code CỦA CÔNG CỤ,\nkhông phải của lệnh (vấp thật release-2-2-0 S4 r5: suite 108 s đơn lẻ, dưới tải\nbị giết ở 118 s → REJECT giả 4 eval). Nhận diện là việc AGENT (nó thấy tool\nresult thật); phần máy chỉ phòng thủ trên field cấu trúc `killedByTool` —\nKHÔNG grep nội dung output trong engine (chuỗi tổng kết là của suite từng repo).\n\nLệnh dài hơn trần 600 s của công cụ thì KHÔNG bị giết: công cụ **đẩy nó sang\nnền** và nó chạy tiếp. Tệp đầu ra nền trống tới phút chót, vì khung bọc lệnh của\nkit chỉ in khi lệnh xong — đọc trống thành «bị giết» là đúng sự cố crm 07/10/2026\n(hồ sơ `lenh-dai-chay-rieng`: hai lượt BLOCKED giả). Dòng «chuyển sang nền» trong\nkhối dưới là lối LỜI cho mọi lệnh. Lối MÁY: eval khai `long_running: <phút>`\ntrong `evals.yaml` thì lượt chấm feature-loop tự chạy lệnh nền, ghi nhật ký ở\n`.acceptance-runs/<slug>/s4-lenh-dai/` và chờ bằng lệnh nó sinh ra\n(`eval-executors.md`, mục `long_running`).\n\n<!-- <<<TOOL-KILL-RULE -->\nTRAN THOI GIAN CONG CU: khi goi Bash chay lenh, LUON dat tham so timeout >= 600000 (ms) — tran mac dinh cua cong cu (~120s) NGAN hon nhieu suite; lenh vuot tran se bi CONG CU giet va exit code luc do la cua cong cu, KHONG phai cua lenh. Neu lenh van bi cong cu dung (tool result bao timeout/killed, hoac output bi CAT giua chung truoc dong tong ket cuoi cua lenh) → DO KHONG PHAI ket qua that: khai cannotRun=true + killedByTool=true + reason \"bi cong cu giet o <so giay> giay\" kem dau hieu (timeout tool / output cat). TUYET DOI khong bao exitCode nhu the lenh tu fail va khong doan PASS/FAIL tu output cut.\nDAU RA DAI: harness co the CAT DAU RA RA TEP (\"Output too large … saved to <tep>\") va chi hien doan DAU — do KHONG phai bi cong cu giet: doc DUOI tep do (tail) de lay dong tong ket va ma thoat; chi khai killedByTool khi tool result bao timeout/killed that.\nCHUYEN SANG NEN KHONG PHAI BI GIET: tool result bao lenh chua xong trong timeout va da duoc CHUYEN SANG NEN (\"moved to the background\", kem ID + tep dau ra) → lenh VAN DANG CHAY: KHONG khai killedByTool, KHONG ket luan tu tep dau ra luc do. Tep dau ra nen TRONG la binh thuong — khung boc lenh chi in duoi dau ra + dong __EXIT=<n> khi lenh XONG. Cho bang lenh Bash co gioi han (moi lan goi ≤ 100 giay, duoi tran mac dinh 120 giay cua cong cu; vd vong lap kiem tep do co dong __EXIT= chua, sleep vai giay, het 100 giay thi thoat) va goi lai toi khi tep co dong __EXIT=<n> → doc ma tu dong do nhu binh thuong. Tong thoi gian cho toi da = so phut eval khai o long_running (vang thi 30 phut), tinh tu luc chay lenh; qua ma chua co dong __EXIT → cannotRun=true + reason \"lenh chay qua <so> phut chua xong — khai long_running: <phut> cho eval trong evals.yaml\" (KHONG killedByTool), va dung tac vu nen neu cong cu cho phep.\n<!-- TOOL-KILL-RULE>>> -->\n\n## Hồ sơ cho lượt bị ngắt (đường độc lập)\n\nPhiên tươi VERIFY gặp lệnh bị công cụ ngắt thì:\n\n- dòng run-log của eval đó: `\"exit_code\": null, \"killed_by_tool\": true` (không\n  ghi mã thoát của công cụ như mã thoát của lệnh);\n- verdict báo cáo `BLOCKED`, `reason: bi cong cu giet o <so giay> giay — <eval ids>`\n  (kèm dấu hiệu: timeout tool / output cắt trước dòng tổng kết); `failed_evals`\n  rỗng — người đọc hồ sơ thấy đây là sự cố hạ tầng, chữa bằng chạy lại với trần\n  công cụ đủ dài, không phải sửa sản phẩm.\n\nLệnh bị đẩy sang nền rồi QUÁ trần chờ (`long_running`, vắng thì 30 phút) cũng\nlà sự cố hạ tầng chứ không phải lệnh hỏng: dòng run-log `\"exit_code\": null`,\n`\"cannot_run\": true` (KHÔNG `killed_by_tool` — công cụ không giết nó), verdict\n`BLOCKED`, reason gọi tên việc cần làm (khai `long_running: <phút>` cho eval).\n",
   "contractPath": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/luot-hang-dem-khong-tu-ap-truoc-doc-lap/_acceptance/luot-hang-dem-khong-tu-ap-truoc-doc-lap/contract.md",
-  "invokedAt": "2026-11-24T09:05:36Z",
-  "invokedSha": "eaabc80df385156bdaa9cd9090536b565fa6e6eb",
+  "invokedAt": "2026-11-24T12:19:15Z",
+  "invokedSha": "a45fc694c9dab087ac240db8c1928386bc7cf5c0",
   "vungVat": [
     "_acceptance/luot-hang-dem-khong-tu-ap-truoc-doc-lap/evals.yaml",
     "_acceptance/luot-hang-dem-khong-tu-ap-truoc-doc-lap/probes/chay.sh",
     "_acceptance/luot-hang-dem-khong-tu-ap-truoc-doc-lap/s4-args.json",
     "agent/scripts/enrich-run.ts",
     "agent/src/enrich/run.ts",
+    "agent/src/enrich/tong-ket.ts",
     "agent/tests/enrich-db.test.ts",
+    "agent/tests/enrich-giao-dich.test.ts",
     "agent/tests/enrich-luot-dem-khong-tu-ap.test.ts"
   ],
   "ngoaiVatGlobs": [
@@ -219,7 +221,11 @@
     "LO-TRINH.html",
     "PRODUCT-MAP.md",
     "_acceptance/luot-hang-dem-khong-tu-ap-truoc-doc-lap/contract.md",
-    "_acceptance/luot-hang-dem-khong-tu-ap-truoc-doc-lap/decisions.jsonl"
+    "_acceptance/luot-hang-dem-khong-tu-ap-truoc-doc-lap/decisions.jsonl",
+    "_acceptance/luot-hang-dem-khong-tu-ap-truoc-doc-lap/evidence-report.md",
+    "_acceptance/luot-hang-dem-khong-tu-ap-truoc-doc-lap/review-findings.md",
+    "_acceptance/luot-hang-dem-khong-tu-ap-truoc-doc-lap/run-log.jsonl",
+    "_acceptance/luot-hang-dem-khong-tu-ap-truoc-doc-lap/usage-report.md"
   ],
   "diffFiles": [
     "LO-TRINH.html",
@@ -227,11 +233,17 @@
     "_acceptance/luot-hang-dem-khong-tu-ap-truoc-doc-lap/contract.md",
     "_acceptance/luot-hang-dem-khong-tu-ap-truoc-doc-lap/decisions.jsonl",
     "_acceptance/luot-hang-dem-khong-tu-ap-truoc-doc-lap/evals.yaml",
+    "_acceptance/luot-hang-dem-khong-tu-ap-truoc-doc-lap/evidence-report.md",
     "_acceptance/luot-hang-dem-khong-tu-ap-truoc-doc-lap/probes/chay.sh",
+    "_acceptance/luot-hang-dem-khong-tu-ap-truoc-doc-lap/review-findings.md",
+    "_acceptance/luot-hang-dem-khong-tu-ap-truoc-doc-lap/run-log.jsonl",
     "_acceptance/luot-hang-dem-khong-tu-ap-truoc-doc-lap/s4-args.json",
+    "_acceptance/luot-hang-dem-khong-tu-ap-truoc-doc-lap/usage-report.md",
     "agent/scripts/enrich-run.ts",
     "agent/src/enrich/run.ts",
+    "agent/src/enrich/tong-ket.ts",
     "agent/tests/enrich-db.test.ts",
+    "agent/tests/enrich-giao-dich.test.ts",
     "agent/tests/enrich-luot-dem-khong-tu-ap.test.ts"
   ],
   "fileDoTrongDiff": [
@@ -240,25 +252,29 @@
     "_acceptance/luot-hang-dem-khong-tu-ap-truoc-doc-lap/s4-args.json",
     "agent/scripts/enrich-run.ts",
     "agent/src/enrich/run.ts",
+    "agent/src/enrich/tong-ket.ts",
     "agent/tests/enrich-db.test.ts",
+    "agent/tests/enrich-giao-dich.test.ts",
     "agent/tests/enrich-luot-dem-khong-tu-ap.test.ts"
   ],
   "coverageFiles": [
     "agent/scripts/enrich-run.ts",
     "agent/src/enrich/run.ts",
+    "agent/src/enrich/tong-ket.ts",
     "agent/tests/enrich-db.test.ts",
+    "agent/tests/enrich-giao-dich.test.ts",
     "agent/tests/enrich-luot-dem-khong-tu-ap.test.ts"
   ],
   "coEvalPaths": true,
-  "evalsHash": "57849c8bd432274cae8a1bb3b2964ace367bb26af110ffd4974e05bb4ef59364",
+  "evalsHash": "dd884957454d9658a34950b2feec00b703710f3cb6b2ce1920d935d78630dea8",
   "runBaseline": true,
   "thuocChup": {
-    "sha": "eaabc80df385156bdaa9cd9090536b565fa6e6eb",
-    "n": 411,
-    "digest": "36b1dcd2c8adcb7400b431102351ddd286a6eb80c81699f8417ca2dbb0d47790",
+    "sha": "a45fc694c9dab087ac240db8c1928386bc7cf5c0",
+    "n": 415,
+    "digest": "043282a9ddddc2bd11599392478e0ea2b206075e398a282e671a99d4248593ec",
     "tep": {
       "_acceptance/config.yaml": "85b03125f91d3ffff2e1affb82dcc26acde45b1f8322cfe2b65e05f28ebac482",
-      "_acceptance/luot-hang-dem-khong-tu-ap-truoc-doc-lap/evals.yaml": "57849c8bd432274cae8a1bb3b2964ace367bb26af110ffd4974e05bb4ef59364",
+      "_acceptance/luot-hang-dem-khong-tu-ap-truoc-doc-lap/evals.yaml": "dd884957454d9658a34950b2feec00b703710f3cb6b2ce1920d935d78630dea8",
       "_acceptance/s03-tran-thoi-gian-luot-nap/ap-may-thu/do-luot-dem.test.sh": "93be8e680f1bcded41bc0637563dfa3d186944f4855603af488614e4ed49cb83",
       "_acceptance/s06-tran-trang/probes/nap-thieu-region.test.mjs": "e42eed6ed1f5bcef425a1df896e835db4d623e258809fb08be0ef3ec79f069c3",
       "_acceptance/s06-tran-trang/probes/tran-mac-dinh.test.mjs": "069d4780fdcc850d123607e91387f9f03cf88958ce1604536a269e18bdf7b53b",
@@ -279,10 +295,10 @@
       "agent/tests/duong-goi-agent.test.ts": "2aa0910eba9f5aecf76cfce2edaa861de9a27f677a8ad2d59203b52d8f12e9cc",
       "agent/tests/enrich-apply.test.ts": "384e1fd2a93252612b20c20b8e409b87ecade1c3c934be80bee35de9b1fc4c76",
       "agent/tests/enrich-db.test.ts": "ed8720d082fcbaaeb88bb6f90b693e03236dd6607829019b259e31dc9720d842",
-      "agent/tests/enrich-giao-dich.test.ts": "e7d9e9378f142d362118cfa0ae651c0df993c5f7110d982faefd4c003e89ab87",
+      "agent/tests/enrich-giao-dich.test.ts": "785fad6be40898efc0534dc8f852bf04bf71f405738f4269b0542261e39769a6",
       "agent/tests/enrich-goi-y.test.ts": "5f3a6ab73797af8dc5c2edb0397965aa475584c4570817505b82a2097bc1691a",
       "agent/tests/enrich-guard.test.ts": "d52db8d5b55a78405638a610d0c9da6db4a551d30f4aa1063e8276fe3bd35a18",
-      "agent/tests/enrich-luot-dem-khong-tu-ap.test.ts": "0a21f4dfe3637aedc5e4054cc6e4b88c038bcd42764e63cc5d2ed7d0bb973862",
+      "agent/tests/enrich-luot-dem-khong-tu-ap.test.ts": "4dc7418fbff74e4d424aa14426af694b0842107f636619ee5af8954d0bf93ed0",
       "agent/tests/enrich-revert.test.ts": "136e145fd9ded16a34ade3d950ffbdbc1fd094b81037598b554eed0b0c23a99e",
       "agent/tests/enrich-route.test.ts": "e86943423a3477ea876f1cf65652c6ea5f8e278b1f071951000bc1cc3d8c410e",
       "agent/tests/goi-thang-anthropic.test.ts": "ead9d0e7f448aca99b9a5e0e7377622f8b5ec748b0e28a0d6d1f20dcf8f94e4e",
@@ -508,7 +524,7 @@
       "pipeline/noi-du-an-s08.test.mjs": "4fbc85ce7eaaa1f9c6591ba2169bfe7aa253e60ccadd94bd25cf5e0bb1b00366",
       "pipeline/parse.test.mjs": "f0ea34fb554f8e2f239a01a5c4b60ed6adfd639734e3189256a1f8766b45a836",
       "pipeline/scripts/airbnb-nghi.test.mjs": "3d65a64e1d87519303b85a7a9af526681133b6404e56a681d3cb0eb0a3684c3e",
-      "pipeline/scripts/assert-rut-thay.test.mjs": "052fc92a4ccc35765b956d5c028fb2752a2ac91530291873fea4236b2423c9cd",
+      "pipeline/scripts/assert-rut-thay.test.mjs": "f3dd505b70d4e789ed0583645dc307da937a19089c93371f1cc38dde0653c65d",
       "pipeline/scripts/backfill-zalo-media.test.mjs": "4949a4141c51d6a443283af1b4026eadf506b177fcd43da9c57851a509413af3",
       "pipeline/scripts/bait-gap-sellers.test.mjs": "27240ac858d6a08747be37700e72096be017ea1c2444386433faef97a67cea96",
       "pipeline/scripts/boc-sdt.test.mjs": "4b8eab2c841ce37e7b5acb8ca69306f64fc90e5b4aacf452cbbc91b592811180",
@@ -534,6 +550,10 @@
       "pipeline/scripts/entrypoint-symlink.test.mjs": "ced4ad1c37f16bb8eb218425ed71dbcb180e364eb1c5fdd4e0a2de938b62939b",
       "pipeline/scripts/eval-classify-ghep.test.mjs": "e76636389363fcc9b8e608682811cdb4e20b1afa55158eedaac5cf1f1ba7b125",
       "pipeline/scripts/gan-sdt-s06.test.mjs": "7c9e37659a94ca91f0cab5e1e393930d015e51c87981df00e6e4c14bbc55131b",
+      "pipeline/scripts/ghep-tin-danh-muc-cham.test.mjs": "f48a1a88dae546e680279cfca0314d85b6e6d632fa0e08cfee1c53ee0e22a2d0",
+      "pipeline/scripts/ghep-tin-danh-muc-doc-bu.test.mjs": "9d1e2069beff69a57947b90696f6ac13751bb12ad2b174fdb320ac86b061e9dd",
+      "pipeline/scripts/ghep-tin-danh-muc-lat-nhan.test.mjs": "fd34b6ce0f754b493a4ee5abbe1e18606d90e73589c7ad72dc08e4017fbba321",
+      "pipeline/scripts/ghep-tin-danh-muc.test.mjs": "e328bb2ad1be9414f222091abc02bda3dffc8e2b3875d43d39e578e55d02abb7",
       "pipeline/scripts/gia-tot-du-an.test.mjs": "97a5be6b2ff7118a8ad1e10fedd7a3c82f84df357140524438f296455fa31957",
       "pipeline/scripts/gia-ty-chan-dong.test.mjs": "028c5945da5a51cf1f492deee8ad86d87ebfad5f3d9b6918666ce8593dd49942",
       "pipeline/scripts/gia-ty-sau-khoang-trang.test.mjs": "23ae41f99b0972ca7da14af8ab873f4d5ea3bc50996b0fef469dc9a9441ee7f1",
@@ -597,7 +617,7 @@
       "pipeline/scripts/va-doc-tin.test.mjs": "cbce328a2a4b339e1a1d884f98dbb5fba1ac39e38abc1636f57883389be6fea4",
       "pipeline/scripts/vn-day.test.mjs": "bf472c3ebb15820f3e37585aea3017d160c3c729306ec92da8e5423da675db7e",
       "pipeline/scripts/vocab-lint.test.mjs": "9c44395149dd70f3f4f11550f7dede945ebe682ee4b3131fad91e861f01a87ae",
-      "pipeline/scripts/vocab.test.mjs": "2f533dad2ea22c3828d38b896697036c48de8cb1509c2c86c65889fc03235d67",
+      "pipeline/scripts/vocab.test.mjs": "49b032e650cebd92b9394b6ebae814cb62e016f8220599527555dea8c6680967",
       "pipeline/scripts/vong-doi.test.mjs": "99f53827168abbcf78a04be9a54ba87519a79fd59263657265d451bbb0d76f05",
       "pipeline/scripts/write-offers.test.mjs": "77ae0829ab754503452b520974190f8d44a216587c9debc82f341e5e7074d114",
       "pipeline/scripts/yeu-cau-ngan-sach.test.mjs": "9f51b8c73041621a5ceb673255e12b78add2363666e617660f0b0926cd04df31",
@@ -671,7 +691,7 @@
     }
   },
   "cayChup": {
-    "sha": "eaabc80df385156bdaa9cd9090536b565fa6e6eb",
+    "sha": "a45fc694c9dab087ac240db8c1928386bc7cf5c0",
     "ban": {},
     "chuaTheoDoi": []
   }
