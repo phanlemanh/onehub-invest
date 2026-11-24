@@ -39,8 +39,8 @@ evals:
     executor: script
     layer: backend-effect
     cmd: bash _acceptance/luot-hang-dem-khong-tu-ap-truoc-doc-lap/probes/chay.sh AC-5
-    paths: [agent/src/enrich/route.ts, agent/src/enrich/doc-toan-bo.ts]
-    expected: "git diff origin/main -- agent/src/enrich/route.ts agent/src/enrich/doc-toan-bo.ts rỗng; agent/tests/enrich-route.test.ts xanh không sửa (routeFields vẫn trả corroborated cho LLM trùng E1)."
+    paths: [agent/src/enrich/route.ts, agent/src/enrich/doc-toan-bo.ts, agent/src/enrich/run.ts, agent/scripts/enrich-run.ts]
+    expected: "Bốn vế: (1) git diff origin/main -- agent/src/enrich/route.ts agent/src/enrich/doc-toan-bo.ts rỗng; (2) agent/tests/enrich-route.test.ts xanh không sửa; (3) ca E5 của enrich-luot-dem-khong-tu-ap.test.ts: chanTuApCanCu=false → corroborated/applied/e1 như cũ, vắng tham số → review/queued; (4) ca LS1-AC-3 của agent/tests/doc-toan-bo-db.itest.ts (lượt đọc toàn bộ) vẫn xanh: đề xuất corroborated trich-dan được áp. enrich-run.ts khai chanTuApCanCu: true (grep)."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E6
     criterion: AC-6

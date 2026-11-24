@@ -38,8 +38,10 @@ gọi `routeFields`) không đổi; `routeFields` không đổi.
   (ô tin đổi, có `field_assertions`).
 - AC-4: Given các nhánh khác của `routeFields` (E1 trái LLM, ô đang giữ chờ người, LLM không căn cứ, ô suy ra), When chạy lượt hằng
   đêm, Then kết quả ghi giống hệt trước khi sửa.
-- AC-5: Given lượt đọc toàn bộ (`doc-toan-bo.ts`) với cùng một ca LLM trùng E1, When chạy, Then đường áp của nó không đổi (hàng này
-  không chạm `doc-toan-bo.ts` hay `routeFields`).
+- AC-5: Given việc chặn đi theo LƯỢT GỌI (tham số `chanTuApCanCu` của `runEnrich`; `enrich-run.ts` khai `true`; vắng → chặn), When
+  `runEnrich` chạy với `chanTuApCanCu: false`, Then đề xuất trùng E1 vẫn `corroborated`/`applied` như cũ; và lượt đọc toàn bộ
+  (`doc-toan-bo.ts`, gọi `routeFields` trực tiếp, không qua `runEnrich`) vẫn áp đề xuất có căn cứ — `routeFields` và `doc-toan-bo.ts`
+  không đổi.
 - AC-6: Given bản chép DB máy thu, When chạy một lượt hằng đêm ở chế độ ghi với model giả lập trả trùng E1 cho mọi tin, Then số dòng
   `enrichment_proposals` của lượt có `status='applied' AND corroborated_by IS NOT NULL` = 0; tổng kết lượt in số đề xuất «có căn cứ
   chờ phiếu độc lập» đã chuyển thẻ.
