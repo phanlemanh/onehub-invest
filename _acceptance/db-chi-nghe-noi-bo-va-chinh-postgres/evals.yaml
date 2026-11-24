@@ -91,3 +91,21 @@ evals:
     question: "Đối chiếu với db/docker-compose.yml: (1) runtime-map có nói DB chỉ nghe 127.0.0.1:5433 và vì sao (audit A1, DB có tầng A), với giá trị cổng trùng compose; (2) có bốn tham số và shm_size trùng compose, kèm câu vì sao đi biến môi trường của ảnh kartoza chứ không command: -c; (3) có lệnh kiểm `bash scripts/check-db-noi-bo.sh live`; (4) có cách đổi tham số — tạo lại container bằng compose, docker restart không sinh lại cấu hình; (5) ap-may-thu.md có đủ năm thứ: lệnh áp, số chạy thử, sao lưu trước, cách lùi, lệnh kiểm sau, cùng khung giờ ngoài lượt job; (6) không câu nào bảo agent tự chạy docker compose up hay khởi động lại colima? Thiếu điều nào hay lệch compose thì FAIL."
     paths: ["docs/ops/runtime-map.md", "_acceptance/db-chi-nghe-noi-bo-va-chinh-postgres/ap-may-thu.md"]
     evidence_required: [verdict, verifier, verified_at]
+
+  - id: E7c
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.suite.pipeline_a
+    long_running: 90
+    paths: [db/**, scripts/**]
+    expected: "exit 0; nửa A bộ test pipeline (suite lượt chấm kéo theo vì nhánh chạm db/ và scripts/; khai ở đây chỉ để có long_running 90 — trên Mac mini nửa A ~41′, vượt trần chờ 30′ mặc định), 0 fail; nhánh mang 70bcecb3a (trần ca SLT-DC-7/9 480 → 900 s)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7d
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.suite.pipeline_b
+    long_running: 90
+    paths: [db/**, scripts/**]
+    expected: "exit 0; nửa B bộ test pipeline (suite lượt chấm, khai ở đây chỉ để có long_running 90), 0 fail."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
