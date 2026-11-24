@@ -72,6 +72,7 @@ Bảng phủ ca, số đếm từ DB máy thu 24/11 (truy vấn chỉ đọc; l�
 |---|---|---|---|
 | Trạng thái thẻ `agent_output` | chờ 1.047 · duyệt 1 · bác 4 · «Để sau» 4 | AC-1 (chỉ thẻ chờ) | `/ops/review` ô «Chờ duyệt» (lọc `pending`) |
 | Đề xuất `queued` trên thẻ chờ | 0 đề xuất: 230 thẻ · ≥ 1: 817 thẻ / 1.121 đề xuất | AC-1 nhóm 1 | NB1 chấm bóng (`cham-bong/doc-db.ts` đọc thẻ chờ JOIN đề xuất `queued`) |
+| Nhóm 1 — vì sao không có đề xuất | cả 230 là thẻ đối chiếu (`run.ts:189`), 0 trường đề xuất, chưa từng có đề xuất trỏ về; đối chiếu ý định 124 · giá 103 · diện tích 5; tạo 03/11 196, 05/11 34 | AC-1, AC-3 (`decision_note` nêu «thẻ đối chiếu, chưa xét») | ô đối chiếu không còn ai xét — báo GS |
 | Nhóm 1 theo đề xuất cùng tin | tin 0 đề xuất 142 · có `applied/corroborated` 60 · `skipped/review` 30 · `applied/direct` 1 | AC-1 (luật không xét đề xuất ngoài thẻ) | — |
 | Ô × trùng/lệch (đề xuất chờ) | loại hình trùng 383 / lệch 235 · PN trùng 47 / lệch 12 / ô tin trống 8 · WC 237 · toà 181 · đường 18 | AC-1, AC-3 | NB5 lô WC; nhóm lệch loại hình (ngoài phạm vi) |
 | Thẻ toàn trùng | 232 thẻ · còn lại 585 thẻ | AC-1 nhóm 2 | Đường găng: ô «Chờ duyệt» 1.047 → ~585 |

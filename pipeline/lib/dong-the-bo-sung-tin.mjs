@@ -13,7 +13,7 @@ export const NHOM = Object.freeze({
   trungGiaTriTin: "trung-gia-tri-tin",
 });
 const LOI_NHOM = {
-  [NHOM.khongConDeXuat]: "thẻ không còn đề xuất nào chờ duyệt",
+  [NHOM.khongConDeXuat]: "thẻ không còn đề xuất nào chờ duyệt (thẻ đối chiếu chưa ai xét thì khối đối chiếu giữ nguyên trong evidence)",
   [NHOM.trungGiaTriTin]: "mọi đề xuất chờ trùng giá trị tin đang có, đề xuất chuyển bỏ qua không áp",
 };
 
