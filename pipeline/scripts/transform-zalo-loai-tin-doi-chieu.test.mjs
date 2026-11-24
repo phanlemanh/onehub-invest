@@ -284,7 +284,9 @@ function demNhomLech(nhom, chuCua) {
 // Trần ca theo thời gian đo (20/11, DB của lượt, sau khi bỏ câu rút bậc hai): máy yên ca 7/9 232 s, ca 10 24 s, cả tệp 278 s;
 // máy đang chạy lượt chấm song song ca 7/9 337 s, ca 10 52 s. Trần ≈ 1,4–2 lần số đo khi có tải. Hết trần thì withTx cắt phiên
 // của ca: khoá 33033 không bị giữ quá trần (hồ sơ slt-dc-cham-va-giu-khoa-33033).
-const TRAN_79 = 480_000;
+// 24/11, máy thu mới (chậm hơn máy cũ ~1,5 lần): chạy riêng tệp ca 7/9 426,6 s và 415,4 s, trong pipeline_a dưới tải vượt 480 s
+// → nới trần ca 7/9 lên 900 s (GS, sổ quyết định NK1 so-nguon-kho-khai-bao). Ca 10 và các ca trần 2 s/60 s giữ nguyên.
+const TRAN_79 = 900_000;
 const TRAN_10 = 120_000;
 
 describe("SLT-DC đối chiếu trên DB máy thu (ROLLBACK)", () => {
