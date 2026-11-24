@@ -4209,7 +4209,7 @@
       "hang": "T2",
       "vai": "Người vận hành",
       "tieu_chi": 9,
-      "cau_giao": "Người vận hành thấy thẻ các dự án, toà mà tin nói tới nhưng danh bạ chưa có, gom theo tần suất kèm tin mẫu, rồi tạo nút ứng viên hoặc trỏ vào nút có sẵn; bản ghi danh mục không khớp nút nào thì máy đúc nút ứng viên hàng loạt, nút chỉ được nối tin và lên Invest sau khi qua thẻ luật theo nguồn (Mạnh xem mẫu) hoặc người duyệt",
+      "cau_giao": "Người vận hành thấy thẻ các dự án, toà mà tin nói tới nhưng danh bạ chưa có, gom theo tần suất kèm tin mẫu (chỉ đếm giá trị đọc từ chính bài, có trích dẫn), rồi tạo nút ứng viên hoặc trỏ vào nút có sẵn; bản ghi danh mục không khớp nút nào thì máy đúc nút ứng viên hàng loạt, nút chỉ được nối tin và lên Invest sau khi qua thẻ luật theo nguồn (Mạnh xem mẫu) hoặc người duyệt",
       "bat_khi": "Tỉ lệ phân giải mã toà S03 ở Ocean Park 1 và Grand Park tăng từ 51%, báo số trước và sau; mã dự án S06 dưới 10 tin có trạng thái hoặc đang chờ thẻ; 0 UPI đúc từ nút ứng viên chưa duyệt; nút ứng viên mang catalog_tier thấp nhất; nút đúc từ danh mục chưa qua thẻ luật theo nguồn hay người duyệt thì 0 tin nối và 0 lên Invest",
       "vi_sao": "Mạnh 09/11 Q2. S03 là nguồn quan trọng nhất mà mã toà chỉ phân giải 51% qua S08 và S09; S09 gần như không phủ TP.HCM; 974 dự án S06 dưới 10 tin không thuộc hàng nào.",
       "vung": [
@@ -4217,7 +4217,7 @@
         "app/src/lib/ops",
         "pipeline/ung-vien-danh-ba"
       ],
-      "ghi_chu": "Dãy C (nối và duyệt). Toà ứng viên chưa cấp UPI tới khi người duyệt, để danh mục tới sau (DA10) khớp vào thay vì sinh UPI thứ hai. Luật 7: máy chỉ gom và đề xuất. Sửa 11/11 (mục 44 Hỏi-1): thêm đúc nút ứng viên từ danh mục qua thẻ luật theo nguồn, vì hàng nghìn bản ghi danh mục không duyệt nổi từng thẻ; thẻ luật giữ người trong vòng.",
+      "ghi_chu": "Dãy C (nối và duyệt). Toà ứng viên chưa cấp UPI tới khi người duyệt, để danh mục tới sau (DA10) khớp vào thay vì sinh UPI thứ hai. Luật 7: máy chỉ gom và đề xuất. Sửa 11/11 (mục 44 Hỏi-1): thêm đúc nút ứng viên từ danh mục qua thẻ luật theo nguồn, vì hàng nghìn bản ghi danh mục không duyệt nổi từng thẻ; thẻ luật giữ người trong vòng. Sửa 24/11 (mục 63 quyết định 1): một ứng viên là một quyết định cho mọi tin cùng nêu; giá trị tin thừa hưởng từ thẻ địa chỉ nhóm hay từ danh bạ không được đếm làm bằng chứng cho ứng viên (ADR-0016 «không tự nuôi»).",
       "phu": [
         "DA18"
       ]
@@ -6005,9 +6005,10 @@
       "dung_tren": [
         "NB1"
       ],
-      "cau_giao": "Người vận hành mở Hàng duyệt, chọn «Bổ sung tin», thấy các thẻ ô số xếp thành bảng lô có bằng chứng và suy luận trên từng dòng cùng ca biên tách riêng, soát mẫu 75 thẻ rồi chấp thuận cả lô một lần và rút được cả lô",
+      "cau_giao": "Người vận hành mở Hàng duyệt, chọn «Bổ sung tin», thấy các thẻ ô số xếp thành bảng lô có bằng chứng và suy luận trên từng dòng cùng ca biên tách riêng, soát mẫu 75 thẻ rồi chấp thuận cả lô một lần và rút được cả lô; thẻ lệch giá trị đang có và thẻ đối chiếu xếp theo kiểu lệch để quyết một lần cho cả nhóm, phán quyết đối chiếu được ghi lại",
       "bat_khi": "Trên Ops máy thu: ô «Chờ duyệt» của «Bổ sung tin» từ 786 (đo 21/11) xuống mức đích chốt ở S1 sau lượt chấm bóng; mỗi lô ghi mã lô, người chấp thuận, giờ, cỡ mẫu và số lỗi mẫu; lô có lỗi mẫu vượt ngưỡng không chấp thuận được; ô loại hình và toà chỉ nhận lô khi mẫu 75 thẻ không lỗi; lệnh rút theo mã lô đưa tin và đề xuất về đúng như trước; ca biên không vào lô",
       "vi_sao": "Mục 61 quyết định 1 (sửa mục 35). Đường quyết thẻ hiện chỉ nhận người, từng thẻ, kèm lý do; bảng lô là bề mặt duyệt Mạnh thấy kiểm nhanh và tin hơn (21/11).",
+      "ghi_chu": "Sửa 24/11 (mục 63 quyết định 1): ca chưa chắc xử theo nhóm, không mỗi tin một thẻ. Đo 24/11 trên 1.047 thẻ chờ, sau khi NB9 đóng 232 thẻ trùng giá trị đang lưu còn 815, gồm bốn tập rời nhau: (a) 230 thẻ đối chiếu chưa từng có đề xuất (lệch ý định 124, lệch giá 103, lệch diện tích 5) — ba kiểu lệch là ba quyết định, hàng này ghi phán quyết đối chiếu; (b) 230 thẻ có đề xuất loại hình hoặc phòng ngủ lệch giá trị đang có (122 tin đang «apartment» bị đề xuất «house») — tập khác với (a), trùng số là ngẫu nhiên; (c) khoảng 190 thẻ ô số còn trống (180 số WC); (d) 167 thẻ toà chờ PL20. Phần (a) làm cỡ hàng có thể vượt 10 tiêu chí, chốt ở S1. Số 786 ở bat_khi là mốc 21/11; mức đích chốt lại ở S1.",
       "vung": [
         "app/src/app/ops/review",
         "app/src/components/ops/review*",
@@ -6097,9 +6098,10 @@
         "NB5",
         "NB7"
       ],
-      "cau_giao": "Một ô của «Bổ sung tin» (ứng viên số WC hoặc số phòng ngủ) được máy tự áp khi hai lần đọc độc lập trùng nhau và cận dưới Wilson của độ đúng đã hiệu chỉnh đạt ngưỡng F3; ca biên và mọi ô khác vẫn lên thẻ",
+      "cau_giao": "Ô số phòng ngủ của «Bổ sung tin» được máy tự áp khi hai lần đọc độc lập trùng nhau, lần đọc thứ hai dùng model khác họ trong ba model đã chốt, và cận dưới Wilson của độ đúng đã hiệu chỉnh đạt ngưỡng F3; ca biên và mọi ô khác vẫn lên thẻ",
       "bat_khi": "Trên DB máy thu: ô «Tự động hoá (D5)» trên /ops/quality từ 0 lên tỉ lệ giá trị máy quyết của ô ấy; tập mở cổng ghi xuất xứ, hiệu chỉnh bằng hệ số bắt lỗi của NB7, cận dưới in cạnh ngưỡng; mỗi lần tự áp mang mã lô và rút được; cấy mẫu tuần vượt ngưỡng lỗi thì ô tự tụt về nấc 2 và báo",
       "vi_sao": "Mục 61 quyết định 2 và 4, đường «luật xác định» của PL21. PL21 giữ ở chờ điều kiện cho các ô còn lại; hàng này mở cho đúng một ô.",
+      "ghi_chu": "Sửa 24/11 (mục 63): ô đầu tiên là số phòng ngủ thay cho «số WC hoặc số phòng ngủ». Đo 24/11 trên nhãn: phòng ngủ khớp 188/189 (cận dưới Wilson 97,1%, ngưỡng nhóm B 0,90, chưa hiệu chỉnh hệ số bắt lỗi); số WC model điền ở 36 bài người ghi «không nêu» nên chờ sửa lời nhắc; loại hình 190/196 (cận dưới 93,5%) chưa đạt nhóm A. Model lớn không đọc trên đường ống (mục 41 Q4).",
       "vung": [
         "agent/src/enrich",
         "pipeline/lib/tu-ap*"
@@ -6375,6 +6377,50 @@
         "scripts/audit-all.sh",
         "pipeline/push-ops-facts.mjs"
       ]
+    },
+    {
+      "dot": "phe-duyet-may-2411",
+      "ma": "NB10",
+      "slug": "ghi-tam-do-sau-co-han",
+      "nhom": "nguoi-o-bien",
+      "phu": [
+        "NB10"
+      ],
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 10,
+      "dung_tren": [],
+      "cau_giao": "Máy chỉ tự ghi khi luật và model đọc độc lập trùng nhau, model không thấy đáp án của luật; giá trị tự ghi mang mã lô, cờ «chưa đo» và hạn đo bù; một lệnh rút được cả lô; ô quá hạn hoặc đo bù không đạt thì tự dừng ghi và rút lô",
+      "bat_khi": "Trên bản chép DB máy thu: 2.290 giá trị đã tự ghi (2.180 loại hình, 110 toà, đo 24/11) đều có mã lô và cờ ghi tạm, trong đó 297 giá trị của lượt làm giàu hằng đêm (187 loại hình, 110 toà) mang mã lô riêng «trước độc lập»; lời nhắc của lượt hằng đêm không còn mang loại hình và mã toà của luật; cấy một lời gọi mà model được thấy đáp án của luật thì không tính là phiếu thứ hai và không ghi; lệnh rút theo mã lô đưa tin và đề xuất về đúng như trước, chạy lại không đổi; giá trị ghi tạm không làm căn lên bậc B3; hạn đo bù tính từ ngày áp, cấy một ô quá hạn thì lượt kế không ghi thêm và báo; mỗi lần ghi lưu ai ghi, model, nấc và mã lô",
+      "vi_sao": "Mục 63 quyết định 3 (sửa mục 19 Q5). Luật «đo xong mới ghi» cộng với thước chưa có làm mọi giá trị dồn về Hàng duyệt; đường tự ghi đang chạy không có mã lô và không có hạn đo. Đo 24/11: phần loại hình nối được với nhãn đúng 56/56 (52 của lượt đọc toàn bộ, 4 của lượt hằng đêm), cần 73 nhãn không sai để cận dưới Wilson đạt 0,95; phần toà chưa có bài nhãn nào nối được. Lượt làm giàu hằng đêm đưa đáp án của luật vào lời nhắc (agent/src/agents/enrich-text.ts) nên chưa đạt điều kiện «hai phiếu độc lập»; lượt đọc toàn bộ 03–05/11 (1.993 loại hình) gạt tên nhóm khỏi chữ gửi model nên độc lập.",
+      "vung": [
+        "agent/src/enrich",
+        "db/migrations/129_*",
+        "pipeline/lib/tu-ap*"
+      ],
+      "ghi_chu": "Giám sát xếp sau hàng đóng 232 thẻ «Bổ sung tin» trùng giá trị đang lưu (NB9 của đợt đang chạy, không có trong tệp này). Số migration 129 là số tạm giám sát giữ. Cách làm phiếu thứ hai độc lập chốt ở S1: bỏ hai dòng đáp án của luật khỏi lời nhắc và giữ tên dự án, hoặc lấy phiếu thứ hai từ đọc gộp vốn không thấy đáp án của luật. Lượt hằng đêm có trần 50 lời gọi mỗi đêm (biến ENRICH_LIMIT ở script nạp hằng ngày của S03) và đứng từ 23/11: đo tồn và chi phí ở S1; đổi trần là tiền nên trình Mạnh ở Cổng Phạm vi. Lô đo bù là việc của Mạnh ở phiên gắn nhãn, không thuộc hàng: lát nhãn có tên toà trước (thiếu thì 110 toà tự rút), rồi khoảng 80 thẻ loại hình có thẻ cài; hạn hai tuần tính từ ngày hàng này được áp lên máy thu. Lên nấc chính thức vẫn là chữ ký riêng cho từng ô (mục 61)."
+    },
+    {
+      "dot": "phe-duyet-may-2411",
+      "ma": "PL37",
+      "slug": "hien-toa-phan-khu-nguyen-van",
+      "nhom": "l05-doc-toa-tang-can",
+      "phu": [
+        "PL37"
+      ],
+      "hang": "T2",
+      "vai": "Nhà đầu tư",
+      "tieu_chi": 9,
+      "dung_tren": [],
+      "cau_giao": "Nhà đầu tư mở một tin căn hộ mà toà hoặc phân khu chưa đối chiếu được với Danh bạ và thấy tên toà, phân khu đúng như bài viết kèm nhãn «theo tin đăng, chưa đối chiếu», thay cho «chưa biết»",
+      "bat_khi": "Trên dữ liệu máy thu: số tin S03 đang hiển thị có toà hoặc phân khu trên trang tin tăng từ số tin đã gắn được nút lên thêm số tin có chữ toà đọc từ bài, báo số trước và sau; giá trị nguyên văn chỉ lấy từ ô đọc gộp có căn cứ là chữ bài, câu trích có thật trong bài và chữ toà hoặc phân khu nằm ngay trong câu trích; cấy một ô có trích thật mà giá trị khác câu trích thì không hiện; tin mang giá trị nguyên văn không vào nhóm so sánh giá theo toà và không tạo liên kết nút; tin đã gắn nút hiện tên Danh bạ, không hiện nhãn; nhãn mới có trong CONTEXT.md; chữ trên cổng không mang tên nguồn",
+      "vi_sao": "Mục 63 quyết định 2 (sửa hành vi dưới ngưỡng nhóm A của F3 cho riêng ô toà, phân khu). Đo 24/11: 40% bài nhãn có toà mà tin trống ô toà; Danh bạ mới có danh sách toà ở khoảng 28 dự án, phân khu trên 344 dự án. Đọc gộp so với nhãn: toà đúng 78/95, và model ghi toà ở 27 bài người ghi «không nêu» — vì vậy chỉ hiện khi chữ toà nằm trong câu trích (kiểm trích ở agent/src/enrich/doc-gop-s03/doc.ts).",
+      "vung": [
+        "app/src/app/(app)/listing",
+        "app/src/lib/offers-public.ts",
+        "CONTEXT.md"
+      ],
+      "ghi_chu": "Giám sát xếp sau HT6. Nhãn «theo tin đăng, chưa đối chiếu» vào CONTEXT.md cùng commit của hàng này. Không đổi bộ phân xử và không gắn nút: gắn toà vẫn là PL20."
     }
   ],
   "chan_troi": [
@@ -6982,7 +7028,7 @@
     {
       "ma": "PL21",
       "dot": "phan-loai-2310",
-      "cau_giao": "Máy chỉ tự áp ở ô có cận dưới Wilson đạt ngưỡng F3; dưới ngưỡng thì hiện kèm nhãn suy ra hoặc lên thẻ",
+      "cau_giao": "Máy tự áp chính thức ở ô có cận dưới Wilson đạt ngưỡng F3; ô chưa đo chỉ được ghi tạm theo bốn điều kiện của mục 63 (hai phiếu độc lập trùng nhau, mã lô rút được, không tính đã đo, đo bù trong hạn); dưới ngưỡng thì hiện kèm nhãn suy ra hoặc lên thẻ theo nhóm",
       "ly_do": "Hoãn ở lần đặt lại lộ trình 15/11 (ROADMAP §3 mục 53): không nằm trên đường tới mục tiêu «căn giá tốt theo dự án, toà, tầng từ tin S03». Khuôn hàng cũ (bat_khi, vi_sao, vung) ở lịch sử git trước PR này.",
       "phu": [
         "C2.5"
