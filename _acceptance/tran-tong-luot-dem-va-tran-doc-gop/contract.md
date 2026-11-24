@@ -5,7 +5,7 @@ slug: tran-tong-luot-dem-va-tran-doc-gop
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: machine-cleared
 veto_state: mo
 veto_opened_at: 2026-11-24T01:12:01Z
 design_doc: docs/superpowers/specs/2026-11-24-tran-tong-luot-dem-va-tran-doc-gop-design.md
@@ -94,3 +94,6 @@ sau ở `ap-may-thu/README.md` (AC-9). Trong vòng: AC-4, AC-7 đo trên bản s
 
 - Bản sửa do ZCode viết (LL soát ĐẠT 24/11, đột biến LL: bỏ chừa enrich 6 đỏ, bỏ kẹp 1 đỏ, bỏ export 6 đỏ, bỏ «−300» 7
   đỏ, trả trần 14400 6 đỏ). Vòng này thêm ca quan hệ AC-4 (HT13, `scripts/zalo-import-tran.test.mjs`) và hồ sơ.
+- Ngoài-1 (máy định tuyến 2026-11-24, đề xuất S4 known-limits): Nếu người vận hành gõ nhầm giá trị trần đọc gộp (ví dụ thêm chữ 'm' hay 's'), lượt nạp đêm 00:00 chết ngay mà không có dòng báo lỗi rõ ràng, nên đêm đó không có dữ liệu mới. — `scripts/zalo-import-daily.sh`
+- Ngoài-2 (máy định tuyến 2026-11-24, đề xuất S4 known-limits): Nếu chỉ áp bản này mà chưa có phần song song hoá bước đọc gộp, hai đêm đo vẫn có thể đỏ và bước làm giàu dữ liệu vẫn không chạy. Người đọc hồ sơ dễ tưởng lưới chia trần đã có tác dụng. — `_acceptance/tran-tong-luot-dem-va-tran-doc-gop/ap-may-thu/README.md`
+- Ngoài-3 (máy định tuyến 2026-11-24, đề xuất S4 known-limits): Bộ kiểm sau khi áp có hai điều kiện chưa được thử bằng ca báo đỏ. Nếu có ai làm hỏng hai điều kiện đó thì bộ kiểm vẫn có thể báo đạt. — `_acceptance/tran-tong-luot-dem-va-tran-doc-gop/ap-may-thu/kiem.sh`
