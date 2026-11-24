@@ -560,10 +560,10 @@ const NHAT_KY = [
       { so: 2, luc: ISO(303), soLan: 2, soTin: 2, soDaCo: 1, soMoi: 1, tin: [[102, giay(-700), giay(-700), 1], [4, giay(58), giay(58), 0]] },
       { so: 3, luc: ISO(305), soLan: 1, soTin: 1, soDaCo: 1, soMoi: 0, tin: [[103, giay(-800), giay(-800), 1]] },
     ] },
-  { k: "phien", phien: 2, batDau: ISO(600), ketThuc: ISO(604), soLoiGoi: 2, soLoi: 0, chan: 0, dbLoi: 0, lyDoDung: "trang-toan-da-co", snapshot: "hcmc__chotot-ads__2026-11-24T021000", tinMoi: [3, 9, 10, 11],
+  { k: "phien", phien: 2, batDau: ISO(600), ketThuc: ISO(604), soLoiGoi: 2, soLoi: 0, chan: 0, dbLoi: 0, lyDoDung: "trang-toan-da-co", snapshot: "hcmc__chotot-ads__2026-11-24T021000", tinMoi: [3, 9, 10, 11, 12],
     trang: [
       { so: 1, luc: ISO(601), soLan: 1, soTin: 5, soDaCo: 1, soMoi: 4, tin: [[3, giay(400), giay(400), 0], [9, giay(500), giay(-80000), 0], [10, giay(-30), giay(-30), 0], [11, giay(-20), null, 0], [102, giay(-700), giay(-700), 1]] },
-      { so: 2, luc: ISO(603), soLan: 1, soTin: 1, soDaCo: 1, soMoi: 0, tin: [[103, giay(-800), giay(-800), 1]] },
+      { so: 2, luc: ISO(603), soLan: 1, soTin: 2, soDaCo: 1, soMoi: 1, tin: [[103, giay(-800), giay(-800), 1], [12, giay(590), null, 0]] },
     ] },
   { k: "phien", phien: 3, batDau: ISO(900), ketThuc: ISO(900), soLoiGoi: 1, soLoi: 0, chan: 1, dbLoi: 0, lyDoDung: null, snapshot: null, tinMoi: [],
     trang: [{ so: 1, luc: ISO(900), soLan: 1, soTin: 0, soDaCo: 0, soMoi: 0, http: 429, tin: [] }] },
@@ -581,18 +581,19 @@ test("báo cáo tính đúng lời gọi/phút, p50/p90 độ trễ đăng → t
   assert.equal(b.loiGoiMoiPhut, 0.7);
   // độ trễ (giây): tin 1: 301−60=241 · tin 2: 301−59=242 · tin 4: 303−58=245 · tin 3: 601−400=201
   // tin 9 đăng trước t0 (cũ đẩy lại) nên không tính; bốn số trên xếp [201, 241, 242, 245]
-  assert.deepEqual(b.doTre, { soLuong: 4, p50: 241, p90: 245 });
-  assert.equal(b.tinMoiDang, 4, "bốn tin mới đăng trong cửa sổ đo");
+  // độ trễ của tin 12: 603 − 590 = 13 giây → năm số [13, 201, 241, 242, 245]: p50 = 241, p90 = 245
+  assert.deepEqual(b.doTre, { soLuong: 5, p50: 241, p90: 245 });
+  assert.equal(b.tinMoiDang, 5, "năm tin mới đăng trong cửa sổ đo — kể cả tin 12 chưa có giờ đăng gốc");
   // ba mục máy chưa có nhưng không phải tin mới đăng của cửa sổ: 9 = cũ đẩy lại (list_time − orig 80.500 giây),
-  // 10 = đăng 30 giây trước t0 (tồn đọng lúc bắt đầu), 11 = không có giờ đăng gốc
+  // 10 = đăng 30 giây trước t0, 11 = đăng 20 giây trước t0 và chưa bị đẩy lại (không có orig_list_time)
   assert.equal(b.truocCuaSo, 3, "mục máy chưa có nhưng đăng trước cửa sổ đo (kể cả cũ đẩy lại)");
-  assert.deepEqual([b.dayLaiCu, b.tronLuaDau, b.khongRoOrig], [1, 1, 1]);
+  assert.deepEqual([b.dayLaiCu, b.tronLuaDau], [1, 2]);
   // tuổi mục mới nhất ở đầu trang 1: lượt 1 lấy lúc 301 s, mục mới nhất 60 s → 241 giây; lượt 2: 601 − 500 = 101 giây
   // hai số [101, 241]: hạng gần nhất của p50 là số thứ nhất
   assert.deepEqual(b.dinhMoiNhat, { soLuong: 2, min: 101, p50: 101 });
   assert.deepEqual(b.luat["trang-toan-da-co"], { soTrang: 5, boSot: 0 });
-  // luật gap-da-co dừng sau trang 1 ở cả hai lượt → 2 lời; tin 4 ở trang 2 lượt 1 nằm sau điểm dừng
-  assert.deepEqual(b.luat["gap-da-co"], { soTrang: 2, boSot: 1 });
+  // luật gap-da-co dừng sau trang 1 ở cả hai lượt → 2 lời; tin 4 (lượt 1, trang 2) và tin 12 (lượt 2, trang 2) nằm sau điểm dừng
+  assert.deepEqual(b.luat["gap-da-co"], { soTrang: 2, boSot: 2 });
 });
 
 test("báo cáo bỏ qua độ trễ âm (giờ nguồn lệch) và không tính tin đăng trước cửa sổ đo là tin mới", () => {
@@ -686,7 +687,7 @@ test("báo cáo cả phép đo: có vùng × mục thì kiểm lượt quét đ�
     dong: NHAT_KY, bayGio: () => T0 + 7200_000,
     moDb: async () => db,
   });
-  assert.deepEqual(kq.batDuoc, { quetDu: 4, duoi: 4, batDuoc: 3, tiLe: 0.75, thieu: [5], chiDuoi: [4] });
+  assert.deepEqual(kq.batDuoc, { quetDu: 4, daCoMa: 0, tinMoi: 4, duoi: 5, batDuoc: 3, tiLe: 0.75, thieu: [5], chiDuoi: [4, 12], thieuDaCoMa: [] });
   assert.equal(kq.quetDuCapNhatLuc, new Date(T0 + 86400_000).toISOString(), "ghi giờ lượt quét đủ mới nhất đã nạp");
   assert.deepEqual(kq.quetDuNapXong, { xong: true, luc: new Date(T0 + 86400_000).toISOString(), snapshotId: "hcmc__chotot-ads__2026-11-24T072926", items: 4, daNap: 4 });
   assert.deepEqual(db.cau.map((x) => x[0]), ["SELECT max(captured_at) AS", "SELECT snapshot_id, manifest", "SELECT count(*)::int AS", "SELECT list_id FROM", "dong"], "kiểm nạp xong trước, mới lấy tập so, rồi đóng");
@@ -740,12 +741,37 @@ test("báo cáo cả phép đo: DB lỗi thì phần so với lượt quét đ�
 test("tỉ lệ bắt được: so tin đuôi thấy với tập lượt quét đủ cùng ngày", () => {
   const quetDu = new Set([1, 2, 3, 5]); // lượt quét đủ có tin 1, 2, 3, 5 đăng trong cửa sổ (không có tin 4 — đã gỡ trước lượt quét)
   const t = tinhTiLeBatDuoc(NHAT_KY, { t0: T0, t1: T0 + 3600 * 1000, quetDu });
-  assert.deepEqual(t, { quetDu: 4, duoi: 4, batDuoc: 3, tiLe: 0.75, thieu: [5], chiDuoi: [4] }, "tin 9 (cũ đẩy lại) không tính là tin mới đăng");
+  assert.deepEqual(t, { quetDu: 4, daCoMa: 0, tinMoi: 4, duoi: 5, batDuoc: 3, tiLe: 0.75, thieu: [5], chiDuoi: [4, 12], thieuDaCoMa: [] },
+    "tin 12 (chưa có giờ đăng gốc) vẫn là tin mới đăng; tin 9 (cũ đẩy lại), 10, 11 (đăng trước t0) không tính");
+});
+
+// CA ĐỎ của lỗi 24/11: lượt quét đủ đưa vào tập cả tin CŨ được làm mới hôm nay (mã máy đã biết, list_time đổi,
+// không có orig_list_time) — 151/654 mã. Nếu để chúng đứng vào mẫu số thì tỉ lệ rơi từ 100% xuống 77% dù đuôi
+// không bỏ sót tin mới nào. Mẫu số phải chỉ gồm TIN MỚI (mã máy chưa biết).
+test("tỉ lệ bắt được: tin cũ được làm mới (mã máy đã biết) KHÔNG đứng vào mẫu số — mẫu số chỉ gồm tin mới", () => {
+  // 101 là mã cũ: ở NHAT_KY đuôi thấy nó với cờ 1; lượt quét đủ đưa vào tập vì list_time của nó nằm trong cửa sổ
+  const t = tinhTiLeBatDuoc(NHAT_KY, { t0: T0, t1: T0 + 3600 * 1000, quetDu: new Set([1, 2, 3, 5, 101]) });
+  assert.deepEqual(t, { quetDu: 5, daCoMa: 1, tinMoi: 4, duoi: 5, batDuoc: 3, tiLe: 0.75, thieu: [5], chiDuoi: [4, 12], thieuDaCoMa: [101] });
+});
+
+test("tỉ lệ bắt được: mã lượt quét đủ có mà đuôi chưa từng thấy vẫn là tin mới bị bỏ sót — kể cả khi là mã cũ", () => {
+  // 7 và 8 không có trong NHAT_KY (các mã «đã có» của nhật ký là 101, 102, 103): đuôi không thấy lần nào
+  const t = tinhTiLeBatDuoc(NHAT_KY, { t0: T0, t1: T0 + 3600 * 1000, quetDu: new Set([1, 2, 3]) });
+  assert.deepEqual([t.quetDu, t.daCoMa, t.tinMoi, t.batDuoc, t.tiLe, t.thieu], [3, 0, 3, 3, 1, []], "đủ cả ba tin mới → 100%");
+  const t2 = tinhTiLeBatDuoc(NHAT_KY, { t0: T0, t1: T0 + 3600 * 1000, quetDu: new Set([1, 2, 3, 7]) });
+  assert.deepEqual([t2.tinMoi, t2.batDuoc, t2.tiLe, t2.thieu, t2.thieuDaCoMa], [4, 3, 0.75, [7], []], "7 là tin mới bị bỏ sót");
+  const t3 = tinhTiLeBatDuoc(NHAT_KY, { t0: T0, t1: T0 + 3600 * 1000, quetDu: new Set([1, 2, 3, 7, 8, 101]) });
+  assert.deepEqual([t3.tinMoi, t3.batDuoc, t3.tiLe, t3.thieu, t3.thieuDaCoMa], [5, 3, 0.6, [7, 8], [101]], "101 (mã đã có) không đứng vào mẫu số");
+});
+
+test("tỉ lệ bắt được: mọi mã lượt quét đủ có đều là mã máy đã biết → không có tin mới để so, tỉ lệ null", () => {
+  assert.deepEqual(tinhTiLeBatDuoc(NHAT_KY, { t0: T0, t1: T0 + 3600 * 1000, quetDu: new Set([101, 103]) }),
+    { quetDu: 2, daCoMa: 2, tinMoi: 0, duoi: 5, batDuoc: 0, tiLe: null, thieu: [], chiDuoi: [1, 2, 3, 4, 12], thieuDaCoMa: [101, 103] });
 });
 
 test("tỉ lệ bắt được khi lượt quét đủ rỗng → tỉ lệ null, không chia cho không", () => {
   assert.deepEqual(tinhTiLeBatDuoc(NHAT_KY, { t0: T0, t1: T0 + 3600 * 1000, quetDu: new Set() }),
-    { quetDu: 0, duoi: 4, batDuoc: 0, tiLe: null, thieu: [], chiDuoi: [1, 2, 3, 4] });
+    { quetDu: 0, daCoMa: 0, tinMoi: 0, duoi: 5, batDuoc: 0, tiLe: null, thieu: [], chiDuoi: [1, 2, 3, 4, 12], thieuDaCoMa: [] });
 });
 
 // ─── DB thật: phép đo chỉ đọc ────────────────────────────────────────────────────────────────────────────────
@@ -802,5 +828,32 @@ test("DB thật: kiểm lượt quét đủ đã nạp xong — trả số dòng
     assert.ok(kq.daNap <= kq.items, "dòng của MỘT snapshot không thể nhiều hơn số item manifest khai — đếm sai phạm vi là lỗi");
     assert.match(kq.snapshotId, /__chotot-ads__/);
     assert.deepEqual(await quetDuDaNapXong(c, { cityCode: "vn-khong-ton-tai" }), { xong: false, lyDo: "stg-chua-co-tin-cua-vung", luc: null, snapshotId: null, items: null, daNap: null });
+  } finally { await c.dong(); }
+});
+
+test("DB thật: tập lượt quét đủ lấy giờ đăng = orig_list_time nếu có, nếu không thì list_time — ba tình huống chọn độc lập", { skip: !CO_DB }, async () => {
+  const c = await moDbChiDoc(DB);
+  try {
+    // cửa sổ nằm hoàn toàn trong quá khổ (8 ngày trước → 1 ngày trước) để tình huống (b) «bị đẩy lại SAU cửa sổ» có thể có
+    const bayGio = Date.now();
+    const win = { cityCode: "vn-hcmc", adType: "u", t0: bayGio - 8 * 86400000, t1: bayGio - 86400000 };
+    const q = await quetDuStg(c, win);
+    const mot = async (dieuKien, thongBao) => {
+      const r = (await c.query(
+        `SELECT list_id FROM stg_chotot_ads WHERE city_code = $1 AND ad_type = $2 AND ${dieuKien} ORDER BY list_id DESC LIMIT 1`,
+        [win.cityCode, win.adType, win.t0, win.t1],
+      )).rows[0]?.list_id;
+      assert.ok(r, `thiếu dữ liệu để kiểm: ${thongBao}`);
+      return Number(r);
+    };
+    // (a) tin chưa từng bị đẩy lại: không có orig_list_time, list_time trong cửa sổ → PHẢI có trong tập
+    const a = await mot(`NULLIF((payload->>'orig_list_time')::bigint, 0) IS NULL AND (payload->>'list_time')::bigint >= $3 AND (payload->>'list_time')::bigint < $4`, "tin mới chưa bị đẩy lại");
+    assert.ok(q.has(a), `tin ${a} chưa bị đẩy lại (không có orig_list_time) phải nằm trong tập lượt quét đủ`);
+    // (b) tin bị đẩy lại SAU cửa sổ: orig trong cửa sổ, list_time ngoài cửa sổ → PHẢI có (lấy orig)
+    const b = await mot(`COALESCE(NULLIF((payload->>'orig_list_time')::bigint, 0), 0) >= $3 AND COALESCE(NULLIF((payload->>'orig_list_time')::bigint, 0), 0) < $4 AND (payload->>'list_time')::bigint >= $4`, "tin bị đẩy lại sau cửa sổ");
+    assert.ok(q.has(b), `tin ${b} đăng trong cửa sổ rồi bị đẩy lại sau đó vẫn phải nằm trong tập`);
+    // (c) tin cũ được đẩy lại TRONG cửa sổ: orig trước cửa sổ, list_time trong cửa sổ → KHÔNG được coi là tin mới của cửa sổ
+    const d = await mot(`COALESCE(NULLIF((payload->>'orig_list_time')::bigint, 0), 0) > 0 AND COALESCE(NULLIF((payload->>'orig_list_time')::bigint, 0), 0) < $3 AND (payload->>'list_time')::bigint >= $3 AND (payload->>'list_time')::bigint < $4`, "tin cũ được đẩy lại trong cửa sổ");
+    assert.ok(!q.has(d), `tin ${d} đăng từ trước cửa sổ, chỉ bị đẩy lại trong cửa sổ — không nằm trong tập`);
   } finally { await c.dong(); }
 });
