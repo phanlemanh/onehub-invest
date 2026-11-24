@@ -324,7 +324,7 @@ không gọi API đếm gộp (đang trả 400). `manifest.schemaVersion = 16` t
 
 | `kind` | `sourceId` | `payload` (nguyên văn) | `meta` |
 |---|---|---|---|
-| `quy-can` | `<du_an_id>` | `{code, data[căn], meta{page, size, total}}` — phản hồi đầy đủ kể cả `meta` của nguồn; một item mỗi TRANG | `duAnId` · `trang` (**đánh từ 0**) · `size` · `soCanNhan` (số căn nhận được của trang) · `tongNguon` (= `meta.total` của nguồn) · `duong` · `status` · `loi?` |
+| `quy-can` | `<du_an_id>` | `{data[căn], meta{code, page, size, total}}` — phản hồi đầy đủ kể cả `meta` của nguồn (khoá gốc chỉ có `data` và `meta`; `meta.code` là chuỗi «200»); một item mỗi TRANG | `duAnId` · `trang` (**đánh từ 0**) · `size` · `soCanNhan` (số căn nhận được của trang) · `tongNguon` (= `meta.total` của nguồn) · `duong` · `status` · `loi?` |
 | `can-cao-tang` | `<tang_id>` | `{code, data[căn]}` — MỘT item mỗi TẦNG, kể cả tầng trả rỗng | `duAnId` · `toaId` · `toaTen` · `tangId` · `tangTen` (nguyên văn «02», «12B») · `duong` · `status` · `loi?` |
 
 Luật đọc (bên nạp):
@@ -334,10 +334,12 @@ Luật đọc (bên nạp):
    40 dự án nhận đủ 1.294/1.294). Bên đọc lấy bản đủ theo `captured_at` muộn hơn; chênh lượt là việc
    của bước đọc stg.
 2. **Hợp căn quỹ căn theo `data[].id`** giữa các trang của cùng dự án (khử trùng); đối soát đủ/thiếu
-   bằng Σ id hợp so `tongNguon` của trang cuối. `data[]` mang mã căn (`property_code`, khuôn
+   bằng Σ id hợp so `tongNguon` của trang đầu. `data[]` mang mã căn (`property_code`, khuôn
    `TÒA.TẦNG.CĂN`), giá (`min/max_selling_price`, `min/max_unit_price`), trạng thái, phân khu/toà
    (`sector_id`/`block_id`) — giá và trạng thái quỹ căn là dữ liệu công khai của nguồn (ROADMAP §3
-   mục 38), đi qua stg bình thường.
+   mục 38), đi qua stg bình thường. **Tầng A trong raw**: `galleries[].urls` mang tên miền CDN của nguồn
+   và `geolocation` là toạ độ từng căn — raw ở lại máy thu; stg phải bỏ URL ảnh (hoặc đổi sang đường dẫn
+   tương tự quy tắc S07) trước khi đi bất kỳ đâu.
 3. `can-cao-tang` là gói 2 (DA43) và phần B3 ngoài Hà Nội (claudedp-2411-3): khoá bền từng cấp là
    uuid dự án; uuid + tên toà; uuid + tên tầng (`tangId` = `sourceId`). Căn khuôn `data[].name ==
    data[].code` dạng `TÒA.TẦNG.CĂN` — nối trực tiếp với (`toa`, `ma_can`) của S16 và `property_code`
