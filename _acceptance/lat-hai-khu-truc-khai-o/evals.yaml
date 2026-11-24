@@ -27,3 +27,13 @@ evals:
     expected: >
       Diff của labels-normalize.ts so với nhánh chính chỉ THÊM dòng của hai-khu-truc (và tách bảng thành nhiều dòng), dòng
       hai-khu-ghep-b giữ nguyên giá trị; mọi lát khác oCuaLat như cũ. Lệnh in danh sách lát khai trước và sau.
+  - id: E4
+    criterion: AC-4
+    executor: test
+    layer: backend-effect
+    cmd: bash _acceptance/lat-hai-khu-truc-khai-o/probes/test.sh
+    paths: ["app/src/lib/labels-normalize.ts", "app/src/lib/labels-queries.ts", "app/src/components/ops/labels/label-form-nhom.tsx", "app/tests/labels-lat-hai-khu-truc.test.tsx"]
+    expected: >
+      Ca HT21-AC-4: nhapChoLat (máy chủ) trả nháp của hai-khu-truc lọc về building, stack; null cho hai-khu-ghep-b; giữ nguyên cho
+      lát không khai; null khi nháp không còn ô của lát. Biểu mẫu dựng thật điền sẵn hai ô và hiện «Nháp máy» cho hai-khu-truc, không
+      cho hai-khu-ghep-b. Chiều đỏ trên cùng tệp: bản đưa hai-khu-ghep-b vào danh sách có nháp thì phép so gắn mù đỏ, gọi tên lát.

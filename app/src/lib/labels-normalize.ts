@@ -123,6 +123,14 @@ export const O_THEO_LAT: Readonly<Record<string, readonly LabelField[]>> = {
   "hai-khu-truc": ["building", "stack"],
 }
 export const oCuaLat = (lat: string): readonly LabelField[] | null => O_THEO_LAT[lat] ?? null
+/**
+ * Lát có khai ô mà VẪN hiện nháp (HT21): mặc định lát có khai ô gắn mù, nháp không rời máy chủ. `hai-khu-truc` là ngoại lệ có tên —
+ * Mạnh bỏ đo mù cho lát này (24/11, lối 3 của PL36: trợ lý nháp, Mạnh duyệt); thước đo người duyệt là thẻ cài lỗi thay cho gắn mù.
+ * Nháp chỉ mang các ô của lát.
+ */
+export const LAT_KHAI_O_CO_NHAP: ReadonlySet<string> = new Set(["hai-khu-truc"])
+/** Lát này có được hiện nháp không: lát không khai ô giữ hành vi cũ; lát khai ô chỉ khi nằm trong danh sách ngoại lệ. */
+export const hienNhap = (lat: string): boolean => oCuaLat(lat) === null || LAT_KHAI_O_CO_NHAP.has(lat)
 const NHAN_THEO_LAT: Readonly<Record<string, Partial<Record<LabelField, string>>>> = {
   "hai-khu-ghep-b": { subzone: "Phân khu hoặc cụm" },
   "hai-khu-truc": { stack: "Trục (hai số cuối của số căn)" },

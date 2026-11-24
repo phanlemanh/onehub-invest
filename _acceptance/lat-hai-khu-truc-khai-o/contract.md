@@ -1,6 +1,6 @@
 ---
 schema_version: 1
-feature: Lát nhãn trục hai-khu-truc của PL36 trên /ops/labels chỉ hiện hai ô Toà và Trục, như lát có khai ô, để Mạnh duyệt 110 bài nhanh
+feature: Lát nhãn trục hai-khu-truc của PL36 trên /ops/labels chỉ hiện hai ô Toà và Trục, như lát có khai ô, và vẫn hiện nháp của trợ lý cho hai ô đó, để Mạnh duyệt 110 bài nhanh
 slug: lat-hai-khu-truc-khai-o
 owner: phanlemanh@gmail.com
 risk_tier: T2
@@ -28,6 +28,12 @@ Hàng HT21, hàng nền của PL36 AC-10 (GS giao 24/11). Lát `hai-khu-truc` đ
 - **AC-2** (ui-observed) Given biểu mẫu `/ops/labels` dựng thật cho một bài của lát, When hiện, Then chỉ có hai ô Toà, Trục, mỗi ô
   có «Không suy ra được», không ô căn cứ, không ô Lý do, bộ đếm 0/2; lát không khai vẫn đủ ô.
 - **AC-3** Given mọi lát khác, When đọc khai ô, Then không đổi gì so với trước (một dòng thêm, không sửa dòng cũ).
+- **AC-4** (nháp của trợ lý, cross-layer) Given nháp của trợ lý theo khuôn sẵn có mà `nhapTuDraft` đọc
+  (`{hien, cach_doc: {gn: {trang_thai: 'co', o: {building, stack}}}}`), When máy chủ dựng bài cho màn và biểu mẫu hiện, Then lát
+  `hai-khu-truc` nhận nháp lọc về đúng hai ô Toà, Trục, điền sẵn và hiện nhãn «Nháp máy»; lát `hai-khu-ghep-b` và mọi lát khai ô khác
+  vẫn gắn mù (không nháp ở máy chủ lẫn màn); lát không khai giữ nguyên nháp. Chiều đỏ: bản đưa `hai-khu-ghep-b` vào danh sách có nháp
+  thì phép đo gắn mù đỏ, thông điệp gọi tên lát. Lý do ngoại lệ: Mạnh bỏ đo mù cho lát này (24/11, lối 3 của PL36 — trợ lý nháp,
+  Mạnh duyệt); thước đo người duyệt là thẻ cài lỗi (8–10%) thay cho gắn mù.
 
 ## Coverage
 

@@ -22,7 +22,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { fmtVnDateTime } from "@/lib/format"
-import { luotRutGon, nhanO, oCuaLat, type LabelField, type LoiLuot, type PriceUnit, type RawLabels } from "@/lib/labels-normalize"
+import { hienNhap, luotRutGon, nhanO, oCuaLat, type LabelField, type LoiLuot, type PriceUnit, type RawLabels } from "@/lib/labels-normalize"
 import type { TinGan } from "@/lib/labels-queries"
 
 import { AnhBai } from "./anh-bai"
@@ -67,7 +67,7 @@ export function LabelFormNhom({
   const oLat = oCuaLat(lat)
   const dsO = oLat ? oLat.flatMap((f) => TAT_CA_O.filter((d) => d.id === f)) : TAT_CA_O
   // Lát mẫu soát (DO1): điền sẵn nháp máy của cách đọc hiện; người giữ hay sửa từng ô rồi lưu.
-  const [nhapDau] = useState(() => (tin.nhap && !oLat ? nhapVeO(tin.nhap) : null))
+  const [nhapDau] = useState(() => (tin.nhap && hienNhap(lat) ? nhapVeO(tin.nhap) : null))
   const [cells, setCells] = useState<Partial<Record<LabelField, O>>>(nhapDau?.cells ?? {})
   const [donVi, setDonVi] = useState<PriceUnit>(nhapDau?.donVi ?? "ty")
   // Người tự bấm đơn vị thì Loại tin không ghi đè lựa chọn đó.
@@ -142,7 +142,7 @@ export function LabelFormNhom({
               {tin.postedAt ? ` · đăng ${fmtVnDateTime(tin.postedAt)}` : ""}
               {tin.doubleLabel ? " · tin gắn trùng (hai người)" : ""}
             </FrameDescription>
-            {tin.nhap && !oLat ? (
+            {tin.nhap && hienNhap(lat) ? (
               <div className="flex">
                 <Badge variant="info-light" data-labels-nhap={tin.nhap.cachDoc} className="wrap-anywhere whitespace-normal">
                   Nháp máy · {tin.nhap.cachDoc}
