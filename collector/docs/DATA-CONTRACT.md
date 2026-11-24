@@ -314,11 +314,13 @@ Khoá nối với S16/S08 (chi tiết số đo ở tệp kê local của lượt
 - UUID dự án/toà/tầng/căn của nguồn này là quan hệ bền (khoá nối cấp cao nhất); **khác** namespace với
   `insight_by_block[].id` của nguồn `s09-du-an` — ánh xạ qua (`du_an_id`, tên toà), không so uuid chéo.
 
-## Nguồn S17 `s17-thua-dinh-gia` — thửa đất định giá, căn hộ, dự án (v17, claudedp-2411-20)
+## Nguồn S17 `s17-thua-dinh-gia` — thửa đất định giá, căn hộ, dự án (v17, claudedp-2411-20 và -21)
 
-> Mốc ngày 1 (24–25/11/2026) thu phần chắc: bảng tham chiếu, dự án, mặt nạ vùng có ranh thửa. Bốn kind có phiên còn
-> lại (`can_ho_list`, `can_ho_detail`, `thua`, `mix_gia`) thuộc mốc ngày 2 (claudedp-2411-21): khuôn của bốn kind này
-> là thiết kế, hiện đánh «chưa thu». Mã bộ thu: `collector/src/collectors/s17-thua-dinh-gia/`.
+> Mốc ngày 1 (24–25/11/2026) thu phần chắc: bảng tham chiếu, dự án, mặt nạ vùng có ranh thửa. Mốc ngày 2
+> (claudedp-2411-21) thu căn hộ của các dự án mẫu, thửa ở khu thí điểm, dự án thấp tầng. Riêng `mix_gia` (đơn giá thị
+> trường theo toạ độ) vẫn là thiết kế, chưa thu. Mã bộ thu: `collector/src/collectors/s17-thua-dinh-gia/`.
+> Chữ đưa vào `sourceId` (tên toà, tên đường, từ khoá, mã căn) viết ASCII chữ thường, không dấu, khoảng trắng và dấu
+> câu thành gạch nối («Hàng Đào» → `hang-dao`, «3312A Tòa Park 12» → `3312a-toa-park-12`).
 
 - Thư mục `vn/vn__s17-thua-dinh-gia__<id>/`. **Một lượt thu = nhiều snapshot nhỏ** ghi ngay khi lấy được: một trang
   danh sách dự án, hay một tỉnh của mặt nạ tile, là một snapshot; bảng tham chiếu và chi tiết dự án gộp theo lô (50 item,
@@ -330,7 +332,7 @@ Khoá nối với S16/S08 (chi tiết số đo ở tệp kê local của lượt
 - **Hai chế độ thu**:
   - *công khai* — `static_config`, `gia_ubnd`, `tile_coverage`: gọi bằng fetch thường kèm header Origin của trang
     nguồn, không mang phiên;
-  - *có phiên* — `du_an_list`, `du_an_detail` (và bốn kind của mốc ngày 2): gọi TRONG TAB của hồ sơ nơi Mạnh đã đăng
+  - *có phiên* — `du_an_list`, `du_an_detail` và mọi kind của mốc ngày 2: gọi TRONG TAB của hồ sơ nơi Mạnh đã đăng
     nhập (trình duyệt ego lite), phiên do chính trang gắn. Thông tin phiên là tầng A: không rời trình duyệt, không vào
     snapshot, không vào log.
 - **Đường API không nằm trong hợp đồng lẫn trong code.** Bộ thu gọi theo *vai* (`project-list`, `project-detail`,
@@ -339,7 +341,12 @@ Khoá nối với S16/S08 (chi tiết số đo ở tệp kê local của lượt
   sách bị từ chối trước khi gửi. `sourceId` và `kind` dùng chữ trung tính, không mang tên đường.
 - Nhịp 300–400 ms một lời (mức nguồn đã chịu được); trần lời gọi và trần thời gian phải khai mỗi lần chạy. 403, 429,
   trang thử thách, hết phiên, quá trần → dừng cả lượt, không gửi thêm lời nào. Lỗi mạng và 5xx thử lại sau 5 s, 15 s,
-  30 s rồi tính là thất bại của riêng bản ghi đó. Chạy như tiến trình của phiên, chưa có lịch.
+  30 s rồi tính là thất bại của riêng bản ghi đó. Chạy như tiến trình của phiên, chưa có lịch. Lời cần phiên gặp lỗi
+  mạng được hỏi lại bằng chính một lời cần phiên trước khi kết luận hết phiên.
+- **Tăng tốc có khoá (Mạnh 24/11)**: từ mốc ngày 2 bộ thu gửi được tối đa 4 lời một đợt (nhiều fetch đồng thời trong
+  trang; đo: hai lời đồng thời xong sau 4,9 s thay vì 8,4 s) và nhịp tới 150 ms. Số lần bị chặn (403, 429) ghi vào
+  trạng thái bộ thu: bị chặn một lần thì chỉ còn nhịp 350 ms một luồng; bị chặn hai lần thì không chạy nữa, chờ
+  người quyết.
 - Phạm vi PII: hồ sơ thửa, căn, dự án chỉ có thuộc tính vật thể (không tên, SĐT chủ sở hữu). Không có lớp người bán ⇒
   RawItem không mang `seller`.
 
@@ -350,10 +357,16 @@ Khoá nối với S16/S08 (chi tiết số đo ở tệp kê local của lượt
 | `tile_coverage` | `coverage-<id tỉnh>` (`id` của `areas` cấp market) | `{ tiles: ["z/x/y", …] }` — tile ranh thửa mức 17 CÓ DỮ LIỆU trong số các điểm đã quét của tỉnh; không lưu ảnh | `request {zoom}` · `congKhai: true` · `ten` · `soDiemQuet` · `trong` · `rong` · `vang` · `loi` |
 | `du_an_list` | `trang-<n>` (tính từ 1) | `{ json }` — một trang danh sách dự án: `data.projects.content[]` (mỗi mục có `id`, `estate_type`, `loai_du_an`, `tinh_trang`, `properties`) cùng `totalElements`, `totalPages`; đo 24/11: 2.508 dự án, 26 trang | `request {query, page, size}` · `tongDuAn` · `soTrang` · `soMuc` · `khongId` (mục không có id) |
 | `du_an_detail` | `du-an-<id>` | `{ detail, filterOptions, gallery }` — phản hồi gốc của một dự án: hồ sơ, cây lựa chọn toà → tầng → hướng → diện tích, thư viện ảnh. `gallery` là `null` khi thư viện lấy lỗi (ảnh không nằm trong mốc ngày 1) — hồ sơ và cây toà vẫn đủ | `request {id}` · `coBangCan` (`true` \| `false` \| `null`) · `galleryLoi` (chỉ khi `gallery` là `null`: lý do) |
-| `can_ho_list` *(chưa thu)* | `du-an-<id>-toa-<toà>-trang-<n>` | `{ json }` — một trang liệt kê căn theo toà | `request {project_id, thap, page, size}` |
-| `can_ho_detail` *(chưa thu)* | `du-an-<id>-can-<ma_can>` | `{ json }` — hồ sơ một căn | `request {project_id, ma_can}` · `khopMaCan` |
-| `thua` *(chưa thu)* | `thua-<mã địa chính>` | `{ json }` — hồ sơ thửa theo toạ độ: đa giác ranh giới, kích thước, tiếp giáp đường, đơn giá đất theo trạng thái quy hoạch | `request` · `phuongPhap` (`suggest` \| `grid`) |
+| `can_ho_list` | `du-an-<id>-toa-<toà>-trang-<n>[-lot-<k>]` | `{ json }` — một trang liệt kê căn theo toà: `data.content[]` (mỗi mục `text` = mã căn, `sub_text` = toà, tầng, diện tích, hướng, loại căn) cùng `totalElements`, `totalPages`; nguồn chịu 100 mục một trang (đo 24/11). Hậu tố `-lot-<k>` chỉ có ở lượt quét kế từ lượt hai | `request {project_id, thap, text, page, size}` · `tongCan` (số DÒNG nguồn công bố) · `soTrang` · `soMuc` · `lot` (lượt quét, từ 1) · `maMoi` (số mã mới gặp ở trang này) |
+| `can_ho_toa` | `du-an-<id>-toa-<toà>` | `{ maCan: […] }` — mã căn duy nhất của một toà sau khi gộp mọi trang, mọi lượt | `request {project_id, thap}` · `tongCan` · `maDuNhieu` · `soLot` · `khop` (`maDuNhieu = tongCan`) · `laToaChungMinh` |
+| `can_ho_du_an` | `du-an-<id>` | `{ toa: [{ thap, maDuNhieu, tongDong, soLot }] }` — bản gộp căn của một dự án mẫu, ghi một lần | `request {id}` · `soToa` · `maDuNhieu` · `tongDong` · `soCanNguon` (số `so_can` trong chi tiết dự án; `null` khi không đọc được) · `khop` (`maDuNhieu = soCanNguon`; `null` khi không có số) · `khopTongDong` |
+| `can_ho_detail` | `du-an-<id>-can-<mã căn>` | `{ json }` — hồ sơ một căn (`data.properties`: `ma_can`, `ma_can_tren_cua` là mã trên cửa, tháp, tầng, diện tích, đơn giá thẩm định, trạng thái giao dịch, ngày duyệt…) | `request {project_id, ma_can}` · `toa` · `khopMaCan: true` |
+| `thua` | `thua-<mã địa chính>` | `{ json }` — hồ sơ thửa theo toạ độ: đa giác ranh giới, kích thước, tiếp giáp đường, đơn giá đất theo trạng thái quy hoạch, mã hành chính cũ và mới | `request {latitude, longitude, loaiTimKiem}` · `phuongPhap` (`grid` \| `suggest`) · `khuVuc` · `ogcFid` · `soTo` · `soThua` · `dienTich` · `duong` · `maPhuong` · `maQuan` · `maThanhPho` |
+| `thua_goi_y` | `goi-y-<khu>-<tên đường>` | `{ json }` — gợi ý thửa theo tên đường: `data[0].items[]`, mỗi mục có `id` và `extra {latitude, longitude, dien_tich, chieu_rong, chieu_dai}` | `request {term, size}` · `khuVuc` · `soMuc` |
+| `thua_khu_vuc` | `khu-vuc-<khu>` | `{ soDiemLuoi, soDiemGoiY, soThuaLuoi, soThuaGoiY, soTrung, soKhongCo, soLoi, soCauGoiY, soLoiGoiY }` — bản gộp một khu thí điểm | `request {dienTichKm2, buocM, soDiemLuuGiac}` · `ten` · `thuaMoiKm2` · `loiMoiKm2` · `tongLoi` · `soThua` |
 | `mix_gia` *(chưa thu)* | `toado-<lat>-<lng>` | `{ json }` — đơn giá thị trường theo toạ độ | `request` · `ganThua` |
+| `du_an_thap_tang` | `du-an-nha-dat-<id>` | `{ json }` — chi tiết một dự án thấp tầng, lấy có cờ riêng trên cùng đường chi tiết dự án | `request {id, for_house: true}` · `phuongPhap` (`id-sweep` \| `suggest`) · `estateType` (luôn là `du_an_nha_dat`) · `ten` · `tuCacTuKhoa` (chỉ khi khám phá qua từ khoá) |
+| `du_an_goi_y_thap_tang` | `goi-y-thap-tang-<từ khoá>` | `{ json }` — gợi ý dự án thấp tầng theo từ khoá, có cờ; `data[0].items[]` mỗi mục có `source`, `id`, `text` | `request {term, for_house: true, size}` · `soMuc` · `soThapTang` |
 
 Luật đọc:
 
@@ -377,12 +390,34 @@ Luật đọc:
    ra `false`. Thư viện ảnh chỉ là phần phụ của mốc này: lỗi thì `gallery` là `null` và `meta.galleryLoi` ghi lý do;
    đếm dự án có bảng căn KHÔNG phụ thuộc thư viện. Ảnh dự án CHƯA tải: payload chỉ có link.
 6. **Hai namespace dự án** (`du_an` căn hộ và `du_an_nha_dat` thấp tầng) trùng dải id: khoá dài hạn là cặp
-   (namespace, id). Chi tiết thấp tầng cần cờ riêng trên cùng một đường (phát hiện tĩnh từ mã ứng dụng 24/11, chưa đo).
+   (namespace, id). Chi tiết thấp tầng PHẢI lấy có cờ riêng (`for_house=true`) trên cùng một đường — đo 24/11: không
+   có cờ, cùng id trả một dự án căn hộ khác (id 1804: «Star Villa Sơn Trà» so với «Nhà công vụ Bộ tổng tham mưu»). Với
+   id không có bản ghi thấp tầng, cờ trả `data: null`. Không có lời liệt kê riêng cho thấp tầng (gợi ý chỉ khớp theo từ
+   trọn vẹn), nên `phuongPhap = id-sweep`: quét từng id có cờ; đo 24/11: id 1804 có bản ghi, 1850/1900/2400/2508 rỗng.
+   `du_an_thap_tang` chỉ ghi khi `data.estate_type` là `du_an_nha_dat`. Danh sách của mốc ngày 1 (`du_an_list`,
+   `du_an_detail`) KHÔNG gồm các dự án này.
 7. **Tên miền thật có trong payload** (link ảnh, link quyết định, kho ảnh nguồn): raw ở local được phép; `stg_s17_*` thì
    không — cùng luật với S07 mục 1. Payload thửa có link ký số tạm thời (hết hạn sau 24 giờ): bên đọc không dựa vào.
-8. *(mốc ngày 2)* `can_ho_detail`: tham số để tra một căn là `ma_can`; đối chiếu `ma_can` trong phản hồi với `ma_can` đã
-   gửi, lệch thì bỏ. Liệt kê căn theo toà có thứ tự trang không ổn định: quét hết mọi trang, khử trùng theo mã căn.
-9. *(mốc ngày 2)* Thửa: định danh bền là mã địa chính (`ogc_fid`); khử trùng giữa các phương pháp theo mã này.
+8. *(mốc ngày 2)* **Liệt kê trọn toà.** Thứ tự trang của lời liệt kê không ổn định — đo 24/11: toà P12 một lượt quét ra
+   599 mã duy nhất trên 719 dòng, lượt khác ra đủ 719. Bộ thu quét hết các trang rồi quét thêm lượt, gộp theo `text`;
+   tối đa 8 lượt, lượt không thêm được mã thì dừng. `can_ho_toa.khop` = số mã duy nhất bằng `tongCan` (số DÒNG của lời
+   liệt kê). **`so_can` trong chi tiết dự án không phải tổng của danh sách** (đo: dự án 1004 ghi 2.432, mã duy nhất
+   2.475; dự án 684 ghi 1.172, mã duy nhất 833) — `can_ho_du_an.khop` chỉ để đối chiếu, không dùng làm chứng minh.
+9. *(mốc ngày 2)* **Tra chi tiết căn khớp theo ĐOẠN ĐẦU của từng từ trong mã và trả đúng MỘT kết quả theo thứ tự cố
+   định** — đo 24/11: gửi «320 Tòa Park 12» nhận «3204 Tòa Park 12»; gửi «3312 Tòa Park 12» nhận «3312A Tòa Park 12»;
+   gửi «320» nhận một căn của toà khác. Căn có mã là đoạn đầu của mã khác (toà P12: 41 trên 719) không gọi trúng được
+   bằng cách nào đã thử. Bộ thu đối chiếu `ma_can` của phản hồi với mã đã gửi: lệch thì KHÔNG ghi và ghi nhận thất bại
+   ở trạng thái bộ thu (báo số trong lượt XONG). Những căn này có ở `can_ho_list` và `can_ho_toa` (mã và `sub_text`)
+   nhưng không có `can_ho_detail`.
+10. *(mốc ngày 2)* **Thửa.** Định danh bền là mã địa chính (`ogc_fid`): một thửa đúng một item `thua`, dù gặp ở nhiều
+   điểm hay hai phương pháp; `soTrung` đếm số điểm trúng thửa đã có. Điểm không nằm trong thửa nào: nguồn trả
+   `data: null` (nhanh, khoảng 0,1 s), không có item, tính vào `soKhongCo`. Điểm hỏi lỗi được ghi ở trạng thái bộ thu,
+   tính `soLoi`. Mật độ `thuaMoiKm2` = thửa tìm được bằng lưới / diện tích khu — phụ thuộc bước lưới (30 m) và đa giác
+   khu (lấy từ `areas` của máy thu), KHÔNG phải số thửa thật của khu. Gợi ý theo tên đường: tên đường lấy từ những
+   thửa vừa có (`vi_tri_duong`), nguồn nắp khoảng 15 mục mỗi tên; toạ độ gợi ý có thể nằm ngoài khu, nên thửa tìm được
+   qua gợi ý đếm riêng (`soThuaGoiY`), không vào mật độ. Lưới khu sinh bằng
+   `collector/src/collectors/s17-thua-dinh-gia/luoi-thua.sql`. Đo 24/11: hồ sơ thửa mất khoảng 4 s ở lần đầu hỏi một
+   điểm, khoảng 0,1 s khi hỏi lại.
 
 **Việc kèm bên one-invest (làn Claude, DA58)**: ALLOWLIST thêm `s17-thua-dinh-gia`; migration `stg_s17_*` (sổ số giữ
 128 tạm). Mẫu snapshot thật lấy từ thư mục snapshot của máy thu (thư mục `vn/vn__s17-thua-dinh-gia__*` mang dấu hiệu
