@@ -68,7 +68,7 @@ evals:
     criterion: AC-8
     executor: test
     cmd: config:executors.test.ht12_luoi
-    paths: [scripts/zalo-import-daily.sh, scripts/zalo-import-job.test.mjs, scripts/enrich-buoc-job.test.mjs, pipeline/tests/import-s16-chi-tiet.test.mjs, pipeline/tests/ghep-tin-danh-muc-117.itest.mjs, pipeline/tests/ghep-tin-danh-muc-ghi.itest.mjs]
+    paths: [scripts/zalo-import-daily.sh, scripts/zalo-import-job.test.mjs, scripts/enrich-buoc-job.test.mjs]
     expected: "exit 0; lưới hồi quy: zalo-import-tran-zcode, zalo-import-job (PL34-AC-3 tìm dòng `doc_gop_run bash \"$ROOT/pipeline/doc-gop-hang-ngay.sh\"`, PL34-AC-4), zalo-import-job-nhe, zalo-import-job-lan, enrich-buoc-job (pl34 nhả khoá sau dòng đọc gộp mới), job-step-thoi-luong (JST-AC-8: so với main đã có A, nhánh chỉ sửa phía dưới mốc làn), job-exit — mọi ca pass, 0 fail."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E8c
