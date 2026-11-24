@@ -113,15 +113,25 @@ Luật phân xử (review §3.3):
    - lớp cao là người hay trường nguồn thì giữ, không thẻ;
    - lớp cao là chữ tường minh hay model có trích, và lớp thấp từ model có trích trở lên, thì lên thẻ.
 3. Hai phiếu chỉ là chứng thực khi độc lập, không phiếu nào thấy đáp án của phiếu kia.
-4. Ô (cách đọc × trường × phân khúc) chưa đo hoặc dưới ngưỡng thì không tự áp. Hành vi dưới ngưỡng theo nhóm F3:
+4. Ô (cách đọc × trường × phân khúc) chưa đo hoặc dưới ngưỡng thì không tự áp. Hành vi dưới ngưỡng theo nhóm F3.
+   - **Sửa 24/11 (ROADMAP §3 mục 63, quyết định 3):** ô **chưa đo** được **ghi tạm** khi đủ bốn điều kiện: hai phiếu độc lập
+     trùng nhau (luật 3) có trích dẫn; mỗi đợt ghi có mã lô và lệnh rút cả lô; giá trị ghi tạm không tính là «đã đo» (không
+     lên B3); đo bù trong hạn hai tuần bằng lô nhãn có thẻ cài, không đạt hoặc quá hạn thì ô tự tụt và rút lô. Ô **đã đo mà
+     dưới ngưỡng** vẫn không tự áp.
 
 | Nhóm F3 | Trường | Ngưỡng cận dưới Wilson | Dưới ngưỡng |
 |---|---|---|---|
-| A · định nhóm, định danh | ý định tin, bán/thuê, loại hình, khu đô thị, phân khu, toà, gắn trục/căn | ≥ 0,95 | Thẻ duyệt; tin vẫn hiện ở B1 «chưa biết» |
+| A · định nhóm, định danh | ý định tin, bán/thuê, loại hình, khu đô thị, phân khu, toà, gắn trục/căn | ≥ 0,95 | Thẻ duyệt **theo nhóm**; tin vẫn hiện ở B1 «chưa biết». Riêng toà, phân khu: hiện nguyên văn kèm «theo tin đăng, chưa đối chiếu» |
 | B · số | giá (khoảng), diện tích, phòng ngủ, `price_basis`, tầng, trục, mã căn | ≥ 0,90 | Hiện kèm «suy ra»; ngoại lai lên thẻ |
 | C · mô tả | hướng, view, nội thất, đường, trường thuê | ≥ 0,80 | Hiện kèm «suy ra», không thẻ |
 
 Xếp phân khu, tầng, trục, mã căn như bảng trên là đề xuất của tài liệu này. F3 gốc chỉ nêu ví dụ; chốt ở PL21.
+
+Sửa 24/11 (ROADMAP §3 mục 63, quyết định 1 và 2) cho cột «Dưới ngưỡng» của nhóm A:
+- Thẻ duyệt gom **theo nhóm**: một ứng viên danh bạ hoặc một kiểu lệch là một quyết định cho mọi tin cùng nhóm, không mỗi tin
+  một thẻ. Giá trị chưa quy được về danh bạ đi cùng đường này (DA18).
+- Ô toà và phân khu chưa đối chiếu được với danh bạ: trang tin hiện nguyên văn như bài viết kèm nhãn «theo tin đăng, chưa đối
+  chiếu» (PL37). Giá trị nguyên văn không vào nhóm so sánh giá theo toà và không tạo liên kết nút; gắn nút vẫn là PL20.
 
 ## 2. Một Căn Nhà qua thời gian
 
