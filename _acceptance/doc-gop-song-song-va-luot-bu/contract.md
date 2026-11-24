@@ -5,7 +5,7 @@ slug: doc-gop-song-song-va-luot-bu
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: verified
 design_doc: docs/superpowers/specs/2026-11-24-doc-gop-song-song-va-luot-bu-design.md
 veto_state:
 veto_opened_at:
