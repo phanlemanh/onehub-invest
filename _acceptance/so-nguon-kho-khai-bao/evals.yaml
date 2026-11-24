@@ -38,7 +38,8 @@ evals:
     criterion: AC-6
     executor: script
     cmd: config:executors.script.nk_tang_a
-    paths: ["**"]
+    # luật R4 của GS (24/11): paths = tệp nhánh sửa (git diff merge-base..HEAD, bỏ _acceptance/ và t1_skip) + probe; sau lượt ghim nhánh CHỈ nhận commit gộp main — thêm commit mã thì cập nhật danh sách và ghim lại
+    paths: [app/src/lib/freshness.ts, app/tests/ops-cloud-khong-bang-nap.test.tsx, app/tests/ops-nhan-theo-context.test.tsx, app/tests/quyen-bon-vai.test.tsx, app/tests/slo-mot-nguon.test.tsx, db/migrations/122_*, pipeline/scripts/ops-facts-fixture.mjs, pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs, scripts/bao-cao-ngay.test.mjs, scripts/check-freshness.test.mjs, scripts/ci-bo-qua.json, scripts/freshness-parity.test.mjs, scripts/lib/freshness.mjs, scripts/lib/so-nguon-122.mjs, scripts/s05-slo.test.mjs, scripts/so-nguon-kho.test.mjs, _acceptance/so-nguon-kho-khai-bao/probes/tang-a.mjs]
     expected: "exit 0; dòng 'danh sách tên: S09 <a> mục, S17 <b> mục, kể cả biến thể gập (nguồn: tệp cục bộ|sổ máy thu)' với a > 0, b > 0; 'tự kiểm: cấy từng biến thể vào bản chép migration → mỗi biến thể TRÚNG' (chỉ mã và số chỗ, không tên); phạm vi quét gồm tệp đổi của nhánh và mọi tệp trong _acceptance/so-nguon-kho-khai-bao/; mỗi tệp đổi 'ok'; 'migration 122: S09, S17 real_name NULL, source_ids rỗng'; cuối 'TANG-A OK'; should-NOT-fire: 'TRUNG', 'TU KIEM HONG', 'KHONG CO DANH SACH'"
   - id: E7
     criterion: AC-7
@@ -52,5 +53,6 @@ evals:
     criterion: AC-8
     executor: script
     cmd: config:executors.script.nk_pham_vi
-    paths: ["**"]
+    # luật R4 của GS (24/11): paths = tệp nhánh sửa (git diff merge-base..HEAD, bỏ _acceptance/ và t1_skip) + probe; sau lượt ghim nhánh CHỈ nhận commit gộp main — thêm commit mã thì cập nhật danh sách và ghim lại
+    paths: [app/src/lib/freshness.ts, app/tests/ops-cloud-khong-bang-nap.test.tsx, app/tests/ops-nhan-theo-context.test.tsx, app/tests/quyen-bon-vai.test.tsx, app/tests/slo-mot-nguon.test.tsx, db/migrations/122_*, pipeline/scripts/ops-facts-fixture.mjs, pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs, scripts/bao-cao-ngay.test.mjs, scripts/check-freshness.test.mjs, scripts/ci-bo-qua.json, scripts/freshness-parity.test.mjs, scripts/lib/freshness.mjs, scripts/lib/so-nguon-122.mjs, scripts/s05-slo.test.mjs, scripts/so-nguon-kho.test.mjs, _acceptance/so-nguon-kho-khai-bao/probes/pham-vi.sh]
     expected: "exit 0; 'tự kiểm: app/src/app/page.tsx → NGOAI PHAM VI'; mỗi tệp 'ok'; cuối 'PHAM-VI OK'; should-NOT-fire: 'NGOAI PHAM VI scripts', 'NGOAI PHAM VI app', 'TU KIEM HONG'"
