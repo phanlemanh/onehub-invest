@@ -6398,7 +6398,7 @@
         "db/migrations/129_*",
         "pipeline/lib/tu-ap*"
       ],
-      "ghi_chu": "Giám sát xếp sau hàng đóng 232 thẻ «Bổ sung tin» trùng giá trị đang lưu (NB9 của đợt đang chạy, không có trong tệp này). Số migration 129 là số tạm giám sát giữ. Cách làm phiếu thứ hai độc lập chốt ở S1: bỏ hai dòng đáp án của luật khỏi lời nhắc và giữ tên dự án, hoặc lấy phiếu thứ hai từ đọc gộp vốn không thấy đáp án của luật. Lượt hằng đêm có trần 50 lời gọi mỗi đêm (ENRICH_LIMIT ở scripts/zalo-import-daily.sh) và đứng từ 23/11: đo tồn và chi phí ở S1; đổi trần là tiền nên trình Mạnh ở Cổng Phạm vi. Lô đo bù là việc của Mạnh ở phiên gắn nhãn, không thuộc hàng: lát nhãn có tên toà trước (thiếu thì 110 toà tự rút), rồi khoảng 80 thẻ loại hình có thẻ cài; hạn hai tuần tính từ ngày hàng này được áp lên máy thu. Lên nấc chính thức vẫn là chữ ký riêng cho từng ô (mục 61)."
+      "ghi_chu": "Giám sát xếp sau hàng đóng 232 thẻ «Bổ sung tin» trùng giá trị đang lưu (NB9 của đợt đang chạy, không có trong tệp này). Số migration 129 là số tạm giám sát giữ. Cách làm phiếu thứ hai độc lập chốt ở S1: bỏ hai dòng đáp án của luật khỏi lời nhắc và giữ tên dự án, hoặc lấy phiếu thứ hai từ đọc gộp vốn không thấy đáp án của luật. Lượt hằng đêm có trần 50 lời gọi mỗi đêm (biến ENRICH_LIMIT ở script nạp hằng ngày của S03) và đứng từ 23/11: đo tồn và chi phí ở S1; đổi trần là tiền nên trình Mạnh ở Cổng Phạm vi. Lô đo bù là việc của Mạnh ở phiên gắn nhãn, không thuộc hàng: lát nhãn có tên toà trước (thiếu thì 110 toà tự rút), rồi khoảng 80 thẻ loại hình có thẻ cài; hạn hai tuần tính từ ngày hàng này được áp lên máy thu. Lên nấc chính thức vẫn là chữ ký riêng cho từng ô (mục 61)."
     },
     {
       "dot": "phe-duyet-may-2411",
