@@ -220,8 +220,14 @@ test("getJson trả body đã phân tích; getRaw trả phản hồi gốc", asy
   assert.equal(JSON.parse(raw.body).data[0].code, "01");
 });
 
-test("readBalance: đọc số dư từ body của máy chủ phụ", async () => {
-  const { client, sent } = makeClient(() => json({ status: true, data: { services: ["a"], cpoint: 20, extra: { cpoint: 20 } } }));
+test("readBalance: đọc số dư từ body của máy chủ phụ (hình dạng đo 24/11: data.available)", async () => {
+  // Phản hồi thật còn nhiều số khác (đã rút, đã hết hạn, đã nạp) — chỉ trường số dư mới tính là số dư.
+  const { client, sent } = makeClient(() => json({ status: true, message: null, data: { available: 20, donated: 20, buyed: 0, reward: 0, withdraw: 11, expired: 109, deposited: 140, valid_available: true, detail_by_type: [{}, {}, {}] }, pagination: null, extra: {} }));
   assert.equal(await client.readBalance(), 20);
   assert.deepEqual(sent, ["https://agent.gia.test/v2.x/balance"]);
+});
+
+test("readBalance: body không có số dư thì trả lỗi tạm, không đoán số", async () => {
+  const { client } = makeClient(() => json({ status: true, data: { detail_by_type: [] } }));
+  await assert.rejects(client.readBalance(), TemporaryFailure);
 });

@@ -1,7 +1,7 @@
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
 import { createHash } from "node:crypto";
-import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { gunzipSync } from "node:zlib";
@@ -10,7 +10,7 @@ import { loadConfig } from "../collectors/s17-thua-dinh-gia/config.js";
 import { S17Client, RunStopped, type Response } from "../collectors/s17-thua-dinh-gia/client.js";
 import { S17_NOTES, S17_SCHEMA_VERSION, S17_SOURCE, BatchWriter } from "../collectors/s17-thua-dinh-gia/store.js";
 import { assertBalanceUnchanged, hasApartmentTable, makeItem, tileBases } from "../collectors/s17-thua-dinh-gia/kinds.js";
-import { emptyState, runPhase, type RunState } from "../collectors/s17-thua-dinh-gia/run.js";
+import { emptyState, runPhase, type RunOptions, type RunState } from "../collectors/s17-thua-dinh-gia/run.js";
 
 /**
  * S17 mốc ngày 1 (claudedp-2411-20) — ghi snapshot theo lô nhỏ với schemaVersion 17; các kind của phần
@@ -222,6 +222,37 @@ test("projects: duyệt hết trang, khử trùng id, lấy chi tiết + cây to
   assert.equal(sent.length, 2 + 1 + 3 + 3, "2 trang + 1 lời lỗi (dự án 2) + 2 dự án × 3 lời");
 }));
 
+test("projects: dừng giữa danh sách thì chạy lại từ trang kế, không lấy lại trang đã có", async () => withTmp(async (root) => {
+  const first = fakeSource();
+  const state = emptyState();
+  // lượt một: trần một lời → lấy trang 0 rồi dừng vì quá trần
+  const capped = new S17Client({
+    config: loadConfig(JSON.stringify(FAKE_CONFIG)),
+    caps: { calls: 1, minutes: 60 },
+    paceMs: 0,
+    now: () => 1_000_000,
+    sleep: async () => undefined,
+    transport: async (url: string) => { first.sent.push(url); return json(env({ projects: { content: [{ id: 1 }, { id: 2 }], totalElements: 3, totalPages: 2 } })); },
+  });
+  const w1 = new BatchWriter({ root, maxItems: 100, phase: "projects" });
+  const r1 = rig(state);
+  const e = await runPhase({ phase: "projects", client: capped, writer: w1, ...r1.rig, state }).then(() => null, (x: unknown) => x);
+  assert.ok(e instanceof RunStopped && e.reason === "call-cap", `phải dừng vì quá trần, nhận ${String(e)}`);
+  await w1.flush(`dừng: ${e instanceof Error ? e.message : String(e)}`);
+  assert.equal(first.sent.length, 1);
+  assert.deepEqual(state.projectIds, ["1", "2"], "id của trang đã lấy được giữ lại");
+  // lượt hai: trần mới, chỉ gọi trang 1
+  const second = fakeSource();
+  const w2 = new BatchWriter({ root, maxItems: 100, phase: "projects" });
+  const r2 = rig(state);
+  const s2 = await runPhase({ phase: "projects", client: second.client, writer: w2, ...r2.rig, state });
+  await w2.flush();
+  assert.equal(second.sent.filter((u) => u.endsWith("/projects?page=0&query=&size=100")).length, 0, "không lấy lại trang 0");
+  assert.equal(second.sent[0], "https://api.gia.test/v2.x/projects?page=1&query=&size=100");
+  assert.deepEqual(state.projectIds, ["1", "2", "3"]);
+  assert.equal(s2.calls + 1, second.sent.length + 1, "số lời của lượt hai khớp");
+}));
+
 test("projects: chạy lại thì không gọi gì nữa khi mọi thứ đã xong (nối tiếp)", async () => withTmp(async (root) => {
   const { client, sent } = fakeSource();
   const w = new BatchWriter({ root, maxItems: 100, phase: "projects" });
@@ -234,19 +265,34 @@ test("projects: chạy lại thì không gọi gì nữa khi mọi thứ đã xo
   assert.equal(sent.length, 9);
 }));
 
-test("projects: bị chặn giữa chừng thì dừng, snapshot có lý do, trạng thái giữ dự án đã xong để nối", async () => withTmp(async (root) => {
-  const { client, sent } = fakeSource({ 5: () => json({ message: "denied" }, 403) }); // lời 3–5 là ba lời của dự án 1
+test("projects: bị chặn giữa chừng thì dừng; phần đang dở được chốt kèm lý do, danh sách đã chốt thì giữ nguyên", async () => withTmp(async (root) => {
+  // Lời 1–2: hai trang danh sách (chốt ngay). Lời 3–5: ba lời của dự án 1 (còn trong bộ đệm). Lời 6: dự án 2 → 403.
+  const { client, sent } = fakeSource({ 6: () => json({ message: "denied" }, 403) });
   const w = new BatchWriter({ root, maxItems: 100, phase: "projects" });
   const r = rig();
   const e = await runPhase({ phase: "projects", client, writer: w, ...r.rig, state: r.state }).then(() => null, (x: unknown) => x);
   assert.ok(e instanceof RunStopped && e.reason === "blocked", `phải dừng vì bị chặn, nhận ${String(e)}`);
-  await w.flush(`dừng: ${e instanceof Error ? e.message : String(e)}`);
-  assert.equal(sent.length, 5);
+  assert.equal(sent.length, 6, "đã dừng thì không gửi thêm lời nào");
   assert.deepEqual(r.state.projectIds, ["1", "2", "3"], "danh sách đã lấy thì giữ lại");
-  assert.deepEqual(r.state.detailDone, []);
-  assert.ok(r.saves() >= 3, "lưu trạng thái sau mỗi bước");
+  assert.equal(w.pendingCount, 1, "dự án 1 đang dở, chưa chốt");
+  await w.flush(`dừng: ${e instanceof Error ? e.message : String(e)}`);
   const snaps = await readSnapshots(root);
-  assert.match(String(snaps.at(-1)?.manifest.error), /403/);
+  const withError = snaps.filter((x) => x.manifest.error);
+  assert.equal(withError.length, 1, "đúng một snapshot mang lý do dừng");
+  assert.match(String(withError[0].manifest.error), /403/);
+  assert.deepEqual(withError[0].items.map((it) => it.sourceId), ["du-an-1"], "phần đang dở không mất");
+  assert.equal(snaps.filter((x) => !x.manifest.error).length, 2, "hai trang danh sách đã chốt sạch từ trước");
+}));
+
+test("projects: dừng khi không còn gì đang dở thì không sinh snapshot rỗng chỉ để chứa lý do", async () => withTmp(async (root) => {
+  const { client } = fakeSource({ 5: () => json({ message: "denied" }, 403) });
+  const w = new BatchWriter({ root, maxItems: 100, phase: "projects" });
+  const r = rig();
+  const e = await runPhase({ phase: "projects", client, writer: w, ...r.rig, state: r.state }).then(() => null, (x: unknown) => x);
+  assert.ok(e instanceof RunStopped && e.reason === "blocked");
+  assert.equal(w.pendingCount, 0);
+  assert.equal(await w.flush(`dừng: ${e instanceof Error ? e.message : String(e)}`), null);
+  assert.equal((await readSnapshots(root)).length, 2);
 }));
 
 // ---------- pha: mặt nạ tile ----------
@@ -292,6 +338,18 @@ test("tile-mask: tile rỗng 1.784 B và tile 404 không vào mặt nạ; một 
   assert.ok(sent.slice(1).every((u) => /^https:\/\/tiles\.gia\.test\/data\/ranh_thua\/17\/\d+\/\d+\.png$/.test(u)), "tile chỉ lấy dưới cơ sở của cấu hình nguồn");
 }));
 
+test("tile-mask: địa chỉ tile trong lưới sai khuôn thì dừng trước khi gửi lời nào", async () => {
+  // Lượt thật 24/11: tệp lưới ghi "x/y" (thiếu mức zoom) — phải lộ ra trước lời gọi đầu, không phải sau một lời.
+  const { client, sent } = fakeSource();
+  const r = rig();
+  const e = await runPhase({
+    phase: "tile-mask", client, writer: new BatchWriter({ root: join(tmpdir(), "s17-khong-ghi"), maxItems: 1, phase: "tile-mask" }), ...r.rig, state: r.state, tileZoom: 17,
+    grid: [{ marketId: "vn-a", name: "Tỉnh A", tiles: ["103796/61548"] }],
+  }).then(() => null, (x: unknown) => x);
+  assert.ok(e instanceof Error && /tile/.test(e.message), `phải ném lỗi về địa chỉ tile, nhận ${String(e)}`);
+  assert.equal(sent.length, 0, "kiểm lưới trước khi gọi nguồn");
+});
+
 test("tile-mask: địa chỉ tile tự bị từ chối (không ghép được đường khác)", async () => {
   const { client } = fakeSource();
   await assert.rejects(async () => client.getTile("https://tiles.gia.test/data/ranh_thua", "17/1/1/../../x"), /tile/);
@@ -316,3 +374,44 @@ test("session-check: lỗi mạng mà lời công khai vẫn chạy → hết ph
   assert.ok(e instanceof RunStopped && e.reason === "session-expired");
   assert.equal(sent.length, 2, "một lời phiên + một lời công khai đối chiếu, rồi dừng");
 });
+
+// ---------- trạng thái chỉ được lưu khi dữ liệu đã xuống đĩa ----------
+
+/** Bọc `save`: mỗi lần lưu, bộ đệm của trình ghi phải rỗng (không nói «đã làm» cho thứ chưa chốt xuống đĩa). */
+function savesWhilePending(o: RunOptions & { writer: BatchWriter }): { save: () => Promise<void>; violations: () => number } {
+  let bad = 0;
+  return {
+    save: async () => {
+      if (o.writer.pendingCount > 0) bad++;
+      await o.save();
+    },
+    violations: () => bad,
+  };
+}
+
+test("projects: chỉ lưu trạng thái khi snapshot đã chốt; hết lượt thì mọi thứ đã chốt và đã lưu", async () => withTmp(async (root) => {
+  // Nguồn giả: 2 trang danh sách, 3 dự án (dự án 2 lỗi 404) → 2 item chi tiết; lô 5 → chỉ chốt ở cuối lượt.
+  const { client } = fakeSource();
+  const w = new BatchWriter({ root, maxItems: 5, phase: "projects" });
+  const state = emptyState();
+  const r = rig(state);
+  const guard = savesWhilePending({ writer: w, save: r.rig.save } as unknown as RunOptions & { writer: BatchWriter });
+  await runPhase({ phase: "projects", client, writer: w, ...r.rig, save: guard.save, state });
+  assert.equal(w.pendingCount, 0, "hết lượt không còn gì trong bộ đệm");
+  assert.equal(guard.violations(), 0, "không lần lưu trạng thái nào lúc dữ liệu còn nằm trong bộ đệm");
+  assert.deepEqual(state.detailDone, ["1", "3"], "hai dự án lấy được đều được ghi nhận sau khi chốt");
+  assert.ok(r.saves() >= 1, "có lưu trạng thái sau khi chốt");
+}));
+
+test("projects: chốt snapshot hỏng thì trạng thái KHÔNG nói đã làm việc chưa xuống đĩa", async () => withTmp(async (root) => {
+  // Lượt thật 24/11: thư mục snapshot không sang được tiến trình ego → chốt bị lỗi, mà trạng thái vẫn nói đã lấy 4 trang.
+  const notADir = join(root, "tep-khong-phai-thu-muc");
+  await writeFile(notADir, "x");
+  const { client } = fakeSource();
+  const writer = new BatchWriter({ root: notADir, maxItems: 100, phase: "projects" });
+  const state = emptyState();
+  const r = rig(state);
+  let saved = 0;
+  await assert.rejects(runPhase({ phase: "projects", client, writer, ...r.rig, save: async () => { saved++; }, state }));
+  assert.equal(saved, 0, "chưa chốt được gì thì chưa lưu trạng thái");
+}));

@@ -17,7 +17,7 @@ import { ConfigError, PROBE_ROLE, ROLES, rolePath, type Role, type S17Config } f
 export type Response = { status: number; contentType: string; body: string; /** Số byte của thân khi vận chuyển không trả thân chữ (tile ảnh). */ bytes?: number };
 export type Transport = (url: string, headers: Record<string, string>) => Promise<Response>;
 export type Caps = { calls: number; minutes: number };
-export type StopReason = "blocked" | "session-expired" | "call-cap" | "time-cap" | "network-down" | "balance-spent";
+export type StopReason = "blocked" | "session-expired" | "call-cap" | "time-cap" | "network-down" | "balance-spent" | "balance-unreadable";
 
 export class RunStopped extends Error {
   constructor(
@@ -200,21 +200,15 @@ export class S17Client {
     }
   }
 
-  /** Số dư điểm trên tài khoản — đọc ở máy để đối chiếu trước và sau lượt; không vào snapshot. */
+  /**
+   * Số dư điểm trên tài khoản — đọc ở máy để đối chiếu trước và sau lượt; không vào snapshot.
+   * Hình dạng đo 24/11: `data.available` là số dư; các số khác trong phản hồi (đã rút, đã hết hạn, đã
+   * nạp) không phải số dư. Không có trường số dư thì trả lỗi tạm, không đoán.
+   */
   async readBalance(): Promise<number> {
-    const body = await this.getJson<{ data?: unknown }>("balance", {});
-    const found = new Set<number>();
-    const walk = (o: unknown): void => {
-      if (Array.isArray(o)) return o.forEach(walk);
-      if (o && typeof o === "object") {
-        for (const [k, v] of Object.entries(o as Record<string, unknown>)) {
-          if (typeof v === "number" && Number.isFinite(v) && /balance|so_du|remain|con_lai|point/i.test(k)) found.add(v);
-          else walk(v);
-        }
-      }
-    };
-    walk(body?.data);
-    if (found.size !== 1) throw new TemporaryFailure(`không đọc được số dư (thấy ${found.size} giá trị)`);
-    return [...found][0];
+    const body = await this.getJson<{ data?: { available?: unknown } }>("balance", {});
+    const v = body?.data?.available;
+    if (typeof v === "number" && Number.isFinite(v)) return v;
+    throw new TemporaryFailure("không đọc được số dư (body thiếu data.available là số)");
   }
 }

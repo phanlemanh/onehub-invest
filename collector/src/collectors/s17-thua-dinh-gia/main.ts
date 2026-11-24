@@ -112,16 +112,30 @@ export function checkConfigForPhase(config: S17Config, o: CliOptions): void {
   if (o.via === "ego" && !config.session) throw new ConfigError("cấu hình local S17 thiếu session.cookieName (tên cookie phiên) cho pha cần phiên");
 }
 
+/**
+ * Nội dung tệp tuỳ chọn chuyển cho tiến trình ego — tách thành hàm để test được: pha qua ego phải mang
+ * cờ đọc số dư (lượt thật 24/11 thiếu cờ này nên chỉ gửi một lời) và tên cookie phiên.
+ */
+export function egoOptions(
+  o: CliOptions,
+  config: S17Config,
+  paths: { statePath: string; logPath: string; resultPath: string },
+  grid?: GridEntry[],
+): Record<string, unknown> {
+  return { ...o, snapshotRoot: o.snapshotsRoot, config, ...paths, grid, cookieName: config.session?.cookieName, checkBalance: o.via === "ego" };
+}
+
 /** Dòng tóm tắt in ra màn: chỉ số đếm và lý do, không URL, không số dư. */
 export function summarize(r: ExecResult): Record<string, unknown> {
   return {
     ok: r.ok,
     stopReason: r.stopReason,
     message: r.message,
-    calls: r.calls,
-    blocks: r.blocks,
-    snapshots: r.snapshots.length,
-    soDuKhongDoi: r.balanceBefore === undefined ? undefined : r.balanceBefore === r.balanceAfter,
+    calls: r.calls ?? 0,
+    blocks: r.blocks ?? 0,
+    snapshots: r.snapshots?.length ?? 0,
+    // Lượt dừng giữa chừng không đọc được số dư sau → để trống, không kết luận «đổi».
+    soDuKhongDoi: r.balanceBefore === undefined || r.balanceAfter === undefined ? undefined : r.balanceBefore === r.balanceAfter,
     summary: r.summary,
   };
 }
@@ -168,7 +182,7 @@ export async function main(
   // Pha cần phiên: sinh tiến trình ego-browser nodejs; script trong trang do ego.ts giữ.
   const optionsPath = join(o.stateDir, "ego-options.json");
   const resultPath = join(o.stateDir, "ego-result.json");
-  await writeFile(optionsPath, JSON.stringify({ ...o, config, statePath, logPath, resultPath, grid, cookieName: config.session?.cookieName }));
+  await writeFile(optionsPath, JSON.stringify(egoOptions(o, config, { statePath, logPath, resultPath }, grid)));
   const egoModule = JSON.stringify(new URL("./ego.js", import.meta.url).href);
   const bootstrap = `const m = await import(${egoModule}); process.exit(await m.main({ claimTaskSpace, takeOverTaskSpace, taskSpace, listTaskSpaces }, ${JSON.stringify(optionsPath)}));`;
   const code = await new Promise<number>((resolve) => {

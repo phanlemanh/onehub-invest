@@ -20,6 +20,11 @@ export class BatchWriter {
   readonly snapshotIds: string[] = [];
   private buffer: RawItem[] = [];
 
+  /** Số item đã lấy nhưng chưa chốt thành snapshot — còn > 0 thì chưa được coi là đã lưu. */
+  get pendingCount(): number {
+    return this.buffer.length;
+  }
+
   constructor(
     private readonly o: {
       root: string;

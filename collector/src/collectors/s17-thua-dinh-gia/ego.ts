@@ -124,7 +124,8 @@ export async function main(api: EgoApi, optionsPath: string): Promise<number> {
     await writeResult(r satisfies ExecResult);
     return r.ok ? 0 : 3;
   } catch (e) {
-    await writeResult({ ok: false, message: e instanceof RunStopped ? e.message : String(e) });
+    // Mang dấu vết (cắt ngắn) để lỗi của bộ thu thấy được chỗ; dấu vết chỉ có đường tệp của máy này.
+    await writeResult({ ok: false, message: (e instanceof Error ? `${e.message}\n${e.stack ?? ""}` : String(e)).slice(0, 1200) });
     return 1;
   }
 }

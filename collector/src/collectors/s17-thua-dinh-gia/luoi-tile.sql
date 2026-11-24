@@ -32,6 +32,7 @@ oc AS (
 diem AS (
   SELECT oc.x0 + oc.buoc / 2 + gx.i * oc.buoc AS tx,
          oc.y0 + oc.buoc / 2 + gy.i * oc.buoc AS ty,
+         oc.z AS z,
          ST_Transform(
            ST_SetSRID(
              ST_MakePoint(
@@ -43,7 +44,7 @@ diem AS (
   CROSS JOIN LATERAL generate_series(0, (oc.y1 - oc.y0) / oc.buoc) AS gy(i)
 ),
 gan AS (
-  SELECT a.id AS market_id, a.name, d.tx, d.ty
+  SELECT a.id AS market_id, a.name, d.tx, d.ty, d.z
   FROM diem d
   JOIN areas a
     ON a.region_type = 'market' AND a.country_code = 'vn' AND ST_Contains(a.geom, d.p)
@@ -51,7 +52,7 @@ gan AS (
 SELECT json_agg(
          json_build_object(
            'marketId', g.market_id, 'name', g.name,
-           'tiles', (SELECT json_agg(t.tx || '/' || t.ty ORDER BY t.ty, t.tx)
+           'tiles', (SELECT json_agg(t.z || '/' || t.tx || '/' || t.ty ORDER BY t.ty, t.tx)
                      FROM gan t WHERE t.market_id = g.market_id)
          ) ORDER BY g.market_id
        )

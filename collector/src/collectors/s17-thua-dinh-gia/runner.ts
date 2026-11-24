@@ -77,6 +77,16 @@ export function makeLogger(path: string): (event: Record<string, unknown>) => vo
   };
 }
 
+/** Đọc số dư; không đọc được thì dừng cả lượt NGAY — thiếu bằng chứng số dư thì không chạy pha. */
+async function readBalanceOrStop(client: S17Client, when: "trước" | "sau"): Promise<number> {
+  try {
+    return await client.readBalance();
+  } catch (e) {
+    if (e instanceof RunStopped) throw e;
+    throw new RunStopped("balance-unreadable", `không đọc được số dư ${when} lượt: ${e instanceof Error ? e.message : String(e)}`);
+  }
+}
+
 export async function executePhase(o: ExecOptions): Promise<ExecResult> {
   const env = o.env ?? realEnv;
   const state = await loadState(o.statePath);
@@ -96,7 +106,7 @@ export async function executePhase(o: ExecOptions): Promise<ExecResult> {
   let balanceBefore: number | undefined;
   let balanceAfter: number | undefined;
   try {
-    if (o.checkBalance) balanceBefore = await client.readBalance();
+    if (o.checkBalance) balanceBefore = await readBalanceOrStop(client, "trước");
     const summary = await runPhase({
       phase: o.phase,
       client,
@@ -111,7 +121,7 @@ export async function executePhase(o: ExecOptions): Promise<ExecResult> {
       emptyTileBytes: o.emptyTileBytes,
     });
     if (o.checkBalance) {
-      balanceAfter = await client.readBalance();
+      balanceAfter = await readBalanceOrStop(client, "sau");
       assertBalanceUnchanged(balanceBefore ?? NaN, balanceAfter);
     }
     await writer.flush();

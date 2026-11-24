@@ -7,6 +7,7 @@ import { join } from "node:path";
 import { ConfigError, loadConfig } from "../collectors/s17-thua-dinh-gia/config.js";
 import { RunStopped, type Response } from "../collectors/s17-thua-dinh-gia/client.js";
 import { executePhase } from "../collectors/s17-thua-dinh-gia/runner.js";
+import { summarize } from "../collectors/s17-thua-dinh-gia/main.js";
 
 /**
  * Trình điều khiển một pha: đọc số dư trước và sau lượt (bằng chứng không tiêu điểm), lưu trạng thái ra
@@ -41,7 +42,7 @@ function harness(): Harness & {
     const p = new URL(url).pathname;
     if (p.endsWith("/balance")) {
       const v = h.balances[Math.min(balanceReads++, h.balances.length - 1)];
-      return json(env({ services: ["lookup"], cpoint: v }));
+      return json(env({ available: v }));
     }
     if (p.endsWith("/projects")) {
       const page = Number(new URL(url).searchParams.get("page"));
@@ -176,4 +177,43 @@ test("RunStopped mang tên lớp để nhận diện ở ranh giới tiến trì
   const e = new RunStopped("blocked", "x");
   assert.equal(e.name, "RunStopped");
   assert.equal(e.reason, "blocked");
+});
+
+test("executePhase: không đọc được số dư thì dừng TRƯỚC khi chạy pha, lý do balance-unreadable (đo 24/11)", async () => withTmp(async (dir) => {
+  const sent: string[] = [];
+  const transport = async (url: string): Promise<Response> => {
+    sent.push(url);
+    return new URL(url).pathname.endsWith("/balance") ? json(env({ detail_by_type: [] })) : json(env({ available: true }));
+  };
+  const r = await executePhase({
+    phase: "session-check",
+    config: loadConfig(JSON.stringify(FAKE_CONFIG)),
+    transport,
+    snapshotRoot: join(dir, "snapshots"),
+    statePath: join(dir, "state.json"),
+    logPath: join(dir, "run.log.jsonl"),
+    caps: { calls: 100, minutes: 60 },
+    paceMs: 0,
+    batchItems: 100,
+    checkBalance: true,
+    env: { sleep: async () => undefined, now: () => new Date("2026-11-24T04:00:00.000Z") },
+  });
+  assert.equal(r.ok, false);
+  assert.equal(r.stopReason, "balance-unreadable");
+  assert.equal(sent.length, 1, "chỉ có lời đọc số dư; pha không chạy");
+}));
+
+test("summarize: kết quả thiếu trường (lỗi ngoài dự kiến) vẫn in được dòng tóm tắt", () => {
+  const line = summarize({ ok: false, message: "lỗi" } as unknown as Awaited<ReturnType<typeof executePhase>>);
+  assert.equal(line.ok, false);
+  assert.equal(line.snapshots, 0);
+  assert.doesNotMatch(JSON.stringify(line), /undefined/);
+});
+
+test("summarize: lượt dừng giữa chừng chưa đọc số dư sau thì để trống, không nói «đổi»", () => {
+  const line = summarize({ ok: false, stopReason: "call-cap", snapshots: [], calls: 5, blocks: 0, balanceBefore: 20 } as unknown as Awaited<ReturnType<typeof executePhase>>);
+  assert.equal(line.ok, false);
+  assert.equal("soDuKhongDoi" in line, true);
+  assert.equal(line.soDuKhongDoi, undefined, "chưa có số sau thì không kết luận gì");
+  assert.equal(summarize({ ok: true, snapshots: [], calls: 3, blocks: 0, balanceBefore: 20, balanceAfter: 20 } as unknown as Awaited<ReturnType<typeof executePhase>>).soDuKhongDoi, true);
 });

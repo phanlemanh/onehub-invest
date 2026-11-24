@@ -16,6 +16,8 @@ export type GridEntry = { marketId: string; name: string; tiles: string[] };
 
 export type RunState = {
   listDone: boolean;
+  /** Trang danh sách sẽ lấy kế tiếp (tính từ 0) — dừng giữa danh sách rồi chạy lại đi từ đây. */
+  listNextPage: number;
   projectIds: string[];
   detailDone: string[];
   detailFailed: Record<string, string>;
@@ -26,7 +28,7 @@ export type RunState = {
 };
 
 export function emptyState(): RunState {
-  return { listDone: false, projectIds: [], detailDone: [], detailFailed: {}, priceDone: [], tileDone: [] };
+  return { listDone: false, listNextPage: 0, projectIds: [], detailDone: [], detailFailed: {}, priceDone: [], tileDone: [] };
 }
 
 export type PhaseSummary = { phase: Phase; calls: number; items: number; failed: number; alive?: boolean };
@@ -51,6 +53,21 @@ type ListEnvelope = Envelope<{ projects?: { content?: unknown[]; totalElements?:
 
 const listOf = (data: unknown): unknown[] => (Array.isArray(data) ? data : Array.isArray((data as { content?: unknown[] } | null)?.content) ? (data as { content: unknown[] }).content : []);
 const byteCount = (res: { body: string; bytes?: number }): number => res.bytes ?? Buffer.byteLength(res.body);
+
+/**
+ * Chỉ lưu trạng thái khi bộ đệm của trình ghi đã rỗng. Trạng thái không bao giờ nói «đã làm» cho việc
+ * chưa chốt xuống đĩa (lượt thật 24/11: chốt snapshot hỏng mà trạng thái vẫn ghi đã lấy bốn trang).
+ * Nếu gãy giữa chừng, phần đã lấy nhưng chưa ghi nhận sẽ được lấy lại (tối đa một lô).
+ */
+async function checkpoint(o: RunOptions): Promise<void> {
+  if (o.writer.pendingCount === 0) await o.save();
+}
+
+/** Chốt phần đang dở rồi lưu trạng thái — dùng ở các điểm kết thúc logic (hết một trang, một tỉnh…). */
+async function commit(o: RunOptions): Promise<void> {
+  await o.writer.flush();
+  await o.save();
+}
 
 async function sessionCheck(o: RunOptions): Promise<PhaseSummary> {
   const body = await o.client.getJson<Envelope>("data-available", {});
@@ -100,10 +117,11 @@ async function reference(o: RunOptions): Promise<PhaseSummary> {
       await o.writer.add(makeItem("gia_ubnd", `ubnd-${districtCode}`, { json: price }, { request: { districtCode, provinceCode }, congKhai: true, soViTri: rows }, at()));
       items++;
       o.state.priceDone.push(districtCode);
-      await o.save();
+      await checkpoint(o);
     }
     o.log({ suKien: "gia-dat-theo-quan", maTinh: provinceCode, soQuan: districts.length });
   }
+  await commit(o);
   o.log({ suKien: "tham-chieu-xong", soQuanDaThay: districtsSeen, soQuanDaLay: o.state.priceDone.length });
   return { phase: o.phase, calls: o.client.calls - started, items, failed: 0 };
 }
@@ -114,6 +132,9 @@ async function tileMask(o: RunOptions): Promise<PhaseSummary> {
   const zoom = o.tileZoom ?? 17;
   const empty = o.emptyTileBytes ?? 1784;
   const grid = o.grid ?? [];
+  // Kiểm cả lưới TRƯỚC lời gọi đầu: địa chỉ phải là "z/x/y" đúng mức quét, nếu không dừng mà không gọi nguồn.
+  const badGrid = grid.find((g) => !/^vn-[a-z0-9-]+$/.test(g.marketId) || g.tiles.some((t) => !new RegExp(`^${zoom}/\\d{1,8}/\\d{1,8}$`).test(t)));
+  if (badGrid) throw new ConfigError(`lưới tile có địa chỉ sai khuôn "z/x/y" (mong mức ${zoom}) ở tỉnh ${badGrid.marketId}`);
   const full = await o.client.getJson<Envelope>("full-config", {});
   const base = tileBases(full).ranh_thua;
   if (!base) throw new ConfigError("cấu hình đầy đủ của nguồn không có cơ sở tile ranh thửa");
@@ -153,14 +174,14 @@ async function tileMask(o: RunOptions): Promise<PhaseSummary> {
     items++;
     failed += loi;
     o.state.tileDone.push(entry.marketId);
-    await o.save();
+    await commit(o);
     o.log({ suKien: "mat-na-tile", tinh: entry.marketId, soDiemQuet: entry.tiles.length, trong: has.length, rong, vang, loi });
   }
   return { phase: o.phase, calls: o.client.calls - started, items, failed };
 }
 
 async function fetchProjectList(o: RunOptions, size: number): Promise<void> {
-  let page = 0;
+  let page = o.state.listNextPage;
   let totalPages = Infinity;
   const seen = new Set(o.state.projectIds);
   const at = () => (o.now ?? (() => new Date()))().toISOString();
@@ -186,14 +207,15 @@ async function fetchProjectList(o: RunOptions, size: number): Promise<void> {
         at(),
       ),
     );
-    await o.save();
+    o.state.listNextPage = page + 1;
+    await commit(o);
     o.log({ suKien: "danh-sach-du-an", trang: page, soMuc: content.length, khongId: noId, tongDuAn: Number(body?.data?.projects?.totalElements ?? 0) });
     if (!content.length) break;
     page++;
     if (page > 1000) throw new RunStopped("call-cap", "danh sách dự án quá 1.000 trang — dừng để không lặp vô hạn");
   }
   o.state.listDone = true;
-  await o.save();
+  await commit(o);
 }
 
 async function projects(o: RunOptions): Promise<PhaseSummary> {
@@ -214,19 +236,17 @@ async function projects(o: RunOptions): Promise<PhaseSummary> {
       o.state.detailDone.push(id);
       items++;
     } catch (e) {
-      if (e instanceof RunStopped) {
-        await o.save();
-        throw e;
-      }
+      if (e instanceof RunStopped) throw e;
       // 4xx khác, lỗi tạm, thân không phải JSON: tính thất bại của riêng dự án này, đi tiếp
       o.state.detailFailed[id] = e instanceof Error ? e.message : String(e);
       failed++;
     }
-    await o.save();
+    await checkpoint(o);
     if ((items + failed) % 50 === 0 && items + failed > 0) {
       o.log({ suKien: "tien-do-chi-tiet", daXong: o.state.detailDone.length, thatBai: Object.keys(o.state.detailFailed).length, tong: o.state.projectIds.length });
     }
   }
+  await commit(o);
   return { phase: o.phase, calls: o.client.calls - started, items, failed };
 }
 

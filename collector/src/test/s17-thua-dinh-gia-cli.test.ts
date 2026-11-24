@@ -1,7 +1,7 @@
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
 
-import { checkConfigForPhase, parseCli } from "../collectors/s17-thua-dinh-gia/main.js";
+import { checkConfigForPhase, egoOptions, parseCli } from "../collectors/s17-thua-dinh-gia/main.js";
 import { loadConfig } from "../collectors/s17-thua-dinh-gia/config.js";
 
 /**
@@ -39,13 +39,31 @@ test("parseCli: pha lạ, thiếu gốc snapshot, hoặc số không nguyên th�
   assert.throws(() => parseCli(base.map((a) => (a === "1000" ? "1.5" : a))));
 });
 
+const CONFIG_DU_AN = {
+  hosts: { api: "https://api.gia.test", agent: "https://agent.gia.test", web: "https://web.gia.test" },
+  paths: { "project-list": "/v2.x/projects", "project-detail": "/v2.x/projects/{id}", "building-tree": "/v2.x/projects/{id}/tree", gallery: "/v2.x/gallery/{id}", "data-available": "/v2.x/data-available", "asset-type": "/v2.x/asset-type", balance: "/v2.x/balance", "full-config": "/v2.x/configuration" },
+};
+
 test("checkConfigForPhase: pha cần phiên đòi tên cookie phiên trong cấu hình local; pha công khai không cần", () => {
-  const config = {
-    hosts: { api: "https://api.gia.test", agent: "https://agent.gia.test", web: "https://web.gia.test" },
-    paths: { "project-list": "/v2.x/projects", "project-detail": "/v2.x/projects/{id}", "building-tree": "/v2.x/projects/{id}/tree", gallery: "/v2.x/gallery/{id}", "data-available": "/v2.x/data-available", "asset-type": "/v2.x/asset-type", balance: "/v2.x/balance", "full-config": "/v2.x/configuration" },
-  };
+  const config = CONFIG_DU_AN;
   assert.doesNotThrow(() => checkConfigForPhase(loadConfig(JSON.stringify(config)), parseCli([...base, "--phase", "tile-mask", "--grid", "/tmp/luoi.json"])));
   assert.throws(() => checkConfigForPhase(loadConfig(JSON.stringify(config)), parseCli([...base, "--phase", "projects", "--space", "4"])), /cookieName/);
   assert.doesNotThrow(() => checkConfigForPhase(loadConfig(JSON.stringify({ ...config, session: { cookieName: "PHIEN_GIA" } })), parseCli([...base, "--phase", "projects", "--space", "4"])));
   assert.throws(() => checkConfigForPhase(loadConfig(JSON.stringify({ ...config, session: { cookieName: "a b(c" } })), parseCli([...base, "--phase", "projects", "--space", "4"])), /cookieName/);
+});
+
+test("egoOptions: pha qua ego phải mang cờ đọc số dư và tên cookie phiên (lượt thật 24/11 thiếu cờ này)", () => {
+  const config = loadConfig(JSON.stringify({ ...CONFIG_DU_AN, session: { cookieName: "PHIEN_GIA" } }));
+  const via = parseCli([...base, "--phase", "projects", "--space", "4"]);
+  const opts = egoOptions(via, config, { statePath: "/tmp/s.json", logPath: "/tmp/l.jsonl", resultPath: "/tmp/r.json" }, [{ marketId: "vn-a", name: "A", tiles: [] }]);
+  assert.equal(opts.checkBalance, true);
+  assert.equal(opts.cookieName, "PHIEN_GIA");
+  assert.equal(opts.spaceId, 4);
+  assert.equal(opts.statePath, "/tmp/s.json");
+  assert.equal(opts.snapshotRoot, "/tmp/snap", "thư mục snapshot phải sang được tiến trình ego (lượt thật 24/11 thiếu, mất 4 trang)");
+  assert.equal(opts.resultPath, "/tmp/r.json");
+  assert.equal(opts.logPath, "/tmp/l.jsonl");
+  assert.ok(JSON.stringify(opts).includes("PHIEN_GIA"), "tệp tuỳ chọn là JSON bình thường");
+  const congKhai = egoOptions(parseCli(base), config, { statePath: "/tmp/s.json", logPath: "/tmp/l.jsonl", resultPath: "/tmp/r.json" });
+  assert.equal(congKhai.checkBalance, false, "pha công khai không đụng tài khoản");
 });
