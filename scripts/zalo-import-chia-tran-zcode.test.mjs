@@ -25,6 +25,24 @@ const XONG = "process.exit(0);\n";
 const NAP_GIA = `import fs from "node:fs"; import p from "node:path"; const __dirname=p.dirname(new URL(import.meta.url).pathname);
 fs.mkdirSync(p.join(__dirname,"logs"),{recursive:true});
 const ngu=Number(process.env.NAP_NGU||0)*1000; setTimeout(()=>{process.exit(Number(process.env.NAP_MA||0))},ngu);\n`;
+// ---- fixture bước đọc gộp (thế cho pipeline/doc-gop-hang-ngay.sh của làn Claude) ----
+// treo: bash ngủ vòng — nhận TERM thì thoát 143 (sau lần sleep đang chạy)
+const DG_TREO = "#!/bin/bash\nwhile true; do sleep 1; done\n";
+// phớt TERM: bash gọi node con bỏ qua SIGTERM — chỉ chết bằng SIGKILL ân hạn
+const DG_PHOT_MJS = 'process.on("SIGTERM", () => {}); setInterval(() => {}, 1000);\n';
+const DG_PHOT = '#!/bin/bash\nnode "$(dirname "$0")/doc-gop-phong-term.mjs"\n';
+// hợp đồng P3/HT6: nhận DOC_GOP_TRAN_GIAY, giữ sổ đã-đọc; chưa xong thì thoát 75 kèm dòng WARN. Số bài làm được
+// trong lượt do FIX_DOC_GOP_LAM (thế cho đồng hồ của bước): lượt 1 làm 2 rồi 75, lượt 2 làm nốt.
+const DG_HOP_DONG = `#!/bin/bash
+s="$(dirname "$0")/logs-doc"; mkdir -p "$s"
+printf '%s\\n' "\${DOC_GOP_TRAN_GIAY:-KHONG_DAT}" > "$s/tran-nhan.txt"
+da=$(cat "$s/da-doc" 2>/dev/null || echo 0)
+con=$(( \${FIX_DOC_GOP_LAM:-6} - da )); [ "$con" -lt 0 ] && con=0
+i=0
+while [ "$i" -lt "$con" ]; do da=$((da+1)); echo "$da" >> "$s/so-doc.txt"; echo "$da" > "$s/da-doc"; i=$((i+1)); done
+if [ "$da" -lt 6 ]; then echo "JOB WARN [doc-gop-hang-ngay] het-gio: hom-qua con lai $((6-da)) loi goi" >&2; exit 75; fi
+exit 0
+`;
 // fixture enrich: chạy qua `node --import tsx scripts/enrich-run.ts` như bản thật — tsx giả rỗng trong agent/node_modules,
 // tệp .ts chỉ chứa JS thường (node 24 chạy thẳng). Ghi số lần chạy vào ENRICH_DA_CHAY.
 const ENRICH_TS = `import fs from "node:fs";
@@ -51,6 +69,7 @@ const dungMoi = ({ bien = null, docGop = "exit 0\n", cham = false } = {}) => {
   writeFileSync(join(root, "pipeline", "scripts", "phuong-tu-du-an.mjs"), XONG);
   writeFileSync(join(root, "pipeline", "import-airbnb.mjs"), NAP_GIA);
   writeFileSync(join(root, "pipeline", "doc-gop-hang-ngay.sh"), docGop);
+  writeFileSync(join(root, "pipeline", "doc-gop-phong-term.mjs"), DG_PHOT_MJS);
   mkdirSync(join(root, "agent", "node_modules", "tsx"), { recursive: true });
   writeFileSync(join(root, "agent", "node_modules", "tsx", "package.json"), '{"name":"tsx","type":"module","main":"index.mjs","exports":"./index.mjs"}\n');
   writeFileSync(join(root, "agent", "node_modules", "tsx", "index.mjs"), "");
@@ -88,12 +107,18 @@ const choHet = async (dau, lan = 80) => { // tối đa 40s
 const donCon = (dau) => { try { execFileSync("pkill", ["-9", "-f", dau]); } catch {} };
 const voiRoot = async (opts, fn) => {
   const root = dungMoi(opts);
-  try { return await fn(root); } finally { rmSync(root, { recursive: true, force: true }); }
+  try { return await fn(root); } finally { donCon("doc-gop-phong-term.mjs"); rmSync(root, { recursive: true, force: true }); }
 };
 const chuKyThat = (pid) => execFileSync("ps", ["-o", "lstart=", "-p", String(pid)], { encoding: "utf8" }).replace(/\s+/g, " ").trim();
 
 const CAU = {
   tranTong: "|| echo 21600)}", // mặc định trần tổng ở phần đồng hồ
+  // nhánh B (phía dưới mốc)
+  dongHoBuoc: 'canh_gio_buoc "$TRAN_DOC_GOP" "bước đọc gộp" "$buoc_pid"',
+  kt75: 'if [ "$rc" -eq 75 ]; then',
+  anHanBuoc: "setTimeout(diet, 20_000).unref();",
+  boQuaTerm: 'process.on("SIGTERM", () => {}); // đồng hồ bước',
+  usr1: 'process.on("SIGUSR1", () => { if (!daBan) process.exit(0); diet(); });',
 };
 
 // ══════ A (3) trần tổng lượt 00:00 mặc định 21600 s được áp ══════
@@ -107,7 +132,7 @@ const kiemA3 = (bien) => voiRoot({ bien, docGop: "sleep 1\n", cham: true }, asyn
   const r = await chay(root, { ZALO_IMPORT_NODE_BIN: nodeGia(root) });
   assert.match(r.out, /\[zalo-import-daily\] trần: nạp ≤1800s · đọc gộp ≤16200s \(dừng sạch ở 15900s\) · lượt ≤21600s/, "A(3) dòng khai trần lúc khởi động: lượt 00:00 mặc định 21600s");
   const dong = readFileSync(join(root, "dong-ho.txt"), "utf8").trim().split("\n").map((l) => l.trim().split(/\s+/).join(" "));
-  assert.deepEqual(dong, ["21600 10800"], `A(3) đồng hồ của lượt nhận trần 21600s, WARN 10800s — thực tế ${JSON.stringify(dong)}`);
+  assert.deepEqual(dong, ["21600 10800", "16200"], `A(3) hai đồng hồ của lượt (nhánh B): tổng 21600s (WARN 10800s) rồi của bước đọc gộp 16200s — thực tế ${JSON.stringify(dong)}`);
   // tuổi khoá theo cùng trần tổng: khoá 5h của chủ thật (pid sống + chữ ký khớp) — dưới 6h nên KHÔNG gỡ
   const khoa = join(root, "pipeline", "logs", "apify-daily.state.lock");
   mkdirSync(khoa, { recursive: true });
@@ -123,7 +148,7 @@ const kiemA3 = (bien) => voiRoot({ bien, docGop: "sleep 1\n", cham: true }, asyn
   assert.match(r7h.out, /gỡ khoá của lượt chạy thật đã VƯỢT trần tổng 21600s/, "A(3) khoá 7h (quá trần 6h, đồng hồ chết) thì gỡ được");
   assert.doesNotMatch(r7h.out, /⏭ bỏ lượt/, "A(3) sau khi gỡ, lượt nhanh chạy");
 });
-test("2311-5 A(3): trần tổng lượt 00:00 mặc định 21600s (WARN 10800s) áp cho đồng hồ và tuổi khoá; đọc gộp 16200s", () => kiemA3());
+test("2311-5 A(3): trần tổng lượt 00:00 mặc định 21600s (WARN 10800s) áp cho đồng hồ và tuổi khoá; nhánh B thêm đồng hồ bước đọc gộp 16200s", () => kiemA3());
 test("2311-5 A(3) chiều đỏ: bản sao trả trần tổng về 14400 → đỏ dòng khai trần", () =>
   assert.rejects(kiemA3((s) => s.replace(CAU.tranTong, "|| echo 14400)}")), /lượt 00:00 mặc định 21600s/));
 test("2311-5 A(3) chiều đỏ: bản sao để tuổi khoá ở 14400 → đỏ «khoá 5h của lượt thật vẫn còn chủ»", () =>
@@ -154,8 +179,9 @@ const kiemA4 = (env, ke) => voiRoot({ docGop: DG_GHI_TRAN }, async (root) => {
 test("2311-5 A hợp đồng: bước đọc gộp nhận DOC_GOP_TRAN_GIAY = (21600 − 2400 − 3000) − 300 = 15900 (mặc định)", () => kiemA4({}, "15900"));
 test("2311-5 A hợp đồng: ZALO_IMPORT_TRAN_DOC_GOP=1200 → bước nhận 900 (lệch trước đồng hồ 300s)", () => kiemA4({ ZALO_IMPORT_TRAN_DOC_GOP: "1200" }, "900"));
 test("2311-5 A hợp đồng: trần đọc gộp quá nhỏ thì mốc dừng sạch không xuống dưới 60s", () => kiemA4({ ZALO_IMPORT_TRAN_DOC_GOP: "30" }, "60"));
-test("2311-5 A hợp đồng chiều đỏ: bản sao không xuất biến → bước nhận KHONG_DAT (đỏ «không nhận được»)", () => assert.rejects(
-  voiRoot({ bien: (s) => s.replace("export DOC_GOP_TRAN_GIAY\n", ""), docGop: DG_GHI_TRAN }, async (root) => {
+// Trên nhánh B bước nhận biến TƯỜNG MINH từ doc_gop_run (không chỉ nhờ export): chiều đỏ phải bỏ cả hai đường.
+test("2311-5 A hợp đồng chiều đỏ: bản sao bỏ cả export lẫn chỗ truyền tường minh → bước nhận KHONG_DAT (đỏ «không nhận được»)", () => assert.rejects(
+  voiRoot({ bien: (s) => s.replace("export DOC_GOP_TRAN_GIAY\n", "").replace('DOC_GOP_TRAN_GIAY="$DOC_GOP_TRAN_GIAY" "$@" &', '"$@" &'), docGop: DG_GHI_TRAN }, async (root) => {
     mkdirSync(join(root, "pipeline", "logs-doc"));
     await chay(root, {});
     assert.equal(readFileSync(join(root, "pipeline", "logs-doc", "tran-nhan.txt"), "utf8").trim(), "15900", "A(2) CA LỖI: bước đọc gộp không nhận được DOC_GOP_TRAN_GIAY (thiếu export)");
@@ -172,10 +198,10 @@ const chayTran = (bien, env) => voiRoot({ bien, docGop: DG_GHI_TRAN, cham: true 
   return { ra: r, tran: readFileSync(join(root, "pipeline", "logs-doc", "tran-nhan.txt"), "utf8").trim(),
     dong: readFileSync(join(root, "dong-ho.txt"), "utf8").trim().split("\n").map((l) => l.trim().split(/\s+/).join(" ")) };
 });
-test("2311-5 A trần tổng 32400 (plist đêm 24→25/11): biến môi trường thắng mặc định — đọc gộp ≤27000s, dừng sạch ở 26700s, đồng hồ nhận 32400", async () => {
+test("2311-5 A trần tổng 32400 (plist đêm 24→25/11): biến môi trường thắng mặc định — đọc gộp ≤27000s, dừng sạch ở 26700s, đồng hồ nhận 32400 (nhánh B: thêm đồng hồ bước 27000s)", async () => {
   const d = await chayTran(null, { ZALO_IMPORT_TRAN_TONG: "32400" });
   assert.match(dongKhai(d.ra), /đọc gộp ≤27000s \(dừng sạch ở 26700s\) · lượt ≤32400s/, "(i) dòng khai trần theo biến môi trường");
-  assert.deepEqual(d.dong, ["32400 16200"], `(i) đồng hồ tổng nhận 32400, WARN 16200 — thực tế ${JSON.stringify(d.dong)}`);
+  assert.deepEqual(d.dong, ["32400 16200", "27000"], `(i) đồng hồ tổng nhận 32400, WARN 16200, rồi đồng hồ bước đọc gộp 27000 — thực tế ${JSON.stringify(d.dong)}`);
   assert.equal(d.tran, "26700", "(i) bước đọc gộp nhận DOC_GOP_TRAN_GIAY = 32400 − 2400 − 3000 − 300");
   assert.doesNotMatch(d.ra.out, /JOB WARN/, "(i) cấu hình hợp lệ: không có dòng cảnh báo");
 });
@@ -197,15 +223,87 @@ test("2311-5 A chiều đỏ: bản sao bỏ chỗ kẹp → trần đọc gộp
     }),
     /phải được kẹp và báo/));
 
-// ══════ A trạng thái chuyển tiếp: chưa có nhánh B thì 75 vẫn là mã của lượt, nhưng enrich VẪN chạy ══════
-// (đúng điều LL ghi ở BÁO 2311-6: nhánh P3 vào trước thì «lượt đỏ nhưng enrich vẫn chạy»). Nhánh B đổi hai Assert
-// đầu: 75 → đi tiếp, lượt thoát 0, không JOB FAIL.
-test("2311-5 A chuyển tiếp: chưa có nhánh B — bước đọc gộp thoát 75 thì enrich vẫn chạy, lượt thoát 75 kèm JOB FAIL", () => voiRoot({ docGop: "exit 75\n" }, async (root) => {
+// ══════ (1) hết đồng hồ đọc gộp → enrich VẪN chạy ══════
+const kiem1 = ({ bien, tong = "40" } = {}) => voiRoot({ bien, docGop: DG_TREO }, async (root) => {
+  const r = await chay(root, { ZALO_IMPORT_TRAN_DOC_GOP: "2", ZALO_IMPORT_TRAN_TONG: tong, ZALO_IMPORT_CANH_BAO: "30" });
+  assert.match(r.out, /TIMEOUT: bước đọc gộp vượt trần 2s/, "(1) dòng TIMEOUT của đồng hồ riêng bước đọc gộp");
+  assert.match(r.out, /^JOB STEP \[zalo-import-daily\] bước doc-gop-hang-ngay mã 143 giây \d+ nhanh 0$/m, "(1) bước bị cắt: ghim JOB STEP mã 143");
+  assert.match(r.out, /^JOB FAIL \[zalo-import-daily\] bước doc-gop-hang-ngay mã 143$/m, "(1) bị đồng hồ cắt (không phải dừng sạch 75) thì vẫn là lỗi của bước");
+  assert.match(r.out, /^JOB STEP \[zalo-import-daily\] bước enrich-run mã 0/m, "(1) CA LÕI: enrich phải VẪN chạy sau khi bước đọc gộp bị cắt");
+  assert.doesNotMatch(r.out, /TIMEOUT: lượt vượt trần/, "(1) đồng hồ TỔNG không bắn — đồng hồ riêng cắt bước trước");
+  assert.equal(r.status, 143, `(1) mã của lượt = mã bước bị cắt — thực tế ${r.status}`);
+});
+test("2311-5 (1): bước đọc gộp treo → đồng hồ riêng cắt đúng bước, enrich VẪN chạy, đồng hồ tổng không bắn", () => kiem1());
+test("2311-5 (1) chiều đỏ: bản sao bỏ đồng hồ riêng → bước treo tới trần tổng, enrich chết theo (đỏ «enrich phải VẪN chạy»)", () => {
+  // bản cũ không có đồng hồ riêng: chỉ đồng hồ tổng (8s) cắt → enrich chưa tới lượt
+  const cut = kiem1({ tong: "8", bien: (s) => s.replace(CAU.dongHoBuoc, ': # đột biến: bỏ đồng hồ riêng của bước đọc gộp') });
+  return assert.rejects(cut, /\(1\) dòng TIMEOUT của đồng hồ riêng bước đọc gộp|\(1\) CA LÕI/);
+});
+
+// ══════ (2) + (4) + 2311-6 (3): 75 = đi tiếp, checkpoint không mất bài ══════
+const kiem2 = (bien) => voiRoot({ bien, docGop: DG_HOP_DONG }, async (root) => {
+  const so = () => (existsSync(join(root, "pipeline", "logs-doc", "so-doc.txt")) ? readFileSync(join(root, "pipeline", "logs-doc", "so-doc.txt"), "utf8").trim().split("\n") : []);
+  const r1 = await chay(root, { FIX_DOC_GOP_LAM: "2" });
+  assert.match(r1.out, /^JOB STEP \[zalo-import-daily\] bước doc-gop-hang-ngay mã 75 giây \d+ nhanh 0$/m, "(2) ghim JOB STEP mã 75 thật của bước");
+  assert.doesNotMatch(r1.out, /JOB FAIL \[zalo-import-daily\] bước doc-gop-hang-ngay/, "(2) CA LÕI: 75 là dừng sạch, không phải lỗi — không có dòng JOB FAIL");
+  assert.match(r1.out, /^JOB WARN \[zalo-import-daily\] bước doc-gop-hang-ngay: hết giờ dừng sạch \(mã 75\) — đi tiếp/m, "(2) một dòng JOB WARN nói bước dừng sạch");
+  assert.match(r1.out, /^JOB STEP \[zalo-import-daily\] bước enrich-run mã 0/m, "(2) enrich chạy ngay lượt đó sau khi đọc gộp dừng sạch");
+  assert.equal(r1.status, 0, `(2) CA LÕI: 75 KHÔNG vào JOB_RC — lượt 00:00 thoát 0, thực tế ${r1.status}`);
+  assert.deepEqual(so(), ["1", "2"], "(2) lượt 1 đọc được 2 bài rồi dừng sạch");
+  assert.equal(readFileSync(join(root, "pipeline", "logs-doc", "tran-nhan.txt"), "utf8").trim(), "15900", "(2) bước nhận DOC_GOP_TRAN_GIAY = 16200 − 300 (trần đọc gộp suy từ trần tổng 21600)");
+  const r2 = await chay(root, { FIX_DOC_GOP_LAM: "6" });
+  assert.equal(r2.status, 0, `(2) lượt 2 thoát 0 — thực tế ${r2.status}`);
+  assert.match(r2.out, /^JOB STEP \[zalo-import-daily\] bước doc-gop-hang-ngay mã 0 /m, "(2) lượt 2 bước đọc gộp xong trọn");
+  assert.deepEqual(so(), ["1", "2", "3", "4", "5", "6"], "(2) CA LÕI: lượt sau đọc tiếp phần dở theo checkpoint — không mất, không lặp");
+});
+test("2311-5 (2)(4): bước dừng sạch thoát 75 → không lỗi, lượt 00:00 thoát 0, enrich chạy; lượt sau đọc tiếp phần dở", () => kiem2());
+test("2311-5 (2) chiều đỏ: bản sao coi 75 là lỗi → JOB FAIL + lượt thoát 75 (đỏ «không có dòng JOB FAIL»)", () =>
+  assert.rejects(kiem2((s) => s.replace(CAU.kt75, "if false; then")), /75 là dừng sạch, không phải lỗi/));
+
+test("2311-5 (4) đối chứng: 75 thoát ngay → thoát 0, không JOB FAIL; mã khác (3) vẫn là lỗi như job_run", () => voiRoot({ docGop: "exit 75\n" }, async (root) => {
   const r = await chay(root, {});
-  assert.match(r.out, /^JOB STEP \[zalo-import-daily\] bước doc-gop-hang-ngay mã 75 /m, "ghim JOB STEP mã 75 thật của bước");
-  assert.match(r.out, /^JOB STEP \[zalo-import-daily\] bước enrich-run mã 0/m, "enrich VẪN chạy sau bước đọc gộp dừng sạch");
-  assert.equal(r.status, 75, `chưa có nhánh B: 75 thành mã của lượt — thực tế ${r.status}`);
+  assert.equal(r.status, 0, `(4) thoát 0 — thực tế ${r.status}`);
+  assert.doesNotMatch(r.out, /JOB FAIL /, "(4) không có dòng JOB FAIL nào");
+  assert.match(r.out, /^JOB STEP \[zalo-import-daily\] bước doc-gop-hang-ngay mã 75 /m, "(4) ghim vẫn ghi mã thật 75");
+  await voiRoot({ docGop: "exit 3\n" }, async (root3) => {
+    const r3 = await chay(root3, {});
+    assert.equal(r3.status, 3, `đối chứng: mã 3 của bước đọc gộp vẫn thành mã của lượt — thực tế ${r3.status}`);
+    assert.match(r3.out, /^JOB FAIL \[zalo-import-daily\] bước doc-gop-hang-ngay mã 3$/m, "đối chứng: mã 3 vẫn có dòng JOB FAIL");
+  });
 }));
+
+// ══════ bước phớt TERM: con phớt TERM không mồ côi, chuỗi chạy tiếp ══════
+// bash của bước nhận TERM là chết ngay (ghim mã 143) còn node con phớt TERM: đồng hồ phải KILL nó (SIGUSR1 từ nơi
+// gọi) trước khi chuỗi chạy tiếp — không chờ 20s, không để mồ côi.
+const kiem5 = ({ bien } = {}) => voiRoot({ bien, docGop: DG_PHOT }, async (root) => {
+  const t0 = Date.now();
+  const r = await chay(root, { ZALO_IMPORT_TRAN_DOC_GOP: "2", ZALO_IMPORT_TRAN_TONG: "60", ZALO_IMPORT_CANH_BAO: "50" }, { sauThoat: () => choHet("doc-gop-phong-term.mjs") });
+  assert.match(r.out, /TIMEOUT: bước đọc gộp vượt trần 2s/, "(5) dòng TIMEOUT");
+  assert.match(r.out, /^JOB STEP \[zalo-import-daily\] bước doc-gop-hang-ngay mã 143 /m, `(5) bash của bước chết vì TERM → ghim mã 143 — thực tế: ${(r.out.split("\n").filter((l) => /bước doc-gop-hang-ngay/.test(l)) || []).join(" | ")}`);
+  assert.match(r.out, /^JOB STEP \[zalo-import-daily\] bước enrich-run mã 0/m, "(5) CA LÕI: sau khi bước bị cắt, chuỗi chạy tiếp tới enrich");
+  assert.doesNotMatch(r.out, /TIMEOUT: lượt vượt trần/, "(5) đồng hồ tổng không bắn");
+  assert.equal(r.them, 0, `(5) CA LỖ: node con phớt TERM của bước phải bị KILL — còn ${r.them} tiến trình sau khi lượt thoát`);
+  assert.ok(Date.now() - t0 < 12_000, `(5) CA LỖI: chuỗi phải chạy tiếp NGAY khi bước đã chết, không chờ ân hạn 20s của đồng hồ — mất ${Math.round((Date.now() - t0) / 1000)}s`);
+});
+test("2311-5 (5): bước đọc gộp phớt TERM → bash chết ngay, node con phớt TERM bị KILL, enrich vẫn chạy, không mồ côi", () => kiem5());
+test("2311-5 (5) chiều đỏ: bản sao bỏ SIGUSR1 → nơi gọi phải chờ đồng hồ hết ân hạn 20s mới chạy tiếp (đỏ «không chờ ân hạn 20s»)", () =>
+  assert.rejects(kiem5({ bien: (s) => s.replace(CAU.usr1, "") }), /không chờ ân hạn 20s/));
+
+// ══════ người gọi không trưởng nhóm: trần TỔNG bắn giữa lúc đọc gộp → bước không sống mồ côi ══════
+// Chạy tay / bash -c: script không phải trưởng nhóm, đồng hồ tổng chỉ TERM/KILL CON TRỰC TIẾP của script. Node của
+// bước là con cháu từ lúc bước chạy nền → đồng hồ riêng phải ở lại dọn nó (bỏ qua SIGTERM), nếu không nó sống mồ côi.
+const kiem6 = (bien) => voiRoot({ bien, docGop: DG_PHOT }, async (root) => {
+  const r = await chay(root, { ZALO_IMPORT_TRAN_TONG: "6", ZALO_IMPORT_CANH_BAO: "4" }, { boc: true, sauThoat: () => choHet("doc-gop-phong-term.mjs") });
+  assert.match(r.out, /TIMEOUT: lượt vượt trần 6s/, "(6) đồng hồ tổng bắn");
+  assert.match(r.out, /^NGUOI-GOI-SONG rc=143$/m, "(6) người gọi sống, script bị cắt");
+  assert.doesNotMatch(r.out, /bước enrich-run/, "(6) fixture: trần tổng bắn trong lúc đọc gộp — enrich chưa tới lượt");
+  assert.equal(r.them, 0, `(6) CA LỖ: node của bước đọc gộp sống mồ côi sau khi lượt và người gọi đã thoát — còn ${r.them}`);
+});
+test("2311-5 (6): chạy tay, trần tổng bắn giữa lúc đọc gộp → đồng hồ riêng dọn nốt cây của bước, không mồ côi", () => kiem6());
+test("2311-5 (6) chiều đỏ a: đồng hồ bước không bỏ qua SIGTERM → chết theo TERM của đồng hồ tổng, node của bước mồ côi (đỏ «sống mồ côi»)", () =>
+  assert.rejects(kiem6((s) => s.replace(CAU.boQuaTerm, "")), /sống mồ côi/));
+test("2311-5 (6) chiều đỏ b: bản sao bỏ KILL ân hạn → node phớt TERM bị TERM mãi không chết, mồ côi (đỏ «sống mồ côi»)", () =>
+  assert.rejects(kiem6((s) => s.replace(CAU.anHanBuoc, "setTimeout(diet, 20_000_000).unref();")), /sống mồ côi/));
 
 // ══════ lượt lành: không còn đồng hồ nào sau khi lượt thoát ══════
 test("2311-5 A lượt 00:00 lành chạy trọn tới enrich → thoát 0, không còn đồng hồ, không FAIL/WARN", () => voiRoot({}, async (root) => {
