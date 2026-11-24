@@ -117,9 +117,16 @@ export const FIELD_LABEL: Record<LabelField, string> = {
  * Lát chỉ gắn một số ô (`lat-khai-o-can-gan`): màn chỉ hiện, chỉ đòi các ô này, không có căn cứ từng ô, không có lượt hai.
  * Lát không có trong bảng giữ nguyên hành vi.
  */
-export const O_THEO_LAT: Readonly<Record<string, readonly LabelField[]>> = { "hai-khu-ghep-b": ["building", "subzone"] }
+export const O_THEO_LAT: Readonly<Record<string, readonly LabelField[]>> = {
+  "hai-khu-ghep-b": ["building", "subzone"],
+  // HT21 (PL36 AC-10): lát nhãn trục 110 bài Ocean Park 1 — chỉ Toà và Trục, đọc mã căn theo quy ước «Mã căn» của CONTEXT.md.
+  "hai-khu-truc": ["building", "stack"],
+}
 export const oCuaLat = (lat: string): readonly LabelField[] | null => O_THEO_LAT[lat] ?? null
-const NHAN_THEO_LAT: Readonly<Record<string, Partial<Record<LabelField, string>>>> = { "hai-khu-ghep-b": { subzone: "Phân khu hoặc cụm" } }
+const NHAN_THEO_LAT: Readonly<Record<string, Partial<Record<LabelField, string>>>> = {
+  "hai-khu-ghep-b": { subzone: "Phân khu hoặc cụm" },
+  "hai-khu-truc": { stack: "Trục (hai số cuối của số căn)" },
+}
 /** Nhãn của một ô trên màn của lát. */
 export const nhanO = (lat: string, f: LabelField): string => NHAN_THEO_LAT[lat]?.[f] ?? FIELD_LABEL[f]
 /**
