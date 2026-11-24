@@ -51,9 +51,19 @@ phải tên thư mục (script thu của S02/S05/S06 nằm trong `pipeline/`).
 | **ZCode — thu thập** (nguồn → raw snapshot → `stg_*`) | `collector/` (kể cả `openclaw/`) · trong `pipeline/`: `collect-*`, `import-*`, `apify-*`, `airdna-rotate.mjs`, `fetch-data.sh`, `import.sh`, `cron/*.plist` · trong `scripts/`: `*-daily.sh` (bước thu/nạp), `install-*`, `zalo-*.sh` · `collector/docs/DATA-CONTRACT.md` |
 | **Claude Code — phần còn lại** (`stg_*` → canonical → sản phẩm) | `transform-*` trở đi trong `pipeline/` (`sql/`, `mappings.yaml`, `resolve-properties`, `reassign-areas`, `sync-cloud`, `push-ops-facts`…) · `db/` · `agent/` · `app/` · `data-api/` · `tools/` · `scripts/` còn lại · `docs/` nền · `_acceptance/` |
 
+- **Ba phiên ZCode** (Mạnh chốt 2026-11-24, `docs/research/tach-zcode-nhieu-phien-2411.md`): **ZV** vận hành (tên kênh `zcode`,
+  `~/dev/onehub-invest-zcode` — DUY NHẤT chạm gateway, `~/.openclaw`, launchd, collector API, `scripts/zalo-*.sh`) · **ZT** tin
+  rao S01/S02/S05/S06 (`zt`, `~/dev/onehub-zt`) · **ZK** nguồn kho S07–S17 (`zk`, `~/dev/onehub-zk`). Một kênh, ba tên nhận;
+  nhánh `zcode/zv-…|zt-…|zk-…`; LL vẫn là đầu mối duy nhất với cả ba.
+
+- **Máy M5** (Mạnh chốt 2026-11-24, mở nhỏ và đo một tuần; ROADMAP §3 mục 64): MacBook M5 là máy thực thi của làn Claude cho cổng
+  Invest và API — `app/src/app/(app)/**`, `(marketing)/**`, `app/src/components/**` trừ `ops/`, `ui/`, `reui/`, `app/src/app/api/v1/**`
+  trừ `ops/`, `data-api/**`; tệp ngoài vùng (kể cả `app/src/lib/**`) chỉ khi lời giao khai. Mac mini giữ kế hoạch, hàng gộp và sổ
+  số migration: M5 không gộp vào `main`, báo xong trên kênh `phanlemanh/onehub-coord#4`. M5 không giữ tầng A, không chạy bộ thu,
+  gateway, `sync-cloud`; chấm bằng `scripts/ci-test-local.mjs`.
 - **Git**: checkout chính `~/dev/onehub-invest` luôn đứng ở `main` — launchd chạy code
   từ đây (qua symlink `~/dev/one-invest`). Không agent nào checkout nhánh khác trong đó.
-  ZCode làm ở worktree `~/dev/onehub-invest-zcode`, nhánh `zcode/<việc>`; Claude ở
+  ZCode làm ở worktree của từng phiên (`~/dev/onehub-invest-zcode`, `~/dev/onehub-zt`, `~/dev/onehub-zk`), nhánh `zcode/<việc>`; Claude ở
   `.claude/worktrees/`, nhánh `feat|fix|…/<việc>`. Worktree mới thiếu file gitignored:
   chép `.env` theo `.worktreeinclude`. Hook git (`core.hooksPath` = `.git/hooks-onehub`,
   chuyển tiếp git-secrets) chặn mọi commit/merge-commit trong checkout chính.
@@ -199,6 +209,11 @@ không sửa tay, cập nhật bằng cách chép lại từ plugin. `PRODUCT-MA
   agent không đem câu hỏi tới Mạnh; câu về cách làm thì gửi phiên giám sát.
 - **Phiên giám sát chịu hiệu quả lộ trình**: chọn việc theo đường găng của nhịp đang làm, cắt và gom hàng, thứ tự gộp, số dãy,
   mở và dọn phiên. Báo tiến độ bằng con số trên màn, không bằng số PR đã gộp.
+- **Phiên giám sát toàn quyền điều phối và gộp, và phải tham gia quyết định cùng các phiên** (Mạnh chốt 2026-11-24, ROADMAP §3
+  mục 62; quyền đi theo vai, không theo phiên hay tài khoản): xếp, cắt, chuyển hàng; mở, thay và dọn phiên; thứ tự gộp và quyết
+  định gộp PR đủ điều kiện; áp lên DB máy thu đúng hồ sơ đã ký. Phiên hỏi cách làm, kẹt, lệch số hay tranh tài nguyên thì giám
+  sát phán ngay kèm lý do và ghi sổ, không chuyển câu đó lên Mạnh và không để phiên tự chờ. Hiệu quả của mốc và lộ trình là
+  trách nhiệm của giám sát. Danh sách «vẫn cần lời riêng của Mạnh» bên dưới không đổi.
 - **Hàng trên đường găng xong khi con số trên màn đổi trên dữ liệu thật**, không xong ở «gộp». Hợp đồng ghi ô nào đổi, từ bao
   nhiêu lên bao nhiêu, kèm lệnh đo. Hàng nền (test, CI, tài liệu) ghi rõ là miễn.
 - **Chữ ký Cổng Bằng chứng kèm luôn lời áp lên DB máy thu** đúng những gì hồ sơ đã ghi (migration, lượt ghi dữ liệu, thẻ luật).

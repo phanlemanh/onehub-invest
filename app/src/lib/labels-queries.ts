@@ -4,7 +4,7 @@ import { pool } from "./db"
 import { docGhep, type GhepHien } from "./labels-anh"
 import { docThe } from "./labels-cum"
 import { nhapTuDraft, type NhapMay } from "./labels-cuon-chieu"
-import { BASIS_KHONG_DOI, DA_GAN_CUA_TOI, msgHangSaiLat, oCuaLat, type LabelRow } from "./labels-normalize"
+import { BASIS_KHONG_DOI, DA_GAN_CUA_TOI, hienNhap, msgHangSaiLat, oCuaLat, type LabelRow } from "./labels-normalize"
 import { maskSourceNames } from "./mask-source-names"
 import { getSourceNameEntries } from "./source-roles"
 
@@ -84,9 +84,22 @@ export async function tinKe(userId: string, lat: string, q: Q = pool, nhom: stri
     nguoiDang,
     nguoiDangId: the.nguoiDangId,
     postedAt: the.postedAt ? new Date(the.postedAt).toISOString() : null,
-    // Lát có khai ô gắn mù: nháp máy không rời máy chủ, ở cả màn lẫn API.
-    nhap: oCuaLat(lat) ? null : nhapTuDraft(r.draft),
+    // Lát có khai ô gắn mù: nháp máy không rời máy chủ, ở cả màn lẫn API — trừ lát ngoại lệ có tên (HT21), nháp lọc về ô của lát.
+    nhap: nhapChoLat(lat, r.draft),
   }
+}
+
+/**
+ * Nháp gửi ra màn của một bài: lát khai ô gắn mù thì không có; lát ngoại lệ (HT21) chỉ giữ các ô của lát; lát không khai giữ nguyên.
+ * Không còn ô nào thì không có nháp.
+ */
+export function nhapChoLat(lat: string, draft: unknown) {
+  if (!hienNhap(lat)) return null
+  const nhap = nhapTuDraft(draft)
+  const oLat = oCuaLat(lat)
+  if (!nhap || !oLat) return nhap
+  const o = Object.fromEntries(Object.entries(nhap.o).filter(([f]) => (oLat as readonly string[]).includes(f)))
+  return Object.keys(o).length ? { ...nhap, o } : null
 }
 
 /** Các nhóm của lát, nhiều bài trước. Lát đời trước không có `stratum` nên trả mảng rỗng: màn dùng đó để giữ biểu mẫu chín trường. */
