@@ -1,68 +1,44 @@
-# Review findings: lat-hai-khu-truc-khai-o (round 1)
-
 ## Trong hợp đồng
 
-Không có finding nào map được vào AC.
+- **Hình dạng 4 (âm tính một mình, không đối chứng dương): tầng màn của lát gắn mù chỉ được đo với đầu vào null**
+  file: `app/tests/labels-lat-hai-khu-truc.test.tsx:103`
+  severity: medium
+  AC: AC-4
+  source: measurement
+  detail: Dòng 103-105: `const b = await bieuMau(MU, nhapChoLat(MU, DRAFT))`. Vì nhapChoLat(MU, DRAFT) luôn là null (dòng 92 đã ghim điều này), biểu mẫu của hai-khu-ghep-b nhận `tin.nhap = null`. Nên hai phép âm tính `b.querySelector("[data-labels-nhap]") === null` và `!b.querySelector("#nhan-building")?.getAttribute("value")` xanh bất kể cổng `hienNhap(lat)` mới thêm trong label-form-nhom.tsx (dòng 70 `useState(() => (tin.nhap && hienNhap(lat) ? ...))` và dòng 145 `{tin.nhap && hienNhap(lat) ? ...}`) có tồn tại hay không. Thử đột biến: đổi cả hai chỗ về `tin.nhap ? ...` (bỏ cổng ở màn), ca này vẫn xanh. Ca không có lần nào đưa một nháp khác null vào biểu mẫu của hai-khu-ghep-b để thấy màn tự chặn. Thế mà chú thích dòng 87 và contract AC-4 hứa «lát gắn mù không lộ nháp ở cả hai tầng (máy chủ lẫn màn)». Phép đo tầng màn ở đây rỗng. Thêm nữa, dòng 105 cũng xanh khi phần tử #nhan-building không có trên màn, vì `?.` trả undefined.
+  rationale: AC-4 hứa lát gắn mù không lộ nháp ở cả máy chủ lẫn màn, nhưng phép đo tầng màn xanh cả khi bỏ cổng chặn, nên phần cam kết này chưa được chứng minh.
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **Bản đột biến ghi thẳng vào app/src/lib, lệch khuôn bản đột biến sẵn có của kho**
-  Người dùng thấy gì: Nếu lượt kiểm bị ngắt đột ngột, một tệp tạm có thể nằm lại cạnh mã thật và vô tình bị đưa vào commit. Người dùng cuối không bị ảnh hưởng.
-  Căn cứ: Hậu quả nhẹ, chỉ xảy ra khi lượt kiểm bị ngắt, người làm xoá tay được ngay và không ảnh hưởng dữ liệu hay màn hình.
+- **s4-args.json đã commit là bản vòng 1 cũ: thiếu E5, E6, E7 đang có trong evals.yaml**
+  Người dùng thấy gì: Một tệp cấu hình của lượt chấm còn là bản cũ, nên nếu ai chấm bằng tệp đó thì sẽ bỏ sót phép kiểm câu mô tả đầu trang. Người duyệt dùng màn nhãn không bị ảnh hưởng gì.
+  Căn cứ: Chỉ ảnh hưởng quy trình chấm nội bộ, không đụng người dùng; bản đúng đã có sẵn trên cây làm việc, chỉ cần chọn đúng tệp khi chấm.
+  file: `_acceptance/lat-hai-khu-truc-khai-o/s4-args.json`
+  severity: low
+  Đề xuất: known-limits
+
+- **Hình dạng 1 (đo mã nguồn thay vì đầu ra): AC-5 so regex trên chữ nguồn labels-view.tsx, không dựng màn**
+  Người dùng thấy gì: Phép kiểm câu mô tả đầu trang chỉ soi chữ trong mã, chưa dựng màn thật. Nếu sau này mã đổi cách viết, phép kiểm có thể báo đỏ giả hoặc để lọt một lỗi hiển thị.
+  Căn cứ: Câu mô tả hiện đúng trên màn hiện tại; rủi ro chỉ là phép kiểm kém chắc, người dùng không mất dữ liệu và có thể tự thấy câu sai ngay trên trang.
   file: `app/tests/labels-lat-hai-khu-truc.test.tsx`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Hình dạng 2 (fixture viết tay đúng khuôn bên đọc, không round-trip từ bên ghi)**
+  Người dùng thấy gì: Phép kiểm dùng nháp viết tay theo khuôn mà màn đọc, chưa lấy nháp do trợ lý thật sinh ra. Nếu khuôn thật khác, các ô có thể không được điền sẵn dù phép kiểm vẫn xanh.
+  Căn cứ: Nếu sai thì người duyệt chỉ phải tự điền hai ô, không mất dữ liệu, và thấy ngay trên màn; kiểm lại với nháp thật khá rẻ khi có dữ liệu.
+  file: `app/tests/labels-lat-hai-khu-truc.test.tsx`
+  severity: low
+  Đề xuất: known-limits
+
+- **Hình dạng 6 (đường dẫn hardcode gốc checkout của tác giả) trong tham số chấm S4 đã commit**
+  Người dùng thấy gì: Tệp cấu hình chấm trỏ cứng vào thư mục làm việc trên máy của tác giả, nên chạy từ chỗ khác có thể gãy hoặc đo nhầm cây. Người dùng cuối không thấy gì.
+  Căn cứ: Chỉ là đồ dùng nội bộ sinh lại mỗi vòng chấm, hỏng thì lộ ngay chứ không âm thầm; sửa không đáng công.
+  file: `_acceptance/lat-hai-khu-truc-khai-o/s4-args.json`
   severity: low
   Đề xuất: wont-fix
 
-- **Chú thích nói lát khai ô là gắn mù nay sai với hai-khu-truc**
-  Người dùng thấy gì: Chú thích trong mã còn ghi lát này là gắn mù trong khi nay nó hiện nháp máy. Người duyệt không thấy gì sai, chỉ người sửa mã sau này dễ hiểu nhầm.
-  Căn cứ: Không đổi gì trên màn hình hay dữ liệu, sửa lúc nào cũng rẻ, rủi ro chỉ là người đọc mã hiểu sai.
-  file: `app/src/components/ops/labels/label-form-nhom.tsx`
-  severity: low
-  Đề xuất: known-limits
-
-- **Mô tả trang của lát khai ô vẫn ghi «toà, phân khu hoặc cụm» và «Máy không cho thấy nó đã đọc ra gì», trong khi hai-khu-truc hỏi Toà + Trục và đang hiện nháp máy**
-  Người dùng thấy gì: Đầu trang gắn nhãn bảo người duyệt ghi phân khu hoặc cụm và nói máy không cho thấy gì, trong khi bên dưới chỉ có Toà và Trục và đã điền sẵn nháp máy. Người duyệt 110 bài có thể bối rối về việc ô điền sẵn là của máy.
-  Căn cứ: Gây hiểu nhầm cho người duyệt đúng ở lát này nhưng không làm mất hay sai dữ liệu, sửa nhỏ và nên làm trong một hàng riêng.
-  file: `app/src/components/ops/labels/labels-view.tsx`
-  severity: medium
-  Đề xuất: new-contract
-
-- **Hình dạng 1: chiều đỏ AC-4 đo vị từ cấu hình hienNhap, không đo đầu ra gắn mù (nhapChoLat, biểu mẫu)**
-  Người dùng thấy gì: Bài kiểm chứng cho thấy lát gắn mù không bị lộ nháp còn đo hơi gián tiếp. Người dùng không thấy khác biệt nào, chỉ là lưới an toàn bắt lỗi sau này mỏng hơn dự kiến.
-  Căn cứ: Không làm sai màn hình hiện tại, chỉ làm lưới bắt lỗi tương lai yếu hơn, có thể bổ sung sau với giá rẻ.
-  file: `app/tests/labels-lat-hai-khu-truc.test.tsx`
-  severity: medium
-  Đề xuất: known-limits
-
-- **Hình dạng 2: biểu mẫu AC-4 nhận nháp viết tay, không lấy đầu ra của nhapChoLat (thiếu round-trip máy chủ → màn)**
-  Người dùng thấy gì: Chưa có bài kiểm nối liền từ máy chủ tới màn cho nháp của trợ lý. Nếu sau này hình dạng nháp đổi, màn có thể hỏng mà bài kiểm vẫn xanh.
-  Căn cứ: Hiện chưa có lỗi thật, rủi ro chỉ xuất hiện khi có thay đổi sau này, và người duyệt sẽ thấy ngay trên màn nên tự phát hiện được.
-  file: `app/tests/labels-lat-hai-khu-truc.test.tsx`
-  severity: medium
-  Đề xuất: known-limits
-
-- **Hình dạng 5: AC-2 hứa «mỗi ô có «Không suy ra được»» nhưng chỉ kiểm ô Trục**
-  Người dùng thấy gì: Bài kiểm mới xác nhận lựa chọn «Không suy ra được» cho ô Trục, chưa kiểm ô Toà. Trên màn rất có thể vẫn đúng, chỉ chưa được chứng minh bằng bài kiểm.
-  Căn cứ: Không có hỏng hóc thấy được, người duyệt nhìn màn là biết ngay, bổ sung kiểm thêm một ô rất rẻ.
-  file: `app/tests/labels-lat-hai-khu-truc.test.tsx`
-  severity: low
-  Đề xuất: known-limits
-
-- **Hình dạng 3: đối chứng «lát không khai vẫn đủ ô» chỉ so length > 2**
-  Người dùng thấy gì: Bài kiểm chỉ xác nhận lát khác vẫn hiện nhiều hơn hai ô, chưa xác nhận đủ cả 17 ô. Nếu một lát mất ô thì bài kiểm chưa chắc bắt được.
-  Căn cứ: Không gây lỗi hiện tại và dễ nhận ra khi duyệt, chỉ làm lưới bắt lỗi thưa hơn.
-  file: `app/tests/labels-lat-hai-khu-truc.test.tsx`
-  severity: low
-  Đề xuất: known-limits
-
-- **Hình dạng 4: «không ô căn cứ», «không ô Lý do» là assert âm một mình, không có đối chứng dương trên cùng bộ chọn**
-  Người dùng thấy gì: Bài kiểm khẳng định lát này không có ô căn cứ và ô Lý do, nhưng chưa chứng minh bộ dò của nó còn tìm được các ô đó ở lát khác. Nếu chữ trên màn đổi, bài kiểm có thể xanh giả.
-  Căn cứ: Chỉ có nguy cơ về sau khi nhãn đổi, không ảnh hưởng người dùng hiện tại và bổ sung đối chứng rất rẻ.
-  file: `app/tests/labels-lat-hai-khu-truc.test.tsx`
-  severity: low
-  Đề xuất: known-limits
-
-Cụm ngoài vùng phủ: cluster: n-a (không đo được — không eval nào khai paths, hoặc dưới ngưỡng cụm).
+⚠ Cụm ngoài vùng phủ: 2/5 lỗi rơi vào file không bộ đo nào phủ (_acceptance/lat-hai-khu-truc-khai-o/s4-args.json) — dừng và quyết: mở rộng hợp đồng hay rút phạm vi.
 

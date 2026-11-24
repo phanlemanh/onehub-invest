@@ -5,7 +5,7 @@ slug: lat-hai-khu-truc-khai-o
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: implemented
+status: machine-cleared
 veto_state: mo
 veto_opened_at: 2026-11-24T14:49:27Z
 approved_by:
@@ -50,3 +50,7 @@ Hàng HT21, hàng nền của PL36 AC-10 (GS giao 24/11). Lát `hai-khu-truc` đ
 - Trợ lý điền nháp, thẻ cài lỗi, chấm Wilson — thuộc PL36 và phiên gắn nhãn.
 
 ## Notes
+
+- Ngoài-1 (máy định tuyến 2026-11-24, đề xuất S4 known-limits): Một tệp cấu hình của lượt chấm còn là bản cũ, nên nếu ai chấm bằng tệp đó thì sẽ bỏ sót phép kiểm câu mô tả đầu trang. Người duyệt dùng màn nhãn không bị ảnh hưởng gì. — `_acceptance/lat-hai-khu-truc-khai-o/s4-args.json`
+- Ngoài-2 (máy định tuyến 2026-11-24, đề xuất S4 known-limits): Phép kiểm câu mô tả đầu trang chỉ soi chữ trong mã, chưa dựng màn thật. Nếu sau này mã đổi cách viết, phép kiểm có thể báo đỏ giả hoặc để lọt một lỗi hiển thị. — `app/tests/labels-lat-hai-khu-truc.test.tsx`
+- Ngoài-3 (máy định tuyến 2026-11-24, đề xuất S4 known-limits): Phép kiểm dùng nháp viết tay theo khuôn mà màn đọc, chưa lấy nháp do trợ lý thật sinh ra. Nếu khuôn thật khác, các ô có thể không được điền sẵn dù phép kiểm vẫn xanh. — `app/tests/labels-lat-hai-khu-truc.test.tsx`
