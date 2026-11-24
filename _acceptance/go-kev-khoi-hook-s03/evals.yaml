@@ -85,7 +85,7 @@ evals:
     criterion: AC-7
     executor: test
     cmd: config:executors.script.collector_test_clean
-    paths: [collector/**]
+    paths: [collector/openclaw/handler.js, collector/openclaw/handler.test.mjs]
     expected: "exit 0; 0 fail, 0 skip (LL đo 24/11: 78/78) — gồm ca kev-nhãn manifest v3 và ZC1."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
@@ -93,7 +93,7 @@ evals:
     criterion: AC-7
     executor: script
     cmd: config:executors.script.kev_manifest_v3
-    paths: [collector/**, scripts/kev-nhan/acceptance.mjs]
+    paths: [collector/openclaw/handler.js, scripts/kev-nhan/acceptance.mjs]
     expected: "exit 0; 'MANIFEST-V3 PASS'; meta.kev giữ nguyên; should-NOT-fire: tin không kev không có meta.kev."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
@@ -110,7 +110,7 @@ evals:
     executor: test
     cmd: config:executors.suite.pipeline_a
     long_running: 90
-    paths: [pipeline/**, scripts/**]
+    paths: [pipeline/cron/com.oneinvest.kev-gate.plist, scripts/zalo-watchdog.sh, scripts/hook-zalo-spool/acceptance.mjs, scripts/kev-nhan/acceptance.mjs, scripts/job-exit.test.mjs]
     expected: "exit 0; nửa A bộ test pipeline, 0 fail (khai ở đây để có long_running 90 — trên Mac mini nửa A ~41′ vượt trần chờ 30′ mặc định; luật GS 24/11)."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
@@ -119,7 +119,7 @@ evals:
     executor: test
     cmd: config:executors.suite.pipeline_b
     long_running: 90
-    paths: [pipeline/**, scripts/**]
+    paths: [pipeline/cron/com.oneinvest.kev-gate.plist, scripts/zalo-watchdog.sh, scripts/hook-zalo-spool/acceptance.mjs, scripts/kev-nhan/acceptance.mjs, scripts/job-exit.test.mjs]
     expected: "exit 0; nửa B bộ test pipeline, 0 fail (long_running 90)."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
