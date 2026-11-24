@@ -197,6 +197,26 @@ test("lời cần phiên lỗi mạng, cả lời kiểm phiên lẫn lời côn
   assert.deepEqual(slept.filter((ms) => ms > 0), [5000, 15000, 30000]);
 });
 
+test("lỗi tạm mang theo LỜI LỖI GỐC của vận chuyển (lượt thật 24/11 18:09: không đọc được số dư trước lượt mà không tra được vì sao)", async () => {
+  const { client } = makeClient(() => {
+    throw new TypeError("TypeError: Failed to fetch");
+  });
+  const e = await client.getJson("gallery", { id: 7 }).then(() => null, (x: unknown) => x);
+  assert.ok(e instanceof TemporaryFailure, String(e));
+  assert.equal(e.message, 'vai "gallery" lỗi mạng «TypeError: Failed to fetch» sau 3 lần thử lại');
+});
+
+test("lỗi tạm vì 5xx vẫn ghi mã trạng thái; vận chuyển ném chuỗi thì ghi nguyên chuỗi", async () => {
+  const sau5xx = await makeClient(() => json({ ok: false }, 503)).client.getJson("gallery", { id: 7 }).then(() => null, (x: unknown) => x);
+  assert.ok(sau5xx instanceof TemporaryFailure);
+  assert.match(sau5xx.message, /lỗi HTTP 503 sau 3 lần thử lại$/);
+  const chuoi = await makeClient(() => {
+    throw "mạng hỏng lạ";
+  }).client.getJson("gallery", { id: 7 }).then(() => null, (x: unknown) => x);
+  assert.ok(chuoi instanceof TemporaryFailure);
+  assert.match(chuoi.message, /lỗi mạng «mạng hỏng lạ»/);
+});
+
 test("10 lỗi tạm liên tiếp: dừng lượt", async () => {
   const { client } = makeClient(() => {
     throw new TypeError("Failed to fetch");

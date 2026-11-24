@@ -64,6 +64,8 @@ export class HttpStatusError extends Error {
 }
 
 const RETRY_WAITS_MS = [5_000, 15_000, 30_000];
+/** Câu chữ của lỗi vận chuyển (không kèm cause) — đủ nhận diện «Failed to fetch», «signal timed out», việc trong trang đã mất. */
+const loiVanChuyen = (e: unknown): string => (e instanceof Error ? e.message : String(e)).slice(0, 160);
 const MAX_CONSECUTIVE_FAILURES = 10;
 
 export type ClientOptions = {
@@ -191,7 +193,11 @@ export class S17Client {
    * trả lỗi tạm; mười lỗi tạm liền nhau thì dừng cả lượt. Lỗi của riêng bản ghi (phiên sống) chỉ thử lại MỘT lần
    * sau 5 s; mạng hỏng thì ba lần (5 s, 15 s, 30 s).
    */
-  private retryOrFail(ownRecord: boolean, res: Response | null, role: string, attempt: number): TemporaryFailure | null {
+  /**
+   * Trả lỗi tạm sau khi thử lại hết. Lời lỗi gốc của vận chuyển đi theo (`loiMang`) — lượt thật 24/11 18:09: không đọc
+   * được số dư trước lượt mà trong lỗi không có gì để tra vì sao. Chỉ câu chữ của lỗi (tối đa 160 ký tự), không kèm cause.
+   */
+  private retryOrFail(ownRecord: boolean, res: Response | null, role: string, attempt: number, loiMang = ""): TemporaryFailure | null {
     const retriesAllowed = ownRecord ? 1 : RETRY_WAITS_MS.length;
     if (attempt < retriesAllowed) {
       this.retries++;
@@ -201,7 +207,7 @@ export class S17Client {
     if (this.consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
       throw this.stop("network-down", `${MAX_CONSECUTIVE_FAILURES} lời thất bại liền nhau`);
     }
-    return new TemporaryFailure(`vai "${role}" lỗi ${res ? `HTTP ${res.status}` : "mạng"} sau ${attempt} lần thử lại`);
+    return new TemporaryFailure(`vai "${role}" lỗi ${res ? `HTTP ${res.status}` : `mạng «${loiMang || "không rõ"}»`} sau ${attempt} lần thử lại`);
   }
 
   /** Đợi trước một lời: lượt thử lại thì nghỉ theo thang, rồi luôn nghỉ nhịp. */
@@ -217,17 +223,19 @@ export class S17Client {
       await this.waitBefore(attempt);
       this.calls++;
       let res: Response | null = null;
+      let loiMang = "";
       try {
         res = await this.o.transport(url, this.headers);
-      } catch {
+      } catch (e) {
         res = null;
+        loiMang = loiVanChuyen(e);
       }
       const verdict = await this.classify(res, needsSession, role);
       if (verdict === "ok") {
         this.consecutiveFailures = 0;
         return res as Response;
       }
-      const failure = this.retryOrFail(verdict.ownRecord, res, role, attempt);
+      const failure = this.retryOrFail(verdict.ownRecord, res, role, attempt, loiMang);
       if (failure) throw failure;
     }
   }
@@ -320,14 +328,16 @@ export class S17Client {
         for (let k = 0; k < wave.length; k++) {
           const idx = wave[k];
           const role = String(reqs[idx].role);
-          const res = raw[k] instanceof Error ? null : (raw[k] as Response);
+          const goc = raw[k];
+          const res = goc instanceof Error ? null : goc;
+          const loiMang = goc instanceof Error ? goc.message : "";
           try {
             const verdict = await this.classify(res, ROLES[reqs[idx].role].needsSession, role);
             if (verdict === "ok") {
               this.consecutiveFailures = 0;
               out[idx] = { ok: true, value: this.parseJson<T>(res as Response, role) };
             } else {
-              const failure = this.retryOrFail(verdict.ownRecord, res, role, attempts.get(idx) ?? 0);
+              const failure = this.retryOrFail(verdict.ownRecord, res, role, attempts.get(idx) ?? 0, loiMang);
               if (failure) out[idx] = { ok: false, error: failure };
               else attempts.set(idx, (attempts.get(idx) ?? 0) + 1);
             }

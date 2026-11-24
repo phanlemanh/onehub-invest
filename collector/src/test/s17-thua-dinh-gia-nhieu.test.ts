@@ -110,6 +110,7 @@ test("getJsonMany: một lời lỗi mạng mà phiên vẫn sống → chỉ l�
   );
   assert.equal(ke.sent.filter((u) => u.includes("latitude=2")).length, 2, "lời lỗi được thử lại đúng một lần");
   assert.equal(ke.client.calls, 7, "4 lời đầu + 2 lần hỏi kiểm phiên (mỗi lần lỗi một lần) + 1 lần thử lại");
+  assert.match(String((r[1] as { error: Error }).error.message), /Failed to fetch/, "lỗi tạm giữ lời lỗi gốc của vận chuyển");
 });
 
 test("getJsonMany: tôn trọng trần lời gọi — không gửi quá trần, phần vượt nhận lỗi quá trần", async () => {
