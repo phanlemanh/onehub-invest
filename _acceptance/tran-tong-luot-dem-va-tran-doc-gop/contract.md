@@ -5,7 +5,9 @@ slug: tran-tong-luot-dem-va-tran-doc-gop
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: draft
+status: approved
+veto_state: mo
+veto_opened_at: 2026-11-24T01:12:01Z
 design_doc: docs/superpowers/specs/2026-11-24-tran-tong-luot-dem-va-tran-doc-gop-design.md
 ---
 
