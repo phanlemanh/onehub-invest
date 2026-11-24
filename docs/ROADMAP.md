@@ -1155,6 +1155,11 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
       - *NB10 sửa chỗ đó:* phiếu thứ hai phải độc lập — bỏ hai dòng đáp án của luật khỏi lời nhắc và giữ tên dự án, hoặc lấy
         phiếu thứ hai từ đọc gộp vốn không thấy đáp án của luật; chốt ở S1 của NB10. 297 giá trị của lượt hằng đêm mang mã lô
         riêng «trước độc lập»; cả hai lô vẫn là ghi tạm chưa đo, lô đo bù quyết giữ hay rút. Giám sát giữ đường không tắt.
+      - *Lượt hằng đêm chờ sửa xong* (Mạnh, 24/11 03:35Z, đáp câu «lượt hằng đêm có được tự ghi tiếp trước khi sửa xong độc
+        lập không»: **«Chờ sửa xong»**; sửa vế «không tắt» ở dòng trên cho riêng lượt này). Lượt làm giàu hằng đêm không tự áp
+        theo đường có căn cứ (model trùng luật, model trùng tên toà của danh bạ) cho tới khi NB10 được áp lên máy thu; trong
+        lúc chờ, các đề xuất ấy đi thẻ và xử theo nhóm (quyết định 1). Lượt đọc toàn bộ không đổi. 297 giá trị đã ghi giữ
+        nguyên, lô đo bù quyết. Hàng NB11 dựng chốt chặn này; NB10 mở lại tự ghi khi phiếu thứ hai đã độc lập.
       - *Hạn đo bù* tính hai tuần từ ngày NB10 được áp lên máy thu; trước ngày đó chưa có cờ ghi tạm và chưa có cơ chế tự
         tụt. Thứ tự lô đo bù: lát nhãn có tên toà trước (hiện chưa có bài nhãn nào nối được, thiếu thì 110 toà tự rút), rồi lô
         khoảng 80 thẻ loại hình.
@@ -1178,7 +1183,8 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
       - Nối vào danh bạ là luật xác định, làm sau khi có tin (mục 41, PL20); model chép nguyên văn kèm trích.
     - **Để ngoài, chưa quyết:** kênh người dùng báo sai trên cổng Invest (đụng tầng A về hồ sơ người dùng); mục danh bạ tự lên
       bậc từ tin (chờ DA18 có số); nhà phố và đất nền (mục 22 giữ nguyên).
-    - **Hàng** (bản phạm vi `docs/plan/pham-vi-phe-duyet-may-2411.md`): NB10 `ghi-tam-do-sau-co-han` (T3) · PL37
+    - **Hàng** (bản phạm vi `docs/plan/pham-vi-phe-duyet-may-2411.md`): NB11 `luot-hang-dem-khong-tu-ap-truoc-doc-lap` (T2,
+      làm trước) · NB10 `ghi-tam-do-sau-co-han` (T3) · PL37
       `hien-toa-phan-khu-nguyen-van` (T2). Sửa lời: NB3 (ô đầu là số phòng ngủ), NB5 (xử theo nhóm, theo kiểu lệch), PL21 (thêm
       lối ghi tạm), DA18 (chỉ đếm giá trị đọc từ chính bài). Việc của Mạnh, ngoài hàng: một buổi duyệt lô đo bù khoảng 80 thẻ
       loại hình có trộn thẻ cài lỗi và một lát nhãn có tên toà.
