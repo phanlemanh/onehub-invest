@@ -61,3 +61,19 @@ evals:
       - "Đăng nhập /login rồi mở /ops/registry; đọc chân ô «Mã nguồn chưa nối» ở khổ rộng chế độ tối và khổ 375 px chế độ sáng; tắt bản dev khi xong"
     expected: "Chân ô hiện phần S08 dạng «S08 <chưa nối>/<đã nạp>» kèm «<n> vào nút ứng viên», hai số khác nhau, chữ không tràn ô ở khổ hẹp 375 px, sáng và tối; ảnh chụp lưu ở evidence/"
     evidence_required: [run_id, screenshot, observed, verified_at]
+  - id: E9
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.suite.pipeline_a
+    long_running: 90
+    paths: [pipeline/**, scripts/**]
+    expected: "exit 0; nửa A bộ test pipeline (suite của lượt chấm, khai ở đây chỉ để có long_running 90 — trên Mac mini nửa A ~41′, vượt trần chờ 30′ mặc định; lời GS 24/11), 0 fail; nhánh mang 70bcecb3a (trần ca SLT-DC-7/9 480 → 900 s)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.suite.pipeline_b
+    long_running: 90
+    paths: [pipeline/**, scripts/**]
+    expected: "exit 0; nửa B bộ test pipeline (suite của lượt chấm, khai ở đây chỉ để có long_running 90; lời GS 24/11), 0 fail."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
