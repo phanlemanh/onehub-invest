@@ -80,7 +80,7 @@ evals:
     criterion: AC-8
     executor: test
     cmd: config:executors.suite.pipeline_a
-    long_running: 60
+    long_running: 90
     paths: [pipeline/**]
     expected: "exit 0; bộ pipeline nửa a của kho xanh trên nhánh (có ca SLT-DC-7/9 đã nới trần 900 s). Khai riêng để lượt chấm chờ đủ giờ khi máy tải — S4 r1 BLOCKED vì nửa a chạy quá 30 phút mặc định; theo khuôn bi-danh-viet-tat-phan-khu E11a."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
@@ -88,7 +88,7 @@ evals:
     criterion: AC-8
     executor: test
     cmd: config:executors.suite.pipeline_b
-    long_running: 60
+    long_running: 90
     paths: [pipeline/**]
     expected: "exit 0; bộ pipeline nửa b của kho xanh trên nhánh. Khai riêng để lượt chấm chờ đủ giờ khi máy tải, cùng lý do E8c."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
