@@ -29,6 +29,7 @@ evals:
     criterion: AC-4
     executor: script
     cmd: config:executors.script.db_noi_bo_tham_so
+    long_running: 30
     expected: "exit 0; compose của cây: PASS shared_buffers=8GB, PASS work_mem=64MB, PASS maintenance_work_mem=1GB, PASS effective_cache_size=20GB, PASS /dev/shm 1.0G; đối chứng compose main 5a418983c: PASS shared_buffers=256MB, work_mem=16MB, maintenance_work_mem=128MB, /dev/shm 64M — giống nhau ở hai bộ thì FAIL tham số không đến từ compose; đường áp trên CÙNG volume: PASS main→cây shared_buffers=8GB và dòng mốc còn 1, PASS docker restart giữ 8GB, PASS cây→main (lùi) shared_buffers=256MB và dòng mốc còn 1 — volume đổi khác giữa các bước thì FAIL; container tạm tên ht8-ts-*, volume tạm, cổng 127.0.0.1:55434, không chạm one-invest-db; không sót sau lệnh"
     paths: ["db/docker-compose.yml", "scripts/check-db-noi-bo.sh"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
@@ -37,6 +38,7 @@ evals:
     criterion: AC-5
     executor: script
     cmd: config:executors.script.db_noi_bo_do
+    long_running: 30
     expected: "exit 0; dòng nguồn: field_assertions <n>/<nguồn>, sale_offer_records <n>/<nguồn>, mỗi bảng ≥ 90% nguồn (dưới → FAIL dữ liệu đo thiếu); bảng | truy vấn | trung vị trước (ms) | trung vị sau (ms) | Workers Launched | cho mọi truy vấn của bộ, ba lần mỗi bộ; PASS ít nhất một truy vấn Workers Launched > 0; dòng PASS mọi truy vấn chạy xong ở cả hai bộ; đối chứng shm: tham số cây + shm 64MB → PASS đối chứng shm đỏ (could not resize shared memory segment) hoặc dòng ĐỐI CHỨNG SHM CHẾT (không tái hiện) — không có dòng nào trong hai thì FAIL; truy vấn lỗi (vd could not resize shared memory segment) → FAIL tên truy vấn + lỗi; không có ngưỡng nhanh hơn — số chỉ được in"
     paths: ["db/docker-compose.yml", "scripts/check-db-noi-bo.sh"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
@@ -77,6 +79,7 @@ evals:
     criterion: AC-8
     executor: script
     cmd: config:executors.script.db_noi_bo_live
+    long_running: 30
     expected: "exit 0; lệnh chạy bộ đọc live ba lần: (a) one-invest-db trước áp → PASS live one-invest-db đỏ đúng: FAIL 5433 nghe * và FAIL shared_buffers=256MB (compose 8GB); (b) container tạm ht8-live-* dựng từ compose của cây ở 127.0.0.1:55435 → PASS live cây xanh: Mac chỉ nghe 127.0.0.1:55435, IP LAN từ chối, client pg nối localhost được, SHOW bằng compose bốn tham số, /dev/shm 1.0G; (c) container tạm từ compose main 5a418983c ở cổng trần 55436 → PASS live main đỏ đúng hai thông điệp ghim; bộ đọc chỉ đọc (lsof, nc, SHOW trong phiên read-only); sau áp, `bash scripts/check-db-noi-bo.sh live` trên one-invest-db là lệnh kiểm sau, exit 0"
     paths: ["db/docker-compose.yml", "scripts/check-db-noi-bo.sh"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
