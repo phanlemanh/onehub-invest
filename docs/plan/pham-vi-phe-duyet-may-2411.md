@@ -8,8 +8,9 @@ Lời Mạnh làm căn cứ (24/11, phiên tư vấn phê duyệt):
   giàu,...nên tôi nghĩ Không được cực đoan hoá mà là một tiến trình.»
 - 02:48Z: «Nếu không tự ghi thì lại kẹt?»
 - 02:56Z, trả lời ba điểm B1, B2, B3 đã trình: «Chốt cả ba».
+- 03:35Z, đáp câu «lượt hằng đêm có được tự ghi tiếp trước khi sửa xong độc lập không»: «Chờ sửa xong».
 
-Hai mã mới. Bốn hàng đã có được sửa lời trong cùng PR, không thành mã của đợt này: `NB3` (ô đầu tiên là số phòng ngủ; lần đọc
+Ba mã mới (NB11 thêm sau lời 03:35Z). Bốn hàng đã có được sửa lời trong cùng PR, không thành mã của đợt này: `NB3` (ô đầu tiên là số phòng ngủ; lần đọc
 thứ hai dùng model khác họ trong ba model đã chốt), `NB5` (thêm xử theo nhóm và theo kiểu lệch), `PL21` (thêm lối ghi tạm của
 mục 63), `DA18` (chỉ đếm giá trị đọc từ chính bài có trích dẫn).
 
@@ -23,6 +24,7 @@ dot: phe-duyet-may-2411
 dang: chuoi
 nguon: onehub-invest-tri-thuc:wiki/dot/phe-duyet-may-2411.md#8e9415ce24a21a0e3cb0af93d718840eae1da278
 
+- `NB11` — lượt làm giàu hằng đêm không tự áp đề xuất trùng luật hay trùng tên toà danh bạ cho tới khi phiếu thứ hai độc lập
 - `NB10` — đường tự ghi khi luật và model trùng nhau thành «ghi tạm»: mã lô, lệnh rút cả lô, cờ chưa đo, tự tụt khi quá hạn đo bù
 - `PL37` — trang tin hiện toà, phân khu nguyên văn như bài viết kèm nhãn «theo tin đăng, chưa đối chiếu»
 ```
