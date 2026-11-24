@@ -21,7 +21,7 @@ import pg from "pg";
 import { resolveContext, resetContextCache } from "../src/agents/context-resolver.js";
 import { enrichTextAgent, buildEnrichInput, parseEnrichOutput } from "../src/agents/enrich-text.js";
 import { runEnrich, type GiaoDich, type LlmFn } from "../src/enrich/run.js";
-import { dongTongKet, maThoat } from "../src/enrich/tong-ket.js";
+import { dongChuyenThe, dongTongKetLuot, maThoat } from "../src/enrich/tong-ket.js";
 import { runAgent } from "../src/runtime/loop.js";
 import { LoiCauHinhModel, LoiThieuKhoa, khoaThieuAgent, modelCuaAgent, taoTran, tranTuArgv, uocTokenVao, type Tran } from "../src/runtime/model-agent.js";
 
@@ -92,11 +92,13 @@ async function main() {
     if (DRY) {
       console.log(
         `offers: ${routed.length} | áp thẳng (E1): ${summary.direct} | có căn cứ: ${summary.corroborated}` +
-          ` | chờ duyệt: ${summary.review} (trong đó có căn cứ chờ phiếu độc lập: ${chuyenThe}) | xung đột E1/LLM: ${summary.xungDot}`,
+          ` | chờ duyệt: ${summary.review} | xung đột E1/LLM: ${summary.xungDot}`,
       );
+      // Chế độ dry không ghi nên chuyenThe = 0; đếm từ đề xuất đã định tuyến (trungLuat) — S4-r1 t1/t3.
+      console.log(dongChuyenThe(routed.flat().filter((r) => r.trungLuat).length));
       return;
     }
-    for (const dong of dongTongKet(dem)) console.log(dong);
+    for (const dong of dongTongKetLuot(dem, chuyenThe)) console.log(dong);
     process.exitCode = maThoat(dem);
   } finally {
     await c.end();

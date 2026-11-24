@@ -7,6 +7,7 @@ import type pg from "pg";
 import type { ContextResult } from "../src/agents/context-resolver.js";
 import type { EnrichResult } from "../src/agents/enrich-text.js";
 import { runEnrich, type LlmFn, type ResolveFn } from "../src/enrich/run.js";
+import { dongTongKetLuot } from "../src/enrich/tong-ket.js";
 import { withTx, insertOffer } from "./helpers/db.js";
 
 const ctx = (o: Partial<ContextResult> = {}): ContextResult => ({
@@ -117,5 +118,9 @@ test("E6 AC-6 bản chép DB: một lượt đêm ghi 0 dòng applied có corrob
     assert.equal(d.tu_ap, 0, "lượt đêm tự áp đề xuất có căn cứ");
     assert.ok(d.chuyen > 0, "tiền đề: có đề xuất trùng luật");
     assert.equal(d.chuyen, r.chuyenThe, "tổng kết lượt lệch số ghi");
+    // Đầu ra in của lượt ghi thật (cùng hàm CLI gọi) phải mang đúng số đếm từ DB — S4-r1 t4.
+    const inRa = dongTongKetLuot(r.dem, r.chuyenThe);
+    assert.ok(inRa.some((l) => l.endsWith(`chờ phiếu độc lập (chuyển thẻ, không áp): ${d.chuyen}`)),
+      `tổng kết lượt in không có số chuyển thẻ ${d.chuyen}: ${inRa.join(" / ")}`);
   });
 });

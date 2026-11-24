@@ -266,7 +266,7 @@ export async function syncReview(
 }
 
 export async function runEnrich(opts: RunEnrichOpts): Promise<{
-  routed: Routed[][];
+  routed: RoutedDem[][];
   summary: ReturnType<typeof summarizeRun>;
   reviewIds: number[];
   dem: DemLuot;
@@ -277,7 +277,7 @@ export async function runEnrich(opts: RunEnrichOpts): Promise<{
   const giaoDich = opts.giaoDich ?? giaoDichSavepoint(c);
   const buildings = opts.buildings ?? (await loadBuildings(c));
   const offers = await selectOffers(c, opts.limit, opts.offerIds);
-  const routed: Routed[][] = [];
+  const routed: RoutedDem[][] = [];
   const reviewIds: number[] = [];
   const dem = demRong();
   dem.tin = offers.length;

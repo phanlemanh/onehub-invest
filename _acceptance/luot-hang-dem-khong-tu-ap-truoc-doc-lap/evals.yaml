@@ -8,7 +8,7 @@ evals:
     layer: backend-effect
     cmd: bash _acceptance/luot-hang-dem-khong-tu-ap-truoc-doc-lap/probes/chay.sh AC-1
     paths: [agent/src/enrich/run.ts, agent/tests/enrich-luot-dem-khong-tu-ap.test.ts]
-    expected: "Tin thật thiếu loại hình, E1 giả lập trả 'apartment', LLM giả lập trả 'apartment': đề xuất e2_llm route review, status queued, corroborated_by NULL, evidence.trung_luat='e1'; 0 dòng field_assertions mới cho offer; sale_offers.property_type vẫn NULL; thẻ agent_output chờ của tin có ô property_type. Cấy ngược (bản sao run.ts bỏ đổi route): đỏ với thông điệp «lượt hằng đêm tự áp đề xuất trùng luật: <offer>»."
+    expected: "Tin thiếu loại hình, E1 giả lập trả 'apartment', LLM giả lập trả 'apartment': đề xuất e2_llm route review, status queued, corroborated_by NULL, evidence.trung_luat='e1'; 0 dòng field_assertions mới cho offer; sale_offers.property_type vẫn 'unknown' (tin tổng hợp trong giao dịch); thẻ agent_output chờ của tin có ô property_type. Ca có assert.fail «lượt hằng đêm tự áp đề xuất trùng luật: <offer>» khi bất kỳ đề xuất nào applied; chiều đỏ là ca E5 (chanTuApCanCu=false → applied)."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E2
     criterion: AC-2
