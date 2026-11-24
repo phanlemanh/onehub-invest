@@ -34,7 +34,7 @@ type Rig = {
 /** Dựng khách với vận chuyển giả. `respond(i, url)` trả phản hồi hoặc ném lỗi mạng. */
 function makeClient(
   respond: (i: number, url: string) => Response | Promise<Response>,
-  o: { caps?: Caps; paceMs?: number; perCallMs?: number } = {},
+  o: { caps?: Caps; paceMs?: number; perCallMs?: number; shouldStop?: () => boolean } = {},
 ): Rig {
   const sent: string[] = [];
   const slept: number[] = [];
@@ -43,6 +43,7 @@ function makeClient(
     config: loadConfig(JSON.stringify(FAKE_CONFIG)),
     caps: o.caps ?? { calls: 100, minutes: 60 },
     paceMs: o.paceMs ?? 0,
+    ...(o.shouldStop ? { shouldStop: o.shouldStop } : {}),
     now: () => t,
     sleep: async (ms: number) => {
       slept.push(ms);
@@ -215,6 +216,37 @@ test("lỗi tạm vì 5xx vẫn ghi mã trạng thái; vận chuyển ném chu�
   }).client.getJson("gallery", { id: 7 }).then(() => null, (x: unknown) => x);
   assert.ok(chuoi instanceof TemporaryFailure);
   assert.match(chuoi.message, /lỗi mạng «mạng hỏng lạ»/);
+});
+
+test("yêu cầu dừng (shouldStop) thành true thì dừng cả lượt ở lời kế tiếp: không gửi thêm lời, không tính là bị chặn", async () => {
+  let dung = false;
+  const { client, sent } = makeClient(() => json({ ok: true }), { shouldStop: () => dung });
+  assert.deepEqual(await client.getJson("project-list"), { ok: true });
+  dung = true;
+  const e = await client.getJson("project-list").then(() => null, (x: unknown) => x);
+  assert.ok(e instanceof RunStopped, String(e));
+  assert.equal(e.reason, "operator-stop");
+  assert.equal(await client.getJson("project-list").then(() => null, (x: unknown) => x), e, "đã dừng thì mọi lời sau bị từ chối bằng chính lỗi dừng");
+  assert.equal(sent.length, 1, "không gửi thêm lời nào");
+  assert.equal(client.blocks, 0, "dừng theo yêu cầu không phải bị chặn");
+});
+
+test("yêu cầu dừng giữa một đợt nhiều lời: phần chưa gửi của đợt nhận lỗi dừng, không gửi", async () => {
+  let dung = false;
+  const { client, sent } = makeClient(() => json({ ok: true }), { shouldStop: () => dung });
+  const r = await client.getJsonMany(
+    [1, 2, 3, 4].map((id) => ({ role: "project-detail" as const, params: { id } })),
+    2,
+  );
+  assert.deepEqual(r.map((x) => (x.ok ? "ok" : (x.error as RunStopped).reason)), ["ok", "ok", "ok", "ok"]);
+  dung = true;
+  sent.length = 0;
+  const r2 = await client.getJsonMany(
+    [5, 6, 7].map((id) => ({ role: "project-detail" as const, params: { id } })),
+    2,
+  );
+  assert.equal(sent.length, 0, "đợt kế không gửi lời nào");
+  assert.deepEqual(r2.map((x) => (x.ok ? "ok" : (x.error as RunStopped).reason)), ["operator-stop", "operator-stop", "operator-stop"]);
 });
 
 test("10 lỗi tạm liên tiếp: dừng lượt", async () => {

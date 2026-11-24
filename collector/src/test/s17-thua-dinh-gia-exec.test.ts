@@ -9,7 +9,7 @@ import { RunStopped, type Response } from "../collectors/s17-thua-dinh-gia/clien
 import { executePhase } from "../collectors/s17-thua-dinh-gia/runner.js";
 import { emptyState } from "../collectors/s17-thua-dinh-gia/run.js";
 import { egoOptions, parseCli, summarize } from "../collectors/s17-thua-dinh-gia/main.js";
-import { buildExecOptions } from "../collectors/s17-thua-dinh-gia/runner.js";
+import { buildExecOptions, type ExecResult } from "../collectors/s17-thua-dinh-gia/runner.js";
 
 /**
  * Trình điều khiển một pha: đọc số dư trước và sau lượt (bằng chứng không tiêu điểm), lưu trạng thái ra
@@ -109,6 +109,61 @@ test("executePhase: không đọc số dư khi pha không đụng tài khoản",
   assert.equal(r.ok, true);
   assert.equal(h.sent.length, 1);
   assert.equal(r.balanceBefore, undefined);
+}));
+
+/** Một lượt kiểm phiên với vận chuyển tùy: `khiGoi(url)` chạy TRƯỚC khi trả lời (nơi duy nhất thấy được pha đang chạy). */
+async function chayVoiVanChuyen(dir: string, khiGoi: (url: string) => Promise<void>, o: { concurrency?: number } = {}): Promise<{ r: ExecResult; daHoi: string[] }> {
+  const daHoi: string[] = [];
+  const r = await executePhase({
+    phase: "session-check",
+    config: loadConfig(JSON.stringify(FAKE_CONFIG)),
+    transport: async (url: string) => {
+      await khiGoi(url);
+      daHoi.push(url);
+      return new URL(url).pathname.endsWith("/balance") ? json(env({ available: 20 })) : json(env({ available: true }));
+    },
+    snapshotRoot: join(dir, "snapshots"),
+    statePath: join(dir, "state.json"),
+    logPath: join(dir, "run.log.jsonl"),
+    caps: { calls: 100, minutes: 60 },
+    paceMs: 0,
+    batchItems: 100,
+    checkBalance: true,
+    ...(o.concurrency ? { concurrency: o.concurrency } : {}),
+    env: { sleep: async () => undefined, now: () => new Date("2026-11-24T04:00:00.000Z") },
+  });
+  return { r, daHoi };
+}
+
+test("tệp DUNG xuất hiện giữa lượt → lượt dừng sạch ở lời kế tiếp: operator-stop, xoá tệp DUNG, không ghi nhận bị chặn (giết tiến trình không đủ — mã vẫn sống trong dịch vụ trình duyệt, đo 24/11 18:09)", async () => withTmp(async (dir) => {
+  const tepDung = join(dir, "DUNG");
+  const { r, daHoi } = await chayVoiVanChuyen(dir, async (url) => {
+    if (!new URL(url).pathname.endsWith("/balance")) await writeFile(tepDung, "", { flag: "wx" }).catch(() => undefined);
+  });
+  assert.equal(r.ok, false);
+  assert.equal(r.stopReason, "operator-stop");
+  assert.equal(r.blocks, 0);
+  assert.equal(daHoi.length, 2, "số dư trước + một lời kiểm phiên; lời sau (gồm số dư sau) không gửi");
+  await assert.rejects(readFile(tepDung), "tệp DUNG được tiêu dùng: xoá sau khi lượt dừng");
+  assert.equal(r.blocks, 0, "dừng theo yêu cầu không phải bị chặn");
+  const dong = (await readFile(join(dir, "run.log.jsonl"), "utf8")).trim().split("\n").map((l) => JSON.parse(l) as Record<string, unknown>);
+  const ketQua = dong.find((d) => d.suKien === "ket-qua");
+  assert.equal(ketQua?.reason, "operator-stop");
+  assert.equal(ketQua?.ok, false);
+  assert.equal(dong.at(-1)?.suKien, "dung-theo-yeu-cau", "ghi sổ việc đã tiêu dùng tệp DUNG");
+  // Lượt kế chạy nhanh (nhiều luồng) phải chạy bình thường: dừng theo yêu cầu KHÔNG khoá tăng tốc như bị chặn.
+  const lanHai = await chayVoiVanChuyen(dir, async () => undefined, { concurrency: 2 });
+  assert.equal(lanHai.r.ok, true, `lượt kế bị dừng oan: ${lanHai.r.stopReason}`);
+  assert.ok(lanHai.daHoi.length > 0);
+}));
+
+test("tệp DUNG có sẵn từ trước lượt → không gửi lời nào, trả operator-stop, xoá tệp", async () => withTmp(async (dir) => {
+  await writeFile(join(dir, "DUNG"), "");
+  const { r, daHoi } = await chayVoiVanChuyen(dir, async () => undefined);
+  assert.equal(r.ok, false);
+  assert.equal(r.stopReason, "operator-stop");
+  assert.equal(daHoi.length, 0, "không gửi lời nào");
+  await assert.rejects(readFile(join(dir, "DUNG")));
 }));
 
 test("executePhase: dừng vì bị chặn thì trả ok=false kèm lý do, snapshot có lý do dừng", async () => withTmp(async (dir) => {

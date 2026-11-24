@@ -4,9 +4,9 @@
  * và log Ở MÁY. Dùng chung cho hai đường vận chuyển: fetch của Node (phần công khai) và fetch trong
  * trang của hồ sơ đăng nhập (phần cần phiên — ego.ts).
  */
-import { appendFileSync } from "node:fs";
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
-import { dirname } from "node:path";
+import { appendFileSync, existsSync } from "node:fs";
+import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
+import { dirname, join } from "node:path";
 import { S17Client, RunStopped, type Caps, type Response, type StopReason, type Transport, type TransportMany } from "./client.js";
 import { ConfigError, type S17Config } from "./config.js";
 import { assertBalanceUnchanged } from "./kinds.js";
@@ -50,6 +50,12 @@ export type ExecOptions = {
 
 /** Nhịp mặc định — mức nguồn đã chịu được (0 lần bị chặn ở 350 ms suốt 24/11). */
 export const DEFAULT_PACE_MS = 350;
+/**
+ * Tên tệp yêu cầu dừng: tệp rỗng này trong thư mục trạng thái làm lượt dừng SẠCH ở lời kế tiếp (chốt những gì đã
+ * lấy, lưu trạng thái, trả `operator-stop`), rồi được xoá. Giết tiến trình không đủ: mã của pha chạy trong dịch vụ
+ * trình duyệt, vẫn sống thêm khoảng 40 s và tranh tab với lượt kế (đo 24/11 18:09).
+ */
+export const STOP_FILE = "DUNG";
 /** Nhịp nhanh nhất được phép khi tăng tốc (Mạnh 24/11). */
 export const MIN_PACE_MS = 150;
 
@@ -141,9 +147,11 @@ export async function executePhase(o: ExecOptions): Promise<ExecResult> {
         ? new RunStopped("fast-after-block", `nguồn đã chặn một lần — chỉ được chạy nhịp ${DEFAULT_PACE_MS} ms, một luồng`)
         : null;
 
+  const stopPath = join(dirname(o.statePath), STOP_FILE);
   const client = new S17Client({
     config: o.config,
     transport: o.transport,
+    shouldStop: () => existsSync(stopPath),
     ...(o.transportMany ? { transportMany: o.transportMany } : {}),
     sleep: env.sleep,
     now: () => env.now().getTime(),
@@ -208,6 +216,11 @@ export async function executePhase(o: ExecOptions): Promise<ExecResult> {
       if (e.reason === "blocked") {
         state.blockedRuns = (state.blockedRuns ?? 0) + 1;
         await saveState(o.statePath, state);
+      }
+      if (e.reason === "operator-stop") {
+        // Tệp đã được tiêu dùng: xoá để lượt kế không dừng oan.
+        await rm(stopPath, { force: true });
+        log({ suKien: "dung-theo-yeu-cau", ...base() });
       }
       return { ok: false, stopReason: e.reason, message, ...base(), balanceBefore, balanceAfter };
     }

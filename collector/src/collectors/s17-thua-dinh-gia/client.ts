@@ -32,7 +32,8 @@ export type StopReason =
   | "balance-unreadable"
   | "proof-failed"
   | "fast-after-block"
-  | "blocked-twice";
+  | "blocked-twice"
+  | "operator-stop";
 
 export class RunStopped extends Error {
   constructor(
@@ -78,6 +79,11 @@ export type ClientOptions = {
   paceMs: number;
   /** Vận chuyển theo đợt cho đường nhiều lời; thiếu thì gửi tuần tự bằng `transport`. */
   transportMany?: TransportMany;
+  /**
+   * Yêu cầu dừng từ người vận hành (tệp DUNG trong thư mục trạng thái). Trả true thì từ lời kế trở đi lượt dừng như
+   * mọi lần dừng khác — không phải bị chặn, không gửi thêm lời nào.
+   */
+  shouldStop?: () => boolean;
 };
 
 export class S17Client {
@@ -129,6 +135,7 @@ export class S17Client {
 
   private assertRunning(): void {
     if (this.stopped) throw this.stopped;
+    if (this.o.shouldStop?.()) throw this.stop("operator-stop", "có tệp DUNG trong thư mục trạng thái — dừng theo yêu cầu");
     if (this.o.now() - this.startedAt > this.o.caps.minutes * 60_000) {
       throw this.stop("time-cap", `quá trần thời gian ${this.o.caps.minutes} phút`);
     }
