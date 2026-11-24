@@ -61,88 +61,111 @@ export type EgoOptions = {
 
 type InPageResult = { status: number; contentType: string | null; body: string; bytes?: number; networkError?: string };
 type InPageInput = { url: string; headerJson: string; cookieName: string; timeoutMs: number };
+type InPageJob = { done: number; rs: InPageResult[] };
 
 /** Trình duyệt (ego) hủy một lần chạy trong trang sau 15 s (đo 24/11). */
 export const EGO_EVALUATE_LIMIT_MS = 15_000;
 /**
- * Hạn chờ của MỘT lời trong trang — thấp hơn hạn của trình duyệt. Lời chậm hơn hạn này dứt bằng lỗi mạng của riêng
- * nó và lớp gọi thử lại theo luật; để trang tự chờ lâu hơn thì trình duyệt hủy cả lần chạy (lượt quét thấp tầng
- * 24/11: đợt hai treo 15 s rồi cả lượt vỡ).
+ * Hạn chờ của MỘT lời trong trang. Không lần chạy trong trang nào chờ lời gọi (xem IN_PAGE_START) nên hạn này không
+ * bị buộc dưới hạn của trình duyệt: bản ghi lớn trả sau 15–60 s (đo 24/11: id 52 của namespace thấp tầng, lỗi lặp
+ * lại ở cả hai lượt) vẫn nằm trong hạn. Lời chậm hơn hạn chờ dứt bằng lỗi mạng của riêng nó, lớp gọi thử lại theo luật.
  */
-export const IN_PAGE_TIMEOUT_MS = 10_000;
+export const IN_PAGE_TIMEOUT_MS = 60_000;
+/** Nhịp hỏi kết quả của một đợt — mỗi lần hỏi là một lần chạy trong trang rất ngắn. */
+export const IN_PAGE_POLL_MS = 250;
 
-/** Tự chứa (chạy trong trang, không được tham chiếu biến ngoài). Chữ giữ thân; nhị phân chỉ giữ số byte. */
-export const IN_PAGE_FETCH = async (input: InPageInput): Promise<InPageResult> => {
-  const g = globalThis as unknown as {
-    fetch(url: string, init: object): Promise<{ status: number; headers: { get(k: string): string | null }; text(): Promise<string>; arrayBuffer(): Promise<ArrayBuffer> }>;
-    document: { cookie: string };
-    AbortSignal: { timeout(ms: number): unknown };
-  };
-  const headers = JSON.parse(input.headerJson) as Record<string, string>;
-  // Tên cookie đến từ cấu hình local; giá trị chỉ đi thẳng vào header của chính lời gọi này.
-  const m = new RegExp(`(?:^|;\\s*)${input.cookieName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}=([^;]+)`).exec(g.document.cookie);
-  if (m) headers.Authorization = `Bearer ${decodeURIComponent(m[1])}`;
-  try {
-    const res = await g.fetch(input.url, { headers, credentials: "omit", signal: g.AbortSignal.timeout(input.timeoutMs) });
-    const contentType = res.headers.get("content-type") ?? "";
-    if (/json|text|javascript|xml|form/i.test(contentType)) return { status: res.status, contentType, body: await res.text() };
-    const buf = await res.arrayBuffer();
-    return { status: res.status, contentType, body: "", bytes: buf.byteLength };
-  } catch (e) {
-    return { status: 0, contentType: null, body: "", networkError: String(e).slice(0, 160) };
-  }
+type InPageGlobal = {
+  fetch(url: string, init: object): Promise<{ status: number; headers: { get(k: string): string | null }; text(): Promise<string>; arrayBuffer(): Promise<ArrayBuffer> }>;
+  document: { cookie: string };
+  AbortSignal: { timeout(ms: number): unknown };
+  /** Việc đang chạy: một việc tại một thời điểm — lớp gọi chạy tuần tự từng đợt, việc mới đè việc cũ. */
+  __s17Job?: InPageJob;
 };
 
 /**
- * Nhiều lời trong MỘT lần chạy trong trang: các fetch cùng chạy, lời i bắt đầu sau i × staggerMs (đo 24/11: hai
- * lời đồng thời xong sau 4,9 s thay vì 8,4 s). Tự chứa; phiên chỉ đi thẳng vào header của chính lời gọi.
+ * BẮT ĐẦU các lời trong trang rồi trả về NGAY số lời đã nhận — không chờ kết quả, vì trình duyệt hủy lần chạy
+ * trong trang sau 15 s. Các fetch cùng chạy, lời i bắt đầu sau i × staggerMs (đo 24/11: hai lời đồng thời xong sau
+ * 4,9 s thay vì 8,4 s). Tự chứa (không tham chiếu biến ngoài); phiên chỉ đi thẳng vào header của chính lời gọi,
+ * không cất lại trong việc. Kết quả lấy lại bằng IN_PAGE_COLLECT.
  */
-export const IN_PAGE_FETCH_MANY = async (input: { items: InPageInput[]; staggerMs: number }): Promise<InPageResult[]> => {
-  const g = globalThis as unknown as {
-    fetch(url: string, init: object): Promise<{ status: number; headers: { get(k: string): string | null }; text(): Promise<string>; arrayBuffer(): Promise<ArrayBuffer> }>;
-    document: { cookie: string };
-    AbortSignal: { timeout(ms: number): unknown };
-  };
-  const mot = async (it: InPageInput, delayMs: number): Promise<InPageResult> => {
+export const IN_PAGE_START = (input: { items: InPageInput[]; staggerMs: number }): number => {
+  const g = globalThis as unknown as InPageGlobal;
+  const job: InPageJob = { done: 0, rs: new Array(input.items.length) };
+  g.__s17Job = job;
+  const mot = async (it: InPageInput, delayMs: number, index: number): Promise<void> => {
     if (delayMs > 0) await new Promise((r) => setTimeout(r, delayMs));
-    const headers = JSON.parse(it.headerJson) as Record<string, string>;
-    const m = new RegExp(`(?:^|;\\s*)${it.cookieName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}=([^;]+)`).exec(g.document.cookie);
-    if (m) headers.Authorization = `Bearer ${decodeURIComponent(m[1])}`;
+    let out: InPageResult;
     try {
+      const headers = JSON.parse(it.headerJson) as Record<string, string>;
+      // Tên cookie đến từ cấu hình local; giá trị chỉ đi thẳng vào header của chính lời gọi này.
+      const m = new RegExp(`(?:^|;\\s*)${it.cookieName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}=([^;]+)`).exec(g.document.cookie);
+      if (m) headers.Authorization = `Bearer ${decodeURIComponent(m[1])}`;
       const res = await g.fetch(it.url, { headers, credentials: "omit", signal: g.AbortSignal.timeout(it.timeoutMs) });
       const contentType = res.headers.get("content-type") ?? "";
-      if (/json|text|javascript|xml|form/i.test(contentType)) return { status: res.status, contentType, body: await res.text() };
-      const buf = await res.arrayBuffer();
-      return { status: res.status, contentType, body: "", bytes: buf.byteLength };
+      // Chữ giữ thân; nhị phân chỉ giữ số byte.
+      if (/json|text|javascript|xml|form/i.test(contentType)) out = { status: res.status, contentType, body: await res.text() };
+      else out = { status: res.status, contentType, body: "", bytes: (await res.arrayBuffer()).byteLength };
     } catch (e) {
-      return { status: 0, contentType: null, body: "", networkError: String(e).slice(0, 160) };
+      out = { status: 0, contentType: null, body: "", networkError: String(e).slice(0, 160) };
     }
+    job.rs[index] = out; // ghi vào việc của chính lời gọi này, kể cả khi việc mới đã đè việc cũ
+    job.done++;
   };
-  return Promise.all(input.items.map((it, i) => mot(it, i * input.staggerMs)));
+  input.items.forEach((it, i) => {
+    void mot(it, i * input.staggerMs, i);
+  });
+  return input.items.length;
 };
 
 /**
- * Hai đường vận chuyển chạy trong một tab: một lời, và nhiều lời một đợt. Mỗi lời xin hạn chờ IN_PAGE_TIMEOUT_MS.
- * Đợt mà lần chạy trong trang vẫn bị hủy thì mỗi lời của đợt nhận một Error — lớp gọi phân loại là lỗi mạng của
- * từng lời theo đúng luật; không để một lần chạy chậm làm vỡ cả lượt.
+ * Hỏi kết quả của việc đang chạy. Chưa xong: báo số đã xong, không lộ thân nào. Xong hết: trả kết quả rồi trang bỏ
+ * việc (thân phản hồi không nằm lại trong trang). Không có việc: trả null.
  */
-export function makeTransports(page: EgoPage, cookieName: string): { transport: Transport; transportMany: TransportMany } {
+export const IN_PAGE_COLLECT = (): { done: number; tong: number; rs?: InPageResult[] } | null => {
+  const g = globalThis as unknown as { __s17Job?: InPageJob };
+  const job = g.__s17Job;
+  if (!job) return null;
+  if (job.done < job.rs.length) return { done: job.done, tong: job.rs.length };
+  g.__s17Job = undefined;
+  return { done: job.done, tong: job.rs.length, rs: job.rs };
+};
+
+/**
+ * Hai đường vận chuyển chạy trong một tab: một lời, và nhiều lời một đợt — cùng một cách: bắt đầu lời gọi rồi hỏi
+ * kết quả tới khi xong; không lần chạy trong trang nào chờ lời gọi. Mỗi lời xin hạn chờ IN_PAGE_TIMEOUT_MS.
+ * Lần chạy trong trang bị hủy, hay trang đánh mất việc, thì mỗi lời của đợt nhận một Error — lớp gọi phân loại là
+ * lỗi mạng của từng lời theo đúng luật; một đợt chậm không làm vỡ cả lượt.
+ */
+export function makeTransports(
+  page: EgoPage,
+  cookieName: string,
+  cho: { sleep: (ms: number) => Promise<void>; pollMs: number },
+): { transport: Transport; transportMany: TransportMany } {
   const xuLy = (r: InPageResult): Response => {
     if (r.networkError) throw new TypeError(r.networkError);
     return { status: r.status, contentType: r.contentType ?? "", body: r.body, bytes: r.bytes };
   };
-  const transport: Transport = async (url, headers) =>
-    xuLy((await page.evaluate(IN_PAGE_FETCH, { url, headerJson: JSON.stringify(headers), cookieName, timeoutMs: IN_PAGE_TIMEOUT_MS })) as InPageResult);
+  const chay = async (requests: Array<{ url: string; headers: Record<string, string> }>, staggerMs: number): Promise<InPageResult[]> => {
+    const items = requests.map((r) => ({ url: r.url, headerJson: JSON.stringify(r.headers), cookieName, timeoutMs: IN_PAGE_TIMEOUT_MS }));
+    await page.evaluate(IN_PAGE_START, { items, staggerMs });
+    for (;;) {
+      const kq = (await page.evaluate(IN_PAGE_COLLECT)) as ReturnType<typeof IN_PAGE_COLLECT>;
+      if (!kq) throw new TypeError("trang không còn giữ việc gọi (đã điều hướng hay tải lại)");
+      if (kq.rs) return kq.rs;
+      await cho.sleep(cho.pollMs);
+    }
+  };
+  const loiDot = (requests: Array<{ url: string }>, e: unknown): Array<Error> => {
+    const loi = new TypeError(`lần chạy trong trang lỗi (cả đợt): ${e instanceof Error ? e.message : String(e)}`);
+    return requests.map(() => loi);
+  };
+  const transport: Transport = async (url, headers) => xuLy((await chay([{ url, headers }], 0))[0]);
   const transportMany: TransportMany = async (requests, staggerMs) => {
     let rs: InPageResult[];
     try {
-      rs = (await page.evaluate(IN_PAGE_FETCH_MANY, {
-        items: requests.map((r) => ({ url: r.url, headerJson: JSON.stringify(r.headers), cookieName, timeoutMs: IN_PAGE_TIMEOUT_MS })),
-        staggerMs,
-      })) as InPageResult[];
+      rs = await chay(requests, staggerMs);
     } catch (e) {
-      const loi = e instanceof Error ? e.message : String(e);
-      return requests.map(() => new TypeError(`lần chạy trong trang lỗi (cả đợt): ${loi}`));
+      return loiDot(requests, e);
     }
     return rs.map((r) => {
       try {
@@ -181,7 +204,7 @@ export async function main(api: EgoApi, optionsPath: string): Promise<number> {
     return 4;
   }
   const page = tab.label ? task.page(tab.label) : await task.adopt(tab.page);
-  const { transport, transportMany } = makeTransports(page, opts.cookieName ?? "");
+  const { transport, transportMany } = makeTransports(page, opts.cookieName ?? "", { sleep: env.sleep, pollMs: IN_PAGE_POLL_MS });
 
   try {
     // Bản kê đi qua buildExecOptions chung với đường Node: không trường nào bị bỏ lại ở ranh giới tiến trình.
