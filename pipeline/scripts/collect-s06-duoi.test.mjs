@@ -12,7 +12,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
   thuDuoi, LUAT_DUNG, LY_DO_DUNG, MA_THOAT, taoItemS06, taoLayTrangS06, ghiSnapshot,
-  chayDoi, tinhBaoCao, tinhTiLeBatDuoc, cuaSoDo, baoCao, taoTraStg, quetDuStg, moDbChiDoc,
+  chayDoi, tinhBaoCao, tinhTiLeBatDuoc, cuaSoDo, baoCao, taoTraStg, quetDuStg, quetDuDaNapXong, moDbChiDoc,
 } from "../collect-s06-duoi.mjs";
 import { readSnapshot } from "../import-chotot.mjs";
 
@@ -663,23 +663,67 @@ test("báo cáo cả phép đo: chưa có tệp trạng thái thì vẫn ra bố
   assert.equal(mo, 0);
 });
 
-test("báo cáo cả phép đo: có vùng × mục thì mở DB chỉ đọc để so với lượt quét đủ rồi đóng DB", async () => {
-  const cau = [];
+/** DB giả cho báo cáo: trả theo đúng câu — số dòng stg của snapshot mới nhất (max, manifest, count) rồi tập id lượt quét đủ. */
+function dbBaoCao({ luc = new Date(T0 + 86400_000), items = 4, daNap = items, cau = [], ids = ["1", "2", "3", "5"] } = {}) {
+  return {
+    cau,
+    query: async (sql, params) => {
+      cau.push([sql.trim().split(/\s+/).slice(0, 3).join(" "), params]);
+      if (/max\(captured_at\)/.test(sql)) return { rows: luc ? [{ luc }] : [] };
+      if (/FROM airbnb_snapshots/.test(sql)) return { rows: items === null ? [] : [{ snapshot_id: "hcmc__chotot-ads__2026-11-24T072926", manifest: { counts: { items } } }] };
+      // cụ thể: chỉ câu đếm ĐÚNG theo snapshot mới nhất mới trả số dòng đã nạp; câu đếm cua khác trả toàn bộ dòng của vùng
+      if (/count\(\*\)::int AS n/.test(sql)) return { rows: [{ n: /WHERE snapshot_id = \$1/.test(sql) ? daNap : 100_000 }] };
+      return { rows: ids.map((list_id) => ({ list_id })) };
+    },
+    dong: async () => { cau.push(["dong"]); },
+  };
+}
+
+test("báo cáo cả phép đo: có vùng × mục thì kiểm lượt quét đủ đã nạp xong, so, rồi đóng DB", async () => {
+  const db = dbBaoCao();
   const kq = await baoCao({
     tt: { trangThai: "xong", cityCode: "vn-hcmc", adType: "u", batDau: ISO(0), hetHan: ISO(3600) },
     dong: NHAT_KY, bayGio: () => T0 + 7200_000,
-    moDb: async () => ({
-      query: async (sql, params) => {
-        cau.push([sql.trim().split(/\s+/).slice(0, 3).join(" "), params]);
-        return { rows: /max\(captured_at\)/.test(sql) ? [{ luc: new Date(T0 + 86400_000) }] : [{ list_id: "1" }, { list_id: "2" }, { list_id: "3" }, { list_id: "5" }] };
-      },
-      dong: async () => { cau.push(["dong"]); },
-    }),
+    moDb: async () => db,
   });
   assert.deepEqual(kq.batDuoc, { quetDu: 4, duoi: 4, batDuoc: 3, tiLe: 0.75, thieu: [5], chiDuoi: [4] });
   assert.equal(kq.quetDuCapNhatLuc, new Date(T0 + 86400_000).toISOString(), "ghi giờ lượt quét đủ mới nhất đã nạp");
-  assert.deepEqual(cau.map((x) => x[0]), ["SELECT list_id FROM", "SELECT max(captured_at) AS", "dong"], "hai câu đọc rồi đóng");
-  assert.deepEqual(cau[0][1], ["vn-hcmc", "u", T0, T0 + 900_001], "so đúng vùng × mục và đúng cửa sổ");
+  assert.deepEqual(kq.quetDuNapXong, { xong: true, luc: new Date(T0 + 86400_000).toISOString(), snapshotId: "hcmc__chotot-ads__2026-11-24T072926", items: 4, daNap: 4 });
+  assert.deepEqual(db.cau.map((x) => x[0]), ["SELECT max(captured_at) AS", "SELECT snapshot_id, manifest", "SELECT count(*)::int AS", "SELECT list_id FROM", "dong"], "kiểm nạp xong trước, mới lấy tập so, rồi đóng");
+  assert.deepEqual(db.cau.at(-2)[1], ["vn-hcmc", "u", T0, T0 + 900_001], "so đúng vùng × mục và đúng cửa sổ");
+});
+
+// CA ĐỎ của lỗi 24/11: ZT tính tỉ lệ lúc lượt nạp 30.623 dòng còn chạy dỏ (tính được 194/200 = 97% và «221 tin quét đủ
+// không có») trong khi lượt quét đủ có đủ 420 tin — tỉ lệ thật 413/420 = 98,3%. Bỏ bước kiểm nạp xong → ca này ĐỎ.
+test("báo cáo cả phép đo: lượt quét đủ CHƯA nạp xong thì KHÔNG đưa tỉ lệ — null kèm số dòng, bốn số vẫn có", async () => {
+  const db = dbBaoCao({ items: 420, daNap: 200, ids: ["1", "2", "3"] });
+  const kq = await baoCao({
+    tt: { trangThai: "xong", cityCode: "vn-hcmc", adType: "u", batDau: ISO(0), hetHan: ISO(3600) },
+    dong: NHAT_KY, bayGio: () => T0 + 7200_000,
+    moDb: async () => db,
+  });
+  assert.equal(kq.batDuoc, null, "chưa nạp xong thì chưa có tập so đầy đủ — không đưa tỉ lệ");
+  assert.match(kq.batDuocLoi, /chưa nạp xong \(200\/420 dòng\)/, "nêu rõ thiếu bao nhiêu dòng");
+  assert.deepEqual([kq.quetDuNapXong.xong, kq.quetDuNapXong.items, kq.quetDuNapXong.daNap], [false, 420, 200]);
+  assert.equal(kq.soLoiGoi, 7, "bốn số không phụ thuộc việc so");
+  assert.ok(!db.cau.some((x) => x[0] === "SELECT list_id FROM"), "không chạy câu lấy tập so khi biết trước là chưa xong");
+});
+
+test("báo cáo cả phép đo: lượt quét đủ nạp xong trừ vài dòng bị bỏ (399/400) vẫn coi là xong và so bình thường", async () => {
+  const kq = await baoCao({
+    tt: { trangThai: "xong", cityCode: "vn-hcmc", adType: "u", batDau: ISO(0), hetHan: ISO(3600) },
+    dong: NHAT_KY, bayGio: () => T0 + 7200_000,
+    moDb: async () => dbBaoCao({ items: 400, daNap: 399 }),
+  });
+  assert.equal(kq.quetDuNapXong.xong, true, "importer bỏ tin thiếu region_v2 dưới 1% — không chặn việc so");
+  assert.equal(kq.batDuoc.quetDu, 4);
+});
+
+test("quetDuDaNapXong: vùng chưa có tin, hoặc không tìm thấy manifest của lượt mới nhất → chưa xong, nêu lý do", async () => {
+  const khongTin = await quetDuDaNapXong({ query: async () => ({ rows: [] }) }, { cityCode: "vn-chua-co" });
+  assert.deepEqual(khongTin, { xong: false, lyDo: "stg-chua-co-tin-cua-vung", luc: null, snapshotId: null, items: null, daNap: null });
+  const khongManifest = await quetDuDaNapXong({ query: async (sql) => ({ rows: /FROM airbnb_snapshots/.test(sql) ? [] : [{ luc: new Date(T0) }] }) }, { cityCode: "vn-hcmc" });
+  assert.deepEqual(khongManifest, { xong: false, lyDo: "khong-thay-manifest-cua-luot-moi-nhat", luc: new Date(T0).toISOString(), snapshotId: null, items: null, daNap: null });
 });
 
 test("báo cáo cả phép đo: DB lỗi thì phần so với lượt quét đủ là null kèm lý do, bốn số vẫn có", async () => {
@@ -743,5 +787,20 @@ test("DB thật: lượt quét đủ cùng ngày = id trong stg của đúng vù
     assert.ok(tuan.size > 100, `cặp đông nhất phải có nhiều tin trong 7 ngày (thấy ${tuan.size})`);
     assert.ok([...tuan].every((x) => Number.isSafeInteger(x)), "list_id trả dạng số");
     assert.equal((await quetDuStg(c, { cityCode: cu.city_code, adType: cu.ad_type, t0: Date.parse("2020-01-01T00:00:00Z"), t1: Date.parse("2020-01-02T00:00:00Z") })).size, 0, "cửa sổ năm 2020 không có tin");
+  } finally { await c.dong(); }
+});
+
+test("DB thật: kiểm lượt quét đủ đã nạp xong — trả số dòng stg và số item manifest của lượt mới nhất, xong khi đạt 99%", { skip: !CO_DB }, async () => {
+  const c = await moDbChiDoc(DB);
+  try {
+    const vung = (await c.query("SELECT city_code FROM stg_chotot_ads WHERE city_code IS NOT NULL GROUP BY 1 ORDER BY count(*) DESC LIMIT 1")).rows[0].city_code;
+    const kq = await quetDuDaNapXong(c, { cityCode: vung });
+    assert.equal(typeof kq.xong, "boolean");
+    assert.ok(Number.isInteger(kq.items) && kq.items > 0, `manifest khai số item (thấy ${kq.items})`);
+    assert.ok(Number.isInteger(kq.daNap) && kq.daNap >= 0, `số dòng stg của snapshot (thấy ${kq.daNap})`);
+    assert.equal(kq.xong, kq.daNap >= kq.items * 0.99, "xong khi và chỉ khi số dòng đã nạp đạt 99% số item");
+    assert.ok(kq.daNap <= kq.items, "dòng của MỘT snapshot không thể nhiều hơn số item manifest khai — đếm sai phạm vi là lỗi");
+    assert.match(kq.snapshotId, /__chotot-ads__/);
+    assert.deepEqual(await quetDuDaNapXong(c, { cityCode: "vn-khong-ton-tai" }), { xong: false, lyDo: "stg-chua-co-tin-cua-vung", luc: null, snapshotId: null, items: null, daNap: null });
   } finally { await c.dong(); }
 });

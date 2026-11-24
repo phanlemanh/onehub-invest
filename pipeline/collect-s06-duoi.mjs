@@ -602,6 +602,28 @@ export function cuaSoDo(tt, dong, bayGio = () => Date.now()) {
   return { t0, t1: Math.min(sauLanCuoi, bayGio(), tt?.hetHan ? Date.parse(tt.hetHan) : Infinity) };
 }
 
+/**
+ * Lượt quét đủ mới nhất của vùng đã nạp XONG vào stg chưa. Bộ nạp ghi từng dòng trong vài chục phút, và so với một
+ * tập còn dở cho tỉ lệ sai hẳn: 24/11 tính giữa lúc 30.623 dòng mới vào một phần thì ra «97%, 221 tin lượt quét đủ
+ * không có»; nạp xong thì số thật là 98,3%. «Xong» = số dòng stg mang snapshot mới nhất đạt 99% số item manifest
+ * khai (importer bỏ tin thiếu region_v2 dưới 1%).
+ */
+export async function quetDuDaNapXong(client, { cityCode }) {
+  const chua = (lyDo) => ({ xong: false, lyDo, luc: null, snapshotId: null, items: null, daNap: null });
+  const luc = (await client.query(`SELECT max(captured_at) AS luc FROM stg_chotot_ads WHERE city_code = $1`, [cityCode])).rows[0]?.luc ?? null;
+  if (!luc) return chua("stg-chua-co-tin-cua-vung");
+  const gio = luc instanceof Date ? luc.toISOString() : luc;
+  const snap = (await client.query(
+    `SELECT snapshot_id, manifest FROM airbnb_snapshots WHERE source = 'chotot-ads' AND collected_at = $1 ORDER BY snapshot_id DESC LIMIT 1`,
+    [luc],
+  )).rows[0];
+  if (!snap) return { ...chua("khong-thay-manifest-cua-luot-moi-nhat"), luc: gio };
+  const items = Number(snap.manifest?.counts?.items ?? 0);
+  const daNap = (await client.query(`SELECT count(*)::int AS n FROM stg_chotot_ads WHERE snapshot_id = $1`, [snap.snapshot_id])).rows[0].n;
+  const xong = items > 0 && daNap >= items * 0.99;
+  return { xong, ...(xong ? {} : { lyDo: "chua-nap-xong" }), luc: gio, snapshotId: snap.snapshot_id, items, daNap };
+}
+
 /** Tỉ lệ tin mới đăng (giờ gốc trong cửa sổ) mà đuôi thấy và lượt quét đủ cũng có. */
 export function tinhTiLeBatDuoc(dong, { t0, t1, quetDu }) {
   const duoi = new Set();
@@ -638,13 +660,19 @@ export async function baoCao({ tt, dong, bayGio = () => Date.now(), moDb }) {
     try {
       const db = await moDb();
       try {
-        const quetDu = await quetDuStg(db, { cityCode: tt.cityCode, adType: tt.adType, t0, t1 });
-        const capNhat = (await db.query(
-          `SELECT max(captured_at) AS luc FROM stg_chotot_ads WHERE city_code = $1 AND ad_type = $2`, [tt.cityCode, tt.adType],
-        )).rows[0].luc;
-        kq.batDuoc = tinhTiLeBatDuoc(dong, { t0, t1, quetDu });
-        // giờ lượt quét đủ mới nhất đã nạp — tỉ lệ so chỉ có nghĩa khi trễ hơn t1
-        kq.quetDuCapNhatLuc = capNhat instanceof Date ? capNhat.toISOString() : capNhat ?? null;
+        // Chỉ so khi lượt quét đủ mới nhất đã nạp XONG — tập còn dở cho tỉ lệ sai (xem quetDuDaNapXong)
+        const nap = await quetDuDaNapXong(db, { cityCode: tt.cityCode });
+        kq.quetDuNapXong = nap;
+        kq.quetDuCapNhatLuc = nap.luc; // giờ lượt quét đủ mới nhất đã nạp — tỉ lệ so chỉ có nghĩa khi trễ hơn t1
+        if (!nap.xong) {
+          kq.batDuoc = null;
+          kq.batDuocLoi = nap.daNap === null
+            ? `chưa biết lượt quét đủ để so (${nap.lyDo})`
+            : `lượt quét đủ mới nhất chưa nạp xong (${nap.daNap}/${nap.items} dòng) — chưa so được`;
+        } else {
+          const quetDu = await quetDuStg(db, { cityCode: tt.cityCode, adType: tt.adType, t0, t1 });
+          kq.batDuoc = tinhTiLeBatDuoc(dong, { t0, t1, quetDu });
+        }
       } finally {
         await db.dong();
       }
