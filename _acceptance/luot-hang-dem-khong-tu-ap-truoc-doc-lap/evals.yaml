@@ -50,3 +50,19 @@ evals:
     paths: [agent/src/enrich/run.ts, agent/tests/enrich-luot-dem-khong-tu-ap.test.ts]
     expected: "Trên bản chép DB (DB của riêng lượt), runEnrich giới hạn 20 tin có E1, LLM giả lập luôn trả đúng giá trị E1 và mã toà E1: đếm dòng của run_id có status applied và corroborated_by NOT NULL = 0; số đề xuất evidence ? 'trung_luat' > 0 và bằng số tổng kết lượt in; thẻ chờ tăng đúng số tin có đề xuất trùng luật."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.suite.pipeline_a
+    long_running: 90
+    paths: [pipeline/**, scripts/**, db/**, agent/**, app/**]
+    expected: "exit 0; nửa A bộ test pipeline (suite của lượt chấm — nhánh chạm vùng LOI_PIPELINE của scripts/suite-neu-doi.mjs; khai ở đây chỉ để có long_running 90, trên Mac mini nửa A ~41′ vượt trần chờ 30′ mặc định), 0 fail; nhánh mang 70bcecb3a (trần ca SLT-DC-7/9 480 → 900 s)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.suite.pipeline_b
+    long_running: 90
+    paths: [pipeline/**, scripts/**, db/**, agent/**, app/**]
+    expected: "exit 0; nửa B bộ test pipeline (suite của lượt chấm, khai ở đây chỉ để có long_running 90 — nửa B ~24′ sát trần chờ 30′), 0 fail."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
