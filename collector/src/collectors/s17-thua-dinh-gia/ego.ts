@@ -45,6 +45,10 @@ export type EgoOptions = {
   spaceId: number;
   /** Tên cookie phiên trong tab của nguồn (từ cấu hình local). */
   cookieName?: string;
+  /** Mốc ngày 2 — pha căn hộ. */
+  projects?: string[];
+  proveBuilding?: string;
+  listOnly?: boolean;
 };
 
 type InPageResult = { status: number; contentType: string | null; body: string; bytes?: number; networkError?: string };
@@ -119,6 +123,9 @@ export async function main(api: EgoApi, optionsPath: string): Promise<number> {
       grid: opts.grid,
       listSize: opts.listSize,
       tileZoom: opts.tileZoom,
+      projects: opts.projects,
+      proveBuilding: opts.proveBuilding,
+      listOnly: opts.listOnly,
       env,
     });
     await writeResult(r satisfies ExecResult);

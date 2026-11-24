@@ -17,7 +17,7 @@ import { ConfigError, PROBE_ROLE, ROLES, SESSION_PROBE_ROLE, rolePath, type Role
 export type Response = { status: number; contentType: string; body: string; /** Số byte của thân khi vận chuyển không trả thân chữ (tile ảnh). */ bytes?: number };
 export type Transport = (url: string, headers: Record<string, string>) => Promise<Response>;
 export type Caps = { calls: number; minutes: number };
-export type StopReason = "blocked" | "session-expired" | "call-cap" | "time-cap" | "network-down" | "balance-spent" | "balance-unreadable";
+export type StopReason = "blocked" | "session-expired" | "call-cap" | "time-cap" | "network-down" | "balance-spent" | "balance-unreadable" | "proof-failed";
 
 export class RunStopped extends Error {
   constructor(

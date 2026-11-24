@@ -25,7 +25,7 @@ import { nodeTransport } from "./transport-node.js";
 
 const HERE = dirname(fileURLToPath(import.meta.url)); // dist/collectors/s17-thua-dinh-gia
 const COLLECTOR_ROOT = join(HERE, "..", "..", "..");
-const PHASES: Phase[] = ["reference", "tile-mask", "projects", "session-check"];
+const PHASES: Phase[] = ["reference", "tile-mask", "projects", "session-check", "apartments"];
 const PUBLIC_PHASES: Phase[] = ["reference", "tile-mask"];
 /** Nhịp đã đo trên nguồn: 0,3–0,4 s/lời. Không cho chạy nhanh hơn bằng cách truyền tham số. */
 const PACE_MIN_MS = 300;
@@ -51,6 +51,10 @@ export type CliOptions = {
   tileZoom: number;
   listSize: number;
   spaceId?: number;
+  /** Mốc ngày 2 — pha căn hộ: dự án mẫu và toà chứng minh. */
+  projects?: string[];
+  proveBuilding?: string;
+  listOnly?: boolean;
 };
 
 export function parseCli(argv: string[]): CliOptions {
@@ -70,6 +74,9 @@ export function parseCli(argv: string[]): CliOptions {
       "tile-zoom": { type: "string" },
       "list-size": { type: "string" },
       space: { type: "string" },
+      project: { type: "string", multiple: true },
+      "prove-building": { type: "string" },
+      "chi-liet-ke": { type: "boolean" },
     },
   });
   const phase = values.phase as Phase | undefined;
@@ -85,6 +92,8 @@ export function parseCli(argv: string[]): CliOptions {
   const isPublic = PUBLIC_PHASES.includes(phase);
   const spaceId = values.space === undefined ? undefined : positive("--space", values.space);
   if (!isPublic && spaceId === undefined) throw new UsageError(`pha ${phase} cần phiên: khai --space <id task space nơi Mạnh đã đăng nhập>`);
+  const projects = values.project?.map((x) => x.trim()).filter(Boolean);
+  if (phase === "apartments" && !projects?.length) throw new UsageError("pha apartments cần ít nhất một --project <id dự án mẫu>");
   return {
     phase,
     via: isPublic ? "node" : "ego",
@@ -98,6 +107,9 @@ export function parseCli(argv: string[]): CliOptions {
     tileZoom: values["tile-zoom"] === undefined ? 17 : positive("--tile-zoom", values["tile-zoom"]),
     listSize: values["list-size"] === undefined ? 100 : positive("--list-size", values["list-size"]),
     spaceId,
+    projects,
+    proveBuilding: values["prove-building"],
+    listOnly: values["chi-liet-ke"] === true ? true : undefined,
   };
 }
 

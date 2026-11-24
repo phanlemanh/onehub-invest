@@ -32,6 +32,10 @@ export type ExecOptions = {
   listSize?: number;
   tileZoom?: number;
   emptyTileBytes?: number;
+  projects?: string[];
+  proveBuilding?: string;
+  apartmentPageSize?: number;
+  listOnly?: boolean;
   env?: Env;
 };
 
@@ -119,6 +123,10 @@ export async function executePhase(o: ExecOptions): Promise<ExecResult> {
       listSize: o.listSize,
       tileZoom: o.tileZoom,
       emptyTileBytes: o.emptyTileBytes,
+      projects: o.projects,
+      proveBuilding: o.proveBuilding,
+      apartmentPageSize: o.apartmentPageSize,
+      listOnly: o.listOnly,
     });
     if (o.checkBalance) {
       balanceAfter = await readBalanceOrStop(client, "sau");
