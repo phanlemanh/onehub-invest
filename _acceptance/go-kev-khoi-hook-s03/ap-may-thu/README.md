@@ -7,7 +7,7 @@ Không migration, không ghi dữ liệu, không nạp plist mới. Hai phần, 
 Người làm: phiên ZCode vận hành (ZV) theo lời GIAO triển khai của LL sau khi PR gộp và GS chuyển lời. Phiên dãy ZT không làm bước nào dưới đây.
 
 1. **Lệnh áp.** Giờ áp: NGOÀI 05:30–06:30 và 14:00–14:45 giờ VN (job thu được ưu tiên). **Khởi động lại gateway cần lời riêng của Mạnh** — chữ ký Cổng Bằng chứng của hồ sơ này phủ đúng bước 1.4 dưới đây; không có chữ ký thì dừng sau bước 1.1.
-   1. `git -C ~/dev/onehub-invest pull --ff-only origin main`; kiểm `grep -c kevScore ~/dev/onehub-invest/collector/openclaw/handler.js` = `0` và `ls ~/dev/onehub-invest/pipeline/cron/com.oneinvest.kev-gate.plist` báo không có tệp. Từ đây watchdog đã là bản K1.
+   1. `git -C ~/dev/onehub-invest pull --ff-only origin main`; kiểm `grep -c kevScore ~/dev/onehub-invest/collector/openclaw/handler.js` = `0` và `ls ~/dev/onehub-invest/pipeline/cron/com.oneinvest.kev-gate.plist` báo không có tệp. Từ đây watchdog đã là bản K1 — trong 5′ sau pull, `tail -1 ~/dev/onehub-invest/pipeline/logs/zalo-watchdog.log` phải là dòng «ok — … 0 turn mới, kev:off (K1), db:ok» (watchdog chạy trọn sau khi gỡ khối canh — vòng code chỉ chốt tĩnh phần này); không thấy dòng ấy sau 10′ → không làm bước 1.2 trở đi, lùi watchdog (mục 4), báo GS.
    2. Sao lưu (mục 3).
    3. `cp ~/dev/onehub-invest/collector/openclaw/HOOK.md ~/dev/onehub-invest/collector/openclaw/handler.js ~/.openclaw/hooks/oneinvest-zalo-pipe/`
    4. `launchctl kickstart -k gui/$(id -u)/ai.openclaw.gateway` — gateway đòi QR thì dừng, báo Mạnh; không đăng nhập lại.

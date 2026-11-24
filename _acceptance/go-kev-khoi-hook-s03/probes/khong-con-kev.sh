@@ -16,6 +16,8 @@ kiem() {
   fi
   grep -q '^KEV_NOTE="kev:off (K1)"$' "$W" || { echo "FAIL watchdog-thieu-nhip-kev-off: không có KEV_NOTE=\"kev:off (K1)\""; F=1; }
   grep -qE '^echo .*ok — .*\$KEV_NOTE' "$W" || { echo "FAIL watchdog-nhip-ok-mat-kev-note: dòng nhịp «ok —» không còn \$KEV_NOTE"; F=1; }
+  # biến của khối canh cũ không còn ai đọc (dưới set -u, đọc biến chưa gán = watchdog chết giữa nhịp)
+  if grep -nE '\$\{?KEV_OK\b' "$W" >/dev/null; then echo "FAIL watchdog-bien-mo-coi: $(grep -nE '\$\{?KEV_OK\b' "$W" | head -1 | cut -c1-100)"; F=1; fi
   # [plist] — cổng chấm không còn được cài từ kho
   [ ! -e "$R/pipeline/cron/com.oneinvest.kev-gate.plist" ] || { echo "FAIL plist-kev-gate-con: pipeline/cron/com.oneinvest.kev-gate.plist còn"; F=1; }
   if grep -lE '8009|kev-serve|kev-gate' "$R"/pipeline/cron/*.plist >/dev/null 2>&1; then
@@ -32,6 +34,10 @@ kiem() {
       echo "FAIL tai-lieu-con-kev: $d: $(grep -nE '→ Kev|Kev gate :8009|Kev :8009|chấm decision model Kev' "$R/$d" | head -1 | cut -c1-100)"; F=1
     fi
   done
+  # [pipeline] — không bước nào trong pipeline/ đọc/lọc theo kev.p hay kev.model (tin kev-off phải đi qua như mọi tin)
+  local loc
+  loc=$(grep -rnE "kev['\"]?\]?(\.|->>?)['\"]?(p|model)\b|'kev'(->|\))" "$R/pipeline" --include='*.sql' --include='*.mjs' --include='*.js' 2>/dev/null | grep -v '/node_modules/' | grep -v '/data/' | head -1)
+  [ -z "$loc" ] || { echo "FAIL pipeline-loc-kev: ${loc#$R/}"; F=1; }
   [ $F = 0 ] && echo "KHONG-CON-KEV PASS"
   return $F
 }
@@ -42,12 +48,14 @@ tu_thu() {
   trap 'rm -rf "$T"' RETURN
   moi() { rm -rf "$T/r"; mkdir -p "$T/r/scripts" "$T/r/pipeline/cron" "$T/r/collector/openclaw" "$T/r/docs/ops"
     cp "$R/scripts/zalo-watchdog.sh" "$T/r/scripts/"; cp "$R"/pipeline/cron/*.plist "$T/r/pipeline/cron/"
-    cp "$R"/collector/openclaw/{handler.js,HOOK.md,README.md} "$T/r/collector/openclaw/"; cp "$R/docs/ops/runtime-map.md" "$T/r/docs/ops/"; }
+    cp "$R"/collector/openclaw/{handler.js,HOOK.md,README.md} "$T/r/collector/openclaw/"; cp "$R/docs/ops/runtime-map.md" "$T/r/docs/ops/"
+    mkdir -p "$T/r/pipeline/sql"; cp "$R"/pipeline/sql/*.sql "$T/r/pipeline/sql/" 2>/dev/null; cp "$R"/pipeline/*.mjs "$T/r/pipeline/" 2>/dev/null; }
   ca() { # <tên> <mốc mong đỏ> <lệnh phá>
     moi; bash -c "$3" _ "$T/r"; out=$(bash "$SELF" "$T/r"); local rc=$?
     if [ $rc = 1 ] && grep -q "^FAIL $2" <<<"$out"; then echo "PASS phá $1 → FAIL $2"; else echo "FAIL tu-thu $1: mong đỏ «$2», được mã $rc «$(head -1 <<<"$out")»"; F=1; fi; }
   moi; out=$(bash "$SELF" "$T/r"); [ $? = 0 ] && echo "PASS đối chứng: bản chép lành → $out" || { echo "FAIL tu-thu đối chứng: bản chép lành đỏ «$out»"; F=1; }
   ca chen-probe-8009 watchdog-con-canh-kev 'printf "%s\n" "KEV_OK=\$(curl -s -o /dev/null -w \"%{http_code}\" --max-time 3 http://127.0.0.1:8009/v1/models)" >> "$1/scripts/zalo-watchdog.sh"'
+  ca doc-kev-ok watchdog-bien-mo-coi 'sed -i "" "s/^KEV_NOTE=\"kev:off (K1)\"$/KEV_NOTE=\"kev:off (K1) \$KEV_OK\"/" "$1/scripts/zalo-watchdog.sh"'
   ca bo-kev-note watchdog-thieu-nhip-kev-off 'sed -i "" "s/^KEV_NOTE=\"kev:off (K1)\"$/KEV_NOTE=\"kev:ok\"/" "$1/scripts/zalo-watchdog.sh"'
   ca nhip-mat-note watchdog-nhip-ok-mat-kev-note 'sed -i "" "s/, \$KEV_NOTE,/,/" "$1/scripts/zalo-watchdog.sh"'
   ca vo-cu-phap watchdog-cu-phap 'printf "if then\n" >> "$1/scripts/zalo-watchdog.sh"'
@@ -55,6 +63,7 @@ tu_thu() {
   ca plist-khac-tro plist-tro-kev 'printf "<string>http://127.0.0.1:8009</string>\n" > "$1/pipeline/cron/com.oneinvest.x.plist"'
   ca hook-goi-lai hook-con-goi-kev 'printf "%s\n" "const KEV = process.env.ONEINVEST_KEV_URL ?? \"http://127.0.0.1:8009\";" >> "$1/collector/openclaw/handler.js"'
   ca doc-tra-kev tai-lieu-con-kev 'printf "%s\n" "→ processMessage → internal hook → Kev → :9210" >> "$1/docs/ops/runtime-map.md"'
+  ca loc-kev-sql pipeline-loc-kev 'printf "%s\n" "DELETE FROM stg_x WHERE (meta->'"'"'kev'"'"'->>'"'"'p'"'"')::float < 0.9;" >> "$1/pipeline/sql/200_transform.sql"'
   [ $F = 0 ] && echo "KHONG-CON-KEV TU-THU PASS"
   return $F
 }

@@ -11,10 +11,25 @@
 //      thấy URL cổng chấm).
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join, dirname } from "node:path";
+import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { existsSync, rmSync } from "node:fs";
+import { homedir, tmpdir } from "node:os";
+import { join, dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+
+// KEV1 (tích hợp): hook tính đường LOG, KEY_FILE, SPOOL_DIR từ homedir() LÚC IMPORT. Không cô lập thì test ghi dòng
+// «post 202 … kev=off» giả vào log hook THẬT, đọc khoá thật, và drainSpool chạy trên spool THẬT với fetch giả (tin chờ
+// thật bị «gửi» vào collector giả rồi xoá). Đặt HOME tạm + spool tạm TRƯỚC khi import (luật an toàn Zalo: phép đo không
+// chạm ~/.openclaw).
+const HOME_THAT = homedir();
+const HOME_TAM = await mkdtemp(join(tmpdir(), "k1-home-"));
+process.env.HOME = HOME_TAM;
+process.env.ONEINVEST_HOOK_SPOOL = join(HOME_TAM, "spool");
+if (resolve(homedir()) === resolve(HOME_THAT)) throw new Error("HOME tạm không có hiệu lực — bỏ chạy, không chạm ~/.openclaw thật");
+await mkdir(join(HOME_TAM, ".openclaw/credentials"), { recursive: true });
+await mkdir(join(HOME_TAM, ".openclaw/logs"), { recursive: true });
+await writeFile(join(HOME_TAM, ".openclaw/credentials/oneinvest-agent.key"), "khoa-gia\n");
+process.on("exit", () => rmSync(HOME_TAM, { recursive: true, force: true }));
 
 const TEP = fileURLToPath(new URL("./handler.js", import.meta.url));
 const { default: handler } = await import(`file://${TEP}`);
@@ -153,4 +168,12 @@ test("khoá-đọc: handler chỉ đọc key từ máy, không in key ra log", a
   const ma = await readFile(TEP, "utf8");
   assert.ok(!ma.includes("console.log"), "handler không in ra stdout");
   assert.ok(ma.includes("authorization: `Bearer ${key}`"), "key đi header như cũ");
+});
+test("cô-lập: log và spool của hook nằm dưới HOME tạm, không dưới HOME thật", async () => {
+  await chayVoiFetchGia();
+  await new Promise((r) => setTimeout(r, 50)); // log() ghi không chờ (fire-and-forget)
+  const logTam = join(HOME_TAM, ".openclaw/logs/oneinvest-zalo-pipe.log");
+  assert.ok(existsSync(logTam), "hook ghi log vào HOME tạm");
+  assert.match(await readFile(logTam, "utf8"), / post 202 .* kev=off /, "dòng post kev=off nằm trong log tạm");
+  assert.notEqual(resolve(homedir()), resolve(HOME_THAT), "homedir() của tiến trình test không phải HOME thật");
 });

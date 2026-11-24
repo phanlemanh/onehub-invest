@@ -15,9 +15,12 @@ khong() { echo "KHÔNG ĐẠT — $*"; exit 1; }
 [ "$post_moi" -gt 0 ] || khong "chưa có dòng «post 202 … kev=off» mới — tin chưa chảy tới cổng thu (đợi nhịp poll ~10′ rồi đo lại; quá 30′ thì dừng, báo GS)"
 cuoi=$(grep -E '^[0-9]{4}-' "$W" | tail -1)
 [ -n "$cuoi" ] || khong "chưa có nhịp watchdog mới sau mốc áp (đợi 5′)"
+# dòng «ok — …» chỉ được ghi khi MỌI lớp lockdown đã qua (lớp nào vỡ thì alert() thoát trước, ghi KILL vào tệp cảnh báo)
 case "$cuoi" in *" ok — "*) ;; *) khong "nhịp watchdog cuối không «ok»: ${cuoi:0:120}";; esac
 case "$cuoi" in *"0 turn mới"*) ;; *) khong "nhịp watchdog cuối không «0 turn mới» (agent có turn)";; esac
 case "$cuoi" in *"kev:off (K1)"*) ;; *) khong "nhịp watchdog cuối không ghi «kev:off (K1)» — watchdog trong checkout chính chưa là bản K1";; esac
+kill=$(grep -c 'KILL:' "$A")
+[ "$kill" = 0 ] || khong "tệp cảnh báo watchdog có $kill dòng KILL mới — một lớp lockdown vỡ, gateway đã bị tắt"
 canh=$(grep -ciE 'kev' "$A")
 [ "$canh" = 0 ] || khong "tệp cảnh báo watchdog có $canh dòng Kev mới"
 echo "ĐẠT — $post_moi dòng post 202 kev=off · 0 kev null · watchdog ok, 0 turn mới, kev:off (K1) · 0 cảnh báo Kev"

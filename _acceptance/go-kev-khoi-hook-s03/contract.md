@@ -38,19 +38,22 @@ LL nêu: gỡ khối canh không có test canh) và bộ kiểm sau áp cho máy
   bên đọc log đang dùng, mang `kev=off`, và log không còn dòng «kev null» hay `skip p=`.
 - AC-4: Given các ca bảo vệ hook đã ký trước (spool rồi phát lại, collector trả 4xx, collector treo, trần 50 tệp spool, khoá
   giữ khi lỗi xác thực, trần thời gian, lỗi tạm thời), When chạy lại trên hook không Kev, Then mọi ca vẫn đạt và hook vẫn chạy
-  tự đủ (không import ngoài) và qua kiểm L1 (không API gửi tin).
+  tự đủ (không import ngoài) và qua kiểm L1 (không API gửi tin); bộ test của hook chạy với HOME và spool tạm, không ghi
+  log, không đọc khoá, không rút spool trong `~/.openclaw` thật.
 - AC-5: Given watchdog `scripts/zalo-watchdog.sh` của nhánh, When soát tĩnh, Then không còn lời gọi, cảnh báo hay thông báo
   nào về `:8009`, nhịp «ok — …» ghi `kev:off (K1)`, cú pháp bash hợp lệ, và lớp L1 vẫn bắt một handler có API gửi tin;
   chèn lại khối canh `:8009` vào bản chép thì chốt đỏ với thông điệp ghim.
 - AC-6: Given thư mục `pipeline/cron/`, When soát, Then không còn `com.oneinvest.kev-gate.plist`, không plist nào trỏ cổng
   chấm, và bộ test job (`scripts/job-exit.test.mjs`) vẫn xanh.
 - AC-7: Given tin mang `kev` khuôn kev-off, When collector ghi snapshot và bộ nạp đọc nó, Then manifest v3 giữ nguyên `meta.kev`
-  và bộ test collector cùng hai nửa bộ test pipeline xanh (không bước nào trong `pipeline/` lọc theo `kev.p`).
+  bộ test collector cùng hai nửa bộ test pipeline xanh, và không tệp nào trong `pipeline/` đọc hay lọc theo `kev.p`,
+  `kev.model` (cấy một điều kiện lọc vào bản chép thì chốt đỏ).
 - AC-8: Given tài liệu hook (`collector/openclaw/HOOK.md`, `README.md`) và `docs/ops/runtime-map.md`, When soát, Then không còn
   mô tả đường tin đi qua Kev hay hạ tầng `Kev :8009`; chèn lại câu ấy vào bản chép thì chốt đỏ.
 - AC-9: Given hồ sơ áp lên máy thu `ap-may-thu/README.md`, When người ký Cổng Bằng chứng đọc, Then có đủ năm mục (lệnh áp ·
   số chạy thử · sao lưu trước · cách lùi · lệnh kiểm sau), có dòng khởi động lại gateway kèm «lời riêng của Mạnh» và khung giờ
-  cấm áp; và `kiem-sau.sh` chấm đúng bảy bộ log mẫu (một ĐẠT, sáu KHÔNG ĐẠT đúng lý do).
+  cấm áp; mỗi mục có lệnh hay con số thật; và `kiem-sau.sh` chấm đúng tám bộ log mẫu (một ĐẠT, bảy KHÔNG ĐẠT đúng lý do, gồm
+  lớp lockdown vỡ) cùng log sinh từ writer thật: hook + watchdog của nhánh → ĐẠT, của main (còn Kev) → KHÔNG ĐẠT đúng lý do.
 
 ## Out of scope
 
@@ -86,4 +89,7 @@ Không có người dùng cuối (ô cơ hội khai «Không đo được»). Co
 ## Notes
 
 - Mã hook, watchdog, plist, tài liệu, kiểm nghiệm thu cũ: ZCode viết (claudedp-2111-9 + 2311-1), LL soát; đột biến LL: chèn lại
-  lời gọi `:8009` → handler.test 4/5 + handler-label FAIL. Vòng này thêm `probes/khong-con-kev.sh` (8 ca tự phá) và `ap-may-thu/`.
+  lời gọi `:8009` → handler.test 4/5 + handler-label FAIL. Vòng này thêm `probes/khong-con-kev.sh` (10 ca tự phá) và `ap-may-thu/` (README năm mục, `kiem-sau.sh`, round-trip writer thật).
+- Sửa tích hợp (vòng này): `collector/openclaw/handler.test.mjs` của nhánh ZCode import hook với HOME THẬT — mỗi lần chạy ghi dòng
+  «post 202 … kev=off» giả vào log hook thật (99 dòng `group=t1|conv-*|c` từ 21/11, KHÔNG xoá — không chạm `~/.openclaw`), đọc khoá
+  thật, và rút spool thật bằng fetch giả. Nay HOME + spool tạm đặt trước import, có chốt ném lỗi và ca cô-lập. Đã báo GS/LL.
