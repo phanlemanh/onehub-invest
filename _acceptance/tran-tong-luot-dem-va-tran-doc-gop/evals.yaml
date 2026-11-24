@@ -78,3 +78,19 @@ evals:
     paths: [_acceptance/tran-tong-luot-dem-va-tran-doc-gop/ap-may-thu/**]
     expected: "exit 0; `kiem.sh` kiểm README.md có năm tiêu đề mục 1–5 (Lệnh áp · Số chạy thử · Sao lưu trước · Cách lùi · Lệnh kiểm sau; thiếu → `FAIL README thiếu mục: <mục>`), rồi chín ca `kiem-sau.sh` trên log mẫu rút từ đầu ra thật của bản sao script: luot-moi-dat → ĐẠT (cả khi `--tran 21600`); luot-32400-dat → ĐẠT, nhưng `--tran 21600` → `KHÔNG ĐẠT — lượt mới nhất không chạy trần 21600s`; luot-cu-khong-khai → `KHÔNG ĐẠT — chưa có lượt 00:00 nào chạy mã mới`; luot-moi-cat-tran → `KHÔNG ĐẠT — lượt bị trần tổng cắt`; nhieu-luot-dat-roi-nhanh-cat (00:00 đạt rồi lượt nhanh TIMEOUT) → ĐẠT; nhieu-luot-cu-dat-moi-cat (00:00 cũ có enrich, rồi 00:00 mới bị cắt, rồi lượt nhanh) → `KHÔNG ĐẠT — lượt bị trần tổng cắt`; luot-vuot-cho-enrich (enrich 3100 s) → `KHÔNG ĐẠT — các bước sau đọc gộp tới enrich mất 3100s > chừa 3000s`. Phá đúng nhánh (đo 24/11 trên bản chép): bỏ giới hạn đoạn lượt → ca nhieu-luot-dat-roi-nhanh-cat đỏ; bỏ kiểm `--tran` → ca 32400 `--tran 21600` đỏ; nới chừa enrich → ca luot-vuot-cho-enrich đỏ."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8c
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.suite.pipeline_a
+    long_running: 90
+    paths: [pipeline/**, scripts/**]
+    expected: "exit 0; nửa A bộ test pipeline (suite của lượt chấm, khai ở đây chỉ để có long_running 90 — trên Mac mini nửa A vượt trần chờ 30′ mặc định), 0 fail; nhánh mang 70bcecb3a (trần ca SLT-DC-7/9 480 → 900 s)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8d
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.suite.pipeline_b
+    long_running: 90
+    paths: [pipeline/**, scripts/**]
+    expected: "exit 0; nửa B bộ test pipeline (suite của lượt chấm, khai ở đây chỉ để có long_running 90), 0 fail."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
