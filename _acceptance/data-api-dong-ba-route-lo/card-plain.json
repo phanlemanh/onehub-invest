@@ -1,0 +1,112 @@
+{
+  "feature_plain": "API dữ liệu công khai thôi trả nội dung bài đăng nhóm chat (S03) và thôi dựa vào số liệu hiệu chuẩn (S02), trước khi API mở cho người ngoài dùng.",
+  "will_do": [
+    {
+      "id": "AC-1",
+      "p": "Sẽ trả danh sách căn giá tốt như cũ (giá, mức rẻ, hạng) nhưng không còn tên nhóm, tên người gửi, chữ bài, ảnh của bài đăng nhóm chat."
+    },
+    {
+      "id": "AC-2",
+      "p": "Sẽ không còn đọc kho bài đăng nhóm chat thô ở cả hai cách tính căn giá tốt, và cách tính dự phòng vẫn trả đúng căn với đủ giá."
+    },
+    {
+      "id": "AC-3",
+      "p": "Sẽ trả độ phủ theo thị trường chỉ bằng số tin tự thu, cho mọi thị trường Việt Nam, không còn con số hiệu chuẩn nào."
+    },
+    {
+      "id": "AC-5",
+      "p": "Sẽ giữ nguyên danh sách tin cho thuê ngắn hạn — đường này không được giao sửa nên không được đổi."
+    },
+    {
+      "id": "AC-6",
+      "p": "Sẽ có ca kiểm tự đỏ ngay khi ai đó đưa lại bản cũ của bất kỳ đường nào trong ba đường, ở cả lớp dữ liệu trả về lẫn lớp câu truy vấn."
+    },
+    {
+      "id": "AC-7",
+      "p": "Sẽ sửa tài liệu của API (README, hướng dẫn cho agent) cho khớp các trường còn lại và ghi luật không đọc dữ liệu cấm."
+    },
+    {
+      "id": "AC-8",
+      "p": "Sẽ chỉ đụng đúng các tệp được giao, không đụng lược đồ mẫu, app, pipeline, và không để lọt tên nguồn thật vào mã công khai."
+    },
+    {
+      "id": "AC-9",
+      "p": "Sẽ giữ mã của API qua bước kiểm kiểu."
+    }
+  ],
+  "wont_do": [
+    {
+      "id": "AC-4",
+      "p": "Sẽ KHÔNG còn lấy ảnh dự phòng và đường dẫn gốc từ số liệu hiệu chuẩn cho trang chi tiết một tin — chỉ ảnh tự thu, tin không ảnh thì để trống."
+    },
+    {
+      "id": "OOS-1",
+      "p": "KHÔNG sửa nhóm đường thị trường (tổng quan, phường con, chỉ số) dù nó cũng đọc số hiệu chuẩn — giám sát tách thành hàng HT20, có Cổng Phạm vi riêng."
+    },
+    {
+      "id": "OOS-2",
+      "p": "KHÔNG sửa lược đồ mẫu và dữ liệu mẫu công khai (đã hỏng sẵn trên bản chính) — giám sát giao thành hàng PB1 ngay sau hàng này."
+    },
+    {
+      "id": "OOS-3",
+      "p": "KHÔNG thêm tên người bán từ nguồn đã làm sạch vào API ở hàng này."
+    },
+    {
+      "id": "OOS-4",
+      "p": "KHÔNG đổi tài liệu mô tả API (bản tóm tắt tự sinh và tài liệu API của app)."
+    },
+    {
+      "id": "OOS-5",
+      "p": "KHÔNG triển khai API, KHÔNG đẩy mã sang kho công khai."
+    },
+    {
+      "id": "OOS-6",
+      "p": "KHÔNG đổi tên trường sang tên chuẩn RESO và KHÔNG gộp tin thuê ngắn hạn với tin bán thành một loại ở hàng này — đã gửi giám sát thành đề xuất hàng riêng."
+    }
+  ],
+  "scope_plain": "Những việc dưới đây cố ý để ngoài hàng này:",
+  "coverage_plain": [
+    {
+      "i": 0,
+      "p": "Phủ đủ ba đường được giao, kể cả hai cách tính căn giá tốt và ba tình huống của trang chi tiết tin, cộng một đường không giao để chống hỏng (AC-1 đến AC-5)."
+    },
+    {
+      "i": 1,
+      "p": "Phủ đủ hai loại dữ liệu cấm: bốn thứ của bài đăng nhóm chat và các bảng cùng trường suy từ số hiệu chuẩn (AC-1 đến AC-4)."
+    },
+    {
+      "i": 2,
+      "p": "Mỗi đường đo hai lớp — thứ trả ra và câu truy vấn — rồi chứng chiều đỏ trên bản cũ (AC-6); trục này chưa có nguồn đối chiếu ngoài."
+    },
+    {
+      "i": 3,
+      "p": "Phủ phần ngoài mã: tài liệu, phạm vi thay đổi, tên nguồn thật, kiểm kiểu (AC-7 đến AC-9)."
+    },
+    {
+      "i": 4,
+      "p": "Ô bỏ có tên: nhóm đường thị trường ngoài lời giao, đã hỏi giám sát."
+    }
+  ],
+  "gap_probe_plain": [
+    {
+      "i": 0,
+      "p": "Máy đã tự quyết bỏ tên người bán mà còn một lối khác sống (giữ tên từ nguồn đã làm sạch) — đã chuyển thành câu hỏi Hỏi-2 cho anh."
+    },
+    {
+      "i": 1,
+      "p": "Phép thử chiều đỏ chỉ đòi một lớp đỏ nên lớp dữ liệu trả về có thể chưa từng được chứng — đã sửa: mỗi bản cũ phải đỏ ở cả hai lớp, các đường khác phải xanh."
+    },
+    {
+      "i": 2,
+      "p": "Ranh giới còn vế «nếu giám sát cho» với tệp cấu hình lệnh kiểm — giám sát đã cho, hợp đồng ghi tường minh đúng các khoá của hàng."
+    },
+    {
+      "i": 3,
+      "p": "Cách tính dự phòng của căn giá tốt chỉ được đo «không lỗi», chưa đo «đúng nội dung» — đã thêm đo đúng căn và đủ giá."
+    },
+    {
+      "i": 4,
+      "p": "Câu chấm tài liệu hỏi về tên nguồn thật mà người chấm không có danh sách tên — đã chuyển sang máy quét toàn văn có thử đỏ."
+    }
+  ]
+}

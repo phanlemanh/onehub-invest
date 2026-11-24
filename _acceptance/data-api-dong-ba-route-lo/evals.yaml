@@ -1,0 +1,73 @@
+schema_version: 1
+feature_slug: data-api-dong-ba-route-lo
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.dapi_drl
+    paths: [data-api/src/routes/deals.ts, data-api/test/**]
+    expected: "exit 0; «ℹ fail 0», «ℹ skipped 0»; ca «DRL-AC-1 deals không trả nội dung bài S03» xanh: tin canh có trong data với priceVnd, discountPct, rank.label đúng dòng cấy; quét đệ quy không gặp khoá contact/postText/senderName/groupName/mediaPath; thân JSON không chứa chuỗi canh nào. Chiều đỏ (E6): bản deals.ts của main đỏ ca này với «DRL deals lộ khoá cấm: contact» hoặc «DRL deals lộ chuỗi canh»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.dapi_drl
+    paths: [data-api/src/routes/deals.ts, data-api/test/**]
+    expected: "exit 0; ca «DRL-AC-2 deals không đọc stg_zalo_posts ở hai nhánh» xanh: ghi lại câu SQL ở nhánh có bảng hạng và nhánh CG8 (xoá dòng offer_price_rank trong ca), mỗi nhánh ≥ 1 câu chứa «FROM sale_offers», không câu nào chứa «stg_zalo_posts»; nhánh CG8 trả 200 và tin canh có trong data với priceVnd, medianPerm2, discountPct là số (thiếu hay sai kiểu → đỏ «DRL deals CG8 đổi hình: <khoá>»). Đối chứng: số câu ghi lại = 0 → đỏ «DRL bộ ghi SQL không bắt được câu nào» (không cho xanh rỗng)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.dapi_drl
+    paths: [data-api/src/routes/coverage.ts, data-api/test/**]
+    expected: "exit 0; ca «DRL-AC-3 coverage không đọc S02» xanh: 200; thị trường canh (có dòng S02) và thị trường không có S02 đều có mặt; ourListings của thị trường canh = số tin tự thu cấy; không khoá calibrationActive/calibrationPeriod/calibrationUniverse/historyMonths/coverageRatio; không giá trị canh (số liệu S02 cấy là số lẻ duy nhất); không câu SQL nào chứa «airdna_» hay «area_sources». Chiều đỏ (E6): bản coverage.ts của main đỏ với «DRL coverage lộ khoá cấm» hoặc «DRL coverage đọc bảng S02»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.dapi_drl
+    paths: [data-api/src/routes/listings.ts, data-api/test/**]
+    expected: "exit 0; ca «DRL-AC-4 listings/:id không đọc S02» xanh: tin không ảnh → photos {urls: null, source: null}; tin có ảnh → photos.source = «self», urls = ảnh tự thu cấy; không khoá listingUrl; không chuỗi canh của airdna_listings; id không có → 404 code NOT_FOUND; không câu SQL nào chứa «airdna_». Chiều đỏ (E6): bản listings.ts của main đỏ với «DRL listings/:id lộ ảnh S02» hoặc «DRL listings/:id đọc bảng S02»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.dapi_drl
+    paths: [data-api/src/routes/listings.ts, data-api/test/**]
+    expected: "exit 0; ca «DRL-AC-5 listings danh sách giữ hình» xanh: 200, phần tử của tin cấy có đúng tập khoá id,name,roomType,bedrooms,priceListed,lat,lng,photoUrls,reviewCount,area,market,stats (so bằng tập, không thừa không thiếu); thiếu hay thừa khoá → đỏ «DRL listings danh sách đổi hình: <khoá>»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.dapi_drl_pha
+    paths: [data-api/src/routes/**, data-api/test/**, _acceptance/data-api-dong-ba-route-lo/probes/pha.mjs]
+    expected: "exit 0; probe in 4 dòng JSON viết trước (ma trận: goc, deals-cu, coverage-cu, listings-cu) rồi «pha: đủ 4 ô». Ô goc: rc 0, fail 0. Mỗi ô cũ: rc ≠ 0 và đầu ra có ĐỦ hai thông điệp của đường mình — deals-cu: «DRL deals lộ» (lớp JSON) và «DRL deals đọc stg_zalo_posts» (lớp SQL); coverage-cu: «DRL coverage lộ» và «DRL coverage đọc bảng S02»; listings-cu: «DRL listings/:id lộ» và «DRL listings/:id đọc bảng S02»; mọi ca DRL-AC-n của các đường còn lại xanh (ở cả ba ô cũ). Thiếu một thông điệp hay một ca đường khác đỏ → probe thoát 1 «pha: N ô sai»; không lấy được bản main của một route → thoát 2 «pha: không dựng được bản cũ»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: judgment
+    inputs: [data-api/README.md, data-api/CLAUDE.md, _acceptance/data-api-dong-ba-route-lo/contract.md, _acceptance/data-api-dong-ba-route-lo/design.md]
+    question: "Đọc data-api/README.md và data-api/CLAUDE.md. (1) README có mô tả /v1/deals, /v1/coverage, /v1/listings/:id khớp hình trả về ghi ở design.md mục «Cách làm» không — không còn nhắc contact, postText, calibration*, coverageRatio, historyMonths, listingUrl, ảnh «calibration» như trường đang có? (2) CLAUDE.md có luật nói data-api không đọc bảng stg_* thô, không đọc bảng S02, không trả chữ bài, ảnh, tên nhóm, tên người gửi của S03 không? PASS khi cả (1) và (2) có. (Tên nguồn thật trong hai tệp do E8 soát bằng máy, không hỏi ở đây.)"
+    expected: "PASS — cả hai vế đạt"
+    evidence_required: [run_id, verdict, judges, rationale]
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.dapi_drl_pham_vi
+    paths: [_acceptance/data-api-dong-ba-route-lo/probes/pham-vi.mjs, data-api/README.md, data-api/CLAUDE.md, _acceptance/config.yaml]
+    expected: "exit 0; «pham-vi: <n> tệp đổi, đều trong ranh giới; không đổi data-api/db, data-api/seed.sql, app/, pipeline/, db/; soát <k> tên nguồn thật (k ≥ 1, từ sourceRegistrySeeds), 0 khớp ngoài dạng định danh» (không in tên). Chiều đỏ cùng thước, cùng lượt (probe tự chạy, không cờ): ô «pha-tep» cấy data-api/seed.sql vào danh sách tệp đổi → phải ra «AC-8 NGOÀI PHẠM VI: data-api/seed.sql»; ô «pha-ten» cấy một dòng thêm chứa tên nguồn thật đầu tiên đứng trần → phải ra «AC-8 tên nguồn thật trong diff: S0x» (mã, không tên); ô «dinh-danh» cấy cùng tên dạng <tên>_listings → không tính; ô «pha-config» cấy một khoá config.yaml ngoài dapi_drl* vào diff → phải ra «AC-8 NGOÀI PHẠM VI: _acceptance/config.yaml khoá <khoá>»; ô «pha-docs» cấy tên trần vào bản chép tạm của README → phải ra «AC-7 tên nguồn thật: S0x». Probe cũng quét TOÀN VĂN data-api/README.md và data-api/CLAUDE.md (không chỉ phần thêm). Ô chiều đỏ không đỏ → thoát 1 «pham-vi: thước không đỏ ở <ô>»; không rút được tên nào → thoát 2."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.data_api
+    paths: [data-api/src/**, data-api/tsconfig.json]
+    expected: "exit 0; tsc --noEmit không lỗi."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.dapi_drl_pham_vi
+    paths: [_acceptance/data-api-dong-ba-route-lo/probes/pham-vi.mjs, data-api/README.md, data-api/CLAUDE.md]
+    expected: "exit 0; dòng «tai-lieu: README.md, CLAUDE.md quét toàn văn, 0 tên nguồn thật ngoài dạng định danh». Chiều đỏ cùng lượt: ô «pha-docs» (tên trần cấy vào bản chép tạm của README) phải ra «AC-7 tên nguồn thật: S0x» — không đỏ → probe thoát 1 «pham-vi: thước không đỏ ở pha-docs»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
