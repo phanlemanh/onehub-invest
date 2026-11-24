@@ -1191,9 +1191,10 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 64. **Chạy dự án trên hai máy: Mac mini lập kế hoạch và gộp, MacBook M5 thực thi cổng Invest và API — mở nhỏ, đo một tuần**
     (24/11). Mạnh nêu đây là ý định sơ khởi. Bối cảnh: máy thu chỉ chạy một lượt chấm nặng mỗi lúc (khoá `s4`, ~80′ mỗi lượt);
     cổng Invest và `data-api/` chỉ đọc dữ liệu nên tách máy ít vướng nhất. M5 là máy thu cũ, chung mạng nội bộ với Mac mini. Đo trên
-    M5 chiều 24/11: phần thu đã gỡ (không `~/.oneinvest`, không `~/.openclaw`, không job thu, không DB cũ), **nhưng còn một bản sao
-    lưu cũ ngày 18/10 chứa tầng A** (trên đĩa M5, trong thư mục tải về, và một bản trên dịch vụ đồng bộ đám mây cá nhân của Mạnh),
-    chờ Mạnh quyết; tới lúc đó điều «M5 không giữ tầng A» ở (f) chưa đạt. Bản chốt và số đo: phiên tư vấn hai máy 24/11.
+    M5 chiều 24/11: phần thu đã gỡ (không `~/.oneinvest`, không `~/.openclaw`, không job thu, không DB cũ), nhưng còn một bản sao lưu
+    cũ ngày 18/10 chứa tầng A (trên đĩa M5 và trong thư mục tải về). Mạnh «Xoá», rồi «Xoá hẳn» (24/11, khoảng 10:58Z): hai bản
+    trên đĩa M5 đã xoá hẳn sau khi đối chiếu 110/110 tệp snapshot của bản sao lưu có đủ trên máy thu. **Còn một bản trên dịch vụ
+    đồng bộ đám mây cá nhân của Mạnh**, không nằm trên đĩa M5, Mạnh tự quyết. Bản chốt và số đo: phiên tư vấn hai máy 24/11.
     - **Lời Mạnh, nguyên văn** (24/11): sau trang tư vấn đầu, «Kiểm lại lần nữa trước khi tôi quyết»; khoảng 10:17Z, sau bản đã
       kiểm lại và sửa, «Chốt bản đã sửa». «Bản đã sửa» là tám quyết định (a)–(h) dưới đây.
     - **(a) DB cho M5.** Dựng lược đồ từ migration bằng `scripts/ci-db-init.mjs`, đúng như CI, dùng ngay. Sau đó một hàng T3
