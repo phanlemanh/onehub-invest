@@ -320,9 +320,13 @@ Khoá nối với S16/S08 (chi tiết số đo ở tệp kê local của lượt
 > lại (`can_ho_list`, `can_ho_detail`, `thua`, `mix_gia`) thuộc mốc ngày 2 (claudedp-2411-21): khuôn của bốn kind này
 > là thiết kế, hiện đánh «chưa thu». Mã bộ thu: `collector/src/collectors/s17-thua-dinh-gia/`.
 
-- Thư mục `vn/vn__s17-thua-dinh-gia__<id>/`. **Một lượt thu = nhiều snapshot nhỏ** (50 item, hay 5 dự án, mỗi lô)
-  ghi ngay khi lấy được: gãy giữa lượt (bị chặn, hết phiên, quá trần) chỉ mất lô đang dở; `manifest.error` ghi lý do
-  dừng. `manifest.schemaVersion = 17`; `coverage.notes` của mọi snapshot mang đúng `S17 khuôn 2 (mốc ngày 1, claudedp-2411-20)`.
+- Thư mục `vn/vn__s17-thua-dinh-gia__<id>/`. **Một lượt thu = nhiều snapshot nhỏ** ghi ngay khi lấy được: một trang
+  danh sách dự án, hay một tỉnh của mặt nạ tile, là một snapshot; bảng tham chiếu và chi tiết dự án gộp theo lô (50 item,
+  5 dự án). Bộ thu chỉ ghi nhận «đã lấy» SAU khi snapshot chốt xong, nên gãy giữa lượt (bị chặn, hết phiên, quá trần)
+  không mất dữ liệu đã chốt; tối đa một lô đang dở được lấy lại ở lượt sau ⇒ cùng `sourceId` có thể nằm trong hai
+  snapshot, bên đọc lấy bản mới nhất theo `fetchedAt`. Lô đang dở lúc dừng được chốt kèm `manifest.error` (lý do dừng);
+  không còn gì đang dở thì không sinh snapshot rỗng. `manifest.schemaVersion = 17`; `coverage.notes` của mọi snapshot
+  mang đúng `S17 khuôn 2 (mốc ngày 1, claudedp-2411-20)`.
 - **Hai chế độ thu**:
   - *công khai* — `static_config`, `gia_ubnd`, `tile_coverage`: gọi bằng fetch thường kèm header Origin của trang
     nguồn, không mang phiên;
@@ -341,10 +345,10 @@ Khoá nối với S16/S08 (chi tiết số đo ở tệp kê local của lượt
 
 | `kind` | `sourceId` | `payload` (nguyên văn) | `meta` |
 |---|---|---|---|
-| `static_config` | `static-cau-hinh-day-du` · `static-danh-muc-tinh` · `static-danh-muc-quan-<mã tỉnh>` · `static-tu-dien-thuoc-tinh-<1\|2\|3>` · `static-giay-to-phap-ly-<1\|2>` · `static-loai-tai-san` · `static-do-tin-cay` · `static-muc-dich-su-dung-dat` | `{ json }` — phản hồi gốc của một bảng tham chiếu | `request` (tham số đã gửi) · `congKhai: true` · `soPhanTu` (số phần tử cấp trên) · `soTinh` (danh mục tỉnh) · `soQuan` (danh mục quận của một tỉnh) |
+| `static_config` | `static-cau-hinh-day-du` · `static-danh-muc-tinh` · `static-danh-muc-quan-<mã tỉnh>` · `static-tu-dien-thuoc-tinh-<1\|2\|3>` · `static-giay-to-phap-ly-<1\|2>` · `static-loai-tai-san` · `static-do-tin-cay` · `static-muc-dich-su-dung-dat` | `{ json }` — phản hồi gốc của một bảng tham chiếu (danh mục tỉnh đo 24/11: 71 mục, 63 mã — 8 mã trùng do sáp nhập, mỗi mã có một danh mục quận) | `request` (tham số đã gửi) · `congKhai: true` · `soPhanTu` (số phần tử cấp trên) · `soTinh` (danh mục tỉnh) · `soQuan` (danh mục quận của một tỉnh) · `boQuaKhongMa` (mục danh sách quận không có mã) |
 | `gia_ubnd` | `ubnd-<mã quận>` | `{ json }` — bảng đơn giá đất theo vị trí của một quận; `data` rỗng khi quận không có bảng | `request {districtCode, provinceCode}` · `congKhai: true` · `soViTri` |
 | `tile_coverage` | `coverage-<id tỉnh>` (`id` của `areas` cấp market) | `{ tiles: ["z/x/y", …] }` — tile ranh thửa mức 17 CÓ DỮ LIỆU trong số các điểm đã quét của tỉnh; không lưu ảnh | `request {zoom}` · `congKhai: true` · `ten` · `soDiemQuet` · `trong` · `rong` · `vang` · `loi` |
-| `du_an_list` | `trang-<n>` (tính từ 1) | `{ json }` — một trang danh sách dự án: `data.projects.content[]` cùng `totalElements`, `totalPages` | `request {query, page, size}` · `tongDuAn` · `soTrang` · `soMuc` · `khongId` (mục không có id) |
+| `du_an_list` | `trang-<n>` (tính từ 1) | `{ json }` — một trang danh sách dự án: `data.projects.content[]` (mỗi mục có `id`, `estate_type`, `loai_du_an`, `tinh_trang`, `properties`) cùng `totalElements`, `totalPages`; đo 24/11: 2.508 dự án, 26 trang | `request {query, page, size}` · `tongDuAn` · `soTrang` · `soMuc` · `khongId` (mục không có id) |
 | `du_an_detail` | `du-an-<id>` | `{ detail, filterOptions, gallery }` — ba phản hồi gốc của một dự án: hồ sơ, cây lựa chọn toà → tầng → hướng → diện tích, thư viện ảnh | `request {id}` · `coBangCan` (`true` \| `false` \| `null`) |
 | `can_ho_list` *(chưa thu)* | `du-an-<id>-toa-<toà>-trang-<n>` | `{ json }` — một trang liệt kê căn theo toà | `request {project_id, thap, page, size}` |
 | `can_ho_detail` *(chưa thu)* | `du-an-<id>-can-<ma_can>` | `{ json }` — hồ sơ một căn | `request {project_id, ma_can}` · `khopMaCan` |
@@ -358,10 +362,13 @@ Luật đọc:
    1) — bên đọc bỏ qua.
 2. `tile_coverage`: `trong` = tile có dữ liệu; `rong` = tile rỗng (1.784 byte); `vang` = tile không tồn tại; `loi` = lỗi
    tạm. `soDiemQuet` = số điểm đã quét của tỉnh. Điểm quét là lưới bước 34 tile (khoảng 10 km) CHỈ trên đất, 34 tỉnh
-   hiện hành. Mặt nạ nói «vùng này có dữ liệu», KHÔNG phải ranh giới phủ.
-3. `gia_ubnd` với `soViTri = 0`: đã hỏi và nguồn không có bảng cho quận đó — khác với chưa hỏi.
+   hiện hành, 5.206 điểm (sinh bằng `collector/src/collectors/s17-thua-dinh-gia/luoi-tile.sql`). Mặt nạ nói «vùng này
+   có dữ liệu», KHÔNG phải ranh giới phủ.
+3. `gia_ubnd` với `soViTri = 0`: đã hỏi và nguồn không có bảng cho quận đó — khác với chưa hỏi (đo 24/11: 710 quận,
+   cả 710 đều có bảng).
 4. `du_an_list`: một dự án = một `id` trong `data.projects.content[]`; id trùng giữa các trang chỉ tính một lần.
-   `meta.tongDuAn` là tổng nguồn công bố — đối chiếu với số id duy nhất.
+   `meta.tongDuAn` là tổng nguồn công bố — đối chiếu với số id duy nhất. Mục danh sách đã mang `properties`: nhiều
+   trường của chi tiết có sẵn ở đây.
 5. `du_an_detail`: một item gom ba phản hồi của một dự án. Dự án lấy lỗi không có item; danh sách đó nằm ở trạng thái
    bộ thu trên máy thu và được báo trong lượt XONG. `coBangCan = null` khi chi tiết không mang cờ — bên đọc không suy
    ra `false`. Ảnh dự án CHƯA tải: payload chỉ có link.
