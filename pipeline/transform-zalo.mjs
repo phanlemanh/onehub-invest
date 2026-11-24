@@ -1123,6 +1123,14 @@ async function main() {
       await client.query("ROLLBACK").catch(() => {});
       throw e;
     }
+    // PL20: gắn tin vào toà, vùng của danh bạ trong giao dịch riêng, sau khi lượt nạp đã ghi. Nạp mô-đun tại đây để lỗi của bước
+    // này, kể cả lỗi nạp mã, chỉ là một dòng cảnh báo.
+    try {
+      const { buocGhepToa } = await import("./lib/ghep-tin-danh-muc-ghi.mjs");
+      await buocGhepToa(client);
+    } catch (e) {
+      console.warn(`JOB WARN [ghep-toa] ${e.message}`);
+    }
   } finally {
     await client.end();
   }
