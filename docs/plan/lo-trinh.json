@@ -6104,6 +6104,277 @@
         "agent/src/enrich",
         "pipeline/lib/tu-ap*"
       ]
+    },
+    {
+      "dot": "tin-tuc-thoi-2411",
+      "ma": "TT1",
+      "slug": "thuoc-dang-den-invest-theo-nguon",
+      "nhom": "tin-tuc-thoi",
+      "phu": [
+        "TT1"
+      ],
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "cau_giao": "Lệnh đo in độ trễ từ lúc tin đăng tới lúc hiện trên Invest theo nguồn và theo ngày (p50, p90)",
+      "bat_khi": "Chạy hằng ngày trên DB máy thu, có số S03 và S06; đỏ khi vượt thước đã chốt (S03 p50 ≤ 15′, p90 ≤ 60′; S06 p50 ≤ 30′, p90 ≤ 2 giờ); mốc lúc cắt: S06 p50 66 giờ tới lần thu đầu, S03 1–3 ngày tới căn/giá",
+      "vi_sao": "Mạnh chốt thước 24/11. Đây là điểm «xong» của đường găng tin tức thời: mọi hàng sau đo bằng lệnh này.",
+      "vung": [
+        "scripts/thuoc-dang-den-invest*",
+        "pipeline/sql/4*thuoc-do-tre*"
+      ],
+      "ghi_chu": "GS xếp dãy P2, sau DA55 (thứ tự lịch, không phải phụ thuộc dữ liệu)."
+    },
+    {
+      "dot": "tin-tuc-thoi-2411",
+      "ma": "TT2",
+      "slug": "doc-gop-lien-tuc-lo-nho",
+      "nhom": "tin-tuc-thoi",
+      "phu": [
+        "TT2"
+      ],
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "dung_tren": [
+        "HT6",
+        "TT1"
+      ],
+      "cau_giao": "Bài S03 mới được đọc gộp theo lô nhỏ, chạy liên tục 24/7 thay cho lượt đêm",
+      "bat_khi": "Trên DB máy thu: độ trễ «bài vào máy → đọc gộp xong» của S03 p90 ≤ 30′ trong một ngày thường (lệnh TT1); chi phí ngày trong trần USD/ngày đã duyệt",
+      "vi_sao": "Đọc gộp ở lượt đêm làm S03 mất 1–3 ngày mới thành căn/giá. Đỉnh ~800 bài/giờ × 7,2 s/bài cần ~2 luồng.",
+      "vung": [
+        "pipeline/doc-gop*",
+        "agent/src/enrich/doc-gop-s03",
+        "agent/scripts/doc-gop-s03.ts"
+      ]
+    },
+    {
+      "dot": "tin-tuc-thoi-2411",
+      "ma": "TT3",
+      "slug": "transform-phan-moi-lo-nho",
+      "nhom": "tin-tuc-thoi",
+      "phu": [
+        "TT3"
+      ],
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 10,
+      "dung_tren": [
+        "TT1"
+      ],
+      "cau_giao": "Tin vừa nạp vào stg_* được transform thành tin, căn, giá theo lô 2–5′, suốt 24 giờ",
+      "bat_khi": "Trên DB máy thu: độ trễ «vào stg_* → có trong sale_offers» p90 ≤ 10′ cho S03 và S06 (lệnh TT1); chạy lại lô không nhân đôi bản ghi",
+      "vi_sao": "Hôm nay transform chạy sau lượt nạp (40–55′) và S03 chỉ nạp 07–22h. Bước nạp là của làn thu (ZV).",
+      "vung": [
+        "pipeline/transform-*",
+        "pipeline/lib/transform-lo-nho*"
+      ],
+      "ghi_chu": "GS xếp dãy P4, sau PL20 (thứ tự lịch)."
+    },
+    {
+      "dot": "tin-tuc-thoi-2411",
+      "ma": "HT10",
+      "slug": "cloud-sync-tang-dan-va-tran",
+      "nhom": "tin-tuc-thoi",
+      "phu": [
+        "HT10"
+      ],
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "dung_tren": [
+        "TT1"
+      ],
+      "cau_giao": "Cloud nhận tin mới trong 1–2′ nhờ đẩy theo updated_at, mỗi lượt có trần thời gian",
+      "bat_khi": "Trên máy thu: lượt cloud-sync chỉ chép dòng đổi kể từ lần trước, nhịp thật ≤ 2′ cho tin mới (hôm nay 35–40′ vì chép lại ~1 triệu dòng); lượt quá trần thì dừng và báo; bộ soát đường cloud vẫn xanh",
+      "vi_sao": "Audit 24/11 (A9, H4): chép lại toàn bộ 22 bảng mỗi lượt, 990–1.284 s, không trần.",
+      "vung": [
+        "pipeline/sync-cloud*",
+        "scripts/cloud-sync.sh"
+      ],
+      "ghi_chu": "Chạm đường cloud: soát leak gate; áp lên cloud cần lời riêng của Mạnh."
+    },
+    {
+      "dot": "tin-tuc-thoi-2411",
+      "ma": "TT4",
+      "slug": "luu-tim-kiem-va-bao-tin",
+      "nhom": "tin-tuc-thoi",
+      "phu": [
+        "TT4"
+      ],
+      "hang": "T3",
+      "vai": "Người dùng Invest",
+      "tieu_chi": 10,
+      "dung_tren": [
+        "TT1"
+      ],
+      "cau_giao": "Người dùng Invest lưu một tìm kiếm và nhận báo khi có tin mới khớp",
+      "bat_khi": "Tin mới khớp tìm kiếm đã lưu được báo trong thước TT1 cộng 5′; kênh báo do Cổng Phạm vi chốt",
+      "vi_sao": "Đích của đợt: người dùng nhận tin tức thời. Hôm nay Invest chưa có lưu tìm kiếm hay thông báo.",
+      "vung": [
+        "app/src/app/(app)/vn",
+        "app/src/lib/saved-search",
+        "db/migrations/127_*"
+      ],
+      "ghi_chu": "Câu hỏi của Cổng Phạm vi: kênh báo (trong trang, email, đẩy trình duyệt). Không dùng tài khoản thu, không gửi vào nhóm xã hội. Chạm dữ liệu người dùng (tầng A ở máy local). GS xếp dãy N1, sau CG20 (thứ tự lịch)."
+    },
+    {
+      "dot": "sau-audit-2411",
+      "ma": "HT6",
+      "slug": "doc-gop-song-song-va-luot-bu",
+      "nhom": "sau-audit",
+      "phu": [
+        "HT6"
+      ],
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "cau_giao": "Lượt đọc gộp S03 gọi model song song, đọc xong một ngày trong trần của lượt đêm, và chạy bù các ngày đã rơi",
+      "bat_khi": "Lượt 00:00 trên máy thu không TIMEOUT; đọc gộp một ngày ≤ 2 giờ (hôm nay 21–28 nghìn giây); bài 22/11, 23/11 được đọc bù; chi phí trong trần USD/ngày",
+      "vi_sao": "Audit 24/11 A2: lượt đêm chạm trần 14.400 s hai lần, enrich không chạy, bài rơi khỏi cửa sổ.",
+      "vung": [
+        "pipeline/doc-gop*",
+        "pipeline/lib/doc-gop*",
+        "pipeline/scripts/doc-gop*",
+        "agent/src/enrich/doc-gop-s03",
+        "agent/scripts/doc-gop-s03.ts",
+        "agent/tests/doc-gop-*"
+      ]
+    },
+    {
+      "dot": "sau-audit-2411",
+      "ma": "HT7",
+      "slug": "script-kiem-dung-tren-mac-mini",
+      "nhom": "sau-audit",
+      "phu": [
+        "HT7"
+      ],
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 6,
+      "cau_giao": "Script kiểm khởi động DB và độ tươi cho kết quả đúng trên máy thu mới",
+      "bat_khi": "Trên máy thu mới: check-db-autostart live xanh khi DB tự lên được, đỏ khi không; check-freshness không còn đỏ giả do đường dẫn máy cũ",
+      "vi_sao": "Audit 24/11 §11: check-db-autostart tìm nhãn colima của máy cũ nên đỏ giả. PR #528.",
+      "vung": [
+        "scripts/check-db-autostart.sh",
+        "scripts/check-db-autostart.test.mjs",
+        "scripts/check-freshness.mjs",
+        "scripts/check-freshness.test.mjs"
+      ],
+      "ghi_chu": "Dưới mục tiêu: vá nhỏ, không gộp vì chạy song song với HT8 (khác tệp)."
+    },
+    {
+      "dot": "sau-audit-2411",
+      "ma": "HT8",
+      "slug": "db-chi-nghe-noi-bo-va-chinh-postgres",
+      "nhom": "sau-audit",
+      "phu": [
+        "HT8"
+      ],
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "cau_giao": "DB máy thu chỉ nhận kết nối nội bộ và chạy với cấu hình theo cỡ máy",
+      "bat_khi": "Từ IP LAN không nối được cổng 5433, từ 127.0.0.1 nối được; shared_buffers, work_mem, effective_cache_size đúng giá trị khai; đo thời gian pha nạp S06 trước và sau",
+      "vi_sao": "Audit 24/11 A1 (DB có tầng A nghe mọi giao diện) và A8 (Postgres gần mặc định trên VM 32 GB). Khởi động lại DB cần lời Mạnh.",
+      "vung": [
+        "db/docker-compose.yml",
+        "scripts/check-db-noi-bo.sh",
+        "scripts/db-volume-check.sh",
+        "docs/ops/runtime-map.md"
+      ]
+    },
+    {
+      "dot": "sau-audit-2411",
+      "ma": "HT9",
+      "slug": "db-thu-tach-khoi-cum-that",
+      "nhom": "sau-audit",
+      "phu": [
+        "HT9"
+      ],
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "cau_giao": "Bộ test của các dãy chạy trên một cụm Postgres riêng, không tạo DB trong cụm thật",
+      "bat_khi": "Sau một lượt suite: cụm thật không có DB oneinvest_suite_* mới; volume cụm thật không tăng do suite; db-thu.sh trỏ cụm riêng",
+      "vi_sao": "Audit 24/11 A7: DB thử chung cụm với DB thật, volume +4 GB trong 1,5 giờ, truy vấn suite tranh với transform S06.",
+      "vung": [
+        "db/db-thu.sh",
+        "db/docker-compose*",
+        "scripts/ci-test-local.mjs",
+        "scripts/db-sao-luu.sh",
+        "scripts/db-sao-luu*"
+      ]
+    },
+    {
+      "dot": "sau-audit-2411",
+      "ma": "HT11",
+      "slug": "so-nguon-s11-s08-dung-trang-thai",
+      "nhom": "sau-audit",
+      "phu": [
+        "HT11"
+      ],
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 5,
+      "dung_tren": [
+        "NK1"
+      ],
+      "cau_giao": "Người vận hành chạy lệnh đo độ tươi thì không còn thấy S11 đỏ, và chữ lý do của S08 đúng hiện trạng",
+      "bat_khi": "check-freshness không còn dòng S11; registry S11 ở trạng thái tạm dừng; reason của S08 khớp lần thu gần nhất",
+      "vi_sao": "Audit 24/11 H10: S11 hoãn nhưng sổ để active, S08 còn chữ «Chưa thu».",
+      "vung": [
+        "db/migrations/126_*"
+      ],
+      "ghi_chu": "Dưới mục tiêu: một migration seed nhỏ, đứng trên cột NK1 nên không gộp."
+    },
+    {
+      "dot": "sau-audit-2411",
+      "ma": "HT12",
+      "slug": "doc-gop-dong-ho-rieng-trong-luot-dem",
+      "nhom": "sau-audit",
+      "phu": [
+        "HT12"
+      ],
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 7,
+      "cau_giao": "Trong lượt đêm, bước đọc gộp có trần thời gian riêng, không ăn vào trần tổng của lượt nạp",
+      "bat_khi": "Lượt 00:00 trên máy thu: bước nạp xong trong trần của nó; đọc gộp chạy tới trần riêng rồi dừng có ghi; không cần nâng trần tay",
+      "vi_sao": "Audit 24/11 §13: đêm 24/11 phải nâng tay trần tổng lên 32.400 s một đêm.",
+      "vung": [
+        "scripts/zalo-import-daily.sh",
+        "scripts/zalo-import-daily*",
+        "scripts/s03-tran*",
+        "docs/ops/runtime-map.md"
+      ],
+      "ghi_chu": "Tệp scripts/zalo-import-daily.sh thuộc làn thu; ZV đang sửa chia trần (vòng 2311-5) — GS xếp để không chồng."
+    },
+    {
+      "dot": "sau-audit-2411",
+      "ma": "KEV2",
+      "slug": "bo-lop-kev-o-ops-va-audit",
+      "nhom": "sau-audit",
+      "phu": [
+        "KEV2"
+      ],
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 8,
+      "cau_giao": "Người vận hành mở trang Thu thập và chạy audit-all thì không còn lớp hay dòng đỏ nào của Kev",
+      "bat_khi": "Trang Thu thập trên Ops (máy thu và cloud) không còn lớp «Cổng Kev»; audit-all không còn FAIL :8009; dữ liệu ops đẩy lên không còn trường Kev",
+      "vi_sao": "Kev đã gỡ (15/11) và rời máy 24/11; audit §11 ghi các đỏ giả còn lại. Phần hook là K1 của làn thu.",
+      "vung": [
+        "app/src/lib/collections-queries.ts",
+        "app/src/lib/ops-queries.ts",
+        "app/src/lib/ops-cloud.ts",
+        "app/src/components/ops/collections",
+        "app/src/components/ops/collections-tables.tsx",
+        "scripts/lib/ops-local.mjs",
+        "scripts/audit-all.sh",
+        "pipeline/push-ops-facts.mjs"
+      ]
     }
   ],
   "chan_troi": [
@@ -7624,6 +7895,26 @@
         "NB4"
       ],
       "mo_lai_khi": "Mốc MS3 xong và hàng đầu tiên của lớp hợp nhất nguồn mở Cổng Phạm vi; dùng bảng cỡ mẫu của docs/research/nguoi-o-bien-khung-2111.md §4.4"
+    },
+    {
+      "ma": "TT5",
+      "dot": "tin-tuc-thoi-2411",
+      "cau_giao": "Tin S06 mới vào máy thu trong vài phút nhờ bộ thu đuôi của làn thu",
+      "ly_do": "Bộ thu là việc của làn thu (ZT), ZCode tự xếp; làn Claude chỉ tích hợp khi có nhánh",
+      "phu": [
+        "TT5"
+      ],
+      "mo_lai_khi": "ZT báo XONG nhánh bộ thu đuôi S06 kèm số đo 1 vùng × 1 mục × 24 giờ"
+    },
+    {
+      "ma": "TT6",
+      "dot": "tin-tuc-thoi-2411",
+      "cau_giao": "Lịch thu đuôi chạy nền với nhịp và trần theo nguồn",
+      "ly_do": "Lõi lịch là việc của làn thu (ZV); plist hay launchd mới cần lời riêng của Mạnh",
+      "phu": [
+        "TT6"
+      ],
+      "mo_lai_khi": "ZV báo XONG nhánh lõi lịch thu đuôi và Mạnh cho phép job nền mới"
     }
   ],
   "da_bac": [
