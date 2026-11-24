@@ -50,7 +50,41 @@ lsof -nP -iTCP:5433 -sTCP:LISTEN                              # chỉ 127.0.0.1:
 
 Trên container tạm cùng ảnh, cùng compose (không chạm `one-invest-db`), `bash scripts/check-db-noi-bo.sh tham-so | live-ba | do`:
 
-_(điền sau lượt chạy — đang chờ khoá s4 / tải máy)_
+Đo 24/11 23:26–23:32Z, giữ khoá s4, cây gộp `main` 8aae9497c (sau khi PL20/117 đã áp lên máy thu).
+
+**`tham-so` — ĐẠT (6/6, 71 s).** Container tạm cùng ảnh:
+
+| compose | shared_buffers | work_mem | maintenance_work_mem | effective_cache_size | /dev/shm |
+|---|---|---|---|---|---|
+| cây (HT8) | 8GB | 64MB | 1GB | 20GB | 1.0G |
+| base 5a418983c | 256MB | 16MB | 128MB | 4GB | 64M |
+
+Đường áp bốn bước trên CÙNG volume xanh: base→cây giữ dòng mốc, `docker restart` giữ 8GB, lùi cây→base về 256MB, dòng
+mốc còn 1; không sót container `ht8-ts-*`.
+
+**`live-ba` — ĐẠT (5/5, 32 s).** `one-invest-db` hiện tại đỏ đúng hai thông điệp ghim (5433 nghe `*`, shared_buffers=256MB)
+— đây là trạng thái TRƯỚC áp; container tạm compose cây xanh trọn (chỉ 127.0.0.1, LAN từ chối, client `pg` nối được, bốn
+tham số, /dev/shm 1.0G); container tạm compose base đỏ đúng hai thông điệp.
+
+**`do` — ĐẠT (77 s).** Máy: Mac mini (máy thu), Docker qua colima, ngày 24/11/2026 ~23:30Z. Bản chép trọn hai bảng (field_assertions 2.318.130/2.318.130, sale_offer_records 146.950/146.950),
+mỗi truy vấn ba lần, trung vị:
+
+| truy vấn | trước (ms, base) | sau (ms, cây) | Workers Launched (sau) |
+|---|---|---|---|
+| Q1 group by field trên field_assertions | 2412 | 2633 | 0 |
+| Q2 join field_assertions × sale_offer_records | 654 | 678 | 2 |
+| Q3 tạo + xoá index (subject_key, field, observed_at) | 1171 | 964 | 0 |
+
+Đọc số: trên hai bảng lớn nhất, truy vấn đọc không nhanh hơn (Q1 +9%, Q2 +4% — trong dao động ba lần chạy, bảng đã nằm trọn
+cache OS ở cả hai bộ). **Xử lý hai truy vấn chậm hơn: GIỮ SỐ tham số và GHI GIỚI HẠN** — Q1 và Q2 chậm hơn 9% và 4% trên
+bộ đo này, mức chênh nằm trong dao động giữa ba lần chạy; không hạ `work_mem`/`shared_buffers` vì việc ấy không làm đọc nhanh
+lên mà mất phần lợi của Q3 và `/dev/shm`. Sau áp thật, `node scripts/check-freshness.mjs` và log lượt job kế là chỗ phát hiện
+nếu chậm hơn lan ra job thật. Việc ghi nặng bộ nhớ nhanh hơn (Q3 −18%, nhờ `maintenance_work_mem` 1GB). Lợi ích chính của HT8 là
+cổng chỉ 127.0.0.1 và `/dev/shm` 1 GB, không phải tốc độ đọc. Đối chứng shm 64 MB KHÔNG tái hiện được lỗi vùng nhớ chung trên
+bộ truy vấn này (dòng «ĐỐI CHỨNG SHM CHẾT») — `shm_size` 1 GB là phòng ngừa theo khuyến nghị ảnh, chưa có ca đo đỏ.
+
+Sửa thước trong lượt này (sổ quyết định): `do` chép thêm các hàm mà cột sinh/CHECK của hai bảng gọi (117 thêm cột sinh gọi
+`assertion_value_key`); container tạm chờ ba lần `select 1` liên tiếp vì compose base không có healthcheck.
 
 ## 5. Cách lùi
 

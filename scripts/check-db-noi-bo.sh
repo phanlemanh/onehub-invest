@@ -181,6 +181,14 @@ dung_tam() {
     | if $shm != "" then .services.db.shm_size = $shm else . end' <<<"$js" > "$out"
   docker compose -p "$2" -f "$out" up -d --force-recreate --wait --wait-timeout 240 >/dev/null 2>"$TMPD/$2.err" \
     || { fail "không dựng được $2: $(tail -2 "$TMPD/$2.err")"; return 1; }
+  # compose base không có healthcheck → --wait trả về lúc ảnh kartoza còn khởi tạo rồi khởi động lại Postgres (đo 25/11:
+  # «the database system is starting up»). Chờ ba lần select 1 liên tiếp, cách 2 giây, tối đa 240 giây.
+  local i ok=0
+  for i in $(seq 1 120); do
+    if [ "$(psql_c "$2" 'select 1')" = 1 ]; then ok=$((ok + 1)); [ $ok -ge 3 ] && return 0; else ok=0; fi
+    sleep 2
+  done
+  fail "không dựng được $2: Postgres chưa sẵn sàng sau 240 giây"; return 1
 }
 bo_tam() { docker compose -p "$1" -f "$TMPD/$1.json" down >/dev/null 2>&1; docker rm -f "$1" >/dev/null 2>&1; }
 psql_c() { docker exec -e PGPASSWORD=oneinvest -e "PGOPTIONS=-c default_transaction_read_only=${3:-on}" "$1" psql -h localhost -U oneinvest -d oneinvest -Atc "$2" 2>&1; }
@@ -259,6 +267,16 @@ run_do() {
   local V=onehub_ht8_do b; b=$(base_compose)
   dung_tam "$b" ht8-do 55437 127.0.0.1 $V || return
   local t n0 n1
+  # Hàm mà cột sinh / CHECK của hai bảng gọi (vd assertion_value_key của 117) phải có trước khi nạp DDL bảng.
+  psql_c $DB "select string_agg(distinct pg_get_functiondef(p.oid), E';\n') || ';' from pg_depend d join pg_proc p
+      on d.refclassid = 'pg_proc'::regclass and d.refobjid = p.oid
+    where (d.classid = 'pg_attrdef'::regclass and d.objid in (select oid from pg_attrdef where adrelid in ('public.field_assertions'::regclass, 'public.sale_offer_records'::regclass)))
+       or (d.classid = 'pg_constraint'::regclass and d.objid in (select oid from pg_constraint where conrelid in ('public.field_assertions'::regclass, 'public.sale_offer_records'::regclass)))" \
+    > "$TMPD/ham.sql"
+  if [ -s "$TMPD/ham.sql" ] && [ "$(cat "$TMPD/ham.sql")" != ";" ]; then
+    docker exec -i -e PGPASSWORD=oneinvest ht8-do psql -h localhost -U oneinvest -d oneinvest -q -v ON_ERROR_STOP=1 \
+      < "$TMPD/ham.sql" >/dev/null 2>"$TMPD/ham.err" || { fail "chép hàm phụ thuộc lỗi: $(tail -2 "$TMPD/ham.err")"; return; }
+  fi
   for t in field_assertions sale_offer_records; do
     docker exec -e PGPASSWORD=oneinvest -e "PGOPTIONS=-c default_transaction_read_only=on" $DB \
       pg_dump -h localhost -U oneinvest -d oneinvest --no-owner --no-acl --section=pre-data --section=data -t "public.$t" \
