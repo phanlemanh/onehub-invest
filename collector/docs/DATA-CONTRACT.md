@@ -339,19 +339,28 @@ Khoá nối với S16/S08 (chi tiết số đo ở tệp kê local của lượt
   `building-tree`, `gallery`, `land-price-by-district`…); đường thật đọc từ tệp local ngoài git
   (`~/.oneinvest/s17-thua-dinh-gia.json`); mỗi vai chỉ nhận đúng tên tham số đã khai. Đường hay tham số ngoài danh
   sách bị từ chối trước khi gửi. `sourceId` và `kind` dùng chữ trung tính, không mang tên đường.
-- Nhịp 300–400 ms một lời (mức nguồn đã chịu được); trần lời gọi và trần thời gian phải khai mỗi lần chạy. 403, 429,
-  trang thử thách, hết phiên, quá trần → dừng cả lượt, không gửi thêm lời nào. Lỗi mạng và 5xx thử lại sau 5 s, 15 s,
+- Nhịp 150–400 ms một lời (mặc định 350 ms — mức nguồn đã chịu được; mức nhanh hơn chỉ khi chưa từng bị chặn); trần
+  lời gọi và trần thời gian phải khai mỗi lần chạy. 403, 429, trang thử thách, hết phiên, quá trần, và nguồn trả
+  `status: false` trong envelope dù HTTP 200 (lý do `source-error` — là nguồn báo lỗi, KHÔNG phải «không có bản
+  ghi») → dừng cả lượt, không gửi thêm lời nào. Lỗi mạng và 5xx thử lại sau 5 s, 15 s,
   30 s rồi tính là thất bại của riêng bản ghi đó. Chạy như tiến trình của phiên, chưa có lịch. Lời cần phiên gặp lỗi
-  mạng được hỏi lại bằng chính một lời cần phiên trước khi kết luận hết phiên. Lỗi tạm ghi kèm câu chữ lỗi gốc của
+  mạng được hỏi lại bằng chính một lời cần phiên trước khi kết luận hết phiên; phản hồi của lời kiểm phiên cũng được
+  phân loại (403, 429, trang thử thách là bị chặn; 401 là hết phiên; 5xx không kết luận được gì). Số dư đã biết gần
+  nhất được nhớ ở trạng thái bộ thu: số dư trước lượt thấp hơn nó thì dừng (`balance-spent`), vì lượt dừng giữa chừng
+  không đọc được số sau. Lỗi tạm ghi kèm câu chữ lỗi gốc của
   vận chuyển (đủ nhận «Failed to fetch», «signal timed out», việc trong trang đã mất).
 - **Dừng một lượt đang chạy**: tạo tệp rỗng tên `DUNG` trong thư mục trạng thái của bộ thu — lượt dừng ở lời kế tiếp
   như mọi lần dừng khác (chốt phần đã lấy, lưu trạng thái, lý do `operator-stop`, không ghi nhận là bị chặn), rồi tệp
   được xoá. KHÔNG giết tiến trình: `ego-browser nodejs` chỉ là máy khách mỏng, mã của pha chạy trong dịch vụ trình
-  duyệt, sống thêm khoảng 40 s và tranh tab với lượt kế (đo 24/11). Hai lượt không dùng cùng một tab một lúc.
+  duyệt, sống thêm khoảng 40 s và tranh tab với lượt kế (đo 24/11). Một thư mục trạng thái chỉ MỘT lượt một lúc: tệp
+  khoá `DANG-CHAY.lock` (ghi pid; khoá của tiến trình đã chết được dọn và lấy lại) — lượt thứ hai dừng ngay với lý do
+  `another-run`. Trong tab, mỗi đợt gọi mang một mã riêng: việc chưa xong của đợt khác không bị ghi đè, kết quả chỉ
+  nhận khi mang đúng mã và đủ số kết quả.
 - **Tăng tốc có khoá (Mạnh 24/11)**: từ mốc ngày 2 bộ thu gửi được tối đa 4 lời một đợt (nhiều fetch đồng thời trong
   trang; đo: hai lời đồng thời xong sau 4,9 s thay vì 8,4 s) và nhịp tới 150 ms. Số lần bị chặn (403, 429) ghi vào
   trạng thái bộ thu: bị chặn một lần thì chỉ còn nhịp 350 ms một luồng; bị chặn hai lần thì không chạy nữa, chờ
-  người quyết.
+  người quyết. Lượt tăng tốc mà dừng vì mười lời thất bại liền cũng tính là một lần bị chặn — nguồn trả 403/429 mà
+  không kèm CORS thì trong trang chỉ thấy là lỗi mạng (đo 24/11 với 401).
 - **Trình duyệt hủy một lần chạy trong trang sau 15 s** (đo 24/11) nên bộ thu KHÔNG chờ lời gọi bên trong một lần
   chạy: bắt đầu lời gọi rồi hỏi kết quả bằng các lần chạy rất ngắn; hạn chờ một lời là 60 s. Hệ quả: bản ghi máy
   chủ trả chậm vẫn lấy được (id 52 và 1705 của thấp tầng về sau khoảng 12 s, thân chỉ vài KB: lúc bộ thu còn chờ
@@ -368,13 +377,13 @@ Khoá nối với S16/S08 (chi tiết số đo ở tệp kê local của lượt
 | `tile_coverage` | `coverage-<id tỉnh>` (`id` của `areas` cấp market) | `{ tiles: ["z/x/y", …] }` — tile ranh thửa mức 17 CÓ DỮ LIỆU trong số các điểm đã quét của tỉnh; không lưu ảnh | `request {zoom}` · `congKhai: true` · `ten` · `soDiemQuet` · `trong` · `rong` · `vang` · `loi` |
 | `du_an_list` | `trang-<n>` (tính từ 1) | `{ json }` — một trang danh sách dự án: `data.projects.content[]` (mỗi mục có `id`, `estate_type`, `loai_du_an`, `tinh_trang`, `properties`) cùng `totalElements`, `totalPages`; đo 24/11: 2.508 dự án, 26 trang | `request {query, page, size}` · `tongDuAn` · `soTrang` · `soMuc` · `khongId` (mục không có id) |
 | `du_an_detail` | `du-an-<id>` | `{ detail, filterOptions, gallery }` — phản hồi gốc của một dự án: hồ sơ, cây lựa chọn toà → tầng → hướng → diện tích, thư viện ảnh. `gallery` là `null` khi thư viện lấy lỗi (ảnh không nằm trong mốc ngày 1) — hồ sơ và cây toà vẫn đủ | `request {id}` · `coBangCan` (`true` \| `false` \| `null`) · `galleryLoi` (chỉ khi `gallery` là `null`: lý do) |
-| `can_ho_list` | `du-an-<id>-toa-<toà>-trang-<n>[-lot-<k>]` | `{ json }` — một trang liệt kê căn theo toà: `data.content[]` (mỗi mục `text` = mã căn, `sub_text` = toà, tầng, diện tích, hướng, loại căn) cùng `totalElements`, `totalPages`; nguồn chịu 100 mục một trang (đo 24/11). Hậu tố `-lot-<k>` chỉ có ở lượt quét kế từ lượt hai | `request {project_id, thap, text, page, size}` · `tongCan` (số DÒNG nguồn công bố) · `soTrang` · `soMuc` · `lot` (lượt quét, từ 1) · `maMoi` (số mã mới gặp ở trang này) |
+| `can_ho_list` | `du-an-<id>-toa-<toà>-trang-<n>[-lot-<k>]` | `{ json }` — một trang liệt kê căn theo toà: `data.content[]` (mỗi mục `text` = mã căn, `sub_text` = toà, tầng, diện tích, hướng, loại căn) cùng `totalElements`, `totalPages`; nguồn chịu 100 mục một trang (đo 24/11). Hậu tố `-lot-<k>` chỉ có ở lượt quét kế từ lượt hai | `request {project_id, thap, text, page, size}` · `tongCan` (số DÒNG nguồn công bố) · `soTrang` · `soMuc` · `lot` (lượt quét, từ 1) · `maMoi` (số mã mới gặp trong LƯỢT quét này, tính dồn tới trang này — không phải của riêng trang) |
 | `can_ho_toa` | `du-an-<id>-toa-<toà>` | `{ maCan: […] }` — mã căn duy nhất của một toà sau khi gộp mọi trang, mọi lượt | `request {project_id, thap}` · `tongCan` · `maDuNhieu` · `soLot` · `khop` (`maDuNhieu = tongCan`) · `laToaChungMinh` |
-| `can_ho_du_an` | `du-an-<id>` | `{ toa: [{ thap, maDuNhieu, tongDong, soLot }] }` — bản gộp căn của một dự án mẫu, ghi lại sau mỗi lượt chạy của pha căn hộ ⇒ có thể có nhiều bản cho một dự án, bên đọc lấy bản mới nhất theo `fetchedAt` | `request {id}` · `soToa` · `maDuNhieu` · `tongDong` · `soCanNguon` (số `so_can` trong chi tiết dự án; `null` khi không đọc được) · `khop` (`maDuNhieu = soCanNguon`; `null` khi không có số) · `khopTongDong` |
+| `can_ho_du_an` | `du-an-<id>` | `{ toa: [{ thap, maDuNhieu, tongDong, soLot }] }` — bản gộp căn của một dự án mẫu, ghi MỘT lần cho một dự án khi đã liệt kê hết các toà; nếu lượt gãy sau khi đã chốt bản gộp mà chưa lưu trạng thái thì lượt sau ghi thêm bản ⇒ có thể có hai bản, bên đọc lấy bản mới nhất theo `fetchedAt` | `request {id}` · `soToa` · `maDuNhieu` · `tongDong` · `soCanNguon` (số `so_can` trong chi tiết dự án; `null` khi không đọc được) · `khop` (`maDuNhieu = soCanNguon`; `null` khi không có số) · `khopTongDong` |
 | `can_ho_detail` | `du-an-<id>-can-<mã căn>` | `{ json }` — hồ sơ một căn (`data.properties`: `ma_can`, `ma_can_tren_cua` là mã trên cửa, tháp, tầng, diện tích, đơn giá thẩm định, trạng thái giao dịch, ngày duyệt…) | `request {project_id, ma_can}` · `toa` · `khopMaCan: true` |
 | `thua` | `thua-<mã địa chính>` | `{ json }` — hồ sơ thửa theo toạ độ: đa giác ranh giới, kích thước, tiếp giáp đường, đơn giá đất theo trạng thái quy hoạch, mã hành chính cũ và mới | `request {latitude, longitude, loaiTimKiem}` · `phuongPhap` (`grid` \| `suggest`) · `khuVuc` · `ogcFid` · `soTo` · `soThua` · `dienTich` · `duong` · `maPhuong` · `maQuan` · `maThanhPho` |
 | `thua_goi_y` | `goi-y-<khu>-<tên đường>` | `{ json }` — gợi ý thửa theo tên đường: `data[0].items[]`, mỗi mục có `id` và `extra {latitude, longitude, dien_tich, chieu_rong, chieu_dai}` | `request {term, size}` · `khuVuc` · `soMuc` |
-| `thua_khu_vuc` | `khu-vuc-<khu>` | `{ soDiemLuoi, soDiemGoiY, soThuaLuoi, soThuaGoiY, soTrung, soKhongCo, soLoi, soCauGoiY, soLoiGoiY }` — bản gộp một khu thí điểm | `request {dienTichKm2, buocM, soDiemLuuGiac}` · `ten` · `thuaMoiKm2` · `loiMoiKm2` · `tongLoi` · `soThua` |
+| `thua_khu_vuc` | `khu-vuc-<khu>` | `{ soDiemLuoi, soDiemGoiY, soThuaLuoi, soThuaGoiY, soTrung, soKhongCo, soLoi, soCauGoiY, soLoiGoiY, loi? }` — bản gộp một khu thí điểm; `loi` (có từ sau lượt soát mã 24/11) = MỌI lời đã dùng cho khu, kể cả lượt chạy trước | `request {dienTichKm2, buocM, soDiemLuuGiac}` · `ten` · `thuaMoiKm2` · `loiMoiKm2` · `tongLoi` · `soThua` |
 | `mix_gia` *(chưa thu)* | `toado-<lat>-<lng>` | `{ json }` — đơn giá thị trường theo toạ độ | `request` · `ganThua` |
 | `du_an_thap_tang` | `du-an-nha-dat-<id>` | `{ json }` — chi tiết một dự án thấp tầng, lấy có cờ riêng trên cùng đường chi tiết dự án | `request {id, for_house: true}` · `phuongPhap` (`id-sweep` \| `suggest`) · `estateType` (luôn là `du_an_nha_dat`) · `ten` · `tuCacTuKhoa` (chỉ khi khám phá qua từ khoá) |
 | `du_an_goi_y_thap_tang` | `goi-y-thap-tang-<từ khoá>` | `{ json }` — gợi ý dự án thấp tầng theo từ khoá, có cờ; `data[0].items[]` mỗi mục có `source`, `id`, `text` | `request {term, for_house: true, size}` · `soMuc` · `soThapTang` |
@@ -421,7 +430,9 @@ Luật đọc:
    liệt kê). **`so_can` trong chi tiết dự án không phải tổng của danh sách** (đo: dự án 1004 ghi 2.432, mã duy nhất
    2.475; dự án 684 ghi 1.172, mã duy nhất 833) — `can_ho_du_an.khop` chỉ để đối chiếu, không dùng làm chứng minh.
    Kết quả hai dự án mẫu của mốc ngày 2 (1004, 684; 9 toà): 3.308 dòng = 3.308 mã duy nhất, 9/9 toà khớp, 14 lượt
-   quét (nhiều nhất 3 lượt ở toà P11).
+   quét (nhiều nhất 3 lượt ở toà P11). `khop` chỉ có thể đúng khi lời liệt kê trả ít nhất một dòng và một mã: 0 = 0
+   (toà không có dữ liệu, hoặc nguồn trả `status: false`) KHÔNG phải khớp. Cổng chứng minh được kiểm cả khi chạy lại
+   sau `proof-failed`: toà chứng minh chưa khớp thì pha không lấy căn.
 9. *(mốc ngày 2)* **Tra chi tiết căn khớp theo ĐOẠN ĐẦU của từng từ trong mã và trả đúng MỘT kết quả theo thứ tự cố
    định** — đo 24/11: gửi «320 Tòa Park 12» nhận «3204 Tòa Park 12»; gửi «3312 Tòa Park 12» nhận «3312A Tòa Park 12»;
    gửi «320» nhận một căn của toà khác. Căn có mã là đoạn đầu của mã khác (toà P12: 41 trên 719) không gọi trúng được
@@ -432,8 +443,13 @@ Luật đọc:
 10. *(mốc ngày 2)* **Thửa.** Định danh bền là mã địa chính (`ogc_fid`): một thửa đúng một item `thua`, dù gặp ở nhiều
    điểm hay hai phương pháp; `soTrung` đếm số điểm trúng thửa đã có. Điểm không nằm trong thửa nào: nguồn trả
    `data: null` (nhanh, khoảng 0,1 s), không có item, tính vào `soKhongCo`. Điểm hỏi lỗi được ghi ở trạng thái bộ thu,
-   tính `soLoi`. Mật độ `thuaMoiKm2` = thửa tìm được bằng lưới / diện tích khu — phụ thuộc bước lưới (30 m) và đa giác
-   khu (lấy từ `areas` của máy thu), KHÔNG phải số thửa thật của khu. Gợi ý theo tên đường: tên đường lấy từ những
+   tính `soLoi`. Envelope `status: false` (HTTP 200) là nguồn báo lỗi, không phải «không có thửa»: bộ thu dừng cả lượt
+   (`source-error`). Mật độ `thuaMoiKm2` = thửa tìm được bằng lưới / diện tích khu — phụ thuộc bước lưới (30 m theo
+   mét Web Mercator: khoảng 28 m trên mặt đất ở Hà Nội, 29,5 m ở TP.HCM) và đa giác khu (lấy từ `areas` của máy thu;
+   diện tích khu 1 là diện tích đất thật, khu 2 xấp xỉ theo số điểm nhân diện tích ô), KHÔNG phải số thửa thật của khu.
+   `tongLoi` và `loiMoiKm2` (bản gộp ghi sau lượt soát mã 24/11) tính trên MỌI lời đã dùng cho khu — hồ sơ, gợi ý, lời
+   kiểm phiên, thử lại, kể cả lượt chạy trước; hai bản gộp của lượt thu 24/11 chưa có cách tính này: `tongLoi` chỉ gồm
+   số điểm đã hỏi và số lời gợi ý, và không có trường `loi`. Gợi ý theo tên đường: tên đường lấy từ những
    thửa vừa có (`vi_tri_duong`), nguồn nắp khoảng 15 mục mỗi tên; toạ độ gợi ý có thể nằm ngoài khu, nên thửa tìm được
    qua gợi ý đếm riêng (`soThuaGoiY`), không vào mật độ. Lưới khu sinh bằng
    `collector/src/collectors/s17-thua-dinh-gia/luoi-thua.sql`. Đo 24/11: hồ sơ thửa mất khoảng 4 s ở lần đầu hỏi một
