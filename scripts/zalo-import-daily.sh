@@ -67,7 +67,7 @@ go_khoa_cu() {
   # mốc = PID bị tiến trình khác DÙNG LẠI → khoá mồ côi, gỡ được (kể cả khoá trẻ).
   if [ -f "$LOCK_DIR/chu" ]; then read -r chu < "$LOCK_DIR/chu"; chu=$(printf '%s' "$chu" | tr -s ' '); chu=${chu# }; chu=${chu% }; fi
   local goc_do_tuoi=0
-  local max_tuoi="${ZALO_IMPORT_TRAN_TONG:-14400}" # trần tổng lượt 00:00 = 4h — khoá cùng lượt sống tới đây
+  local max_tuoi="${ZALO_IMPORT_TRAN_TONG:-21600}" # trần tổng lượt 00:00 = 6h (2311-5) — khoá cùng lượt sống tới đây
   local tuoi=0
   if [ -n "$luc" ] && [[ "$luc" =~ ^[0-9]+$ ]]; then tuoi=$(( $(date +%s) - luc )); fi
   local chu_song="" pid_song=0
@@ -136,9 +136,38 @@ trap '[ -f "$LOCK_DIR/pid" ] && grep -qx "$$" "$LOCK_DIR/pid" 2>/dev/null && rm 
 # < trần nạp 1800s: đồng hồ tổng TERM cả chuỗi TRƯỚC khi trần nạp kịp dừng sạch
 # (mã 124 giữ state), mất dòng ghi state → lượt sau nạp lại cùng đoạn. Lượt
 # nhanh = trần nạp + 600s cho transform/doc-gop; lượt 00:00 giữ 4h.
+# 2311-5 (claudedp-2311-5, bổ sung 2311-6): LƯỚI CHIA TRẦN. Trần tổng một đồng hồ bọc cả lượt làm bước đọc gộp
+# (LLM tuần tự ~7,2s/lời) ăn hết trần rồi TERM cả lượt — enrich đứng sau nó chết theo 3 đêm (21→23/11). Hai việc,
+# mỗi việc một phía của mốc ranh giới làn ở dưới tệp (luật U1-1711-5: một nhánh sửa một phía):
+#  - phía trên mốc (nhánh này): trần tổng lượt 00:00 4h → 6h (21600s), tuổi khoá theo cùng trần; lượt nhanh không
+#    đổi. Xuất DOC_GOP_TRAN_GIAY = trần đọc gộp − 300 cho bước đọc gộp: hợp đồng phía bước (P3/HT6) — tới mốc ấy
+#    bước không phát lời model mới, chờ lời đang bay rồi THOÁT 75 = dừng sạch, không mất bài (checkpoint đã-đọc).
+#    Trần đọc gộp SUY TỪ TRẦN TỔNG THỰC (BÁO claudedp-2411-11 và -12): biến môi trường ZALO_IMPORT_TRAN_TONG
+#    thắng mặc định — đêm 24→25/11 plist đặt 32400 một đêm theo lời Mạnh. Lấy trần đọc gộp = trần tổng − phần các
+#    bước TRƯỚC nó (trần nạp + 600s cho transform, cùng số với trần lượt nhanh) − 3000s cho enrich SAU nó (đo 21/11:
+#    1.842s, cộng dự phòng). Mốc dừng sạch vì thế luôn chừa đủ chỗ cho enrich với MỌI trần tổng: trần tổng lớn hơn
+#    cho đọc gộp chạy lâu hơn để gỡ tồ, trần tổng nhỏ hơn thì đọc gộp tự co. Đặt tường minh
+#    ZALO_IMPORT_TRAN_DOC_GOP thì dùng số đó nhưng vẫn kẹp về giới hạn trên, kèm một dòng JOB WARN — đồng hồ tổng
+#    không bao giờ cắt cả lượt trước mốc dừng sạch. Khi đọc gộp chạy song song (HT6/P3) hạ qua env đó.
+#  - phía dưới mốc (nhánh zcode/s03-nhap-chia-tran-buoc, đứng trên nhánh này): đồng hồ riêng của bước đọc gộp
+#    (lưới TERM cuối) và 75 của bước = đi tiếp, không vào JOB_RC.
 TRAN_NAP="${ZALO_IMPORT_TRAN_NAP:-1800}"
-TRAN_TONG="${ZALO_IMPORT_TRAN_TONG:-$([ "$LUOT_NHANH" = "1" ] && echo $((TRAN_NAP + 600)) || echo 14400)}"
+TRAN_TONG="${ZALO_IMPORT_TRAN_TONG:-$([ "$LUOT_NHANH" = "1" ] && echo $((TRAN_NAP + 600)) || echo 21600)}"
 CANH_BAO="${ZALO_IMPORT_CANH_BAO:-$((TRAN_TONG / 2))}"
+CHUA_TRUOC=$((TRAN_NAP + 600))   # thời gian các bước trước bước đọc gộp được dùng tối đa
+CHUA_ENRICH=3000                  # thời gian dành cho enrich sau bước đọc gộp (đo 21/11: 1.842s + dự phòng)
+TRAN_DOC_GOP_MAX=$((TRAN_TONG - CHUA_TRUOC - CHUA_ENRICH)); [ "$TRAN_DOC_GOP_MAX" -lt 60 ] && TRAN_DOC_GOP_MAX=60
+if [ -n "${ZALO_IMPORT_TRAN_DOC_GOP:-}" ]; then
+  TRAN_DOC_GOP="$ZALO_IMPORT_TRAN_DOC_GOP"
+  if [ "$TRAN_DOC_GOP" -gt "$TRAN_DOC_GOP_MAX" ]; then
+    echo "JOB WARN [zalo-import-daily] trần đọc gộp ${TRAN_DOC_GOP}s không vừa trần tổng ${TRAN_TONG}s — kẹp về ${TRAN_DOC_GOP_MAX}s (chừa ${CHUA_TRUOC}s cho nạp và transform, ${CHUA_ENRICH}s cho enrich)"
+    TRAN_DOC_GOP="$TRAN_DOC_GOP_MAX"
+  fi
+else
+  TRAN_DOC_GOP="$TRAN_DOC_GOP_MAX"
+fi
+DOC_GOP_TRAN_GIAY=$((TRAN_DOC_GOP - 300)); [ "$DOC_GOP_TRAN_GIAY" -lt 60 ] && DOC_GOP_TRAN_GIAY=60
+export DOC_GOP_TRAN_GIAY
 # canh_gio <trần-giây> <warn-giây> <nhãn> <đích-kill> — nhãn in kèm dòng ghim;
 # đích: pid bước, hoặc -PGID để TERM cả nhóm tiến trình của lượt.
 # node dùng ĐƯỜNG TUYỆT ĐỐI (PATH đầu có shim `node` của phép đo job-step —
@@ -211,6 +240,11 @@ canh_gio() {
   DONG_HO_PID=$!
 }
 PGID_LUOT="$(ps -o pgid= -p $$ | tr -d ' ')"
+if [ "$LUOT_NHANH" = "1" ]; then
+  echo "[zalo-import-daily] trần: nạp ≤${TRAN_NAP}s · lượt ≤${TRAN_TONG}s"
+else
+  echo "[zalo-import-daily] trần: nạp ≤${TRAN_NAP}s · đọc gộp ≤${TRAN_DOC_GOP}s (dừng sạch ở ${DOC_GOP_TRAN_GIAY}s) · lượt ≤${TRAN_TONG}s"
+fi
 canh_gio "$TRAN_TONG" "$CANH_BAO" "lượt" "-$PGID_LUOT"
 DONG_HO_TONG_PID="${DONG_HO_PID:-}" # PID riêng cho trap (khi node thật thiếu thì rỗng)
 trap '[ -n "$DONG_HO_TONG_PID" ] && kill "$DONG_HO_TONG_PID" 2>/dev/null; if [ -f "$LOCK_DIR/pid" ] && grep -qx "$$" "$LOCK_DIR/pid" 2>/dev/null; then rm -rf "$LOCK_DIR" 2>/dev/null; fi' EXIT

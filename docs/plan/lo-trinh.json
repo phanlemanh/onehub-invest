@@ -4209,7 +4209,7 @@
       "hang": "T2",
       "vai": "Người vận hành",
       "tieu_chi": 9,
-      "cau_giao": "Người vận hành thấy thẻ các dự án, toà mà tin nói tới nhưng danh bạ chưa có, gom theo tần suất kèm tin mẫu, rồi tạo nút ứng viên hoặc trỏ vào nút có sẵn; bản ghi danh mục không khớp nút nào thì máy đúc nút ứng viên hàng loạt, nút chỉ được nối tin và lên Invest sau khi qua thẻ luật theo nguồn (Mạnh xem mẫu) hoặc người duyệt",
+      "cau_giao": "Người vận hành thấy thẻ các dự án, toà mà tin nói tới nhưng danh bạ chưa có, gom theo tần suất kèm tin mẫu (chỉ đếm giá trị đọc từ chính bài, có trích dẫn), rồi tạo nút ứng viên hoặc trỏ vào nút có sẵn; bản ghi danh mục không khớp nút nào thì máy đúc nút ứng viên hàng loạt, nút chỉ được nối tin và lên Invest sau khi qua thẻ luật theo nguồn (Mạnh xem mẫu) hoặc người duyệt",
       "bat_khi": "Tỉ lệ phân giải mã toà S03 ở Ocean Park 1 và Grand Park tăng từ 51%, báo số trước và sau; mã dự án S06 dưới 10 tin có trạng thái hoặc đang chờ thẻ; 0 UPI đúc từ nút ứng viên chưa duyệt; nút ứng viên mang catalog_tier thấp nhất; nút đúc từ danh mục chưa qua thẻ luật theo nguồn hay người duyệt thì 0 tin nối và 0 lên Invest",
       "vi_sao": "Mạnh 09/11 Q2. S03 là nguồn quan trọng nhất mà mã toà chỉ phân giải 51% qua S08 và S09; S09 gần như không phủ TP.HCM; 974 dự án S06 dưới 10 tin không thuộc hàng nào.",
       "vung": [
@@ -4217,7 +4217,7 @@
         "app/src/lib/ops",
         "pipeline/ung-vien-danh-ba"
       ],
-      "ghi_chu": "Dãy C (nối và duyệt). Toà ứng viên chưa cấp UPI tới khi người duyệt, để danh mục tới sau (DA10) khớp vào thay vì sinh UPI thứ hai. Luật 7: máy chỉ gom và đề xuất. Sửa 11/11 (mục 44 Hỏi-1): thêm đúc nút ứng viên từ danh mục qua thẻ luật theo nguồn, vì hàng nghìn bản ghi danh mục không duyệt nổi từng thẻ; thẻ luật giữ người trong vòng.",
+      "ghi_chu": "Dãy C (nối và duyệt). Toà ứng viên chưa cấp UPI tới khi người duyệt, để danh mục tới sau (DA10) khớp vào thay vì sinh UPI thứ hai. Luật 7: máy chỉ gom và đề xuất. Sửa 11/11 (mục 44 Hỏi-1): thêm đúc nút ứng viên từ danh mục qua thẻ luật theo nguồn, vì hàng nghìn bản ghi danh mục không duyệt nổi từng thẻ; thẻ luật giữ người trong vòng. Sửa 24/11 (mục 63 quyết định 1): một ứng viên là một quyết định cho mọi tin cùng nêu; giá trị tin thừa hưởng từ thẻ địa chỉ nhóm hay từ danh bạ không được đếm làm bằng chứng cho ứng viên (ADR-0016 «không tự nuôi»).",
       "phu": [
         "DA18"
       ]
@@ -6005,9 +6005,10 @@
       "dung_tren": [
         "NB1"
       ],
-      "cau_giao": "Người vận hành mở Hàng duyệt, chọn «Bổ sung tin», thấy các thẻ ô số xếp thành bảng lô có bằng chứng và suy luận trên từng dòng cùng ca biên tách riêng, soát mẫu 75 thẻ rồi chấp thuận cả lô một lần và rút được cả lô",
+      "cau_giao": "Người vận hành mở Hàng duyệt, chọn «Bổ sung tin», thấy các thẻ ô số xếp thành bảng lô có bằng chứng và suy luận trên từng dòng cùng ca biên tách riêng, soát mẫu 75 thẻ rồi chấp thuận cả lô một lần và rút được cả lô; thẻ lệch giá trị đang có và thẻ đối chiếu xếp theo kiểu lệch để quyết một lần cho cả nhóm, phán quyết đối chiếu được ghi lại",
       "bat_khi": "Trên Ops máy thu: ô «Chờ duyệt» của «Bổ sung tin» từ 786 (đo 21/11) xuống mức đích chốt ở S1 sau lượt chấm bóng; mỗi lô ghi mã lô, người chấp thuận, giờ, cỡ mẫu và số lỗi mẫu; lô có lỗi mẫu vượt ngưỡng không chấp thuận được; ô loại hình và toà chỉ nhận lô khi mẫu 75 thẻ không lỗi; lệnh rút theo mã lô đưa tin và đề xuất về đúng như trước; ca biên không vào lô",
       "vi_sao": "Mục 61 quyết định 1 (sửa mục 35). Đường quyết thẻ hiện chỉ nhận người, từng thẻ, kèm lý do; bảng lô là bề mặt duyệt Mạnh thấy kiểm nhanh và tin hơn (21/11).",
+      "ghi_chu": "Sửa 24/11 (mục 63 quyết định 1): ca chưa chắc xử theo nhóm, không mỗi tin một thẻ. Đo 24/11 trên 1.047 thẻ chờ, sau khi NB9 đóng 232 thẻ trùng giá trị đang lưu còn 815, gồm bốn tập rời nhau: (a) 230 thẻ đối chiếu chưa từng có đề xuất (lệch ý định 124, lệch giá 103, lệch diện tích 5) — ba kiểu lệch là ba quyết định, hàng này ghi phán quyết đối chiếu; (b) 230 thẻ có đề xuất loại hình hoặc phòng ngủ lệch giá trị đang có (122 tin đang «apartment» bị đề xuất «house») — tập khác với (a), trùng số là ngẫu nhiên; (c) khoảng 190 thẻ ô số còn trống (180 số WC); (d) 167 thẻ toà chờ PL20. Phần (a) làm cỡ hàng có thể vượt 10 tiêu chí, chốt ở S1. Số 786 ở bat_khi là mốc 21/11; mức đích chốt lại ở S1.",
       "vung": [
         "app/src/app/ops/review",
         "app/src/components/ops/review*",
@@ -6097,13 +6098,350 @@
         "NB5",
         "NB7"
       ],
-      "cau_giao": "Một ô của «Bổ sung tin» (ứng viên số WC hoặc số phòng ngủ) được máy tự áp khi hai lần đọc độc lập trùng nhau và cận dưới Wilson của độ đúng đã hiệu chỉnh đạt ngưỡng F3; ca biên và mọi ô khác vẫn lên thẻ",
+      "cau_giao": "Ô số phòng ngủ của «Bổ sung tin» được máy tự áp khi hai lần đọc độc lập trùng nhau, lần đọc thứ hai dùng model khác họ trong ba model đã chốt, và cận dưới Wilson của độ đúng đã hiệu chỉnh đạt ngưỡng F3; ca biên và mọi ô khác vẫn lên thẻ",
       "bat_khi": "Trên DB máy thu: ô «Tự động hoá (D5)» trên /ops/quality từ 0 lên tỉ lệ giá trị máy quyết của ô ấy; tập mở cổng ghi xuất xứ, hiệu chỉnh bằng hệ số bắt lỗi của NB7, cận dưới in cạnh ngưỡng; mỗi lần tự áp mang mã lô và rút được; cấy mẫu tuần vượt ngưỡng lỗi thì ô tự tụt về nấc 2 và báo",
       "vi_sao": "Mục 61 quyết định 2 và 4, đường «luật xác định» của PL21. PL21 giữ ở chờ điều kiện cho các ô còn lại; hàng này mở cho đúng một ô.",
+      "ghi_chu": "Sửa 24/11 (mục 63): ô đầu tiên là số phòng ngủ thay cho «số WC hoặc số phòng ngủ». Đo 24/11 trên nhãn: phòng ngủ khớp 188/189 (cận dưới Wilson 97,1%, ngưỡng nhóm B 0,90, chưa hiệu chỉnh hệ số bắt lỗi); số WC model điền ở 36 bài người ghi «không nêu» nên chờ sửa lời nhắc; loại hình 190/196 (cận dưới 93,5%) chưa đạt nhóm A. Model lớn không đọc trên đường ống (mục 41 Q4).",
       "vung": [
         "agent/src/enrich",
         "pipeline/lib/tu-ap*"
       ]
+    },
+    {
+      "dot": "tin-tuc-thoi-2411",
+      "ma": "TT1",
+      "slug": "thuoc-dang-den-invest-theo-nguon",
+      "nhom": "tin-tuc-thoi",
+      "phu": [
+        "TT1"
+      ],
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "cau_giao": "Lệnh đo in độ trễ từ lúc tin đăng tới lúc hiện trên Invest theo nguồn và theo ngày (p50, p90)",
+      "bat_khi": "Chạy hằng ngày trên DB máy thu, có số S03 và S06; đỏ khi vượt thước đã chốt (S03 p50 ≤ 15′, p90 ≤ 60′; S06 p50 ≤ 30′, p90 ≤ 2 giờ); mốc lúc cắt: S06 p50 66 giờ tới lần thu đầu, S03 1–3 ngày tới căn/giá",
+      "vi_sao": "Mạnh chốt thước 24/11. Đây là điểm «xong» của đường găng tin tức thời: mọi hàng sau đo bằng lệnh này.",
+      "vung": [
+        "scripts/thuoc-dang-den-invest*",
+        "pipeline/sql/4*thuoc-do-tre*"
+      ],
+      "ghi_chu": "GS xếp dãy P2, sau DA55 (thứ tự lịch, không phải phụ thuộc dữ liệu)."
+    },
+    {
+      "dot": "tin-tuc-thoi-2411",
+      "ma": "TT2",
+      "slug": "doc-gop-lien-tuc-lo-nho",
+      "nhom": "tin-tuc-thoi",
+      "phu": [
+        "TT2"
+      ],
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "dung_tren": [
+        "HT6",
+        "TT1"
+      ],
+      "cau_giao": "Bài S03 mới được đọc gộp theo lô nhỏ, chạy liên tục 24/7 thay cho lượt đêm",
+      "bat_khi": "Trên DB máy thu: độ trễ «bài vào máy → đọc gộp xong» của S03 p90 ≤ 30′ trong một ngày thường (lệnh TT1); chi phí ngày trong trần USD/ngày đã duyệt",
+      "vi_sao": "Đọc gộp ở lượt đêm làm S03 mất 1–3 ngày mới thành căn/giá. Đỉnh ~800 bài/giờ × 7,2 s/bài cần ~2 luồng.",
+      "vung": [
+        "pipeline/doc-gop*",
+        "agent/src/enrich/doc-gop-s03",
+        "agent/scripts/doc-gop-s03.ts"
+      ]
+    },
+    {
+      "dot": "tin-tuc-thoi-2411",
+      "ma": "TT3",
+      "slug": "transform-phan-moi-lo-nho",
+      "nhom": "tin-tuc-thoi",
+      "phu": [
+        "TT3"
+      ],
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 10,
+      "dung_tren": [
+        "TT1"
+      ],
+      "cau_giao": "Tin vừa nạp vào stg_* được transform thành tin, căn, giá theo lô 2–5′, suốt 24 giờ",
+      "bat_khi": "Trên DB máy thu: độ trễ «vào stg_* → có trong sale_offers» p90 ≤ 10′ cho S03 và S06 (lệnh TT1); chạy lại lô không nhân đôi bản ghi",
+      "vi_sao": "Hôm nay transform chạy sau lượt nạp (40–55′) và S03 chỉ nạp 07–22h. Bước nạp là của làn thu (ZV).",
+      "vung": [
+        "pipeline/transform-*",
+        "pipeline/lib/transform-lo-nho*"
+      ],
+      "ghi_chu": "GS xếp dãy P4, sau PL20 (thứ tự lịch)."
+    },
+    {
+      "dot": "tin-tuc-thoi-2411",
+      "ma": "HT10",
+      "slug": "cloud-sync-tang-dan-va-tran",
+      "nhom": "tin-tuc-thoi",
+      "phu": [
+        "HT10"
+      ],
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "dung_tren": [
+        "TT1"
+      ],
+      "cau_giao": "Cloud nhận tin mới trong 1–2′ nhờ đẩy theo updated_at, mỗi lượt có trần thời gian",
+      "bat_khi": "Trên máy thu: lượt cloud-sync chỉ chép dòng đổi kể từ lần trước, nhịp thật ≤ 2′ cho tin mới (hôm nay 35–40′ vì chép lại ~1 triệu dòng); lượt quá trần thì dừng và báo; bộ soát đường cloud vẫn xanh",
+      "vi_sao": "Audit 24/11 (A9, H4): chép lại toàn bộ 22 bảng mỗi lượt, 990–1.284 s, không trần.",
+      "vung": [
+        "pipeline/sync-cloud*",
+        "scripts/cloud-sync.sh"
+      ],
+      "ghi_chu": "Chạm đường cloud: soát leak gate; áp lên cloud cần lời riêng của Mạnh."
+    },
+    {
+      "dot": "tin-tuc-thoi-2411",
+      "ma": "TT4",
+      "slug": "luu-tim-kiem-va-bao-tin",
+      "nhom": "tin-tuc-thoi",
+      "phu": [
+        "TT4"
+      ],
+      "hang": "T3",
+      "vai": "Người dùng Invest",
+      "tieu_chi": 10,
+      "dung_tren": [
+        "TT1"
+      ],
+      "cau_giao": "Người dùng Invest lưu một tìm kiếm và nhận báo khi có tin mới khớp",
+      "bat_khi": "Tin mới khớp tìm kiếm đã lưu được báo trong thước TT1 cộng 5′; kênh báo do Cổng Phạm vi chốt",
+      "vi_sao": "Đích của đợt: người dùng nhận tin tức thời. Hôm nay Invest chưa có lưu tìm kiếm hay thông báo.",
+      "vung": [
+        "app/src/app/(app)/vn",
+        "app/src/lib/saved-search",
+        "db/migrations/127_*"
+      ],
+      "ghi_chu": "Câu hỏi của Cổng Phạm vi: kênh báo (trong trang, email, đẩy trình duyệt). Không dùng tài khoản thu, không gửi vào nhóm xã hội. Chạm dữ liệu người dùng (tầng A ở máy local). GS xếp dãy N1, sau CG20 (thứ tự lịch)."
+    },
+    {
+      "dot": "sau-audit-2411",
+      "ma": "HT6",
+      "slug": "doc-gop-song-song-va-luot-bu",
+      "nhom": "sau-audit",
+      "phu": [
+        "HT6"
+      ],
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "cau_giao": "Lượt đọc gộp S03 gọi model song song, đọc xong một ngày trong trần của lượt đêm, và chạy bù các ngày đã rơi",
+      "bat_khi": "Lượt 00:00 trên máy thu không TIMEOUT; đọc gộp một ngày ≤ 2 giờ (hôm nay 21–28 nghìn giây); bài 22/11, 23/11 được đọc bù; chi phí trong trần USD/ngày",
+      "vi_sao": "Audit 24/11 A2: lượt đêm chạm trần 14.400 s hai lần, enrich không chạy, bài rơi khỏi cửa sổ.",
+      "vung": [
+        "pipeline/doc-gop*",
+        "pipeline/lib/doc-gop*",
+        "pipeline/scripts/doc-gop*",
+        "agent/src/enrich/doc-gop-s03",
+        "agent/scripts/doc-gop-s03.ts",
+        "agent/tests/doc-gop-*"
+      ]
+    },
+    {
+      "dot": "sau-audit-2411",
+      "ma": "HT7",
+      "slug": "script-kiem-dung-tren-mac-mini",
+      "nhom": "sau-audit",
+      "phu": [
+        "HT7"
+      ],
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 6,
+      "cau_giao": "Script kiểm khởi động DB và độ tươi cho kết quả đúng trên máy thu mới",
+      "bat_khi": "Trên máy thu mới: check-db-autostart live xanh khi DB tự lên được, đỏ khi không; check-freshness không còn đỏ giả do đường dẫn máy cũ",
+      "vi_sao": "Audit 24/11 §11: check-db-autostart tìm nhãn colima của máy cũ nên đỏ giả. PR #528.",
+      "vung": [
+        "scripts/check-db-autostart.sh",
+        "scripts/check-db-autostart.test.mjs",
+        "scripts/check-freshness.mjs",
+        "scripts/check-freshness.test.mjs"
+      ],
+      "ghi_chu": "Dưới mục tiêu: vá nhỏ, không gộp vì chạy song song với HT8 (khác tệp)."
+    },
+    {
+      "dot": "sau-audit-2411",
+      "ma": "HT8",
+      "slug": "db-chi-nghe-noi-bo-va-chinh-postgres",
+      "nhom": "sau-audit",
+      "phu": [
+        "HT8"
+      ],
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "cau_giao": "DB máy thu chỉ nhận kết nối nội bộ và chạy với cấu hình theo cỡ máy",
+      "bat_khi": "Từ IP LAN không nối được cổng 5433, từ 127.0.0.1 nối được; shared_buffers, work_mem, effective_cache_size đúng giá trị khai; đo thời gian pha nạp S06 trước và sau",
+      "vi_sao": "Audit 24/11 A1 (DB có tầng A nghe mọi giao diện) và A8 (Postgres gần mặc định trên VM 32 GB). Khởi động lại DB cần lời Mạnh.",
+      "vung": [
+        "db/docker-compose.yml",
+        "scripts/check-db-noi-bo.sh",
+        "scripts/db-volume-check.sh",
+        "docs/ops/runtime-map.md"
+      ]
+    },
+    {
+      "dot": "sau-audit-2411",
+      "ma": "HT9",
+      "slug": "db-thu-tach-khoi-cum-that",
+      "nhom": "sau-audit",
+      "phu": [
+        "HT9"
+      ],
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "cau_giao": "Bộ test của các dãy chạy trên một cụm Postgres riêng, không tạo DB trong cụm thật",
+      "bat_khi": "Sau một lượt suite: cụm thật không có DB oneinvest_suite_* mới; volume cụm thật không tăng do suite; db-thu.sh trỏ cụm riêng",
+      "vi_sao": "Audit 24/11 A7: DB thử chung cụm với DB thật, volume +4 GB trong 1,5 giờ, truy vấn suite tranh với transform S06.",
+      "vung": [
+        "db/db-thu.sh",
+        "db/docker-compose*",
+        "scripts/ci-test-local.mjs",
+        "scripts/db-sao-luu.sh",
+        "scripts/db-sao-luu*"
+      ]
+    },
+    {
+      "dot": "sau-audit-2411",
+      "ma": "HT11",
+      "slug": "so-nguon-s11-s08-dung-trang-thai",
+      "nhom": "sau-audit",
+      "phu": [
+        "HT11"
+      ],
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 5,
+      "dung_tren": [
+        "NK1"
+      ],
+      "cau_giao": "Người vận hành chạy lệnh đo độ tươi thì không còn thấy S11 đỏ, và chữ lý do của S08 đúng hiện trạng",
+      "bat_khi": "check-freshness không còn dòng S11; registry S11 ở trạng thái tạm dừng; reason của S08 khớp lần thu gần nhất",
+      "vi_sao": "Audit 24/11 H10: S11 hoãn nhưng sổ để active, S08 còn chữ «Chưa thu».",
+      "vung": [
+        "db/migrations/126_*"
+      ],
+      "ghi_chu": "Dưới mục tiêu: một migration seed nhỏ, đứng trên cột NK1 nên không gộp."
+    },
+    {
+      "dot": "sau-audit-2411",
+      "ma": "HT12",
+      "slug": "doc-gop-dong-ho-rieng-trong-luot-dem",
+      "nhom": "sau-audit",
+      "phu": [
+        "HT12"
+      ],
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 7,
+      "cau_giao": "Trong lượt đêm, bước đọc gộp có trần thời gian riêng, không ăn vào trần tổng của lượt nạp",
+      "bat_khi": "Lượt 00:00 trên máy thu: bước nạp xong trong trần của nó; đọc gộp chạy tới trần riêng rồi dừng có ghi; không cần nâng trần tay",
+      "vi_sao": "Audit 24/11 §13: đêm 24/11 phải nâng tay trần tổng lên 32.400 s một đêm.",
+      "vung": [
+        "scripts/zalo-import-daily.sh",
+        "scripts/zalo-import-daily*",
+        "scripts/s03-tran*",
+        "docs/ops/runtime-map.md"
+      ],
+      "ghi_chu": "Tệp scripts/zalo-import-daily.sh thuộc làn thu; ZV đang sửa chia trần (vòng 2311-5) — GS xếp để không chồng."
+    },
+    {
+      "dot": "sau-audit-2411",
+      "ma": "KEV2",
+      "slug": "bo-lop-kev-o-ops-va-audit",
+      "nhom": "sau-audit",
+      "phu": [
+        "KEV2"
+      ],
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 8,
+      "cau_giao": "Người vận hành mở trang Thu thập và chạy audit-all thì không còn lớp hay dòng đỏ nào của Kev",
+      "bat_khi": "Trang Thu thập trên Ops (máy thu và cloud) không còn lớp «Cổng Kev»; audit-all không còn FAIL :8009; dữ liệu ops đẩy lên không còn trường Kev",
+      "vi_sao": "Kev đã gỡ (15/11) và rời máy 24/11; audit §11 ghi các đỏ giả còn lại. Phần hook là K1 của làn thu.",
+      "vung": [
+        "app/src/lib/collections-queries.ts",
+        "app/src/lib/ops-queries.ts",
+        "app/src/lib/ops-cloud.ts",
+        "app/src/components/ops/collections",
+        "app/src/components/ops/collections-tables.tsx",
+        "scripts/lib/ops-local.mjs",
+        "scripts/audit-all.sh",
+        "pipeline/push-ops-facts.mjs"
+      ]
+    },
+    {
+      "dot": "phe-duyet-may-2411",
+      "ma": "NB11",
+      "slug": "luot-hang-dem-khong-tu-ap-truoc-doc-lap",
+      "nhom": "nguoi-o-bien",
+      "phu": [
+        "NB11"
+      ],
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 6,
+      "dung_tren": [],
+      "cau_giao": "Lượt làm giàu hằng đêm không tự áp đề xuất của model khi nó trùng luật hoặc trùng tên toà của Danh bạ; các đề xuất ấy lên thẻ duyệt cho tới khi phiếu thứ hai độc lập",
+      "bat_khi": "Trên bản chép DB máy thu: một lượt hằng đêm ghi 0 dòng đề xuất đã áp có căn cứ chứng thực (corroborated_by khác rỗng); đề xuất model trùng luật và đề xuất model trùng tên nút Danh bạ của lượt ấy đều ở trạng thái chờ duyệt; giá trị luật tự áp một mình (direct) không đổi; lượt đọc toàn bộ không đổi hành vi; cấy một đề xuất trùng luật của lượt hằng đêm ở trạng thái đã áp thì phép kiểm đỏ; 297 giá trị đã ghi trước đó không bị đụng",
+      "vi_sao": "Mục 63, lời Mạnh 24/11 03:35Z «Chờ sửa xong». Lời nhắc của lượt hằng đêm mang loại hình và mã toà của luật (agent/src/agents/enrich-text.ts) nên model trùng luật ở đây chưa phải hai phiếu độc lập; bộ làm giàu sắp chạy lại sau khi đứng từ 23/11.",
+      "vung": [
+        "agent/src/enrich/route.ts",
+        "agent/src/enrich/run.ts"
+      ],
+      "ghi_chu": "Chốt chặn tạm, giám sát xếp trước NB9 và NB10. Chỗ phân tuyến dùng chung với lượt đọc toàn bộ (agent/src/enrich/route.ts, nhánh trùng luật và nhánh trùng tên nút Danh bạ) nên phải chặn theo lượt gọi, không đổi lượt đọc toàn bộ vốn độc lập. Hạng T2 trừ khi t3_paths của kho xếp khác. Cỡ nhỏ có chủ ý: một hành vi, làm gấp trước lượt đêm; không gộp vào NB10 vì NB10 là T3 có migration và đứng sau. NB10 mở lại tự ghi khi phiếu thứ hai đã độc lập."
+    },
+    {
+      "dot": "phe-duyet-may-2411",
+      "ma": "NB10",
+      "slug": "ghi-tam-do-sau-co-han",
+      "nhom": "nguoi-o-bien",
+      "phu": [
+        "NB10"
+      ],
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 10,
+      "dung_tren": [],
+      "cau_giao": "Máy chỉ tự ghi khi luật và model đọc độc lập trùng nhau, model không thấy đáp án của luật; giá trị tự ghi mang mã lô, cờ «chưa đo» và hạn đo bù; một lệnh rút được cả lô; ô quá hạn hoặc đo bù không đạt thì tự dừng ghi và rút lô",
+      "bat_khi": "Trên bản chép DB máy thu: 2.290 giá trị đã tự ghi (2.180 loại hình, 110 toà, đo 24/11) đều có mã lô và cờ ghi tạm, trong đó 297 giá trị của lượt làm giàu hằng đêm (187 loại hình, 110 toà) mang mã lô riêng «trước độc lập»; lời nhắc của lượt hằng đêm không còn mang loại hình và mã toà của luật; cấy một lời gọi mà model được thấy đáp án của luật thì không tính là phiếu thứ hai và không ghi; lệnh rút theo mã lô đưa tin và đề xuất về đúng như trước, chạy lại không đổi; giá trị ghi tạm không làm căn lên bậc B3; hạn đo bù tính từ ngày áp, cấy một ô quá hạn thì lượt kế không ghi thêm và báo; mỗi lần ghi lưu ai ghi, model, nấc và mã lô",
+      "vi_sao": "Mục 63 quyết định 3 (sửa mục 19 Q5). Luật «đo xong mới ghi» cộng với thước chưa có làm mọi giá trị dồn về Hàng duyệt; đường tự ghi đang chạy không có mã lô và không có hạn đo. Đo 24/11: phần loại hình nối được với nhãn đúng 56/56 (52 của lượt đọc toàn bộ, 4 của lượt hằng đêm), cần 73 nhãn không sai để cận dưới Wilson đạt 0,95; phần toà chưa có bài nhãn nào nối được. Lượt làm giàu hằng đêm đưa đáp án của luật vào lời nhắc (agent/src/agents/enrich-text.ts) nên chưa đạt điều kiện «hai phiếu độc lập»; lượt đọc toàn bộ 03–05/11 (1.993 loại hình) gạt tên nhóm khỏi chữ gửi model nên độc lập.",
+      "vung": [
+        "agent/src/enrich",
+        "db/migrations/129_*",
+        "pipeline/lib/tu-ap*"
+      ],
+      "ghi_chu": "Giám sát xếp sau NB11 (chốt chặn lượt hằng đêm) và sau hàng đóng 232 thẻ «Bổ sung tin» trùng giá trị đang lưu (NB9 của đợt đang chạy, không có trong tệp này). Hàng này mở lại tự ghi cho lượt hằng đêm khi phiếu thứ hai đã độc lập (lời Mạnh 03:35Z «Chờ sửa xong»). Số migration 129 là số tạm giám sát giữ. Cách làm phiếu thứ hai độc lập chốt ở S1: bỏ hai dòng đáp án của luật khỏi lời nhắc và giữ tên dự án, hoặc lấy phiếu thứ hai từ đọc gộp vốn không thấy đáp án của luật. Lượt hằng đêm có trần 50 lời gọi mỗi đêm (biến ENRICH_LIMIT ở script nạp hằng ngày của S03) và đứng từ 23/11: đo tồn và chi phí ở S1; đổi trần là tiền nên trình Mạnh ở Cổng Phạm vi. Lô đo bù là việc của Mạnh ở phiên gắn nhãn, không thuộc hàng: lát nhãn có tên toà trước (thiếu thì 110 toà tự rút), rồi khoảng 80 thẻ loại hình có thẻ cài; hạn hai tuần tính từ ngày hàng này được áp lên máy thu. Lên nấc chính thức vẫn là chữ ký riêng cho từng ô (mục 61)."
+    },
+    {
+      "dot": "phe-duyet-may-2411",
+      "ma": "PL37",
+      "slug": "hien-toa-phan-khu-nguyen-van",
+      "nhom": "l05-doc-toa-tang-can",
+      "phu": [
+        "PL37"
+      ],
+      "hang": "T2",
+      "vai": "Nhà đầu tư",
+      "tieu_chi": 9,
+      "dung_tren": [],
+      "cau_giao": "Nhà đầu tư mở một tin căn hộ mà toà hoặc phân khu chưa đối chiếu được với Danh bạ và thấy tên toà, phân khu đúng như bài viết kèm nhãn «theo tin đăng, chưa đối chiếu», thay cho «chưa biết»",
+      "bat_khi": "Trên dữ liệu máy thu: số tin S03 đang hiển thị có toà hoặc phân khu trên trang tin tăng từ số tin đã gắn được nút lên thêm số tin có chữ toà đọc từ bài, báo số trước và sau; giá trị nguyên văn chỉ lấy từ ô đọc gộp có căn cứ là chữ bài, câu trích có thật trong bài và chữ toà hoặc phân khu nằm ngay trong câu trích; cấy một ô có trích thật mà giá trị khác câu trích thì không hiện; tin mang giá trị nguyên văn không vào nhóm so sánh giá theo toà và không tạo liên kết nút; tin đã gắn nút hiện tên Danh bạ, không hiện nhãn; nhãn mới có trong CONTEXT.md; chữ trên cổng không mang tên nguồn",
+      "vi_sao": "Mục 63 quyết định 2 (sửa hành vi dưới ngưỡng nhóm A của F3 cho riêng ô toà, phân khu). Đo 24/11: 40% bài nhãn có toà mà tin trống ô toà; Danh bạ mới có danh sách toà ở khoảng 28 dự án, phân khu trên 344 dự án. Đọc gộp so với nhãn: toà đúng 78/95, và model ghi toà ở 27 bài người ghi «không nêu» — vì vậy chỉ hiện khi chữ toà nằm trong câu trích (kiểm trích ở agent/src/enrich/doc-gop-s03/doc.ts).",
+      "vung": [
+        "app/src/app/(app)/listing",
+        "app/src/lib/offers-public.ts",
+        "CONTEXT.md"
+      ],
+      "ghi_chu": "Giám sát xếp sau HT6. Nhãn «theo tin đăng, chưa đối chiếu» vào CONTEXT.md cùng commit của hàng này. Không đổi bộ phân xử và không gắn nút: gắn toà vẫn là PL20."
     }
   ],
   "chan_troi": [
@@ -6711,7 +7049,7 @@
     {
       "ma": "PL21",
       "dot": "phan-loai-2310",
-      "cau_giao": "Máy chỉ tự áp ở ô có cận dưới Wilson đạt ngưỡng F3; dưới ngưỡng thì hiện kèm nhãn suy ra hoặc lên thẻ",
+      "cau_giao": "Máy tự áp chính thức ở ô có cận dưới Wilson đạt ngưỡng F3; ô chưa đo chỉ được ghi tạm theo bốn điều kiện của mục 63 (hai phiếu độc lập trùng nhau, mã lô rút được, không tính đã đo, đo bù trong hạn); dưới ngưỡng thì hiện kèm nhãn suy ra hoặc lên thẻ theo nhóm",
       "ly_do": "Hoãn ở lần đặt lại lộ trình 15/11 (ROADMAP §3 mục 53): không nằm trên đường tới mục tiêu «căn giá tốt theo dự án, toà, tầng từ tin S03». Khuôn hàng cũ (bat_khi, vi_sao, vung) ở lịch sử git trước PR này.",
       "phu": [
         "C2.5"
@@ -7624,6 +7962,26 @@
         "NB4"
       ],
       "mo_lai_khi": "Mốc MS3 xong và hàng đầu tiên của lớp hợp nhất nguồn mở Cổng Phạm vi; dùng bảng cỡ mẫu của docs/research/nguoi-o-bien-khung-2111.md §4.4"
+    },
+    {
+      "ma": "TT5",
+      "dot": "tin-tuc-thoi-2411",
+      "cau_giao": "Tin S06 mới vào máy thu trong vài phút nhờ bộ thu đuôi của làn thu",
+      "ly_do": "Bộ thu là việc của làn thu (ZT), ZCode tự xếp; làn Claude chỉ tích hợp khi có nhánh",
+      "phu": [
+        "TT5"
+      ],
+      "mo_lai_khi": "ZT báo XONG nhánh bộ thu đuôi S06 kèm số đo 1 vùng × 1 mục × 24 giờ"
+    },
+    {
+      "ma": "TT6",
+      "dot": "tin-tuc-thoi-2411",
+      "cau_giao": "Lịch thu đuôi chạy nền với nhịp và trần theo nguồn",
+      "ly_do": "Lõi lịch là việc của làn thu (ZV); plist hay launchd mới cần lời riêng của Mạnh",
+      "phu": [
+        "TT6"
+      ],
+      "mo_lai_khi": "ZV báo XONG nhánh lõi lịch thu đuôi và Mạnh cho phép job nền mới"
     }
   ],
   "da_bac": [
