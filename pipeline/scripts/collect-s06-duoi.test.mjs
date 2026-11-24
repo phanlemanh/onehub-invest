@@ -12,7 +12,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
   thuDuoi, LUAT_DUNG, LY_DO_DUNG, MA_THOAT, taoItemS06, taoLayTrangS06, ghiSnapshot,
-  chayDoi, tinhBaoCao, tinhTiLeBatDuoc, taoTraStg, quetDuStg, moDbChiDoc,
+  chayDoi, tinhBaoCao, tinhTiLeBatDuoc, cuaSoDo, baoCao, taoTraStg, quetDuStg, moDbChiDoc,
 } from "../collect-s06-duoi.mjs";
 import { readSnapshot } from "../import-chotot.mjs";
 
@@ -560,9 +560,9 @@ const NHAT_KY = [
       { so: 2, luc: ISO(303), soLan: 2, soTin: 2, soDaCo: 1, soMoi: 1, tin: [[102, giay(-700), giay(-700), 1], [4, giay(58), giay(58), 0]] },
       { so: 3, luc: ISO(305), soLan: 1, soTin: 1, soDaCo: 1, soMoi: 0, tin: [[103, giay(-800), giay(-800), 1]] },
     ] },
-  { k: "phien", phien: 2, batDau: ISO(600), ketThuc: ISO(604), soLoiGoi: 2, soLoi: 0, chan: 0, dbLoi: 0, lyDoDung: "trang-toan-da-co", snapshot: "hcmc__chotot-ads__2026-11-24T021000", tinMoi: [3, 9],
+  { k: "phien", phien: 2, batDau: ISO(600), ketThuc: ISO(604), soLoiGoi: 2, soLoi: 0, chan: 0, dbLoi: 0, lyDoDung: "trang-toan-da-co", snapshot: "hcmc__chotot-ads__2026-11-24T021000", tinMoi: [3, 9, 10, 11],
     trang: [
-      { so: 1, luc: ISO(601), soLan: 1, soTin: 3, soDaCo: 1, soMoi: 2, tin: [[3, giay(400), giay(400), 0], [9, giay(500), giay(-80000), 0], [102, giay(-700), giay(-700), 1]] },
+      { so: 1, luc: ISO(601), soLan: 1, soTin: 5, soDaCo: 1, soMoi: 4, tin: [[3, giay(400), giay(400), 0], [9, giay(500), giay(-80000), 0], [10, giay(-30), giay(-30), 0], [11, giay(-20), null, 0], [102, giay(-700), giay(-700), 1]] },
       { so: 2, luc: ISO(603), soLan: 1, soTin: 1, soDaCo: 1, soMoi: 0, tin: [[103, giay(-800), giay(-800), 1]] },
     ] },
   { k: "phien", phien: 3, batDau: ISO(900), ketThuc: ISO(900), soLoiGoi: 1, soLoi: 0, chan: 1, dbLoi: 0, lyDoDung: null, snapshot: null, tinMoi: [],
@@ -583,7 +583,13 @@ test("báo cáo tính đúng lời gọi/phút, p50/p90 độ trễ đăng → t
   // tin 9 đăng trước t0 (cũ đẩy lại) nên không tính; bốn số trên xếp [201, 241, 242, 245]
   assert.deepEqual(b.doTre, { soLuong: 4, p50: 241, p90: 245 });
   assert.equal(b.tinMoiDang, 4, "bốn tin mới đăng trong cửa sổ đo");
-  assert.equal(b.truocCuaSo, 1, "một tin đăng trước cửa sổ đo (cũ đẩy lại) mà đuôi đưa ra");
+  // ba mục máy chưa có nhưng không phải tin mới đăng của cửa sổ: 9 = cũ đẩy lại (list_time − orig 80.500 giây),
+  // 10 = đăng 30 giây trước t0 (tồn đọng lúc bắt đầu), 11 = không có giờ đăng gốc
+  assert.equal(b.truocCuaSo, 3, "mục máy chưa có nhưng đăng trước cửa sổ đo (kể cả cũ đẩy lại)");
+  assert.deepEqual([b.dayLaiCu, b.tronLuaDau, b.khongRoOrig], [1, 1, 1]);
+  // tuổi mục mới nhất ở đầu trang 1: lượt 1 lấy lúc 301 s, mục mới nhất 60 s → 241 giây; lượt 2: 601 − 500 = 101 giây
+  // hai số [101, 241]: hạng gần nhất của p50 là số thứ nhất
+  assert.deepEqual(b.dinhMoiNhat, { soLuong: 2, min: 101, p50: 101 });
   assert.deepEqual(b.luat["trang-toan-da-co"], { soTrang: 5, boSot: 0 });
   // luật gap-da-co dừng sau trang 1 ở cả hai lượt → 2 lời; tin 4 ở trang 2 lượt 1 nằm sau điểm dừng
   assert.deepEqual(b.luat["gap-da-co"], { soTrang: 2, boSot: 1 });
@@ -611,6 +617,80 @@ test("báo cáo: lượt hỏng DB và lượt lỗi mạng không là bị ch�
   assert.equal(b.soLoi, 3);
   assert.equal(b.biChan, 0);
   assert.equal(b.loiGoiMoiPhut, 0.6, "3 lời trong 5 phút (0 → 5:00)");
+});
+
+test("tệp trạng thái có ngay từ đầu phép đo (dang-chay) để theo dõi giữa chừng, rồi chuyển xong khi hết", async () => {
+  const goc = gocTam();
+  let thay;
+  try {
+    await chayDoi({
+      vung: VUNG, feed: FEED, goc, motLan: true, moDb: dbGia().mo,
+      taoLayTrang: ({ truocLoiGoi }) => async () => { xinPhep(truocLoiGoi); thay = docTrangThai(goc); return []; }, ...dongHo(),
+    });
+    assert.equal(thay.trangThai, "dang-chay", "khi lượt đầu đang chạy đã có tệp trạng thái");
+    assert.equal(thay.soPhien, 0);
+    assert.equal(thay.hetHan, new Date(T0 + 1440 * 60_000).toISOString(), "ghi luôn giờ dự kiến kết thúc");
+    assert.equal(docTrangThai(goc).trangThai, "xong");
+  } finally { rmSync(goc, { recursive: true, force: true }); }
+});
+
+test("cửa sổ của báo cáo: dừng ở giờ kết thúc thật nếu sớm hơn dự kiến, không vượt hiện tại", () => {
+  const dong = [NHAT_KY[0], NHAT_KY[1], NHAT_KY[2]]; // lượt cuối ghi ketThuc ở giây 900
+  const du = { batDau: ISO(0), hetHan: ISO(3600) };
+  assert.deepEqual(cuaSoDo(du, dong, () => T0 + 7200_000), { t0: T0, t1: T0 + 900_001 }, "từ giờ bắt đầu tới ngay sau lượt cuối (chặn sớm)");
+  assert.deepEqual(cuaSoDo(du, dong, () => T0 + 600_000), { t0: T0, t1: T0 + 600_000 }, "đang chạy giữa chừng thì dừng ở hiện tại");
+  // chưa có tệp trạng thái (phiên cũ chỉ ghi lúc kết thúc): vẫn tính được từ nhật ký
+  assert.deepEqual(cuaSoDo({ batDau: ISO(0), hetHan: null }, dong, () => T0 + 7200_000), { t0: T0, t1: T0 + 900_001 });
+  assert.throws(() => cuaSoDo({ batDau: ISO(0), hetHan: null }, [{ k: "chan" }], () => T0), /chưa có lượt nào/);
+});
+
+test("cửa sổ của báo cáo: không truyền đồng hồ thì lấy giờ hiện tại của máy", () => {
+  const bayGio = Date.now();
+  const dong = [{ k: "phien", phien: 1, batDau: new Date(bayGio - 60_000).toISOString(), ketThuc: new Date(bayGio - 10_000).toISOString(), trang: [] }];
+  const tt = { batDau: new Date(bayGio - 60_000).toISOString(), hetHan: new Date(bayGio + 3600_000).toISOString() };
+  // lượt cuối kết thúc 10 giây trước giờ lấy mốc → cửa sổ dừng ngay sau lượt đó, chưa tới hiện tại
+  assert.deepEqual(cuaSoDo(tt, dong), { t0: bayGio - 60_000, t1: bayGio - 10_000 + 1 });
+});
+
+test("báo cáo cả phép đo: chưa có tệp trạng thái thì vẫn ra bốn số, không mở DB, bỏ phần so với lượt quét đủ", async () => {
+  let mo = 0;
+  const kq = await baoCao({ tt: null, dong: NHAT_KY, bayGio: () => T0 + 7200_000, moDb: async () => { mo++; throw new Error("không được mở DB"); } });
+  assert.equal(kq.trangThai, "dang-chay");
+  assert.equal(kq.soLoiGoi, 7);
+  // không có tệp trạng thái: cửa sổ lấy từ nhật ký — bắt đầu ở lượt đầu (phút 5), tới ngay sau lượt cuối (15:00)
+  assert.deepEqual(kq.cuaSo, { t0: ISO(300), t1: new Date(T0 + 900_001).toISOString() });
+  assert.equal(kq.batDuoc, undefined, "không biết vùng × mục thì không so");
+  assert.equal(mo, 0);
+});
+
+test("báo cáo cả phép đo: có vùng × mục thì mở DB chỉ đọc để so với lượt quét đủ rồi đóng DB", async () => {
+  const cau = [];
+  const kq = await baoCao({
+    tt: { trangThai: "xong", cityCode: "vn-hcmc", adType: "u", batDau: ISO(0), hetHan: ISO(3600) },
+    dong: NHAT_KY, bayGio: () => T0 + 7200_000,
+    moDb: async () => ({
+      query: async (sql, params) => {
+        cau.push([sql.trim().split(/\s+/).slice(0, 3).join(" "), params]);
+        return { rows: /max\(captured_at\)/.test(sql) ? [{ luc: new Date(T0 + 86400_000) }] : [{ list_id: "1" }, { list_id: "2" }, { list_id: "3" }, { list_id: "5" }] };
+      },
+      dong: async () => { cau.push(["dong"]); },
+    }),
+  });
+  assert.deepEqual(kq.batDuoc, { quetDu: 4, duoi: 4, batDuoc: 3, tiLe: 0.75, thieu: [5], chiDuoi: [4] });
+  assert.equal(kq.quetDuCapNhatLuc, new Date(T0 + 86400_000).toISOString(), "ghi giờ lượt quét đủ mới nhất đã nạp");
+  assert.deepEqual(cau.map((x) => x[0]), ["SELECT list_id FROM", "SELECT max(captured_at) AS", "dong"], "hai câu đọc rồi đóng");
+  assert.deepEqual(cau[0][1], ["vn-hcmc", "u", T0, T0 + 900_001], "so đúng vùng × mục và đúng cửa sổ");
+});
+
+test("báo cáo cả phép đo: DB lỗi thì phần so với lượt quét đủ là null kèm lý do, bốn số vẫn có", async () => {
+  const kq = await baoCao({
+    tt: { trangThai: "xong", cityCode: "vn-hcmc", adType: "u", batDau: ISO(0), hetHan: ISO(3600) },
+    dong: NHAT_KY, bayGio: () => T0 + 7200_000,
+    moDb: async () => { throw Object.assign(new Error("ECONNREFUSED"), { code: "ECONNREFUSED" }); },
+  });
+  assert.equal(kq.batDuoc, null);
+  assert.match(kq.batDuocLoi, /ECONNREFUSED/);
+  assert.equal(kq.soLoiGoi, 7);
 });
 
 test("tỉ lệ bắt được: so tin đuôi thấy với tập lượt quét đủ cùng ngày", () => {

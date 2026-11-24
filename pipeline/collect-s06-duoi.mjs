@@ -341,7 +341,7 @@ export async function chayDoi({
   });
   const ghi = (dong) => appendFile(join(goc, "nhat-ky.jsonl"), JSON.stringify(dong) + "\n");
   let ma = MA_THOAT.XONG;
-  let trangThai = "xong";
+  let trangThai = "dang-chay"; // tệp trạng thái ghi ngay từ đầu và sau mỗi lượt, để theo dõi giữa chừng
   let soPhienChay = 0;
   let i = 0;
   const luuTrangThai = () => writeFile(join(goc, "trang-thai.json"), JSON.stringify({
@@ -353,6 +353,7 @@ export async function chayDoi({
   }, null, 2));
 
   try {
+    await luuTrangThai();
     for (;;) {
       if (bayGio() >= hetHan) break;
       i++;
@@ -469,6 +470,7 @@ export async function chayDoi({
       rec.ketThuc = new Date(bayGio()).toISOString();
       await ghi(rec);
       if (rec.chan) await ghi({ k: "chan", phien, luc: rec.ketThuc, thongBao: r?.loi?.thongBao ?? null });
+      await luuTrangThai();
       bao(`phien ${phien} · tin moi ${rec.tinMoi.length} · loi goi ${rec.soLoiGoi} · ${
         rec.dbLoi ? "DB loi — bo luot" : rec.chan ? "BI CHAN — dung ca phep do" : rec.loiNguon ? `loi nguon: ${rec.loiNguon}` : `dung: ${rec.lyDoDung}`}`);
       if (maLuot !== null) {
@@ -482,6 +484,8 @@ export async function chayDoi({
       const cho = t0 + i * nhapPhut * PHUT - bayGio();
       if (cho > 0) await sleep(cho);
     }
+    // vòng lặp dừng vì hết giờ hoặc --mot-lan; các cách dừng khác (chặn, cổng đóng, trần lời) đã ghi lý do riêng
+    if (trangThai === "dang-chay") trangThai = "xong";
   } catch (e) {
     ma = MA_THOAT.LOI;
     trangThai = "loi";
@@ -520,7 +524,9 @@ export function tinhBaoCao(dong, { t0, t1 }) {
     [LUAT_DUNG.GAP_DA_CO]: { soTrang: 0, boSot: 0 },
   };
   const doTre = [];
-  let doTreAm = 0, tinMoiDang = 0, truocCuaSo = 0, soPhienThanhCong = 0, soLuotLoi = 0;
+  const dinhMoiNhat = []; // tuổi (giây) của mục mới nhất ở đầu trang 1, mỗi lượt một số
+  let doTreAm = 0, tinMoiDang = 0, truocCuaSo = 0, dayLaiCu = 0, tronLuaDau = 0, khongRoOrig = 0;
+  let soPhienThanhCong = 0, soLuotLoi = 0;
   for (const d of phien) {
     if (d.dbLoi) continue;
     if (d.loiNguon) soLuotLoi++;
@@ -535,11 +541,22 @@ export function tinhBaoCao(dong, { t0, t1 }) {
     d.trang.forEach((t, idx) => {
       if (idx >= soTrangGap) luat[LUAT_DUNG.GAP_DA_CO].boSot += t.tin.filter((x) => x[3] === 0).length;
     });
+    // Sàn trễ phía nguồn: mục mới nhất ở đầu trang 1 đã bao nhiêu tuổi khi lượt này lấy
+    const trang1 = d.trang.find((t) => t.so === 1);
+    if (trang1 && trang1.tin.length > 0) {
+      dinhMoiNhat.push(Math.round((Date.parse(trang1.luc) - Math.max(...trang1.tin.map((x) => x[1]))) / 1000));
+    }
     for (const t of d.trang) {
       for (const [id, listTime, origTime, daCo] of t.tin) {
         if (daCo !== 0) continue;
         if (!namTrong(origTime, t0, t1)) {
-          if (origTime < t0) truocCuaSo++;
+          // mục máy chưa có nhưng không phải tin mới đăng của cửa sổ — chia ba loại để đọc đúng con số
+          if (origTime < t0) {
+            truocCuaSo++;
+            if (!origTime) khongRoOrig++; // nguồn không có giờ đăng gốc
+            else if (listTime - origTime >= 3600_000) dayLaiCu++; // cũ đẩy lại: list_time mới hơn hẳn giờ đăng gốc
+            else tronLuaDau++; // đăng trước t0 nhưng chưa tới tay máy (tồn đọng lúc bắt đầu đo)
+          }
           continue;
         }
         tinMoiDang++;
@@ -563,10 +580,26 @@ export function tinhBaoCao(dong, { t0, t1 }) {
     loiGoiMoiPhut: soPhut > 0 ? Math.round((soLoiGoi / soPhut) * 1000) / 1000 : null,
     tinMoiDang,
     truocCuaSo,
+    dayLaiCu,
+    tronLuaDau,
+    khongRoOrig,
     doTre: { soLuong: doTre.length, p50: phanVi(0.5, doTre), p90: phanVi(0.9, doTre) },
     doTreAm,
+    dinhMoiNhat: { soLuong: dinhMoiNhat.length, min: dinhMoiNhat.length ? Math.min(...dinhMoiNhat) : null, p50: phanVi(0.5, dinhMoiNhat) },
     luat,
   };
+}
+
+/**
+ * Cửa sổ [t0, t1) của báo cáo: từ giờ bắt đầu phép đo tới ngay sau lượt cuối, không vượt giờ dự kiến kết thúc
+ * và không vượt hiện tại. Thiếu tệp trạng thái (phiên cũ chỉ ghi lúc kết thúc) thì lấy mốc từ nhật ký.
+ */
+export function cuaSoDo(tt, dong, bayGio = () => Date.now()) {
+  const phien = dong.filter((d) => d.k === "phien");
+  if (phien.length === 0) throw new Error("chưa có lượt nào trong nhật ký — chưa tính được cửa sổ");
+  const t0 = Date.parse(tt?.batDau ?? phien[0].batDau);
+  const sauLanCuoi = Math.max(...phien.map((d) => Date.parse(d.ketThuc ?? d.batDau))) + 1;
+  return { t0, t1: Math.min(sauLanCuoi, bayGio(), tt?.hetHan ? Date.parse(tt.hetHan) : Infinity) };
 }
 
 /** Tỉ lệ tin mới đăng (giờ gốc trong cửa sổ) mà đuôi thấy và lượt quét đủ cũng có. */
@@ -590,22 +623,28 @@ async function docNhatKy(goc) {
   return (await readFile(join(goc, "nhat-ky.jsonl"), "utf8")).split("\n").filter((l) => l.trim()).map((l) => JSON.parse(l));
 }
 
-/** Bốn số của phép đo trong thư mục `goc`, kèm tỉ lệ bắt được so với lượt quét đủ nếu đọc được DB. */
-async function baoCao(goc) {
-  const tt = JSON.parse(await readFile(join(goc, "trang-thai.json"), "utf8"));
-  const dong = await docNhatKy(goc);
-  const t0 = Date.parse(tt.batDau);
-  // cửa sổ đo dừng ở giờ thật kết thúc (bị chặn thì sớm hơn dự kiến), không vượt hiện tại
-  const t1 = Math.min(Date.parse(tt.hetHan), Date.now(), Math.max(...dong.filter((d) => d.k === "phien").map((d) => Date.parse(d.ketThuc ?? d.batDau))) + 1);
-  const kq = { cuaSo: { t0: new Date(t0).toISOString(), t1: new Date(t1).toISOString() }, trangThai: tt.trangThai, ...tinhBaoCao(dong, { t0, t1 }) };
-  if (tt.cityCode && tt.adType) {
+/**
+ * Báo cáo cả phép đo: bốn số từ nhật ký, kèm tỉ lệ bắt được so với lượt quét đủ nếu biết vùng × mục
+ * (tệp trạng thái `tt` null = phép đo chạy bằng phiên cũ chưa ghi trạng thái).
+ */
+export async function baoCao({ tt, dong, bayGio = () => Date.now(), moDb }) {
+  const { t0, t1 } = cuaSoDo(tt ?? {}, dong, bayGio);
+  const kq = {
+    cuaSo: { t0: new Date(t0).toISOString(), t1: new Date(t1).toISOString() },
+    trangThai: tt?.trangThai ?? "dang-chay",
+    ...tinhBaoCao(dong, { t0, t1 }),
+  };
+  if (tt?.cityCode && tt.adType) {
     try {
-      const db = await moDbChiDoc(DB_URL);
+      const db = await moDb();
       try {
         const quetDu = await quetDuStg(db, { cityCode: tt.cityCode, adType: tt.adType, t0, t1 });
-        const capNhat = (await db.query(`SELECT max(captured_at) AS luc FROM stg_chotot_ads WHERE city_code = $1 AND ad_type = $2`, [tt.cityCode, tt.adType])).rows[0].luc;
+        const capNhat = (await db.query(
+          `SELECT max(captured_at) AS luc FROM stg_chotot_ads WHERE city_code = $1 AND ad_type = $2`, [tt.cityCode, tt.adType],
+        )).rows[0].luc;
         kq.batDuoc = tinhTiLeBatDuoc(dong, { t0, t1, quetDu });
-        kq.quetDuCapNhatLuc = capNhat; // lượt quét đủ mới nhất đã nạp — số so chỉ có nghĩa khi trễ hơn t1
+        // giờ lượt quét đủ mới nhất đã nạp — tỉ lệ so chỉ có nghĩa khi trễ hơn t1
+        kq.quetDuCapNhatLuc = capNhat instanceof Date ? capNhat.toISOString() : capNhat ?? null;
       } finally {
         await db.dong();
       }
@@ -614,8 +653,7 @@ async function baoCao(goc) {
       kq.batDuocLoi = chiLoi(e);
     }
   }
-  console.log(JSON.stringify(kq, null, 2));
-  return 0;
+  return kq;
 }
 
 function docDoiSo(argv) {
@@ -637,7 +675,17 @@ function docDoiSo(argv) {
 }
 
 async function main(argv) {
-  if (argv.includes("--bao-cao")) return baoCao(docDoiSo(argv).goc ?? argv[argv.indexOf("--bao-cao") + 1]);
+  if (argv.includes("--bao-cao")) {
+    const goc = argv[argv.indexOf("--bao-cao") + 1];
+    let tt = null;
+    try {
+      tt = JSON.parse(await readFile(join(goc, "trang-thai.json"), "utf8"));
+    } catch {
+      tt = null; // đang chạy bằng phiên cũ chưa ghi trạng thái
+    }
+    console.log(JSON.stringify(await baoCao({ tt, dong: await docNhatKy(goc), moDb: () => moDbChiDoc(DB_URL) }), null, 2));
+    return 0;
+  }
   const o = docDoiSo(argv);
   if (!o.vung || !o.goc) throw new Error("cách dùng: node collect-s06-duoi.mjs --vung <group_key> --goc <thư mục> [--muc cg/st] [--nhap 5] [--thoi-gian 1440]");
   if (!Object.values(LUAT_DUNG).includes(o.luatDung)) throw new Error(`--luat-dung phải là một trong ${Object.values(LUAT_DUNG).join(", ")}`);
