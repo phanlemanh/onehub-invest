@@ -79,6 +79,19 @@ _Avoid_: block, chung cư
 - Code: `stack` · RESO: không có — extension `Stack` (ADR-0013 §9)
 _Avoid_: line căn, dòng căn
 
+**Cụm**: Nhóm toà trong một phân khu có chung phần đầu tên toà — phần trước dấu chấm: cụm S1 gồm toà S1.01, S1.05; cụm R1 gồm
+R1.01. Thứ bậc chung hai khu: Dự án → Phân khu → Cụm (khi có) → Toà → Trục → Căn; toà không có cụm (LD2, BE3, GH3, BS10) gắn
+thẳng phân khu. Bài chỉ nêu «S1» gắn mức cụm, không đoán toà; cùng chữ ở hai dự án là hai cụm khác nhau (Mạnh chốt 24/11).
+- Code: `asset_nodes.node_type = subzone`, con của phân khu
+_Avoid_: block, khối
+
+**Mã căn**: Chuỗi định vị căn trong bài hay ở nguồn danh mục, đọc theo một quy ước cho cả hai khu (Mạnh chốt 24/11): khớp tên
+toà dài nhất có trong danh bạ trước, phần còn lại là tầng rồi trục — trục là hai chữ số cuối của số căn, có thể kèm một chữ cái.
+`S2.091710` → toà S2.09, tầng 17, trục 10; `S2.05.24.17` (cách ghi Grand Park) → toà S2.05, tầng 24, trục 17; `LD2XX03` → toà
+LD2, trục 03, che tầng. «R1.01» là tên toà, không tách thành R1 + 01. Máy gắn và trợ lý gắn nháp dùng chung một hàm tách mã.
+- Code: `unit_number`
+_Avoid_: số căn (chỉ là phần trục), mã phòng
+
 **Tầng (của tin)**: Tầng nơi căn rao nằm, đọc từ chữ bài («tầng 12», «lầu 5») hoặc từ mã căn đủ («S1.12.08»), lưu là số 1–999. Nhãn UI «Tầng».
 - Code: `floor_raw` · RESO: UnitFloorLocation (DD 2.1)
 _Avoid_: số tầng (đó là `stories` — tổng tầng của nhà), lầu
