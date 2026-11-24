@@ -58,6 +58,8 @@ export type EgoOptions = {
   lowriseTermsFile?: string;
   /** Mốc ngày 2 — dải id quét dự án thấp tầng. */
   lowriseSweep?: { from: number; to: number };
+  /** Mã của lượt này (từ bản kê): ghi vào tệp kết quả để phía Node không nhận nhầm kết quả của lượt trước. */
+  runId?: string;
 };
 
 type InPageResult = { status: number; contentType: string | null; body: string; bytes?: number; networkError?: string };
@@ -208,7 +210,7 @@ export function makeTransports(
 export async function main(api: EgoApi, optionsPath: string): Promise<number> {
   const fs = await import("node:fs/promises");
   const opts = JSON.parse(await fs.readFile(optionsPath, "utf8")) as EgoOptions;
-  const writeResult = (r: unknown): Promise<void> => fs.writeFile(opts.resultPath, JSON.stringify(r));
+  const writeResult = (r: Record<string, unknown>): Promise<void> => fs.writeFile(opts.resultPath, JSON.stringify({ runId: opts.runId, ...r }));
   const env = { sleep: (ms: number): Promise<void> => new Promise<void>((r) => setTimeout(r, ms)), now: () => new Date() };
 
   let task: EgoTask;

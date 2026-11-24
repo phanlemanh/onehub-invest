@@ -66,6 +66,8 @@ export const LOCK_FILE = "DANG-CHAY.lock";
 export const MIN_PACE_MS = 150;
 
 export type ExecResult = {
+  /** Mã của lượt (chỉ ở tệp kết quả của tiến trình trình duyệt). */
+  runId?: string;
   ok: boolean;
   stopReason?: StopReason;
   message?: string;

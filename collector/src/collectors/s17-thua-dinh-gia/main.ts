@@ -11,7 +11,8 @@
  * - Mã thoát: 0 xong · 3 dừng cả lượt (bị chặn, hết phiên, quá trần, số dư giảm) · 1 lỗi khác · 4 trình duyệt từ chối.
  */
 import { spawn } from "node:child_process";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { randomBytes } from "node:crypto";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -179,7 +180,22 @@ export function egoOptions(
     lowriseTermsFile: tuyetDoi(o.lowriseTermsFile),
     cookieName: config.session?.cookieName,
     checkBalance: o.via === "ego",
+    // Mã của lượt này: tiến trình trình duyệt ghi mã ấy vào tệp kết quả; kết quả mang mã khác là của lượt trước.
+    runId: randomBytes(8).toString("hex"),
   };
+}
+
+/**
+ * Kết quả của ĐÚNG lượt này. Tệp kết quả còn sót của lượt trước (tiến trình trình duyệt chết trước khi ghi) không
+ * được nhận làm kết quả lượt mới (lượt soát 24/11) — trả null khi không có tệp hoặc mã lượt không khớp.
+ */
+export async function readRunResult(resultPath: string, runId: string): Promise<ExecResult | null> {
+  try {
+    const r = JSON.parse(await readFile(resultPath, "utf8")) as (ExecResult & { runId?: string }) | null;
+    return r && typeof r === "object" && r.runId === runId ? r : null;
+  } catch {
+    return null;
+  }
 }
 
 /** Dòng tóm tắt in ra màn: chỉ số đếm và lý do, không URL, không số dư. */
@@ -242,7 +258,9 @@ export async function main(
   // Pha cần phiên: sinh tiến trình ego-browser nodejs; script trong trang do ego.ts giữ.
   const optionsPath = join(o.stateDir, "ego-options.json");
   const resultPath = join(o.stateDir, "ego-result.json");
-  await writeFile(optionsPath, JSON.stringify(egoOptions(o, config, { statePath, logPath, resultPath })));
+  const egoKe = egoOptions(o, config, { statePath, logPath, resultPath });
+  await writeFile(optionsPath, JSON.stringify(egoKe));
+  await rm(resultPath, { force: true }); // tệp kết quả của lượt trước không được đọc làm kết quả lượt này
   const egoModule = JSON.stringify(new URL("./ego.js", import.meta.url).href);
   const bootstrap = `const m = await import(${egoModule}); process.exit(await m.main({ claimTaskSpace, takeOverTaskSpace, taskSpace, listTaskSpaces }, ${JSON.stringify(optionsPath)}));`;
   const code = await new Promise<number>((resolve) => {
@@ -255,13 +273,9 @@ export async function main(
     child.stdin.on("error", () => undefined);
     child.stdin.end(bootstrap);
   });
-  let result: ExecResult | null = null;
-  try {
-    result = JSON.parse(await readFile(resultPath, "utf8")) as ExecResult;
-  } catch {
-    result = null;
-  }
+  const result = await readRunResult(resultPath, String(egoKe.runId));
   if (result) io.out(JSON.stringify(summarize(result)));
+  else io.err(`tiến trình trình duyệt kết thúc (mã ${code}) mà không ghi được kết quả của lượt này`);
   return result ? (result.ok ? 0 : result.stopReason ? 3 : 4) : code || 1;
 }
 

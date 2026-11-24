@@ -67,6 +67,13 @@ test("loadConfig: từ chối đường có đoạn cp (biến thể trả phí)
   assert.throws(() => loadConfig(text), ConfigError);
 });
 
+test("loadConfig: từ chối máy chủ http: — phiên chỉ được gửi qua kết nối mã hoá (lượt soát 24/11: cấu hình sai một chỗ là phiên đi dạng rõ)", () => {
+  const sai = (api: string) => loadConfig(JSON.stringify({ ...FAKE_CONFIG, hosts: { ...FAKE_CONFIG.hosts, api } }));
+  assert.throws(() => sai("http://api.gia.test"), ConfigError);
+  assert.throws(() => sai("api.gia.test"), ConfigError, "phải có đủ giao thức");
+  assert.doesNotThrow(() => sai("https://api.gia.test/"));
+});
+
 test("loadConfig: từ chối đường không bắt đầu bằng / hoặc có ..", () => {
   assert.throws(() => loadConfig(JSON.stringify({ ...FAKE_CONFIG, paths: { "project-list": "v2.x/projects" } })), ConfigError);
   assert.throws(() => loadConfig(JSON.stringify({ ...FAKE_CONFIG, paths: { "project-list": "/v2.x/../other" } })), ConfigError);

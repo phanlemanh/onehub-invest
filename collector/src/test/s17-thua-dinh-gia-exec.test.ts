@@ -8,7 +8,7 @@ import { ConfigError, loadConfig } from "../collectors/s17-thua-dinh-gia/config.
 import { RunStopped, type Response } from "../collectors/s17-thua-dinh-gia/client.js";
 import { executePhase } from "../collectors/s17-thua-dinh-gia/runner.js";
 import { emptyState } from "../collectors/s17-thua-dinh-gia/run.js";
-import { egoOptions, parseCli, summarize } from "../collectors/s17-thua-dinh-gia/main.js";
+import { egoOptions, parseCli, readRunResult, summarize } from "../collectors/s17-thua-dinh-gia/main.js";
 import { buildExecOptions, type ExecResult } from "../collectors/s17-thua-dinh-gia/runner.js";
 
 /**
@@ -429,3 +429,17 @@ test("main: đường dẫn tệp đưa cho tiến trình trình duyệt phải 
   assert.equal(o.lowriseSweep, undefined);
   assert.equal(o.config, cfg);
 });
+
+test("mỗi lượt qua trình duyệt có một mã lượt; kết quả chỉ được nhận khi mang đúng mã của LƯỢT NÀY (lượt soát 24/11: tệp kết quả còn sót của lượt trước bị đọc làm kết quả lượt mới)", async () => withTmp(async (dir) => {
+  const v = parseCli(["--phase", "session-check", "--space", "4", "--caps-calls", "3", "--caps-minutes", "5", "--snapshots-root", join(dir, "snap")]);
+  const a = egoOptions(v, loadConfig(JSON.stringify(FAKE_CONFIG)), { statePath: join(dir, "s.json"), logPath: join(dir, "l.jsonl"), resultPath: join(dir, "r.json") }) as Record<string, unknown>;
+  const b = egoOptions(v, loadConfig(JSON.stringify(FAKE_CONFIG)), { statePath: join(dir, "s.json"), logPath: join(dir, "l.jsonl"), resultPath: join(dir, "r.json") }) as Record<string, unknown>;
+  assert.match(String(a.runId), /^[0-9a-f]{16}$/);
+  assert.notEqual(a.runId, b.runId, "mỗi lượt một mã riêng");
+  const resultPath = join(dir, "r.json");
+  assert.equal(await readRunResult(resultPath, String(a.runId)), null, "chưa có tệp kết quả");
+  await writeFile(resultPath, JSON.stringify({ ok: true, runId: "lan-truoc" }));
+  assert.equal(await readRunResult(resultPath, String(a.runId)), null, "kết quả của lượt khác không được nhận");
+  await writeFile(resultPath, JSON.stringify({ ok: false, stopReason: "blocked", runId: a.runId }));
+  assert.equal((await readRunResult(resultPath, String(a.runId)))?.stopReason, "blocked");
+}));

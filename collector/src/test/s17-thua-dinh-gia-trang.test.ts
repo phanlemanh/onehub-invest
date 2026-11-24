@@ -1,8 +1,12 @@
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { runInNewContext } from "node:vm";
 
-import { EGO_EVALUATE_LIMIT_MS, IN_PAGE_COLLECT, IN_PAGE_START, IN_PAGE_STALE_MS, IN_PAGE_TIMEOUT_MS, makeTransports, type EgoPage } from "../collectors/s17-thua-dinh-gia/ego.js";
+import { loadConfig } from "../collectors/s17-thua-dinh-gia/config.js";
+import { EGO_EVALUATE_LIMIT_MS, IN_PAGE_COLLECT, IN_PAGE_START, IN_PAGE_STALE_MS, IN_PAGE_TIMEOUT_MS, makeTransports, main as egoMain, type EgoApi, type EgoPage } from "../collectors/s17-thua-dinh-gia/ego.js";
 
 /**
  * S17 mốc ngày 2: LỜI GỌI TRONG TRANG và hạn của trình duyệt. Đo 24/11 (lượt quét thấp tầng): đợt 50 id đầu xong
@@ -33,7 +37,7 @@ const rsCua = (kq: DaCollect): InPageResult[] | undefined => ("rs" in kq ? kq.rs
  * («SIG-ABORT:<ms>»). `chamUrl`: lời trả ĐÚNG nhưng sau `treoMs`, hoặc sau `treoRieng[url]` nếu có. Còn lại trả ngay.
  * `doi` ghi mọi mili giây trang được bảo chờ; `xacThuc` ghi header Authorization của mỗi lời; `now` giả đồng hồ của trang.
  */
-function trangGia(o: { treoUrl?: string[]; chamUrl?: string[]; treoMs?: number; treoRieng?: Record<string, number>; cookie?: string; doi?: number[]; now?: () => number } = {}): { sandbox: Record<string, unknown>; daXinCho: number[]; xacThuc: Array<string | undefined> } {
+function trangGia(o: { treoUrl?: string[]; loiUrl?: string[]; chamUrl?: string[]; treoMs?: number; treoRieng?: Record<string, number>; cookie?: string; doi?: number[]; now?: () => number } = {}): { sandbox: Record<string, unknown>; daXinCho: number[]; xacThuc: Array<string | undefined> } {
   const daXinCho: number[] = [];
   const xacThuc: Array<string | undefined> = [];
   const sandbox: Record<string, unknown> = {
@@ -53,6 +57,10 @@ function trangGia(o: { treoUrl?: string[]; chamUrl?: string[]; treoMs?: number; 
     fetch: (url: string, init: LoiGoi["init"]) =>
       new Promise((resolve, reject) => {
         xacThuc.push(init.headers.Authorization);
+        if ((o.loiUrl ?? []).includes(url)) {
+          reject(new TypeError("Failed to fetch"));
+          return;
+        }
         const treo = (o.treoUrl ?? []).includes(url);
         if (!treo && !(o.chamUrl ?? []).includes(url)) {
           resolve(ngoai(url));
@@ -290,4 +298,50 @@ test("hỏi kết quả bị hủy giữa chừng (lần bắt đầu đã chạ
   const rs = await transportMany([{ url: `${U}a`, headers: {} }], 0);
   assert.ok(rs[0] instanceof Error);
   assert.match((rs[0] as Error).message, /timed out after 15000ms/);
+});
+
+test("tiến trình trình duyệt ghi kết quả kèm mã lượt của bản kê; dừng vì hết phiên thì vẫn trả kết quả có mã", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "s17-ego-"));
+  try {
+    const hosts = { api: "https://api.gia.test", agent: "https://agent.gia.test", web: "https://web.gia.test" };
+    const config = loadConfig(JSON.stringify({ hosts, paths: { "data-available": "/v2.x/data-available", "asset-type": "/v2.x/asset-type" }, session: { cookieName: "sid" } }));
+    const optionsPath = join(dir, "ego-options.json");
+    const resultPath = join(dir, "ego-result.json");
+    await writeFile(resultPath, JSON.stringify({ ok: true, runId: "lan-truoc" }), "utf8"); // kết quả cũ còn sót
+    await writeFile(
+      optionsPath,
+      JSON.stringify({ config, phase: "session-check", snapshotRoot: join(dir, "snap"), statePath: join(dir, "s.json"), logPath: join(dir, "l.jsonl"), resultPath, caps: { calls: 5, minutes: 5 }, paceMs: 0, batchItems: 10, checkBalance: false, spaceId: 4, cookieName: "sid", runId: "abc123" }),
+    );
+    // Trang thật sự chạy hàm trong trang (trong một ngữ cảnh giả): lời cần phiên lỗi mạng, lời công khai vẫn chạy.
+    const { sandbox } = trangGia({ loiUrl: [`${hosts.api}/v2.x/data-available`] });
+    const page: EgoPage = {
+      label: "t",
+      evaluate: (fn, arg) => {
+        const f = runInNewContext(`(${fn.toString()})`, sandbox) as (a: unknown) => unknown;
+        return Promise.resolve().then(() => f(arg));
+      },
+    };
+    const api: EgoApi = {
+      listTaskSpaces: async () => [{ id: 4, ownership: "user" }],
+      claimTaskSpace: async () => ({
+        spaceId: 4,
+        tabs: async () => [{ label: "t", url: `${hosts.web}/`, page: null }],
+        page: () => page,
+        adopt: async () => {
+          throw new Error("không được gọi");
+        },
+      }),
+      takeOverTaskSpace: async () => {
+        throw new Error("không được gọi khi task space thuộc về người dùng");
+      },
+    };
+    const code = await egoMain(api, optionsPath);
+    assert.equal(code, 3, "lượt dừng, không báo thành công");
+    const kq = JSON.parse(await readFile(resultPath, "utf8")) as { runId?: string; ok: boolean; stopReason?: string };
+    assert.equal(kq.runId, "abc123", "kết quả mang mã của lượt này, đè kết quả cũ");
+    assert.equal(kq.ok, false);
+    assert.equal(kq.stopReason, "session-expired");
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
 });

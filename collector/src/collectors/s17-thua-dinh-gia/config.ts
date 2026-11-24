@@ -125,7 +125,8 @@ export function loadConfig(text: string): S17Config {
   const hosts: Record<string, string> = {};
   for (const key of ["api", "agent", "web"] as const) {
     const v = obj.hosts?.[key];
-    if (typeof v !== "string" || !isHttpUrl(v)) throw new ConfigError(`thiếu máy chủ "${key}" hợp lệ trong cấu hình S17`);
+    // Chỉ nhận https: phiên đi trong header của lời gọi tới máy chủ này, một chỗ sai là phiên đi dạng rõ.
+    if (typeof v !== "string" || !/^https:\/\/[^\s/?#]+(?:[/?][^\s]*)?$/.test(v)) throw new ConfigError(`thiếu máy chủ "${key}" hợp lệ (https) trong cấu hình S17`);
     hosts[key] = trimSlash(v);
   }
   const paths: Partial<Record<Role, string>> = {};
