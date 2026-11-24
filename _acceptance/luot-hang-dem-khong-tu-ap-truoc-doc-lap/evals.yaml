@@ -40,7 +40,7 @@ evals:
     layer: backend-effect
     cmd: bash _acceptance/luot-hang-dem-khong-tu-ap-truoc-doc-lap/probes/chay.sh AC-5
     paths: [agent/src/enrich/route.ts, agent/src/enrich/doc-toan-bo.ts, agent/src/enrich/run.ts, agent/scripts/enrich-run.ts]
-    expected: "Bốn vế: (1) git diff origin/main -- agent/src/enrich/route.ts agent/src/enrich/doc-toan-bo.ts rỗng; (2) agent/tests/enrich-route.test.ts xanh không sửa; (3) ca E5 của enrich-luot-dem-khong-tu-ap.test.ts: chanTuApCanCu=false → corroborated/applied/e1 như cũ, vắng tham số → review/queued; (4) ca LS1-AC-3 của agent/tests/doc-toan-bo-db.itest.ts (lượt đọc toàn bộ) vẫn xanh: đề xuất corroborated trich-dan được áp. enrich-run.ts khai chanTuApCanCu: true (grep)."
+    expected: "Bốn vế: (1) git diff origin/main...HEAD (từ điểm rẽ nhánh) -- agent/src/enrich/route.ts agent/src/enrich/doc-toan-bo.ts rỗng; (2) agent/tests/enrich-route.test.ts xanh không sửa; (3) ca E5 của enrich-luot-dem-khong-tu-ap.test.ts: chanTuApCanCu=false → corroborated/applied/e1 như cũ, vắng tham số → review/queued; (4) ca LS1-AC-3 của agent/tests/doc-toan-bo-db.itest.ts (lượt đọc toàn bộ) vẫn xanh: đề xuất corroborated trich-dan được áp. enrich-run.ts khai chanTuApCanCu: true (grep)."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E6
     criterion: AC-6
@@ -48,7 +48,7 @@ evals:
     layer: backend-effect
     cmd: bash _acceptance/luot-hang-dem-khong-tu-ap-truoc-doc-lap/probes/chay.sh AC-6
     paths: [agent/src/enrich/run.ts, agent/tests/enrich-luot-dem-khong-tu-ap.test.ts]
-    expected: "Trên bản chép DB (DB của riêng lượt), runEnrich giới hạn 20 tin có E1, LLM giả lập luôn trả đúng giá trị E1 và mã toà E1: đếm dòng của run_id có status applied và corroborated_by NOT NULL = 0; số đề xuất evidence ? 'trung_luat' > 0 và bằng số tổng kết lượt in; thẻ chờ tăng đúng số tin có đề xuất trùng luật."
+    expected: "Trên bản chép DB (DB của riêng lượt), runEnrich giới hạn 20 tin có E1, LLM giả lập luôn trả đúng loại hình E1 (ca toà đo ở E2): đếm dòng của run_id có status applied và corroborated_by NOT NULL = 0; số đề xuất evidence ? 'trung_luat' > 0 và bằng số tổng kết lượt in; mỗi tin có đề xuất trùng luật có thẻ chờ liệt đúng các ô đó, và số thẻ chờ mới bằng số tin trùng luật chưa có thẻ chờ trước lượt."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E7
     criterion: AC-4

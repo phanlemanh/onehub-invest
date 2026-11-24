@@ -107,6 +107,10 @@ test("E6 AC-6 bản chép DB: một lượt đêm ghi 0 dòng applied có corrob
     const ids = rows.map((r) => r.offer_id as string);
     assert.ok(ids.length > 0, "bản chép DB không có tin S03 thiếu loại hình");
     const runId = `enrich-nb11-e6`;
+    const theChoCua = async () => new Set((await c.query(
+      `SELECT item_id FROM review_queue WHERE item_type = 'agent_output' AND status = 'pending' AND item_id = ANY ($1)`,
+      [ids.map((i) => `enrich:${i}`)])).rows.map((x) => x.item_id as string));
+    const theTruoc = await theChoCua();
     const r = await runEnrich({
       client: c, runId, dry: false, limit: 50, offerIds: ids,
       llm: llmWith(kq({ property_type: "apartment" })), resolve: resolveWith({ propertyType: "apartment" }),
@@ -122,5 +126,21 @@ test("E6 AC-6 bản chép DB: một lượt đêm ghi 0 dòng applied có corrob
     const inRa = dongTongKetLuot(r.dem, r.chuyenThe);
     assert.ok(inRa.some((l) => l.endsWith(`chờ phiếu độc lập (chuyển thẻ, không áp): ${d.chuyen}`)),
       `tổng kết lượt in không có số chuyển thẻ ${d.chuyen}: ${inRa.join(" / ")}`);
+    // Thẻ chờ tăng đúng số tin có đề xuất trùng luật (S4-r2 t1/t3): mỗi tin như vậy có thẻ chờ liệt đúng ô đó,
+    // và số thẻ chờ mới = số tin trùng luật chưa có thẻ chờ trước lượt.
+    const { rows: tinChuyen } = await c.query(
+      `SELECT offer_id, array_agg(DISTINCT field) AS fields FROM enrichment_proposals
+        WHERE run_id = $1 AND evidence ? 'trung_luat' GROUP BY offer_id`, [runId]);
+    assert.ok(tinChuyen.length > 0, "tiền đề: có tin trùng luật");
+    const theSau = await theChoCua();
+    for (const t of tinChuyen) {
+      const the = await theCho(c, t.offer_id);
+      assert.ok(the, `tin trùng luật không có thẻ chờ: ${t.offer_id}`);
+      const oTrenThe = new Set(the.evidence.fields.map((f: { field: string }) => f.field));
+      for (const f of t.fields as string[]) assert.ok(oTrenThe.has(f), `thẻ ${t.offer_id} thiếu ô ${f}`);
+    }
+    const moi = [...theSau].filter((x) => !theTruoc.has(x)).length;
+    const canMoi = tinChuyen.filter((t) => !theTruoc.has(`enrich:${t.offer_id}`)).length;
+    assert.equal(moi, canMoi, `thẻ chờ mới ${moi} ≠ số tin trùng luật chưa có thẻ ${canMoi}`);
   });
 });
