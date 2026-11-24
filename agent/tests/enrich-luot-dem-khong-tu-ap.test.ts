@@ -105,7 +105,9 @@ test("E6 AC-6 bản chép DB: một lượt đêm ghi 0 dòng applied có corrob
     const { rows } = await c.query(`SELECT offer_id FROM sale_offers
       WHERE source = 'S03' AND (property_type IS NULL OR property_type = 'unknown') ORDER BY offer_id LIMIT 20`);
     const ids = rows.map((r) => r.offer_id as string);
-    assert.ok(ids.length > 0, "bản chép DB không có tin S03 thiếu loại hình");
+    // DB trống (CI dựng từ migration, không có bản chép máy thu): cài 20 tin S03 thiếu loại hình trong giao dịch.
+    if (ids.length === 0) for (let i = 0; i < 20; i++) ids.push(await tin(c));
+    assert.ok(ids.length > 0, "không có tin S03 thiếu loại hình để chạy lượt");
     const runId = `enrich-nb11-e6`;
     const theChoCua = async () => new Set((await c.query(
       `SELECT item_id FROM review_queue WHERE item_type = 'agent_output' AND status = 'pending' AND item_id = ANY ($1)`,
