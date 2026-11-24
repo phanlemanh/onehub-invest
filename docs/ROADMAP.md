@@ -1188,6 +1188,46 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
       `hien-toa-phan-khu-nguyen-van` (T2). Sửa lời: NB3 (ô đầu là số phòng ngủ), NB5 (xử theo nhóm, theo kiểu lệch), PL21 (thêm
       lối ghi tạm), DA18 (chỉ đếm giá trị đọc từ chính bài). Việc của Mạnh, ngoài hàng: một buổi duyệt lô đo bù khoảng 80 thẻ
       loại hình có trộn thẻ cài lỗi và một lát nhãn có tên toà.
+64. **Chạy dự án trên hai máy: Mac mini lập kế hoạch và gộp, MacBook M5 thực thi cổng Invest và API — mở nhỏ, đo một tuần**
+    (24/11). Mạnh nêu đây là ý định sơ khởi. Bối cảnh: máy thu chỉ chạy một lượt chấm nặng mỗi lúc (khoá `s4`, ~80′ mỗi lượt);
+    cổng Invest và `data-api/` chỉ đọc dữ liệu nên tách máy ít vướng nhất. M5 là máy thu cũ đã xoá sạch (máy trắng, không tầng A,
+    không job thu), chung mạng nội bộ với Mac mini. Bản chốt và số đo: phiên tư vấn hai máy 24/11 (chỉ đọc kho và DB máy thu).
+    - **Lời Mạnh, nguyên văn** (24/11): sau trang tư vấn đầu, «Kiểm lại lần nữa trước khi tôi quyết»; khoảng 10:17Z, sau bản đã
+      kiểm lại và sửa, «Chốt bản đã sửa». «Bản đã sửa» là tám quyết định (a)–(h) dưới đây.
+    - **(a) DB cho M5.** Dựng lược đồ từ migration bằng `scripts/ci-db-init.mjs`, đúng như CI, dùng ngay. Sau đó một hàng T3
+      «bản chép đã lọc»: đúng các bảng `pipeline/sync-cloud.mjs` đang cho lên cloud, cùng lớp che, chép qua mạng nội bộ. Không
+      khôi phục từ cloud (M5 sẽ phải giữ khoá quản trị cloud, và cloud có hồ sơ người dùng app). Chưa đo: cỡ khi xuất ba view
+      (tin rao, người bán, listings); cổng Invest có cần bảng `nights` không.
+    - **(b) Tài khoản Claude.** Hai máy dùng chung một tài khoản, đo phần M5 tiêu trong tuần đầu. Từ 95% hạn mức tuần M5 ngừng mở
+      phiên trước (đường găng ở Mac mini); từ 98% giám sát Mac mini bàn giao cho cả hai máy. Dự báo vượt 95% trước kỳ đặt lại thì
+      chuyển M5 sang tài khoản riêng.
+    - **(c) Ranh giới.** M5: `app/src/app/(app)/**`, `app/src/app/(marketing)/**`, `app/src/components/**` trừ `ops/`, `ui/`,
+      `reui/`, `app/src/app/api/v1/**` trừ `ops/`, và `data-api/**`. `app/src/lib/**`: giám sát khai từng tệp trong lời giao.
+      `CONTEXT.md`: chỉ thêm mục. Đổi phụ thuộc và `package-lock.json`: chỉ Mac mini. Mọi tệp trong `t3_paths` ở lại Mac mini.
+      Hàng sang M5 trước: PB1, rồi CI3; PL37 chuyển hay không do giám sát; EN4 và CI1 ở lại Mac mini.
+    - **(d) Lượt chấm trên M5.** Chấm theo chuẩn CI bằng `scripts/ci-test-local.mjs` (năm job của `ci-test.yml` trong docker,
+      DB dựng từ migration, bỏ qua ca cần dữ liệu thật theo `scripts/ci-bo-qua.json`). Bằng chứng kiểu này hợp lệ cho hàng của M5
+      không cần nhìn giao diện trên dữ liệu thật; hàng cần dữ liệu thật chờ bản chép đã lọc ở (a). Giao việc cho M5 sau khi
+      hàng HT17 gộp (ba ca test đọc trạng thái máy thu sẽ đỏ trên M5 trước đó), hoặc ghi ba ca ấy là đỏ có tên.
+    - **(e) Hàng gộp.** Giám sát Mac mini gộp mọi PR. M5 báo `XONG` kèm số PR và sha trên kênh `phanlemanh/onehub-coord#4`.
+      Trong mỗi cửa sổ gộp, PR của M5 gộp sau cùng. Main đổi sau lúc M5 chấm thì M5 tự gộp main và chấm lại trên M5, không dùng
+      khoá `s4` của Mac mini. Về `paths` của eval trỏ bộ test: từ hàng mới, khai đúng tệp nhánh sửa thay cho cả vùng (đo 24/11
+      trên mười nhánh đang chạy: 76/90 cặp làm cũ nhau với cách khai cả vùng, 3/90 nếu khai hẹp); đây là nới điều kiện «bằng
+      chứng cũ», giám sát nêu với Mạnh ở cổng kế tiếp, chưa phải luật.
+    - **(f) An toàn.** M5 không giữ tầng A, khoá thu, khoá cloud, khoá model hay token Ops; không chạy bộ thu, gateway, launchd
+      thu, `sync-cloud`, `push-ops-facts`. `app/.env.local` của M5 chỉ có `DATABASE_URL` trỏ DB trên chính M5; `data-api` thêm
+      `DATA_API_KEYS` để trống. Mạnh tự bật FileVault trên M5. Không thêm hook hay rào mới; cách chia ghi ở mục này và một dòng
+      trong `AGENTS.md` mục phân làn.
+    - **(g) Sao lưu ngoài nhà.** Giữ mục 46 (QĐ5, QĐ15): bản sao lưu mã hoá lên B2; công cụ đã ký. Gấp hơn vì đĩa máy thu cũ đã
+      xoá, bản sao hiện chỉ có Mac mini và ổ SSD cùng nhà. Còn phía Mạnh, đều cần lời riêng: tạo thùng kín và khoá ứng dụng giới
+      hạn theo thùng; xác nhận đã cất bản khoá mã hoá; lời chạy lượt gửi đầu và lời nạp lịch launchd. Chưa bật khoá chống xoá
+      (Object Lock); quyết sau khi thử khôi phục đạt.
+    - **(h) Quy mô.** Mở nhỏ: một phiên trên M5, làm PB1, đo một tuần; chưa dựng đợt riêng với phiên giám sát riêng cho tới khi
+      Mạnh cắt thêm việc Invest và API. Căn cứ: hôm nay lộ trình có 139 hàng mở, 3 hàng nằm trọn vùng Invest và API (AC1, PB1,
+      EN4), chỉ PB1 làm được ngay; 30 ngày qua 22 trên 311 PR có mã nằm trọn vùng này. Sau một tuần giám sát báo Mạnh số hàng
+      M5 xong, phần hạn mức M5 tiêu và số lượt ghim lại do PR của M5 gây ra; Mạnh quyết mở rộng hay dừng.
+    - **Hàng:** HT18 `ban-chep-da-loc-cho-may-phat-trien` (T3) cho bước hai của (a). **Ghi ở đâu:** `AGENTS.md` mục phân làn
+      (dòng «Máy M5»); luật kênh ở thân issue `phanlemanh/onehub-coord#4`.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
