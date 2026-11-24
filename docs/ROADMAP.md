@@ -1147,10 +1147,22 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
       lập trùng nhau (luật và model, hoặc hai model khác họ), có trích dẫn; (2) mỗi đợt ghi có mã lô và lệnh rút cả lô; (3) giá
       trị ghi tạm không tính là «đã đo», không làm căn lên bậc B3; (4) đo bù trong hạn hai tuần bằng lô nhãn có thẻ cài, không
       đạt hoặc quá hạn thì ô tự tụt và rút lô. Áp ngay cho đường tự ghi đang chạy (không tắt) và là lối chung cho các ô về sau.
+      - *Độc lập, đo 24/11* (giám sát đọc mã, phiên tư vấn đếm trên DB máy thu): 2.290 giá trị đến từ hai đường. Lượt đọc toàn
+        bộ 03–05/11 ghi 1.993 loại hình; model nhận chữ bài đã gạt tên nhóm, không thấy đáp án của luật, nên hai phiếu độc lập.
+        Lượt làm giàu hằng đêm ghi 187 loại hình và cả 110 toà; lời nhắc của nó mang «loại hình từ nhóm» và «mã toà phát
+        hiện» của luật (`agent/src/agents/enrich-text.ts`), nên model trùng luật ở đường này **chưa phải hai phiếu độc lập**,
+        chưa đạt điều kiện (1). Đường hằng đêm đứng từ 23/11.
+      - *NB10 sửa chỗ đó:* phiếu thứ hai phải độc lập — bỏ hai dòng đáp án của luật khỏi lời nhắc và giữ tên dự án, hoặc lấy
+        phiếu thứ hai từ đọc gộp vốn không thấy đáp án của luật; chốt ở S1 của NB10. 297 giá trị của lượt hằng đêm mang mã lô
+        riêng «trước độc lập»; cả hai lô vẫn là ghi tạm chưa đo, lô đo bù quyết giữ hay rút. Giám sát giữ đường không tắt.
+      - *Hạn đo bù* tính hai tuần từ ngày NB10 được áp lên máy thu; trước ngày đó chưa có cờ ghi tạm và chưa có cơ chế tự
+        tụt. Thứ tự lô đo bù: lát nhãn có tên toà trước (hiện chưa có bài nhãn nào nối được, thiếu thì 110 toà tự rút), rồi lô
+        khoảng 80 thẻ loại hình.
       **Sửa mục 19** (Q5 «chỉ tự áp ô đã đo»), luật phân xử 4 và lời hàng PL21. Ghi tạm không phải lên nấc: lên nấc chính thức
       vẫn là một chữ ký của Mạnh cho từng ô (mục 61).
     - **Số đo kèm theo** (24/11, so với nhãn do trợ lý nháp và Mạnh duyệt, chưa hiệu chỉnh hệ số bắt lỗi): phần loại hình máy
-      tự ghi nối được với nhãn đúng 56/56, cần 73 nhãn không sai để cận dưới Wilson đạt 0,95; phần toà tự ghi chưa có bài nhãn
+      tự ghi nối được với nhãn đúng 56/56 (52 của lượt đọc toàn bộ, 4 của lượt hằng đêm), cần 73 nhãn không sai để cận dưới Wilson
+      đạt 0,95; phần toà tự ghi chưa có bài nhãn
       nào nối được. Trên toàn bộ tin có nhãn: loại hình 190/196 (cận dưới 93,5%, chưa đạt nhóm A), số phòng ngủ 188/189 (cận
       dưới 97,1%, đạt ngưỡng số của nhóm B). Ô đầu tiên xin lên nấc là số phòng ngủ; số WC chờ sửa lời nhắc.
     - **Không đổi:**

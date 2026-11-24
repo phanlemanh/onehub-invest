@@ -6388,17 +6388,17 @@
       ],
       "hang": "T3",
       "vai": "nen",
-      "tieu_chi": 9,
+      "tieu_chi": 10,
       "dung_tren": [],
-      "cau_giao": "Giá trị máy tự ghi khi luật và model đọc độc lập trùng nhau mang mã lô, cờ «chưa đo» và hạn đo bù; một lệnh rút được cả lô; ô quá hạn hoặc đo bù không đạt thì tự dừng ghi và rút lô",
-      "bat_khi": "Trên bản chép DB máy thu: 2.290 giá trị đã tự ghi (2.180 loại hình, 110 toà, đo 24/11) đều có mã lô và cờ ghi tạm; lệnh rút theo mã lô đưa tin và đề xuất về đúng như trước, chạy lại không đổi; giá trị ghi tạm không làm căn lên bậc B3; cấy một ô quá hạn đo bù thì lượt kế không ghi thêm và báo; cấy hai phiếu không độc lập (phiếu này thấy đáp án phiếu kia) thì không ghi; mỗi lần ghi lưu ai ghi, model, nấc và mã lô",
-      "vi_sao": "Mục 63 quyết định 3 (sửa mục 19 Q5). Luật «đo xong mới ghi» cộng với thước chưa có làm mọi giá trị dồn về Hàng duyệt; đường tự ghi đang chạy không có mã lô và không có hạn đo. Đo 24/11: phần loại hình nối được với nhãn đúng 56/56, cần 73 nhãn không sai để cận dưới Wilson đạt 0,95; phần toà chưa có bài nhãn nào nối được.",
+      "cau_giao": "Máy chỉ tự ghi khi luật và model đọc độc lập trùng nhau, model không thấy đáp án của luật; giá trị tự ghi mang mã lô, cờ «chưa đo» và hạn đo bù; một lệnh rút được cả lô; ô quá hạn hoặc đo bù không đạt thì tự dừng ghi và rút lô",
+      "bat_khi": "Trên bản chép DB máy thu: 2.290 giá trị đã tự ghi (2.180 loại hình, 110 toà, đo 24/11) đều có mã lô và cờ ghi tạm, trong đó 297 giá trị của lượt làm giàu hằng đêm (187 loại hình, 110 toà) mang mã lô riêng «trước độc lập»; lời nhắc của lượt hằng đêm không còn mang loại hình và mã toà của luật; cấy một lời gọi mà model được thấy đáp án của luật thì không tính là phiếu thứ hai và không ghi; lệnh rút theo mã lô đưa tin và đề xuất về đúng như trước, chạy lại không đổi; giá trị ghi tạm không làm căn lên bậc B3; hạn đo bù tính từ ngày áp, cấy một ô quá hạn thì lượt kế không ghi thêm và báo; mỗi lần ghi lưu ai ghi, model, nấc và mã lô",
+      "vi_sao": "Mục 63 quyết định 3 (sửa mục 19 Q5). Luật «đo xong mới ghi» cộng với thước chưa có làm mọi giá trị dồn về Hàng duyệt; đường tự ghi đang chạy không có mã lô và không có hạn đo. Đo 24/11: phần loại hình nối được với nhãn đúng 56/56 (52 của lượt đọc toàn bộ, 4 của lượt hằng đêm), cần 73 nhãn không sai để cận dưới Wilson đạt 0,95; phần toà chưa có bài nhãn nào nối được. Lượt làm giàu hằng đêm đưa đáp án của luật vào lời nhắc (agent/src/agents/enrich-text.ts) nên chưa đạt điều kiện «hai phiếu độc lập»; lượt đọc toàn bộ 03–05/11 (1.993 loại hình) gạt tên nhóm khỏi chữ gửi model nên độc lập.",
       "vung": [
         "agent/src/enrich",
         "db/migrations/129_*",
         "pipeline/lib/tu-ap*"
       ],
-      "ghi_chu": "Giám sát xếp sau hàng đóng 232 thẻ «Bổ sung tin» trùng giá trị đang lưu (NB9 của đợt đang chạy, không có trong tệp này). Số migration 129 là số tạm giám sát giữ. Lô đo bù (khoảng 80 thẻ loại hình có thẻ cài, một lát nhãn có tên toà) là việc của Mạnh ở phiên gắn nhãn, hạn hai tuần, không thuộc hàng. Lên nấc chính thức vẫn là chữ ký riêng cho từng ô (mục 61)."
+      "ghi_chu": "Giám sát xếp sau hàng đóng 232 thẻ «Bổ sung tin» trùng giá trị đang lưu (NB9 của đợt đang chạy, không có trong tệp này). Số migration 129 là số tạm giám sát giữ. Cách làm phiếu thứ hai độc lập chốt ở S1: bỏ hai dòng đáp án của luật khỏi lời nhắc và giữ tên dự án, hoặc lấy phiếu thứ hai từ đọc gộp vốn không thấy đáp án của luật. Lượt hằng đêm có trần 50 lời gọi mỗi đêm (ENRICH_LIMIT ở scripts/zalo-import-daily.sh) và đứng từ 23/11: đo tồn và chi phí ở S1; đổi trần là tiền nên trình Mạnh ở Cổng Phạm vi. Lô đo bù là việc của Mạnh ở phiên gắn nhãn, không thuộc hàng: lát nhãn có tên toà trước (thiếu thì 110 toà tự rút), rồi khoảng 80 thẻ loại hình có thẻ cài; hạn hai tuần tính từ ngày hàng này được áp lên máy thu. Lên nấc chính thức vẫn là chữ ký riêng cho từng ô (mục 61)."
     },
     {
       "dot": "phe-duyet-may-2411",
@@ -6410,11 +6410,11 @@
       ],
       "hang": "T2",
       "vai": "Nhà đầu tư",
-      "tieu_chi": 8,
+      "tieu_chi": 9,
       "dung_tren": [],
       "cau_giao": "Nhà đầu tư mở một tin căn hộ mà toà hoặc phân khu chưa đối chiếu được với Danh bạ và thấy tên toà, phân khu đúng như bài viết kèm nhãn «theo tin đăng, chưa đối chiếu», thay cho «chưa biết»",
-      "bat_khi": "Trên dữ liệu máy thu: số tin S03 đang hiển thị có toà hoặc phân khu trên trang tin tăng từ số tin đã gắn được nút lên thêm số tin có chữ toà đọc từ bài, báo số trước và sau; giá trị nguyên văn chỉ lấy từ phát biểu đọc từ bài có trích dẫn; tin mang giá trị nguyên văn không vào nhóm so sánh giá theo toà và không tạo liên kết nút; tin đã gắn nút hiện tên Danh bạ, không hiện nhãn; nhãn mới có trong CONTEXT.md; chữ trên cổng không mang tên nguồn",
-      "vi_sao": "Mục 63 quyết định 2 (sửa hành vi dưới ngưỡng nhóm A của F3 cho riêng ô toà, phân khu). Đo 24/11: 40% bài nhãn có toà mà tin trống ô toà; Danh bạ mới có danh sách toà ở khoảng 28 dự án, phân khu trên 344 dự án.",
+      "bat_khi": "Trên dữ liệu máy thu: số tin S03 đang hiển thị có toà hoặc phân khu trên trang tin tăng từ số tin đã gắn được nút lên thêm số tin có chữ toà đọc từ bài, báo số trước và sau; giá trị nguyên văn chỉ lấy từ ô đọc gộp có căn cứ là chữ bài, câu trích có thật trong bài và chữ toà hoặc phân khu nằm ngay trong câu trích; cấy một ô có trích thật mà giá trị khác câu trích thì không hiện; tin mang giá trị nguyên văn không vào nhóm so sánh giá theo toà và không tạo liên kết nút; tin đã gắn nút hiện tên Danh bạ, không hiện nhãn; nhãn mới có trong CONTEXT.md; chữ trên cổng không mang tên nguồn",
+      "vi_sao": "Mục 63 quyết định 2 (sửa hành vi dưới ngưỡng nhóm A của F3 cho riêng ô toà, phân khu). Đo 24/11: 40% bài nhãn có toà mà tin trống ô toà; Danh bạ mới có danh sách toà ở khoảng 28 dự án, phân khu trên 344 dự án. Đọc gộp so với nhãn: toà đúng 78/95, và model ghi toà ở 27 bài người ghi «không nêu» — vì vậy chỉ hiện khi chữ toà nằm trong câu trích (kiểm trích ở agent/src/enrich/doc-gop-s03/doc.ts).",
       "vung": [
         "app/src/app/(app)/listing",
         "app/src/lib/offers-public.ts",

@@ -117,7 +117,8 @@ Luật phân xử (review §3.3):
    - **Sửa 24/11 (ROADMAP §3 mục 63, quyết định 3):** ô **chưa đo** được **ghi tạm** khi đủ bốn điều kiện: hai phiếu độc lập
      trùng nhau (luật 3) có trích dẫn; mỗi đợt ghi có mã lô và lệnh rút cả lô; giá trị ghi tạm không tính là «đã đo» (không
      lên B3); đo bù trong hạn hai tuần bằng lô nhãn có thẻ cài, không đạt hoặc quá hạn thì ô tự tụt và rút lô. Ô **đã đo mà
-     dưới ngưỡng** vẫn không tự áp.
+     dưới ngưỡng** vẫn không tự áp. Hạn tính từ ngày cơ chế ghi tạm (NB10) được áp. Model được thấy đáp án của luật thì
+     không tính là phiếu thứ hai: lượt làm giàu hằng đêm đang như vậy (đo 24/11), NB10 sửa.
 
 | Nhóm F3 | Trường | Ngưỡng cận dưới Wilson | Dưới ngưỡng |
 |---|---|---|---|

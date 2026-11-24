@@ -713,7 +713,9 @@ CHECK chuyển từ NOT VALID sang VALIDATE sau khi dọn.
 4. Ô (phương pháp × trường × nguồn) chưa đo hoặc dưới ngưỡng → mọi phát biểu của nó đi thẻ, không tự áp.
    - **Sửa 24/11 (ROADMAP §3 mục 63):** (a) ô **chưa đo** được **ghi tạm** khi hai phiếu độc lập trùng nhau có trích dẫn, đợt
      ghi có mã lô và rút được cả lô, giá trị không tính là «đã đo», và ô được đo bù trong hạn hai tuần — không đạt hoặc quá
-     hạn thì tự tụt và rút lô; ô đã đo mà dưới ngưỡng vẫn không tự áp. (b) «Đi thẻ» là thẻ **theo nhóm**: một ứng viên danh
+     hạn thì tự tụt và rút lô; ô đã đo mà dưới ngưỡng vẫn không tự áp. Hạn tính từ ngày cơ chế ghi tạm (NB10) được áp. Chứng
+     thực vòng tròn của §2 vẫn còn ở lượt làm giàu hằng đêm (lời nhắc mang đáp án E1, đo 24/11): phiếu như vậy không tính là
+     phiếu thứ hai; NB10 sửa. (b) «Đi thẻ» là thẻ **theo nhóm**: một ứng viên danh
      bạ hoặc một kiểu lệch là một quyết định cho mọi tin cùng nhóm. (c) Ô toà, phân khu chưa đối chiếu được với danh bạ hiện
      nguyên văn kèm nhãn «theo tin đăng, chưa đối chiếu», không vào nhóm so sánh giá theo toà.
 
