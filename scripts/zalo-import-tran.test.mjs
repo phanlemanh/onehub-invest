@@ -269,7 +269,7 @@ const nodeGia = (root) => {
   return f;
 };
 for (const [o, env, args, ke] of [
-  ["00:00 mặc định", {}, [], "14400 7200"],
+  ["00:00 mặc định", {}, [], "21600 10800"], // 2311-5: trần tổng lượt 00:00 4h → 6h (lưới chia trần)
   ["nhanh mặc định", {}, ["--luot-nhanh"], "2400 1200"],
   ["00:00 TRAN_TONG=100", { ZALO_IMPORT_TRAN_TONG: "100" }, [], "100 50"],
   ["00:00 TRAN_TONG=100 CANH_BAO=7", { ZALO_IMPORT_TRAN_TONG: "100", ZALO_IMPORT_CANH_BAO: "7" }, [], "100 7"],
