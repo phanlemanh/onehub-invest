@@ -68,20 +68,20 @@ evals:
     executor: test
     cmd: config:executors.test.agent
     long_running: 25
-    paths: ["agent/**", "pipeline/doc-gop-hang-ngay.sh"]
+    paths: ["agent/src/enrich/doc-gop-s03/**", "agent/scripts/doc-gop-s03.ts", "agent/tests/doc-gop-song-song.test.ts", "pipeline/doc-gop-hang-ngay.sh"]
     expected: "Suite agent xanh trọn (các ca PL30, PL34, goi-thang-anthropic giữ nguyên); suite scripts (enrich-buoc-job, job-step) do lượt chấm chạy theo suite_keys cũng xanh."
   - id: E8b
     criterion: AC-8
     executor: test
     cmd: config:executors.test.jst_regress
-    paths: ["pipeline/doc-gop-hang-ngay.sh", "scripts/zalo-import-daily.sh", "scripts/lib/job-step.sh"]
+    paths: ["pipeline/doc-gop-hang-ngay.sh"]
     expected: "Năm bộ test job của chuỗi đêm (job-exit, s03-nap-nhanh, zalo-import-job, zalo-import-job-nhe, enrich-buoc-job) xanh sau khi đổi pipeline/doc-gop-hang-ngay.sh."
   - id: E8c
     criterion: AC-8
     executor: test
     cmd: config:executors.suite.pipeline_a
     long_running: 90
-    paths: [pipeline/**]
+    paths: ["pipeline/doc-gop-hang-ngay.sh", "pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs"]
     expected: "exit 0; bộ pipeline nửa a của kho xanh trên nhánh (có ca SLT-DC-7/9 đã nới trần 900 s). Khai riêng để lượt chấm chờ đủ giờ khi máy tải — S4 r1 BLOCKED vì nửa a chạy quá 30 phút mặc định; theo khuôn bi-danh-viet-tat-phan-khu E11a."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E8d
@@ -89,6 +89,6 @@ evals:
     executor: test
     cmd: config:executors.suite.pipeline_b
     long_running: 90
-    paths: [pipeline/**]
+    paths: ["pipeline/doc-gop-hang-ngay.sh", "pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs"]
     expected: "exit 0; bộ pipeline nửa b của kho xanh trên nhánh. Khai riêng để lượt chấm chờ đủ giờ khi máy tải, cùng lý do E8c."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
