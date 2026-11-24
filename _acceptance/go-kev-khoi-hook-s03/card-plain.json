@@ -1,0 +1,38 @@
+{
+  "feature_plain": "Bộ nhận tin nhóm S03 thôi hỏi cổng chấm Kev đã gỡ: tin vẫn vào kho như cũ, log hết 4.954 dòng «kev null» mỗi ngày, và bộ canh an toàn thôi báo «Kev chết» mỗi 5 phút.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ đẩy mọi tin nhóm vào kho mà không hỏi cổng chấm Kev lần nào, kể cả khi có thứ gì đó đang nghe ở cổng cũ."},
+    {"id": "AC-2", "p": "Sẽ giữ nguyên khuôn tin gửi vào kho; nhãn Kev vẫn có mặt nhưng để trống (đánh dấu «kev-off»), tin điểm cao hay thấp đều không bị bỏ."},
+    {"id": "AC-3", "p": "Sẽ giữ khuôn dòng log mà các bộ đọc đang dùng, ghi «kev=off» và không còn dòng «kev null»."},
+    {"id": "AC-4", "p": "Sẽ giữ nguyên mọi lớp bảo vệ tin của bộ nhận (lưu tạm rồi gửi lại, chịu được kho chậm hay từ chối, không có đường gửi tin vào nhóm)."},
+    {"id": "AC-7", "p": "Sẽ để tin mới vào kho và qua bước nạp như mọi tin trước đây; không bước nạp nào lọc theo nhãn Kev."},
+    {"id": "AC-9", "p": "Sẽ có hồ sơ áp lên máy thu đủ năm thứ (lệnh áp, số chạy thử, sao lưu, cách lùi, lệnh kiểm sau) và một bộ kiểm sau áp đã thử trên log thật lẫn log mẫu."},
+    {"id": "AC-10", "p": "Sẽ cho bộ test của bộ nhận chạy trong hộp cát riêng: không ghi log, không đọc khoá, không đụng hàng tin chờ của máy thu thật."}
+  ],
+  "wont_do": [
+    {"id": "AC-5", "p": "Sẽ KHÔNG còn bộ canh an toàn nào gọi hay cảnh báo về cổng Kev; nhịp canh ghi «kev:off (K1)», lớp chặn gửi tin vẫn sống."},
+    {"id": "AC-6", "p": "Sẽ KHÔNG còn tệp cài dịch vụ Kev trong kho, và không lịch chạy nào trỏ tới cổng ấy."},
+    {"id": "AC-8", "p": "Sẽ KHÔNG còn tài liệu vận hành nào vẽ đường tin đi qua Kev."},
+    {"id": "OOS-1", "p": "Không dọn ô «Cổng Kev» trên trang Thu thập của Ops và dòng đỏ của bộ kiểm toàn hệ thống — đó là việc KEV2 của dãy giao diện."},
+    {"id": "OOS-2", "p": "Không tự áp lên máy thu: chép bộ nhận và khởi động lại cổng Zalo do phiên vận hành làm sau khi gộp, theo chữ ký của anh."},
+    {"id": "OOS-3", "p": "Không sửa lỗ cũ: bộ canh chỉ soát bản bộ nhận trong kho, chưa soát bản đã cài trên máy — để việc riêng."},
+    {"id": "OOS-4", "p": "Không dọn hai chỗ còn nhắc cổng Kev trong tài liệu và công cụ đo cũ không ai chạy định kỳ."},
+    {"id": "OOS-5", "p": "Không bỏ hẳn nhãn Kev khỏi tin: bỏ là đổi hợp đồng dữ liệu, phải nâng phiên bản và sửa bộ nạp."}
+  ],
+  "scope_plain": "Năm việc để ngoài vòng này:",
+  "coverage_plain": [
+    {"i": 0, "p": "Mọi trạng thái của cổng Kev (sống, tắt, lỗi, treo) nay cùng một hành vi: không hỏi — AC-1, AC-3, AC-4."},
+    {"i": 1, "p": "Mọi cách gửi tin vào kho có thể gặp (thành công, bị từ chối, kho treo, hàng chờ đầy, sai khoá, lỗi tạm, quá giờ) đều được thử lại — AC-2, AC-4."},
+    {"i": 2, "p": "Mọi bên đọc đầu ra của bộ nhận (kho, bước nạp, các bộ đọc log, bộ canh an toàn) đều được kiểm — AC-2, AC-3, AC-4, AC-7."},
+    {"i": 3, "p": "Mọi chỗ còn nhắc Kev ở phần thu (mã bộ nhận, bộ canh, tệp cài dịch vụ, tài liệu) có chốt máy; phần Ops để KEV2 — AC-1, AC-5, AC-6, AC-8."},
+    {"i": 4, "p": "Áp lên máy thu đủ bốn pha: sao lưu, làm, kiểm sau, lùi — AC-9."},
+    {"i": 5, "p": "Phép đo chạy trong hộp cát, không bao giờ trên máy thu thật — AC-10."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Bộ kiểm sau áp mới chỉ thử trên log viết tay. Đã sửa: thêm ca sinh log bằng chính bộ nhận và bộ canh — bản mới ra ĐẠT, bản cũ còn Kev ra KHÔNG ĐẠT đúng lý do."},
+    {"i": 1, "p": "Bộ canh an toàn chưa được chạy trọn sau khi gỡ khối canh Kev. Đưa anh quyết (Hỏi-2); trong lúc đó đã thêm chốt biến bỏ sót và bước kiểm nhịp canh đầu tiên ngay sau khi kéo mã."},
+    {"i": 2, "p": "Bộ kiểm sau áp chưa bắt được lớp chặn gửi tin bị vỡ. Đã sửa: dòng «ok» của bộ canh chỉ ghi khi mọi lớp còn, và có dòng «tắt cổng» mới là KHÔNG ĐẠT."},
+    {"i": 3, "p": "Hồ sơ áp mới kiểm có tiêu đề, chưa kiểm có nội dung. Đã sửa: mỗi mục phải có lệnh hay con số, mục số chạy thử phải có số «trước»."},
+    {"i": 4, "p": "Chưa có phép đo «bước nạp không lọc theo nhãn Kev». Đã thêm chốt máy có ca cấy; phần thử nạp thật qua kho để sau vì nặng hơn giá trị."}
+  ]
+}
