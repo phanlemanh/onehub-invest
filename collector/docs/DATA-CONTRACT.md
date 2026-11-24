@@ -419,7 +419,9 @@ Luật đọc:
    1.603 id mang dự án thấp tầng (87%) và 247 id rỗng; dải 1851–3575 (1.725 id) rỗng hết; 0 lỗi. Id thấp tầng nhỏ nhất
    7, lớn nhất 1814. Theo thành phố/tỉnh của nguồn: TP.HCM 558, Hà Nội 237, Đồng Nai 231, Bình Dương 218, Long An 192,
    Đà Nẵng 81, Bình Phước 63; 6 bản ghi không có vị trí (toạ độ 0, trống thành phố: id 518, 975, 976, 977, 1685, 1721).
-   `loai_du_an` rỗng ở mọi bản ghi; `tinh_trang` chỉ có `null` (853) hoặc `da_ban_giao` (750). Mốc sau quét tiếp từ id
+   `loai_du_an` rỗng ở mọi bản ghi; `tinh_trang` chỉ có `null` (853) hoặc `da_ban_giao` (750). Năm id «rỗng» của dải
+   trên (1851, 2000, 2500, 3000, 3575) hỏi lại lúc 20:30 đều trả HTTP 200, thân 71 byte, `status: true`, `data: null`
+   — tức là «không có bản ghi» thật, không phải lỗi mềm. Mốc sau quét tiếp từ id
    3576 và quét lại các id đã rỗng nếu nghi nguồn bổ sung bản ghi vào dải cũ. `du_an_goi_y_thap_tang` (kind gợi ý có
    cờ) tồn tại trong bộ thu nhưng mốc này không ghi bản nào — quét theo id đã đủ.
 7. **Tên miền thật có trong payload** (link ảnh, link quyết định, kho ảnh nguồn): raw ở local được phép; `stg_s17_*` thì
@@ -454,6 +456,24 @@ Luật đọc:
    qua gợi ý đếm riêng (`soThuaGoiY`), không vào mật độ. Lưới khu sinh bằng
    `collector/src/collectors/s17-thua-dinh-gia/luoi-thua.sql`. Đo 24/11: hồ sơ thửa mất khoảng 4 s ở lần đầu hỏi một
    điểm, khoảng 0,1 s khi hỏi lại.
+   **Kết quả 24/11** (ba luồng nhịp 250 ms; bản gộp mới nhất của mỗi khu, ghi sau lượt hỏi lại lúc 20:31):
+
+   | Khu | km² | Toạ độ lưới | Toạ độ gợi ý | Thửa mới từ lưới | Từ gợi ý | Trùng | Không có thửa | Lỗi | Lời đã dùng | Thửa/km² lưới / cả gợi ý | Lời/km² | Thời gian |
+   |---|---|---|---|---|---|---|---|---|---|---|---|---|
+   | Phường Hoàn Kiếm (Hà Nội) | 1,918 | 2.464 | 439 | 1.114 | 391 | 647 | 751 | 0 | 2.943 | 581 / 785 | 1.534 | khoảng 63 phút |
+   | Ô thí điểm trong phường An Phú (TP.HCM) | 1,999 | 2.304 | 345 | 644 | 295 | 1.465 | 245 | 0 | 2.689 | 322 / 470 | 1.345 | khoảng 54 phút |
+   | **cộng** | **3,917** | **4.768** | **784** | **1.758** | **686** | **2.112** | **996** | **0** | **5.632** | **449 / 624** | **1.438** | khoảng 117 phút |
+
+   Mật độ thửa của hai khu khác nhau 1,8 lần: phố cổ Hà Nội có thửa nhỏ (45% toạ độ ra thửa mới); ô trong phường An
+   Phú có thửa to (đo: 5.000–30.000 m²) nên 63% toạ độ trúng thửa đã có. Gợi ý theo 40 tên đường mỗi khu (nguồn nắp
+   15 mục mỗi tên) thêm 35% (Hoàn Kiếm) và 46% (An Phú) số thửa với khoảng 15–17% số lời. «Lời đã dùng» gồm hồ sơ,
+   gợi ý và lời kiểm phiên của cả khu. Mỗi khu có HAI bản gộp cùng `sourceId`: bản lúc 19:34 và 20:28 do mã trước lượt
+   soát ghi (khu An Phú dùng diện tích 2,074 km² — cao hơn thực 3,8% — và `tongLoi` chỉ gồm điểm đã hỏi cùng lời gợi
+   ý, không có trường `loi`), và bản lúc 20:31; bên đọc lấy bản mới nhất theo `fetchedAt`.
+   **`ogc_fid` có riêng biệt giữa các tỉnh không**: theo số đo là MỘT dải số chung (Hoàn Kiếm 16.154.170–94.310.597;
+   An Phú 69.739.031–94.310.711 — hai dải chồng nhau về giá trị, mã gán theo thứ tự nạp nên thửa cùng đường kề nhau);
+   8 toạ độ «trùng» ở khu An Phú hỏi lại đều ra đúng thửa của khu ấy (mã tỉnh 74), không thấy mã đụng giữa hai tỉnh.
+   Chưa kiểm trọn vẹn: bên đọc nên dùng khoá (mã tỉnh, `ogc_fid`).
 
 **Việc kèm bên one-invest (làn Claude, DA58)**: ALLOWLIST thêm `s17-thua-dinh-gia`; migration `stg_s17_*` (sổ số giữ
 128 tạm). Mẫu snapshot thật lấy từ thư mục snapshot của máy thu (thư mục `vn/vn__s17-thua-dinh-gia__*` mang dấu hiệu
