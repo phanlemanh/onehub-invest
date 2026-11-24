@@ -5,9 +5,11 @@ slug: dong-the-bo-sung-tin-theo-luat
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [script]
-status: draft
+status: approved
 approved_by:
 approved_at:
+veto_state: mo
+veto_opened_at: 2026-11-24T02:19:31Z
 ---
 
 # Acceptance Contract: dong-the-bo-sung-tin-theo-luat
@@ -55,6 +57,10 @@ Hợp đồng ghi LUẬT, không ghi cứng số: số đếm 24/11 (230 + 232 =
 - AC-7: Given đã chạy thật một lần, When chạy thật lần hai trên cùng DB, Then 0 thẻ, 0 đề xuất đổi (lệnh lặp an toàn).
 - AC-8: Given đề xuất nhóm 2 đã chuyển `skipped`, When chạy đường xử lại `skipped` của `agent/src/enrich/doc-toan-bo.ts` (lọc
   `evidence.ly_do='khong-tu-khoa'`), Then không đề xuất nào của lượt đóng thẻ bị đưa lại `queued` hay bị áp.
+- AC-9: Given DB có thẻ người quyết (`decided_by` mã người dùng) và thẻ máy đóng theo luật (`decided_by LIKE 'may:%'`) cùng trong
+  cửa sổ đếm, When tính số «Đã quyết hôm nay» trên đầu trang `/ops/review` (`DAU_TRANG_SQL`) và «công người — quyết 24 giờ» của báo
+  cáo ngày (`CONG_NGUOI_SQL`), Then thẻ `decided_by LIKE 'may:%'` không được đếm; số «Chờ duyệt» vẫn giảm theo thẻ máy đóng; thẻ
+  người quyết vẫn được đếm như trước.
 
 ## Coverage
 
@@ -74,6 +80,26 @@ Bảng phủ ca, số đếm từ DB máy thu 24/11 (truy vấn chỉ đọc; l�
 | Bảng khác | `sale_offers` · `sale_offer_records` · `field_assertions` | AC-3 (không đổi) | Invest, cloud sync |
 | Cloud | `review_queue` là bảng tầng A, không sync (`pipeline/sync-cloud.mjs` `TIER_A_TABLES`) | ngoài phạm vi: không ghi cloud | — |
 | `nap-lai-matrix` | đếm thẻ `approved/rejected` và đề xuất `skipped` là «đã quyết» | AC-3 (giữ khi nạp lại) | `pipeline/lib/nap-lai-matrix.mjs` |
+
+### Ai đọc thẻ `rejected` phía sau (GS phán 24/11: không bên nào được coi thẻ máy đóng là «đề xuất sai» hay «người quyết»)
+
+Quét mọi tệp đọc `review_queue` trong `app/src`, `agent/src`, `pipeline`, `scripts` (trừ test):
+
+| Bên đọc | Đọc thẻ đã quyết thế nào | Lọc `decided_by` hôm nay | Xử lý |
+|---|---|---|---|
+| `app/src/lib/ops/review-dau-trang.ts` `DAU_TRANG_SQL` — ô «Đã quyết hôm nay» `/ops/review` | đếm mọi thẻ `decided_at` hôm nay | không lọc | AC-9: thêm `decided_by NOT LIKE 'may:%'` (một dòng) |
+| `scripts/bao-cao-ngay.mjs` `CONG_NGUOI_SQL` — «công người» H1b quyết 24 giờ | đếm mọi thẻ `decided_at` 24 giờ | không lọc | AC-9: thêm `decided_by NOT LIKE 'may:%'` (một dòng) |
+| `app/src/lib/ops/review-gan-day.ts` — «quyết gần đây» | đọc `ops_audit` do route decide ghi | — (lượt máy không ghi `ops_audit` decide) | không cần sửa |
+| `app/src/lib/ops/review-hang-muc.ts`, `review-nap.ts` — lọc «Đã quyết» | liệt kê, nhãn «Đã bỏ»; không tính tỉ lệ | không lọc | hiển thị, không phải số đo — ngoài phạm vi |
+| `agent/src/enrich/cham-bong/*` (NB1) | chỉ thẻ `pending` | — | không bị ảnh hưởng |
+| `agent/src/enrich/run.ts` | thẻ `pending`/`deferred`; đề xuất `queued` không có thẻ chờ thì gắn thẻ mới | — | nhóm 2 đã `skipped` → không gắn lại (AC-3) |
+| `pipeline/lib/nap-lai-matrix.mjs` | đếm hiện diện để giữ khi nạp lại, không tính tỉ lệ | — | không cần sửa |
+| `pipeline/lib/the-duyet-nguoi.mjs`, `do-the-duyet.mjs`, `s09/s16-*` | chỉ thẻ `data_quality`/`entity_match` | — | không bị ảnh hưởng |
+| `scripts/lib/ops-local.mjs`, `data-flow-queries.ts` | chỉ đếm `pending` | — | «Chờ duyệt» giảm đúng ý |
+| Cloud (`sync-cloud.mjs`, `ops-cloud-proto.mjs`, ops facts) | `review_queue` tầng A, không lên cloud | — | không bị ảnh hưởng |
+| `app/src/lib/ops/eval/**` | không đọc `review_queue` hay `enrichment_proposals` | — | không bị ảnh hưởng |
+
+Hai bên đọc có sẵn cũng đang đếm thẻ máy đóng đời trước (`transform:S0x`, `may-da37`) là «quyết»: ngoài phạm vi, báo GS.
 
 ## Đường đo
 
