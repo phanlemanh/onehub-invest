@@ -319,8 +319,9 @@ Khoá nối với S16/S08 (chi tiết số đo ở tệp kê local của lượt
 
 Cùng nguồn `s09-danh-ba`, cùng thư mục `vn/vn__s09-danh-ba__<id>/`, cùng `coverage.methods =
 {"danh-ba-cong-khai-http": n}`; chỉ đường công khai không đăng nhập; nhịp 3s; 403/429 → dừng cả lượt;
-không gọi API đếm gộp (đang trả 400). `manifest.schemaVersion = 16` từ lượt 24/11. Hai lượt quỹ căn đầu
-(24/11) nằm ở thư mục chờ ngoài `collector/snapshots` và chuyển vào kho NGUYÊN TỆP sau khi mục này lên main.
+không gọi API đếm gộp (đang trả 400). `manifest.schemaVersion = 16` từ lượt 24/11. Các snapshot v16
+(quỹ căn, gói 2, B3) nằm ở thư mục chờ ngoài `collector/snapshots` (chỉ-đọc, có tệp băm sha256) và
+chuyển vào kho NGUYÊN TỆP sau khi hàng DA56 (bộ nạp S09, mang cả mục này) gộp — mục 16 KHÔNG gộp riêng.
 
 | `kind` | `sourceId` | `payload` (nguyên văn) | `meta` |
 |---|---|---|---|
@@ -349,12 +350,12 @@ Luật đọc (bên nạp):
 
 ## Lịch sử phiên bản
 
-- **schemaVersion 16 (2026-11-24, claudedp-2411-6 — S09 quỹ căn + căn cao tầng theo tầng)**: nguồn
+- **schemaVersion 16 (2026-11-24, claudedp-2411-3 và claudedp-2411-5 — S09 quỹ căn + căn cao tầng theo tầng)**: nguồn
   `s09-danh-ba` thêm hai kind `quy-can` (B4, 394 dự án) và `can-cao-tang` (gói 2 Hà Nội + B3 ngoài
   Hà Nội) — khuôn ở mục «Mở rộng v16». RawItem không thêm trường chung; payload nguyên văn;
-  `manifest.schemaVersion = 16` từ lượt 24/11. Hai snapshot quỹ căn 24/11 ghi ở thư mục chờ ngoài
-  `collector/snapshots`, chuyển vào kho nguyên tệp sau khi mục này lên main. Chưa có bộ nạp (làn
-  Claude, sau DA56).
+  `manifest.schemaVersion = 16` từ lượt 24/11. Các snapshot v16 (quỹ căn, gói 2, B3) ghi ở thư mục chờ
+  ngoài `collector/snapshots` (chỉ-đọc, có tệp băm sha256), chuyển vào kho nguyên tệp sau khi hàng DA56
+  (bộ nạp S09, mang cả mục này) gộp — mục 16 KHÔNG gộp riêng.
 - **schemaVersion 15 (2026-11-19, claudedp-1811-12 — S09 danh bạ căn, gói 1 bản đồ; ĐÃ GHIM, trên
   main)**: thêm nguồn
   `s09-danh-ba` (mục ở trên) với năm kind `danh-muc/toa/tang/khu-thap-tang/can-thap-tang`, payload nguyên văn
