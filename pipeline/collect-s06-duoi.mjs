@@ -239,14 +239,17 @@ export function taoTraStg(client) {
 }
 
 /**
- * Tập «lượt quét đủ» để so: id trong stg của đúng vùng × mục, đăng (theo giờ đăng GỐC orig_list_time) trong cửa sổ.
- * Dùng orig_list_time vì list_time đổi khi tin được đẩy lại.
+ * Tập «lượt quét đủ» để so: id trong stg của đúng vùng × mục, đăng trong cửa sổ.
+ * Giờ đăng = orig_list_time nếu có, nếu không thì list_time. Nguồn chỉ điền orig_list_time khi tin ĐƯỢC ĐẨY LẠI lần
+ * đầu (đo 24/11: list_time lúc đó thành giờ đẩy, orig_list_time thành giờ đăng gốc); tin chưa từng bị đẩy thì không
+ * có orig_list_time và list_time chính là giờ đăng. Lọc theo orig_list_time một mình sẽ bỏ quên mọi tin mới chưa bị đẩy.
  */
 export async function quetDuStg(client, { cityCode, adType, t0, t1 }) {
   const { rows } = await client.query(
     `SELECT list_id FROM stg_chotot_ads
       WHERE city_code = $1 AND ad_type = $2
-        AND (payload->>'orig_list_time')::bigint >= $3 AND (payload->>'orig_list_time')::bigint < $4`,
+        AND COALESCE(NULLIF((payload->>'orig_list_time')::bigint, 0), (payload->>'list_time')::bigint) >= $3
+        AND COALESCE(NULLIF((payload->>'orig_list_time')::bigint, 0), (payload->>'list_time')::bigint) < $4`,
     [cityCode, adType, t0, t1],
   );
   return new Set(rows.map((r) => Number(r.list_id)));
@@ -525,7 +528,7 @@ export function tinhBaoCao(dong, { t0, t1 }) {
   };
   const doTre = [];
   const dinhMoiNhat = []; // tuổi (giây) của mục mới nhất ở đầu trang 1, mỗi lượt một số
-  let doTreAm = 0, tinMoiDang = 0, truocCuaSo = 0, dayLaiCu = 0, tronLuaDau = 0, khongRoOrig = 0;
+  let doTreAm = 0, tinMoiDang = 0, truocCuaSo = 0, dayLaiCu = 0, tronLuaDau = 0;
   let soPhienThanhCong = 0, soLuotLoi = 0;
   for (const d of phien) {
     if (d.dbLoi) continue;
@@ -549,18 +552,19 @@ export function tinhBaoCao(dong, { t0, t1 }) {
     for (const t of d.trang) {
       for (const [id, listTime, origTime, daCo] of t.tin) {
         if (daCo !== 0) continue;
-        if (!namTrong(origTime, t0, t1)) {
-          // mục máy chưa có nhưng không phải tin mới đăng của cửa sổ — chia ba loại để đọc đúng con số
-          if (origTime < t0) {
+        // Giờ đăng: orig_list_time nếu có, nếu không thì list_time (tin chưa từng bị đẩy lại — xem quetDuStg)
+        const gioDang = origTime || listTime;
+        if (!namTrong(gioDang, t0, t1)) {
+          // mục máy chưa có nhưng không phải tin mới đăng của cửa sổ — chia loại để đọc đúng con số
+          if (gioDang < t0) {
             truocCuaSo++;
-            if (!origTime) khongRoOrig++; // nguồn không có giờ đăng gốc
-            else if (listTime - origTime >= 3600_000) dayLaiCu++; // cũ đẩy lại: list_time mới hơn hẳn giờ đăng gốc
+            if (origTime && listTime - origTime >= 3600_000) dayLaiCu++; // cũ đẩy lại: list_time mới hơn hẳn giờ đăng gốc
             else tronLuaDau++; // đăng trước t0 nhưng chưa tới tay máy (tồn đọng lúc bắt đầu đo)
           }
           continue;
         }
         tinMoiDang++;
-        const giayTre = (Date.parse(t.luc) - listTime) / 1000;
+        const giayTre = (Date.parse(t.luc) - gioDang) / 1000;
         if (giayTre < 0) {
           doTreAm++; // list_time sau giờ lấy: lệch giờ nguồn
           continue;
@@ -582,7 +586,6 @@ export function tinhBaoCao(dong, { t0, t1 }) {
     truocCuaSo,
     dayLaiCu,
     tronLuaDau,
-    khongRoOrig,
     doTre: { soLuong: doTre.length, p50: phanVi(0.5, doTre), p90: phanVi(0.9, doTre) },
     doTreAm,
     dinhMoiNhat: { soLuong: dinhMoiNhat.length, min: dinhMoiNhat.length ? Math.min(...dinhMoiNhat) : null, p50: phanVi(0.5, dinhMoiNhat) },
@@ -626,19 +629,41 @@ export async function quetDuDaNapXong(client, { cityCode }) {
 
 /** Tỉ lệ tin mới đăng (giờ gốc trong cửa sổ) mà đuôi thấy và lượt quét đủ cũng có. */
 export function tinhTiLeBatDuoc(dong, { t0, t1, quetDu }) {
-  const duoi = new Set();
+  const duoi = new Set(); // mã đuôi đưa ra là tin MỚI (cờ 0) và đăng trong cửa sổ
+  const daCoMa = new Set(); // mã đuôi từng thấy với cờ «đã có» — máy biết mã đó từ trước
   for (const d of dong) {
     if (d.k !== "phien" || d.chan || d.dbLoi) continue;
     for (const t of d.trang ?? []) {
-      for (const [id, , origTime, daCo] of t.tin) if (daCo === 0 && namTrong(origTime, t0, t1)) duoi.add(id);
+      for (const [id, listTime, origTime, daCo] of t.tin) {
+        if (daCo !== 0) {
+          daCoMa.add(id);
+        } else if (namTrong(origTime || listTime, t0, t1)) {
+          duoi.add(id); // giờ đăng = orig_list_time nếu có, nếu không thì list_time (xem quetDuStg)
+        }
+      }
     }
   }
   const g = new Set([...quetDu].map(Number));
   let batDuoc = 0;
   for (const id of duoi) if (g.has(id)) batDuoc++;
-  const thieu = [...g].filter((id) => !duoi.has(id)).sort((a, b) => a - b);
+  // Trong tập lượt quét đủ có cả TIN CŨ ĐƯỢC LÀM MỚI: mã máy đã biết, list_time đổi thành hôm nay, không có
+  // orig_list_time (đo 24/11: 151/654 mã). Chúng không phải tin mới và đuôi bỏ qua theo thiết kế (đã có theo mã).
+  // Mẫu số của tỉ lệ chỉ gồm TIN MỚI; còn mã đuôi chưa từng thấy thì vẫn tính là tin mới bị bỏ sót.
+  const thieuDaCoMa = [...g].filter((id) => !duoi.has(id) && daCoMa.has(id)).sort((a, b) => a - b);
+  const tinMoi = g.size - thieuDaCoMa.length;
+  const thieu = [...g].filter((id) => !duoi.has(id) && !daCoMa.has(id)).sort((a, b) => a - b);
   const chiDuoi = [...duoi].filter((id) => !g.has(id)).sort((a, b) => a - b);
-  return { quetDu: g.size, duoi: duoi.size, batDuoc, tiLe: g.size > 0 ? Math.round((batDuoc / g.size) * 10000) / 10000 : null, thieu, chiDuoi };
+  return {
+    quetDu: g.size, // số mã lượt quét đủ có giờ đăng trong cửa sổ (gồm cả tin cũ được làm mới)
+    daCoMa: thieuDaCoMa.length, // trong số đó: mã máy đã biết từ trước — không là tin mới
+    tinMoi, // quetDu − daCoMa: mẫu số của tỉ lệ
+    duoi: duoi.size,
+    batDuoc,
+    tiLe: tinMoi > 0 ? Math.round((batDuoc / tinMoi) * 10000) / 10000 : null,
+    thieu, // tin mới mà đuôi không bắt được
+    chiDuoi,
+    thieuDaCoMa,
+  };
 }
 
 async function docNhatKy(goc) {
