@@ -109,8 +109,11 @@ nhưng **0 nhãn người**; lát `hai-khu-ghep-c` có 5 nhãn trục. Cận dư
 
 - **Hỏi-1** Ngưỡng Wilson chấm theo khu hay gộp? Khuyến nghị: chấm trên OP1, GP chỉ báo số (GP có 1 tin mã dạng trục). Lối
   khác: gộp hai khu — GP gần như rỗng nên ngưỡng gộp chính là OP1 mang tên hai khu, đọc sai.
-- **Hỏi-2** Tập chấm gắn trục? Khuyến nghị: lát mới 110 bài OP1 có mã dạng trục, rút như lát `-b` của PL20, người gắn nhãn
-  trục trên `/ops/labels` (khoảng 5,5 giờ theo nhịp 3 phút mỗi bài của PL20). Lối khác: gắn nhãn 75 bài `op1-truc` của PL35 — đủ cỡ sát ngưỡng, một lỗi là hụt.
+- **Hỏi-2** Tập chấm gắn trục? Khuyến nghị: lát mới 110 bài OP1 có mã dạng trục, rút như lát `-b` của PL20; **trợ lý gắn
+  nháp trọn quy trình** (chữ → đếm ảnh → danh bạ → căn cứ ở ô Lý do), **Mạnh duyệt từng thẻ** trên `/ops/labels` (khoảng
+  1–1,5 giờ), trộn 8–10% thẻ cài lỗi để đo người duyệt (ROADMAP §3 mục 61), DB ghi ai lưu — nhãn đã duyệt như vậy tính là
+  nhãn người cho thước Wilson của hàng này. Lối khác: Mạnh tự gắn 110 bài (khoảng 5,5 giờ theo nhịp 3 phút mỗi bài của
+  PL20); hoặc gắn 75 bài `op1-truc` của PL35 — sát ngưỡng, một lỗi là hụt. Chọn lối trợ lý thì GS mở lại phiên gắn nhãn.
 - Viết lại `offer_building` cho nhanh (§5) là máy quyết, không hỏi: đầu ra giữ nguyên từng dòng có test so (AC-7), các lối
   khác chết (vật hoá thêm trạng thái phải làm mới; chỉ mục không chữa vòng lồng; để chậm thì `offer_unit` đứng trên nó cũng
   quá 120 giây).
