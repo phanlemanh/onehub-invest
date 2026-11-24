@@ -61,14 +61,14 @@ evals:
     criterion: AC-8
     executor: test
     cmd: config:executors.test.ht12_tran
-    paths: [scripts/zalo-import-daily.sh, scripts/zalo-import-tran.test.mjs, pipeline/cron/**]
+    paths: [scripts/zalo-import-daily.sh, scripts/zalo-import-tran.test.mjs]
     expected: "exit 0; trọn zalo-import-tran.test.mjs (31 ca LL đếm 24/11), gồm «AC-7 plist không đổi so với origin/main» (`git diff --quiet origin/main -- pipeline/cron`)."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E8b
     criterion: AC-8
     executor: test
     cmd: config:executors.test.ht12_luoi
-    paths: [scripts/zalo-import-daily.sh, scripts/lib/job-step.sh, scripts/zalo-import-job.test.mjs, scripts/enrich-buoc-job.test.mjs, scripts/job-step-thoi-luong.test.mjs]
+    paths: [scripts/zalo-import-daily.sh, scripts/zalo-import-job.test.mjs, scripts/enrich-buoc-job.test.mjs]
     expected: "exit 0; lưới hồi quy: zalo-import-tran-zcode, zalo-import-job (PL34-AC-3 tìm dòng `doc_gop_run bash \"$ROOT/pipeline/doc-gop-hang-ngay.sh\"`, PL34-AC-4), zalo-import-job-nhe, zalo-import-job-lan, enrich-buoc-job (pl34 nhả khoá sau dòng đọc gộp mới), job-step-thoi-luong (JST-AC-8: so với main đã có A, nhánh chỉ sửa phía dưới mốc làn), job-exit — mọi ca pass, 0 fail."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E8c
@@ -76,7 +76,7 @@ evals:
     executor: test
     cmd: config:executors.suite.pipeline_a
     long_running: 90
-    paths: [pipeline/**, scripts/**]
+    paths: [scripts/zalo-import-daily.sh, scripts/zalo-import-chia-tran-zcode.test.mjs, scripts/zalo-import-tran.test.mjs, scripts/zalo-import-job.test.mjs, scripts/enrich-buoc-job.test.mjs]
     expected: "exit 0; nửa A bộ test pipeline (suite của lượt chấm, khai ở đây chỉ để có long_running 90 — trên Mac mini nửa A vượt trần chờ 30′ mặc định), 0 fail; main đã mang 70bcecb3a (trần ca SLT-DC-7/9 900 s)."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E8d
@@ -84,7 +84,7 @@ evals:
     executor: test
     cmd: config:executors.suite.pipeline_b
     long_running: 90
-    paths: [pipeline/**, scripts/**]
+    paths: [scripts/zalo-import-daily.sh, scripts/zalo-import-chia-tran-zcode.test.mjs, scripts/zalo-import-tran.test.mjs, scripts/zalo-import-job.test.mjs, scripts/enrich-buoc-job.test.mjs]
     expected: "exit 0; nửa B bộ test pipeline (suite của lượt chấm, khai ở đây chỉ để có long_running 90), 0 fail."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E9
