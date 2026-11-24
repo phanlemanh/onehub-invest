@@ -8,6 +8,7 @@
  * «tiếp tục»; bị từ chối là ĐIỂM DỪNG CỨNG — không thử lại, không đi đường vòng, báo lại (mã 4).
  * KHÔNG tải lại hay điều hướng tab: URL tra cứu có sẵn kết quả làm ứng dụng tự gọi biến thể trả phí.
  */
+import { randomBytes } from "node:crypto";
 import { RunStopped, type Caps, type Transport, type TransportMany } from "./client.js";
 import type { S17Config } from "./config.js";
 import type { Response } from "./client.js";
@@ -61,7 +62,7 @@ export type EgoOptions = {
 
 type InPageResult = { status: number; contentType: string | null; body: string; bytes?: number; networkError?: string };
 type InPageInput = { url: string; headerJson: string; cookieName: string; timeoutMs: number };
-type InPageJob = { done: number; rs: InPageResult[] };
+type InPageJob = { token: string; t0: number; done: number; rs: InPageResult[] };
 
 /** Trình duyệt (ego) hủy một lần chạy trong trang sau 15 s (đo 24/11). */
 export const EGO_EVALUATE_LIMIT_MS = 15_000;
@@ -74,12 +75,17 @@ export const EGO_EVALUATE_LIMIT_MS = 15_000;
 export const IN_PAGE_TIMEOUT_MS = 60_000;
 /** Nhịp hỏi kết quả của một đợt — mỗi lần hỏi là một lần chạy trong trang rất ngắn. */
 export const IN_PAGE_POLL_MS = 250;
+/**
+ * Một việc bắt đầu mà quá bấy lâu vẫn chưa xong là việc MỒ CÔI (lượt đã chết): lượt khác được đè. Con số này phải
+ * viết sẵn `90000` trong IN_PAGE_START (hàm chạy trong trang không tham chiếu được biến ngoài).
+ */
+export const IN_PAGE_STALE_MS = IN_PAGE_TIMEOUT_MS + EGO_EVALUATE_LIMIT_MS + 15_000;
 
 type InPageGlobal = {
   fetch(url: string, init: object): Promise<{ status: number; headers: { get(k: string): string | null }; text(): Promise<string>; arrayBuffer(): Promise<ArrayBuffer> }>;
   document: { cookie: string };
   AbortSignal: { timeout(ms: number): unknown };
-  /** Việc đang chạy: một việc tại một thời điểm — lớp gọi chạy tuần tự từng đợt, việc mới đè việc cũ. */
+  /** Việc đang chạy: tab chỉ giữ MỘT việc tại một thời điểm. Việc mới chỉ đè việc đã xong hoặc việc mồ côi. */
   __s17Job?: InPageJob;
 };
 
@@ -87,11 +93,17 @@ type InPageGlobal = {
  * BẮT ĐẦU các lời trong trang rồi trả về NGAY số lời đã nhận — không chờ kết quả, vì trình duyệt hủy lần chạy
  * trong trang sau 15 s. Các fetch cùng chạy, lời i bắt đầu sau i × staggerMs (đo 24/11: hai lời đồng thời xong sau
  * 4,9 s thay vì 8,4 s). Tự chứa (không tham chiếu biến ngoài); phiên chỉ đi thẳng vào header của chính lời gọi,
- * không cất lại trong việc. Kết quả lấy lại bằng IN_PAGE_COLLECT.
+ * không cất lại trong việc. Kết quả lấy lại bằng IN_PAGE_COLLECT, bằng đúng `token` của đợt mình.
+ *
+ * Tab đang giữ một việc CHƯA XONG của đợt khác thì trả -1 và không làm gì (đo 24/11 18:09: hai lượt tranh tab, lượt
+ * này nhận kết quả của lượt kia và ghi payload này dưới sourceId kia) — phía Node chờ rồi hỏi lại. Việc quá 90000 ms
+ * (hạn chờ một lời + hai lần chạy trong trang) mà vẫn chưa xong là việc mồ côi: được đè.
  */
-export const IN_PAGE_START = (input: { items: InPageInput[]; staggerMs: number }): number => {
+export const IN_PAGE_START = (input: { items: InPageInput[]; staggerMs: number; token: string }): number => {
   const g = globalThis as unknown as InPageGlobal;
-  const job: InPageJob = { done: 0, rs: new Array(input.items.length) };
+  const cu = g.__s17Job;
+  if (cu && cu.done < cu.rs.length && Date.now() - cu.t0 < 90000) return -1;
+  const job: InPageJob = { token: input.token, t0: Date.now(), done: 0, rs: new Array(input.items.length) };
   g.__s17Job = job;
   const mot = async (it: InPageInput, delayMs: number, index: number): Promise<void> => {
     if (delayMs > 0) await new Promise((r) => setTimeout(r, delayMs));
@@ -119,40 +131,54 @@ export const IN_PAGE_START = (input: { items: InPageInput[]; staggerMs: number }
 };
 
 /**
- * Hỏi kết quả của việc đang chạy. Chưa xong: báo số đã xong, không lộ thân nào. Xong hết: trả kết quả rồi trang bỏ
- * việc (thân phản hồi không nằm lại trong trang). Không có việc: trả null.
+ * Hỏi kết quả của việc có đúng `token`. Không có việc, hoặc việc đang giữ mang mã khác → `{ mat: true }` và KHÔNG
+ * tiêu dùng việc ấy. Chưa xong: báo số đã xong, không lộ thân nào. Xong hết: trả kết quả rồi trang bỏ việc (thân
+ * phản hồi không nằm lại trong trang).
  */
-export const IN_PAGE_COLLECT = (): { done: number; tong: number; rs?: InPageResult[] } | null => {
+export const IN_PAGE_COLLECT = (input: { token: string }): { mat: true } | { done: number; tong: number; rs?: InPageResult[] } => {
   const g = globalThis as unknown as { __s17Job?: InPageJob };
   const job = g.__s17Job;
-  if (!job) return null;
+  if (!job || job.token !== input.token) return { mat: true };
   if (job.done < job.rs.length) return { done: job.done, tong: job.rs.length };
   g.__s17Job = undefined;
   return { done: job.done, tong: job.rs.length, rs: job.rs };
 };
 
 /**
- * Hai đường vận chuyển chạy trong một tab: một lời, và nhiều lời một đợt — cùng một cách: bắt đầu lời gọi rồi hỏi
- * kết quả tới khi xong; không lần chạy trong trang nào chờ lời gọi. Mỗi lời xin hạn chờ IN_PAGE_TIMEOUT_MS.
- * Lần chạy trong trang bị hủy, hay trang đánh mất việc, thì mỗi lời của đợt nhận một Error — lớp gọi phân loại là
- * lỗi mạng của từng lời theo đúng luật; một đợt chậm không làm vỡ cả lượt.
+ * Hai đường vận chuyển chạy trong một tab: một lời, và nhiều lời một đợt — cùng một cách: bắt đầu lời gọi (mỗi đợt
+ * một mã riêng) rồi hỏi kết quả tới khi xong; không lần chạy trong trang nào chờ lời gọi. Mỗi lời xin hạn chờ
+ * IN_PAGE_TIMEOUT_MS. Tab bận (đang giữ việc chưa xong của lượt khác) thì chờ, tới quá hạn việc mồ côi mới bỏ.
+ * Lần chạy trong trang bị hủy, trang đánh mất việc, hoặc trả thiếu kết quả, thì mỗi lời của đợt nhận một Error —
+ * lớp gọi phân loại là lỗi mạng của từng lời theo đúng luật; một đợt chậm không làm vỡ cả lượt, và kết quả của
+ * đợt khác không bao giờ bị dùng thay.
  */
 export function makeTransports(
   page: EgoPage,
   cookieName: string,
-  cho: { sleep: (ms: number) => Promise<void>; pollMs: number },
+  cho: { sleep: (ms: number) => Promise<void>; pollMs: number; now?: () => number },
 ): { transport: Transport; transportMany: TransportMany } {
+  const gio = cho.now ?? (() => Date.now());
   const xuLy = (r: InPageResult): Response => {
     if (r.networkError) throw new TypeError(r.networkError);
     return { status: r.status, contentType: r.contentType ?? "", body: r.body, bytes: r.bytes };
   };
   const chay = async (requests: Array<{ url: string; headers: Record<string, string> }>, staggerMs: number): Promise<InPageResult[]> => {
     const items = requests.map((r) => ({ url: r.url, headerJson: JSON.stringify(r.headers), cookieName, timeoutMs: IN_PAGE_TIMEOUT_MS }));
-    await page.evaluate(IN_PAGE_START, { items, staggerMs });
+    const token = randomBytes(8).toString("hex");
+    const han = gio() + IN_PAGE_STALE_MS;
     for (;;) {
-      const kq = (await page.evaluate(IN_PAGE_COLLECT)) as ReturnType<typeof IN_PAGE_COLLECT>;
-      if (!kq) throw new TypeError("trang không còn giữ việc gọi (đã điều hướng hay tải lại)");
-      if (kq.rs) return kq.rs;
+      const nhan = (await page.evaluate(IN_PAGE_START, { items, staggerMs, token })) as number;
+      if (nhan === items.length) break;
+      if (gio() > han) throw new TypeError("tab đang giữ một việc gọi chưa xong của lượt khác");
+      await cho.sleep(cho.pollMs);
+    }
+    for (;;) {
+      const kq = (await page.evaluate(IN_PAGE_COLLECT, { token })) as ReturnType<typeof IN_PAGE_COLLECT>;
+      if (!kq || "mat" in kq) throw new TypeError("trang không còn giữ việc gọi của lượt này (đã điều hướng, tải lại, hoặc bị lượt khác ghi đè)");
+      if (kq.rs) {
+        if (kq.rs.length !== items.length) throw new TypeError(`trang trả ${kq.rs.length} kết quả cho ${items.length} lời — không dùng`);
+        return kq.rs;
+      }
       await cho.sleep(cho.pollMs);
     }
   };
