@@ -57,7 +57,7 @@ export const ROLES: Record<Role, RoleSpec> = {
   "apartment-detail": { host: "api", query: ["project_id", "ma_can"], needsSession: true },
   "parcel-profile": { host: "api", query: ["loaiTimKiem", "latitude", "longitude"], needsSession: true },
   "parcel-suggest": { host: "api", query: ["term", "size"], needsSession: true },
-  "project-suggest": { host: "api", query: ["term", "for_house"], needsSession: true },
+  "project-suggest": { host: "api", query: ["term", "for_house", "size"], needsSession: true },
   "market-price": { host: "api", query: ["lat", "lng"], needsSession: true },
   "data-available": { host: "api", query: [], needsSession: true },
   balance: { host: "agent", query: [], needsSession: true },
@@ -69,8 +69,9 @@ export const PROBE_ROLE: Role = "asset-type";
 export const SESSION_PROBE_ROLE: Role = "data-available";
 
 /** Vai mà mỗi pha của mốc ngày 1 sẽ gọi (không kể lời đối chiếu và số dư). */
-export const PHASE_ROLES: Record<"reference" | "tile-mask" | "projects" | "session-check" | "apartments" | "parcels", readonly Role[]> = {
+export const PHASE_ROLES: Record<"reference" | "tile-mask" | "projects" | "session-check" | "apartments" | "parcels" | "lowrise", readonly Role[]> = {
   parcels: ["parcel-profile", "parcel-suggest"],
+  lowrise: ["project-suggest", "project-detail"],
   apartments: ["project-detail", "apartment-list", "apartment-detail"],
   reference: ["full-config", "province-catalog", "attribute-dictionary", "legal-docs", "asset-type", "confidence", "land-purpose", "land-price-by-district"],
   "tile-mask": ["full-config"],

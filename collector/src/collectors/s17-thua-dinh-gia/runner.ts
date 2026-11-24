@@ -41,6 +41,10 @@ export type ExecOptions = {
   /** Số lời một đợt cho đường nhiều lời (1 = tuần tự). Mặc định 1. */
   concurrency?: number;
   transportMany?: TransportMany;
+  /** Mốc ngày 2 — từ khoá gợi ý để khám phá dự án thấp tầng. */
+  lowriseTerms?: string[];
+  /** Mốc ngày 2 — quét dự án thấp tầng theo id. */
+  lowriseSweep?: { from: number; to: number };
   env?: Env;
 };
 
@@ -153,6 +157,8 @@ export async function executePhase(o: ExecOptions): Promise<ExecResult> {
       listOnly: o.listOnly,
       parcels: o.parcels,
       concurrency: o.concurrency,
+      lowriseTerms: o.lowriseTerms,
+      lowriseSweep: o.lowriseSweep,
     });
     if (o.checkBalance) {
       balanceAfter = await readBalanceOrStop(client, "sau");

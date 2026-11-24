@@ -9,7 +9,7 @@ import { HttpStatusError, RunStopped, TemporaryFailure, type S17Client } from ".
 import { hasApartmentTable, makeItem, projectIdOf, tileBases } from "./kinds.js";
 import type { BatchWriter } from "./store.js";
 
-export type Phase = "session-check" | "reference" | "tile-mask" | "projects" | "apartments" | "parcels";
+export type Phase = "session-check" | "reference" | "tile-mask" | "projects" | "apartments" | "parcels" | "lowrise";
 
 /** Một tỉnh trong lưới tile đã chọn sẵn (chỉ điểm nằm trên đất), sinh ngoài bộ thu từ bảng địa giới. */
 export type GridEntry = { marketId: string; name: string; tiles: string[] };
@@ -59,6 +59,14 @@ export type RunState = {
   parcelKhu: Record<string, ParcelStats>;
   /** Mốc ngày 2 — tên đường gặp được trong khu. */
   parcelDuong: Record<string, string[]>;
+  /** Mốc ngày 2 — id đã quét và nguồn trả rỗng (không có bản ghi thấp tầng). */
+  lowriseSweepChecked: number[];
+  /** Mốc ngày 2 — dự án thấp tầng: từ khoá đã gợi ý, id đã gom, id đã có chi tiết, id lỗi, id → từ khoá gặp. */
+  lowriseTermsDone: string[];
+  lowriseIds: string[];
+  lowriseDone: string[];
+  lowriseFailed: Record<string, string>;
+  lowriseTermsOf: Record<string, string[]>;
 };
 
 /** Số đếm dồn của một khu thí điểm. */
@@ -80,6 +88,7 @@ export function emptyState(): RunState {
     listDone: false, listNextPage: 0, projectIds: [], detailDone: [], detailFailed: {}, priceDone: [], tileDone: [],
     apartmentCodes: {}, apartmentBuildings: {}, apartmentDetailDone: [], apartmentDetailFailed: {}, apartmentProved: false, apartmentToa: {}, apartmentSoCan: {}, apartmentDuAnGop: [],
     parcelSeen: [], parcelPointDone: [], parcelKhuDone: [], parcelStreetDone: [], parcelLoi: {}, parcelKhu: {}, parcelDuong: {},
+    lowriseSweepChecked: [], lowriseTermsDone: [], lowriseIds: [], lowriseDone: [], lowriseFailed: {}, lowriseTermsOf: {},
     blockedRuns: 0,
   };
 }
@@ -111,6 +120,10 @@ export type RunOptions = {
   parcels?: ParcelArea[];
   /** Số lời một đợt cho đường nhiều lời (1 = tuần tự). */
   concurrency?: number;
+  /** Mốc ngày 2 — từ khoá gợi ý để khám phá dự án thấp tầng. */
+  lowriseTerms?: string[];
+  /** Mốc ngày 2 — quét dự án thấp tầng theo id (chi tiết có cờ; id không có bản ghi trả rỗng). */
+  lowriseSweep?: { from: number; to: number };
 };
 
 /** Một khu thí điểm của pha thửa: lưới toạ độ sinh ngoài bộ thu từ đa giác khu trên máy thu. */
@@ -701,6 +714,138 @@ async function parcels(o: RunOptions): Promise<PhaseSummary> {
   };
 }
 
+/** Namespace của dự án thấp tầng trong phản hồi nguồn (đo 24/11). */
+export const LOWRISE_NAMESPACE = "du_an_nha_dat";
+/** Quét thấp tầng theo id: tối đa 5.000 id một lượt, mỗi đợt 50 id rồi chốt xuống đĩa. */
+const MAX_LOWRISE_SWEEP = 5000;
+const LOWRISE_SWEEP_CHUNK = 50;
+
+/**
+ * Mốc ngày 2, pha dự án thấp tầng: không có lời liệt kê riêng, chỉ khám phá qua gợi ý theo từ khoá với cờ
+ * for_house (đo 24/11). Mục gợi ý mang namespace thấp tầng mới được gom; chi tiết PHẢI lấy có cờ — không có cờ
+ * nguồn trả một dự án căn hộ khác trùng id. Chi tiết có cờ mà vẫn không thuộc namespace thấp tầng thì không ghi.
+ */
+async function lowrise(o: RunOptions): Promise<PhaseSummary> {
+  const started = o.client.calls;
+  const terms = [...new Set((o.lowriseTerms ?? []).map((t) => t.trim()).filter(Boolean))];
+  if (!terms.length && !o.lowriseSweep) throw new ConfigError("pha thấp tầng cần dải id quét (--thap-tang-id-tu/den) hoặc ít nhất một từ khoá (--thap-tang-terms)");
+  const concurrency = o.concurrency ?? 1;
+  if (!Number.isInteger(concurrency) || concurrency < 1 || concurrency > 4) throw new ConfigError("concurrency phải là số nguyên từ 1 đến 4");
+  const at = () => (o.now ?? (() => new Date()))().toISOString();
+  let items = 0;
+  let failed = 0;
+  let ngoai = 0;
+  let khongCo = 0;
+  if (o.lowriseSweep) {
+    // Đo 24/11: chi tiết CÓ cờ với id không có bản ghi thấp tầng trả data null (71 byte, ~0,2 s); id có bản ghi
+    // trả đúng dự án thấp tầng. Quét theo id vì thế liệt kê TRỌN namespace thấp tầng, không cần đoán từ khoá.
+    const { from, to } = o.lowriseSweep;
+    if (!Number.isInteger(from) || !Number.isInteger(to) || from < 1 || to < from) {
+      throw new ConfigError("dải id quét phải là hai số nguyên, từ ≥ 1 và đến ≥ từ");
+    }
+    if (to - from > MAX_LOWRISE_SWEEP) throw new ConfigError(`dải id quét quá rộng: tối đa ${MAX_LOWRISE_SWEEP.toLocaleString("vi-VN")} id một lượt`);
+    const daQuet = new Set(o.state.lowriseSweepChecked);
+    const ids: number[] = [];
+    for (let id = from; id <= to; id++) {
+      if (!daQuet.has(id) && !o.state.lowriseDone.includes(String(id)) && !(String(id) in o.state.lowriseFailed)) ids.push(id);
+    }
+    for (let i = 0; i < ids.length; i += LOWRISE_SWEEP_CHUNK) {
+      const part = ids.slice(i, i + LOWRISE_SWEEP_CHUNK);
+      const ketQua = await o.client.getJsonMany<Envelope>(part.map((id) => ({ role: "project-detail" as const, params: { id, for_house: "true" } })), concurrency);
+      let dung: RunStopped | null = null;
+      for (let k = 0; k < part.length; k++) {
+        const id = part[k];
+        const r = ketQua[k];
+        if (!r.ok) {
+          if (r.error instanceof RunStopped) {
+            dung = r.error;
+            break;
+          }
+          o.state.lowriseFailed[String(id)] = r.error.message;
+          failed++;
+          continue;
+        }
+        const d = r.value?.data as { estate_type?: unknown; properties?: { ten_du_an?: unknown } } | null | undefined;
+        if (d === null || d === undefined) {
+          khongCo++;
+          o.state.lowriseSweepChecked.push(id);
+          continue;
+        }
+        const estate = String(d.estate_type ?? "");
+        if (estate !== LOWRISE_NAMESPACE) {
+          o.state.lowriseFailed[String(id)] = `chi tiết id ${id} có cờ for_house trả namespace «${estate || "?"}» — không phải dự án thấp tầng`;
+          failed++;
+          continue;
+        }
+        const ten = String(d.properties?.ten_du_an ?? "");
+        await o.writer.add(makeItem("du_an_thap_tang", `du-an-nha-dat-${id}`, { json: r.value }, { request: { id, for_house: "true" }, phuongPhap: "id-sweep", estateType: estate, ten }, at()));
+        o.state.lowriseDone.push(String(id));
+        items++;
+      }
+      await commit(o); // phần đã xong trong đợt này được chốt và ghi nhận trước khi báo dừng
+      if (dung) throw dung;
+      o.log({ suKien: "thap-tang-quet", daQuet: o.state.lowriseSweepChecked.length, thay: o.state.lowriseDone.length });
+    }
+  }
+  for (const term of terms) {
+    if (o.state.lowriseTermsDone.includes(term)) continue;
+    try {
+      const body = await o.client.getJson<Envelope>("project-suggest", { term, for_house: "true", size: 50 });
+      const muc = listOf(body?.data).flatMap((g) => listOf((g as { items?: unknown }).items));
+      const thapTang = muc.filter((m) => (m as { source?: unknown }).source === LOWRISE_NAMESPACE && String((m as { id?: unknown }).id ?? "").trim());
+      ngoai += muc.length - thapTang.length;
+      await o.writer.add(makeItem("du_an_goi_y_thap_tang", `goi-y-thap-tang-${sourceIdSlug(term)}`, { json: body }, { request: { term, for_house: "true", size: 50 }, soMuc: muc.length, soThapTang: thapTang.length }, at()));
+      items++;
+      for (const m of thapTang) {
+        const id = String((m as { id: unknown }).id).trim();
+        if (!o.state.lowriseIds.includes(id)) o.state.lowriseIds.push(id);
+        const ds = (o.state.lowriseTermsOf[id] ??= []);
+        if (!ds.includes(term)) ds.push(term);
+      }
+    } catch (e) {
+      if (e instanceof RunStopped) {
+        await commit(o);
+        throw e;
+      }
+      failed++;
+      o.state.lowriseFailed[`goi-y|${term}`] = e instanceof Error ? e.message : String(e);
+    }
+    o.state.lowriseTermsDone.push(term);
+    await commit(o);
+  }
+  for (const id of o.state.lowriseIds) {
+    if (o.state.lowriseDone.includes(id) || id in o.state.lowriseFailed) continue;
+    try {
+      const body = await o.client.getJson<Envelope>("project-detail", { id, for_house: "true" });
+      const estate = String((body?.data as { estate_type?: unknown } | null)?.estate_type ?? "");
+      if (estate !== LOWRISE_NAMESPACE) {
+        o.state.lowriseFailed[id] = `chi tiết id ${id} có cờ for_house vẫn trả namespace «${estate || "?"}» — không phải dự án thấp tầng`;
+        failed++;
+      } else {
+        const ten = String(((body?.data as { properties?: { ten_du_an?: unknown } } | null)?.properties)?.ten_du_an ?? "");
+        await o.writer.add(makeItem("du_an_thap_tang", `du-an-nha-dat-${id}`, { json: body }, { request: { id, for_house: "true" }, estateType: estate, ten, tuCacTuKhoa: [...(o.state.lowriseTermsOf[id] ?? [])] }, at()));
+        o.state.lowriseDone.push(id);
+        items++;
+      }
+    } catch (e) {
+      if (e instanceof RunStopped) {
+        await commit(o);
+        throw e;
+      }
+      failed++;
+      o.state.lowriseFailed[id] = e instanceof Error ? e.message : String(e);
+    }
+    await commit(o);
+  }
+  return {
+    phase: o.phase,
+    calls: o.client.calls - started,
+    items,
+    failed,
+    so: { soTuKhoa: terms.length, soDuAnThapTang: o.state.lowriseDone.length, ngoaiNamespace: ngoai, khongCoBanGhi: khongCo },
+  };
+}
+
 export async function runPhase(o: RunOptions): Promise<PhaseSummary> {
   switch (o.phase) {
     case "session-check":
@@ -715,6 +860,8 @@ export async function runPhase(o: RunOptions): Promise<PhaseSummary> {
       return apartments(o);
     case "parcels":
       return parcels(o);
+    case "lowrise":
+      return lowrise(o);
   }
 }
 

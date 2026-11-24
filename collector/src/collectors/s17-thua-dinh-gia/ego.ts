@@ -53,6 +53,7 @@ export type EgoOptions = {
   /** Mốc ngày 2 — số lời một đợt (1 = tuần tự) và tệp lưới khu thí điểm của pha thửa. */
   concurrency?: number;
   parcelsGrid?: string;
+  lowriseTermsFile?: string;
 };
 
 type InPageResult = { status: number; contentType: string | null; body: string; bytes?: number; networkError?: string };
@@ -176,6 +177,7 @@ export async function main(api: EgoApi, optionsPath: string): Promise<number> {
       concurrency: opts.concurrency ?? 1,
       transportMany,
       parcels: opts.parcelsGrid === undefined ? undefined : (JSON.parse(await fs.readFile(opts.parcelsGrid, "utf8")) as ParcelArea[]),
+      lowriseTerms: opts.lowriseTermsFile === undefined ? undefined : (JSON.parse(await fs.readFile(opts.lowriseTermsFile, "utf8")) as string[]),
       env,
     });
     await writeResult(r satisfies ExecResult);

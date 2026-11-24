@@ -25,7 +25,7 @@ import { nodeTransport } from "./transport-node.js";
 
 const HERE = dirname(fileURLToPath(import.meta.url)); // dist/collectors/s17-thua-dinh-gia
 const COLLECTOR_ROOT = join(HERE, "..", "..", "..");
-const PHASES: Phase[] = ["reference", "tile-mask", "projects", "session-check", "apartments", "parcels"];
+const PHASES: Phase[] = ["reference", "tile-mask", "projects", "session-check", "apartments", "parcels", "lowrise"];
 const PUBLIC_PHASES: Phase[] = ["reference", "tile-mask"];
 /**
  * Nhịp: mặc định 350 ms — mức nguồn đã chịu được (0 lần bị chặn suốt 24/11). Mạnh cho tăng tốc thận trọng
@@ -63,6 +63,12 @@ export type CliOptions = {
   concurrency: number;
   /** Mốc ngày 2 — tệp lưới toạ độ các khu thí điểm của pha thửa. */
   parcelsGrid?: string;
+  /** Mốc ngày 2 — tệp JSON mảng các từ khoá gợi ý để khám phá dự án thấp tầng. */
+  lowriseTermsFile?: string;
+  /** Mốc ngày 2 — nội dung tệp từ khoá (đã đọc). */
+  lowriseTerms?: string[];
+  /** Mốc ngày 2 — dải id quét dự án thấp tầng. */
+  lowriseSweep?: { from: number; to: number };
 };
 
 export function parseCli(argv: string[]): CliOptions {
@@ -87,6 +93,9 @@ export function parseCli(argv: string[]): CliOptions {
       "chi-liet-ke": { type: "boolean" },
       "luong-song": { type: "string" },
       "parcels-grid": { type: "string" },
+      "thap-tang-terms": { type: "string" },
+      "thap-tang-id-tu": { type: "string" },
+      "thap-tang-id-den": { type: "string" },
     },
   });
   const phase = values.phase as Phase | undefined;
@@ -107,6 +116,10 @@ export function parseCli(argv: string[]): CliOptions {
   const projects = values.project?.map((x) => x.trim()).filter(Boolean);
   if (phase === "apartments" && !projects?.length) throw new UsageError("pha apartments cần ít nhất một --project <id dự án mẫu>");
   if (phase === "parcels" && !values["parcels-grid"]) throw new UsageError("pha parcels cần --parcels-grid <tệp lưới toạ độ các khu thí điểm>");
+  const idTu = values["thap-tang-id-tu"] === undefined ? undefined : positive("--thap-tang-id-tu", values["thap-tang-id-tu"]);
+  const idDen = values["thap-tang-id-den"] === undefined ? undefined : positive("--thap-tang-id-den", values["thap-tang-id-den"]);
+  if ((idTu === undefined) !== (idDen === undefined)) throw new UsageError("quét thấp tầng theo id cần đủ --thap-tang-id-tu và --thap-tang-id-den");
+  if (phase === "lowrise" && !values["thap-tang-terms"] && idTu === undefined) throw new UsageError("pha lowrise cần dải id quét (--thap-tang-id-tu … --thap-tang-id-den …) hoặc --thap-tang-terms <tệp JSON mảng các từ khoá gợi ý>");
   return {
     phase,
     via: isPublic ? "node" : "ego",
@@ -125,6 +138,8 @@ export function parseCli(argv: string[]): CliOptions {
     listOnly: values["chi-liet-ke"] === true ? true : undefined,
     concurrency,
     parcelsGrid: values["parcels-grid"],
+    lowriseTermsFile: values["thap-tang-terms"],
+    lowriseSweep: idTu === undefined ? undefined : { from: idTu, to: idDen as number },
   };
 }
 
@@ -184,6 +199,11 @@ export async function main(
   checkConfigForPhase(config, o);
   const grid = o.grid === undefined ? undefined : (JSON.parse(await readFile(o.grid, "utf8")) as GridEntry[]);
   const parcels = o.parcelsGrid === undefined ? undefined : (JSON.parse(await readFile(o.parcelsGrid, "utf8")) as ParcelArea[]);
+  const lowriseTerms = o.lowriseTermsFile === undefined ? undefined : (JSON.parse(await readFile(o.lowriseTermsFile, "utf8")) as string[]);
+  if (lowriseTerms !== undefined && (!Array.isArray(lowriseTerms) || lowriseTerms.some((t) => typeof t !== "string"))) {
+    io.err("--thap-tang-terms phải là mảng các chuỗi");
+    return 2;
+  }
   if (parcels !== undefined && (!Array.isArray(parcels) || parcels.some((k) => !k || typeof k.khuVucId !== "string" || !Array.isArray(k.diem)))) {
     io.err("--parcels-grid phải là mảng các khu { khuVucId, ten, dienTichKm2, buocM, diem: [[lat, lng], …] }");
     return 2;
@@ -209,6 +229,7 @@ export async function main(
       tileZoom: o.tileZoom,
       parcels,
       concurrency: o.concurrency,
+      lowriseTerms,
     });
     io.out(JSON.stringify(summarize(r)));
     return r.ok ? 0 : 3;

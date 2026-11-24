@@ -151,6 +151,7 @@ function render(c: Counts, kind: string | undefined): string {
     lines.push(`${kind}: ${c.byKind[kind] ?? 0}`);
     if (kind === "du_an_detail" && c.apartmentTable) lines.push(`  có bảng căn: ${c.apartmentTable.yes} · không: ${c.apartmentTable.no} · không rõ cờ: ${c.apartmentTable.unknown}`);
     if (kind === "du_an_list" && c.projectIdsUnique !== null) lines.push(`  id dự án duy nhất: ${c.projectIdsUnique} · tổng nguồn công bố: ${c.tongDuAn}`);
+    if (kind === "du_an_thap_tang") lines.push(`  dự án thấp tầng: ${c.byKind[kind] ?? 0}`);
     if (kind === "can_ho_toa" && c.apartmentBuilding) lines.push(`  toà: ${c.apartmentBuilding.total} · khớp tổng dòng: ${c.apartmentBuilding.khop} · mã duy nhất: ${c.apartmentBuilding.codes} · dòng: ${c.apartmentBuilding.rows}`);
     if (kind === "can_ho_detail" && c.apartmentDetail) lines.push(`  khớp mã căn: ${c.apartmentDetail.ok} · lệch mã: ${c.apartmentDetail.mismatch}`);
     if (kind === "thua" && c.parcel) lines.push(`  lưới: ${c.parcel.grid} · gợi ý: ${c.parcel.suggest} · khu: ${c.parcel.areas} (${c.parcel.areaKm2} km²) · lời: ${c.parcel.calls} · thửa/km²: ${c.parcel.perKm2} · lời/km²: ${c.parcel.callsPerKm2}`);
