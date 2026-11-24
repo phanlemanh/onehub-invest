@@ -363,7 +363,9 @@ Luật đọc:
 2. `tile_coverage`: `trong` = tile có dữ liệu; `rong` = tile rỗng (1.784 byte); `vang` = tile không tồn tại; `loi` = lỗi
    tạm. `soDiemQuet` = số điểm đã quét của tỉnh. Điểm quét là lưới bước 34 tile (khoảng 10 km) CHỈ trên đất, 34 tỉnh
    hiện hành, 5.206 điểm (sinh bằng `collector/src/collectors/s17-thua-dinh-gia/luoi-tile.sql`). Mặt nạ nói «vùng này
-   có dữ liệu», KHÔNG phải ranh giới phủ.
+   có dữ liệu», KHÔNG phải ranh giới phủ. Đo 24/11: 503 điểm có dữ liệu, 4.469 rỗng, 231 vắng, 3 lỗi; 20 trên 34 tỉnh có
+   ít nhất một điểm có dữ liệu. **Giới hạn**: đa giác tỉnh lấy từ `areas` (cấp market) của máy thu, một số chỉ bao vùng
+   lõi (Hà Nội 35 điểm, Bắc Ninh 50, Hải Phòng 78) — một tỉnh có 0 điểm KHÔNG có nghĩa là không có ranh thửa.
 3. `gia_ubnd` với `soViTri = 0`: đã hỏi và nguồn không có bảng cho quận đó — khác với chưa hỏi (đo 24/11: 710 quận,
    cả 710 đều có bảng).
 4. `du_an_list`: một dự án = một `id` trong `data.projects.content[]`; id trùng giữa các trang chỉ tính một lần.
