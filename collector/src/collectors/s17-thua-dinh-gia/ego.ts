@@ -67,8 +67,9 @@ type InPageJob = { done: number; rs: InPageResult[] };
 export const EGO_EVALUATE_LIMIT_MS = 15_000;
 /**
  * Hạn chờ của MỘT lời trong trang. Không lần chạy trong trang nào chờ lời gọi (xem IN_PAGE_START) nên hạn này không
- * bị buộc dưới hạn của trình duyệt: bản ghi lớn trả sau 15–60 s (đo 24/11: id 52 của namespace thấp tầng, lỗi lặp
- * lại ở cả hai lượt) vẫn nằm trong hạn. Lời chậm hơn hạn chờ dứt bằng lỗi mạng của riêng nó, lớp gọi thử lại theo luật.
+ * bị buộc dưới hạn của trình duyệt: bản ghi máy chủ trả chậm — đo 24/11: id 52 và 1705 của namespace thấp tầng về
+ * sau khoảng 12 s, thân chỉ vài KB — vẫn nằm trong hạn. Lời chậm hơn hạn chờ dứt bằng lỗi mạng của riêng nó, lớp
+ * gọi thử lại theo luật.
  */
 export const IN_PAGE_TIMEOUT_MS = 60_000;
 /** Nhịp hỏi kết quả của một đợt — mỗi lần hỏi là một lần chạy trong trang rất ngắn. */
@@ -156,8 +157,8 @@ export function makeTransports(
     }
   };
   const loiDot = (requests: Array<{ url: string }>, e: unknown): Array<Error> => {
-    const loi = new TypeError(`lần chạy trong trang lỗi (cả đợt): ${e instanceof Error ? e.message : String(e)}`);
-    return requests.map(() => loi);
+    const cau = `lần chạy trong trang lỗi (cả đợt): ${e instanceof Error ? e.message : String(e)}`;
+    return requests.map(() => new TypeError(cau)); // mỗi lời một lỗi riêng
   };
   const transport: Transport = async (url, headers) => xuLy((await chay([{ url, headers }], 0))[0]);
   const transportMany: TransportMany = async (requests, staggerMs) => {
