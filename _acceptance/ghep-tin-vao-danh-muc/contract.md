@@ -132,3 +132,7 @@ Trục và ô lấy từ bảng phủ ca của design doc §2, số đếm thậ
     23/11: n1 109/110 (0,9503, đạt), n2 108/110 (0,9361, hụt; báo cáo `cham-vong-2-may-moi-2411.md`). Hai bài n2 sai (#12663,
     #12711) đều là cặp nút 389/48 ở trên; nguồn C, F giữ bật; DA53 áp sau cổng. Nhãn n2 là «trợ lý đề xuất, người duyệt theo lô»
     (thẻ cài bắt 0/11), không phải người đọc độc lập. Không chấm lại trên lát này.
+  - **Chú thích lùi trong tệp 117 sai, cách lùi đúng ở hồ sơ áp.** Dòng «Lùi» ở đầu `db/migrations/117_ghep_toa_tren_tin.sql` còn
+    ghi «áp lại khối 2 và 3 của 113», mà làm thế thì CHECK của 113 từ chối giữa chừng. Cách lùi đúng là `lui/lui-117.sql`, mục 4
+    của `ho-so-ap.md`, đã chạy thử trên bản chép. Không sửa tệp 117 lúc này vì sửa thì phải ghim lại, tốn một lượt chấm 80 phút
+    (GS 24/11). Migration kế của chuỗi (PL36) mang dòng đính chính.

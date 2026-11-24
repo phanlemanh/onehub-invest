@@ -70,10 +70,19 @@ nghĩa là chưa ghi gì: đọc lý do, DỪNG và báo. Chạy lại lệnh m�
 
 ## 2. Số chạy thử
 
-**Chạy khô trên chính DB máy thu** (19/11, chỉ đọc, `ghep-tin-danh-muc-do.mjs --chi-doc`, trước DA46): **3.448 / 6.757 = 51,0%**
+**Số trên màn đổi sau khi áp** (AC-8): ô «tin căn hộ S03 của Ocean Park 1 và Grand Park gắn được toà, phân khu, cụm» (tử số
+`status = 'gan'` của view `offer_building` trên mẫu số tin căn hộ S03 hai khu) hiện **0** (view chưa có trên máy thu), sau áp lên
+khoảng **4.193 / 7.992 = 52,5%** (theo lượt chạy khô 24/11 dưới đây; số thật lấy lại ở 1c).
+
+**Chạy khô trên chính DB máy thu, 24/11 06:15Z** (chỉ đọc, `ghep-tin-danh-muc-do.mjs --chi-doc`, mã tại `49b99576d`, 6,6 giây):
+**4.193 / 7.992 = 52,5%** tin căn hộ S03 hai khu gắn được (tin bán 1.613 / 2.948 = 54,7%); mức toà 2.790 · mức vùng 1.403 · xung
+đột 23 (0,5% số đã gắn, trần 1%); OP1 1.360 · GP 2.833. Theo nguồn (lũy kế): A 3.462 · B +76 · C +144 · F +511 · D, G 0 (nguồn
+model tắt). **Mốc so lúc áp là dòng này** (lệch quá 2 điểm phần trăm thì DỪNG và báo).
+
+Chạy khô cũ, giữ để so — **trên chính DB máy thu** (19/11, chỉ đọc, `ghep-tin-danh-muc-do.mjs --chi-doc`, trước DA46): **3.448 / 6.757 = 51,0%**
 tin căn hộ S03 của hai khu gắn được (tin bán 1.373 / 2.499 = 54,9%); mức toà 2.390, mức vùng 1.058, xung đột 15 (0,4% số đã gắn);
 OP1 1.172 · GP 2.276. Theo nguồn: A 2.932 · B 62 · C 113 · F 341 · D, G 0 (nguồn model tắt). Thời gian 4,4 giây. Số trên máy thu
-đổi theo lượt nạp: lúc áp lấy lại bằng lệnh khô ở 1c, lệch quá 2 điểm phần trăm so với dòng này thì DỪNG và báo.
+đổi theo lượt nạp: lúc áp lấy lại bằng lệnh khô ở 1c và so với dòng 24/11 ở trên.
 
 **Bản chép DB máy thu, chuỗi đầy đủ 113 → 118 → 117 → lượt gắn** (`probes/do-phu.sh`, chép mới DB, tự xoá):
 
