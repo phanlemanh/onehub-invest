@@ -1,0 +1,122 @@
+schema_version: 1
+slug: ghep-tin-vao-truc-can
+
+# Lệnh đo nằm ở probes/*.sh của hồ sơ (cùng lệ PL20: _acceptance/config.yaml là tệp bảo vệ). Mọi probe chạy trên DB thử
+# của riêng lượt (db/db-thu.sh) hoặc bản chép chỉ đọc của DB máy thu; không ghi vào oneinvest.
+
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: bash _acceptance/ghep-tin-vao-truc-can/probes/ham-gan.sh
+    paths: ["pipeline/lib/ghep-tin-truc-can*.mjs"]
+    expected: >
+      Bảy ô một assert mỗi ô: trục, tầng và căn, toa-lech, ma-khong-toa, ma-la, ma-nhieu, bai-nhieu-can; mã căn rút từ bài thật
+      trên bản chép DB máy thu, kèm đối chứng dương. Chiều đỏ trên cùng fixture: bản đột biến bỏ phép so tiền tố toà thì ô toa-lech
+      đỏ, thông điệp ghim mã căn.
+
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: bash _acceptance/ghep-tin-vao-truc-can/probes/ham-gan.sh
+    paths: ["pipeline/lib/ghep-tin-truc-can*.mjs"]
+    expected: >
+      Số căn khớp một trục của toà đã gắn ra trục ấy, có và không số 0 đầu; số căn không có trục ra truc-ngoai-danh-ba; trục cùng
+      số của toà khác không được chọn. Chiều đỏ: bản đột biến tra trục trên mọi toà thì ca trục toà khác đỏ, thông điệp ghim hai khoá toà.
+
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: bash _acceptance/ghep-tin-vao-truc-can/probes/ham-gan.sh
+    paths: ["pipeline/lib/ghep-tin-truc-can*.mjs"]
+    expected: >
+      Chín ô một assert mỗi ô, mã rút từ bài thật: căn từ trục + tầng chữ bài, căn từ mã tầng + căn, trục can-ngoai-danh-ba, trục
+      tang-lech, căn kèm phát biểu floor_raw rule ghep-can-tang-tu-ma có nguồn là mã căn, tầng 09 với 9 khớp (không tang-lech),
+      toà có tầng 12A không ra căn sai tầng, mã khớp một bí danh S16/S08 ra căn ấy, bí danh trỏ hai căn giữ trục bi-danh-mo-ho;
+      tầng ghi dạng chuẩn; phát biểu floor_raw của bộ đọc chữ không bị rút hay đè.
+      Chiều đỏ: bản đột biến lấy tầng từ mã khi tầng lệch thì ca tang-lech đỏ.
+
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: bash _acceptance/ghep-tin-vao-truc-can/probes/migration.sh
+    layer: backend-effect
+    paths: ["db/migrations/131_*.sql", "pipeline/lib/ghep-tin-truc-can*.mjs"]
+    expected: >
+      Trên DB thử áp tới 117 rồi 131: ghi được hai dạng universal_property_sub_id của ba rule_id đúng khuôn, phát biểu floor_raw
+      ghep-can-tang-tu-ma, và phát biểu của 117 vẫn ghi được; tệp 131 có dòng đính chính «Lùi» của 117. Chiều đỏ: DB từ chối trục
+      không hoạt động, giá trị sai khuôn, trường này trên resource khác Property — mỗi ca một thông điệp gọi tên trường.
+
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: bash _acceptance/ghep-tin-vao-truc-can/probes/offer-unit.sh
+    layer: backend-effect
+    paths: ["db/migrations/131_*.sql", "pipeline/lib/ghep-tin-truc-can*.mjs"]
+    expected: >
+      Sáu ô một assert mỗi ô trên DB thử: cùng trục ra trục, trục + căn cùng trục ra căn, hai trục và trục ngoài toà ra xung_dot
+      giữ mức toà, tin chỉ toà ra toà, tin xung_dot ở offer_building không có dòng; dòng của rule_id khác không vào view. Ô đầu–cuối:
+      hàm gắn thật trên ba bài rút từ bản chép (cùng trục; trục + tầng; hai trục) rồi đọc offer_unit, mức và stack_key đúng từng tin.
+      Trên bản chép DB máy thu in số tin mỗi mức, số tin gắn hai căn bằng 0, và mọi dòng ghep-can-* sống của tin không xung đột hiện ở
+      đúng một dòng offer_unit mức sâu. Chiều đỏ: cấy hai căn vào một tin ở bản sao thì lệnh báo đúng offer_id.
+
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: bash _acceptance/ghep-tin-vao-truc-can/probes/chay-lai.sh
+    paths: ["pipeline/lib/ghep-tin-truc-can*.mjs", "pipeline/lib/assert.mjs", "pipeline/transform-zalo.mjs"]
+    expected: >
+      Lượt hai 0 chèn 0 rút. Ba ca đổi dữ liệu một assert mỗi ca: toà của bài bị rút, mã căn đổi, trục ngừng hoạt động — dòng cũ bị
+      rút, chỉ chèn dòng mới khi còn gắn được. Tắt một nguồn thì lượt kế rút đúng dòng nguồn đó. Một lượt nạp thật trên bản chép:
+      0 dòng ghep-can-* bị rút với lý do thay-boi-luot. Chiều đỏ: bỏ phần chừa ghep-can-% khỏi câu rút thì ca lượt nạp đỏ, ghim số dòng bị rút.
+
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: bash _acceptance/ghep-tin-vao-truc-can/probes/offer-building-nhanh.sh
+    layer: backend-effect
+    paths: ["db/migrations/131_*.sql"]
+    expected: >
+      Trên bản chép DB máy thu: băm đầu ra có sắp xếp của offer_building trước và sau 131 bằng nhau; count(*) sau 131 dưới 10 giây;
+      count(*) và SELECT * WHERE muc <> 'toa' của offer_unit dưới 15 giây; in số giây từng câu. Chiều đỏ: bản đột biến đổi một dòng
+      đầu ra thì phép so đỏ, gọi tên offer_id; bản bỏ MATERIALIZED thì phép đo thời gian vượt trần và gọi tên view.
+
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: bash _acceptance/ghep-tin-vao-truc-can/probes/cuoi-luot-nap.sh
+    paths: ["pipeline/transform-zalo.mjs", "pipeline/lib/ghep-tin-truc-can*.mjs"]
+    expected: >
+      Lượt nạp trên DB thử chạy bước gắn trục, căn sau bước gắn toà, trong giao dịch riêng với khoá tư vấn riêng. Cấy lỗi vào bước
+      gắn: lượt nạp vẫn thoát 0, log có đúng một dòng JOB WARN [ghep-can]. Khoá đang bị giữ thì bỏ lượt, một dòng cảnh báo.
+
+  - id: E9
+    criterion: AC-9
+    executor: script
+    cmd: bash _acceptance/ghep-tin-vao-truc-can/probes/chay-kho.sh
+    paths: ["pipeline/lib/ghep-tin-truc-can*.mjs", "pipeline/scripts/ghep-tin-truc-can*.mjs"]
+    expected: >
+      Chạy khô trên bản chép DB máy thu, không ghi: in theo khu số tin mức toà, trục, căn, xung đột và số theo từng lý do không gắn;
+      tin mức trục cộng căn ở OP1 ≥ 350; GP in số không chấm; in từng tin mức căn kèm mã căn nguyên văn, tầng từ mã, tầng danh bạ.
+      Lệnh thoát 1 và gọi tên khu khi OP1 dưới ngưỡng.
+
+  - id: E10a
+    criterion: AC-10
+    executor: script
+    cmd: bash _acceptance/ghep-tin-vao-truc-can/probes/cham-truc.sh
+    paths: ["pipeline/lib/ghep-tin-truc-can*.mjs", "pipeline/scripts/ghep-tin-truc-can*.mjs"]
+    expected: >
+      Đọc tập nhãn trục OP1 đóng băng, so băm với băm ghim trong hồ sơ, chạy luật, tính cận dưới Wilson 95% của gắn trục đúng
+      trong số bài máy gắn; thoát 1 khi OP1 dưới 0,95; GP in số. Ghi evidence/cham-truc.md có bảng từng bài sai (mã căn nguyên văn,
+      toà, trục máy gắn, trục nhãn người). Chiều đỏ: đổi một nhãn ở bản sao thì băm lệch, lệnh gọi tên tập.
+
+  - id: E10
+    criterion: AC-10
+    executor: judgment
+    question: >
+      Đọc bảng bài sai trong tệp chấm: các bài máy gắn sai trục có chung một kiểu lỗi luật sửa được (dạng mã, tiền tố toà, tra
+      trục) không, hay là lỗi nhãn người hoặc dữ liệu danh bạ?
+    inputs: ["_acceptance/ghep-tin-vao-truc-can/evidence/cham-truc.md"]
+    expected: >
+      Tệp chấm (do E10a sinh) có số bài, số máy gắn, số đúng, cận dưới Wilson, và bảng từng bài sai đủ bốn cột; người chấm
+      xếp từng bài sai vào một kiểu và nói kiểu nào sửa được bằng luật.

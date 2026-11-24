@@ -26,9 +26,9 @@ Vì sao: Mạnh chốt QĐ6 14/11: chia PL20 hai nhịp, gắn toà trước (đ
 
 ## Ngưỡng chết / ngưỡng UAT
 
-- Câu hỏi phép đo trả lời: [đề xuất] đã đạt «Trên tập test đóng băng của PL35: cận dưới Wilson của gắn trục đạt ngưỡng nhóm A; gắn căn chỉ khi đủ toà + tầng + số căn hoặc mã căn khớp bí danh; 0 tin gắn hai căn; tin chỉ biết toà giữ mức toà, không bị hạ; tầng suy từ mã căn ghi phát biểu riêng có nguồn; chạy lại không đổi» chưa?
-- Kết quả nào là SỐNG: [đề xuất] Trên tập test đóng băng của PL35: cận dưới Wilson của gắn trục đạt ngưỡng nhóm A; gắn căn chỉ khi đủ toà + tầng + số căn hoặc mã căn khớp bí danh; 0 tin gắn hai căn; tin chỉ biết toà giữ mức toà, không bị hạ; tầng suy từ mã căn ghi phát biểu riêng có nguồn; chạy lại không đổi
-- Kết quả nào là CHẾT: [đề xuất] chưa đạt «Trên tập test đóng băng của PL35: cận dưới Wilson của gắn trục đạt ngưỡng nhóm A; gắn căn chỉ khi đủ toà + tầng + số căn hoặc mã căn khớp bí danh; 0 tin gắn hai căn; tin chỉ biết toà giữ mức toà, không bị hạ; tầng suy từ mã căn ghi phát biểu riêng có nguồn; chạy lại không đổi» khi hết timebox
+- Câu hỏi phép đo trả lời: [đề xuất] đã đạt «Trên tập nhãn trục OP1 đóng băng (Hỏi-2 — tầng op1-truc của PL35 chưa có nhãn người): cận dưới Wilson của gắn trục đạt ngưỡng nhóm A; gắn căn chỉ khi đủ toà + tầng + số căn hoặc mã căn khớp bí danh; 0 tin gắn hai căn; tin chỉ biết toà giữ mức toà, không bị hạ; tầng suy từ mã căn ghi phát biểu riêng có nguồn; chạy lại không đổi» chưa?
+- Kết quả nào là SỐNG: [đề xuất] Trên tập nhãn trục OP1 đóng băng (Hỏi-2 — tầng op1-truc của PL35 chưa có nhãn người): cận dưới Wilson của gắn trục đạt ngưỡng nhóm A; gắn căn chỉ khi đủ toà + tầng + số căn hoặc mã căn khớp bí danh; 0 tin gắn hai căn; tin chỉ biết toà giữ mức toà, không bị hạ; tầng suy từ mã căn ghi phát biểu riêng có nguồn; chạy lại không đổi
+- Kết quả nào là CHẾT: [đề xuất] chưa đạt «Trên tập nhãn trục OP1 đóng băng (Hỏi-2 — tầng op1-truc của PL35 chưa có nhãn người): cận dưới Wilson của gắn trục đạt ngưỡng nhóm A; gắn căn chỉ khi đủ toà + tầng + số căn hoặc mã căn khớp bí danh; 0 tin gắn hai căn; tin chỉ biết toà giữ mức toà, không bị hạ; tầng suy từ mã căn ghi phát biểu riêng có nguồn; chạy lại không đổi» khi hết timebox
 - Timebox: hai lượt chấm S4 (trần 3 round của kit); quá thì thu phạm vi có tên ở Cổng Bằng chứng.
 - Ngưỡng theo khu (đo P4 24/11, chỉ đọc, theo bài): OP1 có 9.540 bài nêu trục không tầng và 1.996 bài nêu tầng + căn; GP chỉ
   khoảng 150 bài có số căn. Câu «ngưỡng Wilson chấm theo từng khu, GP chỉ báo số» là câu cho Cổng Phạm vi, không quyết ở đây.
