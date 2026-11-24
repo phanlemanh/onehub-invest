@@ -140,7 +140,7 @@ test("lowrise: chạy lại không lặp từ khoá và dự án đã xong", asy
 type Quet = { null: string[]; theoId: Record<string, { estate_type: string; ten: string }>; dot: number[] };
 
 /** Nguồn giả cho quét theo id: `null` = id không có bản ghi thấp tầng (nguồn trả data null); `theoId` = id có bản ghi. */
-function nguonQuet(quet: Quet, o: { many?: boolean; chanId?: number } = {}): { client: S17Client; sent: string[]; dot: number[] } {
+function nguonQuet(quet: Quet, o: { many?: boolean; chanId?: number; loiId?: number } = {}): { client: S17Client; sent: string[]; dot: number[] } {
   const sent: string[] = [];
   const dot: number[] = quet.dot;
   const answer = (url: string): Response => {
@@ -149,6 +149,7 @@ function nguonQuet(quet: Quet, o: { many?: boolean; chanId?: number } = {}): { c
     if (!m) return json(env({ available: 20 }));
     const id = m[1];
     if (o.chanId !== undefined && Number(id) === o.chanId) return json({ message: "denied" }, 403);
+    if (o.loiId !== undefined && Number(id) === o.loiId) throw new TypeError("Failed to fetch");
     if (u.searchParams.get("for_house") !== "true") return json(env({ id, estate_type: "du_an", properties: { ten_du_an: "Căn hộ trùng id" } }));
     const r = quet.theoId[id];
     if (!r) return json(env(null));
@@ -183,15 +184,30 @@ function nguonQuet(quet: Quet, o: { many?: boolean; chanId?: number } = {}): { c
   return { client, sent, dot };
 }
 
-const quet = (root: string, state: RunState, ke: ReturnType<typeof nguonQuet>, sweep: { from: number; to: number }, o: { concurrency?: number; writer?: BatchWriter } = {}) => {
+const quet = (root: string, state: RunState, ke: ReturnType<typeof nguonQuet>, sweep: { from: number; to: number }, o: { concurrency?: number; writer?: BatchWriter; log?: (e: Record<string, unknown>) => void } = {}) => {
   const w = o.writer ?? new BatchWriter({ root, maxItems: 100, phase: "lowrise" });
   const run = () =>
-    runPhase({ phase: "lowrise", client: ke.client, writer: w, state, save: async () => undefined, log: () => undefined, now: () => new Date("2026-11-24T10:00:00.000Z"), lowriseSweep: sweep, concurrency: o.concurrency ?? 1 }).then(async (s) => {
+    runPhase({ phase: "lowrise", client: ke.client, writer: w, state, save: async () => undefined, log: o.log ?? (() => undefined), now: () => new Date("2026-11-24T10:00:00.000Z"), lowriseSweep: sweep, concurrency: o.concurrency ?? 1 }).then(async (s) => {
       await w.flush();
       return s;
     });
   return { run, writer: w };
 };
+
+test("lowrise quét theo id: nhật ký mỗi đợt mang thời gian đợt và số id lỗi trong đợt (đo tốc độ trên dữ liệu thật)", async () => withTmp(async (root) => {
+  const ke = nguonQuet({ null: [], dot: [], theoId: { "7": { estate_type: "du_an_nha_dat", ten: "Biệt thự A" } } }, { loiId: 9 });
+  const dong: Array<Record<string, unknown>> = [];
+  const s = await quet(root, emptyState(), ke, { from: 7, to: 12 }, { log: (e) => dong.push(e) }).run();
+  const q = dong.filter((d) => d.suKien === "thap-tang-quet");
+  assert.equal(q.length, 1, "một đợt (dưới 50 id)");
+  assert.equal(typeof q[0].ms, "number", "có thời gian đợt");
+  assert.ok(Number(q[0].ms) >= 0);
+  assert.equal(q[0].daQuet, 4, "bốn id rỗng (8, 10, 11, 12)");
+  assert.equal(q[0].thay, 1);
+  assert.equal(q[0].loi, 1, "id 9 lỗi mạng sau khi thử lại");
+  assert.equal(s.failed, 1);
+  assert.ok(ke.sent.filter((u) => u.includes("/projects/9?")).length >= 2, "id lỗi mạng được thử lại trước khi tính lỗi");
+}));
 
 test("lowrise quét theo id: id rỗng ghi nhận là đã kiểm, id có bản ghi thấp tầng thì ghi item, sai namespace tính lỗi", async () => withTmp(async (root) => {
   const ke = nguonQuet({ null: [], dot: [], theoId: { "7": { estate_type: "du_an_nha_dat", ten: "Biệt thự A" }, "8": { estate_type: "du_an", ten: "Là căn hộ" }, "10": { estate_type: "du_an_nha_dat", ten: "Nhà phố B" } } });

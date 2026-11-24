@@ -14,7 +14,7 @@ import type { Response } from "./client.js";
 import { buildExecOptions, executePhase, type ExecResult } from "./runner.js";
 import type { GridEntry, ParcelArea, Phase } from "./run.js";
 
-type EgoPage = {
+export type EgoPage = {
   label: string;
   evaluate(fn: (...args: never[]) => unknown, arg?: unknown): Promise<unknown>;
 };
@@ -29,6 +29,7 @@ export type EgoApi = {
   takeOverTaskSpace(id: number): Promise<EgoTask>;
   listTaskSpaces(): Promise<Array<{ id: number; ownership: string }>>;
 };
+
 export type EgoOptions = {
   config: S17Config;
   phase: Phase;
@@ -59,9 +60,19 @@ export type EgoOptions = {
 };
 
 type InPageResult = { status: number; contentType: string | null; body: string; bytes?: number; networkError?: string };
+type InPageInput = { url: string; headerJson: string; cookieName: string; timeoutMs: number };
+
+/** Trình duyệt (ego) hủy một lần chạy trong trang sau 15 s (đo 24/11). */
+export const EGO_EVALUATE_LIMIT_MS = 15_000;
+/**
+ * Hạn chờ của MỘT lời trong trang — thấp hơn hạn của trình duyệt. Lời chậm hơn hạn này dứt bằng lỗi mạng của riêng
+ * nó và lớp gọi thử lại theo luật; để trang tự chờ lâu hơn thì trình duyệt hủy cả lần chạy (lượt quét thấp tầng
+ * 24/11: đợt hai treo 15 s rồi cả lượt vỡ).
+ */
+export const IN_PAGE_TIMEOUT_MS = 10_000;
 
 /** Tự chứa (chạy trong trang, không được tham chiếu biến ngoài). Chữ giữ thân; nhị phân chỉ giữ số byte. */
-const IN_PAGE_FETCH = async (input: { url: string; headerJson: string; cookieName: string }): Promise<InPageResult> => {
+export const IN_PAGE_FETCH = async (input: InPageInput): Promise<InPageResult> => {
   const g = globalThis as unknown as {
     fetch(url: string, init: object): Promise<{ status: number; headers: { get(k: string): string | null }; text(): Promise<string>; arrayBuffer(): Promise<ArrayBuffer> }>;
     document: { cookie: string };
@@ -72,7 +83,7 @@ const IN_PAGE_FETCH = async (input: { url: string; headerJson: string; cookieNam
   const m = new RegExp(`(?:^|;\\s*)${input.cookieName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}=([^;]+)`).exec(g.document.cookie);
   if (m) headers.Authorization = `Bearer ${decodeURIComponent(m[1])}`;
   try {
-    const res = await g.fetch(input.url, { headers, credentials: "omit", signal: g.AbortSignal.timeout(30_000) });
+    const res = await g.fetch(input.url, { headers, credentials: "omit", signal: g.AbortSignal.timeout(input.timeoutMs) });
     const contentType = res.headers.get("content-type") ?? "";
     if (/json|text|javascript|xml|form/i.test(contentType)) return { status: res.status, contentType, body: await res.text() };
     const buf = await res.arrayBuffer();
@@ -86,19 +97,19 @@ const IN_PAGE_FETCH = async (input: { url: string; headerJson: string; cookieNam
  * Nhiều lời trong MỘT lần chạy trong trang: các fetch cùng chạy, lời i bắt đầu sau i × staggerMs (đo 24/11: hai
  * lời đồng thời xong sau 4,9 s thay vì 8,4 s). Tự chứa; phiên chỉ đi thẳng vào header của chính lời gọi.
  */
-const IN_PAGE_FETCH_MANY = async (input: { items: Array<{ url: string; headerJson: string; cookieName: string }>; staggerMs: number }): Promise<InPageResult[]> => {
+export const IN_PAGE_FETCH_MANY = async (input: { items: InPageInput[]; staggerMs: number }): Promise<InPageResult[]> => {
   const g = globalThis as unknown as {
     fetch(url: string, init: object): Promise<{ status: number; headers: { get(k: string): string | null }; text(): Promise<string>; arrayBuffer(): Promise<ArrayBuffer> }>;
     document: { cookie: string };
     AbortSignal: { timeout(ms: number): unknown };
   };
-  const mot = async (it: { url: string; headerJson: string; cookieName: string }, delayMs: number): Promise<InPageResult> => {
+  const mot = async (it: InPageInput, delayMs: number): Promise<InPageResult> => {
     if (delayMs > 0) await new Promise((r) => setTimeout(r, delayMs));
     const headers = JSON.parse(it.headerJson) as Record<string, string>;
     const m = new RegExp(`(?:^|;\\s*)${it.cookieName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}=([^;]+)`).exec(g.document.cookie);
     if (m) headers.Authorization = `Bearer ${decodeURIComponent(m[1])}`;
     try {
-      const res = await g.fetch(it.url, { headers, credentials: "omit", signal: g.AbortSignal.timeout(60_000) });
+      const res = await g.fetch(it.url, { headers, credentials: "omit", signal: g.AbortSignal.timeout(it.timeoutMs) });
       const contentType = res.headers.get("content-type") ?? "";
       if (/json|text|javascript|xml|form/i.test(contentType)) return { status: res.status, contentType, body: await res.text() };
       const buf = await res.arrayBuffer();
@@ -109,6 +120,40 @@ const IN_PAGE_FETCH_MANY = async (input: { items: Array<{ url: string; headerJso
   };
   return Promise.all(input.items.map((it, i) => mot(it, i * input.staggerMs)));
 };
+
+/**
+ * Hai đường vận chuyển chạy trong một tab: một lời, và nhiều lời một đợt. Mỗi lời xin hạn chờ IN_PAGE_TIMEOUT_MS.
+ * Đợt mà lần chạy trong trang vẫn bị hủy thì mỗi lời của đợt nhận một Error — lớp gọi phân loại là lỗi mạng của
+ * từng lời theo đúng luật; không để một lần chạy chậm làm vỡ cả lượt.
+ */
+export function makeTransports(page: EgoPage, cookieName: string): { transport: Transport; transportMany: TransportMany } {
+  const xuLy = (r: InPageResult): Response => {
+    if (r.networkError) throw new TypeError(r.networkError);
+    return { status: r.status, contentType: r.contentType ?? "", body: r.body, bytes: r.bytes };
+  };
+  const transport: Transport = async (url, headers) =>
+    xuLy((await page.evaluate(IN_PAGE_FETCH, { url, headerJson: JSON.stringify(headers), cookieName, timeoutMs: IN_PAGE_TIMEOUT_MS })) as InPageResult);
+  const transportMany: TransportMany = async (requests, staggerMs) => {
+    let rs: InPageResult[];
+    try {
+      rs = (await page.evaluate(IN_PAGE_FETCH_MANY, {
+        items: requests.map((r) => ({ url: r.url, headerJson: JSON.stringify(r.headers), cookieName, timeoutMs: IN_PAGE_TIMEOUT_MS })),
+        staggerMs,
+      })) as InPageResult[];
+    } catch (e) {
+      const loi = e instanceof Error ? e.message : String(e);
+      return requests.map(() => new TypeError(`lần chạy trong trang lỗi (cả đợt): ${loi}`));
+    }
+    return rs.map((r) => {
+      try {
+        return xuLy(r);
+      } catch (e) {
+        return e instanceof Error ? e : new Error(String(e));
+      }
+    });
+  };
+  return { transport, transportMany };
+}
 
 export async function main(api: EgoApi, optionsPath: string): Promise<number> {
   const fs = await import("node:fs/promises");
@@ -136,27 +181,7 @@ export async function main(api: EgoApi, optionsPath: string): Promise<number> {
     return 4;
   }
   const page = tab.label ? task.page(tab.label) : await task.adopt(tab.page);
-
-  const xuLy = (r: InPageResult): Response => {
-    if (r.networkError) throw new TypeError(r.networkError);
-    return { status: r.status, contentType: r.contentType ?? "", body: r.body, bytes: r.bytes };
-  };
-  const transport: Transport = async (url, headers) =>
-    xuLy((await page.evaluate(IN_PAGE_FETCH, { url, headerJson: JSON.stringify(headers), cookieName: opts.cookieName ?? "" })) as InPageResult);
-  // Vận chuyển một đợt: lỗi mạng của một lời thành Error (lớp gọi phân loại), không làm hỏng cả đợt.
-  const transportMany: TransportMany = async (requests, staggerMs) => {
-    const rs = (await page.evaluate(IN_PAGE_FETCH_MANY, {
-      items: requests.map((r) => ({ url: r.url, headerJson: JSON.stringify(r.headers), cookieName: opts.cookieName ?? "" })),
-      staggerMs,
-    })) as InPageResult[];
-    return rs.map((r) => {
-      try {
-        return xuLy(r);
-      } catch (e) {
-        return e instanceof Error ? e : new Error(String(e));
-      }
-    });
-  };
+  const { transport, transportMany } = makeTransports(page, opts.cookieName ?? "");
 
   try {
     // Bản kê đi qua buildExecOptions chung với đường Node: không trường nào bị bỏ lại ở ranh giới tiến trình.

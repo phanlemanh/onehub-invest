@@ -751,8 +751,10 @@ async function lowrise(o: RunOptions): Promise<PhaseSummary> {
     }
     for (let i = 0; i < ids.length; i += LOWRISE_SWEEP_CHUNK) {
       const part = ids.slice(i, i + LOWRISE_SWEEP_CHUNK);
+      const t0 = Date.now();
       const ketQua = await o.client.getJsonMany<Envelope>(part.map((id) => ({ role: "project-detail" as const, params: { id, for_house: "true" } })), concurrency);
       let dung: RunStopped | null = null;
+      let loiDot = 0;
       for (let k = 0; k < part.length; k++) {
         const id = part[k];
         const r = ketQua[k];
@@ -763,6 +765,7 @@ async function lowrise(o: RunOptions): Promise<PhaseSummary> {
           }
           o.state.lowriseFailed[String(id)] = r.error.message;
           failed++;
+          loiDot++;
           continue;
         }
         const d = r.value?.data as { estate_type?: unknown; properties?: { ten_du_an?: unknown } } | null | undefined;
@@ -784,7 +787,8 @@ async function lowrise(o: RunOptions): Promise<PhaseSummary> {
       }
       await commit(o); // phần đã xong trong đợt này được chốt và ghi nhận trước khi báo dừng
       if (dung) throw dung;
-      o.log({ suKien: "thap-tang-quet", daQuet: o.state.lowriseSweepChecked.length, thay: o.state.lowriseDone.length });
+      // Thời gian và số lỗi của đợt: số đo tốc độ lấy từ dữ liệu thật, và dấu hiệu lời nào chậm hơn hạn của trang.
+      o.log({ suKien: "thap-tang-quet", daQuet: o.state.lowriseSweepChecked.length, thay: o.state.lowriseDone.length, loi: loiDot, ms: Date.now() - t0 });
     }
   }
   for (const term of terms) {
