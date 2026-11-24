@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: eb1e81f1f059b4a6218c907c0114ea6c251c065c
+verified_commit: a7fc3d62a6be76ffbdd685e1269141b8512bc273
 human_signoff: Mạnh 2026-11-24
 ---
 
@@ -211,3 +211,7 @@ none — mọi eval nhiều lượt đều đồng nhất (mọi eval chạy m�
 
 Round 1: lịch sử round trước nằm trong run-log.jsonl và các bản hồ sơ cũ; không chép lại ở đây.
 Round 2: mọi eval máy xanh, E9 đạt có giới hạn đã khai (lối 1, Mạnh 24/11); E10 chờ người quyết ở Cổng 2. Verdict PENDING-JUDGMENT.
+
+### Re-pin lần 1 — 2026-11-24, do nhận main sau chữ ký (#533: 4 tệp scripts/zalo-import-*), mã PL20 không đổi
+run_id: repin-20261124T102950Z-35111
+sha: a7fc3d62a6be76ffbdd685e1269141b8512bc273 · suites: 7 lệnh exit 0 · evals: 12/12 eval máy đạt kỳ vọng · đạt-có-giới-hạn: E9=3 · ngoài làn máy: E10 (E10 không khai paths)
