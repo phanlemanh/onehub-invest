@@ -47,7 +47,11 @@ PL20, lời người 18/11).
    chuẩn hoá chữ hoa, bỏ dấu cách. Tách **tiền tố toà** bằng tên đã đăng ký của toà trong dự án (dùng `chuanHoaTenToa` của
    PL20). Tiền tố là toà khác toà đã gắn → `toa-lech`, không gắn. Không có tiền tố nhận ra được → `ma-khong-toa`, không gắn.
 2. **Phần đuôi**: `X{1,2}<NN>` → trục số `NN`; `<T><NN>` 3–4 chữ số (tầng 1–2 chữ số + căn 2 chữ số, căn có thể kèm một chữ
-   cái) → tầng `T`, căn `NN`; dạng khác → `ma-la`.
+   cái) → tầng `T`, căn `NN`; dạng có dấu ngăn `<toà>.<T>.<NN>` hay `<toà>-<T>.<NN>` (cách ghi của GP: `S2.05.24.17`,
+   `S5.03-22.06`, `GH2-21.14`) → tầng `T`, căn `NN`; dạng khác → `ma-la`. Bộ đọc chữ không bắt dạng có dấu ngăn, nên ngoài
+   `unit_number` luật đọc thêm mã có dấu ngăn ngay sau tên toà trong **chữ bài** (rà 24/11 theo lời Mạnh: GP 76 bài dạng này,
+   khoảng 11 mã khác nhau; ghi chú `P4-pl36-ra-soat-truc-gp-2411.md`). Mã tin của sàn (`NTL02362`) và toà + diện tích
+   (`S10.07 67`) không phải mã căn: khuôn bắt buộc dấu chấm hay gạch ngăn giữa toà, tầng, căn.
 3. **Trục**: số căn `NN` khớp đúng một trục đang hoạt động của toà đã gắn (so đoạn cuối bí danh mã trục `.../<toà>/<NN>`,
    bỏ số 0 đầu) → trục. Không khớp → `truc-ngoai-danh-ba`, tin giữ mức toà.
 4. **Tầng**: tầng từ chữ bài (`floor_raw`, bộ đọc chữ) và tầng từ mã. Có cả hai mà lệch → `tang-lech`, giữ mức trục. Chỉ có
