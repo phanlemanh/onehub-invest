@@ -5,7 +5,7 @@ slug: doc-gop-song-song-va-luot-bu
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-24-doc-gop-song-song-va-luot-bu-design.md
 veto_state:
 veto_opened_at:
@@ -138,3 +138,12 @@ Core → AC-1…AC-9. Later: song song hoá `enrich-run`; cảnh báo ra ngoài 
 - Đổi prompt, bảng chọn model, luật «đã đọc», luật khử trùng, trần 20 USD/ngày.
 - Song song hoá `enrich-run`; cảnh báo ra ngoài máy (hàng N4 của audit).
 - Chạy lượt bù thật trong vòng này (chỉ chạy sau chữ ký, theo mục «Áp lên máy thu»).
+
+## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-25:
+  - Ngoài-1: Đêm bước đọc gộp hết giờ (mã 75), nhật ký vẫn có một dòng JOB FAIL giả dù bước dừng đúng hẹn và chuỗi đêm chạy tiếp.
+  - Ngoài-2: Khoá một lượt lấy sau khi đã đọc tiền đã chi và danh sách bài, nên hai lượt nối đuôi sát nhau có thể đọc lại vài bài và chi hơi quá trần ngày.
+  - Ngoài-3: Cùng kẽ hở thứ tự lấy khoá: lượt bù chạy ngay sau lượt đêm có thể dùng số đã chi và danh sách bài cũ.
+  - Ngoài-4: Bước hôm qua hết giờ vẫn in dòng JOB FAIL trước dòng cảnh báo hết giờ.
+  - Ngoài-5: Test số bài còn lại dùng dòng chữ viết tay; đổi chữ dòng «can goi» ở lệnh thật thì máy thu in số sai mà test vẫn xanh.

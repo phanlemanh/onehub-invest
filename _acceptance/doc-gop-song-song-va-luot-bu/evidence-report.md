@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 451be0139ede6144bc5795ba136397204a5be3a5
-human_signoff:
+human_signoff: Mạnh 2026-11-25
 ---
 
 # Evidence Report: doc-gop-song-song-va-luot-bu

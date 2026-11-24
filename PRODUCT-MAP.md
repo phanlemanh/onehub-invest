@@ -11,8 +11,8 @@ flowchart TD
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>21 việc"] --> GP{"Cổng Phạm vi"}
-  GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>223 việc"]
+  GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
+  GB --> DG["Đã giao<br/>224 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>142 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
@@ -68,10 +68,6 @@ flowchart TD
 - DATA-CONTRACT v15 (nháp) mục nguồn S09 danh bạ căn, gồm khuôn lượt bù căn thấp tầng 20/11, vào main để bộ nạp và DA50 đọc theo một bản (`s09-dc-v15-thap-tang`)
 - Tách bộ kiểm pipeline của lượt chấm thành hai nửa chạy song song, mỗi nửa một DB thử, để một lệnh không vượt trần chờ 30 phút của tác tử chấm (`tach-suite-pipeline`)
 - hai test app chạy trên DB chung thôi đỏ vì mã vùng dài cũ và thôi treo khi có DDL xếp hàng (`test-app-tren-db-chung`)
-
-## Đang làm
-
-- Đọc gộp S03 gọi model song song có trần, có trần thời gian riêng để enrich luôn chạy, và lượt bù theo khoảng ngày (`doc-gop-song-song-va-luot-bu`)
 
 ## Đã giao — chờ phiên nghiệm thu
 
@@ -281,6 +277,7 @@ flowchart TD
 - Bước đọc gộp của lượt 00:00 có đồng hồ riêng và mã 75 «dừng sạch» đi tiếp tới enrich — phần B (phía dưới mốc làn) của lưới chia trần (`doc-gop-dong-ho-rieng-trong-luot-dem`) — đã giao — máy thông, cửa veto còn mở
 - Bước đêm đọc gộp S03 chạy được ở kho không có .env trên /bin/bash 3.2 — bộ test agent xanh ở mọi worktree (`doc-gop-env-rong`)
 - Đọc gộp S03 hằng ngày — lệnh hang-ngay đọc toàn bộ bài S03 mới của một ngày đã khử trùng theo tin bằng model của bảng chọn PL30, trần 20 USD theo ngày chi, chạy lại không gọi lại bài đã đọc; bước đêm pipeline/doc-gop-hang-ngay.sh (`doc-gop-hang-ngay`)
+- Đọc gộp S03 gọi model song song có trần, có trần thời gian riêng để enrich luôn chạy, và lượt bù theo khoảng ngày (`doc-gop-song-song-va-luot-bu`)
 - Bộ test design-floor dọn mọi thư mục tạm nó tạo (clone sau-gộp, bản chép, cap-config, reuse-plan) khi tiến trình thoát, để mỗi lượt chạy không bỏ lại rác trong TMPDIR (`don-clone-tam-design-floor`)
 - Mã giao diện của app hết hex thô ngoài thư mục vendor — màu bản đồ dời sang app/src/lib, mặt nạ quét dùng black, giữ đúng từng giá trị màu (`don-hex-tho`)
 - Biểu mẫu theo nhóm chọn đơn vị giá theo Loại tin, hỏi lại khi giá lạ, và thẻ hiện mã để chép (`don-vi-gia-theo-loai-tin`)
