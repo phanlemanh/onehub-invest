@@ -1,6 +1,8 @@
 // dong-the-bo-sung-tin.mjs — NB9 `dong-the-bo-sung-tin-theo-luat`: máy đóng thẻ «Bổ sung tin» (review_queue agent_output
 // enrich:<offer_id>) theo luật xác định, không gọi model, không đổi tin (lời Mạnh 24/11 «Cho đóng 462 thẻ»).
-//   Nhóm 1 khong-con-de-xuat: thẻ chờ, 0 đề xuất queued trỏ review_id về nó.
+//   Nhóm 1 khong-con-de-xuat: thẻ chờ, 0 đề xuất queued trỏ review_id về nó — CHỈ ĐẾM, KHÔNG ĐÓNG. Đo 24/11: cả 230 thẻ là thẻ
+//          đối chiếu chưa ai xét (run.ts dựng thẻ khi tin có evidence.doi_chieu), lời «Cho đóng 462 thẻ» không phủ; GS phán tách,
+//          để NB5 xử theo nhóm.
 //   Nhóm 2 trung-gia-tri-tin: thẻ chờ, ≥ 1 đề xuất queued, MỌI đề xuất queued là property_type/bedrooms trùng giá trị
 //          sale_offers đang có (ô tin trống hay tin vắng khỏi sale_offers thì không trùng) → đề xuất chuyển skipped.
 // Thẻ đóng: status 'rejected' (review_queue không có trạng thái «đóng»; tiền lệ máy đóng thẻ enrich), decided_by NGUOI_LAM.
@@ -56,16 +58,16 @@ export const SQL_DEM_DOC_LAP = Object.freeze({
 });
 
 /**
- * Phân nhóm thẻ chờ. Trả { the: [{id, nhom, de_xuat}], nhom1, nhom2, conLai } — chỉ thẻ thuộc một nhóm nằm trong `the`.
+ * Phân nhóm thẻ chờ. `the` = thẻ SẼ ĐÓNG (chỉ nhóm 2); `nhom1` = thẻ nhóm 1, ngoài phạm vi đóng, chỉ để báo số.
  * @param {import("pg").ClientBase} c
  * @param {{ khoa?: boolean }} [o]
  */
 export async function phanNhom(c, o = {}) {
   const { rows } = await c.query(cauPhanNhom(Boolean(o.khoa)));
-  const the = rows.filter((r) => r.nhom).map((r) => ({ id: Number(r.id), nhom: r.nhom, de_xuat: r.de_xuat.map(Number) }));
-  const nhom1 = the.filter((t) => t.nhom === NHOM.khongConDeXuat);
-  const nhom2 = the.filter((t) => t.nhom === NHOM.trungGiaTriTin);
-  return { the, nhom1, nhom2, tongCho: rows.length, conLai: rows.length - the.length, soDeXuat: nhom2.reduce((n, t) => n + t.de_xuat.length, 0) };
+  const xep = rows.filter((r) => r.nhom).map((r) => ({ id: Number(r.id), nhom: r.nhom, de_xuat: r.de_xuat.map(Number) }));
+  const nhom1 = xep.filter((t) => t.nhom === NHOM.khongConDeXuat);
+  const nhom2 = xep.filter((t) => t.nhom === NHOM.trungGiaTriTin);
+  return { the: nhom2, nhom1, nhom2, tongCho: rows.length, conLai: rows.length - nhom2.length, soDeXuat: nhom2.reduce((n, t) => n + t.de_xuat.length, 0) };
 }
 
 /** Ghi chú quyết định của một thẻ. */
@@ -102,7 +104,7 @@ export async function dongTrongGiaoDich(c, o) {
   }
   return {
     luot: o.luot,
-    nhom1: pn.nhom1.length, nhom2: pn.nhom2.length, soDeXuat: dxIds.length, conLai: pn.conLai,
+    nhom2: pn.nhom2.length, ngoaiPhamVi: pn.nhom1.length, soDeXuat: dxIds.length, conLai: pn.conLai,
     the: theCu.map((r) => ({ ...r, id: Number(r.id), nhom: pn.the.find((t) => t.id === Number(r.id))?.nhom })),
     de_xuat: dxCu.map((r) => ({ ...r, id: Number(r.id), review_id: Number(r.review_id) })),
   };

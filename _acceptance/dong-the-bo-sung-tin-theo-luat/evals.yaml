@@ -9,7 +9,7 @@ evals:
     layer: backend-effect
     cmd: bash _acceptance/dong-the-bo-sung-tin-theo-luat/probes/dong.sh AC-1
     paths: [pipeline/scripts/dong-the-bo-sung-tin*, pipeline/lib/dong-the-bo-sung-tin*]
-    expected: "Fixture viết trước 16 thẻ, mỗi thẻ một assert nhóm viết tay: (a) chờ, 0 đề xuất → nhóm 1; (b) chờ, chỉ đề xuất applied → nhóm 1; (c) chờ, chỉ đề xuất skipped/rejected/superseded/reverted → nhóm 1; (d) chờ, một đề xuất loại hình trùng → nhóm 2; (e) chờ, PN trùng «2» với tin 2 → nhóm 2; (f) chờ, loại hình trùng + PN trùng → nhóm 2; (g) chờ, loại hình trùng + loại hình lệch → không nhóm; (h) chờ, loại hình trùng + WC → không nhóm; (i) chờ, toà → không nhóm; (j) chờ, đường → không nhóm; (k) chờ, PN đề xuất 2 mà ô tin trống → không nhóm; (l) chờ, tin đã nghỉ khỏi sale_offers → không nhóm; (m) «Để sau» 0 đề xuất → không nhóm; (n) đã bác → không nhóm; (o) data_quality chờ → không nhóm; (p) chờ, đề xuất queued trỏ thẻ khác cùng tin → nhóm 1. Đột biến trong bản sao (bỏ điều kiện «mọi» thành «có một»; bỏ kiểm ô tin trống) đỏ, thông điệp nêu mã thẻ."
+    expected: "Fixture viết trước 17 thẻ, mỗi thẻ một assert nhóm viết tay (nhóm 1 chỉ đếm, KHÔNG nằm trong tập sẽ đóng): (a) chờ, 0 đề xuất → nhóm 1; (b) chờ, chỉ đề xuất applied → nhóm 1; (c) chờ, chỉ đề xuất skipped/rejected/superseded/reverted → nhóm 1; (d) chờ, một đề xuất loại hình trùng → nhóm 2; (e) chờ, PN trùng «2» với tin 2 → nhóm 2; (f) chờ, loại hình trùng + PN trùng → nhóm 2; (g) chờ, loại hình trùng + loại hình lệch → không nhóm; (h) chờ, loại hình trùng + WC → không nhóm; (i) chờ, toà → không nhóm; (j) chờ, đường → không nhóm; (k) chờ, PN đề xuất 2 mà ô tin trống → không nhóm; (l) chờ, tin đã nghỉ khỏi sale_offers → không nhóm; (m) «Để sau» 0 đề xuất → không nhóm; (n) đã bác → không nhóm; (o) data_quality chờ → không nhóm; (p) chờ, đề xuất queued trỏ thẻ khác cùng tin → nhóm 1; (q) chờ, thẻ đối chiếu (evidence.doi_chieu, 0 đề xuất) → nhóm 1. Tập sẽ đóng đúng bằng {d, e, f}; cấy thẻ đối chiếu q vào tập đóng thì đỏ, thông điệp «thẻ đối chiếu nằm trong lượt đóng». Đột biến trong bản sao (bỏ điều kiện «mọi» thành «có một»; bỏ kiểm ô tin trống) đỏ, thông điệp nêu mã thẻ."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E2
     criterion: AC-2
@@ -17,7 +17,7 @@ evals:
     layer: backend-effect
     cmd: bash _acceptance/dong-the-bo-sung-tin-theo-luat/probes/dong.sh AC-2
     paths: [pipeline/scripts/dong-the-bo-sung-tin*, pipeline/lib/dong-the-bo-sung-tin*]
-    expected: "Trên fixture E1, --thu in đúng số nhóm 1 = 4 thẻ, nhóm 2 = 3 thẻ kèm số đề xuất 4, thẻ chờ còn lại viết tay, và hai câu SQL đếm độc lập; chạy hai câu SQL in kèm cho cùng số. Không bảng nào của lược đồ public bị ghi (pg_stat_xact_user_tables trước = sau, gồm giao dịch con). Đối chứng dương: một UPDATE review_queue chạy ngoài lệnh làm thước đỏ, thông điệp nêu bảng đổi."
+    expected: "Trên fixture E1, --thu in đúng số nhóm 1 (không đóng) = 5 thẻ, nhóm 2 = 3 thẻ kèm số đề xuất 4, thẻ chờ còn lại 11, và hai câu SQL đếm độc lập; chạy hai câu SQL in kèm cho cùng số. Không bảng nào của lược đồ public bị ghi (pg_stat_xact_user_tables trước = sau, gồm giao dịch con). Đối chứng dương: một UPDATE review_queue chạy ngoài lệnh làm thước đỏ, thông điệp nêu bảng đổi."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3
     criterion: AC-3
@@ -25,7 +25,7 @@ evals:
     layer: backend-effect
     cmd: bash _acceptance/dong-the-bo-sung-tin-theo-luat/probes/dong.sh AC-3
     paths: [pipeline/scripts/dong-the-bo-sung-tin*, pipeline/lib/dong-the-bo-sung-tin*]
-    expected: "Chạy thật trên fixture E1: 7 thẻ nhóm đổi rejected, decided_by bắt đầu «may:dong-the-theo-luat», decision_note chứa mã nhóm; 4 đề xuất nhóm 2 đổi skipped với evidence.ly_do='trung-gia-tri-tin'; mọi dòng khác của review_queue và enrichment_proposals (so từng dòng theo id) không đổi; chỉ hai bảng review_queue và enrichment_proposals có lượt ghi (pg_stat_xact_user_tables) — sale_offers, sale_offer_records, field_assertions không bị ghi. Ném lỗi giả ở thẻ thứ 5 → cả hai bảng về nguyên trạng (một giao dịch). Đột biến áp đề xuất (apply_enrichment) thay vì skipped đỏ, thông điệp nêu bảng field_assertions đổi."
+    expected: "Chạy thật trên fixture E1: 3 thẻ nhóm 2 đổi rejected, 5 thẻ nhóm 1 (gồm thẻ đối chiếu) giữ pending, decided_by bắt đầu «may:dong-the-theo-luat», decision_note chứa mã nhóm; 4 đề xuất nhóm 2 đổi skipped với evidence.ly_do='trung-gia-tri-tin'; mọi dòng khác của review_queue và enrichment_proposals (so từng dòng theo id) không đổi; chỉ hai bảng review_queue và enrichment_proposals có lượt ghi (pg_stat_xact_user_tables) — sale_offers, sale_offer_records, field_assertions không bị ghi. Ném lỗi giả ở thẻ thứ 2 → cả hai bảng về nguyên trạng (một giao dịch). Đột biến áp đề xuất (apply_enrichment) thay vì skipped đỏ, thông điệp nêu bảng field_assertions đổi."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4
     criterion: AC-4
@@ -33,7 +33,7 @@ evals:
     layer: backend-effect
     cmd: bash _acceptance/dong-the-bo-sung-tin-theo-luat/probes/dong.sh AC-4
     paths: [pipeline/scripts/dong-the-bo-sung-tin*, pipeline/lib/dong-the-bo-sung-tin*]
-    expected: "Giữa bước phân nhóm (móc thử) và bước ghi: một phiên khác quyết một thẻ nhóm 1 thành approved, và gắn một đề xuất bathrooms queued vào một thẻ nhóm 2. Lượt ghi đóng đúng 5 thẻ còn khớp, thẻ đã quyết giữ approved của người, thẻ có đề xuất mới giữ pending; số in ra = 5. Đột biến bỏ tính lại trong giao dịch đỏ, thông điệp nêu thẻ bị đè."
+    expected: "Giữa bước phân nhóm và bước ghi: người quyết thẻ nhóm 2 «e» thành approved, và gắn một đề xuất bathrooms queued vào thẻ nhóm 2 «d». Lượt ghi đóng đúng 1 thẻ còn khớp, thẻ đã quyết giữ approved của người, thẻ có đề xuất mới giữ pending; số in ra = 1. Đột biến bỏ tính lại trong giao dịch đỏ, thông điệp nêu thẻ bị đè."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E5
     criterion: AC-5
@@ -41,7 +41,7 @@ evals:
     layer: backend-effect
     cmd: bash _acceptance/dong-the-bo-sung-tin-theo-luat/probes/dong.sh AC-5
     paths: [pipeline/scripts/dong-the-bo-sung-tin*, pipeline/lib/dong-the-bo-sung-tin*]
-    expected: "Sau chạy thật trên fixture E1 có đúng một tệp lùi dưới .acceptance-runs/dong-the-bo-sung-tin-theo-luat/, ghi 7 thẻ và 4 đề xuất với giá trị cũ khớp ảnh chụp DB trước lượt (so từng trường). Lượt ném lỗi giữa chừng không để lại tệp lùi đánh dấu hoàn tất."
+    expected: "Sau chạy thật trên fixture E1 có đúng một tệp lùi dưới .acceptance-runs/dong-the-bo-sung-tin-theo-luat/, ghi 3 thẻ và 4 đề xuất với giá trị cũ khớp ảnh chụp DB trước lượt (so từng trường). Lượt ném lỗi giữa chừng không để lại tệp lùi đánh dấu hoàn tất."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E6
     criterion: AC-6

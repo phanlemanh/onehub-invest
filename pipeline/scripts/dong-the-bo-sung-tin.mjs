@@ -26,7 +26,7 @@ export async function chayThu(c, gd = GD_MAC_DINH) {
     const pn = await phanNhom(c);
     const dem = {};
     for (const [k, sql] of Object.entries(SQL_DEM_DOC_LAP)) dem[k] = Number((await c.query(sql)).rows[0].count);
-    return { tongCho: pn.tongCho, nhom1: pn.nhom1.length, nhom2: pn.nhom2.length, soDeXuat: pn.soDeXuat, conLai: pn.conLai, dem };
+    return { tongCho: pn.tongCho, ngoaiPhamVi: pn.nhom1.length, nhom2: pn.nhom2.length, soDeXuat: pn.soDeXuat, conLai: pn.conLai, dem };
   } finally {
     await c.query(gd.rollback);
   }
@@ -77,15 +77,15 @@ async function main(argv) {
     if (che === "thu") {
       const k = await chayThu(c);
       console.log(`thẻ «Bổ sung tin» chờ: ${k.tongCho}`);
-      console.log(`nhóm 1 khong-con-de-xuat: ${k.nhom1} thẻ (câu đếm độc lập: ${k.dem["khong-con-de-xuat"]})`);
+      console.log(`nhóm 1 khong-con-de-xuat: ${k.ngoaiPhamVi} thẻ — KHÔNG đóng (thẻ đối chiếu chưa xét, NB5) (câu đếm độc lập: ${k.dem["khong-con-de-xuat"]})`);
       console.log(`nhóm 2 trung-gia-tri-tin: ${k.nhom2} thẻ, ${k.soDeXuat} đề xuất → skipped (câu đếm độc lập: ${k.dem["trung-gia-tri-tin"]})`);
       console.log(`còn chờ sau khi đóng: ${k.conLai}`);
       for (const [n, sql] of Object.entries(SQL_DEM_DOC_LAP)) console.log(`-- ${n}\n${sql}`);
-      return k.dem["khong-con-de-xuat"] === k.nhom1 && k.dem["trung-gia-tri-tin"] === k.nhom2 ? 0 : 1;
+      return k.dem["khong-con-de-xuat"] === k.ngoaiPhamVi && k.dem["trung-gia-tri-tin"] === k.nhom2 ? 0 : 1;
     }
     if (che === "that") {
       const k = await chayThat(c);
-      console.log(`đã đóng: nhóm 1 ${k.nhom1} thẻ · nhóm 2 ${k.nhom2} thẻ, ${k.soDeXuat} đề xuất skipped · còn chờ ${k.conLai}`);
+      console.log(`đã đóng: nhóm 2 ${k.nhom2} thẻ, ${k.soDeXuat} đề xuất skipped · nhóm 1 không đóng ${k.ngoaiPhamVi} · còn chờ ${k.conLai}`);
       console.log(`tệp lùi: ${k.tep}`);
       return 0;
     }

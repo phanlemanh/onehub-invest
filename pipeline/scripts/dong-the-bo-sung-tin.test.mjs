@@ -106,8 +106,12 @@ async function dungFixture() {
   id.o = await the("o", s[12].offer_id, { itemType: "data_quality" });
   // (p) chờ; đề xuất queued của cùng tin trỏ thẻ khác (thẻ «Để sau» m) → nhóm 1
   id.p = await the("p", s[13].offer_id); await dx(id.m, s[13].offer_id, "property_type", khac(s[13].property_type));
-  const nhom = { a: 1, b: 1, c: 1, p: 1, d: 2, e: 2, f: 2 };
-  return { id, nhom, dxNhom2: [dxD, dxE, dxF1, dxF2].sort((x, y) => x - y) };
+  // (q) chờ, thẻ đối chiếu (evidence.doi_chieu, 0 đề xuất) — nhóm 1, KHÔNG được đóng (GS 24/11)
+  id.q = await the("q", tin.song[12].offer_id);
+  await c.query(`UPDATE review_queue SET evidence = '{"doi_chieu":[{"loai":"y_dinh"}],"fields":[]}' WHERE id = $1`, [id.q]);
+  const nhom = { a: 1, b: 1, c: 1, p: 1, q: 1, d: 2, e: 2, f: 2 };
+  const dong = { d: 1, e: 1, f: 1 };
+  return { id, nhom, dong, dxNhom2: [dxD, dxE, dxF1, dxF2].sort((x, y) => x - y) };
 }
 
 async function ghiBang() {
@@ -122,10 +126,12 @@ test("E1 AC-1 phân nhóm theo luật — 16 thẻ viết tay", async () => {
   await trongGiaoDich(async () => {
     const f = await dungFixture();
     const pn = await phanNhom(c);
-    const thucTe = Object.fromEntries(pn.the.map((t) => [t.id, t.nhom === NHOM.khongConDeXuat ? 1 : 2]));
+    const thucTe = Object.fromEntries([...pn.nhom1, ...pn.nhom2].map((t) => [t.id, t.nhom === NHOM.khongConDeXuat ? 1 : 2]));
     for (const [ma, theId] of Object.entries(f.id)) {
       assert.equal(thucTe[theId] ?? 0, f.nhom[ma] ?? 0, `thẻ ${ma} (id ${theId}): nhóm sai`);
     }
+    assert.deepEqual(pn.the.map((t) => t.id).sort((x, y) => x - y), [f.id.d, f.id.e, f.id.f].sort((x, y) => x - y), "thẻ sẽ đóng chỉ là nhóm 2");
+    assert.ok(!pn.the.some((t) => t.id === f.id.q), "thẻ đối chiếu nằm trong lượt đóng");
     assert.deepEqual(pn.nhom2.flatMap((t) => t.de_xuat).sort((x, y) => x - y), f.dxNhom2, "đề xuất nhóm 2");
   });
 });
@@ -135,9 +141,9 @@ test("E2 AC-2 chạy thử: số từng nhóm, câu đếm độc lập, không 
     await dungFixture();
     const truoc = await ghiBang();
     const k = await chayThu(c, GD);
-    assert.deepEqual({ n1: k.nhom1, n2: k.nhom2, dx: k.soDeXuat, cl: k.conLai }, { n1: 4, n2: 3, dx: 4, cl: 6 });
+    assert.deepEqual({ n1: k.ngoaiPhamVi, n2: k.nhom2, dx: k.soDeXuat, cl: k.conLai }, { n1: 5, n2: 3, dx: 4, cl: 11 });
     for (const [n, sql] of Object.entries(SQL_DEM_DOC_LAP)) {
-      assert.equal(Number((await c.query(sql)).rows[0].count), n === NHOM.khongConDeXuat ? 4 : 3, `câu đếm độc lập ${n}`);
+      assert.equal(Number((await c.query(sql)).rows[0].count), n === NHOM.khongConDeXuat ? 5 : 3, `câu đếm độc lập ${n}`);
     }
     assert.deepEqual(bangDoi(truoc, await ghiBang()), [], "chế độ thử ghi bảng");
     // Đối chứng dương: một UPDATE ngoài lệnh làm thước đỏ.
@@ -152,19 +158,22 @@ test("E3 AC-3 chạy thật: đúng thẻ/đề xuất đổi, bảng tin không
     const rqTruoc = await anh("review_queue"), epTruoc = await anh("enrichment_proposals");
     const truoc = await ghiBang();
     // Lỗi giả ở thẻ thứ 5 → lùi trọn.
-    await assert.rejects(chayThat(c, { gd: GD, thuMuc: thuMucTam(), sauMoiThe: (i) => { if (i === 5) throw new Error("lỗi giả"); } }), /lỗi giả/);
+    await assert.rejects(chayThat(c, { gd: GD, thuMuc: thuMucTam(), sauMoiThe: (i) => { if (i === 2) throw new Error("lỗi giả"); } }), /lỗi giả/);
     assert.deepEqual(await anh("review_queue"), rqTruoc, "lỗi giữa chừng: review_queue phải nguyên");
     assert.deepEqual(await anh("enrichment_proposals"), epTruoc, "lỗi giữa chừng: enrichment_proposals phải nguyên");
     const k = await chayThat(c, { gd: GD, thuMuc: thuMucTam(), luot: "t3" });
-    assert.deepEqual({ n1: k.nhom1, n2: k.nhom2, dx: k.soDeXuat }, { n1: 4, n2: 3, dx: 4 });
-    const dong = new Set(Object.entries(f.nhom).map(([ma]) => f.id[ma]));
+    assert.deepEqual({ n1: k.ngoaiPhamVi, n2: k.nhom2, dx: k.soDeXuat }, { n1: 5, n2: 3, dx: 4 });
+    const dong = new Set(Object.keys(f.dong).map((ma) => f.id[ma]));
+    for (const ma of ["a", "b", "c", "p", "q"]) {
+      assert.equal((await c.query("SELECT status FROM review_queue WHERE id = $1", [f.id[ma]])).rows[0].status, "pending", `thẻ nhóm 1 ${ma} bị đóng`);
+    }
     for (const r of (await c.query("SELECT * FROM review_queue ORDER BY id")).rows) {
       const cu = JSON.parse(rqTruoc.find((x) => JSON.parse(x).id === r.id));
       if (dong.has(Number(r.id))) {
         assert.equal(r.status, "rejected", `thẻ ${r.id}`);
         assert.equal(r.decided_by, NGUOI_LAM);
         assert.ok(r.decided_at, "decided_at");
-        assert.match(r.decision_note, /khong-con-de-xuat|trung-gia-tri-tin/);
+        assert.match(r.decision_note, /trung-gia-tri-tin/);
       } else {
         assert.deepEqual(JSON.parse(JSON.stringify(r)), cu, `thẻ ngoài nhóm ${r.id} bị đổi`);
       }
@@ -185,13 +194,13 @@ test("E4 AC-4 thẻ đổi giữa phân nhóm và ghi: tính lại trong giao d�
   await trongGiaoDich(async () => {
     const f = await dungFixture();
     const xem = await phanNhom(c);
-    assert.equal(xem.the.length, 7);
-    await c.query("UPDATE review_queue SET status = 'approved', decided_by = 'usr_nb9', decided_at = now() WHERE id = $1", [f.id.a]);
+    assert.equal(xem.the.length, 3);
+    await c.query("UPDATE review_queue SET status = 'approved', decided_by = 'usr_nb9', decided_at = now() WHERE id = $1", [f.id.e]);
     await dx(f.id.d, tin.song[3].offer_id, "bathrooms", "3");
     const k = await chayThat(c, { gd: GD, thuMuc: thuMucTam() });
-    assert.equal(k.nhom1 + k.nhom2, 5, "số đã đóng");
+    assert.equal(k.nhom2, 1, "số đã đóng");
     const st = async (i) => (await c.query("SELECT status, decided_by FROM review_queue WHERE id = $1", [i])).rows[0];
-    assert.deepEqual(await st(f.id.a), { status: "approved", decided_by: "usr_nb9" }, "thẻ người đã quyết bị đè");
+    assert.deepEqual(await st(f.id.e), { status: "approved", decided_by: "usr_nb9" }, "thẻ người đã quyết bị đè");
     assert.equal((await st(f.id.d)).status, "pending", "thẻ có đề xuất mới bị đóng");
   });
 });
@@ -206,7 +215,7 @@ test("E5 AC-5 tệp lùi ghi giá trị cũ; lượt lỗi không để tệp ho
     const epTruoc = (await c.query("SELECT id, status, decided_by, evidence FROM enrichment_proposals ORDER BY id")).rows;
     const k = await chayThat(c, { gd: GD, thuMuc: dir, luot: "ok" });
     const tep = JSON.parse(readFileSync(k.tep, "utf8"));
-    assert.equal(tep.the.length, 7); assert.equal(tep.de_xuat.length, 4);
+    assert.equal(tep.the.length, 3); assert.equal(tep.de_xuat.length, 4);
     for (const t of tep.the) {
       const cu = rqTruoc.find((r) => Number(r.id) === t.id);
       assert.deepEqual([t.status, t.decided_by, t.decided_at, t.decision_note], [cu.status, cu.decided_by, cu.decided_at, cu.decision_note]);
@@ -231,11 +240,11 @@ test("E6 AC-6 lùi về nguyên trạng; dòng người đã đổi không bị 
     assert.deepEqual(await anh("enrichment_proposals"), ep, "lùi: enrichment_proposals");
     // Xung đột
     const k2 = await chayThat(c, { gd: GD, thuMuc: thuMucTam(), luot: "l2" });
-    await c.query("UPDATE review_queue SET status = 'approved', decided_by = 'usr_nb9' WHERE id = $1", [f.id.b]);
+    await c.query("UPDATE review_queue SET status = 'approved', decided_by = 'usr_nb9' WHERE id = $1", [f.id.e]);
     const l2 = await chayLui(c, k2.tep, GD);
-    assert.deepEqual(l2.xungDot, [`the:${f.id.b}`]);
-    assert.equal((await c.query("SELECT status FROM review_queue WHERE id = $1", [f.id.b])).rows[0].status, "approved");
-    assert.equal((await c.query("SELECT status FROM review_queue WHERE id = $1", [f.id.a])).rows[0].status, "pending");
+    assert.deepEqual(l2.xungDot, [`the:${f.id.e}`]);
+    assert.equal((await c.query("SELECT status FROM review_queue WHERE id = $1", [f.id.e])).rows[0].status, "approved");
+    assert.equal((await c.query("SELECT status FROM review_queue WHERE id = $1", [f.id.d])).rows[0].status, "pending");
   });
 });
 
@@ -245,7 +254,7 @@ test("E7 AC-7 chạy lại lần hai: 0 thẻ, 0 đề xuất", async () => {
     await chayThat(c, { gd: GD, thuMuc: thuMucTam() });
     const rq = await anh("review_queue"), ep = await anh("enrichment_proposals");
     const k = await chayThat(c, { gd: GD, thuMuc: thuMucTam() });
-    assert.deepEqual({ n: k.nhom1 + k.nhom2, dx: k.soDeXuat }, { n: 0, dx: 0 });
+    assert.deepEqual({ n: k.nhom2, dx: k.soDeXuat }, { n: 0, dx: 0 });
     assert.deepEqual(await anh("review_queue"), rq); assert.deepEqual(await anh("enrichment_proposals"), ep);
   });
 });

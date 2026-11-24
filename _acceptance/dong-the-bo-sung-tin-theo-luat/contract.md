@@ -1,6 +1,6 @@
 ---
 schema_version: 1
-feature: Máy đóng theo luật xác định các thẻ «Bổ sung tin» không còn việc cho người (không còn đề xuất chờ, hoặc mọi đề xuất chờ trùng giá trị tin đang có), ghi lý do từng thẻ, có chạy thử, chạy thật trong một giao dịch và lệnh lùi — tin không đổi
+feature: Máy đóng theo luật xác định các thẻ «Bổ sung tin» mà mọi đề xuất chờ trùng giá trị tin đang có, ghi lý do từng thẻ, có chạy thử, chạy thật trong một giao dịch và lệnh lùi — tin không đổi
 slug: dong-the-bo-sung-tin-theo-luat
 owner: phanlemanh@gmail.com
 risk_tier: T2
@@ -23,12 +23,17 @@ mà NB1 (`_acceptance/cham-bong-bo-sung-tin/`, Out of scope dòng 4) để ngoà
 
 Hàng viết một lệnh máy đóng hai nhóm thẻ theo luật xác định, không gọi model:
 
-- **Nhóm 1 `khong-con-de-xuat`**: thẻ chờ không còn đề xuất nào `status='queued'` trỏ `review_id` về nó.
+- **Nhóm 1 `khong-con-de-xuat`** — CHỈ ĐẾM, KHÔNG ĐÓNG: thẻ chờ không còn đề xuất nào `status='queued'` trỏ `review_id` về nó. Đo
+  24/11 cả 230 thẻ là thẻ đối chiếu chưa ai xét (xem «Khác lời duyệt ban đầu»).
 - **Nhóm 2 `trung-gia-tri-tin`**: thẻ chờ có ít nhất một đề xuất chờ, và MỌI đề xuất chờ của nó là ô `property_type` hoặc `bedrooms`
   có giá trị trùng đúng giá trị `sale_offers` đang có của tin đó (so theo `value_key` với giá trị tin dạng chữ; tin vắng khỏi
   `sale_offers` hay ô tin trống thì KHÔNG tính là trùng). Các đề xuất chờ của thẻ chuyển `skipped` (không áp).
 
-Hợp đồng ghi LUẬT, không ghi cứng số: số đếm 24/11 (230 + 232 = 462, còn 585) có thể lệch hôm chạy; lệnh chạy thử in số hôm đó.
+**Khác lời duyệt ban đầu: 462 → 232 thẻ**, vì 230 thẻ Mạnh duyệt theo mô tả «không còn đề xuất» thật ra là thẻ đối chiếu chưa ai
+xét (lệch ý định 124 · lệch giá 103 · lệch diện tích 5; số đếm ở `bang-phu-ca.md`), lời «Cho đóng 462 thẻ» không phủ chúng — GS phán
+tách 24/11 (làm ít hơn điều đã duyệt). Chúng đi đường xử theo nhóm của NB5 (QĐ1 Mạnh chốt 02:56Z 24/11).
+
+Hợp đồng ghi LUẬT, không ghi cứng số: số đếm 24/11 (đóng 232, nhóm 1 không đóng 230, còn chờ 815) có thể lệch hôm chạy; lệnh chạy thử in số hôm đó.
 
 ## Criteria
 
@@ -40,7 +45,7 @@ Hợp đồng ghi LUẬT, không ghi cứng số: số đếm 24/11 (230 + 232 =
   ở trạng thái chờ, thẻ loại khác `agent_output`) không thuộc nhóm nào.
 - AC-2: Given DB như AC-1, When chạy lệnh với `--thu`, Then in số thẻ và số đề xuất của từng nhóm, số thẻ chờ còn lại, và câu SQL
   đếm độc lập cho từng nhóm; mọi bảng sau lượt bằng trước lượt từng dòng (lệnh đọc trong giao dịch chỉ đọc).
-- AC-3: Given DB như AC-1, When chạy thật, Then trong MỘT giao dịch: mỗi thẻ nhóm 1 và nhóm 2 chuyển `status='rejected'`,
+- AC-3: Given DB như AC-1, When chạy thật, Then trong MỘT giao dịch: mỗi thẻ nhóm 2 (và CHỈ nhóm 2 — thẻ nhóm 1, kể cả thẻ đối chiếu, giữ `pending`) chuyển `status='rejected'`,
   `decided_by` mang tiền tố máy `may:dong-the-theo-luat`, `decided_at=now()`, `decision_note` nêu mã nhóm và lý do một câu tiếng Việt;
   mỗi đề xuất `queued` của thẻ nhóm 2 chuyển `skipped`, `decided_by` cùng giá trị, `evidence.ly_do='trung-gia-tri-tin'` (khoá cũ
   giữ trong tệp lùi); KHÔNG dòng nào khác của `review_queue`/`enrichment_proposals` đổi, và `sale_offers`, `sale_offer_records`,
@@ -72,10 +77,10 @@ Bảng phủ ca, số đếm từ DB máy thu 24/11 (truy vấn chỉ đọc; l�
 |---|---|---|---|
 | Trạng thái thẻ `agent_output` | chờ 1.047 · duyệt 1 · bác 4 · «Để sau» 4 | AC-1 (chỉ thẻ chờ) | `/ops/review` ô «Chờ duyệt» (lọc `pending`) |
 | Đề xuất `queued` trên thẻ chờ | 0 đề xuất: 230 thẻ · ≥ 1: 817 thẻ / 1.121 đề xuất | AC-1 nhóm 1 | NB1 chấm bóng (`cham-bong/doc-db.ts` đọc thẻ chờ JOIN đề xuất `queued`) |
-| Nhóm 1 — vì sao không có đề xuất | cả 230 là thẻ đối chiếu (`run.ts:189`), 0 trường đề xuất, chưa từng có đề xuất trỏ về; đối chiếu ý định 124 · giá 103 · diện tích 5; tạo 03/11 196, 05/11 34 | AC-1, AC-3 (`decision_note` nêu «thẻ đối chiếu, chưa xét») | ô đối chiếu không còn ai xét — báo GS |
+| Nhóm 1 — vì sao không có đề xuất | cả 230 là thẻ đối chiếu (`run.ts:189`), 0 trường đề xuất, chưa từng có đề xuất trỏ về; đối chiếu ý định 124 · giá 103 · diện tích 5; tạo 03/11 196, 05/11 34 | ngoài phạm vi đóng (AC-1 chỉ đếm, AC-3 không đóng; E1/E3 cấy thẻ đối chiếu) | NB5 xử theo nhóm |
 | Nhóm 1 theo đề xuất cùng tin | tin 0 đề xuất 142 · có `applied/corroborated` 60 · `skipped/review` 30 · `applied/direct` 1 | AC-1 (luật không xét đề xuất ngoài thẻ) | — |
 | Ô × trùng/lệch (đề xuất chờ) | loại hình trùng 383 / lệch 235 · PN trùng 47 / lệch 12 / ô tin trống 8 · WC 237 · toà 181 · đường 18 | AC-1, AC-3 | NB5 lô WC; nhóm lệch loại hình (ngoài phạm vi) |
-| Thẻ toàn trùng | 232 thẻ · còn lại 585 thẻ | AC-1 nhóm 2 | Đường găng: ô «Chờ duyệt» 1.047 → ~585 |
+| Thẻ toàn trùng | 232 thẻ · còn lại 585 thẻ có đề xuất + 230 thẻ đối chiếu | AC-1 nhóm 2 | Đường găng: ô «Chờ duyệt» 1.047 → ~815 |
 | Tin của đề xuất | còn trong `sale_offers` 100% đề xuất chờ (0 vắng) | AC-1 (vắng = không trùng) | — |
 | `evidence.ly_do` đề xuất chờ | rỗng 1.121 | AC-3, AC-8 | `doc-toan-bo.ts` xử lại `skipped` lọc `ly_do='khong-tu-khoa'` |
 | Đổi giữa phân nhóm và ghi | người quyết · enrich gắn đề xuất mới | AC-4 | `decide/route.ts` khoá `FOR UPDATE` cùng dòng thẻ |
@@ -112,14 +117,14 @@ test có sẵn dựng thẻ người quyết với `decided_by` rỗng (`app/tes
 ## Đường đo
 
 Điểm xong (đường găng): ô «Chờ duyệt» của Bổ sung tin trên `/ops/review` máy thu từ 1.047 xuống bằng số thẻ còn lại mà lệnh `--thu`
-in hôm áp (24/11 đếm ~585). Lệnh đo trước và sau áp:
+in hôm áp (24/11 đếm ~815 = 1.047 − 232). Lệnh đo trước và sau áp:
 
 ```sql
 SELECT status, count(*) FROM review_queue WHERE item_type='agent_output' GROUP BY 1;
 ```
 
 Số trên màn đổi vì AC-9 (đo 24/11 ~02:45Z trên DB máy thu): ô «Đã quyết hôm nay» trước 0 → sau 0; H1b báo cáo ngày «quyết 24 giờ»
-trước 1 → sau 0 (thẻ duy nhất là `dung-nguoi`, máy). Hôm áp lượt đóng thẻ, không có AC-9 hai ô này sẽ nhảy thêm ~462; có AC-9 chúng
+trước 1 → sau 0 (thẻ duy nhất là `dung-nguoi`, máy). Hôm áp lượt đóng thẻ, không có AC-9 hai ô này sẽ nhảy thêm ~232; có AC-9 chúng
 giữ đúng số người quyết. Lệnh đo: `DAU_TRANG_SQL` và `CONG_NGUOI_SQL` chạy trước và sau gộp.
 
 Kèm: số dòng `sale_offers`/`field_assertions` và băm từng dòng trước = sau (AC-3); đếm đề xuất `skipped` có `decided_by` máy bằng số
@@ -133,12 +138,19 @@ dừng và báo, không tự sửa cho khớp.
 
 ## Out of scope
 
+- 230 thẻ nhóm 1 (thẻ đối chiếu chưa xét: lệch ý định 124 · giá 103 · diện tích 5): ngoài phạm vi, vì lời «Cho đóng 462 thẻ» dựa
+  trên mô tả «không còn đề xuất» không phủ ca đối chiếu; ba kiểu lệch = ba quyết định theo nhóm ở NB5 (bảng lô).
 - 585 thẻ còn lại: lệch giá trị loại hình (Mạnh quyết theo nhóm), toà ô trống (PL20), WC (lô NB5) — Mạnh chưa chốt.
 - Trợ lý model lớn chấm thẻ; đường tự áp `corroborated` (2.290 giá trị) — Mạnh chưa chốt.
 - Đổi `sale_offers`, `field_assertions`, áp đề xuất.
 - Thẻ loại khác (`data_quality`, `entity_match`, `source_decision`).
 - Ghi lên cloud (Supabase); sửa route `/api/v1/ops/review/[id]/decide` (đường T3).
 - Chạy thật trên DB máy thu trong vòng này — chỉ sau chữ ký Cổng Bằng chứng.
+
+## Việc ngoài (NB5 phải gánh)
+
+- Lượt máy KHÔNG ghi `ops_audit enrich:doi-chieu`: phán quyết đối chiếu (ý định, giá, diện tích) hiện chỉ có chỗ ghi khi người quyết
+  từng thẻ qua route decide; đường xử theo nhóm của NB5 cần chỗ ghi phán quyết đối chiếu cho cả lô.
 
 ## Known limits
 
