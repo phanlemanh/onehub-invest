@@ -302,3 +302,13 @@ test("hai khu thí điểm: mỗi khu hỏi lưới của MÌNH rồi gợi ý t
   assert.deepEqual([gop[1].payload.soThuaLuoi, gop[1].payload.soCauGoiY, gop[1].payload.soDiemGoiY, gop[1].payload.soTrung], [2, 2, 1, 1]);
   assert.deepEqual(state.parcelKhuDone, ["vn-hanoi-hoan-kiem", "vn-hcmc-an-phu-o-thu-diem"]);
 }));
+
+test("khu đã có số đo do mã cũ ghi (chưa có trường loi): bản gộp vẫn ra tongLoi là số, không phải null", async () => withTmp(async (root) => {
+  const ke = nguon({ taiDiem: {}, goiY: {} });
+  const state = emptyState();
+  state.parcelKhu["vn-hcm-thu-duc"] = { soDiemLuoi: 0, soDiemGoiY: 0, soThuaLuoi: 0, soThuaGoiY: 0, soTrung: 0, soKhongCo: 0, soLoi: 0, soCauGoiY: 0, soLoiGoiY: 0 } as unknown as (typeof state.parcelKhu)[string];
+  await chay(root, state, ke, [khu([[1, 1]])]).run();
+  const gop = (await readItems(root)).filter((it) => it.kind === "thua_khu_vuc")[0];
+  assert.equal(gop.meta.tongLoi, 1, "một lời hồ sơ cho một toạ độ");
+  assert.equal(typeof gop.meta.loiMoiKm2, "number");
+}));

@@ -667,6 +667,7 @@ async function parcels(o: RunOptions): Promise<PhaseSummary> {
   for (const khu of cacKhu) {
     if (o.state.parcelKhuDone.includes(khu.khuVucId)) continue;
     const st = (o.state.parcelKhu[khu.khuVucId] ??= parcelStatsRong());
+    st.loi ??= 0; // số đo do mã cũ ghi (trước lượt soát 24/11) chưa có trường này
     await hoiHoSo(khu, "grid", khu.diem);
     // Gợi ý theo tên đường gặp được trong khu (nguồn nắp khoảng 15 mục mỗi từ khoá).
     for (let vong = 0; vong < MAX_SUGGEST_ROUNDS && st.soCauGoiY + st.soLoiGoiY < MAX_SUGGEST_TERMS; vong++) {
