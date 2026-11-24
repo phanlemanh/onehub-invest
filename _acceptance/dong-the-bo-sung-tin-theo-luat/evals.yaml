@@ -72,6 +72,6 @@ evals:
     executor: script
     layer: backend-effect
     cmd: bash _acceptance/dong-the-bo-sung-tin-theo-luat/probes/dong.sh AC-9
-    paths: [app/src/lib/ops/review-dau-trang.ts, scripts/bao-cao-ngay.mjs, app/tests/dong-the-bo-sung-tin*, pipeline/scripts/dong-the-bo-sung-tin*]
-    expected: "Trên DB của riêng lượt cấy 3 thẻ người quyết hôm nay (decided_by usr_*), 4 thẻ máy đóng hôm nay (decided_by may:dong-the-theo-luat:*), 2 thẻ chờ. Chạy nguyên văn DAU_TRANG_SQL (import từ app/src/lib/ops/review-dau-trang.ts) và CONG_NGUOI_SQL (import từ scripts/bao-cao-ngay.mjs): hom_nay = 3, quyet = 3, cho = 2. Đối chứng dương: thêm một thẻ người quyết thì cả hai thành 4. Đột biến gỡ điều kiện may:% khỏi từng câu (trong bản sao) đỏ, thông điệp nêu tên câu và số 7."
+    paths: [app/src/lib/ops/review-dau-trang.ts, scripts/bao-cao-ngay.mjs, pipeline/scripts/dong-the-bo-sung-tin*]
+    expected: "THE_NGUOI_QUYET_SQL rút từ app/src/lib/ops/review-dau-trang.ts bằng đúng bản export của scripts/bao-cao-ngay.mjs (so chuỗi). Trên DB của riêng lượt cấy 3 thẻ người quyết hôm nay (usr_*), 4 thẻ may:dong-the-theo-luat, 1 thẻ transform:S03, 1 thẻ data_quality dung-nguoi, 2 thẻ chờ. DAU_TRANG_SQL (rút từ nguồn, thay vị từ) và CONG_NGUOI_SQL: hom_nay = 3, quyet = 3, cho = 2. Đối chứng dương: thêm một thẻ người quyết thì hom_nay = quyet = 4. Gỡ vị từ khỏi câu thì đếm 9 — thông điệp nêu tên máy bị đếm."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]

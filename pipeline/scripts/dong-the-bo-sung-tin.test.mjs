@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 import pg from "pg";
 import { LY_DO_DE_XUAT, NGUOI_LAM, NHOM, SQL_DEM_DOC_LAP, phanNhom } from "../lib/dong-the-bo-sung-tin.mjs";
 import { chayLui, chayThat, chayThu } from "./dong-the-bo-sung-tin.mjs";
-import { CONG_NGUOI_SQL } from "../../scripts/bao-cao-ngay.mjs";
+import { CONG_NGUOI_SQL, THE_NGUOI_QUYET_SQL } from "../../scripts/bao-cao-ngay.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const GD = { begin: "SAVEPOINT nb9", commit: "RELEASE SAVEPOINT nb9", rollback: "ROLLBACK TO SAVEPOINT nb9" };
@@ -270,22 +270,27 @@ test("E8 AC-8 đường xử lại skipped của doc-toan-bo không bốc đề 
   });
 });
 
-test("E9 AC-9 hai câu đếm «quyết» không tính thẻ máy đóng", async () => {
+test("E9 AC-9 hai câu đếm «quyết» chỉ tính thẻ do người quyết", async () => {
   const dongBang = /THE_DONG_BANG_SQL\s*=\s*"([^"]+)"/.exec(readFileSync(path.join(ROOT, "app/src/lib/ops/review-dong-bang.ts"), "utf8"))[1];
   const nguonTrang = readFileSync(path.join(ROOT, "app/src/lib/ops/review-dau-trang.ts"), "utf8");
-  const DAU_TRANG = /DAU_TRANG_SQL = `([\s\S]*?)`;/.exec(nguonTrang)[1].replace("${KHONG_DONG_BANG_SQL}", `NOT ${dongBang}`);
+  const viTuTs = /THE_NGUOI_QUYET_SQL = "([^"]+)"/.exec(nguonTrang)[1].replace(/\\\\/g, "\\");
+  assert.equal(viTuTs, THE_NGUOI_QUYET_SQL, "vị từ «thẻ do người quyết» lệch giữa app và báo cáo ngày");
+  const DAU_TRANG = /DAU_TRANG_SQL = `([\s\S]*?)`;/.exec(nguonTrang)[1]
+    .replace("${KHONG_DONG_BANG_SQL}", `NOT ${dongBang}`).replace("${THE_NGUOI_QUYET_SQL}", viTuTs);
   await trongGiaoDich(async () => {
     await c.query("DELETE FROM review_queue");
     const s = tin.song;
     for (let i = 0; i < 3; i++) await the(`nguoi${i}`, s[i].offer_id, { status: "approved", decidedBy: `usr_nb9_${i}` });
     for (let i = 3; i < 7; i++) await the(`may${i}`, s[i].offer_id, { status: "rejected", decidedBy: NGUOI_LAM });
+    await the("transform", s[10].offer_id, { status: "rejected", decidedBy: "transform:S03" });
+    await the("dung", s[11].offer_id, { status: "deferred", itemType: "data_quality", decidedBy: "dung-nguoi" });
     for (let i = 7; i < 9; i++) await the(`cho${i}`, s[i].offer_id);
     const dem = async () => ({
       homNay: (await c.query(DAU_TRANG, [72])).rows[0].hom_nay,
       quyet: (await c.query(CONG_NGUOI_SQL)).rows[0].quyet,
       cho: (await c.query(CONG_NGUOI_SQL)).rows[0].cho,
     });
-    assert.deepEqual(await dem(), { homNay: 3, quyet: 3, cho: 2 }, "thẻ máy đóng bị đếm là quyết");
+    assert.deepEqual(await dem(), { homNay: 3, quyet: 3, cho: 2 }, "thẻ máy (may:, transform:, dung-nguoi) bị đếm là quyết");
     await the("nguoi9", s[9].offer_id, { status: "approved", decidedBy: "usr_nb9_9" });
     assert.deepEqual(await dem(), { homNay: 4, quyet: 4, cho: 2 }, "đối chứng dương: thẻ người quyết");
   });

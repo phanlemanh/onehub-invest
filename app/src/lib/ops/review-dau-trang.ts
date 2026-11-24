@@ -1,10 +1,16 @@
 /**
  * Ba số đầu trang /ops/review (OD2 · ĐC3): Chờ duyệt · Quá 3 ngày · Đã quyết hôm nay. Một truy vấn trên `review_queue`;
- * Thẻ máy đóng theo luật (`decided_by` tiền tố `may:`, NB9) không tính «Đã quyết».
  * «hôm nay» theo giờ Việt Nam (cổng Ops ở Hà Nội), không theo giờ UTC của máy chủ. Chỉ ở máy thu.
  */
 import { pool } from "@/lib/db";
 import { KHONG_DONG_BANG_SQL } from "./review-dong-bang";
+
+/**
+ * Thẻ do NGƯỜI quyết (NB9): route decide ghi `decided_by = user.id`, mọi mã người dùng mang tiền tố `usr_`. Máy đóng thẻ ghi
+ * tên máy (`may:dong-the-theo-luat`, `transform:S0x`, `may-da37`, `dung-nguoi`, `nap-lai-nguoi`, `kich-ban-K1`) — không tính
+ * «Đã quyết». Chép NGUYÊN VĂN ở scripts/bao-cao-ngay.mjs (test NB9 E9 so chuỗi).
+ */
+export const THE_NGUOI_QUYET_SQL = "decided_by LIKE 'usr\\_%'";
 
 export type DauTrang = { cho: number; quaHan: number; homNay: number };
 
@@ -16,7 +22,7 @@ export const DAU_TRANG_SQL = `
          count(*) FILTER (WHERE status = 'pending' AND created_at < now() - make_interval(hours => $1))::int AS qua_han,
          count(*) FILTER (WHERE decided_at >= (date_trunc('day', now() AT TIME ZONE 'Asia/Ho_Chi_Minh')
                                                AT TIME ZONE 'Asia/Ho_Chi_Minh')
-                                AND coalesce(decided_by, '') NOT LIKE 'may:%')::int AS hom_nay
+                                AND ${THE_NGUOI_QUYET_SQL})::int AS hom_nay
     FROM review_queue WHERE ${KHONG_DONG_BANG_SQL}`;
 
 /** Ba số; bảng `review_queue` vắng (lược đồ cloud) → null, trang không hiện ba số. */

@@ -57,10 +57,12 @@ Hợp đồng ghi LUẬT, không ghi cứng số: số đếm 24/11 (230 + 232 =
 - AC-7: Given đã chạy thật một lần, When chạy thật lần hai trên cùng DB, Then 0 thẻ, 0 đề xuất đổi (lệnh lặp an toàn).
 - AC-8: Given đề xuất nhóm 2 đã chuyển `skipped`, When chạy đường xử lại `skipped` của `agent/src/enrich/doc-toan-bo.ts` (lọc
   `evidence.ly_do='khong-tu-khoa'`), Then không đề xuất nào của lượt đóng thẻ bị đưa lại `queued` hay bị áp.
-- AC-9: Given DB có thẻ người quyết (`decided_by` mã người dùng) và thẻ máy đóng theo luật (`decided_by LIKE 'may:%'`) cùng trong
-  cửa sổ đếm, When tính số «Đã quyết hôm nay» trên đầu trang `/ops/review` (`DAU_TRANG_SQL`) và «công người — quyết 24 giờ» của báo
-  cáo ngày (`CONG_NGUOI_SQL`), Then thẻ `decided_by LIKE 'may:%'` không được đếm; số «Chờ duyệt» vẫn giảm theo thẻ máy đóng; thẻ
-  người quyết vẫn được đếm như trước.
+- AC-9: Given DB có thẻ do người quyết (`decided_by` là mã người dùng `usr_…`, route decide ghi `user.id`) và thẻ máy quyết
+  (`may:dong-the-theo-luat`, `transform:S0x`, `may-da37`, `dung-nguoi`, `nap-lai-nguoi`, `kich-ban-K1`) cùng trong cửa sổ đếm, When tính
+  «Đã quyết hôm nay» trên đầu trang `/ops/review` (`DAU_TRANG_SQL`) và «công người — quyết 24 giờ» H1b của báo cáo ngày
+  (`CONG_NGUOI_SQL`), Then cả hai chỉ đếm thẻ thoả MỘT vị từ dùng chung `THE_NGUOI_QUYET_SQL` («thẻ do người quyết»), khai một lần ở
+  `app/src/lib/ops/review-dau-trang.ts` và chép nguyên văn ở `scripts/bao-cao-ngay.mjs`; hai bản chép bằng nhau từng ký tự; số
+  «Chờ duyệt» không đổi cách đếm.
 
 ## Coverage
 
@@ -99,7 +101,10 @@ Quét mọi tệp đọc `review_queue` trong `app/src`, `agent/src`, `pipeline`
 | Cloud (`sync-cloud.mjs`, `ops-cloud-proto.mjs`, ops facts) | `review_queue` tầng A, không lên cloud | — | không bị ảnh hưởng |
 | `app/src/lib/ops/eval/**` | không đọc `review_queue` hay `enrichment_proposals` | — | không bị ảnh hưởng |
 
-Hai bên đọc có sẵn cũng đang đếm thẻ máy đóng đời trước (`transform:S0x`, `may-da37`) là «quyết»: ngoài phạm vi, báo GS.
+Tên máy ghi `decided_by` tìm được (DB máy thu `SELECT decided_by, count(*) … GROUP BY 1` 24/11 và quét code): `dung-nguoi` 16,
+`may-da37` 2, `transform:S03` 6, `transform:S05` 2, `nap-lai-nguoi`, `kich-ban-K1` (chỉ trong code), `may:dong-the-theo-luat` (NB9).
+Mã người: `usr_…` 18 thẻ; 0 thẻ đã quyết mà `decided_by` rỗng. Vì vậy vị từ chọn chiều dương `decided_by LIKE 'usr\_%'` — tên máy
+mới về sau tự không được đếm (GS 24/11 gộp việc này vào NB9).
 
 ## Đường đo
 
@@ -109,6 +114,10 @@ in hôm áp (24/11 đếm ~585). Lệnh đo trước và sau áp:
 ```sql
 SELECT status, count(*) FROM review_queue WHERE item_type='agent_output' GROUP BY 1;
 ```
+
+Số trên màn đổi vì AC-9 (đo 24/11 ~02:45Z trên DB máy thu): ô «Đã quyết hôm nay» trước 0 → sau 0; H1b báo cáo ngày «quyết 24 giờ»
+trước 1 → sau 0 (thẻ duy nhất là `dung-nguoi`, máy). Hôm áp lượt đóng thẻ, không có AC-9 hai ô này sẽ nhảy thêm ~462; có AC-9 chúng
+giữ đúng số người quyết. Lệnh đo: `DAU_TRANG_SQL` và `CONG_NGUOI_SQL` chạy trước và sau gộp.
 
 Kèm: số dòng `sale_offers`/`field_assertions` và băm từng dòng trước = sau (AC-3); đếm đề xuất `skipped` có `decided_by` máy bằng số
 lệnh in (AC-3).
