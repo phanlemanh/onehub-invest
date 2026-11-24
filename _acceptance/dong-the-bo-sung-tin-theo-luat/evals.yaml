@@ -75,3 +75,19 @@ evals:
     paths: [app/src/lib/ops/review-dau-trang.ts, scripts/bao-cao-ngay.mjs, pipeline/scripts/dong-the-bo-sung-tin*]
     expected: "THE_NGUOI_QUYET_SQL rút từ app/src/lib/ops/review-dau-trang.ts bằng đúng bản export của scripts/bao-cao-ngay.mjs (so chuỗi). Trên DB của riêng lượt cấy 3 thẻ người quyết hôm nay (usr_*), 4 thẻ may:dong-the-theo-luat, 1 thẻ transform:S03, 1 thẻ data_quality dung-nguoi, 2 thẻ chờ. DAU_TRANG_SQL (rút từ nguồn, thay vị từ) và CONG_NGUOI_SQL: hom_nay = 3, quyet = 3, cho = 2. Đối chứng dương: thêm một thẻ người quyết thì hom_nay = quyet = 4. Gỡ vị từ khỏi câu thì đếm 9 — thông điệp nêu tên máy bị đếm."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.suite.pipeline_a
+    long_running: 90
+    paths: [pipeline/**, scripts/**, db/**, agent/**, app/**]
+    expected: "exit 0; nửa A bộ test pipeline (suite của lượt chấm — nhánh chạm vùng LOI_PIPELINE của scripts/suite-neu-doi.mjs; khai ở đây chỉ để có long_running 90, trên Mac mini nửa A ~41′ vượt trần chờ 30′ mặc định), 0 fail; nhánh mang 70bcecb3a (trần ca SLT-DC-7/9 480 → 900 s)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.suite.pipeline_b
+    long_running: 90
+    paths: [pipeline/**, scripts/**, db/**, agent/**, app/**]
+    expected: "exit 0; nửa B bộ test pipeline (suite của lượt chấm, khai ở đây chỉ để có long_running 90 — nửa B ~24′ sát trần chờ 30′), 0 fail."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
