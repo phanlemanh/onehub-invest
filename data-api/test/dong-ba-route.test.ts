@@ -221,13 +221,13 @@ test("DRL-AC-3 coverage không đọc S02", async () => {
 
   const a = data.find((d) => d.areaId === ID.thiTruong);
   const b = data.find((d) => d.areaId === ID.thiTruongKhongS02);
-  if (!a) loi.push("DRL coverage lộ: thiếu thị trường canh");
+  if (!a) loi.push("DRL coverage thiếu thị trường canh");
   else {
     if (a.name !== "DRL Thị trường A") loi.push("DRL coverage đổi hình: name");
     if (a.ourListings !== 2) loi.push(`DRL coverage đổi hình: ourListings = ${String(a.ourListings)}, phải là 2 tin tự thu`);
   }
   // Thị trường không có dữ liệu S02 vẫn phải có mặt — bản cũ nối trong với bảng S02 nên bỏ rơi nó.
-  if (!b) loi.push("DRL coverage lộ dấu S02: thị trường không có S02 bị bỏ khỏi danh sách");
+  if (!b) loi.push("DRL coverage bỏ thị trường không có S02 khỏi danh sách");
   else if (b.ourListings !== 0) loi.push("DRL coverage đổi hình: thị trường B ourListings khác 0");
 
   const khoa = moiKhoa(r.than);

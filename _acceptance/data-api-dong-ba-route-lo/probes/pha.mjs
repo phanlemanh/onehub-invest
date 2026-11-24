@@ -15,9 +15,9 @@ const git = (...a) => execFileSync("git", ["-C", ROOT, ...a], { encoding: "utf8"
 const CA = ["DRL-AC-1", "DRL-AC-2", "DRL-AC-3", "DRL-AC-4", "DRL-AC-5"];
 const O = [
   { o: "goc", db: "goc" },
-  { o: "deals-cu", db: "deals", tep: "deals.ts", ca: ["DRL-AC-1", "DRL-AC-2"], json: "DRL deals lộ", sql: "DRL deals đọc stg_zalo_posts" },
-  { o: "coverage-cu", db: "cov", tep: "coverage.ts", ca: ["DRL-AC-3"], json: "DRL coverage lộ", sql: "DRL coverage đọc bảng S02" },
-  { o: "listings-cu", db: "list", tep: "listings.ts", ca: ["DRL-AC-4"], json: "DRL listings/:id lộ", sql: "DRL listings/:id đọc bảng S02" },
+  { o: "deals-cu", db: "deals", tep: "deals.ts", ca: ["DRL-AC-1", "DRL-AC-2"], json: /DRL deals lộ (khoá cấm|chuỗi canh)/, sql: "DRL deals đọc stg_zalo_posts" },
+  { o: "coverage-cu", db: "cov", tep: "coverage.ts", ca: ["DRL-AC-3"], json: /DRL coverage lộ (khoá cấm|chuỗi canh)/, sql: "DRL coverage đọc bảng S02" },
+  { o: "listings-cu", db: "list", tep: "listings.ts", ca: ["DRL-AC-4"], json: /DRL listings\/:id lộ (khoá cấm|chuỗi canh|ảnh S02)/, sql: "DRL listings/:id đọc bảng S02" },
 ];
 
 let goc;
@@ -66,7 +66,9 @@ for (const o of O) {
     if (!o.tep) {
       dat = r.status === 0 && fail === 0 && xanh.length === CA.length;
     } else {
-      dong.lop_json = ra.includes(o.json);
+      // Lớp JSON ghim đúng hai loại thông điệp của phép quét khoá cấm và chuỗi canh (riêng listings/:id thêm «lộ ảnh S02»),
+      // không ghim tiền tố chung — thông điệp «thiếu dòng» hay «bỏ thị trường» không được tính là lớp JSON đỏ (S4 r1, t3).
+      dong.lop_json = o.json.test(ra);
       dong.lop_sql = ra.includes(o.sql);
       const khac = CA.filter((c) => !o.ca.includes(c));
       dong.duong_khac_xanh = khac.every((c) => xanh.includes(c));
