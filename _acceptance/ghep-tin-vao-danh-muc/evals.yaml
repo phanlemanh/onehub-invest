@@ -83,9 +83,11 @@ evals:
     criterion: AC-9
     executor: script
     cmd: bash _acceptance/ghep-tin-vao-danh-muc/probes/cham-tap-test.sh
+    expected_exit: 3
     paths: ["pipeline/lib/ghep-tin-danh-muc*.mjs", "pipeline/scripts/ghep-tin-danh-muc*.mjs"]
     expected: >
-      Tính lại cận dưới Wilson của từng nhóm N1, N2 từ đầu ra đóng băng có băm và nhãn thô, ghi evidence/cham-tap-test.md; thoát 0 khi cả hai nhóm từ 0,95 và đủ 110 bài. Đỏ, thông điệp ghim lý do và tên nhóm, khi số lệch báo cáo, khi đầu ra của mã cuối
+      Lối 1 (Mạnh 24/11): thoát 3 — chấm xong đủ 110 bài mỗi nhóm, N1 từ 0,95, N2 hụt (giới hạn đã biết, Known limits); thoát 0 nếu cả hai
+      nhóm từ 0,95 (kit báo «giới hạn đã khai không còn»). Tính lại cận dưới Wilson của từng nhóm N1, N2 từ đầu ra đóng băng có băm và nhãn thô, đối chiếu evidence/cham-tap-test.md. Đỏ, thông điệp ghim lý do và tên nhóm, khi số lệch báo cáo, khi đầu ra của mã cuối
       khác bản đóng băng trên một bài trong mẫu, hoặc khi thiếu cỡ mẫu. Đối chứng hai chiều trên cùng fixture: tập đúng hết đủ cỡ thì xanh, đổi nhãn cho một nhóm hụt ngưỡng thì đỏ đúng nhóm đó, đổi một nút trong đầu ra đóng băng thì đỏ vì băm.
 
   - id: E10
@@ -107,3 +109,20 @@ evals:
     expected: >
       Danh sách lượt 1 và lượt 2 đóng băng có băm, đúng định nghĩa của AC-10: mỗi tin một bài, không bài thử, không tin đã gắn; lượt 1 khớp phép đếm độc lập, lượt 2 chỉ gồm bài luật đọc ra mà chưa có bản đọc. Tổng tiền hai lượt cộng từ silver_labels theo run_id không vượt 5 USD,
       mọi dòng mang run_id thuộc danh sách đóng băng, và chạy lại không sinh dòng mới. Chiều đỏ: cấy một bài thử hoặc một tin đã gắn vào danh sách thì lệnh thoát 1, thông điệp ghim mã bài.
+
+  - id: E12a
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.suite.pipeline_a
+    long_running: 90
+    paths: [pipeline/**]
+    expected: "exit 0; bộ pipeline nửa a của kho xanh trên nhánh (gồm assert-rut-thay: câu rút «thay bởi lượt» chừa dòng ghep-toa-*). Khai riêng để lượt chấm chờ đủ giờ trên máy thu mới (S4 r1 24/11: quá trần 30 phút mặc định), theo khuôn che-ten."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E12b
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.suite.pipeline_b
+    long_running: 90
+    paths: [pipeline/**]
+    expected: "exit 0; bộ pipeline nửa b của kho xanh trên nhánh. Khai riêng để lượt chấm chờ đủ giờ trên máy thu mới, theo khuôn che-ten."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

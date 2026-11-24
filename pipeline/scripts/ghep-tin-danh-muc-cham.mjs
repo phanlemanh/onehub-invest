@@ -235,6 +235,14 @@ async function docLat(c, tep, { lat, nhom }) {
 
 const moDb = async (url) => { const c = new pg.Client({ connectionString: url }); await c.connect(); await c.query("SET default_transaction_read_only = on"); return c; };
 
+/**
+ * Mã thoát của kết luận: 0 đạt, MA_HUT khi chấm xong mà chưa đạt ngưỡng. Mã 1 để riêng cho lỗi đo (đầu ra khác bản đóng băng,
+ * số trong báo cáo khác số tính lại), mã 2 cho sai cách gọi — để E9 khai `expected_exit: 3` (lối 1 của Mạnh 24/11: nhận số
+ * thô, n2 hụt là giới hạn đã biết) mà lỗi đo vẫn đỏ.
+ */
+export const MA_HUT = 3;
+export const maKetLuan = (r) => (r.dat ? 0 : MA_HUT);
+
 async function main() {
   const a = process.argv.slice(2);
   const lay = (k) => { const i = a.indexOf(k); return i < 0 ? undefined : a[i + 1]; };
@@ -272,7 +280,7 @@ async function main() {
     }
     if (lay("--ra")) writeFileSync(lay("--ra"), vietBaoCao(r, tep.sha256));
     console.log(r.dat ? `DAT · nguon phai tat: ${r.nguon_phai_tat.join(", ") || "khong"}` : "CHUA DAT");
-    return r.dat ? 0 : 1;
+    return maKetLuan(r);
   } finally {
     await c1.end();
     await c2?.end();

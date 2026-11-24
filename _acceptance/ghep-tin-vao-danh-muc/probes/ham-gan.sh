@@ -34,6 +34,6 @@ dot_bien bo-chan-nhieu-toa "ô «cot-khop-nhung-chu-neu-hai-toa»" 'if (luat.t.s
 dot_bien bo-chan-nhieu-can "ô «cot-khop-nhung-model-bao-nhieu-can»" 'if (banDoc?.multi_unit?.v === "yes") return { ly_do: "bai-nhieu-can" };' ''
 dot_bien toa-thang-vung-khi-trung-ten "ô «trung-ten-toa-vung-o-cot-gan-muc-vung»" ' && !laTenVung(t));' ');'
 dot_bien mot-toa-hai-vung-chon-toa "ô «mot-toa-hai-vung-trung-ten-la-mo-ho»" 'if (a?.size > 1 || (a?.size === 1 && v?.size > 1)) return { muc: "mo_ho" };' 'if (a?.size > 1) return { muc: "mo_ho" };'
-dot_bien vung-nhan-duoi-ma-can "ma-dinh-so-khong-doc-ra-vung-ngan" 're: ten.map((t) => mauTen(t)).filter(Boolean)' 're: ten.map((t) => mauTen(t, { duoiMaCan: true })).filter(Boolean)'
+dot_bien vung-nhan-duoi-ma-can "ma-dinh-so-khong-doc-ra-vung-ngan" 're: ten.map((t) => mauTen(t, { boThe: boThe(t, v.id) })).filter(Boolean)' 're: ten.map((t) => mauTen(t, { duoiMaCan: true, boThe: boThe(t, v.id) })).filter(Boolean)'
 rm -f /tmp/ham-gan-$$.log
 echo "XANH: ma trận và chín đột biến"

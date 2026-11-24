@@ -3,7 +3,7 @@ import { strict as assert } from "node:assert";
 import { test } from "node:test";
 
 import { dungDanhBa } from "../lib/ghep-tin-danh-muc.mjs";
-import { chamBai, chamLat, docBaoCao, docNhap, gopKetQua, kiemDauRa, quyNhan, tachLoaiThe, tiLeSua, vietBaoCao } from "./ghep-tin-danh-muc-cham.mjs";
+import { chamBai, chamLat, docBaoCao, docNhap, gopKetQua, kiemDauRa, MA_HUT, maKetLuan, quyNhan, tachLoaiThe, tiLeSua, vietBaoCao } from "./ghep-tin-danh-muc-cham.mjs";
 
 const D = dungDanhBa({
   toa: [{ key: "bld_a", upi: "u", vung_id: "101", ten: ["S1.02"] }, { key: "bld_b", upi: "u2", vung_id: "102", ten: ["S2.05"] }, { key: "bld_c", upi: "u3", vung_id: null, ten: ["GOC1"] }],
@@ -72,6 +72,14 @@ test("hai-bai-sai-o-n2-thi-do-dung-n2", () => {
 test("n2-hut-thi-nguon-c-f-phai-tat", () => {
   const { dong, nhan } = tapDu(); sai(nhan, "n2-0"); sai(nhan, "n2-1");
   assert.deepEqual(chamLat({ dong, nhan, danhBa: hai }).nguon_phai_tat, ["C", "F"]);
+});
+test("ma-thoat-hut-khac-ma-loi-do", () => {
+  // Cùng tập: đủ đúng thì 0; hai bài sai ở n2 thì MA_HUT — không trùng mã 1 (lỗi đo) hay 2 (sai cách gọi).
+  const { dong, nhan } = tapDu();
+  assert.equal(maKetLuan(chamLat({ dong, nhan, danhBa: hai })), 0);
+  sai(nhan, "n2-0"); sai(nhan, "n2-1");
+  assert.equal(maKetLuan(chamLat({ dong, nhan, danhBa: hai })), MA_HUT);
+  assert.ok(![0, 1, 2].includes(MA_HUT), `MA_HUT ${MA_HUT} trùng mã đã dùng`);
 });
 test("thieu-co-mau-n1-thi-do", () => {
   const { dong, nhan } = tapDu(); nhan.delete("n1-0");

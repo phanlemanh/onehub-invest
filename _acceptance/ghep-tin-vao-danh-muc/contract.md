@@ -5,9 +5,9 @@ slug: ghep-tin-vao-danh-muc
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli, data]
-status: implemented
-approved_by: Mạnh
-approved_at: 2026-11-18
+status: draft
+approved_by:
+approved_at:
 design_doc: docs/superpowers/specs/2026-11-18-ghep-tin-vao-danh-muc-design.md
 ---
 
@@ -45,7 +45,7 @@ model đọc bù. Hạng T3 vì có migration 117. Mọi số đo: design doc §
 - **AC-8** (số trên màn) Given bản chép DB máy thu sau hai lượt đọc bù, với nguồn A, B, C, F đang bật, When chạy bước gắn, Then số tin căn hộ S03 gắn được toà, phân khu, cụm đổi từ 0 lên **từ 50%** mẫu số toàn bộ tin căn hộ S03 (đích của MS3; đo sau lượt đọc bù đầu với D, G tắt: 49,2%; ước sau lượt đọc thêm: 51,8%), và lệch không quá **0,5% tử số** so với phép đếm độc lập: bản viết lại luật từ design doc §3 do một tác tử khác viết, không nhập hàm gắn; cấy dòng của `rule_id` khác thì tử số không đổi. Lệnh in tử số, mẫu số,
   tách theo khu, mức gắn, nguồn, và số trước, sau từng lượt đọc bù.
 - **AC-9** (chất lượng) Given đầu ra máy đã đóng băng có băm lúc rút mẫu (bài, nút, nguồn), lát `hai-khu-ghep-b` không điền nháp, When chấm hai nhóm rút ngẫu nhiên theo tin từ chính các tin máy gắn sau hai lượt đọc bù: **N1** nguồn A, B · **N2** nguồn C, F, mỗi nhóm **110 bài**, Then cận dưới Wilson 95% của độ đúng từ **0,95** ở **từng nhóm**, với luật quy nhãn người về nút theo design doc §4;
-  lệnh tính lại từ nhãn thô và đỏ khi số lệch báo cáo, khi đầu ra của mã cuối khác bản đóng băng trên bài nào trong mẫu, hoặc khi chưa đủ cỡ mẫu. N1, N2 phải đạt. Nguồn D, G (chỉ có model) **tắt** ở hàng này theo lựa chọn của Mạnh ngày 18/11. Báo cáo tách riêng từng nguồn, mức toà với mức vùng, và theo khu. Hụt ngưỡng: không chỉnh luật rồi chấm lại trên tập này; lối ra theo câu hỏi đã chốt ở Cổng Phạm vi.
+  lệnh tính lại từ nhãn thô và đỏ khi số lệch báo cáo, khi đầu ra của mã cuối khác bản đóng băng trên bài nào trong mẫu, hoặc khi chưa đủ cỡ mẫu. N1 phải đạt; N2 chấm đủ cỡ và báo số, hụt ngưỡng ở N2 là giới hạn đã biết (lối 1, Mạnh 24/11 «PL20 AC-9: chọn lối 1», xem Known limits) — lệnh thoát **3** khi chấm xong mà hụt, khác mã 1 của lỗi đo (số lệch báo cáo, đầu ra khác bản đóng băng, thiếu cỡ mẫu vẫn đỏ). Nguồn D, G (chỉ có model) **tắt** ở hàng này theo lựa chọn của Mạnh ngày 18/11. Báo cáo tách riêng từng nguồn, mức toà với mức vùng, và theo khu. Hụt ngưỡng: không chỉnh luật rồi chấm lại trên tập này; lối ra theo câu hỏi đã chốt ở Cổng Phạm vi.
 - **AC-10** (đọc bù của đợt 2) Given DB máy thu, When lập danh sách, Then **lượt 1** gồm đúng các tin OP1, GP chưa gắn và chưa có bản đọc `dg3-s03-v3`, mỗi tin một bài; **lượt 2** gồm các tin OP1, GP chưa gắn có bài mà luật đọc ra toà hay vùng nhưng chính bài đó chưa có bản đọc, mỗi tin một bài; không bài thử; mỗi danh sách được đóng băng có băm trước lời gọi đầu. When chạy đọc bù trên DB máy thu, Then tổng tiền thật của hai lượt cộng từ `silver_labels` theo `run_id` không vượt **5 USD**, mọi dòng mang `run_id` đó thuộc đúng danh sách đóng băng, chạy lại không gọi lại bài đã đọc. Chiều đỏ: cấy một bài thử hoặc một tin đã gắn vào danh sách thì lệnh kiểm thoát 1, thông điệp ghim mã bài.
 
 ## Coverage
