@@ -1,5 +1,6 @@
 /**
  * Ba số đầu trang /ops/review (OD2 · ĐC3): Chờ duyệt · Quá 3 ngày · Đã quyết hôm nay. Một truy vấn trên `review_queue`;
+ * Thẻ máy đóng theo luật (`decided_by` tiền tố `may:`, NB9) không tính «Đã quyết».
  * «hôm nay» theo giờ Việt Nam (cổng Ops ở Hà Nội), không theo giờ UTC của máy chủ. Chỉ ở máy thu.
  */
 import { pool } from "@/lib/db";
@@ -14,7 +15,8 @@ export const DAU_TRANG_SQL = `
   SELECT count(*) FILTER (WHERE status = 'pending')::int AS cho,
          count(*) FILTER (WHERE status = 'pending' AND created_at < now() - make_interval(hours => $1))::int AS qua_han,
          count(*) FILTER (WHERE decided_at >= (date_trunc('day', now() AT TIME ZONE 'Asia/Ho_Chi_Minh')
-                                               AT TIME ZONE 'Asia/Ho_Chi_Minh'))::int AS hom_nay
+                                               AT TIME ZONE 'Asia/Ho_Chi_Minh')
+                                AND coalesce(decided_by, '') NOT LIKE 'may:%')::int AS hom_nay
     FROM review_queue WHERE ${KHONG_DONG_BANG_SQL}`;
 
 /** Ba số; bảng `review_queue` vắng (lược đồ cloud) → null, trang không hiện ba số. */

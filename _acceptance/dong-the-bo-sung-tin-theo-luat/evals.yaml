@@ -17,7 +17,7 @@ evals:
     layer: backend-effect
     cmd: bash _acceptance/dong-the-bo-sung-tin-theo-luat/probes/dong.sh AC-2
     paths: [pipeline/scripts/dong-the-bo-sung-tin*, pipeline/lib/dong-the-bo-sung-tin*]
-    expected: "Trên fixture E1, --thu in đúng số nhóm 1 = 4 thẻ, nhóm 2 = 3 thẻ kèm số đề xuất 4, thẻ chờ còn lại viết tay, và hai câu SQL đếm độc lập; chạy hai câu SQL in kèm cho cùng số. Băm từng dòng mọi bảng thường của lược đồ public trước = sau. Đối chứng dương: một UPDATE review_queue chạy ngoài lệnh làm thước đỏ, thông điệp nêu bảng đổi."
+    expected: "Trên fixture E1, --thu in đúng số nhóm 1 = 4 thẻ, nhóm 2 = 3 thẻ kèm số đề xuất 4, thẻ chờ còn lại viết tay, và hai câu SQL đếm độc lập; chạy hai câu SQL in kèm cho cùng số. Không bảng nào của lược đồ public bị ghi (pg_stat_xact_user_tables trước = sau, gồm giao dịch con). Đối chứng dương: một UPDATE review_queue chạy ngoài lệnh làm thước đỏ, thông điệp nêu bảng đổi."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3
     criterion: AC-3
@@ -25,7 +25,7 @@ evals:
     layer: backend-effect
     cmd: bash _acceptance/dong-the-bo-sung-tin-theo-luat/probes/dong.sh AC-3
     paths: [pipeline/scripts/dong-the-bo-sung-tin*, pipeline/lib/dong-the-bo-sung-tin*]
-    expected: "Chạy thật trên fixture E1: 7 thẻ nhóm đổi rejected, decided_by bắt đầu «may:dong-the-theo-luat», decision_note chứa mã nhóm; 4 đề xuất nhóm 2 đổi skipped với evidence.ly_do='trung-gia-tri-tin'; mọi dòng khác của review_queue và enrichment_proposals (so từng dòng theo id) không đổi; băm sale_offers, sale_offer_records, field_assertions trước = sau. Ném lỗi giả ở thẻ thứ 5 → cả hai bảng về nguyên trạng (một giao dịch). Đột biến áp đề xuất (apply_enrichment) thay vì skipped đỏ, thông điệp nêu bảng field_assertions đổi."
+    expected: "Chạy thật trên fixture E1: 7 thẻ nhóm đổi rejected, decided_by bắt đầu «may:dong-the-theo-luat», decision_note chứa mã nhóm; 4 đề xuất nhóm 2 đổi skipped với evidence.ly_do='trung-gia-tri-tin'; mọi dòng khác của review_queue và enrichment_proposals (so từng dòng theo id) không đổi; chỉ hai bảng review_queue và enrichment_proposals có lượt ghi (pg_stat_xact_user_tables) — sale_offers, sale_offer_records, field_assertions không bị ghi. Ném lỗi giả ở thẻ thứ 5 → cả hai bảng về nguyên trạng (một giao dịch). Đột biến áp đề xuất (apply_enrichment) thay vì skipped đỏ, thông điệp nêu bảng field_assertions đổi."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4
     criterion: AC-4
