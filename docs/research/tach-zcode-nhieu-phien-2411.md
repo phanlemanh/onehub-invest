@@ -1,7 +1,7 @@
 # Tách làn thu ZCode thành ba phiên + đề xuất thu gần thời gian thực (24/11)
 
-Trạng thái: **ba phiên đã chạy từ 24/11** (Mạnh chốt «Mở luôn cả 3»). Phần «thu gần thời gian thực» ở mục 5 là **ĐỀ XUẤT**,
-chưa có thước đích của Mạnh. Nguồn gọi bằng mã S0x; không có tầng A.
+Trạng thái: **ba phiên đã chạy từ 24/11** (Mạnh chốt «Mở luôn cả 3»). **Thước đích** «đăng → hiện trên Invest» ở mục 5 đã
+được Mạnh chốt «Theo đề xuất» (24/11). Cách làm ở mục 5 vẫn là đề xuất; GS cắt hàng. Nguồn gọi bằng mã S0x; không có tầng A.
 
 ## 1. Kết luận
 
@@ -69,7 +69,7 @@ ZCode trên máy (bản 4.0.0, model GLM-5.3/5.4 theo gói coding plan):
 - chạy được không giao diện (`zcode -p`);
 - thêm được nhà cung cấp model khác.
 
-## 5. ĐỀ XUẤT: thu gần thời gian thực (chờ Mạnh chốt thước đích)
+## 5. Thu gần thời gian thực (thước đích đã chốt 24/11; cách làm là đề xuất)
 
 ```
 Nguồn ──(1) thu đuôi theo mốc──▶ raw snapshot ──(2) nạp + transform phần mới, lô 2–5′──▶ tin/căn/giá
@@ -88,7 +88,7 @@ Nguồn ──(1) thu đuôi theo mốc──▶ raw snapshot ──(2) nạp + 
 4. **Lưu tìm kiếm + báo tin** trên Invest (làn Claude, **chưa có hàng**, cần Cổng Phạm vi). Không dùng tài khoản thu, không
    gửi vào nhóm xã hội.
 
-Thước gợi ý cho Mạnh chốt, đo từ lúc đăng tới lúc hiện trên Invest:
+**Thước đích** (Mạnh chốt «Theo đề xuất», 24/11), đo từ lúc đăng tới lúc hiện trên Invest, theo ngày:
 
 | Nguồn | p50 | p90 |
 |---|---|---|
