@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // ghep-tin-truc-can-cham.mjs — PL36 AC-10 (E10a): chấm luật gắn trục trên tập nhãn trục OP1 đóng băng.
 //   --tep <tệp đóng băng> --bam <sha256 ghim> [--ra <tệp md>]
+// --bo-the-cai <tệp> loại thẻ cài lỗi của phiên gắn nhãn khỏi tập chấm và đếm số thẻ người duyệt sửa đúng.
 // So băm tệp với băm ghim (lệch → thoát 2, gọi tên tập); đọc nhãn người của lát; tính cận dưới Wilson 95% của tỉ lệ gắn trục đúng
 // trong số bài máy gắn; thoát 3 khi OP1 dưới 0,95. GP chỉ báo số (Hỏi-1, Mạnh chốt 24/11). Ghi bảng từng bài sai cho người chấm.
 import { readFileSync, realpathSync, writeFileSync } from "node:fs";
@@ -45,12 +46,31 @@ export function chamTap(dong, nhan) {
   return { so_bai: dong.length, so_cham: so, dung, sai, chua_nhan: chuaNhan, wilson_thap: w?.thap ?? null, dat: Boolean(w && !chuaNhan.length && w.thap >= NGUONG) };
 }
 
+/**
+ * Loại thẻ cài lỗi (thước đo người duyệt, ROADMAP §3 mục 61) khỏi tập chấm luật, và đếm người duyệt đã sửa đúng bao nhiêu thẻ.
+ * @param {{the: {ref_id: string, dung?: Record<string, string|null>}[]}} theCai
+ */
+export function tachTheCai(dong, nhan, theCai) {
+  const cai = new Map((theCai?.the ?? []).map((t) => [String(t.ref_id), t]));
+  let sua = 0, co = 0;
+  for (const [ref, t] of cai) {
+    const n = nhan.get(ref);
+    if (!n || !t.dung) continue;
+    co++;
+    const dungTruc = t.dung.stack == null || (n.stack != null && chuanTruc(n.stack) === chuanTruc(t.dung.stack));
+    const dungToa = t.dung.building == null || (n.building != null && chuanTen(n.building) === chuanTen(t.dung.building));
+    if (dungTruc && dungToa) sua++;
+  }
+  return { dong: dong.filter((d) => !cai.has(String(d.ref_id))), the_cai: { so: cai.size, da_duyet: co, sua_dung: sua } };
+}
+
 export function vietBaoCao(r, x) {
   const f = (v) => (v == null ? "—" : v.toFixed(3));
   return [
     `# Chấm gắn trục PL36 — tập ${x.lat}-${x.seed}`, "",
     `sha256 tập: \`${x.sha256}\``, "",
     "| Khu | Bài trong tập | Đã có nhãn | Máy gắn đúng | Cận dưới Wilson 95% | Ngưỡng | Kết luận |", "|---|---|---|---|---|---|---|",
+    ...(r.the_cai ? [`Thẻ cài lỗi loại khỏi phép tính: ${r.the_cai.so} · người duyệt sửa đúng ${r.the_cai.sua_dung}/${r.the_cai.da_duyet} thẻ đã duyệt.`, ""] : []),
     `| OP1 | ${r.so_bai} | ${r.so_cham} | ${r.dung} | ${f(r.wilson_thap)} | ${NGUONG} | ${r.dat ? "đạt" : r.chua_nhan.length ? "chưa đủ nhãn" : "hụt"} |`,
     "| GP | 0 | — | — | — | báo số | GP gần như không nêu mã căn (Hỏi-1) |", "",
     `## Bài máy gắn sai (${r.sai.length})`, "",
@@ -76,7 +96,9 @@ async function main() {
         WHERE i.lat = $1 AND l.field IN ('building', 'stack') ORDER BY i.ref_id, l.field, l.labeled_at DESC`, [x.lat]);
     const nhan = new Map();
     for (const r of rows) (nhan.get(r.ref_id) ?? nhan.set(r.ref_id, {}).get(r.ref_id))[r.field] = r.value;
-    const r = chamTap(x.dong, nhan);
+    const theCai = g("--bo-the-cai") ? JSON.parse(readFileSync(g("--bo-the-cai"), "utf8")) : null;
+    const t = theCai ? tachTheCai(x.dong, nhan, theCai) : { dong: x.dong, the_cai: null };
+    const r = { ...chamTap(t.dong, nhan), the_cai: t.the_cai };
     const md = vietBaoCao(r, x);
     const ra = g("--ra"); if (ra) writeFileSync(ra, md);
     console.log(md);

@@ -3,7 +3,7 @@ import { strict as assert } from "node:assert";
 import { test } from "node:test";
 
 import { bamDong } from "../label-dong-bang.mjs";
-import { NGUONG, chamTap, docTap, vietBaoCao } from "./ghep-tin-truc-can-cham.mjs";
+import { NGUONG, chamTap, docTap, tachTheCai, vietBaoCao } from "./ghep-tin-truc-can-cham.mjs";
 
 const dong = Array.from({ length: 110 }, (_, i) => ({ ref_id: `p${String(i).padStart(3, "0")}`, toa: "LD2", truc: "3", ma: "LD2XX03" }));
 const tap = { lat: "hai-khu-truc", seed: "s", sha256: bamDong(dong), so_bai: dong.length, dong };
@@ -29,4 +29,15 @@ test("thieu-nhan-nguoi-thi-chua-dat", () => {
   const nhan = new Map(nhanDung); nhan.delete("p109");
   const r = chamTap(dong, nhan);
   assert.equal(r.dat, false); assert.deepEqual(r.chua_nhan, ["p109"]);
+});
+
+test("the-cai-loai-khoi-phep-tinh-va-dem-nguoi-duyet-sua-dung", () => {
+  const theCai = { the: [{ ref_id: "p000", dung: { building: "LD2", stack: "03" } }, { ref_id: "p001", dung: { building: "LD2", stack: "03" } }] };
+  const nhan = new Map(nhanDung); nhan.set("p001", { building: "ld2", stack: "11" }); // người duyệt để lọt thẻ p001
+  const t = tachTheCai(dong, nhan, theCai);
+  assert.equal(t.dong.length, 108, "hai thẻ cài phải bị loại khỏi tập chấm luật");
+  assert.deepEqual(t.the_cai, { so: 2, da_duyet: 2, sua_dung: 1 });
+  const r = { ...chamTap(t.dong, nhan), the_cai: t.the_cai };
+  assert.equal(r.dat, true, "thẻ cài người duyệt để lọt không được tính là máy gắn sai");
+  assert.match(vietBaoCao(r, tap), /Thẻ cài lỗi loại khỏi phép tính: 2 · người duyệt sửa đúng 1\/2/);
 });
