@@ -273,6 +273,7 @@ for (const [o, env, args, ke] of [
   ["nhanh mặc định", {}, ["--luot-nhanh"], "2400 1200"],
   ["00:00 TRAN_TONG=100", { ZALO_IMPORT_TRAN_TONG: "100" }, [], "100 50"],
   ["00:00 TRAN_TONG=100 CANH_BAO=7", { ZALO_IMPORT_TRAN_TONG: "100", ZALO_IMPORT_CANH_BAO: "7" }, [], "100 7"],
+  ["00:00 TRAN_TONG=32400", { ZALO_IMPORT_TRAN_TONG: "32400" }, [], "32400 16200"], // 2311-5: plist đêm 24→25/11 đặt 32400 một đêm — biến môi trường thắng mặc định
 ]) {
   // bước transform-zalo chậm 1 giây: lượt nhanh xong trước khi node giả kịp ghi thì trap đã giết nó
   test(`AC-7 trần ${o} → ${ke}`, () => voiRoot({ cham: true }, async (root) => {

@@ -105,7 +105,7 @@ const nodeGia = (root) => { // đồng hồ giả: ghi TRAN_GIAY CANH_GIAY của
 };
 const kiemA3 = (bien) => voiRoot({ bien, docGop: "sleep 1\n", cham: true }, async (root) => {
   const r = await chay(root, { ZALO_IMPORT_NODE_BIN: nodeGia(root) });
-  assert.match(r.out, /\[zalo-import-daily\] trần: nạp ≤1800s · đọc gộp ≤14400s \(dừng sạch ở 14100s\) · lượt ≤21600s/, "A(3) dòng khai trần lúc khởi động: lượt 00:00 mặc định 21600s");
+  assert.match(r.out, /\[zalo-import-daily\] trần: nạp ≤1800s · đọc gộp ≤16200s \(dừng sạch ở 15900s\) · lượt ≤21600s/, "A(3) dòng khai trần lúc khởi động: lượt 00:00 mặc định 21600s");
   const dong = readFileSync(join(root, "dong-ho.txt"), "utf8").trim().split("\n").map((l) => l.trim().split(/\s+/).join(" "));
   assert.deepEqual(dong, ["21600 10800"], `A(3) đồng hồ của lượt nhận trần 21600s, WARN 10800s — thực tế ${JSON.stringify(dong)}`);
   // tuổi khoá theo cùng trần tổng: khoá 5h của chủ thật (pid sống + chữ ký khớp) — dưới 6h nên KHÔNG gỡ
@@ -123,7 +123,7 @@ const kiemA3 = (bien) => voiRoot({ bien, docGop: "sleep 1\n", cham: true }, asyn
   assert.match(r7h.out, /gỡ khoá của lượt chạy thật đã VƯỢT trần tổng 21600s/, "A(3) khoá 7h (quá trần 6h, đồng hồ chết) thì gỡ được");
   assert.doesNotMatch(r7h.out, /⏭ bỏ lượt/, "A(3) sau khi gỡ, lượt nhanh chạy");
 });
-test("2311-5 A(3): trần tổng lượt 00:00 mặc định 21600s (WARN 10800s) áp cho đồng hồ và tuổi khoá; trần đọc gộp 14400s", () => kiemA3());
+test("2311-5 A(3): trần tổng lượt 00:00 mặc định 21600s (WARN 10800s) áp cho đồng hồ và tuổi khoá; đọc gộp 16200s", () => kiemA3());
 test("2311-5 A(3) chiều đỏ: bản sao trả trần tổng về 14400 → đỏ dòng khai trần", () =>
   assert.rejects(kiemA3((s) => s.replace(CAU.tranTong, "|| echo 14400)}")), /lượt 00:00 mặc định 21600s/));
 test("2311-5 A(3) chiều đỏ: bản sao để tuổi khoá ở 14400 → đỏ «khoá 5h của lượt thật vẫn còn chủ»", () =>
@@ -151,15 +151,51 @@ const kiemA4 = (env, ke) => voiRoot({ docGop: DG_GHI_TRAN }, async (root) => {
   assert.equal(r.status, 0, `lượt lành thoát 0 — thực tế ${r.status}`);
   assert.equal(readFileSync(join(root, "pipeline", "logs-doc", "tran-nhan.txt"), "utf8").trim(), ke, "A(2) DOC_GOP_TRAN_GIAY bước đọc gộp nhận được");
 });
-test("2311-5 A hợp đồng: bước đọc gộp nhận DOC_GOP_TRAN_GIAY = 14400 − 300 = 14100 (mặc định)", () => kiemA4({}, "14100"));
+test("2311-5 A hợp đồng: bước đọc gộp nhận DOC_GOP_TRAN_GIAY = (21600 − 2400 − 3000) − 300 = 15900 (mặc định)", () => kiemA4({}, "15900"));
 test("2311-5 A hợp đồng: ZALO_IMPORT_TRAN_DOC_GOP=1200 → bước nhận 900 (lệch trước đồng hồ 300s)", () => kiemA4({ ZALO_IMPORT_TRAN_DOC_GOP: "1200" }, "900"));
 test("2311-5 A hợp đồng: trần đọc gộp quá nhỏ thì mốc dừng sạch không xuống dưới 60s", () => kiemA4({ ZALO_IMPORT_TRAN_DOC_GOP: "30" }, "60"));
 test("2311-5 A hợp đồng chiều đỏ: bản sao không xuất biến → bước nhận KHONG_DAT (đỏ «không nhận được»)", () => assert.rejects(
   voiRoot({ bien: (s) => s.replace("export DOC_GOP_TRAN_GIAY\n", ""), docGop: DG_GHI_TRAN }, async (root) => {
     mkdirSync(join(root, "pipeline", "logs-doc"));
     await chay(root, {});
-    assert.equal(readFileSync(join(root, "pipeline", "logs-doc", "tran-nhan.txt"), "utf8").trim(), "14100", "A(2) CA LỖI: bước đọc gộp không nhận được DOC_GOP_TRAN_GIAY (thiếu export)");
+    assert.equal(readFileSync(join(root, "pipeline", "logs-doc", "tran-nhan.txt"), "utf8").trim(), "15900", "A(2) CA LỖI: bước đọc gộp không nhận được DOC_GOP_TRAN_GIAY (thiếu export)");
   }), /bước đọc gộp không nhận được DOC_GOP_TRAN_GIAY/));
+
+// ══════ A trần đọc gộp SUY TỪ TRẦN TỔNG THỰC (BÁO claudedp-2411-11 và -12, GS phán 24/11) ══════
+// Biến môi trường ZALO_IMPORT_TRAN_TONG thắng mặc định — đêm 24→25/11 plist đặt 32400 một đêm. Trần đọc gộp =
+// trần tổng − 2400 (nạp, transform) − 3000 (enrich); đặt tường minh lớn hơn thì kẹp và in một dòng JOB WARN.
+const CAU_KEP = 'if [ "$TRAN_DOC_GOP" -gt "$TRAN_DOC_GOP_MAX" ]; then';
+const dongKhai = (r) => r.out.split("\n").find((l) => l.includes("[zalo-import-daily] trần:")) ?? "";
+const chayTran = (bien, env) => voiRoot({ bien, docGop: DG_GHI_TRAN, cham: true }, async (root) => {
+  mkdirSync(join(root, "pipeline", "logs-doc"));
+  const r = await chay(root, { ZALO_IMPORT_NODE_BIN: nodeGia(root), ...env });
+  return { ra: r, tran: readFileSync(join(root, "pipeline", "logs-doc", "tran-nhan.txt"), "utf8").trim(),
+    dong: readFileSync(join(root, "dong-ho.txt"), "utf8").trim().split("\n").map((l) => l.trim().split(/\s+/).join(" ")) };
+});
+test("2311-5 A trần tổng 32400 (plist đêm 24→25/11): biến môi trường thắng mặc định — đọc gộp ≤27000s, dừng sạch ở 26700s, đồng hồ nhận 32400", async () => {
+  const d = await chayTran(null, { ZALO_IMPORT_TRAN_TONG: "32400" });
+  assert.match(dongKhai(d.ra), /đọc gộp ≤27000s \(dừng sạch ở 26700s\) · lượt ≤32400s/, "(i) dòng khai trần theo biến môi trường");
+  assert.deepEqual(d.dong, ["32400 16200"], `(i) đồng hồ tổng nhận 32400, WARN 16200 — thực tế ${JSON.stringify(d.dong)}`);
+  assert.equal(d.tran, "26700", "(i) bước đọc gộp nhận DOC_GOP_TRAN_GIAY = 32400 − 2400 − 3000 − 300");
+  assert.doesNotMatch(d.ra.out, /JOB WARN/, "(i) cấu hình hợp lệ: không có dòng cảnh báo");
+});
+test("2311-5 A trần đọc gộp đặt tường minh lớn hơn chỗ còn lại → kẹp về 16200s và in một dòng JOB WARN", async () => {
+  const r = await chayTran(null, { ZALO_IMPORT_TRAN_DOC_GOP: "30000" });
+  assert.match(r.ra.out, /^JOB WARN \[zalo-import-daily\] trần đọc gộp 30000s không vừa trần tổng 21600s — kẹp về 16200s /m, "(ii) CA LỖI: trần đọc gộp vượt chỗ còn lại của trần tổng phải được kẹp và báo");
+  assert.equal(r.tran, "15900", "(ii) sau khi kẹp: 16200 − 300");
+});
+test("2311-5 A trần tổng nhỏ (6000s) → đọc gộp tự co về 600s (dừng sạch ở 300s), vẫn chừa chỗ cho enrich", async () => {
+  const n = await chayTran(null, { ZALO_IMPORT_TRAN_TONG: "6000" });
+  assert.match(dongKhai(n.ra), /đọc gộp ≤600s \(dừng sạch ở 300s\) · lượt ≤6000s/, "(iii) dòng khai trần khi trần tổng nhỏ");
+  assert.equal(n.tran, "300", "(iii) bước nhận 300");
+});
+test("2311-5 A chiều đỏ: bản sao bỏ chỗ kẹp → trần đọc gộp vượt trần tổng mà không báo (đỏ «phải được kẹp và báo»)", () =>
+  assert.rejects(
+    chayTran((s) => s.replace(CAU_KEP, "if false; then"), { ZALO_IMPORT_TRAN_DOC_GOP: "30000" }).then((r) => {
+      assert.match(r.ra.out, /^JOB WARN \[zalo-import-daily\] trần đọc gộp 30000s không vừa trần tổng 21600s — kẹp về 16200s /m, "(ii) CA LỖI: trần đọc gộp vượt chỗ còn lại của trần tổng phải được kẹp và báo");
+      assert.equal(r.tran, "15900", "(ii) CA LỖI: sau khi kẹp bước phải nhận 16200 − 300");
+    }),
+    /phải được kẹp và báo/));
 
 // ══════ A trạng thái chuyển tiếp: chưa có nhánh B thì 75 vẫn là mã của lượt, nhưng enrich VẪN chạy ══════
 // (đúng điều LL ghi ở BÁO 2311-6: nhánh P3 vào trước thì «lượt đỏ nhưng enrich vẫn chạy»). Nhánh B đổi hai Assert
