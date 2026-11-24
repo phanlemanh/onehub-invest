@@ -78,7 +78,7 @@ async function main() {
   };
 
   try {
-    const { routed, summary, dem } = await runEnrich({
+    const { routed, summary, dem, chuyenThe } = await runEnrich({
       client: c, runId, dry: DRY, limit: Number.isFinite(LIMIT) ? LIMIT : 50, offerIds: OFFERS,
       llm, resolve: resolveContext, giaoDich, tran,
     });
@@ -91,7 +91,7 @@ async function main() {
     if (DRY) {
       console.log(
         `offers: ${routed.length} | áp thẳng (E1): ${summary.direct} | có căn cứ: ${summary.corroborated}` +
-          ` | chờ duyệt: ${summary.review} | xung đột E1/LLM: ${summary.xungDot}`,
+          ` | chờ duyệt: ${summary.review} (trong đó có căn cứ chờ phiếu độc lập: ${chuyenThe}) | xung đột E1/LLM: ${summary.xungDot}`,
       );
       return;
     }

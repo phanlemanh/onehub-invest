@@ -4,6 +4,8 @@
 //   review: thẻ /ops/review agent_output enrich:<offer_id> (người quyết)
 //   review + conflict (E1 trái LLM): cả hai lên thẻ, người chọn một bên (AC-7, AC-11)
 // File này KHÔNG có câu UPDATE sale_offers/properties nào (AC-1).
+// NB11 (Mạnh «Chờ sửa xong» 24/11): lượt hằng đêm KHÔNG tự áp đường corroborated (LLM trùng E1, LLM trùng toà danh bạ) — lời nhắc
+// đêm đưa sẵn đáp án E1 nên phiếu LLM chưa độc lập; chúng lên thẻ (route review, căn cứ cũ ở evidence.trung_luat) tới khi NB10 xong.
 // enrich-chay-sau-nap: mỗi tin hai pha — đọc + gọi LLM NGOÀI giao dịch, ghi trong giao dịch riêng của tin
 // (opts.giaoDich); tin ghi hỏng lui lại một mình. Bộ đếm cộng từ những gì thật sự ghi.
 import type pg from "pg";
@@ -23,6 +25,19 @@ export type LlmFn = (
 ) => Promise<{ result: EnrichResult | null; model: string; tracePath: string | null; loi?: string }>;
 /** Chạy fn trong giao dịch của một tin: commit khi xong, lui lại rồi ném lại khi lỗi. */
 export type GiaoDich = <T>(fn: () => Promise<T>) => Promise<T>;
+
+/** Đề xuất đêm sau khi chặn tự áp: căn cứ cũ (e1 | asset_nodes:<slug>) giữ ở `trungLuat`, ghi vào evidence.trung_luat. */
+export type RoutedDem = Routed & { trungLuat?: string };
+
+/**
+ * NB11: corroborated → review (không áp), corroboratedBy rỗng, căn cứ giữ ở trungLuat. Mọi nhánh khác giữ nguyên. Gỡ hàm này khi
+ * NB10 làm phiếu thứ hai độc lập (ROADMAP mục 63).
+ */
+export function chanTuApCanCu(rs: Routed[]): RoutedDem[] {
+  return rs.map((r) =>
+    r.route === "corroborated" ? { ...r, route: "review", corroboratedBy: null, trungLuat: r.corroboratedBy ?? "khong-ro" } : r,
+  );
+}
 
 /** Cửa sổ không bốc lại tin đã thử (Hỏi-3, Mạnh duyệt 30/10). */
 export const CUA_SO_THU_NGAY = 30;
@@ -250,6 +265,8 @@ export async function runEnrich(opts: RunEnrichOpts): Promise<{
   summary: ReturnType<typeof summarizeRun>;
   reviewIds: number[];
   dem: DemLuot;
+  /** NB11: số đề xuất có căn cứ đã GHI vào thẻ thay vì tự áp (chế độ dry: 0). */
+  chuyenThe: number;
 }> {
   const c = opts.client;
   const giaoDich = opts.giaoDich ?? giaoDichSavepoint(c);
@@ -259,6 +276,7 @@ export async function runEnrich(opts: RunEnrichOpts): Promise<{
   const reviewIds: number[] = [];
   const dem = demRong();
   dem.tin = offers.length;
+  let chuyenThe = 0;
 
   for (const o of offers) {
     // Pha đọc — ngoài giao dịch: không giữ khoá dòng nào trong lúc chờ LLM (AC-1).
@@ -277,7 +295,7 @@ export async function runEnrich(opts: RunEnrichOpts): Promise<{
       else if (!llmRes.result) dem.llmKhongDoc++;
     }
     const held = await heldFields(c, o.offer_id);
-    const rs = routeFields({
+    const rs = chanTuApCanCu(routeFields({
       current: {
         property_type: o.property_type, bedrooms: o.bedrooms, bathrooms: o.bathrooms,
         street_raw: o.street_raw, block_raw: o.block_raw,
@@ -287,7 +305,7 @@ export async function runEnrich(opts: RunEnrichOpts): Promise<{
       buildings,
       held,
       inferredFields: o.loai_suy ? new Set<EnrichField>(["property_type"]) : undefined,
-    });
+    }));
     routed.push(rs);
     if (opts.dry) continue;
 
@@ -301,7 +319,7 @@ export async function runEnrich(opts: RunEnrichOpts): Promise<{
 
     // Pha ghi — một giao dịch của tin. Bộ đếm của tin chỉ cộng vào lượt khi giao dịch xong.
     const ghi = async () => {
-      const t = { deXuatMoi: 0, daAp: 0, choDuyet: 0, card: null as number | null };
+      const t = { deXuatMoi: 0, daAp: 0, choDuyet: 0, chuyenThe: 0, card: null as number | null };
       const applyIds: number[] = [];
       for (const r of rs) {
         const llmRow = r.source === "e2_llm";
@@ -318,7 +336,7 @@ export async function runEnrich(opts: RunEnrichOpts): Promise<{
             llmRow ? (llmRes?.result?.confidence ?? null) : null,
             llmRow ? (llmRes?.model ?? null) : "context-resolver",
             llmRow ? (llmRes?.tracePath ?? null) : null,
-            { ...evidence, basis: basisOf(r, ctx, llmMeta) },
+            { ...evidence, basis: basisOf(r, ctx, llmMeta), ...(r.trungLuat ? { trung_luat: r.trungLuat } : {}) },
             status,
           ],
         );
@@ -326,6 +344,7 @@ export async function runEnrich(opts: RunEnrichOpts): Promise<{
         t.deXuatMoi++;
         if (r.route === "direct" || r.route === "corroborated") applyIds.push(Number(rows[0].id));
         else if (r.route === "review" && status === "queued") t.choDuyet++;
+        if (r.trungLuat) t.chuyenThe++;
       }
       if (applyIds.length > 0) {
         const { rows } = await c.query(`SELECT apply_enrichment($1, $2) AS n`, [applyIds, `enrich-run:${opts.runId}`]);
@@ -349,6 +368,7 @@ export async function runEnrich(opts: RunEnrichOpts): Promise<{
       dem.deXuatMoi += t.deXuatMoi;
       dem.daAp += t.daAp;
       dem.choDuyet += t.choDuyet;
+      chuyenThe += t.chuyenThe;
       if (t.card !== null) reviewIds.push(t.card);
     } catch (e) {
       const err = e as { code?: string; name?: string };
@@ -357,5 +377,5 @@ export async function runEnrich(opts: RunEnrichOpts): Promise<{
   }
 
   dem.the = new Set(reviewIds).size;
-  return { routed, summary: summarizeRun(routed), reviewIds, dem };
+  return { routed, summary: summarizeRun(routed), reviewIds, dem, chuyenThe };
 }
