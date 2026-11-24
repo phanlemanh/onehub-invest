@@ -1132,7 +1132,8 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     - **Dọn thẻ tồn: máy đóng 232 thẻ, không phải 462.** Lời «Cho đóng 462 thẻ» dựa trên mô tả của phiên tư vấn: 232 thẻ mà mọi
       đề xuất trùng giá trị tin đang có (đúng mục 35 «máy rút thẻ trùng giá trị đang lưu») và 230 thẻ «không còn đề xuất». Hàng
       đóng thẻ (NB9) đo lại cùng ngày: 230 thẻ ấy là **thẻ đối chiếu chưa từng có đề xuất** (lệch ý định 124, lệch giá 103, lệch
-      diện tích 5), tức còn điều để quyết. Giám sát phán theo hướng hẹp hơn lời đã cho: NB9 chỉ đóng 232 thẻ trùng giá trị, máy
+      diện tích 5; chưa có dòng nhật ký quyết định nào), tức còn điều để quyết. Giám sát phán khoảng 03:10Z cùng ngày, theo hướng
+      hẹp hơn lời đã cho: NB9 chỉ đóng 232 thẻ trùng giá trị, máy
       ghi lý do, không đổi dữ liệu tin; 230 thẻ đối chiếu sang NB5, xử theo nhóm của quyết định 1 (ba kiểu lệch là ba quyết
       định) và NB5 ghi lại phán quyết đối chiếu. Câu còn mở của mục 61 về các thẻ này đã có trả lời.
     - **Quyết định 1, ca chưa chắc xử theo nhóm.** Ô nhóm A dưới ngưỡng và giá trị chưa quy được về danh bạ không sinh mỗi tin
