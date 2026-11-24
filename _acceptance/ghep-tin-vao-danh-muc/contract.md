@@ -5,7 +5,7 @@ slug: ghep-tin-vao-danh-muc
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli, data]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-24
 design_doc: docs/superpowers/specs/2026-11-18-ghep-tin-vao-danh-muc-design.md
@@ -136,3 +136,14 @@ Trục và ô lấy từ bảng phủ ca của design doc §2, số đếm thậ
     ghi «áp lại khối 2 và 3 của 113», mà làm thế thì CHECK của 113 từ chối giữa chừng. Cách lùi đúng là `lui/lui-117.sql`, mục 4
     của `ho-so-ap.md`, đã chạy thử trên bản chép. Không sửa tệp 117 lúc này vì sửa thì phải ghim lại, tốn một lượt chấm 80 phút
     (GS 24/11). Migration kế của chuỗi (PL36) mang dòng đính chính.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-24:
+  - Ngoài-1: Người vận hành đọc dòng hướng dẫn lùi trong migration 117 rồi làm theo sẽ gặp một bước lùi báo lỗi giữa chừng; tệp lùi thật (`lui/lui-117.sql`, hồ sơ áp mục 4) thì đúng.
+  - Ngoài-3: Hướng dẫn lùi ở đầu migration 117 sai ở phần chữ (trùng Ngoài-1); PL36 mang dòng đính chính.
+  - Ngoài-4: Nếu bước đọc dữ liệu để gắn toà bị kẹt, lượt nạp tin hằng ngày có thể treo mãi và không báo cảnh báo, dù tin đã nạp xong.
+  - Ngoài-5: Phép thử giả lỗi cho rào kiểm của DB (`probes/migration.sh`) có thể báo đạt dù không đúng ca cần đỏ, nên bằng chứng yếu hơn lời hứa.
+  - Ngoài-6: Phép thử giả lỗi cho việc phát hiện tin gắn hai nơi (`probes/xung-dot.sh`) chỉ chứng minh có một ca nào đó đỏ, chưa chắc đúng ca định kiểm.
+  - Ngoài-7: Vài phép thử giả lỗi cho việc chạy lại và gắn vùng (`probes/chay-lai.sh`, `probes/ham-gan.sh`) có thể xanh dù không đúng ca cần đỏ.
+  - Ngoài-8: Hai cách đếm có thể gắn hai nhóm tin khác nhau mà vẫn ra cùng con số, nên con số 50% chưa chứng minh hai bên gắn đúng cùng các tin.
+  - Ngoài-9: Nếu phần đọc tệp mẫu đã đóng băng thôi kiểm tra, việc sửa trộm mẫu chấm có thể không bị bộ test hiện có phát hiện.
+  - Ngoài-10: Phép thử cấy dòng lạ có thể xanh vì lý do khác, nên chưa chắc chứng minh số tin đã gắn không bị dòng lạ làm lệch.
+  - Ngoài-11: Phép kiểm cách gộp kết quả hai vòng chấm dùng số tự viết, chưa chứng minh ngưỡng và cỡ mẫu được giữ khi gộp thật.

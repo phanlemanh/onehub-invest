@@ -1,14 +1,14 @@
 ---
 schema_version: 2
 feature_slug: ghep-tin-vao-danh-muc
-verdict: PENDING-JUDGMENT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: eb1e81f1f059b4a6218c907c0114ea6c251c065c
-human_signoff:
+human_signoff: Mạnh 2026-11-24
 ---
 
 # Evidence Report: ghep-tin-vao-danh-muc
@@ -179,7 +179,7 @@ Round 2. Nội dung thay trọn round cũ; lịch sử round nằm ở mục Ite
     - domain-correctness: PASS — Báo cáo nêu cỡ mẫu 110/110 cho cả n1 và n2, đúng mức AC-9 đã chốt, cận dưới Wilson từng nhóm (0,9503 và 0,9361), các bảng tách theo nguồn, mức toà và vùng, khu. Phần yếu duy nhất là n2 hụt, báo cáo ghi rõ và quy nguyên nhân về cặp nút 389/48 của danh bạ. Ô lẻ n1/vùng 93,8% trên 16 bài chỉ là một bài sai và đã hiện trong bảng.
     - operational-feasibility: PASS — Báo cáo nêu cỡ mẫu, cận dưới Wilson, bảng theo nguồn A/B/C/F, theo mức toà và vùng, theo khu 1 và 16. N2 hụt ngưỡng được nói ra kèm «Nguồn phải tắt: C, F» và hai bài sai truy về cặp nút 389/48. Mức vùng của N1 đạt 93,8% trên 16 bài, mẫu nhỏ, có trong bảng.
     - spec-alignment: PASS — Báo cáo nêu cỡ mẫu 110/110 mỗi nhóm đúng mức đã chốt, cận dưới Wilson từng nhóm (n1 0,9503 đạt, n2 0,9361 hụt), bảng tách riêng theo nguồn, mức toà/vùng, khu. Phần độ đúng thấp được nói ra. Mức vùng n1 93,8% (15/16) chỉ nằm trong bảng, mẫu nhỏ nên không thấp rõ rệt.
-  human_override:  # chi nguoi ghi
+  human_override: Mạnh 2026-11-24 — Đạt
 
 ## Known limits
 
