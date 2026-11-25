@@ -47,6 +47,8 @@ mau con-r2-chan.json 1 "còn 1 ảnh r2.dev lỗi host-not-allowed"
 mau con-redirect.json 1 "còn 1 ảnh lỗi redirect-host"
 mau chua-co-r2.json 1 "chưa có ảnh r2.dev nào tải được"
 mau khong-bai-moi.json 1 "chưa có bài mới có ảnh"
+# rò tên: kiem-sau không in URL hay tên host (host canh gác chỉ có trong mẫu)
+out=$(chay "$A/mau/canh-gac.json"); echo "$out" | grep -q 'canh-gac' && loi "kiem-sau in tên host canh gác" || dat "kiem-sau không in tên host (mẫu canh-gac)"
 
 # 3. round-trip writer thật: dist của nhánh và của main
 ( cd "$GOC/collector" && npx tsc -p tsconfig.json >/dev/null 2>&1 ) || loi "build collector nhánh"

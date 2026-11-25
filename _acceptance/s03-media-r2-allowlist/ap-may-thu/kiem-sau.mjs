@@ -23,12 +23,16 @@ const hoHost = (url) => {
 
 /** Lõi chấm — rows: [{post_id, media_files}] (mỗi bài một dòng, bản mới nhất). */
 export function cham(rows) {
-  let bai = 0, matHet = 0, r2Ok = 0, r2Chan = 0, redirect = 0, jxl = 0;
+  let bai = 0, matHet = 0, matChiDoHost = 0, r2Ok = 0, r2Chan = 0, redirect = 0, jxl = 0;
   for (const r of rows) {
     const mf = Array.isArray(r.media_files) ? r.media_files : [];
     if (mf.length === 0) continue;
     bai++;
-    if (!mf.some((e) => e && e.file)) matHet++;
+    if (!mf.some((e) => e && e.file)) {
+      matHet++;
+      // bài chỉ hỏng vì hai lỗi ZC15 sửa được — tỉ lệ đích của ngày = bỏ các bài này
+      if (mf.some((e) => e && (e.error === "redirect-host" || (e.error === "host-not-allowed" && hoHost(e.url) === "r2.dev")))) matChiDoHost++;
+    }
     for (const e of mf) {
       if (!e) continue;
       const ho = hoHost(e.url);
@@ -44,7 +48,7 @@ export function cham(rows) {
   if (redirect > 0) lyDo.push(`còn ${redirect} ảnh lỗi redirect-host`);
   if (bai > 0 && r2Ok === 0) lyDo.push("chưa có ảnh r2.dev nào tải được");
   const so = `${bai} bài có ảnh · ${matHet} mất hết ảnh · r2.dev có file ${r2Ok} · r2.dev bị chặn ${r2Chan} · redirect-host ${redirect} · .jxl ${jxl}`;
-  return { dat: lyDo.length === 0, so, lyDo };
+  return { dat: lyDo.length === 0, so, lyDo, bai, matHet, matChiDoHost };
 }
 
 function inKetQua(k) {
@@ -93,8 +97,8 @@ async function main(argv) {
       }
       for (const [d, rs] of [...theoNgay].sort()) {
         const k = cham(rs);
-        const [bai, mat] = k.so.match(/\d+/g).map(Number);
-        console.log(`${d}  ${k.so}  → mất hết ${(100 * mat / Math.max(bai, 1)).toFixed(1)}%`);
+        const pct = (n) => (100 * n / Math.max(k.bai, 1)).toFixed(1);
+        console.log(`${d}  ${k.so}  → mất hết ${pct(k.matHet)}% · đích ZC15 (bỏ bài chỉ hỏng vì r2.dev/redirect-host) ${pct(k.matHet - k.matChiDoHost)}%`);
       }
       return 0;
     }

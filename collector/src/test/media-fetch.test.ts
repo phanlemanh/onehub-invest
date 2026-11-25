@@ -290,7 +290,7 @@ test("ZC15: tệp hậu tố trong stateDir mở host đích chuyển hướng; 
 
 test("ZC15: parseHostSuffixes lọc dòng hỏng — một nhãn, ký tự lạ, dấu chấm đầu/cuối, chú thích, dòng trống", () => {
   assert.deepEqual(
-    parseHostSuffixes("vn\n.x.com\nx.com.\na_b.com\n# chú thích\n\n Pub.Example.COM \npub.example.com, ,bad"),
+    parseHostSuffixes("vn\nlocalhost\n.x.com\nx.com.\na_b.com\n# chú thích\n\n Pub.Example.COM \npub.example.com, ,bad"),
     ["pub.example.com"],
   );
   assert.deepEqual(parseHostSuffixes(undefined), []);

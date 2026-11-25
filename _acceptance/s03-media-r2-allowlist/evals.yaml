@@ -22,7 +22,7 @@ evals:
     executor: test
     cmd: config:executors.script.zc15_media_test
     paths: [collector/src/core/media-fetch.ts, collector/src/api/server.ts, collector/src/test/media-fetch.test.ts]
-    expected: "exit 0; ca «ZC15: tệp hậu tố trong stateDir mở host đích chuyển hướng» xanh trên CÙNG fixture hai chiều: stateDir có media-host-suffixes.txt ghi 'localhost' → ảnh /redir-out.jpg (127.0.0.1 → localhost) có file + sha256 khớp byte; stateDir không có tệp → cùng ảnh mang error 'redirect-host' (thông điệp ghim), và URL gốc http://localhost:<port>/a.jpg → 'host-not-allowed'."
+    expected: "exit 0; ca «ZC15: tệp hậu tố trong stateDir mở host đích chuyển hướng» xanh trên CÙNG fixture hai chiều: nguồn là localhost (được phép sẵn), host đích là 127.0.0.1; stateDir có media-host-suffixes.txt ghi hậu tố hai nhãn '0.0.1' → ảnh localhost/redir-ip.jpg (chuyển sang 127.0.0.1) có file + sha256 khớp byte, URL gốc 127.0.0.1/a.jpg tải được; stateDir không có tệp → cùng ảnh mang error 'redirect-host' và URL gốc → 'host-not-allowed' (thông điệp ghim). Đột biến đo 25/11: bỏ phần hậu tố thêm trong server.ts → ca này và ca biến môi trường đỏ."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E4
@@ -30,7 +30,7 @@ evals:
     executor: test
     cmd: config:executors.script.zc15_media_test
     paths: [collector/src/core/media-fetch.ts, collector/src/api/server.ts, collector/src/test/media-fetch.test.ts]
-    expected: "exit 0; ca «ZC15: parseHostSuffixes lọc dòng hỏng» xanh: đầu vào có 'vn', '.x.com', 'x.com.', 'a_b.com', '# chú thích', dòng trống, 'Pub.Example.COM ' → đúng ['pub.example.com'] (chữ thường, cắt trắng); ca biến môi trường ONEINVEST_MEDIA_HOST_SUFFIXES='localhost,bad' (không tệp) mở được /redir-out.jpg; ca log: dòng log khởi động do server ghi có số hậu tố thêm và KHÔNG chứa chuỗi host thêm. Chiều đỏ trong cùng ca: biến môi trường rỗng → redirect-host."
+    expected: "exit 0; ca «ZC15: parseHostSuffixes lọc dòng hỏng» xanh: đầu vào có 'vn', 'localhost', '.x.com', 'x.com.', 'a_b.com', '# chú thích', dòng trống, 'Pub.Example.COM ' → đúng ['pub.example.com'] (chữ thường, cắt trắng; một nhãn như 'vn', 'localhost' bị bỏ — không ngoại lệ); ca biến môi trường ONEINVEST_MEDIA_HOST_SUFFIXES='0.0.1,bad' (không tệp) mở được localhost/redir-ip.jpg; ca log: dòng log khởi động có '+ 1 hậu tố thêm' và KHÔNG chứa chuỗi hậu tố thêm. Chiều đỏ trong cùng ca: biến môi trường rỗng → redirect-host."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E5
@@ -86,5 +86,5 @@ evals:
     executor: script
     cmd: config:executors.script.zc15_ap_may_thu
     paths: [_acceptance/s03-media-r2-allowlist/ap-may-thu/**, collector/src/core/media-fetch.ts]
-    expected: "exit 0; stdout 'AP-MAY-THU PASS': README có năm mục, mỗi mục có lệnh hay con số (mục 2 có số trước 27,5% và 20,9%; mục 1 có 'npm run build', 'media-host-suffixes.txt', 'kickstart' kèm 'lời riêng của Mạnh'; mục 3 có sao lưu dist; mục 4 có lùi; mục 5 có 'kiem-sau.mjs'); kiem-sau chấm đúng các bộ dòng mẫu (1 ĐẠT; còn r2.dev host-not-allowed → KHÔNG ĐẠT 'r2.dev'; còn redirect-host → KHÔNG ĐẠT 'redirect-host'; chưa có ảnh r2.dev nào tải được → KHÔNG ĐẠT 'chưa có ảnh r2.dev'; không bài mới → KHÔNG ĐẠT 'chưa có bài mới'); round-trip writer thật: meta.mediaFiles sinh bằng fetchMessageMedia của nhánh (CDN giả) → ĐẠT, bằng media-fetch của main → KHÔNG ĐẠT đúng lý do. Phá mục 2 thành 'sẽ đo' → FAIL 'README mục 2'."
+    expected: "exit 0; stdout 'AP-MAY-THU PASS': README có năm mục, mỗi mục có lệnh hay con số (mục 2 có số trước 27,5% và 20,9%; mục 1 có 'npm run build', 'media-host-suffixes.txt', 'kickstart' kèm 'lời riêng của Mạnh'; mục 3 có sao lưu dist; mục 4 có lùi; mục 5 có 'kiem-sau.mjs'); kiem-sau chấm đúng các bộ dòng mẫu (1 ĐẠT; còn r2.dev host-not-allowed → KHÔNG ĐẠT 'r2.dev'; còn redirect-host → KHÔNG ĐẠT 'redirect-host'; chưa có ảnh r2.dev nào tải được → KHÔNG ĐẠT 'chưa có ảnh r2.dev'; không bài mới → KHÔNG ĐẠT 'chưa có bài mới'); round-trip writer thật: meta.mediaFiles sinh bằng fetchMessageMedia của nhánh (CDN giả) → ĐẠT, bằng media-fetch của main → KHÔNG ĐẠT đúng lý do. Phá mục 2 thành 'sẽ đo' → FAIL 'README mục 2'. Rò tên: kiem-sau chạy trên mẫu canh-gac.json (URL mang host canh gác 'canh-gac-zc15.example') → stdout+stderr không chứa 'canh-gac'; --ty-le in tỉ lệ đích tính trên chính ngày đo (bỏ bài chỉ hỏng vì r2.dev chặn hay redirect-host)."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
