@@ -16,7 +16,6 @@ import { appendFileSync, existsSync, readFileSync, realpathSync } from "node:fs"
 import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { duongSo } from "./pipeline-that-hang-ngay.mjs";
 
 // Tệp test của các module đọc tệp của module khác (import, chép fixture, quét cây) — vùng rộng theo đo 10/11.
 const LOI_APP = [
@@ -310,6 +309,13 @@ async function mainScripts(argv) {
     if (!xoa() && ma === 0) ma = 3;
   }
   return ket(maNgat || ma);
+}
+
+// Sổ lần chạy của pipeline-that-hang-ngay.mjs (ở đây, không import tệp đó: bản sao đối chứng của S4V-AC-2 chạy ngoài kho).
+export function duongSo(cwd = process.cwd()) {
+  if (process.env.PIPELINE_THAT_SO) return process.env.PIPELINE_THAT_SO;
+  const common = spawnSync("git", ["-C", cwd, "rev-parse", "--path-format=absolute", "--git-common-dir"], { encoding: "utf8" }).stdout.trim();
+  return path.join(path.dirname(common), ".acceptance-runs/pipeline-that/lan-chay.jsonl");
 }
 
 // Dòng «ca dữ liệu thật» (hồ sơ db-thu-tach-khoi-cum-that AC-11): mỗi lượt chấm nói rõ 30 ca cần dữ liệu thật có chạy

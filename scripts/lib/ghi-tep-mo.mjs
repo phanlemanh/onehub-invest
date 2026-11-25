@@ -46,7 +46,7 @@ if (RA) {
 
 // Gom: node scripts/lib/ghi-tep-mo.mjs --gom <nhật ký> --ra <fixture.json> --lenh "<lệnh đã chạy>"
 // Giữ tệp nằm trong cây kho (git ls-files), đường tương đối gốc kho; tiến trình con mang đối số là tệp kho cũng tính.
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url) && process.argv.includes("--gom")) {
+if (process.argv[1] && fs.realpathSync(process.argv[1]) === fs.realpathSync(fileURLToPath(import.meta.url)) && process.argv.includes("--gom")) {
   const arg = (k) => { const i = process.argv.indexOf(k); return i > 0 ? process.argv[i + 1] : null; };
   const goc = cp.execFileSync("git", ["rev-parse", "--show-toplevel"], { encoding: "utf8" }).trim();
   const kho = new Set(cp.execFileSync("git", ["ls-files"], { cwd: goc, encoding: "utf8" }).split("\n").filter(Boolean));

@@ -9,16 +9,13 @@ import { appendFileSync, mkdirSync, realpathSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { duongSo } from "./suite-neu-doi.mjs";
+
+export { duongSo };
 
 const git = (...a) => spawnSync("git", a, { encoding: "utf8" }).stdout.trim();
 
 /** Đường sổ dùng chung của mọi worktree: thư mục cha của git-common-dir (checkout chính). */
-export function duongSo(cwd = process.cwd()) {
-  if (process.env.PIPELINE_THAT_SO) return process.env.PIPELINE_THAT_SO;
-  const common = spawnSync("git", ["-C", cwd, "rev-parse", "--path-format=absolute", "--git-common-dir"], { encoding: "utf8" }).stdout.trim();
-  return path.join(path.dirname(common), ".acceptance-runs/pipeline-that/lan-chay.jsonl");
-}
-
 /** Tên ca đỏ bóc từ đầu ra node --test (dòng `✖ <tên> (<thời gian>)`), không trùng. */
 export function caDo(out) {
   const ten = new Set();
