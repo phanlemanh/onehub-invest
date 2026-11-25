@@ -13,6 +13,7 @@ import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { napChiTietThuMuc } from "../import-s16-chi-tiet.mjs";
+import { sqlNapLaiDayDu } from "../lib/nap-view-song.mjs";
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), "../..");
 const DDL_113 = readFileSync(join(REPO, "db", "migrations", "113_thuoc_tinh_can_s16.sql"), "utf8");
@@ -66,7 +67,12 @@ const snapshotGia = async (items, schemaVersion = 14) => {
 const tmps = [];
 const sinh = async (items, sv) => { const d = await snapshotGia(items, sv); tmps.push(d); return d; };
 
-test.before(async () => { await q(DDL_113); });
+// DB của lượt chép từ máy thu đã có 117 (trục phát biểu mang universal_property_id, có dòng thật): áp nguyên 113 thì CHECK của
+// 113 thiếu trường đó và ADD CONSTRAINT đỏ 23514 (sự cố 24/11 sau khi áp PL20). Nạp lại giữ trục sống, như nap-lai-giu-rang-buoc.
+test.before(async () => {
+  const c = new pg.Client({ connectionString: DB }); await c.connect();
+  try { await c.query(await sqlNapLaiDayDu(c, DDL_113)); } finally { await c.end(); }
+});
 test.after(() => { tmps.forEach((d) => rmSync(d, { recursive: true, force: true })); });
 
 const sidCua = (dir) => JSON.parse(readFileSync(join(dir, "manifest.json"), "utf8")).snapshotId;

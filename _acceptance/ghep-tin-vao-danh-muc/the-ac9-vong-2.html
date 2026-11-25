@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PL20 thẻ AC-9</title>
+<style>
+:root{--bg:#fff;--fg:#1a1a1a;--mute:#5b5b5b;--line:#e2e2e2;--soft:#f6f6f4;--ok:#1f7a3a;--bad:#b3261e;--warn:#8a5a00;--warnbg:#fff6e0}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141414;--fg:#ececec;--mute:#a5a5a5;--line:#333;--soft:#1e1e1e;--ok:#6fcf8a;--bad:#ff8a80;--warn:#f0c060;--warnbg:#2a2210}}
+:root[data-theme="dark"]{--bg:#141414;--fg:#ececec;--mute:#a5a5a5;--line:#333;--soft:#1e1e1e;--ok:#6fcf8a;--bad:#ff8a80;--warn:#f0c060;--warnbg:#2a2210}
+body{margin:0;padding:24px 16px;background:var(--bg);color:var(--fg);font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:860px;margin:0 auto}
+h1{font-size:22px;margin:0 0 4px}h2{font-size:17px;margin:28px 0 8px;border-bottom:1px solid var(--line);padding-bottom:4px}
+.mute{color:var(--mute);font-size:13px}
+.box{background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin:12px 0}
+.warn{background:var(--warnbg);border-color:var(--warn)}
+table{border-collapse:collapse;width:100%;font-size:14px;margin:8px 0}
+th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+td.n{text-align:right;font-variant-numeric:tabular-nums}
+.ok{color:var(--ok);font-weight:600}.bad{color:var(--bad);font-weight:600}
+.wrap{overflow-x:auto}
+blockquote{margin:8px 0;padding:8px 12px;border-left:3px solid var(--line);color:var(--fg)}
+code{font-size:13px}
+ol li,ul li{margin:4px 0}
+</style>
+</head>
+<body><main>
+<h1>PL20 · Ghép tin vào danh mục căn — chấm chất lượng AC-9 vòng 2</h1>
+<p class="mute">Thẻ quyết định cho Mạnh. Chấm lại trên Mac mini ngày 24/11, chỉ đọc. Hồ sơ <code>ghep-tin-vao-danh-muc</code>, nhánh @0cf7192af. Lượt chấm máy đầy đủ (S4) chạy SAU lời của anh.</p>
+
+<div class="box">
+<b>Kết luận chính (số thô, thước không đổi):</b> nhóm n1 <span class="ok">ĐẠT</span> · nhóm n2 <span class="bad">HỤT</span> ngưỡng.
+Đây là vòng 2, vòng cuối theo lối ra anh chốt 18/11 («hụt nữa thì dừng và trình lại») — nên em dừng và trình.
+</div>
+
+<div class="wrap"><table>
+<tr><th>Nhóm</th><th>Nguồn</th><th>Lát nhãn</th><th class="n">Đúng</th><th class="n">Cận dưới Wilson</th><th>Ngưỡng 0,95</th></tr>
+<tr><td>n1</td><td>A, B</td><td>hai-khu-ghep-b</td><td class="n">109/110</td><td class="n">0,9503</td><td class="ok">đạt</td></tr>
+<tr><td>n2</td><td>C, F</td><td>hai-khu-ghep-c</td><td class="n">108/110</td><td class="n">0,9361</td><td class="bad">hụt</td></tr>
+</table></div>
+<p class="mute">Trên máy mới số khớp đúng lượt chấm 23/11 trên máy cũ. Đầu ra máy khớp hai tệp đóng băng, 0 bài lệch. Báo cáo đầy đủ: <code>cham-vong-2-may-moi-2411.md</code>.</p>
+
+<h2>Câu anh cần quyết</h2>
+<p>Nhóm n2 hụt vì đúng 2 bài, cả hai do một lỗi danh bạ đã biết (xem mục «Rainbow»). Anh chọn lối nào?</p>
+<ol>
+<li><b>Lối (b) — nhận số thô kèm giới hạn đã biết</b> (em khuyên). Ghi n2 108/110 là giới hạn có tên, giữ nguồn C, F bật, áp DA53 sau cổng như đã định rồi đo số trên DB máy thu.
+<br><span class="mute">Vì sao: hai bài sai không do luật ghép mà do danh bạ có hai nút cùng tên. Chạy lại DA53 trên đúng lát vừa thấy hai bài sai là sửa theo đáp án, ra 110/110 nhưng không thêm bằng chứng. Đảo được: muốn tắt C, F về sau chỉ cần một lượt tắt nguồn (AC-6).</span></li>
+<li><b>Lối DA53 chạy lại</b>. Anh cho lời áp DA53 (gộp nút 389 vào 48, hồ sơ đã ký) trên máy mới, em chạy lại bộ ghép trên cùng lát n2, không gắn nhãn mới, chấm lại; thẻ ghi cả hai số.
+<br><span class="mute">Giá: một lượt ghi DB máy thu; đầu ra máy sẽ khác tệp đóng băng, phải đóng băng lại trước khi chấm (bàn với GS). Số mới được tính sau khi đã thấy bài sai.</span></li>
+<li><b>Theo đúng luật khi hụt — tắt nguồn C, F</b>. Bộ chấm tự kết luận «nguồn phải tắt: C, F». Lượt kế rút hết dòng ghép của hai nguồn này (tổng thể n2 là 540 tin), chỉ giữ A, B.
+<br><span class="mute">Giá: mất phần tin đọc từ chữ bài bằng model; đích AC-8 (từ 50% tin gắn được) khó còn giữ.</span></li>
+</ol>
+
+<h2>Bài máy sai — đối danh bạ</h2>
+<div class="wrap"><table>
+<tr><th>Nhóm</th><th>Thẻ</th><th>Bài</th><th>Máy gắn</th><th>Người ghi</th><th>Quy về danh bạ</th></tr>
+<tr><td>n1</td><td>#12245</td><td><code>19440fe2…</code></td><td>vùng 49 «S1» (dưới 48 The Rainbow)</td><td>khu «the sapphire 1»</td><td>không quy được</td></tr>
+<tr><td>n2</td><td>#12663</td><td><code>00e5c7bb…</code></td><td>vùng 389 «Rainbow»</td><td>khu «the rainbow»</td><td>vùng 48 «The Rainbow»</td></tr>
+<tr><td>n2</td><td>#12711</td><td><code>3605b344…</code></td><td>vùng 389 «Rainbow»</td><td>khu «the rainbow»</td><td>vùng 48 «The Rainbow»</td></tr>
+</table></div>
+<p class="mute">#12245: GS sửa nhãn theo lời anh 21/11 06:17Z («s1» → «the sapphire 1»); bản chép chấm n1 dựng sau lần sửa này. Danh bạ không có nút nào tên «the sapphire 1», nên bài tính máy sai.</p>
+
+<h2>Mục riêng — Rainbow 48/389 (tính SAU khi thấy số)</h2>
+<div class="box warn">Danh bạ có hai nút cùng là «Rainbow» dưới Vinhomes Grand Park: 48 «The Rainbow» (có phân khu S1–S5) và 389 «Rainbow». DA53 gộp 389 vào 48 (đã gộp mã, CHƯA áp). Nếu coi 389 ≡ 48 thì n2 là 110/110, cận dưới Wilson ≈ 0,966. Con số này tính sau khi đã thấy hai bài sai — chỉ để tham khảo, không thay số thô. Không thẻ cài nào dính hai bài này.</div>
+
+<h2>Số theo nhóm</h2>
+<div class="wrap"><table>
+<tr><th>Nhóm</th><th>Theo nguồn</th><th>Theo mức gắn</th><th>Theo khu (1 = Ocean Park 1 · 16 = Grand Park)</th></tr>
+<tr><td>n1</td><td>A 107/108 · B 2/2</td><td>toà 94/94 · vùng 15/16</td><td>khu 1: 39/39 · khu 16: 70/71</td></tr>
+<tr><td>n2</td><td>F 87/89 · C 21/21</td><td>vùng 87/89 · toà 21/21</td><td>khu 1: 14/14 · khu 16: 94/96</td></tr>
+</table></div>
+
+<h2>n2 tách ba loại thẻ</h2>
+<div class="wrap"><table>
+<tr><th>Loại thẻ</th><th class="n">Bài</th><th class="n">Đúng</th></tr>
+<tr><td>Mạnh quyết từng thẻ</td><td class="n">0</td><td class="n">—</td></tr>
+<tr><td>Duyệt lô trước khi lưu</td><td class="n">110</td><td class="n">108</td></tr>
+<tr><td>Lưu trước, duyệt hồi tố</td><td class="n">0</td><td class="n">—</td></tr>
+</table></div>
+<p class="mute">(n1 lát -b: cả 110 thẻ thuộc loại «Mạnh duyệt từng thẻ», 109 đúng.)</p>
+
+<h2>Tỉ lệ anh sửa nháp của trợ lý</h2>
+<div class="wrap"><table>
+<tr><th>Nhóm</th><th class="n">Có nháp</th><th class="n">Giữ nguyên</th><th class="n">Sửa</th><th class="n">Anh tự quyết</th><th class="n">Thẻ cài</th></tr>
+<tr><td>n1</td><td class="n">110</td><td class="n">104</td><td class="n">1</td><td class="n">5</td><td class="n">0</td></tr>
+<tr><td>n2</td><td class="n">110</td><td class="n">101</td><td class="n">0</td><td class="n">0</td><td class="n">9</td></tr>
+</table></div>
+<p class="mute">«Sửa 1» của n1 là thẻ #12245 — GS sửa theo lời anh, không phải anh sửa nháp lúc gắn; tính đúng thì anh sửa nháp n1 là 0/110. n2: ở các ô toà, khu không cài, anh sửa 0/211 ô.</p>
+
+<h2>Độ độc lập của nhãn — nguyên văn xuất xứ từ GN</h2>
+<blockquote>«Lát hai-khu-ghep-c (n2, 110 bài): cả 110 thẻ do trợ lý GN (claude-opus-5-5) đọc chữ bài, ảnh, danh bạ, thẻ nhóm và đề xuất đủ 24 ô, không xem nháp máy hay đầu ra bộ ghép; Mạnh duyệt theo lô 10 thẻ (11 lô) bằng cách A (bảng chỉ hiện ô căn cứ Nghề, ô chưa chắc, liệt kê ô để trống); trợ lý bấm Lưu sau lời duyệt, so biểu mẫu trước lưu và đối DB sau lưu khớp 110/110. Thẻ Mạnh tự đọc/sửa: 0 (1 thẻ #12691 Mạnh hỏi lại «tầng hay trục», chốt giữ đề xuất trục 10 sau khi xem căn cứ). Thẻ cài 1/lô (10%): bắt 0/11 (suy luận sai 0/6, trích thiếu 0/5); 6/11 thẻ cài nằm ở ô phân khu, 4/11 ở ô toà, 1/11 ở ô dự án — đều là ô AC-9 chấm. Mọi thẻ cài lọt đều lưu giá trị đúng sau «Duyệt #id» riêng. Lát trước s03-cuon-chieu: bắt 0/24. Giới hạn: nhãn là «trợ lý đề xuất, người duyệt theo lô», không phải người đọc độc lập.»</blockquote>
+<div class="box warn"><b>Thẻ cài: anh bắt 0/11 ở lát này, 0/24 ở lát trước.</b> Nghĩa là thước của n2 thực chất là nhãn của trợ lý — duyệt theo lô không bắt được lỗi cài sẵn. Anh đã chọn không có mẫu gắn độc lập (20/11, «Không, như n1»). Cùng lúc anh định tuyến: số n2 được tính là bằng chứng người, hay ghi là «bằng chứng của model lớn có người duyệt».</div>
+
+<h2>Giới hạn đã biết khác</h2>
+<ul>
+<li><b>Cha và con cùng nhánh</b>: bài nêu cả phân khu cha lẫn con (như «ori s10») bị tính là nhiều vùng, không gắn. 105 tin trên DB máy thu có bài như vậy, 5 tin vì thế chưa gắn; luật «lấy nút sâu nhất» chỉ cứu 4 tin nên không đổi luật.</li>
+<li><b>Gom lẫn do cặp 48/389</b>: bài «Rainbow S2» thành nhiều vùng vì S1–S5 nằm dưới 48. Gộp 389 vào 48 (đo trong bộ nhớ, chỉ đọc) cho thêm 101 tin gắn trên DB máy thu (3.941 → 4.042, xung đột 21 → 23). Dọn cặp này đứng đầu danh sách dọn danh bạ sau PL20.</li>
+</ul>
+
+<h2>Sau lời anh</h2>
+<p>Em xin lượt chấm máy đầy đủ (S4), dựng báo cáo bằng chứng, rồi mời anh ký Cổng Bằng chứng; PR mở sau chữ ký, GS gộp. Lối DA53 thì làm thêm lượt áp và chấm lại trước S4.</p>
+</main></body></html>
