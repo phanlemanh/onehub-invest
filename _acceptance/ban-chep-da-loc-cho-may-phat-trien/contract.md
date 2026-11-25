@@ -61,7 +61,7 @@ Căn cứ: GS giao HT18 ngày 24/11.
 - Bảng: tập FILL → AC-1; bảng cấm → AC-4; còn lại → AC-1 (0 dòng); `source_registry` → AC-5; schema lạ → AC-6
 - Cột: cho phép, loại, che → AC-2
 - Tầng A: tên nguồn trong giá trị và lược đồ → AC-3; hồ sơ user app, định danh tài khoản thu, phiên/khoá → AC-4; ngày sinh/giới tính → AC-6
-- Chiều: xanh trên dữ liệu thật → AC-9; cấy đỏ → AC-3, AC-4, AC-5, AC-6; dump hỏng → AC-8
+- Chiều: xanh trên dữ liệu thật → AC-9 (data-api bằng lệnh, trang Invest bằng mắt trên bản chạy thử); cấy đỏ → AC-3, AC-4, AC-5, AC-6; dump hỏng → AC-8
 - Nguồn: DB máy thu chỉ đọc → AC-7
 - Rác và lối rời máy: DB tạm, thư mục đầu ra ngoài git và sao lưu → AC-10
 

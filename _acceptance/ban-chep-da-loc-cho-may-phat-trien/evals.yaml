@@ -69,6 +69,17 @@ evals:
     executor: script
     cmd: config:executors.script.bcl_that
     long_running: 90
-    expected: "exit 0 trên DB máy thu thật (chỉ đọc): bản chép xanh; data-api /v1/listings và trang Invest khu Hà Nội trên bản chép trả 200 với số dòng > 0; in cỡ dump, số bảng có dòng, thời gian; xoá DB đích khi xong. Ngoài CI"
+    expected: "exit 0 trên DB máy thu thật (chỉ đọc): bản chép xanh sau che, bộ soát 0; data-api /v1/listings trên bản chép trả 200 với số dòng > 0; in cỡ dump, số bảng có dòng, số ô che theo bảng.cột, thời gian; xoá DB đích khi xong. Trang Invest đo ở E11 (preview, không chạy next dev bằng Bash). Ngoài CI"
     paths: [scripts/ban-chep-da-loc.mjs, scripts/ban-chep-da-loc-that.mjs]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-9
+    executor: ui-check
+    layer: ui-observed
+    paths: [scripts/ban-chep-da-loc.mjs, pipeline/lib/che-ten-nguon-gia-tri.mjs, .claude/launch.json]
+    steps:
+      - "Tải 1 phút < 12 (uptime) hoặc đang giữ s4. Dựng bản chép thật: nice -n 10 node scripts/ban-chep-da-loc.mjs (chỉ đọc DB máy thu; để lại đúng một DB oneinvest_m5_<ngày>)"
+      - "preview_start cấu hình app-3467-ban-chep-m5 của .claude/launch.json trong worktree (app trỏ DB bản chép, RENAME_REFCALIB=1); mở /vn/hanoi"
+      - "Đọc câu tóm tắt «<số> listing» và «<số> tháng dữ liệu»; chụp ảnh khổ rộng; quét chữ trang không có tên nguồn thật (so với mã S0x); preview_stop; node scripts/ban-chep-da-loc.mjs --don"
+    expected: "Trang Invest khu Hà Nội trên bản chép trả dữ liệu: số listing > 0, số tháng dữ liệu > 0, không lỗi; chữ trang không chứa tên nguồn thật; ảnh lưu ở evidence/; sau ca không còn DB oneinvest_m5_*"
+    evidence_required: [run_id, screenshot, observed, verified_at]
