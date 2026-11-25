@@ -28,8 +28,13 @@ export type MediaFetchOptions = {
   userAgent?: string;
 };
 
-const DEFAULTS = {
-  allowedHostSuffixes: ["zdn.vn"],
+// ZC9 (2211-16): người đăng S03 tự lưu ảnh trên Cloudflare R2 công khai
+// (suffix r2.dev — bucket công khai, link ổn định, đo 22/11: link từ 10/11
+// vẫn 200) — đưa vào danh sách cho phép mặc định. Cách lùi: revert commit
+// này rồi rebuild + khởi động lại collector API.
+const R2_SUFFIX_ZC9 = "r2.dev";
+export const DEFAULTS = {
+  allowedHostSuffixes: ["zdn.vn", R2_SUFFIX_ZC9],
   maxBytes: 10 * 1024 * 1024,
   timeoutMs: 10_000,
   maxPerFlush: 100,
@@ -39,7 +44,7 @@ const DEFAULTS = {
 
 const EXT_RE = /\.(jpe?g|png|webp|gif|bmp)(?:[?#]|$)/i;
 
-function hostAllowed(hostWithPort: string, suffixes: string[]): boolean {
+export function hostAllowed(hostWithPort: string, suffixes: string[]): boolean {
   const host = hostWithPort.toLowerCase().replace(/:\d+$/, "");
   return suffixes.some(
     (s) => host === s.toLowerCase() || host.endsWith("." + s.toLowerCase()),

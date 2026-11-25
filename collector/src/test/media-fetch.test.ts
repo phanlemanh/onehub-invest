@@ -8,6 +8,7 @@ import { join } from "node:path";
 import { after, test } from "node:test";
 
 import { createAgentServer } from "../api/server.js";
+import { DEFAULTS, hostAllowed } from "../core/media-fetch.js";
 
 /**
  * N1 media: tin Zalo mang URL ảnh zdn.vn (URL CÓ HẠN) phải được tải về máy
@@ -195,4 +196,25 @@ test("media: redirect cùng host tải bình thường; redirect ra host ngoài 
   assert.ok(okEntry && okEntry.file, "redirect nội bộ phải tải được");
   assert.equal(outEntry.error, "redirect-host");
   assert.equal(outEntry.file, undefined);
+});
+
+// ZC9 (2211-16): host R2 của người đăng S03 vào danh sách cho phép mặc định.
+// LỆNH PHÁ (bản chép hỏng): xoá `"r2.dev"` khỏi DEFAULTS.allowedHostSuffixes
+// trong src/core/media-fetch.ts → ca này ĐỎ.
+test("ZC9: DEFAULTS cho phép suffix r2.dev (ảnh người đăng S03 tự lưu Cloudflare R2)", async () => {
+  const ma = readFileSync(join(import.meta.dirname, "../../src/core/media-fetch.ts"), "utf8");
+  assert.match(ma, /allowedHostSuffixes:\s*\["zdn\.vn",\s*R2_SUFFIX_ZC9\]/, "DEFAULTS phải gồm zdn.vn + hằng R2");
+  assert.match(ma, /R2_SUFFIX_ZC9\s*=\s*"r2\.dev"/, "hằng R2 phải đúng suffix r2.dev");
+});
+
+// Đề nghị LL (BÁO claudedp-2211-17): ca HÀNH VI cạnh ca đọc chữ nguồn —
+// ranh giới dấu chấm của suffix + host người đăng r2.dev qua được mặc định.
+// LỆNH PHÁ (bản chép hỏng): xoá "r2.dev" khỏi DEFAULTS.allowedHostSuffixes
+// (hoặc đổi hostAllowed bỏ kiểm ranh giới dấu chấm) → ca này ĐỎ.
+test("ZC9-hành-vi: pub-x.r2.dev qua được mặc định; evilr2.dev bị chặn (ranh giới dấu chấm); zpc.zdn.vn trong allowlist", () => {
+  const duoi = DEFAULTS.allowedHostSuffixes;
+  assert.equal(hostAllowed("pub-x.r2.dev:443", duoi), true, "host người đăng r2.dev phải qua");
+  assert.equal(hostAllowed("evilr2.dev", duoi), false, "evilr2.dev KHÔNG khớp suffix r2.dev (ranh giới dấu chấm)");
+  assert.equal(hostAllowed("zdn.vn.evil.com", duoi), false, "tròng zdn.vn ở giữa không khớp");
+  assert.equal(hostAllowed("f20-zpc.zdn.vn", duoi), true, "CDN zpc nằm trong allowlist — 400 của nó không phải chặn của ta");
 });
