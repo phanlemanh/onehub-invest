@@ -273,14 +273,30 @@ if [ -z "$DS_DIR" ] && [ "$LAST" != "00000000T000000" ]; then
   echo "❌ không liệt kê được snapshot nào dù state đã có mốc $LAST — kiểm thư mục snapshot" >&2
   exit 3
 fi
-for SNAP in $(printf '%s\n' "$DS_DIR" | while read -r d; do
+DANH_SACH="$(printf '%s\n' "$DS_DIR" | while read -r d; do
     b=${d##*/}; [ "${b#.}" != "$b" ] && continue # 2510-8: dir '.<id>.partial' đang ghi — bỏ
     ts=$(basename "$d" | sed 's/.*__//')
     if ! echo "$ts" | grep -qE "$TS_RE"; then
       echo "bỏ qua thư mục TS không phải mốc thời gian: $d" >&2; continue
     fi
     echo "$ts $d"
-  done | sort | while read -r _ d; do echo "$d"; done); do
+  done | sort | while read -r _ d; do echo "$d"; done)"
+# ZC20 (claudedp-2511-56): replay trọn từ state 0 — snapshot bù ảnh S03
+# (coverage.loai=tai-bu-anh-2511) nạp PHASE CUỐT, nếu không bản gốc cùng ngày
+# tên muộn hơn đè ảnh đã bù (695 bài 21–24/11 — DATA-CONTRACT «Quy tắc tiêu
+# thụ» điều 7). Lượt thường (LAST ≠ 0) giữ nguyên thứ tự tên. Module vắng
+# (checkout chưa gộp ZC20) → giữ thứ tự tên như cũ.
+if [ "$LAST" = "00000000T000000" ] && [ -n "$DANH_SACH" ] && [ -f "$ROOT/pipeline/backfill-s03-media-2511.mjs" ]; then
+  REPLAY_MODULE="$ROOT/pipeline/backfill-s03-media-2511.mjs"
+  export REPLAY_MODULE
+  DANH_SACH="$(printf '%s\n' "$DANH_SACH" | node --input-type=module -e '
+    const { sapXepReplay } = await import(process.env.REPLAY_MODULE);
+    const dong = (await new Response(process.stdin).text()).split("\n").filter((l) => l.trim() !== "");
+    process.stdout.write((await sapXepReplay(dong)).join("\n"));
+  ')" || { echo "❌ sapXepReplay lỗi — dừng (fail-closed)" >&2; exit 3; }
+  echo "[zalo-import-daily] replay từ state 0 — snapshot bù ảnh S03 xếp phase cuối (DATA-CONTRACT điều 7)"
+fi
+for SNAP in $DANH_SACH; do
   TS=$(basename "$SNAP" | sed 's/.*__//')
   if [[ "$TS" > "$LAST" ]]; then
     # 2510-8: thiếu manifest = snapshot CHƯA xong (bản mới ghi '.partial' rồi
