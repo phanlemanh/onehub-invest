@@ -48,3 +48,21 @@ evals:
     expected: >
       exit 0; dòng ✔ «vượt trần thì lượt dừng: PL39: 5x giá trị chữ …» và ✔ «vượt trần: không thêm tin, không thêm hay rút phát biểu
       nào» (51 tin cấy quận mang tên nguồn); ca đơn vị «SR-AC-5 vượt trần một lượt thì dừng, tới trần thì đi tiếp» chạy ở E4.
+  - id: E6
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.suite.pipeline_a
+    long_running: 90
+    paths: ["pipeline/transform-chotot.mjs", "pipeline/lib/mask-source-names.mjs", "pipeline/scripts/so-ghep-s06.test.mjs"]
+    expected: >
+      exit 0; nửa A bộ test pipeline (suite của lượt chấm, khai ở đây chỉ để có long_running 90 — S4 r1, r2 nửa A vượt trần chờ
+      30′ mặc định khi máy tải; cùng lệ PL36 E11), 0 fail.
+  - id: E7
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.suite.pipeline_b
+    long_running: 90
+    paths: ["pipeline/transform-chotot.mjs", "pipeline/lib/mask-source-names.mjs", "pipeline/scripts/so-ghep-s06.test.mjs"]
+    expected: >
+      exit 0; nửa B bộ test pipeline (khai để có long_running 90, cùng lệ PL36 E12), 0 fail; gồm SG-AC-5 (so-ghep-s06 khoá
+      source_registry).
