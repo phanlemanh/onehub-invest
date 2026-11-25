@@ -51,6 +51,11 @@
       "ly_do": "cần DB máy thu thật (DB trống của CI không có căn nào để đối chiếu); vẫn đo ở máy"
     },
     {
+      "tep": "app/tests/registry-s08-luat.test.tsx",
+      "ca": "RS8: S08 đã nối đếm hai bảng một lần, tách số nối vào nút ứng viên; chưa nối mang lý do bảng luật; chiều đỏ câu cũ",
+      "ly_do": "RS8 chạy trên DB của riêng lượt chép từ máy thu (db/db-thu.sh oneinvest_suite_rs8 --chay); CI không cấp DATABASE_URL cho DB đó"
+    },
+    {
       "tep": "app/tests/registry-nguon-chua-noi.test.tsx",
       "ca": "BN-AC-8 S07, S16 co dong, da nap bang tap ban ghi, da noi bang project_links",
       "ly_do": "cần bản chép DB máy thu (bảng tập bản ghi S07, S09, S10, S16 có dòng; apThe nối thật) — DB CI dựng từ migration rỗng; vẫn chạy ở máy qua db-thu"

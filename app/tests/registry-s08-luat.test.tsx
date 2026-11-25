@@ -22,6 +22,8 @@ const vuong = (x: number, y: number, d: number) => `MULTIPOLYGON(((${x - d} ${y 
 const iframe = (lng: number, lat: number) => ({ project_info: { iframe_location: `<iframe src="https://maps.example/e?pb=!2d${lng}!3d${lat}!2m3"></iframe>` } })
 
 before(async () => {
+  // CI không cấp DB của riêng lượt (không DATABASE_URL): ca RS8 bỏ qua có tên qua scripts/ci-bo-qua.json; hook không dựng URL dự phòng.
+  if (!URL_DB) return
   assert.match(new URL(URL_DB).pathname, /^\/oneinvest_suite_rs8/, "RS8 chỉ chạy trên DB của riêng lượt (db/db-thu.sh oneinvest_suite_rs8 --chay)")
   await c.connect()
   await c.query("BEGIN")
@@ -33,6 +35,7 @@ before(async () => {
     [vuong(150, -30, 0.5)])
 })
 after(async () => {
+  if (!URL_DB) return
   await c.query("ROLLBACK").catch(() => {})
   await c.end().catch(() => {})
   rmSync(CU, { recursive: true, force: true })
@@ -59,7 +62,7 @@ async function banChep(doi: [string, string]): Promise<typeof import("../src/lib
   return import(pathToFileURL(f).href)
 }
 
-test("RS8: S08 đã nối đếm hai bảng một lần, tách số nối vào nút ứng viên; chưa nối mang lý do bảng luật; chiều đỏ câu cũ", async () => {
+test("RS8: S08 đã nối đếm hai bảng một lần, tách số nối vào nút ứng viên; chưa nối mang lý do bảng luật; chiều đỏ câu cũ", { skip: URL_DB ? false : "RS8 cần DATABASE_URL của DB riêng lượt (db/db-thu.sh oneinvest_suite_rs8 --chay)" }, async () => {
   const { rows: [nut] } = await c.query(`INSERT INTO asset_nodes (node_type, name, slug, aliases, area_ids, catalog_tier, meta)
     VALUES ('project', 'Rs Thu Co San', 'rs8-thu-co-san', '{"rs thu co san"}', '{rs8-tinh}', 'xac_minh', '{}') RETURNING id::int AS id`)
   await duAn(MA.tay, "RS THU TAY", [150.1, -30.1])
