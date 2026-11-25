@@ -4,6 +4,7 @@ import { localOnlyTable } from "@/lib/ops-queries"
 import { maskSourceNames } from "@/lib/mask-source-names"
 import { dungCay } from "@/lib/ops/registry/cay"
 import { docDuAn } from "@/lib/ops/registry/du-an"
+import { docQuyCanDuAn } from "@/lib/ops/registry/quy-can"
 import { dungHangToa } from "@/lib/ops/registry/hang-toa"
 import { docPhuThuocTinh, docThuocTinhCan } from "@/lib/ops/thuoc-tinh-can"
 import { getSourceNameEntries } from "@/lib/source-roles"
@@ -17,7 +18,7 @@ import { DuAnView } from "./du-an-view"
  */
 export async function DuAnContent({ id }: { id: number }) {
   if (process.env.VERCEL === "1" || (await localOnlyTable("buildings"))) return <RegistryView mode="cloud" />
-  const [duAn, entries] = await Promise.all([docDuAn(id), getSourceNameEntries()])
+  const [duAn, entries, quyCan] = await Promise.all([docDuAn(id), getSourceNameEntries(), docQuyCanDuAn(id)])
   if (!duAn) notFound()
   const che = (s: string) => maskSourceNames(s, entries) ?? "—"
   const goc = dungCay(duAn.nut, {}, entries)[0]
@@ -45,6 +46,7 @@ export async function DuAnContent({ id }: { id: number }) {
       rows={rows}
       phuThuocTinh={phu.ok ? phu.data : null}
       loiThuocTinh={!tt.ok || !phu.ok}
+      quyCan={quyCan.ok ? quyCan.data : "loi"}
     />
   )
 }

@@ -1,14 +1,17 @@
 "use client"
 
-import { BookUserIcon } from "lucide-react"
+import { BookUserIcon, CircleAlertIcon, RotateCwIcon } from "lucide-react"
 
 import { LocalOnlyAlert } from "@/components/ops/local-only-alert"
 import { PageHeader } from "@/components/page/page-header"
+import { Alert, AlertAction, AlertDescription, AlertTitle } from "@/components/reui/alert"
+import { Button } from "@/components/ui/button"
 import { StatTiles } from "@/components/page/stat-tiles"
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
 import { fmtInt } from "@/lib/format"
 import type { HangCay } from "@/lib/ops/registry/cay"
 import type { MaChuaNoi, TongDanhBa } from "@/lib/ops/registry/doc"
+import type { QuyCanTong } from "@/lib/ops/registry/quy-can"
 
 import { RegistryChuaNoi } from "./registry-chua-noi"
 import { RegistryGrid } from "./registry-grid"
@@ -24,7 +27,7 @@ export const LENH_DUNG = "node pipeline/noi-du-an-s06.mjs"
 
 export type RegistryProps =
   | { mode: "cloud" }
-  | { mode: "local"; tong: TongDanhBa; rows: HangCay[]; chuaNoi: MaChuaNoi[] }
+  | { mode: "local"; tong: TongDanhBa; rows: HangCay[]; chuaNoi: MaChuaNoi[]; quyCan?: QuyCanTong | null | "loi" }
 
 function DanhBaRong() {
   return (
@@ -63,6 +66,15 @@ export function oSo(tong: TongDanhBa) {
   ]
 }
 
+/** Ô «Quỹ căn S09» (DA56): số căn quỹ căn bản đủ mới nhất; dòng phụ chia dự án theo trạng thái nối, ba số cộng bằng số dự án. */
+export function oQuyCan(qc: QuyCanTong) {
+  return {
+    title: "Quỹ căn S09",
+    value: fmtInt(qc.can),
+    footer: `${fmtInt(qc.coGia)} có giá · ${fmtInt(qc.duAn)} dự án: ${fmtInt(qc.noi)} nối nút · ${fmtInt(qc.theChua)} còn thẻ · ${fmtInt(qc.ngoaiDanhMuc)} chưa có trong danh mục`,
+  }
+}
+
 export function RegistryView(props: RegistryProps) {
   if (props.mode === "cloud") {
     return (
@@ -74,13 +86,29 @@ export function RegistryView(props: RegistryProps) {
       </div>
     )
   }
-  const { tong, rows, chuaNoi } = props
+  const { tong, rows, chuaNoi, quyCan } = props
+  const oTong = quyCan && quyCan !== "loi" ? [...oSo(tong), oQuyCan(quyCan)] : oSo(tong)
   return (
     <div className="flex flex-col gap-6">
       <PageHeader crumbs={CRUMBS} title="Danh bạ" stats={[]} description={DESCRIPTION} />
       <div data-registry-tong="">
-        <StatTiles items={oSo(tong)} />
+        <StatTiles items={oTong} />
       </div>
+      {quyCan === "loi" && (
+        <Alert variant="destructive" data-quy-can-loi="">
+          <CircleAlertIcon aria-hidden="true" />
+          <AlertTitle>Không tải được quỹ căn S09</AlertTitle>
+          <AlertDescription>
+            <p>Danh bạ vẫn đúng; chỉ ô quỹ căn chưa đọc được.</p>
+          </AlertDescription>
+          <AlertAction>
+            <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
+              <RotateCwIcon data-icon="inline-start" aria-hidden="true" />
+              Thử lại
+            </Button>
+          </AlertAction>
+        </Alert>
+      )}
       {rows.length === 0 ? <DanhBaRong /> : <RegistryGrid rows={rows} />}
       <RegistryChuaNoi rows={chuaNoi} />
     </div>
