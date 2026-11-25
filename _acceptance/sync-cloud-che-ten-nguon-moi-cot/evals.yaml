@@ -55,7 +55,7 @@ evals:
     criterion: AC-9
     executor: script
     cmd: config:executors.script.scc_ben_doc
-    expected: "exit 0; data-api markets (hàm đọc thật của routes/markets.ts trên DB của lượt) trả cùng JSON trước và sau khi areas.meta được che; thẻ Invest (hàm đọc queries.ts) với tin có mọi phần tử photo_urls trúng → mảng rỗng, ảnh thẻ null, không ném lỗi. Chiều đỏ: bản che làm rỗng cả ô meta (thay vì đổi khoá) thì ca markets đỏ nêu trường lệch"
+    expected: "exit 0; data-api markets (hàm đọc thật của routes/markets.ts trên DB của lượt) trả cùng JSON trước và sau khi areas.meta được che; thẻ Invest (hàm đọc queries.ts) với tin có mọi phần tử photo_urls trúng → mảng rỗng, ảnh thẻ null, không ném lỗi. Chiều đỏ: bản che làm rỗng cả ô meta (thay vì đổi khoá) thì ca markets đỏ nêu trường lệch. Ca canh (GS 26/11): app/src và data-api/src không tham chiếu NGUON_PHUONG, phuongHopLe hay meta.source (grep trên cây kho); chiều đỏ: cấy một tham chiếu vào tệp tạm dưới app/src thì ca nêu tệp"
     paths: [pipeline/lib/che-ten-nguon-gia-tri.mjs, pipeline/sync-cloud-che.test.mjs]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E7
