@@ -15,6 +15,8 @@ export const S17_SCHEMA_VERSION = 17;
  * (quy ước chung của DATA-CONTRACT: file media + RawItem.meta.mediaFiles).
  */
 export const S17_SCHEMA_VERSION_MO_RONG = 18;
+/** Phiên bản ghi vào manifest cho các pha của mốc mở rộng (dùng trong runner). */
+export const S17_SCHEMA_MO_RONG_DUNG = S17_SCHEMA_VERSION_MO_RONG;
 /**
  * Dấu hiệu trong `coverage.notes` của MỌI snapshot S17 ghi từ khuôn 2 (sourceId trung tính). Snapshot S17
  * không mang dấu hiệu này là bản ghi lúc dựng bộ thu sáng 24/11 (sourceId cũ) — bên đọc bỏ qua.

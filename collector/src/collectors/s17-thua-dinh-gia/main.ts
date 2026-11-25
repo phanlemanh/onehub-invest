@@ -26,8 +26,11 @@ import { nodeTransport } from "./transport-node.js";
 
 const HERE = dirname(fileURLToPath(import.meta.url)); // dist/collectors/s17-thua-dinh-gia
 const COLLECTOR_ROOT = join(HERE, "..", "..", "..");
-const PHASES: Phase[] = ["reference", "tile-mask", "projects", "session-check", "apartments", "parcels", "lowrise"];
-const PUBLIC_PHASES: Phase[] = ["reference", "tile-mask"];
+const PHASES: Phase[] = ["reference", "tile-mask", "projects", "session-check", "apartments", "parcels", "lowrise", "apartments-all", "images"];
+/** Pha không cần phiên đăng nhập (chạy bằng fetch của Node ngay trong tiến trình này). */
+const PUBLIC_PHASES: Phase[] = ["reference", "tile-mask", "images"];
+/** Mốc mở rộng — pha ảnh có thư mục trạng thái RIÊNG để chạy song song với pha cần phiên (khoá một lượt một thư mục). */
+const STATE_DIR_ANH = "s17-thua-dinh-gia-anh";
 /**
  * Nhịp: mặc định 350 ms — mức nguồn đã chịu được (0 lần bị chặn suốt 24/11). Mạnh cho tăng tốc thận trọng
  * 24/11 («2 luồng hoặc nhịp ngắn hơn; gặp 429/403 thì lùi ngay về nhịp cũ, lần hai thì dừng»): nhịp nhanh nhất
@@ -69,6 +72,10 @@ export type CliOptions = {
   lowriseTerms?: string[];
   /** Mốc ngày 2 — dải id quét dự án thấp tầng. */
   lowriseSweep?: { from: number; to: number };
+  /** Mốc mở rộng — lựa chọn của pha căn hộ toàn bộ dự án. */
+  tatCaDuAn?: { tuSoCan?: number; denSoCan?: number; gioiHan?: number; ids?: string[] };
+  /** Mốc mở rộng — lựa chọn của pha ảnh. */
+  anh?: { luongSong: number; soFile: number };
 };
 
 export function parseCli(argv: string[]): CliOptions {
@@ -96,6 +103,11 @@ export function parseCli(argv: string[]): CliOptions {
       "thap-tang-terms": { type: "string" },
       "thap-tang-id-tu": { type: "string" },
       "thap-tang-id-den": { type: "string" },
+      "tu-so-can": { type: "string" },
+      "den-so-can": { type: "string" },
+      "gioi-han": { type: "string" },
+      "anh-luong-song": { type: "string" },
+      "anh-so-file": { type: "string" },
     },
   });
   const phase = values.phase as Phase | undefined;
@@ -120,12 +132,18 @@ export function parseCli(argv: string[]): CliOptions {
   const idDen = values["thap-tang-id-den"] === undefined ? undefined : positive("--thap-tang-id-den", values["thap-tang-id-den"]);
   if ((idTu === undefined) !== (idDen === undefined)) throw new UsageError("quét thấp tầng theo id cần đủ --thap-tang-id-tu và --thap-tang-id-den");
   if (phase === "lowrise" && !values["thap-tang-terms"] && idTu === undefined) throw new UsageError("pha lowrise cần dải id quét (--thap-tang-id-tu … --thap-tang-id-den …) hoặc --thap-tang-terms <tệp JSON mảng các từ khoá gợi ý>");
+  // Mốc mở rộng.
+  const tuSoCan = values["tu-so-can"] === undefined ? undefined : positive("--tu-so-can", values["tu-so-can"]);
+  const denSoCan = values["den-so-can"] === undefined ? undefined : positive("--den-so-can", values["den-so-can"]);
+  if (tuSoCan !== undefined && denSoCan !== undefined && tuSoCan > denSoCan) throw new UsageError("--tu-so-can phải nhỏ hơn hoặc bằng --den-so-can");
+  const anhLuongSong = values["anh-luong-song"] === undefined ? 4 : positive("--anh-luong-song", values["anh-luong-song"]);
+  if (anhLuongSong > MAX_CONCURRENCY) throw new UsageError(`--anh-luong-song phải từ 1 đến ${MAX_CONCURRENCY}`);
   return {
     phase,
     via: isPublic ? "node" : "ego",
     config: values.config ?? join(homedir(), ".oneinvest", "s17-thua-dinh-gia.json"),
     snapshotsRoot: values["snapshots-root"],
-    stateDir: values["state-dir"] ?? join(COLLECTOR_ROOT, "state", "s17-thua-dinh-gia"),
+    stateDir: values["state-dir"] ?? join(COLLECTOR_ROOT, "state", phase === "images" ? STATE_DIR_ANH : "s17-thua-dinh-gia"),
     caps: { calls: positive("--caps-calls", values["caps-calls"]), minutes: positive("--caps-minutes", values["caps-minutes"]) },
     paceMs,
     batchItems: values["batch-items"] === undefined ? 50 : positive("--batch-items", values["batch-items"]),
@@ -140,6 +158,8 @@ export function parseCli(argv: string[]): CliOptions {
     parcelsGrid: values["parcels-grid"],
     lowriseTermsFile: values["thap-tang-terms"],
     lowriseSweep: idTu === undefined ? undefined : { from: idTu, to: idDen as number },
+    ...(phase === "apartments-all" ? { tatCaDuAn: { ...(tuSoCan !== undefined ? { tuSoCan } : {}), ...(denSoCan !== undefined ? { denSoCan } : {}), ...(values["gioi-han"] === undefined ? {} : { gioiHan: positive("--gioi-han", values["gioi-han"]) }), ...(projects?.length ? { ids: projects } : {}) } } : {}),
+    ...(phase === "images" ? { anh: { luongSong: anhLuongSong, soFile: values["anh-so-file"] === undefined ? 100 : positive("--anh-so-file", values["anh-so-file"]) } } : {}),
   };
 }
 
@@ -153,6 +173,9 @@ export function rolesOfPhase(phase: Phase, checkBalance: boolean): Role[] {
 export function checkConfigForPhase(config: S17Config, o: CliOptions): void {
   for (const role of rolesOfPhase(o.phase, o.via === "ego")) rolePath(config, role);
   if (o.via === "ego" && !config.session) throw new ConfigError("cấu hình local S17 thiếu session.cookieName (tên cookie phiên) cho pha cần phiên");
+  if (o.phase === "images" && !config.anh?.hostSuffixes.length) {
+    throw new ConfigError("cấu hình local S17 thiếu anh.hostSuffixes (đuôi máy chủ ảnh của nguồn) cho pha ảnh — không tải mò");
+  }
 }
 
 /**

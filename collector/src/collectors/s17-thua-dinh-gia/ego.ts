@@ -60,6 +60,8 @@ export type EgoOptions = {
   lowriseSweep?: { from: number; to: number };
   /** Mã của lượt này (từ bản kê): ghi vào tệp kết quả để phía Node không nhận nhầm kết quả của lượt trước. */
   runId?: string;
+  /** Mốc mở rộng — pha căn hộ toàn bộ dự án (đi qua trình điều khiển cùng các trường khác). */
+  tatCaDuAn?: { tuSoCan?: number; denSoCan?: number; gioiHan?: number; ids?: string[] };
 };
 
 type InPageResult = { status: number; contentType: string | null; body: string; bytes?: number; networkError?: string };

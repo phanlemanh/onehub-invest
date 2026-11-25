@@ -87,6 +87,8 @@ export type S17Config = {
   paths: Partial<Record<Role, string>>;
   /** Tên cookie phiên trong tab của nguồn — chỉ pha cần phiên dùng; giá trị cookie không bao giờ rời trang. */
   session?: { cookieName: string };
+  /** Mốc mở rộng — đuôi máy chủ lưu trữ ảnh của chính nguồn (tầng A): pha ảnh chỉ tải từ các máy chủ này. */
+  anh?: { hostSuffixes: string[] };
 };
 
 export class ConfigError extends Error {
@@ -123,7 +125,9 @@ export function loadConfig(text: string): S17Config {
   } catch (e) {
     throw new ConfigError(`cấu hình S17 không đọc được JSON: ${String(e)}`);
   }
-  const obj = raw as { hosts?: Record<string, unknown>; paths?: Record<string, unknown>; session?: { cookieName?: unknown } | null } | null;
+  const obj = raw as
+    | { hosts?: Record<string, unknown>; paths?: Record<string, unknown>; session?: { cookieName?: unknown } | null; anh?: { hostSuffixes?: unknown } | null }
+    | null;
   if (!obj || typeof obj !== "object") throw new ConfigError("cấu hình S17 phải là một đối tượng");
   const hosts: Record<string, string> = {};
   for (const key of ["api", "agent", "web"] as const) {
@@ -145,7 +149,15 @@ export function loadConfig(text: string): S17Config {
     }
     session = { cookieName: name };
   }
-  return { hosts: { api: hosts.api, agent: hosts.agent, web: hosts.web }, paths, ...(session ? { session } : {}) };
+  // Ảnh chỉ được tải từ máy chủ của chính nguồn: đuôi máy chủ chữ thường, có ít nhất một dấu chấm, không khoảng trắng.
+  let anh: { hostSuffixes: string[] } | undefined;
+  if (obj.anh !== undefined && obj.anh !== null) {
+    const ds: unknown = obj.anh.hostSuffixes;
+    const dung = Array.isArray(ds) && ds.length > 0 && ds.every((x) => typeof x === "string" && /^[a-z0-9-]+(?:\.[a-z0-9-]+)+$/.test(x));
+    if (!dung) throw new ConfigError("anh.hostSuffixes trong cấu hình S17 phải là danh sách không rỗng các đuôi máy chủ chữ thường, vd «cdn.example.net»");
+    anh = { hostSuffixes: ds as string[] };
+  }
+  return { hosts: { api: hosts.api, agent: hosts.agent, web: hosts.web }, paths, ...(session ? { session } : {}), ...(anh ? { anh } : {}) };
 }
 
 /** Đường (khuôn) của một vai. Thiếu thì dừng: không gọi mò. Kiểm lại đoạn trả phí và đặt chỗ. */

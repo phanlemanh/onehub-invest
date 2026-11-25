@@ -387,6 +387,8 @@ test("buildExecOptions: mọi trường của bản kê đi nguyên vẹn sang t
     tileZoom: 19,
     emptyTileBytes: 1234,
     listSize: 55,
+    tatCaDuAn: { tuSoCan: 3000, denSoCan: 9000, gioiHan: 7, ids: ["7"], concurrency: 2, apartmentPageSize: 77 },
+    anh: { luongSong: 3, soFile: 120 },
   };
   const o = buildExecOptions(ke) as Record<string, unknown>;
   assert.equal(o.phase, undefined, "pha do nơi gọi đặt");
@@ -409,6 +411,8 @@ test("buildExecOptions: mọi trường của bản kê đi nguyên vẹn sang t
   assert.equal(o.tileZoom, 19);
   assert.equal(o.emptyTileBytes, 1234);
   assert.equal(o.listSize, 55);
+  assert.deepEqual(o.tatCaDuAn, ke.tatCaDuAn);
+  assert.deepEqual(o.anh, { luongSong: 3, soFile: 120 });
   assert.equal(o.transport, undefined, "vận chuyển do nơi gọi đặt (Node hay trình duyệt)");
   // Không trường nào của bản kê bị bỏ sót: mọi khoá của ke (trừ config) đều có mặt trong đầu ra.
   for (const k of Object.keys(ke)) if (k !== "config") assert.ok(k in o, `thiếu trường ${k}`);

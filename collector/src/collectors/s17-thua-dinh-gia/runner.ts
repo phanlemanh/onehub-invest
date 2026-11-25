@@ -4,14 +4,20 @@
  * và log Ở MÁY. Dùng chung cho hai đường vận chuyển: fetch của Node (phần công khai) và fetch trong
  * trang của hồ sơ đăng nhập (phần cần phiên — ego.ts).
  */
-import { appendFileSync, closeSync, existsSync, openSync, readFileSync, unlinkSync, writeSync } from "node:fs";
+import { appendFileSync, closeSync, existsSync, mkdirSync, openSync, readFileSync, unlinkSync, writeSync } from "node:fs";
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { MAX_CONCURRENCY, S17Client, RunStopped, type Caps, type Response, type StopReason, type Transport, type TransportMany } from "./client.js";
 import { ConfigError, type S17Config } from "./config.js";
 import { assertBalanceUnchanged } from "./kinds.js";
 import { emptyState, runPhase, type GridEntry, type ParcelArea, type Phase, type PhaseSummary, type RunState } from "./run.js";
-import { BatchWriter } from "./store.js";
+import { KeoDan } from "./keo-dan.js";
+import { BatchWriter, S17_SCHEMA_MO_RONG_DUNG } from "./store.js";
+
+/** Mốc mở rộng — pha ảnh: cỡ một tệp tối đa, hạn chờ một tệp, tên tác nhân. */
+export const ANH_MAX_BYTES = 60 * 1024 * 1024;
+export const ANH_TIMEOUT_MS = 60_000;
+export const ANH_USER_AGENT = "oneinvest-collector/1";
 
 export type Env = { sleep: (ms: number) => Promise<void>; now: () => Date };
 const realEnv: Env = { sleep: (ms) => new Promise((r) => setTimeout(r, ms)), now: () => new Date() };
@@ -45,6 +51,12 @@ export type ExecOptions = {
   lowriseTerms?: string[];
   /** Mốc ngày 2 — quét dự án thấp tầng theo id. */
   lowriseSweep?: { from: number; to: number };
+  /** Mốc mở rộng — lựa chọn của pha căn hộ toàn bộ dự án. */
+  tatCaDuAn?: { tuSoCan?: number; denSoCan?: number; gioiHan?: number; ids?: string[] };
+  /** Mốc mở rộng — lựa chọn của pha ảnh. */
+  anh?: { luongSong: number; soFile: number };
+  /** fetch dùng cho pha ảnh — nơi gọi đặt (mặc định fetch toàn cục; test đệm bản giả). */
+  anhFetch?: typeof fetch;
   env?: Env;
 };
 
@@ -80,11 +92,11 @@ export type ExecResult = {
 };
 
 /** Những gì bản kê chạy quy định cho một lượt — trừ pha, vận chuyển và đồng hồ (nơi gọi đặt). */
-export type ExecSpec = Omit<ExecOptions, "phase" | "transport" | "transportMany" | "env">;
+export type ExecSpec = Omit<ExecOptions, "phase" | "transport" | "transportMany" | "anhFetch" | "env">;
 const CAC_TRUONG_KE = [
   "config", "snapshotRoot", "statePath", "logPath", "caps", "paceMs", "batchItems", "checkBalance", "grid", "listSize",
   "tileZoom", "emptyTileBytes", "projects", "proveBuilding", "apartmentPageSize", "listOnly", "parcels", "lowriseTerms",
-  "lowriseSweep", "concurrency",
+  "lowriseSweep", "concurrency", "tatCaDuAn", "anh",
 ] as const satisfies readonly (keyof ExecSpec)[];
 
 /**
@@ -149,6 +161,7 @@ const conSong = (pid: number): boolean => {
 };
 
 function acquireRunLock(path: string): void {
+  mkdirSync(dirname(path), { recursive: true }); // thư mục trạng thái MỚI (pha ảnh dùng thư mục riêng) chưa có ở lượt đầu
   for (let lan = 0; lan < 3; lan++) {
     try {
       const fd = openSync(path, "wx");
@@ -190,9 +203,12 @@ export async function executePhase(o: ExecOptions): Promise<ExecResult> {
   const log = makeLogger(o.logPath);
   // Tăng tốc có khoá (Mạnh 24/11: «gặp 429/403 thì lùi ngay về nhịp cũ, lần hai thì dừng»): đã bị chặn
   // hai lần thì không chạy nữa, chờ người quyết; đã bị chặn một lần thì chỉ còn nhịp cũ, một luồng.
-  const concurrency = o.concurrency ?? 1;
-  if (!Number.isInteger(concurrency) || concurrency < 1 || concurrency > MAX_CONCURRENCY) throw new ConfigError(`concurrency phải là số nguyên từ 1 đến ${MAX_CONCURRENCY}`);
-  const fast = concurrency > 1 || o.paceMs < DEFAULT_PACE_MS;
+  // Số lời (pha ảnh: số tệp) một đợt; pha ảnh không có nhịp nên «nhanh» chỉ theo số luồng.
+  const soLuong = o.phase === "images" ? (o.anh?.luongSong ?? 1) : (o.concurrency ?? 1);
+  if (!Number.isInteger(soLuong) || soLuong < 1 || soLuong > MAX_CONCURRENCY) throw new ConfigError(`concurrency phải là số nguyên từ 1 đến ${MAX_CONCURRENCY}`);
+  const fast = soLuong > 1 || (o.phase !== "images" && o.paceMs < DEFAULT_PACE_MS);
+  // Pha ảnh chỉ tải từ máy chủ của chính nguồn: thiếu danh sách thì dừng trước khi tải gì.
+  if (o.phase === "images" && !o.config.anh?.hostSuffixes.length) throw new ConfigError("cấu hình local S17 thiếu anh.hostSuffixes (đuôi máy chủ ảnh của nguồn) cho pha ảnh — không tải mò");
   const khoaTangToc: RunStopped | null =
     state.blockedRuns >= 2
       ? new RunStopped("blocked-twice", `nguồn đã chặn hai lần (${state.blockedRuns}) — dừng hẳn, chờ người quyết`)
@@ -212,10 +228,18 @@ export async function executePhase(o: ExecOptions): Promise<ExecResult> {
     caps: o.caps,
     paceMs: o.paceMs,
   });
-  const writer = new BatchWriter({ root: o.snapshotRoot, maxItems: o.batchItems, phase: o.phase });
+  const writer = new BatchWriter({
+    root: o.snapshotRoot,
+    maxItems: o.batchItems,
+    phase: o.phase,
+    ...(o.phase === "apartments-all" || o.phase === "images" ? { schemaVersion: S17_SCHEMA_MO_RONG_DUNG } : {}),
+    ...(o.phase === "images" ? { maxFiles: o.anh?.soFile ?? 100 } : {}),
+  });
+  const keoDan = o.phase === "images" ? new KeoDan({ caps: o.caps, now: () => env.now().getTime(), shouldStop: () => existsSync(stopPath) }) : undefined;
+  const tong = () => ({ calls: client.calls + (keoDan?.calls ?? 0), blocks: client.blocks + (keoDan?.blocks ?? 0) });
   const save = () => saveState(o.statePath, state);
   const started = env.now().toISOString();
-  const base = () => ({ snapshots: [...writer.snapshotIds], calls: client.calls, blocks: client.blocks });
+  const base = () => ({ snapshots: [...writer.snapshotIds], ...tong() });
   let balanceBefore: number | undefined;
   let balanceAfter: number | undefined;
   let giuKhoa = false;
@@ -254,6 +278,22 @@ export async function executePhase(o: ExecOptions): Promise<ExecResult> {
       concurrency: o.concurrency,
       lowriseTerms: o.lowriseTerms,
       lowriseSweep: o.lowriseSweep,
+      snapshotRoot: o.snapshotRoot,
+      tienDoDir: dirname(o.statePath),
+      ...(keoDan ? { keoDan } : {}),
+      ...(o.phase === "images"
+        ? {
+            anh: {
+              hostSuffixes: o.config.anh?.hostSuffixes ?? [],
+              luongSong: o.anh?.luongSong ?? 1,
+              maxBytes: ANH_MAX_BYTES,
+              timeoutMs: ANH_TIMEOUT_MS,
+              userAgent: ANH_USER_AGENT,
+              ...(o.anhFetch ? { fetchImpl: o.anhFetch } : {}),
+            },
+          }
+        : {}),
+      ...(o.phase === "apartments-all" ? { tatCaDuAn: { ...o.tatCaDuAn, concurrency: o.concurrency ?? 1, apartmentPageSize: o.apartmentPageSize } } : {}),
     });
     if (o.checkBalance) {
       balanceAfter = await readBalanceOrStop(client, "sau");
@@ -262,7 +302,7 @@ export async function executePhase(o: ExecOptions): Promise<ExecResult> {
     }
     await writer.flush();
     await save();
-    log({ suKien: "ket-qua", ok: true, started, finished: env.now().toISOString(), ...summary, calls: client.calls, blocks: client.blocks, balanceBefore, balanceAfter });
+    log({ suKien: "ket-qua", ok: true, started, finished: env.now().toISOString(), ...summary, ...tong(), balanceBefore, balanceAfter });
     return { ok: true, summary, ...base(), balanceBefore, balanceAfter };
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
@@ -275,8 +315,7 @@ export async function executePhase(o: ExecOptions): Promise<ExecResult> {
       finished: env.now().toISOString(),
       reason: e instanceof RunStopped ? e.reason : "loi",
       message,
-      calls: client.calls,
-      blocks: client.blocks,
+      ...tong(),
       balanceBefore,
       balanceAfter,
     });

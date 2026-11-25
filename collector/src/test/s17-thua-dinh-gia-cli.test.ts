@@ -87,3 +87,49 @@ test("egoOptions: pha qua ego phải mang cờ đọc số dư và tên cookie p
   const congKhai = egoOptions(parseCli(base), config, { statePath: "/tmp/s.json", logPath: "/tmp/l.jsonl", resultPath: "/tmp/r.json" });
   assert.equal(congKhai.checkBalance, false, "pha công khai không đụng tài khoản");
 });
+
+// ---------- mốc mở rộng (claudedp-2411-73): hai pha mới ----------
+
+const anh = ["--phase", "images", "--snapshots-root", "/tmp/snap", "--caps-calls", "1000", "--caps-minutes", "60"];
+
+test("parseCli: pha images đi bằng Node (không cần phiên), thư mục trạng thái riêng để chạy song song với pha cần phiên; lựa chọn ảnh nằm trong mức", () => {
+  const p = parseCli(anh);
+  assert.equal(p.via, "node");
+  assert.ok(p.stateDir.endsWith("s17-thua-dinh-gia-anh"), `thư mục trạng thái riêng cho pha ảnh: ${p.stateDir}`);
+  assert.deepEqual(p.anh, { luongSong: 4, soFile: 100 });
+  assert.equal(parseCli(base).stateDir.endsWith("s17-thua-dinh-gia-anh"), false, "pha khác giữ nguyên thư mục cũ");
+  const q = parseCli([...anh, "--anh-luong-song", "1", "--anh-so-file", "40"]);
+  assert.deepEqual(q.anh, { luongSong: 1, soFile: 40 });
+  assert.throws(() => parseCli([...anh, "--anh-luong-song", "9"]), /1 đến 8/);
+  assert.throws(() => parseCli([...anh, "--anh-so-file", "0"]), /dương/);
+});
+
+test("parseCli: pha apartments-all cần phiên; nhận khoảng số căn, giới hạn số dự án, danh sách id", () => {
+  assert.throws(() => parseCli([...anh, "--phase", "apartments-all"]), /space/);
+  const p = parseCli([...anh, "--phase", "apartments-all", "--space", "4", "--tu-so-can", "3000", "--den-so-can", "9000", "--gioi-han", "7", "--project", "7", "--project", "8", "--luong-song", "6", "--pace-ms", "250"]);
+  assert.equal(p.via, "ego");
+  assert.deepEqual(p.tatCaDuAn, { tuSoCan: 3000, denSoCan: 9000, gioiHan: 7, ids: ["7", "8"] });
+  assert.equal(p.concurrency, 6, "sáu luồng là trong trần mới");
+  assert.equal(p.paceMs, 250);
+  assert.throws(() => parseCli([...anh, "--phase", "apartments-all", "--space", "4", "--tu-so-can", "5000", "--den-so-can", "1000"]), /phải nhỏ hơn hoặc bằng/);
+});
+
+test("checkConfigForPhase: pha images đòi danh sách đuôi máy chủ ảnh trong cấu hình local; các pha khác không cần", () => {
+  const config = CONFIG_DU_AN;
+  assert.throws(() => checkConfigForPhase(loadConfig(JSON.stringify(config)), parseCli(anh)), /anh\.hostSuffixes|ảnh/);
+  const coAnh = { ...config, anh: { hostSuffixes: ["cdn.gia.test"] } };
+  assert.doesNotThrow(() => checkConfigForPhase(loadConfig(JSON.stringify(coAnh)), parseCli(anh)));
+  assert.doesNotThrow(() => checkConfigForPhase(loadConfig(JSON.stringify(config)), parseCli([...base, "--phase", "tile-mask", "--grid", "/tmp/luoi.json"])), "pha khác không cần máy chủ ảnh");
+  assert.throws(() => loadConfig(JSON.stringify({ ...config, anh: { hostSuffixes: [] } })), /hostSuffixes/);
+  assert.throws(() => loadConfig(JSON.stringify({ ...config, anh: { hostSuffixes: ["cdn gia.test"] } })), /hostSuffixes/);
+  assert.throws(() => loadConfig(JSON.stringify({ ...config, anh: { hostSuffixes: ["CDN.gia.test"] } })), /hostSuffixes/);
+  assert.throws(() => loadConfig(JSON.stringify({ ...config, anh: { hostSuffixes: ["localhost"] } })), /hostSuffixes/, "phải có ít nhất một dấu chấm");
+});
+
+test("egoOptions: lựa chọn của hai pha mới đi sang tiến trình trình duyệt nguyên vẹn", () => {
+  const config = { ...CONFIG_DU_AN, session: { cookieName: "PHIEN_GIA" } };
+  const v = parseCli([...anh, "--phase", "apartments-all", "--space", "4", "--tu-so-can", "3000", "--gioi-han", "7"]);
+  const o = egoOptions(v, loadConfig(JSON.stringify(config)), { statePath: "/tmp/s.json", logPath: "/tmp/l.jsonl", resultPath: "/tmp/r.json" }) as Record<string, unknown>;
+  assert.deepEqual(o.tatCaDuAn, { tuSoCan: 3000, gioiHan: 7 });
+  assert.equal(o.checkBalance, true, "pha căn hộ toàn bộ có đụng tới tài khoản: đọc số dư trước và sau");
+});

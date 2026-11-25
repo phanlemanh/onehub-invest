@@ -527,3 +527,109 @@ test("pha căn hộ toàn bộ: lọc theo số căn nguồn khai, theo danh sá
   await chayCanHo(dir, lan2.client, { ids: ["10", "7"] }).run();
   assert.deepEqual([...new Set(lan2.sent.map((u) => new URL(u).searchParams.get("project_id")))], ["7", "10"], "danh sách id: dự án 7 trước (nhiều căn hơn)");
 }));
+
+// ---------- nối vào trình điều khiển ----------
+
+import { executePhase, type ExecResult } from "../collectors/s17-thua-dinh-gia/runner.js";
+import type { RawItem } from "../core/types.js";
+
+const cauHinhAnh = (them: Record<string, unknown> = {}) => loadConfig(JSON.stringify({ hosts: FAKE_HOSTS, paths: {}, anh: { hostSuffixes: ["cdn.gia.test"] }, ...them }));
+
+const chayQuaDieuKhien = (dir: string, phase: "images", fetchImpl: typeof fetch, o: { luongSong?: number; caps?: { calls: number; minutes: number }; config?: ReturnType<typeof loadConfig> } = {}): Promise<ExecResult> =>
+  executePhase({
+    phase,
+    config: o.config ?? cauHinhAnh(),
+    transport: async () => {
+      throw new Error("pha ảnh không được gọi API của nguồn");
+    },
+    snapshotRoot: dir,
+    statePath: join(dir, "tien-do-anh", "state.json"),
+    logPath: join(dir, "tien-do-anh", "log.jsonl"),
+    caps: o.caps ?? { calls: 100, minutes: 10 },
+    paceMs: 350,
+    batchItems: 100,
+    checkBalance: false,
+    anh: { luongSong: o.luongSong ?? 2, soFile: 10 },
+    anhFetch: fetchImpl,
+    env: { sleep: async () => undefined, now: () => new Date("2026-11-25T01:00:00.000Z") },
+  });
+
+async function duaVaoKho(dir: string, cacMuc: RawItem[]): Promise<string> {
+  const w = new BatchWriter({ root: dir, maxItems: 100, phase: "projects" });
+  for (const m of cacMuc) await w.add(m);
+  return (await w.flush()) as string;
+}
+
+test("executePhase pha images: không đọc số dư, không cần phiên, snapshot phiên bản 18, lời của pha ảnh cộng vào kết quả, tiến độ ở thư mục trạng thái của pha", async () => withTmp(async (dir) => {
+  const cu = await duaVaoKho(dir, [anh("8", { danh_sach_hinh_anh: [{ photo_url: "https://cdn.gia.test/a/1" }, { photo_url: "https://cdn.gia.test/a/2" }] }, null, "2026-11-24T05:00:00.000Z")]);
+  const nguon = nguonAnh(() => ({}));
+  const r = await chayQuaDieuKhien(dir, "images", nguon.fetchImpl);
+  assert.equal(r.ok, true, String(r.message));
+  assert.equal(r.calls, 2, "số lời = số tệp đã tải");
+  assert.deepEqual(r.summary?.so, { soDuAnXong: 1, soFile: 2, soByte: r.summary?.so?.soByte, soLoi: 0 });
+  const thuMuc = (await readdir(join(dir, "vn"))).filter((x) => x !== cu);
+  assert.equal(thuMuc.length, 1, "một snapshot cho hai ảnh");
+  const { manifest, items } = await docSnapshot(dir, thuMuc[0]);
+  assert.equal(manifest.schemaVersion, 18);
+  assert.equal(manifest.files.filter((f: { name: string }) => f.name.startsWith("media/")).length, 2);
+  assert.equal(items[0].kind, "anh_du_an");
+  assert.ok((await readdir(join(dir, "tien-do-anh"))).includes("anh-8.jsonl"), "tiến độ nằm cùng thư mục trạng thái của pha ảnh");
+  await assert.rejects(readFile(join(dir, "tien-do-anh", "DANG-CHAY.lock")), "nhả khoá khi xong");
+}));
+
+test("executePhase pha images: cấu hình thiếu máy chủ ảnh thì dừng TRƯỚC khi tải gì", async () => withTmp(async (dir) => {
+  await duaVaoKho(dir, [anh("8", { danh_sach_hinh_anh: [{ photo_url: "https://cdn.gia.test/a/1" }] }, null, "2026-11-24T05:00:00.000Z")]);
+  const nguon = nguonAnh(() => ({}));
+  await assert.rejects(chayQuaDieuKhien(dir, "images", nguon.fetchImpl, { config: loadConfig(JSON.stringify({ hosts: FAKE_HOSTS, paths: {} })) }), /hostSuffixes|ảnh/);
+  assert.equal(nguon.daGoi.length, 0);
+}));
+
+test("executePhase pha images: bị chặn thì ghi nhận MỘT lần bị chặn; lượt ảnh nhiều luồng kế bị từ chối, một luồng vẫn chạy", async () => withTmp(async (dir) => {
+  await duaVaoKho(dir, [anh("8", { danh_sach_hinh_anh: [{ photo_url: "https://cdn.gia.test/chan/1" }] }, null, "2026-11-24T05:00:00.000Z")]);
+  const chan = nguonAnh(() => ({ status: 403, body: "<Error><Code>AccessDenied</Code></Error>" }));
+  const r1 = await chayQuaDieuKhien(dir, "images", chan.fetchImpl, { luongSong: 2 });
+  assert.equal(r1.ok, false);
+  assert.equal(r1.stopReason, "blocked");
+  assert.equal(r1.blocks, 1);
+  assert.equal(JSON.parse(await readFile(join(dir, "tien-do-anh", "state.json"), "utf8")).blockedRuns, 1);
+  const tot = nguonAnh(() => ({}));
+  const r2 = await chayQuaDieuKhien(dir, "images", tot.fetchImpl, { luongSong: 2 });
+  assert.equal(r2.stopReason, "fast-after-block", "nhiều luồng sau một lần bị chặn: chỉ còn một luồng");
+  const r3 = await chayQuaDieuKhien(dir, "images", tot.fetchImpl, { luongSong: 1 });
+  assert.equal(r3.ok, true, "một luồng vẫn được chạy");
+}));
+
+test("executePhase pha apartments-all: có đọc số dư trước và sau (cần phiên), snapshot phiên bản 18, lựa chọn đi qua", async () => withTmp(async (dir) => {
+  const goc = await duaVaoKho(dir, [chiTiet("7", { is_exists_apartment_info: true, danh_sach_thap: ["A"], so_can: 1 }, null, "2026-11-24T05:00:00.000Z")]);
+  const json = (body: unknown) => ({ status: 200, contentType: "application/json", body: JSON.stringify(body) });
+  const daHoi: string[] = [];
+  const transport = async (url: string) => {
+    daHoi.push(new URL(url).pathname);
+    if (url.endsWith("/balance")) return json({ status: true, data: { available: 20 } });
+    if (url.includes("/apartment-list")) return json({ status: true, data: { content: [{ text: "x1" }], totalElements: 1, totalPages: 1 } });
+    return json({ status: true, data: { properties: { ma_can: new URL(url).searchParams.get("ma_can") } } });
+  };
+  const r = await executePhase({
+    phase: "apartments-all",
+    config: loadConfig(JSON.stringify({ hosts: FAKE_HOSTS, paths: { balance: "/v2.x/balance", "apartment-list": "/v2.x/apartment-list", "apartment-detail": "/v2.x/apartment-detail" } })),
+    transport,
+    snapshotRoot: dir,
+    statePath: join(dir, "can-ho", "state.json"),
+    logPath: join(dir, "can-ho", "log.jsonl"),
+    caps: { calls: 50, minutes: 10 },
+    paceMs: 0,
+    batchItems: 100,
+    checkBalance: true,
+    concurrency: 2,
+    tatCaDuAn: { tuSoCan: 1 },
+    env: { sleep: async () => undefined, now: () => new Date("2026-11-25T01:00:00.000Z") },
+  });
+  assert.equal(r.ok, true, String(r.message));
+  assert.equal(r.balanceBefore, 20);
+  assert.equal(r.balanceAfter, 20);
+  assert.equal(daHoi.filter((x) => x.endsWith("/balance")).length, 2, "đọc số dư trước và sau");
+  assert.deepEqual(r.summary?.so?.soDuAnXong, 1);
+  const thuMuc = (await readdir(join(dir, "vn"))).filter((x) => x !== goc);
+  for (const id of thuMuc) assert.equal((await docSnapshot(dir, id)).manifest.schemaVersion, 18);
+  assert.ok((await readdir(join(dir, "can-ho"))).includes("can-ho-7.jsonl"));
+}));
