@@ -379,6 +379,7 @@ test("(1) nạp lại raw theo thứ tự tên vẫn giữ ảnh đã bù (tên 
     writeFileSync(join(dir, "items-0001.json.gz"), gz);
     const files = [{ name: "items-0001.json.gz", sha256: createHash("sha256").update(gz).digest("hex"), bytes: gz.length }];
     if (items[0].meta?.mediaFiles?.[0]?.file) {
+      mkdirSync(join(dir, dirname(items[0].meta.mediaFiles[0].file)), { recursive: true });
       writeFileSync(join(dir, items[0].meta.mediaFiles[0].file), anhBuu);
       files.push({ name: items[0].meta.mediaFiles[0].file, sha256: shaBuu, bytes: anhBuu.length });
     }
