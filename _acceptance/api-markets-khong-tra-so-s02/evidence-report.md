@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: d2651141498c4beb3b0e116b843af9919962d9d5
+verified_commit: 1759ae02bbffc7c613b826b724bae325aac9070c
 human_signoff: Mạnh 2026-11-25
 ---
 
@@ -172,3 +172,7 @@ Round 1: bị chặn vì nửa a bộ pipeline chạy quá 30 phút mặc địn
 Round 2: các eval xanh; còn finding về đối chứng AC-2 trong tập thử, đã sửa ở nhánh.
 Round 3: chạy lại E1, E2, E8 và các lệnh suite sau khi sửa tập thử AC-2; mọi eval xanh. E3-E7, E9 mang từ round 2.
 
+
+### Re-pin lần 1 — 2026-11-25, do test đổi sau chữ ký: dùng DB của lượt (lỗi CI 3D000)
+run_id: repin-20261125T160256Z-71810
+sha: 1759ae02bbffc7c613b826b724bae325aac9070c · suites: 7 lệnh exit 0 · evals: 9/9 eval máy đạt kỳ vọng
