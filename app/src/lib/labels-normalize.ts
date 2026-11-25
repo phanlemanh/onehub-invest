@@ -117,11 +117,36 @@ export const FIELD_LABEL: Record<LabelField, string> = {
  * Lát chỉ gắn một số ô (`lat-khai-o-can-gan`): màn chỉ hiện, chỉ đòi các ô này, không có căn cứ từng ô, không có lượt hai.
  * Lát không có trong bảng giữ nguyên hành vi.
  */
-export const O_THEO_LAT: Readonly<Record<string, readonly LabelField[]>> = { "hai-khu-ghep-b": ["building", "subzone"] }
+export const O_THEO_LAT: Readonly<Record<string, readonly LabelField[]>> = {
+  "hai-khu-ghep-b": ["building", "subzone"],
+  // HT21 (PL36 AC-10): lát nhãn trục 110 bài Ocean Park 1 — chỉ Toà và Trục, đọc mã căn theo quy ước «Mã căn» của CONTEXT.md.
+  "hai-khu-truc": ["building", "stack"],
+}
 export const oCuaLat = (lat: string): readonly LabelField[] | null => O_THEO_LAT[lat] ?? null
-const NHAN_THEO_LAT: Readonly<Record<string, Partial<Record<LabelField, string>>>> = { "hai-khu-ghep-b": { subzone: "Phân khu hoặc cụm" } }
+/**
+ * Lát có khai ô mà VẪN hiện nháp (HT21): mặc định lát có khai ô gắn mù, nháp không rời máy chủ. `hai-khu-truc` là ngoại lệ có tên —
+ * Mạnh bỏ đo mù cho lát này (24/11, lối 3 của PL36: trợ lý nháp, Mạnh duyệt); thước đo người duyệt là thẻ cài lỗi thay cho gắn mù.
+ * Nháp chỉ mang các ô của lát.
+ */
+export const LAT_KHAI_O_CO_NHAP: ReadonlySet<string> = new Set(["hai-khu-truc"])
+/** Lát này có được hiện nháp không: lát không khai ô giữ hành vi cũ; lát khai ô chỉ khi nằm trong danh sách ngoại lệ. */
+export const hienNhap = (lat: string): boolean => oCuaLat(lat) === null || LAT_KHAI_O_CO_NHAP.has(lat)
+const NHAN_THEO_LAT: Readonly<Record<string, Partial<Record<LabelField, string>>>> = {
+  "hai-khu-ghep-b": { subzone: "Phân khu hoặc cụm" },
+  "hai-khu-truc": { stack: "Trục (hai số cuối của số căn)" },
+}
 /** Nhãn của một ô trên màn của lát. */
 export const nhanO = (lat: string, f: LabelField): string => NHAN_THEO_LAT[lat]?.[f] ?? FIELD_LABEL[f]
+/**
+ * Câu mô tả đầu trang của lát có khai ô (HT21 AC-5). Lát có nháp nói rõ các ô đã điền sẵn nháp máy, người duyệt sửa chỗ sai rồi
+ * lưu; lát gắn mù giữ câu cũ. Lát không khai ô trả null (màn dùng câu của nó).
+ */
+export function moTaLatKhaiO(lat: string): string | null {
+  const o = oCuaLat(lat)
+  if (!o) return null
+  if (!LAT_KHAI_O_CO_NHAP.has(lat)) return "Đọc từng bài và ghi toà, phân khu hoặc cụm. Máy không cho thấy nó đã đọc ra gì."
+  return `Đọc từng bài và ghi ${o.map((f) => nhanO(lat, f)).join(", ")}. Các ô đã điền sẵn nháp máy — sửa chỗ sai rồi lưu.`
+}
 /**
  * Căn cứ tạm của lát có khai ô. Route gọi `chuanHoaLuot` không kèm tên lát nên bộ kiểm không tự biết lát; `ghiNhan` biết tên lát:
  * chỉ lát có khai mới được gửi giá trị này, và nó không bao giờ xuống DB.
