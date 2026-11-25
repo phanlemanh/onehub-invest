@@ -843,7 +843,8 @@ export class PsqlQuaDocker {
   }
   async query(sql, params = []) {
     const cau = params.length ? sql.replace(/\$(\d+)\b/g, (_, i) => thamSo(params[Number(i) - 1])) : sql;
-    const outp = await this.#psql(`SELECT coalesce(json_agg(t), '[]'::json) FROM (${cau}) t;\n`);
+    // Bí danh riêng: «t» trùng tên cột t của câu soát thì json_agg lấy cột thay vì cả dòng (itest BCL-8 25/11).
+    const outp = await this.#psql(`SELECT coalesce(json_agg(bcl_dong), '[]'::json) FROM (${cau}) bcl_dong;\n`);
     return { rows: JSON.parse(outp.trim() || "[]") };
   }
   async chayLenh(sql) { await this.#psql(`${sql};\n`); }
