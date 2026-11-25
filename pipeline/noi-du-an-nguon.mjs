@@ -77,7 +77,7 @@ export function vietThe({ nguon, ds, tong, mau, lech, bam }) {
   out.push("| Tên nguồn | Nút nối sẵn | Bóng ra |", "|---|---|---|",
     ...lech.map((d) => `| ${d.ten} | ${d.tenNut ?? "—"} | ${d.kq.bong.nga === "noi" ? `${d.tenBong} (${d.kq.bong.can_cu})` : d.kq.bong.ly_do} |`), "",
     `băm: ${bam}`, "");
-  return out.join("\n");
+  return out.join("\n").replace(/\n{3,}/g, "\n\n");
 }
 
 async function moGiaoDich(client, giaoDich) {
