@@ -367,7 +367,7 @@ không thêm tên nguồn thật (ADR-0007 sửa đổi 26/10); nhãn job, tên 
 | S06 · Rao vặt công khai | active | 05:30 (`chotot`: collect → import → transform → refresh → resolve) | ruler 150 phường; phone reveal chưa làm |
 | S07 · Cổng rao | không có dòng | — | chưa có collector; tự build nếu cần |
 | S08 · Danh mục dự án | paused | — | chưa có collector, `stg_s08_inventory` 0 dòng; ≤ 1 lần/tuần, chỉ nội bộ (luật 5) |
-| S17 · Thửa đất định giá, căn hộ, dự án | không có dòng (chờ migration của làn Claude) | chạy tay như tiến trình của phiên, chưa có lịch | bộ thu `collector/src/collectors/s17-thua-dinh-gia/`, chưa vào scheduler; mốc ngày 1 xong 24/11 (2.508 dự án, 783 bảng tham chiếu, mặt nạ 34 tỉnh); mốc ngày 2: căn hộ hai dự án mẫu, thửa hai khu thí điểm, 1.603 dự án thấp tầng — số đo ở `collector/docs/DATA-CONTRACT.md` mục S17 |
+| S17 · Thửa đất định giá, căn hộ, dự án | không có dòng (chờ migration của làn Claude) | chạy tay như tiến trình của phiên, chưa có lịch | bộ thu `collector/src/collectors/s17-thua-dinh-gia/`, chưa vào scheduler; mốc ngày 1 xong 24/11 (2.508 dự án, 783 bảng tham chiếu, mặt nạ 34 tỉnh); mốc ngày 2 (xong 20:31): căn hộ hai dự án mẫu, thửa hai khu thí điểm, 1.603 dự án thấp tầng; mốc mở rộng (Mạnh chốt 25/11, đang làm): căn hộ toàn bộ 2.043 dự án có bảng căn (khoảng 921.000 căn), toàn bộ ảnh dự án (khoảng 287.000 tệp), thửa cho toàn bộ vùng có dữ liệu theo mặt nạ — số đo ở `collector/docs/DATA-CONTRACT.md` mục S17 |
 
 ### 2.4 Chạy đêm (launchd)
 Đo `launchctl list` 26/10 — 12 nhãn đang nạp.
