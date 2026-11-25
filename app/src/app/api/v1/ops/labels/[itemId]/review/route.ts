@@ -22,7 +22,8 @@ function chiMayThu() {
     : null
 }
 
-/** Lát có khai ô gắn mù, không có lượt hai: không trả đầu ra máy, không ghi trường hợp (lat-khai-o-can-gan AC-5). */
+/** Lát có khai ô không có lượt hai: không trả đầu ra máy, không ghi trường hợp (lat-khai-o-can-gan AC-5). Lát gắn mù trừ lát trong
+ * LAT_KHAI_O_CO_NHAP (HT21) — lát ấy hiện nháp ở lượt một, lượt hai vẫn đóng. */
 async function latGanMu(itemId: number) {
   const lat = await latCuaBai(itemId)
   return lat !== null && oCuaLat(lat) !== null

@@ -269,20 +269,25 @@ const nodeGia = (root) => {
   return f;
 };
 for (const [o, env, args, ke] of [
-  ["00:00 mặc định", {}, [], "14400 7200"],
+  ["00:00 mặc định", {}, [], "21600 10800\n16200"], // 2311-5: trần tổng lượt 00:00 4h → 6h, rồi đồng hồ bước đọc gộp
   ["nhanh mặc định", {}, ["--luot-nhanh"], "2400 1200"],
-  ["00:00 TRAN_TONG=100", { ZALO_IMPORT_TRAN_TONG: "100" }, [], "100 50"],
-  ["00:00 TRAN_TONG=100 CANH_BAO=7", { ZALO_IMPORT_TRAN_TONG: "100", ZALO_IMPORT_CANH_BAO: "7" }, [], "100 7"],
+  ["00:00 TRAN_TONG=100", { ZALO_IMPORT_TRAN_TONG: "100" }, [], "100 50\n60"],
+  ["00:00 TRAN_TONG=100 CANH_BAO=7", { ZALO_IMPORT_TRAN_TONG: "100", ZALO_IMPORT_CANH_BAO: "7" }, [], "100 7\n60"],
+  ["00:00 TRAN_TONG=32400", { ZALO_IMPORT_TRAN_TONG: "32400" }, [], "32400 16200\n27000"], // 2311-5: plist đêm 24→25/11 đặt 32400 một đêm — biến môi trường thắng mặc định
 ]) {
   // bước transform-zalo chậm 1 giây: lượt nhanh xong trước khi node giả kịp ghi thì trap đã giết nó
-  test(`AC-7 trần ${o} → ${ke}`, () => voiRoot({ cham: true }, async (root) => {
+  // 2311-5 (nhánh B): lượt 00:00 có HAI đồng hồ — tổng rồi của bước đọc gộp (dòng thứ hai chỉ có trần, không có
+  // ngưỡng WARN); lượt nhanh chỉ đồng hồ tổng. Mỗi dòng ghim là "<trần> <ngưỡng WARN>" của một lần node giả gọi.
+  test(`AC-7 trần ${o} → ${ke.replace("\n", " rồi ")}`, () => voiRoot({ cham: true }, async (root) => {
     const envBo = { ...env };
     for (const k of ["ZALO_IMPORT_TRAN_TONG", "ZALO_IMPORT_CANH_BAO"]) if (!(k in envBo)) envBo[k] = "";
     // biến rỗng = không đặt: ${X:-mặc định} lấy mặc định
+    // bước đọc gộp ngủ 1 giây: thoát tức thì thì đồng hồ giả của bước bị kết thúc trước khi kịp ghi sổ
+    writeFileSync(join(root, "pipeline", "doc-gop-hang-ngay.sh"), "sleep 1\n");
     await chay(root, { ...envBo, ZALO_IMPORT_NODE_BIN: nodeGia(root) }, { args });
-    const dong = readFileSync(join(root, "dong-ho.txt"), "utf8").trim().split("\n");
-    assert.equal(dong.length, 1, "một đồng hồ mỗi lượt");
-    assert.equal(dong[0].split(" ").slice(0, 2).join(" "), ke);
+    const dong = readFileSync(join(root, "dong-ho.txt"), "utf8").trim().split("\n")
+      .map((l) => l.trim().split(/\s+/).join(" "));
+    assert.deepEqual(dong, ke.split("\n"), "AC-7 đồng hồ của lượt: mỗi dòng <trần> <ngưỡng WARN>, đúng số lần gọi và thứ tự");
   }));
 }
 test("AC-7 plist không đổi so với origin/main", () => {
@@ -297,3 +302,28 @@ test("AC-7 node thật thiếu → TRẦN THỜI GIAN TẮT, cùng các bước,
   assert.deepEqual(buoc(khong.out), buoc(coDongHo.out));
   assert.equal(khong.status, coDongHo.status);
 }));
+
+// ---------- HT13 tran-tong-luot-dem-va-tran-doc-gop: đọc gộp dừng sạch đủ sớm cho enrich với MỌI trần tổng ----------
+// Đo QUAN HỆ, không đo con số (cách suy DOC_GOP_TRAN_GIAY là của làn thu): với trần tổng T (mặc định, biến 32400 của plist
+// đêm 24/11, biến nhỏ 6000), mốc dừng sạch M mà bước đọc gộp nhận phải chừa T − M ≥ (trần nạp + 600) + 2400 — phần các bước
+// trước đọc gộp cộng 2400s cho enrich (đo 21/11: 1.842s cả bước ở LIMIT 50, cộng dự phòng). Chiều đỏ: bản sao bỏ phần
+// chừa cho enrich (CHUA_ENRICH=0) → mốc sát trần tổng → đỏ «đọc gộp dừng quá muộn».
+const DG_GHI_MOC = '#!/bin/bash\nprintf \'%s\\n\' "${DOC_GOP_TRAN_GIAY:-KHONG_DAT}" > "$(dirname "$0")/logs/doc-gop-moc.txt"\nexit 0\n';
+const CHUA_TOI_THIEU = 1800 + 600 + 2400; // trần nạp mặc định + transform + chỗ cho enrich
+const kiemHT13 = (tranTong, bien) => voiRoot({ bien }, async (root) => {
+  writeFileSync(join(root, "pipeline", "doc-gop-hang-ngay.sh"), DG_GHI_MOC);
+  const env = { ZALO_IMPORT_TRAN_DOC_GOP: "", ZALO_IMPORT_CANH_BAO: "", ZALO_IMPORT_TRAN_NAP: "" };
+  env.ZALO_IMPORT_TRAN_TONG = tranTong == null ? "" : String(tranTong);
+  const r = await chay(root, env);
+  const T = tranTong ?? 21600;
+  assert.match(r.out, new RegExp(`\\[zalo-import-daily\\] trần: .*lượt ≤${T}s`), `HT13 dòng khai trần nêu trần lượt ${T}s`);
+  const moc = Number(readFileSync(join(root, "pipeline", "logs", "doc-gop-moc.txt"), "utf8").trim());
+  assert.ok(Number.isInteger(moc) && moc >= 60, `HT13 bước đọc gộp nhận mốc dừng sạch là số giây ≥ 60 — thực tế ${moc}`);
+  assert.ok(T - moc >= CHUA_TOI_THIEU, `HT13 đọc gộp dừng quá muộn: mốc ${moc}s trong trần ${T}s chỉ chừa ${T - moc}s (< ${CHUA_TOI_THIEU}s cho các bước trước và enrich)`);
+  assert.match(r.out, /^JOB STEP \[zalo-import-daily\] bước enrich-run /m, "HT13 enrich chạy sau bước đọc gộp");
+});
+for (const [o, t] of [["mặc định", null], ["biến 32400 (plist đêm 24/11)", 32400], ["biến nhỏ 6000", 6000]]) {
+  test(`HT13 trần tổng ${o}: mốc dừng sạch của đọc gộp chừa đủ chỗ cho enrich, enrich chạy`, () => kiemHT13(t));
+}
+test("HT13 chiều đỏ: bản sao bỏ phần chừa cho enrich → đỏ «đọc gộp dừng quá muộn»", () =>
+  assert.rejects(kiemHT13(32400, (s) => s.replace(/^CHUA_ENRICH=3000\b/m, "CHUA_ENRICH=0")), /đọc gộp dừng quá muộn/));
