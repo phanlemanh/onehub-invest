@@ -16,6 +16,7 @@ import { appendFileSync, existsSync, readFileSync, realpathSync } from "node:fs"
 import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { duongSo } from "./pipeline-that-hang-ngay.mjs";
 
 // Tệp test của các module đọc tệp của module khác (import, chép fixture, quét cây) — vùng rộng theo đo 10/11.
 const LOI_APP = [
@@ -38,6 +39,25 @@ const LOI_PIPELINE = [
   "_acceptance/dong-dau-dia-chi-luc-nap/evidence/mau-bai-lac-du-an-v2.md",
 ];
 
+// Ca cần dữ liệu thật (30 ca pipeline của scripts/ci-bo-qua.json, suite pipeline_that, hồ sơ db-thu-tach-khoi-cum-that):
+// chạy trên bản chép ~30′ nên vùng HẸP — tệp test của các ca, tệp chúng nạp (đồ thị import tĩnh), tệp chúng chạy bằng
+// tiến trình con hay đọc SQL. Canh phủ hai chiều trong scripts/suite-neu-doi.test.mjs: đồ thị import tĩnh hiện tại, và
+// fixture tệp thật sự mở của một lượt chạy thật (scripts/fixtures/pipeline-that-tep-mo.json). Không chứa LO-TRINH.html,
+// collector/src/**, docs/**.
+const VUNG_THAT = [
+  "pipeline/scripts/test-posts.test.mjs", "pipeline/scripts/deals-phi-ly.test.mjs",
+  "pipeline/scripts/ops-facts-so-tong-hop.test.mjs", "pipeline/scripts/install-collector-api.test.mjs",
+  "pipeline/scripts/reassign-areas.test.mjs", "pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs",
+  "pipeline/scripts/ops-apply-plist.test.mjs",
+  "pipeline/scripts/capture-ops-facts.mjs", "pipeline/scripts/ops-facts-fixture.mjs", "pipeline/scripts/test-data-residue.mjs",
+  "pipeline/*.mjs", "pipeline/*.sh", "pipeline/package.json", "pipeline/lib/**", "pipeline/sql/**", "pipeline/data/**",
+  "pipeline/cron/com.oneinvest.collector-api.plist",
+  "db/migrations/**", "db/db-thu.sh", "db/dau-luoc-do.sql",
+  "scripts/check-freshness.mjs", "scripts/lib/**", "scripts/ci-bo-qua.json", "scripts/install-collector-api.sh",
+  "scripts/fixtures/launchctl-list-2026-10-23.txt", "docs/ops/runtime-map.md",
+  "app/package.json", "package.json",
+];
+
 export const VUNG = {
   app: LOI_APP,
   app_ui: LOI_APP,
@@ -46,6 +66,7 @@ export const VUNG = {
   // tệp nào kéo nửa A thì cũng kéo nửa B. Chia nửa là chia theo tệp test, không theo vùng mã.
   pipeline_a: LOI_PIPELINE,
   pipeline_b: LOI_PIPELINE,
+  pipeline_that: VUNG_THAT,
   agent: [
     "agent/**", "db/**", "pipeline/**", "scripts/**", "docs/ops/**",
     "app/src/lib/ops/review-can-cu.ts", "app/src/lib/vocab.generated.ts",
@@ -291,6 +312,21 @@ async function mainScripts(argv) {
   return ket(maNgat || ma);
 }
 
+// Dòng «ca dữ liệu thật» (hồ sơ db-thu-tach-khoi-cum-that AC-11): mỗi lượt chấm nói rõ 30 ca cần dữ liệu thật có chạy
+// trong lượt không; không kích thì nêu lần xanh gần nhất trên main từ sổ của pipeline-that-hang-ngay.mjs.
+export function dongDuLieuThat(chay, so) {
+  if (chay) return "ca dữ liệu thật: chạy trong lượt này";
+  let xanh = null;
+  try {
+    for (const l of readFileSync(so, "utf8").split("\n")) {
+      try { const d = JSON.parse(l); if (d.ket_qua === "xanh") xanh = d; } catch { /* dòng hỏng */ }
+    }
+  } catch { /* sổ chưa có */ }
+  return xanh
+    ? `ca dữ liệu thật: không kích — lần xanh gần nhất trên main: ${xanh.ngay} (${String(xanh.sha).slice(0, 9)})`
+    : "ca dữ liệu thật: không kích — chưa có lần xanh nào trên main";
+}
+
 function main(argv) {
   if (argv[0] === "--chay-scripts") return mainScripts(argv);
   const i = argv.indexOf("--");
@@ -302,6 +338,7 @@ function main(argv) {
   const lenh = argv.slice(i + 1).join(" ");
   const goc = gocKho(process.cwd());
   const q = quyetDinh(ten, tepDoi(goc), { ep: process.env.SUITE_NEU_DOI === "chay" });
+  if (ten === "pipeline_that") console.log(dongDuLieuThat(q.chay, duongSo(goc)));
   if (!q.chay) {
     console.log(`suite-neu-doi: bỏ qua ${ten}: ${q.ly_do}`);
     return 0;
