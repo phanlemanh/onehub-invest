@@ -43,3 +43,27 @@ if (RA) {
   // `import { readFileSync } from "node:fs"` giữ liên kết riêng: đồng bộ lại để tệp nạp sau thấy bản đã bọc.
   syncBuiltinESMExports();
 }
+
+// Gom: node scripts/lib/ghi-tep-mo.mjs --gom <nhật ký> --ra <fixture.json> --lenh "<lệnh đã chạy>"
+// Giữ tệp nằm trong cây kho (git ls-files), đường tương đối gốc kho; tiến trình con mang đối số là tệp kho cũng tính.
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url) && process.argv.includes("--gom")) {
+  const arg = (k) => { const i = process.argv.indexOf(k); return i > 0 ? process.argv[i + 1] : null; };
+  const goc = cp.execFileSync("git", ["rev-parse", "--show-toplevel"], { encoding: "utf8" }).trim();
+  const kho = new Set(cp.execFileSync("git", ["ls-files"], { cwd: goc, encoding: "utf8" }).split("\n").filter(Boolean));
+  const tep = new Set();
+  const them = (p, cwd) => {
+    if (typeof p !== "string" || !p) return;
+    const r = path.relative(goc, path.resolve(cwd ?? goc, p));
+    if (kho.has(r)) tep.add(r);
+  };
+  for (const l of fs.readFileSync(arg("--gom"), "utf8").split("\n")) {
+    if (!l) continue;
+    let d;
+    try { d = JSON.parse(l); } catch { continue; }
+    if (d.loai === "con") for (const a of d.gt) them(a, d.cwd);
+    else them(d.gt, d.cwd);
+  }
+  const sha = cp.execFileSync("git", ["rev-parse", "HEAD"], { cwd: goc, encoding: "utf8" }).trim();
+  fs.writeFileSync(arg("--ra"), JSON.stringify({ sha, lenh: arg("--lenh"), ghi_luc: new Date().toISOString(), tep: [...tep].sort() }, null, 2) + "\n");
+  console.log(`ghi-tep-mo: ${tep.size} tệp trong kho → ${arg("--ra")}`);
+}
