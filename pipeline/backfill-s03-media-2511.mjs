@@ -59,12 +59,17 @@ const SQL_BAI = `
   SELECT post_id, snapshot_id, group_name, author_hash, posted_at, text,
          sender_name, sender_id, conversation_id, media, agent_id, media_files
   FROM chon
-  WHERE jsonb_typeof(media) = 'array' AND jsonb_array_length(media) > 0
+  WHERE CASE WHEN jsonb_typeof(media) <> 'array' THEN false
+             ELSE jsonb_array_length(media) > 0 END
     AND (
       media_files IS NULL
-      OR jsonb_array_length(media_files) < jsonb_array_length(media)
+      OR CASE WHEN jsonb_typeof(media_files) <> 'array' THEN true
+              WHEN jsonb_typeof(media) <> 'array' THEN false
+              ELSE jsonb_array_length(media_files) < jsonb_array_length(media) END
       OR EXISTS (
-        SELECT 1 FROM jsonb_array_elements(media_files) e
+        SELECT 1 FROM jsonb_array_elements(
+          CASE WHEN jsonb_typeof(media_files) = 'array' THEN media_files ELSE '[]'::jsonb END
+        ) e
         WHERE e->>'error' IS NOT NULL AND e->>'error' <> 'http-404'
       )
     )
@@ -218,7 +223,8 @@ export async function ghiSnapshotBuu({ baiHomNgay, rootSnapshots, dirMoi, fetchM
         }
       }
     }
-    if (entriesMoi.length > 0) {
+    if (entriesMoi.length > 0 && urlCanTai.length > 0) {
+      // chỉ đưa bài CÓ url phải tải — bài toàn 404/400-bỏ-qua giữ nguyên trong stg, không viết lại
       items.push({
         source: "zalo-agent",
         sourceId: bai.postId,
@@ -325,11 +331,16 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     }
     if (!kq.snapshotId) continue;
     console.log(`nạp snapshot ${kq.snapshotId}…`);
-    const out = execFileSync(process.execPath, [importer, join(root, "hanoi", kq.snapshotId)], {
-      encoding: "utf8",
-      cwd: join(GOC, "pipeline"),
-    });
-    console.log(out.trim().split("\n").slice(-2).join("\n"));
+    try {
+      const out = execFileSync(process.execPath, [importer, join(root, "hanoi", kq.snapshotId)], {
+        encoding: "utf8",
+        cwd: join(GOC, "pipeline"),
+      });
+      console.log(out.trim().split("\n").slice(-2).join("\n"));
+    } catch (e) {
+      // lỗi nạp — snapshot đã nằm trong hàng đợi của lượt nạp thường, lượt sau tự nạp lại (idempotent)
+      console.error(`⚠️ nạp lỗi (hàng đợi sẽ nạp lại): ${String(e.message).split("\n")[0]}`);
+    }
     tong.snapshot += 1;
     tong.bai += kq.soBai;
     tong.url += kq.soUrlThu;
