@@ -22,7 +22,8 @@ node scripts/day-ban-chep.mjs
 ```
 
 Một lượt: kiểm cầu → chép + soát DB máy thu (HT18, chỉ đọc) → ghim sha256 → gửi đúng hai tệp (dump, `ke.json`) qua stdin của lệnh con
-`nhan` → bước nhận trên M5: so sha256, `ban-chep-da-loc.mjs --kiem --khong-tu-dien`, `pg_restore` vào `oneinvest_moi` bằng `docker exec`,
+`nhan` → bước nhận trên M5: so sha256, soát tệp kê theo danh sách khoá cho phép (khoá cấp một đóng, khoá bảng là tên đã đổi
+của bản chép — M5 không có từ điển tên nguồn), `ban-chep-da-loc.mjs --kiem --khong-tu-dien --qua-docker`, `pg_restore` vào `oneinvest_moi` bằng `docker exec`,
 đếm = `ke.json`, đổi tên (bản cũ → `oneinvest_cu`), xoá tệp. In thời gian từng chặng; sổ ở `state/day-ban-chep/so.jsonl`.
 Mã thoát: 0 xanh · 1 đỏ (DB chạy trên M5 giữ nguyên) · 2 cấu hình sai · 3 cầu Thunderbolt không thông.
 Chỉ chạy khi người gọi — không plist, không cron (hàng sau, cần lời riêng của Mạnh).

@@ -15,7 +15,7 @@ import { createRequire } from "node:module";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { chayChep, xoaDb, tenDich, phanTichNguon } from "./ban-chep-da-loc.mjs";
+import { chayChep, xoaDb, dsDbM5, tenDich, phanTichNguon } from "./ban-chep-da-loc.mjs";
 import { dayBanChep, taoGuiCucBo, docCauHinh } from "./day-ban-chep.mjs";
 import { docSourceNameEntries } from "../pipeline/lib/source-name-entries.mjs";
 import { findSourceNames } from "../pipeline/lib/mask-source-names.mjs";
@@ -29,6 +29,10 @@ const CONTAINER = "one-invest-db";
 const NGUON = process.env.DATABASE_URL ?? "";
 const NG = phanTichNguon(NGUON);
 const DUNG_DB_LUOT = !NG.loi && /^oneinvest_suite_[a-z0-9_]+_[0-9]+$/.test(NG.db);
+// Chế độ thử của HT18 (các eval chạy SONG SONG): đích, «trần một bản sống» và DB tạm --kiem (cả của bước nhận, kế thừa biến) chỉ chạm
+// tiền tố riêng pid này — không bao giờ oneinvest_m5_<ngày> thật hay DB của lượt khác.
+const DICH_THU = `oneinvest_m5_t${process.pid}`;
+if (DUNG_DB_LUOT) process.env.BCL_DICH_THU = DICH_THU;
 const DICH = tenDich();
 const CHAY = `oneinvest_suite_bcmchay_${process.pid}`;
 const HO_CHAY = ["", "_moi", "_cu", "_bo", "_lui"].map((h) => `${CHAY}${h}`);
@@ -84,6 +88,7 @@ after(async () => {
     if (/^oneinvest_suite_/.test(d)) try { psql("postgres", `DROP DATABASE IF EXISTS ${q(d)} WITH (FORCE)`); } catch { /* báo dưới */ }
   }
   await xoaDb(DICH).catch(() => {});
+  for (const d of await dsDbM5(new RegExp(`^${DICH_THU}(_[a-z0-9_]+)?$`)).catch(() => [])) await xoaDb(d).catch(() => {});
   for (const d of tamDirs) rmSync(d, { recursive: true, force: true });
   const sau = vanTayMayThu();
   const { loi, doi } = soMayThu(VT_MAY_THU, sau);
@@ -204,7 +209,9 @@ test("BCM-6: nhận xanh — sha, --kiem --khong-tu-dien, pg_restore vào DB m�
   const r = await nhan(`nhan ${b.ke.sha256}`, { ke: b.keTep, dump: b.dump });
   assert.equal(r.ma, 0, `${r.out}\n${r.err}`);
   for (const ch of ["nhan", "sha", "kiem", "nap", "dem", "xoa-ban-cu", "doi-ten", "giua", "don"]) assert.match(r.out, new RegExp(`chặng ${ch}: \\d+s`));
+  assert.match(r.out, /kiem: tệp kê sạch: \d+ khoá cấp một trong danh sách cho phép/);
   assert.match(r.out, /kiem: .*sha256 khớp ke\.json/);
+  assert.ok(DICH.startsWith(`${DICH_THU}_`), "đích chép phải theo tiền tố pid");
   const vt = vanTay(CHAY);
   for (const [t, n] of Object.entries(b.ke.so_dong)) assert.equal(vt.bang[t], n, `bảng ${t} lệch ke.json`);
   assert.deepEqual(vanTay(CU), vtGia, "DB chạy trước lượt phải thành bản cũ nguyên vẹn");
@@ -336,9 +343,25 @@ const CA_LOI = [
   ["giữa hai lần đổi tên", "giua", async () => ({ env: { NHAN_CAY: "giua" } })],
   ["đổi tên bị từ chối vì một phiên psql còn mở", "doi-ten", async () => ({ env: { NHAN_CAY: "giu-ket-noi" }, phien: true })],
 ];
-test("BCM-7: ma trận viết trước đủ bảy chặng lỗi", () => {
-  assert.deepEqual(CA_LOI.map((x) => x[1]), ["sha", "kiem", "nap", "dem", "xoa-ban-cu", "giua", "doi-ten"]);
+test("BCM-7: ma trận viết trước đủ bảy chặng lỗi (+ hai ca tệp kê ở chặng kiem)", () => {
+  assert.deepEqual(CA_LOI.map((x) => x[1]), ["sha", "kiem", "nap", "dem", "xoa-ban-cu", "giua", "doi-ten", "kiem", "kiem"]);
 });
+
+// Tệp kê ngoài danh sách khoá cho phép (GS 26/11): khoá cấp một lạ; khoá bảng chưa đổi tên (tiền tố cũ của bảng hiệu chuẩn).
+const CA_KE = [
+  ["khoá cấp một ngoài danh sách", (ke) => { ke.bcm_khoa_la = { a: 1 }; }, /khoá cấp một thứ \d+ ngoài danh sách cho phép/],
+  ["khoá bảng chưa đổi tên", (ke) => { const t = Object.keys(ke.so_dong).find((x) => x.startsWith("ref_calib_")); ke.so_dong[t.replace(/^ref_calib_/, "airdna_")] = ke.so_dong[t]; delete ke.so_dong[t]; },
+    /so_dong: khoá thứ \d+ không phải tên bảng \(đã đổi\) của bản chép/],
+];
+for (const [ten, sua, mau] of CA_KE) {
+  CA_LOI.push([`tệp kê — ${ten}`, "kiem", async (b) => {
+    const d = thuMucTam("bcm-ke-");
+    const ke = structuredClone(b.ke);
+    sua(ke);
+    writeFileSync(path.join(d, "ke.json"), JSON.stringify(ke));
+    return { ke: path.join(d, "ke.json"), mau };
+  }]);
+}
 
 for (const [ten, chang, dung] of CA_LOI) {
   test(`BCM-7: lỗi ở chặng ${ten} → DB chạy còn đúng tên, vân tay trước = sau, DB mới bị xoá, nêu chặng; rồi lui → bản cũ thành DB chạy`, async () => {
@@ -355,6 +378,7 @@ for (const [ten, chang, dung] of CA_LOI) {
     } finally { if (phien) await phien.dong(); }
     assert.equal(r.ma, 1, `${r.out}\n${r.err}`);
     assert.match(r.err, new RegExp(`ĐỎ chặng ${chang}:`));
+    if (ca.mau) { assert.match(r.out, ca.mau); assert.doesNotMatch(r.out + r.err, /airdna_|bcm_khoa_la/, "thông điệp không in khoá lạ"); }
     assert.match(r.err, new RegExp(`DB chạy «${CHAY}» giữ nguyên`));
     assert.deepEqual(vanTay(CHAY), vtChay, "DB chạy phải còn đúng tên với dữ liệu trước lượt (oid + số dòng)");
     assert.deepEqual(vanTay(CU), vtCu, "bản cũ phải còn nguyên");

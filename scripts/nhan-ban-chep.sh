@@ -4,7 +4,7 @@
 # MỌI lệnh khách gửi về tệp này, lệnh khách nằm ở SSH_ORIGINAL_COMMAND. Không có biến ấy (gọi tay, xin shell) thì từ chối.
 # Lệnh con — danh sách đóng, khớp trọn `^(nhan [a-f0-9]{64}|lui|trang-thai)$` (ký tự ngoài [a-z0-9-] và một dấu cách thì từ chối):
 #   nhan <sha256>   stdin = dòng "ke <n>" + đúng n byte ke.json + tệp dump (có trần cỡ). Chặng: nhan → sha → kiem
-#                   (ban-chep-da-loc.mjs --kiem --khong-tu-dien của kho trên máy này) → nap (pg_restore vào <DB>_moi bằng docker exec,
+#                   (tệp kê theo danh sách khoá cho phép, rồi ban-chep-da-loc.mjs --kiem --khong-tu-dien --qua-docker của kho trên máy này) → nap (pg_restore vào <DB>_moi bằng docker exec,
 #                   rồi ANALYZE) → dem (= ke.json) → xoa-ban-cu (<DB>_cu tạm thành <DB>_bo) → doi-ten (<DB> → <DB>_cu) → giua (<DB>_moi → <DB>)
 #                   → don (xoá <DB>_bo, xoá tệp). Hỏng ở doi-ten/giua thì <DB>_bo về lại <DB>_cu: luôn đúng một bản cũ, `lui` vẫn chạy.
 #   lui             đổi bản cũ thành DB chạy (DB chạy thành bản cũ) — gọi lại lần nữa là đổi về.
@@ -222,7 +222,33 @@ if [ "$DUNG_SAU" = "nhan" ]; then
 fi
 
 bat_dau kiem
-KIEM="$(cd "$KHO" && "$NODE" scripts/ban-chep-da-loc.mjs --kiem "$DEN/$TEP" --khong-tu-dien 2>&1)"; M_KIEM=$?
+# Tệp kê sạch theo DANH SÁCH CHO PHÉP (GS 26/11 — máy nhận không có từ điển tên nguồn): khoá cấp một trong danh sách đóng; khoá con
+# theo bảng phải là tên bảng ĐÃ ĐỔI của bản chép (BANG_CO_DONG của kho). Lệch → đỏ chặng kiem; thông điệp chỉ nêu vị trí, không in khoá.
+KE_SACH="$(cd "$KHO" && "$NODE" --input-type=module -e '
+const [tepKe, mod] = process.argv.slice(1);
+const { BANG_CO_DONG } = await import(mod);
+const { readFileSync } = await import("node:fs");
+const k = JSON.parse(readFileSync(tepKe, "utf8"));
+const CAP1 = new Set(["ten_dich", "tep", "sha256", "co_byte", "sha_ma", "luc_snapshot", "so_dong", "extension", "view_thanh_bang",
+  "view_dung_lai", "ham_mat_khi_doi_view", "khoa_ngoai_bo", "chi_muc_dung_lai", "chi_muc_bo", "cot_loai_ve_null", "o_da_che", "ham_bo",
+  "thoi_gian_pha_s", "thoi_gian_s"]);
+const bang = new Set(BANG_CO_DONG);
+const loi = [];
+Object.keys(k).forEach((x, i) => { if (!CAP1.has(x)) loi.push(`khoá cấp một thứ ${i + 1} ngoài danh sách cho phép`); });
+for (const muc of ["so_dong", "cot_loai_ve_null", "chi_muc_dung_lai"]) {
+  Object.keys(k[muc] ?? {}).forEach((t, i) => { if (!bang.has(t)) loi.push(`${muc}: khoá thứ ${i + 1} không phải tên bảng (đã đổi) của bản chép`); });
+}
+Object.keys(k.o_da_che ?? {}).forEach((x, i) => {
+  const [t, c, ...du] = x.split(".");
+  if (!bang.has(t) || !/^[a-z0-9_]+$/.test(c ?? "") || du.length) loi.push(`o_da_che: khoá thứ ${i + 1} không phải <bảng của bản chép>.<cột>`);
+});
+if (loi.length) { console.log(loi.join("; ")); process.exit(1); }
+console.log(`tệp kê sạch: ${Object.keys(k).length} khoá cấp một trong danh sách cho phép, ${Object.keys(k.so_dong ?? {}).length} bảng của bản chép`);
+' "$DEN/ke.json" "$KHO/scripts/ban-chep-da-loc.mjs" 2>&1)"; M_KE=$?
+ra "  kiem: $(printf '%s' "$KE_SACH" | head -c 600)"
+[ "$M_KE" -eq 0 ] || do_chang "tệp kê ngoài danh sách khoá cho phép"
+# --kiem đi qua docker exec của đúng container lượt (không qua cổng 5433); không nối được thì mã 3, không bao giờ coi là xanh.
+KIEM="$(cd "$KHO" && ONEHUB_DB_CONTAINER="$CONTAINER" "$NODE" scripts/ban-chep-da-loc.mjs --kiem "$DEN/$TEP" --khong-tu-dien --qua-docker 2>&1)"; M_KIEM=$?
 printf '%s\n' "$KIEM" | sed 's/^/  kiem: /'
 [ "$M_KIEM" -eq 0 ] || do_chang "ban-chep-da-loc --kiem --khong-tu-dien đỏ (mã $M_KIEM)"
 xong
