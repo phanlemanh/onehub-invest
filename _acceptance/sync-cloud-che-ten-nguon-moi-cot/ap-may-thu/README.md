@@ -46,42 +46,48 @@ trỏ cổng chết `127.0.0.1:1`. Lượt khô không đọc tệp khoá và kh
 
 ## 3. Sao lưu trước (chỉ đọc, chạy TRƯỚC khi gộp)
 
-Cloud là bản sao của máy thu: dữ liệu để lùi được dựng lại từ máy thu (mục 4). Vì vậy bản sao lưu chỉ là dấu vân tay từng bảng:
-số dòng và băm, KHÔNG lưu giá trị (3.743 ô ấy mang tầng A, không được ghi ra đĩa hay vào hồ sơ). Lệnh này chạy từ checkout chính,
-chỉ gửi SELECT trong giao dịch chỉ đọc:
+22 bảng FILL trên cloud là **bản chiếu** của DB máy thu: mỗi lượt sync nạp vào `sync_stage`, rồi tráo trọn từng bảng trong một giao
+dịch. **Bản sao lưu thật là DB máy thu** (restic hằng ngày); hàng này không ghi gì vào DB máy thu. Ở bước này chỉ lấy **dấu vân tay**
+từng bảng cloud (số dòng và một dấu băm), KHÔNG lưu giá trị: 3.743 ô kia mang tầng A, không được ra đĩa hay vào hồ sơ. Dấu trước và
+sau áp chỉ để chứng một điều: ngoài 8 bảng.cột bị che, không gì khác đổi (mục 5). Lệnh chạy từ checkout chính, chỉ gửi SELECT trong
+giao dịch chỉ đọc, tuần tự một lời một lúc. Trước mỗi lời, lệnh soát `pipeline/logs/cloud-sync.log`: lượt sync cuối phải đã có dòng
+kết thúc, không chạm pha stage của job. Chạm trần thời gian câu thì lệnh chia bảng theo dải băm khoá chính, mỗi dải một dấu:
 
 ```bash
-cd ~/dev/onehub-invest && node --input-type=module -e '
-import { readFileSync } from "node:fs"; import { homedir } from "node:os";
-import { FILL, RENAME, mgmtExec } from "./pipeline/sync-cloud.mjs";
-const tk = process.env.SUPABASE_MGMT_TOKEN ?? readFileSync(homedir() + "/.oneinvest/cloud.env", "utf8").match(/SUPABASE_MGMT_TOKEN=(\S+)/)[1];
-const ex = mgmtExec(tk);
-console.log("giờ", new Date().toISOString());
-for (const t of FILL.map(RENAME)) {
-  const [r] = await ex(`BEGIN READ ONLY; SELECT count(*)::bigint AS n, md5(coalesce(string_agg(md5(x::text), \x27\x27 ORDER BY md5(x::text)), \x27\x27)) AS h FROM public."${t}" x; COMMIT;`);
-  console.log(t, r?.n, r?.h);
-}
-const [s] = await ex("BEGIN READ ONLY; SELECT max(swapped_at)::text AS t FROM sync_stage.swaps; COMMIT;");
-console.log("lần tráo cuối", s?.t);' | tee _acceptance/sync-cloud-che-ten-nguon-moi-cot/ap-may-thu/sao-luu-truoc.txt
+cd ~/dev/onehub-invest/pipeline && node ../_acceptance/sync-cloud-che-ten-nguon-moi-cot/ap-may-thu/sao-luu.mjs | tee ../_acceptance/sync-cloud-che-ten-nguon-moi-cot/ap-may-thu/sao-luu-truoc.txt
 ```
+
+Câu đo mỗi bảng (`sao-luu.mjs`, thư mục này):
+`SELECT count(*), md5(string_agg(md5(x::text), '' ORDER BY md5(x::text))) FROM public."<bảng>" x`, kèm `max(swapped_at)` của
+`sync_stage.swaps`.
+
+**Số thử (25/11, cloud thật, chỉ đọc):** 24 lời gọi tuần tự (1 câu khoá chính, 22 bảng, 1 câu `sync_stage.swaps`). Lệnh khởi động
+12:46:28Z, gặp lượt sync đang chạy (phút 18,9 → 21,5) nên chờ 6 lần × 30 s, tới lúc lượt ấy có dòng `sync xong 12:49:18Z` mới gọi.
+Tổng 212,2 s, trong đó các lời gọi chỉ khoảng 32 s. Mỗi bảng 0,7–3,8 s (`properties` 120.371 dòng 3,8 s, `nights` 346.750 dòng 2,6 s,
+`sale_offers` 148.753 dòng 2,6 s). Không chạm trần thời gian câu (`SET LOCAL statement_timeout = '110s'`), nên không phải chia dải.
+`lần tráo cuối` = 12:47:33Z, đúng lượt vừa xong. Số dòng và băm của lần thử không lưu vào hồ sơ (chúng là dấu của giờ thử, không phải
+của giờ gộp); lần chạy thật ở bước 1 của mục 1 sẽ ghi `sao-luu-truoc.txt`.
 
 Thêm số đo cloud trước áp: `node scripts/do-ten-nguon-cloud.mjs > …/ap-may-thu/do-truoc-ap.txt` (in số, không in giá trị; mã 1 là
 đúng vì cloud còn 3.743 ô).
 
 ## 4. Cách lùi
 
+Cloud là bản chiếu của máy thu, nên lùi = **revert mã + một lượt sync**:
+
 1. Mở PR `git revert <sha gộp>` (main có branch protection nên không đẩy thẳng), rồi `gh pr merge`, rồi
    `git -C ~/dev/onehub-invest pull --ff-only origin main`.
-2. Lượt launchd kế tiếp chạy mã cũ và thay trọn các bảng FILL bằng bản đọc không che. Cloud về đúng trạng thái trước áp: tên nguồn
-   quay lại ở 8 bảng.cột, đó là chính nghĩa của việc lùi. So với `sao-luu-truoc.txt`: số dòng khớp số máy thu lúc ấy. Băm sẽ khác,
-   vì máy thu đã có dữ liệu mới giữa hai lượt.
-3. Không có DDL nào để lùi: hàng này không đổi lược đồ cloud hay máy thu.
+2. Lượt launchd kế tiếp chạy mã cũ, stage rồi tráo trọn 22 bảng từ DB máy thu, tức bản sao lưu thật. Cloud về đúng bản chiếu của mã
+   cũ: tên nguồn quay lại ở 8 bảng.cột, đó là chính nghĩa của việc lùi.
+3. Không có DDL nào để lùi, không ghi gì vào DB máy thu. Dấu băm ở mục 3 không dùng để khôi phục; chúng chỉ để chứng phạm vi đổi.
 
 ## 5. Lệnh kiểm sau (E7, trong 1 giờ sau giờ áp)
 
 1. `node scripts/do-ten-nguon-cloud.mjs`: mã 0, dòng `tổng` có ô cloud 0 và thô cloud 0 ở mọi bảng.cột. Dán đầu ra vào
    `do-sau-ap.txt`.
-2. Lần tráo mới: chạy lại lệnh mục 3 rồi lưu vào `sau-ap.txt`. `lần tráo cuối` phải lớn hơn giờ áp.
+2. Lần tráo mới: chạy lại lệnh mục 3 rồi lưu vào `sau-ap.txt`. `lần tráo cuối` phải lớn hơn giờ áp. Bảng ngoài 8 bảng.cột có thể
+   đổi dấu chỉ vì máy thu có dữ liệu mới giữa hai lượt. Bảng nào đổi số dòng hay dấu băm mà không giải thích được bằng dữ liệu mới
+   (so `cloud-sync.log` và đếm máy thu cùng lượt) thì dừng, báo GS.
 3. Số dòng đuổi kịp: với mỗi bảng FILL, số dòng cloud ở `sau-ap.txt` ≥ 99% số dòng máy thu cùng lượt (in ở dòng `  <bảng>: <số>`
    của lượt sync trong `cloud-sync.log`).
 4. Số thật đặt cạnh số chạy khô ở mục 2: tổng ô che của lượt áp, lấy từ dòng `WARN che tên nguồn`, phải ≈ 3743 (dữ liệu máy thu
@@ -89,6 +95,5 @@ Thêm số đo cloud trước áp: `node scripts/do-ten-nguon-cloud.mjs > …/ap
 
 ## Đã biết, ngoài hồ sơ
 
-- `pipeline/scripts/check-cloud-sync.mjs allow` (thước cũ của cloud-sync-atomic, executor `cloud_sync_allow`): ca «ten-nguon» cấy
-  tên vào `sale_offers.street_raw`, `properties.street`, `sellers.flags` và chờ lượt dừng ở pha scan. Mã mới che ô ấy rồi cho qua
-  (đúng AC-3), nên ca cũ sẽ báo fail. Tệp nằm ngoài phạm vi của hàng; cần sửa theo hàng riêng.
+- `pipeline/scripts/check-cloud-sync.mjs allow` (executor `cloud_sync_allow`) đã sửa theo GS 25/11, giữ hai chiều trên cùng dữ liệu
+  cấy: (a) có che → lượt qua scan, ô thành mã, lệnh đo trên cloud mô phỏng ra 0; (b) `che:false` → dừng scan, nêu bảng.cột.

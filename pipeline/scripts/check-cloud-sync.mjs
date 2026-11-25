@@ -1148,27 +1148,80 @@ async function caseAllow() {
     else fail(`S06 chuẩn hoá sai: ${cloud[0]?.seller_ref}`);
   } else fail("fixture không có dòng S06 có số");
 
-  // chiều đỏ: định danh nguồn lẫn trong giá trị (mỗi bảng người bán một ô) → dừng trước khi gửi
+  // HT26 (sync-cloud-che-ten-nguon-moi-cot): định danh nguồn lẫn trong giá trị — mỗi bảng người bán một ô, thêm một ô token ngắn.
+  // Hai chiều trên CÙNG dữ liệu cấy: (a) có che → lượt qua scan, ô cấy thành mã, đếm che ≥ số cấy, lệnh đo (lõi + đếm thô độc lập)
+  // trên cloud mô phỏng ra 0; (b) tắt che (cờ thử che:false) → bộ chặn dừng ở scan như ca cũ, nêu bảng.cột, 0 dòng staging.
   const C2 = buildCloudSim("allow_red");
   const reg = await q1(L, "SELECT code, real_name, source_ids FROM source_registry");
+  // Từ điển đọc đúng như sync đọc (hàm nạp chung, kèm cờ match_whole) — thước không chặt hơn hay lỏng hơn bộ che.
+  const { docSourceNameEntries } = await import(pathToFileURL(path.join(PIPE, "lib/source-name-entries.mjs")).href);
+  const lc = await client(L);
+  const entries = await docSourceNameEntries(lc).finally(() => lc.end());
+  const { findSourceNames } = await import(pathToFileURL(path.join(PIPE, "lib/mask-source-names.mjs")).href);
   const longTok = reg.flatMap((r) => r.source_ids ?? []).find((x) => x.length >= 4);
   const shortTok = reg.map((r) => r.real_name).find((x) => x && x.length < 4);
   const plants = [
-    ["sale_offers", "offer_id", "street_raw", "text", longTok],
-    ["properties", "id", "street", "text", longTok],
-    ["sellers", "phone_hash", "flags", "jsonb", longTok],
+    ["sale_offers", "offer_id", "street_raw", "text", longTok, 0],
+    ["properties", "id", "street", "text", longTok, 0],
+    ["sellers", "phone_hash", "flags", "jsonb", longTok, 0],
   ];
-  if (shortTok) plants.push(["properties", "id", "street", "text", shortTok]);
+  if (shortTok) plants.push(["properties", "id", "street", "text", shortTok, 1]);
   else note("source_registry local không có tên nguồn < 4 ký tự — bỏ ca token ngắn");
-  for (const [t, pk, col, kind, tok] of plants) {
-    const [row] = await q1(L, `SELECT ${pk}::text AS id, ${col}::text AS v FROM ${t} ORDER BY ${pk} LIMIT 1`);
+  const goc = [];
+  for (const [t, pk, col, kind, tok, k] of plants) {
+    const [row] = await q1(L, `SELECT ${pk}::text AS id, ${col}::text AS v FROM ${t} ORDER BY ${pk} OFFSET ${k} LIMIT 1`);
     const val = kind === "jsonb" ? `jsonb_build_object('ghi_chu', $1::text)` : `'ngõ ' || $1::text || ' 3'`;
     await q1(L, `UPDATE ${t} SET ${col} = ${val} WHERE ${pk}::text = $2`, [tok, row.id]);
-    const r = await expectFail(runSync(L, C2), "scan");
+    goc.push([t, pk, col, kind, row, tok.length < 4 ? "token ngắn" : "token dài"]);
+  }
+  // (a) có che
+  const wa = [];
+  let ra = null;
+  try {
+    await runSync(L, C2, { log: (m) => wa.push(m) });
+  } catch (e) {
+    ra = e;
+  }
+  if (!ra) pass(`che (a): ${plants.length} ô cấy — lượt qua pha scan, tráo xong`);
+  else fail(`che (a): lượt gãy [${ra.phase}] ${ra.message}`);
+  const dongChe = wa.find((m) => m.includes("che tên nguồn ")) ?? "";
+  for (const [t, pk, col, , row, label] of goc) {
+    const [cl] = await q1(C2, `SELECT ${col}::text AS v FROM ${t} WHERE ${pk}::text = $1`, [row.id]);
+    const v = cl?.v ?? "";
+    if (cl && !findSourceNames(v, entries).length && /S0\d/.test(v)) pass(`che (a) ${t}.${col} (${label}): ô cấy lên cloud dưới dạng mã S0x`);
+    else fail(`che (a) ${t}.${col} (${label}): ô cấy trên cloud ${cl ? "còn tên nguồn hoặc thiếu mã" : "vắng"}`);
+  }
+  for (const tc of [...new Set(goc.map(([t, , col]) => `${t}.${col}`))]) {
+    const cay = goc.filter(([t, , col]) => `${t}.${col}` === tc).length;
+    const n = Number(dongChe.match(new RegExp(`${tc.replace(".", "\\.")} (\\d+)`))?.[1] ?? 0);
+    if (n >= cay) pass(`che (a) đếm che ${tc}: ${n} ≥ ${cay} ô cấy`);
+    else fail(`che (a) đếm che ${tc}: ${n} < ${cay} ô cấy`);
+  }
+  const { doCloud } = await import(pathToFileURL(path.join(ROOT, "scripts/do-ten-nguon-cloud.mjs")).href);
+  // exec của lệnh đo trên cloud mô phỏng: kiểu thời gian giữ chuỗi như Management API trả (khoá keyset là chuỗi, không phải Date).
+  const execDo = async (sql) => {
+    const c = await client(C2, { types: sync.localTypes });
+    try {
+      const res = await c.query(sql);
+      const list = Array.isArray(res) ? res : [res];
+      return ([...list].reverse().find((r) => r.rows?.length) ?? list[list.length - 1])?.rows ?? [];
+    } finally {
+      await c.end().catch(() => {});
+    }
+  };
+  const sach = await doCloud({ exec: execDo, entries });
+  const tong = Object.values(sach.kq).reduce((a, r) => ({ cloud: a.cloud + r.cloud, tho: a.tho + r.thoCloud }), { cloud: 0, tho: 0 });
+  if (tong.cloud === 0 && tong.tho === 0) pass(`che (a) lệnh đo trên cloud mô phỏng: lõi 0, đếm thô độc lập 0 (${Object.keys(sach.kq).length} bảng.cột, ${sach.soCau} câu SELECT chỉ đọc)`);
+  else fail(`che (a) cloud mô phỏng còn tên nguồn: lõi ${tong.cloud}, thô ${tong.tho}`);
+  // (b) cùng dữ liệu cấy, tắt che: mỗi bảng một lượt (fill riêng bảng ấy) để thông điệp nêu đúng bảng.cột của ô cấy.
+  for (const t of [...new Set(goc.map(([x]) => x))]) {
+    const cols = goc.filter(([x]) => x === t).map(([, , col]) => `${t}.${col}`);
+    const r = await expectFail(runSync(L, C2, { sync: { che: false, fill: [t] } }), "scan");
     const st = await stagingCount(C2);
-    const label = tok.length < 4 ? "token ngắn" : "token dài";
-    if (r.ok && st === 0 && r.msg.includes(`${t}.${col}`)) pass(`ĐỎ-ĐÚNG ten-nguon (${label}) ở ${t}.${col}: dừng trước khi nạp, 0 dòng staging`);
-    else fail(`soát tên nguồn ${t}.${col} (${label}): ${r.msg}; staging ${st}`);
+    if (r.ok && st === 0 && cols.some((c) => r.msg.includes(c))) pass(`ĐỎ-ĐÚNG tắt che ở ${t}: dừng pha scan nêu ${cols[0]}, 0 dòng staging`);
+    else fail(`tắt che ở ${t}: ${r.msg}; staging ${st}`);
+  }
+  for (const [t, pk, col, kind, row] of goc.reverse()) {
     await q1(L, `UPDATE ${t} SET ${col} = ${kind === "jsonb" ? "$1::jsonb" : "$1"} WHERE ${pk}::text = $2`, [row.v, row.id]);
   }
   // fail-closed: source_registry rỗng → không soát được → dừng, không gửi
