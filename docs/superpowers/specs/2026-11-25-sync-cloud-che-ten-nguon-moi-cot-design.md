@@ -14,13 +14,16 @@ dữ liệu `pipeline/sync-cloud.mjs` đẩy lên cloud.
 
 ## 2. Bảng phủ ca (S1, đo chỉ đọc 25/11: kéo cột về máy, đếm bằng findSourceNames; 217 lời gọi, ~240 MB, không ghi đĩa, không gửi mẫu)
 
-Quét rộng 108 cột text/jsonb/text[] của 22 bảng FILL; chỉ 9 cột dưới có trúng.
+Quét rộng 108 cột text/jsonb/text[] của 22 bảng FILL; chỉ 9 cột dưới có trúng. **Sửa 26/11 (phát hiện ở HT29):** 3.743 ô trên cloud
+tách thành **3.242 ô rò thật** + **501 hằng máy** — `areas.meta` mang giá trị máy như `osm-phuong` (hằng `NGUON_PHUONG`, 500 dòng, trúng
+S04 vì tên nguồn thật là «osm») và `airbnb-discovery` (1 dòng, trúng S01). Che các hằng này làm gãy bên đọc (phuongHopLe, reassign-areas,
+nap-dvhc). Cách xử (miễn khớp trọn, hay giữ che và sửa bên đọc) là câu của Mạnh, đang trình.
 
 | bảng.cột (tên cloud) | ô trên cloud | ô ở máy thu | ai đọc phía sau | xử lý |
 |---|---|---|---|---|
 | ref_calib_listings.metrics | 1575 (S01) | 1575 | không ai đọc | che (khoá/giá trị json → mã) |
 | ref_calib_listings.listing_url | 1575 (S01) | 1575 | data-api `/v1/listings/:id` trả `listingUrl` (listings.ts:88,126) | URL đứng riêng → NULL; bên đọc mất link (việc của M5 với data-api) |
-| areas.meta | 501 (S04 500, S01 1) | 501 | data-api markets.ts:51 đọc, không trả | che khoá/giá trị → mã |
+| areas.meta | 501 (S04 500, S01 1) — HẰNG MÁY, không phải rò | 501 | data-api markets.ts:51 đọc, không trả; mã so NGUON_PHUONG (phuongHopLe, reassign-areas, nap-dvhc) | chờ Mạnh: miễn khớp trọn (a) hay che + sửa bên đọc (c) |
 | dq_check_results.detail | 75 (S02) | 75 | /ops/quality: dq-checks.ts che bằng maskDetail; do-hang-ngay.ts:26,43 đọc KHÔNG che; extraction-quality chỉ rút số | che → mã; do-hang-ngay.ts che như dq-checks |
 | listings.photo_urls | 10 (S01) | 10 | thẻ Invest queries.ts:242 (ảnh đầu); api/v1/listings; data-api photos.urls | bỏ phần tử URL trúng; thẻ Invest lấy ảnh kế |
 | area_sources.meta | 3 (S02) | 3 | không ai đọc | che |
@@ -44,5 +47,5 @@ luật 5; đổi tên cột là DDL cloud + migration + mọi bên đọc → n�
 
 ## 4. Áp
 
-Gộp mã thì lượt sync kế tiếp (thay trọn bảng FILL) tự thay 3.743 ô trên cloud bằng bản đã che — đó là GHI CLOUD, cần lời riêng của Mạnh
+Gộp mã thì lượt sync kế tiếp (thay trọn bảng FILL) tự thay 3.242 ô rò thật trên cloud (cộng 501 hằng máy tuỳ lời Mạnh) bằng bản đã che — đó là GHI CLOUD, cần lời riêng của Mạnh
 ở bước áp (hồ sơ áp: lệnh, số chạy thử ở máy thu, sao lưu trước, cách lùi, lệnh kiểm sau = `do-ten-nguon-cloud.mjs` ra 0).
