@@ -373,6 +373,17 @@ executors:
     ht12_tran: "node --test --test-concurrency=1 scripts/zalo-import-tran.test.mjs"   # doc-gop-dong-ho-rieng-trong-luot-dem E6, E7b, E8a — ma trận AC-7 hai đồng hồ + ca quan hệ HT13
     ht12_luoi: "node --test --test-concurrency=1 scripts/zalo-import-tran-zcode.test.mjs scripts/zalo-import-job.test.mjs scripts/zalo-import-job-nhe.test.mjs scripts/zalo-import-job-lan.test.mjs scripts/enrich-buoc-job.test.mjs scripts/job-step-thoi-luong.test.mjs scripts/job-exit.test.mjs"   # doc-gop-dong-ho-rieng-trong-luot-dem E8b — lưới hồi quy tệp bọc + JST-AC-8
   script:
+    bcm_cong: "node --test --test-name-pattern='^BCM-1:' scripts/day-ban-chep.test.mjs"   # day-ban-chep-sang-may-phat-trien E1 cổng rời máy ghim sha256
+    bcm_cay: "bash db/db-thu.sh oneinvest_suite_bcm --chay node --test --test-concurrency=1 --test-name-pattern='^BCM-2:' scripts/day-ban-chep.itest.mjs"   # day-ban-chep-sang-may-phat-trien E2 cấy tầng A thì đỏ trước khi gửi
+    bcm_khoa: "node scripts/day-ban-chep-kiem-m5.mjs khoa"   # day-ban-chep-sang-may-phat-trien E3 khoá ép lệnh trên M5 thật qua cầu; ngoài CI
+    bcm_mot_chieu: "node scripts/day-ban-chep-kiem-m5.mjs mot-chieu"   # day-ban-chep-sang-may-phat-trien E4 không khoá ngược M5 → Mac mini; ngoài CI
+    bcm_tep: "node --test --test-name-pattern='^BCM-5:' scripts/day-ban-chep.test.mjs"   # day-ban-chep-sang-may-phat-trien E5 chỉ hai tệp rời máy
+    bcm_nhan: "bash db/db-thu.sh oneinvest_suite_bcm --chay node --test --test-concurrency=1 --test-name-pattern='^BCM-6:' scripts/day-ban-chep.itest.mjs"   # day-ban-chep-sang-may-phat-trien E6 bước nhận nạp nguyên tử trên DB thử
+    bcm_lui: "bash db/db-thu.sh oneinvest_suite_bcm --chay node --test --test-concurrency=1 --test-name-pattern='^BCM-7:' scripts/day-ban-chep.itest.mjs"   # day-ban-chep-sang-may-phat-trien E7 lỗi giữa chừng giữ DB chạy, lui
+    bcm_lich: "node scripts/day-ban-chep-kiem-m5.mjs lich"   # day-ban-chep-sang-may-phat-trien E8 không plist/cron; ngoài CI
+    bcm_cau: "node --test --test-name-pattern='^BCM-9:' scripts/day-ban-chep.test.mjs"   # day-ban-chep-sang-may-phat-trien E9 địa chỉ cầu cố định, không rơi mạng khác
+    bcm_that: "node scripts/day-ban-chep-kiem-m5.mjs that"   # day-ban-chep-sang-may-phat-trien E10 lượt đẩy thật + Invest, data-api trên M5; ngoài CI
+    bcm_tai_lieu: "node scripts/day-ban-chep-kiem-m5.mjs tai-lieu"   # day-ban-chep-sang-may-phat-trien E11 tài liệu hai máy, kho không lộ riêng máy
     bcl_tap: "bash db/db-thu.sh oneinvest_suite_bcl --chay node --test --test-concurrency=1 --test-name-pattern='^BCL-1:' scripts/ban-chep-da-loc.itest.mjs"   # ban-chep-da-loc-cho-may-phat-trien E1 — tập bảng = FILL sync-cloud, còn lại 0 dòng, DB của riêng lượt
     bcl_cot: "node --test scripts/ban-chep-da-loc.test.mjs"   # ban-chep-da-loc-cho-may-phat-trien E2 — cột ba bảng người bán = selectList, thuần
     bcl_soat: "bash db/db-thu.sh oneinvest_suite_bcl --chay node --test --test-concurrency=1 --test-name-pattern='^BCL-3:' scripts/ban-chep-da-loc.itest.mjs"   # ban-chep-da-loc-cho-may-phat-trien E3 — cấy tên nguồn thật vào ô text/json thì đỏ
