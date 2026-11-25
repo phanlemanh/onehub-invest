@@ -510,22 +510,39 @@ Luật đọc:
    PHẦN ảnh của dự án: bên đọc **cộng dồn theo item**, không lấy bản mới nhất theo `sourceId`. Đuôi tệp theo kiểu nội
    dung. Link trong `payload.media` là link ký số hiệu lực 7 ngày kể từ ngày ký (`X-Amz-Date`): bên đọc KHÔNG dùng link
    để tải lại, chỉ dùng tệp đã lưu. Pha này không gọi API của nguồn, không cần phiên.
+   - **Mỗi phần chốt độc lập**: việc tải của mọi phần trong một dự án đổ vào một hàng đợi chung (ảnh gốc to trên đường
+     chậm không giữ phần khác), phần nào đủ kết quả chốt ngay, KHÔNG theo thứ tự. Dừng giữa chừng thì phần đã tải của
+     mọi lô dở vẫn được chốt, nên hai item của cùng dự án có thể có khoảng vị trí KHÁC nhau, kể cả chồng nhau (ví dụ
+     `…-4-4` rồi `…-5-6`): bên đọc vẫn cộng dồn theo item.
    - **Hai lượt chạy riêng**, phân biệt bằng `meta.nhomMayChu`: `nguon` — ảnh trên máy chủ lưu trữ của chính nguồn;
      `ngoai` — ảnh chèn từ máy chủ khác (Mạnh chốt 25/11 «Lấy cả ảnh ở máy chủ ngoài»; đo: 82.127 URL trên 4.101 máy
-     chủ, 68.877 trên một máy chủ). Lượt máy chủ ngoài mỗi máy chủ tối đa hai lời cùng lúc; trước khi kết nối (kể cả
-     mỗi bước chuyển hướng) giải tên máy chủ, tên trỏ vào dải địa chỉ nội bộ thì không tải (`cam-may-chu`).
+     chủ, 68.877 trên một máy chủ). Lượt máy chủ ngoài mỗi máy chủ tối đa hai lời cùng lúc. Trước khi kết nối tới một
+     máy chủ ngoài (kể cả mỗi bước chuyển hướng) bộ thu giải tên máy chủ; tên trỏ vào dải địa chỉ nội bộ thì KHÔNG kết
+     nối — là lỗi tạm (`chiTiet: dns-noi-bo`, chưa từng gửi lời nào; quá ba lượt thì ghi `qua-so-lan-thu`).
    - **Mã lỗi vĩnh viễn** trong `mediaFiles[].error` — hỏi lại cũng vậy, bộ thu không tải lại: `het-han` (link quá hạn
      lúc thu; `chiTiet: du-doan-het-han` = quá hạn theo chính tham số `X-Amz-Date`/`X-Amz-Expires` của link, bộ thu
-     không gửi lời nào — công thức khớp 3.610/3.610 kết quả thật) · `sai-chu-ky` · `khong-con` (404, 410) · `http-4xx`
-     (4xx khác) · `qua-co` (trên 60 MB, kể cả theo `content-length`) · `rong` (0 byte) · `cam-may-chu` (địa chỉ nội bộ
-     hay giao thức lạ — không bao giờ gửi lời) · `chuyen-huong-cam` · `qua-nhieu-chuyen-huong` (trên 5 bước) ·
-     `may-chu-khong-ton-tai` (không phân giải được tên) · `may-chu-khong-tra-loi` (từ chối kết nối, mạng không tới) ·
-     `chung-chi` · `chan-o-may-chu` (chỉ lượt máy chủ ngoài: máy chủ trả 403, 429 hay trang HTML thay ảnh — bỏ máy
-     chủ đó, không lách) · `qua-so-lan-thu` (lỗi tạm quá ba lượt).
-   - **Lỗi tạm** (`chiTiet` là `treo` = không nhận được byte nào quá 30 giây, `timeout` = quá trần tổng 10 phút, lỗi
-     mạng, 5xx): mục nằm trong `mediaFiles` với `error` ngoài bộ mã trên và chưa có tệp — lượt sau thử lại; bên đọc
-     coi là chưa có ảnh.
-   - **Máy chủ của chính nguồn trả 403** (không phải hết hạn), 429 hay trang HTML là BỊ CHẶN: dừng cả lượt, không lách.
+     không gửi lời nào — xem «Hạn của link») · `sai-chu-ky` · `khong-con` (404, 410) · `http-4xx` (4xx khác) · `qua-co`
+     (trên 60 MB, kể cả theo `content-length`) · `rong` (0 byte) · `cam-may-chu` (địa chỉ nội bộ hay giao thức lạ viết
+     thẳng trong URL — không bao giờ gửi lời) · `chuyen-huong-cam` (chuyển hướng tới địa chỉ như trên, hoặc tới tên trỏ
+     vào dải nội bộ) · `qua-nhieu-chuyen-huong` (trên 5 bước) · `may-chu-khong-ton-tai` (không phân giải được tên) ·
+     `may-chu-khong-tra-loi` (từ chối kết nối, mạng không tới) · `chung-chi` · `chan-o-may-chu` (máy chủ ngoài trả
+     403, 429 hay trang HTML thay ảnh — bỏ máy chủ đó, không lách) · `qua-so-lan-thu` (lỗi tạm quá ba lượt).
+   - **Lỗi tạm** — mục nằm trong `mediaFiles` với `error` ngoài bộ mã trên và chưa có tệp, `chiTiet` cho biết vì sao:
+     `treo` (không nhận được byte nào quá 30 giây), `timeout` (quá trần tổng 30 phút của một tệp), `dns-noi-bo`, `ngung`
+     (bị bỏ vì nguồn vừa chặn), tên lỗi mạng (5xx, mất kết nối). Lượt sau thử lại; bên đọc coi là chưa có ảnh.
+   - **Bên trả lời ở bước CUỐI mới chịu trách nhiệm.** Máy chủ của chính nguồn trả 403 (không phải hết hạn), 429 hay
+     trang HTML là BỊ CHẶN: dừng cả lượt ngay (mọi tệp đang dở bị bỏ, không ghi nhận), không lách. Nguồn chuyển hướng
+     sang một máy chủ ngoài và máy chủ ngoài đó trả 403 thì CHỈ máy chủ ngoài bị nhớ và bỏ qua — không tính là nguồn
+     chặn, lượt vẫn đi tiếp.
+   - **Giới hạn còn biết của lớp kiểm địa chỉ** (báo điều phối 25/11): tên máy chủ đổi bản ghi giữa lúc giải tên và lúc
+     kết nối vẫn qua được lớp kiểm này. Đóng hẳn cần ghim địa chỉ ở tầng kết nối; chưa làm.
+   - **Hạn của link** (đo 09:00 ngày 25/11, 286.809 URL máy chủ nguồn): 2.816 link đã hết hạn, 2.376 hết hạn trong
+     ngày 25/11, 5.996 trong ngày 26/11, 269.209 vào ngày 01/12. Ảnh có link đã hết hạn lấy lại được sau khi làm mới
+     chi tiết dự án (link mới là URL khác ⇒ là tệp khác). 1.968 URL máy chủ nguồn không ký số (ảnh chung của trang).
+     Bộ thu chỉ ghi `du-doan-het-han` khi đã có bằng chứng đồng hồ máy thu đúng TRONG LỢT đó: hỏi thử đúng MỘT link
+     đoán đã hết hạn — máy chủ bảo đã hết hạn thì các link đoán khác không bị hỏi; máy chủ vẫn trả ảnh (đồng hồ máy thu
+     lệch) thì lượt đó không đoán, hỏi hết, không link nào bị bỏ oan. Nhật ký chạy ghi `anh-dong-ho` (một lần mỗi lượt)
+     và `soDuDoanHetHan` trong mỗi dòng `anh-lot`.
    - **Hạn của link** (đo 09:00 ngày 25/11, 286.809 URL máy chủ nguồn): 2.816 link đã hết hạn, 2.376 hết hạn trong
      ngày 25/11, 5.996 trong ngày 26/11, 269.209 vào ngày 01/12. Ảnh có link đã hết hạn lấy lại được sau khi làm mới
      chi tiết dự án (link mới là URL khác ⇒ là tệp khác). 1.968 URL máy chủ nguồn không ký số (ảnh chung của trang).
