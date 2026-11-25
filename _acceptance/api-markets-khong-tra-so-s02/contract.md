@@ -5,12 +5,10 @@ slug: api-markets-khong-tra-so-s02
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api, cli]
-status: draft
+status: approved
 design_doc: docs/superpowers/specs/2026-11-25-api-markets-khong-tra-so-s02-design.md
-veto_state:
-veto_opened_at:
-approved_by:
-approved_at:
+veto_state: mo
+veto_opened_at: 2026-11-25T02:43:09Z
 ---
 
 # Acceptance Contract: api-markets-khong-tra-so-s02
@@ -89,12 +87,13 @@ mọi dòng có đủ `id`, `name`, `countryCode`, `listingCount`, và số dòn
 Thiếu một trong ba điều đầu thì phép đo không hợp lệ, không ghi «đạt».
 Bước kiểm sau gộp là chính lệnh này; giám sát đo.
 
-## Hỏi ở Cổng Phạm vi
-
-- Hỏi-1: khoá `marketScore` — bỏ hẳn (khuyến nghị) hay giữ khoá luôn `null`? Xem dòng sổ «chi-nguoi» về khoá này.
-
 ## Out of scope
 
 - `/ops/quality`, `app/src/lib/queries.ts` và mọi màn Ops dùng điểm S02 (đúng chỗ theo luật 5).
 - `pipeline/sync-cloud.mjs`, DDL, ghi cloud.
 - `data-api/**` (M5 giữ HT19/HT20).
+
+## Notes
+
+- Đổi khuôn phản hồi: bỏ `marketScore` khỏi `/api/v1/markets` (GS phán 25/11, Hỏi-1 cũ; không UI nào gọi route, chưa có
+  khách API ngoài được công bố hợp đồng).

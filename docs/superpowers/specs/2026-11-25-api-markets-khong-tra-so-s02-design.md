@@ -8,8 +8,8 @@ Không thành phần UI nào gọi route này. Bộ soát `scripts/check-api-sur
 
 ## Thiết kế
 1. **Route** `app/src/app/api/v1/markets/route.ts`: bỏ JOIN bảng điểm S02 và `area_sources`; phản hồi mỗi dòng còn
-   `id, name, countryCode, listingCount` — bỏ hẳn khoá `marketScore` theo khuyến nghị (Hỏi-1 ở Cổng
-   Phạm vi: bỏ khoá hay giữ khoá luôn null). Xếp `listing_count DESC, a.name`. Tham số `country`, `limit`, khuôn `meta` giữ nguyên.
+   `id, name, countryCode, listingCount` — bỏ hẳn khoá `marketScore` (GS phán 25/11; Hỏi-1 cũ ở Cổng
+   Phạm vi đã đóng: bỏ khoá). Xếp `listing_count DESC, a.name`. Tham số `country`, `limit`, khuôn `meta` giữ nguyên.
 2. **Sổ** `api-surface.ts`: `note` của `v1/markets` thành «danh sách thị trường và số tin; không mang số S02».
 3. **Rào** `check-api-surface.mjs`: thông điệp mới `MSG.publicS02` — route `mode: "public"` mà bao đóng import (route + mọi
    module `app/src/lib` nó kéo theo, đã bỏ chú thích) có tên bảng `airdna_*` hoặc `ref_calib_*` thì đỏ. Chỉ bỏ qua đúng
