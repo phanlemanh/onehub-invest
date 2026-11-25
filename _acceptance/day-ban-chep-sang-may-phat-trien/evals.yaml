@@ -19,7 +19,7 @@ evals:
     criterion: AC-3
     executor: script
     cmd: config:executors.script.bcm_khoa
-    expected: "exit 0 trên M5 thật qua cầu: dùng khoá đẩy chạy `ssh … sh`, `ssh … ls /`, `ssh -L …` → cả ba bị từ chối (không có shell, lệnh khác bị ép về bước nhận và bị bước nhận từ chối vì sai lệnh con, chuyển cổng bị chặn); `ssh … trang-thai` qua khoá đẩy trả trạng thái; dòng authorized_keys của khoá có restrict và command=. Chiều đỏ: dòng khoá thiếu restrict (bản sao tạm trong ca) thì ca xin shell nêu «restrict»"
+    expected: "exit 0 trên M5 thật qua cầu: dùng khoá đẩy chạy `ssh … sh`, `ssh … ls /`, `ssh -L …`, `scp` và `sftp` tới /tmp/x, lệnh con `trang-thai; id` và `nhan $(id)` → tất cả bị từ chối, /tmp/x không được tạo, đầu ra không chứa uid= (không có shell, lệnh khác bị ép về bước nhận và bị bước nhận từ chối vì sai lệnh con, chuyển cổng bị chặn); `ssh … trang-thai` qua khoá đẩy trả trạng thái; dòng authorized_keys của khoá có restrict và command=. Chiều đỏ: dòng khoá thiếu restrict (bản sao tạm trong ca) thì ca xin shell nêu «restrict»"
     paths: [scripts/nhan-ban-chep.sh, scripts/day-ban-chep-kiem-m5.mjs]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4
@@ -40,14 +40,14 @@ evals:
     criterion: AC-6
     executor: script
     cmd: config:executors.script.bcm_nhan
-    expected: "exit 0; bước nhận chạy trên Mac mini với DB thử (cùng mã chạy trên M5): sha khớp, --kiem --khong-tu-dien xanh, pg_restore vào DB mới, đếm = ke.json, đổi tên, đúng một bản cũ, tệp dump đã xoá"
+    expected: "exit 0; bước nhận chạy trên Mac mini với container và DB đọc từ biến của lượt (DB oneinvest_suite_bcm_*, cùng mã chạy trên M5): sha khớp, --kiem --khong-tu-dien xanh, pg_restore vào DB mới, đếm = ke.json, đổi tên, đúng một bản cũ, tệp dump đã xoá"
     paths: [scripts/nhan-ban-chep.sh, scripts/day-ban-chep.itest.mjs]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E7
     criterion: AC-7
     executor: script
     cmd: config:executors.script.bcm_lui
-    expected: "exit 0; ba ca đỏ (sha lệch, ke.json lệch một dòng, lỗi giữa chừng cấy bằng biến môi trường thử) → DB chạy giữ nguyên (vân tay số dòng trước = sau), DB mới bị xoá, thông điệp nêu chặng; lui → bản cũ thành DB chạy"
+    expected: "exit 0; ma trận viết trước bảy chặng lỗi — sha, --kiem, pg_restore, đếm, xoá bản cũ, giữa hai lần đổi tên, đổi tên bị từ chối vì một phiên psql còn mở — mỗi ca: DB chạy đúng tên còn tồn tại, vân tay số dòng trước = sau, DB mới bị xoá, thông điệp ghim tên chặng; sau mỗi ca lui → bản cũ thành DB chạy"
     paths: [scripts/nhan-ban-chep.sh, scripts/day-ban-chep.itest.mjs]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E8
@@ -61,8 +61,15 @@ evals:
     criterion: AC-9
     executor: script
     cmd: config:executors.script.bcm_cau
-    expected: "exit 0: địa chỉ đích đọc từ ~/.config/onehub/hai-may.env, địa chỉ ấy nằm trên giao diện bridge0 (route get); ca đỏ với địa chỉ không thông (cấu hình tạm) → dừng nêu «cầu Thunderbolt», không thử địa chỉ khác; grep kho không có địa chỉ 169.254 hay tên máy M5 trong scripts/"
+    expected: "exit 0: địa chỉ đích đọc từ ~/.config/onehub/hai-may.env, địa chỉ ấy nằm trên giao diện bridge0 (route get); ca đỏ với địa chỉ không thông (cấu hình tạm) → dừng nêu «cầu Thunderbolt», không thử địa chỉ khác; grep scripts/ không có địa chỉ cầu hay tên máy M5 (giá trị đọc từ cấu hình riêng máy)"
     paths: [scripts/day-ban-chep.mjs, scripts/day-ban-chep.test.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E12
+    criterion: AC-12
+    executor: script
+    cmd: config:executors.script.bcm_chan
+    expected: "exit 0; ca đỏ: chạy bước nhận trên Mac mini với vai máy thu và đích container one-invest-db + DB oneinvest → từ chối trước mọi lệnh đổi tên/xoá, thông điệp ghim «máy thu»; đối chứng: DB oneinvest_suite_bcm_* của lượt thì chạy; vân tay DB oneinvest (oid + số dòng từng bảng public) đo trước và sau cả lượt chấm bằng nhau"
+    paths: [scripts/nhan-ban-chep.sh, scripts/day-ban-chep.itest.mjs]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E10
     criterion: AC-10
@@ -76,6 +83,6 @@ evals:
     criterion: AC-11
     executor: script
     cmd: config:executors.script.bcm_tai_lieu
-    expected: "exit 0: ADR-0019 tồn tại và nêu năm rào + lối đã bỏ; AGENTS.md có mục «Hai máy» trỏ docs/ops/hai-may.md; runtime-map trỏ hai-may.md; ROADMAP §3 mục 64 nêu lệnh đẩy; git grep toàn kho không có tên máy M5, địa chỉ 169.254 của hai máy, đường khoá id_ed25519_m5 (đọc giá trị so từ cấu hình riêng máy, không viết cứng vào ca). Chiều đỏ: cấy tên máy vào một tệp tạm đã git add → ca nêu tệp"
+    expected: "exit 0: ADR-0019 tồn tại và nêu năm rào + lối đã bỏ; AGENTS.md có mục «Hai máy» trỏ docs/ops/hai-may.md; runtime-map trỏ hai-may.md; ROADMAP §3 mục 64 nêu lệnh đẩy; git grep toàn kho với danh sách loại trừ rỗng (in danh sách loại trừ ra output) không có tên máy M5, địa chỉ cầu của hai máy, tên tệp khoá dựng máy (đọc giá trị so từ cấu hình riêng máy, không viết cứng vào ca). Chiều đỏ: cấy tên máy vào một tệp tạm đã git add → ca nêu tệp"
     paths: [docs/adr/0019*, AGENTS.md, docs/ops/hai-may.md, docs/ops/runtime-map.md, docs/ROADMAP.md]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]

@@ -1,0 +1,39 @@
+{
+ "feature_plain": "Một lệnh trên máy thu tự chép dữ liệu đã lọc, soát, rồi đẩy sang M5 qua cáp Thunderbolt; M5 tự kiểm và nạp, hỏng thì giữ nguyên dữ liệu cũ.",
+ "will_do": [
+  {"id":"AC-1","p":"Sẽ chỉ gửi đúng tệp vừa qua bộ soát trên máy thu; tệp bị sửa sau khi soát thì dừng trước khi gửi."},
+  {"id":"AC-2","p":"Sẽ dừng ngay trên máy thu nếu bản chép có tên nguồn thật; M5 không nhận được gì."},
+  {"id":"AC-5","p":"Sẽ chỉ gửi đúng hai tệp; danh sách tên nguồn, tệp mật khẩu, dữ liệu thô bị chặn trước khi gửi."},
+  {"id":"AC-6","p":"Sẽ để M5 kiểm lại, nạp vào chỗ mới, đếm khớp rồi mới thay dữ liệu đang dùng; giữ một bản cũ."},
+  {"id":"AC-7","p":"Sẽ giữ nguyên dữ liệu đang dùng trên M5 khi hỏng ở bất kỳ bước nào, và có lệnh lùi về bản cũ."},
+  {"id":"AC-10","p":"Sẽ chạy lượt đẩy thật đầu tiên và kiểm trang Invest, API trên M5 có dữ liệu."},
+  {"id":"AC-11","p":"Sẽ ghi cách vận hành hai máy vào kho để phiên sau không hỏi lại, không lộ tên máy hay địa chỉ."}
+ ],
+ "wont_do": [
+  {"id":"AC-3","p":"Chặn khoá đẩy làm bất cứ việc gì ngoài bước nhận: không mở dòng lệnh, không chép tệp tuỳ ý, không mở đường hầm."},
+  {"id":"AC-4","p":"Chặn chiều ngược: M5 không có khoá nào vào máy thu."},
+  {"id":"AC-12","p":"Chặn bước nhận đụng vào DB của máy thu khi chạy thử; DB máy thu phải y nguyên sau lượt chấm."},
+  {"id":"AC-8","p":"Sẽ KHÔNG chạy tự động; chỉ chạy khi có người hay phiên gọi lệnh."},
+  {"id":"AC-9","p":"Sẽ KHÔNG đi đường khác khi rút cáp Thunderbolt; dừng và báo."},
+  {"id":"OOS-1","p":"KHÔNG chạy hằng đêm trong hàng này; việc đó cần lời riêng của anh."},
+  {"id":"OOS-2","p":"KHÔNG thêm mã hoá hay VPN ngoài SSH có sẵn."},
+  {"id":"OOS-3","p":"KHÔNG có dữ liệu nào đi từ M5 về máy thu."},
+  {"id":"OOS-4","p":"KHÔNG sửa bản chép hay bộ soát của HT18; chỉ dùng lại."}
+ ],
+ "coverage_plain": [
+  {"i":0,"p":"Cổng rời máy nằm ở máy thu: soát và ghim dấu tệp (AC-1), cấy tên nguồn thì dừng (AC-2), tệp cấm bị chặn (AC-5)."},
+  {"i":1,"p":"Một chiều: khoá đẩy chỉ chạy bước nhận (AC-3), không khoá ngược (AC-4)."},
+  {"i":2,"p":"Nhận và lùi trên M5 (AC-6, AC-7), không bao giờ đụng DB máy thu (AC-12)."},
+  {"i":3,"p":"Chỉ chạy khi gọi (AC-8)."},
+  {"i":4,"p":"Chỉ đi qua cáp Thunderbolt với địa chỉ cố định (AC-9)."},
+  {"i":5,"p":"Lượt thật và trang trên M5 có dữ liệu (AC-10)."},
+  {"i":6,"p":"Tài liệu hai máy trong kho, không lộ chi tiết riêng máy (AC-11)."}
+ ],
+ "gap_probe_plain": [
+  {"i":0,"p":"Căn cứ của năm rào trỏ nhầm câu luật chung. Đã ghi lại nguyên văn năm rào của GS và gắn từng rào vào tiêu chí."},
+  {"i":1,"p":"Lượt chạy thử bước nhận trên máy thu có thể đổi tên hoặc xoá DB thật. Đã thêm tiêu chí AC-12 chặn việc này, kèm đối chiếu DB trước và sau."},
+  {"i":2,"p":"Chép tệp kiểu thường hoặc dùng nhầm khoá toàn quyền sẽ phá rào một chiều. Đã chốt một cách truyền duy nhất và thêm ca thử."},
+  {"i":3,"p":"Phép thử lỗi chưa phủ chỗ nguy nhất (giữa hai lần đổi tên). Đã tách thành bảy chặng, mỗi chặng một ca."},
+  {"i":4,"p":"Tài liệu đang chứa đúng địa chỉ và tên khoá mà phép kiểm cấm. Đã thay bằng chỗ giữ."}
+ ]
+}

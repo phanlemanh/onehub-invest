@@ -382,6 +382,7 @@ executors:
     bcm_lui: "bash db/db-thu.sh oneinvest_suite_bcm --chay node --test --test-concurrency=1 --test-name-pattern='^BCM-7:' scripts/day-ban-chep.itest.mjs"   # day-ban-chep-sang-may-phat-trien E7 lỗi giữa chừng giữ DB chạy, lui
     bcm_lich: "node scripts/day-ban-chep-kiem-m5.mjs lich"   # day-ban-chep-sang-may-phat-trien E8 không plist/cron; ngoài CI
     bcm_cau: "node --test --test-name-pattern='^BCM-9:' scripts/day-ban-chep.test.mjs"   # day-ban-chep-sang-may-phat-trien E9 địa chỉ cầu cố định, không rơi mạng khác
+    bcm_chan: "bash db/db-thu.sh oneinvest_suite_bcm --chay node --test --test-concurrency=1 --test-name-pattern='^BCM-12:' scripts/day-ban-chep.itest.mjs"   # day-ban-chep-sang-may-phat-trien E12 bước nhận không bao giờ chạm DB máy thu
     bcm_that: "node scripts/day-ban-chep-kiem-m5.mjs that"   # day-ban-chep-sang-may-phat-trien E10 lượt đẩy thật + Invest, data-api trên M5; ngoài CI
     bcm_tai_lieu: "node scripts/day-ban-chep-kiem-m5.mjs tai-lieu"   # day-ban-chep-sang-may-phat-trien E11 tài liệu hai máy, kho không lộ riêng máy
     bcl_tap: "bash db/db-thu.sh oneinvest_suite_bcl --chay node --test --test-concurrency=1 --test-name-pattern='^BCL-1:' scripts/ban-chep-da-loc.itest.mjs"   # ban-chep-da-loc-cho-may-phat-trien E1 — tập bảng = FILL sync-cloud, còn lại 0 dòng, DB của riêng lượt
