@@ -1231,6 +1231,14 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
       M5 xong, phần hạn mức M5 tiêu và số lượt ghim lại do PR của M5 gây ra; Mạnh quyết mở rộng hay dừng.
     - **Hàng:** HT18 `ban-chep-da-loc-cho-may-phat-trien` (T3) cho bước hai của (a). **Ghi ở đâu:** `AGENTS.md` mục phân làn
       (dòng «Máy M5»); luật kênh ở thân issue `phanlemanh/onehub-coord#4`.
+    - **(i) Đường đẩy bản chép sang M5** (25/11, hàng HT25 `day-ban-chep-sang-may-phat-trien`, T3; Mạnh «Cho máy làm trọn»,
+      duyệt Cổng Phạm vi và kế hoạch). Một lệnh trên máy thu: `node scripts/day-ban-chep.mjs` — chép + soát (HT18), ghim sha256,
+      gửi qua cáp Thunderbolt (địa chỉ cầu cố định, chỉ ở cấu hình riêng máy) bằng khoá đẩy bị ép lệnh
+      (`restrict,command=` → `scripts/nhan-ban-chep.sh`), M5 soát lại, nạp vào DB mới bằng `docker exec`, đếm bằng `ke.json` rồi mới
+      đổi tên, giữ một bản cũ; `--trang-thai`, `--lui`. Năm rào của GS: cổng rời máy ở máy thu, một chiều (M5 không có khoá vào máy
+      thu, lượt đẩy không dùng khoá dựng máy), chỉ hai tệp rời máy, lùi được, chỉ theo lệnh (plist hằng đêm là hàng sau, cần lời
+      riêng). Khoá dựng máy giữ tới hết tuần đo hai máy rồi thu hồi (Hỏi-1). **Ghi ở đâu:** ADR-0019, `docs/ops/hai-may.md` (trỏ từ
+      `runtime-map.md`), `AGENTS.md` mục «Hai máy»; cài và thu hồi khoá: `scripts/day-ban-chep-kiem-m5.mjs cai|go`.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
