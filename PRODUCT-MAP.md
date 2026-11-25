@@ -11,7 +11,7 @@ flowchart TD
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>21 việc"] --> GP{"Cổng Phạm vi"}
-  GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
+  GP --> DL["Đang làm<br/>2 việc"] --> GB{"Cổng Bằng chứng"}
   GB --> DG["Đã giao<br/>224 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>142 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
@@ -71,6 +71,7 @@ flowchart TD
 ## Đang làm
 
 - Mỗi dự án của năm nguồn danh mục (S07, S08, S09, S10, S16) thành một bản ghi chuẩn theo khuôn chung; bộ khớp chạy bóng xếp từng bản ghi vào một ngả căn cứ; ngả rõ (cùng xã + trùng tên, trùng tên đúng một nút cùng tỉnh) nối vào nút danh bạ có sẵn qua thẻ luật có băm, đảo được; ô «Mã nguồn chưa nối» trên Ops đếm đủ các nguồn (`bang-noi-ma-du-an`)
+- Nối dự án S08 vào danh bạ qua một thẻ luật theo nguồn (nối nút có sẵn, đúc nút ứng viên, từ chối có lý do), đảo được, màn Ops đếm được (`soat-noi-s08-danh-ba`)
 
 ## Đã giao — chờ phiên nghiệm thu
 
