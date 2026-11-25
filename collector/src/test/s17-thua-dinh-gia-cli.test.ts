@@ -1,7 +1,7 @@
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
 
-import { checkConfigForPhase, egoOptions, parseCli } from "../collectors/s17-thua-dinh-gia/main.js";
+import { checkConfigForPhase, egoOptions, parseCli, specDuongNode } from "../collectors/s17-thua-dinh-gia/main.js";
 import { loadConfig } from "../collectors/s17-thua-dinh-gia/config.js";
 
 /**
@@ -96,10 +96,10 @@ test("parseCli: pha images đi bằng Node (không cần phiên), thư mục tr�
   const p = parseCli(anh);
   assert.equal(p.via, "node");
   assert.ok(p.stateDir.endsWith("s17-thua-dinh-gia-anh"), `thư mục trạng thái riêng cho pha ảnh: ${p.stateDir}`);
-  assert.deepEqual(p.anh, { luongSong: 4, soFile: 100 });
+  assert.deepEqual(p.anh, { luongSong: 4, soFile: 100, chiNgoai: false });
   assert.equal(parseCli(base).stateDir.endsWith("s17-thua-dinh-gia-anh"), false, "pha khác giữ nguyên thư mục cũ");
   const q = parseCli([...anh, "--anh-luong-song", "1", "--anh-so-file", "40"]);
-  assert.deepEqual(q.anh, { luongSong: 1, soFile: 40 });
+  assert.deepEqual(q.anh, { luongSong: 1, soFile: 40, chiNgoai: false });
   assert.throws(() => parseCli([...anh, "--anh-luong-song", "9"]), /1 đến 8/);
   assert.throws(() => parseCli([...anh, "--anh-so-file", "0"]), /dương/);
 });
@@ -132,4 +132,20 @@ test("egoOptions: lựa chọn của hai pha mới đi sang tiến trình trình
   const o = egoOptions(v, loadConfig(JSON.stringify(config)), { statePath: "/tmp/s.json", logPath: "/tmp/l.jsonl", resultPath: "/tmp/r.json" }) as Record<string, unknown>;
   assert.deepEqual(o.tatCaDuAn, { tuSoCan: 3000, gioiHan: 7 });
   assert.equal(o.checkBalance, true, "pha căn hộ toàn bộ có đụng tới tài khoản: đọc số dư trước và sau");
+});
+
+test("parseCli + specDuongNode: lượt ảnh máy chủ ngoài là một lượt riêng (thư mục trạng thái riêng); đường Node chuyển đủ lựa chọn ảnh (lượt soát 25/11: hai cờ bị rơi)", () => {
+  const v = parseCli([...anh, "--anh-may-chu-ngoai", "--anh-luong-song", "6", "--anh-so-file", "40"]);
+  assert.equal(v.anh?.chiNgoai, true);
+  assert.ok(v.stateDir.endsWith("s17-thua-dinh-gia-anh-ngoai"));
+  const config = { ...CONFIG_DU_AN, anh: { hostSuffixes: ["cdn.gia.test"], ngoai: true } };
+  assert.throws(() => checkConfigForPhase(loadConfig(JSON.stringify(CONFIG_DU_AN)), parseCli(anh)), /hostSuffixes|ảnh/);
+  assert.throws(() => checkConfigForPhase(loadConfig(JSON.stringify({ ...CONFIG_DU_AN, anh: { hostSuffixes: ["cdn.gia.test"] } })), v), /anh\.ngoai/);
+  assert.doesNotThrow(() => checkConfigForPhase(loadConfig(JSON.stringify(config)), v));
+  const spec = specDuongNode(v, loadConfig(JSON.stringify(config)), { statePath: "/tmp/s.json", logPath: "/tmp/l.jsonl" }, {}) as Record<string, unknown>;
+  assert.deepEqual(spec.anh, { luongSong: 6, soFile: 40, chiNgoai: true }, "lựa chọn ảnh tới được trình điều khiển");
+  assert.equal(spec.checkBalance, false, "pha ảnh không đọc số dư");
+  assert.equal(spec.runId, undefined, "mã lượt chỉ dành cho tiến trình trình duyệt");
+  assert.equal(spec.snapshotRoot, "/tmp/snap");
+  assert.equal((spec.caps as { calls: number }).calls, 1000);
 });

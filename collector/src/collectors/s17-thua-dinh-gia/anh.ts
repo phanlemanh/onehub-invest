@@ -1,15 +1,22 @@
 /**
- * Pha ảnh dự án của bộ thu S17 (mốc mở rộng, claudedp-2411-73): tải TOÀN BỘ ảnh dự án vào kho chuẩn.
+ * Phần tải ảnh của bộ thu S17 (mốc mở rộng, claudedp-2411-73): tải TOÀN BỘ ảnh dự án vào kho chuẩn.
  *
  * Ảnh nằm trong payload chi tiết dự án đã thu, dưới dạng link có chữ ký hiệu lực 7 ngày (đo 25/11: `X-Amz-Expires`
- * 604800). Pha này KHÔNG gọi API của nguồn và không cần phiên: chỉ tải tệp tĩnh bằng fetch của Node, từ đúng các máy
- * chủ lưu trữ của nguồn (đuôi máy chủ đọc từ cấu hình local — tầng A), theo quy ước chung của DATA-CONTRACT: ảnh gốc
- * trong thư mục snapshot dưới `media/<băm 16 của URL>.<đuôi>`, manifest khai sha256 và số byte, item ghi bảng đối
- * chiếu `meta.mediaFiles`.
+ * 604800). Pha ảnh KHÔNG gọi API của nguồn và không cần phiên: chỉ tải tệp tĩnh bằng fetch của Node, theo quy ước
+ * chung của DATA-CONTRACT — ảnh gốc trong thư mục snapshot dưới `media/<băm 16 của URL>.<đuôi>`, manifest khai sha256
+ * và số byte, item ghi bảng đối chiếu `meta.mediaFiles`.
  *
- * Rào an toàn: 403 (không phải link hết hạn hay sai chữ ký) và 429 là BỊ CHẶN → dừng cả lượt; nhiều lỗi mạng liền
- * nhau → dừng; lỗi của riêng một tệp (hết hạn, không còn, quá cỡ, timeout) chỉ ghi vào bảng đối chiếu, không làm mất
- * gì cả. Không tải từ máy chủ ngoài (ảnh chèn từ nơi khác) — chỉ ghi lại trong bảng đối chiếu kèm lý do.
+ * Hai lớp máy chủ (Mạnh chốt 25/11: «Lấy cả ảnh ở máy chủ ngoài»):
+ * - «nguon» — máy chủ lưu trữ của chính nguồn (đuôi đọc từ cấu hình local, tầng A). Máy chủ này trả 403 không phải
+ *   hết hạn, 429, hay trang HTML thay cho ảnh (trang thử thách) là BỊ CHẶN → dừng cả lượt.
+ * - «ngoai» — mọi máy chủ công khai khác (ảnh chèn từ nơi khác), chỉ khi được bật. Máy chủ nào chặn thì ghi lý do
+ *   «bị chặn ở máy chủ này», bỏ qua máy chủ đó, không lách — không tính là bị chặn từ nguồn.
+ * - «cam» — mọi địa chỉ nội bộ (localhost, dải riêng, liên kết địa phương), giao thức khác http/https, và máy chủ
+ *   ngoài khi chưa được bật: không bao giờ gửi lời nào tới. Chuyển hướng cũng được kiểm từng bước theo cùng luật
+ *   (fetch không được tự đi theo chuyển hướng).
+ *
+ * Lỗi của riêng một tệp được phân theo nguyên nhân: vĩnh viễn (hết hạn, sai chữ ký, không còn, 4xx khác, quá cỡ,
+ * tệp rỗng, máy chủ không tồn tại, chứng chỉ hỏng) ghi nhận một lần; tạm (mạng, 5xx, hết giờ) thì lượt sau thử lại.
  */
 import { createHash } from "node:crypto";
 
@@ -72,11 +79,111 @@ export function hostDuocPhep(url: string, duoi: string[]): boolean {
   });
 }
 
-export type LoiAnh = "ok" | "chan" | "het-han" | "sai-chu-ky" | "khong-con" | "loi";
+/** Địa chỉ nội bộ: không bao giờ gửi lời nào tới. */
+function mayChuNoiBo(host: string): boolean {
+  if (host === "" || host === "localhost" || host.endsWith(".localhost") || host.endsWith(".local") || host.endsWith(".internal") || host.endsWith(".home.arpa")) return true;
+  if (host.includes(":")) {
+    // IPv6: chỉ nhận dạng ánh xạ IPv4 để kiểm tiếp (URL chuẩn hoá «::ffff:8.8.8.8» thành «::ffff:808:808»);
+    // mọi địa chỉ IPv6 khác coi là cấm (không cần tới).
+    const cham = /^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/i.exec(host);
+    if (cham) return ip4NoiBo(cham[1]);
+    const hex = /^::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/i.exec(host);
+    if (hex) {
+      const a = parseInt(hex[1], 16);
+      const b = parseInt(hex[2], 16);
+      return ip4NoiBo(`${a >> 8}.${a & 255}.${b >> 8}.${b & 255}`);
+    }
+    return true;
+  }
+  if (/^\d{1,3}(?:\.\d{1,3}){3}$/.test(host)) return ip4NoiBo(host);
+  // Dạng số lạ của IPv4 (thập phân, hex, thiếu từng octet): không đoán — cấm.
+  return /^(0x[0-9a-f]+|[\d.]+)$/.test(host);
+}
+
+function ip4NoiBo(ip: string): boolean {
+  const o = ip.split(".").map(Number);
+  if (o.length !== 4 || o.some((x) => !Number.isInteger(x) || x < 0 || x > 255)) return true;
+  return (
+    o[0] === 0 ||
+    o[0] === 10 ||
+    (o[0] === 100 && o[1] >= 64 && o[1] <= 127) ||
+    o[0] === 127 ||
+    (o[0] === 169 && o[1] === 254) ||
+    (o[0] === 172 && o[1] >= 16 && o[1] <= 31) ||
+    (o[0] === 192 && o[1] === 168) ||
+    o[0] >= 224
+  );
+}
+
+export type LopMayChu = "nguon" | "ngoai" | "cam";
+
+export type MayChuOptions = {
+  /** Đuôi máy chủ lưu trữ của chính nguồn — đọc từ cấu hình local (tầng A). */
+  duoiNguon: string[];
+  /** Có lấy ảnh ở máy chủ ngoài hay không (Mạnh chốt 25/11). */
+  keNgoai: boolean;
+};
+
+/** Phân loại URL theo lớp máy chủ, trước khi gửi lời nào. */
+export function phanLoaiMayChu(url: string, o: MayChuOptions): LopMayChu {
+  let u: URL;
+  try {
+    u = new URL(url);
+  } catch {
+    return "cam";
+  }
+  if (u.protocol !== "http:" && u.protocol !== "https:") return "cam";
+  if (mayChuNoiBo(u.hostname.toLowerCase().replace(/^\[|\]$/g, ""))) return "cam";
+  if (hostDuocPhep(url, o.duoiNguon)) return "nguon";
+  return o.keNgoai ? "ngoai" : "cam";
+}
+
+export type LoiAnh =
+  | "ok"
+  /** Bị chặn thật ở máy chủ của nguồn: dừng cả lượt. */
+  | "chan"
+  | "het-han"
+  | "sai-chu-ky"
+  | "khong-con"
+  /** 4xx khác (400, 422…): tham số sai, hỏi lại cũng vậy. */
+  | "http-4xx"
+  /** Lỗi tạm: mạng, 5xx, hết giờ. */
+  | "loi"
+  | "qua-co"
+  /** Tệp 0 byte: không phải ảnh. */
+  | "rong"
+  | "cam-may-chu"
+  | "chuyen-huong-cam"
+  | "qua-nhieu-chuyen-huong"
+  | "may-chu-khong-ton-tai"
+  | "may-chu-khong-tra-loi"
+  | "chung-chi"
+  /** Máy chủ ngoài chặn (403, 429, trang thử thách): bỏ qua máy chủ đó. */
+  | "chan-o-may-chu"
+  /** Quá số lượt thử với lỗi tạm. */
+  | "qua-so-lan-thu";
+
+/** Lỗi vĩnh viễn: hỏi lại cũng vậy, ghi nhận một lần rồi thôi. Chỉ `loi` là tạm (và `chan` là dừng cả lượt). */
+export const LOI_VINH_VIEN_ANH: ReadonlySet<string> = new Set<LoiAnh>([
+  "het-han",
+  "sai-chu-ky",
+  "khong-con",
+  "http-4xx",
+  "qua-co",
+  "rong",
+  "cam-may-chu",
+  "chuyen-huong-cam",
+  "qua-nhieu-chuyen-huong",
+  "may-chu-khong-ton-tai",
+  "may-chu-khong-tra-loi",
+  "chung-chi",
+  "chan-o-may-chu",
+  "qua-so-lan-thu",
+]);
 
 /**
- * Phân loại phản hồi của máy chủ ảnh. "chan" là bị chặn thật (dừng cả lượt); link ký số đã quá hạn thì kho lưu trữ
- * cũng trả 403 kèm XML «Request has expired» — đó là "het-han", không phải bị chặn.
+ * Phân loại phản hồi không phải 200 của máy chủ ảnh. Link ký số đã quá hạn thì kho lưu trữ cũng trả 403 kèm XML
+ * «Request has expired» — đó là "het-han", không phải bị chặn.
  */
 export function phanLoiPhanHoi(status: number, contentType: string | null | undefined, than: string): LoiAnh {
   if (status === 200) return "ok";
@@ -87,47 +194,82 @@ export function phanLoiPhanHoi(status: number, contentType: string | null | unde
   }
   if (status === 429) return "chan";
   if (status === 404 || status === 410) return "khong-con";
+  if (status >= 400 && status < 500) return "http-4xx";
   return "loi";
+}
+
+/** Lỗi mạng theo nguyên nhân: không phân giải được tên hay chứng chỉ hỏng là vĩnh viễn; còn lại là tạm. */
+function phanLoiMang(e: unknown): { loi: LoiAnh; chiTiet: string } {
+  const code = String((e as { cause?: { code?: unknown } } | null)?.cause?.code ?? "");
+  if (/^ENOTFOUND|^EAI_FAIL|^EAI_NODATA|^EAI_NONAME/.test(code)) return { loi: "may-chu-khong-ton-tai", chiTiet: code };
+  if (/^CERT_|^ERR_TLS_|SELF_SIGNED|ALTNAME/.test(code)) return { loi: "chung-chi", chiTiet: code };
+  if (/^ECONNREFUSED|^ENETUNREACH|^EHOSTUNREACH/.test(code)) return { loi: "may-chu-khong-tra-loi", chiTiet: code };
+  if (/TIMEOUT|timed out/i.test(`${code} ${e instanceof Error ? e.name : ""}`)) return { loi: "loi", chiTiet: "timeout" };
+  return { loi: "loi", chiTiet: code || (e instanceof Error ? e.name : "mang") };
 }
 
 export type KetQuaTai = { url: string; loi: LoiAnh; bytes?: Buffer; kieu?: string; http: number; chiTiet?: string };
 
-export type TaiAnhOptions = {
+export type TaiAnhOptions = MayChuOptions & {
   maxBytes: number;
   timeoutMs: number;
   userAgent: string;
   /** Đệm thử trong test; mặc định fetch toàn cục. */
   fetchImpl?: typeof fetch;
+  /** Số bước chuyển hướng nhiều nhất (mặc định 5). */
+  toiDaChuyenHuong?: number;
 };
 
+const CHUYEN_HUONG = new Set([301, 302, 303, 307, 308]);
+
+/** Tải một tệp. Không bao giờ để fetch tự đi theo chuyển hướng: mỗi bước đều kiểm máy chủ đích trước khi gửi. */
 export async function taiAnh(url: string, o: TaiAnhOptions): Promise<KetQuaTai> {
-  try {
-    const res = await (o.fetchImpl ?? fetch)(url, {
-      headers: { "user-agent": o.userAgent },
-      redirect: "follow",
-      signal: AbortSignal.timeout(o.timeoutMs),
-    });
-    if (res.status !== 200) {
-      const than = (await res.text().catch(() => "")).slice(0, 4000);
-      return { url, loi: phanLoiPhanHoi(res.status, res.headers.get("content-type"), than), http: res.status, chiTiet: than.replace(/\s+/g, " ").slice(0, 120) };
+  if (phanLoaiMayChu(url, o) === "cam") return { url, loi: "cam-may-chu", http: 0 };
+  const toiDa = o.toiDaChuyenHuong ?? 5;
+  let hienTai = url;
+  for (let buoc = 0; buoc <= toiDa; buoc++) {
+    let res: Response;
+    try {
+      res = await (o.fetchImpl ?? fetch)(hienTai, { headers: { "user-agent": o.userAgent }, redirect: "manual", signal: AbortSignal.timeout(o.timeoutMs) });
+    } catch (e) {
+      return { url, http: 0, ...phanLoiMang(e) };
     }
-    const reader = res.body?.getReader();
-    if (!reader) return { url, loi: "loi", http: res.status, chiTiet: "no-body" };
-    const chunks: Buffer[] = [];
-    let total = 0;
-    for (;;) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      total += value.byteLength;
-      if (total > o.maxBytes) {
-        await reader.cancel().catch(() => undefined);
-        return { url, loi: "loi", http: res.status, chiTiet: "qua-co" };
+    if (CHUYEN_HUONG.has(res.status)) {
+      const den = res.headers.get("location");
+      if (!den) return { url, loi: "khong-con", http: res.status, chiTiet: "chuyen-huong-khong-dich" };
+      let dich: URL;
+      try {
+        dich = new URL(den, hienTai);
+      } catch {
+        return { url, loi: "chuyen-huong-cam", http: res.status };
       }
-      chunks.push(Buffer.from(value));
+      if (phanLoaiMayChu(dich.href, o) === "cam") return { url, loi: "chuyen-huong-cam", http: res.status };
+      hienTai = dich.href;
+      continue;
     }
-    return { url, loi: "ok", bytes: Buffer.concat(chunks), kieu: res.headers.get("content-type") ?? "", http: res.status };
-  } catch (e) {
-    const hetGio = e instanceof Error && /timed out|TimeoutError|abort/i.test(`${e.name} ${e.message}`);
-    return { url, loi: "loi", http: 0, chiTiet: hetGio ? "timeout" : "mang" };
+    const kieu = res.headers.get("content-type") ?? "";
+    if (res.status === 200) {
+      // 200 nhưng là trang HTML: trang thử thách thay cho ảnh — bị chặn, không lưu.
+      if (/text\/html|application\/xhtml/i.test(kieu)) return { url, loi: "chan", http: 200, chiTiet: "trang-html" };
+      const reader = res.body?.getReader();
+      if (!reader) return { url, loi: "rong", http: 200, chiTiet: "no-body" };
+      const chunks: Buffer[] = [];
+      let total = 0;
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        total += value.byteLength;
+        if (total > o.maxBytes) {
+          await reader.cancel().catch(() => undefined);
+          return { url, loi: "qua-co", http: 200 };
+        }
+        chunks.push(Buffer.from(value));
+      }
+      if (total === 0) return { url, loi: "rong", http: 200 };
+      return { url, loi: "ok", bytes: Buffer.concat(chunks), kieu, http: 200 };
+    }
+    const than = (await res.text().catch(() => "")).slice(0, 4000);
+    return { url, loi: phanLoiPhanHoi(res.status, kieu, than), http: res.status, chiTiet: than.replace(/\s+/g, " ").slice(0, 120) };
   }
+  return { url, loi: "qua-nhieu-chuyen-huong", http: 0 };
 }

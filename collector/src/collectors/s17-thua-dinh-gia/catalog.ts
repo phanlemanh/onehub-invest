@@ -14,7 +14,7 @@ import { readFile, readdir } from "node:fs/promises";
 import { join } from "node:path";
 import { gunzipSync } from "node:zlib";
 import type { RawItem, SnapshotManifest } from "../../core/types.js";
-import { hostDuocPhep } from "./anh.js";
+import { phanLoaiMayChu } from "./anh.js";
 import { parseCount } from "./kinds.js";
 import { S17_CITY, S17_SOURCE } from "./store.js";
 
@@ -84,7 +84,11 @@ export async function projectCatalog(root: string): Promise<DuAnCatalog[]> {
   return [...out.values()].sort((a, b) => (b.soCan ?? -1) - (a.soCan ?? -1) || a.id.localeCompare(b.id, "en", { numeric: true }));
 }
 
-export type AnhCuaDuAn = { id: string; anh: Array<{ url: string; nhom: string[]; ngayKy: string | null }>; /** URL ở máy chủ ngoài — không tải, chỉ ghi lại kèm lý do. */ ngoai: string[] };
+export type AnhCuaDuAn = {
+  id: string;
+  /** Mọi URL ảnh theo thứ tự gặp; `ngoai` = true khi URL ở máy chủ ngoài nguồn (chỉ lượt «máy chủ ngoài» mới tải). */
+  anh: Array<{ url: string; nhom: string[]; ngayKy: string | null; ngoai: boolean }>;
+};
 
 /** Ngày ký (YYYYMMDD) của link có chữ ký; link thường không có. */
 export function ngayKyCuaLink(url: string): string | null {
@@ -98,10 +102,18 @@ export function ngayKyCuaLink(url: string): string | null {
 
 const URL_RE = /https?:\/\/[^\s"'<>\\)]+/g;
 
+/**
+ * URL kéo ra khỏi payload: đổi mã thực thể `&amp;` của HTML thành `&` (không thì link ký số sai), bỏ dấu câu dính
+ * đuôi và dấu `?`/`&` cuối rỗng — cùng một tệp chỉ tính một lần.
+ */
+function sachHoaUrl(u: string): string {
+  return u.replace(/&amp;/gi, "&").replace(/[).,;:'"]+$/, "").replace(/[?&]+$/, "");
+}
+
 function urlTrong(v: unknown, ra: string[]): void {
   if (v == null) return;
   if (typeof v === "string") {
-    for (const m of v.match(URL_RE) ?? []) ra.push(m);
+    for (const m of v.match(URL_RE) ?? []) ra.push(sachHoaUrl(m));
   } else if (Array.isArray(v)) {
     for (const x of v) urlTrong(x, ra);
   } else if (typeof v === "object") {
@@ -114,29 +126,33 @@ function urlTrong(v: unknown, ra: string[]): void {
  * payload), mỗi URL một lần kèm các tên nhóm chứa nó. Dự án có link ký SỚM NHẤT đứng trước (hết hạn sớm nhất phải
  * tải trước). URL ở máy chủ ngoài không lấy, trả trong `ngoai` để pha ghi lại kèm lý do.
  */
-export async function projectImages(root: string, duoiMayChu: string[]): Promise<{ duAn: AnhCuaDuAn[]; soUrl: number; soUrlMayChuNgoai: number }> {
-  const duAn: AnhCuaDuAn[] = [];
-  let soUrlMayChuNgoai = 0;
+export async function projectImages(
+  root: string,
+  duoiMayChu: string[],
+): Promise<{ duAn: AnhCuaDuAn[]; soUrl: number; soUrlNgoai: number; soUrlCam: number }> {
+  const duAn: Array<AnhCuaDuAn & { somNhat: number }> = [];
+  let soUrlNgoai = 0;
+  let soUrlCam = 0;
   for (const it of banMoiNhat(await readKind(root, "du_an_detail"))) {
     const id = String((it.meta?.request as { id?: unknown } | undefined)?.id ?? "");
     const p = it.payload as
       | { gallery?: { data?: unknown }; detail?: { data?: { properties?: { nhom_hinh_anh?: unknown } } } }
       | null;
-    const thuThap = new Map<string, { url: string; nhom: Set<string> }>();
-    const ngoai = new Set<string>();
-    const them = (url: string, nhom: string | null) => {
-      if (!hostDuocPhep(url, duoiMayChu)) {
-        if (!ngoai.has(url)) soUrlMayChuNgoai++;
-        ngoai.add(url);
-        return;
+    const thuThap = new Map<string, { url: string; nhom: Set<string>; ngoai: boolean }>();
+    const them = (urlGoc: string, nhom: string | null) => {
+      const url = sachHoaUrl(urlGoc);
+      const lop = phanLoaiMayChu(url, { duoiNguon: duoiMayChu, keNgoai: true });
+      if (lop === "cam") {
+        soUrlCam++;
+        return; // địa chỉ nội bộ hay giao thức lạ chèn trong payload: không bao giờ tải
       }
-      const x = thuThap.get(url) ?? { url, nhom: new Set<string>() };
+      const ngoai = lop === "ngoai";
+      const x = thuThap.get(url) ?? { url, nhom: new Set<string>(), ngoai };
       if (nhom) x.nhom.add(nhom);
       thuThap.set(url, x);
     };
     const nhom = (g: unknown) => String((g as { name?: unknown; title?: unknown } | null)?.name ?? (g as { title?: unknown } | null)?.title ?? "").trim();
-    const dsNhom = Array.isArray(p?.gallery?.data) ? p.gallery.data : [];
-    for (const g of dsNhom) {
+    for (const g of Array.isArray(p?.gallery?.data) ? p.gallery.data : []) {
       const ra: string[] = [];
       urlTrong(g, ra);
       for (const u of ra) them(u, nhom(g) || null);
@@ -150,11 +166,12 @@ export async function projectImages(root: string, duoiMayChu: string[]): Promise
     const conLai: string[] = [];
     urlTrong(it.payload, conLai);
     for (const u of conLai) them(u, null);
-    if (!thuThap.size && !ngoai.size) continue;
-    const anh = [...thuThap.values()].map((x) => ({ url: x.url, nhom: [...x.nhom], ngayKy: ngayKyCuaLink(x.url) }));
-    duAn.push({ id, anh, ngoai: [...ngoai] });
+    if (!thuThap.size) continue;
+    const anh = [...thuThap.values()].map((x) => ({ url: x.url, nhom: [...x.nhom], ngayKy: ngayKyCuaLink(x.url), ngoai: x.ngoai }));
+    soUrlNgoai += anh.filter((x) => x.ngoai).length;
+    const ngay = anh.map((x) => Number(x.ngayKy ?? 99999999));
+    duAn.push({ id, anh, somNhat: ngay.length ? Math.min(...ngay) : 99999999 });
   }
-  const somNhat = (d: AnhCuaDuAn): number => Math.min(...d.anh.map((x) => Number(x.ngayKy ?? 99999999)));
-  duAn.sort((a, b) => somNhat(a) - somNhat(b) || a.id.localeCompare(b.id, "en", { numeric: true }));
-  return { duAn, soUrl: duAn.reduce((n, d) => n + d.anh.length, 0), soUrlMayChuNgoai };
+  duAn.sort((a, b) => a.somNhat - b.somNhat || a.id.localeCompare(b.id, "en", { numeric: true }));
+  return { duAn: duAn.map(({ somNhat: _bo, ...d }) => d), soUrl: duAn.reduce((n, d) => n + d.anh.length, 0), soUrlNgoai, soUrlCam };
 }

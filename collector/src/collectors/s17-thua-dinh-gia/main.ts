@@ -20,7 +20,7 @@ import { parseArgs } from "node:util";
 import { realpathSync } from "node:fs";
 import { ConfigError, loadConfig, PHASE_ROLES, rolePath, type Role, type S17Config } from "./config.js";
 import { MAX_CONCURRENCY, type Caps } from "./client.js";
-import { DEFAULT_PACE_MS, MIN_PACE_MS, buildExecOptions, executePhase, type ExecResult } from "./runner.js";
+import { DEFAULT_PACE_MS, MIN_PACE_MS, buildExecOptions, executePhase, type ExecResult, type ExecSpec } from "./runner.js";
 import type { GridEntry, ParcelArea, Phase } from "./run.js";
 import { nodeTransport } from "./transport-node.js";
 
@@ -31,6 +31,7 @@ const PHASES: Phase[] = ["reference", "tile-mask", "projects", "session-check", 
 const PUBLIC_PHASES: Phase[] = ["reference", "tile-mask", "images"];
 /** Mốc mở rộng — pha ảnh có thư mục trạng thái RIÊNG để chạy song song với pha cần phiên (khoá một lượt một thư mục). */
 const STATE_DIR_ANH = "s17-thua-dinh-gia-anh";
+const STATE_DIR_ANH_NGOAI = "s17-thua-dinh-gia-anh-ngoai";
 /**
  * Nhịp: mặc định 350 ms — mức nguồn đã chịu được (0 lần bị chặn suốt 24/11). Mạnh cho tăng tốc thận trọng
  * 24/11 («2 luồng hoặc nhịp ngắn hơn; gặp 429/403 thì lùi ngay về nhịp cũ, lần hai thì dừng»): nhịp nhanh nhất
@@ -75,7 +76,7 @@ export type CliOptions = {
   /** Mốc mở rộng — lựa chọn của pha căn hộ toàn bộ dự án. */
   tatCaDuAn?: { tuSoCan?: number; denSoCan?: number; gioiHan?: number; ids?: string[] };
   /** Mốc mở rộng — lựa chọn của pha ảnh. */
-  anh?: { luongSong: number; soFile: number };
+  anh?: { luongSong: number; soFile: number; chiNgoai: boolean };
   /** Phần thửa mở rộng — pha lưới dày. */
   oLuoi?: { buocM: number; gioiHan?: number };
 };
@@ -110,6 +111,7 @@ export function parseCli(argv: string[]): CliOptions {
       "gioi-han": { type: "string" },
       "anh-luong-song": { type: "string" },
       "anh-so-file": { type: "string" },
+      "anh-may-chu-ngoai": { type: "boolean" },
       "buoc-m": { type: "string" },
       "gioi-han-o": { type: "string" },
     },
@@ -150,7 +152,9 @@ export function parseCli(argv: string[]): CliOptions {
     via: isPublic ? "node" : "ego",
     config: values.config ?? join(homedir(), ".oneinvest", "s17-thua-dinh-gia.json"),
     snapshotsRoot: values["snapshots-root"],
-    stateDir: values["state-dir"] ?? join(COLLECTOR_ROOT, "state", phase === "images" ? STATE_DIR_ANH : "s17-thua-dinh-gia"),
+    stateDir:
+      values["state-dir"] ??
+      join(COLLECTOR_ROOT, "state", phase === "images" ? (values["anh-may-chu-ngoai"] === true ? STATE_DIR_ANH_NGOAI : STATE_DIR_ANH) : "s17-thua-dinh-gia"),
     caps: { calls: positive("--caps-calls", values["caps-calls"]), minutes: positive("--caps-minutes", values["caps-minutes"]) },
     paceMs,
     batchItems: values["batch-items"] === undefined ? 50 : positive("--batch-items", values["batch-items"]),
@@ -166,7 +170,15 @@ export function parseCli(argv: string[]): CliOptions {
     lowriseTermsFile: values["thap-tang-terms"],
     lowriseSweep: idTu === undefined ? undefined : { from: idTu, to: idDen as number },
     ...(phase === "apartments-all" ? { tatCaDuAn: { ...(tuSoCan !== undefined ? { tuSoCan } : {}), ...(denSoCan !== undefined ? { denSoCan } : {}), ...(values["gioi-han"] === undefined ? {} : { gioiHan: positive("--gioi-han", values["gioi-han"]) }), ...(projects?.length ? { ids: projects } : {}) } } : {}),
-    ...(phase === "images" ? { anh: { luongSong: anhLuongSong, soFile: values["anh-so-file"] === undefined ? 100 : positive("--anh-so-file", values["anh-so-file"]) } } : {}),
+    ...(phase === "images"
+      ? {
+          anh: {
+            luongSong: anhLuongSong,
+            soFile: values["anh-so-file"] === undefined ? 100 : positive("--anh-so-file", values["anh-so-file"]),
+            chiNgoai: values["anh-may-chu-ngoai"] === true,
+          },
+        }
+      : {}),
     ...(phase === "parcels-cell" && buocM !== undefined ? { oLuoi: { buocM, ...(values["gioi-han-o"] === undefined ? {} : { gioiHan: positive("--gioi-han-o", values["gioi-han-o"]) }) } } : {}),
   };
 }
@@ -183,6 +195,9 @@ export function checkConfigForPhase(config: S17Config, o: CliOptions): void {
   if (o.via === "ego" && !config.session) throw new ConfigError("cấu hình local S17 thiếu session.cookieName (tên cookie phiên) cho pha cần phiên");
   if (o.phase === "images" && !config.anh?.hostSuffixes.length) {
     throw new ConfigError("cấu hình local S17 thiếu anh.hostSuffixes (đuôi máy chủ ảnh của nguồn) cho pha ảnh — không tải mò");
+  }
+  if (o.phase === "images" && o.anh?.chiNgoai === true && config.anh?.ngoai !== true) {
+    throw new ConfigError("lượt ảnh máy chủ ngoài cần anh.ngoai: true trong cấu hình local S17 (Mạnh chốt 25/11) — không tải mò");
   }
 }
 
@@ -213,6 +228,22 @@ export function egoOptions(
     // Mã của lượt này: tiến trình trình duyệt ghi mã ấy vào tệp kết quả; kết quả mang mã khác là của lượt trước.
     runId: randomBytes(8).toString("hex"),
   };
+}
+
+/**
+ * Bản kê của lượt chạy bằng fetch của Node (pha công khai, pha ảnh). Dựng từ CÙNG một hàm như bản kê của tiến trình
+ * trình duyệt (egoOptions) rồi đè đúng ba chỗ khác biệt — số dư không đọc, ba tệp vào đã đọc thành mảng. Lượt soát
+ * 25/11: đường này tự liệt kê trường nên `--anh-luong-song` và `--anh-so-file` bị rơi, lượt ảnh chạy một luồng.
+ */
+export function specDuongNode(
+  o: CliOptions,
+  config: S17Config,
+  paths: { statePath: string; logPath: string },
+  daDoc: { grid?: GridEntry[]; parcels?: ParcelArea[]; lowriseTerms?: string[] },
+): Record<string, unknown> {
+  const ke = egoOptions(o, config, { ...paths, resultPath: "" });
+  delete ke.runId; // chỉ tiến trình trình duyệt dùng mã lượt
+  return buildExecOptions({ ...ke, checkBalance: false, ...daDoc } as Parameters<typeof buildExecOptions>[0]);
 }
 
 /**
@@ -274,10 +305,7 @@ export async function main(
 
   if (o.via === "node") {
     const r = await executePhase({
-      ...buildExecOptions({
-        config, snapshotRoot: o.snapshotsRoot, statePath, logPath, caps: o.caps, paceMs: o.paceMs, batchItems: o.batchItems,
-        checkBalance: false, grid, listSize: o.listSize, tileZoom: o.tileZoom, parcels, concurrency: o.concurrency, lowriseTerms,
-      }),
+      ...(specDuongNode(o, config, { statePath, logPath }, { grid, parcels, lowriseTerms }) as ExecSpec),
       phase: o.phase,
       transport: nodeTransport(),
     });

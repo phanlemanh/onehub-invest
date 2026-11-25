@@ -105,43 +105,45 @@ test("projectCatalog: lấy bản MỚI NHẤT của mỗi dự án theo fetched
   );
 }));
 
-test("projectImages: gom mọi URL ảnh trên máy chủ được phép theo thứ tự gặp, kèm tên nhóm; URL trùng chỉ một lần; máy chủ ngoài bị bỏ và đếm; dự án có link ký sớm nhất đứng trước", async () => withTmp(async (dir) => {
+test("projectImages: gom mọi URL ảnh theo thứ tự gặp kèm tên nhóm và cờ máy chủ ngoài; URL trùng chỉ một lần; địa chỉ nội bộ bị bỏ; dự án có link ký sớm nhất đứng trước", async () => withTmp(async (dir) => {
   const w = new BatchWriter({ root: dir, maxItems: 100, phase: "projects" });
   const ky = (ngay: string, p: string) => `https://cdn.gia.test/p/${p}?X-Amz-Date=${ngay}T000000Z&X-Amz-Signature=abc`;
   await w.add(
-    chiTiet(
+    anh(
       "8",
       {
         is_exists_apartment_info: true,
         danh_sach_thap: ["A"],
-        danh_sach_hinh_anh: [{ photo_url: "https://img.ngoai.test/x.jpg" }],
-        mo_ta: '<p>minh hoạ <img src="' + ky("20261124", "3") + '"></p>',
+        danh_sach_hinh_anh: [{ photo_url: "https://img.ngoai.test/x.jpg)." }],
+        mo_ta: '<p>minh hoạ <img src="' + ky("20261124", "3") + '">&nbsp;<img src="http://127.0.0.1/noi-bo/anh"></p>',
       },
       {
         status: true,
         data: [
           { id: 1, name: "Mặt bằng", photos: [[{ value: ky("20261124", "1") }]] },
-          { id: 2, name: "Thực tế", albums: [{ photos: [[{ value: ky("20261119", "2") }, { value: ky("20261124", "1") }]] }] },
+          { id: 2, name: "Thực tế", albums: [{ photos: [[{ value: ky("20261119", "2") }, { value: ky("20261124", "1") + "&amp;" }]] }] },
         ],
       },
       "2026-11-24T05:00:00.000Z",
     ),
   );
-  await w.add(chiTiet("9", { is_exists_apartment_info: true, danh_sach_thap: ["A"] }, { data: [{ id: 3, name: "Toàn cảnh", photos: [[{ value: ky("20261126", "9") }]] }] }, "2026-11-24T05:00:00.000Z"));
-  await w.add(chiTiet("11", { is_exists_apartment_info: false }, null, "2026-11-24T05:00:00.000Z"));
+  await w.add(anh("9", { is_exists_apartment_info: true, danh_sach_thap: ["A"] }, { data: [{ id: 3, name: "Toàn cảnh", photos: [[{ value: ky("20261126", "9") }]] }] }, "2026-11-24T05:00:00.000Z"));
+  await w.add(anh("11", { is_exists_apartment_info: false }, null, "2026-11-24T05:00:00.000Z"));
   await w.flush();
 
   const kq = await projectImages(dir, ["cdn.gia.test"]);
+  const viet = (d: (typeof kq.duAn)[number]) => [d.id, d.anh.map((a) => [a.url.includes("/p/2") ? "2" : a.url.includes("/p/1") ? "1" : a.url.includes("/p/3") ? "3" : a.url.includes("ngoai") ? "ngoai" : "9", a.nhom, a.ngayKy, a.ngoai])];
   assert.deepEqual(
-    kq.duAn.map((d) => [d.id, d.anh.map((a) => [a.url.includes("/p/2") ? "2" : a.url.includes("/p/1") ? "1" : a.url.includes("/p/3") ? "3" : "9", a.nhom, a.ngayKy])]),
+    kq.duAn.map(viet),
     [
-      ["8", [["1", ["Mặt bằng", "Thực tế"], "20261124"], ["2", ["Thực tế"], "20261119"], ["3", [], "20261124"]]],
-      ["9", [["9", ["Toàn cảnh"], "20261126"]]],
+      ["8", [["1", ["Mặt bằng", "Thực tế"], "20261124", false], ["2", ["Thực tế"], "20261119", false], ["ngoai", [], null, true], ["3", [], "20261124", false]]],
+      ["9", [["9", ["Toàn cảnh"], "20261126", false]]],
     ],
-    "dự án 8 đứng trước dự án 9 vì có link ký sớm hơn (hết hạn sớm hơn); URL 1 gặp hai nhóm nhưng chỉ một lần",
+    "dự án 8 đứng trước dự án 9 vì có link ký sớm hơn (hết hạn sớm hơn); URL 1 gặp hai nhóm (một lần có thực thể &amp; ở đuôi) nhưng chỉ một lần; dấu câu dính đuôi được bỏ; thứ tự theo chỗ gặp trong payload",
   );
-  assert.equal(kq.soUrlMayChuNgoai, 1, "URL ở máy chủ ngoài không lấy, chỉ đếm");
-  assert.equal(kq.soUrl, 4);
+  assert.equal(kq.soUrlNgoai, 1, "một URL ở máy chủ ngoài, được đánh dấu chứ không bỏ");
+  assert.equal(kq.soUrlCam, 1, "URL ở địa chỉ nội bộ bị bỏ, không bao giờ tải");
+  assert.equal(kq.soUrl, 5, "bốn URL của dự án 8 và một của dự án 9");
 }));
 
 test("readKind: bỏ snapshot không mang dấu hiệu khuôn 2 và snapshot không khai kind; tệp bị sửa thì từ chối", async () => withTmp(async (dir) => {
@@ -239,7 +241,7 @@ async function docSnapshot(dir: string, id: string) {
   return { manifest, items };
 }
 
-const chayAnh = (dir: string, fetchImpl: typeof fetch, o: { soFile?: number; luongSong?: number; caps?: { calls: number; minutes: number }; state?: RunState } = {}) => {
+const chayAnh = (dir: string, fetchImpl: typeof fetch, o: { soFile?: number; luongSong?: number; caps?: { calls: number; minutes: number }; state?: RunState; chiNgoai?: boolean } = {}) => {
   const state = o.state ?? emptyState();
   const w = new BatchWriter({ root: dir, maxItems: 1000, phase: "images", schemaVersion: S17_SCHEMA_VERSION_MO_RONG, maxFiles: o.soFile ?? 2 });
   const log: Record<string, unknown>[] = [];
@@ -255,7 +257,7 @@ const chayAnh = (dir: string, fetchImpl: typeof fetch, o: { soFile?: number; luo
       now: () => new Date("2026-11-25T01:00:00.000Z"),
       snapshotRoot: dir,
       tienDoDir: join(dir, "tien-do"),
-      anh: { hostSuffixes: ["cdn.gia.test"], luongSong: o.luongSong ?? 2, maxBytes: 1024 * 1024, timeoutMs: 5000, userAgent: "oneinvest-collector/1", fetchImpl },
+      anh: { hostSuffixes: ["cdn.gia.test"], chiNgoai: o.chiNgoai ?? false, luongSong: o.luongSong ?? 2, maxBytes: 1024 * 1024, timeoutMs: 5000, userAgent: "oneinvest-collector/1", fetchImpl },
       keoDan,
     }).then(async (s) => {
       await w.flush();
@@ -282,9 +284,8 @@ test("pha ảnh: tải ảnh gốc vào snapshot dưới media/ kèm item bảng
   assert.ok(soTep.every((f: { bytes: number; sha256: string }) => f.bytes > 0 && /^[0-9a-f]{64}$/.test(f.sha256)), "manifest khai sha256 và số byte");
   assert.ok(tatCa.every((x) => x.manifest.schemaVersion === 18));
   const items = tatCa.flatMap((x) => x.items);
-  assert.ok(items.every((it) => it.kind === "anh_du_an" && /^du-an-\d+-anh-\d+$/.test(it.sourceId)), JSON.stringify(items.map((it) => it.sourceId)));
-  const ngoai = items.flatMap((it) => it.meta.mediaFiles).find((m: { url: string }) => m.url.includes("ngoai.test"));
-  assert.equal(ngoai.error, "host-not-allowed", "URL máy chủ ngoài được ghi lại kèm lý do");
+  assert.ok(items.every((it) => it.kind === "anh_du_an" && /^du-an-\d+-anh-\d+-\d+$/.test(it.sourceId)), JSON.stringify(items.map((it) => it.sourceId)));
+  assert.equal(items.flatMap((it) => it.meta.mediaFiles).some((m: { url: string }) => m.url.includes("ngoai.test")), false, "URL máy chủ ngoài không thuộc lượt ảnh của chính nguồn");
   const png = items.flatMap((it) => it.meta.mediaFiles).find((m: { url: string }) => m.url.endsWith("1.png?response-content-type=image%2Fpng") || m.url.includes("1.png"));
   assert.match(String(png.file), /^media\/[0-9a-f]{16}\.png$/, "đuôi theo kiểu nội dung");
   assert.ok(items.flatMap((it) => it.payload.media).every((m: { url: string; nhom?: string[] }) => typeof m.url === "string" && (m.nhom === undefined || m.nhom.includes("Mặt bằng"))), "payload giữ URL và tên nhóm");
@@ -666,7 +667,7 @@ test("pha ảnh: lô chốt hỏng thì KHÔNG ghi tiến độ (ảnh chưa xu�
       now: () => new Date("2026-11-25T01:00:00.000Z"),
       snapshotRoot: dir,
       tienDoDir: join(dir, "tien-do"),
-      anh: { hostSuffixes: ["cdn.gia.test"], luongSong: 2, maxBytes: 1024 * 1024, timeoutMs: 5000, userAgent: "x", fetchImpl: nguon.fetchImpl },
+      anh: { hostSuffixes: ["cdn.gia.test"], chiNgoai: false, luongSong: 2, maxBytes: 1024 * 1024, timeoutMs: 5000, userAgent: "x", fetchImpl: nguon.fetchImpl },
       keoDan,
     }),
     /ENOSPC/,
@@ -1019,4 +1020,254 @@ test("parcels-cell: giới hạn số ô một lượt; dừng giữa ô (quá t
   assert.equal(s3.s.calls, 23, "36 − 13 điểm đã hỏi");
   assert.equal(s3.s.so?.soO, 6, "9 ô = 2 (lượt một) + 1 (lượt hai xong trước khi chạm trần) + 6 (lượt ba)");
   assert.equal((await moiKind(dir)).filter((it) => it.kind === "thua_o").length, 9);
+}));
+
+// ---------- sửa theo lượt soát 25/11: tải ảnh an toàn và phân loại lỗi đúng ----------
+
+import { phanLoaiMayChu, taiAnh } from "../collectors/s17-thua-dinh-gia/anh.js";
+
+const TUY_CHON = { maxBytes: 1024, timeoutMs: 5000, userAgent: "oneinvest-collector/1", duoiNguon: ["cdn.gia.test"], keNgoai: false };
+
+test("phanLoaiMayChu: máy chủ của nguồn, máy chủ ngoài (chỉ khi được bật), và cấm mọi địa chỉ nội bộ hoặc giao thức lạ", () => {
+  assert.equal(phanLoaiMayChu("https://a.cdn.gia.test/x", TUY_CHON), "nguon");
+  assert.equal(phanLoaiMayChu("https://anh.example.org/x", TUY_CHON), "cam", "máy chủ ngoài chưa được bật thì coi là cấm");
+  assert.equal(phanLoaiMayChu("https://anh.example.org/x", { ...TUY_CHON, keNgoai: true }), "ngoai");
+  for (const u of [
+    "http://localhost/x",
+    "http://127.0.0.1/x",
+    "http://127.1/x",
+    "http://10.1.2.3/x",
+    "http://192.168.1.1/x",
+    "http://172.16.0.1/x",
+    "http://172.31.255.254/x",
+    "http://169.254.169.254/latest/meta-data",
+    "http://[::1]/x",
+    "http://[fe80::1]/x",
+    "http://[fc00::1]/x",
+    "http://intranet.local/x",
+    "http://may.internal/x",
+    "file:///etc/passwd",
+    "ftp://cdn.gia.test/x",
+    "http://2130706433/x",
+    "http://0x7f.0.0.1/x",
+    "http://[::ffff:127.0.0.1]/x",
+  ]) {
+    assert.equal(phanLoaiMayChu(u, { ...TUY_CHON, keNgoai: true, duoiNguon: ["gia.test"] }), "cam", u);
+  }
+  assert.equal(phanLoaiMayChu("http://172.32.0.1/x", { ...TUY_CHON, keNgoai: true }), "ngoai", "ngoài dải riêng thì là máy chủ ngoài");
+  assert.equal(phanLoaiMayChu("http://[::ffff:8.8.8.8]/x", { ...TUY_CHON, keNgoai: true }), "ngoai");
+  assert.equal(phanLoaiMayChu("không phải url", TUY_CHON), "cam");
+});
+
+/** fetch giả theo đúng lời: trả phản hồi ghi sẵn hoặc chuyển hướng; ghi lại mọi lời kèm các lựa chọn. */
+function fetchGia(tra: (url: string, init: RequestInit) => Response | Promise<Response> | never) {
+  const daGoi: Array<{ url: string; redirect?: RequestRedirect }> = [];
+  const fetchImpl = (async (url: string | URL | Request, init?: RequestInit) => {
+    const u = String(url);
+    daGoi.push({ url: u, redirect: init?.redirect });
+    return tra(u, init ?? {});
+  }) as unknown as typeof fetch;
+  return { fetchImpl, daGoi };
+}
+
+test("taiAnh: chuyển hướng tới máy chủ KHÔNG được phép (hoặc nội bộ) thì dừng, không gửi lời nào tới máy chủ đó; trong máy chủ được phép thì đi tiếp", async () => {
+  const cam = fetchGia(() => new Response(null, { status: 302, headers: { location: "https://khac.example.org/a.jpg" } }));
+  const r1 = await taiAnh("https://a.cdn.gia.test/a", { ...TUY_CHON, fetchImpl: cam.fetchImpl });
+  assert.equal(r1.loi, "chuyen-huong-cam");
+  assert.deepEqual(cam.daGoi.map((x) => x.url), ["https://a.cdn.gia.test/a"], "chỉ lời đầu tiên được gửi");
+  const noiBo = fetchGia(() => new Response(null, { status: 302, headers: { location: "http://169.254.169.254/x" } }));
+  assert.equal((await taiAnh("https://a.cdn.gia.test/a", { ...TUY_CHON, fetchImpl: noiBo.fetchImpl, keNgoai: true })).loi, "chuyen-huong-cam");
+  assert.equal(noiBo.daGoi.length, 1);
+  const hop = fetchGia((u) => (u.endsWith("/a") ? new Response(null, { status: 302, headers: { location: "https://b.cdn.gia.test/b.jpg" } }) : new Response(new Uint8Array([1, 2, 3]), { status: 200, headers: { "content-type": "image/jpeg" } })));
+  const r3 = await taiAnh("https://a.cdn.gia.test/a", { ...TUY_CHON, fetchImpl: hop.fetchImpl });
+  assert.equal(r3.loi, "ok");
+  assert.equal(r3.bytes?.length, 3);
+  assert.deepEqual(hop.daGoi.map((x) => x.redirect), ["manual", "manual"], "không để fetch tự đi theo chuyển hướng");
+  const vong = fetchGia(() => new Response(null, { status: 302, headers: { location: "https://a.cdn.gia.test/a" } }));
+  const r4 = await taiAnh("https://a.cdn.gia.test/a", { ...TUY_CHON, fetchImpl: vong.fetchImpl });
+  assert.equal(r4.loi, "qua-nhieu-chuyen-huong");
+  assert.ok(vong.daGoi.length <= 6);
+});
+
+test("taiAnh: URL ở địa chỉ nội bộ thì không gửi lời nào; phân loại lỗi vĩnh viễn (4xx, quá cỡ, tệp rỗng) và lỗi tạm (5xx, timeout)", async () => {
+  const f = fetchGia(() => new Response(new Uint8Array([1])));
+  assert.equal((await taiAnh("http://127.0.0.1/a", { ...TUY_CHON, fetchImpl: f.fetchImpl })).loi, "cam-may-chu");
+  assert.equal(f.daGoi.length, 0);
+  assert.equal((await taiAnh("https://a.cdn.gia.test/a", { ...TUY_CHON, fetchImpl: fetchGia(() => new Response("sai", { status: 400 })).fetchImpl })).loi, "http-4xx");
+  assert.equal((await taiAnh("https://a.cdn.gia.test/a", { ...TUY_CHON, fetchImpl: fetchGia(() => new Response(null, { status: 410 })).fetchImpl })).loi, "khong-con");
+  assert.equal((await taiAnh("https://a.cdn.gia.test/a", { ...TUY_CHON, fetchImpl: fetchGia(() => new Response(new Uint8Array(2000))).fetchImpl })).loi, "qua-co");
+  assert.equal((await taiAnh("https://a.cdn.gia.test/a", { ...TUY_CHON, fetchImpl: fetchGia(() => new Response(new Uint8Array(0))).fetchImpl })).loi, "rong", "tệp 0 byte không phải ảnh");
+  const loi = await taiAnh("https://a.cdn.gia.test/a", { ...TUY_CHON, fetchImpl: fetchGia(() => new Response("loi", { status: 503 })).fetchImpl });
+  assert.equal(loi.loi, "loi");
+  assert.equal(loi.http, 503);
+});
+
+test("taiAnh: HTTP 200 nhưng thân là trang HTML là trang thử thách → bị chặn; lỗi mạng phân theo nguyên nhân (DNS, chứng chỉ, timeout)", async () => {
+  const html = await taiAnh("https://a.cdn.gia.test/a", { ...TUY_CHON, fetchImpl: fetchGia(() => new Response("<html>captcha</html>", { status: 200, headers: { "content-type": "text/html" } })).fetchImpl });
+  assert.equal(html.loi, "chan");
+  assert.equal(html.chiTiet, "trang-html");
+  const voi = (code: string, ten: string) =>
+    fetchGia(() => {
+      const e = new TypeError("fetch failed", { cause: Object.assign(new Error("x"), { code }) });
+      e.name = ten;
+      throw e;
+    }).fetchImpl;
+  assert.equal((await taiAnh("https://anh.example.org/a", { ...TUY_CHON, keNgoai: true, fetchImpl: voi("ENOTFOUND", "TypeError") })).loi, "may-chu-khong-ton-tai");
+  assert.equal((await taiAnh("https://anh.example.org/a", { ...TUY_CHON, keNgoai: true, fetchImpl: voi("EAI_AGAIN", "TypeError") })).loi, "loi", "tạm thời không phân giải được là lỗi tạm");
+  assert.equal((await taiAnh("https://anh.example.org/a", { ...TUY_CHON, keNgoai: true, fetchImpl: voi("CERT_HAS_EXPIRED", "TypeError") })).loi, "chung-chi");
+  assert.equal((await taiAnh("https://anh.example.org/a", { ...TUY_CHON, keNgoai: true, fetchImpl: voi("ECONNREFUSED", "TypeError") })).loi, "may-chu-khong-tra-loi");
+  const hetGio = await taiAnh("https://a.cdn.gia.test/a", { ...TUY_CHON, fetchImpl: voi("UND_ERR_CONNECT_TIMEOUT", "TypeError") });
+  assert.equal(hetGio.loi, "loi");
+  assert.equal(hetGio.chiTiet, "timeout");
+});
+
+// ---------- pha ảnh sau lượt soát: mã ổn định, giới hạn lần thử, máy chủ ngoài ----------
+
+function nguonAnhUrl(tra: (u: URL) => KetQuaNguon | Promise<KetQuaNguon>) {
+  const daGoi: string[] = [];
+  const fetchImpl = (async (url: string | URL | Request) => {
+    const u = new URL(String(url));
+    daGoi.push(u.href);
+    const k = await tra(u);
+    if (k === "mang") throw new TypeError("Failed to fetch");
+    const than = typeof k.body === "string" ? Buffer.from(k.body) : k.body;
+    const status = k.status ?? 200;
+    return new Response(status === 200 ? new Uint8Array(than ?? Buffer.from("anh")) : new Uint8Array(than ?? Buffer.alloc(0)), {
+      status,
+      headers: { "content-type": status === 200 ? (k.kieu ?? "image/jpeg") : (k.kieu ?? "application/xml") },
+    });
+  }) as unknown as typeof fetch;
+  return { fetchImpl, daGoi };
+}
+
+async function duaAnhVaoKho(dir: string, id: string, cacUrl: string[]): Promise<void> {
+  const w = new BatchWriter({ root: dir, maxItems: 100, phase: "projects" });
+  await w.add(anh(id, { danh_sach_hinh_anh: cacUrl.map((u) => ({ photo_url: u })) }, null, "2026-11-24T05:00:00.000Z"));
+  await w.flush();
+}
+
+test("pha ảnh: mã item theo VỊ TRÍ trong danh sách ảnh của dự án — hai lượt khác nhau không trùng mã, nội dung không đè nhau", async () => withTmp(async (dir) => {
+  await duaAnhVaoKho(dir, "8", [1, 2, 3, 4, 5].map((i) => `https://cdn.gia.test/a/${i}`));
+  const nguon = nguonAnh(() => ({}));
+  const lan1 = chayAnh(dir, nguon.fetchImpl, { soFile: 5, caps: { calls: 2, minutes: 10 } });
+  const r1 = await lan1.run().then(() => null, (x: unknown) => x);
+  assert.ok(r1 instanceof RunStopped && r1.reason === "call-cap");
+  const lan2 = chayAnh(dir, nguon.fetchImpl, { soFile: 5 });
+  const s2 = await lan2.run();
+  assert.equal(s2.s.so?.soFile, 3);
+  const ids = (await moiKind(dir)).filter((it) => it.kind === "anh_du_an").map((it) => it.sourceId).sort();
+  assert.deepEqual(ids, ["du-an-8-anh-1-2", "du-an-8-anh-3-5"], "lượt một ghi ảnh 1–2, lượt hai ghi ảnh 3–5: hai mã khác nhau");
+}));
+
+test("pha ảnh: lỗi tạm được thử lại ở các lượt sau, tới hạn số lượt thì ghi nhận là vĩnh viễn (qua-so-lan-thu)", async () => withTmp(async (dir) => {
+  await duaAnhVaoKho(dir, "8", ["https://cdn.gia.test/m/1"]);
+  const nguon = nguonAnh(() => "mang");
+  for (let lan = 1; lan <= 3; lan++) {
+    const r = await chayAnh(dir, nguon.fetchImpl, { caps: { calls: 100, minutes: 10 } }).run();
+    assert.equal(r.s.so?.soDuAnXong, 0, `lượt ${lan}: dự án chưa xong vì còn ảnh lỗi tạm`);
+  }
+  assert.equal(nguon.daGoi.length, 3, "ba lượt, ba lời");
+  const r4 = await chayAnh(dir, nguon.fetchImpl, { caps: { calls: 100, minutes: 10 } }).run();
+  assert.equal(r4.s.so?.soDuAnXong, 1, "lượt tư: đã quá hạn số lượt, lỗi được ghi nhận, dự án xong");
+  assert.equal(nguon.daGoi.length, 3, "lượt tư không gọi nữa");
+  const loi = (await moiKind(dir)).flatMap((it) => it.meta.mediaFiles ?? []).map((m: { error?: string }) => m.error);
+  assert.deepEqual(loi, ["qua-so-lan-thu"]);
+}));
+
+test("pha ảnh máy chủ ngoài: tiến trình riêng chỉ lấy máy chủ ngoài, mã và tệp tiến độ riêng; lượt của chính nguồn không đụng tới ảnh ngoài", async () => withTmp(async (dir) => {
+  await duaAnhVaoKho(dir, "8", ["https://cdn.gia.test/x/0", "https://a.example.org/x/1", "https://a.example.org/x/2", "https://b.example.org/y/1", "https://a.example.org/x/3"]);
+  const nguon = nguonAnhUrl(() => ({}));
+  const ngoai = chayAnh(dir, nguon.fetchImpl, { chiNgoai: true, luongSong: 1, soFile: 2 });
+  const s1 = await ngoai.run();
+  assert.equal(s1.s.so?.soFile, 4, "bốn ảnh máy chủ ngoài");
+  assert.ok(nguon.daGoi.every((u) => u.includes("example.org")), "không gửi lời nào tới máy chủ của nguồn");
+  const items = (await moiKind(dir)).filter((it) => it.kind === "anh_du_an");
+  assert.deepEqual(
+    items.map((it) => [it.sourceId, it.meta.nhomMayChu, it.meta.soFile]),
+    [["du-an-8-anh-ngoai-1-2", "ngoai", 2], ["du-an-8-anh-ngoai-3-4", "ngoai", 2]],
+  );
+  assert.ok((await readdir(join(dir, "tien-do"))).includes("anh-ngoai-8.jsonl"), "tệp tiến độ riêng");
+  const cuaNguon = chayAnh(dir, nguon.fetchImpl, { chiNgoai: false, luongSong: 1, soFile: 2 });
+  const s2 = await cuaNguon.run();
+  assert.equal(s2.s.so?.soFile, 1, "lượt của chính nguồn chỉ lấy một ảnh trên máy chủ của nguồn");
+  assert.deepEqual((await moiKind(dir)).filter((it) => it.kind === "anh_du_an" && it.meta.nhomMayChu !== "ngoai").map((it) => it.sourceId), ["du-an-8-anh-1-1"]);
+}));
+
+test("pha ảnh máy chủ ngoài: máy chủ nào chặn (403, trang HTML) thì ghi lý do, bỏ qua máy chủ đó, lượt vẫn đi tiếp; máy chủ bị chặn được nhớ cho các lượt sau", async () => withTmp(async (dir) => {
+  await duaAnhVaoKho(dir, "8", ["https://a.example.org/x/1", "https://a.example.org/x/2", "https://b.example.org/y/1", "https://c.example.org/z/1", "https://a.example.org/x/3"]);
+  const chan = nguonAnhUrl((u) => (u.hostname.startsWith("a.") ? { status: 403, body: "<Error><Code>AccessDenied</Code></Error>" } : u.hostname.startsWith("c.") ? { body: "<html>captcha</html>", kieu: "text/html" } : {}));
+  const r = await chayAnh(dir, chan.fetchImpl, { chiNgoai: true, luongSong: 1, soFile: 10 }).run();
+  assert.equal(r.s.calls, 3, "một lời tới a, một lời tới b, một lời tới c; các ảnh còn lại của a không được hỏi");
+  assert.equal(r.s.so?.soFile, 1, "chỉ ảnh của máy chủ b");
+  assert.equal(r.s.so?.soDuAnXong, 1, "mọi ảnh máy chủ ngoài đã có kết quả (lấy được hoặc ghi lý do), dự án xong ngay lượt này");
+  const loi = Object.fromEntries((await moiKind(dir)).filter((it) => it.kind === "anh_du_an").flatMap((it) => it.meta.mediaFiles).map((m: { url: string; error?: string }) => [new URL(m.url).pathname, m.error]));
+  assert.deepEqual(loi, { "/x/1": "chan-o-may-chu", "/x/2": "chan-o-may-chu", "/y/1": undefined, "/z/1": "chan-o-may-chu", "/x/3": "chan-o-may-chu" });
+  assert.equal(r.keoDan.blocks, 0, "máy chủ ngoài chặn không tính là nguồn chặn");
+  const tepBiChan = JSON.parse(await readFile(join(dir, "tien-do", "may-chu-bi-chan.json"), "utf8")) as Record<string, { lyDo: string }>;
+  assert.equal(Object.keys(tepBiChan).length, 2, "hai máy chủ bị chặn được nhớ (chỉ theo mã băm của tên máy chủ)");
+  assert.ok(Object.keys(tepBiChan).every((k) => /^[0-9a-f]{16}$/.test(k)), "không lưu tên máy chủ thật");
+  // Lượt sau: máy chủ a đã mở lại (trả ảnh bình thường) nhưng vẫn bị bỏ qua vì đã ghi nhận bị chặn.
+  const mo = nguonAnhUrl(() => ({}));
+  const r2 = await chayAnh(dir, mo.fetchImpl, { chiNgoai: true, luongSong: 1, soFile: 10 }).run();
+  assert.equal(r2.s.calls, 0);
+  assert.equal(r2.s.so?.soDuAnXong, 0, "dự án đã xong từ lượt trước");
+}));
+
+test("pha ảnh máy chủ ngoài: máy chủ không còn tồn tại là lỗi vĩnh viễn của từng URL, nhiều ảnh như vậy KHÔNG làm dừng lượt", async () => withTmp(async (dir) => {
+  await duaAnhVaoKho(dir, "8", Array.from({ length: 12 }, (_, i) => `https://chet${i}.example.org/x/${i}`));
+  const chet = nguonAnhUrl(() => {
+    throw new TypeError("fetch failed", { cause: Object.assign(new Error("getaddrinfo ENOTFOUND"), { code: "ENOTFOUND" }) });
+  });
+  const r = await chayAnh(dir, chet.fetchImpl, { chiNgoai: true, luongSong: 1, soFile: 4 }).run();
+  assert.equal(r.s.calls, 12);
+  assert.equal(r.s.so?.soDuAnXong, 1);
+  const loi = (await moiKind(dir)).flatMap((it) => it.meta.mediaFiles ?? []).map((m: { error?: string }) => m.error);
+  assert.deepEqual([...new Set(loi)], ["may-chu-khong-ton-tai"]);
+}));
+
+test("pha ảnh máy chủ ngoài: mỗi máy chủ tối đa hai lời cùng lúc dù lượt cho phép nhiều luồng", async () => withTmp(async (dir) => {
+  await duaAnhVaoKho(dir, "8", Array.from({ length: 8 }, (_, i) => `https://mot.example.org/x/${i}`));
+  let dangChay = 0;
+  let toiDa = 0;
+  const dem = nguonAnhUrl(async () => {
+    dangChay++;
+    toiDa = Math.max(toiDa, dangChay);
+    await new Promise((r) => setTimeout(r, 15));
+    dangChay--;
+    return {};
+  });
+  await chayAnh(dir, dem.fetchImpl, { chiNgoai: true, luongSong: 6, soFile: 10 }).run();
+  assert.equal(toiDa, 2, `nhiều nhất hai lời cùng lúc tới một máy chủ ngoài (đo ${toiDa})`);
+}));
+
+test("pha ảnh: máy chủ của nguồn trả 200 kèm trang HTML là trang thử thách → dừng cả lượt với lý do blocked", async () => withTmp(async (dir) => {
+  await duaAnhVaoKho(dir, "8", ["https://cdn.gia.test/a/1"]);
+  const html = nguonAnhUrl(() => ({ body: "<html>captcha</html>", kieu: "text/html" }));
+  const lan = chayAnh(dir, html.fetchImpl, { luongSong: 1, soFile: 5 });
+  const e = await lan.run().then(() => null, (x: unknown) => x);
+  assert.ok(e instanceof RunStopped, String(e));
+  assert.equal(e.reason, "blocked");
+}));
+
+test("pha ảnh: ghi nhật ký mỗi lô (số ảnh, số byte, số lỗi) để lượt dừng giữa chừng vẫn thấy được tiến độ", async () => withTmp(async (dir) => {
+  await duaAnhVaoKho(dir, "8", [1, 2, 3].map((i) => `https://cdn.gia.test/a/${i}`));
+  const nguon = nguonAnh(() => ({}));
+  const r = await chayAnh(dir, nguon.fetchImpl, { soFile: 2 }).run();
+  const lo = r.log.filter((x) => x.suKien === "anh-lot");
+  assert.deepEqual(
+    lo.map((x) => [x.nhomMayChu, x.soFile, Number(x.soByte) > 0, x.soLoi]),
+    [["nguon", 2, true, 0], ["nguon", 1, true, 0]],
+  );
+}));
+
+test("executePhase pha images: mất mạng (network-down) KHÔNG ghi nhận là nguồn chặn — lượt ảnh nhiều luồng kế vẫn được chạy", async () => withTmp(async (dir) => {
+  await duaVaoKho(dir, [anh("8", { danh_sach_hinh_anh: Array.from({ length: 12 }, (_, i) => ({ photo_url: `https://cdn.gia.test/m/${i}` })) }, null, "2026-11-24T05:00:00.000Z")]);
+  const mang = nguonAnh(() => "mang");
+  const r1 = await chayQuaDieuKhien(dir, "images", mang.fetchImpl, { luongSong: 2 });
+  assert.equal(r1.stopReason, "network-down");
+  assert.equal(JSON.parse(await readFile(join(dir, "tien-do-anh", "state.json"), "utf8")).blockedRuns, 0);
+  const tot = nguonAnh(() => ({}));
+  const r2 = await chayQuaDieuKhien(dir, "images", tot.fetchImpl, { luongSong: 2 });
+  assert.notEqual(r2.stopReason, "fast-after-block");
+  assert.equal(r2.ok, true);
 }));

@@ -54,7 +54,7 @@ export type ExecOptions = {
   /** Mốc mở rộng — lựa chọn của pha căn hộ toàn bộ dự án. */
   tatCaDuAn?: { tuSoCan?: number; denSoCan?: number; gioiHan?: number; ids?: string[] };
   /** Mốc mở rộng — lựa chọn của pha ảnh. */
-  anh?: { luongSong: number; soFile: number };
+  anh?: { luongSong: number; soFile: number; chiNgoai?: boolean };
   /** Phần thửa mở rộng — pha lưới dày. */
   oLuoi?: { buocM: number; gioiHan?: number };
   /** fetch dùng cho pha ảnh — nơi gọi đặt (mặc định fetch toàn cục; test đệm bản giả). */
@@ -288,6 +288,7 @@ export async function executePhase(o: ExecOptions): Promise<ExecResult> {
             anh: {
               hostSuffixes: o.config.anh?.hostSuffixes ?? [],
               luongSong: o.anh?.luongSong ?? 1,
+              chiNgoai: o.anh?.chiNgoai === true,
               maxBytes: ANH_MAX_BYTES,
               timeoutMs: ANH_TIMEOUT_MS,
               userAgent: ANH_USER_AGENT,
@@ -324,9 +325,11 @@ export async function executePhase(o: ExecOptions): Promise<ExecResult> {
     if (e instanceof RunStopped) {
       if (giuKhoa) {
         // Một lần bị chặn (403, 429) được ghi vào trạng thái để khoá tăng tốc ở các lượt sau. Nguồn trả 403/429 mà
-        // không kèm CORS thì trong trang chỉ thấy là lỗi mạng (đo 24/11 với 401) — lượt Nhanh mà mười lời thất bại
-        // liền cũng tính là một lần bị chặn, thận trọng hơn là không bao giờ bật được khoá.
-        if (e.reason === "blocked" || (e.reason === "network-down" && fast)) {
+        // không kèm CORS thì TRONG TRANG chỉ thấy là lỗi mạng (đo 24/11 với 401) — lượt nhanh gọi trong trang mà
+        // mười lời thất bại liền cũng tính là một lần bị chặn, thận trọng hơn là không bao giờ bật được khoá. Pha ảnh
+        // gọi bằng fetch của Node nên 403 thấy thẳng: mất mạng ở pha ảnh chỉ là mất mạng của máy thu, KHÔNG tính là
+        // nguồn chặn (lượt soát 25/11: tính thì một lần rớt mạng khoá vĩnh viễn mọi lượt ảnh nhiều luồng sau).
+        if (e.reason === "blocked" || (e.reason === "network-down" && fast && o.phase !== "images")) {
           state.blockedRuns = (state.blockedRuns ?? 0) + 1;
         }
         // Phần đã chốt ở lần chốt khi dừng được ghi nhận SAU khi chốt xong: lượt sau không phải lấy lại.

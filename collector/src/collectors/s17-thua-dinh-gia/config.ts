@@ -89,8 +89,11 @@ export type S17Config = {
   paths: Partial<Record<Role, string>>;
   /** Tên cookie phiên trong tab của nguồn — chỉ pha cần phiên dùng; giá trị cookie không bao giờ rời trang. */
   session?: { cookieName: string };
-  /** Mốc mở rộng — đuôi máy chủ lưu trữ ảnh của chính nguồn (tầng A): pha ảnh chỉ tải từ các máy chủ này. */
-  anh?: { hostSuffixes: string[] };
+  /**
+   * Mốc mở rộng — ảnh: `hostSuffixes` là đuôi máy chủ lưu trữ của chính nguồn (tầng A); `ngoai: true` cho phép lấy
+   * cả ảnh ở máy chủ ngoài (Mạnh chốt 25/11) — thiếu cờ này thì lượt máy chủ ngoài không chạy.
+   */
+  anh?: { hostSuffixes: string[]; ngoai?: boolean };
 };
 
 export class ConfigError extends Error {
@@ -128,7 +131,7 @@ export function loadConfig(text: string): S17Config {
     throw new ConfigError(`cấu hình S17 không đọc được JSON: ${String(e)}`);
   }
   const obj = raw as
-    | { hosts?: Record<string, unknown>; paths?: Record<string, unknown>; session?: { cookieName?: unknown } | null; anh?: { hostSuffixes?: unknown } | null }
+    | { hosts?: Record<string, unknown>; paths?: Record<string, unknown>; session?: { cookieName?: unknown } | null; anh?: { hostSuffixes?: unknown; ngoai?: unknown } | null }
     | null;
   if (!obj || typeof obj !== "object") throw new ConfigError("cấu hình S17 phải là một đối tượng");
   const hosts: Record<string, string> = {};
@@ -157,7 +160,8 @@ export function loadConfig(text: string): S17Config {
     const ds: unknown = obj.anh.hostSuffixes;
     const dung = Array.isArray(ds) && ds.length > 0 && ds.every((x) => typeof x === "string" && /^[a-z0-9-]+(?:\.[a-z0-9-]+)+$/.test(x));
     if (!dung) throw new ConfigError("anh.hostSuffixes trong cấu hình S17 phải là danh sách không rỗng các đuôi máy chủ chữ thường, vd «cdn.example.net»");
-    anh = { hostSuffixes: ds as string[] };
+    if (obj.anh.ngoai !== undefined && obj.anh.ngoai !== null && typeof obj.anh.ngoai !== "boolean") throw new ConfigError("anh.ngoai trong cấu hình S17 phải là true hoặc false");
+    anh = { hostSuffixes: ds as string[], ...(obj.anh.ngoai === true ? { ngoai: true } : {}) };
   }
   return { hosts: { api: hosts.api, agent: hosts.agent, web: hosts.web }, paths, ...(session ? { session } : {}), ...(anh ? { anh } : {}) };
 }
