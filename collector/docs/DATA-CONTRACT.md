@@ -318,28 +318,33 @@ Khoá nối với S16/S08 (chi tiết số đo ở tệp kê local của lượt
 
 > Mốc ngày 1 (24–25/11/2026) thu phần chắc: bảng tham chiếu, dự án, mặt nạ vùng có ranh thửa. Mốc ngày 2
 > (claudedp-2411-21) thu căn hộ của các dự án mẫu, thửa ở khu thí điểm, dự án thấp tầng. Mốc mở rộng
-> (claudedp-2411-73, Mạnh chốt 25/11/2026) mở ra: căn và chi tiết căn của TOÀN BỘ dự án có bảng căn (v18), TOÀN BỘ ảnh
-> dự án vào kho chuẩn (v18, kind `anh_du_an`), rồi thửa cho toàn bộ vùng có dữ liệu theo mặt nạ (đang làm). Riêng
-> `mix_gia` (đơn giá thị trường theo toạ độ) vẫn là thiết kế, chưa thu. Mã bộ thu: `collector/src/collectors/s17-thua-dinh-gia/`.
+> (claudedp-2411-73, Mạnh chốt 25/11/2026) mở ra: căn và chi tiết căn của TOÀN BỘ dự án có bảng căn (v18, luật 11), TOÀN BỘ ảnh
+> dự án vào kho chuẩn (v18, kind `anh_du_an`, luật 12 — kể cả ảnh ở máy chủ ngoài nguồn, Mạnh chốt 25/11 «Lấy cả ảnh ở
+> máy chủ ngoài»), và thửa cho mọi vùng có dữ liệu theo mặt nạ (luật 13–14: bản đồ phủ trước, rồi lưới dày trong từng ô;
+> Mạnh chốt 25/11 «mở cả thửa»). Riêng `mix_gia` (đơn giá thị trường theo toạ độ) vẫn là thiết kế, chưa thu. Mã bộ thu:
+> `collector/src/collectors/s17-thua-dinh-gia/`.
 > Chữ đưa vào `sourceId` (tên toà, tên đường, từ khoá, mã căn) viết ASCII chữ thường, không dấu, khoảng trắng và dấu
 > câu thành gạch nối («Hàng Đào» → `hang-dao`, «3312A Tòa Park 12» → `3312a-toa-park-12`).
 
 - Thư mục `vn/vn__s17-thua-dinh-gia__<id>/`. **Một lượt thu = nhiều snapshot nhỏ** ghi ngay khi lấy được: một trang
   danh sách dự án, hay một tỉnh của mặt nạ tile, là một snapshot; bảng tham chiếu và chi tiết dự án gộp theo lô (50 item,
   5 dự án). Mốc mở rộng: liệt kê căn một toà là một snapshot (mọi trang của một lượt chốt cùng lô với bản gộp toà);
-  100 chi tiết căn một snapshot; pha ảnh chốt tối đa 100 tệp một snapshot cùng một item bảng đối chiếu. Bộ thu chỉ ghi
+  100 chi tiết căn một snapshot; pha ảnh chốt tối đa 100 tệp một snapshot cùng một item bảng đối chiếu; bản đồ phủ và
+  lưới dày chốt theo lô điểm, xong một ô thì ghi thêm item bản đồ / bản gộp của ô. Bộ thu chỉ ghi
   nhận «đã lấy» SAU khi snapshot chốt xong, nên gãy giữa lượt (bị chặn, hết phiên, quá trần)
   không mất dữ liệu đã chốt; tối đa một lô đang dở được lấy lại ở lượt sau ⇒ cùng `sourceId` có thể nằm trong hai
-  snapshot, bên đọc lấy bản mới nhất theo `fetchedAt`. Lô đang dở lúc dừng được chốt kèm `manifest.error` (lý do dừng);
+  snapshot, bên đọc lấy bản mới nhất theo `fetchedAt`. **Ngoại lệ**: mỗi item `anh_du_an` là một PHẦN ảnh của dự án —
+  bên đọc cộng dồn theo item, không lấy bản mới nhất (luật 12). Lô đang dở lúc dừng được chốt kèm `manifest.error` (lý do dừng);
   không còn gì đang dở thì không sinh snapshot rỗng. `manifest.schemaVersion = 17` (các pha của mốc ngày 1–2) hoặc
-`18` (các pha của mốc mở rộng); `coverage.notes` của mọi snapshot
+  `18` (các pha của mốc mở rộng); `coverage.notes` của mọi snapshot
   mang đúng `S17 khuôn 2 (mốc ngày 1, claudedp-2411-20)`.
-- **Hai chế độ thu**:
+- **Ba chế độ thu**:
   - *công khai* — `static_config`, `gia_ubnd`, `tile_coverage`: gọi bằng fetch thường kèm header Origin của trang
     nguồn, không mang phiên;
-  - *có phiên* — `du_an_list`, `du_an_detail` và mọi kind của mốc ngày 2: gọi TRONG TAB của hồ sơ nơi Mạnh đã đăng
+  - *có phiên* — `du_an_list`, `du_an_detail` và mọi kind căn hộ, thửa: gọi TRONG TAB của hồ sơ nơi Mạnh đã đăng
     nhập (trình duyệt ego lite), phiên do chính trang gắn. Thông tin phiên là tầng A: không rời trình duyệt, không vào
     snapshot, không vào log.
+  - *tệp tĩnh* — `anh_du_an`: tải ảnh bằng fetch của Node, không mang phiên, KHÔNG gọi API của nguồn (luật 12).
 - **Đường API không nằm trong hợp đồng lẫn trong code.** Bộ thu gọi theo *vai* (`project-list`, `project-detail`,
   `building-tree`, `gallery`, `land-price-by-district`…); đường thật đọc từ tệp local ngoài git
   (`~/.oneinvest/s17-thua-dinh-gia.json`); mỗi vai chỉ nhận đúng tên tham số đã khai. Đường hay tham số ngoài danh
@@ -384,12 +389,14 @@ Khoá nối với S16/S08 (chi tiết số đo ở tệp kê local của lượt
 | `du_an_detail` | `du-an-<id>` | `{ detail, filterOptions, gallery }` — phản hồi gốc của một dự án: hồ sơ, cây lựa chọn toà → tầng → hướng → diện tích, thư viện ảnh. `gallery` là `null` khi thư viện lấy lỗi (ảnh không nằm trong mốc ngày 1) — hồ sơ và cây toà vẫn đủ | `request {id}` · `coBangCan` (`true` \| `false` \| `null`) · `galleryLoi` (chỉ khi `gallery` là `null`: lý do) |
 | `can_ho_list` | `du-an-<id>-toa-<toà>-trang-<n>[-lot-<k>]` | `{ json }` — một trang liệt kê căn theo toà: `data.content[]` (mỗi mục `text` = mã căn, `sub_text` = toà, tầng, diện tích, hướng, loại căn) cùng `totalElements`, `totalPages`; nguồn chịu 100 mục một trang (đo 24/11). Hậu tố `-lot-<k>` chỉ có ở lượt quét kế từ lượt hai | `request {project_id, thap, text, page, size}` · `tongCan` (số DÒNG nguồn công bố) · `soTrang` · `soMuc` · `lot` (lượt quét, từ 1) · `maMoi` (số mã mới gặp trong LƯỢT quét này, tính dồn tới trang này — không phải của riêng trang) |
 | `can_ho_toa` | `du-an-<id>-toa-<toà>` | `{ maCan: […] }` — mã căn duy nhất của một toà sau khi gộp mọi trang, mọi lượt | `request {project_id, thap}` · `tongCan` · `maDuNhieu` · `soLot` · `khop` (`maDuNhieu = tongCan`; chỉ có thể đúng khi lời liệt kê trả ít nhất một dòng và một mã) · `laToaChungMinh` · `rong` (mốc mở rộng: `true` khi liệt kê không trả mã nào) |
-| `can_ho_du_an` | `du-an-<id>` | `{ toa: [{ thap, maDuNhieu, tongDong, soLot }] }` — bản gộp căn của một dự án, ghi MỘT lần cho một dự án khi đã liệt kê hết các toà và lấy hết căn có thể lấy; nếu lượt gãy sau khi đã chốt bản gộp mà chưa lưu trạng thái thì lượt sau ghi thêm bản ⇒ có thể có hai bản, bên đọc lấy bản mới nhất theo `fetchedAt` | `request {id}` · `soToa` · `maDuNhieu` · `tongDong` · `soCanNguon` (số `so_can` trong chi tiết dự án; `null` khi không đọc được) · `khop` (`maDuNhieu = soCanNguon`; `null` khi không có số) · `khopTongDong` · *(mốc mở rộng)* `moRong: true` · `soToaKhop` · `soDaLay` (số mã đã có `can_ho_detail`) · `soKhongLayDuoc` (số mã không gọi trúng — luật 9) |
+| `can_ho_du_an` | `du-an-<id>` | `{ toa: [{ thap, maDuNhieu, tongDong, soLot }] }` — bản gộp căn của một dự án, ghi MỘT lần cho một dự án khi đã liệt kê hết các toà và lấy hết căn có thể lấy; nếu lượt gãy sau khi đã chốt bản gộp mà chưa lưu trạng thái thì lượt sau ghi thêm bản ⇒ có thể có hai bản, bên đọc lấy bản mới nhất theo `fetchedAt`. Mốc mở rộng: dự án còn toà chưa liệt kê được hay còn căn lỗi tạm thì CHƯA có bản gộp (luật 11) | `request {id}` · `soToa` · `maDuNhieu` · `tongDong` (tổng số DÒNG của lời liệt kê mọi toà) · `soCanNguon` (số `so_can` trong chi tiết dự án; `null` khi không đọc được) · `khop` (`maDuNhieu = soCanNguon`; `null` khi không có số) · `khopTongDong` (`maDuNhieu = tongDong`; `false` khi lời liệt kê có dòng trùng mã hoặc có toà rỗng) · *(mốc mở rộng)* `moRong: true` · `soToaKhop` · `soDaLay` (số mã đã có `can_ho_detail`) · `soKhongLayDuoc` (số mã không gọi trúng — luật 9 — và số mã lỗi tạm quá ba lượt) |
 | `can_ho_detail` | `du-an-<id>-can-<mã căn>` | `{ json }` — hồ sơ một căn (`data.properties`: `ma_can`, `ma_can_tren_cua` là mã trên cửa, tháp, tầng, diện tích, đơn giá thẩm định, trạng thái giao dịch, ngày duyệt…) | `request {project_id, ma_can}` · `toa` · `khopMaCan: true` |
-| `thua` | `thua-<mã địa chính>` | `{ json }` — hồ sơ thửa theo toạ độ: đa giác ranh giới, kích thước, tiếp giáp đường, đơn giá đất theo trạng thái quy hoạch, mã hành chính cũ và mới | `request {latitude, longitude, loaiTimKiem}` · `phuongPhap` (`grid` \| `suggest`) · `khuVuc` · `ogcFid` · `soTo` · `soThua` · `dienTich` · `duong` · `maPhuong` · `maQuan` · `maThanhPho` |
+| `thua` | `thua-<mã địa chính>` | `{ json }` — hồ sơ thửa theo toạ độ: đa giác ranh giới, kích thước, tiếp giáp đường, đơn giá đất theo trạng thái quy hoạch, mã hành chính cũ và mới | `request {latitude, longitude, loaiTimKiem}` · `phuongPhap` (`grid` \| `suggest` \| `ban-do` \| `luoi`) · `khuVuc` (khu thí điểm; ở mốc mở rộng là tile `z-x-y` của bản đồ phủ, hay mã ô `o-<z>-<x>-<y>-<i>-<j>` của lưới dày) · `ogcFid` · `soTo` · `soThua` · `dienTich` · `duong` · `maPhuong` · `maQuan` · `maThanhPho` |
 | `thua_goi_y` | `goi-y-<khu>-<tên đường>` | `{ json }` — gợi ý thửa theo tên đường: `data[0].items[]`, mỗi mục có `id` và `extra {latitude, longitude, dien_tich, chieu_rong, chieu_dai}` | `request {term, size}` · `khuVuc` · `soMuc` |
 | `thua_khu_vuc` | `khu-vuc-<khu>` | `{ soDiemLuoi, soDiemGoiY, soThuaLuoi, soThuaGoiY, soTrung, soKhongCo, soLoi, soCauGoiY, soLoiGoiY, loi? }` — bản gộp một khu thí điểm; `loi` (có từ sau lượt soát mã 24/11) = MỌI lời đã dùng cho khu, kể cả lượt chạy trước | `request {dienTichKm2, buocM, soDiemLuuGiac}` · `ten` · `thuaMoiKm2` · `loiMoiKm2` · `tongLoi` · `soThua` |
-| `anh_du_an` *(mốc mở rộng)* | `du-an-<id>-anh-<n>` (`n` tính từ 1) | `{ media: [{ url, nhom?: [tên nhóm ảnh] }] }` — một lô ảnh của một dự án; ảnh dự án nhiều thì trải trên vài item. `url` là link có chữ ký tạm thời (tên miền thật có trong payload — luật 7) | `request {duAn}` · `soFile` · `soByte` · `mediaFiles: [{ url, file, sha256, bytes } \| { url, error }]` — bảng đối chiếu URL → tệp `media/<băm 16 của URL>.<đuôi>` nằm TRONG CÙNG snapshot (quy ước chung của DATA-CONTRACT); `error` ∈ `host-not-allowed` (máy chủ ngoài, không tải) · `het-han` (link ký số quá hạn) · `sai-chu-ky` · `khong-con` · `timeout` · `mang` · `qua-co` |
+| `thua_ban_do` *(mốc mở rộng, luật 13)* | `ban-do-<z>-<x>-<y>` | `{ buocM: 1000, diem: [[lat, lng, mã thửa \| null \| "loi"], …] }` — BẢN ĐỒ PHỦ của một tile mặt nạ: 121 điểm cách 1 km (11 × 11, mét Mercator) quanh tâm tile; `null` = điểm không có thửa, `"loi"` = lỗi mạng. Chỉ nói ô 1 km nào có thửa, KHÔNG phải kiểm kê | `request {zoom}` · `tile` (`z/x/y`) · `buocM` · `soDiem` · `soCo` (số điểm có thửa) · `soLoi` · `viTri` (`[lat, lng]` tâm tile) |
+| `thua_o` *(mốc mở rộng, luật 14)* | `o-<z>-<x>-<y>-<i>-<j>` | `{ soDiem, soThuaMoi, soTrung, soKhongCo, soLoi }` — bản gộp lưới dày của MỘT ô 1 km (ô `i`, `j` trong lưới 11 × 11 của tile); ghi khi đã hỏi hết điểm của ô | `request {buocM}` · `tile` · `o: [i, j]` · `viTri` (`[lat, lng]` tâm ô) · `phuongPhap: "luoi"` |
+| `anh_du_an` *(mốc mở rộng, luật 12)* | `du-an-<id>-anh-<từ>-<tới>` · lượt máy chủ ngoài: `du-an-<id>-anh-ngoai-<từ>-<tới>` (`từ`, `tới` = VỊ TRÍ trong danh sách ảnh của dự án, tính từ 1) | `{ media: [{ url, nhom?: [tên nhóm ảnh] }] }` — MỘT PHẦN ảnh của một dự án (tối đa 100 URL một item): bên đọc CỘNG DỒN theo item, không lấy bản mới nhất theo `sourceId`. `url` là link ký số tạm thời (tên miền thật có trong payload — luật 7) | `request {duAn}` · `nhomMayChu` (`nguon` = máy chủ lưu trữ của nguồn · `ngoai` = máy chủ khác) · `soFile` · `soByte` · `mediaFiles: [{ url, file, sha256, bytes } \| { url, error, chiTiet? }]` — bảng đối chiếu URL → tệp `media/<băm 16 của URL>.<đuôi>` nằm TRONG CÙNG snapshot (quy ước chung của DATA-CONTRACT); `error` là mã lỗi ở luật 12 |
 | `mix_gia` *(chưa thu)* | `toado-<lat>-<lng>` | `{ json }` — đơn giá thị trường theo toạ độ | `request` · `ganThua` |
 | `du_an_thap_tang` | `du-an-nha-dat-<id>` | `{ json }` — chi tiết một dự án thấp tầng, lấy có cờ riêng trên cùng đường chi tiết dự án | `request {id, for_house: true}` · `phuongPhap` (`id-sweep` \| `suggest`) · `estateType` (luôn là `du_an_nha_dat`) · `ten` · `tuCacTuKhoa` (chỉ khi khám phá qua từ khoá) |
 | `du_an_goi_y_thap_tang` | `goi-y-thap-tang-<từ khoá>` | `{ json }` — gợi ý dự án thấp tầng theo từ khoá, có cờ; `data[0].items[]` mỗi mục có `source`, `id`, `text` | `request {term, for_house: true, size}` · `soMuc` · `soThapTang` |
@@ -414,7 +421,8 @@ Luật đọc:
    dự án có bảng căn (`coBangCan = true`), 465 không có. Dự án lấy lỗi không có item; danh sách đó nằm ở trạng thái
    bộ thu trên máy thu và được báo trong lượt XONG. `coBangCan = null` khi chi tiết không mang cờ — bên đọc không suy
    ra `false`. Thư viện ảnh chỉ là phần phụ của mốc này: lỗi thì `gallery` là `null` và `meta.galleryLoi` ghi lý do;
-   đếm dự án có bảng căn KHÔNG phụ thuộc thư viện. Ảnh dự án CHƯA tải: payload chỉ có link.
+   đếm dự án có bảng căn KHÔNG phụ thuộc thư viện. Thư viện ảnh trong payload chỉ là link; ảnh gốc do pha ảnh lấy
+   riêng (luật 12).
 6. **Hai namespace dự án** (`du_an` căn hộ và `du_an_nha_dat` thấp tầng) trùng dải id: khoá dài hạn là cặp
    (namespace, id). Chi tiết thấp tầng PHẢI lấy có cờ riêng (`for_house=true`) trên cùng một đường — đo 24/11: không
    có cờ, cùng id trả một dự án căn hộ khác (id 1804: «Star Villa Sơn Trà» so với «Nhà công vụ Bộ tổng tham mưu»). Với
@@ -486,16 +494,58 @@ Luật đọc:
    như luật 8–9, khác ở: trang của một lượt liệt kê được lấy song song (`maMoi` vẫn tính dồn theo thứ tự trang); KHÔNG có
    cổng chứng minh dừng cả lượt cho từng dự án — toà không khớp vẫn ghi `khop: false`, `rong: true` khi liệt kê rỗng, và
    bản gộp dự án (`moRong: true`) ghi `soToaKhop`, `soDaLay`, `soKhongLayDuoc`; dự án có bảng căn nhưng không có tên
-   toà vẫn có bản gộp (`soToa: 0`). Một mã căn không lấy được là lỗi vĩnh viễn của mã đó, bộ thu không hỏi lại. Bản gộp
+   toà vẫn có bản gộp (`soToa: 0`). Mã căn không gọi trúng (luật 9) là lỗi vĩnh viễn của mã đó, bộ thu không hỏi lại.
+   **Lỗi tạm** (mạng, 5xx, hết giờ) thì khác: một trang liệt kê lỗi tạm ⇒ toà đó chưa được ghi nhận gì và bị bỏ qua
+   trong lượt này, lượt sau liệt kê lại từ đầu; chi tiết một căn lỗi tạm chưa được ghi là lỗi, đếm lượt thử, quá ba lượt
+   thì ghi nhận là `soKhongLayDuoc`. Dự án còn toà chưa liệt kê được hay còn căn lỗi tạm thì CHƯA có bản gộp. Bản gộp
    `can_ho_du_an` không có `moRong` là của hai dự án mẫu ở trên.
+   **`khop: false` thường là phủ của nguồn, không phải lỗi thu** — đo 25/11 ở dự án lớn nhất (id 92): chi tiết khai
+   13.369 căn, 24 block, nhưng danh sách toà chỉ có 6 tên; bốn toà có dữ liệu khai 2.110 dòng, hai toà (`3`, `CT401`)
+   khai 0 và liệt kê rỗng; liệt kê được 2.069 mã (toà CT304: 490 dòng nhưng 449 mã — lượt quét thứ ba không thêm mã,
+   tức dòng trùng ngay trong lời liệt kê). Bản gộp ghi `soCanNguon: 13369`, `khop: false`, `khopTongDong: false`, ba
+   toà khớp. Bên đọc dùng các số này để tự đánh giá phủ, không «sửa cho khớp». Tốc độ đo 25/11 (bốn luồng, nhịp 250 ms):
+   khoảng 1,65 lời/s — thời gian là do độ trễ máy chủ (khoảng hai giây một lời chi tiết).
 12. *(mốc mở rộng)* **Ảnh dự án** (pha `images`). Ảnh gốc là tệp nhị phân `media/*` trong thư mục snapshot, manifest khai
-   `sha256` và `bytes` của từng tệp (kiểm như `items-*`); item `anh_du_an` chỉ là bảng đối chiếu. Đuôi tệp theo kiểu
-   nội dung. Link trong `payload.media` là link ký số hiệu lực 7 ngày kể từ ngày ký (`X-Amz-Date`): bên đọc KHÔNG dùng
-   link để tải lại, chỉ dùng tệp đã lưu; `error: het-han` là link đã quá hạn lúc thu (đo 25/11: khoảng 5.300 link ký
-   17–20/11 đã hết hạn trước khi mốc bắt đầu — ảnh đó lấy lại được ở lượt sau sau khi làm mới chi tiết dự án). Chỉ tải
-   từ máy chủ lưu trữ của chính nguồn; `error: host-not-allowed` là URL ở máy chủ khác (đo 25/11: 82.133 URL trên
-   4.101 máy chủ, 68.877 trên một máy chủ) — không tải, URL vẫn nằm trong payload. Một URL trong mục lỗi không được
-   tải lại ở lượt sau trừ khi lỗi là `timeout`/`mang`/`qua-co`. Pha này không gọi API của nguồn, không cần phiên.
+   `sha256` và `bytes` của từng tệp (kiểm như `items-*`); item `anh_du_an` chỉ là bảng đối chiếu và MỘT item là MỘT
+   PHẦN ảnh của dự án: bên đọc **cộng dồn theo item**, không lấy bản mới nhất theo `sourceId`. Đuôi tệp theo kiểu nội
+   dung. Link trong `payload.media` là link ký số hiệu lực 7 ngày kể từ ngày ký (`X-Amz-Date`): bên đọc KHÔNG dùng link
+   để tải lại, chỉ dùng tệp đã lưu. Pha này không gọi API của nguồn, không cần phiên.
+   - **Hai lượt chạy riêng**, phân biệt bằng `meta.nhomMayChu`: `nguon` — ảnh trên máy chủ lưu trữ của chính nguồn;
+     `ngoai` — ảnh chèn từ máy chủ khác (Mạnh chốt 25/11 «Lấy cả ảnh ở máy chủ ngoài»; đo: 82.127 URL trên 4.101 máy
+     chủ, 68.877 trên một máy chủ). Lượt máy chủ ngoài mỗi máy chủ tối đa hai lời cùng lúc; trước khi kết nối (kể cả
+     mỗi bước chuyển hướng) giải tên máy chủ, tên trỏ vào dải địa chỉ nội bộ thì không tải (`cam-may-chu`).
+   - **Mã lỗi vĩnh viễn** trong `mediaFiles[].error` — hỏi lại cũng vậy, bộ thu không tải lại: `het-han` (link quá hạn
+     lúc thu; `chiTiet: du-doan-het-han` = quá hạn theo chính tham số `X-Amz-Date`/`X-Amz-Expires` của link, bộ thu
+     không gửi lời nào — công thức khớp 3.610/3.610 kết quả thật) · `sai-chu-ky` · `khong-con` (404, 410) · `http-4xx`
+     (4xx khác) · `qua-co` (trên 60 MB, kể cả theo `content-length`) · `rong` (0 byte) · `cam-may-chu` (địa chỉ nội bộ
+     hay giao thức lạ — không bao giờ gửi lời) · `chuyen-huong-cam` · `qua-nhieu-chuyen-huong` (trên 5 bước) ·
+     `may-chu-khong-ton-tai` (không phân giải được tên) · `may-chu-khong-tra-loi` (từ chối kết nối, mạng không tới) ·
+     `chung-chi` · `chan-o-may-chu` (chỉ lượt máy chủ ngoài: máy chủ trả 403, 429 hay trang HTML thay ảnh — bỏ máy
+     chủ đó, không lách) · `qua-so-lan-thu` (lỗi tạm quá ba lượt).
+   - **Lỗi tạm** (`chiTiet` là `treo` = không nhận được byte nào quá 30 giây, `timeout` = quá trần tổng 10 phút, lỗi
+     mạng, 5xx): mục nằm trong `mediaFiles` với `error` ngoài bộ mã trên và chưa có tệp — lượt sau thử lại; bên đọc
+     coi là chưa có ảnh.
+   - **Máy chủ của chính nguồn trả 403** (không phải hết hạn), 429 hay trang HTML là BỊ CHẶN: dừng cả lượt, không lách.
+   - **Hạn của link** (đo 09:00 ngày 25/11, 286.809 URL máy chủ nguồn): 2.816 link đã hết hạn, 2.376 hết hạn trong
+     ngày 25/11, 5.996 trong ngày 26/11, 269.209 vào ngày 01/12. Ảnh có link đã hết hạn lấy lại được sau khi làm mới
+     chi tiết dự án (link mới là URL khác ⇒ là tệp khác). 1.968 URL máy chủ nguồn không ký số (ảnh chung của trang).
+   - **43 item đầu của kind này** (lượt chạy thử 07:54–08:14 ngày 25/11, trước lượt soát) dùng mã theo số lô
+     `du-an-<id>-anh-<n>`, không có `nhomMayChu`, và đã có MỘT cặp trùng mã (hai item `du-an-121-anh-1`, nội dung
+     khác nhau: một cái có tệp, một cái chỉ toàn lỗi). Kho bất biến nên giữ nguyên — đây là lý do luật này yêu cầu
+     cộng dồn theo item. Ở các item đó `error: host-not-allowed` nghĩa là URL ở máy chủ ngoài (lượt máy chủ ngoài
+     tải riêng), không phải lỗi của nguồn.
+13. *(mốc mở rộng)* **Bản đồ phủ thửa** (pha `parcels-map`). Mặt nạ của mốc ngày 1 chỉ nói ô 10 km × 10 km có ít nhất
+   một điểm có thửa. Pha này thăm dò 121 điểm cách 1 km (mét Mercator) trong ô quanh TÂM của mỗi tile mặt nạ có dữ liệu
+   (503 tile) — khoảng 62.000 lời; điểm không có thửa nguồn trả `data: null` trong khoảng 0,1 s. Kết quả là kind
+   `thua_ban_do` (một item một tile) và những item `thua` có `phuongPhap: "ban-do"` — những thửa này chỉ là dấu chứng có
+   dữ liệu, KHÔNG phải kiểm kê. Đa giác tỉnh trên máy thu không dùng được để dựng lưới (đo 25/11: 20 tỉnh cộng
+   352.000 km²) nên mọi toạ độ tính theo tile. Điểm lỗi mạng được ghi nhận là `"loi"`, không hỏi lại.
+14. *(mốc mở rộng)* **Lưới dày trong từng ô** (pha `parcels-cell`). Ô cần làm = ô 1 km nào có thửa ở chính nó hoặc ở
+   một trong tám ô kề theo bản đồ phủ; xếp ô dày nhất trước. Mỗi ô một lưới vuông ⌊1000/buocM⌋ điểm một cạnh, cách đều
+   `buocM` mét (30 m ở lõi đô thị, 100 m ở phần còn lại), tâm ô là tâm lưới. Thửa ghi một lần theo mã địa chính
+   (`phuongPhap: "luoi"`, `khuVuc` = mã ô), gặp lại ở ô khác tính là trùng (`soTrung`). Xong ô thì ghi bản gộp
+   `thua_o`. Số điểm của một ô là độ phủ theo lưới, KHÔNG phải số thửa thật của ô (cùng giới hạn với `thua_khu_vuc`
+   ở luật 10).
 
 **Việc kèm bên one-invest (làn Claude, DA58)**: ALLOWLIST thêm `s17-thua-dinh-gia`; migration `stg_s17_*` (sổ số giữ
 128 tạm). Mẫu snapshot thật lấy từ thư mục snapshot của máy thu (thư mục `vn/vn__s17-thua-dinh-gia__*` mang dấu hiệu
@@ -504,10 +554,11 @@ Luật đọc:
 ## Lịch sử phiên bản
 
 - **schemaVersion 18 (2026-11-25, claudedp-2411-73 — S17 `s17-thua-dinh-gia`, mốc mở rộng)**: thêm kind
-  `anh_du_an` và tệp nhị phân `media/*` trong snapshot của S17 (luật đọc 12); các pha `apartments-all` và `images` ghi
+  `anh_du_an` và tệp nhị phân `media/*` trong snapshot của S17 (luật đọc 12), kind `thua_ban_do` và `thua_o` của phần
+  thửa mở rộng (luật đọc 13–14); các pha `apartments-all`, `images`, `parcels-map`, `parcels-cell` ghi
   `manifest.schemaVersion = 18`; kind căn hộ của mốc ngày 2 dùng tiếp cho toàn bộ dự án với các trường mới
-  (`can_ho_toa.rong`, `can_ho_du_an.moRong/soToaKhop/soDaLay/soKhongLayDuoc` — luật đọc 11). Các pha của mốc ngày 1–2
-  vẫn ghi 17. Thửa mở ra toàn bộ vùng có dữ liệu theo mặt nạ đang làm, kind thêm theo sẽ ghi trong mục này.
+  (`can_ho_toa.rong`, `can_ho_du_an.moRong/soToaKhop/soDaLay/soKhongLayDuoc` — luật đọc 11); `thua.phuongPhap` thêm
+  `ban-do` và `luoi`. Các pha của mốc ngày 1–2 vẫn ghi 17.
 - **schemaVersion 17 (2026-11-24, claudedp-2411-20 và -21 — S17 `s17-thua-dinh-gia`)**: thêm nguồn
   `s17-thua-dinh-gia` với 15 kind — năm kind của mốc ngày 1 (`static_config`, `gia_ubnd`, `tile_coverage`,
   `du_an_list`, `du_an_detail`), chín kind của mốc ngày 2 (`can_ho_list`, `can_ho_toa`, `can_ho_du_an`,
