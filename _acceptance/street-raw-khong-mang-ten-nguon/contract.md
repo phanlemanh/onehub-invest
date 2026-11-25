@@ -107,3 +107,6 @@ Lớp phát biểu sống (cùng ngày, sau khi ô sự cố đã gỡ, `probes/
 - Lượt 1–3 đỏ ở phép đo, không ở luật: lượt 1 chứng legacy sạch thắng khi rút fact (dẫn tới sửa AC-1); lượt 2–3 phát biểu legacy
   cấy thiếu `evidence.offer_id` nên bộ phân xử bỏ qua.
 
+- Hạ tầng S4 r2 (25/11): cô lập worktree của phiên chấm chặn lệnh nền của tác tử chấm và lệnh baseline; lượt chấm lại
+  không chạy E1–E3, E5, E7 (đã đạt ở r2 trên cùng phần mã). Lối thay cho lượt sau: đổi thư mục phiên ở đầu lượt do tin mở,
+  hoặc phiên chấm riêng (GS chốt 25/11).
