@@ -43,19 +43,20 @@ Chiều đỏ: route cũ đặt thị trường có điểm S02 lên đầu.
 Given sổ bề mặt thật và mã cây,
 When chạy `checkApiSurface`,
 Then 0 vi phạm; và route khai `public` mà bao đóng import (route và mọi module `app/src/lib` nó kéo theo, bỏ chú thích)
-có tên bảng `airdna_*` hoặc `ref_calib_*` thì có vi phạm mang đúng thông điệp `MSG.publicS02`. Tệp định nghĩa bộ đổi tên
-bảng `app/src/lib/db.ts` không tính.
+có tên bảng `airdna_*` hoặc `ref_calib_*` thì có vi phạm mang đúng thông điệp `MSG.publicS02`. Chỉ bỏ qua đúng biểu thức
+đổi tên bảng cho cloud trong `app/src/lib/db.ts` (hằng `CLOUD_TABLE_MAP`); phần còn lại của `db.ts` vẫn bị quét.
 
 ### AC-4 — Đột biến của rào đều đỏ
-Given ba đột biến: cấy lại câu JOIN bảng điểm S02 vào route markets; route public mới import `@/lib/queries`; route
-public mới đọc thẳng `ref_calib_scores`,
+Given bốn đột biến: cấy lại câu JOIN bảng điểm S02 vào route markets; route public mới import `@/lib/queries`; route
+public mới đọc thẳng `ref_calib_scores`; cấy một câu `FROM airdna_scores` vào `app/src/lib/db.ts` ngoài biểu thức đổi tên,
 When chạy bộ soát trên từng đột biến,
 Then mỗi đột biến cho vi phạm `MSG.publicS02`; bản không đột biến 0 vi phạm. Bộ đột biến cũ (`mutation`) vẫn xanh.
 
 ### AC-5 — Soát mọi route public bằng rào mới
 Given mọi dòng sổ khai `public`,
 When chạy rào mới trên cây sau khi sửa,
-Then 0 route đỏ; trên mã trước khi sửa chỉ `v1/markets` đỏ (đối chứng in trong test).
+Then 0 route đỏ; đối chứng trong test: cấy lại câu JOIN cũ vào route markets (văn bản ghim trong test, không đọc git) thì
+đúng một route `v1/markets` đỏ.
 
 ### AC-6 — Sổ nói thật
 Given `app/src/lib/api-surface.ts`,
@@ -64,7 +65,7 @@ Then `note` nói «danh sách thị trường và số tin; không mang số S02
 
 ### AC-7 — Hồi quy
 Given cây sau khi sửa,
-When chạy `feature_loop.suite_keys` phần app và `portal_static`,
+When chạy bộ test app (`app_ui`), `tsc` + lint (`app`) và `portal_static`,
 Then tất cả thoát 0.
 
 ## Coverage
@@ -83,8 +84,14 @@ Never: sửa `/ops/quality`, `lib/queries.ts`, `data-api/**`.
 ## Đường đo
 
 Đích trên màn (sau khi Vercel triển khai bản gộp, không có bước áp DB):
-`curl -s '<miền prod>/api/v1/markets?country=vn&limit=5' | jq '[.data[] | select(has("marketScore"))] | length'` — 5 → 0.
+`curl -s -w '\n%{http_code}' '<miền prod>/api/v1/markets?country=vn&limit=5'` rồi `jq`: đạt khi mã 200, `.data | length == 5`,
+mọi dòng có đủ `id`, `name`, `countryCode`, `listingCount`, và số dòng có khoá `marketScore` = 0 (trước gộp: 5).
+Thiếu một trong ba điều đầu thì phép đo không hợp lệ, không ghi «đạt».
 Bước kiểm sau gộp là chính lệnh này; giám sát đo.
+
+## Hỏi ở Cổng Phạm vi
+
+- Hỏi-1: khoá `marketScore` — bỏ hẳn (khuyến nghị) hay giữ khoá luôn `null`? Xem dòng sổ «chi-nguoi» về khoá này.
 
 ## Out of scope
 

@@ -26,13 +26,13 @@ evals:
     executor: script
     cmd: config:executors.script.api_surface_mutation
     paths: ["scripts/check-api-surface.mjs"]
-    expected: "Mọi đột biến (cũ và ba đột biến HT23) đỏ đúng thông điệp ghim; thoát 0."
+    expected: "Mọi đột biến (cũ và bốn đột biến HT23, gồm cấy FROM airdna_scores vào db.ts ngoài biểu thức đổi tên) đỏ đúng thông điệp ghim; thoát 0."
   - id: E5
     criterion: AC-5
     executor: test
     cmd: config:executors.test.tir_be_mat
     paths: ["scripts/check-api-surface.mjs", "scripts/check-api-surface.test.mjs", "app/src/app/api/**/route.ts"]
-    expected: "Ca HT23-AC-5: mọi route public 0 vi phạm publicS02; đối chứng mã route markets ở origin/main đỏ đúng một route v1/markets."
+    expected: "Ca HT23-AC-5: mọi route public 0 vi phạm publicS02; đối chứng cấy lại câu JOIN cũ (văn bản ghim trong test, không đọc git) thì đúng một route v1/markets đỏ với MSG.publicS02."
   - id: E6
     criterion: AC-6
     executor: test
@@ -45,3 +45,10 @@ evals:
     cmd: config:executors.script.portal_static
     paths: ["scripts/check-api-surface.mjs", "app/src/lib/api-surface.ts"]
     expected: "check-portal-compliance thoát 0; suite app, app_ui do lượt chấm chạy theo suite_keys."
+  - id: E8
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.app_ui
+    long_running: 90
+    paths: ["app/src/app/api/v1/markets/route.ts", "app/src/lib/api-surface.ts", "app/tests/api-markets-khong-s02.test.ts"]
+    expected: "Bộ test app xanh trên DB thử; không test nào còn đọc marketScore của /api/v1/markets."
