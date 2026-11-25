@@ -1,7 +1,7 @@
 /**
- * Điểm vào của bộ thu S17 (mốc ngày 1 và 2, claudedp-2411-20 và -21).
+ * Điểm vào của bộ thu S17 (mốc ngày 1, 2 và mốc mở rộng, claudedp-2411-20, -21 và -73).
  *
- *   node collector/dist/collectors/s17-thua-dinh-gia/main.js --phase <reference|tile-mask|projects|session-check|apartments|parcels|lowrise>
+ *   node collector/dist/collectors/s17-thua-dinh-gia/main.js --phase <reference|tile-mask|projects|session-check|apartments|parcels|lowrise|apartments-all|images|parcels-map>
  *        --snapshots-root <thư mục snapshot> --caps-calls <số> --caps-minutes <số> [--pace-ms 150..400] [--space <id>] [--luong-song 1..4]
  *
  * - Trần lời gọi và trần thời gian PHẢI khai mỗi lần chạy; nhịp kẹp trong mức nguồn đã chịu được.
@@ -26,7 +26,7 @@ import { nodeTransport } from "./transport-node.js";
 
 const HERE = dirname(fileURLToPath(import.meta.url)); // dist/collectors/s17-thua-dinh-gia
 const COLLECTOR_ROOT = join(HERE, "..", "..", "..");
-const PHASES: Phase[] = ["reference", "tile-mask", "projects", "session-check", "apartments", "parcels", "lowrise", "apartments-all", "images"];
+const PHASES: Phase[] = ["reference", "tile-mask", "projects", "session-check", "apartments", "parcels", "lowrise", "apartments-all", "images", "parcels-map"];
 /** Pha không cần phiên đăng nhập (chạy bằng fetch của Node ngay trong tiến trình này). */
 const PUBLIC_PHASES: Phase[] = ["reference", "tile-mask", "images"];
 /** Mốc mở rộng — pha ảnh có thư mục trạng thái RIÊNG để chạy song song với pha cần phiên (khoá một lượt một thư mục). */

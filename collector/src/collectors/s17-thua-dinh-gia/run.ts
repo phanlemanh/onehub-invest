@@ -9,10 +9,11 @@ import { MAX_CONCURRENCY, HttpStatusError, RunStopped, TemporaryFailure, type S1
 import { MAX_APARTMENT_LOT, assertNoSoftError, hasApartmentTable, makeItem, parseCount, projectIdOf, sourceIdSlug, tileBases } from "./kinds.js";
 import { imagesPhase, type AnhPhaseOptions } from "./pha-anh.js";
 import { apartmentsAll, type TatCaDuAnOptions } from "./pha-can-ho.js";
+import { parcelsMap } from "./pha-ban-do.js";
 import type { KeoDan } from "./keo-dan.js";
 import type { BatchWriter } from "./store.js";
 
-export type Phase = "session-check" | "reference" | "tile-mask" | "projects" | "apartments" | "parcels" | "lowrise" | "apartments-all" | "images";
+export type Phase = "session-check" | "reference" | "tile-mask" | "projects" | "apartments" | "parcels" | "lowrise" | "apartments-all" | "images" | "parcels-map";
 
 /** Một tỉnh trong lưới tile đã chọn sẵn (chỉ điểm nằm trên đất), sinh ngoài bộ thu từ bảng địa giới. */
 export type GridEntry = { marketId: string; name: string; tiles: string[] };
@@ -897,6 +898,9 @@ export async function runPhase(o: RunOptions): Promise<PhaseSummary> {
     case "apartments-all":
       if (!o.tatCaDuAn) throw new ConfigError("pha apartments-all cần lựa chọn tatCaDuAn");
       return apartmentsAll(o, o.tatCaDuAn);
+    case "parcels-map":
+      if (!o.snapshotRoot || !o.tienDoDir) throw new ConfigError("pha parcels-map cần gốc kho snapshot và thư mục tiến độ");
+      return parcelsMap(o);
     default:
       throw new ConfigError(`pha chưa làm: ${String(o.phase)}`);
   }

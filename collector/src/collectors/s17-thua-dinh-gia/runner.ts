@@ -232,7 +232,7 @@ export async function executePhase(o: ExecOptions): Promise<ExecResult> {
     root: o.snapshotRoot,
     maxItems: o.batchItems,
     phase: o.phase,
-    ...(o.phase === "apartments-all" || o.phase === "images" ? { schemaVersion: S17_SCHEMA_MO_RONG_DUNG } : {}),
+    ...(o.phase === "apartments-all" || o.phase === "images" || o.phase === "parcels-map" ? { schemaVersion: S17_SCHEMA_MO_RONG_DUNG } : {}),
     ...(o.phase === "images" ? { maxFiles: o.anh?.soFile ?? 100 } : {}),
   });
   const keoDan = o.phase === "images" ? new KeoDan({ caps: o.caps, now: () => env.now().getTime(), shouldStop: () => existsSync(stopPath) }) : undefined;

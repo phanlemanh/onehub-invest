@@ -699,3 +699,181 @@ test("pha căn hộ toàn bộ: lô chốt hỏng thì KHÔNG ghi tiến độ �
   );
   await assert.rejects(readFile(join(dir, "tien-do", "can-ho-7.jsonl")), "chưa có tiến độ nào");
 }));
+
+// ---------- thửa mở rộng, T1: bản đồ phủ bước 1 km trong ô 10 km quanh mỗi điểm mặt nạ có dữ liệu ----------
+
+import { luoiBanDo, parcelsMap } from "../collectors/s17-thua-dinh-gia/pha-ban-do.js";
+
+test("luoiBanDo: 11 × 11 điểm cách 1 km (mét Mercator) trong ô 10 km quanh TÂM của tile; điểm giữa đúng tâm tile", () => {
+  const { tam, diem } = luoiBanDo("17/104068/57570", 11, 1000);
+  assert.equal(diem.length, 121);
+  const R = 6378137;
+  const n = 2 ** 17;
+  const x = ((104068 + 0.5) / n) * 2 * Math.PI * R - Math.PI * R;
+  const y = Math.PI * R - ((57570 + 0.5) / n) * 2 * Math.PI * R;
+  const lat = (Math.atan(Math.sinh(y / R)) * 180) / Math.PI;
+  const lng = (x / R) * (180 / Math.PI);
+  assert.ok(Math.abs(tam[0] - lat) < 1e-9 && Math.abs(tam[1] - lng) < 1e-9, `tâm tile: ${tam}`);
+  const giua = diem[60];
+  assert.ok(Math.abs(giua[0] - lat) < 1e-9 && Math.abs(giua[1] - lng) < 1e-9, "điểm giữa lưới là tâm tile");
+  const toM = (p: [number, number]) => ({ x: (p[1] * Math.PI) / 180 * R, y: Math.atanh(Math.sin((p[0] * Math.PI) / 180)) * R });
+  const a = toM(diem[0]);
+  const b = toM(diem[1]);
+  assert.ok(Math.abs(b.x - a.x - 1000) < 1e-3, "bước ngang 1 000 m Mercator");
+  const c = toM(diem[11]);
+  assert.ok(Math.abs(a.y - c.y - 1000) < 1e-3, "bước dọc 1 000 m Mercator, hàng sau nằm ở phía nam");
+  assert.ok(Math.abs(a.x - x + 5000) < 1e-3 && Math.abs(a.y - y - 5000) < 1e-3, "góc trên trái cách tâm 5 km mỗi chiều");
+  assert.throws(() => luoiBanDo("104068/57570", 11, 1000), /z\/x\/y/);
+});
+
+type DiemBanDo = { taiDiem: Record<string, { ogc: string; duong: string } | null>; loiDiem?: string[] };
+
+/** Nguồn giả cho bản đồ phủ: mỗi toạ độ (làm tròn 6 chữ số) trúng một thửa hoặc không có. */
+function nguonBanDo(o: DiemBanDo, caps = { calls: 100_000, minutes: 60 }) {
+  const sent: string[] = [];
+  const json = (body: unknown): PhanHoi => ({ status: 200, contentType: "application/json", body: JSON.stringify(body) });
+  const answer = (url: string): PhanHoi => {
+    const u = new URL(url);
+    const key = `${Number(u.searchParams.get("latitude")).toFixed(6)},${Number(u.searchParams.get("longitude")).toFixed(6)}`;
+    if (o.loiDiem?.includes(key)) throw new TypeError("Failed to fetch");
+    const t = o.taiDiem[key];
+    if (!t) return json({ status: true, message: null, data: null, pagination: null, extra: {} });
+    return json({ status: true, message: null, pagination: null, extra: {}, data: { id: "1", properties: { ogc_fid: t.ogc, vi_tri_duong: t.duong, dien_tich: 100 } } });
+  };
+  const single = async (url: string): Promise<PhanHoi> => {
+    sent.push(url);
+    return answer(url);
+  };
+  const many: TransportMany = async (list) =>
+    Promise.all(
+      list.map(async (r): Promise<PhanHoi | Error> => {
+        try {
+          return await single(r.url);
+        } catch (e) {
+          return e as Error;
+        }
+      }),
+    );
+  const client = new S17Client({
+    config: loadConfig(JSON.stringify({ hosts: FAKE_HOSTS, paths: { "parcel-profile": "/v2.x/parcel-profile", "data-available": "/v2.x/data-available", "asset-type": "/v2.x/asset-type" } })),
+    caps,
+    paceMs: 0,
+    now: () => 1_000_000,
+    sleep: async () => undefined,
+    transport: single,
+    transportMany: many,
+  });
+  return { client, sent };
+}
+
+async function duaMatNgaVaoKho(dir: string, cacTile: Array<{ tile: string; trong: number }>): Promise<void> {
+  const w = new BatchWriter({ root: dir, maxItems: 100, phase: "tile-mask" });
+  await w.add(
+    makeItem(
+      "tile_coverage",
+      "coverage-vn-a",
+      { tiles: cacTile.map((x) => x.tile) },
+      { request: { zoom: 17 }, congKhai: true, ten: "Tỉnh giả A", soDiemQuet: 10, trong: cacTile.reduce((n, x) => n + x.trong, 0), rong: 5, vang: 1, loi: 0 },
+      "2026-11-24T05:00:00.000Z",
+    ),
+  );
+  await w.flush();
+}
+
+const chayBanDo = (dir: string, client: S17Client, o: { concurrency?: number; state?: RunState; caps?: { calls: number; minutes: number } } = {}) => {
+  const state = o.state ?? emptyState();
+  const w = new BatchWriter({ root: dir, maxItems: 100, phase: "parcels-map", schemaVersion: S17_SCHEMA_VERSION_MO_RONG });
+  const log: Record<string, unknown>[] = [];
+  const run = () =>
+    runPhase({
+      phase: "parcels-map",
+      client,
+      writer: w,
+      state,
+      save: async () => assert.equal(w.pendingCount + w.pendingFiles, 0, "trạng thái chỉ lưu khi lô đã chốt"),
+      log: (e) => log.push(e),
+      now: () => new Date("2026-11-25T01:00:00.000Z"),
+      snapshotRoot: dir,
+      tienDoDir: join(dir, "tien-do"),
+      concurrency: o.concurrency ?? 3,
+    }).then(async (s) => {
+      await w.flush();
+      return { s, log, writer: w };
+    });
+  return { run, writer: w };
+};
+
+test("parcels-map: mỗi điểm mặt nạ có dữ liệu → thăm dò 121 điểm; thửa tìm được ghi thành item thua (phuongPhap ban-do); một ô một bản đồ; chạy lại không hỏi lại ô đã xong", async () => withTmp(async (dir) => {
+  await duaMatNgaVaoKho(dir, [{ tile: "17/104068/57570", trong: 1 }]);
+  const { diem } = luoiBanDo("17/104068/57570", 11, 1000);
+  const k = (p: [number, number]) => `${p[0].toFixed(6)},${p[1].toFixed(6)}`;
+  const taiDiem: DiemBanDo["taiDiem"] = {};
+  taiDiem[k(diem[0])] = { ogc: "100", duong: "Đường A" };
+  taiDiem[k(diem[1])] = { ogc: "100", duong: "Đường A" }; // cùng thửa, điểm kế
+  taiDiem[k(diem[70])] = { ogc: "200", duong: "Đường B" };
+  const nguon = nguonBanDo({ taiDiem });
+  const lan1 = chayBanDo(dir, nguon.client, { concurrency: 4 });
+  const s1 = await lan1.run();
+  assert.equal(s1.s.calls, 121, "một ô = 121 lời");
+  assert.deepEqual(s1.s.so, { soO: 1, soDiem: 121, soDiemCoThua: 3, soThua: 2, soOCoDuLieu: 1 });
+  const items = await moiKind(dir);
+  const banDo = items.filter((it) => it.kind === "thua_ban_do");
+  assert.deepEqual(
+    banDo.map((it) => [it.sourceId, it.meta.tile, it.meta.soDiem, it.meta.soCo, it.meta.buocM, it.meta.viTri.length, it.payload.diem.length]),
+    [["ban-do-17-104068-57570", "17/104068/57570", 121, 3, 1000, 2, 121]],
+  );
+  assert.deepEqual(banDo[0].payload.diem.filter((d: [number, number, string | null]) => d[2]), [
+    [diem[0][0], diem[0][1], "100"],
+    [diem[1][0], diem[1][1], "100"],
+    [diem[70][0], diem[70][1], "200"],
+  ], "bản đồ ghi toạ độ và mã thửa của điểm trúng");
+  assert.deepEqual(
+    items.filter((it) => it.kind === "thua").map((it) => [it.sourceId, it.meta.phuongPhap, it.meta.khuVuc, it.meta.ogcFid]),
+    [["thua-100", "ban-do", "17-104068-57570", "100"], ["thua-200", "ban-do", "17-104068-57570", "200"]],
+    "điểm kế cùng thửa không sinh item lặp",
+  );
+  const nguon2 = nguonBanDo({ taiDiem });
+  const s2 = await chayBanDo(dir, nguon2.client).run();
+  assert.equal(nguon2.sent.length, 0, "ô đã xong không hỏi lại");
+  assert.equal(s2.s.so?.soO, 0);
+}));
+
+test("parcels-map: dừng giữa ô (quá trần) thì chốt phần đã thăm dò và ghi tiến độ; chạy lại làm nốt các điểm còn lại của ô", async () => withTmp(async (dir) => {
+  await duaMatNgaVaoKho(dir, [{ tile: "17/104068/57570", trong: 1 }]);
+  const nguon1 = nguonBanDo({ taiDiem: {} }, { calls: 10, minutes: 60 });
+  const lan1 = chayBanDo(dir, nguon1.client, { concurrency: 1 });
+  const e = await lan1.run().then(() => null, (x: unknown) => x);
+  assert.ok(e instanceof RunStopped, String(e));
+  assert.equal(e.reason, "call-cap");
+  const td = await new NhatKyTienDo(join(dir, "tien-do", "ban-do-17-104068-57570.jsonl")).readAll();
+  assert.equal((td.at(-1)?.daDiem as number[] | undefined)?.length, 10, "mười điểm đã thăm dò (đúng bằng trần 10 lời) được ghi nhận");
+  assert.equal(td.at(-1)?.xong, undefined, "chưa đánh dấu ô xong");
+  const nguon2 = nguonBanDo({ taiDiem: {} });
+  const s2 = await chayBanDo(dir, nguon2.client, { concurrency: 4 }).run();
+  assert.equal(s2.s.calls, 111, "121 − 10 điểm còn lại");
+  assert.equal(s2.s.so?.soO, 1);
+  const td2 = await new NhatKyTienDo(join(dir, "tien-do", "ban-do-17-104068-57570.jsonl")).readAll();
+  assert.equal(td2.at(-1)?.xong, true);
+  const banDo = (await moiKind(dir)).filter((it) => it.kind === "thua_ban_do");
+  assert.equal(banDo.length, 1, "bản đồ của ô chỉ ghi khi ô xong trọn");
+  assert.equal(banDo[0].payload.diem.length, 121);
+}));
+
+test("parcels-map: điểm lỗi mạng được ghi nhận là lỗi (không hỏi lại), điểm khác vẫn tiếp tục; thửa đã có ở ô khác không ghi lặp", async () => withTmp(async (dir) => {
+  await duaMatNgaVaoKho(dir, [{ tile: "17/104068/57570", trong: 1 }, { tile: "17/104069/57570", trong: 1 }]);
+  const a = luoiBanDo("17/104068/57570", 11, 1000);
+  const b = luoiBanDo("17/104069/57570", 11, 1000);
+  const k = (p: [number, number]) => `${p[0].toFixed(6)},${p[1].toFixed(6)}`;
+  const taiDiem: DiemBanDo["taiDiem"] = {};
+  taiDiem[k(a.diem[5])] = { ogc: "300", duong: "Đường C" };
+  taiDiem[k(b.diem[7])] = { ogc: "300", duong: "Đường C" };
+  const nguon = nguonBanDo({ taiDiem, loiDiem: [k(a.diem[6])] });
+  const s = await chayBanDo(dir, nguon.client, { concurrency: 2 }).run();
+  assert.deepEqual(s.s.so, { soO: 2, soDiem: 242, soDiemCoThua: 2, soThua: 1, soOCoDuLieu: 2 });
+  assert.equal(s.s.failed, 1, "một điểm lỗi mạng");
+  const items = await moiKind(dir);
+  assert.equal(items.filter((it) => it.kind === "thua").length, 1, "thửa 300 chỉ một item dù gặp ở hai ô");
+  const oA = items.find((it) => it.sourceId === "ban-do-17-104068-57570")!;
+  assert.equal(oA.meta.soLoi, 1);
+  assert.equal(oA.payload.diem[6][2], "loi", "bản đồ ghi rõ điểm lỗi");
+}));
