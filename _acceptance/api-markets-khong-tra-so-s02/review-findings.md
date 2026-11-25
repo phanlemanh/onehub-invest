@@ -1,25 +1,25 @@
+# Review findings: api-markets-khong-tra-so-s02 (round 2)
+
 ## Trong hợp đồng
 
-- **Hình dạng 3: lời hứa là quan hệ thứ tự «listingCount giảm dần rồi tên», nhưng dữ liệu cố định không phân biệt nó với xếp theo tên**
-  file: `app/tests/api-markets-khong-s02.test.tsx:79`
-  severity: medium
+- **Hình dạng 3 (lời hứa là QUAN HỆ, tập thử không ép được nửa «bằng nhau thì theo tên» của AC-2)**
   AC: AC-2
+  file: `app/tests/api-markets-khong-s02.test.tsx:86`
+  severity: medium
   source: measurement
-  detail: AC-2 hứa một quan hệ giữa các giá trị: thứ tự là listingCount giảm dần, bằng nhau thì theo tên (contract.md dòng 37). Dữ liệu trong test là TT = Alpha(3 tin), Beta(3 tin), Gamma(1 tin). Thứ tự chữ cái của tên trùng đúng với thứ tự số tin giảm dần. Vì vậy assert `deepEqual(body.data.map(d => [d.name, d.listingCount]), [["Alpha",3],["Beta",3],["Gamma",1]])` vẫn xanh nếu route chỉ `ORDER BY m.name`, hoặc bỏ hẳn khoá listing_count. Test chỉ ghim một dãy cụ thể mà không có ca nào mà hai tiêu chí cho kết quả khác nhau. Nhánh đối chứng (SQL cũ đặt Gamma đầu) chỉ chứng minh test bắt được kiểu xếp theo S02. Nó không chứng minh test đo được khoá số tin. Cần ít nhất một thị trường có tên đứng trước nhưng ít tin hơn, ví dụ «Aaa» với 1 tin. Khi đó xếp theo tên và xếp theo số tin cho ra hai thứ tự khác nhau.
-  rationale: AC-2 hứa thứ tự theo số tin giảm dần rồi theo tên, mà dữ liệu test cho cùng kết quả với xếp theo tên nên không chứng minh được AC này.
+  detail: AC-2 hứa hai khoá xếp: số tin giảm dần, «bằng nhau thì theo tên». Mảng TT được chèn theo đúng thứ tự tên (Aaa, Alpha, Beta, Gamma), nên seq scan trả các dòng theo thứ tự tên. Với 4 dòng, qsort của Postgres dùng insertion sort (n<7), là sort ổn định, nên nếu route bỏ `, m.name` và chỉ còn `ORDER BY m.listing_count DESC` thì vẫn ra đúng MONG = [Alpha, Beta, Aaa, Gamma]. Như vậy `assert.deepEqual(thuTu, MONG)` vẫn xanh. Phép đối chứng `notDeepEqual(theoTen, MONG)` chỉ phân biệt «chỉ theo tên» với «theo số tin», không phân biệt «chỉ theo số tin» với «theo số tin rồi tên». Đột biến bỏ khoá phụ vì thế không bị bắt. Cần thêm một cặp bằng số tin mà thứ tự chèn ngược với thứ tự tên (ví dụ chèn Beta trước Alpha), hoặc đối chứng thêm với SQL chỉ có khoá số tin.
+  rationale: AC-2 hứa rõ «bằng nhau thì theo tên» nhưng tập thử không phân biệt được nửa này, nên AC-2 chưa được chứng minh.
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **Khối chú thích HT23 chen giữa JSDoc và hàm checkApiSurface, làm JSDoc gắn nhầm sang BANG_S02**
-  Người dùng thấy gì: Một dòng chú thích trong công cụ kiểm tra nội bộ đứng sai chỗ nên trình soạn thảo gợi ý nhầm. Người dùng cổng và API không thấy khác biệt nào.
-  Căn cứ: Chỉ là chú thích nằm lệch, không đổi kết quả kiểm tra nào, không ảnh hưởng người dùng, sửa hay không cũng chẳng gây hại.
-  file: `scripts/check-api-surface.mjs`
+- **Thẻ nghiệm thu tả sai cách rào đối xử với db.ts (nói 'chỉ bỏ qua đoạn đổi tên', mã thật quét trọn không ngoại lệ)**
+  Người dùng thấy gì: Thẻ người ký đọc tả cách rào kiểm tra khác với thực tế, nên người ký có thể hiểu sai mức kiểm tra. Số liệu thị trường trả ra cho người dùng không bị ảnh hưởng.
+  Căn cứ: Chỉ là chữ trên thẻ, không làm lộ hay sai dữ liệu của người dùng, và sửa lại chữ sau này rất rẻ.
+  file: `_acceptance/api-markets-khong-tra-so-s02/card-plain.json`
   severity: low
-  Đề xuất: wont-fix
-
-## Chưa adversarial-verify (refuter chết)
+  Đề xuất: known-limits
 
 Cụm ngoài vùng phủ: cluster: n-a (không đo được — không eval nào khai paths, hoặc dưới ngưỡng cụm).
 
