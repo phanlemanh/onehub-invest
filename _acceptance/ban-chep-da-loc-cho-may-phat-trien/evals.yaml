@@ -5,7 +5,7 @@ evals:
     criterion: AC-1
     executor: script
     cmd: config:executors.script.bcl_tap
-    expected: "exit 0; trên DB của riêng lượt (fixture dựng bằng chính hàm ghi của pipeline, không chèn tay khuôn bên đọc): bảng FILL có số dòng bằng số câu đọc của sync-cloud trả, bảng con chỉ dòng có cha sống, airdna_* thành ref_calib_*; ngoài FILL chỉ source_registry và spatial_ref_sys có dòng, mọi bảng public khác 0 dòng; extension postgis có trên đích. Chiều đỏ: bản chép bỏ lọc cha sống thì ca nêu nights/property_offers lệch số; cấy một dòng vào một bảng ngoài danh sách thì ca nêu bảng"
+    expected: "exit 0; trên DB của riêng lượt (bản chép dữ liệu máy thu của db-thu, cắt bớt dòng ngay trong DB của lượt; số kỳ vọng đếm bằng chính câu đọc của sync-cloud, không chèn tay khuôn bên đọc): bảng FILL có số dòng bằng số câu đọc của sync-cloud trả, bảng con chỉ dòng có cha sống, airdna_* thành ref_calib_*; ngoài FILL chỉ source_registry và spatial_ref_sys có dòng, mọi bảng public khác 0 dòng; extension postgis có trên đích. Chiều đỏ: bản chép bỏ lọc cha sống thì ca nêu nights/property_offers lệch số; cấy một dòng vào một bảng ngoài danh sách thì ca nêu bảng"
     paths: [scripts/ban-chep-da-loc.mjs, scripts/ban-chep-da-loc.itest.mjs]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E2
@@ -69,6 +69,6 @@ evals:
     executor: script
     cmd: config:executors.script.bcl_that
     long_running: 90
-    expected: "exit 0 trên DB máy thu thật (chỉ đọc): bản chép xanh; data-api /v1/markets, /v1/listings và trang Invest khu Hà Nội trên bản chép trả 200 với số dòng > 0; in cỡ dump, số bảng có dòng, thời gian; xoá DB đích khi xong. Ngoài CI"
+    expected: "exit 0 trên DB máy thu thật (chỉ đọc): bản chép xanh; data-api /v1/listings và trang Invest khu Hà Nội trên bản chép trả 200 với số dòng > 0; in cỡ dump, số bảng có dòng, thời gian; xoá DB đích khi xong. Ngoài CI"
     paths: [scripts/ban-chep-da-loc.mjs, scripts/ban-chep-da-loc-that.mjs]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
