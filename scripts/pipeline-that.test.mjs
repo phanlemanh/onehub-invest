@@ -13,7 +13,7 @@ import { nodeOptions } from "./lib/ci-can-du-lieu.mjs";
 const ROOT = path.join(import.meta.dirname, "..");
 const THAT = path.join(ROOT, "pipeline/chay-that.mjs");
 const DS = JSON.parse(readFileSync(path.join(ROOT, "scripts/ci-bo-qua.json"), "utf8")).pipeline;
-const TEN_30 = DS.map((m) => m.ca).sort();
+const TEN_THAT = DS.map((m) => m.ca).sort();
 // node --test lồng trong một ca test thấy NODE_TEST_CONTEXT của bộ chạy ngoài và in dạng giao thức nội bộ — bỏ biến ấy.
 const ENV = { ...process.env };
 delete ENV.NODE_TEST_CONTEXT;
@@ -22,14 +22,15 @@ delete ENV.NODE_TEST_CONTEXT;
 const tenBoQua = (opts) => [...opts.matchAll(/"--test-skip-pattern=\^(.*?)\$"/g)]
   .map((m) => m[1].replace(/\\\\/g, "\\").replace(/\\(.)/g, "$1")).sort();
 
-test("tập bỏ qua của chuẩn-CI = tập chạy của pipeline_that = 30 mục ci-bo-qua pipeline", () => {
-  assert.equal(TEN_30.length, 30);
-  assert.deepEqual(tenBoQua(nodeOptions(DS, true)), TEN_30);
+test("tập bỏ qua của chuẩn-CI = tập chạy của pipeline_that = 34 mục ci-bo-qua pipeline", () => {
+  // 30 mục lúc duyệt + 4 ca CI bỏ qua ngầm (thiếu DATABASE_URL) thêm ở S4 r1 của hồ sơ db-thu-tach-khoi-cum-that
+  assert.equal(TEN_THAT.length, 34);
+  assert.deepEqual(tenBoQua(nodeOptions(DS, true)), TEN_THAT);
   const r = spawnSync(process.execPath, [THAT, "--liet"], { encoding: "utf8" });
   assert.equal(r.status, 0, r.stderr);
   const dong = r.stdout.split("\n").filter(Boolean);
   const chay = dong.filter((l) => !l.startsWith("pipeline/")).sort();
-  assert.deepEqual(chay, TEN_30);
+  assert.deepEqual(chay, TEN_THAT);
   // chay-nua.mjs dưới CI=true dùng đúng hàm nodeOptions với danh sách pipeline
   const nua = readFileSync(path.join(ROOT, "pipeline/chay-nua.mjs"), "utf8");
   assert.match(nua, /nodeOptions\(ds, true\)/);

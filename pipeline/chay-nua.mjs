@@ -34,6 +34,11 @@ if (process.env.CI === 'true') {
     process.exit(2);
   }
   env = { ...process.env, NODE_OPTIONS: [process.env.NODE_OPTIONS, nodeOptions(ds, true)].filter(Boolean).join(' ') };
+  // --test-skip-pattern lọc ca khỏi lượt mà không in dòng SKIP — in danh sách để đầu ra tự chứng tập bỏ qua
+  // (người đọc đối chiếu: không tên nào dưới đây có dòng ✔/✖ của lượt).
+  const cuaNua = ds.filter((m) => chia[nua].some((t) => m.tep === `pipeline/${t}`));
+  console.log(`chay-nua: bỏ qua ${cuaNua.length} ca của ci-bo-qua.json có tệp trong nửa ${nua} (CI=true)`);
+  for (const m of cuaNua) console.log(`chay-nua: bỏ qua — ${m.tep} — ${m.ca}`);
 }
 const r = spawnSync(process.execPath, ['--test', '--test-concurrency=1', ...bao, ...chia[nua]], { cwd: goc, stdio: 'inherit', env });
 process.exit(r.status ?? 1);

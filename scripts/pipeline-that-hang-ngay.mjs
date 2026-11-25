@@ -15,7 +15,6 @@ export { duongSo };
 
 const git = (...a) => spawnSync("git", a, { encoding: "utf8" }).stdout.trim();
 
-/** Đường sổ dùng chung của mọi worktree: thư mục cha của git-common-dir (checkout chính). */
 /** Tên ca đỏ bóc từ đầu ra node --test (dòng `✖ <tên> (<thời gian>)`), không trùng. */
 export function caDo(out) {
   const ten = new Set();

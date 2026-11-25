@@ -231,7 +231,7 @@ export function quetNgoai(root, mods, tepKho) {
 const MODULE = {
   app: ["app"], app_ui: ["app"], ui_lint_rules: ["app/eslint-plugin-onehub-ui"],
   pipeline_a: ["pipeline"], pipeline_b: ["pipeline"], agent: ["agent"],
-  // pipeline_that: mô-đun là chính các tệp test của 30 ca — mọi tệp chúng nạp ra ngoài đều phải nằm trong vùng hẹp.
+  // pipeline_that: mô-đun là chính các tệp test của 34 ca — mọi tệp chúng nạp ra ngoài đều phải nằm trong vùng hẹp.
   pipeline_that: [...new Set(JSON.parse(readFileSync(path.join(ROOT, "scripts/ci-bo-qua.json"), "utf8")).pipeline.map((m) => m.tep))],
   portal_static: ["scripts/check-portal-compliance.mjs"],
 };
@@ -285,6 +285,8 @@ const NGOAI_LE = [
   { suite: "pipeline_that", duong: "collector/src/api", ly_do: "install-collector-api.test.mjs: thư mục dựng trong gốc tạm" },
   { suite: "pipeline_that", duong: "collector/scripts", ly_do: "install-collector-api.test.mjs: thư mục dựng trong gốc tạm" },
   { suite: "pipeline_that", duong: "collector/src/api/main.ts", ly_do: "install-collector-api.test.mjs: viết mới trong gốc tạm (writeFileSync), không đọc từ kho" },
+  { suite: "pipeline_that", duong: "docs/ops/cloud-schema-catchup-2026-10-31-060.sql", ly_do: "do-hang-ngay.test.mjs chỉ nạp hằng FILL của sync-cloud.mjs; SQL bắt kịp lược đồ cloud chỉ đọc ở lượt đẩy cloud, ca không chạy lượt ấy" },
+  { suite: "pipeline_that", duong: "docs/ops/cloud-schema-catchup-2026-11-14-offer-price-rank.sql", ly_do: "như trên" },
   { suite: "pipeline_that", duong: "collector/scripts/api-launchd.sh", ly_do: "install-collector-api.test.mjs: viết mới trong gốc tạm (writeFileSync), không đọc từ kho" },
 ];
 
@@ -590,7 +592,7 @@ test("HT9-E5 — ma trận viết trước: ba nhánh giả × pipeline_a, pipel
   if (existsSync(TEP_MO)) assert.ok(JSON.parse(readFileSync(TEP_MO, "utf8")).tep.includes(TRANSFORM), `${TRANSFORM} phải có trong fixture tệp mở`);
 });
 
-test("HT9-E4 — vùng pipeline_that ⊇ tệp thật sự mở khi chạy 30 ca dữ liệu thật (fixture một lượt thật); không chứa LO-TRINH.html, collector/src/**, docs/**", () => {
+test("HT9-E4 — vùng pipeline_that ⊇ tệp thật sự mở khi chạy 34 ca dữ liệu thật (fixture một lượt thật); không chứa LO-TRINH.html, collector/src/**, docs/**", () => {
   const fx = JSON.parse(readFileSync(TEP_MO, "utf8"));
   assert.match(fx.sha, /^[0-9a-f]{40}$/);
   assert.ok(fx.lenh && fx.tep.length > 0);

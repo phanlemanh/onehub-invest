@@ -70,7 +70,7 @@ export function kiemLuot({ out, truoc, sau, log = readFileSync(LOG, "utf8") }) {
 const DO = `echo "URL=$DATABASE_URL CI=$CI CT=$DB_THU_CONTAINER"
 docker ps --format '{{.Names}}' | grep -qx "$DB_THU_CONTAINER" && echo SONG=1
 docker port "$DB_THU_CONTAINER" 5432/tcp | sed 's/^/PORT=/'
-q() { docker exec -e PGPASSWORD=oneinvest "$DB_THU_CONTAINER" psql -U oneinvest -h localhost -d oneinvest -Atc "$1"; }
+q() { docker exec -e PGPASSWORD=oneinvest "$DB_THU_CONTAINER" psql -U oneinvest -h localhost -d "\${DATABASE_URL##*/}" -Atc "$1"; }
 echo "SO=$(q "SELECT to_regclass('public.sale_offers') IS NOT NULL")"
 echo "BANG=$(q "SELECT count(*) FROM pg_tables WHERE schemaname='public'")"`;
 
@@ -80,7 +80,11 @@ const banSao = (ten, sua) => {
   return p;
 };
 
-test("chay-trong: lượt lành — container riêng, DB trống từ migration, CI=true, dọn sạch, mã lượt = mã lệnh", async () => {
+// Cần docker thật và container one-invest-db của máy (đọc danh sách DB trước/sau): runner CI không có — bỏ qua như các ca
+// cần docker khác của job scripts (soát S4 r1 của hồ sơ db-thu-tach-khoi-cum-that).
+const BO_QUA = process.env.CI === "true" ? "CI không có docker riêng và container one-invest-db" : false;
+
+test("chay-trong: lượt lành — container riêng, DB trống từ migration, CI=true, dọn sạch, mã lượt = mã lệnh", { skip: BO_QUA }, async () => {
   writeFileSync(LOG, "");
   const truoc = dbThat();
   const r = await luot(DO);
@@ -88,7 +92,7 @@ test("chay-trong: lượt lành — container riêng, DB trống từ migration,
   assert.match(r.out, new RegExp(`CT=${TIEN_TO}\\d+`));
   assert.match(r.out, /SONG=1/);
   assert.match(r.out, /CI=true/);
-  assert.match(r.out, /URL=postgres:\/\/oneinvest:oneinvest@127\.0\.0\.1:\d+\/oneinvest/);
+  assert.match(r.out, /URL=postgres:\/\/oneinvest:oneinvest@127\.0\.0\.1:\d+\/oneinvest_suite_[a-z0-9_]+ /);
   const cong = [...r.out.matchAll(/PORT=(\S+)/g)].map((m) => m[1]);
   assert.ok(cong.length > 0 && cong.every((c) => c.startsWith("127.0.0.1:")), `cổng phải chỉ gắn 127.0.0.1: ${cong}`);
   assert.match(r.out, /SO=t/, "DB trống phải có bảng của migration (sale_offers)");
@@ -100,7 +104,7 @@ test("chay-trong: lượt lành — container riêng, DB trống từ migration,
   kiemLuot({ out: r3.out, truoc, sau: dbThat() });
 });
 
-test("chay-trong: bị TERM giữa chừng — container bị xoá, mã 143", async () => {
+test("chay-trong: bị TERM giữa chừng — container bị xoá, mã 143", { skip: BO_QUA }, async () => {
   writeFileSync(LOG, "");
   const truoc = dbThat();
   const r = await luot("echo BAT_DAU; exec sleep 120", {
@@ -111,7 +115,7 @@ test("chay-trong: bị TERM giữa chừng — container bị xoá, mã 143", as
   kiemLuot({ out: r.out, truoc, sau: dbThat() });
 });
 
-test("chay-trong chiều đỏ: bỏ bước xoá container → ghim «container còn sau lượt»", async () => {
+test("chay-trong chiều đỏ: bỏ bước xoá container → ghim «container còn sau lượt»", { skip: BO_QUA }, async () => {
   writeFileSync(LOG, "");
   const truoc = dbThat();
   const ban = banSao("bo-xoa.sh", (s) => s.replace(/xoa_ct\(\) \{[^\n]*\}/, "xoa_ct() { :; }"));
@@ -122,11 +126,11 @@ test("chay-trong chiều đỏ: bỏ bước xoá container → ghim «container
   for (const c of conLai()) dk("rm", "-f", "-v", c);
 });
 
-test("chay-trong chiều đỏ: rơi về cụm thật → ghim «DB suite trong cụm thật»", async () => {
+test("chay-trong chiều đỏ: rơi về cụm thật → ghim «DB suite trong cụm thật»", { skip: BO_QUA }, async () => {
   writeFileSync(LOG, "");
   const truoc = dbThat();
   const ban = banSao("roi-cum-that.sh", (s) =>
-    s.replace('export DATABASE_URL="postgres://$NGUOI:$NGUOI@127.0.0.1:$CONG/oneinvest"',
+    s.replace('export DATABASE_URL="postgres://$NGUOI:$NGUOI@127.0.0.1:$CONG/$TEN"',
       `export DATABASE_URL="postgres://oneinvest:oneinvest@localhost:5433/${TEN}_$$"`));
   assert.notEqual(readFileSync(ban, "utf8"), readFileSync(SH, "utf8"), "bản sao phải khác bản thật");
   // Lệnh chỉ in URL nó thấy — không nối DB nào; DB_THU_TRONG_INIT=true để bản sao không nối cụm thật.
@@ -136,12 +140,12 @@ test("chay-trong chiều đỏ: rơi về cụm thật → ghim «DB suite trong
 
 const SONG_SONG = `echo "URL=$DATABASE_URL CT=$DB_THU_CONTAINER"
 docker port "$DB_THU_CONTAINER" 5432/tcp | sed 's/^/PORT=/'
-q() { docker exec -e PGPASSWORD=oneinvest "$DB_THU_CONTAINER" psql -U oneinvest -h localhost -d oneinvest -Atc "$1"; }
+q() { docker exec -e PGPASSWORD=oneinvest "$DB_THU_CONTAINER" psql -U oneinvest -h localhost -d "\${DATABASE_URL##*/}" -Atc "$1"; }
 q "CREATE TABLE luot_$$ (x int)" >/dev/null
 sleep 4
 echo "THAY=$(q "SELECT count(*) FROM pg_tables WHERE tablename LIKE 'luot_%'")"`;
 
-test("chay-trong: hai lượt song song — container và cổng riêng, không thấy bảng của nhau, cả hai thoát 0", async () => {
+test("chay-trong: hai lượt song song — container và cổng riêng, không thấy bảng của nhau, cả hai thoát 0", { skip: BO_QUA }, async () => {
   writeFileSync(LOG, "");
   const truoc = dbThat();
   const [a, b] = await Promise.all([luot(SONG_SONG, { env: { DB_THU_TRONG_INIT: "true" } }), luot(SONG_SONG, { env: { DB_THU_TRONG_INIT: "true" } })]);
@@ -173,7 +177,7 @@ async function giuHaiCho() {
   return async () => { for (const c of con) c.kill("SIGTERM"); await Promise.all(xong); };
 }
 
-test("chay-trong: lượt thứ ba khi đã có hai cụm sống — không dựng container, chờ quá trần thì thoát 4", async () => {
+test("chay-trong: lượt thứ ba khi đã có hai cụm sống — không dựng container, chờ quá trần thì thoát 4", { skip: BO_QUA }, async () => {
   writeFileSync(LOG, "");
   const truoc = dbThat();
   const nha = await giuHaiCho();
@@ -188,7 +192,7 @@ test("chay-trong: lượt thứ ba khi đã có hai cụm sống — không dự
   kiemLuot({ out: "", truoc, sau: dbThat() });
 });
 
-test("chay-trong chiều đỏ: bỏ trần → ghim «container thứ ba»", async () => {
+test("chay-trong chiều đỏ: bỏ trần → ghim «container thứ ba»", { skip: BO_QUA }, async () => {
   writeFileSync(LOG, "");
   const truoc = dbThat();
   const ban = banSao("bo-tran.sh", (s) => s.replace(/^  TRAN=2$/m, "  TRAN=9"));

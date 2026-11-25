@@ -38,7 +38,7 @@ const LOI_PIPELINE = [
   "_acceptance/dong-dau-dia-chi-luc-nap/evidence/mau-bai-lac-du-an-v2.md",
 ];
 
-// Ca cần dữ liệu thật (30 ca pipeline của scripts/ci-bo-qua.json, suite pipeline_that, hồ sơ db-thu-tach-khoi-cum-that):
+// Ca cần dữ liệu thật (34 ca pipeline của scripts/ci-bo-qua.json, suite pipeline_that, hồ sơ db-thu-tach-khoi-cum-that):
 // chạy trên bản chép ~30′ nên vùng HẸP — tệp test của các ca, tệp chúng nạp (đồ thị import tĩnh), tệp chúng chạy bằng
 // tiến trình con hay đọc SQL. Canh phủ hai chiều trong scripts/suite-neu-doi.test.mjs: đồ thị import tĩnh hiện tại, và
 // fixture tệp thật sự mở của một lượt chạy thật (scripts/fixtures/pipeline-that-tep-mo.json). Không chứa LO-TRINH.html,
@@ -47,7 +47,8 @@ const VUNG_THAT = [
   "pipeline/scripts/test-posts.test.mjs", "pipeline/scripts/deals-phi-ly.test.mjs",
   "pipeline/scripts/ops-facts-so-tong-hop.test.mjs", "pipeline/scripts/install-collector-api.test.mjs",
   "pipeline/scripts/reassign-areas.test.mjs", "pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs",
-  "pipeline/scripts/ops-apply-plist.test.mjs",
+  "pipeline/scripts/ops-apply-plist.test.mjs", "pipeline/scripts/assert-rut-thay.test.mjs",
+  "pipeline/scripts/do-hang-ngay.test.mjs", "agent/config/doc-gop-s03.json", "agent/src/enrich/doc-gop-s03/prompt.ts",
   "pipeline/scripts/capture-ops-facts.mjs", "pipeline/scripts/ops-facts-fixture.mjs", "pipeline/scripts/test-data-residue.mjs",
   "pipeline/*.mjs", "pipeline/*.sh", "pipeline/package.json", "pipeline/lib/**", "pipeline/sql/**", "pipeline/data/**",
   "pipeline/cron/com.oneinvest.collector-api.plist",

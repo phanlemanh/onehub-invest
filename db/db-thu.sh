@@ -66,7 +66,7 @@ if [ "${2:-}" = "--chay-trong" ]; then
       if [ "$(so_ct_song)" -lt "$TRAN" ]; then
         trap xoa_ct EXIT
         if ! "$DK" run -d --name "$CT" -p 127.0.0.1::5432 \
-            -e POSTGRES_USER=oneinvest -e POSTGRES_PASS=oneinvest -e POSTGRES_DB=oneinvest "$ANH" >/dev/null; then
+            -e POSTGRES_USER=oneinvest -e POSTGRES_PASS=oneinvest -e POSTGRES_DB="$TEN" "$ANH" >/dev/null; then
           rm -rf "$KHOA_TRONG"; echo "db-thu: dựng container $CT lỗi"; exit 1
         fi
         rm -rf "$KHOA_TRONG"
@@ -86,14 +86,16 @@ if [ "${2:-}" = "--chay-trong" ]; then
   # kartoza khởi động postgres hai lần (lần dựng cụm rồi lần thật): đợi sẵn sàng ba lần liền.
   lien=0
   for _ in $(seq 1 150); do
-    if "$DK" exec "$CT" pg_isready -h localhost -U oneinvest -d oneinvest >/dev/null 2>&1; then
+    if "$DK" exec "$CT" pg_isready -h localhost -U oneinvest -d "$TEN" >/dev/null 2>&1; then
       lien=$((lien + 1)); [ "$lien" -ge 3 ] && break
     else lien=0; fi
     sleep 1
   done
   [ "$lien" -ge 3 ] || { echo "db-thu: $CT không sẵn sàng sau 150s"; exit 1; }
   NGUOI=oneinvest  # tài khoản thử của ảnh PostGIS dùng một lần (như service của ci-test.yml)
-  export DATABASE_URL="postgres://$NGUOI:$NGUOI@127.0.0.1:$CONG/oneinvest"
+  # DB mang tên suite (oneinvest_suite_*), không phải «oneinvest»: rào DB thử của test (assert-rut-thay, do-lam-giau…) nhận
+  # đúng tên này; DB tên oneinvest bị coi là DB chung và từ chối.
+  export DATABASE_URL="postgres://$NGUOI:$NGUOI@127.0.0.1:$CONG/$TEN"
   export TEST_DATABASE_URL_ADMIN="$DATABASE_URL"
   export CI=true
   export DB_THU_CONTAINER="$CT"

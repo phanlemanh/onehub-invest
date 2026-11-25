@@ -22,14 +22,14 @@ evals:
     cmd: config:executors.suite.pipeline_b
     long_running: 90
     paths: [db/db-thu.sh, pipeline/package.json, pipeline/chay-nua.mjs]
-    expected: "exit 0; nửa B như E2a; hợp tên ca bỏ qua của hai nửa (bóc từ đầu ra thật) deepEqual 30 tên ca pipeline của ci-bo-qua.json — lệch thì nêu tên; tổng thời gian thật của hai lệnh suite (`.xong` − `.bat-dau` của E2a cộng của E2b, gồm dựng container, migration, xoá) ≤ 1200 s (nền 69′ trên bản chép, HT12 r1); ghi riêng giây dựng cụm + migration db-thu.sh in."
+    expected: "exit 0; nửa B như E2a; hợp tên ca bỏ qua của hai nửa (dòng `chay-nua: bỏ qua — …` của đầu ra thật; không tên nào có dòng ✔/✖ trong lượt) deepEqual mọi tên ca pipeline của ci-bo-qua.json — 34 ca (30 lúc duyệt + 4 ca CI bỏ qua ngầm thêm ở S4 r1, sổ d-20261125T223733Z-17) — lệch thì nêu tên; tổng thời gian thật của hai lệnh suite (`.xong` − `.bat-dau` của E2a cộng của E2b, gồm dựng container, migration, xoá) ≤ 1200 s (nền 69′ trên bản chép, HT12 r1); ghi riêng giây dựng cụm + migration db-thu.sh in."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E2c
     criterion: AC-2
     executor: test
     cmd: config:executors.test.ht9_that
     paths: [scripts/pipeline-that.test.mjs, scripts/ci-bo-qua.json, scripts/lib/ci-can-du-lieu.mjs]
-    expected: "exit 0; ca «tập bỏ qua của chuẩn-CI = tập chạy của pipeline_that = 30 mục ci-bo-qua pipeline» (assert.deepEqual ba tập tên ca, viết trước từ ci-bo-qua.json); chiều đỏ: bản sao danh sách thêm một ca không có trong tệp → rejects ghim `không còn ca`."
+    expected: "exit 0; ca «tập bỏ qua của chuẩn-CI = tập chạy của pipeline_that = 34 mục ci-bo-qua pipeline» (30 lúc duyệt + 4 ở S4 r1, sổ d-20261125T223733Z-17; assert.deepEqual ba tập tên ca, viết trước từ ci-bo-qua.json); chiều đỏ: bản sao danh sách thêm một ca không có trong tệp → rejects ghim `không còn ca`."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3a
     criterion: AC-3
@@ -37,7 +37,7 @@ evals:
     cmd: config:executors.suite.pipeline_that
     long_running: 90
     paths: [db/db-thu.sh, pipeline/package.json, scripts/ci-bo-qua.json, scripts/suite-neu-doi.mjs]
-    expected: "exit 0; nhánh này sửa chính scripts/suite-neu-doi.mjs nên suite chạy (bộ lọc đổi thì mọi suite chạy); khi chạy: `ℹ tests 30`-tương đương (đúng 30 ca chạy, tên khớp ci-bo-qua), `ℹ fail 0`."
+    expected: "exit 0; nhánh này sửa chính scripts/suite-neu-doi.mjs nên suite chạy (bộ lọc đổi thì mọi suite chạy); khi chạy: đúng 34 ca chạy (30 lúc duyệt + 4 ở S4 r1, sổ d-20261125T223733Z-17), tên khớp ci-bo-qua, `ℹ fail 0`."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3b
     criterion: AC-3
@@ -51,7 +51,7 @@ evals:
     executor: test
     cmd: config:executors.test.ht9_suite_vung
     paths: [scripts/suite-neu-doi.mjs, scripts/suite-neu-doi.test.mjs, scripts/ci-bo-qua.json]
-    expected: "exit 0; ca canh phủ «vùng pipeline_that ⊇ tệp thật sự mở khi chạy 30 ca dữ liệu thật» trên fixture `pipeline-that-tep-mo.json` rút từ MỘT lượt chạy thật của pipeline_that có hook ghi tệp mở (fs + child_process qua NODE_OPTIONS; ghi ở S3, kèm sha và lệnh ghi) — mọi tệp trong kho của fixture khớp VUNG.pipeline_that; ca thứ hai: đồ thị import tĩnh hiện tại ⊆ vùng (bắt tệp mới thêm sau lúc ghi fixture); chiều đỏ: bản sao bảng vùng bỏ một tệp nạp động (SQL theo glob) có trong fixture → rejects ghim tên tệp; ca «vùng không chứa LO-TRINH.html, collector/src/**, docs/**»."
+    expected: "exit 0; ca canh phủ «vùng pipeline_that ⊇ tệp thật sự mở khi chạy 34 ca dữ liệu thật» trên fixture `pipeline-that-tep-mo.json` rút từ MỘT lượt chạy thật của pipeline_that có hook ghi tệp mở (fs + child_process qua NODE_OPTIONS; ghi ở S3, kèm sha và lệnh ghi) — mọi tệp trong kho của fixture khớp VUNG.pipeline_that; ca thứ hai: đồ thị import tĩnh hiện tại ⊆ vùng (bắt tệp mới thêm sau lúc ghi fixture); chiều đỏ: bản sao bảng vùng bỏ một tệp nạp động (SQL theo glob) có trong fixture → rejects ghim tên tệp; ca «vùng không chứa LO-TRINH.html, collector/src/**, docs/**»."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E5
     criterion: AC-5
