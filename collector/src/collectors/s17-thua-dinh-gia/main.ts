@@ -3,6 +3,7 @@
  *
  *   node collector/dist/collectors/s17-thua-dinh-gia/main.js --phase <reference|tile-mask|projects|session-check|apartments|parcels|lowrise|apartments-all|images|parcels-map|parcels-cell>
  *        --snapshots-root <thư mục snapshot> --caps-calls <số> --caps-minutes <số> [--pace-ms 150..400] [--space <id>] [--luong-song 1..4]
+ *        [--tab <nhãn trang>] [--bo-doc-so-du]   (cờ sau chỉ cho session-check: lời gọi thử đúng một lời)
  *
  * - Trần lời gọi và trần thời gian PHẢI khai mỗi lần chạy; nhịp kẹp trong mức nguồn đã chịu được.
  * - Pha công khai (reference, tile-mask) chạy ngay trong tiến trình này bằng fetch của Node, không mang phiên.
@@ -82,7 +83,16 @@ export type CliOptions = {
   oLuoi?: { buocM: number; gioiHan?: number };
   /** Nhãn trang (vd `p2`) để gọi trong trang ấy thay cho tab đầu tiên của nguồn — để đổi trang khi tab đầu bị treo. Không dùng để chạy hai pha cần phiên đồng thời (nguồn trả 429; có khoá chung). */
   tabLabel?: string;
+  /**
+   * Lời gọi thử (Mạnh 26/11 «gọi thử một lời và đo lường nó»): chỉ cho pha session-check — không đọc số dư trước và
+   * sau, nên với `--caps-calls 1` lượt gửi ĐÚNG MỘT lời, là lời kiểm phiên tới máy chủ API (lời đọc số dư đi máy chủ
+   * khác, không đo được máy chủ đã trả 429). Pha lấy dữ liệu không nhận cờ này.
+   */
+  boDocSoDu?: boolean;
 };
+
+/** Lượt này có đọc số dư trước và sau không: mọi pha cần phiên đều đọc, trừ lời gọi thử khai `--bo-doc-so-du`. */
+export const docSoDu = (o: CliOptions): boolean => o.via === "ego" && o.boDocSoDu !== true;
 
 export function parseCli(argv: string[]): CliOptions {
   const { values } = parseArgs({
@@ -118,6 +128,7 @@ export function parseCli(argv: string[]): CliOptions {
       "buoc-m": { type: "string" },
       "gioi-han-o": { type: "string" },
       tab: { type: "string" },
+      "bo-doc-so-du": { type: "boolean" },
     },
   });
   const phase = values.phase as Phase | undefined;
@@ -153,6 +164,8 @@ export function parseCli(argv: string[]): CliOptions {
     if (isPublic) throw new UsageError(`pha ${phase} không chạy trong trang nên không nhận --tab`);
     if (!/^[a-z][a-z0-9_-]{0,20}$/.test(values.tab)) throw new UsageError('--tab phải là nhãn trang của trình duyệt, vd p2 (chữ thường, số, gạch nối)');
   }
+  const boDocSoDu = values["bo-doc-so-du"] === true;
+  if (boDocSoDu && phase !== "session-check") throw new UsageError(`--bo-doc-so-du chỉ dùng cho --phase session-check (lời gọi thử đúng một lời): pha ${phase} lấy dữ liệu nên luôn đọc số dư trước và sau`);
   const anhLuongSong = values["anh-luong-song"] === undefined ? 4 : positive("--anh-luong-song", values["anh-luong-song"]);
   if (anhLuongSong > MAX_ANH_LUONG_SONG) throw new UsageError(`--anh-luong-song phải từ 1 đến ${MAX_ANH_LUONG_SONG}`);
   return {
@@ -190,6 +203,7 @@ export function parseCli(argv: string[]): CliOptions {
         }
       : {}),
     ...(values.tab !== undefined ? { tabLabel: values.tab } : {}),
+    ...(boDocSoDu ? { boDocSoDu: true } : {}),
     ...(phase === "parcels-cell" && buocM !== undefined ? { oLuoi: { buocM, ...(values["gioi-han-o"] === undefined ? {} : { gioiHan: positive("--gioi-han-o", values["gioi-han-o"]) }) } } : {}),
   };
 }
@@ -202,7 +216,7 @@ export function rolesOfPhase(phase: Phase, checkBalance: boolean): Role[] {
 
 /** Kiểm cấu hình đủ cho pha này TRƯỚC khi gửi lời nào: đường của mọi vai, và tên cookie phiên nếu pha cần phiên. */
 export function checkConfigForPhase(config: S17Config, o: CliOptions): void {
-  for (const role of rolesOfPhase(o.phase, o.via === "ego")) rolePath(config, role);
+  for (const role of rolesOfPhase(o.phase, docSoDu(o))) rolePath(config, role);
   if (o.via === "ego" && !config.session) throw new ConfigError("cấu hình local S17 thiếu session.cookieName (tên cookie phiên) cho pha cần phiên");
   if (o.phase === "images" && !config.anh?.hostSuffixes.length) {
     throw new ConfigError("cấu hình local S17 thiếu anh.hostSuffixes (đuôi máy chủ ảnh của nguồn) cho pha ảnh — không tải mò");
@@ -235,7 +249,7 @@ export function egoOptions(
     parcelsGrid: tuyetDoi(o.parcelsGrid),
     lowriseTermsFile: tuyetDoi(o.lowriseTermsFile),
     cookieName: config.session?.cookieName,
-    checkBalance: o.via === "ego",
+    checkBalance: docSoDu(o),
     // Mã của lượt này: tiến trình trình duyệt ghi mã ấy vào tệp kết quả; kết quả mang mã khác là của lượt trước.
     runId: randomBytes(8).toString("hex"),
   };
@@ -297,7 +311,7 @@ export async function main(
     return 2;
   }
   const config = loadConfig(await readFile(o.config, "utf8"));
-  const checkBalance = o.via === "ego";
+  const checkBalance = docSoDu(o);
   checkConfigForPhase(config, o);
   const grid = o.grid === undefined ? undefined : (JSON.parse(await readFile(o.grid, "utf8")) as GridEntry[]);
   const parcels = o.parcelsGrid === undefined ? undefined : (JSON.parse(await readFile(o.parcelsGrid, "utf8")) as ParcelArea[]);

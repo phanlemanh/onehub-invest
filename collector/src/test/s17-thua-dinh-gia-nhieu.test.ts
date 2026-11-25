@@ -3,7 +3,7 @@ import { test } from "node:test";
 
 import { loadConfig } from "../collectors/s17-thua-dinh-gia/config.js";
 import { ConfigError } from "../collectors/s17-thua-dinh-gia/config.js";
-import { RunStopped, S17Client, TemporaryFailure, type Response, type TransportMany, MAX_CONCURRENCY } from "../collectors/s17-thua-dinh-gia/client.js";
+import { RunStopped, S17Client, TemporaryFailure, type PhanHoi, type Response, type TransportMany, MAX_CONCURRENCY } from "../collectors/s17-thua-dinh-gia/client.js";
 
 /**
  * S17 mốc ngày 2: gửi NHIỀU lời một đợt (đo 24/11: hai lời hồ sơ thửa đồng thời trong trang xong sau 4,9 s
@@ -25,9 +25,9 @@ const FAKE_CONFIG = {
 const json = (body: unknown, status = 200): Response => ({ status, contentType: "application/json", body: JSON.stringify(body) });
 const loiMang = new TypeError("Failed to fetch");
 
-type Ke = { client: S17Client; sent: string[]; dot: string[][]; slept: number[] };
+type Ke = { client: S17Client; sent: string[]; dot: string[][]; slept: number[]; daBao: PhanHoi[] };
 
-/** `answer(url)` trả phản hồi hoặc ném lỗi mạng. `many`: có vận chuyển theo đợt hay không. */
+/** `answer(url)` trả phản hồi hoặc ném lỗi mạng. `many`: có vận chuyển theo đợt hay không. `daBao`: mọi câu trả lời lớp gọi báo qua `onResponse`. */
 function makeClient(
   answer: (url: string, i: number) => Response | Promise<Response>,
   o: { caps?: { calls: number; minutes: number }; paceMs?: number; many?: boolean } = {},
@@ -35,6 +35,7 @@ function makeClient(
   const sent: string[] = [];
   const dot: string[][] = [];
   const slept: number[] = [];
+  const daBao: PhanHoi[] = [];
   let t = 1_000_000;
   const single = async (url: string): Promise<Response> => {
     sent.push(url);
@@ -62,13 +63,46 @@ function makeClient(
       t += ms;
     },
     transport: single,
+    onResponse: (r) => {
+      daBao.push(r);
+    },
     ...(o.many ? { transportMany: many } : {}),
   });
-  return { client, sent, dot, slept };
+  return { client, sent, dot, slept, daBao };
 }
 
 const reasonOf = (e: unknown): string => (e instanceof RunStopped ? e.reason : e instanceof TemporaryFailure ? "temporary" : String(e));
 const task = (lat: number) => ({ role: "parcel-profile" as const, params: { latitude: lat, longitude: 105.85 } });
+
+test("onResponse: lớp gọi báo MỘT lần cho MỖI câu trả lời (vai, trạng thái, thời gian, header được chọn); thân chỉ đưa khi không phải 200; lời 429 được báo TRƯỚC khi dừng", async () => {
+  const biChan = makeClient(() => ({ status: 429, contentType: "application/json", body: '{"message":"qua han"}', ms: 321, headers: { "retry-after": "30" } }));
+  await assert.rejects(biChan.client.getJson("parcel-profile", task(1).params), (e: unknown) => e instanceof RunStopped && e.reason === "blocked");
+  assert.deepEqual(biChan.daBao, [{ vai: "parcel-profile", status: 429, ms: 321, contentType: "application/json", headers: { "retry-after": "30" }, than: '{"message":"qua han"}' }]);
+  const tot = makeClient(() => ({ ...json({ status: true, data: { available: true } }), ms: 87, headers: { "x-ratelimit-remaining": "12" } }));
+  await tot.client.getJson("parcel-profile", task(1).params);
+  await tot.client.getJson("parcel-profile", task(2).params);
+  assert.deepEqual(tot.daBao, [
+    { vai: "parcel-profile", status: 200, ms: 87, contentType: "application/json", headers: { "x-ratelimit-remaining": "12" } },
+    { vai: "parcel-profile", status: 200, ms: 87, contentType: "application/json", headers: { "x-ratelimit-remaining": "12" } },
+  ]);
+});
+
+test("onResponse: lỗi mạng (không có câu trả lời) cũng được báo với trạng thái 0", async () => {
+  let lan = 0;
+  const ke = makeClient(() => {
+    lan++;
+    throw loiMang;
+  });
+  await ke.client.getJson("parcel-profile", task(1).params).catch(() => undefined);
+  // Mạng hỏng: lớp gọi thử lại ba lần (bốn lần gửi), mỗi lần hỏi thêm hai lời kiểm phiên — câu nào cũng được báo.
+  assert.deepEqual(ke.daBao.slice(0, 3), [
+    { vai: "parcel-profile", status: 0 },
+    { vai: "data-available", status: 0 },
+    { vai: "asset-type", status: 0 },
+  ], "báo lời gốc rồi hai lời kiểm phiên, đúng thứ tự, không có thân");
+  assert.equal(ke.daBao.length, 12, "bốn lần gửi × ba lời");
+  assert.equal(ke.daBao.some((r) => r.status !== 0 || "than" in r), false, "mọi câu đều là lỗi mạng, không có thân");
+});
 
 test("getJsonMany: gửi theo đợt, mỗi đợt tối đa `concurrency` lời, kết quả đúng thứ tự", async () => {
   const ke = makeClient((url) => json({ status: true, data: { lat: new URL(url).searchParams.get("latitude") } }), { many: true });

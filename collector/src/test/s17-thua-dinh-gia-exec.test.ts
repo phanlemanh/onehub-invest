@@ -32,16 +32,19 @@ const FAKE_CONFIG = {
 const json = (body: unknown, status = 200): Response => ({ status, contentType: "application/json", body: JSON.stringify(body) });
 const env = (data: unknown) => ({ status: true, message: null, data, pagination: null, extra: {} });
 
-type Harness = { sent: string[]; balances: number[] };
+/** `phu`: trường gắn thêm vào MỌI câu trả lời (thời gian, header). `loi`: câu trả lời giả cho đường kết thúc bằng `duoi`. */
+type Harness = { sent: string[]; balances: number[]; phu: Partial<Response>; loi: Array<[string, Response]> };
 
 function harness(): Harness & {
-  exec: (o: { phase: "session-check" | "projects"; checkBalance: boolean; dir: string }) => ReturnType<typeof executePhase>;
+  exec: (o: { phase: "session-check" | "projects"; checkBalance: boolean; dir: string; caps?: { calls: number; minutes: number } }) => ReturnType<typeof executePhase>;
 } {
-  const h: Harness = { sent: [], balances: [] };
+  const h: Harness = { sent: [], balances: [], phu: {}, loi: [] };
   let balanceReads = 0;
-  const transport = async (url: string): Promise<Response> => {
+  const traLoi = async (url: string): Promise<Response> => {
     h.sent.push(url);
     const p = new URL(url).pathname;
+    const dat = h.loi.find(([duoi]) => p.endsWith(duoi));
+    if (dat) return dat[1];
     if (p.endsWith("/balance")) {
       const v = h.balances[Math.min(balanceReads++, h.balances.length - 1)];
       return json(env({ available: v }));
@@ -55,7 +58,8 @@ function harness(): Harness & {
     if (/\/projects\/\d+(\/tree)?$/.test(p)) return json(env({ properties: { is_exists_apartment_info: false } }));
     return json(env({ available: true }));
   };
-  const exec = (o: { phase: "session-check" | "projects"; checkBalance: boolean; dir: string }) =>
+  const transport = async (url: string): Promise<Response> => ({ ...(await traLoi(url)), ...h.phu });
+  const exec = (o: { phase: "session-check" | "projects"; checkBalance: boolean; dir: string; caps?: { calls: number; minutes: number } }) =>
     executePhase({
       phase: o.phase,
       config: loadConfig(JSON.stringify(FAKE_CONFIG)),
@@ -63,7 +67,7 @@ function harness(): Harness & {
       snapshotRoot: join(o.dir, "snapshots"),
       statePath: join(o.dir, "state.json"),
       logPath: join(o.dir, "run.log.jsonl"),
-      caps: { calls: 100, minutes: 60 },
+      caps: o.caps ?? { calls: 100, minutes: 60 },
       paceMs: 0,
       batchItems: 100,
       checkBalance: o.checkBalance,
@@ -91,6 +95,35 @@ test("executePhase: đọc số dư trước và sau lượt; không đổi thì
   assert.equal(r.balanceAfter, 20);
   assert.equal(h.sent.length, 3, "số dư trước + một lời kiểm phiên + số dư sau");
   assert.equal(r.calls, 3);
+}));
+
+const docPhanHoi = async (dir: string): Promise<Array<Record<string, unknown>>> =>
+  (await readFile(join(dir, "run.log.jsonl"), "utf8"))
+    .split("\n")
+    .filter(Boolean)
+    .map((l) => {
+      const { at: _bo, ...r } = JSON.parse(l) as Record<string, unknown>;
+      return r;
+    })
+    .filter((r) => r.suKien === "phan-hoi");
+
+test("executePhase: pha kiểm phiên ghi lại MỌI câu trả lời thành dòng «phan-hoi» (vai, trạng thái, thời gian, header được chọn) — để đọc được nguồn nói gì", async () => withTmp(async (dir) => {
+  const h = harness();
+  h.balances.push(20);
+  h.phu = { ms: 42, headers: { "x-ratelimit-remaining": "12", date: "Thu, 26 Nov 2026 05:00:00 GMT" } };
+  await h.exec({ phase: "session-check", checkBalance: true, dir });
+  const ds = await docPhanHoi(dir);
+  assert.deepEqual(ds.map((r) => r.vai), ["balance", "data-available", "balance"]);
+  assert.deepEqual(ds[0], { suKien: "phan-hoi", vai: "balance", status: 200, ms: 42, contentType: "application/json", headers: { "x-ratelimit-remaining": "12", date: "Thu, 26 Nov 2026 05:00:00 GMT" } });
+}));
+
+test("executePhase: pha khác chỉ ghi «phan-hoi» khi câu trả lời KHÔNG phải 200 (kèm phần đầu thân); câu 200 không ghi", async () => withTmp(async (dir) => {
+  const h = harness();
+  h.phu = { ms: 9, headers: { date: "Thu, 26 Nov 2026 05:00:00 GMT" } };
+  h.loi.push(["/projects/1/tree", { status: 404, contentType: "application/json", body: '{"status":false,"message":"khong co"}' }]);
+  await h.exec({ phase: "projects", checkBalance: false, dir }).catch(() => undefined);
+  const ds = await docPhanHoi(dir);
+  assert.deepEqual(ds, [{ suKien: "phan-hoi", vai: "building-tree", status: 404, ms: 9, contentType: "application/json", headers: { date: "Thu, 26 Nov 2026 05:00:00 GMT" }, than: '{"status":false,"message":"khong co"}' }]);
 }));
 
 test("executePhase: số dư giảm thì dừng cả lượt với lý do balance-spent", async () => withTmp(async (dir) => {
@@ -448,4 +481,12 @@ test("mỗi lượt qua trình duyệt có một mã lượt; kết quả chỉ 
   assert.equal(await readRunResult(resultPath, String(a.runId)), null, "kết quả của lượt khác không được nhận");
   await writeFile(resultPath, JSON.stringify({ ok: false, stopReason: "blocked", runId: a.runId }));
   assert.equal((await readRunResult(resultPath, String(a.runId)))?.stopReason, "blocked");
+}));
+
+test("executePhase: kiểm phiên không đọc số dư với trần MỘT lời — gửi đúng MỘT lời kiểm phiên tới máy chủ API, kết quả alive, không có số dư", async () => withTmp(async (dir) => {
+  const h = harness();
+  const r = await h.exec({ phase: "session-check", checkBalance: false, dir, caps: { calls: 1, minutes: 5 } });
+  assert.deepEqual([r.ok, r.calls, r.summary?.alive, r.balanceBefore, r.balanceAfter], [true, 1, true, undefined, undefined]);
+  assert.equal(h.sent.length, 1);
+  assert.match(h.sent[0], /\/data-available$/, "đúng một lời, là lời kiểm phiên (máy chủ API)");
 }));

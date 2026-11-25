@@ -232,6 +232,11 @@ export async function executePhase(o: ExecOptions): Promise<ExecResult> {
     transport: o.transport,
     shouldStop: () => existsSync(stopPath),
     ...(o.transportMany ? { transportMany: o.transportMany } : {}),
+    // Ghi câu trả lời để đo nguồn: pha kiểm phiên (vài lời) ghi MỌI câu trả lời; pha khác chỉ ghi câu trả lời lỗi, kèm
+    // thời gian chờ, header hạn mức (nếu nguồn lộ qua CORS) và phần đầu thân (lần 429 ngày 25/11 không để lại gì ngoài «nguồn trả 429»).
+    onResponse: (r) => {
+      if (r.status !== 200 || o.phase === "session-check") log({ suKien: "phan-hoi", ...r });
+    },
     sleep: env.sleep,
     now: () => env.now().getTime(),
     caps: o.caps,

@@ -14,7 +14,22 @@
  */
 import { ConfigError, PROBE_ROLE, ROLES, SESSION_PROBE_ROLE, rolePath, type Role, type S17Config } from "./config.js";
 
-export type Response = { status: number; contentType: string; body: string; /** Số byte của thân khi vận chuyển không trả thân chữ (tile ảnh). */ bytes?: number };
+export type Response = {
+  status: number;
+  contentType: string;
+  body: string;
+  /** Số byte của thân khi vận chuyển không trả thân chữ (tile ảnh). */
+  bytes?: number;
+  /** Thời gian chờ câu trả lời (ms) — chỉ có ở đường trong trang. */
+  ms?: number;
+  /** Các header được chọn của câu trả lời (retry-after, hạn mức, giờ máy chủ…) — chỉ có ở đường trong trang. */
+  headers?: Record<string, string>;
+};
+/**
+ * Một câu trả lời của nguồn, đủ để đo: vai, trạng thái, thời gian chờ, các header được chọn. Thân (`than`) chỉ đưa
+ * khi câu trả lời KHÔNG phải 200 và tối đa 600 ký tự. Lỗi mạng (không có câu trả lời) báo với `status: 0`.
+ */
+export type PhanHoi = { vai: string; status: number; ms?: number; contentType?: string; headers?: Record<string, string>; bytes?: number; than?: string };
 export type Transport = (url: string, headers: Record<string, string>) => Promise<Response>;
 /** Gửi nhiều lời trong MỘT đợt (vd nhiều fetch đồng thời trong trang), lời i bắt đầu sau i × staggerMs. Mỗi phần tử: phản hồi hoặc lỗi mạng. */
 export type TransportMany = (requests: Array<{ url: string; headers: Record<string, string> }>, staggerMs: number) => Promise<Array<Response | Error>>;
@@ -93,6 +108,8 @@ export type ClientOptions = {
    * mọi lần dừng khác — không phải bị chặn, không gửi thêm lời nào.
    */
   shouldStop?: () => boolean;
+  /** Báo MỖI câu trả lời của nguồn (xem PhanHoi) — trình điều khiển ghi lại để đo; thiếu thì không báo. */
+  onResponse?: (r: PhanHoi) => void;
 };
 
 export class S17Client {
@@ -173,7 +190,27 @@ export class S17Client {
     return this.phanLoaiKiem(role, res);
   }
 
+  /**
+   * Báo câu trả lời qua `onResponse` (nếu có) TRƯỚC mọi phân loại — kể cả câu gây dừng (403, 429, 401) và lỗi mạng.
+   * Lời 429 ngày 25/11 chỉ để lại «nguồn trả 429»; từ đây nhật ký giữ thời gian chờ, phần đầu thân và các header được
+   * chọn. Header chỉ đọc được khi nguồn lộ qua CORS: gọi trong trang là gọi tới máy chủ khác gốc, đo 26/11 câu trả lời
+   * 200 của máy chủ API không đọc được header nào (kể cả date) — số đo chắc chắn là trạng thái, thời gian và thân.
+   */
+  private baoPhanHoi(role: string, res: Response | null): void {
+    if (!this.o.onResponse) return;
+    const r: PhanHoi = { vai: role, status: res?.status ?? 0 };
+    if (res) {
+      if (res.ms !== undefined) r.ms = res.ms;
+      if (res.contentType) r.contentType = res.contentType;
+      if (res.headers && Object.keys(res.headers).length) r.headers = res.headers;
+      if (res.bytes !== undefined) r.bytes = res.bytes;
+      if (res.status !== 200 && res.body) r.than = res.body.slice(0, 600);
+    }
+    this.o.onResponse(r);
+  }
+
   private phanLoaiKiem(role: Role, res: Response | null): "ok" | "fail" | "unknown" {
+    this.baoPhanHoi(role, res);
     if (!res) return "fail";
     if (res.status === 403 || res.status === 429) {
       this.blocks++;
@@ -209,6 +246,7 @@ export class S17Client {
    * - ném RunStopped: bị chặn (403, 429), hết phiên (401), hoặc do lời đối chiếu phát hiện.
    */
   private async classify(res: Response | null, needsSession: boolean, role: string): Promise<"ok" | { ownRecord: boolean }> {
+    this.baoPhanHoi(role, res);
     if (res && res.status === 403) {
       this.blocks++;
       throw this.stop("blocked", `nguồn trả 403 ở vai "${role}"`);
