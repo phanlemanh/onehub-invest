@@ -490,3 +490,16 @@ test("executePhase: kiểm phiên không đọc số dư với trần MỘT lờ
   assert.equal(h.sent.length, 1);
   assert.match(h.sent[0], /\/data-available$/, "đúng một lời, là lời kiểm phiên (máy chủ API)");
 }));
+
+test("executePhase: câu trả lời lỗi có thân DÀI thì dòng «phan-hoi» chỉ giữ ĐÚNG 600 ký tự đầu (cổng soát 26/11: đột biến bỏ chỗ cắt phải bị bắt)", async () => withTmp(async (dir) => {
+  const h = harness();
+  const than = "x".repeat(1_000) + "HET";
+  h.loi.push(["/projects/1/tree", { status: 404, contentType: "application/json", body: than }]);
+  await h.exec({ phase: "projects", checkBalance: false, dir }).catch(() => undefined);
+  const ds = await docPhanHoi(dir);
+  assert.equal(ds.length, 1);
+  const daGhi = ds[0].than as string;
+  assert.equal(daGhi.length, 600, "đúng 600 ký tự");
+  assert.equal(daGhi, than.slice(0, 600), "là 600 ký tự đầu của thân");
+  assert.equal(daGhi.includes("HET"), false, "phần sau 600 ký tự không lọt vào nhật ký");
+}));
