@@ -6,10 +6,12 @@
  */
 import { ConfigError } from "./config.js";
 import { HttpStatusError, RunStopped, TemporaryFailure, type S17Client } from "./client.js";
-import { assertNoSoftError, hasApartmentTable, makeItem, projectIdOf, tileBases } from "./kinds.js";
+import { assertNoSoftError, hasApartmentTable, makeItem, parseCount, projectIdOf, tileBases } from "./kinds.js";
+import { imagesPhase, type AnhPhaseOptions } from "./pha-anh.js";
+import type { KeoDan } from "./keo-dan.js";
 import type { BatchWriter } from "./store.js";
 
-export type Phase = "session-check" | "reference" | "tile-mask" | "projects" | "apartments" | "parcels" | "lowrise";
+export type Phase = "session-check" | "reference" | "tile-mask" | "projects" | "apartments" | "parcels" | "lowrise" | "apartments-all" | "images";
 
 /** Một tỉnh trong lưới tile đã chọn sẵn (chỉ điểm nằm trên đất), sinh ngoài bộ thu từ bảng địa giới. */
 export type GridEntry = { marketId: string; name: string; tiles: string[] };
@@ -128,18 +130,20 @@ export type RunOptions = {
   lowriseTerms?: string[];
   /** Mốc ngày 2 — quét dự án thấp tầng theo id (chi tiết có cờ; id không có bản ghi trả rỗng). */
   lowriseSweep?: { from: number; to: number };
+  /** Mốc mở rộng — gốc kho snapshot, để pha đọc việc còn phải làm (không gọi nguồn). */
+  snapshotRoot?: string;
+  /** Mốc mở rộng — thư mục nhật ký tiến độ chỉ-ghi-thêm (một tệp mỗi dự án). */
+  tienDoDir?: string;
+  /** Mốc mở rộng — lựa chọn của pha ảnh. */
+  anh?: AnhPhaseOptions;
+  /** Mốc mở rộng — kéo dan của pha không gọi API (pha ảnh). */
+  keoDan?: KeoDan;
 };
 
 /** Một khu thí điểm của pha thửa: lưới toạ độ sinh ngoài bộ thu từ đa giác khu trên máy thu. */
 export type ParcelArea = { khuVucId: string; ten: string; dienTichKm2: number; buocM: number; diem: Array<[number, number]> };
 
-/** «2,432» → 2432; không đọc được → null. */
-export function parseCount(text: unknown): number | null {
-  if (typeof text === "number" && Number.isFinite(text)) return text;
-  if (typeof text !== "string") return null;
-  const t = text.replace(/[\s.,]/g, "");
-  return /^\d+$/.test(t) ? Number(t) : null;
-}
+export { parseCount } from "./kinds.js";
 
 type ApartmentListEnvelope = Envelope<{ content?: Array<{ text?: unknown; sub_text?: unknown }>; totalElements?: number; totalPages?: number }>;
 /**
@@ -903,6 +907,11 @@ export async function runPhase(o: RunOptions): Promise<PhaseSummary> {
       return parcels(o);
     case "lowrise":
       return lowrise(o);
+    case "images":
+      if (!o.anh || !o.keoDan) throw new ConfigError("pha images cần lựa chọn ảnh và kéo dan");
+      return imagesPhase(o, o.anh, o.keoDan);
+    default:
+      throw new ConfigError(`pha chưa làm: ${String(o.phase)}`);
   }
 }
 

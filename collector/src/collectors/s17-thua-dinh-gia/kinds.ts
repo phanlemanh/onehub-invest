@@ -8,6 +8,14 @@ export function makeItem(kind: string, sourceId: string, payload: unknown, meta:
   return { source: S17_SOURCE, kind, sourceId, fetchedAt, payload, meta };
 }
 
+/** «2,432» → 2432; không đọc được → null. */
+export function parseCount(text: unknown): number | null {
+  if (typeof text === "number" && Number.isFinite(text)) return text;
+  if (typeof text !== "string") return null;
+  const t = text.replace(/[\s.,]/g, "");
+  return /^\d+$/.test(t) ? Number(t) : null;
+}
+
 /**
  * `status: false` trong envelope là nguồn BÁO LỖI dù HTTP 200 — KHÔNG được đọc là «không có bản ghi» hay «không có
  * thửa» (lượt soát 24/11: một lỗi mềm như vậy sẽ đánh dấu cả dải id là rỗng mà lượt vẫn báo thành công). Bản ghi rỗng
