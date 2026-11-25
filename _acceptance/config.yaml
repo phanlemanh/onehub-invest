@@ -737,6 +737,12 @@ executors:
     snh_scope: "f=$(git diff --name-only $(git merge-base HEAD origin/main) HEAD | grep -v -E '^(_acceptance/|PRODUCT-MAP[.]md$|LO-TRINH[.]html$)' | grep -v -x -E 'scripts/[a-z]+-import-daily[.]sh|scripts/s03-nap-(nhanh|ho-so)[.]test[.]mjs|pipeline/cron/com[.]oneinvest[.]s03-nap-15phut[.]plist'); [ -z \"$f\" ] && echo SCOPE OK || { echo \"NGOAI PHAM VI: $f\"; exit 1; }"
     # collector-graceful-shutdown — không chạm :9210 đang chạy (cổng ngẫu nhiên, snapshot vào thư mục tạm)
     collector_check: "cd collector && npm run check"
+    zc15_media_test: "cd collector && rm -rf dist && npm run build && node --test dist/test/media-fetch.test.js"   # s03-media-r2-allowlist E1–E6 — r2.dev, hậu tố host thêm từ cấu hình local, Accept, JPEG XL
+    zc15_khuon_media_files: "node _acceptance/s03-media-r2-allowlist/probes/khuon-media-files.mjs . && node _acceptance/s03-media-r2-allowlist/probes/khuon-media-files.mjs --tu-thu ."   # s03-media-r2-allowlist E9 — khuôn meta.mediaFiles giữ năm khoá (DATA-CONTRACT)
+    zc15_khong_ten_that: "bash _acceptance/s03-media-r2-allowlist/probes/khong-ten-that.sh \"$PWD\" && bash _acceptance/s03-media-r2-allowlist/probes/khong-ten-that.sh --tu-thu \"$PWD\""   # s03-media-r2-allowlist E10 — tên host đích (tầng A) không trong cây/lịch sử nhánh; chỉ đo được ở máy có tệp nguồn local
+    zc15_ap_may_thu: "bash _acceptance/s03-media-r2-allowlist/ap-may-thu/kiem.sh"   # s03-media-r2-allowlist E11 — hồ sơ áp năm mục + kiem-sau trên mẫu + round-trip collector API nhánh/main
+    zc16_media_test: "cd collector && rm -rf dist && npm test && git diff --exit-code origin/main -- docs/DATA-CONTRACT.md src/core/storage.ts && cd .. && bash _acceptance/s03-jpg-path-fallback/probes/tu-thu.sh"   # s03-jpg-path-fallback E1–E5, E9 — MỘT lệnh dựng dist (npm test = build + toàn bộ ca, gồm media-fetch) để lượt chấm không chạy hai lệnh rm -rf dist song song (S4 r1 25/11); thử lại một lần bỏ /jpg/, tên tệp băm URL đã tải, không urlFetched; DATA-CONTRACT + schemaVersion không đổi
+    zc16_ap_may_thu: "bash _acceptance/s03-jpg-path-fallback/ap-may-thu/kiem.sh"   # s03-jpg-path-fallback E8 — hồ sơ áp năm mục + kiem-sau trên mẫu + round-trip collector API nhánh/ZC15
     collector_plist_lint: "plutil -lint pipeline/cron/com.oneinvest.collector-api.plist"
     shutdown_deadline: "node scripts/collector-shutdown/acceptance.mjs deadline"
     shutdown_skip_media: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/collector-shutdown/acceptance.mjs skip-media"
