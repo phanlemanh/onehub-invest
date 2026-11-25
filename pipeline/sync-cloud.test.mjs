@@ -26,6 +26,10 @@ import {
   selectList,
   shrinkVerdict,
   syncOnce,
+  BANG_TUY_CHON,
+  FILL as FILL_CG9,
+  childFilterSql,
+  localReadSql,
 } from "./sync-cloud.mjs";
 
 // cloud-sync-atomic (_acceptance/cloud-sync-atomic) — lõi thuần của sync nguyên tử.
@@ -411,4 +415,44 @@ test("SVC E8 mọi cột khoá người bán lên cloud nằm trong bảng FILL 
   // Đối chứng đỏ: một bảng ngoài FILL mang khoá người bán.
   const lech = khoaNguoiBanNgoaiFill({ ...CLOUD_ALLOW, ghi_chu_ops: ["id", "seller_phone_hash"] });
   assert.deepEqual(lech, ["ghi_chu_ops.seller_phone_hash"], "KHOA MO COI: đối chứng không phân biệt");
+});
+
+// bang-hang-gia-m2 (_acceptance/bang-hang-gia-m2) — CG9-AC-8: bảng hạng giá lên cloud như bảng con của tin sống; cloud chưa có
+// bảng thì lượt sync bỏ qua đúng bảng ấy, bảng khác vẫn chép; bảng FILL khác vắng vẫn dừng «cloud thiếu bảng».
+
+test("CG9-AC-8 offer_price_rank trong FILL, chép như bảng con của tin sống, không cột lộ tên nguồn", () => {
+  assert.ok(FILL_CG9.includes("offer_price_rank"), "offer_price_rank chưa vào FILL");
+  assert.equal(childFilterSql("offer_price_rank"), ` WHERE "offer_id" IN (SELECT "offer_id" FROM "sale_offers")`,
+    "phải lọc theo tin sống như property_offers");
+  const cot = ["offer_id", "kind", "property_type", "bedrooms", "thuoc", "gia_tri", "cap", "nut", "pn_nhom", "n", "trung_vi", "p20",
+    "hang_pct", "duoi_trung_vi_pct", "nhan", "can_xac_minh", "ly_do", "computed_at", "run_id"];
+  const sel = selectList("offer_price_rank", cot);
+  assert.deepEqual(sel.cols, cot, "mọi cột của bảng hạng lên cloud (không cột nào mang tên nguồn)");
+  assert.deepEqual(sel.unapproved, []);
+  // Đối chứng: cột lộ tên nguồn của sale_offers vẫn bị giữ lại — selectList không mở mọi cột.
+  assert.ok(!selectList("sale_offers", ["offer_id", "listing_url"]).cols.includes("listing_url"));
+});
+
+test("CG9-AC-8 cloud chưa có offer_price_rank: bỏ qua một dòng, không dừng ở catalog; đối chứng bảng khác vắng vẫn dừng", async () => {
+  assert.ok(BANG_TUY_CHON.has("offer_price_rank"));
+  const { exec, calls } = cloudGia(() => "r", { thieu: ["offer_price_rank"] });
+  const log = [];
+  await assert.rejects(syncOnce({ local: null, exec, log: (s) => log.push(s) }), (e) => {
+    assert.notEqual(e.phase, "catalog", `không được dừng ở catalog: ${e.message}`);
+    assert.doesNotMatch(e.message, /cloud thiếu bảng/);
+    return true;
+  });
+  assert.ok(log.some((l) => l.includes("bỏ qua offer_price_rank — cloud chưa có bảng")), `log: ${log.join(" | ")}`);
+  assert.ok(calls.some((s) => s.includes("relkind")), "đã qua bước kiểm kiểu bảng");
+  const doiChung = cloudGia(() => "r", { thieu: ["offer_price_rank", "sellers"] });
+  await assert.rejects(syncOnce({ local: null, exec: doiChung.exec, log: () => {} }), /cloud thiếu bảng: sellers/);
+});
+
+// so-so-tren-man-theo-ngay (_acceptance/so-so-tren-man-theo-ngay) — SM1-AC-6: số mốc S03 lên cloud trong khối dataFlow, dòng của bảng đo ở lại máy thu.
+test("SM1-AC-6 câu đọc dq_check_results loại đúng dòng s03-moc-ngay, bảng khác không đổi", () => {
+  const loc = ` WHERE "check_name" IS DISTINCT FROM 's03-moc-ngay'`;
+  assert.equal(childFilterSql("dq_check_results"), loc, "s03-moc-ngay phải ở lại máy thu");
+  assert.ok(localReadSql("dq_check_results", `"id"`).includes(`FROM "dq_check_results"${loc}) x`), "câu đọc thật phải mang bộ lọc");
+  assert.equal(childFilterSql("areas"), "", "bảng không khai lọc giữ nguyên");
+  assert.equal(childFilterSql("offer_price_rank"), ` WHERE "offer_id" IN (SELECT "offer_id" FROM "sale_offers")`, "lọc cha sống giữ nguyên");
 });

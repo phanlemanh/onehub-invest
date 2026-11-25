@@ -1,7 +1,7 @@
 -- 600_data_flow.sql — DF1 `dong-chay-len-cloud`: làm tươi data_flow_snapshot (migration 051), MỘT định nghĩa số
 -- «Dòng chảy dữ liệu» cho cả trang máy thu lẫn khối `dataFlow` lên cloud (luật 10, ADR-0014).
 -- Chạy mỗi lượt cloud-sync, TRƯỚC push-ops-facts (scripts/cloud-sync.sh). Idempotent: xoá rồi ghi lại đúng ba dòng
--- (7d · 30d · all) trong một giao dịch. CHỈ ghi data_flow_snapshot; bảng nạp và bảng tin chỉ được đọc.
+-- (7d · 30d · all) trong một giao dịch. Ghi data_flow_snapshot và dòng số mốc S03 của hôm nay; bảng nạp và bảng tin chỉ được đọc.
 -- Mốc = now() của lượt làm tươi; ngày theo giờ VN. Phép gộp chuyển nguyên từ getDataFlow (app/src/lib/data-flow-
 -- queries.ts) trước DF1: bài thử theo bốn dấu của pipeline/lib/test-posts.mjs (dấu nội dung chép từ NOI_DUNG_SQL, GN5), năm trường lõi của lib/data-level.ts,
 -- S06 «đọc được» = min(tin, quảng cáo) (chưa có khoá nối ngược), chuỗi ngày 30 ngày gần nhất cho mọi cửa sổ.
@@ -15,10 +15,15 @@
 -- `flow_s03_branch` của phiên rồi bật `oneinvest.flow_branch`. Cờ tắt (600 chạy trần) → khối KHÔNG có ba khoá nhánh, giống
 -- hệt khối trước DF6 (trang đọc khoá vắng thành null — normalizeFacts).
 -- «Đọc được» thắng mọi nhánh: bài trong post_ids của tin không bao giờ vào nhánh mới.
+-- SM1 (`so-so-tren-man-theo-ngay`): mỗi ngày VN một dòng `dq_check_results` (`check_name = 's03-moc-ngay'`), xoá rồi ghi trong CÙNG câu
+-- lệnh dựng snapshot nên số mốc và số của màn chặng đọc cùng một ảnh dữ liệu. Bảng chỉ có khoá `id`: khoá advisory của giao dịch giữ
+-- «một dòng mỗi ngày» khi hai lượt chạy đồng thời. `facts.milestones` chở 30 ngày gần nhất, tăng dần theo ngày.
 
 CREATE TEMP TABLE IF NOT EXISTS flow_s03_branch (post_id text PRIMARY KEY, branch text NOT NULL);
 
 BEGIN;
+
+SELECT pg_advisory_xact_lock(hashtext('s03-moc-ngay'));
 
 DELETE FROM data_flow_snapshot;
 
@@ -85,14 +90,18 @@ cum AS (
   FROM property_offers po JOIN sale_offers o ON o.offer_id = po.offer_id
   GROUP BY 1
 ),
--- Chưa có bảng nối tin → nút danh bạ (V9, chuỗi GC0–GC3): hai CTE rỗng này là chỗ DUY NHẤT phải đổi khi bộ gắn ra đời.
-dinh_vi_link AS (SELECT NULL::text AS offer_id WHERE false),
+-- Định vị CẤP DỰ ÁN (DV7, migration 105): tin có đúng một dự án gốc trong nguồn chung offer_project — cùng nguồn với bậc B2
+-- (offer_located, data_level_units). Khớp toà (nhịp 2, PL20) và gắn căn (nhịp 3, GC0–GC3) chưa có bảng nối: CTE rỗng là chỗ
+-- duy nhất phải đổi khi bộ gắn ra đời. «Chờ khớp» (locatedPending) giữ nghĩa cấp toà: tin ghi toà/trục mà chưa khớp nút toà.
+dinh_vi_link AS MATERIALIZED (SELECT offer_id FROM offer_project WHERE status = 'mot_du_an'),
+toa_link AS (SELECT NULL::text AS offer_id WHERE false),
 gan_can_link AS (SELECT NULL::text AS offer_id WHERE false),
 muc AS (
   SELECT o.offer_id,
          EXISTS (SELECT 1 FROM property_offers po JOIN cum c ON c.property_id = po.property_id
                  WHERE po.offer_id = o.offer_id AND c.n >= 2) AS clustered,
          EXISTS (SELECT 1 FROM dinh_vi_link l WHERE l.offer_id = o.offer_id) AS located,
+         EXISTS (SELECT 1 FROM toa_link l WHERE l.offer_id = o.offer_id) AS toa_khop,
          EXISTS (SELECT 1 FROM gan_can_link l WHERE l.offer_id = o.offer_id) AS unit_linked,
          coalesce(/*<<<LOCATED_PENDING*/nullif(btrim(o.block_raw), '') IS NOT NULL OR o.unit_number ~* 'xx'/*LOCATED_PENDING>>>*/, false) AS ghi_toa,
          coalesce(/*<<<UNIQUE_ID*/(nullif(btrim(o.block_raw), '') IS NOT NULL AND o.unit_number !~* 'xx'
@@ -108,7 +117,7 @@ offers_daily AS (
          count(*) FILTER (WHERE m.clustered) AS clustered,
          count(*) FILTER (WHERE m.located) AS located,
          count(*) FILTER (WHERE m.unit_linked) AS unit_linked,
-         count(*) FILTER (WHERE m.ghi_toa AND NOT m.located) AS located_pending,
+         count(*) FILTER (WHERE m.ghi_toa AND NOT m.toa_khop) AS located_pending,
          count(*) FILTER (WHERE m.dinh_danh AND NOT m.unit_linked) AS unique_id_pending,
          count(*) FILTER (WHERE m.located AND NOT m.unit_linked) AS deep_located,
          count(*) FILTER (WHERE m.clustered AND NOT m.located AND NOT m.unit_linked) AS deep_clustered,
@@ -246,7 +255,45 @@ short_by_win AS (
   LEFT JOIN listings l ON w.since_day IS NULL OR l.last_seen >= w.since_day
   GROUP BY w.time_window, w.since_day
 ),
-enrich AS (SELECT /*<<<ENRICH*/count(*) AS n FROM enrichment_proposals WHERE status = 'queued'/*ENRICH>>>*/)
+enrich AS (SELECT /*<<<ENRICH*/count(*) AS n FROM enrichment_proposals WHERE status = 'queued'/*ENRICH>>>*/),
+-- SM1: bốn số mốc của S03 trên tin đang rao. Mỗi tin chỉ giữ một dòng hạng ở cấp mịn nhất, nên «hạng cấp dự án» gồm cả phân khu và toà:
+-- đếm đúng cap = 'du_an' thì số sẽ tụt đúng ngày hạng cấp toà ra đời.
+moc_hom_nay AS (
+  SELECT jsonb_build_object(
+           'ngay', (SELECT d FROM today)::text,
+           'offers_total', count(*),
+           'project_linked', count(*) FILTER (WHERE m.located),
+           'building_linked', count(*) FILTER (WHERE m.toa_khop),
+           'project_ranked', count(*) FILTER (WHERE r.hang_pct IS NOT NULL AND r.cap IN ('du_an', 'phan_khu', 'toa')),
+           'building_ranked', count(*) FILTER (WHERE r.hang_pct IS NOT NULL AND r.cap = 'toa')
+         ) AS j
+  FROM sale_offers o
+  JOIN muc m USING (offer_id)
+  LEFT JOIN offer_price_rank r ON r.offer_id = o.offer_id
+  WHERE o.source = 'S03'
+),
+-- `detail` của kiểm khác không phải JSON: CASE giữ phép ép kiểu chỉ chạy trên dòng số mốc, thứ tự của AND không được bảo đảm.
+moc_da_ghi AS (
+  SELECT id, CASE WHEN check_name = 's03-moc-ngay' THEN detail::jsonb END AS j
+  FROM dq_check_results
+  WHERE check_name = 's03-moc-ngay'
+),
+moc_xoa AS (
+  DELETE FROM dq_check_results x USING moc_da_ghi c
+  WHERE x.id = c.id AND c.j ->> 'ngay' = (SELECT d FROM today)::text
+),
+moc_ghi AS (
+  INSERT INTO dq_check_results (check_name, entity, status, detail)
+  SELECT 's03-moc-ngay', 'S03', 'pass', j::text FROM moc_hom_nay
+),
+moc_chuoi AS (
+  SELECT jsonb_agg(x.j ORDER BY x.j ->> 'ngay') AS items
+  FROM (
+    SELECT j FROM moc_hom_nay
+    UNION ALL
+    (SELECT j FROM moc_da_ghi WHERE j ->> 'ngay' < (SELECT d FROM today)::text ORDER BY j ->> 'ngay' DESC LIMIT 29)
+  ) x
+)
 INSERT INTO data_flow_snapshot (time_window, computed_at, facts)
 SELECT w.time_window, now(),
        jsonb_build_object(
@@ -255,7 +302,8 @@ SELECT w.time_window, now(),
          'groups', g.groups,
          'shortStay', ss.short_stay,
          'mix', s.mix_base || jsonb_build_object('shortStay', ss.short_stay -> 'stored'),
-         'enrichPending', (SELECT n FROM enrich)
+         'enrichPending', (SELECT n FROM enrich),
+         'milestones', (SELECT items FROM moc_chuoi)
        )
 FROM win w
 JOIN sources_by_win s USING (time_window)

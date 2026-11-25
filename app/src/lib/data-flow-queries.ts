@@ -95,6 +95,16 @@ export type GroupFlow = Branches & {
   latestAt: string | null;
 };
 
+/** Số mốc S03 của một ngày VN (SM1) — đúng các khoá của `dq_check_results.detail`, dòng `s03-moc-ngay`. */
+export type Milestone = {
+  ngay: string;
+  offers_total: number;
+  project_linked: number;
+  building_linked: number;
+  project_ranked: number;
+  building_ranked: number;
+};
+
 export type ShortStay = { received: number; stored: number; withWard: number; latestAt: string | null };
 
 export type KindMix = { sale: number; rentLt: number; shortStay: number };
@@ -162,11 +172,13 @@ export function normalizeFacts(raw: FlowFacts): FlowFacts {
       return { ...(d as FlowDay), unitLinked: nOrNull(d.unitLinked) ?? 0, ...branchesOf(d) };
     }),
     groups: ((raw.groups ?? []) as (GroupFlow & Record<string, unknown>)[]).map((g) => ({ ...(g as GroupFlow), ...branchesOf(g) })),
+    // Khối đời trước SM1 không có khoá này: đọc thành mảng rỗng, vùng số mốc hiện trạng thái trống.
+    milestones: raw.milestones ?? [],
   };
 }
 
 /** Phần tổng hợp của DataFlow — đúng các khoá 600_data_flow.sql ghi vào `facts` (danh sách đóng, khối lên cloud). */
-export const FLOW_FACT_KEYS = ["sources", "days", "groups", "shortStay", "mix", "enrichPending"] as const;
+export const FLOW_FACT_KEYS = ["sources", "days", "groups", "shortStay", "mix", "enrichPending", "milestones"] as const;
 export type FlowFacts = {
   sources: SourceFlow[];
   days: FlowDay[];
@@ -174,6 +186,8 @@ export type FlowFacts = {
   shortStay: ShortStay;
   mix: KindMix;
   enrichPending: number;
+  /** 30 ngày gần nhất, tăng dần theo ngày (SM1). */
+  milestones: Milestone[];
 };
 
 /** Trạng thái số tổng hợp: máy thu theo `computed_at` cũ nhất của bảng tính sẵn (`fresh`/`stale`/`none`); máy chủ theo
@@ -213,17 +227,20 @@ const EMPTY_FACTS: FlowFacts = {
   shortStay: { received: 0, stored: 0, withWard: 0, latestAt: null },
   mix: { sale: 0, rentLt: 0, shortStay: 0 },
   enrichPending: 0,
+  milestones: [],
 };
 
 /** «Tin mới nhất»: mỗi nguồn tối đa 150 tin (S06 ~500 tin/ngày không đẩy tin nhóm khép ra khỏi bảng). Máy thu kèm bài
  * gốc sớm nhất (cắt 600 ký tự); máy chủ không có bảng bài nên `postText`/`postGroup` null (Hỏi-1 DF1). */
-const recordsSql = (withPost: boolean) => `
+const recordsSql = (withPost: boolean, withProject = false) => `
   SELECT o.offer_id, o.source, o.kind, o.property_type, o.price_vnd, o.area_m2, o.bedrooms, o.confidence,
          o.n_reposts, o.first_seen::text, o.last_seen::text,
          a.name AS ward, m.name AS market,
-         -- Mức nhận diện cùng luật 600_data_flow.sql (đoạn LOCATED_PENDING, UNIQUE_ID). Định vị, Gắn căn: chưa có bảng nối
-         -- tin → nút danh bạ (V9) nên không tin nào tới. Cloud không có cột unit_number, street_number → đọc qua to_jsonb.
-         CASE WHEN EXISTS (SELECT 1 FROM property_offers po
+         -- Mức nhận diện cùng luật 600_data_flow.sql (đoạn LOCATED_PENDING, UNIQUE_ID). Định vị cấp dự án (DV7): máy thu đã áp
+         -- 105 đọc nguồn chung offer_project — cùng nguồn với ô Định vị và bậc B2; cloud không có view nên không tin nào tới.
+         -- Gắn căn: chưa có bảng nối (V9). Cloud không có cột unit_number, street_number → đọc qua to_jsonb.
+         CASE ${withProject ? "WHEN EXISTS (SELECT 1 FROM offer_project op WHERE op.offer_id = o.offer_id AND op.status = 'mot_du_an') THEN 'located'" : ""}
+              WHEN EXISTS (SELECT 1 FROM property_offers po
                            JOIN property_offers p2 ON p2.property_id = po.property_id AND p2.offer_id <> po.offer_id
                            JOIN sale_offers s2 ON s2.offer_id = p2.offer_id
                            WHERE po.offer_id = o.offer_id) THEN 'clustered' ELSE 'none' END AS muc,
@@ -324,7 +341,10 @@ export async function getDataFlow(
     const rq = facts.blocks.reviewQueue;
     if (rq && rq.state !== "error" && rq.data) reviewPending = num((rq.data as { total?: unknown }).total);
   }
-  const records = await q(recordsSql(mode === "local"), [totalsStart]);
+  // Máy thu chưa áp 105 (sau gộp, trước lời áp) thì không có view — đọc câu cũ thay vì lỗi cả trang.
+  const withProject = mode === "local" &&
+    Boolean((await q("SELECT to_regclass('offer_project') IS NOT NULL AS co", [])).rows[0]?.co);
+  const records = await q(recordsSql(mode === "local", withProject), [totalsStart]);
 
   return {
     ...normalizeFacts(f.facts ?? EMPTY_FACTS),

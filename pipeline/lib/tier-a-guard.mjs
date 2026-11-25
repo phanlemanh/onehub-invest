@@ -4,10 +4,17 @@
 // Báo bằng đường JSON + mã — KHÔNG bao giờ trả tên.
 import { findSourceNames } from "./mask-source-names.mjs";
 
-/** Token rời (real_name, source_ids) → entries cho lõi; mã của chỗ trúng là chính token (sync-cloud chỉ cần biết có/không). */
+/** Token rời (real_name, source_ids) → entries cho lõi; mã của chỗ trúng là chính token (sync-cloud chỉ cần biết có/không).
+ *  Nhận chuỗi trần (cũ, cờ false) hoặc `{ token, wholeOnly }` (che-ten-nguon-khong-lay-tu-dau, cờ match_whole). */
 export function entriesFromTokens(tokens) {
-  return (tokens ?? []).filter(Boolean).map((t) => ({ code: t, realName: t }));
+  return (tokens ?? [])
+    .map((t) => (typeof t === "string" ? { token: t, wholeOnly: false } : t))
+    .filter((t) => t && t.token)
+    .map((t) => ({ code: t.token, realName: t.token, wholeOnly: t.wholeOnly === true }));
 }
+
+/** entries của hàm nạp → token cho sync-cloud (giữ cờ). */
+export const tokensFromEntries = (entries) => entries.map((e) => ({ token: e.realName, wholeOnly: e.wholeOnly === true }));
 
 /**
  * Mọi giá trị chuỗi của `value` mang tên nguồn thật: [{ path, code }]. `exempt`: regex đường được miễn (vd tên nhóm S03

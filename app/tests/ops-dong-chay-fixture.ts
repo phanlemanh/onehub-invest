@@ -27,7 +27,7 @@ export const vn = (s: string) => new Date(`${s}+07:00`).toISOString()
 export const IN = "2026-10-24T09:00:00"
 export const OLD = "2026-10-10T09:00:00" // ngoài 7 ngày
 export const SNAP = "hanoi__zalo-agent__2026-10-24T090000"
-export const TABLES = ["stg_zalo_posts", "sale_offers", "property_offers", "stg_chotot_ads", "stg_abnb_listings", "listings", "areas", "enrichment_proposals", "review_queue"]
+export const TABLES = ["stg_zalo_posts", "sale_offers", "property_offers", "stg_chotot_ads", "stg_abnb_listings", "listings", "areas", "enrichment_proposals", "review_queue", "dq_check_results", "offer_price_rank"]
 
 // [post_id, snapshot_id, agent_id, group_name, posted_at, media, media_files]
 export type Post = [string, string, string, string, string, unknown, unknown]
@@ -87,6 +87,11 @@ export async function makeFlowSchema(
     await admin.query(`CREATE SCHEMA "${schema}"`)
   }
   for (const t of tables) await admin.query(`CREATE TABLE IF NOT EXISTS "${schema}".${t} (LIKE public.${t} INCLUDING DEFAULTS)`)
+  // DV7: 600 đọc nguồn chung offer_project (view của 105, chỉ máy thu). Lược đồ tạm có bảng rỗng cùng tám cột — fixture không
+  // mang chứng cứ dự án — để 600 đọc đúng lược đồ của test, không rơi về view của public (đọc bảng public) hay lỗi khi DB
+  // chép chưa áp 105. Ca muốn tin định vị thì chèn dòng vào bảng này.
+  await admin.query(`CREATE TABLE IF NOT EXISTS "${schema}".offer_project (offer_id text PRIMARY KEY, source text, project_node_id bigint,
+    status text, evidence text, catalog_tier text, n_posts int, n_posts_with_project int)`)
   if (tables.includes("stg_zalo_posts"))
     for (const [id, snap, agent, group, posted, media, files] of POSTS)
       await admin.query(

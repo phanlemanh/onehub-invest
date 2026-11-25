@@ -23,7 +23,7 @@ const STATE = "pipeline/logs/apify-daily.state";
 const LOCK = `${STATE}.lock`;
 // pl34-lich-dem-sau-buoc (AC-1, Mạnh duyệt 09/11): doc-gop-hang-ngay sau nhả khoá nạp, trước enrich-run — lời «năm bước» của
 // enrich-chay-sau-nap#AC-6 thay bởi pl34-lich-dem-sau-buoc#AC-1. Tệp giả của bước gọi qua node giả nên mang nhãn của nó.
-const NHAN = ["import-airbnb", "transform-zalo", "transform-media", "refresh-bait-gap", "doc-gop-hang-ngay", "enrich-run"];
+const NHAN = ["import-airbnb", "transform-zalo", "phuong-tu-du-an", "transform-media", "refresh-bait-gap", "xep-hang-gia", "doc-gop-hang-ngay", "enrich-run"];
 const DOC_GOP = "pipeline/doc-gop-hang-ngay.sh";
 const DOC_GOP_GIA = '#!/bin/bash\nexec node "$(dirname "$0")/doc-gop-hang-ngay.mjs"\n';
 const PID_KHAC = "424242";
@@ -33,7 +33,9 @@ step=node
 for a in "$@"; do case "$a" in *.mjs|*.js|*.ts) step="$(basename "$a")"; step="\${step%.*}"; break;; esac; done
 echo "$step" >> "$CALLS"
 if [ -d "$LOCKP" ]; then khoa=co; else khoa=khong; fi
-echo "$step|$PWD|\${LIMIT:-}|$khoa" >> "$SEEN"
+ef=""
+for a in "$@"; do case "$a" in --env-file=*) ef="\${a#--env-file=}";; esac; done
+echo "$step|$PWD|\${LIMIT:-}|$khoa|$ef" >> "$SEEN"
 if [ "$step" = enrich-run ] && [ "\${FAKE_OTHER_LOCK:-}" = 1 ]; then
   mkdir "$LOCKP" && echo ${PID_KHAC} > "$LOCKP/pid"
 fi
@@ -87,8 +89,8 @@ function chay(root, { fail = "", limit, khoaKhac = false } = {}) {
   const r = spawnSync("/bin/bash", [path.join(root, SCRIPT)], { cwd: root, env, encoding: "utf8", timeout: 60_000 });
   const doc = (f) => readFileSync(f, "utf8").split("\n").filter(Boolean);
   const thay = Object.fromEntries(doc(seen).map((l) => {
-    const [buoc, cwd, lim, khoa] = l.split("|");
-    return [buoc, { cwd, lim, khoa }];
+    const [buoc, cwd, lim, khoa, envFile] = l.split("|");
+    return [buoc, { cwd, lim, khoa, envFile }];
   }));
   return {
     root, code: r.status, stderr: r.stderr, calls: doc(calls), thay,
@@ -118,6 +120,25 @@ test("EC-AC-6 dãy bước: lành → sáu bước (pl34-lich-dem-sau-buoc AC-1)
   const hong = chay(cay(), { fail: "import-airbnb:2" });
   assert.equal(hong.code, 1, hong.stderr);
   assert.deepEqual(hong.calls, ["import-airbnb"], "EC-AC-6 nạp hỏng mà vẫn chạy bước sau");
+});
+
+// MH1 model-may-sang-haiku: enrich gọi Gateway nên phải nạp .env của kho (khoá AI_GATEWAY_API_KEY), cùng cách bước đọc gộp.
+function kiemEnvFile(noiDung) {
+  const root = cay(noiDung);
+  writeFileSync(path.join(root, ".env"), "AI_GATEWAY_API_KEY=gia\n");
+  const r = chay(root);
+  assert.equal(r.code, 0, r.stderr);
+  if (r.thay["enrich-run"].envFile !== path.join(root, ".env")) assert.fail(`MH1 enrich-run thiếu --env-file của .env kho (nhận «${r.thay["enrich-run"].envFile}»)`);
+}
+test("MH1 enrich-run trong chuỗi nạp chạy node --env-file=<kho>/.env; kho không có .env vẫn chạy (mảng rỗng dưới set -u)", () => {
+  kiemEnvFile(THAT);
+  const r = chay(cay());
+  assert.equal(r.code, 0, r.stderr);
+  assert.equal(r.thay["enrich-run"].envFile, "", "MH1 không có .env mà vẫn truyền --env-file");
+});
+test("chiều đỏ MH1: bỏ --env-file khỏi bước enrich → đỏ «enrich-run thiếu --env-file»", () => {
+  const cut = dotBien('node ${ENRICH_ENV[@]+"${ENRICH_ENV[@]}"} --import tsx scripts/enrich-run.ts', "node --import tsx scripts/enrich-run.ts");
+  assert.throws(() => kiemEnvFile(cut), /MH1 enrich-run thiếu --env-file/);
 });
 
 test("EC-AC-6 chiều đỏ: bỏ dòng job_run enrich-run → thiếu bước enrich-run", () => {
@@ -170,13 +191,29 @@ test("EC-AC-8 chiều đỏ: bỏ dòng nhả khoá → enrich chạy khi còn g
   assert.throws(() => kiemNhaKhoa(giu), /EC-AC-8 enrich chạy khi còn giữ khoá nạp/);
 });
 
-test("EC-AC-8 chiều đỏ: nhả khoá mà không gỡ trap → xoá khoá của job khác", () => {
-  const conTrap = dotBien(`trap - EXIT; rm -rf "$LOCK_DIR"\n`, `rm -rf "$LOCK_DIR"\n`);
-  assert.throws(() => kiemNhaKhoa(conTrap), /EC-AC-8 xoá khoá của job khác/);
+// Từ ZCode 1911-2 trap EXIT của zalo-import-daily.sh chỉ xoá khoá khi pid là của chính lượt (dòng trap kiểm pid) — có HAI
+// lớp chặn xoá khoá của job khác: `trap - EXIT` trước enrich và trap kiểm pid. Chiều đỏ phải bỏ cả hai lớp; mỗi lớp
+// một mình vẫn giữ khoá (hai dòng đối chứng một lớp dưới). Lời EC-AC-8 của hồ sơ enrich giữ nguyên (s03-tran r3, GS 20/11).
+const TRAP_KIEM_PID = `trap '[ -n "$DONG_HO_TONG_PID" ] && kill "$DONG_HO_TONG_PID" 2>/dev/null; if [ -f "$LOCK_DIR/pid" ] && grep -qx "$$" "$LOCK_DIR/pid" 2>/dev/null; then rm -rf "$LOCK_DIR" 2>/dev/null; fi' EXIT`;
+const TRAP_VO_DK = `trap '[ -n "$DONG_HO_TONG_PID" ] && kill "$DONG_HO_TONG_PID" 2>/dev/null; rm -rf "$LOCK_DIR" 2>/dev/null' EXIT`;
+const BO_GO_TRAP = [`trap - EXIT; rm -rf "$LOCK_DIR"\n`, `rm -rf "$LOCK_DIR"\n`];
+function dotBienNhieu(...cap) {
+  return cap.reduce((s, [cu, moi]) => { assert.ok(s.includes(cu), `đột biến không khớp chuỗi: ${cu}`); return s.replace(cu, moi); }, THAT);
+}
+
+test("EC-AC-8 chiều đỏ: bỏ cả gỡ trap lẫn kiểm pid → xoá khoá của job khác", () => {
+  const haiLop = dotBienNhieu(BO_GO_TRAP, [TRAP_KIEM_PID, TRAP_VO_DK]);
+  assert.throws(() => kiemNhaKhoa(haiLop), /EC-AC-8 xoá khoá của job khác/);
 });
 
+test("EC-AC-8 đối chứng một lớp (a): chỉ bỏ gỡ trap, trap còn kiểm pid → khoá job khác còn", () =>
+  kiemNhaKhoa(dotBienNhieu(BO_GO_TRAP)));
+
+test("EC-AC-8 đối chứng một lớp (b): còn gỡ trap, trap xoá vô điều kiện → khoá job khác còn", () =>
+  kiemNhaKhoa(dotBienNhieu([TRAP_KIEM_PID, TRAP_VO_DK])));
+
 // ── pl34-lich-dem-sau-buoc ──────────────────────────────────────────────────────────────────────────────────
-const DONG_DOC_GOP = 'job_run zalo-import-daily doc-gop-hang-ngay bash "$ROOT/pipeline/doc-gop-hang-ngay.sh"\n';
+const DONG_DOC_GOP = 'doc_gop_run bash "$ROOT/pipeline/doc-gop-hang-ngay.sh"\n';
 const DONG_NHA = 'trap - EXIT; rm -rf "$LOCK_DIR"\n';
 function kiemDocGopNhaKhoa(noiDung) {
   const r = chay(cay(noiDung));

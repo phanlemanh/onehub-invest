@@ -288,7 +288,7 @@ function writeTargets(sql: string): string[] {
 }
 
 describe("DC-AC-1 bảng tính sẵn", () => {
-  test("DC-AC-1 bảng tính sẵn — 051 hai lần, 600 hai lần, chỉ ghi data_flow_snapshot", async () => {
+  test("DC-AC-1 bảng tính sẵn — 051 hai lần, 600 hai lần, chỉ ghi data_flow_snapshot và dòng số mốc S03", async () => {
     ready()
     await admin.query(`DROP SCHEMA IF EXISTS "${S_MIG}" CASCADE`)
     await admin.query(`CREATE SCHEMA "${S_MIG}"`)
@@ -308,7 +308,8 @@ describe("DC-AC-1 bảng tính sẵn", () => {
     assert.deepEqual(await idemProblems(S_MIG, flowSql()), [])
     const targets = writeTargets(flowSql())
     console.log(`# DC-AC-1 câu ghi của 600: ${targets.join(", ")}`)
-    assert.deepEqual([...new Set(targets)], ["data_flow_snapshot"], `600 ghi ngoài data_flow_snapshot: ${targets.join(", ")}`)
+    // SM1: 600 ghi thêm đúng một bảng, dòng số mốc S03 của hôm nay trong cùng giao dịch (GS duyệt U2-79, 18/11).
+    assert.deepEqual([...new Set(targets)], ["data_flow_snapshot", "dq_check_results"], `600 ghi ngoài hai bảng được phép: ${targets.join(", ")}`)
     // Chiều đỏ cùng ca: bỏ DELETE → lần làm tươi thứ hai không còn ra đúng ba dòng; câu ghi lạ → bộ quét bắt.
     const noDelete = flowSql().replace("DELETE FROM data_flow_snapshot;", "")
     assert.notEqual(noDelete, flowSql(), "khuôn đột biến lệch 600: không thấy DELETE")
@@ -325,7 +326,9 @@ describe("DC-AC-1 bảng tính sẵn", () => {
       // Bảng 051 chưa áp lên public trước merge (lời dặn giám sát) → bảng TẠM cùng khuôn trong giao dịch, rồi ROLLBACK.
       const ddl = migration051().replace("CREATE TABLE IF NOT EXISTS data_flow_snapshot", "CREATE TEMP TABLE data_flow_snapshot")
       assert.notEqual(ddl, migration051(), "khuôn bảng tạm lệch 051")
-      const body = flowSql().replace(/^BEGIN;$/m, "").replace(/^COMMIT;$/m, "")
+      // DV7: DB local chưa áp 105 thì ô Định vị về CTE rỗng — đúng cách bộ chạy làm tươi làm (dinhViKhiCoView).
+      const { dinhViKhiCoView } = await import("../../pipeline/lib/than-600.mjs")
+      const body = (await dinhViKhiCoView(c, flowSql())).replace(/^BEGIN;$/m, "").replace(/^COMMIT;$/m, "")
       assert.ok(!/^\s*(BEGIN|COMMIT);/m.test(body), "600 còn BEGIN/COMMIT — không chạy được trong giao dịch ROLLBACK")
       await c.query("BEGIN")
       await c.query(ddl)
@@ -344,7 +347,7 @@ describe("DC-AC-1 bảng tính sẵn", () => {
       assert.ok(locks.some((l) => l.relname === "stg_zalo_posts"), "đối chứng: phép đo khoá phải thấy bảng nạp 600 đọc")
       assert.deepEqual(rows.map((r) => r.time_window), ["30d", "7d", "all"])
       assert.ok(giay <= 30, `600 chạy ${giay.toFixed(1)} giây > 30`)
-      const ghi = locks.filter((l) => l.mode !== "AccessShareLock")
+      const ghi = locks.filter((l) => l.mode !== "AccessShareLock" && !l.relname.startsWith("dq_check_results"))
       assert.deepEqual(ghi, [], `600 giữ khoá ghi trên bảng thật: ${JSON.stringify(ghi)}`)
     } finally {
       await c.query("ROLLBACK").catch(() => {})
@@ -458,6 +461,8 @@ const ALLOWED_QUERIES: [string, RegExp][] = [
   // Thẻ Ghép căn đang chờ đóng băng (V7, hồ sơ dong-bang-stage-b-resolve): câu đếm mang vị từ loại trừ.
   ["thẻ chờ duyệt", /^SELECT count\(\*\) AS review FROM review_queue WHERE status = 'pending' AND NOT \(item_type = 'entity_match' AND status = 'pending'\)$/],
   ["Tin mới nhất", /row_number\(\) OVER \(PARTITION BY source ORDER BY first_seen DESC\) AS rn\s+FROM sale_offers WHERE first_seen >= \$1/],
+  // DV7: máy thu dò view offer_project (105) trước khi đánh mức định vị cho bản ghi — chỉ đọc danh mục, không đọc dữ liệu.
+  ["dò nguồn định vị", /^SELECT to_regclass\('offer_project'\) IS NOT NULL AS co$/],
 ]
 /** Câu nằm ngoài ma trận (rỗng = mọi câu thuộc một lớp cho phép, không lớp nào lặp). */
 function queryProblems(seen: string[]): string[] {
@@ -511,13 +516,14 @@ describe("DC-AC-3 chỉ đọc bảng", () => {
 
 // ---------- AC-4: khối dataFlow ----------
 const KEYS: Record<string, string[]> = {
-  "": ["sources", "days", "groups", "shortStay", "mix", "enrichPending"],
+  "": ["sources", "days", "groups", "shortStay", "mix", "enrichPending", "milestones"],
   "sources[]": ["source", "received", "readable", "offers", "clustered", "located", "unitLinked", "locatedPending", "uniqueIdPending", "deepest", "testRejected", "withWard", "withType", "withPriceArea", "complete", "highConfidence", "latestAt", "approx"],
   "sources[].deepest": ["unitLinked", "located", "clustered"],
   "days[]": ["day", "source", "received", "readable", "offers", "unitLinked"],
   "groups[]": ["group", "source", "received", "readable", "offers", "latestAt"],
   shortStay: ["received", "stored", "withWard", "latestAt"],
   mix: ["sale", "rentLt", "shortStay"],
+  "milestones[]": ["ngay", "offers_total", "project_linked", "building_linked", "project_ranked", "building_ranked"],
 }
 /** Mọi đường khoá ngoài ma trận của khối (đệ quy mọi tầng); rỗng = sạch. */
 function blockKeyProblems(block: Record<string, unknown>): string[] {
@@ -973,7 +979,7 @@ describe("DC-AC-9 lịch, FILL, leak gate", () => {
 })
 
 // ---------- AC-10: một định nghĩa ----------
-const FACT_KEYS = ["sources", "days", "groups", "shortStay", "mix", "enrichPending"] as const
+const FACT_KEYS = ["sources", "days", "groups", "shortStay", "mix", "enrichPending", "milestones"] as const
 function oneDefProblems(local: DF, cloud: DF): string[] {
   const out: string[] = []
   for (const k of FACT_KEYS)

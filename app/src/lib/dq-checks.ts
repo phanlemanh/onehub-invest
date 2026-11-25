@@ -13,12 +13,16 @@ export type DqCheckRow = {
   checked_at: string;
 };
 
+/** Điều kiện SQL bỏ các dòng có khối riêng: `do1-*` (DO1 đo hằng ngày), `do3-*` (DO3 làm giàu) và `s03-moc-ngay` (SM1, vẽ ở
+ * /ops/data-flow) — bảng chung không lặp JSON thô của chúng. Nguồn DUY NHẤT: bảng và ca ON12-AC-5 cùng đọc hằng này. */
+export const DQ_SHARED_TABLE_FILTER_SQL =
+  "check_name NOT LIKE 'do1-%' AND check_name NOT LIKE 'do3-%' AND check_name <> 's03-moc-ngay'";
+
 /** Câu SQL của bảng — test chạy ĐÚNG câu này trên fixture. */
-/** Dòng `do1-*` (DO1 đo hằng ngày) và `do3-*` (DO3 làm giàu) có khối riêng — bảng chung không lặp JSON thô của chúng. */
 export function dqLatestSql(): string {
   return `SELECT DISTINCT ON (check_name, entity) check_name, entity, status, detail, checked_at::text
     FROM dq_check_results
-    WHERE checked_at > now() - interval '7 days' AND check_name NOT LIKE 'do1-%' AND check_name NOT LIKE 'do3-%'
+    WHERE checked_at > now() - interval '7 days' AND ${DQ_SHARED_TABLE_FILTER_SQL}
     ORDER BY check_name, entity, checked_at DESC`;
 }
 

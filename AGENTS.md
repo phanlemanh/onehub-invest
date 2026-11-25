@@ -51,9 +51,19 @@ phải tên thư mục (script thu của S02/S05/S06 nằm trong `pipeline/`).
 | **ZCode — thu thập** (nguồn → raw snapshot → `stg_*`) | `collector/` (kể cả `openclaw/`) · trong `pipeline/`: `collect-*`, `import-*`, `apify-*`, `airdna-rotate.mjs`, `fetch-data.sh`, `import.sh`, `cron/*.plist` · trong `scripts/`: `*-daily.sh` (bước thu/nạp), `install-*`, `zalo-*.sh` · `collector/docs/DATA-CONTRACT.md` |
 | **Claude Code — phần còn lại** (`stg_*` → canonical → sản phẩm) | `transform-*` trở đi trong `pipeline/` (`sql/`, `mappings.yaml`, `resolve-properties`, `reassign-areas`, `sync-cloud`, `push-ops-facts`…) · `db/` · `agent/` · `app/` · `data-api/` · `tools/` · `scripts/` còn lại · `docs/` nền · `_acceptance/` |
 
+- **Ba phiên ZCode** (Mạnh chốt 2026-11-24, `docs/research/tach-zcode-nhieu-phien-2411.md`): **ZV** vận hành (tên kênh `zcode`,
+  `~/dev/onehub-invest-zcode` — DUY NHẤT chạm gateway, `~/.openclaw`, launchd, collector API, `scripts/zalo-*.sh`) · **ZT** tin
+  rao S01/S02/S05/S06 (`zt`, `~/dev/onehub-zt`) · **ZK** nguồn kho S07–S17 (`zk`, `~/dev/onehub-zk`). Một kênh, ba tên nhận;
+  nhánh `zcode/zv-…|zt-…|zk-…`; LL vẫn là đầu mối duy nhất với cả ba.
+
+- **Máy M5** (Mạnh chốt 2026-11-24, mở nhỏ và đo một tuần; ROADMAP §3 mục 64): MacBook M5 là máy thực thi của làn Claude cho cổng
+  Invest và API — `app/src/app/(app)/**`, `(marketing)/**`, `app/src/components/**` trừ `ops/`, `ui/`, `reui/`, `app/src/app/api/v1/**`
+  trừ `ops/`, `data-api/**`; tệp ngoài vùng (kể cả `app/src/lib/**`) chỉ khi lời giao khai. Mac mini giữ kế hoạch, hàng gộp và sổ
+  số migration: M5 không gộp vào `main`, báo xong trên kênh `phanlemanh/onehub-coord#4`. M5 không giữ tầng A, không chạy bộ thu,
+  gateway, `sync-cloud`; chấm bằng `scripts/ci-test-local.mjs`.
 - **Git**: checkout chính `~/dev/onehub-invest` luôn đứng ở `main` — launchd chạy code
   từ đây (qua symlink `~/dev/one-invest`). Không agent nào checkout nhánh khác trong đó.
-  ZCode làm ở worktree `~/dev/onehub-invest-zcode`, nhánh `zcode/<việc>`; Claude ở
+  ZCode làm ở worktree của từng phiên (`~/dev/onehub-invest-zcode`, `~/dev/onehub-zt`, `~/dev/onehub-zk`), nhánh `zcode/<việc>`; Claude ở
   `.claude/worktrees/`, nhánh `feat|fix|…/<việc>`. Worktree mới thiếu file gitignored:
   chép `.env` theo `.worktreeinclude`. Hook git (`core.hooksPath` = `.git/hooks-onehub`,
   chuyển tiếp git-secrets) chặn mọi commit/merge-commit trong checkout chính.
@@ -146,8 +156,15 @@ phải tên thư mục (script thu của S02/S05/S06 nằm trong `pipeline/`).
    **Bản sao lưu mã hoá** (Mạnh chốt 2026-11-11, sửa đổi ADR-0007; ROADMAP §3 mục 46 QĐ3): tầng A được rời máy CHỈ trong bản
    sao lưu đã mã hoá ngay trên máy thu; khoá chỉ ở máy thu và một bản Mạnh giữ riêng, không lên cloud, kho git hay kênh nào.
    Phạm vi: raw snapshot, kho gốc ảnh và tư liệu, bản dump DB. Mọi chỗ khác tầng A giữ nguyên.
+   **Ngày sinh, giới tính người bán từ tra hồ sơ** (Mạnh chốt 2026-11-18 04:11Z, sửa đổi ADR-0007; ROADMAP §3 mục 55): lưu
+   đầy đủ ở máy thu, KHÔNG lên cloud — cùng chế độ đường đi với tầng A; bộ soát đường cloud đỏ khi cấy một dòng.
+   **Giấy tờ người mua** (Mạnh chốt 2026-11-18 09:34Z, «Có, thêm vào» 09:53Z; ROADMAP §3 mục 46 QĐ1, hàng ZC12): hợp đồng đã ký và
+   giấy tờ người mua chỉ ở kho riêng mã hoá trên máy thu; không cloud, không model, không cổng, không kênh.
 7. **LLM-off-data-path**: LLM/agent chỉ gate/judge/extract kèm audit + evidence; quyết định
    ghi dữ liệu đi qua người (`/ops/review`) hoặc luật xác định.
+   **Thang tự chủ nấc 0–4** (Mạnh chốt 2026-11-21, ROADMAP §3 mục 61): mỗi loại việc gắn hay duyệt một nấc, lên nấc là chữ ký
+   của Mạnh cho từng ô; từ nấc 2 máy chỉ bấm Lưu vào lớp chờ và DB ghi ai lưu, model, nấc, giờ người duyệt. Không bao giờ quá
+   nấc 1: ký cổng, tiền, cloud, xoá dữ liệu, luật an toàn, gửi tin nhóm xã hội.
 8. **An toàn Zalo**: agent KHÔNG BAO GIỜ gửi tin vào nhóm xã hội (lockdown 7 lớp + watchdog;
    đã có 2 sự cố). Đừng đụng cấu hình OpenClaw khi chưa đọc `docs/ops/runtime-map.md`.
 9. **Cổng (portals.md)**: mọi trang thuộc Invest (`/vn/**`, công khai) hoặc Ops (`/ops/**`,
@@ -185,6 +202,29 @@ Tính năng T2/T3 đi qua Acceptance-Gate Kit: contract → evals → evidence �
 kèm `_acceptance/<slug>/`. Tầng rủi ro, lệnh kiểm, `t3_paths`: `_acceptance/config.yaml`.
 `scripts/pre-merge-check.sh`, `scripts/product-map.mjs` … và `lib/*.cjs` là bản chép từ kit —
 không sửa tay, cập nhật bằng cách chép lại từ plugin. `PRODUCT-MAP.md` máy sinh.
+
+## Ai quyết gì: Mạnh ở cổng, giám sát chịu lộ trình (Mạnh chốt 2026-11-15, ROADMAP §3 mục 50)
+
+- **Mạnh chỉ xuất hiện ở các cổng**: Cổng Phạm vi, Cổng 1.5 (T3), Cổng Bằng chứng, Cổng Đáng và phiên nghiệm thu. Ngoài cổng,
+  agent không đem câu hỏi tới Mạnh; câu về cách làm thì gửi phiên giám sát.
+- **Phiên giám sát chịu hiệu quả lộ trình**: chọn việc theo đường găng của nhịp đang làm, cắt và gom hàng, thứ tự gộp, số dãy,
+  mở và dọn phiên. Báo tiến độ bằng con số trên màn, không bằng số PR đã gộp.
+- **Phiên giám sát toàn quyền điều phối và gộp, và phải tham gia quyết định cùng các phiên** (Mạnh chốt 2026-11-24, ROADMAP §3
+  mục 62; quyền đi theo vai, không theo phiên hay tài khoản): xếp, cắt, chuyển hàng; mở, thay và dọn phiên; thứ tự gộp và quyết
+  định gộp PR đủ điều kiện; áp lên DB máy thu đúng hồ sơ đã ký. Phiên hỏi cách làm, kẹt, lệch số hay tranh tài nguyên thì giám
+  sát phán ngay kèm lý do và ghi sổ, không chuyển câu đó lên Mạnh và không để phiên tự chờ. Hiệu quả của mốc và lộ trình là
+  trách nhiệm của giám sát. Danh sách «vẫn cần lời riêng của Mạnh» bên dưới không đổi.
+- **Hàng trên đường găng xong khi con số trên màn đổi trên dữ liệu thật**, không xong ở «gộp». Hợp đồng ghi ô nào đổi, từ bao
+  nhiêu lên bao nhiêu, kèm lệnh đo. Hàng nền (test, CI, tài liệu) ghi rõ là miễn.
+- **Chữ ký Cổng Bằng chứng kèm luôn lời áp lên DB máy thu** đúng những gì hồ sơ đã ghi (migration, lượt ghi dữ liệu, thẻ luật).
+  Hồ sơ phải có đủ năm thứ: lệnh áp, số chạy thử, sao lưu trước, cách lùi, lệnh kiểm sau. Thiếu một thứ thì chữ ký không phủ
+  việc áp. Áp sau khi PR gộp, từ `main`; áp xong báo số thật cạnh số chạy thử; lệch thì dừng và báo, không tự sửa cho khớp.
+- **Vẫn cần lời riêng của Mạnh**: tiền; DDL hay ghi dữ liệu trên cloud (Supabase); xoá dữ liệu và mọi việc không lùi được; sửa
+  luật an toàn (tầng A, Zalo, raw snapshot). Các luật khác đang đòi lời riêng (gateway, plist launchd mới, khởi động lại dịch vụ
+  nền của máy, gỡ phanh `ops-apply`, sao lưu ra ngoài máy) giữ nguyên.
+- **Trước khi viết mã cho transform, bước khớp, lời gọi ngoài**: ở S1 lập bảng phủ ca (chiều × giá trị, số trong ô đếm từ DB máy
+  thu, không fixture viết tay; có cột «ai đọc đầu ra này phía sau»). Ô bỏ thì ghi «ngoài phạm vi, vì». Căn cứ:
+  `docs/research/dieu-tra-tien-do-cham-1511.md`.
 
 ## Lệnh
 

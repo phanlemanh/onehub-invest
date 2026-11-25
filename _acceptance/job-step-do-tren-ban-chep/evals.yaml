@@ -1,0 +1,31 @@
+schema_version: 1
+feature_slug: job-step-do-tren-ban-chep
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.jst_unit
+    paths: [scripts/job-step-thoi-luong.test.mjs]
+    expected: "exit 0; ca JST-AC-1-bc dựng một kho git tạm (tệp bọc scripts/zalo-import-daily.sh và scripts/lib/job-step.sh chép từ cây, tệp test chép NGUYÊN bản hiện tại; một commit; refs/remotes/origin/main trỏ commit ấy), chụp (sha256, mtimeMs, ctimeMs) của tệp bọc trong kho tạm, chạy `node --test --test-name-pattern 'JST-AC-8 lưới phạm vi làn'` trên tệp test của kho tạm, rồi chụp lại: ba giá trị y nguyên, lời chạy thoát 0, và `git status --porcelain` của kho tạm rỗng. Lưới đỡ: ca còn chụp (sha256, mtimeMs, ctimeMs) của scripts/zalo-import-daily.sh THẬT trong cây làm việc trước và sau CẢ chiều xanh lẫn chiều đỏ — phải y nguyên, khác thì ca đỏ ghim «JST-AC-1-bc phép đo đã chạm tệp bọc thật». Chiều đỏ CÙNG fixture: bản chép tệp test đột biến cho ô chèn ghi vào path.join(REPO, BOC) thay vì tệp trong thư mục tạm (đúng hành vi cũ) → ca đỏ ghim «JST-AC-1-bc ô đột biến đã ghi vào cây làm việc»; kèm khẳng định đột biến thật sự đổi nguồn (chuỗi thay có mặt đúng một lần)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.jst_unit
+    paths: [scripts/job-step-thoi-luong.test.mjs]
+    expected: "exit 0; trong cùng kho tạm của E1, ca lưới phạm vi làn xanh: ô (i) cây hiện tại cho 0 khối trên mốc, ô (ii) bản chép chèn dưới mốc cho 0 khối, ô (iii) bản chép chèn trên mốc cho ≥ 1 khối với thông điệp «JST-AC-8 sửa phần trên ranh giới làn Claude»; ba ô cùng gọi hàm khoiTrenMoc. Ca JST-AC-2-bc: kho tạm XOÁ refs/remotes/origin/main rồi chạy ca lưới → lời chạy thoát ≠ 0 và đầu ra chứa «JST-AC-8 không đọc được bản origin/main của tệp bọc». Chiều đỏ CÙNG fixture: bản chép tệp test đột biến cho khoiTrenMoc luôn trả mảng rỗng → ô (iii) đỏ với chính thông điệp ghim «JST-AC-8 sửa phần trên ranh giới làn Claude»; bản chép tệp test đột biến cho khoiTrenMoc luôn trả MỘT khối giả → ô (i) đỏ với chính thông điệp ghim «JST-AC-8 sửa phần trên ranh giới làn Claude» (hai đột biến ngược chiều cùng đỏ mới khẳng định được ô (i) và ô (ii)/(iii) dùng chung một hàm); bản chép đột biến bỏ lời kiểm mã thoát của git show → ca thiếu origin/main KHÔNG còn mang thông điệp «không đọc được bản origin/main» (ca đỏ ghim «JST-AC-2-bc mất lời báo thiếu origin/main»)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.jst_unit
+    paths: [scripts/job-step-thoi-luong.test.mjs, scripts/lib/job-step.sh, scripts/zalo-import-daily.sh]
+    expected: "exit 0; trọn scripts/job-step-thoi-luong.test.mjs xanh — mọi ca JST-AC-1…JST-AC-9, RF-1…RF-5 và hai ca ma trận đột biến của vòng trước giữ nguyên kỳ vọng, cộng các ca mới của vòng này."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.jst_regress
+    paths: [scripts/lib/job-step.sh, scripts/zalo-import-daily.sh, scripts/job-exit.test.mjs, scripts/s03-nap-nhanh.test.mjs, scripts/zalo-import-job.test.mjs, scripts/zalo-import-job-nhe.test.mjs, scripts/enrich-buoc-job.test.mjs]
+    expected: "exit 0; năm bộ test job có sẵn xanh — vòng này không đổi tệp bọc hay job-step.sh nên năm bộ không có lý do đổi màu; đỏ ở đây nghĩa là vòng đã chạm ngoài tệp test."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

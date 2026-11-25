@@ -1,0 +1,87 @@
+schema_version: 1
+slug: so-so-tren-man-theo-ngay
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/so-so-tren-man-theo-ngay/probes/db.sh SM1-AC-1
+    paths: [pipeline/sql/600_data_flow.sql, app/src/lib/dq-checks.ts, app/src/lib/dq-labels.ts, pipeline/tests/so-moc-s03*]
+    expected: "Sau lượt làm tươi thật: đúng một dòng s03-moc-ngay, entity S03, status pass, detail JSON đúng sáu khoá; dqLatestSql không trả dòng này; dqCheckName có nhãn; git diff so với gốc nhánh không có tệp dưới db/migrations. Chiều đỏ: thêm khoá lạ vào detail hay bỏ nhãn thì ca đỏ, thông điệp nêu s03-moc-ngay."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/so-so-tren-man-theo-ngay/probes/db.sh SM1-AC-2
+    paths: [pipeline/sql/600_data_flow.sql, pipeline/lib/than-600.mjs, pipeline/tests/so-moc-s03*]
+    expected: "Ma trận tin viết trước qua lượt làm tươi thật: mỗi ô một assert về offers_total, project_linked, building_linked, project_ranked, building_ranked, có ô bán, ô thuê và đối chứng dương nối toa_link cho building_linked = 1. Năm đột biến trên chính câu 600 (bỏ lọc nguồn, chỉ cap du_an, đếm cả hạng không điểm, chỉ đếm tin bán, đặt cứng building_linked bằng 0) đỏ, thông điệp nêu tên cột."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/so-so-tren-man-theo-ngay/probes/db.sh SM1-AC-3
+    paths: [pipeline/sql/600_data_flow.sql, pipeline/refresh-data-flow.mjs, pipeline/tests/so-moc-s03*]
+    expected: "Ghim oneinvest.flow_now: làm tươi lại cùng ngày giữ một dòng, số mới; ngày kế thêm dòng, dòng cũ không đổi; 16:59Z và 17:01Z ra hai ngày VN khác nhau, đột biến lấy ngày UTC đỏ. Đột biến ném lỗi sau bước ghi: hai bảng giữ số cũ, thông điệp nêu giao dịch."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/so-so-tren-man-theo-ngay/probes/db.sh SM1-AC-4
+    paths: [pipeline/sql/600_data_flow.sql, pipeline/tests/so-moc-s03*]
+    expected: "Sau một lượt: project_linked = located, offers_total = offers của S03 cửa sổ all; phần tử cuối facts.milestones bằng dòng hôm nay ở cả ba cửa sổ; 35 ngày có dòng cho chuỗi 30 phần tử tăng dần. Đột biến lấy located từ cửa sổ 7d đỏ."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/so-so-tren-man-theo-ngay/probes/db.sh SM1-AC-5
+    paths: [pipeline/sql/600_data_flow.sql, pipeline/tests/so-moc-s03*]
+    expected: "Dòng của kiểm khác cùng ngày và dòng s03-moc-ngay ngày khác giữ nguyên id và nội dung sau lượt làm tươi; hai lượt đồng thời để lại đúng một dòng hôm nay. Hai đột biến đỏ: bỏ điều kiện ngày ở bước xoá, bỏ khoá advisory."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/so-so-tren-man-theo-ngay/probes/app.sh SM1-AC-6
+    paths: [pipeline/push-ops-facts.mjs, pipeline/sync-cloud.mjs, pipeline/sync-cloud.test.mjs, app/src/lib/data-flow-queries.ts, app/tests/so-moc-s03*]
+    expected: "Khối dataFlow do push-ops-facts thật dựng mang milestones; getDataFlow chế độ cloud trả đúng giá trị; khối cũ thiếu khoá thành mảng rỗng; factsChan không báo chặn; localReadSql thật của sync-cloud cho dq_check_results không trả dòng s03-moc-ngay đã cấy, số dòng kiểm khác trước và sau bằng nhau, leak gate và soát tầng A vẫn xanh, khối dataFlow mang đủ chuỗi ngày. Đột biến bỏ bộ lọc ở sync-cloud làm ca đỏ, thông điệp nêu s03-moc-ngay. Đột biến normalizeFacts bỏ khoá milestones làm ca đỏ."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: bash _acceptance/so-so-tren-man-theo-ngay/probes/app.sh SM1-AC-7
+    paths: [app/src/components/ops/data-flow/milestone-trend-data.ts, app/tests/so-moc-s03*]
+    expected: "Ma trận chuỗi ngày viết trước, một assert mỗi ca: tăng, giảm, không đổi, thiếu ngày trước, ba ngày chốt bằng nhau, hai ngày chốt bằng nhau, hôm nay bằng hôm qua, ngày trống, số 0. Đột biến tính cả hôm nay vào đứng yên làm ca sáng sớm đỏ. Ca đầu-cuối: 600 thật qua bốn ngày ghim, getDataFlow, dựng vùng, đúng mức đổi và cờ đúng ô, có ô đối chứng không cờ."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: bash _acceptance/so-so-tren-man-theo-ngay/probes/app.sh SM1-AC-8
+    paths: [app/src/components/ops/data-flow/milestone-trend.tsx, app/src/components/ops/data-flow/milestone-trend-data.ts, app/src/components/ops/data-flow/data-flow-view.tsx, app/tests/so-moc-s03*]
+    expected: "Dựng vùng với năm DataFlow viết trước: đúng chữ từng trạng thái (trống có nút Tải lại, một ngày, đủ, đứng yên, khối thiếu khoá), bốn nhãn, phần trăm, bảng ẩn có số từng ngày; khung tải bốn ô; số dòng chảy lỗi thì có cảnh báo và nút Thử lại, không có vùng số mốc. Đột biến đổi mẫu số phần trăm làm ca đỏ."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/so-so-tren-man-theo-ngay/probes/do-may-thu.sh
+    paths: [pipeline/sql/600_data_flow.sql, _acceptance/so-so-tren-man-theo-ngay/probes/do-may-thu*]
+    expected: "Bản chép mới của DB máy thu đã ANALYZE, làm tươi hai lần: một dòng hôm nay, bốn số lệch 0 so với SQL đếm độc lập, project_linked khớp ô Định vị S03, chậm hơn bản 600 như main tối đa 2 giây và tối đa 20%, in mẫu số, ghi .acceptance-runs/so-so-tren-man-theo-ngay/do-may-thu.md. Đối chứng đếm thiếu lọc nguồn phải lệch khác 0."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-10
+    executor: ui-check
+    layer: ui-observed
+    steps:
+      - "Bản chạy: dev server :3461 do phiên N1b giữ, DB thử oneinvest_u2_sm1. KHÔNG tạo hay sửa tệp nào đang được git theo dõi, trừ ảnh trong evidence/."
+      - "Định danh bản chạy: lấy pid đang nghe cổng 3461 bằng lsof, lấy thư mục làm việc của pid đó, chạy git rev-parse HEAD trong thư mục ấy; sha phải bằng sha đang chấm, khác thì eval không đạt."
+      - "Lấy tài khoản: chạy DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_u2_sm1 node scripts/dev-ops-account.mjs, rồi đăng nhập http://localhost:3461/login bằng email và mật khẩu trong .claude/ops-test-account.json; không in mật khẩu ra đầu ra."
+      - "Mở /ops/data-flow ở 1440 px sáng, chụp riêng vùng [data-milestone-trend] → evidence/E10-step1.png (không chụp thanh bên vì có email đăng nhập). Đọc bốn số trên ô, đối chiếu dòng s03-moc-ngay mới nhất của DB thử. Chọn nút Toàn kho, ở bảng chất lượng theo nguồn đọc dòng S03, cột «Định vị (cấp dự án)»: số tin phải bằng số của ô «Có dự án». Ô Định vị của biểu đồ dòng chảy đếm mọi nguồn nên không dùng để so."
+      - "Cùng trang 1440 px tối, chụp riêng vùng → evidence/E10-step2.png"
+      - "Khổ 375 px sáng, chụp riêng vùng → evidence/E10-step3.png. Tìm phần tử tổ tiên gần nhất có overflow-x auto hoặc scroll của [data-milestone-trend], ghi tên phần tử, scrollWidth và clientWidth ở cả ba nút 7 ngày, 30 ngày, Toàn kho."
+    paths: [app/src/components/ops/data-flow/milestone-trend.tsx, app/src/components/ops/data-flow/data-flow-view.tsx]
+    expected: "Vùng «Số mốc S03 theo ngày» hiện bốn ô, số khớp dòng hôm nay trong DB và cột «Định vị (cấp dự án)» của dòng S03 ở cửa sổ Toàn kho; đọc được ở sáng, tối và khổ 375px; không tràn ngang đo trên phần tử tổ tiên có overflow-x auto hoặc scroll bao quanh [data-milestone-trend] (scrollWidth không lớn hơn clientWidth), không đo trên document; chụp ảnh ba khổ vào evidence."
+    evidence_required: [run_id, verifier, verified_at, screenshot, observed]

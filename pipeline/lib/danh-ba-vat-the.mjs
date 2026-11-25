@@ -52,9 +52,12 @@ export function nutVungCuaToa(toa, phanKhuTheoKhu) {
  * Kế hoạch đúc từ dòng S08 và bí danh đang có.
  * @param {{ dongS08: Array<{ project_id: string, product_code: string, khu_id: number, iso: 'VN-HN'|'VN-SG', subdivision?: string|null }>,
  *           biDanh: Map<string, string>, phanKhuTheoKhu?: Map<number, Array<{ id: number, ten: string[] }>>,
- *           taoKhoa?: (tienTo: string) => string }} vao
+ *           taoKhoa?: (tienTo: string) => string,
+ *           s16TheoKhu?: Map<number, { toa: Map<string,string>, truc: Map<string,string>,
+ *                                      can: Map<string,{ unit_key: string, building_key: string, du_an: string }> }> }} vao
+ *   s16TheoKhu (DA33 §5.5): toà, trục, căn S16 đã có của khu — bước S08 dùng lại thay vì đúc; căn S16 cùng mã khác toà → lechS16.
  */
-export function keHoachDung({ dongS08, biDanh, phanKhuTheoKhu = new Map(), taoKhoa = (t) => moiKhoa(t) }) {
+export function keHoachDung({ dongS08, biDanh, phanKhuTheoKhu = new Map(), taoKhoa = (t) => moiKhoa(t), s16TheoKhu = new Map() }) {
   const toa = new Map(); // value bí danh → bản ghi
   const truc = new Map();
   const can = new Map();
@@ -69,6 +72,14 @@ export function keHoachDung({ dongS08, biDanh, phanKhuTheoKhu = new Map(), taoKh
     biDanhMoi.push({ object_key: key, value });
     return { key, moi: true };
   };
+  // Gắn bí danh S08 vào vật thể S16 có sẵn (không đúc).
+  const ganCo = (value, key) => {
+    if (biDanh.has(value)) return { key: biDanh.get(value), moi: false };
+    biDanh.set(value, key);
+    biDanhMoi.push({ object_key: key, value });
+    return { key, moi: false };
+  };
+  const lechS16 = [];
   const daThay = new Set();
   for (const d of dongS08) {
     const ma = typeof d.product_code === "string" ? d.product_code.trim().toUpperCase() : "";
@@ -86,18 +97,29 @@ export function keHoachDung({ dongS08, biDanh, phanKhuTheoKhu = new Map(), taoKh
     tiLe[d.khu_id].tach++;
     const vToa = biDanhToa(d.project_id, kq.toa);
     let t = toa.get(vToa);
+    const s16 = s16TheoKhu.get(d.khu_id);
     if (!t) {
-      t = { ...datKhoa(vToa, "bld"), project_id: d.project_id, ma_toa: kq.toa, khu_id: d.khu_id, iso: d.iso, phan_khu: new Set() };
+      const coS16 = !biDanh.has(vToa) && s16?.toa.get(chuanHoaTenToa(kq.toa));
+      t = { ...(coS16 ? ganCo(vToa, coS16) : datKhoa(vToa, "bld")), project_id: d.project_id, ma_toa: kq.toa, khu_id: d.khu_id, iso: d.iso,
+        phan_khu: new Set() };
       toa.set(vToa, t);
     }
     if (d.subdivision) t.phan_khu.add(String(d.subdivision).toLowerCase());
+    const canS16 = !biDanh.has(vCan) ? s16?.can.get(ma) : null;
+    // DA37 Q-B: căn S16 cùng mã ở toà khác → căn S08 vẫn đúc ở toà S08 (trục, căn, bí danh S08 như thường) rồi gộp vào căn
+    // S16 (ganLechS16 sau khi ghi). S16 trước hay S08 trước cùng ra một trạng thái: căn S08 merged, bí danh S08 trên nó.
+    const lech = canS16 && canS16.building_key !== t.key;
     const vTruc = biDanhTruc(d.project_id, kq.toa, kq.truc);
     let s = truc.get(vTruc);
     if (!s) {
-      s = { ...datKhoa(vTruc, "stk"), toa_key: t.key, project_id: d.project_id };
+      const trucS16 = !biDanh.has(vTruc) && s16?.truc.get(`${t.key}|${chuanHoaTenToa(kq.toa)}|${kq.truc}`);
+      s = { ...(trucS16 ? ganCo(vTruc, trucS16) : datKhoa(vTruc, "stk")), toa_key: t.key, project_id: d.project_id };
       truc.set(vTruc, s);
     }
-    can.set(vCan, { ...datKhoa(vCan, "unt"), toa_key: t.key, truc_key: s.key, tang: kq.tang, project_id: d.project_id });
+    can.set(vCan, { ...(canS16 && !lech ? ganCo(vCan, canS16.unit_key) : datKhoa(vCan, "unt")), toa_key: t.key, truc_key: s.key,
+      tang: kq.tang, project_id: d.project_id });
+    if (lech) lechS16.push({ du_an: canS16.du_an, ma, khoa_s08: can.get(vCan).key, khoa_can: canS16.unit_key,
+      khoa_toa: [canS16.building_key, t.key].sort() });
   }
   for (const t of toa.values()) t.region_node_id = nutVungCuaToa(t, phanKhuTheoKhu);
   return {
@@ -105,6 +127,7 @@ export function keHoachDung({ dongS08, biDanh, phanKhuTheoKhu = new Map(), taoKh
     truc: [...truc.values()],
     can: [...can.values()],
     biDanhMoi,
+    lechS16,
     soLyDo: [...lyDo].map(([k, so]) => {
       const [project_id, ly_do] = k.split("|");
       return { project_id, ly_do, so };
@@ -237,11 +260,14 @@ export function kiemDich(thamSo, { dbThat = false } = {}) {
   return dbThat ? { ok: true, loai: "that" } : { ok: false, ly_do: THONG_DIEP.thieuCo };
 }
 
-/** Khu của một toà: project của region_node_id, hoặc cha (project) của phân khu. */
+/** Khu của một toà: project của region_node_id, cha (project) của phân khu, hay ông (project) của cụm S09 (DA31). */
 const SQL_KHU_CUA_TOA = `
-  SELECT b.building_key, COALESCE(CASE WHEN n.node_type = 'project' THEN n.slug END, p.slug) AS khu
+  SELECT b.building_key,
+         COALESCE(CASE WHEN n.node_type = 'project' THEN n.slug END, p.slug, g.slug) AS khu
     FROM buildings b JOIN asset_nodes n ON n.id = b.region_node_id
-    LEFT JOIN asset_nodes p ON p.id = n.parent_id AND p.node_type = 'project'`;
+    LEFT JOIN asset_nodes p ON p.id = n.parent_id AND p.node_type = 'project'
+    LEFT JOIN asset_nodes p2 ON p2.id = n.parent_id
+    LEFT JOIN asset_nodes g ON g.id = p2.parent_id AND g.node_type = 'project'`;
 
 /**
  * Đếm độc lập toà, trục, căn theo khu bằng SQL trên ba bảng (không đọc tổng kết bộ dựng).

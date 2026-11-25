@@ -1,0 +1,74 @@
+schema_version: 1
+feature_slug: phuong-tu-du-an
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.pipeline
+    layer: backend-effect
+    paths: [pipeline/lib/phuong-tu-du-an.mjs, pipeline/scripts/phuong-tu-du-an.mjs, pipeline/scripts/phuong-tu-du-an.test.mjs]
+    expected: "exit 0; ca PTD-AC-1 chạy (không skip) trên DB thử nhân bản từ DB mẫu dựng bằng db-thu-dbv.mjs: ma trận viết trước nút D1 (một phường), D2 (hai phường), D3 (một mã tỉnh), D4 (trống) × một bài mỗi nút; sau --ghi đếm dòng luật phuong-tu-du-an = {D1:1, D2:0, D3:0, D4:0}, dòng D1 value=W1, tier inferred, method registry_inherit (đọc hằng từ vocab.generated.mjs), evidence.project_node_id = D1. Chiều đỏ: bản chép lib đột biến bỏ điều kiện đúng-một-phường → ghim «PTD-AC-1 nút nhiều phường sinh phát biểu»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.pipeline
+    layer: backend-effect
+    paths: [pipeline/lib/phuong-tu-du-an.mjs, pipeline/scripts/phuong-tu-du-an.test.mjs]
+    expected: "exit 0; ca PTD-AC-2 chạy: bài có hai phát biểu project_node_id sống (D1 và D5, cả hai một phường khác nhau) → 0 dòng kế thừa, du_an_mau_thuan = 1; bài có hai phát biểu cùng D1 → 1 dòng. Chiều đỏ: đột biến bỏ luật mâu thuẫn → ghim «PTD-AC-2 bài hai dự án nhận phường»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.pipeline
+    layer: backend-effect
+    paths: [db/migrations/099_*.sql, db/migrations/102_*.sql, pipeline/transform-zalo.mjs, pipeline/scripts/phuong-tu-du-an.test.mjs]
+    expected: "exit 0; ca PTD-AC-3 chạy, phát biểu kế thừa sinh bằng bộ ghi thật (--ghi trên nút và bài của ma trận, không chèn tay vào field_assertions): ma trận viết trước cột hiện tại {phường W2, tỉnh, trống} × phường kế thừa {một W1, hai khác nhau, không}; sau resolve_offer_fields: cột = {W2,W2,W2 ; W1,tỉnh,tỉnh ; W1,trống,trống} theo thứ tự, field_provenance->'area_id' = {method registry_inherit, tier inferred, nguon du-an} đúng ở ô nhận W1 và vắng ở ô khác. Chiều đỏ cùng fixture: bản 099 đột biến bỏ điều kiện «cột không phải phường» (DBV_MIG_THAY) → ghim «PTD-AC-3 tin có phường bị đổi»; ca đầu-cuối bộ ghi → resolve → cột = W1 với đối chứng đỏ bản chép lib đổi khoá chủ thể → ghim «PTD-AC-3 phát biểu không tới cột»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.pipeline
+    layer: backend-effect
+    paths: [pipeline/lib/phuong-tu-du-an.mjs, pipeline/scripts/phuong-tu-du-an.mjs, pipeline/scripts/phuong-tu-du-an.test.mjs]
+    expected: "exit 0; ca PTD-AC-4 chạy: lượt 1 --ghi + phân xử (tin nhận W1); rút project_node_id của bài A, đổi area_ids nút của bài B sang W3; lượt 2 KHÔNG chạy transform, chỉ --ghi rồi resolve_offer_fields: dòng cũ của A, B retract_reason='xet-lai-du-an', B có đúng một dòng sống W3, cột tin A = giá trị gốc ghi trong field_provenance lượt 1 và field_provenance không còn khoá area_id, tin B = W3; lượt 3 báo 0 chèn 0 rút. Chiều đỏ: bản chép tệp lệnh bỏ bước rút → ghim «PTD-AC-4 phát biểu kế thừa còn sống sau khi gỡ dự án»; bản 099 đột biến coi mọi cột phường là giữ nguyên → ghim «PTD-AC-4 phường kế thừa còn trên cột sau khi rút»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.pipeline
+    layer: backend-effect
+    paths: [pipeline/transform-zalo.mjs, db/migrations/099_*.sql, db/migrations/102_*.sql, pipeline/scripts/phuong-tu-du-an.test.mjs]
+    expected: "exit 0; ca PTD-AC-5 chạy chuỗi thật: bước ghi tin S03 của transform-zalo (rút từ module, không chép) → resolve_offer_fields → reassign-areas.mjs (trên DB thử) → resolve_offer_fields; tin đã nhận W1 vẫn W1; tin T2 khu lạc mà reassign-areas đặt NULL giữ NULL. Chiều đỏ: bản chép transform-zalo đột biến bỏ lời gọi resolve sau ghi → ghim «PTD-AC-5 S03 chạy lại xoá phường kế thừa»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.pipeline
+    layer: backend-effect
+    paths: [pipeline/lib/phuong-tu-du-an.mjs, pipeline/scripts/phuong-tu-du-an.mjs, db/migrations/099_*.sql, db/migrations/102_*.sql, pipeline/scripts/phuong-tu-du-an.test.mjs]
+    expected: "exit 0; ca PTD-AC-6 trên fixture gộp AC-1…AC-4, phát biểu kế thừa sinh bằng --ghi: đếm độc lập (SQL của test) tin có phường trước T0, sau T1, số tin cột tỉnh/trống có đúng một phường kế thừa K; T1 = T0 + K; tập (offer_id, area_id) của tin vốn có phường trước = sau (đếm khác = 0)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.pipeline
+    layer: backend-effect
+    paths: [db/migrations/099_*.sql, db/migrations/102_*.sql, pipeline/scripts/phuong-tu-du-an.test.mjs]
+    expected: "exit 0; ca PTD-AC-7: pg_get_functiondef(resolve_offer_fields) trước và sau áp 099 lần hai bằng nhau; đối chứng dương: thân hàm sau 099 khác thân hàm ở DB dựng tới 098. Các ca bộ phân xử sẵn có trong pipeline npm test (045/061/068) xanh không sửa."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.pipeline
+    layer: backend-effect
+    paths: [pipeline/scripts/phuong-tu-du-an.mjs, pipeline/scripts/phuong-tu-du-an.test.mjs]
+    expected: "exit 0; ca PTD-AC-8: chạy không cờ → count(field_assertions) và tập (offer_id, area_id) không đổi, stdout có «chạy thử»; DB dựng tới 095 → thoát 2 ghim /project_node_id|096/; DB chưa có 099 → thoát 2 ghim /099/; --ghi với lỗi tiêm sau lô đầu → count không đổi. Chiều đỏ: bản chép tệp lệnh bỏ ROLLBACK → ghim «PTD-AC-8 ghi dở khi lỗi giữa chừng»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/**, db/migrations/099_*.sql, db/migrations/102_*.sql]
+    expected: "exit 0 (cd pipeline && npm test) và danh-ba-vat-the.itest.mjs thoát 0."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

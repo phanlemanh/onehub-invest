@@ -235,7 +235,107 @@ Luật đọc:
 3. Tên tệp và nội dung có thể chứa SĐT người bán (tầng C) — giữ nguyên, collector không chuẩn hoá.
 4. Cùng `driveId` ở hai snapshot: lấy bản mới nhất theo `fetchedAt`; cùng `sha256` là cùng nội dung.
 
+## Nguồn S09 `s09-danh-ba` — danh bạ căn: bản đồ toà/tầng/thấp tầng (nháp v15, claudedp-1811-12)
+
+> **NHÁP — số 15 CHƯA GHIM**: v13 = S09 danh mục; v14 = S16 thuộc tính căn (nháp đang trên nhánh khác);
+> S17 cũng đang nháp cùng số 15. Số chốt lúc gộp, bên đọc nhận diện theo `source`, không theo số.
+
+- Thư mục `vn/vn__s09-danh-ba__<id>/`; **không đăng nhập**, API danh bạ công khai (client `publicRequester`);
+  `manifest.coverage.methods = {"danh-ba-cong-khai-http": n}`. Script thu ở `research-local/` (mang tên miền), không
+  nằm trong kho; tên nguồn thật và tên miền chỉ ở `source_registry` local.
+- Nhịp do làn thu chọn (đo 18/11: 3s trên ~1.600 lời 0 chặn); 403/429 → **dừng cả lượt**, chốt snapshot phần đã có
+  kèm `manifest.error`, thoát khác 0; lỗi mạng/5xx thử lại 3 lần (5s/15s/30s) rồi ghi `meta.loi` và đi tiếp.
+- **Payload nguyên văn** phản hồi `{code, data}` — collector không bóc, không chuẩn hoá. **Item rỗng vẫn ghi**
+  (dự án 0 toà, toà 0 tầng, khu không kích hoạt) — `meta.so*` ghi số phần tử nhận được để đối soát «có trong
+  danh mục ≠ có dữ liệu».
+- Một lượt thu gói 1 (bản đồ): 1 lời danh mục + 1 lời `toa` mỗi dự án + 1 lời `tang` mỗi toà + 1 lời
+  `khu-thap-tang` mỗi dự án + 1 lời `can-thap-tang` mỗi khu. Gói 2 (căn cao tầng theo tầng) là lượt riêng —
+  **không lẫn vào nguồn này ở lượt bản đồ**.
+
+| `kind` | `sourceId` | `payload` (nguyên văn) | `meta` |
+|---|---|---|---|
+| `danh-muc` | `danh-muc` | `{code, data[du_an]}` — toàn quốc, 1 item/lượt | `duong` · `status` · `soDuAn` · `loi?` |
+| `toa` | `<du_an_id>` | `{code, data[toa]}` — `data` rỗng khi dự án không kích hoạt toà | `duAnId` · `duAnTen` · `duong` · `status` · `soToa` · `loi?` |
+| `tang` | `<toa_id>` | `{code, data[tang]}` — tên tầng nguyên văn («02», «12B») | `duAnId` · `toaId` · `toaTen` · `duong` · `status` · `soTang` · `loi?` |
+| `khu-thap-tang` | `<du_an_id>` | `{code, data[khu]}` — phân khu thấp tầng | `duAnId` · `duAnTen` · `duong` · `status` · `soKhu` · `loi?` |
+| `can-thap-tang` | `<khu_id>` | `{code, data[can]}` | bản 19/11: `duAnId` · `khuId` · `khuTen` · `size` · `soCanNhan` · `canDuTrang` · `duong` · `status` · `loi?` — các lượt bù 20/11: `duAnId` · `khuId` · `tienTo` · `tongNguon` · `soCanNhan` · `loi?` |
+
+`canDuTrang` (lượt bản đồ 19/11) ĐẶT THEO MỐC size=2000 nhưng nguồn cắt cứng **500/lời** nên cờ
+không bao giờ bật — bỏ từ lượt thu bù 20/11; đối soát đủ/thiếu bằng `meta.total` của phản hồi
+(**tổng căn THẬT theo tiền tố** — vd khu 11.098 căn) so Σ mã gom. Đặc tả nguồn đã đo 20/11:
+cắt cứng 500/lời; `page/offset/from/skip/sort/order/house_type/size>500` BỊ PHỚT lờ;
+`property_number` là BỘ LỌC TIỀN TỐ mã căn (không phân biệt hoa/thường); phân trang thực tế =
+duyệt tiền tố (prefix-DFS) từ quan sát + quét lỗ giữa dải số; phần không truy được qua tiền tố
+khai trong bảng đối soát (đừng suy ra phần thiếu là gì).
+
+**Luật hợp căn (các lượt bù 20/11)**: cùng khu có NHIỀU item `can-thap-tang` (mỗi tiền tố duyệt
+một item, cùng `sourceId` = khu_id) và căn TRÙNG xuất hiện giữa các lá/lượt (tiền tố đè nhau do
+cấu trúc mã đan xen `NHÀ.LÔ-CĂN`/`NHÀ.LÔ-CĂN TRỰC TIẾP`/`LÔ SỐ 3 CHỮ SỐ` cùng không gian) —
+**bên đọc PHẢI hợp theo `data[].id`** (khử trùng id toàn khu), không cộng số `soCanNhan` giữa
+các item; đối soát đủ/thiếu bằng Σ id hợp so `tongNguon` (lượt 48 khu 20/11: khu lớn nhất gom
+hợp theo id 10.910 — số 10.974 trong tin XONG là đếm trùng tiền tố). `payload.meta` mang
+`{page, size, total}` của nguồn — `total` là tổng căn THẬT theo tiền tố, dùng để đối soát.
+Giữ nguyên khuôn `canDuTrang/size` chỉ để đọc bản 19/11 (bất biến).
+
+Khuôn MỘT item mỗi kind (tên dự án/toà/khu ĐÃ THAY bằng giả; uuid rút gọn; `{code,data}` giữ khuôn thật):
+
+```json
+{"source":"s09-danh-ba","kind":"danh-muc","sourceId":"danh-muc","fetchedAt":"2026-11-19T00:49:00.000Z",
+ "meta":{"duong":"<đường API · danh mục dự án>","status":200,"soDuAn":221,"loi":null},
+ "payload":{"code":200,"data":[{"id":"00000000-0000-4000-8000-000000000001","name":"<du-an-gia-1>","project_locations":[{"district":{"code":"001","name":"<quan-gia>"},"province":{"code":"01","name":"<tinh-gia>"}}],"channel_code":["AVM"],"demand_code":["SECONDARY_BUYING","SECONDARY_SELLING"]}]}}
+{"source":"s09-danh-ba","kind":"toa","sourceId":"00000000-0000-4000-8000-000000000001","fetchedAt":"2026-11-19T00:49:03.000Z",
+ "meta":{"duAnId":"00000000-0000-4000-8000-000000000001","duAnTen":"<du-an-gia-1>","duong":"<đường API · toà theo dự án>","status":200,"soToa":4,"loi":null},
+ "payload":{"code":200,"data":[{"id":"00000000-0000-4000-8000-0000000000a1","name":"TA1"},{"id":"00000000-0000-4000-8000-0000000000a2","name":"TB2"}]}}
+{"source":"s09-danh-ba","kind":"tang","sourceId":"00000000-0000-4000-8000-0000000000a1","fetchedAt":"2026-11-19T00:49:06.000Z",
+ "meta":{"duAnId":"00000000-0000-4000-8000-000000000001","toaId":"00000000-0000-4000-8000-0000000000a1","toaTen":"TA1","duong":"<đường API · tầng theo toà>","status":200,"soTang":29,"loi":null},
+ "payload":{"code":200,"data":[{"id":"00000000-0000-4000-8000-0000000000b1","name":"02"},{"id":"00000000-0000-4000-8000-0000000000b2","name":"12B"}]}}
+{"source":"s09-danh-ba","kind":"khu-thap-tang","sourceId":"00000000-0000-4000-8000-000000000002","fetchedAt":"2026-11-19T00:49:09.000Z",
+ "meta":{"duAnId":"00000000-0000-4000-8000-000000000002","duAnTen":"<du-an-gia-2>","duong":"<đường API · khu thấp tầng theo dự án>","status":200,"soKhu":1,"loi":null},
+ "payload":{"code":200,"data":[{"id":"00000000-0000-4000-8000-0000000000c1","name":"<khu-gia>"}]}}
+{"source":"s09-danh-ba","kind":"can-thap-tang","sourceId":"00000000-0000-4000-8000-0000000000c1","fetchedAt":"2026-11-19T00:49:12.000Z",
+ "meta":{"duAnId":"00000000-0000-4000-8000-000000000002","khuId":"00000000-0000-4000-8000-0000000000c1","khuTen":"<khu-gia>","size":2000,"soCanNhan":387,"canDuTrang":false,"duong":"<đường API · căn thấp tầng theo khu>","status":200,"loi":null},
+ "payload":{"code":200,"data":[{"id":"00000000-0000-4000-8000-0000000000d1","name":"NT1-01","code":"NT1-01","increment_number":1005259}]}}
+```
+
+Khuôn lượt bù 20/11 (cùng kind, MỘT item mỗi tiền tố duyệt; hợp căn theo `data[].id`):
+
+```json
+{"source":"s09-danh-ba","kind":"can-thap-tang","sourceId":"00000000-0000-4000-8000-0000000000c1","fetchedAt":"2026-11-20T00:52:30.000Z",
+ "meta":{"duAnId":"00000000-0000-4000-8000-000000000001","khuId":"00000000-0000-4000-8000-0000000000c1","tienTo":"NT1","tongNguon":740,"soCanNhan":220,"loi":null},
+ "payload":{"code":200,"data":[{"id":"00000000-0000-4000-8000-0000000000d1","name":"NT1-01","code":"NT1-01","increment_number":1005259}],
+            "meta":{"page":0,"size":500,"total":220}}}
+```
+
+Khoá nối với S16/S08 (chi tiết số đo ở tệp kê local của lượt, không commit):
+- Căn cao tầng: `data[].name == data[].code`, khuôn `TÒA.TẦNG.CĂN` (ví dụ giả `TA1.12B.03`) — tách được 3 phần,
+  so trực tiếp với cặp (`toa`, `ma_can`) của S16 và `property_code` của S08; tầng so được qua tên tầng nguyên văn.
+- Căn thấp tầng: khuôn `NHÀ.CĂN` (ví dụ `NT1-01`) — tiền tố nhà theo khu, không tách được tầng (không có tầng);
+  so qua bảng tên nhà ↔ tên khu của dự án.
+- UUID dự án/toà/tầng/căn của nguồn này là quan hệ bền (khoá nối cấp cao nhất); **khác** namespace với
+  `insight_by_block[].id` của nguồn `s09-du-an` — ánh xạ qua (`du_an_id`, tên toà), không so uuid chéo.
+
 ## Lịch sử phiên bản
+
+- **schemaVersion 15 (2026-11-19, nháp claudedp-1811-12 — S09 danh bạ căn, gói 1 bản đồ)**: thêm nguồn
+  `s09-danh-ba` (mục ở trên) với năm kind `danh-muc/toa/tang/khu-thap-tang/can-thap-tang`, payload nguyên văn
+  `{code,data}`. NHÁP — số 15 chưa ghim (v14 = S16 thuộc tính căn đang nháp nhánh khác; S17 cũng nháp cùng số);
+  bên đọc nhận diện theo `source`. Chưa có bộ nạp/migration (làn Claude giữ 115); gói 2 căn cao tầng theo tầng là
+  lượt riêng của nguồn này (DA43 đã ký Cổng Phạm vi, chờ Cổng Bằng chứng).
+- **schemaVersion 13 (2026-11-14, claudedp-1411-8 — S09 danh mục dự án khuôn API, bộ nạp `stg_s09_item`)**: nguồn
+  `s09-du-an` (khuôn API, một lượt thu toàn danh mục `vn/vn__s09-du-an__<ISO>/`, `manifest.coverage.methods =
+  {"api-cong-khai-http": n}`; snapshot 13/11 mang `schemaVersion 1` trong manifest — bất biến giữ nguyên, bộ nạp nhận
+  diện theo `source`; số 13 bỏ qua 12 vì **v12 = S16 (nháp chờ duyệt)** — snapshot S16 13-14/11 đã
+  ghi 12). Hình dạng item: `danh-muc` (`{ url, soTrang, soDuAn }`, một item mỗi lượt) và `du-an` (`du-an-<id>`,
+  `{ url, danhMuc, chiTiet: { data, meta: { code } } }` — `data.id` uuid là khoá dự án; `insight_by_block[]` là toà
+  (`id` uuid khoá toà, `block_code`/`block_name`, `sector_uuid` và `handover_date_from` có thể vắng, một tên có thể
+  hai `id`); `insight_by_sector[]` phân khu; `blocks` KHÔNG phải số toà; `chiTiet.meta.code` khác `"200"` → item
+  không dùng. **Bên đọc không dùng `manifest.coverage.notes` và `item.meta` làm dữ liệu** — lời Mạnh kèm bản 13/11:
+  «meta.layTu và notes của manifest bị sửa 12:16Z 13/11; payload không kiểm được vì mất sha256 gốc». Nạp bằng
+  `pipeline/import-s09.mjs` (dùng lại `dongItemS09` + `CAU_CHEN_S09_ITEM` của DA31) vào `stg_s09_item`
+  (migration 097): tự chèn dòng `airbnb_snapshots` (city `vn`, source `s09-du-an`, ON CONFLICT DO NOTHING), in số
+  bỏ theo ba lý do (thiếu sourceId / kind lạ / chi tiết lỗi); bản 13/11 kỳ vọng 345 dòng bỏ 0/0/0, nạp lại 0.
+  Toà/phân khu/cụm dựng ở lệnh dựng danh bạ (view `v_s09_toa`, `v_s09_phan_khu`) — không phải việc bộ nạp. Bản ghi
+  đầy đủ: `_acceptance/toa-s09-hai-khu-vao-danh-ba/s09-data-contract-api-nhap.md` (soạn DA31, đã soát 14/11).
 
 - **schemaVersion 11 (2026-11-11, DA29 s10-bang-hang-vao-danh-ba — meta dự án cho danh bạ)**: nguồn `s10-bang-hang`
   thêm `meta.duAn` (tên dự án cha), `meta.phanKhu` (tên phân khu) trên item `stock_table` (lượt thu 11/11 đã phát;

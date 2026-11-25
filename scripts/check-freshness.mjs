@@ -11,6 +11,8 @@
  *   S03 ≤ 3 ngày   airbnb_snapshots.collected_at của snapshot chứa bài S03 (stg_zalo_posts, tách khỏi S05 theo agent_id)
  *   S05 ≤ 96 giờ   airbnb_snapshots.collected_at của snapshot chứa bài S05 (stg_zalo_posts, agent_id của S05)
  *   S06 ≤ 36 giờ   airbnb_snapshots.collected_at của snapshot chứa tin stg_chotot_ads
+ *   S08 ≤ 8 ngày   airbnb_snapshots.collected_at của snapshot chứa dòng stg_s08_inventory
+ *   S10, S11 ≤ 8 ngày  airbnb_snapshots.collected_at của bản thu nguồn (chưa có bảng stg — đo mức bản thu)
  *   S04            không đo — địa giới đã thu xong (status completed)
  * Mỗi nguồn chỉ được đo ở thành phố nó thật sự có dữ liệu. Đầu ra chỉ mang mã S0x (SPL).
  *

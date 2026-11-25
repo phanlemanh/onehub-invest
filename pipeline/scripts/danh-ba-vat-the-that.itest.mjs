@@ -58,10 +58,15 @@ before(async () => {
       [n.node_type, n.name, n.slug, n.aliases, n.area_ids, n.dd_field, n.meta, n.cha]);
   }
   const areaIds = [...new Set(nut.flatMap((n) => n.area_ids ?? []))];
-  const { rows: ar } = await may.query(`SELECT id, region_type, name, country_code FROM areas WHERE id = ANY($1)`, [areaIds]);
+  // Luật ISO một tỉnh (DA1, isoCuaKhu): phường quy về thị trường qua parent_id, thị trường ra ISO qua admin_code. Chép kèm
+  // parent_id, admin_code và mọi thị trường cha; cha chèn trước con (khoá ngoại parent_id).
+  const { rows: ar } = await may.query(
+    `SELECT id, region_type, name, country_code, parent_id, admin_code FROM areas
+      WHERE id = ANY($1) OR id IN (SELECT parent_id FROM areas WHERE id = ANY($1) AND parent_id IS NOT NULL)
+      ORDER BY (parent_id IS NOT NULL), id`, [areaIds]);
   for (const a of ar) {
-    await thu.query(`INSERT INTO areas (id, region_type, name, country_code) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING`,
-      [a.id, a.region_type, a.name, a.country_code]);
+    await thu.query(`INSERT INTO areas (id, region_type, name, country_code, parent_id, admin_code) VALUES ($1, $2, $3, $4, $5, $6)
+                     ON CONFLICT DO NOTHING`, [a.id, a.region_type, a.name, a.country_code, a.parent_id, a.admin_code]);
   }
   // Danh mục S08 cao tầng của dự án đã nối hai khu.
   const { rows: lk } = await may.query(
@@ -108,6 +113,16 @@ async function dungLenh() {
   for (const m of maThat) assert.ok(!stdout.includes(m), "DBV-AC-7 đầu ra lộ mã S08");
   return JSON.parse(stdout.trim().split("\n").find((l) => l.startsWith("tong_ket ")).slice("tong_ket ".length));
 }
+
+test("DBV-AC-7 vùng chép theo luật một tỉnh: cha của mọi khu vực được chép có mặt, thị trường cha mang admin_code", async () => {
+  const { rows: thieuCha } = await thu.query(
+    `SELECT a.id FROM areas a WHERE a.parent_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM areas p WHERE p.id = a.parent_id)`);
+  assert.deepEqual(thieuCha.map((r) => r.id), [], "DBV-AC-7 khu vực được chép thiếu cha");
+  const { rows: thiTruong } = await thu.query(
+    `SELECT id, admin_code FROM areas WHERE region_type = 'market' AND id IN (SELECT parent_id FROM areas WHERE parent_id IS NOT NULL)`);
+  assert.ok(thiTruong.length > 0, "DBV-AC-7 đối chứng dương: phải có thị trường cha được chép");
+  assert.deepEqual(thiTruong.filter((r) => !r.admin_code).map((r) => r.id), [], "DBV-AC-7 thị trường cha thiếu admin_code");
+});
 
 test("DBV-AC-7 bản chép thật: ≥ 90% mã tách được mỗi khu, dựng lại 0 khoá mới, mọi dự án có toà, 0 căn không bí danh", async () => {
   const t1 = await dungLenh();

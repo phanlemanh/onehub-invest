@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 import { describe, test } from "node:test";
 import { findSourceNames, fold } from "../lib/mask-source-names.mjs";
 import { guardValues } from "../lib/tier-a-guard.mjs";
-import { scanSourceNames } from "../sync-cloud.mjs";
+import { assertNoSourceNames, scanSourceNames } from "../sync-cloud.mjs";
 import { sourceRegistrySeeds } from "../../scripts/lib/tier-a-source-names.mjs";
 import { captureOpsFacts, mutantPush, payloadLeaks } from "./capture-ops-facts.mjs";
 
@@ -40,6 +40,27 @@ describe("NT2-AC-6 một bộ soát", () => {
       if (viaGuard) hits++;
     }
     assert.ok(hits >= 6 && hits < withNames.length, `bảng ca phải có cả ca trúng lẫn ca không trúng (trúng ${hits}/${withNames.length})`);
+  });
+});
+
+describe("che-ten AC-2: bộ soát bảng người bán soát từng giá trị đã giải JSON", () => {
+  const tk = [{ token: "Lumora Thịnh", wholeOnly: true }, { token: "market.lumorathinh.vn", wholeOnly: true }];
+  const dong = (v) => new Map([["sale_offers", [JSON.stringify({ offer_id: "o1", street_raw: v })]]]);
+  for (const v of ["ngõ Lumora\nThịnh 3", "ngõ Lumora\tThịnh 3", "ngõ Lumora – Thịnh 3"]) test(`cụm khai cờ trong cột ngoài nhóm người bán bị chặn (dài ${v.length})`, () => {
+    assert.throws(() => assertNoSourceNames(dong(v), tk), /định danh nguồn/, "AC-2 bộ soát bảng để lọt cụm qua chuỗi JSON");
+  });
+  test("đối chứng: tên mang thương hiệu đi qua", () => assert.doesNotThrow(() => assertNoSourceNames(dong("dự án Lumora Park"), tk)));
+});
+
+describe("che-ten AC-4: guardValues với dòng khai khớp nguyên cụm (tải giả)", () => {
+  const co = (wholeOnly) => [{ code: "S90", realName: "Lumora Thịnh", wholeOnly }, { code: "S90", realName: "market.lumorathinh.vn", wholeOnly }];
+  test("tên dự án mang thương hiệu: 0 chỗ trúng khi khai cờ, ≥ 1 khi không khai", () => {
+    assert.equal(guardValues({ a: ["dự án Lumora Park"] }, co(true)).length, 0);
+    assert.ok(guardValues({ a: ["dự án Lumora Park"] }, co(false)).length >= 1);
+  });
+  for (const v of ["cron Lumora Thịnh", "tải market.lumorathinh.vn", "lumora-thinh"]) test(`cụm tên hay tên miền bị bắt ở cả hai trạng thái cờ (dài ${v.length})`, () => {
+    assert.ok(guardValues({ a: v }, co(true)).length >= 1);
+    assert.ok(guardValues({ a: v }, co(false)).length >= 1);
   });
 });
 
@@ -134,7 +155,7 @@ describe("NT2-AC-1…AC-5 push-ops-facts qua bộ soát", () => {
   });
 
   test("NT2-AC-5 không đọc được source_registry → chặn, 0 POST, dòng nói không có danh sách tên", async () => {
-    const f = mutantPush("reg-rong.mjs", (s) => s.replace(/REG\.names = reg\.filter\([^\n]+;/, "REG.names = [];"));
+    const f = mutantPush("reg-rong.mjs", (s) => s.replace("REG.names = await docSourceNameEntries(client);", "REG.names = [];"));
     const r = await captureOpsFacts({ script: f, logs: LOGS() });
     assert.notEqual(r.code, 0);
     assert.equal(r.posts, 0, "không có danh sách tên thì không được gửi");
@@ -190,5 +211,76 @@ describe("NT2-AC-10 bản tin thật, chế độ khô", () => {
     const r = await captureOpsFacts({ script: cayCopy(), args: ["--kho"], env: { HOME: homedir(), ONEINVEST_ROOT: mainRoot(), NT2_CAY: "payload.funnel.cay = N;" } });
     assertBlocked(r, "FACTS CHẶN [tầng A] funnel.cay S02");
     assert.match(r.stdout, /ops-facts khô: \d+ chỗ chặn/);
+  });
+});
+
+// ---- che-ten-nguon-khong-lay-tu-dau AC-4: chỗ đọc sổ đi qua MỘT hàm nạp chung ----
+const CHO_DOC = [
+  "pipeline/sync-cloud.mjs", "pipeline/push-ops-facts.mjs", "pipeline/do-hang-ngay.mjs",
+  "app/src/lib/offers-public.ts", "app/src/lib/collections-queries.ts", "scripts/quet-ten-nguon-html.mjs",
+];
+// Câu SQL tự đọc tên/định danh từ sổ để dựng danh sách che: real_name hoặc source_ids trong cùng câu với FROM source_registry.
+const tuDocSo = (src) => /(?:real_name|source_ids|\*)[^;`]*?\bFROM\s+(?:public\.)?"?source_registry\b/i.test(src);
+describe("che-ten AC-4 chỗ đọc qua hàm nạp chung", () => {
+  const REPO_GOC = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+  test("AC-4 sáu chỗ đọc không còn tự đọc real_name/source_ids từ source_registry; mỗi chỗ gọi hàm nạp chung", () => {
+    for (const f of CHO_DOC) {
+      const src = readFileSync(path.join(REPO_GOC, f), "utf8");
+      assert.equal(tuDocSo(src), false, `AC-4 chỗ đọc tự dựng danh sách che: ${f}`);
+      assert.match(src, /docSourceNameEntries/, `AC-4 ${f} không gọi hàm nạp chung`);
+    }
+  });
+  for (const cau of ["SELECT code, real_name FROM source_registry", "SELECT real_name FROM public.source_registry", "SELECT * FROM source_registry", 'SELECT source_ids FROM "source_registry"']) test(`AC-4 chiều đỏ: chèn câu tự đọc sổ vào bản sao → đỏ ghim «AC-4 chỗ đọc tự dựng danh sách che» (${cau.length})`, () => {
+    const src = readFileSync(path.join(REPO_GOC, CHO_DOC[0]), "utf8") + `\nconst x = \`${cau}\`;\n`;
+    assert.throws(() => assert.equal(tuDocSo(src), false, `AC-4 chỗ đọc tự dựng danh sách che: ${CHO_DOC[0]}`),
+      /AC-4 chỗ đọc tự dựng danh sách che/);
+  });
+});
+
+describe("che-ten AC-4: bộ soát bảng không hẹp hơn bản trên main (S4 vòng 3, lời Mạnh 19/11 sửa ngay)", () => {
+  // Luật của bản trên main (origin/main b6be3c6f2, pipeline/sync-cloud.mjs assertNoSourceNames): soát chuỗi JSON thô của cả dòng,
+  // `if (!scanSourceNames(j, tokens)) continue;`. Chép lại ở đây làm thước, vì sau khi gộp main không còn bản cũ để so. Thước dùng lõi
+  // khớp hiện tại: phần nới có chủ đích của AC-2 (thương hiệu của dòng khai cờ) không tính là lọt; so ở đây là so HÌNH DẠNG soát.
+  const banMain = (j, tokens) => scanSourceNames(j, tokens) !== null;
+  const tk = [
+    { token: "Lumora Thịnh", wholeOnly: true },
+    { token: "market.lumorathinh.vn", wholeOnly: true },
+    { token: "Veridia Sàn", wholeOnly: false },
+  ];
+  const ten = ["Lumora Thịnh", "lumora thinh", "LUMORA THỊNH", "lumorathinh", "Lumora-Thịnh", "Lumora\nThịnh", "market.lumorathinh.vn",
+    "Veridia Sàn", "veridia", "veridiasan", "dự án Lumora Park", "ngõ 3 phố Huế"];
+  const cho = {
+    "giá trị": (n) => ({ offer_id: "o1", street_raw: n }),
+    "khoá đỉnh": (n) => ({ offer_id: "o1", [n]: 1 }),
+    "khoá lồng jsonb": (n) => ({ offer_id: "o1", raw: { meta: { [n]: true } } }),
+    "khoá trong mảng": (n) => ({ offer_id: "o1", raw: [{ a: 1 }, { [n]: "x" }] }),
+    "giá trị lồng": (n) => ({ offer_id: "o1", raw: { a: [n] } }),
+    // Hai mảnh kề nhau ghép thành cụm trong chuỗi thô («Lumora","Thịnh») — chỉ cách soát chuỗi thô của main bắt được.
+    "hai phần tử mảng kề": (n) => ({ offer_id: "o1", raw: n.split(/\s+/) }),
+    "giá trị rồi khoá kề": (n) => ({ offer_id: "o1", raw: { a: n.split(/\s+/)[0], [n.split(/\s+/).slice(1).join(" ") || "x"]: 1 } }),
+  };
+  const mau = Object.entries(cho).flatMap(([vi, f]) => ten.map((n) => ({ ca: `${vi} · ${JSON.stringify(n)}`, j: JSON.stringify(f(n)) })));
+  const chan = (j) => {
+    try {
+      assertNoSourceNames(new Map([["sale_offers", [j]]]), tk);
+      return false;
+    } catch (e) {
+      if (!/định danh nguồn/.test(e.message)) throw e;
+      return true;
+    }
+  };
+  test("mọi mẫu cấy bản trên main chặn thì bản mới cũng chặn", () => {
+    const main = mau.filter((m) => banMain(m.j, tk));
+    assert.ok(main.length >= 25, `thước phải bắt đủ mẫu (bắt ${main.length})`);
+    const lot = main.filter((m) => !chan(m.j)).map((m) => m.ca);
+    assert.deepEqual(lot, [], "bản mới để lọt thứ bản trên main bắt được");
+  });
+  for (const vi of ["khoá đỉnh", "khoá lồng jsonb", "khoá trong mảng"]) {
+    test(`${vi}: cụm hai từ, tên miền, cụm xuống dòng đều bị chặn`, () => {
+      for (const n of ["Lumora Thịnh", "market.lumorathinh.vn", "Lumora\nThịnh", "veridia"]) assert.ok(chan(JSON.stringify(cho[vi](n))), `lọt ${JSON.stringify(n)}`);
+    });
+  }
+  test("đối chứng: khoá mang thương hiệu (dòng khai cờ) và khoá thường đi qua", () => {
+    for (const n of ["dự án Lumora Park", "ngõ 3 phố Huế"]) for (const f of Object.values(cho)) assert.equal(chan(JSON.stringify(f(n))), false, n);
   });
 });

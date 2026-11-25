@@ -1,7 +1,9 @@
 # Mô hình dòng chảy danh bạ dự án — bản ghi nguồn vào, một dự án sống qua thời gian, đo hằng ngày
 
 Ngày: 2026-11-11 · Người soạn: Claude (phiên Liên làn, theo lời Mạnh 11/11) · **Bản 2** (sau một lượt đọc độc lập: 20 phát hiện, 5
-chặn, đã sửa hết) · Trạng thái: **Mạnh duyệt Hỏi-1..5 «Theo khuyến nghị» 11/11** (ROADMAP §3 mục 44)
+chặn, đã sửa hết) · Trạng thái: **Mạnh duyệt Hỏi-1..5 «Theo khuyến nghị» 11/11** (ROADMAP §3 mục 44) · **Sửa 17/11**: thang
+tin cậy theo thuộc tính ở dự án có S16 (§1.3), cây dự án con và phân khu (§1.3a) — Mạnh «Theo khuyến nghị cả ba câu» (mục 54) ·
+**Sửa 19/11**: duyệt theo loại căn cứ thay vì theo nguồn (§1.2, Hỏi-1), luật tự nhận phân khu (§1.3a) — Mạnh «Theo khuyến nghị» (mục 56)
 
 > Lời giao (Mạnh, 11/11): «Để hoạt động hiệu quả tôi nghĩ cần mô hình hoá, như cách chúng ta đã mô hình cho một ngôi nhà và
 > gộp, làm giàu… Hãy framing lại phân tích → hoàn chỉnh → đề xuất.»
@@ -38,7 +40,8 @@ chặn, đã sửa hết) · Trạng thái: **Mạnh duyệt Hỏi-1..5 «Theo k
 
    (ROADMAP mục 39, hàng DA3.)
 3. **Thuộc tính dự án là phát biểu** `resource_name = Subdivision / Complex` trên nút, có nguồn. Bộ phân xử dựng cột cấp dự án
-   (DA15, DA16). Hai nguồn nói trái nhau thì **lên thẻ**, không đè (ADR-0016 §7.4, DA16).
+   (DA15, DA16). Hai nguồn nói trái nhau thì **lên thẻ**, không đè (ADR-0016 §7.4, DA16). Ngoại lệ duy nhất (17/11): cấu trúc
+   toà, căn, phân khu ở dự án có S16 theo thang §1.3.
 4. **Nút từ bằng chứng tin do người tạo** (DA18, mục 40 Q2). Toà ứng viên chưa cấp UPI tới khi người duyệt.
 5. **Gắn tin theo sáu bậc** của kế hoạch §4:
    - mã nguồn;
@@ -136,6 +139,9 @@ toạ độ của tin, mà xã của tin có thể đã kế thừa từ chính 
 
 Mỗi thẻ luật Mạnh xem mẫu, đúng như đã chốt. Mẫu soát 20 cặp mỗi tuần cho mỗi căn cứ chỉ để thấy trôi.
 
+**Sửa 19/11** (ROADMAP §3 mục 56): Mạnh duyệt mỗi loại căn cứ một lần, không duyệt lại cho từng nguồn. Nguồn mới đạt ngưỡng ở lượt chạy
+bóng thì được áp theo căn cứ đã duyệt. Chưa có hiệu lực vận hành: cho tới khi Mạnh chốt ngưỡng, nguồn mới vẫn đi thẻ luật như cũ.
+
 **Không bao giờ:**
 - nối khi lệch tỉnh;
 - nối chỉ theo điểm;
@@ -144,11 +150,43 @@ Mỗi thẻ luật Mạnh xem mẫu, đúng như đã chốt. Mẫu soát 20 c�
 ### 1.3 Phân xử thuộc tính (D5)
 
 - Trường danh mục là phát biểu `source_field`, lớp **sự thật** (045). Hai nguồn danh mục nói trái nhau ở cùng một trường thì
-  **lên thẻ** (luật 1; DA16 đã chốt S08 ↔ S09 lệch thì lên thẻ). Không có thứ tự nguồn tự thắng.
+  **lên thẻ** (luật 1; DA16 đã chốt S08 ↔ S09 lệch thì lên thẻ). ~~Không có thứ tự nguồn tự thắng.~~ **Sửa 17/11** (ROADMAP §3
+  mục 54, Q-B): có **một** ngoại lệ có tên, là thang tin cậy theo thuộc tính dưới đây; ngoài thang, vẫn không nguồn nào tự thắng.
+- **Thang tin cậy theo thuộc tính** (sửa 17/11). Chỉ áp ở dự án có S16 (nguồn của chủ đầu tư):
+
+  | Thuộc tính | Nguồn thắng | Nguồn khác (S08, S09, tin S03) lệch thì |
+  |---|---|---|
+  | Toà có trong dự án; tên toà | S16 | giữ làm bí danh `ten`; đếm số lệch trên Ops theo cặp nguồn; không ra thẻ từng cái |
+  | Mã căn; căn thuộc toà nào | S16 | như trên |
+  | Toà thuộc phân khu nào | S16 | như trên |
+  | Phân khu có trong dự án | S16 (danh sách khu chủ đầu tư công bố, Q-C) | như trên |
+  | Giá, pháp lý, CĐT, tiến độ, mọi thuộc tính khác | không có nguồn thắng | lên thẻ, như luật 1 |
+
+  Giữa S08, S09 và tin S03 **không** có thứ tự (Mạnh chưa xếp): ở dự án không có S16, hay khi S16 không nói gì về một toà,
+  lệch vẫn lên thẻ như luật 1. Lý do: S16 có khoảng 110 nghìn căn; mỗi lệch một thẻ thì không ai
+  duyệt nổi, mà về cấu trúc dự án của chính mình thì chủ đầu tư là nguồn gốc. Thang chỉ quyết **cấu trúc nào hiện trên cây**,
+  không xoá phát biểu của nguồn thua (vẫn là bí danh, vẫn đếm được).
 - Để thẻ không ngập:
   - so **sau chuẩn hoá** (chữ hoa/thường, làm tròn diện tích theo đơn vị, ngày theo tháng);
   - cùng một kiểu lệch thì gom thành thẻ luật theo (trường × cặp nguồn).
 - Pháp lý, CĐT, giá không kế thừa xuống tin (ADR-0016 §7.1). CĐT kế thừa xuống toà (DA15).
+
+### 1.3a Cây Dự án → Dự án con → Phân khu → Toà (sửa 17/11, ROADMAP §3 mục 54)
+
+- **Dự án con từ hậu tố khu (Q-A).** Dự án S08 có hậu tố khu (vd «… (OCP1)», «… (OCP2)») mà không khớp nút nào → máy đúc nút
+  dự án con, `parent_id` là dự án mà hậu tố trỏ tới. Đi qua **thẻ luật** (Hỏi-1; từ 19/11 duyệt theo loại căn cứ, mục 56), Mạnh xem mẫu; chưa qua thẻ luật thì
+  nút chưa nối tin, chưa lên Invest. Cùng việc: hai dự án con đang thiếu cha và ba nút `building` cũ ở Grand Park (mục 39 Hỏi-2).
+- **Phân khu từ danh sách khu S16 (Q-C).** Dự án có S16: máy đúc nút phân khu (`subzone`) từ danh sách khu chủ đầu tư công bố,
+  qua thẻ luật. ~~Phân khu S09 trùng thì thành bí danh của nút S16.~~ **Sửa 19/11** (mục 56): phân khu trùng giữ nút đã có, tên S16 thành bí
+  danh của nút đó. Máy chỉ tự nhận khi khớp trọn 1–1: mọi toà có S09 của khu về một nút, nút đó không nhận toà từ khu S16 khác, có ít nhất
+  3 toà chung và ít nhất một nửa số toà của khu có S09. Ca khác chỉ cảnh báo trên thẻ luật.
+- **Toà thuộc phân khu theo thang §1.3**, không theo một lần khớp tên lúc đúc. Cột `buildings.region_node_id` giữ nguyên (rào
+  chỉ-thêm của 082 chỉ cho đổi `status`, `merged_into`); **nút vùng hiệu lực** tính ở view `v_toa_nut_vung` (097), mở rộng để S16
+  xếp trên S09 và toà vào phân khu qua khu S16 của nó. Không nới rào, không đúc lại toà hay căn. Mục tiêu đo trên view: số toà treo
+  thẳng dưới dự án mà dự án có phân khu → 0. (Đã cân nhắc nới rào 082 cho `region_node_id`, không chọn: là sửa luật an toàn của
+  danh bạ vật thể, cần lời riêng của Mạnh, và view đã là nếp có sẵn.)
+- Trang `/ops/registry` đọc phân khu hiệu lực (view `v_toa_nut_vung`), không đọc cột gốc.
+- Hàng: xem ROADMAP §3 mục 54.
 
 ### 1.4 Không gian
 
@@ -245,7 +283,7 @@ nhiều nhất.
 
 | # | Câu | Khuyến nghị | Đụng gì |
 |---|---|---|---|
-| Hỏi-1 | Bản ghi danh mục không khớp nút nào: máy **đúc nút ứng viên** hàng loạt. Nút chỉ được nối tin và lên Invest sau khi qua **thẻ luật theo nguồn** («mọi dự án S07 có xã, không khớp nút nào → nhận làm dự án», Mạnh xem mẫu) hoặc người duyệt. | Có. 5.843 thẻ từng cái không duyệt nổi; thẻ luật giữ người trong vòng | Thêm vào DA18 (nay chỉ người tạo nút từ tin). **Siết** điều kiện Invest mục 39: «có nguồn danh mục» đổi thành «có nguồn danh mục đã qua thẻ luật» |
+| Hỏi-1 | Bản ghi danh mục không khớp nút nào: máy **đúc nút ứng viên** hàng loạt. Nút chỉ được nối tin và lên Invest sau khi qua **thẻ luật theo nguồn** («mọi dự án S07 có xã, không khớp nút nào → nhận làm dự án», Mạnh xem mẫu) hoặc người duyệt. **Sửa 19/11** (mục 56): thẻ luật duyệt theo loại căn cứ một lần, không theo từng nguồn. | Có. 5.843 thẻ từng cái không duyệt nổi; thẻ luật giữ người trong vòng | Thêm vào DA18 (nay chỉ người tạo nút từ tin). **Siết** điều kiện Invest mục 39: «có nguồn danh mục» đổi thành «có nguồn danh mục đã qua thẻ luật» |
 | Hỏi-2 | Điểm do nguồn danh mục công bố (S07 trong trang, S08 trong bản đồ nhúng) dùng làm điểm dự án, ghi nguồn S0x? | Có. Không gọi dịch vụ định vị; rủi ro điều khoản Mạnh chốt | DA16 đã có toạ độ toà S09; mở thêm điểm dự án |
 | Hỏi-3 | Thêm **mức hồ sơ dự án** (thang tổng, cạnh độ đủ DA20): Có tên → Có nguồn → Có xã → Đối chiếu (≥ 2 nguồn khớp) → Có pháp lý (nguồn nhà nước) → Đang bán. Mã M0–M5, khác nhãn B0–B5. | Có, như thước phụ ở Ops; không thành north star | Thêm vào DA20; CONTEXT thêm thuật ngữ |
 | Hỏi-4 | Thu S07 (DAZ3) **trước** DA3, ưu tiên Hà Nội + HCM thay cho «dự án có tin mà chưa nối» (cần DA3)? | Có. Thu chậm (≥ 10 s/trang, ~16 giờ); xong thì DA3 có dữ liệu ngay | Đổi `dung_tren` của DAZ3 |

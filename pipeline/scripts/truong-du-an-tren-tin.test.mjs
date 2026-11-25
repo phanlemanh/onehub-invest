@@ -9,7 +9,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import pg from "pg";
 import YAML from "yaml";
-import { GOC, apTep, taoDbThu, xoaDbThu } from "./db-thu-dbv.mjs";
+import { GOC, taoDbThu, xoaDbThu } from "./db-thu-dbv.mjs";
 
 const MIG = join(GOC, "db/migrations/096_truong_du_an_tren_tin.sql");
 const GOC_TEN = `oneinvest_dbv_tdt_${process.pid}`;
@@ -46,9 +46,10 @@ async function moDb(khoa, opts) {
 
 before(async () => {
   await Promise.all([
-    moDb("chinh"),
+    moDb("chinh", { hetSo: 96 }), // ghim ở 096: migration sau (113) định nghĩa lại cùng CHECK và trigger
+    moDb("day_du"), // đủ mọi migration: sổ từ vựng hiện hành so với DB (AC-5)
     moDb("truoc", { hetSo: 95 }),
-    ...Object.entries(DOT).map(([k, [ten, cu, moi]]) => moDb(k, { thay: ban096Dot(ten, cu, moi) })),
+    ...Object.entries(DOT).map(([k, [ten, cu, moi]]) => moDb(k, { thay: ban096Dot(ten, cu, moi), hetSo: 96 })),
   ]);
   for (const { c } of Object.values(db)) await datNut(c);
 });
@@ -160,6 +161,15 @@ test("TDT-AC-2 ma trận ca sai bị từ chối có tên trường, số dòng 
     "bản bỏ kiểm chữ số của subzone_node_id không làm đỏ ca «abc»");
 });
 
+test("TDT-AC-1, AC-2 trên DB đủ migration (sau 113): hành vi DA2 giữ nguyên — 36 ca đúng ghi được, 17 ca sai bị từ chối đúng tên", async () => {
+  // Các DB đo thân 096 ghim ở hetSo 96 (113 định nghĩa lại cùng CHECK, trigger); ca này giữ chắc migration sau không hồi quy DA2.
+  const { c } = db.day_du;
+  assert.equal((await maTranDung(c)).length, 36, "TDT-AC-1 sau 113: ma trận đúng không ghi đủ");
+  const truoc = await dem(c);
+  assert.deepEqual(await chayCaSai(c), [], "TDT-AC-2 sau 113: có ca sai lọt hay từ chối sai lý do");
+  assert.equal(await dem(c), truoc, "TDT-AC-2 sau 113: số dòng tăng");
+});
+
 test("TDT-RF-1 id quá lớn so với bigint bị từ chối có tên trường", async () => {
   await assert.rejects(chen(db.chinh.c, "Property", "S03:rf1", "project_node_id", "99999999999999999999"), /project_node_id/);
 });
@@ -191,9 +201,11 @@ const DAU = `SELECT (SELECT pg_get_constraintdef(oid) FROM pg_constraint WHERE c
      FROM ref_lookup WHERE lookup_name = 'assertion_field') r)::text AS so`;
 
 test("TDT-AC-4 áp 096 lần hai không lỗi, dấu lược đồ không đổi", async () => {
-  const { c, ten } = db.chinh;
+  const { c } = db.chinh;
   const truoc = (await c.query(DAU)).rows[0];
-  apTep(ten, MIG);
+  // Áp lần hai qua chính pg.Client (giao thức truy vấn đơn, như scripts/ci-db-init.mjs dựng DB thử) — không cần docker,
+  // nên ca chạy được ở CI (hàng itest-nap-lai-migration-cu-sau-095 AC-8; trước đây apTep qua docker exec, phải bỏ-qua).
+  await c.query(readFileSync(MIG, "utf8"));
   const sau = (await c.query(DAU)).rows[0];
   assert.deepEqual(sau, truoc);
   // đối chứng dương: 096 thật sự đổi lược đồ
@@ -221,9 +233,9 @@ test("TDT-AC-5 sổ từ vựng khai ba trường, khớp DB thử", async () =>
   assert.equal(f.project_node_id?.dd, "SubdivisionName");
   assert.ok(f.area_id);
   assert.equal(vocab("--check").status, 0, vocab("--check").stderr);
-  const kq = vocab("--check-db", db.chinh.url);
+  const kq = vocab("--check-db", db.day_du.url);
   assert.equal(kq.status, 0, kq.stderr);
   // chiều đỏ: DB thiếu dòng sổ subzone_node_id thì --check-db phải đỏ
-  await db.m2a.c.query(`DELETE FROM ref_lookup WHERE lookup_name = 'assertion_field' AND lookup_value = 'subzone_node_id'`);
-  assert.equal(vocab("--check-db", db.m2a.url).status, 1, "TDT-AC-5 check-db không thấy thiếu subzone_node_id");
+  await db.day_du.c.query(`DELETE FROM ref_lookup WHERE lookup_name = 'assertion_field' AND lookup_value = 'subzone_node_id'`);
+  assert.equal(vocab("--check-db", db.day_du.url).status, 1, "TDT-AC-5 check-db không thấy thiếu subzone_node_id");
 });

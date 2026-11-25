@@ -88,15 +88,30 @@ export function boDau(s: string): string {
  * trước hai phép thử «từ vị trí trần» và «tháng <số>», dạng không dấu hay gõ sai dấu («Ngo», «Ngỏ», «30 thang 4») được đưa về
  * dạng có dấu, nên ra đúng như «Ngõ», «30 Tháng 4».
  */
-export function khoaDuong(v: string): string[] {
+export function khoaDuong(v: string, giuSoNha = true): string[] {
   let t = v
     .normalize("NFC")
     .trim()
     .toLowerCase()
     .replace(/ð/g, "đ")
+    // L4 (tach-o-duong-dau-vao-ban): bề rộng hẻm có số lẻ «hẻm 3,5m» → một token cụm «hẻm 35m», dấu phẩy thập phân không cắt ô.
+    .replace(/(ngõ|ngo|ngách|ngach|hẻm|hem|kiệt|kiet)(\.?\s*\d+)[.,](\d+\s*m)(?=[\s,]|$)/gu, "$1$2$3")
+    // L5: «822 /131A» → «822/131A»; chỉ khi hai phía gạch chéo đều là số, «1/ Trần Văn Mười» giữ nguyên.
+    .replace(/(\d)\s+\/(?=\d)/gu, "$1/")
+    // L1: dồn dấu phẩy lặp và khoảng trắng quanh nó («Hẻm 5 ,,1/ X» → «hẻm 5, 1/ x»).
+    .replace(/\s*,[\s,]*/gu, ", ")
+    // L2 (danh sách cho phép, hồ sơ l2-bao-thu-doi-probe-that): bóc số nhà trước phẩy CHỈ khi đoạn sau mở đầu bằng một từ
+    // trọn Đường/Phố/Đ./duong/pho hay cụm Hẻm/Ngõ/Ngách/Kiệt («46, Đường Điện Biên Phủ», «237/6, Hẻm 237 …»). «3,5m», «15, Q1»,
+    // «3/2, Phường 12», «208, Nguyễn Hữu Cảnh» không bóc.
+    .replace(/^\d[\p{L}\d/-]*\s*,\s*(?=(?:(?:đường|phố|duong|pho|ngõ|ngo|ngách|ngach|hẻm|hem|kiệt|kiet)(?=[\s.-])|đ\.))/u, "")
     .replace(/^(?:(?:số|so|ngõ|ngo|ngách|ngach|hẻm|hem|kiệt|kiet)\.?\s*\d[\p{L}\d/-]*(?:\s*,\s*|\s+|$))+/u, "")
     .replace(/,.*$/u, "")
     .trim()
+    // L3, cụm đứng cuối ô («tôn thất tùng hẻm 86»): tên đường ở trước cụm — chỉ bỏ cụm.
+    .replace(/(\S)\s+(?:ngõ|ngo|ngách|ngach|hẻm|hem|kiệt|kiet)\.?\s*\d[\p{L}\d/-]*$/u, "$1")
+    // L3: cụm ngõ/ngách/hẻm/kiệt đứng sau chữ khác («Đường Kiệt 91 Lê Tân Trung», «Số nhà 17 ngõ 60 Dương Khuê») — lấy phần
+    // sau cụm cuối. Không áp cho «số»: «Đường số 7» là tên đường.
+    .replace(/^.*\S\s+(?:ngõ|ngo|ngách|ngach|hẻm|hem|kiệt|kiet)\.?\s*\d[\p{L}\d/-]*(?:\s+|$)/u, "")
     .replace(/(^|\s)thang(?=\s+\d)/gu, "$1tháng");
   if (/^(?:so|ngo|ngach|hem|kiet)$/.test(boDau(t))) t = "ngõ";
   if (/^(?:số|ngõ|ngách|hẻm|kiệt)?$/u.test(t)) return [];
@@ -106,7 +121,14 @@ export function khoaDuong(v: string): string[] {
     const coDau = s.match(/^(?:(?:đường|phố)[\s-]+|[đd]\.\s*)(.*)$/u);
     if (coDau) return [boDau(coDau[1])];
     const khongDau = s.match(/^(?:duong|pho)[\s-]+(.*)$/u);
-    return [khongDau ? boDau(khongDau[1]) : "", boDau(s)];
+    const tran = boDau(s);
+    // giuSoNha = false (soDuong, hồ sơ l2-bao-thu-doi-probe-that): khoá trần chỉ gồm token mở đầu bằng số («34/1A», «44d/17»,
+    // «2A», «4/79», «12/3» — số nhà còn lại khi tên đường đã bị cắt sau phẩy) không phải tên đường, không được so; trừ sáu
+    // tên đường ngày lễ (danh sách L2 của main f78e7382: 3/2, 30/4, 19/5, 2/9, 1/5, 23/9).
+    const tk = tran.split(" ");
+    const ngayLe = /^(?:3 2|30 4|19 5|2 9|1 5|23 9)$/.test(tran);
+    const soNhaTran = !giuSoNha && tk.every((x) => /^\d/.test(x)) && !ngayLe;
+    return [khongDau ? boDau(khongDau[1]) : "", soNhaTran ? "" : tran];
   });
   return [...new Set(khoa)].filter((k) => k && !/^\d+$/.test(k));
 }
@@ -114,8 +136,8 @@ export function khoaDuong(v: string): string[] {
 /** So hàng Đường: chung ít nhất một cách đọc → Khớp (chép từ app/src/lib/ops/review-can-cu.ts). */
 export function soDuong(a: string | number | null, b: string | number | null): So {
   if (a === null || b === null) return "thieu";
-  const ka = khoaDuong(String(a));
-  const kb = khoaDuong(String(b));
+  const ka = khoaDuong(String(a), false);
+  const kb = khoaDuong(String(b), false);
   if (ka.length === 0 || kb.length === 0) return "thieu";
   return ka.some((k) => kb.includes(k)) ? "khop" : "lech";
 }
@@ -238,7 +260,6 @@ export function lyDoChu(kq: KetQuaLuat): string {
 
 export const judgeEntityAgent: AgentConfig = {
   name: "judge-entity",
-  model: "qwen27b",
   systemPrompt: `Bạn hỗ trợ người duyệt bất động sản Việt Nam.
 Máy đã kết luận theo luật cố định rằng hai tin đăng có phải CÙNG MỘT CĂN NHÀ hay không, kèm các lý do đo được.
 Nhiệm vụ của bạn: viết từ một đến ba câu tiếng Việt giải thích kết luận ấy cho người duyệt, dựa trên dữ liệu và lý do được đưa.

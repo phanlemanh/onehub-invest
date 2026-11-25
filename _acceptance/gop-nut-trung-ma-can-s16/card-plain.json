@@ -1,0 +1,34 @@
+{
+  "feature_plain": "Danh bạ thôi có hai phân khu cho cùng The Rainbow ở Grand Park: phân khu thừa «Rainbow» được gộp vào «The Rainbow», nên bộ gắn tin nhận thêm khoảng 100 tin và Ops đếm đúng số phân khu.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ nhận một loại căn cứ mới để gộp phân khu trùng: mã căn của chủ đầu tư (S16). Gộp khi mọi mã căn của phân khu thừa thuộc toà của đúng một phân khu sẵn có và ít nhất 3 mã trùng hẳn; trùng ít hơn hay khớp hai phân khu thì để người chọn."},
+    {"id": "AC-2", "p": "Sẽ in thẻ gộp ghi rõ mỗi cặp dựa vào căn cứ nào và bao nhiêu mã trùng, liệt các cặp cần người chọn; thẻ không lộ mã căn thô và không ghi gì vào kho."},
+    {"id": "AC-3", "p": "Sẽ chỉ gộp khi người dán đúng mã thẻ; phân khu thừa chuyển sang trạng thái nghỉ dưới phân khu giữ lại, không xoá dòng; gộp lần hai không đổi gì."},
+    {"id": "AC-4", "p": "Sẽ đảo được lượt gộp về đúng như trước, không gỡ tên tắt đã thêm hôm nay (DA51) và không đụng lượt gộp cũ (DA46)."},
+    {"id": "AC-5", "p": "Sẽ giữ ba lệnh kiểm (lượt mới, lượt gộp cũ, lượt tên tắt) đều xanh, cả trước lẫn sau khi đảo."},
+    {"id": "AC-6", "p": "Sẽ để bộ đọc tên phân khu, bảng toà theo phân khu và số phân khu trong danh bạ Ops đều thấy một phân khu The Rainbow, với 18 toà."},
+    {"id": "AC-8", "p": "Sẽ chứng trên bản chép kho máy thu: đúng một cặp được gộp (Rainbow vào The Rainbow), bộ gắn tin nhận thêm ít nhất 80 tin, ô «chữ và model chỉ hai phân khu khác nhau» giảm ít nhất 80, tin xung đột tăng không quá 5."}
+  ],
+  "wont_do": [
+    {"id": "AC-7", "p": "Sẽ KHÔNG để lượt dựng đêm đúc lại phân khu thừa, và KHÔNG để mã nguồn thô lọt lên cloud."},
+    {"id": "OOS-1", "p": "KHÔNG gộp Sapphire 2 vào S2: không có mã căn nào trùng hẳn, thẻ chỉ đưa ra cho người chọn; gộp thật cần hàng sau có lời người."},
+    {"id": "OOS-2", "p": "KHÔNG gộp ba cặp phân khu mà cả hai bên đều do máy đúc; cần một bước gộp riêng."},
+    {"id": "OOS-3", "p": "KHÔNG sửa chỗ gom bài thành tin bị lẫn phân khu (ít nhất 25 tin); đó là lỗi của bước gom."},
+    {"id": "OOS-4", "p": "KHÔNG sửa bộ gắn tin hay bộ đọc tên phân khu; hai bộ nhận kết quả qua danh bạ."}
+  ],
+  "scope_plain": "Bốn việc gần đây cố ý để ngoài lượt này:",
+  "coverage_plain": [
+    {"i": 0, "p": "Căn cứ gộp (AC-1): phủ đủ sáu ca — căn cứ toà cũ đạt, mã căn đạt, trùng dưới ngưỡng, khớp một phần, không có ứng viên, ứng viên do máy đúc hay đã nghỉ."},
+    {"i": 1, "p": "Thẻ gộp (AC-2): in loại căn cứ, không lộ mã thô, mã thẻ ổn định, chỉ đọc."},
+    {"i": 2, "p": "Gộp và đảo (AC-3 đến AC-5): mã thẻ sai, mã thẻ đúng, ca cần người, gộp lần hai, đảo giữ tên tắt lượt khác, ba lệnh kiểm trước và sau đảo."},
+    {"i": 3, "p": "Bên đọc (AC-6, AC-7): bộ đọc tên phân khu, bảng toà, số phân khu, lượt dựng đêm và đường lên cloud."},
+    {"i": 4, "p": "Dữ liệu thật (AC-8): số trên bản chép kho máy thu, số tin bộ gắn nhận được, và đảo về đúng như cũ."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Luật «mã thuộc toà» từng nhận nhầm mã S10.01 vào toà S1, và chưa đo ca mã khớp cả phân khu cha lẫn con. Đã sửa: khai ranh giới sau tên toà, ca khớp hai phân khu ra «cần người chọn», thêm hai ca đo kèm chiều đỏ; số đo không đổi."},
+    {"i": 1, "p": "Chưa có ca căn cứ toà cũ và mã căn chỉ ra hai phân khu khác nhau. Đã sửa: căn cứ toà cũ thắng, thêm ca đo kèm chiều đỏ."},
+    {"i": 2, "p": "Sổ quyết định chưa nói kết quả gộp lên cloud thế nào. Đã sửa: thêm dòng sổ, theo đúng nếp đã ký của DA51 — lên cloud qua lượt đồng bộ đêm, đảo được."},
+    {"i": 3, "p": "Hai dòng sổ ghi sai nguồn quyết. Đã sửa một dòng; dòng kia giữ vì là khuôn bỏ bước của bộ công cụ."},
+    {"i": 4, "p": "Phép đo bộ gắn tin chưa ghim phiên bản, có thể đỏ oan khi nhánh kia đổi. Đã sửa: ghim một phiên bản, đo trước và sau trên cùng phiên bản."}
+  ]
+}

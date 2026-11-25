@@ -72,12 +72,50 @@ test("ZL-AC-2 nhánh ZCode sửa phần nạp → tệp test job Zalo hiện t�
   assert.match(r.stdout, /ℹ skipped 0/, "ZL-AC-2 có ca bị bỏ qua");
 });
 
-test("ZL-AC-3 đối chứng: bản test cũ (12b8942) đỏ trên cùng nhánh với «phần nạp của tệp bọc đã đổi»", () => {
-  const cu = git(REPO, "show", `${TEST_CU}:${TEST}`);
-  writeFileSync(path.join(WT, "scripts/zalo-import-job-cu.test.mjs"), cu);
-  const r = nodeTest(WT, "scripts/zalo-import-job-cu.test.mjs");
-  assert.notEqual(r.status, 0, "ZL-AC-3 bản cũ không đỏ — mô phỏng không tái hiện lỗi đỏ giả");
-  assert.match(r.stdout, /ZJ-AC-5 phần nạp của tệp bọc đã đổi/, "ZL-AC-3 bản cũ đỏ vì lý do khác");
+// Đối chứng KÍN (hồ sơ zl-ac-3-doi-chung-dung-tren-main): bản test cũ chỉ đúng nghĩa trên tệp bọc CÙNG THỜI với nó. Chạy
+// nó trên tệp bọc hiện tại thì đỏ vì những thứ đến sau (rào «node thật» của #519, khối FAILED đổi hình), và kết quả phụ
+// thuộc merge-base của nhánh đang chạy — xanh trên nhánh còn base cũ, đỏ trên main. Nên ca dựng một cây tạm cắt TẠI
+// TEST_CU, thêm đúng một commit mô phỏng ZCode sửa phần nạp, rồi chạy bản test của chính commit ấy. Merge-base trong cây
+// đó (HEAD với origin/main) luôn là TEST_CU, bất kể HEAD của kho đang ở đâu.
+const dungCayCu = (ten, sua) => {
+  const wt = path.join(path.dirname(WT), ten);
+  git(REPO, "worktree", "add", "-q", "--detach", wt, TEST_CU);
+  const goc = readFileSync(path.join(wt, SCRIPT), "utf8");
+  const moi = sua(goc);
+  writeFileSync(path.join(wt, SCRIPT), moi);
+  if (moi !== goc) git(wt, "-c", "user.name=zcode-mo-phong", "-c", "user.email=mo-phong@local.test", "commit", "-qam", "mô phỏng: ZCode sửa phần nạp");
+  return { wt, goc };
+};
+const suaPhanNap = (src) => src.replace(SUA_GOC, SUA_MOI);
+
+test("ZL-AC-3 đối chứng: bản test cũ (12b8942) đỏ trên cây cùng thời với «phần nạp của tệp bọc đã đổi», và chỉ vì nó", () => {
+  const { wt, goc } = dungCayCu("wt-cu", suaPhanNap);
+  try {
+    assert.ok(goc.includes(SUA_GOC), `ZL-AC-3 tệp bọc tại ${TEST_CU} không có «${SUA_GOC}» — mô phỏng không sửa được phần nạp`);
+    assert.equal(git(wt, "merge-base", "HEAD", "origin/main").trim(), git(REPO, "rev-parse", TEST_CU).trim(), "ZL-AC-3 merge-base của cây cũ không phải TEST_CU");
+    const r = nodeTest(wt, TEST);
+    assert.notEqual(r.status, 0, "ZL-AC-3 bản cũ không đỏ — mô phỏng không tái hiện lỗi đỏ giả");
+    assert.match(r.stdout, /ZJ-AC-5 phần nạp của tệp bọc đã đổi/, `ZL-AC-3 bản cũ đỏ vì lý do khác:\n${r.stdout.split("\n").filter((l) => /✖|Error/.test(l)).join("\n")}`);
+    assert.match(r.stdout, /ℹ fail 1\b/, `ZL-AC-3 bản cũ đỏ thêm ca khác ngoài ZJ-AC-5:\n${r.stdout.split("\n").filter((l) => /^✖/.test(l)).join("\n")}`);
+  } finally {
+    boWorktree(REPO, wt);
+  }
+});
+
+// Đối chứng dương: commit mô phỏng chỉ sửa phần SAU phần nạp (một dòng chú thích cuối tệp bọc — thế «nhánh đổi phần khác
+// của tệp bọc»). Cây không có commit nào thì ZJ-AC-5 cũ tự bỏ qua («nhánh đã nằm trên main»), nên phải có commit.
+const DUOI = "\n# mô phỏng: sửa phần khác của tệp bọc (sau phần nạp)\n";
+test("ZL-AC-3 đối chứng dương: cùng cây cũ chỉ sửa phần SAU phần nạp → bản test cũ xanh trọn, ZJ-AC-5 chạy", () => {
+  const { wt } = dungCayCu("wt-cu-lanh", (src) => src + DUOI);
+  try {
+    assert.notEqual(git(wt, "rev-parse", "HEAD").trim(), git(REPO, "rev-parse", TEST_CU).trim(), "ZL-AC-3 đối chứng dương thiếu commit mô phỏng");
+    const r = nodeTest(wt, TEST);
+    assert.equal(r.status, 0, `ZL-AC-3 cây cũ lành mà bản test cũ đỏ — đối chứng không kín:\n${r.stdout.split("\n").filter((l) => /✖|Error/.test(l)).join("\n")}`);
+    assert.match(r.stdout, /ℹ skipped 0/, "ZL-AC-3 đối chứng dương có ca bị bỏ qua");
+    assert.match(r.stdout, /^✔ ZJ-AC-5 /m, "ZL-AC-3 đối chứng dương: ZJ-AC-5 cũ không chạy xanh");
+  } finally {
+    boWorktree(REPO, wt);
+  }
 });
 
 test("ZL-AC-4 chiều đỏ của phép so mới: rev không có · bản clone nông → «thiếu lịch sử git»", () => {

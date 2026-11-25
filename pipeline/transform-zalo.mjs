@@ -14,8 +14,9 @@ import { docBiDanhAnToan, docPhuongHopLe, docThiTruongCoPhuong, docThiTruongCoXa
 import { matchXaCuCoTienTo } from "./lib/dvhc.mjs";
 import { writeOffers } from "./lib/write-offers.mjs";
 import { ganSdtQuaNguoi } from "./lib/gan-sdt-qua-nguoi.mjs";
-import { co095, subjectKey, phatBieuLoaiHinh, phatBieuPhongNgu, phatBieuTang, phatBieuToaTruc, rutLoaiHinhCu, rutTangCu } from "./lib/assert.mjs";
+import { co095, retractRule, subjectKey, phatBieuLoaiHinh, phatBieuPhongNgu, phatBieuTang, phatBieuToaTruc, rutLoaiHinhCu, rutTangCu } from "./lib/assert.mjs";
 import { assignStickyIds } from "./lib/offer-key.mjs";
+import { LUAT_DV6, LY_DO_RUT, RULE_ID as RULE_ID_THE, coBangThe, docNhanDuAn, docTheDaDuyet, phatBieuDiaChiNhom, rutTheCu, traLaiDV6 } from "./lib/dia-chi-the-nhom.mjs";
 import { normText } from "./lib/norm-text.mjs";
 import { ASSERTION_METHOD, CONFIDENCE, ENRICH_FIELD, FLOOR_BAND, KIND, PROPERTY_TYPE } from "./lib/vocab.generated.mjs";
 
@@ -478,7 +479,7 @@ export function parsePost(text, { giaKhongDonVi = true } = {}) {
 // vàng xác nhận; luật ở lại làm dự phòng.
 
 /** Nguồn suy loại, theo thứ tự đếm của dòng log. */
-export const NGUON_LOAI = Object.freeze(["chu-bai", "tin-hieu-chu", "don-vi-gia", "boi-canh-nhom", "yeu-cau", "bo"]);
+export const NGUON_LOAI = Object.freeze(["chu-bai", "tin-hieu-chu", "don-vi-gia", "the-nhom", "boi-canh-nhom", "yeu-cau", "bo"]);
 
 // Yêu cầu (listing_intent = inquiry, CONTEXT.md): bên mua — «cần mua/thuê/tìm», «tìm mua/thuê/căn/nhà», «khách … xem/tìm/cần»
 // trong cùng câu ngắn, «anh chị/ai có căn (gửi)». «Có khách cọc», «đã có khách» là tin rao (không có động từ tìm/xem/cần).
@@ -554,9 +555,11 @@ export function mucDichNhom(bai) {
  * @param {ReturnType<typeof parsePost>} pr  (bị sửa priceVnd trong ca giá không đơn vị)
  * @param {string} text
  * @param {KIND.sale|KIND.rent_lt|"ca-hai"|undefined} mucDich
+ * @param {KIND.sale|KIND.rent_lt|null} [mucDichThe] ô bán/thuê của thẻ địa chỉ nhóm ĐÃ DUYỆT (TG2), đã được bộ đọc
+ *   thẻ ánh xạ từ ban/thue/ca_hai sang sale/rent_lt/null — suyLoai không tự ánh xạ.
  * @returns {{ kind: KIND.sale|KIND.rent_lt|null, nguon: string }}
  */
-export function suyLoai(pr, text, mucDich) {
+export function suyLoai(pr, text, mucDich, mucDichThe = null) {
   if (pr.kind) return { kind: pr.kind, nguon: "chu-bai" };
   const so = gatSo(text ?? "");
   if (YEU_CAU.test(so)) return { kind: null, nguon: "yeu-cau" };
@@ -572,6 +575,22 @@ export function suyLoai(pr, text, mucDich) {
     if (pr.priceVnd == null && giaKhongDonVi) pr.priceVnd = Math.round(parseVnNumber(giaKhongDonVi[1]) * 1e6);
     if (pr.priceVnd != null && pr.priceVnd < GIA_BAN_SAN) return { kind: null, nguon: "bo" };
     return { kind: KIND.sale, nguon: "tin-hieu-chu" };
+  }
+  // TG2 (dong-dau-dia-chi-luc-nap, AC-11): ô bán/thuê của thẻ nhóm chen TRƯỚC bối cảnh nhóm nhưng KHÔNG thay nó —
+  // trượt cửa giá thì rơi xuống nhánh dưới, nên độ phủ `kind` chỉ giữ nguyên hoặc tăng. Nhánh này không đụng `pr`
+  // khi nó còn có thể rơi xuống: nhánh dưới sửa pr.priceVnd theo luật của chính nó.
+  if (mucDichThe === KIND.sale || mucDichThe === KIND.rent_lt) {
+    // Thẻ THUÊ cần một giá đã đọc được thật. Bài mà bằng chứng giá duy nhất là dạng giá BÁN (giá không đơn vị,
+    // «giá 2.900») thì để nhánh dưới xử: chỉ đường bán mới diễn giải dạng ấy, nên cướp bài là tin mất luôn giá
+    // (đo 17/11 trên 153.410 bài: 12 bài). Mất giá không rơi vào thước nào của AC-11 vì `kind` vẫn còn.
+    if (mucDichThe === KIND.rent_lt && giaCoTheThue && pr.priceVnd != null) return { kind: KIND.rent_lt, nguon: "the-nhom" };
+    if (mucDichThe === KIND.sale) {
+      const giaBan = pr.priceVnd ?? (giaKhongDonVi ? Math.round(parseVnNumber(giaKhongDonVi[1]) * 1e6) : null);
+      if (giaBan == null || giaBan >= GIA_BAN_SAN) {
+        if (pr.priceVnd == null) pr.priceVnd = giaBan; // điền giá y như nhánh dưới vẫn điền cho bài bán
+        return { kind: KIND.sale, nguon: "the-nhom" };
+      }
+    }
   }
   if (mucDich === KIND.sale || mucDich === KIND.rent_lt) {
     if (mucDich === KIND.sale && pr.priceVnd == null && giaKhongDonVi) pr.priceVnd = Math.round(parseVnNumber(giaKhongDonVi[1]) * 1e6);
@@ -856,6 +875,13 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
   const { rows: dongTT } = await client.query("SELECT id FROM areas WHERE region_type = 'market'");
   const maCoThat = new Set(dongTT.map((r) => r.id));
 
+  // TG2 (dong-dau-dia-chi-luc-nap): thẻ địa chỉ nhóm ĐÃ DUYỆT. Đọc trước vòng parse vì ô bán/thuê của thẻ đi vào suyLoai.
+  // DB chưa áp 108 + 109 thì bỏ trọn bước đóng dấu, lượt vẫn chạy (AC-7).
+  const coThe = await coBangThe(client);
+  if (!coThe) console.warn("transform-zalo: DB chưa có bảng thẻ địa chỉ nhóm (migration 108 + 109), bỏ bước đóng dấu thẻ ở lượt này");
+  const { the: theNhom, oBo } = coThe ? await docTheDaDuyet(client, khoaNhom) : { the: new Map(), oBo: null };
+  const phuongChu = new Set(); // bài mà chữ bài đã nêu phường — thẻ không đè ô phường của chúng
+
   // Load staging posts (mới nhất per post_id). Chỉ nguồn Zalo — posts
   // Facebook (agent_id apify-facebook) do transform-fb.mjs xử lý (S05).
   // Post thử (zalo-mock, e2e, nhóm TEST) bị gạt tại đây — L19.
@@ -875,7 +901,7 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
   const nguon = [];
   for (const { p, pr } of docBai) {
     if (suyLoaiTin) {
-      const r = suyLoai(pr, p.text, mucDich.get(p.conversation_id ?? ""));
+      const r = suyLoai(pr, p.text, mucDich.get(p.conversation_id ?? ""), theNhom.get(p.conversation_id ?? "")?.mucDich ?? null);
       pr.kind = r.kind;
       nguon.push(r.nguon);
     } else nguon.push(pr.kind ? "chu-bai" : "bo");
@@ -887,6 +913,7 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
     const { ph } = ganPhuongS03(p.text, khai, { entries, moiThiTruong, biDanhCua });
     const kv = ganKhuVuc({ khai, ph, maCoThat });
     if (kv.areaId) { pr.areaId = kv.areaId; pr.phuong = kv.phuong; }
+    if (kv.phuong != null) phuongChu.add(p.post_id);
     const loaiChu = docLoaiHinh(p.text);
     pr.loaiHinh = loaiChu ?? loaiNhom.get(p.conversation_id) ?? null;
     pr.nguonLoaiHinh = loaiChu ? "chu" : pr.loaiHinh ? "nhom" : null;
@@ -991,9 +1018,77 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
   const coTang = await co095(client);
   if (!coTang) console.warn("transform-zalo: DB chưa áp migration 095, bỏ phát biểu tầng ở lượt này");
   const dongTang = coTang ? phatBieuTang("S03", baiDoc, TANG_VERSION) : [];
+  // TG2: đóng dấu thẻ đã duyệt lên bài của tin. offer_project đếm MỌI dòng dự án còn sống của mọi bài trong tin, không xét
+  // luật hay lớp — nên dòng DV6 và dòng của thẻ cùng sống trên một bài mà khác giá trị là tin thành xung đột ngay. Thứ tự:
+  // sinh dòng → rút dòng DV6 trên đúng bài vừa được ghi DỰ ÁN → rút dòng cũ của chính luật này → ghi cùng lượt writeOffers.
+  let dongThe = [];
+  const theNhomDem = { nhom: theNhom.size, dong: 0, o_bo: oBo, rut_ban: 0, rut_luot: 0, rut_dv6: 0, tra_lai_dv6: 0, dv6_khong_muon: 0, nguon: null };
+  if (coThe) {
+    const nhomCua = new Map(posts.map((p) => [p.post_id, p.conversation_id ?? null]));
+    const tinCua = new Map(nhom.flatMap((o) => o.posts.map((p) => [p.post_id, o.offerId])));
+    // Dòng dự án SỐNG trên bài của lượt, đọc TRƯỚC khi rút gì: của luật khác (để không đóng dấu một tin mà bài khác của nó
+    // đang mang dự án khác) và của mọi luật kể cả luật này (để duyệt thêm một thẻ bất đồng không làm tin mất dự án đang có).
+    const moiChuThe = baiDoc.map((p) => subjectKey("S03", p.post_id));
+    // Dòng TG2 của bản thẻ không còn hiệu lực (thẻ sửa, bác) sẽ bị rút «the-doi-ban» cuối lượt — không tính là «dự án đang có»,
+    // không thì hoà giải «giữ dự án hiện tại» lượt này bỏ dấu cả tin, lượt sau mới đóng: chạy lại đổi tập dòng sống (S4-r3).
+    // Dòng bản cũ mà thẻ bản mới vẫn cho đúng giá trị ấy (sửa ô phường, giữ dự án) hay lấy từ chữ bài thì vẫn là «đang có» —
+    // không thì sửa một ô không liên quan làm tin chéo nhóm đang giữ dự án nhờ nhánh này mất dự án (S4-r3, AC-5).
+    const banHieuLuc = [...theNhom.values()].map((t) => `${t.card_code}|${t.version}`);
+    const giaTriHieuLuc = [...theNhom.values()].filter((t) => t.duAn != null).map((t) => `${t.card_code}|${t.duAn}`);
+    const theHieuLuc = [...theNhom.values()].map((t) => t.card_code);
+    const sinh = async () => {
+      const { rows: songRows } = await client.query(
+        `SELECT split_part(subject_key, ':', 2) AS p, array_agg(value) AS v,
+                array_agg(value) FILTER (WHERE rule_id IS DISTINCT FROM $2) AS khac
+           FROM field_assertions
+          WHERE retracted_at IS NULL AND field = 'project_node_id' AND subject_key = ANY ($1::text[])
+            AND (rule_id IS DISTINCT FROM $2
+                 OR (evidence->>'the') || '|' || (evidence->>'ban') = ANY ($3::text[])
+                 OR (evidence->>'the') || '|' || value = ANY ($4::text[])
+                 OR (evidence->>'nguon_o' = 'chu_bai' AND evidence->>'the' = ANY ($5::text[])))
+          GROUP BY 1`, [moiChuThe, RULE_ID_THE, banHieuLuc, giaTriHieuLuc, theHieuLuc]);
+      return phatBieuDiaChiNhom({
+        bai: baiDoc.map((p) => ({ post_id: p.post_id, conversation_id: nhomCua.get(p.post_id) ?? null, posted_at: p.posted_at, tin: tinCua.get(p.post_id) })),
+        the: theNhom, nhanDuAn, phuongChu,
+        duAnKhac: new Map(songRows.filter((x) => x.khac).map((x) => [x.p, x.khac])),
+        duAnHienTai: new Map(songRows.map((x) => [x.p, x.v])),
+      });
+    };
+    const nhanDuAn = await docNhanDuAn(client);
+    let r = await sinh();
+    // AC-8 (khuôn S4-r3): bài nay KHÔNG nhận dự án từ thẻ mà dòng DV6 của nó đã bị lượt trước rút → ghi dòng DV6 ĐANG muốn
+    // (DV6 tính lại), rồi sinh lại để hoà giải mức tin thấy giá trị vừa trả. Lặp tới điểm dừng: lần sinh lại có thể bỏ dấu của
+    // bài khác trong cùng tin (tin giờ có dự án khác), bài ấy lại thành ứng viên. Mỗi bài trả xong có dòng DV6 sống nên không
+    // thành ứng viên lần nữa — vòng dừng; trần 5 lần chỉ để chặn lỗi lập trình.
+    const khongMuon = new Set();
+    const tinLuot = nhom.map((o) => ({ offer_id: o.offerId, post_ids: o.posts.map((p) => p.post_id) }));
+    const boNho = {}; // đầu vào DV6 đọc một lần cho cả vòng (không đổi giữa các lần)
+    let hoiTu = false;
+    for (let lan = 0; lan < 5; lan++) {
+      const coDuAn = new Set(r.dong.filter((d) => d.field === "project_node_id").map((d) => d.subject_key));
+      const tra = await traLaiDV6(client, moiChuThe.filter((k) => !coDuAn.has(k)), { tin: tinLuot, boNho });
+      theNhomDem.tra_lai_dv6 += tra.chen;
+      for (const k of tra.khongMuon) khongMuon.add(k);
+      if (!tra.chen) { hoiTu = true; break; }
+      r = await sinh();
+    }
+    if (!hoiTu) console.warn("transform-zalo: vòng trả dòng DV6 chạm trần 5 lần mà chưa dừng — lỗi lập trình, báo người; lượt vẫn ghi");
+    theNhomDem.dv6_khong_muon = khongMuon.size;
+    dongThe = r.dong;
+    const baiDuAn = [...new Set(r.dong.filter((d) => d.field === "project_node_id").map((d) => d.subject_key))];
+    for (const rule of LUAT_DV6) {
+      theNhomDem.rut_dv6 += await retractRule(client, baiDuAn, "project_node_id", rule, LY_DO_RUT.thayDV6);
+    }
+    const rut = await rutTheCu(client, { dong: r.dong, moiChuThe, the: theNhom });
+    Object.assign(theNhomDem, { dong: r.dong.length, rut_ban: rut.rutBan, rut_luot: rut.rutLuot, nguon: r.demTheoNguon, tin: r.demTin });
+    console.log(`thẻ nhóm: ${theNhom.size} thẻ đã duyệt, ${r.dong.length} phát biểu ${JSON.stringify(r.demTheoNguon)}, ` +
+      `hoà giải tin ${JSON.stringify(r.demTin)}, rút ${rut.rutBan} theo bản thẻ + ${rut.rutLuot} theo lượt + ${theNhomDem.rut_dv6} dòng DV6, ` +
+      `ghi lại ${theNhomDem.tra_lai_dv6} dòng DV6 theo ý định DV6 (${theNhomDem.dv6_khong_muon} bài DV6 không còn muốn), ` +
+      `ô bỏ ${JSON.stringify(oBo)}`);
+  }
   // PL15: phòng ngủ đi qua phát biểu (mỗi post một), năm cột do bộ phân xử dựng — không ghi thẳng.
   const { reconcile } = await writeOffers(client, "S03", rows, {
-    assertions: [...phatBieuPhongNgu("S03", nhom, "transform-zalo@045"), ...phatBieuToaTruc("S03", baiDoc, "transform-zalo@sv1"), ...dongLoai, ...dongTang],
+    assertions: [...phatBieuPhongNgu("S03", nhom, "transform-zalo@045"), ...phatBieuToaTruc("S03", baiDoc, "transform-zalo@sv1"), ...dongLoai, ...dongTang, ...dongThe],
   });
   if (coTang) {
     const rutTang = await rutTangCu(client, baiDoc.map((p) => subjectKey("S03", p.post_id)), dongTang.map((d) => `${d.subject_key}|${d.field}`), TANG_VERSION);
@@ -1006,7 +1101,7 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
   await ganSo(client, { rieng: new Map(rows.map((r) => [r.offer_id, r.seller_phone])) });
   console.log(`đối soát: ${JSON.stringify({ ...reconcile, pairs: undefined })}`);
   console.log(`offers ghi: ${dedup.size} (SĐT: ${sellerAgg.size} người bán)`);
-  return { offers: rows.length, rejected, reconcile, loaiGiaPhiLy, nguonLoai, bai_doi_khoa: baiDoiKhoa };
+  return { offers: rows.length, rejected, reconcile, loaiGiaPhiLy, nguonLoai, bai_doi_khoa: baiDoiKhoa, the_nhom: theNhomDem };
 }
 
 /** Thị trường có phường và danh sách phường của chúng, để đối chiếu tên phường trong chữ bài. */
@@ -1027,6 +1122,14 @@ async function main() {
     } catch (e) {
       await client.query("ROLLBACK").catch(() => {});
       throw e;
+    }
+    // PL20: gắn tin vào toà, vùng của danh bạ trong giao dịch riêng, sau khi lượt nạp đã ghi. Nạp mô-đun tại đây để lỗi của bước
+    // này, kể cả lỗi nạp mã, chỉ là một dòng cảnh báo.
+    try {
+      const { buocGhepToa } = await import("./lib/ghep-tin-danh-muc-ghi.mjs");
+      await buocGhepToa(client);
+    } catch (e) {
+      console.warn(`JOB WARN [ghep-toa] ${e.message}`);
     }
   } finally {
     await client.end();

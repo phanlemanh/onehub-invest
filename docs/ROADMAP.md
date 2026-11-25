@@ -50,6 +50,10 @@
    *(23/10: Mạnh nêu cần AI Gateway chọn model theo việc + biết chi phí — đề xuất sửa luật này ở review
    phân loại §0.4 M1, chờ Mạnh chốt.)* **Ngoại lệ có tên (07/11, §3 mục 33):** đọc tin S03 dùng ba model cloud
    qua Vercel AI Gateway (ADR-0007 sửa 06/11), chọn model theo ô bằng bảng `agent/config/doc-gop-s03.json`.
+   **Sửa 21/11 (MH1 `_acceptance/model-may-sang-haiku`, Mạnh «Dùng toàn bộ sang cloud model haiku 5.5, không mang sang»):** bỏ Qwen
+   trên MTPLX :8000 khỏi mọi đường của làn Claude; agent (`enrich-text`, `judge-entity`, `smoke-echo`) chạy Haiku 5.5 cloud, model đổi
+   bằng `agent/config/model-agent.json`, trần tiền mỗi lượt. Đường gọi (Mạnh 22/11): Anthropic thẳng trước, lùi sang Gateway khi hết
+   tiền hay khoá sai; nhãn bạc và đọc ảnh bỏ backend `qwen`.
 7. **Đơn vị nghĩ là CĂN NHÀ**: "Một Căn Nhà" (entity properties) là đơn vị
    phân tích; nguồn chỉ là evidence.
 8. **Đo trước khi build**: không graph/vector/infra mới trước khi số liệu
@@ -117,6 +121,7 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
 - S03 lên cổng (SL1 `_acceptance/s03-len-cong`, 03/11): tin không nói phường mang khu vực cấp thị trường qua `transform-zalo.mjs`, không ghép căn ở `resolve-properties.mjs` và tính vào đúng thị trường ở 500, 610; migration 069 cho riêng `property_type` nhận giá trị suy khi chỉ có một ứng viên (`tier: inferred`); thẻ tin S03 có nhãn «Chưa xác minh». Sổ nhóm nháp nằm ở `research-local/`, chưa được duyệt và chưa áp.
 - VLM đọc ảnh tin S03 (KC3 `_acceptance/vlm-anh-tin-s03`, 02/11): chọn bài mà chữ còn thiếu giá, loại hình hoặc dấu hiệu tin rao, đọc mỗi ảnh khác nhau một lần bằng
   Qwen trên máy (`agent/scripts/vlm-anh-run.ts`, chọn bài và đếm ở `pipeline/vlm-anh-s03.mjs`), ghi đề xuất vào `silver_labels` nguồn ảnh, không ghi canonical và không lên cloud.
+  Từ MH1 (21/11) backend `qwen` đã gỡ: `--model qwen` trả mã 2, đọc ảnh chạy `--model haiku`.
   Lô thật 100 bài: tốt 48, rỗng 51, lỗi 1, lấp đúng lý do thiếu 9, chỉ 1 dòng có giá; JSON hỏng 0, `lo-url` 0, ước 2,3 giờ hết tập đọc 2.406 bài (`docs/research/s03-vlm-anh-do.md`).
   Haiku và DeepSeek chỉ chấm phiếu mẫu Mạnh đã xem (`--gold`), chưa chạy thật nên chưa model nào có số độ đúng. Ảnh lộ nguồn gắn nhãn, không chặn.
 - Cầm máu số liệu S03 (N1 `_acceptance/s03-cam-mau-so-lieu`, 30/10): `parsePost` đọc số trên chữ đã gạt URL và SĐT (`gatSo`),
@@ -167,6 +172,12 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   3166-2:VN cũ của tỉnh mang tên được giữ (Huế VN-26; bản chụp `pipeline/data/iso-3166-2-vn.json`); `buildings.iso_region` là khoá
   ngoại tới bảng, `upi` nhận mọi mã. Lệnh dựng suy ISO từ `area_ids` của khu, không đọc `meta.city` (ba khu Hưng Yên ghi `hanoi`);
   chưa áp 088 thì chỉ dựng lại khu đã có toà. Chủ đầu tư ghi `source_field` (tệp + băm). Chưa áp 088 lên máy thu.
+- Thuộc tính căn S16 trên Danh bạ Ops (DA40, `_acceptance/thuoc-tinh-can-s16`, migration 113 + 118, PR #491): bảng nạp
+  `stg_s16_can_chi_tiet` (DATA-CONTRACT v14, bộ nạp `pipeline/import-s16-chi-tiet.mjs`), `pipeline/scripts/thuoc-tinh-can-s16.mjs --ghi`
+  ghi phát biểu `source_field` cấp `Unit` (diện tích, PN, WC, hướng, loại hình, giá chủ đầu tư) cho căn danh bạ khớp mã căn S16; view
+  `v_unit_thuoc_tinh`, `v_s16_gia_cdt` (118 loại mã mơ hồ toà); trang `/ops/registry/<id>` hiện ô phủ «Căn có thuộc tính». **Đã áp
+  lên máy thu 19/11 15:30–15:52Z**: nạp 95.798, 441.193 phát biểu, 84.822 căn có thuộc tính / 111.331 căn có bí danh S16, khớp số đối
+  chiếu (nhật ký ở `docs/ops/nhat-ky-ap/2026-11-19-da40-thuoc-tinh-can-s16.md`). Không job đêm nào nạp lại hay ghi lại: lần thu S16 sau phải chạy tay. Chỉ local, không lên cloud.
 - Ngừng rao khi không thấy lại (V6, `_acceptance/tin-ngung-rao-khong-thay-lai`, migration 085, Q4 Mạnh 08/11): tin sống của S03,
   S05, S06 không thấy lại quá N = 21 ngày (`ngung_rao_sau_ngay`) trong khi nguồn vẫn thu thì nhận phát biểu `offer_status =
   withdrawn` lớp suy luận (`inferred`/`e1_rule`, `rule_id khong-thay-lai:<offer_id>`); đo tới mốc thu, không tới giờ chạy —
@@ -211,6 +222,7 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   hạ từ `admin` xuống vai Vận hành (thay lời «ảnh và chữ bài giữ `admin`» của SD4), vẫn chỉ ở máy thu; `dealTheoVai` bỏ trường trước khi vào trang, vai Người xem không nhận
   ảnh, chữ bài, tên, nhóm, số, toà, tầng, số căn, số nhà. Ngưỡng 5, 35, 50 và 45 ngày ở `lib/deals-chi-tiet.ts`, dùng chung cho SQL và chữ trên trang. Không migration, không thu thêm.
 - Sửa ba lỗi của Căn giá tốt (`_acceptance/can-gia-tot-sua-ba-loi`, Mạnh ký 04/11): chữ giữ chỗ `unknown` không còn hiện như tên ở `/ops/deals` và ở trang Bán, Cho thuê công khai (`lib/ten-tin.ts`, thẻ hiện «Chưa có tên», `unknown` không tính khi đếm tài khoản nhiều tên); căn đắt hơn thước ghi đúng lý do «Đắt hơn thước phường <số>%, không phải căn giá tốt»; crumb «Căn giá tốt» chỉ mang `?can=` khi căn còn trong kết quả `getDeals()`, nên không quay lại chính trang. Không migration, không đổi bố cục.
+- Bảng hạng giá (CG9, `_acceptance/bang-hang-gia-m2`, 14/11): migration 104 `offer_price_rank` — một dòng mỗi tin đang rao, bán và thuê, P1 và P2; `pipeline/xep-hang-gia.mjs` chạy `sql/420_price_rank.sql` sau bước định vị ở ba job đêm (mỗi căn một phiếu; phường × loại × bán/thuê, ± số phòng ngủ khi đủ 10; thuê thiếu m² so giá tháng cùng PN; ≥10 phiếu nhãn «Rẻ trong phường», 5–9 chỉ số, <5 không chấm; rẻ quá 35% mang «Cần xác minh», vẫn hiện). `/ops/deals` (cả S06), `/api/v1/deals`, `/v1/deals` (tham số `kind`, khối `rank`) đọc bảng; bảng chưa có hay rỗng thì lùi về thước CG8. Sync cloud chép bảng, cloud chưa áp DDL (`docs/ops/cloud-schema-catchup-2026-11-14-offer-price-rank.sql`) thì bỏ qua một dòng. Áp 104 lên máy thu và cloud là lời riêng của Mạnh.
 - DATA-CONTRACT v1–2: importer nhận cả hai; ảnh Zalo N1 (`meta.mediaFiles`) →
   `stg_zalo_posts.media_files` (migration 035, PII tầng A — chỉ local, test
   `pipeline/sync-pii.test.mjs` gác FILL).
@@ -333,6 +345,8 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   giờ, plist chờ ZCode); `cloud-sync.sh` tự bỏ chúng khi job giờ vừa chạy trọn dưới 2 giờ, ngược lại tự chạy dưới cùng
   khoá. Đo 10/11 trên DB thử: transform-zalo + media + bait-gap ≈ 76 s/lượt — LT2 chưa cần.
 
+**Số mốc S03 theo ngày (SM1, 18/11):** lượt làm tươi `pipeline/sql/600_data_flow.sql` ghi mỗi ngày VN một dòng `s03-moc-ngay` vào `dq_check_results` (có dự án, khớp toà, có hạng cấp dự án, có hạng cấp toà, mẫu số là tin S03 đang rao) và chở 30 ngày trong `facts.milestones`; `/ops/data-flow` vẽ mức đổi và cờ đứng yên. Số lên cloud trong khối `dataFlow`; dòng của bảng đo ở lại máy thu (`LOCAL_ONLY_ROWS` của `pipeline/sync-cloud.mjs`, Mạnh chốt Hỏi-4).
+
 ### 2.3 Nguồn (source_registry + /ops/collections feed health)
 Đo 26/10 trên máy thu (`source_registry`, `launchctl list`, `airdna_markets`). Trạng thái theo vòng đời năm giá trị
 `draft · active · paused · retired · completed` (CHECK từ 047, TV2a); script thu hỏi «có được thu» qua `isRunnable` (TV2b).
@@ -453,7 +467,8 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
    lát dọc) · lát đầu = OCP1 · Q4/Q9 (ngữ cảnh nhóm chỉ suy luận, Q4 sửa bởi mục 30; thẻ duyệt không hiện độ tự tin) · M1 = model local mặc
    định, cloud khi số đo cho thấy local không đủ; M3 hoãn tới PH4 · Mạnh và đội gắn nhãn khi PL7 xong · chạy F6 · L0 theo thứ
    tự ZC6 → ZC4 → hook Kev v3. Kèm: **PL3 gộp vào PL23**; **`pipeline/mappings.yaml` là nguồn danh sách trường duy nhất**;
-   C2–C4 cắt cùng lúc, phần UI của PL9 gộp vào C4.
+   C2–C4 cắt cùng lúc, phần UI của PL9 gộp vào C4. *(Sửa 24/11, mục 63: vế «chỉ tự áp ô đã đo» của Q5 thêm lối «ghi tạm, đo
+   sau, có hạn»; tự áp chính thức vẫn cần ô đã đo.)*
 
 20. **Kho tri thức riêng tư đi kèm** (26/10, Mạnh duyệt «đặt tên là onehub-invest-tri-thuc để phân biệt với các kho khác
    và duyệt theo khuyến nghị»): `phanlemanh/onehub-invest-tri-thuc` chỉ phục vụ onehub-invest; khai `tri_thuc` với
@@ -549,7 +564,8 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
       (Mạnh 06/11; tập test mù hoãn tới PL21 theo mục 32).
     - Hoãn và Không chắc không bắt lý do; đáp án hoặc chip tính là lý do. Hoàn tác 5 giây cho mọi hạng mục, kể cả Ghép căn.
     - Thẻ luật: quyết một lần cho cả loạt thẻ cùng căn cứ luật E1, kèm năm bài mẫu, có nhật ký và đảo được — là sửa luật
-      xác định (§1 luật 7), khác duyệt hàng loạt đã loại ở GD10.
+      xác định (§1 luật 7), khác duyệt hàng loạt đã loại ở GD10. *(Sửa 21/11: chấp thuận lô có điều kiện mở lại cho «Bổ
+      sung tin», và tập mở cổng PL21 đã chốt — xem mục 61.)*
     - Hàng tồn Bổ sung tin không trả lại hàng loạt: máy rút thẻ trùng giá trị đang lưu, phần còn lại duyệt tay.
     - Khuôn giao diện lấy từ ReUI (gói Pro), không tự vẽ. Hàng OD1–OD7; OD2–OD5 là nấc 1 của PL23.
 36. **S01 dừng sau nấc 1, thử lại theo lịch** (07/11, Mạnh «Dừng S01» rồi «duyệt lịch s01»): lượt 1 thu 40 căn, 12.410 đêm
@@ -647,6 +663,8 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     - Q3: giá tốt = top 20% **và** thấp hơn trung vị **từ 5%**; trần 35% → «Cần xác minh» giữ nguyên.
     - Q4: trung vị tính **chung P1 (S03, S05) và P2 (S06)**, mỗi căn một phiếu.
     - Q5: **CG8** (so cùng loại hình ở `/ops/deals` và `/v1/deals`) làm trước mọi hàng khác, tách khỏi PL26.
+    - **Sửa 14/11 (mục 48, QĐ4):** tin thuê thiếu m² so **giá thuê/tháng theo số phòng ngủ** trong nhóm thay giá/m²; tin thuê có m²
+      và tin bán giữ giá/m². QĐ3: căn đạt chuẩn lên Invest do máy tự hiện, chưa dựng rào.
     Số đo nền (DB máy thu 09/11): thước hiện nay gộp mọi loại hình theo phường, trung vị giá/m² căn hộ thấp hơn trung vị cả phường 45,5%
     (127 phường), nên căn hộ đúng giá hiện «rẻ» khoảng 45% cả trên API công khai. Ở cấp phường p20 thấp hơn trung vị 17,6%, ở cấp dự án
     5,3%. Hàng mới: CG8–CG14; viết lại CG3 (tra theo vị trí bất kỳ); CG2, CG4 chuyển khỏi hàng, CG9 gánh; CGP1 giao cùng CG11.
@@ -707,6 +725,12 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     - QĐ1: máy thu giữ **kho tư liệu** của dự án và chủ đầu tư (media, tài liệu bán hàng, văn bản pháp lý, hợp đồng mua bán) làm
       nguồn tư liệu cho người dùng. Mạnh «Đồng ý, chỉ công khai»: chỉ tài liệu công khai; hợp đồng chỉ bản mẫu, hợp đồng đã ký có
       thông tin người mua thì không thu, hoặc che hết trước khi lưu.
+      **Sửa đổi 18/11 (đảo phần người mua, hàng ZC12).** Phiên điều phối liên làn, giờ UTC: 09:25:27Z Mạnh hỏi «Hiện nay ảnh khi thu
+      mình có giảm kích thước hay không? Và các file media và tài liệu đi kèm?», trợ lý trả lời giấy tờ người mua «Không lưu tệp, chỉ
+      ghi là đã bỏ qua»; 09:34:26Z Mạnh gõ «Lưu luôn hợp đồng và giấy tờ người mua»; 09:35:20Z trợ lý hỏi «Lưu hợp đồng và giấy tờ
+      người mua theo cách nào?»; 09:36:13Z Mạnh chọn «Kho riêng, xoá được». Tức: hợp đồng đã ký và giấy tờ người mua lưu ở kho riêng mã
+      hoá trên máy thu, ngoài raw snapshot; không cloud, không model, không cổng, không kênh; xoá được từng tệp, có sổ xoá. Chưa chốt,
+      hỏi ở Cổng Phạm vi của ZC12: sao lưu ngoài máy, hạn giữ, ai được mở tệp, ý kiến pháp lý, tải lại tệp đã xoá ngày 12/11.
     - QĐ2: **video thu thử 2 tuần có trần dung lượng** (Mạnh «Thu thử có trần»); video vượt trần chỉ ghi đường dẫn và vài khung
       hình. Số trần chốt ở QĐ14. Chưa chốt: giữ bản gốc, bản nén hay chỉ khung hình — hết 2 tuần đo rồi trình.
     - QĐ3: **bản sao lưu mã hoá** (Mạnh «Cho, khoá giữ ở máy», trả lời câu «Có cho một bản sao lưu đã mã hoá ra kho ngoài máy
@@ -778,6 +802,435 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
       bộ thu tự nghỉ 24 giờ.
     - Gỡ dịch vụ model cục bộ bị trùng trong launchd (bật lại liên tục vì trùng cổng), giữ bản «gate». Đã gỡ 12/11.
     Hàng «lịch thu trên Ops» (xem đủ job, mã thoát, bật/tắt, đổi nhịp từ `/ops/collections`) mới là đề xuất, chưa cắt.
+48. **Mỏ neo đợt: «ở dự án B, tháp X, tầng A — căn nào giá tốt nhất»** (14/11, Mạnh «Đồng ý theo khuyến nghị» cho chín quyết định
+    QĐ1–QĐ9; quyết định nguồn S16 cùng ngày; S09 ngày 13/11; bản phạm vi `docs/plan/pham-vi-mo-neo-1411.md`, căn cứ ở kho tri thức
+    riêng `wiki/dot/mo-neo-1411.md`). Nguyên văn: «Đồng ý theo khuyến nghị, mục 2 lên invest chưa cần rào, rào chỉ dựng sau khi rõ
+    tôi trải nghiệm thực tế và đánh giá lại nếu cần thiết. Về giá thuê thông lệ thị trường đang so với nhu cầu như giá căn 2pn, 1pn
+    đây cũng là cách so nếu chưa có m2. Cũng bỏ rào sau khi lên thực tế đánh giá.»
+    - **Mỏ neo và ba nhịp** (QĐ9): nhịp 1 cấp dự án trên Ops (mốc MN1) → nhịp 2 cấp toà ở Ocean Park 1 và Grand Park (MN2) → nhịp 3
+      tầng, ngoài hai khu, lên Invest (MN3). Thước chính: số tin căn hộ đang rao được xếp hạng giá từ cấp dự án trở xuống và hiện
+      trên màn (14/11: 0). Việc đang làm giữ nguyên, xếp theo mỏ neo. Chỉnh lộ trình: tách DA3 hai lát, lát mỏng DA32 đi trước (QĐ5), tự mở
+      `registry_aliases` cho nút dự án bằng migration 100; DS2 đứng thẳng trên DA32, DA7 rời đường găng (GS quyết 14/11 theo mục 44
+      Hỏi-1);
+      PL20 thành nhịp toà, trục và căn ở PL36 (QĐ6); hàng nạp S16 DA33 (QĐ7). QĐ1, QĐ2 (lời ghi thật DV6 rồi DA5, sao lưu và chạy
+      thử lại trước) và QĐ8 (mở ngay CG9, gộp DA6) là việc vận hành, không vào lộ trình.
+    - **QĐ3 — lên Invest chưa dựng rào**: căn giá tốt lên Invest do máy tự hiện. Bỏ bước «gọi thử mẫu, đạt mới mở» và bỏ việc giấu căn
+      rẻ quá 35%; rào chỉ dựng sau khi Mạnh dùng thật và đánh giá lại. Giữ nghĩa «giá tốt» ở mục 42 (20% thấp nhất, dưới trung vị từ
+      5%, nhóm từ 10, từ cấp dự án trở xuống) vì đó là định nghĩa nhãn; căn rẻ quá 35% vẫn hiện với nhãn «Cần xác minh»; giữ dấu
+      «chưa xác minh» / «đã xác minh», dòng «so với N căn, thấp hơn trung vị X%» và thước đang dùng. CG7, CG14 không còn chờ
+      CG5 → CG6; CG5, CG6, CG13 chạy song song.
+    - **QĐ4 — thước tin thuê** (sửa mục 42): tin thuê thiếu m² so giá thuê/tháng theo số phòng ngủ trong nhóm (1PN với 1PN, 2PN với
+      2PN), đúng thông lệ thị trường; tin thuê có m² và tin bán giữ giá/m². Cùng ngưỡng 20% và 5%, nhóm từ 10. Chưa dựng rào; đánh giá
+      sau khi lên thật. Giao ở CG10, CG11.
+    - **Nguồn S16** (14/11, Mạnh «Cả phần đăng nhập»; «Phần đăng nhập là mã chính từ chủ đầu tư, nên sự tin cậy cao»): danh mục do
+      một chủ đầu tư tự công bố. Lời «Cả phần đăng nhập» trả lời câu «đưa dữ liệu S16 có sẵn vào đường ống tới đâu», nên mọi phần
+      đã có — danh mục, tin rao và mã căn lấy bằng đăng nhập — vào đường ống. Mã căn S16 là nguồn tin cậy cao nhất khi dựng cây
+      toà → căn ở các dự án của chủ đầu tư đó, xếp trên S08 và trên mã suy từ tin S03. **Chưa có lời**: thu định kỳ bằng phiên đăng
+      nhập; hiện mã căn lấy bằng đăng nhập lên cổng Invest hay API công khai; hiện tin rao S16 lên cổng — mặc định **chỉ nội bộ** tới
+      khi Mạnh nói khác. Trường nguồn và tên thư mục bản thu mang tên thật nên chỉ ở máy thu; mọi thứ rời máy đổi về `S16`. Phiên
+      đăng nhập, định danh tài khoản thu vẫn là tầng A (luật 6). Hàng DA33: bộ nạp `import-s16*` vào bảng stg là làn thu (ZCode viết,
+      Claude duyệt hợp đồng); Claude viết migration 103 và phần từ stg vào danh bạ.
+    - **Nguyên tắc thu chung** (14/11, Mạnh ở phiên liên làn): «nơi nào dùng API để thu được thì để làn thu thu nhanh và thu hết,
+      nơi nào chặn thì tuân thủ, không làm máy móc quá».
+    - **Nguồn S09** (13/11, Mạnh «Thu như vừa rồi, đó trách nhiệm của S09, nhiệm vụ của bạn là giao việc và kiểm tra kết quả và hỗ
+      trợ»): thu định kỳ qua đường API (miền API riêng), trách nhiệm ở nguồn; không trình lại câu robots, điều khoản. Luật thu chung
+      giữ: không đăng nhập, dừng khi gặp 403, 429 hay trang thử thách, không vượt chặn. Giữ bản thu ngày 13/11 kèm ghi chú phần meta
+      bị sửa (bản thu bất biến, luật 1: ghi chú đi kèm, không ghi đè).
+    Số đo nền (DB máy thu 14/11): tin căn hộ đang rao bán 11.716, thuê 24.900; nhóm dự án từ 10 tin phủ 5.082 tin bán và 6.710 tin
+    thuê; tính thử ra 855 căn bán, 1.280 căn thuê đạt chuẩn «giá tốt» ở cấp dự án; 268 mã dự án S06 phủ 11.045 tin; tin thuê S03
+    có m² 622/3.459; tầng có ở 17% tin bán, 6% tin thuê căn hộ S03. Hàng mới: DA32, DA33, DA34, PL36 và nợ RP1, FR1, PB1, IT4, IT6, IT5,
+    CI3; sửa lời DA3, DA7, PL20, CG7, CG10, CG14, GC2, TN1. AGENTS.md không đổi: S16 chưa có trong luật 5, 6 nên không mâu thuẫn.
+49. **Vận hành ổn định sau sự cố S03 đứt 34 giờ (13–14/11)** (14/11, phiên điều phối liên làn, Mạnh «Theo khuyến nghị» cho cả sáu
+    việc ở §7 của `docs/ops/de-xuat-van-hanh-on-dinh-1411.md`; bản phạm vi `docs/plan/pham-vi-van-hanh-on-dinh-1411.md`, căn cứ ở kho
+    tri thức riêng `wiki/dot/van-hanh-on-dinh-1411.md`). Sự cố: kênh S03 ngừng thu từ 13/11 00:54Z tới 14/11 khoảng 11:00Z, 0 bài.
+    Máy phát hiện đúng lúc (heartbeat DOWN, bộ canh L6) nhưng không lớp nào đẩy tin tới người — cảnh báo chỉ nằm trong tệp log và
+    một banner trên máy thu. Bộ tự khởi động lại của kênh hẹn lịch mà không chạy, rồi phiên mất hiệu lực nên phải quét QR lại.
+    - **D1 — kênh đẩy cảnh báo**: issue trong kho riêng tư trên GitHub, mọi nội dung qua bộ chặn tầng A (`tier-a-guard`). Hàng VH1.
+    - **P1 — watchdog tự khởi động lại gateway** khi bộ hẹn treo: trần 1 lần mỗi 6 giờ, chỉ khi mọi lớp lockdown xanh và không có
+      lượt agent dở; không bao giờ tự quét QR, không đổi cấu hình. Hàng VHZ2 (làn thu).
+    - **D2 — token chỉ-đọc cho dead-man** (GitHub Actions): đồng ý chủ trương; tạo và cất token do Mạnh làm theo quy trình secret,
+      agent không cầm token. Hàng VH4 chỉ mở vòng khi đã có token.
+    - **P2 — quy ước**: tài khoản thu S03 chỉ gateway dùng. Câu H1 (sáng 13/11 Mạnh có mở tài khoản ở nơi khác không) **chưa trả
+      lời**. Việc của người, không vào lộ trình.
+    - **Đăng nhập lại S02** (401 từ 13/11): việc tài khoản của Mạnh, không vào lộ trình.
+    - **P3 — vá gốc bộ hẹn khởi động lại** cài vào runtime gateway theo quy trình `docs/ops/runtime-map.md`. Hàng VHZ3 (làn thu).
+    D3–D8, R1, O1 trong quyền giám sát tự xếp. SLO độ tươi 72 giờ của S03 **giữ nguyên** (đã chốt, AU4); «nhịp sống» là thước riêng
+    thêm vào (D5, hàng VH2). Mốc VHM1, thứ tự VH1 (D1) → VH2 (D5) → VH3 (D4) → VH4 (D2) → VH5 (D6) → VH6 (R1) → VH7 (D8) → VH8 (O1);
+    làn thu VHZ1 (D3) → VHZ2 (P1) → VHZ3 (P3), VHZ4 (dòng chuẩn `AUTH FAIL [S0x]` của D7). Runbook một trang: §6 của tài liệu.
+50. **Mạnh ở cổng, giám sát chịu hiệu quả lộ trình** (15/11, Mạnh gõ ở phiên giám sát: «Tôi muốn chốt lại luật, tôi chỉ xuất hiện ở
+    các cổng, hiệu quả của lộ trình do bạn điều phối», rồi «Có, kèm luôn» cho câu về lời áp). Căn cứ: điều tra tiến độ chậm
+    `docs/research/dieu-tra-tien-do-cham-1511.md`. Tới sáng 15/11 màn «Chất lượng từng chặng» vẫn báo 0 tin định vị, trong khi
+    4.934/6.102 tin S03 đã mang dự án từ 14/11: ô trên màn nối vào bảng rỗng và không hàng nào trong lộ trình nối lại. Từ 05/11 gộp
+    140 PR, khoảng 23 nằm trên chuỗi định vị → giá; 43 là sửa cái vừa làm; 42% lượt chấm bị trả; 182 câu hỏi tới Mạnh trong 10 ngày.
+    - **Mạnh chỉ xuất hiện ở các cổng** (Phạm vi, 1.5, Bằng chứng, Đáng và phiên nghiệm thu).
+    - **Giám sát chịu hiệu quả lộ trình**: đường găng, cắt và gom hàng, thứ tự gộp, số dãy; báo bằng con số trên màn.
+    - **Hàng trên đường găng xong khi số trên màn đổi trên dữ liệu thật**, không xong ở «gộp».
+    - **Chữ ký Cổng Bằng chứng kèm lời áp lên DB máy thu** những gì hồ sơ ghi đủ năm thứ (lệnh áp, số chạy thử, sao lưu, cách
+      lùi, lệnh kiểm sau). Sửa câu «DDL và ghi dữ liệu thật cần lời riêng» ở các mục trước cho phần máy thu; cloud không đổi.
+    - **Vẫn cần lời riêng**: tiền, DDL hay ghi dữ liệu trên cloud, xoá dữ liệu và việc không lùi được, sửa luật an toàn.
+    - **Bảng phủ ca trước khi viết mã** cho transform, bước khớp, lời gọi ngoài.
+    Cùng ngày Mạnh cho ba lời ở phiên điều tra: «Có, cấp dự án» (dải diện tích suy ra theo dự án × số phòng ngủ là phát biểu «suy
+    ra» riêng, không ghi đè diện tích, không dùng để chia giá khi chấm giá tốt; gộp vào CG10), «Áp 104 và thẻ luật S06 luôn»,
+    «Gộp nhanh #457 và #456». Đường găng nhịp 1 (MN1): nguồn «dự án của tin» mọi nguồn + ô Định vị (hàng `du-an-cua-tin-len-dinh-vi`,
+    migration 105) → CG10 xếp hạng cấp dự án + lọc dự án trên `/ops/deals` (một lát). Hàng ngoài đường găng tạm dừng tới khi MN1
+    xong, trừ cảnh báo vận hành (VH1).
+51. **S03 là nguồn lõi; bối cảnh nhóm là mặc định cho địa chỉ của tin** (15/11, Mạnh gõ ở phiên rà soát lộ trình, rồi «Tôi đồng ý
+    duyệt cả hai»). S03 là tin của cộng đồng môi giới, đúng cách họ làm việc và tức thời; S06 là kênh quảng cáo nên giá có thể
+    lệch. Vì thế **thước chính đếm trên S03**, S06 là mặt bằng so sánh; không đặt đích bằng tổng số tin.
+    - **Sửa quyết định 24/10** (RV-Q4/H5 «ngữ cảnh nhóm chỉ phá hoà, không tự quyết») và nối tiếp «Cho ghi suy ra» 04/11: bài nằm
+      trong nhóm nào là dữ kiện. Thẻ địa chỉ của nhóm (dự án, phường và tỉnh, phân khu mặc định, bán hay thuê) là **mặc định**
+      cho tin của nhóm; chữ bài nêu rõ dự án khác thì chữ bài thắng.
+    - **Đóng dấu ở bước nạp** (transform), không ghi vào raw snapshot (luật 1), nên sửa thẻ nhóm thì tin cũ của nhóm tính lại.
+      Vẫn là luật xác định có căn cứ và phiên bản (luật 7); thẻ do người duyệt.
+    - Đo 15/11 trên máy thu: 32 nhóm S03 có bài, các nhóm trỏ tới 6 dự án; 15 nhóm ghi đúng một dự án chiếm 73% số bài; 73% tin
+      căn hộ S03 không nêu dự án trong chữ (đo 04/11). Chưa đo: tỉ lệ bài lạc dự án trong nhóm chuyên một dự án; độ lệch giá
+      S03 so S06 cùng dự án. Hàng: `TG1` (thẻ nhóm), `TG2` (đóng dấu lúc nạp), `CG15` (độ lệch hai nguồn).
+52. **Bỏ Kev** (15/11, Mạnh «Bỏ kev»). Từ 23/10 Kev chỉ gắn nhãn, không lọc; không bước nào trong `pipeline/` đọc nhãn ấy; lượt đọc
+    bằng model (PL34) đã phủ mọi bài S03 mới từ 10/11; Kev chiếm 22 GB RAM máy thu (đo 15/11). Rút mọi việc về Kev khỏi lộ trình
+    (`PL5`, `PL33`, `PH1`, `PH3`, `KC2`, `SH7` vào `da_bac`); ý định tin lấy từ lượt đọc bằng model. Gỡ khỏi hook là hàng `KV1`
+    (làn thu, T3 vì chạm vùng an toàn của kênh S03): sửa cùng lượt bộ canh an toàn, lớp máy móc trên `/ops/collections`,
+    `audit-all`, `push-ops-facts`, `docs/ops/runtime-map.md`. **Khởi động lại gateway và gỡ plist vẫn cần lời riêng của Mạnh.**
+    Nên đi cùng cảnh báo «lời gọi model hỏng hàng loạt» (VH1) vì bỏ Kev là hết nhãn dự phòng chạy tại máy. **Model đọc ảnh chưa
+    được duyệt** (Mạnh ngắt lời «Làm cả hai», chỉ chốt bỏ Kev): không bật khi chưa có lời riêng về tiền.
+53. **Đặt lại lộ trình: sáu mốc, mười một lát** (15/11, Mạnh duyệt hai lần ở phiên rà soát: khung mục tiêu, rồi «Chốt» bản lộ trình
+    cũ ↔ mới). Bản phạm vi `docs/plan/pham-vi-dat-lai-lo-trinh-1511.md`. Mục tiêu: chọn một dự án, xuống tới toà và tầng, và thấy
+    căn hộ nào giá tốt nhất theo tin S03, đặt cạnh mặt bằng S06 (giữ mỏ neo 14/11 của mục 48, đổi thước theo mục 51).
+    - **Sáu mốc, mỗi mốc một con số trên màn**, thay mười mốc cũ: `MS1` tin S03 có dự án ngay lúc nạp → `MS2` hạng giá cấp dự án
+      trên Ops (thay MN1) → `MS3` tin S03 tới toà, hạng cấp toà (thay MN2) → `MS4` một căn là một dòng → `MS5` lên Invest (thay
+      MN3); `MSV` vận hành S03 chạy song song (thay VHM1, thêm gỡ Kev). Mốc GCM1, DAM1, TVM1–TVM3, KHM1 bỏ.
+    - **Mười một lát** là giá trị `nhom` của hàng (`l01-the-dia-chi-nhom` … `l11-mat-bang-s06`). Thứ tự: L1 → L2 → L3 → L5 → L6 →
+      L7 → L10; L8 → L9 song song; L4 (danh bạ toà cho các dự án còn lại) mở khi có dãy rảnh, không chặn MS3 vì tin S03 đã có
+      dự án nằm gần hết ở hai dự án đã có toà; L11 (mặt bằng S06, danh bạ mở rộng, gồm DA7) sau MS3.
+    - **Thước MS1 là đúng con số ô «Định vị» trên màn** (view `offer_project` của DV7: tin có ít nhất một bài mang dự án, không
+      xung đột; chạy thử 15/11: 4.934). Phép đếm theo bài đầu của tin (4.260 / 6.295) là phép đo phụ.
+    - **Xếp lại 175 hàng chưa xong**: 73 giữ trong lát, 29 nền (`nen-giu-nha`, chỉ làm khi đỏ hay khi chặn một lát), 61 hoãn và
+      7 gộp thành mục chờ điều kiện có điều kiện mở lại, 5 bác. 16 mã chờ lỗi thời bác. 137 hàng đã xong không đổi. Thêm 9 hàng
+      và 12 mục chờ cho việc mục tiêu cần mà lộ trình chưa có và việc nợ ngoài lộ trình.
+    - Trạng thái thật của một hàng đọc cả trên nhánh đang làm, không chỉ trên `main`. Ngưỡng 90% (MS1) và 50% (MS3) là đề
+      xuất, chốt ở Cổng Phạm vi của hàng mang thước.
+54. **Cấu trúc danh bạ: nguồn chủ đầu tư S16 thắng về cấu trúc, cây Dự án → Phân khu → Toà** (17/11). Căn cứ: phân tích cấu
+    trúc danh bạ 17/11 (phiên phân tích, chỉ đọc DB máy thu 06:15–06:45Z; bản đầy đủ ở `research-local/`, không vào kho).
+    54/198 toà treo thẳng dưới dự án vì luật xếp phân khu lúc đúc chỉ xét nút `node_type = building` khớp tên tuyệt đối (view
+    `v_toa_nut_vung` của migration 097 đưa về 14, nhưng `/ops/registry` đọc cột gốc); 0/344 dự án có cha; 524 mã nguồn chưa nối
+    (S06 8, S08 172, S09 344), phần lớn vì thiếu nút, nhất là Hà Nội (11 nút dự án), và S09 chưa có bảng nối; trong mã không có
+    thang tin cậy: nguồn đúc trước thắng, lệch thì ra thẻ.
+    - **Ba câu Q-A, Q-B, Q-C** — Mạnh «Theo khuyến nghị cả ba câu» (gõ ở phiên phân tích, 07:57Z):
+      - **Q-A dự án con từ hậu tố khu S08.** Dự án S08 có hậu tố khu (OCP1, OCP2…) → máy đúc nút dự án con, gắn cha theo hậu
+        tố, qua thẻ luật Mạnh xem mẫu. Áp luật dự án con của mục 39 và luật nút ứng viên của mục 44 Hỏi-1.
+      - **Q-B S16 thắng về cấu trúc.** Ở dự án có S16, S16 tự thắng về toà, mã căn, căn thuộc toà nào, toà thuộc phân khu nào.
+        S08, S09 lệch thì giữ làm bí danh và đếm số lệch trên Ops, không ra thẻ từng cái. Giá, pháp lý và mọi thuộc tính khác
+        vẫn lệch → thẻ. **Sửa mô hình 11/11 §1.3 (mục 44)** «Không có thứ tự nguồn tự thắng» cho riêng phần cấu trúc ở dự án có
+        S16 (thang theo thuộc tính ở `docs/architecture/mo-hinh-danh-ba-du-an.md` §1.3). Hàng DA33 đi tiếp nguyên hành vi đã
+        ký (lệch → thẻ); hành vi mới là hàng nối tiếp dựng trên dữ liệu DA33, tính phân khu hiệu lực ở view `v_toa_nut_vung`
+        (cột gốc của toà giữ nguyên vì rào chỉ-thêm 082).
+      - **Q-C phân khu từ danh sách khu S16.** S16 đúc nút phân khu từ danh sách khu chủ đầu tư công bố, qua thẻ luật (mục 38:
+        phân khu là thông tin dự án công khai). Mã căn lấy bằng đăng nhập vẫn không lên cloud.
+    - **«Trong hệ VGP»** (Mạnh gõ ở phiên P4, theo nhật ký giám sát 01:32Z): khi đếm bài lạc dự án trong nhóm S03 (TG2 AC-10),
+      bài Masteri Centre Point và Lumière Boulevard tính trong hệ Grand Park. **Chỉ là cách chấm**, không gộp nút danh bạ; bài
+      có chữ nêu rõ hai dự án này mà khớp nút riêng vẫn giữ dự án của chữ.
+    - **«Có» sửa AC-9, AC-10 của DA33** (Mạnh gõ ở phiên P2, 06:09Z): bộ soát mã S16 soát mã toà và mã khu S16 ở mọi bảng sắp
+      đẩy lên cloud; mã căn S16 chỉ soát ở chỗ dữ liệu S16 chạm được (thẻ duyệt `review_queue`, bảng nút `asset_nodes`); bỏ
+      token toàn số. Lý do: lời cũ chặn trọn đồng bộ cloud ngay lượt đầu (69 dòng trúng, 47 mã trúng đều là mã căn người bán
+      ghi công khai hoặc số trùng định danh; 0 mã toà, 0 mã khu).
+    - **«Làm VHZ1 trước rồi VHZ2»** (Mạnh gõ ở phiên U2, theo nhật ký giám sát): hàng `l6d-down-keo-dai-ly-do` (VHZ1) trước,
+      `watchdog-tu-khoi-dong-gateway` (VHZ2) sau, thay phán gộp một hàng của giám sát.
+    - Hàng (bản phạm vi `docs/plan/pham-vi-danh-ba-cau-truc-1711.md`): DA36 `danh-ba-toa-theo-phan-khu-hieu-luc` (trang đọc
+      view, 54 → 14), DA37 `danh-ba-s16-thang-cau-truc` (Q-B + Q-C, sau DA33), DA38 `du-an-con-tu-hau-to-khu` (Q-A, sau DA8 ba
+      nút Grand Park của mục 39 Hỏi-2), DA39 `nut-ung-vien-s08-s09-ha-noi` (nút thiếu + bảng nối S09, lát mỏng của DA18, DA3).
+55. **Tra hồ sơ Zalo từ SĐT người bán** (18/11). Làn thu đề xuất (tin BÁO zcode-1811-2): dịch vụ tra cứu độc lập trên máy
+    thu, một tài khoản Zalo riêng chỉ tra không chat, cache 7 ngày (dương) / 30 ngày (âm); 13.730 SĐT người bán distinct trên
+    tin rao. Ghi nhớ cũ 04/11 «chưa có quyết định dùng với SĐT người bán» hết hiệu lực. Mạnh trả lời ba câu riêng ở phiên điều
+    phối liên làn, 04:11Z, nguyên văn:
+    - **Câu 1 — dùng cho SĐT người bán trên tin rao:** «Có và tôi muốn nó là một API service để các ứng dụng trong họ onehub
+      có thể dùng».
+    - **Câu 2 — ngày sinh, giới tính:** «Đây là thành viên của mạng lưới lưu trữ chung với thông tin profile để chăm sóc
+      khách hàng. GIữ đầy đủ, nhưng không đưa 2 thông tin này lên cloud». Thành sửa đổi ADR-0007 ngày 18/11 và luật 6 của
+      `AGENTS.md`.
+    - **Câu 3 — tài khoản tra cứu vào lockdown Zalo 7 lớp:** «Có». Lớp kiểm và đoạn runtime-map là việc làn thu (tin
+      claudedp-1811-10); không lượt tra thật nào, kể cả đo, trước khi lớp này chạy trên máy thu và runtime-map đã ghi.
+    - Hàng (bản phạm vi `docs/plan/pham-vi-tra-ho-so-zalo-1811.md`): EN3 `tra-ho-so-zalo-vao-danh-ba-nguoi` (migration 116),
+      EN4 `api-tra-ho-so-zalo`. Câu còn mở của Cổng Phạm vi EN4: API chạy ở đâu, ai gọi (ứng dụng trên cloud không được nhận
+      ngày sinh, giới tính), thuộc cổng nào, xác thực thế nào — data-api công khai không hợp. Ngoài đường găng, sau các hàng
+      MS3; dãy dự kiến U2 sau VHZ2.
+56. **Duyệt nối nguồn danh mục theo loại căn cứ, một lần; phân khu chỉ tự nhận khi khớp trọn 1–1** (19/11). Căn cứ: DA46
+    `noi-phan-khu-trung-s16`. Thẻ luật phân khu S16 số 2 (DA37) đúc 7 nút trùng nơi với phân khu đã có, kéo 50 toà khỏi nút cũ, vì
+    bước khớp chỉ so tên. So tập toà S16 với S09 trên 61 khu (DB máy thu, chỉ đọc): 11 khu khớp 1–1, 3 khu chứa trọn nhiều nút, 0
+    khu chồng chéo, 47 khu không có toà chung. Mỗi nguồn mới đang tốn 6–7 hàng việc; S07, S11 và S12–S15 còn ở phía trước.
+    - **Câu đã trình** (phiên P2, trả lời lời Mạnh 02:08Z «khi bổ sung một nguồn có thể pipeline tự giải quyết được»), khuyến nghị
+      đồng ý cả hai:
+      - *Luật cho DA46:* «Khu chỉ tự nhận nút cũ khi toà khớp trọn 1–1 và có ít nhất 3 toà chung, các ca khác chỉ cảnh báo.»
+      - *Cách duyệt tự động:* «hiện thẻ luật duyệt theo từng nguồn (chốt 11/11). Muốn nguồn mới tự chạy, anh duyệt theo từng loại
+        căn cứ một lần, sau đó nguồn mới đạt ngưỡng chạy bóng thì được áp luôn.»
+    - **Lời Mạnh:** «Theo khuyến nghị» (phiên P2, 2026-11-19T02:21:44Z).
+    - **Quyết định 1, luật tự nhận phân khu.** Khu S16 chỉ tự nhận phân khu đã có khi: mọi toà có S09 của khu về một nút, nút đó
+      không nhận toà từ khu S16 khác, có ít nhất 3 toà chung, và ít nhất một nửa số toà của khu có S09. Ca có bằng chứng mà không
+      đạt thì giữ luật so tên và hiện cảnh báo trên thẻ luật. Phân khu trùng giữ nút cũ (rào chỉ-thêm 082 không cho đổi cột vùng của
+      toà), tên S16 thành bí danh của nút đó; tên hiển thị của nút chưa đổi. **Sửa mục 54 Q-C** ở chiều nút giữ lại.
+    - **Quyết định 2, duyệt theo loại căn cứ.** Mạnh duyệt mỗi loại căn cứ một lần, không duyệt lại cho từng nguồn. Nguồn mới đạt
+      ngưỡng ở lượt chạy bóng thì được áp theo căn cứ đã duyệt. **Sửa mục 44 Hỏi-1** («thẻ luật theo nguồn»).
+    - **Phạm vi áp dụng** của quyết định 2:
+      - *Loại căn cứ:* các căn cứ đang đi thẻ luật ở mô hình 11/11 §1.2 (K1, K2, K3, K5), căn cứ nhận nút ứng viên của Hỏi-1, và tập
+        toà chung khớp trọn 1–1 ở cấp phân khu.
+      - *Nguồn:* các nguồn danh mục đi qua khuôn chung bản ghi nguồn (S07, S08, S09, S10, S11 đến S16).
+      - *Hiệu lực:* chưa loại căn cứ nào được duyệt theo cách mới và chưa có bước chạy bóng. Cho tới khi Mạnh chốt ngưỡng, nguồn
+        mới vẫn đi thẻ luật như cũ. Việc nối 7 cặp của DA46 vẫn cần chữ ký riêng kèm băm thẻ nối.
+    - **Không đổi:**
+      - Mỗi loại căn cứ vẫn do Mạnh xem mẫu và duyệt lần đầu.
+      - Mẫu soát 20 cặp mỗi tuần chỉ để thấy trôi, không mở cổng tự nối (FRAMING §5).
+      - K4 và ca khó vẫn lên thẻ từng cặp; không nối khi lệch tỉnh.
+      - Lời khai từ tin (mã dự án S06, nhóm S03, tên trên tin) không thuộc phạm vi, vẫn đi DA7 và DA18.
+      - S16 thắng về cấu trúc (mục 54 Q-B). Giá, pháp lý, chủ đầu tư, tiến độ lệch vẫn lên thẻ.
+      - LLM không quyết định ghi dữ liệu (luật 7). Điều kiện lên Invest của mục 39 giữ nguyên.
+    - **Câu còn mở**, trình ở Cổng Phạm vi của hàng đầu tiên thuộc lớp hợp nhất nguồn: ngưỡng tự áp cho mỗi căn cứ; phần trùng với danh
+      bạ đã xác nhận có được làm tập đối chiếu không (đụng FRAMING §5); quan hệ cha–con do máy suy có qua thẻ luật lần đầu không.
+58. **Đo nguồn không phải tin: hai họ nguồn, thẻ nguồn kho năm trục** (20/11; số 57 dành cho hàng GT9 đang mở). Căn cứ:
+    bản soát nguồn và đồng bộ trên Ops ngày 20/11 (11 phát hiện L1–L11). Gốc của chỗ «mờ» là việc «xong ở gộp» chưa chạy
+    thật: nạp S07 (DAZ3) và S10 (DA29) đã ký nhưng bảng `stg_*` 0 dòng, 93 và 239 bản thu chờ, không hàng nào sở hữu «chạy
+    thật kèm lịch»; S09 không có dòng trong sổ nguồn; S02 xanh giả. Mạnh trả lời bốn câu Cổng Phạm vi ở phiên rà soát, 02:27Z,
+    nguyên văn: «Theo khuyến nghị».
+    - **Hai họ nguồn.** *Luồng* là tin rao: S03, S05, S06. *Kho* là danh mục S07–S16, tham chiếu S01 và S02, nền S04.
+    - **Thẻ nguồn kho năm trục:** T1 vận hành · T2 phủ · T3 biến động · T4 chất lượng · T5 nối và giá trị. Nguồn mới chỉ khai
+      `family`, `cadence_hours`, `universe`, `stg_tables` trong `source_registry`.
+    - **Lời riêng cho đúng ba plist launchd mới: S07, S10, S16.** Nhịp do làn thu quyết. S11 không nằm trong lời này (nạp S11
+      vẫn hoãn, mục 53).
+    - **Tổng thể (`universe`)** lấy số nguồn tự công bố, kèm mốc và nơi lấy; chưa có thì để trống, không ước.
+    - **Bốn lát.** A: chạy thật (làn thu nạp bù và đặt lịch; sổ nguồn khai báo, migration 122). B: thước vận hành và biến
+      động, gồm kiểm co rút (migration 123, bước SQL 605). C: phễu và phủ, đi cùng các hàng danh bạ toà (DA39, DA42, DA44).
+      D: chất lượng kho (mở lại DA20), giữ sau MS3.
+    - **Không đổi:** hàng nguồn kho xong khi con số trên màn đổi trên dữ liệu thật (mục 50); cloud chỉ nhận số gộp và mã
+      `S0x`; tên nguồn thật vẫn tầng A.
+    - **Lỗ thấy thêm 20/11:** sổ nguồn máy thu thiếu dòng S09 và S17, nên bộ quét tên nguồn mù với hai nguồn này. Hàng sổ
+      nguồn khai báo thêm cả hai dòng; tên thật điền trên máy thu, không vào kho.
+59. **S05 bỏ Apify, thu bằng Playwright trên máy thu** (20/11). Mạnh chốt trực tiếp với làn thu, rồi xác nhận với giám sát
+    ~03:34Z (mã câu hỏi `h-20261120T030758Z-245`), nguyên văn: «Đã chốt, giao đi». Bộ thu chạy trên máy thu với profile riêng và tài khoản
+    thu riêng, chỉ đọc. Mở lại thu S05 theo đường mới trước mốc «giữ dừng tới 24/11» cũ. Bảy điều kiện phải đủ trước lượt
+    thu thật đầu tiên:
+    1. Chỉ được bấm nút đóng trong hộp thoại che trang. Ngoài ra không bấm, không gõ, không đăng, nhắn, thích hay xin vào nhóm.
+    2. Gặp đăng nhập lại, checkpoint, xác minh hay CAPTCHA thì dừng lượt, không vượt.
+    3. Có test cho nhận diện bị chặn, trần mỗi lượt và khuôn snapshot.
+    4. Danh sách nhóm nằm trong tệp cấu hình. Tài khoản thu, phiên và profile là tầng A.
+    5. Chỉ Mạnh tự đăng nhập.
+    6. Không qua OpenClaw hay gateway, không LLM, không plist mới; dùng lại lịch S05 cũ.
+    7. Không thu thật trước khi mã vào `main` và có tin GIAO triển khai.
+    - DATA-CONTRACT không đổi. Phía Claude: mở khoá nạp S05, SLO và trạng thái `source_registry` cùng nhịp tích hợp.
+    - Huỷ gói Apify là việc của Mạnh (tiền).
+60. **Một trình duyệt chuyên dụng cho mọi bộ thu, Mạnh không đụng tới** (20/11). Bốn bộ thu đang chung một ứng dụng trình
+    duyệt, mỗi bộ một profile rải ở chỗ khác nhau; đăng nhập phải qua lệnh riêng nên ba lần Mạnh đăng nhập S02 đều vào nhầm
+    chỗ, S02 đứt từ 28/10. Mạnh ~03:54Z (mã câu hỏi `h-20261120T034556Z-247`), nguyên văn: «Giao, theo thứ tự đó».
+    - **Phạm vi:** mọi bộ thu có trình duyệt — S01, S02, S05 mới, S06 phần lấy số.
+    - **Thứ tự ứng viên, làn thu đo rồi chọn:** (1) Chrome for Testing ghim bản; (2) Chrome kênh Beta cài riêng; (3) nếu cả
+      hai không qua chống bot thì giữ Google Chrome nhưng khoá «chỉ bộ thu».
+    - **Luật kèm:** bộ thu mới không ghi cứng kênh trình duyệt, chọn ở một chỗ cấu hình; profile bộ thu gom về một gốc ngoài
+      kho (tầng A); mỗi nguồn một lệnh đăng nhập, Mạnh tự đăng nhập; ứng viên được chọn phải có số đo qua chống bot.
+    - **Không dùng cho bộ thu:** ego lite và trình duyệt Mạnh dùng hằng ngày. Bộ thu tự mở profile riêng bằng Playwright, đó
+      là kho phiên khác.
+    - **Trạng thái 20/11:** Chrome for Testing bị chặn ở bước đăng nhập Google của S02, làn thu chuyển sang đo Chrome Beta;
+      bản cài nằm ngoài kho. Đăng nhập lại S02: Mạnh «Chờ trình duyệt mới». Khi chốt xong thì sửa bẫy kỹ thuật số 2 của
+      `AGENTS.md`.
+61. **Người ở biên: thang tự chủ nấc 0–4, duyệt theo bảng lô** (21/11). Căn cứ: `docs/research/nguoi-o-bien-khung-2111.md`
+    (khung, kiểm kê, đánh giá, thiết kế, lộ trình). Sáng 21/11 Mạnh gắn lát nhãn `hai-khu-ghep-b` cùng trợ lý (model lớn điền
+    nháp hai ô Toà, Phân khu). Nhóm đầu 110 thẻ Mạnh nhìn và lưu từng thẻ: giữ nguyên nháp 105, tự quyết 5, sửa ngược 0 (tỉ lệ
+    giữ nháp, chưa phải độ đúng; khoảng Wilson 95%: 89,8%–98,0%). Nhóm sau 110 thẻ có 105 thẻ trợ lý lưu sau khi Mạnh duyệt theo
+    bảng lô; bảng nhãn chỉ có một mã người gắn nên DB không tách được hai loại nhãn. Cùng lúc Hàng duyệt chờ 1.117 thẻ, bảy ngày
+    vào 267, người quyết 0; trong 2,01 triệu phát biểu dữ liệu người ghi trực tiếp 2 dòng.
+    - **Lời Mạnh, nguyên văn** (21/11):
+      - Nhận định mở đầu, ở phiên gắn nhãn: «Có một điều tôi thấy bạn gắn thẻ rất chính xác, tôi nghĩ bạn gắn hết được và tôi sẽ
+        nhìn từng cái xong chấp thuận một lượt. Điều này chỉ chứng minh một hướng là một model lớn như opus 5.5 hoàn toàn có thể
+        hỗ trợ gắn tag với semi con người và dần model càng thông minh hơn và chính xác hơn thì tỉ lệ người thấp dần. Tôi nghĩ
+        đây mới là cách đúng để thực hiện không chỉ trong gắn nhãn và cả phê duyệt. Con người chỉ nằm biên».
+      - Ở phiên phân tích, ~00:51Z: «Tôi xem n2 thì với những gì hiện lên thì hoàn toàn tin cậy».
+      - ~00:53Z: «Và một điều nữa là cách duyệt lô lúc mới nãy rất dễ dàng, vì duyệt từng thẻ tôi phải đảo mắt liên tục và nhận
+        ra nó là cái gì tìm ở đâu? Nhưng khi duyệt lô thì mọi thứ được sắp xếp có quy tắc thì việc kiểm nó đã nhanh hơn rất
+        nhiều. Sự tin cậy bản thân tôi cũng cao hơn.»
+      - ~00:55Z: «Duyệt theo lô còn có một điểm đó là thấy rõ bằng chứng và suy luận việc đọc như vậy rất dễ nếu claude sai thì
+        thấy ngay».
+      - 01:05Z, trả lời bốn câu đã trình kèm khuyến nghị: «Theo khuyến nghị cả bốn câu».
+    - **Quyết định 1, chấp thuận lô ở Hàng duyệt.** Người được chấp thuận cả một lô thẻ khi lô có đủ ba thứ: ca biên đã tách
+      riêng, mẫu ngẫu nhiên 75 thẻ đã soát, và lệnh rút cả lô. Áp cho hạng mục «Bổ sung tin», bắt đầu ở ô số (số WC, số phòng
+      ngủ); ô loại hình và toà chỉ nhận lô khi mẫu 75 thẻ không có lỗi nào. **Sửa mục 35** ở câu «duyệt hàng loạt đã loại ở
+      GD10». Đường quyết thẻ hiện chỉ nhận người, từng thẻ, kèm lý do: dùng được sau khi có hàng thi công.
+    - **Quyết định 2, tập mở cổng tự áp (PL21).** Tập test đóng băng gồm nhãn người duyệt nháp, mỗi dòng ghi xuất xứ; độ đúng
+      hiệu chỉnh bằng hệ số bắt lỗi của người duyệt, đo bằng thẻ cài lỗi. Nhãn «máy lưu, người duyệt lô» dùng theo lời duyệt
+      của Mạnh và báo tách, vào tập mở cổng khi cách duyệt lô có hệ số bắt lỗi riêng. Nhãn gắn mù vẫn dùng được, không cần hiệu
+      chỉnh. **Sửa FRAMING §5** ở chỗ để ngỏ «tập mù hay mẫu nháp» và mục 32, 35 ở chỗ hoãn tới PL21.
+    - **Quyết định 3, thẻ cài lỗi.** Từ lát gắn nhãn và lô duyệt kế tiếp, 8–10% số thẻ mang nháp sai có chủ ý, sinh bằng luật
+      xác định; người duyệt biết có, không biết thẻ nào. Thẻ cài không vào tập nhãn. Hai loại, đo riêng: «suy luận sai từ
+      trích đúng» và «trích thiếu phần bài nói khác».
+    - **Quyết định 4, thang tự chủ theo loại việc.** Năm nấc: nấc 0 người làm hết; nấc 1 máy nháp, người duyệt và lưu từng ca;
+      nấc 2 máy gắn hết lô vào lớp chờ, người soát ca biên và mẫu rồi chấp thuận lô; nấc 3 máy tự áp, người quyết ca biên và
+      kiểm mẫu sau; nấc 4 máy tự áp, người vào khi thước trôi bật đỏ. Mỗi loại việc một nấc theo từng ô (loại việc × trường ×
+      phân khúc); lên nấc là một chữ ký của Mạnh ở cổng cho mỗi ô, tụt nấc máy tự làm rồi báo; đổi model hay lời nhắc là một
+      lần đo lại, không phải lý do lên nấc.
+      - *Không bao giờ quá nấc 1:* ký cổng (Phạm vi, 1.5, Bằng chứng, Đáng, phiên nghiệm thu), tiền, DDL hay ghi dữ liệu trên
+        cloud, xoá dữ liệu và việc không lùi được, sửa luật an toàn (tầng A, an toàn nhóm xã hội, raw snapshot), mọi việc gửi tin vào nhóm xã hội (luật 8).
+      - *Máy chỉ bấm Lưu vào lớp chờ.* Từ nấc 2, nhãn hay quyết định của máy nằm ở lớp chờ cho tới khi người chấp thuận; bảng
+        nhãn và bảng thẻ ghi được ai bấm Lưu, model nào, nấc lúc lưu, giờ người duyệt. Nhãn chưa có giờ người duyệt không vào
+        tập đóng băng. Trong lúc chưa có lớp chờ (hàng NB2), gắn nhãn tiếp tục duyệt theo bảng lô như sáng 21/11, sổ của phiên
+        gắn nhãn ở máy thu là bản ghi tạm về ai lưu, lô nào, giờ duyệt.
+      - *Bảng lô là bề mặt duyệt của nấc 2:* một dòng một thẻ, cột cố định, bằng chứng và suy luận nằm ngay trên dòng, dòng nào
+        cũng mở được thẻ gốc. Màn duyệt và màn gắn nhãn dựng theo bảng này, không thêm nút «duyệt hết» lên màn từng thẻ.
+      - `AGENTS.md` luật 7 giữ nguyên câu chữ, thêm câu dẫn tới mục này. ADR-0007 thêm sửa đổi 21/11 «trợ lý gắn nhãn trong
+        phiên».
+    - **Ca biên** (lên người từng ca ở mọi nấc): máy bỏ trống hoặc trả «không suy ra được»; hai lần đọc độc lập lệch nhau, hoặc
+      chữ bài trái thẻ địa chỉ nhóm, hoặc hai nguồn danh bạ lệch; giá trị chưa có tiền lệ (chưa quy được về danh bạ, nguồn hay
+      loại căn cứ lần đầu); ca hiếm mà đắt có tên (nối, tách nút danh bạ, gộp hai căn, đổi dự án của cả một nhóm). Điểm tự tin
+      model tự khai không dùng để chia ca (review phân loại §3.1 điều 4). *(Sửa 24/11, mục 63 quyết định 1: ca «chưa quy
+      được về danh bạ» và ô nhóm A dưới ngưỡng lên người theo nhóm, một ứng viên danh bạ hay một kiểu lệch là một quyết
+      định, không mỗi tin một ca.)*
+    - **Không đổi:**
+      - Luật 7: LLM chỉ phát biểu kèm trích dẫn; ghi dữ liệu qua người hoặc luật xác định. Nấc 3 đi đường «luật xác định» của
+        PL21 (ô đã đo đạt ngưỡng F3), không mở ngoại lệ mới. *(Bổ sung 24/11, mục 63 quyết định 3: ô chưa đo được ghi tạm
+        theo bốn điều kiện; ghi tạm không phải lên nấc.)*
+      - Ngưỡng F3 (A 0,95 · B 0,90 · C 0,80, cận dưới Wilson 95%).
+      - Mục 50: Mạnh ở cổng; lời riêng cho tiền, cloud, xoá dữ liệu, luật an toàn.
+      - Mục 56: K4 và ca khó vẫn lên thẻ từng cặp; mỗi loại căn cứ vẫn do Mạnh duyệt lần đầu.
+      - Tầng A; ba model đọc tin của đường ống (ADR-0007 sửa 06/11).
+      - Mẫu soát cuốn chiếu vẫn chỉ để thấy trôi.
+    - **Câu còn mở**, chốt ở Cổng Phạm vi của từng hàng: ngưỡng lên nấc (đề xuất: từ 100 thẻ đã duyệt ở nấc 1, sửa ngược ≤ 3%,
+      hệ số bắt lỗi ≥ 0,7, tỉ lệ soát ≥ 70%, 4 tuần không tụt trước nấc 4); cỡ mẫu theo nấc (đề xuất: 75 thẻ mỗi lô ở nấc 2, 30
+      thẻ mỗi tuần mỗi ô ở nấc 3); cách ghi «ai bấm Lưu» khi trợ lý thao tác qua phiên Ops của người (đường lưu riêng cho trợ
+      lý chạm quyền Ops); xếp ô số WC, toà vào nhóm F3 nào; 232 thẻ «Bổ sung tin» chờ mà không còn đề xuất nối vào là gì.
+      *(Trả lời 24/11, đo lại còn 230 thẻ: đây là thẻ đối chiếu, chưa từng có đề xuất nào — bộ làm giàu dựng thẻ khi tin có
+      đối chiếu lệch: lệch ý định 124, lệch giá 103, lệch diện tích 5. Không đóng theo luật; sang NB5 xử theo nhóm — xem mục 63.)*
+    - **Hàng:** đợt `nguoi-o-bien-2111`, cắt ở lượt riêng: NB1 chấm bóng hàng «Bổ sung tin» và chấp thuận lô; NB2 xuất xứ nhãn,
+      lớp chờ, thẻ cài lỗi (có migration, T3); NB3 mở PL21 cho một ô; NB4 ngưỡng chạy bóng thẻ luật danh bạ (câu còn mở của
+      mục 56), sau MS3. Ngoài đường găng MS3; giám sát xếp dãy.
+62. **Phiên giám sát toàn quyền điều phối và gộp, phải tham gia quyết định cùng các phiên** (24/11). Bổ sung mục 50. Bối cảnh:
+    máy thu vừa chuyển sang máy mới, đợt chạy lại với bảy phiên dãy mới; Mạnh nhắc điều này lần thứ mười kể từ 30/10 và bảo ghi
+    thành nguyên tắc.
+    - **Lời Mạnh, nguyên văn** (24/11): «Bạn giữ toàn quyền điều phối, tiến trình gộp và quyết định gộp. Tôi chỉ xuất hiện ở các
+      cổng, nên hiệu quả của toàn bộ quá trình chạy mốc và lộ trình quyền quyết định ở bạn, bạn cần tham gia vào các quyết định
+      hỗ trợ các phiên. Điều này cần được ghi lại thành nguyên tắc để không bị mất trong chat.»
+    - **Quyền của vai giám sát** (đi theo vai, không theo phiên hay tài khoản; phiên giám sát mới đọc mục này là dùng ngay):
+      xếp và đổi thứ tự hàng, chuyển hàng giữa các dãy, cắt, gộp, tách hàng; mở, thay và dọn phiên; phán mọi yêu cầu của phiên
+      thợ; gỡ chặn hạ tầng và sự cố lùi được; thứ tự gộp và quyết định gộp PR đủ điều kiện; áp lên DB máy thu đúng hồ sơ đã ký;
+      giao việc liên làn qua phiên điều phối liên làn.
+    - **Trách nhiệm mới so với mục 50:** giám sát tham gia quyết định cùng các phiên. Phiên hỏi cách làm, kẹt, lệch số hay tranh
+      tài nguyên thì giám sát trả lời dứt khoát trong cùng lượt (đồng ý kèm điều kiện, hoặc chỉ lối khác), ghi lý do vào sổ;
+      thấy tín hiệu xấu (tải máy, khoá chấm đứng, hai dãy chồng vùng tệp, thước đo lệch) thì can thiệp trước khi phiên hỏi.
+      Mốc hay lộ trình chậm vì phiên chờ lời giám sát là lỗi của giám sát.
+    - **Không đổi — vẫn cần lời riêng của Mạnh:** chữ ký ở các cổng và phiên nghiệm thu; tiền; DDL hay ghi dữ liệu trên cloud;
+      xoá dữ liệu và việc không lùi được; sửa luật an toàn (tầng A, Zalo, raw snapshot); gateway, plist launchd mới, khởi động
+      lại dịch vụ nền, gỡ phanh `ops-apply`, sao lưu ra ngoài máy; vượt trần vòng chấm.
+    - **Ghi ở đâu:** `AGENTS.md` mục «Ai quyết gì»; quyết định từng ngày ở sổ trạng thái giám sát trong thư mục đợt.
+
+63. **Phê duyệt bằng máy ở khối lượng lớn: ca chưa chắc theo nhóm, toà như bài viết, ghi tạm đo sau có hạn** (24/11). Căn cứ:
+    audit phân loại và làm giàu sáng 24/11 và phiên tư vấn phê duyệt cùng ngày (chỉ đọc DB máy thu); diễn tiến và bảng rà mâu
+    thuẫn ở trang tri thức của đợt `phe-duyet-may-2411`. Đo 24/11: Hàng duyệt chờ 1.047 thẻ «Bổ sung tin», tuổi trung bình 16
+    ngày, 21 ngày qua người quyết 6 thẻ; bộ làm giàu đã tự ghi 2.290 giá trị (2.180 loại hình, 110 toà) khi luật và model cùng
+    đáp án, ở ô chưa đo, trái mục 19 Q5. Luật «đo xong mới ghi» đứng cạnh một thước chưa có (lớp xuất xứ nhãn NB2 chưa dựng, thẻ
+    cài lỗi bắt 0/35) nên không ô nào lên được nấc và mọi giá trị dồn về người.
+    - **Lời Mạnh, nguyên văn** (24/11, phiên tư vấn phê duyệt):
+      - 01:53Z: «Cho đóng 462 thẻ».
+      - 02:12Z: «Đầu tiên dọn trước. Sau đó sẽ nghĩ về giải pháp vì nếu số lượng volume lớn thì không thể duyệt bằng tay được.»
+      - 02:31Z, đáp đề xuất «ngoài danh bạ thì máy không tự ghi»: «Bản chất danh bạ cũng là nguồn sống cần cải thiện theo thời
+        gian giống như mô hình một ngôi nhà, phân loại và làm giàu,...nên tôi nghĩ Không được cực đoan hoá mà là một tiến trình.»
+      - 02:35Z: «Kiểm lại trước khi tôi chốt và rà soát mô hình phân loại enrich, một ngồi nhà và những quyết định mới nhất xem
+        có điều gì mâu thuẫn thì giải quyết trước khi chốt.»
+      - 02:48Z, đáp đề xuất «dừng tự ghi mới»: «Nếu không tự ghi thì lại kẹt?»
+      - 02:56Z, trả lời ba điểm đã trình kèm khuyến nghị: «Chốt cả ba».
+    - **Dọn thẻ tồn: máy đóng 232 thẻ, không phải 462.** Lời «Cho đóng 462 thẻ» dựa trên mô tả của phiên tư vấn: 232 thẻ mà mọi
+      đề xuất trùng giá trị tin đang có (đúng mục 35 «máy rút thẻ trùng giá trị đang lưu») và 230 thẻ «không còn đề xuất». Hàng
+      đóng thẻ (NB9) đo lại cùng ngày: 230 thẻ ấy là **thẻ đối chiếu chưa từng có đề xuất** (lệch ý định 124, lệch giá 103, lệch
+      diện tích 5; chưa có dòng nhật ký quyết định nào), tức còn điều để quyết. Giám sát phán khoảng 03:10Z cùng ngày, theo hướng
+      hẹp hơn lời đã cho: NB9 chỉ đóng 232 thẻ trùng giá trị, máy
+      ghi lý do, không đổi dữ liệu tin; 230 thẻ đối chiếu sang NB5, xử theo nhóm của quyết định 1 (ba kiểu lệch là ba quyết
+      định) và NB5 ghi lại phán quyết đối chiếu. Câu còn mở của mục 61 về các thẻ này đã có trả lời.
+    - **Quyết định 1, ca chưa chắc xử theo nhóm.** Ô nhóm A dưới ngưỡng và giá trị chưa quy được về danh bạ không sinh mỗi tin
+      một thẻ: một ứng viên danh bạ hoặc một kiểu lệch là một quyết định cho mọi tin cùng nhóm, kể cả tin về sau. Tin vẫn hiện
+      «chưa biết» ở ô đó tới khi có quyết định, trừ quyết định 2. **Sửa mục 61** ở câu ca biên «lên người từng ca» và cột «dưới
+      ngưỡng» nhóm A của F3 (`mo-hinh-pipeline-mot-can-nha.md` §1.2, review phân loại §3.3).
+    - **Quyết định 2, toà và phân khu hiện như bài viết.** Ô toà, phân khu chưa đối chiếu được với danh bạ: trang tin hiện
+      nguyên văn kèm nhãn «theo tin đăng, chưa đối chiếu»; giá trị này không dùng để so sánh giá theo toà và không gắn nút danh
+      bạ. **Sửa** hành vi dưới ngưỡng nhóm A của F3 cho riêng hai ô này. Nhãn mới vào `CONTEXT.md` cùng hàng PL37.
+    - **Quyết định 3, ghi tạm, đo sau, có hạn.** Máy được tự ghi trước khi ô có số đo khi đủ bốn điều kiện: (1) hai phiếu độc
+      lập trùng nhau (luật và model, hoặc hai model khác họ), có trích dẫn; (2) mỗi đợt ghi có mã lô và lệnh rút cả lô; (3) giá
+      trị ghi tạm không tính là «đã đo», không làm căn lên bậc B3; (4) đo bù trong hạn hai tuần bằng lô nhãn có thẻ cài, không
+      đạt hoặc quá hạn thì ô tự tụt và rút lô. Áp ngay cho đường tự ghi đang chạy (không tắt) và là lối chung cho các ô về sau.
+      - *Độc lập, đo 24/11* (giám sát đọc mã, phiên tư vấn đếm trên DB máy thu): 2.290 giá trị đến từ hai đường. Lượt đọc toàn
+        bộ 03–05/11 ghi 1.993 loại hình; model nhận chữ bài đã gạt tên nhóm, không thấy đáp án của luật, nên hai phiếu độc lập.
+        Lượt làm giàu hằng đêm ghi 187 loại hình và cả 110 toà; lời nhắc của nó mang «loại hình từ nhóm» và «mã toà phát
+        hiện» của luật (`agent/src/agents/enrich-text.ts`), nên model trùng luật ở đường này **chưa phải hai phiếu độc lập**,
+        chưa đạt điều kiện (1). Đường hằng đêm đứng từ 23/11.
+      - *NB10 sửa chỗ đó:* phiếu thứ hai phải độc lập — bỏ hai dòng đáp án của luật khỏi lời nhắc và giữ tên dự án, hoặc lấy
+        phiếu thứ hai từ đọc gộp vốn không thấy đáp án của luật; chốt ở S1 của NB10. 297 giá trị của lượt hằng đêm mang mã lô
+        riêng «trước độc lập»; cả hai lô vẫn là ghi tạm chưa đo, lô đo bù quyết giữ hay rút. Giám sát giữ đường không tắt.
+      - *Lượt hằng đêm chờ sửa xong* (Mạnh, 24/11 03:35Z, đáp câu «lượt hằng đêm có được tự ghi tiếp trước khi sửa xong độc
+        lập không»: **«Chờ sửa xong»**; sửa vế «không tắt» ở dòng trên cho riêng lượt này). Lượt làm giàu hằng đêm không tự áp
+        theo đường có căn cứ (model trùng luật, model trùng tên toà của danh bạ) cho tới khi NB10 được áp lên máy thu; trong
+        lúc chờ, các đề xuất ấy đi thẻ và xử theo nhóm (quyết định 1). Lượt đọc toàn bộ không đổi. 297 giá trị đã ghi giữ
+        nguyên, lô đo bù quyết. Hàng NB11 dựng chốt chặn này; NB10 mở lại tự ghi khi phiếu thứ hai đã độc lập.
+      - *Hạn đo bù* tính hai tuần từ ngày NB10 được áp lên máy thu; trước ngày đó chưa có cờ ghi tạm và chưa có cơ chế tự
+        tụt. Thứ tự lô đo bù: lát nhãn có tên toà trước (hiện chưa có bài nhãn nào nối được, thiếu thì 110 toà tự rút), rồi lô
+        khoảng 80 thẻ loại hình.
+      **Sửa mục 19** (Q5 «chỉ tự áp ô đã đo»), luật phân xử 4 và lời hàng PL21. Ghi tạm không phải lên nấc: lên nấc chính thức
+      vẫn là một chữ ký của Mạnh cho từng ô (mục 61).
+    - **Số đo kèm theo** (24/11, so với nhãn do trợ lý nháp và Mạnh duyệt, chưa hiệu chỉnh hệ số bắt lỗi): phần loại hình máy
+      tự ghi nối được với nhãn đúng 56/56 (52 của lượt đọc toàn bộ, 4 của lượt hằng đêm), cần 73 nhãn không sai để cận dưới Wilson
+      đạt 0,95; phần toà tự ghi chưa có bài nhãn
+      nào nối được. Trên toàn bộ tin có nhãn: loại hình 190/196 (cận dưới 93,5%, chưa đạt nhóm A), số phòng ngủ 188/189 (cận
+      dưới 97,1%, đạt ngưỡng số của nhóm B). Ô đầu tiên xin lên nấc là số phòng ngủ; số WC chờ sửa lời nhắc.
+    - **Không đổi:**
+      - Luật 7 và danh sách «không bao giờ quá nấc 1» của mục 61; tầng A.
+      - Ba model đọc tin của đường ống (mục 33); model lớn chỉ làm thước và trợ lý trong phiên (mục 41 Q4, mục 61). Lần đọc thứ
+        hai trên đường ống dùng model khác họ trong ba model đó.
+      - Thước mở cổng: nhãn người duyệt nháp kèm hệ số bắt lỗi đo bằng thẻ cài (mục 61 quyết định 2).
+      - Không lập thang tin cậy mới: lớp căn cứ của phát biểu và bậc dòng danh mục (xác minh · suy ra mạnh · một lời khai) giữ
+        nguyên; điểm tự tin model tự khai không là căn cứ.
+      - Nút ứng viên danh bạ chỉ nối tin và lên Invest sau thẻ luật hoặc người duyệt (mục 44, DA18); lời khai từ tin vẫn ngoài
+        phạm vi «duyệt theo loại căn cứ» của mục 56.
+      - «Không tự nuôi» (ADR-0016): giá trị tin thừa hưởng từ thẻ nhóm hay danh bạ không đếm làm bằng chứng cho ứng viên danh bạ.
+      - Nối vào danh bạ là luật xác định, làm sau khi có tin (mục 41, PL20); model chép nguyên văn kèm trích.
+    - **Để ngoài, chưa quyết:** kênh người dùng báo sai trên cổng Invest (đụng tầng A về hồ sơ người dùng); mục danh bạ tự lên
+      bậc từ tin (chờ DA18 có số); nhà phố và đất nền (mục 22 giữ nguyên).
+    - **Hàng** (bản phạm vi `docs/plan/pham-vi-phe-duyet-may-2411.md`): NB11 `luot-hang-dem-khong-tu-ap-truoc-doc-lap` (T2,
+      làm trước) · NB10 `ghi-tam-do-sau-co-han` (T3) · PL37
+      `hien-toa-phan-khu-nguyen-van` (T2). Sửa lời: NB3 (ô đầu là số phòng ngủ), NB5 (xử theo nhóm, theo kiểu lệch), PL21 (thêm
+      lối ghi tạm), DA18 (chỉ đếm giá trị đọc từ chính bài). Việc của Mạnh, ngoài hàng: một buổi duyệt lô đo bù khoảng 80 thẻ
+      loại hình có trộn thẻ cài lỗi và một lát nhãn có tên toà.
+64. **Chạy dự án trên hai máy: Mac mini lập kế hoạch và gộp, MacBook M5 thực thi cổng Invest và API — mở nhỏ, đo một tuần**
+    (24/11). Mạnh nêu đây là ý định sơ khởi. Bối cảnh: máy thu chỉ chạy một lượt chấm nặng mỗi lúc (khoá `s4`, ~80′ mỗi lượt);
+    cổng Invest và `data-api/` chỉ đọc dữ liệu nên tách máy ít vướng nhất. M5 là máy thu cũ, chung mạng nội bộ với Mac mini. Đo trên
+    M5 chiều 24/11: phần thu đã gỡ (không `~/.oneinvest`, không `~/.openclaw`, không job thu, không DB cũ), nhưng còn một bản sao lưu
+    cũ ngày 18/10 chứa tầng A (trên đĩa M5 và trong thư mục tải về). Mạnh «Xoá», rồi «Xoá hẳn» (24/11, khoảng 10:58Z): hai bản
+    trên đĩa M5 đã xoá hẳn sau khi đối chiếu 110/110 tệp snapshot của bản sao lưu có đủ trên máy thu. **Còn một bản trên dịch vụ
+    đồng bộ đám mây cá nhân của Mạnh**, không nằm trên đĩa M5, Mạnh tự quyết. Bản chốt và số đo: phiên tư vấn hai máy 24/11.
+    - **Lời Mạnh, nguyên văn** (24/11): sau trang tư vấn đầu, «Kiểm lại lần nữa trước khi tôi quyết»; khoảng 10:17Z, sau bản đã
+      kiểm lại và sửa, «Chốt bản đã sửa». «Bản đã sửa» là tám quyết định (a)–(h) dưới đây.
+    - **(a) DB cho M5.** Dựng lược đồ từ migration bằng `scripts/ci-db-init.mjs`, đúng như CI, dùng ngay. Sau đó một hàng T3
+      «bản chép đã lọc»: đúng các bảng `pipeline/sync-cloud.mjs` đang cho lên cloud, cùng lớp che, chép qua mạng nội bộ. Không
+      khôi phục từ cloud (M5 sẽ phải giữ khoá quản trị cloud, và cloud có hồ sơ người dùng app). Chưa đo: cỡ khi xuất ba view
+      (tin rao, người bán, listings); cổng Invest có cần bảng `nights` không.
+    - **(b) Tài khoản Claude.** Hai máy dùng chung một tài khoản, đo phần M5 tiêu trong tuần đầu. Từ 95% hạn mức tuần M5 ngừng mở
+      phiên trước (đường găng ở Mac mini); từ 98% giám sát Mac mini bàn giao cho cả hai máy. Dự báo vượt 95% trước kỳ đặt lại thì
+      chuyển M5 sang tài khoản riêng.
+    - **(c) Ranh giới.** M5: `app/src/app/(app)/**`, `app/src/app/(marketing)/**`, `app/src/components/**` trừ `ops/`, `ui/`,
+      `reui/`, `app/src/app/api/v1/**` trừ `ops/`, và `data-api/**`. `app/src/lib/**`: giám sát khai từng tệp trong lời giao.
+      `CONTEXT.md`: chỉ thêm mục. Đổi phụ thuộc và `package-lock.json`: chỉ Mac mini. Mọi tệp trong `t3_paths` ở lại Mac mini.
+      Hàng sang M5 trước: PB1, rồi CI3; PL37 chuyển hay không do giám sát; EN4 và CI1 ở lại Mac mini.
+    - **(d) Lượt chấm trên M5.** Chấm theo chuẩn CI bằng `scripts/ci-test-local.mjs` (năm job của `ci-test.yml` trong docker,
+      DB dựng từ migration, bỏ qua ca cần dữ liệu thật theo `scripts/ci-bo-qua.json`). Bằng chứng kiểu này hợp lệ cho hàng của M5
+      không cần nhìn giao diện trên dữ liệu thật; hàng cần dữ liệu thật chờ bản chép đã lọc ở (a). Giao việc cho M5 sau khi
+      hàng HT17 gộp (ba ca test đọc trạng thái máy thu sẽ đỏ trên M5 trước đó), hoặc ghi ba ca ấy là đỏ có tên.
+    - **(e) Hàng gộp.** Giám sát Mac mini gộp mọi PR. M5 báo `XONG` kèm số PR và sha trên kênh `phanlemanh/onehub-coord#4`.
+      Trong mỗi cửa sổ gộp, PR của M5 gộp sau cùng. Main đổi sau lúc M5 chấm thì M5 tự gộp main và chấm lại trên M5, không dùng
+      khoá `s4` của Mac mini. Về `paths` của eval trỏ bộ test: từ hàng mới, khai đúng tệp nhánh sửa thay cho cả vùng (đo 24/11
+      trên mười nhánh đang chạy: 76/90 cặp làm cũ nhau với cách khai cả vùng, 3/90 nếu khai hẹp); đây là nới điều kiện «bằng
+      chứng cũ», giám sát nêu với Mạnh ở cổng kế tiếp, chưa phải luật.
+    - **(f) An toàn.** M5 không giữ tầng A, khoá thu, khoá cloud, khoá model hay token Ops; không chạy bộ thu, gateway, launchd
+      thu, `sync-cloud`, `push-ops-facts`. `app/.env.local` của M5 chỉ có `DATABASE_URL` trỏ DB trên chính M5; `data-api` thêm
+      `DATA_API_KEYS` để trống. Mạnh tự bật FileVault trên M5. Không thêm hook hay rào mới; cách chia ghi ở mục này và một dòng
+      trong `AGENTS.md` mục phân làn.
+    - **(g) Sao lưu ngoài nhà.** Giữ mục 46 (QĐ5, QĐ15): bản sao lưu mã hoá lên B2; công cụ đã ký. Gấp hơn vì đĩa máy thu cũ đã
+      xoá, bản sao hiện chỉ có Mac mini và ổ SSD cùng nhà. Còn phía Mạnh, đều cần lời riêng: tạo thùng kín và khoá ứng dụng giới
+      hạn theo thùng; xác nhận đã cất bản khoá mã hoá; lời chạy lượt gửi đầu và lời nạp lịch launchd. Chưa bật khoá chống xoá
+      (Object Lock); quyết sau khi thử khôi phục đạt.
+    - **(h) Quy mô.** Mở nhỏ: một phiên trên M5, làm PB1, đo một tuần; chưa dựng đợt riêng với phiên giám sát riêng cho tới khi
+      Mạnh cắt thêm việc Invest và API. Căn cứ: hôm nay lộ trình có 139 hàng mở, 3 hàng nằm trọn vùng Invest và API (AC1, PB1,
+      EN4), chỉ PB1 làm được ngay; 30 ngày qua 22 trên 311 PR có mã nằm trọn vùng này. Sau một tuần giám sát báo Mạnh số hàng
+      M5 xong, phần hạn mức M5 tiêu và số lượt ghim lại do PR của M5 gây ra; Mạnh quyết mở rộng hay dừng.
+    - **Hàng:** HT18 `ban-chep-da-loc-cho-may-phat-trien` (T3) cho bước hai của (a). **Ghi ở đâu:** `AGENTS.md` mục phân làn
+      (dòng «Máy M5»); luật kênh ở thân issue `phanlemanh/onehub-coord#4`.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
@@ -785,6 +1238,12 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 > AU1–AU12; lượt cắt chung 23/10 thêm `giao-dien-2310` UI1–UI17, `nen-tang-2310` NT1–NT7, `zcode-2310` ZC1–ZC5,
 > `san-pham-sau-2310` chờ điều kiện SH1–SH14; bối cảnh `docs/plan/BOI-CANH.md`). Các bảng track dưới đây là chỉ mục
 > lịch sử; đồng bộ với lộ trình ở hàng AU8.
+>
+> **Từ 14/11 (mục 48):** mỏ neo của đợt là «ở dự án B, tháp X, tầng A — căn nào giá tốt nhất»; ba mốc MN1 (cấp dự án trên Ops),
+> MN2 (cấp toà ở hai khu), MN3 (tầng, S16, Invest) đứng đầu `docs/plan/lo-trinh.json`, thứ tự hàng trong mốc là thứ tự làm.
+>
+> **Từ 15/11 (mục 51–53):** lộ trình đặt lại quanh S03. Sáu mốc `MS1`–`MS5` và `MSV` thay MN1–MN3 và VHM1; hàng gom theo
+> mười một lát (trường `nhom`). Bản phạm vi: `docs/plan/pham-vi-dat-lai-lo-trinh-1511.md`.
 
 ### Mục tiêu dữ liệu ra mắt 05/11 (Mạnh chốt 31/10, mức «thách thức»)
 
@@ -823,6 +1282,7 @@ Theo dõi: giám sát đợt báo một dòng mỗi ngày (hiện tại so với
 | M4 | form hồ sơ + export JSON (consent, user-owned) | ⬜ |
 | M5 | pgvector — chỉ khi đo thấy cần | ⬜ kháng cự |
 | HITL | /ops/review Review Queue (12 entity_match seeded) | ✅ c6eea64 |
+| MH1 | agent làn Claude sang Haiku 5.5 cloud (bỏ Qwen/MTPLX), model theo `agent/config/model-agent.json`, Anthropic thẳng rồi Gateway, trần tiền mỗi lượt; đo thật 130 lời: JSON 96 %, giải thích 100 %, kết luận đổi 0, 0,049 USD | 🔶 chờ chấm S4 (`_acceptance/model-may-sang-haiku/`) |
 | M-3 | enrich qua đề xuất: `enrichment_proposals` (033) + luật xác định + thẻ `agent_output` /ops/review; E1 trái LLM → thẻ đối chiếu chọn một bên | ✅ PR #14 (`_acceptance/enrich-qua-de-xuat/`) |
 | M-3b | hậu kỳ enrich: đề xuất sống qua nạp lại (039 + `writeOffers`, khoá ngoại RESTRICT) · hoàn tác có audit (036 + `enrich-revert`) · E1 không suy land từ tên nhóm | 🔶 chờ Cổng Bằng chứng (`_acceptance/enrich-hau-ky/`); sau merge: áp 036 → 039 lên DB local TRƯỚC lượt nạp đêm kế, rồi hoàn tác 639/644 (Hỏi-2) |
 | R-PL | Review kiến trúc phân loại + enrich (`docs/architecture/classification-enrich-review.md`, khung `docs/product/FRAMING.md`): sổ 20 lỗi (L01–L20), kiến trúc đích, việc theo làn; khung RESO ở ADR-0013 | 🔶 FRAMING đã duyệt; chờ Mạnh quyết Q2–Q12 (Q1 Kev thành nhãn đã chốt) |
@@ -854,6 +1314,8 @@ Theo dõi: giám sát đợt báo một dòng mỗi ngày (hiện tại so với
 | V7 | Đóng băng Stage B + thẻ Ghép căn: không dựng cặp, không gieo thẻ, thẻ chờ không hiện và không vào số chờ; dữ liệu giữ nguyên — `_acceptance/dong-bang-stage-b-resolve` (T2) | 🔶 Mạnh duyệt Cổng Phạm vi 09/11 (Hỏi-1 A ẩn thẻ chờ, Hỏi-2 A không thêm chữ), đang chấm |
 | DV1 | Mọi nút dự án trỏ mã xã/phường hiện hành: tệp xã cũ có nguồn + `danh-ba-vat-the.mjs --sua-xa` — `_acceptance/nut-du-an-tro-xa-moi` (T2) | 🔶 Mạnh duyệt Cổng Phạm vi 10/11, đang làm; sau gộp: `--sua-xa --thu` rồi `--sua-xa --db-that` trên máy thu, dựng lại danh bạ, so số toà và UPI trước–sau là lời riêng của Mạnh (Hỏi-1) |
 | DA1 | Danh bạ vật thể dựng toà ở cả 34 tỉnh: bảng ISO trong migration 088, ISO suy từ khu vực, chủ đầu tư `source_field` — `_acceptance/danh-ba-vat-the-toan-quoc` (T3, 088) | 🔶 Mạnh duyệt Cổng Phạm vi và kế hoạch 10/11, đang làm; sau gộp: áp 088 lên máy thu là lời riêng của Mạnh (`pg_dump` trước) |
+| PL20 | Ghép tin S03 vào toà hoặc vùng của Danh bạ (Ocean Park 1, Grand Park): phát biểu `universal_property_id`/`subzone_node_id` trên từng bài theo bốn `rule_id` `ghep-toa-*`, view `offer_building` (một tin một nơi gắn hoặc xung đột), bước gắn cuối mỗi lượt nạp S03 trong giao dịch riêng — `_acceptance/ghep-tin-vao-danh-muc` (T3, 117) | 🔶 vòng S3→S4; bản chép 19/11: 3.448/6.757 = 51,03% tin căn hộ S03 hai khu, xung đột 0,44%, khớp phép đếm độc lập lệch 0,09%; sau gộp: áp 113 → 118 (DA40) → 117 + lượt gắn đầu theo `ho-so-ap.md`; đo lại sau DA46; không lên cloud |
+| DA40 | Thuộc tính căn S16 (diện tích, PN, WC, hướng, loại hình, giá chủ đầu tư) trên Danh bạ Ops máy thu — `_acceptance/thuoc-tinh-can-s16` (T2, 113 + 118) | ✅ gộp PR #491; áp lên máy thu 19/11 15:30–15:52Z, số thật khớp số đối chiếu (+2 căn grand-park, lời Mạnh 02:39Z), nhật ký `docs/ops/nhat-ky-ap/2026-11-19-da40-thuoc-tinh-can-s16.md`; việc theo sau: DA48 rút thuộc tính khi căn thành mơ hồ toà |
 | G-3 | Kev-V media gate + VLM collage + LLM judge (≡ A2) | ⬜ |
 | R2-R4 | asset_nodes mở rộng (subzone/building; geo-polygon; dedup căn) | ⬜ |
 

@@ -1,22 +1,35 @@
 import { pool } from "./db";
 import {
+  type CungTieuChi,
   type DealChiTiet,
   type DealHang,
+  type DongSo,
+  type MatBang,
+  type NutViTri,
+  type TabTrang,
+  type ThamSoDeal,
+  type TrangDeal,
   cauChungMinh,
+  locCungTieuChi,
   lyDoRoi,
+  moTaCungTieuChi,
   NGAY_TOI_DA,
   NGHI_NGO_PCT,
   NGUONG_LOAI_PCT,
   NGUONG_VAO_PCT,
   repostLabel,
+  SO_CUNG_TOI_DA,
+  tabCua,
   tenCan,
   thieuGi,
+  CO_TRANG_DEAL,
 } from "./deals-chi-tiet";
 import { maskSourceNames, type SourceNameEntry } from "./mask-source-names";
 import { fmtPhone, telHref } from "./ops/people";
 import { tenTin } from "./ten-tin";
 import { buildMediaImages, loadOfferMedia } from "./ops/review-media";
 import { docSourceNameEntries } from "./source-roles";
+import { KIND } from "./vocab.generated";
 
 export { NGHI_NGO_PCT, repostLabel };
 
@@ -67,19 +80,34 @@ export function dealHang(d: DealRow, vai: { xemNoiDung: boolean; mayThu: boolean
 export const THUOC_CUNG_LOAI = `SELECT area_id, property_type, m, n FROM v_ruler_p2
   WHERE property_type IS NOT NULL AND property_type <> 'unknown'`;
 
-/** Cột của một tin. `cloud`: không đọc cột ngoài CLOUD_ALLOW; `unit_number`, `street_number` ở lại máy thu. */
-const cotTin = (cloud: boolean) => `o.offer_id, o.source, o.price_vnd, o.area_m2, o.price_perm2, o.bedrooms,
+/**
+ * Cột của một tin. `cloud`: không đọc cột ngoài CLOUD_ALLOW; `unit_number`, `street_number` ở lại máy thu. `coBang` (CG9): số
+ * chứng minh lấy từ hạng tính sẵn `offer_price_rank` (bí danh `h`) thay thước CG8 (bí danh `r`, `bait_gap_pct`).
+ */
+const cotTin = (cloud: boolean, coBang = false) => `o.offer_id, o.source, o.price_vnd, o.area_m2, o.price_perm2, o.bedrooms,
               o.confidence, o.first_seen::text, o.last_seen::text, o.n_reposts,
               o.area_id, o.post_ids, o.seller_name, o.seller_phone,
               o.property_type, o.block_raw, o.floor_raw, o.street_raw, o.district_raw,
               ${cloud ? "NULL AS unit_number, NULL AS street_number" : "o.unit_number, o.street_number"},
               a.name AS phuong,
-              r.m AS median_perm2, r.n AS ruler_n,
+              ${coBang ? COT_HANG : `r.m AS median_perm2, r.n AS ruler_n,
               o.bait_gap_pct AS discount_pct,
-              o.bait_gap_pct > ${NGHI_NGO_PCT} AS suspect,
+              o.bait_gap_pct > ${NGHI_NGO_PCT} AS suspect,`}
               o.last_seen < now() - interval '${NGAY_TOI_DA} days' AS qua_han,
               sel.n_ads AS broker_n_ads,
               sel.flags->>'median_gap_pct' AS broker_med_gap`;
+
+/** Cột hạng giá (CG9) — trung vị in như «giá/m²» chỉ khi thước giá/m²; tin thuê theo tháng không có thước giá/m². */
+const COT_HANG = `CASE WHEN h.thuoc = 'gia-m2' THEN h.trung_vi END AS median_perm2, h.n AS ruler_n,
+              h.duoi_trung_vi_pct AS discount_pct,
+              coalesce(h.can_xac_minh, false) AS suspect,
+              h.n AS rank_n, h.trung_vi AS rank_median, h.p20 AS rank_p20, h.hang_pct AS rank_pct,
+              h.duoi_trung_vi_pct AS rank_below, h.nhan AS rank_label, coalesce(h.can_xac_minh, false) AS rank_cxm,
+              h.pn_nhom AS rank_pn, h.ly_do AS rank_reason, h.thuoc AS rank_metric, (h.offer_id IS NOT NULL) AS co_hang,
+              h.cap AS rank_level, h.nut AS rank_node, pn.name AS rank_node_name,`;
+
+/** Tên dự án của nhóm so sánh cấp dự án (CG10): asset_nodes đã sync cloud; không đọc view offer_project (chỉ máy thu). */
+const NOI_TEN_DU_AN = "LEFT JOIN asset_nodes pn ON h.cap = 'du_an' AND pn.id::text = h.nut";
 
 /** Bài gốc mới nhất của tin; bản cloud không có `stg_zalo_posts` (Hỏi-6). */
 const noiBai = (cloud: boolean) => (cloud
@@ -100,8 +128,45 @@ const noiBai = (cloud: boolean) => (cloud
  * tin phi lý đã bị pipeline gạt số giảm về NULL (ON11) nên không lọt vào đây. Thứ tự: tin thường trước tin cần xác
  * minh, mỗi nhóm giảm dần — sắp TRƯỚC LIMIT, không thì 30 thẻ vẫn toàn tin sát trần.
  */
-export function dealsSql({ cloud = false }: { cloud?: boolean } = {}): string {
+export function dealsSql({ cloud = false, coBang = false, duAn = false, chiXacMinh = false }:
+  { cloud?: boolean; coBang?: boolean; duAn?: boolean; chiXacMinh?: boolean } = {}): string {
   const bai = noiBai(cloud);
+  if (coBang) {
+    // CG9: danh sách = tin bán có nhãn hạng (P1 và P2 — gánh CG2), xếp tin cần xác minh sau rồi % dưới trung vị giảm dần;
+    // trần 50% và hạn 45 ngày giữ như cũ (Hỏi-2). CG10: mỗi căn một dòng (căn S06 nhỏ nhất trong property_offers, hay chính
+    // tin) — tin thấy sau cùng làm đại diện, `so_tin` = số tin của căn qua điều kiện; `duAn` thêm $3 = id nút dự án, chỉ tin
+    // cấp dự án của nút đó; `chiXacMinh` chỉ tin cần xác minh (tab đếm trên toàn tập, Hỏi-3) kèm `tong` = số căn của tập.
+    return `WITH loc AS (
+       SELECT ${cotTin(cloud, true)},
+              coalesce((SELECT min(po.property_id)::text FROM property_offers po WHERE po.offer_id = o.offer_id), o.offer_id) AS can_key,
+              o.last_seen AS thay_cuoi
+       FROM offer_price_rank h
+       JOIN sale_offers o ON o.offer_id = h.offer_id
+       ${NOI_TEN_DU_AN}
+       LEFT JOIN areas a ON a.id = o.area_id
+       LEFT JOIN sellers sel ON sel.phone_hash = o.seller_phone_hash
+       WHERE h.kind = 'sale'
+         AND h.nhan IS NOT NULL
+         AND o.last_seen >= now() - interval '${NGAY_TOI_DA} days'
+         AND h.duoi_trung_vi_pct >= $1
+         AND h.duoi_trung_vi_pct <= ${NGUONG_LOAI_PCT}${duAn ? `
+         AND h.cap = 'du_an' AND h.nut = $3` : ""}
+     ), gom AS (
+       SELECT DISTINCT ON (l.can_key) l.*, count(*) OVER (PARTITION BY l.can_key) AS so_tin
+       FROM loc l
+       ORDER BY l.can_key, l.thay_cuoi DESC, l.offer_id
+     ), base AS (
+       SELECT g.*, count(*) OVER () AS tong
+       FROM gom g${chiXacMinh ? `
+       WHERE g.suspect` : ""}
+       ORDER BY g.suspect, g.discount_pct DESC, g.offer_id
+       LIMIT $2
+     )
+     SELECT b.*, ${bai.cot}
+     FROM base b
+     ${bai.join}
+     ORDER BY b.suspect, b.discount_pct DESC, b.offer_id`;
+  }
   return `WITH ruler AS (${THUOC_CUNG_LOAI}), base AS (
        SELECT ${cotTin(cloud)}
        FROM sale_offers o
@@ -123,16 +188,23 @@ export function dealsSql({ cloud = false }: { cloud?: boolean } = {}): string {
      ORDER BY b.suspect, b.discount_pct DESC, b.offer_id`;
 }
 
-/** Một tin P1 bán theo mã, không lọc theo mức giảm: căn rời danh sách vẫn mở, kèm lý do (Hỏi-1). */
-export function dealSql({ cloud = false }: { cloud?: boolean } = {}): string {
+/**
+ * Một tin bán theo mã, không lọc theo mức giảm: căn rời danh sách vẫn mở, kèm lý do (Hỏi-1). `coBang` (CG9): mọi tin bán
+ * (P1 và P2) kèm hạng tính sẵn — và tin thuê (CG10: trang một căn thuê đọc hạng giá tháng × PN; danh sách vẫn chỉ tin bán, Hỏi-2);
+ * không bảng thì chỉ tin bán P1 với thước CG8 như cũ.
+ */
+export function dealSql({ cloud = false, coBang = false }: { cloud?: boolean; coBang?: boolean } = {}): string {
   const bai = noiBai(cloud);
+  const thuoc = coBang
+    ? `LEFT JOIN offer_price_rank h ON h.offer_id = o.offer_id ${NOI_TEN_DU_AN}`
+    : `LEFT JOIN (${THUOC_CUNG_LOAI}) r ON r.area_id = o.area_id AND r.property_type = o.property_type`;
   return `WITH b AS (
-       SELECT ${cotTin(cloud)}
+       SELECT ${cotTin(cloud, coBang)}
        FROM sale_offers o
-       LEFT JOIN (${THUOC_CUNG_LOAI}) r ON r.area_id = o.area_id AND r.property_type = o.property_type
+       ${thuoc}
        LEFT JOIN areas a ON a.id = o.area_id
        LEFT JOIN sellers sel ON sel.phone_hash = o.seller_phone_hash
-       WHERE o.offer_id = $1 AND o.price_tier = 'P1' AND o.kind = 'sale'
+       WHERE o.offer_id = $1 AND ${coBang ? "o.kind IN ('sale', 'rent_lt')" : "o.kind = 'sale' AND o.price_tier = 'P1'"}
      )
      SELECT b.*, ${bai.cot}
      FROM b
@@ -178,6 +250,24 @@ export function toDealRow(r: DealSqlRow): DealRow {
     roiDanhSach: null,
     brokerNAds: num(r.broker_n_ads),
     brokerMedianGap: num(r.broker_med_gap),
+    soTin: Number(r.so_tin ?? 1),
+    rank: r.co_hang === true
+      ? {
+          n: num(r.rank_n),
+          median: num(r.rank_median),
+          p20: num(r.rank_p20),
+          pct: num(r.rank_pct),
+          below: num(r.rank_below),
+          label: (r.rank_label as string | null) ?? null,
+          needsVerification: r.rank_cxm === true,
+          bedroomsGroup: num(r.rank_pn),
+          reason: (r.rank_reason as string | null) ?? null,
+          metric: (r.rank_metric as string | null) ?? null,
+          level: (r.rank_level as string | null) ?? null,
+          node: (r.rank_node as string | null) ?? null,
+          nodeName: (r.rank_node_name as string | null) ?? null,
+        }
+      : null,
   };
 }
 
@@ -190,15 +280,31 @@ const thieuLuocDo = (e: unknown) => THIEU_LUOC_DO_MAY_THU.has((e as { code?: str
  * cloud. Lỗi khác (deadlock, khoá, mất kết nối) ở máy thu ném tiếp cho khối lỗi có Thử lại: nuốt nó thì trang vẫn đủ căn
  * nhưng nói sai «chỉ có ở máy thu» (S4 r1 E12 của people-hien-so-goc).
  */
-async function truyVan(sql: (o: { cloud?: boolean }) => string, values: unknown[]): Promise<{ rows: DealSqlRow[]; mayThu: boolean }> {
+async function truyVan(
+  sql: (o: { cloud?: boolean; coBang?: boolean }) => string,
+  values: unknown[],
+): Promise<{ rows: DealSqlRow[]; mayThu: boolean }> {
+  const coBang = await coBangHang();
   try {
-    const { rows } = await pool.query(sql({}), values);
+    const { rows } = await pool.query(sql({ coBang }), values);
     return { rows, mayThu: true };
   } catch (e) {
     if (!thieuLuocDo(e)) throw e;
-    const { rows } = await pool.query(sql({ cloud: true }), values);
+    const { rows } = await pool.query(sql({ cloud: true, coBang }), values);
     return { rows, mayThu: false };
   }
+}
+
+/**
+ * CG9 Hỏi-5: bảng hạng giá có và đã có dòng chưa. Cloud trước khi Mạnh áp DDL, máy thu trước lượt chấm đầu → false, ba đường
+ * đọc theo thước CG8 như cũ, không lỗi. Hai câu riêng: hỏi EXISTS trên bảng chưa có là lỗi phân tích câu.
+ * Dò theo search_path (không ghi `public.`) — cùng chỗ câu đọc tìm bảng; lược đồ cloud trong test không có bảng thì phải ra false.
+ */
+export async function coBangHang(): Promise<boolean> {
+  const { rows } = await pool.query(`SELECT to_regclass('offer_price_rank') IS NOT NULL AS co`);
+  if (!rows[0]?.co) return false;
+  const { rows: r2 } = await pool.query(`SELECT EXISTS (SELECT 1 FROM offer_price_rank) AS co`);
+  return r2[0]?.co === true;
 }
 
 /** Ở máy thu: gắn ảnh qua khoá (URL gốc không xuống trình duyệt) và che tên nguồn thật trong chữ của người đăng. */
@@ -230,9 +336,294 @@ async function hoanTat(rows: DealRow[], mayThu: boolean): Promise<{ rows: DealRo
   };
 }
 
-export async function getDeals(limit = SO_CAN_DANH_SACH, minDiscountPct = NGUONG_VAO_PCT): Promise<{ rows: DealRow[]; mayThu: boolean }> {
-  const { rows, mayThu } = await truyVan(dealsSql, [minDiscountPct, limit]);
-  return hoanTat(rows.map(toDealRow), mayThu);
+/**
+ * Mặt bằng S03 so S06 (CG15, project_source_baseline — chỉ máy thu) của các tin S03 cấp dự án trong `ids`: một câu, khớp khoá
+ * nhóm của dòng hạng. Bảng vắng (cloud, máy thu chưa áp 107) → `{}`, không lỗi; lỗi khác ném tiếp cho khối lỗi.
+ */
+export async function matBangCho(ids: string[]): Promise<Record<string, MatBang>> {
+  if (ids.length === 0) return {};
+  const { rows: co } = await pool.query(`SELECT to_regclass('project_source_baseline') IS NOT NULL AS co`);
+  if (!co[0]?.co) return {};
+  const { rows } = await pool.query(
+    `SELECT h.offer_id, b.n_s03, b.trung_vi_s03, b.n_s06, b.trung_vi_s06, b.lech_pct, b.trang_thai
+       FROM offer_price_rank h
+       JOIN sale_offers o ON o.offer_id = h.offer_id AND o.source = 'S03'
+       JOIN project_source_baseline b
+         ON b.nut = h.nut AND b.kind = h.kind AND b.property_type = h.property_type AND b.thuoc = h.thuoc
+        AND coalesce(b.pn_nhom, -1) = coalesce(h.pn_nhom, -1)
+      WHERE h.cap = 'du_an' AND h.offer_id = ANY($1::text[])`, [ids]);
+  const num = (v: unknown) => (v === null || v === undefined ? null : Number(v));
+  return Object.fromEntries(rows.map((r) => [r.offer_id as string, {
+    nS03: Number(r.n_s03), medianS03: num(r.trung_vi_s03), nS06: Number(r.n_s06), medianS06: num(r.trung_vi_s06),
+    lechPct: num(r.lech_pct), trangThai: r.trang_thai as MatBang["trangThai"],
+  }]));
+}
+/** Gắn `matBang` vào từng dòng (null khi tin không có mặt bằng). */
+async function ganMatBang(rows: DealRow[]): Promise<DealRow[]> {
+  const mb = await matBangCho(rows.filter((d) => d.source === "S03" && d.rank?.level === "du_an").map((d) => d.offerId));
+  return rows.map((d) => ({ ...d, matBang: mb[d.offerId] ?? null }));
+}
+
+/** Giới hạn danh sách khi lọc một dự án (CG10): không cắt 30 — Ocean Park 1 có 140 căn. */
+export const SO_CAN_DU_AN = 300;
+
+/** Mọi tin đủ điều kiện của danh sách theo trang, chưa gộp căn: nguồn chung của bước đọc nhẹ và cây vị trí. */
+const tinNheSql = () => `SELECT o.offer_id, o.area_id, o.post_ids, o.property_type, o.area_m2, o.block_raw, o.street_raw, o.seller_phone,
+              h.thuoc, h.trung_vi, coalesce(h.can_xac_minh, false) AS suspect, h.cap, h.nut, h.hang_pct,
+              h.duoi_trung_vi_pct AS discount_pct, pn.name AS ten_du_an, o.last_seen AS thay_cuoi, kv.parent_id AS cha,
+              coalesce((SELECT min(po.property_id)::text FROM property_offers po WHERE po.offer_id = o.offer_id), o.offer_id) AS can_key
+       FROM offer_price_rank h
+       JOIN sale_offers o ON o.offer_id = h.offer_id
+       ${NOI_TEN_DU_AN}
+       LEFT JOIN areas kv ON kv.id = o.area_id
+       WHERE h.kind = $1 AND h.nhan IS NOT NULL
+         AND o.last_seen >= now() - interval '${NGAY_TOI_DA} days'
+         AND h.duoi_trung_vi_pct >= $2
+         AND h.duoi_trung_vi_pct <= ${NGUONG_LOAI_PCT}
+         AND ($3::text IS NULL OR o.property_type = $3)`;
+
+/**
+ * Bước đọc nhẹ của danh sách theo trang (CG3): tập đã lọc vị trí, gộp mỗi căn một dòng, đã sắp thứ tự, mang đủ đầu vào của `thieuGi`.
+ * Lọc vị trí chạy trước khi gộp: căn có một tin thuộc nút đang chọn vẫn hiện, dù tin thấy sau cùng của căn nằm ở nút khác.
+ * Thứ tự: căn không cần xác minh trước, cấp dự án trước cấp phường, hạng phần trăm tăng dần, mức dưới trung vị giảm dần, mã tin.
+ */
+export function dealsNheSql({ cloud = false }: { cloud?: boolean; coBang?: boolean } = {}): string {
+  const coAnh = cloud ? "false" : `EXISTS (SELECT 1 FROM media m WHERE m.resource_record_key = g.offer_id AND (m.local_file IS NOT NULL OR m.media_url IS NOT NULL))`;
+  const coChu = cloud ? "false" : `coalesce((SELECT z.text IS NOT NULL FROM stg_zalo_posts z WHERE z.post_id = ANY(g.post_ids) ORDER BY z.captured_at DESC LIMIT 1), false)`;
+  return `WITH tin AS (
+       ${tinNheSql()}
+     ), dem AS (
+       SELECT t.*, count(*) OVER (PARTITION BY t.can_key) AS so_tin FROM tin t
+     ), loc AS (
+       SELECT d.* FROM dem d
+       WHERE ($4::text IS NULL OR d.area_id = $4 OR d.cha = $4)
+         AND ($5::text IS NULL OR (d.cap = 'du_an' AND d.nut = $5))
+     ), gom AS (
+       SELECT DISTINCT ON (l.can_key) l.*
+       FROM loc l
+       ORDER BY l.can_key, l.thay_cuoi DESC, l.offer_id
+     )
+     SELECT g.*, a.name AS phuong, a.parent_id, pa.name AS ten_tinh, ${coAnh} AS co_anh, ${coChu} AS co_chu
+     FROM gom g
+     LEFT JOIN areas a ON a.id = g.area_id
+     LEFT JOIN areas pa ON pa.id = a.parent_id
+     ORDER BY g.suspect, (g.cap = 'du_an') DESC, g.hang_pct ASC NULLS LAST, g.discount_pct DESC, g.offer_id`;
+}
+
+/** Vị trí của từng căn cho cây vị trí: một dòng cho mỗi nơi căn có tin, theo `kind`, `type` đang chọn. */
+export function dealsCaySql(): string {
+  return `WITH tin AS (
+       ${tinNheSql()}
+     )
+     SELECT DISTINCT t.can_key, t.area_id, t.cha AS parent_id, a.name AS phuong, pa.name AS ten_tinh, t.cap, t.nut, t.ten_du_an
+     FROM tin t
+     LEFT JOIN areas a ON a.id = t.area_id
+     LEFT JOIN areas pa ON pa.id = t.cha`;
+}
+
+/** Bước đọc đầy đủ của danh sách theo trang: chỉ các mã của trang đang xem. */
+export function dealsTheoMaSql({ cloud = false }: { cloud?: boolean; coBang?: boolean } = {}): string {
+  const bai = noiBai(cloud);
+  return `WITH b AS (
+       SELECT ${cotTin(cloud, true)}
+       FROM offer_price_rank h
+       JOIN sale_offers o ON o.offer_id = h.offer_id
+       ${NOI_TEN_DU_AN}
+       LEFT JOIN areas a ON a.id = o.area_id
+       LEFT JOIN sellers sel ON sel.phone_hash = o.seller_phone_hash
+       WHERE o.offer_id = ANY($1::text[])
+     )
+     SELECT b.*, ${bai.cot}
+     FROM b
+     ${bai.join}`;
+}
+
+type DongNhe = Record<string, unknown>;
+
+/** Cây vị trí dựng từ vị trí của từng căn: tỉnh, dưới tỉnh hai nhánh Phường và Dự án; số trên mục là số căn khi chọn mục đó. */
+export function dungCayViTri(rows: DongNhe[]): NutViTri[] {
+  type Dem = { ten: string; can: Set<string> };
+  const tinh = new Map<string, Dem & { phuong: Map<string, Dem>; duAn: Map<string, Dem>; canPhuong: Set<string>; canDuAn: Set<string> }>();
+  const cong = (m: Map<string, Dem>, k: string, ten: string, can: string) => {
+    const x = m.get(k) ?? { ten, can: new Set<string>() };
+    x.can.add(can);
+    m.set(k, x);
+  };
+  for (const r of rows) {
+    const area = r.area_id as string | null;
+    if (!area) continue;
+    const can = r.can_key as string;
+    const cha = (r.parent_id as string | null) ?? null;
+    const ma = cha ?? area;
+    const t = tinh.get(ma) ?? { ten: ((cha ? r.ten_tinh : r.phuong) as string | null) ?? ma, can: new Set<string>(), phuong: new Map(), duAn: new Map(), canPhuong: new Set<string>(), canDuAn: new Set<string>() };
+    t.can.add(can);
+    if (cha) { cong(t.phuong, area, (r.phuong as string | null) ?? area, can); t.canPhuong.add(can); }
+    if (r.cap === "du_an" && r.nut) { cong(t.duAn, r.nut as string, (r.ten_du_an as string | null) ?? (r.nut as string), can); t.canDuAn.add(can); }
+    tinh.set(ma, t);
+  }
+  const muc = (m: Map<string, Dem>, tien: string): NutViTri[] =>
+    [...m.entries()].sort((a, b) => b[1].can.size - a[1].can.size || a[1].ten.localeCompare(b[1].ten, "vi"))
+      .map(([k, v]) => ({ value: `${tien}:${k}`, label: v.ten, count: v.can.size }));
+  return [...tinh.entries()].sort((a, b) => b[1].can.size - a[1].can.size).map(([ma, t]) => {
+    const phuong = muc(t.phuong, "area"), duAn = muc(t.duAn, "project");
+    return {
+      value: `area:${ma}`, label: t.ten, count: t.can.size,
+      children: [
+        ...(duAn.length ? [{ value: `nhom:du-an:${ma}`, label: "Dự án", count: t.canDuAn.size, children: duAn }] : []),
+        ...(phuong.length ? [{ value: `nhom:phuong:${ma}`, label: "Phường", count: t.canPhuong.size, children: phuong }] : []),
+      ],
+    };
+  });
+}
+
+/** Ba tham số đầu của tập nhẹ: bán hay thuê, sàn mức giảm, loại hình. */
+const dieuKienTap = (thamSo: Pick<ThamSoDeal, "kind" | "type">, minPct = NGUONG_VAO_PCT) =>
+  [thamSo.kind === "rent" ? KIND.rent_lt : KIND.sale, minPct, thamSo.type];
+
+/** Một dòng đọc nhẹ thành một căn để so (CG17). */
+function dongSo(r: DongNhe): DongSo {
+  return {
+    offerId: r.offer_id as string,
+    canKey: r.can_key as string,
+    areaId: (r.area_id as string | null) ?? null,
+    propertyType: (r.property_type as string | null) ?? null,
+    areaM2: r.area_m2 === null || r.area_m2 === undefined ? null : Number(r.area_m2),
+    suspect: r.suspect === true,
+    discountPct: r.discount_pct === null || r.discount_pct === undefined ? null : Number(r.discount_pct),
+  };
+}
+
+/**
+ * Danh sách «Căn cùng tiêu chí» của một căn trên toàn tập đã lọc theo `kind`, `type`, `location`, `project` (CG17): tổng, và tối đa
+ * SO_CUNG_TOI_DA căn đầu đọc đầy đủ. `null` khi chưa có bảng hạng (sheet so trong danh sách đã tải như cũ). Căn không còn trong tập →
+ * tổng 0. Chưa lọc theo vai: người gọi lọc bằng `dealTheoVai`.
+ */
+export async function getCanCungTieuChi(offerId: string, thamSo: ThamSoDeal, chiPhuong = false, minPct = NGUONG_VAO_PCT):
+  Promise<{ moTa: string[]; bo: string[]; tong: number; rows: DealRow[]; mayThu: boolean } | null> {
+  if (!(await coBangHang())) return null;
+  const { rows: nhe, mayThu } = await truyVan(dealsNheSql, [...dieuKienTap(thamSo, minPct), thamSo.location, thamSo.project]);
+  const goc = nhe.find((r) => r.offer_id === offerId);
+  if (!goc) return { moTa: [], bo: [], tong: 0, rows: [], mayThu };
+  const { moTa, bo } = moTaCungTieuChi({ phuong: (goc.phuong as string | null) ?? null, propertyType: (goc.property_type as string | null) ?? null, areaM2: goc.area_m2 === null ? null : Number(goc.area_m2) }, chiPhuong);
+  const theoMaCan = new Map(nhe.map((r) => [r.offer_id as string, r]));
+  const can = locCungTieuChi(dongSo(goc), nhe.map(dongSo), chiPhuong);
+  const cua = can.slice(0, SO_CUNG_TOI_DA);
+  if (cua.length === 0) return { moTa, bo, tong: can.length, rows: [], mayThu };
+  const { rows: day } = await truyVan(dealsTheoMaSql, [cua.map((r) => r.offerId)]);
+  const theoMa = new Map(day.map((r) => [r.offer_id as string, r]));
+  const rows = cua.flatMap((r) => { const d = theoMa.get(r.offerId); return d ? [toDealRow({ ...d, so_tin: theoMaCan.get(r.offerId)?.so_tin })] : []; });
+  const xong = await hoanTat(await ganMatBang(rows), mayThu);
+  return { moTa, bo, tong: can.length, rows: xong.rows, mayThu: xong.mayThu };
+}
+
+/**
+ * Trang của danh sách chứa một căn, theo `kind` của căn, không lọc, cỡ mặc định (CG17 AC-10): crumb ở trang một căn về đúng chỗ thay vì
+ * dò 30 căn đầu của danh sách cũ. `null` khi căn không còn trong tập; `undefined` khi chưa có bảng hạng (người gọi lùi về cách cũ).
+ */
+export async function trangCuaCan(offerId: string): Promise<{ kind: "sale" | "rent"; page: number; can: string } | null | undefined> {
+  if (!(await coBangHang())) return undefined;
+  const { rows: k } = await pool.query(
+    `SELECT h.kind, coalesce((SELECT min(po.property_id)::text FROM property_offers po WHERE po.offer_id = h.offer_id), h.offer_id) AS can_key
+       FROM offer_price_rank h WHERE h.offer_id = $1 AND h.nhan IS NOT NULL`, [offerId]);
+  if (!k[0]) return null;
+  const kind = k[0].kind === KIND.rent_lt ? "rent" : "sale";
+  const { rows: nhe } = await truyVan(dealsNheSql, [...dieuKienTap({ kind, type: null }), null, null]);
+  const i = nhe.findIndex((r) => r.can_key === k[0].can_key);
+  if (i < 0) return null;
+  return { kind, page: Math.floor(i / CO_TRANG_DEAL[0]) + 1, can: nhe[i].offer_id as string };
+}
+
+/**
+ * Danh sách theo trang (CG3): đọc nhẹ tập đã lọc vị trí → xếp từng căn vào tab bằng đúng `thieuGi`, `tabCua`, luật đầy đủ ở mọi vai → lọc tab rồi mới cắt
+ * trang trên danh sách mã → đọc đầy đủ các mã của trang. Chưa có bảng hạng → null, trang lùi về danh sách cũ.
+ */
+export async function getDealsTrang(thamSo: ThamSoDeal, minPct = NGUONG_VAO_PCT):
+  Promise<{ rows: DealRow[]; mayThu: boolean; trang: TrangDeal } | null> {
+  if (!(await coBangHang())) return null;
+  const dieuKien = dieuKienTap(thamSo, minPct);
+  const [{ rows: nhe, mayThu }, { rows: viTriCan }] = await Promise.all([
+    truyVan(dealsNheSql, [...dieuKien, thamSo.location, thamSo.project]),
+    truyVan(dealsCaySql, dieuKien),
+  ]);
+  const tabOf = (r: DongNhe) => tabCua({
+    suspect: r.suspect === true,
+    thieu: thieuGi({
+      propertyType: (r.property_type as string | null) ?? null,
+      areaM2: r.area_m2 === null ? null : Number(r.area_m2),
+      block: (r.block_raw as string | null) ?? null,
+      street: (r.street_raw as string | null) ?? null,
+      medianPerm2: r.thuoc === "gia-m2" && r.trung_vi !== null ? Number(r.trung_vi) : null,
+      rank: { metric: (r.thuoc as string | null) ?? null, median: r.trung_vi === null ? null : Number(r.trung_vi) } as DealRow["rank"],
+      postTextFull: r.co_chu === true ? "co" : null,
+      sellerPhone: (r.seller_phone as string | null) ?? null,
+      images: r.co_anh === true ? [1] : [],
+    }, { xemNoiDung: true, mayThu }),
+  });
+  const dem: Record<TabTrang, number> = { all: nhe.length, du: 0, "xac-minh": 0, thieu: 0 };
+  const theoTab = nhe.map((r) => ({ r, tab: tabOf(r) }));
+  for (const { tab } of theoTab) dem[tab] += 1;
+  const chon = thamSo.tab === "all" ? nhe : theoTab.filter((x) => x.tab === thamSo.tab).map((x) => x.r);
+  const page = Math.min(thamSo.page, Math.max(1, Math.ceil(chon.length / thamSo.size)));
+  const cua = chon.slice((page - 1) * thamSo.size, page * thamSo.size);
+  const tabTheoMa = new Map(theoTab.map((x) => [x.r.offer_id as string, x.tab]));
+  const tabDong = Object.fromEntries(cua.map((r) => [r.offer_id as string, tabTheoMa.get(r.offer_id as string)!]));
+  // Số «Căn cùng tiêu chí» của từng căn trên trang, đếm trên toàn tập đã lọc, mọi tab (CG17 Hỏi-2); không thêm câu SQL.
+  const tapSo = nhe.map(dongSo);
+  const cungTieuChi: Record<string, CungTieuChi> = Object.fromEntries(cua.map((r) => {
+    const d = dongSo(r);
+    return [d.offerId, { tieuChi: locCungTieuChi(d, tapSo).length, phuong: locCungTieuChi(d, tapSo, true).length }];
+  }));
+  const trang: TrangDeal = { thamSo: { ...thamSo, page }, dem, tong: chon.length, page, cay: dungCayViTri(viTriCan), tabDong, cungTieuChi };
+  if (cua.length === 0) return { rows: [], mayThu, trang };
+  const { rows: day } = await truyVan(dealsTheoMaSql, [cua.map((r) => r.offer_id)]);
+  const theoMa = new Map(day.map((r) => [r.offer_id as string, r]));
+  const rows = cua.flatMap((r) => { const d = theoMa.get(r.offer_id as string); return d ? [toDealRow({ ...d, so_tin: r.so_tin })] : []; });
+  const xong = await hoanTat(await ganMatBang(rows), mayThu);
+  return { ...xong, trang };
+}
+
+/**
+ * `project` (id nút dự án, đã qua `parseProject`) → chỉ tin cấp dự án của nút đó, giới hạn mặc định SO_CAN_DU_AN.
+ * `thamSo` (CG3) → đọc theo trang ở máy chủ, kết quả mang `trang`; chưa có bảng hạng thì đọc như cũ, không có `trang`.
+ */
+export async function getDeals(limit?: number, minDiscountPct = NGUONG_VAO_PCT, { project = null, thamSo }:
+  { project?: string | null; thamSo?: ThamSoDeal } = {}):
+  Promise<{ rows: DealRow[]; mayThu: boolean; trang?: TrangDeal }> {
+  if (thamSo) {
+    const theoTrang = await getDealsTrang(thamSo, minDiscountPct);
+    if (theoTrang) return theoTrang;
+  }
+  const lim = limit ?? (project ? SO_CAN_DU_AN : SO_CAN_DANH_SACH);
+  const sql = (o: { cloud?: boolean; coBang?: boolean }) => dealsSql({ ...o, duAn: Boolean(project) && o.coBang === true });
+  // Không có bảng hạng thì không có cấp dự án: lọc dự án trả rỗng thay vì danh sách cả phường.
+  if (project && !(await coBangHang())) return { rows: [], mayThu: true };
+  const { rows, mayThu } = await truyVan(sql, project ? [minDiscountPct, lim, project] : [minDiscountPct, lim]);
+  return hoanTat(await ganMatBang(rows.map(toDealRow)), mayThu);
+}
+
+/**
+ * Tab «Cần xác minh» trên TOÀN tập (CG10 Hỏi-3): đếm và liệt kê tin cần xác minh qua cùng điều kiện danh sách, không chỉ trong
+ * 30 dòng đã cắt. `null` khi chưa có bảng hạng (lối CG8: tab đếm trong danh sách như cũ).
+ */
+export async function getXacMinh({ project = null, limit = SO_CAN_DU_AN }: { project?: string | null; limit?: number } = {}):
+  Promise<{ tong: number; rows: DealRow[]; mayThu: boolean } | null> {
+  if (!(await coBangHang())) return null;
+  const sql = (o: { cloud?: boolean; coBang?: boolean }) => dealsSql({ ...o, duAn: Boolean(project), chiXacMinh: true });
+  const { rows, mayThu } = await truyVan(sql, project ? [NGUONG_VAO_PCT, limit, project] : [NGUONG_VAO_PCT, limit]);
+  const xong = await hoanTat(await ganMatBang(rows.map(toDealRow)), mayThu);
+  return { tong: Number(rows[0]?.tong ?? 0), rows: xong.rows, mayThu: xong.mayThu };
+}
+
+/** Id nút dự án từ tham số URL: chỉ chữ số, tối đa 18 ký tự (vừa bigint); sai khuôn → null. */
+export function parseProject(v: string | string[] | undefined | null): string | null {
+  const s = Array.isArray(v) ? v[0] : v;
+  return typeof s === "string" && /^[0-9]{1,18}$/.test(s) ? s.replace(/^0+(?=\d)/, "") : null;
+}
+
+/** Nút dự án theo id (asset_nodes đã sync cloud); không có hay không phải dự án → null. */
+export async function getDuAn(id: string): Promise<{ id: string; ten: string } | null> {
+  const { rows } = await pool.query(`SELECT id::text AS id, name FROM asset_nodes WHERE id = $1::bigint AND node_type = 'project'`, [id]);
+  return rows[0] ? { id: rows[0].id, ten: rows[0].name } : null;
 }
 
 /**
@@ -240,15 +631,31 @@ export async function getDeals(limit = SO_CAN_DANH_SACH, minDiscountPct = NGUONG
  * Bọc chính `dealsSql` để thứ tự và giới hạn một nguồn; bản cloud không đọc bài gốc nên chạy được ở cả hai nơi.
  */
 export async function dealTrongDanhSach(offerId: string): Promise<boolean> {
-  const { rows } = await pool.query(`SELECT 1 FROM (${dealsSql({ cloud: true })}) ds WHERE ds.offer_id = $3`, [NGUONG_VAO_PCT, SO_CAN_DANH_SACH, offerId]);
+  const coBang = await coBangHang();
+  const { rows } = await pool.query(`SELECT 1 FROM (${dealsSql({ cloud: true, coBang })}) ds WHERE ds.offer_id = $3`, [NGUONG_VAO_PCT, SO_CAN_DANH_SACH, offerId]);
   return rows.length > 0;
 }
 
-/** Một căn theo mã; mã lạ, hay tin không phải P1 bán, trả `deal: null`. */
+/**
+ * Dải m² dự án × PN (CG10, project_area_band — chỉ máy thu) cho căn hộ cấp dự án thiếu diện tích có PN. Bảng vắng (cloud,
+ * máy thu chưa áp 106) → null, không lỗi; lỗi khác ném tiếp cho khối lỗi.
+ */
+async function daiM2Cua(d: DealRow): Promise<{ p10: number; p90: number } | null> {
+  if (d.rank?.level !== "du_an" || !d.rank.node || d.areaM2 || d.bedrooms == null || d.propertyType !== "apartment") return null;
+  if (!/^\d+$/.test(d.rank.node)) return null;
+  const { rows: co } = await pool.query(`SELECT to_regclass('project_area_band') IS NOT NULL AS co`);
+  if (!co[0]?.co) return null;
+  const { rows } = await pool.query(`SELECT p10, p90 FROM project_area_band WHERE project_node_id = $1 AND bedrooms = $2`,
+    [d.rank.node, d.bedrooms]);
+  return rows[0] ? { p10: Number(rows[0].p10), p90: Number(rows[0].p90) } : null;
+}
+
+/** Một căn theo mã; mã lạ hay tin không phải tin bán (không bảng hạng: không phải P1 bán) trả `deal: null`. */
 export async function getDeal(offerId: string): Promise<{ deal: DealRow | null; mayThu: boolean }> {
   const { rows, mayThu } = await truyVan(dealSql, [offerId]);
   if (!rows[0]) return { deal: null, mayThu };
-  const d = toDealRow(rows[0]);
+  const [d0] = await ganMatBang([toDealRow(rows[0])]);
+  const d = { ...d0, daiM2: await daiM2Cua(d0) };
   const xong = await hoanTat([{ ...d, roiDanhSach: lyDoRoi(d, rows[0].qua_han === true) }], mayThu);
   return { deal: xong.rows[0], mayThu: xong.mayThu };
 }

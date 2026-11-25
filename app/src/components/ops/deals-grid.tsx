@@ -1,7 +1,8 @@
 "use client"
 
-import { useMemo, useState } from "react"
-import { useSearchParams } from "next/navigation"
+import { useId, useMemo, useState, useSyncExternalStore, useTransition } from "react"
+import Link from "next/link"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useTable, type ColumnDef, type PaginationState, type SortingState } from "@tanstack/react-table"
 import { HouseIcon, ImageIcon, MapPinIcon, PhoneIcon, RadioTowerIcon } from "lucide-react"
 
@@ -13,18 +14,33 @@ import { DataGridColumnHeader } from "@/components/reui/data-grid/data-grid-colu
 import { DataGridPagination } from "@/components/reui/data-grid/data-grid-pagination"
 import { DataGridScrollArea } from "@/components/reui/data-grid/data-grid-scroll-area"
 import { DataGridTable } from "@/components/reui/data-grid/data-grid-table"
+import {
+  Cascader,
+  CascaderContent,
+  CascaderEmpty,
+  CascaderList,
+  CascaderPanel,
+  CascaderStatus,
+  CascaderTrigger,
+} from "@/components/reui/cascader/cascader"
+import { CascaderItems } from "@/components/reui/cascader/cascader-item"
+import { CascaderBreadcrumb, CascaderInput, CascaderNav, CascaderValue } from "@/components/reui/cascader/cascader-nav"
+import type { CascaderNode } from "@/components/reui/cascader/cascader-types"
 import { Filters } from "@/components/reui/filters/filters"
 import { createFilterQuery, flattenFilterConditions } from "@/components/reui/filters/filters-query"
 import type { FilterField, FilterQuery } from "@/components/reui/filters/filters-types"
 import { Frame, FrameFooter, FrameHeader, FramePanel } from "@/components/reui/frame"
 import { Button } from "@/components/ui/button"
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { type DealHang, loaiHinh, tabCua, type TabDeal, soPct } from "@/lib/deals-chi-tiet"
+import { chuGiaM2, CO_TRANG_DEAL, type DealHang, type KindDeal, LOAI_LOC, type NutViTri, loaiHinh, tabCua, type TabDeal, soPctVi, type ThamSoDeal, type TrangDeal, urlThamSoDeal } from "@/lib/deals-chi-tiet"
 import { fmtCompact, fmtInt, fmtVnDate } from "@/lib/format"
+import { LABELS_VI } from "@/lib/vocab.generated"
 
-import { DiscountBar, DealThumb } from "./deals-cells"
+import { DealHangNhom, DiscountBar, DealThumb } from "./deals-cells"
 import { DealChoGhep } from "./deal-cho-ghep"
 import { DealSheet } from "./deal-sheet"
+import type { KetQuaCung, TaiCung } from "./deal-similar"
 
 /**
  * /ops/deals — khuôn records-grid của kho (Frame + data-grid + @reui/filters, bấm hàng mở sheet), tab trạng thái có
@@ -55,7 +71,7 @@ const COLUMNS: ColumnDef<DataGridFeatures, DealHangGhep>[] = [
           <Button variant="link" size="xs" className="max-w-full justify-start">
             <span className="truncate">{[loaiHinh(d.propertyType) ?? "Chưa rõ loại hình", d.areaM2 ? `${Math.round(d.areaM2)} m²` : null, d.bedrooms ? `${d.bedrooms}PN` : null].filter(Boolean).join(" · ")}</span>
           </Button>
-          <span className="text-muted-foreground max-w-full truncate ps-2 text-xs">{[d.block, d.phuong].filter(Boolean).join(" · ")}</span>
+          <span className="text-muted-foreground max-w-full truncate ps-2 text-xs">{[d.block, d.phuong, d.soTin && d.soTin > 1 ? `${d.soTin} tin` : null].filter(Boolean).join(" · ")}</span>
           <div className="ps-2"><DealChoGhep ids={d.choGhep} /></div>
         </div>
       </div>
@@ -71,9 +87,9 @@ const COLUMNS: ColumnDef<DataGridFeatures, DealHangGhep>[] = [
     cell: ({ row: { original: d } }) => (
       <div className="flex flex-col items-end gap-0.5">
         <span className="text-sm font-medium tabular-nums">{d.priceVnd === null ? "—" : fmtCompact(d.priceVnd)}</span>
-        <span className="text-muted-foreground hidden text-xs tabular-nums md:inline">{d.pricePerm2 ? `${fmtInt(d.pricePerm2 / 1e6)} tr/m²` : "—"}</span>
+        <span className="text-muted-foreground hidden text-xs tabular-nums md:inline">{d.pricePerm2 ? chuGiaM2(d.pricePerm2) : "—"}</span>
         {/* Màn hẹp bỏ cột Giảm: mức giảm vào thẳng dưới giá, không phải cuộn ngang mới thấy lý do căn có mặt. */}
-        <span className="text-xs font-medium tabular-nums md:hidden">−{soPct(d.discountPct ?? 0)}%</span>
+        <span className="text-xs font-medium tabular-nums md:hidden">−{soPctVi(d.discountPct ?? 0)}%</span>
       </div>
     ),
     size: 96,
@@ -103,7 +119,7 @@ const COLUMNS: ColumnDef<DataGridFeatures, DealHangGhep>[] = [
   {
     id: "goi",
     accessorFn: (d) => d.sellerName ?? "",
-    header: "Gọi ai",
+    header: ({ column }) => <DataGridColumnHeader title="Gọi ai" column={column} />,
     cell: ({ row: { original: d } }) => (
       <div className="flex min-w-0 flex-col items-start gap-0.5">
         {d.tel && d.sdt ? (
@@ -135,6 +151,66 @@ const COLUMNS: ColumnDef<DataGridFeatures, DealHangGhep>[] = [
     meta: { headerClassName: "hidden xl:table-cell", cellClassName: "hidden xl:table-cell" },
   },
 ]
+
+/** Cột của danh sách đọc ở máy chủ: thêm nhãn hạng và nhóm so sánh; thứ tự do máy chủ quyết nên tiêu đề cột không sắp. */
+const COT_HANG: ColumnDef<DataGridFeatures, DealHangGhep> = {
+  id: "hang",
+  accessorFn: (d) => d.rank?.label ?? "",
+  header: ({ column }) => <DataGridColumnHeader title="Hạng giá" column={column} />,
+  cell: ({ row: { original: d } }) => <DealHangNhom d={d} />,
+  enableSorting: false,
+  size: 220,
+  meta: { headerClassName: "hidden md:table-cell", cellClassName: "hidden md:table-cell" },
+}
+
+/** Cột ẩn theo khổ màn phải rời bảng thật, không chỉ ẩn bằng CSS: bề rộng bảng vẫn tính cột đã ẩn và đẩy cột Giá ra ngoài vùng nhìn. */
+const KHO_MAN = [["xl", "(min-width: 1280px)"], ["lg", "(min-width: 1024px)"], ["md", "(min-width: 768px)"]] as const
+type KhoMan = "xl" | "lg" | "md" | "sm"
+const AN_THEO_KHO: Record<KhoMan, Record<string, boolean>> = {
+  xl: {},
+  lg: { thay: false },
+  md: { goi: false, thay: false },
+  sm: { hang: false, giam: false, tinhTrang: false, goi: false, thay: false },
+}
+const coMatchMedia = () => typeof window !== "undefined" && typeof window.matchMedia === "function"
+const docKhoMan = (): KhoMan => (coMatchMedia() ? KHO_MAN.find(([, q]) => window.matchMedia(q).matches)?.[0] ?? "sm" : "xl")
+function theoDoiKhoMan(bao: () => void) {
+  if (!coMatchMedia()) return () => {}
+  const ds = KHO_MAN.map(([, q]) => window.matchMedia(q))
+  ds.forEach((m) => m.addEventListener("change", bao))
+  return () => ds.forEach((m) => m.removeEventListener("change", bao))
+}
+
+const cotTheoTrang = (cot: ColumnDef<DataGridFeatures, DealHangGhep>[], tabDong: TrangDeal["tabDong"]) => cot.flatMap((c) => {
+  if (c.id === "tinhTrang") {
+    return [{
+      ...c,
+      enableSorting: false,
+      // Tab theo luật đầy đủ ở mọi vai; vai không xem được mục thiếu chỉ thấy «Còn thiếu», không thấy số mục.
+      cell: ({ row: { original: d } }: { row: { original: DealHangGhep } }) => {
+        const t = tabDong[d.offerId] ?? tabCua(d)
+        return t === "xac-minh" ? <Badge variant="warning-light">Cần xác minh</Badge>
+          : t === "thieu" ? <Badge variant="outline">{d.thieu.length > 0 ? `Thiếu ${d.thieu.length}` : "Còn thiếu"}</Badge>
+          : <Badge variant="success-light">Đủ để gọi</Badge>
+      },
+    } as ColumnDef<DataGridFeatures, DealHangGhep>]
+  }
+  if (c.id === "giam") {
+    return [{ ...c, enableSorting: false, cell: ({ row: { original: d } }: { row: { original: DealHangGhep } }) => <DiscountBar d={d} gon donViCan /> } as ColumnDef<DataGridFeatures, DealHangGhep>]
+  }
+  if (c.id !== "can") return [{ ...c, enableSorting: false }]
+  const goc = c.cell as (ctx: { row: { original: DealHangGhep } }) => React.ReactNode
+  return [{
+    ...c,
+    // Màn hẹp bỏ cột Hạng giá: nhãn nằm ngay dưới tên căn.
+    cell: (ctx: { row: { original: DealHangGhep } }) => (
+      <div className="flex min-w-0 flex-col gap-1">
+        {goc(ctx)}
+        <div className="ps-2 md:hidden"><DealHangNhom d={ctx.row.original} /></div>
+      </div>
+    ),
+  } as ColumnDef<DataGridFeatures, DealHangGhep>, COT_HANG]
+})
 
 const O_LOC = {
   source: (d: DealHang) => d.source,
@@ -173,16 +249,145 @@ function hopBoLoc(query: FilterQuery): (d: DealHang) => boolean {
 /** Hằng ngoài component: mặc định `{}` mới mỗi lần vẽ làm `rows` đổi danh tính → bảng tự về trang 1. */
 const KHONG_CHO_GHEP: Record<string, number[]> = {}
 
-export function DealsGrid({ rows: tho, moBanDau = null, locBanDau, xemNoiDung, mayThu, choGhep = KHONG_CHO_GHEP }: {
+const TAT_CA = "all"
+const O_LOAI = [
+  { value: TAT_CA, label: "Mọi loại hình" },
+  ...LOAI_LOC.map((v) => ({ value: v, label: (LABELS_VI.property_type as Record<string, string>)[v] ?? v })),
+]
+const CHU_CAY = {
+  search: () => "Tìm tỉnh, phường, dự án",
+  back: "Quay lại",
+  empty: "Không có vị trí khớp.",
+  loading: "Đang tải",
+  rootLevel: "Tỉnh, thành",
+  itemCount: () => "có mục con",
+}
+
+const sangNut = (n: NutViTri): CascaderNode => ({
+  value: n.value,
+  label: n.label,
+  // Số căn đã ghi ở dòng mô tả; số 0 tắt con số trần cuối dòng của cây.
+  count: 0,
+  description: `${fmtInt(n.count)} căn`,
+  keywords: [n.label.normalize("NFD").replace(/\p{M}/gu, "").replace(/đ/g, "d").replace(/Đ/g, "D")],
+  children: n.children?.map(sangNut),
+})
+
+/**
+ * Thanh lọc của danh sách đọc ở máy chủ: Bán hay Cho thuê, vị trí trên cây, loại hình. Mọi điều kiện nằm trên URL.
+ * `cay` null khi truy vấn danh sách lỗi: cây đọc cùng lượt nên ô vị trí tắt, các điều kiện còn lại vẫn đổi được.
+ */
+function DealsBoLoc({ thamSo, cay, onDoi }: { thamSo: ThamSoDeal; cay: NutViTri[] | null; onDoi: (p: Partial<ThamSoDeal>) => void }) {
+  const items = useMemo(() => (cay ?? []).map(sangNut), [cay])
+  const moTaViTri = useId()
+  const viTri = thamSo.project ? `project:${thamSo.project}` : thamSo.location ? `area:${thamSo.location}` : ""
+  const coLoc = Boolean(viTri || thamSo.type)
+  const chonViTri = (v: string) => {
+    const [loai, ma] = v.split(":")
+    onDoi({ location: loai === "area" ? ma : null, project: loai === "project" ? ma : null, page: 1 })
+  }
+  return (
+    <div className="flex flex-wrap items-center gap-2" data-deals-bo-loc="">
+      <Tabs value={thamSo.kind} onValueChange={(v) => onDoi({ kind: v as KindDeal, location: null, project: null, page: 1 })}>
+        <TabsList>
+          <TabsTrigger value="sale">Bán</TabsTrigger>
+          <TabsTrigger value="rent">Cho thuê</TabsTrigger>
+        </TabsList>
+      </Tabs>
+      {cay ? <Cascader
+        items={items}
+        value={viTri}
+        onValueChange={chonViTri}
+        selectable={(n) => !n.value.startsWith("nhom:")}
+        searchScope="global"
+        labels={CHU_CAY}
+      >
+        <CascaderTrigger aria-label="Chọn vị trí" render={<Button variant="outline" size="sm" />}>
+          <CascaderValue placeholder="Mọi vị trí" display="leaf" />
+        </CascaderTrigger>
+        <CascaderContent className="w-80">
+          <CascaderPanel>
+            <CascaderNav>
+              <CascaderInput />
+            </CascaderNav>
+            <CascaderBreadcrumb />
+            <CascaderEmpty />
+            <CascaderList>
+              <CascaderItems />
+            </CascaderList>
+            <CascaderStatus />
+          </CascaderPanel>
+        </CascaderContent>
+      </Cascader> : (
+        <>
+          <Button variant="outline" size="sm" disabled aria-label="Chọn vị trí" aria-describedby={moTaViTri}>{viTri ? "Vị trí đang chọn" : "Mọi vị trí"}</Button>
+          <span id={moTaViTri} className="text-muted-foreground text-xs">Danh sách vị trí hiện lại sau khi bấm Thử lại.</span>
+        </>
+      )}
+      <Select
+        value={thamSo.type ?? TAT_CA}
+        items={O_LOAI}
+        onValueChange={(v) => onDoi({ type: v === TAT_CA ? null : String(v), page: 1 })}
+      >
+        <SelectTrigger size="sm" aria-label="Loại hình"><SelectValue /></SelectTrigger>
+        <SelectContent align="start" alignItemWithTrigger={false}>
+          <SelectGroup>
+            {O_LOAI.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+          </SelectGroup>
+        </SelectContent>
+      </Select>
+      {coLoc && (
+        <Button variant="ghost" size="sm" onClick={() => onDoi({ location: null, project: null, type: null, page: 1 })}>Xoá bộ lọc</Button>
+      )}
+    </div>
+  )
+}
+
+/**
+ * Thanh lọc đứng cạnh khung lỗi của danh sách. Khung lỗi chỉ tự hết khi đổi đường dẫn gốc, không hết khi đổi tham số,
+ * nên đổi điều kiện ở đây tải lại cả trang để đọc lại danh sách theo điều kiện mới.
+ */
+export function DealsBoLocKhiLoi({ thamSo, di = (url) => window.location.assign(url) }: { thamSo: ThamSoDeal; di?: (url: string) => void }) {
+  return <DealsBoLoc thamSo={thamSo} cay={null} onDoi={(p) => di(urlThamSoDeal({ ...thamSo, ...p }))} />
+}
+
+type DealsGridProps = {
   rows: DealHang[]
+  /** Tab «Cần xác minh» trên toàn tập (CG10 Hỏi-3): tổng số căn và các căn của tab; vắng → tab đếm trong `rows` như cũ. */
+  xacMinh?: { tong: number; rows: DealHang[] }
   moBanDau?: string | null
   locBanDau?: FilterQuery
   xemNoiDung: boolean
   mayThu: boolean
   /** offerId → thẻ Ghép căn còn chờ (OD1 · ĐC7); vắng ở cloud. */
   choGhep?: Record<string, number[]>
-}) {
+  /** Danh sách đọc theo trang ở máy chủ (CG3); vắng → bảng lọc, phân trang ở trình duyệt như cũ. */
+  trang?: TrangDeal
+  /** Đổi điều kiện trên URL; chỉ có khi có `trang`. */
+  onDoi?: (p: Partial<ThamSoDeal>) => void
+  dangChuyen?: boolean
+  /** Server action đọc «Căn cùng tiêu chí» trên toàn tập đã lọc (CG17); chỉ dùng khi có `trang`. */
+  taiCung?: (offerId: string, thamSo: Partial<ThamSoDeal>, chiPhuong: boolean) => Promise<KetQuaCung | null>
+  /** Mở một căn không có trên trang đang xem: sang trang một căn (CG17 AC-6). */
+  onMoNgoai?: (id: string) => void
+}
+
+/** Danh sách đọc ở máy chủ: mọi điều kiện đi qua URL, bảng mờ đi trong lúc chờ trang mới. */
+export function DealsGridTrang(props: DealsGridProps) {
+  const router = useRouter()
+  const [dangChuyen, chuyenTrang] = useTransition()
+  const { trang } = props
+  if (!trang) return <DealsGrid {...props} />
+  const onDoi = (p: Partial<ThamSoDeal>) => chuyenTrang(() => router.push(urlThamSoDeal({ ...trang.thamSo, ...p }), { scroll: false }))
+  const onMoNgoai = (id: string) => router.push(`/ops/deals/${encodeURIComponent(id)}`)
+  return <DealsGrid {...props} onDoi={onDoi} dangChuyen={dangChuyen} onMoNgoai={onMoNgoai} />
+}
+
+export function DealsGrid({ rows: tho, moBanDau = null, locBanDau, xemNoiDung, mayThu, choGhep = KHONG_CHO_GHEP, xacMinh, trang, onDoi, dangChuyen = false, taiCung, onMoNgoai }: DealsGridProps) {
   const rows = useMemo<DealHangGhep[]>(() => tho.map((d) => (choGhep[d.offerId] ? { ...d, choGhep: choGhep[d.offerId] } : d)), [tho, choGhep])
+  // Căn của tab «Cần xác minh» khi đếm trên toàn tập; sheet mở được cả căn chỉ có ở tab này.
+  const xmRows = useMemo<DealHangGhep[] | null>(() => xacMinh?.rows ?? null, [xacMinh])
+  const moDuoc = useMemo(() => (xmRows ? [...rows, ...xmRows.filter((x) => !rows.some((d) => d.offerId === x.offerId))] : rows), [rows, xmRows])
   const [tab, setTab] = useState<Tab>("all")
   const [query, setQuery] = useState<FilterQuery>(() => locBanDau ?? createFilterQuery())
   // Nút Back khôi phục trang từ bộ đệm router, prop là của lần tải đầu; `datMo` chỉ đổi URL, nên URL mới biết căn đang xem.
@@ -196,30 +401,50 @@ export function DealsGrid({ rows: tho, moBanDau = null, locBanDau, xemNoiDung, m
 
   const fields = useMemo(() => truongLoc(rows, xemNoiDung && mayThu), [rows, xemNoiDung, mayThu])
   const quaLoc = useMemo(() => rows.filter(hopBoLoc(query)), [rows, query])
+  const xmLoc = useMemo(() => (xmRows ? xmRows.filter(hopBoLoc(query)) : null), [xmRows, query])
   const dem = useMemo(() => {
     const c: Record<Tab, number> = { all: quaLoc.length, du: 0, "xac-minh": 0, thieu: 0 }
     for (const d of quaLoc) c[tabCua(d)]++
+    if (xacMinh && xmLoc) c["xac-minh"] = flattenFilterConditions(query).some((k) => k.values.length > 0) ? xmLoc.length : xacMinh.tong
     return c
-  }, [quaLoc])
-  const data = useMemo(() => (tab === "all" ? quaLoc : quaLoc.filter((d) => tabCua(d) === tab)), [quaLoc, tab])
+  }, [quaLoc, xmLoc, xacMinh, query])
+  const data = useMemo(() => (tab === "all" ? quaLoc : tab === "xac-minh" && xmLoc ? xmLoc : quaLoc.filter((d) => tabCua(d) === tab)), [quaLoc, xmLoc, tab])
 
   // Vai Người xem không có liên hệ: bỏ hẳn cột, không ghi «Chưa có SĐT» vì căn không thiếu số.
   const cot = useMemo(() => (xemNoiDung ? COLUMNS : COLUMNS.filter((c) => c.id !== "goi")), [xemNoiDung])
+  const cotHien = useMemo(() => (trang ? cotTheoTrang(cot, trang.tabDong) : cot), [cot, trang])
+  const khoMan = useSyncExternalStore(theoDoiKhoMan, docKhoMan, () => "xl" as KhoMan)
+  const trangHien: PaginationState = trang ? { pageIndex: trang.page - 1, pageSize: trang.thamSo.size } : pagination
   const table = useTable({
     features: dataGridFeatures,
-    columns: cot,
-    data,
+    columns: cotHien,
+    data: trang ? rows : data,
     getRowId: (d) => d.offerId,
     enableRowSelection: true,
-    state: { pagination, sorting, rowSelection: vuaXem ? { [vuaXem]: true } : {} },
-    onPaginationChange: setPagination,
+    manualPagination: Boolean(trang),
+    ...(trang ? { rowCount: trang.tong } : {}),
+    state: { pagination: trangHien, sorting, rowSelection: vuaXem ? { [vuaXem]: true } : {}, columnVisibility: trang ? AN_THEO_KHO[khoMan] : {} },
+    onPaginationChange: trang
+      ? (u) => {
+          const moi = typeof u === "function" ? u(trangHien) : u
+          onDoi?.({ page: moi.pageSize === trangHien.pageSize ? moi.pageIndex + 1 : 1, size: moi.pageSize })
+        }
+      : setPagination,
     onSortingChange: setSorting,
   })
+  const tabHien: Tab = trang ? trang.thamSo.tab : tab
+  const demHien = trang ? trang.dem : dem
+  const coLocMay = Boolean(trang && (trang.thamSo.location || trang.thamSo.project || trang.thamSo.type))
 
   // Thứ tự chuyển căn trong sheet: đúng thứ tự đang thấy (lọc + sắp), không chỉ trang hiện tại.
   const thuTu = table.getSortedRowModel().rows.map((r) => r.original)
   const viTri = thuTu.findIndex((d) => d.offerId === moId)
-  const mo = rows.find((d) => d.offerId === moId) ?? null
+  const mo = moDuoc.find((d) => d.offerId === moId) ?? null
+  const thamSoTrang = trang?.thamSo
+  const tai = useMemo<TaiCung | undefined>(
+    () => (thamSoTrang && taiCung ? (id, chiPhuong) => taiCung(id, thamSoTrang, chiPhuong) : undefined),
+    [thamSoTrang, taiCung],
+  )
 
   const datMo = (id: string | null) => {
     setMoId(id)
@@ -231,6 +456,8 @@ export function DealsGrid({ rows: tho, moBanDau = null, locBanDau, xemNoiDung, m
   }
   // Mở một căn từ sheet: căn nằm ngoài lọc đang bật vẫn mở được, bảng chỉ dời trang khi căn có trong bảng.
   const moCan = (id: string) => {
+    // Danh sách theo trang: căn cùng tiêu chí nằm ở trang khác không có dữ liệu đầy đủ ở đây → mở trang một căn.
+    if (trang && !moDuoc.some((d) => d.offerId === id) && onMoNgoai) return onMoNgoai(id)
     datMo(id)
     const i = thuTu.findIndex((d) => d.offerId === id)
     if (i >= 0) setPagination((p) => ({ ...p, pageIndex: Math.floor(i / p.pageSize) }))
@@ -244,9 +471,29 @@ export function DealsGrid({ rows: tho, moBanDau = null, locBanDau, xemNoiDung, m
     <>
       <DataGrid
         table={table}
-        recordCount={data.length}
+        recordCount={trang ? trang.tong : data.length}
+        isLoading={dangChuyen}
         emptyMessage={
-          quaLoc.length === 0 ? (
+          trang ? (
+            <div className="flex flex-col items-center gap-2 py-4" data-deals-trong={tabHien !== "all" && trang.dem.all > 0 ? "tab" : coLocMay ? "loc" : "tap"}>
+              {tabHien !== "all" && trang.dem.all > 0 ? (
+                <>
+                  <span>Mục này chưa có căn.</span>
+                  <Button variant="outline" size="sm" onClick={() => onDoi?.({ tab: "all", page: 1 })}>Xem tất cả</Button>
+                </>
+              ) : coLocMay ? (
+                <>
+                  <span>Không có căn nào khớp bộ lọc.</span>
+                  <Button variant="outline" size="sm" onClick={() => onDoi?.({ location: null, project: null, type: null, page: 1 })}>Xoá bộ lọc</Button>
+                </>
+              ) : (
+                <>
+                  <span>Chưa có căn nào trong danh sách.</span>
+                  <Button variant="outline" size="sm" nativeButton={false} render={<Link prefetch={false} href="/ops/quality" />}>Xem chất lượng dữ liệu</Button>
+                </>
+              )}
+            </div>
+          ) : quaLoc.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-4">
               <span>Không có căn nào khớp bộ lọc.</span>
               <Button variant="outline" size="sm" onClick={() => setQuery(createFilterQuery())}>Xoá bộ lọc</Button>
@@ -259,9 +506,12 @@ export function DealsGrid({ rows: tho, moBanDau = null, locBanDau, xemNoiDung, m
       >
         <Frame variant="default" spacing="sm" className="w-full">
           <FrameHeader data-truong-loc={fields.map((f) => f.id).join(" ")} className="flex flex-row flex-wrap items-center justify-between gap-3">
+            {trang && onDoi && <div className="w-full"><DealsBoLoc thamSo={trang.thamSo} cay={trang.cay} onDoi={onDoi} /></div>}
             <Tabs
-              value={tab}
+              className="max-w-full min-w-0"
+              value={tabHien}
               onValueChange={(v) => {
+                if (trang) return onDoi?.({ tab: v as Tab, page: 1 })
                 setTab(v as Tab)
                 setPagination((p) => ({ ...p, pageIndex: 0 }))
               }}
@@ -270,22 +520,24 @@ export function DealsGrid({ rows: tho, moBanDau = null, locBanDau, xemNoiDung, m
                 {TABS.map((t) => (
                   <TabsTrigger key={t.value} value={t.value} className="flex-none gap-1.5 px-1 text-sm">
                     {t.label}
-                    <Badge variant="outline" radius="full" className="tabular-nums">{dem[t.value]}</Badge>
+                    <Badge variant="outline" radius="full" className="tabular-nums">{fmtInt(demHien[t.value])}</Badge>
                   </TabsTrigger>
                 ))}
               </TabsList>
             </Tabs>
-            <Filters
-              fields={fields}
-              query={query}
-              onQueryChange={(q) => {
-                setQuery(q)
-                setPagination((p) => ({ ...p, pageIndex: 0 }))
-              }}
-              labels={FILTER_LABELS_VI}
-              operatorLabels={FILTER_OPERATORS_VI}
-              showClear
-            />
+            {!trang && (
+              <Filters
+                fields={fields}
+                query={query}
+                onQueryChange={(q) => {
+                  setQuery(q)
+                  setPagination((p) => ({ ...p, pageIndex: 0 }))
+                }}
+                labels={FILTER_LABELS_VI}
+                operatorLabels={FILTER_OPERATORS_VI}
+                showClear
+              />
+            )}
           </FrameHeader>
           <FramePanel className="p-0! shadow-none!">
             <DataGridScrollArea>
@@ -293,11 +545,14 @@ export function DealsGrid({ rows: tho, moBanDau = null, locBanDau, xemNoiDung, m
             </DataGridScrollArea>
           </FramePanel>
           <FrameFooter>
-            <DataGridPagination />
+            <DataGridPagination {...(trang ? {
+              sizes: [...CO_TRANG_DEAL],
+              info: `${fmtInt(trang.tong === 0 ? 0 : (trang.page - 1) * trang.thamSo.size + 1)}–${fmtInt(Math.min(trang.page * trang.thamSo.size, trang.tong))} / ${fmtInt(trang.tong)}`,
+            } : {})} />
           </FrameFooter>
         </Frame>
       </DataGrid>
-      <DealSheet d={mo} rows={rows} choGhep={mo?.choGhep} xemNoiDung={xemNoiDung} mayThu={mayThu} viTri={viTri} tong={thuTu.length} onChuyen={chuyen} onMoCan={moCan} onOpenChange={(o) => !o && datMo(null)} />
+      <DealSheet d={mo} rows={rows} cung={mo ? trang?.cungTieuChi?.[mo.offerId] : undefined} tai={tai} choGhep={mo?.choGhep} xemNoiDung={xemNoiDung} mayThu={mayThu} viTri={viTri} tong={thuTu.length} onChuyen={chuyen} onMoCan={moCan} onOpenChange={(o) => !o && datMo(null)} />
     </>
   )
 }

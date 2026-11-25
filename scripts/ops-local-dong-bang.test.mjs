@@ -31,6 +31,10 @@ export const MIEN = [
   { tep: "pipeline/lib/nap-lai-matrix.mjs", mau: /./, ly_do: "thước nạp lại PL14 đếm thẻ theo khoá trên DB thử, không phải hàng chờ" },
   { tep: "pipeline/lib/the-duyet-nguoi.mjs", mau: /LOAI_THE/, ly_do: "thẻ Người (data_quality), loại khác Ghép căn" },
   { tep: "pipeline/scripts/nap-lai-nguoi.mjs", mau: /data_quality/, ly_do: "thước danh bạ Người, thẻ data_quality" },
+  { tep: "pipeline/lib/s09-dung.mjs", mau: /item_id = \$1/, ly_do: "chặn trùng thẻ toà S09 theo mã thẻ (item_id), mọi trạng thái — không đọc hàng chờ (DA31)" },
+  { tep: "pipeline/lib/s16-dung.mjs", mau: /item_id = \$1/, ly_do: "chặn trùng thẻ S16 theo mã thẻ (item_id), mọi trạng thái — không đọc hàng chờ (DA33)" },
+  { tep: "pipeline/scripts/danh-ba-s16-that.mjs", mau: /s16:|can-lech-toa/, ly_do: "phép đo trên DB thử xoá khi xong, đếm thẻ S16 theo mã thẻ — không đọc hàng chờ (DA33 E10)" },
+  { tep: "pipeline/scripts/danh-ba-s16-cau-truc-that.mjs", mau: /s16:/, ly_do: "phép đo trên bản chép xoá khi xong, đếm thẻ S16 theo mã thẻ — không đọc hàng chờ (DA37 E10)" },
 ];
 
 const coViTu = (cau) => /NOT \$\{THE_DONG_BANG_SQL\}|\$\{KHONG_DONG_BANG_SQL\}/.test(cau) || (VI_TU_TS && cau.includes(`NOT ${VI_TU_TS}`));

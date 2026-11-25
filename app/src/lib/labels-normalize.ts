@@ -91,7 +91,7 @@ export const FIELD_LABEL: Record<LabelField, string> = {
   kind: "Loại tin",
   property_type: "Loại hình",
   multi_unit: "Nhiều căn",
-  project: "Khu đô thị",
+  project: "Dự án",
   subzone: "Phân khu",
   building: "Toà",
   stack: "Trục",
@@ -113,11 +113,52 @@ export const FIELD_LABEL: Record<LabelField, string> = {
   rent_includes: "Phí đã gồm",
 }
 
+/**
+ * Lát chỉ gắn một số ô (`lat-khai-o-can-gan`): màn chỉ hiện, chỉ đòi các ô này, không có căn cứ từng ô, không có lượt hai.
+ * Lát không có trong bảng giữ nguyên hành vi.
+ */
+export const O_THEO_LAT: Readonly<Record<string, readonly LabelField[]>> = {
+  "hai-khu-ghep-b": ["building", "subzone"],
+  // HT21 (PL36 AC-10): lát nhãn trục 110 bài Ocean Park 1 — chỉ Toà và Trục, đọc mã căn theo quy ước «Mã căn» của CONTEXT.md.
+  "hai-khu-truc": ["building", "stack"],
+}
+export const oCuaLat = (lat: string): readonly LabelField[] | null => O_THEO_LAT[lat] ?? null
+/**
+ * Lát có khai ô mà VẪN hiện nháp (HT21): mặc định lát có khai ô gắn mù, nháp không rời máy chủ. `hai-khu-truc` là ngoại lệ có tên —
+ * Mạnh bỏ đo mù cho lát này (24/11, lối 3 của PL36: trợ lý nháp, Mạnh duyệt); thước đo người duyệt là thẻ cài lỗi thay cho gắn mù.
+ * Nháp chỉ mang các ô của lát.
+ */
+export const LAT_KHAI_O_CO_NHAP: ReadonlySet<string> = new Set(["hai-khu-truc"])
+/** Lát này có được hiện nháp không: lát không khai ô giữ hành vi cũ; lát khai ô chỉ khi nằm trong danh sách ngoại lệ. */
+export const hienNhap = (lat: string): boolean => oCuaLat(lat) === null || LAT_KHAI_O_CO_NHAP.has(lat)
+const NHAN_THEO_LAT: Readonly<Record<string, Partial<Record<LabelField, string>>>> = {
+  "hai-khu-ghep-b": { subzone: "Phân khu hoặc cụm" },
+  "hai-khu-truc": { stack: "Trục (hai số cuối của số căn)" },
+}
+/** Nhãn của một ô trên màn của lát. */
+export const nhanO = (lat: string, f: LabelField): string => NHAN_THEO_LAT[lat]?.[f] ?? FIELD_LABEL[f]
+/**
+ * Câu mô tả đầu trang của lát có khai ô (HT21 AC-5). Lát có nháp nói rõ các ô đã điền sẵn nháp máy, người duyệt sửa chỗ sai rồi
+ * lưu; lát gắn mù giữ câu cũ. Lát không khai ô trả null (màn dùng câu của nó).
+ */
+export function moTaLatKhaiO(lat: string): string | null {
+  const o = oCuaLat(lat)
+  if (!o) return null
+  if (!LAT_KHAI_O_CO_NHAP.has(lat)) return "Đọc từng bài và ghi toà, phân khu hoặc cụm. Máy không cho thấy nó đã đọc ra gì."
+  return `Đọc từng bài và ghi ${o.map((f) => nhanO(lat, f)).join(", ")}. Các ô đã điền sẵn nháp máy — sửa chỗ sai rồi lưu.`
+}
+/**
+ * Căn cứ tạm của lát có khai ô. Route gọi `chuanHoaLuot` không kèm tên lát nên bộ kiểm không tự biết lát; `ghiNhan` biết tên lát:
+ * chỉ lát có khai mới được gửi giá trị này, và nó không bao giờ xuống DB.
+ */
+export const BASIS_KHONG_DOI = "khong_doi_can_cu" as const
+export const msgHangSaiLat = (lat: string) => `Căn cứ ${BASIS_KHONG_DOI} không dùng được cho lát ${lat}`
+
 /** Loại trường hợp ghi ở lượt hai. Danh sách khởi đầu; lượt thử sẽ sửa nó. */
 export const CASE_KINDS = [
   { value: "bi-danh", label: "Bí danh viết tắt" },
   { value: "mac-dinh-nhom", label: "Mặc định theo nhóm" },
-  { value: "ma-trung-du-an", label: "Mã trùng giữa khu đô thị" },
+  { value: "ma-trung-du-an", label: "Mã trùng giữa dự án" },
   { value: "nhieu-can", label: "Bài nhiều căn" },
   { value: "che-tang", label: "Che tầng" },
   { value: "so-ngoai-bai", label: "Số ngoài chữ bài" },
@@ -149,10 +190,22 @@ export const MSG_SDT = "SĐT phải có 10 chữ số, đầu 03, 05, 07, 08 ho�
 /** Một ô như người gõ: `not_stated` = «Tin không nêu». Giá mang đơn vị. */
 export type RawCell = { not_stated?: boolean; value?: string | string[]; unit?: PriceUnit; basis?: string }
 export type RawLabels = Partial<Record<LabelField, RawCell>>
-export type LabelRow = { field: LabelField; value: string | null; not_stated: boolean; basis: Basis | null }
+export type LabelRow = { field: LabelField; value: string | null; not_stated: boolean; basis: Basis | typeof BASIS_KHONG_DOI | null }
 /** Lỗi theo ô; `reason` là ô Lý do của lát theo nhóm. */
 export type LoiLuot = Partial<Record<LabelField | "reason", string>>
 export type Chuan = { ok: true; rows: LabelRow[]; reason: string | null } | { ok: false; loi: LoiLuot }
+
+/** Lượt ghi của lát có khai ô: ô của lát mang giá trị người gõ, ô ngoài lát khai «không nêu» để qua bộ kiểm; `ghiNhan` bỏ các dòng đó. */
+export function luotRutGon(lat: string, cells: Partial<Record<LabelField, { value: string; unknown: boolean }>>): RawLabels {
+  const cuaLat = oCuaLat(lat) ?? []
+  const raw: RawLabels = {}
+  for (const f of LABEL_FIELDS_NHOM) {
+    const c = cells[f]
+    if (!cuaLat.includes(f)) raw[f] = f === "multi_unit" ? { value: "no" } : { not_stated: true }
+    else raw[f] = c?.unknown ? { not_stated: true } : { value: c?.value ?? "", basis: BASIS_KHONG_DOI }
+  }
+  return raw
+}
 
 /** Số thập phân như người Việt gõ («4,35», «4.35», «64»): trả phần nguyên đã nhân 10^scale. Sai khuôn (kể cả hơn một
  * dấu) → null; một dấu theo sau đúng ba chữ số («4.350», «4,350») → "nghin" (mơ hồ, bên gọi báo MSG_NGAN_NGHIN). */
@@ -335,11 +388,13 @@ export function chuanHoaLuot(raw: RawLabels | null | undefined, nhom?: { text: s
       }
     }
   }
+  // Giữ dấu căn cứ tạm trên dòng ở mọi lát, kể cả lát chín trường: `ghiNhan` biết tên lát nên là chỗ duy nhất quyết nhận hay từ chối.
+  for (const r of rows) if (o[r.field]?.basis === BASIS_KHONG_DOI) r.basis = BASIS_KHONG_DOI
   let reason: string | null = null
   if (nhom) {
     reason = (typeof nhom.reason === "string" ? nhom.reason.trim() : "") || null
     for (const r of rows) {
-      if (r.not_stated || r.field === "multi_unit") continue
+      if (r.not_stated || r.field === "multi_unit" || r.basis === BASIS_KHONG_DOI) continue
       const b = o[r.field]?.basis
       if (!(BASIS as readonly string[]).includes(String(b))) {
         loi[r.field] = MSG_CAN_CU
@@ -350,7 +405,7 @@ export function chuanHoaLuot(raw: RawLabels | null | undefined, nhom?: { text: s
     }
     // Chữ và ảnh đều nằm trong chính bài nên không cần giải thích; chỉ căn cứ ngoài bài mới đòi lý do.
     // Danh mục CĐT truy được về dòng danh mục (labels-s08.ts kiểm) nên cũng không đòi lý do.
-    if (!reason && rows.some((r) => r.basis && r.basis !== "chu_bai" && r.basis !== "anh" && r.basis !== "danh_muc_cdt")) loi.reason = MSG_THIEU_LY_DO
+    if (!reason && rows.some((r) => r.basis && r.basis !== BASIS_KHONG_DOI && r.basis !== "chu_bai" && r.basis !== "anh" && r.basis !== "danh_muc_cdt")) loi.reason = MSG_THIEU_LY_DO
   }
   if (Object.keys(loi).length > 0) return { ok: false, loi }
   return { ok: true, rows, reason }

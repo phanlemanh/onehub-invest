@@ -41,7 +41,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
 import { fold, nameVariants } from "./lib/mask-source-names.mjs";
-import { entriesFromTokens, guardValues } from "./lib/tier-a-guard.mjs";
+import { docSourceNameEntries } from "./lib/source-name-entries.mjs";
+import { entriesFromTokens, guardValues, tokensFromEntries } from "./lib/tier-a-guard.mjs";
+import { kiemBangDay, soatDuLieu, thongDiepS16, tokenS16 } from "./lib/s16-soat.mjs";
 
 const REF = "smqpqiigzulwpmrsrhci";
 const MGMT = `https://api.supabase.com/v1/projects/${REF}/database/query`;
@@ -66,6 +68,7 @@ export const FILL = [
   "property_offers",
   "area_sources",
   "dq_check_results",
+  "offer_price_rank",
   "airdna_markets",
   "airdna_scores",
   "airdna_market_metrics",
@@ -201,11 +204,17 @@ const foldSql = (expr) => `translate(lower(normalize(${expr}, NFC)), ${lit(FOLD_
 /** Biểu thức SQL trả giá trị cột, hoặc NULL khi mang định danh nguồn. Khớp theo lõi của bộ soát: biến thể ≥ 4 ký tự trúng
  * ở mọi chỗ, ngắn hơn phải đứng riêng một từ. Thiếu token thì NULL hết (đóng chặt): không soát được thì không gửi. */
 export function maskedSourceExpr(col, tokens) {
-  const variants = [...new Set((tokens ?? []).filter(Boolean).flatMap((t) => nameVariants(t)))];
+  // Token trần (cũ) hoặc { token, wholeOnly } (cờ match_whole, migration 112): dòng khai cờ không sinh biến thể từ đầu.
+  const entries = entriesFromTokens(tokens);
+  const variants = [...new Set(entries.flatMap((e) => nameVariants(e.realName, { wholeOnly: e.wholeOnly })))];
   if (!variants.length) return "NULL::text";
+  // Dòng khớp nguyên cụm, tên nhiều từ: so trên bản đã bỏ dấu phân tách để bắt «ten-hai», «ten_hai», «ten  hai». Sai thì che thừa.
+  const lien = [...new Set(entries.filter((e) => e.wholeOnly && /[\s.\-_/]/.test(e.realName.trim())).map((e) => fold(e.realName.trim()).replace(/[\s.\-_/]+/g, "")))].filter((v) => v.length >= 4);
+  const boDau = `regexp_replace(f, '(%[0-9a-f]{2}|[^[:alnum:]])+', '', 'g')`;
   const whole = `' ' || regexp_replace(f, '[^[:alnum:]]', ' ', 'g') || ' '`;
   const hit = variants
     .map((v) => (v.length >= 4 ? `position(${lit(v)} in f) > 0` : `position(${lit(` ${v.replace(/[^\p{L}\p{N}]+/gu, " ")} `)} in ${whole}) > 0`))
+    .concat(lien.map((v) => `position(${lit(v)} in ${boDau}) > 0`))
     .join(" OR ");
   return `(SELECT CASE WHEN ${hit} THEN NULL ELSE ${q(col)} END FROM (SELECT ${foldSql(q(col))} AS f) m)`;
 }
@@ -250,12 +259,25 @@ export const CHILD_OF_LIVE = {
   nights: ["listing_id", "listings", "id"],
   listing_stats: ["listing_id", "listings", "id"],
   property_offers: ["offer_id", "sale_offers", "offer_id"],
+  offer_price_rank: ["offer_id", "sale_offers", "offer_id"],
 };
 
-/** Mệnh đề WHERE lọc bảng con theo cha sống (rỗng với bảng khác). */
+/**
+ * Bảng FILL được phép vắng trên cloud: cloud chưa áp DDL của nó thì lượt sync bỏ qua đúng bảng ấy với một dòng, các bảng khác
+ * chép như cũ (CG9 Hỏi-5 — gộp mã không chờ lịch áp DDL cloud). Bảng ngoài tập này vắng vẫn dừng «cloud thiếu bảng».
+ */
+export const BANG_TUY_CHON = new Map([
+  ["offer_price_rank", "docs/ops/cloud-schema-catchup-2026-11-14-offer-price-rank.sql"],
+]);
+
+/** Dòng ở lại máy thu dù bảng có trong FILL. SM1: số mốc S03 lên cloud trong khối `dataFlow`, không màn cloud nào đọc dòng này (Hỏi-4, Mạnh 18/11). */
+export const LOCAL_ONLY_ROWS = { dq_check_results: `${q("check_name")} IS DISTINCT FROM 's03-moc-ngay'` };
+
+/** Mệnh đề WHERE của câu đọc local: bảng con theo cha sống, bảng có dòng chỉ ở máy thu thì loại dòng đó (rỗng với bảng khác). */
 export function childFilterSql(table) {
   const p = CHILD_OF_LIVE[table];
-  return p ? ` WHERE ${q(p[0])} IN (SELECT ${q(p[2])} FROM ${q(p[1])})` : "";
+  if (p) return ` WHERE ${q(p[0])} IN (SELECT ${q(p[2])} FROM ${q(p[1])})`;
+  return LOCAL_ONLY_ROWS[table] ? ` WHERE ${LOCAL_ONLY_ROWS[table]}` : "";
 }
 
 /** Câu đọc local của một bảng sync: danh sách cột đã lọc + lọc cha sống. */
@@ -389,12 +411,25 @@ export function scanSourceNames(text, tokens) {
   return hit ? hit.code : null;
 }
 
+/** Mọi khoá (mọi tầng) của một giá trị JSON đã giải — để bộ soát giá trị đi qua cả khoá của cột jsonb. */
+const khoaLong = (v) =>
+  Array.isArray(v) ? v.flatMap(khoaLong) : v && typeof v === "object" ? Object.entries(v).flatMap(([k, x]) => [k, ...khoaLong(x)]) : [];
+
 /** Soát payload bảng người bán trước khi gửi: trúng là dừng, không dòng nào rời máy. `data`: tên cloud → dòng JSON. */
 export function assertNoSourceNames(data, tokens) {
   for (const t of Object.keys(CLOUD_ALLOW)) {
     for (const j of data.get(RENAME(t)) ?? []) {
-      if (!scanSourceNames(j, tokens)) continue;
-      const col = Object.entries(JSON.parse(j)).find(([, v]) => v != null && scanSourceNames(JSON.stringify(v), tokens))?.[0];
+      // Hai cách soát, trúng một là dừng. (1) Chuỗi JSON thô — bắt cả KHOÁ lồng trong cột jsonb, như bản trước 19/11.
+      // (2) Từng giá trị đã giải JSON — chuỗi thô thoát xuống dòng thành «\\n», cụm «ten\\nhai» chỉ khớp sau khi giải (phản biện 19/11).
+      // Bỏ (1) là hẹp hơn bản cũ (S4 vòng 3, lời Mạnh 19/11 sửa ngay).
+      const row = JSON.parse(j);
+      // (3) Khoá lồng đã giải — khoá chứa xuống dòng thoát «\\n» thì (1) không thấy, (2) không đi qua khoá.
+      if (!scanSourceNames(j, tokens) && !guardValues(row, entriesFromTokens(tokens)).length && !guardValues(khoaLong(row), entriesFromTokens(tokens)).length) continue;
+      const col = Object.entries(row).find(
+        ([k, v]) =>
+          scanSourceNames(k, tokens) ||
+          (v != null && (scanSourceNames(JSON.stringify(v), tokens) || guardValues([v, khoaLong(v)], entriesFromTokens(tokens)).length)),
+      )?.[0];
       throw new PhaseError(
         "scan",
         `giá trị mang định danh nguồn (tầng A) ở ${t}.${col ?? "?"} — dừng trước khi gửi, không dòng nào rời máy`,
@@ -591,7 +626,7 @@ async function gateAnon(exec) {
 
 /** Một lượt đồng bộ. `local`: pg.Client tới DB local (dựng với `types: localTypes`).
  * `exec(sql, opts)` → mảng dòng của câu cuối. Ném PhaseError (`err.phase`) khi gãy. */
-export async function syncOnce({ local, exec, log = console.log, runId = newRunId(), swapPause = 0, sourceTokens } = {}) {
+export async function syncOnce({ local, exec, log = console.log, runId = newRunId(), swapPause = 0, sourceTokens, fill = FILL } = {}) {
   const timings = {};
   const warnings = [];
   const warn = (m) => {
@@ -603,9 +638,12 @@ export async function syncOnce({ local, exec, log = console.log, runId = newRunI
     timings[k] = (Date.now() - t0) / 1000;
     t0 = Date.now();
   };
-  const cloudOf = new Map(FILL.map((t) => [t, RENAME(t)]));
-  const cloudNames = [...cloudOf.values()];
-  const arr = `ARRAY[${cloudNames.map(lit).join(",")}]`;
+  // DA33 AC-9: bảng stg S16 / bảng vật thể danh bạ không bao giờ trong danh sách đẩy.
+  const cam = kiemBangDay(fill);
+  if (cam) throw new PhaseError("scan", `bảng ${cam} không được lên cloud (mã đăng nhập S16 / danh bạ vật thể) — dừng trước khi gửi`);
+  const cloudOf = new Map(fill.map((t) => [t, RENAME(t)]));
+  let cloudNames = [...cloudOf.values()];
+  let arr = `ARRAY[${cloudNames.map(lit).join(",")}]`;
 
   // 1. catalog
   let cloudCols, plan, cloudCounts;
@@ -629,8 +667,17 @@ export async function syncOnce({ local, exec, log = console.log, runId = newRunI
       if (!cloudCols.has(r.t)) cloudCols.set(r.t, []);
       if (!r.gen) cloudCols.get(r.t).push(r.c);
     }
-    const missing = cloudNames.filter((t) => !cloudCols.has(t));
+    const vang = cloudNames.filter((t) => !cloudCols.has(t));
+    for (const t of vang.filter((x) => BANG_TUY_CHON.has(x))) {
+      log(`  bỏ qua ${t} — cloud chưa có bảng (áp ${BANG_TUY_CHON.get(t)} rồi lượt sau chép)`);
+    }
+    const missing = vang.filter((t) => !BANG_TUY_CHON.has(t));
     if (missing.length) throw new Error(`cloud thiếu bảng: ${missing.join(", ")}`);
+    if (vang.length) {
+      cloudNames = cloudNames.filter((t) => !vang.includes(t));
+      fill = fill.filter((t) => !vang.includes(cloudOf.get(t)));
+      arr = `ARRAY[${cloudNames.map(lit).join(",")}]`;
+    }
     const fks = await exec(`SELECT conrelid::regclass::text AS src, confrelid::regclass::text AS dst
       FROM pg_constraint WHERE contype = 'f' AND connamespace = 'public'::regnamespace`);
     const pkRows = await exec(`SELECT c.relname AS t, a.attname AS c
@@ -673,19 +720,14 @@ export async function syncOnce({ local, exec, log = console.log, runId = newRunI
         [Object.values(SHRINK_AUDIT), SHRINK_AUDIT_HOURS],
       ));
     }
-    if (!tokens) {
-      const { rows } = await local.query(
-        `SELECT DISTINCT x FROM (SELECT real_name AS x FROM source_registry
-           UNION ALL SELECT unnest(source_ids) FROM source_registry) s WHERE length(x) > 0`,
-      );
-      tokens = rows.map((r) => r.x);
-    }
+    // Một hàm nạp chung (che-ten-nguon-khong-lay-tu-dau): mọi token của sổ kèm cờ match_whole; thiếu bảng → [] → dừng dưới.
+    if (!tokens) tokens = tokensFromEntries(await docSourceNameEntries(local));
     // Không có gì để soát = bộ chặn tầng A đang mở → dừng thay vì cho qua (fail-closed).
     if (!tokens.length) throw new PhaseError("scan", "không đọc được tên/định danh nguồn nào từ source_registry local — không soát được, không gửi");
     const { rows: lc } = await local.query(
       `SELECT table_name AS t, column_name AS c, udt_name AS u FROM information_schema.columns
        WHERE table_schema = 'public' AND table_name = ANY($1) ORDER BY table_name, ordinal_position`,
-      [FILL],
+      [fill],
     );
     const localCols = new Map();
     const geo = new Map();
@@ -693,7 +735,7 @@ export async function syncOnce({ local, exec, log = console.log, runId = newRunI
       (localCols.get(r.t) ?? localCols.set(r.t, []).get(r.t)).push(r.c);
       if (r.u === "geometry" || r.u === "geography") (geo.get(r.t) ?? geo.set(r.t, []).get(r.t)).push(r.c);
     }
-    for (const t of FILL) {
+    for (const t of fill) {
       const ct = cloudOf.get(t);
       const sel = selectList(t, localCols.get(t) ?? []);
       for (const c of sel.unapproved) warn(`cột chưa duyệt lên cloud, ở lại máy: ${t}.${c}`);
@@ -707,6 +749,11 @@ export async function syncOnce({ local, exec, log = console.log, runId = newRunI
       const list = selectList(t, send, geo.get(t) ?? [], tokens).sql;
       const { rows } = await local.query(localReadSql(t, list));
       data.set(ct, send.length ? rows.map((r) => r.j) : []);
+    }
+    // DA33 AC-9: mã căn, khu_id, toa_id S16 (đăng nhập) không có trong bất kỳ giá trị nào sắp gửi.
+    const hitS16 = soatDuLieu(data, await tokenS16(local));
+    if (hitS16) {
+      throw new PhaseError("scan", thongDiepS16(hitS16));
     }
     const masked = maskedSellerWarning(await countMaskedSeller(local, tokens));
     if (masked) warn(masked);
@@ -773,7 +820,7 @@ export async function runMain({ local, exec, out = console.log, err = console.er
     for (const [t, n] of Object.entries(r.counts)) out(`  ${t}: ${n}`);
     const tm = Object.entries(r.timings).map(([k, v]) => `${k} ${v.toFixed(1)}s`).join(" · ");
     out(
-      `sync xong ${new Date().toISOString()} (run ${r.runId}): ${r.total} dòng, ${FILL.length} bảng; ${tm}; tổng ${((Date.now() - started) / 1000).toFixed(1)}s; leak gate PASS`,
+      `sync xong ${new Date().toISOString()} (run ${r.runId}): ${r.total} dòng, ${Object.keys(r.counts).length} bảng; ${tm}; tổng ${((Date.now() - started) / 1000).toFixed(1)}s; leak gate PASS`,
     );
     return 0;
   } catch (e) {

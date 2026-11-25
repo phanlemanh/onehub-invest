@@ -1,0 +1,73 @@
+{
+ "feature_plain": "Mỗi tin rao chỉ thuộc một căn, và tin đổi giá không đẻ ra căn mới. Hiện 2.682 tin đang gắn hơn một căn (247 hôm 27/10 → 1.853 hôm 11/11 → 2.682 hôm 12/11), con số tăng mỗi đêm.",
+ "will_do": [
+  {
+   "id": "AC-1",
+   "p": "Sẽ dọn link thừa: mỗi tin giữ đúng căn tạo sớm nhất, 2.935 link thừa chép trọn vào nhật ký trước khi gỡ, không căn nào bị xoá."
+  },
+  {
+   "id": "AC-3",
+   "p": "Sẽ khôi phục được nguyên trạng từ nhật ký nếu cần quay lui."
+  },
+  {
+   "id": "AC-4",
+   "p": "Sẽ không sinh thêm căn hay link khi chạy bộ dựng căn hai lần liền."
+  },
+  {
+   "id": "AC-5",
+   "p": "Sẽ giữ tin đổi giá ở đúng căn cũ, không sinh căn mới."
+  },
+  {
+   "id": "AC-6",
+   "p": "Sẽ giữ nguyên mã định danh (stable_key) của mọi căn đang có."
+  },
+  {
+   "id": "AC-7",
+   "p": "Sẽ vẫn gắn tin mới vào đúng căn có sẵn, và tin đã gắn không bị kéo sang căn khác khi diện tích của nó đổi."
+  },
+  {
+   "id": "AC-9",
+   "p": "Sẽ sửa bước đối soát đêm: khi một tin bị thay bằng tin kế đã thuộc căn khác, link cũ được ghi vào nhật ký khôi phục thay vì mất không dấu vết; tin kế chưa có căn thì nhận căn như trước."
+  }
+ ],
+ "wont_do": [
+  {
+   "id": "AC-2",
+   "p": "Chặn tin gắn căn thứ hai bằng ràng buộc trong DB; chạy lại migration 098 không đổi gì."
+  },
+  {
+   "id": "AC-8",
+   "p": "Chặn bộ dựng căn gắn thêm link ngay cả khi máy thu chưa áp 098."
+  },
+  {
+   "id": "OOS-1",
+   "p": "KHÔNG tự áp lên máy thu hay cloud: hai lượt áp mỗi lượt chờ một lời riêng của anh, theo thứ tự ở Hỏi-3."
+  },
+  {
+   "id": "OOS-2",
+   "p": "KHÔNG gộp các căn đã lỡ sinh ra do đổi giá trước đây — cần người phân biệt căn trùng với căn khác nhau cùng toà."
+  },
+  {
+   "id": "OOS-3",
+   "p": "KHÔNG tự ghim lại các hồ sơ đã ký có chạm bộ dựng căn — việc của giám sát sau khi gộp."
+  }
+ ],
+ "coverage_plain": [
+  {
+   "i": 0,
+   "p": "Dữ liệu đang hỏng: dọn, chạy lại an toàn, quay lui được (AC-1, AC-2, AC-3)."
+  },
+  {
+   "i": 1,
+   "p": "Vòng đời một tin: tin mới, chạy lại, đổi giá, máy chưa áp migration, tin bị thay ở đối soát đêm (AC-4, AC-5, AC-7, AC-8, AC-9)."
+  },
+  {
+   "i": 2,
+   "p": "Định danh căn: giữ mã, không xoá căn, không gộp nhầm căn khác giá (AC-1, AC-6, AC-7)."
+  },
+  {
+   "i": 3,
+   "p": "Ràng buộc chặn link thứ hai (AC-2)."
+  }
+ ]
+}
