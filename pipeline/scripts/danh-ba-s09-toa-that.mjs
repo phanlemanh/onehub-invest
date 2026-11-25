@@ -338,7 +338,11 @@ try {
   const giam = [...toaTheoNutTruoc].filter(([n, so]) => (toaTheoNutSau.get(n) ?? 0) < so).length;
   o("E12 nút đã có bị giảm toà", giam, giam === 0);
   // Đối chứng dương trên cùng bản chép: cấy một bản ghi nằm ở nút 0 mà ba toà trỏ về một nút có thật → đúng một dòng nêu nút 0.
-  const nutThat = Number([...toaTheoNutTruoc.keys()][0]);
+  // Nút cấy phải chưa có bản ghi thật nào trỏ về — không thì luật «nhiều bản ghi» chặn đúng và đối chứng chết vì chọn nút (đo 25/11
+  // sau khi nhận main: nút đầu của toaTheoNutTruoc đã có bản ghi trỏ về).
+  const daTro = new Set(banGhi.flatMap((r) => r.nut.map(Number)));
+  const nutThat = Number([...toaTheoNutTruoc.keys()].find((n) => !daTro.has(Number(n))));
+  if (!Number.isFinite(nutThat)) throw new Error("E12 đối chứng: không còn nút nào chưa có bản ghi trỏ về để cấy");
   const cay = timNutTrungNoi([...banGhi.map((r) => ({ ...r, nut: r.nut.map(Number) })), { node_id: 0, tong: 3, co_bang_chung: 3, nut: [nutThat, nutThat, nutThat] }]);
   o("E12 đối chứng cấy bản ghi sai nút", cay.length, cay.length === 1 && cay[0].node_id === 0, "phải đúng 1 dòng nêu nút cấy");
 
