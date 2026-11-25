@@ -69,3 +69,5 @@ trọn đầu tiên sau áp ZC15 + ZC16: tỉ lệ ≤ 8,0%; ảnh link `/jpg/` 
 
 - Mã thử lại và ca test 2511-3: ZCode (claudedp-2511-3); vòng này bỏ `urlFetched`, thêm assert tên tệp băm URL đã tải; đột biến
   băm theo URL gốc, bỏ thử lại, thử lại mọi lỗi → đỏ; chạy lại mỗi lượt chấm bằng `probes/tu-thu.sh` (đuôi lệnh của E1–E3).
+- Số đo cho HT9/kit (GS 25/11): đổi 5 dòng một tệp test (`collector/src/test/media-fetch.test.ts`, sửa AC-4 sau S4 r1) → 2 lượt ×
+  ~65′ suite pipeline (ZC16 r2 + ghim lại ZC15), không có đường giữ kết quả suite khi mã sản xuất không đổi.
