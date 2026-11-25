@@ -10,7 +10,7 @@ import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, readdi
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { pathToFileURL } from "node:url";
-import { gunzipSync } from "node:zlib";
+import { gzipSync, gunzipSync } from "node:zlib";
 import { entryCua, docSuffixes, chepAnhSong, ghiSnapshotBuu, sapXepReplay } from "./backfill-s03-media-2511.mjs";
 
 const HERE = dirname(new URL(import.meta.url, "file:").pathname);
