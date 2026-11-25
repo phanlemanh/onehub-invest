@@ -30,19 +30,28 @@ che tên nguồn ở mọi cột đi lên bằng hàm dùng chung của HT18 và
   pha scan; chiều đỏ: bỏ bước che thì lượt dừng như 24/11.
 - AC-4: Given trang Ops đọc `dq_check_results.detail` qua `do-hang-ngay.ts`, When detail mang tên nguồn (máy thu), Then giá trị hiện ra
   đã che như `dq-checks.ts`; cấy tên nguồn vào detail thì đầu ra không chứa nó.
-- AC-5: Given máy thu thật, When chạy lượt sync khô (đọc + che + soát, không gửi), Then số ô che theo bảng.cột bằng số đếm của
-  `scripts/do-ten-nguon-cloud.mjs` phía máy thu, bộ chặn ra 0, thời gian lượt không quá 1,5 lần lượt trước khi có che.
+- AC-5: Given máy thu thật, When chạy lượt sync khô (đọc + che + soát, không gửi, không đường nào tới cloud), Then số ô che theo bảng.cột
+  bằng số đếm của `scripts/do-ten-nguon-cloud.mjs` phía máy thu, bộ chặn ra 0, một phép đếm thô độc lập (khớp thẳng chuỗi gốc của
+  source_registry, không phân biệt hoa thường) trên dữ liệu đã che ra 0, và pha đọc + che + soát không quá 1,5 lần pha đọc + soát của
+  mã cũ đo cùng giờ, lượt đầy đủ ước tính dưới 15 phút.
 - AC-6: Given lệnh đo `scripts/do-ten-nguon-cloud.mjs`, When chạy, Then nó chỉ gửi SELECT khoá chính + cột lên cloud trong giao dịch
   chỉ đọc (không mẫu nào chứa tên nguồn), đếm tại máy, in bảng.cột · ô cloud · ô máy thu, không ghi đĩa giá trị; ca kiểm lời gọi
   ghi lại mọi câu SQL gửi đi và không câu nào chứa token tên nguồn.
-- AC-7: Given hồ sơ áp, When Mạnh cho lời áp, Then sau lượt sync đầu tiên của mã mới, lệnh đo trên cloud ra 0 ô ở mọi bảng.cột, cloud
+- AC-8: Given bảng có cột mang tên nguồn trong TÊN cột (`airdna_id`, `airdna_market_id`, `airdna_sub_id` — ngoài phạm vi đổi tên),
+  When che và soát, Then khoá cấp dòng (tên cột lấy từ catalog) giữ nguyên và không bị bộ chặn tính, còn giá trị của cột vẫn được che;
+  khoá json LỒNG mang tên nguồn vẫn bị che hoặc chặn.
+- AC-9: Given bên đọc sau che, When data-api markets đọc `areas.meta` đã che và thẻ Invest đọc tin có mọi ảnh trúng tên nguồn, Then
+  đầu ra markets giống trước khi che ở mọi trường nó trả, và thẻ Invest rơi về trạng thái không ảnh, không lỗi.
+- AC-7: Given hồ sơ áp, When Mạnh cho lời áp, Then sau lượt sync đầu tiên của mã mới, lệnh đo trên cloud ra 0 ô ở mọi bảng.cột (cả
+  phép đếm thô độc lập), cloud
   cập nhật lại (lần tráo mới trong sync_stage.swaps) và số dòng cloud đuổi kịp máy thu.
 
 ## Coverage
 
 - Che: mọi kiểu ô (chữ, URL đứng riêng, mảng URL, json) → AC-1; ô gây sự cố 24/11 → AC-3
 - Soát: mọi bảng FILL, fail-closed → AC-2
-- Bên đọc: Ops do-hang-ngay → AC-4; Invest thẻ tin, data-api — giá trị đã che từ nguồn (AC-1)
+- Bên đọc: Ops do-hang-ngay → AC-4; data-api markets, thẻ Invest sau che → AC-9
+- Định danh lược đồ mang tên nguồn (tên cột) → AC-8
 - Đo: máy thu (khô) → AC-5; cloud chỉ đọc không mẫu → AC-6; sau áp → AC-7
 
 ## Out of scope

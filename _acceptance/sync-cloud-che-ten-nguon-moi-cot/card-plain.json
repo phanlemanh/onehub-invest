@@ -1,0 +1,34 @@
+{
+ "feature_plain": "Đường đồng bộ lên cloud tự che tên nguồn thật ở mọi cột trước khi gửi, nên cloud sạch tên nguồn và một ô bẩn không còn làm cloud đứng số.",
+ "will_do": [
+  {"id":"AC-1","p":"Sẽ che tên nguồn ở mọi ô của mọi bảng đi lên cloud: chữ thành mã S0x, đường dẫn để trống, khoá JSON thành mã."},
+  {"id":"AC-3","p":"Sẽ cho ô kiểu đã làm cloud đứng số đêm qua đi qua sau khi che, không chặn cả lượt nữa."},
+  {"id":"AC-4","p":"Sẽ che chi tiết kiểm chất lượng ở trang Ops đang hiện mà không che."},
+  {"id":"AC-5","p":"Sẽ chạy thử khô trên máy thu (không chạm cloud): số ô che khớp phép đo, đếm độc lập ra 0, không chậm quá 1,5 lần."},
+  {"id":"AC-6","p":"Sẽ có lệnh đo cloud chỉ đọc, không gửi bất kỳ mẫu tên nguồn nào lên cloud."},
+  {"id":"AC-8","p":"Sẽ giữ nguyên tên cột cũ có chữ nguồn (không đổi trong hàng này), chỉ che giá trị."},
+  {"id":"AC-9","p":"Sẽ giữ API thị trường trả y như cũ, thẻ tin Invest không vỡ khi mọi ảnh bị bỏ."},
+  {"id":"AC-7","p":"Sẽ dọn 3.743 ô trên cloud bằng lượt đồng bộ đầu tiên sau khi anh cho lời áp, rồi đo lại ra 0."}
+ ],
+ "wont_do": [
+  {"id":"AC-2","p":"Chặn cả lượt gửi nếu vẫn còn tên nguồn ở bất kỳ bảng nào sau khi che — không cho lọt im lặng."},
+  {"id":"OOS-1","p":"KHÔNG đổi tên cột có chữ nguồn trên cloud; việc đó cần DDL cloud, để sau."},
+  {"id":"OOS-2","p":"KHÔNG sửa đường dẫn trang gốc mà API dữ liệu trả; việc của M5."},
+  {"id":"OOS-3","p":"KHÔNG tự sửa ô đang chặn đồng bộ; GS xin lời anh riêng, sửa bền ở hàng PL39."},
+  {"id":"OOS-4","p":"KHÔNG sửa bước biến đổi dữ liệu; hàng khác."}
+ ],
+ "coverage_plain": [
+  {"i":0,"p":"Che mọi kiểu ô (AC-1), kể cả ô gây sự cố đêm qua (AC-3)."},
+  {"i":1,"p":"Bộ chặn soát mọi bảng, vẫn dừng nếu sót (AC-2)."},
+  {"i":2,"p":"Trang và API đang đọc các cột này vẫn chạy đúng sau che (AC-4, AC-9)."},
+  {"i":3,"p":"Đo ở máy thu, trên cloud và sau khi áp, có phép đếm độc lập (AC-5, AC-6, AC-7)."},
+  {"i":4,"p":"Tên cột có chữ nguồn được giữ nguyên, không làm dừng lượt (AC-8)."}
+ ],
+ "gap_probe_plain": [
+  {"i":0,"p":"Mở che và chặn cho mọi bảng thì tên cột có chữ nguồn sẽ làm mọi lượt dừng. Đã thêm AC-8 giữ tên cột, vẫn che giá trị."},
+  {"i":1,"p":"Lượt chạy thử khô chưa chứng minh không chạm cloud. Đã trỏ mọi đường cloud vào cổng chết và kiểm không có kết nối."},
+  {"i":2,"p":"Che, chặn và đo cùng một bộ dò nên «0 ô» là tự xác nhận. Đã thêm phép đếm thô độc lập."},
+  {"i":3,"p":"Phép so thời gian đem hai thứ khác loại. Đã so cùng pha với mã cũ và thêm trần dưới 15 phút."},
+  {"i":4,"p":"Chưa kiểm trang và API đọc các cột sau khi che. Đã thêm AC-9."}
+ ]
+}

@@ -379,6 +379,8 @@ executors:
     scc_do_hang_ngay: "cd app && node --import tsx --test tests/do-hang-ngay-che.test.tsx"   # sync-cloud-che-ten-nguon-moi-cot E4 Ops do-hang-ngay che detail
     scc_kho: "nice -n 10 node pipeline/sync-cloud.mjs --kho"   # sync-cloud-che-ten-nguon-moi-cot E5 lượt khô trên máy thu thật; ngoài CI
     scc_do: "node --test scripts/do-ten-nguon-cloud.test.mjs"   # sync-cloud-che-ten-nguon-moi-cot E6 lệnh đo không gửi mẫu lên cloud
+    scc_dinh_danh: "bash db/db-thu.sh oneinvest_suite_scc --chay node --test --test-concurrency=1 --test-name-pattern='^SCC-8:' pipeline/sync-cloud-che.test.mjs"   # sync-cloud-che-ten-nguon-moi-cot E8 định danh lược đồ giữ nguyên
+    scc_ben_doc: "bash db/db-thu.sh oneinvest_suite_scc --chay node --test --test-concurrency=1 --test-name-pattern='^SCC-9:' pipeline/sync-cloud-che.test.mjs"   # sync-cloud-che-ten-nguon-moi-cot E9 bên đọc markets, thẻ Invest sau che
     scc_sau_ap: "node scripts/do-ten-nguon-cloud.mjs"   # sync-cloud-che-ten-nguon-moi-cot E7 sau áp; chạy trong hồ sơ áp
     bcl_tap: "bash db/db-thu.sh oneinvest_suite_bcl --chay node --test --test-concurrency=1 --test-name-pattern='^BCL-1:' scripts/ban-chep-da-loc.itest.mjs"   # ban-chep-da-loc-cho-may-phat-trien E1 — tập bảng = FILL sync-cloud, còn lại 0 dòng, DB của riêng lượt
     bcl_cot: "node --test scripts/ban-chep-da-loc.test.mjs"   # ban-chep-da-loc-cho-may-phat-trien E2 — cột ba bảng người bán = selectList, thuần

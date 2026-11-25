@@ -34,21 +34,35 @@ evals:
     executor: script
     cmd: config:executors.script.scc_kho
     long_running: 60
-    expected: "exit 0 trên máy thu thật, lượt khô (đọc + che + soát, exec cloud giả không gửi gì): số ô che theo bảng.cột = số máy thu của do-ten-nguon-cloud.mjs --chi-may-thu; bộ chặn 0; in thời gian lượt và so với lượt tốt gần nhất trong pipeline/logs/cloud-sync.log (≤ 1,5 lần). Ngoài CI"
+    expected: "exit 0 trên máy thu thật, lượt khô (--kho): mọi biến đường cloud (token, URL) trỏ vào cổng chết 127.0.0.1:1 và ca kiểm không có socket nào mở tới máy chủ Supabase (lsof của tiến trình); chiều đỏ: bỏ --kho với cùng môi trường thì lượt fail kết nối, không ghi. Số ô che theo bảng.cột = số máy thu của do-ten-nguon-cloud.mjs --chi-may-thu; bộ chặn 0; phép đếm thô độc lập (khớp thẳng chuỗi gốc real_name, tên miền, source_ids, không phân biệt hoa thường) trên payload đã che = 0; pha đọc + che + soát của mã mới ≤ 1,5 lần pha đọc + soát của mã cũ (git stash-free: chạy mã cũ từ worktree tạm ở merge-base) đo cùng giờ, và lượt đầy đủ ước tính < 15 phút. Ngoài CI"
     paths: [pipeline/sync-cloud.mjs, scripts/do-ten-nguon-cloud.mjs]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E6
     criterion: AC-6
     executor: script
     cmd: config:executors.script.scc_do
-    expected: "exit 0; với exec cloud giả ghi lại mọi câu SQL: mọi câu là SELECT khoá + cột trong giao dịch chỉ đọc, không câu nào chứa token tên nguồn (soát bằng findSourceNames trên chính văn bản câu), không ghi tệp giá trị; đầu ra chỉ số. Chiều đỏ: bản đo lọc ở cloud bằng mẫu tên nguồn thì ca nêu câu vi phạm (không in token)"
+    expected: "exit 0; với exec cloud giả ghi lại mọi câu SQL: mọi câu là SELECT khoá + cột trong giao dịch chỉ đọc, không câu nào chứa token tên nguồn (soát bằng findSourceNames trên chính văn bản câu sau khi bỏ định danh lược đồ có trong catalog cloud — danh sách định danh được miễn in ra output), không ghi tệp giá trị; đầu ra chỉ số; có đếm thô độc lập như E5. Chiều đỏ: bản đo lọc ở cloud bằng mẫu tên nguồn thì ca nêu câu vi phạm (không in token)"
     paths: [scripts/do-ten-nguon-cloud.mjs, scripts/do-ten-nguon-cloud.test.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.scc_dinh_danh
+    expected: "exit 0; dòng localReadSql của một bảng có cột airdna_* (DB của lượt): khoá cấp dòng giữ nguyên tên cột, giá trị cột chứa tên nguồn vẫn được che, bộ chặn ra 0; đối chứng dương: cấy tên nguồn vào một khoá json LỒNG → bị che (hoặc chặn), ca nêu đường khoá"
+    paths: [pipeline/sync-cloud.mjs, pipeline/sync-cloud-che.test.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.scc_ben_doc
+    expected: "exit 0; data-api markets (hàm đọc thật của routes/markets.ts trên DB của lượt) trả cùng JSON trước và sau khi areas.meta được che; thẻ Invest (hàm đọc queries.ts) với tin có mọi phần tử photo_urls trúng → mảng rỗng, ảnh thẻ null, không ném lỗi. Chiều đỏ: bản che làm rỗng cả ô meta (thay vì đổi khoá) thì ca markets đỏ nêu trường lệch"
+    paths: [pipeline/lib/che-ten-nguon-gia-tri.mjs, pipeline/sync-cloud-che.test.mjs]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E7
     criterion: AC-7
     executor: script
     cmd: config:executors.script.scc_sau_ap
     status: not-run
-    expected: "Sau áp (lời riêng của Mạnh): do-ten-nguon-cloud.mjs trên cloud ra 0 ô ở mọi bảng.cột; sync_stage.swaps có lần tráo mới sau giờ áp; số dòng cloud ≥ 99% máy thu ở mọi bảng FILL. Chạy trong hồ sơ áp, không trong lượt chấm"
+    expected: "Sau áp (lời riêng của Mạnh): do-ten-nguon-cloud.mjs trên cloud ra 0 ô ở mọi bảng.cột, cả đếm thô độc lập; sync_stage.swaps có lần tráo mới sau giờ áp; số dòng cloud ≥ 99% máy thu ở mọi bảng FILL. Chạy trong hồ sơ áp, không trong lượt chấm"
     paths: [scripts/do-ten-nguon-cloud.mjs]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
