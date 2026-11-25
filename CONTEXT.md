@@ -83,7 +83,7 @@ _Avoid_: line căn, dòng căn
 R1.01. Thứ bậc chung hai khu: Dự án → Phân khu → Cụm (khi có) → Toà → Trục → Căn; toà không có cụm (LD2, BE3, GH3, BS10) gắn
 thẳng phân khu. Bài chỉ nêu «S1» gắn mức cụm, không đoán toà; cùng chữ ở hai dự án là hai cụm khác nhau (Mạnh chốt 24/11).
 - Code: `asset_nodes.node_type = subzone`, con của phân khu
-_Avoid_: block, khối
+_Avoid_: block
 
 **Mã căn**: Chuỗi định vị căn trong bài hay ở nguồn danh mục, đọc theo một quy ước cho cả hai khu (Mạnh chốt 24/11): khớp tên
 toà dài nhất có trong danh bạ trước, phần còn lại là tầng rồi trục — trục là hai chữ số cuối của số căn, có thể kèm một chữ cái.
