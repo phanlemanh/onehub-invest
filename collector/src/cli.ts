@@ -10,6 +10,7 @@ function usage(): never {
 
 Usage:
   npm run collect -- collect --city <id> --source <id>
+  npm run collect -- login --source <id>     (Mạnh tự đăng nhập — mở đúng profile của bộ thu)
   npm run collect -- list-cities
   npm run collect -- list-sources
 
@@ -35,7 +36,15 @@ if (command === "list-sources") {
   for (const c of COLLECTORS.values()) console.log(`${c.id.padEnd(16)} ${c.description}`);
   process.exit(0);
 }
-if (command !== "collect") usage();
+// 2511-s02: nguồn có phiên đăng nhập tự khai lệnh login — CLI chỉ điều hướng, không biết profile nào.
+if (command === "login") {
+  const coLogin = COLLECTORS.get(values.source ?? "")?.login;
+  if (!coLogin) usage();
+  coLogin().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+} else if (command !== "collect") usage();
 
 const city = cityById(values.city ?? "");
 const collector = COLLECTORS.get(values.source ?? "");

@@ -66,6 +66,8 @@ export type Collector = {
   /** Tốc độ mặc định (request/giây) — tôn trọng nguồn, tránh bị chặn. */
   requestsPerSecond: number;
   collect(ctx: CollectContext): Promise<{ items: RawItem[]; coverage: CoverageReport }>;
+  /** 2511-s02: mở cửa sổ để Mạnh TỰ đăng nhập vào ĐÚNG profile của bộ thu — chỉ nguồn có phiên đăng nhập. */
+  login?(): Promise<void>;
 };
 
 /** Trạng thái resume giữa các lần chạy (cursor phân trang, ngày chạy cuối...). */
