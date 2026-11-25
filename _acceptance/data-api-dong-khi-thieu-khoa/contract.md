@@ -5,10 +5,10 @@ slug: data-api-dong-khi-thieu-khoa
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [api, docs]
-status: approved
+status: draft
 design_doc: _acceptance/data-api-dong-khi-thieu-khoa/design.md
-approved_by: Mạnh
-approved_at: 2026-11-25
+approved_by:
+approved_at:
 ---
 
 # Acceptance Contract: data-api-dong-khi-thieu-khoa
@@ -61,8 +61,11 @@ Căn cứ: gs XONG m5-2511-3 điều (4) (kênh điều phối, 25/11 04:32Z) ·
   `data-api/CLAUDE.md`, `data-api/.env.example`, `data-api/docker-compose.yml`, `_acceptance/data-api-dong-khi-thieu-khoa/**`,
   đúng các khoá `executors.*.dapi_khoa*` thêm vào `_acceptance/config.yaml`, `PRODUCT-MAP.md`, `LO-TRINH.html`; không
   `package-lock.json`; (b) mọi tệp test của `data-api/test/` chạy chung một lượt trên DB thử đều xanh (kể cả test HT19 sau
-  dòng `NODE_ENV`); (c) toàn cây `data-api/` không có tên nguồn thật (bộ lấy tên `scripts/lib/tier-a-source-names.mjs`,
-  không in tên); (d) `npm run typecheck` trong `data-api/` thoát 0.
+  dòng `NODE_ENV`); (c) toàn văn mọi tệp `data-api/` nhánh đổi không có tên nguồn thật ngoài dạng định danh có `_` liền
+  kề (bộ lấy tên `scripts/lib/tier-a-source-names.mjs`, không in tên); tệp `data-api/` nhánh KHÔNG đổi mà có tên từ trước thì
+  probe in một dòng «tồn đọng» đếm theo mã S0x, không làm đỏ — sửa chúng nằm ngoài ranh giới (a), đã báo gs; (d) `npm run
+  typecheck` trong `data-api/` thoát 0. Nền so phạm vi: merge-base với `origin/main`; khi nhánh đứng trên đỉnh HT19
+  (`0d48dfcb0`) mà HT19 chưa vào `origin/main` thì nền là đỉnh HT19 (tệp của HT19 không thuộc PB3).
 - AC-9: Given tài liệu sau hàng, When đọc, Then `README.md` (bảng biến môi trường + mục Authentication) và `.env.example`
   nói đúng luật mới — chỉ `NODE_ENV` development/test mở được khi không khoá, nơi khác thiếu khoá thì 503 và bản Node không
   khởi động; `docker-compose.yml` truyền `DATA_API_KEYS` dạng bắt buộc (`${DATA_API_KEYS:?…}`); `CLAUDE.md` mô tả

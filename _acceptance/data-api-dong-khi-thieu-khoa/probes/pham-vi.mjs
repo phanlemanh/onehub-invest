@@ -110,6 +110,11 @@ const diffConfig = git("diff", "-U0", goc, "--", "_acceptance/config.yaml");
 const tepDataApi = git("ls-files", "data-api").split("\n").filter(Boolean);
 
 const loi = [...soatTep(tep), ...soatPkg(pkgCu, pkgMoi), ...soatHt19(diffHt19), ...soatConfig(diffConfig)];
+// Vế (c) sau lần sửa hợp đồng d-20261125T141207Z-12: tệp data-api/ nhánh đổi → soát TOÀN VĂN, đỏ; tệp data-api/ nhánh không đổi → chỗ có sẵn
+// từ trước, in thành dòng «tồn đọng» (đếm theo mã, không tên), không đỏ — sửa chúng nằm ngoài ranh giới của PB3.
+const tepDoi = new Set(tep);
+const tonDong = new Map(); // mã → số tệp
+let soTepTonDong = 0;
 for (const t of tepDataApi) {
   let vanBan;
   try {
@@ -117,8 +122,17 @@ for (const t of tepDataApi) {
   } catch {
     continue; // tệp đã xoá khỏi cây làm việc
   }
-  for (const m of tenTran(vanBan, ten)) loi.push(`AC-8 tên nguồn thật: ${m} (${t})`);
+  const ma = tenTran(vanBan, ten);
+  if (tepDoi.has(t)) {
+    for (const m of ma) loi.push(`AC-8 tên nguồn thật: ${m} (${t})`);
+  } else if (ma.length) {
+    soTepTonDong += 1;
+    for (const m of ma) tonDong.set(m, (tonDong.get(m) ?? 0) + 1);
+  }
 }
+const dongTonDong = tonDong.size
+  ? `tồn đọng: ${soTepTonDong} tệp data-api/ nhánh không đổi có tên nguồn thật từ trước (${[...tonDong].sort().map(([m, n]) => `${m}×${n}`).join(", ")}) — ngoài phạm vi PB3, đã báo gs`
+  : "tồn đọng: 0 tệp";
 
 // ── Chiều đỏ: cùng các hàm trên, đầu vào cấy ─────────────────────────────────────────────────────────────────────
 const don = ten.find((e) => /^[A-Za-z0-9]{5,}$/.test(e.realName)) ?? ten[0];
@@ -127,7 +141,7 @@ const o = {
   "pha-tep": soatTep([...tep, "data-api/Dockerfile"]).includes("AC-8 NGOÀI PHẠM VI: data-api/Dockerfile"),
   "pha-lock": soatTep([...tep, "data-api/package-lock.json"]).includes("AC-8 NGOÀI PHẠM VI: data-api/package-lock.json"),
   "pha-ht19": soatHt19(`${diffHt19}\n@@ -30,0 +31 @@\n+process.env.VERCEL = "1";`).includes("AC-8 test HT19 đổi ngoài một dòng NODE_ENV"),
-  "pha-ten": tenTran(`${banChep}\nconst nguon = "${don.realName}";\n`, ten).includes(don.code),
+  "pha-ten": tenTran(`${banChep}\nconst nguon = "${don.realName}";\n`, ten).includes(don.code), // bản chép tạm của một tệp nhánh đổi (src/index.ts)
   "pha-config": soatConfig(`+    khoa_la: "echo"\n+    dapi_khoa_x: "echo"`).join("|") === "AC-8 NGOÀI PHẠM VI: _acceptance/config.yaml khoá khoa_la",
   "pha-pkg": soatPkg(pkgCu, pkgMoi.replace('"start": "node dist/index.js"', '"start": "node dist/index.js --x"')).length === 1,
   "dinh-danh": tenTran(`SELECT 1 FROM ${don.realName.toLowerCase()}_listings`, ten).length === 0,
@@ -137,9 +151,11 @@ for (const [ten_o, dat] of Object.entries(o)) {
 }
 console.log(`chieu-do: ${Object.keys(o).join(", ")} — mỗi ô cấy ra đúng thông điệp (pha-tep → «AC-8 NGOÀI PHẠM VI: data-api/Dockerfile», pha-lock → «AC-8 NGOÀI PHẠM VI: data-api/package-lock.json», pha-ht19 → «AC-8 test HT19 đổi ngoài một dòng NODE_ENV», pha-ten → «AC-8 tên nguồn thật: ${don.code}», pha-config → «AC-8 NGOÀI PHẠM VI: _acceptance/config.yaml khoá khoa_la», pha-pkg → package.json đổi ngoài scripts.dev bị bắt, dinh-danh → không tính)`);
 
+console.log(dongTonDong);
 if (loi.length) {
   for (const l of loi) console.log(l);
   console.log(`pham-vi: ${loi.length} vi phạm (nền ${tenNen})`);
   process.exit(1);
 }
-console.log(`pham-vi: nền ${tenNen}; ${tep.length} tệp đổi, đều trong ranh giới; package.json chỉ đổi scripts.dev; dong-ba-route.test.ts chỉ thêm 1 dòng NODE_ENV; soát ${ten.length} tên nguồn thật trên toàn cây data-api (${tepDataApi.length} tệp), 0 khớp ngoài dạng định danh`);
+const soTepDataApiDoi = tep.filter((t) => t.startsWith("data-api/")).length;
+console.log(`pham-vi: nền ${tenNen}; ${tep.length} tệp đổi, đều trong ranh giới; package.json chỉ đổi scripts.dev; dong-ba-route.test.ts chỉ thêm 1 dòng NODE_ENV; soát ${ten.length} tên nguồn thật trên toàn văn ${soTepDataApiDoi} tệp data-api/ nhánh đổi (cây có ${tepDataApi.length} tệp), 0 khớp ngoài dạng định danh`);
