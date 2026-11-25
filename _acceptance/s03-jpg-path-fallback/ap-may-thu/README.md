@@ -33,4 +33,5 @@ bước nào dưới đây.
    Kỳ vọng: `ĐẠT — <n> bài có ảnh · … · link /jpg/ <k> ảnh, có file …, lỗi 400 … (≤5%) · …`, mã 0 — ghi cạnh số chạy thử ở mục 2
    (trước vá 24/11: 1.069/3.347 ảnh `/jpg/` lỗi 400 ≈ 32%; không đòi 0 vì ảnh chia lại từ link cũ chết cả hai biến thể vẫn giữ
    400). `chưa có bài mới` hay `chưa có ảnh link /jpg/ nào` thì đợi 30′ rồi đo lại. Trên 5% → lùi (mục 4), báo GS, không tự sửa. Một ngày VN trọn sau áp:
-   `node _acceptance/s03-jpg-path-fallback/ap-may-thu/kiem-sau.mjs --ty-le --ngay 3` — tỉ lệ mất hết ảnh của ngày ấy ≤ khoảng 8%.
+   `node _acceptance/s03-jpg-path-fallback/ap-may-thu/kiem-sau.mjs --ty-le --ngay 3` — tỉ lệ mất hết ảnh của ngày ấy ≤ 8,0%; cột
+   `.jxl` là số tệp JPEG XL mỗi ngày — GS theo dõi ngưỡng 1% số bài có ảnh (hàng HT22 đã đóng «không build»), vượt thì báo GS.

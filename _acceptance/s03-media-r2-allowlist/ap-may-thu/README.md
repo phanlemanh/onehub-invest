@@ -28,7 +28,7 @@ làm bước nào dưới đây.
    5. `launchctl kickstart -k gui/$(id -u)/com.oneinvest.collector-api` (lời riêng của Mạnh). Bộ tắt êm đẩy hết tin trong
       bộ đệm thành snapshot trước khi thoát (hạn 45 giây). Rồi `grep 'hậu tố thêm từ máy' ~/dev/onehub-invest/pipeline/logs/launchd-collector-api.log | tail -1`
       phải là `media: 2 hậu tố mặc định + 1 hậu tố thêm từ máy`; `curl -s -o /dev/null -w '%{http_code}' -X POST http://127.0.0.1:9210/agent-report` trả `401` (sống, đòi khoá).
-2. **Số chạy thử.** Hộp cát, không chạm máy thu: `cd collector && npm test` → 85/85 (gồm 5 ca ZC15 và 2 ca ZC9); round-trip
+2. **Số chạy thử.** Hộp cát, không chạm máy thu: `cd collector && npm test` → 85/85 trên nhánh ZC15 (gồm 5 ca ZC15 và 2 ca ZC9), 88/88 trên nhánh chung với ZC16; round-trip
    `bash _acceptance/s03-media-r2-allowlist/ap-may-thu/kiem.sh` → bộ tải của nhánh ra `ĐẠT — 3 bài có ảnh · 0 mất hết ảnh`,
    bộ tải của main ra `KHÔNG ĐẠT — còn 1 ảnh r2.dev lỗi host-not-allowed; còn 1 ảnh lỗi redirect-host`. Số «trước» trên máy
    thu (đo 25/11, ngày đăng VN): tỉ lệ bài có ảnh mà mất hết ảnh 22/11 33,7% · 23/11 28,2% · 24/11 27,5%; ảnh r2.dev bị chặn
