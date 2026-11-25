@@ -226,6 +226,17 @@ không sửa tay, cập nhật bằng cách chép lại từ plugin. `PRODUCT-MA
   thu, không fixture viết tay; có cột «ai đọc đầu ra này phía sau»). Ô bỏ thì ghi «ngoài phạm vi, vì». Căn cứ:
   `docs/research/dieu-tra-tien-do-cham-1511.md`.
 
+## Hai máy: máy thu và máy phát triển M5 (chốt 2026-11-25, ADR-0019, hàng HT25)
+
+- **Máy thu** (Mac mini, `VAI=may-thu`): collector, launchd, pipeline, DB `oneinvest` thật, giữ tầng A. **Máy phát triển M5**
+  (`VAI=may-phat-trien`): cổng Invest, data-api, dev — chỉ giữ bản chép đã lọc của HT18, không tầng A.
+- Dữ liệu chỉ đi **một chiều, theo lệnh**, qua cáp Thunderbolt: `node scripts/day-ban-chep.mjs` trên máy thu (chép + soát, ghim
+  sha256, gửi qua khoá đẩy bị ép lệnh, M5 nạp nguyên tử có lùi). `--trang-thai`, `--lui` để kiểm và lùi. Không plist, không cron.
+- Năm rào (cổng rời máy ở máy thu, một chiều, chỉ hai tệp, lùi được, chỉ theo lệnh) và lối đã bỏ: ADR-0019. Vận hành, cài và thu
+  hồi khoá, rút cáp: **`docs/ops/hai-may.md`**.
+- Giá trị riêng máy (địa chỉ cầu, người dùng, đường khoá, tên máy) chỉ ở `~/.config/onehub/hai-may.env` và `CLAUDE.local.md` —
+  không vào kho công khai. DB trên M5 chỉ thao tác qua `docker exec` (cổng 5433 của M5 không ổn định).
+
 ## Lệnh
 
 ```bash
