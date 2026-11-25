@@ -349,6 +349,10 @@ Khoá nối với S16/S08 (chi tiết số đo ở tệp kê local của lượt
     cần phiên đồng thời**: thử 25/11 (13:50–14:26, căn hộ 6 luồng + thửa 8 luồng ≈ 2,1 lời/s) thì 14:26:53 nguồn trả
     HTTP 429 ở lời chi tiết căn — lần bị chặn đầu tiên của dự án. Sau đó căn hộ bị khoá «tăng tốc»: chỉ còn nhịp
     350 ms, một luồng; bị chặn lần thứ hai thì dừng hẳn chờ người quyết. Một pha một lúc, tối đa ≈ 1,65 lời/s.
+    **Lần 429 thứ hai: 18:30:00 ngày 25/11**, ở ĐÚNG nhịp khoá (một luồng, 350 ms, ≈ 0,44 lời/s, một pha) sau 263
+    lời, với phiên đăng nhập mới — hạn mức của nguồn không theo tốc độ tức thời; sau một lần 429 phải chờ lâu rồi
+    thử đúng một lời nhẹ, không mở lại cả lượt. Từ đó mọi pha cần phiên dừng tối thiểu 24 giờ (tới 18:30 ngày 26/11)
+    và chỉ chạy lại khi Mạnh nói; không đổi phiên, địa chỉ hay dấu trình duyệt để đi tiếp.
   - *tệp tĩnh* — `anh_du_an`: tải ảnh bằng fetch của Node, không mang phiên, KHÔNG gọi API của nguồn (luật 12); tối
     đa 16 kết nối một lượt.
 - **Đường API không nằm trong hợp đồng lẫn trong code.** Bộ thu gọi theo *vai* (`project-list`, `project-detail`,
@@ -522,8 +526,8 @@ Luật đọc:
      `…-4-4` rồi `…-5-6`): bên đọc vẫn cộng dồn theo item.
    - **Hai lượt chạy riêng**, phân biệt bằng `meta.nhomMayChu`: `nguon` — ảnh trên máy chủ lưu trữ của chính nguồn;
      `ngoai` — ảnh chèn từ máy chủ khác (Mạnh chốt 25/11 «Lấy cả ảnh ở máy chủ ngoài»; đo: 82.127 URL trên 4.101 máy
-     chủ, 68.877 trên một máy chủ). Lượt máy chủ ngoài mỗi máy chủ tối đa sáu lời cùng lúc (mức một trình duyệt thường
-     mở cho một máy chủ). Trước khi kết nối tới một
+     chủ, 68.877 trên một máy chủ). Lượt máy chủ ngoài mỗi máy chủ tối đa HAI lời cùng lúc (mức ban đầu; chiều 25/11
+     từng nâng lên sáu để tăng tốc, rồi Mạnh chốt 18:18 «giảm lại lượt thu như ban đầu»). Trước khi kết nối tới một
      máy chủ ngoài (kể cả mỗi bước chuyển hướng) bộ thu giải tên máy chủ; tên trỏ vào dải địa chỉ nội bộ thì KHÔNG kết
      nối — là lỗi tạm (`chiTiet: dns-noi-bo`, chưa từng gửi lời nào; quá ba lượt thì ghi `qua-so-lan-thu`).
    - **Mã lỗi vĩnh viễn** trong `mediaFiles[].error` — hỏi lại cũng vậy, bộ thu không tải lại: `het-han` (link quá hạn
