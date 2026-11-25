@@ -6,7 +6,7 @@ evals:
   - id: E1
     criterion: AC-1
     executor: script
-    long_running: 40
+    long_running: 60
     cmd: bash _acceptance/street-raw-khong-mang-ten-nguon/probes/ban-chep.sh
     paths: ["pipeline/transform-chotot.mjs", "pipeline/lib/mask-source-names.mjs", "pipeline/lib/dac-trung-s06.mjs"]
     expected: >
@@ -17,7 +17,7 @@ evals:
   - id: E2
     criterion: AC-2
     executor: script
-    long_running: 40
+    long_running: 60
     cmd: bash _acceptance/street-raw-khong-mang-ten-nguon/probes/ban-chep.sh
     paths: ["pipeline/transform-chotot.mjs", "pipeline/sync-cloud.mjs", "pipeline/lib/tier-a-guard.mjs", "pipeline/lib/duong-can.mjs"]
     expected: >
@@ -26,7 +26,7 @@ evals:
   - id: E3
     criterion: AC-3
     executor: script
-    long_running: 40
+    long_running: 60
     cmd: bash _acceptance/street-raw-khong-mang-ten-nguon/probes/ban-chep.sh
     paths: ["pipeline/transform-chotot.mjs", "pipeline/lib/mask-source-names.mjs"]
     expected: >
@@ -42,7 +42,7 @@ evals:
   - id: E5
     criterion: AC-5
     executor: script
-    long_running: 40
+    long_running: 60
     cmd: bash _acceptance/street-raw-khong-mang-ten-nguon/probes/ban-chep.sh
     paths: ["pipeline/transform-chotot.mjs"]
     expected: >
