@@ -10,6 +10,7 @@ Từ 24/11 lượt nào cũng dừng ở token hết hạn. Đo lại trên đú
 | Mở route dữ liệu `/data/vn` bằng đúng cấu hình lượt đêm | tài liệu chính trả 403 kèm `cf-mitigated: challenge`, ô «Verify you are human», `navigator.webdriver` đúng |
 | Cũng vậy nhưng bỏ cờ `--enable-automation` | y hệt — Chrome 158 bật `navigator.webdriver` khi có kết nối gỡ lỗi |
 | Mở `/favicon.ico` hay `/robots.txt` (không phải tệp tĩnh có thật) | nguồn trả bộ khung SPA (404) mà không qua thử thách; ứng dụng khởi động đủ để tự gọi `fetch_id_token` rồi `fetch_app_token` và ghi token mới vào `localStorage.auth` |
+| Mở `/robots.txt` bằng Chrome KHÔNG CỬA SỔ, cùng profile (20:15) | không có trang thử thách, dù trình duyệt tự báo `webdriver` đúng và user-agent ghi «Headless»; ứng dụng tự cấp token mới sau 6,7 giây |
 | Gọi thẳng điểm OAuth `/oauth2/token` bằng refresh token của profile | không có phản hồi đọc được — ứng dụng không đi đường ấy, mà qua backend của nguồn |
 | Token sau khi ứng dụng tự cấp | `appToken` và id token cùng lúc cấp, cùng hạn 15 phút; refresh token **không** đổi (so mã băm trước và sau) |
 
@@ -27,7 +28,9 @@ Nghĩa là chỉ có một chỗ gãy: ứng dụng không tải được trên 
 - **Chẩn đoán nói đúng việc phải làm.** Bị từ chối (401/403) → đăng nhập lại. Khung nạp được mà không có token →
   đăng nhập lại. Không nạp được khung ở đường nào → nguồn chặn hoặc lỗi mạng; phiên đã lâu thì vẫn đăng nhập lại.
   Token còn hạn mà bị máy chủ từ chối, nạp lại không có token khác → dừng cả lượt, lặp lại thì đăng nhập lại.
-- **Một cửa sổ cho cả lượt, dùng tab sẵn có.** Trước đây mỗi lần cần token là mở lại trình duyệt. Giữ một cửa sổ;
+- **Không cửa sổ, không lẫn với trình duyệt của Mạnh.** Trình duyệt của bộ thu mở ở chế độ không cửa sổ (`headless`), trên
+  profile riêng của bộ thu — không bung cửa sổ lên màn hình, không đụng tab hay phiên Mạnh đang dùng (lời giao
+  claudedp-2511-50). Một tiến trình cho cả lượt, dùng tab sẵn có; trước đây mỗi lần cần token là mở lại trình duyệt.
   giữa hai lần lấy token trang đỗ ở `about:blank` để ứng dụng không chạy nền. Lỗi không mở được profile — thường vì
   còn cửa sổ của lệnh `login` — đi ra dưới dạng `AUTH FAIL [S02]` kèm việc phải làm, không phải lỗi Playwright thô.
 - **Làm mới trước khi gọi.** Token còn dưới lề thì làm mới trước lời gửi, sau khi đã qua giới hạn tốc độ — không đợi
@@ -69,6 +72,17 @@ Nghĩa là chỉ có một chỗ gãy: ứng dụng không tải được trên 
 | | bộ đo độ tươi | — | đọc giờ thu trong DB, không đọc log | `scripts/lib/freshness.mjs` |
 | | dòng `AUTH FAIL [S02]` | — | chưa có bộ đọc (ngoài phạm vi) | — |
 
+### Bảng phủ ca sau khi bỏ cửa sổ (đêm 25/11, mã cuối cùng, không cửa sổ)
+
+| Chiều | Giá trị | Số lần đo | Kết cục |
+|---|---|---|---|
+| Trang thử thách với trình duyệt không cửa sổ | đường dẫn không phải tệp tĩnh | 0 lần | khung nạp được; không cần đổi cờ nào để qua chặn |
+| Trạng thái token lúc đọc | hết hạn | 1 (20:15) | ứng dụng cấp lại sau 6,7 giây |
+| | còn hạn hơn lề | 1 (20:19) | dùng ngay (20:19); lượt 1 thị trường: 9 lời gọi, 9 bản ghi, 0 lỗi, 0 chặn |
+| | còn dưới lề (giữa lượt) | 1 (20:30) | làm mới trước lời gửi, nhận token mới «còn 15 phút»; lượt 2 thị trường: 18 lời gọi, 18 bản ghi, 0 lỗi, 0 chặn |
+| Ứng dụng khi nạp | profile chưa từng đăng nhập | 1 (20:20) | dừng sau một đường dẫn (67 giây), đúng một dòng `AUTH FAIL [S02]` |
+| Cửa sổ bật lên màn hình | mọi lượt trên | 0 | — |
+
 ## Đo
 
 Không có giao diện nào. Năm phép đo ở `_acceptance/s02-phien-qua-khung-ung-dung/probes/`, mỗi phép chạy trên bản
@@ -78,7 +92,7 @@ thật (phải đạt hết) rồi trên bản đột biến (phải đỏ đún
 |---|---|---|---|
 | `han-va-lam-moi.mjs` | ma trận hàm thuần: lề token, giữ token, thử đường kế, chẩn đoán, thứ tự ứng viên, tham số đăng nhập, chỗ profile; hành vi của phép xếp đường và trình lấy token với bước nạp giả | 38 ô | 14 |
 | `loi-xac-thuc.mjs` | hành vi `call()` với hàm gửi giả: làm mới trước khi gửi, 401 với token khác / token không đổi / hai lần, làm mới hỏng, lỗi thường | 7 ca | 3 |
-| `noi-day.sh` | đo tĩnh thân hàm nạp: mọi lối ra có token đi qua kiểm lề, không chờ cứng, `page.goto` đúng chỗ | 3 phép | 4 |
+| `noi-day.sh` | đo tĩnh thân hàm nạp: mọi lối ra có token đi qua kiểm lề, không chờ cứng, `page.goto` đúng chỗ, trình duyệt mở không cửa sổ | 4 phép | 5 |
 | `lenh-login.sh` | lệnh `login` đen-trắng qua chính CLI đã build (Chrome giả): dừng đúng chỗ, báo lỗi mở Chrome | 2 phép | 1 |
 | `vung.sh` | tệp đổi chỉ nằm trong vùng của hàng | 6 tệp | 1 (cấy tệp) |
 
@@ -94,4 +108,7 @@ Bộ test collector (`config:executors.test.collector`, gồm 40 ca của tệp 
   dừng sạch với chẩn đoán «KHÔNG nạp được khung», không gọi gì vô ích.
 - Cửa sổ của lệnh `login` phải đóng trước lượt 19:05; còn mở thì bộ thu không mở được profile và dừng với dòng
   `AUTH FAIL [S02]` nói rõ việc đóng cửa sổ.
+- Chế độ không cửa sổ đứng được vì nguồn không thử thách các đường dẫn `/favicon.ico`, `/robots.txt` kể cả với trình
+  duyệt không cửa sổ (đo 20:15). Nguồn siết thì lượt dừng với chẩn đoán «KHÔNG nạp được khung»; bộ thu không tự quay
+  lại mở có cửa sổ — khi đó cần Mạnh quyết.
 - Hạn của phiên đăng nhập chưa đo được (tháng 10 dùng mỗi đêm được 9 đêm rồi chết). Hết thì Mạnh chạy lệnh `login`.
