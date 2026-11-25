@@ -5,9 +5,9 @@ slug: nap-s09-quy-can-va-can-cao-tang
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli, ui]
-status: draft
-approved_by:
-approved_at:
+status: approved
+approved_by: Mạnh
+approved_at: 2026-11-25
 design_doc: docs/superpowers/specs/2026-11-25-nap-s09-quy-can-va-can-cao-tang-design.md
 ---
 
