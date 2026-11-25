@@ -5,9 +5,9 @@ slug: sync-cloud-che-ten-nguon-moi-cot
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli]
-status: draft
-approved_by:
-approved_at:
+status: approved
+approved_by: Mạnh
+approved_at: 2026-11-25T09:13:20Z
 design_doc: docs/superpowers/specs/2026-11-25-sync-cloud-che-ten-nguon-moi-cot-design.md
 ---
 
