@@ -222,6 +222,47 @@ test("BCM-6: nhận xanh — sha, --kiem --khong-tu-dien, pg_restore vào DB m�
   assert.match(tt.out, /bản chép đang chạy: oneinvest_m5_\d{8} sha256/);
 });
 
+// Rào 4 (GS): sau một lượt nhận THÀNH CÔNG, `lui` đưa bản của lượt trước (<DB>_cu) về làm DB chạy, dữ liệu đúng như trước lượt.
+/** null khi lui về được đúng bản trước lượt (vân tay A); chuỗi lỗi khi không. */
+async function luiVeBanTruoc(vtA) {
+  if (!coDb(CU)) return `không còn bản trước «${CU}» để lui`;
+  const l = await nhan("lui");
+  if (l.ma !== 0) return `lui đỏ (mã ${l.ma}): ${l.err.slice(0, 200)}`;
+  try { assert.deepEqual(vanTay(CHAY), vtA); } catch { return "sau lui DB chạy khác bản trước lượt"; }
+  return null;
+}
+
+test("BCM-6: sau một lượt nhận thành công, lui đưa bản của lượt trước (_cu) thành DB chạy, dữ liệu đúng như trước lượt", async () => {
+  const b = await layBanChep();
+  dungChayGia();
+  const vtA = vanTay(CHAY);
+  const r = await nhan(`nhan ${b.ke.sha256}`, { ke: b.keTep, dump: b.dump });
+  assert.equal(r.ma, 0, r.err);
+  const vtB = vanTay(CHAY);
+  for (const [t, n] of Object.entries(b.ke.so_dong)) assert.equal(vtB.bang[t], n, `DB chạy phải là bản B: bảng ${t}`);
+  assert.deepEqual(vanTay(CU), vtA, "_cu phải là bản A trước lượt");
+  assert.equal(await luiVeBanTruoc(vtA), null);
+  assert.deepEqual(vanTay(CU), vtB, "sau lui bản B thành _cu");
+});
+
+test("BCM-6: chiều đỏ — bản bước nhận xoá _cu sau khi nhận thành công thì ca nêu «không còn bản trước»", async () => {
+  const b = await layBanChep();
+  dungChayGia();
+  const vtA = vanTay(CHAY);
+  // Bản hỏng dựng tạm từ bước nhận thật: thêm một dòng xoá bản cũ ngay trước khi báo xanh.
+  const goc = readFileSync(path.join(REPO, "scripts", "nhan-ban-chep.sh"), "utf8");
+  const moc = 'ra "xanh: «$DB» = $TEP';
+  assert.equal(goc.split(moc).length, 2, "không tìm thấy chỗ cấy trong bước nhận");
+  const hong = path.join(thuMucTam("bcm-hong-"), "nhan-ban-chep.sh");
+  writeFileSync(hong, goc.replace(moc, `xoa_db "$CU"\n${moc}`));
+  const out = [];
+  const err = [];
+  const g = await taoGuiCucBo({ NHAN_CONTAINER: CONTAINER, NHAN_DB: CHAY, NHAN_KHO: REPO, NHAN_DEN: DEN ??= thuMucTam("bcm-den-") }, { sh: hong })(
+    { lenhCon: `nhan ${b.ke.sha256}`, keTep: b.keTep, dumpTep: b.dump, out: (s) => out.push(s), err: (s) => err.push(s) });
+  assert.equal(g.ma, 0, err.join("\n"));
+  assert.match(await luiVeBanTruoc(vtA) ?? "", /không còn bản trước/);
+});
+
 // ───────── BCM-7 (E7, AC-7): lỗi ở chặng nào cũng giữ DB chạy, lui ─────────
 let DA_CHUAN_BI_7 = false;
 async function chuanBi7() {

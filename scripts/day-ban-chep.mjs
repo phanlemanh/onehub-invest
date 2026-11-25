@@ -155,8 +155,8 @@ function chayGui([cmd, args, env], { keTep, dumpTep, out, err }) {
 export const taoGuiSsh = (cfg) => ({ lenhCon, ...r }) => chayGui(lenhSsh(cfg, lenhCon), r);
 
 /** CHỈ cho test: chạy cùng bước nhận ngay trên máy này, như sshd gọi qua command= (SSH_ORIGINAL_COMMAND). */
-export const taoGuiCucBo = (env = {}) => ({ lenhCon, ...r }) =>
-  chayGui(["bash", [NHAN_SH], { ...process.env, ...env, SSH_ORIGINAL_COMMAND: lenhCon }], r);
+export const taoGuiCucBo = (env = {}, { sh = NHAN_SH } = {}) => ({ lenhCon, ...r }) =>
+  chayGui(["bash", [sh], { ...process.env, ...env, SSH_ORIGINAL_COMMAND: lenhCon }], r);
 
 const giay = (t) => Math.round((Date.now() - t) / 100) / 10;
 
