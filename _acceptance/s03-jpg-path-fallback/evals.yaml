@@ -30,7 +30,7 @@ evals:
     executor: test
     cmd: config:executors.script.zc16_media_test
     paths: [collector/src/core/media-fetch.ts, collector/src/test/media-fetch.test.ts]
-    expected: "exit 0; ca ZC15 «JPEG XL lưu nguyên byte với đuôi .jxl; JPEG giữ .jpg» xanh sau khi gộp (byte FF 0A và hộp JXL → .jxl; byte JPEG → .jpg); ca 2511-3: CDN giả trả header image/jxl với byte JPEG_A → tệp đuôi .jpg (đoán theo byte, không theo header)."
+    expected: "exit 0; ca ZC15 «JPEG XL lưu nguyên byte với đuôi .jxl; JPEG giữ .jpg» xanh sau khi gộp (byte FF 0A và hộp JXL → .jxl; byte JPEG → .jpg); ca 2511-3: CDN giả trả header image/jxl với byte JPEG_A → tệp đuôi .jpg (đoán theo byte, không theo header); ca «ZC16: ảnh tải qua đường thử lại mà byte là JPEG XL → đuôi .jxl dù URL đuôi .jpg» xanh (/jpg/jx.jpg 400, /jx.jpg byte FF 0A → file .jxl, byte giữ nguyên)."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E5
@@ -38,7 +38,7 @@ evals:
     executor: test
     cmd: config:executors.script.collector_test_clean
     paths: [collector/src/**]
-    expected: "exit 0; toàn bộ test collector trên dist vừa xoá 0 fail (87 ca, gồm 5 ca ZC15, 2 ca ZC9, ca 2511-3, ca ZC16)."
+    expected: "exit 0; toàn bộ test collector trên dist vừa xoá 0 fail (89 ca, gồm 5 ca ZC15, 2 ca ZC9, ca 2511-3, ba ca ZC16)."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E6

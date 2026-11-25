@@ -32,7 +32,12 @@ let base = ""; // gán sau listen — handler đọc tại lúc có request
 const srv: Server = createServer((req, res) => {
   lastAccept = req.headers.accept;
   hits.set(req.url ?? "", (hits.get(req.url ?? "") ?? 0) + 1);
-  if (req.url === "/jpg/hang.jpg") {
+  if (req.url === "/jpg/jx.jpg") {
+    res.writeHead(400); return void res.end("bad");
+  } else if (req.url === "/jx.jpg") {
+    // ZC16: URL thay thế đuôi .jpg mà byte là JPEG XL → đuôi phải theo byte
+    res.writeHead(200, { "content-type": "image/jxl" }); return void res.end(JXL_CS);
+  } else if (req.url === "/jpg/hang.jpg") {
     return; // ZC16: treo — để timeout
   } else if (req.url === "/r.jpg") {
     // ZC16: URL thay thế chuyển hướng sang host ngoài danh sách (localhost ≠ 127.0.0.1)
@@ -431,4 +436,17 @@ test("ZC16: timeout trên link /jpg/ không thử lại; URL thay thế chuyển
   assert.equal(ra.file, undefined, "URL thay thế chuyển hướng ra host ngoài danh sách: KHÔNG được lưu tệp");
   assert.equal(ra.error, "http-400", "entry giữ lỗi gốc khi lần thử lại bị chặn host");
   assert.equal(existsSync(join(root, "hanoi", m.snapshotId, "media")), false, "không có tệp media nào được ghi");
+});
+
+test("ZC16: ảnh tải qua đường thử lại mà byte là JPEG XL → đuôi .jxl dù URL đuôi .jpg", async () => {
+  const root = fresh();
+  const s = await createAgentServer({ snapshotRoot: root, city: "hanoi", keys: ["k1"], media: mediaOpts, log: () => {} });
+  ingestWith(s, [msg("jxl qua thử lại", [`${base}/jpg/jx.jpg`], "2026-11-25T03:20:00Z")]);
+  const m = await s.flush();
+  assert.ok(m);
+  const e = readItems(root, m.snapshotId)[0].meta.mediaFiles[0];
+  assert.equal(e.error, undefined);
+  assert.match(e.file, /\.jxl$/, "byte JPEG XL qua đường thử lại phải mang đuôi .jxl");
+  const onDisk: Buffer = readFileSync(join(root, "hanoi", m.snapshotId, e.file as string));
+  assert.ok(onDisk.equals(JXL_CS));
 });

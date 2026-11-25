@@ -12,7 +12,7 @@ bước nào dưới đây.
    3. `cd ~/dev/onehub-invest/collector && npm run build` — `grep -c altUrlForJpg dist/core/media-fetch.js` ≥ `1`. Bước ghi tệp
       hậu tố host của ZC15 (mục 1.4 hồ sơ ZC15) làm trong cùng lượt.
    4. `launchctl kickstart -k gui/$(id -u)/com.oneinvest.collector-api` (lời riêng của Mạnh); `curl -s -o /dev/null -w '%{http_code}' -X POST http://127.0.0.1:9210/agent-report` trả `401`.
-2. **Số chạy thử.** Hộp cát: `cd collector && npm test` → 88/88 (gồm ca 2511-3 và hai ca ZC16); round-trip
+2. **Số chạy thử.** Hộp cát: `cd collector && npm test` → 89/89 (gồm ca 2511-3 và ba ca ZC16); round-trip
    `bash _acceptance/s03-jpg-path-fallback/ap-may-thu/kiem.sh` → bộ tải nhánh `ĐẠT — 2 bài có ảnh · 0 mất hết ảnh`, bộ tải ZC15
    `KHÔNG ĐẠT — ảnh link /jpg/ lỗi http-400 100.0% > 5%`. Số «trước» trên máy thu (đo 25/11, ngày đăng VN): mất hết ảnh 24/11 27,5%,
    ảnh link `/jpg/` lỗi 400 trong ngày 24/11 1.069; tỉ lệ đích tính trên cùng ngày (bỏ bài chỉ hỏng vì 400 `/jpg/`, r2.dev,
