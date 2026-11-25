@@ -135,6 +135,8 @@ human_signoff:
 
 ## Known limits
 
+- Ngoài-1 (review-findings): E6 đo việc chặn tự áp trên căn cứ luật dựng sẵn (E1 giả trả 'apartment'), chưa đo trên căn cứ lấy từ dữ liệu thật của máy thu. Mạnh chọn «Ghi known-limits» ngày 26/11/2026. Lượt đêm thật đầu tiên sau khi gộp là lần đo trên dữ liệu thật; lệch thì mở hàng sửa.
+
 ## Ngoài hợp đồng
 
 ## Analyst
