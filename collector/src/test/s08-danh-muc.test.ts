@@ -5,16 +5,26 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { toRawItems, s08SourceId, fetchPage, fetchProjectDetail } from "../collectors/s08-danh-muc.js";
-import type { S08Unit } from "../collectors/s08-danh-muc.js";
-
 /**
  * S08 bước 1 (claudedp-2310-12): item inventory_unit — sourceId ổn định theo
  * căn sha256(S08|project|product_code); payload nguyên vẹn bản ghi API; đủ
  * notSold + sold + detail; không contact_data. Fixture GIẢ dựng theo hình API
  * (2610-22(5): sửa chú thích cũ còn ghi «dữ liệu API thật» — thật sự là giả)
  * (không tên miền — base nhận qua tham số/env).
+ *
+ * 2511-46: S08_TOKEN_FILE phải được đặt TRƯỚC khi mô-đun bộ thu được nạp —
+ * TOKEN_FILE là hằng tính lúc nạp (s08-danh-muc.ts:18). Import tĩnh bị hoist
+ * chạy trước body nên đặt env trong test là vô ích (lượt 78cf1d44d sai vì thế).
+ * Ở đây: viết token GIẢ vào mkdtemp, đặt env, rồi MỚI import mô-đun (động,
+ * top-level await) — mọi ca trong tệp dùng cùng bản nạp đó, không bao giờ đụng
+ * token thật ở ~/.oneinvest dù test chạy với HOME thật hay tạm.
  */
+const thuTamToken = await mkdtemp(join(tmpdir(), "s08-test-"));
+process.env.S08_TOKEN_FILE = join(thuTamToken, "s08-token.json");
+await writeFile(process.env.S08_TOKEN_FILE, JSON.stringify({ access_token: "TEST-TOKEN-KHONG-THAT" }));
+const { toRawItems, s08SourceId, fetchPage, fetchProjectDetail } = await import("../collectors/s08-danh-muc.js");
+import type { S08Unit } from "../collectors/s08-danh-muc.js";
+process.on("exit", () => { rm(thuTamToken, { recursive: true, force: true }).catch(() => {}); }); // dọn thư mục tạm khi hết tệp
 
 const fixture = JSON.parse(
   // fixture nằm ở src (tsc không chép JSON sang dist) — ../../*2 từ dist/test
@@ -98,13 +108,7 @@ test("2410-19: strip PII ĐỆ QUY — contact_data lồng mọi độ sâu bị
   const prevProjects = process.env.S08_PROJECTS;
   process.env.S08_API_BASE = "http://testbase";
   process.env.S08_PROJECTS = "all";
-  // 2511-44: collect() đọc token theo S08_TOKEN_FILE (mặc định ~/.oneinvest/s08-token.json — TẦNG A).
-  // Đặt token GIẢ trong thư mục tạm TRƯỚC import động để test không bao giờ đụng token thật (kể cả khi chạy HOME thật).
-  const thuTam = await mkdtemp(join(tmpdir(), "s08-test-"));
-  const tepToken = join(thuTam, "s08-token.json");
-  await writeFile(tepToken, JSON.stringify({ access_token: "TEST-TOKEN-KHONG-THAT" }));
-  const prevTokenFile = process.env.S08_TOKEN_FILE;
-  process.env.S08_TOKEN_FILE = tepToken;
+  // token đã được cô lập ở đầu tệp (S08_TOKEN_FILE → mkdtemp) TRƯỚC khi mô-đun nạp (2511-46)
   try {
     const mod = await import("../collectors/s08-danh-muc.js");
     const fakeCtx = {
@@ -131,8 +135,6 @@ test("2410-19: strip PII ĐỆ QUY — contact_data lồng mọi độ sâu bị
     globalThis.fetch = origFetch;
     if (prevBase === undefined) delete process.env.S08_API_BASE; else process.env.S08_API_BASE = prevBase;
     if (prevProjects === undefined) delete process.env.S08_PROJECTS; else process.env.S08_PROJECTS = prevProjects;
-    if (prevTokenFile === undefined) delete process.env.S08_TOKEN_FILE; else process.env.S08_TOKEN_FILE = prevTokenFile;
-    await rm(thuTam, { recursive: true, force: true });
     delete process.env.S08_EP_UNITS;
     delete process.env.S08_EP_CATALOG;
     delete process.env.S08_EP_DETAIL;
