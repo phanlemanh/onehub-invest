@@ -343,10 +343,12 @@ Khoá nối với S16/S08 (chi tiết số đo ở tệp kê local của lượt
     nguồn, không mang phiên;
   - *có phiên* — `du_an_list`, `du_an_detail` và mọi kind căn hộ, thửa: gọi TRONG TAB của hồ sơ nơi Mạnh đã đăng
     nhập (trình duyệt ego lite), phiên do chính trang gắn. Thông tin phiên là tầng A: không rời trình duyệt, không vào
-    snapshot, không vào log. Từ 25/11 (Mạnh chốt «mở song song để tăng tốc về đích») mỗi pha chạy ở một trang riêng của
-    cùng hồ sơ (`--tab <nhãn trang>`): căn hộ ở tab Mạnh đã đăng nhập, thửa ở một trang mở thêm vào MỘT TỆP TĨNH của
-    cùng origin — không phải trang ứng dụng nên không có mã của nguồn chạy. Không đăng nhập lại, không chép phiên,
-    không điều hướng tab của Mạnh; mỗi lượt một thư mục trạng thái riêng.
+    snapshot, không vào log. Bộ thu có `--tab <nhãn trang>` để một pha chạy ở một trang khác của cùng hồ sơ (trang mở
+    thêm vào MỘT TỆP TĨNH của cùng origin — không phải trang ứng dụng nên không có mã của nguồn chạy; không đăng nhập
+    lại, không chép phiên, không điều hướng tab của Mạnh; mỗi lượt một thư mục trạng thái riêng). **KHÔNG chạy hai pha
+    cần phiên đồng thời**: thử 25/11 (13:50–14:26, căn hộ 6 luồng + thửa 8 luồng ≈ 2,1 lời/s) thì 14:26:53 nguồn trả
+    HTTP 429 ở lời chi tiết căn — lần bị chặn đầu tiên của dự án. Sau đó căn hộ bị khoá «tăng tốc»: chỉ còn nhịp
+    350 ms, một luồng; bị chặn lần thứ hai thì dừng hẳn chờ người quyết. Một pha một lúc, tối đa ≈ 1,65 lời/s.
   - *tệp tĩnh* — `anh_du_an`: tải ảnh bằng fetch của Node, không mang phiên, KHÔNG gọi API của nguồn (luật 12); tối
     đa 16 kết nối một lượt.
 - **Đường API không nằm trong hợp đồng lẫn trong code.** Bộ thu gọi theo *vai* (`project-list`, `project-detail`,
@@ -562,9 +564,10 @@ Luật đọc:
      tải riêng), không phải lỗi của nguồn.
 13. *(mốc mở rộng)* **Bản đồ phủ thửa** (pha `parcels-map`). Mặt nạ của mốc ngày 1 chỉ nói ô 10 km × 10 km có ít nhất
    một điểm có thửa. Pha này thăm dò 121 điểm cách 1 km (mét Mercator) trong ô quanh TÂM của mỗi tile mặt nạ có dữ liệu
-   (503 tile) — khoảng 62.000 lời; điểm không có thửa nguồn trả `data: null` trong khoảng 0,1 s. Chạy ở trang mở
-   thêm của cùng hồ sơ, song song với pha căn hộ (thư mục trạng thái riêng). Đo 25/11 (tám luồng, nhịp 250 ms, lúc
-   căn hộ cũng đang chạy): khoảng 1,2 lời/s; ba ô đầu có 38, 22, 43 toạ độ trúng thửa trong 121. Kết quả là kind
+   (503 tile) — khoảng 62.000 lời; điểm không có thửa nguồn trả `data: null` trong khoảng 0,1 s. Lượt dài đầu
+   (25/11 13:50–14:28, tám luồng nhịp 250 ms, thư mục trạng thái riêng) dừng ở 20 ô trên 503 ô: 2.420 toạ độ, 1.343
+   trúng thửa, khoảng 1 lời/s. Lượt ấy chạy đồng thời với pha căn hộ và lúc 14:26 nguồn trả 429 (xem «Ba chế độ
+   thu») — các lượt sau làm LẦN LƯỢT, không đồng thời với pha căn hộ. Kết quả là kind
    `thua_ban_do` (một item một tile) và những item `thua` có `phuongPhap: "ban-do"` — những thửa này chỉ là dấu chứng có
    dữ liệu, KHÔNG phải kiểm kê. Đa giác tỉnh trên máy thu không dùng được để dựng lưới (đo 25/11: 20 tỉnh cộng
    352.000 km²) nên mọi toạ độ tính theo tile. Điểm lỗi mạng được ghi nhận là `"loi"`, không hỏi lại.
