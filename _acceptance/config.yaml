@@ -372,9 +372,15 @@ executors:
     ht12_chia_tran: "node --test --test-concurrency=1 scripts/zalo-import-chia-tran-zcode.test.mjs"   # doc-gop-dong-ho-rieng-trong-luot-dem E1–E5, E7 — lưới chia trần A+B của ZCode (bản sao script, node giả, không DB)
     ht12_tran: "node --test --test-concurrency=1 scripts/zalo-import-tran.test.mjs"   # doc-gop-dong-ho-rieng-trong-luot-dem E6, E7b, E8a — ma trận AC-7 hai đồng hồ + ca quan hệ HT13
     ht12_luoi: "node --test --test-concurrency=1 scripts/zalo-import-tran-zcode.test.mjs scripts/zalo-import-job.test.mjs scripts/zalo-import-job-nhe.test.mjs scripts/zalo-import-job-lan.test.mjs scripts/enrich-buoc-job.test.mjs scripts/job-step-thoi-luong.test.mjs scripts/job-exit.test.mjs"   # doc-gop-dong-ho-rieng-trong-luot-dem E8b — lưới hồi quy tệp bọc + JST-AC-8
+    ht9_db_thu: "node --test --test-concurrency=1 scripts/db-thu-trong.test.mjs"   # db-thu-tach-khoi-cum-that E1, E9 — cụm PostGIS dùng một lần của db-thu.sh --chay-trong (cần docker)
+    ht9_that: "node --test --test-concurrency=1 scripts/pipeline-that.test.mjs"   # db-thu-tach-khoi-cum-that E2c, E3b, E6 — tập ca chuẩn-CI / dữ liệu thật, khoá config
+    ht9_suite_vung: "node --test --test-concurrency=1 scripts/suite-neu-doi.test.mjs"   # db-thu-tach-khoi-cum-that E4, E5 — vùng pipeline_that + ma trận kích
+    ht9_sao_luu: "node --test --test-concurrency=1 scripts/db-sao-luu.test.mjs"   # db-thu-tach-khoi-cum-that E7 — sao lưu bỏ DB thử của suite
+    ht9_phut: "node --test --test-concurrency=1 scripts/do-phut-s4.test.mjs"   # db-thu-tach-khoi-cum-that E8 — phút giữ khoá s4
   script:
     ht13_ap: "bash _acceptance/tran-tong-luot-dem-va-tran-doc-gop/ap-may-thu/kiem.sh"   # tran-tong-luot-dem-va-tran-doc-gop E9 — README áp đủ năm mục, lệnh kiểm sau chấm đúng ba log mẫu
     ht12_ap: "bash _acceptance/doc-gop-dong-ho-rieng-trong-luot-dem/ap-may-thu/kiem.sh"   # doc-gop-dong-ho-rieng-trong-luot-dem E9 — README áp đủ năm mục, kiem-sau.sh chấm đúng chín ca
+    ht9_ap: "bash _acceptance/db-thu-tach-khoi-cum-that/ap-may-thu/kiem.sh"   # db-thu-tach-khoi-cum-that E10 — README áp đủ năm mục, lệnh kiểm sau
     trt_tuong_duong: "bash db/db-thu.sh oneinvest_suite_trtd --chay node _acceptance/slt-dc-cham-va-giu-khoa-33033/probes/tuong-duong-ba-luot.mjs"   # slt-dc-cham-va-giu-khoa-33033 E2 — câu cũ và câu mới rút cùng tập id ở cả ba lượt transform của SLT-DC
     trt_slt_dc_gio: "bash _acceptance/slt-dc-cham-va-giu-khoa-33033/probes/do-gio.sh 480 bash db/db-thu.sh oneinvest_suite_sltdc --chay node --test --test-concurrency=1 pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs"   # slt-dc-cham-va-giu-khoa-33033 E4, E5 — cả tệp SLT-DC dưới 480 s (= trần ca 7/9 và N khoá 33033), ca nhả khoá 33033
     trt_san_xuat: "node _acceptance/slt-dc-cham-va-giu-khoa-33033/probes/san-xuat.mjs"   # slt-dc-cham-va-giu-khoa-33033 E7 — bốn bước transform-zalo liền nhau sau gộp, chỉ đọc log
