@@ -35,9 +35,12 @@ export class KeoDan {
     if (this.calls >= this.o.caps.calls) throw this.stop("call-cap", `quá trần ${this.o.caps.calls} lời gọi`);
   }
 
+  /** Một lượt chỉ tính MỘT lần chặn: hai tệp cùng trả 403 vẫn là một lần nguồn chặn. */
   block(message: string): RunStopped {
-    this.blocks++;
-    return this.stop("blocked", message);
+    const daChan = this.stopped?.reason === "blocked";
+    const x = this.stop("blocked", message);
+    if (!daChan) this.blocks++;
+    return x;
   }
 
   stopRun(reason: StopReason, message: string): RunStopped {

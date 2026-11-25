@@ -16,7 +16,10 @@ import { BatchWriter, S17_SCHEMA_MO_RONG_DUNG } from "./store.js";
 
 /** Mốc mở rộng — pha ảnh: cỡ một tệp tối đa, hạn chờ một tệp, tên tác nhân. */
 export const ANH_MAX_BYTES = 60 * 1024 * 1024;
-export const ANH_TIMEOUT_MS = 60_000;
+/** Trần tổng mỗi bước tải ảnh (kết nối + cả thân). Rộng: tệp gốc 44 MB chia giữa nhiều luồng mất 7–8 phút (đo 25/11) — kết nối đứng yên đã bị đồng hồ treo bắt. */
+export const ANH_TIMEOUT_MS = 30 * 60_000;
+/** Không nhận được byte nào quá bấy nhiêu thì bỏ tệp đó (kết nối đứng yên). */
+export const ANH_TREO_MS = 30_000;
 export const ANH_USER_AGENT = "oneinvest-collector/1";
 
 export type Env = { sleep: (ms: number) => Promise<void>; now: () => Date };
@@ -291,6 +294,7 @@ export async function executePhase(o: ExecOptions): Promise<ExecResult> {
               chiNgoai: o.anh?.chiNgoai === true,
               maxBytes: ANH_MAX_BYTES,
               timeoutMs: ANH_TIMEOUT_MS,
+              stallMs: ANH_TREO_MS,
               userAgent: ANH_USER_AGENT,
               ...(o.anhFetch ? { fetchImpl: o.anhFetch } : {}),
             },

@@ -40,6 +40,8 @@ export type AnhPhaseOptions = {
   luongSong: number;
   maxBytes: number;
   timeoutMs: number;
+  /** Không nhận được byte nào quá bấy nhiêu mili-giây thì bỏ tệp đó (lỗi tạm). */
+  stallMs?: number;
   userAgent: string;
   /** Đệm thử trong test; mặc định fetch toàn cục. */
   fetchImpl?: typeof fetch;
@@ -47,6 +49,8 @@ export type AnhPhaseOptions = {
   dnsLookup?: GiaiTen;
   /** Số lượt thử một URL lỗi tạm trước khi ghi nhận `qua-so-lan-thu` (mặc định 3). */
   toiDaLanThu?: number;
+  /** Khoảng cách (mili-giây) giữa hai dòng báo «đang tải» (mặc định 60 000). */
+  baoMoiMs?: number;
 };
 
 type MucMedia = { url: string; file?: string; sha256?: string; bytes?: number; error?: string; chiTiet?: string };
@@ -56,8 +60,9 @@ const TOI_DA_LOI_LIEN = { nguon: 10, ngoai: 50 };
 /** Mỗi máy chủ ngoài tối đa bấy nhiêu lời cùng lúc. */
 const TOI_DA_MOT_MAY_CHU_NGOAI = 2;
 const TEN_TEP_MAY_CHU_BI_CHAN = "may-chu-bi-chan.json";
-/** Link còn hạn dưới bấy nhiêu giây vẫn được hỏi (để lệch đồng hồ hai phía không làm bỏ sót ảnh). */
+/** Link còn hạn dưới bấy nhiêu mili-giây (5 phút) vẫn được hỏi, để lệch đồng hồ nhỏ không làm bỏ sót ảnh. */
 const LEECH_HET_HAN = 300_000;
+const BAO_MOI_MS = 60_000;
 
 type TienDoAnh = { daLan: Set<string>; loiVinhVien: Map<string, string>; dem: Map<string, number>; xong: boolean };
 
@@ -109,7 +114,11 @@ export async function imagesPhase(o: RunOptions, anh: AnhPhaseOptions, keoDan: K
   const toiDaLoiLien = TOI_DA_LOI_LIEN[lop];
   const toiDaMotMayChu = lop === "ngoai" ? Math.min(TOI_DA_MOT_MAY_CHU_NGOAI, Math.max(1, anh.luongSong)) : Math.max(1, anh.luongSong);
   const tepBiChan = join(tienDoDir, TEN_TEP_MAY_CHU_BI_CHAN);
-  const mayChuBiChan: MayChuBiChan = lop === "ngoai" ? await docMayChuBiChan(tepBiChan) : new Map();
+  // Máy chủ ngoài đã chặn được nhớ cho cả hai lượt (nguồn có thể chuyển hướng sang máy chủ ngoài).
+  const mayChuBiChan: MayChuBiChan = await docMayChuBiChan(tepBiChan);
+  const khoaMayChuChan = new Set(mayChuBiChan.keys());
+  // Bằng chứng đồng hồ máy thu đúng (một lần mỗi lượt): chưa có thì không đoán link hết hạn — xem ở vòng dự án.
+  let dongHoDung: boolean | null = null;
 
   let items = 0;
   let failed = 0;
@@ -132,107 +141,208 @@ export async function imagesPhase(o: RunOptions, anh: AnhPhaseOptions, keoDan: K
     let conLoiMang = 0;
     let soFileDuAn = 0;
     let soLoiDuAn = 0;
-    const soLo = Math.max(1, Math.ceil(con.length / motSnapshot));
-    for (let i = 0; i < soLo && !dung; i++) {
-      const lo = con.slice(i * motSnapshot, (i + 1) * motSnapshot);
-      if (!lo.length) break;
 
-      // Tải lô này bằng một nhóm việc chạy song song; máy chủ của nguồn chặn thì cả lô dừng ngay.
-      const ketQua = new Map<string, KetQuaTai>();
-      const daLay = new Set<number>();
-      const daBoQua = new Set<number>();
-      const dangChayMayChu = new Map<string, number>();
-      let biSua = false; // tệp máy chủ bị chặn đổi trong lô này
-      let loiChan: RunStopped | null = null;
-      // Link ký số đã quá hạn theo chính tham số của nó: không gửi lời nào (hỏi cũng chỉ được 403), ghi nhận là hết hạn.
-      const gio = (o.now ?? (() => new Date()))().getTime();
-      for (let k = 0; k < lo.length; k++) {
-        const h = lo[k].hetHan;
-        const han = h === null ? NaN : Date.parse(h);
-        if (han + LEECH_HET_HAN <= gio) {
-          ketQua.set(lo[k].url, { url: lo[k].url, loi: "het-han", http: 0, chiTiet: "du-doan-het-han" });
-          daLay.add(k);
+    const gio = (o.now ?? (() => new Date()))().getTime();
+    const dangChayMayChu = new Map<string, number>();
+    let loiChan: RunStopped | null = null;
+    let biSua = false; // có máy chủ ngoài vừa bị chặn trong dự án này
+    let daXong = 0; // số tệp của dự án đã có kết quả trong lượt này
+    let dangTai = 0; // số tệp đang nhận
+    let byteNhan = 0; // số byte đã nhận được trong lượt này (kể cả tệp đang dở)
+    // Nguồn chặn thì bỏ ngay mọi tệp đang dở của dự án: không nhận tiếp từ máy chủ vừa chặn, cũng không chờ nó.
+    const acBo = new AbortController();
+    let daNhan = 0;
+    const tuyChonTai = {
+      ...anh,
+      duoiNguon: anh.hostSuffixes,
+      keNgoai: true,
+      signal: acBo.signal,
+      mayChuBiChan: khoaMayChuChan,
+      trenKhoi: (n: number) => {
+        byteNhan += n - daNhan;
+        daNhan = n;
+      },
+    };
+    const nguonVuaChan = (): boolean => loiChan !== null && loiChan.reason === "blocked";
+    const nhanKetQua = (x: KetQuaTai, a: { url: string }): KetQuaTai => {
+      if (x.loi !== "chan") return x;
+      if (x.mayChuCuoi === "nguon") {
+        // Bước cuối là máy chủ của nguồn: bị chặn thật — dừng cả lượt.
+        loiChan ??= keoDan.block(`máy chủ ảnh của nguồn trả HTTP ${x.http} (${x.chiTiet ?? "không rõ lý do"})`);
+        acBo.abort(new Error("nguồn chặn"));
+        return { ...x, loi: "loi", chiTiet: "nguồn chặn" };
+      }
+      // Bước cuối là máy chủ ngoài (kể cả khi nguồn chuyển hướng sang đó): máy chủ đó chặn — nhớ và bỏ qua, không tính
+      // là nguồn chặn.
+      const hNgoai = hashUrl(hostCua(x.urlCuoi ?? a.url));
+      if (!mayChuBiChan.has(hNgoai)) {
+        mayChuBiChan.set(hNgoai, { lyDo: x.chiTiet ?? `HTTP ${x.http}`, lanDau: at(), soLan: 1 });
+        khoaMayChuChan.add(hNgoai);
+        biSua = true;
+      }
+      return { ...x, loi: "chan-o-may-chu" as const };
+    };
+
+    // Chỉ tin dự đoán «link đã hết hạn» sau khi có bằng chứng đồng hồ máy thu đúng: hỏi thử MỘT link đoán đã hết hạn.
+    // Máy chủ bảo đã hết hạn → dự đoán đúng cho cả lượt này. Máy chủ vẫn trả ảnh → đồng hồ máy thu lệch: không đoán,
+    // hỏi hết (không link nào bị bỏ oan). Chưa kết luận được (lỗi mạng) thì dự án này không đoán.
+    const doHetHan = (a: { hetHan: string | null }): boolean => a.hetHan !== null && Date.parse(a.hetHan) + LEECH_HET_HAN <= gio;
+    let loiThu: { a: (typeof con)[number]; x: KetQuaTai } | null = null;
+    if (dongHoDung !== true && con.some(doHetHan)) {
+      const a = con.find(doHetHan)!;
+      try {
+        keoDan.assertRunning();
+      } catch (e) {
+        loiChan = e as RunStopped;
+      }
+      if (!loiChan) {
+        keoDan.calls++;
+        const x = nhanKetQua(await taiAnh(a.url, tuyChonTai), a);
+        if (x.loi === "het-han" || x.loi === "ok") {
+          dongHoDung = x.loi === "het-han";
+          o.log({
+            suKien: "anh-dong-ho",
+            duAn: d.id,
+            dung: dongHoDung,
+            lechChu: x.lechChu ?? null,
+            ...(dongHoDung ? {} : { thongBao: "máy chủ vẫn trả ảnh cho một link đoán đã hết hạn — đồng hồ máy thu có thể lệch: lượt này không đoán, hỏi hết" }),
+          });
+        }
+        loiThu = { a, x };
+      }
+    }
+    if (loiChan) {
+      dung = loiChan;
+      break;
+    }
+
+    // Chia lô theo VỊ TRÍ trong danh sách ảnh (mã item ổn định). Việc của MỌI lô đổ vào một hàng đợi chung của dự án:
+    // tệp gốc to trên đường chậm ở lô này không giữ luồng của lô khác (đo 25/11: một tệp 44 MB giữ lô sáu phút, năm
+    // luồng ngồi không). Mỗi lô chốt ngay khi đủ kết quả, không chờ lô trước; mã theo vị trí nên thứ tự chốt không ảnh
+    // hưởng gì. Các lô được chốt nối tiếp nhau — mỗi lô vẫn là một snapshot.
+    type LoAnh = { a: typeof con; ketQua: Map<string, KetQuaTai>; conLai: number; coTai: number; daChot: boolean };
+    const cacLo: LoAnh[] = [];
+    for (let i = 0; i < con.length; i += motSnapshot) {
+      const lo: LoAnh = { a: con.slice(i, i + motSnapshot), ketQua: new Map(), conLai: 0, coTai: 0, daChot: false };
+      // Link ký số đã quá hạn theo chính tham số của nó (và đồng hồ đã có bằng chứng): không gửi lời nào, ghi nhận là hết hạn.
+      for (const anh of lo.a) {
+        if (dongHoDung === true && doHetHan(anh)) lo.ketQua.set(anh.url, { url: anh.url, loi: "het-han", http: 0, chiTiet: "du-doan-het-han" });
+        else lo.conLai++;
+      }
+      cacLo.push(lo);
+    }
+    if (loiThu) {
+      const lo = cacLo.find((x) => x.a.includes(loiThu!.a))!;
+      if (!lo.ketQua.has(loiThu.a.url)) lo.conLai--;
+      lo.ketQua.set(loiThu.a.url, loiThu.x);
+      lo.coTai++;
+    }
+    const hang = cacLo.flatMap((lo) => lo.a.map((_, k) => ({ lo, k })).filter((v) => !lo.ketQua.has(v.lo.a[v.k].url)));
+    const daLay = new Set<number>();
+    let daXuLi = 0; // đã lấy đi hoặc đã bỏ qua
+    let loiChot: unknown = null; // lỗi khi chốt snapshot: dừng hết, không ghi tiến độ của lô ấy
+
+    let hangChot: Promise<void> = Promise.resolve();
+    const xepChot = (lo: LoAnh): void => {
+      lo.daChot = true;
+      hangChot = hangChot
+        .then(() => chotLo(lo))
+        .catch((e: unknown) => {
+          loiChot = e;
+        });
+    };
+    const kiemChot = (lo: LoAnh): void => {
+      if (lo.conLai <= 0 && !lo.daChot) xepChot(lo);
+    };
+
+    const layViec = (): number | "het" | -1 => {
+      for (let i = 0; i < hang.length; i++) {
+        if (daLay.has(i)) continue;
+        const v = hang[i];
+        const h = hashUrl(hostCua(v.lo.a[v.k].url));
+        if (mayChuBiChan.has(h)) {
+          daLay.add(i); // máy chủ này đã chặn: không hỏi nữa
+          daXuLi++;
+          v.lo.conLai--;
+          kiemChot(v.lo);
+          continue;
+        }
+        if ((dangChayMayChu.get(h) ?? 0) < toiDaMotMayChu) {
+          daLay.add(i);
+          daXuLi++;
+          dangChayMayChu.set(h, (dangChayMayChu.get(h) ?? 0) + 1);
+          return i;
         }
       }
-      const layViec = (): number | "het" => {
-        for (let k = 0; k < lo.length; k++) {
-          if (daLay.has(k) || daBoQua.has(k)) continue;
-          const h = hashUrl(hostCua(lo[k].url));
-          if (mayChuBiChan.has(h)) {
-            daBoQua.add(k); // máy chủ này đã chặn: không hỏi nữa
-            continue;
-          }
-          if ((dangChayMayChu.get(h) ?? 0) < toiDaMotMayChu) {
-            daLay.add(k);
-            dangChayMayChu.set(h, (dangChayMayChu.get(h) ?? 0) + 1);
-            return k;
-          }
+      return daXuLi >= hang.length ? "het" : -1; // -1: còn việc nhưng máy chủ đang bận
+    };
+    const worker = async (): Promise<void> => {
+      for (;;) {
+        if (loiChan || loiChot) return;
+        const i = layViec();
+        if (i === "het") return;
+        if (i === -1) {
+          await new Promise((r) => setTimeout(r, 3));
+          continue;
         }
-        return daLay.size + daBoQua.size >= lo.length ? "het" : -1; // -1: còn việc nhưng máy chủ đang bận
-      };
-      const worker = async (): Promise<void> => {
-        for (;;) {
-          if (loiChan) return;
-          let k = layViec();
-          while (k === -1) {
-            await new Promise((r) => setTimeout(r, 3));
-            if (loiChan) return;
-            k = layViec();
-          }
-          if (k === "het") return;
-          try {
-            keoDan.assertRunning();
-          } catch (e) {
-            loiChan = e as RunStopped; // quá trần hoặc yêu cầu dừng
+        const { lo, k } = hang[i];
+        const a = lo.a[k];
+        try {
+          keoDan.assertRunning();
+        } catch (e) {
+          loiChan = e as RunStopped; // quá trần hoặc yêu cầu dừng
+          return;
+        }
+        keoDan.calls++;
+        daNhan = 0;
+        const h = hashUrl(hostCua(a.url));
+        dangTai++;
+        let x: KetQuaTai;
+        try {
+          x = await taiAnh(a.url, tuyChonTai);
+        } finally {
+          dangTai--;
+          dangChayMayChu.set(h, Math.max(0, (dangChayMayChu.get(h) ?? 1) - 1));
+        }
+        x = nhanKetQua(x, a);
+        if (nguonVuaChan()) return; // nguồn vừa chặn: tệp đang dở bị bỏ, không ghi nhận, không tính là một lượt thử lỗi
+        daXong++;
+        if (!mayChuBiChan.has(h)) {
+          lo.ketQua.set(a.url, x); // máy chủ (ngoài) của URL này vừa bị chặn trong lúc tải: ghi là bị chặn
+          lo.coTai++;
+        }
+        lo.conLai--;
+        kiemChot(lo);
+        if (x.loi === "ok" && x.bytes) loiLien = 0;
+        else if (!LOI_VINH_VIEN_ANH.has(x.loi)) {
+          loiLien++;
+          if (loiLien >= toiDaLoiLien) {
+            loiChan = keoDan.stopRun("network-down", `${toiDaLoiLien} tệp ảnh lỗi mạng liền nhau`);
             return;
           }
-          keoDan.calls++;
-          const h = hashUrl(hostCua(lo[k].url));
-          const x = await taiAnh(lo[k].url, { ...anh, duoiNguon: anh.hostSuffixes, keNgoai: true });
-          dangChayMayChu.set(h, Math.max(0, (dangChayMayChu.get(h) ?? 1) - 1));
-          if (!mayChuBiChan.has(h)) ketQua.set(lo[k].url, x); // máy chủ vừa bị chặn trong lúc tải: ghi là bị chặn
-          if (x.loi === "ok") {
-            loiLien = 0;
-          } else if (x.loi === "chan") {
-            if (lop === "nguon") {
-              loiChan = keoDan.block(`máy chủ ảnh của nguồn trả HTTP ${x.http} (${x.chiTiet ?? "không rõ lý do"})`);
-              return;
-            }
-            mayChuBiChan.set(h, { lyDo: x.chiTiet ?? `HTTP ${x.http}`, lanDau: at(), soLan: 1 });
-            biSua = true;
-          } else if (!LOI_VINH_VIEN_ANH.has(x.loi)) {
-            loiLien++;
-            if (loiLien >= toiDaLoiLien) {
-              loiChan = keoDan.stopRun("network-down", `${toiDaLoiLien} tệp ảnh lỗi mạng liền nhau`);
-              return;
-            }
-          }
         }
-      };
-      await Promise.all(Array.from({ length: Math.max(1, Math.min(toiDaMotMayChu, lo.length)) }, worker));
-      if (lop === "ngoai" && biSua) {
-        await mkdir(tienDoDir, { recursive: true });
-        await ghiMayChuBiChan(tepBiChan, mayChuBiChan);
       }
-
+    };
+    async function chotLo(lo: LoAnh): Promise<void> {
+      if (loiChot) return; // một lô chốt hỏng: không chốt tiếp nữa, lượt dừng với lỗi ấy
       const tep: Array<{ name: string; bytes: Buffer }> = [];
       const daTai: string[] = [];
       const loi: Record<string, string> = {};
       const dem: Record<string, number> = {};
       const muc: MucMedia[] = [];
-      const daiDien: typeof lo = []; // các URL thực sự có mặt trong item này
+      const daiDien: typeof con = []; // các URL thực sự có mặt trong item này
       let loByte = 0;
-      for (const a of lo) {
+      for (const a of lo.a) {
         const h = hashUrl(a.url);
-        const hostBiChan = lop === "ngoai" ? mayChuBiChan.get(hashUrl(hostCua(a.url))) : undefined;
-        if (hostBiChan && !td.daLan.has(h) && !ketQua.get(a.url)?.bytes) {
+        const hostBiChan = mayChuBiChan.get(hashUrl(hostCua(a.url)));
+        if (hostBiChan && !td.daLan.has(h) && !lo.ketQua.get(a.url)?.bytes) {
           loi[h] = "chan-o-may-chu";
           muc.push({ url: a.url, error: "chan-o-may-chu", chiTiet: hostBiChan.lyDo });
           daiDien.push(a);
           continue;
         }
-        const x = ketQua.get(a.url);
-        if (!x) continue; // chưa tới lượt (dừng giữa lô) — lượt sau làm
+        const x = lo.ketQua.get(a.url);
+        if (!x) continue; // chưa có kết quả (dừng giữa lô) — lượt sau làm
         daiDien.push(a);
         if (x.loi === "ok" && x.bytes) {
           const name = tenTepCua(a.url, duoiCua(x.kieu, a.url));
@@ -262,9 +372,9 @@ export async function imagesPhase(o: RunOptions, anh: AnhPhaseOptions, keoDan: K
       if (!tep.length && !Object.keys(loi).length) {
         // Không có gì chốt (cả lô chỉ toàn lỗi tạm): chỉ ghi số lượt thử — dòng này không khẳng định việc gì đã làm.
         if (Object.keys(dem).length) await tienDo.append({ dem });
-        dung = loiChan;
-        continue;
+        return;
       }
+      lo.ketQua.clear(); // tệp đã vào lô chốt: trả bộ nhớ
       const vi = daiDien.map((a) => a.vi);
       const item = makeItem(
         "anh_du_an",
@@ -282,15 +392,48 @@ export async function imagesPhase(o: RunOptions, anh: AnhPhaseOptions, keoDan: K
       soByte += loByte;
       soFileDuAn += tep.length;
       soLoiDuAn += Object.keys(loi).length;
-      o.log({ suKien: "anh-lot", duAn: d.id, nhomMayChu: lop, soFile: tep.length, soByte: loByte, soLoi: Object.keys(loi).length });
+      o.log({
+        suKien: "anh-lot",
+        duAn: d.id,
+        nhomMayChu: lop,
+        tu: Math.min(...vi),
+        toi: Math.max(...vi),
+        soFile: tep.length,
+        soByte: loByte,
+        soLoi: Object.keys(loi).length,
+        soDuDoanHetHan: muc.filter((m) => m.chiTiet === "du-doan-het-han").length,
+      });
+    }
+
+    for (const lo of cacLo) kiemChot(lo); // lô chỉ toàn link đã hết hạn: chốt luôn
+    // Theo giờ thật, mỗi khoảng báo một dòng «đang tải» (bao nhiêu tệp đang nhận, bao nhiêu byte đã nhận): lô có tệp gốc
+    // to trên đường chậm kéo dài nhiều phút (đo 25/11: 44 MB, 0,2 MB/s một kết nối) — không có dòng này thì không phân
+    // biệt được đang tải với treo.
+    const bao = setInterval(() => {
+      if (dangTai > 0) o.log({ suKien: "anh-dang-tai", duAn: d.id, nhomMayChu: lop, dangTai, daXong, soLuong: hang.length, byteDangNhan: byteNhan });
+    }, anh.baoMoiMs ?? BAO_MOI_MS);
+    bao.unref?.();
+    try {
+      await Promise.all(Array.from({ length: Math.max(1, Math.min(anh.luongSong, hang.length)) }, worker));
+    } finally {
+      clearInterval(bao);
+    }
+    if (biSua) {
+      await mkdir(tienDoDir, { recursive: true });
+      await ghiMayChuBiChan(tepBiChan, mayChuBiChan);
+    }
+    // Dừng giữa dự án: phần đã tải của mọi lô dở vẫn được chốt (mã theo vị trí, lượt sau làm phần thiếu).
+    for (const lo of cacLo) if (!lo.daChot && lo.coTai > 0) xepChot(lo);
+    await hangChot;
+    if (loiChot) throw loiChot;
+    if (loiChan) {
       dung = loiChan;
+      break;
     }
-    if (!dung) {
-      if (conLoiMang > 0) continue; // còn ảnh lỗi tạm: để lượt sau thử lại, chưa đánh dấu xong
-      await tienDo.append({ duAn: d.id, xong: true, soFile: soFileDuAn, soLoi: soLoiDuAn });
-      soDuAnXong++;
-      o.log({ suKien: "anh-du-an-xong", duAn: d.id, nhomMayChu: lop, soFile: soFileDuAn, soLoi: soLoiDuAn });
-    }
+    if (conLoiMang > 0) continue; // còn ảnh lỗi tạm: để lượt sau thử lại, chưa đánh dấu xong
+    await tienDo.append({ duAn: d.id, xong: true, soFile: soFileDuAn, soLoi: soLoiDuAn });
+    soDuAnXong++;
+    o.log({ suKien: "anh-du-an-xong", duAn: d.id, nhomMayChu: lop, soFile: soFileDuAn, soLoi: soLoiDuAn });
   }
   if (dung) throw dung;
   return { phase: o.phase, calls: keoDan.calls - started, items, failed, so: { soDuAnXong, soFile, soByte, soLoi: failed } };

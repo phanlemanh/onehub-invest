@@ -71,7 +71,7 @@ export function duoiCua(kieu: string | null | undefined, url: string): string {
 export function hostDuocPhep(url: string, duoi: string[]): boolean {
   let host: string;
   try {
-    host = new URL(url).host.toLowerCase().replace(/:\d+$/, "");
+    host = new URL(url).host.toLowerCase().replace(/:\d+$/, "").replace(/\.$/, ""); // dấu chấm cuối là cùng một tên
   } catch {
     return false;
   }
@@ -189,6 +189,9 @@ export type MayChuOptions = {
   keNgoai: boolean;
 };
 
+/** Tên máy chủ viết thường, bỏ ngoặc IPv6 và dấu chấm cuối (là cùng một tên). */
+const chuanHoaTen = (hostname: string): string => hostname.toLowerCase().replace(/^\[|\]$/g, "").replace(/\.$/, "");
+
 /** Phân loại URL theo lớp máy chủ, trước khi gửi lời nào. */
 export function phanLoaiMayChu(url: string, o: MayChuOptions): LopMayChu {
   let u: URL;
@@ -198,7 +201,7 @@ export function phanLoaiMayChu(url: string, o: MayChuOptions): LopMayChu {
     return "cam";
   }
   if (u.protocol !== "http:" && u.protocol !== "https:") return "cam";
-  if (mayChuNoiBo(u.hostname.toLowerCase().replace(/^\[|\]$/g, ""))) return "cam";
+  if (mayChuNoiBo(chuanHoaTen(u.hostname))) return "cam";
   if (hostDuocPhep(url, o.duoiNguon)) return "nguon";
   return o.keNgoai ? "ngoai" : "cam";
 }
@@ -274,11 +277,36 @@ function phanLoiMang(e: unknown): { loi: LoiAnh; chiTiet: string } {
   return { loi: "loi", chiTiet: code || (e instanceof Error ? e.name : "mang") };
 }
 
-export type KetQuaTai = { url: string; loi: LoiAnh; bytes?: Buffer; kieu?: string; http: number; chiTiet?: string };
+export type KetQuaTai = {
+  url: string;
+  loi: LoiAnh;
+  bytes?: Buffer;
+  kieu?: string;
+  http: number;
+  chiTiet?: string;
+  /** Lớp máy chủ của BƯỚC CUỐI (sau chuyển hướng) — bên trả lời là nguồn hay máy chủ ngoài. */
+  mayChuCuoi?: LopMayChu;
+  urlCuoi?: string;
+  /** Giờ máy chủ theo header `Date` trừ giờ máy thu lúc nhận phản hồi (mili-giây) — để đối chiếu đồng hồ. */
+  lechChu?: number;
+};
 
 export type TaiAnhOptions = MayChuOptions & {
   maxBytes: number;
+  /** Trần tổng của mỗi bước (kết nối + cả thân), tính bằng mili-giây. */
   timeoutMs: number;
+  /** Không nhận được byte nào quá bấy nhiêu mili-giây thì bỏ (mặc định bằng `timeoutMs`). */
+  stallMs?: number;
+  /** Chờ kết nối và phần đầu phản hồi tối đa bấy nhiêu mili-giây (mặc định 60 000) — khỏi thời gian treo giữa các khối. */
+  firstByteMs?: number;
+  /** Tín hiệu bỏ từ ngoài: pha bỏ mọi tệp đang dở khi nguồn chặn hay khi dừng. */
+  signal?: AbortSignal;
+  /** Báo số byte đã nhận được của tệp này (dồn) sau mỗi khối. */
+  trenKhoi?: (soByte: number) => void;
+  /** Máy chủ ngoài đã biết là chặn (băm tên máy chủ): không gửi lời nào tới nữa. */
+  mayChuBiChan?: ReadonlySet<string>;
+  /** Đồng hồ của máy thu (để thử); mặc định giờ thật. */
+  now?: () => Date;
   userAgent: string;
   /** Đệm thử trong test; mặc định fetch toàn cục. */
   fetchImpl?: typeof fetch;
@@ -289,41 +317,136 @@ export type TaiAnhOptions = MayChuOptions & {
 };
 
 const CHUYEN_HUONG = new Set([301, 302, 303, 307, 308]);
+const TREO = new Error("treo");
+
+/** Lỗi vì đồng hồ của chính bộ thu (trần tổng, thời gian treo) hay tín hiệu bỏ từ ngoài — luôn là lỗi tạm. */
+function loiGio(treo: AbortSignal, gio: AbortSignal, ngoai?: AbortSignal): { loi: LoiAnh; chiTiet: string } {
+  if (ngoai?.aborted) return { loi: "loi", chiTiet: "ngung" };
+  return treo.aborted ? { loi: "loi", chiTiet: "treo" } : { loi: "loi", chiTiet: "timeout" };
+}
+
+const TREO_GIAI_TEN = new Error("giải tên treo");
+const TOI_DA_THAN_LOI = 64 * 1024;
+const FIRST_BYTE_MS = 60_000;
+
+const hostCua = (u: string): string => {
+  try {
+    return new URL(u).host.toLowerCase();
+  } catch {
+    return u;
+  }
+};
+
+type ThanDoc = { buf: Buffer; loi?: unknown; quaCo: boolean };
+
+/**
+ * Đọc thân tới hết hoặc tới `toiDa` byte rồi đóng thân; mỗi khối đặt lại đồng hồ treo. Trả `loi` khi việc đọc văng
+ * (đồng hồ, tín hiệu bỏ, mất kết nối) — nơi gọi phân loại. Thân phản hồi lỗi cũng đi qua đây: không đọc vô chừng.
+ */
+async function docThan(res: Response, toiDa: number, datGioTreo: () => void, trenKhoi?: (soByte: number) => void): Promise<ThanDoc> {
+  const reader = res.body?.getReader();
+  if (!reader) return { buf: Buffer.alloc(0), quaCo: false };
+  const chunks: Buffer[] = [];
+  let total = 0;
+  try {
+    for (;;) {
+      datGioTreo();
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      trenKhoi?.(total);
+      if (total > toiDa) {
+        await reader.cancel().catch(() => undefined);
+        return { buf: Buffer.alloc(0), quaCo: true };
+      }
+      chunks.push(Buffer.from(value));
+    }
+  } catch (e) {
+    return { buf: Buffer.alloc(0), loi: e, quaCo: false };
+  }
+  return { buf: Buffer.concat(chunks), quaCo: false };
+}
 
 /**
  * Tải một tệp. Không bao giờ để fetch tự đi theo chuyển hướng: mỗi bước đều kiểm máy chủ đích trước khi gửi. Máy chủ
- * ngoài lấy từ nội dung dự án nên tên có thể trỏ vào dải riêng: giải tên xong mới kết nối (khoảng hở: tên đổi bản ghi
- * giữa lúc giải và lúc kết nối — hẹp, chấp nhận ở máy thu này).
+ * ngoài lấy từ nội dung dự án nên tên có thể trỏ vào dải riêng: giải tên xong mới kết nối. Khoảng hở còn lại: tên đổi bản
+ * ghi giữa lúc giải và lúc kết nối (fetch tự giải tên lần hai) — để đóng hẳn cần ghim địa chỉ ở tầng kết nối.
+ *
+ * Mỗi bước có ba đồng hồ: trần tổng (kết nối + cả thân), hạn riêng cho kết nối và phần đầu phản hồi, và thời gian treo
+ * giữa hai khối byte — tệp to trên đường chậm vẫn tải được, còn kết nối đứng yên thì bỏ sớm. Lời giải tên, thân phản hồi
+ * lỗi và thân phản hồi thành công đều có đồng hồ. Mọi lỗi khi tải là của riêng tệp này, không ném ra ngoài.
  */
 export async function taiAnh(url: string, o: TaiAnhOptions): Promise<KetQuaTai> {
   const toiDa = o.toiDaChuyenHuong ?? 5;
+  const treoMacDinh = o.stallMs ?? o.timeoutMs;
   let hienTai = url;
   for (let buoc = 0; buoc <= toiDa; buoc++) {
     const lop = phanLoaiMayChu(hienTai, o);
     if (lop === "cam") return { url, loi: buoc === 0 ? "cam-may-chu" : "chuyen-huong-cam", http: 0 };
     if (lop === "ngoai") {
+      if (o.mayChuBiChan?.has(hashUrl(hostCua(hienTai)))) return { url, loi: "chan-o-may-chu", http: 0, chiTiet: "may-chu-bi-chan", mayChuCuoi: "ngoai", urlCuoi: hienTai };
       let vaoNoiBo: boolean;
+      let dongHo: NodeJS.Timeout | undefined;
       try {
-        vaoNoiBo = await giaiVaoNoiBo(new URL(hienTai).hostname.replace(/^\[|\]$/g, ""), o.dnsLookup ?? GIAI_TEN_MAC_DINH);
+        vaoNoiBo = await Promise.race([
+          giaiVaoNoiBo(chuanHoaTen(new URL(hienTai).hostname), o.dnsLookup ?? GIAI_TEN_MAC_DINH),
+          new Promise<never>((_, rej) => {
+            dongHo = setTimeout(() => rej(TREO_GIAI_TEN), treoMacDinh);
+          }),
+          ...(o.signal ? [new Promise<never>((_, rej) => o.signal!.addEventListener("abort", () => rej(o.signal!.reason), { once: true }))] : []),
+        ]);
       } catch (e) {
+        clearTimeout(dongHo);
+        if (o.signal?.aborted) return { url, http: 0, loi: "loi", chiTiet: "ngung" };
+        if (e === TREO_GIAI_TEN) return { url, http: 0, loi: "loi", chiTiet: "treo" };
         return { url, http: 0, ...phanLoiMang(e) };
+      } finally {
+        clearTimeout(dongHo);
       }
-      if (vaoNoiBo) return { url, loi: buoc === 0 ? "cam-may-chu" : "chuyen-huong-cam", http: 0, chiTiet: "dns-noi-bo" };
+      // Tên trỏ vào dải nội bộ: chưa từng gửi lời nào. Ở bước đầu là lỗi tạm (máy thu sau VPN có thể giải mọi tên ra dải
+      // riêng — thử lại các lượt sau, quá hạn thì ghi nhận); ở bước chuyển hướng thì không đi tiếp.
+      if (vaoNoiBo) return { url, loi: buoc === 0 ? "loi" : "chuyen-huong-cam", http: 0, chiTiet: "dns-noi-bo" };
     }
+    const gio = AbortSignal.timeout(o.timeoutMs);
+    const ac = new AbortController();
+    let treo: NodeJS.Timeout | undefined;
+    const datGioTreo = (ms: number = treoMacDinh): void => {
+      clearTimeout(treo);
+      treo = setTimeout(() => ac.abort(TREO), ms);
+    };
+    datGioTreo(o.firstByteMs ?? FIRST_BYTE_MS);
+    const loiCua = (e: unknown): { loi: LoiAnh; chiTiet: string } => (ac.signal.aborted || gio.aborted || o.signal?.aborted ? loiGio(ac.signal, gio, o.signal) : phanLoiMang(e));
     let res: Response;
     try {
-      res = await (o.fetchImpl ?? fetch)(hienTai, { headers: { "user-agent": o.userAgent }, redirect: "manual", signal: AbortSignal.timeout(o.timeoutMs) });
+      res = await (o.fetchImpl ?? fetch)(hienTai, {
+        headers: { "user-agent": o.userAgent },
+        redirect: "manual",
+        signal: o.signal ? AbortSignal.any([gio, ac.signal, o.signal]) : AbortSignal.any([gio, ac.signal]),
+      });
     } catch (e) {
-      return { url, http: 0, ...phanLoiMang(e) };
+      clearTimeout(treo);
+      return { url, http: 0, ...loiCua(e) };
     }
+    if (ac.signal.aborted || gio.aborted || o.signal?.aborted) {
+      await res.body?.cancel().catch(() => undefined);
+      clearTimeout(treo);
+      return { url, http: res.status, ...loiCua(TREO) };
+    }
+    const ngay = Date.parse(res.headers.get("date") ?? "");
+    const pho = { mayChuCuoi: lop, urlCuoi: hienTai, ...(Number.isFinite(ngay) ? { lechChu: ngay - (o.now ?? (() => new Date()))().getTime() } : {}) };
+    const dongThan = async (): Promise<void> => {
+      clearTimeout(treo);
+      await res.body?.cancel().catch(() => undefined);
+    };
     if (CHUYEN_HUONG.has(res.status)) {
+      await dongThan();
       const den = res.headers.get("location");
-      if (!den) return { url, loi: "khong-con", http: res.status, chiTiet: "chuyen-huong-khong-dich" };
+      if (!den) return { url, loi: "khong-con", http: res.status, chiTiet: "chuyen-huong-khong-dich", ...pho };
       let dich: URL;
       try {
         dich = new URL(den, hienTai);
       } catch {
-        return { url, loi: "chuyen-huong-cam", http: res.status };
+        return { url, loi: "chuyen-huong-cam", http: res.status, ...pho };
       }
       hienTai = dich.href;
       continue;
@@ -331,26 +454,29 @@ export async function taiAnh(url: string, o: TaiAnhOptions): Promise<KetQuaTai> 
     const kieu = res.headers.get("content-type") ?? "";
     if (res.status === 200) {
       // 200 nhưng là trang HTML: trang thử thách thay cho ảnh — bị chặn, không lưu.
-      if (/text\/html|application\/xhtml/i.test(kieu)) return { url, loi: "chan", http: 200, chiTiet: "trang-html" };
-      const reader = res.body?.getReader();
-      if (!reader) return { url, loi: "rong", http: 200, chiTiet: "no-body" };
-      const chunks: Buffer[] = [];
-      let total = 0;
-      for (;;) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        total += value.byteLength;
-        if (total > o.maxBytes) {
-          await reader.cancel().catch(() => undefined);
-          return { url, loi: "qua-co", http: 200 };
-        }
-        chunks.push(Buffer.from(value));
+      if (/text\/html|application\/xhtml/i.test(kieu)) {
+        await dongThan();
+        return { url, loi: "chan", http: 200, chiTiet: "trang-html", ...pho };
       }
-      if (total === 0) return { url, loi: "rong", http: 200 };
-      return { url, loi: "ok", bytes: Buffer.concat(chunks), kieu, http: 200 };
+      // Máy chủ khai sẵn cỡ lớn hơn trần: bỏ ngay, không tải để rồi vứt (khai sai thì vòng đọc vẫn cắt).
+      const daiKe = Number(res.headers.get("content-length"));
+      if (Number.isFinite(daiKe) && daiKe > o.maxBytes) {
+        await dongThan();
+        return { url, loi: "qua-co", http: 200, ...pho };
+      }
+      const than = await docThan(res, o.maxBytes, datGioTreo, o.trenKhoi);
+      clearTimeout(treo);
+      if (than.loi !== undefined) return { url, http: 200, ...loiCua(than.loi), ...pho };
+      if (than.quaCo) return { url, loi: "qua-co", http: 200, ...pho };
+      if (than.buf.length === 0) return { url, loi: "rong", http: 200, ...pho };
+      return { url, loi: "ok", bytes: than.buf, kieu, http: 200, ...pho };
     }
-    const than = (await res.text().catch(() => "")).slice(0, 4000);
-    return { url, loi: phanLoiPhanHoi(res.status, kieu, than), http: res.status, chiTiet: than.replace(/\s+/g, " ").slice(0, 120) };
+    // Thân phản hồi lỗi chỉ để nhận diện (hết hạn, sai chữ ký): đọc đủ khoảng 64 KB rồi đóng, cũng có đồng hồ treo —
+    // thân đứng yên không được giữ worker tới trần tổng. Đọc không được thì phân loại theo status.
+    const than = await docThan(res, TOI_DA_THAN_LOI, datGioTreo);
+    clearTimeout(treo);
+    const chu = than.buf.toString("utf8");
+    return { url, loi: phanLoiPhanHoi(res.status, kieu, chu), http: res.status, chiTiet: chu.replace(/\s+/g, " ").slice(0, 120), ...pho };
   }
   return { url, loi: "qua-nhieu-chuyen-huong", http: 0 };
 }
