@@ -48,7 +48,8 @@
     "tests/s08-danh-muc-nap.test.mjs",
     "scripts/khop-tron.test.mjs",
     "scripts/tinh-cu.test.mjs",
-    "scripts/ban-ghi-nguon.test.mjs"
+    "scripts/ban-ghi-nguon.test.mjs",
+    "scripts/khop-du-an.test.mjs"
   ],
   "b": [
     "parse.test.mjs",
