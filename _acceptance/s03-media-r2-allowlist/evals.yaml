@@ -88,3 +88,21 @@ evals:
     paths: [_acceptance/s03-media-r2-allowlist/ap-may-thu/**, collector/src/core/media-fetch.ts]
     expected: "exit 0; stdout 'AP-MAY-THU PASS': README có năm mục, mỗi mục có lệnh hay con số (mục 2 có số trước 27,5% và 20,9%; mục 1 có 'npm run build', 'media-host-suffixes.txt', 'kickstart' kèm 'lời riêng của Mạnh'; mục 3 có sao lưu dist; mục 4 có lùi; mục 5 có 'kiem-sau.mjs'); kiem-sau chấm đúng các bộ dòng mẫu (1 ĐẠT; còn r2.dev host-not-allowed → KHÔNG ĐẠT 'r2.dev'; còn redirect-host → KHÔNG ĐẠT 'redirect-host'; chưa có ảnh r2.dev nào tải được → KHÔNG ĐẠT 'chưa có ảnh r2.dev'; không bài mới → KHÔNG ĐẠT 'chưa có bài mới'); round-trip writer thật: meta.mediaFiles sinh bằng fetchMessageMedia của nhánh (CDN giả) → ĐẠT, bằng media-fetch của main → KHÔNG ĐẠT đúng lý do. Phá mục 2 thành 'sẽ đo' → FAIL 'README mục 2'. Rò tên: kiem-sau chạy trên mẫu canh-gac.json (URL mang host canh gác 'canh-gac-zc15.example') → stdout+stderr không chứa 'canh-gac'; --ty-le in tỉ lệ đích tính trên chính ngày đo (bỏ bài chỉ hỏng vì r2.dev chặn hay redirect-host)."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E12
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.suite.pipeline_a
+    long_running: 90
+    paths: [collector/src/core/media-fetch.ts, collector/src/api/server.ts]
+    expected: "exit 0; nửa A bộ test pipeline, 0 fail — suite chạy vì collector/src nằm trong vùng suite pipeline (suite-neu-doi); khai ở đây để có long_running 90 (Mac mini nửa A ~41′ vượt trần 30′; luật GS 24/11), paths hẹp theo R4."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E13
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.suite.pipeline_b
+    long_running: 90
+    paths: [collector/src/core/media-fetch.ts, collector/src/api/server.ts]
+    expected: "exit 0; nửa B bộ test pipeline, 0 fail — cùng lý do với E12 (~24′)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

@@ -72,3 +72,21 @@ evals:
     paths: [collector/src/core/media-fetch.ts, collector/src/test/media-fetch.test.ts]
     expected: "exit 0; ca «ZC16: timeout trên link /jpg/ không thử lại; URL thay thế chuyển hướng ra ngoài danh sách thì không lưu» xanh: /jpg/r.jpg 400, /r.jpg nhận đúng 1 yêu cầu và 302 sang localhost (ngoài danh sách) → entry file undefined, error 'http-400', snapshot không có thư mục media. Đối chứng dương cùng tệp: ca 2511-3 (thay thế trong danh sách) tải được."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E10
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.suite.pipeline_a
+    long_running: 90
+    paths: [collector/src/core/media-fetch.ts]
+    expected: "exit 0; nửa A bộ test pipeline, 0 fail — suite chạy vì collector/src nằm trong vùng suite pipeline (suite-neu-doi); khai ở đây để có long_running 90 (Mac mini nửa A ~41′ vượt trần 30′; luật GS 24/11), paths hẹp theo R4."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E11
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.suite.pipeline_b
+    long_running: 90
+    paths: [collector/src/core/media-fetch.ts]
+    expected: "exit 0; nửa B bộ test pipeline, 0 fail — cùng lý do với E10 (~24′)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
