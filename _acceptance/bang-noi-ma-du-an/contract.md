@@ -84,14 +84,12 @@ S08, S09. S07, S10, S16 không có trong ô.
 
 Bảng phủ ca đếm trên DB máy thu nằm ở `evidence/bang-phu-s1.md`; trục và cột «ai đọc» ở thiết kế §2.
 
-| Trục | Ca | AC |
-|---|---|---|
-| Nguồn × trường | S07, S08, S09, S10, S16 × tên, tỉnh, xã, điểm, CĐT, MST, loại hình, mã cha; tỉnh cũ; rỗng giả | AC-1 |
-| Ngả căn cứ | đã nối, tên rỗng, không tỉnh, K1, K2, K3, T, nhiều nút, khác tỉnh, nút ứng viên nguồn khác, không khớp | AC-2 |
-| Vòng đời | thẻ, áp, áp lần hai, băm lệch, đảo, đảo lần hai | AC-3, AC-4, AC-5 |
-| Nối có sẵn | chép cứng S09, S16; S08 thuộc DA55; lệch dự án con có cha | AC-6 |
-| Bên đọc | bộ dùng S09, S16, dựng vật thể, năm view, màn | AC-7, AC-8 |
-| Dữ liệu thật | bảng phủ, ô trên màn tách hai hiệu ứng, đảo | AC-9 |
+- Nguồn × trường: S07, S08, S09, S10, S16 × tên, tỉnh, xã, điểm, CĐT, MST, loại hình, mã cha; tỉnh cũ; rỗng giả → AC-1
+- Ngả căn cứ: đã nối, tên rỗng, không tỉnh, K1, K2, K3, T, nhiều nút, khác tỉnh, nút ứng viên nguồn khác, không khớp → AC-2
+- Vòng đời: thẻ, áp, áp lần hai, băm lệch, đảo, đảo lần hai, lùi trọn → AC-3, AC-4, AC-5
+- Nối có sẵn: chép cứng S09, S16; S08 thuộc DA55; lệch dự án con có cha → AC-6
+- Bên đọc: bộ dùng S09, S16, dựng vật thể, năm view, màn (đọc và cộng ô) → AC-7, AC-8
+- Dữ liệu thật: bảng phủ, ô trên màn tách hai hiệu ứng, đảo → AC-9
 
 ## Đường đo
 

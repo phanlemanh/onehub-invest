@@ -1,0 +1,42 @@
+{
+  "feature_plain": "Dự án mà năm nguồn danh mục (S07, S08, S09, S10, S16) ghi lại được đưa về một khuôn chung. Máy tìm dự án nào trùng một dự án đã có trong danh bạ: cùng phường và trùng tên, hoặc trùng tên với đúng một dự án trong cùng tỉnh. Những cặp đó nối vào danh bạ qua thẻ luật anh xem mẫu trước khi áp, và đảo lại được. Ô «Mã nguồn chưa nối» trên Ops đếm đủ các nguồn.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ đưa mỗi dự án của năm nguồn về một khuôn chung: tên, tỉnh, phường, toạ độ, chủ đầu tư, loại hình. Tên tỉnh cũ đổi sang tỉnh mới sau sáp nhập. Giá trị trống giả kiểu «Đang cập nhật», «--» về trống."},
+    {"id": "AC-2", "p": "Sẽ xếp mỗi dự án vào đúng một ngả: đã nối từ trước, không có tỉnh, cùng phường và trùng tên, trùng tên đúng một dự án cùng tỉnh, trùng hai dự án, hoặc không khớp. Không bao giờ nối sang tỉnh khác, nối chỉ vì gần, hay nối khi trùng hai dự án."},
+    {"id": "AC-3", "p": "Sẽ in thẻ luật cho từng nguồn: tổng theo ngả, 20 cặp mẫu mỗi căn cứ, danh sách cặp lệch với nối có sẵn. Thẻ không ghi gì vào dữ liệu và mang một mã băm cố định."},
+    {"id": "AC-4", "p": "Sẽ áp đúng thẻ anh đã xem (mã băm phải khớp). Mỗi dự án có một dòng trạng thái nối, mỗi cặp nối có một bí danh. Danh bạ dự án, bảng nối S08, S10 và bí danh có sẵn không đổi."},
+    {"id": "AC-5", "p": "Sẽ đảo được từng luật, và đảo hết các luật của một nguồn là lùi trọn. Không xoá dòng dữ liệu nào."},
+    {"id": "AC-6", "p": "Sẽ giữ nguyên mọi nối đang có: 2 dự án S09, 5 dự án S16 và toàn bộ S08 (do DA55 nối). Cặp máy thấy khác với nối có sẵn chỉ được liệt ra, không ghi đè."},
+    {"id": "AC-7", "p": "Sẽ không làm đổi kết quả của các phần khác đang đọc danh bạ: bộ nạp toà S09, S16, bộ dựng toà, trục, căn và năm bảng xem, kể cả bảng tin theo toà của PL20."},
+    {"id": "AC-8", "p": "Sẽ cho ô «Mã nguồn chưa nối» đếm thêm S07, S16 và đếm đúng phần S09 đã nối. S10 hiện một dòng riêng «không có vị trí», không cộng vào ô."},
+    {"id": "AC-9", "p": "Sẽ chạy trọn trên bản chép dữ liệu thật và báo hai hiệu ứng riêng: ô tăng vì đếm thêm nguồn; rồi giảm vì nối thêm (S07 6.074 → 5.817, S09 344 → 337, S16 20 → 15)."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "KHÔNG tạo dự án mới trong danh bạ cho những dự án không khớp (S07 còn 5.809). Đó là DA62, nơi anh quyết có tạo hàng loạt hay không."},
+    {"id": "OOS-2", "p": "KHÔNG làm thẻ duyệt từng cặp trên màn Ops cho ca không rõ. Đó là DA60, và cỡ của nó đo bằng số ca hàng này để lại."},
+    {"id": "OOS-3", "p": "KHÔNG gộp hai bảng nối riêng của S08, S10 vào bảng chung. Đó là DA61, vì đổi cấu trúc dữ liệu nên đi riêng."},
+    {"id": "OOS-4", "p": "KHÔNG mở loại mã nhà nước, vì chưa có dữ liệu nguồn nhà nước nào được nạp."},
+    {"id": "OOS-5", "p": "KHÔNG tìm tỉnh cho S10: nguồn này không có địa chỉ, toạ độ hay tỉnh, nên cả 119 dự án ghi «chờ nguồn có vị trí»."},
+    {"id": "OOS-6", "p": "KHÔNG dùng căn cứ «gần dưới 1 km + tên giống một phần», vì chưa dự án nào trong danh bạ có toạ độ."},
+    {"id": "OOS-7", "p": "KHÔNG ghi gì cho S08: DA55 đang nối S08, hàng này chỉ chạy thử để đối chiếu."},
+    {"id": "OOS-8", "p": "KHÔNG sửa máy để hiểu quy ước «dự án con gắn vào dự án cha» của 6 nối tay S08, vì hàng này không ghi S08; thẻ liệt đủ 6 ca."},
+    {"id": "OOS-9", "p": "KHÔNG chuyển S09, S16 khỏi phần nối viết cứng trong mã, không làm S11, không làm nút «Duyệt cả loạt» trên màn."},
+    {"id": "OOS-10", "p": "KHÔNG tự áp lên dữ liệu máy thu. Việc áp đi theo chữ ký của anh ở Cổng Bằng chứng, kèm đủ năm thứ của hồ sơ áp."}
+  ],
+  "scope_plain": "Hàng này chỉ nối vào dự án đã có trong danh bạ, bằng hai căn cứ chạy được hôm nay.",
+  "coverage_plain": [
+    {"i": 0, "p": "Năm nguồn × mọi trường của khuôn, kể cả tên tỉnh cũ và giá trị trống giả (AC-1), đếm trên dữ liệu thật."},
+    {"i": 1, "p": "Mọi ngả xếp: đã nối, trống tên, không tỉnh, bốn căn cứ, trùng hai dự án, khác tỉnh, không khớp (AC-2)."},
+    {"i": 2, "p": "Trọn vòng đời luật: in thẻ, áp, áp lần hai, mã băm sai, đảo, đảo lần hai, lùi trọn (AC-3, AC-4, AC-5)."},
+    {"i": 3, "p": "Nối có sẵn luôn thắng: S09, S16 viết cứng; S08 của DA55; 6 ca dự án con (AC-6)."},
+    {"i": 4, "p": "Mọi phần đang đọc danh bạ không đổi kết quả, và ô trên màn đếm đúng (AC-7, AC-8)."},
+    {"i": 5, "p": "Chạy trọn trên bản chép dữ liệu thật, ô báo tách hai hiệu ứng, đảo xong về như cũ (AC-9)."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Tên tỉnh cũ (1.809 dự án S07) không có đường đổi sang tỉnh mới trong dữ liệu kho. Đã xử: thêm bảng 63 tỉnh trước sáp nhập; số kiểm so với bộ đếm độc lập đã đóng băng."},
+    {"i": 1, "p": "Lùi trọn từng phải xoá dòng — việc cần lời riêng của anh. Đã xử: mọi dòng mang mã luật, lùi bằng đảo luật, không xoá gì."},
+    {"i": 2, "p": "Danh sách giá trị trống giả vượt quá câu hỏi đã trình anh hôm 13/11. Đã xử: trở về sáu giá trị theo khuyến nghị cũ, giữ «Khác»; đây là câu duy nhất anh quyết ở thẻ này."},
+    {"i": 3, "p": "Ngưỡng gốc 09/11 soạn cho phạm vi cũ. Đã xử: hợp đồng có bảng chín ngưỡng, mỗi ngưỡng ghi hàng nào giữ hay vì sao bỏ."},
+    {"i": 4, "p": "Ô trên màn được cộng ở tệp giao diện, không ai đo chỗ cộng. Đã xử: đo cả con số dựng ra trên màn, cố ý cộng nhầm S10 thì phép đo đỏ."}
+  ]
+}
