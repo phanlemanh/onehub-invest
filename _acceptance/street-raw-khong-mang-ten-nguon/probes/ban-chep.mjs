@@ -120,26 +120,30 @@ try {
   const idN = mintOfferId("S06", String(m.id));
 
   // Đếm độc lập: giá trị của stg mà luật phải bỏ ghi, và chủ thể có phát biểu sống đường/toà trúng (luật phải rút).
-  const { rows: ads } = await c.query(`SELECT payload->'street_name' AS d, payload->'block' AS b, area_name, ward_name_v3 FROM stg_chotot_ads
+  const { rows: ads } = await c.query(`SELECT payload->'street_name' AS d, payload->'block' AS b, area_name, ward_name_v3, ward_name FROM stg_chotot_ads
      WHERE price > 0 AND size_m2 > 0 AND ad_type IN ('s', 'u')`);
   const t0 = performance.now();
   const ky = {
     street_raw: ads.filter((r) => trung(docDuong(r.d), e)).length,
     block_raw: ads.filter((r) => trung(String(r.b ?? "").trim().normalize("NFC").replace(/\s+/g, " "), e)).length,
+    // Phường của tin lấy từ ward_name_v3 rồi ward_name của nguồn (hai đường khớp tên); hai đường còn lại lấy tên khu của danh bạ.
+    phuong_raw: ads.filter((r) => trung(r.ward_name_v3 ?? r.ward_name, e)).length,
     district_raw: ads.filter((r) => trung(r.area_name, e)).length,
   };
   const { rows: song } = await c.query(`SELECT subject_key, value FROM field_assertions WHERE retracted_at IS NULL
      AND field IN ('street_raw', 'block_raw') AND subject_key LIKE 'S06:%'`);
   const kyRut = new Set(song.filter((r) => trung(r.value, e)).map((r) => r.subject_key)).size;
-  ads.filter((r) => trung(r.ward_name_v3, e));
   const chiPhiLuat = performance.now() - t0;
 
   const that2 = await chay(join(P, "transform-chotot.mjs"));
   const dongDem = that2.dong.find((d) => d.startsWith("ô chữ mang tên nguồn:")) ?? "";
   console.log(`log lượt thật: ${dongDem}`);
-  for (const [k, n] of Object.entries(ky)) bao(dongDem.includes(`${k} ${n}`), `log bỏ ghi ${k} = ${n} (đếm độc lập trên stg)`);
-  bao(dongDem.includes("phuong_raw 1"), "log bỏ ghi phuong_raw = 1 (tin N)");
-  bao(dongDem.includes(`rút ${kyRut} chủ thể`), `log rút ${kyRut} chủ thể (đếm độc lập phát biểu sống trúng: A, B${coThat ? ", ô thật" : ""})`);
+  // So BẰNG từng số của dòng log với đếm độc lập (không so chuỗi con).
+  const soLog = Object.fromEntries([...dongDem.matchAll(/(street_raw|block_raw|phuong_raw|district_raw) (\d+)/g)].map((m) => [m[1], Number(m[2])]));
+  const rutLog = Number(/rút (\d+) chủ thể/.exec(dongDem)?.[1] ?? NaN);
+  for (const [k, n] of Object.entries(ky)) bao(soLog[k] === n, `log bỏ ghi ${k} = ${soLog[k]}, đếm độc lập trên stg = ${n}`);
+  bao(ky.phuong_raw >= 1 && ky.street_raw >= 2 && ky.block_raw >= 1 && ky.district_raw >= 1, "đếm độc lập gồm các ô cấy (đường A, N; toà; phường N; quận N)");
+  bao(rutLog === kyRut, `log rút ${rutLog} chủ thể, đếm độc lập phát biểu sống trúng trước lượt thật = ${kyRut}`);
   const nCan = await dienDuongCan(c);
   console.log(`bước chép đường sang căn sau lượt thật: điền ${nCan} căn`);
   const soatThat = await soat(tokens);
@@ -148,7 +152,12 @@ try {
   const B = await chup();
   const doi = [];
   for (const [id, v] of A) { const w = B.get(id); if (!w) continue; COT.forEach((k, i) => { if (v[i] !== w[i]) doi.push(`${id}.${k}`); }); }
-  const kyDoi = [`${idA}.street_raw`, `${idA}.block_raw`, `${idB}.street_raw`, ...(coThat ? ["offer_ba52ee3409d223e3.street_raw"] : [])].sort();
+  // Kỳ vọng: đúng các ô trúng bộ dò sau lượt bỏ luật (tin cấy A, B và mọi ô thật nguồn còn gửi), không ô nào khác.
+  const kyDoi = [];
+  for (const [id, v] of A) COT.forEach((k, i) => { if (trung(v[i], e)) kyDoi.push(`${id}.${k}`); });
+  kyDoi.sort();
+  for (const k of [`${idA}.street_raw`, `${idA}.block_raw`, `${idB}.street_raw`]) bao(kyDoi.includes(k), `ô cấy ${k} trúng sau lượt bỏ luật`);
+  console.log(`ô thật offer_ba52ee3409d223e3 trúng sau lượt bỏ luật: ${kyDoi.includes("offer_ba52ee3409d223e3.street_raw") ? "có (nguồn vẫn gửi giá trị ấy)" : "không"}`);
   console.log(`ô chữ đổi giữa lượt đột biến và lượt thật: ${doi.length} (${A.size} tin S06 × ${COT.length} cột)`);
   bao(JSON.stringify(doi.sort()) === JSON.stringify(kyDoi), `chỉ đúng các ô mang tên nguồn đổi: ${doi.join(", ") || "(không)"}`);
   const sau = doi.map((k) => B.get(k.split(".")[0])[COT.indexOf(k.split(".")[1])]);
@@ -163,6 +172,19 @@ try {
   console.log(`thời gian: lượt đột biến ${(dot.ms / 1000).toFixed(1)} s · lượt thật ${(that2.ms / 1000).toFixed(1)} s (tỉ lệ ${(that2.ms / dot.ms).toFixed(3)}, một mẫu, chỉ tham khảo) · chi phí riêng của luật ${(chiPhiLuat / 1000).toFixed(2)} s = ${(tile * 100).toFixed(2)}% lượt thật`);
   const tran = Number(process.env.PL39_TRAN_CHI_PHI ?? "0.05");
   bao(tile <= tran, `chi phí riêng của luật không quá ${(tran * 100).toFixed(0)}% thời gian lượt transform`);
+
+  // 4. Trần (AC-5): cấy thêm 51 tin mới có quận mang tên nguồn → lượt dừng TRƯỚC mọi lần ghi.
+  const { rows: [m2] } = await c.query(`SELECT max(list_id) AS id FROM stg_chotot_ads`);
+  await c.query(`INSERT INTO stg_chotot_ads SELECT (jsonb_populate_record(NULL::stg_chotot_ads, to_jsonb(s) || jsonb_build_object(
+      'list_id', $2::bigint + k, 'area_name', $3::text))).* FROM stg_chotot_ads s, generate_series(1, 51) k WHERE s.list_id = $1`,
+    [g.list_id, m2.id, cay.quan]);
+  const dau = async () => (await c.query(`SELECT (SELECT count(*) FROM sale_offer_records)::int AS tin, (SELECT max(id) FROM field_assertions)::text AS pb,
+      (SELECT count(*) FROM field_assertions WHERE retracted_at IS NOT NULL)::int AS rut`)).rows[0];
+  const truocTran = await dau();
+  let loiTran = "";
+  try { await chay(join(P, "transform-chotot.mjs")); } catch (er) { loiTran = er.message; }
+  bao(/vượt trần 50 — dừng, không rút, không ghi/.test(loiTran), `vượt trần thì lượt dừng: ${loiTran.slice(0, 60) || "(không dừng)"}`);
+  bao(JSON.stringify(await dau()) === JSON.stringify(truocTran), "vượt trần: không thêm tin, không thêm hay rút phát biểu nào");
 } finally {
   rmSync(TEP_DB, { force: true });
   await c.end();

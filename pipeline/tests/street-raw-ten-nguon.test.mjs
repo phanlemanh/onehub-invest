@@ -35,9 +35,14 @@ test("SR-AC-4 hai trường đi qua phát biểu là đường và toà", () => 
   assert.deepEqual(O_CHU_PHAT_BIEU, ["street_raw", "block_raw"]);
 });
 
-test("SR-AC-4 dựng sẵn biến thể theo mảng: cùng kết quả, mảng mới không dùng nhầm bản cũ", () => {
+test("SR-AC-4 dựng sẵn biến thể theo mảng: cùng kết quả với bản dựng mới, mảng mới không dùng nhầm bản cũ", () => {
   const v = "Đường Nhà Thử Nghiệm 12";
-  assert.deepEqual(findSourceNames(v, SO), findSourceNames(v, SO));
+  const mau = [v, "nha thu nghiem tower", "NhaThuNghiem", "Ngõ 5 kenh-thu.vn", "kenh thu vn", "Nguyễn Văn Linh", "Toà S1.03", ""];
+  findSourceNames(v, SO); // dựng sẵn cho mảng SO
+  for (const t of mau) {
+    // [...SO] là mảng mới mỗi lần gọi → bộ dò dựng biến thể từ đầu: bản đã dựng sẵn phải cho đúng kết quả ấy.
+    assert.deepEqual(findSourceNames(t, SO), findSourceNames(t, [...SO]), `bản dựng sẵn lệch bản dựng mới ở «${t}»`);
+  }
   const khac = [{ code: "S92", realName: "Kênh Khác", wholeOnly: false }];
   assert.equal(findSourceNames(v, khac).length, 0, "mảng sổ khác vẫn trả kết quả của sổ trước");
   assert.equal(findSourceNames("đường kênh khác", khac)[0].code, "S92");

@@ -71,8 +71,9 @@ Lớp phát biểu sống (cùng ngày, sau khi ô sự cố đã gỡ, `probes/
 - **AC-4** Given sổ tên giả, When gọi luật với chữ cấy (có dấu, NFD, viết liền, tên miền) và chữ sạch, Then luật trúng đúng chỗ bộ
   soát sync-cloud trúng; sổ rỗng thì không lọc; dựng sẵn biến thể theo mảng sổ không đổi kết quả của bộ dò, sổ thêm mục tại chỗ
   thì bộ dò thấy tên mới; test hiện có của bộ che và bộ soát vẫn xanh.
-- **AC-5** Given một lượt có hơn 50 giá trị chữ hay phát biểu sống mang tên nguồn, When luật chạy, Then job dừng với thông điệp
-  «vượt trần 50 — dừng, không rút, không ghi»; đúng 50 thì đi tiếp.
+- **AC-5** Given một lượt có hơn 50 giá trị chữ hay phát biểu sống mang tên nguồn, When transform S06 chạy, Then lượt dừng với
+  thông điệp «vượt trần 50 — dừng, không rút, không ghi» TRƯỚC mọi lần ghi: số tin, phát biểu và phát biểu đã rút không đổi; đúng
+  50 thì đi tiếp.
 
 ## Coverage
 
@@ -92,7 +93,6 @@ Lớp phát biểu sống (cùng ngày, sau khi ô sự cố đã gỡ, `probes/
 - Transform S03, S05 và bộ đọc tin: 0 ô trúng 25/11; không đổi.
 - Dòng S06 cũ có quận, phường mang tên nguồn: câu upsert không ghi đè hai cột ấy; 25/11 có 0 ô như vậy.
 - `properties.street` và `enrichment_log` đã chép tên nguồn trước khi luật áp: 25/11 có 0 ô; duong-can chỉ điền ô căn đang trống.
-- Ca trần không chạy trên bản chép (cần sổ nguồn giả hàng loạt); chứng bằng test đơn vị của hàm trần (AC-5).
 - Sửa bộ soát sync-cloud hay sổ nguồn: bộ soát đúng thiết kế.
 
 ## Notes

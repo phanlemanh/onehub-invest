@@ -41,8 +41,10 @@ evals:
       exit 0; ℹ fail 0; các ca SR-AC-4 xanh cùng test hiện có của bộ che (ops-nhan-ma-nguon) và bộ soát (soat-tang-a, ops-facts).
   - id: E5
     criterion: AC-5
-    executor: test
-    cmd: cd pipeline && node --test tests/street-raw-ten-nguon.test.mjs scripts/ops-nhan-ma-nguon.test.mjs scripts/soat-tang-a.test.mjs scripts/ops-facts-so-tong-hop.test.mjs
-    paths: ["pipeline/transform-chotot.mjs", "pipeline/tests/street-raw-ten-nguon.test.mjs"]
+    executor: script
+    long_running: 40
+    cmd: bash _acceptance/street-raw-khong-mang-ten-nguon/probes/ban-chep.sh
+    paths: ["pipeline/transform-chotot.mjs"]
     expected: >
-      exit 0; ca «SR-AC-5 vượt trần một lượt thì dừng, tới trần thì đi tiếp» xanh.
+      exit 0; dòng ✔ «vượt trần thì lượt dừng: PL39: 5x giá trị chữ …» và ✔ «vượt trần: không thêm tin, không thêm hay rút phát biểu
+      nào» (51 tin cấy quận mang tên nguồn); ca đơn vị «SR-AC-5 vượt trần một lượt thì dừng, tới trần thì đi tiếp» chạy ở E4.
