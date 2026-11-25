@@ -23,6 +23,8 @@ export type SourceSnapshot = {
   manifest: SnapshotManifest;
   items: Array<{ kind: string; sourceId: string; payload: unknown; meta?: Record<string, unknown> }>;
   currentScheme: boolean;
+  /** Tệp nhị phân dưới `media/` của snapshot — lấy từ manifest, không bao giờ đọc nội dung (thiếu = không có ảnh). */
+  media?: { files: number; bytes: number };
 };
 
 export type Counts = {
@@ -40,26 +42,51 @@ export type Counts = {
   apartmentDetail: { ok: number } | null;
   /** Mốc ngày 2 — thửa theo phương pháp và số đo mỗi km² (lấy từ bản gộp khu). */
   parcel: { grid: number; suggest: number; areas: number; areaKm2: number; calls: number; perKm2: number; callsPerKm2: number } | null;
+  /** Mốc mở rộng — ảnh dự án: số tệp và số byte từ manifest, số item và số dự án có ảnh, lỗi theo loại. */
+  images: { files: number; bytes: number; items: number; duAn: number; loi: Record<string, number> } | null;
+  /** Mốc mở rộng — căn hộ toàn bộ dự án, cộng từ các bản gộp `can_ho_du_an` của mốc (moRong). */
+  apartmentsAll: { duAn: number; toa: number; toaKhop: number; maDuNhieu: number; soDaLay: number; soLoi: number } | null;
   firstAt: string;
   lastAt: string;
 };
 
 type Item = SourceSnapshot["items"][number];
 
-/** Đọc mọi snapshot S17 dưới `<root>/vn/` (thư mục hoàn chỉnh, không kể `.partial`), kiểm sha256 từng tệp. */
-export async function readSourceSnapshots(root: string): Promise<SourceSnapshot[]> {
+/**
+ * Đọc mọi snapshot S17 dưới `<root>/vn/` (thư mục hoàn chỉnh, không kể `.partial`), kiểm sha256 từng tệp items.
+ * Tệp ảnh dưới `media/` KHÔNG BAO GIỜ đọc ở đây (cả trăm GB, và không phải gzip): chỉ lấy số tệp và số byte từ
+ * manifest. `kinds` cho trước thì chỉ mở tệp items của snapshot khai kind đó trong `coverage.methods`; `kinds: []`
+ * = chỉ đọc manifest (byKind vẫn có, nhanh dù kho có hàng chục nghìn snapshot).
+ */
+export async function readSourceSnapshots(root: string, o: { kinds?: string[] } = {}): Promise<SourceSnapshot[]> {
   const dir = join(root, S17_CITY);
   const names = (await readdir(dir)).filter((n) => n.startsWith(`${S17_CITY}__${S17_SOURCE}__`)).sort();
   const out: SourceSnapshot[] = [];
   for (const name of names) {
-    const manifest = JSON.parse(await readFile(join(dir, name, "manifest.json"), "utf8")) as SnapshotManifest;
-    const items: Item[] = [];
-    for (const f of manifest.files) {
-      const gz = await readFile(join(dir, name, f.name));
-      if (createHash("sha256").update(gz).digest("hex") !== f.sha256) throw new Error(`sha256 không khớp: ${name}/${f.name}`);
-      items.push(...(JSON.parse(gunzipSync(gz).toString("utf8")) as Item[]));
+    let manifest: SnapshotManifest;
+    try {
+      manifest = JSON.parse(await readFile(join(dir, name, "manifest.json"), "utf8")) as SnapshotManifest;
+    } catch (e) {
+      if ((e as NodeJS.ErrnoException).code === "ENOENT") continue; // lượt khác đang chốt
+      throw e;
     }
-    out.push({ snapshotId: name, manifest, items, currentScheme: (manifest.coverage.notes ?? []).includes(S17_NOTES) });
+    const media = { files: 0, bytes: 0 };
+    for (const f of manifest.files) {
+      if (!f.name.startsWith("media/")) continue;
+      media.files++;
+      media.bytes += f.bytes;
+    }
+    const items: Item[] = [];
+    const methods = manifest.coverage.methods ?? {};
+    if (!o.kinds || o.kinds.some((k) => (methods[k] ?? 0) > 0)) {
+      for (const f of manifest.files) {
+        if (!f.name.startsWith("items-")) continue;
+        const gz = await readFile(join(dir, name, f.name));
+        if (createHash("sha256").update(gz).digest("hex") !== f.sha256) throw new Error(`sha256 không khớp: ${name}/${f.name}`);
+        items.push(...(JSON.parse(gunzipSync(gz).toString("utf8")) as Item[]));
+      }
+    }
+    out.push({ snapshotId: name, manifest, items, currentScheme: (manifest.coverage.notes ?? []).includes(S17_NOTES), media });
   }
   return out;
 }
@@ -76,10 +103,18 @@ export function countSnapshots(snaps: SourceSnapshot[]): Counts {
   let toa: Counts["apartmentBuilding"] = null;
   let can: Counts["apartmentDetail"] = null;
   let thua: Counts["parcel"] = null;
+  let images: Counts["images"] = null;
+  const duAnCoAnh = new Set<string>();
+  let apartmentsAll: Counts["apartmentsAll"] = null;
   const ids = new Set<string>();
   let sawList = false;
   for (const s of current) {
     for (const [kind, n] of Object.entries(s.manifest.coverage.methods)) byKind[kind] = (byKind[kind] ?? 0) + n;
+    if ((s.media?.files ?? 0) > 0) {
+      images ??= { files: 0, bytes: 0, items: 0, duAn: 0, loi: {} };
+      images.files += s.media?.files ?? 0;
+      images.bytes += s.media?.bytes ?? 0;
+    }
     for (const it of s.items) {
       if (it.kind === "du_an_detail") {
         apartment ??= { yes: 0, no: 0, unknown: 0 };
@@ -115,6 +150,21 @@ export function countSnapshots(snaps: SourceSnapshot[]): Counts {
         thua.calls += num(it.meta?.tongLoi);
         thua.perKm2 += num(it.meta?.thuaMoiKm2);
         thua.callsPerKm2 += num(it.meta?.loiMoiKm2);
+      } else if (it.kind === "anh_du_an") {
+        images ??= { files: 0, bytes: 0, items: 0, duAn: 0, loi: {} };
+        images.items++;
+        duAnCoAnh.add(String((it.meta?.request as { duAn?: unknown } | undefined)?.duAn ?? ""));
+        for (const m of (it.meta?.mediaFiles as Array<{ error?: unknown }> | undefined) ?? []) {
+          if (typeof m?.error === "string") images.loi[m.error] = (images.loi[m.error] ?? 0) + 1;
+        }
+      } else if (it.kind === "can_ho_du_an" && it.meta?.moRong === true) {
+        apartmentsAll ??= { duAn: 0, toa: 0, toaKhop: 0, maDuNhieu: 0, soDaLay: 0, soLoi: 0 };
+        apartmentsAll.duAn++;
+        apartmentsAll.toa += num(it.meta.soToa);
+        apartmentsAll.toaKhop += num(it.meta.soToaKhop);
+        apartmentsAll.maDuNhieu += num(it.meta.maDuNhieu);
+        apartmentsAll.soDaLay += num(it.meta.soDaLay);
+        apartmentsAll.soLoi += num(it.meta.soKhongLayDuoc);
       } else if (it.kind === "tile_coverage") {
         tile ??= { provinces: 0, scanned: 0, withData: 0, empty: 0, absent: 0, error: 0 };
         tile.provinces++;
@@ -139,6 +189,8 @@ export function countSnapshots(snaps: SourceSnapshot[]): Counts {
     apartmentBuilding: toa,
     apartmentDetail: can,
     parcel: thua,
+    images: images ? { ...images, duAn: duAnCoAnh.size } : null,
+    apartmentsAll,
     firstAt: times[0] ?? "",
     lastAt: times.at(-1) ?? "",
   };
@@ -154,12 +206,21 @@ function render(c: Counts, kind: string | undefined): string {
     if (kind === "can_ho_toa" && c.apartmentBuilding) lines.push(`  toà: ${c.apartmentBuilding.total} · khớp tổng dòng: ${c.apartmentBuilding.khop} · mã duy nhất: ${c.apartmentBuilding.codes} · dòng: ${c.apartmentBuilding.rows}`);
     if (kind === "can_ho_detail" && c.apartmentDetail) lines.push(`  khớp mã căn: ${c.apartmentDetail.ok} (chỉ bản khớp mới được ghi; số không gọi trúng nằm ở trạng thái bộ thu)`);
     if (kind === "thua" && c.parcel) lines.push(`  lưới: ${c.parcel.grid} · gợi ý: ${c.parcel.suggest} · khu: ${c.parcel.areas} (${c.parcel.areaKm2} km²) · lời: ${c.parcel.calls} · thửa/km²: ${c.parcel.perKm2} · lời/km²: ${c.parcel.callsPerKm2}`);
+    if (kind === "anh_du_an" && c.images) {
+      const loi = Object.entries(c.images.loi).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${v}`).join(", ");
+      lines.push(`  ảnh gốc: ${c.images.files} tệp · ${(c.images.bytes / 2 ** 30).toFixed(2)} GiB · dự án có ảnh: ${c.images.duAn}${loi ? ` · lỗi: ${loi}` : ""}`);
+    }
+    if (kind === "can_ho_du_an" && c.apartmentsAll) {
+      lines.push(`  (mốc mở rộng) dự án đã xét: ${c.apartmentsAll.duAn} · toà: ${c.apartmentsAll.toa} (khớp ${c.apartmentsAll.toaKhop}) · mã căn: ${c.apartmentsAll.maDuNhieu} · có chi tiết: ${c.apartmentsAll.soDaLay} · không lấy được: ${c.apartmentsAll.soLoi}`);
+    }
     if (kind === "tile_coverage" && c.tile) {
       lines.push(`  tỉnh: ${c.tile.provinces} · điểm quét: ${c.tile.scanned} · có dữ liệu: ${c.tile.withData} · rỗng: ${c.tile.empty} · vắng: ${c.tile.absent} · lỗi: ${c.tile.error}`);
     }
     return lines.join("\n");
   }
   for (const [k, n] of Object.entries(c.byKind).sort()) lines.push(`${k.padEnd(16)} ${n}`);
+  if (c.images) lines.push(`ảnh gốc: ${c.images.files} tệp · ${(c.images.bytes / 2 ** 30).toFixed(2)} GiB · dự án có ảnh: ${c.images.duAn}`);
+  if (c.apartmentsAll) lines.push(`căn hộ (mốc mở rộng): dự án ${c.apartmentsAll.duAn} · toà ${c.apartmentsAll.toa} (khớp ${c.apartmentsAll.toaKhop}) · mã căn ${c.apartmentsAll.maDuNhieu} · có chi tiết ${c.apartmentsAll.soDaLay}`);
   lines.push(`(snapshot khuôn 2: ${c.snapshots} · dừng có lỗi: ${c.stopped} · bản khuôn 1 bị bỏ qua: ${c.skippedOldScheme})`);
   return lines.join("\n");
 }
@@ -168,13 +229,16 @@ async function main(argv: string[]): Promise<number> {
   const { values } = parseArgs({
     args: argv,
     strict: true,
-    options: { "snapshots-root": { type: "string" }, kind: { type: "string" }, json: { type: "boolean" } },
+    options: { "snapshots-root": { type: "string" }, kind: { type: "string" }, json: { type: "boolean" }, "chi-manifest": { type: "boolean" } },
   });
   if (!values["snapshots-root"]) {
     console.error("thiếu --snapshots-root");
     return 2;
   }
-  const c = countSnapshots(await readSourceSnapshots(values["snapshots-root"]));
+  // Chỉ đọc manifest khi có --kind (mở đúng snapshot khai kind đó) hoặc --chi-manifest: kho lớn vẫn đếm nhanh.
+  const c = countSnapshots(
+    await readSourceSnapshots(values["snapshots-root"], { kinds: values["chi-manifest"] === true ? [] : values.kind !== undefined ? [values.kind] : undefined }),
+  );
   if (values.json) console.log(JSON.stringify(c));
   else console.log(render(c, values.kind));
   return 0;

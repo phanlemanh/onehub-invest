@@ -114,3 +114,43 @@ test("readSourceSnapshots: kiểm sha256 từng tệp trước khi đọc (luậ
 test("S17_NOTES ngắn, ổn định để bên đọc lọc", () => {
   assert.match(S17_NOTES, /^S17 khuôn 2 /);
 });
+
+// ---------- mốc mở rộng (claudedp-2411-73): ảnh và căn hộ toàn bộ ----------
+
+test("count: ảnh gốc đếm từ manifest (số tệp, số byte) mà KHÔNG đọc nội dung tệp ảnh; lỗi ảnh theo loại; bản gộp căn hộ mở rộng", async () => {
+  const root = await mkdtemp(join(tmpdir(), "s17-dem-anh-"));
+  try {
+    const w = new BatchWriter({ root, maxItems: 10, phase: "images", schemaVersion: 18 });
+    const anh = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3]);
+    await w.addWithFiles(
+      makeItem(
+        "anh_du_an",
+        "du-an-7-anh-1",
+        { media: [{ url: "https://cdn.gia.test/a" }, { url: "https://img.ngoai.test/x" }, { url: "https://cdn.gia.test/het" }] },
+        { request: { duAn: "7" }, mediaFiles: [{ url: "https://cdn.gia.test/a", file: "media/a.jpg", bytes: 7 }, { url: "https://img.ngoai.test/x", error: "host-not-allowed" }, { url: "https://cdn.gia.test/het", error: "het-han" }] },
+        at,
+      ),
+      [{ name: "media/a.jpg", bytes: anh }],
+    );
+    await w.flush();
+    const w2 = new BatchWriter({ root, maxItems: 10, phase: "apartments-all", schemaVersion: 18 });
+    await w2.add(makeItem("can_ho_du_an", "du-an-7", { toa: [] }, { request: { id: "7" }, soToa: 2, soToaKhop: 1, maDuNhieu: 500, soDaLay: 480, soKhongLayDuoc: 20, moRong: true }, at));
+    await w2.add(makeItem("can_ho_du_an", "du-an-1004", { toa: [] }, { request: { id: "1004" }, soToa: 4, soToaKhop: 4, maDuNhieu: 2457, soDaLay: 2344, soKhongLayDuoc: 113 }, at));
+    await w2.flush();
+
+    const snaps = await readSourceSnapshots(root);
+    assert.equal(snaps[0].media?.files, 1, "số tệp ảnh lấy từ manifest");
+    assert.equal(snaps[0].media?.bytes, 7);
+    const c = countSnapshots(snaps);
+    assert.deepEqual(c.images, { files: 1, bytes: 7, items: 1, duAn: 1, loi: { "host-not-allowed": 1, "het-han": 1 } });
+    assert.deepEqual(c.apartmentsAll, { duAn: 1, toa: 2, toaKhop: 1, maDuNhieu: 500, soDaLay: 480, soLoi: 20 }, "chỉ bản gộp của mốc mở rộng (moRong), không tính bản của dự án mẫu");
+    const day = await readSourceSnapshots(root, { kinds: ["can_ho_du_an"] });
+    assert.equal(day[0].items.length, 0, "snapshot không có kind cần đọc thì không mở tệp items");
+    assert.equal(day[0].media?.files, 1, "nhưng số ảnh vẫn đếm được từ manifest");
+    const chiManifest = await readSourceSnapshots(root, { kinds: [] });
+    assert.ok(chiManifest.every((s) => s.items.length === 0));
+    assert.equal(countSnapshots(chiManifest).byKind.anh_du_an, 1, "byKind vẫn có từ coverage.methods");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

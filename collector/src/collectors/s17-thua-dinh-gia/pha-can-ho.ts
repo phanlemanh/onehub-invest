@@ -137,7 +137,7 @@ export async function apartmentsAll(o: RunOptions, luaChon: TatCaDuAnOptions): P
   if (!Number.isInteger(concurrency) || concurrency < 1 || concurrency > MAX_CONCURRENCY) {
     throw new ConfigError(`concurrency phải là số nguyên từ 1 đến ${MAX_CONCURRENCY}`);
   }
-  const motDot = luaChon.motDot ?? 40;
+  const motDot = luaChon.motDot ?? 100; // 100 căn một lô = 100 căn một snapshot
   const ids = new Set(luaChon.ids ?? []);
   const trongKhoang = (d: { soCan: number | null }): boolean =>
     (luaChon.tuSoCan === undefined || (d.soCan ?? 0) >= luaChon.tuSoCan) && (luaChon.denSoCan === undefined || (d.soCan ?? Number.MAX_SAFE_INTEGER) <= luaChon.denSoCan);
