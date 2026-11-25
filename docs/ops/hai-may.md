@@ -81,6 +81,9 @@ hay sha256 lệch → «ĐỎ chặng nhan/sha», DB chạy trên M5 giữ nguy�
 
 - DB trên M5 chỉ thao tác qua `docker exec … one-invest-db` — cổng 5433 của M5 là đường chuyển của colima, không ổn định. Không tự khởi
   động lại colima hay docker ở máy nào.
-- Bước `--kiem` của HT18 tự nối `localhost:5433` để dựng DB tạm: cổng 5433 của M5 đứt thì lượt đỏ ở «chặng kiem», DB chạy giữ nguyên.
+- Bước `--kiem` của HT18 trên M5 đi qua `docker exec` (DATABASE_URL vắng thì tự dùng; container đọc từ `ONEHUB_DB_CONTAINER`); không
+  nối được DB thì thoát mã 3 «không nối được DB» — không bao giờ coi là xanh. Lượt đỏ ở «chặng kiem» thì DB chạy giữ nguyên.
+- Chạy bộ test trên bản chép ở M5 LUÔN kèm `CI=1`: thiếu biến này, ca cần bảng không có trong bản chép (vd ranh giới OSM, bảng `stg_*`)
+  ném lỗi thay vì bỏ qua có tên.
 - Test của bước nhận chạy trên máy thu (`scripts/day-ban-chep.itest.mjs` dưới `db/db-thu.sh --chay`) với vai `may-thu`: bước nhận chỉ
   được chạm DB `oneinvest_suite_*`; vân tay DB `oneinvest` (oid, tập DB) đo trước và sau lượt.
