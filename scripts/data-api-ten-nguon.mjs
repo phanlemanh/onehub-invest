@@ -44,7 +44,6 @@ export const DINH_DANH_BIET = new Set([
   "«S02»Id",
 ]);
 
-const DUOI = /\.(sql|ts|tsx|js|mjs|cjs|json|md|yml|yaml|txt|sh)$/i;
 const BO_QUA = new Set(["node_modules", "dist", ".git"]);
 
 /** Mọi tệp chữ dưới `<root>/data-api` (bỏ node_modules, dist), đường tương đối gốc kho, xếp theo chữ. */
@@ -136,7 +135,7 @@ export function quet(root = ROOT, { entries = sourceRegistrySeeds(root), files =
     for (const h of findSourceNames(path.posix.basename(file), entries)) tenTep.push({ file: che(file, entries), code: h.code });
     let text;
     try { text = readFileSync(path.join(root, file), "utf8"); } catch { continue; }
-    if (!DUOI.test(file) || text.includes("\u0000")) continue;
+    if (text.includes("\u0000")) continue; // tệp nhị phân
     const hits = findSourceNames(text, entries);
     if (hits.length === 0) continue;
     const L = loaiKyTu(text, file);
@@ -159,7 +158,7 @@ export function quet(root = ROOT, { entries = sourceRegistrySeeds(root), files =
       cum.push({ file: che(file, entries), dong, cot: h.start - dau + 1, code: h.code, loai, dang, hop_le: loai === "dinh-danh" && biet.has(dang) });
     }
   }
-  return { cum, tenTep };
+  return { cum, tenTep, soTep: files.length };
 }
 
 /** Tách một tệp SQL thành câu tại `;` nằm trong mã (không trong chú thích hay chuỗi); bỏ câu rỗng. */
@@ -177,7 +176,8 @@ export function tachCauSql(text, file = "x.sql") {
 /**
  * Dựng lược đồ mẫu của bản công khai lên DB trống qua `client` (pg): mọi `<dir>/db/*.sql` theo thứ tự tên rồi `<dir>/seed.sql`,
  * từng câu một như `psql -f` (câu lỗi không dừng tệp; trong BEGIN đã lỗi thì câu sau là 25P02). Trả
- * { loi: ["<số lần> LOI <3 ký tự đầu tên tệp> <SQLSTATE>"], doiTuong: ["BASE TABLE <tên>" | "VIEW <tên>"] } — tên chưa che.
+ * { loi: ["<số lần> LOI <3 ký tự đầu tên tệp> <SQLSTATE>"], doiTuong: ["BASE TABLE <tên>" | "VIEW <tên>"], nguon: ["<mã> | <real_name> |
+ * <source_ids>"], macDinh: ["<bảng>.<cột> = <mặc định>"] } — tên chưa che.
  */
 export async function dungLuocDoMau(dir, client) {
   const tep = readdirSync(path.join(dir, "db")).filter((n) => n.endsWith(".sql")).sort().map((n) => path.join(dir, "db", n));
@@ -193,20 +193,23 @@ export async function dungLuocDoMau(dir, client) {
   }
   const loi = [...dem].map(([k, n]) => `${n} ${k}`).sort();
   const { rows } = await client.query("SELECT table_type || ' ' || table_name AS d FROM information_schema.tables WHERE table_schema = 'public' ORDER BY 1");
-  return { loi, doiTuong: rows.map((r) => r.d) };
+  // quan hệ giữa các tệp: dòng source_registry (mã · real_name · source_ids) và mọi giá trị mặc định của cột
+  const sr = await client.query("SELECT code || ' | ' || real_name || ' | ' || array_to_string(source_ids, ',') AS d FROM source_registry ORDER BY code");
+  const md = await client.query("SELECT table_name || '.' || column_name || ' = ' || column_default AS d FROM information_schema.columns WHERE table_schema = 'public' AND column_default IS NOT NULL ORDER BY 1");
+  return { loi, doiTuong: rows.map((r) => r.d), nguon: sr.rows.map((r) => r.d), macDinh: md.rows.map((r) => r.d) };
 }
 
 /** Tổng theo loại + danh sách vi phạm (cụm không hợp lệ và tên tệp). */
-export function tongKet({ cum, tenTep }) {
+export function tongKet({ cum, tenTep, soTep = 0 }) {
   const theoLoai = {};
   for (const c of cum) theoLoai[c.loai] = (theoLoai[c.loai] ?? 0) + 1;
   const viPham = cum.filter((c) => !c.hop_le);
-  return { tong: cum.length, theoLoai, tenTep: tenTep.length, dinhDanhBiet: cum.filter((c) => c.hop_le).length, viPham, viPhamTenTep: tenTep };
+  return { soTep, tong: cum.length, theoLoai, tenTep: tenTep.length, dinhDanhBiet: cum.filter((c) => c.hop_le).length, viPham, viPhamTenTep: tenTep };
 }
 
 if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const k = tongKet(quet());
-  console.log(`data-api ten-nguon: ${k.tong} cụm trong nội dung (${Object.entries(k.theoLoai).map(([l, s]) => `${l} ${s}`).join(" · ") || "0"}) · tên tệp ${k.tenTep} · định danh lược đồ đã biết ${k.dinhDanhBiet}`);
+  console.log(`data-api ten-nguon: ${k.soTep} tệp đã quét · ${k.tong} cụm trong nội dung (${Object.entries(k.theoLoai).map(([l, s]) => `${l} ${s}`).join(" · ") || "0"}) · tên tệp ${k.tenTep} · định danh lược đồ đã biết ${k.dinhDanhBiet}`);
   for (const v of k.viPham) console.log(`  VI PHẠM ${v.loai} ${v.code} ${v.file}:${v.dong}:${v.cot} — ${process.argv.includes("--chi-tiet") ? v.dang : ""}`);
   for (const v of k.viPhamTenTep) console.log(`  VI PHẠM ten-tep ${v.code} ${v.file}`);
   const ok = k.viPham.length === 0 && k.viPhamTenTep.length === 0;
