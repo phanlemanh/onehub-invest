@@ -4,9 +4,10 @@
 #  (i)  mọi câu `return token;` của hàm nạp một đường dẫn (moMotDuong) nằm trên dòng có điều kiện duDungKhong(
 #       — không token nào rời hàm nếu không còn hạn quá lề (và nếu là đúng token vừa bị từ chối);
 #  (ii) không còn lời chờ cứng `waitForTimeout(`;
-#  (iii) mọi lời `page.goto(` chỉ trỏ về APP_ORIGIN + duong (duong đi từ danh sách ứng viên) hoặc about:blank.
+#  (iii) mọi lời `page.goto(` chỉ trỏ về APP_ORIGIN + duong (duong đi từ danh sách ứng viên) hoặc about:blank;
+#  (iv)  trình duyệt mở KHÔNG CỬA SỔ (`headless: true`) — bộ thu không bung cửa sổ lên màn hình của Mạnh.
 # Chiều đỏ trên bản chép của CHÍNH tệp: (a) đổi điều kiện thành `if (token)` · (b) cấy một câu `return token;`
-# trước khi kiểm · (c) cấy lại lời chờ cứng · (d) cấy một lời page.goto trỏ chỗ khác — mỗi bản phải ĐỎ với đúng
+# trước khi kiểm · (c) cấy lại lời chờ cứng · (d) cấy một lời page.goto trỏ chỗ khác · (e) mở có cửa sổ — mỗi bản phải ĐỎ với đúng
 # thông điệp ghim.
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
@@ -15,6 +16,7 @@ F="$(grep -l "export function docExpAppToken" "$ROOT"/collector/src/collectors/*
 M_KIEM="ĐỎ: hàm nạp có câu return token không đi qua kiểm lề"
 M_CHO="ĐỎ: bộ thu còn lời chờ cứng waitForTimeout"
 M_GOTO="ĐỎ: có lời page.goto trỏ ngoài APP_ORIGIN + duong hoặc about:blank"
+M_CUA_SO="ĐỎ: bộ thu mở cửa sổ trình duyệt lên màn hình (headless không phải true)"
 
 do_tep() {
   local f="$1" loi=0
@@ -38,6 +40,10 @@ do_tep() {
   if [ "$n_goto" -ge 2 ] && [ "$n_goto" = "$n_goto_dung" ]; then
     echo "đạt: $n_goto lời page.goto đều trỏ APP_ORIGIN + duong hoặc about:blank"
   else echo "$M_GOTO ($n_goto_dung/$n_goto lời đúng chỗ)"; loi=1; fi
+  # (iv) trình duyệt mở KHÔNG CỬA SỔ: nhu cầu của Mạnh là bộ thu không bung cửa sổ lên màn hình
+  if grep -qE 'headless: true,' "$f" && ! grep -qE 'headless: false' "$f"; then
+    echo "đạt: trình duyệt mở không cửa sổ (headless: true)"
+  else echo "$M_CUA_SO"; loi=1; fi
   return $loi
 }
 
@@ -51,5 +57,6 @@ sed 's/if (duDungKhong(token) \&\& token !== loaiBo) return token;/if (token) re
 awk '{print} /const token = await docToken\(\);/{print "        return token;"}' "$F" > "$T/b.ts"; pha "trả sớm" "$T/b.ts" "$M_KIEM"
 awk '{print} /const token = await docToken\(\);/{print "        await page.waitForTimeout(6_000);"}' "$F" > "$T/c.ts"; pha "chờ cứng" "$T/c.ts" "$M_CHO"
 awk '{print} /const token = await docToken\(\);/{print "        await page.goto(\"https://vi-du.invalid/\");"}' "$F" > "$T/d.ts"; pha "goto chỗ khác" "$T/d.ts" "$M_GOTO"
+sed 's/headless: true,/headless: false,/' "$F" > "$T/e.ts"; pha "mở có cửa sổ" "$T/e.ts" "$M_CUA_SO"
 [ $RC -eq 0 ] && echo "XANH" || echo "ĐỎ"
 exit $RC

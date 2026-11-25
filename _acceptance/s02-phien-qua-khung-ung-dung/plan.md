@@ -13,5 +13,6 @@ tìm ra được sửa trong phạm vi mười tiêu chí, cũng theo TDD.
 | 5. Test đơn vị: hàm thuần, `call()` với fetch nối vào được, trình lấy token với bước nạp giả, lệnh `login` đen-trắng qua CLI thật với Chrome giả | `collector/src/test/s02-phien-qua-khung-ung-dung.test.ts` | E13 | true |
 | 6. Năm phép đo, mỗi phép có chiều đỏ trên bản đột biến | `probes/han-va-lam-moi.mjs` · `probes/loi-xac-thuc.mjs` · `probes/noi-day.sh` · `probes/lenh-login.sh` · `probes/vung.sh` | E1 → E12, E15 → E17 | true |
 | 7. Chỉ dẫn cho agent: profile đổi chỗ được, lệnh `login`, route dữ liệu là phương án cuối | `collector/CLAUDE.md` · `collector/AGENTS.md` | AC-9, AC-10 | true |
+| 8. Bước lấy token mở trình duyệt KHÔNG CỬA SỔ (sau lời giao claudedp-2511-50), giữ profile riêng của bộ thu | tệp bộ thu S02 · `probes/noi-day.sh` | AC-3, E10 | — (đã làm) |
 
 Verify mỗi việc: chạy chính phép đo đó cả hai chiều (đã chạy lúc viết: xanh và đỏ đúng chỗ). Không còn mã nào phải viết.

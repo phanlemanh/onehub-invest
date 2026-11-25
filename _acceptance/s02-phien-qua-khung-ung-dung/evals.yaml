@@ -59,7 +59,7 @@ evals:
     criterion: AC-3
     executor: script
     cmd: bash _acceptance/s02-phien-qua-khung-ung-dung/probes/noi-day.sh
-    expected: "exit 0; dòng cuối 'XANH'; ba dòng 'đạt: …' của bản thật (mọi câu return token đi qua kiểm lề · không còn lời chờ cứng · mọi lời page.goto đúng chỗ) và bốn dòng chiều đỏ 'đạt: chiều đỏ (điều kiện bò|trả sớm|chờ cứng|goto chỗ khác) bắt đúng: …'"
+    expected: "exit 0; dòng cuối 'XANH'; bốn dòng 'đạt: …' của bản thật (mọi câu return token đi qua kiểm lề · không còn lời chờ cứng · mọi lời page.goto đúng chỗ · trình duyệt mở không cửa sổ — vế KHÔNG-BẮN: không bung cửa sổ lên màn hình) và năm dòng chiều đỏ 'đạt: chiều đỏ (điều kiện bò|trả sớm|chờ cứng|goto chỗ khác|mở có cửa sổ) bắt đúng: …'"
     paths: [collector/src/collectors/**, _acceptance/s02-phien-qua-khung-ung-dung/probes/noi-day.sh]
   - id: E11
     criterion: AC-3
