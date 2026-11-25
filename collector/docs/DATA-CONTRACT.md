@@ -525,11 +525,15 @@ Luật đọc:
      (trên 60 MB, kể cả theo `content-length`) · `rong` (0 byte) · `cam-may-chu` (địa chỉ nội bộ hay giao thức lạ viết
      thẳng trong URL — không bao giờ gửi lời) · `chuyen-huong-cam` (chuyển hướng tới địa chỉ như trên, hoặc tới tên trỏ
      vào dải nội bộ) · `qua-nhieu-chuyen-huong` (trên 5 bước) · `may-chu-khong-ton-tai` (không phân giải được tên) ·
-     `may-chu-khong-tra-loi` (từ chối kết nối, mạng không tới) · `chung-chi` · `chan-o-may-chu` (máy chủ ngoài trả
-     403, 429 hay trang HTML thay ảnh — bỏ máy chủ đó, không lách) · `qua-so-lan-thu` (lỗi tạm quá ba lượt).
+     `may-chu-khong-tra-loi` (từ chối kết nối, mạng không tới; ở máy chủ ngoài còn gồm không nối được kịp — hết giờ
+     bắt tay) · `chung-chi` (mọi lỗi chứng chỉ và bắt tay TLS) · `chan-o-may-chu` (máy chủ ngoài trả 403, 429 hay trang
+     HTML thay ảnh — bỏ máy chủ đó, không lách) · `qua-so-lan-thu` (lỗi tạm quá ba lượt).
    - **Lỗi tạm** — mục nằm trong `mediaFiles` với `error` ngoài bộ mã trên và chưa có tệp, `chiTiet` cho biết vì sao:
-     `treo` (không nhận được byte nào quá 30 giây), `timeout` (quá trần tổng 30 phút của một tệp), `dns-noi-bo`, `ngung`
-     (bị bỏ vì nguồn vừa chặn), tên lỗi mạng (5xx, mất kết nối). Lượt sau thử lại; bên đọc coi là chưa có ảnh.
+     `treo` (không nhận được byte nào quá 30 giây), `timeout` (quá trần tổng 30 phút của một tệp; riêng ở máy chủ của
+     nguồn còn gồm không nối được kịp), `dns-noi-bo`, `ngung` (bị bỏ vì nguồn vừa chặn), tên lỗi mạng (5xx, mất kết
+     nối). Lượt sau thử lại; bên đọc coi là chưa có ảnh. Quy tắc dừng «mất mạng» (`network-down`, không ghi nhận là
+     nguồn chặn): lượt máy chủ nguồn dừng sau 10 lỗi tạm liền nhau; lượt máy chủ ngoài sau 50 lỗi tạm liền nhau, mà
+     lỗi liền nhau trên cùng một máy chủ chỉ tính một lần (một máy chủ ngoài chết là chuyện của nó).
    - **Bên trả lời ở bước CUỐI mới chịu trách nhiệm.** Máy chủ của chính nguồn trả 403 (không phải hết hạn), 429 hay
      trang HTML là BỊ CHẶN: dừng cả lượt ngay (mọi tệp đang dở bị bỏ, không ghi nhận), không lách. Nguồn chuyển hướng
      sang một máy chủ ngoài và máy chủ ngoài đó trả 403 thì CHỈ máy chủ ngoài bị nhớ và bỏ qua — không tính là nguồn
