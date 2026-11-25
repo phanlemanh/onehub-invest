@@ -1,5 +1,5 @@
 {
-  "feature_plain": "API dữ liệu công khai thôi trả nội dung bài đăng nhóm chat (S03) và thôi dựa vào số liệu hiệu chuẩn (S02), trước khi API mở cho người ngoài dùng.",
+  "feature_plain": "API dữ liệu công khai thôi trả nội dung bài đăng nhóm chat (S03) và thôi dựa vào số liệu hiệu chuẩn (S02), trước khi API mở cho người ngoài dùng. Ký lại vì phạm vi thêm ba tệp kiểm thử của app.",
   "will_do": [
     {
       "id": "AC-1",
@@ -27,7 +27,7 @@
     },
     {
       "id": "AC-8",
-      "p": "Sẽ chỉ đụng đúng các tệp được giao, không đụng lược đồ mẫu, app, pipeline, và không để lọt tên nguồn thật vào mã công khai."
+      "p": "Sẽ chỉ đụng đúng các tệp được giao, cộng ba tệp kiểm thử của app chỉ được bỏ hai trường đã gỡ (tên liên hệ, chữ bài); không đụng lược đồ mẫu, phần khác của app, pipeline, và không để lọt tên nguồn thật vào mã công khai."
     },
     {
       "id": "AC-9",

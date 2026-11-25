@@ -5,10 +5,10 @@ slug: data-api-dong-ba-route-lo
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api, docs]
-status: implemented
+status: draft
 design_doc: _acceptance/data-api-dong-ba-route-lo/design.md
-approved_by: Mạnh
-approved_at: 2026-11-24
+approved_by:
+approved_at:
 ---
 
 # Acceptance Contract: data-api-dong-ba-route-lo
@@ -55,8 +55,11 @@ Source input: lời giao `gs-2411-1` (kênh điều phối riêng tư, issue #4)
 - AC-8: Given diff của nhánh so với merge-base với `main`, When soát phạm vi, Then mọi tệp đổi nằm trong ranh giới lời giao
   (ba route, `data-api/test/**`, `data-api/README.md`, `data-api/CLAUDE.md`, `_acceptance/data-api-dong-ba-route-lo/**`,
   cộng đúng các khoá lệnh `executors.*.dapi_drl*` của hàng trong `_acceptance/config.yaml`, không khoá nào khác của tệp đó,
-  và hai tệp máy sinh `PRODUCT-MAP.md`, `LO-TRINH.html` do lệnh duyệt, ký của kit vẽ lại), không đổi
-  `data-api/db/**`, `data-api/seed.sql`, `app/`, `pipeline/`, `db/`, và không tên nguồn thật nào (rút từ các câu `INSERT INTO source_registry` của `db/migrations` bằng
+  và hai tệp máy sinh `PRODUCT-MAP.md`, `LO-TRINH.html` do lệnh duyệt, ký của kit vẽ lại, cộng ba test của app import
+  `data-api/src/routes/deals.ts` — `app/tests/can-gia-cung-loai-db.test.tsx`, `app/tests/hang-gia-doc.test.tsx`,
+  `app/tests/gia-tot-du-an-doc.test.tsx` — trong đó phần diff CHỈ bỏ hai khoá `contact`, `postText` khỏi danh sách khoá cũ
+  của `/v1/deals`, không thêm dòng mới, không đổi ca nào khác), không đổi `data-api/db/**`, `data-api/seed.sql`, tệp nào
+  khác của `app/`, `pipeline/`, `db/`, và không tên nguồn thật nào (rút từ các câu `INSERT INTO source_registry` của `db/migrations` bằng
   `scripts/lib/tier-a-source-names.mjs`, không in ra) xuất hiện trong phần thêm của diff dưới `data-api/` — trừ dạng định
   danh có `_` liền kề (tên bảng), cùng ngoại lệ với `scripts/check-invest-tier-a.mjs`.
 - AC-9: Given nhánh sau hàng, When chạy `npm run typecheck` trong `data-api/`, Then thoát 0.
@@ -102,3 +105,12 @@ Quét hình thái làm tay trong bước thiết kế (không nạp skill — kh
 - Hỏi-2 (Cổng Phạm vi, Mạnh quyết): deals bỏ cả tên người gửi ở hàng này (khuyến nghị) hay giữ tên người bán đọc từ
   `sale_offers` đã làm sạch ngay trong hàng này.
 - Ca đỏ đã biết trên M5, không do nhánh: QV-AC-5 ở `app/tests/quyen-bon-vai.test.tsx` (lệch môi trường docker).
+- Mở lại Cổng Phạm vi (25/11, gs cho phép ở `m5-2411-10`): bộ kiểm CI trên M5 bắt ba ca của hồ sơ đã ký — CG8-AC-6,
+  CG9-AC-7, CG10-AC-8 — đỏ vì chúng ghim `contact`, `postText` là khoá phải giữ của `/v1/deals`. Bỏ hai khoá đó khỏi kỳ vọng
+  của ba ca là **đổi kỳ vọng có chủ đích của HT19**, không phải nới thước: mọi khoá còn lại và mọi phép kiểm khác của ba ca
+  giữ nguyên. Kiểm bắt buộc của gs, làm 25/11: không mã chạy thật nào trong `app/` hay `data-api/` đọc `contact` hay
+  `postText` từ kết quả của `data-api /v1/deals` (app không gọi data-api; hai chỗ `postText` ở `app/src` là màn Ops dòng
+  chảy dữ liệu, đọc DB trực tiếp) — gỡ hai khoá không làm gãy trang nào.
+- Lượt chấm chính thức (S4) chạy trên Mac mini, máy có dữ liệu thật (gs, `m5-2411-7`): bốn suite trọn trên M5 đỏ nền và che
+  mất ba ca trên. M5 xong phần mình (bộ kiểm CI trên M5 xanh trừ QV-AC-5, 10/10 eval), đẩy nhánh; một dãy Mac mini chấm rồi
+  commit bằng chứng lên cùng nhánh.
