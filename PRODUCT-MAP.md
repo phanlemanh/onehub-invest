@@ -11,7 +11,7 @@ flowchart TD
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>21 việc"] --> GP{"Cổng Phạm vi"}
-  GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
+  GP --> DL["Đang làm<br/>2 việc"] --> GB{"Cổng Bằng chứng"}
   GB --> DG["Đã giao<br/>224 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>142 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
@@ -71,6 +71,7 @@ flowchart TD
 
 ## Đang làm
 
+- Collector S03 tải lại ảnh bị CDN trả 400 vì đoạn /jpg/ trong đường dẫn — thử một lần URL bỏ /jpg/; khuôn meta.mediaFiles giữ nguyên (ZC16) (`s03-jpg-path-fallback`)
 - Collector S03 nhận ảnh trên host R2 của người đăng và host đích chuyển hướng của CDN ảnh S03; ảnh JPEG XL được giữ nguyên byte (ZC15, phần host của ZC9) (`s03-media-r2-allowlist`)
 
 ## Đã giao — chờ phiên nghiệm thu
