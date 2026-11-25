@@ -7,12 +7,12 @@
 //   «trang 1 còn tin mới → lấy trang 2; trang 2 toàn tin đã có → dừng ở trang 2» (lấy nốt trang 3, nhả tin 9)
 import test from "node:test";
 import assert from "node:assert/strict";
-import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
   thuDuoi, LUAT_DUNG, LY_DO_DUNG, MA_THOAT, taoItemS06, taoLayTrangS06, ghiSnapshot,
-  chayDoi, tinhBaoCao, tinhTiLeBatDuoc, cuaSoDo, baoCao, taoTraStg, quetDuStg, quetDuDaNapXong, moDbChiDoc,
+  chayDoi, tinhBaoCao, tinhTiLeBatDuoc, cuaSoDo, baoCao, taoTraStg, quetDuStg, quetDuDaNapXong, moDbChiDoc, laKhoChuan,
 } from "../collect-s06-duoi.mjs";
 import { readSnapshot } from "../import-chotot.mjs";
 
@@ -385,6 +385,79 @@ test("một lượt: qua cổng rồi mới tra stg và gọi nguồn, ghi snaps
     assert.deepEqual([docTrangThai(goc).trangThai, docTrangThai(goc).soPhien, docTrangThai(goc).soLoiGoi], ["xong", 1, 2], "tệp trạng thái để theo dõi từ xa");
     assert.deepEqual(baoQua, ["phien 1 · tin moi 1 · loi goi 2 · dung: trang-toan-da-co"], "một dòng tóm tắt mỗi lượt, chỉ mã và số");
   } finally { rmSync(goc, { recursive: true, force: true }); }
+});
+
+// CA ĐỎ của rủi ro dãy U2 (claudedp-2511-26): script hằng ngày nạp snapshot có TÊN MỚI NHẤT mỗi thành phố. Bộ thu
+// đuôi ghi vào kho chuẩn (collector/snapshots) thì snapshot đuôi (mới hơn) bị nhầm làm snapshot ngày. Bỏ hàng rào
+// dưới đây → ca này ĐỎ.
+test("hàng rào: --goc trỏ vào kho chuẩn (thư mục snapshots của collector) → từ chối chạy, 0 lời gọi nguồn, không ghi gì", async () => {
+  const gocTam = mkdtempSync(join(tmpdir(), "s06-duoi-chan-"));
+  // dựng kho chuẩn giả: <gốc>/collector/snapshots
+  mkdirSync(join(gocTam, "collector", "snapshots"), { recursive: true });
+  let denCuaNguon = 0;
+  try {
+    for (const gocSai of ["collector", join("collector", "snapshots"), join("collector", "snapshots", ".."), join("collector", ".")]) {
+      denCuaNguon = 0;
+      const r = await chayDoi({
+        vung: VUNG, feed: FEED, goc: join(gocTam, gocSai), motLan: true, moDb: dbGia().mo,
+        taoLayTrang: ({ truocLoiGoi }) => async () => { xinPhep(truocLoiGoi); denCuaNguon++; return []; },
+        ...dongHo(),
+      });
+      assert.equal(r.ma, MA_THOAT.GOC_SAI, `--goc "${gocSai}": thoát bằng mã riêng của «thư mục ghi sai chỗ»`);
+      assert.equal(denCuaNguon, 0, `--goc "${gocSai}": không gọi nguồn`);
+    }
+    assert.equal(existsSync(join(gocTam, "collector", "snapshots", "hcmc")), false, "không ghi snapshot nào vào kho chuẩn");
+    assert.equal(existsSync(join(gocTam, "collector", "state")), false, "không ghi trạng thái vào thư mục của collector");
+  } finally { rmSync(gocTam, { recursive: true, force: true }); }
+});
+
+test("hàng rào: --goc là thư mục riêng (kể cả bên trong collector/snapshots/…/state) → chạy bình thường", async () => {
+  const gocTam = mkdtempSync(join(tmpdir(), "s06-duoi-rieng-"));
+  mkdirSync(join(gocTam, "collector", "snapshots"), { recursive: true });
+  let denCuaNguon = 0;
+  try {
+    const r = await chayDoi({
+      vung: VUNG, feed: FEED, goc: join(gocTam, "collector", "snapshots", "state", "phep-do"), motLan: true, moDb: dbGia().mo,
+      taoLayTrang: ({ truocLoiGoi }) => async () => { xinPhep(truocLoiGoi); denCuaNguon++; return []; },
+      ...dongHo(),
+    });
+    assert.equal(r.ma, MA_THOAT.XONG, "thư mục riêng vẫn chạy");
+    assert.equal(denCuaNguon, 1);
+  } finally { rmSync(gocTam, { recursive: true, force: true }); }
+});
+
+test("hàng rào: --goc là thư mục riêng nhưng là LINK trỏ tới kho chuẩn → vẫn bị chặn (xem qua symlink)", async () => {
+  const gocTam = mkdtempSync(join(tmpdir(), "s06-duoi-link-"));
+  mkdirSync(join(gocTam, "collector", "snapshots"), { recursive: true });
+  symlinkSync(join(gocTam, "collector", "snapshots"), join(gocTam, "phep-do-lien-ket"), "dir");
+  let denCuaNguon = 0;
+  try {
+    const r = await chayDoi({
+      vung: VUNG, feed: FEED, goc: join(gocTam, "phep-do-lien-ket"), motLan: true, moDb: dbGia().mo,
+      taoLayTrang: ({ truocLoiGoi }) => async () => { xinPhep(truocLoiGoi); denCuaNguon++; return []; },
+      ...dongHo(),
+    });
+    assert.equal(r.ma, MA_THOAT.GOC_SAI, "link trỏ tới kho chuẩn cũng là kho chuẩn");
+    assert.equal(denCuaNguon, 0);
+  } finally { rmSync(gocTam, { recursive: true, force: true }); }
+});
+
+test("hàng rào: --goc CHÍNH LÀ thư mục tên snapshots nhưng cha không phải collector → không chặn quá rộng", async () => {
+  const gocTam = mkdtempSync(join(tmpdir(), "s06-duoi-ten-giong-"));
+  // <gốc>/du-lieu-cua-toi/snapshots — TÊN trùng "snapshots" của kho chuẩn, nhưng cha là "du-lieu-cua-toi"
+  const gocRieng = join(gocTam, "du-lieu-cua-toi", "snapshots");
+  let denCuaNguon = 0;
+  try {
+    const r = await chayDoi({
+      vung: VUNG, feed: FEED, goc: gocRieng, motLan: true, moDb: dbGia().mo,
+      taoLayTrang: ({ truocLoiGoi }) => async () => { xinPhep(truocLoiGoi); denCuaNguon++; return []; },
+      ...dongHo(),
+    });
+    assert.equal(r.ma, MA_THOAT.XONG, "không chặn quá rộng: chỉ kho chuẩn của collector mới bị chặn");
+    assert.equal(denCuaNguon, 1);
+    assert.ok(existsSync(gocRieng), "thư mục riêng chưa tồn tại được tạo và ghi vào đó");
+    assert.equal(laKhoChuan(gocRieng), false, "hàm hàng rào nói rõ thư mục này không phải kho chuẩn");
+  } finally { rmSync(gocTam, { recursive: true, force: true }); }
 });
 
 test("lượt không có tin mới → không ghi snapshot, vẫn ghi nhật ký", async () => {
