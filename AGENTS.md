@@ -56,11 +56,12 @@ phải tên thư mục (script thu của S02/S05/S06 nằm trong `pipeline/`).
   rao S01/S02/S05/S06 (`zt`, `~/dev/onehub-zt`) · **ZK** nguồn kho S07–S17 (`zk`, `~/dev/onehub-zk`). Một kênh, ba tên nhận;
   nhánh `zcode/zv-…|zt-…|zk-…`; LL vẫn là đầu mối duy nhất với cả ba.
 
-- **Máy M5** (Mạnh chốt 2026-11-24, mở nhỏ và đo một tuần; ROADMAP §3 mục 64): MacBook M5 là máy thực thi của làn Claude cho cổng
-  Invest và API — `app/src/app/(app)/**`, `(marketing)/**`, `app/src/components/**` trừ `ops/`, `ui/`, `reui/`, `app/src/app/api/v1/**`
-  trừ `ops/`, `data-api/**`; tệp ngoài vùng (kể cả `app/src/lib/**`) chỉ khi lời giao khai. Mac mini giữ kế hoạch, hàng gộp và sổ
-  số migration: M5 không gộp vào `main`, báo xong trên kênh `phanlemanh/onehub-coord#4`. M5 không giữ tầng A, không chạy bộ thu,
-  gateway, `sync-cloud`; chấm bằng `scripts/ci-test-local.mjs`.
+- **Máy M5** (Mạnh chốt 2026-11-25, sửa bản 24/11; ROADMAP §3 mục 64, mục «Hai máy» dưới): M5 là máy mở rộng ở nhà, chạy lâu dài,
+  thực thi làn Claude cho cổng Invest và API — `app/src/app/(app)/**`, `(marketing)/**`, `app/src/components/**` trừ `ops/`, `ui/`,
+  `reui/`, `app/src/app/api/v1/**` trừ `ops/`, `data-api/**`; tệp ngoài vùng (kể cả `app/src/lib/**`) chỉ khi lời giao khai. Một hàng
+  việc, một giám sát ở Mac mini; M5 tự chấm S4 cho hàng vùng của nó trên bản chép đã lọc. Mac mini giữ kế hoạch, hàng gộp và sổ số
+  migration: M5 không gộp vào `main`, báo xong trên kênh `phanlemanh/onehub-coord#4`. M5 không giữ tầng A, không chạy bộ thu,
+  gateway, `sync-cloud`.
 - **Git**: checkout chính `~/dev/onehub-invest` luôn đứng ở `main` — launchd chạy code
   từ đây (qua symlink `~/dev/one-invest`). Không agent nào checkout nhánh khác trong đó.
   ZCode làm ở worktree của từng phiên (`~/dev/onehub-invest-zcode`, `~/dev/onehub-zt`, `~/dev/onehub-zk`), nhánh `zcode/<việc>`; Claude ở
@@ -229,8 +230,8 @@ không sửa tay, cập nhật bằng cách chép lại từ plugin. `PRODUCT-MA
 ## Hai máy: máy thu (Mac mini) và máy mở rộng M5 (chốt 2026-11-25, ADR-0019, hàng HT25)
 
 - **Máy thu** (Mac mini, `VAI=may-thu`): collector, launchd, pipeline, DB `oneinvest` thật, giữ tầng A; gộp vào `main` CHỈ ở đây.
-  **M5 — máy mở rộng tính toán của Mac mini** (`VAI=may-phat-trien`; máy bàn ở nhà, chạy lâu dài, để tăng tốc tiến trình — không phải
-  máy xách tay): một hàng việc một giám sát, cổng Invest và data-api, tự chấm S4 cho vùng Invest + API trên bản chép đã lọc của HT18.
+  **M5 — máy mở rộng tính toán của Mac mini** (`VAI=may-phat-trien`; máy bàn ở nhà, chạy lâu dài, để tăng tốc tiến trình):
+  một hàng việc một giám sát, cổng Invest và data-api, tự chấm S4 cho vùng Invest + API trên bản chép đã lọc của HT18.
   M5 không giữ tầng A hay raw snapshot, không chạy bộ thu, gateway, `sync-cloud`.
 - Dữ liệu chỉ đi **một chiều, theo lệnh**, qua cáp Thunderbolt: `node scripts/day-ban-chep.mjs` trên máy thu (chép + soát, ghim
   sha256, gửi qua khoá đẩy bị ép lệnh, M5 nạp nguyên tử có lùi). `--trang-thai`, `--lui` để kiểm và lùi. Không plist, không cron

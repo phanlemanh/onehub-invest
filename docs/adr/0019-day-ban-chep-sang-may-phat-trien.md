@@ -9,7 +9,7 @@ Ngày: 2026-11-25 · Trạng thái: **accepted** (Mạnh duyệt Cổng Phạm v
 
 Từ 24/11 có hai máy: **máy thu** (Mac mini — collector, launchd, DB `oneinvest` thật, giữ tầng A, nơi DUY NHẤT gộp vào `main`) và
 **M5 — máy mở rộng tính toán của Mac mini** (Mạnh chốt 25/11 tối: máy bàn ở nhà, chạy lâu dài, đặt để tăng hiệu quả và tốc độ tiến
-trình; không phải máy xách tay). M5 nhận một hàng việc một giám sát, tự chấm S4 cho vùng Invest và API trên bản chép đã lọc, không
+trình). M5 nhận một hàng việc một giám sát, tự chấm S4 cho vùng Invest và API trên bản chép đã lọc, không
 được giữ tầng A (luật 6) và không chạy bộ thu, gateway, `sync-cloud`. M5 cần dữ liệu thật. HT18 làm ra bản chép đã lọc (tệp dump +
 `ke.json`) và bộ soát tầng A chạy trên chính DB đích ở máy thu. Mạnh không chép tay được («Tôi không tự làm được hãy phân tích và mô
 hình để tự động hoá được») và hai máy nối nhau bằng cáp Thunderbolt («đều là mạng nội bộ … tôi ngồi ở 2 máy thôi»).

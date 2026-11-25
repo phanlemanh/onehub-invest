@@ -5,7 +5,7 @@ Mô hình và năm rào: `docs/adr/0019-day-ban-chep-sang-may-phat-trien.md`. H�
 | Máy | Vai (`VAI=` trong `~/.config/onehub/hai-may.env`) | Chạy gì | Dữ liệu |
 |---|---|---|---|
 | Máy thu (Mac mini) | `may-thu` | collector, launchd, pipeline, DB `oneinvest` thật; gộp `main` CHỈ ở đây | giữ tầng A; DB máy thu chỉ đọc với lệnh đẩy |
-| M5 — máy mở rộng tính toán của Mac mini (máy bàn ở nhà, chạy lâu dài; không phải máy xách tay) | `may-phat-trien` | một hàng việc một giám sát; cổng Invest, data-api; tự chấm S4 vùng Invest + API trên bản chép | chỉ bản chép đã lọc (HT18); không tầng A, không raw snapshot; không bộ thu, gateway, `sync-cloud` |
+| M5 — máy mở rộng tính toán của Mac mini (máy bàn ở nhà, chạy lâu dài) | `may-phat-trien` | một hàng việc một giám sát; cổng Invest, data-api; tự chấm S4 vùng Invest + API trên bản chép | chỉ bản chép đã lọc (HT18); không tầng A, không raw snapshot; không bộ thu, gateway, `sync-cloud` |
 
 Hai máy nối bằng cáp Thunderbolt (giao diện cầu, địa chỉ IPv4 cố định). Giá trị riêng máy — địa chỉ cầu hai máy, người dùng M5, đường
 khoá đẩy, đường khoá quản trị, tên máy — chỉ nằm ở `~/.config/onehub/hai-may.env` của máy thu (khoá `CAU_GIAO_DIEN`, `CAU_MAY_NAY`,
