@@ -62,6 +62,8 @@ Lớp phát biểu sống (cùng ngày, sau khi ô sự cố đã gỡ, `probes/
   toà; B đường; ô thật `offer_ba52ee3409d223e3` khi bản chép còn nó) và không ô nào trong số đó còn trúng bộ dò (về NULL hoặc về
   phát biểu sạch còn lại); mọi ô đường, toà, phường, quận khác của tin S06 có sẵn giống hệt sau lượt bỏ luật; tin mới N cấy cả bốn
   cột về NULL; dòng log `ô chữ mang tên nguồn: bỏ ghi … · rút … chủ thể` bằng đếm độc lập trên `stg_chotot_ads` và trên phát biểu sống.
+  Ca tái diễn (đúng sự cố sau lượt rút tay 09:13Z): tin C có phát biểu đường mang tên nguồn đã rút lý do `mang-ten-nguon`, stg vẫn
+  gửi giá trị ấy → lượt có luật không sinh lại phát biểu sống mang tên nguồn, cột không trúng.
 - **AC-2** Given cùng bản chép, When chạy bản transform bỏ luật, Then bộ soát của sync-cloud (đọc như lượt sync: `selectList`,
   `localReadSql`, `assertNoSourceNames`) dừng ở `sale_offers`; When chạy transform thật rồi bước chép đường sang căn (`dienDuongCan`),
   Then bộ soát qua trọn `sale_offers`, `sellers`, `properties`.

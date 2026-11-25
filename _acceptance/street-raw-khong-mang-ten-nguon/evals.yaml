@@ -12,8 +12,8 @@ evals:
     expected: >
       exit 0; in «KẾT QUẢ: xanh»; các dòng ✔ «chỉ đúng các ô mang tên nguồn đổi» (A street_raw, block_raw; B street_raw; cộng
       offer_ba52ee3409d223e3.street_raw khi bản chép còn ô ấy), «các ô đổi không còn trúng bộ dò», «tin mới N: đường, toà, phường, quận
-      về NULL», «log bỏ ghi street_raw/block_raw/district_raw = N (đếm độc lập trên stg)», «log bỏ ghi phuong_raw = 1», «log rút K chủ
-      thể».
+      về NULL», «log bỏ ghi <cột> = X, đếm độc lập trên stg = X» cho cả bốn cột, «log rút K chủ
+      thể», «ca tái diễn: lượt có luật không sinh lại phát biểu sống mang tên nguồn cho tin C».
   - id: E2
     criterion: AC-2
     executor: script

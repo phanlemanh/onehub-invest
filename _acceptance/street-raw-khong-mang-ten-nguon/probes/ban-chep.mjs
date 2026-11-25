@@ -119,6 +119,22 @@ try {
       FROM stg_chotot_ads s WHERE s.list_id = $1`, [g.list_id, m.id, cay.quan, cay.duong, cay.toa, cay.phuong]);
   const idN = mintOfferId("S06", String(m.id));
 
+  // Ca tái diễn (GS 25/11, đúng sự cố offer_ba52ee3409d223e3 sau lượt rút tay): tin C có phát biểu đường mang tên nguồn ĐÃ RÚT lý do
+  // mang-ten-nguon, không còn phát biểu đường sống nào, và stg vẫn gửi giá trị ấy → lượt CÓ luật không được sinh lại phát biểu sống.
+  const { rows: [cc] } = await c.query(`SELECT s.list_id FROM stg_chotot_ads s JOIN sale_offers o ON o.source = 'S06'
+      AND o.originating_system_key = s.list_id::text AND o.street_raw IS NOT NULL
+     WHERE s.price > 0 AND s.size_m2 > 0 AND s.ad_type IN ('s', 'u') AND s.list_id NOT IN ($1, $2) ORDER BY s.list_id DESC LIMIT 1`,
+    [a.list_id, b.list_id]);
+  const idC = mintOfferId("S06", String(cc.list_id)), skC = `S06:${cc.list_id}`;
+  await c.query(`UPDATE stg_chotot_ads SET payload = payload || jsonb_build_object('street_name', $2::text) WHERE list_id = $1`, [cc.list_id, cay.duong]);
+  await c.query(`UPDATE field_assertions SET retracted_at = clock_timestamp(), retract_reason = 'pl39-cay-tai-dien'
+     WHERE retracted_at IS NULL AND subject_key = $1 AND field = 'street_raw'`, [skC]);
+  // Bảng chỉ thêm (field_assertions_guard): chèn sống rồi rút, như lượt rút tay 09:13Z.
+  await c.query(`WITH moi AS (INSERT INTO field_assertions (subject_key, field, value, evidence_tier, method, method_version, rule_id, evidence, observed_at)
+       VALUES ($1, 'street_raw', $2, 'fact', 'source_field', 'transform-chotot@045', 'payload.street_name', '{}'::jsonb, now()) RETURNING id)
+     SELECT id FROM moi`, [skC, cay.duong]).then(({ rows: [r] }) =>
+    c.query(`UPDATE field_assertions SET retracted_at = clock_timestamp(), retract_reason = 'mang-ten-nguon' WHERE id = $1`, [r.id]));
+
   // Đếm độc lập: giá trị của stg mà luật phải bỏ ghi, và chủ thể có phát biểu sống đường/toà trúng (luật phải rút).
   const { rows: ads } = await c.query(`SELECT payload->'street_name' AS d, payload->'block' AS b, area_name, ward_name_v3, ward_name FROM stg_chotot_ads
      WHERE price > 0 AND size_m2 > 0 AND ad_type IN ('s', 'u')`);
@@ -155,6 +171,7 @@ try {
   // Kỳ vọng: đúng các ô trúng bộ dò sau lượt bỏ luật (tin cấy A, B và mọi ô thật nguồn còn gửi), không ô nào khác.
   const kyDoi = [];
   for (const [id, v] of A) COT.forEach((k, i) => { if (trung(v[i], e)) kyDoi.push(`${id}.${k}`); });
+  if (A.get(idC)?.[0] != null && !kyDoi.includes(`${idC}.street_raw`)) kyDoi.push(`${idC}.street_raw`); // C: nguồn nay gửi tên nguồn → cột rời giá trị cũ
   kyDoi.sort();
   for (const k of [`${idA}.street_raw`, `${idA}.block_raw`, `${idB}.street_raw`]) bao(kyDoi.includes(k), `ô cấy ${k} trúng sau lượt bỏ luật`);
   console.log(`ô thật offer_ba52ee3409d223e3 trúng sau lượt bỏ luật: ${kyDoi.includes("offer_ba52ee3409d223e3.street_raw") ? "có (nguồn vẫn gửi giá trị ấy)" : "không"}`);
@@ -163,6 +180,10 @@ try {
   const sau = doi.map((k) => B.get(k.split(".")[0])[COT.indexOf(k.split(".")[1])]);
   bao(sau.every((v) => !trung(v, e)), `các ô đổi không còn trúng bộ dò: ${sau.filter((v) => v === null).length} về NULL, ${sau.filter((v) => v !== null).length} về phát biểu sạch còn lại`);
   bao(!trung(B.get(idB)?.[0], e), `tin B (đường chỉ từ phát biểu legacy trúng) không còn trúng: ${B.get(idB)?.[0] === null ? "về NULL" : "về phát biểu sạch còn lại"}`);
+  const { rows: [songC] } = await c.query(`SELECT count(*) FILTER (WHERE retracted_at IS NULL)::int AS song,
+      count(*) FILTER (WHERE retracted_at IS NULL AND value = $2)::int AS song_trung FROM field_assertions WHERE subject_key = $1 AND field = 'street_raw'`,
+    [skC, cay.duong]);
+  bao(songC.song_trung === 0 && !trung(B.get(idC)?.[0], e), `ca tái diễn: lượt có luật không sinh lại phát biểu sống mang tên nguồn cho tin C (sống ${songC.song}, trúng ${songC.song_trung}; cột ${B.get(idC)?.[0] === null ? "NULL" : "không trúng"})`);
   const vN = B.get(idN);
   bao(!!vN && vN.every((v) => v === null), "tin mới N: đường, toà, phường, quận về NULL");
   const { rows: [r] } = await c.query(`SELECT count(*)::int n FROM field_assertions WHERE retract_reason = 'mang-ten-nguon' AND subject_key = ANY($1)`,
