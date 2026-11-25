@@ -18,11 +18,13 @@ let m: Awaited<ReturnType<typeof nap>>;
 const q = (sql: string, v: unknown[] = []) => m.pool.query(sql, v);
 
 const QG = "zz";
+// Thứ tự chèn NGƯỢC thứ tự tên trong từng cặp bằng số tin (Beta trước Alpha, Gamma trước Aaa): nếu route bỏ khoá phụ
+// «rồi tên» thì sort ổn định giữ thứ tự chèn và AC-2 đỏ (S4-r2, finding đo AC-2 nửa «bằng nhau thì theo tên»).
 const TT = [
-  { id: "zz-ht23-aaa", name: "Aaa", tin: 1, diem: null },
-  { id: "zz-ht23-alpha", name: "Alpha", tin: 3, diem: null },
   { id: "zz-ht23-beta", name: "Beta", tin: 3, diem: 40 },
+  { id: "zz-ht23-alpha", name: "Alpha", tin: 3, diem: null },
   { id: "zz-ht23-gamma", name: "Gamma", tin: 1, diem: 95 },
+  { id: "zz-ht23-aaa", name: "Aaa", tin: 1, diem: null },
 ];
 
 const don = async () => {
@@ -84,5 +86,8 @@ test("HT23-AC-2 xếp theo số tin giảm dần rồi tên; đối chứng: rou
   // Đối chứng: chỉ xếp theo tên thì «Aaa» đứng đầu — tập này phân biệt được khoá số tin với khoá tên.
   const theoTen = [...thuTu].sort((a, b) => a[0].localeCompare(b[0]));
   assert.notDeepEqual(theoTen, MONG, "tập thử phải phân biệt xếp theo tên với xếp theo số tin");
+  // Đối chứng nửa khoá phụ: thứ tự chèn (cái mà «chỉ theo số tin» + sort ổn định sẽ giữ) phải khác MONG.
+  const theoChen = [...TT].sort((a, b) => b.tin - a.tin).map((t) => [t.name, t.tin]);
+  assert.notDeepEqual(theoChen, MONG, "tập thử phải phân biệt «chỉ theo số tin» với «theo số tin rồi tên»");
   assert.deepEqual(thuTu, MONG);
 });
