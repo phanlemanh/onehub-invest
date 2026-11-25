@@ -5,7 +5,7 @@
 // của DB lượt; thông điệp ca không bao giờ in token.
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { unlinkSync, writeFileSync } from "node:fs";
+import { readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { after, before, test } from "node:test";
@@ -397,4 +397,39 @@ test("SCC-9: thẻ Invest (getAreaThumbnails thật) — mọi ảnh trúng tên
   }
   const daChe = chayTs("app", MA_THE, "scc9t", env);
   assert.equal(daChe[a.area_id], undefined, "SCC-9: thẻ vẫn có ảnh sau khi mọi ảnh bị bỏ");
+});
+
+// ───────────────────────── SCC-9 ca canh (GS 26/11): chưa có bên đọc areas.meta.source ở app/data-api ─────────────────────────
+// Sau che, giá trị areas.meta.source trên cloud là «S04-…» (mã thay tên). Bên đọc mới tra khoá ấy (NGUON_PHUONG, phuongHopLe,
+// meta.source) phải xử trước — HT26 ghi giới hạn có tên. Đọc cây kho (git ls-files), không cần DB.
+const MAU_BEN_DOC = /NGUON_PHUONG|phuongHopLe|\bmeta\.source\b/;
+const TB_CANH = "bên đọc areas.meta.source mới ở app/data-api — giá trị trên cloud là S04-…, xử trước (HT26 giới hạn có tên)";
+/** Tệp trong `tep` có tham chiếu mẫu; `doc(tệp)` trả nội dung. */
+function benDocMetaSource(tep, doc) {
+  return tep.filter((f) => MAU_BEN_DOC.test(doc(f)));
+}
+const tepBenDoc = () =>
+  execFileSync("git", ["-C", GOC, "ls-files", "--", "app/src", "data-api/src"], { encoding: "utf8" }).split("\n").filter(Boolean);
+const docTep = (f) => readFileSync(path.join(GOC, f), "utf8");
+function kiemBenDoc(tep, doc) {
+  const co = benDocMetaSource(tep, doc);
+  assert.ok(!co.length, `${TB_CANH}: ${co.join(", ")}`);
+}
+
+test("SCC-9: ca canh — không tệp nào dưới app/src, data-api/src tham chiếu NGUON_PHUONG, phuongHopLe hay meta.source", () => {
+  const tep = tepBenDoc();
+  assert.ok(tep.length > 100 && tep.some((f) => f.startsWith("data-api/src/")), "SCC-9 ca canh tiền đề: git ls-files phải ra cây app/src và data-api/src");
+  kiemBenDoc(tep, docTep);
+});
+
+test("SCC-9: ca canh chiều đỏ — cấy tệp tạm dưới app/src chứa «meta.source» thì ca đỏ nêu đúng tệp", () => {
+  const gia = "app/src/lib/scc9-ben-doc-tam.ts";
+  const doc = (f) => (f === gia ? "const nguon = area.meta.source ?? null;\n" : docTep(f));
+  assert.throws(() => kiemBenDoc([...tepBenDoc(), gia], doc), (e) => {
+    assert.ok(e.message.includes(TB_CANH), "SCC-9 ca canh: thông điệp không ghim");
+    assert.ok(e.message.endsWith(gia), "SCC-9 ca canh: thông điệp không nêu đúng tệp cấy");
+    return true;
+  });
+  for (const mau of ["NGUON_PHUONG", "phuongHopLe(x)"]) assert.deepEqual(benDocMetaSource([gia], () => mau), [gia], `SCC-9 ca canh: mẫu ${mau} không bị bắt`);
+  assert.deepEqual(benDocMetaSource([gia], () => "meta.sources"), [], "SCC-9 ca canh: «meta.sources» không phải khoá đang canh");
 });
