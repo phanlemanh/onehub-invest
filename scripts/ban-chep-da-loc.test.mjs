@@ -315,3 +315,30 @@ test("BCL-1: viết lại định nghĩa chỉ mục của bảng gốc sang b�
   assert.notEqual(a, chuanChiMuc("CREATE INDEX x ON public.sale_offers USING btree (kind, area_id)"));
   assert.notEqual(chuanChiMuc("CREATE UNIQUE INDEX x ON public.t USING btree (a)"), chuanChiMuc("CREATE INDEX x ON public.t USING btree (a)"));
 });
+
+test("BCL-10: chế độ thử BCL_DICH_THU — chỉ nhận với DB lượt oneinvest_suite_*, khuôn đích/dọn chỉ của tiền tố", async () => {
+  const { khuonM5, loiTenDich: loi, tenDich: ten } = await import("./ban-chep-da-loc.mjs");
+  const that = khuonM5("oneinvest", {});
+  assert.equal(that.thu, false);
+  assert.ok(that.re.test("oneinvest_m5_20261126") && that.re.test("oneinvest_m5_t123_20261126"));
+  const k = khuonM5("oneinvest_suite_bcl3_99", { BCL_DICH_THU: "oneinvest_m5_t123" });
+  assert.ok(k.thu && k.re.test("oneinvest_m5_t123_20261126") && k.re.test("oneinvest_m5_t123_kiem_5") && k.re.test("oneinvest_m5_t123"));
+  for (const d of ["oneinvest_m5_20261126", "oneinvest_m5_t1234_20261126", "oneinvest_m5_t12_20261126", "oneinvest_m5_kiem_5"]) assert.ok(!k.re.test(d), d);
+  assert.throws(() => khuonM5("oneinvest", { BCL_DICH_THU: "oneinvest_m5_t123" }), /oneinvest_suite_/);
+  assert.throws(() => khuonM5("oneinvest_suite_x_1", { BCL_DICH_THU: "oneinvest_m5_20261126" }), /dạng/);
+  assert.equal(loi("oneinvest_m5_t123_20261126", "oneinvest_suite_x_1", k), null);
+  assert.ok(loi("oneinvest_m5_20261126", "oneinvest_suite_x_1", k), "chế độ thử không được chạm tên đích thật");
+  assert.equal(ten(new Date(2026, 10, 26), "oneinvest_m5_t123"), "oneinvest_m5_t123_20261126");
+});
+
+test("BCL-3: tệp kê — cấy tên nguồn vào một mục thì nêu đường khoá (không giá trị); tệp kê sạch thì 0 chỗ", async () => {
+  const { choTrungTrongKe } = await import("./ban-chep-da-loc.mjs");
+  const sach = { so_dong: { ref_calib_listings: 3 }, cot_loai_ve_null: { sale_offers: ["listing_url"] }, khoa_ngoai_bo: ["nights.nights_listing_id_fkey"] };
+  assert.deepEqual(choTrungTrongKe(sach, BIA), []);
+  const cay = structuredClone(sach);
+  cay.cot_loai_ve_null.zelvanha_bang = ["x"];
+  cay.ham_bo = ["public.f()", "Quoxa Bds"];
+  const trung = choTrungTrongKe(cay, BIA);
+  assert.deepEqual(trung, [".cot_loai_ve_null.<khoá>", ".ham_bo[1]"]);
+  for (const t of trung) assert.equal(findSourceNames(t, BIA).length, 0, "đường báo không được mang tên");
+});

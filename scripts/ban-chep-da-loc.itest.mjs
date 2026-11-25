@@ -6,7 +6,7 @@
 // Token cấy đọc từ source_registry của DB lượt (docSourceNameEntries), không viết cứng tên nguồn thật (kho công khai).
 import { test, before, after, afterEach } from "node:test";
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import os from "node:os";
@@ -32,7 +32,13 @@ const lit = (s) => `'${String(s).replace(/'/g, "''")}'`;
 const NGUON = process.env.DATABASE_URL ?? "";
 const NG = phanTichNguon(NGUON);
 const DUNG_DB_LUOT = !NG.loi && /^oneinvest_suite_[a-z0-9_]+_[0-9]+$/.test(NG.db);
+// Chế độ thử: mọi DB đích/DB tạm của lượt này mang tiền tố riêng theo pid — không chạm oneinvest_m5_<ngày> thật, không dọn của lượt
+// khác chạy song song (S4 r1 BLOCKED 26/11).
+const TIEN_TO = `oneinvest_m5_t${process.pid}`;
+process.env.BCL_DICH_THU = TIEN_TO;
+const KHUON = new RegExp(`^${TIEN_TO}(_[a-z0-9_]+)?$`);
 const DICH = tenDich();
+const dsCuaToi = () => dsDbM5(KHUON);
 const urlCua = (db) => `postgres://oneinvest:oneinvest@localhost:5433/${db}`;
 
 async function voi(url, fn) {
@@ -46,7 +52,9 @@ let TOKEN = null; // tên nguồn thật để cấy — chỉ nằm trong bộ 
 const tamDirs = [];
 const thuMucTam = () => { const d = mkdtempSync(path.join(os.tmpdir(), "bcl-")); tamDirs.push(d); return d; };
 
+let DB_M5_THAT_TRUOC = [];
 before(async () => {
+  DB_M5_THAT_TRUOC = (await dsDbM5()).filter((d) => /^oneinvest_m5_[0-9]{8}$/.test(d));
   if (!DUNG_DB_LUOT) throw new Error("itest chỉ chạy dưới db-thu --chay (DATABASE_URL = oneinvest_suite_*_<pid>)");
   await voi(NGUON, async (c) => {
     entries = await docSourceNameEntries(c);
@@ -78,10 +86,10 @@ before(async () => {
 });
 
 afterEach(async () => {
-  await donHet().catch(() => {});
+  await donHet({ nguonDb: NG.db }).catch(() => {});
 });
 after(async () => {
-  await donHet().catch(() => {});
+  await donHet({ nguonDb: NG.db }).catch(() => {});
   for (const d of tamDirs) rmSync(d, { recursive: true, force: true });
 });
 
@@ -156,7 +164,7 @@ test("BCL-1: cấy một dòng vào bảng ngoài danh sách thì thoát 1, nêu
   const r = await chep({ sauChep: (c) => cayMotDong(c, bang) });
   assert.equal(r.ma, 1);
   assert.match(r.err, new RegExp(`bang_ngoai: ${bang}`));
-  assert.deepEqual(await dsDbM5(), []);
+  assert.deepEqual(await dsCuaToi(), []);
   assert.ok(!coDump(r.ra));
 });
 
@@ -255,7 +263,7 @@ for (const [ten, mau, cay] of O_CAY) {
     assert.equal(r.ma, 1, `ô ${ten} phải đỏ`);
     assert.match(r.err, mau);
     assert.ok(khongToken(r.out) && khongToken(r.err), `dòng in ra của ô ${ten} mang token`);
-    assert.deepEqual(await dsDbM5(), [], "DB đích phải bị xoá");
+    assert.deepEqual(await dsCuaToi(), [], "DB đích phải bị xoá");
     assert.ok(!coDump(r.ra), "không được có tệp dump");
   });
 }
@@ -289,6 +297,21 @@ test("BCL-3: ca xanh — bộ soát 0 trúng sau che; ô che theo bảng.cột t
   const ke = JSON.parse(readFileSync(path.join(r.ra, "ke.json"), "utf8"));
   assert.deepEqual(ke.o_da_che, truoc, "ô che lệch ô trúng trước che");
   assert.ok(Array.isArray(ke.khoa_ngoai_bo));
+});
+
+test("BCL-3: tệp kê — cấy tên nguồn vào một mục (lối thử) thì đỏ trước khi ghi; tệp kê lượt xanh không chứa token", async () => {
+  const r = await chep({ _cayKe: (ke) => { ke.cot_loai_ve_null[`bcl_${TOKEN}`] = ["x"]; } });
+  inBCL3.push(r.out, r.err);
+  assert.equal(r.ma, 1);
+  assert.match(r.err, /TRÚNG tệp kê: \.cot_loai_ve_null\.<khoá>/);
+  assert.ok(khongToken(r.out) && khongToken(r.err));
+  assert.ok(!existsSync(path.join(r.ra, "ke.json")) && !coDump(r.ra), "không được ghi tệp");
+  assert.deepEqual(await dsCuaToi(), []);
+  const x = await chep();
+  assert.equal(x.ma, 0, x.err);
+  const ke = readFileSync(path.join(x.ra, "ke.json"), "utf8");
+  assert.equal(findSourceNames(ke, entries).length, 0, "tệp kê lượt xanh mang token");
+  assert.ok(!/"doi_ten"/.test(ke));
 });
 
 test("BCL-3: lọc thô SQL trả đúng tập của bản JS (quaLocTho) trên mẫu bịa", async () => {
@@ -344,7 +367,7 @@ test("BCL-4: cấy một dòng vào sessions → thoát 1 nêu sessions", async 
   const r = await chep({ sauChep: (c) => cayMotDong(c, "sessions") });
   assert.equal(r.ma, 1);
   assert.match(r.err, /bang_cam: sessions/);
-  assert.deepEqual(await dsDbM5(), []);
+  assert.deepEqual(await dsCuaToi(), []);
 });
 
 test("BCL-4: cấy một dòng vào bảng stg_* → thoát 1 nêu bảng", async () => {
@@ -359,7 +382,7 @@ test("BCL-4: cấy một dòng vào bảng stg_* → thoát 1 nêu bảng", asyn
   });
   assert.equal(r.ma, 1);
   assert.match(r.err, new RegExp(`bang_cam: ${bang}`));
-  assert.deepEqual(await dsDbM5(), []);
+  assert.deepEqual(await dsCuaToi(), []);
 });
 
 // ───────── BCL-5 (E5) ─────────
@@ -382,7 +405,7 @@ test("BCL-5: cấy real_name → thoát 1 nêu source_registry.real_name", async
   const r = await chep({ sauChep: (c) => c.query(`UPDATE source_registry SET real_name = 'bcl-cay' WHERE code = (SELECT min(code) FROM source_registry)`) });
   assert.equal(r.ma, 1);
   assert.match(r.err, /nguon: source_registry\.real_name/);
-  assert.deepEqual(await dsDbM5(), []);
+  assert.deepEqual(await dsCuaToi(), []);
 });
 
 // ───────── BCL-6 (E6) ─────────
@@ -479,7 +502,7 @@ async function kiem(tep, khongTuDien = false) {
   const ma = await chayKiem({ tep, khongTuDien, nguonUrl: NGUON, out: (s) => out.push(s), err: (s) => err.push(s) });
   return { ma, out: out.join("\n"), err: err.join("\n") };
 }
-const conDbKiem = async () => (await dsDbM5()).filter((d) => /^oneinvest_m5_kiem_/.test(d));
+const conDbKiem = async () => (await dsCuaToi()).filter((d) => d.startsWith(`${TIEN_TO}_kiem_`));
 function chepBo(tep) {
   const d = thuMucTam();
   const moi = path.join(d, path.basename(tep));
@@ -561,31 +584,55 @@ test("BCL-8: --kiem qua docker exec (không qua cổng 5433) xanh, có và khôn
 });
 
 // ───────── BCL-10 (E10) ─────────
+test("BCL-10: hai lượt chép song song với hai tiền tố khác nhau không xoá DB của nhau", async () => {
+  const tt = [`oneinvest_m5_t${process.pid}1`, `oneinvest_m5_t${process.pid}2`];
+  const chay1 = (t) => new Promise((resolve) => {
+    const ra = thuMucTam();
+    const p = spawn(process.execPath, [SCRIPT, "--dich", tenDich(new Date(), t), "--ra", ra],
+      { env: { ...process.env, DATABASE_URL: NGUON, BCL_DICH_THU: t }, stdio: ["ignore", "pipe", "pipe"] });
+    let e = "";
+    p.stderr.on("data", (b) => { e += b; });
+    p.stdout.resume();
+    p.on("close", (ma) => resolve({ ma, e }));
+  });
+  try {
+    const kq = await Promise.all(tt.map(chay1));
+    kq.forEach((k, i) => assert.equal(k.ma, 0, `lượt ${i + 1}: ${k.e.slice(0, 500)}`));
+    const ds = await dsDbM5();
+    for (const t of tt) assert.ok(ds.includes(tenDich(new Date(), t)), `DB của ${t} bị xoá: còn ${ds.filter((d) => d.startsWith("oneinvest_m5_t")).join(", ")}`);
+    assert.ok(!ds.some((d) => /^oneinvest_m5_[0-9]{8}$/.test(d) && !DB_M5_THAT_TRUOC.includes(d)), "lượt thử không được dựng tên đích thật");
+  } finally {
+    for (const t of tt) spawnSync(process.execPath, [SCRIPT, "--don"], { env: { ...process.env, DATABASE_URL: NGUON, BCL_DICH_THU: t } });
+  }
+  for (const t of tt) assert.deepEqual((await dsDbM5()).filter((d) => d.startsWith(`${t}_`)), [], `--don của ${t} chưa dọn`);
+});
+
+
 async function taoDbCu(ten) {
   await voi(urlCua("postgres"), (c) => c.query(`CREATE DATABASE ${q(ten)} TEMPLATE template0`));
 }
 
 test("BCL-10: có sẵn một oneinvest_m5_ cũ → chép mới xong chỉ còn đúng một DB", async () => {
-  await taoDbCu("oneinvest_m5_20200101");
+  await taoDbCu(`${TIEN_TO}_20200101`);
   const r = await chep();
   assert.equal(r.ma, 0, r.err);
-  const ds = await dsDbM5();
+  const ds = await dsCuaToi();
   assert.deepEqual(ds, [DICH], `còn ${ds.length} DB oneinvest_m5_*: ${ds.join(", ")}`);
 });
 
 test("BCL-10: lỗi cấy giữa bước chép → không còn DB đích, không dump", async () => {
   const r = await chep({ loiCay: "giua-chep" });
   assert.equal(r.ma, 1);
-  assert.deepEqual(await dsDbM5(), []);
+  assert.deepEqual(await dsCuaToi(), []);
   assert.ok(!coDump(r.ra));
 });
 
 test("BCL-10: --don xoá mọi oneinvest_m5_*", async () => {
-  await taoDbCu("oneinvest_m5_20200101");
-  await taoDbCu("oneinvest_m5_kiem_1");
+  await taoDbCu(`${TIEN_TO}_20200101`);
+  await taoDbCu(`${TIEN_TO}_kiem_1`);
   const p = spawnSync(process.execPath, [SCRIPT, "--don"], { encoding: "utf8", env: { ...process.env, DATABASE_URL: NGUON } });
   assert.equal(p.status, 0, p.stderr);
-  assert.deepEqual(await dsDbM5(), []);
+  assert.deepEqual(await dsCuaToi(), []);
 });
 
 test("BCL-10: state/ban-chep-m5 bị git bỏ qua và nằm ngoài nguồn sao lưu ra ngoài máy", () => {

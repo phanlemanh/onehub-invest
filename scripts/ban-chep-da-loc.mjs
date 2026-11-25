@@ -79,17 +79,33 @@ export function loaiO(udt) {
 const q = (id) => `"${String(id).replace(/"/g, '""')}"`;
 const lit = (s) => `'${String(s).replace(/'/g, "''")}'`;
 
-/** Tên đích theo ngày giờ máy (giờ VN trên máy thu): oneinvest_m5_yyyymmdd. */
-export function tenDich(d = new Date()) {
+/**
+ * Chế độ thử (itest, GS 26/11 sau S4 r1 BLOCKED vì các lượt song song xoá DB của nhau): biến BCL_DICH_THU=oneinvest_m5_t<pid> — chỉ
+ * nhận khi DB nguồn là DB lượt `oneinvest_suite_*` (đang trong db-thu --chay). Khi có: tên đích `<tiền tố>_<yyyymmdd>`, «trần một bản
+ * sống», --don và DB tạm --kiem chỉ chạm khuôn `<tiền tố>(_…)?`. Không biến: hành vi bản thật như cũ (mọi oneinvest_m5_*).
+ */
+export const DICH_THU_RE = /^oneinvest_m5_t[0-9]+$/;
+export function khuonM5(nguonDb, env = process.env) {
+  const t = env.BCL_DICH_THU;
+  if (!t) return { tienTo: "oneinvest_m5", re: /^oneinvest_m5_/, thu: false };
+  if (!DICH_THU_RE.test(t)) throw new Error("BCL_DICH_THU phải dạng oneinvest_m5_t<số>");
+  if (!/^oneinvest_suite_[a-z0-9_]+$/.test(String(nguonDb ?? ""))) throw new Error("BCL_DICH_THU chỉ dùng khi nguồn là DB lượt oneinvest_suite_* (db-thu --chay)");
+  return { tienTo: t, re: new RegExp(`^${t}(_[a-z0-9_]+)?$`), thu: true };
+}
+
+/** Tên đích theo ngày giờ máy (giờ VN trên máy thu): oneinvest_m5_yyyymmdd (chế độ thử: <tiền tố>_yyyymmdd). */
+export function tenDich(d = new Date(), tienTo = process.env.BCL_DICH_THU || "oneinvest_m5") {
   const p = (n) => String(n).padStart(2, "0");
-  return `oneinvest_m5_${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}`;
+  return `${tienTo}_${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}`;
 }
 
 /** null khi tên đích hợp lệ; chuỗi lý do khi phải từ chối (mã 2). */
-export function loiTenDich(ten, nguon) {
+export function loiTenDich(ten, nguon, khuon = null) {
   if (!ten) return "thiếu tên DB đích";
   if (ten === "oneinvest") return "đích không được là DB máy thu oneinvest";
-  if (!TEN_DICH_RE.test(ten)) return `đích phải dạng oneinvest_m5_<yyyymmdd>, nhận «${ten.replace(/[^A-Za-z0-9_]/g, "?")}»`;
+  if (khuon?.thu) {
+    if (!new RegExp(`^${khuon.tienTo}_[0-9]{8}$`).test(ten)) return `chế độ thử: đích phải dạng ${khuon.tienTo}_<yyyymmdd>, không được chạm tên đích thật`;
+  } else if (!TEN_DICH_RE.test(ten)) return `đích phải dạng oneinvest_m5_<yyyymmdd>, nhận «${ten.replace(/[^A-Za-z0-9_]/g, "?")}»`;
   if (nguon && ten === nguon) return "đích trùng DB nguồn";
   return null;
 }
@@ -361,8 +377,9 @@ async function quanTri(fn) {
   const c = await moClient(urlCua("postgres"));
   try { return await fn(c); } finally { await c.end().catch(() => {}); }
 }
-export const dsDbM5 = () => quanTri(async (c) =>
-  (await c.query("SELECT datname FROM pg_database WHERE datname ~ '^oneinvest_m5_' ORDER BY 1")).rows.map((r) => r.datname));
+/** DB oneinvest_m5_* hiện có, lọc theo khuôn (mặc định mọi oneinvest_m5_*; chế độ thử chỉ khuôn của tiền tố). */
+export const dsDbM5 = (re = /^oneinvest_m5_/) => quanTri(async (c) =>
+  (await c.query("SELECT datname FROM pg_database WHERE datname ~ '^oneinvest_m5_' ORDER BY 1")).rows.map((r) => r.datname).filter((d) => re.test(d)));
 export async function xoaDb(ten) {
   if (!TEN_M5_RE.test(ten)) throw new Error("từ chối xoá DB ngoài khuôn oneinvest_m5_*");
   await quanTri((c) => c.query(`DROP DATABASE IF EXISTS ${q(ten)} WITH (FORCE)`));
@@ -372,8 +389,8 @@ async function taoDb(ten) {
   await quanTri((c) => c.query(`CREATE DATABASE ${q(ten)} TEMPLATE template0 ENCODING 'UTF8'`));
 }
 /** `--don`: xoá mọi DB oneinvest_m5_* (đích và DB tạm --kiem). */
-export async function donHet() {
-  const ds = await dsDbM5();
+export async function donHet({ nguonDb } = {}) {
+  const ds = await dsDbM5(khuonM5(nguonDb).re);
   for (const d of ds) await xoaDb(d);
   return ds;
 }
@@ -511,6 +528,28 @@ async function boHamNhacTenCu(dc) {
         AND NOT EXISTS (SELECT 1 FROM pg_depend d WHERE d.deptype = 'e' AND d.classid = 'pg_proc'::regclass AND d.objid = p.oid)`);
   for (const r of rows) await dc.query(`DROP FUNCTION IF EXISTS ${r.f} CASCADE`);
   return rows.map((r) => r.f);
+}
+
+/**
+ * Chỗ trúng tên nguồn trong tệp kê: đường khoá JSON (khoá trúng thì đoạn ấy ghi «<khoá>»), không giá trị. Soát cả chuỗi JSON toàn
+ * văn (bắt chỗ trúng vắt qua ranh giá trị) — trúng toàn văn mà không định vị được thì trả «<toàn văn>».
+ */
+export function choTrungTrongKe(ke, entries) {
+  const out = [];
+  const di = (v, p) => {
+    if (typeof v === "string") { if (findSourceNames(v, entries).length) out.push(p || "<gốc>"); return; }
+    if (Array.isArray(v)) { v.forEach((x, i) => di(x, `${p}[${i}]`)); return; }
+    if (v && typeof v === "object") {
+      for (const [k, x] of Object.entries(v)) {
+        const kp = findSourceNames(k, entries).length ? "<khoá>" : k;
+        if (kp === "<khoá>") out.push(`${p}.<khoá>`);
+        di(x, `${p}.${kp}`);
+      }
+    }
+  };
+  di(ke, "");
+  if (!out.length && findSourceNames(JSON.stringify(ke, null, 2), entries).length) out.push("<toàn văn>");
+  return out;
 }
 
 /** Viết lại định nghĩa chỉ mục của bảng gốc cho bảng đích: tên chỉ mục mới, `ON public.<bảng đích>`. null nếu không đọc được khuôn. */
@@ -680,14 +719,19 @@ export async function demDong(client, tables) {
  * `loiCay` — "giua-chep": ném lỗi sau bảng đầu tiên (E10: lệnh gãy giữa chừng thì không còn DB đích).
  */
 export async function chayChep({ nguonUrl = NGUON_MAC_DINH, dich = tenDich(), ra = RA_MAC_DINH, out = console.log, err = console.error,
-  sauChep, loiCay, _boChiMuc = false } = {}) {
+  sauChep, loiCay, _boChiMuc = false, _cayKe } = {}) {
   const ng = phanTichNguon(nguonUrl);
   if (ng.loi) { err(`ban-chep-da-loc: ${ng.loi}`); return 2; }
-  const loiTen = loiTenDich(dich, ng.db);
+  let khuon;
+  try { khuon = khuonM5(ng.db); } catch (e) { err(`ban-chep-da-loc: ${e.message}`); return 2; }
+  const loiTen = loiTenDich(dich, ng.db, khuon);
   if (loiTen) { err(`ban-chep-da-loc: ${loiTen}`); return 2; }
   if (TEN_M5_RE.test(ng.db)) { err("ban-chep-da-loc: nguồn không được là một DB oneinvest_m5_* (bước dọn sẽ xoá nó)"); return 2; }
 
   const t0 = Date.now();
+  const pha = {};
+  let tPha = Date.now();
+  const xongPha = (k) => { pha[k] = Math.round((Date.now() - tPha) / 100) / 10; tPha = Date.now(); };
   let che = (s) => String(s);
   let nguon;
   let dc;
@@ -701,12 +745,14 @@ export async function chayChep({ nguonUrl = NGUON_MAC_DINH, dich = tenDich(), ra
     const tokens = tokensFromEntries(entries);
 
     // Trần một bản sống: xoá mọi oneinvest_m5_* cũ (kể cả bản cùng ngày) trước khi dựng.
-    for (const cu of await dsDbM5()) { await xoaDb(cu); out(`xoá bản cũ ${cu}`); }
+    for (const cu of await dsDbM5(khuon.re)) { await xoaDb(cu); out(`xoá bản cũ ${cu}`); }
     await taoDb(dich);
     dungDich = true;
     dc = await moClient(urlCua(dich));
     const ext = await dungExtension(nc, dc);
+    xongPha("dung_db");
     await chepLuocDo({ nguonDb: ng.db, snapshot: nguon.snapshot, dichDb: dich });
+    xongPha("luoc_do");
 
     const { rows: coBang } = await nc.query(`SELECT relname FROM pg_class WHERE relnamespace = 'public'::regnamespace AND relname = ANY($1)`,
       [[...FILL, "source_registry"]]);
@@ -731,39 +777,67 @@ export async function chayChep({ nguonUrl = NGUON_MAC_DINH, dich = tenDich(), ra
       }
       if (loiCay === "giua-chep" && ++lan === 1) throw new Error("lỗi cấy giữa bước chép (E10)");
     }
+    xongPha("chep_du_lieu");
     // Chỉ mục của bảng gốc cho các bảng thành-bảng; `_boChiMuc` chỉ cho chiều đỏ của itest BCL-1.
     const chiMuc = _boChiMuc ? { dung: {}, bo: ["bỏ bước dựng chỉ mục (cờ thử)"] } : await dungChiMuc(nc, dc, view.thanhBang, cotLen);
     for (const [v, ds] of Object.entries(chiMuc.dung)) out(`chỉ mục dựng lại: ${v} ${ds.length}`);
-    const doiTen = await doiTenRefCalib(dc);
+    xongPha("chi_muc");
+    await doiTenRefCalib(dc);
     const hamBo = await boHamNhacTenCu(dc);
+    xongPha("doi_ten");
     const daChe = await cheODich(dc, entries);
+    xongPha("che");
     for (const [k, n] of Object.entries(daChe)) out(`che tên nguồn → mã: ${k} ${n} ô`);
     // Thống kê cho bộ lập kế hoạch: bản chép mới nạp chưa có (GS 26/11). pg_dump không mang thống kê — máy nhận ANALYZE lại.
     await dc.query("ANALYZE");
+    xongPha("analyze");
     for (const t of chep) soDong[RENAME(t)] = (await demDong(dc, [RENAME(t)]))[RENAME(t)];
     out(`chép xong ${chep.length} bảng (${Object.values(soDong).reduce((a, b) => a + b, 0)} dòng), view → bảng: ${view.thanhBang.join(", ") || "—"}`);
 
     if (sauChep) await sauChep(dc);
 
+    tPha = Date.now();
     const hits = await soatDich(dc, { entries });
+    xongPha("soat");
+    out(`thời gian pha (s): ${Object.entries(pha).map(([k, v]) => `${k} ${v}`).join(", ")}`);
     if (hits.length) {
       for (const h of hits) err(dongTrung(h, che));
       err(`ban-chep-da-loc: bộ soát trúng ${hits.length} chỗ — xoá DB đích, không ghi dump`);
       return 1;
     }
 
+    // Tệp kê cạnh dump (GS 26/11, tầng A): tên theo tên ĐÃ ĐỔI, không cặp cũ → mới; toàn bộ chữ soát bằng findSourceNames TRƯỚC khi
+    // ghi dump và tệp. Trúng → đỏ, nêu khoá JSON, không ghi gì, xoá đích.
+    const dt = doiTenDoiTuong;
+    const ke = {
+      ten_dich: dich, tep: null, sha256: null, co_byte: null, sha_ma: shaMa(), luc_snapshot: nguon.luc,
+      so_dong: soDong, extension: ext, view_thanh_bang: view.thanhBang, view_dung_lai: view.dungLai.map(dt),
+      ham_mat_khi_doi_view: view.hamMat.map(dt), khoa_ngoai_bo: kn.bo.map(dt),
+      chi_muc_dung_lai: Object.fromEntries(Object.entries(chiMuc.dung).map(([v, ds]) => [RENAME(v), ds.map(dt)])), chi_muc_bo: chiMuc.bo.map(dt),
+      cot_loai_ve_null: Object.fromEntries(Object.entries(cotLoai).map(([t, cs]) => [RENAME(t), cs])), o_da_che: daChe, ham_bo: hamBo.map(dt),
+      thoi_gian_pha_s: pha,
+    };
+    if (_cayKe) _cayKe(ke);
+    const trungKe = choTrungTrongKe(ke, entries);
+    if (trungKe.length) {
+      for (const k of trungKe) err(`TRÚNG tệp kê: ${che(k)}`);
+      err("ban-chep-da-loc: tệp kê mang tên nguồn — xoá DB đích, không ghi dump, không ghi ke.json");
+      return 1;
+    }
+
     mkdirSync(ra, { recursive: true });
-    const ngay = dich.replace(/^oneinvest_m5_/, "");
+    const ngay = dich.slice(-8);
     const tep = path.join(ra, `oneinvest-m5-${ngay}.dump`);
     // Một ke.json cho một thư mục → dump ngày khác không còn kiểm được, xoá cùng lúc.
     for (const f of readdirSync(ra)) if (/^oneinvest-m5-[0-9]{8}\.dump$/.test(f) && f !== path.basename(tep)) rmSync(path.join(ra, f), { force: true });
     const { sha256, coByte } = await xuatDump(dich, tep);
-    const ke = {
-      ten_dich: dich, tep: path.basename(tep), sha256, co_byte: coByte, sha_ma: shaMa(), luc_snapshot: nguon.luc,
-      so_dong: soDong, extension: ext, view_thanh_bang: view.thanhBang, view_dung_lai: view.dungLai, ham_mat_khi_doi_view: view.hamMat,
-      khoa_ngoai_bo: kn.bo, chi_muc_dung_lai: chiMuc.dung, chi_muc_bo: chiMuc.bo, cot_loai_ve_null: cotLoai, o_da_che: daChe, doi_ten: doiTen.map((t) => [t, RENAME(t)]), ham_bo: hamBo,
-      thoi_gian_s: Math.round((Date.now() - t0) / 1000),
-    };
+    Object.assign(ke, { tep: path.basename(tep), sha256, co_byte: coByte, thoi_gian_s: Math.round((Date.now() - t0) / 1000) });
+    // Soát lại bản cuối (băm hex vừa thêm): trúng thì bỏ cả dump.
+    if (choTrungTrongKe(ke, entries).length) {
+      rmSync(tep, { force: true });
+      err("ban-chep-da-loc: tệp kê bản cuối mang chuỗi trùng tên nguồn — bỏ dump, không ghi ke.json");
+      return 1;
+    }
     writeFileSync(path.join(ra, "ke.json"), `${JSON.stringify(ke, null, 2)}\n`);
     out(`xanh: ${che(tep)} (${coByte} byte, sha256 ${sha256.slice(0, 12)}…), ${Object.values(soDong).filter((n) => n > 0).length} bảng có dòng, ${ke.thoi_gian_s}s`);
     dungDich = false; // giữ bản sống
@@ -975,7 +1049,9 @@ export async function chayKiem({ tep, khongTuDien = false, nguonUrl = NGUON_MAC_
   }
 
   let che = (s) => String(s);
-  const tam = `oneinvest_m5_kiem_${process.pid}`;
+  let khuon;
+  try { khuon = khuonM5(noi.nguonDb); } catch (e) { err(`ban-chep-da-loc --kiem: ${e.message}`); return 2; }
+  const tam = `${khuon.tienTo}_kiem_${process.pid}`;
   let dc;
   let daTao = false;
   try {
@@ -1050,7 +1126,8 @@ async function main() {
   if (a.loi) { console.error(`ban-chep-da-loc: ${a.loi}`); process.exitCode = 2; return; }
   const nguonUrl = process.env.DATABASE_URL ?? NGUON_MAC_DINH;
   if (a.che === "don") {
-    const ds = await donHet();
+    let ds;
+    try { ds = await donHet({ nguonDb: phanTichNguon(nguonUrl).db }); } catch (e) { console.error(`ban-chep-da-loc: ${e.message}`); process.exitCode = 2; return; }
     console.log(`đã xoá ${ds.length} DB oneinvest_m5_*${ds.length ? `: ${ds.join(", ")}` : ""}`);
     return;
   }
