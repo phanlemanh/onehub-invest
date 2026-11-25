@@ -13,6 +13,7 @@ import { RunStopped, type Caps, type Transport, type TransportMany } from "./cli
 import type { S17Config } from "./config.js";
 import type { Response } from "./client.js";
 import { buildExecOptions, executePhase, type ExecResult } from "./runner.js";
+import { duongKhoaPhienMacDinh, khoaPhien } from "./khoa-phien.js";
 import type { GridEntry, ParcelArea, Phase } from "./run.js";
 
 export type EgoPage = {
@@ -64,23 +65,47 @@ export type EgoOptions = {
   runId?: string;
   /** Mốc mở rộng — pha căn hộ toàn bộ dự án (đi qua trình điều khiển cùng các trường khác). */
   tatCaDuAn?: { tuSoCan?: number; denSoCan?: number; gioiHan?: number; ids?: string[] };
-  /** Nhãn trang gọi trong trang (vd `p2`): mặc định là tab đầu tiên của nguồn; ghi nhãn thì chỉ chạy ở trang ấy. */
+  /** Nhãn trang gọi trong trang (vd `p2`): mặc định là tab đầu tiên của nguồn; ghi nhãn thì chỉ chạy ở trang ấy — để đổi
+   *  trang khi tab đầu bị treo. KHÔNG dùng để chạy hai pha cần phiên đồng thời (nguồn trả 429; có khoá chung). */
   tabLabel?: string;
+  /** Đường tệp khoá chung mọi pha cần phiên (mặc định ở thư mục tạm của người dùng; test đưa đường tạm riêng). */
+  khoaPhien?: string;
 };
 
 /**
+ * Trang có thuộc nguồn không: so theo CỐNG (giao thức + máy chủ + cổng), không phải theo tiền tố chữ — kẻ khác mua
+ * tên có cùng tiền tố (`web.gia.test.evil.example`) thì `startsWith` vẫn nhận. Cấu hình `web` có đường thì trang phải
+ * nằm trong đường ấy, khớp theo đoạn (`/app` và `/application` là hai chuyện khác nhau).
+ */
+export function laTrangCuaNguon(web: URL, url: string): boolean {
+  try {
+    const u = new URL(url);
+    if (u.origin !== web.origin) return false;
+    const duongDan = web.pathname.replace(/\/+$/, "");
+    return duongDan === "" || u.pathname === duongDan || u.pathname.startsWith(`${duongDan}/`);
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Chọn trang để gọi trong trang. Bản kê ghi nhãn thì chỉ nhận đúng trang ấy và trang ấy phải là của nguồn — KHÔNG lùi
- * về tab đầu (hai lượt chạy song song mà lùi thì hai lượt rơi vào cùng một trang). Không ghi thì lấy tab đầu tiên của
- * nguồn (tab Mạnh đã đăng nhập).
+ * về tab đầu (chọn nhầm trang là đưa phiên tới nơi sai). Không ghi thì lấy tab đầu tiên của nguồn (tab Mạnh đã đăng nhập).
  */
 export function chonTrangGoi(tabs: Array<{ label?: string; url: string }>, web: string, tabLabel?: string): { loi: string } | { label?: string; url: string } {
+  let gocWeb: URL;
+  try {
+    gocWeb = new URL(web);
+  } catch {
+    return { loi: "cấu hình web không phải URL" };
+  }
   if (tabLabel === undefined) {
-    const tab = tabs.find((t) => t.url.startsWith(web));
+    const tab = tabs.find((t) => laTrangCuaNguon(gocWeb, t.url));
     return tab ? { ...(tab.label ? { label: tab.label } : {}), url: tab.url } : { loi: "không có tab nào của nguồn" };
   }
   const tab = tabs.find((t) => t.label === tabLabel);
   if (!tab) return { loi: `không có trang ${tabLabel}` };
-  if (!tab.url.startsWith(web)) return { loi: `trang ${tabLabel} không phải trang của nguồn` };
+  if (!laTrangCuaNguon(gocWeb, tab.url)) return { loi: `trang ${tabLabel} không phải trang của nguồn` };
   return { label: tab.label, url: tab.url };
 }
 
@@ -109,6 +134,8 @@ type InPageGlobal = {
   fetch(url: string, init: object): Promise<{ status: number; headers: { get(k: string): string | null }; text(): Promise<string>; arrayBuffer(): Promise<ArrayBuffer> }>;
   document: { cookie: string };
   AbortSignal: { timeout(ms: number): unknown };
+  /** Gốc của trang — kiểm mỗi lần bắt đầu để phiên không bao giờ được dùng ở trang lạ. */
+  location?: { origin: string };
   /** Việc đang chạy: tab chỉ giữ MỘT việc tại một thời điểm. Việc mới chỉ đè việc đã xong hoặc việc mồ côi. */
   __s17Job?: InPageJob;
 };
@@ -122,9 +149,14 @@ type InPageGlobal = {
  * Tab đang giữ một việc CHƯA XONG của đợt khác thì trả -1 và không làm gì (đo 24/11 18:09: hai lượt tranh tab, lượt
  * này nhận kết quả của lượt kia và ghi payload này dưới sourceId kia) — phía Node chờ rồi hỏi lại. Việc quá 90000 ms
  * (hạn chờ một lời + hai lần chạy trong trang) mà vẫn chưa xong là việc mồ côi: được đè.
+ *
+ * Gốc của trang được kiểm lại ở MỖI lần (lượt soát 25/11): lượt chạy nhiều giờ mà tab bị điều hướng sang nơi khác
+ * (Mạnh dùng tab, ứng dụng nhảy ra ngoài) thì lần chạy kế tiếp sẽ gửi URL của API nguồn và tên cookie vào trang lạ.
+ * Không đúng gốc (`input.goc`) thì trả -2 và không làm gì; phía Node dừng cả lượt.
  */
-export const IN_PAGE_START = (input: { items: InPageInput[]; staggerMs: number; token: string }): number => {
+export const IN_PAGE_START = (input: { items: InPageInput[]; staggerMs: number; token: string; goc?: string }): number => {
   const g = globalThis as unknown as InPageGlobal;
+  if (input.goc !== undefined && (g.location?.origin ?? "") !== input.goc) return -2;
   const cu = g.__s17Job;
   if (cu && cu.done < cu.rs.length && Date.now() - cu.t0 < 90000) return -1;
   const job: InPageJob = { token: input.token, t0: Date.now(), done: 0, rs: new Array(input.items.length) };
@@ -180,6 +212,7 @@ export function makeTransports(
   page: EgoPage,
   cookieName: string,
   cho: { sleep: (ms: number) => Promise<void>; pollMs: number; now?: () => number },
+  goc?: string,
 ): { transport: Transport; transportMany: TransportMany } {
   const gio = cho.now ?? (() => Date.now());
   const xuLy = (r: InPageResult): Response => {
@@ -190,8 +223,10 @@ export function makeTransports(
     const items = requests.map((r) => ({ url: r.url, headerJson: JSON.stringify(r.headers), cookieName, timeoutMs: IN_PAGE_TIMEOUT_MS }));
     const token = randomBytes(8).toString("hex");
     const han = gio() + IN_PAGE_STALE_MS;
+    const dauVao = { items, staggerMs, token, ...(goc !== undefined ? { goc } : {}) }; // gốc của trang được kiểm lại ở mỗi lần bắt đầu
     for (;;) {
-      const nhan = (await page.evaluate(IN_PAGE_START, { items, staggerMs, token })) as number;
+      const nhan = (await page.evaluate(IN_PAGE_START, dauVao)) as number;
+      if (nhan === -2) throw new RunStopped("page-origin", "trang gọi trong trang không còn ở gốc của nguồn — dừng cả lượt, không gửi lời nào kèm phiên");
       if (nhan === items.length) break;
       if (gio() > han) throw new TypeError("tab đang giữ một việc gọi chưa xong của lượt khác");
       await cho.sleep(cho.pollMs);
@@ -216,6 +251,9 @@ export function makeTransports(
     try {
       rs = await chay(requests, staggerMs);
     } catch (e) {
+      // Trang không còn ở gốc của nguồn: MỌI lời nhận đúng lỗi dừng (giữ nguyên kiểu, không đổi thành lỗi mạng rồi thử
+      // lại) — hợp đồng «mỗi lời một lỗi, không ném giữa đợt» giữ nguyên; lớp gọi thấy RunStopped thì dừng cả lượt.
+      if (e instanceof RunStopped) return requests.map(() => e);
       return loiDot(requests, e);
     }
     return rs.map((r) => {
@@ -235,6 +273,29 @@ export async function main(api: EgoApi, optionsPath: string): Promise<number> {
   const writeResult = (r: Record<string, unknown>): Promise<void> => fs.writeFile(opts.resultPath, JSON.stringify({ runId: opts.runId, ...r }));
   const env = { sleep: (ms: number): Promise<void> => new Promise<void>((r) => setTimeout(r, ms)), now: () => new Date() };
 
+  // KHOÁ CHUNG mọi pha cần phiên (khoa-phien.ts): hai pha cần phiên chạy đồng thời thì nguồn trả 429 (25/11). Lấy
+  // khoá TRƯỚC khi nhận task space hay chọn trang — pha khác đang giữ thì chưa gọi gì, chưa đụng trình duyệt.
+  let moKhoa: () => void;
+  try {
+    moKhoa = khoaPhien(opts.khoaPhien ?? duongKhoaPhienMacDinh());
+  } catch (e) {
+    if (e instanceof RunStopped) {
+      await writeResult({ ok: false, stopReason: e.reason, message: e.message });
+      return 3;
+    }
+    throw e;
+  }
+  try {
+    return await chayPhien(api, opts, writeResult, env, fs);
+  } finally {
+    moKhoa(); // xong, dừng hay văng đều nhả khoá chung
+  }
+}
+
+type MoiTruong = { sleep: (ms: number) => Promise<void>; now: () => Date };
+
+/** Phần còn lại của lượt, sau khi đã giữ khoá chung: nhận task space, chọn trang, chạy pha, ghi kết quả. */
+async function chayPhien(api: EgoApi, opts: EgoOptions, writeResult: (r: Record<string, unknown>) => Promise<void>, env: MoiTruong, fs: typeof import("node:fs/promises")): Promise<number> {
   let task: EgoTask;
   try {
     const entry = (await api.listTaskSpaces()).find((s) => s.id === opts.spaceId);
@@ -243,7 +304,7 @@ export async function main(api: EgoApi, optionsPath: string): Promise<number> {
       return 4;
     }
     // Thuộc về người dùng: chỉ nhận lại (luật ở đầu tệp). Người dùng ủy quyền tạm: chiếm lại. Còn trong tay agent: LẤY
-    // LẠI bằng taskSpace — hai lượt chạy song song (hai trang của cùng hồ sơ) cùng lấy, không lượt nào chiếm của lượt kia.
+    // LẠI bằng taskSpace — lấy lại là đủ, không chiếm của ai.
     task =
       entry.ownership === "user"
         ? await api.claimTaskSpace(opts.spaceId)
@@ -261,10 +322,12 @@ export async function main(api: EgoApi, optionsPath: string): Promise<number> {
     await writeResult({ ok: false, message: `task space ${opts.spaceId} ${chon.loi} — không gọi gì trong trang` });
     return 4;
   }
-  // Tab Mạnh mở chưa có nhãn: nhận quản lý (adopt). Trang mở thêm trong cùng hồ sơ đã có nhãn (vd p2): dùng thẳng,
-  // không đụng tab đầu — hai lượt chạy song song, mỗi lượt một trang.
+  // Tab Mạnh mở chưa có nhãn: nhận quản lý (adopt). Trang đã có nhãn mà bản kê chỉ định (khi tab đầu bị treo): dùng
+  // thẳng, không đụng trang khác. Hai pha cần phiên KHÔNG chạy đồng thời — có khoá chung ở đầu hàm main.
   const page = chon.label ? task.page(chon.label) : await task.adopt(tabs.find((t) => t.url === chon.url)?.page);
-  const { transport, transportMany } = makeTransports(page, opts.cookieName ?? "", { sleep: env.sleep, pollMs: IN_PAGE_POLL_MS });
+  // Gốc của trang được kiểm lại ở mỗi lần bắt đầu lời trong trang (IN_PAGE_START): tab bị điều hướng đi chỗ khác giữa
+  // lượt thì dừng cả lượt, không gửi URL của API nguồn và tên cookie vào trang lạ.
+  const { transport, transportMany } = makeTransports(page, opts.cookieName ?? "", { sleep: env.sleep, pollMs: IN_PAGE_POLL_MS }, new URL(opts.config.hosts.web).origin);
 
   try {
     // Bản kê đi qua buildExecOptions chung với đường Node: không trường nào bị bỏ lại ở ranh giới tiến trình.

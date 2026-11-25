@@ -40,7 +40,9 @@ export type StopReason =
   | "blocked-twice"
   | "operator-stop"
   | "another-run"
-  | "source-error";
+  | "source-error"
+  /** Trang gọi trong trang không còn ở gốc của nguồn (bị điều hướng đi chỗ khác giữa lượt). */
+  | "page-origin";
 
 export class RunStopped extends Error {
   constructor(
@@ -266,6 +268,7 @@ export class S17Client {
       try {
         res = await this.o.transport(url, this.headers);
       } catch (e) {
+        if (e instanceof RunStopped) throw e; // vận chuyển bảo dừng (vd trang không còn ở gốc của nguồn): không thử lại
         res = null;
         loiMang = loiVanChuyen(e);
       }
@@ -391,6 +394,10 @@ export class S17Client {
           }
           const role = String(reqs[idx].role);
           const goc = raw[k];
+          if (goc instanceof RunStopped) {
+            out[idx] = { ok: false, error: goc }; // vận chuyển bảo dừng cả lượt: mỗi lời nhận đúng lỗi dừng, không thử lại
+            continue;
+          }
           const res = goc instanceof Error ? null : goc;
           const loiMang = goc instanceof Error ? goc.message : "";
           try {

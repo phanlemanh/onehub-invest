@@ -61,7 +61,7 @@ export type ExecOptions = {
   anh?: { luongSong: number; soFile: number; chiNgoai?: boolean };
   /** Phần thửa mở rộng — pha lưới dày. */
   oLuoi?: { buocM: number; gioiHan?: number };
-  /** Nhãn trang gọi trong trang (mặc định: tab đầu tiên của nguồn) — để hai pha chạy song song ở hai trang của cùng hồ sơ. */
+  /** Nhãn trang gọi trong trang (mặc định: tab đầu tiên của nguồn) — để đổi trang khi tab đầu bị treo; không để chạy hai pha cần phiên đồng thời. */
   tabLabel?: string;
   /** fetch dùng cho pha ảnh — nơi gọi đặt (mặc định fetch toàn cục; test đệm bản giả). */
   anhFetch?: typeof fetch;

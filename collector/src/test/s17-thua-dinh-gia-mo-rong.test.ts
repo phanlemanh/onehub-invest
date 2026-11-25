@@ -1058,6 +1058,7 @@ test("parcels-cell: giới hạn số ô một lượt; dừng giữa ô (quá t
 // ---------- sửa theo lượt soát 25/11: tải ảnh an toàn và phân loại lỗi đúng ----------
 
 import { diaChiNoiBo, hashUrl, phanLoaiMayChu, taiAnh } from "../collectors/s17-thua-dinh-gia/anh.js";
+import { getEventListeners } from "node:events";
 
 const TUY_CHON = { maxBytes: 1024, timeoutMs: 5000, userAgent: "oneinvest-collector/1", duoiNguon: ["cdn.gia.test"], keNgoai: false };
 
@@ -1637,6 +1638,158 @@ test("pha ảnh: trong một dự án, URL còn tươi được tải TRƯỚC, 
   assert.deepEqual(nguon.daGoi, ["/a/1", "/a/3", "/a/4", "/a/2"], "ảnh 2 (đã lỗi một lần) xuống cuối; thứ tự các ảnh tươi giữ nguyên");
 }));
 
+// ---------- theo lượt soát lần hai (25/11): rớt mạng không được ghi vĩnh viễn cả hàng; vòng chờ không đốt CPU ----------
+
+/** fetch giả ném lỗi mạng như fetch thật: TypeError «fetch failed», mã lỗi nằm trong `cause.code`. */
+const fetchLoiMang = (code: string) =>
+  fetchGia(() => {
+    const e = new TypeError("fetch failed", { cause: Object.assign(new Error("x"), { code }) });
+    e.name = "TypeError";
+    throw e;
+  }).fetchImpl;
+
+const docTienDo = async (tep: string) => (await new NhatKyTienDo(tep).readAll()) as Array<{ loi?: Record<string, string>; dem?: Record<string, number>; daTai?: string[] }>;
+const demVinhVien = (ds: Array<{ loi?: Record<string, string> }>): number => ds.reduce((n, d) => n + Object.keys(d.loi ?? {}).length, 0);
+
+test("pha ảnh máy chủ ngoài: RỚT MẠNG của máy thu (mọi máy chủ cùng hết giờ kết nối) KHÔNG được ghi nhận là lỗi vĩnh viễn của từng URL — dừng «mất mạng» (lượt soát lần hai, phát hiện nghiêm trọng)", async () => withTmp(async (dir) => {
+  await duaAnhVaoKho(dir, "8", Array.from({ length: 60 }, (_, i) => `https://h${i}.example.org/x/${i}.jpg`));
+  const r = await chayAnh(dir, fetchLoiMang("UND_ERR_CONNECT_TIMEOUT"), { soFile: 100, luongSong: 4, chiNgoai: true }).run().then(
+    () => null,
+    (x: unknown) => x,
+  );
+  assert.ok(r instanceof RunStopped && r.reason === "network-down", `phải dừng vì mất mạng (nhận ${JSON.stringify(r ?? "ok")})`);
+  const vinhVien = demVinhVien(await docTienDo(join(dir, "tien-do", "anh-ngoai-8.jsonl")));
+  assert.ok(vinhVien <= 2, `tối đa hai URL bị ghi vĩnh viễn trước khi nhận ra rớt mạng (thấy ${vinhVien})`);
+}));
+
+test("pha ảnh máy chủ nguồn: lỗi cấp máy chủ (chứng chỉ, không phân giải được tên, hết giờ kết nối) luôn là lỗi TẠM — rớt mạng thì dừng «mất mạng», không ghi vĩnh viễn", async () => withTmp(async (dir) => {
+  for (const code of ["UNABLE_TO_VERIFY_LEAF_SIGNATURE", "ENOTFOUND", "UND_ERR_CONNECT_TIMEOUT"]) {
+    const id = code.slice(0, 6).toLowerCase();
+    await duaAnhVaoKho(dir, id, Array.from({ length: 60 }, (_, i) => `https://cdn.gia.test/${id}/${i}`));
+    const r = await chayAnh(dir, fetchLoiMang(code), { soFile: 100, luongSong: 4 }).run().then(
+      () => null,
+      (x: unknown) => x,
+    );
+    assert.ok(r instanceof RunStopped && r.reason === "network-down", `${code}: phải dừng vì mất mạng`);
+    assert.equal(demVinhVien(await docTienDo(join(dir, "tien-do", `anh-${id}.jsonl`))), 0, `${code}: không URL nào bị ghi vĩnh viễn`);
+  }
+}));
+
+test("pha ảnh máy chủ ngoài: lỗi cấp máy chủ của MỘT máy chủ chết (các tệp khác vẫn tải được) vẫn là vĩnh viễn ngay — không thử lại ba lượt", async () => withTmp(async (dir) => {
+  const chet = Array.from({ length: 5 }, (_, i) => `https://chet.example.org/x/${i}.jpg`);
+  const song = Array.from({ length: 15 }, (_, i) => `https://song.example.org/x/${i}.jpg`);
+  const ds: string[] = [];
+  for (let i = 0; i < 15; i++) {
+    ds.push(song[i]);
+    if (i % 3 === 0) ds.push(chet[i / 3]);
+  }
+  await duaAnhVaoKho(dir, "8", ds);
+  const f = fetchGia((u) => {
+    if (u.startsWith("https://chet.example.org/")) {
+      const e = new TypeError("fetch failed", { cause: Object.assign(new Error("x"), { code: "ENOTFOUND" }) });
+      e.name = "TypeError";
+      throw e;
+    }
+    return new Response(new Uint8Array([1]), { status: 200, headers: { "content-type": "image/jpeg" } });
+  });
+  const { s } = await chayAnh(dir, f.fetchImpl, { soFile: 100, luongSong: 4, chiNgoai: true }).run();
+  assert.deepEqual([s.so?.soFile, s.so?.soLoi, s.so?.soDuAnXong], [15, 5, 1]);
+  const td = await docTienDo(join(dir, "tien-do", "anh-ngoai-8.jsonl"));
+  assert.deepEqual([...new Set(td.flatMap((d) => Object.values(d.loi ?? {})))], ["may-chu-khong-ton-tai"]);
+  assert.equal(td.reduce((n, d) => n + Object.keys(d.dem ?? {}).length, 0), 0, "không đếm lượt thử: đã kết luận ngay");
+}));
+
+test("pha ảnh: phanh dự phòng — một chuỗi lỗi tạm quá dài kể cả trên URL đã lỗi từ lượt trước vẫn dừng «mất mạng» (rớt mạng thật không được che bởi miễn trừ)", async () => withTmp(async (dir) => {
+  const urls = Array.from({ length: 40 }, (_, i) => `https://cdn.gia.test/a/${i}`);
+  await duaAnhVaoKho(dir, "8", urls);
+  await new NhatKyTienDo(join(dir, "tien-do", "anh-8.jsonl")).append({ dem: Object.fromEntries(urls.map((u) => [hashUrl(u), 1])) });
+  const r = await chayAnh(dir, fetchLoiMang("UND_ERR_CONNECT_TIMEOUT"), { soFile: 100, luongSong: 4 }).run().then(
+    () => null,
+    (x: unknown) => x,
+  );
+  assert.ok(r instanceof RunStopped && r.reason === "network-down", "40 URL đã lỗi một lần, mọi lời hết giờ: đây là rớt mạng, phải dừng");
+  const td = (await docTienDo(join(dir, "tien-do", "anh-8.jsonl"))).slice(1); // dòng đầu là 40 lượt thử gieo sẵn
+  const daThu = td.reduce((n, d) => n + Object.keys(d.dem ?? {}).length, 0);
+  assert.ok(daThu >= 20 && daThu < 40, `dừng quanh lần thứ hai mươi, trước khi thử hết 40 URL (đã thử ${daThu})`);
+}));
+
+test("pha ảnh máy chủ ngoài: hai máy chủ chết xen kẽ nhau KHÔNG làm lượt dừng «mất mạng» — đếm theo số máy chủ khác nhau, không theo thứ tự", async () => withTmp(async (dir) => {
+  const ds: string[] = [];
+  for (let i = 0; i < 60; i++) ds.push(`https://h${i % 2}.example.org/x/${i}.jpg`);
+  await duaAnhVaoKho(dir, "8", ds);
+  const nguon = nguonAnh(() => ({ status: 503, body: "loi tam thoi" }));
+  const { s } = await chayAnh(dir, nguon.fetchImpl, { soFile: 100, luongSong: 4, chiNgoai: true }).run();
+  assert.equal(s.so?.soDuAnXong, 0, "URL lỗi tạm chưa kết luận");
+  const td = await docTienDo(join(dir, "tien-do", "anh-ngoai-8.jsonl"));
+  assert.equal(td.reduce((n, d) => n + Object.keys(d.dem ?? {}).length, 0), 60, "cả 60 URL được thử một lượt, lượt không dừng");
+}));
+
+test("pha ảnh: worker nhàn không hỏi vòng theo đồng hồ (đốt CPU) — được đánh thức khi có tệp tải xong", async () => withTmp(async (dir) => {
+  await duaAnhVaoKho(dir, "8", Array.from({ length: 60 }, (_, i) => `https://mot.example.org/x/${i}.jpg`));
+  // Mỗi máy chủ ngoài hai lời, bốn luồng → hai worker nhàn suốt dự án. Đếm số lần pha đặt hẹn giờ (setTimeout).
+  const goc = globalThis.setTimeout;
+  let soHen = 0;
+  globalThis.setTimeout = ((fn: (...a: never[]) => void, ms?: number, ...args: unknown[]) => {
+    soHen++;
+    return goc(fn, ms, ...args);
+  }) as unknown as typeof setTimeout;
+  try {
+    const nguon = nguonAnh(async () => {
+      await new Promise((r) => goc(r, 40));
+      return {};
+    });
+    const { s } = await chayAnh(dir, nguon.fetchImpl, { soFile: 100, luongSong: 4, chiNgoai: true }).run();
+    assert.equal(s.so?.soFile, 60);
+    assert.ok(soHen <= 60 * 5, `số hẹn giờ tỷ lệ với số tệp tải (${soHen}), không phải với thời gian chờ`);
+  } finally {
+    globalThis.setTimeout = goc;
+  }
+}));
+
+test("taiAnh: không tích tụ listener «abort» trên tín hiệu bỏ của dự án — sau nhiều lời, tín hiệu không còn listener nào", async () => {
+  const ac = new AbortController();
+  const f = fetchGia(() => new Response(new Uint8Array([1]), { status: 200, headers: { "content-type": "image/jpeg" } }));
+  for (let i = 0; i < 30; i++) await taiAnh(`https://anh.example.org/a/${i}.jpg`, { ...TUY_CHON, keNgoai: true, ...GIAI_CONG_KHAI, fetchImpl: f.fetchImpl, signal: ac.signal });
+  assert.equal(getEventListeners(ac.signal, "abort").length, 0);
+});
+
+test("pha ảnh: khai mười sáu kết nối thì tải song song thật tới gần mười sáu (không phải vẫn tám)", async () => withTmp(async (dir) => {
+  await duaAnhVaoKho(dir, "8", Array.from({ length: 40 }, (_, i) => `https://cdn.gia.test/a/${i}`));
+  let dangChay = 0;
+  let toiDa = 0;
+  const f = fetchGia(async () => {
+    dangChay++;
+    toiDa = Math.max(toiDa, dangChay);
+    await new Promise((r) => setTimeout(r, 25));
+    dangChay--;
+    return new Response(new Uint8Array([1]), { status: 200, headers: { "content-type": "image/jpeg" } });
+  });
+  const { s } = await chayAnh(dir, f.fetchImpl, { soFile: 50, luongSong: 16 }).run();
+  assert.equal(s.so?.soFile, 40);
+  assert.ok(toiDa >= 12, `tối đa ${toiDa} lời cùng lúc`);
+}));
+
+test("pha ảnh lượt nguồn: URL đã lỗi tạm ở lượt trước KHÔNG tính vào bộ đếm chính «mất mạng» — mười lăm URL lỗi kinh niên không làm lượt dừng (chỉ vào phanh dự phòng)", async () => withTmp(async (dir) => {
+  const urls = Array.from({ length: 15 }, (_, i) => `https://cdn.gia.test/a/${i}`);
+  await duaAnhVaoKho(dir, "8", urls);
+  await new NhatKyTienDo(join(dir, "tien-do", "anh-8.jsonl")).append({ dem: Object.fromEntries(urls.map((u) => [hashUrl(u), 1])) });
+  const nguon = nguonAnh(() => ({ status: 503, body: "loi tam thoi" }));
+  const { s } = await chayAnh(dir, nguon.fetchImpl, { soFile: 50, luongSong: 2 }).run();
+  assert.equal(s.so?.soDuAnXong, 0);
+  const td = (await docTienDo(join(dir, "tien-do", "anh-8.jsonl"))).slice(1);
+  assert.deepEqual([...new Set(td.flatMap((d) => Object.values(d.dem ?? {})))], [2], "cả 15 URL được tính lượt thử thứ hai, lượt không dừng");
+}));
+
+test("pha ảnh: một tệp tải được đặt lại MỌI bộ đếm «mất mạng» — lỗi tạm rải giữa các tệp thành công (nhiều hơn cả phanh dự phòng) không cộng dồn", async () => withTmp(async (dir) => {
+  // Lượt nguồn: 60 URL xen kẽ 30 tệp tải được / 30 lỗi tạm → có 30 lỗi tạm trong lượt nhưng không có chuỗi nào dài.
+  const ds: string[] = [];
+  for (let i = 0; i < 30; i++) ds.push(`https://cdn.gia.test/ok/${i}`, `https://cdn.gia.test/loi/${i}`);
+  await duaAnhVaoKho(dir, "8", ds);
+  const nguon = nguonAnh((duong) => (duong.includes("/loi/") ? { status: 503, body: "loi tam thoi" } : {}));
+  const { s } = await chayAnh(dir, nguon.fetchImpl, { soFile: 100, luongSong: 1 }).run();
+  assert.deepEqual([s.so?.soFile, s.so?.soDuAnXong], [30, 0], "30 tệp tải được; 30 URL lỗi tạm chưa kết luận; lượt không dừng");
+}));
+
 test("pha ảnh: một tệp trong lô lỗi giữa lúc đọc thân — các tệp khác vẫn chốt; tệp lỗi được đếm lượt thử, lượt sau tải nốt", async () => withTmp(async (dir) => {
   await duaAnhVaoKho(dir, "8", [1, 2, 3].map((i) => `https://cdn.gia.test/a/${i}`));
   let lan = 0;
@@ -1749,16 +1902,41 @@ test("pha ảnh máy chủ ngoài: máy chủ nào chặn (403, trang HTML) thì
   assert.equal(r2.s.so?.soDuAnXong, 0, "dự án đã xong từ lượt trước");
 }));
 
-test("pha ảnh máy chủ ngoài: máy chủ không còn tồn tại là lỗi vĩnh viễn của từng URL, nhiều ảnh như vậy KHÔNG làm dừng lượt", async () => withTmp(async (dir) => {
-  await duaAnhVaoKho(dir, "8", Array.from({ length: 12 }, (_, i) => `https://chet${i}.example.org/x/${i}`));
-  const chet = nguonAnhUrl(() => {
-    throw new TypeError("fetch failed", { cause: Object.assign(new Error("getaddrinfo ENOTFOUND"), { code: "ENOTFOUND" }) });
+test("pha ảnh máy chủ ngoài: máy chủ không còn tồn tại là lỗi vĩnh viễn NGAY của riêng URL khi giữa các lỗi có tệp tải được; MƯỜI HAI máy chủ khác nhau cùng chết liền nhau thì nghi là rớt mạng — coi là tạm, ba lượt mới ghi nhận", async () => withTmp(async (dir) => {
+  const f = fetchGia((u) => {
+    if (u.includes("://chet")) {
+      const e = new TypeError("fetch failed", { cause: Object.assign(new Error("getaddrinfo ENOTFOUND"), { code: "ENOTFOUND" }) });
+      e.name = "TypeError";
+      throw e;
+    }
+    return new Response(new Uint8Array([1]), { status: 200, headers: { "content-type": "image/jpeg" } });
   });
-  const r = await chayAnh(dir, chet.fetchImpl, { chiNgoai: true, luongSong: 1, soFile: 4 }).run();
-  assert.equal(r.s.calls, 12);
-  assert.equal(r.s.so?.soDuAnXong, 1);
-  const loi = (await moiKind(dir)).flatMap((it) => it.meta.mediaFiles ?? []).map((m: { error?: string }) => m.error);
-  assert.deepEqual([...new Set(loi)], ["may-chu-khong-ton-tai"]);
+  // a) xen kẽ: sau mỗi máy chủ chết có một tệp tải được → mạng ổn, mỗi máy chủ chết kết luận ngay
+  const ds: string[] = [];
+  for (let i = 0; i < 12; i++) ds.push(`https://chet${i}.example.org/x/${i}`, `https://song.example.org/x/${i}`);
+  await duaAnhVaoKho(dir, "8", ds);
+  const r = await chayAnh(dir, f.fetchImpl, { chiNgoai: true, luongSong: 1, soFile: 40 }).run();
+  assert.deepEqual([r.s.calls, r.s.so?.soDuAnXong, r.s.so?.soFile], [24, 1, 12]);
+  const loi8 = (await moiKind(dir)).filter((it) => it.meta?.request?.duAn === "8").flatMap((it) => it.meta.mediaFiles ?? []).map((m: { error?: string }) => m.error).filter((e) => e);
+  assert.deepEqual([...new Set(loi8)], ["may-chu-khong-ton-tai"]);
+  // b) mười hai máy chủ KHÁC NHAU chết liền nhau, không có tệp nào xen giữa: không phân biệt được với rớt mạng — mỗi lượt
+  //    chỉ kết luận URL đầu tiên, phần còn lại đếm lượt thử; quá ba lượt mới ghi nhận hết
+  await duaAnhVaoKho(dir, "9", Array.from({ length: 12 }, (_, i) => `https://chet${i}.example.org/y/${i}`));
+  const lan1 = await chayAnh(dir, f.fetchImpl, { chiNgoai: true, luongSong: 1, soFile: 40 }).run();
+  assert.equal(lan1.s.so?.soDuAnXong, 0, "chưa kết luận sau lượt đầu");
+  const td1 = await docTienDo(join(dir, "tien-do", "anh-ngoai-9.jsonl"));
+  assert.deepEqual([demVinhVien(td1), td1.reduce((n, d) => n + Object.keys(d.dem ?? {}).length, 0)], [1, 11]);
+  await chayAnh(dir, f.fetchImpl, { chiNgoai: true, luongSong: 1, soFile: 40 }).run();
+  const lan3 = await chayAnh(dir, f.fetchImpl, { chiNgoai: true, luongSong: 1, soFile: 40 }).run();
+  assert.equal(lan3.s.calls, 10, "lượt ba hỏi mười URL còn treo: URL đầu kết luận ngay, chín URL kia là lần thử thứ ba");
+  const lan4 = await chayAnh(dir, f.fetchImpl, { chiNgoai: true, luongSong: 1, soFile: 40 }).run();
+  assert.deepEqual([lan4.s.calls, lan4.s.so?.soDuAnXong], [0, 1], "lượt bốn không hỏi gì nữa, chỉ đánh dấu dự án xong");
+  // Trạng thái cuối lấy ở nhật ký tiến độ (mỗi lượt chốt một item riêng nên không gom theo item).
+  const td9 = (await docTienDo(join(dir, "tien-do", "anh-ngoai-9.jsonl"))) as Array<{ loi?: Record<string, string>; xong?: boolean; soLoi?: number }>;
+  const loiCuoi = new Map(td9.flatMap((d) => Object.entries(d.loi ?? {})));
+  assert.equal(loiCuoi.size, 12, "cả mười hai URL đều có kết luận vĩnh viễn");
+  assert.deepEqual([...new Set(loiCuoi.values())].sort(), ["may-chu-khong-ton-tai", "qua-so-lan-thu"]);
+  assert.equal(td9.filter((d) => d.xong === true).length, 1, "dự án được đánh dấu xong đúng một lần");
 }));
 
 test("pha ảnh máy chủ ngoài: mỗi máy chủ ngoài tối đa HAI lời cùng lúc (như ban đầu) dù lượt khai nhiều luồng hơn", async () => withTmp(async (dir) => {

@@ -80,7 +80,7 @@ export type CliOptions = {
   anh?: { luongSong: number; soFile: number; chiNgoai: boolean };
   /** Phần thửa mở rộng — pha lưới dày. */
   oLuoi?: { buocM: number; gioiHan?: number };
-  /** Nhãn trang (vd `p2`) để gọi trong trang ấy thay cho tab đầu tiên của nguồn — mở thêm trang trong cùng hồ sơ thì hai pha chạy song song. */
+  /** Nhãn trang (vd `p2`) để gọi trong trang ấy thay cho tab đầu tiên của nguồn — để đổi trang khi tab đầu bị treo. Không dùng để chạy hai pha cần phiên đồng thời (nguồn trả 429; có khoá chung). */
   tabLabel?: string;
 };
 

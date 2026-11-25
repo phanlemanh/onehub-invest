@@ -394,13 +394,21 @@ export async function taiAnh(url: string, o: TaiAnhOptions): Promise<KetQuaTai> 
       if (o.mayChuBiChan?.has(hashUrl(hostCua(hienTai)))) return { url, loi: "chan-o-may-chu", http: 0, chiTiet: "may-chu-bi-chan", mayChuCuoi: "ngoai", urlCuoi: hienTai };
       let vaoNoiBo: boolean;
       let dongHo: NodeJS.Timeout | undefined;
+      let boMayTinh: (() => void) | null = null; // listener tín hiệu bỏ của cuộc đua này — gỡ ngay khi cuộc đua kết thúc
       try {
         vaoNoiBo = await Promise.race([
           giaiVaoNoiBo(chuanHoaTen(new URL(hienTai).hostname), o.dnsLookup ?? GIAI_TEN_MAC_DINH),
           new Promise<never>((_, rej) => {
             dongHo = setTimeout(() => rej(TREO_GIAI_TEN), treoMacDinh);
           }),
-          ...(o.signal ? [new Promise<never>((_, rej) => o.signal!.addEventListener("abort", () => rej(o.signal!.reason), { once: true }))] : []),
+          ...(o.signal
+            ? [
+                new Promise<never>((_, rej) => {
+                  boMayTinh = () => rej(o.signal!.reason);
+                  o.signal!.addEventListener("abort", boMayTinh, { once: true }); // không tích tụ listener theo số lời (lượt soát 25/11)
+                }),
+              ]
+            : []),
         ]);
       } catch (e) {
         clearTimeout(dongHo);
@@ -409,6 +417,7 @@ export async function taiAnh(url: string, o: TaiAnhOptions): Promise<KetQuaTai> 
         return { url, http: 0, ...phanLoiMang(e, lop) };
       } finally {
         clearTimeout(dongHo);
+        if (o.signal && boMayTinh) o.signal.removeEventListener("abort", boMayTinh);
       }
       // Tên trỏ vào dải nội bộ: chưa từng gửi lời nào. Ở bước đầu là lỗi tạm (máy thu sau VPN có thể giải mọi tên ra dải
       // riêng — thử lại các lượt sau, quá hạn thì ghi nhận); ở bước chuyển hướng thì không đi tiếp.

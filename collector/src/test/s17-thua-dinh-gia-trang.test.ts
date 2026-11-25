@@ -1,12 +1,15 @@
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
+import { spawn } from "node:child_process";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { runInNewContext } from "node:vm";
 
 import { loadConfig } from "../collectors/s17-thua-dinh-gia/config.js";
-import { EGO_EVALUATE_LIMIT_MS, IN_PAGE_COLLECT, IN_PAGE_START, IN_PAGE_STALE_MS, IN_PAGE_TIMEOUT_MS, makeTransports, main as egoMain, type EgoApi, type EgoPage } from "../collectors/s17-thua-dinh-gia/ego.js";
+import { RunStopped } from "../collectors/s17-thua-dinh-gia/client.js";
+import { khoaPhien } from "../collectors/s17-thua-dinh-gia/khoa-phien.js";
+import { chonTrangGoi, EGO_EVALUATE_LIMIT_MS, IN_PAGE_COLLECT, IN_PAGE_START, IN_PAGE_STALE_MS, IN_PAGE_TIMEOUT_MS, makeTransports, main as egoMain, type EgoApi, type EgoPage } from "../collectors/s17-thua-dinh-gia/ego.js";
 
 /**
  * S17 mốc ngày 2: LỜI GỌI TRONG TRANG và hạn của trình duyệt. Đo 24/11 (lượt quét thấp tầng): đợt 50 id đầu xong
@@ -37,7 +40,7 @@ const rsCua = (kq: DaCollect): InPageResult[] | undefined => ("rs" in kq ? kq.rs
  * («SIG-ABORT:<ms>»). `chamUrl`: lời trả ĐÚNG nhưng sau `treoMs`, hoặc sau `treoRieng[url]` nếu có. Còn lại trả ngay.
  * `doi` ghi mọi mili giây trang được bảo chờ; `xacThuc` ghi header Authorization của mỗi lời; `now` giả đồng hồ của trang.
  */
-function trangGia(o: { treoUrl?: string[]; loiUrl?: string[]; chamUrl?: string[]; treoMs?: number; treoRieng?: Record<string, number>; cookie?: string; doi?: number[]; now?: () => number } = {}): { sandbox: Record<string, unknown>; daXinCho: number[]; xacThuc: Array<string | undefined> } {
+function trangGia(o: { treoUrl?: string[]; loiUrl?: string[]; chamUrl?: string[]; treoMs?: number; treoRieng?: Record<string, number>; cookie?: string; doi?: number[]; now?: () => number; goc?: string } = {}): { sandbox: Record<string, unknown>; daXinCho: number[]; xacThuc: Array<string | undefined> } {
   const daXinCho: number[] = [];
   const xacThuc: Array<string | undefined> = [];
   const sandbox: Record<string, unknown> = {
@@ -71,6 +74,7 @@ function trangGia(o: { treoUrl?: string[]; loiUrl?: string[]; chamUrl?: string[]
       }),
   };
   if (o.now) sandbox.Date = { now: o.now };
+  if (o.goc) sandbox.location = { origin: o.goc };
   return { sandbox, daXinCho, xacThuc };
 }
 
@@ -310,10 +314,10 @@ test("tiến trình trình duyệt ghi kết quả kèm mã lượt của bản 
     await writeFile(resultPath, JSON.stringify({ ok: true, runId: "lan-truoc" }), "utf8"); // kết quả cũ còn sót
     await writeFile(
       optionsPath,
-      JSON.stringify({ config, phase: "session-check", snapshotRoot: join(dir, "snap"), statePath: join(dir, "s.json"), logPath: join(dir, "l.jsonl"), resultPath, caps: { calls: 5, minutes: 5 }, paceMs: 0, batchItems: 10, checkBalance: false, spaceId: 4, cookieName: "sid", runId: "abc123" }),
+      JSON.stringify({ config, phase: "session-check", snapshotRoot: join(dir, "snap"), statePath: join(dir, "s.json"), logPath: join(dir, "l.jsonl"), resultPath, caps: { calls: 5, minutes: 5 }, paceMs: 0, batchItems: 10, checkBalance: false, spaceId: 4, cookieName: "sid", runId: "abc123", khoaPhien: join(dir, "khoa-phien.lock") }),
     );
     // Trang thật sự chạy hàm trong trang (trong một ngữ cảnh giả): lời cần phiên lỗi mạng, lời công khai vẫn chạy.
-    const { sandbox } = trangGia({ loiUrl: [`${hosts.api}/v2.x/data-available`] });
+    const { sandbox } = trangGia({ loiUrl: [`${hosts.api}/v2.x/data-available`], goc: hosts.web });
     const page: EgoPage = {
       label: "t",
       evaluate: (fn, arg) => {
@@ -369,11 +373,11 @@ async function chayEgoTrang(o: { tabLabel?: string; cacTrang: Array<[string, str
         checkBalance: false,
         spaceId: 4,
         cookieName: "sid",
-        runId: "abc123",
+        runId: "abc123", khoaPhien: join(dir, "khoa-phien.lock"),
         ...(o.tabLabel ? { tabLabel: o.tabLabel } : {}),
       }),
     );
-    const { sandbox } = trangGia();
+    const { sandbox } = trangGia({ goc: "https://web.gia.test" });
     const page: EgoPage = {
       label: "x",
       evaluate: (fn, arg) => {
@@ -433,8 +437,8 @@ test("tiến trình trình duyệt: task space vẫn trong tay agent thì LẤY 
     const config = loadConfig(JSON.stringify({ hosts, paths: { "data-available": "/v2.x/data-available", "asset-type": "/v2.x/asset-type" }, session: { cookieName: "sid" } }));
     const optionsPath = join(dir, "ego-options.json");
     const resultPath = join(dir, "ego-result.json");
-    await writeFile(optionsPath, JSON.stringify({ config, phase: "session-check", snapshotRoot: join(dir, "snap"), statePath: join(dir, "s.json"), logPath: join(dir, "l.jsonl"), resultPath, caps: { calls: 5, minutes: 5 }, paceMs: 0, batchItems: 10, checkBalance: false, spaceId: 4, cookieName: "sid", runId: "abc123", tabLabel: "p2" }));
-    const { sandbox } = trangGia();
+    await writeFile(optionsPath, JSON.stringify({ config, phase: "session-check", snapshotRoot: join(dir, "snap"), statePath: join(dir, "s.json"), logPath: join(dir, "l.jsonl"), resultPath, caps: { calls: 5, minutes: 5 }, paceMs: 0, batchItems: 10, checkBalance: false, spaceId: 4, cookieName: "sid", runId: "abc123", khoaPhien: join(dir, "khoa-phien.lock"), tabLabel: "p2" }));
+    const { sandbox } = trangGia({ goc: "https://web.gia.test" });
     const page: EgoPage = { label: "p2", evaluate: (fn, arg) => { const f = runInNewContext(`(${fn.toString()})`, sandbox) as (a: unknown) => unknown; return Promise.resolve().then(() => f(arg)); } };
     const daGoi: string[] = [];
     const api: EgoApi = {
@@ -461,6 +465,156 @@ test("tiến trình trình duyệt: task space vẫn trong tay agent thì LẤY 
     const code2 = await egoMain(api2, optionsPath);
     assert.equal(code2, 0);
     assert.deepEqual(daGoi, ["taskSpace", "takeOverTaskSpace"]);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+// ---------- theo lượt soát lần hai (25/11): chọn trang theo gốc, kiểm lại gốc trong trang, khoá chung mọi pha cần phiên ----------
+
+test("chonTrangGoi: chỉ nhận trang đúng CỐNG của nguồn — máy chủ khác có cùng tiền tố không được nhận; web có đường thì trang phải nằm trong đường ấy (theo đoạn, không theo chữ)", () => {
+  const web = "https://web.gia.test";
+  const doi: Array<{ label?: string; url: string }> = [{ label: "p9", url: `${web}.evil.example/du-an` }];
+  assert.match((chonTrangGoi(doi, web) as { loi: string }).loi, /không có tab nào của nguồn/);
+  assert.match((chonTrangGoi(doi, web, "p9") as { loi: string }).loi, /không phải trang của nguồn/);
+  assert.ok("loi" in chonTrangGoi([{ label: "p1", url: "http://web.gia.test/" }], web, "p1"), "cổng/giao thức khác là gốc khác");
+  assert.ok("loi" in chonTrangGoi([{ label: "p1", url: "https://web.gia.test:8443/" }], web, "p1"), "cổng khác là gốc khác");
+  assert.deepEqual(chonTrangGoi([{ label: "p1", url: `${web}/app/du-an/3` }, { label: "p2", url: `${web}/` }], web), { label: "p1", url: `${web}/app/du-an/3` });
+  const coDuong = `${web}/app`;
+  assert.deepEqual(chonTrangGoi([{ label: "p1", url: `${web}/app/du-an/3` }], coDuong, "p1"), { label: "p1", url: `${web}/app/du-an/3` });
+  assert.ok("loi" in chonTrangGoi([{ label: "p2", url: `${web}/` }], coDuong, "p2"), "web có đường: trang ở gốc máy chủ không nằm trong đường");
+  assert.ok("loi" in chonTrangGoi([{ label: "p3", url: `${web}/application/x` }], coDuong, "p3"), "tiền tố đường khớp theo đoạn");
+  assert.ok("loi" in chonTrangGoi([{ url: `${web}/khong-nhan` }], web, "p4"), "tab chưa có nhãn không отвеч nhãn");
+});
+
+test("IN_PAGE_START: trang không còn ở gốc của nguồn thì trả -2 và KHÔNG gửi lời nào — phiên không bao giờ được dùng ở trang lạ", async () => {
+  const item = { url: `${U}asset-type`, headerJson: "{}", cookieName: "sid", timeoutMs: 1000 };
+  const la = trangGia({ goc: "https://khac.example" });
+  const fLa = runInNewContext(`(${IN_PAGE_START.toString()})`, la.sandbox) as (a: unknown) => unknown;
+  assert.equal(await fLa({ items: [item], staggerMs: 0, token: "t", goc: "https://web.gia.test" }), -2);
+  await nghi(20);
+  assert.equal(la.xacThuc.length, 0, "không lời nào được gửi kèm phiên ở trang lạ");
+  const dung = trangGia({ goc: "https://web.gia.test" });
+  const fDung = runInNewContext(`(${IN_PAGE_START.toString()})`, dung.sandbox) as (a: unknown) => unknown;
+  assert.equal(await fDung({ items: [item], staggerMs: 0, token: "t", goc: "https://web.gia.test" }), 1, "đúng gốc thì bắt đầu bình thường");
+  const khongRangBuoc = trangGia();
+  const f0 = runInNewContext(`(${IN_PAGE_START.toString()})`, khongRangBuoc.sandbox) as (a: unknown) => unknown;
+  assert.equal(await f0({ items: [item], staggerMs: 0, token: "t" }), 1, "không yêu cầu kiểm gốc (lượt gọi không khai) thì không kiểm");
+});
+
+test("makeTransports: trang không còn ở gốc của nguồn → MỌI lời của đợt nhận RunStopped page-origin, không chờ thử lại như lỗi mạng", async () => {
+  const { sandbox } = trangGia({ goc: "https://khac.example" });
+  const page: EgoPage = {
+    label: "x",
+    evaluate: (fn, arg) => {
+      const f = runInNewContext(`(${fn.toString()})`, sandbox) as (a: unknown) => unknown;
+      return Promise.resolve().then(() => f(arg));
+    },
+  };
+  const { daCho, cho } = choNhanh();
+  const { transport, transportMany } = makeTransports(page, "sid", cho, "https://web.gia.test");
+  await assert.rejects(() => transport(`${U}mot`, {}), (x: unknown) => x instanceof RunStopped && x.reason === "page-origin");
+  const rs = await transportMany(YEU_CAU, 0);
+  assert.equal(rs.length, 2);
+  for (const r of rs) assert.ok(r instanceof RunStopped && r.reason === "page-origin");
+  assert.deepEqual(daCho, [], "không chờ thử lại");
+});
+
+test("khoá chung mọi pha cần phiên: một lúc chỉ một pha giữ khoá; khoá của tiến trình đã chết được dọn; nhả khoá thì xoá tệp", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "s17-khoa-phien-"));
+  try {
+    const duong = join(dir, "s17-phien.lock");
+    const nhHa = khoaPhien(duong);
+    assert.throws(
+      () => khoaPhien(duong),
+      (x: unknown) => x instanceof RunStopped && x.reason === "another-run" && /không chạy hai pha cần phiên đồng thời/.test(x.message),
+    );
+    nhHa();
+    khoaPhien(duong)();
+    const con = spawn(process.execPath, ["-e", "process.exit(0)"]);
+    await new Promise<void>((r) => con.once("exit", () => r()));
+    await writeFile(duong, JSON.stringify({ pid: con.pid, luc: new Date().toISOString() }));
+    khoaPhien(duong)();
+    await assert.rejects(() => readFile(duong), "nhả khoá thì xoá tệp khoá");
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("tiến trình trình duyệt: khoá chung đang được một pha cần phiên khác giữ thì dừng ngay với lý do another-run — chưa gọi gì, chưa nhận task space", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "s17-ego-khoa-"));
+  try {
+    const hosts = { api: "https://api.gia.test", agent: "https://agent.gia.test", web: "https://web.gia.test" };
+    const config = loadConfig(JSON.stringify({ hosts, paths: { "data-available": "/v2.x/data-available", "asset-type": "/v2.x/asset-type" }, session: { cookieName: "sid" } }));
+    const optionsPath = join(dir, "ego-options.json");
+    const resultPath = join(dir, "ego-result.json");
+    const khoa = join(dir, "s17-phien.lock");
+    const nhHa = khoaPhien(khoa);
+    await writeFile(optionsPath, JSON.stringify({ config, phase: "session-check", snapshotRoot: join(dir, "snap"), statePath: join(dir, "s.json"), logPath: join(dir, "l.jsonl"), resultPath, caps: { calls: 5, minutes: 5 }, paceMs: 0, batchItems: 10, checkBalance: false, spaceId: 4, cookieName: "sid", runId: "abc123", khoaPhien: khoa }));
+    let goi = 0;
+    const api: EgoApi = {
+      listTaskSpaces: async () => {
+        goi++;
+        return [];
+      },
+      claimTaskSpace: async () => {
+        throw new Error("không được gọi");
+      },
+      takeOverTaskSpace: async () => {
+        throw new Error("không được gọi");
+      },
+    };
+    const code = await egoMain(api, optionsPath);
+    assert.deepEqual([code, goi], [3, 0]);
+    const kq = JSON.parse(await readFile(resultPath, "utf8")) as { runId?: string; ok: boolean; stopReason?: string };
+    assert.equal(kq.runId, "abc123");
+    assert.equal(kq.ok, false);
+    assert.equal(kq.stopReason, "another-run");
+    nhHa();
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("tiến trình trình duyệt: tab của nguồn chưa có nhãn thì nhận quản lý (adopt) rồi gọi trong trang; xong lượt nhả khoá chung", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "s17-ego-adopt-"));
+  try {
+    const hosts = { api: "https://api.gia.test", agent: "https://agent.gia.test", web: "https://web.gia.test" };
+    const config = loadConfig(JSON.stringify({ hosts, paths: { "data-available": "/v2.x/data-available", "asset-type": "/v2.x/asset-type" }, session: { cookieName: "sid" } }));
+    const optionsPath = join(dir, "ego-options.json");
+    const resultPath = join(dir, "ego-result.json");
+    const khoa = join(dir, "s17-phien.lock");
+    await writeFile(optionsPath, JSON.stringify({ config, phase: "session-check", snapshotRoot: join(dir, "snap"), statePath: join(dir, "s.json"), logPath: join(dir, "l.jsonl"), resultPath, caps: { calls: 5, minutes: 5 }, paceMs: 0, batchItems: 10, checkBalance: false, spaceId: 4, cookieName: "sid", runId: "abc123", khoaPhien: khoa }));
+    const { sandbox } = trangGia({ goc: "https://web.gia.test" });
+    const page: EgoPage = {
+      label: "p1",
+      evaluate: (fn, arg) => {
+        const f = runInNewContext(`(${fn.toString()})`, sandbox) as (a: unknown) => unknown;
+        return Promise.resolve().then(() => f(arg));
+      },
+    };
+    const daGoi: string[] = [];
+    const api: EgoApi = {
+      listTaskSpaces: async () => [{ id: 4, ownership: "user" }],
+      claimTaskSpace: async () => ({
+        spaceId: 4,
+        tabs: async () => [{ url: `${hosts.web}/`, page: { la: "tab-cua-manh" } }],
+        page: () => {
+          throw new Error("tab chưa có nhãn: không được gọi page(label)");
+        },
+        adopt: async (p: unknown) => {
+          daGoi.push(JSON.stringify(p));
+          return page;
+        },
+      }),
+      takeOverTaskSpace: async () => {
+        throw new Error("không được gọi khi task space thuộc về người dùng");
+      },
+    };
+    const code = await egoMain(api, optionsPath);
+    assert.equal(code, 0, "phiên sống, lượt kiểm phiên xong bình thường");
+    assert.deepEqual(daGoi, ['{"la":"tab-cua-manh"}'], "đúng tab của nguồn được nhận quản lý");
+    await assert.rejects(() => readFile(khoa), "xong lượt thì nhả khoá chung");
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

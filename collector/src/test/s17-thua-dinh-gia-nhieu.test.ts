@@ -208,3 +208,20 @@ test("getJsonMany: lỗi mạng đứng TRƯỚC 403 trong cùng đợt → khô
   );
   assert.equal(ke2.sent.length, 2, "trang thử thách trong đợt cũng khoá dừng ngay, không hỏi đối chiếu");
 });
+
+test("vận chuyển ném RunStopped (vd trang không còn ở gốc của nguồn): dừng ngay — không thử lại như lỗi mạng, mỗi lời nhận đúng lỗi dừng", async () => {
+  const dung = new RunStopped("page-origin", "trang không còn ở gốc của nguồn");
+  for (const many of [false, true]) {
+    const ke = makeClient(() => {
+      throw dung;
+    }, { many });
+    if (many) {
+      const rs = await ke.client.getJsonMany([{ role: "asset-type", params: {} }, { role: "asset-type", params: {} }, { role: "asset-type", params: {} }], 1);
+      assert.equal(rs.length, 3);
+      for (const r of rs) assert.ok(!r.ok && r.error === dung);
+    } else {
+      await assert.rejects(() => ke.client.getJson("asset-type", {}), (e: unknown) => e === dung);
+    }
+    assert.ok(ke.slept.every((ms) => ms < 1000), `không chờ thử lại (các lần nghỉ: ${JSON.stringify(ke.slept)})`);
+  }
+});

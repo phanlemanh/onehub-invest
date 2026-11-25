@@ -55,8 +55,24 @@ export type AnhPhaseOptions = {
 
 type MucMedia = { url: string; file?: string; sha256?: string; bytes?: number; error?: string; chiTiet?: string };
 
-/** Nhiều lỗi tạm liền nhau thế này là mạng của máy thu hỏng — dừng, không đổ tiếp. */
+/**
+ * «Mất mạng» của máy thu — dừng, không đổ tiếp. Lượt nguồn: bấy nhiêu lỗi tạm ĐƯỢC TÍNH liền nhau. Lượt ngoài: bấy
+ * nhiêu MÁY CHỦ KHÁC NHAU cùng lỗi tạm liền nhau (một máy chủ chết kéo theo hàng chục URL của nó — không phải mạng
+ * của máy thu hỏng).
+ */
 const TOI_DA_LOI_LIEN = { nguon: 10, ngoai: 50 };
+/**
+ * Phanh dự phòng: MỌI lỗi tạm liền nhau, kể cả trên URL đã lỗi ở lượt trước (được miễn trừ ở bộ đếm chính) — một cú
+ * rớt mạng thật không được che bởi miễn trừ. Cao hơn bộ đếm chính để cụm URL lỗi kinh niên (đo 25/11: 82 URL liền) qua.
+ */
+const TOI_DA_LOI_TAT_CA = { nguon: 20, ngoai: 150 };
+/**
+ * Lỗi «cấp máy chủ»: chứng chỉ, không phân giải được tên, không nối được kịp. Mỗi lỗi như vậy là vĩnh viễn của riêng
+ * URL khi mạng vẫn ổn — nhưng khi MẠT MẠNG của máy thu thì MỌI lời đều lỗi kiểu này.
+ */
+const LOI_CAP_MAY_CHU: ReadonlySet<string> = new Set(["chung-chi", "may-chu-khong-ton-tai", "may-chu-khong-tra-loi"]);
+/** Ở lượt ngoài: chuỗi lỗi cấp máy chủ liền nhau (không có tệp nào tải được xen giữa) có bấy nhiêu máy chủ khác nhau thì coi là rớt mạng. */
+const NGUONG_MAY_CHU_CAP_LOI = 2;
 /**
  * Mỗi máy chủ ngoài tối đa bấy nhiêu lời cùng lúc — mức ban đầu (từng nâng lên sáu chiều 25/11 để tăng tốc, rồi Mạnh
  * chốt 18:18 «giảm lại lượt thu như ban đầu»). Máy chủ nào chặn (403, 429, trang thử thách) thì bỏ máy chủ đó, không lách.
@@ -117,6 +133,7 @@ export async function imagesPhase(o: RunOptions, anh: AnhPhaseOptions, keoDan: K
   const kq = await projectImages(o.snapshotRoot as string, anh.hostSuffixes);
   const toiDaLanThu = anh.toiDaLanThu ?? 3;
   const toiDaLoiLien = TOI_DA_LOI_LIEN[lop];
+  const toiDaLoiTatCa = TOI_DA_LOI_TAT_CA[lop];
   const toiDaMotMayChu = lop === "ngoai" ? Math.min(TOI_DA_MOT_MAY_CHU_NGOAI, Math.max(1, anh.luongSong)) : Math.max(1, anh.luongSong);
   const tepBiChan = join(tienDoDir, TEN_TEP_MAY_CHU_BI_CHAN);
   // Máy chủ ngoài đã chặn được nhớ cho cả hai lượt (nguồn có thể chuyển hướng sang máy chủ ngoài).
@@ -131,8 +148,17 @@ export async function imagesPhase(o: RunOptions, anh: AnhPhaseOptions, keoDan: K
   let soByte = 0;
   let soDuAnXong = 0;
   let dung: RunStopped | null = null;
-  let loiLien = 0; // lỗi tạm liền nhau suốt cả lượt: một tệp thành công mới đặt về không
-  let hostLoiTruoc: string | null = null; // máy chủ của lỗi tạm liền trước (đo «mất mạng» ở lượt máy chủ ngoài)
+  // «Mất mạng»: các bộ đếm dưới chạy suốt lượt (qua cả ranh giới dự án), chỉ một tệp tải được mới đặt về không.
+  let loiLien = 0; // lượt nguồn: lỗi tạm ĐƯỢC TÍNH liền nhau
+  const mayChuLoiLien = new Set<string>(); // lượt ngoài: máy chủ khác nhau trong chuỗi lỗi tạm được tính
+  let loiTamTatCa = 0; // MỌI lỗi tạm liền nhau kể cả được miễn trừ — phanh dự phòng
+  const mayChuCapLoi = new Set<string>(); // máy chủ khác nhau trong chuỗi lỗi CẤP MÁY CHỦ liền nhau (nhận ra rớt mạng)
+  const datLaiMang = (): void => {
+    loiLien = 0;
+    mayChuLoiLien.clear();
+    loiTamTatCa = 0;
+    mayChuCapLoi.clear();
+  };
 
   for (const d of kq.duAn) {
     if (dung) break;
@@ -243,16 +269,27 @@ export async function imagesPhase(o: RunOptions, anh: AnhPhaseOptions, keoDan: K
       lo.ketQua.set(loiThu.a.url, loiThu.x);
       lo.coTai++;
     }
-    const hang = cacLo.flatMap((lo) => lo.a.map((_, k) => ({ lo, k })).filter((v) => !lo.ketQua.has(v.lo.a[v.k].url)));
     // URL đã lỗi tạm ở lượt trước xếp xuống CUỐI hàng của dự án: phần còn tươi tải trước, và cụm URL lỗi kinh niên ở
     // đầu hàng không cộng dồn thành «mất mạng» giả (lượt thật 25/11 17:47 dừng oan sau 102 lời). Mã item vẫn theo vị trí
-    // gốc trong danh sách ảnh, thứ tự tải không đổi mã.
-    const daLoiTruoc = (a: { url: string }): boolean => (td.dem.get(hashUrl(a.url)) ?? 0) > 0;
-    hang.sort((x, y) => Number(daLoiTruoc(x.lo.a[x.k])) - Number(daLoiTruoc(y.lo.a[y.k])));
+    // gốc trong danh sách ảnh, thứ tự tải không đổi mã. Băm máy chủ tính một lần ở đây (vòng chờ cũ băm lại mỗi 3 ms).
+    const daLoi = new Set(con.filter((a) => (td.dem.get(hashUrl(a.url)) ?? 0) > 0).map((a) => a.url));
+    const hang = cacLo.flatMap((lo) =>
+      lo.a.map((a, k) => ({ lo, k, a, h: hashUrl(hostCua(a.url)), mienTru: daLoi.has(a.url) })).filter((v) => !lo.ketQua.has(v.a.url)),
+    );
+    hang.sort((x, y) => Number(x.mienTru) - Number(y.mienTru));
     const daLay = new Set<number>();
     let daXuLi = 0; // đã lấy đi hoặc đã bỏ qua
     let loiChot: unknown = null; // lỗi khi chốt snapshot: dừng hết, không ghi tiến độ của lô ấy
 
+    // Worker nhàn (còn việc nhưng máy chủ của việc đó đang ở giới hạn) không hỏi vòng theo đồng hồ — đốt CPU (đo lượt
+    // soát 25/11: càng nhiều luồng càng chậm). Mỗi worker nhàn chờ một promise chung; một tệp tải xong, hoặc lượt dừng,
+    // thì đánh thức tất cả.
+    const dangCho = new Set<() => void>();
+    const danhThuc = (): void => {
+      for (const g of dangCho) g();
+      dangCho.clear();
+    };
+    const choViec = (): Promise<void> => new Promise<void>((g) => dangCho.add(g));
     let hangChot: Promise<void> = Promise.resolve();
     const xepChot = (lo: LoAnh): void => {
       lo.daChot = true;
@@ -260,6 +297,7 @@ export async function imagesPhase(o: RunOptions, anh: AnhPhaseOptions, keoDan: K
         .then(() => chotLo(lo))
         .catch((e: unknown) => {
           loiChot = e;
+          danhThuc();
         });
     };
     const kiemChot = (lo: LoAnh): void => {
@@ -270,7 +308,7 @@ export async function imagesPhase(o: RunOptions, anh: AnhPhaseOptions, keoDan: K
       for (let i = 0; i < hang.length; i++) {
         if (daLay.has(i)) continue;
         const v = hang[i];
-        const h = hashUrl(hostCua(v.lo.a[v.k].url));
+        const h = v.h;
         if (mayChuBiChan.has(h)) {
           daLay.add(i); // máy chủ này đã chặn: không hỏi nữa
           daXuLi++;
@@ -288,57 +326,75 @@ export async function imagesPhase(o: RunOptions, anh: AnhPhaseOptions, keoDan: K
       return daXuLi >= hang.length ? "het" : -1; // -1: còn việc nhưng máy chủ đang bận
     };
     const worker = async (): Promise<void> => {
-      for (;;) {
-        if (loiChan || loiChot) return;
-        const i = layViec();
-        if (i === "het") return;
-        if (i === -1) {
-          await new Promise((r) => setTimeout(r, 3));
-          continue;
-        }
-        const { lo, k } = hang[i];
-        const a = lo.a[k];
-        try {
-          keoDan.assertRunning();
-        } catch (e) {
-          loiChan = e as RunStopped; // quá trần hoặc yêu cầu dừng
-          return;
-        }
-        keoDan.calls++;
-        daNhan = 0;
-        const h = hashUrl(hostCua(a.url));
-        dangTai++;
-        let x: KetQuaTai;
-        try {
-          x = await taiAnh(a.url, tuyChonTai);
-        } finally {
-          dangTai--;
-          dangChayMayChu.set(h, Math.max(0, (dangChayMayChu.get(h) ?? 1) - 1));
-        }
-        x = nhanKetQua(x, a);
-        if (nguonVuaChan()) return; // nguồn vừa chặn: tệp đang dở bị bỏ, không ghi nhận, không tính là một lượt thử lỗi
-        daXong++;
-        if (!mayChuBiChan.has(h)) {
-          lo.ketQua.set(a.url, x); // máy chủ (ngoài) của URL này vừa bị chặn trong lúc tải: ghi là bị chặn
-          lo.coTai++;
-        }
-        lo.conLai--;
-        kiemChot(lo);
-        if (x.loi === "ok" && x.bytes) {
-          loiLien = 0;
-          hostLoiTruoc = null;
-        } else if (!LOI_VINH_VIEN_ANH.has(x.loi)) {
-          // «Mất mạng» là nhiều máy chủ khác nhau cùng lỗi. Ở lượt máy chủ ngoài, lỗi liền nhau trên CÙNG một máy chủ chỉ
-          // tính một lần: một máy chủ chết kéo theo hàng chục URL của nó, không phải mạng của máy thu hỏng (đo 25/11:
-          // 50 lỗi liền nhau trên 34 dự án đều là những URL đã lỗi từ lượt trước).
-          // URL đã lỗi tạm ở lượt trước là lỗi kinh niên của riêng nó: không tính vào «mất mạng».
-          if (!daLoiTruoc(a) && !(lop === "ngoai" && loiLien > 0 && h === hostLoiTruoc)) loiLien++;
-          hostLoiTruoc = h;
-          if (loiLien >= toiDaLoiLien) {
-            loiChan = keoDan.stopRun("network-down", `${toiDaLoiLien} tệp ảnh lỗi mạng liền nhau`);
+      try {
+        for (;;) {
+          if (loiChan || loiChot) return;
+          const i = layViec();
+          if (i === "het") return;
+          if (i === -1) {
+            await choViec();
+            continue;
+          }
+          const { lo, a, h, mienTru } = hang[i];
+          try {
+            keoDan.assertRunning();
+          } catch (e) {
+            loiChan = e as RunStopped; // quá trần hoặc yêu cầu dừng
             return;
           }
+          keoDan.calls++;
+          daNhan = 0;
+          dangTai++;
+          let x: KetQuaTai;
+          try {
+            x = await taiAnh(a.url, tuyChonTai);
+          } finally {
+            dangTai--;
+            dangChayMayChu.set(h, Math.max(0, (dangChayMayChu.get(h) ?? 1) - 1));
+            danhThuc();
+          }
+          x = nhanKetQua(x, a);
+          if (nguonVuaChan()) return; // nguồn vừa chặn: tệp đang dở bị bỏ, không ghi nhận, không tính là một lượt thử lỗi
+          daXong++;
+          const tuCapMayChu = LOI_CAP_MAY_CHU.has(x.loi);
+          if (tuCapMayChu) {
+            // Lỗi cấp máy chủ khi RỚT MẠNG: mọi lời đều lỗi kiểu này. Ghi vĩnh viễn từng URL thì một cú rớt mạng đốt
+            // sạch phần hàng còn lại mà lượt vẫn kết thúc bình thường (phát hiện nghiêm trọng của lượt soát 25/11 —
+            // nhật ký tiến độ chỉ ghi thêm nên không còn đường thử lại). Ở lượt nguồn luôn coi là tạm (tối đa ba lượt
+            // rồi mới ghi nhận). Ở lượt ngoài chỉ là vĩnh viễn của riêng máy chủ khi chuỗi lỗi cấp máy chủ liền nhau
+            // chưa có hai máy chủ khác nhau: một máy chủ chết là chuyện của nó, nhiều máy chủ cùng chết là mạng của ta.
+            mayChuCapLoi.add(h);
+            if (lop === "nguon" || mayChuCapLoi.size >= NGUONG_MAY_CHU_CAP_LOI) x = { ...x, loi: "loi", chiTiet: `${x.loi}: ${x.chiTiet ?? ""}`.trim() };
+          }
+          if (!mayChuBiChan.has(h)) {
+            lo.ketQua.set(a.url, x); // máy chủ (ngoài) của URL này vừa bị chặn trong lúc tải: ghi là bị chặn
+            lo.coTai++;
+          }
+          lo.conLai--;
+          kiemChot(lo);
+          if (x.loi === "ok" && x.bytes) {
+            datLaiMang();
+          } else if (!LOI_VINH_VIEN_ANH.has(x.loi)) {
+            if (!tuCapMayChu) mayChuCapLoi.clear(); // đã tới được máy chủ (lỗi 5xx, treo…): mạng còn lên
+            // URL đã lỗi tạm ở lượt trước là lỗi kinh niên của riêng nó: không tính vào bộ đếm chính, chỉ vào phanh dự phòng.
+            loiTamTatCa++;
+            if (!mienTru) {
+              if (lop === "ngoai") mayChuLoiLien.add(h);
+              else loiLien++;
+            }
+            const soDem = lop === "ngoai" ? mayChuLoiLien.size : loiLien;
+            if (soDem >= toiDaLoiLien) {
+              loiChan = keoDan.stopRun("network-down", lop === "ngoai" ? `${soDem} máy chủ khác nhau cùng lỗi mạng liền nhau` : `${soDem} tệp ảnh lỗi mạng liền nhau`);
+              return;
+            }
+            if (loiTamTatCa >= toiDaLoiTatCa) {
+              loiChan = keoDan.stopRun("network-down", `${toiDaLoiTatCa} tệp ảnh lỗi mạng liền nhau, kể cả URL đã lỗi từ lượt trước`);
+              return;
+            }
+          }
         }
+      } finally {
+        danhThuc(); // worker này thoát (dừng, lỗi chốt): đánh thức các worker đang chờ để chúng thấy lý do dừng
       }
     };
     async function chotLo(lo: LoAnh): Promise<void> {
