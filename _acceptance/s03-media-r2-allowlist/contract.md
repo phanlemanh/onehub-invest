@@ -5,7 +5,7 @@ slug: s03-media-r2-allowlist
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, config]
-status: implemented
+status: machine-cleared
 veto_state: mo
 veto_opened_at: 2026-11-25T01:05:36Z
 design_doc: docs/superpowers/specs/2026-11-25-s03-media-r2-allowlist-design.md
@@ -85,3 +85,12 @@ AC-9 bảo đảm bộ đo.
 
 - Mã r2.dev và test hành vi: ZCode (claudedp 2211-16, 2211-17), LL soát; đột biến bỏ `r2.dev` → 2 ca đỏ.
 - Tên thật của host đích và URL mẫu nằm ở tệp nghiên cứu local của LL (mode 600); vòng này chỉ đọc nó bằng lệnh in băm.
+- Ngoài-1 (máy định tuyến 2026-11-25, đề xuất S4 known-limits): Văn bản mô tả cách đặt tên tệp ảnh chưa khớp hẳn với cách thu mới ở các bài phải thử lại link ảnh. Công cụ nào tự dựng lại tên tệp theo văn bản cũ sẽ không tìm thấy ảnh ở những bài đó. — `collector/src/core/media-fetch.ts`
+- Ngoài-2 (máy định tuyến 2026-11-25, đề xuất S4 known-limits): Ảnh định dạng JPEG XL sẽ không hiện trong màn duyệt của đội vận hành và báo lỗi từ chối truy cập. Dễ bị đọc nhầm là sự cố bảo mật. — `app/src/lib/ops/zalo-media.ts`
+- Ngoài-3 (máy định tuyến 2026-11-25, đề xuất S4 known-limits): Con số tỉ lệ bài mất hết ảnh sau khi vá có thể hiện thấp hơn thực tế. Người ký có thể tưởng việc vá hiệu quả hơn mức thật. — `_acceptance/s03-jpg-path-fallback/ap-may-thu/kiem-sau.mjs`
+- Ngoài-4 (máy định tuyến 2026-11-25, đề xuất S4 known-limits): Nếu tệp danh sách host bị hỏng quyền hay định dạng, hệ thống vẫn chạy lặng lẽ và một số ảnh vẫn lỗi mà không có dấu hiệu nguyên nhân. Người vận hành phải tự mò. — `collector/src/api/server.ts`
+- Ngoài-5 (máy định tuyến 2026-11-25, đề xuất S4 known-limits): Phép thử cho việc nhận ảnh từ host mới chỉ kiểm chữ trong mã, chưa chạy một lượt tải thật. Nếu cấu hình bị nối sai, phép thử vẫn báo xanh. — `collector/src/test/media-fetch.test.ts`
+- Ngoài-6 (máy định tuyến 2026-11-25, đề xuất S4 known-limits): Phép thử ảnh thử lại chỉ kiểm độ dài, nên tệp sai nội dung hay mã kiểm sai vẫn có thể qua. Ảnh hỏng thầm lặng có thể lọt vào kho. — `collector/src/test/media-fetch.test.ts`
+- Ngoài-7 (máy định tuyến 2026-11-25, đề xuất S4 known-limits): Chưa có phép thử nào bắt trường hợp hệ thống đặt đuôi tệp theo lời khai của máy chủ ảnh thay vì theo nội dung thật. Ảnh có thể mang đuôi sai. — `collector/src/test/media-fetch.test.ts`
+- Ngoài-8 (máy định tuyến 2026-11-25, đề xuất S4 known-limits): Phép tự kiểm có thể báo đã bắt đúng lỗi khi thật ra chỉ có một ca bất kỳ đỏ. Việc ký nghiệm thu dựa vào đó có thể tin quá mức. — `_acceptance/s03-jpg-path-fallback/probes/tu-thu.sh`
+- Ngoài-9 (máy định tuyến 2026-11-25, đề xuất S4 known-limits): Bước kiểm sau áp xác nhận không lộ tên host có thể báo ổn cả khi công cụ kiểm tự hỏng và in ra rỗng. Người vận hành có thể yên tâm sai. — `_acceptance/s03-jpg-path-fallback/ap-may-thu/kiem.sh`
