@@ -29,8 +29,9 @@ const LOI_PIPELINE = [
   "collector/scripts/**", "data-api/src/**", "tools/**", "CONTEXT.md", "LO-TRINH.html", "docs/ROADMAP.md",
   "docs/ops/**",
   "docs/adr/**", "docs/research/pty-project-type-s06.md",
-  // pipeline/sync-cloud-che.test.mjs (HT26 SCC-9) chạy mã TypeScript của data-api bằng tsx của chính gói data-api.
-  "data-api/**",
+  // pipeline/sync-cloud-che.test.mjs (HT26 SCC-9) chạy mã của data-api bằng tsx của gói data-api — tham chiếu thư mục gốc gói;
+  // mã nguồn đã có ở data-api/src/** (đường trần, không «data-api/**», để đổi README… của data-api không kéo suite pipeline).
+  "data-api",
   "_acceptance/danh-ba-phuong-xa-toan-quoc/**", "_acceptance/du-an-cua-tin-len-dinh-vi/**",
   "_acceptance/gop-tin-chi-anh-o-transform/**",
   "_acceptance/lay-mau-khu-trung-theo-tin/**", "_acceptance/nhom-dang-ky-hai-lan-s03/**",
