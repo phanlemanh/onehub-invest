@@ -1713,6 +1713,21 @@ test("pha ảnh: phanh dự phòng — một chuỗi lỗi tạm quá dài kể 
   assert.ok(daThu >= 20 && daThu < 40, `dừng quanh lần thứ hai mươi, trước khi thử hết 40 URL (đã thử ${daThu})`);
 }));
 
+test("pha ảnh máy chủ ngoài: lượt chỉ còn URL đã lỗi hai lần và máy chủ TRẢ LỜI bằng trang lỗi — phanh dự phòng KHÔNG dừng «mất mạng», URL được ghi nhận đủ (đêm 25/11: lượt thử lại dừng oan ở 150)", async () => withTmp(async (dir) => {
+  const urls = Array.from({ length: 160 }, (_, i) => `https://h${i}.example.org/x/${i}.jpg`);
+  await duaAnhVaoKho(dir, "8", urls);
+  await new NhatKyTienDo(join(dir, "tien-do", "anh-ngoai-8.jsonl")).append({ dem: Object.fromEntries(urls.map((u) => [hashUrl(u), 2])) });
+  const nguon = nguonAnh(() => ({ status: 503, body: "<!DOCTYPE HTML><html><head><title>Service Unavailable</title></head></html>" }));
+  const tuyChon = { soFile: 100, luongSong: 4, chiNgoai: true };
+  const lan1 = await chayAnh(dir, nguon.fetchImpl, tuyChon).run();
+  const td = await docTienDo(join(dir, "tien-do", "anh-ngoai-8.jsonl"));
+  assert.deepEqual([...new Set(td.flatMap((d) => Object.values(d.loi ?? {})))], ["qua-so-lan-thu"], "lần thử thứ ba: ghi nhận hết, một mã thôi");
+  assert.equal(td.slice(1).reduce((n, d) => n + Object.keys(d.loi ?? {}).length, 0), 160, "máy chủ đã trả lời thì mạng của ta còn lên: thử hết 160 URL, cả 160 được ghi nhận");
+  assert.equal(lan1.s.so?.soDuAnXong, 0, "dự án còn ảnh lỗi tạm trong lượt này thì chưa đóng dấu xong");
+  const lan2 = await chayAnh(dir, nguon.fetchImpl, tuyChon).run();
+  assert.deepEqual([lan2.s.calls, lan2.s.so?.soDuAnXong], [0, 1], "lượt kế đóng dấu dự án xong, không gọi gì thêm");
+}));
+
 test("pha ảnh máy chủ ngoài: hai máy chủ chết xen kẽ nhau KHÔNG làm lượt dừng «mất mạng» — đếm theo số máy chủ khác nhau, không theo thứ tự", async () => withTmp(async (dir) => {
   const ds: string[] = [];
   for (let i = 0; i < 60; i++) ds.push(`https://h${i % 2}.example.org/x/${i}.jpg`);

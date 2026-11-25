@@ -151,7 +151,7 @@ export async function imagesPhase(o: RunOptions, anh: AnhPhaseOptions, keoDan: K
   // «Mất mạng»: các bộ đếm dưới chạy suốt lượt (qua cả ranh giới dự án), chỉ một tệp tải được mới đặt về không.
   let loiLien = 0; // lượt nguồn: lỗi tạm ĐƯỢC TÍNH liền nhau
   const mayChuLoiLien = new Set<string>(); // lượt ngoài: máy chủ khác nhau trong chuỗi lỗi tạm được tính
-  let loiTamTatCa = 0; // MỌI lỗi tạm liền nhau kể cả được miễn trừ — phanh dự phòng
+  let loiTamTatCa = 0; // MỌI lỗi tạm KHÔNG có phản hồi HTTP liền nhau, kể cả được miễn trừ — phanh dự phòng
   const mayChuCapLoi = new Set<string>(); // máy chủ khác nhau trong chuỗi lỗi CẤP MÁY CHỦ liền nhau (nhận ra rớt mạng)
   const datLaiMang = (): void => {
     loiLien = 0;
@@ -377,7 +377,10 @@ export async function imagesPhase(o: RunOptions, anh: AnhPhaseOptions, keoDan: K
           } else if (!LOI_VINH_VIEN_ANH.has(x.loi)) {
             if (!tuCapMayChu) mayChuCapLoi.clear(); // đã tới được máy chủ (lỗi 5xx, treo…): mạng còn lên
             // URL đã lỗi tạm ở lượt trước là lỗi kinh niên của riêng nó: không tính vào bộ đếm chính, chỉ vào phanh dự phòng.
-            loiTamTatCa++;
+            // Phanh dự phòng chỉ đếm lời KHÔNG tới được máy chủ (chưa có phản hồi HTTP): máy chủ đã trả lời (trang lỗi 5xx,
+            // trang HTML) thì mạng của ta còn lên. Lượt chỉ còn URL đã lỗi không có tệp nào thành công để đặt lại bộ đếm —
+            // đêm 25/11 lượt chốt các URL ngoài dừng oan ở 150.
+            if (!(x.http > 0)) loiTamTatCa++;
             if (!mienTru) {
               if (lop === "ngoai") mayChuLoiLien.add(h);
               else loiLien++;
