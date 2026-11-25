@@ -3,6 +3,8 @@
  * pipeline/do-hang-ngay.mjs và so-sanh-cach-doc.mjs tính sẵn (luật 10), bảng đã lên cloud nên đọc được ở cả máy thu lẫn cloud.
  * React chỉ đọc; số có neo — chỉ so tuần với tuần và so cách đọc với nhau.
  */
+import { SQL_SO_HINH, docSourceNameEntriesVoi, maskSourceNames } from "./mask-source-names"
+
 type Queryable = { query: (sql: string) => Promise<{ rows: unknown[] }> }
 
 export type Wilson = { thap: number; cao: number } | null
@@ -52,7 +54,21 @@ export function gomDo1(rows: Raw[]): Do1 | null {
 }
 
 export async function loadDo1(db: Queryable): Promise<Do1 | null> {
-  return gomDo1((await db.query(do1Sql())).rows as Raw[])
+  return gomDo1(await cheDetail(db, (await db.query(do1Sql())).rows as Raw[]))
+}
+
+/**
+ * Che tên nguồn trong `detail` trước khi khối dựng (HT26 sync-cloud-che-ten-nguon-moi-cot AC-4) — cùng hàm che của bảng chung
+ * /ops/quality (dq-checks.ts: maskSourceNames với từ điển của sổ nguồn). Đóng chặt như bảng chung: có sổ mà không đọc được tên nào →
+ * ẩn chi tiết. Cloud không có sổ nguồn (bảng vắng): giữ nguyên — dòng ở cloud đã đi qua bước che và bộ chặn của sync-cloud.
+ */
+export async function cheDetail(db: Queryable, rows: Raw[]): Promise<Raw[]> {
+  const names = await docSourceNameEntriesVoi(db)
+  if (!names.length) {
+    const h = (await db.query(SQL_SO_HINH)).rows[0] as { bang?: boolean } | undefined
+    return h?.bang ? rows.map((r) => ({ ...r, detail: null })) : rows
+  }
+  return rows.map((r) => ({ ...r, detail: r.detail === null ? null : maskSourceNames(r.detail, names) }))
 }
 
 /** Bốn lát của khối; khoá trùng tham số URL `?lat-do=`. */
