@@ -18,7 +18,7 @@
 
 ## Key Technical Notes
 
-1. **Headful Chrome only** — headless gets anti-bot blocked (Airbnb, AirDNA)
+1. **Headful Chrome only** — headless gets anti-bot blocked (Airbnb). Riêng bước lấy token của S02 chạy headless được từ 25/11: nạp bộ khung ứng dụng qua đường dẫn không bị thử thách, ứng dụng tự cấp token — xem mục 5
 2. **System Chrome** via `channel: "chrome"` (no browser download needed)
 3. **Pagination**: `A[aria-label^='Trang N']` links, NOT `pagination-next-button` testid
 4. **JS click**: `el.evaluate(el => el.click())` — actionability click fails on "element outside viewport"

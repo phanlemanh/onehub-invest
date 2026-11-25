@@ -294,7 +294,10 @@ export function phienTu(mo: MoMotDuong, log: (...a: unknown[]) => void): TrinhLa
 async function moPhien(log: (...a: unknown[]) => void): Promise<Phien> {
   const browser = await chromium.launchPersistentContext(PROFILE_DIR, {
     channel: "chrome",
-    headless: false, // Turnstile chặn headless (AGENTS.md)
+    // 2511-s02c: KHÔNG CỬA SỔ — Mạnh cần bộ thu không bung cửa sổ lên màn hình. Đo 25/11 20:15: trên đường dẫn
+    // không bị thử thách, chế độ này cũng nạp được bộ khung và chính ứng dụng vẫn cấp token. Bị thử thách thì
+    // lượt dừng với chẩn đoán «KHÔNG nạp được khung» — không tự mở có cửa sổ.
+    headless: true,
     viewport: { width: 1440, height: 900 },
     locale: "en-US",
   });
