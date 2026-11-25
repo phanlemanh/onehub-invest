@@ -7,7 +7,12 @@ import assert from "node:assert/strict";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
-process.env.DATABASE_URL ??= "postgres://oneinvest:oneinvest@localhost:5433/oneinvest_suite_ht23_khong_dung";
+// DB của lượt: npm test / db-thu.sh --chay đặt DATABASE_URL. CI (Postgres riêng dựng từ migration, không container) không đặt
+// biến này — dùng DB «oneinvest» của CI như can-gia-cung-loai-db.test. Trên máy mà thiếu biến thì dừng, không rơi về DB chung
+// và không tự đặt một tên DB riêng (lỗi CI 4e0156200: tên «…_ht23_khong_dung» không có trên DB trống của CI).
+const DB_URL = process.env.DATABASE_URL ?? (process.env.CI ? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest" : "");
+if (!DB_URL) throw new Error("api-markets-khong-s02.test: thiếu DATABASE_URL — chạy qua npm test hoặc db/db-thu.sh <tên> --chay");
+process.env.DATABASE_URL = DB_URL;
 
 const nap = async () => ({
   pool: (await import("../src/lib/db")).pool,
