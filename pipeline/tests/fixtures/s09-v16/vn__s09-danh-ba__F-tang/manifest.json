@@ -1,0 +1,22 @@
+{
+ "schemaVersion": 16,
+ "snapshotId": "vn__s09-danh-ba__F-tang",
+ "city": "vn",
+ "source": "s09-danh-ba",
+ "startedAt": "2026-11-24T07:29:36.787Z",
+ "finishedAt": "2026-11-24T14:25:08.624Z",
+ "counts": {
+  "items": 8,
+  "failed": 0
+ },
+ "coverage": {
+  "notes": "DA56: khuôn căn cao tầng (hai toà × ba tầng) + tầng rỗng, tầng lỗi, căn name khác code; đã thay mọi chuỗi"
+ },
+ "files": [
+  {
+   "name": "items-0001.json.gz",
+   "sha256": "936e39c5a1f5d5ff8a07a81bf6afab6a3a2074ef37876e43b65a1eed5310c3bf",
+   "bytes": 1005
+  }
+ ]
+}

@@ -1,0 +1,22 @@
+{
+ "schemaVersion": 16,
+ "snapshotId": "vn__s09-danh-ba__F-hong",
+ "city": "vn",
+ "source": "s09-danh-ba",
+ "startedAt": "2026-11-24T02:40:22.939Z",
+ "finishedAt": "2026-11-24T03:00:49.950Z",
+ "counts": {
+  "items": 3,
+  "failed": 0
+ },
+ "coverage": {
+  "notes": "DA56: khuôn bản hỏng quỹ căn (trang từ 1, không trang 0) + một trang rỗng; đã thay mọi chuỗi"
+ },
+ "files": [
+  {
+   "name": "items-0001.json.gz",
+   "sha256": "13282a2471524e6fa5d408eac18c7c278a28df4cd4b72955e46ee1bf2c7341ee",
+   "bytes": 1597
+  }
+ ]
+}
