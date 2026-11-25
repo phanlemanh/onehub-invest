@@ -5,7 +5,7 @@ slug: day-ban-chep-sang-may-phat-trien
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli]
-status: approved
+status: implemented
 approved_by: Mạnh
 approved_at: 2026-11-25T08:24:50Z
 design_doc: docs/superpowers/specs/2026-11-25-day-ban-chep-sang-may-phat-trien-design.md
