@@ -373,6 +373,13 @@ executors:
     ht12_tran: "node --test --test-concurrency=1 scripts/zalo-import-tran.test.mjs"   # doc-gop-dong-ho-rieng-trong-luot-dem E6, E7b, E8a — ma trận AC-7 hai đồng hồ + ca quan hệ HT13
     ht12_luoi: "node --test --test-concurrency=1 scripts/zalo-import-tran-zcode.test.mjs scripts/zalo-import-job.test.mjs scripts/zalo-import-job-nhe.test.mjs scripts/zalo-import-job-lan.test.mjs scripts/enrich-buoc-job.test.mjs scripts/job-step-thoi-luong.test.mjs scripts/job-exit.test.mjs"   # doc-gop-dong-ho-rieng-trong-luot-dem E8b — lưới hồi quy tệp bọc + JST-AC-8
   script:
+    scc_che: "bash db/db-thu.sh oneinvest_suite_scc --chay node --test --test-concurrency=1 --test-name-pattern='^SCC-1:' pipeline/sync-cloud-che.test.mjs"   # sync-cloud-che-ten-nguon-moi-cot E1 che mọi kiểu ô
+    scc_soat: "bash db/db-thu.sh oneinvest_suite_scc --chay node --test --test-concurrency=1 --test-name-pattern='^SCC-2:' pipeline/sync-cloud-che.test.mjs"   # sync-cloud-che-ten-nguon-moi-cot E2 bộ chặn mọi bảng
+    scc_su_co: "bash db/db-thu.sh oneinvest_suite_scc --chay node --test --test-concurrency=1 --test-name-pattern='^SCC-3:' pipeline/sync-cloud-che.test.mjs"   # sync-cloud-che-ten-nguon-moi-cot E3 ô street_raw 24/11
+    scc_do_hang_ngay: "cd app && node --import tsx --test tests/do-hang-ngay-che.test.tsx"   # sync-cloud-che-ten-nguon-moi-cot E4 Ops do-hang-ngay che detail
+    scc_kho: "nice -n 10 node pipeline/sync-cloud.mjs --kho"   # sync-cloud-che-ten-nguon-moi-cot E5 lượt khô trên máy thu thật; ngoài CI
+    scc_do: "node --test scripts/do-ten-nguon-cloud.test.mjs"   # sync-cloud-che-ten-nguon-moi-cot E6 lệnh đo không gửi mẫu lên cloud
+    scc_sau_ap: "node scripts/do-ten-nguon-cloud.mjs"   # sync-cloud-che-ten-nguon-moi-cot E7 sau áp; chạy trong hồ sơ áp
     bcl_tap: "bash db/db-thu.sh oneinvest_suite_bcl --chay node --test --test-concurrency=1 --test-name-pattern='^BCL-1:' scripts/ban-chep-da-loc.itest.mjs"   # ban-chep-da-loc-cho-may-phat-trien E1 — tập bảng = FILL sync-cloud, còn lại 0 dòng, DB của riêng lượt
     bcl_cot: "node --test scripts/ban-chep-da-loc.test.mjs"   # ban-chep-da-loc-cho-may-phat-trien E2 — cột ba bảng người bán = selectList, thuần
     bcl_soat: "bash db/db-thu.sh oneinvest_suite_bcl --chay node --test --test-concurrency=1 --test-name-pattern='^BCL-3:' scripts/ban-chep-da-loc.itest.mjs"   # ban-chep-da-loc-cho-may-phat-trien E3 — cấy tên nguồn thật vào ô text/json thì đỏ

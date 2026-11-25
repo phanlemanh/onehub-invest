@@ -1,0 +1,54 @@
+schema_version: 1
+feature_slug: sync-cloud-che-ten-nguon-moi-cot
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.scc_che
+    expected: "exit 0; ma trận viết trước trên dòng JSON dựng bằng chính localReadSql của sync-cloud (DB của lượt): chữ tự do → mã, URL đứng riêng → NULL, mảng URL bỏ phần tử trúng, khoá json → mã, giá trị json → mã, ô không trúng giữ nguyên byte, số thập phân jsonb giữ nguyên; dòng cảnh báo nêu số ô che theo bảng.cột không chứa giá trị. Chiều đỏ: bỏ bước che ở một kiểu ô thì ca của kiểu đó đỏ nêu tên kiểu"
+    paths: [pipeline/sync-cloud.mjs, pipeline/lib/che-ten-nguon-gia-tri.mjs, pipeline/sync-cloud-che.test.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.scc_soat
+    expected: "exit 0; với lối thử tắt che: cấy tên nguồn vào areas.meta, dq_check_results.detail, listings.photo_urls (ngoài CLOUD_ALLOW) → mỗi ca PhaseError scan nêu đúng bảng.cột, exec cloud giả không nhận câu stage nào; đối chứng: bản bộ chặn cũ (chỉ CLOUD_ALLOW) để lọt cả ba ca"
+    paths: [pipeline/sync-cloud.mjs, pipeline/sync-cloud-che.test.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.scc_su_co
+    expected: "exit 0; dòng sale_offers có street_raw chứa tên nguồn S06 (token đọc từ source_registry của lượt): có che → qua pha scan, giá trị gửi là mã; tắt che → PhaseError scan «sale_offers.street_raw» như nhật ký 24/11"
+    paths: [pipeline/sync-cloud.mjs, pipeline/sync-cloud-che.test.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.scc_do_hang_ngay
+    expected: "exit 0; do-hang-ngay trên lược đồ tạm: detail cấy tên nguồn → đầu ra không chứa token, chứa mã; chiều đỏ: bản không che (bản cũ) để lọt token, ca nêu «do-hang-ngay»"
+    paths: [app/src/lib/do-hang-ngay.ts, app/tests/do-hang-ngay-che.test.tsx]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.scc_kho
+    long_running: 60
+    expected: "exit 0 trên máy thu thật, lượt khô (đọc + che + soát, exec cloud giả không gửi gì): số ô che theo bảng.cột = số máy thu của do-ten-nguon-cloud.mjs --chi-may-thu; bộ chặn 0; in thời gian lượt và so với lượt tốt gần nhất trong pipeline/logs/cloud-sync.log (≤ 1,5 lần). Ngoài CI"
+    paths: [pipeline/sync-cloud.mjs, scripts/do-ten-nguon-cloud.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.scc_do
+    expected: "exit 0; với exec cloud giả ghi lại mọi câu SQL: mọi câu là SELECT khoá + cột trong giao dịch chỉ đọc, không câu nào chứa token tên nguồn (soát bằng findSourceNames trên chính văn bản câu), không ghi tệp giá trị; đầu ra chỉ số. Chiều đỏ: bản đo lọc ở cloud bằng mẫu tên nguồn thì ca nêu câu vi phạm (không in token)"
+    paths: [scripts/do-ten-nguon-cloud.mjs, scripts/do-ten-nguon-cloud.test.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.scc_sau_ap
+    status: not-run
+    expected: "Sau áp (lời riêng của Mạnh): do-ten-nguon-cloud.mjs trên cloud ra 0 ô ở mọi bảng.cột; sync_stage.swaps có lần tráo mới sau giờ áp; số dòng cloud ≥ 99% máy thu ở mọi bảng FILL. Chạy trong hồ sơ áp, không trong lượt chấm"
+    paths: [scripts/do-ten-nguon-cloud.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
