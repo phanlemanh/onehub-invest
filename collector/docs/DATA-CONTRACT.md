@@ -353,6 +353,13 @@ Khoá nối với S16/S08 (chi tiết số đo ở tệp kê local của lượt
     lời, với phiên đăng nhập mới — hạn mức của nguồn không theo tốc độ tức thời; sau một lần 429 phải chờ lâu rồi
     thử đúng một lời nhẹ, không mở lại cả lượt. Từ đó mọi pha cần phiên dừng tối thiểu 24 giờ (tới 18:30 ngày 26/11)
     và chỉ chạy lại khi Mạnh nói; không đổi phiên, địa chỉ hay dấu trình duyệt để đi tiếp.
+    Từ lượt soát lần hai (tối 25/11) bộ thu ép điều này bằng mã: (1) MỘT pha cần phiên một lúc — mọi pha `via = ego`
+    lấy một KHOÁ CHUNG ở thư mục tạm của người dùng (`khoa-phien.ts`) trước khi nhận task space; pha khác đang giữ
+    thì dừng ngay với `another-run`, chưa gọi gì. (2) Trang gọi trong trang được chọn theo CỐNG của nguồn (giao thức +
+    máy chủ + cổng; nếu `hosts.web` có đường thì trang phải nằm trong đường ấy), không theo tiền tố chữ. (3) Gốc của
+    trang được kiểm lại ở MỖI lần bắt đầu lời trong trang: tab bị điều hướng sang gốc khác giữa lượt thì dừng cả lượt
+    với lý do `page-origin` (mới) — phiên không bao giờ được dùng ở trang lạ; lớp gọi thấy lỗi dừng từ vận chuyển thì
+    dừng ngay, không thử lại như lỗi mạng.
   - *tệp tĩnh* — `anh_du_an`: tải ảnh bằng fetch của Node, không mang phiên, KHÔNG gọi API của nguồn (luật 12); tối
     đa 16 kết nối một lượt.
 - **Đường API không nằm trong hợp đồng lẫn trong code.** Bộ thu gọi theo *vai* (`project-list`, `project-detail`,
@@ -539,12 +546,22 @@ Luật đọc:
      `may-chu-khong-tra-loi` (từ chối kết nối, mạng không tới; ở máy chủ ngoài còn gồm không nối được kịp — hết giờ
      bắt tay) · `chung-chi` (mọi lỗi chứng chỉ và bắt tay TLS) · `chan-o-may-chu` (máy chủ ngoài trả 403, 429 hay trang
      HTML thay ảnh — bỏ máy chủ đó, không lách) · `qua-so-lan-thu` (lỗi tạm quá ba lượt).
+     Ở LƯỢT MÁY CHỦ NGUỒN ba lỗi cấp máy chủ `may-chu-khong-ton-tai`, `may-chu-khong-tra-loi`, `chung-chi` không bao giờ
+     ghi vĩnh viễn ngay: chúng là lỗi tạm (ghi `error: loi`, `chiTiet: <tên lỗi>: <mã>`, tối đa ba lượt rồi thành
+     `qua-so-lan-thu`) — vì khi máy thu rớt mạng thì MỌI lời đều lỗi kiểu này (lượt soát 25/11: một cú rớt mạng đốt
+     sạch phần hàng còn lại).
    - **Lỗi tạm** — mục nằm trong `mediaFiles` với `error` ngoài bộ mã trên và chưa có tệp, `chiTiet` cho biết vì sao:
      `treo` (không nhận được byte nào quá 30 giây), `timeout` (quá trần tổng 30 phút của một tệp; riêng ở máy chủ của
      nguồn còn gồm không nối được kịp), `dns-noi-bo`, `ngung` (bị bỏ vì nguồn vừa chặn), tên lỗi mạng (5xx, mất kết
-     nối). Lượt sau thử lại; bên đọc coi là chưa có ảnh. Quy tắc dừng «mất mạng» (`network-down`, không ghi nhận là
-     nguồn chặn): lượt máy chủ nguồn dừng sau 10 lỗi tạm liền nhau; lượt máy chủ ngoài sau 50 lỗi tạm liền nhau, mà
-     lỗi liền nhau trên cùng một máy chủ chỉ tính một lần (một máy chủ ngoài chết là chuyện của nó).
+     nối), và — riêng ở lượt máy chủ nguồn — cả lỗi cấp máy chủ (xem trên). Lượt sau thử lại; bên đọc coi là chưa có ảnh.
+     Trong mỗi dự án, URL đã lỗi tạm ở lượt trước được tải sau cùng.
+     Quy tắc dừng «mất mạng» (`network-down`, không ghi nhận là nguồn chặn; một tệp tải được thì mọi bộ đếm đặt về
+     không): lượt máy chủ nguồn dừng sau 10 lỗi tạm liền nhau; lượt máy chủ ngoài sau khi 50 MÁY CHỦ KHÁC NHAU cùng lỗi
+     tạm liền nhau; và phanh dự phòng cho cả hai lượt — 20 (nguồn) / 150 (ngoài) lỗi tạm liền nhau kể cả trên URL đã
+     lỗi ở lượt trước. URL đã lỗi tạm ở lượt trước không tính vào bộ đếm chính (lỗi kinh niên của riêng nó).
+     Lỗi cấp máy chủ ở lượt ngoài chỉ ghi vĩnh viễn ngay khi là chuyện của riêng máy chủ: chuỗi lỗi cấp máy chủ liền
+     nhau (không có tệp nào tải được xen giữa) chưa có hai máy chủ khác nhau. Nhiều máy chủ cùng chết liền nhau thì
+     không phân biệt được với rớt mạng — mỗi lượt chỉ kết luận URL đầu tiên, phần còn lại đếm lượt thử.
    - **Bên trả lời ở bước CUỐI mới chịu trách nhiệm.** Máy chủ của chính nguồn trả 403 (không phải hết hạn), 429 hay
      trang HTML là BỊ CHẶN: dừng cả lượt ngay (mọi tệp đang dở bị bỏ, không ghi nhận), không lách. Nguồn chuyển hướng
      sang một máy chủ ngoài và máy chủ ngoài đó trả 403 thì CHỈ máy chủ ngoài bị nhớ và bỏ qua — không tính là nguồn
