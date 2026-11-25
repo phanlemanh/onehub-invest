@@ -5,7 +5,7 @@ slug: street-raw-khong-mang-ten-nguon
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: draft
+status: implemented
 veto_state: mo
 veto_opened_at: 2026-11-25T09:11:22Z
 approved_by:
@@ -96,3 +96,12 @@ Lớp phát biểu sống (cùng ngày, sau khi ô sự cố đã gỡ, `probes/
 - Sửa bộ soát sync-cloud hay sổ nguồn: bộ soát đúng thiết kế.
 
 ## Notes
+
+- S3 25/11, phép đo trên bản chép (`probes/ban-chep.sh`), lượt 4 xanh: ca phá dừng ở `sale_offers.street_raw`; 3 ô đổi giữa lượt bỏ
+  luật và lượt thật (A đường, toà; B đường legacy), 2 về NULL, 1 về phát biểu sạch còn lại; tin mới N bốn cột NULL; log «bỏ ghi
+  street_raw 2 · block_raw 2 · phuong_raw 1 · district_raw 1 · rút 2 chủ thể» bằng đếm độc lập; bộ soát qua ba bảng sau duong-can.
+- Chi phí riêng của luật 1,4–2,0 s, tức 0,42–0,61% lượt transform (243–476 s) qua ba lượt. Tỉ lệ cả lượt thật so lượt bỏ luật
+  dao động 0,873–1,372 qua ba lượt: nhiễu máy (dãy khác giữ s4) lớn hơn hẳn chi phí luật, nên AC-3 đo chi phí riêng.
+- Lượt 1–3 đỏ ở phép đo, không ở luật: lượt 1 chứng legacy sạch thắng khi rút fact (dẫn tới sửa AC-1); lượt 2–3 phát biểu legacy
+  cấy thiếu `evidence.offer_id` nên bộ phân xử bỏ qua.
+

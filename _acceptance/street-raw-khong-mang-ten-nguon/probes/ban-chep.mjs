@@ -93,9 +93,11 @@ try {
   await c.query(`UPDATE stg_chotot_ads SET payload = payload || jsonb_build_object('street_name', $2::text, 'block', $3::text) WHERE list_id = $1`,
     [a.list_id, cay.duong, cay.toa]);
   await c.query(`UPDATE stg_chotot_ads SET payload = payload - 'street_name' WHERE list_id = $1`, [b.list_id]);
-  await c.query(`INSERT INTO field_assertions (subject_key, field, value, evidence_tier, method, method_version, evidence, observed_at)
-     VALUES ($1, 'street_raw', $2, 'observed', 'legacy', 'pl39-cay', '{}'::jsonb, now())`, [`S06:${b.list_id}`, cay.duong]);
   const idA = mintOfferId("S06", String(a.list_id)), idB = mintOfferId("S06", String(b.list_id));
+  // Phát biểu legacy chỉ đỡ đúng tin sinh ra nó (061: evidence.offer_id), mang rule_id 'offer:<offer_id>' như phat-bieu-cat-chuyen.
+  await c.query(`INSERT INTO field_assertions (subject_key, field, value, evidence_tier, method, method_version, rule_id, evidence, observed_at)
+     VALUES ($1, 'street_raw', $2, 'observed', 'legacy', 'pl39-cay', 'offer:' || $3, jsonb_build_object('offer_id', $3::text), now())`,
+    [`S06:${b.list_id}`, cay.duong, idB]);
 
   // 2. Đột biến (luật tắt) → bộ soát phải dừng.
   const dot = await chay(TEP_DB);
