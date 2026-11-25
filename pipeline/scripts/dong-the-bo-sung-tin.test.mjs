@@ -24,20 +24,38 @@ before(async () => {
   await c.connect();
   const { rows: [d] } = await c.query("SELECT current_database() AS db");
   if (d.db === "oneinvest") throw new Error("không chạy trên DB chung oneinvest");
-  const song = (await c.query(`SELECT offer_id, property_type, bedrooms FROM sale_offers
-     WHERE property_type IS NOT NULL AND bedrooms IS NOT NULL ORDER BY offer_id LIMIT 14`)).rows;
-  const trongPn = (await c.query(`SELECT offer_id, property_type FROM sale_offers
-     WHERE property_type IS NOT NULL AND bedrooms IS NULL ORDER BY offer_id LIMIT 1`)).rows[0];
-  const nghi = (await c.query(`SELECT r.offer_id FROM sale_offer_records r
-     WHERE NOT EXISTS (SELECT 1 FROM sale_offers s WHERE s.offer_id = r.offer_id) ORDER BY r.offer_id LIMIT 1`)).rows[0];
-  assert.ok(song.length === 14 && trongPn && nghi, "DB thử thiếu tin để dựng fixture");
-  tin = { song, trongPn, nghi };
 });
 after(async () => { await c?.end(); });
+
+// Tin cho fixture, lấy trong giao dịch của từng ca. DB trống (CI dựng từ migration, không có bản chép máy thu):
+// cài 14 tin sống đủ loại hình + phòng ngủ, 1 tin thiếu phòng ngủ, 1 tin đã nghỉ — ROLLBACK cuối ca bỏ hết.
+async function layTin() {
+  const chon = async () => ({
+    song: (await c.query(`SELECT offer_id, property_type, bedrooms FROM sale_offers
+       WHERE property_type IS NOT NULL AND bedrooms IS NOT NULL ORDER BY offer_id LIMIT 14`)).rows,
+    trongPn: (await c.query(`SELECT offer_id, property_type FROM sale_offers
+       WHERE property_type IS NOT NULL AND bedrooms IS NULL ORDER BY offer_id LIMIT 1`)).rows[0],
+    nghi: (await c.query(`SELECT r.offer_id FROM sale_offer_records r
+       WHERE NOT EXISTS (SELECT 1 FROM sale_offers s WHERE s.offer_id = r.offer_id) ORDER BY r.offer_id LIMIT 1`)).rows[0],
+  });
+  let t = await chon();
+  if (t.song.length < 14 || !t.trongPn || !t.nghi) {
+    const cai = (id, pt, pn, nghi = false) => c.query(
+      `INSERT INTO sale_offer_records (offer_id, kind, property_type, bedrooms, source, post_ids, first_seen, last_seen, retired_at)
+       VALUES ($1, 'sale', $2, $3, 'S03', ARRAY[$1 || '-p'], now(), now(), CASE WHEN $4 THEN now() END)`, [id, pt, pn, nghi]);
+    for (let i = t.song.length; i < 14; i++) await cai(`nb9-song-${String(i).padStart(2, "0")}`, i % 2 ? "house" : "apartment", 2);
+    if (!t.trongPn) await cai("nb9-trong-pn", "apartment", null);
+    if (!t.nghi) await cai("nb9-nghi", "apartment", 2, true);
+    t = await chon();
+  }
+  assert.ok(t.song.length === 14 && t.trongPn && t.nghi, "DB thử thiếu tin để dựng fixture");
+  return t;
+}
 
 async function trongGiaoDich(fn) {
   await c.query("BEGIN");
   try {
+    tin = await layTin();
     await c.query("DELETE FROM review_queue WHERE item_type = 'agent_output'");
     await c.query("DELETE FROM enrichment_proposals");
     return await fn();
@@ -115,7 +133,8 @@ async function dungFixture() {
 }
 
 async function ghiBang() {
-  const { rows } = await c.query(`SELECT relname, n_tup_ins + n_tup_upd + n_tup_del AS n FROM pg_stat_xact_user_tables`);
+  const { rows } = await c.query(`SELECT relname, n_tup_ins + n_tup_upd + n_tup_del AS n FROM pg_stat_xact_user_tables WHERE schemaname = 'public'`);
+  // Chỉ schema public: DB chép có thể mang schema rác của test khác cùng tên bảng (review_queue…), gom theo relname thì dòng rác đè dòng thật.
   return Object.fromEntries(rows.map((r) => [r.relname, Number(r.n)]));
 }
 const bangDoi = (truoc, sau) => Object.keys(sau).filter((k) => (sau[k] ?? 0) !== (truoc[k] ?? 0)).sort();
