@@ -5,7 +5,7 @@ slug: data-api-dong-khi-thieu-khoa
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [api, docs]
-status: approved
+status: implemented
 design_doc: _acceptance/data-api-dong-khi-thieu-khoa/design.md
 approved_by: Mạnh
 approved_at: 2026-11-25
