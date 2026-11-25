@@ -1,6 +1,6 @@
--- 008_zalo_offers.sql — staging zalo posts + canonical offers + asset stats
+-- 008_s03_offers.sql — staging S03 posts + canonical offers + asset stats
 CREATE TABLE IF NOT EXISTS stg_zalo_posts (
-  post_id     text PRIMARY KEY,        -- 'mock-sale-0-abc123' | 'zalo-<msg_id>'
+  post_id     text PRIMARY KEY,        -- 'mock-sale-0-abc123' | 's03-<msg_id>'
   snapshot_id text NOT NULL REFERENCES airbnb_snapshots(snapshot_id) ON DELETE CASCADE,
   group_name  text,
   author_hash text,
@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS sale_offers (
   last_seen   timestamptz NOT NULL,
   n_reposts   int NOT NULL DEFAULT 1,
   post_ids    text[] NOT NULL DEFAULT '{}',
-  source      text NOT NULL DEFAULT 'mock' -- 'mock' | 'zalo'
+  source      text NOT NULL DEFAULT 'mock' -- 'mock' | 'S03'
 );
 CREATE INDEX IF NOT EXISTS sale_offers_area_idx ON sale_offers(area_id, kind);
 

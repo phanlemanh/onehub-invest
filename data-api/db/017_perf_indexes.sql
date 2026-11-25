@@ -1,6 +1,6 @@
 -- 017_perf_indexes.sql — Perf-audit /ops (2026-10-20): các cột timestamp
 -- dùng cho luồng ngày (getFlowDays GROUP BY với lọc >= since) đang seq-scan;
--- bảng airdna_listings 43k+ tăng nhanh mỗi đêm rotation.
+-- bảng listings của S02 43k+ tăng nhanh mỗi đêm rotation.
 CREATE INDEX IF NOT EXISTS idx_airdna_listings_captured_at ON airdna_listings (captured_at);
 CREATE INDEX IF NOT EXISTS idx_airdna_markets_captured_at ON airdna_markets (captured_at);
 CREATE INDEX IF NOT EXISTS idx_listings_last_seen ON listings (last_seen);

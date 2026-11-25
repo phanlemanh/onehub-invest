@@ -143,6 +143,8 @@ executors:
     svm_unit: "node --test pipeline/lib/thi-truong.test.mjs"   # s06-vung-moi-len-canonical AC-3 — ánh xạ một chỗ + quét chuỗi cứng, không DB
     ckl_unit: "node --test pipeline/scripts/chotot-khong-lui-noi-dung.test.mjs"   # 2510-6
     scripts: "node --test scripts/*.test.mjs"        # test script ở scripts/ (dev-ops-account) — cần DB local :5433
+    pb5_ten_nguon: "node --test scripts/data-api-ten-nguon.test.mjs"   # data-api-don-ten-nguon E1–E3 (PB5-AC-1..3); AC-4 tự bỏ qua ngoài CI khi thiếu DATABASE_URL
+    pb5_db_mau: "bash scripts/data-api-ten-nguon-db.sh"   # data-api-don-ten-nguon E4 (PB5-AC-4) — PostGIS dùng một lần + node cùng mạng docker, không DB :5433
     s4v_bo_qua: "node --test --test-name-pattern=S4V-AC-1 scripts/suite-neu-doi.test.mjs"   # s4-suite-theo-vung E1 — repo git tạm, không DB
     s4v_chay: "node --test --test-name-pattern=S4V-AC-2 scripts/suite-neu-doi.test.mjs"     # s4-suite-theo-vung E2
     s4v_keo: "node --test --test-name-pattern=S4V-AC-3 scripts/suite-neu-doi.test.mjs"      # s4-suite-theo-vung E3 — ma trận 18 ô
@@ -373,6 +375,7 @@ executors:
     ht12_tran: "node --test --test-concurrency=1 scripts/zalo-import-tran.test.mjs"   # doc-gop-dong-ho-rieng-trong-luot-dem E6, E7b, E8a — ma trận AC-7 hai đồng hồ + ca quan hệ HT13
     ht12_luoi: "node --test --test-concurrency=1 scripts/zalo-import-tran-zcode.test.mjs scripts/zalo-import-job.test.mjs scripts/zalo-import-job-nhe.test.mjs scripts/zalo-import-job-lan.test.mjs scripts/enrich-buoc-job.test.mjs scripts/job-step-thoi-luong.test.mjs scripts/job-exit.test.mjs"   # doc-gop-dong-ho-rieng-trong-luot-dem E8b — lưới hồi quy tệp bọc + JST-AC-8
   script:
+    pb5_luoi: "node scripts/data-api-ten-nguon.mjs"   # data-api-don-ten-nguon E5 — lưới tên nguồn trên data-api/**, in tổng theo loại, thoát 1 khi còn vi phạm
     ht13_ap: "bash _acceptance/tran-tong-luot-dem-va-tran-doc-gop/ap-may-thu/kiem.sh"   # tran-tong-luot-dem-va-tran-doc-gop E9 — README áp đủ năm mục, lệnh kiểm sau chấm đúng ba log mẫu
     ht12_ap: "bash _acceptance/doc-gop-dong-ho-rieng-trong-luot-dem/ap-may-thu/kiem.sh"   # doc-gop-dong-ho-rieng-trong-luot-dem E9 — README áp đủ năm mục, kiem-sau.sh chấm đúng chín ca
     trt_tuong_duong: "bash db/db-thu.sh oneinvest_suite_trtd --chay node _acceptance/slt-dc-cham-va-giu-khoa-33033/probes/tuong-duong-ba-luot.mjs"   # slt-dc-cham-va-giu-khoa-33033 E2 — câu cũ và câu mới rút cùng tập id ở cả ba lượt transform của SLT-DC
