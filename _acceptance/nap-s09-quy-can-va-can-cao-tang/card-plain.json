@@ -1,0 +1,91 @@
+{
+  "feature_plain": "Quỹ căn đang bán của S09 (1.294 căn ở 40 dự án, 1.268 căn có giá chủ đầu tư) và căn cao tầng theo tầng (gói 2) được nạp vào kho trung gian trên máy thu, đã bỏ URL ảnh mang tên miền nguồn; trang Danh bạ của Ops hiện số quỹ căn và bảng giá từng căn trên trang dự án.",
+  "will_do": [
+    {
+      "id": "AC-1",
+      "p": "Sẽ nạp hai loại bản thu mới mà nạp lại không nhân dòng, bỏ và đếm bản ghi hỏng, dừng hẳn khi một tệp sai băm."
+    },
+    {
+      "id": "AC-2",
+      "p": "Sẽ bỏ URL ảnh (và toạ độ nếu anh chọn ở Hỏi-2) khỏi từng căn trước khi ghi, theo bảng kiểm kê từng trường viết trước."
+    },
+    {
+      "id": "AC-3",
+      "p": "Sẽ lấy đúng bản thu đủ của mỗi dự án, đếm mỗi căn một lần, dự án thiếu trang hiện ở bảng đối soát thay vì hiện số sai."
+    },
+    {
+      "id": "AC-4",
+      "p": "Sẽ lấy căn cao tầng từ bản tầng tốt mới nhất; tầng lỗi hay rỗng không xoá bản tốt."
+    },
+    {
+      "id": "AC-5",
+      "p": "Sẽ đối chiếu số trên dữ liệu thật với bộ đếm độc lập và manifest: 1.294 căn, 40 dự án, chia 24 đã nối · 6 chờ thẻ · 10 ngoài danh mục."
+    },
+    {
+      "id": "AC-6",
+      "p": "Sẽ cho cùng kết quả khi nạp lại hay nạp theo thứ tự khác."
+    },
+    {
+      "id": "AC-7",
+      "p": "Sẽ hiện ô «Quỹ căn S09» trên trang Danh bạ với số bằng đúng số đếm trong dữ liệu."
+    },
+    {
+      "id": "AC-8",
+      "p": "Sẽ hiện bảng «Quỹ căn đang bán» với giá, diện tích, trạng thái trên trang từng dự án đã nối; trống, lỗi, đang tải đều có hiển thị."
+    },
+    {
+      "id": "AC-9",
+      "p": "Sẽ kiểm bằng chuỗi giả cấy vào rằng không URL ảnh, toạ độ hay tên thật của nguồn nào lọt lên màn, vào log hay vào danh sách đồng bộ cloud."
+    },
+    {
+      "id": "AC-10",
+      "p": "Sẽ có hồ sơ áp lên máy thu đủ năm thứ và hợp đồng dữ liệu v16 đúng bản của làn thu."
+    }
+  ],
+  "wont_do": [
+    {
+      "id": "OOS-1",
+      "p": "KHÔNG đưa căn quỹ căn hay căn cao tầng vào danh bạ căn — đó là việc DA43, đọc kho trung gian của hàng này."
+    },
+    {
+      "id": "OOS-2",
+      "p": "KHÔNG làm khu và căn thấp tầng (DA50)."
+    },
+    {
+      "id": "OOS-3",
+      "p": "KHÔNG đưa quỹ căn lên cloud hay cổng Invest — cần lời riêng của anh về ghi cloud."
+    },
+    {
+      "id": "OOS-4",
+      "p": "KHÔNG giữ lịch sử giá theo thời gian, chỉ bản mới nhất."
+    }
+  ],
+  "coverage_plain": [
+    {
+      "i": 0,
+      "p": "Đã phủ hai loại bản thu × mọi trạng thái bản thu (đủ, hỏng, rỗng, lỗi, thiếu trang, chồng bản) × bốn lớp (kho trung gian, bảng đọc, màn, rời máy) × ba thứ phải giấu (URL, toạ độ, tên nguồn); mỗi ô có một phép kiểm ở AC-3, AC-4, cặp màn–dữ liệu ở AC-7, AC-8, ca cấy chuỗi giả ở AC-2, AC-9."
+    }
+  ],
+  "gap_probe_plain": [
+    {
+      "i": 0,
+      "p": "Phản biện thấy máy tự xếp toạ độ căn vào loại thông tin phải giấu mà không có căn cứ chốt — đã chuyển thành Hỏi-2 cho anh quyết."
+    },
+    {
+      "i": 1,
+      "p": "Con số «24 dự án có bảng quỹ căn» chưa có phép đo và chưa rõ thế nào là «đã nối» — đã định nghĩa (gồm cả dự án chờ duyệt do DA42 tạo) và thêm phép đo 24 · 6 · 10."
+    },
+    {
+      "i": 2,
+      "p": "Phép kiểm rò thông tin chỉ thử hai trường đã biết — đã thêm bảng kiểm kê mọi trường và lượt quét dữ liệu thật tìm đường dẫn web bằng 0."
+    },
+    {
+      "i": 3,
+      "p": "Bộ chấm bằng mắt không so được hợp đồng dữ liệu với bản của làn thu — đã thêm một phép so bằng lệnh."
+    },
+    {
+      "i": 4,
+      "p": "Bản thu hỏng thiếu trang đầu có thể cho trạng thái đối soát rỗng thay vì «chưa đủ» — đã ghi luật «thiếu trang đầu là chưa đủ» và thêm phép đo trên bản hỏng thật."
+    }
+  ]
+}
