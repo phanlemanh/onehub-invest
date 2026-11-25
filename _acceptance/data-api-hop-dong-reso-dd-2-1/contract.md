@@ -5,10 +5,10 @@ slug: data-api-hop-dong-reso-dd-2-1
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api, docs]
-status: draft
+status: approved
 design_doc: _acceptance/data-api-hop-dong-reso-dd-2-1/design.md
-approved_by:
-approved_at:
+approved_by: Mạnh
+approved_at: 2026-11-25
 ---
 
 # Acceptance Contract: data-api-hop-dong-reso-dd-2-1
