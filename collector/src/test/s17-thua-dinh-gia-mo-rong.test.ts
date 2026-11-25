@@ -1057,7 +1057,7 @@ test("parcels-cell: giới hạn số ô một lượt; dừng giữa ô (quá t
 
 // ---------- sửa theo lượt soát 25/11: tải ảnh an toàn và phân loại lỗi đúng ----------
 
-import { diaChiNoiBo, phanLoaiMayChu, taiAnh } from "../collectors/s17-thua-dinh-gia/anh.js";
+import { diaChiNoiBo, hashUrl, phanLoaiMayChu, taiAnh } from "../collectors/s17-thua-dinh-gia/anh.js";
 
 const TUY_CHON = { maxBytes: 1024, timeoutMs: 5000, userAgent: "oneinvest-collector/1", duoiNguon: ["cdn.gia.test"], keNgoai: false };
 
@@ -1613,6 +1613,28 @@ test("pha ảnh máy chủ ngoài: một máy chủ trả lỗi tạm cho cả h
     (x: unknown) => x,
   );
   assert.ok(r instanceof RunStopped && r.reason === "network-down", "50 máy chủ khác nhau cùng lỗi mạng là mất mạng thật");
+}));
+
+test("pha ảnh: URL đã lỗi tạm từ lượt trước KHÔNG tính vào «mất mạng» — cụm URL lỗi kinh niên ở nhiều máy chủ khác nhau không làm lượt dừng (lượt thật 25/11 17:47 dừng oan sau 102 lời)", async () => withTmp(async (dir) => {
+  // 55 URL trên 55 máy chủ khác nhau, mỗi URL đã lỗi tạm MỘT lần ở lượt trước; lần này vẫn lỗi tạm.
+  const urls = Array.from({ length: 55 }, (_, i) => `https://h${i}.example.org/x/${i}.jpg`);
+  await duaAnhVaoKho(dir, "8", urls);
+  await new NhatKyTienDo(join(dir, "tien-do", "anh-ngoai-8.jsonl")).append({ dem: Object.fromEntries(urls.map((u) => [hashUrl(u), 1])) });
+  const nguon = nguonAnh(() => ({ status: 503, body: "loi tam thoi" }));
+  const { s } = await chayAnh(dir, nguon.fetchImpl, { soFile: 100, luongSong: 4, chiNgoai: true }).run();
+  assert.equal(s.so?.soFile, 0);
+  assert.equal(s.so?.soDuAnXong, 0, "URL lỗi tạm chưa kết luận nên dự án chưa xong");
+  const td = (await new NhatKyTienDo(join(dir, "tien-do", "anh-ngoai-8.jsonl")).readAll()).at(-1) as { dem?: Record<string, number> };
+  assert.deepEqual([...new Set(Object.values(td.dem ?? {}))], [2], "mỗi URL được đếm lượt thử thứ hai");
+}));
+
+test("pha ảnh: trong một dự án, URL còn tươi được tải TRƯỚC, URL đã lỗi tạm từ lượt trước xếp xuống CUỐI", async () => withTmp(async (dir) => {
+  await duaAnhVaoKho(dir, "8", [1, 2, 3, 4].map((i) => `https://cdn.gia.test/a/${i}`));
+  await new NhatKyTienDo(join(dir, "tien-do", "anh-8.jsonl")).append({ dem: { [hashUrl("https://cdn.gia.test/a/2")]: 1 } });
+  const nguon = nguonAnh(() => ({}));
+  const { s } = await chayAnh(dir, nguon.fetchImpl, { soFile: 10, luongSong: 1 }).run();
+  assert.equal(s.so?.soFile, 4);
+  assert.deepEqual(nguon.daGoi, ["/a/1", "/a/3", "/a/4", "/a/2"], "ảnh 2 (đã lỗi một lần) xuống cuối; thứ tự các ảnh tươi giữ nguyên");
 }));
 
 test("pha ảnh: một tệp trong lô lỗi giữa lúc đọc thân — các tệp khác vẫn chốt; tệp lỗi được đếm lượt thử, lượt sau tải nốt", async () => withTmp(async (dir) => {

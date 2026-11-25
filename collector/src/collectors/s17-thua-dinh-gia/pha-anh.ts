@@ -244,6 +244,11 @@ export async function imagesPhase(o: RunOptions, anh: AnhPhaseOptions, keoDan: K
       lo.coTai++;
     }
     const hang = cacLo.flatMap((lo) => lo.a.map((_, k) => ({ lo, k })).filter((v) => !lo.ketQua.has(v.lo.a[v.k].url)));
+    // URL đã lỗi tạm ở lượt trước xếp xuống CUỐI hàng của dự án: phần còn tươi tải trước, và cụm URL lỗi kinh niên ở
+    // đầu hàng không cộng dồn thành «mất mạng» giả (lượt thật 25/11 17:47 dừng oan sau 102 lời). Mã item vẫn theo vị trí
+    // gốc trong danh sách ảnh, thứ tự tải không đổi mã.
+    const daLoiTruoc = (a: { url: string }): boolean => (td.dem.get(hashUrl(a.url)) ?? 0) > 0;
+    hang.sort((x, y) => Number(daLoiTruoc(x.lo.a[x.k])) - Number(daLoiTruoc(y.lo.a[y.k])));
     const daLay = new Set<number>();
     let daXuLi = 0; // đã lấy đi hoặc đã bỏ qua
     let loiChot: unknown = null; // lỗi khi chốt snapshot: dừng hết, không ghi tiến độ của lô ấy
@@ -326,7 +331,8 @@ export async function imagesPhase(o: RunOptions, anh: AnhPhaseOptions, keoDan: K
           // «Mất mạng» là nhiều máy chủ khác nhau cùng lỗi. Ở lượt máy chủ ngoài, lỗi liền nhau trên CÙNG một máy chủ chỉ
           // tính một lần: một máy chủ chết kéo theo hàng chục URL của nó, không phải mạng của máy thu hỏng (đo 25/11:
           // 50 lỗi liền nhau trên 34 dự án đều là những URL đã lỗi từ lượt trước).
-          if (!(lop === "ngoai" && loiLien > 0 && h === hostLoiTruoc)) loiLien++;
+          // URL đã lỗi tạm ở lượt trước là lỗi kinh niên của riêng nó: không tính vào «mất mạng».
+          if (!daLoiTruoc(a) && !(lop === "ngoai" && loiLien > 0 && h === hostLoiTruoc)) loiLien++;
           hostLoiTruoc = h;
           if (loiLien >= toiDaLoiLien) {
             loiChan = keoDan.stopRun("network-down", `${toiDaLoiLien} tệp ảnh lỗi mạng liền nhau`);
