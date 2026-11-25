@@ -24,11 +24,19 @@ const JXL_BOX = Buffer.concat([
   Buffer.from([0x00, 0x00, 0x00, 0x0c]), Buffer.from("JXL "), Buffer.from([0x0d, 0x0a, 0x87, 0x0a]),
   Buffer.from("fake-jxl-box"),
 ]);
+/** ZC16: đếm yêu cầu theo đường dẫn — kiểm số lần thử lại. */
+const hits = new Map<string, number>();
 /** ZC15: header accept của yêu cầu ảnh gần nhất mà CDN giả nhận. */
 let lastAccept: string | undefined;
 let base = ""; // gán sau listen — handler đọc tại lúc có request
 const srv: Server = createServer((req, res) => {
   lastAccept = req.headers.accept;
+  hits.set(req.url ?? "", (hits.get(req.url ?? "") ?? 0) + 1);
+  if (req.url === "/plain400.jpg" || req.url === "/jpg/both-bad.jpg") {
+    res.writeHead(400); return void res.end("bad");
+  } else if (req.url === "/both-bad.jpg" || req.url === "/jpg/gone.jpg") {
+    res.writeHead(404); return void res.end("gone");
+  }
   if (req.url === "/jxl-cs.jpg") {
     res.writeHead(200, { "content-type": "image/jxl" });
     res.end(JXL_CS);
@@ -387,4 +395,19 @@ test("media (2511-3): URL /jpg/ bị CDN 400 → fallback bỏ /jpg/ tải đư�
   // nội dung trên đĩa khớp bytes fixture
   const onDisk = readFileSync(join(dir, mediaEntry.name));
   assert.equal(onDisk.length, JPG_A.length);
+});
+
+test("ZC16: không thử lại sai chỗ — 400 không /jpg/, 404 có /jpg/, thay thế cũng lỗi → giữ lỗi gốc", async () => {
+  hits.clear();
+  const root = fresh();
+  const s = await createAgentServer({ snapshotRoot: root, city: "hanoi", keys: ["k1"], media: mediaOpts, log: () => {} });
+  ingestWith(s, [msg("lỗi", [`${base}/plain400.jpg`, `${base}/jpg/gone.jpg`, `${base}/jpg/both-bad.jpg`], "2026-11-25T03:00:00Z")]);
+  const m = await s.flush();
+  assert.ok(m);
+  const errs = readItems(root, m.snapshotId)[0].meta.mediaFiles.map((e: { error?: string }) => e.error);
+  assert.deepEqual(errs, ["http-400", "http-404", "http-400"], "entry giữ lỗi của URL gốc");
+  assert.equal(hits.get("/plain400.jpg"), 1, "400 không có /jpg/: không thử lại");
+  assert.equal(hits.get("/gone.jpg"), undefined, "404 có /jpg/: không thử lại");
+  assert.equal(hits.get("/jpg/gone.jpg"), 1);
+  assert.equal(hits.get("/both-bad.jpg"), 1, "400 có /jpg/: thử lại ĐÚNG một lần");
 });

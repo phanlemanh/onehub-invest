@@ -1,0 +1,66 @@
+schema_version: 1
+feature_slug: s03-jpg-path-fallback
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.script.zc16_media_test
+    paths: [collector/src/core/media-fetch.ts, collector/src/test/media-fetch.test.ts]
+    expected: "exit 0; 0 fail; ca «media (2511-3): URL /jpg/ bị CDN 400 → fallback bỏ /jpg/ tải được…» xanh: CDN giả trả 400 cho /jpg/broken.jpg và 200 cho /broken.jpg → manifest có tệp media, sha256/độ dài khớp byte, error undefined. Chiều đỏ (đo 25/11 trên bản chép): đổi điều kiện thử lại thành false → đúng ca này đỏ."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.script.zc16_media_test
+    paths: [collector/src/core/media-fetch.ts, collector/src/test/media-fetch.test.ts]
+    expected: "exit 0; cùng ca 2511-3: payload.media và meta.url giữ URL gốc /jpg/broken.jpg; mf.urlFetched === undefined; khoá của entry đúng [bytes, file, sha256, url]; tên tệp mở đầu media/<băm 16 hex của URL ĐÃ TẢI /broken.jpg> và KHÔNG mở đầu bằng băm của URL gốc. Chiều đỏ (đo 25/11): băm theo url gốc thay vì URL đã tải → ca này đỏ với thông điệp 'tên tệp phải băm theo URL đã tải'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.script.zc16_media_test
+    paths: [collector/src/core/media-fetch.ts, collector/src/test/media-fetch.test.ts]
+    expected: "exit 0; ca «ZC16: không thử lại sai chỗ…» xanh: /plain400.jpg (400, không /jpg/) → http-400, CDN nhận đúng 1 yêu cầu; /jpg/gone.jpg (404) → http-404, /gone.jpg nhận 0 yêu cầu; /jpg/both-bad.jpg (400) thử /both-bad.jpg (404) đúng 1 lần → entry giữ http-400 của URL gốc. Chiều đỏ (đo 25/11): thử lại với mọi lỗi (bỏ điều kiện http-400) → ca này đỏ ('404 có /jpg/: không thử lại')."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.script.zc16_media_test
+    paths: [collector/src/core/media-fetch.ts, collector/src/test/media-fetch.test.ts]
+    expected: "exit 0; ca ZC15 «JPEG XL lưu nguyên byte với đuôi .jxl; JPEG giữ .jpg» xanh sau khi gộp (byte FF 0A và hộp JXL → .jxl; byte JPEG → .jpg); ca 2511-3: CDN giả trả header image/jxl với byte JPEG_A → tệp đuôi .jpg (đoán theo byte, không theo header)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.script.collector_test_clean
+    paths: [collector/src/**]
+    expected: "exit 0; toàn bộ test collector trên dist vừa xoá 0 fail (87 ca, gồm 5 ca ZC15, 2 ca ZC9, ca 2511-3, ca ZC16)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.collector_check
+    paths: [collector/src/**]
+    expected: "exit 0; tsc --noEmit không lỗi."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.zc15_khuon_media_files
+    paths: [collector/src/core/media-fetch.ts]
+    expected: "exit 0; 'KHUON-MEDIA-FILES PASS — MediaFileEntry giữ đúng 5 khoá (bytes, error, file, sha256, url)' (không urlFetched); 'TU-THU PASS' khi thêm khoá vào bản chép. (DATA-CONTRACT.md và storage.ts không đổi so origin/main: chốt ở đuôi lệnh zc16_media_test của E1–E4)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.zc16_ap_may_thu
+    paths: [_acceptance/s03-jpg-path-fallback/ap-may-thu/**, collector/src/core/media-fetch.ts]
+    expected: "exit 0; 'AP-MAY-THU PASS': README năm mục có nội dung (mục 1 có build, kickstart kèm 'lời riêng của Mạnh', khung giờ, nói áp chung ZC15; mục 2 có 27,5% và 8,1%); tự phá mục 2 → đỏ đúng mục; kiem-sau trên mẫu: dat → ĐẠT, con-jpg-400 → 'còn 1 ảnh link /jpg/ lỗi http-400', chua-co-jpg → 'chưa có ảnh link /jpg/ nào tải được', khong-bai-moi → 'chưa có bài mới có ảnh'; canh-gac → đầu ra không chứa 'canh-gac'; round-trip collector API: nhánh → 'ĐẠT — 2 bài có ảnh · 0 mất hết ảnh', đầu nhánh ZC15 → 'KHÔNG ĐẠT — còn 1 ảnh link /jpg/ lỗi http-400'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
