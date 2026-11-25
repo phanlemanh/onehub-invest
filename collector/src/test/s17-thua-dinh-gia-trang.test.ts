@@ -345,3 +345,83 @@ test("tiến trình trình duyệt ghi kết quả kèm mã lượt của bản 
     await rm(dir, { recursive: true, force: true });
   }
 });
+
+/** Chạy tiến trình trình duyệt với danh sách trang giả; trả mã thoát, kết quả và những nhãn trang đã được lấy. */
+async function chayEgoTrang(o: { tabLabel?: string; cacTrang: Array<[string, string]> }): Promise<{ code: number; kq: Record<string, unknown>; daLayTrang: string[] }> {
+  const dir = await mkdtemp(join(tmpdir(), "s17-ego-trang-"));
+  try {
+    const hosts = { api: "https://api.gia.test", agent: "https://agent.gia.test", web: "https://web.gia.test" };
+    const config = loadConfig(JSON.stringify({ hosts, paths: { "data-available": "/v2.x/data-available", "asset-type": "/v2.x/asset-type" }, session: { cookieName: "sid" } }));
+    const optionsPath = join(dir, "ego-options.json");
+    const resultPath = join(dir, "ego-result.json");
+    await writeFile(
+      optionsPath,
+      JSON.stringify({
+        config,
+        phase: "session-check",
+        snapshotRoot: join(dir, "snap"),
+        statePath: join(dir, "s.json"),
+        logPath: join(dir, "l.jsonl"),
+        resultPath,
+        caps: { calls: 5, minutes: 5 },
+        paceMs: 0,
+        batchItems: 10,
+        checkBalance: false,
+        spaceId: 4,
+        cookieName: "sid",
+        runId: "abc123",
+        ...(o.tabLabel ? { tabLabel: o.tabLabel } : {}),
+      }),
+    );
+    const { sandbox } = trangGia();
+    const page: EgoPage = {
+      label: "x",
+      evaluate: (fn, arg) => {
+        const f = runInNewContext(`(${fn.toString()})`, sandbox) as (a: unknown) => unknown;
+        return Promise.resolve().then(() => f(arg));
+      },
+    };
+    const daLayTrang: string[] = [];
+    const api: EgoApi = {
+      listTaskSpaces: async () => [{ id: 4, ownership: "agent" }],
+      takeOverTaskSpace: async () => ({
+        spaceId: 4,
+        tabs: async () => o.cacTrang.map(([label, url]) => ({ label, url, page: null })),
+        page: (label: string) => {
+          daLayTrang.push(label);
+          return page;
+        },
+        adopt: async () => {
+          throw new Error("không được tự nhận tab");
+        },
+      }),
+      claimTaskSpace: async () => {
+        throw new Error("không được gọi khi task space thuộc về agent");
+      },
+    };
+    const code = await egoMain(api, optionsPath);
+    const kq = JSON.parse(await readFile(resultPath, "utf8")) as Record<string, unknown>;
+    return { code, kq, daLayTrang };
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+}
+
+test("tiến trình trình duyệt: bản kê ghi tabLabel thì chạy ở ĐÚNG trang ấy (trang mở thêm trong cùng hồ sơ) — không đụng trang đầu", async () => {
+  const r = await chayEgoTrang({ tabLabel: "p2", cacTrang: [["p1", "https://web.gia.test/"], ["p2", "https://web.gia.test/du-an"]] });
+  assert.deepEqual([r.code, r.kq.ok, r.daLayTrang], [0, true, ["p2"]], JSON.stringify(r.kq).slice(0, 300));
+});
+
+test("tiến trình trình duyệt: bản kê không ghi tabLabel thì lấy tab đầu tiên của nguồn như cũ", async () => {
+  const r = await chayEgoTrang({ cacTrang: [["p1", "https://web.gia.test/"], ["p2", "https://web.gia.test/du-an"]] });
+  assert.deepEqual([r.code, r.kq.ok, r.daLayTrang], [0, true, ["p1"]], JSON.stringify(r.kq).slice(0, 300));
+});
+
+test("tiến trình trình duyệt: trang ghi trong bản kê mà không phải của nguồn, hoặc không tồn tại, thì dừng trước khi gọi gì", async () => {
+  const sai = await chayEgoTrang({ tabLabel: "p9", cacTrang: [["p1", "https://web.gia.test/"], ["p9", "https://khac.example.org/"]] });
+  assert.deepEqual([sai.code, sai.kq.ok, sai.daLayTrang], [4, false, []], "không lấy trang của nơi khác");
+  assert.match(String(sai.kq.message), /không phải trang của nguồn/);
+  const thieu = await chayEgoTrang({ tabLabel: "p3", cacTrang: [["p1", "https://web.gia.test/"]] });
+  assert.deepEqual([thieu.code, thieu.kq.ok, thieu.daLayTrang], [4, false, []], "không lùi về tab đầu khi trang ghi không có");
+  assert.match(String(thieu.kq.message), /không có trang p3/);
+});

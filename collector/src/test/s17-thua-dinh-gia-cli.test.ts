@@ -24,6 +24,17 @@ test("parseCli: nhịp ngoài 150–400 ms bị từ chối; trong mức thì nh
   assert.equal(parseCli(base).paceMs, 350, "mặc định 350 ms — giữa mức đã đo");
 });
 
+test("parseCli: --tab <nhãn trang> chọn trang chạy trong trang (pha cần phiên); pha không chạy trong trang không nhận", () => {
+  const phien = [...base, "--phase", "session-check", "--space", "4"];
+  assert.equal(parseCli([...phien, "--tab", "p2"]).tabLabel, "p2");
+  assert.equal(parseCli(phien).tabLabel, undefined, "mặc định: tab đầu tiên của nguồn");
+  assert.throws(() => parseCli([...phien, "--tab", "a b"]), /--tab/);
+  assert.throws(() => parseCli([...base, "--tab", "p2"]), /không chạy trong trang/, "pha công khai chạy bằng Node");
+  assert.throws(() => parseCli([...anh, "--tab", "p2"]), /không chạy trong trang/);
+  const kq = egoOptions(parseCli([...phien, "--tab", "p2"]), loadConfig(JSON.stringify({ hosts: { api: "https://api.gia.test", agent: "https://agent.gia.test", web: "https://web.gia.test" }, paths: {}, session: { cookieName: "sid" } })), { statePath: "/a/s.json", logPath: "/a/l.jsonl", resultPath: "/a/r.json" });
+  assert.equal(kq.tabLabel, "p2", "nhãn trang đi vào bản kê của tiến trình trình duyệt");
+});
+
 test("parseCli: pha công khai đi bằng Node; pha cần phiên đi qua ego và phải khai space", () => {
   assert.equal(parseCli(base).via, "node");
   assert.equal(parseCli([...base, "--phase", "tile-mask", "--grid", "/tmp/luoi.json"]).via, "node");

@@ -61,6 +61,8 @@ export type ExecOptions = {
   anh?: { luongSong: number; soFile: number; chiNgoai?: boolean };
   /** Phần thửa mở rộng — pha lưới dày. */
   oLuoi?: { buocM: number; gioiHan?: number };
+  /** Nhãn trang gọi trong trang (mặc định: tab đầu tiên của nguồn) — để hai pha chạy song song ở hai trang của cùng hồ sơ. */
+  tabLabel?: string;
   /** fetch dùng cho pha ảnh — nơi gọi đặt (mặc định fetch toàn cục; test đệm bản giả). */
   anhFetch?: typeof fetch;
   env?: Env;
@@ -102,7 +104,7 @@ export type ExecSpec = Omit<ExecOptions, "phase" | "transport" | "transportMany"
 const CAC_TRUONG_KE = [
   "config", "snapshotRoot", "statePath", "logPath", "caps", "paceMs", "batchItems", "checkBalance", "grid", "listSize",
   "tileZoom", "emptyTileBytes", "projects", "proveBuilding", "apartmentPageSize", "listOnly", "parcels", "lowriseTerms",
-  "lowriseSweep", "concurrency", "tatCaDuAn", "anh", "oLuoi",
+  "lowriseSweep", "concurrency", "tatCaDuAn", "anh", "oLuoi", "tabLabel",
 ] as const satisfies readonly (keyof ExecSpec)[];
 
 /**

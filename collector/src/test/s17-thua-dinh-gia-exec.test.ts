@@ -389,6 +389,7 @@ test("buildExecOptions: mọi trường của bản kê đi nguyên vẹn sang t
     listSize: 55,
     tatCaDuAn: { tuSoCan: 3000, denSoCan: 9000, gioiHan: 7, ids: ["7"], concurrency: 2, apartmentPageSize: 77 },
     anh: { luongSong: 3, soFile: 120 },
+    tabLabel: "p2",
   };
   const o = buildExecOptions(ke) as Record<string, unknown>;
   assert.equal(o.phase, undefined, "pha do nơi gọi đặt");
@@ -397,6 +398,7 @@ test("buildExecOptions: mọi trường của bản kê đi nguyên vẹn sang t
   assert.equal(o.logPath, "/nhat-ky/l.jsonl");
   assert.deepEqual(o.caps, { calls: 41, minutes: 7 });
   assert.equal(o.paceMs, 211);
+  assert.equal(o.tabLabel, "p2", "trang chạy trong trang (mở thêm để hai pha song song) đi sang tiến trình trình duyệt");
   assert.equal(o.batchItems, 13);
   assert.equal(o.checkBalance, true);
   assert.equal(o.grid, ke.grid);

@@ -80,6 +80,8 @@ export type CliOptions = {
   anh?: { luongSong: number; soFile: number; chiNgoai: boolean };
   /** Phần thửa mở rộng — pha lưới dày. */
   oLuoi?: { buocM: number; gioiHan?: number };
+  /** Nhãn trang (vd `p2`) để gọi trong trang ấy thay cho tab đầu tiên của nguồn — mở thêm trang trong cùng hồ sơ thì hai pha chạy song song. */
+  tabLabel?: string;
 };
 
 export function parseCli(argv: string[]): CliOptions {
@@ -115,6 +117,7 @@ export function parseCli(argv: string[]): CliOptions {
       "anh-may-chu-ngoai": { type: "boolean" },
       "buoc-m": { type: "string" },
       "gioi-han-o": { type: "string" },
+      tab: { type: "string" },
     },
   });
   const phase = values.phase as Phase | undefined;
@@ -146,6 +149,10 @@ export function parseCli(argv: string[]): CliOptions {
   const buocM = values["buoc-m"] === undefined ? undefined : positive("--buoc-m", values["buoc-m"]);
   if (buocM !== undefined && buocM > 1000) throw new UsageError("--buoc-m không được lớn hơn 1000 (cạnh ô 1 km)");
   if (phase === "parcels-cell" && buocM === undefined) throw new UsageError("pha parcels-cell cần --buoc-m <số mét của bước lưới, vd 30 hoặc 100>");
+  if (values.tab !== undefined) {
+    if (isPublic) throw new UsageError(`pha ${phase} không chạy trong trang nên không nhận --tab`);
+    if (!/^[a-z][a-z0-9_-]{0,20}$/.test(values.tab)) throw new UsageError('--tab phải là nhãn trang của trình duyệt, vd p2 (chữ thường, số, gạch nối)');
+  }
   const anhLuongSong = values["anh-luong-song"] === undefined ? 4 : positive("--anh-luong-song", values["anh-luong-song"]);
   if (anhLuongSong > MAX_ANH_LUONG_SONG) throw new UsageError(`--anh-luong-song phải từ 1 đến ${MAX_ANH_LUONG_SONG}`);
   return {
@@ -180,6 +187,7 @@ export function parseCli(argv: string[]): CliOptions {
           },
         }
       : {}),
+    ...(values.tab !== undefined ? { tabLabel: values.tab } : {}),
     ...(phase === "parcels-cell" && buocM !== undefined ? { oLuoi: { buocM, ...(values["gioi-han-o"] === undefined ? {} : { gioiHan: positive("--gioi-han-o", values["gioi-han-o"]) }) } } : {}),
   };
 }

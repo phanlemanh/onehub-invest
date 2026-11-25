@@ -62,7 +62,25 @@ export type EgoOptions = {
   runId?: string;
   /** Mốc mở rộng — pha căn hộ toàn bộ dự án (đi qua trình điều khiển cùng các trường khác). */
   tatCaDuAn?: { tuSoCan?: number; denSoCan?: number; gioiHan?: number; ids?: string[] };
+  /** Nhãn trang gọi trong trang (vd `p2`): mặc định là tab đầu tiên của nguồn; ghi nhãn thì chỉ chạy ở trang ấy. */
+  tabLabel?: string;
 };
+
+/**
+ * Chọn trang để gọi trong trang. Bản kê ghi nhãn thì chỉ nhận đúng trang ấy và trang ấy phải là của nguồn — KHÔNG lùi
+ * về tab đầu (hai lượt chạy song song mà lùi thì hai lượt rơi vào cùng một trang). Không ghi thì lấy tab đầu tiên của
+ * nguồn (tab Mạnh đã đăng nhập).
+ */
+export function chonTrangGoi(tabs: Array<{ label?: string; url: string }>, web: string, tabLabel?: string): { loi: string } | { label?: string; url: string } {
+  if (tabLabel === undefined) {
+    const tab = tabs.find((t) => t.url.startsWith(web));
+    return tab ? { ...(tab.label ? { label: tab.label } : {}), url: tab.url } : { loi: "không có tab nào của nguồn" };
+  }
+  const tab = tabs.find((t) => t.label === tabLabel);
+  if (!tab) return { loi: `không có trang ${tabLabel}` };
+  if (!tab.url.startsWith(web)) return { loi: `trang ${tabLabel} không phải trang của nguồn` };
+  return { label: tab.label, url: tab.url };
+}
 
 type InPageResult = { status: number; contentType: string | null; body: string; bytes?: number; networkError?: string };
 type InPageInput = { url: string; headerJson: string; cookieName: string; timeoutMs: number };
@@ -229,12 +247,14 @@ export async function main(api: EgoApi, optionsPath: string): Promise<number> {
   }
 
   const tabs = await task.tabs();
-  const tab = tabs.find((t) => t.url.startsWith(opts.config.hosts.web));
-  if (!tab) {
-    await writeResult({ ok: false, message: `task space ${opts.spaceId} không có tab nào của nguồn để gọi trong trang` });
+  const chon = chonTrangGoi(tabs, opts.config.hosts.web, opts.tabLabel);
+  if ("loi" in chon) {
+    await writeResult({ ok: false, message: `task space ${opts.spaceId} ${chon.loi} — không gọi gì trong trang` });
     return 4;
   }
-  const page = tab.label ? task.page(tab.label) : await task.adopt(tab.page);
+  // Tab Mạnh mở chưa có nhãn: nhận quản lý (adopt). Trang mở thêm trong cùng hồ sơ đã có nhãn (vd p2): dùng thẳng,
+  // không đụng tab đầu — hai lượt chạy song song, mỗi lượt một trang.
+  const page = chon.label ? task.page(chon.label) : await task.adopt(tabs.find((t) => t.url === chon.url)?.page);
   const { transport, transportMany } = makeTransports(page, opts.cookieName ?? "", { sleep: env.sleep, pollMs: IN_PAGE_POLL_MS });
 
   try {
