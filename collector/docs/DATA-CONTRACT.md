@@ -557,8 +557,11 @@ Luật đọc:
      Trong mỗi dự án, URL đã lỗi tạm ở lượt trước được tải sau cùng.
      Quy tắc dừng «mất mạng» (`network-down`, không ghi nhận là nguồn chặn; một tệp tải được thì mọi bộ đếm đặt về
      không): lượt máy chủ nguồn dừng sau 10 lỗi tạm liền nhau; lượt máy chủ ngoài sau khi 50 MÁY CHỦ KHÁC NHAU cùng lỗi
-     tạm liền nhau; và phanh dự phòng cho cả hai lượt — 20 (nguồn) / 150 (ngoài) lỗi tạm liền nhau kể cả trên URL đã
-     lỗi ở lượt trước. URL đã lỗi tạm ở lượt trước không tính vào bộ đếm chính (lỗi kinh niên của riêng nó).
+     tạm liền nhau; và phanh dự phòng cho cả hai lượt — 20 (nguồn) / 150 (ngoài) lỗi tạm liền nhau KHÔNG có phản hồi
+     HTTP (chưa tới được máy chủ), kể cả trên URL đã lỗi ở lượt trước. Máy chủ đã trả lời (trang lỗi 5xx, trang HTML)
+     thì mạng của máy thu còn lên, không tính vào phanh (đêm 25/11: lượt chỉ còn URL đã lỗi, không có tệp nào thành
+     công để đặt lại bộ đếm, dừng oan ở 150). URL đã lỗi tạm ở lượt trước không tính vào bộ đếm chính (lỗi kinh niên
+     của riêng nó).
      Lỗi cấp máy chủ ở lượt ngoài chỉ ghi vĩnh viễn ngay khi là chuyện của riêng máy chủ: chuỗi lỗi cấp máy chủ liền
      nhau (không có tệp nào tải được xen giữa) chưa có hai máy chủ khác nhau. Nhiều máy chủ cùng chết liền nhau thì
      không phân biệt được với rớt mạng — mỗi lượt chỉ kết luận URL đầu tiên, phần còn lại đếm lượt thử.
