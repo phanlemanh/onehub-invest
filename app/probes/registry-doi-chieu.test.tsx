@@ -40,7 +40,8 @@ test("TDB-DC dải số, tổng cây, tin theo nguồn, danh mục khớp đếm
   const kv = {
     duAn: await so(`SELECT count(*) AS n FROM asset_nodes WHERE node_type = 'project'`),
     duAnXacMinh: await so(`SELECT count(*) AS n FROM asset_nodes WHERE node_type = 'project' AND catalog_tier = 'xac_minh'`),
-    phanKhu: await so(`SELECT count(*) AS n FROM asset_nodes WHERE node_type <> 'project'`),
+    // Cùng luật nghỉ với SQL_TONG của doc.ts (#498, DA46): nút phân khu, toà đã nối về nút khác (meta.nghi = true) không đếm.
+    phanKhu: await so(`SELECT count(*) AS n FROM asset_nodes WHERE node_type <> 'project' AND COALESCE((meta ->> 'nghi')::boolean, false) = false`),
     toa: await so(`SELECT count(*) AS n FROM buildings WHERE status = 'active'`),
     toaCoCan: await so(`SELECT count(DISTINCT b.building_key) AS n FROM buildings b JOIN units u ON u.building_key = b.building_key AND u.status = 'active' WHERE b.status = 'active'`),
     truc: await so(`SELECT count(*) AS n FROM stacks WHERE status = 'active'`),

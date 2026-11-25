@@ -5,7 +5,7 @@ slug: probe-danh-ba-dem-theo-luat-nghi
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: approved
+status: implemented
 veto_state: mo
 veto_opened_at: 2026-11-25T06:53:21Z
 approved_by:
