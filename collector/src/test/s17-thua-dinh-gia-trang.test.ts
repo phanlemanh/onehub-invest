@@ -425,3 +425,43 @@ test("tiến trình trình duyệt: trang ghi trong bản kê mà không phải 
   assert.deepEqual([thieu.code, thieu.kq.ok, thieu.daLayTrang], [4, false, []], "không lùi về tab đầu khi trang ghi không có");
   assert.match(String(thieu.kq.message), /không có trang p3/);
 });
+
+test("tiến trình trình duyệt: task space vẫn trong tay agent thì LẤY LẠI (taskSpace), không chiếm lại — lượt chạy song song không làm phiền lượt đang giữ space", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "s17-ego-space-"));
+  try {
+    const hosts = { api: "https://api.gia.test", agent: "https://agent.gia.test", web: "https://web.gia.test" };
+    const config = loadConfig(JSON.stringify({ hosts, paths: { "data-available": "/v2.x/data-available", "asset-type": "/v2.x/asset-type" }, session: { cookieName: "sid" } }));
+    const optionsPath = join(dir, "ego-options.json");
+    const resultPath = join(dir, "ego-result.json");
+    await writeFile(optionsPath, JSON.stringify({ config, phase: "session-check", snapshotRoot: join(dir, "snap"), statePath: join(dir, "s.json"), logPath: join(dir, "l.jsonl"), resultPath, caps: { calls: 5, minutes: 5 }, paceMs: 0, batchItems: 10, checkBalance: false, spaceId: 4, cookieName: "sid", runId: "abc123", tabLabel: "p2" }));
+    const { sandbox } = trangGia();
+    const page: EgoPage = { label: "p2", evaluate: (fn, arg) => { const f = runInNewContext(`(${fn.toString()})`, sandbox) as (a: unknown) => unknown; return Promise.resolve().then(() => f(arg)); } };
+    const daGoi: string[] = [];
+    const api: EgoApi = {
+      listTaskSpaces: async () => [{ id: 4, ownership: "agent" }],
+      taskSpace: async () => {
+        daGoi.push("taskSpace");
+        return { spaceId: 4, tabs: async () => [{ label: "p1", url: `${hosts.web}/`, page: null }, { label: "p2", url: `${hosts.web}/static/x.css`, page: null }], page: () => page, adopt: async () => { throw new Error("không được tự nhận tab"); } };
+      },
+      takeOverTaskSpace: async () => {
+        daGoi.push("takeOverTaskSpace");
+        throw new Error("không được chiếm lại space đang trong tay agent");
+      },
+      claimTaskSpace: async () => {
+        daGoi.push("claimTaskSpace");
+        throw new Error("không được nhận space khi đã thuộc về agent");
+      },
+    };
+    const code = await egoMain(api, optionsPath);
+    assert.equal(code, 0, "lượt chạy bình thường ở trang p2");
+    assert.deepEqual(daGoi, ["taskSpace"]);
+    // space được người dùng ủy quyền tạm: mới chiếm lại
+    const api2: EgoApi = { ...api, listTaskSpaces: async () => [{ id: 4, ownership: "agentDelegatedToUser" }], takeOverTaskSpace: async () => { daGoi.push("takeOverTaskSpace"); return { spaceId: 4, tabs: async () => [{ label: "p2", url: `${hosts.web}/static/x.css`, page: null }], page: () => page, adopt: async () => page }; } };
+    await writeFile(resultPath, "{}", "utf8");
+    const code2 = await egoMain(api2, optionsPath);
+    assert.equal(code2, 0);
+    assert.deepEqual(daGoi, ["taskSpace", "takeOverTaskSpace"]);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});

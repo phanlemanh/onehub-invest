@@ -28,6 +28,8 @@ type EgoTask = {
 export type EgoApi = {
   claimTaskSpace(id: number): Promise<EgoTask>;
   takeOverTaskSpace(id: number): Promise<EgoTask>;
+  /** Lấy lại task space vẫn trong tay agent (không chiếm của ai). */
+  taskSpace?(id: number): Promise<EgoTask>;
   listTaskSpaces(): Promise<Array<{ id: number; ownership: string }>>;
 };
 
@@ -240,7 +242,14 @@ export async function main(api: EgoApi, optionsPath: string): Promise<number> {
       await writeResult({ ok: false, message: `không thấy task space ${opts.spaceId}` });
       return 4;
     }
-    task = entry.ownership === "user" ? await api.claimTaskSpace(opts.spaceId) : await api.takeOverTaskSpace(opts.spaceId);
+    // Thuộc về người dùng: chỉ nhận lại (luật ở đầu tệp). Người dùng ủy quyền tạm: chiếm lại. Còn trong tay agent: LẤY
+    // LẠI bằng taskSpace — hai lượt chạy song song (hai trang của cùng hồ sơ) cùng lấy, không lượt nào chiếm của lượt kia.
+    task =
+      entry.ownership === "user"
+        ? await api.claimTaskSpace(opts.spaceId)
+        : entry.ownership === "agentDelegatedToUser" || !api.taskSpace
+          ? await api.takeOverTaskSpace(opts.spaceId)
+          : await api.taskSpace(opts.spaceId);
   } catch (e) {
     await writeResult({ ok: false, browserStop: true, message: String(e).slice(0, 400) });
     return 4;
