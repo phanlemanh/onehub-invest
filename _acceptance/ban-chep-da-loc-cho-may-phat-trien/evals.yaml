@@ -12,14 +12,14 @@ evals:
     criterion: AC-2
     executor: script
     cmd: config:executors.script.bcl_cot
-    expected: "exit 0; ma trận cột ba bảng người bán: cột đích = selectList của sync-cloud; seller_ref dạng S0x:số; tên/SĐT mang tên nguồn về NULL; cột local mới chưa duyệt vắng ở đích. Chiều đỏ: thêm cột mới vào bảng nguồn mà bản chép tự lấy SELECT * thì ca nêu tên cột"
-    paths: [scripts/ban-chep-da-loc.mjs, scripts/ban-chep-da-loc.test.mjs]
+    expected: "exit 0; ma trận cột ba bảng người bán: cột đích = selectList của sync-cloud; seller_ref dạng S0x:số; tên/SĐT mang tên nguồn về NULL; cột local mới chưa duyệt vắng ở đích. Chiều đỏ: thêm cột mới vào bảng nguồn mà bản chép tự lấy SELECT * thì ca nêu tên cột. Che: ma trận viết trước — chữ tự do có tên nguồn thành mã S0x, phần tử URL trúng bị bỏ khỏi mảng, khoá json trúng đổi thành mã, giá trị source thành mã; ô không trúng giữ nguyên. Lọc thô là tập cha của findSourceNames: mọi chuỗi findSourceNames bắt trong mẫu đều qua lọc thô; ca phá thu hẹp lọc thô thì đỏ nêu chuỗi mẫu bị sót (không in giá trị)"
+    paths: [scripts/ban-chep-da-loc.mjs, scripts/ban-chep-da-loc.test.mjs, pipeline/lib/che-ten-nguon-gia-tri.mjs]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3
     criterion: AC-3
     executor: script
     cmd: config:executors.script.bcl_soat
-    expected: "exit 0; ca xanh 0 trúng; ma trận cấy viết trước mười ô — ô text, ô json, ô text[], thân hàm, định nghĩa view, COMMENT ON, DEFAULT, nhãn enum, tên ràng buộc, tên chỉ mục — mỗi ô thoát 1, thông điệp nêu chỗ, không chứa token, DB đích bị xoá, không có tệp dump; số ca = 10; toàn bộ stdout/stderr của mười ca không chứa token nào của từ điển. Đối chứng dương: token không có trong source_registry cấy vào ô text[] thì không trúng"
+    expected: "exit 0; ca xanh 0 trúng sau che, tổng ô che theo bảng.cột trong ke.json bằng tổng ô bộ quét thô trúng trước che; ma trận cấy viết trước mười ô — ô text, ô json, ô text[], thân hàm, định nghĩa view, COMMENT ON, DEFAULT, nhãn enum, tên ràng buộc, tên chỉ mục — mỗi ô thoát 1, thông điệp nêu chỗ, không chứa token, DB đích bị xoá, không có tệp dump; số ca = 10; toàn bộ stdout/stderr của mười ca không chứa token nào của từ điển. Đối chứng dương: token không có trong source_registry cấy vào ô text[] thì không trúng"
     paths: [scripts/ban-chep-da-loc.mjs, scripts/ban-chep-da-loc.itest.mjs]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4

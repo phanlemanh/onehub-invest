@@ -29,7 +29,9 @@ Căn cứ: GS giao HT18 ngày 24/11.
   của sync-cloud trả, bảng con chỉ dòng có cha sống), `airdna_*` mang tên `ref_calib_*`; ngoài FILL chỉ `source_registry` (AC-5) và
   bảng của extension PostGIS (`spatial_ref_sys`) được có dòng, mọi bảng `public` khác 0 dòng; extension PostGIS có trên đích.
 - AC-2: Given bảng người bán, When chép, Then cột lên đích đúng bằng cột sync-cloud gửi (CLOUD_ALLOW trừ PII_EXCLUDE, SOURCE_EXCLUDE),
-  `seller_ref` dạng `<S0x>:<số>`, tên/SĐT mang tên nguồn về NULL; cột local mới chưa duyệt không lên đích.
+  `seller_ref` dạng `<S0x>:<số>`, tên/SĐT mang tên nguồn về NULL; cột local mới chưa duyệt không lên đích. Mọi giá trị chữ/json
+  khác mang tên nguồn được che trước bộ soát: chữ tự do thay tên bằng mã S0x (cùng lõi che của app), phần tử URL trúng bị bỏ khỏi
+  mảng, khoá json trúng đổi thành mã; số ô che theo bảng.cột ghi vào `ke.json` và bằng số ô bộ quét thô trúng trước khi che.
 - AC-3: Given token tên nguồn thật đọc từ `source_registry` máy thu, When bộ soát đọc lại DB đích, Then 0 chỗ chứa token ở cả dữ
   liệu (ô text, json, mảng text) lẫn lược đồ (thân hàm, định nghĩa view, COMMENT, DEFAULT, CHECK, nhãn enum, tên ràng buộc, tên
   chỉ mục; định danh lược đồ có sẵn — tên bảng, tên cột — không tính); cấy tên nguồn thật vào từng chỗ ấy thì lệnh thoát 1, nêu chỗ, không in giá trị, xoá DB đích, không ghi dump; từ điển
@@ -73,6 +75,8 @@ Căn cứ: GS giao HT18 ngày 24/11.
   `ref_calib_*` như cloud mà data-api chưa có bộ đổi tên; ngoài phạm vi, vì số S02 không thuộc Invest và API công khai (luật 5).
 
 ## Notes
+
+- DB đích không ép toàn vẹn ở bốn khoá ngoại trỏ sang bảng gốc 0 dòng (tên ghi trong `ke.json` mục khoá ngoại đã bỏ).
 
 - Phạm vi tệp: `scripts/ban-chep-da-loc*` (mã, test) và chín khoá lệnh kiểm `bcl_*` trong `_acceptance/config.yaml` (GS 25/11:
   khoá executor là đường T3, khai trong phạm vi). Không sửa `pipeline/sync-cloud.mjs`.
