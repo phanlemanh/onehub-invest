@@ -103,6 +103,8 @@ _Avoid_: unit (trong chữ UI), căn hộ (khi nói chung mọi loại)
 - Ghi chú: trang `/ops/registry` «Danh bạ» (máy thu, chỉ đọc) đi theo cây dự án → phân khu → toà → căn với số đếm, bậc danh mục, nguồn `S0x`, tin đang rao và mã dự án nguồn chưa nối; `/ops/registry/<id nút>` mở một dự án xuống tới căn.
 _Avoid_: master data, MDM
 
+**Không có vị trí**: Nhãn dòng riêng của một nguồn danh mục ở chân ô «Mã nguồn chưa nối» trên `/ops/registry` khi nguồn không có địa chỉ, điểm hay tỉnh (hôm nay là S10). Luật nối chặn cùng tỉnh nên dự án của nguồn ấy không nối được và không cộng vào ô. Code `NGUON_KHONG_VI_TRI` (`app/src/lib/ops/registry/doc.ts`), lý do `khong-vi-tri` trong `project_links`. _Avoid_: «thiếu tỉnh», «lỗi nguồn».
+
 **Danh bạ người**: Phần người của danh bạ — mỗi người một khoá mờ `pty_…` cấp một lần, thuộc đúng một nguồn (chưa nối xuyên nguồn); định danh tại nguồn là bí danh, quan hệ với tin là vai trò (ADR-0016 §8). Chỉ ở DB local.
 - Code: `party` · RESO: resource Member (khung), khoá local
 - Slug URL: `people`

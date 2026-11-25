@@ -44,7 +44,10 @@ function DanhBaRong() {
 
 /** Bốn ô số đầu trang — mỗi ô một câu hỏi quản lý: có bao nhiêu, bao nhiêu chắc chắn, bao nhiêu còn thiếu. */
 export function oSo(tong: TongDanhBa) {
-  const chuaNoi = tong.danhMuc.reduce((a, d) => a + d.chuaNoi, 0)
+  // Nguồn không có vị trí (S10) không cộng vào ô: không nối được theo luật chặn cùng tỉnh (DA3 AC-8); hiện riêng kèm lý do.
+  const vaoO = tong.danhMuc.filter((d) => d.tinhVaoO)
+  const rieng = tong.danhMuc.filter((d) => !d.tinhVaoO)
+  const chuaNoi = vaoO.reduce((a, d) => a + d.chuaNoi, 0)
   return [
     { title: "Dự án", value: fmtInt(tong.duAn), footer: `${fmtInt(tong.duAnXacMinh)} đã xác minh · ${fmtInt(tong.phanKhu)} phân khu` },
     { title: "Toà", value: fmtInt(tong.toa), footer: `${fmtInt(tong.toaCoCan)} toà có căn · ${fmtInt(tong.truc)} trục` },
@@ -54,11 +57,12 @@ export function oSo(tong: TongDanhBa) {
       value: fmtInt(chuaNoi),
       footer:
         [
-          ...tong.danhMuc.map((d) =>
+          ...vaoO.map((d) =>
             d.noiUngVien > 0
               ? `${d.source} ${fmtInt(d.chuaNoi)}/${fmtInt(d.daNap)} (${fmtInt(d.noiUngVien)} vào nút ứng viên)`
               : `${d.source} ${fmtInt(d.chuaNoi)}/${fmtInt(d.daNap)}`,
           ),
+          ...rieng.map((d) => `${d.source} ${fmtInt(d.chuaNoi)}/${fmtInt(d.daNap)} ${d.lyDoRieng ?? "không cộng vào ô"}`),
           tong.toaBiDanhS09 > 0 ? `S09 đã cấp tên ${fmtInt(tong.toaBiDanhS09)} toà` : null,
         ]
           .filter(Boolean)

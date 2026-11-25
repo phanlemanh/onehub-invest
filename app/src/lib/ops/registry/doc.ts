@@ -35,8 +35,20 @@ export type NutDanhBa = {
   tin: Record<string, number>
 }
 
-/** `noiUngVien`: số mã đã nối mà nút đích là nút ứng viên (`catalog_tier = 'mot_loi_khai'`, chưa ai xác minh) — DA55 tách khỏi số nối nút có sẵn. */
-export type NguonDanhMuc = { source: string; daNap: number; daNoi: number; chuaNoi: number; noiUngVien: number }
+/** `noiUngVien`: số mã đã nối mà nút đích là nút ứng viên (`catalog_tier = 'mot_loi_khai'`, chưa ai xác minh) — DA55 tách khỏi số nối nút có sẵn.
+ * `tinhVaoO`: nguồn có cộng vào ô «Mã nguồn chưa nối» không; nguồn không có vị trí (S10) hiện riêng kèm `lyDoRieng` (DA3 AC-8). */
+export type NguonDanhMuc = {
+  source: string
+  daNap: number
+  daNoi: number
+  chuaNoi: number
+  noiUngVien: number
+  tinhVaoO: boolean
+  lyDoRieng: string | null
+}
+
+/** Nguồn danh mục không có địa chỉ, điểm hay tỉnh: không nối được theo luật chặn cùng tỉnh, nên không cộng vào ô (DA3). */
+export const NGUON_KHONG_VI_TRI: Record<string, string> = { S10: "không có vị trí" }
 
 export type TongDanhBa = {
   duAn: number
@@ -142,12 +154,37 @@ SELECT
      WHERE a.source = 'S09' AND a.retired_at IS NULL AND b.status = 'active')::int AS toa_bi_danh_s09`
 
 /**
+ * Mã dự án đã nạp của ba nguồn danh mục S07, S09, S16 — đúng tập bản ghi cấp dự án mà bộ chuyển DA3 đọc
+ * (`SQL_NGUON` của `pipeline/lib/ban-ghi-nguon.mjs`): S07 thẻ danh sách ∪ trang chi tiết, S09 `v_s09_du_an_moi`, S16 trang dự án ∪ khu.
+ */
+/** Bảng nguồn danh mục mà câu đếm cần; nguồn thiếu bảng (DB chưa nạp nguồn ấy, hay schema thử) thì không có dòng. */
+const BANG_DANH_MUC = ["stg_s07_project_card", "stg_s07_project", "stg_s16_item", "stg_s16_khu", "stg_s10_project", "s10_project_links"] as const
+type BangCo = Set<string>
+
+function sqlMaDanhMuc(co: BangCo): string | null {
+  const phan: string[] = []
+  if (co.has("stg_s07_project_card") && co.has("stg_s07_project"))
+    phan.push(`SELECT 'S07' AS source, m.ma, max(m.ten) AS ten FROM (
+  SELECT pj_id::text AS ma, project_name AS ten FROM stg_s07_project_card
+  UNION ALL SELECT pj_id::text, project_name FROM stg_s07_project) m GROUP BY m.ma`)
+  phan.push(`SELECT 'S09' AS source, project_id AS ma, max(data ->> 'name') AS ten FROM v_s09_du_an_moi GROUP BY project_id`)
+  if (co.has("stg_s16_item") && co.has("stg_s16_khu"))
+    phan.push(`SELECT 'S16' AS source, m.ma, max(m.ten) AS ten FROM (
+  SELECT payload -> 'html' ->> 'slug' AS ma, payload -> 'html' -> 'project' ->> 'name' AS ten FROM stg_s16_item
+   WHERE kind = 'du-an' AND jsonb_typeof(payload -> 'html' -> 'project') = 'object'
+  UNION ALL SELECT du_an, du_an_ten FROM stg_s16_khu) m GROUP BY m.ma`)
+  return phan.join("\nUNION ALL\n")
+}
+const coS10 = (co: BangCo) => co.has("stg_s10_project") && co.has("s10_project_links")
+
+/**
  * Danh mục dự án đã nạp theo nguồn: số mã dự án khác nhau đã nạp, số đã nối nút, số đã nối vào nút ứng viên, số chưa nối (gồm
  * cả mã chưa qua bước nối). S06: mã trong `project_links`. S08: dự án của `stg_s08_project`, nối ở bảng tay `s08_project_links`
- * (DN1) hoặc ở `project_links` nguồn S08 (thẻ luật DA55) — mỗi dự án đếm một lần, bảng luật trước. S09: dự án của
- * `v_s09_du_an_moi` — kho chưa có bảng nối dự án S09 nên đã nối = 0.
+ * (DN1) hoặc ở `project_links` nguồn S08 (thẻ luật DA55) — mỗi dự án đếm một lần, bảng luật trước. S07, S09, S16: bản ghi
+ * cấp dự án của khuôn chung DA3 (`pipeline/lib/ban-ghi-nguon.mjs`), nối ở `project_links` (thẻ luật DA3). S10: dự án của
+ * `stg_s10_project`, nối ở `s10_project_links` hoặc `project_links`; không cộng vào ô (`NGUON_KHONG_VI_TRI`).
  */
-const SQL_DANH_MUC = `
+const sqlDanhMuc = (co: BangCo) => `
 SELECT 'S06' AS source, count(*)::int AS da_nap, (count(*) FILTER (WHERE pl.status = 'noi'))::int AS da_noi,
        (count(*) FILTER (WHERE pl.status = 'noi' AND n.catalog_tier = 'mot_loi_khai'))::int AS noi_ung_vien
 FROM project_links pl LEFT JOIN asset_nodes n ON n.id = pl.asset_node_id WHERE pl.source = 'S06'
@@ -160,10 +197,25 @@ FROM (SELECT p.project_id, coalesce(
       FROM (SELECT DISTINCT project_id FROM stg_s08_project) p) x
 LEFT JOIN asset_nodes n ON n.id = x.nut
 UNION ALL
-SELECT 'S09', count(*)::int, 0, 0 FROM v_s09_du_an_moi`
+SELECT m.source, count(*)::int, (count(*) FILTER (WHERE pl.status = 'noi'))::int,
+       (count(*) FILTER (WHERE pl.status = 'noi' AND n.catalog_tier = 'mot_loi_khai'))::int
+FROM (${sqlMaDanhMuc(co)}) m
+LEFT JOIN project_links pl ON pl.source = m.source AND pl.source_project_id = m.ma
+LEFT JOIN asset_nodes n ON n.id = pl.asset_node_id
+GROUP BY m.source
+${coS10(co) ? `UNION ALL
+SELECT 'S10', count(*)::int, (count(*) FILTER (WHERE x.nut IS NOT NULL))::int,
+       (count(*) FILTER (WHERE x.nut IS NOT NULL AND n.catalog_tier = 'mot_loi_khai'))::int
+FROM (SELECT p.project_id, coalesce(
+        (SELECT asset_node_id FROM project_links pl WHERE pl.source = 'S10' AND pl.source_project_id = p.project_id AND pl.status = 'noi'),
+        (SELECT asset_node_id FROM s10_project_links l WHERE l.project_id = p.project_id AND l.status = 'noi')) AS nut
+      FROM (SELECT DISTINCT project_id FROM stg_s10_project) p) x
+LEFT JOIN asset_nodes n ON n.id = x.nut
+HAVING count(*) > 0` : ""}
+ORDER BY 1`
 
 /** Mã dự án nguồn chưa nối (thứ tự: nguồn, mã). Tên dự án S08, S09 là thông tin dự án công khai (ROADMAP §3 mục 38). */
-const SQL_CHUA_NOI = `
+const sqlChuaNoi = (co: BangCo) => `
 SELECT 'S06' AS source, source_project_id AS ma, NULL::text AS ten, ly_do FROM project_links WHERE source = 'S06' AND status = 'chua_noi'
 UNION ALL
 SELECT 'S08', p.project_id, max(p.project_name), coalesce(max(pl.ly_do), max(l.ly_do))
@@ -171,7 +223,14 @@ FROM stg_s08_project p LEFT JOIN s08_project_links l USING (project_id)
 LEFT JOIN project_links pl ON pl.source = 'S08' AND pl.source_project_id = p.project_id
 WHERE l.status IS DISTINCT FROM 'noi' AND pl.status IS DISTINCT FROM 'noi' GROUP BY p.project_id
 UNION ALL
-SELECT 'S09', project_id, data ->> 'name', NULL FROM v_s09_du_an_moi
+SELECT m.source, m.ma, m.ten, pl.ly_do FROM (${sqlMaDanhMuc(co)}) m
+LEFT JOIN project_links pl ON pl.source = m.source AND pl.source_project_id = m.ma
+WHERE pl.status IS DISTINCT FROM 'noi'
+${coS10(co) ? `UNION ALL
+SELECT 'S10', p.project_id, max(p.project_label), coalesce(max(pl.ly_do), max(l.ly_do), 'khong-vi-tri')
+FROM stg_s10_project p LEFT JOIN s10_project_links l USING (project_id)
+LEFT JOIN project_links pl ON pl.source = 'S10' AND pl.source_project_id = p.project_id
+WHERE l.status IS DISTINCT FROM 'noi' AND pl.status IS DISTINCT FROM 'noi' GROUP BY p.project_id` : ""}
 ORDER BY 1, 2`
 
 function nutTuHang(r: HangNut): NutDanhBa {
@@ -194,11 +253,15 @@ function nutTuHang(r: HangNut): NutDanhBa {
 
 /** Toàn bộ danh bạ cho trang /ops/registry: dải số, mọi nút kèm số đếm, tên tỉnh/thành, mã nguồn chưa nối. */
 export async function docDanhBa(q: Q = pool): Promise<DanhBa> {
+  // Bảng nguồn danh mục có mặt (to_regclass theo search_path): nguồn chưa nạp bảng thì không có dòng, không làm hỏng trang.
+  const { rows: bangCo } = await q.query<{ ten: string }>(
+    `SELECT t AS ten FROM unnest($1::text[]) AS t WHERE to_regclass(t) IS NOT NULL`, [BANG_DANH_MUC as unknown as string[]])
+  const co: BangCo = new Set(bangCo.map((r) => r.ten))
   const [tong, nut, danhMuc, chuaNoi, tinh] = await Promise.all([
     q.query<{ du_an: number; du_an_xac_minh: number; phan_khu: number; toa: number; toa_co_can: number; truc: number; can: number; toa_bi_danh_s09: number }>(SQL_TONG),
     q.query<HangNut>(SQL_NUT),
-    q.query<{ source: string; da_nap: number; da_noi: number; noi_ung_vien: number }>(SQL_DANH_MUC),
-    q.query<{ source: string; ma: string; ten: string | null; ly_do: string | null }>(SQL_CHUA_NOI),
+    q.query<{ source: string; da_nap: number; da_noi: number; noi_ung_vien: number }>(sqlDanhMuc(co)),
+    q.query<{ source: string; ma: string; ten: string | null; ly_do: string | null }>(sqlChuaNoi(co)),
     q.query<{ id: string; name: string }>(`SELECT id, name FROM areas WHERE parent_id IS NULL`),
   ])
   const t = tong.rows[0]
@@ -212,7 +275,15 @@ export async function docDanhBa(q: Q = pool): Promise<DanhBa> {
       truc: t.truc,
       can: t.can,
       toaBiDanhS09: t.toa_bi_danh_s09,
-      danhMuc: danhMuc.rows.map((r) => ({ source: r.source, daNap: r.da_nap, daNoi: r.da_noi, chuaNoi: r.da_nap - r.da_noi, noiUngVien: r.noi_ung_vien })),
+      danhMuc: danhMuc.rows.map((r) => ({
+        source: r.source,
+        daNap: r.da_nap,
+        daNoi: r.da_noi,
+        chuaNoi: r.da_nap - r.da_noi,
+        noiUngVien: r.noi_ung_vien,
+        tinhVaoO: !(r.source in NGUON_KHONG_VI_TRI),
+        lyDoRieng: NGUON_KHONG_VI_TRI[r.source] ?? null,
+      })),
     },
     nut: nut.rows.map(nutTuHang),
     // Tên ngắn như getAreaNames của /ops: bỏ tiền tố «Thành phố »/«Tỉnh ».

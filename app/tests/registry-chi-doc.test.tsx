@@ -301,9 +301,9 @@ test("TDB-AC-3 dải số đầu trang và danh mục đã nạp chưa nối the
     { duAn: 3, duAnXacMinh: 2, phanKhu: 3, toa: 3, toaCoCan: 2, truc: 1, can: 5, toaBiDanhS09: 1 },
   )
   assert.deepEqual(tong.danhMuc, [
-    { source: "S06", daNap: 3, daNoi: 2, chuaNoi: 1, noiUngVien: 0 },
-    { source: "S08", daNap: 4, daNoi: 1, chuaNoi: 3, noiUngVien: 0 },
-    { source: "S09", daNap: 2, daNoi: 0, chuaNoi: 2, noiUngVien: 0 },
+    { source: "S06", daNap: 3, daNoi: 2, chuaNoi: 1, noiUngVien: 0, tinhVaoO: true, lyDoRieng: null },
+    { source: "S08", daNap: 4, daNoi: 1, chuaNoi: 3, noiUngVien: 0, tinhVaoO: true, lyDoRieng: null },
+    { source: "S09", daNap: 2, daNoi: 0, chuaNoi: 2, noiUngVien: 0, tinhVaoO: true, lyDoRieng: null },
   ])
   const html = await htmlDanhBa()
   assert.match(html, /S08 3\/4/)

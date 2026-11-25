@@ -76,7 +76,7 @@ test("RS8: S08 đã nối đếm hai bảng một lần, tách số nối vào n
   const { docDanhBa } = await import("../src/lib/ops/registry/doc")
   const d: DanhBa = await docDanhBa(c as never)
   const s08 = d.tong.danhMuc.find((x) => x.source === "S08")
-  assert.deepEqual(s08, { source: "S08", daNap: 5, daNoi: 3, chuaNoi: 2, noiUngVien: 1 })
+  assert.deepEqual(s08, { source: "S08", daNap: 5, daNoi: 3, chuaNoi: 2, noiUngVien: 1, tinhVaoO: true, lyDoRieng: null })
   const chan = oSo(d.tong).find((o) => o.title === "Mã nguồn chưa nối")?.footer ?? ""
   assert.match(chan, /S08 2\/5 \(1 vào nút ứng viên\)/, `chân ô thiếu số tách: ${chan}`)
   const chua = d.chuaNoi.filter((r) => r.source === "S08").map((r) => [r.ma, r.lyDo ?? null])

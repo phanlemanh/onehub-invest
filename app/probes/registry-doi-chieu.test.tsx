@@ -77,8 +77,22 @@ test("TDB-DC dải số, tổng cây, tin theo nguồn, danh mục khớp đếm
     { source: "S08", daNap: await so(`SELECT count(DISTINCT project_id) AS n FROM stg_s08_project`),
       daNoi: await so(`SELECT count(*) AS n FROM (SELECT project_id FROM s08_project_links WHERE status = 'noi' UNION SELECT source_project_id FROM project_links WHERE source = 'S08' AND status = 'noi') x WHERE x.project_id IN (SELECT project_id FROM stg_s08_project)`),
       noiUngVien: await so(`SELECT count(*) AS n FROM project_links pl JOIN asset_nodes n ON n.id = pl.asset_node_id WHERE pl.source = 'S08' AND pl.status = 'noi' AND n.catalog_tier = 'mot_loi_khai' AND pl.source_project_id IN (SELECT project_id FROM stg_s08_project)`) },
-    { source: "S09", daNap: await so(`SELECT count(DISTINCT project_id) AS n FROM stg_s09_item WHERE kind = 'du-an' AND detail_ok AND project_id IS NOT NULL`), daNoi: 0, noiUngVien: 0 },
-  ].map((x) => ({ source: x.source, daNap: x.daNap, daNoi: x.daNoi, chuaNoi: x.daNap - x.daNoi, noiUngVien: x.noiUngVien }))
+    // S07, S09, S16 (DA3): mã đã nạp đếm thẳng trên bảng stg, nối ở project_links; S10 hiện riêng, không cộng vào ô.
+    { source: "S07", daNap: await so(`SELECT count(*) AS n FROM (SELECT pj_id FROM stg_s07_project_card UNION SELECT pj_id FROM stg_s07_project) x`),
+      daNoi: await so(`SELECT count(*) AS n FROM project_links WHERE source = 'S07' AND status = 'noi'`),
+      noiUngVien: await so(`SELECT count(*) AS n FROM project_links pl JOIN asset_nodes n ON n.id = pl.asset_node_id WHERE pl.source = 'S07' AND pl.status = 'noi' AND n.catalog_tier = 'mot_loi_khai'`) },
+    { source: "S09", daNap: await so(`SELECT count(DISTINCT project_id) AS n FROM stg_s09_item WHERE kind = 'du-an' AND detail_ok AND project_id IS NOT NULL`),
+      daNoi: await so(`SELECT count(*) AS n FROM project_links WHERE source = 'S09' AND status = 'noi'`),
+      noiUngVien: await so(`SELECT count(*) AS n FROM project_links pl JOIN asset_nodes n ON n.id = pl.asset_node_id WHERE pl.source = 'S09' AND pl.status = 'noi' AND n.catalog_tier = 'mot_loi_khai'`) },
+    { source: "S10", daNap: await so(`SELECT count(DISTINCT project_id) AS n FROM stg_s10_project`),
+      daNoi: await so(`SELECT count(*) AS n FROM (SELECT project_id FROM s10_project_links WHERE status = 'noi' UNION SELECT source_project_id FROM project_links WHERE source = 'S10' AND status = 'noi') x`),
+      noiUngVien: 0 },
+    { source: "S16", daNap: await so(`SELECT count(*) AS n FROM (SELECT payload -> 'html' ->> 'slug' AS m FROM stg_s16_item WHERE kind = 'du-an' AND jsonb_typeof(payload -> 'html' -> 'project') = 'object' UNION SELECT du_an FROM stg_s16_khu) x`),
+      daNoi: await so(`SELECT count(*) AS n FROM project_links WHERE source = 'S16' AND status = 'noi'`),
+      noiUngVien: await so(`SELECT count(*) AS n FROM project_links pl JOIN asset_nodes n ON n.id = pl.asset_node_id WHERE pl.source = 'S16' AND pl.status = 'noi' AND n.catalog_tier = 'mot_loi_khai'`) },
+  ].sort((a, b) => a.source.localeCompare(b.source))
+    .map((x) => ({ source: x.source, daNap: x.daNap, daNoi: x.daNoi, chuaNoi: x.daNap - x.daNoi, noiUngVien: x.noiUngVien,
+      tinhVaoO: x.source !== "S10", lyDoRieng: x.source === "S10" ? "không có vị trí" : null }))
   assert.deepEqual(danhMuc, dm, "TDB-DC danh mục")
   console.log(`# TDB-DC danh mục ${JSON.stringify(dm)}`)
 
