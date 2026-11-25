@@ -343,8 +343,12 @@ Khoá nối với S16/S08 (chi tiết số đo ở tệp kê local của lượt
     nguồn, không mang phiên;
   - *có phiên* — `du_an_list`, `du_an_detail` và mọi kind căn hộ, thửa: gọi TRONG TAB của hồ sơ nơi Mạnh đã đăng
     nhập (trình duyệt ego lite), phiên do chính trang gắn. Thông tin phiên là tầng A: không rời trình duyệt, không vào
-    snapshot, không vào log.
-  - *tệp tĩnh* — `anh_du_an`: tải ảnh bằng fetch của Node, không mang phiên, KHÔNG gọi API của nguồn (luật 12).
+    snapshot, không vào log. Từ 25/11 (Mạnh chốt «mở song song để tăng tốc về đích») mỗi pha chạy ở một trang riêng của
+    cùng hồ sơ (`--tab <nhãn trang>`): căn hộ ở tab Mạnh đã đăng nhập, thửa ở một trang mở thêm vào MỘT TỆP TĨNH của
+    cùng origin — không phải trang ứng dụng nên không có mã của nguồn chạy. Không đăng nhập lại, không chép phiên,
+    không điều hướng tab của Mạnh; mỗi lượt một thư mục trạng thái riêng.
+  - *tệp tĩnh* — `anh_du_an`: tải ảnh bằng fetch của Node, không mang phiên, KHÔNG gọi API của nguồn (luật 12); tối
+    đa 16 kết nối một lượt.
 - **Đường API không nằm trong hợp đồng lẫn trong code.** Bộ thu gọi theo *vai* (`project-list`, `project-detail`,
   `building-tree`, `gallery`, `land-price-by-district`…); đường thật đọc từ tệp local ngoài git
   (`~/.oneinvest/s17-thua-dinh-gia.json`); mỗi vai chỉ nhận đúng tên tham số đã khai. Đường hay tham số ngoài danh
@@ -516,7 +520,8 @@ Luật đọc:
      `…-4-4` rồi `…-5-6`): bên đọc vẫn cộng dồn theo item.
    - **Hai lượt chạy riêng**, phân biệt bằng `meta.nhomMayChu`: `nguon` — ảnh trên máy chủ lưu trữ của chính nguồn;
      `ngoai` — ảnh chèn từ máy chủ khác (Mạnh chốt 25/11 «Lấy cả ảnh ở máy chủ ngoài»; đo: 82.127 URL trên 4.101 máy
-     chủ, 68.877 trên một máy chủ). Lượt máy chủ ngoài mỗi máy chủ tối đa hai lời cùng lúc. Trước khi kết nối tới một
+     chủ, 68.877 trên một máy chủ). Lượt máy chủ ngoài mỗi máy chủ tối đa sáu lời cùng lúc (mức một trình duyệt thường
+     mở cho một máy chủ). Trước khi kết nối tới một
      máy chủ ngoài (kể cả mỗi bước chuyển hướng) bộ thu giải tên máy chủ; tên trỏ vào dải địa chỉ nội bộ thì KHÔNG kết
      nối — là lỗi tạm (`chiTiet: dns-noi-bo`, chưa từng gửi lời nào; quá ba lượt thì ghi `qua-so-lan-thu`).
    - **Mã lỗi vĩnh viễn** trong `mediaFiles[].error` — hỏi lại cũng vậy, bộ thu không tải lại: `het-han` (link quá hạn
@@ -557,7 +562,9 @@ Luật đọc:
      tải riêng), không phải lỗi của nguồn.
 13. *(mốc mở rộng)* **Bản đồ phủ thửa** (pha `parcels-map`). Mặt nạ của mốc ngày 1 chỉ nói ô 10 km × 10 km có ít nhất
    một điểm có thửa. Pha này thăm dò 121 điểm cách 1 km (mét Mercator) trong ô quanh TÂM của mỗi tile mặt nạ có dữ liệu
-   (503 tile) — khoảng 62.000 lời; điểm không có thửa nguồn trả `data: null` trong khoảng 0,1 s. Kết quả là kind
+   (503 tile) — khoảng 62.000 lời; điểm không có thửa nguồn trả `data: null` trong khoảng 0,1 s. Chạy ở trang mở
+   thêm của cùng hồ sơ, song song với pha căn hộ (thư mục trạng thái riêng). Đo 25/11 (tám luồng, nhịp 250 ms, lúc
+   căn hộ cũng đang chạy): khoảng 1,2 lời/s; ba ô đầu có 38, 22, 43 toạ độ trúng thửa trong 121. Kết quả là kind
    `thua_ban_do` (một item một tile) và những item `thua` có `phuongPhap: "ban-do"` — những thửa này chỉ là dấu chứng có
    dữ liệu, KHÔNG phải kiểm kê. Đa giác tỉnh trên máy thu không dùng được để dựng lưới (đo 25/11: 20 tỉnh cộng
    352.000 km²) nên mọi toạ độ tính theo tile. Điểm lỗi mạng được ghi nhận là `"loi"`, không hỏi lại.
