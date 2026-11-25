@@ -34,7 +34,7 @@ evals:
     executor: script
     cmd: config:executors.script.scc_kho
     long_running: 60
-    expected: "exit 0 trên máy thu thật, lượt khô (--kho): mọi biến đường cloud (token, URL) trỏ vào cổng chết 127.0.0.1:1 và ca kiểm không có socket nào mở tới máy chủ Supabase (lsof của tiến trình); chiều đỏ: bỏ --kho với cùng môi trường thì lượt fail kết nối, không ghi. Số ô che theo bảng.cột = số máy thu của do-ten-nguon-cloud.mjs --chi-may-thu; bộ chặn 0; phép đếm thô độc lập (khớp thẳng chuỗi gốc real_name, tên miền, source_ids, không phân biệt hoa thường) trên payload đã che = 0; pha đọc + che + soát của mã mới ≤ 1,5 lần pha đọc + soát của mã cũ (git stash-free: chạy mã cũ từ worktree tạm ở merge-base) đo cùng giờ, và lượt đầy đủ ước tính < 15 phút. Ngoài CI"
+    expected: "exit 0 trên máy thu thật, lượt khô (--kho): mọi biến đường cloud (token, URL) trỏ vào cổng chết 127.0.0.1:1 và ca kiểm không có socket nào mở tới máy chủ Supabase (lsof của tiến trình); chiều đỏ: bỏ --kho với cùng môi trường thì lượt fail kết nối, không ghi. Số ô che theo bảng.cột = số máy thu của do-ten-nguon-cloud.mjs --chi-may-thu; bộ chặn 0; phép đếm thô độc lập (khớp thẳng chuỗi gốc real_name, tên miền, source_ids, không phân biệt hoa thường) trên payload đã che = 0; pha đọc + che + soát của mã mới ≤ 1,5 lần pha đọc + soát của mã cũ (git stash-free: chạy mã cũ từ worktree tạm ở merge-base) đo cùng giờ, và phần mã mới thêm (che + soát mới) ≤ 2 phút so với mã cũ trên cùng dữ liệu (sửa 25/11 theo lời Mạnh). Ngoài CI"
     paths: [pipeline/sync-cloud.mjs, scripts/do-ten-nguon-cloud.mjs]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E6

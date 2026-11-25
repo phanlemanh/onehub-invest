@@ -5,7 +5,7 @@ slug: sync-cloud-che-ten-nguon-moi-cot
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli]
-status: approved
+status: implemented
 approved_by: Mạnh
 approved_at: 2026-11-25T09:13:20Z
 design_doc: docs/superpowers/specs/2026-11-25-sync-cloud-che-ten-nguon-moi-cot-design.md
@@ -33,7 +33,8 @@ che tên nguồn ở mọi cột đi lên bằng hàm dùng chung của HT18 và
 - AC-5: Given máy thu thật, When chạy lượt sync khô (đọc + che + soát, không gửi, không đường nào tới cloud), Then số ô che theo bảng.cột
   bằng số đếm của `scripts/do-ten-nguon-cloud.mjs` phía máy thu, bộ chặn ra 0, một phép đếm thô độc lập (khớp thẳng chuỗi gốc của
   source_registry, không phân biệt hoa thường) trên dữ liệu đã che ra 0, và pha đọc + che + soát không quá 1,5 lần pha đọc + soát của
-  mã cũ đo cùng giờ, lượt đầy đủ ước tính dưới 15 phút.
+  mã cũ đo cùng giờ, và mã mới thêm không quá 2 phút so với mã cũ trên cùng dữ liệu (sửa 25/11, Mạnh «Đồng ý sửa»: vế «lượt đầy đủ
+  dưới 15 phút» sai từ lúc viết vì chưa đo đường nền — lượt prod trước khi đổi đã 20–27 phút; rút ngắn lượt là việc của HT10).
 - AC-6: Given lệnh đo `scripts/do-ten-nguon-cloud.mjs`, When chạy, Then nó chỉ gửi SELECT khoá chính + cột lên cloud trong giao dịch
   chỉ đọc (không mẫu nào chứa tên nguồn), đếm tại máy, in bảng.cột · ô cloud · ô máy thu, không ghi đĩa giá trị; ca kiểm lời gọi
   ghi lại mọi câu SQL gửi đi và không câu nào chứa token tên nguồn.
