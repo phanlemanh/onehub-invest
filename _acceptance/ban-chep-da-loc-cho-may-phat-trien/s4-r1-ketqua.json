@@ -1,0 +1,391 @@
+{
+ "verdict": "BLOCKED",
+ "failedEvals": [
+  "E1",
+  "E4",
+  "E5",
+  "E6",
+  "E7",
+  "E8",
+  "E10",
+  "E9",
+  "E11"
+ ],
+ "failedCommands": [
+  {
+   "cmd": "bash db/db-thu.sh oneinvest_suite_bcl --chay node --test --test-concurrency=1 --test-name-pattern='^BCL-1:' scripts/ban-chep-da-loc.itest.mjs",
+   "evals": [
+    "E1"
+   ],
+   "exitCode": 1
+  },
+  {
+   "cmd": "bash db/db-thu.sh oneinvest_suite_bcl --chay node --test --test-concurrency=1 --test-name-pattern='^BCL-4:' scripts/ban-chep-da-loc.itest.mjs",
+   "evals": [
+    "E4"
+   ],
+   "exitCode": 1
+  },
+  {
+   "cmd": "bash db/db-thu.sh oneinvest_suite_bcl --chay node --test --test-concurrency=1 --test-name-pattern='^BCL-5:' scripts/ban-chep-da-loc.itest.mjs",
+   "evals": [
+    "E5"
+   ],
+   "exitCode": 1
+  },
+  {
+   "cmd": "bash db/db-thu.sh oneinvest_suite_bcl --chay node --test --test-concurrency=1 --test-name-pattern='^BCL-6:' scripts/ban-chep-da-loc.itest.mjs",
+   "evals": [
+    "E6"
+   ],
+   "exitCode": 1
+  },
+  {
+   "cmd": "bash db/db-thu.sh oneinvest_suite_bcl --chay node --test --test-concurrency=1 --test-name-pattern='^BCL-7:' scripts/ban-chep-da-loc.itest.mjs",
+   "evals": [
+    "E7"
+   ],
+   "exitCode": 1
+  },
+  {
+   "cmd": "bash db/db-thu.sh oneinvest_suite_bcl --chay node --test --test-concurrency=1 --test-name-pattern='^BCL-8:' scripts/ban-chep-da-loc.itest.mjs",
+   "evals": [
+    "E8"
+   ],
+   "exitCode": 1
+  },
+  {
+   "cmd": "bash db/db-thu.sh oneinvest_suite_bcl --chay node --test --test-concurrency=1 --test-name-pattern='^BCL-10:' scripts/ban-chep-da-loc.itest.mjs",
+   "evals": [
+    "E10"
+   ],
+   "exitCode": 1
+  },
+  {
+   "cmd": "node scripts/ban-chep-da-loc-that.mjs",
+   "evals": [
+    "E9"
+   ],
+   "exitCode": 1
+  },
+  {
+   "cmd": "ui-check:E11",
+   "evals": [
+    "E11"
+   ],
+   "exitCode": 1
+  }
+ ],
+ "blocked": [
+  {
+   "cmd": "bash db/db-thu.sh oneinvest_suite_bcl --chay node --test --test-concurrency=1 --test-name-pattern='^BCL-3:' scripts/ban-chep-da-loc.itest.mjs",
+   "reason": "Lệnh `bash db/db-thu.sh oneinvest_suite_bcl --chay node --test ... BCL-3` chạy nền quá 30 phút (30:05) mà chưa in dòng __EXIT=, vượt trần long_running mặc định 30 phút; không khai long_running trong evals.yaml nên dùng mặc định. Tôi đã gửi SIGTERM cho tiến trình wrapper và node test; exit 144 là do chính tôi dừng (SIGTERM), KHÔNG phải kết quả test. Chưa có PASS/FAIL nào. Tệp đầu ra nền trống (lệnh ghi vào tệp tạm bên trong). Cần chạy lại với long_running đã khai, hoặc kiểm tra vì sao BCL-3 treo (DB container oneinvest_suite_bcl, lock, hoặc test chờ)."
+  },
+  {
+   "cmd": "node scripts/suite-neu-doi.mjs pipeline_a -- 'cd pipeline && npm run test:a'",
+   "reason": "Lệnh suite pipeline_a chạy quá khoảng 30 phút chưa xong: khai long_running: 30 cho eval trong evals.yaml (mặc định vàng). Không có dòng __EXIT trong tệp đầu ra, nên không xác định được PASS/FAIL. Không bị công cụ giết (lệnh đã được chuyển nền, không phải timeout cứng). Lệnh vẫn còn chạy nền với ID b28dmvwok; không khởi động lại để tránh chạy trùng."
+  }
+ ],
+ "confirmedFindings": [
+  {
+   "title": "ke.json đi kèm dump sang M5 mang tên nguồn thật của S02 (airdna_*), không qua bộ soát",
+   "file": "scripts/ban-chep-da-loc.mjs",
+   "line": 761,
+   "severity": "medium",
+   "detail": "Bản chép đổi airdna_* → ref_calib_* (C4 SPL), giống sync-cloud, để tên nguồn thật không nằm trong DB đem chia sẻ. Nhưng ke.json lại ghi tên bảng gốc: `cot_loai_ve_null: cotLoai`, với cotLoai đánh khoá bằng tên NGUỒN `t` (dòng 728), và `doi_ten: doiTen.map((t) => [t, RENAME(t)])`. Trong state/ban-chep-m5/ke.json hiện có 14 chỗ chứa token của S02 (real_name 'airdna', migration 012). Đó là các khoá `<S02>_markets`, `<S02>_listings`… ở cot_loai_ve_null và cặp đổi tên ở doi_ten. Theo design §3, ke.json được chép tay sang M5 cùng tệp dump, và `--kiem --khong-tu-dien` trên M5 bắt buộc phải có nó. Bộ soát soatDich chỉ đọc DB, không quét ke.json, nên tầng A rời máy mà không bị chặn, đúng chỗ phép đổi tên được dựng ra để tránh. Các mục ham_bo, ham_mat_khi_doi_view, chi_muc_bo, khoa_ngoai_bo cũng chứa tên đối tượng lấy từ catalog mà không được soát. Hướng sửa: đánh khoá bằng RENAME(t), bỏ hoặc che doi_ten, và cho chữ ke.json qua findSourceNames trước khi ghi (đỏ thì không ghi).",
+   "source": "conventions",
+   "tid": "t1",
+   "inContract": false,
+   "acRef": null,
+   "rationale": "AC-3 chỉ soát DB đích và dòng lệnh in ra; tệp ke.json đi kèm dump không nằm trong AC nào và không có mục Out of scope nói tới.",
+   "proposal": "new-contract",
+   "plain": "Tệp kê đi kèm bản chép có thể mang tên nguồn thật của một nguồn số liệu đối chiếu. Khi chép sang máy phát triển, tên đó rời khỏi máy thu mà không bị chặn.",
+   "can_cu": "Là lộ tên nguồn thật ra ngoài máy, thuộc nhóm dữ liệu cấm rời máy, nhưng chỉ là tên bảng trong tệp kê chứ không phải dữ liệu người dùng; muốn đóng hẳn thì cần thêm tiêu chí soát tệp kê trong một hợp đồng riêng, và sửa sớm rẻ hơn sửa sau khi tệp đã chép đi.",
+   "unclassified": false,
+   "khongBacBo": true
+  },
+  {
+   "title": "--kiem không kiểm DATABASE_URL ở biên; tạo và soát DB tạm qua host của URL nhưng pg_restore luôn vào container",
+   "file": "scripts/ban-chep-da-loc.mjs",
+   "line": 936,
+   "severity": "medium",
+   "detail": "chayChep chặn mọi nguồn khác Postgres local :5433 bằng phanTichNguon. chayKiem thì nhận nguyên DATABASE_URL: nhánh không qua docker của duongNoi dựng `new URL(nguonUrl)` với host và cổng bất kỳ, rồi chạy `DROP DATABASE … WITH (FORCE)` và `CREATE DATABASE` trên host đó (dòng 994–995), sau đó mở moDb(tam) cũng trên host đó để đếm dòng và soát. Còn pg_restore (dòng 999) luôn chạy qua dx(), tức `docker exec <container> pg_restore -h localhost`. Khi DATABASE_URL không trỏ đúng vào container (máy M5 có Postgres riêng ở 5432, hoặc một URL từ xa/cloud trong env), có hai khả năng: DDL CREATE/DROP DATABASE chạy trên máy chủ khác, chẳng hạn trên cloud, việc cần lời riêng của Mạnh; hoặc khôi phục vào một chỗ trong khi soát ở chỗ khác. Cần kiểm DATABASE_URL bằng phanTichNguon, hoặc cho nhánh cổng mạng chạy pg_restore tới đúng URL ấy.",
+   "source": "conventions",
+   "tid": "t2",
+   "inContract": false,
+   "acRef": null,
+   "rationale": "AC-7 chỉ nói đích của lệnh chép; không AC nào yêu cầu kiểm địa chỉ máy chủ khi chạy chế độ kiểm.",
+   "proposal": "known-limits",
+   "plain": "Nếu biến môi trường trỏ nhầm sang một máy chủ khác, lệnh kiểm có thể tạo và xoá một cơ sở dữ liệu tạm ở đó, hoặc khôi phục vào một nơi mà soát ở nơi khác.",
+   "can_cu": "Chỉ xảy ra khi người chạy cấu hình sai máy chủ và chỉ đụng cơ sở dữ liệu tạm có tên riêng, không mất dữ liệu thật; người dùng tự tránh được bằng cách chạy đúng máy.}",
+   "unclassified": false,
+   "khongBacBo": true
+  },
+  {
+   "title": "itest xoá mọi DB oneinvest_m5_* trên máy chủ :5433 dùng chung, ngoài DB của riêng lượt",
+   "file": "scripts/ban-chep-da-loc.itest.mjs",
+   "line": 80,
+   "severity": "medium",
+   "detail": "Quy ước của kho: test chạy trên DB của riêng lượt (db-thu --chay oneinvest_suite_*), và lệnh phá phải dùng danh sách cho phép oneinvest_suite_*. Itest này lại gọi `donHet()` trong afterEach và after. chep() chạy chayChep với `DICH = tenDich()`, tức đúng tên bản chép thật của ngày hôm nay, và chayChep tự xoá mọi oneinvest_m5_* trước khi dựng (dòng 704 của ban-chep-da-loc.mjs). BCL-10 còn chạy `--don`. Mọi lệnh xoá đều dùng `DROP DATABASE … WITH (FORCE)`. Hậu quả: chạy bất kỳ executor bcl_* nào (E1, E3–E8, E10) trên máy thu sẽ cắt ngang và xoá bản chép thật đang được preview app-3467-ban-chep-m5 phục vụ (E11) hoặc đang chờ chép sang M5. Nếu một lượt --kiem đang chạy thì DB tạm oneinvest_m5_kiem_<pid> của nó cũng mất. Cần cho itest một tên đích và khuôn dọn riêng, chẳng hạn gắn theo DB lượt hoặc pid, thay vì dùng khuôn chung oneinvest_m5_*.",
+   "source": "conventions",
+   "tid": "t3",
+   "inContract": false,
+   "acRef": null,
+   "rationale": "Hành vi của bộ test tích hợp, không phải hành vi của lệnh chép mà AC mô tả; AC-10 chỉ nói về lệnh chép.",
+   "proposal": "known-limits",
+   "plain": "Chạy bộ kiểm tự động trên máy thu có thể xoá bản chép thật đang được dùng để xem thử, buộc phải chép lại.",
+   "can_cu": "Mất công chép lại bản dữ liệu chứ không mất dữ liệu gốc, và chỉ xảy ra khi chạy test trên máy thu; người dùng tự làm lại được bằng một lệnh.",
+   "unclassified": false,
+   "khongBacBo": true
+  },
+  {
+   "title": "--kiem: ống tệp dump → pg_restore không bắt lỗi EPIPE trên stdin, tiến trình sập và bỏ lại DB tạm",
+   "file": "scripts/ban-chep-da-loc.mjs",
+   "line": 304,
+   "severity": "medium",
+   "detail": "Trong chay(), nhánh inFile chạy `createReadStream(inFile).pipe(p.stdin)` mà không gắn `p.stdin.on(\"error\", …)`. Nhánh input có gắn, ongCopy cũng có gắn cho dst.stdin, chỉ nhánh này thiếu. chayKiem gọi pg_restore với --exit-on-error qua `docker exec -i`. Khi pg_restore gặp lỗi sớm, ví dụ ở pre-data, nó thoát lúc phần lớn dump còn chưa đọc. docker exec thoát theo và lần ghi tiếp theo vào stdin trả EPIPE. Readable.pipe phát lại lỗi trên stream đích khi không có listener nào khác, nên thành uncaught exception. Hậu quả: tiến trình sập kèm stack, nhánh `ĐỎ khôi phục` (in stderr đã che) không chạy, khối finally của chayKiem không chạy nên DB `oneinvest_m5_kiem_<pid>` còn lại. Mã thoát 1 đến từ lỗi crash chứ không từ kết quả soát. Cách sửa: gắn `p.stdin.on(\"error\", () => {})` (và bắt lỗi của ReadStream) cho cả nhánh inFile.",
+   "source": "bugs",
+   "tid": "t4",
+   "inContract": true,
+   "acRef": "AC-8",
+   "rationale": "AC-8 yêu cầu DB tạm bị xoá cả khi đỏ; sập vì lỗi ghi sớm làm bỏ lại DB tạm và không in kết quả đỏ đúng.",
+   "proposal": null,
+   "plain": null,
+   "can_cu": null,
+   "unclassified": false
+  },
+  {
+   "title": "E9: spawn data-api không có listener 'error' — thiếu tsx thì tiến trình sập, DB đích không bị xoá",
+   "file": "scripts/ban-chep-da-loc-that.mjs",
+   "line": 47,
+   "severity": "low",
+   "detail": "`api = spawn(data-api/node_modules/.bin/tsx, …)` không gắn `api.on(\"error\")`. Trong worktree mới, `data-api/node_modules` thường chưa có vì bị gitignore. Khi đó spawn phát 'error' (ENOENT) bất đồng bộ trong lúc đang await choSan, và không có listener nên thành uncaught exception. Process thoát ngay: khối finally (kill data-api, `xoaDb(dich)`) không chạy, dòng `.catch` của main() cũng không bắt được. DB `oneinvest_m5_<hôm nay>` còn lại, trái với mô tả `xoá DB đích khi xong`. Tương tự, `readFileSync(ke.json)` và `congTrong()` nằm trước khối try, nên lỗi ở đó cũng bỏ lại DB đích.",
+   "source": "bugs",
+   "tid": "t5",
+   "inContract": false,
+   "acRef": null,
+   "rationale": "AC-9 chỉ đo data-api trả dữ liệu; việc dọn DB đích khi script chạy thử sập không thuộc AC nào (AC-10 nói về lệnh chép).",
+   "proposal": "known-limits",
+   "plain": "Khi chạy thử đầu-cuối mà thiếu công cụ chạy API, script sập và để lại một bản chép trong máy.",
+   "can_cu": "Chỉ để lại một cơ sở dữ liệu thừa trên máy thu, không lộ hay mất dữ liệu; xoá được bằng lệnh dọn có sẵn.",
+   "unclassified": false,
+   "khongBacBo": true
+  },
+  {
+   "title": "Đối số --dich/--ra thiếu giá trị bị lặng lẽ rơi về mặc định",
+   "file": "scripts/ban-chep-da-loc.mjs",
+   "line": 1039,
+   "severity": "low",
+   "detail": "docDoiSo gán `a.dich = argv[++i]` và `a.ra = argv[++i]` mà không kiểm còn giá trị. Gọi `--dich` hoặc `--ra` ở cuối dòng lệnh cho ra undefined. main() sau đó dùng `a.dich ?? tenDich()` và `a.ra ? … : RA_MAC_DINH`, nên lệnh vẫn chép vào tên hôm nay hoặc thư mục mặc định (đồng thời xoá mọi oneinvest_m5_* cũ và các dump ngày khác trong thư mục ấy) thay vì trả mã 2 «đối số sai» như header hứa. `--kiem` không kèm tệp thì đã được chặn ở chayKiem (mã 2), nhưng --dich và --ra thì không.",
+   "source": "bugs",
+   "tid": "t6",
+   "inContract": false,
+   "acRef": null,
+   "rationale": "Không AC nào quy định xử lý đối số thiếu giá trị.",
+   "proposal": "known-limits",
+   "plain": "Gõ thiếu giá trị sau tuỳ chọn đích hoặc thư mục ra thì lệnh vẫn chạy với mặc định thay vì báo sai, và xoá các bản chép cũ.",
+   "can_cu": "Hậu quả chỉ là xoá bản chép cũ đã được tạo lại được, và đích vẫn bị ràng buộc dạng tên an toàn; người dùng chạy lại là xong.",
+   "unclassified": false,
+   "khongBacBo": true
+  },
+  {
+   "title": "Hình dạng 1 (đo chỉ dẫn thay vì đầu ra): seller_ref dạng S0x:số và tên/SĐT về NULL chỉ được kiểm bằng regex trên chuỗi SQL, không kiểm giá trị ở đích",
+   "file": "scripts/ban-chep-da-loc.test.mjs",
+   "line": 44,
+   "severity": "medium",
+   "detail": "E2 hứa một tính chất của GIÁ TRỊ đầu ra: «seller_ref dạng S0x:số; tên/SĐT mang tên nguồn về NULL». Test «BCL-2: sale_offers — seller_ref về dạng <S0x>:<số>…» chỉ dò chuỗi trong ke.sql, gồm `assert.match(ke.sql, /\"source\" \\|\\| ':' \\|\\| substring.../)`, `assert.match(ke.sql, new RegExp(`THEN NULL ELSE \"${c}\" END`))` và `ke.sql.includes(\"'quoxa bds'\")`. Thêm vào đó, `assert.equal(SELLER_REF_RE, \"^S0[1-9]:[0-9]+$\")` chỉ so một hằng với một chuỗi viết tay, không nối gì tới đầu ra. Không ca nào chạy biểu thức này trên dữ liệu. Ví dụ, nếu cột `source` ở local mang tên nguồn thay vì mã S0x, seller_ref ra «<tên>:123» mà test vẫn xanh. Trong itest (scripts/ban-chep-da-loc.itest.mjs) không có ca nào đọc sale_offers.seller_ref, seller_name hay seller_phone trên DB đích và khớp chúng với SELLER_REF_RE hoặc kiểm NULL.",
+   "source": "measurement",
+   "tid": "t7",
+   "inContract": true,
+   "acRef": "AC-2",
+   "rationale": "AC-2 hứa giá trị seller_ref và tên/SĐT ở đích, nhưng không ca nào đo giá trị đầu ra nên tiêu chí chưa được chứng minh.",
+   "proposal": null,
+   "plain": null,
+   "can_cu": null,
+   "unclassified": false
+  },
+  {
+   "title": "Hình dạng 1 (đo chỉ dẫn thay vì đầu ra): «cột đích = selectList, cột local mới vắng ở đích» chỉ đo trên kế hoạch cột, không đo DB đích; assert đầu là tautology",
+   "file": "scripts/ban-chep-da-loc.test.mjs",
+   "line": 29,
+   "severity": "medium",
+   "detail": "Test BCL-2 cho ba bảng người bán gọi `assert.deepEqual(ke.cols, selectList(t, local, [], TOKENS).cols)`. Với mọi bảng khác source_registry, keHoachCot chỉ là `return selectList(table, localCols, [], tokens)` (scripts/ban-chep-da-loc.mjs:104), nên assert này so một hàm với chính nó. Ca «chiều đỏ SELECT *» gọi `cotThua(t, local, local, TOKENS)`: nó đưa vào một danh sách giả định chứ không chạy một bản chép. Ở đích thật, lược đồ được chép nguyên (chepLuocDo), và moCotLoai (dòng 459-466) chỉ DROP DEFAULT/NOT NULL nên cột loại và cột chưa duyệt VẪN CÓ trên bảng đích. Như vậy lời hứa «vắng ở đích» không bao giờ được đo trên đầu ra. Cổng giữ đầu ra thật là nhánh `cot_chua_duyet` của bộ soát (dòng 829-845), và itest không có ca nào cấy giá trị vào seller_phone hay một cột chưa duyệt ở đích để thấy nhánh ấy đỏ.",
+   "source": "measurement",
+   "tid": "t8",
+   "inContract": true,
+   "acRef": "AC-2",
+   "rationale": "AC-2 hứa cột local mới chưa duyệt không lên đích, nhưng test chỉ so kế hoạch với chính nó, không đo DB đích.",
+   "proposal": null,
+   "plain": null,
+   "can_cu": null,
+   "unclassified": false
+  },
+  {
+   "title": "Hình dạng 4 (assertion âm tính một mình): ca «lỗi cấy giữa bước chép» chỉ kiểm mã 1 và «không còn DB», không ghim thông điệp, không có đối chứng là DB đã được dựng",
+   "file": "scripts/ban-chep-da-loc.itest.mjs",
+   "line": 576,
+   "severity": "low",
+   "detail": "Ca `BCL-10: lỗi cấy giữa bước chép` chỉ có `assert.equal(r.ma, 1)`, `assert.deepEqual(await dsDbM5(), [])` và `!coDump(r.ra)`. Thông điệp «lỗi cấy giữa bước chép (E10)» không được ghim, và không có bước nào xác nhận DB đích đã tồn tại trước lúc ném lỗi. chayChep còn những đường trả 1 TRƯỚC taoDb, ví dụ từ điển rỗng (`return 1` ngay sau docSourceNameEntries, trước dòng 703-705). Khi rơi vào đường ấy, cả ba assert âm tính vẫn xanh mà bước dọn khi gãy giữa chừng chưa hề chạy.",
+   "source": "measurement",
+   "tid": "t9",
+   "inContract": true,
+   "acRef": "AC-10",
+   "rationale": "AC-10 yêu cầu lệnh lỗi giữa chừng thì không còn DB đích; ca test có thể xanh mà chưa hề chạy bước dọn nên không chứng minh được tiêu chí.",
+   "proposal": null,
+   "plain": null,
+   "can_cu": null,
+   "unclassified": false
+  }
+ ],
+ "triaged": [
+  {
+   "title": "ke.json đi kèm dump sang M5 mang tên nguồn thật của S02 (airdna_*), không qua bộ soát",
+   "file": "scripts/ban-chep-da-loc.mjs",
+   "line": 761,
+   "severity": "medium",
+   "detail": "Bản chép đổi airdna_* → ref_calib_* (C4 SPL), giống sync-cloud, để tên nguồn thật không nằm trong DB đem chia sẻ. Nhưng ke.json lại ghi tên bảng gốc: `cot_loai_ve_null: cotLoai`, với cotLoai đánh khoá bằng tên NGUỒN `t` (dòng 728), và `doi_ten: doiTen.map((t) => [t, RENAME(t)])`. Trong state/ban-chep-m5/ke.json hiện có 14 chỗ chứa token của S02 (real_name 'airdna', migration 012). Đó là các khoá `<S02>_markets`, `<S02>_listings`… ở cot_loai_ve_null và cặp đổi tên ở doi_ten. Theo design §3, ke.json được chép tay sang M5 cùng tệp dump, và `--kiem --khong-tu-dien` trên M5 bắt buộc phải có nó. Bộ soát soatDich chỉ đọc DB, không quét ke.json, nên tầng A rời máy mà không bị chặn, đúng chỗ phép đổi tên được dựng ra để tránh. Các mục ham_bo, ham_mat_khi_doi_view, chi_muc_bo, khoa_ngoai_bo cũng chứa tên đối tượng lấy từ catalog mà không được soát. Hướng sửa: đánh khoá bằng RENAME(t), bỏ hoặc che doi_ten, và cho chữ ke.json qua findSourceNames trước khi ghi (đỏ thì không ghi).",
+   "source": "conventions",
+   "tid": "t1",
+   "inContract": false,
+   "acRef": null,
+   "rationale": "AC-3 chỉ soát DB đích và dòng lệnh in ra; tệp ke.json đi kèm dump không nằm trong AC nào và không có mục Out of scope nói tới.",
+   "proposal": "new-contract",
+   "plain": "Tệp kê đi kèm bản chép có thể mang tên nguồn thật của một nguồn số liệu đối chiếu. Khi chép sang máy phát triển, tên đó rời khỏi máy thu mà không bị chặn.",
+   "can_cu": "Là lộ tên nguồn thật ra ngoài máy, thuộc nhóm dữ liệu cấm rời máy, nhưng chỉ là tên bảng trong tệp kê chứ không phải dữ liệu người dùng; muốn đóng hẳn thì cần thêm tiêu chí soát tệp kê trong một hợp đồng riêng, và sửa sớm rẻ hơn sửa sau khi tệp đã chép đi.",
+   "unclassified": false,
+   "khongBacBo": true
+  },
+  {
+   "title": "--kiem không kiểm DATABASE_URL ở biên; tạo và soát DB tạm qua host của URL nhưng pg_restore luôn vào container",
+   "file": "scripts/ban-chep-da-loc.mjs",
+   "line": 936,
+   "severity": "medium",
+   "detail": "chayChep chặn mọi nguồn khác Postgres local :5433 bằng phanTichNguon. chayKiem thì nhận nguyên DATABASE_URL: nhánh không qua docker của duongNoi dựng `new URL(nguonUrl)` với host và cổng bất kỳ, rồi chạy `DROP DATABASE … WITH (FORCE)` và `CREATE DATABASE` trên host đó (dòng 994–995), sau đó mở moDb(tam) cũng trên host đó để đếm dòng và soát. Còn pg_restore (dòng 999) luôn chạy qua dx(), tức `docker exec <container> pg_restore -h localhost`. Khi DATABASE_URL không trỏ đúng vào container (máy M5 có Postgres riêng ở 5432, hoặc một URL từ xa/cloud trong env), có hai khả năng: DDL CREATE/DROP DATABASE chạy trên máy chủ khác, chẳng hạn trên cloud, việc cần lời riêng của Mạnh; hoặc khôi phục vào một chỗ trong khi soát ở chỗ khác. Cần kiểm DATABASE_URL bằng phanTichNguon, hoặc cho nhánh cổng mạng chạy pg_restore tới đúng URL ấy.",
+   "source": "conventions",
+   "tid": "t2",
+   "inContract": false,
+   "acRef": null,
+   "rationale": "AC-7 chỉ nói đích của lệnh chép; không AC nào yêu cầu kiểm địa chỉ máy chủ khi chạy chế độ kiểm.",
+   "proposal": "known-limits",
+   "plain": "Nếu biến môi trường trỏ nhầm sang một máy chủ khác, lệnh kiểm có thể tạo và xoá một cơ sở dữ liệu tạm ở đó, hoặc khôi phục vào một nơi mà soát ở nơi khác.",
+   "can_cu": "Chỉ xảy ra khi người chạy cấu hình sai máy chủ và chỉ đụng cơ sở dữ liệu tạm có tên riêng, không mất dữ liệu thật; người dùng tự tránh được bằng cách chạy đúng máy.}",
+   "unclassified": false,
+   "khongBacBo": true
+  },
+  {
+   "title": "itest xoá mọi DB oneinvest_m5_* trên máy chủ :5433 dùng chung, ngoài DB của riêng lượt",
+   "file": "scripts/ban-chep-da-loc.itest.mjs",
+   "line": 80,
+   "severity": "medium",
+   "detail": "Quy ước của kho: test chạy trên DB của riêng lượt (db-thu --chay oneinvest_suite_*), và lệnh phá phải dùng danh sách cho phép oneinvest_suite_*. Itest này lại gọi `donHet()` trong afterEach và after. chep() chạy chayChep với `DICH = tenDich()`, tức đúng tên bản chép thật của ngày hôm nay, và chayChep tự xoá mọi oneinvest_m5_* trước khi dựng (dòng 704 của ban-chep-da-loc.mjs). BCL-10 còn chạy `--don`. Mọi lệnh xoá đều dùng `DROP DATABASE … WITH (FORCE)`. Hậu quả: chạy bất kỳ executor bcl_* nào (E1, E3–E8, E10) trên máy thu sẽ cắt ngang và xoá bản chép thật đang được preview app-3467-ban-chep-m5 phục vụ (E11) hoặc đang chờ chép sang M5. Nếu một lượt --kiem đang chạy thì DB tạm oneinvest_m5_kiem_<pid> của nó cũng mất. Cần cho itest một tên đích và khuôn dọn riêng, chẳng hạn gắn theo DB lượt hoặc pid, thay vì dùng khuôn chung oneinvest_m5_*.",
+   "source": "conventions",
+   "tid": "t3",
+   "inContract": false,
+   "acRef": null,
+   "rationale": "Hành vi của bộ test tích hợp, không phải hành vi của lệnh chép mà AC mô tả; AC-10 chỉ nói về lệnh chép.",
+   "proposal": "known-limits",
+   "plain": "Chạy bộ kiểm tự động trên máy thu có thể xoá bản chép thật đang được dùng để xem thử, buộc phải chép lại.",
+   "can_cu": "Mất công chép lại bản dữ liệu chứ không mất dữ liệu gốc, và chỉ xảy ra khi chạy test trên máy thu; người dùng tự làm lại được bằng một lệnh.",
+   "unclassified": false,
+   "khongBacBo": true
+  },
+  {
+   "title": "--kiem: ống tệp dump → pg_restore không bắt lỗi EPIPE trên stdin, tiến trình sập và bỏ lại DB tạm",
+   "file": "scripts/ban-chep-da-loc.mjs",
+   "line": 304,
+   "severity": "medium",
+   "detail": "Trong chay(), nhánh inFile chạy `createReadStream(inFile).pipe(p.stdin)` mà không gắn `p.stdin.on(\"error\", …)`. Nhánh input có gắn, ongCopy cũng có gắn cho dst.stdin, chỉ nhánh này thiếu. chayKiem gọi pg_restore với --exit-on-error qua `docker exec -i`. Khi pg_restore gặp lỗi sớm, ví dụ ở pre-data, nó thoát lúc phần lớn dump còn chưa đọc. docker exec thoát theo và lần ghi tiếp theo vào stdin trả EPIPE. Readable.pipe phát lại lỗi trên stream đích khi không có listener nào khác, nên thành uncaught exception. Hậu quả: tiến trình sập kèm stack, nhánh `ĐỎ khôi phục` (in stderr đã che) không chạy, khối finally của chayKiem không chạy nên DB `oneinvest_m5_kiem_<pid>` còn lại. Mã thoát 1 đến từ lỗi crash chứ không từ kết quả soát. Cách sửa: gắn `p.stdin.on(\"error\", () => {})` (và bắt lỗi của ReadStream) cho cả nhánh inFile.",
+   "source": "bugs",
+   "tid": "t4",
+   "inContract": true,
+   "acRef": "AC-8",
+   "rationale": "AC-8 yêu cầu DB tạm bị xoá cả khi đỏ; sập vì lỗi ghi sớm làm bỏ lại DB tạm và không in kết quả đỏ đúng.",
+   "proposal": null,
+   "plain": null,
+   "can_cu": null,
+   "unclassified": false
+  },
+  {
+   "title": "E9: spawn data-api không có listener 'error' — thiếu tsx thì tiến trình sập, DB đích không bị xoá",
+   "file": "scripts/ban-chep-da-loc-that.mjs",
+   "line": 47,
+   "severity": "low",
+   "detail": "`api = spawn(data-api/node_modules/.bin/tsx, …)` không gắn `api.on(\"error\")`. Trong worktree mới, `data-api/node_modules` thường chưa có vì bị gitignore. Khi đó spawn phát 'error' (ENOENT) bất đồng bộ trong lúc đang await choSan, và không có listener nên thành uncaught exception. Process thoát ngay: khối finally (kill data-api, `xoaDb(dich)`) không chạy, dòng `.catch` của main() cũng không bắt được. DB `oneinvest_m5_<hôm nay>` còn lại, trái với mô tả `xoá DB đích khi xong`. Tương tự, `readFileSync(ke.json)` và `congTrong()` nằm trước khối try, nên lỗi ở đó cũng bỏ lại DB đích.",
+   "source": "bugs",
+   "tid": "t5",
+   "inContract": false,
+   "acRef": null,
+   "rationale": "AC-9 chỉ đo data-api trả dữ liệu; việc dọn DB đích khi script chạy thử sập không thuộc AC nào (AC-10 nói về lệnh chép).",
+   "proposal": "known-limits",
+   "plain": "Khi chạy thử đầu-cuối mà thiếu công cụ chạy API, script sập và để lại một bản chép trong máy.",
+   "can_cu": "Chỉ để lại một cơ sở dữ liệu thừa trên máy thu, không lộ hay mất dữ liệu; xoá được bằng lệnh dọn có sẵn.",
+   "unclassified": false,
+   "khongBacBo": true
+  },
+  {
+   "title": "Đối số --dich/--ra thiếu giá trị bị lặng lẽ rơi về mặc định",
+   "file": "scripts/ban-chep-da-loc.mjs",
+   "line": 1039,
+   "severity": "low",
+   "detail": "docDoiSo gán `a.dich = argv[++i]` và `a.ra = argv[++i]` mà không kiểm còn giá trị. Gọi `--dich` hoặc `--ra` ở cuối dòng lệnh cho ra undefined. main() sau đó dùng `a.dich ?? tenDich()` và `a.ra ? … : RA_MAC_DINH`, nên lệnh vẫn chép vào tên hôm nay hoặc thư mục mặc định (đồng thời xoá mọi oneinvest_m5_* cũ và các dump ngày khác trong thư mục ấy) thay vì trả mã 2 «đối số sai» như header hứa. `--kiem` không kèm tệp thì đã được chặn ở chayKiem (mã 2), nhưng --dich và --ra thì không.",
+   "source": "bugs",
+   "tid": "t6",
+   "inContract": false,
+   "acRef": null,
+   "rationale": "Không AC nào quy định xử lý đối số thiếu giá trị.",
+   "proposal": "known-limits",
+   "plain": "Gõ thiếu giá trị sau tuỳ chọn đích hoặc thư mục ra thì lệnh vẫn chạy với mặc định thay vì báo sai, và xoá các bản chép cũ.",
+   "can_cu": "Hậu quả chỉ là xoá bản chép cũ đã được tạo lại được, và đích vẫn bị ràng buộc dạng tên an toàn; người dùng chạy lại là xong.",
+   "unclassified": false,
+   "khongBacBo": true
+  },
+  {
+   "title": "Hình dạng 1 (đo chỉ dẫn thay vì đầu ra): seller_ref dạng S0x:số và tên/SĐT về NULL chỉ được kiểm bằng regex trên chuỗi SQL, không kiểm giá trị ở đích",
+   "file": "scripts/ban-chep-da-loc.test.mjs",
+   "line": 44,
+   "severity": "medium",
+   "detail": "E2 hứa một tính chất của GIÁ TRỊ đầu ra: «seller_ref dạng S0x:số; tên/SĐT mang tên nguồn về NULL». Test «BCL-2: sale_offers — seller_ref về dạng <S0x>:<số>…» chỉ dò chuỗi trong ke.sql, gồm `assert.match(ke.sql, /\"source\" \\|\\| ':' \\|\\| substring.../)`, `assert.match(ke.sql, new RegExp(`THEN NULL ELSE \"${c}\" END`))` và `ke.sql.includes(\"'quoxa bds'\")`. Thêm vào đó, `assert.equal(SELLER_REF_RE, \"^S0[1-9]:[0-9]+$\")` chỉ so một hằng với một chuỗi viết tay, không nối gì tới đầu ra. Không ca nào chạy biểu thức này trên dữ liệu. Ví dụ, nếu cột `source` ở local mang tên nguồn thay vì mã S0x, seller_ref ra «<tên>:123» mà test vẫn xanh. Trong itest (scripts/ban-chep-da-loc.itest.mjs) không có ca nào đọc sale_offers.seller_ref, seller_name hay seller_phone trên DB đích và khớp chúng với SELLER_REF_RE hoặc kiểm NULL.",
+   "source": "measurement",
+   "tid": "t7",
+   "inContract": true,
+   "acRef": "AC-2",
+   "rationale": "AC-2 hứa giá trị seller_ref và tên/SĐT ở đích, nhưng không ca nào đo giá trị đầu ra nên tiêu chí chưa được chứng minh.",
+   "proposal": null,
+   "plain": null,
+   "can_cu": null,
+   "unclassified": false
+  },
+  {
+   "title": "Hình dạng 1 (đo chỉ dẫn thay vì đầu ra): «cột đích = selectList, cột local mới vắng ở đích» chỉ đo trên kế hoạch cột, không đo DB đích; assert đầu là tautology",
+   "file": "scripts/ban-chep-da-loc.test.mjs",
+   "line": 29,
+   "severity": "medium",
+   "detail": "Test BCL-2 cho ba bảng người bán gọi `assert.deepEqual(ke.cols, selectList(t, local, [], TOKENS).cols)`. Với mọi bảng khác source_registry, keHoachCot chỉ là `return selectList(table, localCols, [], tokens)` (scripts/ban-chep-da-loc.mjs:104), nên assert này so một hàm với chính nó. Ca «chiều đỏ SELECT *» gọi `cotThua(t, local, local, TOKENS)`: nó đưa vào một danh sách giả định chứ không chạy một bản chép. Ở đích thật, lược đồ được chép nguyên (chepLuocDo), và moCotLoai (dòng 459-466) chỉ DROP DEFAULT/NOT NULL nên cột loại và cột chưa duyệt VẪN CÓ trên bảng đích. Như vậy lời hứa «vắng ở đích» không bao giờ được đo trên đầu ra. Cổng giữ đầu ra thật là nhánh `cot_chua_duyet` của bộ soát (dòng 829-845), và itest không có ca nào cấy giá trị vào seller_phone hay một cột chưa duyệt ở đích để thấy nhánh ấy đỏ.",
+   "source": "measurement",
+   "tid": "t8",
+   "inContract": true,
+   "acRef": "AC-2",
+   "rationale": "AC-2 hứa cột local mới chưa duyệt không lên đích, nhưng test chỉ so kế hoạch với chính nó, không đo DB đích.",
+   "proposal": null,
+   "plain": null,
+   "can_cu": null,
+   "unclassified": false
+  },
+  {
+   "title": "Hình dạng 4 (assertion âm tính một mình): ca «lỗi cấy giữa bước chép» chỉ kiểm mã 1 và «không còn DB», không ghim thông điệp, không có đối chứng là DB đã được dựng",
+   "file": "scripts/ban-chep-da-loc.itest.mjs",
+   "line": 576,
+   "severity": "low",
+   "detail": "Ca `BCL-10: lỗi cấy giữa bước chép` chỉ có `assert.equal(r.ma, 1)`, `assert.deepEqual(await dsDbM5(), [])` và `!coDump(r.ra)`. Thông điệp «lỗi cấy giữa bước chép (E10)» không được ghim, và không có bước nào xác nhận DB đích đã tồn tại trước lúc ném lỗi. chayChep còn những đường trả 1 TRƯỚC taoDb, ví dụ từ điển rỗng (`return 1` ngay sau docSourceNameEntries, trước dòng 703-705). Khi rơi vào đường ấy, cả ba assert âm tính vẫn xanh mà bước dọn khi gãy giữa chừng chưa hề chạy.",
+   "source": "measurement",
+   "tid": "t9",
+   "inContract": true,
+   "acRef": "AC-10",
+   "rationale": "AC-10 yêu cầu lệnh lỗi giữa chừng thì không còn DB đích; ca test có thể xanh mà chưa hề chạy bước dọn nên không chứng minh được tiêu chí.",
+   "proposal": null,
+   "plain": null,
+   "can_cu": null,
+   "unclassified": false
+  }
+ ]
+}

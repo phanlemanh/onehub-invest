@@ -234,3 +234,111 @@ test("BCL-2: chiều đỏ — thu hẹp lọc thô thì nêu mẫu bị sót", 
   const motBienThe = mauBiSot({ v: loc.v.slice(0, 1), lien: [] });
   assert.ok(motBienThe.length >= 10, `chỉ một biến thể phải sót nhiều mẫu: ${motBienThe.join(",")}`);
 });
+
+// --kiem không nối được DB → mã riêng 3, nêu «không nối được DB», không bao giờ báo xanh (GS 25/11, cổng an toàn của HT25).
+const { chayKiem, MA_KHONG_NOI, laLoiKetNoi } = await import("./ban-chep-da-loc.mjs");
+const { mkdtempSync, writeFileSync, rmSync } = await import("node:fs");
+const os = await import("node:os");
+const { createHash } = await import("node:crypto");
+
+function dumpGia() {
+  const d = mkdtempSync(path.join(os.tmpdir(), "bcl-kiem-"));
+  const tep = path.join(d, "oneinvest-m5-20261125.dump");
+  const buf = Buffer.from("PGDMP gia cho ca khong noi duoc");
+  writeFileSync(tep, buf);
+  writeFileSync(path.join(d, "ke.json"), JSON.stringify({ tep: path.basename(tep), sha256: createHash("sha256").update(buf).digest("hex"), so_dong: {} }));
+  return { d, tep };
+}
+const URL_CHET = "postgres://127.0.0.1:1/oneinvest"; // không mang mật khẩu (hook git-secrets)
+/** Điều kiện của ca «không nối được»: trả danh sách vi phạm (rỗng = đạt). */
+const viPhamKhongNoi = ({ ma, out, err }) => [
+  ...(ma === MA_KHONG_NOI ? [] : [`mã thoát ${ma}, phải ${MA_KHONG_NOI}`]),
+  ...(/không nối được DB/.test(err) ? [] : ["thiếu thông điệp «không nối được DB»"]),
+  ...(/xanh|0 trúng/.test(out + err) ? ["in như kết quả xanh"] : []),
+];
+async function kiemGom(o) {
+  const out = [];
+  const err = [];
+  const ma = await chayKiem({ out: (s) => out.push(s), err: (s) => err.push(s), ...o });
+  return { ma, out: out.join("\n"), err: err.join("\n") };
+}
+
+test("BCL-8: --kiem qua cổng chết 127.0.0.1:1 → mã 3, nêu «không nối được DB», không báo xanh", async () => {
+  const { d, tep } = dumpGia();
+  try {
+    for (const khongTuDien of [false, true]) {
+      const r = await kiemGom({ tep, nguonUrl: URL_CHET, khongTuDien });
+      assert.deepEqual(viPhamKhongNoi(r), [], r.err);
+    }
+  } finally { rmSync(d, { recursive: true, force: true }); }
+});
+
+test("BCL-8: --kiem qua docker exec, container sai tên (lệnh thật, DATABASE_URL vắng → tự đi docker) → mã 3", () => {
+  const { d, tep } = dumpGia();
+  try {
+    const env = { ...process.env, ONEHUB_DB_CONTAINER: "bcl-khong-co-container" };
+    delete env.DATABASE_URL;
+    for (const them of [[], ["--qua-docker"]]) {
+      const r = spawnSync(process.execPath, [SCRIPT, "--kiem", tep, "--khong-tu-dien", ...them], { encoding: "utf8", env });
+      assert.deepEqual(viPhamKhongNoi({ ma: r.status, out: r.stdout, err: r.stderr }), [], r.stderr);
+      assert.match(r.stderr, /docker exec bcl-khong-co-container/);
+    }
+  } finally { rmSync(d, { recursive: true, force: true }); }
+});
+
+test("BCL-8: chiều đỏ — bản bỏ kiểm kết nối thì ca nêu lỗi (mã khác 3)", async () => {
+  const { d, tep } = dumpGia();
+  try {
+    const r = await kiemGom({ tep, nguonUrl: URL_CHET, khongTuDien: true, _boKiemNoi: true });
+    const vp = viPhamKhongNoi(r);
+    assert.ok(vp.some((x) => x.startsWith("mã thoát")), `ca phải nêu mã sai, nhận: ${vp.join("; ")}`);
+  } finally { rmSync(d, { recursive: true, force: true }); }
+});
+
+test("BCL-8: phân loại lỗi nối", () => {
+  assert.ok(laLoiKetNoi({ code: "ECONNREFUSED" }));
+  assert.ok(laLoiKetNoi({ message: "Error response from daemon: No such container: x" }));
+  assert.ok(laLoiKetNoi({ code: "08006" }));
+  assert.ok(!laLoiKetNoi({ message: "relation \"x\" does not exist", code: "42P01" }));
+});
+
+test("BCL-1: viết lại định nghĩa chỉ mục của bảng gốc sang bảng đích; chuẩn hoá để so theo định nghĩa", async () => {
+  const { vietLaiChiMuc, chuanChiMuc } = await import("./ban-chep-da-loc.mjs");
+  assert.equal(vietLaiChiMuc("CREATE UNIQUE INDEX sale_offers_pkey ON public.sale_offer_records USING btree (offer_id)", "sale_offers_pkey", "sale_offers"),
+    'CREATE UNIQUE INDEX "sale_offers_pkey" ON public."sale_offers" USING btree (offer_id)');
+  assert.equal(vietLaiChiMuc('CREATE INDEX "Ten La" ON public."Bang Goc" USING btree (street_raw, area_id) WHERE (street_raw IS NOT NULL)', "x_idx", "sale_offers"),
+    'CREATE INDEX "x_idx" ON public."sale_offers" USING btree (street_raw, area_id) WHERE (street_raw IS NOT NULL)');
+  assert.equal(vietLaiChiMuc("không phải chỉ mục", "a", "b"), null);
+  const a = chuanChiMuc("CREATE INDEX sale_offers_area_idx ON public.sale_offer_records USING btree (area_id, kind)");
+  const b = chuanChiMuc('CREATE INDEX "sale_offers_area_idx" ON public."sale_offers" USING btree (area_id, kind)');
+  assert.equal(a, b);
+  assert.notEqual(a, chuanChiMuc("CREATE INDEX x ON public.sale_offers USING btree (kind, area_id)"));
+  assert.notEqual(chuanChiMuc("CREATE UNIQUE INDEX x ON public.t USING btree (a)"), chuanChiMuc("CREATE INDEX x ON public.t USING btree (a)"));
+});
+
+test("BCL-10: chế độ thử BCL_DICH_THU — chỉ nhận với DB lượt oneinvest_suite_*, khuôn đích/dọn chỉ của tiền tố", async () => {
+  const { khuonM5, loiTenDich: loi, tenDich: ten } = await import("./ban-chep-da-loc.mjs");
+  const that = khuonM5("oneinvest", {});
+  assert.equal(that.thu, false);
+  assert.ok(that.re.test("oneinvest_m5_20261126") && that.re.test("oneinvest_m5_t123_20261126"));
+  const k = khuonM5("oneinvest_suite_bcl3_99", { BCL_DICH_THU: "oneinvest_m5_t123" });
+  assert.ok(k.thu && k.re.test("oneinvest_m5_t123_20261126") && k.re.test("oneinvest_m5_t123_kiem_5") && k.re.test("oneinvest_m5_t123"));
+  for (const d of ["oneinvest_m5_20261126", "oneinvest_m5_t1234_20261126", "oneinvest_m5_t12_20261126", "oneinvest_m5_kiem_5"]) assert.ok(!k.re.test(d), d);
+  assert.throws(() => khuonM5("oneinvest", { BCL_DICH_THU: "oneinvest_m5_t123" }), /oneinvest_suite_/);
+  assert.throws(() => khuonM5("oneinvest_suite_x_1", { BCL_DICH_THU: "oneinvest_m5_20261126" }), /dạng/);
+  assert.equal(loi("oneinvest_m5_t123_20261126", "oneinvest_suite_x_1", k), null);
+  assert.ok(loi("oneinvest_m5_20261126", "oneinvest_suite_x_1", k), "chế độ thử không được chạm tên đích thật");
+  assert.equal(ten(new Date(2026, 10, 26), "oneinvest_m5_t123"), "oneinvest_m5_t123_20261126");
+});
+
+test("BCL-3: tệp kê — cấy tên nguồn vào một mục thì nêu đường khoá (không giá trị); tệp kê sạch thì 0 chỗ", async () => {
+  const { choTrungTrongKe } = await import("./ban-chep-da-loc.mjs");
+  const sach = { so_dong: { ref_calib_listings: 3 }, cot_loai_ve_null: { sale_offers: ["listing_url"] }, khoa_ngoai_bo: ["nights.nights_listing_id_fkey"] };
+  assert.deepEqual(choTrungTrongKe(sach, BIA), []);
+  const cay = structuredClone(sach);
+  cay.cot_loai_ve_null.zelvanha_bang = ["x"];
+  cay.ham_bo = ["public.f()", "Quoxa Bds"];
+  const trung = choTrungTrongKe(cay, BIA);
+  assert.deepEqual(trung, [".cot_loai_ve_null.<khoá>", ".ham_bo[1]"]);
+  for (const t of trung) assert.equal(findSourceNames(t, BIA).length, 0, "đường báo không được mang tên");
+});
