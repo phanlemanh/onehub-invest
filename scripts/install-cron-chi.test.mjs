@@ -74,6 +74,26 @@ test("--chi backup: BACKUP_DIR vào plist backup qua PlistBuddy (plist đọc đ
   rmSync(home, { recursive: true, force: true });
 });
 
+// 2511-29: --chi thu-duoi-s06 — CHỈ plist thu-duoi-s06 được ghi (cài thật chờ
+// Mạnh ký ở Cổng Bằng chứng ZC18; ca này chỉ chứng minh đường cài chọn đúng job)
+test("--chi thu-duoi-s06: CHỈ thu-duoi-s06 được cài — không chạm job nào khác", { skip: CAN_MACOS }, () => {
+  const { home, bin, log } = taoMoiTruong();
+  const out = chay(home, bin, "--chi", "thu-duoi-s06");
+  const dir = join(home, "Library/LaunchAgents");
+  assert.deepEqual(readdirSync(dir).sort(), ["com.oneinvest.thu-duoi-s06.plist"]);
+  assert.match(out, /installed: .*com\.oneinvest\.thu-duoi-s06\.plist/);
+  const lc = readFileSync(log, "utf8");
+  assert.match(lc, /bootout gui\/\d+ .*com\.oneinvest\.thu-duoi-s06\.plist/);
+  assert.match(lc, /bootstrap gui\/\d+ .*com\.oneinvest\.thu-duoi-s06\.plist/);
+  // không đụng collector/smoke/backup
+  assert.doesNotMatch(lc, /com\.oneinvest\.(collector|smoke|backup)\.plist/);
+  // plist hợp lệ về nội dung: trỏ đúng wrapper + nhịp 300s (2511-29)
+  const plist = readFileSync(join(dir, "com.oneinvest.thu-duoi-s06.plist"), "utf8");
+  assert.match(plist, /scripts\/thu-duoi-s06\.sh/);
+  assert.match(plist, /<integer>300<\/integer>/);
+  rmSync(home, { recursive: true, force: true });
+});
+
 test("tên job lạ → thoát 2, KHÔNG ghi plist nào", () => {
   const { home, bin } = taoMoiTruong();
   let rc = 0;
