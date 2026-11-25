@@ -633,3 +633,69 @@ test("executePhase pha apartments-all: có đọc số dư trước và sau (c�
   for (const id of thuMuc) assert.equal((await docSnapshot(dir, id)).manifest.schemaVersion, 18);
   assert.ok((await readdir(join(dir, "can-ho"))).includes("can-ho-7.jsonl"));
 }));
+
+// ---------- thứ tự «chốt xong mới ghi tiến độ» khi lô chốt hỏng ----------
+
+/** Trình ghi bị lỗi chốt: `flush()` trả lỗi lần đầu (như đĩa đầy), lần sau chạy bình thường. */
+function writerDoiMat(w: BatchWriter): { writer: BatchWriter; soLanChot: () => number } {
+  let lan = 0;
+  const doiMat = Object.create(w);
+  doiMat.flush = async (reason?: string) => {
+    lan++;
+    if (lan === 1) throw new Error("ENOSPC: hết đĩa");
+    return w.flush(reason);
+  };
+  return { writer: doiMat as BatchWriter, soLanChot: () => lan };
+}
+
+test("pha ảnh: lô chốt hỏng thì KHÔNG ghi tiến độ (ảnh chưa xuống đĩa không được coi là đã tải)", async () => withTmp(async (dir) => {
+  const w0 = new BatchWriter({ root: dir, maxItems: 100, phase: "projects" });
+  await w0.add(anh("8", { danh_sach_hinh_anh: [{ photo_url: "https://cdn.gia.test/a/1" }, { photo_url: "https://cdn.gia.test/a/2" }] }, null, "2026-11-24T05:00:00.000Z"));
+  await w0.flush();
+  const nguon = nguonAnh(() => ({}));
+  const doi = writerDoiMat(new BatchWriter({ root: dir, maxItems: 1000, phase: "images", schemaVersion: S17_SCHEMA_VERSION_MO_RONG, maxFiles: 10 }));
+  const keoDan = new KeoDan({ caps: { calls: 100, minutes: 10 }, now: () => new Date("2026-11-25T01:00:00.000Z").getTime() });
+  await assert.rejects(
+    runPhase({
+      phase: "images",
+      client: undefined as never,
+      writer: doi.writer,
+      state: emptyState(),
+      save: async () => undefined,
+      log: () => undefined,
+      now: () => new Date("2026-11-25T01:00:00.000Z"),
+      snapshotRoot: dir,
+      tienDoDir: join(dir, "tien-do"),
+      anh: { hostSuffixes: ["cdn.gia.test"], luongSong: 2, maxBytes: 1024 * 1024, timeoutMs: 5000, userAgent: "x", fetchImpl: nguon.fetchImpl },
+      keoDan,
+    }),
+    /ENOSPC/,
+  );
+  await assert.rejects(readFile(join(dir, "tien-do", "anh-8.jsonl")), "chưa có tiến độ nào");
+}));
+
+test("pha căn hộ toàn bộ: lô chốt hỏng thì KHÔNG ghi tiến độ — lượt sau liệt kê lại từ đầu chứ không tin toà đã liệt kê", async () => withTmp(async (dir) => {
+  const w0 = new BatchWriter({ root: dir, maxItems: 100, phase: "projects" });
+  await w0.add(chiTiet("7", { is_exists_apartment_info: true, danh_sach_thap: ["A"], so_can: 2 }, null, "2026-11-24T05:00:00.000Z"));
+  await w0.flush();
+  const ds = { "7": { A: [[["a1", "a2"]]] } };
+  const nguon = nguonCanHo(ds);
+  const doi = writerDoiMat(new BatchWriter({ root: dir, maxItems: 100, phase: "apartments-all", schemaVersion: S17_SCHEMA_VERSION_MO_RONG }));
+  const state = emptyState();
+  await assert.rejects(
+    runPhase({
+      phase: "apartments-all",
+      client: nguon.client,
+      writer: doi.writer,
+      state,
+      save: async () => undefined,
+      log: () => undefined,
+      now: () => new Date("2026-11-25T01:00:00.000Z"),
+      snapshotRoot: dir,
+      tienDoDir: join(dir, "tien-do"),
+      tatCaDuAn: { concurrency: 2 },
+    }),
+    /ENOSPC/,
+  );
+  await assert.rejects(readFile(join(dir, "tien-do", "can-ho-7.jsonl")), "chưa có tiến độ nào");
+}));
