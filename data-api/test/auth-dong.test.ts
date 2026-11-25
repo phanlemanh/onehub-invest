@@ -10,8 +10,12 @@
  * pha.mjs cần tên ca đỏ chứ không cần lỗi nạp.
  */
 import assert from "node:assert/strict";
+import { spawn, type ChildProcess } from "node:child_process";
 import { randomUUID } from "node:crypto";
+import net from "node:net";
+import path from "node:path";
 import { after, test } from "node:test";
+import { fileURLToPath } from "node:url";
 
 const url = process.env.DATABASE_URL ?? "";
 const tenDb = url.split("?")[0].split("/").pop() ?? "";
@@ -205,7 +209,115 @@ test("PB3-AC-4 đọc biến ở mỗi lời gọi", async () => {
   assert.equal(loi.length, 0, loi.join(" | "));
 });
 
-// <<<PB3-AC-5 — Bước 2 của kế hoạch chèn ca khởi động ở đây>>>
+// ── AC-5: tiến trình con src/index.ts ───────────────────────────────────────────────────────────────────────────────
+const DAPI = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const conSong = new Set<ChildProcess>();
+after(() => {
+  for (const con of conSong) con.kill("SIGKILL");
+});
+
+function congTrong(): Promise<number> {
+  return new Promise((ok, loi) => {
+    const s = net.createServer();
+    s.on("error", loi);
+    s.listen(0, "127.0.0.1", () => {
+      const port = (s.address() as net.AddressInfo).port;
+      s.close(() => ok(port));
+    });
+  });
+}
+
+function khoiDong(ten: string, envCa: EnvCa, port: number) {
+  const env: NodeJS.ProcessEnv = { PATH: process.env.PATH, DATABASE_URL: process.env.DATABASE_URL, PORT: String(port) };
+  for (const [k, v] of Object.entries(envCa)) if (v !== undefined) env[k] = v;
+  const con = spawn(process.execPath, ["--import", "tsx", "src/index.ts"], { cwd: DAPI, env, stdio: ["ignore", "pipe", "pipe"] });
+  conSong.add(con);
+  let out = "";
+  let err = "";
+  con.stdout?.on("data", (d) => (out += String(d)));
+  con.stderr?.on("data", (d) => (err += String(d)));
+  const thoat = new Promise<number | null>((ok) =>
+    con.on("exit", (code) => {
+      conSong.delete(con);
+      ok(code);
+    }),
+  );
+  const ghiLai = () => {
+    gom.push({ noi: `stdout ${ten}`, vanBan: out }, { noi: `stderr ${ten}`, vanBan: err });
+  };
+  return { con, thoat, out: () => out, err: () => err, ghiLai };
+}
+
+const cho = (ms: number) => new Promise<"het-gio">((ok) => setTimeout(() => ok("het-gio"), ms));
+
+function congMo(port: number): Promise<boolean> {
+  return new Promise((ok) => {
+    const s = net.connect(port, "127.0.0.1");
+    s.on("connect", () => {
+      s.destroy();
+      ok(true);
+    });
+    s.on("error", () => ok(false));
+  });
+}
+
+async function healthTrong10s(port: number): Promise<number | null> {
+  const han = Date.now() + 10_000;
+  while (Date.now() < han) {
+    try {
+      const r = await fetch(`http://127.0.0.1:${port}/health`);
+      if (r.status === 200) return 200;
+    } catch {
+      // chưa lắng nghe — thử lại
+    }
+    await cho(200);
+  }
+  return null;
+}
+
+test("PB3-AC-5 index.ts không khởi động khi thiếu khoá", async () => {
+  const loi: string[] = [];
+  if (THONG_DIEP === null) loi.push("PB3 thiếu hằng thông điệp MISSING_KEYS_MESSAGE trong auth.ts");
+
+  const caDong: { ten: string; env: EnvCa }[] = [
+    { ten: "production khoá rỗng", env: { NODE_ENV: "production", DATA_API_KEYS_BACKUP: CANH } },
+    { ten: "NODE_ENV vắng khoá rỗng", env: { DATA_API_KEYS_BACKUP: CANH } },
+  ];
+  for (const ca of caDong) {
+    const port = await congTrong();
+    const p = khoiDong(ca.ten, ca.env, port);
+    const kq = await Promise.race([p.thoat, cho(10_000)]);
+    if (kq === "het-gio") {
+      loi.push(`PB3 khởi động: ${ca.ten} không thoát trong 10 giây`);
+      if (await congMo(port)) loi.push(`PB3 khởi động: ${ca.ten} đang nhận kết nối ở cổng ${port}`);
+      p.con.kill("SIGKILL");
+      await p.thoat;
+    } else {
+      if (kq === 0 || kq === null) loi.push(`PB3 khởi động: ${ca.ten} thoát mã ${String(kq)}, mong khác 0`);
+      if (THONG_DIEP !== null && !p.err().includes(THONG_DIEP)) {
+        loi.push(`PB3 khởi động: ${ca.ten} stderr thiếu nguyên câu thông điệp ghim`);
+      }
+      if (await congMo(port)) loi.push(`PB3 khởi động: ${ca.ten} cổng ${port} vẫn nhận kết nối`);
+    }
+    p.ghiLai();
+  }
+
+  const caDoiChung: { ten: string; env: EnvCa }[] = [
+    { ten: "production có khoá", env: { NODE_ENV: "production", DATA_API_KEYS: `${CANH}-khoi-dong` } },
+    { ten: "development không khoá", env: { NODE_ENV: "development" } },
+  ];
+  for (const ca of caDoiChung) {
+    const port = await congTrong();
+    const p = khoiDong(ca.ten, ca.env, port);
+    const ma = await healthTrong10s(port);
+    if (ma !== 200) loi.push(`PB3 khởi động: ${ca.ten} không trả /health 200 trong 10 giây (stderr: ${p.err().slice(0, 200)})`);
+    p.con.kill("SIGTERM");
+    await Promise.race([p.thoat, cho(5_000)]);
+    p.ghiLai();
+  }
+
+  assert.equal(loi.length, 0, loi.join(" | "));
+});
 
 test("PB3-AC-6 không lộ giá trị khoá", async () => {
   // Ca production khoá rỗng, chuỗi canh nằm ở biến khoá phụ.
