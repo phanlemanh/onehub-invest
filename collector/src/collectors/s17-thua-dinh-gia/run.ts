@@ -10,10 +10,11 @@ import { MAX_APARTMENT_LOT, assertNoSoftError, hasApartmentTable, makeItem, pars
 import { imagesPhase, type AnhPhaseOptions } from "./pha-anh.js";
 import { apartmentsAll, type TatCaDuAnOptions } from "./pha-can-ho.js";
 import { parcelsMap } from "./pha-ban-do.js";
+import { parcelsCell, type OLuoiOptions } from "./pha-o.js";
 import type { KeoDan } from "./keo-dan.js";
 import type { BatchWriter } from "./store.js";
 
-export type Phase = "session-check" | "reference" | "tile-mask" | "projects" | "apartments" | "parcels" | "lowrise" | "apartments-all" | "images" | "parcels-map";
+export type Phase = "session-check" | "reference" | "tile-mask" | "projects" | "apartments" | "parcels" | "lowrise" | "apartments-all" | "images" | "parcels-map" | "parcels-cell";
 
 /** Một tỉnh trong lưới tile đã chọn sẵn (chỉ điểm nằm trên đất), sinh ngoài bộ thu từ bảng địa giới. */
 export type GridEntry = { marketId: string; name: string; tiles: string[] };
@@ -142,6 +143,8 @@ export type RunOptions = {
   keoDan?: KeoDan;
   /** Mốc mở rộng — lựa chọn của pha căn hộ toàn bộ dự án. */
   tatCaDuAn?: TatCaDuAnOptions;
+  /** Phần thửa mở rộng — bước lưới (mét) và số ô nhiều nhất một lượt của pha lưới dày. */
+  oLuoi?: OLuoiOptions;
 };
 
 /** Một khu thí điểm của pha thửa: lưới toạ độ sinh ngoài bộ thu từ đa giác khu trên máy thu. */
@@ -901,6 +904,9 @@ export async function runPhase(o: RunOptions): Promise<PhaseSummary> {
     case "parcels-map":
       if (!o.snapshotRoot || !o.tienDoDir) throw new ConfigError("pha parcels-map cần gốc kho snapshot và thư mục tiến độ");
       return parcelsMap(o);
+    case "parcels-cell":
+      if (!o.snapshotRoot || !o.tienDoDir || !o.oLuoi) throw new ConfigError("pha parcels-cell cần gốc kho snapshot, thư mục tiến độ và bước lưới");
+      return parcelsCell(o, o.oLuoi);
     default:
       throw new ConfigError(`pha chưa làm: ${String(o.phase)}`);
   }

@@ -1,7 +1,7 @@
 /**
  * Điểm vào của bộ thu S17 (mốc ngày 1, 2 và mốc mở rộng, claudedp-2411-20, -21 và -73).
  *
- *   node collector/dist/collectors/s17-thua-dinh-gia/main.js --phase <reference|tile-mask|projects|session-check|apartments|parcels|lowrise|apartments-all|images|parcels-map>
+ *   node collector/dist/collectors/s17-thua-dinh-gia/main.js --phase <reference|tile-mask|projects|session-check|apartments|parcels|lowrise|apartments-all|images|parcels-map|parcels-cell>
  *        --snapshots-root <thư mục snapshot> --caps-calls <số> --caps-minutes <số> [--pace-ms 150..400] [--space <id>] [--luong-song 1..4]
  *
  * - Trần lời gọi và trần thời gian PHẢI khai mỗi lần chạy; nhịp kẹp trong mức nguồn đã chịu được.
@@ -26,7 +26,7 @@ import { nodeTransport } from "./transport-node.js";
 
 const HERE = dirname(fileURLToPath(import.meta.url)); // dist/collectors/s17-thua-dinh-gia
 const COLLECTOR_ROOT = join(HERE, "..", "..", "..");
-const PHASES: Phase[] = ["reference", "tile-mask", "projects", "session-check", "apartments", "parcels", "lowrise", "apartments-all", "images", "parcels-map"];
+const PHASES: Phase[] = ["reference", "tile-mask", "projects", "session-check", "apartments", "parcels", "lowrise", "apartments-all", "images", "parcels-map", "parcels-cell"];
 /** Pha không cần phiên đăng nhập (chạy bằng fetch của Node ngay trong tiến trình này). */
 const PUBLIC_PHASES: Phase[] = ["reference", "tile-mask", "images"];
 /** Mốc mở rộng — pha ảnh có thư mục trạng thái RIÊNG để chạy song song với pha cần phiên (khoá một lượt một thư mục). */
@@ -76,6 +76,8 @@ export type CliOptions = {
   tatCaDuAn?: { tuSoCan?: number; denSoCan?: number; gioiHan?: number; ids?: string[] };
   /** Mốc mở rộng — lựa chọn của pha ảnh. */
   anh?: { luongSong: number; soFile: number };
+  /** Phần thửa mở rộng — pha lưới dày. */
+  oLuoi?: { buocM: number; gioiHan?: number };
 };
 
 export function parseCli(argv: string[]): CliOptions {
@@ -108,6 +110,8 @@ export function parseCli(argv: string[]): CliOptions {
       "gioi-han": { type: "string" },
       "anh-luong-song": { type: "string" },
       "anh-so-file": { type: "string" },
+      "buoc-m": { type: "string" },
+      "gioi-han-o": { type: "string" },
     },
   });
   const phase = values.phase as Phase | undefined;
@@ -136,6 +140,9 @@ export function parseCli(argv: string[]): CliOptions {
   const tuSoCan = values["tu-so-can"] === undefined ? undefined : positive("--tu-so-can", values["tu-so-can"]);
   const denSoCan = values["den-so-can"] === undefined ? undefined : positive("--den-so-can", values["den-so-can"]);
   if (tuSoCan !== undefined && denSoCan !== undefined && tuSoCan > denSoCan) throw new UsageError("--tu-so-can phải nhỏ hơn hoặc bằng --den-so-can");
+  const buocM = values["buoc-m"] === undefined ? undefined : positive("--buoc-m", values["buoc-m"]);
+  if (buocM !== undefined && buocM > 1000) throw new UsageError("--buoc-m không được lớn hơn 1000 (cạnh ô 1 km)");
+  if (phase === "parcels-cell" && buocM === undefined) throw new UsageError("pha parcels-cell cần --buoc-m <số mét của bước lưới, vd 30 hoặc 100>");
   const anhLuongSong = values["anh-luong-song"] === undefined ? 4 : positive("--anh-luong-song", values["anh-luong-song"]);
   if (anhLuongSong > MAX_CONCURRENCY) throw new UsageError(`--anh-luong-song phải từ 1 đến ${MAX_CONCURRENCY}`);
   return {
@@ -160,6 +167,7 @@ export function parseCli(argv: string[]): CliOptions {
     lowriseSweep: idTu === undefined ? undefined : { from: idTu, to: idDen as number },
     ...(phase === "apartments-all" ? { tatCaDuAn: { ...(tuSoCan !== undefined ? { tuSoCan } : {}), ...(denSoCan !== undefined ? { denSoCan } : {}), ...(values["gioi-han"] === undefined ? {} : { gioiHan: positive("--gioi-han", values["gioi-han"]) }), ...(projects?.length ? { ids: projects } : {}) } } : {}),
     ...(phase === "images" ? { anh: { luongSong: anhLuongSong, soFile: values["anh-so-file"] === undefined ? 100 : positive("--anh-so-file", values["anh-so-file"]) } } : {}),
+    ...(phase === "parcels-cell" && buocM !== undefined ? { oLuoi: { buocM, ...(values["gioi-han-o"] === undefined ? {} : { gioiHan: positive("--gioi-han-o", values["gioi-han-o"]) }) } } : {}),
   };
 }
 

@@ -69,11 +69,12 @@ export const PROBE_ROLE: Role = "asset-type";
 export const SESSION_PROBE_ROLE: Role = "data-available";
 
 /** Vai mà mỗi pha sẽ gọi (không kể lời đối chiếu và số dư). */
-export const PHASE_ROLES: Record<"reference" | "tile-mask" | "projects" | "session-check" | "apartments" | "parcels" | "lowrise" | "apartments-all" | "images" | "parcels-map", readonly Role[]> = {
+export const PHASE_ROLES: Record<"reference" | "tile-mask" | "projects" | "session-check" | "apartments" | "parcels" | "lowrise" | "apartments-all" | "images" | "parcels-map" | "parcels-cell", readonly Role[]> = {
   // Mốc mở rộng: pha ảnh chỉ tải tệp tĩnh, không gọi API nào của nguồn.
   images: [],
   "apartments-all": ["apartment-list", "apartment-detail"],
   "parcels-map": ["parcel-profile"],
+  "parcels-cell": ["parcel-profile"],
   parcels: ["parcel-profile", "parcel-suggest"],
   lowrise: ["project-suggest", "project-detail"],
   apartments: ["project-detail", "apartment-list", "apartment-detail"],

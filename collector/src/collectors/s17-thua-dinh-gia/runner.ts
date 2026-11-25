@@ -55,6 +55,8 @@ export type ExecOptions = {
   tatCaDuAn?: { tuSoCan?: number; denSoCan?: number; gioiHan?: number; ids?: string[] };
   /** Mốc mở rộng — lựa chọn của pha ảnh. */
   anh?: { luongSong: number; soFile: number };
+  /** Phần thửa mở rộng — pha lưới dày. */
+  oLuoi?: { buocM: number; gioiHan?: number };
   /** fetch dùng cho pha ảnh — nơi gọi đặt (mặc định fetch toàn cục; test đệm bản giả). */
   anhFetch?: typeof fetch;
   env?: Env;
@@ -96,7 +98,7 @@ export type ExecSpec = Omit<ExecOptions, "phase" | "transport" | "transportMany"
 const CAC_TRUONG_KE = [
   "config", "snapshotRoot", "statePath", "logPath", "caps", "paceMs", "batchItems", "checkBalance", "grid", "listSize",
   "tileZoom", "emptyTileBytes", "projects", "proveBuilding", "apartmentPageSize", "listOnly", "parcels", "lowriseTerms",
-  "lowriseSweep", "concurrency", "tatCaDuAn", "anh",
+  "lowriseSweep", "concurrency", "tatCaDuAn", "anh", "oLuoi",
 ] as const satisfies readonly (keyof ExecSpec)[];
 
 /**
@@ -232,7 +234,7 @@ export async function executePhase(o: ExecOptions): Promise<ExecResult> {
     root: o.snapshotRoot,
     maxItems: o.batchItems,
     phase: o.phase,
-    ...(o.phase === "apartments-all" || o.phase === "images" || o.phase === "parcels-map" ? { schemaVersion: S17_SCHEMA_MO_RONG_DUNG } : {}),
+    ...(o.phase === "apartments-all" || o.phase === "images" || o.phase === "parcels-map" || o.phase === "parcels-cell" ? { schemaVersion: S17_SCHEMA_MO_RONG_DUNG } : {}),
     ...(o.phase === "images" ? { maxFiles: o.anh?.soFile ?? 100 } : {}),
   });
   const keoDan = o.phase === "images" ? new KeoDan({ caps: o.caps, now: () => env.now().getTime(), shouldStop: () => existsSync(stopPath) }) : undefined;

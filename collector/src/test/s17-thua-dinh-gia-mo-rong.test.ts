@@ -877,3 +877,146 @@ test("parcels-map: điểm lỗi mạng được ghi nhận là lỗi (không h�
   assert.equal(oA.meta.soLoi, 1);
   assert.equal(oA.payload.diem[6][2], "loi", "bản đồ ghi rõ điểm lỗi");
 }));
+
+// ---------- thửa mở rộng, T2/T3: lưới dày trong ô 1 km có dữ liệu ----------
+
+import { cacOCoDuLieu, luoiO, parcelsCell } from "../collectors/s17-thua-dinh-gia/pha-o.js";
+
+test("luoiO: lưới vuông canh ⌊1000/buoc⌋ centimet, cách đều buoc mét, tâm ô là tâm lưới", () => {
+  const tam: [number, number] = [21.03, 105.85];
+  assert.deepEqual(luoiO(tam, 1000), [tam], "bước 1 km: chỉ tâm ô");
+  const R = 6378137;
+  const toM = (p: [number, number]) => ({ x: ((p[1] * Math.PI) / 180) * R, y: Math.atanh(Math.sin((p[0] * Math.PI) / 180)) * R });
+  const c = toM(tam);
+  const d500 = luoiO(tam, 500).map(toM);
+  assert.equal(d500.length, 4);
+  assert.deepEqual(
+    d500.map((p) => [Math.round(p.x - c.x), Math.round(c.y - p.y)]),
+    [
+      [-250, -250],
+      [250, -250],
+      [-250, 250],
+      [250, 250],
+    ],
+    "bốn điểm cách tâm 250 m mỗi chiều; hàng trên (bắc) trước",
+  );
+  const d100 = luoiO(tam, 100);
+  assert.equal(d100.length, 100);
+  const d30 = luoiO(tam, 30);
+  assert.equal(d30.length, 1089, "33 × 33 điểm cho bước 30 m");
+  assert.throws(() => luoiO(tam, 0), /buoc/);
+  assert.throws(() => luoiO(tam, 1500), /1000/);
+});
+
+test("cacOCoDuLieu: ô 1 km nào có thửa ở chính nó hoặc ở một trong tám ô kề (theo bản đồ phủ); dày nhất đứng trước; điểm lỗi không tính là có", async () => withTmp(async (dir) => {
+  const { diem } = luoiBanDo("17/104068/57570", 11, 1000);
+  const ds = diem.map((p, k) => [p[0], p[1], k === 0 ? "100" : k === 60 ? "200" : k === 61 ? "201" : k === 70 ? "loi" : null] as [number, number, string | null]);
+  const w = new BatchWriter({ root: dir, maxItems: 10, phase: "parcels-map", schemaVersion: 18 });
+  await w.add(makeItem("thua_ban_do", "ban-do-17-104068-57570", { buocM: 1000, diem: ds }, { request: { zoom: 17 }, tile: "17/104068/57570", soDiem: 121, soCo: 3, soLoi: 1, viTri: [21, 105] }, "2026-11-25T01:00:00.000Z"));
+  await w.flush();
+  const o = await cacOCoDuLieu(dir);
+  const khoa = (x: { tile: string; i: number; j: number }) => `${x.tile}#${x.i},${x.j}`;
+  assert.equal(o.length, 16, "góc (0,0) kéo theo 2 × 2 = 4 ô; hai điểm trúng kề nhau (5,5),(6,5) kéo theo ô cột 4–7, hàng 4–6 = 12 ô");
+  assert.deepEqual(
+    o.slice(0, 3).map((x) => [khoa(x), x.soLanTrung]),
+    [["17/104068/57570#5,4", 2], ["17/104068/57570#5,5", 2], ["17/104068/57570#5,6", 2]],
+    "sáu ô thấy cả hai điểm trúng đứng trước, xếp theo cột rồi hàng",
+  );
+  assert.ok(o.some((x) => x.i === 0 && x.j === 0) && o.some((x) => x.i === 1 && x.j === 1), "hai ô kề góc");
+  assert.ok(!o.some((x) => x.i === 4 && x.j === 7), "ô chỉ kề điểm «loi» (4,6) chứ chẳng kề điểm trúng nào thì không có dữ liệu");
+  assert.ok(Math.abs(o.find((x) => x.i === 5 && x.j === 5)!.tam[0] - diem[60][0]) < 1e-12, "tâm ô là toạ độ điểm bản đồ");
+}));
+
+async function duaBanDoVaoKho(dir: string, o: { diemTrung: number[] } = { diemTrung: [60] }): Promise<[number, number][]> {
+  const { diem } = luoiBanDo("17/104068/57570", 11, 1000);
+  const w = new BatchWriter({ root: dir, maxItems: 10, phase: "parcels-map", schemaVersion: 18 });
+  await w.add(makeItem("thua_ban_do", "ban-do-17-104068-57570", { buocM: 1000, diem: diem.map((p, k) => [p[0], p[1], o.diemTrung.includes(k) ? "900" : null]) }, { request: { zoom: 17 }, tile: "17/104068/57570", soDiem: 121, soCo: o.diemTrung.length, soLoi: 0, viTri: [21, 105] }, "2026-11-25T01:00:00.000Z"));
+  await w.flush();
+  return diem;
+}
+
+const chayO = (dir: string, client: S17Client, o: { buocM: number; concurrency?: number; gioiHan?: number; state?: RunState } = { buocM: 500 }) => {
+  const state = o.state ?? emptyState();
+  const w = new BatchWriter({ root: dir, maxItems: 100, phase: "parcels-cell", schemaVersion: S17_SCHEMA_VERSION_MO_RONG });
+  const log: Record<string, unknown>[] = [];
+  const run = () =>
+    runPhase({
+      phase: "parcels-cell",
+      client,
+      writer: w,
+      state,
+      save: async () => assert.equal(w.pendingCount + w.pendingFiles, 0, "trạng thái chỉ lưu khi lô đã chốt"),
+      log: (e) => log.push(e),
+      now: () => new Date("2026-11-25T01:00:00.000Z"),
+      snapshotRoot: dir,
+      tienDoDir: join(dir, "tien-do"),
+      concurrency: o.concurrency ?? 3,
+      oLuoi: { buocM: o.buocM, ...(o.gioiHan !== undefined ? { gioiHan: o.gioiHan } : {}) },
+    }).then(async (s) => {
+      await w.flush();
+      return { s, log, writer: w };
+    });
+  return { run, writer: w };
+};
+
+test("parcels-cell: mỗi ô có dữ liệu một lưới dày; thửa ghi một lần dù kề hai ô; mỗi ô một bản gộp; chạy lại không hỏi lại", async () => withTmp(async (dir) => {
+  const diem = await duaBanDoVaoKho(dir, { diemTrung: [60] });
+  const o = await cacOCoDuLieu(dir);
+  const k = (p: [number, number]) => `${p[0].toFixed(6)},${p[1].toFixed(6)}`; // cùng cách làm tròn với nguồn giả
+  const taiDiem: DiemBanDo["taiDiem"] = {};
+  // Thửa 500 nằm ở một điểm lưới của ô (5,5) và một điểm lưới của ô kề (6,5); thửa 501 ở ô (4,4).
+  taiDiem[k(luoiO(o.find((x) => x.i === 5 && x.j === 5)!.tam, 500)[0])] = { ogc: "500", duong: "Đường X" };
+  const ke = luoiO(o.find((x) => x.i === 6 && x.j === 5)!.tam, 500);
+  taiDiem[k(ke[0])] = { ogc: "500", duong: "Đường X" };
+  const xa = luoiO(o.find((x) => x.i === 4 && x.j === 4)!.tam, 500);
+  taiDiem[k(xa[3])] = { ogc: "501", duong: "Đường Y" };
+  const nguon = nguonBanDo({ taiDiem });
+  const lan1 = chayO(dir, nguon.client, { buocM: 500, concurrency: 2 });
+  const s1 = await lan1.run();
+  assert.equal(o.length, 9);
+  assert.equal(s1.s.calls, 36, "9 ô × 4 điểm");
+  assert.deepEqual(s1.s.so, { soO: 9, soDiem: 36, soThuaMoi: 2, soTrung: 1, soKhongCo: 33, soLoi: 0 });
+  const items = await moiKind(dir);
+  assert.deepEqual(
+    items.filter((it) => it.kind === "thua").map((it) => [it.sourceId, it.meta.phuongPhap, it.meta.khuVuc]),
+    [
+      ["thua-501", "luoi", "o-17-104068-57570-4-4"],
+      ["thua-500", "luoi", "o-17-104068-57570-5-5"],
+    ],
+    "ô (4,4) đứng trước (4,5)…; thửa 500 gặp lại ở ô kề (6,5) chỉ tính là trùng",
+  );
+  const gop = items.filter((it) => it.kind === "thua_o");
+  assert.equal(gop.length, 9);
+  const o55 = gop.find((it) => it.sourceId === "o-17-104068-57570-5-5")!;
+  assert.deepEqual([o55.payload.soDiem, o55.payload.soThuaMoi, o55.payload.soTrung, o55.payload.soKhongCo, o55.meta.request.buocM, o55.meta.tile, o55.meta.o], [4, 1, 0, 3, 500, "17/104068/57570", [5, 5]]);
+  const o65 = gop.find((it) => it.sourceId === "o-17-104068-57570-6-5")!;
+  assert.deepEqual([o65.payload.soThuaMoi, o65.payload.soTrung], [0, 1]);
+  const nguon2 = nguonBanDo({ taiDiem });
+  const s2 = await chayO(dir, nguon2.client, { buocM: 500 }).run();
+  assert.equal(nguon2.sent.length, 0, "ô đã xong không hỏi lại");
+  assert.equal(s2.s.so?.soO, 0);
+}));
+
+test("parcels-cell: giới hạn số ô một lượt; dừng giữa ô (quá trần) thì ghi tiến độ và chạy lại làm nốt", async () => withTmp(async (dir) => {
+  await duaBanDoVaoKho(dir, { diemTrung: [60] });
+  const nguon1 = nguonBanDo({ taiDiem: {} }, { calls: 100, minutes: 60 });
+  const s1 = await chayO(dir, nguon1.client, { buocM: 500, gioiHan: 2 }).run();
+  assert.equal(s1.s.so?.soO, 2, "chỉ hai ô trong lượt này");
+  const nguon2 = nguonBanDo({ taiDiem: {} }, { calls: 5, minutes: 60 });
+  const lan2 = chayO(dir, nguon2.client, { buocM: 500, concurrency: 1 });
+  const e = await lan2.run().then(() => null, (x: unknown) => x);
+  assert.ok(e instanceof RunStopped, String(e));
+  assert.equal(e.reason, "call-cap");
+  const tep = (await readdir(join(dir, "tien-do"))).filter((x) => x.startsWith("o-"));
+  const chuaXong: number[] = [];
+  for (const t of tep) {
+    const td = await new NhatKyTienDo(join(dir, "tien-do", t)).readAll();
+    if (!td.some((r) => r.xong === true)) chuaXong.push(((td.at(-1)?.daDiem as number[] | undefined) ?? []).length);
+  }
+  assert.deepEqual(chuaXong, [1], "đúng một ô đang dở với một điểm đã thăm dò (trần 5 lời: ô một 4 điểm, ô hai 1 điểm)");
+  const nguon3 = nguonBanDo({ taiDiem: {} });
+  const s3 = await chayO(dir, nguon3.client, { buocM: 500 }).run();
+  assert.equal(s3.s.calls, 23, "36 − 13 điểm đã hỏi");
+  assert.equal(s3.s.so?.soO, 6, "9 ô = 2 (lượt một) + 1 (lượt hai xong trước khi chạm trần) + 6 (lượt ba)");
+  assert.equal((await moiKind(dir)).filter((it) => it.kind === "thua_o").length, 9);
+}));
