@@ -12,9 +12,9 @@ bước nào dưới đây.
    3. `cd ~/dev/onehub-invest/collector && npm run build` — `grep -c altUrlForJpg dist/core/media-fetch.js` ≥ `1`. Bước ghi tệp
       hậu tố host của ZC15 (mục 1.4 hồ sơ ZC15) làm trong cùng lượt.
    4. `launchctl kickstart -k gui/$(id -u)/com.oneinvest.collector-api` (lời riêng của Mạnh); `curl -s -o /dev/null -w '%{http_code}' -X POST http://127.0.0.1:9210/agent-report` trả `401`.
-2. **Số chạy thử.** Hộp cát: `cd collector && npm test` → 87/87 (gồm ca 2511-3 và ca ZC16 không thử lại sai chỗ); round-trip
+2. **Số chạy thử.** Hộp cát: `cd collector && npm test` → 88/88 (gồm ca 2511-3 và hai ca ZC16); round-trip
    `bash _acceptance/s03-jpg-path-fallback/ap-may-thu/kiem.sh` → bộ tải nhánh `ĐẠT — 2 bài có ảnh · 0 mất hết ảnh`, bộ tải ZC15
-   `KHÔNG ĐẠT — còn 1 ảnh link /jpg/ lỗi http-400`. Số «trước» trên máy thu (đo 25/11, ngày đăng VN): mất hết ảnh 24/11 27,5%,
+   `KHÔNG ĐẠT — ảnh link /jpg/ lỗi http-400 100.0% > 5%`. Số «trước» trên máy thu (đo 25/11, ngày đăng VN): mất hết ảnh 24/11 27,5%,
    ảnh link `/jpg/` lỗi 400 trong ngày 24/11 1.069; tỉ lệ đích tính trên cùng ngày (bỏ bài chỉ hỏng vì 400 `/jpg/`, r2.dev,
    redirect-host) 0,4%; làn thu đo 15–25/11: 22,9% → 8,1% (link cũ quá ba tuần 404).
 3. **Sao lưu trước.** Ngay trước bước 1.3 (chung với ZC15), bản sao `collector/dist.bak-$G` và mốc giờ `/tmp/zc16-moc.txt`:
@@ -30,6 +30,7 @@ bước nào dưới đây.
    ```bash
    cd ~/dev/onehub-invest && node _acceptance/s03-jpg-path-fallback/ap-may-thu/kiem-sau.mjs --sau "$(sed -n 1p /tmp/zc16-moc.txt)"
    ```
-   Kỳ vọng: `ĐẠT — <n> bài có ảnh · … · link /jpg/ lỗi 400 0 · …`, mã 0 — ghi cạnh số chạy thử ở mục 2. `chưa có bài mới` thì đợi
-   30′ rồi đo lại. Còn ảnh link `/jpg/` lỗi 400 mới → lùi (mục 4), báo GS, không tự sửa. Một ngày VN trọn sau áp:
+   Kỳ vọng: `ĐẠT — <n> bài có ảnh · … · link /jpg/ <k> ảnh, có file …, lỗi 400 … (≤5%) · …`, mã 0 — ghi cạnh số chạy thử ở mục 2
+   (trước vá 24/11: 1.069/3.347 ảnh `/jpg/` lỗi 400 ≈ 32%; không đòi 0 vì ảnh chia lại từ link cũ chết cả hai biến thể vẫn giữ
+   400). `chưa có bài mới` hay `chưa có ảnh link /jpg/ nào` thì đợi 30′ rồi đo lại. Trên 5% → lùi (mục 4), báo GS, không tự sửa. Một ngày VN trọn sau áp:
    `node _acceptance/s03-jpg-path-fallback/ap-may-thu/kiem-sau.mjs --ty-le --ngay 3` — tỉ lệ mất hết ảnh của ngày ấy ≤ khoảng 8%.

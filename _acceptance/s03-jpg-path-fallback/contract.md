@@ -27,13 +27,15 @@ làn thu `zcode/s03-jpg-path-fallback` @f6dcdf3fe (ZCode); vòng này gộp tay 
   không có `urlFetched`, và tên tệp là băm của URL ĐÃ TẢI, không phải của URL gốc.
 - AC-3: Given URL lỗi 400 không có `/jpg/`, lỗi khác 400 (404, timeout) có `/jpg/`, hoặc URL thay thế cũng lỗi, When bộ tải xử
   lý, Then không thử lại (hoặc thử đúng một lần) và entry giữ lỗi gốc của URL gốc.
+- AC-7: Given URL `/jpg/` bị 400 và URL thay thế chuyển hướng sang host ngoài danh sách cho phép, When bộ tải thử lại, Then
+  không tệp nào được ghi vào snapshot và entry giữ lỗi `http-400` của URL gốc (kiểm host cuối áp cho cả lần thử lại).
 - AC-4: Given byte trả về là JPEG XL hay JPEG bất kể `content-type`, When bộ tải đặt đuôi, Then byte JPEG XL ra `.jxl`, byte
   JPEG ra `.jpg` (luật ZC15 giữ nguyên sau khi gộp).
 - AC-5: Given mọi ca của ZC15 và các bảo vệ cũ của bộ tải, When chạy toàn bộ test collector trên dist sạch và kiểm kiểu, Then
   mọi ca xanh; khuôn `meta.mediaFiles` giữ đúng năm khoá; DATA-CONTRACT và `schemaVersion` không đổi.
 - AC-6: Given hồ sơ áp `ap-may-thu/README.md` và bộ kiểm sau áp `ap-may-thu/kiem-sau.mjs`, When người ký đọc, Then có đủ năm
-  mục có lệnh hay con số, dòng khởi động lại collector API kèm «lời riêng của Mạnh»; bộ kiểm chấm đúng bộ dòng mẫu (một ĐẠT,
-  còn 400 `/jpg/` → KHÔNG ĐẠT, chưa có ảnh `/jpg/` nào tải được → KHÔNG ĐẠT) và dòng sinh từ chính bộ tải: bản nhánh → ĐẠT,
+  mục có lệnh hay con số, dòng khởi động lại collector API kèm «lời riêng của Mạnh»; bộ kiểm chấm đúng bộ dòng mẫu (ảnh `/jpg/`
+  lỗi 400 ≤ 5% → ĐẠT, trên 5% → KHÔNG ĐẠT, chưa có ảnh `/jpg/` → KHÔNG ĐẠT), tính tỉ lệ ngày đúng trên mẫu biết trước đáp án, và dòng sinh từ chính bộ tải: bản nhánh → ĐẠT,
   bản ZC15 (chưa có thử lại) → KHÔNG ĐẠT đúng lý do; đầu ra không in URL.
 
 ## Out of scope
@@ -48,9 +50,9 @@ làn thu `zcode/s03-jpg-path-fallback` @f6dcdf3fe (ZCode); vòng này gộp tay 
 
 ## Coverage
 
-- Trục lỗi của URL gốc: 400 có `/jpg/` · 400 không `/jpg/` · 404 có `/jpg/` · timeout [thước CE: bảng lỗi theo họ host đo 25/11]
-  — AC-1, AC-3.
-- Trục kết quả của URL thay thế: 200 · lỗi — AC-1, AC-3.
+- Trục lỗi của URL gốc: 400 có `/jpg/` · 400 không `/jpg/` · 404 có `/jpg/` · timeout có `/jpg/` [thước CE: bảng lỗi theo họ host
+  đo 25/11] — AC-1, AC-3.
+- Trục kết quả của URL thay thế: 200 · lỗi · chuyển hướng ra ngoài danh sách — AC-1, AC-3, AC-7.
 - Trục người đọc đầu ra: `meta.mediaFiles` (bộ nạp S03) · tên tệp · manifest — AC-2, AC-5.
 - Trục byte trả về: JPEG với header jxl · JPEG XL · JPEG [thước CE: đo 25/11, 6 URL thay thế byte JPEG, header image/jxl] —
   AC-4.
@@ -59,10 +61,11 @@ làn thu `zcode/s03-jpg-path-fallback` @f6dcdf3fe (ZCode); vòng này gộp tay 
 ## Đường đo
 
 Tỉ lệ bài S03 có ảnh mà mất hết ảnh theo ngày đăng VN, `node _acceptance/s03-jpg-path-fallback/ap-may-thu/kiem-sau.mjs --ty-le`
-trên DB máy thu (25/11: 24/11 27,5%). Đích ngày VN trọn đầu tiên sau áp ZC15 + ZC16: ≤ khoảng 8%; bài mới lỗi 400 `/jpg/` = 0.
-AC-6 bảo đảm bộ đo.
+trên DB máy thu, cùng thước với mốc 25/11 (24/11 27,5%; mẫu số = bài có `media_files` không rỗng, ngày theo giờ VN). Đích ngày VN
+trọn đầu tiên sau áp ZC15 + ZC16: tỉ lệ ≤ 8,0%; ảnh link `/jpg/` trên bài mới còn lỗi 400 ≤ 5% (24/11: 1.069/3.347 ≈ 32%) — không
+đòi 0 vì ảnh chia lại từ link cũ chết cả hai biến thể vẫn giữ 400 của URL gốc. AC-6 bảo đảm bộ đo (gồm phép tính tỉ lệ).
 
 ## Notes
 
 - Mã thử lại và ca test 2511-3: ZCode (claudedp-2511-3); vòng này bỏ `urlFetched`, thêm assert tên tệp băm URL đã tải; đột biến
-  25/11: băm theo URL gốc → đỏ, bỏ khối thử lại → đỏ.
+  băm theo URL gốc, bỏ thử lại, thử lại mọi lỗi → đỏ; chạy lại mỗi lượt chấm bằng `probes/tu-thu.sh` (đuôi lệnh của E1–E3).

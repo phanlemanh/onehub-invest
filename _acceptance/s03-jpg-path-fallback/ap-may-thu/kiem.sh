@@ -43,9 +43,13 @@ mau() {  # $1 tệp · $2 mã mong · $3 chuỗi phải có
   if [ "$code" = "$2" ] && echo "$out" | grep -qF "$3"; then dat "mẫu $1 → $3"; else loi "mẫu $1: mã $code, '$out'"; fi
 }
 mau dat.json 0 "ĐẠT — 3 bài có ảnh"
-mau con-jpg-400.json 1 "còn 1 ảnh link /jpg/ lỗi http-400"
-mau chua-co-jpg.json 1 "chưa có ảnh link /jpg/ nào tải được"
+mau duoi-tran.json 0 "lỗi 400 1 (4.0%)"
+mau con-jpg-400.json 1 "ảnh link /jpg/ lỗi http-400 50.0% > 5%"
+mau chua-co-jpg.json 1 "chưa có ảnh link /jpg/ nào"
 mau khong-bai-moi.json 1 "chưa có bài mới có ảnh"
+# phép tính --ty-le: mẫu số = bài có media_files không rỗng, ngày theo giờ VN (16:59Z → ngày trước)
+out=$(node "$A/kiem-sau.mjs" --ty-le --tu-tep "$A/mau/ty-le.json" 2>&1)
+if echo "$out" | grep -q '^2026-11-25  10 bài có ảnh · 2 mất hết ảnh.*mất hết 20.0%' && echo "$out" | grep -q '^2026-11-24  1 bài có ảnh'; then dat "--ty-le tính đúng 20,0% (mẫu số bỏ bài rỗng, ngày VN)"; else loi "--ty-le: '$out'"; fi
 # rò tên: kiem-sau không in URL hay tên host (host canh gác chỉ có trong mẫu)
 out=$(chay "$A/mau/canh-gac.json"); echo "$out" | grep -q 'canh-gac' && loi "kiem-sau in tên host canh gác" || dat "kiem-sau không in tên host (mẫu canh-gac)"
 
@@ -58,7 +62,7 @@ BASE=$(git -C "$GOC" rev-parse --verify -q origin/fix/s03-media-r2-allowlist || 
 mkdir -p "$T/main" && git -C "$GOC" archive "$BASE" collector | tar -x -C "$T/main" && ln -s "$GOC/collector/node_modules" "$T/main/collector/node_modules"
 ( cd "$T/main/collector" && npx tsc -p tsconfig.json >/dev/null 2>&1 ) || loi "build collector main"
 node "$A/sinh-dong-that.mjs" "$T/main/collector/dist" "$T/main.json" && out=$(chay "$T/main.json")
-echo "$out" | grep -q 'KHÔNG ĐẠT — còn 1 ảnh link /jpg/ lỗi http-400' && dat "round-trip ZC15 ($(git -C "$GOC" rev-parse --short "$BASE")) → KHÔNG ĐẠT đúng lý do" || loi "round-trip ZC15: '$out'"
+echo "$out" | grep -q 'KHÔNG ĐẠT — ảnh link /jpg/ lỗi http-400 100.0% > 5%' && dat "round-trip ZC15 ($(git -C "$GOC" rev-parse --short "$BASE")) → KHÔNG ĐẠT đúng lý do" || loi "round-trip ZC15: '$out'"
 
 if [ ${#LOI[@]} -eq 0 ]; then echo "AP-MAY-THU PASS"; exit 0; fi
 echo "AP-MAY-THU FAIL (${#LOI[@]} mục)"; exit 1

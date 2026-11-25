@@ -22,7 +22,7 @@ evals:
     executor: test
     cmd: config:executors.script.zc16_media_test
     paths: [collector/src/core/media-fetch.ts, collector/src/test/media-fetch.test.ts]
-    expected: "exit 0; ca «ZC16: không thử lại sai chỗ…» xanh: /plain400.jpg (400, không /jpg/) → http-400, CDN nhận đúng 1 yêu cầu; /jpg/gone.jpg (404) → http-404, /gone.jpg nhận 0 yêu cầu; /jpg/both-bad.jpg (400) thử /both-bad.jpg (404) đúng 1 lần → entry giữ http-400 của URL gốc. Chiều đỏ (đo 25/11): thử lại với mọi lỗi (bỏ điều kiện http-400) → ca này đỏ ('404 có /jpg/: không thử lại')."
+    expected: "exit 0; ca «ZC16: không thử lại sai chỗ…» xanh: /plain400.jpg (400, không /jpg/) → http-400, CDN nhận đúng 1 yêu cầu; /jpg/gone.jpg (404) → http-404, /gone.jpg nhận 0 yêu cầu; /jpg/both-bad.jpg (400) thử /both-bad.jpg (404) đúng 1 lần → entry giữ http-400 của URL gốc; ca thứ hai: /jpg/hang.jpg treo → 'timeout', /hang.jpg nhận 0 yêu cầu. Chiều đỏ chạy lại mỗi lượt (probes/tu-thu.sh, đuôi lệnh): thử lại với mọi lỗi → đỏ với 'không thử lại'; bỏ thử lại → đỏ 'fallback phải tải được ảnh khi bỏ /jpg/'; băm url gốc → đỏ 'tên tệp phải băm theo URL đã tải'; dòng cuối 'TU-THU PASS'."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E4
@@ -63,4 +63,12 @@ evals:
     cmd: config:executors.script.zc16_ap_may_thu
     paths: [_acceptance/s03-jpg-path-fallback/ap-may-thu/**, collector/src/core/media-fetch.ts]
     expected: "exit 0; 'AP-MAY-THU PASS': README năm mục có nội dung (mục 1 có build, kickstart kèm 'lời riêng của Mạnh', khung giờ, nói áp chung ZC15; mục 2 có 27,5% và 8,1%); tự phá mục 2 → đỏ đúng mục; kiem-sau trên mẫu: dat → ĐẠT, con-jpg-400 → 'còn 1 ảnh link /jpg/ lỗi http-400', chua-co-jpg → 'chưa có ảnh link /jpg/ nào tải được', khong-bai-moi → 'chưa có bài mới có ảnh'; canh-gac → đầu ra không chứa 'canh-gac'; round-trip collector API: nhánh → 'ĐẠT — 2 bài có ảnh · 0 mất hết ảnh', đầu nhánh ZC15 → 'KHÔNG ĐẠT — còn 1 ảnh link /jpg/ lỗi http-400'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E9
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.script.zc16_media_test
+    paths: [collector/src/core/media-fetch.ts, collector/src/test/media-fetch.test.ts]
+    expected: "exit 0; ca «ZC16: timeout trên link /jpg/ không thử lại; URL thay thế chuyển hướng ra ngoài danh sách thì không lưu» xanh: /jpg/r.jpg 400, /r.jpg nhận đúng 1 yêu cầu và 302 sang localhost (ngoài danh sách) → entry file undefined, error 'http-400', snapshot không có thư mục media. Đối chứng dương cùng tệp: ca 2511-3 (thay thế trong danh sách) tải được."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]

@@ -32,7 +32,12 @@ let base = ""; // gán sau listen — handler đọc tại lúc có request
 const srv: Server = createServer((req, res) => {
   lastAccept = req.headers.accept;
   hits.set(req.url ?? "", (hits.get(req.url ?? "") ?? 0) + 1);
-  if (req.url === "/plain400.jpg" || req.url === "/jpg/both-bad.jpg") {
+  if (req.url === "/jpg/hang.jpg") {
+    return; // ZC16: treo — để timeout
+  } else if (req.url === "/r.jpg") {
+    // ZC16: URL thay thế chuyển hướng sang host ngoài danh sách (localhost ≠ 127.0.0.1)
+    res.writeHead(302, { location: base.replace("127.0.0.1", "localhost") + "/a.jpg" }); return void res.end();
+  } else if (req.url === "/plain400.jpg" || req.url === "/jpg/both-bad.jpg" || req.url === "/jpg/r.jpg") {
     res.writeHead(400); return void res.end("bad");
   } else if (req.url === "/both-bad.jpg" || req.url === "/jpg/gone.jpg") {
     res.writeHead(404); return void res.end("gone");
@@ -410,4 +415,20 @@ test("ZC16: không thử lại sai chỗ — 400 không /jpg/, 404 có /jpg/, th
   assert.equal(hits.get("/gone.jpg"), undefined, "404 có /jpg/: không thử lại");
   assert.equal(hits.get("/jpg/gone.jpg"), 1);
   assert.equal(hits.get("/both-bad.jpg"), 1, "400 có /jpg/: thử lại ĐÚNG một lần");
+});
+
+test("ZC16: timeout trên link /jpg/ không thử lại; URL thay thế chuyển hướng ra ngoài danh sách thì không lưu", async () => {
+  hits.clear();
+  const root = fresh();
+  const s = await createAgentServer({ snapshotRoot: root, city: "hanoi", keys: ["k1"], media: mediaOpts, log: () => {} });
+  ingestWith(s, [msg("lỗi", [`${base}/jpg/hang.jpg`, `${base}/jpg/r.jpg`], "2026-11-25T03:10:00Z")]);
+  const m = await s.flush();
+  assert.ok(m);
+  const [treo, ra] = readItems(root, m.snapshotId)[0].meta.mediaFiles;
+  assert.equal(treo.error, "timeout", "timeout giữ lỗi gốc");
+  assert.equal(hits.get("/hang.jpg"), undefined, "timeout có /jpg/: không thử lại");
+  assert.equal(hits.get("/r.jpg"), 1, "400 có /jpg/: thử lại một lần");
+  assert.equal(ra.file, undefined, "URL thay thế chuyển hướng ra host ngoài danh sách: KHÔNG được lưu tệp");
+  assert.equal(ra.error, "http-400", "entry giữ lỗi gốc khi lần thử lại bị chặn host");
+  assert.equal(existsSync(join(root, "hanoi", m.snapshotId, "media")), false, "không có tệp media nào được ghi");
 });

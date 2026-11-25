@@ -5,8 +5,9 @@
 //   node kiem-sau.mjs --sau <ISO mốc>             chấm bài đăng từ mốc (sau khi khởi động lại collector API)
 //   node kiem-sau.mjs --tu-tep <rows.json>        chấm bộ dòng mẫu [{post_id, media_files}] (kiem.sh)
 //
-// Chấm (--sau, --tu-tep): ĐẠT khi có bài mới có ảnh, 0 entry lỗi http-400 trên link có /jpg/, và ≥1 ảnh link /jpg/ có
-// file (tải qua đường thử lại). Thoát 0 = ĐẠT, 1 = KHÔNG ĐẠT, 2 = gọi sai / không đọc được DB.
+// Chấm (--sau, --tu-tep): ĐẠT khi có bài mới có ảnh, có ảnh link /jpg/, và ảnh link /jpg/ còn lỗi http-400 ≤ 5% số ảnh
+// link /jpg/ (không phải = 0: ảnh chia lại từ link cũ chết cả hai biến thể vẫn giữ 400 của URL gốc; trước vá 24/11: 32%).
+//   node kiem-sau.mjs --ty-le --tu-tep <rows.json>  bảng tỉ lệ trên tệp mẫu (rows có posted_at) — kiem.sh chấm phép tính Thoát 0 = ĐẠT, 1 = KHÔNG ĐẠT, 2 = gọi sai / không đọc được DB.
 import { readFileSync, existsSync } from "node:fs";
 import { createRequire } from "node:module";
 import { createHash } from "node:crypto";
@@ -24,9 +25,12 @@ const hoHost = (url) => {
 const coJpg = (url) => { try { return new URL(url).pathname.includes("/jpg/"); } catch { return false; } };
 const laJpg400 = (e) => e.error === "http-400" && coJpg(e.url);
 
+/** Trần % ảnh link /jpg/ còn lỗi 400 sau áp (trước vá 24/11: 1.069/3.347 ≈ 32%). */
+export const NGUONG_400 = 5;
+
 /** Lõi chấm — rows: [{post_id, media_files}] (mỗi bài một dòng, bản mới nhất). */
 export function cham(rows) {
-  let bai = 0, matHet = 0, matChiDoHost = 0, jpgOk = 0, jpg400 = 0, jxl = 0;
+  let bai = 0, matHet = 0, matChiDoHost = 0, jpgOk = 0, jpg400 = 0, jpgTong = 0, jxl = 0;
   for (const r of rows) {
     const mf = Array.isArray(r.media_files) ? r.media_files : [];
     if (mf.length === 0) continue;
@@ -38,6 +42,7 @@ export function cham(rows) {
     }
     for (const e of mf) {
       if (!e) continue;
+      if (coJpg(e.url)) jpgTong++;
       if (coJpg(e.url) && e.file) jpgOk++;
       if (laJpg400(e)) jpg400++;
       if (typeof e.file === "string" && e.file.endsWith(".jxl")) jxl++;
@@ -45,10 +50,26 @@ export function cham(rows) {
   }
   const lyDo = [];
   if (bai === 0) lyDo.push("chưa có bài mới có ảnh — đợi nhịp poll rồi đo lại");
-  if (jpg400 > 0) lyDo.push(`còn ${jpg400} ảnh link /jpg/ lỗi http-400`);
-  if (bai > 0 && jpgOk === 0) lyDo.push("chưa có ảnh link /jpg/ nào tải được");
-  const so = `${bai} bài có ảnh · ${matHet} mất hết ảnh · link /jpg/ có file ${jpgOk} · link /jpg/ lỗi 400 ${jpg400} · .jxl ${jxl}`;
+  const tl400 = jpgTong ? (100 * jpg400) / jpgTong : 0;
+  if (bai > 0 && jpgTong === 0) lyDo.push("chưa có ảnh link /jpg/ nào");
+  if (tl400 > NGUONG_400) lyDo.push(`ảnh link /jpg/ lỗi http-400 ${tl400.toFixed(1)}% > ${NGUONG_400}%`);
+  const so = `${bai} bài có ảnh · ${matHet} mất hết ảnh · link /jpg/ ${jpgTong} ảnh, có file ${jpgOk}, lỗi 400 ${jpg400} (${tl400.toFixed(1)}%) · .jxl ${jxl}`;
   return { dat: lyDo.length === 0, so, lyDo, bai, matHet, matChiDoHost };
+}
+
+/** Tỉ lệ bài có ảnh mà mất hết ảnh theo ngày đăng VN (UTC+7); mẫu số = bài có media_files không rỗng. */
+export function tyLe(rows) {
+  const theoNgay = new Map();
+  for (const r of rows) {
+    const d = new Date(new Date(r.posted_at).getTime() + 7 * 3600e3).toISOString().slice(0, 10);
+    if (!theoNgay.has(d)) theoNgay.set(d, []);
+    theoNgay.get(d).push(r);
+  }
+  return [...theoNgay].sort().map(([d, rs]) => {
+    const k = cham(rs);
+    const pct = (n) => (100 * n / Math.max(k.bai, 1)).toFixed(1);
+    return `${d}  ${k.so}  → mất hết ${pct(k.matHet)}% · đích ZC15+ZC16 (bỏ bài chỉ hỏng vì 400 /jpg/, r2.dev, redirect-host) ${pct(k.matHet - k.matChiDoHost)}%`;
+  });
 }
 
 function inKetQua(k) {
@@ -76,7 +97,11 @@ const BAI = `
 
 async function main(argv) {
   const i = (k) => argv.indexOf(k);
-  if (i("--tu-tep") >= 0) return inKetQua(cham(JSON.parse(readFileSync(argv[i("--tu-tep") + 1], "utf8"))));
+  if (i("--tu-tep") >= 0) {
+    const rows = JSON.parse(readFileSync(argv[i("--tu-tep") + 1], "utf8"));
+    if (i("--ty-le") >= 0) { for (const l of tyLe(rows)) console.log(l); return 0; }
+    return inKetQua(cham(rows));
+  }
   const c = pgClient();
   await c.connect();
   try {
@@ -89,17 +114,7 @@ async function main(argv) {
     if (i("--ty-le") >= 0) {
       const ngay = Number(i("--ngay") >= 0 ? argv[i("--ngay") + 1] : 8);
       const { rows } = await c.query(BAI, [new Date(Date.now() - ngay * 86400e3)]);
-      const theoNgay = new Map();
-      for (const r of rows) {
-        const d = new Date(new Date(r.posted_at).getTime() + 7 * 3600e3).toISOString().slice(0, 10);
-        if (!theoNgay.has(d)) theoNgay.set(d, []);
-        theoNgay.get(d).push(r);
-      }
-      for (const [d, rs] of [...theoNgay].sort()) {
-        const k = cham(rs);
-        const pct = (n) => (100 * n / Math.max(k.bai, 1)).toFixed(1);
-        console.log(`${d}  ${k.so}  → mất hết ${pct(k.matHet)}% · đích ZC15+ZC16 (bỏ bài chỉ hỏng vì 400 /jpg/, r2.dev, redirect-host) ${pct(k.matHet - k.matChiDoHost)}%`);
-      }
+      for (const l of tyLe(rows)) console.log(l);
       return 0;
     }
     console.error("kiem-sau: dùng --ty-le | --sau <ISO> | --tu-tep <rows.json>");

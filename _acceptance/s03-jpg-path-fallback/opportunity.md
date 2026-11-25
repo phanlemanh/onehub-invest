@@ -25,5 +25,5 @@ Nguồn mã: nhánh làn thu `zcode/s03-jpg-path-fallback` @f6dcdf3fe (ZCode), x
 
 ## Ngưỡng chết / ngưỡng UAT
 
-Không đo được bằng người dùng cuối — việc nền làn thu. Đích đo trên máy thu sau áp (cùng ZC15): bài mới có ảnh lỗi http-400 trên
-link `/jpg/` = 0; tỉ lệ bài S03 có ảnh mà mất hết ảnh của một ngày VN trọn sau áp ≤ khoảng 8% (từ khoảng 23–28%).
+Không đo được bằng người dùng cuối — việc nền làn thu. Đích đo trên máy thu sau áp (cùng ZC15): ảnh link `/jpg/` trên bài mới còn
+lỗi http-400 ≤ 5% (24/11 ≈ 32%); tỉ lệ bài S03 có ảnh mà mất hết ảnh của một ngày VN trọn sau áp ≤ 8,0% (từ khoảng 23–28%).
