@@ -714,6 +714,8 @@ export async function soatDich(c, { entries = null } = {}) {
   const { rows: sch } = await c.query(
     `SELECT nspname FROM pg_namespace n WHERE nspname !~ '^pg_' AND nspname NOT IN ('public', 'information_schema')
        AND NOT EXISTS (SELECT 1 FROM pg_depend d WHERE d.deptype = 'e' AND d.classid = 'pg_namespace'::regclass AND d.objid = n.oid)
+       -- schema riêng của extension (topology của postgis_topology) không ghi phụ thuộc 'e' — nhận theo extnamespace.
+       AND n.oid NOT IN (SELECT extnamespace FROM pg_extension)
      ORDER BY 1`);
   for (const r of sch) hits.push({ muc: "schema_la", cho: r.nspname });
 
