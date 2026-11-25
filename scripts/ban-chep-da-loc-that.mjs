@@ -71,8 +71,16 @@ async function main() {
     if (r1.status !== 200 || nApi <= 0) loi = 1;
 
     await choSan(`http://127.0.0.1:${cApp}/`);
-    const r2 = await fetch(`http://127.0.0.1:${cApp}/vn/hanoi`);
-    const html = await r2.text();
+    // next dev biên dịch theo yêu cầu: lần gọi đầu có thể 500 khi bản dựng chưa xong (đo 25/11: ENOENT build-manifest) — gọi lại
+    // tới khi 200, trần 300 s, giữ mã cuối.
+    let r2;
+    let html = "";
+    for (const het = Date.now() + 300_000; ;) {
+      r2 = await fetch(`http://127.0.0.1:${cApp}/vn/hanoi`);
+      html = await r2.text();
+      if (r2.status === 200 || Date.now() > het) break;
+      await new Promise((r) => setTimeout(r, 5000));
+    }
     // Câu tóm tắt và dòng chỉ số của trang Invest: «<số> listing» (fmtInt, dấu chấm nghìn).
     const m = html.match(/([0-9][0-9.]*) listing/);
     const nTrang = m ? Number(m[1].replace(/\./g, "")) : 0;
