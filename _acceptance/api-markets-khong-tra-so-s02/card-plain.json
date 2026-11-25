@@ -1,5 +1,5 @@
 {
-  "feature_plain": "API công khai trả danh sách thị trường (/api/v1/markets) thôi mang điểm thị trường lấy từ S02 và thôi xếp theo điểm ấy; bộ soát API chặn mọi route công khai đọc lại bảng số S02.",
+  "feature_plain": "Danh sách thị trường trên API công khai thôi hiện điểm thị trường lấy từ S02 và thôi xếp theo điểm đó; thị trường nhiều tin đứng trước, bằng số tin thì theo tên.",
   "will_do": [
     {
       "id": "AC-1",
@@ -87,5 +87,6 @@
       "i": 4,
       "p": "AC-7 hứa chạy bộ test app mà chưa có eval nào chạy. Đã thêm eval chạy bộ test app."
     }
-  ]
+  ],
+  "analyst_plain": "Ba lệnh kiểm của bộ soát bề mặt API chạy giống nhau trước và sau sửa, nên chúng không phân biệt được bản cũ với bản mới; chiều đỏ của chúng nằm ở ca cấy lỗi riêng."
 }
