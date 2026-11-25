@@ -5,7 +5,7 @@ slug: api-markets-doi-chung-tren-db
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api]
-status: approved
+status: implemented
 design_doc: docs/superpowers/specs/2026-11-25-api-markets-doi-chung-tren-db-design.md
 veto_state: mo
 veto_opened_at: 2026-11-25T19:40:00Z
