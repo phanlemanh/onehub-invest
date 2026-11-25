@@ -25,3 +25,9 @@ evals:
     cmd: cd pipeline && node --test tests/street-raw-ten-nguon.test.mjs
     paths: ["pipeline/transform-chotot.mjs", "pipeline/tests/street-raw-ten-nguon.test.mjs"]
     expected: "exit 0; ℹ fail 0; ca SR-AC-4, SR-AC-5 xanh."
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: cd pipeline && node --test scripts/street-raw-tran-dem.test.mjs scripts/chia-nua.test.mjs
+    paths: ["pipeline/transform-chotot.mjs", "pipeline/scripts/street-raw-tran-dem.test.mjs", "pipeline/test-nua.json"]
+    expected: "exit 0; ℹ fail 0; bốn ca TD-AC-1..4 xanh; chia-nua xanh (tệp đã xếp vào nửa b nên CI chạy)."

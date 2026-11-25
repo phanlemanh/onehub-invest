@@ -42,6 +42,9 @@ lượt trước đã xử: không còn phát biểu sống trúng). Mọi giá 
 - **AC-2** Given cùng bản chép thêm 51 tin mới có quận mang tên nguồn, When chạy transform S06 bản PL41, Then lượt dừng với
   «vượt trần 50 — dừng, không rút, không ghi» trước mọi lần ghi: số tin, phát biểu, phát biểu đã rút không đổi.
 - **AC-3** Given test đơn vị của luật PL39, When chạy, Then vẫn xanh (trần 50 đi tiếp, 51 dừng; luật trúng đúng chỗ bộ soát).
+- **AC-4** Given `npm test` của pipeline (CI), When chạy `scripts/street-raw-tran-dem.test.mjs`, Then bốn ca xanh: 51 giá trị cũ
+  không vào trần; 51 giá trị mới vào trần và dừng (50 đi tiếp); phát biểu sống trúng vào trần; transform đếm trần qua
+  `demTenNguonLuot` rồi `kiemTranTenNguon(demLuot.tran, …)` trước câu upsert tin đầu tiên. Phá từng nhánh thì đúng ca giữ nó đỏ.
 
 ## Coverage
 
