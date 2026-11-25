@@ -360,7 +360,7 @@ test("ZC15: JPEG XL lưu nguyên byte với đuôi .jxl; JPEG giữ .jpg", async
   assert.match(files[2].file, /\.jpg$/, "JPEG vẫn đuôi .jpg");
 });
 
-test("media (2511-3): URL /jpg/ bị CDN 400 → fallback bỏ /jpg/ tải được, meta ghi urlFetched; bỏ khối fallback thì ca này đỏ", async () => {
+test("media (2511-3): URL /jpg/ bị CDN 400 → fallback bỏ /jpg/ tải được, tên tệp băm URL đã tải, không urlFetched; bỏ khối fallback thì ca này đỏ", async () => {
   const root = fresh();
   const s = await createAgentServer({ snapshotRoot: root, city: "hanoi", keys: ["k1"], media: mediaOpts });
   ingestWith(s, [msg("link /jpg/ hỏng", [`${base}/jpg/broken.jpg`], "2026-10-22T10:05:00Z")]);
@@ -372,10 +372,16 @@ test("media (2511-3): URL /jpg/ bị CDN 400 → fallback bỏ /jpg/ tải đư�
   assert.ok(mediaEntry, "fallback phải tải được ảnh khi bỏ /jpg/");
   const items = readItems(root, m.snapshotId);
   const mf = items[0].meta.mediaFiles[0];
-  // payload + meta.url giữ URL gốc nguyên văn — fallback chỉ ghi ở urlFetched
+  // payload + meta.url giữ URL gốc nguyên văn — URL đã tải chỉ hiện qua tên tệp
   assert.deepEqual(items[0].payload.media, [{ path: null, url: `${base}/jpg/broken.jpg`, type: "image/jpeg" }]);
   assert.equal(mf.url, `${base}/jpg/broken.jpg`);
-  assert.equal(mf.urlFetched, `${base}/broken.jpg`);
+  // ZC16 (phán GS 25/11): không ghi urlFetched — khuôn meta.mediaFiles giữ năm khoá;
+  // tên tệp là băm của URL ĐÃ TẢI (URL bỏ /jpg/), không phải của URL gốc
+  assert.equal(mf.urlFetched, undefined, "meta.mediaFiles không được có urlFetched");
+  assert.deepEqual(Object.keys(mf).sort(), ["bytes", "file", "sha256", "url"]);
+  const bam = (u: string) => createHash("sha256").update(u).digest("hex").slice(0, 16);
+  assert.ok(mf.file.startsWith(`media/${bam(`${base}/broken.jpg`)}.`), "tên tệp phải băm theo URL đã tải (bỏ /jpg/)");
+  assert.ok(!mf.file.startsWith(`media/${bam(`${base}/jpg/broken.jpg`)}.`), "tên tệp không được băm theo URL gốc");
   assert.equal(mf.file, mediaEntry.name);
   assert.equal(mf.error, undefined);
   // nội dung trên đĩa khớp bytes fixture

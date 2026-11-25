@@ -11,8 +11,6 @@ import type { RawItem } from "./types.js";
 
 export type MediaFileEntry = {
   url: string;
-  /** URL thật đã tải khi dùng phương án thay thế 400-/jpg/ (2511-3); khác `url`. */
-  urlFetched?: string;
   file?: string;
   sha256?: string;
   bytes?: number;
@@ -240,15 +238,18 @@ export async function fetchMessageMedia(params: {
       const ext = isJpegXl(dl.bytes)
         ? ".jxl"
         : m ? `.${m[1].toLowerCase().replace("jpeg", "jpg")}` : ".jpg";
-      // Tên theo băm URL đã fetch: cùng URL (repost) = cùng file, ổn định giữa các item
+      // Tên theo băm URL ĐÃ TẢI (ZC16): URL thay thế không ghi vào meta (khuôn
+      // meta.mediaFiles giữ năm khoá, DATA-CONTRACT không đổi) — luật thử lại
+      // tất định (đúng một lần, bỏ đoạn "/jpg/") nên ai cũng tính lại được URL
+      // đã tải từ `url` và đối chiếu bằng tên tệp. Cùng URL = cùng file.
       const name = `media/${createHash("sha256").update(fetchedUrl).digest("hex").slice(0, 16)}${ext}`;
       try {
         const written = await params.putFile(name, dl.bytes);
         entries.set(
           url,
           written
-            ? { url, urlFetched: fetchedUrl === url ? undefined : fetchedUrl, file: name, sha256: written.sha256, bytes: written.bytes }
-            : { url, urlFetched: fetchedUrl === url ? undefined : fetchedUrl, file: name }, // đã ghi trong flush này — tái dùng
+            ? { url, file: name, sha256: written.sha256, bytes: written.bytes }
+            : { url, file: name }, // đã ghi trong flush này — tái dùng
         );
       } catch {
         entries.set(url, { url, error: "write-failed" });
