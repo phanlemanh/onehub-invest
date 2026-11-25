@@ -11,6 +11,8 @@ import type { RawItem } from "./types.js";
 
 export type MediaFileEntry = {
   url: string;
+  /** URL thật đã tải khi dùng phương án thay thế 400-/jpg/ (2511-3); khác `url`. */
+  urlFetched?: string;
   file?: string;
   sha256?: string;
   bytes?: number;
@@ -78,6 +80,16 @@ export function hostAllowed(hostWithPort: string, suffixes: string[]): boolean {
   return suffixes.some(
     (s) => host === s.toLowerCase() || host.endsWith("." + s.toLowerCase()),
   );
+}
+
+/** 2511-3 (claudedp-2511-3): CDN nguồn trả 400 cho biến thể path có đoạn
+ *  "/jpg/" (bỏ "/jpg/" là 200 image/jxl — đo 25/11; tệp 400 cũ 02/11 là 404,
+ *  mất thật). Trả URL thay thế bỏ đoạn "/jpg/", hoặc null nếu không có. */
+function altUrlForJpg(url: string, pathname: string): string | null {
+  if (!pathname.includes("/jpg/")) return null;
+  const alt = new URL(url);
+  alt.pathname = pathname.replace("/jpg/", "/");
+  return alt.toString();
 }
 
 function mediaUrlsOf(item: RawItem): string[] {
@@ -201,26 +213,42 @@ export async function fetchMessageMedia(params: {
         entries.set(url, { url, error: "host-not-allowed" });
         continue;
       }
-      const m = EXT_RE.exec(parsed.pathname);
-      const dl = await downloadOne(url, { ...opts, signal: params.signal });
+      let dl = await downloadOne(url, { ...opts, signal: params.signal });
+      let fetchedUrl = url;
+      if (dl.error === "http-400") {
+        // 2511-3: CDN nguồn trả 400 cho biến thể path có đoạn "/jpg/"
+        // (bỏ "/jpg/" là 200 image/jxl — đo 25/11, claudedp-2511-3). Thử MỘT
+        // lần URL thay thế; host alt vẫn thuộc allowlist đã kiểm ở trên.
+        const altRaw = altUrlForJpg(url, parsed.pathname);
+        if (altRaw) {
+          const alt = await downloadOne(altRaw, { ...opts, signal: params.signal });
+          if (!alt.error) {
+            dl = alt;
+            fetchedUrl = altRaw;
+          }
+        }
+      }
       if (dl.error) {
         entries.set(url, { url, error: dl.error });
         continue;
       }
+      const fetchedPath = new URL(fetchedUrl).pathname;
+      const m = EXT_RE.exec(fetchedPath);
       // ZC15: byte JPEG XL giữ NGUYÊN (snapshot bất biến) nhưng đuôi nói thật
-      // để bên đọc theo đuôi không coi nó là JPEG.
+      // để bên đọc theo đuôi không coi nó là JPEG — đoán theo BYTE, không theo
+      // content-type (đo 25/11: URL fallback trả header image/jxl mà byte là JPEG).
       const ext = isJpegXl(dl.bytes)
         ? ".jxl"
         : m ? `.${m[1].toLowerCase().replace("jpeg", "jpg")}` : ".jpg";
-      // Tên theo băm URL: cùng URL (repost) = cùng file, ổn định giữa các item
-      const name = `media/${createHash("sha256").update(url).digest("hex").slice(0, 16)}${ext}`;
+      // Tên theo băm URL đã fetch: cùng URL (repost) = cùng file, ổn định giữa các item
+      const name = `media/${createHash("sha256").update(fetchedUrl).digest("hex").slice(0, 16)}${ext}`;
       try {
         const written = await params.putFile(name, dl.bytes);
         entries.set(
           url,
           written
-            ? { url, file: name, sha256: written.sha256, bytes: written.bytes }
-            : { url, file: name }, // đã ghi trong flush này — tái dùng
+            ? { url, urlFetched: fetchedUrl === url ? undefined : fetchedUrl, file: name, sha256: written.sha256, bytes: written.bytes }
+            : { url, urlFetched: fetchedUrl === url ? undefined : fetchedUrl, file: name }, // đã ghi trong flush này — tái dùng
         );
       } catch {
         entries.set(url, { url, error: "write-failed" });

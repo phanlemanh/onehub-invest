@@ -65,6 +65,14 @@ const srv: Server = createServer((req, res) => {
     // redirect sang hostname khác (localhost ≠ 127.0.0.1 trong allowlist)
     res.writeHead(302, { location: base.replace("127.0.0.1", "localhost") + "/a.jpg" });
     res.end();
+  } else if (req.url === "/jpg/broken.jpg") {
+    // 2511-3: CDN nguồn trả 400 cho biến thể path có đoạn "/jpg/"
+    res.writeHead(400, { "content-type": "text/plain" });
+    res.end("bad");
+  } else if (req.url === "/broken.jpg") {
+    // cùng ảnh sau khi bỏ "/jpg/" — 200 (nội dung JPEG XL ở nguồn thật)
+    res.writeHead(200, { "content-type": "image/jxl", "content-length": String(JPG_A.length) });
+    res.end(JPG_A);
   } else {
     res.writeHead(403);
     res.end();
@@ -350,4 +358,27 @@ test("ZC15: JPEG XL lưu nguyên byte với đuôi .jxl; JPEG giữ .jpg", async
     assert.equal(e.sha256, createHash("sha256").update(bytes).digest("hex"));
   }
   assert.match(files[2].file, /\.jpg$/, "JPEG vẫn đuôi .jpg");
+});
+
+test("media (2511-3): URL /jpg/ bị CDN 400 → fallback bỏ /jpg/ tải được, meta ghi urlFetched; bỏ khối fallback thì ca này đỏ", async () => {
+  const root = fresh();
+  const s = await createAgentServer({ snapshotRoot: root, city: "hanoi", keys: ["k1"], media: mediaOpts });
+  ingestWith(s, [msg("link /jpg/ hỏng", [`${base}/jpg/broken.jpg`], "2026-10-22T10:05:00Z")]);
+  const m = await s.flush();
+  assert.ok(m);
+  const dir = join(root, "hanoi", m.snapshotId);
+  const manifest = JSON.parse(readFileSync(join(dir, "manifest.json"), "utf8"));
+  const mediaEntry = manifest.files.find((f: { name: string }) => f.name.startsWith("media/"));
+  assert.ok(mediaEntry, "fallback phải tải được ảnh khi bỏ /jpg/");
+  const items = readItems(root, m.snapshotId);
+  const mf = items[0].meta.mediaFiles[0];
+  // payload + meta.url giữ URL gốc nguyên văn — fallback chỉ ghi ở urlFetched
+  assert.deepEqual(items[0].payload.media, [{ path: null, url: `${base}/jpg/broken.jpg`, type: "image/jpeg" }]);
+  assert.equal(mf.url, `${base}/jpg/broken.jpg`);
+  assert.equal(mf.urlFetched, `${base}/broken.jpg`);
+  assert.equal(mf.file, mediaEntry.name);
+  assert.equal(mf.error, undefined);
+  // nội dung trên đĩa khớp bytes fixture
+  const onDisk = readFileSync(join(dir, mediaEntry.name));
+  assert.equal(onDisk.length, JPG_A.length);
 });
