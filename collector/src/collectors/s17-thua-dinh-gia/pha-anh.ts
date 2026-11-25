@@ -127,6 +127,7 @@ export async function imagesPhase(o: RunOptions, anh: AnhPhaseOptions, keoDan: K
   let soDuAnXong = 0;
   let dung: RunStopped | null = null;
   let loiLien = 0; // lỗi tạm liền nhau suốt cả lượt: một tệp thành công mới đặt về không
+  let hostLoiTruoc: string | null = null; // máy chủ của lỗi tạm liền trước (đo «mất mạng» ở lượt máy chủ ngoài)
 
   for (const d of kq.duAn) {
     if (dung) break;
@@ -313,9 +314,15 @@ export async function imagesPhase(o: RunOptions, anh: AnhPhaseOptions, keoDan: K
         }
         lo.conLai--;
         kiemChot(lo);
-        if (x.loi === "ok" && x.bytes) loiLien = 0;
-        else if (!LOI_VINH_VIEN_ANH.has(x.loi)) {
-          loiLien++;
+        if (x.loi === "ok" && x.bytes) {
+          loiLien = 0;
+          hostLoiTruoc = null;
+        } else if (!LOI_VINH_VIEN_ANH.has(x.loi)) {
+          // «Mất mạng» là nhiều máy chủ khác nhau cùng lỗi. Ở lượt máy chủ ngoài, lỗi liền nhau trên CÙNG một máy chủ chỉ
+          // tính một lần: một máy chủ chết kéo theo hàng chục URL của nó, không phải mạng của máy thu hỏng (đo 25/11:
+          // 50 lỗi liền nhau trên 34 dự án đều là những URL đã lỗi từ lượt trước).
+          if (!(lop === "ngoai" && loiLien > 0 && h === hostLoiTruoc)) loiLien++;
+          hostLoiTruoc = h;
           if (loiLien >= toiDaLoiLien) {
             loiChan = keoDan.stopRun("network-down", `${toiDaLoiLien} tệp ảnh lỗi mạng liền nhau`);
             return;

@@ -1570,6 +1570,38 @@ test("pha ảnh: trong lúc lô đang tải, theo giờ thật, mỗi khoảng b
   assert.ok(tai.length <= 12, `không dồn dòng quá một mỗi khoảng (${tai.length})`);
 }));
 
+test("taiAnh: lỗi riêng của một máy chủ ngoài là vĩnh viễn — không nối được kịp, bắt tay TLS hỏng, chứng chỉ không kiểm được; không nối được kịp ở máy chủ của nguồn vẫn là lỗi tạm", async () => {
+  const voi = (code: string) =>
+    fetchGia(() => {
+      const e = new TypeError("fetch failed", { cause: Object.assign(new Error("x"), { code }) });
+      e.name = "TypeError";
+      throw e;
+    }).fetchImpl;
+  const ngoai = (code: string) => taiAnh("https://anh.example.org/a.jpg", { ...TUY_CHON, keNgoai: true, ...GIAI_CONG_KHAI, fetchImpl: voi(code) });
+  assert.deepEqual(
+    [(await ngoai("UND_ERR_CONNECT_TIMEOUT")).loi, (await ngoai("ERR_SSL_SSL/TLS_ALERT_HANDSHAKE_FAILURE")).loi, (await ngoai("UNABLE_TO_VERIFY_LEAF_SIGNATURE")).loi, (await ngoai("UNABLE_TO_GET_ISSUER_CERT_LOCALLY")).loi],
+    ["may-chu-khong-tra-loi", "chung-chi", "chung-chi", "chung-chi"],
+  );
+  assert.deepEqual(
+    [(await taiAnh("https://a.cdn.gia.test/a", { ...TUY_CHON, fetchImpl: voi("UND_ERR_CONNECT_TIMEOUT") })).loi, (await taiAnh("https://a.cdn.gia.test/a", { ...TUY_CHON, fetchImpl: voi("ERR_SSL_SSL/TLS_ALERT_HANDSHAKE_FAILURE") })).loi],
+    ["loi", "chung-chi"],
+    "máy chủ của nguồn: không nối được kịp là lỗi tạm (được thử lại); chứng chỉ hỏng thì vĩnh viễn",
+  );
+});
+
+test("pha ảnh máy chủ ngoài: một máy chủ trả lỗi tạm cho cả hàng chục URL không làm lượt dừng vì «mất mạng» — lỗi liền nhau trên cùng một máy chủ chỉ tính một lần; nhiều máy chủ khác nhau cùng lỗi thì vẫn dừng", async () => withTmp(async (dir) => {
+  await duaAnhVaoKho(dir, "8", Array.from({ length: 60 }, (_, i) => `https://chet.example.org/${i}.jpg`));
+  const nguon = nguonAnh(() => ({ status: 503, body: "loi tam thoi" }));
+  const lan1 = await chayAnh(dir, nguon.fetchImpl, { soFile: 100, luongSong: 4, chiNgoai: true }).run();
+  assert.deepEqual([lan1.s.so?.soFile, lan1.s.so?.soDuAnXong, lan1.keoDan.blocks], [0, 0, 0], "lượt đi hết 60 URL của máy chủ đó, không dừng; URL lỗi tạm chưa kết luận nên dự án chưa xong");
+  await duaAnhVaoKho(dir, "9", Array.from({ length: 60 }, (_, i) => `https://h${i}.example.org/${i}.jpg`));
+  const r = await chayAnh(dir, nguon.fetchImpl, { soFile: 100, luongSong: 4, chiNgoai: true }).run().then(
+    () => null,
+    (x: unknown) => x,
+  );
+  assert.ok(r instanceof RunStopped && r.reason === "network-down", "50 máy chủ khác nhau cùng lỗi mạng là mất mạng thật");
+}));
+
 test("pha ảnh: một tệp trong lô lỗi giữa lúc đọc thân — các tệp khác vẫn chốt; tệp lỗi được đếm lượt thử, lượt sau tải nốt", async () => withTmp(async (dir) => {
   await duaAnhVaoKho(dir, "8", [1, 2, 3].map((i) => `https://cdn.gia.test/a/${i}`));
   let lan = 0;

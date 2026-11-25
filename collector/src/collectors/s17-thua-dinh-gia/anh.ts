@@ -266,13 +266,20 @@ export function phanLoiPhanHoi(status: number, contentType: string | null | unde
   return "loi";
 }
 
-/** Lỗi mạng theo nguyên nhân: không phân giải được tên hay chứng chỉ hỏng là vĩnh viễn; còn lại là tạm. Nhận cả lỗi của fetch (code trong `cause`) và của bộ giải tên (code ở gốc). */
-function phanLoiMang(e: unknown): { loi: LoiAnh; chiTiet: string } {
+/**
+ * Lỗi mạng theo nguyên nhân: không phân giải được tên, chứng chỉ hỏng, máy chủ không trả lời là vĩnh viễn; còn lại là
+ * tạm. Nhận cả lỗi của fetch (code trong `cause`) và của bộ giải tên (code ở gốc). `lop` là lớp máy chủ của bước đang
+ * tải: máy chủ NGOÀI không nối được kịp thì coi như không trả lời (một máy chủ ngoài chết là chuyện của nó); ở máy chủ
+ * của nguồn thì đó là lỗi tạm — nguồn chậm một lúc không được ghi nhận là mất ảnh.
+ */
+function phanLoiMang(e: unknown, lop: LopMayChu): { loi: LoiAnh; chiTiet: string } {
   const goc = e as { cause?: { code?: unknown }; code?: unknown } | null;
   const code = String(goc?.cause?.code ?? goc?.code ?? "");
   if (/^ENOTFOUND|^EAI_FAIL|^EAI_NODATA|^EAI_NONAME/.test(code)) return { loi: "may-chu-khong-ton-tai", chiTiet: code };
-  if (/^CERT_|^ERR_TLS_|SELF_SIGNED|ALTNAME/.test(code)) return { loi: "chung-chi", chiTiet: code };
+  // Chứng chỉ: mọi lỗi của lớp TLS (bắt tay hỏng, sai phiên bản…), không kiểm được chữ ký nhánh, tự ký, hết hạn, sai tên.
+  if (/^CERT_|^ERR_TLS_|^ERR_SSL_|SELF_SIGNED|ALTNAME|^UNABLE_TO_|^DEPTH_ZERO_/.test(code)) return { loi: "chung-chi", chiTiet: code };
   if (/^ECONNREFUSED|^ENETUNREACH|^EHOSTUNREACH/.test(code)) return { loi: "may-chu-khong-tra-loi", chiTiet: code };
+  if (/^UND_ERR_CONNECT_TIMEOUT/.test(code)) return lop === "ngoai" ? { loi: "may-chu-khong-tra-loi", chiTiet: code } : { loi: "loi", chiTiet: "timeout" };
   if (/TIMEOUT|timed out/i.test(`${code} ${e instanceof Error ? e.name : ""}`)) return { loi: "loi", chiTiet: "timeout" };
   return { loi: "loi", chiTiet: code || (e instanceof Error ? e.name : "mang") };
 }
@@ -399,7 +406,7 @@ export async function taiAnh(url: string, o: TaiAnhOptions): Promise<KetQuaTai> 
         clearTimeout(dongHo);
         if (o.signal?.aborted) return { url, http: 0, loi: "loi", chiTiet: "ngung" };
         if (e === TREO_GIAI_TEN) return { url, http: 0, loi: "loi", chiTiet: "treo" };
-        return { url, http: 0, ...phanLoiMang(e) };
+        return { url, http: 0, ...phanLoiMang(e, lop) };
       } finally {
         clearTimeout(dongHo);
       }
@@ -415,7 +422,7 @@ export async function taiAnh(url: string, o: TaiAnhOptions): Promise<KetQuaTai> 
       treo = setTimeout(() => ac.abort(TREO), ms);
     };
     datGioTreo(o.firstByteMs ?? FIRST_BYTE_MS);
-    const loiCua = (e: unknown): { loi: LoiAnh; chiTiet: string } => (ac.signal.aborted || gio.aborted || o.signal?.aborted ? loiGio(ac.signal, gio, o.signal) : phanLoiMang(e));
+    const loiCua = (e: unknown): { loi: LoiAnh; chiTiet: string } => (ac.signal.aborted || gio.aborted || o.signal?.aborted ? loiGio(ac.signal, gio, o.signal) : phanLoiMang(e, lop));
     let res: Response;
     try {
       res = await (o.fetchImpl ?? fetch)(hienTai, {
