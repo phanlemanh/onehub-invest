@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: cb55117697ea0ee0e00584618b59668908695939
+verified_commit: 1e81de1516fae7b9b03ccc3de1e9bb9c3d2cd22a
 human_signoff:
 ---
 
@@ -212,3 +212,7 @@ none — every multi-run eval is uniform
 ## Iterations
 
 Round 1: tất cả 13 eval đạt, không eval nào đỏ, không mục judgment nào chờ người. Verdict PASS.
+
+### Re-pin lần 1 — 2026-11-25, do ghim lại sau a3df12daf (tệp test collector đổi, mã sản xuất không đổi)
+run_id: repin-20261125T083852Z-14339
+sha: 1e81de1516fae7b9b03ccc3de1e9bb9c3d2cd22a · suites: 7 lệnh exit 0 · evals: 13/13 eval máy đạt kỳ vọng
