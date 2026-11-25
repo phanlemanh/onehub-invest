@@ -222,6 +222,48 @@ test("BCM-6: nhận xanh — sha, --kiem --khong-tu-dien, pg_restore vào DB m�
   assert.match(tt.out, /bản chép đang chạy: oneinvest_m5_\d{8} sha256/);
 });
 
+/** null khi bảng sale_offers của DB đã ANALYZE (pg_stat_user_tables.last_analyze có giá trị); «chưa ANALYZE …» khi chưa.
+ *  Bộ đếm thống kê đẩy lên chậm tới ~1s sau khi phiên ANALYZE đóng: đọc lại vài lần. */
+async function daAnalyze(db) {
+  for (let i = 0; i < 10; i++) {
+    const v = psql(db, "SELECT coalesce(last_analyze::text, '') FROM pg_stat_user_tables WHERE schemaname = 'public' AND relname = 'sale_offers'", { chiDoc: true });
+    if (v) return null;
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  return `chưa ANALYZE: sale_offers của «${db}» không có last_analyze`;
+}
+
+/** Bản bước nhận hỏng dựng tạm từ bản thật: thay đúng một đoạn (không thấy đoạn thì ném). */
+function nhanHong(tu, sang) {
+  const goc = readFileSync(path.join(REPO, "scripts", "nhan-ban-chep.sh"), "utf8");
+  if (goc.split(tu).length !== 2) throw new Error("không tìm thấy chỗ cấy trong bước nhận");
+  const f = path.join(thuMucTam("bcm-hong-"), "nhan-ban-chep.sh");
+  writeFileSync(f, goc.replace(tu, sang));
+  return f;
+}
+async function nhanQua(sh, b) {
+  DEN ??= thuMucTam("bcm-den-");
+  const err = [];
+  const g = await taoGuiCucBo({ NHAN_CONTAINER: CONTAINER, NHAN_DB: CHAY, NHAN_KHO: REPO, NHAN_DEN: DEN }, { sh })(
+    { lenhCon: `nhan ${b.ke.sha256}`, keTep: b.keTep, dumpTep: b.dump, out: () => {}, err: (s) => err.push(s) });
+  return { ma: g.ma, err: err.join("\n") };
+}
+
+test("BCM-6: sau lượt nhận thành công, DB chạy đã ANALYZE (sale_offers có last_analyze); chiều đỏ: bỏ ANALYZE thì nêu «chưa ANALYZE»", async () => {
+  const b = await layBanChep();
+  assert.ok("sale_offers" in b.ke.so_dong, "bản chép phải có bảng sale_offers");
+  dungChayGia();
+  const r = await nhan(`nhan ${b.ke.sha256}`, { ke: b.keTep, dump: b.dump });
+  assert.equal(r.ma, 0, r.err);
+  assert.equal(await daAnalyze(CHAY), null);
+  // Chiều đỏ: bản bước nhận bỏ dòng ANALYZE.
+  dungChayGia();
+  const hong = nhanHong('PSQL -d "$MOI" -c "ANALYZE" >/dev/null || do_chang "ANALYZE «$MOI» lỗi"\n', "");
+  const h = await nhanQua(hong, b);
+  assert.equal(h.ma, 0, h.err);
+  assert.match(await daAnalyze(CHAY) ?? "", /chưa ANALYZE/);
+});
+
 // Rào 4 (GS): sau một lượt nhận THÀNH CÔNG, `lui` đưa bản của lượt trước (<DB>_cu) về làm DB chạy, dữ liệu đúng như trước lượt.
 /** null khi lui về được đúng bản trước lượt (vân tay A); chuỗi lỗi khi không. */
 async function luiVeBanTruoc(vtA) {
@@ -250,16 +292,9 @@ test("BCM-6: chiều đỏ — bản bước nhận xoá _cu sau khi nhận thà
   dungChayGia();
   const vtA = vanTay(CHAY);
   // Bản hỏng dựng tạm từ bước nhận thật: thêm một dòng xoá bản cũ ngay trước khi báo xanh.
-  const goc = readFileSync(path.join(REPO, "scripts", "nhan-ban-chep.sh"), "utf8");
   const moc = 'ra "xanh: «$DB» = $TEP';
-  assert.equal(goc.split(moc).length, 2, "không tìm thấy chỗ cấy trong bước nhận");
-  const hong = path.join(thuMucTam("bcm-hong-"), "nhan-ban-chep.sh");
-  writeFileSync(hong, goc.replace(moc, `xoa_db "$CU"\n${moc}`));
-  const out = [];
-  const err = [];
-  const g = await taoGuiCucBo({ NHAN_CONTAINER: CONTAINER, NHAN_DB: CHAY, NHAN_KHO: REPO, NHAN_DEN: DEN ??= thuMucTam("bcm-den-") }, { sh: hong })(
-    { lenhCon: `nhan ${b.ke.sha256}`, keTep: b.keTep, dumpTep: b.dump, out: (s) => out.push(s), err: (s) => err.push(s) });
-  assert.equal(g.ma, 0, err.join("\n"));
+  const g = await nhanQua(nhanHong(moc, `xoa_db "$CU"\n${moc}`), b);
+  assert.equal(g.ma, 0, g.err);
   assert.match(await luiVeBanTruoc(vtA) ?? "", /không còn bản trước/);
 });
 

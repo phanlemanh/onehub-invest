@@ -4,8 +4,8 @@
 # MỌI lệnh khách gửi về tệp này, lệnh khách nằm ở SSH_ORIGINAL_COMMAND. Không có biến ấy (gọi tay, xin shell) thì từ chối.
 # Lệnh con — danh sách đóng, khớp trọn `^(nhan [a-f0-9]{64}|lui|trang-thai)$` (ký tự ngoài [a-z0-9-] và một dấu cách thì từ chối):
 #   nhan <sha256>   stdin = dòng "ke <n>" + đúng n byte ke.json + tệp dump (có trần cỡ). Chặng: nhan → sha → kiem
-#                   (ban-chep-da-loc.mjs --kiem --khong-tu-dien của kho trên máy này) → nap (pg_restore vào <DB>_moi bằng docker exec)
-#                   → dem (= ke.json) → xoa-ban-cu (<DB>_cu tạm thành <DB>_bo) → doi-ten (<DB> → <DB>_cu) → giua (<DB>_moi → <DB>)
+#                   (ban-chep-da-loc.mjs --kiem --khong-tu-dien của kho trên máy này) → nap (pg_restore vào <DB>_moi bằng docker exec,
+#                   rồi ANALYZE) → dem (= ke.json) → xoa-ban-cu (<DB>_cu tạm thành <DB>_bo) → doi-ten (<DB> → <DB>_cu) → giua (<DB>_moi → <DB>)
 #                   → don (xoá <DB>_bo, xoá tệp). Hỏng ở doi-ten/giua thì <DB>_bo về lại <DB>_cu: luôn đúng một bản cũ, `lui` vẫn chạy.
 #   lui             đổi bản cũ thành DB chạy (DB chạy thành bản cũ) — gọi lại lần nữa là đổi về.
 #   trang-thai      in DB chạy, bản cũ, bản chép đang chạy (theo ke.json), thư mục đến. Chỉ đọc.
@@ -236,6 +236,8 @@ cay nap && NGUON_NAP=/dev/null
 DX pg_restore -U oneinvest -h localhost --no-owner --no-acl --exit-on-error -d "$MOI" < "$NGUON_NAP" > /dev/null 2>"$DEN/.loi-nap" \
   || { bao "$(head -c 400 "$DEN/.loi-nap")"; rm -f "$DEN/.loi-nap"; do_chang "pg_restore vào «$MOI» lỗi"; }
 rm -f "$DEN/.loi-nap"
+# pg_dump không mang thống kê: thiếu ANALYZE thì planner trên máy nhận chọn kế hoạch tệ (thước P2, trang Invest chậm).
+PSQL -d "$MOI" -c "ANALYZE" >/dev/null || do_chang "ANALYZE «$MOI» lỗi"
 xong
 
 bat_dau dem
