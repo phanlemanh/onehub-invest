@@ -17,7 +17,7 @@ import { docDanhBa, type DanhBa } from "../src/lib/ops/registry/doc"
 const APP = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 // Bản đột biến đặt trong app/tests (khuôn RS8 của DA55) để còn tìm được node_modules của app; xoá khi xong.
 const TAM = join(APP, "tests", `.da3-o-man-${process.pid}`)
-mkdirSync(TAM, { recursive: true })
+// Thư mục tạm chỉ dựng khi ghi bản đột biến (ca bị bỏ qua trên CI không để lại thư mục).
 const URL_DB = process.env.DATABASE_URL ?? ""
 const c = new pg.Client({ connectionString: URL_DB })
 
@@ -94,6 +94,7 @@ function banChep(tep: string, tu: string, thanh: string): string {
     const f = [".ts", ".tsx", "/index.ts", "/index.tsx", ""].map((d) => g + d).find((x) => existsSync(x) && !statSync(x).isDirectory())
     return `from "${pathToFileURL(f ?? g).href}"`
   })
+  mkdirSync(TAM, { recursive: true })
   const f = join(TAM, `dot-${tep.split("/").pop()}`)
   writeFileSync(f, ban)
   return f

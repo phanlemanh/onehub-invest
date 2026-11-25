@@ -49,6 +49,31 @@
       "tep": "app/tests/can-gia-tot-doi-chieu.test.tsx",
       "ca": "CGT-DC đối chiếu DB máy thu chỉ đọc",
       "ly_do": "cần DB máy thu thật (DB trống của CI không có căn nào để đối chiếu); vẫn đo ở máy"
+    },
+    {
+      "tep": "app/tests/registry-nguon-chua-noi.test.tsx",
+      "ca": "BN-AC-8 S07, S16 co dong, da nap bang tap ban ghi, da noi bang project_links",
+      "ly_do": "cần bản chép DB máy thu (bảng tập bản ghi S07, S09, S10, S16 có dòng; apThe nối thật) — DB CI dựng từ migration rỗng; vẫn chạy ở máy qua db-thu"
+    },
+    {
+      "tep": "app/tests/registry-nguon-chua-noi.test.tsx",
+      "ca": "BN-AC-8 S09 da noi doc tu project_links, khong con hang 0",
+      "ly_do": "cần bản chép DB máy thu (bảng tập bản ghi S07, S09, S10, S16 có dòng; apThe nối thật) — DB CI dựng từ migration rỗng; vẫn chạy ở máy qua db-thu"
+    },
+    {
+      "tep": "app/tests/registry-nguon-chua-noi.test.tsx",
+      "ca": "BN-AC-8 S10 hien rieng, khong cong vao o; S06, S08 nhu truoc",
+      "ly_do": "cần bản chép DB máy thu (bảng tập bản ghi S07, S09, S10, S16 có dòng; apThe nối thật) — DB CI dựng từ migration rỗng; vẫn chạy ở máy qua db-thu"
+    },
+    {
+      "tep": "app/tests/registry-nguon-chua-noi.test.tsx",
+      "ca": "BN-AC-8 o dung ra tren man bang tong nam nguon, khong cong S10",
+      "ly_do": "cần bản chép DB máy thu (bảng tập bản ghi S07, S09, S10, S16 có dòng; apThe nối thật) — DB CI dựng từ migration rỗng; vẫn chạy ở máy qua db-thu"
+    },
+    {
+      "tep": "app/tests/registry-nguon-chua-noi.test.tsx",
+      "ca": "BN-AC-8 chieu do: cong moi nguon vao o thi ca S10 do",
+      "ly_do": "cần bản chép DB máy thu (bảng tập bản ghi S07, S09, S10, S16 có dòng; apThe nối thật) — DB CI dựng từ migration rỗng; vẫn chạy ở máy qua db-thu"
     }
   ],
   "pipeline": [

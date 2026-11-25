@@ -217,6 +217,8 @@ export const MA_TRAN = {
   "scripts/nap-dvhc-do.mjs": "mien", // PX1: thước trước/sau, đọc danh sách tên như transform, ROLLBACK, không gán tin thật
   "scripts/the-dia-chi-nhom.mjs": "mien", // TG1: đọc phường của tin để dựng nháp thẻ nhóm, ghi bảng thẻ, không gán khu vực cho tin
   "lib/dia-chi-the-nhom.mjs": "mien", // TG2: kiểm ô phường NGƯỜI ĐÃ DUYỆT trên thẻ còn là phường (đúng điều kiện trigger 096) trước khi ghi phát biểu; không chọn phường từ chữ hay toạ độ, không đổi cột area_id của tin
+  "lib/ban-ghi-nguon.mjs": "mien", // DA3: đọc tỉnh, xã, điểm của bản ghi nguồn danh mục (S07…S16) để so nút dự án, không gán khu vực cho tin
+  "lib/khop-du-an.mjs": "mien", // DA3: so tỉnh của bản ghi nguồn với nút dự án khi khớp, không gán khu vực cho tin
 };
 
 function docPipeline() {
@@ -252,7 +254,7 @@ export function kiemMaTran(files, maTran = MA_TRAN) {
 }
 
 test("TRG-AC-7 tập tệp khớp mẫu bằng đúng ma trận viết trước", () => {
-  assert.equal(Object.keys(MA_TRAN).length, 23, "ma trận viết trước phải đủ 23 tệp (design doc §5 + phép đo N1 + 500 của s03-len-cong + đo hằng ngày DO1 + dữ liệu mẫu DO1 + bộ nạp và thước danh bạ PX1 + 600 của gan-can-dinh-danh-duy-nhat + bộ đọc và dữ liệu mẫu DO3 + lệnh dựng nháp thẻ nhóm TG1 + bộ đọc thẻ đóng dấu TG2)");
+  assert.equal(Object.keys(MA_TRAN).length, 25, "ma trận viết trước phải đủ 25 tệp (design doc §5 + phép đo N1 + 500 của s03-len-cong + đo hằng ngày DO1 + dữ liệu mẫu DO1 + bộ nạp và thước danh bạ PX1 + 600 của gan-can-dinh-danh-duy-nhat + bộ đọc và dữ liệu mẫu DO3 + lệnh dựng nháp thẻ nhóm TG1 + bộ đọc thẻ đóng dấu TG2 + khuôn bản ghi nguồn và bộ khớp dự án DA3)");
   assert.deepEqual(kiemMaTran(docPipeline()), []);
 });
 

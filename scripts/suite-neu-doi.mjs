@@ -22,6 +22,8 @@ const LOI_APP = [
   "app/**", "agent/**", "pipeline/**", "scripts/**", "db/**", "data-api/**", "CONTEXT.md",
   ".claude/skills/onehub-ui/**", "docs/architecture/**", "docs/product/**", "docs/ops/**",
   "_acceptance/tap-nhan-mau-ocp1/**",
+  // app/probes/da3-dau-cuoi.test.tsx chạy bộ đo S1 đóng băng và ghi evidence của hồ sơ DA3 — đầu vào, đầu ra của probe.
+  "_acceptance/bang-noi-ma-du-an/**",
 ];
 
 const LOI_PIPELINE = [
@@ -36,6 +38,8 @@ const LOI_PIPELINE = [
   "_acceptance/the-dia-chi-nhom-s03/ap-may-thu/**",
   // pipeline/scripts/mau-bai-lac-du-an.test.mjs đọc hồ sơ mẫu v2 thật (khoá 100 mã, hạt giống, n) — đầu vào của test (TG2).
   "_acceptance/dong-dau-dia-chi-luc-nap/evidence/mau-bai-lac-du-an-v2.md",
+  // pipeline/scripts/noi-du-an-nguon-that.mjs so với bộ đo S1 đóng băng của hồ sơ DA3 (đếm độc lập với mã của hàng).
+  "_acceptance/bang-noi-ma-du-an/probes/s1/do.mjs",
 ];
 
 export const VUNG = {
