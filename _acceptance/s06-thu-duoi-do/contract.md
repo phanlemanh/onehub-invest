@@ -98,3 +98,8 @@ Không có `opportunity.md`: hàng được GS mở trong đợt. Thước của
   đủ cả 1.072.
 - Giới hạn: tỉ lệ bắt được không được tính lại độc lập trong hồ sơ này. Muốn tính lại cần tập mã của lượt quét đủ đóng băng tại
   thời điểm đo, mà tập này đọc từ `stg_chotot_ads` thì đổi theo các lượt quét sau. LL đã soát số này ở vòng `claudedp-2411-6`.
+- Giới hạn đã biết, dành cho người gộp: `scripts/chotot-daily.sh` nạp snapshot có TÊN MỚI NHẤT của mỗi thành phố, bằng
+  `ls … ${CITY}__chotot-ads__* | sort | tail -1`. Snapshot đuôi cùng khuôn tên `<city>__chotot-ads__<mốc>`. Vì vậy nếu bộ thu
+  đuôi chạy với `--goc` trỏ vào `collector/snapshots` sau lượt thu ngày, lượt nạp ngày sẽ nạp snapshot đuôi nhỏ thay cho lượt
+  quét đủ. Trước hàng «chọn snapshot để nạp», CẤM chạy sống bộ thu đuôi vào `collector/snapshots` (GS đã chuyển LL ngày 25/11).
+  Chép 231 snapshot cũ của phép đo vào kho chuẩn thì an toàn, vì tên của chúng cũ hơn lượt thu ngày kế.
