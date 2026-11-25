@@ -121,7 +121,7 @@ test("ghiSnapshotBuu: ảnh sống chép từ snapshot gốc + ảnh /jpg/400 t�
     const kq = await ghiSnapshotBuu({ baiHomNgay: bai, rootSnapshots: t.root, dirMoi, fetchModule, suffixes: SUFFIX_TEST, tocDo: 1000 });
     assert.equal(kq.maChan, undefined);
     assert.equal(kq.snapshotId, "hanoi__zalo-agent__2026-11-25T120000000");
-    assert.equal(kq.soBai, 2);
+    assert.equal(kq.soBai, 1, "bài chỉ-toàn-404 không được viết (giữ nguyên trong stg)");
     assert.equal(kq.taiDuoc, 1, "chỉ /jpg/ tải lại được qua fallback");
     assert.ok(!existsSync(join(t.root, "hanoi", ".hanoi__zalo-agent__2026-11-25T120000000.partial")), "không sót thư mục tạm");
 
@@ -142,9 +142,9 @@ test("ghiSnapshotBuu: ảnh sống chép từ snapshot gốc + ảnh /jpg/400 t�
     // bytes ảnh sống = đúng bytes gốc
     assert.ok(manifest.files.find((f) => f.name === "media/cu-song.jpg"), "ảnh sống được chép sang snapshot mới cùng tên");
 
-    // items: mediaFiles ĐỦ theo thứ tự payload.media, entry sống KHÔNG còn snapshotId cũ
+    // items: chỉ bài có url phải tải; mediaFiles ĐỦ theo thứ tự payload.media, entry sống KHÔNG còn snapshotId cũ
     const items = JSON.parse(gunzipSync(readFileSync(join(dirMoi, "items-0001.json.gz"))).toString());
-    assert.equal(items.length, 2);
+    assert.equal(items.length, 1, "p2 toàn-404 không vào snapshot");
     const p1 = items.find((x) => x.sourceId === "p1");
     assert.deepEqual(
       p1.meta.mediaFiles.map((e) => e.url),
@@ -155,9 +155,6 @@ test("ghiSnapshotBuu: ảnh sống chép từ snapshot gốc + ảnh /jpg/400 t�
     assert.equal(p1.meta.mediaFiles[0].snapshotId, undefined, "không giữ snapshotId cũ — bộ nạp sẽ đóng dấu mới");
     assert.ok(p1.meta.mediaFiles[1].file, "ảnh /jpg/400 tải lại có file");
     assert.equal(p1.meta.mediaFiles[1].error, undefined);
-    const p2 = items.find((x) => x.sourceId === "p2");
-    assert.equal(p2.meta.mediaFiles[0].error, "http-404", "404 giữ nguyên");
-    assert.equal(p2.meta.mediaFiles[0].file, undefined);
     // payload nguyên văn: media trả lại ĐỦ danh sách gốc (không chỉ url cần tải)
     assert.equal(p1.payload.media.length, 2);
   } finally {
