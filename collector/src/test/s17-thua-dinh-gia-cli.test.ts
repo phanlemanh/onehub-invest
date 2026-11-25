@@ -100,7 +100,8 @@ test("parseCli: pha images đi bằng Node (không cần phiên), thư mục tr�
   assert.equal(parseCli(base).stateDir.endsWith("s17-thua-dinh-gia-anh"), false, "pha khác giữ nguyên thư mục cũ");
   const q = parseCli([...anh, "--anh-luong-song", "1", "--anh-so-file", "40"]);
   assert.deepEqual(q.anh, { luongSong: 1, soFile: 40, chiNgoai: false });
-  assert.throws(() => parseCli([...anh, "--anh-luong-song", "9"]), /1 đến 8/);
+  assert.equal(parseCli([...anh, "--anh-luong-song", "12"]).anh?.luongSong, 12, "ảnh là tệp tĩnh: trần riêng 16 kết nối, khỏi trần 8 của lời API");
+  assert.throws(() => parseCli([...anh, "--anh-luong-song", "17"]), /1 đến 16/);
   assert.throws(() => parseCli([...anh, "--anh-so-file", "0"]), /dương/);
 });
 

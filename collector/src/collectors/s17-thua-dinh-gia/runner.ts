@@ -8,6 +8,7 @@ import { appendFileSync, closeSync, existsSync, mkdirSync, openSync, readFileSyn
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { MAX_CONCURRENCY, S17Client, RunStopped, type Caps, type Response, type StopReason, type Transport, type TransportMany } from "./client.js";
+import { MAX_ANH_LUONG_SONG } from "./pha-anh.js";
 import { ConfigError, type S17Config } from "./config.js";
 import { assertBalanceUnchanged } from "./kinds.js";
 import { emptyState, runPhase, type GridEntry, type ParcelArea, type Phase, type PhaseSummary, type RunState } from "./run.js";
@@ -210,7 +211,8 @@ export async function executePhase(o: ExecOptions): Promise<ExecResult> {
   // hai lần thì không chạy nữa, chờ người quyết; đã bị chặn một lần thì chỉ còn nhịp cũ, một luồng.
   // Số lời (pha ảnh: số tệp) một đợt; pha ảnh không có nhịp nên «nhanh» chỉ theo số luồng.
   const soLuong = o.phase === "images" ? (o.anh?.luongSong ?? 1) : (o.concurrency ?? 1);
-  if (!Number.isInteger(soLuong) || soLuong < 1 || soLuong > MAX_CONCURRENCY) throw new ConfigError(`concurrency phải là số nguyên từ 1 đến ${MAX_CONCURRENCY}`);
+  const toiDaLuong = o.phase === "images" ? MAX_ANH_LUONG_SONG : MAX_CONCURRENCY; // ảnh là tệp tĩnh: trần riêng
+  if (!Number.isInteger(soLuong) || soLuong < 1 || soLuong > toiDaLuong) throw new ConfigError(`concurrency phải là số nguyên từ 1 đến ${toiDaLuong}`);
   const fast = soLuong > 1 || (o.phase !== "images" && o.paceMs < DEFAULT_PACE_MS);
   // Pha ảnh chỉ tải từ máy chủ của chính nguồn: thiếu danh sách thì dừng trước khi tải gì.
   if (o.phase === "images" && !o.config.anh?.hostSuffixes.length) throw new ConfigError("cấu hình local S17 thiếu anh.hostSuffixes (đuôi máy chủ ảnh của nguồn) cho pha ảnh — không tải mò");

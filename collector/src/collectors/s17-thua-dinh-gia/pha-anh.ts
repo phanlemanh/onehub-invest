@@ -57,8 +57,13 @@ type MucMedia = { url: string; file?: string; sha256?: string; bytes?: number; e
 
 /** Nhiều lỗi tạm liền nhau thế này là mạng của máy thu hỏng — dừng, không đổ tiếp. */
 const TOI_DA_LOI_LIEN = { nguon: 10, ngoai: 50 };
-/** Mỗi máy chủ ngoài tối đa bấy nhiêu lời cùng lúc. */
-const TOI_DA_MOT_MAY_CHU_NGOAI = 2;
+/**
+ * Mỗi máy chủ ngoài tối đa bấy nhiêu lời cùng lúc — mức một trình duyệt thường mở cho một máy chủ. Máy chủ nào chặn
+ * (403, 429, trang thử thách) thì bỏ máy chủ đó, không lách.
+ */
+export const TOI_DA_MOT_MAY_CHU_NGOAI = 6;
+/** Trần số kết nối tải ảnh một lượt. Ảnh là tệp tĩnh, không gọi API của nguồn nên có trần riêng (khỏi trần 8 của lời API). */
+export const MAX_ANH_LUONG_SONG = 16;
 const TEN_TEP_MAY_CHU_BI_CHAN = "may-chu-bi-chan.json";
 /** Link còn hạn dưới bấy nhiêu mili-giây (5 phút) vẫn được hỏi, để lệch đồng hồ nhỏ không làm bỏ sót ảnh. */
 const LEECH_HET_HAN = 300_000;

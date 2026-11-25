@@ -552,6 +552,7 @@ test("pha căn hộ toàn bộ: lọc theo số căn nguồn khai, theo danh sá
 // ---------- nối vào trình điều khiển ----------
 
 import { executePhase, type ExecResult } from "../collectors/s17-thua-dinh-gia/runner.js";
+import { MAX_ANH_LUONG_SONG, TOI_DA_MOT_MAY_CHU_NGOAI } from "../collectors/s17-thua-dinh-gia/pha-anh.js";
 import type { RawItem } from "../core/types.js";
 
 const cauHinhAnh = (them: Record<string, unknown> = {}) => loadConfig(JSON.stringify({ hosts: FAKE_HOSTS, paths: {}, anh: { hostSuffixes: ["cdn.gia.test"] }, ...them }));
@@ -596,6 +597,18 @@ test("executePhase pha images: không đọc số dư, không cần phiên, snap
   assert.equal(items[0].kind, "anh_du_an");
   assert.ok((await readdir(join(dir, "tien-do-anh"))).includes("anh-8.jsonl"), "tiến độ nằm cùng thư mục trạng thái của pha ảnh");
   await assert.rejects(readFile(join(dir, "tien-do-anh", "DANG-CHAY.lock")), "nhả khoá khi xong");
+}));
+
+test("executePhase pha images: mở tới 16 kết nối được — trần riêng của ảnh, khỏi trần 8 của lời API; quá 16 thì từ chối trước khi tải gì", async () => withTmp(async (dir) => {
+  await duaAnhVaoKho(dir, "8", Array.from({ length: 8 }, (_, i) => `https://cdn.gia.test/a/${i}`));
+  const nguon = nguonAnh(() => ({}));
+  const r12 = await chayQuaDieuKhien(dir, "images", nguon.fetchImpl, { luongSong: MAX_ANH_LUONG_SONG });
+  assert.equal(r12.ok, true, String(r12.message));
+  assert.equal(r12.summary?.so?.soFile, 8);
+  assert.equal(MAX_ANH_LUONG_SONG, 16, "trần số kết nối của ảnh");
+  assert.equal(TOI_DA_MOT_MAY_CHU_NGOAI, 6, "mỗi máy chủ ngoài: mức trình duyệt thường mở");
+  await duaAnhVaoKho(dir, "9", Array.from({ length: 8 }, (_, i) => `https://cdn.gia.test/b/${i}`));
+  await assert.rejects(chayQuaDieuKhien(dir, "images", nguon.fetchImpl, { luongSong: MAX_ANH_LUONG_SONG + 1 }), new RegExp(`1 đến ${MAX_ANH_LUONG_SONG}`), "quá trần: từ chối trước khi tải gì");
 }));
 
 test("executePhase pha images: cấu hình thiếu máy chủ ảnh thì dừng TRƯỚC khi tải gì", async () => withTmp(async (dir) => {
@@ -1505,7 +1518,7 @@ test("pha ảnh: nguồn trả 403 ở hai tệp cùng lúc — tính MỘT lầ
   assert.ok(!nhatKy.includes("\"dem\""), `tệp bị bỏ vì nguồn chặn không bị tính là một lượt thử lỗi: ${nhatKy}`);
 }));
 
-test("pha ảnh máy chủ ngoài: nhiều máy chủ khác nhau thì tải song song tới số luồng khai; mỗi máy chủ tối đa hai lời", async () => withTmp(async (dir) => {
+test("pha ảnh máy chủ ngoài: nhiều máy chủ khác nhau thì tải song song tới số luồng khai; mỗi máy chủ ngoài không vượt giới hạn riêng", async () => withTmp(async (dir) => {
   await duaAnhVaoKho(dir, "8", ["h1", "h2", "h3", "h4"].flatMap((h) => [1, 2, 3].map((i) => `https://${h}.example.org/${i}.jpg`)));
   const dangChay = new Map<string, number>();
   let toiDa = 0; // tối đa lời đang chạy CÙNG LÚC trong cả lượt
@@ -1525,7 +1538,7 @@ test("pha ảnh máy chủ ngoài: nhiều máy chủ khác nhau thì tải song
   const { s } = await chayAnh(dir, f.fetchImpl, { soFile: 12, luongSong: 6, chiNgoai: true }).run();
   assert.equal(s.so?.soFile, 12);
   assert.ok(toiDa >= 4, `nhiều máy chủ phải chạy song song (tối đa quan sát được ${toiDa})`);
-  assert.ok(Math.max(...toiDaMotMayChu) <= 2, `mỗi máy chủ tối đa hai lời (tối đa ${Math.max(...toiDaMotMayChu)})`);
+  assert.ok(Math.max(...toiDaMotMayChu) <= TOI_DA_MOT_MAY_CHU_NGOAI, `mỗi máy chủ ngoài tối đa sáu lời (tối đa ${Math.max(...toiDaMotMayChu)})`);
 }));
 
 const KY_HET_HAN = (ngayGio: string, p: string) => `https://cdn.gia.test/p/${p}?X-Amz-Date=${ngayGio}&X-Amz-Expires=604800&X-Amz-Signature=abc`;
@@ -1726,8 +1739,8 @@ test("pha ảnh máy chủ ngoài: máy chủ không còn tồn tại là lỗi 
   assert.deepEqual([...new Set(loi)], ["may-chu-khong-ton-tai"]);
 }));
 
-test("pha ảnh máy chủ ngoài: mỗi máy chủ tối đa hai lời cùng lúc dù lượt cho phép nhiều luồng", async () => withTmp(async (dir) => {
-  await duaAnhVaoKho(dir, "8", Array.from({ length: 8 }, (_, i) => `https://mot.example.org/x/${i}`));
+test("pha ảnh máy chủ ngoài: mỗi máy chủ ngoài tối đa sáu lời cùng lúc (mức trình duyệt thường mở) dù lượt khai nhiều luồng hơn", async () => withTmp(async (dir) => {
+  await duaAnhVaoKho(dir, "8", Array.from({ length: 16 }, (_, i) => `https://mot.example.org/x/${i}`));
   let dangChay = 0;
   let toiDa = 0;
   const dem = nguonAnhUrl(async () => {
@@ -1737,8 +1750,9 @@ test("pha ảnh máy chủ ngoài: mỗi máy chủ tối đa hai lời cùng l�
     dangChay--;
     return {};
   });
-  await chayAnh(dir, dem.fetchImpl, { chiNgoai: true, luongSong: 6, soFile: 10 }).run();
-  assert.equal(toiDa, 2, `nhiều nhất hai lời cùng lúc tới một máy chủ ngoài (đo ${toiDa})`);
+  const { s } = await chayAnh(dir, dem.fetchImpl, { chiNgoai: true, luongSong: 12, soFile: 20 }).run();
+  assert.equal(s.so?.soFile, 16, "mười sáu ảnh của máy chủ đó đều tải được");
+  assert.equal(toiDa, TOI_DA_MOT_MAY_CHU_NGOAI, `nhiều nhất sáu lời cùng lúc tới một máy chủ ngoài (đo ${toiDa})`);
 }));
 
 test("pha ảnh: máy chủ của nguồn trả 200 kèm trang HTML là trang thử thách → dừng cả lượt với lý do blocked", async () => withTmp(async (dir) => {

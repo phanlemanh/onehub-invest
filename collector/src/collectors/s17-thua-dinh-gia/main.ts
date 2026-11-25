@@ -20,6 +20,7 @@ import { parseArgs } from "node:util";
 import { realpathSync } from "node:fs";
 import { ConfigError, loadConfig, PHASE_ROLES, rolePath, type Role, type S17Config } from "./config.js";
 import { MAX_CONCURRENCY, type Caps } from "./client.js";
+import { MAX_ANH_LUONG_SONG } from "./pha-anh.js";
 import { DEFAULT_PACE_MS, MIN_PACE_MS, buildExecOptions, executePhase, type ExecResult, type ExecSpec } from "./runner.js";
 import type { GridEntry, ParcelArea, Phase } from "./run.js";
 import { nodeTransport } from "./transport-node.js";
@@ -146,7 +147,7 @@ export function parseCli(argv: string[]): CliOptions {
   if (buocM !== undefined && buocM > 1000) throw new UsageError("--buoc-m không được lớn hơn 1000 (cạnh ô 1 km)");
   if (phase === "parcels-cell" && buocM === undefined) throw new UsageError("pha parcels-cell cần --buoc-m <số mét của bước lưới, vd 30 hoặc 100>");
   const anhLuongSong = values["anh-luong-song"] === undefined ? 4 : positive("--anh-luong-song", values["anh-luong-song"]);
-  if (anhLuongSong > MAX_CONCURRENCY) throw new UsageError(`--anh-luong-song phải từ 1 đến ${MAX_CONCURRENCY}`);
+  if (anhLuongSong > MAX_ANH_LUONG_SONG) throw new UsageError(`--anh-luong-song phải từ 1 đến ${MAX_ANH_LUONG_SONG}`);
   return {
     phase,
     via: isPublic ? "node" : "ego",
