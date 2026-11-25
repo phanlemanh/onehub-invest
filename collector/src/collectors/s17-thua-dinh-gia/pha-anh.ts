@@ -54,6 +54,8 @@ const TOI_DA_LOI_LIEN = { nguon: 10, ngoai: 50 };
 /** Mỗi máy chủ ngoài tối đa bấy nhiêu lời cùng lúc. */
 const TOI_DA_MOT_MAY_CHU_NGOAI = 2;
 const TEN_TEP_MAY_CHU_BI_CHAN = "may-chu-bi-chan.json";
+/** Link còn hạn dưới bấy nhiêu giây vẫn được hỏi (để lệch đồng hồ hai phía không làm bỏ sót ảnh). */
+const LEECH_HET_HAN = 300_000;
 
 type TienDoAnh = { daLan: Set<string>; loiVinhVien: Map<string, string>; dem: Map<string, number>; xong: boolean };
 
@@ -140,6 +142,16 @@ export async function imagesPhase(o: RunOptions, anh: AnhPhaseOptions, keoDan: K
       const dangChayMayChu = new Map<string, number>();
       let biSua = false; // tệp máy chủ bị chặn đổi trong lô này
       let loiChan: RunStopped | null = null;
+      // Link ký số đã quá hạn theo chính tham số của nó: không gửi lời nào (hỏi cũng chỉ được 403), ghi nhận là hết hạn.
+      const gio = (o.now ?? (() => new Date()))().getTime();
+      for (let k = 0; k < lo.length; k++) {
+        const h = lo[k].hetHan;
+        const han = h === null ? NaN : Date.parse(h);
+        if (han + LEECH_HET_HAN <= gio) {
+          ketQua.set(lo[k].url, { url: lo[k].url, loi: "het-han", http: 0, chiTiet: "du-doan-het-han" });
+          daLay.add(k);
+        }
+      }
       const layViec = (): number | "het" => {
         for (let k = 0; k < lo.length; k++) {
           if (daLay.has(k) || daBoQua.has(k)) continue;

@@ -87,7 +87,7 @@ export async function projectCatalog(root: string): Promise<DuAnCatalog[]> {
 export type AnhCuaDuAn = {
   id: string;
   /** Mọi URL ảnh theo thứ tự gặp; `ngoai` = true khi URL ở máy chủ ngoài nguồn (chỉ lượt «máy chủ ngoài» mới tải). */
-  anh: Array<{ url: string; nhom: string[]; ngayKy: string | null; ngoai: boolean }>;
+  anh: Array<{ url: string; nhom: string[]; ngayKy: string | null; hetHan: string | null; ngoai: boolean }>;
 };
 
 /** Ngày ký (YYYYMMDD) của link có chữ ký; link thường không có. */
@@ -95,6 +95,24 @@ export function ngayKyCuaLink(url: string): string | null {
   try {
     const d = new URL(url).searchParams.get("X-Amz-Date");
     return d && /^\d{8}/.test(d) ? d.slice(0, 8) : null;
+  } catch {
+    return null;
+  }
+}
+
+const X_AMZ_DATE = /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/;
+
+/**
+ * Thời điểm hết hạn (ISO) của link ký số: `X-Amz-Date` + `X-Amz-Expires` giây. Qua thời điểm ấy kho lưu trữ chắc chắn
+ * từ chối (đo 25/11: khớp 3.610/3.610 kết quả thật), nên pha ảnh không gửi lời nào nữa. Link thường hay tham số lạ → null.
+ */
+export function hanCuaLink(url: string): string | null {
+  try {
+    const q = new URL(url).searchParams;
+    const m = X_AMZ_DATE.exec(q.get("X-Amz-Date") ?? "");
+    const giay = q.get("X-Amz-Expires");
+    if (!m || !giay || !/^\d{1,9}$/.test(giay)) return null;
+    return new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]) + Number(giay) * 1000).toISOString();
   } catch {
     return null;
   }
@@ -167,7 +185,7 @@ export async function projectImages(
     urlTrong(it.payload, conLai);
     for (const u of conLai) them(u, null);
     if (!thuThap.size) continue;
-    const anh = [...thuThap.values()].map((x) => ({ url: x.url, nhom: [...x.nhom], ngayKy: ngayKyCuaLink(x.url), ngoai: x.ngoai }));
+    const anh = [...thuThap.values()].map((x) => ({ url: x.url, nhom: [...x.nhom], ngayKy: ngayKyCuaLink(x.url), hetHan: hanCuaLink(x.url), ngoai: x.ngoai }));
     soUrlNgoai += anh.filter((x) => x.ngoai).length;
     const ngay = anh.map((x) => Number(x.ngayKy ?? 99999999));
     duAn.push({ id, anh, somNhat: ngay.length ? Math.min(...ngay) : 99999999 });

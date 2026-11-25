@@ -244,11 +244,12 @@ async function docSnapshot(dir: string, id: string) {
   return { manifest, items };
 }
 
-const chayAnh = (dir: string, fetchImpl: typeof fetch, o: { soFile?: number; luongSong?: number; caps?: { calls: number; minutes: number }; state?: RunState; chiNgoai?: boolean } = {}) => {
+const chayAnh = (dir: string, fetchImpl: typeof fetch, o: { soFile?: number; luongSong?: number; caps?: { calls: number; minutes: number }; state?: RunState; chiNgoai?: boolean; now?: string } = {}) => {
+  const GIO = o.now ?? "2026-11-25T01:00:00.000Z";
   const state = o.state ?? emptyState();
   const w = new BatchWriter({ root: dir, maxItems: 1000, phase: "images", schemaVersion: S17_SCHEMA_VERSION_MO_RONG, maxFiles: o.soFile ?? 2 });
   const log: Record<string, unknown>[] = [];
-  const keoDan = new KeoDan({ caps: o.caps ?? { calls: 1000, minutes: 60 }, now: () => new Date("2026-11-25T01:00:00.000Z").getTime() });
+  const keoDan = new KeoDan({ caps: o.caps ?? { calls: 1000, minutes: 60 }, now: () => new Date(GIO).getTime() });
   const run = () =>
     runPhase({
       phase: "images",
@@ -257,7 +258,7 @@ const chayAnh = (dir: string, fetchImpl: typeof fetch, o: { soFile?: number; luo
       state,
       save: async () => assert.equal(w.pendingCount + w.pendingFiles, 0, "trạng thái chỉ lưu khi lô đã chốt"),
       log: (e) => log.push(e),
-      now: () => new Date("2026-11-25T01:00:00.000Z"),
+      now: () => new Date(GIO),
       snapshotRoot: dir,
       tienDoDir: join(dir, "tien-do"),
       anh: { hostSuffixes: ["cdn.gia.test"], chiNgoai: o.chiNgoai ?? false, luongSong: o.luongSong ?? 2, maxBytes: 1024 * 1024, timeoutMs: 5000, userAgent: "oneinvest-collector/1", fetchImpl },
@@ -1340,4 +1341,50 @@ test("pha căn hộ toàn bộ: chi tiết căn lỗi mạng tạm chưa đượ
   assert.equal(nguon.sent.filter((u) => u.includes("ma_can=a1")).length, 6, "lượt tư không hỏi lại căn a1");
   const gop = (await moiKind(dir)).find((it) => it.kind === "can_ho_du_an")!;
   assert.deepEqual([gop.meta.soDaLay, gop.meta.soKhongLayDuoc], [1, 1]);
+}));
+
+// ---------- link đã hết hạn biết trước: không gửi lời nào ----------
+
+test("projectImages: link ký số ghi cả thời điểm hết hạn (X-Amz-Date + X-Amz-Expires); link thường hay tham số lạ thì không có", async () => withTmp(async (dir) => {
+  await duaAnhVaoKho(dir, "8", [
+    "https://cdn.gia.test/a.jpg?X-Amz-Date=20261118T010000Z&X-Amz-Expires=604800&X-Amz-Signature=abc",
+    "https://cdn.gia.test/b.jpg?X-Amz-Date=20261118T010000Z",
+    "https://cdn.gia.test/c.jpg?X-Amz-Date=1900&X-Amz-Expires=604800",
+    "https://cdn.gia.test/d.jpg?X-Amz-Date=20261118T010000Z&X-Amz-Expires=nam",
+    "https://cdn.gia.test/e.jpg",
+  ]);
+  const kq = await projectImages(dir, ["cdn.gia.test"]);
+  assert.deepEqual(
+    kq.duAn[0].anh.map((a) => a.hetHan),
+    ["2026-11-25T01:00:00.000Z", null, null, null, null],
+    "chỉ link có đủ ngày ký đúng dạng và số giây mới tính được hạn",
+  );
+}));
+
+test("pha ảnh: link ký số đã quá hạn theo chính tham số của nó thì KHÔNG gửi lời nào — ghi nhận là hết hạn; link vừa mới hết hạn (trong khoảng đệm 5 phút), link còn hạn và link thường vẫn được hỏi", async () => withTmp(async (dir) => {
+  const ky = (ngayGio: string, p: string) => `https://cdn.gia.test/p/${p}?X-Amz-Date=${ngayGio}&X-Amz-Expires=604800&X-Amz-Signature=abc`;
+  await duaAnhVaoKho(dir, "8", [
+    ky("20261118T005400Z", "chet"), // hết hạn 2026-11-25T00:54:00Z — sáu phút trước
+    ky("20261118T005800Z", "vua-chet"), // hết hạn 2026-11-25T00:58:00Z — hai phút trước: trong khoảng đệm, vẫn hỏi
+    ky("20261118T080000Z", "con-han"), // hết hạn 2026-11-25T08:00:00Z
+    "https://cdn.gia.test/p/thuong.jpg",
+  ]);
+  const hetHanThat = "<Error><Code>AccessDenied</Code><Message>Request has expired</Message></Error>";
+  const nguon = nguonAnh((duong) => (duong === "/p/vua-chet" ? { status: 403, body: hetHanThat } : {}));
+  const { s, keoDan } = await chayAnh(dir, nguon.fetchImpl, { soFile: 10, now: "2026-11-25T01:00:00.000Z" }).run();
+  assert.deepEqual(nguon.daGoi, ["/p/vua-chet", "/p/con-han", "/p/thuong.jpg"], "chỉ không hỏi link chết quá năm phút");
+  assert.equal(keoDan.calls, 3, "link đã chết không tốn lời gọi");
+  const [item] = (await moiKind(dir)).filter((it) => it.kind === "anh_du_an");
+  const ten = (u: string) => u.match(/\/p\/([a-z-]+)/)![1];
+  assert.deepEqual(
+    item.meta.mediaFiles.map((x: { url: string; file?: string; error?: string; chiTiet?: string }) => [ten(x.url), x.file ? "có tệp" : x.error, x.chiTiet ?? null]),
+    [
+      ["chet", "het-han", "du-doan-het-han"],
+      ["vua-chet", "het-han", hetHanThat],
+      ["con-han", "có tệp", null],
+      ["thuong", "có tệp", null],
+    ],
+  );
+  assert.equal(s.so?.soFile, 2);
+  assert.equal(s.so?.soLoi, 2);
 }));
