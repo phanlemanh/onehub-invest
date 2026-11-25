@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: d2651141498c4beb3b0e116b843af9919962d9d5
-human_signoff:
+human_signoff: Mạnh 2026-11-25
 ---
 
 # Evidence Report: api-markets-khong-tra-so-s02

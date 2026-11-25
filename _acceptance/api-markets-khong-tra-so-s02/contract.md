@@ -5,7 +5,7 @@ slug: api-markets-khong-tra-so-s02
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api, cli]
-status: implemented
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-25-api-markets-khong-tra-so-s02-design.md
 veto_state: mo
 veto_opened_at: 2026-11-25T02:43:09Z
@@ -97,3 +97,6 @@ Bước kiểm sau gộp là chính lệnh này; giám sát đo.
 
 - Đổi khuôn phản hồi: bỏ `marketScore` khỏi `/api/v1/markets` (GS phán 25/11, Hỏi-1 cũ; không UI nào gọi route, chưa có
   khách API ngoài được công bố hợp đồng).
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-25:
+  - Trong hợp đồng (AC-2, thứ tự thị trường): phép đối chứng cho nửa «bằng nhau thì theo tên» chưa chạy trên cơ sở dữ liệu, nên nếu sau này route lỡ bỏ xếp theo tên thì test có thể không báo; đo bổ sung ở hàng HT28 api-markets-doi-chung-tren-db.
+  - Ngoài-1: chữ trên thẻ Cổng Phạm vi từng tả sai cách rào kiểm tra tệp kết nối dữ liệu; đã sửa chữ cho khớp mã.
