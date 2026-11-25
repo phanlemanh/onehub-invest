@@ -26,7 +26,8 @@ của GS, và ghi cách vận hành hai máy vào kho để phiên sau không h�
 - AC-2: Given một dòng tầng A cấy vào nguồn của lượt, When đẩy, Then lượt đỏ ở bộ soát trên máy thu, không có kết nối gửi nào tới M5
   (số tệp trong thư mục đến của M5 trước = sau).
 - AC-3: Given khoá đẩy, When dùng nó xin shell, chạy một lệnh khác, hay chuyển tiếp cổng, Then M5 từ chối; khoá chỉ chạy được bước
-  nhận (dòng `authorized_keys` có `restrict` và `command=`).
+  nhận (dòng `authorized_keys` có `restrict` và `command=`); lượt đẩy không dùng khoá dựng máy (khoá toàn quyền đang có) — lệnh đẩy
+  chỉ nạp khoá đẩy (`IdentitiesOnly`).
 - AC-4: Given hai máy, When liệt kê khoá, Then `authorized_keys` của Mac mini không có khoá nào của M5 và lệnh đẩy chỉ mở kết nối từ
   Mac mini sang M5.
 - AC-5: Given lượt đẩy, When gửi, Then chỉ đúng hai tệp (dump, `ke.json`) rời máy; tệp nằm ngoài danh sách cho phép (từ điển nguồn,
