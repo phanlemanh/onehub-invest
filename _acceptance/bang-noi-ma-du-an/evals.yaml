@@ -86,8 +86,8 @@ evals:
     layer: backend-effect
     paths: ["pipeline/noi-du-an-nguon.mjs", "pipeline/lib/ban-ghi-nguon*.mjs", "pipeline/lib/khop-du-an*.mjs"]
     expected: >
-      Trên DB thử chép từ DB máy thu: băm có sắp xếp đầu ra của napS16TheoKhu (mọi khu), bản đồ bí danh mà s09-dung đọc, danh-ba-vat-the
-      chạy khô, và năm view v_toa_nut_vung, offer_building, s06_offer_project, v_s16_toa, v_s09_toa bằng nhau ở ba mốc trước áp, sau
+      Trên DB thử chép từ DB máy thu: băm có sắp xếp đầu ra của napS16TheoKhu (mọi khu), bản đồ bí danh toà, trục, căn mà s09-dung (S09) và
+      danh-ba-vat-the (S08) đọc (lệnh dựng vật thể không có chế độ chạy khô), và năm view v_toa_nut_vung, offer_building, s06_offer_project, v_s16_toa, v_s09_toa bằng nhau ở ba mốc trước áp, sau
       áp bốn nguồn S07 S09 S10 S16, sau đảo; in số giây từng câu. Chiều đỏ: cấy một bí danh ma_nguon S09 giá trị dạng toà «<pid>/<id>»
       trỏ node:<id> thì phép so của s09-dung đỏ, gọi tên bên đọc.
 
