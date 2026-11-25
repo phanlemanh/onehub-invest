@@ -1,0 +1,48 @@
+schema_version: 1
+slug: street-raw-khong-mang-ten-nguon
+# E1–E3 cùng một lệnh: phép đo trên DB của riêng lượt (db/db-thu.sh --chay), chép từ DB máy thu, xoá khi xong. Không in giá trị ô.
+# E4, E5 cùng một lệnh test không cần DB.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    long_running: 40
+    cmd: bash _acceptance/street-raw-khong-mang-ten-nguon/probes/ban-chep.sh
+    paths: ["pipeline/transform-chotot.mjs", "pipeline/lib/mask-source-names.mjs", "pipeline/lib/dac-trung-s06.mjs"]
+    expected: >
+      exit 0; in «KẾT QUẢ: xanh»; các dòng ✔ «chỉ đúng các ô mang tên nguồn đổi» (A street_raw, block_raw; B street_raw; cộng
+      offer_ba52ee3409d223e3.street_raw khi bản chép còn ô ấy), «các ô đổi không còn trúng bộ dò», «tin mới N: đường, toà, phường, quận
+      về NULL», «log bỏ ghi street_raw/block_raw/district_raw = N (đếm độc lập trên stg)», «log bỏ ghi phuong_raw = 1», «log rút K chủ
+      thể».
+  - id: E2
+    criterion: AC-2
+    executor: script
+    long_running: 40
+    cmd: bash _acceptance/street-raw-khong-mang-ten-nguon/probes/ban-chep.sh
+    paths: ["pipeline/transform-chotot.mjs", "pipeline/sync-cloud.mjs", "pipeline/lib/tier-a-guard.mjs", "pipeline/lib/duong-can.mjs"]
+    expected: >
+      exit 0; dòng ✔ «ca phá: bỏ luật thì bộ soát sync-cloud dừng ở sale_offers.<cột>», ✔ «ca phá: tin A …», ✔ «ca phá: tin B lấy
+      đường từ phát biểu legacy …» và ✔ «bộ soát sync-cloud qua trọn sale_offers, sellers, properties sau transform thật và duong-can».
+  - id: E3
+    criterion: AC-3
+    executor: script
+    long_running: 40
+    cmd: bash _acceptance/street-raw-khong-mang-ten-nguon/probes/ban-chep.sh
+    paths: ["pipeline/transform-chotot.mjs", "pipeline/lib/mask-source-names.mjs"]
+    expected: >
+      exit 0; dòng «thời gian: … chi phí riêng của luật X s = P% lượt thật» với P ≤ 5 và ✔ «chi phí riêng của luật không quá 5% thời
+      gian lượt transform».
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: cd pipeline && node --test tests/street-raw-ten-nguon.test.mjs scripts/ops-nhan-ma-nguon.test.mjs scripts/soat-tang-a.test.mjs scripts/ops-facts-so-tong-hop.test.mjs
+    paths: ["pipeline/transform-chotot.mjs", "pipeline/lib/mask-source-names.mjs", "pipeline/tests/street-raw-ten-nguon.test.mjs"]
+    expected: >
+      exit 0; ℹ fail 0; các ca SR-AC-4 xanh cùng test hiện có của bộ che (ops-nhan-ma-nguon) và bộ soát (soat-tang-a, ops-facts).
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: cd pipeline && node --test tests/street-raw-ten-nguon.test.mjs scripts/ops-nhan-ma-nguon.test.mjs scripts/soat-tang-a.test.mjs scripts/ops-facts-so-tong-hop.test.mjs
+    paths: ["pipeline/transform-chotot.mjs", "pipeline/tests/street-raw-ten-nguon.test.mjs"]
+    expected: >
+      exit 0; ca «SR-AC-5 vượt trần một lượt thì dừng, tới trần thì đi tiếp» xanh.
