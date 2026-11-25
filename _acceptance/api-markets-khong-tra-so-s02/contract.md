@@ -63,7 +63,7 @@ Then `note` nói «danh sách thị trường và số tin; không mang số S02
 
 ### AC-7 — Hồi quy
 Given cây sau khi sửa,
-When chạy bộ test app (`app_ui`), `tsc` + lint (`app`) và `portal_static`,
+When chạy bộ test app (`app_ui`), `tsc` + lint (`app`), `portal_static` và hai nửa bộ pipeline (`pipeline_a`, `pipeline_b`),
 Then tất cả thoát 0.
 
 ## Coverage

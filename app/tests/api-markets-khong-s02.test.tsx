@@ -1,6 +1,6 @@
 // api-markets-khong-s02.test.ts — HT23 api-markets-khong-tra-so-s02. DB thử trắng (db/db-thu.sh --chay) dựng từ db/migrations.
-// Tập viết tay, số bịa, mã quốc gia riêng «zz» để không lẫn dữ liệu khác: ba thị trường; «Gamma» có điểm S02 cao nhất nhưng ít
-// tin nhất. Route mới phải không mang khoá marketScore và xếp theo số tin; đối chứng: SQL của route cũ (ghim ở bộ soát) trên
+// Tập viết tay, số bịa, mã quốc gia riêng «zz» để không lẫn dữ liệu khác: bốn thị trường; «Gamma» có điểm S02 cao nhất nhưng ít
+// tin nhất; «Aaa» đứng đầu theo tên nhưng ít tin, để xếp theo tên và xếp theo số tin ra hai thứ tự khác nhau (S4-r1, finding đo AC-2). Route mới phải không mang khoá marketScore và xếp theo số tin; đối chứng: SQL của route cũ (ghim ở bộ soát) trên
 // cùng DB trả điểm S02 và đẩy Gamma lên đầu.
 import { after, before, test } from "node:test";
 import assert from "node:assert/strict";
@@ -19,6 +19,7 @@ const q = (sql: string, v: unknown[] = []) => m.pool.query(sql, v);
 
 const QG = "zz";
 const TT = [
+  { id: "zz-ht23-aaa", name: "Aaa", tin: 1, diem: null },
   { id: "zz-ht23-alpha", name: "Alpha", tin: 3, diem: null },
   { id: "zz-ht23-beta", name: "Beta", tin: 3, diem: 40 },
   { id: "zz-ht23-gamma", name: "Gamma", tin: 1, diem: 95 },
@@ -68,15 +69,20 @@ test("HT23-AC-1 phản hồi không mang khoá suy từ S02; đối chứng: rou
   assert.ok(cu.some((r) => r.market_score !== null), "route cũ mang số S02 — đối chứng phải thấy điểm S02");
   const { status, body } = await goi();
   assert.equal(status, 200);
-  assert.equal(body.data.length, 3);
+  assert.equal(body.data.length, 4);
   for (const d of body.data) assert.deepEqual(Object.keys(d).sort(), ["countryCode", "id", "listingCount", "name"], `dòng ${String(d.id)}`);
   assert.ok(!body.data.some((d) => "marketScore" in d), "không dòng nào được có khoá marketScore");
-  assert.deepEqual(body.meta, { total: 3, limit: 5 });
+  assert.deepEqual(body.meta, { total: 4, limit: 5 });
 });
 
 test("HT23-AC-2 xếp theo số tin giảm dần rồi tên; đối chứng: route cũ đẩy thị trường điểm S02 cao nhất lên đầu", async () => {
   const cu = (await q(SQL_CU(), [QG])).rows;
   assert.equal(cu[0].name, "Gamma", "route cũ xếp theo điểm S02 — đối chứng phải đặt Gamma đầu");
   const { body } = await goi();
-  assert.deepEqual(body.data.map((d) => [d.name, d.listingCount]), [["Alpha", 3], ["Beta", 3], ["Gamma", 1]]);
+  const thuTu = body.data.map((d) => [d.name, d.listingCount] as [string, number]);
+  const MONG = [["Alpha", 3], ["Beta", 3], ["Aaa", 1], ["Gamma", 1]];
+  // Đối chứng: chỉ xếp theo tên thì «Aaa» đứng đầu — tập này phân biệt được khoá số tin với khoá tên.
+  const theoTen = [...thuTu].sort((a, b) => a[0].localeCompare(b[0]));
+  assert.notDeepEqual(theoTen, MONG, "tập thử phải phân biệt xếp theo tên với xếp theo số tin");
+  assert.deepEqual(thuTu, MONG);
 });

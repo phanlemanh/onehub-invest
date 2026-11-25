@@ -111,7 +111,6 @@ export function importClosure(entry, files) {
 const exportedMethods = (src) =>
   [...code(src).matchAll(/export\s+(?:async\s+)?function\s+(GET|POST|PUT|PATCH|DELETE)\b/g)].map((m) => m[1]).sort();
 
-/** files: { "<đường gốc kho>": "<mã nguồn>" } — gồm mọi route.ts và mọi module có thể import. */
 // HT23 (api-markets-khong-tra-so-s02, AGENTS.md luật 5): số S02 chỉ ở /ops/quality — route public không được đọc bảng
 // số S02, tên local `airdna_*` hay tên trung tính trên cloud `ref_calib_*`, kể cả gián tiếp qua module nó import (gồm db.ts).
 // Mẫu đòi chữ cái ngay sau tiền tố nên bộ đổi tên bảng cho cloud trong db.ts (`airdna_(markets|…)`, `"ref_calib_$1"`)
@@ -119,6 +118,7 @@ const exportedMethods = (src) =>
 const BANG_S02 = /\b(?:airdna|ref_calib)_[a-z][a-z_]*\b/;
 export const docBangS02 = (g, files) => BANG_S02.test(code(files[g] ?? ""));
 
+/** files: { "<đường gốc kho>": "<mã nguồn>" } — gồm mọi route.ts và mọi module có thể import. */
 export function checkApiSurface({ entries, files }) {
   const violations = [];
   const routesOnDisk = Object.keys(files)

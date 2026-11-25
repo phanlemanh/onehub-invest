@@ -48,7 +48,15 @@ evals:
   - id: E8
     criterion: AC-7
     executor: test
-    cmd: config:executors.test.app_ui
+    cmd: config:executors.suite.app_ui
     long_running: 90
     paths: ["app/src/app/api/v1/markets/route.ts", "app/src/lib/api-surface.ts", "app/tests/api-markets-khong-s02.test.tsx"]
     expected: "Bộ test app xanh trên DB thử; không test nào còn đọc marketScore của /api/v1/markets."
+  - id: E9
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.suite.pipeline_a
+    long_running: 90
+    paths: ["app/src/app/api/v1/markets/route.ts", "scripts/check-api-surface.mjs"]
+    expected: "exit 0; nửa a bộ pipeline xanh trên nhánh. Khai riêng để lượt chấm chờ đủ giờ khi máy tải — S4 r1 BLOCKED vì nửa a chạy quá 30 phút mặc định (khuôn E8c của HT6)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
