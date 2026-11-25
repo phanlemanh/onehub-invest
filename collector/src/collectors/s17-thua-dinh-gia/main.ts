@@ -161,8 +161,10 @@ export function parseCli(argv: string[]): CliOptions {
     config: values.config ?? join(homedir(), ".oneinvest", "s17-thua-dinh-gia.json"),
     snapshotsRoot: values["snapshots-root"],
     stateDir:
-      values["state-dir"] ??
-      join(COLLECTOR_ROOT, "state", phase === "images" ? (values["anh-may-chu-ngoai"] === true ? STATE_DIR_ANH_NGOAI : STATE_DIR_ANH) : "s17-thua-dinh-gia"),
+      // Tuyệt đối luôn: tệp bản kê lấy đường này, mà tiến trình trình duyệt chạy ở thư mục khác (lỗi thật 25/11).
+      values["state-dir"] !== undefined
+        ? resolve(values["state-dir"])
+        : join(COLLECTOR_ROOT, "state", phase === "images" ? (values["anh-may-chu-ngoai"] === true ? STATE_DIR_ANH_NGOAI : STATE_DIR_ANH) : "s17-thua-dinh-gia"),
     caps: { calls: positive("--caps-calls", values["caps-calls"]), minutes: positive("--caps-minutes", values["caps-minutes"]) },
     paceMs,
     batchItems: values["batch-items"] === undefined ? 50 : positive("--batch-items", values["batch-items"]),

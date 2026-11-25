@@ -3,6 +3,7 @@ import { test } from "node:test";
 
 import { checkConfigForPhase, egoOptions, parseCli, specDuongNode } from "../collectors/s17-thua-dinh-gia/main.js";
 import { loadConfig } from "../collectors/s17-thua-dinh-gia/config.js";
+import { resolve } from "node:path";
 
 /**
  * Điểm vào của bộ thu S17: trần lời gọi và trần thời gian PHẢI khai khi chạy (không có mặc định), nhịp
@@ -33,6 +34,11 @@ test("parseCli: --tab <nhãn trang> chọn trang chạy trong trang (pha cần p
   assert.throws(() => parseCli([...anh, "--tab", "p2"]), /không chạy trong trang/);
   const kq = egoOptions(parseCli([...phien, "--tab", "p2"]), loadConfig(JSON.stringify({ hosts: { api: "https://api.gia.test", agent: "https://agent.gia.test", web: "https://web.gia.test" }, paths: {}, session: { cookieName: "sid" } })), { statePath: "/a/s.json", logPath: "/a/l.jsonl", resultPath: "/a/r.json" });
   assert.equal(kq.tabLabel, "p2", "nhãn trang đi vào bản kê của tiến trình trình duyệt");
+});
+
+test("parseCli: --state-dir tương đối được đổi sang đường tuyệt đối — tiến trình trình duyệt chạy ở thư mục khác (lỗi thật 25/11: ENOENT ego-options.json)", () => {
+  const p = parseCli([...base, "--phase", "session-check", "--space", "4", "--state-dir", "tt-thua"]);
+  assert.equal(p.stateDir, resolve("tt-thua"), "đường dẫn thư mục trạng thái là tuyệt đối tính từ thư mục gọi lệnh");
 });
 
 test("parseCli: pha công khai đi bằng Node; pha cần phiên đi qua ego và phải khai space", () => {
