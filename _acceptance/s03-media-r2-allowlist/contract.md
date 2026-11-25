@@ -5,9 +5,9 @@ slug: s03-media-r2-allowlist
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, config]
-status: draft
-approved_by:
-approved_at:
+status: implemented
+veto_state: mo
+veto_opened_at: 2026-11-25T01:05:36Z
 design_doc: docs/superpowers/specs/2026-11-25-s03-media-r2-allowlist-design.md
 ---
 
