@@ -217,3 +217,142 @@ test("cheAnhSong: lệch sha256 → trả null (rơi xuống tải lại); thi�
   }
 });
 
+
+// ─── Cổng ZC20 (claudedp-2511-52/53) ───
+
+test("(2) raw bất biến: snapshot gốc (tệp + manifest) giữ nguyên băm trước/sau một lượt bù", { skip: !CO_DIST && "cần collector dist đã build" }, async () => {
+  const t = await moiTruong();
+  try {
+    // snapshot gốc: manifest + 1 ảnh sống — sẽ được chepAnhSong ĐỌC trong lượt bù
+    const snapshotCu = join(t.root, "hanoi", t.snapshotCu);
+    writeFileSync(join(snapshotCu, "manifest.json"), JSON.stringify({ snapshotId: t.snapshotCu, ghiChu: "goc" }));
+    const bam = (dir) =>
+      readdirSync(dir, { recursive: true }).flatMap((f) => {
+        const p = join(dir, f);
+        try {
+          return [[f, createHash("sha256").update(readFileSync(p)).digest("hex")]];
+        } catch {
+          return [];
+        }
+      }).sort();
+    const truoc = bam(snapshotCu);
+
+    const bai = [{
+      postId: "p-raw",
+      snapshotId: t.snapshotCu,
+      payload: { group: "g", author: "h", text: "t", senderName: null, senderId: null, conversationId: null,
+        media: [{ path: null, url: `${t.base}/jpg/broken.jpg`, type: "image/jpeg" }], agent_id: "a" },
+      postedAt: NGAY_HN,
+      mediaFiles: [
+        { url: `${t.base}/song-goc.jpg`, file: "media/cu-song.jpg", sha256: A.sha, bytes: A.bytes.length, snapshotId: t.snapshotCu },
+        { url: `${t.base}/jpg/broken.jpg`, error: "http-400" },
+      ],
+    }];
+    const dirMoi = join(t.root, "hanoi", "hanoi__zalo-agent__2026-11-25T200000000");
+    const kq = await ghiSnapshotBuu({ baiHomNgay: bai, rootSnapshots: t.root, dirMoi, fetchModule, suffixes: SUFFIX_TEST, tocDo: 1000 });
+    assert.equal(kq.taiDuoc, 1);
+    // fixture server không có /song-goc.jpg — ảnh sống đọc từ snapshot gốc qua chepAnhSong
+    assert.deepEqual(bam(snapshotCu), truoc, "snapshot gốc phải nguyên băm sau lượt bù");
+    assert.equal(readFileSync(join(snapshotCu, "manifest.json"), "utf8"), JSON.stringify({ snapshotId: t.snapshotCu, ghiChu: "goc" }));
+  } finally {
+    t.srv.close();
+    rmSync(t.home, { recursive: true, force: true });
+  }
+});
+
+test("(3) trần lời gọi chặn TRƯỚC khi phát: không cửa sổ nào vượt tocDo", { skip: !CO_DIST && "cần collector dist đã build" }, async () => {
+  const t = await moiTruong();
+  const lucGoi = [];
+  t.srv.close(); // đóng server mặc định — thay bằng server đếm giờ gọi
+  const srv = createServer((req, res) => {
+    lucGoi.push(Date.now());
+    res.writeHead(404, { "content-type": "text/plain" });
+    res.end("gone");
+  });
+  await new Promise((done) => srv.listen(0, "127.0.0.1", done));
+  const base = `http://127.0.0.1:${srv.address().port}`;
+  try {
+    const bai = [{
+      postId: "p-tran",
+      snapshotId: t.snapshotCu,
+      payload: { group: "g", author: "h", text: "t", senderName: null, senderId: null, conversationId: null,
+        media: Array.from({ length: 9 }, (_, i) => ({ path: null, url: `${base}/c${i}.jpg`, type: "image/jpeg" })), agent_id: "a" },
+      postedAt: NGAY_HN,
+      mediaFiles: [], // mọi url đều phải tải
+    }];
+    const dirMoi = join(t.root, "hanoi", "hanoi__zalo-agent__2026-11-25T210000000");
+    const batDau = Date.now();
+    await ghiSnapshotBuu({ baiHomNgay: bai, rootSnapshots: t.root, dirMoi, fetchModule, suffixes: SUFFIX_TEST, tocDo: 3, cuaSoMs: 400 });
+    assert.equal(lucGoi.length, 9);
+    const cuaSoMs = 400;
+    const theoCua = new Map();
+    for (const luc of lucGoi) {
+      const k = Math.floor(luc / cuaSoMs);
+      theoCua.set(k, (theoCua.get(k) ?? 0) + 1);
+    }
+    assert.ok(Math.max(...theoCua.values()) <= 3, `một cửa sổ không quá 3 lời — thấy ${JSON.stringify([...theoCua])}`);
+    assert.ok(Date.now() - batDau >= 2 * cuaSoMs, "9 lời ở trần 3/cửa sổ phải spanning ≥2 cửa sổ");
+  } finally {
+    srv.close();
+    rmSync(t.home, { recursive: true, force: true });
+  }
+});
+
+test("(1) nạp lại raw theo thứ tự tên vẫn giữ ảnh đã bù (tên bù theo giờ chạy xếp sau chót)", { skip: !process.env.DATABASE_URL && "cần DATABASE_URL (npm test pipeline cấp DB riêng lượt)" }, async () => {
+  const { execFileSync } = await import("node:child_process");
+  const pg = (await import("pg")).default;
+  const pid = `buu-test-${Date.now()}`;
+  const home = mkdtempSync(join(tmpdir(), "buu-replay-"));
+  const root = join(home, "snapshots", "hanoi");
+  // ảnh của bản bù
+  const anhBuu = Buffer.from("anh-da-bu");
+  const shaBuu = createHash("sha256").update(anhBuu).digest("hex");
+  const viet = (dir, items) => {
+    mkdirSync(dir, { recursive: true });
+    const gz = gzipSync(Buffer.from(JSON.stringify(items), "utf8"));
+    writeFileSync(join(dir, "items-0001.json.gz"), gz);
+    const files = [{ name: "items-0001.json.gz", sha256: createHash("sha256").update(gz).digest("hex"), bytes: gz.length }];
+    if (items[0].meta?.mediaFiles?.[0]?.file) {
+      writeFileSync(join(dir, items[0].meta.mediaFiles[0].file), anhBuu);
+      files.push({ name: items[0].meta.mediaFiles[0].file, sha256: shaBuu, bytes: anhBuu.length });
+    }
+    writeFileSync(join(dir, "manifest.json"), JSON.stringify({
+      schemaVersion: 6, snapshotId: dir.split("/").pop(), city: "hanoi", source: "zalo-agent",
+      startedAt: NGAY_HN, finishedAt: NGAY_HN, counts: { items: 1, failed: 0 }, coverage: {}, files,
+    }));
+  };
+  const item = (mediaFiles) => ({
+    source: "zalo-agent", sourceId: pid, fetchedAt: NGAY_HN,
+    payload: { group: "g", author: "h", text: "t", senderName: null, senderId: null, conversationId: null,
+      media: [{ path: null, url: "http://u/a.jpg", type: "image/jpeg" }], agent_id: "a" },
+    meta: { mediaFiles },
+  });
+  // bản GỐC (tên 21/11, entry lỗi) và bản BÙ (tên 25/11 kiểu giờ chạy — xếp SAU CHÓT)
+  const goc = join(root, "hanoi__zalo-agent__2026-11-21T190000000");
+  const buu = join(root, "hanoi__zalo-agent__2026-11-25T100000000");
+  viet(goc, [item([{ url: "http://u/a.jpg", error: "http-400" }])]);
+  viet(buu, [item([{ url: "http://u/a.jpg", file: "media/buu.jpg", sha256: shaBuu, bytes: anhBuu.length }])]);
+
+  const napor = (dir) =>
+    execFileSync(process.execPath, [join(GOC, "pipeline", "import-airbnb.mjs"), dir], {
+      encoding: "utf8", cwd: GOC + "/pipeline",
+      env: { ...process.env }, // DATABASE_URL của lượt test
+    });
+  try {
+    // nạp lại raw ĐÚNG THỨ TỰ TÊN, chạy HAI LƯỢT (giả lập replay trọn vẹn)
+    for (let luot = 0; luot < 2; luot += 1) napor(goc), napor(buu);
+    const c = new pg.Client({ connectionString: process.env.DATABASE_URL });
+    await c.connect();
+    const { rows } = await c.query("SELECT media_files FROM stg_zalo_posts WHERE post_id = $1", [pid]);
+    await c.query("DELETE FROM stg_zalo_posts WHERE post_id = $1", [pid]);
+    await c.query("DELETE FROM airbnb_snapshots WHERE snapshot_id IN ($1, $2)", [goc.split("/").pop(), buu.split("/").pop()]);
+    await c.end();
+    assert.equal(rows.length, 1);
+    const mf = rows[0].media_files[0];
+    assert.equal(mf.error, undefined, "ảnh bù phải còn nguyên sau replay theo thứ tự tên");
+    assert.match(mf.file, /media\/buu\.jpg/);
+    assert.equal(mf.snapshotId, "hanoi__zalo-agent__2026-11-25T100000000");
+  } finally {
+    rmSync(home, { recursive: true, force: true });
+  }
+});

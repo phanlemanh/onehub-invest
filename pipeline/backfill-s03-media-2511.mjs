@@ -129,7 +129,7 @@ export function docSuffixes(file = SUFFIX_MAC_DINH) {
  * taiDuoc, loi404, loiKhac, maChan}. Gặp http-403/429: maChan khác rỗng, KHÔNG
  * ghi snapshot — người gọi thoát 3.
  */
-export async function ghiSnapshotBuu({ baiHomNgay, rootSnapshots, dirMoi, fetchModule, suffixes, tocDo = 30, denGio = null, boQuaHttp400 = false, ghiLog = console.log }) {
+export async function ghiSnapshotBuu({ baiHomNgay, rootSnapshots, dirMoi, fetchModule, suffixes, tocDo = 30, denGio = null, boQuaHttp400 = false, cuaSoMs = 60_000, ghiLog = console.log }) {
   const daBatDau = new Date().toISOString();
   const dirTam = join(dirname(dirMoi), `.${basename(dirMoi)}.partial`);
   await mkdir(join(dirTam, "media"), { recursive: true });
@@ -144,20 +144,20 @@ export async function ghiSnapshotBuu({ baiHomNgay, rootSnapshots, dirMoi, fetchM
     return { sha256, bytes: bytes.length };
   };
 
-  // trần lời gọi: đếm theo cửa sổ một phút (chỉ đếm url TẢI LẠI)
-  let cuaSo = Math.floor(Date.now() / 60000);
+  // trần lời gọi: chặn TRƯỚC khi phát lời (mỗi url fetch riêng, một lời một lần)
+  let cuaSo = Math.floor(Date.now() / cuaSoMs);
   let daDung = 0;
   const choLuot = async () => {
-    const phut = Math.floor(Date.now() / 60000);
-    if (phut !== cuaSo) {
-      cuaSo = phut;
+    const cua = Math.floor(Date.now() / cuaSoMs);
+    if (cua !== cuaSo) {
+      cuaSo = cua;
       daDung = 0;
     }
     if (daDung >= tocDo) {
-      const cho = 60000 - (Date.now() % 60000) + 50;
-      ghiLog(`nghỉ ${Math.round(cho / 1000)}s giữ trần ${tocDo} lời/phút`);
+      const cho = cuaSoMs - (Date.now() % cuaSoMs) + 20;
+      ghiLog(`nghỉ ${Math.round(cho / 1000)}s giữ trần ${tocDo} lời/${Math.round(cuaSoMs / 1000)}s`);
       await new Promise((r) => setTimeout(r, cho));
-      cuaSo = Math.floor(Date.now() / 60000);
+      cuaSo = Math.floor(Date.now() / cuaSoMs);
       daDung = 0;
     }
     daDung += 1;
@@ -192,25 +192,25 @@ export async function ghiSnapshotBuu({ baiHomNgay, rootSnapshots, dirMoi, fetchM
       urlCanTai.push(url);
       entriesMoi.push(null); // chỗ trống — điền sau khi tải
     }
-    if (urlCanTai.length > 0) {
+    for (let i = 0; i < urls.length; i += 1) {
+      const url = urls[i];
+      if (entriesMoi[i] !== null) continue;
+      soUrlThu += 1;
+      await choLuot(); // trần chặn TRƯỚC khi phát lời gọi
+      if (denGio && Date.now() >= Date.parse(denGio)) break;
       const itemTai = {
         source: "zalo-agent",
         sourceId: bai.postId,
         fetchedAt: bai.postedAt,
-        payload: { ...bai.payload, media: urlCanTai.map((u) => ({ url: u })) },
+        payload: { ...bai.payload, media: [{ url }] }, // MỘT url/lượt — trần kiểm soát được
       };
       await fetchModule.fetchMessageMedia({
         items: [itemTai],
         putFile: ghiFile,
-        options: { allowedHostSuffixes: suffixes, maxBytes: 10 * 1024 * 1024, timeoutMs: 15_000, maxPerFlush: 500, concurrency: 3 },
+        options: { allowedHostSuffixes: suffixes, maxBytes: 10 * 1024 * 1024, timeoutMs: 15_000, maxPerFlush: 500, concurrency: 1 },
       });
-      const nhanDuoc = new Map((itemTai.meta?.mediaFiles ?? []).map((e) => [e.url, e]));
-      for (let i = 0; i < urls.length; i += 1) {
-        if (entriesMoi[i] !== null) continue;
-        const url = urls[i];
-        soUrlThu += 1;
-        await choLuot();
-        const e = nhanDuoc.get(url);
+      const e = itemTai.meta?.mediaFiles?.[0];
+      {
         if (e?.file) {
           entriesMoi[i] = e;
           taiDuoc += 1;
@@ -321,8 +321,10 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     const baiHomNgay = await layBai(c, tuNgayUtc, denNgayUtc);
     await c.end();
     if (baiHomNgay.length === 0) continue;
+    // tên theo GIỜ CHẠY (không phải ngày đăng): xếp SAU mọi snapshot gốc lịch sử
+    // → nạp lại raw theo thứ tự tên luôn nạp bản bù sau chót, ảnh bù không bị đè
     const bay = new Date();
-    const msc = `${ngay}T${String(bay.getUTCHours()).padStart(2, "0")}${String(bay.getUTCMinutes()).padStart(2, "0")}${String(bay.getUTCSeconds()).padStart(2, "0")}${String(bay.getUTCMilliseconds()).padStart(3, "0")}`;
+    const msc = `${bay.toISOString().slice(0, 10)}T${String(bay.getUTCHours()).padStart(2, "0")}${String(bay.getUTCMinutes()).padStart(2, "0")}${String(bay.getUTCSeconds()).padStart(2, "0")}${String(bay.getUTCMilliseconds()).padStart(3, "0")}`;
     const dirMoi = join(root, "hanoi", `hanoi__zalo-agent__${msc}`);
     const kq = await ghiSnapshotBuu({ baiHomNgay, rootSnapshots: root, dirMoi, fetchModule, suffixes, tocDo, denGio, boQuaHttp400: coCo("bo-qua-http-400") });
     if (kq.maChan) {
