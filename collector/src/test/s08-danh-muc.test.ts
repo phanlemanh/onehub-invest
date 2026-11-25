@@ -1,6 +1,8 @@
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
-import { readFile } from "node:fs/promises";
+import { readFile, mkdtemp, writeFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { toRawItems, s08SourceId, fetchPage, fetchProjectDetail } from "../collectors/s08-danh-muc.js";
@@ -96,6 +98,13 @@ test("2410-19: strip PII ĐỆ QUY — contact_data lồng mọi độ sâu bị
   const prevProjects = process.env.S08_PROJECTS;
   process.env.S08_API_BASE = "http://testbase";
   process.env.S08_PROJECTS = "all";
+  // 2511-44: collect() đọc token theo S08_TOKEN_FILE (mặc định ~/.oneinvest/s08-token.json — TẦNG A).
+  // Đặt token GIẢ trong thư mục tạm TRƯỚC import động để test không bao giờ đụng token thật (kể cả khi chạy HOME thật).
+  const thuTam = await mkdtemp(join(tmpdir(), "s08-test-"));
+  const tepToken = join(thuTam, "s08-token.json");
+  await writeFile(tepToken, JSON.stringify({ access_token: "TEST-TOKEN-KHONG-THAT" }));
+  const prevTokenFile = process.env.S08_TOKEN_FILE;
+  process.env.S08_TOKEN_FILE = tepToken;
   try {
     const mod = await import("../collectors/s08-danh-muc.js");
     const fakeCtx = {
@@ -122,6 +131,8 @@ test("2410-19: strip PII ĐỆ QUY — contact_data lồng mọi độ sâu bị
     globalThis.fetch = origFetch;
     if (prevBase === undefined) delete process.env.S08_API_BASE; else process.env.S08_API_BASE = prevBase;
     if (prevProjects === undefined) delete process.env.S08_PROJECTS; else process.env.S08_PROJECTS = prevProjects;
+    if (prevTokenFile === undefined) delete process.env.S08_TOKEN_FILE; else process.env.S08_TOKEN_FILE = prevTokenFile;
+    await rm(thuTam, { recursive: true, force: true });
     delete process.env.S08_EP_UNITS;
     delete process.env.S08_EP_CATALOG;
     delete process.env.S08_EP_DETAIL;
