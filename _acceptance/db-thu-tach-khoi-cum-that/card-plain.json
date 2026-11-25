@@ -1,37 +1,127 @@
 {
   "feature_plain": "Lượt chấm bớt chạy bộ test pipeline trên bản chép dữ liệu thật, để mỗi lượt giữ khoá chấm ngắn lại và hàng chờ của các dãy vơi đi.",
   "will_do": [
-    {"id":"AC-1","p":"Sẽ dựng cho mỗi lượt một cụm DB trống riêng (dựng từ migration), chạy test trên đó rồi xoá sạch, kể cả khi lượt bị ngắt — không tạo DB nào trong cụm thật."},
-    {"id":"AC-2","p":"Sẽ chạy hai nửa test pipeline trên cụm trống ấy, bỏ đúng 30 ca cần dữ liệu thật (so từng tên), tất cả xanh, và tổng thời gian thật của hai nửa không quá 20 phút (nay 69 phút)."},
-    {"id":"AC-3","p":"Sẽ có một bộ riêng chỉ chạy đúng 30 ca cần dữ liệu thật trên bản chép; danh sách trỏ ca không còn thì báo đỏ gọi tên."},
-    {"id":"AC-4","p":"Sẽ chỉ kích bộ dữ liệu thật khi nhánh đổi đúng tệp mà 30 ca đó thật sự mở lúc chạy (ghi từ một lượt chạy thật)."},
-    {"id":"AC-5","p":"Sẽ quyết chạy/bỏ đúng ba ca viết trước: chỉ đổi tệp tải ảnh của bộ thu thì bỏ bộ dữ liệu thật; đổi tệp transform mà 30 ca dùng thì chạy; chỉ đổi hồ sơ thì chạy đủ."},
-    {"id":"AC-6","p":"Sẽ đổi cấu hình cổng nghiệm thu để lượt chấm dùng cách chạy mới."},
-    {"id":"AC-7","p":"Sẽ để bản sao lưu DB bỏ các DB thử của bộ test (mỗi bản 3,7–4,1 GB), ghi tên DB bỏ vào sổ sao lưu, giữ nguyên DB khác."},
-    {"id":"AC-8","p":"Sẽ có lệnh đo khoảng giữa hai lần cấp khoá chấm (nền hôm nay: trung vị 99 phút, 15 lượt)."},
-    {"id":"AC-9","p":"Sẽ cho hai lượt cụm trống chạy cùng lúc mà không đụng nhau."},
-    {"id":"AC-10","p":"Sẽ có hồ sơ áp năm mục và lệnh kiểm sau so phút sau áp với nền 99 phút."}
+    {
+      "id": "AC-1",
+      "p": "Sẽ dựng cho mỗi lượt một cụm DB trống riêng (dựng từ migration, cổng chỉ nghe trong máy, tên theo lượt), chạy test trên đó rồi tự xoá kể cả khi lượt bị ngắt — không tạo DB nào trong cụm thật, không đụng DB thật."
+    },
+    {
+      "id": "AC-2",
+      "p": "Sẽ chạy hai nửa test pipeline trên cụm trống ấy, bỏ đúng 30 ca cần dữ liệu thật (so từng tên), tất cả xanh, và tổng thời gian thật của hai nửa không quá 20 phút (nay 69 phút)."
+    },
+    {
+      "id": "AC-3",
+      "p": "Sẽ có một bộ riêng chỉ chạy đúng 30 ca cần dữ liệu thật trên bản chép; danh sách trỏ ca không còn thì báo đỏ gọi tên."
+    },
+    {
+      "id": "AC-4",
+      "p": "Sẽ chỉ kích bộ dữ liệu thật khi nhánh đổi đúng tệp mà 30 ca đó thật sự mở lúc chạy (ghi từ một lượt chạy thật)."
+    },
+    {
+      "id": "AC-5",
+      "p": "Sẽ quyết chạy/bỏ đúng ba ca viết trước: chỉ đổi tệp tải ảnh của bộ thu thì bỏ bộ dữ liệu thật; đổi tệp transform mà 30 ca dùng thì chạy; chỉ đổi hồ sơ thì chạy đủ."
+    },
+    {
+      "id": "AC-6",
+      "p": "Sẽ đổi cấu hình cổng nghiệm thu để lượt chấm dùng cách chạy mới."
+    },
+    {
+      "id": "AC-7",
+      "p": "Sẽ đổi phạm vi sao lưu: bỏ các DB thử của bộ test (bản chép dùng một lần, không phải dữ liệu — hôm nay ~11,9 GB), ghi tên DB bỏ vào sổ sao lưu, giữ nguyên DB khác."
+    },
+    {
+      "id": "AC-8",
+      "p": "Sẽ có lệnh đo khoảng giữa hai lần cấp khoá chấm (nền hôm nay: trung vị 99 phút, 15 lượt)."
+    },
+    {
+      "id": "AC-9",
+      "p": "Sẽ cho tối đa hai cụm dùng một lần chạy cùng lúc mà không đụng nhau; lượt thứ ba chờ chỗ, quá 15 phút thì dừng có báo."
+    },
+    {
+      "id": "AC-10",
+      "p": "Sẽ có hồ sơ áp năm mục và lệnh kiểm sau so phút sau áp với nền 99 phút."
+    },
+    {
+      "id": "AC-11",
+      "p": "Sẽ chạy 30 ca dữ liệu thật mỗi ngày một lần trên main (GS gọi một lệnh), đỏ thì báo tên ca; mỗi lượt chấm ghi rõ «ca dữ liệu thật: chạy trong lượt này» hay «không kích — lần xanh gần nhất trên main: <ngày>»."
+    }
   ],
   "wont_do": [
-    {"id":"OOS-1","p":"KHÔNG dựng cụm DB thường trực riêng cho bản chép — cần lời riêng của Mạnh, để hàng HT24."},
-    {"id":"OOS-2","p":"KHÔNG đổi bộ test app, app_ui, agent trong vòng này — HT24."},
-    {"id":"OOS-3","p":"KHÔNG sửa kit: dùng lại kết quả test cho hai hồ sơ cùng commit và chấm song song nhiều khe chỉ ghi đề xuất gửi kit."},
-    {"id":"OOS-4","p":"KHÔNG làm lại tên DB theo lượt — đã có từ trước."},
-    {"id":"OOS-5","p":"KHÔNG xoá các DB thử đang nằm trong cụm thật — xoá dữ liệu cần lời Mạnh."},
-    {"id":"OOS-6","p":"KHÔNG đổi tài nguyên hay khởi động lại Docker, Colima, DB thật."}
+    {
+      "id": "OOS-1",
+      "p": "KHÔNG dựng cụm DB thường trực riêng cho bản chép — cần lời riêng của Mạnh, để hàng HT24."
+    },
+    {
+      "id": "OOS-2",
+      "p": "KHÔNG đổi bộ test app, app_ui, agent trong vòng này — HT24."
+    },
+    {
+      "id": "OOS-3",
+      "p": "KHÔNG sửa kit: dùng lại kết quả test cho hai hồ sơ cùng commit và chấm song song nhiều khe chỉ ghi đề xuất gửi kit."
+    },
+    {
+      "id": "OOS-4",
+      "p": "KHÔNG làm lại tên DB theo lượt — đã có từ trước."
+    },
+    {
+      "id": "OOS-5",
+      "p": "KHÔNG xoá ~23 GB DB thử đang nằm trong cụm thật — xoá dữ liệu cần lời riêng của Mạnh."
+    },
+    {
+      "id": "OOS-6",
+      "p": "KHÔNG đổi tài nguyên hay khởi động lại Docker, Colima, DB thật."
+    },
+    {
+      "id": "OOS-7",
+      "p": "KHÔNG sửa thẻ của kit để tự in dòng «ca dữ liệu thật» — dòng đi qua đầu ra bộ test, đề xuất gửi kit."
+    }
   ],
   "coverage_plain": [
-    {"i":0,"p":"Nơi đặt DB của bộ test: cụm trống dùng một lần, bản chép trong cụm thật, Postgres của CI — AC-1, AC-2, AC-3, AC-9."},
-    {"i":1,"p":"Tập ca: ca chuẩn CI, đúng 30 ca dữ liệu thật, danh sách lệch — AC-2, AC-3."},
-    {"i":2,"p":"Khi nào kích bộ: một tệp ngoài vùng, tệp trong vùng dữ liệu thật, chỉ hồ sơ — AC-4, AC-5."},
-    {"i":3,"p":"Kết cục lượt: xanh, đỏ, bị ngắt, hai lượt cùng lúc — AC-1, AC-9."},
-    {"i":4,"p":"Cổng và vận hành: cấu hình cổng, sao lưu, lệnh đo, hồ sơ áp — AC-6, AC-7, AC-8, AC-10."}
+    {
+      "i": 0,
+      "p": "Nơi đặt DB của bộ test: cụm trống dùng một lần, bản chép trong cụm thật, Postgres của CI — AC-1, AC-2, AC-3, AC-9."
+    },
+    {
+      "i": 1,
+      "p": "Tập ca: ca chuẩn CI, đúng 30 ca dữ liệu thật, danh sách lệch — AC-2, AC-3."
+    },
+    {
+      "i": 2,
+      "p": "Khi nào kích bộ: một tệp ngoài vùng, tệp trong vùng dữ liệu thật, chỉ hồ sơ — AC-4, AC-5."
+    },
+    {
+      "i": 3,
+      "p": "Kết cục lượt: xanh, đỏ, bị ngắt, hai lượt cùng lúc — AC-1, AC-9."
+    },
+    {
+      "i": 4,
+      "p": "Cổng và vận hành: cấu hình cổng, sao lưu, lệnh đo, hồ sơ áp, soát dữ liệu thật hằng ngày — AC-6, AC-7, AC-8, AC-10, AC-11."
+    },
+    {
+      "i": 5,
+      "p": "Trần cụm dùng một lần: một, hai cùng lúc, lượt thứ ba chờ hoặc quá trần — AC-9."
+    }
   ],
   "gap_probe_plain": [
-    {"i":0,"p":"Sổ ghi việc bỏ bản chép là đã có căn cứ, thực ra câu trích chỉ đòi chạy thêm — đã đổi thành câu hỏi cho Mạnh."},
-    {"i":1,"p":"Số nền 99 phút đo khoảng giữa hai lần cấp khoá, không phải đúng phút giữ khoá — đã gọi đúng tên và tính lại."},
-    {"i":2,"p":"Ngưỡng 20 phút đo thiếu thời gian dựng cụm và migration — đã đổi sang đo thời gian thật."},
-    {"i":3,"p":"Vùng kích bộ dữ liệu thật dựa trên quét tĩnh, lọt tệp nạp động — đã đổi sang danh sách tệp mở ghi từ lượt chạy thật."},
-    {"i":4,"p":"Phép đo tập ca bỏ qua chỉ đếm số — đã đổi sang so từng tên."}
+    {
+      "i": 0,
+      "p": "Sổ ghi việc bỏ bản chép là đã có căn cứ, thực ra câu trích chỉ đòi chạy thêm — đã đổi thành câu hỏi cho Mạnh."
+    },
+    {
+      "i": 1,
+      "p": "Số nền 99 phút đo khoảng giữa hai lần cấp khoá, không phải đúng phút giữ khoá — đã gọi đúng tên và tính lại."
+    },
+    {
+      "i": 2,
+      "p": "Ngưỡng 20 phút đo thiếu thời gian dựng cụm và migration — đã đổi sang đo thời gian thật."
+    },
+    {
+      "i": 3,
+      "p": "Vùng kích bộ dữ liệu thật dựa trên quét tĩnh, lọt tệp nạp động — đã đổi sang danh sách tệp mở ghi từ lượt chạy thật."
+    },
+    {
+      "i": 4,
+      "p": "Phép đo tập ca bỏ qua chỉ đếm số — đã đổi sang so từng tên."
+    }
   ]
 }

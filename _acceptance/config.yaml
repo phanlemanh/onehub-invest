@@ -377,6 +377,7 @@ executors:
     ht9_suite_vung: "node --test --test-concurrency=1 scripts/suite-neu-doi.test.mjs"   # db-thu-tach-khoi-cum-that E4, E5 — vùng pipeline_that + ma trận kích
     ht9_sao_luu: "node --test --test-concurrency=1 scripts/db-sao-luu.test.mjs"   # db-thu-tach-khoi-cum-that E7 — sao lưu bỏ DB thử của suite
     ht9_phut: "node --test --test-concurrency=1 scripts/do-phut-s4.test.mjs"   # db-thu-tach-khoi-cum-that E8 — phút giữ khoá s4
+    ht9_hang_ngay: "node --test --test-concurrency=1 scripts/pipeline-that-hang-ngay.test.mjs"   # db-thu-tach-khoi-cum-that E11 — soát ca dữ liệu thật hằng ngày trên main + dòng «ca dữ liệu thật» của lượt chấm
   script:
     ht13_ap: "bash _acceptance/tran-tong-luot-dem-va-tran-doc-gop/ap-may-thu/kiem.sh"   # tran-tong-luot-dem-va-tran-doc-gop E9 — README áp đủ năm mục, lệnh kiểm sau chấm đúng ba log mẫu
     ht12_ap: "bash _acceptance/doc-gop-dong-ho-rieng-trong-luot-dem/ap-may-thu/kiem.sh"   # doc-gop-dong-ho-rieng-trong-luot-dem E9 — README áp đủ năm mục, kiem-sau.sh chấm đúng chín ca

@@ -6,7 +6,7 @@ evals:
     executor: test
     cmd: config:executors.test.ht9_db_thu
     paths: [db/db-thu.sh, scripts/db-thu-trong.test.mjs]
-    expected: "exit 0; ca «chay-trong: lượt lành» — container riêng của lượt (tên mang pid) có trong `docker ps` lúc lệnh chạy, lệnh thấy DATABASE_URL trỏ cổng của container và CI=true, DB trống có bảng của migration cuối; sau lượt `docker ps -a` không còn container, cụm thật không có DB `oneinvest_suite_*` mới (so danh sách trước/sau), mã lượt = mã lệnh (0 và 3). Ca «bị TERM giữa chừng» — gửi TERM cho lượt, container bị xoá, mã 143. Hai chiều đỏ trên bản sao db-thu.sh: bỏ bước xoá container → rejects ghim `container còn sau lượt`; rơi về cụm thật → rejects ghim `DB suite trong cụm thật`."
+    expected: "exit 0; ca «chay-trong: lượt lành» — container riêng của lượt (tên mang pid) có trong `docker ps` lúc lệnh chạy, lệnh thấy DATABASE_URL trỏ cổng của container và CI=true, DB trống có bảng của migration cuối; sau lượt `docker ps -a` không còn container, cụm thật không có DB `oneinvest_suite_*` mới (so danh sách trước/sau), mã lượt = mã lệnh (0 và 3); `docker port` của container chỉ gắn 127.0.0.1; bản ghi lệnh docker của lượt (bọc docker giả ghi đối số) không có lệnh nào nhắm `one-invest-db`. Ca «bị TERM giữa chừng» — gửi TERM cho lượt, container bị xoá, mã 143. Hai chiều đỏ trên bản sao db-thu.sh: bỏ bước xoá container → rejects ghim `container còn sau lượt`; rơi về cụm thật → rejects ghim `DB suite trong cụm thật`."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E2a
     criterion: AC-2
@@ -86,7 +86,7 @@ evals:
     executor: test
     cmd: config:executors.test.ht9_db_thu
     paths: [db/db-thu.sh, scripts/db-thu-trong.test.mjs]
-    expected: "exit 0; ca «hai lượt song song» — hai `--chay-trong` khởi cùng lúc, mỗi lượt in tên container và cổng khác nhau, lệnh mỗi lượt ghi một bảng riêng rồi kiểm không thấy bảng của lượt kia, cả hai thoát 0, sau cùng không còn container nào."
+    expected: "exit 0; ca «hai lượt song song» — hai `--chay-trong` khởi cùng lúc, mỗi lượt in tên container và cổng khác nhau, lệnh mỗi lượt ghi một bảng riêng rồi kiểm không thấy bảng của lượt kia, cả hai thoát 0, sau cùng không còn container nào. Ca «lượt thứ ba»: khi đã có hai container sống của db-thu (giả bằng hai lượt treo), lượt thứ ba không dựng container, chờ; hạ trần chờ xuống 3 s qua biến môi trường thì thoát 4 kèm dòng ghim `đã đủ 2 cụm dùng một lần`; chiều đỏ: bản sao bỏ trần → rejects ghim `container thứ ba`."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E10
     criterion: AC-10
@@ -94,4 +94,11 @@ evals:
     cmd: config:executors.script.ht9_ap
     paths: [_acceptance/db-thu-tach-khoi-cum-that/ap-may-thu/**, scripts/do-phut-s4.mjs]
     expected: "exit 0; kiem.sh: README có năm mục 1–5 (thiếu → `FAIL README thiếu mục`); lệnh kiểm sau chạy trên mẫu su-kien có thêm ba lượt sau mốc áp giả, in hai dòng «nền 99′ (n=15)» và «sau áp <x>′ (n=3)»; mẫu chưa có lượt sau mốc → in «chưa có lượt nào sau áp», mã 0."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-11
+    executor: test
+    cmd: config:executors.test.ht9_hang_ngay
+    paths: [scripts/pipeline-that-hang-ngay.mjs, scripts/pipeline-that-hang-ngay.test.mjs, scripts/suite-neu-doi.mjs]
+    expected: "exit 0; với lệnh suite giả (thoát 0 / thoát 1 in tên ca đỏ): lệnh hằng ngày nối đúng một dòng sổ {ngay, sha, ket_qua, ca_do} và in một dòng, đỏ thì dòng gọi tên ca; suite-neu-doi khi không kích pipeline_that in «ca dữ liệu thật: không kích — lần xanh gần nhất trên main: <ngày> (<sha>)» lấy từ dòng xanh cuối của sổ, sổ trống in «chưa có lần xanh nào trên main», khi kích in «ca dữ liệu thật: chạy trong lượt này»; chiều đỏ: sổ chỉ có dòng đỏ → assert không có chữ «lần xanh gần nhất» kèm ngày (ghim)."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
