@@ -5,7 +5,9 @@ slug: db-thu-tach-khoi-cum-that
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: draft
+status: approved
+approved_by: Mạnh
+approved_at: 2026-11-25T03:59:22Z
 design_doc: docs/superpowers/specs/2026-11-25-db-thu-tach-khoi-cum-that-design.md
 ---
 
