@@ -3,6 +3,8 @@
 // In theo khu: số bài, số tin mức toà, trục, căn, xung đột, số bài theo từng lý do không gắn; in từng tin mức căn kèm mã căn
 // nguyên văn, tầng từ mã, tầng danh bạ để người soát. Thoát 1 khi tin mức trục + căn ở OP1 dưới ngưỡng (mặc định 350).
 // Chạy: DATABASE_URL=… node scripts/ghep-tin-truc-can-kho.mjs [--nguong 350] [--json]
+import { realpathSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import pg from "pg";
 import { KHU_SLUG } from "../lib/mau-hai-khu.mjs";
 import { docDauVao, tinhGan } from "../lib/ghep-tin-truc-can-doc.mjs";
@@ -66,4 +68,4 @@ async function main() {
   } finally { await c.end(); }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) await main();
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) await main();

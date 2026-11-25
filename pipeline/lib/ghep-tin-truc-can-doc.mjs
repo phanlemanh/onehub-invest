@@ -4,6 +4,7 @@ import { KHU_SLUG } from "./mau-hai-khu.mjs";
 import { RULE as RULE_TOA } from "./ghep-tin-danh-muc.mjs";
 import { NGUON_BAT, RULE, chuanTang, chuanTruc, khoaGiaTriBiDanh, xetBai } from "./ghep-tin-truc-can.mjs";
 import { testMarker } from "./test-posts.mjs";
+import { ASSERTION_FIELD } from "./vocab.generated.mjs";
 
 const RULE_TOA_ALL = Object.values(RULE_TOA);
 const them = (m, k, v) => { (m.get(k) ?? m.set(k, []).get(k)).push(v); };
@@ -76,8 +77,8 @@ export async function docDauVao(c, { postIds = null } = {}) {
   if (!ids.length) return { bai, danhBa };
   const { rows: o } = await c.query(
     `SELECT split_part(subject_key, ':', 2) AS post_id, field, value FROM field_assertions
-      WHERE subject_key = ANY ($1) AND retracted_at IS NULL AND field IN ('unit_number', 'floor_raw')
-        AND (rule_id IS NULL OR rule_id NOT LIKE 'ghep-can-%')`, [ids.map((i) => `S03:${i}`)]);
+      WHERE subject_key = ANY ($1) AND retracted_at IS NULL AND field = ANY ($2::text[])
+        AND (rule_id IS NULL OR rule_id NOT LIKE 'ghep-can-%')`, [ids.map((i) => `S03:${i}`), [ASSERTION_FIELD.unit_number, ASSERTION_FIELD.floor_raw]]);
   for (const r of o) {
     const b = bai.get(r.post_id);
     if (b) (r.field === "unit_number" ? b.ma : b.tangChu).push(r.value);

@@ -475,7 +475,7 @@ enums:
       - { code: direction_faces, label_vi: Hướng }   # DA40 (113): trục local direction_faces, tám mã
       - { code: lot_size_area, label_vi: Diện tích đất, dd_lookup: LotSizeArea }   # DA40 (113): nhà thấp tầng
       - { code: universal_property_id, label_vi: Toà của tin, dd_lookup: UniversalPropertyId }   # PL20 (117): resource Property, UPI của toà đang hoạt động (ADR-0016 §5)
-      - { code: universal_property_sub_id, label_vi: Trục, căn của tin, dd_lookup: UniversalPropertySubId }   # PL36 (131): resource Property, «khoá trục:tầng» hay «khoá trục:*» (ADR-0016 §4)
+      - { code: universal_property_sub_id, label_vi: "Trục, căn của tin", dd_lookup: UniversalPropertySubId }   # PL36 (131): resource Property, «khoá trục:tầng» hay «khoá trục:*» (ADR-0016 §4)
   evidence_tier:
     term_vi: Lớp căn cứ
     dd_field: null
