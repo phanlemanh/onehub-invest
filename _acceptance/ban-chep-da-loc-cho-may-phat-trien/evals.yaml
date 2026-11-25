@@ -84,6 +84,14 @@ evals:
       - "Đọc câu tóm tắt «<số> listing» và «<số> tháng dữ liệu»; chụp ảnh khổ rộng; quét chữ trang không có tên nguồn thật (so với mã S0x); preview_stop; node scripts/ban-chep-da-loc.mjs --don"
     expected: "Trang Invest khu Hà Nội trên bản chép trả dữ liệu: số listing > 0, số tháng dữ liệu > 0, không lỗi; chữ trang không chứa tên nguồn thật; ảnh lưu ở evidence/; sau ca không còn DB oneinvest_m5_*"
     evidence_required: [run_id, screenshot, observed, verified_at]
+  - id: E14
+    criterion: AC-11
+    executor: script
+    cmd: config:executors.script.bcl_soat
+    long_running: 60
+    expected: "exit 0; ca BCL-3 tệp kê: ke.json của lượt xanh không chứa token nào của từ điển (soát toàn văn), khoá theo tên đã đổi, không có cặp đổi tên; cấy tên nguồn vào một mục tệp kê (lối thử) → lượt chép thoát 1 trước khi ghi, nêu khoá JSON chứa chỗ trúng, không in giá trị, không có tệp kê hay dump nào được ghi"
+    paths: [scripts/ban-chep-da-loc.mjs, scripts/ban-chep-da-loc.itest.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E12
     criterion: AC-1
     executor: test

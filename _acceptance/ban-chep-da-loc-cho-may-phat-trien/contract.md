@@ -53,6 +53,9 @@ Căn cứ: GS giao HT18 ngày 24/11.
 - AC-10: Given đã có một DB `oneinvest_m5_*`, When chép bản mới, Then bản cũ bị xoá (trần một bản sống); lệnh lỗi giữa chừng thì
   không còn DB đích; `--don` xoá mọi `oneinvest_m5_*`; thư mục `state/ban-chep-m5/` bị git bỏ qua và nằm ngoài nguồn của sao lưu
   ra ngoài máy.
+- AC-11: Given tệp kê (`ke.json`) và mọi tệp nằm cạnh dump, When ghi, Then không tệp nào mang tên nguồn thật: khoá theo tên bảng
+  đã đổi, không cặp đổi tên, chữ của tệp qua bộ soát trước khi ghi; cấy tên nguồn vào một mục tệp kê thì lượt chép đỏ trước khi ghi,
+  không tệp nào được ghi (GS 26/11 mở phạm vi, lý do tầng A).
 - AC-9: Given bản chép từ DB máy thu thật, When chạy data-api và app (`RENAME_REFCALIB=1`) trỏ vào nó, Then `/v1/listings` của
   data-api và trang Invest khu Hà Nội trả dữ liệu (số dòng > 0, HTTP 200); in cỡ dump, số bảng có dòng, thời gian.
 
@@ -60,7 +63,7 @@ Căn cứ: GS giao HT18 ngày 24/11.
 
 - Bảng: tập FILL → AC-1; bảng cấm → AC-4; còn lại → AC-1 (0 dòng); `source_registry` → AC-5; schema lạ → AC-6
 - Cột: cho phép, loại, che → AC-2
-- Tầng A: tên nguồn trong giá trị và lược đồ → AC-3; hồ sơ user app, định danh tài khoản thu, phiên/khoá → AC-4; ngày sinh/giới tính → AC-6
+- Tầng A: tên nguồn trong giá trị và lược đồ → AC-3; trong tệp kê đi kèm dump → AC-11; hồ sơ user app, định danh tài khoản thu, phiên/khoá → AC-4; ngày sinh/giới tính → AC-6
 - Chiều: xanh trên dữ liệu thật → AC-9 (data-api bằng lệnh, trang Invest bằng mắt trên bản chạy thử); cấy đỏ → AC-3, AC-4, AC-5, AC-6; dump hỏng → AC-8
 - Nguồn: DB máy thu chỉ đọc → AC-7
 - Rác và lối rời máy: DB tạm, thư mục đầu ra ngoài git và sao lưu → AC-10
