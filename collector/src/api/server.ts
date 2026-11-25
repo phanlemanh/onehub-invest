@@ -7,7 +7,7 @@ import { SnapshotWriter, HO_SO_SCHEMA_VERSION, KENH_TIN_SCHEMA_VERSION } from ".
 // U1(9): hằng schemaVersion hai kênh S03 khai ở core/storage.ts — server không
 // khai lại giá trị, chỉ re-export cho người dùng cũ của API này.
 export { HO_SO_SCHEMA_VERSION, KENH_TIN_SCHEMA_VERSION } from "../core/storage.js";
-import { fetchMessageMedia, type MediaFetchOptions } from "../core/media-fetch.js";
+import { DEFAULTS as MEDIA_DEFAULTS, fetchMessageMedia, parseHostSuffixes, type MediaFetchOptions } from "../core/media-fetch.js";
 import type { RawItem } from "../core/types.js";
 
 /**
@@ -56,9 +56,16 @@ export type AgentServerOptions = {
   /** Trần số tin mỗi lô ở tầng HTTP — vượt thì 413 rõ ràng để agent chia nhỏ
    *  gửi lại (claudedp-2510-2). ingest() nội bộ không bị trần này. */
   maxBatchItems?: number; // default 1000
-  /** Ghi đè tuỳ chọn tải media (mặc định: chỉ *.zdn.vn, ≤10MB, timeout 10s). */
+  /** Ghi đè tuỳ chọn tải media (mặc định: *.zdn.vn + *.r2.dev, ≤10MB, timeout 10s). */
   media?: MediaFetchOptions;
+  /** Ghi một dòng log vận hành (mặc định console.log). */
+  log?: (line: string) => void;
 };
+
+/** ZC15: tệp hậu tố host ảnh thêm của máy thu, trong stateDir (gitignored). */
+export const MEDIA_HOST_SUFFIXES_FILE = "media-host-suffixes.txt";
+/** ZC15: biến môi trường hậu tố host ảnh thêm (phẩy). */
+export const MEDIA_HOST_SUFFIXES_ENV = "ONEINVEST_MEDIA_HOST_SUFFIXES";
 
 /** Đọc body gộp BUFFER rồi decode một lần — nối chuỗi từng chunk sẽ corrupt
  *  ký tự đa byte bị chặn ngang ranh giới chunk (payload phải NGUYÊN VẬN). */
@@ -120,6 +127,27 @@ export async function createAgentServer(opts: AgentServerOptions) {
       }
     } catch { /* chưa có file — lần đầu */ }
   }
+
+  // ZC15: hậu tố host ảnh thêm do máy thu khai — tên miền nguồn là tầng A
+  // nên chỉ nằm trong tệp local / biến môi trường, không trong mã. Log chỉ
+  // in SỐ hậu tố, không in tên.
+  let hostFile = "";
+  if (opts.stateDir) {
+    try {
+      hostFile = await readFile(join(opts.stateDir, MEDIA_HOST_SUFFIXES_FILE), "utf8");
+    } catch { /* không có tệp — chỉ danh sách mặc định */ }
+  }
+  const extraHosts = parseHostSuffixes(
+    [hostFile, process.env[MEDIA_HOST_SUFFIXES_ENV] ?? ""].join("\n"),
+  );
+  const baseHosts = opts.media?.allowedHostSuffixes ?? MEDIA_DEFAULTS.allowedHostSuffixes;
+  const mediaOpts: MediaFetchOptions = {
+    ...(opts.media ?? {}),
+    allowedHostSuffixes: [...baseHosts, ...extraHosts.filter((h) => !baseHosts.includes(h))],
+  };
+  (opts.log ?? console.log)(
+    `media: ${baseHosts.length} hậu tố mặc định + ${extraHosts.length} hậu tố thêm từ máy`,
+  );
 
   // ZC1 (claudedp-2310-14): tin CHỈ CÓ ẢNH (text rỗng) — hai tin cùng nhóm
   // cùng ts đụng nhau ở công thức cũ, tin sau bị bỏ ở dedup. Thêm sender +
@@ -271,7 +299,7 @@ export async function createAgentServer(opts: AgentServerOptions) {
         const stats = await fetchMessageMedia({
           items,
           putFile: (name, bytes) => w.addExtraFile(name, bytes),
-          options: opts.media,
+          options: mediaOpts,
           signal: ac.signal,
         });
         if (stats.fetched > 0 || stats.failed > 0) {
