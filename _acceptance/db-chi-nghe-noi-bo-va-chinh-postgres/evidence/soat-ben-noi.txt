@@ -1,4 +1,4 @@
-# Tệp có docker run / docker exec chạm one-invest-db hay mạng container: — sinh bởi check-db-noi-bo.sh soat 6b866d99d
+# Tệp có docker run / docker exec chạm one-invest-db hay mạng container: — sinh bởi check-db-noi-bo.sh soat 831aa6bdf
 db/check-idempotent-tam.sh	docker exec vào one-invest-db
 db/check-idempotent.selftest.sh	docker exec vào one-invest-db
 db/check-idempotent.sh	docker exec vào one-invest-db
