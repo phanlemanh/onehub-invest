@@ -2,7 +2,7 @@
 # Phép đo AC-3 (hồ sơ s02-phien-qua-khung-ung-dung), đo TĨNH trên thân mã của bộ thu S02 (tệp duy nhất trong
 # collector/src/collectors/ xuất docExpAppToken — không ghi tên tệp vào phép đo):
 #  (i)  mọi câu `return token;` của hàm nạp một đường dẫn (moMotDuong) nằm trên dòng có điều kiện duDungKhong(
-#       — không token nào rời hàm nếu không còn hạn quá lề;
+#       — không token nào rời hàm nếu không còn hạn quá lề (và nếu là đúng token vừa bị từ chối);
 #  (ii) không còn lời chờ cứng `waitForTimeout(`;
 #  (iii) mọi lời `page.goto(` chỉ trỏ về APP_ORIGIN + duong (duong đi từ danh sách ứng viên) hoặc about:blank.
 # Chiều đỏ trên bản chép của CHÍNH tệp: (a) đổi điều kiện thành `if (token)` · (b) cấy một câu `return token;`
@@ -20,7 +20,7 @@ do_tep() {
   local f="$1" loi=0
   # thân hàm nạp một đường dẫn: từ dòng khai báo tới dòng đóng `  };` đầu tiên
   local than
-  than="$(awk '/const moMotDuong = async /{on=1} on{print} on&&/^  \};/{exit}' "$f")"
+  than="$(awk '/const moMotDuong/{on=1} on{print} on&&/^  \};/{exit}' "$f")"
   [ -n "$than" ] || { echo "ĐỎ: không thấy hàm nạp một đường dẫn (moMotDuong)"; return 1; }
   local n_tra=0 n_dung=0
   while IFS= read -r d; do
@@ -47,9 +47,9 @@ pha() { # $1 tên bản đột biến, $2 tệp chép, $3 thông điệp phải 
   if do_tep "$2" >"$T/out" 2>&1; then cat "$T/out"; echo "ĐỎ: thước mù — bản $1 vẫn xanh"; RC=1; return; fi
   grep -qF "$3" "$T/out" && echo "đạt: chiều đỏ ($1) bắt đúng: $3" || { cat "$T/out"; echo "ĐỎ: chiều đỏ ($1) sai thông điệp"; RC=1; }
 }
-sed 's/if (duDungKhong(token)) return token;/if (token) return token;/' "$F" > "$T/a.ts"; pha "điều kiện bò" "$T/a.ts" "$M_KIEM"
-awk '{print} /const token = await docToken\(\)/{print "        return token;"}' "$F" > "$T/b.ts"; pha "trả sớm" "$T/b.ts" "$M_KIEM"
-awk '{print} /const token = await docToken\(\)/{print "        await page.waitForTimeout(6_000);"}' "$F" > "$T/c.ts"; pha "chờ cứng" "$T/c.ts" "$M_CHO"
-awk '{print} /const token = await docToken\(\)/{print "        await page.goto(\"https://vi-du.invalid/\");"}' "$F" > "$T/d.ts"; pha "goto chỗ khác" "$T/d.ts" "$M_GOTO"
+sed 's/if (duDungKhong(token) \&\& token !== loaiBo) return token;/if (token) return token;/' "$F" > "$T/a.ts"; pha "điều kiện bò" "$T/a.ts" "$M_KIEM"
+awk '{print} /const token = await docToken\(\);/{print "        return token;"}' "$F" > "$T/b.ts"; pha "trả sớm" "$T/b.ts" "$M_KIEM"
+awk '{print} /const token = await docToken\(\);/{print "        await page.waitForTimeout(6_000);"}' "$F" > "$T/c.ts"; pha "chờ cứng" "$T/c.ts" "$M_CHO"
+awk '{print} /const token = await docToken\(\);/{print "        await page.goto(\"https://vi-du.invalid/\");"}' "$F" > "$T/d.ts"; pha "goto chỗ khác" "$T/d.ts" "$M_GOTO"
 [ $RC -eq 0 ] && echo "XANH" || echo "ĐỎ"
 exit $RC

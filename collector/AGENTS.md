@@ -7,9 +7,12 @@
 
 ## Không được đụng
 
-- **Không đọc** `.env`, `.env.local`, `.env.production*`, `*.har`, `.airdna-profile/**`.
+- **Không đọc** `.env`, `.env.local`, `.env.production*`, `*.har`, `.airdna-profile/**` (và thư mục nào mà
+  `AIRDNA_PROFILE_DIR` trỏ tới).
 - **Không sửa/xoá** gì trong `snapshots/` — raw snapshot bất biến, collector chỉ ghi mới.
-- **Không sửa** `.airdna-profile/` (cookie đăng nhập AirDNA, đăng nhập một lần dùng mãi).
+- **Không sửa** `.airdna-profile/` (hay thư mục `AIRDNA_PROFILE_DIR` trỏ tới) — nơi giữ phiên đăng nhập S02.
+  Phiên CÓ hạn, không phải «đăng nhập một lần dùng mãi»: hết thì Mạnh tự đăng nhập lại bằng
+  `npm run collect -- login --source airdna-research`; agent chỉ mở cửa sổ bằng lệnh đó, không gõ mật khẩu.
 - Không `git push --force`; không merge vào `main`; không checkout nhánh khác trong
   `~/dev/onehub-invest` (launchd chạy code từ đó).
 - Không sửa migration đã commit trong `db/migrations/`; không tự chạy migration.

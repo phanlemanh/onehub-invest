@@ -5,43 +5,43 @@ evals:
     criterion: AC-1
     executor: script
     cmd: cd collector && npx tsc -p tsconfig.json && cd .. && node _acceptance/s02-phien-qua-khung-ung-dung/probes/han-va-lam-moi.mjs
-    expected: "exit 0; dòng cuối 'XANH'; 26 dòng 'đạt: bản thật · …' (năm ô lề token, bốn ô giữ token, năm ô đường kế, năm ô chẩn đoán, một ô thứ tự ứng viên, ba ô đăng nhập, ba ô profile) và sáu dòng 'đạt: bản đột biến (…) bị bắt ở ô: …'; riêng chiều đỏ AC-1: 'bị bắt ở ô: AC-1 lề: còn 29 giây → không dùng'"
+    expected: "exit 0; dòng cuối 'XANH'; 38 dòng 'đạt: bản thật · …' và 14 dòng 'đạt: bản đột biến (…) bị bắt ở ô: …'; riêng AC-1: năm dòng 'đạt: bản thật · AC-1 lề: …' và chiều đỏ 'đạt: bản đột biến (bỏ lề token) bị bắt ở ô: AC-1 lề: còn 29 giây → không dùng'"
     paths: [collector/src/collectors/**, _acceptance/s02-phien-qua-khung-ung-dung/probes/han-va-lam-moi.mjs]
   - id: E2
     criterion: AC-2
     executor: script
     cmd: cd collector && npx tsc -p tsconfig.json && cd .. && node _acceptance/s02-phien-qua-khung-ung-dung/probes/han-va-lam-moi.mjs
-    expected: "cùng lệnh E1: bốn dòng 'đạt: bản thật · AC-2 giữ: …' và 'đạt: bản đột biến (bỏ vế ép làm mới) bị bắt ở ô: AC-2 giữ: còn hạn, ép làm mới → không dùng lại'"
+    expected: "cùng lệnh E1: bốn dòng 'đạt: bản thật · AC-2 giữ: …' — vế KHÔNG-BẮN 'đạt: bản thật · AC-2 giữ: còn hạn, ép làm mới → không dùng lại' — và chiều đỏ 'đạt: bản đột biến (bỏ vế ép làm mới) bị bắt ở ô: AC-2 giữ: còn hạn, ép làm mới → không dùng lại'"
     paths: [collector/src/collectors/**, _acceptance/s02-phien-qua-khung-ung-dung/probes/han-va-lam-moi.mjs]
   - id: E3
     criterion: AC-4
     executor: script
     cmd: cd collector && npx tsc -p tsconfig.json && cd .. && node _acceptance/s02-phien-qua-khung-ung-dung/probes/han-va-lam-moi.mjs
-    expected: "cùng lệnh E1: năm dòng 'đạt: bản thật · AC-4 đường kế: …' và 'đạt: bản đột biến (luôn thử đường kế) bị bắt ở ô: AC-4 đường kế: thấy mã 200 → dừng'"
+    expected: "cùng lệnh E1: sáu dòng 'đạt: bản thật · AC-4 đường kế: …' — vế KHÔNG-BẮN 'đạt: bản thật · AC-4 đường kế: khung nạp được, chưa thấy lời gọi xác thực → DỪNG' — và chiều đỏ 'đạt: bản đột biến (khung nạp được vẫn thử đường kế) bị bắt ở ô: AC-4 đường kế: khung nạp được, chưa thấy lời gọi xác thực → DỪNG'"
     paths: [collector/src/collectors/**, _acceptance/s02-phien-qua-khung-ung-dung/probes/han-va-lam-moi.mjs]
   - id: E4
     criterion: AC-5
     executor: script
     cmd: cd collector && npx tsc -p tsconfig.json && cd .. && node _acceptance/s02-phien-qua-khung-ung-dung/probes/han-va-lam-moi.mjs
-    expected: "cùng lệnh E1: năm dòng 'đạt: bản thật · AC-5 chẩn đoán: …' và 'đạt: bản đột biến (bỏ nhận 401/403) bị bắt ở ô: AC-5 chẩn đoán: 401 → phiên ĐÃ HẾT, chỉ lệnh đăng nhập'"
+    expected: "cùng lệnh E1: bảy dòng 'đạt: bản thật · AC-5 chẩn đoán: …' và chiều đỏ 'đạt: bản đột biến (bỏ nhận 401/403) bị bắt ở ô: AC-5 chẩn đoán: 401 → BỊ TỪ CHỐI, chỉ lệnh đăng nhập'"
     paths: [collector/src/collectors/**, _acceptance/s02-phien-qua-khung-ung-dung/probes/han-va-lam-moi.mjs]
   - id: E5
     criterion: AC-9
     executor: script
     cmd: cd collector && npx tsc -p tsconfig.json && cd .. && node _acceptance/s02-phien-qua-khung-ung-dung/probes/han-va-lam-moi.mjs
-    expected: "cùng lệnh E1: ba dòng 'đạt: bản thật · AC-9 đăng nhập: …' — riêng vế KHÔNG-BẮN 'đạt: bản thật · AC-9 đăng nhập: tham số cuối là https tới route dữ liệu, không cờ tự động hoá' (không tham số nào mang cờ tự động hoá) — và chiều đỏ 'đạt: bản đột biến (profile sai chỗ) bị bắt ở ô: AC-9 đăng nhập: đúng một tham số trỏ thư mục profile'"
+    expected: "cùng lệnh E1: bốn dòng 'đạt: bản thật · AC-9 đăng nhập: …' — vế KHÔNG-BẮN 'đạt: bản thật · AC-9 đăng nhập: tham số cuối là https tới route dữ liệu, không cờ tự động hoá' (không tham số nào mang cờ tự động hoá) — và chiều đỏ 'đạt: bản đột biến (profile sai chỗ) bị bắt ở ô: AC-9 đăng nhập: đúng một tham số trỏ thư mục profile'"
     paths: [collector/src/collectors/**, _acceptance/s02-phien-qua-khung-ung-dung/probes/han-va-lam-moi.mjs]
   - id: E6
     criterion: AC-10
     executor: script
     cmd: cd collector && npx tsc -p tsconfig.json && cd .. && node _acceptance/s02-phien-qua-khung-ung-dung/probes/han-va-lam-moi.mjs
-    expected: "cùng lệnh E1: ba dòng 'đạt: bản thật · AC-10 profile: …' và 'đạt: bản đột biến (bỏ biến môi trường profile) bị bắt ở ô: AC-10 profile: biến môi trường thắng'"
+    expected: "cùng lệnh E1: ba dòng 'đạt: bản thật · AC-10 profile: …' và chiều đỏ 'đạt: bản đột biến (bỏ biến môi trường profile) bị bắt ở ô: AC-10 profile: biến môi trường thắng'"
     paths: [collector/src/collectors/**, _acceptance/s02-phien-qua-khung-ung-dung/probes/han-va-lam-moi.mjs]
   - id: E7
     criterion: AC-6
     executor: script
     cmd: cd collector && npx tsc -p tsconfig.json && cd .. && node _acceptance/s02-phien-qua-khung-ung-dung/probes/loi-xac-thuc.mjs
-    expected: "exit 0; dòng cuối 'XANH'; năm dòng 'đạt: bản thật · …' (hai ô AC-8, hai ô AC-6, một ô AC-7) và hai dòng 'đạt: bản đột biến (…) bị bắt ở ô: …'; riêng chiều đỏ AC-6: 'bị bắt ở ô: AC-6 làm mới hỏng: ném LoiXacThuc, 0 lời gửi, không tính là lời gọi lỗi'"
+    expected: "exit 0; dòng cuối 'XANH'; bốn dòng 'đạt: bản thật · AC-6 …' — trong đó 'AC-6 401 mà làm mới KHÔNG đổi token → không gửi lại, ném LoiXacThuc sau đúng MỘT dòng AUTH FAIL [S02]' (vế không-bắn: không gửi lại) — và chiều đỏ 'đạt: bản đột biến (bỏ bắt LoiXacThuc) bị bắt ở ô: AC-6 làm mới hỏng: ném LoiXacThuc, 0 lời gửi, không tính là lời gọi lỗi'"
     paths: [collector/src/collectors/**, _acceptance/s02-phien-qua-khung-ung-dung/probes/loi-xac-thuc.mjs]
   - id: E8
     criterion: AC-7
@@ -53,7 +53,7 @@ evals:
     criterion: AC-8
     executor: script
     cmd: cd collector && npx tsc -p tsconfig.json && cd .. && node _acceptance/s02-phien-qua-khung-ung-dung/probes/loi-xac-thuc.mjs
-    expected: "cùng lệnh E7: hai dòng 'đạt: bản thật · AC-8 …' — riêng vế KHÔNG-BẮN 'đạt: bản thật · AC-8 còn hạn: không làm mới thừa' (bước làm mới chạy 0 lần khi token còn hạn) — và chiều đỏ 'đạt: bản đột biến (bỏ làm mới trước khi gửi) bị bắt ở ô: AC-8 sắp hết hạn: làm mới đúng một lần TRƯỚC lời gửi, API nhận token mới'"
+    expected: "cùng lệnh E7: hai dòng 'đạt: bản thật · AC-8 …' — vế KHÔNG-BẮN 'đạt: bản thật · AC-8 còn hạn: không làm mới thừa' (bước làm mới chạy 0 lần khi token còn hạn) — và chiều đỏ 'đạt: bản đột biến (bỏ làm mới trước khi gửi) bị bắt ở ô: AC-8 sắp hết hạn: làm mới đúng một lần TRƯỚC lời gửi, API nhận token mới'"
     paths: [collector/src/collectors/**, _acceptance/s02-phien-qua-khung-ung-dung/probes/loi-xac-thuc.mjs]
   - id: E10
     criterion: AC-3
@@ -71,7 +71,7 @@ evals:
     criterion: AC-10
     executor: script
     cmd: bash _acceptance/s02-phien-qua-khung-ung-dung/probes/vung.sh
-    expected: "exit 0; dòng cuối 'XANH: mọi tệp đổi nằm trong vùng', dòng chiều đỏ gọi tên pipeline/transform-ngoai-vung.mjs, năm dòng 'đạt: có …'; tệp ngoài vùng thì 'ĐỎ: tệp ngoài vùng: <tệp>'"
+    expected: "exit 0; dòng cuối 'XANH: mọi tệp đổi nằm trong vùng', dòng chiều đỏ gọi tên pipeline/transform-ngoai-vung.mjs, sáu dòng 'đạt: có …'; tệp ngoài vùng thì 'ĐỎ: tệp ngoài vùng: <tệp>'"
     paths: [collector/**, _acceptance/s02-phien-qua-khung-ung-dung/**]
   - id: E13
     criterion: AC-10
@@ -85,3 +85,21 @@ evals:
     cmd: config:executors.script.cli
     expected: "exit 0; build collector xong và lệnh list-sources in danh sách bộ thu, trong đó có bộ thu S02"
     paths: [collector/src/**, collector/package.json, collector/tsconfig.json]
+  - id: E15
+    criterion: AC-6
+    executor: script
+    cmd: cd collector && npx tsc -p tsconfig.json && cd .. && node _acceptance/s02-phien-qua-khung-ung-dung/probes/han-va-lam-moi.mjs
+    expected: "cùng lệnh E1: năm dòng 'đạt: bản thật · AC-6 …' — vế KHÔNG-BẮN 'đạt: bản thật · AC-6 trình lấy token: sau 401 chỉ nạp MỘT đường dẫn, loại đúng token bị từ chối, không trả lại nó' — và chiều đỏ 'đạt: bản đột biến (quên đổi lỗi thường thành lỗi dừng cả lượt) bị bắt ở ô: AC-6 trình lấy token: bước nạp ném lỗi THƯỜNG → vẫn dừng cả lượt bằng LoiXacThuc, một dòng AUTH FAIL'"
+    paths: [collector/src/collectors/**, _acceptance/s02-phien-qua-khung-ung-dung/probes/han-va-lam-moi.mjs]
+  - id: E16
+    criterion: AC-9
+    executor: script
+    cmd: cd collector && npx tsc -p tsconfig.json && cd .. && bash _acceptance/s02-phien-qua-khung-ung-dung/probes/lenh-login.sh
+    expected: "exit 0; dòng cuối 'XANH'; hai dòng 'đạt: …' của bản thật (login mở đúng profile rồi dừng — thoát 0, in hướng dẫn, không in Usage · không mở được Chrome → thoát 1 có lý do, không in Usage) và chiều đỏ 'đạt: chiều đỏ (login rơi sang nhánh lệnh kế) bắt đúng: ĐỎ: lệnh login không dừng sau khi mở cửa sổ'"
+    paths: [collector/src/cli.ts, collector/src/core/**, collector/src/collectors/**, _acceptance/s02-phien-qua-khung-ung-dung/probes/lenh-login.sh]
+  - id: E17
+    criterion: AC-4
+    executor: script
+    cmd: cd collector && npx tsc -p tsconfig.json && cd .. && node _acceptance/s02-phien-qua-khung-ung-dung/probes/han-va-lam-moi.mjs
+    expected: "cùng lệnh E1: ba dòng 'đạt: bản thật · AC-4 xếp đường: …' — vế KHÔNG-BẮN 'đạt: bản thật · AC-4 xếp đường: khung nạp được mà không có token → DỪNG, không nạp đường khác (kể cả route dữ liệu)' — và chiều đỏ 'đạt: bản đột biến (xếp đường không dừng khi khung đã nạp) bị bắt ở ô: AC-4 xếp đường: khung nạp được mà không có token → DỪNG, không nạp đường khác (kể cả route dữ liệu)'"
+    paths: [collector/src/collectors/**, _acceptance/s02-phien-qua-khung-ung-dung/probes/han-va-lam-moi.mjs]

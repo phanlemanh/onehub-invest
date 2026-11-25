@@ -37,25 +37,27 @@ if (command === "list-sources") {
   process.exit(0);
 }
 // 2511-s02: nguồn có phiên đăng nhập tự khai lệnh login — CLI chỉ điều hướng, không biết profile nào.
+// 2511-s02b: mỗi lệnh MỘT nhánh, đóng — lệnh login xong thì dừng, không rơi sang nhánh thu. Không gọi
+// process.exit() ngay sau khi in chữ: stdout là đường ống thì chữ chưa kịp ra.
 if (command === "login") {
   const coLogin = COLLECTORS.get(values.source ?? "")?.login;
   if (!coLogin) usage();
   coLogin().catch((err) => {
     console.error(err);
+    process.exitCode = 1;
+  });
+} else if (command === "collect") {
+  const city = cityById(values.city ?? "");
+  const collector = COLLECTORS.get(values.source ?? "");
+  if (!city || !collector) usage();
+
+  runCollector({
+    city,
+    collector,
+    snapshotRoot: `${ROOT}snapshots`,
+    stateDir: `${ROOT}state`,
+  }).catch((err) => {
+    console.error(err);
     process.exit(1);
   });
-} else if (command !== "collect") usage();
-
-const city = cityById(values.city ?? "");
-const collector = COLLECTORS.get(values.source ?? "");
-if (!city || !collector) usage();
-
-runCollector({
-  city,
-  collector,
-  snapshotRoot: `${ROOT}snapshots`,
-  stateDir: `${ROOT}state`,
-}).catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+} else usage();
