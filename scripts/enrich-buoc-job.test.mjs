@@ -213,7 +213,7 @@ test("EC-AC-8 đối chứng một lớp (b): còn gỡ trap, trap xoá vô đi�
   kiemNhaKhoa(dotBienNhieu([TRAP_KIEM_PID, TRAP_VO_DK])));
 
 // ── pl34-lich-dem-sau-buoc ──────────────────────────────────────────────────────────────────────────────────
-const DONG_DOC_GOP = 'job_run zalo-import-daily doc-gop-hang-ngay bash "$ROOT/pipeline/doc-gop-hang-ngay.sh"\n';
+const DONG_DOC_GOP = 'doc_gop_run bash "$ROOT/pipeline/doc-gop-hang-ngay.sh"\n';
 const DONG_NHA = 'trap - EXIT; rm -rf "$LOCK_DIR"\n';
 function kiemDocGopNhaKhoa(noiDung) {
   const r = chay(cay(noiDung));

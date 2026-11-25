@@ -1,0 +1,37 @@
+{
+  "feature_plain": "Bước đọc bài S03 hằng đêm đọc nhiều bài cùng lúc và tự dừng đúng hẹn, để đêm nào cũng xong trong giờ và bước làm giàu tin phía sau được chạy; kèm một lệnh đọc bù những ngày đã bị bỏ sót.",
+  "will_do": [
+    {"id": "AC-3", "p": "Sẽ dừng phát bài mới ngay khi hết tiền hay khoá sai, và khi có đường dự phòng thì chuyển sang đó mà không bỏ sót bài nào (AC-3)."},
+    {"id": "AC-4", "p": "Sẽ tạm chậm lại khi nhà cung cấp báo quá nhịp rồi tăng lại sau đó; bài lỗi được đọc lại ở lượt sau, lượt không dừng (AC-4)."},
+    {"id": "AC-5", "p": "Sẽ ghi ra đúng cùng kết quả như khi đọc từng bài một: mỗi lời gọi một dòng sổ chi, không bài nào bị đọc hai lần (AC-5)."},
+    {"id": "AC-7", "p": "Sẽ có lệnh đọc bù theo khoảng ngày, chạy thử trước để thấy số bài và số tiền ước, chạy thật thì đọc ngày cũ trước và có trần tiền riêng (AC-7)."},
+    {"id": "AC-9", "p": "Sẽ chỉ cho một lượt đọc chạy tại một thời điểm; lượt thứ hai tự lui ngay, không đọc đôi, không tiêu đôi (AC-9)."},
+    {"id": "AC-8", "p": "Sẽ giữ nguyên mọi hành vi đọc bài và chuỗi chạy đêm hiện có — các bộ kiểm cũ vẫn xanh (AC-8)."}
+  ],
+  "wont_do": [
+    {"id": "AC-1", "p": "Sẽ KHÔNG đọc quá số bài cùng lúc đã đặt (mặc định 4); lệnh đọc tay cũ vẫn đọc từng bài một (AC-1)."},
+    {"id": "AC-2", "p": "Sẽ KHÔNG tiêu vượt trần tiền dù đọc nhiều bài cùng lúc: chạm trần thì dừng và nói rõ còn bao nhiêu bài (AC-2)."},
+    {"id": "AC-6", "p": "Sẽ KHÔNG đọc tiếp quá giờ hẹn (mặc định 2,5 giờ): dừng sạch, báo ngày và số bài còn lại, để bước làm giàu tin luôn có giờ chạy (AC-6)."},
+    {"id": "OOS-1", "p": "KHÔNG sửa kịch bản chạy đêm, lịch máy hay trần 4 giờ của cả lượt — phần đó ZCode làm riêng."},
+    {"id": "OOS-2", "p": "KHÔNG đổi cách đọc bài: câu hỏi cho model, model, luật «đã đọc», luật lọc trùng, trần 20 USD/ngày giữ nguyên."},
+    {"id": "OOS-3", "p": "KHÔNG làm nhanh bước làm giàu tin và KHÔNG thêm cảnh báo ra ngoài máy ở việc này."},
+    {"id": "OOS-4", "p": "KHÔNG chạy đọc bù thật trong vòng này — chỉ chạy sau khi anh ký Cổng Bằng chứng."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Đọc một bài hay bốn bài cùng lúc đều được thử, và kết quả hai cách phải giống nhau (AC-1, AC-5)."},
+    {"i": 1, "p": "Mọi kết cục của một lời đọc đều có ca: đọc được, trả lời hỏng, quá nhịp, máy chủ lỗi, hết tiền, khoá sai (AC-3, AC-4, AC-5)."},
+    {"i": 2, "p": "Cả hai đường gọi model và việc chuyển đường giữa lượt đều được thử (AC-3)."},
+    {"i": 3, "p": "Bốn cách một lượt dừng — hết bài, chạm trần tiền, hết giờ, hết tiền/khoá sai — mỗi cách có ca riêng (AC-2, AC-3, AC-6)."},
+    {"i": 4, "p": "Ngày hôm qua, hôm kia và một khoảng ngày bù đều được thử (AC-6, AC-7)."},
+    {"i": 5, "p": "Chạy thử (chỉ đếm, không tiêu tiền) và chạy thật đều được thử (AC-7)."},
+    {"i": 6, "p": "Một lượt chạy một mình, và hai lượt lỡ chồng nhau (đêm và bù), đều được thử (AC-9)."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Số tiền xin duyệt cho lượt bù lúc đầu tính thiếu ngày 24/11 và không có ngưỡng dừng nếu ước lệch. Đã sửa: lượt bù chỉ còn 22–23/11, có trần riêng 6 USD, ước vượt 6 USD thì dừng và xin lại."},
+    {"i": 1, "p": "Khi hết giờ và bỏ ngày hôm kia, dòng báo không nói ngày nào, bao nhiêu bài; nhịp đọc sau lỗi quá nhịp chỉ giảm không tăng. Đã sửa: dòng báo nêu ngày và số bài, nhịp tăng lại sau một phút yên."},
+    {"i": 2, "p": "Chưa có gì chặn lượt bù và lượt đêm chạy chồng nhau, có thể đọc đôi và tiêu đôi. Đã sửa: thêm khoá một lượt và tiêu chí AC-9."},
+    {"i": 3, "p": "Lựa chọn «bốn bài cùng lúc» từng trích một câu đề xuất có hai lối như thể đã chốt. Đã sửa: căn cứ ghi lại là sức chứa đo được."},
+    {"i": 4, "p": "Lời hứa «chuỗi chạy đêm không vỡ» chưa có bộ kiểm nào chạy. Đã sửa: thêm bộ kiểm năm kịch bản job đêm."}
+  ],
+  "scope_plain": "Ngoài phạm vi việc này:"
+}
