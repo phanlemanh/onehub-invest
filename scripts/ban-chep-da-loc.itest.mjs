@@ -14,8 +14,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   chayChep, chayKiem, donHet, dsDbM5, moNguon, xuatDump, sha256Tep, tenDich, cauDemNguon, dx, BANG_CO_DONG, BANG_CAM, laBangCam,
-  COT_NGUON_GIU, phanTichNguon,
+  COT_NGUON_GIU, phanTichNguon, keHoachCot, cauDocNguon, loaiO, cauLocTenNguon, quaLocTho, bienTheLoc,
 } from "./ban-chep-da-loc.mjs";
+import { tokensFromEntries } from "../pipeline/lib/tier-a-guard.mjs";
 import { FILL, RENAME } from "../pipeline/sync-cloud.mjs";
 import { docSourceNameEntries } from "../pipeline/lib/source-name-entries.mjs";
 import { findSourceNames } from "../pipeline/lib/mask-source-names.mjs";
@@ -205,6 +206,54 @@ for (const [ten, mau, cay] of O_CAY) {
     assert.ok(!coDump(r.ra), "không được có tệp dump");
   });
 }
+
+/** Ô trúng TRƯỚC che, đếm độc lập trên phép chiếu của câu đọc nguồn (DB lượt): { "bảng_đích.cột": số ô }. */
+async function oTrungTruocChe() {
+  return voi(NGUON, async (c) => {
+    const tokens = tokensFromEntries(entries);
+    const dem = {};
+    for (const t of [...FILL, "source_registry"]) {
+      const { rows: cols } = await c.query(`SELECT a.attname AS c, ty.typname AS u FROM pg_attribute a JOIN pg_type ty ON ty.oid = a.atttypid
+        WHERE a.attrelid = to_regclass($1) AND a.attnum > 0 AND NOT a.attisdropped AND a.attgenerated = '' ORDER BY a.attnum`, [`public.${t}`]);
+      if (!cols.length) continue;
+      const ke = keHoachCot(t, cols.map((x) => x.c), tokens);
+      const chu = ke.cols.filter((col) => loaiO(cols.find((x) => x.c === col).u));
+      if (!chu.length) continue;
+      const { rows } = await c.query(`SELECT ${chu.map((x) => `${q(x)}::text AS ${q(x)}`).join(", ")} FROM (${cauDocNguon(t, ke.sql)}) x`);
+      for (const r of rows) for (const col of chu) {
+        if (r[col] != null && findSourceNames(r[col], entries).length) dem[`${RENAME(t)}.${col}`] = (dem[`${RENAME(t)}.${col}`] ?? 0) + 1;
+      }
+    }
+    return dem;
+  });
+}
+
+test("BCL-3: ca xanh — bộ soát 0 trúng sau che; ô che theo bảng.cột trong ke.json = ô trúng trước che", async () => {
+  const truoc = await oTrungTruocChe();
+  const r = await chep();
+  assert.equal(r.ma, 0, r.err);
+  inBCL3.push(r.out, r.err);
+  const ke = JSON.parse(readFileSync(path.join(r.ra, "ke.json"), "utf8"));
+  assert.deepEqual(ke.o_da_che, truoc, "ô che lệch ô trúng trước che");
+  assert.ok(Array.isArray(ke.khoa_ngoai_bo));
+});
+
+test("BCL-3: lọc thô SQL trả đúng tập của bản JS (quaLocTho) trên mẫu bịa", async () => {
+  const bia = [
+    { code: "S91", realName: "Quoxa Bds", wholeOnly: false }, { code: "S92", realName: "Zêlva Nhà", wholeOnly: true },
+    { code: "S93", realName: "vnk", wholeOnly: false }, { code: "S95", realName: "Đồng Lúa Xanh", wholeOnly: false },
+  ];
+  const mau = ["BÁN QUOXA BDS", "quoxa-bds", "zelva_nha", "zelva%20nha", "ZÊLVA-NHÀ", "Ze\u0302lva Nha\u0300", "abc vnk def", "ĐỒNG LÚA",
+    "donglua-xanh", "không có gì", "q u o x a", '{"quoxa_bds_id": 1}'];
+  const loc = bienTheLoc(bia);
+  await voi(NGUON, async (c) => {
+    await c.query("CREATE TEMP TABLE bcl_mau (v text)");
+    for (const s of mau) await c.query("INSERT INTO bcl_mau VALUES ($1)", [s]);
+    const sql = new Set((await c.query(cauLocTenNguon("bcl_mau", "v", bia).replace(/"bcl_mau"/, () => "pg_temp.bcl_mau"))).rows.map((x) => x.v));
+    const js = new Set(mau.filter((s) => quaLocTho(s, loc)));
+    assert.deepEqual([...sql].sort(), [...js].sort(), "lọc thô SQL khác bản JS");
+  });
+});
 
 test("BCL-3: đối chứng dương — chuỗi không có trong source_registry cấy vào ô text[] thì không trúng", async () => {
   const bia = "zzbcl-khong-phai-nguon-qx";

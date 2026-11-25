@@ -8,8 +8,9 @@ import { fileURLToPath } from "node:url";
 import {
   keHoachCot, cotThua, cauDocNguon, cauDemNguon, loiTenDich, tenDich, laBangCam, BANG_CO_DONG, COT_NGUON_GIU, thuTuChep,
   boDinhDanh, soatDongDdl, taoChe, dongTrung, doiTenDoiTuong, loaiO, docDoiSo, phanTichNguon, TEN_DICH_RE, TEN_KIEM_RE, TEN_M5_RE,
-  MAU_SINH_GIOI,
+  MAU_SINH_GIOI, quaLocTho, bienTheLoc,
 } from "./ban-chep-da-loc.mjs";
+import { findSourceNames } from "../pipeline/lib/mask-source-names.mjs";
 import { CLOUD_ALLOW, PII_EXCLUDE, SOURCE_EXCLUDE, selectList, SELLER_REF_RE } from "../pipeline/sync-cloud.mjs";
 
 const SCRIPT = path.join(path.dirname(fileURLToPath(import.meta.url)), "ban-chep-da-loc.mjs");
@@ -202,4 +203,34 @@ test("BCL-3: bộ lọc thô SQL là tập trên của lõi khớp (biến thể
   assert.match(sql, /OFFSET 0\) m/);
   assert.match(cauLocTenNguon("areas", "meta", []), /WHERE false/);
   assert.match(cauLocTenNguon("areas", "meta", BIA, { voiCtid: true }), /ctid::text AS id/);
+});
+
+// Lọc thô là TẬP CHA của findSourceNames (sổ d-…-26): mọi chuỗi lõi khớp bắt đều phải qua lọc thô. Mẫu bịa đủ biến thể.
+const BIA_LOC = [
+  { code: "S91", realName: "Quoxa Bds", wholeOnly: false },
+  { code: "S92", realName: "Zêlva Nhà", wholeOnly: true },
+  { code: "S93", realName: "vnk", wholeOnly: false },
+  { code: "S94", realName: "shop.kemtra.vn", wholeOnly: true },
+  { code: "S95", realName: "Đồng Lúa Xanh", wholeOnly: false },
+];
+const MAU_LOC = [
+  ["hoa_khong_dau", "BÁN NHÀ QUOXA BDS"], ["gach_noi", "quoxa-bds"], ["dinh_so", "quoxabds123"], ["dinh_chu", "xQuoxaBdsx"],
+  ["tu_dau", "bên quoxa nói"], ["co_dau_khong_dau", "Zelva Nha"], ["nhieu_trang", "zêlva   nhà"], ["gach_duoi", "zelva_nha"],
+  ["ma_url", "zelva%20nha"], ["hoa_co_dau", "ZÊLVA-NHÀ"], ["nfd", "Zêlva Nhà"], ["ngan_dung_rieng", "abc vnk def"],
+  ["ngan_hoa", "VNK"], ["mien_bo_nhan_dau", "kemtra.vn/abc"], ["mien_du", "https://shop.kemtra.vn/x"], ["dd", "ĐỒNG LÚA XANH"],
+  ["dd_lien", "donglua-xanh"], ["json", '{"quoxa_bds_id": 1}'],
+];
+const mauBiSot = (loc) => MAU_LOC.filter(([, s]) => findSourceNames(s, BIA_LOC).length && !quaLocTho(s, loc)).map(([ten]) => ten);
+
+test("BCL-2: lọc thô là tập cha của findSourceNames trên mẫu đủ biến thể", () => {
+  for (const [ten, s] of MAU_LOC) assert.ok(findSourceNames(s, BIA_LOC).length > 0, `mẫu ${ten} phải là chuỗi lõi khớp bắt`);
+  assert.deepEqual(mauBiSot(bienTheLoc(BIA_LOC)), []);
+});
+
+test("BCL-2: chiều đỏ — thu hẹp lọc thô thì nêu mẫu bị sót", () => {
+  const loc = bienTheLoc(BIA_LOC);
+  const khongLien = mauBiSot({ v: loc.v, lien: [] });
+  assert.ok(khongLien.includes("gach_duoi") && khongLien.includes("ma_url"), `bỏ bản viết liền phải sót gach_duoi, ma_url: ${khongLien.join(",")}`);
+  const motBienThe = mauBiSot({ v: loc.v.slice(0, 1), lien: [] });
+  assert.ok(motBienThe.length >= 10, `chỉ một biến thể phải sót nhiều mẫu: ${motBienThe.join(",")}`);
 });

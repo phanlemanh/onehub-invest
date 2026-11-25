@@ -26,6 +26,7 @@ import {
 import { docSourceNameEntries } from "../pipeline/lib/source-name-entries.mjs";
 import { tokensFromEntries } from "../pipeline/lib/tier-a-guard.mjs";
 import { findSourceNames, maskSourceNames, fold, nameVariants } from "../pipeline/lib/mask-source-names.mjs";
+import { cheGiaTri, cheChuJson } from "../pipeline/lib/che-ten-nguon-gia-tri.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 // scripts/ ở gốc không có node_modules: mượn pg của app (như scripts/dev-ops-account.mjs).
@@ -233,6 +234,15 @@ export function bienTheLoc(entries) {
  * sale_offers của máy thu — không dùng được cho bộ soát toàn bảng. Không LIMIT: lọc thô có thể trúng thừa, cắt N dòng đầu thì
  * một ô trúng thật phía sau bị bỏ. `voiCtid` trả thêm ctid cho bước che.
  */
+const FOLD_MAP = new Map(FOLD_FROM.map((ch, i) => [ch, FOLD_TO[i]]));
+/** Bản JS của đúng phép lọc thô SQL dưới (lower → translate theo bảng gập → position; bản bỏ dấu phân tách và mã %XX). Dùng cho ca
+ *  chứng tập cha (test thuần) và ca đối chiếu SQL = JS (itest). */
+export function quaLocTho(s, loc) {
+  const f = [...String(s).normalize("NFC").toLowerCase()].map((ch) => FOLD_MAP.get(ch) ?? ch).join("");
+  const g = f.replace(/(%[0-9a-f]{2}|[^\p{L}\p{N}])+/gu, "");
+  return loc.v.some((x) => f.includes(x)) || loc.lien.some((x) => g.includes(x));
+}
+
 export function cauLocTenNguon(table, col, entries, { voiCtid = false } = {}) {
   const { v, lien } = bienTheLoc(entries);
   if (!v.length) return `SELECT NULL::text AS v WHERE false`;
@@ -517,18 +527,30 @@ async function cotChuCoDong(c) {
 }
 
 /**
- * Che tên nguồn còn trong ô dữ liệu đã chép (thay tên bằng mã S0x, như bộ che của app). Đo 25/11 trên DB máy thu: tập FILL của
- * sync-cloud còn mang tên nguồn thật ở `areas.meta` (khoá và giá trị, ~500 dòng) và `listings.name`/`photo_urls` — bộ soát đích
- * (AC-3) sẽ đỏ trên mọi bản chép nếu không che. Bước này chỉ là che; bộ soát chạy SAU và độc lập. Trả { "bảng.cột": số ô }.
+ * Che tên nguồn còn trong ô dữ liệu đã chép, bằng hàm che chung pipeline/lib/che-ten-nguon-gia-tri.mjs (GS phán 25/11, sổ
+ * d-…-25): chữ tự do → mã S0x, phần tử URL trúng trong mảng bị bỏ, khoá/giá trị json trúng → mã. Đo 25/11 trên DB máy thu: tập FILL
+ * của sync-cloud còn mang tên nguồn ở areas.meta, listings.name, listings.photo_urls, sale_offers.street_raw. Ô trúng = lọc thô +
+ * findSourceNames trên chữ của ô (cùng định nghĩa bộ soát). Che xong ô vẫn trúng thì ném (không coi là đã che). Bộ soát chạy SAU và
+ * độc lập. Trả { "bảng.cột": số ô đã che }.
  */
-export async function cheGiaTri(dc, entries) {
+export async function cheODich(dc, entries) {
   const dem = {};
   for (const r of await cotChuCoDong(dc)) {
     const { rows } = await dc.query(cauLocTenNguon(r.t, r.c, entries, { voiCtid: true }));
-    for (const x of rows) {
-      if (!findSourceNames(x.v, entries).length) continue;
-      const moi = maskSourceNames(x.v, entries);
-      if (moi == null) throw new Error(`không che được ${r.t}.${r.c}`);
+    const ids = rows.filter((x) => findSourceNames(x.v, entries).length).map((x) => x.id);
+    if (!ids.length) continue;
+    const json = /^_?jsonb?$/.test(r.udt);
+    const mang = r.udt.startsWith("_");
+    // Ô mảng chữ đọc dạng đã giải (pg trả mảng JS); ô json đọc dạng chữ để giữ nguyên chữ số; ô chữ đọc dạng chữ.
+    const { rows: goc } = await dc.query(
+      `SELECT ctid::text AS id, ${json || !mang ? `${q(r.c)}::text` : q(r.c)} AS raw FROM ${q(r.t)} WHERE ctid = ANY($1::tid[])`, [ids]);
+    for (const x of goc) {
+      let moi;
+      if (json && !mang) moi = cheChuJson(x.raw, entries).text;
+      else if (mang && !json) moi = cheGiaTri(x.raw, entries).giaTri;
+      else moi = maskSourceNames(x.raw, entries); // json[] hay kiểu chữ khác: thay chữ trên toàn ô
+      const chu = moi == null ? null : json && !mang ? moi : mang && !json ? JSON.stringify(moi) : String(moi);
+      if (chu == null || findSourceNames(chu, entries).length) throw new Error(`không che hết ô ${r.t}.${r.c}`);
       await dc.query(`UPDATE ${q(r.t)} SET ${q(r.c)} = $1::${r.kieu} WHERE ctid = $2::tid`, [moi, x.id]);
       dem[`${r.t}.${r.c}`] = (dem[`${r.t}.${r.c}`] ?? 0) + 1;
     }
@@ -639,7 +661,7 @@ export async function chayChep({ nguonUrl = NGUON_MAC_DINH, dich = tenDich(), ra
     }
     const doiTen = await doiTenRefCalib(dc);
     const hamBo = await boHamNhacTenCu(dc);
-    const daChe = await cheGiaTri(dc, entries);
+    const daChe = await cheODich(dc, entries);
     for (const [k, n] of Object.entries(daChe)) out(`che tên nguồn → mã: ${k} ${n} ô`);
     for (const t of chep) soDong[RENAME(t)] = (await demDong(dc, [RENAME(t)]))[RENAME(t)];
     out(`chép xong ${chep.length} bảng (${Object.values(soDong).reduce((a, b) => a + b, 0)} dòng), view → bảng: ${view.thanhBang.join(", ") || "—"}`);
