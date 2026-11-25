@@ -19,7 +19,7 @@ evals:
     criterion: AC-3
     executor: script
     cmd: config:executors.script.bcl_soat
-    expected: "exit 0; ca xanh 0 trúng; ma trận cấy viết trước tám ô — ô text, ô json, ô text[], thân hàm, định nghĩa view, COMMENT ON, DEFAULT, nhãn enum — mỗi ô thoát 1, thông điệp nêu chỗ, không chứa token, DB đích bị xoá, không có tệp dump; số ca = 8. Đối chứng dương: token không có trong source_registry cấy vào ô text[] thì không trúng"
+    expected: "exit 0; ca xanh 0 trúng; ma trận cấy viết trước mười ô — ô text, ô json, ô text[], thân hàm, định nghĩa view, COMMENT ON, DEFAULT, nhãn enum, tên ràng buộc, tên chỉ mục — mỗi ô thoát 1, thông điệp nêu chỗ, không chứa token, DB đích bị xoá, không có tệp dump; số ca = 10; toàn bộ stdout/stderr của mười ca không chứa token nào của từ điển. Đối chứng dương: token không có trong source_registry cấy vào ô text[] thì không trúng"
     paths: [scripts/ban-chep-da-loc.mjs, scripts/ban-chep-da-loc.itest.mjs]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4
@@ -33,7 +33,7 @@ evals:
     criterion: AC-5
     executor: script
     cmd: config:executors.script.bcl_nguon
-    expected: "exit 0; source_registry đích chỉ mã + vai trò, real_name, source_ids NULL; cấy real_name thì thoát 1"
+    expected: "exit 0; source_registry đích chỉ mã + vai trò, mọi cột khác NULL; cấy real_name thì thoát 1"
     paths: [scripts/ban-chep-da-loc.mjs, scripts/ban-chep-da-loc.itest.mjs]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E6
@@ -54,8 +54,15 @@ evals:
     criterion: AC-8
     executor: script
     cmd: config:executors.script.bcl_kiem
-    expected: "exit 0; --kiem trên dump xanh: số dòng = ke.json, sha256 khớp; ca đỏ 1: sửa một byte tệp dump thì đỏ với thông điệp ghim «sha256»; ca đỏ 2: dump hợp lệ, sha khớp, ke.json sửa lệch một dòng ở một bảng thì đỏ với thông điệp ghim đúng tên bảng; DB tạm không còn sau cả ba ca"
+    expected: "exit 0; --kiem trên dump xanh: số dòng = ke.json, sha256 khớp; ca đỏ 1: sửa một byte tệp dump thì đỏ với thông điệp ghim «sha256»; ca đỏ 2: dump hợp lệ, sha khớp, ke.json sửa lệch một dòng ở một bảng thì đỏ với thông điệp ghim đúng tên bảng; DB tạm không còn sau cả ba ca; --khong-tu-dien trên dump xanh thoát 0, trên dump cấy một dòng sessions thoát 1 nêu bảng"
     paths: [scripts/ban-chep-da-loc.mjs, scripts/ban-chep-da-loc.itest.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.script.bcl_don
+    expected: "exit 0; có sẵn một oneinvest_m5_ cũ → chép mới xong chỉ còn đúng một DB oneinvest_m5_*; lệnh bị ngắt giữa bước chép (lỗi cấy) → không còn DB đích; --don → 0 DB oneinvest_m5_*; git check-ignore state/ban-chep-m5/x thoát 0; nguonSaoLuu của scripts/lib/sao-luu-ngoai-may.mjs không trả đường nào nằm dưới state/ban-chep-m5. Chiều đỏ: bản chép bỏ bước xoá bản cũ thì ca nêu hai DB"
+    paths: [scripts/ban-chep-da-loc.mjs, scripts/ban-chep-da-loc.itest.mjs, scripts/lib/sao-luu-ngoai-may.mjs, .gitignore]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E9
     criterion: AC-9

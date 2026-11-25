@@ -381,6 +381,7 @@ executors:
     bcl_sinh: "bash db/db-thu.sh oneinvest_suite_bcl --chay node --test --test-concurrency=1 --test-name-pattern='^BCL-6:' scripts/ban-chep-da-loc.itest.mjs"   # ban-chep-da-loc-cho-may-phat-trien E6 — ngày sinh/giới tính, schema lạ thì đỏ
     bcl_chi_doc: "bash db/db-thu.sh oneinvest_suite_bcl --chay node --test --test-concurrency=1 --test-name-pattern='^BCL-7:' scripts/ban-chep-da-loc.itest.mjs"   # ban-chep-da-loc-cho-may-phat-trien E7 — nguồn chỉ đọc, vân tay trước = sau, đích sai khuôn mã 2
     bcl_kiem: "bash db/db-thu.sh oneinvest_suite_bcl --chay node --test --test-concurrency=1 --test-name-pattern='^BCL-8:' scripts/ban-chep-da-loc.itest.mjs"   # ban-chep-da-loc-cho-may-phat-trien E8 — --kiem khôi phục dump, so ke.json
+    bcl_don: "bash db/db-thu.sh oneinvest_suite_bcl --chay node --test --test-concurrency=1 --test-name-pattern='^BCL-10:' scripts/ban-chep-da-loc.itest.mjs"   # ban-chep-da-loc-cho-may-phat-trien E10 — trần một DB m5 sống, --don, đầu ra ngoài git và sao lưu
     bcl_that: "node scripts/ban-chep-da-loc-that.mjs"   # ban-chep-da-loc-cho-may-phat-trien E9 — DB máy thu thật chỉ đọc, data-api + Invest chạy trên bản chép; ngoài CI
     ht13_ap: "bash _acceptance/tran-tong-luot-dem-va-tran-doc-gop/ap-may-thu/kiem.sh"   # tran-tong-luot-dem-va-tran-doc-gop E9 — README áp đủ năm mục, lệnh kiểm sau chấm đúng ba log mẫu
     ht12_ap: "bash _acceptance/doc-gop-dong-ho-rieng-trong-luot-dem/ap-may-thu/kiem.sh"   # doc-gop-dong-ho-rieng-trong-luot-dem E9 — README áp đủ năm mục, kiem-sau.sh chấm đúng chín ca

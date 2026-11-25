@@ -45,12 +45,16 @@ Các ô bỏ: Ops trên M5 — ngoài phạm vi, vì lời giao chỉ nêu API +
 
 DB máy thu chỉ đọc; không ghi cloud; không chuyển tệp đi đâu.
 
-## 3. Quyết định cần người (lên thẻ)
+## 3. Quyết định
 
-- Hỏi-1 (khó đảo): chuyển bản chép sang M5 qua LAN thế nào, ai chạy.
-- Hỏi-2: `source_registry` trên bản chép chỉ mã S0x + vai trò.
-- Hỏi-3: `stg_zalo_posts` không chép — đoạn chữ bài trong `/v1/deals` của data-api rỗng trên M5.
-- Hỏi-4: lược đồ đích đổ từ DB máy thu (khớp app đang chạy, kèm soát DDL) hay dựng từ `db/migrations` (đã review, phải dọn seed).
+GS phán 25/11 (câu cách làm): `source_registry` chỉ mã S0x + vai trò; không chép mọi `stg_*` (gồm `stg_zalo_posts` —
+`/v1/deals` trên M5 thiếu chữ bài, HT19 đóng phần đó); lược đồ đổ từ DB máy thu, bộ soát DDL quét COMMENT, DEFAULT, CHECK, thân
+view/hàm, nhãn enum, tên ràng buộc, tên chỉ mục, mỗi loại một ô cấy, từ điển không in ra log.
+Điều kiện thêm: DB đích là DB tạm, trần một bản sống, có `--don`; `state/ban-chep-m5/` ngoài git và ngoài sao lưu ra ngoài máy.
+
+Còn một câu cho Mạnh — Hỏi-1 (khó đảo): chuyển sang M5. Khuyến nghị: Mạnh tự chép tay qua LAN tệp
+`state/ban-chep-m5/oneinvest-m5-<ngày>.dump` (băm sha256 ở `ke.json` cùng thư mục), rồi trên M5 chạy
+`node scripts/ban-chep-da-loc.mjs --kiem <tệp> --khong-tu-dien`.
 
 ## 4. Giới hạn đã biết
 
