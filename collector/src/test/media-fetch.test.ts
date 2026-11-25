@@ -220,7 +220,7 @@ test("media (2511-3): URL /jpg/ bị CDN 400 → fallback bỏ /jpg/ tải đư�
   // payload + meta.url giữ URL gốc nguyên văn — fallback chỉ ghi ở urlFetched
   assert.deepEqual(items[0].payload.media, [{ path: null, url: `${base}/jpg/broken.jpg`, type: "image/jpeg" }]);
   assert.equal(mf.url, `${base}/jpg/broken.jpg`);
-  assert.equal(mf.urlFetched, `${base}/broken.jpg`);
+  // urlFetched đã bỏ khỏi meta theo 2511-14 — xuất xứ giữ qua tên file băm theo URL alt
   assert.equal(mf.file, mediaEntry.name);
   assert.equal(mf.error, undefined);
   // nội dung trên đĩa khớp bytes fixture

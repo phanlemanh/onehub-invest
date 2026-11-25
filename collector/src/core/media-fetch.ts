@@ -11,8 +11,6 @@ import type { RawItem } from "./types.js";
 
 export type MediaFileEntry = {
   url: string;
-  /** URL thật đã tải khi dùng phương án thay thế 400-/jpg/ (2511-3); khác `url`. */
-  urlFetched?: string;
   file?: string;
   sha256?: string;
   bytes?: number;
@@ -222,8 +220,8 @@ export async function fetchMessageMedia(params: {
         entries.set(
           url,
           written
-            ? { url, urlFetched: fetchedUrl === url ? undefined : fetchedUrl, file: name, sha256: written.sha256, bytes: written.bytes }
-            : { url, urlFetched: fetchedUrl === url ? undefined : fetchedUrl, file: name }, // đã ghi trong flush này — tái dùng
+            ? { url, file: name, sha256: written.sha256, bytes: written.bytes }
+            : { url, file: name }, // đã ghi trong flush này — tái dùng
         );
       } catch {
         entries.set(url, { url, error: "write-failed" });
