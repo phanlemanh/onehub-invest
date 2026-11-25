@@ -15,7 +15,7 @@
 // duy nhất lệnh đẩy dùng. Giá trị riêng máy (địa chỉ cầu, người dùng, đường khoá, tên máy) đọc từ ~/.config/onehub/hai-may.env —
 // không in đường khoá riêng, không in nội dung khoá riêng. Mã thoát: 0 đạt · 1 không đạt · 2 cấu hình/đối số sai · 3 cầu không thông.
 import { spawn, spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync, chmodSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync, chmodSync, realpathSync } from "node:fs";
 import net from "node:net";
 import os from "node:os";
 import path from "node:path";
@@ -408,6 +408,6 @@ async function main() {
   return LENH[lenh](cfg);
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   main().then((m) => { process.exitCode = m; }).catch((e) => { console.error(`day-ban-chep-kiem-m5: lỗi — ${String(e?.message ?? e).slice(0, 300)}`); process.exit(1); });
 }
