@@ -39,7 +39,7 @@ Source input: lời giao `m5-2411-4` (gs nhận đề xuất, mã PB2, PB1 gộp
   `priceVnd`, `areaM2`, `pricePerm2`, `bedrooms`, `phuong`, `marketId`, `firstSeen`, `lastSeen`, `nReposts`, `id`, `name`,
   `priceListed`, `lat`, `lng`, `photoUrls`, `area`, `market`, `stats`, `photos`).
 - AC-2: Given tin thuê ngắn hạn cấy trong `listings` (có ảnh, có đêm trong `nights`) và một tin không ảnh, When gọi
-  `GET /v1/listings?kind=rent_st`, Then phần tử có cùng tập khoá như AC-1, `kind` = `rent_st`, `leaseAmount` = giá đêm,
+  `GET /v1/listings?kind=rent_st`, Then phần tử có cùng tập khoá như AC-1, `kind` = `rent_st`, `leaseAmount` = giá niêm yết một đêm (`price_listed`) của dòng cấy,
   `leaseAmountFrequency` = `Daily`, `propertyType` = `Residential Lease`, `propertySubType` null, `originatingSystemName` =
   `S01`, `media` = `[{mediaURL, order}]` theo đúng thứ tự ảnh cấy (tin không ảnh: `media` null), `listingTitle`, `roomType`,
   `accommodates`, `minimumNights`, `reviewCount`, `occupancyRate`, `averageDailyRevenue` khớp dòng cấy; và `listingKey` =
@@ -91,7 +91,7 @@ Source input: lời giao `m5-2411-4` (gs nhận đề xuất, mã PB2, PB1 gộp
   `_acceptance/data-api-hop-dong-reso-dd-2-1/**`, đúng các khoá `executors.*.dapi_reso*` thêm vào `_acceptance/config.yaml`,
   `PRODUCT-MAP.md`, `LO-TRINH.html` (kit vẽ lại), và ba test app ghim hình `/v1/deals` nếu gs cho (`app/tests/can-gia-cung-loai-db.test.tsx`,
   `hang-gia-doc.test.tsx`, `gia-tot-du-an-doc.test.tsx` — chỉ đổi bảng khoá `/v1/deals` sang khoá mới, không đổi ca khác);
-  (b) toàn cây `data-api/` không có tên nguồn thật nào ngoài dạng định danh có `_` liền kề (bộ rút tên
+  (b) toàn cây `data-api/` không có tên nguồn thật nào ngoài dạng định danh có `_` liền kề (bộ lấy tên
   `scripts/lib/tier-a-source-names.mjs`, không in tên); (c) `/openapi.json` có schema phần tử listing sinh từ tệp hợp đồng
   (tập khoá bằng tập khoá của `listing.ts`), `/health` và `info.version` = `0.2.0` (máy đo, ca test riêng); (d) `data-api/README.md` có bảng tên cũ → tên mới và mô tả ba
   đường đúng hình mới, `data-api/CLAUDE.md` có luật «khoá phần tử listing chỉ thêm qua tệp hợp đồng, tra DD 2.1 trước»
