@@ -23,7 +23,7 @@ import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 import { RunStopped } from "./client.js";
-import { LOI_VINH_VIEN_ANH, duoiCua, hashUrl, taiAnh, tenTepCua, type KetQuaTai } from "./anh.js";
+import { LOI_VINH_VIEN_ANH, duoiCua, hashUrl, taiAnh, tenTepCua, type GiaiTen, type KetQuaTai } from "./anh.js";
 import { projectImages } from "./catalog.js";
 import { makeItem } from "./kinds.js";
 import type { KeoDan } from "./keo-dan.js";
@@ -43,6 +43,8 @@ export type AnhPhaseOptions = {
   userAgent: string;
   /** Đệm thử trong test; mặc định fetch toàn cục. */
   fetchImpl?: typeof fetch;
+  /** Đệm thử trong test; mặc định hỏi bộ giải tên của hệ điều hành (chỉ máy chủ ngoài). */
+  dnsLookup?: GiaiTen;
   /** Số lượt thử một URL lỗi tạm trước khi ghi nhận `qua-so-lan-thu` (mặc định 3). */
   toiDaLanThu?: number;
 };

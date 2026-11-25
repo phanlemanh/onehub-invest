@@ -261,7 +261,7 @@ const chayAnh = (dir: string, fetchImpl: typeof fetch, o: { soFile?: number; luo
       now: () => new Date(GIO),
       snapshotRoot: dir,
       tienDoDir: join(dir, "tien-do"),
-      anh: { hostSuffixes: ["cdn.gia.test"], chiNgoai: o.chiNgoai ?? false, luongSong: o.luongSong ?? 2, maxBytes: 1024 * 1024, timeoutMs: 5000, userAgent: "oneinvest-collector/1", fetchImpl },
+      anh: { dnsLookup: async () => ["1.2.3.4"], hostSuffixes: ["cdn.gia.test"], chiNgoai: o.chiNgoai ?? false, luongSong: o.luongSong ?? 2, maxBytes: 1024 * 1024, timeoutMs: 5000, userAgent: "oneinvest-collector/1", fetchImpl },
       keoDan,
     }).then(async (s) => {
       await w.flush();
@@ -1036,7 +1036,7 @@ test("parcels-cell: giới hạn số ô một lượt; dừng giữa ô (quá t
 
 // ---------- sửa theo lượt soát 25/11: tải ảnh an toàn và phân loại lỗi đúng ----------
 
-import { phanLoaiMayChu, taiAnh } from "../collectors/s17-thua-dinh-gia/anh.js";
+import { diaChiNoiBo, phanLoaiMayChu, taiAnh } from "../collectors/s17-thua-dinh-gia/anh.js";
 
 const TUY_CHON = { maxBytes: 1024, timeoutMs: 5000, userAgent: "oneinvest-collector/1", duoiNguon: ["cdn.gia.test"], keNgoai: false };
 
@@ -1124,13 +1124,57 @@ test("taiAnh: HTTP 200 nhưng thân là trang HTML là trang thử thách → b�
       e.name = ten;
       throw e;
     }).fetchImpl;
-  assert.equal((await taiAnh("https://anh.example.org/a", { ...TUY_CHON, keNgoai: true, fetchImpl: voi("ENOTFOUND", "TypeError") })).loi, "may-chu-khong-ton-tai");
-  assert.equal((await taiAnh("https://anh.example.org/a", { ...TUY_CHON, keNgoai: true, fetchImpl: voi("EAI_AGAIN", "TypeError") })).loi, "loi", "tạm thời không phân giải được là lỗi tạm");
-  assert.equal((await taiAnh("https://anh.example.org/a", { ...TUY_CHON, keNgoai: true, fetchImpl: voi("CERT_HAS_EXPIRED", "TypeError") })).loi, "chung-chi");
-  assert.equal((await taiAnh("https://anh.example.org/a", { ...TUY_CHON, keNgoai: true, fetchImpl: voi("ECONNREFUSED", "TypeError") })).loi, "may-chu-khong-tra-loi");
+  const congKhai = { dnsLookup: async (): Promise<string[]> => ["1.2.3.4"] }; // máy chủ ngoài được giải tên sang địa chỉ công khai (không hỏi DNS thật)
+  assert.equal((await taiAnh("https://anh.example.org/a", { ...TUY_CHON, keNgoai: true, ...congKhai, fetchImpl: voi("ENOTFOUND", "TypeError") })).loi, "may-chu-khong-ton-tai");
+  assert.equal((await taiAnh("https://anh.example.org/a", { ...TUY_CHON, keNgoai: true, ...congKhai, fetchImpl: voi("EAI_AGAIN", "TypeError") })).loi, "loi", "tạm thời không phân giải được là lỗi tạm");
+  assert.equal((await taiAnh("https://anh.example.org/a", { ...TUY_CHON, keNgoai: true, ...congKhai, fetchImpl: voi("CERT_HAS_EXPIRED", "TypeError") })).loi, "chung-chi");
+  assert.equal((await taiAnh("https://anh.example.org/a", { ...TUY_CHON, keNgoai: true, ...congKhai, fetchImpl: voi("ECONNREFUSED", "TypeError") })).loi, "may-chu-khong-tra-loi");
   const hetGio = await taiAnh("https://a.cdn.gia.test/a", { ...TUY_CHON, fetchImpl: voi("UND_ERR_CONNECT_TIMEOUT", "TypeError") });
   assert.equal(hetGio.loi, "loi");
   assert.equal(hetGio.chiTiet, "timeout");
+});
+
+test("diaChiNoiBo: IPv4 dải riêng/đặc biệt và IPv6 (loopback, ULA, link-local, multicast, ánh xạ IPv4, NAT64, 6to4, Teredo, ngoài dải công khai) đều là nội bộ; địa chỉ công khai là false; không đọc được thì coi là cấm", () => {
+  const trong = [
+    "10.0.0.1", "100.64.0.1", "100.127.255.254", "127.0.0.1", "169.254.169.254", "172.16.0.1", "172.31.255.255", "192.168.1.1", "0.0.0.0", "224.0.0.1", "255.255.255.255",
+    "::", "::1", "fc00::1", "fd12:3456::1", "fe80::1", "ff02::1", "::ffff:10.0.0.1", "::ffff:127.0.0.1", "64:ff9b::a00:1", "2002:a00:1::", "2001:db8::1", "2001::1", "100::1", "4000::1", "::10.0.0.1",
+  ];
+  const ngoai = ["8.8.8.8", "1.1.1.1", "172.32.0.1", "172.15.0.1", "192.169.0.1", "100.63.255.255", "100.128.0.1", "2400:cb00::1", "2606:4700::1", "2001:4860:4860::8888", "::ffff:8.8.8.8", "64:ff9b::808:808", "2002:808:808::1", "2a00:1450:4001:81b::200e"];
+  for (const ip of trong) assert.equal(diaChiNoiBo(ip), true, ip);
+  for (const ip of ngoai) assert.equal(diaChiNoiBo(ip), false, ip);
+  assert.equal(diaChiNoiBo("khong-phai-dia-chi"), true, "không đọc được địa chỉ thì cấm");
+});
+
+test("taiAnh: máy chủ ngoài có tên trỏ tới địa chỉ dải riêng (theo DNS) thì KHÔNG kết nối — kể cả ở bước chuyển hướng; máy chủ của nguồn không cần hỏi DNS; lỗi DNS phân theo nguyên nhân", async () => {
+  const f = fetchGia(() => new Response(new Uint8Array([1])));
+  const giai = (ds: string[]) => {
+    const daHoi: string[] = [];
+    return { daHoi, dnsLookup: (async (h: string) => (daHoi.push(h), ds)) as never };
+  };
+  const r1 = await taiAnh("https://anh.example.org/a.jpg", { ...TUY_CHON, keNgoai: true, fetchImpl: f.fetchImpl, ...giai(["10.0.0.5"]) });
+  assert.equal(r1.loi, "cam-may-chu");
+  assert.equal(r1.chiTiet, "dns-noi-bo");
+  assert.equal(f.daGoi.length, 0, "không gửi lời nào");
+  const hon = giai(["1.2.3.4", "192.168.1.1"]);
+  assert.equal((await taiAnh("https://anh.example.org/a.jpg", { ...TUY_CHON, keNgoai: true, fetchImpl: f.fetchImpl, dnsLookup: hon.dnsLookup })).loi, "cam-may-chu", "một trong nhiều địa chỉ là dải riêng thì cấm");
+  assert.deepEqual(hon.daHoi, ["anh.example.org"], "hỏi theo tên máy chủ, không kèm cổng");
+  const r3 = await taiAnh("https://anh.example.org/a.jpg", { ...TUY_CHON, keNgoai: true, fetchImpl: f.fetchImpl, ...giai(["2606:4700::1"]) });
+  assert.equal(r3.loi, "ok", "địa chỉ công khai thì tải bình thường");
+  const chuyen = fetchGia(() => new Response(null, { status: 302, headers: { location: "https://doc.example.net:8443/x" } }));
+  const r4 = await taiAnh("https://a.cdn.gia.test/a", { ...TUY_CHON, keNgoai: true, fetchImpl: chuyen.fetchImpl, ...giai(["127.0.0.1"]) });
+  assert.equal(r4.loi, "chuyen-huong-cam", "bước chuyển hướng tới tên trỏ vào dải riêng: dừng");
+  assert.equal(chuyen.daGoi.length, 1);
+  const khongHoi = giai([]);
+  const r5 = await taiAnh("https://a.cdn.gia.test/a", { ...TUY_CHON, fetchImpl: f.fetchImpl, dnsLookup: khongHoi.dnsLookup });
+  assert.equal(r5.loi, "ok");
+  assert.deepEqual(khongHoi.daHoi, [], "máy chủ của nguồn (cấu hình local) không cần hỏi DNS");
+  const ipThang = giai([]);
+  assert.equal((await taiAnh("http://1.2.3.4/a.jpg", { ...TUY_CHON, keNgoai: true, fetchImpl: f.fetchImpl, dnsLookup: ipThang.dnsLookup })).loi, "ok", "địa chỉ viết thẳng thì không hỏi DNS");
+  assert.deepEqual(ipThang.daHoi, []);
+  const r6 = await taiAnh("https://anh.example.org/a.jpg", { ...TUY_CHON, keNgoai: true, fetchImpl: f.fetchImpl, dnsLookup: (async () => { throw Object.assign(new Error("không phân giải được"), { code: "ENOTFOUND" }); }) as never });
+  assert.equal(r6.loi, "may-chu-khong-ton-tai", "DNS trả lỗi thì phân loại như lỗi mạng của fetch");
+  const r7 = await taiAnh("https://anh.example.org/a.jpg", { ...TUY_CHON, keNgoai: true, fetchImpl: f.fetchImpl, dnsLookup: (async () => { throw Object.assign(new Error("lưu tạm"), { code: "EAI_AGAIN" }); }) as never });
+  assert.equal(r7.loi, "loi", "EAI_AGAIN là lỗi tạm");
 });
 
 // ---------- pha ảnh sau lượt soát: mã ổn định, giới hạn lần thử, máy chủ ngoài ----------

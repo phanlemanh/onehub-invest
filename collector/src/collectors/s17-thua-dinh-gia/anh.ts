@@ -19,6 +19,8 @@
  * tệp rỗng, máy chủ không tồn tại, chứng chỉ hỏng) ghi nhận một lần; tạm (mạng, 5xx, hết giờ) thì lượt sau thử lại.
  */
 import { createHash } from "node:crypto";
+import { lookup as lookupHeDieuHanh } from "node:dns/promises";
+import { isIP } from "node:net";
 
 const DUOI_THEO_KIEU: Record<string, string> = {
   "image/jpeg": ".jpg",
@@ -115,6 +117,69 @@ function ip4NoiBo(ip: string): boolean {
   );
 }
 
+/** IPv6 → tám nhóm 16 bit (nhận cả dạng kết hợp `…:a.b.c.d` và `[địa chỉ]`); không đọc được → null. */
+function ip6ThanhSo(ip: string): number[] | null {
+  let s = ip.toLowerCase().replace(/^\[|\]$/g, "");
+  const iVung = s.indexOf("%"); // định danh vùng của link-local: bỏ
+  if (iVung >= 0) s = s.slice(0, iVung);
+  let v4: number[] | null = null;
+  const cuoiV4 = /^(.*:)(\d{1,3}(?:\.\d{1,3}){3})$/.exec(s);
+  if (cuoiV4) {
+    v4 = cuoiV4[2].split(".").map(Number);
+    s = `${cuoiV4[1]}0:0`;
+  }
+  const phan = s.split("::");
+  if (phan.length > 2) return null;
+  const trai = phan[0] ? phan[0].split(":") : [];
+  const phai = phan.length === 2 ? (phan[1] ? phan[1].split(":") : []) : [];
+  const n = trai.length + phai.length;
+  if (n > 8 || (phan.length === 1 && n !== 8)) return null;
+  const ra = [...trai, ...Array(8 - n).fill("0"), ...phai].map((x) => (/^[0-9a-f]{1,4}$/.test(x) ? parseInt(x, 16) : NaN));
+  if (ra.some((x) => Number.isNaN(x))) return null;
+  if (v4) {
+    ra[6] = (v4[0] << 8) | v4[1];
+    ra[7] = (v4[2] << 8) | v4[3];
+  }
+  return ra;
+}
+
+function ip6NoiBo(r: number[]): boolean {
+  const [a, b, c, d, e, f, g, h] = r;
+  const ip4Cua = (x: number, y: number) => `${x >> 8}.${x & 255}.${y >> 8}.${y & 255}`;
+  if (a === 0 && b === 0 && c === 0 && d === 0) {
+    if (e === 0 && f === 0xffff) return ip4NoiBo(ip4Cua(g, h)); // ::ffff:a.b.c.d
+    return true; // ::, ::1 và các dạng cũ của ::/96
+  }
+  if (a === 0x64 && b === 0xff9b && c === 0 && d === 0 && e === 0 && f === 0) return ip4NoiBo(ip4Cua(g, h)); // NAT64 64:ff9b::/96
+  if (a === 0x2002) return ip4NoiBo(ip4Cua(b, c)); // 6to4 mang IPv4 trong hai nhóm đầu
+  if (a === 0x100 && b === 0 && c === 0 && d === 0) return true; // 100::/64 (chỉ bỏ đi)
+  if (a === 0x2001 && (b === 0 || b === 0xdb8)) return true; // Teredo 2001::/32, tài liệu 2001:db8::/32
+  if ((a & 0xfe00) === 0xfc00 || (a & 0xffc0) === 0xfe80 || (a & 0xff00) === 0xff00) return true; // ULA, link-local, multicast
+  return (a & 0xe000) !== 0x2000; // ngoài dải unicast công khai 2000::/3
+}
+
+/**
+ * Địa chỉ IP có thuộc dải nội bộ/đặc biệt không (cho kết quả giải tên máy chủ): IPv4 dải riêng, IPv6 loopback/ULA/
+ * link-local/multicast và mọi dạng mang IPv4 trong ruột. Không đọc được → coi là nội bộ (cấm).
+ */
+export function diaChiNoiBo(ip: string): boolean {
+  const s = ip.toLowerCase().replace(/^\[|\]$/g, "");
+  const v6 = ip6ThanhSo(s);
+  if (v6) return ip6NoiBo(v6);
+  return /^\d{1,3}(?:\.\d{1,3}){3}$/.test(s) ? ip4NoiBo(s) : true;
+}
+
+/** Giải tên máy chủ thành mọi địa chỉ; mặc định dùng bộ giải của hệ điều hành (cùng nguồn với fetch). */
+export type GiaiTen = (host: string) => Promise<string[]>;
+
+const GIAI_TEN_MAC_DINH: GiaiTen = async (host) => (await lookupHeDieuHanh(host, { all: true, verbatim: true })).map((x) => x.address);
+
+/** Máy chủ ngoài có tên trỏ tới (một trong các) địa chỉ nội bộ thì không được kết nối. */
+async function giaiVaoNoiBo(host: string, giai: GiaiTen): Promise<boolean> {
+  if (isIP(host)) return false; // địa chỉ viết thẳng: phanLoaiMayChu đã kiểm
+  return (await giai(host)).some(diaChiNoiBo);
+}
+
 export type LopMayChu = "nguon" | "ngoai" | "cam";
 
 export type MayChuOptions = {
@@ -198,9 +263,10 @@ export function phanLoiPhanHoi(status: number, contentType: string | null | unde
   return "loi";
 }
 
-/** Lỗi mạng theo nguyên nhân: không phân giải được tên hay chứng chỉ hỏng là vĩnh viễn; còn lại là tạm. */
+/** Lỗi mạng theo nguyên nhân: không phân giải được tên hay chứng chỉ hỏng là vĩnh viễn; còn lại là tạm. Nhận cả lỗi của fetch (code trong `cause`) và của bộ giải tên (code ở gốc). */
 function phanLoiMang(e: unknown): { loi: LoiAnh; chiTiet: string } {
-  const code = String((e as { cause?: { code?: unknown } } | null)?.cause?.code ?? "");
+  const goc = e as { cause?: { code?: unknown }; code?: unknown } | null;
+  const code = String(goc?.cause?.code ?? goc?.code ?? "");
   if (/^ENOTFOUND|^EAI_FAIL|^EAI_NODATA|^EAI_NONAME/.test(code)) return { loi: "may-chu-khong-ton-tai", chiTiet: code };
   if (/^CERT_|^ERR_TLS_|SELF_SIGNED|ALTNAME/.test(code)) return { loi: "chung-chi", chiTiet: code };
   if (/^ECONNREFUSED|^ENETUNREACH|^EHOSTUNREACH/.test(code)) return { loi: "may-chu-khong-tra-loi", chiTiet: code };
@@ -216,18 +282,34 @@ export type TaiAnhOptions = MayChuOptions & {
   userAgent: string;
   /** Đệm thử trong test; mặc định fetch toàn cục. */
   fetchImpl?: typeof fetch;
+  /** Đệm thử trong test; mặc định hỏi bộ giải của hệ điều hành (chỉ máy chủ ngoài mới hỏi). */
+  dnsLookup?: GiaiTen;
   /** Số bước chuyển hướng nhiều nhất (mặc định 5). */
   toiDaChuyenHuong?: number;
 };
 
 const CHUYEN_HUONG = new Set([301, 302, 303, 307, 308]);
 
-/** Tải một tệp. Không bao giờ để fetch tự đi theo chuyển hướng: mỗi bước đều kiểm máy chủ đích trước khi gửi. */
+/**
+ * Tải một tệp. Không bao giờ để fetch tự đi theo chuyển hướng: mỗi bước đều kiểm máy chủ đích trước khi gửi. Máy chủ
+ * ngoài lấy từ nội dung dự án nên tên có thể trỏ vào dải riêng: giải tên xong mới kết nối (khoảng hở: tên đổi bản ghi
+ * giữa lúc giải và lúc kết nối — hẹp, chấp nhận ở máy thu này).
+ */
 export async function taiAnh(url: string, o: TaiAnhOptions): Promise<KetQuaTai> {
-  if (phanLoaiMayChu(url, o) === "cam") return { url, loi: "cam-may-chu", http: 0 };
   const toiDa = o.toiDaChuyenHuong ?? 5;
   let hienTai = url;
   for (let buoc = 0; buoc <= toiDa; buoc++) {
+    const lop = phanLoaiMayChu(hienTai, o);
+    if (lop === "cam") return { url, loi: buoc === 0 ? "cam-may-chu" : "chuyen-huong-cam", http: 0 };
+    if (lop === "ngoai") {
+      let vaoNoiBo: boolean;
+      try {
+        vaoNoiBo = await giaiVaoNoiBo(new URL(hienTai).hostname.replace(/^\[|\]$/g, ""), o.dnsLookup ?? GIAI_TEN_MAC_DINH);
+      } catch (e) {
+        return { url, http: 0, ...phanLoiMang(e) };
+      }
+      if (vaoNoiBo) return { url, loi: buoc === 0 ? "cam-may-chu" : "chuyen-huong-cam", http: 0, chiTiet: "dns-noi-bo" };
+    }
     let res: Response;
     try {
       res = await (o.fetchImpl ?? fetch)(hienTai, { headers: { "user-agent": o.userAgent }, redirect: "manual", signal: AbortSignal.timeout(o.timeoutMs) });
@@ -243,7 +325,6 @@ export async function taiAnh(url: string, o: TaiAnhOptions): Promise<KetQuaTai> 
       } catch {
         return { url, loi: "chuyen-huong-cam", http: res.status };
       }
-      if (phanLoaiMayChu(dich.href, o) === "cam") return { url, loi: "chuyen-huong-cam", http: res.status };
       hienTai = dich.href;
       continue;
     }
