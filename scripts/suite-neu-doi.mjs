@@ -29,6 +29,8 @@ const LOI_PIPELINE = [
   "collector/scripts/**", "data-api/src/**", "tools/**", "CONTEXT.md", "LO-TRINH.html", "docs/ROADMAP.md",
   "docs/ops/**",
   "docs/adr/**", "docs/research/pty-project-type-s06.md",
+  // pipeline/sync-cloud-che.test.mjs (HT26 SCC-9) chạy mã TypeScript của data-api bằng tsx của chính gói data-api.
+  "data-api/**",
   "_acceptance/danh-ba-phuong-xa-toan-quoc/**", "_acceptance/du-an-cua-tin-len-dinh-vi/**",
   "_acceptance/gop-tin-chi-anh-o-transform/**",
   "_acceptance/lay-mau-khu-trung-theo-tin/**", "_acceptance/nhom-dang-ky-hai-lan-s03/**",
@@ -53,6 +55,8 @@ export const VUNG = {
     // agent/probes/du-lieu-that.test.ts readdirSync đúng thư mục này để đếm tệp tạm của lượt (l2-bao-thu-doi-probe-that,
     // nhận main 16/11); cả đường thư mục trần lẫn tệp dưới nó đều phải nằm trong vùng.
     "app/probes", "app/probes/**",
+    // scripts/do-ten-nguon-cloud.mjs (HT26) mượn pg qua createRequire(app/package.json).
+    "app/package.json",
     "_acceptance/config.yaml", "_acceptance/chon-model-theo-o/**", "_acceptance/the-ghep-can-tin-roi-kho/**",
   ],
   // check-portal-compliance.mjs nạp các cổng check-*.mjs cùng thư mục; tier-a-source-names.mjs rút tên nguồn từ
