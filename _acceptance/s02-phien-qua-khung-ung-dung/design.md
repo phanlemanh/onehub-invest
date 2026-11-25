@@ -51,18 +51,18 @@ Nghĩa là chỉ có một chỗ gãy: ứng dụng không tải được trên 
 
 | Chiều | Giá trị | Số lần đo | Kết cục | Ai đọc đầu ra này phía sau |
 |---|---|---|---|---|
-| Trạng thái token lúc đọc | còn hạn hơn lề | 4 | dùng ngay, ứng dụng không gọi xác thực | `call()` → API của nguồn |
-| | hết hạn | 4 | ứng dụng cấp lại trong 2–6 giây, bộ thu đọc token mới | như trên |
-| | còn dưới lề (giữa lượt) | 1 | làm mới trước lời gửi, nhận token mới «còn 15 phút» | như trên |
+| Trạng thái token lúc đọc | còn hạn hơn lề | 5 | dùng ngay, ứng dụng không gọi xác thực | `call()` → API của nguồn |
+| | hết hạn | 3 | ứng dụng cấp lại trong 2–6 giây, bộ thu đọc token mới | như trên |
+| | còn dưới lề (giữa lượt) | 2 | làm mới trước lời gửi, nhận token mới «còn 15 phút» | như trên |
 | | rác, rỗng, không phải chuỗi | 0 (chỉ phép đo) | không dùng | — |
-| Lý do làm mới | sắp hết hạn | 1 (giữa lượt) | nạp lại bộ khung ứng dụng | — |
+| Lý do làm mới | sắp hết hạn | 2 (giữa lượt, trước và sau vòng sửa) | nạp lại bộ khung ứng dụng | — |
 | | vừa bị 401 | 0 (chỉ phép đo) | chờ token KHÁC; không có thì dừng, không gửi lại | — |
 | Ứng dụng khi nạp | route dữ liệu hoặc tệp tĩnh có thật | 5 | trang thử thách, khung không nạp | — |
-| | bộ khung qua đường dẫn không phải tệp tĩnh | 8 | khung nạp, ứng dụng cấp token | — |
+| | bộ khung qua đường dẫn không phải tệp tĩnh | 10 | khung nạp, ứng dụng cấp token | — |
 | | profile chưa từng đăng nhập | 3 | khung nạp, không có token; dừng sau một đường dẫn | người vận hành đọc dòng `AUTH FAIL [S02]` |
 | Thử đường kế | khung nạp mà không có token → dừng ngay | 1 (mã sau vòng sửa) | một đường dẫn | — |
 | | thử đủ ba rồi dừng | 2 (mã trước vòng sửa, profile trống) · 0 (phép đo) | ba đường dẫn, rồi dừng | — |
-| Kết cục lời gọi API | có dữ liệu | 45 (9 + 18 + 9 + 9) | ghi snapshot | transform S02 đọc snapshot |
+| Kết cục lời gọi API | có dữ liệu | 54 (9 + 18 + 9 + 18) | ghi snapshot | transform S02 đọc snapshot |
 | | 401 một lần rồi thành công · 401 hai lần · 401 mà token không đổi · lỗi máy chủ | 0 (chỉ phép đo) | gửi lại bằng token mới / dừng / dừng / đếm một lời lỗi | — |
 | Lệnh của người | `login` đúng nguồn · không mở được Chrome | 0 (chỉ phép đo, qua CLI thật với Chrome giả) | thoát 0 kèm hướng dẫn / thoát 1 kèm lý do | Mạnh |
 | Người đọc phía sau | script đêm S02 | — | `collect` thoát khác 0 thì `set -e` dừng trước transform; chọn bản thu theo tên, bỏ thư mục chấm | `scripts/*-daily.sh` |

@@ -70,6 +70,6 @@ Bỏ coverage-scan — hàng sửa lỗi ở một tệp bộ thu, trục liệt
 - Bằng chứng chạy thật ngày 25/11 (do người viết chạy, cần phiên của Mạnh và nguồn sống — không phải eval; sổ chạy gốc ở `research-local/`, không commit):
   - Dựng lại lỗi với cấu hình lượt đêm: route dữ liệu trả 403 kèm `cf-mitigated: challenge`, `navigator.webdriver` đúng; bỏ `--enable-automation` vẫn vậy (2 lần).
   - Lúc 09:01 và 10:48 (trước và sau vòng sửa), token cũ vừa hết hạn: lượt thu một thị trường thu 9 mục, 0 lỗi, có snapshot mới.
-  - Lúc 09:31, token hết hạn GIỮA lượt (mã trước vòng sửa): hai dòng `token OK` («còn 2 phút» lúc đầu, «còn 15 phút» giữa lượt), 18 mục, 0 lỗi, không lời gọi lỗi.
+  - Lúc 09:31 (mã trước vòng sửa) và 11:01 (mã cuối), token hết hạn GIỮA lượt: hai dòng `token OK` («còn 2 phút» lúc đầu, «còn 15 phút» giữa lượt), 18 mục, 0 lỗi, không lời gọi lỗi.
   - Profile trống chưa từng đăng nhập: lượt dừng ngay, đúng một dòng `AUTH FAIL [S02]`, chỉ để lại thư mục tạm ẩn. Mã trước vòng sửa chẩn đoán «KHÔNG khởi động» sau ~95 giây; mã sau vòng sửa chẩn đoán «nạp được khung nhưng không có token» sau 65 giây và không nạp thêm đường dẫn nào.
   - Refresh token không đổi sau lần ứng dụng tự cấp lại (so mã băm trước và sau).
