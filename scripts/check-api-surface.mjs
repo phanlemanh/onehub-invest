@@ -2,7 +2,7 @@
 // Kiểm TĨNH sổ bề mặt API (hồ sơ so-be-mat-api, NT4): mỗi route.ts dưới app/src/app/api khớp đúng một dòng của
 // app/src/lib/api-surface.ts và cổng trong mã khớp chế độ sổ khai. Đo trạng thái cây, không đo diff.
 //   node scripts/check-api-surface.mjs static    — đo cây thật (exit 0 = đạt, 1 = vi phạm)
-//   node scripts/check-api-surface.mjs mutation  — bản nguyên phải ĐẠT, bảng đột biến M1–M25 phải TRƯỢT đúng thông điệp
+//   node scripts/check-api-surface.mjs mutation  — bản nguyên phải ĐẠT, bảng đột biến M1–M29 phải TRƯỢT đúng thông điệp
 // check-portal-compliance.mjs gọi checkApiSurface trên cây thật (làn ghim lại).
 import { readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
 import path from "node:path";
@@ -28,6 +28,7 @@ export const MSG = {
   kqMode: "chế độ sổ lệch bảng quyền (kiemQuyen)",
   machine: "chế độ machine mà mã thiếu kiemTokenMay",
   machineSession: "chế độ machine mà mã nhận phiên người",
+  publicS02: "route public đọc bảng số S02 (airdna_*/ref_calib_*)",
 };
 
 // TV1 quyen-bon-vai-mot-cho: route gọi kiemQuyen(req, "<hành động>") — chế độ sổ của mỗi phương thức phải khớp dòng của
@@ -111,6 +112,13 @@ const exportedMethods = (src) =>
   [...code(src).matchAll(/export\s+(?:async\s+)?function\s+(GET|POST|PUT|PATCH|DELETE)\b/g)].map((m) => m[1]).sort();
 
 /** files: { "<đường gốc kho>": "<mã nguồn>" } — gồm mọi route.ts và mọi module có thể import. */
+// HT23 (api-markets-khong-tra-so-s02, AGENTS.md luật 5): số S02 chỉ ở /ops/quality — route public không được đọc bảng
+// số S02, tên local `airdna_*` hay tên trung tính trên cloud `ref_calib_*`, kể cả gián tiếp qua module nó import (gồm db.ts).
+// Mẫu đòi chữ cái ngay sau tiền tố nên bộ đổi tên bảng cho cloud trong db.ts (`airdna_(markets|…)`, `"ref_calib_$1"`)
+// không khớp — không cần ngoại lệ, db.ts bị quét trọn (đột biến M29 canh).
+const BANG_S02 = /\b(?:airdna|ref_calib)_[a-z][a-z_]*\b/;
+export const docBangS02 = (g, files) => BANG_S02.test(code(files[g] ?? ""));
+
 export function checkApiSurface({ entries, files }) {
   const violations = [];
   const routesOnDisk = Object.keys(files)
@@ -136,6 +144,10 @@ export function checkApiSurface({ entries, files }) {
     const offerRoute = e.publicOffers === true && PUBLIC_OFFER_ROUTES.has(e.route);
     if (e.publicOffers && !offerRoute) violations.push(`${e.route}: ${MSG.publicOffersRoute}`);
     if (e.mode === "public" && saleReaders.length && !offerRoute) violations.push(`${e.route}: ${MSG.publicSale}`);
+    if (e.mode === "public") {
+      const s02 = closure.filter((g) => docBangS02(g, files));
+      if (s02.length) violations.push(`${e.route}: ${MSG.publicS02} (${s02.join(", ")})`);
+    }
     if (e.mode === "public" && offerRoute) {
       for (const g of saleReaders) if (g !== OFFERS_LIB) violations.push(`${e.route}: ${MSG.publicOffersLib} (${g})`);
     }
@@ -223,6 +235,11 @@ const guardMutant = (name) => ({ entries, files }) => {
   return m === null ? null : { entries, files: { ...files, [f]: m } };
 };
 const SALE_ROUTE = `import { pool } from "@/lib/db";\nexport async function GET() {\n  const { rows } = await pool.query("SELECT offer_id FROM sale_offers");\n  return Response.json(rows);\n}\n`;
+// Văn bản JOIN của route markets trước HT23 — ghim tại đây làm đối chứng, không đọc git (phản biện P1).
+export const JOIN_S02_CU = `     LEFT JOIN airdna_scores ms ON ms.airdna_id = (
+       SELECT x.source_area_key FROM area_sources x
+       WHERE x.area_id = a.id AND x.source = 'S02' LIMIT 1
+     )\n`;
 const pub = (route) => ({ route, methods: ["GET"], mode: "public", note: "đột biến" });
 
 export const MUTATIONS = [
@@ -360,6 +377,23 @@ export const MUTATIONS = [
       [routeFile("v1/moi-may")]: `import { kiemQuyen } from "@/lib/ops-access";\nimport { kiemTokenMay } from "@/lib/token-may";\nexport async function GET(req: Request) {\n  const t = await kiemTokenMay(req, "ops:pull");\n  if (t.ok) return Response.json({});\n  const q = await kiemQuyen(req, "ops.read");\n  return q.ok ? Response.json({}) : q.res;\n}\n`,
     },
   })],
+  // HT23: route public đọc bảng số S02 — trực tiếp, qua thư viện, tên cloud, và cấy vào db.ts ngoài bộ đổi tên.
+  ["M26", "cấy lại câu JOIN bảng điểm S02 vào route markets", MSG.publicS02, ({ entries, files }) => {
+    const r = replaceIn(files, routeFile("v1/markets"), "FROM areas a\n", `FROM areas a\n${JOIN_S02_CU}`);
+    return r && { entries, files: r };
+  }],
+  ["M27", "route public mới import @/lib/queries (có bảng S02)", MSG.publicS02, ({ entries, files }) => ({
+    entries: [...entries, pub("v1/moi-queries")],
+    files: { ...files, [routeFile("v1/moi-queries")]: `import { getArea } from "@/lib/queries";\nexport async function GET() {\n  return Response.json(await getArea("x"));\n}\n` },
+  })],
+  ["M28", "route public mới đọc thẳng ref_calib_scores", MSG.publicS02, ({ entries, files }) => ({
+    entries: [...entries, pub("v1/moi-calib")],
+    files: { ...files, [routeFile("v1/moi-calib")]: SALE_ROUTE.replace("SELECT offer_id FROM sale_offers", "SELECT total FROM ref_calib_scores") },
+  })],
+  ["M29", "cấy FROM airdna_scores vào db.ts ngoài bộ đổi tên", MSG.publicS02, ({ entries, files }) => {
+    if (!("app/src/lib/db.ts" in files)) return null;
+    return { entries, files: { ...files, "app/src/lib/db.ts": `${files["app/src/lib/db.ts"]}\nexport const diemS02 = () => pool.query("SELECT total FROM airdna_scores");\n` } };
+  }],
 ];
 
 const isMain = process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url);

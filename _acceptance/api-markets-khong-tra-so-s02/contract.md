@@ -5,7 +5,7 @@ slug: api-markets-khong-tra-so-s02
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api, cli]
-status: approved
+status: implemented
 design_doc: docs/superpowers/specs/2026-11-25-api-markets-khong-tra-so-s02-design.md
 veto_state: mo
 veto_opened_at: 2026-11-25T02:43:09Z
@@ -21,7 +21,7 @@ khác null. AGENTS.md luật 5: số S02 chỉ ở `/ops/quality`. Không UI nà
 route public chỉ cấm `sale_offers`, nên không bộ soát nào canh.
 
 Vùng: `app/src/app/api/v1/markets/route.ts`, `app/src/lib/api-surface.ts`, `scripts/check-api-surface.mjs`,
-`scripts/check-api-surface.test.mjs`, `app/tests/api-markets-khong-s02.test.ts`, `_acceptance/api-markets-khong-tra-so-s02/**`.
+`scripts/check-api-surface.test.mjs`, `app/tests/api-markets-khong-s02.test.tsx`, `_acceptance/api-markets-khong-tra-so-s02/**`.
 
 ## Criteria
 
@@ -41,8 +41,8 @@ Chiều đỏ: route cũ đặt thị trường có điểm S02 lên đầu.
 Given sổ bề mặt thật và mã cây,
 When chạy `checkApiSurface`,
 Then 0 vi phạm; và route khai `public` mà bao đóng import (route và mọi module `app/src/lib` nó kéo theo, bỏ chú thích)
-có tên bảng `airdna_*` hoặc `ref_calib_*` thì có vi phạm mang đúng thông điệp `MSG.publicS02`. Chỉ bỏ qua đúng biểu thức
-đổi tên bảng cho cloud trong `app/src/lib/db.ts` (hằng `CLOUD_TABLE_MAP`); phần còn lại của `db.ts` vẫn bị quét.
+có tên bảng `airdna_*` hoặc `ref_calib_*` thì có vi phạm mang đúng thông điệp `MSG.publicS02`. `app/src/lib/db.ts` bị quét
+trọn, không ngoại lệ: bộ đổi tên bảng cho cloud trong đó không mang tên bảng nào khớp mẫu.
 
 ### AC-4 — Đột biến của rào đều đỏ
 Given bốn đột biến: cấy lại câu JOIN bảng điểm S02 vào route markets; route public mới import `@/lib/queries`; route

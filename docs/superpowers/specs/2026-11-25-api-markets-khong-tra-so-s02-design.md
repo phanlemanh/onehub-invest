@@ -12,9 +12,9 @@ Không thành phần UI nào gọi route này. Bộ soát `scripts/check-api-sur
    Phạm vi đã đóng: bỏ khoá). Xếp `listing_count DESC, a.name`. Tham số `country`, `limit`, khuôn `meta` giữ nguyên.
 2. **Sổ** `api-surface.ts`: `note` của `v1/markets` thành «danh sách thị trường và số tin; không mang số S02».
 3. **Rào** `check-api-surface.mjs`: thông điệp mới `MSG.publicS02` — route `mode: "public"` mà bao đóng import (route + mọi
-   module `app/src/lib` nó kéo theo, đã bỏ chú thích) có tên bảng `airdna_*` hoặc `ref_calib_*` thì đỏ. Chỉ bỏ qua đúng
-   biểu thức đổi tên bảng cho cloud trong `app/src/lib/db.ts` (hằng `CLOUD_TABLE_MAP` và dòng `replace` dùng nó) — mọi route
-   import `db.ts` nên không bỏ qua thì cả bốn route public đỏ giả; phần còn lại của `db.ts` vẫn bị quét. Đột biến: M-a cấy
+   module `app/src/lib` nó kéo theo, đã bỏ chú thích) có tên bảng `airdna_*` hoặc `ref_calib_*` thì đỏ. Không ngoại lệ:
+   mẫu đòi chữ cái ngay sau tiền tố, nên bộ đổi tên bảng cho cloud trong `app/src/lib/db.ts` (`airdna_(markets|…)`,
+   `"ref_calib_$1"`) không khớp; `db.ts` bị quét trọn (đo 25/11: bốn route public 0 vi phạm). Đột biến: M-a cấy
    lại câu JOIN vào route markets; M-b route public import `@/lib/queries` (có bảng S02); M-c bảng `ref_calib_*` trực
    tiếp; M-d cấy `FROM airdna_scores` vào `db.ts` ngoài biểu thức đổi tên. Mỗi đột biến đỏ đúng thông điệp ghim.
 4. Soát mọi route public bằng rào mới: trước sửa chỉ `v1/markets` đỏ (đo 25/11: `asset-stats`, `listings`,

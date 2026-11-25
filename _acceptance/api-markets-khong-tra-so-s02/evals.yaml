@@ -6,14 +6,14 @@ evals:
     executor: test
     cmd: config:executors.test.api_markets_s02
     long_running: 90
-    paths: ["app/src/app/api/v1/markets/route.ts", "app/tests/api-markets-khong-s02.test.ts"]
+    paths: ["app/src/app/api/v1/markets/route.ts", "app/tests/api-markets-khong-s02.test.tsx"]
     expected: "Ca HT23-AC-1 xanh: 200, mọi dòng đúng bốn khoá, không có marketScore. Chiều đỏ ghim trong test: chạy SQL của route cũ trên cùng DB thử ra dòng có market_score của S02 («route cũ mang số S02»)."
   - id: E2
     criterion: AC-2
     executor: test
     cmd: config:executors.test.api_markets_s02
     long_running: 90
-    paths: ["app/src/app/api/v1/markets/route.ts", "app/tests/api-markets-khong-s02.test.ts"]
+    paths: ["app/src/app/api/v1/markets/route.ts", "app/tests/api-markets-khong-s02.test.tsx"]
     expected: "Ca HT23-AC-2 xanh: thứ tự listingCount giảm dần rồi tên. Chiều đỏ: SQL cũ đặt thị trường có điểm S02 lên đầu."
   - id: E3
     criterion: AC-3
@@ -50,5 +50,5 @@ evals:
     executor: test
     cmd: config:executors.test.app_ui
     long_running: 90
-    paths: ["app/src/app/api/v1/markets/route.ts", "app/src/lib/api-surface.ts", "app/tests/api-markets-khong-s02.test.ts"]
+    paths: ["app/src/app/api/v1/markets/route.ts", "app/src/lib/api-surface.ts", "app/tests/api-markets-khong-s02.test.tsx"]
     expected: "Bộ test app xanh trên DB thử; không test nào còn đọc marketScore của /api/v1/markets."
