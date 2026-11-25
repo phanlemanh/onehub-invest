@@ -17,6 +17,12 @@
 // Bên đọc giải file ảnh theo entry.snapshotId (media-rows.mjs localFile) nên mọi
 // entry trong snapshot bù trỏ file trong snapshot bù — chép bytes là bắt buộc.
 //
+// TÊN SNAPSHOT BÙ theo GIỜ CHẠY (không phải ngày đăng) — xếp sau chót mọi
+// snapshot gốc lịch sử. NẠP LẠI từ raw PHẢI xếp qua sapXepReplay(): snapshot bù
+// (coverage.loai = 'tai-bu-anh-2511', gồm 5 snapshot 21-25/11 đã ghi khi còn đặt
+// tên theo ngày đăng) luôn nạp PHASE CUỐI, nếu không bản gốc mang entry lỗi nạp
+// sau sẽ đè ảnh đã bù.
+//
 // Dùng:
 //   node backfill-s03-media-2511.mjs --check                 chỉ đo, không ghi không mạng
 //   node backfill-s03-media-2511.mjs --tu 2026-11-19         bù khoảng ngày đăng (giờ VN)
@@ -125,6 +131,33 @@ export function docSuffixes(file = SUFFIX_MAC_DINH) {
 }
 
 /**
+ * sapXepReplay — thứ tự NẠP LẠI từ raw (lớp hai của lời giải claudedp-2511-52/54):
+ * snapshot thường theo tên (thời gian thu), snapshot BÙ (coverage.loai =
+ * 'tai-bu-anh-2511') LUÔN phase CUỐI — giữ nguyên thứ tự tên trong từng nhóm.
+ * Lý do: bộ nạp ghi media_files thay trọn khi giá trị khác null; 5 snapshot bù
+ * 21-25/11 mang tên NGÀY ĐĂNG (xếp giữa các snapshot gốc cùng ngày) nên replay
+ * theo tên trần sẽ đè ảnh đã bù của ~695 bài — bắt buộc phase cuối. Mọi công cụ
+ * nạp lại raw PHẢI đi qua hàm này (đọc manifest từng thư mục; thiếu manifest →
+ * nhóm thường).
+ */
+export async function sapXepReplay(dirs) {
+  const thuong = [];
+  const buu = [];
+  for (const d of dirs) {
+    let laBuu = false;
+    try {
+      const m = JSON.parse(await readFile(join(d, "manifest.json"), "utf8"));
+      laBuu = m?.coverage?.loai === "tai-bu-anh-2511";
+    } catch {
+      // thiếu/hỏng manifest — xếp nhóm thường, bộ nạp tự xử (chờ 30′ hay mồ côi)
+    }
+    (laBuu ? buu : thuong).push(d);
+  }
+  const theoTen = (a, b) => a.localeCompare(b);
+  return [...thuong.sort(theoTen), ...buu.sort(theoTen)];
+}
+
+/**
  * Ghi một snapshot bù cho MỘT ngày đăng. Trả {snapshotId, soBai, soUrlThu,
  * taiDuoc, loi404, loiKhac, maChan}. Gặp http-403/429: maChan khác rỗng, KHÔNG
  * ghi snapshot — người gọi thoát 3.
@@ -144,23 +177,19 @@ export async function ghiSnapshotBuu({ baiHomNgay, rootSnapshots, dirMoi, fetchM
     return { sha256, bytes: bytes.length };
   };
 
-  // trần lời gọi: chặn TRƯỚC khi phát lời (mỗi url fetch riêng, một lời một lần)
-  let cuaSo = Math.floor(Date.now() / cuaSoMs);
-  let daDung = 0;
+  // trần lời gọi: CỬA SỔ TRƯỢT theo timestamp lúc phát (mỗi url fetch riêng) —
+  // miễn nhiễm độ trễ fetch (cửa sổ cứng theo Date.now() bị reset khi fetch chậm)
+  const lucGoi = [];
   const choLuot = async () => {
-    const cua = Math.floor(Date.now() / cuaSoMs);
-    if (cua !== cuaSo) {
-      cuaSo = cua;
-      daDung = 0;
-    }
-    if (daDung >= tocDo) {
-      const cho = cuaSoMs - (Date.now() % cuaSoMs) + 20;
+    for (;;) {
+      const bay = Date.now();
+      while (lucGoi.length > 0 && bay - lucGoi[0] >= cuaSoMs) lucGoi.shift();
+      if (lucGoi.length < tocDo) break;
+      const cho = lucGoi[0] + cuaSoMs - bay + 20;
       ghiLog(`nghỉ ${Math.round(cho / 1000)}s giữ trần ${tocDo} lời/${Math.round(cuaSoMs / 1000)}s`);
-      await new Promise((r) => setTimeout(r, cho));
-      cuaSo = Math.floor(Date.now() / cuaSoMs);
-      daDung = 0;
+      await new Promise((r) => setTimeout(r, cho > 0 ? cho : 20));
     }
-    daDung += 1;
+    lucGoi.push(Date.now());
   };
 
   const items = [];
@@ -223,6 +252,13 @@ export async function ghiSnapshotBuu({ baiHomNgay, rootSnapshots, dirMoi, fetchM
         }
       }
     }
+    // dừng mềm giữa bài: ô null là url chưa tải — BỎ CẢ BÀI (stg giữ media_files
+    // cũ nguyên vẹn, nhịp sau bù lại), không bao giờ ghi entry null
+    const dutGiua = entriesMoi.some((e) => e === null);
+    if (dutGiua) {
+      ghiLog(`dừng mềm giữa bài ${bai.postId} — bỏ bài, nhịp sau bù lại`);
+      continue;
+    }
     if (entriesMoi.length > 0 && urlCanTai.length > 0) {
       // chỉ đưa bài CÓ url phải tải — bài toàn 404/400-bỏ-qua giữ nguyên trong stg, không viết lại
       items.push({
@@ -242,6 +278,7 @@ export async function ghiSnapshotBuu({ baiHomNgay, rootSnapshots, dirMoi, fetchM
   }
   if (items.length === 0) {
     ghiLog("không có bài nào cần snapshot");
+    await rm(dirTam, { recursive: true, force: true }); // dọn nháp
     return { snapshotId: null, soBai: 0, soUrlThu, taiDuoc, loi404, loiKhac };
   }
 

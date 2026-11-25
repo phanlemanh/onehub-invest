@@ -11,7 +11,7 @@ import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { pathToFileURL } from "node:url";
 import { gunzipSync } from "node:zlib";
-import { entryCua, docSuffixes, chepAnhSong, ghiSnapshotBuu } from "./backfill-s03-media-2511.mjs";
+import { entryCua, docSuffixes, chepAnhSong, ghiSnapshotBuu, sapXepReplay } from "./backfill-s03-media-2511.mjs";
 
 const HERE = dirname(new URL(import.meta.url, "file:").pathname);
 const GOC = dirname(HERE);
@@ -285,17 +285,83 @@ test("(3) trần lời gọi chặn TRƯỚC khi phát: không cửa sổ nào v
     await ghiSnapshotBuu({ baiHomNgay: bai, rootSnapshots: t.root, dirMoi, fetchModule, suffixes: SUFFIX_TEST, tocDo: 3, cuaSoMs: 400 });
     assert.equal(lucGoi.length, 9);
     const cuaSoMs = 400;
-    const theoCua = new Map();
+    // cửa sổ TRƯỢT: với mỗi lời, đếm số lời trong [t, t+cuaSoMs) — không vượt tocDo
+    let maxCua = 0;
     for (const luc of lucGoi) {
-      const k = Math.floor(luc / cuaSoMs);
-      theoCua.set(k, (theoCua.get(k) ?? 0) + 1);
+      maxCua = Math.max(maxCua, lucGoi.filter((x) => x >= luc && x < luc + cuaSoMs).length);
     }
-    assert.ok(Math.max(...theoCua.values()) <= 3, `một cửa sổ không quá 3 lời — thấy ${JSON.stringify([...theoCua])}`);
-    assert.ok(Date.now() - batDau >= 2 * cuaSoMs, "9 lời ở trần 3/cửa sổ phải spanning ≥2 cửa sổ");
+    assert.ok(maxCua <= 3, `cửa sổ trượt 400ms không quá 3 lời — thấy ${maxCua} (${JSON.stringify(lucGoi)})`);
   } finally {
     srv.close();
     rmSync(t.home, { recursive: true, force: true });
   }
+});
+
+test("(c) dừng mềm giữa bài: bài chưa xong bị BỎ — không bao giờ ghi entry null, dọn thư mục tạm", { skip: !CO_DIST && "cần collector dist đã build" }, async () => {
+  const t = await moiTruong();
+  t.srv.close();
+  const srv = createServer((req, res) => {
+    res.writeHead(404, { "content-type": "text/plain" });
+    res.end("gone");
+  });
+  await new Promise((done) => srv.listen(0, "127.0.0.1", done));
+  const base = `http://127.0.0.1:${srv.address().port}`;
+  try {
+    const bai = [{
+      postId: "p-cut",
+      snapshotId: t.snapshotCu,
+      payload: { group: "g", author: "h", text: "t", senderName: null, senderId: null, conversationId: null,
+        media: Array.from({ length: 9 }, (_, i) => ({ path: null, url: `${base}/c${i}.jpg`, type: "image/jpeg" })), agent_id: "a" },
+      postedAt: NGAY_HN,
+      mediaFiles: [],
+    }];
+    const dirMoi = join(t.root, "hanoi", "hanoi__zalo-agent__2026-11-25T220000000");
+    const denGio = new Date(Date.now() + 200).toISOString(); // cắt giữa bài (trần 3/400ms → bài cần ~1,2s)
+    const kq = await ghiSnapshotBuu({ baiHomNgay: bai, rootSnapshots: t.root, dirMoi, fetchModule, suffixes: SUFFIX_TEST, tocDo: 3, cuaSoMs: 400, denGio });
+    assert.equal(kq.snapshotId, null, "bài bị cắt giữa không được ghi snapshot");
+    assert.equal(existsSync(dirMoi), false);
+    assert.equal(existsSync(join(t.root, "hanoi", ".hanoi__zalo-agent__2026-11-25T220000000.partial")), false, "thư mục tạm được dọn");
+  } finally {
+    srv.close();
+    rmSync(t.home, { recursive: true, force: true });
+  }
+});
+
+test("sapXepReplay: snapshot bù (coverage.loai=tai-bu-anh-2511) luôn phase cuối, mỗi nhóm giữ thứ tự tên", async () => {
+  const home = mkdtempSync(join(tmpdir(), "replay-"));
+  const goc = join(home, "snapshots", "hanoi");
+  const ten = [
+    "hanoi__zalo-agent__2026-11-21T143738670", // bù (đã ghi 25/11)
+    "hanoi__zalo-agent__2026-11-21T190000000", // gốc cùng ngày — tên MUỘN hơn bù
+    "hanoi__zalo-agent__2026-11-22T140520119", // bù
+    "hanoi__zalo-agent__2026-11-22T193000000", // gốc
+    "hanoi__zalo-agent__2026-11-25T125516859", // bù
+  ];
+  for (const [i, d] of ten.entries()) {
+    mkdirSync(join(goc, d), { recursive: true });
+    const laBuu = i % 2 === 0;
+    writeFileSync(join(goc, d, "manifest.json"), JSON.stringify({
+      snapshotId: d,
+      coverage: laBuu ? { loai: "tai-bu-anh-2511" } : { discovered: 1 },
+    }));
+  }
+  const thuTu = await sapXepReplay(ten.map((d) => join(goc, d)));
+  assert.deepEqual(
+    thuTu.map((d) => d.split("/").pop()),
+    [
+      "hanoi__zalo-agent__2026-11-21T190000000",
+      "hanoi__zalo-agent__2026-11-22T193000000",
+      "hanoi__zalo-agent__2026-11-21T143738670",
+      "hanoi__zalo-agent__2026-11-22T140520119",
+      "hanoi__zalo-agent__2026-11-25T125516859",
+    ],
+    "gốc trước (theo tên), cả ba snapshot bù phase cuối",
+  );
+  // thiếu manifest → nhóm thường, không nổ
+  mkdirSync(join(goc, "hanoi__zalo-agent__2026-11-20T000000000"), { recursive: true });
+  const thuTu2 = await sapXepReplay([join(goc, "hanoi__zalo-agent__2026-11-20T000000000"), ...thuTu]);
+  assert.equal(thuTu2[0].split("/").pop(), "hanoi__zalo-agent__2026-11-20T000000000");
+  rmSync(home, { recursive: true, force: true });
 });
 
 test("(1) nạp lại raw theo thứ tự tên vẫn giữ ảnh đã bù (tên bù theo giờ chạy xếp sau chót)", { skip: !process.env.DATABASE_URL && "cần DATABASE_URL (npm test pipeline cấp DB riêng lượt)" }, async () => {
