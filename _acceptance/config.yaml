@@ -1055,6 +1055,10 @@ executors:
     s09_ranh_gioi: "node pipeline/scripts/s09-ranh-gioi.mjs --base origin/main"   # toa-s09-hai-khu-vao-danh-ba E9 — vùng, tầng A, 097 áp hai lần
     s09_toa_db: "node --test --test-concurrency=1 pipeline/lib/s09-danh-ba-can.test.mjs pipeline/scripts/danh-ba-s09-toa.itest.mjs"   # nap-s09-toa-tang-vao-danh-ba E1, E3–E6, E8, E9 — DB thử riêng lượt oneinvest_dbv_s09t_<pid> dựng từ db/migrations (db-thu-dbv.mjs), xoá khi xong; không đụng DB oneinvest
     s09_toa_that: "node pipeline/scripts/danh-ba-s09-toa-that.mjs --tran-phut 40"   # nap-s09-toa-tang-vao-danh-ba E2, E10, E12 — chỉ đọc DB máy thu (chép sang DB thử để dựng), trần 40 phút, chỉ in số; ngoài CI
+    s09_v16_db: "node --test --test-concurrency=1 pipeline/lib/s09-danh-ba-v16.test.mjs pipeline/scripts/s09-v16.itest.mjs"   # nap-s09-quy-can-va-can-cao-tang E1–E4, E9 — DB thử riêng lượt dựng từ db/migrations, xoá khi xong; không đụng DB oneinvest
+    s09_v16_that: "node pipeline/scripts/s09-v16-that.mjs --tran-phut 40"   # nap-s09-quy-can-va-can-cao-tang E5, E6 — chép DB máy thu sang DB thử, đọc thư mục chờ v16 (kiểm băm), chỉ in số; ngoài CI
+    s09_v16_app: "cd app && bash ../db/db-thu.sh oneinvest_suite_qc --chay node --import tsx --test --test-concurrency=1 tests/registry-quy-can.test.tsx"   # nap-s09-quy-can-va-can-cao-tang E7, E8, E9b — route thật /ops/registry trên lược đồ tạm
+    s09_v16_dc: "git diff --exit-code 767c70c13 -- collector/docs/DATA-CONTRACT.md"   # nap-s09-quy-can-va-can-cao-tang E10b — DATA-CONTRACT đúng bản làn thu
     s16_db: "node --test --test-concurrency=1 pipeline/scripts/danh-ba-s16.itest.mjs"   # nap-s16-vao-danh-ba E1, E3–E8 — itest tự dựng DB oneinvest_suite_s16_<pid> từ db/migrations, xoá khi xong
     s16_that: "node pipeline/scripts/danh-ba-s16-that.mjs"   # nap-s16-vao-danh-ba E2, E10 — ba bản thu thật trên DB thử chép máy thu, đếm độc lập, sync chạy thử đọc chỉ-đọc DB máy thu; ngoài CI
     nps_cay: "node --test --test-concurrency=1 --test-name-pattern='^NPS-1:' pipeline/scripts/phan-khu-s16-noi.itest.mjs"   # noi-phan-khu-trung-s16 AC-1
