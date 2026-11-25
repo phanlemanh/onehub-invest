@@ -1,14 +1,14 @@
 import { strict as assert } from "node:assert";
 import { createHash } from "node:crypto";
 import { createServer, type Server } from "node:http";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { gunzipSync } from "node:zlib";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, test } from "node:test";
 
 import { createAgentServer } from "../api/server.js";
-import { DEFAULTS, hostAllowed } from "../core/media-fetch.js";
+import { DEFAULTS, hostAllowed, parseHostSuffixes } from "../core/media-fetch.js";
 
 /**
  * N1 media: tin Zalo mang URL ảnh zdn.vn (URL CÓ HẠN) phải được tải về máy
@@ -18,9 +18,24 @@ import { DEFAULTS, hostAllowed } from "../core/media-fetch.js";
  * ảnh chậm (chạy chồng flush), redirect trong/out allowlist.
  */
 const JPG_A = Buffer.from("fake-jpeg-bytes-A");
+// ZC15: byte mở đầu của JPEG XL — codestream trần và hộp ISO-BMFF "JXL "
+const JXL_CS = Buffer.concat([Buffer.from([0xff, 0x0a]), Buffer.from("fake-jxl-codestream")]);
+const JXL_BOX = Buffer.concat([
+  Buffer.from([0x00, 0x00, 0x00, 0x0c]), Buffer.from("JXL "), Buffer.from([0x0d, 0x0a, 0x87, 0x0a]),
+  Buffer.from("fake-jxl-box"),
+]);
+/** ZC15: header accept của yêu cầu ảnh gần nhất mà CDN giả nhận. */
+let lastAccept: string | undefined;
 let base = ""; // gán sau listen — handler đọc tại lúc có request
 const srv: Server = createServer((req, res) => {
-  if (req.url === "/a.jpg") {
+  lastAccept = req.headers.accept;
+  if (req.url === "/jxl-cs.jpg") {
+    res.writeHead(200, { "content-type": "image/jxl" });
+    res.end(JXL_CS);
+  } else if (req.url === "/jxl-box.jpg") {
+    res.writeHead(200, { "content-type": "image/jxl" });
+    res.end(JXL_BOX);
+  } else if (req.url === "/a.jpg") {
     res.writeHead(200, { "content-type": "image/jpeg", "content-length": String(JPG_A.length) });
     res.end(JPG_A);
   } else if (req.url === "/404.jpg") {
@@ -40,6 +55,11 @@ const srv: Server = createServer((req, res) => {
   } else if (req.url === "/redir-ok.jpg") {
     // redirect nội bộ cùng host — phải tải bình thường
     res.writeHead(302, { location: "/a.jpg" });
+    res.end();
+  } else if (req.url === "/redir-ip.jpg") {
+    // ZC15: host nguồn (localhost) chuyển hướng sang host đích 127.0.0.1 — host
+    // đích chỉ được phép khi hậu tố "0.0.1" có trong cấu hình local
+    res.writeHead(302, { location: base + "/a.jpg" });
     res.end();
   } else if (req.url === "/redir-out.jpg") {
     // redirect sang hostname khác (localhost ≠ 127.0.0.1 trong allowlist)
@@ -217,4 +237,117 @@ test("ZC9-hành-vi: pub-x.r2.dev qua được mặc định; evilr2.dev bị ch�
   assert.equal(hostAllowed("evilr2.dev", duoi), false, "evilr2.dev KHÔNG khớp suffix r2.dev (ranh giới dấu chấm)");
   assert.equal(hostAllowed("zdn.vn.evil.com", duoi), false, "tròng zdn.vn ở giữa không khớp");
   assert.equal(hostAllowed("f20-zpc.zdn.vn", duoi), true, "CDN zpc nằm trong allowlist — 400 của nó không phải chặn của ta");
+});
+
+// ── ZC15 (bổ sung LL 24/11): host đích chuyển hướng qua cấu hình local, Accept, JPEG XL ──
+
+function stateDirWith(lines: string | null): string {
+  const d = fresh();
+  mkdirSync(d, { recursive: true });
+  if (lines !== null) writeFileSync(join(d, "media-host-suffixes.txt"), lines);
+  return d;
+}
+
+/** ZC15: fixture host — nguồn là localhost (được phép sẵn), host đích là 127.0.0.1 (hậu tố "0.0.1" chỉ từ cấu hình local). */
+const mediaOptsNguon = { ...mediaOpts, allowedHostSuffixes: ["localhost"] };
+const HAU_TO_DICH = "0.0.1";
+
+test("ZC15: tệp hậu tố trong stateDir mở host đích chuyển hướng; vắng tệp thì redirect-host như cũ", async () => {
+  const nguon = base.replace("127.0.0.1", "localhost");
+  // chiều xanh: tệp khai hậu tố của host đích
+  {
+    const root = fresh();
+    const s = await createAgentServer({
+      snapshotRoot: root, stateDir: stateDirWith(`# host đích ZC15\n${HAU_TO_DICH}\n`),
+      city: "hanoi", keys: ["k1"], media: mediaOptsNguon, log: () => {},
+    });
+    ingestWith(s, [msg("redirect sang host đích", [`${nguon}/redir-ip.jpg`, `${base}/a.jpg`], "2026-11-25T01:00:00Z")]);
+    const m = await s.flush();
+    assert.ok(m);
+    const [viaRedirect, direct] = readItems(root, m.snapshotId)[0].meta.mediaFiles;
+    assert.equal(viaRedirect.error, undefined, "có tệp hậu tố: ảnh chuyển hướng sang host đích phải tải được");
+    assert.ok(viaRedirect.file);
+    const onDisk: Buffer = readFileSync(join(root, "hanoi", m.snapshotId, viaRedirect.file as string));
+    assert.ok(onDisk.equals(JPG_A));
+    assert.equal(createHash("sha256").update(onDisk).digest("hex"), viaRedirect.sha256);
+    assert.equal(direct.error, undefined, "có tệp hậu tố: URL gốc ở host đích phải tải được");
+  }
+  // chiều đỏ: cùng fixture, stateDir không có tệp
+  {
+    const root = fresh();
+    const s = await createAgentServer({
+      snapshotRoot: root, stateDir: stateDirWith(null),
+      city: "hanoi", keys: ["k1"], media: mediaOptsNguon, log: () => {},
+    });
+    ingestWith(s, [msg("redirect sang host đích", [`${nguon}/redir-ip.jpg`, `${base}/a.jpg`], "2026-11-25T01:01:00Z")]);
+    const m = await s.flush();
+    assert.ok(m);
+    const [viaRedirect, direct] = readItems(root, m.snapshotId)[0].meta.mediaFiles;
+    assert.equal(viaRedirect.error, "redirect-host", "vắng tệp hậu tố: phải lỗi redirect-host");
+    assert.equal(direct.error, "host-not-allowed", "vắng tệp hậu tố: URL gốc host đích phải host-not-allowed");
+  }
+});
+
+test("ZC15: parseHostSuffixes lọc dòng hỏng — một nhãn, ký tự lạ, dấu chấm đầu/cuối, chú thích, dòng trống", () => {
+  assert.deepEqual(
+    parseHostSuffixes("vn\n.x.com\nx.com.\na_b.com\n# chú thích\n\n Pub.Example.COM \npub.example.com, ,bad"),
+    ["pub.example.com"],
+  );
+  assert.deepEqual(parseHostSuffixes(undefined), []);
+  assert.deepEqual(parseHostSuffixes("a.r2.dev # ghi chú, b.example.org"), ["a.r2.dev", "b.example.org"]);
+});
+
+test("ZC15: biến môi trường ONEINVEST_MEDIA_HOST_SUFFIXES mở host đích; log chỉ in số, không in tên host", async () => {
+  const prev = process.env.ONEINVEST_MEDIA_HOST_SUFFIXES;
+  try {
+    for (const [env, wantErr] of [[`${HAU_TO_DICH},bad`, undefined], ["", "redirect-host"]] as const) {
+      process.env.ONEINVEST_MEDIA_HOST_SUFFIXES = env;
+      const lines: string[] = [];
+      const root = fresh();
+      const s = await createAgentServer({
+        snapshotRoot: root, city: "hanoi", keys: ["k1"], media: mediaOptsNguon, log: (l) => lines.push(l),
+      });
+      ingestWith(s, [msg("env", [`${base.replace("127.0.0.1", "localhost")}/redir-ip.jpg`], `2026-11-25T01:0${env ? 2 : 3}:00Z`)]);
+      const m = await s.flush();
+      assert.ok(m);
+      const e = readItems(root, m.snapshotId)[0].meta.mediaFiles[0];
+      assert.equal(e.error, wantErr, `env='${env}'`);
+      const log = lines.join("\n");
+      assert.match(log, env ? /\+ 1 hậu tố thêm/ : /\+ 0 hậu tố thêm/, "log khởi động phải in số hậu tố thêm");
+      assert.ok(!log.includes(HAU_TO_DICH), "log khởi động KHÔNG được in tên host thêm");
+    }
+  } finally {
+    if (prev === undefined) delete process.env.ONEINVEST_MEDIA_HOST_SUFFIXES;
+    else process.env.ONEINVEST_MEDIA_HOST_SUFFIXES = prev;
+  }
+});
+
+test("ZC15: Accept chỉ xin jpeg, png, webp, gif — không xin JPEG XL, không */*", async () => {
+  lastAccept = undefined;
+  const root = fresh();
+  const s = await createAgentServer({ snapshotRoot: root, city: "hanoi", keys: ["k1"], media: mediaOpts, log: () => {} });
+  ingestWith(s, [msg("accept", [`${base}/a.jpg?accept`], "2026-11-25T01:04:00Z")]);
+  assert.ok(await s.flush());
+  const acc = lastAccept as string | undefined;
+  assert.ok(acc, "CDN giả phải nhận header accept");
+  assert.ok(acc.includes("image/jpeg"), `accept phải có image/jpeg, được '${acc}'`);
+  assert.ok(!acc.includes("image/jxl"), `accept không được xin image/jxl, được '${acc}'`);
+  assert.ok(!acc.includes("*/*"), `accept không được là */*, được '${acc}'`);
+});
+
+test("ZC15: JPEG XL lưu nguyên byte với đuôi .jxl; JPEG giữ .jpg", async () => {
+  const root = fresh();
+  const s = await createAgentServer({ snapshotRoot: root, city: "hanoi", keys: ["k1"], media: mediaOpts, log: () => {} });
+  ingestWith(s, [msg("jxl", [`${base}/jxl-cs.jpg`, `${base}/jxl-box.jpg`, `${base}/a.jpg`], "2026-11-25T01:05:00Z")]);
+  const m = await s.flush();
+  assert.ok(m);
+  const files = readItems(root, m.snapshotId)[0].meta.mediaFiles;
+  for (const [e, bytes] of [[files[0], JXL_CS], [files[1], JXL_BOX]] as const) {
+    assert.equal(e.error, undefined);
+    assert.match(e.file, /^media\/[0-9a-f]{16}\.jxl$/, "đuôi .jxl cho byte JPEG XL");
+    const onDisk: Buffer = readFileSync(join(root, "hanoi", m.snapshotId, e.file as string));
+    assert.ok(onDisk.equals(bytes), "byte JPEG XL phải giữ nguyên");
+    assert.equal(e.sha256, createHash("sha256").update(bytes).digest("hex"));
+  }
+  assert.match(files[2].file, /\.jpg$/, "JPEG vẫn đuôi .jpg");
 });

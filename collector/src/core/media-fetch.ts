@@ -44,6 +44,35 @@ export const DEFAULTS = {
 
 const EXT_RE = /\.(jpe?g|png|webp|gif|bmp)(?:[?#]|$)/i;
 
+// ZC15: chỉ xin các định dạng mà bên đọc (vlm-anh, ops zalo-media) hiểu —
+// không xin JPEG XL; để trống thì fetch gửi "*/*" và CDN được chọn JPEG XL.
+export const MEDIA_ACCEPT = "image/jpeg,image/png,image/webp,image/gif";
+
+/** ZC15: byte JPEG XL — codestream trần (FF 0A) hoặc hộp ISO-BMFF "JXL ". */
+export function isJpegXl(b: Buffer): boolean {
+  if (b.length >= 2 && b[0] === 0xff && b[1] === 0x0a) return true;
+  return b.length >= 12 && b.readUInt32BE(0) === 0x0c && b.toString("latin1", 4, 8) === "JXL ";
+}
+
+/**
+ * ZC15: hậu tố host thêm do máy thu khai (tệp state/media-host-suffixes.txt,
+ * biến ONEINVEST_MEDIA_HOST_SUFFIXES) — tên miền nguồn là tầng A nên KHÔNG
+ * nằm trong mã. Mỗi mục cách bằng xuống dòng hoặc phẩy; "#" mở chú thích.
+ * Chỉ nhận chữ thường [a-z0-9.-], ít nhất hai nhãn, không dấu chấm đầu/cuối —
+ * một nhãn ("vn") sẽ mở cả một đuôi quốc gia, nên bị bỏ.
+ */
+export function parseHostSuffixes(text: string | undefined | null): string[] {
+  if (!text) return [];
+  const out: string[] = [];
+  for (const raw of text.split(/[\n,]/)) {
+    const s = raw.replace(/#.*$/, "").trim().toLowerCase();
+    if (!s) continue;
+    if (!/^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(s)) continue;
+    if (!out.includes(s)) out.push(s);
+  }
+  return out;
+}
+
 export function hostAllowed(hostWithPort: string, suffixes: string[]): boolean {
   const host = hostWithPort.toLowerCase().replace(/:\d+$/, "");
   return suffixes.some(
@@ -88,7 +117,7 @@ async function downloadOne(
     const res = await fetch(url, {
       signal,
       redirect: "follow",
-      headers: { "user-agent": opts.userAgent },
+      headers: { "user-agent": opts.userAgent, accept: MEDIA_ACCEPT },
     });
     if (res.status !== 200) return { bytes: Buffer.alloc(0), error: `http-${res.status}` };
     // redirect đã follow — host URL CUỐI cũng phải thuộc allowlist, kẻo
@@ -173,14 +202,18 @@ export async function fetchMessageMedia(params: {
         continue;
       }
       const m = EXT_RE.exec(parsed.pathname);
-      const ext = m ? `.${m[1].toLowerCase().replace("jpeg", "jpg")}` : ".jpg";
-      // Tên theo băm URL: cùng URL (repost) = cùng file, ổn định giữa các item
-      const name = `media/${createHash("sha256").update(url).digest("hex").slice(0, 16)}${ext}`;
       const dl = await downloadOne(url, { ...opts, signal: params.signal });
       if (dl.error) {
         entries.set(url, { url, error: dl.error });
         continue;
       }
+      // ZC15: byte JPEG XL giữ NGUYÊN (snapshot bất biến) nhưng đuôi nói thật
+      // để bên đọc theo đuôi không coi nó là JPEG.
+      const ext = isJpegXl(dl.bytes)
+        ? ".jxl"
+        : m ? `.${m[1].toLowerCase().replace("jpeg", "jpg")}` : ".jpg";
+      // Tên theo băm URL: cùng URL (repost) = cùng file, ổn định giữa các item
+      const name = `media/${createHash("sha256").update(url).digest("hex").slice(0, 16)}${ext}`;
       try {
         const written = await params.putFile(name, dl.bytes);
         entries.set(
