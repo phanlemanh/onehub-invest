@@ -6,6 +6,11 @@
 //       chạy); bài đã có nhãn đọc được không gọi lại. --thu chỉ in phạm vi + ước, không gọi model, không ghi, không đòi khoá.
 //       Dòng cuối stdout: {"pl34": {...}}. Thoát: 0 xong · 1 mọi lời gọi hỏng (lỗi gọi hay JSON hỏng) hoặc dừng vì khoá sai ·
 //       2 đầu vào sai · 3 trần · 4 dừng sớm vì hết tiền · 5 thiếu khoá.
+//   bu --tu YYYY-MM-DD --den YYYY-MM-DD [--tran-ngay-usd 20] [--tran-luot-usd X] [--song-song N] [--het-gio ISO] [--cau-hinh <tệp>] [--thu]
+//       HT6 lượt bù: hang-ngay cho từng ngày bài từ cũ tới mới (tối đa 14 ngày), chung trần ngày chi với lượt đêm, run_id mang «-bu-».
+//       --thu in từng ngày + dòng «bu tong», không gọi model, không ghi, không đòi khoá. Lượt bù thật là tiền: chạy tay theo hồ sơ áp.
+//   hang-ngay còn nhận --song-song N (hay DOC_GOP_SONG_SONG, mặc định 1) và --het-gio ISO (hay DOC_GOP_HET_GIO): hết giờ thoát 75
+//       («dừng đúng hẹn, đi tiếp»); lượt thật thứ hai chạy chồng thoát 6 «dang-co-luot-khac».
 //   cham --split test|dev --tran-usd <USD> [--lat s03-theo-nhom] [--cau-hinh <tệp>] [--ra <bảng.md>] [--tom-tat <tệp.json>]
 //       chấm bộ đọc trên nhãn vàng; chỉ đọc DB, không ghi bảng nào.
 // Khoá theo đường của bảng chọn (goi-thang-anthropic): ANTHROPIC_API_KEY cho model đi đường anthropic, AI_GATEWAY_API_KEY cho
@@ -80,12 +85,38 @@ export async function lenhHangNgay(argv: string[]): Promise<number> {
   }
 }
 
+export async function lenhBu(argv: string[]): Promise<number> {
+  const { docCoBu, chayBu } = await import("../src/enrich/doc-gop-s03/hang-ngay.js");
+  let co;
+  try {
+    co = docCoBu(argv);
+    napCauHinh(co.cauHinh);
+  } catch (e) {
+    console.error(`doc-gop-s03 bu: ${(e as Error).message}`);
+    return 2;
+  }
+  if (!co.thu) {
+    const ma = thieuKhoa("bu", co.cauHinh);
+    if (ma !== null) return ma;
+  }
+  const c = new pg.Client({ connectionString: DB_URL });
+  await c.connect();
+  try {
+    const kq = await chayBu({ client: c, co });
+    console.log(JSON.stringify({ bu: kq.tong }));
+    return kq.ma;
+  } finally {
+    await c.end();
+  }
+}
+
 async function main(): Promise<number> {
   const [lenh, ...rest] = process.argv.slice(2);
   if (lenh === "chay") return lenhChay(rest);
   if (lenh === "hang-ngay") return lenhHangNgay(rest);
+  if (lenh === "bu") return lenhBu(rest);
   if (lenh === "cham") return (await import("../src/enrich/doc-gop-s03/cham-lenh.js")).lenhCham(rest);
-  console.error("lệnh: chay | hang-ngay | cham");
+  console.error("lệnh: chay | hang-ngay | bu | cham");
   return 2;
 }
 
