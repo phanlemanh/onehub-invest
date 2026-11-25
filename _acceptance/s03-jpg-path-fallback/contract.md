@@ -5,7 +5,7 @@ slug: s03-jpg-path-fallback
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, config]
-status: implemented
+status: machine-cleared
 veto_state: mo
 veto_opened_at: 2026-11-25T01:57:41Z
 design_doc: docs/superpowers/specs/2026-11-25-s03-jpg-path-fallback-design.md
@@ -71,3 +71,11 @@ trọn đầu tiên sau áp ZC15 + ZC16: tỉ lệ ≤ 8,0%; ảnh link `/jpg/` 
   băm theo URL gốc, bỏ thử lại, thử lại mọi lỗi → đỏ; chạy lại mỗi lượt chấm bằng `probes/tu-thu.sh` (đuôi lệnh của E1–E3).
 - Số đo cho HT9/kit (GS 25/11): đổi 5 dòng một tệp test (`collector/src/test/media-fetch.test.ts`, sửa AC-4 sau S4 r1) → 2 lượt ×
   ~65′ suite pipeline (ZC16 r2 + ghim lại ZC15), không có đường giữ kết quả suite khi mã sản xuất không đổi.
+- Ngoài-1 (máy định tuyến 2026-11-25, đề xuất S4 known-limits): Khi chấm chung hai hồ sơ, bước kiểm sau áp của ZC15 có thể lúc đỏ lúc xanh dù mã đúng. Người dùng cuối không bị ảnh hưởng, chỉ người chấm có thể phải chạy lại. — `_acceptance/s03-media-r2-allowlist/ap-may-thu/kiem.sh`
+- Ngoài-2 (máy định tuyến 2026-11-25, đề xuất S4 known-limits): Tài liệu mô tả cách đặt tên tệp ảnh đã lệch so với hành vi thật cho ảnh tải qua đường thử lại. Phía đọc dữ liệu dùng tên tệp ghi sẵn nên hiện chưa hỏng gì. — `collector/src/core/media-fetch.ts`
+- Ngoài-3 (máy định tuyến 2026-11-25, đề xuất S4 known-limits): Khi ảnh lỗi cả hai lần, sổ chỉ ghi lỗi 400 ban đầu nên không phân biệt được lỗi mạng tạm thời với link chết. Tỉ lệ lỗi 400 đo sau khi áp có thể cao hơn thực tế một chút. — `collector/src/core/media-fetch.ts`
+- Ngoài-4 (máy định tuyến 2026-11-25, đề xuất S4 known-limits): Sau khi ZC15 gộp vào nhánh chính, bước kiểm của ZC15 có thể báo đỏ giả dù mã đúng. Người ký có thể bị nhầm là có lỗi thật. — `_acceptance/s03-media-r2-allowlist/ap-may-thu/kiem.sh`
+- Ngoài-5 (máy định tuyến 2026-11-25, đề xuất S4 known-limits): Bước kiểm của ZC15 có thể cho kết quả không ổn định khi chạy cùng lúc với bài kiểm của hồ sơ khác. Chỉ ảnh hưởng người chấm. — `_acceptance/s03-media-r2-allowlist/ap-may-thu/kiem.sh`
+- Ngoài-6 (máy định tuyến 2026-11-25, đề xuất S4 known-limits): Bước tự thử có thể báo đã bắt được lỗi dù ca đỏ là do lý do khác, nên chưa chứng minh chắc là việc thử lại sai chỗ sẽ bị phát hiện. Phần mã tải ảnh chạy cho người dùng không đổi. — `_acceptance/s03-jpg-path-fallback/probes/tu-thu.sh`
+- Ngoài-7 (máy định tuyến 2026-11-25, đề xuất S4 known-limits): Nếu bộ kiểm sau áp hỏng giữa chừng, phép soát rò tên vẫn báo ổn. Có thể bỏ sót một lần rò tên nguồn trong đầu ra. — `_acceptance/s03-jpg-path-fallback/ap-may-thu/kiem.sh`
+- Ngoài-8 (máy định tuyến 2026-11-25, đề xuất S4 known-limits): Phép kiểm khuôn dữ liệu ảnh chỉ đọc phần khai báo, nên một đường ghi thêm khoá lạ có thể lọt. Hiện chưa thấy khoá thừa nào được ghi. — `_acceptance/s03-media-r2-allowlist/probes/khuon-media-files.mjs`
