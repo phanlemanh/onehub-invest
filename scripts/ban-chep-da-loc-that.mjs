@@ -2,7 +2,8 @@
 // ban-chep-da-loc-that.mjs — E9 (AC-9) của HT18: ca dữ liệu thật. Ngoài CI, nặng (long_running) — chỉ lượt chấm s4 chạy.
 //   node scripts/ban-chep-da-loc-that.mjs
 // 1. Chép DB máy thu thật (CHỈ ĐỌC) → oneinvest_m5_<hôm nay>, soát, dump ra state/ban-chep-m5/ (đúng lệnh chính).
-// 2. Dựng data-api và app (RENAME_REFCALIB=1, như cloud) trỏ vào bản chép, ở cổng trống riêng; gọi `/v1/listings` của data-api và
+// 2. Dựng data-api và app (RENAME_REFCALIB=1, như cloud; app chạy `next dev --webpack` như cấu hình dev worktree của kho — Turbopack
+//    không giải được next qua app/node_modules là symlink ra ngoài thư mục app của worktree, đo 25/11) trỏ vào bản chép, ở cổng trống riêng; gọi `/v1/listings` của data-api và
 //    trang Invest khu Hà Nội (/vn/hanoi); in HTTP, số dòng, cỡ dump, số bảng có dòng, thời gian.
 // 3. Dọn: dừng hai tiến trình (cả nhóm), xoá DB đích. Tệp dump + ke.json giữ ở state/ban-chep-m5/ (gitignored).
 // Không gọi mạng ngoài: chỉ localhost. Không in giá trị — chỉ số đếm và mã HTTP.
@@ -58,7 +59,7 @@ async function main() {
   const api = nen(path.join(REPO, "data-api", "node_modules", ".bin", "tsx"), ["src/index.ts"], {
     cwd: path.join(REPO, "data-api"), env: { DATABASE_URL: url, PORT: String(cApi), DATA_API_KEYS: "" },
   });
-  const app = nen(path.join(REPO, "app", "node_modules", ".bin", "next"), ["dev", "-p", String(cApp)], {
+  const app = nen(path.join(REPO, "app", "node_modules", ".bin", "next"), ["dev", "--webpack", "-p", String(cApp)], {
     cwd: path.join(REPO, "app"), env: { DATABASE_URL: url, RENAME_REFCALIB: "1", NEXT_TELEMETRY_DISABLED: "1" },
   });
   let loi = 0;

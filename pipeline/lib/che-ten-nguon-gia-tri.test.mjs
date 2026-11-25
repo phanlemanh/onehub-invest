@@ -2,7 +2,7 @@
 // Mỗi ca có cặp đỏ: chạy cùng ma trận trên một bản hàm bị phá một luật → bản ấy phải trượt đúng các ca mang luật đó, nêu tên ca.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { cheGiaTri, cheChuJson, laUrl } from "./che-ten-nguon-gia-tri.mjs";
+import { cheGiaTri, cheChuJson, cheO, cheOJson, laUrl, laCotUrl } from "./che-ten-nguon-gia-tri.mjs";
 import { findSourceNames, maskSourceNames } from "./mask-source-names.mjs";
 
 const BIA = [
@@ -116,4 +116,44 @@ test("CHE: nhận dạng URL", () => {
 test("CHE: từ điển rỗng thì ném (đóng chặt)", () => {
   assert.throws(() => cheGiaTri("x", []), /rỗng/);
   assert.throws(() => cheGiaTri("x", null), /rỗng/);
+});
+
+// Ô gắn cột: URL đứng riêng mà trúng → NULL. [tên ca, cột, vào, mong, số chỗ]
+const MA_TRAN_O = [
+  ["url_rieng_theo_ten_cot", "listing_url", "cdn.quoxabds.vn/rooms/1", null, 1],
+  ["url_rieng_theo_gia_tri", "ghi_chu", "https://zelvanha.vn/x", null, 1],
+  ["chu_cot_thuong", "name", "Nhà Quoxa Bds", "Nhà S91", 1],
+  ["url_khong_trung", "listing_url", "https://khac.vn/x", "https://khac.vn/x", 0],
+  ["mang_trong_cot_url", "photo_urls", ["cdn.quoxabds.vn/a.jpg", "cdn.khac.vn/b.jpg"], ["cdn.khac.vn/b.jpg"], 1],
+];
+function caTruotO(fn) {
+  const truot = [];
+  for (const [ten, cot, vao, mong, so] of MA_TRAN_O) {
+    try {
+      const { giaTri, soCho } = fn(structuredClone(vao), BIA, { cot });
+      assert.deepEqual(giaTri, mong);
+      assert.equal(soCho, so);
+    } catch {
+      truot.push(ten);
+    }
+  }
+  return truot;
+}
+
+test("CHE: ô URL đứng riêng trúng → NULL, mảng trong cột URL chỉ bỏ phần tử, chữ thường thay mã", () => {
+  assert.deepEqual(caTruotO(cheO), []);
+});
+
+test("CHE: chiều đỏ — bản phá bỏ qua luật URL đứng riêng (thay chữ) trượt đúng hai ca URL", () => {
+  const truot = caTruotO((v, e) => cheGiaTri(v, e));
+  assert.deepEqual(truot.sort(), ["url_rieng_theo_gia_tri", "url_rieng_theo_ten_cot"], `trượt: ${truot.join(", ")}`);
+  // Bản phá NULL cả mảng trong cột URL trượt ca mảng.
+  const nullHet = caTruotO((v, e, o) => (laCotUrl(o.cot) && findSourceNames(JSON.stringify(v), e).length ? { giaTri: null, soCho: 1 } : cheO(v, e, o)));
+  assert.ok(nullHet.includes("mang_trong_cot_url"), `trượt: ${nullHet.join(", ")}`);
+});
+
+test("CHE: ô json là chuỗi URL trúng → null; json khác như cũ", () => {
+  assert.deepEqual(cheOJson('"https://zelvanha.vn/x"', BIA, { cot: "meta" }), { text: null, soCho: 1 });
+  assert.equal(cheOJson('{"zelvanha_id": 1}', BIA, { cot: "meta" }).text, '{"S92_id":1}');
+  assert.ok(laCotUrl("listing_url") && laCotUrl("photo_urls") && laCotUrl("photo") && !laCotUrl("name"));
 });

@@ -5,7 +5,9 @@
 // Luật:
 //   - chữ tự do → thay tên nguồn bằng mã S0x (maskSourceNames);
 //   - phần tử URL trúng trong mảng (mảng json hay text[]) → BỎ phần tử khỏi mảng, không thay chữ (URL thay chữ là URL hỏng);
-//   - khoá json trúng → đổi tên khoá thành mã («<tên>_id» → «S0x_id»); giá trị trúng → mã; đi sâu mọi cấp.
+//   - khoá json trúng → đổi tên khoá thành mã («<tên>_id» → «S0x_id»); giá trị trúng → mã; đi sâu mọi cấp;
+//   - ô URL đứng riêng (cột tên có `url`/`photo`, hoặc giá trị bắt đầu http(s)://) mà trúng → NULL, không thay chữ (GS 25/11:
+//     «URL thay chữ là URL chết»). Dùng cheO(giaTri, entries, { cot }) cho một ô; cheGiaTri cho giá trị không gắn cột.
 // Từ điển rỗng → ném (đóng chặt: không biết tên thì không được coi là đã che).
 import { findSourceNames, maskSourceNames } from "./mask-source-names.mjs";
 
@@ -61,4 +63,25 @@ export function docJson(text) {
 export function cheChuJson(text, entries) {
   const { giaTri, soCho } = cheGiaTri(docJson(text), entries);
   return { text: soCho ? JSON.stringify(giaTri) : text, soCho };
+}
+
+/** Tên cột chứa URL (listing_url, photo_urls, photo…). */
+export const laCotUrl = (cot) => /url|photo/i.test(String(cot ?? ""));
+
+/**
+ * Che MỘT ô của cột `cot`. Ô chữ đứng riêng là URL (theo tên cột hoặc giá trị http(s)://) mà trúng → { giaTri: null, soCho: 1 };
+ * còn lại như cheGiaTri (mảng trong cột URL vẫn chỉ bỏ phần tử trúng, không NULL cả ô).
+ */
+export function cheO(giaTri, entries, { cot } = {}) {
+  if (!entries?.length) throw new Error("che-ten-nguon-gia-tri: từ điển tên nguồn rỗng — không che được");
+  if (typeof giaTri === "string" && (laCotUrl(cot) || /^\s*https?:\/\//i.test(giaTri)) && findSourceNames(giaTri, entries).length) {
+    return { giaTri: null, soCho: 1 };
+  }
+  return cheGiaTri(giaTri, entries);
+}
+
+/** Như cheChuJson cho một ô json của cột `cot`: json là một chuỗi URL đứng riêng mà trúng → text null. */
+export function cheOJson(text, entries, { cot } = {}) {
+  const { giaTri, soCho } = cheO(docJson(text), entries, { cot });
+  return { text: !soCho ? text : giaTri === null ? null : JSON.stringify(giaTri), soCho };
 }

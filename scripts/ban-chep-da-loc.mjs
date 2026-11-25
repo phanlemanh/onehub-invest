@@ -26,7 +26,7 @@ import {
 import { docSourceNameEntries } from "../pipeline/lib/source-name-entries.mjs";
 import { tokensFromEntries } from "../pipeline/lib/tier-a-guard.mjs";
 import { findSourceNames, maskSourceNames, fold, nameVariants } from "../pipeline/lib/mask-source-names.mjs";
-import { cheGiaTri, cheChuJson } from "../pipeline/lib/che-ten-nguon-gia-tri.mjs";
+import { cheGiaTri, cheO, cheOJson } from "../pipeline/lib/che-ten-nguon-gia-tri.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 // scripts/ ở gốc không có node_modules: mượn pg của app (như scripts/dev-ops-account.mjs).
@@ -528,7 +528,7 @@ async function cotChuCoDong(c) {
 
 /**
  * Che tên nguồn còn trong ô dữ liệu đã chép, bằng hàm che chung pipeline/lib/che-ten-nguon-gia-tri.mjs (GS phán 25/11, sổ
- * d-…-25): chữ tự do → mã S0x, phần tử URL trúng trong mảng bị bỏ, khoá/giá trị json trúng → mã. Đo 25/11 trên DB máy thu: tập FILL
+ * d-…-25): chữ tự do → mã S0x, phần tử URL trúng trong mảng bị bỏ, ô URL đứng riêng trúng → NULL, khoá/giá trị json trúng → mã. Đo 25/11 trên DB máy thu: tập FILL
  * của sync-cloud còn mang tên nguồn ở areas.meta, listings.name, listings.photo_urls, sale_offers.street_raw. Ô trúng = lọc thô +
  * findSourceNames trên chữ của ô (cùng định nghĩa bộ soát). Che xong ô vẫn trúng thì ném (không coi là đã che). Bộ soát chạy SAU và
  * độc lập. Trả { "bảng.cột": số ô đã che }.
@@ -544,13 +544,17 @@ export async function cheODich(dc, entries) {
     // Ô mảng chữ đọc dạng đã giải (pg trả mảng JS); ô json đọc dạng chữ để giữ nguyên chữ số; ô chữ đọc dạng chữ.
     const { rows: goc } = await dc.query(
       `SELECT ctid::text AS id, ${json || !mang ? `${q(r.c)}::text` : q(r.c)} AS raw FROM ${q(r.t)} WHERE ctid = ANY($1::tid[])`, [ids]);
+    let moNull = false;
     for (const x of goc) {
       let moi;
-      if (json && !mang) moi = cheChuJson(x.raw, entries).text;
+      if (json && !mang) moi = cheOJson(x.raw, entries, { cot: r.c }).text;
       else if (mang && !json) moi = cheGiaTri(x.raw, entries).giaTri;
-      else moi = maskSourceNames(x.raw, entries); // json[] hay kiểu chữ khác: thay chữ trên toàn ô
+      else if (!mang) moi = cheO(x.raw, entries, { cot: r.c }).giaTri; // chữ: thay mã, hay NULL nếu là ô URL đứng riêng
+      else moi = maskSourceNames(x.raw, entries); // json[]: thay chữ trên toàn ô
       const chu = moi == null ? null : json && !mang ? moi : mang && !json ? JSON.stringify(moi) : String(moi);
-      if (chu == null || findSourceNames(chu, entries).length) throw new Error(`không che hết ô ${r.t}.${r.c}`);
+      if (chu != null && findSourceNames(chu, entries).length) throw new Error(`không che hết ô ${r.t}.${r.c}`);
+      // Ô URL đứng riêng về NULL: cột NOT NULL thì bỏ NOT NULL ở đích (một lần).
+      if (moi == null && !moNull) { await dc.query(`ALTER TABLE ${q(r.t)} ALTER COLUMN ${q(r.c)} DROP NOT NULL`); moNull = true; }
       await dc.query(`UPDATE ${q(r.t)} SET ${q(r.c)} = $1::${r.kieu} WHERE ctid = $2::tid`, [moi, x.id]);
       dem[`${r.t}.${r.c}`] = (dem[`${r.t}.${r.c}`] ?? 0) + 1;
     }
