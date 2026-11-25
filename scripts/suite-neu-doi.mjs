@@ -51,6 +51,7 @@ const VUNG_THAT = [
   "pipeline/scripts/capture-ops-facts.mjs", "pipeline/scripts/ops-facts-fixture.mjs", "pipeline/scripts/test-data-residue.mjs",
   "pipeline/*.mjs", "pipeline/*.sh", "pipeline/package.json", "pipeline/lib/**", "pipeline/sql/**", "pipeline/data/**",
   "pipeline/cron/com.oneinvest.collector-api.plist",
+  "pipeline/cron/com.oneinvest.ops-apply.plist",
   "db/migrations/**", "db/db-thu.sh", "db/dau-luoc-do.sql",
   "scripts/check-freshness.mjs", "scripts/lib/**", "scripts/ci-bo-qua.json", "scripts/install-collector-api.sh",
   "scripts/fixtures/launchctl-list-2026-10-23.txt", "docs/ops/runtime-map.md",
