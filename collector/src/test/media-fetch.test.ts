@@ -404,7 +404,10 @@ test("media (2511-3): URL /jpg/ bị CDN 400 → fallback bỏ /jpg/ tải đư�
   assert.equal(mf.error, undefined);
   // nội dung trên đĩa khớp bytes fixture
   const onDisk = readFileSync(join(dir, mediaEntry.name));
-  assert.equal(onDisk.length, JPG_A.length);
+  assert.ok(onDisk.equals(JPG_A), "byte trên đĩa phải khớp byte CDN trả");
+  assert.equal(mf.sha256, createHash("sha256").update(JPG_A).digest("hex"));
+  // AC-4: CDN trả header image/jxl mà byte là JPEG → đuôi theo BYTE (.jpg), không theo header
+  assert.match(mf.file, /\.jpg$/, "đuôi phải theo byte (.jpg) dù header là image/jxl");
 });
 
 test("ZC16: không thử lại sai chỗ — 400 không /jpg/, 404 có /jpg/, thay thế cũng lỗi → giữ lỗi gốc", async () => {

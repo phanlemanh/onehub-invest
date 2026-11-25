@@ -54,11 +54,14 @@ if echo "$out" | grep -q '^2026-11-25  10 bài có ảnh · 2 mất hết ảnh.
 out=$(chay "$A/mau/canh-gac.json"); echo "$out" | grep -q 'canh-gac' && loi "kiem-sau in tên host canh gác" || dat "kiem-sau không in tên host (mẫu canh-gac)"
 
 # 3. round-trip writer thật: dist của nhánh và của đầu nhánh ZC15
-( cd "$GOC/collector" && npx tsc -p tsconfig.json >/dev/null 2>&1 ) || loi "build collector nhánh"
-"$(command -v node)" "$A/sinh-dong-that.mjs" "$GOC/collector/dist" "$T/nhanh.json" && out=$(chay "$T/nhanh.json")
+# build vào bản chép riêng trong $T — KHÔNG đụng collector/dist của cây (eval khác chạy song song xoá/dựng lại dist; S4 r1 25/11)
+mkdir -p "$T/nhanh" && git -C "$GOC" archive HEAD collector | tar -x -C "$T/nhanh" && ln -s "$GOC/collector/node_modules" "$T/nhanh/collector/node_modules"
+( cd "$T/nhanh/collector" && npx tsc -p tsconfig.json >/dev/null 2>&1 ) || loi "build collector nhánh"
+"$(command -v node)" "$A/sinh-dong-that.mjs" "$T/nhanh/collector/dist" "$T/nhanh.json" && out=$(chay "$T/nhanh.json")
 echo "$out" | grep -q '^ĐẠT — 2 bài có ảnh · 0 mất hết ảnh' && dat "round-trip nhánh → ĐẠT" || loi "round-trip nhánh: '$out'"
 # bản so: đầu nhánh ZC15 (chưa có thử lại /jpg/) — ZC16 xếp chồng lên ZC15
-BASE=$(git -C "$GOC" rev-parse --verify -q origin/fix/s03-media-r2-allowlist || git -C "$GOC" rev-parse fix/s03-media-r2-allowlist)
+# sha cố định của đầu nhánh ZC15 (nằm trong lịch sử nhánh này) — không dựa vào tên nhánh chỉ có ở một máy
+BASE=edb66bd8c31a21a50208cfedb06337b7505965f7
 mkdir -p "$T/main" && git -C "$GOC" archive "$BASE" collector | tar -x -C "$T/main" && ln -s "$GOC/collector/node_modules" "$T/main/collector/node_modules"
 ( cd "$T/main/collector" && npx tsc -p tsconfig.json >/dev/null 2>&1 ) || loi "build collector main"
 node "$A/sinh-dong-that.mjs" "$T/main/collector/dist" "$T/main.json" && out=$(chay "$T/main.json")

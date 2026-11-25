@@ -30,7 +30,7 @@ if (process.argv[2] === "--con") {
     for (let i = 0; i < 5; i++) {
       const r = cdn(u);
       if (r.to) { u = new URL(r.to); continue; }
-      const res = new Response(r.body ?? "", { status: r.status ?? 200, headers: { "content-type": "image/jpeg" } });
+      const res = new Response(r.body ?? "", { status: r.status ?? 200, headers: { "content-type": "image/jxl" } });
       Object.defineProperty(res, "url", { value: u.href });
       return res;
     }

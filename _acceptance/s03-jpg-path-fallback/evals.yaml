@@ -14,7 +14,7 @@ evals:
     executor: test
     cmd: config:executors.script.zc16_media_test
     paths: [collector/src/core/media-fetch.ts, collector/src/test/media-fetch.test.ts]
-    expected: "exit 0; cùng ca 2511-3: payload.media và meta.url giữ URL gốc /jpg/broken.jpg; mf.urlFetched === undefined; khoá của entry đúng [bytes, file, sha256, url]; tên tệp mở đầu media/<băm 16 hex của URL ĐÃ TẢI /broken.jpg> và KHÔNG mở đầu bằng băm của URL gốc. Chiều đỏ (đo 25/11): băm theo url gốc thay vì URL đã tải → ca này đỏ với thông điệp 'tên tệp phải băm theo URL đã tải'."
+    expected: "exit 0; cùng ca 2511-3: payload.media và meta.url giữ URL gốc /jpg/broken.jpg; mf.urlFetched === undefined; khoá của entry đúng [bytes, file, sha256, url]; tên tệp mở đầu media/<băm 16 hex của URL ĐÃ TẢI /broken.jpg> và KHÔNG mở đầu bằng băm của URL gốc. Byte trên đĩa bằng đúng byte CDN trả và sha256 khớp. Chiều đỏ (đo 25/11): băm theo url gốc thay vì URL đã tải → ca này đỏ với thông điệp 'tên tệp phải băm theo URL đã tải'."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E3
@@ -30,13 +30,13 @@ evals:
     executor: test
     cmd: config:executors.script.zc16_media_test
     paths: [collector/src/core/media-fetch.ts, collector/src/test/media-fetch.test.ts]
-    expected: "exit 0; ca ZC15 «JPEG XL lưu nguyên byte với đuôi .jxl; JPEG giữ .jpg» xanh sau khi gộp (byte FF 0A và hộp JXL → .jxl; byte JPEG → .jpg); ca 2511-3: CDN giả trả header image/jxl với byte JPEG_A → tệp đuôi .jpg (đoán theo byte, không theo header); ca «ZC16: ảnh tải qua đường thử lại mà byte là JPEG XL → đuôi .jxl dù URL đuôi .jpg» xanh (/jpg/jx.jpg 400, /jx.jpg byte FF 0A → file .jxl, byte giữ nguyên)."
+    expected: "exit 0; ca ZC15 «JPEG XL lưu nguyên byte với đuôi .jxl; JPEG giữ .jpg» xanh sau khi gộp (byte FF 0A và hộp JXL → .jxl; byte JPEG → .jpg); ca 2511-3: CDN giả trả header image/jxl với byte JPEG_A → assert tên tệp kết thúc '.jpg' (thông điệp ghim 'đuôi phải theo byte'; đoán theo byte, không theo header); ca «ZC16: ảnh tải qua đường thử lại mà byte là JPEG XL → đuôi .jxl dù URL đuôi .jpg» xanh (/jpg/jx.jpg 400, /jx.jpg byte FF 0A → file .jxl, byte giữ nguyên)."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E5
     criterion: AC-5
     executor: test
-    cmd: config:executors.script.collector_test_clean
+    cmd: config:executors.script.zc16_media_test
     paths: [collector/src/**]
     expected: "exit 0; toàn bộ test collector trên dist vừa xoá 0 fail (89 ca, gồm 5 ca ZC15, 2 ca ZC9, ca 2511-3, ba ca ZC16)."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
@@ -62,7 +62,7 @@ evals:
     executor: script
     cmd: config:executors.script.zc16_ap_may_thu
     paths: [_acceptance/s03-jpg-path-fallback/ap-may-thu/**, collector/src/core/media-fetch.ts]
-    expected: "exit 0; 'AP-MAY-THU PASS': README năm mục có nội dung (mục 1 có build, kickstart kèm 'lời riêng của Mạnh', khung giờ, nói áp chung ZC15; mục 2 có 27,5% và 8,1%); tự phá mục 2 → đỏ đúng mục; kiem-sau trên mẫu: dat → ĐẠT, con-jpg-400 → 'còn 1 ảnh link /jpg/ lỗi http-400', chua-co-jpg → 'chưa có ảnh link /jpg/ nào tải được', khong-bai-moi → 'chưa có bài mới có ảnh'; canh-gac → đầu ra không chứa 'canh-gac'; round-trip collector API: nhánh → 'ĐẠT — 2 bài có ảnh · 0 mất hết ảnh', đầu nhánh ZC15 → 'KHÔNG ĐẠT — còn 1 ảnh link /jpg/ lỗi http-400'."
+    expected: "exit 0; 'AP-MAY-THU PASS': README năm mục có nội dung (mục 1 có build, kickstart kèm 'lời riêng của Mạnh', khung giờ, nói áp chung ZC15; mục 2 có 27,5% và 8,1%); tự phá mục 2 → đỏ đúng mục; kiem-sau trên mẫu (ngưỡng 5%): dat → 'ĐẠT — 3 bài có ảnh', duoi-tran → ĐẠT 'lỗi 400 1 (4.0%)', con-jpg-400 → 'ảnh link /jpg/ lỗi http-400 50.0% > 5%', chua-co-jpg → 'chưa có ảnh link /jpg/ nào', khong-bai-moi → 'chưa có bài mới có ảnh'; --ty-le trên mẫu ty-le → 20,0%; canh-gac → đầu ra không chứa 'canh-gac'; round-trip collector API trên bản chép riêng trong thư mục tạm (không đụng collector/dist của cây), CDN giả trả header image/jxl với byte JPEG: nhánh → 'ĐẠT — 2 bài có ảnh · 0 mất hết ảnh', đầu nhánh ZC15 (sha cố định edb66bd8c) → 'KHÔNG ĐẠT — ảnh link /jpg/ lỗi http-400 100.0% > 5%'."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E9
