@@ -21,11 +21,11 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
-  FILL, RENAME, CLOUD_ALLOW, PII_EXCLUDE, SOURCE_EXCLUDE, selectList, childFilterSql, maskedSourceExpr,
+  FILL, RENAME, CLOUD_ALLOW, PII_EXCLUDE, SOURCE_EXCLUDE, selectList, childFilterSql,
 } from "../pipeline/sync-cloud.mjs";
 import { docSourceNameEntries } from "../pipeline/lib/source-name-entries.mjs";
 import { tokensFromEntries } from "../pipeline/lib/tier-a-guard.mjs";
-import { findSourceNames, maskSourceNames } from "../pipeline/lib/mask-source-names.mjs";
+import { findSourceNames, maskSourceNames, fold, nameVariants } from "../pipeline/lib/mask-source-names.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 // scripts/ ở gốc không có node_modules: mượn pg của app (như scripts/dev-ops-account.mjs).
@@ -208,11 +208,40 @@ SELECT DISTINCT x FROM (
   WHERE c.relnamespace = 'public'::regnamespace AND c.relkind IN ('r', 'p', 'v', 'm', 'f') AND a.attnum > 0 AND NOT a.attisdropped
 ) s`;
 
-/** Câu lọc thô một cột: giá trị có biến thể tên nguồn theo biểu thức che của sync-cloud (cùng lõi gập dấu); JS xác nhận lại
- *  bằng findSourceNames. */
-// Không LIMIT: lọc thô có thể trúng thừa (ranh từ của SQL khác JS một chút) — cắt ở N dòng đầu thì một ô trúng thật phía sau bị bỏ.
-export const cauLocTenNguon = (table, col, tokens) =>
-  `SELECT v FROM (SELECT ${q(col)}::text AS v FROM ${q(table)}) s WHERE v IS NOT NULL AND ${maskedSourceExpr("v", tokens)} IS NULL`;
+// Bảng gập dấu cho translate(), sinh từ chính fold() của lõi khớp (cùng cách sync-cloud dựng — hàm ấy không export).
+const FOLD_FROM = [];
+const FOLD_TO = [];
+for (const [lo, hi] of [[0xc0, 0x24f], [0x1e00, 0x1eff]]) {
+  for (let cp = lo; cp <= hi; cp++) {
+    const ch = String.fromCodePoint(cp);
+    const b = fold(ch);
+    if (b !== ch && b.length === 1) { FOLD_FROM.push(ch); FOLD_TO.push(b); }
+  }
+}
+
+/** Biến thể đã gập của từ điển, bản giữ dấu phân tách và bản bỏ hết ký tự không phải chữ/số — cho bộ lọc thô. */
+export function bienTheLoc(entries) {
+  const v = [...new Set(entries.flatMap((e) => nameVariants(e.realName, { wholeOnly: e.wholeOnly })))];
+  const lien = [...new Set(v.map((x) => x.replace(/[^\p{L}\p{N}]+/gu, "")).filter((x) => x.length >= 3))];
+  return { v, lien };
+}
+
+/**
+ * Câu lọc thô một cột: TẬP TRÊN của findSourceNames (không xét ranh từ, thêm bản bỏ dấu phân tách và mã %XX), mỗi dòng gập dấu
+ * một lần (OFFSET 0 chặn Postgres nhân biểu thức theo từng biến thể). JS xác nhận lại bằng findSourceNames — lõi khớp duy nhất.
+ * Đo 25/11: biểu thức che của sync-cloud (maskedSourceExpr) tính lại regexp cho từng biến thể ngắn, quá 180 s một cột trên
+ * sale_offers của máy thu — không dùng được cho bộ soát toàn bảng. Không LIMIT: lọc thô có thể trúng thừa, cắt N dòng đầu thì
+ * một ô trúng thật phía sau bị bỏ. `voiCtid` trả thêm ctid cho bước che.
+ */
+export function cauLocTenNguon(table, col, entries, { voiCtid = false } = {}) {
+  const { v, lien } = bienTheLoc(entries);
+  if (!v.length) return `SELECT NULL::text AS v WHERE false`;
+  const dieu = [...v.map((x) => `position(${lit(x)} in m.f) > 0`), ...lien.map((x) => `position(${lit(x)} in n.g) > 0`)].join(" OR ");
+  return `SELECT ${voiCtid ? "s.id, " : ""}s.v FROM (SELECT ${voiCtid ? "ctid::text AS id, " : ""}${q(col)}::text AS v FROM ${q(table)}) s
+    CROSS JOIN LATERAL (SELECT translate(lower(normalize(s.v, NFC)), ${lit(FOLD_FROM.join(""))}, ${lit(FOLD_TO.join(""))}) AS f OFFSET 0) m
+    CROSS JOIN LATERAL (SELECT regexp_replace(m.f, '(%[0-9a-f]{2}|[^[:alnum:]])+', '', 'g') AS g OFFSET 0) n
+    WHERE s.v IS NOT NULL AND (${dieu})`;
+}
 
 /** Che tên nguồn trong một dòng sắp in (mã S0x thay tên). Không có từ điển thì in nguyên — chế độ --khong-tu-dien không biết tên. */
 export function taoChe(entries) {
@@ -493,11 +522,9 @@ async function cotChuCoDong(c) {
  * (AC-3) sẽ đỏ trên mọi bản chép nếu không che. Bước này chỉ là che; bộ soát chạy SAU và độc lập. Trả { "bảng.cột": số ô }.
  */
 export async function cheGiaTri(dc, entries) {
-  const tokens = tokensFromEntries(entries);
   const dem = {};
   for (const r of await cotChuCoDong(dc)) {
-    const { rows } = await dc.query(
-      `SELECT id, v FROM (SELECT ctid::text AS id, ${q(r.c)}::text AS v FROM ${q(r.t)}) s WHERE v IS NOT NULL AND ${maskedSourceExpr("v", tokens)} IS NULL`);
+    const { rows } = await dc.query(cauLocTenNguon(r.t, r.c, entries, { voiCtid: true }));
     for (const x of rows) {
       if (!findSourceNames(x.v, entries).length) continue;
       const moi = maskSourceNames(x.v, entries);
@@ -732,13 +759,12 @@ export async function soatDich(c, { entries = null } = {}) {
 
   if (!entries) return hits;
   if (!entries.length) { hits.push({ muc: "tu_dien", cho: "từ điển tên nguồn rỗng — không soát được" }); return hits; }
-  const tokens = tokensFromEntries(entries);
 
   // (a1) ô dữ liệu text/json/mảng chữ.
   for (const r of cols) {
     const lo = loaiO(r.udt);
     if (!lo) continue;
-    const { rows } = await c.query(cauLocTenNguon(r.t, r.c, tokens));
+    const { rows } = await c.query(cauLocTenNguon(r.t, r.c, entries));
     const hit = rows.map((x) => findSourceNames(x.v, entries)[0]).find(Boolean);
     if (hit) hits.push({ muc: lo, cho: `${r.t}.${r.c}`, ma: hit.code });
   }

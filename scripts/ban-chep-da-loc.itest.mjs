@@ -464,12 +464,10 @@ test("BCL-10: --don xoá mọi oneinvest_m5_*", async () => {
 test("BCL-10: state/ban-chep-m5 bị git bỏ qua và nằm ngoài nguồn sao lưu ra ngoài máy", () => {
   const g = spawnSync("git", ["-C", REPO, "check-ignore", "-q", "state/ban-chep-m5/x"]);
   assert.equal(g.status, 0, "state/ban-chep-m5/ phải bị git bỏ qua");
+  // Nguồn sao lưu ra ngoài máy (collector/snapshots, collector/state, kho ảnh) không được có đường nào dưới state/ban-chep-m5.
   const goc = path.join(REPO, "state", "ban-chep-m5");
-  const { duong } = nguonSaoLuu({ gocNguon: REPO, khoAnh: goc });
-  // khoAnh trỏ thử vào chính thư mục — nếu ai đó nối state/ vào nguồn sao lưu thì đường dưới state/ban-chep-m5 lộ ra ở đây.
-  const loi = duong.filter((d) => d !== goc && (path.resolve(d) + path.sep).startsWith(goc + path.sep));
-  assert.deepEqual(loi, []);
-  const { duong: d2 } = nguonSaoLuu({ gocNguon: REPO, khoAnh: null });
-  assert.deepEqual(d2.filter((d) => (path.resolve(d) + path.sep).startsWith(goc + path.sep)), []);
+  const { duong } = nguonSaoLuu({ gocNguon: REPO, khoAnh: null });
+  const duoi = duong.filter((d) => (path.resolve(d) + path.sep).startsWith(goc + path.sep) || (goc + path.sep).startsWith(path.resolve(d) + path.sep));
+  assert.deepEqual(duoi, [], `nguồn sao lưu chạm state/ban-chep-m5: ${duoi.join(", ")}`);
   assert.ok(existsSync(SCRIPT));
 });

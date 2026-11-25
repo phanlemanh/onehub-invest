@@ -189,3 +189,17 @@ for (const dich of ["oneinvest", "oneinvest_m5_2026", "foo"]) {
     assert.match(r.stderr, /đích/);
   });
 }
+
+test("BCL-3: bộ lọc thô SQL là tập trên của lõi khớp (biến thể đủ, bản viết liền), không LIMIT", async () => {
+  const { bienTheLoc, cauLocTenNguon } = await import("./ban-chep-da-loc.mjs");
+  const { v, lien } = bienTheLoc(BIA);
+  assert.ok(v.includes("quoxa bds") && v.includes("quoxabds") && v.includes("zelvanha"));
+  assert.ok(lien.includes("quoxabds"));
+  const sql = cauLocTenNguon("areas", "meta", BIA);
+  assert.ok(!/LIMIT/i.test(sql));
+  assert.match(sql, /position\('quoxa bds' in m\.f\)/);
+  assert.match(sql, /position\('quoxabds' in n\.g\)/);
+  assert.match(sql, /OFFSET 0\) m/);
+  assert.match(cauLocTenNguon("areas", "meta", []), /WHERE false/);
+  assert.match(cauLocTenNguon("areas", "meta", BIA, { voiCtid: true }), /ctid::text AS id/);
+});
