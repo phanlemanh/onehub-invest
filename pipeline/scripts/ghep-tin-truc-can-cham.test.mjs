@@ -39,5 +39,5 @@ test("the-cai-loai-khoi-phep-tinh-va-dem-nguoi-duyet-sua-dung", () => {
   assert.deepEqual(t.the_cai, { so: 2, da_duyet: 2, sua_dung: 1 });
   const r = { ...chamTap(t.dong, nhan), the_cai: t.the_cai };
   assert.equal(r.dat, true, "thẻ cài người duyệt để lọt không được tính là máy gắn sai");
-  assert.match(vietBaoCao(r, tap), /Thẻ cài lỗi loại khỏi phép tính: 2 · người duyệt sửa đúng 1\/2/);
+  assert.match(vietBaoCao(r, tap), /Thẻ cài lỗi loại khỏi phép tính: 2 · nhãn đã lưu của thẻ cài đúng giá trị 1\/2/);
 });

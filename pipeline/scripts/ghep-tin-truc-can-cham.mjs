@@ -69,8 +69,8 @@ export function vietBaoCao(r, x) {
   return [
     `# Chấm gắn trục PL36 — tập ${x.lat}-${x.seed}`, "",
     `sha256 tập: \`${x.sha256}\``, "",
+    ...(r.the_cai ? [`Thẻ cài lỗi loại khỏi phép tính: ${r.the_cai.so} · nhãn đã lưu của thẻ cài đúng giá trị ${r.the_cai.sua_dung}/${r.the_cai.da_duyet} (hệ số bắt lỗi lúc duyệt do phiên gắn nhãn đo riêng).`, ""] : []),
     "| Khu | Bài trong tập | Đã có nhãn | Máy gắn đúng | Cận dưới Wilson 95% | Ngưỡng | Kết luận |", "|---|---|---|---|---|---|---|",
-    ...(r.the_cai ? [`Thẻ cài lỗi loại khỏi phép tính: ${r.the_cai.so} · người duyệt sửa đúng ${r.the_cai.sua_dung}/${r.the_cai.da_duyet} thẻ đã duyệt.`, ""] : []),
     `| OP1 | ${r.so_bai} | ${r.so_cham} | ${r.dung} | ${f(r.wilson_thap)} | ${NGUONG} | ${r.dat ? "đạt" : r.chua_nhan.length ? "chưa đủ nhãn" : "hụt"} |`,
     "| GP | 0 | — | — | — | báo số | GP gần như không nêu mã căn (Hỏi-1) |", "",
     `## Bài máy gắn sai (${r.sai.length})`, "",
