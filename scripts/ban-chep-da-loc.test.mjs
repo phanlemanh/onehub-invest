@@ -301,3 +301,17 @@ test("BCL-8: phân loại lỗi nối", () => {
   assert.ok(laLoiKetNoi({ code: "08006" }));
   assert.ok(!laLoiKetNoi({ message: "relation \"x\" does not exist", code: "42P01" }));
 });
+
+test("BCL-1: viết lại định nghĩa chỉ mục của bảng gốc sang bảng đích; chuẩn hoá để so theo định nghĩa", async () => {
+  const { vietLaiChiMuc, chuanChiMuc } = await import("./ban-chep-da-loc.mjs");
+  assert.equal(vietLaiChiMuc("CREATE UNIQUE INDEX sale_offers_pkey ON public.sale_offer_records USING btree (offer_id)", "sale_offers_pkey", "sale_offers"),
+    'CREATE UNIQUE INDEX "sale_offers_pkey" ON public."sale_offers" USING btree (offer_id)');
+  assert.equal(vietLaiChiMuc('CREATE INDEX "Ten La" ON public."Bang Goc" USING btree (street_raw, area_id) WHERE (street_raw IS NOT NULL)', "x_idx", "sale_offers"),
+    'CREATE INDEX "x_idx" ON public."sale_offers" USING btree (street_raw, area_id) WHERE (street_raw IS NOT NULL)');
+  assert.equal(vietLaiChiMuc("không phải chỉ mục", "a", "b"), null);
+  const a = chuanChiMuc("CREATE INDEX sale_offers_area_idx ON public.sale_offer_records USING btree (area_id, kind)");
+  const b = chuanChiMuc('CREATE INDEX "sale_offers_area_idx" ON public."sale_offers" USING btree (area_id, kind)');
+  assert.equal(a, b);
+  assert.notEqual(a, chuanChiMuc("CREATE INDEX x ON public.sale_offers USING btree (kind, area_id)"));
+  assert.notEqual(chuanChiMuc("CREATE UNIQUE INDEX x ON public.t USING btree (a)"), chuanChiMuc("CREATE INDEX x ON public.t USING btree (a)"));
+});

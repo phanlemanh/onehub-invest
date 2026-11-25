@@ -513,6 +513,68 @@ async function boHamNhacTenCu(dc) {
   return rows.map((r) => r.f);
 }
 
+/** Viết lại định nghĩa chỉ mục của bảng gốc cho bảng đích: tên chỉ mục mới, `ON public.<bảng đích>`. null nếu không đọc được khuôn. */
+export function vietLaiChiMuc(def, ten, bangDich) {
+  const m = /^(CREATE (?:UNIQUE )?INDEX )(?:"(?:[^"]|"")+"|\S+)( ON (?:ONLY )?)(?:"(?:[^"]|"")+"|\S+)\.(?:"(?:[^"]|"")+"|\S+?)( USING .*)$/s.exec(def);
+  if (!m) return null;
+  return `${m[1]}${q(ten)}${m[2]}public.${q(bangDich)}${m[3]}`;
+}
+
+/**
+ * Chuẩn hoá định nghĩa chỉ mục để so «theo định nghĩa» (bỏ tên chỉ mục và tên bảng): «CREATE [UNIQUE ]INDEX ON <bảng> USING …».
+ */
+export function chuanChiMuc(def) {
+  const m = /^(CREATE (?:UNIQUE )?INDEX )(?:"(?:[^"]|"")+"|\S+) ON (?:ONLY )?(?:"(?:[^"]|"")+"|\S+)( USING .*)$/s.exec(def);
+  return m ? `${m[1]}ON _${m[2]}` : def;
+}
+
+/** Câu đọc NGUỒN (chỉ đọc): bảng gốc duy nhất của một view và chỉ mục của nó, kèm cột mà mỗi chỉ mục chạm (khoá, biểu thức, điều kiện). */
+export const SQL_CHI_MUC_GOC = `
+WITH goc AS (
+  SELECT u.table_name AS bang FROM information_schema.view_table_usage u
+  WHERE u.view_schema = 'public' AND u.view_name = $1
+)
+SELECT (SELECT count(*) FROM goc)::int AS so_goc, g.bang, i.indexrelid::regclass::text AS ten_cu, pg_get_indexdef(i.indexrelid) AS def,
+       i.indisprimary AS pk,
+       ARRAY(SELECT DISTINCT a.attname::text FROM pg_depend d JOIN pg_attribute a ON a.attrelid = d.refobjid AND a.attnum = d.refobjsubid
+             WHERE d.classid = 'pg_class'::regclass AND d.objid = i.indexrelid AND d.refobjsubid > 0 ORDER BY 1) AS cot
+FROM goc g JOIN pg_class c ON c.relname = g.bang AND c.relnamespace = 'public'::regnamespace AND c.relkind IN ('r', 'p')
+JOIN pg_index i ON i.indrelid = c.oid
+WHERE (SELECT count(*) FROM goc) = 1
+ORDER BY 3`;
+
+/**
+ * Dựng lại chỉ mục của bảng gốc trên các bảng thành-bảng (GS 26/11, sổ d-…-31): CREATE TABLE AS … WITH NO DATA không mang chỉ mục.
+ * Chỉ dựng khi view có đúng MỘT quan hệ gốc là bảng; chỉ mục chạm cột không lên đích bị bỏ (trả trong `bo`). Khoá chính → ADD
+ * PRIMARY KEY USING INDEX. Tên trùng với chỉ mục của bảng gốc ở đích (bảng 0 dòng) thì đổi tên chỉ mục ở bảng gốc đích thành
+ * `<tên>_goc` và giữ tên cũ cho bảng đích. Trả { dung: { bảng: [tên] }, bo: ["bảng.tên: lý do"] }.
+ */
+export async function dungChiMuc(nc, dc, thanhBang, cotLen) {
+  const dung = {};
+  const bo = [];
+  for (const v of thanhBang) {
+    const { rows } = await nc.query(SQL_CHI_MUC_GOC, [v]);
+    const { rows: [so] } = await nc.query(`SELECT count(*)::int AS n FROM information_schema.view_table_usage WHERE view_schema = 'public' AND view_name = $1`, [v]);
+    if (so.n !== 1) { bo.push(`${v}: ${so.n} quan hệ gốc — không dựng chỉ mục theo bảng gốc`); dung[v] = []; continue; }
+    dung[v] = [];
+    const cot = new Set(cotLen[v] ?? []);
+    for (const r of rows) {
+      const ten = r.ten_cu.replace(/^public\./, "").replace(/^"(.*)"$/, "$1");
+      const thieu = r.cot.filter((c) => !cot.has(c));
+      if (thieu.length) { bo.push(`${v}.${ten}: cột không lên đích (${thieu.join(", ")})`); continue; }
+      const { rows: [trung] } = await dc.query(
+        `SELECT c.relname FROM pg_class c WHERE c.relnamespace = 'public'::regnamespace AND c.relname = $1`, [ten]);
+      if (trung) await dc.query(`ALTER INDEX ${q(ten)} RENAME TO ${q(`${ten}_goc`.slice(0, 63))}`);
+      const def = vietLaiChiMuc(r.def, ten, v);
+      if (!def) { bo.push(`${v}.${ten}: không đọc được định nghĩa`); continue; }
+      await dc.query(def);
+      if (r.pk) await dc.query(`ALTER TABLE ${q(v)} ADD CONSTRAINT ${q(ten)} PRIMARY KEY USING INDEX ${q(ten)}`);
+      dung[v].push(ten);
+    }
+  }
+  return { dung, bo };
+}
+
 /** Kiểu cột có chữ (text/json/mảng chữ) của các bảng có dòng ở public — chung cho bước che và bộ soát. */
 async function cotChuCoDong(c) {
   const { rows } = await c.query(
@@ -618,7 +680,7 @@ export async function demDong(client, tables) {
  * `loiCay` — "giua-chep": ném lỗi sau bảng đầu tiên (E10: lệnh gãy giữa chừng thì không còn DB đích).
  */
 export async function chayChep({ nguonUrl = NGUON_MAC_DINH, dich = tenDich(), ra = RA_MAC_DINH, out = console.log, err = console.error,
-  sauChep, loiCay } = {}) {
+  sauChep, loiCay, _boChiMuc = false } = {}) {
   const ng = phanTichNguon(nguonUrl);
   if (ng.loi) { err(`ban-chep-da-loc: ${ng.loi}`); return 2; }
   const loiTen = loiTenDich(dich, ng.db);
@@ -656,21 +718,28 @@ export async function chayChep({ nguonUrl = NGUON_MAC_DINH, dich = tenDich(), ra
 
     const soDong = {};
     const cotLoai = {};
+    const cotLen = {};
     const thuTu = thuTuChep(chep, kn.fks);
     let lan = 0;
     for (const t of thuTu) {
       const local = (cotNguon.get(t) ?? []).filter((c) => !c.gen).map((c) => c.c);
       const ke = keHoachCot(t, local, tokens);
+      cotLen[t] = ke.cols;
       cotLoai[t] = await moCotLoai(dc, t, cotDich.get(t) ?? [], ke.cols);
       if (ke.cols.length) {
         await ongCopy({ nguonDb: ng.db, snapshot: nguon.snapshot, cauDoc: cauDocNguon(t, ke.sql), dichDb: dich, bangDich: t, cols: ke.cols });
       }
       if (loiCay === "giua-chep" && ++lan === 1) throw new Error("lỗi cấy giữa bước chép (E10)");
     }
+    // Chỉ mục của bảng gốc cho các bảng thành-bảng; `_boChiMuc` chỉ cho chiều đỏ của itest BCL-1.
+    const chiMuc = _boChiMuc ? { dung: {}, bo: ["bỏ bước dựng chỉ mục (cờ thử)"] } : await dungChiMuc(nc, dc, view.thanhBang, cotLen);
+    for (const [v, ds] of Object.entries(chiMuc.dung)) out(`chỉ mục dựng lại: ${v} ${ds.length}`);
     const doiTen = await doiTenRefCalib(dc);
     const hamBo = await boHamNhacTenCu(dc);
     const daChe = await cheODich(dc, entries);
     for (const [k, n] of Object.entries(daChe)) out(`che tên nguồn → mã: ${k} ${n} ô`);
+    // Thống kê cho bộ lập kế hoạch: bản chép mới nạp chưa có (GS 26/11). pg_dump không mang thống kê — máy nhận ANALYZE lại.
+    await dc.query("ANALYZE");
     for (const t of chep) soDong[RENAME(t)] = (await demDong(dc, [RENAME(t)]))[RENAME(t)];
     out(`chép xong ${chep.length} bảng (${Object.values(soDong).reduce((a, b) => a + b, 0)} dòng), view → bảng: ${view.thanhBang.join(", ") || "—"}`);
 
@@ -692,7 +761,7 @@ export async function chayChep({ nguonUrl = NGUON_MAC_DINH, dich = tenDich(), ra
     const ke = {
       ten_dich: dich, tep: path.basename(tep), sha256, co_byte: coByte, sha_ma: shaMa(), luc_snapshot: nguon.luc,
       so_dong: soDong, extension: ext, view_thanh_bang: view.thanhBang, view_dung_lai: view.dungLai, ham_mat_khi_doi_view: view.hamMat,
-      khoa_ngoai_bo: kn.bo, cot_loai_ve_null: cotLoai, o_da_che: daChe, doi_ten: doiTen.map((t) => [t, RENAME(t)]), ham_bo: hamBo,
+      khoa_ngoai_bo: kn.bo, chi_muc_dung_lai: chiMuc.dung, chi_muc_bo: chiMuc.bo, cot_loai_ve_null: cotLoai, o_da_che: daChe, doi_ten: doiTen.map((t) => [t, RENAME(t)]), ham_bo: hamBo,
       thoi_gian_s: Math.round((Date.now() - t0) / 1000),
     };
     writeFileSync(path.join(ra, "ke.json"), `${JSON.stringify(ke, null, 2)}\n`);

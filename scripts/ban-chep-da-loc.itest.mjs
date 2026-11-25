@@ -14,7 +14,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   chayChep, chayKiem, donHet, dsDbM5, moNguon, xuatDump, sha256Tep, tenDich, cauDemNguon, dx, BANG_CO_DONG, BANG_CAM, laBangCam,
-  COT_NGUON_GIU, phanTichNguon, keHoachCot, cauDocNguon, loaiO, cauLocTenNguon, quaLocTho, bienTheLoc,
+  COT_NGUON_GIU, phanTichNguon, keHoachCot, chuanChiMuc, cauDocNguon, loaiO, cauLocTenNguon, quaLocTho, bienTheLoc,
 } from "./ban-chep-da-loc.mjs";
 import { tokensFromEntries } from "../pipeline/lib/tier-a-guard.mjs";
 import { FILL, RENAME } from "../pipeline/sync-cloud.mjs";
@@ -158,6 +158,59 @@ test("BCL-1: cấy một dòng vào bảng ngoài danh sách thì thoát 1, nêu
   assert.match(r.err, new RegExp(`bang_ngoai: ${bang}`));
   assert.deepEqual(await dsDbM5(), []);
   assert.ok(!coDump(r.ra));
+});
+
+/** So chỉ mục theo định nghĩa: mỗi bảng thành-bảng → { thieu: [def], thua: [def], bo: [def] }. Kỳ vọng đọc độc lập từ pg_indexes của
+ *  bảng gốc ở NGUỒN; chỉ mục chạm cột không lên đích (theo kế hoạch cột) được liệt kê ở `bo`, không tính thiếu. */
+async function soChiMuc(views) {
+  const tokens = tokensFromEntries(entries);
+  const kq = {};
+  for (const v of views) {
+    const { goc, nguon, cols } = await voi(NGUON, async (c) => {
+      const { rows: g } = await c.query(`SELECT table_name FROM information_schema.view_table_usage WHERE view_schema = 'public' AND view_name = $1`, [v]);
+      const { rows: vc } = await c.query(`SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = $1`, [v]);
+      const ng = g.length === 1 ? (await c.query(`SELECT indexdef FROM pg_indexes WHERE schemaname = 'public' AND tablename = $1`, [g[0].table_name])).rows.map((x) => x.indexdef) : [];
+      return { goc: g.length, nguon: ng, cols: keHoachCot(v, vc.map((x) => x.column_name), tokens).cols };
+    });
+    const dich = await voi(urlCua(DICH), async (c) => (await c.query(`SELECT indexdef FROM pg_indexes WHERE schemaname = 'public' AND tablename = $1`, [v])).rows.map((x) => chuanChiMuc(x.indexdef)));
+    // Cột trong định nghĩa: mọi định danh trong ngoặc sau USING và mệnh đề WHERE.
+    const cotCua = (def) => (def.replace(/^.* USING \S+ /s, "").match(/[a-z_][a-z0-9_]*/g) ?? []).filter((w) => !["is", "not", "null", "and", "or", "where", "desc", "asc", "nulls", "first", "last"].includes(w));
+    const bo = nguon.filter((d) => cotCua(d).some((c) => !cols.includes(c)));
+    const can = nguon.filter((d) => !bo.includes(d)).map(chuanChiMuc);
+    kq[v] = { goc, thieu: can.filter((d) => !dich.includes(d)), thua: dich.filter((d) => !can.includes(d)), bo, soNguon: can.length, soDich: dich.length };
+  }
+  return kq;
+}
+const bangThieuChiMuc = (kq) => Object.entries(kq).filter(([, x]) => x.thieu.length || x.soDich !== x.soNguon).map(([v, x]) => `${v} (thiếu ${x.thieu.length}, đích ${x.soDich}/nguồn ${x.soNguon})`);
+
+test("BCL-1: bảng thành-bảng mang đủ chỉ mục của bảng gốc theo định nghĩa; đích đã ANALYZE; thước P2 chạy dưới trần 60 s", async () => {
+  const r = await chep();
+  assert.equal(r.ma, 0, r.err);
+  const ke = JSON.parse(readFileSync(path.join(r.ra, "ke.json"), "utf8"));
+  assert.deepEqual([...ke.view_thanh_bang].sort(), ["listings", "sale_offers", "sellers"]);
+  const kq = await soChiMuc(ke.view_thanh_bang);
+  const thieu = bangThieuChiMuc(kq);
+  const bo = Object.entries(kq).flatMap(([v, x]) => x.bo.map((d) => `${v}: ${d}`));
+  assert.deepEqual(thieu, [], `bảng thiếu chỉ mục; chỉ mục bỏ vì cột không lên: ${bo.join(" | ")}`);
+  for (const [v, x] of Object.entries(kq)) assert.deepEqual(x.thua, [], `${v} có chỉ mục lạ`);
+  assert.ok(kq.sale_offers.soNguon > 0 && kq.listings.soNguon > 0, "bảng gốc phải có chỉ mục để đo");
+  await voi(urlCua(DICH), async (c) => {
+    const bang = [...FILL.map(RENAME), "source_registry"];
+    const { rows } = await c.query(`SELECT relname FROM pg_stat_user_tables WHERE schemaname = 'public' AND relname = ANY($1) AND last_analyze IS NULL`, [bang]);
+    assert.deepEqual(rows.map((x) => x.relname), [], "bảng chưa ANALYZE");
+    await c.query("SET statement_timeout = '60s'");
+    const t0 = Date.now();
+    await c.query("SELECT count(*) FROM v_ruler_p2_area");
+    assert.ok(Date.now() - t0 < 60_000);
+  });
+});
+
+test("BCL-1: chiều đỏ — bản chép bỏ bước dựng chỉ mục thì ca nêu bảng thiếu", async () => {
+  const r = await chep({ _boChiMuc: true });
+  assert.equal(r.ma, 0, r.err);
+  const thieu = bangThieuChiMuc(await soChiMuc(["sale_offers", "listings", "sellers"]));
+  assert.ok(thieu.some((x) => x.startsWith("sale_offers ")) && thieu.some((x) => x.startsWith("listings ")), `phải nêu sale_offers, listings: ${thieu.join("; ")}`);
+  assert.ok(!thieu.some((x) => x.startsWith("sellers ")), "sellers không có chỉ mục gốc để thiếu");
 });
 
 // ───────── BCL-3 (E3) — mười ô cấy viết trước ─────────
