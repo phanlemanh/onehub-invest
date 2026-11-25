@@ -53,6 +53,9 @@ export function ganPhuongS06(ad, { mk, wardMap, biDanh, slugList }) {
 // ghi NULL. Seller_name, seller_phone không ở đây — sync-cloud đã che khi gửi.
 export const O_CHU_PHAT_BIEU = [ENRICH_FIELD.street_raw, ENRICH_FIELD.block_raw];
 // Trần một lượt: sổ nguồn có token chung chung thì bộ dò trúng hàng loạt — dừng job (đỏ, có tên) thay vì NULL lặng lẽ.
+// PL41: trần đếm cái lượt THẬT SỰ đổi — phát biểu sống trúng (lượt sẽ rút) cộng giá trị trúng ở tin MỚI (chưa có bản ghi tin,
+// lượt sẽ bỏ ghi lần đầu). Giá trị trúng còn nằm trong stg của tin đã có (các đêm trước đã bỏ ghi) không đếm lại: stg giữ mọi
+// tin từng thu, đếm trên cả stg thì trần thành cộng dồn và transform dừng mọi đêm khi tích đủ 51 (S4 r2 PL39, finding t3).
 // 25/11 trên DB máy thu: 1 ô.
 export const TRAN_TEN_NGUON = 50;
 
@@ -63,15 +66,13 @@ export function kiemTranTenNguon(n, cai) {
   }
 }
 
-/** Phát biểu sống của S06 ở đường, toà mà giá trị mang tên nguồn: [{ id, subject_key }]. Chỉ đọc; vượt trần thì ném. */
+/** Phát biểu sống của S06 ở đường, toà mà giá trị mang tên nguồn: [{ id, subject_key }]. Chỉ đọc. */
 export async function docPhatBieuTenNguonS06(client, entries) {
   if (!entries.length) return [];
   const { rows } = await client.query(
     `SELECT id, subject_key, value FROM field_assertions
       WHERE retracted_at IS NULL AND field = ANY($1::text[]) AND subject_key LIKE 'S06:%'`, [O_CHU_PHAT_BIEU]);
-  const trung = rows.filter((r) => mangTenNguon(r.value, entries)).map(({ id, subject_key }) => ({ id, subject_key }));
-  kiemTranTenNguon(trung.length, "phát biểu sống");
-  return trung;
+  return rows.filter((r) => mangTenNguon(r.value, entries)).map(({ id, subject_key }) => ({ id, subject_key }));
 }
 
 /** Rút các phát biểu đã đọc ở `docPhatBieuTenNguonS06` (lý do `mang-ten-nguon`). Trả các chủ thể (để phân xử lại). */
@@ -115,18 +116,25 @@ export async function runTransformChotot(client) {
   const boTen = { street_raw: 0, block_raw: 0, phuong_raw: 0, district_raw: 0 };
   // PL39: đếm trước khi ghi dòng nào — vượt trần thì job dừng ở đây, chưa upsert tin, chưa ghi hay rút phát biểu.
   const tinhSan = new Map();
+  // PL41: tin đã có bản ghi (khoá gốc S06) — giá trị trúng của chúng đã được các lượt trước xử, không vào trần.
+  const { rows: daCo } = await client.query(
+    `SELECT originating_system_key AS k FROM sale_offer_records WHERE source = 'S06' AND originating_system_key IS NOT NULL`);
+  const tinCu = new Set(daCo.map((r) => r.k));
+  let trungMoi = 0;
   for (const ad of ads) {
     if (ad.ad_type !== "s" && ad.ad_type !== "u") continue;
     const mk = thiTruongCua(ad.city_code, thiTruongCo);
     const g = ganPhuongS06(ad, { mk, wardMap: byCity.get(mk), biDanh: biDanhCua.get(mk), slugList: slugLists.get(mk) });
     const dacTrung = docDacTrungS06(ad);
-    if (mangTenNguon(g.phuongRaw, tenNguon)) boTen.phuong_raw++;
-    if (mangTenNguon(ad.area_name, tenNguon)) boTen.district_raw++;
-    for (const d of dacTrung) if (O_CHU_PHAT_BIEU.includes(d.field) && mangTenNguon(d.value, tenNguon)) boTen[d.field]++;
+    const moi = !tinCu.has(String(ad.list_id));
+    const dem = (cot) => { boTen[cot]++; if (moi) trungMoi++; };
+    if (mangTenNguon(g.phuongRaw, tenNguon)) dem("phuong_raw");
+    if (mangTenNguon(ad.area_name, tenNguon)) dem("district_raw");
+    for (const d of dacTrung) if (O_CHU_PHAT_BIEU.includes(d.field) && mangTenNguon(d.value, tenNguon)) dem(d.field);
     tinhSan.set(ad, { mk, g, dacTrung });
   }
-  kiemTranTenNguon(Object.values(boTen).reduce((a, n) => a + n, 0), "giá trị chữ");
   const phatBieuTenNguon = await docPhatBieuTenNguonS06(client, tenNguon);
+  kiemTranTenNguon(trungMoi + phatBieuTenNguon.length, "ô chữ mới (tin mới + phát biểu sống)");
 
   let nHigh = 0, nMed = 0, nSkip = 0, nWardV3 = 0, nWardTxt = 0, nBiDanh = 0;
   // PL15: loại hình (category) và phòng ngủ (rooms) là trường có cấu trúc của nguồn → phát biểu lớp sự thật; năm cột

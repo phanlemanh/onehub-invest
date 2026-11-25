@@ -1,0 +1,27 @@
+schema_version: 1
+slug: street-raw-tran-dem-tren-phat-bieu-song
+# E1, E2 cùng một lệnh trên DB của riêng lượt (db/db-thu.sh --chay), chép từ DB máy thu. Không in giá trị ô.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    long_running: 40
+    cmd: bash _acceptance/street-raw-tran-dem-tren-phat-bieu-song/probes/tran.sh
+    paths: ["pipeline/transform-chotot.mjs"]
+    expected: >
+      exit 0; «KẾT QUẢ: xanh»; ✔ «ca 1, bản PL39 (đếm trên stg) dừng», ✔ «ca 1, bản PL39: dừng trước mọi lần ghi», ✔ «ca 1, bản
+      PL41 chạy trọn», ✔ «ca 1: log bỏ ghi street_raw N ≥ 51».
+  - id: E2
+    criterion: AC-2
+    executor: script
+    long_running: 40
+    cmd: bash _acceptance/street-raw-tran-dem-tren-phat-bieu-song/probes/tran.sh
+    paths: ["pipeline/transform-chotot.mjs"]
+    expected: >
+      exit 0; ✔ «ca 2, bản PL41 dừng: PL39: … vượt trần 50 …» và ✔ «ca 2: không thêm tin, không thêm hay rút phát biểu nào».
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: cd pipeline && node --test tests/street-raw-ten-nguon.test.mjs
+    paths: ["pipeline/transform-chotot.mjs", "pipeline/tests/street-raw-ten-nguon.test.mjs"]
+    expected: "exit 0; ℹ fail 0; ca SR-AC-4, SR-AC-5 xanh."

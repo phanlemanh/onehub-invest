@@ -11,7 +11,7 @@ flowchart TD
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>22 việc"] --> GP{"Cổng Phạm vi"}
-  GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
+  GP --> DL["Đang làm<br/>2 việc"] --> GB{"Cổng Bằng chứng"}
   GB --> DG["Đã giao<br/>225 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>144 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
@@ -73,6 +73,7 @@ flowchart TD
 ## Đang làm
 
 - Transform S06 không ghi ô chữ địa chỉ mang tên nguồn thật, nên bộ soát tầng A của sync-cloud không còn dừng cả lượt đồng bộ vì một ô (`street-raw-khong-mang-ten-nguon`)
+- Trần 50 của transform S06 đếm cái lượt thật sự đổi, nên giá trị mang tên nguồn còn nằm trong dữ liệu thu của các đêm trước không làm job dừng mọi đêm (`street-raw-tran-dem-tren-phat-bieu-song`)
 
 ## Đã giao — chờ phiên nghiệm thu
 
