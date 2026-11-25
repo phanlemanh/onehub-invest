@@ -5,7 +5,9 @@ slug: ban-chep-da-loc-cho-may-phat-trien
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: draft
+status: approved
+veto_state: mo
+veto_opened_at: 2026-11-25T06:17:17Z
 approved_by:
 approved_at:
 design_doc: docs/superpowers/specs/2026-11-25-ban-chep-da-loc-cho-may-phat-trien-design.md
@@ -63,7 +65,7 @@ Căn cứ: GS giao HT18 ngày 24/11.
 
 ## Out of scope
 
-- Chuyển bản chép sang M5 qua LAN, và ai chạy: Hỏi-1 của Mạnh; hàng chỉ để tệp ở `state/ban-chep-m5/`.
+- Chuyển bản chép sang M5: hàng HT25 `day-ban-chep-sang-may-phat-trien` (T3, sau HT18); hàng này chỉ để tệp ở `state/ban-chep-m5/`.
 - Ops trên M5, tài khoản user thật trên M5: ngoài phạm vi, vì M5 chỉ chạy API + Invest.
 - Đổi bộ lọc của sync-cloud: hàng chỉ dùng lại, không sửa `pipeline/sync-cloud.mjs`.
 - Lịch chép tự động (launchd): chưa; chạy tay khi cần.
