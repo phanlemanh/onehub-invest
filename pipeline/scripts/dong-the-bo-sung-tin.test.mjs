@@ -12,6 +12,10 @@ import pg from "pg";
 import { LY_DO_DE_XUAT, NGUOI_LAM, NHOM, SQL_DEM_DOC_LAP, phanNhom } from "../lib/dong-the-bo-sung-tin.mjs";
 import { chayLui, chayThat, chayThu } from "./dong-the-bo-sung-tin.mjs";
 import { CONG_NGUOI_SQL, THE_NGUOI_QUYET_SQL } from "../../scripts/bao-cao-ngay.mjs";
+import { chotDbThu } from "../lib/db-thu-chot.mjs";
+
+// Thiếu DATABASE_URL (chạy trần `node --test`) → bỏ qua cả tệp như các tệp DB khác; có URL mà không phải oneinvest_suite_* → thoát 2.
+const DB_URL = chotDbThu({ ten: "dong-the-bo-sung-tin", khiThieu: "bo-qua" });
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const GD = { begin: "SAVEPOINT nb9", commit: "RELEASE SAVEPOINT nb9", rollback: "ROLLBACK TO SAVEPOINT nb9" };
@@ -19,11 +23,8 @@ const GD = { begin: "SAVEPOINT nb9", commit: "RELEASE SAVEPOINT nb9", rollback: 
 let c;
 let tin; // { song: [offer có property_type + bedrooms], trongPn, nghi }
 before(async () => {
-  if (!process.env.DATABASE_URL) throw new Error("thiếu DATABASE_URL — chạy qua db/db-thu.sh oneinvest_suite_<bộ> --chay");
-  c = new pg.Client({ connectionString: process.env.DATABASE_URL });
+  c = new pg.Client({ connectionString: DB_URL });
   await c.connect();
-  const { rows: [d] } = await c.query("SELECT current_database() AS db");
-  if (d.db === "oneinvest") throw new Error("không chạy trên DB chung oneinvest");
 });
 after(async () => { await c?.end(); });
 

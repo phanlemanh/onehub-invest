@@ -5,7 +5,7 @@
 //   node pipeline/scripts/dong-the-bo-sung-tin.mjs --lui <tệp>     lùi một lượt; dòng đã bị đổi sau đó không đè (thoát 3)
 // DATABASE_URL trỏ DB. Tệp lùi: .acceptance-runs/dong-the-bo-sung-tin-theo-luat/lui-<lượt>.json (ngoài git); tệp chỉ mang
 // tên cuối sau khi COMMIT xong — tệp `.dang-ghi` còn sót là lượt chưa hoàn tất, không dùng để lùi.
-import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, realpathSync, renameSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
@@ -101,6 +101,6 @@ async function main(argv) {
   }
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   main(process.argv.slice(2)).then((rc) => { process.exitCode = rc; }, (e) => { console.error(e); process.exitCode = 1; });
 }

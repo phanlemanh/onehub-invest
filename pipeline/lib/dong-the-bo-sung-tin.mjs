@@ -8,6 +8,12 @@
 // Thẻ đóng: status 'rejected' (review_queue không có trạng thái «đóng»; tiền lệ máy đóng thẻ enrich), decided_by NGUOI_LAM.
 // Các hàm ở đây KHÔNG tự mở giao dịch: bên gọi (lệnh pipeline/scripts/dong-the-bo-sung-tin.mjs) BEGIN/COMMIT.
 
+import { ENRICH_FIELD } from "./vocab.generated.mjs";
+
+// Hai field của nhóm 2 lấy từ sổ từ vựng (vocab-lint VL-AC-5), không viết tay trong câu SQL.
+const PT = ENRICH_FIELD.property_type;
+const PN = ENRICH_FIELD.bedrooms;
+
 export const NGUOI_LAM = "may:dong-the-theo-luat";
 export const LY_DO_DE_XUAT = "trung-gia-tri-tin";
 export const NHOM = Object.freeze({
@@ -27,10 +33,10 @@ WITH the AS (
    ORDER BY rq.id ${khoa ? "FOR UPDATE OF rq" : ""}
 ), dx AS (
   SELECT ep.id, ep.review_id,
-         ep.field IN ('property_type', 'bedrooms') AND so.offer_id IS NOT NULL AND (
-           (ep.field = 'property_type' AND so.property_type IS NOT NULL
+         ep.field IN ('${PT}', '${PN}') AND so.offer_id IS NOT NULL AND (
+           (ep.field = '${PT}' AND so.property_type IS NOT NULL
               AND (ep.value_key = so.property_type OR ep.value = so.property_type))
-        OR (ep.field = 'bedrooms' AND so.bedrooms IS NOT NULL
+        OR (ep.field = '${PN}' AND so.bedrooms IS NOT NULL
               AND (ep.value_key = so.bedrooms::text OR ep.value = so.bedrooms::text))) AS trung
     FROM enrichment_proposals ep
     JOIN the ON the.id = ep.review_id
@@ -53,8 +59,8 @@ export const SQL_DEM_DOC_LAP = Object.freeze({
   AND rq.status='pending' AND EXISTS (SELECT 1 FROM enrichment_proposals ep WHERE ep.review_id=rq.id AND ep.status='queued')
   AND NOT EXISTS (SELECT 1 FROM enrichment_proposals ep LEFT JOIN sale_offers so ON so.offer_id=ep.offer_id
     WHERE ep.review_id=rq.id AND ep.status='queued' AND NOT coalesce(
-      (ep.field='property_type' AND so.property_type IN (ep.value_key, ep.value))
-      OR (ep.field='bedrooms' AND so.bedrooms::text IN (ep.value_key, ep.value)), false));`,
+      (ep.field='${PT}' AND so.property_type IN (ep.value_key, ep.value))
+      OR (ep.field='${PN}' AND so.bedrooms::text IN (ep.value_key, ep.value)), false));`,
 });
 
 /**
