@@ -1,16 +1,19 @@
-# Hai máy — máy thu và máy phát triển M5 (vận hành, HT25)
+# Hai máy — máy thu (Mac mini) và máy mở rộng M5 (vận hành, HT25)
 
 Mô hình và năm rào: `docs/adr/0019-day-ban-chep-sang-may-phat-trien.md`. Hợp đồng: `_acceptance/day-ban-chep-sang-may-phat-trien/`.
 
 | Máy | Vai (`VAI=` trong `~/.config/onehub/hai-may.env`) | Chạy gì | Dữ liệu |
 |---|---|---|---|
-| Máy thu (Mac mini) | `may-thu` | collector, launchd, pipeline, DB `oneinvest` thật | giữ tầng A; DB máy thu chỉ đọc với lệnh đẩy |
-| Máy phát triển M5 | `may-phat-trien` | cổng Invest, data-api, dev | chỉ bản chép đã lọc (HT18), không tầng A |
+| Máy thu (Mac mini) | `may-thu` | collector, launchd, pipeline, DB `oneinvest` thật; gộp `main` CHỈ ở đây | giữ tầng A; DB máy thu chỉ đọc với lệnh đẩy |
+| M5 — máy mở rộng tính toán của Mac mini (máy bàn ở nhà, chạy lâu dài; không phải máy xách tay) | `may-phat-trien` | một hàng việc một giám sát; cổng Invest, data-api; tự chấm S4 vùng Invest + API trên bản chép | chỉ bản chép đã lọc (HT18); không tầng A, không raw snapshot; không bộ thu, gateway, `sync-cloud` |
 
 Hai máy nối bằng cáp Thunderbolt (giao diện cầu, địa chỉ IPv4 cố định). Giá trị riêng máy — địa chỉ cầu hai máy, người dùng M5, đường
-khoá đẩy, đường khoá dựng máy, tên máy — chỉ nằm ở `~/.config/onehub/hai-may.env` của máy thu (khoá `CAU_GIAO_DIEN`, `CAU_MAY_NAY`,
+khoá đẩy, đường khoá quản trị, tên máy — chỉ nằm ở `~/.config/onehub/hai-may.env` của máy thu (khoá `CAU_GIAO_DIEN`, `CAU_MAY_NAY`,
 `M5_DIA_CHI`, `M5_NGUOI_DUNG`, `KHOA_DAY`, `KHOA_DUNG`, `M5_TEN_MAY`) và `CLAUDE.local.md`. **Không ghi chúng vào kho** (kho công khai;
-`day-ban-chep-kiem-m5.mjs tai-lieu` soát). Trong tài liệu dùng chỗ giữ: `<địa chỉ cầu M5>`, `<khoá đẩy>`, `<khoá dựng máy>`.
+`day-ban-chep-kiem-m5.mjs tai-lieu` soát). Trong tài liệu dùng chỗ giữ: `<địa chỉ cầu M5>`, `<khoá đẩy>`, `<khoá quản trị>`.
+
+Giữ nguyên: tầng A và raw snapshot không sang M5; đẩy chỉ theo lệnh (plist là việc sau, cần lời riêng của Mạnh); gộp vào `main` chỉ
+ở Mac mini.
 
 ## Đẩy bản chép (máy thu)
 
@@ -42,7 +45,7 @@ node scripts/day-ban-chep.mjs --lui            # bản cũ thành DB chạy, DB 
 Bước nhận lỗi ở chặng nào cũng tự giữ DB chạy và xoá DB mới (thông điệp «ĐỎ chặng <tên>»); `--lui` chỉ cần khi bản chép mới đã nạp
 xanh mà dữ liệu sai.
 
-## Cài, thu hồi khoá đẩy (máy thu, dùng khoá dựng máy)
+## Cài, thu hồi khoá đẩy (máy thu, dùng khoá quản trị)
 
 ```bash
 node scripts/day-ban-chep-kiem-m5.mjs cai      # tạo <khoá đẩy> nếu chưa có; chép bước nhận sang ~/.local/share/onehub/ của M5;
@@ -51,9 +54,10 @@ node scripts/day-ban-chep-kiem-m5.mjs cai      # tạo <khoá đẩy> nếu chư
 node scripts/day-ban-chep-kiem-m5.mjs go       # thu hồi: sao lưu rồi gỡ đúng dòng của khoá đẩy (khoá đẩy hết vào được)
 ```
 
-Sửa `scripts/nhan-ban-chep.sh` thì chạy lại `cai` để chép bản mới sang M5 (dòng khoá có sẵn đúng khuôn thì không đổi). Khoá dựng máy
-(`<khoá dựng máy>`, toàn quyền vào M5) chỉ cho `cai`, `go` và các lệnh kiểm; giữ tới hết tuần đo hai máy rồi thu hồi bằng cách xoá
-dòng của nó trong `authorized_keys` của M5 (Hỏi-1, Mạnh duyệt 25/11).
+Sửa `scripts/nhan-ban-chep.sh` thì chạy lại `cai` để chép bản mới sang M5 (dòng khoá có sẵn đúng khuôn thì không đổi). Khoá quản trị
+(`<khoá quản trị>`, khoá `KHOA_DUNG` trong cấu hình, toàn quyền vào M5): Mac mini giữ **lâu dài** (Mạnh chốt 25/11 tối, thay Hỏi-1 —
+không thu hồi sau tuần đo) để dựng, kiểm M5 và chạy `cai`, `go`, các lệnh kiểm; không bao giờ dùng cho lượt đẩy. Khoá đẩy luôn bị ép
+lệnh chỉ chạy bước nhận. M5 không có khoá nào vào Mac mini.
 
 ## Lệnh kiểm (ngoài CI)
 

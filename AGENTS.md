@@ -226,12 +226,17 @@ không sửa tay, cập nhật bằng cách chép lại từ plugin. `PRODUCT-MA
   thu, không fixture viết tay; có cột «ai đọc đầu ra này phía sau»). Ô bỏ thì ghi «ngoài phạm vi, vì». Căn cứ:
   `docs/research/dieu-tra-tien-do-cham-1511.md`.
 
-## Hai máy: máy thu và máy phát triển M5 (chốt 2026-11-25, ADR-0019, hàng HT25)
+## Hai máy: máy thu (Mac mini) và máy mở rộng M5 (chốt 2026-11-25, ADR-0019, hàng HT25)
 
-- **Máy thu** (Mac mini, `VAI=may-thu`): collector, launchd, pipeline, DB `oneinvest` thật, giữ tầng A. **Máy phát triển M5**
-  (`VAI=may-phat-trien`): cổng Invest, data-api, dev — chỉ giữ bản chép đã lọc của HT18, không tầng A.
+- **Máy thu** (Mac mini, `VAI=may-thu`): collector, launchd, pipeline, DB `oneinvest` thật, giữ tầng A; gộp vào `main` CHỈ ở đây.
+  **M5 — máy mở rộng tính toán của Mac mini** (`VAI=may-phat-trien`; máy bàn ở nhà, chạy lâu dài, để tăng tốc tiến trình — không phải
+  máy xách tay): một hàng việc một giám sát, cổng Invest và data-api, tự chấm S4 cho vùng Invest + API trên bản chép đã lọc của HT18.
+  M5 không giữ tầng A hay raw snapshot, không chạy bộ thu, gateway, `sync-cloud`.
 - Dữ liệu chỉ đi **một chiều, theo lệnh**, qua cáp Thunderbolt: `node scripts/day-ban-chep.mjs` trên máy thu (chép + soát, ghim
-  sha256, gửi qua khoá đẩy bị ép lệnh, M5 nạp nguyên tử có lùi). `--trang-thai`, `--lui` để kiểm và lùi. Không plist, không cron.
+  sha256, gửi qua khoá đẩy bị ép lệnh, M5 nạp nguyên tử có lùi). `--trang-thai`, `--lui` để kiểm và lùi. Không plist, không cron
+  (plist là việc sau, cần lời riêng).
+- Khoá: Mac mini giữ lâu dài một khoá quản trị vào M5 (dựng, kiểm, cài/thu hồi khoá đẩy — không cho lượt đẩy); khoá đẩy riêng ép
+  lệnh chỉ chạy bước nhận; M5 không có khoá nào vào Mac mini.
 - Năm rào (cổng rời máy ở máy thu, một chiều, chỉ hai tệp, lùi được, chỉ theo lệnh) và lối đã bỏ: ADR-0019. Vận hành, cài và thu
   hồi khoá, rút cáp: **`docs/ops/hai-may.md`**.
 - Giá trị riêng máy (địa chỉ cầu, người dùng, đường khoá, tên máy) chỉ ở `~/.config/onehub/hai-may.env` và `CLAUDE.local.md` —

@@ -3,7 +3,7 @@
 > Truy nguyên sự cố: file này là bản đồ THẬT của mọi tiến trình/binary/log
 > liên quan thu thập. Sửa khi đổi môi trường.
 >
-> Hai máy (máy thu ↔ máy phát triển M5, đường đẩy bản chép qua cầu Thunderbolt, khoá ép lệnh, lùi): xem
+> Hai máy (máy thu Mac mini ↔ máy mở rộng M5, đường đẩy bản chép qua cầu Thunderbolt, khoá ép lệnh, lùi): xem
 > [`docs/ops/hai-may.md`](hai-may.md) (ADR-0019).
 
 ## Bảng chân lý 5 thành phần
