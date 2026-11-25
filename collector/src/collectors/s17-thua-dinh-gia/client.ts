@@ -365,8 +365,30 @@ export class S17Client {
         if (!wave.length) continue;
         const list = wave.map((idx) => ({ url: reqs[idx].url, headers: this.headers }));
         const raw = await this.sendWave(list, this.o.paceMs);
+        // Khoá dừng TRƯỚC khi phân loại từng lời: đợt đã về mà có 403/429/401 hay trang thử thách thì mọi lời của
+        // đợt nhận lỗi dừng ngay — lời lỗi mạng đứng trước không kịp hỏi đối chiếu (lượt soát 25/11).
+        for (let k = 0; k < wave.length; k++) {
+          const g = raw[k];
+          if (g instanceof Error) continue;
+          const vai = String(reqs[wave[k]].role);
+          if (g.status === 403 || g.status === 429) {
+            this.blocks++;
+            this.stop("blocked", `nguồn trả ${g.status} ở vai "${vai}"`);
+          } else if (g.status === 401) this.stop("session-expired", `nguồn trả 401 ở vai "${vai}"`);
+          else if (g.status < 500 && !/json/i.test(g.contentType)) {
+            this.blocks++;
+            this.stop("blocked", `nguồn trả trang không phải JSON (${g.contentType || "không rõ kiểu"}) ở vai "${vai}"`);
+          }
+        }
         for (let k = 0; k < wave.length; k++) {
           const idx = wave[k];
+          // Lời KHÔNG thành công trong đợt có khoá dừng nhận lỗi dừng ngay (không hỏi đối chiếu); lời đã về với
+          // phản hồi JSON hợp lệ vẫn được xử lý — dữ liệu ấy đã có, không cần gọi thêm.
+          const g0 = raw[k];
+          if (this.stopped && !(g0 instanceof Error === false && g0.status < 400 && /json/i.test(g0.contentType))) {
+            out[idx] = { ok: false, error: this.stopped };
+            continue;
+          }
           const role = String(reqs[idx].role);
           const goc = raw[k];
           const res = goc instanceof Error ? null : goc;

@@ -135,6 +135,8 @@ test("count: ảnh gốc đếm từ manifest (số tệp, số byte) mà KHÔNG
     await w.flush();
     const w2 = new BatchWriter({ root, maxItems: 10, phase: "apartments-all", schemaVersion: 18 });
     await w2.add(makeItem("can_ho_du_an", "du-an-7", { toa: [] }, { request: { id: "7" }, soToa: 2, soToaKhop: 1, maDuNhieu: 500, soDaLay: 480, soKhongLayDuoc: 20, moRong: true }, at));
+    // Bản gộp cũ của dự án 7 (chốt trước khi ghi dòng «xong», lượt sau làm lại và ghi bản mới): chỉ tính bản mới nhất.
+    await w2.add(makeItem("can_ho_du_an", "du-an-7", { toa: [] }, { request: { id: "7" }, soToa: 1, soToaKhop: 0, maDuNhieu: 300, soDaLay: 100, soKhongLayDuoc: 5, moRong: true }, "2026-11-23T00:00:00.000Z"));
     await w2.add(makeItem("can_ho_du_an", "du-an-1004", { toa: [] }, { request: { id: "1004" }, soToa: 4, soToaKhop: 4, maDuNhieu: 2457, soDaLay: 2344, soKhongLayDuoc: 113 }, at));
     await w2.flush();
 

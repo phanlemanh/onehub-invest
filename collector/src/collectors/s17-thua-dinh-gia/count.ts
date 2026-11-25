@@ -21,7 +21,7 @@ import { S17_CITY, S17_NOTES, S17_SOURCE } from "./store.js";
 export type SourceSnapshot = {
   snapshotId: string;
   manifest: SnapshotManifest;
-  items: Array<{ kind: string; sourceId: string; payload: unknown; meta?: Record<string, unknown> }>;
+  items: Array<{ kind: string; sourceId: string; payload: unknown; meta?: Record<string, unknown>; fetchedAt?: string }>;
   currentScheme: boolean;
   /** Tệp nhị phân dưới `media/` của snapshot — lấy từ manifest, không bao giờ đọc nội dung (thiếu = không có ảnh). */
   media?: { files: number; bytes: number };
@@ -105,7 +105,9 @@ export function countSnapshots(snaps: SourceSnapshot[]): Counts {
   let thua: Counts["parcel"] = null;
   let images: Counts["images"] = null;
   const duAnCoAnh = new Set<string>();
-  let apartmentsAll: Counts["apartmentsAll"] = null;
+  // Bản gộp căn hộ của mốc mở rộng: một dự án có thể có hai bản (bản cũ chốt trước khi ghi dòng «xong») — chỉ tính
+  // bản mới nhất theo fetchedAt, nếu không một dự án bị đếm thành hai.
+  const gopCanHo = new Map<string, { fetchedAt: string; meta: Record<string, unknown> }>();
   const ids = new Set<string>();
   let sawList = false;
   for (const s of current) {
@@ -158,13 +160,8 @@ export function countSnapshots(snaps: SourceSnapshot[]): Counts {
           if (typeof m?.error === "string") images.loi[m.error] = (images.loi[m.error] ?? 0) + 1;
         }
       } else if (it.kind === "can_ho_du_an" && it.meta?.moRong === true) {
-        apartmentsAll ??= { duAn: 0, toa: 0, toaKhop: 0, maDuNhieu: 0, soDaLay: 0, soLoi: 0 };
-        apartmentsAll.duAn++;
-        apartmentsAll.toa += num(it.meta.soToa);
-        apartmentsAll.toaKhop += num(it.meta.soToaKhop);
-        apartmentsAll.maDuNhieu += num(it.meta.maDuNhieu);
-        apartmentsAll.soDaLay += num(it.meta.soDaLay);
-        apartmentsAll.soLoi += num(it.meta.soKhongLayDuoc);
+        const cu = gopCanHo.get(it.sourceId);
+        if (!cu || String(cu.fetchedAt) < String(it.fetchedAt ?? "")) gopCanHo.set(it.sourceId, { fetchedAt: String(it.fetchedAt ?? ""), meta: it.meta });
       } else if (it.kind === "tile_coverage") {
         tile ??= { provinces: 0, scanned: 0, withData: 0, empty: 0, absent: 0, error: 0 };
         tile.provinces++;
@@ -175,6 +172,16 @@ export function countSnapshots(snaps: SourceSnapshot[]): Counts {
         tile.error += num(it.meta?.loi);
       }
     }
+  }
+  let apartmentsAll: Counts["apartmentsAll"] = null;
+  for (const { meta } of gopCanHo.values()) {
+    apartmentsAll ??= { duAn: 0, toa: 0, toaKhop: 0, maDuNhieu: 0, soDaLay: 0, soLoi: 0 };
+    apartmentsAll.duAn++;
+    apartmentsAll.toa += num(meta.soToa);
+    apartmentsAll.toaKhop += num(meta.soToaKhop);
+    apartmentsAll.maDuNhieu += num(meta.maDuNhieu);
+    apartmentsAll.soDaLay += num(meta.soDaLay);
+    apartmentsAll.soLoi += num(meta.soKhongLayDuoc);
   }
   const times = current.map((s) => s.manifest.startedAt).sort();
   return {

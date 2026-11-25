@@ -180,3 +180,31 @@ test("getJsonMany: đang bị chặn giữa đợt mà một lời khác lỗi m
   assert.equal(ke.sent.filter((u) => u.includes("/data-available") || u.includes("/asset-type")).length, 0, "không gửi lời kiểm phiên nào sau khi bị chặn");
   assert.equal(ke.client.calls, 2, "chỉ hai lời của đợt đầu tiên được gửi");
 });
+
+test("getJsonMany: lỗi mạng đứng TRƯỚC 403 trong cùng đợt → không gửi lời kiểm phiên nào; khoá dừng được đặt trước khi phân loại", async () => {
+  const ke = makeClient((url) => {
+    const lat = new URL(url).searchParams.get("latitude");
+    if (lat === "1") throw new TypeError("Failed to fetch");
+    if (lat === "2") return json({ message: "denied" }, 403);
+    return json({ status: true, data: {} });
+  }, { many: true });
+  const r = await ke.client.getJsonMany([task(1), task(2), task(3)], 2);
+  assert.deepEqual(
+    r.map((x) => (x.ok ? "ok" : reasonOf(x.error))),
+    ["blocked", "blocked", "blocked"],
+  );
+  assert.equal(ke.sent.filter((u) => u.includes("/data-available") || u.includes("/asset-type")).length, 0, "403 đã về trong đợt thì không hỏi đối chiếu nữa");
+  assert.equal(ke.client.calls, 2);
+  const ke2 = makeClient((url) => {
+    const lat = new URL(url).searchParams.get("latitude");
+    if (lat === "2") return { status: 403, contentType: "text/html", body: "<html>captcha</html>" };
+    if (lat === "1") throw new TypeError("Failed to fetch");
+    return json({ status: true, data: {} });
+  }, { many: true });
+  const r2 = await ke2.client.getJsonMany([task(1), task(2)], 2);
+  assert.deepEqual(
+    r2.map((x) => (x.ok ? "ok" : reasonOf(x.error))),
+    ["blocked", "blocked"],
+  );
+  assert.equal(ke2.sent.length, 2, "trang thử thách trong đợt cũng khoá dừng ngay, không hỏi đối chiếu");
+});

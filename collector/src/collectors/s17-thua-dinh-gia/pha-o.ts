@@ -18,7 +18,7 @@ import { ConfigError } from "./config.js";
 import { assertNoSoftError, makeItem } from "./kinds.js";
 import type { ToaDo } from "./pha-ban-do.js";
 import type { PhaseSummary, RunOptions } from "./run.js";
-import { NhatKyTienDo, chotVaLuu } from "./tien-do.js";
+import { NhatKyTienDo, chot } from "./tien-do.js";
 
 const R = 6378137;
 const MOT_DOT = 40;
@@ -177,7 +177,7 @@ export async function parcelsCell(o: RunOptions, luaChon: OLuoiOptions): Promise
         );
         items++;
       }
-      await chotVaLuu(o);
+      await chot(o);
       await tienDo.append({ ...(daDiem.length ? { daDiem } : {}), ...(Object.keys(ogc).length ? { ogc } : {}), ...(moi.length ? { moi } : {}), ...(loi.length ? { loi } : {}) });
       for (const k of daDiem) td.daDiem.add(k);
       for (const [k, fid] of Object.entries(ogc)) td.ogc.set(Number(k), fid);
@@ -191,7 +191,7 @@ export async function parcelsCell(o: RunOptions, luaChon: OLuoiOptions): Promise
       makeItem("thua_o", c.id, banGop, { request: { buocM: luaChon.buocM }, tile: c.tile, o: [c.i, c.j], viTri: c.tam, phuongPhap: "luoi" }, at()),
     );
     items++;
-    await chotVaLuu(o);
+    await chot(o);
     await tienDo.append({ xong: true });
     soO++;
     soDiem += banGop.soDiem;

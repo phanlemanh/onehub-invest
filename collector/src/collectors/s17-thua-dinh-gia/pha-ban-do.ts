@@ -20,7 +20,7 @@ import { readKind } from "./catalog.js";
 import { ConfigError } from "./config.js";
 import { assertNoSoftError, makeItem } from "./kinds.js";
 import type { PhaseSummary, RunOptions } from "./run.js";
-import { NhatKyTienDo, chotVaLuu } from "./tien-do.js";
+import { NhatKyTienDo, chot } from "./tien-do.js";
 
 const R = 6378137;
 const TILE_RE = /^(\d{1,2})\/(\d{1,8})\/(\d{1,8})$/;
@@ -150,7 +150,7 @@ export async function parcelsMap(o: RunOptions): Promise<PhaseSummary> {
         soThua++;
         items++;
       }
-      await chotVaLuu(o);
+      await chot(o);
       await tienDo.append({ ...(daDiem.length ? { daDiem } : {}), ...(Object.keys(ogc).length ? { ogc } : {}), ...(loi.length ? { loi } : {}) });
       failed += loi.length;
     }
@@ -167,7 +167,7 @@ export async function parcelsMap(o: RunOptions): Promise<PhaseSummary> {
       ),
     );
     items++;
-    await chotVaLuu(o);
+    await chot(o);
     await tienDo.append({ xong: true });
     soO++;
     soDiem += xongTd.daDiem.size + xongTd.loi.size;

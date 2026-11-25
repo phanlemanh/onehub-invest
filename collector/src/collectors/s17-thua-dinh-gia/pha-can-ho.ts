@@ -6,24 +6,24 @@
  * `ids`, `gioiHan` (số dự án một lượt — để chạy thang đầu).
  *
  * Cùng kind và cùng ý nghĩa với pha căn hộ của mốc ngày 2 (`can_ho_list`, `can_ho_toa`, `can_ho_detail`,
- * `can_ho_du_an`), khác ở ba chỗ:
+ * `can_ho_du_an`), khác ở bốn chỗ:
  * - trang của một lượt liệt kê được lấy SONG SONG (trang 0 trước để biết số trang); `maMoi` vẫn tính dồn theo
- *   thứ tự trang;
- * - chi tiết căn lấy theo đợt (`concurrency` lời một đợt);
+ *   thứ tự trang; MỌI trang được kiểm lỗi mềm (`status: false` là nguồn báo lỗi → dừng cả lượt), trang nào lỗi
+ *   mạng thì toà đó bị bỏ qua trong lượt này (không ghi gì cho toà), lượt sau liệt kê lại;
+ * - chi tiết căn lấy theo đợt (`concurrency` lời một đợt); lỗi tạm (mạng, 5xx) của một căn CHƯA được ghi là lỗi —
+ *   lượt sau thử lại, quá `toiDaLanThu` lượt mới ghi `qua-so-lan-thu`; lỗi mềm → dừng cả lượt;
  * - KHÔNG có cổng chứng minh dừng cả lượt cho từng dự án: mỗi toà vẫn ghi `khop` (và `rong` khi liệt kê không trả
- *   dòng nào), số toà không khớp nằm trong bản gộp dự án để báo ở mỗi mốc.
- *
- * Tiến độ: nhật ký chỉ-ghi-thêm, một tệp mỗi dự án (`can-ho-<id>.jsonl`) — lô chốt xong mới ghi dòng. Chạy lại chỉ
- * làm phần còn lại: toà đã liệt kê không liệt kê lại, căn đã lấy (đã ghi nhận lỗi vĩnh viễn) không hỏi lại.
+ *   dòng nào); dự án chỉ có bản gộp và được đánh dấu xong khi mọi toà đã liệt kê và mọi căn đã có kết luận;
+ * - tiến độ là nhật ký chỉ-ghi-thêm, một tệp mỗi dự án (`can-ho-<id>.jsonl`) — lô chốt xong mới ghi dòng.
  */
 import { join } from "node:path";
 
-import { MAX_CONCURRENCY, RunStopped } from "./client.js";
+import { MAX_CONCURRENCY, RunStopped, TemporaryFailure } from "./client.js";
 import { projectCatalog } from "./catalog.js";
 import { ConfigError } from "./config.js";
 import { assertNoSoftError, makeItem, MAX_APARTMENT_LOT, sourceIdSlug } from "./kinds.js";
 import type { PhaseSummary, RunOptions } from "./run.js";
-import { NhatKyTienDo, chotVaLuu } from "./tien-do.js";
+import { NhatKyTienDo, chot } from "./tien-do.js";
 
 export type TatCaDuAnOptions = {
   /** Chỉ dự án có số căn nguồn khai từ mức này. */
@@ -40,6 +40,8 @@ export type TatCaDuAnOptions = {
   apartmentPageSize?: number;
   /** Số căn một đợt lấy chi tiết rồi chốt. */
   motDot?: number;
+  /** Số lượt thử một căn lỗi tạm trước khi ghi nhận `qua-so-lan-thu` (mặc định 3). */
+  toiDaLanThu?: number;
 };
 
 type Envelope<T = unknown> = { status?: boolean; message?: string | null; data?: T; pagination?: unknown; extra?: unknown };
@@ -47,10 +49,12 @@ type TrangList = Envelope<{ content?: Array<{ text?: unknown }>; totalElements?:
 type ChiTietCan = Envelope<{ properties?: { ma_can?: unknown } }>;
 
 type ToaDaLietKe = { tongDong: number; soLot: number; khop: boolean; rong: boolean; maCan: string[] };
-type TienDo = { toa: Map<string, ToaDaLietKe>; daLay: Set<string>; loi: Map<string, string>; xong: boolean };
+type TienDo = { toa: Map<string, ToaDaLietKe>; daLay: Set<string>; loi: Map<string, string>; dem: Map<string, number>; xong: boolean };
+
+const TOI_DA_LAN_THU = 3;
 
 function docTienDo(lines: Array<Record<string, unknown>>): TienDo {
-  const out: TienDo = { toa: new Map(), daLay: new Set(), loi: new Map(), xong: false };
+  const out: TienDo = { toa: new Map(), daLay: new Set(), loi: new Map(), dem: new Map(), xong: false };
   for (const r of lines) {
     if (typeof r.toa === "string") {
       out.toa.set(r.toa, {
@@ -63,22 +67,22 @@ function docTienDo(lines: Array<Record<string, unknown>>): TienDo {
     }
     for (const c of (r.daLay as string[] | undefined) ?? []) out.daLay.add(c);
     for (const [c, loi] of Object.entries((r.loi ?? {}) as Record<string, string>)) out.loi.set(c, loi);
+    for (const [c, n] of Object.entries((r.dem ?? {}) as Record<string, number>)) out.dem.set(c, n);
     if (r.xong === true) out.xong = true;
   }
   return out;
 }
 
+/** Kết quả liệt kê một toà: đủ trang thì có mã; trang nào lỗi mạng thì `loi` mang lời lỗi và KHÔNG có gì được ghi. */
+export type KetQuaLietKe = { codes: string[]; total: number; lots: number; khop: boolean; rong: boolean; soTrangDaGhi: number; loi?: string };
+
 /**
  * Liệt kê TRỌN một toà: trang 0 trước (biết số trang), các trang còn lại lấy song song; thiếu mã thì quét thêm lượt
  * (tối đa MAX_APARTMENT_LOT, lượt không thêm mã thì dừng). Ghi item `can_ho_list` từng trang (CHƯA chốt — nơi gọi
- * chốt cùng bản gộp toà). Liệt kê rỗng (0 dòng) hoặc nguồn báo lỗi mềm không được coi là khớp.
+ * chốt cùng bản gộp toà). Lỗi mềm (`status: false`) ở BẤT KỲ trang nào → dừng cả lượt (source-error). Một trang
+ * lỗi tạm → trả `loi`, không ghi trang nào của toà (ghi thiếu trang là ghi dữ liệu sai).
  */
-export async function lietKeToa(
-  o: RunOptions,
-  projectId: string,
-  building: string,
-  concurrency: number,
-): Promise<{ codes: string[]; total: number; lots: number; khop: boolean; rong: boolean; soTrangDaGhi: number }> {
+export async function lietKeToa(o: RunOptions, projectId: string, building: string, concurrency: number): Promise<KetQuaLietKe> {
   const at = () => (o.now ?? (() => new Date()))().toISOString();
   const size = o.apartmentPageSize ?? 100;
   const requestOf = (page: number) => ({ thap: building, text: building, project_id: projectId, page, size });
@@ -87,18 +91,28 @@ export async function lietKeToa(
   let lots = 0;
   let soTrangDaGhi = 0;
   for (lots = 1; lots <= MAX_APARTMENT_LOT; lots++) {
-    const dau = await o.client.getJson<TrangList>("apartment-list", requestOf(0));
+    let dau: TrangList;
+    try {
+      dau = await o.client.getJson<TrangList>("apartment-list", requestOf(0));
+    } catch (e) {
+      if (e instanceof RunStopped) throw e;
+      return { codes: [], total: 0, lots: 0, khop: false, rong: false, soTrangDaGhi: 0, loi: e instanceof Error ? e.message : String(e) };
+    }
     assertNoSoftError(dau, `lời liệt kê căn của toà ${building} (dự án ${projectId})`);
     total = Number(dau?.data?.totalElements ?? 0);
     const soTrang = Number(dau?.data?.totalPages ?? 0);
     const pages: TrangList[] = [dau];
     if (soTrang > 1) {
-      // Một trang thiếu là thiếu mã: trang nào lỗi thì dừng ở đó, không ghi bản gộp toà thiếu trang.
       const rs = await o.client.getJsonMany<TrangList>(
         Array.from({ length: Math.min(soTrang - 1, 2000) }, (_, i) => ({ role: "apartment-list" as const, params: requestOf(i + 1) })),
         concurrency,
       );
-      for (const r of rs) if (!r.ok) throw r.error;
+      const loi = rs.find((r) => !r.ok);
+      if (loi && !loi.ok) {
+        if (loi.error instanceof RunStopped) throw loi.error;
+        return { codes: [], total, lots: 0, khop: false, rong: false, soTrangDaGhi: 0, loi: loi.error.message };
+      }
+      for (const r of rs as Array<{ ok: true; value: TrangList }>) assertNoSoftError(r.value, `lời liệt kê căn trang ${pages.length + 1} của toà ${building} (dự án ${projectId})`);
       pages.push(...(rs as Array<{ ok: true; value: TrangList }>).map((r) => r.value));
     }
     let maMoi = 0;
@@ -127,7 +141,7 @@ export async function lietKeToa(
     if (maMoi === 0 || unique.size >= total) break;
   }
   const khop = total > 0 && unique.size > 0 && unique.size === total;
-  return { codes: [...unique], total, lots: Math.min(lots, MAX_APARTMENT_LOT), khop, rong: unique.size === 0, soTrangDaGhi: soTrangDaGhi };
+  return { codes: [...unique], total, lots: Math.min(lots, MAX_APARTMENT_LOT), khop, rong: unique.size === 0, soTrangDaGhi };
 }
 
 export async function apartmentsAll(o: RunOptions, luaChon: TatCaDuAnOptions): Promise<PhaseSummary> {
@@ -138,10 +152,12 @@ export async function apartmentsAll(o: RunOptions, luaChon: TatCaDuAnOptions): P
     throw new ConfigError(`concurrency phải là số nguyên từ 1 đến ${MAX_CONCURRENCY}`);
   }
   const motDot = luaChon.motDot ?? 100; // 100 căn một lô = 100 căn một snapshot
+  const toiDaLanThu = luaChon.toiDaLanThu ?? TOI_DA_LAN_THU;
   const ids = new Set(luaChon.ids ?? []);
   const trongKhoang = (d: { soCan: number | null }): boolean =>
     (luaChon.tuSoCan === undefined || (d.soCan ?? 0) >= luaChon.tuSoCan) && (luaChon.denSoCan === undefined || (d.soCan ?? Number.MAX_SAFE_INTEGER) <= luaChon.denSoCan);
   const duAn = (await projectCatalog(o.snapshotRoot as string)).filter((d) => trongKhoang(d) && (!ids.size || ids.has(d.id)));
+  if (!duAn.length) o.log({ suKien: "can-ho-khong-co-du-an", thongBao: "lựa chọn không khớp dự án nào trong kho — kiểm --tu-so-can/--den-so-can/--project và gốc kho snapshot" });
   let conLai = luaChon.gioiHan ?? Number.POSITIVE_INFINITY;
 
   let items = 0;
@@ -150,6 +166,7 @@ export async function apartmentsAll(o: RunOptions, luaChon: TatCaDuAnOptions): P
   let soDuAnDaXongTruoc = 0;
   let soToa = 0;
   let soToaKhop = 0;
+  let soToaLoi = 0;
   let maDuNhieu = 0;
   let soDaLay = 0;
   let soLoi = 0;
@@ -165,11 +182,18 @@ export async function apartmentsAll(o: RunOptions, luaChon: TatCaDuAnOptions): P
     }
     conLai--;
     const t0 = Date.now();
+    const toaLoiLuaChay = new Set<string>(); // toà lỗi tạm trong lượt này: chưa ghi nhận gì, lượt sau liệt kê lại
 
     // 1. Liệt kê các toà chưa có trong tiến độ.
     for (const toa of d.toa) {
       if (td.toa.has(toa)) continue;
       const r = await lietKeToa(o, d.id, toa, concurrency);
+      if (r.loi) {
+        toaLoiLuaChay.add(toa);
+        soToaLoi++;
+        o.log({ suKien: "can-ho-toa-loi", duAn: d.id, toa, loi: r.loi });
+        continue;
+      }
       await o.writer.add(
         makeItem(
           "can_ho_toa",
@@ -179,13 +203,14 @@ export async function apartmentsAll(o: RunOptions, luaChon: TatCaDuAnOptions): P
           at(),
         ),
       );
-      await chotVaLuu(o);
+      await chot(o);
       await tienDo.append({ toa, tongDong: r.total, soLot: r.lots, khop: r.khop, rong: r.rong, maCan: r.codes });
       td.toa.set(toa, { tongDong: r.total, soLot: r.lots, khop: r.khop, rong: r.rong, maCan: r.codes });
       items += r.soTrangDaGhi + 1; // trang liệt kê + bản gộp toà
     }
 
     // 2. Chi tiết căn còn thiếu, theo đợt.
+    let conLoiMang = 0;
     for (const [tenToa, x] of td.toa) {
       if (dung) break;
       const con = x.maCan.filter((c) => !td.daLay.has(c) && !td.loi.has(c));
@@ -198,6 +223,7 @@ export async function apartmentsAll(o: RunOptions, luaChon: TatCaDuAnOptions): P
         );
         const daLay: string[] = [];
         const loi: Record<string, string> = {};
+        const dem: Record<string, number> = {};
         for (let k = 0; k < phan.length; k++) {
           const code = phan[k];
           const r = rs[k];
@@ -206,9 +232,19 @@ export async function apartmentsAll(o: RunOptions, luaChon: TatCaDuAnOptions): P
               dung = r.error; // phần chưa xong: lượt sau
               continue;
             }
-            loi[code] = r.error.message;
+            if (r.error instanceof TemporaryFailure) {
+              // Lỗi tạm: chưa ghi là lỗi. Đếm lượt thử, quá hạn mới ghi nhận.
+              const n = (td.dem.get(code) ?? 0) + 1;
+              td.dem.set(code, n);
+              dem[code] = n;
+              conLoiMang++;
+              if (n >= toiDaLanThu) loi[code] = "qua-so-lan-thu";
+              continue;
+            }
+            loi[code] = r.error.message; // 4xx của riêng căn này: vĩnh viễn
             continue;
           }
+          assertNoSoftError(r.value, `chi tiết căn «${code}» của toà ${tenToa} (dự án ${d.id})`);
           // Nguồn tra chi tiết căn khớp theo ĐOẠN ĐẦU của từng từ trong mã: đối chiếu `ma_can`, lệch thì KHÔNG ghi.
           const got = String((r.value?.data as { properties?: { ma_can?: unknown } } | null)?.properties?.ma_can ?? "").trim();
           if (got !== code) loi[code] = `khớp mã căn: gửi «${code}» nhận «${got}»`;
@@ -217,17 +253,26 @@ export async function apartmentsAll(o: RunOptions, luaChon: TatCaDuAnOptions): P
             daLay.push(code);
           }
         }
-        await chotVaLuu(o);
-        await tienDo.append({ ...(daLay.length ? { daLay } : {}), ...(Object.keys(loi).length ? { loi } : {}) });
+        const tienDoMoi = { ...(daLay.length ? { daLay } : {}), ...(Object.keys(loi).length ? { loi } : {}), ...(Object.keys(dem).length ? { dem } : {}) };
+        if (daLay.length) {
+          await chot(o);
+          items += daLay.length;
+        }
+        if (Object.keys(tienDoMoi).length) await tienDo.append(tienDoMoi); // dòng `dem` không khẳng định việc gì đã làm
         for (const c of daLay) td.daLay.add(c);
         for (const [c, l] of Object.entries(loi)) td.loi.set(c, l);
-        items += daLay.length;
         failed += Object.keys(loi).length;
+        if (daLay.length || Object.keys(loi).length) o.log({ suKien: "can-ho-lot", duAn: d.id, toa: tenToa, soCan: daLay.length, soLoi: Object.keys(loi).length });
       }
     }
     if (dung) break;
+    if (toaLoiLuaChay.size > 0 || conLoiMang > 0) {
+      // Còn toà chưa liệt kê được hoặc còn căn lỗi tạm: dự án để ngỏ, không có bản gộp — lượt sau làm tiếp.
+      o.log({ suKien: "can-ho-du-an-chua-xong", duAn: d.id, soToaLoi: toaLoiLuaChay.size, soCanLoiTam: conLoiMang });
+      continue;
+    }
 
-    // 3. Bản gộp dự án rồi đánh dấu xong.
+    // 3. Bản gộp dự án rồi đánh dấu xong — chỉ khi mọi toà đã liệt kê và mọi căn đã có kết luận.
     const cacToa = [...td.toa.entries()];
     const tong = cacToa.reduce((n, [, x]) => n + x.maCan.length, 0);
     const tongDong = cacToa.reduce((n, [, x]) => n + x.tongDong, 0);
@@ -254,7 +299,7 @@ export async function apartmentsAll(o: RunOptions, luaChon: TatCaDuAnOptions): P
       ),
     );
     items++;
-    await chotVaLuu(o);
+    await chot(o);
     await tienDo.append({ xong: true, soToa: cacToa.length, soToaKhop: khopToa, maDuNhieu: tong, soDaLay: td.daLay.size, soLoi: td.loi.size });
     soDuAnXong++;
     soToa += cacToa.length;
@@ -270,6 +315,6 @@ export async function apartmentsAll(o: RunOptions, luaChon: TatCaDuAnOptions): P
     calls: o.client.calls - started,
     items,
     failed,
-    so: { soDuAnXong, soDuAnDaXongTruoc, soToa, soToaKhop, maDuNhieu, soDaLay, soLoi },
+    so: { soDuAnXong, soDuAnDaXongTruoc, soToa, soToaKhop, soToaLoi, maDuNhieu, soDaLay, soLoi },
   };
 }

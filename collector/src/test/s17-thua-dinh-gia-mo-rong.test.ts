@@ -198,6 +198,9 @@ test("NhatKyTienDo: ghi thêm từng dòng, đọc lại đúng thứ tự; dòn
   assert.deepEqual(await new NhatKyTienDo(duong).readAll(), [{ a: 1 }, { a: 2, b: "x" }]);
   await appendFile(duong, '{"a":3', "utf8");
   assert.deepEqual(await new NhatKyTienDo(duong).readAll(), [{ a: 1 }, { a: 2, b: "x" }], "dòng cuối cụt bị bỏ");
+  // Sau một dòng cụt, ghi thêm phải xuống dòng trước — nếu không, bản mới dính vào dòng hỏng và mất, lượt sau lỗi luôn.
+  await new NhatKyTienDo(duong).append({ a: 30 });
+  assert.deepEqual(await new NhatKyTienDo(duong).readAll(), [{ a: 1 }, { a: 2, b: "x" }, { biCat: true, goc: '{"a":3' }, { a: 30 }], "mảnh cụt được thay bằng bản ghi «bị cắt», bản mới không dính vào dòng hỏng");
   await appendFile(duong, '}\n{"a":4}\n{"hong\n{"a":5}\n', "utf8");
   await assert.rejects(new NhatKyTienDo(duong).readAll(), /dòng 5/, "dòng hỏng giữa tệp không được bỏ lặng");
 }));
@@ -387,7 +390,9 @@ const FAKE_CFG_CAN_HO = {
 };
 
 /** Nguồn giả cho pha căn hộ toàn bộ: `trang[dự án][toà][lượt][trang]` = mã căn của trang; `lech[mã]` = mã nguồn trả về thay vì mã đã gửi. */
-function nguonCanHo(ds: Record<string, Record<string, string[][][]>>, lech: Record<string, string> = {}, caps = { calls: 10_000, minutes: 60 }) {
+type TacDong = { trang?: (duAn: string, thap: string, page: number) => "mem" | "mang" | undefined; can?: (maCan: string) => "mem" | "mang" | undefined };
+
+function nguonCanHo(ds: Record<string, Record<string, string[][][]>>, lech: Record<string, string> = {}, caps = { calls: 10_000, minutes: 60 }, tacDong: TacDong = {}) {
   const sent: string[] = [];
   const lotCuaToa = new Map<string, number>();
   const json = (body: unknown): PhanHoi => ({ status: 200, contentType: "application/json", body: JSON.stringify(body) });
@@ -398,6 +403,9 @@ function nguonCanHo(ds: Record<string, Record<string, string[][][]>>, lech: Reco
       const page = Number(u.searchParams.get("page"));
       const thap = u.searchParams.get("thap") ?? "";
       const duAn = u.searchParams.get("project_id") ?? "";
+      const tac = tacDong.trang?.(duAn, thap, page);
+      if (tac === "mang") throw new TypeError("Failed to fetch");
+      if (tac === "mem") return json({ status: false, message: "Quá tải", data: { content: [], totalElements: 0, totalPages: 0 } });
       if (page === 0) lotCuaToa.set(`${duAn}/${thap}`, (lotCuaToa.get(`${duAn}/${thap}`) ?? -1) + 1);
       const cacLot = ds[duAn]?.[thap] ?? [[]];
       const lot = Math.min(lotCuaToa.get(`${duAn}/${thap}`) ?? 0, cacLot.length - 1);
@@ -405,6 +413,9 @@ function nguonCanHo(ds: Record<string, Record<string, string[][][]>>, lech: Reco
       return json({ status: true, message: null, data: { content: codes.map((text) => ({ text, sub_text: `Tháp ${thap}` })), totalElements: cacLot[cacLot.length - 1].flat().length, totalPages: (cacLot[lot] ?? []).length, size: 100, number: page }, pagination: null, extra: {} });
     }
     const maCan = u.searchParams.get("ma_can") ?? "";
+    const tac = tacDong.can?.(maCan);
+    if (tac === "mang") throw new TypeError("Failed to fetch");
+    if (tac === "mem") return json({ status: false, message: "Quá tải", data: null });
     return json({ status: true, message: null, data: { properties: { ma_can: lech[maCan] ?? maCan } }, pagination: null, extra: {} });
   };
   const single = async (url: string): Promise<PhanHoi> => {
@@ -483,7 +494,7 @@ test("pha căn hộ toàn bộ: liệt kê toà (trang song song, quét thêm l�
   const s2 = await lan2.run();
   assert.equal(nguon2.sent.filter((u) => u.includes("/apartment-list")).length, 0, "không liệt kê lại toà đã có");
   assert.deepEqual(nguon2.sent.map((u) => new URL(u).searchParams.get("ma_can")).sort(), ["b2", "b3"]);
-  assert.deepEqual(s2.s.so, { soDuAnDaXongTruoc: 0, soDuAnXong: 2, soToa: 2, soToaKhop: 2, maDuNhieu: 5, soDaLay: 4, soLoi: 1 });
+  assert.deepEqual(s2.s.so, { soDuAnDaXongTruoc: 0, soDuAnXong: 2, soToa: 2, soToaKhop: 2, soToaLoi: 0, maDuNhieu: 5, soDaLay: 4, soLoi: 1 });
   const items = await moiKind(dir, w0.snapshotIds[0]);
   const theo = (k: string) => items.filter((it) => it.kind === k);
   assert.deepEqual(theo("can_ho_detail").map((it) => it.sourceId).sort(), ["du-an-7-can-a1", "du-an-7-can-a2", "du-an-7-can-b1", "du-an-7-can-b2"]);
@@ -1270,4 +1281,63 @@ test("executePhase pha images: mất mạng (network-down) KHÔNG ghi nhận là
   const r2 = await chayQuaDieuKhien(dir, "images", tot.fetchImpl, { luongSong: 2 });
   assert.notEqual(r2.stopReason, "fast-after-block");
   assert.equal(r2.ok, true);
+}));
+
+// ---------- pha căn hộ theo lượt soát: lỗi mềm, lỗi tạm, trang hỏng ----------
+
+test("pha căn hộ toàn bộ: trang sau trả status false → dừng source-error; trang đó không được ghi, toà không được ghi nhận", async () => withTmp(async (dir) => {
+  const goc = await duaVaoKho(dir, [chiTiet("7", { is_exists_apartment_info: true, danh_sach_thap: ["A"], so_can: 2 }, null, "2026-11-24T05:00:00.000Z")]);
+  const ds = { "7": { A: [[["a1"], ["a2"]]] } };
+  const nguon = nguonCanHo(ds, {}, { calls: 500, minutes: 60 }, { trang: (duAn, thap, page) => (page === 1 ? "mem" : undefined) });
+  const e = await chayCanHo(dir, nguon.client, {}).run().then(() => null, (x: unknown) => x);
+  assert.ok(e instanceof RunStopped, String(e));
+  assert.equal(e.reason, "source-error");
+  const list = (await moiKind(dir, goc)).filter((it) => it.kind === "can_ho_list");
+  assert.deepEqual(list.map((it) => it.sourceId), [], "không trang nào của toà được ghi làm dữ liệu khi có trang lỗi mềm");
+  assert.equal((await moiKind(dir, goc)).some((it) => it.kind === "can_ho_toa"), false, "toà thiếu trang không có bản gộp");
+  await assert.rejects(readFile(join(dir, "tien-do", "can-ho-7.jsonl")), "chưa có gì được ghi nhận");
+}));
+
+test("pha căn hộ toàn bộ: chi tiết căn trả status false → dừng source-error; căn đó không ghi, không bị ghi nhầm là lệch mã", async () => withTmp(async (dir) => {
+  await duaVaoKho(dir, [chiTiet("7", { is_exists_apartment_info: true, danh_sach_thap: ["A"], so_can: 2 }, null, "2026-11-24T05:00:00.000Z")]);
+  const nguon = nguonCanHo({ "7": { A: [[["a1", "a2"]]] } }, {}, { calls: 500, minutes: 60 }, { can: (ma) => (ma === "a2" ? "mem" : undefined) });
+  const e = await chayCanHo(dir, nguon.client, { concurrency: 1 }).run().then(() => null, (x: unknown) => x);
+  assert.ok(e instanceof RunStopped, String(e));
+  assert.equal(e.reason, "source-error");
+  const td = await new NhatKyTienDo(join(dir, "tien-do", "can-ho-7.jsonl")).readAll();
+  assert.equal(JSON.stringify(td).includes("khớp mã căn"), false, "lỗi mềm không bị ghi là lệch mã");
+}));
+
+test("pha căn hộ toàn bộ: một trang liệt kê lỗi mạng tạm → toà đó bị bỏ qua trong lượt này, lượt vẫn đi tiếp; toà chưa được ghi nhận nên lượt sau liệt kê lại", async () => withTmp(async (dir) => {
+  await duaVaoKho(dir, [chiTiet("7", { is_exists_apartment_info: true, danh_sach_thap: ["A", "B"], so_can: 3 }, null, "2026-11-24T05:00:00.000Z"), chiTiet("8", { is_exists_apartment_info: true, danh_sach_thap: ["A"], so_can: 1 }, null, "2026-11-24T05:00:00.000Z")]);
+  const ds = { "7": { A: [[["a1"], ["a2"]]], B: [[["b1", "b2"]]] }, "8": { A: [[["c1"]]] } };
+  let hong = true;
+  const nguon1 = nguonCanHo(ds, {}, { calls: 500, minutes: 60 }, { trang: (duAn, thap, page) => (hong && duAn === "7" && thap === "A" && page === 1 ? "mang" : undefined) });
+  const s1 = await chayCanHo(dir, nguon1.client, {}).run();
+  assert.deepEqual(s1.s.so, { soDuAnXong: 1, soDuAnDaXongTruoc: 0, soToa: 1, soToaKhop: 1, soToaLoi: 1, maDuNhieu: 1, soDaLay: 1, soLoi: 0 }, "toà B của dự án 7 lấy đủ; toà A lỗi; dự án 8 xong");
+  assert.ok(s1.log.some((x) => x.suKien === "can-ho-toa-loi" && x.toa === "A"));
+  const td = await new NhatKyTienDo(join(dir, "tien-do", "can-ho-7.jsonl")).readAll();
+  assert.deepEqual(td.filter((r) => typeof r.toa === "string").map((r) => r.toa), ["B"], "toà A chưa được ghi nhận");
+  assert.equal(td.some((r) => r.xong === true), false, "dự án 7 chưa xong");
+  hong = false;
+  const nguon2 = nguonCanHo(ds);
+  const s2 = await chayCanHo(dir, nguon2.client, {}).run();
+  assert.equal(s2.s.so?.soDuAnXong, 1, "lượt hai: toà A liệt kê lại, dự án 7 xong");
+  assert.ok(nguon2.sent.some((u) => u.includes("/apartment-list")), "có liệt kê lại toà A");
+}));
+
+test("pha căn hộ toàn bộ: chi tiết căn lỗi mạng tạm chưa được ghi là lỗi; thử lại ở các lượt sau, quá ba lượt thì ghi qua-so-lan-thu", async () => withTmp(async (dir) => {
+  await duaVaoKho(dir, [chiTiet("7", { is_exists_apartment_info: true, danh_sach_thap: ["A"], so_can: 2 }, null, "2026-11-24T05:00:00.000Z")]);
+  const ds = { "7": { A: [[["a1", "a2"]]] } };
+  const nguon = nguonCanHo(ds, {}, { calls: 500, minutes: 60 }, { can: (ma) => (ma === "a1" ? "mang" : undefined) });
+  for (let lan = 1; lan <= 3; lan++) {
+    const r = await chayCanHo(dir, nguon.client, { concurrency: 1 }).run();
+    assert.equal(r.s.so?.soDuAnXong, 0, `lượt ${lan}: còn một căn dở`);
+    assert.equal(nguon.sent.filter((u) => u.includes("ma_can=a1")).length, lan * 2, "mỗi lượt gửi hai lời (một lần thử lại sau khi hỏi phiên) rồi tính là lỗi tạm");
+  }
+  const r4 = await chayCanHo(dir, nguon.client, { concurrency: 1 }).run();
+  assert.equal(r4.s.so?.soDuAnXong, 1, "lượt tư: quá hạn số lượt, căn được ghi nhận, dự án xong");
+  assert.equal(nguon.sent.filter((u) => u.includes("ma_can=a1")).length, 6, "lượt tư không hỏi lại căn a1");
+  const gop = (await moiKind(dir)).find((it) => it.kind === "can_ho_du_an")!;
+  assert.deepEqual([gop.meta.soDaLay, gop.meta.soKhongLayDuoc], [1, 1]);
 }));
