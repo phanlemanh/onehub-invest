@@ -151,8 +151,10 @@ run_soat() {
   { echo "# Tệp có docker run / docker exec chạm one-invest-db hay mạng container: — sinh bởi check-db-noi-bo.sh soat $(git -C "$ROOT" rev-parse --short HEAD)"
     git -C "$ROOT" grep -l -E 'docker (run|exec)|docker compose .*(up|exec)' -- 'scripts/*' 'db/*' 'pipeline/*.sh' 'pipeline/*.mjs' 'app/scripts/*' \
       | grep -v -x 'db/docker-compose.yml' | while read -r f; do
-          if grep -q -E 'network[= ]"?container:' "$f"; then c="docker run --network container: (mạng của one-invest-db)"
-          elif grep -q -E 'docker exec[^|]*(one-invest-db|\$DB|\$C\b|DB_CONTAINER)' "$f"; then c="docker exec vào one-invest-db"
+          # Biến container của tệp: chỉ tính là DB thật khi tệp gán nó bằng one-invest-db (tránh $DB của container tạm).
+          local vs; vs=$(grep -o -E '^[[:space:]]*(local )?[A-Z_]+=["'"'"']?one-invest-db' "$f" | sed -E 's/^[[:space:]]*(local )?//; s/=.*//' | paste -sd'|' -)
+          if grep -q -E 'docker run[^#]*--netw[o]rk[= ]"?container:' "$f"; then c="docker run --network=container (mạng của one-invest-db)"
+          elif grep -q -E "docker exec[^|]*(one-invest-db|\\\$C\\b|DB_CONTAINER${vs:+|\\\$\\{?($vs)\\b})" "$f"; then c="docker exec vào one-invest-db"
           elif grep -q -E 'docker run' "$f"; then c="docker run container riêng"
           else c="docker compose / khác"; fi
           printf '%s\t%s\n' "$f" "$c"
@@ -194,11 +196,13 @@ bo_tam() { docker compose -p "$1" -f "$TMPD/$1.json" down >/dev/null 2>&1; docke
 psql_c() { docker exec -e PGPASSWORD=oneinvest -e "PGOPTIONS=-c default_transaction_read_only=${3:-on}" "$1" psql -h localhost -U oneinvest -d oneinvest -Atc "$2" 2>&1; }
 show_ts() { local c=$1; echo "shared_buffers=$(psql_c $c 'show shared_buffers') work_mem=$(psql_c $c 'show work_mem') maintenance_work_mem=$(psql_c $c 'show maintenance_work_mem') effective_cache_size=$(psql_c $c 'show effective_cache_size') shm=$(docker exec $c df -h /dev/shm | awk 'NR==2{print $2}')"; }
 base_compose() { git -C "$ROOT" show "$BASE:db/docker-compose.yml" > "$TMPD/base.yml" && echo "$TMPD/base.yml"; }
-don_tam() { local p; for p in $(docker ps -a --format '{{.Names}}' | grep -E '^ht8-(ts|live|do)-'); do docker rm -f "$p" >/dev/null 2>&1; done
-            docker volume ls -q | grep -E '^onehub_ht8_' | xargs -r docker volume rm -f >/dev/null 2>&1; rm -rf "$TMPD"; }
+# $1 tiền tố của chế độ (ts | live | do): chỉ dọn container/volume của chính chế độ ấy — ba chế độ chạy song song được
+# (lượt chấm chạy E4, E5, E8 cùng lúc; bản cũ dọn mọi ht8-* và giết container của chế độ khác).
+don_tam() { local k=$1 p; for p in $(docker ps -a --format '{{.Names}}' | grep -E "^ht8-$k(-|\$)"); do docker rm -f "$p" >/dev/null 2>&1; done
+            docker volume ls -q | grep -E "^onehub_ht8_$k(_|\$)" | xargs -r docker volume rm -f >/dev/null 2>&1; rm -rf "$TMPD"; }
 
 run_tham_so() {
-  TMPD=$(mktemp -d); trap don_tam RETURN
+  TMPD=$(mktemp -d); trap "don_tam ts" RETURN
   local b; b=$(base_compose) || { fail "không đọc được compose ở $BASE"; return; }
   dung_tam "$COMPOSE" ht8-ts-cay 55434 127.0.0.1 onehub_ht8_ts_cay || return
   local s; s=$(show_ts ht8-ts-cay); echo "cây: $s"
@@ -226,7 +230,7 @@ run_tham_so() {
   dung_tam "$b" ht8-ts-ap 55434 127.0.0.1 $V || return
   s=$(psql_c ht8-ts-ap 'show shared_buffers'); m=$(psql_c ht8-ts-ap 'select count(*) from ht8_moc')
   [ "$s" = 256MB ] && [ "$m" = 1 ] && pass "đường lùi cây→base: shared_buffers=256MB, dòng mốc còn 1" || fail "đường lùi: shared_buffers=$s, dòng mốc=$m"
-  bo_tam ht8-ts-ap; don_tam; TMPD=$(mktemp -d)
+  bo_tam ht8-ts-ap; don_tam ts; TMPD=$(mktemp -d)
   [ "$(docker ps -aq --filter name=ht8-ts- | wc -l | tr -d ' ')" = 0 ] && pass "không sót container ht8-ts-*" || fail "sót container ht8-ts-*"
 }
 
@@ -251,7 +255,7 @@ live_doc() {
   v=$(docker exec "$c" df -h /dev/shm 2>/dev/null | awk 'NR==2{print $2}'); [ "$v" = 1.0G ] && pass "/dev/shm $v" || fail "/dev/shm ${v:-?} (compose 1gb)"
 }
 run_live_ba() {
-  TMPD=$(mktemp -d); trap don_tam RETURN
+  TMPD=$(mktemp -d); trap "don_tam live" RETURN
   expect "live one-invest-db (trước áp)" do "FAIL 5433 nghe *" live_doc $DB 5433
   expect "live one-invest-db (trước áp) tham số" do "FAIL shared_buffers=256MB (compose 8GB)" live_doc $DB 5433
   dung_tam "$COMPOSE" ht8-live-cay 55435 127.0.0.1 onehub_ht8_live_cay || return
@@ -263,7 +267,7 @@ run_live_ba() {
 }
 
 run_do() {
-  TMPD=$(mktemp -d); trap don_tam RETURN
+  TMPD=$(mktemp -d); trap "don_tam do" RETURN
   local V=onehub_ht8_do b; b=$(base_compose)
   dung_tam "$b" ht8-do 55437 127.0.0.1 $V || return
   local t n0 n1
@@ -290,11 +294,22 @@ run_do() {
   local Q1="select field, count(*), count(distinct subject_key) from field_assertions group by field"
   local Q3="create index ht8_do_idx on field_assertions (subject_key, field, observed_at); drop index ht8_do_idx"
   local Q2="select count(*), sum(length(fa.value)) from field_assertions fa join sale_offer_records s on s.offer_id = split_part(fa.subject_key, ':', 2)"
+  # Câu ghi (Q3): in tổng ms, hoặc "LOI <dòng lỗi>" khi psql thoát khác 0, có dòng ERROR, hay không ra dòng Time.
+  chay_ghi() {
+    local out rc; out=$(docker exec -e PGPASSWORD=oneinvest ht8-do psql -h localhost -U oneinvest -d oneinvest -At \
+      -v ON_ERROR_STOP=1 -c '\timing on' -c "$1" 2>&1); rc=$?
+    if [ $rc -ne 0 ] || grep -q -E '^(psql:.*)?ERROR' <<<"$out" || ! grep -q '^Time: ' <<<"$out"; then
+      echo "LOI $(grep -m1 -E 'ERROR|FATAL|error' <<<"$out" | head -c 200)"; return; fi
+    sed -nE 's/^Time: ([0-9.]+) ms.*/\1/p' <<<"$out" | awk '{s+=$1} END{print s}'
+  }
+  # Đối chứng dương: câu ghi lỗi chắc chắn phải ra LOI — không thì phép «mọi truy vấn chạy xong» không phân biệt gì với Q3.
+  case "$(chay_ghi "create index ht8_do_hong on field_assertions (ht8_khong_co_cot)")" in
+    LOI*) pass "đối chứng câu ghi lỗi bị bắt (LOI)";; *) fail "đối chứng câu ghi lỗi KHÔNG bị bắt — thước Q3 chết";; esac
   do_bo() { # $1 nhãn → in "<nhãn> <q> <ms> <workers>" ba lần mỗi truy vấn
     local q i ms w
     for q in Q1 Q2 Q3; do for i in 1 2 3; do
       if [ $q = Q3 ]; then
-        ms=$(psql_c ht8-do "\\timing on" off >/dev/null; docker exec -e PGPASSWORD=oneinvest ht8-do psql -h localhost -U oneinvest -d oneinvest -At -c '\timing on' -c "$Q3" 2>&1 | sed -nE 's/^Time: ([0-9.]+) ms.*/\1/p' | awk '{s+=$1} END{print s}')
+        ms=$(chay_ghi "$Q3"); case "$ms" in LOI*) echo "LOI $1 $q ${ms#LOI }"; continue;; esac
         w=0
       else
         local js; js=$(psql_c ht8-do "explain (analyze, format json) ${!q}" off)

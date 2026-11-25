@@ -1,4 +1,4 @@
-# Tệp có docker run / docker exec chạm one-invest-db hay mạng container: — sinh bởi check-db-noi-bo.sh soat 0af1b77e3
+# Tệp có docker run / docker exec chạm one-invest-db hay mạng container: — sinh bởi check-db-noi-bo.sh soat 6b866d99d
 db/check-idempotent-tam.sh	docker exec vào one-invest-db
 db/check-idempotent.selftest.sh	docker exec vào one-invest-db
 db/check-idempotent.sh	docker exec vào one-invest-db
@@ -11,12 +11,12 @@ pipeline/scripts/resolve-so-stage-a.sh	docker exec vào one-invest-db
 pipeline/scripts/truong-du-an-tren-tin.test.mjs	docker compose / khác
 scripts/audit-all.sh	docker exec vào one-invest-db
 scripts/check-db-autostart.sh	docker run container riêng
-scripts/check-db-noi-bo.sh	docker run --network container: (mạng của one-invest-db)
-scripts/check-ruler-views.sh	docker compose / khác
-scripts/check-supabase-lock.sh	docker exec vào one-invest-db
+scripts/check-db-noi-bo.sh	docker exec vào one-invest-db
+scripts/check-ruler-views.sh	docker exec vào one-invest-db
+scripts/check-supabase-lock.sh	docker run container riêng
 scripts/db-chuyen-volume.sh	docker exec vào one-invest-db
-scripts/db-khoi-phuc.sh	docker run --network container: (mạng của one-invest-db)
-scripts/db-sao-luu.sh	docker run --network container: (mạng của one-invest-db)
+scripts/db-khoi-phuc.sh	docker run --network=container (mạng của one-invest-db)
+scripts/db-sao-luu.sh	docker run --network=container (mạng của one-invest-db)
 scripts/db-volume-check.sh	docker run container riêng
 scripts/migrate-export.sh	docker compose / khác
 scripts/sao-luu-ngoai-may.itest.mjs	docker run container riêng

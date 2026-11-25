@@ -320,7 +320,7 @@ lạnh, hạn giữ bản lùi): `docs/ops/db-volume.md`.
   `EXTRA_CONF: "effective_cache_size = 20GB"`, `shm_size: 1gb`. Đi **biến môi trường** của ảnh kartoza — ảnh ghi chúng ra
   `postgis.conf`/`extra.conf` lúc khởi động; ảnh KHÔNG nhận `command: -c …` (entrypoint bọc `gosu` sai). `shm_size` vì truy
   vấn song song cấp vùng nhớ chung ở `/dev/shm` (mặc định Docker 64 MB).
-- **Đổi tham số = tạo lại container:** `docker compose -f db/docker-compose.yml up -d --force-recreate db` (DB dừng ~10 giây).
+- **Đổi tham số = tạo lại container:** `docker compose -f db/docker-compose.yml up -d --force-recreate --wait --wait-timeout 240 db` (DB dừng ~10 giây; `--wait` chờ healthcheck xanh rồi mới trả về).
   `docker restart` KHÔNG sinh lại cấu hình (tệp khoá cấu hình ở lớp container). Đây là khởi động lại dịch vụ nền: cần lời riêng
   của Mạnh, theo `ap-may-thu.md` của hồ sơ; agent không tự chạy. Lưu ý: `scripts/setup.sh`, `scripts/migrate-export.sh`,
   `pipeline/import.sh` có `docker compose up -d` — chạy tay chúng sau khi compose đổi cũng là tạo lại container.

@@ -9,7 +9,7 @@ Hàng HT8 `db-chi-nghe-noi-bo-va-chinh-postgres` (T2, hàng nền, dãy P1). Ngu
   `lsof` thấy `ssh … TCP *:5433 (LISTEN)`. Nối được bằng IP LAN của máy (192.168.1.x) với mật khẩu mặc định; trong DB
   có hồ sơ user app (tầng A). `pg_hba.conf` của ảnh kartoza nhận `0.0.0.0/0` bằng mật khẩu.
 - **A8 — tham số gần mặc định của ảnh.** `shared_buffers` 256 MB, `work_mem` 16 MB, `maintenance_work_mem` 128 MB,
-  `effective_cache_size` 5 GB trên VM colima 12 nhân, 32 GB. Audit §8: điểm tranh thật là một cụm Postgres chung cho DB
+  `effective_cache_size` 5 GB theo audit (đo thẳng trên compose `5a418983c` ra 4GB — §4 hồ sơ áp) trên VM colima 12 nhân, 32 GB. Audit §8: điểm tranh thật là một cụm Postgres chung cho DB
   thật và DB suite; lượt nạp S06 05:30 chậm ở phần DB.
 - **Phát hiện khi thiết kế:** container có `/dev/shm` 64 MB (mặc định Docker). Postgres để `dynamic_shared_memory_type
   = posix`, nên truy vấn song song (hash join, sort song song) cấp vùng nhớ chung trong `/dev/shm`; nâng `work_mem` mà giữ
@@ -41,8 +41,8 @@ container thì cấu hình sinh lại từ biến môi trường; chỉ `docker 
 | Job launchd (collector, pipeline, sync-cloud, s03-nap…) | `localhost:5433` trên Mac | giữ nguyên |
 | App dev (`.claude/launch.json`), data-api, agent, test | `localhost:5433` | giữ nguyên |
 | `scripts/db-sao-luu.sh`, `scripts/db-khoi-phuc.sh` | `docker run --network container:one-invest-db` | không qua cổng Mac — giữ nguyên |
-| `db/db-thu.sh`, `db/check-idempotent*.sh`, `pipeline/scripts/backup.sh`, `pipeline/scripts/resolve-so-stage-a.sh`, `scripts/audit-all.sh`, `scripts/check-ruler-views.sh`, `scripts/db-chuyen-volume.sh` | `docker exec` vào `one-invest-db` (psql/pg_dump bên trong container) | không qua cổng Mac — giữ nguyên |
-| `scripts/check-db-autostart.sh`, `scripts/db-volume-check.sh`, `scripts/check-supabase-lock.sh`, `scripts/sao-luu-ngoai-may.itest.mjs`, `scripts/check-db-noi-bo.sh` (bộ kiểm của HT8; chế độ `do` còn `docker exec one-invest-db pg_dump` chỉ đọc) | container riêng (dind, cụm tập dượt cổng 55433, PostGIS/PostgREST tạm) | không chạm DB thật; `db-volume-check.sh` đổi khuôn `sed` cổng (§5) |
+| `db/db-thu.sh`, `db/check-idempotent*.sh`, `pipeline/scripts/backup.sh`, `pipeline/scripts/resolve-so-stage-a.sh`, `scripts/audit-all.sh`, `scripts/check-ruler-views.sh`, `scripts/db-chuyen-volume.sh`, `scripts/check-db-noi-bo.sh` (bộ kiểm của HT8: `live`, `live-ba`, `do` đọc `one-invest-db` bằng `docker exec` trong phiên read-only/`pg_dump` chỉ đọc; các chế độ khác dựng container tạm `ht8-*`) | `docker exec` vào `one-invest-db` (psql/pg_dump bên trong container) | không qua cổng Mac — giữ nguyên |
+| `scripts/check-db-autostart.sh`, `scripts/db-volume-check.sh`, `scripts/check-supabase-lock.sh`, `scripts/sao-luu-ngoai-may.itest.mjs` | `docker run` container riêng (dind, cụm tập dượt cổng 55433, PostGIS/PostgREST tạm) | không chạm DB thật; `db-volume-check.sh` đổi khuôn `sed` cổng (§5) |
 | `pipeline/finalize-hanoi.sh`, `pipeline/import.sh`, `scripts/setup.sh`, `scripts/migrate-export.sh` | `docker compose exec db …`; ba tệp sau còn `docker compose up -d` | `exec` không qua cổng Mac. **`up -d` sau khi gộp sẽ tạo lại container theo compose mới = áp** — chỉ chạy tay; không job launchd nào gọi chúng (soát 24/11). Hồ sơ áp và runtime-map ghi điều này |
 | `pipeline/scripts/cong-tac-that.test.mjs`, `pipeline/scripts/truong-du-an-tren-tin.test.mjs` | `pg` tới `localhost` (chỉ nhắc docker trong chú thích) | giữ nguyên |
 | `scripts/ci-test-local.mjs` | container PostGIS riêng, mạng `container:` | không chạm DB thật |
