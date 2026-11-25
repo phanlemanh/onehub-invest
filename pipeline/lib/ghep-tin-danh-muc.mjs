@@ -1,0 +1,242 @@
+// ghep-tin-danh-muc.mjs — PL20 ghep-tin-vao-danh-muc: luật gắn một bài S03 vào toà hay vùng (phân khu, cụm) của Danh bạ.
+// Hàm thuần, không đọc DB. Thứ tự luật: docs/superpowers/specs/2026-11-18-ghep-tin-vao-danh-muc-design.md §3.
+// Luật 7: model chỉ trích; gắn hay không do luật xác định ở đây quyết (căn cứ chu_bai, đoạn trích đã kiểm, tên nằm trong đoạn trích,
+// tên khớp đúng một nút của dự án).
+import { chuanHoaTenToa as chuan } from "./danh-ba-vat-the.mjs";
+
+/** Mỗi nhóm nguồn một rule_id để tắt riêng được. */
+export const RULE = Object.freeze({
+  cot: "ghep-toa-cot", cotChuan: "ghep-toa-cot-chuan", chuModel: "ghep-toa-chu-model", model: "ghep-toa-model",
+});
+export const TAT_CA_NGUON = Object.freeze([RULE.cot, RULE.cotChuan, RULE.chuModel, RULE.model]);
+/** Nguồn đang bật. Tắt một nguồn: bỏ rule_id khỏi danh sách này, lượt kế rút hết dòng của nguồn đó.
+ * RULE.model (D, G) tắt: chỉ có 81 tin, không đủ 110 bài để chấm (Mạnh chọn 18/11). */
+export const NGUON_BAT = Object.freeze([RULE.cot, RULE.cotChuan, RULE.chuModel]);
+
+/** Chữ bài rao từ hai căn trở lên: «sẵn 8 căn», «2 căn», «nhiều căn» (vòng 2 AC-9, bài #12295). */
+// Đọc trên chữ còn dấu: bỏ dấu thì «căn» trùng «cần» («căn thứ 2 Cần ra gấp»). Số căn phải có chữ chỉ lượng đứng ngay trước
+// («sẵn 8 căn», «bán 2 căn»), để «tầng 16 căn số 10», «S2.12 căn», «cắt lỗ 200 căn» không bị tính là nhiều căn.
+const LUONG = "sẵn|còn|có|bán|thuê|gửi|nhận|quỹ|tổng|gồm|hơn|trên|list";
+const MAU_NHIEU_CAN = new RegExp(`(?<![\\p{L}\\p{N}])(?:(?:${LUONG}) (?:[2-9]|[1-9][0-9]{1,2}) ?căn|nhiều căn)(?![\\p{L}\\p{N}])`, "u");
+export const chuNhieuCan = (chu) => MAU_NHIEU_CAN.test(String(chu ?? "").normalize("NFC").toLowerCase().replace(/\s+/g, " "));
+const boDot = (s) => s.replace(/\./g, "");
+const boDau = (s) => String(s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/gi, "D").toUpperCase();
+/** Chữ để dò tên: giữ chữ, số, dấu chấm; có khoảng trắng hai đầu. */
+const chuDo = (s) => ` ${boDau(s).replace(/[^A-Z0-9.]+/g, " ")} `;
+/** Chữ gọn để kiểm tên trong đoạn trích: chỉ giữ chữ và số. */
+const gon = (s) => boDau(s).replace(/[^A-Z0-9]/g, "");
+const thoat = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const them = (m, k, v) => { (m.get(k) ?? m.set(k, new Set()).get(k)).add(v); };
+
+/**
+ * Mẫu dò một tên trong chữ bài. Chỉ tên toà được mang đuôi mã căn dính sau (S1.02.1508, S1.02-15XX08); tên vùng thì không,
+ * vì «S1006» là toà S10.06 chứ không phải vùng S1 cộng đuôi 006.
+ */
+function mauTen(ten, { duoiMaCan = false, boThe = false } = {}) {
+  const tu = boDau(ten).replace(/[^A-Z0-9.]+/g, " ").trim().split(" ").filter(Boolean);
+  if (!tu.length) return null;
+  const duoi = duoiMaCan ? "(?:[ .-]?(?:[0-9]{3,4}|[0-9]{0,2}X{1,2}[0-9]{2}))?" : "";
+  // «The Beverly Solari» thường viết «Beverly Solari»: chữ THE đầu tên được bỏ (vòng 2 AC-9, bài #12274).
+  const dau = boThe && tu.length > 1 && tu[0] === "THE" ? `(?:THE ?)?` : null;
+  const than = (dau ? tu.slice(1) : tu).map(thoat).join(" ?");
+  return new RegExp(`(?<![A-Z0-9.])${dau ?? ""}${than}${duoi}(?![A-Z0-9]|\\.[A-Z0-9])`, "g");
+}
+
+/**
+ * Bảng tên của một dự án. Tên dưới 2 ký tự sau chuẩn hoá bị loại (khớp nhầm chữ thường trong bài).
+ * @param {{ toa: {key: string, upi: string, vung_id: string|number|null, ten: string[]}[],
+ *           vung: {id: string|number, cha_id: string|number|null, ten: string[]}[] }} vao
+ */
+export function dungDanhBa({ toa, vung }) {
+  const d = { tenToa: new Map(), tenToaBoDot: new Map(), tenVung: new Map(), mauToa: [], mauVung: [], tenGon: new Map(),
+    upi: new Map(), vungCuaToa: new Map(), cha: new Map() };
+  const dungDuoc = (t) => chuan(t).length >= 2;
+  // Tên trùng đúng một toà và đúng một vùng được hiểu là vùng: người đăng ghi «S1» là nói cả phân khu, gắn mức vùng không khẳng định sai toà.
+  // Bỏ tên ấy khỏi toà ngay từ đây để ô tên toà, chữ bài và bản đọc cho cùng kết quả dù danh bạ còn hay đã gỡ dòng toà trùng tên.
+  const vungTheoTen = new Map(), toaTheoTen = new Map();
+  for (const v of vung) for (const t of v.ten ?? []) if (dungDuoc(t)) them(vungTheoTen, chuan(t), v.id);
+  for (const b of toa) for (const t of b.ten ?? []) if (dungDuoc(t)) them(toaTheoTen, chuan(t), b.key);
+  // Chữ THE đầu tên được bỏ khi tên trần không thuộc nút khác: danh bạ còn cặp «The Rainbow» · «Rainbow» là hai nút.
+  const boThe = (t, k) => /^the\s+\S/i.test(t.trim()) && [vungTheoTen, toaTheoTen].every((m) => [...(m.get(chuan(t.trim().slice(4))) ?? [])].every((x) => x === k));
+  const laTenVung = (t) => vungTheoTen.get(chuan(t))?.size === 1 && toaTheoTen.get(chuan(t))?.size === 1;
+  for (const b of toa) {
+    const ten = (b.ten ?? []).filter((t) => dungDuoc(t) && /[A-Z]/.test(chuan(t)) && !laTenVung(t));
+    for (const t of ten) { them(d.tenToa, chuan(t), b.key); them(d.tenToaBoDot, boDot(chuan(t)), b.key); }
+    d.mauToa.push({ k: b.key, re: ten.map((t) => mauTen(t, { duoiMaCan: true, boThe: boThe(t, b.key) })).filter(Boolean) });
+    d.tenGon.set(b.key, ten.map(gon).filter((g) => g.length >= 2));
+    d.upi.set(b.key, b.upi);
+    d.vungCuaToa.set(b.key, b.vung_id ?? null);
+  }
+  for (const v of vung) {
+    const ten = (v.ten ?? []).filter(dungDuoc);
+    for (const t of ten) them(d.tenVung, chuan(t), v.id);
+    d.mauVung.push({ k: v.id, re: ten.map((t) => mauTen(t, { boThe: boThe(t, v.id) })).filter(Boolean) });
+    d.tenGon.set(v.id, ten.map(gon).filter((g) => g.length >= 2));
+    d.cha.set(v.id, v.cha_id ?? null);
+  }
+  return d;
+}
+
+/**
+ * Khớp một giá trị tên với danh bạ: đúng tên trước chuẩn hoá cách viết. Tên trùng đúng một toà và đúng một vùng đã được
+ * dungDanhBa xếp về vùng; tên còn khớp cả toà lẫn nhiều vùng là mơ hồ.
+ */
+export function khopTen(raw, d) {
+  const t = chuan(raw ?? "");
+  if (!t) return { muc: "rong" };
+  const a = d.tenToa.get(t);
+  const v = d.tenVung.get(t);
+  if (a?.size > 1 || (a?.size === 1 && v?.size > 1)) return { muc: "mo_ho" };
+  if (a?.size === 1) return { muc: "toa", k: [...a][0], cach: "dung" };
+  if (v?.size === 1) return { muc: "vung", k: [...v][0], cach: "dung" };
+  if (v?.size > 1) return { muc: "mo_ho" };
+  const b = d.tenToaBoDot.get(boDot(t));
+  if (b?.size === 1) return { muc: "toa", k: [...b][0], cach: "chuan", ten_chuan: tenDangKy(d, [...b][0], boDot(t)) };
+  if (b?.size > 1) return { muc: "mo_ho" };
+  const dau = t.split(".")[0];
+  if (dau !== t) {
+    const x = d.tenToa.get(dau);
+    const y = d.tenVung.get(dau);
+    if (x?.size > 1 || (x?.size === 1 && y?.size > 1)) return { muc: "mo_ho" };
+    if (x?.size === 1) return { muc: "toa", k: [...x][0], cach: "chuan", ten_chuan: dau };
+    if (y?.size === 1) return { muc: "vung", k: [...y][0], cach: "chuan", ten_chuan: dau };
+    if (y?.size > 1) return { muc: "mo_ho" };
+  }
+  return { muc: "ngoai" };
+}
+
+/** Tên đã đăng ký của toà ứng với dạng bỏ dấu chấm. */
+function tenDangKy(d, key, daBoDot) {
+  for (const [ten, keys] of d.tenToa) if (keys.has(key) && boDot(ten) === daBoDot) return ten;
+  return daBoDot;
+}
+
+/** Tên toà, vùng mà luật dò được trong chữ bài. */
+function docChu(chu, d) {
+  const s = chuDo(chu);
+  // Mỗi chỗ khớp một khoảng [a, b). Tên dài nhất thắng: chỗ khớp nằm gọn trong chỗ khớp dài hơn của nút khác bị bỏ
+  // («Beverly» trong «Beverly Solari»).
+  const khop = [];
+  for (const [loai, ds] of [["t", d.mauToa], ["v", d.mauVung]])
+    for (const x of ds) for (const r of x.re) for (const m of s.matchAll(r)) khop.push({ loai, k: x.k, a: m.index, b: m.index + m[0].length });
+  const t = new Set(), v = new Set();
+  for (const x of khop) {
+    if (khop.some((y) => y.k !== x.k && y.a <= x.a && y.b >= x.b && y.b - y.a > x.b - x.a)) continue;
+    (x.loai === "t" ? t : v).add(x.k);
+  }
+  return { t, v };
+}
+
+/** Ô bản đọc được tính: có giá trị chuỗi, căn cứ chữ bài, đoạn trích đã kiểm có trong bài. */
+const oDuocTinh = (x) => typeof x?.v === "string" && x.v.trim() !== "" && x.cc === "chu_bai" && (x.trich_ok === true || x.trich_ok === "true");
+
+/** Toà, vùng mà model nêu, kèm ô làm căn cứ. */
+function docModel(banDoc, d) {
+  const t = new Map(), v = new Map();
+  for (const x of [banDoc?.building, banDoc?.subzone]) {
+    if (!oDuocTinh(x)) continue;
+    const m = khopTen(x.v, d);
+    if (m.muc === "toa" && !t.has(m.k)) t.set(m.k, x);
+    if (m.muc === "vung" && !v.has(m.k)) v.set(m.k, x);
+  }
+  return { t, v };
+}
+
+const coTenTrongTrich = (x, k, d) => { const s = gon(x?.trich); return (d.tenGon.get(k) ?? []).some((g) => s.includes(g)); };
+
+/** Quyết định khi luật đọc được đúng một nút, hoặc chỉ model đọc được. */
+function xetChuModel({ luat, model, muc, nguonChung, nguonModel, banDoc, d }) {
+  if (luat.size === 1) {
+    const k = [...luat][0];
+    if (model.size === 1 && model.has(k)) {
+      const x = model.get(k);
+      return { muc, k, nguon: nguonChung, rule_id: RULE.chuModel, can_cu: { nguon: "chu-model", ten: x.v, label_id: banDoc.label_id, trich: x.trich } };
+    }
+    return { ly_do: model.size ? "chu-model-khac" : "chi-luat" };
+  }
+  if (model.size > 1) return { ly_do: muc === "toa" ? "model-nhieu-toa" : "model-nhieu-vung" };
+  if (model.size === 1) {
+    const [k, x] = [...model][0];
+    if (!coTenTrongTrich(x, k, d)) return { ly_do: "trich-khong-co-ten" };
+    return { muc, k, nguon: nguonModel, rule_id: RULE.model, can_cu: { nguon: "model", ten: x.v, label_id: banDoc.label_id, model: banDoc.model, trich: x.trich } };
+  }
+  return null;
+}
+
+/**
+ * Xét một bài trong phạm vi dự án của tin.
+ * @param {{ cot: string[], chu: string|null, banDoc: object|null }} bai
+ * @returns {{muc: 'toa'|'vung', k: string|number, nguon: string, rule_id: string, can_cu: object} | {ly_do: string}}
+ */
+export function xetBai({ cot = [], chu = null, banDoc = null }, d, { nguonBat = NGUON_BAT } = {}) {
+  const kq = xetTheoThuTu(cot, chu, banDoc, d);
+  return kq.rule_id && !nguonBat.includes(kq.rule_id) ? { ly_do: "nguon-tat" } : kq;
+}
+
+function xetTheoThuTu(cot, chu, banDoc, d) {
+  const luat = docChu(chu, d);
+  if (luat.t.size > 1) return { ly_do: "chu-nhieu-toa" };
+  if (banDoc?.multi_unit?.v === "yes") return { ly_do: "bai-nhieu-can" };
+  if (chuNhieuCan(chu)) return { ly_do: "bai-nhieu-can" };
+
+  const cots = cot.map((raw) => ({ raw, ...khopTen(raw, d) })).filter((x) => x.muc !== "rong");
+  const khop = cots.filter((x) => x.muc === "toa" || x.muc === "vung");
+  if (new Set(khop.map((x) => x.k)).size > 1 || cots.some((x) => x.muc === "mo_ho")) return { ly_do: "mo-ho" };
+  if (khop.length) {
+    const x = khop.find((y) => y.cach === "dung") ?? khop[0];
+    if (x.cach === "dung") return { muc: x.muc, k: x.k, nguon: "A", rule_id: RULE.cot, can_cu: { nguon: "cot", ten: x.raw } };
+    return { muc: x.muc, k: x.k, nguon: "B", rule_id: RULE.cotChuan, can_cu: { nguon: "cot", ten: x.raw, ten_chuan: x.ten_chuan } };
+  }
+  if (cots.length) return { ly_do: "ngoai-danh-ba" };
+
+  const model = docModel(banDoc, d);
+  const toa = xetChuModel({ luat: luat.t, model: model.t, muc: "toa", nguonChung: "C", nguonModel: "D", banDoc, d });
+  if (toa) return toa;
+  if (luat.v.size > 1) return { ly_do: "chu-nhieu-vung" };
+  return xetChuModel({ luat: luat.v, model: model.v, muc: "vung", nguonChung: "F", nguonModel: "G", banDoc, d }) ?? { ly_do: "khong-neu" };
+}
+
+/** Chuỗi vùng từ một nút lên gốc, gồm chính nó. */
+export function chuoiVung(id, d) {
+  const ra = new Set();
+  for (let n = id, i = 0; n !== null && n !== undefined && i < 16; n = d.cha.get(n), i++) ra.add(n);
+  return ra;
+}
+
+/**
+ * Gộp kết quả các bài lên tin, cùng luật với view offer_building: toà cùng vùng chứa nó ra mức toà; hai toà, toà với vùng không
+ * chứa nó, hai vùng không lồng nhau là xung đột.
+ */
+export function gopTin(ketQua, d) {
+  const gan = ketQua.filter((x) => x.muc);
+  if (!gan.length) return { status: "chua_gan" };
+  const toa = new Set(gan.filter((x) => x.muc === "toa").map((x) => x.k));
+  const vung = new Set(gan.filter((x) => x.muc === "vung").map((x) => x.k));
+  if (toa.size > 1) return { status: "xung_dot" };
+  if (toa.size === 1) {
+    const k = [...toa][0];
+    const chua = chuoiVung(d.vungCuaToa.get(k), d);
+    return [...vung].every((v) => chua.has(v)) ? { status: "gan", muc: "toa", k } : { status: "xung_dot" };
+  }
+  const sau = [...vung].find((v) => { const c = chuoiVung(v, d); return [...vung].every((w) => c.has(w)); });
+  return sau === undefined ? { status: "xung_dot" } : { status: "gan", muc: "vung", k: sau };
+}
+
+/**
+ * Xét một tin: ngoài phạm vi thì không sinh kết quả bài nào.
+ * @param {{ du_an: string|null, property_type: string, post_ids: string[] }} tin
+ * @param {(post_id: string) => object|null|undefined} docBai bài không còn dữ liệu trả rỗng và bị bỏ qua
+ * @param {Map<string, object>} danhBaTheoDuAn chỉ chứa các dự án trong phạm vi
+ */
+export function xetTin(tin, docBai, danhBaTheoDuAn, opts = {}) {
+  const bai = new Map();
+  if (!tin.du_an) return { ly_do: "chua-co-du-an", bai };
+  const d = danhBaTheoDuAn.get(String(tin.du_an));
+  if (!d) return { ly_do: "ngoai-pham-vi", bai };
+  if (tin.property_type !== "apartment") return { ly_do: "khong-phai-can-ho", bai };
+  for (const p of tin.post_ids ?? []) {
+    const b = docBai(p);
+    if (b) bai.set(p, xetBai(b, d, opts));
+  }
+  return { bai, gop: gopTin([...bai.values()], d) };
+}

@@ -13,6 +13,7 @@ import pg from "pg";
 
 import { SQL_RUT_THAY, writeAssertions } from "../lib/assert.mjs";
 import { chotDbThu } from "../lib/db-thu-chot.mjs";
+import { RULE, TAT_CA_NGUON } from "../lib/ghep-tin-danh-muc.mjs";
 
 // Rào DB thử TRƯỚC mọi kết nối: tệp chạy ANALYZE field_assertions trong giao dịch, mà ANALYZE ghi reltuples/relpages
 // tại chỗ (không lùi theo ROLLBACK) — chính loại thay đổi có thể lật kế hoạch sản xuất (hồ sơ slt-dc-cham-va-giu-khoa-33033).
@@ -138,6 +139,36 @@ describe("TR-AC-1 câu rút mới tương đương câu cũ (ca biên, ROLLBACK)
   test("chiều đỏ TR-AC-1: bản phá bỏ điều kiện phương pháp (rút sang bộ khác) → đỏ ghim «TR-AC-1 tập rút lệch câu cũ»", async () => {
     const mod = await banDot([[" AND fa.method = k.m\n      AND fa.value_key <> ALL (k.vks)", "\n      AND fa.value_key <> ALL (k.vks)"]]);
     await assert.rejects(() => kiemTuongDuong(mod.writeAssertions), /TR-AC-1 tập rút lệch câu cũ/);
+  });
+});
+
+// ---- PL20 (ghep-tin-vao-danh-muc, E7): câu rút «thay bởi lượt» chừa dòng của bước gắn toà ----
+/** Mồi hai dòng sống cùng (chủ thể, trường, phương pháp): một của bước gắn (rule ghep-toa-cot), một không rule; rồi ghi giá trị
+ * khác bằng replaceOwn như thẻ nhóm ghi phân khu. Trả trạng thái rút của từng dòng mồi. */
+async function rutKhiTheGhi(ghi) {
+  return trongGiaoDich(async () => {
+    const mo = async (v, rule) => (await c.query(
+      `INSERT INTO field_assertions (subject_key, field, value, evidence_tier, method, rule_id, observed_at)
+       VALUES ('TRT:pl20', 'subzone_node_id', $1, 'inferred', 'e1_rule', $2, now()) RETURNING id`, [v, rule])).rows[0].id;
+    const gan = await mo("48", RULE.cot);
+    const khac = await mo("50", null);
+    await ghi(c, [{ subject_key: "TRT:pl20", field: "subzone_node_id", value: "389", evidence_tier: "inferred", method: "e1_rule", rule_id: "the-nhom" }], { replaceOwn: true });
+    const rut = async (id) => (await c.query(`SELECT retracted_at IS NOT NULL AS r FROM field_assertions WHERE id = $1`, [id])).rows[0].r;
+    return { gan: await rut(gan), khac: await rut(khac) };
+  });
+}
+
+describe("PL20 câu rút chừa dòng bước gắn toà (ROLLBACK)", () => {
+  test("PL20-E7 mọi rule_id của bước gắn mang tiền tố ghep-toa- (khớp mẫu trong SQL_RUT_THAY)", () => {
+    for (const r of TAT_CA_NGUON) assert.ok(r.startsWith("ghep-toa-"), `PL20-E7 rule_id ${r} không khớp mẫu ghep-toa-% của câu rút`);
+    assert.match(SQL_RUT_THAY, /fa\.rule_id NOT LIKE 'ghep-toa-%'/);
+  });
+  test("PL20-E7 ghi khác giá trị cùng bộ: dòng ghep-toa giữ sống, dòng không rule bị rút", async () => {
+    assert.deepEqual(await rutKhiTheGhi(writeAssertions), { gan: false, khac: true });
+  });
+  test("chiều đỏ PL20-E7: bản phá bỏ điều kiện chừa → dòng ghep-toa bị rút, đỏ", async () => {
+    const mod = await banDot([["\n      AND (fa.rule_id IS NULL OR fa.rule_id NOT LIKE 'ghep-toa-%')", ""]]);
+    assert.deepEqual(await rutKhiTheGhi(mod.writeAssertions), { gan: true, khac: true });
   });
 });
 

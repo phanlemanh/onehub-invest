@@ -56,6 +56,11 @@ phải tên thư mục (script thu của S02/S05/S06 nằm trong `pipeline/`).
   rao S01/S02/S05/S06 (`zt`, `~/dev/onehub-zt`) · **ZK** nguồn kho S07–S17 (`zk`, `~/dev/onehub-zk`). Một kênh, ba tên nhận;
   nhánh `zcode/zv-…|zt-…|zk-…`; LL vẫn là đầu mối duy nhất với cả ba.
 
+- **Máy M5** (Mạnh chốt 2026-11-24, mở nhỏ và đo một tuần; ROADMAP §3 mục 64): MacBook M5 là máy thực thi của làn Claude cho cổng
+  Invest và API — `app/src/app/(app)/**`, `(marketing)/**`, `app/src/components/**` trừ `ops/`, `ui/`, `reui/`, `app/src/app/api/v1/**`
+  trừ `ops/`, `data-api/**`; tệp ngoài vùng (kể cả `app/src/lib/**`) chỉ khi lời giao khai. Mac mini giữ kế hoạch, hàng gộp và sổ
+  số migration: M5 không gộp vào `main`, báo xong trên kênh `phanlemanh/onehub-coord#4`. M5 không giữ tầng A, không chạy bộ thu,
+  gateway, `sync-cloud`; chấm bằng `scripts/ci-test-local.mjs`.
 - **Git**: checkout chính `~/dev/onehub-invest` luôn đứng ở `main` — launchd chạy code
   từ đây (qua symlink `~/dev/one-invest`). Không agent nào checkout nhánh khác trong đó.
   ZCode làm ở worktree của từng phiên (`~/dev/onehub-invest-zcode`, `~/dev/onehub-zt`, `~/dev/onehub-zk`), nhánh `zcode/<việc>`; Claude ở
