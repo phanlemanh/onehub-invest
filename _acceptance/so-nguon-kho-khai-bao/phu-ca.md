@@ -33,3 +33,26 @@ S08 192 · S10 192 · S11 192.
 - `universe` mọi mã: để `{}` — ngoài phạm vi, vì chưa có số nguồn tự công bố kèm mốc và nơi lấy (Mạnh câu 3).
 - Xanh giả S02, tồn đọng nạp S07, S10 (snapshot chờ nạp) — ngoài phạm vi, vì thuộc NK2 và làn thu.
 - Lịch thu hcmc của S01 — ngoài phạm vi, vì là việc làn thu; hàng này chỉ thôi đo thị trường không có lịch.
+
+## Đường cloud — tên S09, S17 trúng bao nhiêu ô (đo 26/11, GS giao)
+
+Probe `probes/duong-cloud.mjs`. Danh sách tên đọc từ hai tệp cục bộ, theo cùng luật đọc với `tang-a.mjs`: S09 3 mục, S17 7 mục. Quét
+bằng `findSourceNames` trên DB máy thu, phiên READ ONLY, một luồng, 133–199 s. Phạm vi gồm hai nguồn:
+
+- `sync-cloud`: 22 bảng `FILL`, đúng các cột lên cloud (`selectList`) và bộ lọc dòng (`localReadSql`), kể cả khoá jsonb; tổng 1.024.308 dòng.
+- Bản tin `push-ops-facts`: bắt bằng `captureOpsFacts`, HOME tạm, máy chủ thu 127.0.0.1, không lên cloud.
+
+Probe chỉ in mã, bảng.cột và số đếm, không in tên hay giá trị.
+
+| Cờ `match_whole` | S09 | S17 | S17 theo bảng.cột |
+|---|---|---|---|
+| không (hành vi khi dòng thiếu cờ) | 0 | 17.853 | `sellers.flags` 13.855 · `dq_check_results.detail` 1.860 · `dq_check_results.check_name` 1.844 · `sale_offers.seller_name` 284 · `ref_calib_listings.metrics` 4 · `ref_calib_listings.photo_urls` 4 · bản tin `jobs[].label` 1 · `blocks.reviewQueue.byType[].type` 1 |
+| có, cho S17 (bước điền đặt cho cả S09, S17) | 0 | **0** | — |
+
+Ở lượt không cờ, độ dài chỗ trúng là 5 ký tự ở 13.855/13.855 ô `sellers.flags`, 1.844/1.844 ô `check_name` và 280/284 ô
+`seller_name`; 4 ô còn lại trúng 6 ký tự. Nguồn của các chỗ trúng này là bốn mục S17 sinh biến thể ngắn 5–6 ký tự, tức nhãn tên miền
+sau khi bỏ đuôi, mà nhãn ấy là từ thường. Kết luận: không có rò thật của S17 trên đường cloud. Bước điền phải giữ
+`match_whole = true` (đã có trong `ap-may-thu/tra-s09-s17.mjs`). Bước kiểm sau (`ap-may-thu.md` bước 5) chạy lại probe với ngưỡng
+S09 0, S17 0.
+
+Giới hạn: bản tin `push-ops-facts` dựng với log job rỗng, nên dòng log thật của máy thu nằm ngoài phép đo này.

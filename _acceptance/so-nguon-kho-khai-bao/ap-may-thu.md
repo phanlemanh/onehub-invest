@@ -47,6 +47,12 @@ S17 sẽ đổi 1 dòng (6 tên miền)». Khác số này → dừng, báo giá
 Một giao dịch: `UPDATE … SET real_name, source_ids, match_whole = true WHERE code = $1 AND real_name IS NULL` cho từng mã, mỗi mã
 phải đúng 1 dòng, không thì lùi cả hai. Dòng 1 của tệp → `real_name`; dòng tên miền → `source_ids`; dòng bắt đầu bằng «/» (tiền tố
 đường dẫn API — từ chung 6–7 chữ, đo 21/11 trúng giả 30 chỗ trong kho) bỏ. In số dòng, số tên miền — không in giá trị.
+**Vì sao `match_whole = true` cho cả S09 và S17 (GS phán 26/11):** không có cờ, bộ che và bộ soát lấy cả biến thể ngắn của tên
+(nhãn tên miền sau khi bỏ đuôi). Bốn mục S17 sinh biến thể ngắn 5–6 ký tự, và đó là từ thường. Đo 26/11 trên DB máy thu (`phu-ca.md`,
+mục «Đường cloud»): không cờ thì S17 trúng 17.853 ô trên đường cloud (`sellers.flags` 13.855, `dq_check_results` 3.704,
+`sale_offers.seller_name` 284…), gần như toàn bộ là trúng giả. Như thế bộ che sẽ NULL oan tên người bán và bộ soát sẽ chặn oan cả lượt
+sync. Có cờ thì còn 0 ô. S09 không có cờ đã 0 ô. Đừng bỏ cờ khi điền tay.
+
 Chạy từ worktree của nhánh (tệp chỉ có ở nhánh tới khi kéo) hoặc từ checkout chính sau bước 4 — trước bước 5.
 
 ## 4. Kéo main vào checkout chính
@@ -61,6 +67,17 @@ git -C ~/dev/onehub-invest pull --ff-only origin main
 cd ~/dev/onehub-invest && node _acceptance/so-nguon-kho-khai-bao/probes/may-thu.mjs
 node _acceptance/so-nguon-kho-khai-bao/probes/tang-a.mjs
 ```
+
+Rồi đo đường cloud bằng tên ĐÃ điền trong sổ (bước 6 chưa xoá tệp thì probe đọc tệp với cờ như bước 3; hai cách cùng số). Một
+luồng, ~3 phút, chỉ đọc; không chạy khi máy đang chấm suite nặng:
+
+```bash
+node _acceptance/so-nguon-kho-khai-bao/probes/duong-cloud.mjs --ops --tran S09=0,S17=0
+```
+
+Ngưỡng mong đợi ghi trước (đo 26/11, `phu-ca.md` mục «Đường cloud»): **S09 0 ô, S17 0 ô**, theo mã × bảng.cột, cả sync-cloud lẫn bản tin
+push-ops-facts → `DUONG-CLOUD OK`. Lớn hơn 0 (`VUOT TRAN`) → dừng, báo giám sát kèm dòng mã × bảng.cột probe in; không bật lịch sync
+khi chưa phán.
 
 `may-thu.mjs`: CLI `check-freshness --json` và `readFreshness` của app (hàm trang Thu thập đọc) trên DB máy thu, cùng mốc, so từng
 hàng (lệch 0); S16 có hàng, không «chưa khai SLO»; S01 chỉ hanoi; S11 không hàng; S09 có hàng; bộ soát tầng A (`docSourceNameEntries`)
