@@ -1,93 +1,145 @@
 schema_version: 1
 feature_slug: bang-noi-ma-du-an
-# Ca «ND-AC-n». Bốn executor mới (khai ở _acceptance/config.yaml executors.test):
-# - noi_da_db (pipeline, DB thử chép từ DB máy thu của riêng lượt): scripts/bang-noi-du-an.itest.mjs — migration, view, bí danh, bộ chuyển S08 thật, bộ đề xuất trên DB.
-# - noi_da_ham (pipeline, không DB): lib/ban-ghi-nguon.test.mjs, lib/de-xuat-noi-du-an.test.mjs — khuôn chung, rỗng giả, ma trận căn cứ.
-# - noi_da_route (app, DB thử của riêng lượt): tests/noi-du-an.test.tsx — route duyệt cặp, thẻ luật, cấp lô/toà.
-# - noi_da_ui (app, jsdom, không DB): tests/noi-du-an-ui.test.tsx — hạng mục «Nối dự án» dựng thật.
+# Ca «BN-AC-n». Lệnh đo nằm ở probes/*.sh của hồ sơ (cùng lệ PL20, PL36: _acceptance/config.yaml là tệp bảo vệ). Mọi probe chạy
+# trên DB thử của riêng lượt (db/db-thu.sh) hoặc bản chép DB máy thu; không ghi vào oneinvest. Bản ghi cấp dự án của dữ liệu thật
+# rút từ bản chép, không fixture viết tay; ma trận viết trước chỉ dùng cho hàm thuần (AC-1 rỗng giả, AC-2).
+
 evals:
   - id: E1
     criterion: AC-1
-    executor: test
-    cmd: config:executors.test.noi_da_db
-    paths: [db/migrations/100_*.sql, pipeline/noi-du-an-s08.mjs, pipeline/scripts/bang-noi-du-an.itest.mjs]
-    expected: "exit 0; ca 'ND-AC-1': trước migration chụp 150 dòng s08_project_links (8 noi) từ DB thử; áp migration hai lần; SELECT * FROM s08_project_links ORDER BY project_id deepEqual bản chụp (150 dòng, count status='noi' = 8); project_links WHERE source='S08' có 150 dòng cùng trạng thái, nút, lý do; lần áp thứ hai số dòng hai bảng không đổi; INSERT một dòng chua_noi, UPDATE sang noi, DELETE qua tên s08_project_links đều phản ánh ở project_links; chạy pipeline/noi-du-an-s08.mjs với tệp nối fixture dựng lại từ 8 dòng noi đã chụp → project_links nguồn S08 vẫn đúng 8 noi cùng nút, không dòng nào đổi; đối chứng đỏ: bản sao migration bỏ trigger INSTEAD OF INSERT thì INSERT qua tên cũ ném lỗi, ca nêu 'instead-of'"
-    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    executor: script
+    cmd: bash _acceptance/bang-noi-ma-du-an/probes/bo-chuyen.sh
+    layer: backend-effect
+    paths: ["pipeline/lib/ban-ghi-nguon*.mjs"]
+    expected: >
+      Trên bản chép DB máy thu: số bản ghi và số có tỉnh, xã, điểm của S07, S08, S09, S10, S16 bằng phép đếm SQL độc lập viết trong
+      probe (mỗi nguồn × trường một assert); S10 mọi bản ghi tỉnh null, lý do khong-vi-tri; bảng 63 tỉnh cũ đủ 63 dòng, mỗi mã cũ có
+      dòng area_aliases; một bản ghi S07 thật có tên tỉnh cũ ra tỉnh mới, bỏ các dòng alias của mã ấy ở DB thử thì tỉnh null (không ra
+      tỉnh khác); ma trận rỗng giả 10 ô: 6 ô về null, «Khác», «Liên hệ», «Vinhomes», «0 m2» giữ; đếm bản ghi bị đổi bởi quy ước rỗng
+      giả trên bản chép, in theo nguồn × trường. Chiều đỏ: bản đột biến bỏ «N/A» khỏi RONG_GIA thì ô ấy đỏ, thông điệp gọi tên giá trị.
+
   - id: E2
     criterion: AC-2
     executor: test
-    cmd: config:executors.test.noi_da_db
-    paths: [db/migrations/100_*.sql, pipeline/scripts/bang-noi-du-an.itest.mjs]
-    expected: "exit 0; ca 'ND-AC-2' ma trận viết trước 12 ô (assert đúng 12 phần tử): object_key node:12 nhận, bld_<ULID hợp lệ> nhận, node:abc từ chối, xyz_1 từ chối; source S08 nhận, S15 nhận, S16 từ chối, S00 từ chối; kind ma_nha_nuoc nhận, ma_nguon nhận, la từ chối; registry_events object_key node:12 nhận; mỗi ô từ chối ghim tên ràng buộc CHECK trong lỗi; đối chứng đỏ: bản sao migration giữ regex source cũ thì ô S15 bị từ chối, ca nêu 'S10-S15'"
-    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    cmd: bash _acceptance/bang-noi-ma-du-an/probes/xep-nga.sh
+    paths: ["pipeline/lib/khop-du-an*.mjs"]
+    expected: >
+      Ma trận viết trước, một assert mỗi ô, kết cục so deepEqual: đã nối → giu; tên «Đang cập nhật» → chua_noi:khong-ten; không tỉnh →
+      chua_noi:khong-tinh; S10 → chua_noi:khong-vi-tri; MST trùng + tên trùng → noi:K1; điểm 200 m + tên trùng → noi:K2; điểm 200 m
+      tên khác → chua_noi:khong-khop; cùng xã + tên trùng → noi:K3; tên trùng một nút cùng tỉnh khác xã → noi:T; tên trùng hai nút cùng
+      tỉnh → chua_noi:nhieu-nut; tên trùng một nút khác tỉnh → chua_noi:khong-khop; nút mot_loi_khai nguồn khác cùng tỉnh trùng tên →
+      noi:T. Chiều đỏ: bản đột biến bỏ điều kiện cùng tỉnh thì ô khác tỉnh đỏ, thông điệp ghim «cung-tinh».
+
   - id: E3
-    criterion: AC-2
-    executor: test
-    cmd: config:executors.test.noi_da_db
-    paths: [pipeline/mappings.yaml, db/migrations/100_*.sql, pipeline/scripts/bang-noi-du-an.itest.mjs]
-    expected: "exit 0; ca 'ND-AC-2b': trên DB thử đã áp migration, chạy 'node pipeline/vocab.mjs --check-db' với DATABASE_URL của DB thử → thoát 0; alias_kind của pipeline/mappings.yaml có ma_nha_nuoc; đối chứng đỏ: bản sao mappings.yaml bỏ ma_nha_nuoc thì --check-db thoát khác 0 và in tên ma_nha_nuoc, ca nêu 'vocab'"
-    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    criterion: AC-3
+    executor: script
+    cmd: bash _acceptance/bang-noi-ma-du-an/probes/the.sh
+    layer: backend-effect
+    paths: ["pipeline/noi-du-an-nguon.mjs", "pipeline/lib/khop-du-an*.mjs", "pipeline/lib/ban-ghi-nguon*.mjs"]
+    expected: >
+      Trên bản chép: dựng thẻ S07 hai lần; tổng theo ngả trong tệp deepEqual phép đếm của probe; mỗi căn cứ nối có đúng min(20, số
+      cặp) mẫu; danh sách «khác nối sẵn» có mặt; tệp không chứa mã dự án nguồn nào (quét mọi mã của bản ghi); hai băm bằng nhau và bằng
+      sha256 của danh sách kết cục chuẩn hoá tính lại trong probe; đếm dòng bốn bảng project_links, project_link_rules, registry_aliases,
+      asset_nodes không đổi. Chiều đỏ: đổi kết cục một bản ghi trong danh sách thì băm tính lại khác băm trong tệp.
+
   - id: E4
-    criterion: AC-3
-    executor: test
-    cmd: config:executors.test.noi_da_ham
-    paths: [pipeline/lib/ban-ghi-nguon.mjs, pipeline/lib/ban-ghi-nguon.test.mjs]
-    expected: "exit 0; ca 'ND-AC-3a' ma trận rỗng giả viết trước 10 ô (assert đúng 10): '', '  ', 'Đang cập nhật', 'đang cập nhật', '--', '-', '0', 'N/A' về null; '0 m2', 'Vinhomes' giữ nguyên; đối chứng đỏ: bản sao quy ước rỗng bỏ bước bỏ dấu thì ô 'đang cập nhật' lệch, ca nêu 'rong-gia'"
-    evidence_required: [run_id, exit_code, verifier, verified_at, output]
-  - id: E5
-    criterion: AC-3
-    executor: test
-    cmd: config:executors.test.noi_da_db
-    paths: [pipeline/lib/ban-ghi-nguon.mjs, db/migrations/093_*.sql, pipeline/scripts/bang-noi-du-an.itest.mjs]
-    expected: "exit 0; ca 'ND-AC-3c' trên stg_s08_project thật của DB thử (177 dự án): bộ chuyển S08 ra 177 bản ghi, mỗi bản ghi đúng 14 khoá; dự án có điểm nằm trong areas (submarket) có tinh và xa khác null (đo 13/11: 172), điểm ngoài vùng có tinh null với ly_do 'ngoai-vung', 3 dự án không điểm có ly_do 'khong-diem', tổng ba nhóm = 177; ma_so_dn null ở cả 177; ca 'ND-AC-3b': INSERT fixture một dự án S07 có phân khu cha vào stg_s07_project của DB thử (bảng thật của 093), bộ chuyển S07 đọc từ chính bảng đó ra đúng 14 khoá deepEqual bản kỳ vọng viết tay, và tập cột bộ chuyển đọc là tập con của information_schema.columns của stg_s07_project; đối chứng đỏ thứ hai: bản sao bộ chuyển đọc một cột không có trong bảng thì ca nêu tên cột; đối chứng đỏ: bản sao bộ chuyển bỏ suy xã từ điểm thì đếm xa khác null về 0, ca nêu 'xa-tu-diem'"
-    evidence_required: [run_id, exit_code, verifier, verified_at, output]
-  - id: E6
     criterion: AC-4
-    executor: test
-    cmd: config:executors.test.noi_da_ham
-    paths: [pipeline/lib/de-xuat-noi-du-an.mjs, pipeline/lib/de-xuat-noi-du-an.test.mjs]
-    expected: "exit 0; ca 'ND-AC-4' ma trận viết trước 14 ô = K1–K5 × đủ/thiếu dữ liệu (10 ô) + 4 ô «không bao giờ» (assert đúng 14 phần tử, kỳ vọng từng ô viết tay): K1/K2/K3 đủ → 'the-luat:K<n>', K4 đủ → 'tung-cap:K4', K5 đủ → 'the-luat:K5', thiếu dữ liệu → 'chua-noi:khong-ung-vien'; lệch tỉnh, chỉ theo điểm, hai nút cùng tên, nút chỉ có area_ids cấp tỉnh → không bao giờ bắt đầu bằng 'the-luat' hay 'tung-cap'; bản ghi chưa có tỉnh mà tên trùng → 'tung-cap:chua-tinh'; đối chứng đỏ: bản sao bỏ chặn cùng tỉnh thì ô lệch tỉnh ra đề xuất, ca nêu 'chan-tinh'"
-    evidence_required: [run_id, exit_code, verifier, verified_at, output]
-  - id: E7
+    executor: script
+    cmd: bash _acceptance/bang-noi-ma-du-an/probes/ap.sh
+    layer: backend-effect
+    paths: ["pipeline/noi-du-an-nguon.mjs", "pipeline/lib/khop-du-an*.mjs"]
+    expected: >
+      Trên DB thử chép từ DB máy thu: áp với băm sai → thoát khác 0, đếm bốn bảng không đổi; áp với băm đúng (S07) → đúng một dòng
+      project_link_rules cho S07-K3, S07-T, S07-noi-san (khi có), S07-trang-thai; mỗi bản ghi S07 đúng một dòng project_links mang
+      rule_id của lượt, mỗi dòng noi đúng một bí danh
+      node:<id> ma_nguon giá trị du_an/<mã> nguồn S07; băm có sắp xếp của asset_nodes, s08_project_links, s10_project_links và bí danh
+      có sẵn bằng trước áp; áp lần hai thoát 0, đếm và băm không đổi. Chiều đỏ: cấy lỗi vào lần ghi bí danh thứ 10 thì không dòng nào
+      của lượt còn lại (một giao dịch).
+
+  - id: E5
     criterion: AC-5
-    executor: test
-    cmd: config:executors.test.noi_da_db
-    paths: [pipeline/de-xuat-noi-du-an.mjs, pipeline/lib/de-xuat-noi-du-an.mjs, pipeline/scripts/bang-noi-du-an.itest.mjs]
-    expected: "exit 0; ca 'ND-AC-5' trên DB thử đã áp migration: chạy pipeline/de-xuat-noi-du-an.mjs --nguon S08; mọi project_id của snapshot 07/11 có đúng một dòng project_links (đếm thiếu = 0, trước đó 27); 8 dòng noi cũ giữ asset_node_id; mỗi dòng de_xuat có đúng một review_queue item_type 'project_link' trỏ nó; đặt tay một dòng sang tu_choi rồi chạy lần hai: dòng đó giữ tu_choi, số thẻ review_queue project_link không đổi; đối chứng đỏ: bản sao bộ đề xuất ghi đè mọi dòng thì dòng tu_choi về de_xuat, ca nêu 'nguoi-thang'"
-    evidence_required: [run_id, exit_code, verifier, verified_at, output]
-  - id: E8
+    executor: script
+    cmd: bash _acceptance/bang-noi-ma-du-an/probes/ap.sh
+    layer: backend-effect
+    paths: ["pipeline/noi-du-an-nguon.mjs"]
+    expected: >
+      Sau lượt áp của E4: đảo luật S07-T → mọi bí danh của luật có retired_at, số dòng registry_aliases không giảm, dòng về chua_noi
+      dao-luat, dòng luật có dao_by và dao_at; dòng của luật S07-K3 không đổi; đảo lần hai báo «da-dao», không ghi. Đảo tiếp mọi luật
+      còn lại của S07 (lùi trọn): 0 dòng noi nguồn S07, số dòng ba bảng không giảm, băm có sắp xếp của bí danh còn hiệu lực bằng trước áp.
+
+  - id: E6
     criterion: AC-6
-    executor: test
-    cmd: config:executors.test.noi_da_route
-    paths: ["app/src/app/api/v1/ops/review/[id]/decide/route.ts", app/src/lib/ops/noi-du-an.ts, app/tests/noi-du-an.test.tsx]
-    expected: "exit 0; ca 'ND-AC-6' trên lược đồ tạm đã áp migration: vai ops quyết 'noi' thẻ K3 → 200; SELECT status, decided_by deepEqual {status:'noi', decided_by: actor}; registry_aliases WHERE object_key='node:<id>' AND kind='ma_nguon' AND value='S08/<project_id>' đếm 1; ops_audit tăng 1; 'khong-phai' không lý do → 400 body.ly_do 'thieu-ly-do'; kèm lý do → status 'tu_choi', bí danh đếm 0; viewer → 403, đếm project_links/registry_aliases/ops_audit deepEqual trước; bản sao route ném ở lần ghi bí danh → 5xx, ba đếm deepEqual trước; đối chứng đỏ: bản sao bỏ ghi bí danh thì đếm bí danh 0, ca nêu 'bi-danh'"
-    evidence_required: [run_id, exit_code, verifier, verified_at, output]
-  - id: E9
+    executor: script
+    cmd: bash _acceptance/bang-noi-ma-du-an/probes/noi-san.sh
+    layer: backend-effect
+    paths: ["pipeline/noi-du-an-nguon.mjs", "pipeline/lib/khop-du-an*.mjs", "pipeline/lib/ban-ghi-nguon*.mjs"]
+    expected: >
+      Trên bản chép: thẻ S09 có 2 dòng giu căn cứ S09-noi-san, thẻ S16 có 5 dòng giu căn cứ S16-noi-san, nút đích bằng NOI_KHU_S09,
+      NOI_DU_AN_S16; cấy vào DB thử một nút trùng tên cùng xã với một dự án chép cứng thì bản ghi vẫn giu nút chép cứng và có mặt ở
+      danh sách «khác nối sẵn»; lệnh --ap --nguon S08 thoát khác 0 với lời «S08 do thẻ luật DA55 nối», không ghi; thẻ bóng S08 liệt đủ
+      6 ca khác nối tay, mỗi ca ghi «quy ước dự án con có cha (mục 39)».
+
+  - id: E7
     criterion: AC-7
-    executor: test
-    cmd: config:executors.test.noi_da_route
-    paths: [app/src/app/api/v1/ops/noi-du-an/**, app/src/lib/ops/noi-du-an.ts, app/tests/noi-du-an.test.tsx]
-    expected: "exit 0; ca 'ND-AC-7' với 12 đề xuất K3 nguồn S08 trên lược đồ tạm (1 cặp đã được ops quyết 'tu_choi' trước): admin duyệt thẻ luật → project_link_rules đếm 1, 11 cặp noi cùng rule_id, 11 bí danh mới, cặp tu_choi giữ nguyên; admin đảo luật → một dòng nhật ký hanh_dong 'dao', 11 cặp về de_xuat, 11 bí danh có retired_at khác null, đếm dòng registry_aliases không giảm, review_queue project_link đang mở trỏ 11 cặp ấy đếm đúng 11 (mỗi cặp một); ops nối lại một cặp đã đảo → 200, registry_aliases của cặp có 2 dòng: dòng mới retired_at null, dòng cũ retired_at giữ nguyên; đối chứng đỏ thứ hai: bản sao đảo luật không mở lại thẻ thì đếm thẻ mở 0, ca nêu 'mo-lai-the'; ops gọi duyệt hay đảo → 403 và không đếm nào đổi; đối chứng đỏ: bản sao đảo luật bằng DELETE bí danh thì rào chỉ-thêm ném lỗi, ca nêu 'chi-them'"
-    evidence_required: [run_id, exit_code, verifier, verified_at, output]
-  - id: E10
+    executor: script
+    cmd: bash _acceptance/bang-noi-ma-du-an/probes/ben-doc.sh
+    layer: backend-effect
+    paths: ["pipeline/noi-du-an-nguon.mjs", "pipeline/lib/ban-ghi-nguon*.mjs", "pipeline/lib/khop-du-an*.mjs"]
+    expected: >
+      Trên DB thử chép từ DB máy thu: băm có sắp xếp đầu ra của napS16TheoKhu (mọi khu), bản đồ bí danh mà s09-dung đọc, danh-ba-vat-the
+      chạy khô, và năm view v_toa_nut_vung, offer_building, s06_offer_project, v_s16_toa, v_s09_toa bằng nhau ở ba mốc trước áp, sau
+      áp bốn nguồn S07 S09 S10 S16, sau đảo; in số giây từng câu. Chiều đỏ: cấy một bí danh ma_nguon S09 giá trị dạng toà «<pid>/<id>»
+      trỏ node:<id> thì phép so của s09-dung đỏ, gọi tên bên đọc.
+
+  - id: E8
     criterion: AC-8
     executor: test
-    cmd: config:executors.test.noi_da_route
-    paths: [app/src/lib/ops/noi-du-an.ts, pipeline/lib/ban-ghi-nguon.mjs, app/tests/noi-du-an.test.tsx]
-    expected: "exit 0; ca 'ND-AC-8' fixture S11 4 bản ghi cấp lô Ocean Park 1 (tên pháp lý khác tên thương mại) theo khuôn DATA-CONTRACT v8 đi qua bộ chuyển ra level 'lo_toa' (giới hạn đã khai: S11 chưa có bảng stg phía ghi, ca chỉ chứng đường duyệt cấp lô/toà, không chứng bộ chuyển S11 trên bảng thật); quyết từng cặp chọn một buildings có sẵn → project_links.building_id = id đó, bí danh object_key 'bld_<ULID của toà>'; chọn phân khu có sẵn → asset_node_id phân khu, bí danh 'node:<id>'; đếm asset_nodes và buildings deepEqual trước; đối chứng đỏ: bản sao cho tạo toà mới khi không khớp thì đếm buildings tăng, ca nêu 'khong-tao-moi'"
-    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    cmd: bash _acceptance/bang-noi-ma-du-an/probes/o-man.sh
+    layer: backend-effect
+    paths: ["app/src/lib/ops/registry/doc.ts", "app/src/components/ops/registry/registry-view.tsx", "app/tests/registry-nguon-chua-noi*.test.ts*"]
+    expected: >
+      Trên DB thử fixture (bản ghi rút từ bản chép): docDanhBa trả dòng S07, S16 với chưa nối / đã nạp đúng; S09 đã nối bằng số dòng
+      noi của project_links S09; S10 một dòng riêng lý do «không có vị trí» và không cộng vào ô; dự án nối ở hai nơi đếm một lần; danh
+      sách chưa nối mang lý do của project_links; S06, S08 bằng số trước khi thêm nhánh. Màn: dựng registry-view thật trên jsdom với
+      đầu ra docDanhBa ấy, con số ô hiện ra bằng tổng chưa nối của S06, S07, S08, S09, S16 và dòng S10 hiện riêng kèm lý do. Chiều đỏ:
+      bản đột biến cộng S10 vào ô ở registry-view (hoặc ở doc.ts) thì ca đỏ, thông điệp ghim «S10».
+
+  - id: E9
+    criterion: AC-9
+    executor: script
+    cmd: bash _acceptance/bang-noi-ma-du-an/probes/dau-cuoi.sh
+    long_running: 60
+    layer: backend-effect
+    paths: ["pipeline/noi-du-an-nguon.mjs", "pipeline/lib/ban-ghi-nguon*.mjs", "pipeline/lib/khop-du-an*.mjs", "app/src/lib/ops/registry/doc.ts"]
+    expected: >
+      Trên bản chép DB máy thu: chạy thẻ, áp, kiểm, đo, đảo cho S07, S09, S10, S16; mỗi ngả của từng thẻ so với đầu ra của bộ đo S1
+      đóng băng probes/s1/do.mjs chạy trên cùng bản chép (đếm độc lập với mã của hàng), in hai cột kèm hiệu số; ô đọc bằng docDanhBa
+      in ba cột trước / đổi phạm vi / sau nối cho từng nguồn và tổng; sau khi đảo đủ mọi luật, ô về cột đổi phạm vi; ghi
+      evidence/dau-cuoi.md. Lệnh thoát 1 và gọi tên nguồn, ngả khi hiệu số khác 0.
+
+  - id: E10
+    criterion: AC-3
+    executor: judgment
+    question: >
+      Đọc mẫu nối căn cứ T và K3 trong thẻ S07 (evidence/the-S07.md): có cặp nào là hai dự án khác nhau chỉ trùng tên chung chung
+      không? Có kiểu sai lặp lại mà luật sửa được không?
+    inputs: ["_acceptance/bang-noi-ma-du-an/evidence/the-S07.md"]
+    expected: >
+      Thẻ có 20 mẫu mỗi căn cứ; người chấm đánh từng mẫu đúng/sai/không chắc kèm một dòng lý do và kết luận căn cứ T có đủ tin để
+      Mạnh duyệt mẫu hay cần siết (ví dụ đòi thêm xã).
+
   - id: E11
     criterion: AC-9
-    executor: test
-    cmd: config:executors.test.noi_da_ui
-    paths: [app/src/components/ops/review/**, app/src/lib/ops/review-hang-muc.ts, app/tests/noi-du-an-ui.test.tsx]
-    expected: "exit 0; ca 'ND-AC-9' dựng hàng duyệt thật trong jsdom, fetch giả: hạng mục 'Nối dự án' có thẻ với hai cột (nguồn, nút) và dòng căn cứ chứa 'K3'; bấm 'Nối' → fetch decide chưa gọi sau 4 giây giả, 'Hoàn tác' huỷ → không gọi sau 6 giây giả; không hoàn tác → gọi đúng 1 lần sau 5 giây; bấm 'Để sau' → fetch decide không gọi, thẻ chuyển xuống cuối hàng; trả {items:[]} → chữ 'Không còn cặp nào chờ nối'; trả 500 → Alert và nút 'Thử lại'; phiên viewer 0 nút 'Nối', 'Không phải', 'Để sau', 'Duyệt cả loạt'; phiên ops 0 nút 'Duyệt cả loạt', phiên admin 1 nút; đối chứng đỏ: bản sao bỏ kiểm vai admin thì phiên ops thấy nút, ca nêu 'admin-luat'; bản sao bỏ kiểm vai viewer thì ca nêu 'viewer'"
-    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    executor: script
+    cmd: config:executors.suite.pipeline_a
+    long_running: 90
+    paths: ["pipeline/noi-du-an-nguon.mjs", "pipeline/lib/ban-ghi-nguon*.mjs", "pipeline/lib/khop-du-an*.mjs", "pipeline/tests/noi-du-an-nguon*.mjs"]
+    expected: "exit 0; nửa A bộ test pipeline, 0 fail (khai ở đây để có long_running 90 trên Mac mini)."
+
   - id: E12
-    criterion: AC-10
-    executor: ui-check
-    layer: ui-observed
-    paths: [app/src/components/ops/review/**, app/src/lib/ops/noi-du-an.ts]
-    steps: "Từ gốc worktree đang kiểm: dựng DB thử 'bash db/db-thu.sh oneinvest_p4_da3' (chép DB local), áp migration của hàng lên DB thử bằng psql trong container one-invest-db (không chạm DB chung), chạy 'DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p4_da3 node pipeline/de-xuat-noi-du-an.mjs --nguon S08'; nạp 12 đề xuất K3 mẫu bằng 'DATABASE_URL=… node pipeline/scripts/bang-noi-du-an-mau.mjs' (cùng fixture của ca ND-AC-7); 'DATABASE_URL=… node scripts/dev-ops-account.mjs' (vai admin, mật khẩu ở .claude/ops-test-account.json, không in ra); chạy app dev cổng riêng :3465 với cùng DATABASE_URL; đăng nhập /login; mở /ops/review, chọn hạng mục 'Nối dự án'; chụp thẻ cặp; bấm 'Nối'; chụp toast; mở thẻ luật K3; chụp; bấm 'Duyệt cả loạt'; chụp nhật ký luật. Xong xoá DB thử: 'bash db/db-thu.sh oneinvest_p4_da3 --xoa'."
-    expected: "thẻ cặp có cột nguồn (tên S08, địa chỉ) và cột nút danh bạ, dòng căn cứ đọc được (K3 · cùng xã · tên trùng); toast 'Đã nối' có nút 'Hoàn tác'; thẻ luật nêu tổng số cặp và 5 cặp mẫu; sau duyệt, nhật ký luật có dòng mới với nút 'Đảo luật'. Giới hạn đã khai: chỉ S08 có dữ liệu thật và chỉ ra 1 đề xuất K3 mới, thẻ luật trên màn dựng từ 12 đề xuất mẫu; thẻ cấp lô/toà không có trên màn vì chưa có bản ghi S11"
-    evidence_required: [screenshot, observed, verifier, verified_at]
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.suite.pipeline_b
+    long_running: 90
+    paths: ["pipeline/noi-du-an-nguon.mjs", "pipeline/lib/ban-ghi-nguon*.mjs", "pipeline/lib/khop-du-an*.mjs", "pipeline/tests/noi-du-an-nguon*.mjs"]
+    expected: "exit 0; nửa B bộ test pipeline, 0 fail (khai ở đây để có long_running 90)."

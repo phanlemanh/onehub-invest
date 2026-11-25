@@ -1,101 +1,144 @@
 ---
 schema_version: 1
-feature: Người vận hành mở thẻ nối dự án trên Ops, thấy cặp mã nguồn ↔ dự án máy đề xuất kèm căn cứ, duyệt từng cặp hoặc cả loạt cùng căn cứ, và mỗi cặp đã duyệt thành một bí danh
+feature: Mỗi dự án của năm nguồn danh mục (S07, S08, S09, S10, S16) thành một bản ghi chuẩn theo khuôn chung; bộ khớp chạy bóng xếp từng bản ghi vào một ngả căn cứ; ngả rõ (cùng xã + trùng tên, trùng tên đúng một nút cùng tỉnh) nối vào nút danh bạ có sẵn qua thẻ luật có băm, đảo được; ô «Mã nguồn chưa nối» trên Ops đếm đủ các nguồn
 slug: bang-noi-ma-du-an
 owner: phanlemanh@gmail.com
-risk_tier: T3      # hàng khai T3: quyền duyệt và dữ liệu nối; chạm db/migrations
-surfaces: [ui, api, cli]
+risk_tier: T3      # hàng khai T3: ghi dữ liệu nối trên DB máy thu
+surfaces: [cli, ui]
 status: draft
-design_doc: docs/superpowers/specs/2026-11-13-bang-noi-ma-du-an-design.md
+design_doc: docs/superpowers/specs/2026-11-25-bang-noi-ma-du-an-design.md
 ---
 
 # Acceptance Contract: bang-noi-ma-du-an
 
 ## Context
 
-Hàng DA3 (T3) của mốc «Định vị căn và thông tin dự án», đứng trên DA2 (trường dự án trên tin, #432) và DA30
-(`stg_s08_project`, #440). Ba cơ chế bí danh dự án đang cùng tồn tại; `s08_project_links` (074) chỉ ghi từ tệp tay và
-27 dự án của snapshot S08 07/11 chưa có dòng nối. Hàng này dựng một bảng nối chung có người duyệt, một khuôn chung
-bản ghi nguồn cho mọi nguồn danh mục, bộ đề xuất cặp theo căn cứ §1.2, và thẻ duyệt trên `/ops/review`.
+Hàng DA3 (T3), đứng trên DA2, DA30, DA32 (đã ký). GS phán 25/11 cắt lại hàng: DA3 là bước 1 cấp dự án của lớp hợp nhất nguồn
+danh bạ (Mạnh 19/11 «duyệt theo loại căn cứ»). Bản nháp 13/11 bỏ. Thẻ từng cặp tách thành DA60, gộp bảng nối thành DA61, đúc nút
+liên nguồn thành DA62.
 
-Căn cứ: `_acceptance/bang-noi-ma-du-an/opportunity.md` (Mạnh 09/11), `docs/architecture/mo-hinh-danh-ba-du-an.md`
-§1.1–§1.2, §6; ROADMAP §3 mục 35, 40, 44, 45. Số đo nền 13/11 ở design doc mục 1.
+Bảng phủ ca đếm trên DB máy thu 25/11 nằm ở `evidence/bang-phu-s1.md`. Trước DA3, ô «Mã nguồn chưa nối» ghi 529 và chỉ đếm S06,
+S08, S09. S07, S10, S16 không có trong ô.
 
 ## Acceptance Criteria
 
-- **AC-1** Given DB thử chép lược đồ máy thu có 150 dòng `s08_project_links` (8 `noi`), When áp migration của hàng
-  hai lần, Then bảng `project_links` có 150 dòng nguồn S08 cùng trạng thái, nút và lý do; view `s08_project_links` trả
-  150 dòng, đúng 8 dòng `status = 'noi'`, cùng cột và cùng giá trị như trước migration (so từng dòng); lần áp thứ hai
-  không đổi số dòng nào; `INSERT`, `UPDATE`, `DELETE` thường qua tên cũ (cách itest danh bạ vật thể đang làm) đi xuống `project_links`;
-  `pipeline/noi-du-an-s08.mjs` ghi thẳng `project_links` và chạy lại trên tệp nối cũ cho cùng 8 dòng `noi`.
-- **AC-2** Given migration đã áp, When chèn `registry_aliases` với ma trận viết trước (`object_key` `node:12` · `bld_<ULID>`
-  · `node:abc` · `xyz_1`; `source` `S08` · `S15` · `S16` · `S00`; `kind` `ma_nha_nuoc` · `ma_nguon` · `la`), Then đúng
-  các ô hợp lệ được nhận, ô sai bị CHECK từ chối, và `registry_events` nhận `node:<id>` cùng luật; `node pipeline/vocab.mjs
-  --check-db` thoát 0 với `alias_kind` có `ma_nha_nuoc`.
-- **AC-3** Given bản ghi `stg_s08_project` thật (177 dự án) và fixture `stg_s07_project` rút từ khuôn hợp đồng dữ liệu
-  v9, When bộ chuyển của từng nguồn dựng khuôn chung, Then mỗi bản ghi ra đủ 14 trường của khuôn (trường không có ở
-  nguồn là `null`); S08: tỉnh và xã suy từ điểm cho mọi dự án có điểm nằm trong vùng đã nạp (172/174 đo 13/11), điểm ngoài vùng
-  có tỉnh `null` lý do `ngoai-vung`, 3 dự án không điểm có tỉnh `null` lý do `khong-diem`; ma trận rỗng
-  giả viết trước (`""`, `"  "`, `"Đang cập nhật"`, `"đang cập nhật"`, `"--"`, `"-"`, `"0"`, `"N/A"`, `"0 m2"`, `"Vinhomes"`)
-  về `null` đúng 8 ô đầu, giữ nguyên 2 ô cuối.
-- **AC-4** Given ma trận căn cứ viết trước (K1–K5 × có/không đủ dữ liệu, cộng bốn ca «không bao giờ»: lệch tỉnh, chỉ
-  theo điểm, hai nút cùng tên, nút chỉ có `area_ids` cấp tỉnh), When hàm đề xuất quyết một bản ghi, Then mỗi ô ra đúng
-  một kết cục viết trước (`the-luat:K3`, `tung-cap:K4`, `chua-noi:<lý do>`…); bốn ca «không bao giờ» không bao giờ ra
-  đề xuất nối.
-- **AC-5** (cross-layer) Given DB thử chép từ DB máy thu, When chạy bộ đề xuất trên S08, Then mọi dự án của snapshot
-  07/11 có đúng một dòng `project_links` (27 dự án mới hết thiếu); 8 dòng `noi` cũ giữ nguyên nút; dòng `noi`/`tu_choi`
-  do người quyết không bị ghi đè khi chạy lại; mỗi đề xuất có đúng một thẻ `review_queue` hạng mục `project_link`;
-  chạy lần hai không thêm thẻ trùng.
-- **AC-6** (cross-layer) Given thẻ một cặp đề xuất K3, When vai `ops` gọi route duyệt «Nối», Then trong một giao dịch:
-  dòng sang `noi` với `decided_by` là actor, đúng một bí danh `node:<id>` kind `ma_nguon` value `S08/<project_id>`, một
-  dòng `ops_audit`; «Không phải» thiếu lý do → 400, kèm lý do → `tu_choi`, không bí danh; vai `viewer` → 403, không đổi
-  dòng nào; bản sao route làm lần ghi bí danh ném lỗi → không dòng nào đổi.
-- **AC-7** (cross-layer) Given 12 đề xuất K3 cùng nguồn S08, trong đó 1 cặp vai `ops` đã quyết «Không phải» trước, When
-  vai `admin` duyệt thẻ luật rồi đảo luật, Then duyệt: một dòng `project_link_rules`, 11 cặp `noi` cùng `rule_id`, 11 bí
-  danh, cặp đã từ chối giữ `tu_choi`, một giao dịch; đảo: một dòng nhật ký «đảo», 11 cặp về `de_xuat`, 11 bí danh có
-  `retired_at` (không xoá dòng nào), mỗi cặp `de_xuat` có đúng một thẻ `project_link` đang mở; vai `ops` nối lại một cặp
-  đã đảo → 200, một bí danh mới `retired_at` rỗng, bí danh cũ giữ dấu; vai `ops` gọi duyệt hay đảo luật → 403.
-- **AC-8** (cross-layer) Given fixture S11 4 bản ghi cấp lô của Ocean Park 1 (tên pháp lý khác tên thương mại) theo
-  khuôn hợp đồng dữ liệu v8, When người duyệt thẻ từng cặp chọn một toà có sẵn (hay phân khu có sẵn), Then dòng
-  `project_links` cấp `lo_toa` trỏ `building_id` (hay nút phân khu), bí danh trỏ `bld_<ULID>` (hay `node:<id>`); không
-  tạo nút hay toà mới.
-- **AC-9** Given hàng duyệt dựng thật trong jsdom với fetch giả, When mở hạng mục «Nối dự án», Then thẻ cặp hiện hai
-  cột nguồn ↔ nút và dòng căn cứ; bấm Nối thì không gọi route trong 5 giây và «Hoàn tác» huỷ được; «Để sau» không gọi route quyết, dòng giữ `de_xuat` và
-  thẻ về cuối hàng; danh sách rỗng →
-  «Không còn cặp nào chờ nối»; lỗi tải → Alert và «Thử lại»; vai `viewer` không thấy nút nào; vai `ops` không thấy nút «Duyệt cả loạt», vai `admin` thấy.
-- **AC-10** (ui-observed) Given dev server trỏ DB thử chép từ DB máy thu sau khi chạy bộ đề xuất, cộng 12 đề xuất K3 mẫu nạp
-  từ fixture của AC-7 (dữ liệu thật 13/11 chỉ ra 1 đề xuất K3 mới — không đủ dựng thẻ luật), đăng nhập tài khoản thử vai admin, When mở `/ops/review`, hạng mục «Nối dự án», nối một cặp, rồi mở thẻ luật K3 và duyệt, Then thẻ cặp có
-  căn cứ đọc được; toast có Hoàn tác; thẻ luật có 5 cặp mẫu và tổng số; nhật ký luật có dòng mới và nút «Đảo luật».
+- **AC-1** Given bản chép DB máy thu, When chạy bộ chuyển của năm nguồn, Then:
+  - Mỗi bản ghi ra đủ các trường của khuôn chung (thiết kế §3.1); trường nguồn không có thì là null.
+  - Số bản ghi và số có tỉnh, xã, điểm của từng nguồn bằng phép đếm SQL độc lập trên cùng bản chép. Số 25/11: S07 6.074, S08 185,
+    S09 344, S10 119, S16 20.
+  - S10 có tỉnh null kèm lý do `khong-vi-tri`.
+  - Tên tỉnh cũ trong địa chỉ đổi ra mã tỉnh cũ qua bảng 63 tỉnh trước sáp nhập, rồi ra tỉnh mới qua `area_aliases`
+    (`old_province_code` → `province_code`). Bỏ các dòng alias của mã ấy ở DB thử thì tỉnh ra null, không ra tỉnh khác.
+  - Ma trận rỗng giả viết trước gồm 10 ô (Hỏi-2). 6 ô về null: "", «Đang cập nhật», «--», «-», «0», «N/A». 4 ô giữ nguyên làm đối
+    chứng dương: «Khác», «Liên hệ», «Vinhomes», «0 m2». Trên dữ liệu 25/11, quy ước này đổi 0 bản ghi.
+- **AC-2** Given ma trận ca viết trước, When hàm xếp ngả quyết một bản ghi, Then mỗi ô ra đúng một kết cục viết trước.
+  - Các ô: đã nối, tên rỗng giả, không tỉnh, K1, K2, K3, T, hai nút, khác tỉnh, nút ứng viên nguồn khác, còn lại.
+  - Kết cục có dạng `giu`, `noi:K3`, `chua_noi:nhieu-nut`, `chua_noi:khong-khop`, …
+  - Nút khác tỉnh không bao giờ là ứng viên. Hai nút không bao giờ ra nối. Điểm gần mà tên khác không bao giờ ra nối.
+  - Chiều đỏ: bản bỏ điều kiện cùng tỉnh thì ca khác tỉnh đỏ.
+- **AC-3** Given DB, When dựng thẻ của một nguồn hai lần, Then:
+  - Thẻ có tổng theo ngả, 20 mẫu mỗi căn cứ nối, danh sách bản ghi mà bóng ra nút khác nối có sẵn.
+  - Thẻ không in mã dự án nguồn. Hai lần cùng một băm, và không ghi gì vào DB.
+  - Băm đổi khi kết cục, nút đích hay căn cứ của một bản ghi đổi.
+- **AC-4** Given thẻ và băm, When áp, Then:
+  - Băm lệch thì không ghi gì.
+  - Băm đúng thì, trong một giao dịch:
+    - ghi một dòng `project_link_rules` cho mỗi loại căn cứ có nối (`<nguồn>-K3`, `<nguồn>-T`), một dòng cho nối có sẵn
+      (`<nguồn>-noi-san`) và một dòng cho trạng thái chưa nối (`<nguồn>-trang-thai`);
+    - ghi mỗi bản ghi một dòng `project_links` mang `rule_id` của lượt (`noi` kèm căn cứ, hoặc `chua_noi` kèm lý do);
+    - ghi mỗi dòng nối một bí danh `node:<id>` kind `ma_nguon`, giá trị `du_an/<mã>`.
+  - Dòng `asset_nodes`, `s08_project_links`, `s10_project_links` và bí danh có sẵn không đổi một byte.
+  - Áp lần hai không đổi gì.
+- **AC-5** Given một lượt đã áp, When đảo theo mã luật, Then:
+  - Bí danh của luật nghỉ (`retired_at`, không xoá dòng). Dòng về `chua_noi` lý do `dao-luat`. Dòng luật ghi người và giờ đảo.
+  - Đảo lần hai báo «đã đảo», không ghi. Dòng của luật khác cùng nguồn không đổi.
+  - Đảo đủ mọi luật của một nguồn là cách lùi trọn: nguồn ấy không còn dòng `noi` nào, mọi bí danh của lượt có `retired_at`, số dòng
+    các bảng không giảm (không xoá dòng nào), băm có sắp xếp của bí danh còn hiệu lực bằng trước áp.
+- **AC-6** Given dự án đã nối từ trước (S09 chép cứng 2, S16 chép cứng 5, S08 bảng tay và thẻ DA55), When chạy bộ khớp, Then:
+  - Nối có sẵn luôn thắng: dòng ghi `noi` căn cứ `<nguồn>-noi-san`.
+  - Bóng ra nút khác thì ghi vào danh sách «khác nối sẵn» trên thẻ, không ghi đè.
+  - Gọi lệnh áp cho S08 thì bị từ chối kèm lời «S08 do thẻ luật DA55 nối», không ghi.
+  - Thẻ S08 chạy bóng đối chiếu: liệt 6 ca khác do quy ước dự án con có cha (ROADMAP §3 mục 39).
+- **AC-7** (cross-layer) Given bản chép DB máy thu, When áp rồi đảo bốn nguồn S07, S09, S10, S16, Then đầu ra của các bên đọc
+  bằng nhau trước áp, sau áp và sau đảo.
+  - Bên đọc bí danh nguồn: bộ dùng S09 (`s09-dung.mjs`), bộ dùng S16 (`napS16TheoKhu`), `danh-ba-vat-the.mjs` chạy khô.
+  - Năm view: `v_toa_nut_vung`, `offer_building`, `s06_offer_project`, `v_s16_toa`, `v_s09_toa`.
+  - Phép so là băm đầu ra có sắp xếp. Chiều đỏ: cấy một bí danh `ma_nguon` S09 dạng toà thì phép so của bộ dùng S09 đỏ.
+- **AC-8** (cross-layer) Given dự án S07, S09, S16 nối ở `project_links` và S10 chưa nối lý do `khong-vi-tri`, When màn
+  `/ops/registry` đọc danh bạ (`docDanhBa`) và dựng ô (`registry-view.tsx`), Then:
+  - Ô «Mã nguồn chưa nối» đếm thêm S07, S16.
+  - S09 lấy số đã nối từ `project_links`, không còn hằng 0.
+  - S10 hiện riêng kèm lý do «không có vị trí». Mỗi dự án đếm một lần.
+  - Danh sách chưa nối mang lý do của `project_links`. Dự án S08, S06 đếm như trước.
+  - Con số ô dựng ra trên màn bằng tổng chưa nối của S06, S07, S08, S09, S16, không cộng S10.
+- **AC-9** (cross-layer) Given bản chép DB máy thu, When chạy trọn chuỗi thẻ, áp, kiểm, đo, đảo, Then:
+  - Mỗi ngả của thẻ bằng phép đếm của bộ đo S1 đóng băng (`probes/s1/do.mjs`, đếm độc lập với mã của hàng) trên cùng bản chép, in hai
+    cột kèm hiệu số. Số 25/11: S07 K3 48, T 209, nhiều nút 1, không tỉnh 7, không khớp 5.809; S09 nối 7 (2 giữ); S16 nối 5 (5 giữ);
+    S10 không tỉnh 119.
+  - Ô đọc bằng `docDanhBa` của app báo hai hiệu ứng tách nhau:
+    - đổi phạm vi đếm: thêm S07 6.074 và S16 20 chưa nối; S09 đọc phần đã nối từ bảng;
+    - nối thêm: S07 6.074 → 5.817, S09 344 → 337, S16 20 → 15.
+  - Sau khi đảo đủ mọi luật của bốn nguồn, ô về cột đổi phạm vi (S07 6.074, S09 344, S16 20).
 
 ## Coverage
 
-Quét theo preset test-matrix (skill morphological-scan), năm trục — chi tiết ở design doc mục 4:
-- Trục A — nguồn × cấp bản ghi: S08 dự án (thật) · S07 dự án (fixture, AC-3) · S11 lô/toà (fixture, AC-8). [CE: §1.1 + DATA-CONTRACT v8/v9]
-- Trục B — căn cứ × kết cục: K1–K5 × thẻ luật/từng cặp/chờ + bốn «không bao giờ» (AC-4). [CE: §1.2]
-- Trục C — vòng đời cặp: đề xuất → nối/từ chối/để sau; nối theo luật → đảo; hoàn tác 5 giây (AC-5, AC-6, AC-7, AC-9).
-- Trục D — vai: viewer · ops · admin (AC-6, AC-7, AC-9). [CE: bảng quyền bốn vai]
-- Trục E — tầng: migration (AC-1, AC-2) · hàm thuần (AC-3, AC-4) · DB thử (AC-5) · route (AC-6–AC-8) · màn (AC-9, AC-10).
+Bảng phủ ca đếm trên DB máy thu nằm ở `evidence/bang-phu-s1.md`; trục và cột «ai đọc» ở thiết kế §2.
+
+| Trục | Ca | AC |
+|---|---|---|
+| Nguồn × trường | S07, S08, S09, S10, S16 × tên, tỉnh, xã, điểm, CĐT, MST, loại hình, mã cha; tỉnh cũ; rỗng giả | AC-1 |
+| Ngả căn cứ | đã nối, tên rỗng, không tỉnh, K1, K2, K3, T, nhiều nút, khác tỉnh, nút ứng viên nguồn khác, không khớp | AC-2 |
+| Vòng đời | thẻ, áp, áp lần hai, băm lệch, đảo, đảo lần hai | AC-3, AC-4, AC-5 |
+| Nối có sẵn | chép cứng S09, S16; S08 thuộc DA55; lệch dự án con có cha | AC-6 |
+| Bên đọc | bộ dùng S09, S16, dựng vật thể, năm view, màn | AC-7, AC-8 |
+| Dữ liệu thật | bảng phủ, ô trên màn tách hai hiệu ứng, đảo | AC-9 |
 
 ## Đường đo
 
-Ngưỡng của `opportunity.md`:
-- «8 cặp S08 đã nối hiện trong bảng mới và view trả đúng 8 dòng» — AC-1 (so từng dòng trước/sau migration).
-- «duyệt một cặp sinh đúng một bí danh node:<id>» — AC-6.
-- «hoàn tác 5 giây khôi phục» — AC-9 (màn), AC-10 (nhìn).
-- «thẻ luật duyệt loạt có nhật ký và đảo được» — AC-7.
-- «registry_aliases.kind nhận thêm ma_nha_nuoc» — AC-2.
-- «27 dự án S08 mới có trạng thái nối» (`bat_khi`) — AC-5.
+- Ô «Mã nguồn chưa nối» ở `/ops/registry`, đọc bằng `SQL_DANH_MUC` của `app/src/lib/ops/registry/doc.ts`, đo bằng `docDanhBa`
+  trên bản chép DB máy thu. Hai hiệu ứng tách nhau, số ở AC-9; AC-8 và AC-9 bảo đảm.
+- Sau khi áp trên DB máy thu: đếm `project_links` theo nguồn × trạng thái, và đọc lại ô trên màn Ops máy thu.
+
+Ngưỡng SỐNG gốc của `opportunity.md` (09/11, phạm vi cũ), đối chiếu với phạm vi cắt lại ngày 25/11:
+
+| Ngưỡng gốc | Đường đo hôm nay |
+|---|---|
+| 8 cặp S08 đã nối hiện trong bảng mới, view thay `s08_project_links` trả đúng 8 dòng | DA61 |
+| Duyệt một cặp sinh đúng một bí danh `node:<id>`; hoàn tác 5 giây khôi phục | DA60 (thẻ từng cặp) |
+| Thẻ luật duyệt loạt có nhật ký và đảo được | AC-4, AC-5 |
+| `registry_aliases.kind` nhận thêm `ma_nha_nuoc` | bỏ — nguồn nhà nước chưa có dữ liệu nạp |
+| Khuôn chung bản ghi nguồn có bộ chuyển cho mọi nguồn danh mục đã có `stg_*` | AC-1 (S07, S08, S09, S10, S16) |
+| `registry_aliases`, `registry_events` nhận nút dự án và nguồn S10–S15 | đã xong ở migration 100, 103 |
+| Bản ghi S11 cấp lô của Ocean Park 1 nối được qua thẻ từng cặp | bỏ — S11 chưa có bảng `stg_*`; khi có thì đi DA60 |
+| Giá trị rỗng giả về trống theo một quy ước | AC-1 |
+| 27 dự án S08 mới có trạng thái nối | DA55 |
 
 ## Out of scope
 
-- Căn cứ K1, K2, K4 trên dữ liệu thật: cần mã số DN và toạ độ nút danh bạ — hàng làm giàu danh bạ. Hàm đề xuất có ô
-  của chúng (AC-4) nhưng hôm nay không cặp nào đủ dữ liệu.
-- Bộ chuyển chạy trên S07, S11 thật: chờ ZCode nạp `stg_s07_*`, chờ bảng S11 (DA24a). Hàng này đo bằng fixture.
-- Nối tin rao vào nút (DA7, DA18) và đưa nút lên Invest (mục 44 Hỏi-1 — sau khi qua thẻ).
-- Đưa `project_links` hay bí danh dự án lên cloud.
-- Viết thẻ luật cho bản ghi cấp lô/toà (mục 45 Q5: đủ 20 mẫu mới viết).
-- Áp migration lên DB máy thu thật: sau gộp, theo lời Mạnh.
-- Duyệt thẻ nối dự án từ Ops ở cloud (Hỏi-3, máy khuyên làm sau): hàng này đặt thẻ ở Ops máy thu.
-- Bộ chuyển S11: chưa có bảng `stg_*` phía ghi; AC-8 chỉ chứng đường duyệt cấp lô/toà trên fixture.
+- Đúc nút mới cho bản ghi không khớp (S07 5.809, S08 173, S09 337, S16 15; 295 nhóm / 609 bản ghi trùng giữa nguồn): ngoài phạm
+  vi, vì DA62 là nơi Mạnh quyết câu «tự nuôi» và cỡ nút.
+- Thẻ từng cặp trên `/ops/review` cho ca không rõ (nhiều nút; K4 khi nút có điểm): ngoài phạm vi, vì là DA60 (migration 133). Cỡ
+  của DA60 đo bằng số ca DA3 để lại.
+- Gộp `s08_project_links`, `s10_project_links` thành view trên `project_links`: ngoài phạm vi, vì đổi lược đồ khó đảo nên đi riêng
+  ở DA61.
+- kind `ma_nha_nuoc`: ngoài phạm vi, vì nguồn nhà nước chưa có dữ liệu nạp.
+- Tìm tỉnh cho S10: ngoài phạm vi, vì nguồn không có địa chỉ, điểm hay tỉnh. Ghi «không tỉnh 119/119, chờ nguồn có vị trí».
+- K4 (điểm ≤ 1 km + tên trùng một phần): ngoài phạm vi, vì 0/344 nút có điểm. K1, K2 có ô trong hàm nhưng không bắn vì thiếu dữ
+  liệu.
+- Ghi S08: ngoài phạm vi, vì DA55 sở hữu thẻ luật S08; DA3 chỉ chạy bóng đối chiếu.
+- Sửa bộ khớp nhận quy ước dự án con có cha: ngoài phạm vi, vì DA3 không ghi S08 nên 6 ca lệch không ảnh hưởng dữ liệu; thẻ liệt kê
+  đủ 6 ca.
+- Chuyển S09, S16 khỏi chép cứng sang đường chung (bước 3 bản 19/11), S11 (chưa có bảng `stg_*`), nút «Duyệt cả loạt» trên màn:
+  ngoài phạm vi, GS đồng ý 25/11.
+- Áp lên DB máy thu: ngoài phạm vi của mã. Chữ ký Cổng Bằng chứng phủ việc áp khi hồ sơ áp đủ năm thứ (thiết kế §4).
 
 ## Notes
+
+- Không migration: `project_links`, `project_link_rules`, `registry_aliases` của 100 và 103 đủ cột.
+- `app/src/lib/ops/registry/doc.ts` và `app/src/components/ops/registry/registry-view.tsx` nằm trong ranh giới DA55. Nhánh DA3
+  chồng lên nhánh DA55 riêng cho hai tệp này và gộp sau DA55.
+- Ngưỡng SỐNG của bản cắt 25/11 (GS phán, thay ngưỡng 09/11 của `opportunity.md` cho hàng này): ô «Mã nguồn chưa nối» báo tách hai
+  hiệu ứng như AC-9, nối thêm S07 257, S09 5 mới cộng 2 giữ, S16 5 giữ. CHẾT: bộ khớp nối nhầm qua mẫu E10, hoặc một bên đọc đổi
+  đầu ra (AC-7).
+- Cách lùi trên DB máy thu là đảo đủ mọi luật của nguồn (AC-5); không xoá dòng nào.
+- Nguồn đứng: S07, S10 thu lần cuối 11/11; S09 và phần dự án của S16 thu lần cuối 13/11. Số trong thẻ là số của snapshot đang có.
