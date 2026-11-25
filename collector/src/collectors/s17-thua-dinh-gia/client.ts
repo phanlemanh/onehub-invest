@@ -19,8 +19,13 @@ export type Transport = (url: string, headers: Record<string, string>) => Promis
 /** Gửi nhiều lời trong MỘT đợt (vd nhiều fetch đồng thời trong trang), lời i bắt đầu sau i × staggerMs. Mỗi phần tử: phản hồi hoặc lỗi mạng. */
 export type TransportMany = (requests: Array<{ url: string; headers: Record<string, string> }>, staggerMs: number) => Promise<Array<Response | Error>>;
 export type ManyResult<T> = { ok: true; value: T } | { ok: false; error: Error };
-/** Số lời tối đa một đợt (Mạnh cho tăng tốc thận trọng 24/11: «2 luồng»; trần bốn). */
-const MAX_CONCURRENCY = 4;
+/**
+ * Số lời tối đa một đợt — HẰNG SỐ CHUNG của cả bộ thu (lớp gọi, dòng lệnh, trình điều khiển, các pha).
+ * Mạnh cho tăng tốc thận trọng 24/11 («2 luồng»), trần bốn; 25/11 Mạnh chốt «tiếp tục tăng tốc» cho mốc mở rộng
+ * (claudedp-2411-73) nên trần nâng lên tám. Trần là mức TRÊN CÙNG; tốc độ thật đi theo nấc, bị chặn một lần thì
+ * lùi về nhịp cũ một luồng (khoá ở trình điều khiển).
+ */
+export const MAX_CONCURRENCY = 8;
 export type Caps = { calls: number; minutes: number };
 export type StopReason =
   | "blocked"

@@ -8,6 +8,21 @@ export function makeItem(kind: string, sourceId: string, payload: unknown, meta:
   return { source: S17_SOURCE, kind, sourceId, fetchedAt, payload, meta };
 }
 
+/**
+ * Chữ dùng trong sourceId: ASCII, chữ thường, khoảng trắng và dấu câu thành gạch nối; tiếng Việt bỏ dấu
+ * («Hàng Đào» → hang-dao, «3312A Tòa Park 12» → 3312a-toa-park-12).
+ */
+export function sourceIdSlug(text: string): string {
+  return text
+    .normalize("NFC")
+    .replace(/[Đđ]/g, "d")
+    .normalize("NFD")
+    .replace(/[\p{M}]+/gu, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 /** «2,432» → 2432; không đọc được → null. */
 export function parseCount(text: unknown): number | null {
   if (typeof text === "number" && Number.isFinite(text)) return text;
@@ -63,3 +78,9 @@ export function projectIdOf(entry: unknown): string | null {
 export function assertBalanceUnchanged(before: number, after: number): void {
   if (after < before) throw new RunStopped("balance-spent", `số dư giảm từ ${before} xuống ${after} trong lượt này`);
 }
+
+/**
+ * Số lượt quét tối đa cho một toà khi thứ tự trang không ổn định. Đo 24/11: toà P11 cần ba lượt, toà P9 còn
+ * thiếu 18 mã sau ba lượt mà mỗi lượt vẫn thêm được mã — trần nâng lên tám; lượt không thêm mã thì dừng ngay.
+ */
+export const MAX_APARTMENT_LOT = 8;

@@ -19,7 +19,7 @@ import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { realpathSync } from "node:fs";
 import { ConfigError, loadConfig, PHASE_ROLES, rolePath, type Role, type S17Config } from "./config.js";
-import type { Caps } from "./client.js";
+import { MAX_CONCURRENCY, type Caps } from "./client.js";
 import { DEFAULT_PACE_MS, MIN_PACE_MS, buildExecOptions, executePhase, type ExecResult } from "./runner.js";
 import type { GridEntry, ParcelArea, Phase } from "./run.js";
 import { nodeTransport } from "./transport-node.js";
@@ -34,7 +34,6 @@ const PUBLIC_PHASES: Phase[] = ["reference", "tile-mask"];
  * MIN_PACE_MS, tối đa MAX_CONCURRENCY lời một đợt. Khoá theo số lần bị chặn nằm ở trình điều khiển (runner).
  */
 const PACE_MAX_MS = 400;
-const MAX_CONCURRENCY = 4;
 
 export class UsageError extends Error {
   constructor(message: string) {

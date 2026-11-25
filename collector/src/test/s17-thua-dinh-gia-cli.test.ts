@@ -59,7 +59,7 @@ test("parseCli: pha thửa cần phiên, cần lưới khu thí điểm; số lu
   assert.equal(p.concurrency, 3);
   assert.equal(p.parcelsGrid, "/tmp/luoi-thua.json");
   assert.equal(parseCli(base).concurrency, 1, "mặc định một luồng");
-  assert.throws(() => parseCli([...thua, "--space", "4", "--parcels-grid", "/tmp/luoi-thua.json", "--luong-song", "5"]), /1 đến 4/);
+  assert.throws(() => parseCli([...thua, "--space", "4", "--parcels-grid", "/tmp/luoi-thua.json", "--luong-song", "9"]), /1 đến 8/);
 });
 
 test("checkConfigForPhase: pha cần phiên đòi tên cookie phiên trong cấu hình local; pha công khai không cần", () => {

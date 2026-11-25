@@ -7,7 +7,7 @@
 import { appendFileSync, closeSync, existsSync, openSync, readFileSync, unlinkSync, writeSync } from "node:fs";
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import { S17Client, RunStopped, type Caps, type Response, type StopReason, type Transport, type TransportMany } from "./client.js";
+import { MAX_CONCURRENCY, S17Client, RunStopped, type Caps, type Response, type StopReason, type Transport, type TransportMany } from "./client.js";
 import { ConfigError, type S17Config } from "./config.js";
 import { assertBalanceUnchanged } from "./kinds.js";
 import { emptyState, runPhase, type GridEntry, type ParcelArea, type Phase, type PhaseSummary, type RunState } from "./run.js";
@@ -191,7 +191,7 @@ export async function executePhase(o: ExecOptions): Promise<ExecResult> {
   // Tăng tốc có khoá (Mạnh 24/11: «gặp 429/403 thì lùi ngay về nhịp cũ, lần hai thì dừng»): đã bị chặn
   // hai lần thì không chạy nữa, chờ người quyết; đã bị chặn một lần thì chỉ còn nhịp cũ, một luồng.
   const concurrency = o.concurrency ?? 1;
-  if (!Number.isInteger(concurrency) || concurrency < 1 || concurrency > 4) throw new ConfigError("concurrency phải là số nguyên từ 1 đến 4");
+  if (!Number.isInteger(concurrency) || concurrency < 1 || concurrency > MAX_CONCURRENCY) throw new ConfigError(`concurrency phải là số nguyên từ 1 đến ${MAX_CONCURRENCY}`);
   const fast = concurrency > 1 || o.paceMs < DEFAULT_PACE_MS;
   const khoaTangToc: RunStopped | null =
     state.blockedRuns >= 2

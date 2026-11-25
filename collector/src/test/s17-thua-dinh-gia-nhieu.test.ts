@@ -3,7 +3,7 @@ import { test } from "node:test";
 
 import { loadConfig } from "../collectors/s17-thua-dinh-gia/config.js";
 import { ConfigError } from "../collectors/s17-thua-dinh-gia/config.js";
-import { RunStopped, S17Client, TemporaryFailure, type Response, type TransportMany } from "../collectors/s17-thua-dinh-gia/client.js";
+import { RunStopped, S17Client, TemporaryFailure, type Response, type TransportMany, MAX_CONCURRENCY } from "../collectors/s17-thua-dinh-gia/client.js";
 
 /**
  * S17 mốc ngày 2: gửi NHIỀU lời một đợt (đo 24/11: hai lời hồ sơ thửa đồng thời trong trang xong sau 4,9 s
@@ -139,11 +139,11 @@ test("getJsonMany: không có vận chuyển theo đợt thì gửi tuần tự,
   assert.equal(ke.dot.length, 0, "không có đợt nào");
 });
 
-test("getJsonMany: concurrency ngoài 1–4 hoặc rỗng thì từ chối", async () => {
+test("getJsonMany: concurrency ngoài 1–8 (trần chung MAX_CONCURRENCY, Mạnh 25/11) hoặc rỗng thì từ chối", async () => {
   const ke = makeClient(() => json({ status: true, data: {} }), { many: true });
   await assert.rejects(ke.client.getJsonMany([task(1)], 0), ConfigError);
-  await assert.rejects(ke.client.getJsonMany([task(1)], 5), ConfigError);
-  assert.deepEqual(await ke.client.getJsonMany([], 2), []);
+  await assert.rejects(ke.client.getJsonMany([task(1)], MAX_CONCURRENCY + 1), ConfigError);
+  assert.deepEqual(await ke.client.getJsonMany([], MAX_CONCURRENCY), [], "đúng trần thì nhận");
 });
 
 test("getJsonMany: nghỉ thử lại xong mà đã quá trần thời gian thì không gửi nữa", async () => {

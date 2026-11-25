@@ -375,3 +375,155 @@ test("KeoDan (kéo dài cho pha không dùng API): trần lời, trần thời g
   assert.equal(k4.blocks, 1);
   assert.throws(() => k4.assertRunning(), (x: unknown) => x === loi, "đã dừng thì mọi lời sau bị từ chối bằng chính lỗi dừng");
 });
+
+// ---------- pha căn hộ toàn bộ dự án ----------
+
+import { S17Client, type Response as PhanHoi, type TransportMany } from "../collectors/s17-thua-dinh-gia/client.js";
+
+const FAKE_CFG_CAN_HO = {
+  hosts: FAKE_HOSTS,
+  paths: { "apartment-list": "/v2.x/apartment-list", "apartment-detail": "/v2.x/apartment-detail", "data-available": "/v2.x/data-available", "asset-type": "/v2.x/asset-type" },
+};
+
+/** Nguồn giả cho pha căn hộ toàn bộ: `trang[dự án][toà][lượt][trang]` = mã căn của trang; `lech[mã]` = mã nguồn trả về thay vì mã đã gửi. */
+function nguonCanHo(ds: Record<string, Record<string, string[][][]>>, lech: Record<string, string> = {}, caps = { calls: 10_000, minutes: 60 }) {
+  const sent: string[] = [];
+  const lotCuaToa = new Map<string, number>();
+  const json = (body: unknown): PhanHoi => ({ status: 200, contentType: "application/json", body: JSON.stringify(body) });
+  const answer = (url: string): PhanHoi => {
+    const u = new URL(url);
+    const p = u.pathname;
+    if (p.endsWith("/apartment-list")) {
+      const page = Number(u.searchParams.get("page"));
+      const thap = u.searchParams.get("thap") ?? "";
+      const duAn = u.searchParams.get("project_id") ?? "";
+      if (page === 0) lotCuaToa.set(`${duAn}/${thap}`, (lotCuaToa.get(`${duAn}/${thap}`) ?? -1) + 1);
+      const cacLot = ds[duAn]?.[thap] ?? [[]];
+      const lot = Math.min(lotCuaToa.get(`${duAn}/${thap}`) ?? 0, cacLot.length - 1);
+      const codes = (cacLot[lot] ?? [])[page] ?? [];
+      return json({ status: true, message: null, data: { content: codes.map((text) => ({ text, sub_text: `Tháp ${thap}` })), totalElements: cacLot[cacLot.length - 1].flat().length, totalPages: (cacLot[lot] ?? []).length, size: 100, number: page }, pagination: null, extra: {} });
+    }
+    const maCan = u.searchParams.get("ma_can") ?? "";
+    return json({ status: true, message: null, data: { properties: { ma_can: lech[maCan] ?? maCan } }, pagination: null, extra: {} });
+  };
+  const single = async (url: string): Promise<PhanHoi> => {
+    sent.push(url);
+    return answer(url);
+  };
+  const many: TransportMany = async (list) =>
+    Promise.all(
+      list.map(async (r): Promise<PhanHoi | Error> => {
+        try {
+          return await single(r.url);
+        } catch (e) {
+          return e as Error;
+        }
+      }),
+    );
+  const client = new S17Client({ config: loadConfig(JSON.stringify(FAKE_CFG_CAN_HO)), caps, paceMs: 0, now: () => 1_000_000, sleep: async () => undefined, transport: single, transportMany: many });
+  return { client, sent };
+}
+
+const chayCanHo = (dir: string, client: S17Client, tatCaDuAn: Record<string, unknown>, state: RunState = emptyState()) => {
+  const w = new BatchWriter({ root: dir, maxItems: 100, phase: "apartments-all", schemaVersion: S17_SCHEMA_VERSION_MO_RONG });
+  const log: Record<string, unknown>[] = [];
+  const run = () =>
+    runPhase({
+      phase: "apartments-all",
+      client,
+      writer: w,
+      state,
+      save: async () => assert.equal(w.pendingCount + w.pendingFiles, 0, "trạng thái chỉ lưu khi lô đã chốt"),
+      log: (e) => log.push(e),
+      now: () => new Date("2026-11-25T01:00:00.000Z"),
+      snapshotRoot: dir,
+      tienDoDir: join(dir, "tien-do"),
+      tatCaDuAn: { concurrency: 2, ...tatCaDuAn },
+    }).then(async (s) => {
+      await w.flush();
+      return { s, log };
+    });
+  return { run, writer: w };
+};
+
+async function moiKind(dir: string, loaiBo?: string): Promise<Array<{ kind: string; sourceId: string; payload: any; meta: any }>> {
+  const out: Array<{ kind: string; sourceId: string; payload: any; meta: any }> = [];
+  for (const id of (await readdir(join(dir, "vn"))).sort()) {
+    if (loaiBo && id === loaiBo) continue;
+    const { items } = await docSnapshot(dir, id);
+    out.push(...items);
+  }
+  return out;
+}
+
+test("pha căn hộ toàn bộ: liệt kê toà (trang song song, quét thêm lượt khi thiếu mã), lấy chi tiết theo đợt; dừng giữa chừng rồi chạy lại chỉ làm phần còn lại", async () => withTmp(async (dir) => {
+  const w0 = new BatchWriter({ root: dir, maxItems: 100, phase: "projects" });
+  await w0.add(chiTiet("7", { is_exists_apartment_info: true, danh_sach_thap: ["A", "B"], so_can: 5 }, null, "2026-11-24T05:00:00.000Z"));
+  await w0.add(chiTiet("8", { is_exists_apartment_info: true, danh_sach_thap: [], so_can: 2 }, null, "2026-11-24T05:00:00.000Z"));
+  await w0.add(chiTiet("9", { is_exists_apartment_info: false, danh_sach_thap: ["A"], so_can: 99 }, null, "2026-11-24T05:00:00.000Z"));
+  await w0.flush();
+  // Toà A khớp ngay lượt một. Toà B: lượt một thiếu mã (2 trên 3), lượt hai đủ. Mã «b3» nguồn trả «b30» (khớp đoạn đầu).
+  const ds = { "7": { A: [[["a1", "a2"]]], B: [[["b1"], ["b2"]], [["b1"], ["b2", "b3"]]] } };
+  const nguon1 = nguonCanHo(ds, { b3: "b30" }, { calls: 8, minutes: 60 });
+  const lan1 = chayCanHo(dir, nguon1.client, {});
+  const e = await lan1.run().then(() => null, (x: unknown) => x);
+  assert.ok(e instanceof RunStopped, String(e));
+  assert.equal(e.reason, "call-cap", "dừng đúng ở trần 8 lời: 5 lời liệt kê + a1, a2, b1");
+  assert.equal(nguon1.sent.filter((u) => u.includes("/apartment-list")).length, 5, "toà A một trang; toà B hai lượt, mỗi lượt hai trang");
+  const tienDo1 = await new NhatKyTienDo(join(dir, "tien-do", "can-ho-7.jsonl")).readAll();
+  assert.deepEqual(
+    tienDo1.map((r) => [r.toa ?? null, r.tongDong ?? null, r.soLot ?? null, r.khop ?? null, (r.daLay as string[] | undefined)?.join(",") ?? null]),
+    [["A", 2, 1, true, null], ["B", 3, 2, true, null], [null, null, null, null, "a1,a2"], [null, null, null, null, "b1"]],
+  );
+  assert.equal(lan1.writer.pendingCount, 0, "không còn gì dở");
+  // Lượt hai: không liệt kê lại, chỉ lấy b2, b3; b3 lệch mã → ghi nhận lỗi; rồi bản gộp dự án và đánh dấu xong.
+  const nguon2 = nguonCanHo(ds, { b3: "b30" });
+  const lan2 = chayCanHo(dir, nguon2.client, {});
+  const s2 = await lan2.run();
+  assert.equal(nguon2.sent.filter((u) => u.includes("/apartment-list")).length, 0, "không liệt kê lại toà đã có");
+  assert.deepEqual(nguon2.sent.map((u) => new URL(u).searchParams.get("ma_can")).sort(), ["b2", "b3"]);
+  assert.deepEqual(s2.s.so, { soDuAnDaXongTruoc: 0, soDuAnXong: 2, soToa: 2, soToaKhop: 2, maDuNhieu: 5, soDaLay: 4, soLoi: 1 });
+  const items = await moiKind(dir, w0.snapshotIds[0]);
+  const theo = (k: string) => items.filter((it) => it.kind === k);
+  assert.deepEqual(theo("can_ho_detail").map((it) => it.sourceId).sort(), ["du-an-7-can-a1", "du-an-7-can-a2", "du-an-7-can-b1", "du-an-7-can-b2"]);
+  assert.deepEqual(
+    Object.fromEntries(theo("can_ho_list").map((it) => [it.sourceId, it.meta.maMoi])),
+    { "du-an-7-toa-a-trang-1": 2, "du-an-7-toa-b-trang-1": 1, "du-an-7-toa-b-trang-2": 2, "du-an-7-toa-b-trang-1-lot-2": 0, "du-an-7-toa-b-trang-2-lot-2": 1 },
+    "trang ghi theo đúng số trang; lượt hai mang hậu tố -lot-2; maMoi tính dồn trong lượt theo thứ tự trang",
+  );
+  assert.deepEqual(
+    theo("can_ho_toa").map((it) => [it.sourceId, it.meta.tongCan, it.meta.maDuNhieu, it.meta.soLot, it.meta.khop, it.meta.laToaChungMinh]),
+    [["du-an-7-toa-a", 2, 2, 1, true, false], ["du-an-7-toa-b", 3, 3, 2, true, false]],
+  );
+  const gop = theo("can_ho_du_an");
+  assert.deepEqual(
+    gop.map((it) => [it.sourceId, it.meta.soToa, it.meta.soToaKhop, it.meta.maDuNhieu, it.meta.soDaLay, it.meta.soKhongLayDuoc, it.meta.soCanNguon, it.meta.moRong]),
+    [
+      ["du-an-7", 2, 2, 5, 4, 1, 5, true],
+      ["du-an-8", 0, 0, 0, 0, 0, 2, true],
+    ],
+    "dự án 8 không có tên toà: vẫn có bản gộp để bên đọc thấy là đã xét; dự án 9 không có bảng căn nên không đụng tới",
+  );
+  assert.ok(gop.every((it) => it.payload.toa.length === (it.sourceId === "du-an-7" ? 2 : 0)));
+  // Lượt ba: mọi thứ đã xong → không gọi nguồn.
+  const nguon3 = nguonCanHo(ds);
+  const s3 = await chayCanHo(dir, nguon3.client, {}).run();
+  assert.equal(nguon3.sent.length, 0);
+  assert.equal(s3.s.so?.soDuAnDaXongTruoc, 2);
+}));
+
+test("pha căn hộ toàn bộ: lọc theo số căn nguồn khai, theo danh sách id, và giới hạn số dự án một lượt", async () => withTmp(async (dir) => {
+  const w0 = new BatchWriter({ root: dir, maxItems: 100, phase: "projects" });
+  for (const [id, soCan] of [["7", 5000], ["8", 1500], ["9", 700], ["10", 50]] as const) {
+    await w0.add(chiTiet(id, { is_exists_apartment_info: true, danh_sach_thap: ["A"], so_can: soCan }, null, "2026-11-24T05:00:00.000Z"));
+  }
+  await w0.flush();
+  const ds = Object.fromEntries(["7", "8", "9", "10"].map((id) => [id, { A: [[["x1"]]] }]));
+  const lan1 = nguonCanHo(ds);
+  const s1 = await chayCanHo(dir, lan1.client, { tuSoCan: 600, denSoCan: 3000, gioiHan: 1 }).run();
+  assert.deepEqual([...new Set(lan1.sent.map((u) => new URL(u).searchParams.get("project_id")))], ["8"], "chỉ dự án 8 (1.500 căn) nằm trong khoảng; giới hạn một dự án");
+  assert.equal(s1.s.so?.soDuAnXong, 1);
+  const lan2 = nguonCanHo(ds);
+  await chayCanHo(dir, lan2.client, { ids: ["10", "7"] }).run();
+  assert.deepEqual([...new Set(lan2.sent.map((u) => new URL(u).searchParams.get("project_id")))], ["7", "10"], "danh sách id: dự án 7 trước (nhiều căn hơn)");
+}));

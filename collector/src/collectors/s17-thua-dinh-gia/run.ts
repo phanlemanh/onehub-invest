@@ -5,9 +5,10 @@
  * bị chặn); mọi item đi qua BatchWriter (lô nhỏ, schemaVersion 17).
  */
 import { ConfigError } from "./config.js";
-import { HttpStatusError, RunStopped, TemporaryFailure, type S17Client } from "./client.js";
-import { assertNoSoftError, hasApartmentTable, makeItem, parseCount, projectIdOf, tileBases } from "./kinds.js";
+import { MAX_CONCURRENCY, HttpStatusError, RunStopped, TemporaryFailure, type S17Client } from "./client.js";
+import { MAX_APARTMENT_LOT, assertNoSoftError, hasApartmentTable, makeItem, parseCount, projectIdOf, sourceIdSlug, tileBases } from "./kinds.js";
 import { imagesPhase, type AnhPhaseOptions } from "./pha-anh.js";
+import { apartmentsAll, type TatCaDuAnOptions } from "./pha-can-ho.js";
 import type { KeoDan } from "./keo-dan.js";
 import type { BatchWriter } from "./store.js";
 
@@ -138,6 +139,8 @@ export type RunOptions = {
   anh?: AnhPhaseOptions;
   /** Mốc mở rộng — kéo dan của pha không gọi API (pha ảnh). */
   keoDan?: KeoDan;
+  /** Mốc mở rộng — lựa chọn của pha căn hộ toàn bộ dự án. */
+  tatCaDuAn?: TatCaDuAnOptions;
 };
 
 /** Một khu thí điểm của pha thửa: lưới toạ độ sinh ngoài bộ thu từ đa giác khu trên máy thu. */
@@ -146,26 +149,7 @@ export type ParcelArea = { khuVucId: string; ten: string; dienTichKm2: number; b
 export { parseCount } from "./kinds.js";
 
 type ApartmentListEnvelope = Envelope<{ content?: Array<{ text?: unknown; sub_text?: unknown }>; totalElements?: number; totalPages?: number }>;
-/**
- * Số lượt quét tối đa cho một toà khi thứ tự trang không ổn định. Đo 24/11: toà P11 cần ba lượt, toà P9 còn
- * thiếu 18 mã sau ba lượt mà mỗi lượt vẫn thêm được mã — trần nâng lên tám; lượt không thêm mã thì dừng ngay.
- */
-const MAX_APARTMENT_LOT = 8;
-
-/**
- * Chữ dùng trong sourceId: ASCII, chữ thường, khoảng trắng và dấu câu thành gạch nối; tiếng Việt bỏ dấu
- * («Hàng Đào» → hang-dao, «3312A Tòa Park 12» → 3312a-toa-park-12).
- */
-export function sourceIdSlug(text: string): string {
-  return text
-    .normalize("NFC")
-    .replace(/[Đđ]/g, "d")
-    .normalize("NFD")
-    .replace(/[\p{M}]+/gu, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
+export { sourceIdSlug } from "./kinds.js";
 
 /**
  * Liệt kê TRỌN một toà: quét hết các trang, gộp theo mã căn (`content[].text`). Thứ tự trang của nguồn không
@@ -584,7 +568,7 @@ async function parcels(o: RunOptions): Promise<PhaseSummary> {
     }
   }
   const concurrency = o.concurrency ?? 1;
-  if (!Number.isInteger(concurrency) || concurrency < 1 || concurrency > 4) throw new ConfigError("concurrency phải là số nguyên từ 1 đến 4");
+  if (!Number.isInteger(concurrency) || concurrency < 1 || concurrency > MAX_CONCURRENCY) throw new ConfigError(`concurrency phải là số nguyên từ 1 đến ${MAX_CONCURRENCY}`);
   const at = () => (o.now ?? (() => new Date()))().toISOString();
   let items = 0;
   let failed = 0;
@@ -764,7 +748,7 @@ async function lowrise(o: RunOptions): Promise<PhaseSummary> {
   const terms = [...new Set((o.lowriseTerms ?? []).map((t) => t.trim()).filter(Boolean))];
   if (!terms.length && !o.lowriseSweep) throw new ConfigError("pha thấp tầng cần dải id quét (--thap-tang-id-tu/den) hoặc ít nhất một từ khoá (--thap-tang-terms)");
   const concurrency = o.concurrency ?? 1;
-  if (!Number.isInteger(concurrency) || concurrency < 1 || concurrency > 4) throw new ConfigError("concurrency phải là số nguyên từ 1 đến 4");
+  if (!Number.isInteger(concurrency) || concurrency < 1 || concurrency > MAX_CONCURRENCY) throw new ConfigError(`concurrency phải là số nguyên từ 1 đến ${MAX_CONCURRENCY}`);
   const at = () => (o.now ?? (() => new Date()))().toISOString();
   let items = 0;
   let failed = 0;
@@ -910,6 +894,9 @@ export async function runPhase(o: RunOptions): Promise<PhaseSummary> {
     case "images":
       if (!o.anh || !o.keoDan) throw new ConfigError("pha images cần lựa chọn ảnh và kéo dan");
       return imagesPhase(o, o.anh, o.keoDan);
+    case "apartments-all":
+      if (!o.tatCaDuAn) throw new ConfigError("pha apartments-all cần lựa chọn tatCaDuAn");
+      return apartmentsAll(o, o.tatCaDuAn);
     default:
       throw new ConfigError(`pha chưa làm: ${String(o.phase)}`);
   }

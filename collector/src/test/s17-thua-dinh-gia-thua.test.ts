@@ -7,7 +7,7 @@ import { gunzipSync } from "node:zlib";
 
 import { loadConfig } from "../collectors/s17-thua-dinh-gia/config.js";
 import { ConfigError } from "../collectors/s17-thua-dinh-gia/config.js";
-import { RunStopped, S17Client, type Response, type TransportMany } from "../collectors/s17-thua-dinh-gia/client.js";
+import { RunStopped, S17Client, type Response, type TransportMany, MAX_CONCURRENCY } from "../collectors/s17-thua-dinh-gia/client.js";
 import { S17_NOTES, BatchWriter } from "../collectors/s17-thua-dinh-gia/store.js";
 import { emptyState, runPhase, sourceIdSlug, type ParcelArea, type RunState } from "../collectors/s17-thua-dinh-gia/run.js";
 
@@ -255,9 +255,9 @@ test("parcels: thiếu khu thí điểm thì từ chối trước khi gọi ngu�
   assert.equal(ke.sent.length, 0);
 }));
 
-test("parcels: luồng ngoài 1–4 thì từ chối", async () => withTmp(async (root) => {
+test("parcels: luồng ngoài 1–8 (trần chung MAX_CONCURRENCY) thì từ chối", async () => withTmp(async (root) => {
   const ke = nguon({ taiDiem: {}, goiY: {} });
-  await assert.rejects(chay(root, emptyState(), ke, [khu([[21.0, 105.85]])], { concurrency: 5 }).run(), ConfigError);
+  await assert.rejects(chay(root, emptyState(), ke, [khu([[21.0, 105.85]])], { concurrency: MAX_CONCURRENCY + 1 }).run(), ConfigError);
   assert.equal(ke.sent.length, 0);
 }));
 
