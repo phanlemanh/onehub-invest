@@ -482,6 +482,31 @@ test("BCL-8: --kiem xanh, sha256 sửa byte đỏ, ke.json lệch một dòng đ
   assert.deepEqual(await conDbKiem(), []);
 });
 
+test("BCL-8: --kiem qua docker exec (không qua cổng 5433) xanh, có và không có từ điển; DB tạm bị xoá", async () => {
+  const r = await chep();
+  assert.equal(r.ma, 0, r.err);
+  for (const khongTuDien of [false, true]) {
+    const out = [];
+    const err = [];
+    const ma = await chayKiem({ tep: r.tep, khongTuDien, nguonUrl: NGUON, quaDocker: true, out: (s) => out.push(s), err: (s) => err.push(s) });
+    assert.equal(ma, 0, err.join("\n"));
+    assert.match(out.join("\n"), /nối qua docker exec/);
+    assert.deepEqual(await conDbKiem(), []);
+  }
+  // Đỏ qua docker vẫn đỏ: ke.json lệch một dòng thì nêu bảng.
+  const lech = chepBo(r.tep);
+  const keTep = path.join(path.dirname(lech), "ke.json");
+  const ke = JSON.parse(readFileSync(keTep, "utf8"));
+  const bang = Object.keys(ke.so_dong).find((t) => ke.so_dong[t] > 0);
+  ke.so_dong[bang] += 1;
+  writeFileSync(keTep, JSON.stringify(ke));
+  const err = [];
+  const ma = await chayKiem({ tep: lech, khongTuDien: true, quaDocker: true, out: () => {}, err: (s) => err.push(s) });
+  assert.equal(ma, 1);
+  assert.match(err.join("\n"), new RegExp(`số dòng: ${bang} `));
+  assert.deepEqual(await conDbKiem(), []);
+});
+
 // ───────── BCL-10 (E10) ─────────
 async function taoDbCu(ten) {
   await voi(urlCua("postgres"), (c) => c.query(`CREATE DATABASE ${q(ten)} TEMPLATE template0`));

@@ -7,10 +7,12 @@
 //
 //   node scripts/ban-chep-da-loc.mjs                         chép DATABASE_URL (mặc định DB máy thu) → oneinvest_m5_<hôm nay>
 //   node scripts/ban-chep-da-loc.mjs --dich oneinvest_m5_<ngày> --ra <thư mục>
-//   node scripts/ban-chep-da-loc.mjs --kiem <tệp.dump> [--khong-tu-dien]   khôi phục vào DB tạm, soát lại, so ke.json
+//   node scripts/ban-chep-da-loc.mjs --kiem <tệp.dump> [--khong-tu-dien] [--qua-docker]   khôi phục vào DB tạm, soát lại, so ke.json
+//     (--qua-docker, hay khi DATABASE_URL vắng: nối qua `docker exec $ONEHUB_DB_CONTAINER` — mặc định one-invest-db — không qua cổng 5433;
+//      không nối được DB → mã 3, không bao giờ báo xanh)
 //   node scripts/ban-chep-da-loc.mjs --don                   xoá mọi DB oneinvest_m5_*
 //
-// Mã thoát: 0 xanh · 1 soát trúng hay lỗi (DB đích đã xoá, không ghi dump) · 2 đối số/đích sai khuôn.
+// Mã thoát: 0 xanh · 1 soát trúng hay lỗi (DB đích đã xoá, không ghi dump) · 2 đối số/đích sai khuôn · 3 (--kiem) không nối được DB.
 // Luật: DB nguồn chỉ đọc (giao dịch REPEATABLE READ READ ONLY + default_transaction_read_only cho mọi phiên đọc); không ghi
 // cloud, không gọi mạng ngoài; KHÔNG in giá trị tầng A — mọi dòng in ra đi qua che() (tên nguồn → mã S0x), thông điệp chỉ nêu
 // bảng/cột/loại chỗ. Tên DB tạm của --kiem: `oneinvest_m5_kiem_<pid>` (cũng bị --don dọn).
@@ -32,7 +34,9 @@ const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 // scripts/ ở gốc không có node_modules: mượn pg của app (như scripts/dev-ops-account.mjs).
 const pg = createRequire(path.join(REPO, "app/package.json"))("pg");
 
-export const CONTAINER = "one-invest-db";
+/** Tên container Postgres; đổi bằng biến ONEHUB_DB_CONTAINER (máy M5 có thể đặt tên khác). */
+export const CONTAINER_MAC_DINH = "one-invest-db";
+export const tenContainer = () => process.env.ONEHUB_DB_CONTAINER || CONTAINER_MAC_DINH;
 export const NGUON_MAC_DINH = "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 export const RA_MAC_DINH = path.join(REPO, "state", "ban-chep-m5");
 
@@ -283,7 +287,7 @@ const urlCua = (db) => `postgres://oneinvest:oneinvest@localhost:5433/${db}`;
 export function dx(args, { chiDoc = false } = {}) {
   const env = ["-e", "PGPASSWORD=oneinvest"];
   if (chiDoc) env.push("-e", "PGOPTIONS=-c default_transaction_read_only=on");
-  return ["docker", ["exec", "-i", ...env, CONTAINER, ...args]];
+  return ["docker", ["exec", "-i", ...env, tenContainer(), ...args]];
 }
 export const psqlArgs = (db, extra = []) => ["psql", "-U", "oneinvest", "-h", "localhost", "-q", "-At", "-v", "ON_ERROR_STOP=1", "-d", db, ...extra];
 
@@ -804,8 +808,85 @@ export async function soatDich(c, { entries = null } = {}) {
   return hits;
 }
 
-/** `--kiem <dump>`: sha256 = ke.json, khôi phục vào DB tạm, số dòng = ke.json, bộ soát; xoá DB tạm cả khi đỏ. */
-export async function chayKiem({ tep, khongTuDien = false, nguonUrl = NGUON_MAC_DINH, out = console.log, err = console.error } = {}) {
+/** Mã thoát riêng của --kiem khi không nối được DB — khác 1 («trúng tầng A»/đỏ) để lượt đẩy HT25 không đọc nhầm thành kết quả soát. */
+export const MA_KHONG_NOI = 3;
+
+export class LoiKetNoi extends Error {}
+
+/** Lỗi có phải do không nối được DB (cổng chết, container sai tên/không chạy, docker vắng) chứ không phải do dữ liệu. */
+export function laLoiKetNoi(e) {
+  if (e instanceof LoiKetNoi) return true;
+  const ma = String(e?.code ?? "");
+  if (["ECONNREFUSED", "ECONNRESET", "ETIMEDOUT", "ENOTFOUND", "EHOSTUNREACH", "ENOENT", "EPIPE"].includes(ma)) return true;
+  if (/^(08|57P0)/.test(ma)) return true;
+  return /could not connect|connection refused|No such container|is not running|Cannot connect to the Docker daemon|Connection terminated|timeout expired|the database system is (starting|shutting)/i
+    .test(String(e?.message ?? e));
+}
+
+const thamSo = (v) => (v == null ? "NULL" : Array.isArray(v) ? `ARRAY[${v.map(lit).join(", ")}]::text[]` : typeof v === "number" ? String(v) : lit(v));
+
+/**
+ * Client kiểu pg (query(sql, params) → { rows }) đi qua `docker exec … psql` thay vì cổng mạng :5433 (GS 25/11: trên M5 cổng 5433
+ * chập chờn). Chỉ cho câu SELECT (gói trong json_agg); lệnh DDL dùng chayLenh. Tham số $n thay bằng hằng đã thoát.
+ */
+export class PsqlQuaDocker {
+  constructor(db, { chiDoc = false } = {}) { this.db = db; this.chiDoc = chiDoc; }
+  async #psql(input) {
+    let r;
+    try { r = await chay(dx(psqlArgs(this.db), { chiDoc: this.chiDoc }), { input }); } catch (e) { throw new LoiKetNoi(`docker exec lỗi: ${e?.code ?? e?.message ?? e}`); }
+    if (r.code !== 0) {
+      const m = r.stderr.slice(0, 400);
+      if (laLoiKetNoi({ message: m }) || r.code === 125 || r.code === 126 || r.code === 127) throw new LoiKetNoi(m || `docker exec mã ${r.code}`);
+      throw new Error(m || `psql mã ${r.code}`);
+    }
+    return r.stdout;
+  }
+  async query(sql, params = []) {
+    const cau = params.length ? sql.replace(/\$(\d+)\b/g, (_, i) => thamSo(params[Number(i) - 1])) : sql;
+    const outp = await this.#psql(`SELECT coalesce(json_agg(t), '[]'::json) FROM (${cau}) t;\n`);
+    return { rows: JSON.parse(outp.trim() || "[]") };
+  }
+  async chayLenh(sql) { await this.#psql(`${sql};\n`); }
+  async end() {}
+}
+
+/** Hai đường nối cho --kiem: cổng mạng theo DATABASE_URL, hay docker exec vào container (không qua cổng). */
+function duongNoi({ quaDocker, nguonUrl }) {
+  if (quaDocker) {
+    let nguonDb = "oneinvest";
+    try { if (nguonUrl) nguonDb = decodeURIComponent(new URL(nguonUrl).pathname.replace(/^\//, "")) || nguonDb; } catch { /* giữ mặc định */ }
+    return {
+      ten: `docker exec ${tenContainer()}`,
+      nguonDb,
+      moDb: async (db, o) => new PsqlQuaDocker(db, o),
+      lenhQuanTri: (sql) => new PsqlQuaDocker("postgres").chayLenh(sql),
+      thuNoi: () => new PsqlQuaDocker("postgres").query("SELECT 1 AS ok"),
+    };
+  }
+  const goc = new URL(nguonUrl);
+  const urlDb = (db) => { const u = new URL(goc); u.pathname = `/${db}`; return u.toString(); };
+  const moPg = async (db, { chiDoc = false } = {}) => {
+    const c = new pg.Client({ connectionString: urlDb(db), connectionTimeoutMillis: 10_000, ...(chiDoc ? { options: "-c default_transaction_read_only=on" } : {}) });
+    c.on("error", () => {});
+    await c.connect();
+    return c;
+  };
+  return {
+    ten: `cổng ${goc.hostname}:${goc.port || 5432}`,
+    nguonDb: decodeURIComponent(goc.pathname.replace(/^\//, "")),
+    moDb: moPg,
+    lenhQuanTri: async (sql) => { const c = await moPg("postgres"); try { await c.query(sql); } finally { await c.end().catch(() => {}); } },
+    thuNoi: async () => { const c = await moPg("postgres"); try { return await c.query("SELECT 1 AS ok"); } finally { await c.end().catch(() => {}); } },
+  };
+}
+
+/**
+ * `--kiem <dump>`: nối DB trước (không nối được → mã 3, nêu «không nối được DB», không bao giờ báo xanh), sha256 = ke.json, khôi phục
+ * vào DB tạm, số dòng = ke.json, bộ soát; xoá DB tạm cả khi đỏ. `quaDocker` đi qua docker exec (mặc định khi DATABASE_URL vắng).
+ * `_boKiemNoi` chỉ cho ca đỏ của test: bản bỏ bước nối trước và bỏ phân loại lỗi nối (lỗi nối rơi về mã 1 như lỗi thường).
+ */
+export async function chayKiem({ tep, khongTuDien = false, nguonUrl = NGUON_MAC_DINH, quaDocker = false, out = console.log, err = console.error,
+  _boKiemNoi = false } = {}) {
   if (!tep || !existsSync(tep)) { err("ban-chep-da-loc --kiem: không thấy tệp dump"); return 2; }
   const keTep = path.join(path.dirname(tep), "ke.json");
   if (!existsSync(keTep)) { err("ban-chep-da-loc --kiem: thiếu ke.json cạnh tệp dump"); return 2; }
@@ -813,29 +894,46 @@ export async function chayKiem({ tep, khongTuDien = false, nguonUrl = NGUON_MAC_
   try { ke = JSON.parse(readFileSync(keTep, "utf8")); } catch { err("ban-chep-da-loc --kiem: ke.json hỏng"); return 1; }
   if (ke.tep !== path.basename(tep)) { err("ban-chep-da-loc --kiem: ke.json không ứng với tệp dump này"); return 1; }
 
-  let entries = null;
-  let che = (s) => String(s);
-  if (!khongTuDien) {
-    const ng = phanTichNguon(nguonUrl);
-    if (ng.loi) { err(`ban-chep-da-loc --kiem: ${ng.loi}`); return 2; }
-    const nc = await moClient(ng.url, { chiDoc: true });
-    try { entries = await docSourceNameEntries(nc); } finally { await nc.end().catch(() => {}); }
-    if (!entries.length) { err("ban-chep-da-loc --kiem: từ điển tên nguồn rỗng — dùng --khong-tu-dien trên máy không có sổ nguồn"); return 1; }
-    che = taoChe(entries);
+  let noi;
+  try { noi = duongNoi({ quaDocker, nguonUrl }); } catch { err("ban-chep-da-loc --kiem: DATABASE_URL không đọc được"); return 2; }
+  const khongNoi = (e) => {
+    err(`ban-chep-da-loc --kiem: không nối được DB qua ${noi.ten} — chưa soát gì, đây KHÔNG phải kết quả soát (${String(e?.message ?? e).slice(0, 200)})`);
+    return MA_KHONG_NOI;
+  };
+  if (!_boKiemNoi) {
+    try { await noi.thuNoi(); } catch (e) { return khongNoi(e); }
   }
 
-  const sha = await sha256Tep(tep);
-  if (sha !== ke.sha256) { err("ĐỎ sha256: băm tệp dump không khớp ke.json"); return 1; }
-  out("sha256 khớp ke.json");
-
+  let che = (s) => String(s);
   const tam = `oneinvest_m5_kiem_${process.pid}`;
   let dc;
+  let daTao = false;
   try {
-    await xoaDb(tam);
-    await taoDb(tam);
-    const r = await chay(dx(["pg_restore", "-U", "oneinvest", "-h", "localhost", "--no-owner", "--no-acl", "--exit-on-error", "-d", tam]), { inFile: tep });
-    if (r.code !== 0) { err(`ĐỎ khôi phục: pg_restore lỗi (mã ${r.code}): ${che(r.stderr.slice(0, 400))}`); return 1; }
-    dc = await moClient(urlCua(tam));
+    let entries = null;
+    if (!khongTuDien) {
+      const nc = await noi.moDb(noi.nguonDb, { chiDoc: true });
+      try { entries = await docSourceNameEntries(nc); } finally { await nc.end().catch(() => {}); }
+      if (!entries.length) { err("ban-chep-da-loc --kiem: từ điển tên nguồn rỗng — dùng --khong-tu-dien trên máy không có sổ nguồn"); return 1; }
+      che = taoChe(entries);
+    }
+
+    const sha = await sha256Tep(tep);
+    if (sha !== ke.sha256) { err("ĐỎ sha256: băm tệp dump không khớp ke.json"); return 1; }
+    out("sha256 khớp ke.json");
+
+    await noi.lenhQuanTri(`DROP DATABASE IF EXISTS ${q(tam)} WITH (FORCE)`);
+    await noi.lenhQuanTri(`CREATE DATABASE ${q(tam)} TEMPLATE template0 ENCODING 'UTF8'`);
+    daTao = true;
+    let r;
+    try {
+      r = await chay(dx(["pg_restore", "-U", "oneinvest", "-h", "localhost", "--no-owner", "--no-acl", "--exit-on-error", "-d", tam]), { inFile: tep });
+    } catch (e) { throw new LoiKetNoi(`docker exec pg_restore lỗi: ${e?.code ?? e?.message ?? e}`); }
+    if (r.code !== 0) {
+      if (laLoiKetNoi({ message: r.stderr })) throw new LoiKetNoi(r.stderr.slice(0, 300));
+      err(`ĐỎ khôi phục: pg_restore lỗi (mã ${r.code}): ${che(r.stderr.slice(0, 400))}`);
+      return 1;
+    }
+    dc = await noi.moDb(tam);
     const lech = [];
     for (const [t, n] of Object.entries(ke.so_dong ?? {})) {
       const { rows: [x] } = await dc.query("SELECT to_regclass($1) IS NOT NULL AS co", [`public.${q(t)}`]);
@@ -846,14 +944,15 @@ export async function chayKiem({ tep, khongTuDien = false, nguonUrl = NGUON_MAC_
     const hits = await soatDich(dc, { entries });
     for (const h of hits) err(dongTrung(h, che));
     if (lech.length || hits.length) return 1;
-    out(`xanh: số dòng ${Object.keys(ke.so_dong ?? {}).length} bảng khớp ke.json, bộ soát 0 trúng${khongTuDien ? " (không từ điển)" : ""}`);
+    out(`xanh: số dòng ${Object.keys(ke.so_dong ?? {}).length} bảng khớp ke.json, bộ soát 0 trúng${khongTuDien ? " (không từ điển)" : ""} — nối qua ${noi.ten}`);
     return 0;
   } catch (e) {
+    if (!_boKiemNoi && laLoiKetNoi(e)) return khongNoi(e);
     err(`ban-chep-da-loc --kiem: lỗi — ${che(e?.message ?? e)}`);
     return 1;
   } finally {
     if (dc) await dc.end().catch(() => {});
-    await xoaDb(tam).catch(() => err(`ban-chep-da-loc --kiem: chưa xoá được ${tam}`));
+    if (daTao) await noi.lenhQuanTri(`DROP DATABASE IF EXISTS ${q(tam)} WITH (FORCE)`).catch(() => err(`ban-chep-da-loc --kiem: chưa xoá được ${tam}`));
   }
 }
 
@@ -865,12 +964,14 @@ export function docDoiSo(argv) {
     const x = argv[i];
     if (x === "--kiem") { a.che = "kiem"; a.tep = argv[++i]; }
     else if (x === "--khong-tu-dien") a.khongTuDien = true;
+    else if (x === "--qua-docker") a.quaDocker = true;
     else if (x === "--don") a.che = "don";
     else if (x === "--dich") a.dich = argv[++i];
     else if (x === "--ra") a.ra = argv[++i];
     else return { loi: `đối số lạ «${String(x).replace(/[^A-Za-z0-9_-]/g, "?")}»` };
   }
   if (a.khongTuDien && a.che !== "kiem") return { loi: "--khong-tu-dien chỉ đi với --kiem" };
+  if (a.quaDocker && a.che !== "kiem") return { loi: "--qua-docker chỉ đi với --kiem" };
   return a;
 }
 
@@ -884,7 +985,9 @@ async function main() {
     return;
   }
   if (a.che === "kiem") {
-    process.exitCode = await chayKiem({ tep: a.tep && path.resolve(a.tep), khongTuDien: a.khongTuDien, nguonUrl });
+    // Không có DATABASE_URL (máy M5) hay có cờ --qua-docker → nối qua docker exec, không đi cổng 5433.
+    process.exitCode = await chayKiem({ tep: a.tep && path.resolve(a.tep), khongTuDien: a.khongTuDien, nguonUrl,
+      quaDocker: a.quaDocker || !process.env.DATABASE_URL });
     return;
   }
   const dich = a.dich ?? tenDich();
