@@ -1236,8 +1236,12 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
       gửi qua cáp Thunderbolt (địa chỉ cầu cố định, chỉ ở cấu hình riêng máy) bằng khoá đẩy bị ép lệnh
       (`restrict,command=` → `scripts/nhan-ban-chep.sh`), M5 soát lại, nạp vào DB mới bằng `docker exec`, đếm bằng `ke.json` rồi mới
       đổi tên, giữ một bản cũ; `--trang-thai`, `--lui`. Năm rào của GS: cổng rời máy ở máy thu, một chiều (M5 không có khoá vào máy
-      thu, lượt đẩy không dùng khoá dựng máy), chỉ hai tệp rời máy, lùi được, chỉ theo lệnh (plist hằng đêm là hàng sau, cần lời
-      riêng). Khoá dựng máy giữ tới hết tuần đo hai máy rồi thu hồi (Hỏi-1). **Ghi ở đâu:** ADR-0019, `docs/ops/hai-may.md` (trỏ từ
+      thu, lượt đẩy không dùng khoá quản trị), chỉ hai tệp rời máy, lùi được, chỉ theo lệnh (plist hằng đêm là hàng sau, cần lời
+      riêng). **Vai M5 (Mạnh chốt 25/11 tối, qua GS):** máy mở rộng tính toán của Mac mini — máy bàn ở nhà, chạy lâu dài, đặt để tăng
+      hiệu quả và tốc độ tiến trình (không phải máy xách tay); một hàng việc một giám sát; M5 tự chấm S4 cho vùng Invest + API trên
+      bản chép đã lọc; gộp `main` chỉ ở Mac mini. Mac mini giữ lâu dài một khoá quản trị vào M5 (thay Hỏi-1, không thu hồi sau tuần
+      đo); khoá đẩy riêng vẫn ép lệnh chỉ chạy bước nhận; M5 không có khoá nào vào Mac mini. Giữ nguyên: tầng A và raw snapshot không
+      sang M5; không bộ thu, gateway, `sync-cloud` trên M5. **Ghi ở đâu:** ADR-0019, `docs/ops/hai-may.md` (trỏ từ
       `runtime-map.md`), `AGENTS.md` mục «Hai máy»; cài và thu hồi khoá: `scripts/day-ban-chep-kiem-m5.mjs cai|go`.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
