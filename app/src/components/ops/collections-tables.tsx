@@ -262,7 +262,7 @@ export function ZaloGroupsTable({
       pageSize={10}
       footnote={
         <>
-          Qua cổng = cổng Kev ≥ 0,9 (đọc nhật ký cổng).{" "}
+          Qua cổng = hook đẩy được vào cổng nhận tin (đọc nhật ký hook).{" "}
           {cloud ? (
             <>Danh sách cho phép: mã nhóm chỉ xem ở máy thu.</>
           ) : enabled?.some((a) => a.groupId === null) ? (

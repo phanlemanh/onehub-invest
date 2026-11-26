@@ -100,6 +100,7 @@ function toCloudLockdown(b: Awaited<ReturnType<typeof readOpsFacts>>["blocks"]["
   for (const l of d.layers as Record<string, unknown>[]) {
     if (typeof l?.layer !== "string" || typeof l?.desc !== "string") return null
     if (l.ok !== true && l.ok !== false && l.ok !== null) return null
+    if (laLopDaGo({ layer: l.layer, desc: l.desc })) continue
     layers.push({ layer: l.layer, desc: l.desc, ok: l.ok })
   }
   return {
@@ -139,11 +140,13 @@ function toCloudS03(b: Awaited<ReturnType<typeof readOpsFacts>>["blocks"]["s03"]
   return { allowlistEnabled: d.allowlistEnabled, groups, stale: b.state === "stale" }
 }
 
-/** Hai hàng cổng của lưới Máy móc ↔ lớp «Hạ tầng» cùng cổng trong khối khoá an toàn (ON23 Hỏi-1 = A): một lần đo nên hai
- * bảng cùng trạng thái. Mỗi hàng đọc ĐÚNG lớp của cổng mình. */
-const GATE_LAYER: Record<string, string> = { kev: "Cổng Kev :8009", "collector-api": "Cổng nhận tin :9210" }
+/** Hàng cổng của lưới Máy móc ↔ lớp «Hạ tầng» cùng cổng trong khối khoá an toàn (ON23 Hỏi-1 = A): một lần đo nên hai
+ * bảng cùng trạng thái. */
+const GATE_LAYER: Record<string, string> = { "collector-api": "Cổng nhận tin :9210" }
+/** Dòng hạ tầng của cổng chấm điểm :8009 đã gỡ (KEV2): bản tin máy thu đẩy trước mã mới còn mang — bỏ khi đọc. */
+const laLopDaGo = (l: { layer: string; desc: string }) => l.layer === "Hạ tầng" && / :8009$/.test(l.desc)
 
-/** Máy chủ: trạng thái hàng Kev gate / collector API lấy từ khối `lockdown` (true → Sống, false → Không phản hồi, null hay
+/** Máy chủ: trạng thái hàng cổng nhận tin lấy từ khối `lockdown` (true → Sống, false → Không phản hồi, null hay
  * không khối → Chưa kiểm được), cờ cũ theo khối; các hàng khác giữ nguyên khoá `jobs` của bản tin. */
 export function withLockdownGates(jobs: JobStatus[], lockdown: CloudLockdown | null): JobStatus[] {
   return jobs.map((j) => {

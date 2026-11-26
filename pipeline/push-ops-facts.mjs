@@ -46,16 +46,16 @@ async function probe(url) {
 const REG = { roles: {}, names: [] };
 const lab = (code) => (REG.roles[code] ? `${code} · ${REG.roles[code]}` : code);
 
-async function scheduler() {
-  const LOGS = path.join(ROOT, "pipeline/logs");
+/** Lưới Máy móc của bản tin. `root`/`probe` chỉ để phép đo trỏ thư mục tạm và ghi lời dò (KEV2). */
+export async function scheduler({ root = ROOT, probe: doCong = probe } = {}) {
+  const LOGS = path.join(root, "pipeline/logs");
   let weekly = null;
   try {
     const files = (await readdir(LOGS)).filter((f) => /^weekly-.*\.log$/.test(f)).sort();
     weekly = files.length ? path.join(LOGS, files.at(-1)) : null;
   } catch {}
-  const [kevAlive, apiAlive, airdnaLog, smokeLog, apiLog, weeklyTail] = await Promise.all([
-    probe("http://127.0.0.1:8009/"),
-    probe("http://127.0.0.1:9210/"),
+  const [apiAlive, airdnaLog, smokeLog, apiLog, weeklyTail] = await Promise.all([
+    doCong("http://127.0.0.1:9210/"),
     tailLog(path.join(LOGS, "airdna-daily.log")),
     tailLog(path.join(LOGS, "launchd-smoke.log")),
     tailLog(path.join(LOGS, "launchd-collector-api.log")),
@@ -66,7 +66,6 @@ async function scheduler() {
     { id: "s01-weekly", label: `${lab("S01")} — Hà Nội`, schedule: "Chủ nhật 19:30 +jitter", alive: "unknown", ...weeklyTail },
     { id: "s01-smoke", label: `Smoke ${lab("S01")}`, schedule: "20:00 hằng ngày", alive: "unknown", ...smokeLog },
     { id: "collector-api", label: "Agent ingest :9210", schedule: "KeepAlive", alive: apiAlive, ...apiLog },
-    { id: "kev", label: "Kev gate :8009", schedule: "KeepAlive", alive: kevAlive, lastLogAt: null, lastLine: null },
     { id: "cloud-sync", label: "Sync Supabase + ops facts", schedule: "mỗi 15 phút", alive: "unknown", ...(await tailLog(path.join(LOGS, "cloud-sync.log"))) },
   ];
   // dòng log cuối là dữ liệu chạy — che tên thật; danh sách tên rỗng → null (đóng chặt)

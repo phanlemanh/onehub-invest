@@ -22,7 +22,7 @@ import {
  *
  * Ba câu hỏi trang phải trả lời:
  *  1. Hôm nay chảy vào gì? (DB counts theo ngày)
- *  2. Qua cổng nào? (funnel gate Kev parse hook log)
+ *  2. Hook Zalo đẩy được bao nhiêu vào cổng nhận tin? (phễu đọc nhật ký hook)
  *  3. Máy móc có chạy không? (launchd logs + probe port)
  */
 
@@ -184,8 +184,10 @@ export type GateFunnel = {
 };
 
 const EMPTY = { messages: 0, passed: 0, skipped: 0, accepted: 0, media: 0 };
+/** Dòng hook ghi kèm MỖI tin khi cổng chấm điểm vắng (collector/openclaw/handler.js) — không đếm là tin (KEV2 AC-6). */
+const KEV_NULL = / kev null /;
 
-/** Funnel cổng Kev từ hook log (~/.openclaw/logs/oneinvest-zalo-pipe.log). */
+/** Phễu hook Zalo từ nhật ký hook (~/.openclaw/logs/oneinvest-zalo-pipe.log). */
 export async function readGateFunnel(opts: { now?: number } = {}): Promise<GateFunnel> {
   {
     const f = await getLocalFacts();
@@ -208,6 +210,7 @@ export async function readGateFunnel(opts: { now?: number } = {}): Promise<GateF
   let lastEventAt: string | null = null;
   for (const line of lines) {
     if (/ (heartbeat|alert) /.test(line)) continue; // gióng máy, không phải tin
+    if (KEV_NULL.test(line)) continue; // dòng phụ của hook mỗi tin khi Kev vắng — không phải tin thứ hai (KEV2 AC-6)
     const ts = line.slice(0, 24);
     const iso = /^\d{4}-\d{2}-\d{2}T/.test(ts) ? ts : null;
     const in7 = iso ? new Date(iso).getTime() >= cutoff : true; // dòng không timestamp: đếm vào 7 ngày
@@ -286,18 +289,18 @@ async function registryForJobs(): Promise<{ roles: SourceRoles; names: SourceNam
   }
 }
 
-/** Trạng thái 5 launchd agent + 2 dịch vụ KeepAlive. */
+/** Trạng thái launchd agent + cổng nhận tin. */
 export async function readSchedulerStatus(): Promise<JobStatus[]> {
   {
     const f = await getLocalFacts();
-    if (f) return f.jobs;
+    // Bản tin cũ (máy thu chưa chạy mã KEV2) còn hàng `kev` — bỏ khi đọc để trang máy chủ sạch ngay (KEV2 AC-4).
+    if (f) return f.jobs.filter((j) => j.id !== "kev");
   }
   // ON7: nhãn «S0x · vai trò», dòng log cuối che tên thật; danh sách tên rỗng (DB lỗi) → lastLine null (đóng chặt).
   const { roles, names } = await registryForJobs();
   const weekly = await latestWeeklyLog();
   const logs = logsDir(); // ON16: log ở checkout chính khi app chạy từ worktree, tính khi gọi
-  const [kevAlive, apiAlive, airdnaLog, smokeLog, apiLog, weeklyTail] = await Promise.all([
-    probe("http://127.0.0.1:8009/"),
+  const [apiAlive, airdnaLog, smokeLog, apiLog, weeklyTail] = await Promise.all([
     probe("http://127.0.0.1:9210/"),
     tailFile(path.join(logs, "airdna-daily.log")),
     tailFile(path.join(logs, "launchd-smoke.log")),
@@ -336,14 +339,6 @@ export async function readSchedulerStatus(): Promise<JobStatus[]> {
       alive: apiAlive,
       lastLogAt: apiLog.mtime,
       lastLine: apiLog.lastLine,
-    },
-    {
-      id: "kev",
-      label: "Cổng Kev :8009",
-      schedule: "Chạy liên tục",
-      alive: kevAlive,
-      lastLogAt: null,
-      lastLine: null,
     },
   ];
   return jobs.map((j) => ({ ...j, lastLine: maskSourceNames(j.lastLine, names) }));
@@ -432,14 +427,14 @@ export async function readZaloAllowlist(): Promise<ZaloAllowlistEntry[] | null> 
   }
 }
 
-/** Funnel cổng Kev theo nhóm từ hook log (dòng có tag group=). */
+/** Phễu hook Zalo theo nhóm từ nhật ký hook (dòng có tag group=). */
 export function gateByGroup(text: string): Map<string, ZaloGroupRow> {
   const m = new Map<string, ZaloGroupRow>();
   const acceptedSeen = new Set<string>();
   for (const line of text.split("\n")) {
     // Cùng khuôn với parseLog của bên ghi: tên nhóm dừng ở p= hoặc account= (dòng skip thật không có p=).
     const g = line.match(/group=(.+?)(?:\s+p=|\s+account=|$)/)?.[1];
-    if (!g) continue;
+    if (!g || KEV_NULL.test(line)) continue; // dòng kev null đi kèm một tin, không phải tin của nhóm (KEV2 AC-6)
     const row =
       m.get(g) ??
       ({

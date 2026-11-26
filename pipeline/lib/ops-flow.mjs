@@ -35,6 +35,8 @@ export function parseLog(text, { now = Date.now() } = {}) {
     } else if (line.includes(" alert silent-gate") && now - t <= 86400000) health.silentAlert24h = true;
     else if (line.includes(" alert drift") && now - t <= 86400000) health.driftAlert24h = true;
     if (/ (heartbeat|alert) /.test(line)) continue;
+    // Hook ghi thêm một dòng «kev null» cho MỖI tin khi cổng chấm điểm vắng — không phải tin thứ hai (KEV2 AC-6).
+    if (/ kev null /.test(line)) continue;
     funnel.lastEventAt = ts;
     for (const b of [t >= cutoff ? funnel.last7 : null, vnDayKey(t) === todayKey ? funnel.today : null]) {
       if (!b) continue;
