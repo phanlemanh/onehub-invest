@@ -395,10 +395,13 @@ test("SCC-9: data-api markets (route thật) trả cùng JSON trước/sau che a
   assert.ok(lechChiTiet.some((p) => p.endsWith(".marketScore")), `SCC-9 (b): route chi tiết không nêu marketScore: ${lechChiTiet.slice(0, 3).join(", ")}`);
   await c.query("TRUNCATE scc9m.area_sources; INSERT INTO scc9m.area_sources SELECT * FROM scc9m.as_giu");
   assert.equal(lech(sau, chayTs("data-api", MA_MARKETS, "scc9m", env)), null, "SCC-9 (b): trả lại area_sources mà markets chưa về như sau che");
-  // Đối chứng dương: phép so phát hiện được lệch ở một trường markets trả về.
+  // (b) tiếp — che tràn sang areas.name (cột route trả) thì ca đỏ nêu `.name`; trả lại thì xanh như sau che.
+  await c.query("CREATE TABLE scc9m.ten_giu AS SELECT id, name FROM scc9m.areas WHERE id = $1", [mk[0].id]);
   await c.query("UPDATE scc9m.areas SET name = name || ' (đổi)' WHERE id = $1", [mk[0].id]);
   const doiTen = chayTs("data-api", MA_MARKETS, "scc9m", env);
-  assert.match(String(lech(sau, doiTen)), /\.name$/, "SCC-9 đối chứng dương: phép so không nêu trường lệch");
+  assert.match(String(lech(sau, doiTen)), /\.name$/, "SCC-9 (b): che tràn sang areas.name mà phép so không nêu .name");
+  await c.query("UPDATE scc9m.areas a SET name = g.name FROM scc9m.ten_giu g WHERE g.id = a.id");
+  assert.equal(lech(sau, chayTs("data-api", MA_MARKETS, "scc9m", env)), null, "SCC-9 (b): trả lại areas.name mà markets chưa về như sau che");
 });
 
 test("SCC-9: thẻ Invest (getAreaThumbnails thật) — mọi ảnh trúng tên nguồn bị bỏ → không ảnh, không lỗi; chưa che thì ảnh mang tên nguồn", coDb, async () => {
