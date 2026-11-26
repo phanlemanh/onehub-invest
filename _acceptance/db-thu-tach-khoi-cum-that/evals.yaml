@@ -1,0 +1,104 @@
+schema_version: 1
+feature_slug: db-thu-tach-khoi-cum-that
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.ht9_db_thu
+    paths: [db/db-thu.sh, scripts/db-thu-trong.test.mjs]
+    expected: "exit 0; ca «chay-trong: lượt lành» — container riêng của lượt (tên mang pid) có trong `docker ps` lúc lệnh chạy, lệnh thấy DATABASE_URL trỏ cổng của container và CI=true, DB trống có bảng của migration cuối; sau lượt `docker ps -a` không còn container, cụm thật không có DB `oneinvest_suite_*` mới (so danh sách trước/sau), mã lượt = mã lệnh (0 và 3); `docker port` của container chỉ gắn 127.0.0.1; bản ghi lệnh docker của lượt (bọc docker giả ghi đối số) không có lệnh nào nhắm `one-invest-db`. Ca «bị TERM giữa chừng» — gửi TERM cho lượt, container bị xoá, mã 143. Hai chiều đỏ trên bản sao db-thu.sh: bỏ bước xoá container → rejects ghim `container còn sau lượt`; rơi về cụm thật → rejects ghim `DB suite trong cụm thật`."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2a
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.suite.pipeline_a
+    long_running: 90
+    paths: [db/db-thu.sh, pipeline/package.json, pipeline/chay-nua.mjs]
+    expected: "exit 0; nửa A chạy trên cụm dùng một lần (db-thu.sh in dòng container của lượt và giây dựng cụm + migration), dòng tổng kết `ℹ fail 0`; tên các ca bỏ qua bóc từ đầu ra (dòng `﹣ … # SKIP`) — ghi lại để E2b hợp hai nửa; thời gian thật của lệnh lấy từ `.bat-dau`/`.xong` của s4-lenh-dai."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2b
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.suite.pipeline_b
+    long_running: 90
+    paths: [db/db-thu.sh, pipeline/package.json, pipeline/chay-nua.mjs]
+    expected: "exit 0; nửa B như E2a; hợp tên ca bỏ qua của hai nửa (dòng `chay-nua: bỏ qua — …` của đầu ra thật; không tên nào có dòng ✔/✖ trong lượt) deepEqual mọi tên ca pipeline của ci-bo-qua.json — 34 ca (30 lúc duyệt + 4 ca CI bỏ qua ngầm thêm ở S4 r1, sổ d-20261125T223733Z-17) — lệch thì nêu tên; tổng thời gian thật của hai lệnh suite (`.xong` − `.bat-dau` của E2a cộng của E2b, gồm dựng container, migration, xoá) ≤ 1200 s (nền 69′ trên bản chép, HT12 r1); ghi riêng giây dựng cụm + migration db-thu.sh in."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2c
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.ht9_that
+    paths: [scripts/pipeline-that.test.mjs, scripts/ci-bo-qua.json, scripts/lib/ci-can-du-lieu.mjs]
+    expected: "exit 0; ca «tập bỏ qua của chuẩn-CI = tập chạy của pipeline_that = 34 mục ci-bo-qua pipeline» (30 lúc duyệt + 4 ở S4 r1, sổ d-20261125T223733Z-17; assert.deepEqual ba tập tên ca, viết trước từ ci-bo-qua.json); chiều đỏ: bản sao danh sách thêm một ca không có trong tệp → rejects ghim `không còn ca`."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3a
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.suite.pipeline_that
+    long_running: 90
+    paths: [db/db-thu.sh, pipeline/package.json, scripts/ci-bo-qua.json, scripts/suite-neu-doi.mjs]
+    expected: "exit 0; nhánh này sửa chính scripts/suite-neu-doi.mjs nên suite chạy (bộ lọc đổi thì mọi suite chạy); khi chạy: đúng 34 ca chạy (30 lúc duyệt + 4 ở S4 r1, sổ d-20261125T223733Z-17), tên khớp ci-bo-qua, `ℹ fail 0`."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3b
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.ht9_that
+    paths: [scripts/pipeline-that.test.mjs, scripts/ci-bo-qua.json]
+    expected: "exit 0; ca «lệnh pipeline_that chỉ chạy ca trong danh sách» — chạy lệnh của suite với tệp test giả (hai ca trong danh sách, một ca ngoài) trên DB giả không cần DB, chỉ hai ca chạy; chiều đỏ: mục trỏ ca không còn → lệnh thoát khác 0 gọi tên mục."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.ht9_suite_vung
+    paths: [scripts/suite-neu-doi.mjs, scripts/suite-neu-doi.test.mjs, scripts/ci-bo-qua.json]
+    expected: "exit 0; ca canh phủ «vùng pipeline_that ⊇ tệp thật sự mở khi chạy 34 ca dữ liệu thật» trên fixture `pipeline-that-tep-mo.json` rút từ MỘT lượt chạy thật của pipeline_that có hook ghi tệp mở (fs + child_process qua NODE_OPTIONS; ghi ở S3, kèm sha và lệnh ghi) — mọi tệp trong kho của fixture khớp VUNG.pipeline_that; ca thứ hai: đồ thị import tĩnh hiện tại ⊆ vùng (bắt tệp mới thêm sau lúc ghi fixture); chiều đỏ: bản sao bảng vùng bỏ một tệp nạp động (SQL theo glob) có trong fixture → rejects ghim tên tệp; ca «vùng không chứa LO-TRINH.html, collector/src/**, docs/**»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.ht9_suite_vung
+    paths: [scripts/suite-neu-doi.mjs, scripts/suite-neu-doi.test.mjs]
+    expected: "exit 0; ma trận viết trước ba hàng × ba suite (assert.deepEqual): [collector/src/core/media-fetch.ts] → pipeline_a chạy, pipeline_b chạy, pipeline_that bỏ; [một tệp transform lấy từ fixture pipeline-that-tep-mo.json, gọi tên cụ thể] → cả ba chạy; [_acceptance/x/contract.md] → cả ba chạy (nền)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.ht9_that
+    paths: [_acceptance/config.yaml, scripts/pipeline-that.test.mjs]
+    expected: "exit 0; ca «config: suite_keys có executors.suite.pipeline_that; executors.test.pipeline_a|b chứa --chay-trong; executors.test.pipeline_that tồn tại và bọc suite-neu-doi ở executors.suite» đọc config.yaml bằng js-yaml; chiều đỏ trên bản sao config bỏ khoá → rejects ghim tên khoá."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.ht9_sao_luu
+    paths: [scripts/db-sao-luu.sh, scripts/db-sao-luu.test.mjs]
+    expected: "exit 0; ca chạy db-sao-luu.sh với psql/pg_dump giả (PATH giả trả danh sách oneinvest, oneinvest_suite_pipeline_a_123, oneinvest_suite_mau, oneinvest_p2_x): danh sách DB được dump = [oneinvest, oneinvest_p2_x], manifest có hai dòng «bỏ DB thử của suite: …»; chiều đỏ: bản sao bỏ bộ lọc → rejects ghim `oneinvest_suite_mau`."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.ht9_phut
+    paths: [scripts/do-phut-s4.mjs, scripts/do-phut-s4.test.mjs]
+    expected: "exit 0; trên mẫu rút từ su-kien.jsonl thật (dòng tai_nguyen s4 từ 2026-11-23T12:00Z tới 2026-11-25T03:11:41Z, chép nguyên văn vào fixture): n=15, trung vị 99, p75 174; cửa sổ rỗng → n=0 không trung vị; ca tay nhỏ: lần cấp theo sau bởi thu-hoi thì mốc kết là thu-hoi; chiều đỏ: bản sao bỏ lọc cửa sổ --tu → rejects ghim n khác 15."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.ht9_db_thu
+    paths: [db/db-thu.sh, scripts/db-thu-trong.test.mjs]
+    expected: "exit 0; ca «hai lượt song song» — hai `--chay-trong` khởi cùng lúc, mỗi lượt in tên container và cổng khác nhau, lệnh mỗi lượt ghi một bảng riêng rồi kiểm không thấy bảng của lượt kia, cả hai thoát 0, sau cùng không còn container nào. Ca «lượt thứ ba»: khi đã có hai container sống của db-thu (giả bằng hai lượt treo), lượt thứ ba không dựng container, chờ; hạ trần chờ xuống 3 s qua biến môi trường thì thoát 4 kèm dòng ghim `đã đủ 2 cụm dùng một lần`; chiều đỏ: bản sao bỏ trần → rejects ghim `container thứ ba`."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.script.ht9_ap
+    paths: [_acceptance/db-thu-tach-khoi-cum-that/ap-may-thu/**, scripts/do-phut-s4.mjs]
+    expected: "exit 0; kiem.sh: README có năm mục 1–5 (thiếu → `FAIL README thiếu mục`); lệnh kiểm sau chạy trên mẫu su-kien có thêm ba lượt sau mốc áp giả, in hai dòng «nền 99′ (n=15)» và «sau áp <x>′ (n=3)»; mẫu chưa có lượt sau mốc → in «chưa có lượt nào sau áp», mã 0."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-11
+    executor: test
+    cmd: config:executors.test.ht9_hang_ngay
+    paths: [scripts/pipeline-that-hang-ngay.mjs, scripts/pipeline-that-hang-ngay.test.mjs, scripts/suite-neu-doi.mjs]
+    expected: "exit 0; với lệnh suite giả (thoát 0 / thoát 1 in tên ca đỏ): lệnh hằng ngày nối đúng một dòng sổ {ngay, sha, ket_qua, ca_do} và in một dòng, đỏ thì dòng gọi tên ca; suite-neu-doi khi không kích pipeline_that in «ca dữ liệu thật: không kích — lần xanh gần nhất trên main: <ngày> (<sha>)» lấy từ dòng xanh cuối của sổ, sổ trống in «chưa có lần xanh nào trên main», khi kích in «ca dữ liệu thật: chạy trong lượt này»; chiều đỏ: sổ chỉ có dòng đỏ → assert không có chữ «lần xanh gần nhất» kèm ngày (ghim)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
