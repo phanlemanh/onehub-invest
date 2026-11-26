@@ -1,0 +1,91 @@
+schema_version: 1
+slug: cham-bong-cau-tra-loi-khong-bi-cat
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/cham-bong-cau-tra-loi-khong-bi-cat/probes/cham.sh AC-1
+    paths: [agent/src/enrich/cham-bong/**, agent/tests/cham-bong-cau-tra-loi-khong-bi-cat.test.ts]
+    expected: "Ma trận viết tay n = 1..5 ô: tranTokenRa(n) bằng 1000, 1600, 2200, 2800, 3400 (5 assert). docMot với model giả lập bắt tham số: thẻ n ô truyền đúng trần 400 + 600 × n tới lớp gọi (5 assert). goiModelThat với lớp Anthropic giả và lớp Gateway giả (không gọi mạng) truyền trần vào max_tokens và maxOutputTokens (2 assert). Đột biến trong bản sao (trả hằng 1000; quên truyền trần sang đường Gateway) đỏ, thông điệp nêu n và trần nhận được."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/cham-bong-cau-tra-loi-khong-bi-cat/probes/cham.sh AC-2
+    paths: [agent/src/enrich/cham-bong/**, agent/tests/cham-bong-cau-tra-loi-khong-bi-cat.test.ts]
+    expected: "Model giả lập trả cat=true với hai dạng chữ: JSON cụt không tách được, và JSON đầy đủ tách được. Cả hai: lần đọc ok=false, loi=bi-cat; sổ gọi đúng một dòng loi=bi-cat với token ra thật (1600); kho không nhận lần đọc. Lớp Anthropic giả stop_reason=max_tokens và lớp Gateway giả finishReason=length cho cat=true; stop_reason=end_turn / finishReason=stop cho cat=false. Đối chứng dương: cùng chữ JSON đầy đủ với cat=false là lần đọc thành công. Lượt trên Truy giả: thẻ có lần đọc Haiku bị cắt (JSON tách được) và lần đọc DeepSeek ok → kho đúng 1 dòng (DeepSeek), tệp kết quả có kết cục null cho ô của thẻ (không kết cục giả từ câu cụt). Đột biến bỏ kiểm cat (dùng JSON đã tách khi bị cắt) đỏ, thông điệp nêu «bi-cat» và lỗi nhận được."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/cham-bong-cau-tra-loi-khong-bi-cat/probes/cham.sh AC-3
+    paths: [agent/src/enrich/cham-bong/**, agent/tests/cham-bong-cau-tra-loi-khong-bi-cat.test.ts]
+    expected: "Ma trận viết tay 2 × 2 (cat true/false × JSON tách được/không): false+tách được → ok; false+không → json-hong; true+tách được → bi-cat; true+không → bi-cat (4 assert, mỗi ô thông điệp nêu ô). Đột biến xếp cat=true thành json-hong khi JSON hỏng đỏ, thông điệp nêu ô «cắt + JSON hỏng»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/cham-bong-cau-tra-loi-khong-bi-cat/probes/cham.sh AC-4
+    paths: [agent/src/enrich/cham-bong/**, agent/tests/cham-bong-cau-tra-loi-khong-bi-cat.test.ts]
+    expected: "Lượt chạy trên Truy giả (không DB) gồm 3 thẻ × 2 model, model giả lập trả lần lượt: ok, bi-cat, json-hong, ném lỗi 500, ok, bi-cat. tong-ket.json có loi_goi 4 và loi_theo_ly_do viết tay {bi-cat: 2, json-hong: 1, <lớp lỗi 500>: 1}, tổng bằng loi_goi; dòng báo cáo in «bi-cat 2» và «json-hong 1». Đột biến đếm mọi lỗi vào json-hong đỏ, thông điệp nêu lý do và số lệch."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/cham-bong-cau-tra-loi-khong-bi-cat/probes/cham.sh AC-5
+    paths: [agent/src/enrich/cham-bong/**, agent/tests/cham-bong-cau-tra-loi-khong-bi-cat.test.ts]
+    expected: "uocDau của thẻ n ô (n = 1, 3, 5) bằng giá trị tính tay (ký tự lời nhắc / 3 × giá vào + (400 + 600 × n) × giá ra) / 1e6 (3 assert). Trên Truy giả: trần tiền đặt giữa ước 1 ô và ước 5 ô — thẻ 5 ô đứng đầu thì lượt dừng trước lời gọi đầu (0 lời gọi), thẻ 1 ô thì gọi. Đột biến trả hằng 1000 trong ước đỏ, thông điệp nêu n và ước nhận được."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/cham-bong-cau-tra-loi-khong-bi-cat/probes/cham.sh AC-6
+    paths: [agent/src/enrich/cham-bong/**, agent/config/cham-bong-bo-sung-tin.json, agent/tests/cham-bong-cau-tra-loi-khong-bi-cat.test.ts]
+    expected: "Cấu hình của kho có prompt_version cb-v1. khoaDung của một thẻ mẫu cố định × hai model bằng hai giá trị băm ghim (tính trên main b28bdbd3d trước khi sửa, viết tay trong test). Trên Truy giả với kho đã có lời đọc thành công cho 5/6 cặp: lượt chạy gọi đúng 1 lời gọi (cặp còn thiếu). Đột biến đưa trần token ra vào khoá dùng lại đỏ, thông điệp nêu băm lệch."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/cham-bong-cau-tra-loi-khong-bi-cat/probes/tran-30.sh
+    paths: [agent/src/enrich/cham-bong/**, agent/config/cham-bong-bo-sung-tin.json]
+    expected: "Trên DB máy thu oneinvest trong giao dịch chỉ đọc (PGOPTIONS default_transaction_read_only): 30 thẻ đầu theo xepThe, đếm số ô mỗi thẻ, in mức chi cao nhất theo từng model và tổng bằng hàm của chính bộ chạy (tranTokenRa, bảng giá cấu hình); tổng ≤ 0,1 USD → thoát 0. Chiều đỏ cùng dữ liệu: --tran 0.01 phải thoát 1 với thông điệp «vượt trần» kèm hai số."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-6
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/cham-bong-cau-tra-loi-khong-bi-cat/probes/khoa-trung.sh
+    paths: [agent/src/enrich/cham-bong/**, agent/config/cham-bong-bo-sung-tin.json]
+    expected: "Trên máy thu, chỉ đọc: lấy 30 review_id của lượt 1 từ state/cham-bong-bo-sung-tin/cb-2026-11-22T052458782Z/ket-qua.jsonl, đọc thẻ hiện tại từ DB oneinvest (giao dịch chỉ đọc), tính khoaDung × hai model bằng mã của nhánh và tra trong state/cham-bong-bo-sung-tin/kho.jsonl (đúng kho lượt 2 sẽ mở). In số cặp trúng / số cặp; thẻ rời hàng hay đổi chữ in riêng có lý do. Đạt khi mọi cặp có lời đọc thành công ở lượt 1 và thẻ còn nguyên đều trúng (đích 57/57); thiếu cặp nào → thoát 1, thông điệp nêu review_id × model."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-8
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/cham-bong-cau-tra-loi-khong-bi-cat/probes/cham.sh AC-8
+    paths: [agent/src/enrich/cham-bong/**, agent/tests/cham-bong-cau-tra-loi-khong-bi-cat.test.ts]
+    expected: "Lượt trên Truy giả 3 thẻ, trần tiền 1,5 × ước lời gọi đầu: lượt dừng vì trần, báo cáo có dòng «DỪNG VÌ TRẦN <trần> USD … thẻ đủ hai kết quả k/3, còn 3−k thẻ chưa đủ, đã chi … USD» với k < 3 (regex ghim số thẻ). Đối chứng dương: cùng 3 thẻ không trần → đủ 3/3, không có dòng dừng vì trần. Đột biến bỏ dòng dừng vì trần đỏ, thông điệp «thiếu dòng rõ lý do»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.suite.pipeline_a
+    long_running: 90
+    paths: [agent/src/enrich/cham-bong/**, agent/tests/cham-bong-cau-tra-loi-khong-bi-cat.test.ts]
+    expected: "exit 0; nửa A bộ test pipeline (suite của lượt chấm — nhánh chạm vùng LOI_PIPELINE của scripts/suite-neu-doi.mjs; khai ở đây chỉ để có long_running 90, trên Mac mini nửa A ~41′ vượt trần chờ 30′ mặc định), 0 fail; trần ca SLT-DC-7/9 900 s nay đến từ main (be765e6a5, #533). paths hẹp theo luật R4 của GS (24/11): đúng tệp nhánh sửa."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.suite.pipeline_b
+    long_running: 90
+    paths: [agent/src/enrich/cham-bong/**, agent/tests/cham-bong-cau-tra-loi-khong-bi-cat.test.ts]
+    expected: "exit 0; nửa B bộ test pipeline (suite của lượt chấm, khai ở đây chỉ để có long_running 90 — nửa B ~24′ sát trần chờ 30′), 0 fail."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
