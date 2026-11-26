@@ -36,9 +36,16 @@ try {
   const dong = '  if (ten.length && guardValues([s], ten).length) return "TEN NGUON";';
   if (!lib.includes(dong)) { console.log("KHUON DOT BIEN LECH MA NGUON"); process.exit(3); }
   ghiTam("lib/do-hang-ngay.dotbien.tmp.mjs", lib.replace(dong, '  if (false) return "TEN NGUON";'));
+  // Ca gọi doHangNgay qua pipeline/do-hang-ngay.mjs, tệp này nạp lib — chép cả nó, trỏ vào lib đột biến (S4 r1: chỉ đột biến lib
+  // thì ca vẫn chạy bộ soát thật và xanh).
+  const bo = readFileSync(path.join(PIPE, "do-hang-ngay.mjs"), "utf8");
+  if (!bo.includes('from "./lib/do-hang-ngay.mjs"')) { console.log("KHUON IMPORT BO GHI LECH"); process.exit(3); }
+  ghiTam("do-hang-ngay.dotbien.tmp.mjs", bo.replaceAll('from "./lib/do-hang-ngay.mjs"', 'from "./lib/do-hang-ngay.dotbien.tmp.mjs"'));
   const test = readFileSync(path.join(PIPE, "scripts/do-hang-ngay.test.mjs"), "utf8");
-  if (!test.includes('from "../lib/do-hang-ngay.mjs"')) { console.log("KHUON IMPORT LECH"); process.exit(3); }
-  const c = chay(ghiTam("scripts/do-hang-ngay-dotbien.tmp.test.mjs", test.replace('from "../lib/do-hang-ngay.mjs"', 'from "../lib/do-hang-ngay.dotbien.tmp.mjs"')));
+  if (!test.includes('from "../lib/do-hang-ngay.mjs"') || !test.includes('from "../do-hang-ngay.mjs"')) { console.log("KHUON IMPORT LECH"); process.exit(3); }
+  const testDb = test.replaceAll('from "../lib/do-hang-ngay.mjs"', 'from "../lib/do-hang-ngay.dotbien.tmp.mjs"')
+    .replaceAll('from "../do-hang-ngay.mjs"', 'from "../do-hang-ngay.dotbien.tmp.mjs"');
+  const c = chay(ghiTam("scripts/do-hang-ngay-dotbien.tmp.test.mjs", testDb));
   ket("C go bo soat do", c.code !== 0 && c.fail === 1 && c.out.includes("không chặn TEN_THAT_V"), c);
   // D — sổ KHÔNG có dòng S09 (xoá trên DB của riêng lượt).
   const pg = createRequire(path.join(PIPE, "package.json"))("pg");
