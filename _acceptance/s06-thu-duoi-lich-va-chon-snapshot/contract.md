@@ -50,6 +50,14 @@ lịch: cài plist cần lời riêng của Mạnh.
 - AC-9: Given máy thu sau lượt chấm, When đọc `launchctl list` và `~/Library/LaunchAgents`, Then không có
   `com.oneinvest.thu-duoi-s06`. Given nhánh so với `origin/main`, Then ngoài vật hồ sơ (`_acceptance/**`, `docs/**`, tệp máy sinh)
   chỉ có đúng tám tệp của làn thu (cộng hai dòng xếp nửa test trong `pipeline/test-nua.json`), và hai tệp test `scripts/` chạy với HOME tạm rỗng, không `DATABASE_URL`, không lời gọi mạng ra ngoài.
+- AC-10: Given số vùng chạy là cấu hình của wrapper, When không đặt cấu hình, Then wrapper chỉ gọi bộ thu cho đúng phạm vi đã
+  đo ở ZC17 (hcmc × mục `1000/u`), dù DB có thêm vùng chạy được; vùng chạy được mà ngoài danh sách thì 0 lời gọi và có một dòng
+  nhật ký. When cấu hình nêu hai vùng, Then gọi đủ hai vùng. Mở rộng vùng là đổi cấu hình, không đổi mã. Mở thêm vùng trên máy
+  thu theo câu Mạnh chọn ở Cổng Phạm vi.
+- AC-11: Given bộ thu thoát 3 (nguồn trả 403/429 hay trang thử thách, rào S06 hiện có), When vòng đó kết thúc, Then wrapper thoát
+  3 và để lại một dấu chặn có hạn dưới gốc `state/thu-duoi-s06`. When vòng sau tới lúc dấu còn hạn, Then thoát 0, 0 lời gọi bộ
+  thu, 0 lời nạp. When dấu đã hết hạn, Then vòng chạy lại bình thường. Bị chặn ở vùng đầu thì vùng sau trong cùng vòng không được
+  gọi.
 
 ## Coverage
 
@@ -63,6 +71,8 @@ trong sổ: không gian ca là các nhánh của một wrapper đã viết xong,
 - Trục chọn-nạp: không snapshot · snapshot mới · tồn đọng · đã nạp còn trong stg · đã nạp bị lượt quét đủ đè · hai vùng → AC-5
 - Trục kết cục bộ thu và bộ nạp: 0 · 3 · 4 · 5 · nạp lỗi → AC-6
 - Trục mốc: trên trần · dưới trần · hỏng → AC-7
+- Trục phạm vi vùng: mặc định · ngoài danh sách · cấu hình hai vùng → AC-10
+- Trục chặn nguồn: vòng bị chặn · còn hạn · hết hạn · chặn ở vùng đầu → AC-11
 - Trục cài lịch: `--chi thu-duoi-s06` · vắng cờ · tên lạ · trơn → AC-8; không cài trong vòng → AC-9
 - Trục phạm vi và cách ly: tệp đổi · mạng · HOME → AC-9
 - [GIẢ ĐỊNH] Năm vùng ngoài hcmc chưa có phép đo sống của bộ thu đuôi (phép đo 24h của làn thu chỉ ở hcmc). Ca hai vùng ở AC-5
@@ -92,4 +102,7 @@ PL38 nối transform, resolve, sync-cloud theo nhịp. Hồ sơ này chỉ bảo
   «AC-7 plist không đổi so với origin/main», vì nhánh thêm plist mới. GS phán: ca đã biết, KHÔNG sửa test; KEV1 thu hẹp ca đó
   về plist `zalo-import*`. Gộp ZC18 khi KEV1 chưa vào main thì CI scripts đỏ.
 - Tải sáu vùng tuần tự mỗi 5 phút chưa đo (phép đo 24 giờ ZC17 chỉ một vùng × một mục). Nêu ở thẻ khi xin cài plist.
+- AC-10, AC-11 thêm 27/11 theo lời GS. Trên `7fe8bb5b0` cả hai ĐỎ theo đọc mã: bước 5 chạy mọi vùng `source_groups` chạy được,
+  không có cấu hình vùng; thoát 3 không để dấu gì, 5 phút sau launchd gọi lại nguồn. Đã báo GS để trả ZCode qua LL. Probe
+  `chon-nap.mjs` thêm ca E11, E12 khi ZCode giao sha (tên cấu hình và hạn dấu chặn do ZCode chọn).
 - Test của nhánh dùng shim `node`, nên bước tra stg và bộ nạp không chạy thật. AC-5 là ca duy nhất nối wrapper với bộ nạp thật.
