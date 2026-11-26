@@ -750,3 +750,34 @@ async function chupTrongGiaoDich() {
     await db.query("ROLLBACK TO SAVEPOINT q42");
   }
 }
+
+// ---- Hồ sơ áp: lệnh lùi nạp chỉ gỡ ba bản thu của lượt áp (finding S4-r1, GS giao sửa trước Cổng 2) ----------------------------------
+test("lui-nap.sql chỉ gỡ ba bản thu của lượt áp; bản thu S09 khác (v16, bản hỏng) và stg của chúng còn nguyên", async () => {
+  const BA = ["vn__s09-danh-ba__2026-11-19T004959637", "vn__s09-danh-ba__2026-11-20T015947402", "vn__s09-danh-ba__2026-11-20T052953464"];
+  const KHAC = ["vn__s09-danh-ba__2026-11-26T013515249", "vn__s09-danh-ba__2026-11-19T211829028"];
+  const sql = readFileSync(join(import.meta.dirname, "../../_acceptance/nap-s09-toa-tang-vao-danh-ba/ap-may-thu/lui-nap.sql"), "utf8")
+    .replace(/^\s*(BEGIN|COMMIT);\s*$/gm, ""); // chạy trong giao dịch của ca thử để hoàn lại
+  const dem = async (ds) => (await db.query("SELECT count(*)::int AS n FROM airbnb_snapshots WHERE snapshot_id = ANY($1)", [ds])).rows[0].n;
+  const demStg = async (ds) => (await db.query("SELECT count(*)::int AS n FROM stg_s09_danh_ba WHERE snapshot_id = ANY($1)", [ds])).rows[0].n;
+  await db.query("BEGIN");
+  try {
+    for (const s of [...BA, ...KHAC]) {
+      await db.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ($1, 'vn', 's09-danh-ba', '{}')`, [s]);
+      await db.query(`INSERT INTO stg_s09_danh_ba (snapshot_id, kind, source_id, dong, payload, meta, fetched_at)
+                      VALUES ($1, 'tang', 'lui-' || $1, 1, '{"code":"200","data":[]}', '{}', now())`, [s]);
+    }
+    assert.equal(await dem(BA), 3); assert.equal(await dem(KHAC), 2);
+    await db.query(sql);
+    assert.equal(await dem(BA), 0, "ba bản thu của lượt áp phải bị gỡ");
+    assert.equal(await demStg(BA), 0, "stg của ba bản thu phải đi theo (cascade)");
+    assert.equal(await dem(KHAC), 2, "lệnh lùi đụng bản thu S09 không do lượt áp nạp");
+    assert.equal(await demStg(KHAC), 2, "lệnh lùi đụng stg của bản thu khác");
+    // Đối chứng: lệnh cũ (xoá theo tiền tố) phải làm ca này đỏ — chứng phép thử phân biệt được.
+    await db.query("SAVEPOINT cu");
+    await db.query("DELETE FROM airbnb_snapshots WHERE starts_with(snapshot_id, 'vn__s09-danh-ba__')");
+    assert.equal(await dem(KHAC), 0, "đối chứng: lệnh tiền tố cũ xoá cả bản thu khác");
+    await db.query("ROLLBACK TO SAVEPOINT cu");
+  } finally {
+    await db.query("ROLLBACK");
+  }
+});

@@ -1,0 +1,42 @@
+schema_version: 1
+feature_slug: s08-test-cach-ly-token
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.script.zc19_cach_ly
+    paths: [collector/src/test/s08-danh-muc.test.ts, _acceptance/s08-test-cach-ly-token/probes/cach-ly.sh]
+    expected: "exit 0; dòng 'PASS (a) HOME tạm rỗng → 4/4, không ENOENT'. Chiều đỏ ghim trong cùng lệnh (c): bỏ dòng đặt S08_TOKEN_FILE → tệp đỏ ENOENT ở HOME tạm rỗng."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.script.zc19_cach_ly
+    paths: [collector/src/test/s08-danh-muc.test.ts, _acceptance/s08-test-cach-ly-token/probes/cach-ly.sh]
+    expected: "exit 0; không có dòng 'FAIL (b) chạy bằng quyền đọc được tệp 000'; dòng 'PASS (b) token ở HOME quyền 000 + JSON hỏng → vẫn 4/4, không chạm tệp' (đầu ra không có EACCES, chuỗi KHONG-DUOC-DOC hay lỗi JSON); đối chứng ghim cùng HOME: dòng \"PASS (b') bản phá (c) dưới HOME token 000 + JSON hỏng → ĐỎ\" (gap-probe P2)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.script.zc19_cach_ly
+    paths: [collector/src/test/s08-danh-muc.test.ts, _acceptance/s08-test-cach-ly-token/probes/cach-ly.sh]
+    expected: "exit 0; dòng 'PASS (c) phá «bỏ đặt S08_TOKEN_FILE» → ĐỎ, đầu ra nêu s08-token.json' — bản chép trong collector/dist/test (tên .zc19-pha-c-*) đỏ ≥1 ca với đầu ra nêu s08-token.json; mẫu phá lệch mã thì FAIL «không dựng được bản phá». Bản chép bị xoá ở trap EXIT."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.script.zc19_cach_ly
+    paths: [collector/src/test/s08-danh-muc.test.ts, _acceptance/s08-test-cach-ly-token/probes/cach-ly.sh]
+    expected: "exit 0; dòng 'PASS (a) dọn thư mục token tạm: 0 thư mục s08-test-* sau lượt' và dòng 'PASS (d) phá «dọn bất đồng bộ» → còn thư mục tạm (n)' với n ≥ 1; dòng cuối 'CACH-LY PASS'. Đo 26/11 trước sửa: bản làn thu (rm promise trong «exit») để lại 1 thư mục mỗi lượt."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.script.zc19_cach_ly
+    paths: [collector/src/test/s08-danh-muc.test.ts, collector/src/collectors/s08-danh-muc.ts, collector/src/test/**]
+    expected: "exit 0; phần npm test của lệnh chạy với HOME + TMPDIR tạm (như M5/CI không có token; dist xoá rồi dựng lại) báo 'ℹ fail 0', gồm ca «2410-19: strip PII ĐỆ QUY» xanh, đầu ra không có ENOENT …s08-token; `git diff --quiet $(git merge-base origin/main HEAD) -- src ':!src/test'` trong collector thoát 0 (mã sản xuất không đổi so với gốc nhánh — gap-probe P1, P2). Chiều đỏ: trên main trước gộp ZC19, chạy với HOME không có tệp token → ca 2410-19 đỏ ENOENT (KEV1 E11 S4 r1 trên M5 26/11)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

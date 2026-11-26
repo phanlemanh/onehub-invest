@@ -18,6 +18,8 @@ import { kiemCatChuyen, resolveOffers, retractRule, subjectKey, writeAssertions 
 import { rutDuongCoSo } from "./lib/sdt-trong-chuoi.mjs";
 import { docDacTrungS06 } from "./lib/dac-trung-s06.mjs";
 import { ganSdtS06 } from "./gan-sdt-s06.mjs";
+import { findSourceNames } from "./lib/mask-source-names.mjs";
+import { docSourceNameEntries } from "./lib/source-name-entries.mjs";
 
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
@@ -44,6 +46,48 @@ export function ganPhuongS06(ad, { mk, wardMap, biDanh, slugList }) {
   return { areaId: null, phuongRaw: null, cach: null };
 }
 
+// PL39: ô chữ của tin S06 lên cloud (CLOUD_ALLOW của sync-cloud) mà bộ dò tên nguồn trúng thì không ghi — cùng lõi khớp với
+// bộ soát tầng A của sync-cloud (tier-a-guard → findSourceNames), sổ tên đọc bằng cùng hàm nạp. Hai trường đi qua phát biểu
+// (đường, toà): không ghi phát biểu, rồi rút MỌI phát biểu sống của S06 ở hai trường ấy mà giá trị trúng (mọi phương pháp, kể cả
+// legacy) với lý do `mang-ten-nguon`; bộ phân xử trả cột về phát biểu sạch còn lại hoặc NULL. Hai cột ghi thẳng (phường, quận):
+// ghi NULL. Seller_name, seller_phone không ở đây — sync-cloud đã che khi gửi.
+export const O_CHU_PHAT_BIEU = [ENRICH_FIELD.street_raw, ENRICH_FIELD.block_raw];
+// Trần một lượt: sổ nguồn có token chung chung thì bộ dò trúng hàng loạt — dừng job (đỏ, có tên) thay vì NULL lặng lẽ.
+// 25/11 trên DB máy thu: 1 ô.
+export const TRAN_TEN_NGUON = 50;
+
+/** Ném khi số ô bỏ ghi hay phát biểu rút của lượt vượt trần. `n`: số đếm, `cai`: tên phép đếm cho thông điệp. */
+export function kiemTranTenNguon(n, cai) {
+  if (n > TRAN_TEN_NGUON) {
+    throw new Error(`PL39: ${n} ${cai} mang tên nguồn trong một lượt, vượt trần ${TRAN_TEN_NGUON} — dừng, không rút, không ghi; soát sổ nguồn (source_registry) trước khi chạy lại`);
+  }
+}
+
+/** Phát biểu sống của S06 ở đường, toà mà giá trị mang tên nguồn: [{ id, subject_key }]. Chỉ đọc; vượt trần thì ném. */
+export async function docPhatBieuTenNguonS06(client, entries) {
+  if (!entries.length) return [];
+  const { rows } = await client.query(
+    `SELECT id, subject_key, value FROM field_assertions
+      WHERE retracted_at IS NULL AND field = ANY($1::text[]) AND subject_key LIKE 'S06:%'`, [O_CHU_PHAT_BIEU]);
+  const trung = rows.filter((r) => mangTenNguon(r.value, entries)).map(({ id, subject_key }) => ({ id, subject_key }));
+  kiemTranTenNguon(trung.length, "phát biểu sống");
+  return trung;
+}
+
+/** Rút các phát biểu đã đọc ở `docPhatBieuTenNguonS06` (lý do `mang-ten-nguon`). Trả các chủ thể (để phân xử lại). */
+export async function rutPhatBieuTenNguon(client, trung) {
+  if (!trung.length) return [];
+  await client.query(
+    `UPDATE field_assertions SET retracted_at = clock_timestamp(), retract_reason = 'mang-ten-nguon'
+      WHERE retracted_at IS NULL AND id = ANY($1::bigint[])`, [trung.map((r) => r.id)]);
+  return [...new Set(trung.map((r) => r.subject_key))];
+}
+
+/** Chữ mang tên nguồn thật theo sổ `entries`. Sổ rỗng → false: không lọc (sync-cloud vẫn đóng chặt khi gửi). */
+export function mangTenNguon(v, entries) {
+  return typeof v === "string" && v !== "" && entries.length > 0 && findSourceNames(v, entries).length > 0;
+}
+
 /**
  * Thân transform S06 — main chạy không bọc transaction như trước; test và phép đo (thước nap-lai-ba-luot) bọc BEGIN…ROLLBACK.
  * @param {import("pg").Client} client
@@ -66,6 +110,23 @@ export async function runTransformChotot(client) {
     `SELECT * FROM stg_chotot_ads WHERE price > 0 AND size_m2 > 0`,
   );
   console.log(`stg có giá+DT: ${ads.length}`);
+  const tenNguon = await docSourceNameEntries(client);
+  if (!tenNguon.length) console.log("sổ nguồn rỗng — không lọc ô chữ mang tên nguồn (sync-cloud vẫn chặn khi gửi)");
+  const boTen = { street_raw: 0, block_raw: 0, phuong_raw: 0, district_raw: 0 };
+  // PL39: đếm trước khi ghi dòng nào — vượt trần thì job dừng ở đây, chưa upsert tin, chưa ghi hay rút phát biểu.
+  const tinhSan = new Map();
+  for (const ad of ads) {
+    if (ad.ad_type !== "s" && ad.ad_type !== "u") continue;
+    const mk = thiTruongCua(ad.city_code, thiTruongCo);
+    const g = ganPhuongS06(ad, { mk, wardMap: byCity.get(mk), biDanh: biDanhCua.get(mk), slugList: slugLists.get(mk) });
+    const dacTrung = docDacTrungS06(ad);
+    if (mangTenNguon(g.phuongRaw, tenNguon)) boTen.phuong_raw++;
+    if (mangTenNguon(ad.area_name, tenNguon)) boTen.district_raw++;
+    for (const d of dacTrung) if (O_CHU_PHAT_BIEU.includes(d.field) && mangTenNguon(d.value, tenNguon)) boTen[d.field]++;
+    tinhSan.set(ad, { mk, g, dacTrung });
+  }
+  kiemTranTenNguon(Object.values(boTen).reduce((a, n) => a + n, 0), "giá trị chữ");
+  const phatBieuTenNguon = await docPhatBieuTenNguonS06(client, tenNguon);
 
   let nHigh = 0, nMed = 0, nSkip = 0, nWardV3 = 0, nWardTxt = 0, nBiDanh = 0;
   // PL15: loại hình (category) và phòng ngủ (rooms) là trường có cấu trúc của nguồn → phát biểu lớp sự thật; năm cột
@@ -84,11 +145,11 @@ export async function runTransformChotot(client) {
     if (!kind) { nSkip++; continue; }
 
     // Phường: ward_name_v3 (chuẩn 2025) → ward_name → text-match subject
-    const mk = thiTruongCua(ad.city_code, thiTruongCo);
+    const { mk, g, dacTrung } = tinhSan.get(ad);
     if (!mk) maLa.set(ad.city_code ?? "(rỗng)", (maLa.get(ad.city_code ?? "(rỗng)") ?? 0) + 1);
-    const g = ganPhuongS06(ad, { mk, wardMap: byCity.get(mk), biDanh: biDanhCua.get(mk), slugList: slugLists.get(mk) });
     const areaId = g.areaId;
-    const phuongRaw = g.phuongRaw;
+    const phuongRaw = mangTenNguon(g.phuongRaw, tenNguon) ? null : g.phuongRaw;
+    const districtRaw = mangTenNguon(ad.area_name, tenNguon) ? null : ad.area_name;
     if (g.cach === "v3") nWardV3++;
     if (g.cach === "chu") nWardTxt++;
     if (g.cach === "bi-danh") nBiDanh++;
@@ -120,7 +181,7 @@ export async function runTransformChotot(client) {
       [
         offerId, areaId, kind, Number(ad.price), Number(ad.size_m2), pricePerm2,
         phuongRaw, confidence, seen,
-        ad.area_name, seller.full_name ?? null,
+        districtRaw, seller.full_name ?? null,
         payload.account_id ? `ct:${payload.account_id}` : null, osk,
       ],
     );
@@ -132,8 +193,10 @@ export async function runTransformChotot(client) {
       phatBieu.push({ ...chung, field: ENRICH_FIELD.bedrooms, value: String(Number(ad.rooms)), rule_id: "rooms" });
     }
     // HD5 (061): đặc trưng nhà — số nhà, mã căn, mặt tiền, ngang × dài, số tầng, WC, toạ độ; rule_id = khoá nguồn đã đọc.
-    const dacTrung = docDacTrungS06(ad);
-    for (const d of dacTrung) phatBieu.push({ ...chung, ...d });
+    for (const d of dacTrung) {
+      if (O_CHU_PHAT_BIEU.includes(d.field) && mangTenNguon(d.value, tenNguon)) continue; // PL39: đã đếm ở lượt đếm trước
+      phatBieu.push({ ...chung, ...d });
+    }
     if (!dacTrung.some((d) => d.field === ENRICH_FIELD.street_raw)) khongDuong.push(chung.subject_key);
   }
   const ghi = await writeAssertions(client, phatBieu, { replaceOwn: true });
@@ -142,6 +205,10 @@ export async function runTransformChotot(client) {
   if (coSo.length) console.log(`đường mang số: rút ${coSo.length} phát biểu`);
   // DS1: nguồn bỏ trống đường thì rút phát biểu của transform; bộ phân xử trả cột về `legacy` hoặc NULL.
   await retractRule(client, khongDuong, ENRICH_FIELD.street_raw, "payload.street_name", "nguon-bo-trong");
+  // PL39: giá trị mang tên nguồn không thành phát biểu; mọi phát biểu sống trúng (cả tin ngoài lượt, cả legacy) rút, rồi phân xử lại.
+  const rutTenNguon = await rutPhatBieuTenNguon(client, phatBieuTenNguon);
+  for (const k of rutTenNguon) offerIds.push(mintOfferId("S06", k.slice("S06:".length)));
+  console.log(`ô chữ mang tên nguồn: bỏ ghi ${Object.entries(boTen).map(([c, n]) => `${c} ${n}`).join(" · ")} · rút ${rutTenNguon.length} chủ thể (trần ${TRAN_TEN_NGUON})`);
   for (const k of coSo) offerIds.push(mintOfferId("S06", k.slice("S06:".length)));
   const pxu = offerIds.length ? await resolveOffers(client, [...new Set(offerIds)]) : { offers: 0, offers_changed: 0 };
   console.log(`phát biểu S06: +${ghi.inserted} (rút ${ghi.retracted}) · phân xử ${pxu.offers} tin, đổi ${pxu.offers_changed}`);
@@ -158,7 +225,7 @@ export async function runTransformChotot(client) {
   for (const [ma, n] of maLa) console.log(`city_code lạ: ${ma} (${n} tin) — không ánh xạ được thị trường, area_id NULL`);
   return {
     high: nHigh, medium: nMed, skip: nSkip, wardV3: nWardV3, wardText: nWardTxt, biDanh: nBiDanh, maLa: Object.fromEntries(maLa), sdt,
-    inserted: ghi.inserted, retracted: ghi.retracted, offersChanged: pxu.offers_changed,
+    inserted: ghi.inserted, retracted: ghi.retracted, offersChanged: pxu.offers_changed, boTenNguon: boTen, rutTenNguon: rutTenNguon.length,
   };
 }
 

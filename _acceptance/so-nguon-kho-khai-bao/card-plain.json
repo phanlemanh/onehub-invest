@@ -1,0 +1,30 @@
+{
+  "feature_plain": "Người vận hành chạy lệnh đo độ tươi hay mở trang Thu thập sẽ thấy đúng tình trạng các nguồn kho: S16 được đo, S09 hiện ra, S01 thôi báo đỏ ở thị trường không có lịch thu, S11 hiện tạm dừng.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ ghi vào sổ nguồn họ nguồn, nhịp đo, bảng nạp và thị trường có lịch của từng mã; thêm dòng S09, S17; S11 chuyển tạm dừng; áp lại lần hai không đổi gì."},
+    {"id": "AC-2", "p": "Sẽ cho lệnh đo và trang Ops đọc cùng một nhịp từ sổ nguồn; số của các nguồn đang xanh giữ nguyên; sổ chưa nâng cấp thì báo lỗi gọi tên bước còn thiếu."},
+    {"id": "AC-3", "p": "Sẽ đo S16 và S09 theo lần thu mới nhất có dữ liệu trong bảng nạp của chính nó, không phụ thuộc tên thư mục thu."},
+    {"id": "AC-4", "p": "Sẽ chỉ đo S01 ở Hà Nội (thị trường có lịch thu); nguồn khác vẫn đo mọi thành phố như cũ."},
+    {"id": "AC-5", "p": "Sẽ cho bảng Sức khoẻ nguồn trên trang Thu thập có hàng S09, hết hàng đỏ S01 hcmc và vn, hết S11 «chưa có dữ liệu», hết S16 «chưa khai SLO»."},
+    {"id": "AC-6", "p": "Sẽ không đưa tên thật hay tên miền của S09, S17 vào kho; một máy quét kiểm cả các biến thể viết khác của tên."},
+    {"id": "AC-7", "p": "Sẽ đổi được con số trên máy thu thật sau khi áp, và bộ chặn lộ tên nguồn khi đẩy lên cloud nhận diện được S09, S17."},
+    {"id": "AC-8", "p": "Sẽ chỉ sửa đúng các tệp trong vùng đã khai của việc này."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "KHÔNG làm việc thu và nạp dữ liệu mới cho S07, S10, S11, S09, cũng không cài lịch chạy mới — đó là việc của làn thu."},
+    {"id": "OOS-2", "p": "KHÔNG ghi con số tổng thể của nguồn — để trống tới khi có số nguồn tự công bố, đúng lời anh dặn."},
+    {"id": "OOS-3", "p": "KHÔNG làm thẻ biến động, cảnh báo co rút, phễu, độ phủ hay chất lượng kho — đó là các hàng NK2, NK3, NK4."},
+    {"id": "OOS-4", "p": "KHÔNG đặt lịch thu hcmc cho S01 — việc này chỉ thôi đo nơi không có lịch."},
+    {"id": "OOS-5", "p": "KHÔNG dọn chỗ lộ tên S09, S17 nằm ngoài nhánh này — máy quét chỉ đếm, báo giám sát để cắt việc riêng."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Mỗi nguồn S01–S17 được soát theo sáu mặt (khai báo, nhịp, cách đo, thị trường, trạng thái, tên thật) bằng số đếm trên máy thu, kèm ai đọc kết quả phía sau; ô bỏ có ghi vì sao."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Thiếu thứ tự áp an toàn: nếu kéo mã mới trước khi nâng sổ, lệnh đo và lượt đẩy lên cloud sẽ lỗi. Đã sửa: nâng sổ trên máy thu trước rồi mới kéo mã; lùi thì lùi mã trước. Cloud không bị ảnh hưởng."},
+    {"i": 1, "p": "Hai lựa chọn của máy dựa vào căn cứ chưa đứng. Đã sửa: cách cho S11 tạm dừng nay là câu hỏi cho anh (Hỏi-2); lý do giữ cách đo cũ cho S01–S11 nay dựa vào cấu trúc dữ liệu thật."},
+    {"i": 2, "p": "Máy quét tên thật chỉ bắt đúng nguyên văn. Đã sửa: quét cả biến thể viết khác, cả tệp trong hồ sơ, và thử cấy từng biến thể phải bị bắt."},
+    {"i": 3, "p": "Trang Thu thập trên máy thu chưa được đo sau áp. Đã sửa: sau áp máy chạy chính hàm của trang ấy trên dữ liệu thật và so từng hàng với lệnh đo."},
+    {"i": 4, "p": "Bảng mong đợi tính cả S05 đang tạm dừng. Đã sửa: bỏ S05, thêm phép thử nguồn tạm dừng không có hàng, bật lại thì có."}
+  ]
+}

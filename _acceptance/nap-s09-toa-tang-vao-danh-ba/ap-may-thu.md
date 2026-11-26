@@ -10,8 +10,8 @@ lệnh, báo số thật cạnh số diễn tập (mục 5). Lệch thì DỪNG 
 máy xanh. Mã của DA42 có rào «chưa áp 115 hoặc 125 thì bỏ bước S09 gói 1» (`daAp115Va125`, T3b), nên gộp trước áp không đổi lượt
 dựng đêm nào.
 
-**Ghi dữ liệu hằng đêm.** Từ lúc 115 + 125 đã áp VÀ `stg_s09_danh_ba` có danh mục, mọi job có bước `refresh-bait-gap` (00:00 Zalo và S03
-Facebook; 05:30, 14:00 S06; 06:00, 12:00, 18:00 S03) gọi `buocVatTheDem` → `dung()` → `buocS09DanhBa` trong giao dịch của nó: tự đúc
+**Ghi dữ liệu hằng đêm.** Từ lúc 115 + 125 đã áp VÀ `stg_s09_danh_ba` có danh mục, mọi job có bước `refresh-bait-gap` (00:00 S03 hai kênh;
+05:30, 14:00 S06; 06:00, 12:00, 18:00 S03) gọi `buocVatTheDem` → `dung()` → `buocS09DanhBa` trong giao dịch của nó: tự đúc
 nút ứng viên, toà S09 — không mốc, không tệp khoá. Vì thế **mục 2 → 3 chạy liền một mạch trong khung 22:05–23:55 giờ VN**, ngoài các
 lượt ấy và lượt nạp S03 15 phút (07:00–22:00). Cách tắt bước này mà không xoá gì: mục 4a.
 
@@ -120,7 +120,7 @@ có (thẻ duyệt, lượt nạp) — khi đó `diff` lệch đúng ở các b�
 thì quyết định mất cùng thẻ. Chỉ lùi nạp (chưa dựng): `lui-nap.sql` rồi `lui-luoc-do.sql`. Chưa nạp: chỉ `lui-luoc-do.sql`.
 
 **Lối cuối** — khôi phục bản dump mục 0: `pg_restore -U oneinvest -h localhost -p 5433 -d oneinvest --clean --if-exists
-$H/truoc-da42-<G>.dump`. Giá: mất mọi dòng ghi sau lúc dump (S03 15 phút, S06, Zalo, thẻ đã duyệt), phải nạp lại từ raw bất biến.
+$H/truoc-da42-<G>.dump`. Giá: mất mọi dòng ghi sau lúc dump (S03 15 phút, S06, S03 kênh chat, thẻ đã duyệt), phải nạp lại từ raw bất biến.
 
 ## 5. Lệnh kiểm sau và số chạy thử
 
