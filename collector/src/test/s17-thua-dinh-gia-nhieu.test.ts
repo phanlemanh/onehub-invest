@@ -259,3 +259,59 @@ test("vận chuyển ném RunStopped (vd trang không còn ở gốc của ngu�
     assert.ok(ke.slept.every((ms) => ms < 1000), `không chờ thử lại (các lần nghỉ: ${JSON.stringify(ke.slept)})`);
   }
 });
+
+test("getJsonMany: vận chuyển trả RunStopped (vd trang không còn ở gốc của nguồn) thì lớp gọi CHỐT dừng — các đợt sau không gửi, không nghỉ nhịp, không vống số lời; lời gọi kế nhận chính lỗi dừng đó (lượt xét vòng 1, AC-2)", async () => {
+  const dung = new RunStopped("page-origin", "trang gọi trong trang không còn ở gốc của nguồn");
+  let soDot = 0;
+  const slept: number[] = [];
+  const client = new S17Client({
+    config: loadConfig(JSON.stringify(FAKE_CONFIG)),
+    caps: { calls: 100, minutes: 60 },
+    paceMs: 0,
+    now: () => 1_000_000,
+    sleep: async (ms: number) => {
+      slept.push(ms);
+    },
+    transport: async () => {
+      throw dung;
+    },
+    transportMany: async (list) => {
+      soDot++;
+      return list.map(() => dung);
+    },
+  });
+  const r = await client.getJsonMany([task(1), task(2), task(3), task(4), task(5)], 2);
+  assert.equal(soDot, 1, "đợt đầu đã trả lỗi dừng thì không gửi đợt hai, ba (trước khi sửa: vẫn gửi đủ ba đợt)");
+  assert.deepEqual(
+    r.map((x) => (x.ok ? "ok" : x.error === dung ? "dừng" : "khác")),
+    ["dừng", "dừng", "dừng", "dừng", "dừng"],
+  );
+  assert.equal(client.calls, 2, "chỉ hai lời của đợt đầu được tính");
+  await assert.rejects(client.getJson("parcel-profile", task(1).params), (e: unknown) => e === dung, "đã dừng thì lời sau nhận chính lỗi dừng, không gửi");
+});
+
+test("getJson: vận chuyển trả RunStopped thì lớp gọi chốt dừng — lời kế nhận chính lỗi đó, không gửi lại (lượt xét vòng 1, AC-2)", async () => {
+  const dung = new RunStopped("page-origin", "trang gọi trong trang không còn ở gốc của nguồn");
+  let soLan = 0;
+  const client = new S17Client({
+    config: loadConfig(JSON.stringify(FAKE_CONFIG)),
+    caps: { calls: 100, minutes: 60 },
+    paceMs: 0,
+    now: () => 1_000_000,
+    sleep: async () => undefined,
+    transport: async () => {
+      soLan++;
+      throw dung;
+    },
+  });
+  await assert.rejects(client.getJson("parcel-profile", task(1).params), (e: unknown) => e === dung);
+  await assert.rejects(client.getJson("parcel-profile", task(2).params), (e: unknown) => e === dung, "lời thứ hai nhận đúng lỗi dừng");
+  const sau = await client.getJsonMany([task(3), task(4)], 2);
+  assert.deepEqual(
+    sau.map((x) => (x.ok ? "ok" : x.error === dung ? "dừng" : "khác")),
+    ["dừng", "dừng"],
+    "getJsonMany sau khi đã dừng: mọi lời nhận lỗi dừng, không đợt nào được gửi",
+  );
+  assert.equal(client.calls, 1, "chỉ lời đầu tiên được tính; lời sau bị từ chối trước khi gửi");
+  assert.equal(soLan, 1, "lời sau không tới vận chuyển (trước khi sửa: gửi lại, mỗi lần thêm một lần chạy trong trang lạ)");
+});

@@ -306,7 +306,13 @@ export class S17Client {
       try {
         res = await this.o.transport(url, this.headers);
       } catch (e) {
-        if (e instanceof RunStopped) throw e; // vận chuyển bảo dừng (vd trang không còn ở gốc của nguồn): không thử lại
+        if (e instanceof RunStopped) {
+          // Vận chuyển bảo dừng cả lượt (vd trang không còn ở gốc của nguồn): CHỐT vào lớp gọi — mọi lời sau bị từ chối
+          // ngay, không thử lại. Không chốt thì lượt vẫn gửi tiếp, mỗi lần là thêm một lần chạy trong trang lạ (lượt
+          // xét vòng 1).
+          this.stopped ??= e;
+          throw e;
+        }
         res = null;
         loiMang = loiVanChuyen(e);
       }
@@ -433,7 +439,10 @@ export class S17Client {
           const role = String(reqs[idx].role);
           const goc = raw[k];
           if (goc instanceof RunStopped) {
-            out[idx] = { ok: false, error: goc }; // vận chuyển bảo dừng cả lượt: mỗi lời nhận đúng lỗi dừng, không thử lại
+            // Vận chuyển bảo dừng cả lượt: mỗi lời nhận đúng lỗi dừng, không thử lại; và CHỐT để các đợt sau của cùng
+            // lời gọi (và mọi lời sau) không còn gửi, không nghỉ nhịp, không vống số lời (lượt xét vòng 1).
+            this.stopped ??= goc;
+            out[idx] = { ok: false, error: goc };
             continue;
           }
           const res = goc instanceof Error ? null : goc;

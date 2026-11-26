@@ -503,3 +503,37 @@ test("executePhase: câu trả lời lỗi có thân DÀI thì dòng «phan-hoi�
   assert.equal(daGhi, than.slice(0, 600), "là 600 ký tự đầu của thân");
   assert.equal(daGhi.includes("HET"), false, "phần sau 600 ký tự không lọt vào nhật ký");
 }));
+
+test("tăng tốc: bị chặn HAI LẦN THẬT thì dừng hẳn — lượt 1 trả 403, lượt 2 (một luồng, nhịp cũ) trả 403 nữa → trạng thái ghi 2 → lượt 3 dừng blocked-twice, không gửi gì (lượt xét vòng 1, AC-2: đo đường cộng dồn, không viết tay số 2)", async () => withTmp(async (dir) => {
+  const statePath = join(dir, "state.json");
+  const docState = async () => (JSON.parse(await readFile(statePath, "utf8")) as { blockedRuns?: number }).blockedRuns;
+  const base = {
+    phase: "tile-mask" as const,
+    config: loadConfig(JSON.stringify(FAKE_CONFIG_TANG_TOC)),
+    snapshotRoot: join(dir, "snapshots"),
+    statePath,
+    logPath: join(dir, "run.log.jsonl"),
+    caps: { calls: 100, minutes: 60 },
+    batchItems: 100,
+    checkBalance: false,
+    grid: [{ marketId: "vn-a", name: "A", tiles: ["17/1/1"] }],
+    env: { sleep: async () => undefined, now: () => new Date("2026-11-24T04:00:00.000Z") },
+  };
+  // Lượt 1: nguồn trả 403 → bị chặn lần thứ nhất.
+  const r1 = await executePhase({ ...base, paceMs: 350, concurrency: 1, transport: async () => json({ message: "denied" }, 403) });
+  assert.equal(r1.stopReason, "blocked");
+  assert.equal(await docState(), 1, "sau lượt 1 trạng thái ghi 1");
+  // Lượt 2: một luồng, nhịp cũ (được chạy vì mới bị chặn một lần) → nguồn trả 403 lần nữa.
+  const r2 = await executePhase({ ...base, paceMs: 350, concurrency: 1, transport: async () => json({ message: "denied" }, 403) });
+  assert.equal(r2.stopReason, "blocked", "lượt 2 được gửi và bị chặn lần thứ hai");
+  assert.equal(await docState(), 2, "sau lượt 2 trạng thái CỘNG DỒN thành 2 (đột biến «= 1» thì còn 1 → ca đỏ)");
+  // Lượt 3: dừng hẳn trước khi gửi lời nào, kể cả ở nhịp cũ.
+  const sent: string[] = [];
+  const r3 = await executePhase({ ...base, paceMs: 350, concurrency: 1, transport: async (url) => {
+    sent.push(url);
+    return nguonLanh(url);
+  } });
+  assert.equal(r3.stopReason, "blocked-twice", "lần thứ ba dừng hẳn, chờ người quyết");
+  assert.equal(sent.length, 0, "không gửi lời nào");
+  assert.equal(await docState(), 2, "lượt bị từ chối không đổi số lần bị chặn");
+}));
