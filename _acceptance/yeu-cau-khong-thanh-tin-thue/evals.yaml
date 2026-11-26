@@ -1,0 +1,60 @@
+schema_version: 1
+slug: yeu-cau-khong-thanh-tin-thue
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.pl42_unit
+    paths: ["pipeline/transform-zalo.mjs", "pipeline/scripts/yeu-cau-khong-thanh-tin-thue.test.mjs"]
+    expected: "Ma trận tám mẫu × có/không giá: mọi câu là Yêu cầu; đối chứng chạy cùng ma trận bằng biểu thức YEU_CAU cũ ghim trong test thì các câu ấy không khớp (chiều đỏ, gọi tên mẫu)."
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.pl42_unit
+    paths: ["pipeline/transform-zalo.mjs", "pipeline/scripts/yeu-cau-khong-thanh-tin-thue.test.mjs"]
+    expected: "Mỗi mẫu giữ có câu rao gần giống (có/không giá): kind giống hàm cũ; đối chứng: thêm mẫu «khách thuê» vào luật trong bản sao thì ca «khách thuê cọc» đỏ gọi tên mẫu."
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.pl42_unit
+    paths: ["pipeline/transform-zalo.mjs", "pipeline/scripts/yeu-cau-khong-thanh-tin-thue.test.mjs"]
+    expected: "Hai câu tìm thuê dài hạn là Yêu cầu, hai câu cho thuê dài hạn vẫn rent_lt chữ bài."
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.pl42_ac4
+    paths: ["pipeline/transform-zalo.mjs", "pipeline/lib/nhanh-bai-s03.mjs", "pipeline/scripts/yeu-cau-khong-thanh-tin-thue.itest.mjs"]
+    expected: "Ca PL42-AC-4 chạy (pass ≥ 1, fail 0, skipped 0): pha luật cũ ra tin rò (chiều đỏ gọi tên bài); pha luật mới tin rò nghỉ cùng khoá, tin gom còn bài rao, tin thật y nguyên, lần hai không đổi; pha luật cũ lại thì tin sống lại cùng khoá."
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.pl42_do_that
+    long_running: 90
+    paths: ["pipeline/transform-zalo.mjs", "pipeline/scripts/do-yeu-cau-lot-tin.mjs"]
+    expected: "Trên bản chép: tin rò ≤ 85 (mốc 264, thử 76), giá tốt thuê rò ≤ 16 (mốc 51, thử 13), in giá tốt thuê trước/sau, tin rút nhãn offer/chưa nhãn ≤ 10 và có tệp mẫu; thoát 0. Chiều đỏ trong do-yeu-cau-lot-tin.test: vượt từng ngưỡng thì thoát 1 gọi tên ngưỡng."
+  - id: E6
+    criterion: AC-6
+    executor: judgment
+    inputs: ["_acceptance/yeu-cau-khong-thanh-tin-thue/evidence/mau-tin-rut.md"]
+    question: "Mỗi bài trong tệp mẫu có phải câu tìm căn của người cần thuê hay mua (Yêu cầu), không phải tin rao cho thuê hay bán không? Nêu mã tin của bài nào là tin rao thật."
+    expected: "Mọi bài là Yêu cầu; không bài nào là tin rao."
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.pl42_loai_tin
+    paths: ["pipeline/transform-zalo.mjs"]
+    expected: "transform-zalo-loai-tin.test.mjs và transform-zalo-loai-tin-doi-chieu.test.mjs xanh và không đổi so với main (git diff rỗng)."
+  - id: E8
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.suite.pipeline_a
+    long_running: 90
+    paths: ["pipeline/**"]
+    expected: "Nửa a bộ pipeline xanh."
+  - id: E9
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.suite.pipeline_b
+    long_running: 90
+    paths: ["pipeline/**"]
+    expected: "Nửa b bộ pipeline xanh."
