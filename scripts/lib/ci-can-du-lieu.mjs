@@ -25,6 +25,8 @@ export function loiDanhSach(list, root = ROOT) {
     else if (!readFileSync(f, "utf8").includes(m.ca)) out.push(`${m.tep}: không còn ca «${m.ca}»`);
     if (CAM.some((re) => re.test(m.ca))) out.push(`${m.tep}: «${m.ca}» là ca đỏ sẵn của main — không được bỏ qua`);
     if (!m.ly_do) out.push(`${m.tep}: «${m.ca}» thiếu lý do`);
+    // HT33: `may_thu` = lý do ca chỉ chạy được ở máy thu (máy phát triển bỏ qua có tên) — phải là chữ có nội dung.
+    if ("may_thu" in m && (typeof m.may_thu !== "string" || !m.may_thu.trim())) out.push(`${m.tep}: «${m.ca}» khoá may_thu phải là lý do bằng chữ`);
   }
   return out;
 }
