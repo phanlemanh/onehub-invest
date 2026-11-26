@@ -136,6 +136,14 @@ executors:
     tdb_doi_chieu: "cd app && node --import tsx --test probes/registry-doi-chieu.test.tsx"   # trang-danh-ba-chi-doc E14 — chỉ SELECT trên DB máy thu :5433 trong giao dịch READ ONLY, chỉ in số
     tir_be_mat: "node --test scripts/check-api-surface.test.mjs scripts/check-mcp-tools.test.mjs"   # tin-rao-tren-invest E6 — sổ bề mặt: khoá publicOffers, đối chứng route khác
     api_markets_s02: "cd app && bash ../db/db-thu.sh oneinvest_suite_ht23 --chay node --import tsx --test tests/api-markets-khong-s02.test.tsx"   # api-markets-khong-tra-so-s02 E1/E2 — /api/v1/markets không mang khoá, không xếp theo số S02 (DB thử trắng)
+    # bang-yeu-cau-noi-lai (YC0): mỗi eval chạy đúng ca của nó theo tên, đòi pass ≥ 1, fail 0, skipped 0 (ca tự bỏ qua khi thiếu DB thì đỏ)
+    yc0_unit: "node --test pipeline/scripts/yeu-cau.test.mjs"
+    yc0_ac1: "set -o pipefail; cd pipeline && bash ../db/db-thu.sh oneinvest_suite_yc0 --chay node --test --test-name-pattern 'YC0-AC-1' scripts/yeu-cau.itest.mjs 2>&1 | awk '{print > \"/dev/stderr\"} /^ℹ pass /{p=$3} /^ℹ fail /{f=$3} /^ℹ skipped /{s=$3} END{exit !(p>=1 && f==0 && s==0)}'"
+    yc0_ac4: "set -o pipefail; cd pipeline && bash ../db/db-thu.sh oneinvest_suite_yc0 --chay node --test --test-name-pattern 'YC0-AC-4' scripts/yeu-cau.itest.mjs 2>&1 | awk '{print > \"/dev/stderr\"} /^ℹ pass /{p=$3} /^ℹ fail /{f=$3} /^ℹ skipped /{s=$3} END{exit !(p>=1 && f==0 && s==0)}'"
+    yc0_ac5: "set -o pipefail; cd pipeline && bash ../db/db-thu.sh oneinvest_suite_yc0 --chay node --test --test-name-pattern 'YC0-AC-5' scripts/yeu-cau.itest.mjs 2>&1 | awk '{print > \"/dev/stderr\"} /^ℹ pass /{p=$3} /^ℹ fail /{f=$3} /^ℹ skipped /{s=$3} END{exit !(p>=1 && f==0 && s==0)}'"
+    yc0_ac6: "set -o pipefail; cd pipeline && bash ../db/db-thu.sh oneinvest_suite_yc0 --chay node --test --test-name-pattern 'YC0-AC-6' scripts/yeu-cau.itest.mjs 2>&1 | awk '{print > \"/dev/stderr\"} /^ℹ pass /{p=$3} /^ℹ fail /{f=$3} /^ℹ skipped /{s=$3} END{exit !(p>=1 && f==0 && s==0)}'"
+    yc0_ac7: "set -o pipefail; cd pipeline && bash ../db/db-thu.sh oneinvest_suite_yc0 --chay node --test --test-name-pattern 'YC0-AC-7' scripts/yeu-cau.itest.mjs 2>&1 | awk '{print > \"/dev/stderr\"} /^ℹ pass /{p=$3} /^ℹ fail /{f=$3} /^ℹ skipped /{s=$3} END{exit !(p>=1 && f==0 && s==0)}'"
+    yc0_ac8: "set -o pipefail; cd pipeline && bash ../db/db-thu.sh oneinvest_suite_yc0 --chay node --test --test-name-pattern 'YC0-AC-8' scripts/yeu-cau.itest.mjs 2>&1 | awk '{print > \"/dev/stderr\"} /^ℹ pass /{p=$3} /^ℹ fail /{f=$3} /^ℹ skipped /{s=$3} END{exit !(p>=1 && f==0 && s==0)}'"
     svc_sync_cu: "node --test pipeline/sync-cloud.test.mjs pipeline/scripts/sync-cloud-pii.test.mjs pipeline/scripts/soat-tang-a.test.mjs"   # sellers-view-len-cloud E5 — hồi quy sync
     kns_lich_unit: "node --test pipeline/scripts/s05-b-lich.test.mjs"   # G1 2510-14
     tl_bao_cao: "node --test scripts/bao-cao-ngay.test.mjs"   # thuoc-lech-ma-nguon-va-lich-s05 AC-1 (thuần), AC-2 (DB máy thu chỉ đọc)
@@ -637,6 +645,8 @@ executors:
     api_surface_static: "node scripts/check-api-surface.mjs static"
     anh_goc_hd10_nguyen: "git diff --exit-code 6b610913 -- app/tests/anh-goc-qua-may-chu.test.tsx"   # proxy-anh-chan-svg AC-7 — bộ test HD10 không bị sửa kỳ vọng
     api_surface_mutation: "node scripts/check-api-surface.mjs mutation"
+    yc0_vocab: "cd pipeline && node vocab.mjs --check && node vocab.mjs --lint && bash ../db/db-thu.sh oneinvest_suite_yc0 --chay node scripts/yeu-cau-vocab-db.mjs && ! grep -n 'là tính năng sau' ../CONTEXT.md"   # bang-yeu-cau-noi-lai E2 (AC-2)
+    yc0_do_that: "cd pipeline && node --test scripts/do-yeu-cau.test.mjs && bash ../db/db-thu.sh oneinvest_suite_yc0_that --chay node scripts/do-yeu-cau.mjs --kiem"   # bang-yeu-cau-noi-lai E9 (AC-9) — bản chép dữ liệu thật (db-thu chép từ mẫu của DB chung), ROLLBACK
     api_surface_smoke: "BASE_URL=${BASE_URL:-http://localhost:3456} node scripts/smoke-api-surface.mjs"
     # mcp-tools-theo-so-be-mat (ON15) — bản khai công cụ MCP theo sổ bề mặt; historic cần lịch sử git có 1c6389b
     mcp_tools_static: "node scripts/check-mcp-tools.mjs static"

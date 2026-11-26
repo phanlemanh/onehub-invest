@@ -7,10 +7,10 @@
 ```mermaid
 flowchart TD
   A["Đang cân nhắc cơ hội<br/>chưa có"] --> GD{"Cổng Đáng"}
-  GD --> B["Sắp mở vòng<br/>20 việc"]
+  GD --> B["Sắp mở vòng<br/>19 việc"]
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
-  B --> CD["Chờ duyệt phạm vi<br/>22 việc"] --> GP{"Cổng Phạm vi"}
+  B --> CD["Chờ duyệt phạm vi<br/>23 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
   GB --> DG["Đã giao<br/>226 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>144 việc"] --> GG{"Cổng Giá trị"}
@@ -26,7 +26,6 @@ flowchart TD
 
 - Ba nút Grand Park mang loại theo luật dự án con hay phân khu, Ocean Park 1, 2, 3 có dự án cha Ocean Park, không còn nút asset_nodes loại building, và lệnh dựng danh bạ vẫn ra cùng toà (`ba-nut-grand-park-q2`)
 - Người vận hành mở thẻ nối dự án trên Ops, thấy cặp mã nguồn ↔ dự án máy đề xuất kèm căn cứ, duyệt từng cặp hoặc cả loạt cùng căn cứ, và mỗi cặp đã duyệt thành một bí danh (`bang-noi-ma-du-an`)
-- Transform S03 và S05 ghi mỗi Yêu cầu vào bảng inquiry_records (dịch vụ, loại hình, số phòng, diện tích, ngân sách với đầu dưới ở ListPriceLow, khu, bài nguồn, bằng chứng ý định); ý định lấy từ phát biểu lớp cao nhất giữa luật laYeuCau và nhãn model đọc tin, Kev thêm vào khi PL5 giao (`bang-yeu-cau-noi-lai`)
 - Người vận hành mở trang đo hằng ngày và thấy phân bố tin theo sáu mức gắn (căn, trục, toà, phân khu, dự án, phường) theo nguồn × vùng × loại nhà, kèm cảnh báo khi một ô giảm (`chi-so-muc-gan`)
 - Bản chiếu Danh bạ lên cloud gồm toà, trục, căn, bảng nối dự án, phát biểu thuộc tính dự án và tin sơ cấp, không mang tên nguồn thật, và trang Danh bạ đọc được trên cloud (`danh-ba-len-cloud`)
 - Người vận hành mở trang Danh bạ và thấy độ đủ hồ sơ của từng dự án theo bảy nhóm thông tin — trống, một nguồn, nhiều nguồn khớp, mâu thuẫn — cùng thẻ mâu thuẫn và tỉ lệ dự án đủ năm nhóm đầu mỗi ngày (`do-du-ho-so-du-an`)
@@ -48,6 +47,7 @@ flowchart TD
 ## Chờ duyệt phạm vi
 
 - ADR-0015 «đường lệnh kéo một chiều cloud → máy thu» và bản sửa đổi ADR-0007, kèm thuật ngữ mới và ROADMAP §2.3–2.4 khớp thực tế (`adr-duong-lenh-keo`)
+- Lớp bài Yêu cầu — transform S03 ghi phát biểu ý định (luật = observed, nhãn Haiku = inferred), bộ phân xử ghi mỗi bài Yêu cầu thành một dòng inquiry_post_records khoá theo post_id, chỉ DB local (`bang-yeu-cau-noi-lai`)
 - Báo cáo số liệu hằng ngày theo bảng mục tiêu — lệnh gom số chỉ đọc, so hôm qua và so đích, gợi ý kiến nghị (`bao-cao-so-lieu-ngay`)
 - Ca CD-AC-7b chờ request lưu ghi xong rồi mới đọc params, hết chập chờn trên CI (`che-do-thu-test-cho-luu`)
 - Tài liệu và đánh dấu của kho khớp các chốt 23–24/10 (tên nhóm S03 tầng C, luật S08, luật phép đo Zalo, ROADMAP V9) (`chep-chot-2410`)

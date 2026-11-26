@@ -1,0 +1,79 @@
+schema_version: 1
+slug: bang-yeu-cau-noi-lai
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.yc0_ac1
+    paths: ["db/migrations/136_inquiry_post_records.sql", "pipeline/lib/nap-136.mjs", "pipeline/scripts/yeu-cau.itest.mjs"]
+    expected: "Ca YC0-AC-1 chạy (pass ≥ 1, fail 0, skipped 0): áp 136 hai lần trong ROLLBACK; bảng, view, hàm đủ; mỗi CHECK một dòng vi phạm ra lỗi đúng tên ràng buộc (chiều đỏ ghim); phát biểu listing_intent ngoài sổ bị trigger từ chối; trường phát biểu cũ vẫn chèn được; migration ghi 0 dòng."
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.yc0_vocab
+    paths: ["pipeline/mappings.yaml", "pipeline/lib/vocab.generated.mjs", "pipeline/dq-enum-vocab.mjs", "pipeline/scripts/yeu-cau-vocab-db.mjs", "CONTEXT.md", "docs/adr/**"]
+    expected: "vocab --check, --lint xanh; yeu-cau-vocab-db.mjs (áp 136 trong ROLLBACK rồi --check-db) thoát 0 và có ca đối chứng đỏ gọi tên cột khi bỏ trục khỏi inquiry_post_records.kind; CONTEXT không còn «là tính năng sau»; phụ lục có 11 mục."
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.yc0_unit
+    paths: ["pipeline/lib/yeu-cau.mjs", "pipeline/scripts/yeu-cau.test.mjs"]
+    expected: "Ma trận chín bài viết trước xanh; đối chứng: bộ sinh bỏ bước lọc nhãn hỏng thì ca «nhãn hỏng đè» đổi tập dòng, đỏ gọi tên ca."
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.yc0_ac4
+    paths: ["pipeline/lib/yeu-cau.mjs", "pipeline/transform-zalo.mjs", "db/migrations/136_inquiry_post_records.sql", "pipeline/scripts/yeu-cau.itest.mjs"]
+    expected: "Ca YC0-AC-4 chạy (pass ≥ 1, skipped 0): một dòng mỗi bài khoá S03:<post_id>, song/cho-duyet đúng, dòng chờ duyệt có trong bảng và vắng trong view, intent_assertion_ids đúng, cột tiêu chí NULL, lượt hai thêm 0; đối chứng câu đọc nhãn bỏ lọc json_ok đỏ gọi tên bài."
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.yc0_ac5
+    paths: ["pipeline/lib/yeu-cau.mjs", "pipeline/transform-zalo.mjs", "pipeline/**/*.sql", "db/migrations/136_inquiry_post_records.sql", "pipeline/scripts/yeu-cau.itest.mjs"]
+    expected: "Ca YC0-AC-5 chạy (pass ≥ 1, skipped 0): lượt không chứa A giữ A sống; nghỉ het-y-dinh rồi sống lại cùng khoá; răng quét DELETE đỏ gọi tên tệp khi cấy vào bản sao transform-zalo.mjs và vào một tệp SQL."
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.yc0_ac6
+    paths: ["pipeline/lib/yeu-cau.mjs", "pipeline/transform-zalo.mjs", "pipeline/scripts/yeu-cau.itest.mjs"]
+    expected: "Ca YC0-AC-6 chạy (pass ≥ 1, skipped 0): DB chưa áp 136 → 0 phát biểu ý định, đúng một dòng «chưa áp 136»."
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.yc0_ac7
+    paths: ["pipeline/lib/yeu-cau.mjs", "pipeline/transform-zalo.mjs", "db/migrations/136_inquiry_post_records.sql", "pipeline/scripts/yeu-cau.itest.mjs"]
+    expected: "Ca YC0-AC-7 chạy (pass ≥ 1, skipped 0): sale_offers giống nhau có/không 136; đối chứng: cấy đổi mảng bài dùng chung thì đỏ gọi tên tin."
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.yc0_ac8
+    paths: ["pipeline/sql/600_data_flow.sql", "pipeline/refresh-data-flow.mjs", "pipeline/scripts/yeu-cau.itest.mjs"]
+    expected: "Ca YC0-AC-8 chạy (pass ≥ 1, skipped 0): ô Yêu cầu của dòng S03 bằng count(inquiries) (không gồm chờ duyệt); DB chưa áp 136 giữ đường tính lại cũ; đối chứng: ô đếm cả chờ duyệt thì đỏ."
+  - id: E9
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.yc0_do_that
+    long_running: 90
+    paths: ["pipeline/lib/yeu-cau.mjs", "pipeline/transform-zalo.mjs", "pipeline/scripts/do-yeu-cau.mjs", "db/migrations/136_inquiry_post_records.sql"]
+    expected: "Trên bản chép thật: tập bài = đếm độc lập (0 vắng, 0 thừa), ba nguồn đạt sàn 90% mốc, lần hai không đổi, source chỉ S0x, danh sách sync-cloud có sale_offers mà không có inquiry_post_records/inquiries; thoát 0. Chiều đỏ trong do-yeu-cau.test: thiếu bài, thừa bài, nguồn dưới sàn, cấy inquiries vào bản sao danh sách đều thoát 1 gọi tên."
+  - id: E10
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.suite.pipeline_a
+    long_running: 90
+    paths: ["pipeline/**"]
+    expected: "Nửa a bộ pipeline xanh."
+  - id: E11
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.suite.pipeline_b
+    long_running: 90
+    paths: ["pipeline/**"]
+    expected: "Nửa b bộ pipeline xanh."
+  - id: E12
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.suite.app_ui
+    long_running: 90
+    paths: ["app/**"]
+    expected: "Bộ test app xanh."
