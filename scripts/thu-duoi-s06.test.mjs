@@ -68,6 +68,17 @@ esac
 `;
   writeFileSync(join(bin, "node"), shim, { mode: 0o755 });
 
+  // SHIM pgrep (MỞ LẠI 2611-27 lần 3): wrapper dò «lượt quét đủ đang chạy» qua pgrep —
+  // nếu để pgrep thật thì kết quả test phụ thuộc tiến trình đang sống trên máy thu
+  // (16/26 đỏ lúc 05:46 VN khi lượt 05:30 đang chạy). PATH của test đặt $bin TRƯỚC,
+  // nên wrapper luôn gặp pgrep giả này: mặc định «không có gì chạy», chỉ nói «có»
+  // khi ca yêu cầu qua PGREP_GIA_QUET_DU=1.
+  const shimPgrep = `#!/bin/bash
+[ "\${PGREP_GIA_QUET_DU:-0}" = "1" ] && exit 0
+exit 1
+`;
+  writeFileSync(join(bin, "pgrep"), shimPgrep, { mode: 0o755 });
+
   const env = {
     PATH: `${bin}:/bin:/usr/bin`,
     HOME: home,
@@ -77,8 +88,6 @@ esac
   };
   return { home, bin, root, goc, log, env };
 }
-
-const DANG_QUET_DU = () => spawnSync("pgrep", ["-f", "scripts/chotot-daily.sh"]).status === 0;
 
 function chay(t, suaEnv = {}) {
   return spawnSync("bash", [join(t.root, "scripts", "thu-duoi-s06.sh")], {
@@ -120,15 +129,12 @@ test("khoá sót của tiến trình đã chết → nhận lại khoá, vòng c
   dung(t);
 });
 
-test("script nạp ngày đang chạy → thoát 0, nhường lượt, không lời gọi node", async () => {
+test("2611-27 «đang có lượt quét đủ» (tiến trình giả qua PGREP_GIA_QUET_DU=1) → thoát 0, nhường lượt, không lời gọi node", async () => {
   const t = moiTruong();
-  const con = spawn("bash", ["-c", `exec -a "${t.root}/scripts/chotot-daily.sh" sleep 30`]);
-  await new Promise((r) => setTimeout(r, 300));
-  const kq = chay(t);
-  assert.equal(kq.status, 0);
+  const kq = chay(t, { PGREP_GIA_QUET_DU: "1" });
+  assert.equal(kq.status, 0, kq.stderr);
   assert.match(kq.stdout, /nhường lượt/);
   assert.deepEqual(docLog(t), [], "nhường lượt phải đứng trước mọi lời gọi node");
-  con.kill("SIGTERM");
   dung(t);
 });
 
@@ -173,7 +179,6 @@ test("vui: thu 2 vùng, hanoi đã nạp → import ĐÚNG 1 snapshot mới nh�
 // — claudedp-2611-27 (1): tập vùng cấu hình được, MẶC ĐỊNH bằng đúng phạm vi đã đo (một vùng) —
 test("2611-27 MẶC ĐỊNH chỉ vùng đã đo: hanoi bị bỏ (có dòng nhật ký), chỉ hcmc được gọi", () => {
   const t = moiTruong();
-  if (DANG_QUET_DU()) { t.skip && t.skip?.(); } // lượt quét đủ đang chạy → wrapper nhường lượt thoát 0 im lặng, không đo được
   const kq = chay(t, { SHIM_CITIES: "hanoi hcmc" });
   assert.equal(kq.status, 0, kq.stderr);
   const log = docLog(t);
@@ -185,7 +190,6 @@ test("2611-27 MẶC ĐỊNH chỉ vùng đã đo: hanoi bị bỏ (có dòng nh�
 
 test("2611-27 mở thêm vùng bằng THU_DUOI_S06_VUNG → vùng đó được gọi (đối chứng hành vi)", () => {
   const t = moiTruong();
-  if (DANG_QUET_DU()) { t.skip && t.skip?.(); } // lượt quét đủ đang chạy → wrapper nhường lượt thoát 0 im lặng, không đo được
   const kq = chay(t, { SHIM_CITIES: "hanoi hcmc", THU_DUOI_S06_VUNG: "hanoi hcmc" });
   assert.equal(kq.status, 0, kq.stderr);
   assert.deepEqual(docLog(t).filter((d) => d.startsWith("collect")), ["collect hanoi", "collect hcmc"]);
@@ -194,7 +198,6 @@ test("2611-27 mở thêm vùng bằng THU_DUOI_S06_VUNG → vùng đó được 
 
 test("2611-27 vùng ngoài tập: KHÔNG phát lời gọi nào cho vùng đó, vẫn có dòng nhật ký bỏ", () => {
   const t = moiTruong();
-  if (DANG_QUET_DU()) { t.skip && t.skip?.(); } // lượt quét đủ đang chạy → wrapper nhường lượt thoát 0 im lặng, không đo được
   const kq = chay(t, { SHIM_CITIES: "hcmc da-nang hanoi", THU_DUOI_S06_VUNG: "hcmc da-nang" });
   assert.equal(kq.status, 0, kq.stderr);
   assert.deepEqual(docLog(t).filter((d) => d.startsWith("collect")), ["collect hcmc", "collect da-nang"], "hanoi ngoài tập không được gọi");
@@ -205,7 +208,6 @@ test("2611-27 vùng ngoài tập: KHÔNG phát lời gọi nào cho vùng đó, 
 // — claudedp-2611-27 (2): nghỉ có hạn sau khi nguồn trả 403/429 —
 test("2611-27 vừa bị chặn (collect RC 3) → ghi mốc nghỉ và thoát 3", () => {
   const t = moiTruong();
-  if (DANG_QUET_DU()) { t.skip && t.skip?.(); } // lượt quét đủ đang chạy → wrapper nhường lượt thoát 0 im lặng, không đo được
   const kq = chay(t, { SHIM_COLLECT_RC: 3, SHIM_CITIES: "hcmc" });
   assert.equal(kq.status, 3);
   const moc = JSON.parse(readFileSync(join(t.goc, "bi-chan.json"), "utf8"));
@@ -215,7 +217,6 @@ test("2611-27 vừa bị chặn (collect RC 3) → ghi mốc nghỉ và thoát 3
 
 test("2611-27 ĐANG trong khoảng nghỉ sau bị chặn → thoát 0, KHÔNG lời gọi nào tới nguồn (kể cả thu)", async () => {
   const t = moiTruong();
-  if (DANG_QUET_DU()) { t.skip && t.skip?.(); } // lượt quét đủ đang chạy → wrapper nhường lượt thoát 0 im lặng, không đo được
   const con = spawn("bash", ["-c", "sleep 30"]);
   mkdirSync(`${t.goc}.lock`);
   writeFileSync(join(`${t.goc}.lock`, "pid"), String(con.pid));
@@ -239,7 +240,6 @@ test("2611-27 ĐANG trong khoảng nghỉ sau bị chặn → thoát 0, KHÔNG l
 // — claudedp-2611-27 (3, ZC18): chặn LẦN HAI trong 24 giờ → DỪNG HẲN cho tới khi NGƯỜI gỡ dấu —
 test("2611-27 chặn lần hai trong 24 giờ → ghi dấu dừng hẳn, thoát 3, in dòng nói rõ + cách gỡ", () => {
   const t = moiTruong();
-  if (DANG_QUET_DU()) { t.skip && t.skip?.(); }
   // lần chặn trước cách đây 1 giờ — lần chặn này là «lần hai trong 24 giờ»
   writeFileSync(join(t.goc, "lan-chan.json"), JSON.stringify({ lanCuoi: new Date(Date.now() - 3600_000).toISOString() }));
   const kq = chay(t, { SHIM_COLLECT_RC: 3, SHIM_CITIES: "hcmc" });
@@ -252,7 +252,6 @@ test("2611-27 chặn lần hai trong 24 giờ → ghi dấu dừng hẳn, thoát
 
 test("2611-27 ĐÃ dừng hẳn: các lượt sau không gọi nguồn DÙ hết hạn nghỉ, chỉ in dòng gỡ dấu, thoát 0", () => {
   const t = moiTruong();
-  if (DANG_QUET_DU()) { t.skip && t.skip?.(); }
   writeFileSync(join(t.goc, "dung-han.json"), JSON.stringify({ lanTruoc: "2026-11-26T00:00:00Z", lanHai: "2026-11-26T01:00:00Z" }));
   // mốc nghỉ ĐÃ quá hạn — dấu dừng hẳn vẫn phải chặn trước mọi lời gọi node
   writeFileSync(join(t.goc, "bi-chan.json"), JSON.stringify({ hetLuc: new Date(Date.now() - 60_000).toISOString() }));
@@ -266,7 +265,6 @@ test("2611-27 ĐÃ dừng hẳn: các lượt sau không gọi nguồn DÙ hết
 
 test("2611-27 chặn lần hai SAU 24 giờ → chỉ nghỉ như lần đầu, không dừng hẳn", () => {
   const t = moiTruong();
-  if (DANG_QUET_DU()) { t.skip && t.skip?.(); }
   writeFileSync(join(t.goc, "lan-chan.json"), JSON.stringify({ lanCuoi: new Date(Date.now() - 25 * 3600_000).toISOString() }));
   const kq = chay(t, { SHIM_COLLECT_RC: 3, SHIM_CITIES: "hcmc" });
   assert.equal(kq.status, 3, kq.stdout + kq.stderr);
@@ -280,7 +278,6 @@ test("2611-27 chặn lần hai SAU 24 giờ → chỉ nghỉ như lần đầu, 
 
 test("2611-27 người gỡ dấu bằng tay (rm dung-han.json) → chạy lại bình thường, gọi nguồn lại", () => {
   const t = moiTruong();
-  if (DANG_QUET_DU()) { t.skip && t.skip?.(); }
   writeFileSync(join(t.goc, "dung-han.json"), JSON.stringify({ lanTruoc: "x", lanHai: "y" }));
   rmSync(join(t.goc, "dung-han.json")); // đúng hành động gỡ: rm <tệp>
   const kq = chay(t, { SHIM_CITIES: "hcmc", SHIM_DA_NAP: "hcmc" });
@@ -292,7 +289,6 @@ test("2611-27 người gỡ dấu bằng tay (rm dung-han.json) → chạy lại
 
 test("2611-27 tắt THU_DUOI_S06_DUNG_LAN_HAI=0 → chặn lần hai chỉ nghỉ, không dấu dừng (như fc3fa4a7a)", () => {
   const t = moiTruong();
-  if (DANG_QUET_DU()) { t.skip && t.skip?.(); }
   writeFileSync(join(t.goc, "lan-chan.json"), JSON.stringify({ lanCuoi: new Date(Date.now() - 3600_000).toISOString() }));
   const kq = chay(t, { SHIM_COLLECT_RC: 3, SHIM_CITIES: "hcmc", THU_DUOI_S06_DUNG_LAN_HAI: "0" });
   assert.equal(kq.status, 3, kq.stdout + kq.stderr);
