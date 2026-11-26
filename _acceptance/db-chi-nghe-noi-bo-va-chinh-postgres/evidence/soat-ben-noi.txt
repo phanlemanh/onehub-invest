@@ -1,4 +1,4 @@
-# Tệp có docker run / docker exec chạm one-invest-db hay mạng container: — sinh bởi check-db-noi-bo.sh soat 831aa6bdf
+# Tệp có docker run / docker exec chạm one-invest-db hay mạng container: — sinh bởi check-db-noi-bo.sh soat 2274d1b52
 db/check-idempotent-tam.sh	docker exec vào one-invest-db
 db/check-idempotent.selftest.sh	docker exec vào one-invest-db
 db/check-idempotent.sh	docker exec vào one-invest-db
@@ -17,6 +17,7 @@ scripts/check-supabase-lock.sh	docker run container riêng
 scripts/db-chuyen-volume.sh	docker exec vào one-invest-db
 scripts/db-khoi-phuc.sh	docker run --network=container (mạng của one-invest-db)
 scripts/db-sao-luu.sh	docker run --network=container (mạng của one-invest-db)
+scripts/db-thu-trong.test.mjs	docker run container riêng
 scripts/db-volume-check.sh	docker run container riêng
 scripts/migrate-export.sh	docker compose / khác
 scripts/sao-luu-ngoai-may.itest.mjs	docker run container riêng
