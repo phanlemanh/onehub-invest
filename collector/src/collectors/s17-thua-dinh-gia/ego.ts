@@ -109,7 +109,17 @@ export function chonTrangGoi(tabs: Array<{ label?: string; url: string }>, web: 
   return { label: tab.label, url: tab.url };
 }
 
-type InPageResult = { status: number; contentType: string | null; body: string; bytes?: number; networkError?: string };
+type InPageResult = {
+  status: number;
+  contentType: string | null;
+  body: string;
+  bytes?: number;
+  networkError?: string;
+  /** Thời gian chờ tới khi có câu trả lời (ms) — chỉ có khi nguồn đã trả lời. */
+  ms?: number;
+  /** Các header ĐƯỢC CHỌN của câu trả lời (hạn mức, retry-after, giờ máy chủ, mã lần chạy) — chỉ có khi nguồn đã trả lời và có ít nhất một cái. */
+  headers?: Record<string, string>;
+};
 type InPageInput = { url: string; headerJson: string; cookieName: string; timeoutMs: number };
 type InPageJob = { token: string; t0: number; done: number; rs: InPageResult[] };
 
@@ -164,16 +174,53 @@ export const IN_PAGE_START = (input: { items: InPageInput[]; staggerMs: number; 
   const mot = async (it: InPageInput, delayMs: number, index: number): Promise<void> => {
     if (delayMs > 0) await new Promise((r) => setTimeout(r, delayMs));
     let out: InPageResult;
+    const t0 = Date.now();
     try {
       const headers = JSON.parse(it.headerJson) as Record<string, string>;
       // Tên cookie đến từ cấu hình local; giá trị chỉ đi thẳng vào header của chính lời gọi này.
       const m = new RegExp(`(?:^|;\\s*)${it.cookieName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}=([^;]+)`).exec(g.document.cookie);
       if (m) headers.Authorization = `Bearer ${decodeURIComponent(m[1])}`;
       const res = await g.fetch(it.url, { headers, credentials: "omit", signal: g.AbortSignal.timeout(it.timeoutMs) });
+      // Đo câu trả lời (Mạnh 26/11 «gọi thử một lời và đo lường nó»): thời gian chờ tới khi có câu trả lời và các header nói về
+      // hạn mức — lần 429 ngày 25/11 chỉ ghi được «nguồn trả 429», không biết nguồn bảo gì. Chỉ lấy các header được chọn,
+      // không lấy cả đống (set-cookie là của riêng lời gọi). Danh sách viết sẵn trong hàm: hàm chạy trong trang.
+      const doTon: Pick<InPageResult, "ms" | "headers"> = { ms: Date.now() - t0 };
+      const chon: Record<string, string> = {};
+      for (const k of [
+        "retry-after",
+        "ratelimit-limit",
+        "ratelimit-remaining",
+        "ratelimit-reset",
+        "ratelimit-policy",
+        "x-ratelimit-limit",
+        "x-ratelimit-remaining",
+        "x-ratelimit-reset",
+        "x-ratelimit-reset-ttl",
+        "x-ratelimit-used",
+        "x-rate-limit-limit",
+        "x-rate-limit-remaining",
+        "x-rate-limit-reset",
+        "x-request-id",
+        "request-id",
+        "x-trace-id",
+        "trace-id",
+        "date",
+        "server",
+        "age",
+        "cf-ray",
+        "cf-cache-status",
+        "x-cache",
+        "x-served-by",
+        "via",
+      ]) {
+        const v = res.headers.get(k);
+        if (v !== null) chon[k] = v;
+      }
+      if (Object.keys(chon).length) doTon.headers = chon;
       const contentType = res.headers.get("content-type") ?? "";
       // Chữ giữ thân; nhị phân chỉ giữ số byte.
-      if (/json|text|javascript|xml|form/i.test(contentType)) out = { status: res.status, contentType, body: await res.text() };
-      else out = { status: res.status, contentType, body: "", bytes: (await res.arrayBuffer()).byteLength };
+      if (/json|text|javascript|xml|form/i.test(contentType)) out = { status: res.status, contentType, body: await res.text(), ...doTon };
+      else out = { status: res.status, contentType, body: "", bytes: (await res.arrayBuffer()).byteLength, ...doTon };
     } catch (e) {
       out = { status: 0, contentType: null, body: "", networkError: String(e).slice(0, 160) };
     }
@@ -217,7 +264,7 @@ export function makeTransports(
   const gio = cho.now ?? (() => Date.now());
   const xuLy = (r: InPageResult): Response => {
     if (r.networkError) throw new TypeError(r.networkError);
-    return { status: r.status, contentType: r.contentType ?? "", body: r.body, bytes: r.bytes };
+    return { status: r.status, contentType: r.contentType ?? "", body: r.body, bytes: r.bytes, ...(r.ms !== undefined ? { ms: r.ms } : {}), ...(r.headers ? { headers: r.headers } : {}) };
   };
   const chay = async (requests: Array<{ url: string; headers: Record<string, string> }>, staggerMs: number): Promise<InPageResult[]> => {
     const items = requests.map((r) => ({ url: r.url, headerJson: JSON.stringify(r.headers), cookieName, timeoutMs: IN_PAGE_TIMEOUT_MS }));

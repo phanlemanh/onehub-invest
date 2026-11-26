@@ -23,7 +23,7 @@ import { chonTrangGoi, EGO_EVALUATE_LIMIT_MS, IN_PAGE_COLLECT, IN_PAGE_START, IN
  * phải đối chiếu với số lời đã gửi. Máy chủ và trang ở đây đều GIẢ.
  */
 
-type InPageResult = { status: number; contentType: string | null; body: string; bytes?: number; networkError?: string };
+type InPageResult = { status: number; contentType: string | null; body: string; bytes?: number; networkError?: string; ms?: number; headers?: Record<string, string> };
 type InPageInput = { url: string; headerJson: string; cookieName: string; timeoutMs: number };
 type DaCollect = { mat: true } | { done: number; tong: number; rs?: InPageResult[] };
 type Tro = { ms: number; addEventListener(type: "abort", fn: () => void): void };
@@ -170,6 +170,35 @@ test("giá trị phiên chỉ đi thẳng vào header của chính lời gọi: 
   for (const s of [String(n), JSON.stringify(kq), String(viec)]) {
     assert.equal(s.includes("BIET MAT"), false, "giá trị phiên không được rời khỏi lời gọi");
   }
+});
+
+test("lời trong trang ghi thêm thời gian chờ (ms) và CÁC HEADER ĐƯỢC CHỌN của câu trả lời (retry-after, hạn mức, giờ máy chủ); header khác không lấy", async () => {
+  let t = 5_000;
+  const { sandbox } = trangGia({ now: () => t });
+  const tung: Record<string, string> = { "content-type": "application/json", "retry-after": "30", "x-ratelimit-remaining": "0", date: "Thu, 26 Nov 2026 05:00:00 GMT", "set-cookie": "bi-mat=1" };
+  sandbox.fetch = (_url: string, init: LoiGoi["init"]) =>
+    new Promise((resolve, reject) => {
+      setTimeout(() => {
+        t += 4321;
+        resolve({ status: 429, headers: { get: (k: string) => tung[k] ?? null }, text: async () => '{"error":"qua han"}', arrayBuffer: async () => new ArrayBuffer(0) });
+      }, 10);
+      init.signal.addEventListener("abort", () => reject(new Error("SIG-ABORT")));
+    });
+  dau(sandbox)({ items: [mot(`${U}a`)], staggerMs: 0, token: "h" });
+  await nghi(40);
+  const r = rsCua(lay(sandbox)({ token: "h" }))?.[0];
+  // So chuỗi JSON: kết quả sinh ra trong ngữ cảnh máy ảo khác nên không so được nguyên mẫu (như test xung quanh).
+  assert.equal(
+    JSON.stringify([r?.status, r?.ms, r?.headers, r?.body]),
+    JSON.stringify([429, 4321, { "retry-after": "30", "x-ratelimit-remaining": "0", date: "Thu, 26 Nov 2026 05:00:00 GMT" }, '{"error":"qua han"}']),
+  );
+});
+
+test("vận chuyển đưa thời gian chờ và header được chọn của câu trả lời sang Response cho lớp gọi", async () => {
+  const { page } = pageGia({ collect: [{ done: 1, tong: 1, rs: [{ status: 200, contentType: "application/json", body: "{}", ms: 87, headers: { "x-ratelimit-remaining": "12" } }] }] });
+  const { transport } = makeTransports(page, "sid", choNhanh().cho);
+  const r = await transport(`${U}mot`, {});
+  assert.deepEqual([r.ms, r.headers], [87, { "x-ratelimit-remaining": "12" }]);
 });
 
 function pageGia(tra: { start?: number | Error | Array<number | Error>; collect: Array<unknown | Error> }): { page: EgoPage; buoc: Array<{ ham: string; arg: Record<string, unknown> }> } {

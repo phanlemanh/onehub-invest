@@ -81,12 +81,17 @@ export type KetQuaLietKe = { codes: string[]; total: number; lots: number; khop:
  * (tối đa MAX_APARTMENT_LOT, lượt không thêm mã thì dừng). Ghi item `can_ho_list` từng trang (CHƯA chốt — nơi gọi
  * chốt cùng bản gộp toà). Lỗi mềm (`status: false`) ở BẤT KỲ trang nào → dừng cả lượt (source-error). Một trang
  * lỗi tạm → trả `loi`, không ghi trang nào của toà (ghi thiếu trang là ghi dữ liệu sai).
+ *
+ * Trang được GOM lại trong hàm và chỉ đẩy vào writer sau khi mọi lượt quét của toà đã xong, không lỗi: lỗi tạm ở lượt
+ * quét thứ hai trở đi không được để lại trang của lượt trước trong bộ đệm (lượt xét vòng 1 — trang mồ côi của một toà
+ * bị coi là chưa liệt kê, không có bản gộp, lượt sau lại ghi chồng một bộ trang nữa).
  */
 export async function lietKeToa(o: RunOptions, projectId: string, building: string, concurrency: number): Promise<KetQuaLietKe> {
   const at = () => (o.now ?? (() => new Date()))().toISOString();
   const size = o.apartmentPageSize ?? 100;
   const requestOf = (page: number) => ({ thap: building, text: building, project_id: projectId, page, size });
   const unique = new Set<string>();
+  const trang: Array<ReturnType<typeof makeItem>> = []; // chỉ ghi khi cả toà đã liệt kê xong
   let total = 0;
   let lots = 0;
   let soTrangDaGhi = 0;
@@ -126,7 +131,7 @@ export async function lietKeToa(o: RunOptions, projectId: string, building: stri
           maMoi++;
         }
       }
-      await o.writer.add(
+      trang.push(
         makeItem(
           "can_ho_list",
           `du-an-${projectId}-toa-${sourceIdSlug(building)}-trang-${page + 1}${lots > 1 ? `-lot-${lots}` : ""}`,
@@ -141,6 +146,7 @@ export async function lietKeToa(o: RunOptions, projectId: string, building: stri
     if (maMoi === 0 || unique.size >= total) break;
   }
   const khop = total > 0 && unique.size > 0 && unique.size === total;
+  for (const it of trang) await o.writer.add(it); // tới đây mọi lượt quét đã xong, không lỗi: mới ghi trang của toà
   return { codes: [...unique], total, lots: Math.min(lots, MAX_APARTMENT_LOT), khop, rong: unique.size === 0, soTrangDaGhi };
 }
 

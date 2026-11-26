@@ -3,7 +3,7 @@ import { test } from "node:test";
 
 import { loadConfig } from "../collectors/s17-thua-dinh-gia/config.js";
 import { ConfigError } from "../collectors/s17-thua-dinh-gia/config.js";
-import { RunStopped, S17Client, TemporaryFailure, type Response, type TransportMany, MAX_CONCURRENCY } from "../collectors/s17-thua-dinh-gia/client.js";
+import { RunStopped, S17Client, TemporaryFailure, type PhanHoi, type Response, type TransportMany, MAX_CONCURRENCY } from "../collectors/s17-thua-dinh-gia/client.js";
 
 /**
  * S17 mốc ngày 2: gửi NHIỀU lời một đợt (đo 24/11: hai lời hồ sơ thửa đồng thời trong trang xong sau 4,9 s
@@ -25,9 +25,9 @@ const FAKE_CONFIG = {
 const json = (body: unknown, status = 200): Response => ({ status, contentType: "application/json", body: JSON.stringify(body) });
 const loiMang = new TypeError("Failed to fetch");
 
-type Ke = { client: S17Client; sent: string[]; dot: string[][]; slept: number[] };
+type Ke = { client: S17Client; sent: string[]; dot: string[][]; slept: number[]; daBao: PhanHoi[] };
 
-/** `answer(url)` trả phản hồi hoặc ném lỗi mạng. `many`: có vận chuyển theo đợt hay không. */
+/** `answer(url)` trả phản hồi hoặc ném lỗi mạng. `many`: có vận chuyển theo đợt hay không. `daBao`: mọi câu trả lời lớp gọi báo qua `onResponse`. */
 function makeClient(
   answer: (url: string, i: number) => Response | Promise<Response>,
   o: { caps?: { calls: number; minutes: number }; paceMs?: number; many?: boolean } = {},
@@ -35,6 +35,7 @@ function makeClient(
   const sent: string[] = [];
   const dot: string[][] = [];
   const slept: number[] = [];
+  const daBao: PhanHoi[] = [];
   let t = 1_000_000;
   const single = async (url: string): Promise<Response> => {
     sent.push(url);
@@ -62,13 +63,46 @@ function makeClient(
       t += ms;
     },
     transport: single,
+    onResponse: (r) => {
+      daBao.push(r);
+    },
     ...(o.many ? { transportMany: many } : {}),
   });
-  return { client, sent, dot, slept };
+  return { client, sent, dot, slept, daBao };
 }
 
 const reasonOf = (e: unknown): string => (e instanceof RunStopped ? e.reason : e instanceof TemporaryFailure ? "temporary" : String(e));
 const task = (lat: number) => ({ role: "parcel-profile" as const, params: { latitude: lat, longitude: 105.85 } });
+
+test("onResponse: lớp gọi báo MỘT lần cho MỖI câu trả lời (vai, trạng thái, thời gian, header được chọn); thân chỉ đưa khi không phải 200; lời 429 được báo TRƯỚC khi dừng", async () => {
+  const biChan = makeClient(() => ({ status: 429, contentType: "application/json", body: '{"message":"qua han"}', ms: 321, headers: { "retry-after": "30" } }));
+  await assert.rejects(biChan.client.getJson("parcel-profile", task(1).params), (e: unknown) => e instanceof RunStopped && e.reason === "blocked");
+  assert.deepEqual(biChan.daBao, [{ vai: "parcel-profile", status: 429, ms: 321, contentType: "application/json", headers: { "retry-after": "30" }, than: '{"message":"qua han"}' }]);
+  const tot = makeClient(() => ({ ...json({ status: true, data: { available: true } }), ms: 87, headers: { "x-ratelimit-remaining": "12" } }));
+  await tot.client.getJson("parcel-profile", task(1).params);
+  await tot.client.getJson("parcel-profile", task(2).params);
+  assert.deepEqual(tot.daBao, [
+    { vai: "parcel-profile", status: 200, ms: 87, contentType: "application/json", headers: { "x-ratelimit-remaining": "12" } },
+    { vai: "parcel-profile", status: 200, ms: 87, contentType: "application/json", headers: { "x-ratelimit-remaining": "12" } },
+  ]);
+});
+
+test("onResponse: lỗi mạng (không có câu trả lời) cũng được báo với trạng thái 0", async () => {
+  let lan = 0;
+  const ke = makeClient(() => {
+    lan++;
+    throw loiMang;
+  });
+  await ke.client.getJson("parcel-profile", task(1).params).catch(() => undefined);
+  // Mạng hỏng: lớp gọi thử lại ba lần (bốn lần gửi), mỗi lần hỏi thêm hai lời kiểm phiên — câu nào cũng được báo.
+  assert.deepEqual(ke.daBao.slice(0, 3), [
+    { vai: "parcel-profile", status: 0 },
+    { vai: "data-available", status: 0 },
+    { vai: "asset-type", status: 0 },
+  ], "báo lời gốc rồi hai lời kiểm phiên, đúng thứ tự, không có thân");
+  assert.equal(ke.daBao.length, 12, "bốn lần gửi × ba lời");
+  assert.equal(ke.daBao.some((r) => r.status !== 0 || "than" in r), false, "mọi câu đều là lỗi mạng, không có thân");
+});
 
 test("getJsonMany: gửi theo đợt, mỗi đợt tối đa `concurrency` lời, kết quả đúng thứ tự", async () => {
   const ke = makeClient((url) => json({ status: true, data: { lat: new URL(url).searchParams.get("latitude") } }), { many: true });
@@ -224,4 +258,60 @@ test("vận chuyển ném RunStopped (vd trang không còn ở gốc của ngu�
     }
     assert.ok(ke.slept.every((ms) => ms < 1000), `không chờ thử lại (các lần nghỉ: ${JSON.stringify(ke.slept)})`);
   }
+});
+
+test("getJsonMany: vận chuyển trả RunStopped (vd trang không còn ở gốc của nguồn) thì lớp gọi CHỐT dừng — các đợt sau không gửi, không nghỉ nhịp, không vống số lời; lời gọi kế nhận chính lỗi dừng đó (lượt xét vòng 1, AC-2)", async () => {
+  const dung = new RunStopped("page-origin", "trang gọi trong trang không còn ở gốc của nguồn");
+  let soDot = 0;
+  const slept: number[] = [];
+  const client = new S17Client({
+    config: loadConfig(JSON.stringify(FAKE_CONFIG)),
+    caps: { calls: 100, minutes: 60 },
+    paceMs: 0,
+    now: () => 1_000_000,
+    sleep: async (ms: number) => {
+      slept.push(ms);
+    },
+    transport: async () => {
+      throw dung;
+    },
+    transportMany: async (list) => {
+      soDot++;
+      return list.map(() => dung);
+    },
+  });
+  const r = await client.getJsonMany([task(1), task(2), task(3), task(4), task(5)], 2);
+  assert.equal(soDot, 1, "đợt đầu đã trả lỗi dừng thì không gửi đợt hai, ba (trước khi sửa: vẫn gửi đủ ba đợt)");
+  assert.deepEqual(
+    r.map((x) => (x.ok ? "ok" : x.error === dung ? "dừng" : "khác")),
+    ["dừng", "dừng", "dừng", "dừng", "dừng"],
+  );
+  assert.equal(client.calls, 2, "chỉ hai lời của đợt đầu được tính");
+  await assert.rejects(client.getJson("parcel-profile", task(1).params), (e: unknown) => e === dung, "đã dừng thì lời sau nhận chính lỗi dừng, không gửi");
+});
+
+test("getJson: vận chuyển trả RunStopped thì lớp gọi chốt dừng — lời kế nhận chính lỗi đó, không gửi lại (lượt xét vòng 1, AC-2)", async () => {
+  const dung = new RunStopped("page-origin", "trang gọi trong trang không còn ở gốc của nguồn");
+  let soLan = 0;
+  const client = new S17Client({
+    config: loadConfig(JSON.stringify(FAKE_CONFIG)),
+    caps: { calls: 100, minutes: 60 },
+    paceMs: 0,
+    now: () => 1_000_000,
+    sleep: async () => undefined,
+    transport: async () => {
+      soLan++;
+      throw dung;
+    },
+  });
+  await assert.rejects(client.getJson("parcel-profile", task(1).params), (e: unknown) => e === dung);
+  await assert.rejects(client.getJson("parcel-profile", task(2).params), (e: unknown) => e === dung, "lời thứ hai nhận đúng lỗi dừng");
+  const sau = await client.getJsonMany([task(3), task(4)], 2);
+  assert.deepEqual(
+    sau.map((x) => (x.ok ? "ok" : x.error === dung ? "dừng" : "khác")),
+    ["dừng", "dừng"],
+    "getJsonMany sau khi đã dừng: mọi lời nhận lỗi dừng, không đợt nào được gửi",
+  );
+  assert.equal(client.calls, 1, "chỉ lời đầu tiên được tính; lời sau bị từ chối trước khi gửi");
+  assert.equal(soLan, 1, "lời sau không tới vận chuyển (trước khi sửa: gửi lại, mỗi lần thêm một lần chạy trong trang lạ)");
 });

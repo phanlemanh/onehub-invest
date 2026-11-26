@@ -167,3 +167,17 @@ test("parseCli + specDuongNode: lượt ảnh máy chủ ngoài là một lượ
   assert.equal(spec.snapshotRoot, "/tmp/snap");
   assert.equal((spec.caps as { calls: number }).calls, 1000);
 });
+
+test("parseCli: --bo-doc-so-du chỉ dành cho --phase session-check — bản kê của tiến trình trình duyệt không đọc số dư; pha lấy dữ liệu thì từ chối", () => {
+  const phien = [...base, "--phase", "session-check", "--space", "4", "--caps-calls", "1"];
+  const config = loadConfig(JSON.stringify({ hosts: { api: "https://api.gia.test", agent: "https://agent.gia.test", web: "https://web.gia.test" }, paths: {}, session: { cookieName: "sid" } }));
+  const duong = { statePath: "/a/s.json", logPath: "/a/l.jsonl", resultPath: "/a/r.json" };
+  const macDinh = parseCli(phien);
+  assert.equal(macDinh.boDocSoDu, undefined, "mặc định không tắt");
+  assert.equal(egoOptions(macDinh, config, duong).checkBalance, true, "kiểm phiên mặc định có đọc số dư");
+  const motLoi = parseCli([...phien, "--bo-doc-so-du"]);
+  assert.equal(motLoi.boDocSoDu, true);
+  assert.equal(egoOptions(motLoi, config, duong).checkBalance, false, "lời gọi thử: không đọc số dư, chỉ lời kiểm phiên tới máy chủ API");
+  assert.throws(() => parseCli([...base, "--phase", "projects", "--space", "4", "--bo-doc-so-du"]), /--bo-doc-so-du/, "pha lấy dữ liệu luôn đọc số dư");
+  assert.throws(() => parseCli([...base, "--bo-doc-so-du"]), /--bo-doc-so-du/, "pha công khai cũng không nhận");
+});

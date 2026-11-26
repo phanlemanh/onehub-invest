@@ -289,6 +289,19 @@ test("pha ảnh: tải ảnh gốc vào snapshot dưới media/ kèm item bảng
   assert.ok(soTep.every((f: { bytes: number; sha256: string }) => f.bytes > 0 && /^[0-9a-f]{64}$/.test(f.sha256)), "manifest khai sha256 và số byte");
   assert.ok(tatCa.every((x) => x.manifest.schemaVersion === 18));
   const items = tatCa.flatMap((x) => x.items);
+  // Quan hệ, không chỉ khuôn (lượt xét vòng 1, AC-6): sha256 trong manifest VÀ trong meta.mediaFiles là băm của đúng
+  // byte của tệp media trên đĩa — băm lại từng tệp rồi so với cả hai nơi.
+  for (const x of tatCa) {
+    for (const f of x.manifest.files.filter((q: { name: string }) => q.name.startsWith("media/"))) {
+      const byte = await readFile(join(dir, "vn", x.id, f.name));
+      assert.equal(byte.length, f.bytes, `manifest khai đúng số byte của ${f.name}`);
+      assert.equal(sha(byte), f.sha256, `manifest khai sha256 khớp nội dung ${f.name}`);
+      const muc = items.flatMap((it) => it.meta.mediaFiles).find((m: { file?: string }) => m.file === f.name);
+      assert.ok(muc, `${f.name} có mục trong mediaFiles của item`);
+      assert.equal(muc.bytes, byte.length, `meta.mediaFiles khai đúng số byte của ${f.name}`);
+      assert.equal(muc.sha256, sha(byte), `meta.mediaFiles khai sha256 khớp nội dung ${f.name}`);
+    }
+  }
   assert.ok(items.every((it) => it.kind === "anh_du_an" && /^du-an-\d+-anh-\d+-\d+$/.test(it.sourceId)), JSON.stringify(items.map((it) => it.sourceId)));
   assert.equal(items.flatMap((it) => it.meta.mediaFiles).some((m: { url: string }) => m.url.includes("ngoai.test")), false, "URL máy chủ ngoài không thuộc lượt ảnh của chính nguồn");
   const png = items.flatMap((it) => it.meta.mediaFiles).find((m: { url: string }) => m.url.endsWith("1.png?response-content-type=image%2Fpng") || m.url.includes("1.png"));
@@ -1464,11 +1477,13 @@ test("taiAnh: tín hiệu bỏ từ ngoài — bỏ giữa chừng là lỗi t�
       ),
   );
   const loi = taiAnh("https://a.cdn.gia.test/a", { ...TUY_CHON, fetchImpl: cham.fetchImpl, signal: ac.signal, trenKhoi: (n) => { daBao = n; } });
-  await new Promise((r) => setTimeout(r, 70));
+  // Chờ tới khi đã báo đủ 40 byte rồi mới bỏ — không phụ thuộc độ chính xác của đồng hồ khi cả bộ chạy chung một tiến
+  // trình (26/11: chạy trọn bộ lúc máy bận, chỉ kịp 10 byte thì đỏ oan). Luồng giả có tất cả 100 byte trong 200 ms.
+  for (let i = 0; i < 100 && daBao < 40; i++) await new Promise((r) => setTimeout(r, 5));
   ac.abort(new Error("ngừng"));
   const r = await loi;
   assert.deepEqual([r.loi, r.chiTiet], ["loi", "ngung"]);
-  assert.ok(daBao >= 20 && daBao <= 60, `đã báo dồn số byte nhận được (${daBao})`);
+  assert.ok(daBao >= 40 && daBao < 100, `đã báo dồn số byte nhận được (${daBao}) — đủ 40, và bỏ trước khi hết luồng`);
 });
 
 test("pha ảnh: nguồn chuyển hướng sang máy chủ ngoài và máy chủ ngoài trả 403 — KHÔNG tính là nguồn chặn; máy chủ ngoài bị nhớ là chặn, lượt vẫn đi tiếp", async () => withTmp(async (dir) => {
@@ -2110,3 +2125,141 @@ test("pha ảnh: link ký số đã quá hạn theo chính tham số của nó t
   assert.equal(s.so?.soFile, 3);
   assert.equal(s.so?.soLoi, 3);
 }));
+
+test("pha căn hộ toàn bộ: toà lỗi tạm ở lượt quét thứ hai trở đi thì KHÔNG ghi trang liệt kê nào của toà — kể cả trang của lượt quét trước (lượt xét vòng 1, AC-6)", async () => withTmp(async (dir) => {
+  const w0 = new BatchWriter({ root: dir, maxItems: 100, phase: "projects" });
+  await w0.add(chiTiet("7", { is_exists_apartment_info: true, danh_sach_thap: ["A", "B"], so_can: 5 }, null, "2026-11-24T05:00:00.000Z"));
+  await w0.flush();
+  // Toà A khớp ngay. Toà B: lượt một thiếu mã (b1, b2 trên 3) nên phải quét lượt hai; ở lượt hai trang 0 lỗi mạng.
+  const ds = { "7": { A: [[["a1", "a2"]]], B: [[["b1"], ["b2"]], [["b1"], ["b2", "b3"]]] } };
+  let soLanTrangDau = 0;
+  const nguon = nguonCanHo(ds, {}, { calls: 10_000, minutes: 60 }, {
+    trang: (duAn, thap, page) => {
+      if (duAn !== "7" || thap !== "B" || page !== 0) return undefined;
+      soLanTrangDau = Math.min(2, soLanTrangDau + 1); // bám ở 2: mọi lần thử lại của lượt quét hai đều lỗi mạng
+      return soLanTrangDau === 2 ? "mang" : undefined;
+    },
+  });
+  const lan = chayCanHo(dir, nguon.client, {});
+  const s = await lan.run();
+  assert.deepEqual([s.s.so?.soToaLoi, s.s.so?.soDuAnXong], [1, 0], "một toà lỗi tạm → dự án chưa xong; lỗi của một toà không dừng cả lượt");
+  assert.equal(s.log.filter((e) => e.suKien === "can-ho-toa-loi" && e.toa === "B").length, 1, "ghi nhận toà B lỗi tạm trong nhật ký");
+  assert.equal(lan.writer.pendingCount, 0, "không còn gì dở trong bộ đệm");
+  const items = await moiKind(dir, w0.snapshotIds[0]);
+  assert.deepEqual(
+    items.filter((it) => it.kind === "can_ho_list").map((it) => it.sourceId),
+    ["du-an-7-toa-a-trang-1"],
+    "chỉ có trang của toà A: toà B không để lại trang nào (trước khi sửa, hai trang của lượt quét một bị ghi mồ côi)",
+  );
+  const tienDo = await new NhatKyTienDo(join(dir, "tien-do", "can-ho-7.jsonl")).readAll();
+  assert.equal(tienDo.some((r) => r.toa === "B"), false, "tiến độ không ghi toà B → lượt sau liệt kê lại từ đầu");
+}));
+
+test("pha căn hộ toàn bộ: toà khớp ở lượt quét thứ hai thì ghi trang của CẢ HAI lượt, đúng thứ tự (sau khi gom trang vào cuối)", async () => withTmp(async (dir) => {
+  const w0 = new BatchWriter({ root: dir, maxItems: 100, phase: "projects" });
+  await w0.add(chiTiet("7", { is_exists_apartment_info: true, danh_sach_thap: ["B"], so_can: 3 }, null, "2026-11-24T05:00:00.000Z"));
+  await w0.flush();
+  const ds = { "7": { B: [[["b1"], ["b2"]], [["b1"], ["b2", "b3"]]] } };
+  const nguon = nguonCanHo(ds);
+  const lan = chayCanHo(dir, nguon.client, {});
+  const s = await lan.run();
+  assert.deepEqual([s.s.so?.soToaKhop, s.s.so?.soDaLay], [1, 3]);
+  const items = await moiKind(dir, w0.snapshotIds[0]);
+  assert.deepEqual(
+    items.filter((it) => it.kind === "can_ho_list").map((it) => [it.sourceId, it.meta.lot, it.meta.soMuc, it.meta.maMoi]),
+    [["du-an-7-toa-b-trang-1", 1, 1, 1], ["du-an-7-toa-b-trang-2", 1, 1, 2], ["du-an-7-toa-b-trang-1-lot-2", 2, 1, 0], ["du-an-7-toa-b-trang-2-lot-2", 2, 2, 1]],
+    "bốn trang của hai lượt quét đều xuống đĩa, đúng mã và số mã mới của từng trang",
+  );
+}));
+
+// ---------- lượt xét vòng 1 (claudedp-2611-18): ghim địa chỉ đã kiểm ở tầng kết nối (AC-5) ----------
+
+import { createServer as taoMayChuHttp, type IncomingHttpHeaders, type Server as MayChuHttp } from "node:http";
+import { EventEmitter as SuKienGoc } from "node:events";
+import { PassThrough as DongChay } from "node:stream";
+import { fetchGhim, type MayChuYeuCau } from "../collectors/s17-thua-dinh-gia/anh.js";
+
+type LookUpGhi = (host: string, o: { all?: boolean }, cb: (...a: unknown[]) => void) => void;
+type GiuYeuCau = { url: string; phuongThuc?: string; options: Record<string, unknown> };
+
+/** http/https.request giả: ghi lại URL, phương thức, lựa chọn rồi trả một phản hồi Stream có thân `than`. */
+function yeuCauGia(giu: GiuYeuCau, than: Buffer, status = 200, raw: string[] = ["content-type", "image/jpeg"]) {
+  return (muc: URL, options: Record<string, unknown>, cb: (res: unknown) => void) => {
+    giu.url = String(muc);
+    giu.phuongThuc = options.method as string | undefined;
+    giu.options = options;
+    const yeuCau = Object.assign(new SuKienGoc(), {
+      end: () => {
+        const phanHoi = Object.assign(new DongChay(), { statusCode: status, rawHeaders: raw });
+        cb(phanHoi);
+        phanHoi.end(than);
+      },
+    });
+    return yeuCau as never;
+  };
+}
+const goiLookup = (lookup: LookUpGhi, host: string, o: { all?: boolean }): Promise<unknown[]> => new Promise((ok, _rej) => lookup(host, o, (...a) => ok(a)));
+
+test("fetchGhim: kết nối đi ĐÚNG các địa chỉ đã kiểm — hàm giải tên của kết nối chỉ trả địa chỉ được đưa vào, không hỏi bộ giải hệ điều hành (đóng hở DNS-rebinding, AC-5); https cho URL https, đúng tiêu đề, đúng tín hiệu", async () => {
+  const ac = new AbortController();
+  const daDung: string[] = [];
+  const giu: GiuYeuCau = { url: "", options: {} };
+  const goc = yeuCauGia(giu, Buffer.from("anh"));
+  const boc = (ten: string) => (m: URL, o: Record<string, unknown>, cb: (res: unknown) => void) => {
+    daDung.push(ten);
+    return goc(m, o, cb);
+  };
+  const res = await fetchGhim("https://may-gia.test/a.jpg", { headers: { "user-agent": "x/1" }, signal: ac.signal }, ["203.0.113.7", "2001:db8::1"], { http: boc("http") as never, https: boc("https") as never });
+  assert.deepEqual(daDung, ["https"], "URL https đi bằng https.request");
+  assert.equal(giu.url, "https://may-gia.test/a.jpg");
+  assert.equal(giu.phuongThuc, "GET");
+  assert.deepEqual(giu.options.headers, { "user-agent": "x/1" }, "đúng các tiêu đề được đưa vào, không thêm không bớt");
+  assert.equal(giu.options.signal, ac.signal, "tín hiệu bỏ đi thẳng vào lời kết nối");
+  const lookup = giu.options.lookup as LookUpGhi;
+  assert.deepEqual(await goiLookup(lookup, "may-gia.test", {}), [null, "203.0.113.7", 4], "một địa chỉ: trả địa chỉ ĐÃ KIỂM đầu tiên — «may-gia.test» không tồn tại trong DNS, chỉ ghim mới đi được");
+  assert.deepEqual(await goiLookup(lookup, "may-gia.test", { all: true }), [null, [{ address: "203.0.113.7", family: 4 }, { address: "2001:db8::1", family: 6 }]], "nhiều địa chỉ: đúng danh sách đã kiểm");
+  assert.equal(res.status, 200);
+  assert.equal(res.headers.get("content-type"), "image/jpeg");
+  assert.equal(Buffer.from(await res.arrayBuffer()).toString(), "anh");
+  const giu2: GiuYeuCau = { url: "", options: {} };
+  const goc2 = yeuCauGia(giu2, Buffer.from("anh"));
+  await fetchGhim("http://a.cdn.gia.test/a", { headers: { "user-agent": "x/1" }, signal: ac.signal }, null, { http: goc2 as never, https: goc2 as never });
+  assert.equal(giu2.options.lookup, undefined, "máy chủ của nguồn (được tin): không ghim, dùng bộ giải của hệ điều hành");
+});
+
+test("fetchGhim (đường thật): một hostname KHÔNG tồn tại trong DNS vẫn tải được vì kết nối bị ghim vào địa chỉ đã kiểm; trên dây chỉ có Host, Connection và các tiêu đề đưa vào", async () => {
+  const daNhan: Array<{ method?: string; headers: IncomingHttpHeaders }> = [];
+  const mayChu = await new Promise<MayChuHttp>((ok) => {
+    const s = taoMayChuHttp((req, res) => {
+      daNhan.push({ method: req.method, headers: req.headers });
+      res.writeHead(200, { "content-type": "image/jpeg" });
+      res.end(Buffer.from([0xff, 0xd8, 0xff, 0xd9]));
+    });
+    s.listen(0, "127.0.0.1", () => ok(s));
+  });
+  try {
+    const cong = (mayChu.address() as { port: number }).port;
+    const res = await fetchGhim(`http://may-khong-ton-tai-gia.test:${cong}/a.jpg`, { headers: { "user-agent": "oneinvest-collector/1" }, signal: AbortSignal.timeout(5_000) }, ["127.0.0.1"]);
+    assert.equal(res.status, 200);
+    assert.deepEqual([...new Uint8Array(await res.arrayBuffer())], [0xff, 0xd8, 0xff, 0xd9]);
+    assert.equal(daNhan.length, 1);
+    assert.equal(daNhan[0].method, "GET");
+    assert.equal(daNhan[0].headers.host, `may-khong-ton-tai-gia.test:${cong}`, "Host vẫn là tên gốc");
+    assert.deepEqual(Object.keys(daNhan[0].headers).sort(), ["connection", "host", "user-agent"], "không thêm tiêu đề mặc định nào của fetch (accept, accept-language, sec-fetch-mode, accept-encoding)");
+  } finally {
+    mayChu.close();
+  }
+});
+
+test("taiAnh: sau khi kiểm, kết nối đi đúng địa chỉ đã kiểm — tên giải ra dải nội bộ lúc kết nối (DNS-rebinding) cũng không tới được (AC-5)", async () => {
+  const giu: GiuYeuCau = { url: "", options: {} };
+  const goc = yeuCauGia(giu, Buffer.from("anh"));
+  const r = await taiAnh("http://may-gia.test/a.jpg", { ...TUY_CHON, keNgoai: true, dnsLookup: async () => ["203.0.113.9"], yeuCau: { http: goc as never, https: goc as never } });
+  assert.equal(r.loi, "ok", `tải được (nhận ${JSON.stringify(r)})`);
+  assert.equal(Buffer.from(r.bytes ?? Buffer.alloc(0)).toString(), "anh");
+  assert.deepEqual(await goiLookup(giu.options.lookup as LookUpGhi, "may-gia.test", {}), [null, "203.0.113.9", 4], "ghim vào địa chỉ ĐÃ KIỂM; hàm giải tên của kết nối không hỏi bộ giải nào, nên tên có đổi sang dải nội bộ lúc kết nối cũng không tới được");
+  const giu2: GiuYeuCau = { url: "", options: {} };
+  const r2 = await taiAnh("http://a.cdn.gia.test/a.jpg", { ...TUY_CHON, yeuCau: { http: yeuCauGia(giu2, Buffer.from("anh")) as never, https: yeuCauGia(giu2, Buffer.alloc(0)) as never } });
+  assert.equal(r2.loi, "ok");
+  assert.equal(giu2.options.lookup, undefined, "máy chủ của nguồn: không ghim");
+});

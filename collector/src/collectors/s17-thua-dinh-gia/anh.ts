@@ -20,7 +20,10 @@
  */
 import { createHash } from "node:crypto";
 import { lookup as lookupHeDieuHanh } from "node:dns/promises";
-import { isIP } from "node:net";
+import { request as httpYeuCau } from "node:http";
+import { request as httpsYeuCau } from "node:https";
+import { isIP, type LookupFunction } from "node:net";
+import { Readable } from "node:stream";
 
 const DUOI_THEO_KIEU: Record<string, string> = {
   "image/jpeg": ".jpg",
@@ -174,10 +177,79 @@ export type GiaiTen = (host: string) => Promise<string[]>;
 
 const GIAI_TEN_MAC_DINH: GiaiTen = async (host) => (await lookupHeDieuHanh(host, { all: true, verbatim: true })).map((x) => x.address);
 
-/** Máy chủ ngoài có tên trỏ tới (một trong các) địa chỉ nội bộ thì không được kết nối. */
-async function giaiVaoNoiBo(host: string, giai: GiaiTen): Promise<boolean> {
-  if (isIP(host)) return false; // địa chỉ viết thẳng: phanLoaiMayChu đã kiểm
-  return (await giai(host)).some(diaChiNoiBo);
+/**
+ * Giải tên máy chủ ngoài thành mọi địa chỉ — để GHIM khi kết nối — và kiểm: một trong các địa chỉ thuộc dải nội bộ
+ * thì coi là vào nội bộ. Địa chỉ viết thẳng thì `phanLoaiMayChu` đã kiểm, chỉ giữ lại để ghim.
+ */
+async function giaiVaKiemNoiBo(host: string, giai: GiaiTen): Promise<{ vaoNoiBo: boolean; diaChi: string[] }> {
+  if (isIP(host)) return { vaoNoiBo: false, diaChi: [host] };
+  const diaChi = await giai(host);
+  return { vaoNoiBo: diaChi.some(diaChiNoiBo), diaChi };
+}
+
+/** `http.request` / `https.request` của Node — tách ra kiểu để thử được. */
+export type YeuCauNode = typeof import("node:http").request;
+/** Cặp hàm gửi lời HTTP thường và HTTPS. */
+export type MayChuYeuCau = { http: YeuCauNode; https: YeuCauNode };
+const YEU_CAU_MAC_DINH: MayChuYeuCau = { http: httpYeuCau, https: httpsYeuCau };
+
+/**
+ * fetch CÓ GHIM địa chỉ: kết nối đúng các địa chỉ đã giải và đã kiểm, KHÔNG giải tên lần hai — đóng hở «tên đổi bản
+ * ghi giữa lúc giải và lúc kết nối» (DNS-rebinding, lượt xét vòng 1): máy chủ ngoài không thể làm bộ thu gửi lời tới
+ * dải nội bộ. Chỉ GET, không bao giờ đi theo chuyển hướng, mang đúng các tiêu đề được đưa vào và tín hiệu bỏ. Gửi bằng
+ * http/https của Node nên trên dây chỉ có Host, Connection và các tiêu đề đưa vào — không thêm tiêu đề mặc định nào
+ * của fetch. `diaChi` rỗng (null) nghĩa là máy chủ được tin (máy chủ của nguồn): dùng bộ giải của hệ điều hành như
+ * thường. Trả Response chuẩn nên phần đọc thân, đồng hồ và phân loại lỗi không đổi.
+ */
+export function fetchGhim(
+  url: string,
+  init: { headers: Record<string, string>; signal: AbortSignal },
+  diaChi: readonly string[] | null,
+  yeuCau: MayChuYeuCau = YEU_CAU_MAC_DINH,
+): Promise<Response> {
+  return new Promise((resolve, reject) => {
+    let u: URL;
+    try {
+      u = new URL(url);
+    } catch (e) {
+      reject(e);
+      return;
+    }
+    const ds = (diaChi ?? []).map((address) => ({ address, family: isIP(address) }));
+    if (ds.some((x) => x.family === 0)) {
+      reject(new TypeError(`địa chỉ ghim không hợp lệ cho ${u.hostname}`));
+      return;
+    }
+    // Hàm giải tên của kết nối: chỉ trả đúng các địa chỉ đã kiểm (kể khi Node hỏi cả danh sách cho happy-eyeballs).
+    const lookup =
+      ds.length
+        ? ((_hostname: string, o: { all?: boolean } | undefined, cb: (err: null, a: unknown, family?: number) => void) => {
+            if (o?.all) cb(null, ds);
+            else cb(null, ds[0].address, ds[0].family);
+          }) as unknown as LookupFunction
+        : undefined;
+    let req: ReturnType<YeuCauNode>;
+    try {
+      req = (u.protocol === "http:" ? yeuCau.http : yeuCau.https)(u, { method: "GET", headers: init.headers, signal: init.signal, ...(lookup ? { lookup } : {}) }, (phanHoi) => {
+        try {
+          const headers = new Headers();
+          for (let i = 0; i < phanHoi.rawHeaders.length; i += 2) headers.append(phanHoi.rawHeaders[i], phanHoi.rawHeaders[i + 1]);
+          const trangThai = phanHoi.statusCode ?? 0;
+          // ép kiểu: luồng web của Node và ReadableStream của lib dom cùng một thứ nhưng TypeScript thấy khác kiểu.
+          const than: ReadableStream | null = trangThai === 204 || trangThai === 304 ? null : (Readable.toWeb(phanHoi) as unknown as ReadableStream);
+          resolve(new Response(than, { status: trangThai, headers }));
+        } catch (e) {
+          phanHoi.destroy();
+          reject(e);
+        }
+      });
+    } catch (e) {
+      reject(e);
+      return;
+    }
+    req.on("error", reject);
+    req.end();
+  });
 }
 
 export type LopMayChu = "nguon" | "ngoai" | "cam";
@@ -319,6 +391,8 @@ export type TaiAnhOptions = MayChuOptions & {
   fetchImpl?: typeof fetch;
   /** Đệm thử trong test; mặc định hỏi bộ giải của hệ điều hành (chỉ máy chủ ngoài mới hỏi). */
   dnsLookup?: GiaiTen;
+  /** Đệm thử: cặp hàm gửi http/https thay cho của Node (để kiểm việc ghim địa chỉ đã kiểm). */
+  yeuCau?: MayChuYeuCau;
   /** Số bước chuyển hướng nhiều nhất (mặc định 5). */
   toiDaChuyenHuong?: number;
 };
@@ -375,9 +449,10 @@ async function docThan(res: Response, toiDa: number, datGioTreo: () => void, tre
 }
 
 /**
- * Tải một tệp. Không bao giờ để fetch tự đi theo chuyển hướng: mỗi bước đều kiểm máy chủ đích trước khi gửi. Máy chủ
- * ngoài lấy từ nội dung dự án nên tên có thể trỏ vào dải riêng: giải tên xong mới kết nối. Khoảng hở còn lại: tên đổi bản
- * ghi giữa lúc giải và lúc kết nối (fetch tự giải tên lần hai) — để đóng hẳn cần ghim địa chỉ ở tầng kết nối.
+ * Tải một tệp. Không bao giờ để tự đi theo chuyển hướng: mỗi bước đều kiểm máy chủ đích trước khi gửi. Máy chủ
+ * ngoài lấy từ nội dung dự án nên tên có thể trỏ vào dải riêng: giải tên xong mới kết nối, và kết nối bị GHIM vào
+ * đúng các địa chỉ đã giải và đã kiểm (`fetchGhim`) — tên đổi bản ghi giữa lúc giải và lúc kết nối (DNS-rebinding)
+ * cũng không đưa được lời tới dải nội bộ. Khi có `fetchImpl` (thử) thì dùng nó và không ghim.
  *
  * Mỗi bước có ba đồng hồ: trần tổng (kết nối + cả thân), hạn riêng cho kết nối và phần đầu phản hồi, và thời gian treo
  * giữa hai khối byte — tệp to trên đường chậm vẫn tải được, còn kết nối đứng yên thì bỏ sớm. Lời giải tên, thân phản hồi
@@ -390,14 +465,15 @@ export async function taiAnh(url: string, o: TaiAnhOptions): Promise<KetQuaTai> 
   for (let buoc = 0; buoc <= toiDa; buoc++) {
     const lop = phanLoaiMayChu(hienTai, o);
     if (lop === "cam") return { url, loi: buoc === 0 ? "cam-may-chu" : "chuyen-huong-cam", http: 0 };
+    let diaChiDaKiem: string[] = []; // máy chủ ngoài: các địa chỉ đã giải và đã kiểm ở bước này — kết nối chỉ đi tới đây
     if (lop === "ngoai") {
       if (o.mayChuBiChan?.has(hashUrl(hostCua(hienTai)))) return { url, loi: "chan-o-may-chu", http: 0, chiTiet: "may-chu-bi-chan", mayChuCuoi: "ngoai", urlCuoi: hienTai };
       let vaoNoiBo: boolean;
       let dongHo: NodeJS.Timeout | undefined;
       let boMayTinh: (() => void) | null = null; // listener tín hiệu bỏ của cuộc đua này — gỡ ngay khi cuộc đua kết thúc
       try {
-        vaoNoiBo = await Promise.race([
-          giaiVaoNoiBo(chuanHoaTen(new URL(hienTai).hostname), o.dnsLookup ?? GIAI_TEN_MAC_DINH),
+        const giai = await Promise.race([
+          giaiVaKiemNoiBo(chuanHoaTen(new URL(hienTai).hostname), o.dnsLookup ?? GIAI_TEN_MAC_DINH),
           new Promise<never>((_, rej) => {
             dongHo = setTimeout(() => rej(TREO_GIAI_TEN), treoMacDinh);
           }),
@@ -410,6 +486,8 @@ export async function taiAnh(url: string, o: TaiAnhOptions): Promise<KetQuaTai> 
               ]
             : []),
         ]);
+        vaoNoiBo = giai.vaoNoiBo;
+        diaChiDaKiem = giai.diaChi;
       } catch (e) {
         clearTimeout(dongHo);
         if (o.signal?.aborted) return { url, http: 0, loi: "loi", chiTiet: "ngung" };
@@ -433,12 +511,14 @@ export async function taiAnh(url: string, o: TaiAnhOptions): Promise<KetQuaTai> 
     datGioTreo(o.firstByteMs ?? FIRST_BYTE_MS);
     const loiCua = (e: unknown): { loi: LoiAnh; chiTiet: string } => (ac.signal.aborted || gio.aborted || o.signal?.aborted ? loiGio(ac.signal, gio, o.signal) : phanLoiMang(e, lop));
     let res: Response;
+    const dauVao = {
+      headers: { "user-agent": o.userAgent },
+      redirect: "manual" as const,
+      signal: o.signal ? AbortSignal.any([gio, ac.signal, o.signal]) : AbortSignal.any([gio, ac.signal]),
+    };
     try {
-      res = await (o.fetchImpl ?? fetch)(hienTai, {
-        headers: { "user-agent": o.userAgent },
-        redirect: "manual",
-        signal: o.signal ? AbortSignal.any([gio, ac.signal, o.signal]) : AbortSignal.any([gio, ac.signal]),
-      });
+      // Có fetchImpl (thử) thì đi qua fetch được bơm, không ghim; chạy thật thì ghim vào địa chỉ đã kiểm (máy chủ ngoài).
+      res = o.fetchImpl ? await o.fetchImpl(hienTai, dauVao) : await fetchGhim(hienTai, dauVao, lop === "ngoai" ? diaChiDaKiem : null, o.yeuCau);
     } catch (e) {
       clearTimeout(treo);
       return { url, http: 0, ...loiCua(e) };
