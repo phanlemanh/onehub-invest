@@ -79,7 +79,7 @@ evals:
     expected: >
       Trên bản chép DB máy thu: băm đầu ra có sắp xếp của offer_building trước và sau 131 bằng nhau; count(*) sau 131 dưới 10 giây;
       count(*) và SELECT * WHERE muc <> 'toa' của offer_unit dưới 15 giây; in số giây từng câu. Chiều đỏ: bản đột biến đổi một dòng
-      đầu ra thì phép so đỏ, gọi tên offer_id; bản bỏ MATERIALIZED thì phép đo thời gian vượt trần và gọi tên view.
+      đầu ra thì phép so đỏ, gọi tên offer_id; bản bỏ MATERIALIZED thì kế hoạch truy vấn của view mất bước «CTE toa_vung», ca kiểm kế hoạch đỏ và gọi tên view.
 
   - id: E8
     criterion: AC-8

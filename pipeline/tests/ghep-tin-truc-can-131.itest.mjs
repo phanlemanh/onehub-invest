@@ -168,6 +168,13 @@ test("offer-building-dau-ra-giu-nguyen", async () => {
   const [cu, moi] = [await bam(obCu), await bam("SELECT * FROM offer_building")];
   assert.deepEqual(moi, cu, `offer_building sau 131 khác 117: ${cu.n} → ${moi.n} dòng`);
 });
+// Chiều đỏ của MATERIALIZED đo bằng kế hoạch, không bằng đồng hồ (GS phán 27/11): DB lượt vừa khôi phục chạy nhanh cả khi bỏ
+// MATERIALIZED (M5 0,37 giây), còn DB máy thu mất 43 giây — thời gian phụ thuộc máy, dữ liệu; bước vật thể hoá thì xác định.
+const coBuoc = (nut, ten) => nut?.["Subplan Name"] === ten || (nut?.Plans ?? []).some((x) => coBuoc(x, ten));
+test("offer-building-ke-hoach-giu-buoc-vat-the-hoa-toa-vung", async () => {
+  const { rows: [{ "QUERY PLAN": [{ Plan }] }] } = await c.query("EXPLAIN (FORMAT JSON) SELECT count(*) FROM offer_building");
+  assert.ok(coBuoc(Plan, "CTE toa_vung"), "offer_building: kế hoạch thiếu bước «CTE toa_vung» (v_toa_nut_vung không còn được vật thể hoá một lần)");
+});
 test("offer-building-va-offer-unit-nhanh", { timeout: 600_000 }, async () => {
   // DB của lượt vừa khôi phục chưa có thống kê nên planner chọn kế hoạch khác DB máy thu (đo 27/11: bỏ MATERIALIZED ở toa_vung
   // trên DB máy thu 43 giây, trên DB lượt chưa ANALYZE dưới 1 giây — đột biến bo-materialized không đỏ). ANALYZE trước khi đo
