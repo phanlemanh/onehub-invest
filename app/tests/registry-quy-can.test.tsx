@@ -85,25 +85,25 @@ async function htmlDuAn(id: number): Promise<string> {
   const { DuAnContent } = await import("../src/components/ops/registry/du-an-content")
   return renderToStaticMarkup(await DuAnContent({ id }))
 }
-/** Ô «Quỹ căn S09» trong HTML: số chính và dòng phụ. */
+/** Ô «Căn CĐT đang bán S09» trong HTML: số chính và dòng phụ. */
 function oQuyCan(html: string): string {
-  const i = html.indexOf("Quỹ căn S09")
-  assert.ok(i >= 0, "AC-7 quỹ căn: trang không có ô «Quỹ căn S09»")
+  const i = html.indexOf("Căn CĐT đang bán S09")
+  assert.ok(i >= 0, "AC-7 quỹ căn: trang không có ô «Căn CĐT đang bán S09»")
   return html.slice(i, i + 1200).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ")
 }
 const ma = (html: string) => [...html.matchAll(/translate="no">([A-Z][A-Z0-9.]*)</g)].map((m) => m[1]).filter((x) => /\./.test(x))
 
-test("AC-7 ô «Quỹ căn S09» bằng SELECT trên view của cùng DB; dòng phụ ba số cộng bằng số dự án; cấy thêm một căn thì tăng đúng một", async () => {
+test("AC-7 ô «Căn CĐT đang bán S09» bằng SELECT trên view của cùng DB; dòng phụ ba số cộng bằng số dự án; cấy thêm một căn thì tăng đúng một", async () => {
   const [v] = (await q(`SELECT count(*)::int AS can, count(DISTINCT du_an_id)::int AS du_an,
     count(*) FILTER (WHERE gia_ban_min IS NOT NULL OR gia_ban_max IS NOT NULL)::int AS co_gia FROM v_s09_db_quy_can`)).rows
   assert.deepEqual(v, { can: 7, du_an: 4, co_gia: 6 }, "fixture: tiền đề số của view")
   const o = oQuyCan(await htmlDanhBa())
-  assert.match(o, new RegExp(`Quỹ căn S09 ${v.can} `), "AC-7 quỹ căn: số căn lệch view")
+  assert.match(o, new RegExp(`Căn CĐT đang bán S09 ${v.can} `), "AC-7 quỹ căn: số căn lệch view")
   assert.match(o, new RegExp(`${v.co_gia} có giá · ${v.du_an} dự án: 2 nối nút · 1 còn thẻ · 1 chưa có trong danh mục`), "AC-7 quỹ căn: dòng phụ lệch")
   assert.equal(2 + 1 + 1, v.du_an)
   await trang("qe", [canQc("c-e1", "E.01", 2_000_000_000), canQc("c-e2", "E.02", 2_000_000_000)])
   try {
-    assert.match(oQuyCan(await htmlDanhBa()), /Quỹ căn S09 8 /, "AC-7 quỹ căn: cấy thêm một căn mà số không tăng đúng một")
+    assert.match(oQuyCan(await htmlDanhBa()), /Căn CĐT đang bán S09 8 /, "AC-7 quỹ căn: cấy thêm một căn mà số không tăng đúng một")
   } finally {
     await q(`DELETE FROM stg_s09_danh_ba WHERE dong = $1`, [dong])
   }
@@ -111,7 +111,7 @@ test("AC-7 ô «Quỹ căn S09» bằng SELECT trên view của cùng DB; dòng 
 
 test("AC-8 trang dự án: nút có quỹ căn ra đúng số dòng và giá; hai mã một nút không lặp căn; nút không quỹ căn có chữ trống", async () => {
   const html = await htmlDuAn(N.D1)
-  assert.match(html, /Quỹ căn đang bán/)
+  assert.match(html, /Căn CĐT đang bán/)
   assert.deepEqual(ma(html).filter((m) => /^[AB]\d/.test(m)).sort(), ["A1.05.01", "A1.05.02", "A1.06.01", "B2.10.03"], "AC-8 số dòng quỹ căn lệch view")
   assert.match(html, /4 căn\./, "AC-8 số dòng quỹ căn lệch view")
   assert.match(html, /5 tỷ/)
@@ -119,7 +119,7 @@ test("AC-8 trang dự án: nút có quỹ căn ra đúng số dòng và giá; ha
   assert.match(html, /69 tr\/m²/)
   assert.match(html, /AVAILABLE/)
   const hai = await htmlDuAn(N.D2)
-  assert.match(hai, /Chưa có quỹ căn của nguồn S09 cho dự án này/)
+  assert.match(hai, /Chưa có căn CĐT đang bán của nguồn S09 cho dự án này/)
   assert.match(hai, /Về danh bạ/)
 })
 
@@ -133,7 +133,7 @@ test("AC-8 truy vấn quỹ căn lỗi → khối lỗi có Thử lại; trang v
   }
   try {
     const html = await htmlDuAn(N.D1)
-    assert.match(html, /Không tải được quỹ căn/)
+    assert.match(html, /Không tải được căn CĐT đang bán/)
     assert.match(html, /Thử lại/)
     assert.match(html, /Toà và căn/)
   } finally {

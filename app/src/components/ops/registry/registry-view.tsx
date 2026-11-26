@@ -69,7 +69,7 @@ export function oSo(tong: TongDanhBa) {
 /** Ô «Quỹ căn S09» (DA56): số căn quỹ căn bản đủ mới nhất; dòng phụ chia dự án theo trạng thái nối, ba số cộng bằng số dự án. */
 export function oQuyCan(qc: QuyCanTong) {
   return {
-    title: "Quỹ căn S09",
+    title: "Căn CĐT đang bán S09",
     value: fmtInt(qc.can),
     footer: `${fmtInt(qc.coGia)} có giá · ${fmtInt(qc.duAn)} dự án: ${fmtInt(qc.noi)} nối nút · ${fmtInt(qc.theChua)} còn thẻ · ${fmtInt(qc.ngoaiDanhMuc)} chưa có trong danh mục`,
   }
@@ -97,9 +97,9 @@ export function RegistryView(props: RegistryProps) {
       {quyCan === "loi" && (
         <Alert variant="destructive" data-quy-can-loi="">
           <CircleAlertIcon aria-hidden="true" />
-          <AlertTitle>Không tải được quỹ căn S09</AlertTitle>
+          <AlertTitle>Không tải được căn CĐT đang bán S09</AlertTitle>
           <AlertDescription>
-            <p>Danh bạ vẫn đúng; chỉ ô quỹ căn chưa đọc được.</p>
+            <p>Danh bạ vẫn đúng; chỉ ô căn CĐT đang bán chưa đọc được.</p>
           </AlertDescription>
           <AlertAction>
             <Button variant="outline" size="sm" onClick={() => window.location.reload()}>

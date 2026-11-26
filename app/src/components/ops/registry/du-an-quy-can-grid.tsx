@@ -41,7 +41,7 @@ const COLUMNS: ColumnDef<DataGridFeatures, CanQuyCan>[] = [
   },
   { id: "dien-tich", header: "Diện tích", cell: ({ row }) => khoang(row.original.dienTich, (v) => SO_1.format(v), "m²"), size: 120 },
   { id: "gia-ban", header: "Giá bán", cell: ({ row }) => khoang(row.original.giaBan, (v) => SO_2.format(v / 1e9), "tỷ"), size: 140 },
-  { id: "don-gia", header: "Đơn giá", cell: ({ row }) => khoang(row.original.donGia, (v) => SO_1.format(v / 1e6), "tr/m²"), size: 130 },
+  { id: "don-gia", header: "Giá/m²", cell: ({ row }) => khoang(row.original.donGia, (v) => SO_1.format(v / 1e6), "tr/m²"), size: 130 },
   {
     id: "trang-thai",
     header: "Trạng thái nguồn",
@@ -55,7 +55,7 @@ function KhungQuyCan({ mo, children, footer }: { mo: string; children: React.Rea
     <Frame variant="default" spacing="sm" className="w-full min-w-0" data-quy-can="">
       <FrameHeader>
         <div className="flex min-w-0 flex-col gap-0.5">
-          <FrameTitle role="heading" aria-level={2}>Quỹ căn đang bán</FrameTitle>
+          <FrameTitle role="heading" aria-level={2}>Căn CĐT đang bán</FrameTitle>
           <FrameDescription>{mo}</FrameDescription>
         </div>
       </FrameHeader>
@@ -85,7 +85,7 @@ export function DuAnQuyCanGrid({ rows }: { rows: CanQuyCan[] }) {
       tableLayout={{ dense: true, headerSticky: true }}
       emptyMessage={
         <div className="flex flex-col items-center gap-2 py-4" data-quy-can-trong="">
-          <span>Chưa có quỹ căn của nguồn S09 cho dự án này.</span>
+          <span>Chưa có căn CĐT đang bán của nguồn S09 cho dự án này.</span>
           <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/ops/registry" />}>Về danh bạ</Button>
         </div>
       }
@@ -112,9 +112,9 @@ export function DuAnQuyCanLoi() {
   return (
     <Alert variant="destructive" data-quy-can-loi="">
       <CircleAlertIcon aria-hidden="true" />
-      <AlertTitle>Không tải được quỹ căn</AlertTitle>
+      <AlertTitle>Không tải được căn CĐT đang bán</AlertTitle>
       <AlertDescription>
-        <p>Toà và căn của danh bạ vẫn đúng; chỉ khối quỹ căn chưa đọc được.</p>
+        <p>Toà và căn của danh bạ vẫn đúng; chỉ khối căn CĐT đang bán chưa đọc được.</p>
       </AlertDescription>
       <AlertAction>
         <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
