@@ -17,7 +17,9 @@ import { gunzipSync } from "node:zlib";
 
 const TAMP_DB = `zcode_s06r_test_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
 const DB_ROOT = process.env.TEST_DATABASE_URL_ADMIN ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
-const DB = `postgres://oneinvest:oneinvest@localhost:5433/${TAMP_DB}`;
+// Cùng máy chủ với DB_ROOT (cụm dùng một lần của db-thu.sh --chay-trong, Postgres của CI), không ghim :5433.
+const urlTren = (ten) => { const u = new URL(DB_ROOT); u.pathname = `/${ten}`; return u.toString(); };
+const DB = urlTren(TAMP_DB);
 const S06 = join(import.meta.dirname, "../collect-chotot.mjs");
 
 const PSQL = (sql) => {

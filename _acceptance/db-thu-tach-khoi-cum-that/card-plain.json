@@ -1,0 +1,4 @@
+{
+  "feature_plain": "Lượt chấm chạy phần lớn bộ test pipeline trên một Postgres trống dựng riêng cho lượt rồi xoá, chỉ chạy 34 ca cần dữ liệu thật trên bản chép khi việc chạm tới chúng — hai nửa pipeline từ 69 phút còn khoảng 5 phút, khoá chấm được nhả sớm hơn cho các dãy khác.",
+  "scope_plain": "Những phần dưới đây cố ý để sau, mỗi phần có lý do riêng:"
+}
