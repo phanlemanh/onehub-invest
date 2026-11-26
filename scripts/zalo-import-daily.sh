@@ -258,6 +258,7 @@ FAILED=0
 # HOẶC kèm hậu tố '-n' khi trùng mili-giây. Sort chuỗi vẫn đúng thứ tự vì
 # các khuôn chia sẻ tiền tố tới giây (state 6 số cũ giữ nguyên).
 # GIỐNG HỆT apify-facebook-daily.sh — hai bản phải không lệch nhau (BÁO 2510-5).
+DANH_SACH="" # ZC20: danh sách snapshot vòng liệt kê gom, vòng nạp đọc
 TS_RE='^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{6}([0-9]{3})?(-[0-9]+)?Z?$'
 # 0311-8: ls -1d với glob vượt ARG_MAX (11.082 thư mục ≈ 1MB > 1.048.576) —
 # ls thoát 126 'Argument list too long', 2>/dev/null nuốt lỗi → vòng lặp rỗng
@@ -273,16 +274,21 @@ if [ -z "$DS_DIR" ] && [ "$LAST" != "00000000T000000" ]; then
   echo "❌ không liệt kê được snapshot nào dù state đã có mốc $LAST — kiểm thư mục snapshot" >&2
   exit 3
 fi
-DANH_SACH="$(printf '%s\n' "$DS_DIR" | while read -r d; do
+for SNAP in $(printf '%s\n' "$DS_DIR" | while read -r d; do
     b=${d##*/}; [ "${b#.}" != "$b" ] && continue # 2510-8: dir '.<id>.partial' đang ghi — bỏ
     ts=$(basename "$d" | sed 's/.*__//')
     if ! echo "$ts" | grep -qE "$TS_RE"; then
       echo "bỏ qua thư mục TS không phải mốc thời gian: $d" >&2; continue
     fi
     echo "$ts $d"
-  done | sort | while read -r _ d; do echo "$d"; done)"
+  done | sort | while read -r _ d; do echo "$d"; done); do
+  # ZC20: vòng liệt kê CHỈ gom danh sách (khối trên giữ GIỐNG HỆT apify-facebook-daily.sh — BÁO 2510-5);
+  # nạp ở vòng dưới để lượt replay xếp lại được thứ tự.
+  DANH_SACH="${DANH_SACH:+$DANH_SACH
+}$SNAP"
+done
 # ZC20 (claudedp-2511-56): replay trọn từ state 0 — snapshot bù ảnh S03
-# (coverage.loai=tai-bu-anh-2511) nạp PHASE CUỐT, nếu không bản gốc cùng ngày
+# (coverage.loai=tai-bu-anh-2511) nạp PHASE CUỐI, nếu không bản gốc cùng ngày
 # tên muộn hơn đè ảnh đã bù (695 bài 21–24/11 — DATA-CONTRACT «Quy tắc tiêu
 # thụ» điều 7). Lượt thường (LAST ≠ 0) giữ nguyên thứ tự tên. Module vắng
 # (checkout chưa gộp ZC20) → giữ thứ tự tên như cũ.
@@ -296,6 +302,7 @@ if [ "$LAST" = "00000000T000000" ] && [ -n "$DANH_SACH" ] && [ -f "$ROOT/pipelin
   ')" || { echo "❌ sapXepReplay lỗi — dừng (fail-closed)" >&2; exit 3; }
   echo "[zalo-import-daily] replay từ state 0 — snapshot bù ảnh S03 xếp phase cuối (DATA-CONTRACT điều 7)"
 fi
+# Vòng nạp: thân vòng cũ nguyên văn, chạy trên danh sách đã gom (đã xếp lại nếu là lượt replay).
 for SNAP in $DANH_SACH; do
   TS=$(basename "$SNAP" | sed 's/.*__//')
   if [[ "$TS" > "$LAST" ]]; then

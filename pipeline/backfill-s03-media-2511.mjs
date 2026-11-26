@@ -34,9 +34,9 @@ import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { gzipSync } from "node:zlib";
 import { readFile, writeFile, mkdir, rename, rm } from "node:fs/promises";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, realpathSync } from "node:fs";
 import { join, dirname, basename } from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import pg from "pg";
 
 const GOC = dirname(dirname(new URL(import.meta.url, "file:").pathname)); // gốc kho chứa pipeline/
@@ -306,7 +306,7 @@ export async function ghiSnapshotBuu({ baiHomNgay, rootSnapshots, dirMoi, fetchM
 }
 
 // ─── CLI ───
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const check = coCo("check");
   const tu = arg("tu");
   const den = arg("den", new Date(Date.now() + 86_400_000).toISOString().slice(0, 10)); // mặc định trọn hôm nay (giờ VN)
