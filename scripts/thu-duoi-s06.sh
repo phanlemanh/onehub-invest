@@ -33,11 +33,23 @@ VUNG_CHAY="${THU_DUOI_S06_VUNG:-$VUNG_MAC_DINH}"
 # khoảng này KHÔNG gọi nguồn; hết nghỉ xoá mốc và chạy lại.
 NGHI_SAU_CHAN_PHUT="${THU_DUOI_S06_NGHI_SAU_CHAN_PHUT:-30}"
 BI_CHAN="$GOC/bi-chan.json"
+# 2611-27 (3, ZC18 — khuyến nghị Cổng Phạm vi, khớp chính sách «chỗ chặn thì dừng» 14/11):
+# nguồn chặn LẦN HAI trong 24 giờ kể từ lần chặn trước → DỪNG HẲN: không gọi nguồn ở các
+# lượt sau cho tới khi NGƯỜI gỡ dấu bằng tay (rm tệp dấu). Tắt bằng
+# THU_DUOI_S06_DUNG_LAN_HAI=0 (mặc định BẬT; đặt được trong plist) — tắt thì chặn lần hai
+# chỉ nghỉ như lần đầu, đúng hành vi fc3fa4a7a. Giờ chặn gần nhất vẫn ghi mọi khi (forensic).
+DUNG_LAN_HAI="${THU_DUOI_S06_DUNG_LAN_HAI:-1}"
+dung_lan_hai_tat() {
+  case "$DUNG_LAN_HAI" in 0|false|FALSE|False|off|OFF|Off|tat|TAT|Tat) return 0 ;; *) return 1 ;; esac
+}
+LAN_CHAN="$GOC/lan-chan.json"  # giờ chặn gần nhất — mọi lần chặn đều cập nhật
+DUNG_HAN="$GOC/dung-han.json" # dấu dừng hẳn — CHỈ người gỡ bằng tay: rm tệp này
 
 # Giờ ISO UTC cột giây từ epoch — GNU (-d @) trước, BSD (-r) sau; lỗi thì thoát 1
 # (MỞ LẠI 2611-27: wrapper phải chạy đúng cả Linux CI lẫn macOS máy thu)
 iso_tu_epoch() {
   local s="$1" kq=""
+  case "$s" in ''|*[!0-9]*) return 1 ;; esac # GNU date -d "" không lỗi mà trả 0h hôm nay — chặn đầu vào trước
   kq="$(date -u -d "@${s}" '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null)" && [ -n "$kq" ] && { printf '%s' "$kq"; return 0; }
   kq="$(date -u -r "${s}" '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null)" && [ -n "$kq" ] && { printf '%s' "$kq"; return 0; }
   return 1
@@ -46,6 +58,7 @@ iso_tu_epoch() {
 # không parse được thì in rỗng (gọi bên phải tự coi là mốc hỏng)
 epoch_tu_iso() {
   local v="$1" kq=""
+  [ -n "$v" ] || return 1 # GNU date -d "" trả 0h hôm nay, không lỗi — đầu vào rỗng phải dừng trước
   kq="$(date -u -d "${v}" '+%s' 2>/dev/null)" && [ -n "$kq" ] && { printf '%s' "$kq"; return 0; }
   kq="$(date -ju -f '%Y-%m-%dT%H:%M:%S' "${v%%.*}" '+%s' 2>/dev/null)" && [ -n "$kq" ] && { printf '%s' "$kq"; return 0; }
   return 1
@@ -73,6 +86,13 @@ fi
 echo "$$" > "$KHOA/pid"
 trap 'rm -rf "$KHOA"' EXIT
 trap 'exit 1' TERM INT
+
+# 1a) 2611-27 (3): dấu dừng hẳn còn nguyên → không gọi nguồn lượt này, chỉ in dòng gỡ dấu;
+#     dấu chỉ NGƯỜI gỡ bằng tay (rm) — hết hạn nghỉ cũng không tự chạy lại.
+if [ -f "$DUNG_HAN" ]; then
+  echo "$(date -u +%FT%TZ) DỪNG HẲN: nguồn chặn lần hai trong 24 giờ — không gọi nguồn lượt này; gỡ dấu bằng tay để chạy lại: rm $DUNG_HAN"
+  exit 0
+fi
 
 # 1b) 2611-27 (2): còn trong khoảng nghỉ sau bị chặn → thoát 0 kèm dòng nhật ký,
 #     KHÔNG gọi node nào (kể cả thu); mốc hỏng/xong thì xoá và đi tiếp.
@@ -141,10 +161,20 @@ for CITY in $CITIES; do
     || { RC=$?
          echo "❌ thu đuôi vùng $CITY thoát $RC — dừng vòng, nạp để vòng sau"
          if [ "$RC" = "3" ]; then
-           # 2611-27 (2): bị chặn nguồn → các vòng kế nghỉ NGHI_SAU_CHAN_PHUT phút, không gọi nguồn.
-           # MỞ LẠI 2611-27: giờ hết tính hai chuẩn GNU/BSD; KHÔNG tính được thì KHÔNG ghi mốc
-           # (mốc rỗng/sai còn tệ hơn không có — vòng kế sẽ chạy lại như thường), chỉ nhắc stderr.
-           HET_MOI="$(iso_tu_epoch "$(( $(date -u +%s) + NGHI_SAU_CHAN_PHUT * 60 ))")" \
+           # 2611-27 (2): bị chặn nguồn → nghỉ NGHI_SAU_CHAN_PHUT phút. (3): chặn LẦN HAI trong
+           # 24 giờ kể từ lần trước → DỪNG HẲN (dấu chỉ người gỡ). Giờ hết tính hai chuẩn
+           # GNU/BSD (MỞ LẠI 2611-27); KHÔNG tính được thì KHÔNG ghi mốc rỗng/sai.
+           BAY="$(date -u +%s)"
+           CU_S="$(epoch_tu_iso "$(sed -E 's/.*"lanCuoi":"([^"]*)".*/\1/' "$LAN_CHAN" 2>/dev/null)")"
+           case "$CU_S" in ''|*[!0-9]*) CU_S=0 ;; esac
+           GIO_CHAN="$(iso_tu_epoch "$BAY")"
+           [ -n "$GIO_CHAN" ] && printf '{"lanCuoi":"%s"}' "$GIO_CHAN" > "$LAN_CHAN"
+           if ! dung_lan_hai_tat && [ "$CU_S" -gt 0 ] && [ $(( BAY - CU_S )) -lt 86400 ]; then
+             printf '{"lanTruoc":"%s","lanHai":"%s"}' "$(iso_tu_epoch "$CU_S")" "$GIO_CHAN" > "$DUNG_HAN"
+             echo "$(date -u +%FT%TZ) DỪNG HẲN: nguồn chặn lần hai trong 24 giờ — không gọi nguồn ở các lượt sau; gỡ dấu bằng tay để chạy lại: rm $DUNG_HAN"
+             exit "$RC" # lượt này bị chặn thật — giữ mã 3
+           fi
+           HET_MOI="$(iso_tu_epoch "$(( BAY + NGHI_SAU_CHAN_PHUT * 60 ))")" \
              && printf '{"hetLuc":"%s"}' "$HET_MOI" > "$BI_CHAN" \
              || echo "⚠️ không tính được giờ hết nghỉ trên date của máy này — không ghi mốc nghỉ, vòng kế chạy lại như thường" >&2
          fi
