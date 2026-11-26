@@ -1063,11 +1063,12 @@ export const execKho = async () => {
 
 /** `--kho` (HT26 AC-5): một lượt đọc + che + soát trên máy thu thật, KHÔNG đường nào tới cloud (không đọc tệp khoá, exec chặn mọi lời
  *  gọi). In số dòng, số ô che theo bảng.cột, thời gian từng pha và phép đếm thô độc lập trên payload đã che; mã 0 khi bộ chặn và
- *  phép đếm thô đều ra 0. Không in giá trị. */
-export async function runKho({ local, out = console.log, err = console.error, sourceEntries } = {}) {
+ *  phép đếm thô đều ra 0. Không in giá trị. `fill`, `che: false` chỉ cho thước E5 (chiều đỏ «ô bẩn» trên vài bảng thật); dòng lệnh
+ *  `--kho` không bao giờ đặt. */
+export async function runKho({ local, out = console.log, err = console.error, sourceEntries, fill = FILL, che: cheBat = true } = {}) {
   const t0 = Date.now();
   try {
-    const r = await syncOnce({ local, exec: execKho, log: out, kho: true, sourceEntries });
+    const r = await syncOnce({ local, exec: execKho, log: out, kho: true, sourceEntries, fill, che: cheBat });
     const tDoc = (Date.now() - t0) / 1000;
     for (const [t, n] of Object.entries(r.counts)) out(`  ${t}: ${n}`);
     const che = Object.entries(r.che).sort(([x], [y]) => x.localeCompare(y));

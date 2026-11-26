@@ -1,26 +1,30 @@
 // Thử lệnh sao lưu mục 3 hồ sơ áp HT26 — CHỈ ĐỌC trên cloud thật (GS cho phép riêng bước này, 25/11).
-// Mỗi lời gọi: soát cloud-sync.log — lượt sync cuối phải đã có dòng kết thúc (không ở pha stage); chưa thì chờ. Tuần tự, một lời một lúc.
-// Chạm trần thời gian câu → chia bảng theo dải băm khoá chính, mỗi dải một dấu băm (không kéo dòng về máy). In: bảng, số dòng, băm.
+// Mỗi lời gọi: chờ job cloud-sync rảnh (cho-ranh.mjs: nhật ký + tiến trình sync đang sống, trần 40′, quá trần thì dừng có lý do). Tuần tự,
+// một lời một lúc. Chạm trần thời gian câu → chia bảng theo dải băm khoá chính, mỗi dải một dấu băm (không kéo dòng về máy). In: bảng,
+// số dòng, băm.
+// Chạy (README mục 3): TRƯỚC khi gộp từ worktree của nhánh HT26 (tệp này chưa có trên main); SAU khi gộp từ checkout chính. Hai chỗ nạp
+// cùng danh sách FILL (kiem-ho-so.mjs soát FILL của nhánh = FILL của origin/main). Nhật ký job luôn ở checkout chính.
+import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
-// Chạy: node _acceptance/sync-cloud-che-ten-nguon-moi-cot/ap-may-thu/sao-luu.mjs (từ checkout chính). Nhật ký job ở checkout chính.
+import { choRanh as choRanhLoi } from "./cho-ranh.mjs";
 const { FILL, RENAME, mgmtExec } = await import(new URL("../../../pipeline/sync-cloud.mjs", import.meta.url).href);
 const LOG = process.env.CLOUD_SYNC_LOG ?? homedir() + "/dev/onehub-invest/pipeline/logs/cloud-sync.log";
 const tk = process.env.SUPABASE_MGMT_TOKEN ?? readFileSync(homedir() + "/.oneinvest/cloud.env", "utf8").match(/SUPABASE_MGMT_TOKEN=(\S+)/)[1];
 const raw = mgmtExec(tk, { retries: 0 });
 const ngu = (ms) => new Promise((r) => setTimeout(r, ms));
 let goi = 0;
-async function choRanh() {
-  for (;;) {
-    const dong = readFileSync(LOG, "utf8").split("\n").filter((l) => /^sync bắt đầu|^sync xong|SYNC FAIL/.test(l));
-    const iBd = dong.findLastIndex((l) => l.startsWith("sync bắt đầu"));
-    const xong = dong.slice(iBd + 1).some((l) => /^sync xong|SYNC FAIL/.test(l));
-    const phut = (Date.now() - Date.parse(dong[iBd].split(" ")[3])) / 60000;
-    if (xong) return;
-    console.error(`  chờ: lượt sync đang chạy phút ${phut.toFixed(1)}`);
-    await ngu(30000);
+/** Có tiến trình sync-cloud (không phải lượt khô, không phải chính lệnh này) đang sống? pgrep lỗi lạ thì ném — không coi là rảnh. */
+function coTienTrinh() {
+  try {
+    const out = execFileSync("pgrep", ["-fl", "sync-cloud\\.mjs"], { encoding: "utf8" });
+    return out.split("\n").some((l) => l.trim() && !l.includes("--kho") && !l.startsWith(`${process.pid} `));
+  } catch (e) {
+    if (e.status === 1) return false;
+    throw new Error(`sao-luu: không soát được tiến trình sync: ${e.message}`);
   }
 }
+const choRanh = () => choRanhLoi({ docLog: () => readFileSync(LOG, "utf8"), coTienTrinh, ngu });
 async function ex(sql) {
   if (!/^\s*SELECT\b/i.test(sql) || /\b(insert|update|delete|drop|alter|create|truncate|grant|revoke)\b/i.test(sql.replace(/'[^']*'/g, ""))) throw new Error("câu không chỉ đọc");
   await choRanh();

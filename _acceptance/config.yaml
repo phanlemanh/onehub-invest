@@ -395,10 +395,11 @@ executors:
     scc_soat: "bash db/db-thu.sh oneinvest_suite_scc --chay node --test --test-concurrency=1 --test-name-pattern='^SCC-2:' pipeline/sync-cloud-che.test.mjs"   # sync-cloud-che-ten-nguon-moi-cot E2 bộ chặn mọi bảng
     scc_su_co: "bash db/db-thu.sh oneinvest_suite_scc --chay node --test --test-concurrency=1 --test-name-pattern='^SCC-3:' pipeline/sync-cloud-che.test.mjs"   # sync-cloud-che-ten-nguon-moi-cot E3 ô street_raw 24/11
     scc_do_hang_ngay: "cd app && node --import tsx --test tests/do-hang-ngay-che.test.tsx"   # sync-cloud-che-ten-nguon-moi-cot E4 Ops do-hang-ngay che detail
-    scc_kho: "nice -n 10 node pipeline/sync-cloud.mjs --kho"   # sync-cloud-che-ten-nguon-moi-cot E5 lượt khô trên máy thu thật; ngoài CI
-    scc_do: "node --test scripts/do-ten-nguon-cloud.test.mjs"   # sync-cloud-che-ten-nguon-moi-cot E6 lệnh đo không gửi mẫu lên cloud
+    scc_kho: "node --test pipeline/tests/sync-cloud-kho-xet.test.mjs && node _acceptance/sync-cloud-che-ten-nguon-moi-cot/probes/kiem-kho.mjs"   # sync-cloud-che-ten-nguon-moi-cot E5 lượt khô trên máy thu thật (cổng chết, lsof, so --chi-may-thu, so mã cũ ở merge-base, hai chiều đỏ, đột biến thước); ngoài CI
+    scc_do: "node --test scripts/do-ten-nguon-cloud.test.mjs && bash db/db-thu.sh oneinvest_suite_scc6 --chay-trong node --test scripts/do-ten-nguon-cloud.itest.mjs"   # sync-cloud-che-ten-nguon-moi-cot E6 lệnh đo không gửi mẫu lên cloud; câu gửi chạy thật trên Postgres của lượt
     scc_dinh_danh: "bash db/db-thu.sh oneinvest_suite_scc --chay node --test --test-concurrency=1 --test-name-pattern='^SCC-8:' pipeline/sync-cloud-che.test.mjs"   # sync-cloud-che-ten-nguon-moi-cot E8 định danh lược đồ giữ nguyên
     scc_ben_doc: "bash db/db-thu.sh oneinvest_suite_scc --chay node --test --test-concurrency=1 --test-name-pattern='^SCC-9:' pipeline/sync-cloud-che.test.mjs"   # sync-cloud-che-ten-nguon-moi-cot E9 bên đọc markets, thẻ Invest sau che
+    scc_ap: "node --test _acceptance/sync-cloud-che-ten-nguon-moi-cot/ap-may-thu/cho-ranh.test.mjs && node _acceptance/sync-cloud-che-ten-nguon-moi-cot/ap-may-thu/kiem-ho-so.mjs"   # sync-cloud-che-ten-nguon-moi-cot E11 hồ sơ áp chạy được nguyên văn, bước chờ sao lưu có trần
     scc_sau_ap: "node scripts/do-ten-nguon-cloud.mjs"   # sync-cloud-che-ten-nguon-moi-cot E7 sau áp; chạy trong hồ sơ áp
     ht33_may_thu: "env -u ONEHUB_HAI_MAY_TEP node --input-type=module -e \"import { vaiMay } from './scripts/lib/vai-may.mjs'; const v = vaiMay(); console.log(v); process.exit(v === 'may-thu' ? 0 : 1)\""   # HT33 E6 — máy chấm là máy thu
     ht33_m5: "bash _acceptance/pipeline-that-ca-may-thu-co-ten-tren-may-phat-trien/kiem-m5.sh"   # HT33 E5 — đầu ra lượt pipeline_that trên M5

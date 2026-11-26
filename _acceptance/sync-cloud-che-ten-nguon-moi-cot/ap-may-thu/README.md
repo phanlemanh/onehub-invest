@@ -9,7 +9,9 @@ một câu trước khi gộp thì phải chặn job sync trước khi gộp; kh
 
 ## 1. Lệnh áp
 
-1. Chạy mục 3 (sao lưu trước) **trước khi gộp**, rồi dán kết quả vào `sao-luu-truoc.txt` cạnh tệp này.
+1. Chạy lệnh **trước gộp** của mục 3 (sao lưu trước) **trước khi gộp**, từ worktree của nhánh HT26: `sao-luu.mjs` chỉ có trên nhánh cho
+   tới lúc gộp, checkout chính đứng ở `main` chưa có nó. Đầu ra (chỉ số dòng và dấu băm) ghi vào `pipeline/logs/` của checkout chính
+   (gitignored, còn nguyên sau khi gộp và khi worktree bị dọn): `ht26-sao-luu-truoc.txt`, `ht26-do-truoc-ap.txt`.
 2. Điều phối làn merge: `gh pr merge <số PR>` rồi `git -C ~/dev/onehub-invest pull --ff-only origin main`.
 3. Không gõ lệnh sync tay. Lượt launchd kế tiếp (≤ 15′, kể cả lượt đang chạy dở bằng mã cũ phải xong trước) là lượt áp. Ghi giờ
    pull làm **giờ áp**.
@@ -51,10 +53,24 @@ dịch. **Bản sao lưu thật là DB máy thu** (restic hằng ngày); hàng n
 từng bảng cloud (số dòng và một dấu băm), KHÔNG lưu giá trị: 3.743 ô kia mang tầng A, không được ra đĩa hay vào hồ sơ. Dấu trước và
 sau áp chỉ để chứng một điều: ngoài 8 bảng.cột bị che, không gì khác đổi (mục 5). Lệnh chạy từ checkout chính, chỉ gửi SELECT trong
 giao dịch chỉ đọc, tuần tự một lời một lúc. Trước mỗi lời, lệnh soát `pipeline/logs/cloud-sync.log`: lượt sync cuối phải đã có dòng
-kết thúc, không chạm pha stage của job. Chạm trần thời gian câu thì lệnh chia bảng theo dải băm khoá chính, mỗi dải một dấu:
+kết thúc, không chạm pha stage của job. Chạm trần thời gian câu thì lệnh chia bảng theo dải băm khoá chính, mỗi dải một dấu.
+
+Bước chờ (`cho-ranh.mjs`, ca test `cho-ranh.test.mjs`) phán theo cả nhật ký lẫn tiến trình `sync-cloud.mjs` đang sống: nhật ký vừa xoay
+vòng mà không có tiến trình thì rảnh; lượt cuối không có dòng kết thúc mà không còn tiến trình (đã chết giữa chừng) thì rảnh và in lý do;
+lượt đang chạy thì chờ, quá 40′ thì dừng có lý do, không gọi cloud.
+
+**Trước gộp** (từ worktree HT26 — tệp chỉ có trên nhánh; lệnh nạp `FILL`, `RENAME`, `mgmtExec` của nhánh, mà `FILL` của nhánh trùng
+`origin/main`, `kiem-ho-so.mjs` soát điều đó):
 
 ```bash
-cd ~/dev/onehub-invest/pipeline && node ../_acceptance/sync-cloud-che-ten-nguon-moi-cot/ap-may-thu/sao-luu.mjs | tee ../_acceptance/sync-cloud-che-ten-nguon-moi-cot/ap-may-thu/sao-luu-truoc.txt
+cd ~/dev/onehub-invest/.claude/worktrees/sync-cloud-che-ten/pipeline && node ../_acceptance/sync-cloud-che-ten-nguon-moi-cot/ap-may-thu/sao-luu.mjs | tee ~/dev/onehub-invest/pipeline/logs/ht26-sao-luu-truoc.txt
+cd ~/dev/onehub-invest/.claude/worktrees/sync-cloud-che-ten && node scripts/do-ten-nguon-cloud.mjs | tee ~/dev/onehub-invest/pipeline/logs/ht26-do-truoc-ap.txt
+```
+
+**Sau gộp** (mục 5, từ checkout chính — tệp đã lên `main`):
+
+```bash
+cd ~/dev/onehub-invest/pipeline && node ../_acceptance/sync-cloud-che-ten-nguon-moi-cot/ap-may-thu/sao-luu.mjs | tee logs/ht26-sau-ap.txt
 ```
 
 Câu đo mỗi bảng (`sao-luu.mjs`, thư mục này):
@@ -66,10 +82,10 @@ Câu đo mỗi bảng (`sao-luu.mjs`, thư mục này):
 Tổng 212,2 s, trong đó các lời gọi chỉ khoảng 32 s. Mỗi bảng 0,7–3,8 s (`properties` 120.371 dòng 3,8 s, `nights` 346.750 dòng 2,6 s,
 `sale_offers` 148.753 dòng 2,6 s). Không chạm trần thời gian câu (`SET LOCAL statement_timeout = '110s'`), nên không phải chia dải.
 `lần tráo cuối` = 12:47:33Z, đúng lượt vừa xong. Số dòng và băm của lần thử không lưu vào hồ sơ (chúng là dấu của giờ thử, không phải
-của giờ gộp); lần chạy thật ở bước 1 của mục 1 sẽ ghi `sao-luu-truoc.txt`.
+của giờ gộp); lần chạy thật ở bước 1 của mục 1 ghi `pipeline/logs/ht26-sao-luu-truoc.txt` của checkout chính.
 
-Thêm số đo cloud trước áp: `node scripts/do-ten-nguon-cloud.mjs > …/ap-may-thu/do-truoc-ap.txt` (in số, không in giá trị; mã 1 là
-đúng vì cloud còn 3.743 ô).
+Số đo cloud trước áp là dòng lệnh thứ hai của khối **Trước gộp** (`ht26-do-truoc-ap.txt`; in số, không in giá trị; mã 1 là đúng vì
+cloud còn 3.743 ô).
 
 ## 4. Cách lùi
 
@@ -83,12 +99,12 @@ Cloud là bản chiếu của máy thu, nên lùi = **revert mã + một lượt
 
 ## 5. Lệnh kiểm sau (E7, trong 1 giờ sau giờ áp)
 
-1. `node scripts/do-ten-nguon-cloud.mjs`: mã 0, dòng `tổng` có ô cloud 0 và thô cloud 0 ở mọi bảng.cột. Dán đầu ra vào
-   `do-sau-ap.txt`.
-2. Lần tráo mới: chạy lại lệnh mục 3 rồi lưu vào `sau-ap.txt`. `lần tráo cuối` phải lớn hơn giờ áp. Bảng ngoài 8 bảng.cột có thể
+1. `cd ~/dev/onehub-invest && node scripts/do-ten-nguon-cloud.mjs | tee pipeline/logs/ht26-do-sau-ap.txt` (checkout chính, sau gộp):
+   mã 0, dòng `tổng` có ô cloud 0 và thô cloud 0 ở mọi bảng.cột.
+2. Lần tráo mới: chạy lệnh **sau gộp** của mục 3 (ghi `pipeline/logs/ht26-sau-ap.txt`). `lần tráo cuối` phải lớn hơn giờ áp. Bảng ngoài 8 bảng.cột có thể
    đổi dấu chỉ vì máy thu có dữ liệu mới giữa hai lượt. Bảng nào đổi số dòng hay dấu băm mà không giải thích được bằng dữ liệu mới
    (so `cloud-sync.log` và đếm máy thu cùng lượt) thì dừng, báo GS.
-3. Số dòng đuổi kịp: với mỗi bảng FILL, số dòng cloud ở `sau-ap.txt` ≥ 99% số dòng máy thu cùng lượt (in ở dòng `  <bảng>: <số>`
+3. Số dòng đuổi kịp: với mỗi bảng FILL, số dòng cloud ở `ht26-sau-ap.txt` ≥ 99% số dòng máy thu cùng lượt (in ở dòng `  <bảng>: <số>`
    của lượt sync trong `cloud-sync.log`).
 4. Số thật đặt cạnh số chạy khô ở mục 2: tổng ô che của lượt áp, lấy từ dòng `WARN che tên nguồn`, phải ≈ 3743 (dữ liệu máy thu
    có thể đổi vài ô). Lệch lớn hay cloud còn ô thì dừng, báo GS, không tự sửa cho khớp.

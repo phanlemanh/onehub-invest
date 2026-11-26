@@ -35,14 +35,14 @@ evals:
     cmd: config:executors.script.scc_kho
     long_running: 60
     expected: "exit 0 trên máy thu thật, lượt khô (--kho): mọi biến đường cloud (token, URL) trỏ vào cổng chết 127.0.0.1:1 và ca kiểm không có socket nào mở tới máy chủ Supabase (lsof của tiến trình); chiều đỏ: bỏ --kho với cùng môi trường thì lượt fail kết nối, không ghi. Số ô che theo bảng.cột = số máy thu của do-ten-nguon-cloud.mjs --chi-may-thu; bộ chặn 0; phép đếm thô độc lập (khớp thẳng chuỗi gốc real_name, tên miền, source_ids, không phân biệt hoa thường) trên payload đã che = 0; pha đọc + che + soát của mã mới ≤ 1,5 lần pha đọc + soát của mã cũ (git stash-free: chạy mã cũ từ worktree tạm ở merge-base) đo cùng giờ, và phần mã mới thêm (che + soát mới) ≤ 2 phút so với mã cũ trên cùng dữ liệu (sửa 25/11 theo lời Mạnh). Ngoài CI"
-    paths: [pipeline/sync-cloud.mjs, scripts/do-ten-nguon-cloud.mjs]
+    paths: [pipeline/sync-cloud.mjs, scripts/do-ten-nguon-cloud.mjs, pipeline/lib/sync-cloud-kho-xet.mjs, pipeline/tests/sync-cloud-kho-xet.test.mjs, _acceptance/sync-cloud-che-ten-nguon-moi-cot/probes/kiem-kho.mjs]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E6
     criterion: AC-6
     executor: script
     cmd: config:executors.script.scc_do
     expected: "exit 0; với exec cloud giả ghi lại mọi câu SQL: mọi câu là SELECT khoá + cột trong giao dịch chỉ đọc, không câu nào chứa token tên nguồn (soát bằng findSourceNames trên chính văn bản câu sau khi bỏ định danh lược đồ có trong catalog cloud — danh sách định danh được miễn in ra output), không ghi tệp giá trị; đầu ra chỉ số; có đếm thô độc lập như E5. Chiều đỏ: bản đo lọc ở cloud bằng mẫu tên nguồn thì ca nêu câu vi phạm (không in token)"
-    paths: [scripts/do-ten-nguon-cloud.mjs, scripts/do-ten-nguon-cloud.test.mjs]
+    paths: [scripts/do-ten-nguon-cloud.mjs, scripts/do-ten-nguon-cloud.test.mjs, scripts/do-ten-nguon-cloud.itest.mjs]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E8
     criterion: AC-8
@@ -57,6 +57,13 @@ evals:
     cmd: config:executors.script.scc_ben_doc
     expected: "exit 0; data-api markets (hàm đọc thật của routes/markets.ts trên DB của lượt) trả cùng JSON trước và sau khi areas.meta được che; thẻ Invest (hàm đọc queries.ts) với tin có mọi phần tử photo_urls trúng → mảng rỗng, ảnh thẻ null, không ném lỗi. Chiều đỏ: bản che làm rỗng cả ô meta (thay vì đổi khoá) thì ca markets đỏ nêu trường lệch. Ca canh (GS 26/11): app/src và data-api/src không tham chiếu NGUON_PHUONG, phuongHopLe hay meta.source (grep trên cây kho); chiều đỏ: cấy một tham chiếu vào tệp tạm dưới app/src thì ca nêu tệp"
     paths: [pipeline/lib/che-ten-nguon-gia-tri.mjs, pipeline/sync-cloud-che.test.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.scc_ap
+    expected: "exit 0 (vòng 2, GS 26/11 — finding t1, t2 vòng 1): hồ sơ áp chạy được NGUYÊN VĂN: README có đủ năm mục; mọi lệnh `cd … && node …` trỏ tệp có trên nhánh; lệnh trước gộp không đứng ở checkout chính với tệp chưa có trên origin/main; FILL của nhánh = FILL của origin/main; đột biến (lệnh sao lưu vòng 1, FILL lệch, thiếu mục) đều đỏ. Bước chờ của sao-luu.mjs: nhật ký vừa xoay vòng không ném, lượt chết giữa chừng không chờ mãi, lượt đang chạy quá trần 40′ thì dừng có lý do; đối chứng bản vòng 1 ném TypeError và chờ mãi"
+    paths: [_acceptance/sync-cloud-che-ten-nguon-moi-cot/ap-may-thu/README.md, _acceptance/sync-cloud-che-ten-nguon-moi-cot/ap-may-thu/sao-luu.mjs, _acceptance/sync-cloud-che-ten-nguon-moi-cot/ap-may-thu/cho-ranh.mjs, _acceptance/sync-cloud-che-ten-nguon-moi-cot/ap-may-thu/cho-ranh.test.mjs, _acceptance/sync-cloud-che-ten-nguon-moi-cot/ap-may-thu/kiem-ho-so.mjs]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E7
     criterion: AC-7

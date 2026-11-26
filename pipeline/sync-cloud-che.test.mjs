@@ -359,7 +359,7 @@ function lech(a, b, p = "") {
 test("SCC-9: data-api markets (route thật) trả cùng JSON trước/sau che areas.meta; đối chứng dương: đổi trường trả về thì nêu trường lệch", coDb, async () => {
   const entries = await docSourceNameEntries(c);
   assert.ok(entries.length, "SCC-9 tiền đề: sổ của lượt có tên nguồn");
-  await dungPhu("scc9m", { areas: "" });
+  await dungPhu("scc9m", { areas: "", area_sources: "" });
   const { rows: mk } = await c.query("SELECT id FROM scc9m.areas WHERE region_type = 'market' ORDER BY id");
   const env = { SCC_IDS: JSON.stringify(mk.map((r) => r.id)) };
   const truoc = chayTs("data-api", MA_MARKETS, "scc9m", env);
@@ -374,6 +374,27 @@ test("SCC-9: data-api markets (route thật) trả cùng JSON trước/sau che a
   assert.ok(doi > 0, "SCC-9 tiền đề: areas.meta của lượt phải có ô mang tên nguồn để che");
   const sau = chayTs("data-api", MA_MARKETS, "scc9m", env);
   assert.equal(lech(truoc, sau), null, `SCC-9 markets lệch sau che ở trường ${lech(truoc, sau)}`);
+  // (a) Vòng 2: làm rỗng cả ô meta (bản che thô nhất) — markets vẫn cùng JSON: không route markets nào đưa areas.meta vào đầu ra
+  // (`/:id` SELECT a.meta mà không trả; `/submarkets` đọc meta của ref_calib_submarket_metrics). Đây là bằng chứng route KHÔNG nhạy với
+  // areas.meta, nên «giống trước che» đứng vững với mọi cách che ô ấy; bên đọc mới của meta bị ca canh dưới bắt.
+  await c.query("CREATE TABLE scc9m.areas_meta_giu AS SELECT id, meta FROM scc9m.areas");
+  await c.query("UPDATE scc9m.areas SET meta = '{}'::jsonb");
+  const rong = chayTs("data-api", MA_MARKETS, "scc9m", env);
+  assert.equal(lech(sau, rong), null, `SCC-9 (a): làm rỗng areas.meta mà markets lệch ở ${lech(sau, rong)} — route có đọc meta, phải soát lại AC-9`);
+  await c.query("UPDATE scc9m.areas a SET meta = g.meta FROM scc9m.areas_meta_giu g WHERE g.id = a.id");
+  // (b) Vòng 2, chiều đỏ có phân biệt: bản che TRÀN sang cột route đọc — khoá S02 của area_sources (nối ra marketScore) — thì ca nêu
+  // đúng trường lệch.
+  assert.ok(Object.values(sau).some((v) => v?.data?.marketScore != null || (Array.isArray(v?.data) && v.data.some((x) => x.marketScore != null))),
+    "SCC-9 (b) tiền đề: lượt phải có thị trường có marketScore");
+  await c.query("CREATE TABLE scc9m.as_giu AS SELECT * FROM scc9m.area_sources");
+  await c.query("UPDATE scc9m.area_sources SET source_area_key = 'S02' WHERE source = 'S02'");
+  const tran = chayTs("data-api", MA_MARKETS, "scc9m", env);
+  // Danh sách `/` xếp theo điểm nên lệch đầu tiên là thứ tự; route chi tiết `/<id>` nêu thẳng trường.
+  assert.notEqual(lech(sau, tran), null, "SCC-9 (b): che tràn sang khoá S02 mà markets không lệch");
+  const lechChiTiet = Object.keys(sau).filter((k) => /^\/[^/]+$/.test(k) && k !== "/").map((k) => lech(sau[k], tran[k])).filter(Boolean);
+  assert.ok(lechChiTiet.some((p) => p.endsWith(".marketScore")), `SCC-9 (b): route chi tiết không nêu marketScore: ${lechChiTiet.slice(0, 3).join(", ")}`);
+  await c.query("TRUNCATE scc9m.area_sources; INSERT INTO scc9m.area_sources SELECT * FROM scc9m.as_giu");
+  assert.equal(lech(sau, chayTs("data-api", MA_MARKETS, "scc9m", env)), null, "SCC-9 (b): trả lại area_sources mà markets chưa về như sau che");
   // Đối chứng dương: phép so phát hiện được lệch ở một trường markets trả về.
   await c.query("UPDATE scc9m.areas SET name = name || ' (đổi)' WHERE id = $1", [mk[0].id]);
   const doiTen = chayTs("data-api", MA_MARKETS, "scc9m", env);
@@ -403,6 +424,8 @@ test("SCC-9: thẻ Invest (getAreaThumbnails thật) — mọi ảnh trúng tên
 // Sau che, giá trị areas.meta.source trên cloud là «S04-…» (mã thay tên). Bên đọc mới tra khoá ấy (NGUON_PHUONG, phuongHopLe,
 // meta.source) phải xử trước — HT26 ghi giới hạn có tên. Đọc cây kho (git ls-files), không cần DB.
 const MAU_BEN_DOC = /NGUON_PHUONG|phuongHopLe|\bmeta\.source\b/;
+// (c) Vòng 2: route data-api đưa meta của dòng areas vào đầu ra (biến dòng `m`, `r`, `row`, `x` đọc `.meta`) — markets sẽ nhạy với ô đã che.
+const MAU_ROUTE_META = /\b(?:m|r|row|x)\.meta\b/;
 const TB_CANH = "bên đọc areas.meta.source mới ở app/data-api — giá trị trên cloud là S04-…, xử trước (HT26 giới hạn có tên)";
 /** Tệp trong `tep` có tham chiếu mẫu; `doc(tệp)` trả nội dung. */
 function benDocMetaSource(tep, doc) {
@@ -432,4 +455,23 @@ test("SCC-9: ca canh chiều đỏ — cấy tệp tạm dưới app/src chứa 
   });
   for (const mau of ["NGUON_PHUONG", "phuongHopLe(x)"]) assert.deepEqual(benDocMetaSource([gia], () => mau), [gia], `SCC-9 ca canh: mẫu ${mau} không bị bắt`);
   assert.deepEqual(benDocMetaSource([gia], () => "meta.sources"), [], "SCC-9 ca canh: «meta.sources» không phải khoá đang canh");
+});
+
+// (c) Vòng 2: ca canh route markets — không route data-api nào đưa meta của dòng areas vào JSON; có thì AC-9 «giống trước che» phải soát lại.
+const tepRoute = () => tepBenDoc().filter((f) => f.startsWith("data-api/src/routes/"));
+function kiemRouteMeta(tep, doc) {
+  const co = tep.filter((f) => MAU_ROUTE_META.test(doc(f)));
+  assert.ok(!co.length, `route data-api đưa meta của dòng areas vào đầu ra — markets nhạy với ô đã che, soát lại AC-9: ${co.join(", ")}`);
+}
+test("SCC-9: ca canh (c) — không route data-api nào đọc `.meta` của dòng areas vào đầu ra", () => {
+  const tep = tepRoute();
+  assert.ok(tep.some((f) => f.endsWith("/markets.ts")), "SCC-9 (c) tiền đề: phải thấy data-api/src/routes/markets.ts");
+  kiemRouteMeta(tep, docTep);
+});
+test("SCC-9: ca canh (c) chiều đỏ — cấy `meta: m.meta` vào markets.ts thì ca đỏ nêu đúng tệp", () => {
+  const dich = "data-api/src/routes/markets.ts";
+  const doc = (f) => (f === dich ? docTep(f).replace("name: m.name,", "name: m.name, meta: m.meta,") : docTep(f));
+  assert.notEqual(doc(dich), docTep(dich), "SCC-9 (c): chỗ cấy không còn trong markets.ts");
+  assert.throws(() => kiemRouteMeta(tepRoute(), doc), (e) => e.message.endsWith(dich));
+  assert.ok(!MAU_ROUTE_META.test("sm.meta->>'market_score'"), "SCC-9 (c): meta của ref_calib_submarket_metrics (sm.meta) không phải areas.meta");
 });
