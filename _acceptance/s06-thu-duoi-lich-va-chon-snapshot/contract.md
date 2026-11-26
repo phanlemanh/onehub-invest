@@ -110,6 +110,9 @@ PL38 nối transform, resolve, sync-cloud theo nhịp. Hồ sơ này chỉ bảo
   `THU_DUOI_S06_NGHI_SAU_CHAN_PHUT` mặc định 30 phút. Probe `chon-nap.mjs` thêm ca E11, E12; chạy thử trên Mac mini với bản
   chép CHỈ-ĐỌC của phép đo: mã mới `CHON-NAP OK`, wrapper `7fe8bb5b0` đối chứng `CHON-NAP DO (5 ca)` (vùng mặc định chạy cả
   hai, vùng ngoài danh sách bị gọi, không có dấu chặn, gọi nguồn khi còn hạn, dấu không gỡ). Lượt chấm thật vẫn trên M5.
+  Lượt M5 @dfdc36324 (`evidence/m5-e5-dfdc36324.txt`, commit 27fbaec02): đầu nhánh `CHON-NAP OK`, đủ bảy dòng E11/E12;
+  đối chứng 7173fc21a `CHON-NAP DO (10 ca)`, E11/E12 đỏ 5/7 (hai dòng «hai vùng gọi cả hai» và «chặn giữa chừng» vốn đúng
+  trên mã cũ), các ca AC-5 đỏ.
 - Lệch với khuyến nghị Hỏi-3 (60 phút, chặn lần hai trong 24 giờ thì dừng tới khi người mở lại): mã mặc định 30 phút và
   không có luật lần hai. Hạn đổi được bằng biến môi trường trong plist; luật lần hai chưa có — Mạnh chọn khuyến nghị thì
   trả ZCode qua LL trước khi chấm.
