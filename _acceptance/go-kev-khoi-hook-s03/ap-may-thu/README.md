@@ -6,7 +6,12 @@ Không migration, không ghi dữ liệu, không nạp plist mới. Hai phần, 
 
 Người làm: phiên ZCode vận hành (ZV) theo lời GIAO triển khai của LL sau khi PR gộp và GS chuyển lời. Phiên dãy ZT không làm bước nào dưới đây.
 
-1. **Lệnh áp.** Giờ áp: NGOÀI 05:30–06:30 và 14:00–14:45 giờ VN (job thu được ưu tiên). **Khởi động lại gateway cần lời riêng của Mạnh** — chữ ký Cổng Bằng chứng của hồ sơ này phủ đúng bước 1.4 dưới đây; không có chữ ký thì dừng sau bước 1.1.
+1. **Lệnh áp.** Giờ áp: NGOÀI 05:30–06:30 và 14:00–14:45 giờ VN (job thu được ưu tiên).
+   **Khởi động lại gateway cần lời riêng của Mạnh ngay lúc làm, ngoài chữ ký.** Chữ ký Cổng Bằng chứng của hồ sơ này
+   KHÔNG phủ bước nào chạm `~/.openclaw`, launchd hay plist (bước 1.3, 1.4 và lần khởi động lại ở mục 4): ngay trước bước
+   1.3, ZV hỏi Mạnh và chờ một lời riêng cho đúng lượt này; không có lời ấy thì dừng sau bước 1.2, báo LL. Ai chạy: chỉ
+   phiên ZV theo lời GIAO triển khai của LL — không phải dãy ZT, không phải GS. Kiểm trước: bước 1.1 xanh và bản sao lưu
+   mục 3 có đủ hai tệp `.bak-`. Kiểm sau: mục 5. Cách lùi: mục 4 (cũng cần lời riêng của Mạnh cho lần khởi động lại).
    1. `git -C ~/dev/onehub-invest pull --ff-only origin main`; kiểm `grep -c kevScore ~/dev/onehub-invest/collector/openclaw/handler.js` = `0` và `ls ~/dev/onehub-invest/pipeline/cron/com.oneinvest.kev-gate.plist` báo không có tệp. Từ đây watchdog đã là bản K1 — trong 5′ sau pull, `tail -1 ~/dev/onehub-invest/pipeline/logs/zalo-watchdog.log` phải là dòng «ok — … 0 turn mới, kev:off (K1), db:ok» (watchdog chạy trọn sau khi gỡ khối canh — vòng code chỉ chốt tĩnh phần này); không thấy dòng ấy sau 10′ → không làm bước 1.2 trở đi, lùi watchdog (mục 4), báo GS.
    2. Sao lưu (mục 3).
    3. `cp ~/dev/onehub-invest/collector/openclaw/HOOK.md ~/dev/onehub-invest/collector/openclaw/handler.js ~/.openclaw/hooks/oneinvest-zalo-pipe/`
@@ -23,7 +28,7 @@ Người làm: phiên ZCode vận hành (ZV) theo lời GIAO triển khai của 
    Lưu ý: log hook thật đang có 99 dòng `post 202 … kev=off` GIẢ (nhóm `t1`, `conv-*`, `c`; từ 21/11) do bản cũ của
    `collector/openclaw/handler.test.mjs` chạy với HOME thật — để nguyên, không xoá (không ai sửa `~/.openclaw` ngoài bước áp);
    bộ kiểm sau áp chỉ đọc phần log sinh SAU mốc byte nên không đếm chúng. Watchdog cắt `zalo-watchdog.log` còn 500 dòng mỗi nhịp — mốc byte của tệp này có thể trôi; mục 5 vì vậy chỉ đọc 3 dòng cuối của nó.
-4. **Cách lùi** (≈1′, không đụng dữ liệu). Hook: `cp "$H/handler.js.bak-$G" "$H/handler.js" && cp "$H/HOOK.md.bak-$G" "$H/HOOK.md"` rồi `launchctl kickstart -k gui/$(id -u)/ai.openclaw.gateway` (cùng lời riêng của Mạnh). Hook cũ chạy được khi không có Kev (fail-open, chỉ thêm «kev null»). Watchdog: `git revert -m 1 <sha commit gộp>` trên một nhánh, PR lùi, gộp, `git -C ~/dev/onehub-invest pull --ff-only origin main`. Không cần dựng lại Kev.
+4. **Cách lùi** (≈1′, không đụng dữ liệu). Hook: `cp "$H/handler.js.bak-$G" "$H/handler.js" && cp "$H/HOOK.md.bak-$G" "$H/HOOK.md"` rồi `launchctl kickstart -k gui/$(id -u)/ai.openclaw.gateway` — cần một lời riêng của Mạnh ngay lúc lùi, riêng với lời cho bước 1.4 và ngoài chữ ký cổng; ZV chạy. Hook cũ chạy được khi không có Kev (fail-open, chỉ thêm «kev null»). Watchdog: `git revert -m 1 <sha commit gộp>` trên một nhánh, PR lùi, gộp, `git -C ~/dev/onehub-invest pull --ff-only origin main`. Không cần dựng lại Kev.
 5. **Lệnh kiểm sau.** Trong 30′ sau bước 1.4, chỉ đọc phần log sinh sau mốc:
    ```bash
    M=/tmp/kev1-moc.txt; L=~/dev/onehub-invest/pipeline/logs
