@@ -1,0 +1,4 @@
+{
+  "feature_plain": "Khi máy chấm bóng thẻ «Bổ sung tin», mỗi lời gọi model có trần chữ trả về theo số ô của thẻ; câu trả lời bị cắt ở trần được ghi riêng là «bị cắt», không lẫn với «trả JSON hỏng», nên lượt thử 30 thẻ ra đủ kết quả mà không phải đọc lại phần đã trả tiền. Sau bản chấm: hai bộ kiểm lớn của pipeline chỉ chạy lại khi nhánh chạm đúng mã chấm bóng (anh «Đồng ý R4» 26/11), và nhánh đã gộp main mới (có HT9) — máy kiểm trước khi gộp xác nhận bằng chứng chưa cũ.",
+  "analyst_plain": ""
+}

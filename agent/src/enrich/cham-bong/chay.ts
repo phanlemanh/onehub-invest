@@ -6,7 +6,7 @@ import { appendFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { RecordCall } from "../../runtime/ai-call-log.js";
 import type { CauHinhCham, ModelCham } from "./cau-hinh.js";
-import { docMot, MAX_TOKEN_RA, type GoiModel } from "./doc.js";
+import { docMot, tranTokenRa, type GoiModel } from "./doc.js";
 import { docThe, oCuaThe, xepThe, type BoQua, type TheCham, type Truy } from "./doc-db.js";
 import { khoaGiaTri, ketCuc, laCaBien, type KetCuc } from "./ket-cuc.js";
 import { khoaDung, moKho, type DongKho } from "./kho.js";
@@ -16,7 +16,7 @@ export type CheDo = "thu" | "ap";
 export type TongKet = {
   run_id: string; che_do: CheDo; prompt_version: string; models: string[]; tran_usd: number;
   so_the: number; so_de_xuat: number; the_du: number; the_cho: number;
-  goi_moi: number; dung_lai: number; loi_goi: number; vao: number; ra: number; usd: number;
+  goi_moi: number; dung_lai: number; loi_goi: number; loi_theo_ly_do: Record<string, number>; vao: number; ra: number; usd: number;
   dung_vi_tran: boolean; bo_qua: BoQua[];
 };
 export type DongDoc = {
@@ -31,11 +31,15 @@ export type DongKetCuc = {
 
 export const thuMucLuot = (thuMuc: string, runId: string) => join(thuMuc, runId);
 
-/** Ước chi phí lời gọi đầu của một model khi chưa có lời gọi nào: ký tự lời nhắc / 3 token vào, MAX_TOKEN_RA token ra. */
-function uocDau(m: ModelCham, t: TheCham): number {
-  const p = loiNhac({ text: t.text, group_name: t.group_name, o: oCuaThe(t) });
-  return ((p.system.length + p.user.length) / 3 * m.gia_vao + MAX_TOKEN_RA * m.gia_ra) / 1e6;
+/** Ước chi phí lời gọi đầu của một model khi chưa có lời gọi nào: ký tự lời nhắc / 3 token vào, trần token ra của chính thẻ ra (AC-5). */
+export function uocDau(m: Pick<ModelCham, "gia_vao" | "gia_ra">, t: Pick<TheCham, "text" | "group_name" | "de_xuat">): number {
+  const o = oCuaThe(t as TheCham);
+  const p = loiNhac({ text: t.text, group_name: t.group_name, o });
+  return ((p.system.length + p.user.length) / 3 * m.gia_vao + tranTokenRa(o.length) * m.gia_ra) / 1e6;
 }
+
+/** Khoá đếm lỗi theo lý do (AC-4): «bi-cat», «json-hong», hay lớp lỗi nhà cung cấp (đoạn đầu của chuoiLoi, vd «may-chu»). */
+export const lyDoLoi = (loi: string): string => loi.split(":")[0];
 
 export async function chay(o: {
   truy: Truy; cauHinh: CauHinhCham; cheDo: CheDo; goi: GoiModel; recordCallDb: RecordCall; thuMuc: string; runId: string;
@@ -55,7 +59,7 @@ export async function chay(o: {
   const tk: TongKet = {
     run_id: o.runId, che_do: o.cheDo, prompt_version: pv, models: o.cauHinh.model.map((m) => m.gateway), tran_usd: tran,
     so_the: ds.length, so_de_xuat: ds.reduce((s, t) => s + t.de_xuat.length, 0), the_du: 0, the_cho: 0,
-    goi_moi: 0, dung_lai: 0, loi_goi: 0, vao: 0, ra: 0, usd: 0, dung_vi_tran: false, bo_qua,
+    goi_moi: 0, dung_lai: 0, loi_goi: 0, loi_theo_ly_do: {}, vao: 0, ra: 0, usd: 0, dung_vi_tran: false, bo_qua,
   };
   const daChi = new Map<string, { n: number; usd: number }>();
   try {
@@ -74,7 +78,7 @@ export async function chay(o: {
         tk.ra += d.ra ?? 0;
         daChi.set(m.gateway, { n: (ls?.n ?? 0) + 1, usd: (ls?.usd ?? 0) + d.usd });
         if (d.ok) kho.ghi(k, d, o.runId);
-        else tk.loi_goi++;
+        else { tk.loi_goi++; const ld = lyDoLoi(d.loi); tk.loi_theo_ly_do[ld] = (tk.loi_theo_ly_do[ld] ?? 0) + 1; }
       }
     }
   } finally {
