@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 956208c194a5e9819770f2a987c7a947faab12a8
+verified_commit: 7d6c8221aea720ac7f135e6b0a8397161899afae
 human_signoff: Mạnh 2026-11-22
 ---
 
@@ -158,3 +158,7 @@ Round 1: mọi eval chạy được đều đạt (E7 không chạy theo hồ s�
 ### Re-pin lần 1 — 2026-11-22, do ghim lại sau chữ ký, nhận main b28bdbd3d (HT2)
 run_id: repin-20261122T051751Z-81706
 sha: 956208c194a5e9819770f2a987c7a947faab12a8 · suites: 7 lệnh exit 0 · evals: 7/7 eval máy đạt kỳ vọng · không chạy theo hồ sơ: E7 · AC không có chốt máy: AC-7
+
+### Re-pin lần 2 — 2026-11-26, do ghim lại trên main có HT9 (4714329fe) sau sửa CI, nới trần SLT-DC-7/9, thu hẹp paths E6/E8 (R4), thêm đo đường cloud
+run_id: repin-20261126T021523Z-41362
+sha: 7d6c8221aea720ac7f135e6b0a8397161899afae · suites: 8 lệnh exit 0 · evals: 7/7 eval máy đạt kỳ vọng · không chạy theo hồ sơ: E7 · AC không có chốt máy: AC-7 · chập chờn (đỏ lần đầu, đạt khi chạy lại): suite 1/8, suite 3/8
