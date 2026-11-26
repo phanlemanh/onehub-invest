@@ -1,0 +1,10 @@
+{
+  "feature_plain": "API dữ liệu công khai thôi mở cửa khi quên đặt khoá: chỗ nào không phải máy dev hay máy test mà thiếu danh sách khoá thì API từ chối mọi lời gọi dữ liệu, và bản chạy trên máy chủ không khởi động.",
+  "decisions": [
+    {
+      "id": "E10",
+      "q": "Tài liệu API đã nói đúng luật đóng khi thiếu khoá chưa?",
+      "why": "Hội đồng ba góc nhìn cùng đề xuất Đạt: README, tệp mẫu biến môi trường, docker-compose và CLAUDE.md đều nêu chỉ máy dev, máy test chạy được không khoá."
+    }
+  ]
+}
