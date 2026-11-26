@@ -1,0 +1,56 @@
+---
+schema_version: 1
+feature: Lát nhãn trục hai-khu-truc của PL36 trên /ops/labels chỉ hiện hai ô Toà và Trục, như lát có khai ô, và vẫn hiện nháp của trợ lý cho hai ô đó, để Mạnh duyệt 110 bài nhanh
+slug: lat-hai-khu-truc-khai-o
+owner: phanlemanh@gmail.com
+risk_tier: T2
+surfaces: [ui]
+status: machine-cleared
+veto_state: mo
+veto_opened_at: 2026-11-24T14:49:27Z
+approved_by:
+approved_at:
+design_doc: docs/superpowers/specs/2026-11-24-lat-hai-khu-truc-khai-o-design.md
+---
+
+# Acceptance Contract: lat-hai-khu-truc-khai-o
+
+## Context
+
+Hàng HT21, hàng nền của PL36 AC-10 (GS giao 24/11). Lát `hai-khu-truc` đã nạp lên DB máy thu nhưng chưa khai ô, nên màn hiện đủ 17
+ô kèm căn cứ (≈ 5,5 giờ cho 110 bài). Khuôn lát có khai ô đã ký ở hồ sơ `lat-khai-o-can-gan`.
+
+## Acceptance Criteria
+
+- **AC-1** Given lát `hai-khu-truc`, When đọc khai ô của lát, Then ra đúng `building`, `stack`, nhãn ô Trục «Trục (hai số cuối của
+  số căn)», nhãn ô Toà như cũ; lát `hai-khu-ghep-b` vẫn `building`, `subzone`. Chiều đỏ: bản bỏ dòng khai thì lát không còn khai ô
+  và ca đỏ, thông điệp gọi tên lát.
+- **AC-2** (ui-observed) Given biểu mẫu `/ops/labels` dựng thật cho một bài của lát, When hiện, Then chỉ có hai ô Toà, Trục, mỗi ô
+  có «Không suy ra được», không ô căn cứ, không ô Lý do, bộ đếm 0/2; lát không khai vẫn đủ ô.
+- **AC-3** Given mọi lát khác, When đọc khai ô, Then không đổi gì so với trước (một dòng thêm, không sửa dòng cũ).
+- **AC-4** (nháp của trợ lý, cross-layer) Given nháp của trợ lý theo khuôn sẵn có mà `nhapTuDraft` đọc
+  (`{hien, cach_doc: {gn: {trang_thai: 'co', o: {building, stack}}}}`), When máy chủ dựng bài cho màn và biểu mẫu hiện, Then lát
+  `hai-khu-truc` nhận nháp lọc về đúng hai ô Toà, Trục, điền sẵn và hiện nhãn «Nháp máy»; lát `hai-khu-ghep-b` và mọi lát khai ô khác
+  vẫn gắn mù (không nháp ở máy chủ lẫn màn); lát không khai giữ nguyên nháp. Chiều đỏ: bản đưa `hai-khu-ghep-b` vào danh sách có nháp
+  thì phép đo gắn mù đỏ, thông điệp gọi tên lát. Lý do ngoại lệ: Mạnh bỏ đo mù cho lát này (24/11, lối 3 của PL36 — trợ lý nháp,
+  Mạnh duyệt); thước đo người duyệt là thẻ cài lỗi (8–10%) thay cho gắn mù.
+- **AC-5** (mô tả đầu trang theo lát) Given trang `/ops/labels` của một lát có khai ô, When hiện câu mô tả đầu trang, Then lát
+  `hai-khu-truc` ghi đúng hai ô của lát (Toà, Trục) và nói rõ các ô đã điền sẵn nháp máy, người duyệt sửa chỗ sai rồi lưu; lát gắn
+  mù (`hai-khu-ghep-b`) giữ câu cũ «… Máy không cho thấy nó đã đọc ra gì»; lát không khai dùng câu của nó. Chiều đỏ: bản dùng một câu
+  cố định cho mọi lát khai ô thì ca `hai-khu-truc` đỏ. (Nâng phạm vi theo phán của GS 24/11 sau S4 vòng 1: câu cũ chỉ dẫn sai người
+  duyệt đúng ở lát này.)
+
+## Coverage
+
+- Bỏ quét không gian AC — xem dòng sổ `descope` «bỏ coverage-scan»: một dòng khai theo khuôn đã ký, trục duy nhất là lát.
+
+## Out of scope
+
+- Sửa luật «căn cứ Chữ bài phải đọc được trong chữ» để nhận trục theo quy ước Mã căn (lát có khai không đòi căn cứ nên không cần).
+- Trợ lý điền nháp, thẻ cài lỗi, chấm Wilson — thuộc PL36 và phiên gắn nhãn.
+
+## Notes
+
+- Ngoài-1 (máy định tuyến 2026-11-24, đề xuất S4 known-limits): Một tệp cấu hình của lượt chấm còn là bản cũ, nên nếu ai chấm bằng tệp đó thì sẽ bỏ sót phép kiểm câu mô tả đầu trang. Người duyệt dùng màn nhãn không bị ảnh hưởng gì. — `_acceptance/lat-hai-khu-truc-khai-o/s4-args.json`
+- Ngoài-2 (máy định tuyến 2026-11-24, đề xuất S4 known-limits): Phép kiểm câu mô tả đầu trang chỉ soi chữ trong mã, chưa dựng màn thật. Nếu sau này mã đổi cách viết, phép kiểm có thể báo đỏ giả hoặc để lọt một lỗi hiển thị. — `app/tests/labels-lat-hai-khu-truc.test.tsx`
+- Ngoài-3 (máy định tuyến 2026-11-24, đề xuất S4 known-limits): Phép kiểm dùng nháp viết tay theo khuôn mà màn đọc, chưa lấy nháp do trợ lý thật sinh ra. Nếu khuôn thật khác, các ô có thể không được điền sẵn dù phép kiểm vẫn xanh. — `app/tests/labels-lat-hai-khu-truc.test.tsx`

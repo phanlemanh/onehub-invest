@@ -1,0 +1,96 @@
+schema_version: 1
+feature_slug: tran-tong-luot-dem-va-tran-doc-gop
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.ht13_chia_tran
+    paths: [scripts/zalo-import-daily.sh, scripts/zalo-import-chia-tran-zcode.test.mjs]
+    expected: "exit 0; ca «2311-5 A(3): trần tổng lượt 00:00 mặc định 21600s…»: dòng khai `[zalo-import-daily] trần: nạp ≤1800s · đọc gộp ≤16200s (dừng sạch ở 15900s) · lượt ≤21600s`, node giả của đồng hồ ghi đúng `[\"21600 10800\"]`; ca «A(3) tĩnh»: hai mặc định `${ZALO_IMPORT_TRAN_TONG:-N}` và `|| echo N)}` cùng số 21600. Chiều đỏ cùng fixture: «A(3) chiều đỏ: bản sao trả trần tổng về 14400» → assert.rejects với thông điệp ghim `lượt 00:00 mặc định 21600s`."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.ht13_chia_tran
+    paths: [scripts/zalo-import-daily.sh, scripts/zalo-import-chia-tran-zcode.test.mjs]
+    expected: "exit 0; trong ca A(3): khoá pid sống + chữ ký khớp lấy lúc −5h → lượt nhanh in `khoá còn sống (PID …) — không gỡ` và `⏭ bỏ lượt`, thư mục khoá còn `pid`; lấy lúc −7h → `gỡ khoá của lượt chạy thật đã VƯỢT trần tổng 21600s`, không `⏭ bỏ lượt`. Chiều đỏ: «A(3) chiều đỏ: bản sao để tuổi khoá ở 14400» → rejects ghim `khoá 5h của lượt thật vẫn còn chủ`."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.ht13_chia_tran
+    paths: [scripts/zalo-import-daily.sh, scripts/zalo-import-chia-tran-zcode.test.mjs]
+    expected: "exit 0; ca «2311-5 A trần tổng 32400 (plist đêm 24→25/11)…»: dòng khai khớp `đọc gộp ≤27000s (dừng sạch ở 26700s) · lượt ≤32400s`, đồng hồ `[\"32400 16200\"]`, bước đọc gộp nhận `26700`, không dòng `JOB WARN`."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3b
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.ht13_tran
+    paths: [scripts/zalo-import-daily.sh, scripts/zalo-import-tran.test.mjs]
+    expected: "exit 0; ma trận AC-7 của zalo-import-tran.test.mjs viết trước năm hàng, mỗi hàng một đồng hồ và hai số đầu đúng: 00:00 mặc định `21600 10800` · nhanh mặc định `2400 1200` · `TRAN_TONG=100` → `100 50` · `TRAN_TONG=100 CANH_BAO=7` → `100 7` · `TRAN_TONG=32400` → `32400 16200`."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.ht13_tran
+    paths: [scripts/zalo-import-daily.sh, scripts/zalo-import-tran.test.mjs]
+    expected: "exit 0; ba ca «HT13 trần tổng mặc định | biến 32400 (plist đêm 24/11) | biến nhỏ 6000: mốc dừng sạch của đọc gộp chừa đủ chỗ cho enrich, enrich chạy»: bước đọc gộp giả ghi DOC_GOP_TRAN_GIAY = M, M nguyên ≥ 60, T − M ≥ 4800 (= trần nạp 1800 + 600 + 2400 cho enrich), dòng khai nêu `lượt ≤Ts`, có dòng `JOB STEP [zalo-import-daily] bước enrich-run`. Chiều đỏ cùng fixture: «HT13 chiều đỏ: bản sao bỏ phần chừa cho enrich» (`CHUA_ENRICH=3000` → `CHUA_ENRICH=0`, T=32400) → rejects ghim `đọc gộp dừng quá muộn`. Bổ sung số: ca ZCode «trần tổng nhỏ (6000s) → đọc gộp tự co về 600s (dừng sạch ở 300s)» xanh trong ht13_chia_tran."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.ht13_chia_tran
+    paths: [scripts/zalo-import-daily.sh, scripts/zalo-import-chia-tran-zcode.test.mjs]
+    expected: "exit 0; ca hợp đồng: `ZALO_IMPORT_TRAN_DOC_GOP=1200` → bước nhận `900`; `=30` → `60`; mặc định → `15900`; ca kẹp `=30000` → dòng `JOB WARN [zalo-import-daily] trần đọc gộp 30000s không vừa trần tổng 21600s — kẹp về 16200s`, bước nhận `15900`. Chiều đỏ: «bản sao bỏ chỗ kẹp» → rejects ghim `phải được kẹp và báo`; «bản sao không xuất biến» → rejects ghim `bước đọc gộp không nhận được DOC_GOP_TRAN_GIAY`."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.ht13_chia_tran
+    paths: [scripts/zalo-import-daily.sh, scripts/zalo-import-chia-tran-zcode.test.mjs]
+    expected: "exit 0; ca «A(3) lượt nhanh: trần giữ nguyên 2400s, một đồng hồ»: dòng khai đúng `[zalo-import-daily] trần: nạp ≤1800s · lượt ≤2400s` ở cuối dòng (không nhắc đọc gộp), đồng hồ `[\"2400 1200\"]`."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.ht13_chia_tran
+    paths: [scripts/zalo-import-daily.sh, scripts/zalo-import-chia-tran-zcode.test.mjs]
+    expected: "exit 0; ca «A chuyển tiếp: chưa có nhánh B — bước đọc gộp thoát 75 thì enrich vẫn chạy, lượt thoát 75 kèm JOB FAIL»: dòng `JOB STEP … bước doc-gop-hang-ngay mã 75`, dòng `JOB STEP … bước enrich-run mã 0`, status 75. Ca «A lượt 00:00 lành»: status 0, không `JOB FAIL|JOB WARN`, hai bước theo thứ tự doc-gop-hang-ngay rồi enrich-run, 0 tiến trình đồng hồ còn lại (đếm theo dấu symlink)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8a
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.ht13_tran
+    paths: [scripts/zalo-import-daily.sh, scripts/zalo-import-tran.test.mjs, pipeline/cron/**]
+    expected: "exit 0; trọn zalo-import-tran.test.mjs (AC-1..AC-9 của #519 + ca HT13), gồm «AC-7 plist không đổi so với origin/main» (`git diff --quiet origin/main -- pipeline/cron`)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8b
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.ht13_luoi
+    paths: [scripts/zalo-import-daily.sh, scripts/lib/job-step.sh, scripts/zalo-import-job.test.mjs, scripts/job-step-thoi-luong.test.mjs]
+    expected: "exit 0; lưới hồi quy: zalo-import-tran-zcode, zalo-import-job (PL34-AC-4 tập 15 tệp nhắc zalo-import-daily, gồm zalo-import-chia-tran-zcode.test.mjs), zalo-import-job-nhe, zalo-import-job-lan, enrich-buoc-job, job-step-thoi-luong (JST-AC-8: nhánh chỉ sửa phía trên mốc làn), job-exit — mọi ca pass, 0 fail."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.ht13_ap
+    paths: [_acceptance/tran-tong-luot-dem-va-tran-doc-gop/ap-may-thu/**]
+    expected: "exit 0; `kiem.sh` kiểm README.md có năm tiêu đề mục 1–5 (Lệnh áp · Số chạy thử · Sao lưu trước · Cách lùi · Lệnh kiểm sau; thiếu → `FAIL README thiếu mục: <mục>`), rồi chín ca `kiem-sau.sh` trên log mẫu rút từ đầu ra thật của bản sao script: luot-moi-dat → ĐẠT (cả khi `--tran 21600`); luot-32400-dat → ĐẠT, nhưng `--tran 21600` → `KHÔNG ĐẠT — lượt mới nhất không chạy trần 21600s`; luot-cu-khong-khai → `KHÔNG ĐẠT — chưa có lượt 00:00 nào chạy mã mới`; luot-moi-cat-tran → `KHÔNG ĐẠT — lượt bị trần tổng cắt`; nhieu-luot-dat-roi-nhanh-cat (00:00 đạt rồi lượt nhanh TIMEOUT) → ĐẠT; nhieu-luot-cu-dat-moi-cat (00:00 cũ có enrich, rồi 00:00 mới bị cắt, rồi lượt nhanh) → `KHÔNG ĐẠT — lượt bị trần tổng cắt`; luot-vuot-cho-enrich (enrich 3100 s) → `KHÔNG ĐẠT — các bước sau đọc gộp tới enrich mất 3100s > chừa 3000s`. Phá đúng nhánh (đo 24/11 trên bản chép): bỏ giới hạn đoạn lượt → ca nhieu-luot-dat-roi-nhanh-cat đỏ; bỏ kiểm `--tran` → ca 32400 `--tran 21600` đỏ; nới chừa enrich → ca luot-vuot-cho-enrich đỏ."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8c
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.suite.pipeline_a
+    long_running: 90
+    paths: [pipeline/**, scripts/**]
+    expected: "exit 0; nửa A bộ test pipeline (suite của lượt chấm, khai ở đây chỉ để có long_running 90 — trên Mac mini nửa A vượt trần chờ 30′ mặc định), 0 fail; nhánh mang 70bcecb3a (trần ca SLT-DC-7/9 480 → 900 s)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8d
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.suite.pipeline_b
+    long_running: 90
+    paths: [pipeline/**, scripts/**]
+    expected: "exit 0; nửa B bộ test pipeline (suite của lượt chấm, khai ở đây chỉ để có long_running 90), 0 fail."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

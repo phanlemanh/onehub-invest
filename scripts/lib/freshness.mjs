@@ -13,13 +13,13 @@
  *   S06  airbnb_snapshots.collected_at của snapshot chứa tin stg_chotot_ads
  *   S08  airbnb_snapshots.collected_at của snapshot chứa dòng stg_s08_inventory
  *   S10, S11  airbnb_snapshots.collected_at của bản thu nguồn (chưa có bảng stg)
- * Thành phố = nơi mã đó có dữ liệu (không ghép chéo). Mã `completed` (S04) không đo.
+ *   mã khác  airbnb_snapshots.collected_at của snapshot có dòng ở một bảng trong `stg_tables` của chính mã (S09, S16)
+ * Thành phố = nơi mã đó có dữ liệu (không ghép chéo), lọc theo `measured_markets` khi sổ khai. Chỉ đo dòng `active`
+ * (S04 completed, S05/S11 paused không đo).
+ *
+ * Nhịp (SLO) đọc từ `source_registry.cadence_hours` (migration 122, NK1 so-nguon-kho-khai-bao) — không còn hằng trong mã;
+ * NULL = «chưa khai SLO». Sổ chưa có cột (chưa áp 122) → ném lỗi gọi tên migration, không rơi về số cũ.
  */
-
-/** SLO theo giờ. S01/S02/S03 = 8/35/3 ngày (ADR-0007; Mạnh chốt Hỏi-1 AU4 23/10); S05/S06 theo nhịp thu —
- * S05 = 96 giờ: từ 7/11 thu 2 lượt/tuần (thứ Ba + thứ Sáu), khoảng dài nhất thứ Sáu → thứ Ba (s05-slo-theo-lich).
- * S10, S11 = 192 giờ (8 ngày, khuôn S01, S08): thu một lượt/tuần (khai-slo-s10-s11, giám sát đợt duyệt 12/11). */
-export const SLO_HOURS = { S01: 192, S02: 840, S03: 72, S05: 96, S06: 36, S08: 192, S10: 192, S11: 192 };
 
 /** Cột thời gian (giờ thu) mà probe của từng mã lấy max — phép đo đối chiếu khai báo này với SQL thật. */
 export const TIME_SOURCE = {
@@ -32,6 +32,9 @@ export const TIME_SOURCE = {
   S10: "airbnb_snapshots.collected_at",
   S11: "airbnb_snapshots.collected_at",
 };
+
+/** Cột thời gian của câu đo chung qua bảng nạp (mã không có câu riêng, đo theo `stg_tables`). */
+export const STG_TIME_SOURCE = "airbnb_snapshots.collected_at";
 
 const ZALO_POSTS = `
   SELECT s.city, max(s.collected_at) AS last
@@ -95,27 +98,70 @@ export function gopThanhPho(rows) {
   return [...m.values()];
 }
 
+export const LOI_122 = "source_registry chưa có cột cadence_hours — áp migration 122";
+export const REGISTRY_SQL = `SELECT code, source_ids, cadence_hours, stg_tables, measured_markets
+    FROM source_registry WHERE status = 'active' ORDER BY code`;
+
+/** Đọc các dòng `active` của sổ kèm cột của 122. Thiếu cột → lỗi gọi tên 122 (cả với client trả dòng thiếu khoá). */
+async function docSo(client) {
+  let rows;
+  try {
+    ({ rows } = await client.query(REGISTRY_SQL));
+  } catch (e) {
+    if (e?.code === "42703") throw new Error(LOI_122);
+    throw e;
+  }
+  for (const r of rows)
+    if (!("cadence_hours" in r) || !("stg_tables" in r) || !("measured_markets" in r)) throw new Error(LOI_122);
+  return rows;
+}
+
+/** Khuôn tên bảng nạp: chỉ tên này mới được ghép vào câu SQL (sau khi đã chắc bảng có thật và có cột snapshot_id). */
+export const STG_TEN = /^stg_[a-z0-9_]+$/;
+
+/** Câu đo chung qua bảng nạp: snapshot có dòng ở một trong các bảng → max(collected_at) theo thành phố. Tên sai khuôn,
+ *  bảng không có thật hay không có snapshot_id → không chạy SQL mang tên đó, trả lý do. */
+export async function probeStg(client, tables) {
+  const sai = tables.filter((t) => typeof t !== "string" || !STG_TEN.test(t));
+  if (sai.length) return { rows: [], reason: `bảng nạp sai khuôn tên: ${sai.join(", ")}` };
+  if (tables.length === 0) return { rows: [], reason: "sổ không khai bảng nạp" };
+  const { rows: co } = await client.query(
+    `SELECT t FROM unnest($1::text[]) AS t
+      WHERE EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid = to_regclass(t) AND attname = 'snapshot_id' AND NOT attisdropped)`,
+    [tables],
+  );
+  const coSet = new Set(co.map((r) => r.t));
+  const thieu = tables.filter((t) => !coSet.has(t));
+  if (thieu.length) return { rows: [], reason: `bảng nạp không có (hoặc thiếu snapshot_id): ${thieu.join(", ")}` };
+  const u = tables.map((t) => `SELECT snapshot_id FROM ${t}`).join(" UNION ");
+  const { rows } = await client.query(
+    `SELECT s.city, max(s.collected_at) AS last FROM airbnb_snapshots s JOIN (${u}) u USING (snapshot_id) GROUP BY s.city`,
+  );
+  return { rows };
+}
+
 /**
  * @returns {Promise<Array<{code: string, city: string|null, last: string|null, ageHours: number|null,
- *   sloHours: number|null, status: "fresh"|"stale"|"none"|"no-slo"}>>}
+ *   sloHours: number|null, status: "fresh"|"stale"|"none"|"no-slo", reason?: string}>>}
  */
 export async function readFreshness(client, { now = new Date() } = {}) {
-  const { rows: reg } = await client.query(
-    `SELECT code, source_ids FROM source_registry WHERE status = 'active' ORDER BY code`,
-  );
+  const reg = await docSo(client);
   const out = [];
-  for (const { code, source_ids: ids } of reg) {
-    const sloHours = SLO_HOURS[code] ?? null;
+  for (const { code, source_ids: ids, cadence_hours: cadence, stg_tables: stg, measured_markets: markets } of reg) {
+    const sloHours = cadence ?? null;
     if (sloHours === null) {
       out.push({ code, city: null, last: null, ageHours: null, sloHours: null, status: "no-slo" });
       continue;
     }
     const probe = PROBES[code];
     const others = reg.filter((r) => r.code !== code).flatMap((r) => r.source_ids);
-    const rows = probe ? (await client.query(probe.sql, probe.args(ids, others))).rows : [];
-    const seen = gopThanhPho(rows.filter((r) => r.last !== null));
+    let rows = [];
+    let reason;
+    if (probe) rows = (await client.query(probe.sql, probe.args(ids, others))).rows;
+    else if (stg?.length) ({ rows, reason } = await probeStg(client, stg));
+    const seen = gopThanhPho(rows.filter((r) => r.last !== null)).filter((r) => !markets || markets.includes(r.city));
     if (seen.length === 0) {
-      out.push({ code, city: null, last: null, ageHours: null, sloHours, status: "none" });
+      out.push({ code, city: null, last: null, ageHours: null, sloHours, status: "none", ...(reason ? { reason } : {}) });
       continue;
     }
     for (const r of seen) {
@@ -138,7 +184,7 @@ export async function readFreshness(client, { now = new Date() } = {}) {
 export function describe(row) {
   const where = row.city ? `${row.code}/${row.city}` : row.code;
   if (row.status === "stale") return `${where}: quá hạn — ${row.ageHours} giờ (SLO ${row.sloHours} giờ)`;
-  if (row.status === "none") return `${where}: chưa có dữ liệu ở bảng nạp của nguồn`;
+  if (row.status === "none") return `${where}: chưa có dữ liệu ở bảng nạp của nguồn${row.reason ? ` — ${row.reason}` : ""}`;
   if (row.status === "no-slo") return `${where}: nguồn active chưa khai SLO`;
   return `${where}: tươi — ${row.ageHours} giờ (SLO ${row.sloHours} giờ)`;
 }

@@ -3,7 +3,7 @@
 // Khoá cloud: AI_GATEWAY_API_KEY (người chạy nạp .env). Mỗi lần gọi một dòng ai_calls; trace JSONL ở agent/traces/.
 //
 // Chạy:
-//   npx tsx scripts/vlm-anh-run.ts --model qwen --limit 100
+//   npx tsx scripts/vlm-anh-run.ts --model haiku --limit 100
 //   npx tsx --env-file=<.env> scripts/vlm-anh-run.ts --model haiku --gold research-local/vlm-anh/phieu.jsonl --tran-usd 0.5
 //   --thu: không ghi DB. --gold <phiếu>: chấm phiếu gắn tay, không ghi silver_labels. --since <ngày>: chỉ bài từ ngày đó.
 // Mã thoát: 0 xong · 1 hỏng ngoài vòng ảnh · 2 cờ sai hoặc nội dung prompt đổi mà giữ bản · 4 dừng vì trần chi phí.
@@ -24,7 +24,7 @@ export type Co = { model: VlmModel; limit: number; since: string | null; thu: bo
 export function docCo(argv: string[]): Co {
   const lay = (k: string) => { const i = argv.indexOf(`--${k}`); return i >= 0 ? argv[i + 1] : undefined; };
   const model = lay("model") as VlmModel;
-  if (!VLM_MODELS.includes(model)) throw new Error(`vlm-anh-run: --model phải là ${VLM_MODELS.join(" | ")}`);
+  if (!VLM_MODELS.includes(model)) throw new Error(`vlm-anh-run: model không được duyệt: ${JSON.stringify(model ?? null)} — --model phải là ${VLM_MODELS.join(" | ")}`);
   const limit = Number(lay("limit") ?? 100);
   const tranUsd = Number(lay("tran-usd") ?? 1);
   if (!Number.isInteger(limit) || limit <= 0) throw new Error("vlm-anh-run: --limit phải là số nguyên dương");

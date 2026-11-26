@@ -138,6 +138,8 @@ async function kiemCoLapLoi(c: pg.Client, run: RunFn, cho: number | "sauCuoi") {
   const { dem } = await run({
     client: clientHong(c, t2, cho), runId, dry: false, limit: 50, offerIds: [t1, t2, t3],
     llm: llmTheo(["ok", "ok", "ok"], doSau, thay), resolve: CAN_LLM, buildings: [], giaoDich: gd,
+    // Ca này đo cô lập giao dịch của câu ghi field_assertions; NB11 chặn tự áp ở lượt đêm (mặc định) nên đi đường áp cũ.
+    chanTuApCanCu: false,
   });
   const lech: string[] = [];
   const phai = (dung: boolean, tb: string) => { if (!dung) lech.push(tb); };
@@ -246,8 +248,8 @@ test("EC-AC-3 ma trận LLM × ghi", async () => {
     await voiDotBien<{ maThoat: typeof maThoat }, void>(
       "tong-ket.ts",
       [
-        "  if (d.loiGhi.length > 0) return 2;\n  if (d.llmGoi > 0 && 2 * hong(d) >= d.llmGoi) return 3;",
-        "  if (d.llmGoi > 0 && 2 * hong(d) >= d.llmGoi) return 3;\n  if (d.loiGhi.length > 0) return 2;",
+        "  if (d.loiGhi.length > 0) return 2;\n  if (d.hetTran) return 4;\n  if (d.llmGoi > 0 && 2 * hong(d) >= d.llmGoi) return 3;",
+        "  if (d.llmGoi > 0 && 2 * hong(d) >= d.llmGoi) return 3;\n  if (d.loiGhi.length > 0) return 2;\n  if (d.hetTran) return 4;",
       ],
       async (m) => assert.throws(() => kiemMaTran(o, m.maThoat), /chết LLM che lỗi ghi/),
     );

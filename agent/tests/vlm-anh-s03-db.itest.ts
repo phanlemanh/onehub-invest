@@ -1,6 +1,7 @@
 // vlm-anh-s03-db.itest.ts — hồ sơ _acceptance/vlm-anh-tin-s03, phần cần DB máy thu: ghi nhãn (VLM-AC-4), không đụng canonical (VLM-AC-5),
 // lỗi và trần (VLM-AC-6), chấm phiếu (VLM-AC-7), đếm và rút mẫu (VLM-AC-8), đọc mỗi ảnh một lần (VLM-AC-10). Mọi ca ghi DB trong
-// BEGIN … ROLLBACK, chỉ in số. Máy chủ HTTP giả thay Gateway và MTPLX; không ảnh nào rời máy. Ca spawn CLI chỉ dùng --thu.
+// BEGIN … ROLLBACK, chỉ in số. Máy chủ HTTP giả thay Vercel AI Gateway; không ảnh nào rời máy. Ca spawn CLI chỉ dùng --thu.
+// Model Qwen local qua MTPLX gỡ ở MH1 model-may-sang-haiku (21/11): mọi ca chạy Haiku hoặc DeepSeek qua Gateway giả.
 // Tệp nằm ngoài glob tests/*.test.ts — CI (DB trống) không chạy; chạy: node --import tsx --test tests/vlm-anh-s03-db.itest.ts
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
@@ -27,36 +28,31 @@ const kich = new Map<string, Phan | Phan[] | ((model: string) => Phan)>();
 const datLai = () => { yeuCau.length = 0; kich.clear(); };
 
 function shaTrongThan(j: any): string {
-  const parts = [...(j.prompt ?? []), ...(j.messages ?? [])].flatMap((m: any) => (Array.isArray(m.content) ? m.content : []));
-  const p = parts.find((x: any) => x.type === "file" || x.type === "image_url");
-  const b64 = p?.type === "file" ? String(p.data?.data ?? p.data) : String(p?.image_url?.url).replace(/^data:[^,]*,/, "");
+  const parts = (j.prompt ?? []).flatMap((m: any) => (Array.isArray(m.content) ? m.content : []));
+  const p = parts.find((x: any) => x.type === "file");
+  const b64 = String(p?.data?.data ?? p?.data);
   return createHash("sha256").update(Buffer.from(b64, "base64")).digest("hex");
 }
 const sv = createServer((req, res) => {
   let s = "";
   req.on("data", (d) => (s += d));
   req.on("end", () => {
-    const gw = (req.url ?? "").includes("/language-model");
     const sha = shaTrongThan(JSON.parse(s));
-    const model = gw ? String(req.headers["ai-language-model-id"]) : "qwen";
+    const model = String(req.headers["ai-language-model-id"]);
     yeuCau.push({ sha, model, than: s });
     const k = kich.get(sha);
     const p: Phan = !k ? tra() : typeof k === "function" ? k(model) : Array.isArray(k) ? (k.shift() ?? tra()) : k;
     res.setHeader("content-type", "application/json");
     if (p.status) { res.writeHead(p.status); res.end(JSON.stringify({ error: { message: "canh-thong-diep-loi", type: p.status === 401 ? "authentication_error" : "internal_server_error" } })); return; }
-    res.end(JSON.stringify(gw
-      ? { content: [{ type: "text", text: p.text }], finishReason: { unified: "stop", raw: "stop" }, usage: { inputTokens: { total: 1600, noCache: 1600 }, outputTokens: { total: 200, text: 200 } }, warnings: [], ...(p.cost ? { providerMetadata: { gateway: { cost: p.cost } } } : {}) }
-      : { id: "x", object: "chat.completion", created: 1, model: "m", choices: [{ index: 0, message: { role: "assistant", content: p.text }, finish_reason: "stop" }], usage: { prompt_tokens: 1600, completion_tokens: 200, total_tokens: 1800 } }));
+    res.end(JSON.stringify({ content: [{ type: "text", text: p.text }], finishReason: { unified: "stop", raw: "stop" }, usage: { inputTokens: { total: 1600, noCache: 1600 }, outputTokens: { total: 200, text: 200 } }, warnings: [], ...(p.cost ? { providerMetadata: { gateway: { cost: p.cost } } } : {}) }));
   });
 });
 await new Promise<void>((r) => sv.listen(0, "127.0.0.1", r));
 const CONG = (sv.address() as AddressInfo).port;
 const URL_GW = `http://127.0.0.1:${CONG}/gw`;
-const URL_MTPLX = `http://127.0.0.1:${CONG}/v1`;
 const CONG_CHET = "http://127.0.0.1:9/khong-co";
 process.env.AI_GATEWAY_BASE_URL = URL_GW;
 process.env.AI_GATEWAY_API_KEY = "khoa-gia";
-process.env.MTPLX_URL = URL_MTPLX;
 (globalThis as { AI_SDK_LOG_WARNINGS?: boolean }).AI_SDK_LOG_WARNINGS = false;
 const { chamPhieu, hoiTuTep, PROMPT_SHA, PROMPT_VERSION, SQL_GHI_ANH, TEN_MODEL, thamSoGhiAnh } = await import("../src/agents/vlm-anh-s03.js");
 const { chayLenh } = await import("../scripts/vlm-anh-run.js");
@@ -131,14 +127,14 @@ test("VLM-AC-4 ghi đúng khoá, giữ dòng chữ KC1, hai bài cùng chữ hai
     kich.set(b.sha256, tra({ price_vnd: 4e9, quote: "4 tỷ" }));
     kich.set(loi.sha256, [{ status: 500 }, tra({ price_vnd: 5e9 })]);
 
-    const mot = await chay(c, "qwen");
+    const mot = await chay(c, "haiku");
     assert.equal(mot.ma, 0);
     assert.equal(yeuCau.length, 3);
     const dong = await dongCua(c, "t_vlm_%");
     assert.deepEqual(dong.map((d) => d.post_id), ["t_vlm_a", "t_vlm_b", "t_vlm_loi"], "VLM-AC-4 hai bài cùng chữ phải ra hai dòng");
     const d = dong[0];
     assert.equal(d.prompt_version, "vlm-s03-v1");
-    assert.equal(d.model, TEN_MODEL.qwen);
+    assert.equal(d.model, TEN_MODEL.haiku);
     assert.equal(d.listing_intent, "unknown");
     assert.equal(d.kind, null);
     assert.equal(d.quote_ok, null, "VLM-AC-4 quote_ok phải NULL");
@@ -156,7 +152,7 @@ test("VLM-AC-4 ghi đúng khoá, giữ dòng chữ KC1, hai bài cùng chữ hai
     assert.equal((await c.query(`SELECT count(*)::int n FROM silver_labels WHERE post_id = 't_vlm_a' AND model = 'test:kc1'`)).rows[0].n, 1, "VLM-AC-4 dòng chữ KC1 bị mất");
 
     yeuCau.length = 0;
-    const hai = await chay(c, "qwen");
+    const hai = await chay(c, "haiku");
     assert.equal(hai.ma, 0);
     assert.deepEqual(yeuCau.map((y) => y.sha), [loi.sha256], "VLM-AC-4 lượt hai chỉ được gọi lại ảnh lỗi");
     const sau = await dongCua(c, "t_vlm_%");
@@ -166,10 +162,10 @@ test("VLM-AC-4 ghi đúng khoá, giữ dòng chữ KC1, hai bài cùng chữ hai
     assert.equal(sau[0].run_id, dong[0].run_id, "VLM-AC-4 dòng tốt bị ghi đè");
 
     yeuCau.length = 0;
-    await chay(c, "qwen");
+    await chay(c, "haiku");
     assert.equal(yeuCau.length, 0, "VLM-AC-4 lượt ba phải 0 lần gọi");
 
-    await chay(c, "haiku");
+    await chay(c, "deepseek");
     assert.equal((await dongCua(c, "t_vlm_a")).length, 2, "VLM-AC-4 cùng bài hai model phải hai dòng");
   });
 });
@@ -178,13 +174,13 @@ test("VLM-AC-4 đổi nội dung prompt giữ bản → mã 2, 0 yêu cầu; đ�
   datLai();
   await withTx(async (c) => {
     await moiBai(c, "t_vlm_p", chuThieuGia("p"), [anhMoi()]);
-    assert.equal((await chay(c, "qwen")).ma, 0);
+    assert.equal((await chay(c, "haiku")).ma, 0);
     assert.equal(yeuCau.length, 1);
     yeuCau.length = 0;
-    const lech = await chay(c, "qwen", [], { prompt: { version: PROMPT_VERSION, cauHoi: "Đọc ảnh khác đi", sha: "sha-khac" } });
+    const lech = await chay(c, "haiku", [], { prompt: { version: PROMPT_VERSION, cauHoi: "Đọc ảnh khác đi", sha: "sha-khac" } });
     assert.equal(lech.ma, 2, "VLM-AC-4 đổi nội dung giữ bản phải thoát 2");
     assert.equal(yeuCau.length, 0, "VLM-AC-4 đổi nội dung giữ bản vẫn gửi yêu cầu");
-    const moi = await chay(c, "qwen", [], { prompt: { version: "vlm-s03-thu", cauHoi: "Đọc ảnh khác đi", sha: "sha-khac" } });
+    const moi = await chay(c, "haiku", [], { prompt: { version: "vlm-s03-thu", cauHoi: "Đọc ảnh khác đi", sha: "sha-khac" } });
     assert.equal(moi.ma, 0);
     assert.equal(yeuCau.length, 1, "VLM-AC-4 đổi bản phải có yêu cầu mới");
     assert.ok(yeuCau[0].than.includes("Đọc ảnh khác đi"));
@@ -334,23 +330,25 @@ async function donRun(id: string) {
   rmSync(join(import.meta.dirname, "../traces", `${id}.jsonl`), { force: true });
 }
 
-test("VLM-AC-6 CLI thật: thiếu model và model lạ trả 2, Qwen và DeepSeek chạy qua máy giả, --thu giữ số dòng, trần trả 4 ở lô", async () => {
+test("VLM-AC-6 CLI thật: thiếu model, model lạ và qwen (đã gỡ) trả 2, DeepSeek chạy qua máy giả, --thu giữ số dòng, trần trả 4 ở lô", async () => {
   datLai();
-  assert.equal((await execTs([], { AI_GATEWAY_BASE_URL: CONG_CHET, MTPLX_URL: CONG_CHET })).ma, 2, "VLM-AC-6 thiếu --model phải trả 2");
-  assert.equal((await execTs(["--model", "decisions"], { AI_GATEWAY_BASE_URL: CONG_CHET, MTPLX_URL: CONG_CHET })).ma, 2, "VLM-AC-6 --model decisions phải trả 2");
+  assert.equal((await execTs([], { AI_GATEWAY_BASE_URL: CONG_CHET })).ma, 2, "VLM-AC-6 thiếu --model phải trả 2");
+  assert.equal((await execTs(["--model", "decisions"], { AI_GATEWAY_BASE_URL: CONG_CHET })).ma, 2, "VLM-AC-6 --model decisions phải trả 2");
   const truoc = await demSilver();
 
   const r1 = runMoi();
   try {
-    const qwen = await execTs(["--model", "qwen", "--limit", "1", "--thu", "--run-id", r1], { AI_GATEWAY_BASE_URL: CONG_CHET, MTPLX_URL: URL_MTPLX });
-    assert.equal(qwen.ma, 0, `VLM-AC-6 --model qwen phải chạy được: ${qwen.out.slice(0, 200)}`);
-    assert.match(qwen.out, /đã xử 1 bài/);
+    // Qwen gỡ ở MH1: kể cả khi trỏ đúng máy giả, lệnh vẫn từ chối trước khi gọi model nào.
+    const qwen = await execTs(["--model", "qwen", "--limit", "1", "--thu", "--run-id", r1], { AI_GATEWAY_BASE_URL: URL_GW });
+    assert.equal(qwen.ma, 2, `VLM-AC-6 --model qwen phải trả 2: ${qwen.out.slice(0, 200)}`);
+    assert.match(qwen.out, /model không được duyệt/);
+    assert.equal(yeuCau.length, 0, "VLM-AC-6 --model qwen vẫn gửi yêu cầu");
   } finally { await donRun(r1); }
 
   yeuCau.length = 0;
   const r2 = runMoi();
   try {
-    const ds = await execTs(["--model", "deepseek", "--limit", "1", "--thu", "--run-id", r2], { AI_GATEWAY_BASE_URL: URL_GW, MTPLX_URL: CONG_CHET });
+    const ds = await execTs(["--model", "deepseek", "--limit", "1", "--thu", "--run-id", r2], { AI_GATEWAY_BASE_URL: URL_GW });
     assert.equal(ds.ma, 0, `VLM-AC-6 --model deepseek phải chạy được: ${ds.out.slice(0, 200)}`);
     assert.ok(yeuCau.length >= 1, "VLM-AC-6 deepseek không có yêu cầu tới máy giả");
     const ghi = await moDb(async (c) => (await c.query(`SELECT count(*)::int n FROM ai_calls WHERE trace = $1`, [r2])).rows[0].n);
@@ -361,7 +359,7 @@ test("VLM-AC-6 CLI thật: thiếu model và model lạ trả 2, Qwen và DeepSe
   const r3 = runMoi();
   try {
     // Máy giả không kèm chi phí: 1600 + 200 token theo đơn giá Haiku = 0,00026 USD mỗi ảnh; trần 0,0004 chỉ đủ một ảnh.
-    const dung = await execTs(["--model", "haiku", "--limit", "50", "--thu", "--tran-usd", "0.0004", "--run-id", r3], { AI_GATEWAY_BASE_URL: URL_GW, MTPLX_URL: CONG_CHET });
+    const dung = await execTs(["--model", "haiku", "--limit", "50", "--thu", "--tran-usd", "0.0004", "--run-id", r3], { AI_GATEWAY_BASE_URL: URL_GW });
     assert.equal(dung.ma, 4, `VLM-AC-6 trần ở lô phải trả 4: ${dung.out.slice(0, 200)}`);
     assert.equal(yeuCau.length, 1, "VLM-AC-6 trần không dừng trước ảnh vượt khi trả lời không kèm chi phí");
   } finally { await donRun(r3); }
@@ -394,7 +392,7 @@ function phieu(dac: Dac[]) {
   }
   return hang;
 }
-const cham = (model: "haiku" | "deepseek" | "qwen", hang: unknown[], tranUsd = 5) => chamPhieu({ model, hang: hang as never, tranUsd, hoi: hoiTuTep(model, { recordCall: async (r: { ok: boolean }) => { soCuoc.push(r); } }) });
+const cham = (model: "haiku" | "deepseek", hang: unknown[], tranUsd = 5) => chamPhieu({ model, hang: hang as never, tranUsd, hoi: hoiTuTep(model, { recordCall: async (r: { ok: boolean }) => { soCuoc.push(r); } }) });
 const G = 1e9;
 
 test("VLM-AC-7 ma trận phiếu: số viết tay từng thước; chỉ ảnh đã gắn có yêu cầu; ai_calls đủ", async () => {
@@ -489,7 +487,7 @@ test("VLM-AC-7 lệnh --gold: in bảng, không chữ bài, không đổi silver
   yeuCau.length = 0;
   const r = runMoi();
   try {
-    const dung = await execTs(["--model", "haiku", "--gold", tep, "--tran-usd", "0.0004", "--run-id", r], { AI_GATEWAY_BASE_URL: URL_GW, MTPLX_URL: CONG_CHET });
+    const dung = await execTs(["--model", "haiku", "--gold", tep, "--tran-usd", "0.0004", "--run-id", r], { AI_GATEWAY_BASE_URL: URL_GW });
     assert.equal(dung.ma, 4, `VLM-AC-6 trần ở --gold phải trả 4: ${dung.out.slice(0, 200)}`);
     assert.equal(yeuCau.length, 1, "VLM-AC-6 trần ở --gold không dừng trước ảnh vượt");
   } finally { await donRun(r); }
@@ -509,7 +507,7 @@ test("VLM-AC-8 đếm trên dòng ghi thật: số viết tay từng lý do, mod
     const lo = anhMoi();
     kich.set(lo.sha256, tra({ lo_nguon: true, loai_anh: "qr-quang-cao" }));
     for (let i = 0; i < 10; i++) await moiBai(c, `t_vlm8_nguon${"abcdefghij"[i]}`, chuThieuGia(`nguon${"abcdefghij"[i]}`), [lo]);
-    assert.equal((await chay(c, "qwen")).ma, 0);
+    assert.equal((await chay(c, "haiku")).ma, 0);
     assert.equal(yeuCau.length, 7, "VLM-AC-8 ảnh dùng 10 bài phải chỉ một yêu cầu");
     // Sau lần đọc: một bài chưa đọc, một bài thêm ảnh.
     const moi = anhMoi();
@@ -517,7 +515,7 @@ test("VLM-AC-8 đếm trên dòng ghi thật: số viết tay từng lý do, mod
     await c.query(`UPDATE stg_zalo_posts SET media_files = $1::jsonb WHERE post_id = 't_vlm8_doi'`, [JSON.stringify([doi, moi].map((m) => ({ file: m.file, sha256: m.sha256, snapshotId: SNAP })))]);
     // Toàn lô 401 ở model khác không làm tăng nhãn tốt: bài chưa có dòng vẫn chưa đọc sau khi đã có dòng lỗi được đếm là lỗi.
     for (const y of [...kich.keys()]) kich.set(y, { status: 401 });
-    assert.equal((await chay(c, "haiku")).ma, 0);
+    assert.equal((await chay(c, "deepseek")).ma, 0);
 
     const { tap } = await napTapDoc(c, { goc: GOC });
     const dong = (await docDongAnh(c)).filter((r: { post_id: string }) => r.post_id.startsWith("t_vlm8_"));
@@ -526,8 +524,8 @@ test("VLM-AC-8 đếm trên dòng ghi thật: số viết tay từng lý do, mod
     assert.deepEqual(d.theoLyDo, { thieu_gia: 16, thieu_loai_hinh: 1 }, "VLM-AC-8 lý do sai");
     assert.equal(d.luotAnh, 18);
     assert.equal(d.anhKhacNhau, 9);
-    const q = d.models.find((m: { model: string }) => m.model === TEN_MODEL.qwen);
-    assert.deepEqual([q.tot, q.rong, q.loi, q.chuaDoc], [4, 11, 1, 1], "VLM-AC-8 bốn nhóm Qwen sai");
+    const q = d.models.find((m: { model: string }) => m.model === TEN_MODEL.haiku);
+    assert.deepEqual([q.tot, q.rong, q.loi, q.chuaDoc], [4, 11, 1, 1], "VLM-AC-8 bốn nhóm Haiku sai");
     assert.equal(q.tot + q.rong + q.loi + q.chuaDoc, d.tapDoc, "VLM-AC-8 bốn nhóm không cộng bằng tập đọc");
     assert.equal(q.lapDung, 3, "VLM-AC-8 bài thiếu giá chỉ có loại hình không được tính lấp đúng");
     assert.deepEqual(q.lapTheoLyDo, { thieu_gia: 2, thieu_loai_hinh: 1 });
@@ -536,12 +534,12 @@ test("VLM-AC-8 đếm trên dòng ghi thật: số viết tay từng lý do, mod
     assert.equal(q.tapAnhDoi, 1, "VLM-AC-8 bài thêm ảnh sau lần đọc phải tính tập ảnh đã đổi");
     assert.deepEqual([q.dungChung10.bai, q.dungChung10.rong, q.dungChung10.tot], [10, 10, 0], "VLM-AC-8 nhóm dùng từ 10 bài sai");
     assert.equal(q.shaChuaDoc, 3, "VLM-AC-8 ước thời gian phải tính theo sha chưa đọc");
-    const h = d.models.find((m: { model: string }) => m.model === TEN_MODEL.haiku);
+    const h = d.models.find((m: { model: string }) => m.model === TEN_MODEL.deepseek);
     assert.equal(h.tot, 0, "VLM-AC-8 lô 401 làm tăng nhãn tốt");
     assert.equal(h.tot + h.rong + h.loi + h.chuaDoc, d.tapDoc);
     assert.ok(h.loi > 0);
     assert.ok(!inDem(d).includes("Bán căn hộ"), "VLM-AC-8 bảng đếm có chữ bài");
-    assert.deepEqual(kiemLoThat(d), [], "VLM-AC-9 có dòng Qwen tốt và nhóm cộng đúng thì phải đạt");
+    assert.deepEqual(kiemLoThat(d), [], "VLM-AC-9 có dòng model tốt và nhóm cộng đúng thì phải đạt");
   });
 });
 
@@ -624,7 +622,7 @@ test("VLM-AC-10 ma trận: số yêu cầu bằng số sha khác nhau; dòng ri�
     kich.set(lo.sha256, tra({ lo_nguon: true, loai_anh: "qr-quang-cao" }));
     const MA_TRAN = [["t_vlm10_ca", [chung]], ["t_vlm10_cb", [chung]], ["t_vlm10_cc", [chung]], ["t_vlm10_trai", [giaA, giaB]], ["t_vlm10_mot", [coGia, rong]], ["t_vlm10_loi", [tot, loi]], ["t_vlm10_lo", [lo]]] as const;
     for (const [id, m] of MA_TRAN) await moiBai(c, id, chuThieuGia(id.slice(8)), [...m]);
-    assert.equal((await chay(c, "qwen")).ma, 0);
+    assert.equal((await chay(c, "haiku")).ma, 0);
     assert.equal(yeuCau.length, 8, "VLM-AC-10 số yêu cầu phải bằng số sha khác nhau");
     assert.equal(new Set(yeuCau.map((y) => y.sha)).size, 8);
     const dong = Object.fromEntries((await dongCua(c, "t_vlm10_%")).map((d) => [d.post_id, d]));
@@ -643,7 +641,7 @@ test("VLM-AC-10 ma trận: số yêu cầu bằng số sha khác nhau; dòng ri�
     // Lô hai: bài mới cùng ảnh đã đọc + ảnh lỗi đọc lại. Đúng một yêu cầu.
     yeuCau.length = 0;
     await moiBai(c, "t_vlm10_moi", chuThieuGia("moi"), [chung]);
-    assert.equal((await chay(c, "qwen")).ma, 0);
+    assert.equal((await chay(c, "haiku")).ma, 0);
     assert.deepEqual(yeuCau.map((y) => y.sha), [loi.sha256], "VLM-AC-10 lô hai chỉ được gọi ảnh chưa đọc tốt");
     const [moi] = await dongCua(c, "t_vlm10_moi");
     assert.equal(moi.probabilities.anh[0].quote, "Quote lượt đầu", "VLM-AC-10 quote dùng lại phải khớp lượt đầu");
@@ -655,7 +653,7 @@ test("VLM-AC-10 ma trận: số yêu cầu bằng số sha khác nhau; dòng ri�
 
     // Đổi model thì không dùng lại kết quả.
     yeuCau.length = 0;
-    await chay(c, "haiku", ["--limit", "1"]);
+    await chay(c, "deepseek", ["--limit", "1"]);
     assert.ok(yeuCau.length >= 1, "VLM-AC-10 đổi model phải có yêu cầu");
   });
 });
@@ -665,7 +663,7 @@ test("VLM-AC-10 --limit 1 vẫn tính so_bai_dung_chung trên cả tập đọc"
   await withTx(async (c) => {
     const a = anhMoi();
     for (const id of ["t_vlm10x_a", "t_vlm10x_b", "t_vlm10x_c"]) await moiBai(c, id, chuThieuGia(id.slice(9)), [a]);
-    await chay(c, "qwen", ["--limit", "1"]);
+    await chay(c, "haiku", ["--limit", "1"]);
     const dong = await dongCua(c, "t_vlm10x_%");
     assert.equal(dong.length, 1);
     assert.equal(dong[0].probabilities.anh[0].so_bai_dung_chung, 3, "VLM-AC-10 so_bai_dung_chung chỉ tính trong lô");
@@ -680,7 +678,7 @@ test("VLM-AC-10 đối chứng hai chiều nhãn lộ nguồn: cùng ảnh, true
       const a = anhMoi();
       kich.set(a.sha256, tra({ lo_nguon: lo }));
       await moiBai(c, "t_vlm10l", chuThieuGia("l"), [a]);
-      await chay(c, "qwen");
+      await chay(c, "haiku");
       const d = await dongCua(c, "t_vlm10l");
       ket[String(lo)] = { soYeuCau: yeuCau.length, lo: d[0]?.probabilities.anh[0].lo_nguon, so: d[0]?.probabilities.so_anh_lo_nguon, soDong: d.length };
     });
