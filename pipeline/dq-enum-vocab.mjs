@@ -35,6 +35,10 @@ export const KIEM_ENUM = Object.freeze([
   { bang: "units", cot: "catalog_tier", truc: "catalog_tier" },
   { bang: "field_assertions", cot: "field", truc: "assertion_field" },
   { bang: "field_assertions", cot: "method", truc: "assertion_method" },
+  // Bài Yêu cầu (YC0 bang-yeu-cau-noi-lai, 136; chỉ DB local): đọc qua bảng bản ghi để kiểm cả dòng chờ duyệt và đã nghỉ. Máy chưa
+  // áp 136 → bỏ qua. intent_status không phải trục sổ (mã có gạch nối) — CHECK 136 giữ, thước do-yeu-cau đếm theo trạng thái.
+  { bang: "inquiry_post_records", cot: "kind", truc: "inquiry_kind" },
+  { bang: "inquiry_post_records", cot: "property_type", truc: "property_type" },
 ]);
 
 /**
@@ -67,13 +71,18 @@ export async function kiemEnum(c, { bang, cot: col, truc }) {
   return { status, bad };
 }
 
+/** Bảng (hay view) có ở DB này chưa — bảng chỉ-local vắng ở máy chưa áp migration thì mục kiểm bỏ qua, không văng. */
+export async function coBang(c, bang) {
+  return Boolean((await c.query("SELECT to_regclass($1) AS t", [`public.${bang}`])).rows[0].t);
+}
+
 async function main() {
   const c = new pg.Client({ connectionString: DB_URL });
   await c.connect();
   try {
     let allPass = true;
     for (const muc of KIEM_ENUM) {
-      if (!(await c.query("SELECT to_regclass($1) AS t", [`public.${muc.bang}`])).rows[0].t) {
+      if (!(await coBang(c, muc.bang))) {
         console.log(`${muc.bang}.${muc.cot}: bỏ qua — chưa có bảng`);
         continue;
       }

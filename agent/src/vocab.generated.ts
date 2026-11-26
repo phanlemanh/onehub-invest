@@ -3,11 +3,12 @@
 
 export const VOCAB = {
   kind: ["sale", "rent_lt"],
+  inquiry_kind: ["sale", "rent_lt", "rent_st"],
   property_type: ["apartment", "house", "land", "room", "commercial", "unknown"],
   confidence: ["high", "medium", "low"],
   price_tier: ["P0", "P1", "P2"],
   enrich_field: ["property_type", "bedrooms", "bathrooms", "street_raw", "block_raw"],
-  assertion_field: ["property_type", "bedrooms", "bathrooms", "street_raw", "block_raw", "offer_status", "street_number", "unit_number", "frontage_length", "lot_size_dimensions", "stories", "latitude", "longitude", "builder_name", "area_id", "floor_raw", "floor_band", "project_node_id", "subzone_node_id", "living_area", "building_area_total", "direction_faces", "lot_size_area", "universal_property_id"],
+  assertion_field: ["property_type", "bedrooms", "bathrooms", "street_raw", "block_raw", "offer_status", "street_number", "unit_number", "frontage_length", "lot_size_dimensions", "stories", "latitude", "longitude", "builder_name", "area_id", "floor_raw", "floor_band", "project_node_id", "subzone_node_id", "living_area", "building_area_total", "direction_faces", "lot_size_area", "universal_property_id", "listing_intent", "kind", "budget_min_vnd", "budget_max_vnd"],
   evidence_tier: ["fact", "observed", "inferred"],
   assertion_method: ["hitl", "source_field", "parser", "e1_rule", "e2_llm", "legacy", "registry_inherit"],
   registry_status: ["active", "merged", "split", "retired"],
@@ -32,6 +33,7 @@ export const VOCAB = {
 
 export type VocabAxis = keyof typeof VOCAB;
 export type Kind = (typeof VOCAB.kind)[number];
+export type InquiryKind = (typeof VOCAB.inquiry_kind)[number];
 export type PropertyType = (typeof VOCAB.property_type)[number];
 export type Confidence = (typeof VOCAB.confidence)[number];
 export type PriceTier = (typeof VOCAB.price_tier)[number];
@@ -59,11 +61,12 @@ export type RentIncludes = (typeof VOCAB.rent_includes)[number];
 export type PriceBasis = (typeof VOCAB.price_basis)[number];
 
 export const KIND = { sale: "sale", rent_lt: "rent_lt" } as const;
+export const INQUIRY_KIND = { sale: "sale", rent_lt: "rent_lt", rent_st: "rent_st" } as const;
 export const PROPERTY_TYPE = { apartment: "apartment", house: "house", land: "land", room: "room", commercial: "commercial", unknown: "unknown" } as const;
 export const CONFIDENCE = { high: "high", medium: "medium", low: "low" } as const;
 export const PRICE_TIER = { P0: "P0", P1: "P1", P2: "P2" } as const;
 export const ENRICH_FIELD = { property_type: "property_type", bedrooms: "bedrooms", bathrooms: "bathrooms", street_raw: "street_raw", block_raw: "block_raw" } as const;
-export const ASSERTION_FIELD = { property_type: "property_type", bedrooms: "bedrooms", bathrooms: "bathrooms", street_raw: "street_raw", block_raw: "block_raw", offer_status: "offer_status", street_number: "street_number", unit_number: "unit_number", frontage_length: "frontage_length", lot_size_dimensions: "lot_size_dimensions", stories: "stories", latitude: "latitude", longitude: "longitude", builder_name: "builder_name", area_id: "area_id", floor_raw: "floor_raw", floor_band: "floor_band", project_node_id: "project_node_id", subzone_node_id: "subzone_node_id", living_area: "living_area", building_area_total: "building_area_total", direction_faces: "direction_faces", lot_size_area: "lot_size_area", universal_property_id: "universal_property_id" } as const;
+export const ASSERTION_FIELD = { property_type: "property_type", bedrooms: "bedrooms", bathrooms: "bathrooms", street_raw: "street_raw", block_raw: "block_raw", offer_status: "offer_status", street_number: "street_number", unit_number: "unit_number", frontage_length: "frontage_length", lot_size_dimensions: "lot_size_dimensions", stories: "stories", latitude: "latitude", longitude: "longitude", builder_name: "builder_name", area_id: "area_id", floor_raw: "floor_raw", floor_band: "floor_band", project_node_id: "project_node_id", subzone_node_id: "subzone_node_id", living_area: "living_area", building_area_total: "building_area_total", direction_faces: "direction_faces", lot_size_area: "lot_size_area", universal_property_id: "universal_property_id", listing_intent: "listing_intent", kind: "kind", budget_min_vnd: "budget_min_vnd", budget_max_vnd: "budget_max_vnd" } as const;
 export const EVIDENCE_TIER = { fact: "fact", observed: "observed", inferred: "inferred" } as const;
 export const ASSERTION_METHOD = { hitl: "hitl", source_field: "source_field", parser: "parser", e1_rule: "e1_rule", e2_llm: "e2_llm", legacy: "legacy", registry_inherit: "registry_inherit" } as const;
 export const REGISTRY_STATUS = { active: "active", merged: "merged", split: "split", retired: "retired" } as const;

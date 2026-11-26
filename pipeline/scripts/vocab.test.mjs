@@ -13,7 +13,7 @@ const PIPE = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SO_THAT = readFileSync(join(PIPE, "mappings.yaml"), "utf8");
 
 const AXES = [
-  "kind", "property_type", "confidence", "price_tier", "enrich_field", "assertion_field", "evidence_tier", "assertion_method",
+  "kind", "inquiry_kind", "property_type", "confidence", "price_tier", "enrich_field", "assertion_field", "evidence_tier", "assertion_method",
   "registry_status", "alias_kind", "catalog_tier", "registry_event_kind", "party_role", "contact_kind", "contact_rule",
   "listing_intent", "offer_status", "change_type", "data_level", "capability_level",
   "furnished", "direction_faces", "floor_band", "view", "rent_includes", "price_basis",
@@ -26,6 +26,8 @@ const AXES = [
 // ho-nguoi-theo-nguon (Mạnh duyệt 30/10); assertion_field + change_type: PL19 (trường phát biểu; loại thay đổi RESO ChangeType).
 const NHAN = [
   ["kind", "sale", "Bán"], ["kind", "rent_lt", "Cho thuê"],
+  // bang-yeu-cau-noi-lai (136): dịch vụ Yêu cầu, nhãn theo phía người tìm.
+  ["inquiry_kind", "sale", "Mua"], ["inquiry_kind", "rent_lt", "Thuê dài hạn"], ["inquiry_kind", "rent_st", "Thuê ngắn hạn"],
   ["property_type", "apartment", "Căn hộ"], ["property_type", "house", "Nhà riêng"], ["property_type", "land", "Đất"],
   ["property_type", "room", "Phòng"], ["property_type", "commercial", "Mặt bằng"], ["property_type", "unknown", "Chưa rõ"],
   ["confidence", "high", "cao"], ["confidence", "medium", "trung bình"], ["confidence", "low", "thấp"],
@@ -45,6 +47,9 @@ const NHAN = [
   ["assertion_field", "project_node_id", "Dự án"], ["assertion_field", "subzone_node_id", "Phân khu"],
   ["assertion_field", "living_area", "Diện tích thông thuỷ"], ["assertion_field", "building_area_total", "Diện tích tim tường"],
   ["assertion_field", "direction_faces", "Hướng"], ["assertion_field", "lot_size_area", "Diện tích đất"], ["assertion_field", "universal_property_id", "Toà của tin"],
+  // bang-yeu-cau-noi-lai (136): bốn trường của Yêu cầu.
+  ["assertion_field", "listing_intent", "Ý định tin"], ["assertion_field", "kind", "Dịch vụ"],
+  ["assertion_field", "budget_min_vnd", "Ngân sách từ"], ["assertion_field", "budget_max_vnd", "Ngân sách đến"],
   ["evidence_tier", "fact", "Sự thật"], ["evidence_tier", "observed", "Quan sát có trích dẫn"],
   ["evidence_tier", "inferred", "Suy luận"],
   ["assertion_method", "hitl", "Người quyết"], ["assertion_method", "source_field", "Trường có cấu trúc của nguồn"],
@@ -95,11 +100,11 @@ function dotBien(fn) {
   return YAML.stringify(doc);
 }
 
-test("VB-AC-1 sổ thật: đủ 26 trục, đúng code + nhãn từng byte", () => {
+test("VB-AC-1 sổ thật: đủ 27 trục, đúng code + nhãn từng byte", () => {
   const reg = loadRegister(SO_THAT);
   validateRegister(reg); // đối chứng dương: sổ thật không ném
   assert.deepEqual(reg.axes.map((a) => a.name), AXES);
-  assert.equal(NHAN.length, 132); // ghep-tin-vao-danh-muc (117): +1 mã assertion_field (universal_property_id); thuoc-tinh-can-s16 (113): +4 mã assertion_field (living_area, building_area_total, direction_faces, lot_size_area); truong-du-an-tren-tin (096): +2 mã assertion_field, area_id «Phường»; tang-tren-tin-s03 (095): +2 mã assertion_field, trục floor_band 3 mã; HD5 (061; giám sát duyệt P1-87): +7 mã assertion_field; SD3 thêm alias_kind sdt; enrich-nguoi-s03 (079) +4 mã liên lạc; link-nguoi-ban-s03 (080) +1 luật; truong-nhan-s03-081 +29 mã nhãn; danh-ba-toa-truc-can (082): +7 (builder_name, area_id, registry_inherit, ma_nguon, ba bậc catalog_tier)
+  assert.equal(NHAN.length, 139); // bang-yeu-cau-noi-lai (136): trục inquiry_kind 3 mã, +4 mã assertion_field; ghep-tin-vao-danh-muc (117): +1 mã assertion_field (universal_property_id); thuoc-tinh-can-s16 (113): +4 mã assertion_field (living_area, building_area_total, direction_faces, lot_size_area); truong-du-an-tren-tin (096): +2 mã assertion_field, area_id «Phường»; tang-tren-tin-s03 (095): +2 mã assertion_field, trục floor_band 3 mã; HD5 (061; giám sát duyệt P1-87): +7 mã assertion_field; SD3 thêm alias_kind sdt; enrich-nguoi-s03 (079) +4 mã liên lạc; link-nguoi-ban-s03 (080) +1 luật; truong-nhan-s03-081 +29 mã nhãn; danh-ba-toa-truc-can (082): +7 (builder_name, area_id, registry_inherit, ma_nguon, ba bậc catalog_tier)
   // wanted-thanh-inquiry AC-1: yêu cầu là bên mua, đối xứng với listing bên bán.
   const li = reg.axes.find((a) => a.name === "listing_intent");
   assert.deepEqual(li.values.map((v) => v.code), ["offer", "inquiry", "not_listing", "unknown"]);

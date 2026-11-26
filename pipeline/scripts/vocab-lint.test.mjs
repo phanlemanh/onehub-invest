@@ -162,6 +162,14 @@ const NGOAI_LE = [
   "app/src/components/compare/compare-types.ts|confidence",
   // CG9 bang-hang-gia-m2: data-api (subtree công khai) không có tệp hằng sinh; tham số kind của /v1/deals kiểm hai giá trị tại chỗ.
   "data-api/src/routes/deals.ts|kind",
+  // bang-yeu-cau-noi-lai (136): assertion_field thêm listing_intent, kind — trùng chữ với tên cột, tên trục, kiểu ô ở bảy tệp.
+  "pipeline/do-hang-ngay.mjs|assertion_field",
+  "pipeline/lib/do-hang-ngay.mjs|assertion_field",
+  "pipeline/lib/chuan-hoa-nhan.mjs|assertion_field",
+  "pipeline/scripts/do-nhom-hai-lan.mjs|assertion_field",
+  "app/src/components/ops/labels/nhom-fields.ts|assertion_field",
+  "app/src/lib/dq-labels.ts|assertion_field",
+  "app/src/lib/labels-normalize.ts|assertion_field",
   // app/src/lib/source-status-labels.ts|registry_status gỡ ở hàng nhan-trang-thai-nguon-draft: bảng có thêm draft (năm
   // khoá, hai trùng chữ active/retired) nên lint không còn coi là trục registry_status — ngoại lệ thừa thì allowStale đỏ.
 ];
@@ -190,4 +198,21 @@ test("VL-AC-5 đối chứng: bản trước vòng của dq-enum-vocab.mjs bị 
     "pipeline/dq-enum-vocab.mjs:16 · price_tier · P0,P1,P2",
     "pipeline/dq-enum-vocab.mjs:17 · property_type · apartment,house,land,room,commercial,unknown",
   ]);
+});
+
+// bang-yeu-cau-noi-lai (136): trục khai `lint: false` (inquiry_kind lặp sale, rent_lt của kind) không sinh dòng đỏ trùng; bỏ cờ thì
+// cùng danh sách đỏ thêm ở trục ấy; cờ thiếu lint_ly_do thì sổ ném.
+test("YC0-AC-2 trục lint: false — bộ quét bỏ trục lặp mã; bỏ cờ thì đỏ thêm ở trục ấy; thiếu lint_ly_do thì ném", () => {
+  const nguon = "export const K = ['sale', 'rent_lt'];\n";
+  assert.deepEqual(scanText(nguon, "agent/src/a-mang.ts", REG).map(dongDo), ["agent/src/a-mang.ts:1 · kind · sale,rent_lt"]);
+  const doc = YAML.parse(SO_THAT);
+  delete doc.enums.inquiry_kind.lint;
+  delete doc.enums.inquiry_kind.lint_ly_do;
+  const boCo = loadRegister(YAML.stringify(doc));
+  validateRegister(boCo);
+  assert.deepEqual(scanText(nguon, "agent/src/a-mang.ts", boCo).map(dongDo),
+    ["agent/src/a-mang.ts:1 · inquiry_kind · sale,rent_lt", "agent/src/a-mang.ts:1 · kind · sale,rent_lt"]);
+  const doc2 = YAML.parse(SO_THAT);
+  delete doc2.enums.inquiry_kind.lint_ly_do;
+  assert.throws(() => validateRegister(loadRegister(YAML.stringify(doc2))), /inquiry_kind: lint: false thiếu lint_ly_do/);
 });

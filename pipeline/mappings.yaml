@@ -282,6 +282,94 @@ media:
       note: "đổi khi nội dung dòng đổi; dòng không đổi giữ nguyên"
 
 # --------------------------------------------------------------------------
+# LỚP YÊU CẦU — bảng `inquiry_post_records` + view sống `inquiries` (migration 136, YC0 bang-yeu-cau-noi-lai): bài cần mua,
+# cần thuê (bên mua), một dòng mỗi bài, đối xứng listing. RESO DD 2.1 không có bản ghi ngang hàng Property cho nhu cầu bên mua;
+# gần nhất là SavedSearch, nhưng tiêu chí của nó là chuỗi truy vấn (SearchQuery) — bảng dùng trường khoá/hệ thống của SavedSearch
+# và dùng lại trường RESO phía bán (resource Property) cho tiêu chí. Ý định đi qua phát biểu listing_intent (luật = observed, nhãn
+# model = inferred); chỉ resolve_inquiry_fields ghi dòng (ADR-0013 câu 4). Bên ghi phát biểu: pipeline/lib/yeu-cau.mjs
+# (transform-zalo). KHÔNG sync cloud (chỉ DB local); không cột danh tính người đăng.
+# --------------------------------------------------------------------------
+inquiries:
+  table: inquiry_post_records
+  dd_resource: SavedSearch
+  dd_version: "2.1"
+  checked_on: "2026-11-26"  # tra research-local/reso/dd-2.1.json
+  fields:
+    inquiry_id:
+      dd: SavedSearchKey
+      note: "khoá chủ thể phát biểu '<S0x>:<post_id>' (CHECK = source || ':' || originating_system_key); không băm nội dung (ADR-0013 câu 3) — hai bài cùng chữ là hai dòng, gom ở YC4"
+    source:
+      dd: OriginatingSystemName
+      note: "mã S0x (ADR-0007), không phải tên nguồn thật"
+    originating_system_key:
+      dd: OriginatingSystemKey
+      note: "post_id của bài"
+    posted_at:
+      dd: OriginalEntryTimestamp
+      note: "lúc bài đăng — observed_at sớm nhất của các phát biểu ý định sống"
+    intent_status:
+      dd: null
+      rationale: >
+        trạng thái ý định do resolve_inquiry_fields suy từ phát biểu thắng: «song» khi luật hay người nhận (lớp fact/observed),
+        «cho-duyet» khi chỉ nhãn model nhận (lớp inferred, Hỏi-1a — Mạnh duyệt 26/11). SavedSearch DD 2.1 không có trường
+        trạng thái tương đương; đặc trưng VN (bài nhóm chat, luật 7 model chỉ là nhãn). CHECK ở 136; view `inquiries` chỉ lấy
+        «song». Mã có gạch nối nên không thành trục sổ (khuôn mã của sổ là snake_case); DQ: thước do-yeu-cau đếm theo trạng thái.
+      checked_on: "2026-11-26"
+    intent_assertion_ids:
+      dd: null
+      rationale: >
+        id phát biểu listing_intent thắng (field_assertions, 045) — dấu vết căn cứ của trạng thái ý định; SavedSearch không có
+        trường xuất xứ. Chỉ resolve_inquiry_fields ghi.
+      checked_on: "2026-11-26"
+    kind:
+      dd: PropertyType
+      note: "dịch vụ cần, trục inquiry_kind (sale = mua · rent_lt = thuê dài hạn · rent_st = thuê ngắn hạn); NULL ở YC0, YC9 ghi qua phân xử"
+    property_type:
+      dd: PropertySubType
+      note: "trường Property phía bán dùng lại, trục property_type; NULL ở YC0"
+    bedrooms:
+      dd: BedroomsTotal
+      note: "trường Property dùng lại; NULL ở YC0"
+    area_m2:
+      dd: LivingArea
+      note: "trường Property dùng lại, m²; NULL ở YC0"
+    budget_min_vnd:
+      dd: ListPrice
+      note: "trường Property dùng lại làm đầu dưới ngân sách (VND); CHECK min ≤ max; NULL ở YC0"
+    budget_max_vnd:
+      dd: ListPrice
+      note: "trường Property dùng lại làm đầu trên ngân sách (VND); NULL ở YC0"
+    area_id:
+      dd: null
+      rationale: >
+        phường/xã (cùng khoá areas.id của sale_offers.area_id) — DD dùng địa chỉ chuỗi, không có khoá vùng nội bộ; không khoá
+        ngoại vì reassign-areas xoá area không phải phường. NULL ở YC0.
+      checked_on: "2026-11-26"
+    market_id:
+      dd: null
+      rationale: "thị trường (cha của phường) — khoá vùng nội bộ, DD không có. NULL ở YC0."
+      checked_on: "2026-11-26"
+    project_node_id:
+      dd: SubdivisionName
+      note: "id nút dự án asset_nodes (cùng trường phát biểu project_node_id của tin); NULL ở YC0"
+    retired_at:
+      dd: null
+      rationale: "nghỉ thay vì xoá (khuôn PL14, 044) — Yêu cầu hết ý định rời view inquiries, dòng giữ nguyên, sống lại cùng khoá."
+      checked_on: "2026-11-26"
+    retired_reason:
+      dd: null
+      rationale: "lý do nghỉ ('het-y-dinh'); có khi và chỉ khi retired_at có (CHECK 136)."
+      checked_on: "2026-11-26"
+    created_at:
+      dd: null
+      rationale: "lúc dòng được tạo ở DB local — dấu kỹ thuật, không phải thời điểm của nhu cầu (đó là posted_at)."
+      checked_on: "2026-11-26"
+    updated_at:
+      dd: null
+      rationale: "lúc bộ phân xử ghi dòng lần cuối — dấu kỹ thuật."
+      checked_on: "2026-11-26"
+
+# --------------------------------------------------------------------------
 # LỚP NGUỒN — staging → canonical
 # --------------------------------------------------------------------------
 sources:
@@ -390,10 +478,23 @@ enums:
       - { code: rent_lt, label_vi: Cho thuê, dd_lookup: ResidentialLease }
     note: "DD phân biệt bán/thuê qua chính PropertyType; rent_lt ≈ ResidentialLease + LeaseAmountFrequency=Monthly. rent_st (STR) chưa có."
     checked_on: "2026-10-26"
+  inquiry_kind:
+    term_vi: Dịch vụ Yêu cầu
+    dd_field: PropertyType
+    lint: false
+    lint_ly_do: "lặp hai mã sale, rent_lt của trục kind — danh sách viết tay của hai mã ấy đã bị bắt qua trục kind"
+    columns: [inquiry_post_records.kind]
+    nullable: true
+    values:
+      - { code: sale, label_vi: Mua, dd_lookup: Residential }
+      - { code: rent_lt, label_vi: Thuê dài hạn, dd_lookup: ResidentialLease }
+      - { code: rent_st, label_vi: Thuê ngắn hạn, local: true, rationale: "thuê theo ngày — DD 2.1 chỉ có mảnh rời (PropertyType ResidentialLease + LeaseAmountFrequency Daily), không có mô hình thuê ngắn hạn (canonical.kind)", checked_on: "2026-11-26" }
+    note: "Dịch vụ của Yêu cầu, nhãn theo phía người tìm (CONTEXT «Yêu cầu mua», «Yêu cầu thuê»). Trục riêng vì trục kind của tin rao chưa có rent_st mà CHECK của sale_offers, silver_labels chỉ nhận sale, rent_lt (YC0, migration 136)."
+    checked_on: "2026-11-26"
   property_type:
     term_vi: Loại hình
     dd_field: PropertySubType
-    columns: [sale_offers.property_type, properties.property_type]
+    columns: [sale_offers.property_type, properties.property_type, inquiry_post_records.property_type]
     nullable: true
     values:
       - { code: apartment, label_vi: Căn hộ, dd_lookup: Condominium }
@@ -446,7 +547,7 @@ enums:
     term_vi: Trường phát biểu
     dd_field: null
     local: true
-    rationale: "extension FieldAssertion.FieldName (ADR-0013 §6) — trường nhận phát biểu và phân xử: năm trường enrich + trạng thái chào (PL19, migration 059) + bảy đặc trưng nhà S06 (HD5, migration 061) + hai trường của toà (DB1, migration 082: builder_name, area_id — chỉ resource Building) + tầng và dải tầng của tin (DV4, migration 095: floor_raw → UnitFloorLocation tra DD 2.1 11/11, floor_band extension) + dự án, phân khu, phường của tin (DA2, migration 096: project_node_id → SubdivisionName tra DD 2.1 12/11, subzone_node_id extension, area_id mở cho resource Property) + bốn thuộc tính căn (DA40, migration 113: living_area → LivingArea, building_area_total → BuildingAreaTotal, lot_size_area → LotSizeArea tra DD 2.1 18/11; direction_faces trục local — resource Unit và Property); dd_lookup = tên field RESO của trường (BuilderName: tra DD 2.1 07/11 — field của resource Building). DQ: dq-enum-vocab field_assertions.field. Cột resource_name (CHECK ở 082: Property · Building · Stack · Unit) giữ tên resource RESO viết hoa nên nằm ngoài sổ: Property, Building theo DD 2.1; Stack, Unit là resource local (ADR-0016 §11 — DD 2.1 chỉ có UnitNumber/SubId trên tin, không resource bền cho căn, trục)"
+    rationale: "extension FieldAssertion.FieldName (ADR-0013 §6) — trường nhận phát biểu và phân xử: năm trường enrich + trạng thái chào (PL19, migration 059) + bảy đặc trưng nhà S06 (HD5, migration 061) + hai trường của toà (DB1, migration 082: builder_name, area_id — chỉ resource Building) + tầng và dải tầng của tin (DV4, migration 095: floor_raw → UnitFloorLocation tra DD 2.1 11/11, floor_band extension) + dự án, phân khu, phường của tin (DA2, migration 096: project_node_id → SubdivisionName tra DD 2.1 12/11, subzone_node_id extension, area_id mở cho resource Property) + bốn thuộc tính căn (DA40, migration 113: living_area → LivingArea, building_area_total → BuildingAreaTotal, lot_size_area → LotSizeArea tra DD 2.1 18/11; direction_faces trục local — resource Unit và Property) + bốn trường của Yêu cầu (YC0, migration 136: listing_intent extension ListingIntent, kind → PropertyType, budget_min_vnd/budget_max_vnd → ListPrice tra DD 2.1 26/11 — chỉ resource Property, giá trị giữ bằng trigger field_assertions_gia_tri_136); dd_lookup = tên field RESO của trường (BuilderName: tra DD 2.1 07/11 — field của resource Building). DQ: dq-enum-vocab field_assertions.field. Cột resource_name (CHECK ở 082: Property · Building · Stack · Unit) giữ tên resource RESO viết hoa nên nằm ngoài sổ: Property, Building theo DD 2.1; Stack, Unit là resource local (ADR-0016 §11 — DD 2.1 chỉ có UnitNumber/SubId trên tin, không resource bền cho căn, trục)"
     checked_on: "2026-11-12"
     columns: [field_assertions.field]
     nullable: false
@@ -475,6 +576,10 @@ enums:
       - { code: direction_faces, label_vi: Hướng }   # DA40 (113): trục local direction_faces, tám mã
       - { code: lot_size_area, label_vi: Diện tích đất, dd_lookup: LotSizeArea }   # DA40 (113): nhà thấp tầng
       - { code: universal_property_id, label_vi: Toà của tin, dd_lookup: UniversalPropertyId }   # PL20 (117): resource Property, UPI của toà đang hoạt động (ADR-0016 §5)
+      - { code: listing_intent, label_vi: Ý định tin }   # YC0 (136): extension ListingIntent của bài (trục listing_intent); luật = observed, nhãn model = inferred
+      - { code: kind, label_vi: Dịch vụ, dd_lookup: PropertyType }   # YC0 (136): dịch vụ cần của Yêu cầu (trục inquiry_kind); YC9 ghi
+      - { code: budget_min_vnd, label_vi: Ngân sách từ, dd_lookup: ListPrice }   # YC0 (136): đầu dưới ngân sách của Yêu cầu, số nguyên dương VND; YC9 ghi
+      - { code: budget_max_vnd, label_vi: Ngân sách đến, dd_lookup: ListPrice }   # YC0 (136): đầu trên ngân sách của Yêu cầu; YC9 ghi
   evidence_tier:
     term_vi: Lớp căn cứ
     dd_field: null
@@ -610,7 +715,7 @@ enums:
       - { code: inquiry, label_vi: Yêu cầu }
       - { code: not_listing, label_vi: Không phải tin rao }
       - { code: unknown, label_vi: Chưa rõ }
-    note: "Cột đến ở PL5. Nhãn: Hỏi-1 của PL6 (Mạnh duyệt 26/10); wanted → inquiry «Yêu cầu»: Mạnh 27/10, migration 050."
+    note: "Cột đến ở PL5. Nhãn: Hỏi-1 của PL6 (Mạnh duyệt 26/10); wanted → inquiry «Yêu cầu»: Mạnh 27/10, migration 050. Phát biểu theo bài qua trục assertion_field (YC0, 136: trigger giữ giá trị trong trục này)."
   offer_status:
     term_vi: Trạng thái chào
     dd_field: StandardStatus
@@ -786,3 +891,25 @@ enums_lint_allow:
   - path: data-api/src/routes/deals.ts
     axis: kind
     reason: "CG9: data-api (subtree công khai) không có tệp hằng sinh; tham số kind của /v1/deals kiểm hai giá trị tại chỗ"
+  # YC0 (136): trục assertion_field thêm listing_intent, kind — trùng chữ với tên cột, tên trục ở các chỗ dưới, không phải danh sách trường phát biểu.
+  - path: pipeline/do-hang-ngay.mjs
+    axis: assertion_field
+    reason: "CORE_SQL dựng khoá JSON theo tên cột sale_offers (kind, property_type, area_id) — trùng chữ với mã trường phát biểu (YC0)"
+  - path: pipeline/lib/do-hang-ngay.mjs
+    axis: assertion_field
+    reason: "tên cột sale_offers và tên trục nhãn (listing_intent, kind) của DO1 — trùng chữ với mã trường phát biểu (YC0)"
+  - path: pipeline/lib/chuan-hoa-nhan.mjs
+    axis: assertion_field
+    reason: "O_CHON là tên ô chọn của thẻ nhãn (listing_intent, kind, property_type…) — trùng chữ với mã trường phát biểu (YC0)"
+  - path: pipeline/scripts/do-nhom-hai-lan.mjs
+    axis: assertion_field
+    reason: "COT_SO là tên cột sale_offers đem so — trùng chữ với mã trường phát biểu (YC0)"
+  - path: app/src/components/ops/labels/nhom-fields.ts
+    axis: assertion_field
+    reason: "khoá `kind` ở đây là kiểu ô nhập (chu/so), không phải mã trường; `id` là tên ô thẻ nhãn — trùng chữ (YC0)"
+  - path: app/src/lib/dq-labels.ts
+    axis: assertion_field
+    reason: "COT_ENUM khoá theo tên cột sale_offers (kind, property_type…) — trùng chữ với mã trường phát biểu (YC0)"
+  - path: app/src/lib/labels-normalize.ts
+    axis: assertion_field
+    reason: "SELECT_AXES là tên trục sổ (listing_intent, kind) — trùng chữ vì hai trường phát biểu mang đúng tên trục (YC0)"

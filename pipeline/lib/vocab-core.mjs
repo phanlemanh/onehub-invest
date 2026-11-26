@@ -33,6 +33,10 @@ export function loadRegister(yamlText) {
       local: axisLocal,
       rationale: a?.rationale,
       checked_on: a?.checked_on,
+      // `lint: false` (kèm `lint_ly_do`): trục chỉ lặp mã của trục khác (vd inquiry_kind lặp sale, rent_lt của kind) — bộ quét viết tay
+      // bỏ trục này, danh sách viết tay vẫn bị bắt qua trục gốc. Không đổi sinh hằng, --check-db.
+      lint: a?.lint !== false,
+      lint_ly_do: a?.lint_ly_do,
       values: (a?.values ?? []).map((v) => ({
         code: v?.code,
         label_vi: v?.label_vi,
@@ -60,6 +64,7 @@ export function validateRegister(reg) {
     if (!Array.isArray(a.columns)) loi("columns phải là danh sách (có thể rỗng)");
     if (!a.values.length) loi("không có giá trị nào");
     if (a.local && !a.rationale) loi("trục local thiếu rationale");
+    if (!a.lint && !a.lint_ly_do) loi("lint: false thiếu lint_ly_do");
     for (const col of a.columns) {
       if (!/^[a-z_]+\.[a-z_]+$/.test(col)) loi("cột phải dạng bảng.cột", col);
       if (cotCuaTruc.has(col)) loi(`cột đã khai ở trục ${cotCuaTruc.get(col)}`, col);
@@ -293,6 +298,7 @@ function stripSqlComments(src) {
 function codeIndex(reg) {
   const m = new Map();
   for (const a of reg.axes) for (const v of a.values) {
+    if (a.lint === false) continue;
     if (!m.has(v.code)) m.set(v.code, []);
     m.get(v.code).push(a.name);
   }
