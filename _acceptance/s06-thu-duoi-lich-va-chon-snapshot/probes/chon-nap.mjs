@@ -12,6 +12,9 @@
 //           UPSERT của import-chotot làm khi lượt quét đủ thu lại cùng tin)
 //   vòng 3, 4: không snapshot mới → phải nạp 0; nội dung stg không lùi
 //   đối chứng dương: đặt S3 mới hơn → vòng 5 nạp đúng 1 (S3)
+//   E11 (AC-10): không cấu hình → chỉ gọi bộ thu cho hcmc; THU_DUOI_S06_VUNG="hcmc" → hanoi 0 lời gọi + dòng «bỏ vùng»;
+//                hai vùng → gọi cả hai
+//   E12 (AC-11): bộ thu thoát 3 ở vùng đầu → exit 3, dấu chặn có hạn, vùng sau không gọi; còn hạn → 0 lời gọi; hết hạn → chạy lại
 //
 // Dùng: bash db/db-thu.sh oneinvest_suite_s06tl --chay-trong node <tệp này>
 // Đường phép đo: $S06_DUOI_DO (mặc định worktree ZT). Không ghi gì ngoài thư mục tạm và DB của lượt.
@@ -107,7 +110,41 @@ try {
     "goc trong collector: exit 1 · khong tao thu muc · 0 loi goi bo thu", `GHI VAO COLLECTOR: exit ${vCol.rc} · thư mục ${existsSync(join(T, "collector"))}`);
   const vDb = vong("db-loi", { DATABASE_URL: "postgres://khong:dung@127.0.0.1:1/oneinvest_suite_khong_co" });
   ok(vDb.rc === 1 && vDb.stub.length === 0, "doc vung loi: exit 1 · 0 loi goi bo thu", `CHON-NAP DO DB lỗi: exit ${vDb.rc} · ${vDb.stub.length} lời gọi bộ thu`);
-  for (const ma of [3, 4, 5]) {
+  // --- phạm vi vùng (AC-10): hai vùng hanoi, hcmc chạy được trong DB ---
+  const vungGoi = (v) => v.stub.map((l) => /--vung (\S+)/.exec(l)?.[1]).filter(Boolean);
+  const gMd = vungGoi(vMd);
+  ok(gMd.length > 0 && gMd.every((x) => x === "hcmc"), "vung mac dinh: chi hcmc · loi goi vung khac 0",
+    `VUNG MAC DINH CHAY CA: ${gMd.join(", ") || "(không vùng nào)"}`);
+  const vMot = vong("vung-mot", { THU_DUOI_S06_VUNG: "hcmc" });
+  const gMot = vungGoi(vMot);
+  ok(vMot.rc === 0 && !gMot.includes("hanoi") && gMot.includes("hcmc") && /bỏ vùng hanoi/.test(vMot.out),
+    "vung ngoai danh sach: 0 loi goi · co dong nhat ky", `VUNG NGOAI DANH SACH BI GOI: gọi ${gMot.join(", ")} · dòng nhật ký ${/bỏ vùng hanoi/.test(vMot.out)}`);
+  const vHai = vong("vung-hai", { THU_DUOI_S06_VUNG: "hanoi hcmc" });
+  const gHai = vungGoi(vHai);
+  ok(vHai.rc === 0 && gHai.includes("hanoi") && gHai.includes("hcmc"), "vung cau hinh hai vung: goi ca hai",
+    `CHON-NAP DO hai vùng: gọi ${gHai.join(", ")}`);
+
+  // --- nghỉ sau bị chặn (AC-11): bộ thu thoát 3 ở vùng đầu (hanoi, theo thứ tự source_groups) ---
+  const BI_CHAN = join(GOC, "bi-chan.json");
+  const vChan = vong("ma-3", { STUB_RC: "3", THU_DUOI_S06_VUNG: "hanoi hcmc" });
+  ok(vChan.rc === 3 && vChan.nap.length === 0 && !existsSync(join(T, "state/thu-duoi-s06.lock")),
+    "ma 3: exit 3 · nap 0 · khoa go", `CHON-NAP DO mã 3: exit ${vChan.rc} · nap ${vChan.nap.length}`);
+  let het = NaN;
+  try { het = Date.parse(JSON.parse(readFileSync(BI_CHAN, "utf8")).hetLuc); } catch { /* không có dấu */ }
+  ok(vChan.rc === 3 && het > Date.now() && het <= Date.now() + 24 * 3600_000,
+    "chan: vong 1 exit 3 · co dau chan co han", `KHONG DAU CHAN: exit ${vChan.rc} · hetLuc ${Number.isNaN(het) ? "(không có)" : new Date(het).toISOString()}`);
+  const gChan = vungGoi(vChan);
+  ok(gChan.length === 1 && gChan[0] === "hanoi", "chan giua chung: vung sau khong goi", `CHON-NAP DO chặn giữa chừng: gọi ${gChan.join(", ")}`);
+  const vCon = vong("con-han", { THU_DUOI_S06_VUNG: "hanoi hcmc" });
+  ok(vCon.rc === 0 && vCon.stub.length === 0 && vCon.nap.length === 0, "con han: vong 2 exit 0 · 0 loi goi bo thu · 0 loi nap",
+    `GOI NGUON KHI CON HAN: exit ${vCon.rc} · ${vCon.stub.length} lời gọi bộ thu · nap ${vCon.nap.length}`);
+  writeFileSync(BI_CHAN, JSON.stringify({ hetLuc: new Date(Date.now() - 60_000).toISOString().replace(/\.\d+Z$/, "Z") }));
+  const vHet = vong("het-han", { THU_DUOI_S06_VUNG: "hanoi hcmc" });
+  ok(vHet.rc === 0 && vHet.stub.length > 0 && !existsSync(BI_CHAN), "het han: vong 3 goi bo thu",
+    `KET HAN: exit ${vHet.rc} · ${vHet.stub.length} lời gọi bộ thu · dấu còn ${existsSync(BI_CHAN)}`);
+  rmSync(BI_CHAN, { force: true });
+
+  for (const ma of [4, 5]) {
     const v = vong(`ma-${ma}`, { STUB_RC: String(ma) });
     ok(v.rc === ma && v.nap.length === 0 && !existsSync(join(T, "state/thu-duoi-s06.lock")),
       `ma ${ma}: exit ${ma} · nap 0 · khoa go`, `CHON-NAP DO mã ${ma}: exit ${v.rc} · nap ${v.nap.length}`);
@@ -147,7 +184,7 @@ try {
   const tepItems = readdirSync(join(GOC, "snapshots/hanoi", HN)).find((f) => f.startsWith("items-"));
   writeFileSync(join(GOC, "snapshots/hanoi", HN, tepItems), "hong");
   datSnap(S4);
-  const v6 = vong(6);
+  const v6 = vong(6, { THU_DUOI_S06_VUNG: "hanoi hcmc" }); // AC-6 cần hai vùng: mở bằng cấu hình (AC-10)
   ok(v6.rc === 1 && v6.nap.includes(S4), "nap loi vung dau: vung sau van thu · exit 1", `CHON-NAP DO nạp lỗi: exit ${v6.rc} · nap ${v6.nap.join(", ")}`);
 } catch (e) {
   // probe tự hỏng (không phải mã bị đo đỏ): in riêng, thoát 2, không đếm thành CHON-NAP DO

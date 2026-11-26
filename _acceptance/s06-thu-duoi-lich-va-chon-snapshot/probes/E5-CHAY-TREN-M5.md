@@ -22,7 +22,7 @@ thêm `DOI CHUNG HONG` ở vòng 5 vì mã cũ không nạp gì: vẫn tính là
 ## 1. Lượt xanh — đầu nhánh
 
 ```bash
-git worktree add /tmp/zc18-xanh 9614ab0af11202e6dbef2228cc14d9f2eeb04a13
+git worktree add /tmp/zc18-xanh <sha40 đầu nhánh lúc chạy>
 cd /tmp/zc18-xanh
 S06_DUOI_DO=<…> bash db/db-thu.sh oneinvest_suite_s06tl --chay-trong node _acceptance/s06-thu-duoi-lich-va-chon-snapshot/probes/chon-nap.mjs
 ```
@@ -32,9 +32,9 @@ Kỳ vọng: thoát 0, dòng cuối `CHON-NAP OK`, có `fixture tu writer that`,
 
 Probe lấy từ đầu nhánh; CHỈ hai tệp mã của làn thu đổi về bản cũ (bộ nạp, migration giữ nguyên):
 ```bash
-git worktree add /tmp/zc18-do 9614ab0af11202e6dbef2228cc14d9f2eeb04a13
+git worktree add /tmp/zc18-do <sha40 đầu nhánh lúc chạy>
 cd /tmp/zc18-do
-git checkout 7173fc21a -- scripts/thu-duoi-s06.sh pipeline/lib/thu-duoi-moc.mjs
+git checkout 7173fc21a -- scripts/thu-duoi-s06.sh pipeline/lib/thu-duoi-moc.mjs   # đối chứng AC-5; E11/E12 cũng đỏ ở đây
 git diff --stat HEAD   # phải đúng hai tệp trên
 S06_DUOI_DO=<…> bash db/db-thu.sh oneinvest_suite_s06tl --chay-trong node _acceptance/s06-thu-duoi-lich-va-chon-snapshot/probes/chon-nap.mjs
 ```
@@ -51,3 +51,10 @@ worktree (`git rev-parse HEAD` + `git diff --stat HEAD` của lượt đỏ), m�
 Gỡ hai worktree tạm sau khi xong.
 
 Chưa đo ở lượt này: E11 (số vùng), E12 (nghỉ sau chặn) — mã ZCode chưa có, probe chưa có ca.
+
+## Lượt 27/11 (sau fc3fa4a7a)
+
+Probe có thêm ca E11 (phạm vi vùng) và E12 (nghỉ sau chặn). Kỳ vọng ở lượt xanh: thêm bảy dòng `vung mac dinh: …`,
+`vung ngoai danh sach: …`, `vung cau hinh hai vung: …`, `chan: …`, `chan giua chung: …`, `con han: …`, `het han: …`.
+Lượt đối chứng trên 7173fc21a: các dòng E11/E12 đỏ cùng các ca AC-5. U2 đã chạy thử trên Mac mini với bản chép chỉ-đọc
+(xanh trên đầu nhánh, đỏ 5 ca trên wrapper 7fe8bb5b0) trước khi giao.

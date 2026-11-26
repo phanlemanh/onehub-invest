@@ -105,6 +105,14 @@ PL38 nối transform, resolve, sync-cloud theo nhịp. Hồ sơ này chỉ bảo
 - AC-10, AC-11 thêm 27/11 theo lời GS. Trên `7fe8bb5b0` cả hai ĐỎ theo đọc mã: bước 5 chạy mọi vùng `source_groups` chạy được,
   không có cấu hình vùng; thoát 3 không để dấu gì, 5 phút sau launchd gọi lại nguồn. Đã báo GS để trả ZCode qua LL. Probe
   `chon-nap.mjs` thêm ca E11, E12 khi ZCode giao sha (tên cấu hình và hạn dấu chặn do ZCode chọn).
+- 27/11: ZCode giao `fc3fa4a7a` (claudedp-2611-27, xuôi từ `7fe8bb5b0`), U2 gộp nguyên (merge `6aad914f5`, ba tệp trùng
+  từng byte). Cấu hình vùng `THU_DUOI_S06_VUNG` (mặc định `hcmc`); nghỉ sau chặn ghi `state/thu-duoi-s06/bi-chan.json`, hạn
+  `THU_DUOI_S06_NGHI_SAU_CHAN_PHUT` mặc định 30 phút. Probe `chon-nap.mjs` thêm ca E11, E12; chạy thử trên Mac mini với bản
+  chép CHỈ-ĐỌC của phép đo: mã mới `CHON-NAP OK`, wrapper `7fe8bb5b0` đối chứng `CHON-NAP DO (5 ca)` (vùng mặc định chạy cả
+  hai, vùng ngoài danh sách bị gọi, không có dấu chặn, gọi nguồn khi còn hạn, dấu không gỡ). Lượt chấm thật vẫn trên M5.
+- Lệch với khuyến nghị Hỏi-3 (60 phút, chặn lần hai trong 24 giờ thì dừng tới khi người mở lại): mã mặc định 30 phút và
+  không có luật lần hai. Hạn đổi được bằng biến môi trường trong plist; luật lần hai chưa có — Mạnh chọn khuyến nghị thì
+  trả ZCode qua LL trước khi chấm.
 - E5 chạy trên M5 (lời GS 27/11), hai lượt xanh/đối chứng đỏ: cách dựng ở `probes/E5-CHAY-TREN-M5.md`.
   Kết quả 27/11 @212b7145a (`evidence/m5-e5-212b7145a.txt`): mã ZCode 7fe8bb5b0 `CHON-NAP OK`, gồm ca «quét đủ đè → không nạp
   lại» và «nội dung stg không lùi»; mã cũ 7173fc21a `CHON-NAP DO (5 ca)`. Lượt đầu @9614ab0af hỏng vì probe (đã sửa), không tính.
