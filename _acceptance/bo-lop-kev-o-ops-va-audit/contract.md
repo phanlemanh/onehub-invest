@@ -32,7 +32,7 @@ Kev» ở khung đường ống Zalo và chú thích bảng nhóm, và `Service 
 - **AC-4** Given máy chủ (cloud) đọc một bản tin CŨ còn hàng `kev` và lớp «Cổng Kev :8009», When `/ops/collections` dựng,
   Then trang không hiện hàng hay lớp Kev; hàng «Cổng nhận tin :9210» vẫn mang đúng trạng thái lớp cổng nhận tin của khối
   khoá an toàn (Sống / Không phản hồi / Chưa kiểm được). Đối chứng: bản tin không có Kev cho cùng trang.
-- **AC-5** Given khung đường ống Zalo, Then chữ khung không còn «Kev»: dòng phễu nói «Hook Zalo: sự kiện cuối … 7 ngày qua: N
+- **AC-5** Given khung đường ống Zalo, Then chữ khung không còn «Kev»: dòng phễu nói «Hook S03: sự kiện cuối … 7 ngày qua: N
   tin thấy → M đẩy vào cổng nhận tin → K nhận vào bảng thô»; chú thích bảng nhóm S03 không còn «cổng Kev ≥ 0,9».
 - **AC-6** Given nhật ký hook có các dòng `kev null (timeout/gate) …` xen giữa dòng `post 202 …`, When đếm phễu — cả ở máy thu
   (`readGateFunnel`) lẫn ở bản tin đẩy lên (`parseLog` của `pipeline/push-ops-facts.mjs`) — Then dòng `kev null` không tính là

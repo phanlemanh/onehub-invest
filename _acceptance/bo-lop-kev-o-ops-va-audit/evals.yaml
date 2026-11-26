@@ -40,7 +40,7 @@ evals:
     cmd: config:executors.test.kev2_app
     long_running: 60
     paths: ["app/src/components/ops/collections/pipe-panels.tsx", "app/src/components/ops/collections-tables.tsx", "app/tests/kev2-thu-thap.test.tsx"]
-    expected: "Ca KEV2-AC-5 xanh: ZaloPipePanel với phễu viết trước (7 ngày: 5 tin, 4 đẩy, 3 nhận) có đúng câu «Hook Zalo: sự kiện cuối … 5 tin thấy → 4 đẩy vào cổng nhận tin → 3 nhận vào bảng thô», không chữ «Kev»; chú thích bảng nhóm không «Kev». Chiều đỏ: bản sao pipe-panels giữ «Cổng Kev» → ghim tên khung."
+    expected: "Ca KEV2-AC-5 xanh: ZaloPipePanel với phễu viết trước (7 ngày: 5 tin, 4 đẩy, 3 nhận) có đúng câu «Hook S03: sự kiện cuối … 5 tin thấy → 4 đẩy vào cổng nhận tin → 3 nhận vào bảng thô», không chữ «Kev»; chú thích bảng nhóm không «Kev». Chiều đỏ: bản sao pipe-panels giữ «Cổng Kev» → ghim tên khung."
   - id: E7
     criterion: AC-6
     executor: test

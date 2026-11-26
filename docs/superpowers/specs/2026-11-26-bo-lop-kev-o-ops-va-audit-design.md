@@ -15,7 +15,7 @@ cổng :8009 nay luôn đỏ giả.
 | Bảng nhóm S03 (`collections-tables.tsx`) | chú thích «Qua cổng = cổng Kev ≥ 0,9» |
 | `scripts/audit-all.sh` mục F | `Service :8009 chết` → FAIL |
 
-Hook Zalo trên main (`collector/openclaw/handler.js`, làn thu) vẫn gọi Kev và ghi một dòng `kev null (timeout/gate)`
+Hook S03 trên main (`collector/openclaw/handler.js`, làn thu) vẫn gọi Kev và ghi một dòng `kev null (timeout/gate)`
 cho MỖI tin khi Kev vắng; bộ đếm phễu hiện coi mọi dòng không phải heartbeat/alert là một «tin thấy», nên số tin thấy
 đang đếm đôi. Gỡ Kev khỏi hook là KEV1 của làn thu — ngoài vòng này.
 
@@ -28,7 +28,7 @@ cho MỖI tin khi Kev vắng; bộ đếm phễu hiện coi mọi dòng không p
 3. **Máy chủ lọc bản tin cũ.** Bản tin máy thu đẩy trước khi chạy mã mới (tới 15′, hay lâu hơn khi máy thu chưa kéo
    main) còn hàng `kev` và lớp Kev: máy chủ bỏ hai thứ đó khi đọc, để trang trên cloud sạch ngay khi bản app mới lên,
    không phụ thuộc giờ máy thu cập nhật.
-4. **Phễu hook gọi đúng tên.** Khung đường ống đổi «Cổng Kev» thành «Hook Zalo»; «qua cổng» thành «đẩy được vào cổng
+4. **Phễu hook gọi đúng tên.** Khung đường ống đổi «Cổng Kev» thành «Hook S03»; «qua cổng» thành «đẩy được vào cổng
    nhận tin» (dòng `post 202` của hook — đúng nghĩa đang đếm); chú thích bảng nhóm theo đó. Dòng `kev null …` không
    tính là một tin thấy (hết đếm đôi, kể cả khi KEV1 chưa vào).
 5. **audit-all** chỉ dò :9210.

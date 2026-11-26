@@ -161,12 +161,12 @@ test("KEV2-AC-4 máy chủ đọc bản tin CŨ (bên ghi ở 04b9ddc3b) không 
   assert.equal(rows(await renderCloud()).find(([id]) => id === "kev"), undefined)
 })
 
-test("KEV2-AC-5 khung đường ống «Hook Zalo … đẩy vào cổng nhận tin», chú thích bảng nhóm không Kev", async () => {
+test("KEV2-AC-5 khung đường ống «Hook S03 … đẩy vào cổng nhận tin», chú thích bảng nhóm không Kev", async () => {
   const ZERO = { messages: 0, passed: 0, skipped: 0, accepted: 0, media: 0 }
   const { ZaloPipePanel } = await import("../src/components/ops/collections/pipe-panels")
   const zalo = { silentAlert24h: false, driftAlert24h: false, connected: true, uptime24h: 1, heartbeatAgeMin: 1, lastHeartbeatAt: null, lastPostAt: null } as never
   const h = text(await html(ZaloPipePanel({ zalo, funnel: { lastEventAt: null, today: ZERO, last7: { ...ZERO, messages: 5, passed: 4, accepted: 3 } } } as never)))
-  assert.match(h, /Hook Zalo: sự kiện cuối .*? 7 ngày qua: 5 tin thấy → 4 đẩy vào cổng nhận tin → 3 nhận vào bảng thô/)
+  assert.match(h, /Hook S03: sự kiện cuối .*? 7 ngày qua: 5 tin thấy → 4 đẩy vào cổng nhận tin → 3 nhận vào bảng thô/)
   assert.doesNotMatch(h, /Kev/)
   const bang = readFileSync(join(ROOT, "app/src/components/ops/collections-tables.tsx"), "utf8")
   assert.doesNotMatch(bang, /cổng Kev/)
