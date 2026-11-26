@@ -5,7 +5,7 @@ slug: db-thu-tach-khoi-cum-that
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-25T03:59:22Z
 design_doc: docs/superpowers/specs/2026-11-25-db-thu-tach-khoi-cum-that-design.md
@@ -108,3 +108,11 @@ lệnh kiểm sau ở `ap-may-thu/README.md` (AC-10) đo trung vị các lượt
 - Ngoài-6 (máy định tuyến 2026-11-26, đề xuất S4 known-limits): Hiếm khi, nếu lượt chấm bị tắt đúng một khoảnh khắc, mọi lượt sau bị kẹt cho tới khi có người xoá tay một thư mục khoá. — `db/db-thu.sh`
 - Ngoài-7 (máy định tuyến 2026-11-26, đề xuất S4 known-limits): Một ca kiểm chỉ đọc chữ trong mã chứ không chạy thật, nên có thể báo xanh dù cách chia hai nửa suite bị sai. — `scripts/pipeline-that.test.mjs`
 - Ngoài-8 (máy định tuyến 2026-11-26, đề xuất S4 known-limits): Ca kiểm có thể không phát hiện nếu cụm dùng một lần dừng ở một migration giữa chừng. — `scripts/db-thu-trong.test.mjs`
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-26:
+  - Ngoài-1: Khi bộ test của chính công cụ này đang chạy cùng lúc, lượt chấm thật có thể phải chờ chỗ, tối đa 15 phút rồi báo lỗi.
+  - Ngoài-2: Vài chỗ ghi chú còn nói 30 ca trong khi thực tế là 34, người đọc nhật ký chấm có thể so nhầm con số.
+  - Ngoài-3: Lệnh đo phút giữ khoá chỉ chạy đúng mặc định trên máy này, và tên người dùng máy lộ trong mã công khai.
+  - Ngoài-4: Nếu bộ test của công cụ bị ngắt giữa chừng và để sót hai container, mọi lượt chấm sau đó chờ 15 phút rồi đỏ mà không nêu đúng nguyên nhân.
+  - Ngoài-6: Hiếm khi, nếu lượt chấm bị tắt đúng một khoảnh khắc, mọi lượt sau bị kẹt cho tới khi có người xoá tay một thư mục khoá.
+  - Ngoài-7: Một ca kiểm chỉ đọc chữ trong mã chứ không chạy thật, nên có thể báo xanh dù cách chia hai nửa suite bị sai.
+  - Ngoài-8: Ca kiểm có thể không phát hiện nếu cụm dùng một lần dừng ở một migration giữa chừng.
