@@ -136,3 +136,11 @@ evals:
     long_running: 90
     paths: ["pipeline/lib/ghep-tin-truc-can*.mjs", "pipeline/lib/assert.mjs", "pipeline/transform-zalo.mjs", "pipeline/tests/ghep-tin-truc-can*.mjs", "db/migrations/131_*.sql"]
     expected: "exit 0; nửa B bộ test pipeline (suite của lượt chấm, khai ở đây chỉ để có long_running 90), 0 fail."
+
+  - id: E13
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.suite.pipeline_that
+    long_running: 90
+    paths: ["db/migrations/131_*.sql", "pipeline/lib/ghep-tin-truc-can*.mjs", "pipeline/lib/assert.mjs", "pipeline/transform-zalo.mjs"]
+    expected: "exit 0; nhánh đổi db/migrations/131 và tệp trong vùng hẹp VUNG_THAT nên suite pipeline_that (ca dữ liệu thật trên bản chép) chạy; `ℹ fail 0`. Khai ở đây để có long_running 90 theo khuôn HT9 E3a, do1-ac9 E5 (luật GS 26/11)."

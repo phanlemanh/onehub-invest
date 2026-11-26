@@ -5,7 +5,7 @@ slug: ghep-tin-vao-truc-can
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli, data]
-status: approved
+status: implemented
 approved_by: Mạnh
 approved_at: 2026-11-24
 design_doc: docs/superpowers/specs/2026-11-24-ghep-tin-vao-truc-can-design.md
