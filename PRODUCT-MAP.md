@@ -11,9 +11,9 @@ flowchart TD
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>22 việc"] --> GP{"Cổng Phạm vi"}
-  GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>228 việc"]
-  GB --> CN["Chờ phiên nghiệm thu<br/>145 việc"] --> GG{"Cổng Giá trị"}
+  GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
+  GB --> DG["Đã giao<br/>231 việc"]
+  GB --> CN["Chờ phiên nghiệm thu<br/>146 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
 
@@ -69,10 +69,6 @@ flowchart TD
 - DATA-CONTRACT v15 (nháp) mục nguồn S09 danh bạ căn, gồm khuôn lượt bù căn thấp tầng 20/11, vào main để bộ nạp và DA50 đọc theo một bản (`s09-dc-v15-thap-tang`)
 - Tách bộ kiểm pipeline của lượt chấm thành hai nửa chạy song song, mỗi nửa một DB thử, để một lệnh không vượt trần chờ 30 phút của tác tử chấm (`tach-suite-pipeline`)
 - hai test app chạy trên DB chung thôi đỏ vì mã vùng dài cũ và thôi treo khi có DDL xếp hàng (`test-app-tren-db-chung`)
-
-## Đang làm
-
-- Ca DO1-AC-9 của do-hang-ngay.test.mjs xanh lại sau khi sổ nguồn có dòng S09 (122, NK1) (`do1-ac9-xanh-lai-sau-so-nguon-122`)
 
 ## Đã giao — chờ phiên nghiệm thu
 
@@ -183,6 +179,7 @@ flowchart TD
 - Vá hẹp bộ đọc tin S03 (diện tích, phòng ngủ, phường theo hướng, số ngữ cảnh, thuê từ 1 tỷ, giá che số, giá không đơn vị) và lưu toà, trục qua phát biểu có sẵn (`s03-va-doc-tin`)
 - check-freshness và /ops đo S05 theo nhịp 2 lượt/tuần: SLO_HOURS.S05 = 96 giờ ở cả hai bản chép, giữ parity với /ops (`s05-slo-theo-lich`)
 - Đường của tin S06 đi tới tin và căn, không rơi giữa chừng (`s06-duong-du-an-len-tin`)
+- Test bộ thu S08 cô lập token — không đọc tệp token thật ở HOME, xanh trên máy không có tệp, không để lại thư mục tạm (ZC19) (`s08-test-cach-ly-token`)
 - Tin và danh bạ Người lưu số gốc SĐT ở một dạng +84…, danh bạ có bí danh số gốc, và bảng người bán thành view trên danh bạ (`sdt-luu-goc-e164`)
 - Bước tổng hợp người bán thêm dòng cho mọi SĐT mới trên tin, không chỉ cập nhật và xoá dòng đã có (`sellers-them-dong-lai`)
 - Người vận hành thấy cùng một số SLO trên /ops và /ops/collections (`slo-mot-nguon`)
@@ -270,6 +267,7 @@ flowchart TD
 - Trang /ops/people cho người vận hành xem danh bạ Người ở máy thu — người theo nguồn S0x, số tin đã đăng, bí danh, nhãn suy luận chỉ hiển thị (`danh-ba-nguoi-tren-ops`)
 - Trang Danh bạ trên Ops đặt mỗi toà dưới phân khu hiệu lực (cụm S09, rồi phân khu S09, rồi cột gốc) đọc từ view v_toa_nut_vung, và hiện cả gốc lẫn hiệu lực khi hai giá trị khác nhau (`danh-ba-toa-theo-phan-khu-hieu-luc`) — đã giao — máy thông, cửa veto còn mở
 - data-api đóng ba đường trả dữ liệu trái luật (HT19) — deals thôi trả nội dung bài S03, coverage và listings/:id thôi đọc bảng S02 (`data-api-dong-ba-route-lo`)
+- data-api đóng khi thiếu khoá (PB3) — môi trường không khai rõ là dev/test mà danh sách khoá API rỗng thì từ chối mọi lời gọi dữ liệu và bản Node không khởi động (`data-api-dong-khi-thieu-khoa`)
 - Dấu lược đồ của bản mẫu DB thử phủ constraint, index, trigger, enum, độ dài kiểu, NOT NULL, DEFAULT, RLS, quyền và schema ngoài public, để bản mẫu dựng lại ngay khi migration đổi những thứ đó (`dau-luoc-do-ban-mau`)
 - Suite pipeline của lượt chấm chạy trên cụm Postgres dùng một lần (DB trống chuẩn CI), ca dữ liệu thật tách thành suite kích hẹp, sao lưu bỏ DB thử của suite (`db-thu-tach-khoi-cum-that`)
 - Dữ liệu DB local nằm trong volume có tên — sao lưu, khôi phục kiểm được, chuyển và lùi (`db-vao-volume`)
@@ -285,6 +283,7 @@ flowchart TD
 - Phép đo gán khu vực tin rao (kiem-tin-rao-gan-khu-vuc --thu) tự dựng tin mồi trỏ khu vực không hợp lệ trong transaction, không dựa vào trạng thái DB thật (`do-khu-vuc-tu-dung-moi`)
 - đo nền hiệu năng DB local + 5 trang chính (Invest, Ops) trên build prod — số nền vào docs/research, ngưỡng chỉ đề xuất (`do-nen-hieu-nang`)
 - Thước gán khu vực tin rao (KDM-AC-3) theo luật khớp xã PX1 — gỡ ca đỏ sẵn làm hồi quy scripts đỏ cho mọi hàng (`do-san-sl1-kdm`)
+- Ca DO1-AC-9 của do-hang-ngay.test.mjs xanh lại sau khi sổ nguồn có dòng S09 (122, NK1) (`do1-ac9-xanh-lai-sau-so-nguon-122`) — đã giao — máy thông, cửa veto còn mở
 - DO1 giữ dấu ngày lập mốc (đổi thang, lập mốc đầu) suốt cả ngày qua mọi lượt cloud-sync, ngày ấy không có dòng chuyển bậc, lệnh sửa ngày đổi thang đã qua, thước TB-AC-11 chạy được sau khi máy thu áp 087 (`do1-giu-dau-doi-thang`)
 - Bước đọc gộp của lượt 00:00 có đồng hồ riêng và mã 75 «dừng sạch» đi tiếp tới enrich — phần B (phía dưới mốc làn) của lưới chia trần (`doc-gop-dong-ho-rieng-trong-luot-dem`) — đã giao — máy thông, cửa veto còn mở
 - Bước đêm đọc gộp S03 chạy được ở kho không có .env trên /bin/bash 3.2 — bộ test agent xanh ở mọi worktree (`doc-gop-env-rong`)
@@ -343,6 +342,7 @@ flowchart TD
 - Lockdown tính ở máy local không báo «Ổn» cho lớp không kiểm được và «Dòng log cuối» của job là dòng có nghĩa (`lockdown-local-noi-that`)
 - Lối vào các script Node chạy được khi gọi qua symlink ~/dev/one-invest (job đêm launchd) (`loi-vao-script-chay-qua-symlink`)
 - Người vận hành đọc «Luồng 7 ngày qua» trên /ops/collections thấy mỗi cột đếm đúng thứ nhãn nói — tin rao đúng nguồn, đủ 7 ngày từ số máy thu đẩy lên, cột không có số trên máy chủ ghi «Chỉ ở máy thu» (`luong-7-ngay-dung-so`)
+- Lượt làm giàu hằng đêm không tự áp đề xuất có căn cứ (LLM trùng luật E1, LLM trùng tên toà danh bạ) — chúng lên thẻ cho người, tới khi phiếu thứ hai độc lập (NB10); E1 áp thẳng và lượt đọc toàn bộ giữ nguyên (`luot-hang-dem-khong-tu-ap-truoc-doc-lap`)
 - Ca «M2-AC-10 chỉ thêm hai dòng config» so cặp commit cố định 3b3a33e5^→3b3a33e5 thay vì merge-base origin/main, để bộ test design-floor không đỏ trên main sau khi gộp hay trên nhánh khác sửa config.yaml (`m2-ac10-so-cap-co-dinh`)
 - Hai test DB (agent AC-10, app the-duyet «public đã bị chạm») không đỏ theo tải của DB local dùng chung, không nới assertion (`main-xanh-duoi-tai-db`)
 - Chuyển mọi agent làn Claude từ Qwen trên MTPLX sang Haiku 5.5 cloud (Anthropic thẳng, lùi sang Gateway), đổi model bằng cấu hình (`model-may-sang-haiku`)
