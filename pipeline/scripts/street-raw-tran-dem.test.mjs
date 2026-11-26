@@ -46,3 +46,40 @@ test("TD-AC-4 transform S06 đếm trần bằng hàm này trước mọi lần 
   assert.ok(goi > 0 && kiem > goi, "transform không đếm trần qua demTenNguonLuot rồi kiemTranTenNguon(demLuot.tran)");
   assert.ok(kiem < ghiTin, "kiểm trần phải đứng trước câu upsert tin đầu tiên");
 });
+
+// TD-AC-5: đo DÂY NỐI phát biểu sống → trần trong chính runTransformChotot (finding đo AC-4 vòng 1): client giả, không
+// cần DB. Mọi tin đều không có trong stg; chỉ field_assertions có N phát biểu sống S06 mang tên nguồn (sổ S90 giả). Đặt
+// `nPhatBieuSong: 0` hay bỏ khoá ở transform thì ca 51 không dừng → đỏ.
+async function chayGia(nSong) {
+  const { runTransformChotot } = await import("../transform-chotot.mjs");
+  const { SQL_SO_HINH, SQL_SO_CO_CO } = await import("../lib/source-name-entries.mjs");
+  const ghi = [];
+  const client = {
+    async query(sql) {
+      const s = typeof sql === "string" ? sql : sql.text;
+      if (/^\s*(INSERT|UPDATE|DELETE)/i.test(s)) ghi.push(s.trim().slice(0, 40));
+      if (s.includes("phat-bieu:cat-chuyen")) return { rows: [{ ok: true }] };
+      if (s === SQL_SO_HINH) return { rows: [{ bang: true, cot: true }] };
+      if (s === SQL_SO_CO_CO) return { rows: [{ code: "S90", real_name: "Nhà Thử Nghiệm", ids: [], match_whole: false }] };
+      if (/SELECT id, subject_key, value FROM field_assertions/.test(s)) {
+        return { rows: Array.from({ length: nSong }, (_, i) => ({ id: String(i + 1), subject_key: `S06:${i}`, value: TRUNG })) };
+      }
+      if (s.includes("admin_code")) return { rows: [{ ok: false }] };
+      return { rows: [] };
+    },
+  };
+  const log = console.log, warn = console.warn;
+  console.log = () => {}; console.warn = () => {};
+  try { await runTransformChotot(client); return { loi: null, ghi }; }
+  catch (e) { return { loi: e.message, ghi }; }
+  finally { console.log = log; console.warn = warn; }
+}
+
+test("TD-AC-5 transform S06: 51 phát biểu sống trúng, 0 tin mới → dừng trước mọi lần ghi; 50 thì không dừng vì trần", async () => {
+  const r51 = await chayGia(TRAN_TEN_NGUON + 1);
+  assert.match(r51.loi ?? "(không dừng)", /vượt trần 50 — dừng, không rút, không ghi/,
+    "phát biểu sống trúng của DB không tới được trần của transform (dây nối nPhatBieuSong đứt)");
+  assert.deepEqual(r51.ghi, [], "dừng trần mà đã có câu ghi trước đó");
+  const r50 = await chayGia(TRAN_TEN_NGUON);
+  assert.doesNotMatch(r50.loi ?? "", /vượt trần/, "50 phát biểu sống (đúng trần) mà vẫn dừng");
+});
