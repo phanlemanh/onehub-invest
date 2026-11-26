@@ -1,0 +1,464 @@
+# NB10 probe trên M5 ＠b191078df650d52f9649bce05bb78be851a36f96 — bắt đầu 2026-11-26T15:53:35Z
+
+## $ bash _acceptance/ghi-tam-do-sau-co-han/probes/cham.sh AC-1
+xanh AC-1 trên mã thật: tests 2, skipped 0
+HỎNG đột biến «trả lại dòng loại hình của luật»: đỏ nhưng không có thông điệp ghim /AC-1 ô loại=true toà=(true|false): lời nhắc còn dòng «Loại hình từ nhóm»/
+node:internal/modules/esm/resolve:272
+    throw new ERR_MODULE_NOT_FOUND(
+          ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/private/var/folders/bp/cf66dm9n18x8q1rcjsylk6ph0000gq/T/nb10-dot-bien-z7cT5C/pipeline/lib/eval-labels.mjs' imported from /private/var/folders/bp/cf66dm9n18x8q1rcjsylk6ph0000gq/T/nb10-dot-bien-z7cT5C/agent/src/enrich/doc-toan-bo.ts
+    at finalizeResolution (node:internal/modules/esm/resolve:272:11)
+    at moduleResolve (node:internal/modules/esm/resolve:879:10)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:705:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:725:38)
+    at nextStep (node:internal/modules/customization_hooks:189:26)
+    at resolveBaseSync (file:///Users/manhphan/dev/onehub-invest/agent/node_modules/tsx/dist/register-nyXW-TH3.mjs:2:11092)
+    at resolveDirectorySync (file:///Users/manhphan/dev/onehub-invest/agent/node_modules/tsx/dist/register-nyXW-TH3.mjs:2:12398)
+    at resolveTsPathsSync (file:///Users/manhphan/dev/onehub-invest/agent/node_modules/tsx/dist/register-nyXW-TH3.mjs:2:13605)
+    at resolve (file:///Users/manhphan/dev/onehub-invest/agent/node_modules/tsx/dist/register-nyXW-TH3.mjs:2:16832) {
+  code: 'ERR_MODULE_NOT_FOUND',
+  url: 'file:///private/var/folders/bp/cf66dm9n18x8q1rcjsylk6ph0000gq/T/nb10-dot-bien-z7cT5C/pipeline/lib/eval-labels.mjs'
+}
+
+Node.js v24.21.0
+✖ tests/ghi-tam.test.ts (146.738041ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 149.77475
+
+✖ failing tests:
+
+test at tests/ghi-tam.test.ts:1:1
+✖ tests/ghi-tam.test.ts (146.738041ms)
+  'test failed'
+
+HỎNG đột biến «trả lại dòng mã toà của luật»: đỏ nhưng không có thông điệp ghim /AC-1 ô loại=(true|false) toà=true: lời nhắc còn dòng «Mã tòa phát hiện»/
+node:internal/modules/esm/resolve:272
+    throw new ERR_MODULE_NOT_FOUND(
+          ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/private/var/folders/bp/cf66dm9n18x8q1rcjsylk6ph0000gq/T/nb10-dot-bien-D5bUUl/pipeline/lib/eval-labels.mjs' imported from /private/var/folders/bp/cf66dm9n18x8q1rcjsylk6ph0000gq/T/nb10-dot-bien-D5bUUl/agent/src/enrich/doc-toan-bo.ts
+    at finalizeResolution (node:internal/modules/esm/resolve:272:11)
+    at moduleResolve (node:internal/modules/esm/resolve:879:10)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:705:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:725:38)
+    at nextStep (node:internal/modules/customization_hooks:189:26)
+    at resolveBaseSync (file:///Users/manhphan/dev/onehub-invest/agent/node_modules/tsx/dist/register-nyXW-TH3.mjs:2:11092)
+    at resolveDirectorySync (file:///Users/manhphan/dev/onehub-invest/agent/node_modules/tsx/dist/register-nyXW-TH3.mjs:2:12398)
+    at resolveTsPathsSync (file:///Users/manhphan/dev/onehub-invest/agent/node_modules/tsx/dist/register-nyXW-TH3.mjs:2:13605)
+    at resolve (file:///Users/manhphan/dev/onehub-invest/agent/node_modules/tsx/dist/register-nyXW-TH3.mjs:2:16832) {
+  code: 'ERR_MODULE_NOT_FOUND',
+  url: 'file:///private/var/folders/bp/cf66dm9n18x8q1rcjsylk6ph0000gq/T/nb10-dot-bien-D5bUUl/pipeline/lib/eval-labels.mjs'
+}
+
+Node.js v24.21.0
+✖ tests/ghi-tam.test.ts (151.369458ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 154.629
+
+✖ failing tests:
+
+test at tests/ghi-tam.test.ts:1:1
+✖ tests/ghi-tam.test.ts (151.369458ms)
+  'test failed'
+
+→ mã thoát 1
+
+## $ bash _acceptance/ghi-tam-do-sau-co-han/probes/cham.sh AC-2
+ĐỎ AC-2 trên mã thật (thoát 1, pass 0, skipped 0):
+✖ E2 AC-2 lời nhắc mang đáp án hay danh sách toà: không phải phiếu hai, lên thẻ; lời nhắc sạch thì ghi tạm (34.171375ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 184.4205
+
+✖ failing tests:
+
+test at tests/ghi-tam.test.ts:4:300
+✖ E2 AC-2 lời nhắc mang đáp án hay danh sách toà: không phải phiếu hai, lên thẻ; lời nhắc sạch thì ghi tạm (34.171375ms)
+  error: syntax error at or near "$"
+      at /Users/manhphan/dev/onehub-invest/agent/node_modules/pg/lib/client.js:694:17
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async withTx (/Users/manhphan/dev/onehub-invest/.claude/worktrees/probe-nb10/agent/tests/helpers/db.ts:63:18)
+      at async TestContext.<anonymous> (/Users/manhphan/dev/onehub-invest/.claude/worktrees/probe-nb10/agent/tests/ghi-tam.test.ts:76:3)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    length: 92,
+    severity: 'ERROR',
+    code: '42601',
+    detail: undefined,
+    hint: undefined,
+    position: '5144',
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: undefined,
+    schema: undefined,
+    table: undefined,
+    column: undefined,
+    dataType: undefined,
+    constraint: undefined,
+    file: 'scan.l',
+    line: '1244',
+    routine: 'scanner_yyerror'
+  }
+
+→ mã thoát 1
+
+## $ bash _acceptance/ghi-tam-do-sau-co-han/probes/cham.sh AC-3
+ĐỎ AC-3 trên mã thật (thoát 1, pass 0, skipped 0):
+✖ E3 AC-3 lượt đêm ghi ba giá trị: đúng hai lô theo trường, mỗi giá trị có lô và cờ, không đề xuất nào thiếu lô (31.333291ms)
+✖ E3 AC-3 lượt đọc toàn bộ: giá trị tự ghi có lô <run_id>:property_type, độc lập, cờ ghi tạm (17.578375ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 0
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 202.114541
+
+✖ failing tests:
+
+test at tests/ghi-tam.test.ts:8:985
+✖ E3 AC-3 lượt đêm ghi ba giá trị: đúng hai lô theo trường, mỗi giá trị có lô và cờ, không đề xuất nào thiếu lô (31.333291ms)
+  error: syntax error at or near "$"
+      at /Users/manhphan/dev/onehub-invest/agent/node_modules/pg/lib/client.js:694:17
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async withTx (/Users/manhphan/dev/onehub-invest/.claude/worktrees/probe-nb10/agent/tests/helpers/db.ts:63:18)
+      at async TestContext.<anonymous> (/Users/manhphan/dev/onehub-invest/.claude/worktrees/probe-nb10/agent/tests/ghi-tam.test.ts:99:3)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    length: 92,
+    severity: 'ERROR',
+    code: '42601',
+    detail: undefined,
+    hint: undefined,
+    position: '5144',
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: undefined,
+    schema: undefined,
+    table: undefined,
+    column: undefined,
+    dataType: undefined,
+    constraint: undefined,
+    file: 'scan.l',
+    line: '1244',
+    routine: 'scanner_yyerror'
+  }
+
+test at tests/ghi-tam.test.ts:10:690
+✖ E3 AC-3 lượt đọc toàn bộ: giá trị tự ghi có lô <run_id>:property_type, độc lập, cờ ghi tạm (17.578375ms)
+  error: syntax error at or near "$"
+      at /Users/manhphan/dev/onehub-invest/agent/node_modules/pg/lib/client.js:694:17
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async withTx (/Users/manhphan/dev/onehub-invest/.claude/worktrees/probe-nb10/agent/tests/helpers/db.ts:63:18)
+      at async TestContext.<anonymous> (/Users/manhphan/dev/onehub-invest/.claude/worktrees/probe-nb10/agent/tests/ghi-tam.test.ts:120:3)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    length: 92,
+    severity: 'ERROR',
+    code: '42601',
+    detail: undefined,
+    hint: undefined,
+    position: '5144',
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: undefined,
+    schema: undefined,
+    table: undefined,
+    column: undefined,
+    dataType: undefined,
+    constraint: undefined,
+    file: 'scan.l',
+    line: '1244',
+    routine: 'scanner_yyerror'
+  }
+
+→ mã thoát 1
+
+## $ bash _acceptance/ghi-tam-do-sau-co-han/probes/cham.sh AC-4
+xanh AC-4 trên mã thật: tests 1, skipped 0
+→ mã thoát 0
+
+## $ bash _acceptance/ghi-tam-do-sau-co-han/probes/cham.sh AC-5
+ĐỎ AC-5 trên mã thật (thoát 1, pass 0, skipped 0):
+✖ E5 AC-5 rút cả lô: tin và đề xuất về như trước, lô da-rut, chạy lại 0; actor không phải người hay thiếu lý do thì từ chối (30.848875ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 187.866917
+
+✖ failing tests:
+
+test at tests/ghi-tam.test.ts:11:1357
+✖ E5 AC-5 rút cả lô: tin và đề xuất về như trước, lô da-rut, chạy lại 0; actor không phải người hay thiếu lý do thì từ chối (30.848875ms)
+  error: syntax error at or near "$"
+      at /Users/manhphan/dev/onehub-invest/agent/node_modules/pg/lib/client.js:694:17
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async withTx (/Users/manhphan/dev/onehub-invest/.claude/worktrees/probe-nb10/agent/tests/helpers/db.ts:63:18)
+      at async TestContext.<anonymous> (/Users/manhphan/dev/onehub-invest/.claude/worktrees/probe-nb10/agent/tests/ghi-tam.test.ts:149:3)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    length: 92,
+    severity: 'ERROR',
+    code: '42601',
+    detail: undefined,
+    hint: undefined,
+    position: '5144',
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: undefined,
+    schema: undefined,
+    table: undefined,
+    column: undefined,
+    dataType: undefined,
+    constraint: undefined,
+    file: 'scan.l',
+    line: '1244',
+    routine: 'scanner_yyerror'
+  }
+
+→ mã thoát 1
+
+## $ bash _acceptance/ghi-tam-do-sau-co-han/probes/cham.sh AC-6
+ĐỎ AC-6 trên mã thật (thoát 1, pass 0, skipped 0):
+✖ E6 AC-6 lô quá hạn: lượt kế không ghi trường đó, báo tên lô, rút bằng actor máy, ô dừng; trường khác vẫn ghi (30.884542ms)
+✖ E6 AC-6 xét hạn không cần lượt: xet_han_ghi_tam rút lô quá hạn, lô còn hạn giữ nguyên (19.581583ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 0
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 209.083333
+
+✖ failing tests:
+
+test at tests/ghi-tam.test.ts:11:5194
+✖ E6 AC-6 lô quá hạn: lượt kế không ghi trường đó, báo tên lô, rút bằng actor máy, ô dừng; trường khác vẫn ghi (30.884542ms)
+  error: syntax error at or near "$"
+      at /Users/manhphan/dev/onehub-invest/agent/node_modules/pg/lib/client.js:694:17
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async withTx (/Users/manhphan/dev/onehub-invest/.claude/worktrees/probe-nb10/agent/tests/helpers/db.ts:63:18)
+      at async TestContext.<anonymous> (/Users/manhphan/dev/onehub-invest/.claude/worktrees/probe-nb10/agent/tests/ghi-tam.test.ts:201:3)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    length: 92,
+    severity: 'ERROR',
+    code: '42601',
+    detail: undefined,
+    hint: undefined,
+    position: '5144',
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: undefined,
+    schema: undefined,
+    table: undefined,
+    column: undefined,
+    dataType: undefined,
+    constraint: undefined,
+    file: 'scan.l',
+    line: '1244',
+    routine: 'scanner_yyerror'
+  }
+
+test at tests/ghi-tam.test.ts:11:7118
+✖ E6 AC-6 xét hạn không cần lượt: xet_han_ghi_tam rút lô quá hạn, lô còn hạn giữ nguyên (19.581583ms)
+  error: syntax error at or near "$"
+      at /Users/manhphan/dev/onehub-invest/agent/node_modules/pg/lib/client.js:694:17
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async withTx (/Users/manhphan/dev/onehub-invest/.claude/worktrees/probe-nb10/agent/tests/helpers/db.ts:63:18)
+      at async TestContext.<anonymous> (/Users/manhphan/dev/onehub-invest/.claude/worktrees/probe-nb10/agent/tests/ghi-tam.test.ts:224:3)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    length: 92,
+    severity: 'ERROR',
+    code: '42601',
+    detail: undefined,
+    hint: undefined,
+    position: '5144',
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: undefined,
+    schema: undefined,
+    table: undefined,
+    column: undefined,
+    dataType: undefined,
+    constraint: undefined,
+    file: 'scan.l',
+    line: '1244',
+    routine: 'scanner_yyerror'
+  }
+
+→ mã thoát 1
+
+## $ bash _acceptance/ghi-tam-do-sau-co-han/probes/cham.sh AC-7
+ĐỎ AC-7 trên mã thật (thoát 1, pass 0, skipped 0):
+✖ E7 AC-7 kết quả đo bù: không đạt → rút + dừng ô; đạt → thôi cờ, không rút; actor máy không rút được đề xuất ngoài lô (27.993583ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 198.246916
+
+✖ failing tests:
+
+test at tests/ghi-tam.test.ts:11:3341
+✖ E7 AC-7 kết quả đo bù: không đạt → rút + dừng ô; đạt → thôi cờ, không rút; actor máy không rút được đề xuất ngoài lô (27.993583ms)
+  error: syntax error at or near "$"
+      at /Users/manhphan/dev/onehub-invest/agent/node_modules/pg/lib/client.js:694:17
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async withTx (/Users/manhphan/dev/onehub-invest/.claude/worktrees/probe-nb10/agent/tests/helpers/db.ts:63:18)
+      at async TestContext.<anonymous> (/Users/manhphan/dev/onehub-invest/.claude/worktrees/probe-nb10/agent/tests/ghi-tam.test.ts:174:3)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    length: 92,
+    severity: 'ERROR',
+    code: '42601',
+    detail: undefined,
+    hint: undefined,
+    position: '5144',
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: undefined,
+    schema: undefined,
+    table: undefined,
+    column: undefined,
+    dataType: undefined,
+    constraint: undefined,
+    file: 'scan.l',
+    line: '1244',
+    routine: 'scanner_yyerror'
+  }
+
+→ mã thoát 1
+
+## $ bash _acceptance/ghi-tam-do-sau-co-han/probes/cham.sh AC-8
+ĐỎ AC-8 trên mã thật (thoát 1, pass 0, skipped 0):
+✖ E8 AC-8 loại hình ghi tạm không làm căn lên B3; lô đạt thì lên; bậc tin không đổi (28.979708ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 178.820833
+
+✖ failing tests:
+
+test at tests/ghi-tam.test.ts:11:7828
+✖ E8 AC-8 loại hình ghi tạm không làm căn lên B3; lô đạt thì lên; bậc tin không đổi (28.979708ms)
+  error: syntax error at or near "$"
+      at /Users/manhphan/dev/onehub-invest/agent/node_modules/pg/lib/client.js:694:17
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async withTx (/Users/manhphan/dev/onehub-invest/.claude/worktrees/probe-nb10/agent/tests/helpers/db.ts:63:18)
+      at async TestContext.<anonymous> (/Users/manhphan/dev/onehub-invest/.claude/worktrees/probe-nb10/agent/tests/ghi-tam.test.ts:236:3)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    length: 92,
+    severity: 'ERROR',
+    code: '42601',
+    detail: undefined,
+    hint: undefined,
+    position: '5144',
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: undefined,
+    schema: undefined,
+    table: undefined,
+    column: undefined,
+    dataType: undefined,
+    constraint: undefined,
+    file: 'scan.l',
+    line: '1244',
+    routine: 'scanner_yyerror'
+  }
+
+→ mã thoát 1
+
+## $ bash _acceptance/ghi-tam-do-sau-co-han/probes/cham.sh AC-9
+ĐỎ AC-9 trên mã thật (thoát 1, pass 0, skipped 0):
+✖ E9 AC-9 cổng ghi tạm chỉ đổi nhánh corroborated; mọi nhánh khác của routeFields giữ nguyên (2.10925ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 140.25125
+
+✖ failing tests:
+
+test at tests/ghi-tam.test.ts:14:662
+✖ E9 AC-9 cổng ghi tạm chỉ đổi nhánh corroborated; mọi nhánh khác của routeFields giữ nguyên (2.10925ms)
+  AssertionError [ERR_ASSERTION]: AC-9 routeFields đổi ở ô E1≠LLM
+  + actual - expected
+  
+    [
+  +   'property_type:direct'
+  -   'property_type:review',
+  -   'property_type:review'
+    ]
+  
+      at TestContext.<anonymous> (/Users/manhphan/dev/onehub-invest/.claude/worktrees/probe-nb10/agent/tests/ghi-tam.test.ts:272:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [ 'property_type:direct' ],
+    expected: [ 'property_type:review', 'property_type:review' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+→ mã thoát 1
+
+## $ bash _acceptance/ghi-tam-do-sau-co-han/probes/ban-chep.sh AC-4
+== bản chép DB máy thu + 129
+NOTICE:  database "oneinvest_nb10_ban_chep" does not exist, skipping
+ERROR:  syntax error at or near "$"
+LINE 2: RETURNS integer LANGUAGE plpgsql AS $
+                                            ^
+→ mã thoát 3
+# xong 2026-11-26T15:55:42Z
+DB thử oneinvest_nb10_ban_chep còn sau lượt: 0 (0 = đã xoá)
+
+## Ghi chú phiên chấm M5 (không sửa mã)
+- máy: M5 (M5 Max 18 nhân, colima 16/96) · DB: bản đầy đủ máy thu chép sang 26/11 05:45Z · worktree tại đúng b191078df, node_modules nối về checkout chính.
+- Kết quả: xanh AC-4 (cham.sh). Đỏ AC-1 (đột biến không chạy được), AC-2, AC-3, AC-5, AC-6, AC-7, AC-8, AC-9 (ca thật đỏ) và ban-chep AC-4 (mã 3).
+- Nguyên nhân chung của ca thật đỏ và ban-chep: db/migrations/129_ghi_tam_lo.sql ở sha này có hai thân hàm bọc bằng một dấu «$» đơn thay vì «$$»
+  (mở dòng 83 «AS $», đóng dòng 186 «END $;»; mở dòng 274 «AS $», đóng dòng 318 «$;») → Postgres báo «syntax error at or near "$"» (42601)
+  khi helper test nạp migration và khi ban-chep áp lần đầu. ban-chep dừng ngay bước áp, trước mọi câu đếm; DB thử đã tự xoá; DB oneinvest chỉ được đọc (pg_dump).
+- AC-1: ca thật xanh, nhưng cả hai đột biến «HỎNG» vì cây chép tạm của probes/dot-bien.mjs (agent/src, agent/tests, agent/config, db/migrations) thiếu
+  pipeline/lib/eval-labels.mjs mà agent nạp → ERR_MODULE_NOT_FOUND, không phải đỏ có thông điệp ghim. Lỗi của thước, không phải của mã.
