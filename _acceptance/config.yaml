@@ -138,6 +138,8 @@ executors:
     tdb_doi_chieu: "cd app && node --import tsx --test probes/registry-doi-chieu.test.tsx"   # trang-danh-ba-chi-doc E14 — chỉ SELECT trên DB máy thu :5433 trong giao dịch READ ONLY, chỉ in số
     tir_be_mat: "node --test scripts/check-api-surface.test.mjs scripts/check-mcp-tools.test.mjs"   # tin-rao-tren-invest E6 — sổ bề mặt: khoá publicOffers, đối chứng route khác
     api_markets_s02: "cd app && bash ../db/db-thu.sh oneinvest_suite_ht23 --chay node --import tsx --test tests/api-markets-khong-s02.test.tsx"   # api-markets-khong-tra-so-s02 E1/E2 — /api/v1/markets không mang khoá, không xếp theo số S02 (DB thử trắng)
+    ht28_ac1: "set -o pipefail; cd app && bash ../db/db-thu.sh oneinvest_suite_ht28 --chay node --import tsx --test --test-name-pattern 'HT28-AC-1' tests/api-markets-khong-s02.test.tsx 2>&1 | tee /dev/stderr | grep '^ℹ pass 1$' >/dev/null"   # api-markets-doi-chung-tren-db E1 — chạy riêng một ca, đòi đúng một ca đạt
+    ht28_ac2: "set -o pipefail; cd app && bash ../db/db-thu.sh oneinvest_suite_ht28 --chay node --import tsx --test --test-name-pattern 'HT28-AC-2' tests/api-markets-khong-s02.test.tsx 2>&1 | tee /dev/stderr | grep '^ℹ pass 1$' >/dev/null"   # api-markets-doi-chung-tren-db E2
     svc_sync_cu: "node --test pipeline/sync-cloud.test.mjs pipeline/scripts/sync-cloud-pii.test.mjs pipeline/scripts/soat-tang-a.test.mjs"   # sellers-view-len-cloud E5 — hồi quy sync
     kns_lich_unit: "node --test pipeline/scripts/s05-b-lich.test.mjs"   # G1 2510-14
     tl_bao_cao: "node --test scripts/bao-cao-ngay.test.mjs"   # thuoc-lech-ma-nguon-va-lich-s05 AC-1 (thuần), AC-2 (DB máy thu chỉ đọc)
@@ -642,6 +644,8 @@ executors:
     api_surface_static: "node scripts/check-api-surface.mjs static"
     anh_goc_hd10_nguyen: "git diff --exit-code 6b610913 -- app/tests/anh-goc-qua-may-chu.test.tsx"   # proxy-anh-chan-svg AC-7 — bộ test HD10 không bị sửa kỳ vọng
     api_surface_mutation: "node scripts/check-api-surface.mjs mutation"
+    ht28_khong_theo_chen: "F=app/tests/api-markets-khong-s02.test.tsx; test -f $F && ! grep -nE 'theoChen|sort ổn định|giữ thứ tự chèn' $F && grep -q 'chiều đỏ tất định nằm ở HT28-AC-2' $F"   # api-markets-doi-chung-tren-db E3 — gỡ đối chứng mô hình JS, chú thích đúng
+    ht28_route_khong_doi: "git diff --exit-code 04b9ddc3b -- app/src/app/api/v1/markets/route.ts"   # api-markets-doi-chung-tren-db E5 — route không đổi
     api_surface_smoke: "BASE_URL=${BASE_URL:-http://localhost:3456} node scripts/smoke-api-surface.mjs"
     # mcp-tools-theo-so-be-mat (ON15) — bản khai công cụ MCP theo sổ bề mặt; historic cần lịch sử git có 1c6389b
     mcp_tools_static: "node scripts/check-mcp-tools.mjs static"
