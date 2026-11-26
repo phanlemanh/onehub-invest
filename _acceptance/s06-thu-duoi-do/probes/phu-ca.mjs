@@ -8,7 +8,7 @@
 // Tự kiểm hai chiều: snapshot chép sang thư mục tạm bị lật một byte → bộ nạp từ chối; nhật ký bị bớt một mã mới →
 // phép so báo LECH; độ trễ cộng 3 giờ → VUOT THUOC.
 import { createHash } from "node:crypto";
-import { cpSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, cpSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -109,6 +109,9 @@ if (che === "e6") {
     try {
       const dst = join(tam, mau.snapshot);
       cpSync(thuMuc.get(mau.snapshot), dst, { recursive: true });
+      // bản chép giữ quyền chỉ-đọc của phép đo (lượt M5 26/11 EACCES) — mở quyền ghi trên bản chép, bản gốc không đổi
+      chmodSync(dst, 0o755);
+      for (const f of readdirSync(dst)) chmodSync(join(dst, f), 0o644);
       const gz = readdirSync(dst).find((f) => f.startsWith("items-"));
       const b = readFileSync(join(dst, gz)); b[b.length - 1] ^= 0xff; writeFileSync(join(dst, gz), b);
       let tuChoi = false;
