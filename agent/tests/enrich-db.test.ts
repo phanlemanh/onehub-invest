@@ -192,7 +192,7 @@ test("AC-6 bỏ/để sau", async () => {
   });
 });
 
-test("AC-3 block LLM khớp asset_nodes được áp tên chuẩn", async () => {
+test("AC-3 block LLM khớp asset_nodes: tên chuẩn lên thẻ, không tự áp (NB11)", async () => {
   await withTx(async (c) => {
     const a = await offerWithPost(c, { property_type: "apartment", bedrooms: 2 });
     await runEnrich({
@@ -200,15 +200,17 @@ test("AC-3 block LLM khớp asset_nodes được áp tên chuẩn", async () => 
       llm: llmWith({ ...real(19), building: "LBV" }), resolve: resolveWith(),
       buildings: [{ slug: "gpk-lumiere-boulevard", name: "Lumiere Boulevard", aliases: ["lbv"] }],
     });
-    assert.equal((await offerRow(c, a)).block_raw, "Lumiere Boulevard", "AC-3: áp tên chuẩn của node");
+    assert.equal((await offerRow(c, a)).block_raw, null, "NB11: lượt đêm không tự áp toà khớp danh bạ");
     const p = (await proposals(c, a)).find((x) => x.field === "block_raw");
-    assert.equal(p.route, "corroborated");
-    assert.equal(p.corroborated_by, "asset_nodes:gpk-lumiere-boulevard");
-    assert.equal(p.status, "applied");
+    assert.equal(p.value, "Lumiere Boulevard", "AC-3: tên chuẩn của node");
+    assert.equal(p.route, "review");
+    assert.equal(p.corroborated_by, null);
+    assert.equal(p.evidence.trung_luat, "asset_nodes:gpk-lumiere-boulevard");
+    assert.equal(p.status, "queued");
   });
 });
 
-test("AC-3 E1 thật + asset_nodes thật: mã toà thô áp tên chuẩn", async () => {
+test("AC-3 E1 thật + asset_nodes thật: tên chuẩn (không mã thô) lên thẻ, không tự áp (NB11)", async () => {
   await withTx(async (c) => {
     // E1 = resolveContext THẬT (trả buildingHint "LBV"), buildings = asset_nodes THẬT (seed 032)
     const a = await offerWithPost(c, {
@@ -218,10 +220,11 @@ test("AC-3 E1 thật + asset_nodes thật: mã toà thô áp tên chuẩn", asyn
       client: c, runId: "test-ac3-real", dry: false, limit: 50, offerIds: [a],
       llm: llmWith({ ...real(19), building: "LBV" }), resolve: resolveContext,
     });
-    assert.equal((await offerRow(c, a)).block_raw, "Lumiere Boulevard", "AC-3: phải áp tên chuẩn, không áp mã thô 'LBV'");
+    assert.equal((await offerRow(c, a)).block_raw, null, "NB11: lượt đêm không tự áp");
     assert.equal(summary.xungDot, 0, "AC-3: cùng một toà không được tính là xung đột E1/LLM");
     const ps = (await proposals(c, a)).filter((p) => p.field === "block_raw");
-    assert.deepEqual(ps.map((p) => [p.source, p.route, p.status]), [["e2_llm", "corroborated", "applied"]]);
+    assert.deepEqual(ps.map((p) => [p.source, p.value, p.route, p.status, p.evidence.trung_luat]),
+      [["e2_llm", "Lumiere Boulevard", "review", "queued", "e1"]], "AC-3: tên chuẩn, không mã thô 'LBV'");
   });
 });
 
@@ -389,17 +392,17 @@ test("AC-7 để sau thẻ xung đột giữ dấu xung đột", async () => {
   });
 });
 
-test("AC-7 đối chứng: LLM đồng ý luật thì áp như cũ", async () => {
+test("AC-7 đối chứng: LLM đồng ý luật thì lên thẻ, không tự áp (NB11)", async () => {
   await withTx(async (c) => {
     const a = await conflictOffer(c, 0);
     await run(c, [a], llmWith({ ...llmFrom(CONFLICT.cases[0]), property_type: "land" }), resolveOldLand);
-    assert.equal((await offerRow(c, a)).property_type, "land");
+    assert.equal((await offerRow(c, a)).property_type, "unknown", "NB11: lượt đêm không tự áp đề xuất trùng luật");
     assert.deepEqual(
-      (await ptypeProposals(c, a)).map((p) => [p.source, p.route, p.corroborated_by, p.status]),
-      [["e2_llm", "corroborated", "e1", "applied"]],
+      (await ptypeProposals(c, a)).map((p) => [p.source, p.route, p.corroborated_by, p.status, p.evidence.trung_luat]),
+      [["e2_llm", "review", null, "queued", "e1"]],
     );
     const ev = (await pendingCards(c, a))[0]?.evidence;
-    assert.ok(!ev || ev.fields.every((f: { field: string }) => f.field !== "property_type"));
+    assert.ok(ev?.fields.some((f: { field: string }) => f.field === "property_type"), "thẻ phải liệt ô property_type");
   });
 });
 
