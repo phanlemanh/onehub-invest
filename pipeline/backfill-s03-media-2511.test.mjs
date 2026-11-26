@@ -195,6 +195,41 @@ test("ghiSnapshotBuu: gặp http-403 dừng HẲN — không ghi snapshot, dọn
   }
 });
 
+test("ghiSnapshotBuu: 403 ở url ĐẦU của bài nhiều ảnh → đúng 1 lời gọi, không gọi tiếp host vừa chặn", { skip: !CO_DIST && "cần collector dist đã build" }, async () => {
+  const t = await moiTruong();
+  t.srv.close(); // đóng server mặc định — thay bằng server ĐẾM lời gọi
+  const dem = { goi: 0 };
+  const srv = createServer((req, res) => {
+    dem.goi += 1;
+    if (req.url === "/m1.jpg") { res.writeHead(403, { "content-type": "text/plain" }); res.end("forbidden"); }
+    else { res.writeHead(200, { "content-type": "image/jpeg" }); res.end(Buffer.from("anh-moi-" + req.url)); }
+  });
+  await new Promise((done) => srv.listen(0, "127.0.0.1", done));
+  const base = `http://127.0.0.1:${srv.address().port}`;
+  try {
+    const bai = [{
+      postId: "p-chan-nhieu-anh",
+      snapshotId: t.snapshotCu,
+      payload: { group: "g", author: "h", text: "t", senderName: null, senderId: null, conversationId: null,
+        media: [
+          { path: null, url: `${base}/m1.jpg`, type: "image/jpeg" }, // bị 403 — url còn lại KHÔNG được gọi nữa
+          { path: null, url: `${base}/m2.jpg`, type: "image/jpeg" },
+          { path: null, url: `${base}/m3.jpg`, type: "image/jpeg" },
+        ], agent_id: "a" },
+      postedAt: NGAY_HN,
+      mediaFiles: [], // cả ba url đều phải tải
+    }];
+    const dirMoi = join(t.root, "hanoi", "hanoi__zalo-agent__2026-11-25T220000000");
+    const kq = await ghiSnapshotBuu({ baiHomNgay: bai, rootSnapshots: t.root, dirMoi, fetchModule, suffixes: SUFFIX_TEST, tocDo: 1000 });
+    assert.match(kq.maChan, /http-403/);
+    assert.equal(dem.goi, 1, `sau mã chặn đầu tiên KHÔNG còn lời gọi nào tới host (đỏ trên 2f0865de9: gọi ${dem.goi})`);
+    assert.equal(existsSync(dirMoi), false, "bị chặn → không ghi snapshot");
+  } finally {
+    srv.close();
+    rmSync(t.home, { recursive: true, force: true });
+  }
+});
+
 test("cheAnhSong: lệch sha256 → trả null (rơi xuống tải lại); thiếu file → null", { skip: !CO_DIST && "cần collector dist đã build" }, async () => {
   const t = await moiTruong();
   try {
@@ -241,7 +276,10 @@ test("(2) raw bất biến: snapshot gốc (tệp + manifest) giữ nguyên băm
       postId: "p-raw",
       snapshotId: t.snapshotCu,
       payload: { group: "g", author: "h", text: "t", senderName: null, senderId: null, conversationId: null,
-        media: [{ path: null, url: `${t.base}/jpg/broken.jpg`, type: "image/jpeg" }], agent_id: "a" },
+        media: [
+          { path: null, url: `${t.base}/song-goc.jpg`, type: "image/jpeg" }, // sống ở snapshot gốc — entry hợp lệ → chép, KHÔNG gọi CDN
+          { path: null, url: `${t.base}/jpg/broken.jpg`, type: "image/jpeg" }, // nhóm /jpg/ 400 — bỏ qua, không đốt lượt
+        ], agent_id: "a" },
       postedAt: NGAY_HN,
       mediaFiles: [
         { url: `${t.base}/song-goc.jpg`, file: "media/cu-song.jpg", sha256: A.sha, bytes: A.bytes.length, snapshotId: t.snapshotCu },
@@ -251,7 +289,11 @@ test("(2) raw bất biến: snapshot gốc (tệp + manifest) giữ nguyên băm
     const dirMoi = join(t.root, "hanoi", "hanoi__zalo-agent__2026-11-25T200000000");
     const kq = await ghiSnapshotBuu({ baiHomNgay: bai, rootSnapshots: t.root, dirMoi, fetchModule, suffixes: SUFFIX_TEST, tocDo: 1000 });
     assert.equal(kq.taiDuoc, 1);
-    // fixture server không có /song-goc.jpg — ảnh sống đọc từ snapshot gốc qua chepAnhSong
+    // ĐỐI CHỨNG DƯƠNG (AC-4 — findings round 1): bước chép PHẢI chạy thật và chạm snapshot gốc
+    assert.equal(kq.soChep, 1, "đúng một ảnh chép từ snapshot gốc (đỏ trên 2f0865de9: chưa có số đếm)");
+    const manifest = JSON.parse(readFileSync(join(dirMoi, "manifest.json"), "utf8"));
+    assert.ok(manifest.files.some((f) => f.sha256 === A.sha), "manifest snapshot bù phải chứa ảnh chép từ snapshot gốc");
+    // đối chứng dương đứng rồi mới khẳng định âm tính: snapshot gốc nguyên băm
     assert.deepEqual(bam(snapshotCu), truoc, "snapshot gốc phải nguyên băm sau lượt bù");
     assert.equal(readFileSync(join(snapshotCu, "manifest.json"), "utf8"), JSON.stringify({ snapshotId: t.snapshotCu, ghiChu: "goc" }));
   } finally {

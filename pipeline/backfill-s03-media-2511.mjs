@@ -195,6 +195,7 @@ export async function ghiSnapshotBuu({ baiHomNgay, rootSnapshots, dirMoi, fetchM
   const items = [];
   let soUrlThu = 0;
   let taiDuoc = 0;
+  let soChep = 0; // AC-4 findings round 1: đếm ảnh chép từ snapshot gốc — đối chứng dương cho ca raw bất biến
   let loi404 = 0;
   const loiKhac = new Map();
   let maChan = null;
@@ -212,6 +213,7 @@ export async function ghiSnapshotBuu({ baiHomNgay, rootSnapshots, dirMoi, fetchM
         const daChep = await chepAnhSong(cu, rootSnapshots, ghiFile);
         if (daChep) {
           entriesMoi.push(daChep);
+          soChep += 1;
           continue;
         }
       } else if (cu && (cu.error === "http-404" || (boQuaHttp400 && cu.error === "http-400"))) {
@@ -224,6 +226,7 @@ export async function ghiSnapshotBuu({ baiHomNgay, rootSnapshots, dirMoi, fetchM
     for (let i = 0; i < urls.length; i += 1) {
       const url = urls[i];
       if (entriesMoi[i] !== null) continue;
+      if (maChan) break; // AC-5 findings round 1: chặn thì dừng HẲN — không gọi tiếp host vừa chặn trong cùng bài
       soUrlThu += 1;
       await choLuot(); // trần chặn TRƯỚC khi phát lời gọi
       if (denGio && Date.now() >= Date.parse(denGio)) break;
@@ -274,12 +277,12 @@ export async function ghiSnapshotBuu({ baiHomNgay, rootSnapshots, dirMoi, fetchM
   if (maChan) {
     ghiLog(`DỪNG: ${maChan} — không ghi snapshot, không nạp`);
     await rm(dirTam, { recursive: true, force: true }); // dọn nháp — không để thư mục .partial thừa
-    return { maChan, soBai: 0, soUrlThu, taiDuoc, loi404, loiKhac };
+    return { maChan, soBai: 0, soUrlThu, taiDuoc, soChep, loi404, loiKhac };
   }
   if (items.length === 0) {
     ghiLog("không có bài nào cần snapshot");
     await rm(dirTam, { recursive: true, force: true }); // dọn nháp
-    return { snapshotId: null, soBai: 0, soUrlThu, taiDuoc, loi404, loiKhac };
+    return { snapshotId: null, soBai: 0, soUrlThu, taiDuoc, soChep, loi404, loiKhac };
   }
 
   const itemsGz = gzipSync(Buffer.from(JSON.stringify(items), "utf8"));
@@ -302,7 +305,7 @@ export async function ghiSnapshotBuu({ baiHomNgay, rootSnapshots, dirMoi, fetchM
   await writeFile(join(dirTam, "manifest.json"), JSON.stringify(manifest, null, 2));
   await rename(dirTam, dirMoi); // manifest là file cuối — rename sau cùng như collector (2510-8)
   ghiLog(`snapshot ${snapshotId}: ${items.length} bài · thử ${soUrlThu} url · tải được ${taiDuoc} · 404 ${loi404}`);
-  return { snapshotId, soBai: items.length, soUrlThu, taiDuoc, loi404, loiKhac };
+  return { snapshotId, soBai: items.length, soUrlThu, taiDuoc, soChep, loi404, loiKhac };
 }
 
 // ─── CLI ───
