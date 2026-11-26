@@ -1,0 +1,40 @@
+{
+  "feature_plain": "Đưa khoảng 250–350 nghìn căn cao tầng của S09 vào danh bạ, dưới các toà DA42 đã đưa vào; căn trùng căn S16, S08 có sẵn chỉ được gắn thêm mã S09, không sinh căn thứ hai.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ chỉ đưa căn của một toà vào khi mọi tầng của toà đã thu được (có căn hoặc rỗng thật); bản thu lỗi hay rỗng đêm sau không xoá bản tốt đêm trước."},
+    {"id": "AC-2", "p": "Sẽ đếm đầu vào bằng một bộ đếm độc lập đọc thẳng bản thu và so từng ô (dự án, toà, tầng, căn, mã hỏng, trùng khoá); lệch một ô là dừng."},
+    {"id": "AC-3", "p": "Sẽ lấy toà theo cấu trúc bản thu và lấy số căn, tầng từ đuôi mã căn — đúng với mọi khuôn mã thật của S09 như «AK1-015.21», «04.01», «AQL1.04.11» dưới toà «Lake 1»."},
+    {"id": "AC-4", "p": "Sẽ chỉ đưa căn vào toà đã có trong danh bạ (qua mã toà DA42 ghi) và đã thu đủ tầng; toà khác giữ lại, đếm theo lý do."},
+    {"id": "AC-5", "p": "Sẽ gắn mã S09 vào căn S16, S08 có sẵn cùng toà, tầng, số căn — không thêm căn; hai căn S09 trùng khoá thì một căn vào, căn kia giữ lại và đếm."},
+    {"id": "AC-6", "p": "Sẽ không tạo căn mới khi căn S09 không khớp căn nào ở toà đã có S16, S08: mỗi toà một thẻ trên /ops/review kèm số căn lệch."},
+    {"id": "AC-7", "p": "Sẽ tạo căn mới ở toà chỉ có S09, bậc tin cậy thấp nhất; tầng lạ như «1+2» thành căn không trục."},
+    {"id": "AC-8", "p": "Sẽ cho cùng một tập căn dù S09 nạp trước hay sau S16, S08, và chạy lại không sinh thêm căn, mã hay thẻ."},
+    {"id": "AC-10", "p": "Sẽ đưa ô «Căn» S09 trên /ops/registry từ 0 lên một số nằm trong dải 250.000–349.493 khai trước; bảy phần cộng đúng 358.032; độ đúng khớp đo theo từng khuôn mã."}
+  ],
+  "wont_do": [
+    {"id": "AC-9", "p": "Sẽ KHÔNG để bảng căn, thẻ hay log nào mang tên thật của nguồn rời máy; cấy thử một tên thật thì bộ soát đỏ."},
+    {"id": "OOS-1", "p": "Không thu dữ liệu và không viết bộ nạp — làn thu đã thu, DA56 đã nạp."},
+    {"id": "OOS-2", "p": "Không tự thu bù 165 tầng còn thiếu; toà của chúng đợi làn thu."},
+    {"id": "OOS-3", "p": "Không tự áp lên DB máy thu; áp theo hồ sơ sau khi PR gộp."},
+    {"id": "OOS-4", "p": "Không làm thấp tầng, không nối dự án hay tạo toà mới — đó là DA42."},
+    {"id": "OOS-5", "p": "Không có diện tích, phòng ngủ, hướng, giá — S09 không trả các trường này."},
+    {"id": "OOS-6", "p": "Không đưa căn S09 lên cloud hay cổng Invest."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Dữ liệu vào: toà đủ tầng qua nhiều đêm, số đếm khớp bộ đếm độc lập, tách mã đúng mười bốn khuôn thật (AC-1, AC-2, AC-3)."},
+    {"i": 1, "p": "Cấp danh bạ: căn chỉ vào toà đã có, căn trùng thành mã phụ, căn lệch lên thẻ, toà chỉ S09 được tạo căn (AC-4…AC-7)."},
+    {"i": 2, "p": "Chạy lại và đổi thứ tự nguồn không đổi kết quả (AC-8)."},
+    {"i": 3, "p": "Không lộ tên nguồn thật (AC-9)."},
+    {"i": 4, "p": "Kết quả thật trên bản chép DB máy thu: bảy phần cộng đủ, số trên màn trong dải khai trước (AC-10)."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Phép đo độ đúng cũ tự đúng (so tầng trên chính khoá đã khớp) — đã đổi sang mẫu theo từng khuôn mã, đối chiếu bằng nguồn độc lập, thêm ngưỡng tầng mã khác tầng cấu trúc ≤8%."},
+    {"i": 1, "p": "Không có sàn số căn vào danh bạ — đã khai dải 250.000–349.493 trước khi đo, và trần 5% cho toà chưa nối, chưa trọn."},
+    {"i": 2, "p": "Chưa có ca thử cho căn trùng khoá — đã thêm, kèm chiều đỏ."},
+    {"i": 3, "p": "Bảy phần chưa có thứ tự khi chồng nhau — đã khai thứ tự, mỗi căn đúng một phần."},
+    {"i": 4, "p": "Đích và hai ngưỡng 1,5% đặt sau khi thấy số — đích nay khai trước; hai ngưỡng ghi rõ là đặt sau đo, anh quyết ở Hỏi-4, Hỏi-5."},
+    {"i": 5, "p": "Hai số tầng lệch nhau 2 giữa các tài liệu — đã thống nhất."},
+    {"i": 6, "p": "Chưa nói danh sách tầng gói 1 lấy từ đâu — đã ghi nguồn và khoá nối."},
+    {"i": 7, "p": "Tập toà trùng là tập trước DA42 — sẽ đo lại sau DA42; tầng có chữ thêm vào bảng phủ ca."}
+  ]
+}
