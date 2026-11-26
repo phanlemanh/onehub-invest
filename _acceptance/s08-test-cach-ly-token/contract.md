@@ -5,7 +5,7 @@ slug: s08-test-cach-ly-token
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: machine-cleared
 veto_state: mo
 veto_opened_at: 2026-11-26T08:40:00Z
 design_doc: docs/superpowers/specs/2026-11-26-s08-test-cach-ly-token-design.md
