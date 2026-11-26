@@ -48,3 +48,11 @@ evals:
     paths: [scripts/zalo-import-daily.sh, scripts/apify-facebook-daily.sh, pipeline/backfill-s03-media-2511.mjs, scripts/nap-argmax.test.mjs, pipeline/scripts/entrypoint-symlink.test.mjs]
     expected: "exit 0; dòng 'PASS (3) nap-argmax 10/10', 'PASS (3) AC-3 lối vào khuôn mới (backfill-s03-media-2511.mjs)', 'PASS (2) họ zalo-import 51/51'; chiều đỏ chạy lại mỗi lượt: 'PASS (5d) lệch khối liệt kê → ĐỎ «nap-argmax: khối liệt kê hai bản GIỐNG HỆT nhau»' (gap-probe P2); dòng cuối 'ZC20 PASS'. Đo 26/11 trên M5 @e994fc21a (trước vá): «AC-3 không còn khuôn cũ» và ba ca nap-argmax đỏ."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.suite.pipeline_that
+    long_running: 90
+    paths: [pipeline/backfill-s03-media-2511.mjs, pipeline/backfill-s03-media-2511.test.mjs]
+    expected: "exit 0; nhánh sửa pipeline/backfill-s03-media-2511.mjs (vùng của pipeline_that) nên suite chạy: các ca dữ liệu thật của ci-bo-qua trên bản chép, dòng tổng kết `ℹ fail 0` (khai long_running 90 theo khuôn HT9 E3a, như KEV1 E19 — thiếu khai thì lượt chấm bị ngắt ~29′)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
