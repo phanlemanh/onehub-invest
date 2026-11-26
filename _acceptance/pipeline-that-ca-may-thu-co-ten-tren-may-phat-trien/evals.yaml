@@ -37,3 +37,10 @@ evals:
     cmd: config:executors.script.ht33_may_thu
     paths: ["scripts/lib/vai-may.mjs"]
     expected: "Chạy trên máy chấm (Mac mini): vaiMay() không đối số, ONEHUB_HAI_MAY_TEP không đặt → in «may-thu», thoát 0; ra giá trị khác → thoát 1."
+  - id: E7
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.suite.pipeline_that
+    long_running: 90
+    paths: ["pipeline/chay-that.mjs", "scripts/ci-bo-qua.json", "scripts/lib/vai-may.mjs", "scripts/lib/ci-can-du-lieu.mjs"]
+    expected: "exit 0; nhánh đổi pipeline/chay-that.mjs nên suite-neu-doi kích pipeline_that (dòng «ca dữ liệu thật: chạy trong lượt này»); trên máy chấm (Mac mini, vai may-thu) đầu ra có «chạy đủ N ca», không dòng «bỏ qua … ca chỉ máy thu», ON22-AC-10 chạy, `ℹ fail 0`."
