@@ -10,9 +10,10 @@
 // Lỗi đọc/parse KHÔNG ném — trả null để vòng thu vẫn chạy (cắt là việc phụ).
 //
 // Dùng: node thu-duoi-moc.mjs <goc> <trần>   → in JSON một dòng kết quả
+import { realpathSync } from "node:fs";
 import { readFile, rename, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 
 export async function catMoc(goc, toiDa) {
   if (!Number.isInteger(toiDa) || toiDa <= 0) return { daCat: false, lyDo: "tran-khong-hop-le" };
@@ -32,7 +33,7 @@ export async function catMoc(goc, toiDa) {
 }
 
 // Chạy trực tiếp qua CLI (wrapper gọi): node thu-duoi-moc.mjs <goc> <trần>
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const [goc, tran] = process.argv.slice(2);
   const kq = await catMoc(goc, Number.parseInt(tran ?? "", 10));
   console.log(JSON.stringify(kq ?? { daCat: false, lyDo: "doc-loi" }));

@@ -49,7 +49,7 @@ case "$argv" in
     mkdir -p "$goc/snapshots/$city/\${city}__chotot-ads__20261125T060000"
     echo x > "$goc/snapshots/$city/\${city}__chotot-ads__20261125T060000/manifest.json"
     exit 0 ;;
-  *stg_chotot_ads*)
+  *stg_chotot_ads*|*airbnb_snapshots*)   # 2611-21: chọn-nạp soát sổ nạp bền airbnb_snapshots
     city="\${@: -2:1}"; goc="\${@: -1}"   # node -e <nguồn> <city> <goc>
     moi="$(ls -1 "$goc/snapshots/$city" 2>/dev/null | sort | tail -1)"
     [ -z "$moi" ] && exit 0
