@@ -12,8 +12,19 @@ services:
       POSTGRES_DB: oneinvest
       POSTGRES_USER: oneinvest
       POSTGRES_PASS: oneinvest
+      # Tham số Postgres (HT8, audit máy thu 24/11 A8; VM colima 32 GB). Ảnh kartoza đọc các biến này lúc khởi động và ghi
+      # postgis.conf / extra.conf — KHÔNG nhận `command: -c …` (entrypoint bọc gosu sai). Cấu hình chỉ sinh lại khi TẠO LẠI
+      # container (`docker compose up -d --force-recreate db`); `docker restart` không đổi gì. Kiểm: bash scripts/check-db-noi-bo.sh live
+      SHARED_BUFFERS: 8GB
+      WORK_MEM: 64MB
+      MAINTENANCE_WORK_MEM: 1GB
+      EXTRA_CONF: "effective_cache_size = 20GB"
+    # Truy vấn song song cấp vùng nhớ chung ở /dev/shm (dynamic_shared_memory_type=posix); mặc định Docker 64 MB không đủ khi work_mem 64MB.
+    shm_size: 1gb
+    # Chỉ nghe 127.0.0.1 phía Mac (HT8, audit A1): bộ chuyển cổng của colima tôn trọng IP khai ở đây, nên máy khác trong LAN
+    # không nối được. Mạng docker nội bộ (sao lưu qua --network container:) không qua cổng này.
     ports:
-      - "5433:5432"
+      - "127.0.0.1:5433:5432"
     # kartoza để dữ liệu ở /var/lib/postgresql/<major>/main — gắn thư mục cha, không phải /var/lib/postgresql/data
     # (đường của ảnh postgres chính thức; gắn đó thì volume rỗng và dữ liệu nằm trong lớp ghi của container).
     # Kiểm: bash scripts/db-volume-check.sh static|live
