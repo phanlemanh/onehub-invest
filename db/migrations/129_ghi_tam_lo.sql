@@ -80,7 +80,7 @@ UPDATE enrichment_proposals ep
 
 -- <<<HAM-129
 CREATE OR REPLACE FUNCTION revert_enrichment(p_ids bigint[], p_actor text, p_reason text)
-RETURNS integer LANGUAGE plpgsql AS $
+RETURNS integer LANGUAGE plpgsql AS $$
 DECLARE
   rid      bigint;
   r        record;
@@ -183,7 +183,7 @@ BEGIN
     'reason', p_reason, 'ids', to_jsonb(COALESCE(p_ids, '{}')), 'reverted', reverted,
     'skipped', skipped, 'reopened', to_jsonb(reopened)));
   RETURN n;
-END $;
+END $$;
 
 -- Rút cả lô: hoàn tác mọi đề xuất applied của lô qua revert_enrichment (ô về giá trị kế có căn cứ, superseded mở lại), đặt lô
 -- da-rut. p_dung_o = true (quá hạn, đo bù không đạt) thì ô của trường dừng tự ghi tới khi người mở lại. Lô đã rút → 0.
@@ -271,7 +271,7 @@ END $$;
 
 CREATE OR REPLACE FUNCTION unit_data_level()
 RETURNS TABLE (unit_key text, data_level text, ke_thieu text, source text, area_id text, property_type text,
-               offer_ids text[]) LANGUAGE sql STABLE AS $
+               offer_ids text[]) LANGUAGE sql STABLE AS $$
   WITH gan AS (   -- chỉ căn có thật trong danh bạ, đang hiệu lực (082)
     SELECT un.unit_key AS uk, o.*
       FROM sale_offers o
@@ -315,5 +315,5 @@ RETURNS TABLE (unit_key text, data_level text, ke_thieu text, source text, area_
          CASE lv WHEN 3 THEN 'lam-giau' WHEN 4 THEN 'hieu-luc' ELSE 'giu-nhip' END,
          source, area_id, property_type, offer_ids
     FROM can
-$;
+$$;
 -- HAM-129>>>
