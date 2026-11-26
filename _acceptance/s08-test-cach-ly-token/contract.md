@@ -5,7 +5,7 @@ slug: s08-test-cach-ly-token
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: verified
 veto_state: mo
 veto_opened_at: 2026-11-26T08:40:00Z
 design_doc: docs/superpowers/specs/2026-11-26-s08-test-cach-ly-token-design.md
@@ -48,3 +48,4 @@ bộ collector đỏ nền (KEV1 E11 S4 r1 trên M5, 26/11). Nguồn mã: nhánh
 ## Notes
 
 - Đo 26/11 trên nhánh trước sửa dọn: mỗi lượt để lại 1 thư mục `s08-test-*` trong TMPDIR (token giả, không phải tầng A).
+- Ngoài-2 (máy định tuyến 2026-11-26, đề xuất S4 known-limits): Trong một số môi trường thiếu lịch sử git, phép kiểm xác nhận mã bộ thu không bị đụng tới có thể báo xanh dù mã đã bị sửa. Khi đó một thay đổi lẽ ra bị chặn có thể lọt qua mà không ai biết. — `_acceptance/config.yaml`
