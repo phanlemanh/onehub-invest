@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # ke-hoach-toa-vung.sh — căn cứ đổi cách bắt chiều đỏ E7 (GS phán 27/11): EXPLAIN câu đếm trên thân offer_building của 131
 # (dạng SELECT, không tạo view, phiên chỉ đọc) — bản thật phải có bước «CTE toa_vung», bản bỏ MATERIALIZED ở toa_vung thì mất.
-# Chạy: bash ke-hoach-toa-vung.sh [tên DB, mặc định oneinvest] — qua docker exec vào one-invest-db. Thêm --thoi-gian để đo giây.
+# Chạy: bash ke-hoach-toa-vung.sh [tên DB | "" để lấy từ DATABASE_URL, mặc định oneinvest] — qua docker exec vào one-invest-db. Thêm --thoi-gian để đo giây.
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
-DB="${1:-oneinvest}"; DO_GIAY="${2:-}"
+# Tên DB: tham số 1; trống thì lấy đuôi DATABASE_URL (db-thu.sh --chay đặt DB của lượt có đuôi pid), rồi mới tới oneinvest.
+DB="${1:-}"; [ -z "$DB" ] && { if [ -n "${DATABASE_URL:-}" ]; then DB="${DATABASE_URL##*/}"; else DB=oneinvest; fi; }; DO_GIAY="${2:-}"
 node -e '
 const fs = require("fs"); const s = fs.readFileSync(process.argv[1], "utf8");
 const dau = "CREATE OR REPLACE VIEW offer_building AS"; const a = s.indexOf(dau) + dau.length, b = s.indexOf("FROM xet;", a) + "FROM xet".length;

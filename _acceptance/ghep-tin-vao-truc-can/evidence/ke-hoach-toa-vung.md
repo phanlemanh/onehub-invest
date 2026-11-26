@@ -18,7 +18,7 @@ Kế hoạch chậm chỉ hiện trên DB máy thu; DB lượt vừa khôi phụ
 | Máy · DB | Bản thật | Bản đột biến |
 |---|---|---|
 | Mac mini · DB máy thu `oneinvest` (chỉ đọc) | có | KHÔNG có |
-| M5 · DB lượt | _chờ M5_ | _chờ M5_ |
+| M5 · DB lượt (bản chép DB máy thu 26/11 05:45Z, thân view của 131 dạng SELECT; evidence/ke-hoach-toa-vung-m5.txt) | có (0,51 giây) | KHÔNG có (0,40 giây) |
 
 Lệnh: `bash _acceptance/ghep-tin-vao-truc-can/probes/ke-hoach-toa-vung.sh <tên DB>` (thoát 0 khi bản thật có bước ấy và bản đột biến không).
-Trên DB lượt: `bash db/db-thu.sh oneinvest_suite_pl36_kh --chay bash _acceptance/ghep-tin-vao-truc-can/probes/ke-hoach-toa-vung.sh oneinvest_suite_pl36_kh`.
+Trên DB lượt: `bash db/db-thu.sh oneinvest_suite_pl36_kh --chay bash _acceptance/ghep-tin-vao-truc-can/probes/ke-hoach-toa-vung.sh "" --thoi-gian` (tên DB lấy từ DATABASE_URL — DB lượt có đuôi pid; lệnh giao lần đầu truyền tên trần nên psql không thấy DB, M5 chạy lại bằng tên từ DATABASE_URL, xem tệp M5).
