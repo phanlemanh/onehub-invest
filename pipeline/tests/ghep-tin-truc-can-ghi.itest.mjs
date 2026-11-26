@@ -3,9 +3,10 @@
 // DB của riêng lượt: các ca đổi dữ liệu thật rồi chạy lại bước gắn; DB bị xoá khi lệnh kết thúc.
 // GHEP_CAN_GHI_LIB, GHEP_CAN_ASSERT_LIB trỏ bản đột biến cho probes của hồ sơ.
 import { strict as assert } from "node:assert";
-import { readFileSync } from "node:fs";
+import { readFileSync, rmSync, writeFileSync } from "node:fs";
+import { spawn } from "node:child_process";
 import { after, before, test } from "node:test";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import pg from "pg";
 
@@ -127,6 +128,39 @@ test("luot-khac-giu-khoa-thi-bo-luot", async () => {
     await buocGhepCan(c, { log: (s) => dong.push(s) });
     assert.deepEqual(dong, ["JOB WARN [ghep-can] lượt khác đang ghi, bỏ lượt này"]);
   } finally { await c2.query("ROLLBACK"); await c2.end(); }
+});
+// AC-8 trên lượt nạp thật (finding r1, hình dạng 1): chạy transform-zalo.mjs như launchd chạy, trên DB của riêng lượt; thứ tự
+// đo bằng dấu vết thật của hai bước (dòng «ghep-toa:» rồi «ghep-can:» ở stdout), không bằng văn bản mã. GHEP_ZALO_TEP trỏ bản
+// đột biến (probes/cuoi-luot-nap.sh đảo thứ tự hai bước → ca đỏ).
+const chayLuotNap = (tep) => new Promise((ok) => {
+  const p = spawn(process.execPath, [tep], { cwd: new URL("..", import.meta.url), env: { ...process.env, DATABASE_URL: DB_URL } });
+  let ra = "";
+  p.stdout.on("data", (d) => { ra += d; }); p.stderr.on("data", (d) => { ra += d; });
+  p.on("close", (ma) => ok({ ma, dong: ra.split("\n") }));
+});
+const TEP_ZALO = fileURLToPath(new URL("../transform-zalo.mjs", import.meta.url));
+test("luot-nap-that-gan-can-chay-sau-gan-toa", { timeout: 900_000 }, async () => {
+  const { ma, dong } = await chayLuotNap(process.env.GHEP_ZALO_TEP ?? TEP_ZALO);
+  assert.equal(ma, 0, `lượt nạp thoát ${ma}: ${dong.slice(-5).join(" | ")}`);
+  const i = dong.findIndex((d) => /^ghep-toa: /.test(d) || /JOB WARN \[ghep-toa\]/.test(d));
+  const j = dong.findIndex((d) => /^ghep-can: /.test(d) || /JOB WARN \[ghep-can\]/.test(d));
+  assert.ok(i >= 0 && j >= 0, `lượt nạp thiếu dấu vết bước gắn: ghep-toa ${i}, ghep-can ${j}`);
+  assert.ok(i < j, `bước gắn trục, căn (dòng ${j}) chạy trước bước gắn toà (dòng ${i})`);
+  assert.ok(dong.some((d) => /^ghep-can: /.test(d)), `bước gắn trục, căn không chạy trọn: ${dong[j]}`);
+});
+test("luot-nap-that-loi-nap-buoc-gan-can-van-thoat-0-mot-canh-bao", { timeout: 900_000 }, async () => {
+  // Cấy lỗi nạp mã vào bước gắn trục, căn ở một bản chép của transform (cạnh tệp gốc để import tương đối còn đúng).
+  const goc = readFileSync(TEP_ZALO, "utf8"), tu = `await import("./lib/ghep-tin-truc-can-ghi.mjs")`;
+  assert.ok(goc.includes(tu), "transform-zalo không còn nạp bước gắn trục, căn bằng import động");
+  const tam = TEP_ZALO.replace(/\.mjs$/, `.loi-pl36-${process.pid}.mjs`);
+  writeFileSync(tam, goc.replace(tu, `await import("./lib/khong-co-pl36.mjs")`));
+  try {
+    const { ma, dong } = await chayLuotNap(tam);
+    assert.equal(ma, 0, `cấy lỗi bước gắn làm lượt nạp thoát ${ma}`);
+    const canh = dong.filter((d) => d.includes("JOB WARN [ghep-can]"));
+    assert.equal(canh.length, 1, `cần đúng một dòng JOB WARN [ghep-can], nhận ${canh.length}`);
+    assert.ok(dong.some((d) => /^ghep-toa: /.test(d)), "cấy lỗi bước gắn trục, căn làm mất bước gắn toà");
+  } finally { rmSync(tam, { force: true }); }
 });
 test("transform-zalo-goi-buoc-gan-can-sau-buoc-gan-toa-trong-try", () => {
   const s = readFileSync(new URL("../transform-zalo.mjs", import.meta.url), "utf8");
