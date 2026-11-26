@@ -101,3 +101,11 @@ evals:
     paths: [pipeline/test-nua.json]
     expected: "exit 0; nửa A bộ test pipeline, 0 fail, không chứa collect-s06-duoi.test.mjs (tệp chỉ ở nửa B). Khai ở đây để có long_running 90 (luật R4 của GS)."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10c
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.suite.pipeline_that
+    long_running: 90
+    paths: [pipeline/collect-s06-duoi.mjs]
+    expected: "exit 0; nhánh đổi pipeline/collect-s06-duoi.mjs nên suite pipeline_that (ca dữ liệu thật trên bản chép, 27–45′) chạy; `ℹ fail 0`. Khai ở đây để có long_running 90 theo khuôn HT9 E3a (luật GS 26/11): trần mặc định 30′ ngắt lượt chấm. Bộ thu đuôi không có ca nào trong pipeline_that; eval này chỉ chứng nhánh không làm đỏ ca dữ liệu thật."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
