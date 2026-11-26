@@ -15,6 +15,8 @@
 -- `flow_s03_branch` của phiên rồi bật `oneinvest.flow_branch`. Cờ tắt (600 chạy trần) → khối KHÔNG có ba khoá nhánh, giống
 -- hệt khối trước DF6 (trang đọc khoá vắng thành null — normalizeFacts).
 -- «Đọc được» thắng mọi nhánh: bài trong post_ids của tin không bao giờ vào nhánh mới.
+-- YC0 (`bang-yeu-cau-noi-lai`): DB đã áp 136 thì nhánh «yeu-cau» của bảng tạm là bài trong view sống `inquiries` (không gồm bài
+-- chờ duyệt) — bộ chạy đọc bảng thật (nhanh-bai-s03.mjs `baiYeuCauSong`); chưa áp 136 thì vẫn tính lại bằng luật.
 -- SM1 (`so-so-tren-man-theo-ngay`): mỗi ngày VN một dòng `dq_check_results` (`check_name = 's03-moc-ngay'`), xoá rồi ghi trong CÙNG câu
 -- lệnh dựng snapshot nên số mốc và số của màn chặng đọc cùng một ảnh dữ liệu. Bảng chỉ có khoá `id`: khoá advisory của giao dịch giữ
 -- «một dòng mỗi ngày» khi hai lượt chạy đồng thời. `facts.milestones` chở 30 ngày gần nhất, tăng dần theo ngày.

@@ -3,6 +3,8 @@
 //   - `anh-da-ghep`  bài chỉ-ảnh mà PL28 gán vào một tin S03 (`baiAnhCuaTin` của transform-media.mjs);
 //   - `anh-chua-ghep` bài chỉ-ảnh còn lại (`laChiAnh` của lib/gop-anh.mjs);
 //   - `yeu-cau`      bài có chữ, parsePost không ra loại và `laYeuCau` đúng — đúng nhánh `yeu-cau` của suyLoai.
+// YC0 (bang-yeu-cau-noi-lai): DB đã áp 136 thì nhánh `yeu-cau` là bài trong view sống `inquiries` (luật hay người nhận — không
+// gồm bài chờ duyệt chỉ nhãn model), đọc từ bảng thật thay vì tính lại bằng luật; chưa áp 136 thì giữ đường tính lại cũ.
 // Bài khác không có dòng. «Đọc được» (bài trong post_ids của tin) do 600 tự đếm và THẮNG mọi nhánh ở đây, nên tin đọc từ
 // lượt transform cũ vẫn là tin. Kết quả nạp vào bảng TẠM `flow_s03_branch` của phiên và bật `oneinvest.flow_branch`;
 // 600 chạy trên cùng phiên đọc bảng ấy (bộ chạy: refresh-data-flow.mjs). Chỉ đọc bảng thật.
@@ -35,12 +37,29 @@ export async function tinhNhanhBai(c) {
   const daGhep = new Set();
   for (const rows of (await baiAnhCuaTin(c)).values()) for (const r of rows) daGhep.add(r.post_id);
   const { posts } = await loadStgPosts(c, "zalo");
+  const yeuCau = await baiYeuCauSong(c);
   const out = new Map();
   for (const p of posts) {
-    const n = nhanhCuaBai(p, daGhep);
+    let n = nhanhCuaBai(p, daGhep);
+    if (yeuCau) {
+      if (n === NHANH.yeuCau) n = null;
+      if (!n && yeuCau.has(p.post_id)) n = NHANH.yeuCau;
+    }
     if (n) out.set(p.post_id, n);
   }
   return out;
+}
+
+/**
+ * post_id các bài Yêu cầu sống (view `inquiries`, nguồn S03) khi DB đã áp 136; chưa áp → null (giữ đường tính lại bằng luật).
+ * @param {import("pg").Client} c
+ * @returns {Promise<Set<string>|null>}
+ */
+export async function baiYeuCauSong(c) {
+  const { rows: [r] } = await c.query("SELECT to_regclass('inquiries') IS NOT NULL AS co");
+  if (!r.co) return null;
+  const { rows } = await c.query("SELECT originating_system_key AS post_id FROM inquiries WHERE source = 'S03'");
+  return new Set(rows.map((x) => x.post_id));
 }
 
 const LO = 20000;
