@@ -32,3 +32,11 @@ evals:
     expected: "exit 0; 'tep doi:' chỉ liệt pipeline/scripts/do-hang-ngay.test.mjs, _acceptance/config.yaml, tệp của hồ sơ này và bản đồ máy sinh; dòng cuối 'PHAM-VI OK'"
     paths: ["pipeline/scripts/do-hang-ngay.test.mjs", "_acceptance/do1-ac9-xanh-lai-sau-so-nguon-122/probes/pham-vi.sh"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.suite.pipeline_that
+    long_running: 90
+    paths: ["pipeline/scripts/do-hang-ngay.test.mjs"]
+    expected: "exit 0; nhánh đổi pipeline/scripts/do-hang-ngay.test.mjs nên suite pipeline_that (ca dữ liệu thật trên bản chép) chạy; ca 'DO1-AC-9 detail …' nằm trong suite và qua; `ℹ fail 0`. Khai ở đây để có long_running 90 theo khuôn HT9 E3a (luật GS 26/11; vòng 2 BLOCKED vì trần 30′)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
