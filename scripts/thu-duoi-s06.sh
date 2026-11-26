@@ -94,7 +94,7 @@ for CITY in $CITIES; do
   SNAP="$(cd "$ROOT/pipeline" && node --input-type=module -e '
     import pg from "pg";
     import { readdirSync } from "node:fs";
-    const [city, goc] = process.argv.slice(2);
+    const [city, goc] = process.argv.slice(1); // với -e: argv = [node, <đối số>…] — slice(2) mất đối số đầu
     const muc = `${goc}/snapshots/${city}`;
     let tatCa;
     try { tatCa = readdirSync(muc).filter((n) => n.startsWith(`${city}__chotot-ads__`)).sort().reverse(); }
@@ -103,7 +103,10 @@ for CITY in $CITIES; do
     const c = new pg.Client({ connectionString: process.env.DATABASE_URL });
     try {
       await c.connect();
-      const co = await c.query("SELECT snapshot_id FROM stg_chotot_ads WHERE snapshot_id = ANY($1)", [tatCa]);
+      // SỔ NẠP BỀN (2611-21): import ghi airbnb_snapshots cho MỌI snapshot đã nạp và KHÔNG bao giờ
+      // bị lượt sau đè (upsert stg theo list_id ghi đè snapshot_id về bản mới hơn) — soát theo stg thì
+      // snapshot đuôi sau lượt quét đủ trông như chưa nạp và bị nạp lại mỗi vòng.
+      const co = await c.query("SELECT snapshot_id FROM airbnb_snapshots WHERE snapshot_id = ANY($1)", [tatCa]);
       await c.end();
       const daCo = new Set(co.rows.map((r) => r.snapshot_id));
       const chua = tatCa.find((id) => !daCo.has(id));
