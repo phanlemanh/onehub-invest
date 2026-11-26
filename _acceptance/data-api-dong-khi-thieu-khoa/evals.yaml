@@ -1,0 +1,80 @@
+schema_version: 1
+feature_slug: data-api-dong-khi-thieu-khoa
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.dapi_khoa
+    paths: [data-api/src/middleware/**, data-api/src/app.ts, data-api/src/routes/**, data-api/test/auth-dong.test.ts]
+    expected: "exit 0; «ℹ fail 0», «ℹ skipped 0»; ca «PB3-AC-1 môi trường đóng, khoá rỗng → 503» xanh: danh sách đường đọc từ app.routes (mọi đường bắt đầu /v1, tham số :x thay bằng giá trị mẫu), test in «PB3 đường /v1 đếm được: <N>» và assert N > 5 (đối chứng: có đường chi tiết); ma trận viết trước = 5 môi trường đóng (production, vắng, staging, development+VERCEL, test+VERCEL) × 3 dạng khoá rỗng × (N đường × 2 cách gửi header + /health + /openapi.json), số assert trạng thái = 15 × (2N + 2), test in con số đó; mỗi /v1 → 503, error.code AUTH_NOT_CONFIGURED, error.message chuỗi không rỗng; /health → 503 status misconfigured; /openapi.json → 200; bộ đếm bọc pool.query = 0 sau toàn ca. Sai → «PB3 đóng: <env>/<dạng khoá>/<đường> trả <mã>, mong <mã>»; có truy vấn → «PB3 đóng mà vẫn truy vấn DB: <n>». Đối chứng trong cùng ca: bộ đếm truy vấn phải > 0 khi gọi /v1/markets ở môi trường mở (bộ đếm sống)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.dapi_khoa
+    paths: [data-api/src/middleware/**, data-api/test/auth-dong.test.ts]
+    expected: "exit 0; ca «PB3-AC-2 môi trường mở, khoá rỗng → mở như cũ» xanh: NODE_ENV development và test (không VERCEL), khoá rỗng, /v1/markets không header → 200. Sai → «PB3 mở: <env> trả <mã>, mong 200»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.dapi_khoa
+    paths: [data-api/src/middleware/**, data-api/test/auth-dong.test.ts]
+    expected: "exit 0; ca «PB3-AC-3 có khoá → xác thực như cũ» xanh ở cả production và development: /v1/markets không header 401 UNAUTHORIZED, khoá sai 401, Bearer khoá một 200, X-API-Key khoá hai 200; /health và /openapi.json không header 200. Sai → «PB3 có khoá: <env>/<cách gửi> trả <mã>, mong <mã>»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.dapi_khoa
+    paths: [data-api/src/middleware/**, data-api/test/auth-dong.test.ts]
+    expected: "exit 0; ca «PB3-AC-4 đọc biến ở mỗi lời gọi» xanh: production, khoá rỗng → 503; đặt khoá → không header 401; xoá khoá → 503, trong cùng tiến trình, không nạp lại module. Sai → «PB3 chốt biến lúc nạp: bước <i> trả <mã>, mong <mã>»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.dapi_khoa
+    paths: [data-api/src/index.ts, data-api/src/middleware/**, data-api/test/auth-dong.test.ts]
+    expected: "exit 0; ca «PB3-AC-5 index.ts không khởi động khi thiếu khoá» xanh: tiến trình con node --import tsx src/index.ts, PORT là cổng trống tìm bằng net; production khoá rỗng và NODE_ENV vắng khoá rỗng → mỗi ca thoát mã ≠ 0 trong 10 giây, stderr chứa NGUYÊN câu của hằng thông điệp xuất từ auth.ts (test nạp module bằng import động và đọc hằng; module không có hằng → ca đỏ «PB3 thiếu hằng thông điệp», tệp test vẫn nạp được), kết nối TCP tới cổng bị từ chối; đối chứng: production có khoá và development không khoá → /health 200 qua HTTP thật trong 10 giây, rồi tiến trình bị dừng. Sai → «PB3 khởi động: <ca> <điều sai>»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.dapi_khoa
+    paths: [data-api/src/index.ts, data-api/src/middleware/**, data-api/test/auth-dong.test.ts]
+    expected: "exit 0; ca «PB3-AC-6 không lộ giá trị khoá» xanh: khoá cấy CANH-KHOA-PB3-<ngẫu nhiên> có mặt trong env ở mọi lời gọi và tiến trình con của ca AC-3, AC-5, và một ca production khoá rỗng nhưng biến khoá phụ khác mang chuỗi canh; gom mọi thân trả về, stdout, stderr → không chứa chuỗi canh. Lộ → «PB3 lộ giá trị khoá ở <nơi>». Đối chứng trong cùng ca: bộ dò phải bắt chuỗi canh khi cấy nó vào một thân giả."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.dapi_khoa_pha
+    paths: [data-api/src/middleware/**, data-api/src/index.ts, data-api/test/auth-dong.test.ts, _acceptance/data-api-dong-khi-thieu-khoa/probes/pha.mjs]
+    expected: "exit 0; probe chép data-api/ (trừ node_modules, nối lại bằng symlink) vào thư mục tạm, thay src/middleware/auth.ts và src/index.ts bằng bản ở git merge-base HEAD origin/main, chạy cùng lệnh test của E1 trên bản sao trong DB thử → trước hết đầu ra phải có ≥ 1 tên ca «PB3-AC-» (tệp test nạp được; không có → thoát 1 «pha: bản sao không nạp được tệp test»), test PHẢI thoát ≠ 0 và tập ca đỏ gồm «PB3-AC-1», «PB3-AC-4», «PB3-AC-5»; in «pha: bản cũ đỏ ở <danh sách ca đỏ thật>»; rồi chạy trên cây thật → thoát 0, in «pha: cây thật xanh». Bản cũ xanh hay thiếu ca ghim → thoát 1 «pha: thước không đỏ ở <ca>»; thư mục tạm xoá cuối lượt kể cả khi lỗi."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.dapi_khoa_pham_vi
+    paths: [_acceptance/data-api-dong-khi-thieu-khoa/probes/pham-vi.mjs, data-api/**, _acceptance/config.yaml]
+    expected: "exit 0; «pham-vi: <n> tệp đổi, đều trong ranh giới; package.json chỉ đổi scripts.dev; dong-ba-route.test.ts chỉ thêm 1 dòng NODE_ENV; soát <k> tên nguồn thật trên toàn văn <j> tệp data-api/ nhánh đổi (cây có <m> tệp), 0 khớp ngoài dạng định danh» (không in tên), kèm một dòng «tồn đọng: …» đếm theo mã S0x các tệp data-api/ nhánh không đổi có tên từ trước (không đỏ); nền là merge-base với origin/main, hoặc đỉnh HT19 0d48dfcb0 khi HT19 chưa vào origin/main. Chiều đỏ cùng lượt: pha-tep (cấy data-api/Dockerfile vào danh sách tệp) → «AC-8 NGOÀI PHẠM VI: data-api/Dockerfile»; pha-lock (cấy data-api/package-lock.json) → «AC-8 NGOÀI PHẠM VI: data-api/package-lock.json»; pha-ht19 (cấy thêm một dòng khác vào diff test HT19) → «AC-8 test HT19 đổi ngoài một dòng NODE_ENV»; pha-ten (tên trần vào bản chép tạm một tệp data-api nhánh đổi) → «AC-8 tên nguồn thật: S0x»; pha-pkg (đổi script khác dev) → bị bắt; pha-config (khoá ngoài dapi_khoa*) → «AC-8 NGOÀI PHẠM VI: _acceptance/config.yaml khoá <khoá>». Ô không đỏ → thoát 1."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.data_api
+    paths: [data-api/src/**, data-api/test/**]
+    expected: "exit 0 — npm run typecheck trong data-api/ không lỗi."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.dapi_khoa_toan
+    paths: [data-api/src/**, data-api/test/**]
+    expected: "exit 0; «ℹ fail 0», «ℹ skipped 0»; lệnh chạy mọi tệp data-api/test/*.test.ts trong một lượt trên DB thử, đầu ra có tên ca của cả auth-dong.test.ts («PB3-AC-») và dong-ba-route.test.ts (HT19) — thiếu tên ca của một tệp là đỏ khi người chấm đọc; một ca HT19 đỏ vì 503 nghĩa là dòng NODE_ENV chưa đủ."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-9
+    executor: judgment
+    inputs: [data-api/README.md, data-api/.env.example, data-api/docker-compose.yml, data-api/CLAUDE.md, _acceptance/data-api-dong-khi-thieu-khoa/design.md]
+    question: "Đọc data-api/README.md, data-api/.env.example, data-api/docker-compose.yml và data-api/CLAUDE.md, đối chiếu bảng design.md §2. (1) README (bảng biến môi trường và mục Authentication) và .env.example nói: chỉ NODE_ENV development hoặc test (không trên Vercel) mới chạy được khi không có khoá; mọi nơi khác thiếu khoá thì đường dữ liệu trả 503 AUTH_NOT_CONFIGURED và bản Node không khởi động? (2) docker-compose.yml truyền DATA_API_KEYS cho dịch vụ api ở dạng bắt buộc ${DATA_API_KEYS:?…}? (3) CLAUDE.md mô tả auth.ts theo luật mới? (4) Không tệp nào trong bốn tệp còn câu nói khoá trống là tắt xác thực vô điều kiện? PASS khi cả bốn vế đạt."
+    expected: "PASS — cả bốn vế đạt"
+    evidence_required: [run_id, verdict, judges, rationale]

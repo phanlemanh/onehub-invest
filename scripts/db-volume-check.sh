@@ -182,7 +182,7 @@ td_compose_up() { # $1 project, $2 tệp compose, $3 container
 td_dung_cu() { # cụm kiểu cũ + dữ liệu mồi
   mkdir -p "$TD_TMP/cu"
   git -C "$ROOT" show "$TD_CU_REF:db/docker-compose.yml" \
-    | sed -e "s/container_name: one-invest-db/container_name: $TD_DB/" -e "s/\"5433:5432\"/\"$TD_PORT:5432\"/" > "$TD_TMP/cu/docker-compose.yml" \
+    | sed -e "s/container_name: one-invest-db/container_name: $TD_DB/" -e "s/5433:5432/$TD_PORT:5432/" > "$TD_TMP/cu/docker-compose.yml" \
     || { fail "không đọc được compose cũ ở $TD_CU_REF"; return 1; }
   grep -q '/var/lib/postgresql/data' "$TD_TMP/cu/docker-compose.yml" || { fail "compose ở $TD_CU_REF không phải kiểu cũ"; return 1; }
   td_compose_up onehub-tapduot-cu "$TD_TMP/cu/docker-compose.yml" "$TD_DB" || { fail "không dựng được $TD_DB"; return 1; }
@@ -249,7 +249,7 @@ td_id() { docker inspect -f '{{.Id}}' "$1" 2>/dev/null; }
 td_chuan_bi_moi() { # compose mới (bản của cây) đổi sang tên tập dượt + bản chép plist launchd
   mkdir -p "$TD_TMP/moi" "$TD_TMP/plist"
   sed -e 's/^name: onehub-db$/name: onehub-tapduot-moi/' -e "s/container_name: one-invest-db/container_name: $TD_DB/" \
-      -e "s/\"5433:5432\"/\"$TD_PORT:5432\"/" -e 's/name: onehub_pgdata$/name: onehub_tapduot_moi/' "$COMPOSE" > "$TD_TMP/moi/docker-compose.yml"
+      -e "s/5433:5432/$TD_PORT:5432/" -e 's/name: onehub_pgdata$/name: onehub_tapduot_moi/' "$COMPOSE" > "$TD_TMP/moi/docker-compose.yml"
   for x in 'name: onehub-tapduot-moi' "container_name: $TD_DB" "$TD_PORT:5432" 'name: onehub_tapduot_moi'; do
     grep -qF "$x" "$TD_TMP/moi/docker-compose.yml" || { fail "compose tập dượt thiếu «$x» — sed không khớp compose của cây"; return 1; }
   done

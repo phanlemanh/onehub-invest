@@ -49,6 +49,10 @@ export function inBaoCao(b: BangBaoCao): string {
     `Đề xuất: ${b.so_de_xuat} · lệch trên thẻ: ${b.lech_tren_the} · ô đã có (observed): ${b.o_da_co}`,
     `Thẻ đủ hai kết quả / thẻ chờ còn đề xuất: ${t.the_du}/${t.so_the}`,
     `Lời gọi mới ${t.goi_moi} (lỗi ${t.loi_goi}), dùng lại ${t.dung_lai} · token vào ${t.vao}, ra ${t.ra} · chi phí ${t.usd.toFixed(4)} USD${t.dung_vi_tran ? " · DỪNG VÌ TRẦN" : ""}`,
+    ...(t.dung_vi_tran
+      ? [`DỪNG VÌ TRẦN ${t.tran_usd} USD trước lời gọi có thể vượt: thẻ đủ hai kết quả ${t.the_du}/${t.so_the}, còn ${t.the_cho} thẻ chưa đủ, đã chi ${t.usd.toFixed(4)} USD — thiếu thẻ ở lượt này là do trần, không phải lỗi đọc`]
+      : []),
+    `Lỗi theo lý do: ${Object.entries(t.loi_theo_ly_do ?? {}).map(([k, n]) => `${k} ${n}`).join(" · ") || "không"}`,
     `Bỏ qua: ${t.bo_qua.length} thẻ (${t.bo_qua.map((x) => `${x.review_id}:${x.ly_do}`).join(", ") || "không"})`,
   ].join("\n");
 }
