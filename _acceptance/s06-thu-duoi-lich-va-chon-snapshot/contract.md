@@ -120,6 +120,8 @@ PL38 nối transform, resolve, sync-cloud theo nhịp. Hồ sơ này chỉ bảo
   plist; plist mẫu chưa có khối `EnvironmentVariables`, thêm khi cài nếu đặt biến. Probe thêm năm dòng cho luật lần hai; chạy
   thử Mac mini bản chép chỉ-đọc: đầu nhánh `CHON-NAP OK`, đối chứng wrapper `fc3fa4a7a` `CHON-NAP DO (2 ca)` («KHONG DUNG
   HAN», «GOI NGUON KHI DUNG HAN»).
+  Lượt M5 @d7c24b0a0 (`evidence/m5-e5-d7c24b0a0.txt`, commit 2c079ffe0): đầu nhánh `CHON-NAP OK`, đủ năm dòng luật lần
+  hai; đối chứng 7173fc21a `CHON-NAP DO (14 ca)`; đối chứng wrapper fc3fa4a7a `CHON-NAP DO (2 ca)`, đúng hai ca luật lần hai.
 - Test `scripts/thu-duoi-s06.test.mjs` của ZCode không giả `pgrep`: chạy trong lúc lượt quét đủ `chotot-daily.sh` đang chạy
   trên máy thu (05:30, 14:00) thì wrapper nhường lượt và 16/26 ca đỏ (đo 27/11 05:46 giờ VN). Lỗi test của làn thu, đã báo GS.
 - E5 chạy trên M5 (lời GS 27/11), hai lượt xanh/đối chứng đỏ: cách dựng ở `probes/E5-CHAY-TREN-M5.md`.
