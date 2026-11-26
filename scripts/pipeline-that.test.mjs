@@ -15,7 +15,7 @@ const THAT = path.join(ROOT, "pipeline/chay-that.mjs");
 const DS = JSON.parse(readFileSync(path.join(ROOT, "scripts/ci-bo-qua.json"), "utf8")).pipeline;
 const TEN_THAT = DS.map((m) => m.ca).sort();
 // node --test lồng trong một ca test thấy NODE_TEST_CONTEXT của bộ chạy ngoài và in dạng giao thức nội bộ — bỏ biến ấy.
-const ENV = { ...process.env };
+const ENV = { ...process.env, ONEHUB_HAI_MAY_TEP: "/khong-co/hai-may.env" }; // vai máy thu (HT33): ca này đo tập đủ, máy nào cũng vậy
 delete ENV.NODE_TEST_CONTEXT;
 
 /** Tên ca trong các mẫu `--test-skip-pattern="^…$"` mà chuẩn-CI truyền qua NODE_OPTIONS. */
@@ -26,7 +26,7 @@ test("tập bỏ qua của chuẩn-CI = tập chạy của pipeline_that = 34 m�
   // 30 mục lúc duyệt + 4 ca CI bỏ qua ngầm (thiếu DATABASE_URL) thêm ở S4 r1 của hồ sơ db-thu-tach-khoi-cum-that
   assert.equal(TEN_THAT.length, 34);
   assert.deepEqual(tenBoQua(nodeOptions(DS, true)), TEN_THAT);
-  const r = spawnSync(process.execPath, [THAT, "--liet"], { encoding: "utf8" });
+  const r = spawnSync(process.execPath, [THAT, "--liet"], { encoding: "utf8", env: ENV });
   assert.equal(r.status, 0, r.stderr);
   const dong = r.stdout.split("\n").filter(Boolean);
   const chay = dong.filter((l) => !l.startsWith("pipeline/")).sort();
@@ -41,7 +41,7 @@ test("chiều đỏ: danh sách thêm một ca không có trong tệp → chay-t
   const d = mkdtempSync(path.join(tmpdir(), "pt-lech-"));
   const ds = path.join(d, "ci-bo-qua.json");
   writeFileSync(ds, JSON.stringify({ pipeline: [...DS, { tep: DS[0].tep, ca: "CA-MA không tồn tại", ly_do: "thử" }] }));
-  const r = spawnSync(process.execPath, [THAT, "--danh-sach", ds, "--liet"], { encoding: "utf8" });
+  const r = spawnSync(process.execPath, [THAT, "--danh-sach", ds, "--liet"], { encoding: "utf8", env: ENV });
   assert.notEqual(r.status, 0);
   assert.match(r.stderr, /không còn ca «CA-MA không tồn tại»/);
 });
