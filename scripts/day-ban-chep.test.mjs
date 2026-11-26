@@ -7,7 +7,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { createHash, randomBytes } from "node:crypto";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, utimesSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, utimesSync, writeFileSync, rmSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -186,8 +186,28 @@ for (const [ten, rel, mau] of TEP_CAM) {
 }
 
 // ───────── BCM-9 (E9, AC-9): địa chỉ cầu cố định, không rơi mạng khác ─────────
-const CO_CAU_HINH = existsSync(CAU_HINH);
-test("BCM-9: địa chỉ đích đọc từ ~/.config/onehub/hai-may.env và nằm trên giao diện cầu (route get)", { skip: !CO_CAU_HINH && "máy không có ~/.config/onehub/hai-may.env (CI)" }, () => {
+// Chỉ chạy BCM-9 trên máy thu: M5 cũng có hai-may.env nhưng VAI=may-phat-trien (bước cài HT25 ghi), không có địa chỉ cầu
+// của phía đẩy — xét VAI thay vì tệp tồn tại (M5X soát 26/11: hai ca đỏ nền trên M5).
+function lyDoBoQuaBcm9(tep = CAU_HINH) {
+  if (!existsSync(tep)) return "máy không có ~/.config/onehub/hai-may.env (CI)";
+  const { cfg } = docCauHinh(tep);
+  if (cfg?.VAI !== "may-thu") return `hai-may.env có nhưng VAI=${cfg?.VAI ?? "(trống)"} — BCM-9 chỉ chạy ở máy thu`;
+  return false;
+}
+const BO_QUA_BCM9 = lyDoBoQuaBcm9();
+if (BO_QUA_BCM9) console.log(`# BCM-9 bỏ qua: ${BO_QUA_BCM9}`);
+test("BCM-9: điều kiện chạy xét VAI — tệp có mà VAI=may-phat-trien thì bỏ qua có lý do; VAI=may-thu thì chạy; không tệp thì bỏ qua (CI)", () => {
+  const d = mkdtempSync(path.join(os.tmpdir(), "bcm9-vai-"));
+  try {
+    const f = path.join(d, "hai-may.env");
+    assert.match(lyDoBoQuaBcm9(f), /\(CI\)/);
+    writeFileSync(f, "VAI=may-phat-trien\n");
+    assert.match(lyDoBoQuaBcm9(f), /VAI=may-phat-trien — BCM-9 chỉ chạy ở máy thu/);
+    writeFileSync(f, "VAI=may-thu\nM5_DIA_CHI=x\n");
+    assert.equal(lyDoBoQuaBcm9(f), false);
+  } finally { rmSync(d, { recursive: true, force: true }); }
+});
+test("BCM-9: địa chỉ đích đọc từ ~/.config/onehub/hai-may.env và nằm trên giao diện cầu (route get)", { skip: BO_QUA_BCM9 }, () => {
   const { cfg, loi } = docCauHinh();
   assert.equal(loi, undefined);
   assert.equal(loiCauHinhDay(cfg), null);
@@ -237,7 +257,7 @@ test("BCM-9: cấu hình đọc không thực thi tệp, $HOME/~ về thư mục
   assert.match(docCauHinh(path.join(d, "khong-co")).loi, /hai-may\.env/);
 });
 
-test("BCM-9: scripts/ không chứa địa chỉ cầu hay tên máy phát triển (giá trị đọc từ cấu hình riêng máy)", { skip: !CO_CAU_HINH && "máy không có ~/.config/onehub/hai-may.env (CI)" }, () => {
+test("BCM-9: scripts/ không chứa địa chỉ cầu hay tên máy phát triển (giá trị đọc từ cấu hình riêng máy)", { skip: BO_QUA_BCM9 }, () => {
   const { cfg } = docCauHinh();
   const gt = [cfg.M5_DIA_CHI, cfg.CAU_MAY_NAY, cfg.M5_TEN_MAY].filter(Boolean);
   assert.ok(gt.length >= 2);
