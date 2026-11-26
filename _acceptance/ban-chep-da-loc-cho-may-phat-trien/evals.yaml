@@ -98,7 +98,7 @@ evals:
     cmd: config:executors.suite.pipeline_a
     long_running: 90
     paths: [pipeline/lib/che-ten-nguon-gia-tri.mjs, pipeline/lib/che-ten-nguon-gia-tri.test.mjs]
-    expected: "exit 0; nửa A bộ test pipeline (suite của lượt chấm, khai ở đây chỉ để có long_running 90 — trên Mac mini nửa A ~41′, vượt trần chờ 30′ mặc định; S4 r1 BLOCKED vì thế), 0 fail."
+    expected: "exit 0; nửa A bộ test pipeline (suite của lượt chấm, khai ở đây chỉ để có long_running 90 — sau HT9 chạy trên cụm PostGIS dùng một lần ~5′; giữ trần 90 phòng máy đông), 0 fail."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E13
     criterion: AC-1
@@ -107,4 +107,12 @@ evals:
     long_running: 90
     paths: [pipeline/lib/che-ten-nguon-gia-tri.mjs, pipeline/lib/che-ten-nguon-gia-tri.test.mjs]
     expected: "exit 0; nửa B bộ test pipeline (suite của lượt chấm, khai ở đây chỉ để có long_running 90), 0 fail."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E15
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.suite.pipeline_that
+    long_running: 60
+    paths: [pipeline/lib/che-ten-nguon-gia-tri.mjs, pipeline/lib/che-ten-nguon-gia-tri.test.mjs]
+    expected: "exit 0; 30 ca pipeline dữ liệu thật (HT9 pipeline_that, kích vì nhánh đổi pipeline/lib/che-ten-nguon-gia-tri.mjs) trên bản chép DB máy thu, 0 fail; khai để có long_running 60."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
