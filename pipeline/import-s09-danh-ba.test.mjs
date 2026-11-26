@@ -311,6 +311,10 @@ test("script-con: chạy qua process.execPath với *_NODE_BIN quy ước GS (20
   const client = new pg.Client({ connectionString: DB_URL, connectionTimeoutMillis: 2000 });
   try { await client.connect(); } catch { t.skip("DB của lượt không chạy"); return; }
   await client.end();
+  // Bộ nạp chỉ nhận DB thử ^oneinvest_suite_ (rào giữ DB máy thu). CI và M5 chạy trên Postgres riêng tên «oneinvest» không qua
+  // db-thu → ca này không có DB hợp lệ cho script con: bỏ qua có lý do, chạy thật qua db/db-thu.sh … --chay.
+  const tenDb = new URL(DB_URL).pathname.replace(/^\//, "");
+  if (!/^oneinvest_suite_[a-z0-9_]+$/.test(tenDb)) { t.skip(`DB '${tenDb}' không phải oneinvest_suite_* — chạy qua db/db-thu.sh`); return; }
   const { thuMuc } = taoSnapshot([[it2]]);
   try {
     const r = await new Promise((resolve) => {
