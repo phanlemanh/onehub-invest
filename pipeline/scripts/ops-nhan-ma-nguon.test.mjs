@@ -99,11 +99,11 @@ function mutantCopy(file, fn) {
 }
 
 describe("ON7-AC-4 payload facts", () => {
-  test("ON7-AC-4 push-ops-facts thật → payload bắt được: 6 job, 0 tên nguồn thật trong MỌI giá trị chuỗi (trừ zaloGroups[].name và zaloAccounts[]), id trung tính, dòng log cuối mang mã S0x", async () => {
+  test("ON7-AC-4 push-ops-facts thật → payload bắt được: 5 job (hàng kev gỡ ở KEV2), 0 tên nguồn thật trong MỌI giá trị chuỗi (trừ zaloGroups[].name và zaloAccounts[]), id trung tính, dòng log cuối mang mã S0x", async () => {
     const r = await captureOpsFacts({ logs: LOGS() });
     assert.equal(r.code, 0, r.stderr.slice(0, 800));
     assert.ok(r.payload, "máy chủ thu không nhận được payload");
-    assert.equal(r.payload.jobs.length, 6, "payload phải đủ 6 job");
+    assert.equal(r.payload.jobs.length, 5, "payload phải đủ 5 job");
     assert.deepEqual(payloadLeaks(r.payload, ENTRIES, EXEMPT), [], "payload còn tên nguồn thật");
     const byId = Object.fromEntries(r.payload.jobs.map((j) => [j.id, j]));
     assert.deepEqual(Object.keys(byId).sort(), ["cloud-sync", "collector-api", "s01-smoke", "s01-weekly", "s02-daily"]);

@@ -796,6 +796,10 @@ cổng Ops nằm ở dòng `_Avoid_` để thước chữ hiển thị giữ nó
 - Code: `cloud` · RESO: —
 _Avoid_: bản cloud, lên cloud
 
+**Hook Zalo**: Bộ nhận tin trong OpenClaw đẩy mỗi tin nhóm S03 vào cổng nhận tin :9210; phễu trên trang Thu thập đếm tin nó thấy, tin đẩy được và tin vào bảng thô (KEV2).
+- Code: `hook (oneinvest-zalo-pipe)` · RESO: —
+_Avoid_: cổng Kev
+
 **Tác vụ**: Một việc launchd chạy theo lịch hoặc chạy liên tục trên máy thu (thu S02 hằng ngày, thu S01 hằng tuần, cổng nhận tin…).
 - Code: `job (JobStatus)` · RESO: —
 _Avoid_: Job

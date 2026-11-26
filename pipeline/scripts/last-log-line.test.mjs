@@ -61,7 +61,7 @@ describe("LD-AC-6 dòng log cuối có nghĩa", () => {
     assert.match(src, /import \{[^}]*\btailLog\b[^}]*\} from "\.\/lib\/last-log-line\.mjs"/);
     assert.doesNotMatch(src, /function tailFile\b/);
     assert.doesNotMatch(src, /lines\.at\(-1\)/);
-    const jobs = src.slice(src.indexOf("async function scheduler()"), src.indexOf("// ---- 3."));
+    const jobs = src.slice(src.indexOf("async function scheduler("), src.indexOf("// ---- 3."));
     assert.equal((jobs.match(/tailLog\(/g) ?? []).length, 5, "năm job đọc log trong scheduler() đều qua tailLog");
   });
 

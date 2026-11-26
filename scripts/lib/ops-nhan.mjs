@@ -43,7 +43,7 @@ export function boldAsciiWords(contextMd) {
 }
 
 /** Danh sách giữ viết trước (design doc §2.2c): viết tắt và tên riêng. */
-export const KEEP_EN = new Set(["slo", "kpi", "qr", "pn", "wc", "vn", "ai", "tr", "url", "api", "gmt", "alt", "zalo", "facebook", "openclaw", "kev", "ops"])
+export const KEEP_EN = new Set(["slo", "kpi", "qr", "pn", "wc", "vn", "ai", "tr", "url", "api", "gmt", "alt", "zalo", "facebook", "openclaw", "kev", "hook", "ops"])
 
 const DAU = "(?:b|c|ch|d|g|gh|gi|h|k|kh|l|m|n|ng|ngh|nh|p|ph|qu|r|s|t|th|tr|v|x)"
 const VAN =
