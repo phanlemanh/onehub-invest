@@ -8,7 +8,7 @@ public `onehub-data-api`. Mọi thứ trong thư mục này coi như công khai.
 ```
 src/app.ts            mount /v1/markets, /v1/listings, /v1/deals, /v1/asset-stats, /v1/coverage
 src/routes/*.ts       mỗi nhóm một file
-src/middleware/       auth.ts (Bearer, DATA_API_KEYS; trống = tắt auth khi dev), error-handler.ts
+src/middleware/       auth.ts (Bearer/X-API-Key, DATA_API_KEYS; đóng mặc định — khoá trống chỉ mở khi NODE_ENV=development|test và không VERCEL, nơi khác 503 AUTH_NOT_CONFIGURED và index.ts không khởi động), error-handler.ts
 src/db/client.ts      pg pool từ DATABASE_URL
 seed.sql, db/         dữ liệu mẫu cho người dùng repo public
 ```
