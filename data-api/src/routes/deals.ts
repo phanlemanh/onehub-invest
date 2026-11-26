@@ -25,6 +25,8 @@ export async function coBangHang(): Promise<boolean> {
  * Query: ?area=<area_id>&market=<market_id>&limit=30&min_discount=5&kind=sale|rent_lt&project=<id nút dự án>
  * CG10 (gia-tot-cap-du-an): `project` (chỉ chữ số, sai khuôn → 400) giữ tin xếp hạng cấp dự án của đúng nút đó; khối `rank` thêm
  * `node` (id nút của nhóm: area_id hay asset_nodes.id). Chưa có bảng hạng thì không có cấp dự án → `project` trả danh sách rỗng.
+ * HT19: không đọc bảng bài thô (`stg_*`) và không trả tên nhóm, tên người gửi, chữ bài, ảnh của bài S03 — các thứ đó chỉ hiện ở
+ * cổng Ops (luật 6). Hai khoá `contact`, `postText` đã gỡ hẳn khỏi phần tử.
  */
 dealsRoute.get("/", async (c) => {
   const rawKind = c.req.query("kind");
@@ -88,17 +90,10 @@ dealsRoute.get("/", async (c) => {
     `SELECT o.offer_id, o.price_vnd, o.area_m2, o.price_perm2, o.bedrooms,
             o.confidence, o.first_seen::text, o.last_seen::text, o.n_reposts,
             o.area_id, a.name AS phuong, a.parent_id AS market_id, o.property_type,
-            ${cotSo},
-            z.sender_name, z.group_name, z.media->0->>'path' AS media_path,
-            left(z.text, 200) AS post_text
+            ${cotSo}
      FROM sale_offers o
      LEFT JOIN areas a ON a.id = o.area_id
      ${thuoc}
-     LEFT JOIN LATERAL (
-       SELECT sender_name, group_name, media, text
-       FROM stg_zalo_posts z WHERE z.post_id = ANY(o.post_ids)
-       ORDER BY z.captured_at DESC LIMIT 1
-     ) z ON TRUE
      WHERE ${where}${loc}
      ORDER BY discount_pct DESC, o.offer_id
      LIMIT $${params.length}`,
@@ -121,13 +116,6 @@ dealsRoute.get("/", async (c) => {
       firstSeen: r.first_seen,
       lastSeen: r.last_seen,
       nReposts: r.n_reposts,
-      // Contact info — only available if stg data exists
-      contact: r.sender_name ? {
-        senderName: r.sender_name,
-        groupName: r.group_name,
-        mediaPath: r.media_path,
-      } : null,
-      postText: r.post_text,
       ...(coBang ? { rank: khoiHang(r) } : {}),
     })),
     meta: coBang ? { total: rows.length, minDiscount, kind } : { total: rows.length, minDiscount },
