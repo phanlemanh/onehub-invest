@@ -177,7 +177,7 @@ const KHOA_CU_APP: Record<string, string> = { offerId: "string", source: "string
   bedrooms: "object|number", phuong: "string", medianPerm2: "number|object", rulerN: "number", discountPct: "number", confidence: "string", lastSeen: "string" };
 const KHOA_CU_API: Record<string, string> = { offerId: "string", priceVnd: "number", areaM2: "number", pricePerm2: "number", bedrooms: "object|number",
   phuong: "string", marketId: "string", propertyType: "string", medianPerm2: "number|object", discountPct: "number", confidence: "string",
-  firstSeen: "string", lastSeen: "string", nReposts: "number", contact: "object", postText: "object|string" };
+  firstSeen: "string", lastSeen: "string", nReposts: "number" };
 function kiemKhoa(row: Record<string, unknown>, bo: Record<string, string>, nhan: string) {
   for (const [k, kieu] of Object.entries(bo)) {
     assert.ok(k in row, `${nhan}: thiếu trường cũ ${k}`);

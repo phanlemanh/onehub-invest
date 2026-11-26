@@ -10,8 +10,8 @@ reason: |
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: ca962f33adae04c894b8c19f57534a45f1ae2530
-human_signoff:
+verified_commit: 1d337a8ee8360e35f644bae39e69f1e49bfc5c3d
+human_signoff: Mạnh 2026-11-26
 ---
 
 # Evidence Report: street-raw-khong-mang-ten-nguon
@@ -127,3 +127,7 @@ none — không có eval nhiều lượt chạy; mọi eval deterministic.
 Round 1: E4 xanh (giữ lại ở round 2 bằng carry-forward).
 Round 2: BLOCKED hạ tầng — công cụ Bash từ chối khởi chạy lệnh bản chép (E1, E2, E3, E5) và nửa B (E7); E6 và các lệnh suite xanh. Cần chạy lại hai lệnh đó ngoài công cụ rồi verify lại.
 
+
+### Re-pin lần 1 — 2026-11-26, do ghim lại sau gộp main (HT31) trước chữ ký Cổng 2
+run_id: repin-20261126T111409Z-53342
+sha: 1d337a8ee8360e35f644bae39e69f1e49bfc5c3d · suites: 8 lệnh exit 0 · evals: 7/7 eval máy đạt kỳ vọng

@@ -1,0 +1,42 @@
+schema_version: 1
+feature_slug: do1-ac9-xanh-lai-sau-so-nguon-122
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.ht31_ca
+    long_running: 30
+    expected: "exit 0; dòng TAP 'ℹ tests 1', 'ℹ pass 1', 'ℹ fail 0', 'ℹ skipped 0'; ca '✔ DO1-AC-9 detail các dòng do1-* …' chạy trên DB oneinvest_suite_ht31 chép từ máy thu (sổ có dòng S09)"
+    paths: ["pipeline/scripts/do-hang-ngay.test.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.ht31_doi_chung
+    long_running: 45
+    expected: "exit 0; 'OK  B ban main do' (bản origin/main thoát khác 0, fail 1, có 'không chặn TEN_THAT_V'); 'OK  C go bo soat do' (bản sửa + bộ soát gỡ trên bản chép, fail 1, cùng thông điệp); dòng cuối 'DOI-CHUNG OK'"
+    paths: ["pipeline/scripts/do-hang-ngay.test.mjs", "pipeline/lib/do-hang-ngay.mjs", "_acceptance/do1-ac9-xanh-lai-sau-so-nguon-122/probes/doi-chung.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.ht31_doi_chung
+    long_running: 45
+    expected: "exit 0; 'so cua luot: xoa 1 dong S09' và 'OK  D ban sua xanh khi so khong co S09: exit 0, tests 1, pass 1, fail 0, skipped 0'; dòng cuối 'DOI-CHUNG OK'"
+    paths: ["pipeline/scripts/do-hang-ngay.test.mjs", "_acceptance/do1-ac9-xanh-lai-sau-so-nguon-122/probes/doi-chung.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.ht31_pham_vi
+    expected: "exit 0; 'tep doi:' chỉ liệt pipeline/scripts/do-hang-ngay.test.mjs, _acceptance/config.yaml, tệp của hồ sơ này và bản đồ máy sinh; dòng cuối 'PHAM-VI OK'"
+    paths: ["pipeline/scripts/do-hang-ngay.test.mjs", "_acceptance/do1-ac9-xanh-lai-sau-so-nguon-122/probes/pham-vi.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.suite.pipeline_that
+    long_running: 90
+    paths: ["pipeline/scripts/do-hang-ngay.test.mjs"]
+    expected: "exit 0; nhánh đổi pipeline/scripts/do-hang-ngay.test.mjs nên suite pipeline_that (ca dữ liệu thật trên bản chép) chạy; ca 'DO1-AC-9 detail …' nằm trong suite và qua; `ℹ fail 0`. Khai ở đây để có long_running 90 theo khuôn HT9 E3a (luật GS 26/11; vòng 2 BLOCKED vì trần 30′)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
