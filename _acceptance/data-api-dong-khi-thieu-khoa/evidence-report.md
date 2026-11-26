@@ -1,14 +1,14 @@
 ---
 schema_version: 2
 feature_slug: data-api-dong-khi-thieu-khoa
-verdict: PENDING-JUDGMENT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 53d3109cc29e9e8568c419910f7bbd274a3b6376
-human_signoff:
+human_signoff: Mạnh 2026-11-26
 ---
 
 # Evidence Report: data-api-dong-khi-thieu-khoa
@@ -141,7 +141,7 @@ máy: M5 (M5 Max 18 nhân, colima 16/96) · DB: bản đầy đủ máy thu ché
     - domain-correctness: PASS — README dòng 48 và bảng Authentication dòng 101-106 cùng .env.example dòng 7-8 nói chỉ NODE_ENV development hoặc test và không trên Vercel mới chạy được khi không có khoá; nơi khác đường dữ liệu trả 503 AUTH_NOT_CONFIGURED, /health trả misconfigured, bản Node không khởi động. docker-compose.yml dòng 30 có DATA_API_KEYS bắt buộc. CLAUDE.md dòng 11 mô tả auth.ts theo luật đóng mặc định.
     - operational-feasibility: PASS — README và .env.example nêu luật đóng mặc định khớp design.md §2; docker-compose.yml dùng DATA_API_KEYS bắt buộc; CLAUDE.md mô tả auth.ts theo luật mới; không tệp nào còn câu khoá trống là tắt xác thực.
     - spec-alignment: PASS — cả bốn vế đạt; README cùng .env.example nói đúng điều kiện chạy không khoá; docker-compose.yml truyền DATA_API_KEYS bắt buộc cho dịch vụ api; CLAUDE.md đúng luật đóng mặc định của design.md §2.
-  human_override:  # chi nguoi ghi
+  human_override: Mạnh 2026-11-26 — Đạt
 
 ### Lệnh suite (hồi quy)
 

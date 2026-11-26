@@ -5,7 +5,7 @@ slug: data-api-dong-khi-thieu-khoa
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [api, docs]
-status: verified
+status: signed-off
 design_doc: _acceptance/data-api-dong-khi-thieu-khoa/design.md
 approved_by: Mạnh
 approved_at: 2026-11-25
@@ -106,3 +106,13 @@ Không có `opportunity.md` (hàng nền an toàn, không ngưỡng UAT).
   không chạm test HT19, nhưng máy chủ trần quên đặt `NODE_ENV` vẫn mở). Chi tiết `design.md` §3.
 - Hồ sơ HT19 có eval chạy `data-api/test/dong-ba-route.test.ts`; sau khi hàng này gộp, hồ sơ HT19 có thể phải ghim lại bằng
   máy (lượt làn, không đổi kết quả) — việc của làn gộp, báo gs cùng lúc mở PR.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-26:
+  - Ngoài-1: Phép soát «không lộ khoá» chưa bắt được dòng log tự động của máy chủ trong tiến trình test (hiện dòng đó chỉ in phương thức, đường dẫn, mã trạng thái).
+  - Ngoài-2: Phép soát «không lộ khoá» bỏ sót khoá nếu sau này ai đó in nguyên đối tượng lỗi chứa khoá ra log.
+  - Ngoài-3: Phép soát «không lộ khoá» có thể bỏ sót vài dòng cuối máy chủ con in ra lúc tắt.
+  - Ngoài-4: Kênh stdout của máy chủ con chưa có đối chứng chứng minh bộ gom bắt được chữ.
+  - Ngoài-5: Ca gửi khoá đúng tới máy chủ con chỉ loại trừ 401/503, chưa ghim mã mong đợi.
+  - Ngoài-6: README công khai chưa nhắc đặt DATA_API_KEYS ở hướng dẫn Docker và PaaS, người tự cài làm theo sẽ thấy máy chủ không chạy.
+  - Ngoài-7: Probe phạm vi từng báo đỏ giả khi HT19 gộp kiểu squash — đã sửa ở 53d3109cc bằng so nội dung ba route; còn đỏ giả nếu ba route đó đổi tiếp trên main trước khi PB3 gộp.
+  - Ngoài-8: README chưa nhắc đặt DATA_API_KEYS ở hướng dẫn Docker, Vercel và khởi động nhanh (trùng Ngoài-6).
+  - Ngoài-10: Phép đo chiều đỏ nhận ca đỏ theo tên ca, chưa theo thông điệp hỏng.
