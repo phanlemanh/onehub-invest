@@ -59,6 +59,8 @@ const VUNG_THAT = [
   "db/migrations/**", "db/db-thu.sh", "db/dau-luoc-do.sql",
   "scripts/check-freshness.mjs", "scripts/lib/**", "scripts/ci-bo-qua.json", "scripts/install-collector-api.sh",
   "scripts/fixtures/launchctl-list-2026-10-23.txt", "docs/ops/runtime-map.md",
+  // pipeline/sync-cloud.mjs (HT26) nạp động phép đếm thô độc lập của bộ soát tên nguồn trên cloud.
+  "scripts/do-ten-nguon-cloud.mjs",
   "app/package.json", "package.json",
 ];
 
