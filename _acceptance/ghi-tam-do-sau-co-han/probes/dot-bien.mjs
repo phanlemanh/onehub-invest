@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // dot-bien.mjs — ghi-tam-do-sau-co-han: chạy ca của một AC trên mã thật (phải xanh), rồi trên từng bản đột biến (phải đỏ với
 // thông điệp ghim). Bản đột biến là một cây chép ở thư mục tạm NGOÀI kho (agent/src, agent/tests, cấu hình, db/migrations;
-// node_modules nối mềm) — không ghi tệp nào trong cây kho. Dùng: node dot-bien.mjs AC-n (cần DATABASE_URL cho ca DB).
+// node_modules, pipeline/, scripts/ nối mềm) — không ghi tệp nào trong cây kho. Dùng: node dot-bien.mjs AC-n (cần DATABASE_URL cho ca DB).
 import { spawnSync } from "node:child_process";
 import { cpSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -60,6 +60,8 @@ function banChep() {
   for (const d of ["agent/src", "agent/tests", "agent/config", "db/migrations"]) cpSync(join(GOC, d), join(goc, d), { recursive: true });
   for (const t of ["agent/package.json", "agent/tsconfig.json"]) cpSync(join(GOC, t), join(goc, t));
   symlinkSync(join(GOC, "agent/node_modules"), join(goc, "agent/node_modules"));
+  // agent nạp mã pipeline (eval-labels, eval-classify…) và scripts; không đột biến chúng nên nối mềm (soát M5 @b191078df).
+  for (const d of ["pipeline", "scripts"]) symlinkSync(join(GOC, d), join(goc, d));
   return goc;
 }
 function chayTest(goc) {

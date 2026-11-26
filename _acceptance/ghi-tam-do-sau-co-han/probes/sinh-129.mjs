@@ -20,7 +20,7 @@ const kiemCu = `  IF p_actor IS NULL OR p_actor !~ '^hitl:.+' THEN
     RAISE EXCEPTION 'revert_enrichment: chỉ người được hoàn tác (actor hitl:<tên>), nhận: %', p_actor;
   END IF;`;
 assert.ok(rev.includes(kiemCu), "thân 066 đổi khối kiểm actor");
-rev = rev.replace(kiemCu, `  -- 129: người (hitl:) như cũ; actor máy may:ghi-tam:<lý do> CHỈ khi mọi id thuộc một lô ghi tạm còn cờ (NB10, Hỏi-4).
+rev = rev.replace(kiemCu, () => `  -- 129: người (hitl:) như cũ; actor máy may:ghi-tam:<lý do> CHỈ khi mọi id thuộc một lô ghi tạm còn cờ (NB10, Hỏi-4).
   IF p_actor IS NULL OR NOT (
        p_actor ~ '^hitl:.+'
        OR (p_actor ~ '^may:ghi-tam:.+'
@@ -35,14 +35,17 @@ const udl087 = lay(mig("087_thang_bac_moi.sql"), "CREATE OR REPLACE FUNCTION uni
 let udl = udl087;
 const duCu = "SELECT * FROM gan g WHERE offer_core_complete(g.kind, g.property_type, g.price_vnd, g.area_m2, g.area_id)";
 assert.ok(udl.includes(duCu), "thân 087 đổi CTE du");
-udl = udl.replace(duCu, `${duCu}
+udl = udl.replace(duCu, () => `${duCu}
        -- 129 (NB10 AC-8): loại hình đến từ giá trị ghi tạm còn sống chưa phải «đã đo» — tin không làm căn lên B3–B5.
        AND NOT EXISTS (SELECT 1 FROM enrichment_proposals ep
                         WHERE ep.offer_id = g.offer_id AND ep.field = 'property_type'
                           AND ep.status = 'applied' AND ep.ghi_tam)`);
 
 const tay = readFileSync(new URL("./129-tay.sql", import.meta.url), "utf8");
-const ra = tay.replace("-- @@REVERT_ENRICHMENT@@", rev).replace("-- @@UNIT_DATA_LEVEL@@", udl);
+const ra = tay.replace("-- @@REVERT_ENRICHMENT@@", () => rev).replace("-- @@UNIT_DATA_LEVEL@@", () => udl);
+// Mỗi thân hàm phải mở và đóng bằng $$ — chuỗi thay của String.replace từng nuốt «$$» thành «$» (soát M5 @b191078df).
+assert.equal((ra.match(/AS \$\$/g) ?? []).length, (ra.match(/\$\$;/g) ?? []).length, "số AS $$ và $$; lệch");
+assert.ok(!/AS \$\n/.test(ra) && !/\$;\n/.test(ra.replace(/\$\$;/g, "")), "còn thân hàm bọc bằng một dấu $");
 assert.ok(!ra.includes("@@"), "còn chỗ giữ chưa thay");
 writeFileSync(`${goc}/db/migrations/129_ghi_tam_lo.sql`, ra);
 console.log("đã ghi 129_ghi_tam_lo.sql", ra.split("\n").length, "dòng");

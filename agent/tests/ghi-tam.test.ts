@@ -141,7 +141,7 @@ test("E3 AC-3 lượt đọc toàn bộ: giá trị tự ghi có lô <run_id>:pr
 // ---------- AC-5, AC-7 (hàm SQL mà lệnh rut-lo-ghi-tam.mjs gọi) ----------
 async function loBa(c: pg.Client, runId: string) {
   const [a, b] = [await tin(c), await tin(c, { property_type: "apartment" })];
-  await chay(c, runId, [a], llmPrompt(kq({ property_type: "townhouse", building: "LBV" })), resolveWith({ propertyType: "townhouse" }));
+  await chay(c, runId, [a], llmPrompt(kq({ property_type: "house", building: "LBV" })), resolveWith({ propertyType: "house" }));
   await chay(c, runId, [b], llmPrompt(kq({ building: "LBV" })), resolveWith());
   return { a, b };
 }
@@ -161,7 +161,7 @@ test("E5 AC-5 rút cả lô: tin và đề xuất về như trước, lô da-rut
     assert.equal(r.n, 2, "AC-5 số giá trị rút");
     assert.equal((await dongTin(c, a)).block_raw, null, "AC-5 tin A ô toà chưa về như trước");
     assert.equal((await dongTin(c, b)).block_raw, null, "AC-5 tin B ô toà chưa về như trước");
-    assert.equal((await dongTin(c, a)).property_type, "townhouse", "AC-5 rút lô toà làm đổi loại hình — rút ngoài lô");
+    assert.equal((await dongTin(c, a)).property_type, "house", "AC-5 rút lô toà làm đổi loại hình — rút ngoài lô");
     assert.deepEqual((await deXuat(c, a, "block_raw")).map((p) => p.status), ["reverted"], "AC-5 đề xuất chưa reverted");
     assert.equal((await lo(c, ma)).trang_thai, "da-rut");
     const { rows: [r2] } = await c.query(`SELECT rut_lo_ghi_tam($1, 'hitl:thu', 'thu rut', false) AS n`, [ma]);
@@ -259,10 +259,10 @@ const c1 = (o: Partial<Routed>): Routed => ({ field: "property_type", value: "ap
 test("E9 AC-9 cổng ghi tạm chỉ đổi nhánh corroborated; mọi nhánh khác của routeFields giữ nguyên", () => {
   const b = [{ slug: "lbv", name: "Lumiere Boulevard", aliases: ["lbv"] }];
   const ma: [string, Parameters<typeof routeFields>[0], string[]][] = [
-    ["fill-gap", { current: { property_type: "apartment" }, e1: { property_type: "townhouse" }, llm: { property_type: "townhouse" }, buildings: b }, []],
+    ["fill-gap", { current: { property_type: "apartment" }, e1: { property_type: "house" }, llm: { property_type: "house" }, buildings: b }, []],
     ["E1 một mình", { current: {}, e1: { property_type: "apartment" }, llm: null, buildings: b }, ["property_type:direct"]],
     ["E1=LLM", { current: {}, e1: { property_type: "apartment" }, llm: { property_type: "apartment" }, buildings: b }, ["property_type:corroborated"]],
-    ["E1≠LLM", { current: {}, e1: { property_type: "apartment" }, llm: { property_type: "townhouse" }, buildings: b }, ["property_type:review", "property_type:review"]],
+    ["E1≠LLM", { current: {}, e1: { property_type: "apartment" }, llm: { property_type: "house" }, buildings: b }, ["property_type:review", "property_type:review"]],
     ["field giữ", { current: {}, e1: { property_type: "apartment" }, llm: { property_type: "apartment" }, buildings: b, held: new Set(["property_type" as const]) }, ["property_type:review", "property_type:review"]],
     ["LLM khớp danh bạ", { current: {}, e1: {}, llm: { block_raw: "LBV" }, buildings: b }, ["block_raw:corroborated"]],
     ["LLM không căn cứ", { current: {}, e1: {}, llm: { street_raw: "Minh Khai" }, buildings: b }, ["street_raw:review"]],
