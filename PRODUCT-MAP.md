@@ -11,7 +11,7 @@ flowchart TD
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>22 việc"] --> GP{"Cổng Phạm vi"}
-  GP --> DL["Đang làm<br/>2 việc"] --> GB{"Cổng Bằng chứng"}
+  GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
   GB --> DG["Đã giao<br/>232 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>146 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
@@ -72,7 +72,6 @@ flowchart TD
 
 ## Đang làm
 
-- Bản chép DB đã lọc cho máy phát triển M5 — chỉ tập dữ liệu Invest và API công khai đọc, không tầng A, có bộ soát trên DB đích (`ban-chep-da-loc-cho-may-phat-trien`)
 - Đường lên cloud che tên nguồn ở mọi cột của mọi bảng đẩy lên và soát mọi bảng trước khi gửi — một ô bẩn không còn làm đứng cloud (`sync-cloud-che-ten-nguon-moi-cot`)
 
 ## Đã giao — chờ phiên nghiệm thu

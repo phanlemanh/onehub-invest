@@ -188,15 +188,6 @@
         "3461"
       ],
       "port": 3461
-    },
-    {
-      "name": "app-3467-ban-chep-m5",
-      "runtimeExecutable": "bash",
-      "runtimeArgs": [
-        "-c",
-        "D=$(docker exec -i -e PGPASSWORD=oneinvest one-invest-db psql -U oneinvest -h localhost -At -d postgres -c \"SELECT datname FROM pg_database WHERE datname ~ '^oneinvest_m5_[0-9]{8}$' ORDER BY datname DESC LIMIT 1\"); [ -n \"$D\" ] || { echo 'chưa có bản chép oneinvest_m5_*: chạy node scripts/ban-chep-da-loc.mjs trước'; exit 2; }; exec env DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/$D RENAME_REFCALIB=1 npm --prefix app run dev -- -p 3467"
-      ],
-      "port": 3467
     }
   ]
 }
