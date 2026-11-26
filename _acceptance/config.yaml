@@ -66,6 +66,7 @@ executors:
     s06tt_tran: "node --test _acceptance/s06-tran-trang/probes/tran-mac-dinh.test.mjs"   # s06-tran-trang E1 — trần mặc định 210, cờ --pages và CHOTOT_MAX_PAGES vẫn thắng
     s06tt_chia: "cd pipeline && node --test scripts/chia-nua.test.mjs"   # s06-tran-trang E3 — tệp test mới nằm đúng một nửa
     s06tt_region: "bash db/db-thu.sh oneinvest_suite_s06tt_region --chay node --test _acceptance/s06-tran-trang/probes/nap-thieu-region.test.mjs"   # s06-tran-trang E5 — tin thiếu region_v2 bỏ qua có đếm, không huỷ cả vùng
+    ht31_ca: "bash db/db-thu.sh oneinvest_suite_ht31 --chay node --test --test-name-pattern='^DO1-AC-9 detail' pipeline/scripts/do-hang-ngay.test.mjs"   # do1-ac9-xanh-lai-sau-so-nguon-122 E1 — ca DO1-AC-9 trên bản chép đã có S09
     agent: "cd agent && npm test"                    # agent/tests/parsers.test.ts; npm test tự chạy trên DB của riêng lượt (db/db-thu.sh --chay)
     app: "cd app && npx tsc --noEmit && npm run lint"   # app chưa có test; lint 0 lỗi (3 cảnh báo cố ý)
     data_api: "cd data-api && npm run typecheck"     # suy từ: data-api/package.json — xanh
@@ -394,6 +395,8 @@ executors:
     nk_tang_a: "node _acceptance/so-nguon-kho-khai-bao/probes/tang-a.mjs"   # so-nguon-kho-khai-bao E6 — quét tệp đổi bằng tên thật S09, S17 (tệp cục bộ hoặc sổ máy thu), chỉ in mã và số
     nk_may_thu: "node _acceptance/so-nguon-kho-khai-bao/probes/may-thu.mjs"   # so-nguon-kho-khai-bao E7 — đo sau áp trên DB máy thu, chỉ đọc
     nk_pham_vi: "bash _acceptance/so-nguon-kho-khai-bao/probes/pham-vi.sh"   # so-nguon-kho-khai-bao E8 — tệp đổi chỉ trong vùng của hàng
+    ht31_doi_chung: "bash db/db-thu.sh oneinvest_suite_ht31dc --chay node _acceptance/do1-ac9-xanh-lai-sau-so-nguon-122/probes/doi-chung.mjs"   # do1-ac9-xanh-lai-sau-so-nguon-122 E2, E3 — bản main đỏ, gỡ bộ soát đỏ, sổ không S09 xanh
+    ht31_pham_vi: "bash _acceptance/do1-ac9-xanh-lai-sau-so-nguon-122/probes/pham-vi.sh"   # do1-ac9-xanh-lai-sau-so-nguon-122 E4 — một dòng mã, chỉ tệp test
     tg1_that_dem: "mkdir -p .acceptance-runs/the-dia-chi-nhom-s03 && node pipeline/scripts/the-dia-chi-nhom-that.mjs --dem --ghi .acceptance-runs/the-dia-chi-nhom-s03/so-chay-thu.md"   # the-dia-chi-nhom-s03 E7 — bản chép DB máy thu oneinvest_u1_tg1, áp 108 + dựng nháp
     tg1_that_chat_luong: "node pipeline/scripts/the-dia-chi-nhom-that.mjs --chat-luong"   # the-dia-chi-nhom-s03 E8 — 13 nhóm sổ một dự án, dựng nháp bỏ sổ
     tg2_phu_the: "node pipeline/scripts/dong-dau-dia-chi-that.mjs --do-neu-cu --thuoc phu-the"   # dong-dau-dia-chi-luc-nap E1 · AC-1(a) — bản chép oneinvest_p4_tg2, kịch bản K1 khai trước
