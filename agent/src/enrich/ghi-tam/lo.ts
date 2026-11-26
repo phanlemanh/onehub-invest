@@ -51,3 +51,12 @@ export async function xetHan(c: pg.Client): Promise<LoHetHan[]> {
   );
   return rows;
 }
+
+/** Trường có lô dang-ghi đã quá hạn đo bù mà chưa có kết quả — vẫn dừng tự ghi khi lệnh rút bị từ chối (bẫy thứ tự 066). */
+export async function truongQuaHan(c: pg.Client): Promise<EnrichField[]> {
+  const { rows } = await c.query<{ field: EnrichField }>(
+    `SELECT DISTINCT field FROM ghi_tam_lo
+      WHERE trang_thai = 'dang-ghi' AND ket_qua_do_bu = 'chua-do' AND han_do_bu < current_date ORDER BY field`,
+  );
+  return rows.map((r) => r.field);
+}

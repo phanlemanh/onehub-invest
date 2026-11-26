@@ -231,6 +231,39 @@ test("E6 AC-6 xét hạn không cần lượt: xet_han_ghi_tam rút lô quá h�
   });
 });
 
+const MIG_DIR = join(import.meta.dirname, "../../db/migrations");
+/** Thân revert_enrichment bản 066 nguyên văn — giả lập ngày 066 được áp lên máy thu SAU 129. */
+async function revert066(): Promise<string> {
+  const t = await readFile(join(MIG_DIR, "066_can_theo_tin.sql"), "utf8");
+  const i = t.indexOf("CREATE OR REPLACE FUNCTION revert_enrichment");
+  return t.slice(i, t.indexOf("$$;", t.indexOf("AS $$", i)) + 3);
+}
+test("E6 AC-6 bẫy thứ tự 066: áp 066 sau 129 làm mất bản vá → rút bằng actor máy bị từ chối nguyên khối, lượt báo lỗi và vẫn dừng trường; chạy lại 129 thì rút được", async () => {
+  await withTx(async (c) => {
+    const runId = `enrich-nb10-e6c-${seq}`;
+    await loBa(c, runId);
+    const ma = `${runId}:block_raw`;
+    await c.query(`UPDATE ghi_tam_lo SET han_do_bu = current_date - 1 WHERE ma = $1`, [ma]);
+    await c.query(await revert066());
+    const vaCon = async () => (await c.query(`SELECT prosrc ~ '129 \\(NB10 Hỏi-4\\)' AS co FROM pg_proc WHERE proname = 'revert_enrichment'`)).rows[0].co;
+    assert.equal(await vaCon(), false, "AC-6 tiền đề: nạp 066 phải làm mất bản vá 129");
+    await c.query("SAVEPOINT s");
+    await assert.rejects(c.query(`SELECT * FROM xet_han_ghi_tam()`), /chỉ người được hoàn tác/, "AC-6 mất bản vá mà actor máy vẫn rút được");
+    await c.query("ROLLBACK TO SAVEPOINT s");
+    assert.equal((await lo(c, ma)).trang_thai, "dang-ghi", "AC-6 rút nửa chừng khi bị từ chối");
+    assert.equal(Number((await c.query(`SELECT count(*) FROM enrichment_proposals WHERE lo_id = $1 AND status = 'applied'`, [ma])).rows[0].count), 2,
+      "AC-6 giá trị của lô bị đổi khi lệnh rút bị từ chối");
+    const t2 = await tin(c, { property_type: "apartment" });
+    const r = await chay(c, `${runId}-ke`, [t2], llmPrompt(kq({ building: "LBV" })), resolveWith());
+    assert.match(r.ghiTam.loiXetHan ?? "", /chỉ người được hoàn tác/, "AC-6 lượt không báo lệnh rút bị từ chối");
+    assert.ok(dongTongKetLuot(r.dem, r.chuyenThe, r.ghiTam).some((l) => l.startsWith("✗ xét hạn ghi tạm bị từ chối")), "AC-6 tổng kết im lặng khi rút bị từ chối");
+    assert.deepEqual((await deXuat(c, t2, "block_raw")).map((p) => [p.route, p.status]), [["review", "queued"]], "AC-6 trường quá hạn vẫn ghi khi rút bị từ chối");
+    await c.query(await readFile(join(MIG_DIR, "129_ghi_tam_lo.sql"), "utf8"));
+    assert.equal(await vaCon(), true, "AC-6 chạy lại 129 không phục hồi bản vá");
+    assert.deepEqual((await c.query(`SELECT ma FROM xet_han_ghi_tam() WHERE ma = $1`, [ma])).rows.map((x) => x.ma), [ma], "AC-6 sau khi vá lại vẫn không rút được");
+  });
+});
+
 // ---------- AC-8 ----------
 test("E8 AC-8 loại hình ghi tạm không làm căn lên B3; lô đạt thì lên; bậc tin không đổi", async () => {
   await withTx(async (c) => {

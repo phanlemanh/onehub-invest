@@ -13,6 +13,10 @@ docker exec -i -e PGPASSWORD=oneinvest one-invest-db psql -U oneinvest -h localh
 
 Một giao dịch (`-1`). Lệnh không gọi model, không ghi cloud (bảng và cột mới không nằm trong danh sách sync).
 
+129 vá đúng một khối trên thân `revert_enrichment` và `unit_data_level` ĐANG CHẠY (không chép thân từ tệp nào): DB máy thu chưa áp
+066 (sổ GS từ 19/11), thân `revert_enrichment` ở đó là bản trước 066. Không thấy khối cần vá, hay thấy từ hai lần, thì cả giao dịch
+huỷ và in tên hàm — không đổi gì.
+
 ## 2. Số chạy thử trên bản chép DB máy thu
 
 Lệnh: `bash _acceptance/ghi-tam-do-sau-co-han/probes/ban-chep.sh AC-4`. Lượt chép DB máy thu sang DB thử chỉ đọc DB nguồn.
@@ -32,8 +36,14 @@ mkdir -p ~/onehub-backup && docker exec -e PGPASSWORD=oneinvest one-invest-db pg
   -t enrichment_proposals -Fc > ~/onehub-backup/enrichment_proposals-truoc-129-$(date +%Y%m%dT%H%M%S).dump
 ```
 
-`ghi_tam_lo`, `ghi_tam_o` chưa có trước 129 nên không cần sao lưu. Hai hàm bị thay (`revert_enrichment`, `unit_data_level`)
-nằm nguyên văn trong khối lùi.
+`ghi_tam_lo`, `ghi_tam_o` chưa có trước 129 nên không cần sao lưu. Hai hàm bị vá (`revert_enrichment`, `unit_data_level`) được
+vá ngược trong khối lùi; muốn giữ bản thân hàm trước áp thì chép kèm:
+
+```bash
+docker exec -i -e PGPASSWORD=oneinvest one-invest-db psql -U oneinvest -h localhost -d oneinvest -At -c "
+  SELECT pg_get_functiondef(oid) FROM pg_proc WHERE proname IN ('revert_enrichment', 'unit_data_level')" \
+  > ~/onehub-backup/ham-truoc-129-$(date +%Y%m%dT%H%M%S).sql
+```
 
 ## 4. Cách lùi
 
@@ -42,8 +52,9 @@ docker exec -i -e PGPASSWORD=oneinvest one-invest-db psql -U oneinvest -h localh
   < _acceptance/ghi-tam-do-sau-co-han/probes/lui-129.sql
 ```
 
-Một giao dịch: gỡ ba hàm mới (`rut_lo_ghi_tam`, `ghi_ket_qua_do_bu`, `xet_han_ghi_tam`), hai cột (`lo_id`, `ghi_tam`), hai bảng
-(`ghi_tam_lo`, `ghi_tam_o`); nạp lại nguyên văn `revert_enrichment` bản 066 và `unit_data_level` bản 087. Lùi không đổi giá trị
+Một giao dịch: gỡ ba hàm mới (`rut_lo_ghi_tam`, `ghi_ket_qua_do_bu`, `xet_han_ghi_tam`); vá ngược `revert_enrichment` và
+`unit_data_level` trên thân đang chạy (chỉ khi có dấu vá của 129, đóng khi lệch); gỡ hai cột (`lo_id`, `ghi_tam`), hai bảng
+(`ghi_tam_lo`, `ghi_tam_o`). Lùi không đổi giá trị
 nào trên tin (2.290 giá trị đã áp giữ nguyên, chỉ mất lô và cờ). Đã có lô bị rút thì giá trị đã rút KHÔNG tự về lại khi lùi —
 áp lại bằng lệnh người là việc riêng.
 
@@ -51,6 +62,22 @@ Chạy thử trên bản chép (cùng lượt `ban-chep.sh`): chờ lượt.
 
 Lùi mã (lượt hằng đêm quay về chốt NB11) là revert commit gộp của PR; chỉ lùi DB mà giữ mã mới thì bộ chạy đêm lỗi vì thiếu bảng
 lô — luôn lùi mã trước, DB sau.
+
+## Thứ tự với 066
+
+066 chưa áp lên máy thu và chờ Mạnh quyết đường gỡ E7 của hàng cũ — NB10 không kéo 066 theo. Nếu một ngày 066 được áp SAU 129, nó
+thay `revert_enrichment` và làm mất bản vá của 129: lệnh rút bằng actor máy (`xet_han_ghi_tam`, lượt đêm) bị từ chối nguyên khối,
+tổng kết lượt in «✗ xét hạn ghi tạm bị từ chối…», trường quá hạn vẫn dừng tự ghi. Ngay sau khi áp 066, chạy lại 129 (vá lại, lô
+giữ nguyên) rồi kiểm:
+
+```bash
+docker exec -i -e PGPASSWORD=oneinvest one-invest-db psql -U oneinvest -h localhost -d oneinvest -v ON_ERROR_STOP=1 -1 \
+  < db/migrations/129_ghi_tam_lo.sql
+docker exec -i -e PGPASSWORD=oneinvest one-invest-db psql -U oneinvest -h localhost -d oneinvest -At -c "
+  SELECT proname, prosrc ~ '129 \\(NB10' FROM pg_proc WHERE proname IN ('revert_enrichment', 'unit_data_level')"
+```
+
+Mong: cả hai dòng `t`. Đo trên bản chép (lượt `ban-chep.sh`, mục «bẫy thứ tự 066»): chờ lượt.
 
 ## 5. Lệnh kiểm sau khi áp
 

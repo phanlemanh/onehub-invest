@@ -19,7 +19,7 @@ import {
   llmFieldsFromEnrich, routeFields, summarizeRun, type BuildingNode, type EnrichField, type Routed,
 } from "./route.js";
 import { bamLoiNhac, phieuDocLap } from "./ghi-tam/doc-lap.js";
-import { ganLo, oDangDung, xetHan, type LoHetHan } from "./ghi-tam/lo.js";
+import { ganLo, oDangDung, truongQuaHan, xetHan, type LoHetHan } from "./ghi-tam/lo.js";
 import { demRong, type DemLuot } from "./tong-ket.js";
 
 /**
@@ -278,13 +278,24 @@ export async function runEnrich(opts: RunEnrichOpts): Promise<{
   /** Số đề xuất có căn cứ đã GHI vào thẻ thay vì tự áp — phiếu không độc lập hoặc ô dừng (chế độ dry: 0). */
   chuyenThe: number;
   /** NB10: lô quá hạn vừa rút ở đầu lượt, các trường đang dừng, và các lô lượt này đã ghi vào. */
-  ghiTam: { hetHan: LoHetHan[]; oDung: EnrichField[]; lo: string[] };
+  ghiTam: { hetHan: LoHetHan[]; oDung: EnrichField[]; lo: string[]; loiXetHan: string | null };
 }> {
   const c = opts.client;
   const giaoDich = opts.giaoDich ?? giaoDichSavepoint(c);
   // NB10 AC-6: xét hạn trước khi đọc tin — lô quá hạn bị rút, ô dừng; lượt dry chỉ đọc trạng thái ô.
-  const hetHan = opts.dry ? [] : await giaoDich(() => xetHan(c));
+  // Lệnh rút bị từ chối (vd revert_enrichment mất bản vá 129 vì 066 được áp sau) → lượt không rút, nhưng trường quá hạn vẫn
+  // dừng tự ghi và tổng kết báo lỗi nguyên văn — không rút nửa chừng, không im lặng.
+  let hetHan: LoHetHan[] = [];
+  let loiXetHan: string | null = null;
+  if (!opts.dry) {
+    try {
+      hetHan = await giaoDich(() => xetHan(c));
+    } catch (e) {
+      loiXetHan = e instanceof Error ? e.message : String(e);
+    }
+  }
   const oDung = await oDangDung(c);
+  if (loiXetHan) for (const f of await truongQuaHan(c)) oDung.add(f);
   const loDaGhi = new Set<string>();
   const buildings = opts.buildings ?? (await loadBuildings(c));
   const offers = await selectOffers(c, opts.limit, opts.offerIds);
@@ -412,6 +423,6 @@ export async function runEnrich(opts: RunEnrichOpts): Promise<{
   dem.the = new Set(reviewIds).size;
   return {
     routed, summary: summarizeRun(routed), reviewIds, dem, chuyenThe,
-    ghiTam: { hetHan, oDung: [...oDung].sort(), lo: [...loDaGhi].sort() },
+    ghiTam: { hetHan, oDung: [...oDung].sort(), lo: [...loDaGhi].sort(), loiXetHan },
   };
 }

@@ -37,6 +37,23 @@ b2="$("${P[@]}" -c "$BAM")"; n2="$("${P[@]}" -c "SELECT count(*) FROM ghi_tam_lo
 [ "$b1" = "$b2" ] && [ "$n1" = "$n2" ] || { echo "ĐỎ AC-4: áp lần hai đổi dòng (băm $b1 → $b2, lô $n1 → $n2)"; exit 1; }
 echo "áp lần hai: không đổi (băm $b1, $n1 lô)"
 
+echo "== bẫy thứ tự 066 (giả lập 066 áp sau 129)"
+VA="SELECT prosrc ~ '129 \\(NB10 Hỏi-4\\)' FROM pg_proc WHERE proname = 'revert_enrichment'"
+node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8");const i=s.indexOf("CREATE OR REPLACE FUNCTION revert_enrichment");process.stdout.write(s.slice(i,s.indexOf("$$;",s.indexOf("AS $$",i))+3)+"\n")' \
+  "$GOC/db/migrations/066_can_theo_tin.sql" | "${P[@]}"
+[ "$("${P[@]}" -c "$VA")" = "f" ] || { echo "ĐỎ AC-6: nạp 066 không làm mất bản vá — ca bẫy không đo gì"; exit 1; }
+LO1="$("${P[@]}" -c "SELECT ma FROM ghi_tam_lo ORDER BY ma LIMIT 1")"
+ERR="$(mktemp)"
+if "${P[@]}" -c "BEGIN; UPDATE ghi_tam_lo SET han_do_bu = current_date - 1 WHERE ma = '$LO1'; SELECT * FROM xet_han_ghi_tam(); COMMIT;" >/dev/null 2>"$ERR"; then
+  echo "ĐỎ AC-6: mất bản vá mà actor máy vẫn rút được lô $LO1"; exit 1
+fi
+echo "mất bản vá: rút bằng actor máy bị từ chối — $(grep -o 'chỉ người được hoàn tác[^,]*' "$ERR" | head -1); lô $LO1 còn $("${P[@]}" -c "SELECT trang_thai FROM ghi_tam_lo WHERE ma = '$LO1'")"
+rm -f "$ERR"
+"${P[@]}" < "$GOC/db/migrations/129_ghi_tam_lo.sql"
+[ "$("${P[@]}" -c "$VA")" = "t" ] || { echo "ĐỎ AC-6: chạy lại 129 không phục hồi bản vá"; exit 1; }
+kiem >/dev/null || { echo "ĐỎ AC-4: chạy lại 129 sau 066 làm đổi lô"; exit 1; }
+echo "chạy lại 129: bản vá phục hồi, ba lô giữ nguyên"
+
 echo "== chạy thử khối lùi"
 "${P[@]}" < "$HS/probes/lui-129.sql"
 echo "sau lùi: bảng ghi_tam_lo $("${P[@]}" -c "SELECT to_regclass('ghi_tam_lo') IS NULL") (true = đã gỡ) · cột lo_id $("${P[@]}" -c "SELECT count(*) FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'enrichment_proposals' AND column_name IN ('lo_id','ghi_tam')") (0 = đã gỡ)"

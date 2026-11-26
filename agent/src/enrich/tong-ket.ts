@@ -67,6 +67,8 @@ export type GhiTamLuot = {
   hetHan: { ma: string; field: string; han_do_bu: string; da_rut: number }[];
   oDung: string[];
   lo: string[];
+  /** Lệnh rút lô quá hạn bị từ chối — nguyên văn lỗi; null khi xét hạn chạy xong. */
+  loiXetHan?: string | null;
 };
 
 /** NB10 AC-6: lô quá hạn vừa rút (tên lô + lý do), trường đang dừng, lô lượt này ghi vào. */
@@ -75,6 +77,7 @@ export function dongGhiTam(g: GhiTamLuot): string[] {
   for (const h of g.hetHan) {
     dong.push(`✗ lô ${h.ma} quá hạn đo bù ${h.han_do_bu} — đã rút ${h.da_rut} giá trị, dừng tự ghi ${h.field}`);
   }
+  if (g.loiXetHan) dong.push(`✗ xét hạn ghi tạm bị từ chối, chưa rút lô nào: ${g.loiXetHan}`);
   if (g.oDung.length) dong.push(`⚠ trường đang dừng tự ghi: ${g.oDung.join(", ")}`);
   return dong;
 }
