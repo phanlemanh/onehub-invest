@@ -127,5 +127,5 @@ evals:
     executor: script
     cmd: config:executors.test.s06tl_chon_nap
     paths: [scripts/thu-duoi-s06.sh, pipeline/import-chotot.mjs, _acceptance/s06-thu-duoi-lich-va-chon-snapshot/probes/chon-nap.mjs]
-    expected: "dòng 'chan: vong 1 exit 3 · co dau chan co han'; dòng 'con han: vong 2 exit 0 · 0 loi goi bo thu · 0 loi nap'; dòng 'het han: vong 3 goi bo thu'; dòng 'chan giua chung: vung sau khong goi'; should-NOT-fire: 'GOI NGUON KHI CON HAN', 'KHONG DAU CHAN', 'KET HAN'"
+    expected: "dòng 'chan: vong 1 exit 3 · co dau chan co han'; dòng 'con han: vong 2 exit 0 · 0 loi goi bo thu · 0 loi nap'; dòng 'het han: vong 3 goi bo thu'; dòng 'chan giua chung: vung sau khong goi'; dòng 'lan hai trong 24 gio: exit 3 · co dau dung han'; dòng 'dung han: 0 loi goi du het han nghi · co dong go dau'; dòng 'nguoi go dau: vong sau goi bo thu'; dòng 'lan hai sau 24 gio: chi nghi'; dòng 'tat luat lan hai: chi nghi'; should-NOT-fire: 'GOI NGUON KHI CON HAN', 'KHONG DAU CHAN', 'KET HAN', 'KHONG DUNG HAN', 'GOI NGUON KHI DUNG HAN', 'KET SAU KHI GO', 'DUNG HAN SAU 24 GIO', 'DUNG HAN KHI TAT'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]

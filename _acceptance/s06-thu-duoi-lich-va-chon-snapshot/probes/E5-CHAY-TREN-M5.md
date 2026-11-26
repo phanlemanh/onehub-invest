@@ -58,3 +58,8 @@ Probe có thêm ca E11 (phạm vi vùng) và E12 (nghỉ sau chặn). Kỳ vọn
 `vung ngoai danh sach: …`, `vung cau hinh hai vung: …`, `chan: …`, `chan giua chung: …`, `con han: …`, `het han: …`.
 Lượt đối chứng trên 7173fc21a: các dòng E11/E12 đỏ cùng các ca AC-5. U2 đã chạy thử trên Mac mini với bản chép chỉ-đọc
 (xanh trên đầu nhánh, đỏ 5 ca trên wrapper 7fe8bb5b0) trước khi giao.
+
+## Lượt sau fc7aedaa1 (luật chặn lần hai)
+
+Thêm năm dòng ở lượt xanh: `lan hai trong 24 gio: …`, `dung han: …`, `nguoi go dau: …`, `lan hai sau 24 gio: …`,
+`tat luat lan hai: …`. Đối chứng 7173fc21a: các dòng E11/E12 đỏ như lượt trước, cộng các dòng luật lần hai.

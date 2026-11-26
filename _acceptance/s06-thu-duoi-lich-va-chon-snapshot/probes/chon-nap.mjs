@@ -15,6 +15,7 @@
 //   E11 (AC-10): không cấu hình → chỉ gọi bộ thu cho hcmc; THU_DUOI_S06_VUNG="hcmc" → hanoi 0 lời gọi + dòng «bỏ vùng»;
 //                hai vùng → gọi cả hai
 //   E12 (AC-11): bộ thu thoát 3 ở vùng đầu → exit 3, dấu chặn có hạn, vùng sau không gọi; còn hạn → 0 lời gọi; hết hạn → chạy lại
+//                chặn lần hai trong 24 giờ → dấu dừng hẳn, 0 lời gọi dù hết nghỉ, người gỡ thì chạy lại; sau 24 giờ hay tắt luật → chỉ nghỉ
 //
 // Dùng: bash db/db-thu.sh oneinvest_suite_s06tl --chay-trong node <tệp này>
 // Đường phép đo: $S06_DUOI_DO (mặc định worktree ZT). Không ghi gì ngoài thư mục tạm và DB của lượt.
@@ -143,6 +144,30 @@ try {
   ok(vHet.rc === 0 && vHet.stub.length > 0 && !existsSync(BI_CHAN), "het han: vong 3 goi bo thu",
     `KET HAN: exit ${vHet.rc} · ${vHet.stub.length} lời gọi bộ thu · dấu còn ${existsSync(BI_CHAN)}`);
   rmSync(BI_CHAN, { force: true });
+
+  // --- luật chặn lần hai trong 24 giờ (AC-11, Hỏi-3): dừng hẳn tới khi người gỡ dấu ---
+  const LAN_CHAN = join(GOC, "lan-chan.json"), DUNG_HAN = join(GOC, "dung-han.json");
+  const iso = (ms) => new Date(ms).toISOString().replace(/\.\d+Z$/, "Z");
+  const vHai2 = vong("lan-hai", { STUB_RC: "3", THU_DUOI_S06_VUNG: "hanoi hcmc" }); // lan-chan.json còn từ vòng ma-3
+  ok(vHai2.rc === 3 && existsSync(DUNG_HAN), "lan hai trong 24 gio: exit 3 · co dau dung han",
+    `KHONG DUNG HAN: exit ${vHai2.rc} · dấu ${existsSync(DUNG_HAN)}`);
+  rmSync(BI_CHAN, { force: true }); // hết hạn nghỉ cũng không được chạy lại
+  const vDung = vong("dung-han", { THU_DUOI_S06_VUNG: "hanoi hcmc" });
+  ok(vDung.rc === 0 && vDung.stub.length === 0 && vDung.out.includes(`rm ${DUNG_HAN}`),
+    "dung han: 0 loi goi du het han nghi · co dong go dau", `GOI NGUON KHI DUNG HAN: exit ${vDung.rc} · ${vDung.stub.length} lời gọi bộ thu`);
+  rmSync(DUNG_HAN, { force: true });
+  const vGo = vong("nguoi-go", { THU_DUOI_S06_VUNG: "hanoi hcmc" });
+  ok(vGo.rc === 0 && vGo.stub.length > 0, "nguoi go dau: vong sau goi bo thu", `KET SAU KHI GO: exit ${vGo.rc} · ${vGo.stub.length} lời gọi`);
+  writeFileSync(LAN_CHAN, JSON.stringify({ lanCuoi: iso(Date.now() - 25 * 3600_000) }));
+  const vXa = vong("lan-hai-sau-24h", { STUB_RC: "3", THU_DUOI_S06_VUNG: "hanoi hcmc" });
+  ok(vXa.rc === 3 && !existsSync(DUNG_HAN) && existsSync(BI_CHAN), "lan hai sau 24 gio: chi nghi",
+    `DUNG HAN SAU 24 GIO: dấu dừng ${existsSync(DUNG_HAN)} · dấu nghỉ ${existsSync(BI_CHAN)}`);
+  rmSync(BI_CHAN, { force: true }); rmSync(DUNG_HAN, { force: true });
+  writeFileSync(LAN_CHAN, JSON.stringify({ lanCuoi: iso(Date.now() - 3600_000) }));
+  const vTat = vong("tat-lan-hai", { STUB_RC: "3", THU_DUOI_S06_VUNG: "hanoi hcmc", THU_DUOI_S06_DUNG_LAN_HAI: "0" });
+  ok(vTat.rc === 3 && !existsSync(DUNG_HAN) && existsSync(BI_CHAN), "tat luat lan hai: chi nghi",
+    `DUNG HAN KHI TAT: dấu dừng ${existsSync(DUNG_HAN)} · dấu nghỉ ${existsSync(BI_CHAN)}`);
+  for (const f of [BI_CHAN, DUNG_HAN, LAN_CHAN]) rmSync(f, { force: true });
 
   for (const ma of [4, 5]) {
     const v = vong(`ma-${ma}`, { STUB_RC: String(ma) });

@@ -113,9 +113,15 @@ PL38 nối transform, resolve, sync-cloud theo nhịp. Hồ sơ này chỉ bảo
   Lượt M5 @dfdc36324 (`evidence/m5-e5-dfdc36324.txt`, commit 27fbaec02): đầu nhánh `CHON-NAP OK`, đủ bảy dòng E11/E12;
   đối chứng 7173fc21a `CHON-NAP DO (10 ca)`, E11/E12 đỏ 5/7 (hai dòng «hai vùng gọi cả hai» và «chặn giữa chừng» vốn đúng
   trên mã cũ), các ca AC-5 đỏ.
-- Lệch với khuyến nghị Hỏi-3 (60 phút, chặn lần hai trong 24 giờ thì dừng tới khi người mở lại): mã mặc định 30 phút và
-  không có luật lần hai. Hạn đổi được bằng biến môi trường trong plist; luật lần hai chưa có — Mạnh chọn khuyến nghị thì
-  trả ZCode qua LL trước khi chấm.
+- Hỏi-3 làm sẵn cơ chế (GS phán 27/11, không chờ Mạnh): ZCode giao `fc7aedaa1` (xuôi `fc3fa4a7a`), U2 gộp nguyên (hai tệp
+  trùng từng byte). Nghỉ lần đầu `THU_DUOI_S06_NGHI_SAU_CHAN_PHUT` (mặc định 30); chặn lần hai trong 24 giờ kể từ lần trước
+  → dấu dừng hẳn `state/thu-duoi-s06/dung-han.json`, các lượt sau không gọi nguồn dù hết nghỉ, chỉ người gỡ (`rm`); sổ giờ chặn
+  `lan-chan.json`; bật/tắt `THU_DUOI_S06_DUNG_LAN_HAI` (mặc định bật). Câu trả lời Hỏi-3 của Mạnh chỉ là đặt giá trị trong
+  plist; plist mẫu chưa có khối `EnvironmentVariables`, thêm khi cài nếu đặt biến. Probe thêm năm dòng cho luật lần hai; chạy
+  thử Mac mini bản chép chỉ-đọc: đầu nhánh `CHON-NAP OK`, đối chứng wrapper `fc3fa4a7a` `CHON-NAP DO (2 ca)` («KHONG DUNG
+  HAN», «GOI NGUON KHI DUNG HAN»).
+- Test `scripts/thu-duoi-s06.test.mjs` của ZCode không giả `pgrep`: chạy trong lúc lượt quét đủ `chotot-daily.sh` đang chạy
+  trên máy thu (05:30, 14:00) thì wrapper nhường lượt và 16/26 ca đỏ (đo 27/11 05:46 giờ VN). Lỗi test của làn thu, đã báo GS.
 - E5 chạy trên M5 (lời GS 27/11), hai lượt xanh/đối chứng đỏ: cách dựng ở `probes/E5-CHAY-TREN-M5.md`.
   Kết quả 27/11 @212b7145a (`evidence/m5-e5-212b7145a.txt`): mã ZCode 7fe8bb5b0 `CHON-NAP OK`, gồm ca «quét đủ đè → không nạp
   lại» và «nội dung stg không lùi»; mã cũ 7173fc21a `CHON-NAP DO (5 ca)`. Lượt đầu @9614ab0af hỏng vì probe (đã sửa), không tính.
