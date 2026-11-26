@@ -31,3 +31,6 @@
 {"ts":"2026-11-26T05:10:00Z","sha":"e28962f7b664447369220b4d17fe7dbcb757a143","round":1,"kind":"baseline","evals_hash":"e31d6476514699f237bb9e673f31d2adb7f38abe04f972274b345e05fcd414cb","non_discriminating":[]}
 {"ts":"2026-11-26T05:10:00Z","sha":"e28962f7b664447369220b4d17fe7dbcb757a143","round":1,"kind":"round-tally","verdict":"REJECT","expected":11,"returned":11,"blocked":0}
 {"ts":"2026-11-26T05:10:00Z","sha":"e28962f7b664447369220b4d17fe7dbcb757a143","round":1,"kind":"chot-truong-nguoi","human_signoff":0,"human_override":0,"bypass_ack":0,"verified_at":19}
+{"kind":"thuoc-vat","ts":"2026-11-26T06:20:20Z","round":1,"san":"e28962f7b664447369220b4d17fe7dbcb757a143","vat":[17,9],"thuoc":[0,0],"ho_so":[339,0],"nhat":0,"lan":0,"tep_thuoc":[]}
+{"kind":"cay-doi","ts":"2026-11-26T06:20:20Z","round":1,"luot_ts":"2026-11-26T05:10:00Z","sha":"e28962f7b664447369220b4d17fe7dbcb757a143","tep":[{"tep":"pipeline/scripts/danh-ba-s09-toa-that.mjs","doi":"commit"}],"commit":["c1267a441"],"moi":[]}
+{"kind":"ghi-boi-tac-tu-cham","ts":"2026-11-26T06:20:20Z","round":1,"luot_ts":"2026-11-26T05:10:00Z","sha":"e28962f7b664447369220b4d17fe7dbcb757a143","tac_tu":[],"tep_khong_ro":["pipeline/scripts/danh-ba-s09-toa-that.mjs"]}
