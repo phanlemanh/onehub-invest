@@ -269,21 +269,25 @@ const nodeGia = (root) => {
   return f;
 };
 for (const [o, env, args, ke] of [
-  ["00:00 mặc định", {}, [], "21600 10800"], // 2311-5: trần tổng lượt 00:00 4h → 6h (lưới chia trần)
+  ["00:00 mặc định", {}, [], "21600 10800\n16200"], // 2311-5: trần tổng lượt 00:00 4h → 6h, rồi đồng hồ bước đọc gộp
   ["nhanh mặc định", {}, ["--luot-nhanh"], "2400 1200"],
-  ["00:00 TRAN_TONG=100", { ZALO_IMPORT_TRAN_TONG: "100" }, [], "100 50"],
-  ["00:00 TRAN_TONG=100 CANH_BAO=7", { ZALO_IMPORT_TRAN_TONG: "100", ZALO_IMPORT_CANH_BAO: "7" }, [], "100 7"],
-  ["00:00 TRAN_TONG=32400", { ZALO_IMPORT_TRAN_TONG: "32400" }, [], "32400 16200"], // 2311-5: plist đêm 24→25/11 đặt 32400 một đêm — biến môi trường thắng mặc định
+  ["00:00 TRAN_TONG=100", { ZALO_IMPORT_TRAN_TONG: "100" }, [], "100 50\n60"],
+  ["00:00 TRAN_TONG=100 CANH_BAO=7", { ZALO_IMPORT_TRAN_TONG: "100", ZALO_IMPORT_CANH_BAO: "7" }, [], "100 7\n60"],
+  ["00:00 TRAN_TONG=32400", { ZALO_IMPORT_TRAN_TONG: "32400" }, [], "32400 16200\n27000"], // 2311-5: plist đêm 24→25/11 đặt 32400 một đêm — biến môi trường thắng mặc định
 ]) {
   // bước transform-zalo chậm 1 giây: lượt nhanh xong trước khi node giả kịp ghi thì trap đã giết nó
-  test(`AC-7 trần ${o} → ${ke}`, () => voiRoot({ cham: true }, async (root) => {
+  // 2311-5 (nhánh B): lượt 00:00 có HAI đồng hồ — tổng rồi của bước đọc gộp (dòng thứ hai chỉ có trần, không có
+  // ngưỡng WARN); lượt nhanh chỉ đồng hồ tổng. Mỗi dòng ghim là "<trần> <ngưỡng WARN>" của một lần node giả gọi.
+  test(`AC-7 trần ${o} → ${ke.replace("\n", " rồi ")}`, () => voiRoot({ cham: true }, async (root) => {
     const envBo = { ...env };
     for (const k of ["ZALO_IMPORT_TRAN_TONG", "ZALO_IMPORT_CANH_BAO"]) if (!(k in envBo)) envBo[k] = "";
     // biến rỗng = không đặt: ${X:-mặc định} lấy mặc định
+    // bước đọc gộp ngủ 1 giây: thoát tức thì thì đồng hồ giả của bước bị kết thúc trước khi kịp ghi sổ
+    writeFileSync(join(root, "pipeline", "doc-gop-hang-ngay.sh"), "sleep 1\n");
     await chay(root, { ...envBo, ZALO_IMPORT_NODE_BIN: nodeGia(root) }, { args });
-    const dong = readFileSync(join(root, "dong-ho.txt"), "utf8").trim().split("\n");
-    assert.equal(dong.length, 1, "một đồng hồ mỗi lượt");
-    assert.equal(dong[0].split(" ").slice(0, 2).join(" "), ke);
+    const dong = readFileSync(join(root, "dong-ho.txt"), "utf8").trim().split("\n")
+      .map((l) => l.trim().split(/\s+/).join(" "));
+    assert.deepEqual(dong, ke.split("\n"), "AC-7 đồng hồ của lượt: mỗi dòng <trần> <ngưỡng WARN>, đúng số lần gọi và thứ tự");
   }));
 }
 test("AC-7 plist không đổi so với origin/main", () => {
