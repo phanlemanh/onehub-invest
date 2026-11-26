@@ -2,12 +2,12 @@
 schema_version: 2
 feature_slug: do1-ac9-xanh-lai-sau-so-nguon-122
 verdict: BLOCKED
-failed_evals: ["E2","E3"]
-reason: "Lệnh `node scripts/suite-neu-doi.mjs pipeline_that -- 'cd pipeline && npm run test:that'` chạy quá 30 phút chưa xong (tiến trình nền bm5ydr5d5 vẫn chạy, chưa có dòng __EXIT=). Không có dòng __EXIT trong đầu ra nên không có exit code thật. Eval pipeline_that không khai long_running trong evals.yaml nên áp mốc mặc định 30 phút. Lệnh bị chuyển nền sau 600s chứ không bị công cụ giết; tiến trình node suite-neu-doi.mjs pipeline_that vẫn còn (chay-that.mjs đang chạy, db-thu.sh oneinvest_suite_pipeline_that). Không có công cụ TaskStop để dừng nền nên không dừng được. Không chạy lại theo yêu cầu."
+failed_evals: []
+reason: "Lệnh suite pipeline_that (node scripts/suite-neu-doi.mjs pipeline_that -- 'cd pipeline && npm run test:that') đã chạy nền sau khi vượt 600 giây của công cụ, không phải bị công cụ giết. Tiến trình PID 54864 bắt đầu 15:21:21 và vẫn chạy lúc 15:59, khoảng 38 phút, vượt trần 30 phút mặc định vì eval này không khai long_running trong evals.yaml. Tệp đầu ra nền vẫn rỗng, chưa có dòng mã thoát, nên không có kết quả thật. Không chạy lại, không sửa code, không đổi branch. Cần khai long_running cho pipeline_that trong evals.yaml hoặc xác minh tiến trình 54864 rồi chạy lại."
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: b48cd02edbfe98de16cdff77ac566e17522c9e49
+verified_commit: 39971ce71c460129e20e4dcfbe48a64dfb043125
 human_signoff:
 ---
 
@@ -15,102 +15,94 @@ human_signoff:
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
-| E1 | AC-1 | test | PASS |
-| E2 | AC-2 | script | FAIL |
-| E3 | AC-3 | script | FAIL |
-| E4 | AC-4 | script | PASS |
+| E1 | AC-1 | test | PASS (carry-forward tu round 1) |
+| E2 | AC-2 | script | PASS |
+| E3 | AC-3 | script | PASS |
+| E4 | AC-4 | script | PASS (carry-forward tu round 1) |
+
+Tổng: BLOCKED. Bốn eval của hợp đồng đều xanh, nhưng lệnh suite hồi quy pipeline_that chưa có kết quả (xem reason).
 
 ## Evidence
 
 - eval: E1
   run_id: minted-do1-ac9-xanh-lai-sau-so-nguon-122-E1-r1
   exit_code: 0
-  baseline: red
+  carried_from_round: 1
+  baseline: n-a
   verifier: config:executors.test.ht31_ca
   verified_at: 2026-11-26T06:43:29Z
   output: |
-    ca DO1-AC-9 detail chạy trên DB oneinvest_suite_ht31 chép từ máy thu
-    ℹ duration_ms 137237.205333
-    __EXIT=0
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E2
-  run_id: minted-do1-ac9-xanh-lai-sau-so-nguon-122-E2-r1
-  exit_code: 1
+  run_id: minted-do1-ac9-xanh-lai-sau-so-nguon-122-E2-r2
+  exit_code: 0
   baseline: n-a
   verifier: config:executors.script.ht31_doi_chung
-  verified_at: 2026-11-26T06:43:29Z
+  verified_at: 2026-11-26T08:01:13Z
   output: |
-    OK  B ban main do (bản origin/main đỏ đúng một ca)
-    LOI C go bo soat do (bản đột biến vẫn xanh, không đỏ như AC-2 đòi)
-    DOI-CHUNG DO (1)
+    DOI-CHUNG OK
 
 - eval: E3
-  run_id: minted-do1-ac9-xanh-lai-sau-so-nguon-122-E3-r1
-  exit_code: 1
+  run_id: minted-do1-ac9-xanh-lai-sau-so-nguon-122-E3-r2
+  exit_code: 0
   baseline: n-a
   verifier: config:executors.script.ht31_doi_chung
-  verified_at: 2026-11-26T06:43:29Z
+  verified_at: 2026-11-26T08:01:13Z
   output: |
-    so cua luot: xoa 1 dong S09
-    OK  D ban sua xanh khi so khong co S09: tests 1, pass 1, fail 0, skipped 0
-    DOI-CHUNG DO (1)
-    (E3 dùng chung lệnh với E2; dòng D đạt nhưng lệnh thoát đỏ vì lượt C, nên E3 cũng bị tính đỏ)
+    DOI-CHUNG OK
 
 - eval: E4
   run_id: minted-do1-ac9-xanh-lai-sau-so-nguon-122-E4-r1
   exit_code: 0
+  carried_from_round: 1
   baseline: n-a
   verifier: config:executors.script.ht31_pham_vi
   verified_at: 2026-11-26T06:43:29Z
   output: |
-    PHAM-VI OK
-    __EXIT=0
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 ### Lệnh suite (hồi quy)
 
 - cmd: node scripts/suite-neu-doi.mjs agent -- 'cd agent && npm test'
-  run_id: minted-do1-ac9-xanh-lai-sau-so-nguon-122-SUITE-node_scripts_suite_neu_doi_mjs_agent_cd_-r1
+  run_id: minted-do1-ac9-xanh-lai-sau-so-nguon-122-SUITE-node_scripts_suite_neu_doi_mjs_agent_cd_-r2
   exit_code: 0
-  verified_at: 2026-11-26T06:43:29Z
+  verified_at: 2026-11-26T08:01:13Z
 
 - cmd: node scripts/suite-neu-doi.mjs app -- 'cd app && npx tsc --noEmit && npm run lint'
-  run_id: minted-do1-ac9-xanh-lai-sau-so-nguon-122-SUITE-lint-r1
+  run_id: minted-do1-ac9-xanh-lai-sau-so-nguon-122-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-11-26T06:43:29Z
+  verified_at: 2026-11-26T08:01:13Z
 
 - cmd: node scripts/suite-neu-doi.mjs app_ui -- 'cd app && npm test'
-  run_id: minted-do1-ac9-xanh-lai-sau-so-nguon-122-SUITE-node_scripts_suite_neu_doi_mjs_app_ui_cd-r1
-  exit_code: 1
-  verified_at: 2026-11-26T06:43:29Z
-  (1294 ca, 1284 xanh, 0 đỏ, 1 bị huỷ do quá hạn: tests/sellers-chip.test.tsx SD-AC-6 timed out sau 180000ms; lệnh này không gắn eval nào)
+  run_id: minted-do1-ac9-xanh-lai-sau-so-nguon-122-SUITE-node_scripts_suite_neu_doi_mjs_app_ui_cd-r2
+  exit_code: 0
+  verified_at: 2026-11-26T08:01:13Z
 
 - cmd: node scripts/suite-neu-doi.mjs pipeline_a -- 'cd pipeline && npm run test:a'
-  run_id: minted-do1-ac9-xanh-lai-sau-so-nguon-122-SUITE-test_a-r1
+  run_id: minted-do1-ac9-xanh-lai-sau-so-nguon-122-SUITE-test_a-r2
   exit_code: 0
-  verified_at: 2026-11-26T06:43:29Z
+  verified_at: 2026-11-26T08:01:13Z
 
 - cmd: node scripts/suite-neu-doi.mjs pipeline_b -- 'cd pipeline && npm run test:b'
-  run_id: minted-do1-ac9-xanh-lai-sau-so-nguon-122-SUITE-test_b-r1
+  run_id: minted-do1-ac9-xanh-lai-sau-so-nguon-122-SUITE-test_b-r2
   exit_code: 0
-  verified_at: 2026-11-26T06:43:29Z
+  verified_at: 2026-11-26T08:01:13Z
 
 - cmd: node scripts/suite-neu-doi.mjs pipeline_that -- 'cd pipeline && npm run test:that'
-  run_id: minted-do1-ac9-xanh-lai-sau-so-nguon-122-SUITE-test_that-r1
-  exit_code: 1
-  verified_at: 2026-11-26T06:43:29Z
-  (không có dòng __EXIT thật: lệnh còn chạy nền sau 30 phút, xem reason ở frontmatter)
+  run_id: minted-do1-ac9-xanh-lai-sau-so-nguon-122-SUITE-test_that-r2
+  trang_thai: không chạy xong, chưa có mã thoát (tiến trình PID 54864 chạy nền khoảng 38 phút, vượt trần 30 phút mặc định; xem reason)
+  verified_at: 2026-11-26T08:01:13Z
 
 - cmd: node scripts/suite-neu-doi.mjs ui_lint_rules -- 'cd app && npm run test:lint-rules'
-  run_id: minted-do1-ac9-xanh-lai-sau-so-nguon-122-SUITE-test_lint_rules-r1
+  run_id: minted-do1-ac9-xanh-lai-sau-so-nguon-122-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-11-26T06:43:29Z
+  verified_at: 2026-11-26T08:01:13Z
 
 - cmd: node scripts/suite-neu-doi.mjs portal_static -- 'node scripts/check-portal-compliance.mjs'
-  run_id: minted-do1-ac9-xanh-lai-sau-so-nguon-122-SUITE-node_scripts_suite_neu_doi_mjs_portal_st-r1
+  run_id: minted-do1-ac9-xanh-lai-sau-so-nguon-122-SUITE-node_scripts_suite_neu_doi_mjs_portal_st-r2
   exit_code: 0
-  verified_at: 2026-11-26T06:43:29Z
-
-Lệnh đỏ không gắn eval: `node scripts/suite-neu-doi.mjs app_ui -- 'cd app && npm test'` (ca SD-AC-6 quá hạn). Lệnh `bash db/db-thu.sh oneinvest_suite_ht31dc --chay node _acceptance/do1-ac9-xanh-lai-sau-so-nguon-122/probes/doi-chung.mjs` gắn E2 và E3 và cũng đỏ.
+  verified_at: 2026-11-26T08:01:13Z
 
 ## Known limits
 
@@ -118,11 +110,9 @@ Lệnh đỏ không gắn eval: `node scripts/suite-neu-doi.mjs app_ui -- 'cd ap
 
 ## Analyst
 
-none — moi eval feature deu red tren baseline (co phan biet). Riêng E1 đo được baseline red; E2, E3, E4 không đo được baseline (xem dưới).
+carried tu round 1 — baseline khong do lai round nay.
 
-Baseline khong do
-- bash db/db-thu.sh oneinvest_suite_ht31dc --chay node _acceptance/do1-ac9-xanh-lai-sau-so-nguon-122/probes/doi-chung.mjs: bo qua baseline: tep _acceptance/do1-ac9-xanh-lai-sau-so-nguon-122/probes/doi-chung.mjs co o cay dang kiem nhung chua co o merge-base 6286dd29a2b2d57ede549677566cf49e161168e6 — eval moi, chay tren code cu khong phan biet gi
-- bash _acceptance/do1-ac9-xanh-lai-sau-so-nguon-122/probes/pham-vi.sh: bo qua baseline: tep _acceptance/do1-ac9-xanh-lai-sau-so-nguon-122/probes/pham-vi.sh co o cay dang kiem nhung chua co o merge-base 6286dd29a2b2d57ede549677566cf49e161168e6 — eval moi, chay tren code cu khong phan biet gi
+Eval không-phân-biệt: không có.
 
 ## Variance
 
@@ -130,6 +120,11 @@ none — every multi-run eval is uniform
 
 ## Iterations
 
-Round 1: E2, E3 failed — probe đối chứng lượt C (gỡ bộ soát) chỉ đột biến lib mà doHangNgay thật không đọc nên bản đột biến vẫn xanh; E3 đỏ theo vì dùng chung lệnh. Ngoài ra lệnh suite pipeline_that quá 30 phút chưa xong nên verdict BLOCKED. Returned to implementation.
+Round 1: E1, E4 passed; hồ sơ bằng chứng đầu tiên.
+Round 2: E2, E3 chạy lại và xanh, E1/E4 carry-forward; verdict BLOCKED vì lệnh suite pipeline_that vượt trần 30 phút khi chưa khai long_running, chưa có kết quả. Cần khai long_running rồi chạy lại.
 
-máy: M5 (M5 Max 18 nhân, colima 16/96) · DB: `oneinvest` đầy đủ của M5 (db-thu chép, không DB trống) · chỗ chấm: node_modules app, pipeline, agent, data-api symlink sang checkout chính · ca đỏ có tên: E2/E3 «LOI C go bo soat do» (probe đột biến không chạm bộ soát ca thật dùng); app_ui tests/sellers-chip.test.tsx SD-AC-6 quá hạn 180000 ms; pipeline_that quá trần chờ 30′ khi đang chạy chay-that.mjs (không chờ khoá mẫu hay chỗ cụm), lượt chấm cham-kev1 chạy pipeline_that song song.
+## Chạy lại riêng suite pipeline_that (ngoài lượt chấm)
+
+Lượt chấm dừng pipeline_that ở trần chờ 30′ (BLOCKED, không có mã thoát). Phiên điều phối chạy cùng lệnh song song, không trần, trên cùng sha 39971ce71: 2625 s, tests 38 · pass 37 · fail 1, mã thoát 1. DO1-AC-9 detail xanh. Ca đỏ duy nhất ON22-AC-10 «máy thu thật, chế độ khô»: khối s03 không đo được vì M5 không có cấu hình OpenClaw (chỉ có trên máy thu); tệp test và mã nó đo nằm ngoài diff của hàng (diff mã chỉ pipeline/scripts/do-hang-ngay.test.mjs). Dòng run-log kind chay-lai-suite. Đây là số đo hạ tầng để người quyết, không thay verdict của lượt chấm.
+
+máy: M5 (M5 Max 18 nhân, colima 16/96) · DB: `oneinvest` đầy đủ của M5 (db-thu chép) · node_modules app, pipeline, agent, data-api symlink sang checkout chính · M5 cùng lúc có các lượt chấm ZC19, ZC21, PB3.
