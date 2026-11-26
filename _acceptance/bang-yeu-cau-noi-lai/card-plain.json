@@ -1,0 +1,37 @@
+{
+  "feature_plain": "Bài người cần thuê, cần mua trong nhóm (Yêu cầu) được giữ lại thành bảng trên máy thu, mỗi bài một dòng, để Ops đếm và (ở hàng sau) lọc, ghép với tin rao.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ dựng bảng Yêu cầu mức bài, một danh sách Yêu cầu đang sống và bộ phân xử ý định; dữ liệu sai khuôn bị từ chối (AC-1, lược đồ)."},
+    {"id": "AC-2", "p": "Sẽ khai bảng vào sổ ánh xạ RESO và từ điển sản phẩm, kèm phụ lục «11 câu áp cho Yêu cầu» của luật kiến trúc (AC-2, sổ và từ vựng)."},
+    {"id": "AC-3", "p": "Sẽ ghi cho mỗi bài một phát biểu ý định: luật nhận là bằng chứng quan sát, nhãn Haiku là bằng chứng suy luận (AC-3, phát biểu ý định)."},
+    {"id": "AC-4", "p": "Sẽ để bộ phân xử quyết: luật nhận thì Yêu cầu sống, chỉ nhãn Haiku nhận thì «chờ duyệt», chưa hiện là Yêu cầu sống (AC-4, phân xử)."},
+    {"id": "AC-5", "p": "Sẽ cho Yêu cầu nghỉ khi bài thôi là Yêu cầu và sống lại khi trở lại, không xoá dòng nào; lượt nạp chỉ có bài mới không làm nghỉ bài cũ (AC-5, vòng đời)."},
+    {"id": "AC-7", "p": "Sẽ giữ nguyên mọi tin rao như trước khi có bước Yêu cầu (AC-7, tin rao không đổi)."},
+    {"id": "AC-8", "p": "Sẽ cho ô «Đọc thành Yêu cầu» ở màn Dòng chảy dữ liệu đếm từ bảng thật (AC-8, ô trên màn)."},
+    {"id": "AC-9", "p": "Sẽ đo trên bản chép dữ liệu thật: mọi bài Yêu cầu có đúng một dòng, mỗi nguồn đạt ít nhất 90% mốc, bảng không lên cloud (AC-9, thước dữ liệu thật)."},
+    {"id": "AC-10", "p": "Sẽ giữ xanh bộ test pipeline và app (AC-10, không hồi quy)."}
+  ],
+  "wont_do": [
+    {"id": "AC-6", "p": "Sẽ KHÔNG ghi gì và chỉ báo một dòng khi máy chưa có bảng mới (AC-6, chưa áp 136)."},
+    {"id": "OOS-1", "p": "KHÔNG đọc tiêu chí (dịch vụ, loại hình, phòng ngủ, ngân sách, dự án) — hàng YC9 làm, rồi tới màn Ops YC5."},
+    {"id": "OOS-2", "p": "KHÔNG siết hay mở luật nhận Yêu cầu, không xử bài luật bắt nhầm — việc của GT8."},
+    {"id": "OOS-3", "p": "KHÔNG đo «bài người duyệt đánh Không phải Yêu cầu thì lượt sau không vào bảng» — chưa có chỗ ghi nhãn người, chuyển sang ngăn duyệt của YC5."},
+    {"id": "OOS-4", "p": "KHÔNG đưa bảng lên cloud, không lưu danh tính người đăng."},
+    {"id": "OOS-5", "p": "KHÔNG sửa bài tìm viết tắt đang lọt thành tin rao thuê — hàng PL42, gộp trước hàng này."},
+    {"id": "OOS-6", "p": "KHÔNG làm các thiếu hụt khác phiên kiểm nêu (nhãn vàng, tiêu chí trong nhãn, vai người tìm, lịch sử ngân sách, chỉ số) — mỗi thứ một hàng có số đo."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Bảng và luật dữ liệu: khuôn bảng, khoá theo bài, ràng buộc, nghỉ có lý do, áp lại không lỗi (AC-1); sổ và từ vựng (AC-2)."},
+    {"i": 1, "p": "Ai là Yêu cầu: đủ chín ca — cả luật lẫn nhãn nhận, chỉ luật, luật và nhãn bất đồng, chỉ nhãn (hai ca), tin rao, bài thử, nhãn hỏng, nhãn đổi ý (AC-3, AC-4)."},
+    {"i": 2, "p": "Vòng đời: ghi, chạy lại, hai bài cùng chữ, lượt nạp một phần, nghỉ, sống lại, chưa có bảng (AC-4, AC-5, AC-6)."},
+    {"i": 3, "p": "Không phá và nhìn thấy được: tin rao giữ nguyên (AC-7), ô màn Dòng chảy (AC-8), dữ liệu thật (AC-9), bộ test (AC-10)."},
+    {"i": 4, "p": "Không quét hình thái riêng: không gian lấy từ hồ sơ đã ký 30/10 cộng bảng đếm từ DB máy thu."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Bản giữa còn ghi thẳng trạng thái ý định từ luật, lệch luật kiến trúc. Đã sửa: ý định đi qua phát biểu và bộ phân xử."},
+    {"i": 1, "p": "Chưa có ca chặn việc một lượt nạp chỉ bài mới làm nghỉ hàng loạt bài cũ. Đã thêm vào AC-5."},
+    {"i": 2, "p": "Kiểm «không lên cloud» chỉ dò tên bảng, không có đối chứng dương, bỏ sót danh sách sống. Đã thêm đối chứng ở AC-9."},
+    {"i": 3, "p": "Câu đọc nhãn Haiku chưa được đo trên DB, ô chỉ-nhãn chưa có sàn số. Đã chèn nhãn thật vào DB thử ở AC-4 và thêm sàn ở AC-9."},
+    {"i": 4, "p": "Răng quét «không xoá» chỉ quét một tệp. Đã mở ra toàn bộ pipeline và migration."}
+  ]
+}
