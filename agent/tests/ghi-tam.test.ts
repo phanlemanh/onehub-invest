@@ -244,7 +244,10 @@ test("E8 AC-8 loại hình ghi tạm không làm căn lên B3; lô đạt thì l
     await c.query(`INSERT INTO buildings (building_key, region_node_id, upi, iso_region, catalog_tier)
       VALUES ($1, $2, 'urn:onehub:upi:1:VN:VN-HN:' || $1, 'VN-HN', 'xac_minh')`, [bld, nut]);
     await c.query(`INSERT INTO units (unit_key, building_key, floor, sub_id, catalog_tier) VALUES ($1, $2, '10', $1, 'xac_minh')`, [can, bld]);
-    await c.query(`UPDATE sale_offer_records SET price_vnd = 3000000000, area_m2 = 70, area_id = 'vn-hanoi-test', kind = 'sale' WHERE offer_id = $1`, [a]);
+    // Khu vực có thật của DB (khoá ngoại sale_offers_area_id_fkey); DB trống của CI thì gieo một khu trong giao dịch.
+    const { rows: [kv] } = await c.query(`SELECT id FROM areas ORDER BY id LIMIT 1`);
+    const khu = kv?.id ?? (await c.query(`INSERT INTO areas (id, region_type, name, country_code) VALUES ('vn-nb10-thu', 'submarket', 'NB10 thử', 'VN') RETURNING id`)).rows[0].id;
+    await c.query(`UPDATE sale_offer_records SET price_vnd = 3000000000, area_m2 = 70, area_id = $2, kind = 'sale' WHERE offer_id = $1`, [a, khu]);
     await c.query(`CREATE OR REPLACE FUNCTION offer_unit_key(p_offer_id text) RETURNS text LANGUAGE sql STABLE AS
       $f$ SELECT CASE WHEN p_offer_id = '${a}' THEN '${can}' END $f$`);
     const bac = async () => (await c.query(`SELECT data_level FROM unit_data_level() WHERE unit_key = $1`, [can])).rows[0]?.data_level ?? null;

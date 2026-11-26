@@ -9,12 +9,14 @@
 -- Chạy lại không đổi dòng nào: bảng/cột IF NOT EXISTS, lô điền lùi ON CONFLICT DO NOTHING (hạn giữ nguyên ngày áp đầu), gắn lô
 -- chỉ cho đề xuất còn lo_id NULL, hàm CREATE OR REPLACE.
 --
--- Hai hàm chép NGUYÊN thân bản mới nhất và đổi đúng một chỗ (sinh bằng script, có assert):
---   revert_enrichment — thân 066, khối kiểm actor nhận thêm may:ghi-tam: cho đề xuất thuộc lô ghi tạm;
---   unit_data_level   — thân 087, CTE du loại tin có loại hình từ ghi tạm còn sống.
+-- Hai hàm có sẵn được VÁ trên thân đang chạy, đúng một khối mỗi hàm (khối DO cuối tệp, sinh bằng probes/sinh-129.mjs): DB máy
+-- thu chạy thân khác bản mới nhất trong kho (066 chưa áp ở máy thu, probe M5 26/11), nên không chép thân từ tệp nào.
+--   revert_enrichment — khối kiểm actor nhận thêm may:ghi-tam: cho đề xuất thuộc lô ghi tạm;
+--   unit_data_level   — CTE du loại tin có loại hình từ ghi tạm còn sống.
+-- Đã vá thì bỏ qua; không thấy khối cần vá, hay thấy hơn một lần, thì dừng cả giao dịch.
 --
--- Lùi: _acceptance/ghi-tam-do-sau-co-han/probes/lui-129.sql (một giao dịch: gỡ ba hàm mới, hai cột, hai bảng; nạp lại nguyên văn
--- revert_enrichment bản 066 và unit_data_level bản 087). Đã chạy thử trên bản chép — số ở ap-may-thu.md của hồ sơ.
+-- Lùi: _acceptance/ghi-tam-do-sau-co-han/probes/lui-129.sql (một giao dịch: gỡ ba hàm mới; vá ngược hai hàm trên thân đang
+-- chạy; gỡ hai cột, hai bảng). Đã chạy thử trên bản chép — số ở ap-may-thu.md của hồ sơ.
 
 -- <<<BANG-129
 CREATE TABLE IF NOT EXISTS ghi_tam_lo (
@@ -79,8 +81,6 @@ UPDATE enrichment_proposals ep
 -- DIEN-LUI-129>>>
 
 -- <<<HAM-129
--- @@REVERT_ENRICHMENT@@
-
 -- Rút cả lô: hoàn tác mọi đề xuất applied của lô qua revert_enrichment (ô về giá trị kế có căn cứ, superseded mở lại), đặt lô
 -- da-rut. p_dung_o = true (quá hạn, đo bù không đạt) thì ô của trường dừng tự ghi tới khi người mở lại. Lô đã rút → 0.
 CREATE OR REPLACE FUNCTION rut_lo_ghi_tam(p_ma text, p_actor text, p_ly_do text, p_dung_o boolean DEFAULT false)
@@ -165,5 +165,5 @@ BEGIN
   END LOOP;
 END $$;
 
--- @@UNIT_DATA_LEVEL@@
+-- @@VA_HAM@@
 -- HAM-129>>>
