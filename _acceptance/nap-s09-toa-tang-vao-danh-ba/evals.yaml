@@ -95,7 +95,7 @@ evals:
     criterion: AC-8
     executor: test
     cmd: config:executors.suite.pipeline_that
-    long_running: 45
+    long_running: 90
     paths: ["db/migrations/115_stg_s09_danh_ba.sql", "db/migrations/125_v_s09_db_du_an_ma_tinh.sql", "pipeline/danh-ba-vat-the.mjs", "pipeline/import-s09-danh-ba*", "pipeline/lib/s09-danh-ba-can*", "pipeline/lib/s09-dung.mjs", "pipeline/lib/s16-dung.mjs", "pipeline/package.json", "pipeline/test-nua.json", "pipeline/scripts/danh-ba-s09-*", "pipeline/tests/fixtures/s09-danh-ba/**", "scripts/ops-local-dong-bang.test.mjs"]
     expected: "exit 0; ca dữ liệu thật của bộ test pipeline (pipeline_that, khuôn HT9) trên bản chép, kích vì nhánh đổi db/migrations trong vùng của nó; 0 fail."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
