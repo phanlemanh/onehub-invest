@@ -186,7 +186,7 @@ type DongApi = { offerId: string; discountPct: number; rank?: { level: string | 
 const SO = ["number", "null"], CHU = ["string", "null"];
 const KHOA_CU_DATA_API: [string, string[]][] = [["offerId", ["string"]], ["priceVnd", SO], ["areaM2", SO], ["pricePerm2", SO],
   ["bedrooms", SO], ["phuong", CHU], ["marketId", CHU], ["propertyType", CHU], ["medianPerm2", SO], ["discountPct", SO],
-  ["confidence", CHU], ["firstSeen", CHU], ["lastSeen", CHU], ["nReposts", SO], ["contact", ["object", "null"]]];
+  ["confidence", CHU], ["firstSeen", CHU], ["lastSeen", CHU], ["nReposts", SO]];
 const KHOA_CU_APP: [string, string[]][] = [["offerId", ["string"]], ["source", CHU], ["priceVnd", SO], ["areaM2", SO], ["pricePerm2", SO],
   ["bedrooms", SO], ["phuong", CHU], ["medianPerm2", SO], ["rulerN", SO], ["discountPct", SO], ["confidence", CHU], ["lastSeen", CHU]];
 const kieu = (v: unknown) => (v === null ? "null" : typeof v);

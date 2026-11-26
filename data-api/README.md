@@ -59,10 +59,28 @@ npm run dev
 | GET | `/v1/markets/:id/submarkets` | Submarkets with metrics |
 | GET | `/v1/markets/:id/insights` | Monthly metrics (ADR, occupancy, revenue) |
 | GET | `/v1/listings` | Filter listings (market, area, bedrooms) |
-| GET | `/v1/listings/:id` | Listing detail with photos and stats |
-| GET | `/v1/deals` | Best-value listings (price/m² vs area median) |
+| GET | `/v1/listings/:id` | Listing detail with self-collected photos |
+| GET | `/v1/deals` | Best-value listings (price/m² vs group median, with price rank) |
 | GET | `/v1/asset-stats` | Asset statistics (median, p25, p75, yield) |
-| GET | `/v1/coverage` | Data coverage report by market |
+| GET | `/v1/coverage` | Self-collected listing count by market |
+
+### Response fields
+
+`GET /v1/deals` — each item: `offerId`, `priceVnd`, `areaM2`, `pricePerm2`, `bedrooms`, `phuong` (ward name),
+`marketId`, `propertyType`, `medianPerm2`, `discountPct`, `confidence`, `firstSeen`, `lastSeen`, `nReposts`, and — when
+the price-rank table is available — a `rank` block (`level`, `node`, `n`, `median`, `p20`, `percentile`, `label`,
+`needsVerification`, `metric`, `bedroomsGroup`, `reason`). `meta`: `total`, `minDiscount`, and `kind` when ranked.
+
+`GET /v1/coverage` — one row per Vietnamese market: `areaId`, `name`, `ourListings` (self-collected short-term rental
+listings in the market, including its wards). Markets with no listings yet are included with `ourListings: 0`.
+
+`GET /v1/listings/:id` — `id`, `name`, `roomType`, `propertyType`, `bedrooms`, `bathrooms`, `accommodates`,
+`minimumNights`, `priceListed`, `lat`, `lng`, `area`, `market`, `photos`, `reviewCount`, `lastSeen`.
+`photos` is `{ urls, source }`: `source` is `"self"` when the listing has self-collected photos, otherwise both
+are `null`.
+
+Data boundaries: this API never returns the text, images, group name or sender name of community posts, and never
+reads or returns calibration-source data — those stay in the internal operations portal.
 
 ## Authentication
 
