@@ -150,11 +150,13 @@ after(async () => {
   await pool.end();
 });
 
+// DB thử chép từ dữ liệu thật (db-thu --chay): deals lấy 30 tin giảm sâu nhất, listings 50 tên đầu, nên gọi trần thì tin thật
+// đẩy dòng cấy ra khỏi trang. Mọi lời gọi danh sách lọc theo phường canh (?area=), cả bản route mới lẫn bản cũ đều nhận tham số này.
 const KHOA_CAM_DEALS = ["contact", "postText", "senderName", "groupName", "mediaPath"];
 const CANH_S03 = [CANH.nhom, CANH.nguoiGui, CANH.chuBai, CANH.anhBai];
 
 test("DRL-AC-1 deals không trả nội dung bài S03", async () => {
-  const r = await goi("/v1/deals");
+  const r = await goi(`/v1/deals?area=${ID.phuong}`);
   assert.equal(r.status, 200);
   const data = r.than.data as Record<string, unknown>[];
   const tin = data.find((d) => d.offerId === ID.tinCanh);
@@ -176,7 +178,7 @@ test("DRL-AC-2 deals không đọc stg_zalo_posts ở hai nhánh", async () => {
   const loi: string[] = [];
 
   // Nhánh có bảng hạng.
-  const hang = await goi("/v1/deals");
+  const hang = await goi(`/v1/deals?area=${ID.phuong}`);
   assert.equal(hang.status, 200);
   if (!hang.sql.some((c) => c.includes("FROM sale_offers"))) loi.push("DRL bộ ghi SQL không bắt được câu nào (nhánh bảng hạng)");
   if (coBang(hang.sql, "stg_zalo_posts").length) loi.push("DRL deals đọc stg_zalo_posts (nhánh bảng hạng)");
@@ -184,7 +186,7 @@ test("DRL-AC-2 deals không đọc stg_zalo_posts ở hai nhánh", async () => {
   // Nhánh thước CG8: bảng hạng rỗng → route lùi về v_ruler_p2.
   await sql(`DELETE FROM offer_price_rank`);
   try {
-    const cg8 = await goi("/v1/deals");
+    const cg8 = await goi(`/v1/deals?area=${ID.phuong}`);
     assert.equal(cg8.status, 200);
     if (!cg8.sql.some((c) => c.includes("v_ruler_p2"))) loi.push("DRL bộ ghi SQL không bắt được câu nào (nhánh CG8)");
     if (coBang(cg8.sql, "stg_zalo_posts").length) loi.push("DRL deals đọc stg_zalo_posts (nhánh CG8)");
@@ -273,7 +275,7 @@ const KHOA_DANH_SACH = [
 ];
 
 test("DRL-AC-5 listings danh sách giữ hình", async () => {
-  const r = await goi("/v1/listings");
+  const r = await goi(`/v1/listings?area=${ID.phuong}`);
   assert.equal(r.status, 200);
   const dong = (r.than.data as Record<string, unknown>[]).find((d) => d.id === ID.listingCoAnh);
   assert.ok(dong, "DRL listings danh sách đổi hình: thiếu listing cấy");

@@ -1,28 +1,24 @@
 ## Trong hợp đồng
 
-- **Hình dạng 4 (không ghim thông điệp): ô coverage-cu của pha.mjs ghim tiền tố «DRL coverage lộ», và tiền tố này khớp cả thông điệp không thuộc lớp khoá cấm hay chuỗi canh**
-  AC: AC-6
-  file: `_acceptance/data-api-dong-ba-route-lo/probes/pha.mjs:21`
-  severity: low
-  source: measurement
-  detail: Dòng 21 đặt `json: "DRL coverage lộ"`, và dòng 66 coi lớp JSON là đỏ khi `ra.includes(o.json)`. Tiền tố này khớp ba thông điệp khác nhau trong dong-ba-route.test.ts. Thứ nhất là «DRL coverage lộ: thiếu thị trường canh» (dòng 214), báo thiếu dòng chứ không báo lộ dữ liệu. Thứ hai là «DRL coverage lộ dấu S02: thị trường không có S02 bị bỏ khỏi danh sách» (dòng 220), kiểm sự có mặt của dòng. Thứ ba mới là «DRL coverage lộ khoá cấm» và «lộ chuỗi canh» (dòng 224-225). Bản coverage.ts cũ nối `JOIN LATERAL ... lc ON TRUE` nên thị trường B luôn bị bỏ, tức là thông điệp «lộ dấu S02» luôn xuất hiện. Vì vậy ô coverage-cu vẫn ra `lop_json = true` kể cả khi phần quét KHOA_CAM_COVERAGE hay phần dò chuỗi canh CANH.soS02/CANH.kyS02 bị hỏng hoặc không bao giờ đỏ. Trong khi đó evals.yaml E3 hứa rằng chiều đỏ ra «DRL coverage lộ khoá cấm», và E6 hứa «lớp JSON» đỏ. Nghĩa là chiều đỏ của hai phép đo đó không được chứng minh độc lập, vì tiền tố đã ghim lẫn chúng với một phép đo khác.
-  rationale: AC-6 đòi mỗi lớp một thông điệp ghim riêng (lớp JSON là khoá cấm hay chuỗi canh) và hai lớp độc lập; tiền tố ghim quá rộng làm chiều đỏ của lớp JSON không được chứng minh riêng.
+- **Test DRL đọc ba đường không lọc, nên trên DB thử chép từ dữ liệu thật thì không thấy dòng canh và đỏ giả**
+  file: `data-api/test/dong-ba-route.test.ts:157`
+  severity: medium
+  AC: AC-1
+  source: conventions
+  detail: Executor `dapi_drl` trong _acceptance/config.yaml và probes/pha.mjs đều chạy test qua `db/db-thu.sh … --chay`. Lệnh này chép bản mẫu `oneinvest_suite_mau`, tức một pg_dump của DB chung `oneinvest`, kèm toàn bộ dữ liệu thật. Nó không dựng DB trống từ migration như `--chay-trong`. Thế mà test gọi các đường không lọc và trông vào việc dòng canh lọt vào trang đầu:
+  - DRL-AC-1 và DRL-AC-2 (dòng 157, 179, 187) gọi `/v1/deals`. Route sắp theo `discount_pct DESC` và mặc định `LIMIT 30`, còn tin canh chỉ giảm 20%. Trên máy có `offer_price_rank` hay `sale_offers` thật (Mac mini), 30 dòng đầu sẽ là tin thật giảm 20–50%. Khi đó `data.find(offerId === ID.tinCanh)` ra undefined và test đỏ với «thiếu tin canh».
+  - DRL-AC-5 (dòng 276) gọi `/v1/listings`, route sắp `ORDER BY l.name LIMIT 50`. Dòng «DRL có ảnh» đứng sau mọi tên bắt đầu bằng số, A, B, C… nên sẽ rơi ngoài 50 dòng đầu.
+  Test xanh trên M5 vì DB thử ở đó thiếu dữ liệu nền: chính evidence-report.md dòng 196 và design.md dòng 43 có ghi điều này. Hồ sơ mở cửa cho lượt chấm chính thức chạy lại trên máy có dữ liệu thật (commit 16340596f «sau gộp main, vào lượt chấm chính thức»). Ở đó E1, E2, E5 đỏ, và ô «goc» của pha.mjs (E6) cũng đỏ theo. Trường hợp này trái với hướng repo vừa chốt ở HT9 (#545): ca cần cô lập khỏi dữ liệu thật thì chạy `--chay-trong` trên DB trống từ migration, ca dữ liệu thật tách riêng. Hướng sửa: lọc bằng `?area=vn-drl-thi-truong-phuong-1` hoặc `?market=vn-drl-thi-truong`, hoặc chuyển executor và pha.mjs sang `--chay-trong`.
+  rationale: AC-1, AC-2 và AC-5 đòi tin canh có trong data của /v1/deals và /v1/listings trên DB thử; lượt chấm chính thức chạy trên máy có dữ liệu thật nên các ca này đỏ giả, làm chúng that bại.
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **Test DRL gọi /v1/deals và /v1/listings không lọc, nên trên DB có dữ liệu thật dòng canh có thể rơi khỏi trang đầu**
-  Người dùng thấy gì: Khi chạy kiểm thử trên máy thu có nhiều dữ liệu thật, các ca kiểm có thể báo đỏ giả vì tin cấy thử bị đẩy ra khỏi trang đầu. Luật chặn lộ dữ liệu vẫn đúng, chỉ là phép kiểm có thể báo sai.
-  Căn cứ: Chỉ làm phép kiểm báo đỏ nhầm trên máy có dữ liệu thật, không làm lộ hay mất dữ liệu của người dùng, chạy lại hoặc sửa sau đều rẻ.
-  file: `data-api/test/dong-ba-route.test.ts`
-  severity: medium
-  Đề xuất: known-limits
-
-- **Test DRL tìm dòng cấy trong danh sách đã phân trang, không lọc theo khu; trên DB có dữ liệu thật sẽ đỏ giả (cả AC-1, AC-2, AC-5 và ô «goc» của pha.mjs)**
-  Người dùng thấy gì: Trên máy có dữ liệu thật, bộ kiểm có thể báo đỏ dù ba đường API đã được gỡ đúng luật. Người dùng cuối không bị ảnh hưởng, chỉ người chạy kiểm thử thấy kết quả sai.
-  Căn cứ: Hậu quả chỉ là báo động giả cho người kiểm, không ảnh hưởng dữ liệu hay người dùng, và có thể tự thử lại hoặc sửa sau với chi phí thấp.
-  file: `data-api/test/dong-ba-route.test.ts`
+- **README công khai khẳng định API không bao giờ đọc hay trả dữ liệu S02, nhưng /v1/markets* vẫn làm việc đó**
+  Người dùng thấy gì: Tài liệu công khai của API nói rằng API không bao giờ trả số liệu của nguồn hiệu chuẩn, nhưng các trang thị trường vẫn trả. Người dùng API có thể hiểu sai về dữ liệu họ nhận được.
+  Căn cứ: Chỉ là câu chữ mô tả sai, không làm lộ thêm dữ liệu so với hiện tại, và sẽ hết khi hàng gỡ số này khỏi các trang thị trường hoàn tất.
+  file: `data-api/README.md`
   severity: medium
   Đề xuất: known-limits
 
