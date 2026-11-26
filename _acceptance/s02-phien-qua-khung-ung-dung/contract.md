@@ -5,7 +5,7 @@ slug: s02-phien-qua-khung-ung-dung
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: machine-cleared
 veto_state: mo
 veto_opened_at: 2026-11-25T02:50:00Z
 approved_by:
