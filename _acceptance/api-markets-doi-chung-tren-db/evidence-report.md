@@ -1,116 +1,112 @@
 ---
 schema_version: 2
 feature_slug: api-markets-doi-chung-tren-db
-verdict: REJECT
-failed_evals: ["E4"]
+verdict: PASS
+failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 1c522bd32edf605a07aa6d6cf1a3d16822f09152
+verified_commit: fb40a54dc4a7ff33a8a1c2f30fb1c52c786547e8
 human_signoff:
 ---
 
 # Evidence Report: api-markets-doi-chung-tren-db
-
-Round 1. Có một eval rớt (E4), nên verdict là REJECT.
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
 | E1 | AC-1 | test | PASS |
 | E2 | AC-2 | test | PASS |
 | E3 | AC-3 | script | PASS |
-| E4 | AC-4 | test | FAIL |
+| E4 | AC-4 | test | PASS |
 | E5 | AC-4 | script | PASS |
 
 ## Evidence
 
 - eval: E1
-  run_id: minted-api-markets-doi-chung-tren-db-E1-r1
+  run_id: minted-api-markets-doi-chung-tren-db-E1-r2
   exit_code: 0
-  baseline: red
+  baseline: n-a
   verifier: config:executors.test.ht28_ac1
-  verified_at: 2026-11-26T06:14:55Z
+  verified_at: 2026-11-26T06:43:29Z
   output: |
-    ℹ duration_ms 794.783458
+    Ca HT28-AC-1 chạy riêng bằng --test-name-pattern, đạt «ℹ pass 1».
+    ℹ duration_ms 234.472666
 
 - eval: E2
-  run_id: minted-api-markets-doi-chung-tren-db-E2-r1
+  run_id: minted-api-markets-doi-chung-tren-db-E2-r2
   exit_code: 0
-  baseline: red
+  baseline: n-a
   verifier: config:executors.test.ht28_ac2
-  verified_at: 2026-11-26T06:14:55Z
+  verified_at: 2026-11-26T06:43:29Z
   output: |
-    ℹ duration_ms 593.413083
+    Ca HT28-AC-2 chạy riêng bằng --test-name-pattern, đạt «ℹ pass 1».
+    ℹ duration_ms 402.106958
 
 - eval: E3
-  run_id: minted-api-markets-doi-chung-tren-db-E3-r1
+  run_id: minted-api-markets-doi-chung-tren-db-E3-r2
   exit_code: 0
-  baseline: red
+  baseline: n-a
   verifier: config:executors.script.ht28_khong_theo_chen
-  verified_at: 2026-11-26T06:14:55Z
+  verified_at: 2026-11-26T06:43:29Z
   output: |
-    (lệnh kiểm tệp test thoát sạch, không in gì)
+    Tệp test tồn tại, không còn các cụm theoChen, sort ổn định, giữ thứ tự chèn; có cụm «chiều đỏ tất định nằm ở HT28-AC-2».
 
 - eval: E4
-  run_id: minted-api-markets-doi-chung-tren-db-E4-r1
-  exit_code: 1
-  baseline: red
+  run_id: minted-api-markets-doi-chung-tren-db-E4-r2
+  exit_code: 0
+  baseline: n-a
   verifier: config:executors.suite.app_ui
-  verified_at: 2026-11-26T06:14:55Z
+  verified_at: 2026-11-26T06:43:29Z
   output: |
-    Bộ test app (`cd app && npm test`) có ca đỏ ở tests/hang-gia-doc.test.tsx:
-    CG9-AC-7 /v1/deals data-api và CG9-AC-7 /api/v1/deals app (token ops).
-    Nguyên nhân in ra: ERR_MODULE_NOT_FOUND, không tìm thấy package 'pg' được import từ
-    .claude/worktrees/cham-ht28/data-api/src/db/client.ts.
+    Bộ test app xanh trên DB thử.
+    ℹ duration_ms 771969.541834
 
 - eval: E5
-  run_id: minted-api-markets-doi-chung-tren-db-E5-r1
+  run_id: minted-api-markets-doi-chung-tren-db-E5-r2
   exit_code: 0
-  baseline: green
+  baseline: n-a
   verifier: config:executors.script.ht28_route_khong_doi
-  verified_at: 2026-11-26T06:14:55Z
+  verified_at: 2026-11-26T06:43:29Z
   output: |
     git diff rỗng: route.ts bằng đúng bản ở 04b9ddc3b.
 
 ### Lệnh suite (hồi quy)
 
 - cmd: node scripts/suite-neu-doi.mjs agent -- 'cd agent && npm test'
-  run_id: minted-api-markets-doi-chung-tren-db-SUITE-node_scripts_suite_neu_doi_mjs_agent_cd_-r1
+  run_id: minted-api-markets-doi-chung-tren-db-SUITE-node_scripts_suite_neu_doi_mjs_agent_cd_-r2
   exit_code: 0
-  verified_at: 2026-11-26T06:14:55Z
+  verified_at: 2026-11-26T06:43:29Z
 
 - cmd: node scripts/suite-neu-doi.mjs app -- 'cd app && npx tsc --noEmit && npm run lint'
-  run_id: minted-api-markets-doi-chung-tren-db-SUITE-lint-r1
+  run_id: minted-api-markets-doi-chung-tren-db-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-11-26T06:14:55Z
+  verified_at: 2026-11-26T06:43:29Z
 
 - cmd: node scripts/suite-neu-doi.mjs pipeline_a -- 'cd pipeline && npm run test:a'
-  run_id: minted-api-markets-doi-chung-tren-db-SUITE-test_a-r1
+  run_id: minted-api-markets-doi-chung-tren-db-SUITE-test_a-r2
   exit_code: 0
-  verified_at: 2026-11-26T06:14:55Z
+  verified_at: 2026-11-26T06:43:29Z
 
 - cmd: node scripts/suite-neu-doi.mjs pipeline_b -- 'cd pipeline && npm run test:b'
-  run_id: minted-api-markets-doi-chung-tren-db-SUITE-test_b-r1
+  run_id: minted-api-markets-doi-chung-tren-db-SUITE-test_b-r2
   exit_code: 0
-  verified_at: 2026-11-26T06:14:55Z
+  verified_at: 2026-11-26T06:43:29Z
 
 - cmd: node scripts/suite-neu-doi.mjs pipeline_that -- 'cd pipeline && npm run test:that'
-  run_id: minted-api-markets-doi-chung-tren-db-SUITE-test_that-r1
+  run_id: minted-api-markets-doi-chung-tren-db-SUITE-test_that-r2
   exit_code: 0
-  verified_at: 2026-11-26T06:14:55Z
+  verified_at: 2026-11-26T06:43:29Z
 
 - cmd: node scripts/suite-neu-doi.mjs ui_lint_rules -- 'cd app && npm run test:lint-rules'
-  run_id: minted-api-markets-doi-chung-tren-db-SUITE-test_lint_rules-r1
+  run_id: minted-api-markets-doi-chung-tren-db-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-11-26T06:14:55Z
+  verified_at: 2026-11-26T06:43:29Z
 
 - cmd: node scripts/suite-neu-doi.mjs portal_static -- 'node scripts/check-portal-compliance.mjs'
-  run_id: minted-api-markets-doi-chung-tren-db-SUITE-node_scripts_suite_neu_doi_mjs_portal_st-r1
+  run_id: minted-api-markets-doi-chung-tren-db-SUITE-node_scripts_suite_neu_doi_mjs_portal_st-r2
   exit_code: 0
-  verified_at: 2026-11-26T06:14:55Z
-
-Lệnh fail không gắn eval: không có. Lệnh duy nhất rớt là `node scripts/suite-neu-doi.mjs app_ui -- 'cd app && npm test'`, và nó gắn với E4.
+  verified_at: 2026-11-26T06:43:29Z
 
 ## Known limits
 
@@ -118,9 +114,10 @@ Lệnh fail không gắn eval: không có. Lệnh duy nhất rớt là `node scr
 
 ## Analyst
 
-E5 (regression-guard có chủ ý: đòi route.ts không đổi so với 04b9ddc3b) xanh ở cả code mới lẫn baseline. Nó chỉ chứng minh route không bị sửa, không chứng minh hành vi mới.
+carried tu round 1 — baseline khong do lai round nay
 
-Không có eval judgment nên không có judge panel nào cần đề xuất hay human_override.
+Eval không phân biệt (xanh cả trên HEAD lẫn baseline), cần viết lại để assert hành vi mới hoặc xác nhận là regression-guard có chủ ý:
+- E5 (`git diff --exit-code 04b9ddc3b -- app/src/app/api/v1/markets/route.ts`): regression-guard có chủ ý, ghim route không đổi.
 
 ## Variance
 
@@ -128,6 +125,7 @@ none — every multi-run eval is uniform
 
 ## Iterations
 
-Round 1: E4 failed. Bộ test app có ca đỏ ở tests/hang-gia-doc.test.tsx (CG9-AC-7, deals) do thiếu package 'pg' khi import data-api/src/db/client.ts trong worktree cham-ht28. Các ca HT28-AC-1 và HT28-AC-2 của feature đều xanh. Cần xử lý môi trường (cài phụ thuộc data-api cho worktree) hoặc xác nhận ca đỏ là lỗi có sẵn ngoài feature, rồi chạy lại E4. Trả về bước triển khai.
+Round 1: baseline đã đo; E5 xanh cả hai phía (regression-guard có chủ ý).
+Round 2: E1 đến E5 và mọi lệnh suite đạt; verdict PASS.
 
-máy: M5 (M5 Max 18 nhân, colima 16/96) · DB: bản đầy đủ máy thu chép sang 26/11 05:45Z · ca đỏ có tên: app_ui 16/1295 ca đỏ (1270 pass), đều ở các tệp test deals (CG8, CG9, CG10) — CG8-AC-3/5/6, CG8-TIEN-DE, CG9-AC-6 (x5), CG9-AC-7 (x2), CG10-AC-6/7/8 (x4) + mức tệp gia-tot-du-an-doc.test.tsx; mỗi ca chết lúc nạp (~0,03 ms) — ERR_MODULE_NOT_FOUND 'pg' từ data-api/src/db/client.ts: worktree chấm thiếu data-api/node_modules (hướng dẫn M5 chỉ nối app/pipeline/agent) → đỏ do môi trường chấm, không do diff HT28.
+máy: M5 (M5 Max 18 nhân, colima 16/96) · DB: bản đầy đủ máy thu chép sang 26/11 05:45Z · ca đỏ có tên: không. Vòng trước (r1 ＠683d3d22) đỏ do chỗ chấm M5 thiếu data-api/node_modules (16 ca deals chết lúc nạp gói pg), không do hàng — GS phán không tính vòng; vòng này chấm lại cùng mã sau khi nối data-api/node_modules.
