@@ -60,18 +60,18 @@ trap 'exit 1' TERM INT
 # 1b) 2611-27 (2): còn trong khoảng nghỉ sau bị chặn → thoát 0 kèm dòng nhật ký,
 #     KHÔNG gọi node nào (kể cả thu); mốc hỏng/xong thì xoá và đi tiếp.
 if [ -f "$BI_CHAN" ]; then
-  CON_LAI="$(node -e '
-    try {
-      const h = new Date(JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")).hetLuc) - Date.now();
-      console.log(Number.isFinite(h) ? Math.max(0, Math.ceil(h / 60000)) : -1);
-    } catch { console.log(-1); }
-  ' "$BI_CHAN")"
+  # thuần bash date (BSD/macOS) — không gọi node, để môi trường shim test không xuyên ge]
+  HET="$(sed -E 's/.*"hetLuc":"([^"]*)".*/\1/' "$BI_CHAN" 2>/dev/null)"
+  HET="${HET%%.*}" # bỏ mili-giây — ISO của JS có .SSSZ, %FT%TZ không đọc được
+  HET_S="$(date -ju -f '%Y-%m-%dT%H:%M:%S' "$HET" '+%s' 2>/dev/null || echo 0)" # BSD date không đọc %T và Z phải bỏ (HET đã cắt mili-giây)
+  CON_LAI=$(( (HET_S - $(date -u +%s) + 59) / 60 ))
   case "$CON_LAI" in
-    -1) rm -f "$BI_CHAN" ;;                                   # mốc hỏng — coi như không có
-    0)  rm -f "$BI_CHAN" ;;                                   # hết nghỉ — chạy lại
-    *)  echo "$(date -u +%FT%TZ) nghỉ sau bị chặn nguồn — còn $CON_LAI phút, không gọi nguồn vòng này"
-        exit 0 ;;
+    0|*) if [ "$CON_LAI" -le 0 ]; then rm -f "$BI_CHAN"; fi ;;  # hết nghỉ / mốc hỏng — chạy lại
   esac
+  if [ "$CON_LAI" -gt 0 ]; then
+    echo "$(date -u +%FT%TZ) nghỉ sau bị chặn nguồn — còn $CON_LAI phút, không gọi nguồn vòng này"
+    exit 0
+  fi
 fi
 
 # 2) nhường lượt quét đủ (05:30 + 14:00) — script nạp ngày đang chạy → thoát 0
@@ -126,7 +126,7 @@ for CITY in $CITIES; do
          echo "❌ thu đuôi vùng $CITY thoát $RC — dừng vòng, nạp để vòng sau"
          if [ "$RC" = "3" ]; then
            # 2611-27 (2): bị chặn nguồn → các vòng kế nghỉ NGHI_SAU_CHAN_PHUT phút, không gọi nguồn
-           printf '{"hetLuc":"%s"}' "$(node -e 'console.log(new Date(Date.now() + Number(process.env.NGHI_SAU_CHAN_PHUT) * 60000).toISOString())')" > "$BI_CHAN"
+           printf '{"hetLuc":"%s"}' "$(date -u -v+"${NGHI_SAU_CHAN_PHUT}"M +%FT%TZ)" > "$BI_CHAN"
          fi
          exit "$RC"; }
 
