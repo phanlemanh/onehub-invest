@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 53d3109cc29e9e8568c419910f7bbd274a3b6376
+verified_commit: a55c8aaca44c641b016fb9bc3ed7b67ebb1afeb3
 human_signoff: Mạnh 2026-11-26
 ---
 
@@ -207,3 +207,7 @@ Round 3: mọi eval máy E1 đến E9 và E11 xanh, các lệnh suite xanh; E10 
 ### Re-pin lần 1 — 2026-11-26, do gộp main b013b4428 (HT19 #549) và sửa probe phạm vi nhận squash
 run_id: repin-20261126T090732Z-45729
 sha: 53d3109cc29e9e8568c419910f7bbd274a3b6376 · suites: 8 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng · ngoài làn máy: E10 (E10 không khai paths) · AC không có chốt máy: AC-9
+
+### Re-pin lần 2 — 2026-11-26, do gộp main 816796cf3 (#550, #537) để hết xung đột PR #551
+run_id: repin-20261126T094923Z-44636
+sha: a55c8aaca44c641b016fb9bc3ed7b67ebb1afeb3 · suites: 8 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng · ngoài làn máy: E10 (E10 không khai paths) · AC không có chốt máy: AC-9
