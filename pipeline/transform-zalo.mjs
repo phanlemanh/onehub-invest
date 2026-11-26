@@ -504,8 +504,8 @@ const YEU_CAU_PL42 = [
   String.raw`${KHONG_DINH_CHU}(?:ace|ac|anh\s*(?:\/\s*)?chị|a\s*(?:\/\s*)?c|ai)\s+(?:nào\s+)?có\s+(?:thì\s+)?(?:căn\s+)?(?:gửi|nhắn|ib|inbox)\s+(?:cho\s+)?(?:em|e)(?![\p{L}])`,
   // «khách e/em cọc hụt/chốt hụt» — «khách e chốt căn này rồi, còn 1 căn…» là tin rao, không khớp.
   String.raw`kh[aá]ch\s+(?:e|em)\s+(?:cọc|chốt)\s+hụt`,
-  // «em/mình/e (đang) (cần) tìm», trừ «… tìm khách/người (thuê)» của môi giới.
-  String.raw`${KHONG_DINH_CHU}(?:em|mình|e)\s+(?:đang\s+)?(?:cần\s+)?tìm(?![\p{L}])(?!\s+(?:kh[aá]ch|người))`,
+  // «em/mình/e (đang) (cần) tìm», trừ «… tìm (gấp/được) khách/người (thuê)» của môi giới.
+  String.raw`${KHONG_DINH_CHU}(?:em|mình|e)\s+(?:đang\s+)?(?:cần\s+)?tìm(?![\p{L}])(?!\s+(?:gấp\s+|được\s+)?(?:kh[aá]ch|người))`,
 ];
 const YEU_CAU = new RegExp(`(?:${[YEU_CAU_GOC, ...YEU_CAU_PL42].join("|")})`, "iu");
 const YEU_CAU_MAC_DINH = YEU_CAU;

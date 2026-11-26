@@ -96,6 +96,9 @@ const TIN_RAO = [
   ["em/mình tìm", "Em tìm khách thuê cho căn 2pn 8tr", "rent_lt", "don-vi-gia"],
   ["em/mình tìm", "Em đang tìm khách thuê cho căn studio full đồ", null, "bo"],
   ["em/mình tìm", "Mình tìm người thuê căn 1pn 6tr", "rent_lt", "don-vi-gia"],
+  ["em/mình tìm", "Em tìm gấp khách thuê căn 2pn 8tr", "rent_lt", "don-vi-gia"],
+  ["em/mình tìm", "Mình đang tìm gấp người thuê căn 1pn 6tr", "rent_lt", "don-vi-gia"],
+  ["em/mình tìm", "Em tìm được khách rồi, còn 1 căn 2pn 8tr", "rent_lt", "don-vi-gia"],
   ["khách thuê cọc", "Khách thuê cọc rồi, còn 1 căn 2pn 8tr", "rent_lt", "don-vi-gia"],
   ["khách thuê cọc", "Khách thuê cọc rồi, còn căn 2pn full đồ", null, "bo"],
   ["đã có khách", "Đã có khách, còn studio 6tr", "rent_lt", "don-vi-gia"],
@@ -127,8 +130,12 @@ describe("PL42-AC-2 tin rao gần giống không bị kéo vào Yêu cầu", () 
     assert.throws(() => kiemTinRao(mod, "PL42-AC-2 tin rao thành Yêu cầu"), /PL42-AC-2 tin rao thành Yêu cầu: .*\[khách thuê cọc\] «Khách thuê cọc rồi, còn 1 căn 2pn 8tr» → null\/yeu-cau/);
   });
   test("chiều đỏ PL42-AC-2: bỏ loại trừ «tìm khách/người» của mẫu «em tìm» → ca «Em tìm khách thuê» đỏ", async () => {
-    const mod = await banDot([["tìm(?![\\p{L}])(?!\\s+(?:kh[aá]ch|người))`,", "tìm(?![\\p{L}])`,"]]);
+    const mod = await banDot([["tìm(?![\\p{L}])(?!\\s+(?:gấp\\s+|được\\s+)?(?:kh[aá]ch|người))`,", "tìm(?![\\p{L}])`,"]]);
     assert.throws(() => kiemTinRao(mod, "PL42-AC-2 tin rao thành Yêu cầu"), /PL42-AC-2 tin rao thành Yêu cầu: .*\[em\/mình tìm\] «Em tìm khách thuê cho căn 2pn 8tr» → null\/yeu-cau/);
+  });
+  test("chiều đỏ PL42-AC-2: loại trừ của mẫu «em tìm» không nhận «gấp/được» → «Em tìm gấp khách», «Em tìm được khách» đỏ", async () => {
+    const mod = await banDot([["(?!\\s+(?:gấp\\s+|được\\s+)?(?:kh[aá]ch|người))`,", "(?!\\s+(?:kh[aá]ch|người))`,"]]);
+    assert.throws(() => kiemTinRao(mod, "PL42-AC-2 tin rao thành Yêu cầu"), /«Em tìm gấp khách thuê căn 2pn 8tr» → null\/yeu-cau[\s\S]*«Em tìm được khách rồi, còn 1 căn 2pn 8tr» → null\/yeu-cau/);
   });
 });
 
