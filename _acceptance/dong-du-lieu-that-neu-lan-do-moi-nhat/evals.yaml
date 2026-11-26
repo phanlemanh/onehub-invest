@@ -25,3 +25,10 @@ evals:
     cmd: config:executors.test.ht30_dong
     paths: ["scripts/suite-neu-doi.mjs", "scripts/pipeline-that-hang-ngay.test.mjs"]
     expected: "Ca tên HT30-AC-4 (pass, không skip): duongSo(<thư mục tạm không phải kho git>) === null khi PIPELINE_THAT_SO vắng; dongDuLieuThat(false, null) và dongDuLieuThat(false, <thư mục thay vì tệp>) bắt đầu «ca dữ liệu thật: không kích — không đọc được sổ soát hằng ngày»; sổ [xanh, dòng cuối cắt dở] → «… (dòng cuối hỏng)», sổ [xanh, dòng giữa hỏng, đỏ] → vẫn nêu ĐỎ mới hơn; (đo ở mức hàm: ngoài kho git suite-neu-doi luôn kích pipeline_that nên nhánh này không tới được qua lệnh thật — thu hẹp sau lượt chấm M5 vòng 1). Chiều đỏ: bản sao duongSo cũ (chạy với cwd là thư mục tạm, không trúng sổ thật) → dòng in «chưa có lần xanh nào», ghim «sổ không đọc được trông như sổ trống»."
+  - id: E5
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.suite.pipeline_that
+    long_running: 90
+    paths: ["scripts/suite-neu-doi.mjs", "scripts/ci-bo-qua.json"]
+    expected: "exit 0; nhánh đổi scripts/suite-neu-doi.mjs nên suite-neu-doi kích pipeline_that (dòng «ca dữ liệu thật: chạy trong lượt này»), `ℹ fail 0`; trên M5 tập ca bỏ qua đúng bằng tập may_thu của ci-bo-qua (ON22-AC-10), không ca nào khác bị bỏ — đổi dòng in «ca dữ liệu thật» không làm đỏ ca nào dùng dữ liệu thật."
