@@ -147,6 +147,8 @@ human_signoff:
 
 ## Known limits
 
+- Sửa cách đo E8 sau chữ ký (phán GS 26/11, cửa veto của Mạnh mở tới khi gộp): Ngoài-6 (Known limits) thành đỏ thật khi thẻ 108375 đăng lại chữ mới từ 24/11 — probe nay in riêng thẻ đổi chữ kèm căn cứ (khoá tính trên bài lúc lượt 1 khớp khoá lượt 1, bài mới nhất chụp sau lượt 1), không tính thiếu. Expected E8 không đổi. Đo 26/11 trên DB máy thu: 55/55 cặp thẻ còn nguyên trúng kho, 2 cặp (1 thẻ) đổi chữ, thoát 0; đối chứng phá `KT_PHA=lech:107677` và `KT_PHA=vang-kho:107677` đều thoát 1, đỏ đúng thẻ 107677.
+
 ## Ngoài hợp đồng
 
 ## Analyst
