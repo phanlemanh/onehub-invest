@@ -17,7 +17,7 @@ evals:
     criterion: AC-3
     executor: test
     cmd: config:executors.test.s09_can_ham
-    expected: "Ma trận mười bốn ô viết trước theo khuôn thật của gói 2, mỗi ô một assert giá trị trả về (toà của item, tầng, số căn hoặc lý do hỏng). Chiều đỏ: đột biến tách theo dấu chấm đầu tiên thì ô «toà có dấu chấm» đỏ; đột biến lấy toà từ mã thì ô «toà viết tắt» đỏ; mỗi thông điệp nêu tên ô"
+    expected: "Ma trận mười bốn ô viết trước theo khuôn thật của gói 2, mỗi ô một assert giá trị trả về (toà của item, tầng, số căn hoặc lý do hỏng). Chiều đỏ: đột biến tách theo dấu chấm đầu tiên thì ô «toà có dấu chấm» đỏ; đột biến bỏ đọc tầng trong mã (luôn lấy tầng item) thì ô «mã ghi tầng khác tầng item» đỏ; mỗi thông điệp nêu tên ô"
     paths: ["pipeline/lib/s09-can-cao-tang.mjs", "pipeline/lib/s09-can-cao-tang.test.mjs"]
   - id: E4
     criterion: AC-4
