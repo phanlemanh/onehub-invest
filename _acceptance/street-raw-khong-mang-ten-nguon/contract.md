@@ -5,7 +5,7 @@ slug: street-raw-khong-mang-ten-nguon
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-11-25T09:11:22Z
 approved_by:
@@ -110,3 +110,12 @@ Lớp phát biểu sống (cùng ngày, sau khi ô sự cố đã gỡ, `probes/
 - Hạ tầng S4 r2 (25/11): cô lập worktree của phiên chấm chặn lệnh nền của tác tử chấm và lệnh baseline; lượt chấm lại
   không chạy E1–E3, E5, E7 (đã đạt ở r2 trên cùng phần mã). Lối thay cho lượt sau: đổi thư mục phiên ở đầu lượt do tin mở,
   hoặc phiên chấm riêng (GS chốt 25/11).
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-26:
+  - Ngoài-1: Dòng báo cáo sau mỗi lượt có thể ghi số ô đã rút nhiều hơn thực tế trong vài trường hợp hiếm; dữ liệu và kết quả trên cổng vẫn đúng.
+  - Ngoài-2: Con số chi phí của luật được báo có thể thấp hơn chi phí thật vì luật được gọi hai lần mỗi tin; vẫn xa ngưỡng 5%.
+  - Ngoài-4: Cam kết luật không làm chậm quá 5% được kiểm bằng ước lượng, chưa đo trực tiếp bên trong lượt transform.
+  - Ngoài-5: Ca tái diễn chưa có lượt đối chứng không luật trong cùng phép đo (lượt bỏ luật ở vòng 2 đã cho thấy ô thật tái diễn).
+  - Ngoài-6: Ca tin mới về NULL chưa có đối chứng dương riêng.
+  - Ngoài-7: Ca «đếm độc lập gồm các ô cấy» so ngưỡng số đếm, không so từng ô cấy.
+  - Ngoài-8: Hai eval suite E6, E7 khai danh sách tệp hẹp hơn khuôn có sẵn, nên có thể nhắc chấm lại thiếu hoặc thừa.
+  - Ngoài-9: Test đơn vị của luật chưa nằm trong npm test của pipeline, nên CI không tự chạy; chạy qua eval E4.
