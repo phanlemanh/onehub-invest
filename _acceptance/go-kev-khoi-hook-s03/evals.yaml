@@ -5,8 +5,8 @@ evals:
     criterion: AC-1
     executor: test
     cmd: config:executors.script.kev1_handler_test
-    paths: [collector/openclaw/handler.js, collector/openclaw/handler.test.mjs]
-    expected: "exit 0; 6/6 pass, 0 fail; bộ chạy với HOME + spool TẠM đặt trước khi import hook (chốt ném «HOME tạm không có hiệu lực» nếu homedir() còn là HOME thật — phá dòng gán HOME → 1 fail đúng thông điệp ấy, đo 24/11); ca «cô-lập: log và spool của hook nằm dưới HOME tạm» xanh; ca «tin-giả: đúng 1 lần đẩy tới cổng thu, KHÔNG gọi cổng chấm nào» xanh; hai ca tự phá trong bộ (P1 bỏ trường kev → ca khuôn-kev đỏ; P2 chèn lại lời gọi cổng chấm → fetch giả thấy URL) chạy và đạt — chiều đỏ ghim trong chính bộ test. Đột biến LL 24/11: chèn lại lời gọi :8009 vào handler.js → 4/5."
+    paths: [collector/openclaw/handler.js, collector/openclaw/handler.test.mjs, pipeline/lib/ops-flow.mjs, app/src/lib/collections-queries.ts]
+    expected: "exit 0; 8/8 pass, 0 fail; ca «bên-đọc-log: dòng post mới tách đúng tên nhóm ở ops-flow parseLog và gateByGroup» xanh (tên nhóm = t1, không dính « kev=off»; regex gateByGroup rút từ mã nguồn app) và ca «bên-đọc-log ĐỎ khi đặt lại kev=off giữa group= và account=» đạt (review S4 r1); bộ chạy với HOME + spool TẠM đặt trước khi import hook (chốt ném «HOME tạm không có hiệu lực» nếu homedir() còn là HOME thật — phá dòng gán HOME → 1 fail đúng thông điệp ấy, đo 24/11); ca «cô-lập: log và spool của hook nằm dưới HOME tạm» xanh; ca «tin-giả: đúng 1 lần đẩy tới cổng thu, KHÔNG gọi cổng chấm nào» xanh; hai ca tự phá trong bộ (P1 bỏ trường kev → ca khuôn-kev đỏ; P2 chèn lại lời gọi cổng chấm → fetch giả thấy URL) chạy và đạt — chiều đỏ ghim trong chính bộ test. Đột biến LL 24/11: chèn lại lời gọi :8009 vào handler.js → 4/5."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E2
@@ -136,7 +136,7 @@ evals:
     executor: script
     cmd: config:executors.script.kev1_ap_may_thu
     paths: [_acceptance/go-kev-khoi-hook-s03/ap-may-thu/**]
-    expected: "exit 0; (a) README có năm mục 1–5, mỗi mục có lệnh hay con số, mục 2 có 4.954 và 5.103, mục 3 và 4 có handler.js.bak-, mục 4 có kickstart, mục 5 có kiem-sau.sh, dòng 'lời riêng của Mạnh', lệnh 'launchctl kickstart -k gui/$(id -u)/ai.openclaw.gateway', khung '05:30–06:30 … 14:00–14:45'; (b) tám ca log mẫu: dat → 'ĐẠT — 3 dòng post 202 kev=off'; con-kev-null, hook-cu, khong-tin, watchdog-cu, watchdog-khong-ok, lockdown-vo (KILL trong cảnh báo), canh-bao-kev → 'KHÔNG ĐẠT — <lý do đúng>' mã 1; (c) round-trip writer thật: log sinh bằng handler.js của cây + nhịp dựng từ chuỗi echo của zalo-watchdog.sh → 'ĐẠT'; handler.js của be765e6a5 → 'KHÔNG ĐẠT — còn 3 dòng «kev null» mới'; zalo-watchdog.sh của be765e6a5 → 'KHÔNG ĐẠT — nhịp watchdog cuối không ghi «kev:off (K1)»'; 'AP-MAY-THU PASS'. Phá đo 24/11 trên bản chép: tắt kiểm kev null → ca con-kev-null đỏ; xoá dòng lời riêng → 'FAIL README thiếu dòng lời riêng'; thay mục 2 bằng «sẽ đo» → 'FAIL README mục 2 không có lệnh hay con số'."
+    expected: "exit 0; (a) README có năm mục 1–5, mỗi mục có lệnh hay con số, mục 2 có 4.954 và 5.103, mục 3 và 4 có handler.js.bak-, mục 4 có kickstart, mục 5 có kiem-sau.sh, dòng 'lời riêng của Mạnh', lệnh 'launchctl kickstart -k gui/$(id -u)/ai.openclaw.gateway', khung '05:30–06:30 … 14:00–14:45'; (b) tám ca log mẫu: dat → 'ĐẠT — 3 dòng post 202 kev=off'; con-kev-null, hook-cu, khong-tin, watchdog-cu, watchdog-khong-ok, lockdown-vo (KILL trong cảnh báo), canh-bao-kev → 'KHÔNG ĐẠT — <lý do đúng>' mã 1; (c) round-trip writer thật: log sinh bằng handler.js của cây + nhịp do CHẠY THẬT đoạn L5 của zalo-watchdog.sh (từ «# L5 — ghi nhịp» tới hết tệp, hộp cát: ROOT/HOME/tệp cảnh báo tạm, osascript/curl/launchctl/pkill/pgrep giả qua PATH, sổ gọi không có launchctl/pkill/pgrep; luật 8 — không chạy trọn watchdog) → 'ĐẠT'; handler.js của be765e6a5 → 'KHÔNG ĐẠT — còn 3 dòng «kev null» mới'; zalo-watchdog.sh của be765e6a5 → 'KHÔNG ĐẠT — nhịp watchdog cuối không ghi «kev:off (K1)»'; bản chép watchdog gán lại KEV_NOTE sau dòng gán → 'KHÔNG ĐẠT — nhịp watchdog cuối không ghi «kev:off (K1)»'; bản chép bỏ dòng ghi nhịp «ok —» → 'KHÔNG ĐẠT — chưa có nhịp watchdog mới sau mốc áp'; 'AP-MAY-THU PASS'. Phá đo 24/11 trên bản chép: tắt kiểm kev null → ca con-kev-null đỏ; xoá dòng lời riêng → 'FAIL README thiếu dòng lời riêng'; thay mục 2 bằng «sẽ đo» → 'FAIL README mục 2 không có lệnh hay con số'."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E18
@@ -145,4 +145,13 @@ evals:
     cmd: config:executors.script.kev1_handler_test
     paths: [collector/openclaw/handler.test.mjs, collector/openclaw/handler.js]
     expected: "exit 0; ca «cô-lập: log và spool của hook nằm dưới HOME tạm, không dưới HOME thật» xanh (log tạm có dòng post kev=off, homedir() của tiến trình ≠ HOME thật); chiều đỏ ghim: bỏ dòng gán HOME tạm → bộ dừng trước import với «HOME tạm không có hiệu lực — bỏ chạy, không chạm ~/.openclaw thật» (đo 24/11). Cỡ log hook thật không đổi qua một lượt chạy bộ (đo 24/11: 36.363.288 → 36.363.288 byte)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E19
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.suite.pipeline_that
+    long_running: 90
+    paths: [docs/ops/runtime-map.md]
+    expected: "exit 0; nhánh sửa docs/ops/runtime-map.md (vùng của pipeline_that) nên suite chạy: các ca dữ liệu thật của ci-bo-qua trên bản chép, dòng tổng kết `ℹ fail 0` (khai long_running 90 theo khuôn HT9 E3a — S4 r1 trên M5 bị ngắt ~29′ vì thiếu khai)."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]

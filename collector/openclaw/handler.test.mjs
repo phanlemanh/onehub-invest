@@ -12,7 +12,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
-import { existsSync, rmSync } from "node:fs";
+import { existsSync, readFileSync, rmSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -176,4 +176,41 @@ test("cô-lập: log và spool của hook nằm dưới HOME tạm, không dư�
   assert.ok(existsSync(logTam), "hook ghi log vào HOME tạm");
   assert.match(await readFile(logTam, "utf8"), / post 202 .* kev=off /, "dòng post kev=off nằm trong log tạm");
   assert.notEqual(resolve(homedir()), resolve(HOME_THAT), "homedir() của tiến trình test không phải HOME thật");
+});
+
+// Bên đọc log hook (review S4 r1, AC-3): tên nhóm phải tách đúng ở CẢ HAI chỗ đọc — pipeline/lib/ops-flow.mjs parseLog
+// (funnel theo nhóm đẩy lên cloud) và app/src/lib/collections-queries.ts gateByGroup (regex rút từ mã nguồn).
+const { parseLog } = await import(pathToFileURL(join(dirname(TEP), "../../pipeline/lib/ops-flow.mjs")).href);
+const reGateByGroup = (() => {
+  const ma = readFileSync(join(dirname(TEP), "../../app/src/lib/collections-queries.ts"), "utf8");
+  const i = ma.indexOf("export function gateByGroup");
+  const m = ma.slice(i).match(/line\.match\(\/(group=[^\n]*?)\/\)/);
+  assert.ok(i > 0 && m, "rút được regex tên nhóm của gateByGroup");
+  return new RegExp(m[1]);
+})();
+async function dongPostCuoi(hamChay = handler) {
+  await chayVoiFetchGia(hamChay);
+  await new Promise((r) => setTimeout(r, 50)); // log() ghi không chờ
+  const dong = (await readFile(join(HOME_TAM, ".openclaw/logs/oneinvest-zalo-pipe.log"), "utf8"))
+    .split("\n").filter((l) => / post 202 /.test(l)).at(-1);
+  assert.ok(dong, "có dòng post 202 trong log tạm");
+  return dong;
+}
+const NHOM_TIN_GIA = "t1"; // tin giả của chayVoiFetchGia: metadata.threadId "t1" → group của hook
+function kiemBenDoc(dong) {
+  const nhom = NHOM_TIN_GIA;
+  assert.ok(dong.includes(` group=${nhom} `), "dòng post mang group= của tin giả");
+  assert.deepEqual([...parseLog(dong, { now: Date.parse(dong.slice(0, 24)) }).groups].map((g) => g.name), [nhom],
+    "ops-flow parseLog tách tên nhóm đúng, không dính « kev=off»");
+  assert.equal(dong.match(reGateByGroup)?.[1], nhom, "regex gateByGroup tách tên nhóm đúng, không dính « kev=off»");
+}
+test("bên-đọc-log: dòng post mới tách đúng tên nhóm ở ops-flow parseLog và gateByGroup", async () => {
+  kiemBenDoc(await dongPostCuoi());
+});
+test("bên-đọc-log ĐỎ khi đặt lại kev=off giữa group= và account= (khuôn r1)", async () => {
+  await banChep("group=${group} account=${account} kev=off by=", "group=${group} kev=off account=${account} by=",
+    async (handlerHong) => {
+      const dong = await dongPostCuoi(handlerHong);
+      assert.throws(() => kiemBenDoc(dong), /không dính « kev=off»/);
+    });
 });

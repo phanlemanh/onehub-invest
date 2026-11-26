@@ -209,8 +209,9 @@ export default async function (context) {
       await log(`spool +1 group=${group} account=${account}`);
       return;
     }
-    // KHUÔN LOG CŨ — 'post <status> <body60>' (5 nơi đọc chuỗi này, vòng 3)
-    await log(`post ${r.status} ${r.body} group=${group} kev=off account=${account} by=${ev.metadata?.senderName ?? "?"}${hasMedia ? ` media=${mediaFacts.length}` : ""}`);
+    // KHUÔN LOG CŨ — 'post <status> <body60>' (5 nơi đọc chuỗi này, vòng 3). «kev=off» đứng SAU account=: hai bên
+    // đọc tên nhóm (pipeline/lib/ops-flow.mjs parseLog, app collections-queries gateByGroup) dừng ở « p=» hay « account=».
+    await log(`post ${r.status} ${r.body} group=${group} account=${account} kev=off by=${ev.metadata?.senderName ?? "?"}${hasMedia ? ` media=${mediaFacts.length}` : ""}`);
   } catch (e) {
     // bất kỳ lỗi ngoài (đọc key/đĩa) — cố spool lại để không mất tin ở nguồn
     try {
