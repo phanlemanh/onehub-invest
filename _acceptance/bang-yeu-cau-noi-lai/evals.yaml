@@ -42,7 +42,7 @@ evals:
     executor: test
     cmd: config:executors.test.yc0_ac7
     paths: ["pipeline/lib/yeu-cau.mjs", "pipeline/transform-zalo.mjs", "db/migrations/136_inquiry_post_records.sql", "pipeline/scripts/yeu-cau.itest.mjs"]
-    expected: "Ca YC0-AC-7 chạy (pass ≥ 1, skipped 0): sale_offers giống nhau có/không 136; đối chứng: cấy đổi mảng bài dùng chung thì đỏ gọi tên tin."
+    expected: "Ca YC0-AC-7 chạy (pass ≥ 1, skipped 0): sale_offers giống nhau có/không 136; đối chứng: bộ phân xử tin không có phần vá của 136 thì đỏ gọi tên tin của bài fixture."
   - id: E8
     criterion: AC-8
     executor: test
