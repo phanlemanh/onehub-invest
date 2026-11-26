@@ -53,11 +53,13 @@ test("TD-AC-4 transform S06 đếm trần bằng hàm này trước mọi lần 
 async function chayGia(nSong) {
   const { runTransformChotot } = await import("../transform-chotot.mjs");
   const { SQL_SO_HINH, SQL_SO_CO_CO } = await import("../lib/source-name-entries.mjs");
-  const ghi = [];
+  const ghi = [], rut = [];
   const client = {
-    async query(sql) {
+    async query(sql, thamSo) {
       const s = typeof sql === "string" ? sql : sql.text;
       if (/^\s*(INSERT|UPDATE|DELETE)/i.test(s)) ghi.push(s.trim().slice(0, 40));
+      if (/retract_reason = 'mang-ten-nguon'/.test(s)) rut.push(...thamSo[0]);
+      if (s.includes("resolve_offer_fields")) return { rows: [{ r: { offers: 0, offers_changed: 0 } }] };
       if (s.includes("phat-bieu:cat-chuyen")) return { rows: [{ ok: true }] };
       if (s === SQL_SO_HINH) return { rows: [{ bang: true, cot: true }] };
       if (s === SQL_SO_CO_CO) return { rows: [{ code: "S90", real_name: "Nhà Thử Nghiệm", ids: [], match_whole: false }] };
@@ -70,8 +72,8 @@ async function chayGia(nSong) {
   };
   const log = console.log, warn = console.warn;
   console.log = () => {}; console.warn = () => {};
-  try { await runTransformChotot(client); return { loi: null, ghi }; }
-  catch (e) { return { loi: e.message, ghi }; }
+  try { await runTransformChotot(client); return { loi: null, ghi, rut }; }
+  catch (e) { return { loi: e.message, ghi, rut }; }
   finally { console.log = log; console.warn = warn; }
 }
 
@@ -80,6 +82,8 @@ test("TD-AC-5 transform S06: 51 phát biểu sống trúng, 0 tin mới → dừ
   assert.match(r51.loi ?? "(không dừng)", /vượt trần 50 — dừng, không rút, không ghi/,
     "phát biểu sống trúng của DB không tới được trần của transform (dây nối nPhatBieuSong đứt)");
   assert.deepEqual(r51.ghi, [], "dừng trần mà đã có câu ghi trước đó");
+  // Chiều dương (finding đo vòng 2): 50 thì lượt đi qua chỗ kiểm trần, rút đúng 50 phát biểu trúng và chạy trọn.
   const r50 = await chayGia(TRAN_TEN_NGUON);
-  assert.doesNotMatch(r50.loi ?? "", /vượt trần/, "50 phát biểu sống (đúng trần) mà vẫn dừng");
+  assert.equal(r50.loi, null, `50 phát biểu sống (đúng trần) mà lượt không chạy trọn: ${r50.loi}`);
+  assert.equal(r50.rut.length, TRAN_TEN_NGUON, "lượt 50 không rút đủ 50 phát biểu sống trúng sổ");
 });

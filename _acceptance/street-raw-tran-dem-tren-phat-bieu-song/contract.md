@@ -5,7 +5,7 @@ slug: street-raw-tran-dem-tren-phat-bieu-song
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: implemented
 veto_state: mo
 veto_opened_at: 2026-11-25T22:24:08Z
 approved_by:
