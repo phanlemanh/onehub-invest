@@ -3,18 +3,43 @@
 // so từng ô. DB máy thu chỉ bị đọc (pg_dump của db/db-thu.sh). Chỉ in số, không in mã hay tên nguồn. Lệch một ô → thoát 1 nêu ô.
 // Ô trên màn đọc bằng chính docDanhBa của app, nên chạy dưới tsx từ thư mục app:
 //   cd app && node --import tsx ../pipeline/scripts/noi-du-an-s08-that.mjs
-// Bộ gắn PL20 ghim sha e27d1e690 (nhánh feat/ghep-tin-vao-danh-muc), đọc từ worktree P4_WT; HEAD khác sha → thoát 2. Ngoài CI.
-import { execFileSync, spawnSync } from "node:child_process";
-import { dirname, join, resolve } from "node:path";
+// Bộ gắn PL20 ghim sha e27d1e690 (nhánh feat/ghep-tin-vao-danh-muc). Vòng 1 đọc nó từ một worktree P4_WT nằm trong scratchpad phiên
+// khác — dọn là mất, và thiếu node_modules thì đỏ lẫn với kết quả đo. Vòng 2 (GS 27/11): mã PL20 đã gộp main, nên đọc thẳng từ kho
+// này và ghim bằng so tệp: mọi tệp trong bao nạp của ghep-tin-danh-muc-doc.mjs phải giống hệt ở e27d1e690, lệch → PROBE HONG.
+// Mã 0 đạt · 1 lệch ô đo · 2 PROBE HONG (môi trường: pg, git, sha, bản chép DB) — không lẫn với kết quả đo. Ngoài CI.
+import { spawnSync } from "node:child_process";
+import { readFileSync } from "node:fs";
+import { dirname, join, normalize } from "node:path";
 import { pathToFileURL } from "node:url";
-import pg from "pg";
 import { GOC, MAY_CHU } from "./db-thu-dbv.mjs";
+
+const hong = (ly) => { console.error(`PROBE HONG: ${ly}`); process.exit(2); };
+let pg;
+try { pg = (await import("pg")).default; } catch (e) { hong(`không nạp được gói pg (${e.code ?? e.message}) — cài node_modules của pipeline`); }
 
 const TRONG = process.env.NS8_THAT_TRONG === "1";
 const TEN = TRONG ? new URL(process.env.DATABASE_URL ?? "postgres://x/").pathname.slice(1) : null;
-const gocChinh = () => dirname(resolve(GOC, execFileSync("git", ["-C", GOC, "rev-parse", "--git-common-dir"], { encoding: "utf8" }).trim()));
-const P4_WT = process.env.P4_WT ?? join(gocChinh(), ".claude/worktrees/ghep-tin-vao-danh-muc");
-const P4_SHA = "e27d1e690";
+const P4_SHA = process.env.NS8_PL20_SHA ?? "e27d1e690"; // biến môi trường chỉ cho chiều đỏ của phép ghim
+const PL20 = "pipeline/lib/ghep-tin-danh-muc-doc.mjs";
+/** Bao nạp tương đối của một tệp .mjs trong kho (import "./…" / "../…"), gồm chính nó. */
+function baoNap(goc, tep) {
+  const thay = new Set();
+  const cho = [tep];
+  while (cho.length) {
+    const f = cho.pop();
+    if (thay.has(f)) continue;
+    thay.add(f);
+    for (const [, r] of readFileSync(join(goc, f), "utf8").matchAll(/(?:from|import)\s*\(?\s*"(\.{1,2}\/[^"]+)"/g)) cho.push(normalize(join(dirname(f), r)));
+  }
+  return [...thay].sort();
+}
+/** Ghim PL20: tệp nào trong bao nạp khác bản ở sha ghim. Ném khi git không đọc được sha. */
+function lechSha(goc, tep, sha) {
+  const ds = baoNap(goc, tep);
+  const r = spawnSync("git", ["-C", goc, "diff", "--name-only", sha, "--", ...ds], { encoding: "utf8" });
+  if (r.status !== 0) throw new Error(`git không so được với ${sha}: ${r.stderr.trim()}`);
+  return { ds, lech: r.stdout.split("\n").filter(Boolean) };
+}
 const loi = [];
 const o = (ten, thuc, mong) => {
   const ok = JSON.stringify(thuc) === JSON.stringify(mong);
@@ -26,26 +51,26 @@ async function main() {
   if (!TRONG) {
     const ten = `oneinvest_suite_ns8that_${process.pid}`;
     const dbThu = (...a) => spawnSync("bash", [join(GOC, "db/db-thu.sh"), ten, ...a], { cwd: GOC, stdio: ["ignore", "ignore", "inherit"], env: { ...process.env, DATABASE_URL: "" } });
-    if (dbThu().status !== 0) { console.error("không chép được DB máy thu"); process.exitCode = 2; return; }
+    if (dbThu().status !== 0) hong("không chép được DB máy thu");
     const r = spawnSync(process.execPath, [...process.execArgv, ...process.argv.slice(1)], { cwd: process.cwd(), stdio: "inherit",
       env: { ...process.env, DATABASE_URL: `${MAY_CHU}/${ten}`, NS8_THAT_TRONG: "1" } });
     dbThu("--xoa");
     process.exitCode = r.status ?? 1;
     return;
   }
-  if (!/^oneinvest_suite_ns8that_[0-9]+$/.test(TEN)) { console.error(`từ chối: DB «${TEN}» không phải DB của lượt này`); process.exitCode = 2; return; }
-  let sha;
-  try { sha = execFileSync("git", ["-C", P4_WT, "rev-parse", "HEAD"], { encoding: "utf8" }).trim(); } catch { sha = ""; }
-  if (!sha.startsWith(P4_SHA)) { console.error(`bộ gắn PL20 phải ở sha ${P4_SHA} (P4_WT=${P4_WT}), đang ở «${sha || "không đọc được"}»`); process.exitCode = 2; return; }
-  console.log(`  bộ gắn PL20 sha: ${sha.slice(0, 9)}`);
-  const { docDauVao, tinhGan } = await import(pathToFileURL(join(P4_WT, "pipeline/lib/ghep-tin-danh-muc-doc.mjs")).href);
+  if (!/^oneinvest_suite_ns8that_[0-9]+$/.test(TEN)) hong(`DB «${TEN}» không phải DB của lượt này`);
+  let ghim;
+  try { ghim = lechSha(GOC, PL20, P4_SHA); } catch (e) { hong(e.message); }
+  if (ghim.lech.length) hong(`bộ gắn PL20 lệch bản ghim ${P4_SHA} ở ${ghim.lech.join(", ")}`);
+  console.log(`  bộ gắn PL20: ${ghim.ds.length} tệp giống hệt ${P4_SHA}`);
+  const { docDauVao, tinhGan } = await import(pathToFileURL(join(GOC, PL20)).href);
   const { apTheLuat, daoTheLuat, dungTheLuat, kiemLuot } = await import("../noi-du-an-s08-luat.mjs");
   const { dungKeHoachNoi } = await import("../phan-khu-s16.mjs");
   const { demNga } = await import(pathToFileURL(join(GOC, "_acceptance/soat-noi-s08-danh-ba/probes/bang-phu.mjs")).href);
   const { docDanhBa } = await import(pathToFileURL(join(GOC, "app/src/lib/ops/registry/doc.ts")).href);
 
   const c = new pg.Client({ connectionString: `${MAY_CHU}/${TEN}` });
-  await c.connect();
+  try { await c.connect(); } catch (e) { hong(`không nối được bản chép DB: ${e.message}`); }
   const vanTay = async (sql) => (await c.query(`SELECT md5(coalesce(string_agg(row_to_json(t)::text, '' ORDER BY 1), '')) AS h FROM (${sql}) t`)).rows[0].h;
   const ids0 = (await c.query("SELECT array_agg(id ORDER BY id) AS a FROM asset_nodes")).rows[0].a;
   const vtNut = () => vanTay(`SELECT * FROM asset_nodes WHERE id = ANY('{${ids0.join(",")}}'::bigint[]) ORDER BY id`);
@@ -98,11 +123,31 @@ async function main() {
     console.log(`  ngả nối vào nút có sẵn mà nút là ứng viên nguồn khác: ${noiVaoUngVien} dự án (${uv.n} nút)`);
     o("man_sau", await o8(), { noi_co_san: dem.giu_tay + dem.noi - noiVaoUngVien, noi_ung_vien: dem.duc + noiVaoUngVien, chua_noi: dem.tu_choi + dem.the_cap, da_nap: dem.tong });
     o("nut_co_san_va_bang_tay_sau_ap", [await vtNut(), await vtTay()], [vtN0, vtT0]);
-    const { rows: [g] } = await c.query(`
+    const tinHang = async () => (await c.query(`
       WITH n AS (SELECT id FROM asset_nodes WHERE meta ->> 'nguon' = 'S08')
       SELECT (SELECT count(*)::int FROM offer_project WHERE project_node_id IN (SELECT id FROM n)) AS tin,
-             (SELECT count(*)::int FROM offer_price_rank WHERE nut IN (SELECT id::text FROM n)) AS hang`);
-    o("nut_ung_vien_khong_tin_khong_hang", g, { tin: 0, hang: 0 });
+             (SELECT count(*)::int FROM offer_price_rank WHERE nut IN (SELECT id::text FROM n)) AS hang`)).rows[0];
+    o("nut_ung_vien_khong_tin_khong_hang", await tinHang(), { tin: 0, hang: 0 });
+    // Đối chứng dương (vòng 2): cấy một nút ứng viên S08 có tin và có hạng giá — gắn nhãn S08 lên một nút dự án đang có cả hai — thì
+    // cùng phép đếm phải ra khác 0, tức ô trên đỏ được. Trong giao dịch ROLLBACK, không để lại gì.
+    await c.query("BEGIN");
+    try {
+      const { rows: [cay] } = await c.query(`
+        SELECT p.project_node_id AS id FROM offer_project p
+          JOIN asset_nodes a ON a.id = p.project_node_id
+         WHERE (a.meta ->> 'nguon') IS DISTINCT FROM 'S08'
+           AND EXISTS (SELECT 1 FROM offer_price_rank r WHERE r.nut = p.project_node_id::text)
+         GROUP BY 1 ORDER BY count(*) DESC, 1 LIMIT 1`);
+      if (!cay) {
+        o("doi_chung_nut_ung_vien", "bản chép không có nút dự án nào vừa có tin vừa có hạng giá", "có nút để cấy");
+      } else {
+        await c.query(`UPDATE asset_nodes SET meta = coalesce(meta, '{}'::jsonb) || '{"nguon":"S08"}' WHERE id = $1`, [cay.id]);
+        const gc = await tinHang();
+        const doDuoc = gc.tin > 0 && gc.hang > 0;
+        console.log(`  đối chứng dương: cấy một nút ứng viên S08 có tin → ô nut_ung_vien_khong_tin_khong_hang ${doDuoc ? "ĐỎ" : "VẪN XANH"} (tin ${gc.tin}, hạng ${gc.hang})`);
+        o("doi_chung_nut_ung_vien", doDuoc, true);
+      }
+    } finally { await c.query("ROLLBACK"); }
     o("bam_da53_khong_doi", (await dungKeHoachNoi(c)).bam, da53);
     const p1 = await pl20();
     console.log(`  PL20 trước: ${JSON.stringify(p0)} · sau: ${JSON.stringify(p1)}`);

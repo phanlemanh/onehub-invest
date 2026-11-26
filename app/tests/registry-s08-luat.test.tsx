@@ -24,7 +24,9 @@ const iframe = (lng: number, lat: number) => ({ project_info: { iframe_location:
 before(async () => {
   // CI không cấp DB của riêng lượt (không DATABASE_URL): ca RS8 bỏ qua có tên qua scripts/ci-bo-qua.json; hook không dựng URL dự phòng.
   if (!URL_DB) return
-  assert.match(new URL(URL_DB).pathname, /^\/oneinvest_suite_rs8/, "RS8 chỉ chạy trên DB của riêng lượt (db/db-thu.sh oneinvest_suite_rs8 --chay)")
+  // Mọi DB của riêng lượt do db/db-thu.sh cấp (oneinvest_suite_<tên>_<pid>): lệnh riêng E6 cấp oneinvest_suite_rs8_*, `npm test` của app
+  // cấp oneinvest_suite_app_*. DB chung oneinvest hay DB khác thì dừng — ca ghi trong giao dịch ROLLBACK nhưng vẫn không chạy trên DB máy thu.
+  assert.match(new URL(URL_DB).pathname, /^\/oneinvest_suite_[a-z0-9_]+$/, "RS8 chỉ chạy trên DB của riêng lượt (db/db-thu.sh oneinvest_suite_<tên> --chay)")
   await c.connect()
   await c.query("BEGIN")
   await c.query("DELETE FROM project_links WHERE source = 'S08'")

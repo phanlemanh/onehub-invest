@@ -112,6 +112,25 @@ test("NS8-2: thẻ ghi loại căn cứ, in đủ ngả, không lộ mã, băm �
 });
 
 let RULE;
+/** Lượt áp đang hiệu lực (chưa đảo) — áp mới khi chưa có hay lượt trước đã đảo. NS8-4, NS8-5 tự dựng trạng thái, chạy riêng từng
+ *  ca bằng --test-name-pattern vẫn đúng (lệnh eval E4, E5 lọc một ca). */
+const luotSong = async () => {
+  if (RULE) {
+    const { rows: [l] } = await db.query("SELECT dao_at FROM project_link_rules WHERE id = $1", [RULE]);
+    if (l && !l.dao_at) return RULE;
+  }
+  RULE = (await apTheLuat(db, { bam: (await dungTheLuat(db)).bam, nguoi: "itest" })).rule_id;
+  return RULE;
+};
+/** Lượt đã đảo — dựng khi chưa có (NS8-5 áp lại sau đảo). */
+const luotDaDao = async () => {
+  if (RULE) {
+    const { rows: [l] } = await db.query("SELECT dao_at FROM project_link_rules WHERE id = $1", [RULE]);
+    if (l?.dao_at) return RULE;
+  }
+  await daoTheLuat(db, { ruleId: await luotSong(), nguoi: "itest-dao" });
+  return RULE;
+};
 test("NS8-3: băm lệch không ghi; băm đúng ghi luật, dòng nối, bí danh, nút đúc; nút có sẵn và bảng tay không đổi; áp lần hai không đổi", async () => {
   const truoc = await vanTayBang();
   const nutTruoc = await chupNut();
@@ -155,6 +174,7 @@ test("NS8-3: băm lệch không ghi; băm đúng ghi luật, dòng nối, bí da
 });
 
 test("NS8-4: đảo nghỉ bí danh, dòng nối về dao-luat, giữ nút, ghi người đảo; đảo lần hai báo da-dao", async () => {
+  await luotSong();
   const soNut = async () => (await db.query("SELECT count(*)::int AS n FROM asset_nodes")).rows[0].n;
   const truoc = await soNut();
   const songCuaLuot = async () => (await db.query(`SELECT count(*)::int AS n FROM registry_aliases a JOIN project_links pl
@@ -175,6 +195,9 @@ test("NS8-4: đảo nghỉ bí danh, dòng nối về dao-luat, giữ nút, ghi 
 
 test("NS8-5: lệnh kiểm thoát 0 sau áp; cấy lệch tỉnh, thiếu trạng thái thì thoát 1; hai nút bị DB chặn nêu loại lỗi, không in mã", async () => {
   // Áp lại sau đảo: dự án đã có nút đúc giữ nút ấy (không đúc nút thứ hai).
+  await luotDaDao();
+  const nutS08 = (await db.query("SELECT count(*)::int AS n FROM asset_nodes WHERE meta ->> 'nguon' = 'S08'")).rows[0].n;
+  assert.equal(nutS08, 2, "đối chứng: trước áp lại đã có đúng 2 nút đúc của lượt đầu");
   const soNut = (await db.query("SELECT count(*)::int AS n FROM asset_nodes")).rows[0].n;
   const kq = await apTheLuat(db, { bam: (await dungTheLuat(db)).bam, nguoi: "itest" });
   assert.equal(kq.soNutMoi, 0, "áp lại không đúc nút mới");
