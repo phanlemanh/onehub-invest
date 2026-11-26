@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 88488c118862157b675a85615a613394f81eb2d2
+verified_commit: 800bf49c8310e40a53037d22ec2a115dcfa81044
 human_signoff:
 ---
 
@@ -227,3 +227,7 @@ none — mọi eval chạy một lần (runs 1), kết quả đều đồng nh�
 
 Round 1: E2a, E2b failed — nửa B của pipeline kết nối vào cụm thật thay vì cụm dùng một lần khi chạy với chế độ chạy-trong, nên hai nửa suite đỏ. Returned to implementation.
 Round 2: toàn bộ 14 eval và 5 lệnh suite xanh trên commit 88488c118862157b675a85615a613394f81eb2d2.
+
+### Re-pin lần 1 — 2026-11-26, do sửa db-thu-trong.test.mjs chịu máy không có docker (soát M5 trên 88488c118)
+run_id: repin-20261126T003612Z-68832
+sha: 800bf49c8310e40a53037d22ec2a115dcfa81044 · suites: 8 lệnh exit 0 · evals: 14/14 eval máy đạt kỳ vọng
