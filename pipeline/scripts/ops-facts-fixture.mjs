@@ -35,6 +35,7 @@ export function schemaUrl(schema) {
  * @param {string} schema
  * @param {{ omit?: string[] }} [opts] */
 export async function makeOpsSchema(admin, schema, { omit = [] } = {}) {
+  await (await import("../../scripts/lib/so-nguon-122.mjs")).ap122NeuThieu(admin); // NK1: bản chép DB thử chưa áp 122 thì áp (phép không sau khi máy thu áp)
   await admin.query(`DROP SCHEMA IF EXISTS "${schema}" CASCADE`);
   await admin.query(`CREATE SCHEMA "${schema}"`);
   await admin.query(`CREATE TABLE "${schema}".source_registry AS SELECT * FROM public.source_registry`);
