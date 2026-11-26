@@ -1,0 +1,81 @@
+schema_version: 1
+slug: ghi-tam-do-sau-co-han
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/ghi-tam-do-sau-co-han/probes/cham.sh AC-1
+    paths: [agent/src/agents/enrich-text.ts, agent/tests/ghi-tam*]
+    expected: "Ma trận viết tay 2 × 2 (luật có/không loại hình × có/không mã toà), bối cảnh có tên dự án, ứng viên và khu vực: lời nhắc của buildEnrichInput không chứa giá trị loại hình và mã toà của luật cũng không chứa hai nhãn «Loại hình từ nhóm», «Mã tòa phát hiện» (4 ô), vẫn chứa tên dự án, ứng viên, khu vực (4 ô). Đột biến trong bản sao (trả lại một trong hai dòng) đỏ, thông điệp nêu ô và dòng còn sót."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/ghi-tam-do-sau-co-han/probes/cham.sh AC-2
+    paths: [agent/src/enrich/**, agent/src/agents/enrich-text.ts, agent/scripts/enrich-run.ts, agent/tests/ghi-tam*]
+    expected: "Lượt runEnrich trên DB thử (db/db-thu.sh, dựng từ db/migrations kể cả 129), model giả lập trả đúng giá trị của luật, hai tin cùng chữ: tin A lời nhắc gửi đi sạch → đề xuất corroborated được áp, lo_id khác null, ghi_tam true, evidence.doc_lap true; tin B lời nhắc gửi đi được cấy dòng «Loại hình từ nhóm: <giá trị>» → đề xuất route review, không áp (sale_offers giữ giá trị cũ, đọc lại bằng SELECT), evidence.doc_lap false, evidence.trung_luat = e1; tin C lời nhắc cấy danh sách toà của danh bạ, model trả một toà trong danh sách → block_raw route review, doc_lap false. Đối chứng dương: tin A. Đột biến bỏ kiểm phieuDocLap đỏ, thông điệp nêu tin B và route nhận được. In «tests N, skipped 0»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/ghi-tam-do-sau-co-han/probes/cham.sh AC-3
+    paths: [agent/src/enrich/**, agent/scripts/**, db/migrations/129_*, agent/tests/ghi-tam*]
+    expected: "Trên DB thử: một lượt đêm giả lập ghi ba giá trị (loại hình căn cứ e1 hai tin, toà căn cứ danh bạ một tin) → đúng 2 lô (<run_id>:property_type, <run_id>:block_raw); mỗi lô ghi_boi = enrich-run:<run_id>, model của lượt, nac, mo_luc, han_do_bu = mo_luc::date + 14 (so từng trường với giá trị viết tay); mọi đề xuất applied route corroborated có lo_id và ghi_tam true. Lượt đọc toàn bộ (đường gọi của doc-toan-bo.ts, model giả lập) cũng ra lô. Câu đếm SELECT count(*) đề xuất applied corroborated thiếu lo_id = 0. Đột biến áp không mở lô đỏ, thông điệp nêu đề xuất thiếu lô."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/ghi-tam-do-sau-co-han/probes/ban-chep.sh AC-4
+    paths: [db/migrations/129_*]
+    expected: "Chép DB máy thu sang DB thử (chỉ đọc DB máy thu), áp 129: câu đếm theo lô in đúng doc-toan-bo-loai-hinh 1993 · truoc-doc-lap-loai-hinh 187 · truoc-doc-lap-toa 110, tổng 2290, applied corroborated thiếu lô 0, ghi_tam false 0; lô truoc-doc-lap-* có doc_lap false, lô doc-toan-bo-loai-hinh doc_lap true (in và so cả ba); han_do_bu = ngày áp + 14 cho cả ba lô. Áp 129 lần hai: số dòng mỗi bảng và băm cột lo_id/ghi_tam không đổi. Đột biến điền lùi gộp hai lô đêm thành một đỏ, thông điệp nêu lô thiếu; đột biến đảo doc_lap của lô doc-toan-bo-loai-hinh đỏ, thông điệp nêu tên lô. Xoá DB thử khi xong."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/ghi-tam-do-sau-co-han/probes/cham.sh AC-5
+    paths: [pipeline/scripts/rut-lo-ghi-tam*, db/migrations/129_*]
+    expected: "Trên DB thử có một lô 3 giá trị đã áp (hai tin, một tin có đề xuất superseded): chạy thử in «3 giá trị · 2 tin», không đổi dòng nào (băm bảng trước/sau bằng nhau); --ghi --nguoi hitl:thu --ly-do thu: ô của tin về đúng giá trị viết tay trước lần áp, 3 đề xuất reverted, đề xuất superseded về queued, lô da-rut; chạy lại --ghi: 0 dòng đổi. Thiếu --nguoi hay actor không mở đầu hitl:, thiếu --ly-do: thoát khác 0, không đổi dòng nào. Đột biến bỏ lọc theo lô (rút cả đề xuất lô khác) đỏ, thông điệp nêu đề xuất ngoài lô bị rút."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/ghi-tam-do-sau-co-han/probes/cham.sh AC-6
+    paths: [agent/src/enrich/**, agent/scripts/enrich-run.ts, db/migrations/129_*, agent/tests/ghi-tam*]
+    expected: "Trên DB thử cấy lô loại hình dang-ghi có han_do_bu hôm qua, lô toà còn hạn: lượt kế với model giả lập trùng luật cho cả hai trường → 0 đề xuất loại hình applied mới (đi review), đề xuất toà applied ghi tạm; tổng kết lượt có dòng tên lô loại hình và lý do het-han; lô loại hình da-rut, reverted_by may:ghi-tam:het-han; ô property_type dừng (lượt thứ ba vẫn không ghi loại hình). Ca thứ hai không chạy lượt làm giàu nào: cấy lô quá hạn, chạy `node pipeline/scripts/rut-lo-ghi-tam.mjs --het-han` → lô da-rut, reverted_by may:ghi-tam:het-han, đầu ra in tên lô; lô còn hạn không đổi. Đối chứng dương: lô còn hạn → ghi. Đột biến bỏ kiểm hạn đỏ, thông điệp nêu lô quá hạn vẫn ghi."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/ghi-tam-do-sau-co-han/probes/cham.sh AC-7
+    paths: [pipeline/scripts/rut-lo-ghi-tam*, db/migrations/129_*, agent/src/enrich/**]
+    expected: "Trên DB thử hai lô: --ket-qua L1 khong-dat --nguoi hitl:thu → L1 da-rut, ô của trường dừng (lượt kế không ghi trường đó); --ket-qua L2 dat → L2 dat, ghi_tam false cho mọi giá trị của L2, không rút. Gọi hàm rút bằng actor may:ghi-tam:… trên đề xuất không thuộc lô ghi tạm → lỗi, không đổi dòng; actor may: khác tiền tố ghi-tam → lỗi. Đột biến cho actor máy rút mọi đề xuất đỏ, thông điệp nêu đề xuất ngoài lô."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/ghi-tam-do-sau-co-han/probes/cham.sh AC-8
+    paths: [db/migrations/129_*]
+    expected: "Trên DB thử cấy một căn danh bạ active và một tin S03 gắn căn đủ trường lõi, loại hình đến từ đề xuất ghi tạm của lô dang-ghi: unit_data_level() không trả căn ở B3–B5 vì tin ấy; đặt lô dat → căn ở B3; data_level của tin (B0–B2) bằng nhau ở hai trạng thái. Đối chứng dương: cùng tin, loại hình không từ ghi tạm → B3. Đột biến bỏ điều kiện ghi tạm trong 129 đỏ, thông điệp nêu căn lên B3."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/ghi-tam-do-sau-co-han/probes/cham.sh AC-9
+    paths: [agent/src/enrich/**, agent/scripts/enrich-run.ts, agent/tests/**]
+    expected: "Ma trận viết tay các nhánh của routeFields (fill-gap, E1 một mình, E1=LLM, E1≠LLM, field giữ, LLM khớp danh bạ, LLM không căn cứ — 7 ô) chạy qua bộ chạy đêm: route và giá trị khớp bảng viết tay; chỉ ô corroborated đổi từ review (NB11) sang áp ghi tạm khi độc lập và ô mở. Test NB11 cũ (enrich-luot-dem-khong-tu-ap) được cập nhật theo NB10, không bị xoá ca nào ngoài ca «chặn mọi corroborated»; bộ test agent xanh. Đột biến áp corroborated khi ô dừng đỏ."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-10
+    executor: judgment
+    question: "Tệp ap-may-thu.md có đủ năm thứ không — (1) lệnh áp migration 129 từ main, (2) số chạy thử trên bản chép DB máy thu khớp ba lô 1.993 · 187 · 110 của AC-4, (3) lệnh sao lưu trước khi áp, (4) cách lùi kèm số đã chạy thử trên bản chép, (5) lệnh kiểm sau khi áp và số mong đợi? Thiếu một thứ là FAIL."
+    inputs: [_acceptance/ghi-tam-do-sau-co-han/ap-may-thu.md, _acceptance/ghi-tam-do-sau-co-han/contract.md]
+    evidence_required: [run_id, verdict, verifier, verified_at]
