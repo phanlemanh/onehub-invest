@@ -37,7 +37,7 @@ export const API_SURFACE: ApiSurfaceEntry[] = [
   { route: "v1/asset-stats", methods: ["GET"], mode: "public", note: "chỉ số tài sản theo khu vực (metrics precompute)" },
   { route: "v1/listings", methods: ["GET"], mode: "public", publicOffers: true, note: "danh sách Listing theo loại: thuê ngắn hạn, tin bán, tin thuê dài hạn; không mang SĐT" },
   { route: "v1/listings/[id]/contact", methods: ["GET"], mode: "public", publicOffers: true, note: "SĐT của đúng một tin đang hiện; tin ẩn hay chưa có số cùng một 404" },
-  { route: "v1/markets", methods: ["GET"], mode: "public", note: "chỉ số thị trường theo khu vực" },
+  { route: "v1/markets", methods: ["GET"], mode: "public", note: "danh sách thị trường và số tin; không mang số S02" },
   { route: "v1/deals", methods: ["GET"], mode: "ops", note: "căn giá tốt — tạm đóng tới khi PL2 rút tin mock (deals-api-tam-dong)" },
   { route: "v1/offers", methods: ["GET"], mode: "ops", note: "tin rao — cùng chế độ tạm đóng với căn giá tốt (so-be-mat-api)" },
   { route: "v1/ops/collections", methods: ["GET"], mode: "ops", note: "sức khoẻ thu thập theo nguồn" },
