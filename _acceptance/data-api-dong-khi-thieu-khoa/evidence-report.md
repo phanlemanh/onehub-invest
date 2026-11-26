@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 740151808faaaf097693a345066d34ce0a5bc947
+verified_commit: 53d3109cc29e9e8568c419910f7bbd274a3b6376
 human_signoff:
 ---
 
@@ -203,3 +203,7 @@ none — mọi eval đều xác định (một lượt chạy), không có pass_
 
 Round 1 và Round 2: lịch sử nằm trong run-log.jsonl và review-findings các round trước; báo cáo này thay thế toàn bộ.
 Round 3: mọi eval máy E1 đến E9 và E11 xanh, các lệnh suite xanh; E10 là judgment chờ người xác nhận (hội đồng đề xuất PASS), nên verdict PENDING-JUDGMENT.
+
+### Re-pin lần 1 — 2026-11-26, do gộp main b013b4428 (HT19 #549) và sửa probe phạm vi nhận squash
+run_id: repin-20261126T090732Z-45729
+sha: 53d3109cc29e9e8568c419910f7bbd274a3b6376 · suites: 8 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng · ngoài làn máy: E10 (E10 không khai paths) · AC không có chốt máy: AC-9
