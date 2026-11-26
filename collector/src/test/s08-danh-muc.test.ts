@@ -1,6 +1,7 @@
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
-import { readFile, mkdtemp, writeFile, rm } from "node:fs/promises";
+import { readFile, mkdtemp, writeFile } from "node:fs/promises";
+import { rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -24,7 +25,8 @@ process.env.S08_TOKEN_FILE = join(thuTamToken, "s08-token.json");
 await writeFile(process.env.S08_TOKEN_FILE, JSON.stringify({ access_token: "TEST-TOKEN-KHONG-THAT" }));
 const { toRawItems, s08SourceId, fetchPage, fetchProjectDetail } = await import("../collectors/s08-danh-muc.js");
 import type { S08Unit } from "../collectors/s08-danh-muc.js";
-process.on("exit", () => { rm(thuTamToken, { recursive: true, force: true }).catch(() => {}); }); // dọn thư mục tạm khi hết tệp
+// dọn thư mục tạm khi hết tệp — ĐỒNG BỘ: trong sự kiện "exit" Node không chạy tiếp việc bất đồng bộ (rm promise bỏ dở, thư mục còn lại)
+process.on("exit", () => { rmSync(thuTamToken, { recursive: true, force: true }); });
 
 const fixture = JSON.parse(
   // fixture nằm ở src (tsc không chép JSON sang dist) — ../../*2 từ dist/test
