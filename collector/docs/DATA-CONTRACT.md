@@ -569,8 +569,12 @@ Luật đọc:
      trang HTML là BỊ CHẶN: dừng cả lượt ngay (mọi tệp đang dở bị bỏ, không ghi nhận), không lách. Nguồn chuyển hướng
      sang một máy chủ ngoài và máy chủ ngoài đó trả 403 thì CHỈ máy chủ ngoài bị nhớ và bỏ qua — không tính là nguồn
      chặn, lượt vẫn đi tiếp.
-   - **Giới hạn còn biết của lớp kiểm địa chỉ** (báo điều phối 25/11): tên máy chủ đổi bản ghi giữa lúc giải tên và lúc
-     kết nối vẫn qua được lớp kiểm này. Đóng hẳn cần ghim địa chỉ ở tầng kết nối; chưa làm.
+   - **Lớp kiểm địa chỉ có GHIM ở tầng kết nối** (sửa 26/11 theo lượt xét vòng 1; trước đó là «giới hạn còn biết»: tên đổi
+     bản ghi giữa lúc giải tên và lúc kết nối vẫn qua được lớp kiểm): chạy thật thì lời tải ảnh đi bằng http/https của
+     Node với hàm giải tên riêng, chỉ trả đúng các địa chỉ đã giải và đã kiểm — máy chủ ngoài không thể làm bộ thu gửi
+     lời tới dải nội bộ; chứng chỉ TLS vẫn được kiểm theo tên gốc. Trên dây vì thế chỉ có `Host`, `Connection` và
+     `user-agent: oneinvest-collector/1` (fetch của Node vốn tự thêm `accept`, `accept-language`, `sec-fetch-mode`,
+     `accept-encoding`). Chỉ test mới bơm `fetchImpl`, và khi đó không ghim.
    - **Hạn của link** (đo 09:00 ngày 25/11, 286.809 URL máy chủ nguồn): 2.816 link đã hết hạn, 2.376 hết hạn trong
      ngày 25/11, 5.996 trong ngày 26/11, 269.209 vào ngày 01/12. Ảnh có link đã hết hạn lấy lại được sau khi làm mới
      chi tiết dự án (link mới là URL khác ⇒ là tệp khác). 1.968 URL máy chủ nguồn không ký số (ảnh chung của trang).
