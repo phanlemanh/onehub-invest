@@ -1,0 +1,27 @@
+schema_version: 1
+slug: s02-map-listings-trang-ke
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: cd collector && npx tsc -p tsconfig.json && cd .. && node _acceptance/s02-map-listings-trang-ke/probes/chay-test-dot-bien.mjs trang-ke
+    expected: "exit 0; dòng cuối 'XANH'; dòng 'đạt: bản thật · trang-ke: 37 ca đạt, 0 ca đỏ'; dòng 'đạt: bản đối chứng (chép, không đổi) · 36 ca đạt, 1 ca đỏ sẵn do chép' (ca đỏ sẵn: ca đọc tệp nguồn, không được tính là bắt được); bốn dòng 'đạt: bản đột biến (…) bị bắt:' — gửi lại hậu tố @offset lên đường dẫn · cắt mất đường dẫn kể cả khi không có hậu tố · sourceId ghi đường dẫn gửi thay vì tên trang · payload.url ghi tên trang thay vì đường dẫn gửi"
+    paths: [collector/src/collectors/**, collector/src/test/s02-bo-thu-cua-api.test.ts, _acceptance/s02-map-listings-trang-ke/probes/chay-test-dot-bien.mjs]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: cd collector && npx tsc -p tsconfig.json && cd .. && node _acceptance/s02-map-listings-trang-ke/probes/chay-test-dot-bien.mjs trang-ke
+    expected: "cùng lệnh E1: dòng 'đạt: bản đột biến (cắt mất đường dẫn kể cả khi không có hậu tố) bị bắt:' — vế KHÔNG-BẮN: ca 'đường dẫn không có @offset thì giữ nguyên, gửi đúng' đạt ở bản thật"
+    paths: [collector/src/collectors/**, collector/src/test/s02-bo-thu-cua-api.test.ts, _acceptance/s02-map-listings-trang-ke/probes/chay-test-dot-bien.mjs]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: bash _acceptance/s02-map-listings-trang-ke/probes/vung.sh
+    expected: "exit 0; dòng cuối 'XANH: mọi tệp đổi nằm trong vùng'; hai dòng 'đạt: chiều đỏ — cấy … thì bộ lọc gọi tên nó' (pipeline/transform-ngoai-vung.mjs · collector/src/cli.ts); hai dòng 'đạt: có …'; tệp ngoài vùng thì 'ĐỎ: tệp ngoài vùng: <tệp>'"
+    paths: [collector/**, _acceptance/s02-map-listings-trang-ke/**]
+  - id: E4
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.collector
+    expected: "exit 0; tsc không lỗi, mọi ca node --test của collector đạt"
+    paths: [collector/**]
