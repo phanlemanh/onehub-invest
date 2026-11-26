@@ -66,3 +66,11 @@ evals:
     expected: "Sau áp (lời riêng của Mạnh): do-ten-nguon-cloud.mjs trên cloud ra 0 ô ở mọi bảng.cột, cả đếm thô độc lập; sync_stage.swaps có lần tráo mới sau giờ áp; số dòng cloud ≥ 99% máy thu ở mọi bảng FILL. Chạy trong hồ sơ áp, không trong lượt chấm"
     paths: [scripts/do-ten-nguon-cloud.mjs]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.suite.pipeline_that
+    long_running: 90
+    paths: [pipeline/sync-cloud.mjs, pipeline/lib/che-ten-nguon-gia-tri.mjs]
+    expected: "exit 0; ca pipeline dữ liệu thật (HT9 pipeline_that, kích vì nhánh đổi pipeline/sync-cloud.mjs và pipeline/lib/che-ten-nguon-gia-tri.mjs) trên bản chép DB máy thu, 0 fail; khai để có long_running 90 (luật CHUNG.md 26/11, khuôn HT9 E3a)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
