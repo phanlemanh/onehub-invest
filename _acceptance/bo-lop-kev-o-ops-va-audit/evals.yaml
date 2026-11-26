@@ -60,3 +60,10 @@ evals:
     cmd: config:executors.test.kev2_scripts
     paths: ["scripts/kev2-ops-local.test.mjs", "app/src/lib/ops-queries.ts", "app/src/lib/ops-cloud.ts", "app/src/lib/collections-queries.ts", "app/src/components/ops/collections/**", "app/src/components/ops/collections-tables.tsx", "scripts/lib/ops-local.mjs", "scripts/audit-all.sh", "pipeline/push-ops-facts.mjs"]
     expected: "Ca KEV2-AC-8 xanh: quét danh sách tệp viết trước (bảy tệp mã + mọi tệp dưới components/ops/collections) không khớp /127\\.0\\.0\\.1:8009|Cổng Kev|Kev gate|kevUp/ (chú thích được phép nêu lý do gỡ bằng chữ «Kev» trần — khuôn không bắt «Kev» đứng một mình); số tệp quét ≥ 9 (chống quét rỗng). Chiều đỏ: bản sao một tệp chèn lại «Cổng Kev :8009» → ghim tên tệp."
+  - id: E10
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.suite.pipeline_that
+    long_running: 90
+    paths: ["pipeline/push-ops-facts.mjs", "pipeline/lib/ops-flow.mjs", "scripts/ci-bo-qua.json"]
+    expected: "exit 0; nhánh đổi pipeline/push-ops-facts.mjs và pipeline/lib/ops-flow.mjs nên suite-neu-doi kích pipeline_that (dòng «ca dữ liệu thật: chạy trong lượt này»); mọi ca dữ liệu thật của ci-bo-qua chạy trên bản chép, `ℹ fail 0` — đổi bên ghi bản tin không làm đỏ ca nào dùng dữ liệu thật."
