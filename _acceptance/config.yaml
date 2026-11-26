@@ -698,6 +698,8 @@ executors:
     kev_watchdog_l1: "node scripts/kev-nhan/acceptance.mjs watchdog-l1"
     kev_contract_doc: "grep -qE 'schemaVersion.: [3-9]' collector/docs/DATA-CONTRACT.md && grep -qE 'chấp nhận `\\{1,2,3(,[0-9]+)*\\}`' collector/docs/DATA-CONTRACT.md && echo CONTRACT-DOC OK"
     zc1_sourceid: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan/acceptance.mjs sourceid"
+    zc21_s17: "cd collector && rm -rf dist && npm run build && cp -R src/test/fixtures dist/test/ && H=$(mktemp -d) && HOME=$H TMPDIR=$H node --test 'dist/test/s17-*.test.js' && git diff --quiet $(git merge-base origin/main HEAD) -- src ':!src/collectors/s17-thua-dinh-gia' ':!src/test/s17-*' && cd .. && bash _acceptance/s17-bo-thu-mo-rong/probes/dot-bien.sh"   # s17-bo-thu-mo-rong E1–E6, E8 — MỘT lệnh dựng dist (tsc = kiểm kiểu), 13 tệp test S17 với HOME + TMPDIR tạm, mã collector ngoài thư mục S17 không đổi so với gốc nhánh, năm đột biến an toàn phải đỏ đúng ca
+    zc21_tang_a: "node _acceptance/so-nguon-kho-khai-bao/probes/tang-a.mjs --tam /khong-co"   # s17-bo-thu-mo-rong E7 — tên thật, tên miền S17 (sổ máy thu, chỉ đọc) không có trong tệp nhánh đổi; chỉ in mã và số
     zc1_stg_roundtrip: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan/acceptance.mjs stg-roundtrip"   # cần DB local :5433; kiểm trùng trước, xoá snapshot giả sau
     # importer-bo-qua-du-lieu-thu (PL1) — DB local :5433: real-mock chỉ chạy importer trên snapshot THỬ (bị bỏ qua); fixtures dữ liệu giả mốc năm 2001, xoá sau
     pl1_real_mock: "node scripts/importer-bo-qua-du-lieu-thu/acceptance.mjs real-mock"

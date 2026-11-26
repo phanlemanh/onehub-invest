@@ -1,0 +1,66 @@
+schema_version: 1
+feature_slug: s17-bo-thu-mo-rong
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.script.zc21_s17
+    paths: [collector/src/collectors/s17-thua-dinh-gia/main.ts, collector/src/collectors/s17-thua-dinh-gia/config.ts, collector/src/test/s17-thua-dinh-gia-cli.test.ts, collector/src/test/s17-thua-dinh-gia-nhieu.test.ts, _acceptance/s17-bo-thu-mo-rong/probes/dot-bien.sh]
+    expected: "exit 0; các ca «parseCli: thiếu trần lời gọi hoặc trần thời gian thì từ chối», «parseCli: nhịp ngoài 150–400 ms bị từ chối», «getJsonMany: concurrency ngoài 1–8 … thì từ chối» xanh; chiều đỏ ghim trong cùng lệnh: dòng 'PASS bo-bat-buoc-tran-loi → ĐỎ' (bản chép main.js bỏ bắt buộc --caps-calls làm đỏ ca thiếu trần)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.script.zc21_s17
+    paths: [collector/src/collectors/s17-thua-dinh-gia/client.ts, collector/src/collectors/s17-thua-dinh-gia/runner.ts, collector/src/collectors/s17-thua-dinh-gia/anh.ts, collector/src/test/s17-thua-dinh-gia-nhieu.test.ts, collector/src/test/s17-thua-dinh-gia-exec.test.ts, collector/src/test/s17-thua-dinh-gia-mo-rong.test.ts]
+    expected: "exit 0; các ca «getJsonMany: một lời trong đợt gặp 403 → dừng cả lượt…», «tăng tốc: bị chặn một lần thì ghi vào trạng thái; lần sau chỉ còn nhịp cũ một luồng», «tăng tốc: bị chặn hai lần thì dừng hẳn…», «taiAnh: HTTP 200 nhưng thân là trang HTML là trang thử thách → bị chặn…» xanh, cùng ca «pha ảnh: nhiều lỗi mạng liền nhau thì dừng cả lượt (network-down)…»; chiều đỏ ghim trong cùng lệnh: dòng 'PASS bo-dung-khi-403 → ĐỎ' (gồm «403: dừng cả lượt, mọi lời sau không gửi nữa») và 'PASS bo-dung-han-khi-chan-hai-lan → ĐỎ 1 ca' (gap-probe P1)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.script.zc21_s17
+    paths: [collector/src/collectors/s17-thua-dinh-gia/khoa-phien.ts, collector/src/test/s17-thua-dinh-gia-trang.test.ts, _acceptance/s17-bo-thu-mo-rong/probes/dot-bien.sh]
+    expected: "exit 0; ca «khoá chung mọi pha cần phiên: một lúc chỉ một pha giữ khoá; khoá của tiến trình đã chết được dọn…» và «tiến trình trình duyệt: khoá chung đang được một pha cần phiên khác giữ thì dừng ngay với lý do another-run…» xanh; dòng 'PASS khoa-phien-bo-another-run → ĐỎ 2 ca' (LL đo 26/11 cùng kết quả)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.script.zc21_s17
+    paths: [collector/src/collectors/s17-thua-dinh-gia/kinds.ts, collector/src/collectors/s17-thua-dinh-gia/runner.ts, collector/src/test/s17-thua-dinh-gia-exec.test.ts, collector/src/test/s17-thua-dinh-gia-run.test.ts, _acceptance/s17-bo-thu-mo-rong/probes/dot-bien.sh]
+    expected: "exit 0; ca «executePhase: số dư giảm thì dừng cả lượt với lý do balance-spent», «executePhase: không đọc được số dư thì dừng TRƯỚC khi chạy pha…», «assertBalanceUnchanged: số dư giảm thì dừng cả lượt…» xanh; dòng 'PASS bo-dung-khi-so-du-giam → ĐỎ'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.script.zc21_s17
+    paths: [collector/src/collectors/s17-thua-dinh-gia/anh.ts, collector/src/collectors/s17-thua-dinh-gia/pha-anh.ts, collector/src/test/s17-thua-dinh-gia-mo-rong.test.ts, collector/src/test/s17-thua-dinh-gia-trang.test.ts, _acceptance/s17-bo-thu-mo-rong/probes/dot-bien.sh]
+    expected: "exit 0; các ca «diaChiNoiBo: IPv4 dải riêng/đặc biệt và IPv6…», «taiAnh: máy chủ ngoài có tên trỏ tới địa chỉ dải riêng (theo DNS) thì KHÔNG kết nối…», «taiAnh: chuyển hướng tới máy chủ KHÔNG được phép (hoặc nội bộ) thì dừng…», «taiAnh: máy chủ khai content-length lớn hơn trần cỡ thì bỏ ngay…», «pha ảnh máy chủ nguồn: lỗi cấp máy chủ … luôn là lỗi TẠM…» xanh; hai dòng 'PASS bo-chan-dia-chi-noi-bo → ĐỎ' và 'PASS loi-may-chu-thanh-vinh-vien → ĐỎ 1 ca'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.script.zc21_s17
+    paths: [collector/src/collectors/s17-thua-dinh-gia/store.ts, collector/src/collectors/s17-thua-dinh-gia/runner.ts, collector/src/collectors/s17-thua-dinh-gia/tien-do.ts, collector/src/test/s17-thua-dinh-gia-run.test.ts, collector/src/test/s17-thua-dinh-gia-exec.test.ts, collector/src/test/s17-thua-dinh-gia-mo-rong.test.ts]
+    expected: "exit 0; các ca «projects: chốt snapshot hỏng thì trạng thái KHÔNG nói đã làm việc chưa xuống đĩa», «pha ảnh: lô chốt hỏng thì KHÔNG ghi tiến độ…», «BatchWriter: ghi lô nhỏ; mỗi snapshot mang schemaVersion 17, đủ sha256…», «tệp DUNG xuất hiện giữa lượt → lượt dừng sạch ở lời kế tiếp…», «executePhase: trạng thái lưu ra tệp; chạy lại đọc lại và không lặp việc đã xong» xanh; chiều đỏ ghim: dòng 'PASS ghi-tien-do-khi-lo-chua-chot → ĐỎ' (gồm «projects: chỉ lưu trạng thái khi snapshot đã chốt») và 'PASS bo-kiem-tep-dung → ĐỎ' (gap-probe P1)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.zc21_tang_a
+    paths: [collector/src/collectors/s17-thua-dinh-gia/**, collector/src/test/s17-*, _acceptance/s17-bo-thu-mo-rong/**]
+    expected: "exit 0; dòng 'danh sách tên: … S17 <n> mục' với n ≥ 1 (nguồn: sổ máy thu); dòng 'tự kiểm: cấy từng biến thể vào bản chép migration → mỗi biến thể TRÚNG (… S17 n/n)'; 'phạm vi quét: <k> tệp' gồm tệp nhánh đổi; mọi tệp 'ok'; dòng cuối 'TANG-A OK'. Đo 26/11: S17 13 mục, 13/13 trúng, 65 tệp."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.script.zc21_s17
+    paths: [collector/src/collectors/s17-thua-dinh-gia/**, collector/src/test/s17-*]
+    expected: "exit 0; npm run build (tsc) không lỗi; node --test 13 tệp dist/test/s17-*.test.js với HOME + TMPDIR tạm báo 'ℹ fail 0' (đo 26/11: 263/263); `git diff --quiet $(git merge-base origin/main HEAD) -- src ':!src/collectors/s17-thua-dinh-gia' ':!src/test/s17-*'` thoát 0; probe: 'PASS bản lành: 263/263 ca S17 xanh, skipped 0, todo 0' (khoá SO_CA=263), 'PASS 23 ca nêu tên trong evals chạy xanh', 'PASS phạm vi nhánh: mọi tệp đổi nằm trong danh sách trắng', 'PASS không có cờ --bo-doc-so-du', dòng cuối 'DOT-BIEN PASS' (gap-probe P1)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
