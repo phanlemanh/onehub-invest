@@ -236,6 +236,73 @@ test("2611-27 ĐANG trong khoảng nghỉ sau bị chặn → thoát 0, KHÔNG l
   dung(t);
 });
 
+// — claudedp-2611-27 (3, ZC18): chặn LẦN HAI trong 24 giờ → DỪNG HẲN cho tới khi NGƯỜI gỡ dấu —
+test("2611-27 chặn lần hai trong 24 giờ → ghi dấu dừng hẳn, thoát 3, in dòng nói rõ + cách gỡ", () => {
+  const t = moiTruong();
+  if (DANG_QUET_DU()) { t.skip && t.skip?.(); }
+  // lần chặn trước cách đây 1 giờ — lần chặn này là «lần hai trong 24 giờ»
+  writeFileSync(join(t.goc, "lan-chan.json"), JSON.stringify({ lanCuoi: new Date(Date.now() - 3600_000).toISOString() }));
+  const kq = chay(t, { SHIM_COLLECT_RC: 3, SHIM_CITIES: "hcmc" });
+  assert.equal(kq.status, 3, kq.stdout + kq.stderr);
+  assert.match(kq.stdout, /DỪNG HẲN.*chặn lần hai trong 24 giờ.*rm /, "lượt bị dừng phải in dòng nói rõ và cách gỡ");
+  assert.ok(existsSync(join(t.goc, "dung-han.json")), "phải ghi dấu dừng hẳn (dung-han.json)");
+  assert.ok(!existsSync(join(t.goc, "bi-chan.json")), "dừng hẳn thay nghỉ — không ghi mốc nghỉ");
+  dung(t);
+});
+
+test("2611-27 ĐÃ dừng hẳn: các lượt sau không gọi nguồn DÙ hết hạn nghỉ, chỉ in dòng gỡ dấu, thoát 0", () => {
+  const t = moiTruong();
+  if (DANG_QUET_DU()) { t.skip && t.skip?.(); }
+  writeFileSync(join(t.goc, "dung-han.json"), JSON.stringify({ lanTruoc: "2026-11-26T00:00:00Z", lanHai: "2026-11-26T01:00:00Z" }));
+  // mốc nghỉ ĐÃ quá hạn — dấu dừng hẳn vẫn phải chặn trước mọi lời gọi node
+  writeFileSync(join(t.goc, "bi-chan.json"), JSON.stringify({ hetLuc: new Date(Date.now() - 60_000).toISOString() }));
+  const kq = chay(t);
+  assert.equal(kq.status, 0, kq.stderr);
+  assert.match(kq.stdout, /DỪNG HẲN.*rm /, "phải in dòng nói rõ đang dừng và cách gỡ");
+  assert.deepEqual(docLog(t), [], "đang dừng hẳn thì không một lời gọi node nào — kể cả thu");
+  assert.ok(existsSync(join(t.goc, "dung-han.json")), "dấu phải còn nguyên — hết hạn nghỉ không tự gỡ");
+  dung(t);
+});
+
+test("2611-27 chặn lần hai SAU 24 giờ → chỉ nghỉ như lần đầu, không dừng hẳn", () => {
+  const t = moiTruong();
+  if (DANG_QUET_DU()) { t.skip && t.skip?.(); }
+  writeFileSync(join(t.goc, "lan-chan.json"), JSON.stringify({ lanCuoi: new Date(Date.now() - 25 * 3600_000).toISOString() }));
+  const kq = chay(t, { SHIM_COLLECT_RC: 3, SHIM_CITIES: "hcmc" });
+  assert.equal(kq.status, 3, kq.stdout + kq.stderr);
+  assert.ok(!existsSync(join(t.goc, "dung-han.json")), "lần chặn cách đây hơn 24 giờ chỉ được nghỉ như lần đầu");
+  const moc = JSON.parse(readFileSync(join(t.goc, "bi-chan.json"), "utf8"));
+  assert.ok(Date.parse(moc.hetLuc) > Date.now(), "vẫn ghi mốc nghỉ trong tương lai");
+  const lc = JSON.parse(readFileSync(join(t.goc, "lan-chan.json"), "utf8"));
+  assert.ok(Math.abs(Date.parse(lc.lanCuoi) - Date.now()) < 120_000, "sổ giờ chặn cập nhật giờ chặn mới nhất");
+  dung(t);
+});
+
+test("2611-27 người gỡ dấu bằng tay (rm dung-han.json) → chạy lại bình thường, gọi nguồn lại", () => {
+  const t = moiTruong();
+  if (DANG_QUET_DU()) { t.skip && t.skip?.(); }
+  writeFileSync(join(t.goc, "dung-han.json"), JSON.stringify({ lanTruoc: "x", lanHai: "y" }));
+  rmSync(join(t.goc, "dung-han.json")); // đúng hành động gỡ: rm <tệp>
+  const kq = chay(t, { SHIM_CITIES: "hcmc", SHIM_DA_NAP: "hcmc" });
+  assert.equal(kq.status, 0, kq.stderr);
+  assert.deepEqual(docLog(t).filter((d) => d.startsWith("collect")), ["collect hcmc"], "gỡ dấu xong phải gọi nguồn lại");
+  assert.doesNotMatch(kq.stdout, /DỪNG HẲN/);
+  dung(t);
+});
+
+test("2611-27 tắt THU_DUOI_S06_DUNG_LAN_HAI=0 → chặn lần hai chỉ nghỉ, không dấu dừng (như fc3fa4a7a)", () => {
+  const t = moiTruong();
+  if (DANG_QUET_DU()) { t.skip && t.skip?.(); }
+  writeFileSync(join(t.goc, "lan-chan.json"), JSON.stringify({ lanCuoi: new Date(Date.now() - 3600_000).toISOString() }));
+  const kq = chay(t, { SHIM_COLLECT_RC: 3, SHIM_CITIES: "hcmc", THU_DUOI_S06_DUNG_LAN_HAI: "0" });
+  assert.equal(kq.status, 3, kq.stdout + kq.stderr);
+  assert.ok(!existsSync(join(t.goc, "dung-han.json")), "tắt biến thì không bao giờ dừng hẳn");
+  const moc = JSON.parse(readFileSync(join(t.goc, "bi-chan.json"), "utf8"));
+  assert.ok(Date.parse(moc.hetLuc) > Date.now(), "chỉ nghỉ có hạn như hành vi cũ");
+  assert.doesNotMatch(kq.stdout, /DỪNG HẲN/);
+  dung(t);
+});
+
 test("bị chặn nguồn (collect RC 3) → thoát 3, KHÔNG nạp gì", () => {
   const t = moiTruong();
   const kq = chay(t, { SHIM_COLLECT_RC: 3 });
