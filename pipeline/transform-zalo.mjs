@@ -18,6 +18,7 @@ import { co095, retractRule, subjectKey, phatBieuLoaiHinh, phatBieuPhongNgu, pha
 import { assignStickyIds } from "./lib/offer-key.mjs";
 import { LUAT_DV6, LY_DO_RUT, RULE_ID as RULE_ID_THE, coBangThe, docNhanDuAn, docTheDaDuyet, phatBieuDiaChiNhom, rutTheCu, traLaiDV6 } from "./lib/dia-chi-the-nhom.mjs";
 import { normText } from "./lib/norm-text.mjs";
+import { ghiYeuCau } from "./lib/yeu-cau.mjs";
 import { ASSERTION_METHOD, CONFIDENCE, ENRICH_FIELD, FLOOR_BAND, KIND, PROPERTY_TYPE } from "./lib/vocab.generated.mjs";
 
 const DB_URL =
@@ -850,10 +851,12 @@ export async function docThiTruongNhom(client, khoaNhom = khoaNhomThat) {
 // `parse` chỉ để thước giả lập đổi rule parser (PL14 NL-AC-4); đường chạy thật luôn dùng parsePost.
 // `suyLoaiTin: false` tắt bước suy loại (RM1) — chỉ cho thước đối chiếu trước/sau; đường chạy thật luôn bật.
 // `khoaNhom` chỉ để thước truyền hàm đột biến (nhom-hai-lan-s03-xu-goc); đường chạy thật luôn dùng khoaNhomThat.
+// `buocYeuCau` chỉ để ca đỏ của YC0 (bang-yeu-cau-noi-lai) chạy bản sao đột biến của bước Yêu cầu qua transform thật; đường chạy
+// thật luôn dùng ghiYeuCau.
 /** Phiên bản bộ đọc tầng (DV4) — method_version của phát biểu tầng. */
 export const TANG_VERSION = "transform-zalo@dv4";
 
-export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin = true, khoaNhom = khoaNhomThat, ganSo = ganSdtQuaNguoi } = {}) {
+export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin = true, khoaNhom = khoaNhomThat, ganSo = ganSdtQuaNguoi, buocYeuCau = ghiYeuCau } = {}) {
   // Phường theo thị trường của nhóm (N1): nhóm S03 khai market_codes ở sổ nhóm (collection_units, PL12) chỉ đối chiếu
   // phường của các thị trường đó; nhóm chưa khai (Hỏi-1, Mạnh duyệt 30/10) đối chiếu mọi thị trường có phường.
   const moiThiTruong = await docThiTruongCoPhuong(client);
@@ -1101,7 +1104,11 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
   await ganSo(client, { rieng: new Map(rows.map((r) => [r.offer_id, r.seller_phone])) });
   console.log(`đối soát: ${JSON.stringify({ ...reconcile, pairs: undefined })}`);
   console.log(`offers ghi: ${dedup.size} (SĐT: ${sellerAgg.size} người bán)`);
-  return { offers: rows.length, rejected, reconcile, loaiGiaPhiLy, nguonLoai, bai_doi_khoa: baiDoiKhoa, the_nhom: theNhomDem };
+  // YC0 (bang-yeu-cau-noi-lai): phát biểu ý định của mọi bài thật trong lượt (luật = observed, nhãn Haiku = inferred) rồi phân xử
+  // thành dòng inquiry_post_records — sau bước tin rao, không đụng luồng tin (phân xử tin bỏ qua trường của Yêu cầu, 136 §5).
+  // DB chưa áp 136 → một dòng «chưa áp 136», bỏ bước.
+  const yeuCau = await buocYeuCau(client, posts);
+  return { offers: rows.length, rejected, reconcile, loaiGiaPhiLy, nguonLoai, bai_doi_khoa: baiDoiKhoa, the_nhom: theNhomDem, yeuCau };
 }
 
 /** Thị trường có phường và danh sách phường của chúng, để đối chiếu tên phường trong chữ bài. */

@@ -1,15 +1,16 @@
-// scan-delete.mjs — PL14 (nap-lai-khong-xoa AC-8): không câu DELETE FROM / TRUNCATE nào nhắm bảng tin hay listing.
+// scan-delete.mjs — PL14 (nap-lai-khong-xoa AC-8): không câu DELETE FROM / TRUNCATE nào nhắm bảng tin, listing hay bài Yêu cầu
+// (YC0 bang-yeu-cau-noi-lai, 136: inquiry_post_records + view inquiries — Yêu cầu hết ý định chỉ nghỉ).
 // Tin và listing chỉ NGHỈ (retired_at, migration 044); xoá hàng là mất quyết định người qua khoá ngoại.
 // Bỏ qua dòng chú thích (//, --, /*, *) và dòng mang dấu `quet-xoa:bo-qua` (đối chứng có chủ đích trong thước).
 import { readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 
-const BANG = "(?:sale_offers|sale_offer_records|listings|listing_records)";
+const BANG = "(?:sale_offers|sale_offer_records|listings|listing_records|inquiries|inquiry_post_records)";
 const DELETE_RE = new RegExp(`\\bDELETE\\s+FROM\\s+(?:ONLY\\s+)?(?:"?public"?\\.)?"?${BANG}"?(?![A-Za-z0-9_])`, "i");
 const TRUNCATE_RE = new RegExp(`\\bTRUNCATE\\b[^;]*?(?<![A-Za-z0-9_])"?${BANG}"?(?![A-Za-z0-9_])`, "i");
 const CHU_THICH = /^\s*(?:\/\/|--|\/\*|\*)/;
 
-/** '<tệp>:<dòng>' cho mỗi câu xoá nhắm bảng tin/listing. files: [{ path, text }]. */
+/** '<tệp>:<dòng>' cho mỗi câu xoá nhắm bảng tin/listing/Yêu cầu. files: [{ path, text }]. */
 export function scanDeleteRecords(files) {
   const hits = [];
   for (const f of files) {
