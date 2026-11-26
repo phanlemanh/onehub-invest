@@ -1,0 +1,16 @@
+---
+slug: so-nguon-kho-khai-bao
+at: 2026-11-21T07:35:00Z
+verdict: findings
+p0: 2
+p1: 3
+p2: 0
+---
+## Findings
+| Sev | Artifact | Thiếu gì | Kịch bản fail | Thước đo | Xử lý |
+|---|---|---|---|---|---|
+| P0 | design | Lựa chọn «sổ thiếu cột thì ném lỗi» chạm người dùng trong khoảng gộp tới áp; thiết kế không chốt thứ tự gộp, kéo main, áp 122; tệp lùi xoá cột mà không lùi mã; không nói cloud /ops đọc gì. [phuong-tu-du-an-chay-that#F1] [phuong-tu-du-an-chay-that#F2] | Gộp lúc 21:30, kéo main ngay, lượt áp trễ: push-ops-facts ném lỗi, khối freshness trên cloud đứng yên; lùi DB khi mã mới còn chạy làm CLI và /ops lỗi vĩnh viễn. | Hồ sơ áp ghi thứ tự áp trước kéo, lùi mã trước DB; thiết kế nói rõ cloud đọc gì. | fixed: dòng sổ mới thay d-20261121T065651Z-3 — thứ tự gộp → áp 122 từ bản origin/main khi checkout chính chưa kéo → điền S09, S17 → kéo main; lùi mã trước, DB sau; thiết kế và Notes của hợp đồng ghi cloud không gọi readFreshness (đọc khối freshness đẩy lên). Áp vào DB máy thu nằm trong chữ ký Cổng Bằng chứng, không phải ship ra người dùng ngoài, nên kho_dao giữ false. |
+| P0 | design | Căn cứ sai loại: dòng dừng S11 trích câu chỉ quyết trạng thái đích, không quyết cơ chế; dòng giữ hai kiểu câu đo dựa vào chính AC-2 do máy viết. [thuoc-tinh-can-s16-rut-khi-mo-ho#F1] [thuoc-tinh-can-s16-rut-khi-mo-ho#F2] | Cổng Phạm vi tưởng hai lựa chọn đã có căn cứ ngoài, duyệt mà không thấy là lựa chọn của máy. | Thay căn cứ bằng ràng buộc ngoài, hoặc đổi thành câu hỏi. | fixed: dòng dừng S11 đổi thành Hỏi-2 (thay d-20261121T065722Z-7); dòng hai kiểu câu đo viết lại với ràng buộc ngoài — S03/S05 chung stg_zalo_posts tách theo agent_id, S01 không bảng nạp, S02 không snapshot_id (thay d-20261121T065651Z-2). |
+| P1 | evals | E6 chỉ quét tên đúng nguyên văn trong tệp cục bộ; không có biến thể gập; không quét tệp trong hồ sơ. [che-ten-nguon-khong-lay-tu-dau#F1] | Fixture hay hồ sơ áp nhắc tên thương hiệu không kèm đuôi miền → 0 chỗ trúng, tầng A lên kho công khai. | Danh sách quét gồm biến thể gập; cấy từng biến thể phải trúng; phạm vi quét thêm hồ sơ; thiếu danh sách thoát khác 0. | fixed: AC-6 và E6 thêm biến thể gập (chữ thường, bỏ đuôi miền, bỏ khoảng trắng và gạch), tự kiểm cấy từng biến thể, phạm vi gồm mọi tệp trong _acceptance/so-nguon-kho-khai-bao/; thiếu danh sách đã là KHONG CO DANH SACH (thoát khác 0). |
+| P1 | contract | Lý do bỏ ui-observed trỏ tới AC-7, nhưng AC-7 không chạm trang Thu thập. | Sau áp, app ở máy thu vẫn chạy bản cũ; trang Thu thập còn S16 «chưa khai SLO» trong khi CLI xanh, E7 vẫn ghi OK. | AC-7 và E7 gọi hàm truy vấn của trang Thu thập ở máy thu, so từng hàng với CLI. | fixed: AC-7 và E7 gọi readFreshness của app ở checkout chính trên DB máy thu, so từng hàng với CLI (lệch 0); dòng bỏ ui-observed viết lại (thay d-20261121T065722Z-12). |
+| P1 | contract | Bảng mong đợi AC-2 có S05 nhưng S05 paused nên không có hàng; không có đối chứng vắng mặt. | Ca NK-AC-2 đỏ vì thiếu S05, hoặc người viết test bật S05 active cho xanh, lệch Given. | Bỏ S05 khỏi bảng; thêm assert âm có đối chứng dương cho S05, S11. | fixed: AC-2 và E2 bỏ S05 khỏi bảng mong đợi, thêm ca «S05, S11 paused không có hàng; đổi sang active thì có hàng», thông điệp gọi tên mã. |
