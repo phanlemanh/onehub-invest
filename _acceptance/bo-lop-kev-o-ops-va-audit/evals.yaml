@@ -1,0 +1,62 @@
+schema_version: 1
+slug: bo-lop-kev-o-ops-va-audit
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.kev2_app
+    long_running: 60
+    paths: ["app/src/lib/ops-queries.ts", "app/src/components/ops/collections/**", "app/tests/kev2-thu-thap.test.tsx"]
+    expected: "Ca KEV2-AC-1 xanh: getLockdownStatus (fetch giả ghi mọi URL được gọi) trả đúng bảy dòng theo thứ tự viết trước, deepEqual mô tả; danh sách URL ghi được chứa 127.0.0.1:9210 (đối chứng dương: fetch giả có bắt lời dò) và không URL nào chứa 8009; /ops/collections dựng ở máy thu có bảy dòng trong khối Khoá an toàn, không chữ «Kev». Chiều đỏ: bản sao LOCKDOWN_LAYERS thêm lại dòng Kev → ghim «khối khoá an toàn còn dòng Kev»."
+  - id: E2
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.kev2_scripts
+    paths: ["scripts/lib/ops-local.mjs", "scripts/kev2-ops-local.test.mjs"]
+    expected: "Ca KEV2-AC-1-GHI xanh: readLockdown (thư mục log tạm, fetch giả) trả bảy dòng, cùng thứ tự và mô tả với LOCKDOWN_LAYERS của app (đọc từ nguồn app, so deepEqual); URL ghi được chứa 127.0.0.1:9210 và không URL 8009. Chiều đỏ: bản sao ops-local.mjs còn dòng Kev → ghim «bên ghi lệch bên đọc»."
+  - id: E3
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.kev2_app
+    long_running: 60
+    paths: ["app/src/lib/collections-queries.ts", "app/tests/kev2-thu-thap.test.tsx"]
+    expected: "Ca KEV2-AC-2 xanh: readSchedulerStatus ở máy thu (fetch giả) trả các id viết trước [s02-daily, s01-weekly, s01-smoke, collector-api], không id kev, không nhãn chứa Kev/8009. Chiều đỏ: bản sao còn hàng kev → ghim «lưới máy móc còn hàng Kev»."
+  - id: E4
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.kev2_scripts
+    paths: ["pipeline/push-ops-facts.mjs", "scripts/kev2-ops-local.test.mjs"]
+    expected: "Ca KEV2-AC-3 xanh: dựng bản tin bằng hàm của push-ops-facts (không đẩy cloud, không DB thật: hàm dựng jobs/lockdown gọi trực tiếp với thư mục log tạm, fetch giả) — jobs không id kev, lockdown.layers không dòng Kev, JSON.stringify không chứa «Kev»/«8009»; tập khoá trên cùng của bản tin deepEqual danh sách viết trước. Ca KEV2-AC-6-GHI: parseLog của push-ops-facts trên cùng nhật ký mẫu của E7 ra funnel deepEqual readGateFunnel của app (messages = số tin, không gấp đôi). Chiều đỏ: bản sao push-ops-facts còn hàng kev → ghim «bản tin còn Kev»; bản sao parseLog bỏ lọc kev null → ghim «bản tin đếm đôi»."
+  - id: E5
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.kev2_app
+    long_running: 60
+    paths: ["app/src/lib/ops-cloud.ts", "app/src/lib/collections-queries.ts", "app/tests/kev2-thu-thap.test.tsx", "app/tests/lockdown-cloud-theo-facts.test.tsx"]
+    expected: "Ca KEV2-AC-4 xanh: /ops/collections dựng ở chế độ máy chủ (VERCEL=1) trên ops_heartbeat của DB thử chứa bản tin CŨ sinh bằng push-ops-facts.mjs ở commit 04b9ddc3b (git show ra tệp tạm, fetch giả cho :8009 sống, ghi sha nguồn trong test) — không viết tay hàng kev hay lớp Kev → HTML không hàng/lớp Kev; hàng collector-api mang ba trạng thái theo lớp cổng nhận tin (ma trận 3 ô viết trước: true→Sống, false→Không phản hồi, null→Chưa kiểm được). Đối chứng dương: bản tin mới không Kev cho cùng HTML khối máy móc. Chiều đỏ: bản sao bỏ bộ lọc ở ops-cloud → ghim «máy chủ hiện Kev từ bản tin cũ». lockdown-cloud-theo-facts.test.tsx sửa còn bảy lớp và xanh."
+  - id: E6
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.kev2_app
+    long_running: 60
+    paths: ["app/src/components/ops/collections/pipe-panels.tsx", "app/src/components/ops/collections-tables.tsx", "app/tests/kev2-thu-thap.test.tsx"]
+    expected: "Ca KEV2-AC-5 xanh: ZaloPipePanel với phễu viết trước (7 ngày: 5 tin, 4 đẩy, 3 nhận) có đúng câu «Hook Zalo: sự kiện cuối … 5 tin thấy → 4 đẩy vào cổng nhận tin → 3 nhận vào bảng thô», không chữ «Kev»; chú thích bảng nhóm không «Kev». Chiều đỏ: bản sao pipe-panels giữ «Cổng Kev» → ghim tên khung."
+  - id: E7
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.kev2_app
+    long_running: 60
+    paths: ["app/src/lib/collections-queries.ts", "app/tests/kev2-thu-thap.test.tsx"]
+    expected: "Ca KEV2-AC-6 xanh: readGateFunnel trên HOME tạm với nhật ký dựng từ khuôn dòng log rút từ collector/openclaw/handler.js (đọc nguồn, mỗi loại dòng một mẫu: kev null, post 202 kèm accepted, skip (rỗng), media-only captured, spool +1, heartbeat) theo ma trận số đếm kỳ vọng viết trước — mỗi loại một hàng, riêng kev null không cộng vào messages; 3 tin mỗi tin «kev null» + «post 202» → messages = 3, passed = 3; tệp vắng → số 0, lastEventAt null. Chiều đỏ: bản sao bộ đếm bỏ luật lọc kev null → messages = 6, ghim «tin thấy đếm đôi»."
+  - id: E8
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.kev2_scripts
+    paths: ["scripts/audit-all.sh", "scripts/kev2-ops-local.test.mjs"]
+    expected: "Ca KEV2-AC-7 xanh: trích khối «F. INFRASTRUCTURE» của audit-all.sh chạy với curl giả (PATH tạm, ghi URL được gọi; :9210 trả 200 rồi 000): không URL nào tới 8009, :9210 sống → dòng PASS «Service :9210 sống», chết → FAIL «Service :9210 chết». Chiều đỏ: bản sao còn \":8009\" trong vòng dò → ghim «audit-all còn dò :8009»."
+  - id: E9
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.kev2_scripts
+    paths: ["scripts/kev2-ops-local.test.mjs", "app/src/lib/ops-queries.ts", "app/src/lib/ops-cloud.ts", "app/src/lib/collections-queries.ts", "app/src/components/ops/collections/**", "app/src/components/ops/collections-tables.tsx", "scripts/lib/ops-local.mjs", "scripts/audit-all.sh", "pipeline/push-ops-facts.mjs"]
+    expected: "Ca KEV2-AC-8 xanh: quét danh sách tệp viết trước (bảy tệp mã + mọi tệp dưới components/ops/collections) không khớp /127\\.0\\.0\\.1:8009|Cổng Kev|Kev gate|kevUp/ (chú thích được phép nêu lý do gỡ bằng chữ «Kev» trần — khuôn không bắt «Kev» đứng một mình); số tệp quét ≥ 9 (chống quét rỗng). Chiều đỏ: bản sao một tệp chèn lại «Cổng Kev :8009» → ghim tên tệp."
