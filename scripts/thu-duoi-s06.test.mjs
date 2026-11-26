@@ -78,6 +78,8 @@ esac
   return { home, bin, root, goc, log, env };
 }
 
+const DANG_QUET_DU = () => spawnSync("pgrep", ["-f", "scripts/chotot-daily.sh"]).status === 0;
+
 function chay(t, suaEnv = {}) {
   return spawnSync("bash", [join(t.root, "scripts", "thu-duoi-s06.sh")], {
     env: { ...t.env, ...suaEnv },
@@ -157,7 +159,7 @@ test("không vùng chạy được → thoát 0 (đã gọi cắt mốc với tr
 
 test("vui: thu 2 vùng, hanoi đã nạp → import ĐÚNG 1 snapshot mới nhất của hcmc, thoát 0", () => {
   const t = moiTruong();
-  const kq = chay(t, { SHIM_DA_NAP: "hanoi" });
+  const kq = chay(t, { SHIM_DA_NAP: "hanoi", THU_DUOI_S06_VUNG: "hanoi hcmc" });
   assert.equal(kq.status, 0, kq.stderr);
   const log = docLog(t);
   assert.deepEqual(log.filter((d) => d.startsWith("collect")), ["collect hanoi", "collect hcmc"]);
@@ -165,6 +167,72 @@ test("vui: thu 2 vùng, hanoi đã nạp → import ĐÚNG 1 snapshot mới nh�
   assert.equal(nap.length, 1, `tối đa 1 nạp/vòng — log=${JSON.stringify(log)} stdout=${kq.stdout}`);
   assert.match(nap[0], /hcmc__chotot-ads__20261125T060000/);
   assert.match(kq.stdout, /nạp snapshot đuôi .*hcmc__chotot-ads__20261125T060000/);
+  dung(t);
+});
+
+// — claudedp-2611-27 (1): tập vùng cấu hình được, MẶC ĐỊNH bằng đúng phạm vi đã đo (một vùng) —
+test("2611-27 MẶC ĐỊNH chỉ vùng đã đo: hanoi bị bỏ (có dòng nhật ký), chỉ hcmc được gọi", () => {
+  const t = moiTruong();
+  if (DANG_QUET_DU()) { t.skip && t.skip?.(); } // lượt quét đủ đang chạy → wrapper nhường lượt thoát 0 im lặng, không đo được
+  const kq = chay(t, { SHIM_CITIES: "hanoi hcmc" });
+  assert.equal(kq.status, 0, kq.stderr);
+  const log = docLog(t);
+  assert.deepEqual(log.filter((d) => d.startsWith("collect")), ["collect hcmc"], "mặc định chỉ thu vùng đã đo");
+  assert.match(kq.stdout, /bỏ vùng hanoi: ngoài tập đã cấu hình/, "có dòng nhật ký nói rõ bị bỏ");
+  const nap = log.filter((d) => d.startsWith("import"));
+  assert.equal(nap.length <= 1, true, kq.stdout);
+});
+
+test("2611-27 mở thêm vùng bằng THU_DUOI_S06_VUNG → vùng đó được gọi (đối chứng hành vi)", () => {
+  const t = moiTruong();
+  if (DANG_QUET_DU()) { t.skip && t.skip?.(); } // lượt quét đủ đang chạy → wrapper nhường lượt thoát 0 im lặng, không đo được
+  const kq = chay(t, { SHIM_CITIES: "hanoi hcmc", THU_DUOI_S06_VUNG: "hanoi hcmc" });
+  assert.equal(kq.status, 0, kq.stderr);
+  assert.deepEqual(docLog(t).filter((d) => d.startsWith("collect")), ["collect hanoi", "collect hcmc"]);
+  dung(t);
+});
+
+test("2611-27 vùng ngoài tập: KHÔNG phát lời gọi nào cho vùng đó, vẫn có dòng nhật ký bỏ", () => {
+  const t = moiTruong();
+  if (DANG_QUET_DU()) { t.skip && t.skip?.(); } // lượt quét đủ đang chạy → wrapper nhường lượt thoát 0 im lặng, không đo được
+  const kq = chay(t, { SHIM_CITIES: "hcmc da-nang hanoi", THU_DUOI_S06_VUNG: "hcmc da-nang" });
+  assert.equal(kq.status, 0, kq.stderr);
+  assert.deepEqual(docLog(t).filter((d) => d.startsWith("collect")), ["collect hcmc", "collect da-nang"], "hanoi ngoài tập không được gọi");
+  assert.match(kq.stdout, /bỏ vùng hanoi: ngoài tập đã cấu hình/);
+  dung(t);
+});
+
+// — claudedp-2611-27 (2): nghỉ có hạn sau khi nguồn trả 403/429 —
+test("2611-27 vừa bị chặn (collect RC 3) → ghi mốc nghỉ và thoát 3", () => {
+  const t = moiTruong();
+  if (DANG_QUET_DU()) { t.skip && t.skip?.(); } // lượt quét đủ đang chạy → wrapper nhường lượt thoát 0 im lặng, không đo được
+  const kq = chay(t, { SHIM_COLLECT_RC: 3, SHIM_CITIES: "hcmc" });
+  assert.equal(kq.status, 3);
+  const moc = JSON.parse(readFileSync(join(t.goc, "bi-chan.json"), "utf8"));
+  assert.ok(Date.parse(moc.hetLuc) > Date.now(), "mốc nghỉ phải ghi giờ hết trong tương lai");
+  dung(t);
+});
+
+test("2611-27 ĐANG trong khoảng nghỉ sau bị chặn → thoát 0, KHÔNG lời gọi nào tới nguồn (kể cả thu)", async () => {
+  const t = moiTruong();
+  if (DANG_QUET_DU()) { t.skip && t.skip?.(); } // lượt quét đủ đang chạy → wrapper nhường lượt thoát 0 im lặng, không đo được
+  const con = spawn("bash", ["-c", "sleep 30"]);
+  mkdirSync(`${t.goc}.lock`);
+  writeFileSync(join(`${t.goc}.lock`, "pid"), String(con.pid));
+  await new Promise((r) => setTimeout(r, 200));
+  con.kill("SIGTERM");
+  // bash -c "sleep 30" có thể chưa chết ngay sau SIGTERM — chờ chết hẳn, nếu không
+  // wrapper thấy khoá bận và thoát 0 im lặng (stdout rỗng, ca đỏ giả)
+  for (let i = 0; i < 50 && spawnSync("kill", ["-0", String(con.pid)]).status === 0; i++) {
+    await new Promise((r) => setTimeout(r, 20));
+  }
+  // vòng trước vừa bị chặn: ghi mốc nghỉ còn 20 phút
+  writeFileSync(join(t.goc, "bi-chan.json"), JSON.stringify({ hetLuc: new Date(Date.now() + 20 * 60_000).toISOString() })); // ISO JS có mili-giây — ca này bắt lỗi parse mili-giây trước khi sửa mã
+  const kq = chay(t);
+  assert.equal(kq.status, 0, kq.stderr);
+  assert.deepEqual(docLog(t), [], "trong khoảng nghỉ không được gọi node nào — kể cả thu");
+  assert.match(kq.stdout, /nghỉ sau bị chặn nguồn/, "phải có dòng nhật ký nghỉ");
+  assert.ok(existsSync(join(t.goc, "bi-chan.json")), "mốc nghỉ còn hạn phải giữ nguyên");
   dung(t);
 });
 
@@ -179,7 +247,7 @@ test("bị chặn nguồn (collect RC 3) → thoát 3, KHÔNG nạp gì", () => 
 
 test("nạp lỗi → thoát 1 cuối vòng", () => {
   const t = moiTruong();
-  const kq = chay(t, { SHIM_IMPORT_RC: 1, SHIM_CITIES: "hanoi" });
+  const kq = chay(t, { SHIM_IMPORT_RC: 1, SHIM_CITIES: "hanoi", THU_DUOI_S06_VUNG: "hanoi" });
   assert.equal(kq.status, 1, `log=${JSON.stringify(docLog(t))} stdout=${kq.stdout} stderr=${kq.stderr}`);
   assert.equal(docLog(t).filter((d) => d.startsWith("import")).length, 1);
   assert.match(kq.stdout, /thoát 1 cuối vòng/);

@@ -12,7 +12,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readdirSync } from "node:fs";
+import { existsSync, mkdtempSync, mkdirSync, writeFileSync, rmSync, readdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { gzipSync } from "node:zlib";
@@ -73,6 +73,49 @@ CREATE TABLE source_groups (
   id bigserial PRIMARY KEY, source_code text NOT NULL, group_key text NOT NULL,
   status text NOT NULL DEFAULT 'active', params jsonb NOT NULL DEFAULT '{}');
 `;
+
+// claudedp-2611-27 (2c): mốc QUÁ HẠN → xoá mốc, vòng chạy lại bình thường (node thật — qua shim
+// không phân biệt được quá hạn/hết hạn vì mọi lời gọi node đều qua shim).
+test("2611-27 đã hết khoảng nghỉ → xoá mốc, vòng chạy bình thường", { timeout: 180_000 }, async (t) => {
+  const tenDb = `zcode_thuduois06_e2e_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+  const admin = new pg.Client({ connectionString: DB_ROOT });
+  let db = null, home = null, goc = null;
+  try {
+    await admin.connect();
+    await admin.query(`CREATE DATABASE ${tenDb}`);
+    db = new pg.Client({ connectionString: urlTren(tenDb) });
+    await db.connect();
+    await db.query(LUC_DO);
+    await db.query(`INSERT INTO source_registry (code, status) VALUES ('S06', 'active')`);
+    await db.query(`INSERT INTO source_groups (source_code, group_key, status) VALUES ('S06', 'hcmc', 'active')`);
+    home = mkdtempSync(join(tmpdir(), "thuduois06-e2e-home-"));
+    goc = mkdtempSync(join(tmpdir(), "thuduois06-e2e-goc-"));
+    const root = join(WORKTREE, "pipeline", ".e2e-root-cooldown");
+    rmSync(root, { recursive: true, force: true });
+    mkdirSync(join(root, "scripts"), { recursive: true });
+    mkdirSync(join(root, "pipeline", "lib"), { recursive: true });
+    const doc = async (d) => (await import("node:fs/promises")).readFile(d, "utf8");
+    writeFileSync(join(root, "scripts", "thu-duoi-s06.sh"), await doc(join(WORKTREE, "scripts", "thu-duoi-s06.sh")));
+    writeFileSync(join(root, "pipeline", "import-chotot.mjs"), await doc(join(WORKTREE, "pipeline", "import-chotot.mjs")));
+    writeFileSync(join(root, "pipeline", "lib", "vong-doi.mjs"), await doc(join(WORKTREE, "pipeline", "lib", "vong-doi.mjs")));
+    writeFileSync(join(root, "pipeline", "lib", "thu-duoi-moc.mjs"), await doc(join(WORKTREE, "pipeline", "lib", "thu-duoi-moc.mjs")));
+    writeFileSync(join(root, "pipeline", "collect-s06-duoi.mjs"), "process.exit(0);\n");
+    // mốc QUÁ HẠN 1 phút
+    writeFileSync(join(goc, "bi-chan.json"), JSON.stringify({ hetLuc: new Date(Date.now() - 60_000).toISOString() }));
+    const envDb = { ...process.env, DATABASE_URL: urlTren(tenDb), HOME: home, THU_DUOI_S06_GOC: goc };
+    const r = spawnSync("bash", [join(root, "scripts", "thu-duoi-s06.sh")], { env: envDb, encoding: "utf8", timeout: 120_000 });
+    assert.equal(r.status, 0, `vòng rảnh phải thoát 0 — stdout=${r.stdout?.slice(0, 300)} stderr=${r.stderr?.slice(0, 300)}`);
+    assert.equal(existsSync(join(goc, "bi-chan.json")), false, "mốc quá hạn phải được xoá rồi mới chạy");
+    assert.doesNotMatch(r.stdout, /nghỉ sau bị chặn/, "không được coi là còn nghỉ");
+  } finally {
+    if (db) await db.end().catch(() => {});
+    await admin.query(`DROP DATABASE IF EXISTS ${tenDb} WITH (FORCE)`).catch(() => {});
+    await admin.end().catch(() => {});
+    if (home) rmSync(home, { recursive: true, force: true });
+    if (goc) rmSync(goc, { recursive: true, force: true });
+    rmSync(join(WORKTREE, "pipeline", ".e2e-root-cooldown"), { recursive: true, force: true });
+  }
+});
 
 test("snapshot đuôi đã nạp bị lượt quét đủ đè hết snapshot_id → vòng rảnh kế KHÔNG nạp lại (đỏ trên 7173fc21a)", { timeout: 180_000 }, async (t) => {
   const tenDb = `zcode_thuduois06_e2e_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;

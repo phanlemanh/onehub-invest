@@ -25,6 +25,31 @@ GOC="${THU_DUOI_S06_GOC:-$ROOT/state/thu-duoi-s06}"
 KHOA="$GOC.lock"
 MUC="${THU_DUOI_S06_MUC:-1000/u}"
 MOC_TOIDA="${THU_DUOI_S06_MOC_TOIDA:-200000}" # trần số id giữ lại trong moc.json
+# 2611-27 (1): tập vùng được thu — MẶC ĐỊNH bằng đúng phạm vi phép đo 24 giờ (2411-6):
+# MỘT vùng × một mục. Mở thêm bằng THU_DUOI_S06_VUNG="vùng1 vùng2 …" (phân tách dấu cách).
+VUNG_MAC_DINH="hcmc"
+VUNG_CHAY="${THU_DUOI_S06_VUNG:-$VUNG_MAC_DINH}"
+# 2611-27 (2): nghỉ có hạn sau khi nguồn trả 403/429 (bộ thu thoát 3) — các vòng kế trong
+# khoảng này KHÔNG gọi nguồn; hết nghỉ xoá mốc và chạy lại.
+NGHI_SAU_CHAN_PHUT="${THU_DUOI_S06_NGHI_SAU_CHAN_PHUT:-30}"
+BI_CHAN="$GOC/bi-chan.json"
+
+# Giờ ISO UTC cột giây từ epoch — GNU (-d @) trước, BSD (-r) sau; lỗi thì thoát 1
+# (MỞ LẠI 2611-27: wrapper phải chạy đúng cả Linux CI lẫn macOS máy thu)
+iso_tu_epoch() {
+  local s="$1" kq=""
+  kq="$(date -u -d "@${s}" '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null)" && [ -n "$kq" ] && { printf '%s' "$kq"; return 0; }
+  kq="$(date -u -r "${s}" '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null)" && [ -n "$kq" ] && { printf '%s' "$kq"; return 0; }
+  return 1
+}
+# epoch từ ISO (chấp nhận có/không mili-giây và Z) — GNU (-d) trước, BSD (-j -f) sau;
+# không parse được thì in rỗng (gọi bên phải tự coi là mốc hỏng)
+epoch_tu_iso() {
+  local v="$1" kq=""
+  kq="$(date -u -d "${v}" '+%s' 2>/dev/null)" && [ -n "$kq" ] && { printf '%s' "$kq"; return 0; }
+  kq="$(date -ju -f '%Y-%m-%dT%H:%M:%S' "${v%%.*}" '+%s' 2>/dev/null)" && [ -n "$kq" ] && { printf '%s' "$kq"; return 0; }
+  return 1
+}
 
 # Rào trước mọi thao tác: goc cấm nằm trong collector/ của checkout nào
 # (chặn 2511-26 — lượt nạp ngày lấy tên mới nhất sẽ nhận nhầm).
@@ -48,6 +73,22 @@ fi
 echo "$$" > "$KHOA/pid"
 trap 'rm -rf "$KHOA"' EXIT
 trap 'exit 1' TERM INT
+
+# 1b) 2611-27 (2): còn trong khoảng nghỉ sau bị chặn → thoát 0 kèm dòng nhật ký,
+#     KHÔNG gọi node nào (kể cả thu); mốc hỏng/xong thì xoá và đi tiếp.
+#     Thuần bash + date hai chuẩn (GNU Linux CI / BSD macOS) — không gọi node,
+#     để môi trường shim test không xuyên lời gọi thật.
+if [ -f "$BI_CHAN" ]; then
+  HET="$(sed -E 's/.*"hetLuc":"([^"]*)".*/\1/' "$BI_CHAN" 2>/dev/null)"
+  HET_S="$(epoch_tu_iso "$HET")"
+  case "$HET_S" in ''|*[!0-9]*) HET_S=0 ;; esac # mốc hỏng/mốc rỗng → coi như hết nghỉ, xoá dưới đây
+  CON_LAI=$(( (HET_S - $(date -u +%s) + 59) / 60 ))
+  if [ "$CON_LAI" -le 0 ]; then rm -f "$BI_CHAN"; fi # hết nghỉ / mốc hỏng — chạy lại
+  if [ "$CON_LAI" -gt 0 ]; then
+    echo "$(date -u +%FT%TZ) nghỉ sau bị chặn nguồn — còn $CON_LAI phút, không gọi nguồn vòng này"
+    exit 0
+  fi
+fi
 
 # 2) nhường lượt quét đủ (05:30 + 14:00) — script nạp ngày đang chạy → thoát 0
 if pgrep -f "scripts/chotot-daily.sh" >/dev/null 2>&1; then
@@ -80,6 +121,16 @@ CITIES="$(cd "$ROOT/pipeline" && node --input-type=module -e '
     console.log(rows.filter((r) => isRunnable(src, { status: r.status }).run).map((r) => r.group_key).join(" "));
   } catch (e) { console.error("S06 vung-doc-loi: " + e.message); process.exit(1); }
 ')" || { echo "❌ đọc vùng S06 từ DB fail — dừng (fail-closed)"; exit 1; }
+# 5b) 2611-27 (1): lọc tập vùng — mặc định chỉ vùng đã đo; vùng ngoài tập bị bỏ
+#     CÓ DÒNG NHẬT KÝ, 0 lời gọi tới nguồn cho vùng đó.
+CHAY=""
+for v in $CITIES; do
+  case " $VUNG_CHAY " in
+    *" $v "*) CHAY="$CHAY $v" ;;
+    *) echo "$(date -u +%FT%TZ) bỏ vùng $v: ngoài tập đã cấu hình (THU_DUOI_S06_VUNG)" ;;
+  esac
+done
+CITIES="$CHAY"
 [ -z "$CITIES" ] && exit 0
 
 RC=0
@@ -87,7 +138,17 @@ for CITY in $CITIES; do
   # 6) thu đuôi vùng này — mã thoát giữ nguyên trạng của bộ thu; mã ≠0 dừng
   #    cả vòng, snapshot đã thu để cho vòng nạp sau (5 phút nữa)
   node "$ROOT/pipeline/collect-s06-duoi.mjs" --vung "$CITY" --muc "$MUC" --goc "$GOC" \
-    || { RC=$?; echo "❌ thu đuôi vùng $CITY thoát $RC — dừng vòng, nạp để vòng sau"; exit "$RC"; }
+    || { RC=$?
+         echo "❌ thu đuôi vùng $CITY thoát $RC — dừng vòng, nạp để vòng sau"
+         if [ "$RC" = "3" ]; then
+           # 2611-27 (2): bị chặn nguồn → các vòng kế nghỉ NGHI_SAU_CHAN_PHUT phút, không gọi nguồn.
+           # MỞ LẠI 2611-27: giờ hết tính hai chuẩn GNU/BSD; KHÔNG tính được thì KHÔNG ghi mốc
+           # (mốc rỗng/sai còn tệ hơn không có — vòng kế sẽ chạy lại như thường), chỉ nhắc stderr.
+           HET_MOI="$(iso_tu_epoch "$(( $(date -u +%s) + NGHI_SAU_CHAN_PHUT * 60 ))")" \
+             && printf '{"hetLuc":"%s"}' "$HET_MOI" > "$BI_CHAN" \
+             || echo "⚠️ không tính được giờ hết nghỉ trên date của máy này — không ghi mốc nghỉ, vòng kế chạy lại như thường" >&2
+         fi
+         exit "$RC"; }
 
   # 7) chọn-nạp: duyệt snapshot mới nhất → cũ, nạp TỐI ĐA 1 snapshot/vùng/vòng
   #    — snapshot đầu tiên (tính từ mới nhất) mà stg CHƯA có snapshot_id
