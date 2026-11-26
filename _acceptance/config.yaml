@@ -69,6 +69,7 @@ executors:
     agent: "cd agent && npm test"                    # agent/tests/parsers.test.ts; npm test tự chạy trên DB của riêng lượt (db/db-thu.sh --chay)
     app: "cd app && npx tsc --noEmit && npm run lint"   # app chưa có test; lint 0 lỗi (3 cảnh báo cố ý)
     data_api: "cd data-api && npm run typecheck"     # suy từ: data-api/package.json — xanh
+    dapi_drl: "bash db/db-thu.sh oneinvest_suite_dapi --chay sh -c 'cd data-api && node --import tsx --test --test-reporter=spec --test-concurrency=1 test/dong-ba-route.test.ts'"   # data-api-dong-ba-route-lo E1–E5 — ba đường trên lược đồ thật, có dòng canh ở bảng cấm
     app_ui: "cd app && npm test"                     # test render jsdom (app/tests); npm test tự chạy trên DB của riêng lượt (db/db-thu.sh --chay)
     ui_lint_rules: "cd app && npm run test:lint-rules"   # plugin lint onehub-ui (RuleTester + script kèm)
     ui_routes_map: "cd app && node --test eslint-plugin-onehub-ui/tests/routes-map.test.mjs"
@@ -138,6 +139,8 @@ executors:
     tdb_doi_chieu: "cd app && node --import tsx --test probes/registry-doi-chieu.test.tsx"   # trang-danh-ba-chi-doc E14 — chỉ SELECT trên DB máy thu :5433 trong giao dịch READ ONLY, chỉ in số
     tir_be_mat: "node --test scripts/check-api-surface.test.mjs scripts/check-mcp-tools.test.mjs"   # tin-rao-tren-invest E6 — sổ bề mặt: khoá publicOffers, đối chứng route khác
     api_markets_s02: "cd app && bash ../db/db-thu.sh oneinvest_suite_ht23 --chay node --import tsx --test tests/api-markets-khong-s02.test.tsx"   # api-markets-khong-tra-so-s02 E1/E2 — /api/v1/markets không mang khoá, không xếp theo số S02 (DB thử trắng)
+    ht28_ac1: "set -o pipefail; cd app && bash ../db/db-thu.sh oneinvest_suite_ht28 --chay node --import tsx --test --test-name-pattern 'HT28-AC-1' tests/api-markets-khong-s02.test.tsx 2>&1 | tee /dev/stderr | grep '^ℹ pass 1$' >/dev/null"   # api-markets-doi-chung-tren-db E1 — chạy riêng một ca, đòi đúng một ca đạt
+    ht28_ac2: "set -o pipefail; cd app && bash ../db/db-thu.sh oneinvest_suite_ht28 --chay node --import tsx --test --test-name-pattern 'HT28-AC-2' tests/api-markets-khong-s02.test.tsx 2>&1 | tee /dev/stderr | grep '^ℹ pass 1$' >/dev/null"   # api-markets-doi-chung-tren-db E2
     svc_sync_cu: "node --test pipeline/sync-cloud.test.mjs pipeline/scripts/sync-cloud-pii.test.mjs pipeline/scripts/soat-tang-a.test.mjs"   # sellers-view-len-cloud E5 — hồi quy sync
     kns_lich_unit: "node --test pipeline/scripts/s05-b-lich.test.mjs"   # G1 2510-14
     tl_bao_cao: "node --test scripts/bao-cao-ngay.test.mjs"   # thuoc-lech-ma-nguon-va-lich-s05 AC-1 (thuần), AC-2 (DB máy thu chỉ đọc)
@@ -491,6 +494,8 @@ executors:
     design_floor_fresh: "node scripts/design-floor/gen-tokens.mjs --root . --check && node scripts/design-floor/gen-registry.mjs --root . --check"   # dung-m2-song-song: design/*.json khớp nguồn — đo trạng thái cây
     portal_smoke: "BASE_URL=http://localhost:3456 node scripts/smoke-portal-compliance.mjs"   # cần app đang chạy :3456 + DB local
     product_map: "node scripts/product-map.mjs --root . --check"
+    dapi_drl_pha: "node _acceptance/data-api-dong-ba-route-lo/probes/pha.mjs"   # data-api-dong-ba-route-lo E6 — bản route cũ của main phải đỏ ở cả hai lớp
+    dapi_drl_pham_vi: "node _acceptance/data-api-dong-ba-route-lo/probes/pham-vi.mjs"   # data-api-dong-ba-route-lo E8, E10 — phạm vi tệp, khoá config, tên nguồn thật
     nntd_do: "node _acceptance/ngoai-n-tu-dinh-tuyen-bat/do-mo-phong.mjs"   # ngoai-n-tu-dinh-tuyen-bat: dựng lại 9 hồ sơ đã ký (mốc d2b4beaf) về trước Cổng 2, chạy dinh-tuyen-may.cjs của kit với config thật
     nntd_luoi: "! bash scripts/pre-merge-check.sh . --base origin/main 2>&1 | grep '^VIOLATION' | grep -vF 'VIOLATION [ngoai-n-tu-dinh-tuyen-bat]'"   # ngoai-n-tu-dinh-tuyen-bat AC-8 — lưới trước-gộp không có vi phạm nào ngoài dòng chờ của chính hồ sơ
     gta_luoi: "! bash scripts/pre-merge-check.sh . --base origin/main 2>&1 | grep '^VIOLATION' | grep -vF 'VIOLATION [goi-thang-anthropic]'"   # goi-thang-anthropic E13
@@ -642,6 +647,8 @@ executors:
     api_surface_static: "node scripts/check-api-surface.mjs static"
     anh_goc_hd10_nguyen: "git diff --exit-code 6b610913 -- app/tests/anh-goc-qua-may-chu.test.tsx"   # proxy-anh-chan-svg AC-7 — bộ test HD10 không bị sửa kỳ vọng
     api_surface_mutation: "node scripts/check-api-surface.mjs mutation"
+    ht28_khong_theo_chen: "F=app/tests/api-markets-khong-s02.test.tsx; test -f $F && ! grep -nE 'theoChen|sort ổn định|giữ thứ tự chèn' $F && grep -q 'chiều đỏ tất định nằm ở HT28-AC-2' $F"   # api-markets-doi-chung-tren-db E3 — gỡ đối chứng mô hình JS, chú thích đúng
+    ht28_route_khong_doi: "git diff --exit-code 04b9ddc3b -- app/src/app/api/v1/markets/route.ts"   # api-markets-doi-chung-tren-db E5 — route không đổi
     api_surface_smoke: "BASE_URL=${BASE_URL:-http://localhost:3456} node scripts/smoke-api-surface.mjs"
     # mcp-tools-theo-so-be-mat (ON15) — bản khai công cụ MCP theo sổ bề mặt; historic cần lịch sử git có 1c6389b
     mcp_tools_static: "node scripts/check-mcp-tools.mjs static"

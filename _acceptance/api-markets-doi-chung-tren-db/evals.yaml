@@ -1,0 +1,34 @@
+schema_version: 1
+slug: api-markets-doi-chung-tren-db
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.ht28_ac1
+    paths: ["app/tests/api-markets-khong-s02.test.tsx", "app/src/app/api/v1/markets/route.ts"]
+    expected: "Chạy riêng ca HT28-AC-1 (--test-name-pattern), đòi «ℹ pass 1». Ca HT28-AC-1 xanh: SQL rút từ route.ts chạy trên DB thử ra Alpha, Beta, Aaa, Gamma; cùng SQL với khoá phụ m.name DESC ra Beta, Alpha, Gamma, Aaa. Chiều đỏ ghim: bản đổi khoá phụ bằng MONG thì đỏ «tập thử không có cặp bằng số tin do khoá phụ quyết»."
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.ht28_ac2
+    paths: ["app/tests/api-markets-khong-s02.test.tsx", "app/src/app/api/v1/markets/route.ts"]
+    expected: "Chạy riêng ca HT28-AC-2, đòi «ℹ pass 1». coKhoaPhuTheoTen(SQL route) = true; đối chứng âm cùng ca: bản chỉ sửa ORDER BY bỏ «, m.name» (SELECT còn m.name) → false, bản m.name DESC → false. Chiều đỏ ghim khi route mất khoá phụ: «route mất khoá phụ rồi tên»."
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.ht28_khong_theo_chen
+    paths: ["app/tests/api-markets-khong-s02.test.tsx"]
+    expected: "Thoát 0 khi tệp test tồn tại, không còn «theoChen», «sort ổn định», «giữ thứ tự chèn», và có cụm «chiều đỏ tất định nằm ở HT28-AC-2». Chiều đỏ: `git show 04b9ddc3b:app/tests/api-markets-khong-s02.test.tsx | grep -q theoChen` tìm thấy (bản HT23 sẽ đỏ)."
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.suite.app_ui
+    long_running: 90
+    paths: ["app/tests/api-markets-khong-s02.test.tsx"]
+    expected: "Bộ test app xanh trên DB thử, gồm HT23-AC-1, HT23-AC-2, HT28-AC-1, HT28-AC-2."
+  - id: E5
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.ht28_route_khong_doi
+    paths: ["app/src/app/api/v1/markets/route.ts"]
+    expected: "Thoát 0 khi route.ts bằng đúng bản ở 04b9ddc3b (git diff rỗng); sửa route thì thoát 1."
