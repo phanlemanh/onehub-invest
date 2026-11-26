@@ -5,9 +5,9 @@ slug: ghi-tam-do-sau-co-han
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [script, db]
-status: draft
-approved_by:
-approved_at:
+status: approved
+approved_by: Mạnh
+approved_at: 2026-11-26
 design_doc: docs/superpowers/specs/2026-11-26-ghi-tam-do-sau-co-han-design.md
 ---
 
