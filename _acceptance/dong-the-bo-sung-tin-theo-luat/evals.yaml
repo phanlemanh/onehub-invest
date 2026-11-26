@@ -1,7 +1,8 @@
 schema_version: 1
 slug: dong-the-bo-sung-tin-theo-luat
 # Mọi eval chạy trên DB của riêng lượt (db/db-thu.sh oneinvest_suite_* --chay), không chạm DB máy thu.
-# E1–E9 trỏ thẳng config:executors.test.nb9_db (cả tệp, 9 ca) — tệp dùng chotDbThu bỏ qua khi thiếu DATABASE_URL, nên
+# E1–E9 trỏ thẳng config:executors.test.nb9_db (cả tệp, 9 ca, db-thu.sh --chay-trong: cụm dùng một lần, DB trống từ migration —
+# khuôn HT9) — tệp dùng chotDbThu bỏ qua khi thiếu DATABASE_URL, nên
 # kết quả chỉ đạt khi output có đủ 9 ca chạy, 0 ca bỏ qua (GS 26/11, sau soát trước M5 thấy npm test bỏ qua cả tệp).
 # Fixture viết tay trong pipeline/scripts/dong-the-bo-sung-tin.test.mjs, phủ đủ các ô của bảng Coverage.
 evals:
