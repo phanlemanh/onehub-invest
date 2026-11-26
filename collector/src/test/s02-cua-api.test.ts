@@ -45,6 +45,11 @@ test("2511-s02 phân loại: 429, hoặc đầu cf-mitigated: challenge, hoặc 
   assert.equal(phanLoaiPhanHoi({ trangThai: 503, cfMitigated: null, kieuNoiDung: "text/html; charset=UTF-8" }), "bi-chan");
 });
 
+test("2511-s02 phân loại: đầu cf-mitigated: challenge ĐỨNG MỘT MÌNH (thân không phải HTML, kể cả mã 200) → vẫn bi-chan", () => {
+  assert.equal(phanLoaiPhanHoi({ trangThai: 403, cfMitigated: "challenge", kieuNoiDung: "application/json" }), "bi-chan");
+  assert.equal(phanLoaiPhanHoi({ trangThai: 200, cfMitigated: "challenge", kieuNoiDung: "application/json" }), "bi-chan");
+});
+
 test("2511-s02 phân loại: 401/403 phản hồi JSON → xac-thuc (phiên chết, cần đăng nhập lại)", () => {
   assert.equal(phanLoaiPhanHoi({ trangThai: 401, cfMitigated: null, kieuNoiDung: "application/json" }), "xac-thuc");
   assert.equal(phanLoaiPhanHoi({ trangThai: 403, cfMitigated: null, kieuNoiDung: "application/json" }), "xac-thuc");
@@ -119,9 +124,15 @@ test("2511-s02 doiToken: phản hồi HTML ở lời một (dù là 5xx) → coi
   assert.equal(daGoi, 1);
 });
 
-test("2511-s02 doiToken: 200 nhưng thân thiếu id_token → LoiXacThuc (ứng dụng coi là đã đăng xuất)", async () => {
-  const { doi } = cuaThu(fetchGia(json(200, { error: "no_token" })));
+test("2511-s02 doiToken: 200 nhưng thân thiếu id_token → LoiXacThuc và KHÔNG gửi lời hai (ứng dụng coi là đã đăng xuất)", async () => {
+  let daGoi = 0;
+  const { doi, soTake } = cuaThu(fetchGia(async () => {
+    daGoi++;
+    return json(200, { error: "no_token" })();
+  }));
   await assert.rejects(doiToken(RT, doi), LoiXacThuc);
+  assert.equal(daGoi, 1, "không có id_token thì không có gì để gửi lời hai");
+  assert.equal(soTake(), 1);
 });
 
 test("2511-s02 doiToken: lỗi mạng MỘT lần rồi thành công → thử lại được; mỗi lần thử một take()", async () => {

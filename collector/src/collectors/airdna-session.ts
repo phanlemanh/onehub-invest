@@ -335,12 +335,13 @@ export class LoiBiChan extends Error {
 export type PhanHoiSo = { trangThai: number; cfMitigated: string | null; kieuNoiDung: string };
 export type LoaiPhanHoi = "ok" | "xac-thuc" | "bi-chan" | "tam-thoi" | "loi";
 
-/** Phân loại một phản hồi HTTP: ok · bị chặn (dừng, không lách) · xác thực (phiên chết) · tạm thời (được thử lại) · lỗi khác. */
+/** Phân loại một phản hồi HTTP: bị chặn (dừng, không lách) · ok · xác thực (phiên chết) · tạm thời (được thử lại) · lỗi khác.
+ * Dấu hiệu thử thách xét TRƯỚC mã trạng thái: nguồn trả 200 kèm cf-mitigated thì đó vẫn là trang chặn, không phải dữ liệu. */
 export function phanLoaiPhanHoi(r: PhanHoiSo): LoaiPhanHoi {
-  if (r.trangThai >= 200 && r.trangThai < 300) return "ok";
   if (r.trangThai === 429 || r.cfMitigated === "challenge" || (r.trangThai >= 400 && /text\/html/i.test(r.kieuNoiDung))) {
     return "bi-chan";
   }
+  if (r.trangThai >= 200 && r.trangThai < 300) return "ok";
   if (r.trangThai === 401 || r.trangThai === 403) return "xac-thuc";
   if (r.trangThai >= 500) return "tam-thoi";
   return "loi";
