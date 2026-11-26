@@ -320,7 +320,9 @@ test("BCL-10: chế độ thử BCL_DICH_THU — chỉ nhận với DB lượt o
   const { khuonM5, loiTenDich: loi, tenDich: ten } = await import("./ban-chep-da-loc.mjs");
   const that = khuonM5("oneinvest", {});
   assert.equal(that.thu, false);
-  assert.ok(that.re.test("oneinvest_m5_20261126") && that.re.test("oneinvest_m5_t123_20261126"));
+  assert.ok(that.re.test("oneinvest_m5_20261126") && that.re.test("oneinvest_m5_kiem_5"));
+  // S4 r2 BLOCKED 26/11: bản thật xoá WITH (FORCE) DB thử của itest đang chạy song song — bản thật không được chạm DB thử.
+  for (const d of ["oneinvest_m5_t123_20261126", "oneinvest_m5_t123_kiem_5", "oneinvest_m5_t123", "oneinvest_m5_x"]) assert.ok(!that.re.test(d), d);
   const k = khuonM5("oneinvest_suite_bcl3_99", { BCL_DICH_THU: "oneinvest_m5_t123" });
   assert.ok(k.thu && k.re.test("oneinvest_m5_t123_20261126") && k.re.test("oneinvest_m5_t123_kiem_5") && k.re.test("oneinvest_m5_t123"));
   for (const d of ["oneinvest_m5_20261126", "oneinvest_m5_t1234_20261126", "oneinvest_m5_t12_20261126", "oneinvest_m5_kiem_5"]) assert.ok(!k.re.test(d), d);
@@ -341,4 +343,29 @@ test("BCL-3: tệp kê — cấy tên nguồn vào một mục thì nêu đườ
   const trung = choTrungTrongKe(cay, BIA);
   assert.deepEqual(trung, [".cot_loai_ve_null.<khoá>", ".ham_bo[1]"]);
   for (const t of trung) assert.equal(findSourceNames(t, BIA).length, 0, "đường báo không được mang tên");
+});
+
+test("BCL-8: chay() với inFile — bên nhận thoát sớm (EPIPE) thì trả mã của bên nhận, không làm sập tiến trình", async () => {
+  const { chay } = await import("./ban-chep-da-loc.mjs");
+  const { mkdtempSync, writeFileSync, rmSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const dir = mkdtempSync(path.join(tmpdir(), "bcl-epipe-"));
+  try {
+    const tep = path.join(dir, "lon.bin");
+    writeFileSync(tep, Buffer.alloc(20 * 1024 * 1024, 65));
+    // Đối chứng dương: bên nhận đọc hết thì mã 0.
+    assert.equal((await chay(["sh", ["-c", "cat >/dev/null"]], { inFile: tep })).code, 0);
+    // Bên nhận đọc 10 byte rồi thoát 1 (như pg_restore --exit-on-error): lời hứa trả mã 1, không ném EPIPE chưa bắt.
+    assert.equal((await chay(["sh", ["-c", "head -c 10 >/dev/null; exit 1"]], { inFile: tep })).code, 1);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("BCL-10: noiOng — đích chết trước khi đọc hết thì dừng nguồn và từ chối, không treo", async () => {
+  const { noiOng } = await import("./ban-chep-da-loc.mjs");
+  const nguonVoTan = ["sh", ["-c", "yes 0123456789abcdef"]];
+  // Đối chứng dương: hai đầu thoát 0 thì xong.
+  await noiOng(["sh", ["-c", "head -c 100000 /dev/zero"]], ["sh", ["-c", "cat >/dev/null"]], "thử");
+  const t0 = Date.now();
+  await assert.rejects(noiOng(nguonVoTan, ["sh", ["-c", "head -c 10 >/dev/null; exit 1"]], "thử"), /thử lỗi \(nguồn .*đích 1\)/);
+  assert.ok(Date.now() - t0 < 10_000, "noiOng treo quá 10 s");
 });

@@ -82,12 +82,15 @@ const lit = (s) => `'${String(s).replace(/'/g, "''")}'`;
 /**
  * Chế độ thử (itest, GS 26/11 sau S4 r1 BLOCKED vì các lượt song song xoá DB của nhau): biến BCL_DICH_THU=oneinvest_m5_t<pid> — chỉ
  * nhận khi DB nguồn là DB lượt `oneinvest_suite_*` (đang trong db-thu --chay). Khi có: tên đích `<tiền tố>_<yyyymmdd>`, «trần một bản
- * sống», --don và DB tạm --kiem chỉ chạm khuôn `<tiền tố>(_…)?`. Không biến: hành vi bản thật như cũ (mọi oneinvest_m5_*).
+ * sống», --don và DB tạm --kiem chỉ chạm khuôn `<tiền tố>(_…)?`. Không biến: bản thật chạm mọi DB bản thật — đích
+ * `oneinvest_m5_<yyyymmdd>` và DB tạm `oneinvest_m5_kiem_<pid>` — nhưng KHÔNG chạm DB thử `oneinvest_m5_t<số>…` của itest đang chạy
+ * (S4 r2 BLOCKED 26/11: bước «trần một bản sống» của bản thật xoá WITH (FORCE) DB thử của 7 itest song song, 57P01).
  */
+export const BAN_THAT_RE = /^oneinvest_m5_(?:[0-9]{8}|kiem_[0-9]+)$/;
 export const DICH_THU_RE = /^oneinvest_m5_t[0-9]+$/;
 export function khuonM5(nguonDb, env = process.env) {
   const t = env.BCL_DICH_THU;
-  if (!t) return { tienTo: "oneinvest_m5", re: /^oneinvest_m5_/, thu: false };
+  if (!t) return { tienTo: "oneinvest_m5", re: BAN_THAT_RE, thu: false };
   if (!DICH_THU_RE.test(t)) throw new Error("BCL_DICH_THU phải dạng oneinvest_m5_t<số>");
   if (!/^oneinvest_suite_[a-z0-9_]+$/.test(String(nguonDb ?? ""))) throw new Error("BCL_DICH_THU chỉ dùng khi nguồn là DB lượt oneinvest_suite_* (db-thu --chay)");
   return { tienTo: t, re: new RegExp(`^${t}(_[a-z0-9_]+)?$`), thu: true };
@@ -317,8 +320,11 @@ export function chay([cmd, args], { input, outFile, inFile } = {}) {
     if (outFile) { ws = createWriteStream(outFile); p.stdout.pipe(ws); } else p.stdout.on("data", (b) => out.push(b));
     p.stderr.on("data", (b) => err.push(b));
     p.on("error", reject);
-    if (inFile) createReadStream(inFile).pipe(p.stdin);
-    else { p.stdin.on("error", () => {}); p.stdin.end(input ?? ""); }
+    // Bên nhận (pg_restore --exit-on-error) có thể thoát sớm: EPIPE trên stdin không được làm sập tiến trình — mã thoát của
+    // bên nhận mới là kết quả, và khối finally của người gọi (xoá DB tạm) phải chạy (AC-8).
+    p.stdin.on("error", () => {});
+    if (inFile) { const rs = createReadStream(inFile); rs.on("error", reject); rs.pipe(p.stdin); }
+    else p.stdin.end(input ?? "");
     p.on("close", (code) => {
       const done = () => resolve({ code, stdout: Buffer.concat(out).toString("utf8"), stderr: Buffer.concat(err).toString("utf8") });
       if (ws && !ws.closed) ws.on("close", done); else done();
@@ -326,16 +332,9 @@ export function chay([cmd, args], { input, outFile, inFile } = {}) {
   });
 }
 
-/** Ống COPY nguồn → đích: psql nguồn (giao dịch READ ONLY, nhập snapshot) `COPY (SELECT …) TO STDOUT` | psql đích `COPY t(cột) FROM STDIN`. */
-export function ongCopy({ nguonDb, snapshot, cauDoc, dichDb, bangDich, cols }) {
+/** Nối stdout của lệnh nguồn vào stdin của lệnh đích; xong khi CẢ HAI đã thoát. Đích chết trước thì dừng nguồn (AC-10). */
+export function noiOng([c1, a1], [c2, a2], nhan) {
   return new Promise((resolve, reject) => {
-    const [c1, a1] = dx(psqlArgs(nguonDb, [
-      "-c", "BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY",
-      "-c", `SET TRANSACTION SNAPSHOT ${lit(snapshot)}`,
-      "-c", `COPY (${cauDoc}) TO STDOUT`,
-      "-c", "COMMIT",
-    ]), { chiDoc: true });
-    const [c2, a2] = dx(psqlArgs(dichDb, ["-c", `COPY ${q(bangDich)} (${cols.map(q).join(", ")}) FROM STDIN`]));
     const src = spawn(c1, a1, { stdio: ["ignore", "pipe", "pipe"] });
     const dst = spawn(c2, a2, { stdio: ["pipe", "pipe", "pipe"] });
     const e1 = [];
@@ -350,13 +349,27 @@ export function ongCopy({ nguonDb, snapshot, cauDoc, dichDb, bangDich, cols }) {
     const xong = () => {
       if (m1 === null || m2 === null) return;
       if (m1 === 0 && m2 === 0) resolve();
-      else reject(new Error(`COPY ${bangDich} lỗi (nguồn ${m1}, đích ${m2}): ${Buffer.concat([...e1, ...e2]).toString("utf8").slice(0, 400)}`));
+      else reject(new Error(`${nhan} lỗi (nguồn ${m1}, đích ${m2}): ${Buffer.concat([...e1, ...e2]).toString("utf8").slice(0, 400)}`));
     };
     src.on("error", reject);
     dst.on("error", reject);
-    src.on("close", (c) => { m1 = c; xong(); });
-    dst.on("close", (c) => { m2 = c; xong(); });
+    src.on("close", (c, sig) => { m1 = c ?? `tín hiệu ${sig}`; xong(); });
+    // Đích chết trước khi đọc hết (COPY lỗi, container dừng): pipe ngừng đọc nguồn, psql nguồn kẹt khi đầy bộ đệm và không bao
+    // giờ thoát — dừng nguồn ngay để lời hứa kết thúc và bước dọn DB đích chạy (AC-10).
+    dst.on("close", (c, sig) => { m2 = c ?? `tín hiệu ${sig}`; if (m2 !== 0 && m1 === null) { try { src.kill("SIGTERM"); } catch { /* đã thoát */ } } xong(); });
   });
+}
+
+/** Ống COPY nguồn → đích: psql nguồn (giao dịch READ ONLY, nhập snapshot) `COPY (SELECT …) TO STDOUT` | psql đích `COPY t(cột) FROM STDIN`. */
+export function ongCopy({ nguonDb, snapshot, cauDoc, dichDb, bangDich, cols }) {
+  const nguon = dx(psqlArgs(nguonDb, [
+    "-c", "BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY",
+    "-c", `SET TRANSACTION SNAPSHOT ${lit(snapshot)}`,
+    "-c", `COPY (${cauDoc}) TO STDOUT`,
+    "-c", "COMMIT",
+  ]), { chiDoc: true });
+  const dich = dx(psqlArgs(dichDb, ["-c", `COPY ${q(bangDich)} (${cols.map(q).join(", ")}) FROM STDIN`]));
+  return noiOng(nguon, dich, `COPY ${bangDich}`);
 }
 
 async function moClient(url, { chiDoc = false } = {}) {
@@ -377,8 +390,8 @@ async function quanTri(fn) {
   const c = await moClient(urlCua("postgres"));
   try { return await fn(c); } finally { await c.end().catch(() => {}); }
 }
-/** DB oneinvest_m5_* hiện có, lọc theo khuôn (mặc định mọi oneinvest_m5_*; chế độ thử chỉ khuôn của tiền tố). */
-export const dsDbM5 = (re = /^oneinvest_m5_/) => quanTri(async (c) =>
+/** DB oneinvest_m5_* hiện có, lọc theo khuôn (mặc định mọi DB bản thật, không DB thử; chế độ thử chỉ khuôn của tiền tố). */
+export const dsDbM5 = (re = BAN_THAT_RE) => quanTri(async (c) =>
   (await c.query("SELECT datname FROM pg_database WHERE datname ~ '^oneinvest_m5_' ORDER BY 1")).rows.map((r) => r.datname).filter((d) => re.test(d)));
 export async function xoaDb(ten) {
   if (!TEN_M5_RE.test(ten)) throw new Error("từ chối xoá DB ngoài khuôn oneinvest_m5_*");

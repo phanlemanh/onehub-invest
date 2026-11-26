@@ -12,7 +12,7 @@ import { readFileSync, statSync } from "node:fs";
 import net from "node:net";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { chayChep, xoaDb, tenDich, NGUON_MAC_DINH, RA_MAC_DINH } from "./ban-chep-da-loc.mjs";
+import { chayChep, xoaDb, tenDich, dsDbM5, NGUON_MAC_DINH, RA_MAC_DINH } from "./ban-chep-da-loc.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -32,7 +32,24 @@ async function choSan(url, { giay = 120 } = {}) {
   throw new Error(`data-api không lên sau ${giay}s`);
 }
 
+/**
+ * Bản thật giữ «trần một bản sống»: lượt chép mới xoá bản đang có. E11 (ui-check) dựng bản chép riêng rồi xem qua preview, nên khi E11
+ * đang giữ một bản thì E9 chờ tới khi bản đó được dọn (E11 kết thúc bằng --don), tối đa 40′ — không xoá bản người khác đang xem
+ * (S4 r2 BLOCKED 26/11: E9 và E11 xoá DB của nhau). Phía E11 chờ tiến trình này kết thúc trước khi chép (bước của E11 trong evals.yaml).
+ */
+async function choBanKhac({ phut = 40 } = {}) {
+  const het = Date.now() + phut * 60_000;
+  for (let lan = 0; ; lan++) {
+    const ds = await dsDbM5();
+    if (!ds.length) return;
+    if (Date.now() > het) throw new Error(`còn bản chép khác (${ds.join(", ")}) sau ${phut}′ — không xoá bản người khác đang dùng`);
+    if (lan === 0) console.log(`chờ bản chép khác được dọn: ${ds.join(", ")}`);
+    await new Promise((r) => setTimeout(r, 20_000));
+  }
+}
+
 async function main() {
+  await choBanKhac();
   const t0 = Date.now();
   const dich = tenDich();
   const nguon = process.env.DATABASE_URL ?? NGUON_MAC_DINH;

@@ -79,7 +79,7 @@ evals:
     layer: ui-observed
     paths: [scripts/ban-chep-da-loc.mjs, pipeline/lib/che-ten-nguon-gia-tri.mjs, .claude/launch.json]
     steps:
-      - "Tải 1 phút < 12 (uptime) hoặc đang giữ s4. Dựng bản chép thật: nice -n 10 node scripts/ban-chep-da-loc.mjs (chỉ đọc DB máy thu; để lại đúng một DB oneinvest_m5_<ngày>)"
+      - "Tải 1 phút < 12 (uptime) hoặc đang giữ s4. Chờ E9 xong trước (hai ca cùng dựng oneinvest_m5_<ngày>, ca chép sau xoá bản ca trước): lặp mỗi 30 s tới khi `pgrep -f ban-chep-da-loc-that.mjs` rỗng hai lần liền (tối đa 40 phút). Rồi dựng bản chép thật: nice -n 10 node scripts/ban-chep-da-loc.mjs (chỉ đọc DB máy thu; để lại đúng một DB oneinvest_m5_<ngày>)"
       - "preview_start cấu hình app-3467-ban-chep-m5 của .claude/launch.json trong worktree (app trỏ DB bản chép, RENAME_REFCALIB=1); mở /vn/hanoi"
       - "Đọc câu tóm tắt «<số> listing» và «<số> tháng dữ liệu»; chụp ảnh khổ rộng; quét chữ trang không có tên nguồn thật (so với mã S0x); preview_stop; node scripts/ban-chep-da-loc.mjs --don"
     expected: "Trang Invest khu Hà Nội trên bản chép trả dữ liệu: số listing > 0, số tháng dữ liệu > 0, không lỗi; chữ trang không chứa tên nguồn thật; ảnh lưu ở evidence/; sau ca không còn DB oneinvest_m5_*"

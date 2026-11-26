@@ -598,13 +598,13 @@ test("BCL-10: hai lượt chép song song với hai tiền tố khác nhau khôn
   try {
     const kq = await Promise.all(tt.map(chay1));
     kq.forEach((k, i) => assert.equal(k.ma, 0, `lượt ${i + 1}: ${k.e.slice(0, 500)}`));
-    const ds = await dsDbM5();
+    const ds = await dsDbM5(/^oneinvest_m5_/);
     for (const t of tt) assert.ok(ds.includes(tenDich(new Date(), t)), `DB của ${t} bị xoá: còn ${ds.filter((d) => d.startsWith("oneinvest_m5_t")).join(", ")}`);
     assert.ok(!ds.some((d) => /^oneinvest_m5_[0-9]{8}$/.test(d) && !DB_M5_THAT_TRUOC.includes(d)), "lượt thử không được dựng tên đích thật");
   } finally {
     for (const t of tt) spawnSync(process.execPath, [SCRIPT, "--don"], { env: { ...process.env, DATABASE_URL: NGUON, BCL_DICH_THU: t } });
   }
-  for (const t of tt) assert.deepEqual((await dsDbM5()).filter((d) => d.startsWith(`${t}_`)), [], `--don của ${t} chưa dọn`);
+  for (const t of tt) assert.deepEqual((await dsDbM5(/^oneinvest_m5_/)).filter((d) => d.startsWith(`${t}_`)), [], `--don của ${t} chưa dọn`);
 });
 
 
