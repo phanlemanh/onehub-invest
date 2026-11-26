@@ -1,4 +1,4 @@
-# ZC17 S4 r1 E10c — pipeline_that trên M5 ＠cff224123578ad004b5a6bc01ce923c4ac04637f
+# ZC17 S4 r2 E10c — pipeline_that trên M5 ＠843d31e8f174c5c6db5d0224582593b8c0651d5f
 ca dữ liệu thật: chạy trong lượt này
 suite-neu-doi: chạy pipeline_that — đổi pipeline/collect-s06-duoi.mjs
 
@@ -8,38 +8,38 @@ suite-neu-doi: chạy pipeline_that — đổi pipeline/collect-s06-duoi.mjs
 chay-that: vai may-phat-trien — bỏ qua 1 ca chỉ máy thu
 chay-that: bỏ qua (chỉ máy thu) — pipeline/scripts/ops-facts-so-tong-hop.test.mjs — ON22-AC-10 máy thu thật, chế độ khô: năm khối có measured_at, freshness bằng check-freshness, 0 chỗ chặn, đầu ra chỉ tên khối + trạng thái — chạy push-ops-facts thật trên log, ~/.oneinvest, cấu hình OpenClaw, launchctl có job thật của máy thu — máy phát triển không có và luật cấm chạy push-ops-facts thật ở đó
 ▶ PL20 câu rút chừa dòng bước gắn toà (ROLLBACK)
-  ✔ PL20-E7 ghi khác giá trị cùng bộ: dòng ghep-toa giữ sống, dòng không rule bị rút (10.061375ms)
-  ✔ chiều đỏ PL20-E7: bản phá bỏ điều kiện chừa → dòng ghep-toa bị rút, đỏ (5.166958ms)
-✔ PL20 câu rút chừa dòng bước gắn toà (ROLLBACK) (24.594416ms)
-✔ DP-AC-2 loaiTinPhiLy (63.663917ms)
-✔ DP-AC-2 tập toàn tin hợp lý không ghi audit (47.55525ms)
+  ✔ PL20-E7 ghi khác giá trị cùng bộ: dòng ghep-toa giữ sống, dòng không rule bị rút (19.070375ms)
+  ✔ chiều đỏ PL20-E7: bản phá bỏ điều kiện chừa → dòng ghep-toa bị rút, đỏ (8.7045ms)
+✔ PL20 câu rút chừa dòng bước gắn toà (ROLLBACK) (40.290334ms)
+✔ DP-AC-2 loaiTinPhiLy (133.304208ms)
+✔ DP-AC-2 tập toàn tin hợp lý không ghi audit (127.416916ms)
 ruler: apartment=1 phường (phường × loại, n≥5)
 bait_gap_pct: cập nhật 9 offers P1
 không chấm: chua-ro-loai=0 thieu-thuoc-cung-loai=0
 sellers (view): 1 người bán
 loại tin phi lý: 3 tin {"phong-qua-nho":1,"thieu-dien-tich":1,"dien-tich-ngoai-khoang":1}
   broker: ? — 4 tin, gap giữa 25%, đa kênh=false
-✔ DP-AC-2 refreshBaitGap giữ registry người bán (61.098542ms)
-✔ DO1-AC-6 chuyển bậc trên DB: lập mốc, bảy loại đổi, đổi khoá, một dòng mỗi đơn vị, chạy lại 0 dòng (664065.686708ms)
-✔ DO1-AC-9 detail các dòng do1-* qua bộ ghi không mang chữ bài, trích, người đăng, labeler, tên nguồn; số đi qua writer (89484.752375ms)
-✔ cài thật: ghi plist vào LaunchAgents của HOME giả, plutil sạch, chmod 600, chỉ IN lệnh launchctl (49.353709ms)
-✔ 2610-5: tạo thư mục pipeline/logs (khuôn install-*.sh) + sed lỗi không đè plist cũ (50.876459ms)
-✔ SS-AC-6 plist neo node bằng __NODE__, không còn /usr/bin/env (6.680042ms)
-✔ SS-AC-7 chạy đúng dòng cài của runtime-map vào thư mục tạm: node tuyệt đối chạy dưới PATH launchd (46.233167ms)
-✔ AU9-AC-1 chỉ ranh giới cấp 6 thành phường (823.464875ms)
-✔ AU9-AC-1 ranh giới cấp 4 bao Hà Nội không vào areas (691.802542ms)
-✔ AU9-AC-2 phường cấp 6 nằm ngoài polygon market bị bỏ, in tên (680.624292ms)
-✔ AU9-AC-2 market chưa có polygon → không chốt, in cảnh báo (779.230083ms)
-✔ AU9-AC-3 dọn khu vực lạc (916.418458ms)
-✔ AU9-AC-3 khu vực lạc có saved_markets thì giữ (925.648125ms)
-✔ AU9-AC-3 khu vực lạc có properties thì giữ; market_asset_stats là cache thì xoá cùng khu vực (1908.296583ms)
-✔ AU9-AC-4 chạy lần hai không đổi gì (1844.991917ms)
-✔ AU9-AC-9 snapshot mất tag admin_level → dừng, không xoá gì (356.427959ms)
-✔ AU9-AC-9 snapshot còn dưới một nửa số phường → dừng, không xoá gì (356.531833ms)
-✔ AU9-AC-5 DQ area_con_ngoai_cha fail khi có con ngoài cha (60.438125ms)
-✔ AU9-AC-5 DQ area_con_ngoai_cha pass trên dữ liệu sạch (967.04975ms)
-✔ AU9-AC-10 không cờ: khu vực lạc và metrics còn nguyên, listing vẫn gán lại (980.899083ms)
-✔ AU9-AC-10 có cờ: khu vực lạc bị xoá (958.469084ms)
+✔ DP-AC-2 refreshBaitGap giữ registry người bán (119.255167ms)
+✔ DO1-AC-6 chuyển bậc trên DB: lập mốc, bảy loại đổi, đổi khoá, một dòng mỗi đơn vị, chạy lại 0 dòng (774888.770542ms)
+✔ DO1-AC-9 detail các dòng do1-* qua bộ ghi không mang chữ bài, trích, người đăng, labeler, tên nguồn; số đi qua writer (85114.309084ms)
+✔ cài thật: ghi plist vào LaunchAgents của HOME giả, plutil sạch, chmod 600, chỉ IN lệnh launchctl (45.778041ms)
+✔ 2610-5: tạo thư mục pipeline/logs (khuôn install-*.sh) + sed lỗi không đè plist cũ (48.533792ms)
+✔ SS-AC-6 plist neo node bằng __NODE__, không còn /usr/bin/env (6.440458ms)
+✔ SS-AC-7 chạy đúng dòng cài của runtime-map vào thư mục tạm: node tuyệt đối chạy dưới PATH launchd (43.523417ms)
+✔ AU9-AC-1 chỉ ranh giới cấp 6 thành phường (644.344ms)
+✔ AU9-AC-1 ranh giới cấp 4 bao Hà Nội không vào areas (669.276083ms)
+✔ AU9-AC-2 phường cấp 6 nằm ngoài polygon market bị bỏ, in tên (659.421125ms)
+✔ AU9-AC-2 market chưa có polygon → không chốt, in cảnh báo (761.415417ms)
+✔ AU9-AC-3 dọn khu vực lạc (917.702917ms)
+✔ AU9-AC-3 khu vực lạc có saved_markets thì giữ (923.55475ms)
+✔ AU9-AC-3 khu vực lạc có properties thì giữ; market_asset_stats là cache thì xoá cùng khu vực (1861.151792ms)
+✔ AU9-AC-4 chạy lần hai không đổi gì (1776.689417ms)
+✔ AU9-AC-9 snapshot mất tag admin_level → dừng, không xoá gì (380.450917ms)
+✔ AU9-AC-9 snapshot còn dưới một nửa số phường → dừng, không xoá gì (349.844667ms)
+✔ AU9-AC-5 DQ area_con_ngoai_cha fail khi có con ngoài cha (58.399ms)
+✔ AU9-AC-5 DQ area_con_ngoai_cha pass trên dữ liệu sạch (900.092208ms)
+✔ AU9-AC-10 không cờ: khu vực lạc và metrics còn nguyên, listing vẫn gán lại (930.617583ms)
+✔ AU9-AC-10 có cờ: khu vực lạc bị xoá (921.909166ms)
 posts: 247222 (gạt 1265 post thử {"agent":1,"group":2,"noi-dung":2,"snapshot-source":1260})
 parse: 628 high, 110645 medium, 132681 fail — coverage 0.3%
 giá phi lý (không thành offer): {"thue-tu-1-ty":2,"ban-tren-100-ty":5}
@@ -64,7 +64,7 @@ tầng: 13384 phát biểu, rút 0
 gán số qua người đăng: đổi 1917 · gán 1917 (so_tren_tin=1721 so_trong_bai=196) · rút 0 · bỏ dấu 0
 đối soát: {"kept":0,"links":0,"moved":0,"stale":1,"merged":0,"source":"S03","reapplied":0,"candidates":0,"links_journaled":0}
 offers ghi: 9484 (SĐT: 633 người bán)
-✔ AC-4 rút offer giả qua đối soát (182011.142667ms)
+✔ AC-4 rút offer giả qua đối soát (184717.724666ms)
 posts: 247221 (gạt 0 post thử {})
 parse: 627 high, 110645 medium, 132681 fail — coverage 0.3%
 giá phi lý (không thành offer): {"thue-tu-1-ty":2,"ban-tren-100-ty":5}
@@ -97,7 +97,7 @@ dedup: 0 unique offers (từ 0 tin có giá)
 tin nhiều SĐT: 0
 loại hình: 0 phát biểu, rút 96594
 thẻ nhóm: 43 thẻ đã duyệt, 0 phát biểu {"the":0,"chu_bai":0,"bo":0}, hoà giải tin {"chuBaiThang":0,"chuBaiBatDong":0,"theBatDong":0,"theGiuHienTai":0,"xungLuatKhac":0}, rút 0 theo bản thẻ + 0 theo lượt + 0 dòng DV6, ghi lại 0 dòng DV6 theo ý định DV6 (0 bài DV6 không còn muốn), ô bỏ {"duAn":0,"areaId":0,"phanKhu":0}
-✔ AC-5 lượt sạch và lượt toàn thử (187268.342334ms)
+✔ AC-5 lượt sạch và lượt toàn thử (199398.212625ms)
 posts: 247221 (gạt 1265 post thử {"agent":1,"group":2,"noi-dung":2,"snapshot-source":1260})
 parse: 627 high, 110645 medium, 132681 fail — coverage 0.3%
 giá phi lý (không thành offer): {"thue-tu-1-ty":2,"ban-tren-100-ty":5}
@@ -116,7 +116,7 @@ dedup: 30 unique offers
 tin nhiều SĐT: 1
 đối soát: {"kept":0,"links":0,"moved":0,"stale":0,"merged":0,"source":"S05","reapplied":0,"candidates":0,"links_journaled":0}
 S05 offers ghi: 30 (SĐT: 21 người bán)
-✔ AC-9 stg không đổi (89896.716792ms)
+✔ AC-9 stg không đổi (91190.37125ms)
 FB posts: 100 (gạt 1 post thử {"group":1})
 parse: 21 high, 36 medium, 19 fail — coverage 21.0%
 dedup: 30 unique offers
@@ -129,7 +129,7 @@ dedup: 31 unique offers
 tin nhiều SĐT: 1
 đối soát: {"kept":0,"links":0,"moved":0,"stale":0,"merged":0,"source":"S05","reapplied":0,"candidates":0,"links_journaled":0}
 S05 offers ghi: 31 (SĐT: 22 người bán)
-✔ AC-3 transform S05 dùng cùng bộ lọc (577.981125ms)
+✔ AC-3 transform S05 dùng cùng bộ lọc (450.231666ms)
 posts: 247222 (gạt 1266 post thử {"agent":1,"group":2,"noi-dung":2,"snapshot-source":1261})
 parse: 628 high, 110645 medium, 132681 fail — coverage 0.3%
 giá phi lý (không thành offer): {"thue-tu-1-ty":2,"ban-tren-100-ty":5}
@@ -146,7 +146,7 @@ ruler: apartment=161 phường, commercial=40 phường, house=226 phường, la
 bait_gap_pct: cập nhật 2127 offers P1
 không chấm: chua-ro-loai=412 thieu-thuoc-cung-loai=236
 sellers (view): 13865 người bán
-loại tin phi lý: 12 tin {"phong-qua-nho":3,"thieu-dien-tich":4,"dien-tich-ngoai-khoang":4,"phong-ngu-ngoai-khoang":1}
+loại tin phi lý: 12 tin {"dien-tich-ngoai-khoang":4,"thieu-dien-tich":4,"phong-qua-nho":3,"phong-ngu-ngoai-khoang":1}
   broker: Thảo Vương — 3 tin, gap giữa 99.7%, đa kênh=false
   broker: ? — 1 tin, gap giữa 98.9%, đa kênh=false
   broker: Lục Văn Xuân — 1 tin, gap giữa 98.3%, đa kênh=false
@@ -166,11 +166,11 @@ ruler: apartment=161 phường, commercial=40 phường, house=226 phường, la
 bait_gap_pct: cập nhật 2128 offers P1
 không chấm: chua-ro-loai=412 thieu-thuoc-cung-loai=236
 sellers (view): 13865 người bán
-loại tin phi lý: 12 tin {"thieu-dien-tich":4,"phong-qua-nho":3,"dien-tich-ngoai-khoang":4,"phong-ngu-ngoai-khoang":1}
+loại tin phi lý: 12 tin {"dien-tich-ngoai-khoang":4,"phong-qua-nho":3,"thieu-dien-tich":4,"phong-ngu-ngoai-khoang":1}
   broker: Thảo Vương — 3 tin, gap giữa 99.7%, đa kênh=false
   broker: ? — 1 tin, gap giữa 98.9%, đa kênh=false
   broker: Lục Văn Xuân — 1 tin, gap giữa 98.3%, đa kênh=false
-✔ AC-6 bait gap tính lại (187322.698041ms)
+✔ AC-6 bait gap tính lại (183020.862708ms)
 posts: 247221 (gạt 1265 post thử {"agent":1,"group":2,"noi-dung":2,"snapshot-source":1260})
 parse: 627 high, 110645 medium, 132681 fail — coverage 0.3%
 giá phi lý (không thành offer): {"thue-tu-1-ty":2,"ban-tren-100-ty":5}
@@ -187,7 +187,7 @@ ruler: apartment=161 phường, commercial=40 phường, house=226 phường, la
 bait_gap_pct: cập nhật 2126 offers P1
 không chấm: chua-ro-loai=412 thieu-thuoc-cung-loai=236
 sellers (view): 13865 người bán
-loại tin phi lý: 12 tin {"dien-tich-ngoai-khoang":4,"thieu-dien-tich":4,"phong-qua-nho":3,"phong-ngu-ngoai-khoang":1}
+loại tin phi lý: 12 tin {"dien-tich-ngoai-khoang":4,"phong-qua-nho":3,"thieu-dien-tich":4,"phong-ngu-ngoai-khoang":1}
   broker: Thảo Vương — 3 tin, gap giữa 99.7%, đa kênh=false
   broker: ? — 1 tin, gap giữa 98.9%, đa kênh=false
   broker: Lục Văn Xuân — 1 tin, gap giữa 98.3%, đa kênh=false
@@ -219,27 +219,27 @@ ruler: apartment=161 phường, commercial=40 phường, house=226 phường, la
 bait_gap_pct: cập nhật 2126 offers P1
 không chấm: chua-ro-loai=412 thieu-thuoc-cung-loai=236
 sellers (view): 13865 người bán
-loại tin phi lý: 12 tin {"thieu-dien-tich":4,"phong-qua-nho":3,"dien-tich-ngoai-khoang":4,"phong-ngu-ngoai-khoang":1}
+loại tin phi lý: 12 tin {"dien-tich-ngoai-khoang":4,"phong-qua-nho":3,"thieu-dien-tich":4,"phong-ngu-ngoai-khoang":1}
   broker: Thảo Vương — 3 tin, gap giữa 99.7%, đa kênh=false
   broker: ? — 1 tin, gap giữa 98.9%, đa kênh=false
   broker: Lục Văn Xuân — 1 tin, gap giữa 98.3%, đa kênh=false
-✔ AC-8 thước dư lượng bắt được tin giả (267859.156417ms)
+✔ AC-8 thước dư lượng bắt được tin giả (273216.942208ms)
 SLT-DC-KHOA lưới máy chủ (ca 7/9): trần 900 s → transaction_timeout 930s
 SLT-DC-9 tắt {"ban":2671,"ban_duoi_300tr":56} · bật {"ban":3790,"ban_duoi_300tr":56} · nguồn {"chu-bai":64496,"tin-hieu-chu":14343,"don-vi-gia":33617,"the-nhom":1880,"boi-canh-nhom":205,"yeu-cau":23477,"bo":109212}
 SLT-DC-9 thuê từ 1 tỷ (trước lọc giá phi lý): tắt 3 · bật 3
 ▶ SLT-DC đối chiếu trên DB máy thu (ROLLBACK)
   ▶ SLT-DC-7, SLT-DC-9: tắt rồi bật suy loại, rồi tắt lại — cùng một transaction
-    ✔ SLT-DC-9 tin bán S03 tăng ≥ 30%, thuê ≥ 1 tỷ và bán < 300 triệu không tăng (3.093333ms)
-    ✔ SLT-DC-9 tập Yêu cầu mẫu không bài nào thành tin (77.755792ms)
+    ✔ SLT-DC-9 tin bán S03 tăng ≥ 30%, thuê ≥ 1 tỷ và bán < 300 triệu không tăng (0.764458ms)
+    ✔ SLT-DC-9 tập Yêu cầu mẫu không bài nào thành tin (76.015542ms)
 SLT-DC-7 nhóm ≥ 2 bài 6892 · lệch 0
-    ✔ SLT-DC-7 nhóm gộp không lẫn bài khác PN hay khác DT (2889.501625ms)
+    ✔ SLT-DC-7 nhóm gộp không lẫn bài khác PN hay khác DT (2910.455041ms)
 SLT-DC-9 tin chỉ gồm bài suy loại: còn sống 0 · bản ghi (gồm đã rút) 4410
-    ✔ SLT-DC-9 chạy lại với suy loại tắt: tin chỉ gồm bài suy loại đều bị rút (10872.418167ms)
-  ✔ SLT-DC-7, SLT-DC-9: tắt rồi bật suy loại, rồi tắt lại — cùng một transaction (385108.037333ms)
+    ✔ SLT-DC-9 chạy lại với suy loại tắt: tin chỉ gồm bài suy loại đều bị rút (10479.67475ms)
+  ✔ SLT-DC-7, SLT-DC-9: tắt rồi bật suy loại, rồi tắt lại — cùng một transaction (343622.113459ms)
 SLT-DC-KHOA lưới máy chủ (ca 10): trần 120 s → transaction_timeout 150s
 SLT-DC-10 lần một 30 · lần hai 0 · --thu 0 · tầng {"chu-bai":{"co":5249,"chon":10},"moi-nhan":{"co":4471,"chon":10},"van-bo":{"co":67436,"chon":10}}
-  ✔ SLT-DC-10 lát s03-loai-tin: lần một thêm n, lần hai cùng seed thêm 0, --thu thêm 0 (34274.679209ms)
-✔ SLT-DC đối chiếu trên DB máy thu (ROLLBACK) (419383.436292ms)
+  ✔ SLT-DC-10 lát s03-loai-tin: lần một thêm n, lần hai cùng seed thêm 0, --thu thêm 0 (34680.909959ms)
+✔ SLT-DC đối chiếu trên DB máy thu (ROLLBACK) (378303.562084ms)
 ℹ tests 37
 ℹ suites 2
 ℹ pass 37
@@ -247,6 +247,6 @@ SLT-DC-10 lần một 30 · lần hai 0 · --thu 0 · tầng {"chu-bai":{"co":52
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 2101004.6655
+ℹ duration_ms 2183219.285625
 
 __EXIT=0

@@ -5,7 +5,7 @@ slug: s06-thu-duoi-do
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: verified
 veto_state: mo
 veto_opened_at: 2026-11-25T03:53:20Z
 design_doc: docs/superpowers/specs/2026-11-25-s06-thu-duoi-do-design.md
