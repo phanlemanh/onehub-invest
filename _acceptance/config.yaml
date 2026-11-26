@@ -9,7 +9,7 @@ recheck: strict              # CI re-check of COMMITTED evidence — repo mới,
 feature_loop:
   ngoai_n_tu_dinh_tuyen: true  # kit 2.37.0: máy tự xếp mục ngoài hợp đồng mà chính nó đề xuất known-limits/wont-fix ở hồ sơ T2 · PASS · 0 UNCERTAIN (Mạnh duyệt điểm D 15/11; hồ sơ ngoai-n-tu-dinh-tuyen-bat)
   ui_standards_skill: onehub-ui
-  suite_keys: [executors.suite.agent, executors.suite.app, executors.suite.app_ui, executors.suite.pipeline_a, executors.suite.pipeline_b, executors.suite.ui_lint_rules, executors.suite.portal_static]   # làn ghim lại (repin) chạy mỗi lượt; bọc suite-neu-doi — chỉ chạy suite có vùng bị nhánh đổi (s4-suite-theo-vung). pipeline tách hai nửa (tach-suite-pipeline, 13/11: một lệnh vượt trần chờ 30′ của tác tử chấm)
+  suite_keys: [executors.suite.agent, executors.suite.app, executors.suite.app_ui, executors.suite.pipeline_a, executors.suite.pipeline_b, executors.suite.pipeline_that, executors.suite.ui_lint_rules, executors.suite.portal_static]   # làn ghim lại (repin) chạy mỗi lượt; bọc suite-neu-doi — chỉ chạy suite có vùng bị nhánh đổi (s4-suite-theo-vung). pipeline tách hai nửa (tach-suite-pipeline, 13/11: một lệnh vượt trần chờ 30′ của tác tử chấm); hai nửa chạy cụm dùng một lần DB trống, 30 ca dữ liệu thật thành pipeline_that kích hẹp (db-thu-tach-khoi-cum-that)
   # Khoá làn ghim lại của kit (GUIDE §7.1; Mạnh duyệt 2026-10-26, hồ sơ kit-khoa-nhom-1).
   repin_retry: 1               # lệnh đỏ chạy lại đúng một lần, một mình; xanh lần hai → dòng pin gọi tên ca chập chờn
   repin_budget_min: 80         # trần mỗi lượt; vượt → thoát 4, không ghi pin, để lại repin-do «vuot-tran»
@@ -36,6 +36,7 @@ executors:
     app_ui: "node scripts/suite-neu-doi.mjs app_ui -- 'cd app && npm test'"
     pipeline_a: "node scripts/suite-neu-doi.mjs pipeline_a -- 'cd pipeline && npm run test:a'"
     pipeline_b: "node scripts/suite-neu-doi.mjs pipeline_b -- 'cd pipeline && npm run test:b'"
+    pipeline_that: "node scripts/suite-neu-doi.mjs pipeline_that -- 'cd pipeline && npm run test:that'"
     ui_lint_rules: "node scripts/suite-neu-doi.mjs ui_lint_rules -- 'cd app && npm run test:lint-rules'"
     portal_static: "node scripts/suite-neu-doi.mjs portal_static -- 'node scripts/check-portal-compliance.mjs'"
   test:
@@ -55,6 +56,7 @@ executors:
     pipeline: "cd pipeline && npm test"              # suy từ: pipeline/package.json; npm test tự chạy trên DB của riêng lượt (db/db-thu.sh --chay)
     pipeline_a: "cd pipeline && npm run test:a"     # tach-suite-pipeline — nửa A của npm test (pipeline/test-nua.json), DB thử oneinvest_suite_pipeline_a
     pipeline_b: "cd pipeline && npm run test:b"     # tach-suite-pipeline — nửa B, DB thử oneinvest_suite_pipeline_b; hợp hai nửa = npm test (scripts/chia-nua.test.mjs canh)
+    pipeline_that: "cd pipeline && npm run test:that"   # db-thu-tach-khoi-cum-that — đúng 30 ca pipeline của scripts/ci-bo-qua.json trên bản chép dữ liệu thật; test:a/b chạy cụm dùng một lần (--chay-trong), bỏ đúng 30 ca ấy
     s08ns_can: "bash db/db-thu.sh oneinvest_suite_s08ns_can --chay node --test --test-name-pattern='^S08-3' pipeline/tests/s08-danh-muc-nap.test.mjs"   # s08-nap-sua E1 — snapshot chỉ căn, thiếu 094: nạp + đánh dấu
     s08ns_hoan: "bash db/db-thu.sh oneinvest_suite_s08ns_hoan --chay node --test --test-name-pattern='^S08-2' pipeline/tests/s08-danh-muc-nap.test.mjs"   # s08-nap-sua E2 — có danh mục, thiếu 094: hoãn, không đánh dấu
     s08ns_094: "bash db/db-thu.sh oneinvest_suite_s08ns_094 --chay node --test --test-name-pattern='^S08-1' pipeline/tests/s08-danh-muc-nap.test.mjs"   # s08-nap-sua E3 — có 094: nạp dự án, nạp lại không nhân
@@ -375,9 +377,16 @@ executors:
     ht12_chia_tran: "node --test --test-concurrency=1 scripts/zalo-import-chia-tran-zcode.test.mjs"   # doc-gop-dong-ho-rieng-trong-luot-dem E1–E5, E7 — lưới chia trần A+B của ZCode (bản sao script, node giả, không DB)
     ht12_tran: "node --test --test-concurrency=1 scripts/zalo-import-tran.test.mjs"   # doc-gop-dong-ho-rieng-trong-luot-dem E6, E7b, E8a — ma trận AC-7 hai đồng hồ + ca quan hệ HT13
     ht12_luoi: "node --test --test-concurrency=1 scripts/zalo-import-tran-zcode.test.mjs scripts/zalo-import-job.test.mjs scripts/zalo-import-job-nhe.test.mjs scripts/zalo-import-job-lan.test.mjs scripts/enrich-buoc-job.test.mjs scripts/job-step-thoi-luong.test.mjs scripts/job-exit.test.mjs"   # doc-gop-dong-ho-rieng-trong-luot-dem E8b — lưới hồi quy tệp bọc + JST-AC-8
+    ht9_db_thu: "node --test --test-concurrency=1 scripts/db-thu-trong.test.mjs"   # db-thu-tach-khoi-cum-that E1, E9 — cụm PostGIS dùng một lần của db-thu.sh --chay-trong (cần docker)
+    ht9_that: "node --test --test-concurrency=1 scripts/pipeline-that.test.mjs"   # db-thu-tach-khoi-cum-that E2c, E3b, E6 — tập ca chuẩn-CI / dữ liệu thật, khoá config
+    ht9_suite_vung: "node --test --test-concurrency=1 scripts/suite-neu-doi.test.mjs"   # db-thu-tach-khoi-cum-that E4, E5 — vùng pipeline_that + ma trận kích
+    ht9_sao_luu: "node --test --test-concurrency=1 scripts/db-sao-luu.test.mjs"   # db-thu-tach-khoi-cum-that E7 — sao lưu bỏ DB thử của suite
+    ht9_phut: "node --test --test-concurrency=1 scripts/do-phut-s4.test.mjs"   # db-thu-tach-khoi-cum-that E8 — phút giữ khoá s4
+    ht9_hang_ngay: "node --test --test-concurrency=1 scripts/pipeline-that-hang-ngay.test.mjs"   # db-thu-tach-khoi-cum-that E11 — soát ca dữ liệu thật hằng ngày trên main + dòng «ca dữ liệu thật» của lượt chấm
   script:
     ht13_ap: "bash _acceptance/tran-tong-luot-dem-va-tran-doc-gop/ap-may-thu/kiem.sh"   # tran-tong-luot-dem-va-tran-doc-gop E9 — README áp đủ năm mục, lệnh kiểm sau chấm đúng ba log mẫu
     ht12_ap: "bash _acceptance/doc-gop-dong-ho-rieng-trong-luot-dem/ap-may-thu/kiem.sh"   # doc-gop-dong-ho-rieng-trong-luot-dem E9 — README áp đủ năm mục, kiem-sau.sh chấm đúng chín ca
+    ht9_ap: "bash _acceptance/db-thu-tach-khoi-cum-that/ap-may-thu/kiem.sh"   # db-thu-tach-khoi-cum-that E10 — README áp đủ năm mục, lệnh kiểm sau
     trt_tuong_duong: "bash db/db-thu.sh oneinvest_suite_trtd --chay node _acceptance/slt-dc-cham-va-giu-khoa-33033/probes/tuong-duong-ba-luot.mjs"   # slt-dc-cham-va-giu-khoa-33033 E2 — câu cũ và câu mới rút cùng tập id ở cả ba lượt transform của SLT-DC
     trt_slt_dc_gio: "bash _acceptance/slt-dc-cham-va-giu-khoa-33033/probes/do-gio.sh 480 bash db/db-thu.sh oneinvest_suite_sltdc --chay node --test --test-concurrency=1 pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs"   # slt-dc-cham-va-giu-khoa-33033 E4, E5 — cả tệp SLT-DC dưới 480 s (= trần ca 7/9 và N khoá 33033), ca nhả khoá 33033
     trt_san_xuat: "node _acceptance/slt-dc-cham-va-giu-khoa-33033/probes/san-xuat.mjs"   # slt-dc-cham-va-giu-khoa-33033 E7 — bốn bước transform-zalo liền nhau sau gộp, chỉ đọc log
