@@ -5,7 +5,7 @@ slug: yeu-cau-khong-thanh-tin-thue
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [data, cli]
-status: approved
+status: implemented
 design_doc: docs/superpowers/specs/2026-11-26-yeu-cau-khong-thanh-tin-thue-design.md
 veto_state: mo
 veto_opened_at: 2026-11-26T11:05:00Z
