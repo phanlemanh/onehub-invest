@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 5a11083e9fb37a9d055df3845912ab40207a4bc9
+verified_commit: c41f806eb84515530e903a540fe7f63538bd3720
 human_signoff:
 ---
 
@@ -158,3 +158,7 @@ none — mọi eval nhiều lần chạy đều đồng nhất (mọi eval đề
 ## Iterations
 
 Round 3: E1–E8 xanh cùng năm lệnh suite hồi quy; không còn eval đỏ. Các round trước xem lịch sử run-log.jsonl.
+
+### Re-pin lần 1 — 2026-11-26, do E6 sửa cho DB trống CI + gộp main có HT9
+run_id: repin-20261126T090100Z-48763
+sha: c41f806eb84515530e903a540fe7f63538bd3720 · suites: 8 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng
