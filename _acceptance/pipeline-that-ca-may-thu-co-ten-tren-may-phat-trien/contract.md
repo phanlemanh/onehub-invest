@@ -5,7 +5,7 @@ slug: pipeline-that-ca-may-thu-co-ten-tren-may-phat-trien
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: machine-cleared
 approved_by:
 veto_state: mo
 veto_opened_at: 2026-11-26T09:40:00Z
@@ -50,3 +50,13 @@ cấu hình, launchctl và chạy `push-ops-facts` thật của máy thu. Mọi 
 - Trục vai máy: tệp vắng · may-thu · may-phat-trien · giá trị lạ · dòng chú thích [thước CE: tệp ~/.config/onehub/hai-may.env của
   Mac mini] — AC-1, AC-2, AC-3.
 - Trục ca: 33 ca chỉ cần DB/plutil · 1 ca chỉ máy thu [thước CE: bảng phủ ca của design doc] — AC-2, AC-4, AC-5.
+
+## Notes
+
+- Ngoài-1 (máy định tuyến 2026-11-26, đề xuất S4 known-limits): Phần ghi chú mô tả danh sách ca bỏ qua chưa nhắc tới khoá mới, nên người đọc sau có thể không biết khoá ấy có và có nghĩa gì. Chạy thật không bị ảnh hưởng. — `scripts/lib/ci-can-du-lieu.mjs`
+- Ngoài-2 (máy định tuyến 2026-11-26, đề xuất S4 known-limits): Phép kiểm báo đạt cả trên máy không có tệp cấu hình vai, nên nó chưa chứng minh được đang chạy đúng trên Mac mini. Lượt soát hằng ngày vẫn chạy đủ ca. — `_acceptance/config.yaml`
+- Ngoài-3 (máy định tuyến 2026-11-26, đề xuất S4 known-limits): Một máy lạ hoặc máy mất tệp cấu hình cũng được báo là máy thu trong lượt chấm. Hệ quả là bằng chứng nghiệm thu kém chắc, nhưng người dùng không thấy khác biệt khi dùng. — `_acceptance/config.yaml`
+- Ngoài-4 (máy định tuyến 2026-11-26, đề xuất S4 known-limits): Nếu sau này mọi ca đều đánh dấu chỉ máy thu, máy phát triển sẽ chạy cả bộ test thay vì dừng lại. Hiện chưa xảy ra. — `pipeline/chay-that.mjs`
+- Ngoài-5 (máy định tuyến 2026-11-26, đề xuất S4 known-limits): Phép kiểm hồ sơ chạy trên M5 có thể bỏ lọt một hồ sơ thiếu dòng về môi trường. Người dùng cuối không bị ảnh hưởng. — `_acceptance/pipeline-that-ca-may-thu-co-ten-tren-may-phat-trien/kiem-m5.sh`
+- Ngoài-6 (máy định tuyến 2026-11-26, đề xuất S4 known-limits): Khi hồ sơ M5 sai, công cụ kiểm có báo đỏ nhưng chưa chắc ghi rõ sai ở đâu. Chỉ ảnh hưởng người soát nội bộ. — `_acceptance/pipeline-that-ca-may-thu-co-ten-tren-may-phat-trien/kiem-m5.sh`
+- Ngoài-7 (máy định tuyến 2026-11-26, đề xuất S4 known-limits): Bài test có thể không phân biệt được lý do chạy dừng, nên có khả năng bỏ lọt một lỗi khác cũng làm dừng. Người dùng không thấy khác biệt. — `scripts/vai-may.test.mjs`
