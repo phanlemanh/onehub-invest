@@ -21,7 +21,9 @@ import { join } from "node:path";
 // trên collection_units như thật); DROP khi xong.
 const TAMP_DB = `zcode_tv2b_test_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
 const DB_ROOT = process.env.TEST_DATABASE_URL_ADMIN ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
-const DB = `postgres://oneinvest:oneinvest@localhost:5433/${TAMP_DB}`;
+// Cùng máy chủ với DB_ROOT (cụm dùng một lần của db-thu.sh --chay-trong, Postgres của CI), không ghim :5433.
+const urlTren = (ten) => { const u = new URL(DB_ROOT); u.pathname = `/${ten}`; return u.toString(); };
+const DB = urlTren(TAMP_DB);
 
 const PSQL = (sql) => {
   const r = spawnSync("node", ["--input-type=module", "-e", `
@@ -223,7 +225,7 @@ test("TV2b (c)+(d): S06 — vùng active được thu (kể cả vùng MỚI), v
 test("TV2b (e): DB lỗi → 0 lời gọi, thoát ≠0 (fail-closed) — cả S05 lẫn S06", async () => {
   const pv = fakeProvider(); await pv.start();
   const fh = fakeHome();
-  const CHET = "postgres://oneinvest:oneinvest@localhost:5433/zcode_tv2b_khong_ton_tai";
+  const CHET = urlTren("zcode_tv2b_khong_ton_tai");
   try {
     const r5 = await chay(S05, [], { DATABASE_URL: CHET, APIFY_API: `${pv.addr()}/apify` }, fh.home);
     assert.notEqual(r5.code, 0, "S05 DB chết phải thoát ≠0");

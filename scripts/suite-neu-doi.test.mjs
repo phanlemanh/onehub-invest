@@ -129,12 +129,13 @@ test("S4V-AC-2 (đổi tên) — tệp chuyển RA KHỎI vùng vẫn kéo suite
     "S4V-AC-2 đối chứng: bản sao bỏ --no-renames phải bỏ qua app (git nuốt đường nguồn của git mv)");
 });
 
-test("S4V-AC-3 — ma trận viết trước: migration, pipeline, collector, ROADMAP × bảy suite", () => {
+test("S4V-AC-3 — ma trận viết trước: migration, pipeline, collector, ROADMAP × tám suite", () => {
+  // cột pipeline_that thêm ở hồ sơ db-thu-tach-khoi-cum-that (vùng hẹp: collector/src, ROADMAP không kích)
   const MA_TRAN = {
-    "db/migrations/090_x.sql": { app: true, app_ui: true, ui_lint_rules: true, pipeline_a: true, pipeline_b: true, agent: true, portal_static: true },
-    "pipeline/lib/x.mjs": { app: true, app_ui: true, ui_lint_rules: false, pipeline_a: true, pipeline_b: true, agent: true, portal_static: false },
-    "collector/src/x.ts": { app: false, app_ui: false, ui_lint_rules: false, pipeline_a: true, pipeline_b: true, agent: false, portal_static: false },
-    "docs/ROADMAP.md": { app: false, app_ui: false, ui_lint_rules: false, pipeline_a: true, pipeline_b: true, agent: false, portal_static: false },
+    "db/migrations/090_x.sql": { app: true, app_ui: true, ui_lint_rules: true, pipeline_a: true, pipeline_b: true, pipeline_that: true, agent: true, portal_static: true },
+    "pipeline/lib/x.mjs": { app: true, app_ui: true, ui_lint_rules: false, pipeline_a: true, pipeline_b: true, pipeline_that: true, agent: true, portal_static: false },
+    "collector/src/x.ts": { app: false, app_ui: false, ui_lint_rules: false, pipeline_a: true, pipeline_b: true, pipeline_that: false, agent: false, portal_static: false },
+    "docs/ROADMAP.md": { app: false, app_ui: false, ui_lint_rules: false, pipeline_a: true, pipeline_b: true, pipeline_that: false, agent: false, portal_static: false },
   };
   let so = 0;
   for (const [tep, mong] of Object.entries(MA_TRAN)) {
@@ -143,8 +144,8 @@ test("S4V-AC-3 — ma trận viết trước: migration, pipeline, collector, RO
       so++;
     }
   }
-  assert.equal(so, 28);
-  assert.deepEqual(Object.keys(VUNG).sort(), ["agent", "app", "app_ui", "pipeline_a", "pipeline_b", "portal_static", "ui_lint_rules"]);
+  assert.equal(so, 32);
+  assert.deepEqual(Object.keys(VUNG).sort(), ["agent", "app", "app_ui", "pipeline_a", "pipeline_b", "pipeline_that", "portal_static", "ui_lint_rules"]);
 });
 
 test("S4V-AC-4 — không chắc thì chạy, dòng in nêu lý do; đối chứng ngoài vùng thì bỏ qua", (t) => {
@@ -230,6 +231,8 @@ export function quetNgoai(root, mods, tepKho) {
 const MODULE = {
   app: ["app"], app_ui: ["app"], ui_lint_rules: ["app/eslint-plugin-onehub-ui"],
   pipeline_a: ["pipeline"], pipeline_b: ["pipeline"], agent: ["agent"],
+  // pipeline_that: mô-đun là chính các tệp test của 34 ca — mọi tệp chúng nạp ra ngoài đều phải nằm trong vùng hẹp.
+  pipeline_that: [...new Set(JSON.parse(readFileSync(path.join(ROOT, "scripts/ci-bo-qua.json"), "utf8")).pipeline.map((m) => m.tep))],
   portal_static: ["scripts/check-portal-compliance.mjs"],
 };
 
@@ -265,6 +268,26 @@ const NGOAI_LE = [
   { suite: "pipeline_a", duong: "_acceptance/danh-ba-s16-thang-cau-truc/lui", ly_do: "pipeline/scripts/danh-ba-s16-cau-truc-that.mjs: phép đo thật của eval, không phải tệp npm test chạy" },
   { suite: "pipeline_b", duong: "_acceptance/danh-ba-s16-thang-cau-truc/lui", ly_do: "pipeline/scripts/danh-ba-s16-cau-truc-that.mjs: phép đo thật của eval, không phải tệp npm test chạy" },
   { suite: "pipeline_b", duong: "_acceptance/ma-du-an-s06-thanh-nut/evidence", ly_do: "như pipeline_a" },
+  // pipeline_that (db-thu-tach-khoi-cum-that): phép quét đọc cả tệp test, nên thấy đường của các ca KHÔNG thuộc 30 ca dữ
+  // liệu thật (chúng chạy ở pipeline_a/b), mảnh của path.join, và thư mục dựng trong gốc tạm của test.
+  { suite: "pipeline_that", duong: "scripts", ly_do: "transform-zalo-loai-tin-doi-chieu.test.mjs: mkdtemp dưới path.join(PIPE, \"scripts\") = pipeline/scripts, không phải scripts/ gốc" },
+  { suite: "pipeline_that", duong: "agent", ly_do: "pipeline/lib/test-posts.mjs: giá trị dấu tin thử «agent», không phải đường dẫn" },
+  { suite: "pipeline_that", duong: "pipeline", ly_do: "test-posts.test.mjs: ca quét mã «AC-3 quét quan hệ», «AC-4 không câu DELETE…» không thuộc 30 ca — pipeline_a/b chạy chúng" },
+  { suite: "pipeline_that", duong: "agent/src", ly_do: "như trên — ca quét mã của test-posts.test.mjs" },
+  { suite: "pipeline_that", duong: "app/src", ly_do: "như trên" },
+  { suite: "pipeline_that", duong: "data-api/src", ly_do: "như trên" },
+  { suite: "pipeline_that", duong: "db", ly_do: "scripts/lib/tier-a-source-names.mjs: mảnh của join(root, \"db\", \"migrations\") — đã phủ bằng db/migrations/**" },
+  { suite: "pipeline_that", duong: "docs", ly_do: "ops-apply-plist.test.mjs: mảnh của join(GOC, \"docs\", \"ops\", \"runtime-map.md\") — đã phủ bằng chính tệp ấy" },
+  { suite: "pipeline_that", duong: "_acceptance/sao-luu-ma-hoa-b2", ly_do: "như app — chú thích đầu tệp sao-luu-ngoai-may.mjs" },
+  { suite: "pipeline_that", duong: "docs/superpowers/specs/2026-11-11-sao-luu-ma-hoa-b2-design.md", ly_do: "như app" },
+  { suite: "pipeline_that", duong: "collector", ly_do: "sao-luu-ngoai-may.mjs: đường máy thu lúc chạy (collector/state, snapshots), không phải tệp test đọc" },
+  { suite: "pipeline_that", duong: "pipeline/cron", ly_do: "install-collector-api.test.mjs: thư mục dựng trong gốc tạm; tệp plist chép từ kho đã phủ" },
+  { suite: "pipeline_that", duong: "collector/src/api", ly_do: "install-collector-api.test.mjs: thư mục dựng trong gốc tạm" },
+  { suite: "pipeline_that", duong: "collector/scripts", ly_do: "install-collector-api.test.mjs: thư mục dựng trong gốc tạm" },
+  { suite: "pipeline_that", duong: "collector/src/api/main.ts", ly_do: "install-collector-api.test.mjs: viết mới trong gốc tạm (writeFileSync), không đọc từ kho" },
+  { suite: "pipeline_that", duong: "docs/ops/cloud-schema-catchup-2026-10-31-060.sql", ly_do: "do-hang-ngay.test.mjs chỉ nạp hằng FILL của sync-cloud.mjs; SQL bắt kịp lược đồ cloud chỉ đọc ở lượt đẩy cloud, ca không chạy lượt ấy" },
+  { suite: "pipeline_that", duong: "docs/ops/cloud-schema-catchup-2026-11-14-offer-price-rank.sql", ly_do: "như trên" },
+  { suite: "pipeline_that", duong: "collector/scripts/api-launchd.sh", ly_do: "install-collector-api.test.mjs: viết mới trong gốc tạm (writeFileSync), không đọc từ kho" },
 ];
 
 export function chuaPhu(root, vung, ngoaiLe = NGOAI_LE) {
@@ -299,9 +322,10 @@ test("S4V-AC-5 — bảng vùng phủ mọi đường dẫn mã tham chiếu; ng
   assert.ok(thieuPs.includes("db"), "S4V-AC-5 đối chứng: bỏ db/** khỏi portal_static mà phép quét không thấy tier-a-source-names đọc db/migrations");
 });
 
-test("S4V-AC-6 — executors.suite.* bọc nguyên văn lệnh hiện hành, suite_keys trỏ đúng bảy key; thêm key test mới vẫn xanh", () => {
+test("S4V-AC-6 — executors.suite.* bọc nguyên văn lệnh hiện hành, suite_keys trỏ đúng tám key; thêm key test mới vẫn xanh", () => {
   const cfg = readFileSync(path.join(ROOT, "_acceptance/config.yaml"), "utf8");
-  const ten = ["agent", "app", "app_ui", "pipeline_a", "pipeline_b", "ui_lint_rules", "portal_static"];
+  // pipeline_that thêm ở hồ sơ db-thu-tach-khoi-cum-that
+  const ten = ["agent", "app", "app_ui", "pipeline_a", "pipeline_b", "pipeline_that", "ui_lint_rules", "portal_static"];
   const khoi = (c, k) => { const m = c.match(new RegExp(`^  ${k}:\\n((?:    .*\\n|\\s*#.*\\n|\\s*\\n)*)`, "m")); return m ? m[1] : ""; };
   const lenh = (khoiTxt, k) => { const m = khoiTxt.match(new RegExp(`^    ${k}: "((?:[^"\\\\]|\\\\.)*)"`, "m")); return m ? m[1] : null; };
   const kiem = (c) => {
@@ -550,4 +574,43 @@ test("SSL-AC-2 tomTatScripts — đọc số ca từ dòng tổng kết spec hay
   assert.deepEqual([dai.tests, dai.pass, dai.fail], [40, 10, 30], "SSL-AC-2 lượt đỏ dài vẫn phải giữ số ca");
   const k = tomTatScripts("bị giết giữa chừng", { sha: "a", exit: 143, giay: 2 });
   assert.deepEqual([k.tests, k.pass, k.fail], [null, null, null], "SSL-AC-2 không có dòng tổng kết thì số ca phải null, không bịa 0");
+});
+
+// ── db-thu-tach-khoi-cum-that E4, E5: vùng hẹp của pipeline_that ───────────────────────────────────────────────────────
+const TEP_MO = path.join(ROOT, "scripts/fixtures/pipeline-that-tep-mo.json");
+
+test("HT9-E5 — ma trận viết trước: ba nhánh giả × pipeline_a, pipeline_b, pipeline_that", () => {
+  // tệp transform mà ca dữ liệu thật chạy: lấy từ fixture tệp mở (E4 canh nó có trong fixture)
+  const TRANSFORM = "pipeline/transform-zalo.mjs";
+  const MA_TRAN = [
+    [["collector/src/core/media-fetch.ts"], { pipeline_a: true, pipeline_b: true, pipeline_that: false }],
+    [[TRANSFORM], { pipeline_a: true, pipeline_b: true, pipeline_that: true }],
+    [["_acceptance/x/contract.md"], { pipeline_a: true, pipeline_b: true, pipeline_that: true }],
+  ];
+  const thuc = MA_TRAN.map(([tep]) => Object.fromEntries(["pipeline_a", "pipeline_b", "pipeline_that"].map((s) => [s, quyetDinh(s, tep).chay])));
+  assert.deepEqual(thuc, MA_TRAN.map(([, m]) => m));
+  if (existsSync(TEP_MO)) assert.ok(JSON.parse(readFileSync(TEP_MO, "utf8")).tep.includes(TRANSFORM), `${TRANSFORM} phải có trong fixture tệp mở`);
+});
+
+test("HT9-E4 — vùng pipeline_that ⊇ tệp thật sự mở khi chạy 34 ca dữ liệu thật (fixture một lượt thật); không chứa LO-TRINH.html, collector/src/**, docs/**", () => {
+  const fx = JSON.parse(readFileSync(TEP_MO, "utf8"));
+  assert.match(fx.sha, /^[0-9a-f]{40}$/);
+  assert.ok(fx.lenh && fx.tep.length > 0);
+  const tepKho = new Set(git(ROOT, "ls-files").trim().split("\n"));
+  const thieu = (vung) => fx.tep.filter((t) => tepKho.has(t) && !trongVung(t, vung));
+  assert.deepEqual(thieu(VUNG.pipeline_that), [], "tệp thật sự mở nằm ngoài VUNG.pipeline_that");
+  // các tệp test của 30 ca phải có trong fixture (lượt ghi thật sự chạy chúng)
+  const ds = JSON.parse(readFileSync(path.join(ROOT, "scripts/ci-bo-qua.json"), "utf8")).pipeline;
+  for (const t of new Set(ds.map((m) => m.tep))) assert.ok(fx.tep.includes(t), `fixture thiếu tệp test ${t}`);
+  // chiều đỏ: bản sao vùng bỏ một tệp nạp động (SQL) có trong fixture → ghim tên tệp
+  const sql = fx.tep.find((t) => tepKho.has(t) && t.endsWith(".sql"));
+  assert.ok(sql, "fixture phải có ít nhất một tệp SQL nạp động");
+  const hong = VUNG.pipeline_that.filter((g) => !trongVung(sql, [g]));
+  const ghim = (vung) => { const t = thieu(vung); if (t.length) throw new Error(`ngoài vùng: ${t.join(", ")}`); };
+  assert.throws(() => ghim(hong), (e) => e.message.includes(sql), `bản vùng bỏ ${sql} phải đỏ gọi tên nó`);
+  // không chứa ba vùng rộng
+  for (const t of ["LO-TRINH.html", "collector/src/core/media-fetch.ts", "docs/ROADMAP.md", "docs/x/y.md"]) {
+    assert.equal(trongVung(t, VUNG.pipeline_that), false, `VUNG.pipeline_that không được phủ ${t}`);
+  }
+  assert.ok(!VUNG.pipeline_that.includes("collector/src/**") && !VUNG.pipeline_that.includes("docs/**"));
 });
