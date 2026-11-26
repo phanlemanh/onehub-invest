@@ -100,7 +100,8 @@
     {
       "tep": "pipeline/scripts/ops-facts-so-tong-hop.test.mjs",
       "ca": "ON22-AC-10 máy thu thật, chế độ khô: năm khối có measured_at, freshness bằng check-freshness, 0 chỗ chặn, đầu ra chỉ tên khối + trạng thái",
-      "ly_do": "chạy launchctl của máy thu (chỉ có trên macOS)"
+      "ly_do": "chạy launchctl của máy thu (chỉ có trên macOS)",
+      "may_thu": "chạy push-ops-facts thật trên log, ~/.oneinvest, cấu hình OpenClaw, launchctl có job thật của máy thu — máy phát triển không có và luật cấm chạy push-ops-facts thật ở đó"
     },
     {
       "tep": "pipeline/scripts/install-collector-api.test.mjs",

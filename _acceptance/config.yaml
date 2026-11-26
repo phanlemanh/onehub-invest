@@ -143,6 +143,7 @@ executors:
     tir_be_mat: "node --test scripts/check-api-surface.test.mjs scripts/check-mcp-tools.test.mjs"   # tin-rao-tren-invest E6 — sổ bề mặt: khoá publicOffers, đối chứng route khác
     kev2_app: "cd app && bash ../db/db-thu.sh oneinvest_suite_kev2 --chay-trong node --import tsx --test --test-concurrency=1 tests/kev2-thu-thap.test.tsx tests/lockdown-cloud-theo-facts.test.tsx"   # bo-lop-kev-o-ops-va-audit E1/E3/E5/E6/E7 — Thu thập không còn Kev (máy thu, máy chủ đọc bản tin cũ), phễu hook không đếm đôi
     kev2_scripts: "node --test --test-concurrency=1 scripts/kev2-ops-local.test.mjs"   # bo-lop-kev-o-ops-va-audit E2/E4/E8/E9 — bên ghi bản tin, push-ops-facts, audit-all, quét chuỗi Kev
+    ht33_vai: "node --test --test-concurrency=1 scripts/vai-may.test.mjs"   # pipeline-that-ca-may-thu-co-ten-tren-may-phat-trien E1–E4 — vai máy, chay-that bỏ qua có tên ca chỉ máy thu
     api_markets_s02: "cd app && bash ../db/db-thu.sh oneinvest_suite_ht23 --chay node --import tsx --test tests/api-markets-khong-s02.test.tsx"   # api-markets-khong-tra-so-s02 E1/E2 — /api/v1/markets không mang khoá, không xếp theo số S02 (DB thử trắng)
     ht28_ac1: "set -o pipefail; cd app && bash ../db/db-thu.sh oneinvest_suite_ht28 --chay node --import tsx --test --test-name-pattern 'HT28-AC-1' tests/api-markets-khong-s02.test.tsx 2>&1 | tee /dev/stderr | grep '^ℹ pass 1$' >/dev/null"   # api-markets-doi-chung-tren-db E1 — chạy riêng một ca, đòi đúng một ca đạt
     ht28_ac2: "set -o pipefail; cd app && bash ../db/db-thu.sh oneinvest_suite_ht28 --chay node --import tsx --test --test-name-pattern 'HT28-AC-2' tests/api-markets-khong-s02.test.tsx 2>&1 | tee /dev/stderr | grep '^ℹ pass 1$' >/dev/null"   # api-markets-doi-chung-tren-db E2
@@ -392,6 +393,8 @@ executors:
     ht9_phut: "node --test --test-concurrency=1 scripts/do-phut-s4.test.mjs"   # db-thu-tach-khoi-cum-that E8 — phút giữ khoá s4
     ht9_hang_ngay: "node --test --test-concurrency=1 scripts/pipeline-that-hang-ngay.test.mjs"   # db-thu-tach-khoi-cum-that E11 — soát ca dữ liệu thật hằng ngày trên main + dòng «ca dữ liệu thật» của lượt chấm
   script:
+    ht33_may_thu: "env -u ONEHUB_HAI_MAY_TEP node --input-type=module -e \"import { vaiMay } from './scripts/lib/vai-may.mjs'; const v = vaiMay(); console.log(v); process.exit(v === 'may-thu' ? 0 : 1)\""   # HT33 E6 — máy chấm là máy thu
+    ht33_m5: "bash _acceptance/pipeline-that-ca-may-thu-co-ten-tren-may-phat-trien/kiem-m5.sh"   # HT33 E5 — đầu ra lượt pipeline_that trên M5
     ht13_ap: "bash _acceptance/tran-tong-luot-dem-va-tran-doc-gop/ap-may-thu/kiem.sh"   # tran-tong-luot-dem-va-tran-doc-gop E9 — README áp đủ năm mục, lệnh kiểm sau chấm đúng ba log mẫu
     ht12_ap: "bash _acceptance/doc-gop-dong-ho-rieng-trong-luot-dem/ap-may-thu/kiem.sh"   # doc-gop-dong-ho-rieng-trong-luot-dem E9 — README áp đủ năm mục, kiem-sau.sh chấm đúng chín ca
     ht9_ap: "bash _acceptance/db-thu-tach-khoi-cum-that/ap-may-thu/kiem.sh"   # db-thu-tach-khoi-cum-that E10 — README áp đủ năm mục, lệnh kiểm sau
