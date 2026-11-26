@@ -5,7 +5,7 @@ slug: luot-hang-dem-khong-tu-ap-truoc-doc-lap
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [script]
-status: verified
+status: signed-off
 approved_by:
 approved_at:
 veto_state: mo
@@ -99,3 +99,6 @@ Bằng chứng lượt đọc toàn bộ vẫn tự áp như cũ: E5 vế (4) ch
 ## Known limits
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-26:
+  - Ngoài-1: Phép thử chặn tự áp dùng căn cứ luật dựng sẵn, chưa đo trên dữ liệu thật của máy thu; lượt đêm thật đầu tiên sau gộp là lần đo thật.
