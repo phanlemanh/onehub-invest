@@ -112,6 +112,8 @@
     "scripts/ghep-tin-danh-muc-doc-bu.test.mjs",
     "scripts/ghep-tin-danh-muc-lat-nhan.test.mjs",
     "scripts/ghep-tin-danh-muc-cham.test.mjs",
-    "tests/import-s16-chi-tiet.test.mjs"
+    "tests/import-s16-chi-tiet.test.mjs",
+    "scripts/yeu-cau.test.mjs",
+    "scripts/do-yeu-cau.test.mjs"
   ]
 }
