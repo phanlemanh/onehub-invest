@@ -71,10 +71,13 @@ try {
     const bo = NHOM[nhom];
     const vai = TEP_THEO_VAI();
     const that = chayTest(DIST, bo.tepTest);
-    console.log(`đạt: bản thật · ${nhom}: ${that.dat} ca đạt, ${that.do.size} ca đỏ (${bo.tepTest}, cần ≥ ${bo.mong} ca đạt và 0 ca đỏ)`);
-    if (!(that.dat >= bo.mong && that.do.size === 0 && that.roi === 0)) {
+    const du = that.dat >= bo.mong && that.do.size === 0 && that.roi === 0;
+    console.log(`${du ? "đạt" : "ĐỎ"}: bản thật · ${nhom}: ${that.dat} ca đạt, ${that.do.size} ca đỏ (${bo.tepTest}, cần ≥ ${bo.mong} ca đạt và 0 ca đỏ)`);
+    if (!du) {
       loi = 1;
       if (that.do.size) console.log(`ĐỎ: bản thật đỏ ở ca đầu: ${[...that.do][0]}`);
+      else if (that.dat < bo.mong) console.log(`ĐỎ: bản thật chỉ đạt ${that.dat} ca, dưới ngưỡng ${bo.mong}`);
+      else console.log(`ĐỎ: bản thật thoát với mã khác 0`);
     }
     // ---- bản đối chứng: bản chép KHÔNG đổi — ca đỏ ở đây là do môi trường chép, không được tính là «bắt được»
     const chep = join(tam, "doi-chung");
