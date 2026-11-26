@@ -71,6 +71,8 @@ executors:
     app: "cd app && npx tsc --noEmit && npm run lint"   # app chưa có test; lint 0 lỗi (3 cảnh báo cố ý)
     data_api: "cd data-api && npm run typecheck"     # suy từ: data-api/package.json — xanh
     dapi_drl: "bash db/db-thu.sh oneinvest_suite_dapi --chay sh -c 'cd data-api && node --import tsx --test --test-reporter=spec --test-concurrency=1 test/dong-ba-route.test.ts'"   # data-api-dong-ba-route-lo E1–E5 — ba đường trên lược đồ thật, có dòng canh ở bảng cấm
+    dapi_khoa: "bash db/db-thu.sh oneinvest_suite_dapi --chay sh -c 'cd data-api && node --import tsx --test --test-reporter=spec --test-concurrency=1 test/auth-dong.test.ts'"   # data-api-dong-khi-thieu-khoa E1–E6 — đóng khi thiếu khoá, ma trận môi trường × khoá × đường
+    dapi_khoa_toan: "bash db/db-thu.sh oneinvest_suite_dapi --chay sh -c 'cd data-api && node --import tsx --test --test-reporter=spec --test-concurrency=1 test/*.test.ts'"   # data-api-dong-khi-thieu-khoa E11 — mọi test data-api chung một lượt (HT19 không gãy vì đóng mặc định)
     app_ui: "cd app && npm test"                     # test render jsdom (app/tests); npm test tự chạy trên DB của riêng lượt (db/db-thu.sh --chay)
     ui_lint_rules: "cd app && npm run test:lint-rules"   # plugin lint onehub-ui (RuleTester + script kèm)
     ui_routes_map: "cd app && node --test eslint-plugin-onehub-ui/tests/routes-map.test.mjs"
@@ -499,6 +501,8 @@ executors:
     product_map: "node scripts/product-map.mjs --root . --check"
     dapi_drl_pha: "node _acceptance/data-api-dong-ba-route-lo/probes/pha.mjs"   # data-api-dong-ba-route-lo E6 — bản route cũ của main phải đỏ ở cả hai lớp
     dapi_drl_pham_vi: "node _acceptance/data-api-dong-ba-route-lo/probes/pham-vi.mjs"   # data-api-dong-ba-route-lo E8, E10 — phạm vi tệp, khoá config, tên nguồn thật
+    dapi_khoa_pha: "node _acceptance/data-api-dong-khi-thieu-khoa/probes/pha.mjs"   # data-api-dong-khi-thieu-khoa E7 — auth.ts, index.ts của merge-base phải đỏ đúng ca ghim
+    dapi_khoa_pham_vi: "node _acceptance/data-api-dong-khi-thieu-khoa/probes/pham-vi.mjs"   # data-api-dong-khi-thieu-khoa E8 — phạm vi tệp, khoá config, tên nguồn thật
     nntd_do: "node _acceptance/ngoai-n-tu-dinh-tuyen-bat/do-mo-phong.mjs"   # ngoai-n-tu-dinh-tuyen-bat: dựng lại 9 hồ sơ đã ký (mốc d2b4beaf) về trước Cổng 2, chạy dinh-tuyen-may.cjs của kit với config thật
     nntd_luoi: "! bash scripts/pre-merge-check.sh . --base origin/main 2>&1 | grep '^VIOLATION' | grep -vF 'VIOLATION [ngoai-n-tu-dinh-tuyen-bat]'"   # ngoai-n-tu-dinh-tuyen-bat AC-8 — lưới trước-gộp không có vi phạm nào ngoài dòng chờ của chính hồ sơ
     gta_luoi: "! bash scripts/pre-merge-check.sh . --base origin/main 2>&1 | grep '^VIOLATION' | grep -vF 'VIOLATION [goi-thang-anthropic]'"   # goi-thang-anthropic E13
@@ -768,6 +772,7 @@ executors:
     zc15_ap_may_thu: "bash _acceptance/s03-media-r2-allowlist/ap-may-thu/kiem.sh"   # s03-media-r2-allowlist E11 — hồ sơ áp năm mục + kiem-sau trên mẫu + round-trip collector API nhánh/main
     zc16_media_test: "cd collector && rm -rf dist && npm test && git diff --exit-code origin/main -- docs/DATA-CONTRACT.md src/core/storage.ts && cd .. && bash _acceptance/s03-jpg-path-fallback/probes/tu-thu.sh"   # s03-jpg-path-fallback E1–E5, E9 — MỘT lệnh dựng dist (npm test = build + toàn bộ ca, gồm media-fetch) để lượt chấm không chạy hai lệnh rm -rf dist song song (S4 r1 25/11); thử lại một lần bỏ /jpg/, tên tệp băm URL đã tải, không urlFetched; DATA-CONTRACT + schemaVersion không đổi
     zc16_ap_may_thu: "bash _acceptance/s03-jpg-path-fallback/ap-may-thu/kiem.sh"   # s03-jpg-path-fallback E8 — hồ sơ áp năm mục + kiem-sau trên mẫu + round-trip collector API nhánh/ZC15
+    zc19_cach_ly: "cd collector && rm -rf dist && HOME=$(mktemp -d) TMPDIR=$(mktemp -d) npm test && git diff --quiet $(git merge-base origin/main HEAD) -- src ':!src/test' && cd .. && bash _acceptance/s08-test-cach-ly-token/probes/cach-ly.sh"   # s08-test-cach-ly-token E1–E5 — MỘT lệnh dựng dist (npm test = build + toàn bộ ca collector, HOME + TMPDIR tạm như máy không có token); mã sản xuất collector ngoài src/test không đổi; probe HOME/TMPDIR tạm: 4/4, token HOME quyền 000 không bị chạm, hai bản phá đỏ đúng lý do
     collector_plist_lint: "plutil -lint pipeline/cron/com.oneinvest.collector-api.plist"
     shutdown_deadline: "node scripts/collector-shutdown/acceptance.mjs deadline"
     shutdown_skip_media: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/collector-shutdown/acceptance.mjs skip-media"
