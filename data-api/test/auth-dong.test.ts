@@ -54,6 +54,17 @@ const queryGoc = pool.query.bind(pool);
 const CANH = `CANH-KHOA-PB3-${randomUUID()}`;
 const gom: { noi: string; vanBan: string }[] = [];
 
+// Đầu ra console NGAY TRONG tiến trình test (logger của hono, mọi console.* mà middleware có thể gọi) cũng vào `gom`:
+// các ca AC-1, AC-3 gửi chuỗi canh qua header trong tiến trình này, nên chỉ gom thân trả về là chưa phủ đường lộ (S4 r2, t5).
+// Bọc ở mức console thay vì process.stdout.write vì bộ chạy node:test dùng stdout của tiến trình con cho dữ liệu của nó.
+for (const ten of ["log", "info", "warn", "error", "debug"] as const) {
+  const goc = console[ten].bind(console);
+  console[ten] = (...a: unknown[]) => {
+    gom.push({ noi: `console.${ten} trong tiến trình`, vanBan: a.map((x) => (typeof x === "string" ? x : JSON.stringify(x))).join(" ") });
+    goc(...a);
+  };
+}
+
 async function goi(duong: string, headers: Record<string, string> = {}) {
   const res = await app.request(duong, { headers });
   const vanBan = await res.text();
@@ -311,6 +322,13 @@ test("PB3-AC-5 index.ts không khởi động khi thiếu khoá", async () => {
     const p = khoiDong(ca.ten, ca.env, port);
     const ma = await healthTrong10s(port);
     if (ma !== 200) loi.push(`PB3 khởi động: ${ca.ten} không trả /health 200 trong 10 giây (stderr: ${p.err().slice(0, 200)})`);
+    const khoa = ca.env.DATA_API_KEYS;
+    if (ma === 200 && khoa) {
+      // Gửi đúng khoá chuỗi canh tới máy chủ thật, để stdout/stderr của tiến trình con có dịp lộ nó (AC-6).
+      const r = await fetch(`http://127.0.0.1:${port}/v1/markets`, { headers: { authorization: `Bearer ${khoa}` } });
+      await r.text();
+      if (r.status === 401 || r.status === 503) loi.push(`PB3 khởi động: ${ca.ten} gửi khoá đúng mà /v1/markets trả ${r.status}`);
+    }
     p.con.kill("SIGTERM");
     await Promise.race([p.thoat, cho(5_000)]);
     p.ghiLai();
@@ -326,10 +344,19 @@ test("PB3-AC-6 không lộ giá trị khoá", async () => {
   await goi("/health");
 
   const coCanh = (s: string) => s.includes(CANH);
-  // Đối chứng: bộ dò bắt được chuỗi canh cấy vào một thân giả.
-  assert.ok(coCanh(JSON.stringify({ error: { message: `x ${CANH} y` } })), "PB3 bộ dò chuỗi canh chết");
-
-  const lo = gom.filter((g) => coCanh(g.vanBan)).map((g) => g.noi);
+  // Soát trước, trên đúng phần đã gom từ các ca AC-1 … AC-6 (thân trả về, console trong tiến trình, stdout/stderr tiến trình con).
+  const daGom = gom.slice();
+  const lo = daGom.filter((g) => coCanh(g.vanBan)).map((g) => g.noi);
+  const kenh = new Set(daGom.map((g) => g.noi.split(" ")[0]));
+  console.log(`PB3 AC-6 đã gom ${daGom.length} mục từ các kênh: ${[...kenh].sort().join(", ")}`);
   assert.equal(lo.length, 0, `PB3 lộ giá trị khoá ở ${[...new Set(lo)].join(", ")}`);
-  assert.ok(gom.length > 0, "PB3 không gom được thân nào để soát");
+  for (const k of ["thân", "console.log", "stdout", "stderr"]) {
+    assert.ok(kenh.has(k), `PB3 AC-6 không gom được kênh ${k}`);
+  }
+
+  // Đối chứng dương trên CÙNG đường gom: cấy chuỗi canh vào console.error trong tiến trình → bộ gom phải bắt được.
+  const truoc = gom.length;
+  console.error(`đối chứng PB3 AC-6 ${CANH}`);
+  const moi = gom.slice(truoc);
+  assert.ok(moi.some((g) => g.noi.startsWith("console.error") && coCanh(g.vanBan)), "PB3 bộ gom console không bắt được chuỗi canh cấy");
 });
