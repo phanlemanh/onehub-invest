@@ -1,0 +1,2 @@
+console errors: none
+GET /vn/hanoi 200; 40 asset _next/static (font/css/js) 200; khong XHR/fetch toi api_base; khong third-party
