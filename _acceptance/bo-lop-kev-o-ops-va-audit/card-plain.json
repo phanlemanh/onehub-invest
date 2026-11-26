@@ -1,34 +1,3 @@
 {
-  "feature_plain": "Người vận hành mở trang Thu thập (ở máy thu hay trên cloud) và chạy audit-all thì không còn dòng đỏ giả nào của Kev — Kev đã rời máy từ 24/11; số «tin thấy» của hook Zalo thôi bị đếm gấp đôi.",
-  "will_do": [
-    {"id": "AC-1", "p": "Sẽ hiện khối Khoá an toàn còn bảy dòng (năm lớp khoá L1–L4b, OpenClaw, cổng nhận tin), không dòng Kev, và trang thôi dò cổng 8009."},
-    {"id": "AC-4", "p": "Sẽ giấu hàng và lớp Kev trên cloud ngay cả khi máy thu chưa kịp đẩy bản tin mới; hàng cổng nhận tin vẫn đúng trạng thái."},
-    {"id": "AC-6", "p": "Sẽ đếm mỗi tin hook thấy đúng một lần, ở máy thu lẫn trên cloud (hiện đang đếm gấp đôi vì dòng «kev null»)."}
-  ],
-  "wont_do": [
-    {"id": "AC-2", "p": "Sẽ KHÔNG còn hàng «Cổng Kev» chết trong lưới Máy móc ở máy thu."},
-    {"id": "AC-3", "p": "Sẽ KHÔNG còn hàng hay lớp Kev trong bản tin máy thu đẩy lên cloud."},
-    {"id": "AC-5", "p": "Sẽ KHÔNG còn chữ «Cổng Kev» ở khung đường ống Zalo và chú thích bảng nhóm; khung gọi đúng tên «Hook Zalo … đẩy vào cổng nhận tin»."},
-    {"id": "AC-7", "p": "Sẽ KHÔNG còn FAIL «Service :8009 chết» trong audit-all; cổng nhận tin :9210 vẫn được kiểm."},
-    {"id": "AC-8", "p": "Chặn Kev quay lại: test quét các tệp của vùng, thấy chuỗi Kev là đỏ và gọi tên tệp."},
-    {"id": "OOS-1", "p": "Không đổi cách đếm các loại dòng khác của hook (gửi lại, bỏ qua, chỉ ảnh)."},
-    {"id": "OOS-2", "p": "Không đụng hook Zalo — gỡ Kev khỏi hook là hàng KEV1 của làn thu."},
-    {"id": "OOS-3", "p": "Không đổi nhãn «Ý định tin (Kev)» ở trang Dòng dữ liệu — để hàng dọn chữ sau."},
-    {"id": "OOS-4", "p": "Không đụng watchdog, launchd, OpenClaw — làn ZCode, cần lời riêng."},
-    {"id": "OOS-5", "p": "Không đổi tên khoá của bản tin, để cloud cũ và mới cùng đọc."},
-    {"id": "OOS-6", "p": "Không dọn công cụ thử Kev cũ — không hiện ở Ops."}
-  ],
-  "coverage_plain": [
-    {"i": 0, "p": "Phủ bốn nơi Kev hiện ra: máy thu, bản tin đẩy lên, cloud đọc bản tin cũ, audit-all (AC-1, AC-2, AC-3, AC-4, AC-7) — danh sách đo bằng tìm chuỗi trên main."},
-    {"i": 1, "p": "Phủ bốn khối của trang Thu thập: khoá an toàn, máy móc, đường ống, bảng nhóm (AC-1, AC-2, AC-5)."},
-    {"i": 2, "p": "Phủ nhật ký hook: chỉ dòng gửi, dòng gửi xen dòng Kev, tệp vắng, và hai bộ đếm phải ra cùng số (AC-6)."},
-    {"i": 3, "p": "Chặn chữ Kev quay lại trong mã của vùng (AC-8)."}
-  ],
-  "gap_probe_plain": [
-    {"i": 0, "p": "Bộ đếm phễu trên cloud là bản riêng chưa được đo — đã sửa: tiêu chí đếm đúng nay đo cả hai bộ đếm và bắt chúng ra cùng số."},
-    {"i": 1, "p": "Nhật ký mẫu viết tay có thể lệch khuôn thật của hook — đã sửa: dựng mẫu từ chính khuôn dòng log của hook."},
-    {"i": 2, "p": "Bản tin cũ trong test viết tay có thể lệch bản thật — đã sửa: sinh bản tin cũ bằng chính bộ đẩy ở bản main hiện nay."},
-    {"i": 3, "p": "Bớt dòng ở khối Khoá an toàn chạm luật an toàn mà chưa có căn cứ — đã sửa: sổ trích sổ vận hành xếp Kev vào hạ tầng, không phải lớp khoá."},
-    {"i": 4, "p": "Phép kiểm «không dò 8009» thiếu đối chứng — đã sửa: phải thấy lời dò 9210 trước khi kết luận không có 8009."}
-  ]
+  "feature_plain": "Trang Thu thập ở Ops (cả máy thu lẫn cloud) và bản kiểm toàn hệ thống thôi hiện lớp, hàng và dòng đỏ của Kev đã bỏ; phễu hook S03 được gọi đúng tên và thôi đếm mỗi tin hai lần."
 }
