@@ -67,6 +67,7 @@ Hôm nay 0 tin S03 gắn trục hay căn; 2.830 tin hai khu ở mức toà. Hạ
   tập, Then lệnh so băm tập với băm đã ghim, tính cận dưới Wilson (95%) của tỉ lệ gắn trục đúng trong số bài máy gắn và
   thoát 1 khi OP1 **dưới 0,95** (nhóm A); GP chỉ báo số (Hỏi-1). Tệp chấm có bảng từng bài sai (mã căn nguyên văn, toà, trục
   máy gắn, trục nhãn người) và người chấm (judgment) đọc bảng đó: các bài sai có chung một kiểu lỗi luật sửa được không.
+  0 bài sai là kết quả hợp lệ: khi đó người chấm ghi không có kiểu lỗi nào.
   Chiều đỏ: đổi một nhãn thì băm lệch, lệnh gọi tên tập.
 
 ## Coverage
