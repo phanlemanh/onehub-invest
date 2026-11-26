@@ -5,7 +5,7 @@ slug: dong-the-bo-sung-tin-theo-luat
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [script]
-status: implemented
+status: verified
 approved_by:
 approved_at:
 veto_state: mo
