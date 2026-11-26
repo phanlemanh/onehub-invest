@@ -7,6 +7,9 @@
 //   --het-han                                   rút mọi lô quá hạn đo bù chưa có kết quả (actor máy, không cần lượt làm giàu)
 //   --danh-sach                                 in mọi lô và ô đang dừng
 // Mọi lệnh ghi chạy trong một giao dịch; lỗi thì lui lại, thoát 1. Sai đối số thoát 2.
+import { realpathSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+
 import pg from "pg";
 
 const DB_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
@@ -97,4 +100,4 @@ async function main() {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) main();
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) main();

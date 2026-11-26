@@ -159,9 +159,10 @@ export function thieuTrongChuoi(chuoi, tep) {
     .filter((so) => !chuoi.includes(so)).sort();
 }
 /** Bảng viết trước (đọc tay 22/11): mọi migration có chữ resolve_offer_fields, xếp loại. 063/066 chỉ GỌI hàm trong
- *  apply_enrichment/revert_enrichment (nạp lại riêng bằng HAM_063/HAM_066), 096/102 chỉ nhắc trong chú thích — không thuộc chuỗi. */
+ *  apply_enrichment/revert_enrichment (nạp lại riêng bằng HAM_063/HAM_066), 096/102 chỉ nhắc trong chú thích — không thuộc chuỗi.
+ *  129 (NB10) chép thân revert_enrichment của 066 — chỉ GỌI hàm, không thuộc chuỗi. */
 const BANG_PHAN_XU = { "045": "dinh-nghia", "059": "dinh-nghia", "061": "dinh-nghia", "063": "goi", "066": "goi", "068": "chen",
-  "069": "chen", "095": "chen", "096": "nhac", "099": "chen", "102": "nhac" };
+  "069": "chen", "095": "chen", "096": "nhac", "099": "chen", "102": "nhac", "129": "goi" };
 const MIG_DIR = path.join(ROOT, "db/migrations");
 const tepMigration = () => readdirSync(MIG_DIR).filter((f) => /^\d{3}_.*\.sql$/.test(f))
   .map((ten) => ({ ten, noiDung: readFileSync(path.join(MIG_DIR, ten), "utf8") }));
