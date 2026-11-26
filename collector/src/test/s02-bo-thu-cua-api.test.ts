@@ -347,6 +347,33 @@ test("2511-s02 call: 401 RỒI bước làm mới gặp lỗi thường → ném
   assert.equal(demDong(dong, "AUTH FAIL [S02]"), 0);
 });
 
+test("2511-s02 call: trang kế map_listings@15000 → đường dẫn GỬI ĐI không mang @offset (hậu tố bị 404), danh tính bản ghi vẫn giữ tên trang", async () => {
+  // đo 26/11 18:38–18:41: /map_listings@15000 → 404; cùng lời với offset trong THÂN → 200, 15000 căn khác trang đầu
+  const daGoi: string[] = [];
+  const { ctx } = ctxThu(conHan, async () => {});
+  const kq = await call("POST", "/v1/market/47/map_listings@15000", { pagination: { page_size: 15000, offset: 15000 } }, ctx, fetchGia(async (goi) => {
+    daGoi.push(goi.url);
+    return json(200, { payload: { listings: [] } })();
+  }));
+  assert.deepEqual(daGoi, ["https://api.airdna.co/api/explorer/v1/market/47/map_listings"], "hậu tố @offset chỉ là tên trang, không gửi lên nguồn");
+  assert.deepEqual((kq as { payload: { reqBody: unknown } }).payload.reqBody, { pagination: { page_size: 15000, offset: 15000 } }, "offset nằm trong thân");
+  assert.equal(kq?.sourceId, "/v1/market/47/map_listings@15000", "sourceId giữ tên trang để các trang không trùng danh tính");
+  assert.equal(kq?.meta?.apiPath, "/v1/market/47/map_listings@15000");
+  assert.equal((kq as { payload: { url: string } }).payload.url, "https://api.airdna.co/api/explorer/v1/market/47/map_listings");
+  assert.equal(ctx.failed, 0);
+});
+
+test("2511-s02 call: đường dẫn không có @offset thì giữ nguyên, gửi đúng", async () => {
+  const daGoi: string[] = [];
+  const { ctx } = ctxThu(conHan, async () => {});
+  const kq = await call("GET", "/v1/market/47/map_listings", null, ctx, fetchGia(async (goi) => {
+    daGoi.push(goi.url);
+    return json(200, { payload: { listings: [] } })();
+  }));
+  assert.deepEqual(daGoi, ["https://api.airdna.co/api/explorer/v1/market/47/map_listings"]);
+  assert.equal(kq?.sourceId, "/v1/market/47/map_listings");
+});
+
 // ---- lượt thu không còn trình duyệt, nhịp ≥ 5 giây giữa các lời
 // tệp test chạy qua dist/test → nguồn ở ../../src/collectors; chạy src/test trực tiếp → ../collectors.
 const thuMucTest = dirname(fileURLToPath(import.meta.url));
