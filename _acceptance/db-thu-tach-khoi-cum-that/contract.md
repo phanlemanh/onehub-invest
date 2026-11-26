@@ -5,7 +5,7 @@ slug: db-thu-tach-khoi-cum-that
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: verified
 approved_by: Mạnh
 approved_at: 2026-11-25T03:59:22Z
 design_doc: docs/superpowers/specs/2026-11-25-db-thu-tach-khoi-cum-that-design.md
@@ -101,3 +101,10 @@ lệnh kiểm sau ở `ap-may-thu/README.md` (AC-10) đo trung vị các lượt
 - Số nền để đo lại sau áp: trung vị khoảng cấp s4 99′, p75 174′ (n=15, 23/11 12Z → 25/11 03:11Z); hai nửa pipeline 69′ (HT12 r1)
   → đích ≤ 20′.
 - Số nền đo bằng chính `do-phut-s4.mjs` khi viết xong (AC-8); số trong Context là phép tính cùng luật chạy tay 25/11 03:5xZ.
+- Ngoài-1 (máy định tuyến 2026-11-26, đề xuất S4 known-limits): Khi bộ test của chính công cụ này đang chạy cùng lúc, lượt chấm thật có thể phải chờ chỗ, tối đa 15 phút rồi báo lỗi. — `db/db-thu.sh`
+- Ngoài-2 (máy định tuyến 2026-11-26, đề xuất S4 known-limits): Vài chỗ ghi chú còn nói 30 ca trong khi thực tế là 34, người đọc nhật ký chấm có thể so nhầm con số. — `_acceptance/config.yaml`
+- Ngoài-3 (máy định tuyến 2026-11-26, đề xuất S4 known-limits): Lệnh đo phút giữ khoá chỉ chạy đúng mặc định trên máy này, và tên người dùng máy lộ trong mã công khai. — `scripts/do-phut-s4.mjs`
+- Ngoài-4 (máy định tuyến 2026-11-26, đề xuất S4 known-limits): Nếu bộ test của công cụ bị ngắt giữa chừng và để sót hai container, mọi lượt chấm sau đó chờ 15 phút rồi đỏ mà không nêu đúng nguyên nhân. — `db/db-thu.sh`
+- Ngoài-6 (máy định tuyến 2026-11-26, đề xuất S4 known-limits): Hiếm khi, nếu lượt chấm bị tắt đúng một khoảnh khắc, mọi lượt sau bị kẹt cho tới khi có người xoá tay một thư mục khoá. — `db/db-thu.sh`
+- Ngoài-7 (máy định tuyến 2026-11-26, đề xuất S4 known-limits): Một ca kiểm chỉ đọc chữ trong mã chứ không chạy thật, nên có thể báo xanh dù cách chia hai nửa suite bị sai. — `scripts/pipeline-that.test.mjs`
+- Ngoài-8 (máy định tuyến 2026-11-26, đề xuất S4 known-limits): Ca kiểm có thể không phát hiện nếu cụm dùng một lần dừng ở một migration giữa chừng. — `scripts/db-thu-trong.test.mjs`
