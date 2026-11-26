@@ -168,7 +168,11 @@ test("offer-building-dau-ra-giu-nguyen", async () => {
   const [cu, moi] = [await bam(obCu), await bam("SELECT * FROM offer_building")];
   assert.deepEqual(moi, cu, `offer_building sau 131 khác 117: ${cu.n} → ${moi.n} dòng`);
 });
-test("offer-building-va-offer-unit-nhanh", async () => {
+test("offer-building-va-offer-unit-nhanh", { timeout: 600_000 }, async () => {
+  // DB của lượt vừa khôi phục chưa có thống kê nên planner chọn kế hoạch khác DB máy thu (đo 27/11: bỏ MATERIALIZED ở toa_vung
+  // trên DB máy thu 43 giây, trên DB lượt chưa ANALYZE dưới 1 giây — đột biến bo-materialized không đỏ). ANALYZE trước khi đo
+  // để thời gian phản ánh kế hoạch của DB máy thu.
+  await c.query("ANALYZE");
   const tOb = await giay("SELECT count(*) FROM offer_building");
   const tOu = await giay("SELECT count(*) FROM offer_unit");
   const tSau = await giay("SELECT * FROM offer_unit WHERE muc <> 'toa'");
