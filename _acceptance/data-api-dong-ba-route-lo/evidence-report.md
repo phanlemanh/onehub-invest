@@ -7,8 +7,8 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 706f7494cda4a6b9c08e573e35bd092bd91dfb18
-human_signoff:
+verified_commit: c5042286fcdb3fecf73c665033dee65dfd1c0d3f
+human_signoff: Mạnh 2026-11-26
 ---
 
 # Evidence Report: data-api-dong-ba-route-lo
@@ -191,3 +191,7 @@ none — every multi-run eval is uniform
 Round 1: lượt đầu, xem lịch sử run-log.
 Round 2: E8, E9, E10 chạy và đạt; E7 panel chấm xong, đạt.
 Round 3: E1–E6 chạy lại sau sửa test HT19 (lọc theo phường cảnh), đạt; E7–E10 carry-forward từ round 2; các lệnh suite đạt.
+
+### Re-pin lần 1 — 2026-11-26, do gộp main 0d4d81163 (#548) để hết xung đột PR #549
+run_id: repin-20261126T083650Z-32579
+sha: c5042286fcdb3fecf73c665033dee65dfd1c0d3f · suites: 8 lệnh exit 0 · evals: 9/9 eval máy đạt kỳ vọng · ngoài làn máy: E7 (E7 không khai paths)

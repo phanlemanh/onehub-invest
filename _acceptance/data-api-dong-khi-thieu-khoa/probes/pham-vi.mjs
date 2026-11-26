@@ -107,7 +107,19 @@ try {
 } catch {
   dinhHt19 = git("rev-parse", HT19_LUC_CAT).trim();
 }
-const dungTrenHt19 = laToTien(HT19_LUC_CAT, "HEAD") && !laToTien(HT19_LUC_CAT, "origin/main");
+// HT19 đã vào main khi ba route của nó trên origin/main trùng nội dung với đỉnh nhánh HT19 — main gộp kiểu squash nên phép thử
+// tổ tiên không bao giờ đúng (finding S4 r2 «squash»; #549 gộp 26/11 thành b013b4428).
+const HT19_TEP = ["data-api/src/routes/deals.ts", "data-api/src/routes/coverage.ts", "data-api/src/routes/listings.ts"];
+const trungNoiDung = (a, b) => {
+  try {
+    execFileSync("git", ["-C", ROOT, "diff", "--quiet", a, b, "--", ...HT19_TEP], { stdio: "ignore" });
+    return true;
+  } catch {
+    return false;
+  }
+};
+const ht19DaVaoMain = laToTien(HT19_LUC_CAT, "origin/main") || trungNoiDung(dinhHt19, "origin/main");
+const dungTrenHt19 = laToTien(HT19_LUC_CAT, "HEAD") && !ht19DaVaoMain;
 const goc = dungTrenHt19 ? dinhHt19 : mainBase;
 const tenNen = dungTrenHt19 ? `đỉnh HT19 ${goc.slice(0, 9)} (HT19 chưa vào origin/main)` : `merge-base ${goc.slice(0, 9)}`;
 
