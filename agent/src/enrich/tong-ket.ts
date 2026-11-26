@@ -56,14 +56,30 @@ export function dongTongKet(d: DemLuot): string[] {
 }
 
 /**
- * NB11 AC-6: dòng tổng kết số đề xuất «có căn cứ chờ phiếu độc lập» — trùng luật (E1 / toà danh bạ) nhưng lượt hằng đêm
- * chuyển sang thẻ chờ, không áp. In ở cả chế độ dry lẫn ghi thật.
+ * Dòng tổng kết số đề xuất có căn cứ (trùng luật E1 / toà danh bạ) mà lượt chuyển sang thẻ thay vì ghi tạm — phiếu không độc
+ * lập hoặc ô đang dừng (NB10; NB11 AC-6 cũ). In ở cả chế độ dry lẫn ghi thật.
  */
 export function dongChuyenThe(n: number): string {
   return `có căn cứ chờ phiếu độc lập (chuyển thẻ, không áp): ${n}`;
 }
 
-/** Toàn bộ dòng tổng kết lượt ghi thật mà CLI in (enrich-run.ts) — test E6 đọc đúng hàm này. */
-export function dongTongKetLuot(d: DemLuot, chuyenThe: number): string[] {
-  return [...dongTongKet(d), dongChuyenThe(chuyenThe)];
+export type GhiTamLuot = {
+  hetHan: { ma: string; field: string; han_do_bu: string; da_rut: number }[];
+  oDung: string[];
+  lo: string[];
+};
+
+/** NB10 AC-6: lô quá hạn vừa rút (tên lô + lý do), trường đang dừng, lô lượt này ghi vào. */
+export function dongGhiTam(g: GhiTamLuot): string[] {
+  const dong = [`ghi tạm: ${g.lo.length} lô${g.lo.length ? ` (${g.lo.join(", ")})` : ""}`];
+  for (const h of g.hetHan) {
+    dong.push(`✗ lô ${h.ma} quá hạn đo bù ${h.han_do_bu} — đã rút ${h.da_rut} giá trị, dừng tự ghi ${h.field}`);
+  }
+  if (g.oDung.length) dong.push(`⚠ trường đang dừng tự ghi: ${g.oDung.join(", ")}`);
+  return dong;
+}
+
+/** Toàn bộ dòng tổng kết lượt ghi thật mà CLI in (enrich-run.ts) — test đọc đúng hàm này. */
+export function dongTongKetLuot(d: DemLuot, chuyenThe: number, g?: GhiTamLuot): string[] {
+  return [...dongTongKet(d), dongChuyenThe(chuyenThe), ...(g ? dongGhiTam(g) : [])];
 }

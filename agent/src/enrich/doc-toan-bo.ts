@@ -13,6 +13,7 @@ import { recordCallDb, soToken, tenLop, type RecordCall } from "../runtime/ai-ca
 import { getModel } from "../runtime/models.js";
 import { KIND, LISTING_INTENT, PROPERTY_TYPE } from "../vocab.generated.js";
 import { kiemTrichLoai, trichCoThat } from "./luat-trich-dan.js";
+import { ganLo, oDangDung } from "./ghi-tam/lo.js";
 import { routeFields, type EnrichField, type Routed } from "./route.js";
 import { catChu, giaoDichSavepoint, heldFields, syncReview, type GiaoDich, type ResolveFn } from "./run.js";
 
@@ -316,7 +317,14 @@ export async function chayLuot(o: {
     const ghi = async () => {
       const dem = { deXuat: 0, daAp: 0 };
       const ap: number[] = [];
-      for (const d of q.de_xuat) {
+      /** NB10: đề xuất corroborated sắp áp, theo trường — ghi tạm, gắn lô trước apply_enrichment (AC-3). */
+      const ghiTamIds = new Map<EnrichField, number[]>();
+      const oDung = await oDangDung(c);
+      for (const d0 of q.de_xuat) {
+        // Ô đang dừng tự ghi (lô quá hạn hay đo bù không đạt): đề xuất có căn cứ lên thẻ thay vì áp (NB10 AC-6).
+        const d = d0.route === "corroborated" && d0.status === "queued" && oDung.has(d0.field)
+          ? { ...d0, route: "review" as const, corroboratedBy: null, lyDo: d0.lyDo ?? "o-dung" }
+          : d0;
         const { rows } = await c.query(
           `INSERT INTO enrichment_proposals
              (run_id, offer_id, field, value, value_key, source, route, corroborated_by, model, evidence, status)
@@ -338,6 +346,13 @@ export async function chayLuot(o: {
         if (!rows[0]) continue;
         dem.deXuat++;
         if (d.status === "queued" && d.route !== "review") ap.push(Number(rows[0].id));
+        if (d.status === "queued" && d.route === "corroborated") {
+          ghiTamIds.set(d.field, [...(ghiTamIds.get(d.field) ?? []), Number(rows[0].id)]);
+        }
+      }
+      // Lượt đọc toàn bộ gửi chữ bài đã gạt tên nhóm, không thấy đáp án của luật — phiếu độc lập (ROADMAP mục 63).
+      for (const [field, ids] of ghiTamIds) {
+        await ganLo(c, ids, { runId: o.runId, field, docLap: true, ghiBoi: `doc-toan-bo:${o.runId}`, model: TEN_MODEL.haiku });
       }
       if (ap.length > 0) {
         const { rows } = await c.query(`SELECT apply_enrichment($1, $2) AS n`, [ap, `doc-toan-bo:${o.runId}`]);
@@ -422,12 +437,16 @@ export async function xuLaiTrich(o: {
     }
     kq.dat++;
     if (o.thu) continue;
+    if ((await oDangDung(c)).has("property_type")) { giu("o-dung"); continue; }
     try {
       kq.daAp += await giaoDich(async () => {
         await c.query(
           `UPDATE enrichment_proposals SET status = 'queued', route = 'corroborated', corroborated_by = $2, run_id = $3,
              evidence = (evidence - 'ly_do') || jsonb_build_object('xu_lai_tu_run', $4::text, 'luat_version', $5::text)
            WHERE id = $1 AND status = 'skipped'`, [ep.id, d.corroboratedBy, o.runId, ep.run_id, LUAT_VERSION]);
+        await ganLo(c, [Number(ep.id)], {
+          runId: o.runId, field: "property_type", docLap: true, ghiBoi: `doc-toan-bo:${o.runId}`, model: TEN_MODEL.haiku,
+        });
         const { rows } = await c.query(`SELECT apply_enrichment($1, $2) AS n`, [[ep.id], `doc-toan-bo:${o.runId}`]);
         return Number(rows[0].n ?? 0);
       });

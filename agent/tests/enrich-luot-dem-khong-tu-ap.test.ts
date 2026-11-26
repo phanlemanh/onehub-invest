@@ -1,4 +1,6 @@
 // enrich-luot-dem-khong-tu-ap.test.ts — NB11 `luot-hang-dem-khong-tu-ap-truoc-doc-lap`, E1/E2/E3/E6 ↔ AC-1/2/3/6.
+// NB10: chốt NB11 thay bằng cổng ghi tạm — model giả lập ở đây không trả lời nhắc đã gửi nên KHÔNG độc lập: E1, E2, E6 giữ
+// nguyên kỳ vọng «lên thẻ, không áp»; E5 đổi sang hai phía của cổng mới.
 // runEnrich (lượt hằng đêm) trên DB của riêng lượt trong BEGIN…ROLLBACK; model và E1 giả lập.
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -84,19 +86,20 @@ test("E3 AC-3 E1 direct ở lượt đêm vẫn áp", async () => {
   });
 });
 
-test("E5 AC-5 tham số theo lượt gọi: chanTuApCanCu=false giữ đường áp cũ (đối chứng hai phía)", async () => {
+test("E5 AC-5 (NB10 thay tham số NB11) lời nhắc độc lập thì ghi tạm có lô, không khai lời nhắc thì vẫn lên thẻ", async () => {
   await withTx(async (c) => {
     const a = await tin(c);
-    await runEnrich({ client: c, runId: `enrich-nb11-cu`, dry: false, limit: 50, offerIds: [a], chanTuApCanCu: false,
-      llm: llmWith(kq({ property_type: "apartment" })), resolve: resolveWith({ propertyType: "apartment" }) });
-    assert.deepEqual((await deXuat(c, a, "property_type")).map((p) => [p.route, p.status, p.corroborated_by]),
-      [["corroborated", "applied", "e1"]], "tắt chặn thì phải áp như trước");
+    const sach: LlmFn = async () => ({ result: kq({ property_type: "apartment" }), model: "gia-lap", tracePath: null, prompt: "TIN ĐĂNG:\nBán căn" });
+    await runEnrich({ client: c, runId: `enrich-nb11-cu`, dry: false, limit: 50, offerIds: [a],
+      llm: sach, resolve: resolveWith({ propertyType: "apartment" }) });
+    assert.deepEqual((await deXuat(c, a, "property_type")).map((p) => [p.route, p.status, p.corroborated_by, p.lo_id, p.ghi_tam]),
+      [["corroborated", "applied", "e1", "enrich-nb11-cu:property_type", true]], "phiếu độc lập thì ghi tạm có lô");
     assert.equal((await dongTin(c, a)).property_type, "apartment");
     const b = await tin(c);
     await runEnrich({ client: c, runId: `enrich-nb11-vang`, dry: false, limit: 50, offerIds: [b],
       llm: llmWith(kq({ property_type: "apartment" })), resolve: resolveWith({ propertyType: "apartment" }) });
     assert.deepEqual((await deXuat(c, b, "property_type")).map((p) => [p.route, p.status]), [["review", "queued"]],
-      "bên gọi không khai thì mặc định chặn");
+      "bên gọi không trả lời nhắc thì không tính là độc lập");
   });
 });
 

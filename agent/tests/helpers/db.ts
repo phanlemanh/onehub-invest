@@ -40,6 +40,11 @@ const SAU_045_CUA_059 = MIG_059
   : "";
 
 /** Mở cổng «chưa cắt chuyển» của 045 trong giao dịch test — giá trị gieo được ghi kèm phát biểu legacy (insertOffer). */
+// NB10: bảng lô ghi tạm + revert_enrichment/unit_data_level bản 129 — nạp SAU 045/059 (đè bản 045 vừa nạp lại), idempotent.
+// DB bản chép chưa áp 129 vẫn chạy được mã mới của bộ làm giàu.
+const TEP_129 = join(MIGRATIONS_DIR, "129_ghi_tam_lo.sql");
+const MIG_129 = existsSync(TEP_129) ? readFileSync(TEP_129, "utf8") : "";
+
 const MO_CONG = `INSERT INTO ops_audit (actor, action, detail) VALUES ('test:agent', 'phat-bieu:cat-chuyen', '{}'::jsonb)`;
 
 export async function withTx<T>(fn: (c: pg.Client) => Promise<T>): Promise<T> {
@@ -55,6 +60,7 @@ export async function withTx<T>(fn: (c: pg.Client) => Promise<T>): Promise<T> {
     await c.query(sql(rows[0].ok, rows[0].pb));
     const { rows: [m] } = await c.query("SELECT to_regclass('history_transactional') IS NOT NULL AS co");
     if (m.co && SAU_045_CUA_059) await c.query(SAU_045_CUA_059);
+    if (MIG_129) await c.query(MIG_129);
     await c.query(MO_CONG);
     return await fn(c);
   } finally {

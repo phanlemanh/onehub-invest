@@ -57,8 +57,8 @@ export function buildEnrichInput(
     ctxParts.push(`Nhóm CÓ THỂ thuộc các dự án sau (chọn đúng 1 trong JSON project_name, hoặc null nếu không chắc): ${context.projectCandidates.join(", ")}`);
   }
   if (context?.areaHint) ctxParts.push(`Khu vực: ${context.areaHint}`);
-  if (context?.propertyType) ctxParts.push(`Loại hình từ nhóm: ${context.propertyType}`);
-  if (context?.buildingHint) ctxParts.push(`Mã tòa phát hiện: ${context.buildingHint}`);
+  // NB10 AC-1: không đưa loại hình và mã toà của luật E1 vào lời nhắc — model phải đọc độc lập thì mới là phiếu thứ hai
+  // (ROADMAP mục 63 QĐ3 điều kiện 1). Tên dự án, ứng viên và khu vực giữ nguyên.
 
   const ctx = ctxParts.length > 0
     ? `\n\nBỐI CẢNH (từ tên nhóm Zalo):\n${ctxParts.map((p) => `- ${p}`).join("\n")}`

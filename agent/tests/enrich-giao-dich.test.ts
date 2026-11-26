@@ -42,7 +42,8 @@ function llmTheo(kieu: KieuLlm[], doSau: () => number, thay: number[]): LlmFn {
     const k = kieu[i++] ?? "ok";
     if (k === "loi") return { result: null, model: "qwen27b", tracePath: null, loi: "APICallError" };
     if (k === "rac") return { result: null, model: "qwen27b", tracePath: "traces/t.jsonl" };
-    return { result: LLM_OK, model: "qwen27b", tracePath: "traces/t.jsonl" };
+    // Lời nhắc sạch (không mang đáp án của luật) — phiếu độc lập, đường corroborated áp ghi tạm như đường áp cũ (NB10).
+    return { result: LLM_OK, model: "qwen27b", tracePath: "traces/t.jsonl", prompt: "TIN ĐĂNG:\nBán căn 2pn" };
   };
 }
 
@@ -138,8 +139,6 @@ async function kiemCoLapLoi(c: pg.Client, run: RunFn, cho: number | "sauCuoi") {
   const { dem } = await run({
     client: clientHong(c, t2, cho), runId, dry: false, limit: 50, offerIds: [t1, t2, t3],
     llm: llmTheo(["ok", "ok", "ok"], doSau, thay), resolve: CAN_LLM, buildings: [], giaoDich: gd,
-    // Ca này đo cô lập giao dịch của câu ghi field_assertions; NB11 chặn tự áp ở lượt đêm (mặc định) nên đi đường áp cũ.
-    chanTuApCanCu: false,
   });
   const lech: string[] = [];
   const phai = (dung: boolean, tb: string) => { if (!dung) lech.push(tb); };

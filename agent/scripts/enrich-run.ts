@@ -39,12 +39,12 @@ const taoLlm = (gateway: string, tran: Tran): LlmFn => async (text, ctx) => {
   try {
     const r = await runAgent(enrichTextAgent, vao);
     tran.ghi(r.usage.inputTokens ?? uocTokenVao(vao), r.usage.outputTokens);
-    return { result: parseEnrichOutput(r.output), model: r.model, tracePath: r.tracePath };
+    return { result: parseEnrichOutput(r.output), model: r.model, tracePath: r.tracePath, prompt: vao };
   } catch (e) {
     if (e instanceof LoiCauHinhModel || e instanceof LoiThieuKhoa) throw e;
     tran.ghi(uocTokenVao(vao), 0);
     console.log(`  ✗ LLM: ${e instanceof Error ? e.message.slice(0, 80) : "?"}`);
-    return { result: null, model: gateway, tracePath: null, loi: e instanceof Error ? e.name : "Error" };
+    return { result: null, model: gateway, tracePath: null, loi: e instanceof Error ? e.name : "Error", prompt: vao };
   }
 };
 
@@ -78,8 +78,8 @@ async function main() {
   };
 
   try {
-    const { routed, summary, dem, chuyenThe } = await runEnrich({
-      chanTuApCanCu: true, // NB11: lượt hằng đêm không tự áp đề xuất có căn cứ tới khi NB10 làm phiếu độc lập
+    // NB10: đề xuất có căn cứ tự áp là ghi tạm (lô, cờ chưa đo, hạn đo bù) khi phiếu độc lập và ô mở — cổng ở runEnrich.
+    const { routed, summary, dem, chuyenThe, ghiTam } = await runEnrich({
       client: c, runId, dry: DRY, limit: Number.isFinite(LIMIT) ? LIMIT : 50, offerIds: OFFERS,
       llm, resolve: resolveContext, giaoDich, tran,
     });
@@ -98,7 +98,7 @@ async function main() {
       console.log(dongChuyenThe(routed.flat().filter((r) => r.trungLuat).length));
       return;
     }
-    for (const dong of dongTongKetLuot(dem, chuyenThe)) console.log(dong);
+    for (const dong of dongTongKetLuot(dem, chuyenThe, ghiTam)) console.log(dong);
     process.exitCode = maThoat(dem);
   } finally {
     await c.end();
