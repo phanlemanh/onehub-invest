@@ -8,6 +8,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync } from "node:fs";
+import pg from "pg";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
@@ -868,65 +869,94 @@ test("DB thật: phiên mở ra là CHỈ ĐỌC — mọi câu ghi (kể cả v
 });
 
 test("DB thật: tra stg theo list_id — id có trong bảng trả về dạng số, id lạ không, hỏi rỗng thì không chạy câu nào", { skip: !CO_DB }, async () => {
+  const rw = new pg.Client({ connectionString: DB });
+  await rw.connect();
   const c = await moDbChiDoc(DB);
   try {
-    const mot = Number((await c.query("SELECT list_id FROM stg_chotot_ads ORDER BY list_id LIMIT 1")).rows[0].list_id);
+    // ca tự chứa: seed một dòng của riêng ca (list_id dải riêng, không đụng dữ liệu khác)
+    const id = 987654000042;
+    await rw.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, collected_at, manifest) VALUES ('suite-ztdo-tra', 'hcmc', 'chotot-ads', now(), '{}') ON CONFLICT (snapshot_id) DO NOTHING`);
+    await rw.query("INSERT INTO stg_chotot_ads (list_id, region_v2, city_code, category, ad_type, payload, snapshot_id) VALUES ($1, 13000, 'zz-suite-ztdo', 1000, 'u', '{}', 'suite-ztdo-tra') ON CONFLICT (list_id) DO NOTHING", [id]);
     const tra = taoTraStg(c);
-    assert.deepEqual([...(await tra([mot, -987654321]))], [mot]);
-    assert.deepEqual([...(await tra([]))], []);
-  } finally { await c.dong(); }
+    assert.deepEqual([...(await tra([id, -987654321]))], [id], "id đã seed phải trả về, id lạ không");
+    assert.deepEqual([...(await tra([]))], [], "hỏi rỗng thì không chạy câu nào");
+  } finally { await c.dong(); await rw.end().catch(() => {}); }
 });
 
 test("DB thật: lượt quét đủ cùng ngày = id trong stg của đúng vùng × mục, đăng trong cửa sổ, theo giờ đăng gốc", { skip: !CO_DB }, async () => {
+  const rw = new pg.Client({ connectionString: DB });
+  await rw.connect();
   const c = await moDbChiDoc(DB);
   try {
-    const cu = (await c.query("SELECT city_code, ad_type FROM stg_chotot_ads WHERE city_code IS NOT NULL AND ad_type IS NOT NULL GROUP BY 1, 2 ORDER BY count(*) DESC LIMIT 1")).rows[0];
+    // seed ba tin của một vùng × mục RIÊNG của ca (city_code tổng hợp — không phụ thuộc dữ liệu có sẵn)
+    const city = "zz-suite-ztdo";
     const bayGio = Date.now();
-    const tuan = await quetDuStg(c, { cityCode: cu.city_code, adType: cu.ad_type, t0: bayGio - 7 * 86400000, t1: bayGio + 86400000 });
-    assert.ok(tuan.size > 100, `cặp đông nhất phải có nhiều tin trong 7 ngày (thấy ${tuan.size})`);
+    const vung = { cityCode: city, adType: "u", t0: bayGio - 7 * 86400000, t1: bayGio + 86400000 };
+    await rw.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, collected_at, manifest) VALUES ('suite-ztdo-qd', 'hcmc', 'chotot-ads', now(), '{}') ON CONFLICT (snapshot_id) DO NOTHING`);
+    const seed = async (list_id, payload) =>
+      rw.query("INSERT INTO stg_chotot_ads (list_id, region_v2, city_code, category, ad_type, payload, snapshot_id) VALUES ($1, 13000, $2, 1000, 'u', $3, 'suite-ztdo-qd') ON CONFLICT (list_id) DO NOTHING",
+        [list_id, city, JSON.stringify(payload)]);
+    await seed(987654001101, { list_time: bayGio - 3600_000, orig_list_time: bayGio - 3600_000 }); // trong cửa sổ
+    await seed(987654001102, { list_time: bayGio - 3600_000, orig_list_time: bayGio - 7200_000 }); // trong cửa sổ
+    await seed(987654001103, { list_time: bayGio - 60_000, orig_list_time: bayGio - 9 * 86400000 }); // đăng TRƯỚC cửa sổ (9 ngày trước)
+    const tuan = await quetDuStg(c, vung);
+    assert.equal(tuan.size, 2, `chỉ tin đăng trong cửa sổ (thấy ${tuan.size})`);
+    assert.deepEqual([...tuan].sort((a, b) => a - b), [987654001101, 987654001102], "đúng hai id trong cửa sổ");
     assert.ok([...tuan].every((x) => Number.isSafeInteger(x)), "list_id trả dạng số");
-    assert.equal((await quetDuStg(c, { cityCode: cu.city_code, adType: cu.ad_type, t0: Date.parse("2020-01-01T00:00:00Z"), t1: Date.parse("2020-01-02T00:00:00Z") })).size, 0, "cửa sổ năm 2020 không có tin");
-  } finally { await c.dong(); }
+    assert.equal((await quetDuStg(c, { cityCode: city, adType: "u", t0: Date.parse("2020-01-01T00:00:00Z"), t1: Date.parse("2020-01-02T00:00:00Z") })).size, 0,
+      "cửa sổ năm 2020 không có tin");
+  } finally { await c.dong(); await rw.end().catch(() => {}); }
 });
 
 test("DB thật: kiểm lượt quét đủ đã nạp xong — trả số dòng stg và số item manifest của lượt mới nhất, xong khi đạt 99%", { skip: !CO_DB }, async () => {
+  const rw = new pg.Client({ connectionString: DB });
+  await rw.connect();
   const c = await moDbChiDoc(DB);
   try {
-    const vung = (await c.query("SELECT city_code FROM stg_chotot_ads WHERE city_code IS NOT NULL GROUP BY 1 ORDER BY count(*) DESC LIMIT 1")).rows[0].city_code;
-    const kq = await quetDuDaNapXong(c, { cityCode: vung });
-    assert.equal(typeof kq.xong, "boolean");
-    assert.ok(Number.isInteger(kq.items) && kq.items > 0, `manifest khai số item (thấy ${kq.items})`);
-    assert.ok(Number.isInteger(kq.daNap) && kq.daNap >= 0, `số dòng stg của snapshot (thấy ${kq.daNap})`);
-    assert.equal(kq.xong, kq.daNap >= kq.items * 0.99, "xong khi và chỉ khi số dòng đã nạp đạt 99% số item");
-    assert.ok(kq.daNap <= kq.items, "dòng của MỘT snapshot không thể nhiều hơn số item manifest khai — đếm sai phạm vi là lỗi");
-    assert.match(kq.snapshotId, /__chotot-ads__/);
-    assert.deepEqual(await quetDuDaNapXong(c, { cityCode: "vn-khong-ton-tai" }), { xong: false, lyDo: "stg-chua-co-tin-cua-vung", luc: null, snapshotId: null, items: null, daNap: null });
-  } finally { await c.dong(); }
+    // seed một snapshot đã nạp ĐỦ 10/10 và một snapshot chỉ 5/10 — hai thành phố riêng của ca
+    // (mỗi thành phố MỘT dải list_id riêng — chung dải thì DO NOTHING nuốt hết dòng của thành phố sau)
+    for (const [stt, city, snap, daNap, mocLuc] of [
+      [1, "zz-suite-ztdo-moc", "suite-ztdo-moc-day", 10, "2026-11-26T23:00:00Z"],
+      [2, "zz-suite-ztdo-moc-thieu", "suite-ztdo-moc-thieu", 5, "2026-11-26T23:30:00Z"],
+    ]) {
+      await rw.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, collected_at, manifest)
+        VALUES ($1, 'hcmc', 'chotot-ads', $2, $3) ON CONFLICT (snapshot_id) DO NOTHING`,
+        [snap, mocLuc, JSON.stringify({ counts: { items: 10 } })]);
+      for (let i = 0; i < daNap; i++) {
+        await rw.query("INSERT INTO stg_chotot_ads (list_id, region_v2, city_code, category, ad_type, payload, snapshot_id, captured_at) VALUES ($1, 13000, $3, 1000, 'u', '{}', $2, $4) ON CONFLICT (list_id) DO NOTHING",
+          [987654100000 + stt * 100_000 + i, snap, city, mocLuc]);
+      }
+    }
+    const du = await quetDuDaNapXong(c, { cityCode: "zz-suite-ztdo-moc" });
+    assert.deepEqual(du, { xong: true, luc: "2026-11-26T23:00:00.000Z", snapshotId: "suite-ztdo-moc-day", items: 10, daNap: 10 }, "10/10 dòng → xong");
+    const thieu = await quetDuDaNapXong(c, { cityCode: "zz-suite-ztdo-moc-thieu" });
+    assert.equal(thieu.xong, false, "5/10 dòng → chưa xong (dưới 99%)");
+    assert.equal(thieu.items, 10);
+    assert.equal(thieu.daNap, 5);
+    assert.deepEqual(await quetDuDaNapXong(c, { cityCode: "zz-suite-khong-ton-tai" }),
+      { xong: false, lyDo: "stg-chua-co-tin-cua-vung", luc: null, snapshotId: null, items: null, daNap: null });
+  } finally { await c.dong(); await rw.end().catch(() => {}); }
 });
 
 test("DB thật: tập lượt quét đủ lấy giờ đăng = orig_list_time nếu có, nếu không thì list_time — ba tình huống chọn độc lập", { skip: !CO_DB }, async () => {
+  const rw = new pg.Client({ connectionString: DB });
+  await rw.connect();
   const c = await moDbChiDoc(DB);
   try {
-    // cửa sổ nằm hoàn toàn trong quá khổ (8 ngày trước → 1 ngày trước) để tình huống (b) «bị đẩy lại SAU cửa sổ» có thể có
+    // seed ĐÚNG ba tình huống cho một vùng × mục RIÊNG — cửa sổ nằm trong quá khổ để tình huống (b) có thể có
+    const city = "zz-suite-ztdo-ba";
     const bayGio = Date.now();
-    const win = { cityCode: "vn-hcmc", adType: "u", t0: bayGio - 8 * 86400000, t1: bayGio - 86400000 };
+    const win = { cityCode: city, adType: "u", t0: bayGio - 8 * 86400000, t1: bayGio - 86400000 };
+    await rw.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, collected_at, manifest) VALUES ('suite-ztdo-ba', 'hcmc', 'chotot-ads', now(), '{}') ON CONFLICT (snapshot_id) DO NOTHING`);
+    const seed = async (list_id, payload) =>
+      rw.query("INSERT INTO stg_chotot_ads (list_id, region_v2, city_code, category, ad_type, payload, snapshot_id) VALUES ($1, 13000, $2, 1000, 'u', $3, 'suite-ztdo-ba') ON CONFLICT (list_id) DO NOTHING",
+        [list_id, city, JSON.stringify(payload)]);
+    await seed(987654201101, { list_time: win.t0 + 3600_000 });                                   // (a) chưa từng bị đẩy lại
+    await seed(987654201102, { list_time: win.t1 + 3600_000, orig_list_time: win.t0 + 7200_000 }); // (b) đẩy lại SAU cửa sổ
+    await seed(987654201103, { list_time: win.t0 + 3600_000, orig_list_time: win.t0 - 7200_000 }); // (c) đẩy lại TRONG cửa sổ, đăng trước cửa sổ
     const q = await quetDuStg(c, win);
-    const mot = async (dieuKien, thongBao) => {
-      const r = (await c.query(
-        `SELECT list_id FROM stg_chotot_ads WHERE city_code = $1 AND ad_type = $2 AND ${dieuKien} ORDER BY list_id DESC LIMIT 1`,
-        [win.cityCode, win.adType, win.t0, win.t1],
-      )).rows[0]?.list_id;
-      assert.ok(r, `thiếu dữ liệu để kiểm: ${thongBao}`);
-      return Number(r);
-    };
-    // (a) tin chưa từng bị đẩy lại: không có orig_list_time, list_time trong cửa sổ → PHẢI có trong tập
-    const a = await mot(`NULLIF((payload->>'orig_list_time')::bigint, 0) IS NULL AND (payload->>'list_time')::bigint >= $3 AND (payload->>'list_time')::bigint < $4`, "tin mới chưa bị đẩy lại");
-    assert.ok(q.has(a), `tin ${a} chưa bị đẩy lại (không có orig_list_time) phải nằm trong tập lượt quét đủ`);
-    // (b) tin bị đẩy lại SAU cửa sổ: orig trong cửa sổ, list_time ngoài cửa sổ → PHẢI có (lấy orig)
-    const b = await mot(`COALESCE(NULLIF((payload->>'orig_list_time')::bigint, 0), 0) >= $3 AND COALESCE(NULLIF((payload->>'orig_list_time')::bigint, 0), 0) < $4 AND (payload->>'list_time')::bigint >= $4`, "tin bị đẩy lại sau cửa sổ");
-    assert.ok(q.has(b), `tin ${b} đăng trong cửa sổ rồi bị đẩy lại sau đó vẫn phải nằm trong tập`);
-    // (c) tin cũ được đẩy lại TRONG cửa sổ: orig trước cửa sổ, list_time trong cửa sổ → KHÔNG được coi là tin mới của cửa sổ
-    const d = await mot(`COALESCE(NULLIF((payload->>'orig_list_time')::bigint, 0), 0) > 0 AND COALESCE(NULLIF((payload->>'orig_list_time')::bigint, 0), 0) < $3 AND (payload->>'list_time')::bigint >= $3 AND (payload->>'list_time')::bigint < $4`, "tin cũ được đẩy lại trong cửa sổ");
-    assert.ok(!q.has(d), `tin ${d} đăng từ trước cửa sổ, chỉ bị đẩy lại trong cửa sổ — không nằm trong tập`);
-  } finally { await c.dong(); }
+    assert.ok(q.has(987654201101), "(a) tin chưa bị đẩy lại (không có orig_list_time) phải nằm trong tập");
+    assert.ok(q.has(987654201102), "(b) đăng trong cửa sổ rồi bị đẩy lại sau đó vẫn phải nằm trong tập");
+    assert.ok(!q.has(987654201103), "(c) đăng từ trước cửa sổ, chỉ bị đẩy lại trong cửa sổ — không nằm trong tập");
+  } finally { await c.dong(); await rw.end().catch(() => {}); }
 });
