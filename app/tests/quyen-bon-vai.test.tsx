@@ -91,8 +91,10 @@ before(async () => {
     if (!(thuc(p) + "/").startsWith(thuc(TMP) + "/")) throw new Error(`rào: HOME thật — ${ten} ${p} nằm ngoài ${TMP}`)
   }
   await admin.connect()
+  await (await import("../../scripts/lib/so-nguon-122.mjs")).ap122NeuThieu(admin) // NK1: bản chép DB thử chưa áp 122 thì áp, TRƯỚC khi chụp public (phép không sau khi máy thu áp)
   publicTruoc = await chupPublic(admin)
   await dungSauGop(admin, S, { thamChieu: true })
+  await (await import("../../scripts/lib/so-nguon-122.mjs")).ap122VaoSchema(admin, S) // NK1: «khuôn sau gộp» dừng ở 048 — thêm 122 cho sổ của lược đồ tạm
   await dungBangPhien(admin, S)
   for (const t of ["ops_audit", "stg_zalo_posts", "review_queue"]) await admin.query(`CREATE TABLE "${S}".${t} (LIKE public.${t} INCLUDING ALL)`)
   await admin.query(`CREATE TABLE "${S}".ops_heartbeat (id text PRIMARY KEY, payload jsonb NOT NULL, pushed_at timestamptz)`)
