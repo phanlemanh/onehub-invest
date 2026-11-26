@@ -7,8 +7,8 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 831aa6bdff2adcb236af7844a79dff97dc980cc8
-human_signoff:
+verified_commit: d1d622cdaa2530d7bc80be8960d975130f1bb69a
+human_signoff: Mạnh 2026-11-26
 ---
 
 # Evidence Report: db-chi-nghe-noi-bo-va-chinh-postgres
@@ -200,3 +200,7 @@ none — mọi eval chạy một lần, không eval nào có phương sai.
 
 Round 1: baseline được đo ở round 1 (chi tiết xem lịch sử round đó).
 Round 2: toàn bộ eval máy và lệnh suite xanh, ba mục judgment đề xuất PASS (human_override để trống cho người quyết ở Cổng 2); verdict PASS.
+
+### Re-pin lần 1 — 2026-11-26, do ghim lại bằng làn eval
+run_id: repin-20261126T160602Z-30047
+sha: d1d622cdaa2530d7bc80be8960d975130f1bb69a · suites: 8 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng · ngoài làn máy: E5b, E6b, E9 · AC không có chốt máy: AC-9

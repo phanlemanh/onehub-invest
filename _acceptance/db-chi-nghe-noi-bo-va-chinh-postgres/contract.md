@@ -5,7 +5,7 @@ slug: db-chi-nghe-noi-bo-va-chinh-postgres
 owner: phanlemanh@gmail.com
 risk_tier: T2      # db/docker-compose.yml + scripts/ + docs — không chạm t3_paths
 surfaces: [config, docs]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-24-db-chi-nghe-noi-bo-va-chinh-postgres-design.md
 approved_by: Mạnh
 approved_at: 2026-11-24
@@ -109,3 +109,11 @@ Hàng nền, không ô cơ hội — miễn bảng ngưỡng. Số trên màn c�
   (`docker compose -f db/docker-compose.yml up -d --force-recreate db`), `docker restart` không sinh lại cấu hình. Hồ sơ áp
   kiểm sau bằng `SHOW shared_buffers`, `df /dev/shm` trong container và `lsof` cổng 5433 chỉ nghe 127.0.0.1.
 - Không có bề mặt UI → không design-pass, không đặc tả UX, không eval ui-check (sổ quyết định).
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-26:
+  - Ngoài-1: Sau khi áp lên máy thật, lần chạy lại bộ kiểm của hồ sơ này sẽ báo đỏ dù máy đã đúng.
+  - Ngoài-2: Nếu phải lùi riêng phần cổng, hướng dẫn bảo sửa tay tệp cấu hình ngay trên máy chạy thật, làm bản chính bị lệch so với kho.
+  - Ngoài-3: Hai tài liệu ghi hai con số khác nhau cho mức bộ nhớ đệm trước khi chỉnh, người đọc có thể phân vân số nào đúng.
+  - Ngoài-4: Khi áp thật, nếu chạy lệnh kiểm ngay sau khi tạo lại DB thì DB còn đang khởi động và kiểm báo đỏ giả.
+  - Ngoài-5: Bộ kiểm có thể không bắt được một thay đổi lạ ở phần cấu hình ngoài cổng và tham số, như đổi ảnh DB.
+  - Ngoài-6: Phần soát các tác vụ tự chạy của máy có thể báo sạch dù thực ra không đọc được tệp nào.
+  - Ngoài-7: Phần soát các bên nối DB bắt được vài kiểu nối ra ngoài thường gặp nhưng có thể bỏ sót cách viết khác.
