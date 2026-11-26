@@ -56,3 +56,5 @@ Ai đọc đầu ra phía sau: thước E10 của hồ sơ `can-gia-tot-biet-can
 ## Known limits
 
 ## Notes
+
+- Ngoài-2 (máy định tuyến 2026-11-26, đề xuất S4 known-limits): Phép kiểm việc nối dây chỉ xác nhận các dòng mã có mặt, chưa chạy thử script thật. Một bản sửa sai về hành vi vẫn có thể qua phép kiểm này. — `scripts/can-gia-tot-ba-vai-ten-nguon.test.mjs`
