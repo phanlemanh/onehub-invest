@@ -1,0 +1,21 @@
+# Kế hoạch — HT9 `db-thu-tach-khoi-cum-that`
+
+Hợp đồng: `_acceptance/db-thu-tach-khoi-cum-that/contract.md` (11 AC). Thiết kế:
+`docs/superpowers/specs/2026-11-25-db-thu-tach-khoi-cum-that-design.md`. Mỗi phép đo mới đi kèm cặp hai chiều trên cùng fixture
+(vật lành → xanh, bản sao phá → đỏ ghim thông điệp). Test chạm docker chỉ dựng container dùng một lần, không đụng `one-invest-db`
+ngoài đọc danh sách DB.
+
+| # | Việc | Tệp | Lệnh kiểm từng việc | Phục vụ | independent |
+|---|---|---|---|---|---|
+| T1 | `db-thu.sh --chay-trong`: container PostGIS dùng một lần (ảnh của job pipeline trong `ci-test.yml`), tên `one-invest-db-thu-<pid>`, cổng ngẫu nhiên gắn 127.0.0.1, `ci-db-init.mjs` dựng DB trống, chạy lệnh với `CI=true` + `DATABASE_URL` trỏ container, trap EXIT/TERM/INT xoá container, trần 2 container sống (`docker ps --filter name=one-invest-db-thu-`), lượt thứ ba chờ (trần `DB_THU_TRONG_CHO_GIAY`, mặc định 900) rồi thoát 4; in giây dựng cụm + migration | `db/db-thu.sh`, `scripts/db-thu-trong.test.mjs` | `node --test --test-concurrency=1 scripts/db-thu-trong.test.mjs` + `node --test scripts/db-thu.test.mjs` (hồi quy) | E1, E9 | true |
+| T2 | Lệnh suite: `test:a`/`test:b` của pipeline đổi sang `--chay-trong` (NODE_OPTIONS từ `ci-can-du-lieu.mjs pipeline`); thêm `test:that` = `db-thu.sh oneinvest_suite_pipeline_that --chay node chay-that.mjs` — chạy đúng các tệp test của 30 mục `ci-bo-qua.json` pipeline với `--test-name-pattern` khớp nguyên tên, mục lệch → thoát 2 gọi tên | `pipeline/package.json`, `pipeline/chay-that.mjs`, `scripts/pipeline-that.test.mjs` | `node --test scripts/pipeline-that.test.mjs` | E2c, E3b | false (sau T1) |
+| T3 | Ghi fixture tệp mở: một lượt `test:that` trên bản chép với hook ghi `fs.open*`/`readFileSync`/`child_process` (qua `NODE_OPTIONS --import`), lưu `scripts/fixtures/pipeline-that-tep-mo.json` (sha, lệnh ghi, danh sách tệp trong kho). Chạy nặng → xin khoá s4 ngắn (ước 35′) | `scripts/lib/ghi-tep-mo.mjs`, `scripts/fixtures/pipeline-that-tep-mo.json` | lượt ghi thoát 0, fixture có ≥ 9 tệp test của danh sách | E4, E5 | false (sau T2) |
+| T4 | `suite-neu-doi.mjs`: `VUNG.pipeline_that` (hẹp, phủ fixture + đồ thị import hiện tại), ma trận E5; dòng «ca dữ liệu thật: …» đọc sổ `.acceptance-runs/pipeline-that/lan-chay.jsonl` | `scripts/suite-neu-doi.mjs`, `scripts/suite-neu-doi.test.mjs` | `node --test scripts/suite-neu-doi.test.mjs` | E4, E5, E11 | false (sau T3) |
+| T5 | `db-sao-luu.sh` bỏ `oneinvest_suite_*` khỏi vòng dump, ghi «bỏ DB thử của suite: <tên>» vào `thong-tin.txt`; test với docker/psql giả trên PATH | `scripts/db-sao-luu.sh`, `scripts/db-sao-luu.test.mjs` | `node --test scripts/db-sao-luu.test.mjs` | E7 | true |
+| T6 | `do-phut-s4.mjs --tu --den [--tep]`: khoảng cấp s4 (cấp → cấp hay thu hồi kế), n / trung vị / p75; fixture rút nguyên văn từ `su-kien.jsonl` thật (dòng s4 23/11 12Z → 25/11 03:11:41Z) | `scripts/do-phut-s4.mjs`, `scripts/do-phut-s4.test.mjs`, `scripts/fixtures/su-kien-s4-2311-2511.jsonl` | `node --test scripts/do-phut-s4.test.mjs` | E8 | true |
+| T7 | `pipeline-that-hang-ngay.mjs`: chạy `test:that` trên `main` (từ chối nhánh khác), nối dòng sổ {ngay, sha, ket_qua, ca_do}, in một dòng | `scripts/pipeline-that-hang-ngay.mjs`, `scripts/pipeline-that-hang-ngay.test.mjs` | `node --test scripts/pipeline-that-hang-ngay.test.mjs` | E11 | true |
+| T8 | `_acceptance/config.yaml`: `executors.test.pipeline_that`, `executors.suite.pipeline_that`, `suite_keys` thêm khoá — CHỈ sau khi Mạnh duyệt Hỏi-1 | `_acceptance/config.yaml`, `scripts/pipeline-that.test.mjs` (ca config) | `node --test scripts/pipeline-that.test.mjs` | E6 | false (sau T2) |
+| T9 | Thư mục áp: README năm mục, `kiem.sh`, lệnh kiểm sau (nền 99′ cạnh số sau áp); `de-xuat-kit.md` (carry suite hai hồ sơ cùng commit, dòng «ca dữ liệu thật» trên thẻ, khe s4 song song) | `_acceptance/db-thu-tach-khoi-cum-that/ap-may-thu/*`, `_acceptance/db-thu-tach-khoi-cum-that/de-xuat-kit.md` | `bash _acceptance/db-thu-tach-khoi-cum-that/ap-may-thu/kiem.sh` | E10 | false (sau T6) |
+
+Thứ tự: T1, T5, T6, T7 làm trước (độc lập, không cần khoá s4); T2 → T3 (xin s4) → T4; T8 sau lời Mạnh; T9 cuối. Lượt chấm S4 đo
+AC-2 bằng chính hai lệnh suite mới (thời gian thật từ `.bat-dau`/`.xong`).
