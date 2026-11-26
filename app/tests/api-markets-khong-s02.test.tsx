@@ -4,6 +4,7 @@
 // cùng DB trả điểm S02 và đẩy Gamma lên đầu.
 import { after, before, test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -23,14 +24,36 @@ let m: Awaited<ReturnType<typeof nap>>;
 const q = (sql: string, v: unknown[] = []) => m.pool.query(sql, v);
 
 const QG = "zz";
-// Thứ tự chèn NGƯỢC thứ tự tên trong từng cặp bằng số tin (Beta trước Alpha, Gamma trước Aaa): nếu route bỏ khoá phụ
-// «rồi tên» thì sort ổn định giữ thứ tự chèn và AC-2 đỏ (S4-r2, finding đo AC-2 nửa «bằng nhau thì theo tên»).
+// Thứ tự chèn NGƯỢC thứ tự tên trong từng cặp bằng số tin (Beta trước Alpha, Gamma trước Aaa). Postgres không bảo đảm
+// thứ tự giữa các dòng bằng nhau khi thiếu khoá phụ, nên cách chèn này chỉ tăng khả năng phép so thứ tự bắt được route
+// mất khoá phụ «rồi tên»; chiều đỏ tất định nằm ở HT28-AC-2 (soát văn bản ORDER BY của route).
 const TT = [
   { id: "zz-ht23-beta", name: "Beta", tin: 3, diem: 40 },
   { id: "zz-ht23-alpha", name: "Alpha", tin: 3, diem: null },
   { id: "zz-ht23-gamma", name: "Gamma", tin: 1, diem: 95 },
   { id: "zz-ht23-aaa", name: "Aaa", tin: 1, diem: null },
 ];
+// Thứ tự mong: số tin giảm dần, bằng nhau thì theo tên.
+const MONG = [["Alpha", 3], ["Beta", 3], ["Aaa", 1], ["Gamma", 1]];
+
+// HT28: câu SQL thật của route — chuỗi backtick đầu tiên sau `pool.query(` trong route.ts.
+const sqlCuaRoute = (): string => {
+  const src = readFileSync(join(import.meta.dirname, "../src/app/api/v1/markets/route.ts"), "utf8");
+  const i = src.indexOf("pool.query(");
+  assert.ok(i >= 0, "route.ts không còn lời gọi pool.query( — cách rút SQL của HT28 phải sửa theo khuôn mới");
+  const dau = src.indexOf("`", i);
+  const cuoi = src.indexOf("`", dau + 1);
+  assert.ok(dau > i && cuoi > dau, "không rút được chuỗi SQL backtick sau pool.query(");
+  return src.slice(dau + 1, cuoi);
+};
+
+// HT28: chỉ xét mệnh đề ORDER BY (tới LIMIT hay hết câu); m.name ở SELECT không tính.
+const coKhoaPhuTheoTen = (sql: string): boolean => {
+  const m = /\bORDER\s+BY\s+([\s\S]*?)(?:\s+LIMIT\b|$)/i.exec(sql);
+  if (!m) return false;
+  const khoa = m[1].split(",").map((k) => k.trim().replace(/\s+/g, " "));
+  return khoa.length === 2 && khoa[0] === "m.listing_count DESC" && /^m\.name( ASC)?$/i.test(khoa[1]);
+};
 
 const don = async () => {
   await q("DELETE FROM listings WHERE id LIKE 'ht23-%'");
@@ -87,12 +110,32 @@ test("HT23-AC-2 xếp theo số tin giảm dần rồi tên; đối chứng: rou
   assert.equal(cu[0].name, "Gamma", "route cũ xếp theo điểm S02 — đối chứng phải đặt Gamma đầu");
   const { body } = await goi();
   const thuTu = body.data.map((d) => [d.name, d.listingCount] as [string, number]);
-  const MONG = [["Alpha", 3], ["Beta", 3], ["Aaa", 1], ["Gamma", 1]];
   // Đối chứng: chỉ xếp theo tên thì «Aaa» đứng đầu — tập này phân biệt được khoá số tin với khoá tên.
   const theoTen = [...thuTu].sort((a, b) => a[0].localeCompare(b[0]));
   assert.notDeepEqual(theoTen, MONG, "tập thử phải phân biệt xếp theo tên với xếp theo số tin");
-  // Đối chứng nửa khoá phụ: thứ tự chèn (cái mà «chỉ theo số tin» + sort ổn định sẽ giữ) phải khác MONG.
-  const theoChen = [...TT].sort((a, b) => b.tin - a.tin).map((t) => [t.name, t.tin]);
-  assert.notDeepEqual(theoChen, MONG, "tập thử phải phân biệt «chỉ theo số tin» với «theo số tin rồi tên»");
   assert.deepEqual(thuTu, MONG);
+});
+
+test("HT28-AC-1 đối chứng khoá phụ chạy trên DB: SQL thật của route ra thứ tự mong, đổi khoá phụ thành name DESC thì đảo cặp bằng số tin", async () => {
+  const sql = sqlCuaRoute();
+  const ten = async (cau: string) => (await q(cau, [QG, 5])).rows.map((r) => [r.name, r.listing_count]);
+  assert.deepEqual(await ten(sql), MONG, "SQL rút từ route phải ra đúng thứ tự mong trên DB thử");
+  const nguoc = sql.replace(/ORDER BY m\.listing_count DESC, m\.name\b/, "ORDER BY m.listing_count DESC, m.name DESC");
+  assert.notEqual(nguoc, sql, "không thay được khoá phụ trong SQL route — khuôn ORDER BY đã đổi");
+  const raNguoc = await ten(nguoc);
+  assert.notDeepEqual(raNguoc, MONG, "tập thử không có cặp bằng số tin do khoá phụ quyết");
+  assert.deepEqual(raNguoc, [["Beta", 3], ["Alpha", 3], ["Gamma", 1], ["Aaa", 1]]);
+});
+
+test("HT28-AC-2 soát văn bản ORDER BY: route giữ khoá phụ rồi tên; bản mất khoá phụ hay đảo chiều thì sai", () => {
+  const sql = sqlCuaRoute();
+  assert.ok(coKhoaPhuTheoTen(sql), "route mất khoá phụ rồi tên");
+  // (b) chỉ sửa trong ORDER BY, SELECT vẫn còn m.name.
+  const matKhoaPhu = sql.replace(/(ORDER BY m\.listing_count DESC), m\.name\b/, "$1");
+  assert.notEqual(matKhoaPhu, sql, "không dựng được bản mất khoá phụ — khuôn ORDER BY đã đổi");
+  assert.ok(/SELECT m\.id, m\.name/.test(matKhoaPhu), "bản đối chứng phải còn m.name ở SELECT");
+  assert.equal(coKhoaPhuTheoTen(matKhoaPhu), false, "bỏ khoá phụ trong ORDER BY phải bị bắt dù SELECT còn m.name");
+  // (c) đảo chiều khoá phụ.
+  const daoChieu = sql.replace(/(ORDER BY m\.listing_count DESC, m\.name)\b/, "$1 DESC");
+  assert.equal(coKhoaPhuTheoTen(daoChieu), false, "khoá phụ m.name DESC phải bị bắt");
 });

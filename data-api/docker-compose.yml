@@ -26,6 +26,8 @@ services:
     environment:
       DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@db:5432/onehub
       PORT: 3001
+      # Required: the API refuses to start without keys (only NODE_ENV=development|test may run keyless).
+      DATA_API_KEYS: ${DATA_API_KEYS:?set_api_keys}
     depends_on:
       db:
         condition: service_healthy
