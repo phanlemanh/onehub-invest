@@ -193,21 +193,3 @@ Q "SELECT count(*) FROM offer_building b JOIN offer_project p USING (offer_id) W
 Lượt nạp S03 kế tiếp (log `zalo-import-daily`): phải có dòng `ghep-toa: … · chèn <nhỏ> · rút <nhỏ>`, không có `JOB WARN [ghep-toa]`.
 Số thật phải khớp số chạy khô ở 1c (tử số `gan` của `offer_building` lệch không quá 0,5%); lệch thì DỪNG và báo, không tự sửa cho
 khớp. Báo số thật cạnh số chạy thử vào kênh của đợt.
-
-## 6. Kết quả áp (24/11, GS chạy từ `main` 5e85f3d8a sau khi #534 gộp)
-
-| Hạng mục | Số chạy thử (mục 2) | Số thật |
-|---|---|---|
-| Sao lưu trước áp | — | `truoc-117-pl20-20261124T122202Z.dump` (661 MB) |
-| Áp 117 hai lần | sạch | sạch |
-| Chạy khô trước ghi (tin gắn / tin hai khu) | 4.193 / 7.992 = 52,5% | 4.232 / 8.057 = 52,5% (lệch 0,0 điểm, dưới ngưỡng dừng 2 điểm) |
-| Lượt gắn đầu | chèn ≈48.354 · rút 0 | chèn 49.240 · rút 0 |
-| Lượt gắn thứ hai | chèn 0 · rút 0 | chèn 0 · rút 0 |
-| `offer_building` | — | gan\|toa 2.830 · gan\|vung 1.402 · xung_dot 23 |
-| Phát biểu sống · hàng trùng | — | 49.240 · 0 |
-| Theo khu | — | OP1 1.359 · GP 2.873 |
-
-Số tin tăng từ 7.992 lên 8.057 vì lượt nạp S03 giữa lúc chạy thử và lúc áp; tỉ lệ giữ nguyên.
-
-Cờ để lại cho PL36: câu kiểm thứ tư của mục 5 (join `offer_building` × `offer_project`, đếm tin đã gắn mà dự án chưa
-một) chạy quá 120 giây trên máy thu. PL36 và CG11 sẽ đọc view này, nên S1 của PL36 đo thời gian và đề xuất cách xử.
