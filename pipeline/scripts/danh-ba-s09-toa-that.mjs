@@ -134,19 +134,27 @@ try {
                               ORDER BY fetched_at DESC, snapshot_id DESC LIMIT 1`);
   console.log("E2 · bảng ba cột (stg · đọc thẳng · nguồn khai):");
   o("E2 dự án", `${stgDuAn} · ${dem.du_an.size} · ${khai.du_an}`, stgDuAn === dem.du_an.size && dem.du_an.size === khai.du_an);
+  // Ba tổng phải bằng nhau thật (rf r1: dòng tổng từng gán cứng true). Vế khai thiếu số thì không so được — đếm và in ra, không bỏ im.
   const tongToa = [...dem.toa.values()].reduce((a, s) => a + s.size, 0);
   const tongTang = [...dem.tang.values()].reduce((a, s) => a + s.size, 0);
-  o("E2 toà", `${[...stgToa.values()].reduce((a, n) => a + n, 0)} · ${tongToa} · ${[...khai.toa.values()].reduce((a, n) => a + n, 0)}`, true);
-  o("E2 tầng", `${[...stgTang.values()].reduce((a, n) => a + n, 0)} · ${tongTang} · ${[...khai.tang.values()].reduce((a, n) => a + n, 0)}`, true);
-  let lechO = 0;
-  for (const [toa, s] of dem.tang) {
-    const k = khai.tang.get(toa);
-    if (stgTang.get(toa) !== s.size || (Number.isFinite(k) && k !== s.size)) { if (lechO++ < 5) o(`E2 tầng toà ${toa.slice(0, 8)}`, `${stgTang.get(toa)} · ${s.size} · ${k}`, false); }
+  const cong = (m) => [...m.values()].reduce((a, n) => a + (Number.isFinite(n) ? n : 0), 0);
+  const khaiDu = (m, keys) => [...keys].every((k) => Number.isFinite(m.get(k)));
+  const toaStg = cong(stgToa), toaKhai = cong(khai.toa), tangStg = cong(stgTang), tangKhai = cong(khai.tang);
+  o("E2 toà", `${toaStg} · ${tongToa} · ${toaKhai}`, toaStg === tongToa && (!khaiDu(khai.toa, dem.toa.keys()) || toaKhai === tongToa));
+  o("E2 tầng", `${tangStg} · ${tongTang} · ${tangKhai}`, tangStg === tongTang && (!khaiDu(khai.tang, dem.tang.keys()) || tangKhai === tongTang));
+  // So từng ô trên HỢP khoá của stg và bản thu: ô có trong stg mà không có trong bản thu cũng là lệch.
+  let lechO = 0, khongKhai = 0;
+  for (const toa of new Set([...dem.tang.keys(), ...stgTang.keys()])) {
+    const n = dem.tang.get(toa)?.size, k = khai.tang.get(toa);
+    if (!Number.isFinite(k)) khongKhai++;
+    if (stgTang.get(toa) !== n || (Number.isFinite(k) && k !== n)) { if (lechO++ < 5) o(`E2 tầng toà ${toa.slice(0, 8)}`, `${stgTang.get(toa)} · ${n} · ${k}`, false); }
   }
-  for (const [duAn, s] of dem.toa) {
-    const k = khai.toa.get(duAn);
-    if (stgToa.get(duAn) !== s.size || (Number.isFinite(k) && k !== s.size)) { if (lechO++ < 10) o(`E2 toà dự án ${duAn.slice(0, 8)}`, `${stgToa.get(duAn)} · ${s.size} · ${k}`, false); }
+  for (const duAn of new Set([...dem.toa.keys(), ...stgToa.keys()])) {
+    const n = dem.toa.get(duAn)?.size, k = khai.toa.get(duAn);
+    if (!Number.isFinite(k)) khongKhai++;
+    if (stgToa.get(duAn) !== n || (Number.isFinite(k) && k !== n)) { if (lechO++ < 10) o(`E2 toà dự án ${duAn.slice(0, 8)}`, `${stgToa.get(duAn)} · ${n} · ${k}`, false); }
   }
+  console.log(`E2 ô không có số khai của nguồn (chỉ so stg với đọc thẳng): ${khongKhai}`);
   o("E2 ô lệch", lechO, lechO === 0);
 
   // ---- 3. Dựng danh bạ (hai lần: lần hai phải ra cùng số) ----
