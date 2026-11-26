@@ -19,6 +19,9 @@
 // Tệp mẫu (kho công khai): chữ đã gạt URL/SĐT (gatSo), chuỗi từ 8 chữ số trở lên thành «#», tên nguồn thật che bằng mã (sổ
 // nguồn local; sổ rỗng thì không ghi, thoát 1). Gồm MỌI bài nhãn khác inquiry bị đổi + 20 bài ngẫu nhiên (hạt giống cố định,
 // khử trùng theo chữ) trong bài chưa nhãn bị đổi; dưới 20 thì thoát 1 «mẫu thiếu».
+// Chạy làm eval (E5) tệp mẫu ghi ra `.acceptance-runs/yeu-cau-khong-thanh-tin-thue/` — executor không ghi vào cây `_acceptance/`
+// (luật GS 26/11 điểm 6). Bản chấm tay AC-6 là bản đã commit ở `_acceptance/…/evidence/mau-tin-rut.md`; cờ `--ghi-evidence` chép
+// thêm vào đó khi người chủ ý làm mới bản commit (hạt giống cố định nên cùng bản chép thì cùng mẫu).
 import { mkdirSync, realpathSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -32,7 +35,8 @@ import { xepHangGia } from "../xep-hang-gia.mjs";
 
 const DB_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 const GOC = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-export const TEP_MAU = path.join(GOC, "_acceptance/yeu-cau-khong-thanh-tin-thue/evidence/mau-tin-rut.md");
+export const TEP_MAU = path.join(GOC, ".acceptance-runs/yeu-cau-khong-thanh-tin-thue/mau-tin-rut.md");
+export const TEP_MAU_EVIDENCE = path.join(GOC, "_acceptance/yeu-cau-khong-thanh-tin-thue/evidence/mau-tin-rut.md");
 
 /** Ngưỡng hợp đồng AC-5. */
 export const NGUONG = Object.freeze({ mocRo: 264, mocGiaTotRo: 51, saiMoc: 2, roSau: 85, giaTotRoSau: 16, doiKhac: 10, mauNgauNhien: 20 });
@@ -247,9 +251,12 @@ async function main() {
     const hong = xet({ truoc: truoc.k, sau: sau.k, doi: { khac: khac.length }, thue: { con: thueCon, rutDuDoan: rutThue.length }, mau: { ngauNhien: ngauNhien.length } });
     if (ngauNhien.length >= NGUONG.mauNgauNhien) {
       const md = vietMau({ khac, ngauNhien }, (t) => maskSourceNames(cheSo(gatSo(t)), entries));
-      mkdirSync(path.dirname(TEP_MAU), { recursive: true });
-      writeFileSync(TEP_MAU, md);
-      console.log(`tệp mẫu: ${path.relative(GOC, TEP_MAU)} (${khac.length} + ${ngauNhien.length} bài)`);
+      const dich = process.argv.includes("--ghi-evidence") ? [TEP_MAU, TEP_MAU_EVIDENCE] : [TEP_MAU];
+      for (const t of dich) {
+        mkdirSync(path.dirname(t), { recursive: true });
+        writeFileSync(t, md);
+        console.log(`tệp mẫu: ${path.relative(GOC, t)} (${khac.length} + ${ngauNhien.length} bài)`);
+      }
     }
     console.log(hong.length ? `KẾT: hỏng — ${hong.join(" · ")}` : "KẾT: đạt");
     return hong.length ? 1 : 0;

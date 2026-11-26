@@ -31,7 +31,7 @@ evals:
     cmd: config:executors.script.pl42_do_that
     long_running: 90
     paths: ["pipeline/transform-zalo.mjs", "pipeline/scripts/do-yeu-cau-lot-tin.mjs"]
-    expected: "Trên bản chép: tin rò ≤ 85 (mốc 264, thử 76), giá tốt thuê rò ≤ 16 (mốc 51, thử 13), in giá tốt thuê trước/sau, tin rút nhãn offer/chưa nhãn ≤ 10 và có tệp mẫu; thoát 0. Chiều đỏ trong do-yeu-cau-lot-tin.test: vượt từng ngưỡng thì thoát 1 gọi tên ngưỡng."
+    expected: "Trên bản chép: tin rò ≤ 85 (mốc 264, thử 76), giá tốt thuê rò ≤ 16 (mốc 51, thử 13), in giá tốt thuê trước/sau, tin rút nhãn offer/chưa nhãn ≤ 10 và có tệp mẫu (khi chạy làm eval ghi ra .acceptance-runs/yeu-cau-khong-thanh-tin-thue/mau-tin-rut.md, không ghi vào cây _acceptance); thoát 0. Chiều đỏ trong do-yeu-cau-lot-tin.test: vượt từng ngưỡng thì thoát 1 gọi tên ngưỡng."
   - id: E6
     criterion: AC-6
     executor: judgment
@@ -58,3 +58,11 @@ evals:
     long_running: 90
     paths: ["pipeline/**"]
     expected: "Nửa b bộ pipeline xanh."
+  - id: E10
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.suite.pipeline_that
+    long_running: 90
+    paths: ["pipeline/transform-zalo.mjs", "pipeline/lib/nhanh-bai-s03.mjs", "pipeline/scripts/do-yeu-cau-lot-tin.mjs"]
+    expected: "exit 0; suite ca dữ liệu thật trên bản chép, `ℹ fail 0`; trên M5 (vai may-phat-trien) tập ca bị bỏ vì máy bằng đúng tập mang khoá may_thu của scripts/ci-bo-qua.json (hôm nay ON22-AC-10), ghi nguyên dòng «bỏ qua 1 ca chỉ máy thu» vào bằng chứng. Khai ở đây để có long_running 90 theo khuôn HT9 E3a (luật GS 26/11; vòng 1 BLOCKED vì trần 30′)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
