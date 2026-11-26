@@ -21,7 +21,10 @@ import pg from "pg";
 
 const WORKTREE = new URL("../../", import.meta.url).pathname.replace(/\/$/, ""); // worktree wrapper — script ở scripts/, node_modules ở pipeline/
 const NUT = dirname(process.execPath); // thư mục chứa node — đưa vào PATH cho wrapper
-const ADMIN = "postgres://oneinvest:oneinvest@localhost:5433/postgres";
+// Quy ước HT9: DB tạm dựng trên CÙNG máy chủ với TEST_DATABASE_URL_ADMIN (cụm dùng một lần
+// của db-thu.sh --chay-trong / Postgres của CI), không ghim cổng.
+const DB_ROOT = process.env.TEST_DATABASE_URL_ADMIN ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
+const urlTren = (ten) => { const u = new URL(DB_ROOT); u.pathname = `/${ten}`; return u.toString(); };
 
 const tin = (list_id, phut) => ({
   source: "chotot-ads", // readSnapshot lọc theo source — thiếu là 0 item
@@ -72,8 +75,8 @@ CREATE TABLE source_groups (
 `;
 
 test("snapshot đuôi đã nạp bị lượt quét đủ đè hết snapshot_id → vòng rảnh kế KHÔNG nạp lại (đỏ trên 7173fc21a)", { timeout: 180_000 }, async (t) => {
-  const tenDb = `oneinvest_thuduois06_e2e_${Date.now()}`;
-  const admin = new pg.Client({ connectionString: ADMIN });
+  const tenDb = `zcode_thuduois06_e2e_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+  const admin = new pg.Client({ connectionString: DB_ROOT });
   let db = null;
   try {
     await admin.connect();
@@ -84,7 +87,7 @@ test("snapshot đuôi đã nạp bị lượt quét đủ đè hết snapshot_id
   let home = null, goc = null;
   try {
     await admin.query(`CREATE DATABASE ${tenDb}`);
-    db = new pg.Client({ connectionString: `postgres://oneinvest:oneinvest@localhost:5433/${tenDb}` });
+    db = new pg.Client({ connectionString: urlTren(tenDb) });
     await db.connect();
     await db.query(LUC_DO);
     await db.query(`INSERT INTO source_registry (code, status) VALUES ('S06', 'active')`);
@@ -105,7 +108,7 @@ test("snapshot đuôi đã nạp bị lượt quét đủ đè hết snapshot_id
     // collect là STUB: vòng thật đã được đo riêng (2411-6); ca này chỉ cần bước chọn-nạp chạy
     writeFileSync(join(root, "pipeline", "collect-s06-duoi.mjs"), "process.exit(0);\n");
 
-    const dbUrl = `postgres://oneinvest:oneinvest@localhost:5433/${tenDb}`;
+    const dbUrl = urlTren(tenDb);
     const envDb = { ...process.env, DATABASE_URL: dbUrl, HOME: home, THU_DUOI_S06_GOC: goc };
 
     // (1) vòng đuôi nạp snapshot A
