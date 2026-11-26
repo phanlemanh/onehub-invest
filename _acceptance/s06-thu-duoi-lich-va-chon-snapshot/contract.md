@@ -49,7 +49,7 @@ lịch: cài plist cần lời riêng của Mạnh.
   thì thoát 2, không ghi plist nào. Khuôn plist có `Label` đúng và `StartInterval` 300.
 - AC-9: Given máy thu sau lượt chấm, When đọc `launchctl list` và `~/Library/LaunchAgents`, Then không có
   `com.oneinvest.thu-duoi-s06`. Given nhánh so với `origin/main`, Then ngoài vật hồ sơ (`_acceptance/**`, `docs/**`, tệp máy sinh)
-  chỉ có đúng sáu tệp của làn thu, và hai tệp test chạy với HOME tạm rỗng, không `DATABASE_URL`, không lời gọi mạng ra ngoài.
+  chỉ có đúng tám tệp của làn thu (cộng hai dòng xếp nửa test trong `pipeline/test-nua.json`), và hai tệp test `scripts/` chạy với HOME tạm rỗng, không `DATABASE_URL`, không lời gọi mạng ra ngoài.
 
 ## Coverage
 
@@ -85,4 +85,11 @@ PL38 nối transform, resolve, sync-cloud theo nhịp. Hồ sơ này chỉ bảo
 - Ở S1 đã thấy AC-5 nhiều khả năng đỏ trên `7173fc21a`. Bước 7 của wrapper coi «chưa nạp» là «stg không còn dòng nào mang
   `snapshot_id` này», trong khi bộ nạp ghi đè `snapshot_id` theo bản mới hơn. Trên máy thu, 100/375 snapshot S06 đã nạp
   không còn dòng nào trong stg (94 thuộc nhóm «vn», 6 snapshot vùng). GS phán 26/11: trả ZCode qua LL (GIAO claudedp-2611-21). Hồ sơ chấm trên sha mới ZCode giao, U2 tích hợp lên nhánh này, và chỉ trình Cổng Phạm vi sau khi E5 chạy trên sha đó.
+- 27/11: ZCode giao `7fe8bb5b0` (thay `7173fc21a`), U2 gộp nguyên vào nhánh (merge `059e60956`, tám tệp làn thu trùng từng byte
+  với sha ZCode). Thêm hai tệp test của ZCode: `pipeline/scripts/thu-duoi-chon-nap-e2e.test.mjs` (DB tạm) và
+  `thu-duoi-moc-symlink.test.mjs` (3 ca, xanh trên Mac mini).
+- Phụ thuộc: KEV1 (`fix/go-kev-khoi-hook-s03`) gộp trước. soat-m5 `7fe8bb5b0-20261127T001012` có module scripts đỏ đúng một ca
+  «AC-7 plist không đổi so với origin/main», vì nhánh thêm plist mới. GS phán: ca đã biết, KHÔNG sửa test; KEV1 thu hẹp ca đó
+  về plist `zalo-import*`. Gộp ZC18 khi KEV1 chưa vào main thì CI scripts đỏ.
+- Tải sáu vùng tuần tự mỗi 5 phút chưa đo (phép đo 24 giờ ZC17 chỉ một vùng × một mục). Nêu ở thẻ khi xin cài plist.
 - Test của nhánh dùng shim `node`, nên bước tra stg và bộ nạp không chạy thật. AC-5 là ca duy nhất nối wrapper với bộ nạp thật.

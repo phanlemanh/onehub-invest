@@ -19,7 +19,7 @@ if [ -e "$HOME/Library/LaunchAgents/$NHAN.plist" ]; then echo "DA CAI LICH: Laun
 else echo "LaunchAgents: khong co $NHAN.plist"; fi
 
 # 2) phạm vi
-CHO_PHEP='^(scripts/thu-duoi-s06\.sh|scripts/thu-duoi-s06\.test\.mjs|scripts/install-cron\.sh|scripts/install-cron-chi\.test\.mjs|pipeline/lib/thu-duoi-moc\.mjs|pipeline/cron/com\.oneinvest\.thu-duoi-s06\.plist|pipeline/collect-s06-duoi\.mjs|pipeline/scripts/collect-s06-duoi\.test\.mjs|pipeline/test-nua\.json|_acceptance/.*|docs/.*|PRODUCT-MAP\.md|LO-TRINH\.html)$'
+CHO_PHEP='^(scripts/thu-duoi-s06\.sh|scripts/thu-duoi-s06\.test\.mjs|scripts/install-cron\.sh|scripts/install-cron-chi\.test\.mjs|pipeline/lib/thu-duoi-moc\.mjs|pipeline/scripts/thu-duoi-chon-nap-e2e\.test\.mjs|pipeline/scripts/thu-duoi-moc-symlink\.test\.mjs|pipeline/cron/com\.oneinvest\.thu-duoi-s06\.plist|pipeline/collect-s06-duoi\.mjs|pipeline/scripts/collect-s06-duoi\.test\.mjs|pipeline/test-nua\.json|_acceptance/.*|docs/.*|PRODUCT-MAP\.md|LO-TRINH\.html)$'
 xet() { local k=0; while IFS= read -r f; do [ -z "$f" ] && continue
   if [[ "$f" =~ $CHO_PHEP ]]; then echo "ok $f"; else echo "NGOAI PHAM VI $f"; k=$((k+1)); fi; done; return $k; }
 if printf 'scripts/thu-duoi-s06.sh\napp/src/app/page.tsx\n' | xet | grep -q '^NGOAI PHAM VI app/src/app/page.tsx$'; then

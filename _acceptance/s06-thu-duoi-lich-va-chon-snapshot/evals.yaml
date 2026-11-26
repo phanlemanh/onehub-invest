@@ -104,7 +104,7 @@ evals:
     criterion: AC-9
     executor: script
     cmd: config:executors.test.s06tl_pham_vi
-    paths: [scripts/thu-duoi-s06.sh, scripts/thu-duoi-s06.test.mjs, scripts/install-cron.sh, scripts/install-cron-chi.test.mjs, pipeline/lib/thu-duoi-moc.mjs, pipeline/cron/com.oneinvest.thu-duoi-s06.plist, _acceptance/s06-thu-duoi-lich-va-chon-snapshot/probes/pham-vi.sh]
+    paths: [scripts/thu-duoi-s06.sh, scripts/thu-duoi-s06.test.mjs, scripts/install-cron.sh, scripts/install-cron-chi.test.mjs, pipeline/lib/thu-duoi-moc.mjs, pipeline/cron/com.oneinvest.thu-duoi-s06.plist, pipeline/scripts/thu-duoi-chon-nap-e2e.test.mjs, pipeline/scripts/thu-duoi-moc-symlink.test.mjs, _acceptance/s06-thu-duoi-lich-va-chon-snapshot/probes/pham-vi.sh]
     expected: "exit 0; 'doi chung launchctl: thay N job com.oneinvest.*' (N ≥ 1, chứng minh lệnh đọc được domain); 'launchctl: khong co com.oneinvest.thu-duoi-s06'; 'LaunchAgents: khong co com.oneinvest.thu-duoi-s06.plist'; sáu dòng 'ok <tệp>'; 'tự kiểm: app/src/app/page.tsx → NGOAI PHAM VI'; 'plist cai thu: __ROOT__ da thay bang goc kho'; 'test cach ly: exit 0 · loi goi mang that 0 · HOME tam rong'; 'tu kiem mang: bộ đếm bắt 1 lời (TRUNG)'; cuối 'PHAM-VI OK'; should-NOT-fire: 'DA CAI LICH', 'DOI CHUNG HONG', 'PLIST CON __ROOT__', 'PLIST SAI GOC', 'CAI THU LOI', 'NGOAI PHAM VI scripts', 'NGOAI PHAM VI pipeline', 'GOI MANG THAT', 'GHI VAO HOME', 'TU KIEM HONG'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E10
@@ -112,6 +112,6 @@ evals:
     executor: test
     cmd: config:executors.suite.pipeline_that
     long_running: 90
-    paths: [pipeline/lib/thu-duoi-moc.mjs]
+    paths: [pipeline/lib/thu-duoi-moc.mjs, pipeline/scripts/thu-duoi-moc-symlink.test.mjs, pipeline/scripts/thu-duoi-chon-nap-e2e.test.mjs]
     expected: "exit 0 trong trần 90′ (luật GS 26/11: hàng đổi pipeline/lib/** kích pipeline_that, khuôn HT9 E3a); should-NOT-fire: '✖'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
