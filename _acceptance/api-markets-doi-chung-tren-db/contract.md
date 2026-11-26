@@ -5,7 +5,7 @@ slug: api-markets-doi-chung-tren-db
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api]
-status: verified
+status: machine-cleared
 design_doc: docs/superpowers/specs/2026-11-25-api-markets-doi-chung-tren-db-design.md
 veto_state: mo
 veto_opened_at: 2026-11-25T19:40:00Z
@@ -61,3 +61,4 @@ tiêu chí phủ hai chiều của đúng hai finding HT23.
 
 - Sau áp HT23 (GS đo prod 2026-11-25 18:11:28Z, sau gộp 04b9ddc3b): `/api/v1/markets?country=vn&limit=5` trả 5 dòng,
   0 khoá `marketScore`, xếp theo số tin rồi tên.
+- Ngoài-1 (máy định tuyến 2026-11-26, đề xuất S4 known-limits): Hai bước kiểm tự động mới viết lệch cách các bước kiểm cũ vẫn viết. Trên máy chạy kiểm khác loại vỏ lệnh, chúng có thể báo đỏ dù kiểm thử vẫn xanh. Hiện chưa gây hại vì bước kiểm này chưa chạy trên máy chủ. — `_acceptance/config.yaml`
