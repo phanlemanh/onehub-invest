@@ -57,17 +57,30 @@ function gapNfc(text) {
 
 const isWordChar = (c) => c !== undefined && /[\p{L}\p{N}]/u.test(c);
 
+// PL39: biến thể và dòng khớp cụm của một danh sách tên dựng một lần cho mỗi mảng entries (transform S06 gọi bộ dò hàng trăm
+// nghìn lần với cùng một mảng). Cùng phép khớp, chỉ không dựng lại; mảng mới (vd entriesFromTokens mỗi lần gọi) thì dựng mới,
+// mảng bị thêm hay bớt mục tại chỗ (độ dài đổi) cũng dựng lại. Sửa chữ của một mục có sẵn tại chỗ thì không thấy — không bên gọi
+// nào làm vậy (25/11).
+const DA_DUNG = new WeakMap();
+function boDo(entries) {
+  let b = DA_DUNG.get(entries);
+  if (b && b.n === entries.length) return b;
+  const cands = entries.flatMap(({ code, realName, wholeOnly }) => nameVariants(realName, { wholeOnly }).map((v) => ({ code, v })));
+  cands.sort((a, b) => b.v.length - a.v.length);
+  const cum = entries.map(({ code, realName, wholeOnly }) => ({ code, re: cumTach(realName, wholeOnly) })).filter((x) => x.re);
+  b = { n: entries.length, cands, cum };
+  DA_DUNG.set(entries, b);
+  return b;
+}
+
 /** Mọi chỗ khớp tên trong text: [{ code, start, end }] trên bản gập, ưu tiên khớp dài hơn. Biến thể ≥ 4 ký tự khớp ở
  *  mọi chỗ (tên dính hậu tố như mã kênh, khoá nguồn); biến thể ngắn hơn phải đứng riêng một từ (không trúng giữa từ). */
 export function findSourceNames(text, entries) {
   const { f, dau, cuoi } = gapNfc(text);
-  const cands = entries.flatMap(({ code, realName, wholeOnly }) => nameVariants(realName, { wholeOnly }).map((v) => ({ code, v })));
-  cands.sort((a, b) => b.v.length - a.v.length);
+  const { cands, cum } = boDo(entries);
   const hits = [];
   const taken = new Uint8Array(f.length);
-  for (const { code, realName, wholeOnly } of entries) {
-    const re = cumTach(realName, wholeOnly);
-    if (!re) continue;
+  for (const { code, re } of cum) {
     for (const m of f.matchAll(re)) {
       const end = m.index + m[0].length;
       if (taken.subarray(m.index, end).some(Boolean)) continue;
