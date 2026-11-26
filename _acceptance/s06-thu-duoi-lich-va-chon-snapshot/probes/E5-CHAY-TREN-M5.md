@@ -11,6 +11,14 @@ Phiên chấm M5 chỉ đọc tệp này, không hỏi lại. Mọi lệnh chạ
   E5, báo GS để chép, đừng chạy với dữ liệu viết tay.
 - Không có tệp nào của thư mục này được commit (luật kho: không commit snapshot).
 
+## Lượt 1 trên M5 (26/11 17:41Z) hỏng vì probe, đã sửa
+
+Kết quả ở `evidence/m5-e5-9614ab0af.txt`: cả hai lượt chết vì lỗi của probe, không phải của mã đo. (1) Probe đè `snapshot_id` trong
+stg trước khi ghi sổ nạp cho snapshot lượt quét đủ → vi phạm khoá ngoại. (2) Bản chép snapshot giữ quyền chỉ-đọc → ghi tệp hỏng cho
+ca nạp lỗi bị từ chối. U2 sửa cả hai, và probe nay in `PROBE HONG: …` rồi thoát 2 khi tự hỏng (khác `CHON-NAP DO`). Chạy lại
+CẢ HAI lượt ở đầu nhánh mới (thay `9614ab0af` bằng sha đầu nhánh lúc chạy; mã làn thu không đổi). Lượt đối chứng có thể in
+thêm `DOI CHUNG HONG` ở vòng 5 vì mã cũ không nạp gì: vẫn tính là đỏ.
+
 ## 1. Lượt xanh — đầu nhánh
 
 ```bash
@@ -33,11 +41,11 @@ S06_DUOI_DO=<…> bash db/db-thu.sh oneinvest_suite_s06tl --chay-trong node _acc
 Kỳ vọng: dòng cuối `CHON-NAP DO`, thoát khác 0. Trên mã cũ có hai lỗi: argv của `node -e` lệch một đối số (bước chọn-nạp
 không nạp gì — đỏ ngay ở vòng chọn đầu, «nạp 0» thay vì nạp gói S2), và soát «chưa nạp» theo dòng stg (`NAP LAI` sau lượt
 quét đủ đè). Đỏ ở dòng nào cũng được tính là đối chứng đỏ, miễn dòng cuối `CHON-NAP DO` và các ca điều khiển (`khoa go`,
-mã 3/4/5) in ra trước. Lượt in `CHON-NAP OK` trên mã cũ thì probe hỏng: báo GS, không ghi xanh.
+mã 3/4/5) in ra trước. Lượt in `CHON-NAP OK` trên mã cũ thì probe hỏng: báo GS, không ghi xanh. Dòng `PROBE HONG` ở bất kỳ lượt nào: không phải kết quả E5, báo GS.
 
 ## 3. Ghi kết quả
 
-Một tệp `_acceptance/s06-thu-duoi-lich-va-chon-snapshot/evidence/m5-e5-9614ab0af.txt` gồm: hai lệnh đã chạy, sha mỗi
+Một tệp `_acceptance/s06-thu-duoi-lich-va-chon-snapshot/evidence/m5-e5-<sha ngắn đầu nhánh>.txt` (lượt 1 ở tệp `m5-e5-9614ab0af.txt`, giữ nguyên) gồm: hai lệnh đã chạy, sha mỗi
 worktree (`git rev-parse HEAD` + `git diff --stat HEAD` của lượt đỏ), mã thoát, và toàn bộ stdout của mỗi lượt. Commit
 `test(acceptance): ZC18 E5 trên M5 — xanh <mã> / đối chứng đỏ <mã>`, đẩy lên `feat/s06-thu-duoi-lich-va-chon-snapshot`.
 Gỡ hai worktree tạm sau khi xong.

@@ -65,7 +65,11 @@ const goiStub = () => { try { return readFileSync(STUB_LOG, "utf8").split("\n").
 const SHIM = join(T, "shim"); mkdirSync(SHIM);
 writeFileSync(join(SHIM, "pgrep"), "#!/bin/sh\nexit 1\n"); chmodSync(join(SHIM, "pgrep"), 0o755);
 const GOC = join(T, "state/thu-duoi-s06");
-const datSnap = (id) => cpSync(join(KHO, id), join(GOC, "snapshots/hcmc", id), { recursive: true });
+// Bản chép giữ quyền chỉ-đọc của phép đo; mở quyền ghi cho bản chép (không chạm bản gốc) để ghi và dọn được.
+const moQuyen = (p) => { for (const n of readdirSync(p, { withFileTypes: true })) { const c = join(p, n.name);
+  if (n.isDirectory()) { chmodSync(c, 0o755); moQuyen(c); } else chmodSync(c, 0o644); } };
+const chep = (tu, toi) => { cpSync(tu, toi, { recursive: true }); chmodSync(toi, 0o755); moQuyen(toi); };
+const datSnap = (id) => chep(join(KHO, id), join(GOC, "snapshots/hcmc", id));
 
 // --- hạt giống DB: S06 chạy được ở đúng hai vùng hcmc, hanoi ---
 await q("UPDATE source_registry SET status='active' WHERE code='S06'");
@@ -75,6 +79,7 @@ for (const v of ["hanoi", "hcmc"]) {
 }
 
 let soDo = 0;
+let probeHong = null;
 const ok = (dk, dong, dongDo) => { if (dk) console.log(dong); else { console.log(dongDo); soDo++; } };
 function vong(nhan, them = {}) {
   const env = { PATH: `${SHIM}:${dirname(process.execPath)}:/usr/bin:/bin`, HOME: HOME_TAM, DATABASE_URL: URL_DB, THU_DUOI_S06_GOC: GOC, ...them };
@@ -121,8 +126,9 @@ try {
 
   // giả lượt quét đủ: thu lại cùng tin với captured_at mới hơn → snapshot_id bị đè
   const NGAY = "hcmc__chotot-ads__2026-11-26T053000";
-  await q("UPDATE stg_chotot_ads SET snapshot_id=$1, captured_at = captured_at + interval '1 day' WHERE snapshot_id = ANY($2)", [NGAY, [S1, S2]]);
+  // sổ nạp trước (khoá ngoại stg_chotot_ads_snapshot_id_fkey), rồi mới đè snapshot_id — lỗi thứ tự ở lượt M5 26/11
   await q("INSERT INTO airbnb_snapshots (snapshot_id, city, source, collected_at, manifest) VALUES ($1,'hcmc','chotot-ads',now(),'{}') ON CONFLICT DO NOTHING", [NGAY]);
+  await q("UPDATE stg_chotot_ads SET snapshot_id=$1, captured_at = captured_at + interval '1 day' WHERE snapshot_id = ANY($2)", [NGAY, [S1, S2]]);
   const truoc = (await q("SELECT list_id, snapshot_id, captured_at, md5(payload::text) h FROM stg_chotot_ads ORDER BY list_id")).rows;
   const v3 = vong(3), v4 = vong(4);
   ok(v3.nap.length === 0 && v4.nap.length === 0,
@@ -137,15 +143,19 @@ try {
 
   // --- nạp lỗi ở vùng đầu (hanoi) → vùng sau (hcmc) vẫn thử, thoát 1 (AC-6) ---
   const HN = "hanoi__chotot-ads__2026-11-24T000000";
-  cpSync(join(KHO, S1), join(GOC, "snapshots/hanoi", HN), { recursive: true });
+  chep(join(KHO, S1), join(GOC, "snapshots/hanoi", HN));
   const tepItems = readdirSync(join(GOC, "snapshots/hanoi", HN)).find((f) => f.startsWith("items-"));
   writeFileSync(join(GOC, "snapshots/hanoi", HN, tepItems), "hong");
   datSnap(S4);
   const v6 = vong(6);
   ok(v6.rc === 1 && v6.nap.includes(S4), "nap loi vung dau: vung sau van thu · exit 1", `CHON-NAP DO nạp lỗi: exit ${v6.rc} · nap ${v6.nap.join(", ")}`);
+} catch (e) {
+  // probe tự hỏng (không phải mã bị đo đỏ): in riêng, thoát 2, không đếm thành CHON-NAP DO
+  probeHong = e?.message ?? String(e);
 } finally {
   await db.end();
   rmSync(T, { recursive: true, force: true });
 }
+if (probeHong) { console.log(`PROBE HONG: ${probeHong}`); process.exit(2); }
 console.log(soDo === 0 ? "CHON-NAP OK" : `CHON-NAP DO (${soDo} ca)`);
 process.exit(soDo === 0 ? 0 : 1);
