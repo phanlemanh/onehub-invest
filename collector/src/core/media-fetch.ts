@@ -28,8 +28,13 @@ export type MediaFetchOptions = {
   userAgent?: string;
 };
 
-const DEFAULTS = {
-  allowedHostSuffixes: ["zdn.vn"],
+// ZC9 (2211-16): người đăng S03 tự lưu ảnh trên Cloudflare R2 công khai
+// (suffix r2.dev — bucket công khai, link ổn định, đo 22/11: link từ 10/11
+// vẫn 200) — đưa vào danh sách cho phép mặc định. Cách lùi: revert commit
+// này rồi rebuild + khởi động lại collector API.
+const R2_SUFFIX_ZC9 = "r2.dev";
+export const DEFAULTS = {
+  allowedHostSuffixes: ["zdn.vn", R2_SUFFIX_ZC9],
   maxBytes: 10 * 1024 * 1024,
   timeoutMs: 10_000,
   maxPerFlush: 100,
@@ -39,11 +44,50 @@ const DEFAULTS = {
 
 const EXT_RE = /\.(jpe?g|png|webp|gif|bmp)(?:[?#]|$)/i;
 
-function hostAllowed(hostWithPort: string, suffixes: string[]): boolean {
+// ZC15: chỉ xin các định dạng mà bên đọc (vlm-anh, ops zalo-media) hiểu —
+// không xin JPEG XL; để trống thì fetch gửi "*/*" và CDN được chọn JPEG XL.
+export const MEDIA_ACCEPT = "image/jpeg,image/png,image/webp,image/gif";
+
+/** ZC15: byte JPEG XL — codestream trần (FF 0A) hoặc hộp ISO-BMFF "JXL ". */
+export function isJpegXl(b: Buffer): boolean {
+  if (b.length >= 2 && b[0] === 0xff && b[1] === 0x0a) return true;
+  return b.length >= 12 && b.readUInt32BE(0) === 0x0c && b.toString("latin1", 4, 8) === "JXL ";
+}
+
+/**
+ * ZC15: hậu tố host thêm do máy thu khai (tệp state/media-host-suffixes.txt,
+ * biến ONEINVEST_MEDIA_HOST_SUFFIXES) — tên miền nguồn là tầng A nên KHÔNG
+ * nằm trong mã. Mỗi mục cách bằng xuống dòng hoặc phẩy; "#" mở chú thích.
+ * Chỉ nhận chữ thường [a-z0-9.-], ít nhất hai nhãn, không dấu chấm đầu/cuối —
+ * một nhãn ("vn") sẽ mở cả một đuôi quốc gia, nên bị bỏ.
+ */
+export function parseHostSuffixes(text: string | undefined | null): string[] {
+  if (!text) return [];
+  const out: string[] = [];
+  for (const raw of text.split(/[\n,]/)) {
+    const s = raw.replace(/#.*$/, "").trim().toLowerCase();
+    if (!s) continue;
+    if (!/^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(s)) continue;
+    if (!out.includes(s)) out.push(s);
+  }
+  return out;
+}
+
+export function hostAllowed(hostWithPort: string, suffixes: string[]): boolean {
   const host = hostWithPort.toLowerCase().replace(/:\d+$/, "");
   return suffixes.some(
     (s) => host === s.toLowerCase() || host.endsWith("." + s.toLowerCase()),
   );
+}
+
+/** 2511-3 (claudedp-2511-3): CDN nguồn trả 400 cho biến thể path có đoạn
+ *  "/jpg/" (bỏ "/jpg/" là 200 image/jxl — đo 25/11; tệp 400 cũ 02/11 là 404,
+ *  mất thật). Trả URL thay thế bỏ đoạn "/jpg/", hoặc null nếu không có. */
+function altUrlForJpg(url: string, pathname: string): string | null {
+  if (!pathname.includes("/jpg/")) return null;
+  const alt = new URL(url);
+  alt.pathname = pathname.replace("/jpg/", "/");
+  return alt.toString();
 }
 
 function mediaUrlsOf(item: RawItem): string[] {
@@ -83,7 +127,7 @@ async function downloadOne(
     const res = await fetch(url, {
       signal,
       redirect: "follow",
-      headers: { "user-agent": opts.userAgent },
+      headers: { "user-agent": opts.userAgent, accept: MEDIA_ACCEPT },
     });
     if (res.status !== 200) return { bytes: Buffer.alloc(0), error: `http-${res.status}` };
     // redirect đã follow — host URL CUỐI cũng phải thuộc allowlist, kẻo
@@ -167,15 +211,38 @@ export async function fetchMessageMedia(params: {
         entries.set(url, { url, error: "host-not-allowed" });
         continue;
       }
-      const m = EXT_RE.exec(parsed.pathname);
-      const ext = m ? `.${m[1].toLowerCase().replace("jpeg", "jpg")}` : ".jpg";
-      // Tên theo băm URL: cùng URL (repost) = cùng file, ổn định giữa các item
-      const name = `media/${createHash("sha256").update(url).digest("hex").slice(0, 16)}${ext}`;
-      const dl = await downloadOne(url, { ...opts, signal: params.signal });
+      let dl = await downloadOne(url, { ...opts, signal: params.signal });
+      let fetchedUrl = url;
+      if (dl.error === "http-400") {
+        // 2511-3: CDN nguồn trả 400 cho biến thể path có đoạn "/jpg/"
+        // (bỏ "/jpg/" là 200 image/jxl — đo 25/11, claudedp-2511-3). Thử MỘT
+        // lần URL thay thế; host alt vẫn thuộc allowlist đã kiểm ở trên.
+        const altRaw = altUrlForJpg(url, parsed.pathname);
+        if (altRaw) {
+          const alt = await downloadOne(altRaw, { ...opts, signal: params.signal });
+          if (!alt.error) {
+            dl = alt;
+            fetchedUrl = altRaw;
+          }
+        }
+      }
       if (dl.error) {
         entries.set(url, { url, error: dl.error });
         continue;
       }
+      const fetchedPath = new URL(fetchedUrl).pathname;
+      const m = EXT_RE.exec(fetchedPath);
+      // ZC15: byte JPEG XL giữ NGUYÊN (snapshot bất biến) nhưng đuôi nói thật
+      // để bên đọc theo đuôi không coi nó là JPEG — đoán theo BYTE, không theo
+      // content-type (đo 25/11: URL fallback trả header image/jxl mà byte là JPEG).
+      const ext = isJpegXl(dl.bytes)
+        ? ".jxl"
+        : m ? `.${m[1].toLowerCase().replace("jpeg", "jpg")}` : ".jpg";
+      // Tên theo băm URL ĐÃ TẢI (ZC16): URL thay thế không ghi vào meta (khuôn
+      // meta.mediaFiles giữ năm khoá, DATA-CONTRACT không đổi) — luật thử lại
+      // tất định (đúng một lần, bỏ đoạn "/jpg/") nên ai cũng tính lại được URL
+      // đã tải từ `url` và đối chiếu bằng tên tệp. Cùng URL = cùng file.
+      const name = `media/${createHash("sha256").update(fetchedUrl).digest("hex").slice(0, 16)}${ext}`;
       try {
         const written = await params.putFile(name, dl.bytes);
         entries.set(
