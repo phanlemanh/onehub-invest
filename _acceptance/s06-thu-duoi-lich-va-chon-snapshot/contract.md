@@ -56,7 +56,7 @@ lịch: cài plist cần lời riêng của Mạnh.
   thu theo câu Mạnh chọn ở Cổng Phạm vi.
 - AC-11: Given bộ thu thoát 3 (nguồn trả 403/429 hay trang thử thách, rào S06 hiện có), When vòng đó kết thúc, Then wrapper thoát
   3 và để lại một dấu chặn có hạn dưới gốc `state/thu-duoi-s06`. When vòng sau tới lúc dấu còn hạn, Then thoát 0, 0 lời gọi bộ
-  thu, 0 lời nạp. When dấu đã hết hạn, Then vòng chạy lại bình thường. Bị chặn ở vùng đầu thì vùng sau trong cùng vòng không được
+  thu, 0 lời nạp. When dấu đã hết hạn, Then vòng chạy lại bình thường. Hạn nghỉ và luật «chặn lần hai trong 24 giờ» theo câu Mạnh chọn ở Cổng Phạm vi (Hỏi-3). Bị chặn ở vùng đầu thì vùng sau trong cùng vòng không được
   gọi.
 
 ## Coverage
@@ -105,4 +105,5 @@ PL38 nối transform, resolve, sync-cloud theo nhịp. Hồ sơ này chỉ bảo
 - AC-10, AC-11 thêm 27/11 theo lời GS. Trên `7fe8bb5b0` cả hai ĐỎ theo đọc mã: bước 5 chạy mọi vùng `source_groups` chạy được,
   không có cấu hình vùng; thoát 3 không để dấu gì, 5 phút sau launchd gọi lại nguồn. Đã báo GS để trả ZCode qua LL. Probe
   `chon-nap.mjs` thêm ca E11, E12 khi ZCode giao sha (tên cấu hình và hạn dấu chặn do ZCode chọn).
+- E5 chạy trên M5 (lời GS 27/11), hai lượt xanh/đối chứng đỏ: cách dựng ở `probes/E5-CHAY-TREN-M5.md`.
 - Test của nhánh dùng shim `node`, nên bước tra stg và bộ nạp không chạy thật. AC-5 là ca duy nhất nối wrapper với bộ nạp thật.
