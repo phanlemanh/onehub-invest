@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 706f7494cda4a6b9c08e573e35bd092bd91dfb18
-human_signoff:
+human_signoff: Mạnh 2026-11-26
 ---
 
 # Evidence Report: data-api-dong-ba-route-lo
