@@ -19,6 +19,7 @@ if (!tenDb.includes("_suite_")) {
 }
 // Không khoá API trong lượt test → middleware auth để mở.
 delete process.env.DATA_API_KEYS;
+process.env.NODE_ENV = "test";
 
 const { pool } = await import("../src/db/client.js");
 const { default: app } = await import("../src/app.js");

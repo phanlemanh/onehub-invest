@@ -45,7 +45,7 @@ npm run dev
 |---|---|---|
 | `DATABASE_URL` | *(see setup below)* | PostgreSQL connection string |
 | `PORT` | `3001` | API port |
-| `DATA_API_KEYS` | *(empty)* | Comma-separated API keys. Empty = no auth (dev mode) |
+| `DATA_API_KEYS` | *(empty)* | Comma-separated API keys. **Required** outside `NODE_ENV=development` / `NODE_ENV=test` — see [Authentication](#authentication) |
 | `PUBLIC_URL` | *(empty)* | Public URL for OpenAPI servers list |
 
 ## API Endpoints
@@ -98,7 +98,14 @@ curl -H "Authorization: Bearer $YOUR_API_KEY" http://localhost:3001/v1/markets
 curl -H "X-API-Key: your-api-key" http://localhost:3001/v1/markets
 ```
 
-If `DATA_API_KEYS` is empty, auth is disabled (development mode).
+The API is **closed by default** when no keys are set:
+
+| Environment | `DATA_API_KEYS` empty |
+|---|---|
+| `NODE_ENV=development` or `NODE_ENV=test`, not on Vercel | No auth (local development and tests). `npm run dev` sets `NODE_ENV=development` for you. |
+| Anything else — `NODE_ENV=production`, `NODE_ENV` unset, any other value, any Vercel deployment | Every data route answers `503` with `{"error":{"code":"AUTH_NOT_CONFIGURED",…}}`, `/health` answers `503` with `"status":"misconfigured"`, and the Node server (`npm start`, Docker) refuses to start. |
+
+`/openapi.json` is always served. When keys are set, `/health` and `/openapi.json` need no key and every other route answers `401` without a valid key.
 
 ## Database Schema
 
