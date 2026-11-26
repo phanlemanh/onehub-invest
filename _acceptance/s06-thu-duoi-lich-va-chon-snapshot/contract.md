@@ -124,6 +124,9 @@ PL38 nối transform, resolve, sync-cloud theo nhịp. Hồ sơ này chỉ bảo
   hai; đối chứng 7173fc21a `CHON-NAP DO (14 ca)`; đối chứng wrapper fc3fa4a7a `CHON-NAP DO (2 ca)`, đúng hai ca luật lần hai.
 - Test `scripts/thu-duoi-s06.test.mjs` của ZCode không giả `pgrep`: chạy trong lúc lượt quét đủ `chotot-daily.sh` đang chạy
   trên máy thu (05:30, 14:00) thì wrapper nhường lượt và 16/26 ca đỏ (đo 27/11 05:46 giờ VN). Lỗi test của làn thu, đã báo GS.
+  ZCode sửa ở `a4ffc86b5` (chỉ tệp test: pgrep giả đặt trước trong PATH, ca nhường lượt bật bằng `PGREP_GIA_QUET_DU=1`), U2
+  gộp nguyên (khớp byte). Kiểm lại trên Mac mini khi có tiến trình mang tên `scripts/chotot-daily.sh` đang sống: 26/26, 0 bỏ qua;
+  `pham-vi.sh` OK.
 - E5 chạy trên M5 (lời GS 27/11), hai lượt xanh/đối chứng đỏ: cách dựng ở `probes/E5-CHAY-TREN-M5.md`.
   Kết quả 27/11 @212b7145a (`evidence/m5-e5-212b7145a.txt`): mã ZCode 7fe8bb5b0 `CHON-NAP OK`, gồm ca «quét đủ đè → không nạp
   lại» và «nội dung stg không lùi»; mã cũ 7173fc21a `CHON-NAP DO (5 ca)`. Lượt đầu @9614ab0af hỏng vì probe (đã sửa), không tính.
