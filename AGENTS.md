@@ -66,8 +66,10 @@ phải tên thư mục (script thu của S02/S05/S06 nằm trong `pipeline/`).
   từ đây (qua symlink `~/dev/one-invest`). Không agent nào checkout nhánh khác trong đó.
   ZCode làm ở worktree của từng phiên (`~/dev/onehub-invest-zcode`, `~/dev/onehub-zt`, `~/dev/onehub-zk`), nhánh `zcode/<việc>`; Claude ở
   `.claude/worktrees/`, nhánh `feat|fix|…/<việc>`. Worktree mới thiếu file gitignored:
-  chép `.env` theo `.worktreeinclude`. Hook git (`core.hooksPath` = `.git/hooks-onehub`,
-  chuyển tiếp git-secrets) chặn mọi commit/merge-commit trong checkout chính.
+  chép `.env` theo `.worktreeinclude`. Hook git (`core.hooksPath` = `.git/hooks-onehub`)
+  chặn mọi commit/merge-commit trong checkout chính. Mac mini là máy cá nhân, không còn git-secrets của công ty
+  (gỡ 26/11); lớp chặn khoá là GitHub secret scanning + push protection. M5 là máy công ty: hook git-secrets ở đó
+  giữ nguyên, không sửa, không `--no-verify`.
 - **Ba vai, không chồng nhau** (chốt 2026-10-23):
   - *Mạnh* — quyết định, ký cổng; bảo ZCode «đọc tin» khi có việc.
   - *Điều phối liên làn* (phiên Claude «Phân chia công việc Claude/Zcode») — đầu mối DUY
