@@ -206,9 +206,10 @@ test("YCNS-AC-6 quay đầu", async () => {
     /QUAY DAU KHONG PHAI TRAN cần mua 2ty6 quay đầu/);
 });
 
-// Băm phần ngoài khối «Ngân sách» của bản chép nguyên từ nhánh feat/bang-yeu-cau. Tính lại:
-// git show 6c4ee41d:pipeline/lib/yeu-cau.mjs | node -e '<bỏ từ «// ---- Ngân sách» tới trước «// ---- Loại hình», sha256>'
-const BAM_NGOAI_KHOI = "87a7c9e18ead696b1ac3d27f67ae758f34ad1dec88bbd0d8f8c7fd91fd3e8c5b";
+// Băm phần ngoài khối «Ngân sách» của yeu-cau.mjs. Bản ghim đầu (YC1) là bản chép nguyên từ nhánh feat/bang-yeu-cau (6c4ee41d,
+// 87a7c9e1…); YC0 bang-yeu-cau-noi-lai viết lại phần ngoài khối (bỏ khoá băm nội dung và bộ ghi 058, thêm phát biểu ý định + ghiYeuCau
+// của 136) nên ghim lại theo bản YC0. Tính lại: node -e '<bỏ từ «// ---- Ngân sách» tới trước «// ---- Loại hình», sha256>' lib/yeu-cau.mjs
+const BAM_NGOAI_KHOI = "09e1c504db86fafbbdd5cda7aada45dc42c7533a2e0062441f0d2c7044a91d6b";
 const bamNgoaiKhoi = (s) => {
   const a = s.indexOf("// ---- Ngân sách"), b = s.indexOf("// ---- Loại hình");
   if (a < 0 || b < a) throw new Error("không thấy khối Ngân sách");

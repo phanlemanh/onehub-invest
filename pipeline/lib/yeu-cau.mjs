@@ -1,15 +1,20 @@
-// yeu-cau.mjs — bang-yeu-cau: bài S03 có phát biểu ý định = Yêu cầu (lớp cao nhất thắng) thành một dòng ở bảng
-// inquiry_records (migration 058) kèm tiêu chí — dịch vụ, loại hình, PN, diện tích, khoảng ngân sách, khu vực. Phần thuần
-// (đọc tiêu chí, khoá gom) ở trên; phần DB (đọc phát biểu thắng, upsert, nghỉ) ở dưới.
-// Spec: docs/superpowers/specs/2026-10-30-bang-yeu-cau-design.md · Hỏi-1 trần · Hỏi-2 gom · Hỏi-3 bảng ánh xạ (Mạnh 30/10).
+// yeu-cau.mjs — lớp bài Yêu cầu (YC0 bang-yeu-cau-noi-lai, migration 136): bài S03 mà luật hay nhãn model nói là Yêu cầu (bên
+// mua: cần mua, cần thuê). Ý định đi qua phát biểu `listing_intent` (luật = observed, nhãn Haiku = inferred); bộ phân xử
+// `resolve_inquiry_fields` của 136 ghi mỗi bài một dòng `inquiry_post_records` khoá '<S0x>:<post_id>' (ADR-0013 câu 3, 4).
+// Phần thuần: bộ đọc tiêu chí (ngân sách, loại hình, dịch vụ — YC9 sẽ ghi qua phát biểu), chọn nhãn, sinh phát biểu ý định.
+// Phần DB: đọc nhãn Haiku hợp lệ mới nhất, ghi phát biểu, rút dòng lượt không còn, gọi phân xử.
+// Spec: docs/superpowers/specs/2026-11-26-bang-yeu-cau-noi-lai-design.md · hồ sơ _acceptance/bang-yeu-cau-noi-lai.
 //
-// Vòng nhập: transform-zalo nhập ghiYeuCau, tệp này nhập hàm thuần của transform-zalo — chỉ an toàn khi không tệp nào gọi
-// hàm của tệp kia ở cấp đỉnh. Đừng thêm lời gọi cấp đỉnh.
+// Vòng nhập: transform-zalo nhập ghiYeuCau, tệp này (và nhanh-bai-s03) nhập hàm thuần của transform-zalo — chỉ an toàn khi
+// không tệp nào gọi hàm của tệp kia ở cấp đỉnh. Đừng thêm lời gọi cấp đỉnh.
 
-import { createHash } from "node:crypto";
-import { extractPhones, gatSo, lyDoGiaPhiLy, normText, parsePost, parseVnNumber, soTy } from "../transform-zalo.mjs";
-import { subjectKey } from "./assert.mjs";
-import { ASSERTION_FIELD, KIND, LISTING_INTENT, PROPERTY_TYPE } from "./vocab.generated.mjs";
+import { gatSo, lyDoGiaPhiLy, parsePost, parseVnNumber, soTy } from "../transform-zalo.mjs";
+import { retractRule, subjectKey, writeAssertions } from "./assert.mjs";
+import { laChiAnh } from "./gop-anh.mjs";
+import { co136 } from "./nap-136.mjs";
+import { NHANH, nhanhCuaBai } from "./nhanh-bai-s03.mjs";
+import { testMarker } from "./test-posts.mjs";
+import { ASSERTION_FIELD, ASSERTION_METHOD, EVIDENCE_TIER, KIND, LISTING_INTENT, PROPERTY_TYPE } from "./vocab.generated.mjs";
 
 // ---- Ngân sách (Hỏi-1: số tiền không kèm chữ chỉ chiều là trần) ----
 // YC1 sua-doc-ngan-sach-yeu-cau: phần lẻ sau đơn vị, khoảng thiếu đơn vị đầu dưới, không bao giờ min > max, số trơn sau
@@ -143,161 +148,133 @@ export const docLoaiHinh = (text) => cumDauTien(text, LOAI_HINH);
 /** Dịch vụ đọc từ chữ: «cần mua / tìm mua» → sale, «cần thuê / tìm thuê» → rent_lt (kể cả thuê theo ngày — sổ chưa có rent_st). */
 export const docDichVu = (text) => cumDauTien(text, DICH_VU);
 
-// ---- Khoá gom (Hỏi-2: cùng nguồn · cùng người · cùng chữ chuẩn hoá) ----
+// ---- Ý định từng bài (YC0) ----
 
-/** Người gửi của bài: sender_id, vắng thì SĐT đầu tiên trong chữ, vắng cả hai → null. Chỉ đi vào băm khoá, không lưu. */
-export function khoaNguoi(post) {
-  if (post.sender_id) return `sender:${post.sender_id}`;
-  const sdt = extractPhones(post.text ?? "")[0];
-  return sdt ? `phone:${sdt}` : null;
-}
+/** rule_id của hai bộ phát biểu ý định — bộ ghi chỉ thay, rút dòng mang đúng hai mã này. */
+export const RULE_LUAT = "yeu-cau-luat";
+export const RULE_NHAN = "yeu-cau-nhan-haiku";
+/** Phiên bản bộ đọc luật (method_version của dòng luật). */
+export const LUAT_VERSION = "transform-zalo@yc0";
+/** Lý do rút dòng mà lượt này không còn sinh (luật không còn nhận, nhãn không còn, bài thành tin rao). */
+export const LY_DO_RUT = "yeu-cau-luot-khong-con";
 
-/** SavedSearchKey: 'inq_' + 16 hex của băm (nguồn · người · chữ chuẩn hoá); bài không có người thì khoá gồm post_id (không gom). */
-export function inquiryId(source, post) {
-  const nguoi = khoaNguoi(post) ?? `post:${post.post_id}`;
-  return `inq_${createHash("sha256").update(`${source}|${nguoi}|${normText(post.text)}`).digest("hex").slice(0, 16)}`;
+/** Nhãn dùng được: model Haiku, JSON đọc được, có ý định. */
+export const nhanHopLe = (n) => /haiku/i.test(n?.model ?? "") && n.json_ok !== false && n.listing_intent != null;
+
+const moc = (t) => (t == null ? -Infinity : new Date(t).getTime());
+
+/**
+ * Nhãn Haiku hợp lệ MỚI NHẤT của một bài: bỏ nhãn hỏng TRƯỚC rồi mới lấy mới nhất theo (labeled_at, label_id) — nhãn mới mà
+ * hỏng không được đè nhãn cũ hợp lệ.
+ * @param {Array<{label_id: number|string, model: string, json_ok: boolean, listing_intent: string|null, labeled_at: any}>} nhan
+ */
+export function chonNhan(nhan) {
+  let best = null;
+  for (const n of nhan ?? []) {
+    if (!nhanHopLe(n)) continue;
+    if (!best || moc(n.labeled_at) > moc(best.labeled_at)
+      || (moc(n.labeled_at) === moc(best.labeled_at) && BigInt(n.label_id) > BigInt(best.label_id))) best = n;
+  }
+  return best;
 }
 
 /**
- * Tiêu chí của một bài Yêu cầu. Phát biểu thắng của bài (kind, property_type) đi trước chữ; property_type «unknown» coi như
- * vắng.
- * @param {{post_id: string, text: string, sender_id?: string|null}} post
- * @param {{kind?: {value: string}, property_type?: {value: string}}} thang phát biểu thắng theo trường (docPhatBieuThang)
- * @param {{phuongCua: (post: object) => ({id: string, market: string}|null), thiTruongKhai: (post: object) => string[]}} ctx
+ * Phát biểu ý định của các bài (hàm thuần). Bài xét = có chữ (không phải bài chỉ-ảnh) và parsePost KHÔNG ra loại tin — bài
+ * parsePost ra loại đang là tin rao, không thành Yêu cầu dù nhãn nói inquiry (Hỏi-1b, Hỏi-2), nên không nhận dòng nào. Bài thử
+ * (bốn dấu của testMarker) không bao giờ có dòng — người gọi đã gạt ở loadStgPosts, ở đây chặn lần nữa. Trong bài xét:
+ *   - luật nhận (nhánh `yeu-cau` của nhanhCuaBai — dùng chung với /ops/data-flow) → listing_intent = inquiry, observed, parser;
+ *   - nhãn Haiku hợp lệ mới nhất (chonNhan) → listing_intent = <nhãn>, inferred, e2_llm, evidence {label_id, prompt_version, probability}.
+ * @param {Array<{post_id: string, text: string|null, posted_at?: any, snapshot_id?: string, agent_id?: string, group_name?: string}>} posts
+ * @param {Map<string, Array<object>>} nhanTheoBai post_id → các dòng silver_labels của bài
+ * @param {{ source?: string }} [opts]
+ * @returns {{ dong: object[], xet: number, loaiTinNhanYeuCau: number }} loaiTinNhanYeuCau: bài parsePost ra loại mà nhãn nói inquiry (đếm để soi)
  */
-export function tieuChiYeuCau(post, thang, ctx) {
-  const kind = thang?.kind?.value ?? docDichVu(post.text);
-  const ptThang = thang?.property_type?.value;
-  const property_type = ptThang && ptThang !== PROPERTY_TYPE.unknown ? ptThang : docLoaiHinh(post.text);
-  const pr = parsePost(post.text ?? "");
-  const ns = docNganSach(post.text ?? "", kind);
-  const ph = ctx.phuongCua(post);
-  const khai = ctx.thiTruongKhai(post) ?? [];
-  return {
-    kind, property_type, bedrooms: pr.bedrooms, area_m2: pr.areaM2, budget_min_vnd: ns.min, budget_max_vnd: ns.max,
-    area_id: ph?.id ?? null, market_id: ph?.market ?? (khai.length === 1 ? khai[0] : null),
-  };
-}
-
-const moc = (t) => (t == null ? NaN : new Date(t).getTime());
-
-/**
- * Gom bài Yêu cầu thành dòng inquiry_records theo inquiryId. post_ids sắp theo (posted_at, post_id); bài neo = sớm nhất;
- * tiêu chí + chứng cứ ý định theo bài mới nhất.
- * @param {string} source
- * @param {Array<{post: {post_id: string, text: string, posted_at: any, sender_id?: string|null},
- *   thang: {listing_intent: {assertion_id: any, method: string, tier: string, p: any}}, tieuChi: object}>} items
- */
-export function gomYeuCau(source, items) {
-  const nhom = new Map();
-  for (const it of items) {
-    const id = inquiryId(source, it.post);
-    if (!nhom.has(id)) nhom.set(id, []);
-    nhom.get(id).push(it);
+export function phatBieuYDinh(posts, nhanTheoBai, { source = "S03" } = {}) {
+  const dong = [];
+  let xet = 0, loaiTinNhanYeuCau = 0;
+  const trong = new Set();
+  for (const p of posts) {
+    if (laChiAnh(p.text) || testMarker(p)) continue;
+    const nhan = chonNhan(nhanTheoBai.get(p.post_id));
+    if (parsePost(p.text ?? "").kind) {
+      if (nhan?.listing_intent === LISTING_INTENT.inquiry) loaiTinNhanYeuCau++;
+      continue;
+    }
+    xet++;
+    const k = subjectKey(source, p.post_id);
+    const luc = p.posted_at ?? null;
+    if (nhanhCuaBai(p, trong) === NHANH.yeuCau) {
+      dong.push({
+        subject_key: k, field: ASSERTION_FIELD.listing_intent, value: LISTING_INTENT.inquiry, evidence_tier: EVIDENCE_TIER.observed,
+        method: ASSERTION_METHOD.parser, method_version: LUAT_VERSION, rule_id: RULE_LUAT, evidence: {}, observed_at: luc,
+      });
+    }
+    if (nhan) {
+      dong.push({
+        subject_key: k, field: ASSERTION_FIELD.listing_intent, value: nhan.listing_intent, evidence_tier: EVIDENCE_TIER.inferred,
+        method: ASSERTION_METHOD.e2_llm, method_version: nhan.model, rule_id: RULE_NHAN,
+        evidence: { label_id: Number(nhan.label_id), prompt_version: nhan.prompt_version, probability: nhan.probability ?? null },
+        observed_at: luc,
+      });
+    }
   }
-  const rows = [];
-  for (const [inquiry_id, ds] of nhom) {
-    ds.sort((a, b) => (moc(a.post.posted_at) || 0) - (moc(b.post.posted_at) || 0) || a.post.post_id.localeCompare(b.post.post_id));
-    const moi = ds[ds.length - 1];
-    const lan = ds.map((x) => moc(x.post.posted_at)).filter(Number.isFinite);
-    const li = moi.thang.listing_intent;
-    rows.push({
-      inquiry_id, source, originating_system_key: ds[0].post.post_id, post_ids: ds.map((x) => x.post.post_id),
-      ...moi.tieuChi,
-      first_seen: lan.length ? new Date(Math.min(...lan)).toISOString() : null,
-      last_seen: lan.length ? new Date(Math.max(...lan)).toISOString() : null,
-      intent_evidence: { assertion_id: li.assertion_id, method: li.method, tier: li.tier, p: li.p ?? null },
-    });
-  }
-  return rows;
+  return { dong, xet, loaiTinNhanYeuCau };
 }
 
 // ---- Phần DB ----
 
-// Ba trường phát biểu Yêu cầu đọc: ý định (ai là Yêu cầu), dịch vụ và loại hình (tiêu chí — đi trước chữ).
-const TRUONG = [ASSERTION_FIELD.listing_intent, ASSERTION_FIELD.kind, ASSERTION_FIELD.property_type];
+/** Nhãn Haiku hợp lệ mới nhất mỗi bài: bỏ nhãn hỏng trong WHERE rồi mới DISTINCT ON mới nhất ($1 nguồn, $2 post_id). */
+export const SQL_NHAN = `
+  SELECT DISTINCT ON (post_id) label_id, post_id, model, prompt_version, listing_intent, probability, json_ok, labeled_at
+    FROM silver_labels
+   WHERE source_code = $1 AND post_id = ANY ($2::text[])
+     AND model ILIKE '%haiku%' AND json_ok IS NOT FALSE AND listing_intent IS NOT NULL
+   ORDER BY post_id, labeled_at DESC, label_id DESC`;
 
 /**
- * Phát biểu sống THẮNG của từng bài theo trường: lớp cao nhất (fact › observed › inferred), trong lớp theo
- * assertion_method_rank của 045, rồi observed_at mới nhất, rồi id.
- * @param {import("pg").Client} client
- * @param {string} source
- * @param {string[]} postIds
- * @returns {Promise<Map<string, Record<string, {assertion_id: number, value: string, method: string, tier: string, p: number|null}>>>}
+ * Nhãn của các bài, mỗi bài tối đa một dòng (SQL_NHAN).
+ * @returns {Promise<Map<string, object[]>>}
  */
-export async function docPhatBieuThang(client, source, postIds) {
-  const { rows } = await client.query(
-    `SELECT DISTINCT ON (subject_key, field) id, subject_key, field, value, method, evidence_tier, evidence->>'p' AS p
-       FROM field_assertions
-      WHERE retracted_at IS NULL AND subject_key = ANY($1::text[]) AND field = ANY($2::text[])
-      ORDER BY subject_key, field, CASE evidence_tier WHEN 'fact' THEN 0 WHEN 'observed' THEN 1 ELSE 2 END,
-               assertion_method_rank(method), observed_at DESC NULLS LAST, id DESC`,
-    [postIds.map((id) => subjectKey(source, id)), TRUONG]);
+export async function docNhanHaiku(client, source, postIds) {
+  const { rows } = await client.query(SQL_NHAN, [source, postIds]);
   const out = new Map();
-  for (const r of rows) {
-    const id = r.subject_key.slice(source.length + 1);
-    if (!out.has(id)) out.set(id, {});
-    out.get(id)[r.field] = {
-      assertion_id: Number(r.id), value: r.value, method: r.method, tier: r.evidence_tier, p: r.p == null ? null : Number(r.p),
-    };
-  }
+  for (const r of rows) out.set(r.post_id, [r]);
   return out;
 }
 
-// Cột ghi của inquiry_records (trừ retired_*, created_at, updated_at) — đúng thứ tự hàng gomYeuCau.
-const COT = [
-  ["inquiry_id", "text"], ["source", "text"], ["originating_system_key", "text"], ["post_ids", "text[]"], ["kind", "text"],
-  ["property_type", "text"], ["bedrooms", "int"], ["area_m2", "numeric"], ["budget_min_vnd", "bigint"],
-  ["budget_max_vnd", "bigint"], ["area_id", "text"], ["market_id", "text"], ["first_seen", "timestamptz"],
-  ["last_seen", "timestamptz"], ["intent_evidence", "jsonb"],
-];
-const TEN = COT.map(([c]) => c);
-const SQL_UPSERT = `
-  INSERT INTO inquiry_records (${TEN.join(", ")})
-  SELECT ${TEN.join(", ")} FROM jsonb_to_recordset($1::jsonb) AS x(${COT.map(([c, t]) => `${c} ${t}`).join(", ")})
-  ON CONFLICT (inquiry_id) DO UPDATE SET
-    ${TEN.slice(1).map((c) => `${c} = EXCLUDED.${c}`).join(", ")}, retired_at = NULL, retired_reason = NULL, updated_at = now()
-  WHERE inquiry_records.retired_at IS NOT NULL
-     OR (${TEN.slice(1).map((c) => `inquiry_records.${c}`).join(", ")}) IS DISTINCT FROM (${TEN.slice(1).map((c) => `EXCLUDED.${c}`).join(", ")})
-  RETURNING inquiry_id`;
-
 /**
- * Bước Yêu cầu của transform (sau bước Kev): mọi bài trong `posts` (đã gạt bài thử) có phát biểu ý định thắng = inquiry
- * thành Yêu cầu, gom theo Hỏi-2; upsert ghi đủ cột (post_ids là tập đầy đủ của lượt), gỡ nghỉ; Yêu cầu sống của nguồn không
- * còn bài nào thì nghỉ 'het-phat-bieu'. Không DELETE. Người gọi giữ transaction. Thiếu bảng (chưa áp 058) → bỏ bước.
+ * Bước Yêu cầu của transform (sau bước tin rao, cùng giao dịch của người gọi). Mọi bài trong `posts` (đã gạt bài thử) là phạm vi
+ * của lượt: ghi phát biểu ý định (thay dòng cũ của chính bộ này), rút dòng luật / nhãn mà lượt không còn sinh, rồi phân xử
+ * ĐÚNG các bài này — bài ngoài lượt không bị rút, không bị nghỉ (AC-5 i). Không DELETE. Thiếu bảng (chưa áp 136) → in một dòng,
+ * bỏ bước, không ghi gì.
  * @param {import("pg").Client} client
- * @param {Array<{post_id: string, text: string, posted_at: any, sender_id?: string|null}>} posts
- * @param {{phuongCua: Function, thiTruongKhai: Function}} ctx taoNguCanhPhuong của transform-zalo
- * @returns {Promise<null|{xet: number, yeuCau: number, them: number, capNhat: number, songLai: number, nghi: number}>}
+ * @param {Array<{post_id: string, text: string|null, posted_at?: any}>} posts
+ * @param {{ source?: string }} [opts]
+ * @returns {Promise<null|{xet: number, phatBieu: number, themPhatBieu: number, rut: number, loaiTinNhanYeuCau: number,
+ *   xetPhanXu: number, them: number, capNhat: number, songLai: number, nghi: number}>}
  */
-export async function ghiYeuCau(client, posts, ctx, source = "S03") {
-  const { rows: [co] } = await client.query("SELECT to_regclass('inquiry_records') IS NOT NULL AS co");
-  if (!co.co) {
-    console.log("yêu cầu: chưa áp 058 — bỏ bước Yêu cầu");
+export async function ghiYeuCau(client, posts, { source = "S03" } = {}) {
+  if (!(await co136(client))) {
+    console.log("yêu cầu: chưa áp 136 — bỏ bước Yêu cầu");
     return null;
   }
-  const thang = await docPhatBieuThang(client, source, posts.map((p) => p.post_id));
-  const items = [];
-  for (const post of posts) {
-    const t = thang.get(post.post_id);
-    if (t?.listing_intent?.value !== LISTING_INTENT.inquiry) continue;
-    items.push({ post, thang: t, tieuChi: tieuChiYeuCau(post, t, ctx) });
-  }
-  const rows = gomYeuCau(source, items);
-  const { rows: truoc } = await client.query(
-    "SELECT inquiry_id, retired_at IS NOT NULL AS nghi FROM inquiry_records WHERE source = $1", [source]);
-  const daCo = new Map(truoc.map((r) => [r.inquiry_id, r.nghi]));
-  const { rows: ghi } = await client.query(SQL_UPSERT, [JSON.stringify(rows)]);
-  let them = 0, capNhat = 0, songLai = 0;
-  for (const { inquiry_id } of ghi) {
-    if (!daCo.has(inquiry_id)) them++;
-    else if (daCo.get(inquiry_id)) songLai++;
-    else capNhat++;
-  }
-  const { rowCount: nghi } = await client.query(
-    `UPDATE inquiry_records SET retired_at = now(), retired_reason = 'het-phat-bieu', updated_at = now()
-      WHERE source = $1 AND retired_at IS NULL AND inquiry_id <> ALL($2::text[])`,
-    [source, rows.map((r) => r.inquiry_id)]);
-  console.log(`yêu cầu: ${items.length} bài inquiry · ${rows.length} Yêu cầu (thêm ${them}, cập nhật ${capNhat}, sống lại ${songLai}, nghỉ ${nghi})`);
-  return { xet: items.length, yeuCau: rows.length, them, capNhat, songLai, nghi };
+  const coChu = posts.filter((p) => !laChiAnh(p.text));
+  const nhan = await docNhanHaiku(client, source, coChu.map((p) => p.post_id));
+  const { dong, xet, loaiTinNhanYeuCau } = phatBieuYDinh(coChu, nhan, { source });
+  const ghi = await writeAssertions(client, dong, { replaceOwn: true });
+  // Phạm vi rút và phân xử = đúng bài của lượt.
+  const phamVi = posts.map((p) => subjectKey(source, p.post_id));
+  const coDong = (rule) => new Set(dong.filter((d) => d.rule_id === rule).map((d) => d.subject_key));
+  const coLuat = coDong(RULE_LUAT), coNhan = coDong(RULE_NHAN);
+  const rutLuat = await retractRule(client, phamVi.filter((k) => !coLuat.has(k)), ASSERTION_FIELD.listing_intent, RULE_LUAT, LY_DO_RUT);
+  const rutNhan = await retractRule(client, phamVi.filter((k) => !coNhan.has(k)), ASSERTION_FIELD.listing_intent, RULE_NHAN, LY_DO_RUT);
+  const { rows: [{ r }] } = await client.query("SELECT resolve_inquiry_fields($1::text[]) AS r", [phamVi]);
+  const kq = {
+    xet, phatBieu: dong.length, themPhatBieu: ghi.inserted, rut: ghi.retracted + rutLuat + rutNhan, loaiTinNhanYeuCau,
+    xetPhanXu: r.xet, them: r.them, capNhat: r.cap_nhat, songLai: r.song_lai, nghi: r.nghi,
+  };
+  console.log(`yêu cầu: ${xet} bài xét · ${dong.length} phát biểu ý định (thêm ${kq.themPhatBieu}, rút ${kq.rut}) · ` +
+    `dòng Yêu cầu thêm ${kq.them}, cập nhật ${kq.capNhat}, sống lại ${kq.songLai}, nghỉ ${kq.nghi} · ` +
+    `bài tin rao mà nhãn nói Yêu cầu (không ghi, Hỏi-1b) ${loaiTinNhanYeuCau}`);
+  return kq;
 }
