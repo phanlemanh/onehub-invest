@@ -1,0 +1,195 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hồ sơ · go-kev-khoi-hook-s03</title>
+<style>
+:root{--bg:#faf9f6;--card:#fff;--bd:#e6e4de;--ink:#1f1f1d;--mut:#6c6a64;--hint:#9a988f}
+*{box-sizing:border-box}body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);margin:0;line-height:1.5;font-size:15px}
+.wrap{max-width:920px;margin:0 auto;padding:24px 20px 64px}
+h1{font-size:20px;margin:0 0 2px}h2{font-size:15px;margin:30px 0 10px;letter-spacing:.02em}
+.sub{font-size:13px;color:var(--mut)}
+.badge{display:inline-block;font-size:12px;font-weight:600;padding:3px 11px;border-radius:999px;vertical-align:middle}
+.pass{background:#E1F5EE;color:#085041}.pend{background:#FAEEDA;color:#633806}.rej{background:#FAECE7;color:#712B13}.neutral{background:#f1efe8;color:#444441}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--mut);margin-top:6px}
+.meta b{color:var(--ink);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:8px 9px;border-bottom:1px solid var(--bd)}th{color:var(--mut);font-weight:600;font-size:12px}
+td a{color:#185FA5;text-decoration:none}.mono{font-family:ui-monospace,Menlo,monospace;font-size:12px}
+.eval{scroll-margin-top:14px}.eval h3{font-size:14px;margin:0 0 4px}.eval .crit{font-size:13px;color:var(--mut);margin:0 0 8px}
+pre.out{background:#1f1f1d;color:#e8e6df;border-radius:8px;padding:11px 13px;overflow:auto;max-height:280px;font-size:12px;margin:8px 0}
+.kv{font-size:12px;color:var(--mut);display:flex;flex-wrap:wrap;gap:4px 16px;margin:6px 0}.kv b{color:var(--ink)}
+.shot img{display:block;max-width:100%;border:1px solid var(--bd);border-radius:8px}
+.slide{position:relative}.slide .frame{position:absolute;inset:0;opacity:0;transition:opacity .35s}.slide .frame:first-child{position:relative}.slide .frame.on{opacity:1}
+.slidebar{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--mut);margin-top:6px}
+.btn{font-size:12px;padding:4px 11px;border:1px solid var(--bd);border-radius:7px;background:#fff;cursor:pointer}
+.ov{background:#FAEEDA;color:#633806;border-radius:7px;padding:6px 10px;font-size:12px;display:inline-block}
+.ovok{background:#E1F5EE;color:#085041}
+.note{font-size:13px;color:var(--mut)}.flag{font-size:13px;border-radius:8px;padding:8px 11px;margin:6px 0}
+.fred{background:#FAECE7;color:#712B13}.fok{background:#E1F5EE;color:#085041}
+.foot{margin-top:30px;padding-top:14px;border-top:1px solid var(--bd);font-size:12px;color:var(--hint)}
+ul.ck{list-style:none;padding:0;margin:0}ul.ck li{padding:5px 0;font-size:14px}ul.ck input{margin-right:8px}
+.tl{border-left:2px solid var(--bd);padding-left:14px;margin:0}.tl li{font-size:13px;margin:0 0 6px;list-style:none}
+.dai{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0 8px}
+.o{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:8px 11px;min-width:0}
+.o .hoi{font-size:11px;color:var(--mut);text-transform:none;letter-spacing:.02em}
+.o .tra{font-size:13px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.vang{color:var(--hint);font-style:italic}
+.chu-kho{font-size:12px;color:var(--mut);display:flex;flex-wrap:wrap;gap:4px 14px;margin:0 0 10px}.chu-kho b{color:var(--ink)}
+details.muc{background:var(--card);border:1px solid var(--bd);border-radius:12px;margin:0 0 10px;padding:0 14px}
+details.muc>summary{cursor:pointer;font-weight:600;font-size:14px;padding:11px 0}
+details.muc[open]>summary{border-bottom:1px solid var(--bd);margin-bottom:10px}
+details.muc .noi{padding:0 0 12px;font-size:13px}
+.loc{display:flex;gap:6px;margin:0 0 8px}.loc .btn[aria-pressed="true"]{background:#1f1f1d;color:#fff}
+.tl li[hidden]{display:none}
+@media (max-width:720px){.dai{grid-template-columns:1fr}}
+</style></head><body><div class="wrap">
+<h1>Hook nhận tin S03 thôi gọi cổng chấm Kev; watchdog thôi canh :8009; gỡ plist cổng chấm khỏi kho (KEV1, phần làn thu của KV1)</h1><div class="sub">Trang hồ sơ · <span class="mono">go-kev-khoi-hook-s03</span> · tier T3</div>
+<section class="dai" aria-label="Hồ sơ trong một phút"><div class="o" data-o="da_giao" data-nguon="contract.md"><div class="hoi">Đã giao gì</div><div class="tra">Hook nhận tin S03 thôi gọi cổng chấm Kev; watchdog thôi canh :8009; gỡ plist cổng chấm khỏi kho (KEV1, phần làn thu của KV1)</div></div><div class="o" data-o="vi_sao" data-nguon="opportunity.md"><div class="hoi">Vì sao</div><div class="tra">Mạnh chốt bỏ Kev 15/11; máy thu Mac mini (24/11) không còn dịch vụ Kev. Hook vẫn gọi :8009 cho mỗi bài, ghi một dòng «kev null» cho mỗi bài: đo 24/11 (ngày VN) 4.954 dòng «kev null» cạnh 5.103 dòng post 202; log hook 36 MB, phình gấp đôi. Watchdog 5′ ghi «kev:DOWN» + WARN + thông báo macOS mỗi lượt — tiếng ồn che cảnh báo thật của lớp an toàn Zalo…</div></div><div class="o" data-o="trang_thai" data-nguon="contract.md"><div class="hoi">Trạng thái</div><div class="tra">Đang làm</div></div><div class="o" data-o="ngay" data-nguon="contract.md"><div class="hoi">Ngày</div><div class="tra">2026-11-24</div></div><div class="o" data-o="production" data-nguon="decisions.jsonl"><div class="hoi">Đã lên production chưa</div><div class="tra">chưa ghi quan sát production</div></div><div class="o" data-o="do_gi" data-nguon="opportunity.md"><div class="hoi">Sẽ đo gì, khi nào</div><div class="tra">chưa khai ngưỡng</div></div><div class="o" data-o="ket_qua" data-nguon="uat-session.md"><div class="hoi">Kết quả</div><div class="tra">chưa đo</div></div><div class="o" data-o="chua_lam" data-nguon="contract.md"><div class="hoi">Chưa làm gì</div><div class="tra">5 mục để ngoài phạm vi · 0 giới hạn đã biết</div></div><div class="o" data-o="ai_quyet" data-nguon="contract.md"><div class="hoi">Ai quyết</div><div class="tra">Cổng Đáng: giám sát đợt dot0-cam-mau (tra-loi ZT-4, 09:44Z 24/11) theo Mạnh «bỏ Kev» 15/11 (ROADMAP §3 mục 52) và «Mở hồ sơ KEV1 cho anh ký» 24/11 · Cổng Phạm vi: Mạnh · Cổng Bằng chứng: chưa ký</div></div></section>
+<div class="chu-kho" data-chu-kho><span data-k="tieu_chi">Tiêu chí <b>10</b></span><span data-k="phep_do">Phép đo <b>19</b></span><span data-k="luot_cham">Lượt chấm <b>2</b></span><span data-k="token">Token <b>173.649</b></span><span data-k="quyet_dinh_may">Quyết định máy <b>15</b></span><span data-k="quyet_dinh_nguoi">người <b>2</b></span><span data-k="ma">Mã <b>8c23b9f</b></span></div>
+<details class="muc" id="vi-sao"><summary>Vì sao làm</summary><div class="noi"><p>Mạnh chốt bỏ Kev 15/11; máy thu Mac mini (24/11) không còn dịch vụ Kev. Hook vẫn gọi :8009 cho mỗi bài, ghi một dòng «kev null» cho mỗi bài: đo 24/11 (ngày VN) 4.954 dòng «kev null» cạnh 5.103 dòng post 202; log hook 36 MB, phình gấp đôi. Watchdog 5′ ghi «kev:DOWN» + WARN + thông báo macOS mỗi lượt — tiếng ồn che cảnh báo thật của lớp an toàn Zalo. Người gặp: Mạnh (thông báo macOS), đội vận hành đọc log/watchdog.</p></div></details>
+<details class="muc" id="da-hua"><summary>Đã hứa</summary><div class="noi"><ol class="hua"><li data-ac="AC-1"><b>AC-1</b> — Given hook nhận một tin có chữ của kênh zalouser và cổng chấm giả ĐANG SỐNG ở `ONEINVEST_KEV_URL`, When hook xử lý</li><li data-ac="AC-2"><b>AC-2</b> — Given hook đẩy tin tới cổng thu, When collector giả nhận POST, Then đường là `/agent-report` với khoá đọc từ HOME,</li><li data-ac="AC-3"><b>AC-3</b> — Given hook đẩy xong một tin, When đọc log hook, Then dòng ghi giữ khuôn `post &lt;status&gt; &lt;body60&gt;` có `group=` mà các</li><li data-ac="AC-4"><b>AC-4</b> — Given các ca bảo vệ hook đã ký trước (spool rồi phát lại, collector trả 4xx, collector treo, trần 50 tệp spool, khoá</li><li data-ac="AC-5"><b>AC-5</b> — Given watchdog `scripts/zalo-watchdog.sh` của nhánh, When soát tĩnh, Then không còn lời gọi, cảnh báo hay thông báo</li><li data-ac="AC-6"><b>AC-6</b> — Given thư mục `pipeline/cron/`, When soát, Then không còn `com.oneinvest.kev-gate.plist`, không plist nào trỏ cổng</li><li data-ac="AC-7"><b>AC-7</b> — Given tin mang `kev` khuôn kev-off, When collector ghi snapshot và bộ nạp đọc nó, Then manifest v3 giữ nguyên `meta.kev`</li><li data-ac="AC-8"><b>AC-8</b> — Given tài liệu hook (`collector/openclaw/HOOK.md`, `README.md`) và `docs/ops/runtime-map.md`, When soát, Then không còn</li><li data-ac="AC-9"><b>AC-9</b> — Given hồ sơ áp lên máy thu `ap-may-thu/README.md`, When người ký Cổng Bằng chứng đọc, Then có đủ năm mục (lệnh áp ·</li><li data-ac="AC-10"><b>AC-10</b> — Given bộ test của hook (`collector/openclaw/handler.test.mjs`) chạy trên máy thu có `~/.openclaw` thật, When chạy</li></ol></div></details>
+<details class="muc" id="thiet-ke"><summary>Thiết kế</summary><div class="noi"><p class="mono" data-design-doc>docs/superpowers/specs/2026-11-24-go-kev-khoi-hook-s03-design.md</p></div></details>
+<details class="muc" id="quyet-dinh"><summary>Quyết định</summary><div class="noi"><div class="loc" role="group" aria-label="Lọc quyết định"><button class="btn" data-loc="tat-ca" aria-pressed="true">Tất cả 17</button><button class="btn" data-loc="may" aria-pressed="false">Máy 15</button><button class="btn" data-loc="nguoi" aria-pressed="false">Người 2</button></div><ol class="tl" data-dong-thoi-gian><li data-loai="may" data-id="d-20261124T095236Z-1"><b>2026-11-24</b> · Máy · approach · S1 — Đã tra tri thức: Hook nhận tin S03 đẩy bài thẳng tới collector không qua Kev; bộ canh an toàn của kênh không còn canh Kev; gỡ plist cổng chấm kev-gate<div class="note">Kho đã khai tri_thuc — bước thiết kế tra trang trước khi chọn.</div></li><li data-loai="may" data-id="d-20261124T095236Z-2"><b>2026-11-24</b> · Máy · descope · S1 — Phạm vi hẹp: chỉ hook, watchdog, plist cổng chấm, tài liệu vận hành; lớp Kev trên Ops, audit-all, push-ops-facts để cho hàng KEV2 của dãy U1.<div class="note">GS phán ZT-4 lúc 09:44Z 24/11 khi mở ô từ hàng KV1 (ô cơ hội đã ghi).</div></li><li data-loai="may" data-id="d-20261124T095236Z-3"><b>2026-11-24</b> · Máy · approach · S1 — Giữ trường kev trên tin với p = null và model kev-off, không bỏ trường.<div class="note">Bỏ trường là đổi DATA-CONTRACT, phải tăng schemaVersion và sửa bộ nạp; giữ khuôn thì manifest v3 và bộ nạp không đổi (E11, E12).</div></li><li data-loai="may" data-id="d-20261124T095236Z-4"><b>2026-11-24</b> · Máy · approach · S1 — Watchdog đo bằng chốt tĩnh có tự phá trên bản chép, không chạy watchdog thật trong phép đo.<div class="note">Watchdog thật có lớp tắt gateway và đọc tài khoản thật; luật an toàn Zalo cấm phép đo chạm tài khoản thật (E8).</div></li><li data-loai="may" data-id="d-20261124T095236Z-5"><b>2026-11-24</b> · Máy · descope · S1 — bỏ đặc-tả-UX — hàng không chạm giao diện (hook, watchdog, plist, tài liệu)<div class="note">surfaces cli, config; không tệp nào trong app/.</div></li><li data-loai="may" data-id="d-20261124T095236Z-6"><b>2026-11-24</b> · Máy · approach · S1 — Áp lên máy thu (chép hook, khởi động lại gateway) nằm thành mục riêng trong ap-may-thu/README.md để chữ ký Cổng Bằng chứng phủ; dãy ZT không tự áp.<div class="note">Khởi động lại gateway cần lời riêng của Mạnh; chữ ký Cổng Bằng chứng chỉ phủ việc áp khi hồ sơ có đủ năm thứ (AGENTS.md «Ai quyết gì»; E16).</div></li><li data-loai="may" data-id="d-20261124T095247Z-7"><b>2026-11-24</b> · Máy · descope · S1 — Phạm vi hẹp: chỉ hook, watchdog, plist cổng chấm, tài liệu vận hành; lớp Kev trên Ops, audit-all, push-ops-facts để cho hàng KEV2 của dãy U1 (GS phán ZT-4, 09:44Z 24/11).<div class="note">Ô cơ hội ghi lời phán của GS khi mở từ hàng KV1.</div></li><li data-loai="may" data-id="d-20261124T095751Z-8"><b>2026-11-24</b> · Máy · approach · S1 — Watchdog đo bằng chốt tĩnh có tự phá (gồm biến mồ côi của khối canh cũ) cộng một bước kiểm nhịp đầu tiên sau pull trên máy thu, không dựng hộp cát chạy trọn watchdog trong vòng này.<div class="note">Phản biện gap-probe chỉ ra lối hộp cát (HOME tạm, PATH chặn launchctl/pkill/osascript) không chết; nó cần dựng giả cấu hình OpenClaw, log runtime và DB agent cho mọi lớp, và một sơ suất PATH là pkill -9 gateway thật.</div></li><li data-loai="may" data-id="d-20261124T095751Z-9"><b>2026-11-24</b> · Máy · fix · S1 — Sửa handler.test.mjs của nhánh ZCode để chạy với HOME và spool tạm (đặt trước import, chốt ném lỗi khi còn HOME thật, thêm ca cô-lập).<div class="note">Bộ test cũ ghi dòng post kev=off giả vào log hook thật (99 dòng từ 21/11) và rút spool thật bằng fetch giả — trái .claude/rules/zalo-safety.md (phép đo không chạm ~/.openclaw); là lỗi tích hợp trong vùng hàng nên sửa tại đây, đã báo GS/LL.</div></li><li data-loai="nguoi" data-id="d-20261124T101013Z-10"><b>2026-11-24</b> · Người · seal · gate1 — </li><li data-loai="may" data-id="d-20261124T101541Z-11"><b>2026-11-24</b> · Máy · approach · S2 — Theo luật R4 của GS (24/11): thu hẹp paths của E13, E14 (hai nửa bộ test pipeline) về đúng năm tệp ngoài collector mà nhánh sửa, và E11, E12 về tệp hook; lời tiêu chí, lệnh và kỳ vọng không đổi. E17 giữ pipeline/** vì vật nó đo là mọi tệp pipeline (chốt không ai lọc theo nhãn Kev).<div class="note">Khai rộng pipeline/**, scripts/**, collector/** làm hồ sơ cũ theo mọi thay đổi của nhánh khác (ma trận TV: 76/90 cặp), còn va chạm chéo đã có CI chạy đủ bộ test trên mọi PR.</div></li><li data-loai="nguoi" data-id="d-20261124T104038Z-12"><b>2026-11-24</b> · Người (Mạnh) · approach · gate1 — Cổng 1.5: Mạnh duyệt kế hoạch thi công docs/superpowers/plans/2026-11-24-go-kev-khoi-hook-s03.md («duyệt kế hoạch»).<div class="note">Hạng T3 phải có người duyệt kế hoạch trước lượt chấm.</div></li><li data-loai="may" data-id="d-20261125T154341Z-13"><b>2026-11-25</b> · Máy · fix · S3 — Đổi kỳ vọng của hồ sơ đã ký ZI (s03-tran-thoi-gian-luot-nap), GS cho phép 25/11: ca AC-7 «plist không đổi so với origin/main» trong scripts/zalo-import-tran.test.mjs nay chỉ so plist com.oneinvest.zalo-import*, thêm ca đối chứng và ca phá trên bản sao.<div class="note">KEV1 gỡ pipeline/cron/com.oneinvest.kev-gate.plist đúng hợp đồng, nên phép so cả thư mục pipeline/cron đỏ (M5 soát trước @4dff4b63b); ý gốc của AC-7 chỉ là lượt đổi trần không đụng plist zalo-import.</div></li><li data-loai="may" data-id="d-20261126T021451Z-14"><b>2026-11-26</b> · Máy · approach · S3 — Sau khi gộp main có HT9 (4714329fe), E13/E14 (pipeline_a/b) giữ long_running 90 theo khuôn HT9, kỳ vọng ghi chạy trên cụm PostGIS dùng một lần; paths thêm scripts/zalo-import-tran.test.mjs theo luật R4 của GS (paths = đúng tệp nhánh sửa).<div class="note">GS giao 26/11: KEV1 chấm chính thức trên M5 sau HT9; suite pipeline nay chạy cụm dùng một lần, tệp test AC-7 vừa thêm vào vùng KEV1.</div></li><li data-loai="may" data-id="d-20261126T073448Z-15"><b>2026-11-26</b> · Máy · fix · S4-r1 — Dòng log post của hook đặt kev=off SAU account= (group=… account=… kev=off by=…), thêm hai ca kiểm tên nhóm bằng chính ops-flow parseLog và regex gateByGroup rút từ mã app, có ca đỏ khi đặt lại khuôn r1.<div class="note">Review S4 r1 (hai mục high, AC-3): khuôn r1 group=… kev=off account=… làm hai bên đọc tách tên nhóm thành «&lt;nhóm&gt; kev=off», số theo nhóm trên /ops tách đôi; đặt token sau account= là chỗ sửa hẹp nhất, không đụng app/ hay pipeline/.</div></li><li data-loai="may" data-id="d-20261126T073448Z-17"><b>2026-11-26</b> · Máy · fix · S4-r1 — kiem.sh phần (c) dựng nhịp watchdog bằng cách CHẠY THẬT đoạn L5 của zalo-watchdog.sh trong hộp cát (lệnh tắt giả qua PATH, có sổ gọi), thêm hai ca phá: gán lại KEV_NOTE và bỏ dòng ghi nhịp; README mục 2 sửa số ca (handler.test 8/8, 8 bộ log mẫu).<div class="note">Review S4 r1 (AC-9): nhịp dựng từ chữ trong script không bắt được KEV_NOTE bị gán lại hay dòng nhịp không ghi; chạy trọn watchdog bị luật 8 cấm vì đường KILL gọi launchctl bootout/pkill, đoạn L5 không có đường đó.</div></li><li data-loai="may" data-id="d-20261126T073448Z-19"><b>2026-11-26</b> · Máy · fix · S4-r1 — Thêm E19 trỏ suite pipeline_that với long_running 90 (paths docs/ops/runtime-map.md); E11 đỏ ở ca s08-danh-muc (token S08 dưới HOME) không vá trong KEV1 vì đó là việc của ZC19.<div class="note">S4 r1 trên M5: pipeline_that bị ngắt ~29′ vì không eval nào khai long_running cho nó; E11 đỏ đúng ca ZC19 s08-test-cach-ly-token sửa.</div></li></ol></div></details>
+<details class="muc" id="bang-chung"><summary>Bằng chứng</summary><div class="noi">
+<div class="card" style="margin-top:12px"><span class="badge pass">PASS</span>
+<div class="meta"><span>Verified by: <b>fresh-context verification subagent</b></span><span>Human signoff: <b>CHƯA ký</b></span><span>enforcement: <b>strict</b></span></div></div>
+<h2>Các eval</h2><div class="card" style="padding:4px 8px"><table><thead><tr><th>Eval</th><th>Tiêu chí</th><th>Loại</th><th>Verdict</th><th>run_id</th><th>verified_at</th></tr></thead><tbody>
+<tr><td><a href="#E1">E1</a></td><td>AC-1</td><td>test</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-go-kev-khoi-hook-s03-E1-r2</td><td class="mono">2026-11-26T20:28:16Z</td></tr>
+<tr><td><a href="#E2">E2</a></td><td>AC-1</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-go-kev-khoi-hook-s03-E2-r2</td><td class="mono">2026-11-26T20:28:16Z</td></tr>
+<tr><td><a href="#E3">E3</a></td><td>AC-2</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-go-kev-khoi-hook-s03-E3-r2</td><td class="mono">2026-11-26T20:28:16Z</td></tr>
+<tr><td><a href="#E4">E4</a></td><td>AC-3</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-go-kev-khoi-hook-s03-E4-r2</td><td class="mono">2026-11-26T20:28:16Z</td></tr>
+<tr><td><a href="#E5">E5</a></td><td>AC-3</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-go-kev-khoi-hook-s03-E5-r2</td><td class="mono">2026-11-26T20:28:16Z</td></tr>
+<tr><td><a href="#E6">E6</a></td><td>AC-4</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-go-kev-khoi-hook-s03-E6-r2</td><td class="mono">2026-11-26T20:28:16Z</td></tr>
+<tr><td><a href="#E7">E7</a></td><td>AC-4</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-go-kev-khoi-hook-s03-E7-r2</td><td class="mono">2026-11-26T20:28:16Z</td></tr>
+<tr><td><a href="#E8">E8</a></td><td>AC-5</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-go-kev-khoi-hook-s03-E8-r2</td><td class="mono">2026-11-26T20:28:16Z</td></tr>
+<tr><td><a href="#E9">E9</a></td><td>AC-5</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-go-kev-khoi-hook-s03-E9-r2</td><td class="mono">2026-11-26T20:28:16Z</td></tr>
+<tr><td><a href="#E10">E10</a></td><td>AC-6</td><td>test</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-go-kev-khoi-hook-s03-E10-r2</td><td class="mono">2026-11-26T20:28:16Z</td></tr>
+<tr><td><a href="#E11">E11</a></td><td>AC-7</td><td>test</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-go-kev-khoi-hook-s03-E11-r2</td><td class="mono">2026-11-26T20:28:16Z</td></tr>
+<tr><td><a href="#E12">E12</a></td><td>AC-7</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-go-kev-khoi-hook-s03-E12-r2</td><td class="mono">2026-11-26T20:28:16Z</td></tr>
+<tr><td><a href="#E17">E17</a></td><td>AC-7</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-go-kev-khoi-hook-s03-E17-r2</td><td class="mono">2026-11-26T20:28:16Z</td></tr>
+<tr><td><a href="#E13">E13</a></td><td>AC-7</td><td>test</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-go-kev-khoi-hook-s03-E13-r2</td><td class="mono">2026-11-26T20:28:16Z</td></tr>
+<tr><td><a href="#E14">E14</a></td><td>AC-7</td><td>test</td><td><span class="badge pass">PASS</span></td><td class="mono">r2-l12-1-20261126202816</td><td class="mono">2026-11-26T20:28:16Z</td></tr>
+<tr><td><a href="#E15">E15</a></td><td>AC-8</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-go-kev-khoi-hook-s03-E15-r2</td><td class="mono">2026-11-26T20:28:16Z</td></tr>
+<tr><td><a href="#E16">E16</a></td><td>AC-9</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-go-kev-khoi-hook-s03-E16-r2</td><td class="mono">2026-11-26T20:28:16Z</td></tr>
+<tr><td><a href="#E18">E18</a></td><td>AC-10</td><td>test</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-go-kev-khoi-hook-s03-E18-r2</td><td class="mono">2026-11-26T20:28:16Z</td></tr>
+<tr><td><a href="#E19">E19</a></td><td>AC-7</td><td>test</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-go-kev-khoi-hook-s03-E19-r2</td><td class="mono">2026-11-26T20:28:16Z</td></tr>
+</tbody></table></div>
+<h2>Chi tiết từng eval</h2>
+<div class="card eval" id="E1"><h3><span class="badge pass">PASS</span> &nbsp;E1 · test</h3><p class="crit">AC-1: Given hook nhận một tin có chữ của kênh zalouser và cổng chấm giả ĐANG SỐNG ở `ONEINVEST_KEV_URL`, When hook xử lý</p>
+<div class="kv"><span>run_id <b>minted-go-kev-khoi-hook-s03-E1-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.kev1_handler_test</b></span><span>verified_at <b>2026-11-26T20:28:16Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">node --test collector/openclaw/handler.test.mjs
+ℹ duration_ms 220.7415</pre>
+</div>
+<div class="card eval" id="E2"><h3><span class="badge pass">PASS</span> &nbsp;E2 · script</h3><p class="crit">AC-1: Given hook nhận một tin có chữ của kênh zalouser và cổng chấm giả ĐANG SỐNG ở `ONEINVEST_KEV_URL`, When hook xử lý</p>
+<div class="kv"><span>run_id <b>minted-go-kev-khoi-hook-s03-E2-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.kev_handler_label</b></span><span>verified_at <b>2026-11-26T20:28:16Z</b></span><span>baseline <b>green</b></span></div>
+<pre class="out">node scripts/kev-nhan/acceptance.mjs handler-label
+HANDLER-LABEL PASS</pre>
+</div>
+<div class="card eval" id="E3"><h3><span class="badge pass">PASS</span> &nbsp;E3 · script</h3><p class="crit">AC-2: Given hook đẩy tin tới cổng thu, When collector giả nhận POST, Then đường là `/agent-report` với khoá đọc từ HOME,</p>
+<div class="kv"><span>run_id <b>minted-go-kev-khoi-hook-s03-E3-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.kev_handler_label</b></span><span>verified_at <b>2026-11-26T20:28:16Z</b></span><span>baseline <b>green</b></span></div>
+<pre class="out">node scripts/kev-nhan/acceptance.mjs handler-label
+HANDLER-LABEL PASS</pre>
+</div>
+<div class="card eval" id="E4"><h3><span class="badge pass">PASS</span> &nbsp;E4 · script</h3><p class="crit">AC-3: Given hook đẩy xong một tin, When đọc log hook, Then dòng ghi giữ khuôn `post &lt;status&gt; &lt;body60&gt;` có `group=` mà các</p>
+<div class="kv"><span>run_id <b>minted-go-kev-khoi-hook-s03-E4-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.hsn_zc6_regress</b></span><span>verified_at <b>2026-11-26T20:28:16Z</b></span><span>baseline <b>green</b></span></div>
+<pre class="out">vòng lặp sáu chế độ: spool-replay reject-4xx hang-stop cap-50 kev-hang self-contained
+SELF-CONTAINED PASS</pre>
+</div>
+<div class="card eval" id="E5"><h3><span class="badge pass">PASS</span> &nbsp;E5 · script</h3><p class="crit">AC-3: Given hook đẩy xong một tin, When đọc log hook, Then dòng ghi giữ khuôn `post &lt;status&gt; &lt;body60&gt;` có `group=` mà các</p>
+<div class="kv"><span>run_id <b>minted-go-kev-khoi-hook-s03-E5-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.kev_handler_label</b></span><span>verified_at <b>2026-11-26T20:28:16Z</b></span><span>baseline <b>green</b></span></div>
+<pre class="out">node scripts/kev-nhan/acceptance.mjs handler-label
+HANDLER-LABEL PASS</pre>
+</div>
+<div class="card eval" id="E6"><h3><span class="badge pass">PASS</span> &nbsp;E6 · script</h3><p class="crit">AC-4: Given các ca bảo vệ hook đã ký trước (spool rồi phát lại, collector trả 4xx, collector treo, trần 50 tệp spool, khoá</p>
+<div class="kv"><span>run_id <b>minted-go-kev-khoi-hook-s03-E6-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.kev1_hsn_regress</b></span><span>verified_at <b>2026-11-26T20:28:16Z</b></span><span>baseline <b>green</b></span></div>
+<pre class="out">vòng lặp sáu chế độ: auth-held held-then-hang reject-perm tam-thoi budget budget-env
+BUDGET-ENV PASS</pre>
+</div>
+<div class="card eval" id="E7"><h3><span class="badge pass">PASS</span> &nbsp;E7 · script</h3><p class="crit">AC-4: Given các ca bảo vệ hook đã ký trước (spool rồi phát lại, collector trả 4xx, collector treo, trần 50 tệp spool, khoá</p>
+<div class="kv"><span>run_id <b>minted-go-kev-khoi-hook-s03-E7-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.hsn_l1_syntax</b></span><span>verified_at <b>2026-11-26T20:28:16Z</b></span><span>baseline <b>green</b></span></div>
+<pre class="out">node scripts/hook-zalo-spool/acceptance.mjs l1-grep &amp;&amp; node --check collector/openclaw/handler.js
+SYNTAX OK</pre>
+</div>
+<div class="card eval" id="E8"><h3><span class="badge pass">PASS</span> &nbsp;E8 · script</h3><p class="crit">AC-5: Given watchdog `scripts/zalo-watchdog.sh` của nhánh, When soát tĩnh, Then không còn lời gọi, cảnh báo hay thông báo</p>
+<div class="kv"><span>run_id <b>minted-go-kev-khoi-hook-s03-E8-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.kev1_khong_con_kev</b></span><span>verified_at <b>2026-11-26T20:28:16Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">probes/khong-con-kev.sh trên cây rồi --tu-thu
+KHONG-CON-KEV TU-THU PASS</pre>
+</div>
+<div class="card eval" id="E9"><h3><span class="badge pass">PASS</span> &nbsp;E9 · script</h3><p class="crit">AC-5: Given watchdog `scripts/zalo-watchdog.sh` của nhánh, When soát tĩnh, Then không còn lời gọi, cảnh báo hay thông báo</p>
+<div class="kv"><span>run_id <b>minted-go-kev-khoi-hook-s03-E9-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.kev_watchdog_l1</b></span><span>verified_at <b>2026-11-26T20:28:16Z</b></span><span>baseline <b>green</b></span></div>
+<pre class="out">node scripts/kev-nhan/acceptance.mjs watchdog-l1
+WATCHDOG-L1 PASS</pre>
+</div>
+<div class="card eval" id="E10"><h3><span class="badge pass">PASS</span> &nbsp;E10 · test</h3><p class="crit">AC-6: Given thư mục `pipeline/cron/`, When soát, Then không còn `com.oneinvest.kev-gate.plist`, không plist nào trỏ cổng</p>
+<div class="kv"><span>run_id <b>minted-go-kev-khoi-hook-s03-E10-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.test.job_exit</b></span><span>verified_at <b>2026-11-26T20:28:16Z</b></span><span>baseline <b>red</b></span></div>
+<pre class="out">node --test scripts/job-exit.test.mjs
+ℹ duration_ms 8348.234667</pre>
+</div>
+<div class="card eval" id="E11"><h3><span class="badge pass">PASS</span> &nbsp;E11 · test</h3><p class="crit">AC-7: Given tin mang `kev` khuôn kev-off, When collector ghi snapshot và bộ nạp đọc nó, Then manifest v3 giữ nguyên `meta.kev`</p>
+<div class="kv"><span>run_id <b>minted-go-kev-khoi-hook-s03-E11-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.collector_test_clean</b></span><span>verified_at <b>2026-11-26T20:28:16Z</b></span><span>baseline <b>green</b></span></div>
+<pre class="out">cd collector &amp;&amp; rm -rf dist &amp;&amp; npm test
+ℹ duration_ms 75593.365916</pre>
+</div>
+<div class="card eval" id="E12"><h3><span class="badge pass">PASS</span> &nbsp;E12 · script</h3><p class="crit">AC-7: Given tin mang `kev` khuôn kev-off, When collector ghi snapshot và bộ nạp đọc nó, Then manifest v3 giữ nguyên `meta.kev`</p>
+<div class="kv"><span>run_id <b>minted-go-kev-khoi-hook-s03-E12-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.kev_manifest_v3</b></span><span>verified_at <b>2026-11-26T20:28:16Z</b></span><span>baseline <b>green</b></span></div>
+<pre class="out">build collector rồi node scripts/kev-nhan/acceptance.mjs manifest-v3
+MANIFEST-V3 PASS</pre>
+</div>
+<div class="card eval" id="E17"><h3><span class="badge pass">PASS</span> &nbsp;E17 · script</h3><p class="crit">AC-7: Given tin mang `kev` khuôn kev-off, When collector ghi snapshot và bộ nạp đọc nó, Then manifest v3 giữ nguyên `meta.kev`</p>
+<div class="kv"><span>run_id <b>minted-go-kev-khoi-hook-s03-E17-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.kev1_khong_con_kev</b></span><span>verified_at <b>2026-11-26T20:28:16Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">probes/khong-con-kev.sh trên cây rồi --tu-thu
+KHONG-CON-KEV TU-THU PASS</pre>
+</div>
+<div class="card eval" id="E13"><h3><span class="badge pass">PASS</span> &nbsp;E13 · test</h3><p class="crit">AC-7: Given tin mang `kev` khuôn kev-off, When collector ghi snapshot và bộ nạp đọc nó, Then manifest v3 giữ nguyên `meta.kev`</p>
+<div class="kv"><span>run_id <b>minted-go-kev-khoi-hook-s03-E13-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.suite.pipeline_a</b></span><span>verified_at <b>2026-11-26T20:28:16Z</b></span><span>baseline <b>red</b></span></div>
+<pre class="out">node scripts/suite-neu-doi.mjs pipeline_a -- &#39;cd pipeline &amp;&amp; npm run test:a&#39;
+ℹ duration_ms 205093.630583</pre>
+</div>
+<div class="card eval" id="E14"><h3><span class="badge pass">PASS</span> &nbsp;E14 · test</h3><p class="crit">AC-7: Given tin mang `kev` khuôn kev-off, When collector ghi snapshot và bộ nạp đọc nó, Then manifest v3 giữ nguyên `meta.kev`</p>
+<div class="kv"><span>run_id <b>r2-l12-1-20261126202816</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.suite.pipeline_b</b></span><span>verified_at <b>2026-11-26T20:28:16Z</b></span><span>baseline <b>red</b></span></div>
+<pre class="out">node scripts/suite-neu-doi.mjs pipeline_b -- &#39;cd pipeline &amp;&amp; npm run test:b&#39;
+ℹ duration_ms 111182.241542</pre>
+</div>
+<div class="card eval" id="E15"><h3><span class="badge pass">PASS</span> &nbsp;E15 · script</h3><p class="crit">AC-8: Given tài liệu hook (`collector/openclaw/HOOK.md`, `README.md`) và `docs/ops/runtime-map.md`, When soát, Then không còn</p>
+<div class="kv"><span>run_id <b>minted-go-kev-khoi-hook-s03-E15-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.kev1_khong_con_kev</b></span><span>verified_at <b>2026-11-26T20:28:16Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">probes/khong-con-kev.sh trên cây rồi --tu-thu
+KHONG-CON-KEV TU-THU PASS</pre>
+</div>
+<div class="card eval" id="E16"><h3><span class="badge pass">PASS</span> &nbsp;E16 · script</h3><p class="crit">AC-9: Given hồ sơ áp lên máy thu `ap-may-thu/README.md`, When người ký Cổng Bằng chứng đọc, Then có đủ năm mục (lệnh áp ·</p>
+<div class="kv"><span>run_id <b>minted-go-kev-khoi-hook-s03-E16-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.kev1_ap_may_thu</b></span><span>verified_at <b>2026-11-26T20:28:16Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">bash _acceptance/go-kev-khoi-hook-s03/ap-may-thu/kiem.sh
+AP-MAY-THU PASS</pre>
+</div>
+<div class="card eval" id="E18"><h3><span class="badge pass">PASS</span> &nbsp;E18 · test</h3><p class="crit">AC-10: Given bộ test của hook (`collector/openclaw/handler.test.mjs`) chạy trên máy thu có `~/.openclaw` thật, When chạy</p>
+<div class="kv"><span>run_id <b>minted-go-kev-khoi-hook-s03-E18-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.kev1_handler_test</b></span><span>verified_at <b>2026-11-26T20:28:16Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">node --test collector/openclaw/handler.test.mjs
+ℹ duration_ms 220.7415</pre>
+</div>
+<div class="card eval" id="E19"><h3><span class="badge pass">PASS</span> &nbsp;E19 · test</h3><p class="crit">AC-7: Given tin mang `kev` khuôn kev-off, When collector ghi snapshot và bộ nạp đọc nó, Then manifest v3 giữ nguyên `meta.kev`</p>
+<div class="kv"><span>run_id <b>minted-go-kev-khoi-hook-s03-E19-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.suite.pipeline_that</b></span><span>verified_at <b>2026-11-26T20:28:16Z</b></span><span>baseline <b>red</b></span></div>
+<pre class="out">node scripts/suite-neu-doi.mjs pipeline_that -- &#39;cd pipeline &amp;&amp; npm run test:that&#39;
+ℹ duration_ms 2366104.383333</pre>
+</div>
+<h2>Eval không phân biệt (Analyst)</h2><div class="flag fred">Eval không phân biệt (xanh ở cả code mới lẫn baseline; chứng minh harness hơn là tính năng, là regression-guard có chủ ý):
+- E2, E3, E5 — `node scripts/kev-nhan/acceptance.mjs handler-label`
+- E4 — vòng lặp sáu chế độ `scripts/hook-zalo-spool/acceptance.mjs`
+- E6 — vòng lặp sáu chế độ `scripts/hook-spool-nghiem-ngat/acceptance.mjs`
+- E7 — `l1-grep` và `node --check collector/openclaw/handler.js`
+- E9 — `node scripts/kev-nhan/acceptance.mjs watchdog-l1`
+- E11 — `cd collector &amp;&amp; rm -rf dist &amp;&amp; npm test`
+- E12 — build collector rồi `manifest-v3`
+Baseline không đo:
+- node --test collector/openclaw/handler.test.mjs: bo qua baseline: tep collector/openclaw/handler.test.mjs co o cay dang kiem nhung chua co o merge-base befda13c624655ee0c0e4bb44b8f6482fec427d4 — eval moi, chay tren code cu khong phan biet gi
+- bash _acceptance/go-kev-khoi-hook-s03/probes/khong-con-kev.sh &quot;$PWD&quot; &amp;&amp; bash _acceptance/go-kev-khoi-hook-s03/probes/khong-con-kev.sh --tu-thu &quot;$PWD&quot;: bo qua baseline: tep _acceptance/go-kev-khoi-hook-s03/probes/khong-con-kev.sh co o cay dang kiem nhung chua co o merge-base befda13c624655ee0c0e4bb44b8f6482fec427d4 — eval moi, chay tren code cu khong phan biet gi
+- bash _acceptance/go-kev-khoi-hook-s03/ap-may-thu/kiem.sh: bo qua baseline: tep _acceptance/go-kev-khoi-hook-s03/ap-may-thu/kiem.sh co o cay dang kiem nhung chua co o merge-base befda13c624655ee0c0e4bb44b8f6482fec427d4 — eval moi, chay tren code cu khong phan biet gi</div>
+<h2>Vòng verify</h2><ul class="tl"><li>Round 1: lịch sử xem run-log.jsonl và review S4 r1 (ca khuôn kev giữa group= và account=, thiếu khai long_running 90 cho E19, HOME tạm); đã quay lại triển khai.</li><li>Round 2: toàn bộ 19 eval và 5 lệnh suite xanh trên verified_commit 8c23b9fdc204a361d69199bf9e21673f13be0e2d; không có mục judgment, không có phương sai.</li></ul>
+</div></details>
+<details class="muc" id="tai-nguyen"><summary>Tài nguyên</summary><div class="noi"><table data-tai-nguyen><thead><tr><th>Khối</th><th>Tác tử</th><th>Token đầu ra</th></tr></thead><tbody><tr><td>S4 round 1 (M5)</td><td>30</td><td>79.280</td></tr><tr><td>S4 round 2</td><td>26</td><td>94.369</td></tr></tbody></table><p class="note">2 lượt chấm · tổng 173.649 token</p></div></details>
+<details class="muc" id="gioi-han"><summary>Giới hạn và ngoài hợp đồng</summary><div class="noi"><ul data-gioi-han><li data-loai="ngoai">Lớp «Cổng Kev :8009» trên `/ops/collections` (`app/src/lib/collections-queries.ts`, `ops-queries.ts`, `ops-cloud.ts`), `scripts/lib/ops-local.mjs`, job «kev» trong `pipeline/push-ops-facts.mjs`, FAIL `:8009` của `scripts/audit-all.sh` — ngoài phạm vi, vì là hàng KEV2 (`bo-lop-kev-o-ops-va-audit`) của dãy U1 theo lời phán GS.</li><li data-loai="ngoai">Chép hook vào `~/.openclaw`, khởi động lại gateway, đo trên máy thu — ngoài phạm vi vòng code, vì là bước triển khai sau gộp do phiên ZCode vận hành làm theo `ap-may-thu/README.md` (cần lời riêng của Mạnh).</li><li data-loai="ngoai">Watchdog L1 chỉ soát bản hook trong kho, không soát bản đã cài trong `~/.openclaw/hooks/` — ngoài phạm vi, vì là lỗ cũ có trước K1 (LL ghi «việc riêng sau K1»); hai bản hôm nay giống hệt.</li><li data-loai="ngoai">Nhắc `:8009` trong `agent/README.md`, `pipeline/scripts/bench-gate.mjs` — ngoài phạm vi, vì không nằm trên đường chạy (tài liệu và công cụ đo cũ), không ai gọi định kỳ.</li><li data-loai="ngoai">Bỏ hẳn trường `kev` khỏi tin — ngoài phạm vi, vì đổi DATA-CONTRACT phải tăng `schemaVersion` (luật 4) và kéo theo bộ nạp.</li></ul></div></details>
+<details class="muc" id="giao"><summary>Giao</summary><div class="noi"><div class="kv" data-giao><span>Mã đã chấm <b class="mono">8c23b9fdc204a361d69199bf9e21673f13be0e2d</b></span><span>Ngày ký <b>—</b></span><span>Cổng Đáng: giám sát đợt dot0-cam-mau (tra-loi ZT-4, 09:44Z 24/11) theo Mạnh «bỏ Kev» 15/11 (ROADMAP §3 mục 52) và «Mở hồ sơ KEV1 cho anh ký» 24/11 · Cổng Phạm vi: Mạnh · Cổng Bằng chứng: chưa ký</span><span data-pr>chưa gộp</span></div><p class="note">chưa ghi quan sát production</p></div></details>
+<details class="muc" id="gia-tri"><summary>Giá trị</summary><div class="noi"><span class="vang">chưa có — opportunity.md</span></div></details>
+<div class="foot">Trang trình bày · KHÔNG quyết — <span class="mono">evidence-report.md</span> + hook là nguồn-sự-thật. Sinh từ run đã verify; ảnh/output gắn run_id.</div>
+<script>
+document.querySelectorAll('[data-loc]').forEach(function(b){b.addEventListener('click',function(){var v=b.getAttribute('data-loc');document.querySelectorAll('[data-loc]').forEach(function(x){x.setAttribute('aria-pressed',String(x===b));});document.querySelectorAll('[data-dong-thoi-gian] li').forEach(function(li){li.hidden=!(v==='tat-ca'||li.getAttribute('data-loai')===v);});});});
+document.querySelectorAll('.slide').forEach(function(s){var fr=s.querySelectorAll('.frame');if(fr.length<2)return;var i=0;fr[0].classList.add('on');var adv=function(){fr[i].classList.remove('on');i=(i+1)%fr.length;fr[i].classList.add('on');};s._t=setInterval(adv,1600);var bar=s.nextElementSibling,b=bar?bar.querySelector('[data-toggle]'):null;if(b)b.addEventListener('click',function(){if(s._t){clearInterval(s._t);s._t=null;b.textContent='▶ Chạy';}else{s._t=setInterval(adv,1600);b.textContent='⏸ Tạm dừng';}});});
+</script>
+</div></body></html>
