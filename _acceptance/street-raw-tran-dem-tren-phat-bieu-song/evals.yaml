@@ -31,3 +31,30 @@ evals:
     cmd: cd pipeline && node --test scripts/street-raw-tran-dem.test.mjs scripts/chia-nua.test.mjs
     paths: ["pipeline/transform-chotot.mjs", "pipeline/scripts/street-raw-tran-dem.test.mjs", "pipeline/test-nua.json"]
     expected: "exit 0; ℹ fail 0; bốn ca TD-AC-1..4 xanh; chia-nua xanh (tệp đã xếp vào nửa b nên CI chạy)."
+  - id: E5
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.suite.pipeline_a
+    long_running: 90
+    paths: ["pipeline/transform-chotot.mjs", "pipeline/scripts/street-raw-tran-dem.test.mjs", "pipeline/test-nua.json"]
+    expected: >
+      exit 0; nửa A bộ test pipeline (suite của lượt chấm, khai ở đây chỉ để có long_running 90 — cùng lệ PL39 E6, PL36 E11:
+      nửa A vượt trần chờ 30′ mặc định khi máy tải), 0 fail.
+  - id: E6
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.suite.pipeline_b
+    long_running: 90
+    paths: ["pipeline/transform-chotot.mjs", "pipeline/scripts/street-raw-tran-dem.test.mjs", "pipeline/test-nua.json"]
+    expected: >
+      exit 0; nửa B bộ test pipeline (khai để có long_running 90, cùng lệ PL39 E7), 0 fail; gồm bốn ca TD-AC-1..4 của
+      scripts/street-raw-tran-dem.test.mjs (tệp xếp vào nửa b).
+  - id: E7
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.suite.pipeline_that
+    long_running: 90
+    paths: ["pipeline/transform-chotot.mjs"]
+    expected: >
+      exit 0; nhánh đổi pipeline/transform-chotot.mjs (vùng hẹp VUNG_THAT) nên suite pipeline_that (ca dữ liệu thật trên bản
+      chép) chạy; `ℹ fail 0`. Khai ở đây để có long_running 90 theo khuôn HT9 E3a, do1-ac9 E5 (luật GS 26/11).
