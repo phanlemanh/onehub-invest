@@ -5,7 +5,7 @@
 //  3. data-api/test/dong-ba-route.test.ts (test HT19) chỉ thêm đúng một dòng `process.env.NODE_ENV = "test";`.
 //  4. _acceptance/config.yaml chỉ THÊM khoá `dapi_khoa*`.
 //  5. Toàn cây data-api/ (tệp git theo dõi) không có tên nguồn thật ngoài dạng định danh có `_` liền kề.
-// Nền: merge-base với origin/main; khi nhánh đứng trên đỉnh HT19 mà HT19 chưa vào origin/main thì nền là đỉnh HT19 (PB3 cắt
+// Nền: merge-base với origin/main; khi nhánh đứng trên HT19 mà HT19 chưa vào origin/main thì nền là merge-base với nhánh HT19 (PB3 cắt
 // sau HT19 theo lời giao gs; tệp của HT19 không phải phạm vi của PB3). Thước tự chứng chiều đỏ cùng lượt (năm ô cấy). Báo vi
 // phạm tên nguồn bằng mã S0x, KHÔNG in tên.
 import { execFileSync } from "node:child_process";
@@ -27,7 +27,10 @@ const laToTien = (a, b) => {
 };
 
 const SLUG = "data-api-dong-khi-thieu-khoa";
-const DINH_HT19 = "0d48dfcb0"; // đỉnh nhánh fix/data-api-dong-ba-route-lo lúc cắt PB3
+// Đỉnh nhánh HT19: lấy từ origin/fix/data-api-dong-ba-route-lo (nhánh có thể đã gộp main sau khi cắt PB3); ref vắng thì
+// dùng đỉnh lúc cắt PB3 (0d48dfcb0).
+const HT19_REF = "refs/remotes/origin/fix/data-api-dong-ba-route-lo";
+const HT19_LUC_CAT = "0d48dfcb0";
 const HT19_TEST = "data-api/test/dong-ba-route.test.ts";
 const DUOC = [
   /^data-api\/src\/middleware\/auth\.ts$/,
@@ -98,8 +101,14 @@ try {
 if (ten.length < 1) { console.log("pham-vi: không rút được tên nguồn nào"); process.exit(2); }
 
 const mainBase = git("merge-base", "HEAD", "origin/main").trim();
-const dungTrenHt19 = laToTien(DINH_HT19, "HEAD") && !laToTien(DINH_HT19, "origin/main");
-const goc = dungTrenHt19 ? git("rev-parse", DINH_HT19).trim() : mainBase;
+let dinhHt19;
+try {
+  dinhHt19 = git("merge-base", "HEAD", HT19_REF).trim(); // phần HT19 mà PB3 đã chứa
+} catch {
+  dinhHt19 = git("rev-parse", HT19_LUC_CAT).trim();
+}
+const dungTrenHt19 = laToTien(HT19_LUC_CAT, "HEAD") && !laToTien(HT19_LUC_CAT, "origin/main");
+const goc = dungTrenHt19 ? dinhHt19 : mainBase;
 const tenNen = dungTrenHt19 ? `đỉnh HT19 ${goc.slice(0, 9)} (HT19 chưa vào origin/main)` : `merge-base ${goc.slice(0, 9)}`;
 
 const tep = [...new Set(git("diff", "--name-only", goc).split("\n").filter(Boolean))].sort();
