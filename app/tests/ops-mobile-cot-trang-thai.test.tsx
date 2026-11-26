@@ -59,7 +59,7 @@ const BANG: Bang[] = [
     trangThai: "alive",
     html: async () => {
       const { JobsGrid } = await import("../src/components/ops/collections/jobs-grid")
-      return render(<JobsGrid jobs={[{ id: "kev", label: "Cổng Kev :8009", schedule: "Chạy liên tục", alive: "yes", lastLogAt: null, lastLine: null }]} />)
+      return render(<JobsGrid jobs={[{ id: "collector-api", label: "Cổng nhận tin :9210", schedule: "Chạy liên tục", alive: "yes", lastLogAt: null, lastLine: null }]} />)
     },
   },
   {

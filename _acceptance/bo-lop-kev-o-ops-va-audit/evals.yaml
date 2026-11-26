@@ -7,7 +7,7 @@ evals:
     cmd: config:executors.test.kev2_app
     long_running: 60
     paths: ["app/src/lib/ops-queries.ts", "app/src/components/ops/collections/**", "app/tests/kev2-thu-thap.test.tsx"]
-    expected: "Ca KEV2-AC-1 xanh: getLockdownStatus (fetch giả ghi mọi URL được gọi) trả đúng bảy dòng theo thứ tự viết trước, deepEqual mô tả; danh sách URL ghi được chứa 127.0.0.1:9210 (đối chứng dương: fetch giả có bắt lời dò) và không URL nào chứa 8009; /ops/collections dựng ở máy thu có bảy dòng trong khối Khoá an toàn, không chữ «Kev». Chiều đỏ: bản sao LOCKDOWN_LAYERS thêm lại dòng Kev → ghim «khối khoá an toàn còn dòng Kev»."
+    expected: "Ca KEV2-AC-1 xanh: getLockdownStatus (fetch giả ghi mọi URL được gọi) trả đúng bảy dòng theo thứ tự viết trước, deepEqual mô tả; danh sách URL ghi được chứa 127.0.0.1:9210 (đối chứng dương: fetch giả có bắt lời dò) và không URL nào chứa 8009; LOCKDOWN_LAYERS đúng bảy dòng; trang máy chủ dựng bảy hàng khối Khoá an toàn (lockdown-cloud-theo-facts ON23-AC-1, cùng lệnh). Chiều đỏ: bản sao LOCKDOWN_LAYERS thêm lại dòng Kev → ghim «khối khoá an toàn còn dòng Kev»."
   - id: E2
     criterion: AC-1
     executor: test
@@ -25,8 +25,8 @@ evals:
     criterion: AC-3
     executor: test
     cmd: config:executors.test.kev2_scripts
-    paths: ["pipeline/push-ops-facts.mjs", "scripts/kev2-ops-local.test.mjs"]
-    expected: "Ca KEV2-AC-3 xanh: dựng bản tin bằng hàm của push-ops-facts (không đẩy cloud, không DB thật: hàm dựng jobs/lockdown gọi trực tiếp với thư mục log tạm, fetch giả) — jobs không id kev, lockdown.layers không dòng Kev, JSON.stringify không chứa «Kev»/«8009»; tập khoá trên cùng của bản tin deepEqual danh sách viết trước. Ca KEV2-AC-6-GHI: parseLog của push-ops-facts trên cùng nhật ký mẫu của E7 ra funnel deepEqual readGateFunnel của app (messages = số tin, không gấp đôi). Chiều đỏ: bản sao push-ops-facts còn hàng kev → ghim «bản tin còn Kev»; bản sao parseLog bỏ lọc kev null → ghim «bản tin đếm đôi»."
+    paths: ["pipeline/push-ops-facts.mjs", "pipeline/lib/ops-flow.mjs", "scripts/kev2-ops-local.test.mjs"]
+    expected: "Ca KEV2-AC-3 xanh: scheduler (xuất từ push-ops-facts, gốc tạm, lời dò giả) trả id viết trước [s02-daily, s01-weekly, s01-smoke, collector-api, cloud-sync], JSON không «Kev»/«8009», lời dò đúng một URL :9210. Ca KEV2-AC-6-GHI: parseLog của bản tin trên nhật ký dựng từ khuôn log của handler.js ra funnel {messages 4, passed 3, skipped 1, accepted 3} (cùng số ca KEV2-AC-6 của app) và nhóm seen = 4. Chiều đỏ: bản sao còn hàng kev → ghim «bản tin còn Kev»; bản sao parseLog bỏ lọc kev null → ghim «bản tin đếm đôi». Toàn văn bản tin thật (push-ops-facts chạy trọn qua capture-ops-facts, DB của lượt) đo ở ca KEV2-AC-3 của app/tests/kev2-thu-thap.test.tsx (E5)."
   - id: E5
     criterion: AC-4
     executor: test

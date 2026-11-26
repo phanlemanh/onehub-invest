@@ -58,7 +58,7 @@ async function renderBoth(): Promise<[string, string]> {
     zaloHealth: { connected: null, uptime24h: null, heartbeatAgeMin: null, lastHeartbeatAt: null, lastPostAt: null, silentAlert24h: false, driftAlert24h: false },
     factsPushedAt: null,
     feedHealth: await getSourceFeedHealth(),
-    lockdown: { layers: [], lastWatchdogAt: null, agentTurnsToday: 0, openClawUp: false, kevUp: false, collectorUp: false },
+    lockdown: { layers: [], lastWatchdogAt: null, agentTurnsToday: 0, openClawUp: false, collectorUp: false },
     nowMs: Date.now(),
     cloud: localOnly ? await getCloudOpsView() : null, // ON3: cloud đọc bản tin máy local (lược đồ này không có → «chưa có số»)
   })

@@ -1,7 +1,7 @@
 // lockdown-cloud-theo-facts.test.tsx — ON23 (ADR-0014): ô và lưới Khoá an toàn trên máy chủ đọc khối `lockdown` máy thu đẩy
-// lên; Kev gate / collector API ở Máy móc cùng trạng thái với khối ấy. Lược đồ «như máy chủ» chỉ có ops_heartbeat; bản tin do
+// lên; cổng nhận tin ở Máy móc cùng trạng thái với khối ấy (hàng và lớp Kev gỡ ở KEV2). Lược đồ «như máy chủ» chỉ có ops_heartbeat; bản tin do
 // push-ops-facts THẬT dựng (pipeline/scripts/capture-ops-facts.mjs) rồi đi qua handler POST /api/v1/ops/ingest THẬT; trang
-// /ops/collections THẬT dựng ở chế độ máy chủ (VERCEL=1). Cổng Kev / collector dò cổng thật của máy chạy test nên giá trị
+// /ops/collections THẬT dựng ở chế độ máy chủ (VERCEL=1). Cổng nhận tin dò cổng thật của máy chạy test nên giá trị
 // `ok` của các lớp được ĐẶT trên bản tin thật (chỉ đổi `ok`, giữ lớp + mô tả của bên ghi). Tên ca mở đầu bằng mã AC.
 import { after, before, describe, test } from "node:test"
 import assert from "node:assert/strict"
@@ -77,11 +77,11 @@ const ingest = async (payload: Payload) => {
   assert.equal(res.status, 200)
 }
 const clear = () => admin.query(`DELETE FROM "${S_CLOUD}".ops_heartbeat`)
-/** Đặt `ok` của tám lớp trên bản tin thật (giữ lớp + mô tả của bên ghi). */
+/** Đặt `ok` của bảy lớp trên bản tin thật (giữ lớp + mô tả của bên ghi). */
 function withOks(p: Payload, oks: (boolean | null)[]): Payload {
   const q = structuredClone(p)
   const layers = q.blocks.lockdown.layers as Layer[]
-  assert.equal(layers.length, oks.length, "bên ghi phải đẩy đủ 8 lớp")
+  assert.equal(layers.length, oks.length, "bên ghi phải đẩy đủ 7 lớp")
   q.blocks.lockdown.layers = layers.map((l, i) => ({ ...l, ok: oks[i] }))
   return q
 }
@@ -142,7 +142,7 @@ const vnTime = (iso: string) => {
   return `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute} (GMT+7)`
 }
 const LABEL = (ok: boolean | null) => (ok === true ? "Ổn" : ok === false ? "Hỏng" : "Chưa kiểm được")
-/** 8 cặp lớp + mô tả của getLockdownStatus — import động: pool của app đọc DATABASE_URL lúc import. */
+/** 7 cặp lớp + mô tả của getLockdownStatus — import động: pool của app đọc DATABASE_URL lúc import. */
 const expectedIds = async () => (await import("../src/lib/ops-queries")).LOCKDOWN_LAYERS.map((l) => `${l.layer}|${l.desc}`)
 
 // ---- đột biến cho chiều đỏ (khuôn ON3) ----
@@ -173,11 +173,11 @@ const PAGE_CLOUD = [{ rel: "src/components/ops/collections/collections-content.t
 /** Bên ghi: khối lockdown ném lỗi — bản tin mang `{measured_at, error}` cho khối ấy, không viết tay khối lỗi. */
 const LOCKDOWN_THROWS = (s: string) => s.replace("measure(() => readLockdown(", 'measure(() => (() => { throw new Error("thử: không đọc được khoá an toàn") })() ?? readLockdown(')
 
-/** Lưới 8 hàng «Chỉ kiểm ở máy thu» vàng, ô «—» — chung cho AC-1 và AC-2. */
+/** Lưới 7 hàng «Chỉ kiểm ở máy thu» vàng, ô «—» — chung cho AC-1 và AC-2. */
 async function assertMachineOnly(h: string, name: string) {
   const g = grid(h)
   const rs = rows(g)
-  assert.deepEqual(rs.map(([id]) => id), await expectedIds(), `${name}: đúng 8 lớp theo thứ tự`)
+  assert.deepEqual(rs.map(([id]) => id), await expectedIds(), `${name}: đúng 7 lớp theo thứ tự`)
   assert.deepEqual(rs.filter(([, label]) => label !== "Chỉ kiểm ở máy thu").map(([id]) => id), [], `${name}: mọi hàng «Chỉ kiểm ở máy thu»`)
   assert.deepEqual(rs.filter(([, , cls]) => !cls.includes("warning")).map(([id]) => id), [], `${name}: badge vàng (Hỏi-3 = A)`)
   assert.equal(successBadges(g) + successTone(g), 0, `${name}: lưới không màu đạt`)
@@ -188,7 +188,7 @@ async function assertMachineOnly(h: string, name: string) {
 }
 
 describe("ON23-AC-1 không bản tin", () => {
-  test("ON23-AC-1 không bản tin: lưới khoá an toàn đúng 8 hàng = 8 cặp lớp + mô tả của getLockdownStatus, mỗi hàng «Chỉ kiểm ở máy thu», 0 badge success và 0 bg-success trong lưới + ô, ô «—» kèm «Chưa kiểm được trên máy chủ»", async () => {
+  test("ON23-AC-1 không bản tin: lưới khoá an toàn đúng 7 hàng = 7 cặp lớp + mô tả của getLockdownStatus, mỗi hàng «Chỉ kiểm ở máy thu», 0 badge success và 0 bg-success trong lưới + ô, ô «—» kèm «Chưa kiểm được trên máy chủ»", async () => {
     ready()
     await clear()
     await assertMachineOnly(await renderCollections(), "không bản tin")
@@ -210,7 +210,7 @@ describe("ON23-AC-1 không bản tin", () => {
 })
 
 describe("ON23-AC-2 khối lockdown lỗi ở bên ghi", () => {
-  test("ON23-AC-2 khối lockdown lỗi ở bên ghi thật (push-ops-facts qua handler ingest thật): lưới 8/8 «Chỉ kiểm ở máy thu», ô «—», ô Bản ghi 24h vẫn = tổng khối records24h", async () => {
+  test("ON23-AC-2 khối lockdown lỗi ở bên ghi thật (push-ops-facts qua handler ingest thật): lưới 7/7 «Chỉ kiểm ở máy thu», ô «—», ô Bản ghi 24h vẫn = tổng khối records24h", async () => {
     ready()
     const p = await push(mutantPush("lockdown-loi.mjs", LOCKDOWN_THROWS))
     assert.match(String(p.blocks.lockdown.error ?? ""), /^không đo được/, "bên ghi phải ghi lỗi cho khối lockdown")
@@ -233,8 +233,8 @@ describe("ON23-AC-2 khối lockdown lỗi ở bên ghi", () => {
   })
 })
 
-// Ma trận 3 giá trị viết trước: L1…L4b, OpenClaw, Kev, collector
-const MIXED: (boolean | null)[] = [true, null, true, true, false, null, true, false]
+// Ma trận 3 giá trị viết trước: L1…L4b, OpenClaw, collector
+const MIXED: (boolean | null)[] = [true, null, true, true, false, null, false]
 
 describe("ON23-AC-3 bản tin tươi", () => {
   test("ON23-AC-3 bản tin tươi có đủ true/false/null và 2 lượt tự trả lời: hàng lưới = hàng khối (lớp, mô tả, nhãn Ổn/Hỏng/Chưa kiểm được theo ok), mô tả lưới «Bộ canh chạy cuối» giờ VN của lastWatchdogAt, số trên tab = số lớp mỗi giá trị, ô = số lớp true / 8 kèm «2 lượt tự trả lời»", async () => {
@@ -252,7 +252,7 @@ describe("ON23-AC-3 bản tin tươi", () => {
     assert.match(text(g), new RegExp(`Bộ canh chạy cuối: ${vnTime(p.blocks.lockdown.lastWatchdogAt as string).replace(/[()+]/g, "\\$&")}`))
     const t = tile(h)
     assert.equal(kpiValue(t), String(n(true)), "ô = số lớp true")
-    assert.match(text(t), new RegExp(`${n(true)} ?/ ?8`))
+    assert.match(text(t), new RegExp(`${n(true)} ?/ ?7`))
     assert.match(text(t), /2 lượt tự trả lời/)
   })
   test("ON23-AC-3 bản sao bỏ qua ok null (coi như true) → bắt", async () => {
@@ -277,10 +277,10 @@ const staleBlock = (p: Payload) => {
   q.blocks.lockdown.measured_at = shift(q.blocks.lockdown.measured_at, -46)
   return q
 }
-const ALL_OK: (boolean | null)[] = [true, true, true, true, true, true, true, true]
+const ALL_OK: (boolean | null)[] = [true, true, true, true, true, true, true]
 
 describe("ON23-AC-4 khối cũ", () => {
-  test("ON23-AC-4 khối lùi 46′: nhãn hàng giữ nguyên, 0 success-light trong lưới, ô số mờ, 0 bg-success trong ô; hàng kev và collector-api của Máy móc giữ nhãn đọc từ khối, 0 success-light", async () => {
+  test("ON23-AC-4 khối lùi 46′: nhãn hàng giữ nguyên, 0 success-light trong lưới, ô số mờ, 0 bg-success trong ô; hàng collector-api của Máy móc giữ nhãn đọc từ khối, 0 success-light", async () => {
     ready()
     await ingest(staleBlock(withOks(await push(), ALL_OK)))
     const h = await renderCollections()
@@ -290,7 +290,7 @@ describe("ON23-AC-4 khối cũ", () => {
     const t = tile(h)
     assert.match(t, /text-2xl[^"]*text-muted-foreground/, "ô số mờ")
     assert.equal(successTone(t) + successBadges(t), 0, "ô: 0 màu đạt")
-    for (const id of ["kev", "collector-api"]) {
+    for (const id of ["collector-api"]) {
       const r = jobRow(h, id)
       assert.ok(r, `Máy móc phải có hàng ${id}`)
       assert.equal(r[1], "Sống", `${id}: nhãn đọc từ khối`)
@@ -316,7 +316,7 @@ describe("ON23-AC-4 khối cũ", () => {
       [COL_VIEW_JOBS, ...COL_PAGE],
     )
     try {
-      const r = jobRow(await renderCollections(m.path), "kev")
+      const r = jobRow(await renderCollections(m.path), "collector-api")
       assert.ok(r && r[2].includes("bg-success"), "phép đo phải thấy «Sống» xanh trên số cũ")
     } finally {
       m.done()
@@ -338,63 +338,56 @@ describe("ON23-AC-4 khối cũ", () => {
 })
 
 describe("ON23-AC-5 Máy móc cùng trạng thái với Khoá an toàn", () => {
-  // [Kev ok, collector ok] — 3 × 2 ô cùng giá trị + 2 ca chéo, viết trước
-  const CASES: [boolean | null, boolean | null][] = [
-    [true, true],
-    [false, false],
-    [null, null],
-    [true, false],
-    [false, true],
-  ]
+  // collector ok — 3 giá trị, viết trước (hàng kev gỡ ở KEV2)
+  const CASES: (boolean | null)[] = [true, false, null]
   const ALIVE = (ok: boolean | null) => (ok === true ? "Sống" : ok === false ? "Không phản hồi" : "Chưa kiểm được")
   /** Khoá jobs cũ nói NGƯỢC giá trị khối — để thấy hàng không đọc nó. */
-  const contrary = (p: Payload, kev: boolean | null, col: boolean | null) => {
+  const contrary = (p: Payload, col: boolean | null) => {
     const q = structuredClone(p)
     const flip = (ok: boolean | null) => (ok === true ? "no" : "yes")
-    q.jobs = q.jobs.map((j) => (j.id === "kev" ? { ...j, alive: flip(kev) } : j.id === "collector-api" ? { ...j, alive: flip(col) } : j))
+    q.jobs = q.jobs.map((j) => (j.id === "collector-api" ? { ...j, alive: flip(col) } : j))
     return q
   }
-  test("ON23-AC-5 ma trận 3 × 2 + ca chéo trên bản tin thật: hàng kev và collector-api của Máy móc = «Sống» / «Không phản hồi» / «Chưa kiểm được» theo lớp cổng của mình, khoá jobs cũ nói ngược lại", async () => {
+  test("ON23-AC-5 ma trận 3 giá trị trên bản tin thật: hàng collector-api của Máy móc = «Sống» / «Không phản hồi» / «Chưa kiểm được» theo lớp cổng của mình, khoá jobs cũ nói ngược lại", async () => {
     ready()
     const real = await push()
     let cells = 0
-    for (const [kev, col] of CASES) {
-      await ingest(contrary(withOks(real, [true, true, true, true, true, true, kev, col]), kev, col))
+    for (const col of CASES) {
+      await ingest(contrary(withOks(real, [true, true, true, true, true, true, col]), col))
       const h = await renderCollections()
-      assert.equal(jobRow(h, "kev")?.[1], ALIVE(kev), `Kev ${kev}`)
+      assert.equal(jobRow(h, "kev"), undefined, "hàng kev gỡ ở KEV2")
       assert.equal(jobRow(h, "collector-api")?.[1], ALIVE(col), `collector ${col}`)
-      cells += 2
+      cells++
     }
-    assert.equal(cells, CASES.length * 2, "đếm đủ ô ma trận")
+    assert.equal(cells, CASES.length, "đếm đủ ô ma trận")
   })
-  test("ON23-AC-5 không khối lockdown → hai hàng «Chưa kiểm được»", async () => {
+  test("ON23-AC-5 không khối lockdown → hàng cổng nhận tin «Chưa kiểm được»", async () => {
     ready()
     const p = structuredClone(await push())
     delete p.blocks.lockdown
     await ingest(p)
     const h = await renderCollections()
-    assert.equal(jobRow(h, "kev")?.[1], "Chưa kiểm được")
     assert.equal(jobRow(h, "collector-api")?.[1], "Chưa kiểm được")
   })
   test("ON23-AC-5 bản sao đọc alive của khoá jobs cũ → bắt", async () => {
     ready()
-    await ingest(contrary(withOks(await push(), [true, true, true, true, true, true, true, true]), true, true))
+    await ingest(contrary(withOks(await push(), [true, true, true, true, true, true, true]), true))
     const m = mutantChain({ rel: "src/lib/ops-cloud.ts", fn: (s) => s.replace("    if (!desc) return j\n", "    if (desc || !desc) return j\n") }, [...PAGE_CLOUD])
     try {
-      assert.notEqual(jobRow(await renderCollections(m.path), "kev")?.[1], "Sống", "phép đo phải thấy trạng thái của khoá jobs cũ")
+      assert.notEqual(jobRow(await renderCollections(m.path), "collector-api")?.[1], "Sống", "phép đo phải thấy trạng thái của khoá jobs cũ")
     } finally {
       m.done()
     }
   })
-  test("ON23-AC-5 bản sao tráo ánh xạ kev ↔ collector-api → bắt", async () => {
+  test("ON23-AC-5 bản sao trỏ collector-api sang lớp OpenClaw → bắt", async () => {
     ready()
-    await ingest(withOks(await push(), [true, true, true, true, true, true, true, false]))
+    await ingest(withOks(await push(), [true, true, true, true, true, false, true]))
     const m = mutantChain(
-      { rel: "src/lib/ops-cloud.ts", fn: (s) => s.replace('{ kev: "Cổng Kev :8009", "collector-api": "Cổng nhận tin :9210" }', '{ kev: "Cổng nhận tin :9210", "collector-api": "Cổng Kev :8009" }') },
+      { rel: "src/lib/ops-cloud.ts", fn: (s) => s.replace('{ "collector-api": "Cổng nhận tin :9210" }', '{ "collector-api": "OpenClaw đang chạy" }') },
       [...PAGE_CLOUD],
     )
     try {
-      assert.notEqual(jobRow(await renderCollections(m.path), "kev")?.[1], "Sống", "phép đo phải thấy Kev mang trạng thái của collector")
+      assert.notEqual(jobRow(await renderCollections(m.path), "collector-api")?.[1], "Sống", "phép đo phải thấy collector mang trạng thái của OpenClaw")
     } finally {
       m.done()
     }
@@ -429,7 +422,7 @@ describe("ON23-AC-6 máy thu", () => {
     try {
       const { h, n } = await spyHeartbeat(() => renderCollections(undefined, { cloud: false }))
       assert.ok(h.includes('id="lockdown"'), "máy thu vẫn có lưới khoá an toàn")
-      assert.deepEqual(rows(region(h, 'id="lockdown"', 'id="nhom-s03"')).map(([id]) => id).slice(0, 8), await expectedIds(), "lưới từ getLockdownStatus")
+      assert.deepEqual(rows(region(h, 'id="lockdown"', 'id="nhom-s03"')).map(([id]) => id).slice(0, 7), await expectedIds(), "lưới từ getLockdownStatus")
       assert.ok(!h.includes("Chỉ kiểm ở máy thu"), "máy thu không có chữ «Chỉ kiểm ở máy thu»")
       assert.equal(n, 0, "máy thu không đọc ops_heartbeat")
     } finally {

@@ -103,7 +103,7 @@ async function collections(variant: "canh-bao" | "lanh"): Promise<string> {
         : { connected: true, uptime24h: 1, heartbeatAgeMin: 5, lastHeartbeatAt: null, lastPostAt: "2026-10-24T02:00:00Z", silentAlert24h: false, driftAlert24h: false },
       factsPushedAt: bad ? new Date(NOW - 90 * 60_000).toISOString() : null,
       feedHealth: bad ? [feed("S05", "stale"), feed("S06", "none")] : [],
-      lockdown: { layers: bad ? [{ layer: "L1", desc: "bindings", ok: false }] : [], lastWatchdogAt: null, agentTurnsToday: bad ? 1 : 0, openClawUp: true, kevUp: true, collectorUp: true },
+      lockdown: { layers: bad ? [{ layer: "L1", desc: "bindings", ok: false }] : [], lastWatchdogAt: null, agentTurnsToday: bad ? 1 : 0, openClawUp: true, collectorUp: true },
       nowMs: NOW,
       roles: await getSourceRoles(),
     } as never),
