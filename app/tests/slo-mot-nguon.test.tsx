@@ -18,7 +18,8 @@ const BASE_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@loc
   u.searchParams.set("options", `-c search_path=${SCHEMA}`)
   process.env.DATABASE_URL = u.toString()
 }
-const TABLES = ["source_registry", "airbnb_snapshots", "stg_zalo_posts", "stg_chotot_ads", "airdna_markets", "stg_abnb_listings", "sale_offers"]
+const TABLES = ["source_registry", "airbnb_snapshots", "stg_zalo_posts", "stg_chotot_ads", "airdna_markets", "stg_abnb_listings", "sale_offers",
+  "stg_s09_item", "stg_s16_can", "stg_s16_can_chi_tiet", "stg_s16_item", "stg_s16_khu", "stg_s16_toa"] // NK1: bảng nạp nguồn kho
 const CANARY_CITY = "canh-thu" // chỉ có trong lược đồ tạm: thấy nó = phép đo đọc đúng lược đồ (đối chứng dương)
 
 const admin = new pg.Client({ connectionString: BASE_URL })
@@ -28,6 +29,9 @@ before(async () => {
     await admin.connect()
     await admin.query(`CREATE SCHEMA "${SCHEMA}"`)
     for (const t of TABLES) await admin.query(`CREATE TABLE "${SCHEMA}".${t} (LIKE public.${t} INCLUDING ALL)`)
+    // NK1: DB chưa áp 122 thì LIKE thiếu cột nhịp của sổ — thêm bằng chính khối cột của migration 122.
+    const { themCot122 } = await import("../../scripts/lib/so-nguon-122.mjs")
+    await themCot122(admin, SCHEMA)
   } catch (e) {
     dbErr = (e as Error).message
   }
@@ -43,7 +47,7 @@ const needDb = () => assert.equal(dbErr, null, `DB local :5433 không tới đư
 // ---------------------------------------------------------------- fixture --
 const ago = (h: number) => new Date(Date.now() - h * 3.6e6).toISOString()
 type Fixture = {
-  registry: { code: string; status: string; ids: string[] }[]
+  registry: { code: string; status: string; ids: string[]; cadence?: number | null; reason?: string }[]
   snapshots: { id: string; city: string; source: string; at: string }[]
   airdna: { id: string; country: string; at: string }[]
   posts: { id: string; snap: string; agent: string | null; at: string }[]
@@ -93,8 +97,13 @@ async function seed(f: Fixture) {
   needDb()
   for (const t of TABLES) await admin.query(`TRUNCATE "${SCHEMA}".${t}`)
   const q = (sql: string, v: unknown[]) => admin.query(sql.replaceAll("§", `"${SCHEMA}"`), v)
+  // NK1: nhịp mặc định đọc từ migration 122 (một chỗ ghi), dòng fixture ghi đè được.
+  const { cadenceMap122 } = await import("../../scripts/lib/so-nguon-122.mjs")
+  const nhip: Record<string, number> = cadenceMap122()
   for (const r of f.registry)
-    await q(`INSERT INTO §.source_registry (code, real_name, label_vi, status, source_ids) VALUES ($1,$2,'x',$3,$4)`, [r.code, `REALNAME-CANARY-${r.code}`, r.status, r.ids])
+    await q(`INSERT INTO §.source_registry (code, real_name, label_vi, status, source_ids, cadence_hours, reason) VALUES ($1,$2,'x',$3,$4,$5,$6)`, [
+      r.code, `REALNAME-CANARY-${r.code}`, r.status, r.ids, r.cadence !== undefined ? r.cadence : (nhip[r.code] ?? null), r.reason ?? null,
+    ])
   for (const s of f.snapshots)
     await q(`INSERT INTO §.airbnb_snapshots (snapshot_id, city, source, manifest, collected_at) VALUES ($1,$2,$3,'{}',$4)`, [s.id, s.city, s.source, s.at])
   for (const a of f.airdna) await q(`INSERT INTO §.airdna_markets (airdna_id, country_code, captured_at) VALUES ($1,$2,$3)`, [a.id, a.country, a.at])
@@ -311,5 +320,69 @@ describe("AU6 slo-mot-nguon", () => {
     assert.deepEqual((await getSourceFeedHealth()).map((f) => FEED_STATE[feedState(f)].label), ["Chưa có dữ liệu"])
     const [ops, col] = [await renderOps(), await renderCollections()]
     assert.deepEqual([summaries(ops), summaries(col)], [["0/1", "0/1"], ["0/1", "0/1"]])
+  })
+})
+
+// ======================================================================================================== NK1 ==
+// so-nguon-kho-khai-bao AC-5: sổ ở AC-1 (sổ trước 122 + chạy CHÍNH migration 122 trong lược đồ tạm) → dựng trọn bảng
+// «Sức khoẻ nguồn» của /ops/collections. S01 có bản thu hanoi + hcmc quá hạn + vn cũ; S16 có bản thu ở stg_s16_can_chi_tiet;
+// S09 có dòng stg_s09_item; S11 active trước 122, chưa có bản thu.
+describe("NK-AC-5 bảng Sức khoẻ nguồn", () => {
+  async function seed122(sua?: string) {
+    const f = base()
+    f.registry = [
+      ...f.registry.filter((r) => r.code !== "S07").map((r) => ({ ...r, cadence: null })),
+      { code: "S11", status: "active", ids: ["s11"], cadence: null },
+      { code: "S16", status: "active", ids: ["s16"], cadence: null },
+    ]
+    f.snapshots.push(
+      { id: "vn__s01__cu", city: "vn", source: "s01a", at: ago(24 * 30 + 0.5) },
+      { id: "vn__s16__1", city: "vn", source: "s16-thu-khac", at: ago(40.5) },
+      { id: "vn__s09__1", city: "vn", source: "s09-thu", at: ago(5.5) },
+    )
+    await seed(f)
+    const q = (sql: string, v: unknown[] = []) => admin.query(sql.replaceAll("§", `"${SCHEMA}"`), v)
+    await q(`INSERT INTO §.stg_s16_can_chi_tiet (snapshot_id, du_an, ma_can, dong) VALUES ('vn__s16__1', 'd', 'm1', 1)`)
+    await q(`INSERT INTO §.stg_s09_item (snapshot_id, source_id, kind, payload) VALUES ('vn__s09__1', 'i1', 'du-an', '{}')`)
+    const { doc122 } = await import("../../scripts/lib/so-nguon-122.mjs")
+    await admin.query("BEGIN")
+    try {
+      await admin.query(`SET LOCAL search_path TO "${SCHEMA}"`)
+      await admin.query(doc122())
+      if (sua) await admin.query(sua)
+      await admin.query("COMMIT")
+    } catch (e) {
+      await admin.query("ROLLBACK")
+      throw e
+    }
+  }
+  const NHAN = { S09: "S09", S16: "S16" }
+
+  test("NK-AC-5 bảng Sức khoẻ nguồn dựng trọn: có hàng S09, không S01/hcmc, S01/vn, không S11, không «chưa khai SLO» của S16", async () => {
+    needDb()
+    await seed122()
+    const { getSourceFeedHealth, getCoverageOverview } = await import("../src/lib/ops-queries")
+    const { feedState, FEED_STATE } = await import("../src/components/ops/collections/feed-status")
+    const feeds = await getSourceFeedHealth()
+    const lab = Object.fromEntries(feeds.map((x) => [x.code, [x.freshnessHrs, x.sloHours, FEED_STATE[feedState(x)].label]]))
+    assert.deepEqual(lab.S09, [5, 192, "Đạt"], "S09 có hàng, tuổi từ stg_s09_item")
+    assert.deepEqual(lab.S16, [40, 192, "Đạt"], "S16 đo qua bảng nạp, không «Chưa khai SLO»")
+    assert.deepEqual(lab.S01, [10, 192, "Đạt"], "S01 chỉ đo hanoi — hcmc 200 giờ, vn 720 giờ không kéo trễ")
+    assert.notEqual(lab.S11?.[2], "Chưa có dữ liệu", "S11 tạm dừng không còn «Chưa có dữ liệu»")
+    const cov = (await getCoverageOverview()).map((r) => `${r.code}/${r.city}`)
+    for (const o of ["S01/hcmc", "S01/vn"]) assert.ok(!cov.includes(o), `ô ${o} không còn`)
+    assert.ok(!cov.some((x) => x.startsWith("S11/")), "S11 không còn ô")
+    const col = await renderCollections()
+    for (const ma of Object.values(NHAN)) assert.ok(col.includes(ma), `bảng dựng trọn có hàng ${ma}`)
+  })
+
+  test("chiều đỏ NK-AC-5: S09 không có stg_tables thì hàng S09 vắng", async () => {
+    needDb()
+    await seed122("UPDATE source_registry SET stg_tables = '{}' WHERE code = 'S09'")
+    const { getSourceFeedHealth } = await import("../src/lib/ops-queries")
+    const { feedState, FEED_STATE } = await import("../src/components/ops/collections/feed-status")
+    const s09 = (await getSourceFeedHealth()).find((x) => x.code === "S09")
+    assert.equal(s09 && FEED_STATE[feedState(s09)].label, "Chưa có dữ liệu", "S09 không bảng nạp → không có tuổi")
+    assert.equal(s09?.freshnessHrs, null)
   })
 })

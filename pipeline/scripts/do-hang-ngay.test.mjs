@@ -664,7 +664,9 @@ test("DO1-AC-9 detail các dòng do1-* qua bộ ghi không mang chữ bài, trí
     const fx = await fixtureMau(c);
     await c.query("UPDATE stg_zalo_posts SET text = 'CHU_BAI_X căn hộ mẫu đặc biệt dài hơn hai mươi ký tự', sender_name = 'NGUOI_Z' WHERE post_id = 'do1p10'");
     await c.query("UPDATE sale_offer_records SET seller_phone = '+84900000001', seller_name = 'NGUOI_Z' WHERE offer_id = 'offer_do1_do1p10'");
-    await c.query("INSERT INTO source_registry (code, real_name, label_vi) VALUES ('S09', 'TEN_THAT_V', 'thử') ON CONFLICT DO NOTHING");
+    // Ghi đè trong giao dịch của ca: sổ máy thu có dòng S09 thật từ 122 (NK1), «ON CONFLICT DO NOTHING» thì tên giả không vào sổ
+    // và bộ soát không có gì để chặn (HT31). Xanh cả khi sổ có lẫn không có dòng S09.
+    await c.query("INSERT INTO source_registry (code, real_name, label_vi) VALUES ('S09', 'TEN_THAT_V', 'thử') ON CONFLICT (code) DO UPDATE SET real_name = EXCLUDED.real_name");
     const kq = await rutMau(c, { ngay: D, goiDocGop: goiGia(c), log: () => {} });
     // Mạnh gắn nhãn 14 thẻ: giữ nháp bộ đọc luật ở giá, sửa diện tích ở 4 thẻ.
     let i = 0;

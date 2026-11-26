@@ -102,6 +102,7 @@ describe("Ops trên cloud không có bảng nạp (sự cố prod 24/10)", () =>
 
   test("OP-AC-2 đối chứng: có source_registry (bảng rỗng) → không hiện câu chỉ-đo-ở-local", async () => {
     needDb()
+    await (await import("../../scripts/lib/so-nguon-122.mjs")).ap122NeuThieu(admin) // NK1: bản chép DB thử chưa áp 122 thì áp (phép không sau khi máy thu áp)
     for (const t of RAW) await admin.query(`CREATE TABLE "${SCHEMA}".${t} (LIKE public.${t} INCLUDING ALL)`)
     try {
       const { freshnessLocalOnly } = await import("../src/lib/ops-queries")
