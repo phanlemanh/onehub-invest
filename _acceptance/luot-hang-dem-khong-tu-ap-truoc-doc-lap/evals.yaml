@@ -1,0 +1,68 @@
+schema_version: 1
+slug: luot-hang-dem-khong-tu-ap-truoc-doc-lap
+# Mọi eval chạy trên DB của riêng lượt (db/db-thu.sh oneinvest_suite_* --chay), runEnrich với model giả lập, BEGIN…ROLLBACK.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/luot-hang-dem-khong-tu-ap-truoc-doc-lap/probes/chay.sh AC-1
+    paths: [agent/src/enrich/run.ts, agent/tests/enrich-luot-dem-khong-tu-ap.test.ts]
+    expected: "Tin thiếu loại hình, E1 giả lập trả 'apartment', LLM giả lập trả 'apartment': đề xuất e2_llm route review, status queued, corroborated_by NULL, evidence.trung_luat='e1'; 0 dòng field_assertions mới cho offer; sale_offers.property_type vẫn 'unknown' (tin tổng hợp trong giao dịch); thẻ agent_output chờ của tin có ô property_type. Ca có assert.fail «lượt hằng đêm tự áp đề xuất trùng luật: <offer>» khi bất kỳ đề xuất nào applied; chiều đỏ là ca E5 (chanTuApCanCu=false → applied)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/luot-hang-dem-khong-tu-ap-truoc-doc-lap/probes/chay.sh AC-2
+    paths: [agent/src/enrich/run.ts, agent/tests/enrich-luot-dem-khong-tu-ap.test.ts]
+    expected: "Tin thiếu toà, E1 không có toà, LLM trả mã toà khớp một asset_nodes cài trong giao dịch: đề xuất block_raw route review, value = tên chuẩn nút, evidence.trung_luat='asset_nodes:<slug>', không áp, có trên thẻ."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/luot-hang-dem-khong-tu-ap-truoc-doc-lap/probes/chay.sh AC-3
+    paths: [agent/src/enrich/run.ts, agent/tests/enrich-luot-dem-khong-tu-ap.test.ts]
+    expected: "E1 trả 'apartment', LLM không trả loại hình: đề xuất e1_rule route direct status applied, sale_offers.property_type = 'apartment', có dòng field_assertions nguồn e1."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/luot-hang-dem-khong-tu-ap-truoc-doc-lap/probes/chay.sh AC-4
+    paths: [agent/src/enrich/run.ts, agent/tests/enrich-db.test.ts]
+    expected: "Các ca có sẵn của agent/tests/enrich-db.test.ts cho xung đột E1↔LLM, ô giữ, LLM không căn cứ, để sau, chạy lại + dry vẫn xanh không sửa; ba ca mang hành vi cũ (asset_nodes áp, E1 thật + asset_nodes, LLM đồng ý luật thì áp) đổi kỳ vọng sang review/queued và vẫn xanh."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/luot-hang-dem-khong-tu-ap-truoc-doc-lap/probes/chay.sh AC-5
+    paths: [agent/src/enrich/route.ts, agent/src/enrich/doc-toan-bo.ts, agent/src/enrich/run.ts, agent/scripts/enrich-run.ts]
+    expected: "Bốn vế: (1) git diff origin/main...HEAD (từ điểm rẽ nhánh) -- agent/src/enrich/route.ts agent/src/enrich/doc-toan-bo.ts rỗng; (2) agent/tests/enrich-route.test.ts xanh không sửa; (3) ca E5 của enrich-luot-dem-khong-tu-ap.test.ts: chanTuApCanCu=false → corroborated/applied/e1 như cũ, vắng tham số → review/queued; (4) ca LS1-AC-3 của agent/tests/doc-toan-bo-db.itest.ts (lượt đọc toàn bộ) vẫn xanh: đề xuất corroborated trich-dan được áp. enrich-run.ts khai chanTuApCanCu: true (grep)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/luot-hang-dem-khong-tu-ap-truoc-doc-lap/probes/chay.sh AC-6
+    paths: [agent/src/enrich/run.ts, agent/tests/enrich-luot-dem-khong-tu-ap.test.ts]
+    expected: "Trên bản chép DB (DB của riêng lượt), runEnrich giới hạn 20 tin có E1, LLM giả lập luôn trả đúng loại hình E1 (ca toà đo ở E2): đếm dòng của run_id có status applied và corroborated_by NOT NULL = 0; số đề xuất evidence ? 'trung_luat' > 0 và bằng số tổng kết lượt in; mỗi tin có đề xuất trùng luật có thẻ chờ liệt đúng các ô đó, và số thẻ chờ mới bằng số tin trùng luật chưa có thẻ chờ trước lượt."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.suite.pipeline_a
+    long_running: 90
+    paths: [agent/src/enrich/run.ts, agent/src/enrich/tong-ket.ts, agent/scripts/enrich-run.ts, agent/tests/enrich-db.test.ts, agent/tests/enrich-giao-dich.test.ts, agent/tests/enrich-luot-dem-khong-tu-ap.test.ts, pipeline/tests/import-s16-chi-tiet.test.mjs, pipeline/tests/ghep-tin-danh-muc-117.itest.mjs, pipeline/tests/ghep-tin-danh-muc-ghi.itest.mjs]
+    expected: "exit 0; nửa A bộ test pipeline (suite của lượt chấm — nhánh chạm vùng LOI_PIPELINE của scripts/suite-neu-doi.mjs; khai ở đây chỉ để có long_running 90, trên Mac mini nửa A ~41′ vượt trần chờ 30′ mặc định), 0 fail; nhánh mang 5f483de92, bản chép của 70bcecb3a (trần ca SLT-DC-7/9 480 → 900 s)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.suite.pipeline_b
+    long_running: 90
+    paths: [agent/src/enrich/run.ts, agent/src/enrich/tong-ket.ts, agent/scripts/enrich-run.ts, agent/tests/enrich-db.test.ts, agent/tests/enrich-giao-dich.test.ts, agent/tests/enrich-luot-dem-khong-tu-ap.test.ts, pipeline/tests/import-s16-chi-tiet.test.mjs, pipeline/tests/ghep-tin-danh-muc-117.itest.mjs, pipeline/tests/ghep-tin-danh-muc-ghi.itest.mjs]
+    expected: "exit 0; nửa B bộ test pipeline (suite của lượt chấm, khai ở đây chỉ để có long_running 90 — nửa B ~24′ sát trần chờ 30′), 0 fail."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
