@@ -178,19 +178,23 @@ test("HT30-AC-4 không đọc được sổ: ngoài kho git · đường là th�
     `${KH}không đọc được sổ soát hằng ngày (dòng cuối hỏng)`);
   assert.equal(dongDuLieuThat(false, soTam([X("2026-11-25"), "{hỏng", D("2026-11-26", ["Z"])])),
     `${KH}lần xanh gần nhất trên main: 2026-11-25 (aaaaaaaaa); ĐỎ mới hơn: 2026-11-26 (ccccccccc) — ca đỏ: Z`);
-  // Lệnh thật: suite-neu-doi chạy ngoài kho git, không PIPELINE_THAT_SO → dòng «không đọc được sổ».
-  const env = { ...process.env, SUITE_NEU_DOI: "", SUITE_NEU_DOI_BASE: "" };
-  delete env.PIPELINE_THAT_SO;
-  const r = spawnSync(process.execPath, [SND, "pipeline_that", "--", "true"], { cwd: ngoai, encoding: "utf8", env });
-  assert.match(r.stdout, /^ca dữ liệu thật: (chạy trong lượt này|không kích — không đọc được sổ soát hằng ngày \(.+\))$/m, r.stdout + r.stderr);
+  // Không có ca «lệnh thật ngoài kho»: ngoài kho git suite-neu-doi luôn kích pipeline_that (không giải được gốc → chạy), nên
+  // nhánh «không đọc được sổ» không tới được qua lệnh thật — đo ở mức hàm (lượt chấm M5 vòng 1, Ngoài-1/Ngoài-4).
   // Chiều đỏ: bản sao duongSo cũ (rơi về đường tương đối) → dòng in như sổ trống.
   const { dongDuLieuThat: phaDong, duongSo: phaDuong } = await banPha(
     'if (r.status !== 0 || !path.isAbsolute(common)) return null;', "");
   const ghim = (s) => { if (/chưa có lần xanh nào trên main$/.test(s)) throw new Error(`sổ không đọc được trông như sổ trống: ${s}`); };
+  // Bản phá trả đường TƯƠNG ĐỐI theo cwd của tiến trình — chạy trong thư mục tạm để không bao giờ trúng sổ thật của máy.
+  const cwdCu = process.cwd();
   delete process.env.PIPELINE_THAT_SO;
+  process.chdir(ngoai);
   try {
     ghim(dongDuLieuThat(false, duongSo(ngoai)));
+    assert.ok(!path.isAbsolute(phaDuong(ngoai)), "bản phá phải rơi về đường tương đối");
     assert.throws(() => ghim(phaDong(false, phaDuong(ngoai))), /sổ không đọc được trông như sổ trống/);
-  } finally { if (cu !== undefined) process.env.PIPELINE_THAT_SO = cu; }
+  } finally {
+    process.chdir(cwdCu);
+    if (cu !== undefined) process.env.PIPELINE_THAT_SO = cu;
+  }
 });
 
