@@ -23,7 +23,7 @@ evals:
     criterion: AC-5
     executor: script
     cmd: cd collector && npx tsc -p tsconfig.json && cd .. && node _acceptance/s02-cua-api/probes/chay-test-dot-bien.mjs bo-thu
-    expected: "cùng lệnh E3: ba dòng 'đạt: bản đột biến (…) bị bắt:' — gửi lại dù token không đổi · bỏ làm mới token trước khi gửi · bỏ dòng AUTH FAIL sau 401 — vế KHÔNG-BẮN: ca 'lỗi thường (HTTP 500) → null, tính một lời gọi lỗi' đạt ở bản thật (không dừng cả lượt)"
+    expected: "cùng lệnh E3: ba dòng 'đạt: bản đột biến (…) bị bắt:' — gửi lại dù token không đổi · bỏ làm mới token trước khi gửi · bỏ dòng AUTH FAIL sau 401 — vế KHÔNG-BẮN: ca 'lỗi thường (HTTP 500) → null, tính một lời lỗi — KHÔNG dừng cả lượt' đạt ở bản thật"
     paths: [collector/src/collectors/**, collector/src/test/s02-bo-thu-cua-api.test.ts, _acceptance/s02-cua-api/probes/chay-test-dot-bien.mjs]
   - id: E5
     criterion: AC-6
