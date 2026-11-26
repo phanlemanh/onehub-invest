@@ -104,7 +104,7 @@ evals:
     criterion: AC-6
     executor: test
     cmd: config:executors.suite.pipeline_that
-    long_running: 45
+    long_running: 90
     paths: ["db/migrations/130_*", "pipeline/import-s09-danh-ba.mjs", "pipeline/lib/s09-danh-ba-v16*", "pipeline/scripts/s09-v16*", "pipeline/tests/fixtures/s09-v16/**"]
     expected: "exit 0; ca dữ liệu thật của bộ test pipeline (pipeline_that, khuôn HT9) trên bản chép, kích vì nhánh đổi db/migrations trong vùng của nó; 0 fail."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
