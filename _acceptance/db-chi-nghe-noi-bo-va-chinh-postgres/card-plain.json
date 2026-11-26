@@ -1,0 +1,1 @@
+{"feature_plain":"DB của máy thu chỉ nhận kết nối từ chính máy (127.0.0.1:5433), không còn mở ra mạng LAN, và Postgres được cấp bộ nhớ hợp với máy (8GB đệm, 1GB vùng nhớ chung) — việc áp lên máy thật là một lần tạo lại container, chờ lời riêng của anh lúc áp."}
