@@ -167,7 +167,8 @@ describe("PL20 câu rút chừa dòng bước gắn toà (ROLLBACK)", () => {
     assert.deepEqual(await rutKhiTheGhi(writeAssertions), { gan: false, khac: true });
   });
   test("chiều đỏ PL20-E7: bản phá bỏ điều kiện chừa → dòng ghep-toa bị rút, đỏ", async () => {
-    const mod = await banDot([["\n      AND (fa.rule_id IS NULL OR fa.rule_id NOT LIKE 'ghep-toa-%')", ""]]);
+    // PL36 thêm vế chừa ghep-can-% cạnh ghep-toa-%: phá đúng vế ghep-toa-% (ghep-can giữ nguyên), dòng ghep-toa phải bị rút.
+    const mod = await banDot([["fa.rule_id NOT LIKE 'ghep-toa-%' AND ", ""]]);
     assert.deepEqual(await rutKhiTheGhi(mod.writeAssertions), { gan: true, khac: true });
   });
 });

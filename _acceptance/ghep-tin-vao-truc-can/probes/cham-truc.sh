@@ -12,5 +12,7 @@ mkdir -p "$HS/evidence"
 export DATABASE_URL="${DATABASE_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest}"
 # Thẻ cài lỗi của phiên gắn nhãn (research-local, chỉ ở máy thu): loại khỏi tập chấm luật, đếm người duyệt sửa đúng.
 THE_CAI="${THE_CAI:-$HOME/dev/onehub-invest/research-local/gan-nhan-tro-ly/the-cai-hai-khu-truc-2411.json}"
-BO=(); [ -f "$THE_CAI" ] && BO=(--bo-the-cai "$THE_CAI")
-node scripts/ghep-tin-truc-can-cham.mjs --tep "$ROOT/$TEP" --bam "$BAM" --ra "$HS/evidence/cham-truc.md" "${BO[@]}"
+# Thiếu tệp thì dừng có tên, không lặng lẽ chấm một tập khác (finding r1, ngoài hợp đồng); không dùng mảng rỗng với set -u
+# (bash 3.2 của macOS báo «unbound variable» — đo S4 r1 trên M5).
+[ -f "$THE_CAI" ] || { echo "ĐỎ: thiếu tệp thẻ cài lỗi $THE_CAI (chỉ ở máy thu) — chép sang hoặc trỏ THE_CAI rồi chấm lại"; exit 5; }
+node scripts/ghep-tin-truc-can-cham.mjs --tep "$ROOT/$TEP" --bam "$BAM" --ra "$HS/evidence/cham-truc.md" --bo-the-cai "$THE_CAI"

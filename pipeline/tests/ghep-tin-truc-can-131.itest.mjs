@@ -127,21 +127,38 @@ caDl("rule-khac-khong-vao-view", async () => {
 
 // AC-5 đầu–cuối: luật thật ghi trên dữ liệu của bản chép, rồi view khớp từng tin; 0 tin hai căn.
 // Không bọc BEGIN … ROLLBACK: ghiGan tự mở giao dịch; DB của riêng lượt bị xoá khi lệnh dừng.
+// Bộ dò «một tin hai dòng»: cùng câu cho view thật và cho bản sao có cấy dòng trùng (chiều đỏ của ô).
+const haiDong = async (nguon, p = []) => (await c.query(`SELECT offer_id FROM (${nguon}) u GROUP BY 1 HAVING count(*) > 1 ORDER BY 1 LIMIT 5`, p)).rows.map((r) => r.offer_id);
 test("dau-cuoi-luat-that-va-view-khop", async (t) => {
   if (!coDuLieu) return t.skip("DB không có toà có trục");
+  // Rút dòng ghep-can-* có sẵn của bản chép: lượt gắn phải tự chèn lại, không dựa vào dòng cũ (finding r1, hình dạng 4).
+  await c.query(`UPDATE field_assertions SET retracted_at = now(), retract_reason = 'thu-pl36-dau-cuoi' WHERE retracted_at IS NULL AND rule_id LIKE 'ghep-can-%'`);
   const vao = await docDauVao(c);
   const { ketQuaBai } = tinhGan(vao);
   const r = await ghiGan(c, dongPhatBieu(ketQuaBai));
   if (r.bo_luot) throw new Error("khoá đang bị giữ");
-  const lech = (await c.query(`
-    SELECT f.subject_key FROM field_assertions f
+  assert.ok(r.chen > 0, "lượt gắn thật không chèn dòng nào trên bản chép");
+  // Mỗi tin không xung đột có dòng ghep-can-* sống: đúng một dòng offer_unit mức sâu, stack_key bằng trục của dòng.
+  const { rows: tin } = await c.query(`
+    SELECT o.offer_id, array_agg(DISTINCT split_part(f.value, ':', 1)) AS truc, min(u.muc) AS muc, min(u.stack_key) AS stack_key, count(DISTINCT u)::int AS n
+      FROM field_assertions f
       JOIN sale_offers o ON f.subject_key = ANY (SELECT 'S03:' || p FROM unnest(o.post_ids) p)
       JOIN offer_unit u ON u.offer_id = o.offer_id
      WHERE f.retracted_at IS NULL AND f.field = $1 AND f.rule_id LIKE 'ghep-can-%' AND u.status = 'gan'
-       AND (u.muc = 'toa' OR u.stack_key IS DISTINCT FROM split_part(f.value, ':', 1)) LIMIT 5`, [SUB])).rows;
-  assert.deepEqual(lech, [], `dòng ghep-can-* sống không hiện ở mức sâu của tin: ${lech.map((x) => x.subject_key).join(", ")}`);
-  const hai = (await c.query(`SELECT offer_id FROM offer_unit GROUP BY 1 HAVING count(*) > 1 LIMIT 5`)).rows;
-  assert.deepEqual(hai, [], "một tin chỉ một dòng ở offer_unit (0 tin gắn hai căn)");
+     GROUP BY o.offer_id`, [SUB]);
+  const sai = tin.filter((x) => x.n !== 1 || !["truc", "can"].includes(x.muc) || x.truc.length !== 1 || x.stack_key !== x.truc[0]);
+  const muc = Object.fromEntries(["truc", "can"].map((m) => [m, tin.filter((x) => x.muc === m).length]));
+  console.log(`đầu–cuối: chèn ${r.chen} · ${tin.length} tin không xung đột có dòng ghep-can (trục ${muc.truc} · căn ${muc.can}) · lệch ${sai.length}`);
+  assert.ok(tin.length > 0 && muc.truc + muc.can > 0, "ô đầu–cuối rỗng: không tin nào ở mức trục hay căn sau lượt gắn thật");
+  assert.deepEqual(sai.map((x) => x.offer_id), [], `tin lệch mức hay stack_key: ${sai.slice(0, 5).map((x) => `${x.offer_id} ${x.muc} ${x.stack_key}≠${x.truc}`).join(", ")}`);
+  assert.deepEqual(await haiDong("SELECT * FROM offer_unit"), [], "một tin chỉ một dòng ở offer_unit (0 tin gắn hai căn)");
+});
+test("dau-cuoi-bo-do-hai-can-bao-dung-offer-id", async (t) => {
+  if (!coDuLieu) return t.skip("DB không có toà có trục");
+  // Chiều đỏ của «0 tin hai căn»: cấy một dòng trùng của một tin vào bản sao của view, bộ dò phải báo đúng offer_id đó.
+  const [{ offer_id } = {}] = (await c.query(`SELECT offer_id FROM offer_unit ORDER BY offer_id LIMIT 1`)).rows;
+  assert.ok(offer_id, "offer_unit rỗng trên bản chép");
+  assert.deepEqual(await haiDong("SELECT * FROM offer_unit UNION ALL SELECT * FROM offer_unit WHERE offer_id = $1", [offer_id]), [offer_id]);
 });
 
 // AC-7 — offer_building giữ nguyên đầu ra, nhanh; offer_unit nhanh

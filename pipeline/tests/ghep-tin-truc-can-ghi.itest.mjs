@@ -82,14 +82,26 @@ caDl("tat-mot-nguon-chi-rut-dong-cua-nguon-do", async () => {
   assert.equal(await demRule(RULE.ma), ma, "bật lại nguồn không về số cũ");
 });
 caDl("cau-rut-thay-boi-luot-chua-dong-ghep-can", async () => {
-  // Một bộ đọc khác ghi floor_raw cùng phương pháp e1_rule với replaceOwn trên bài đang có dòng ghep-can (khuôn của lượt nạp).
-  // Bài đang có dòng sống thật (các ca trước có thể đã làm nghỉ trục của vài bài).
-  const { rows: [{ subject_key, value }] } = await c.query(`SELECT subject_key, value FROM field_assertions WHERE retracted_at IS NULL AND rule_id = $1 ORDER BY id LIMIT 1`, [RULE.truc]);
-  const post = subject_key.slice(4);
-  await writeAssertions(c, [{ subject_key, field: "universal_property_sub_id", value, evidence_tier: "inferred",
-    method: "e1_rule", method_version: "thu-pl36", rule_id: "khac-pl36" }], { replaceOwn: true });
-  const { rows: [{ n }] } = await c.query(`SELECT count(*)::int n FROM field_assertions WHERE subject_key = $1 AND rule_id LIKE 'ghep-can-%' AND retract_reason = 'thay-boi-luot'`, [`S03:${post}`]);
-  assert.equal(n, 0, `câu rút «thay bởi lượt» rút ${n} dòng ghep-can-* của bài ${post}`);
+  // Một bộ đọc khác ghi universal_property_sub_id cùng phương pháp e1_rule với replaceOwn, GIÁ TRỊ KHÁC, trên bài đang có dòng
+  // ghep-can (khuôn của lượt nạp). Đối chứng dương: một dòng e1_rule không rule (giá trị thứ ba) cùng bài, cùng trường PHẢI bị rút
+  // «thay-boi-luot»; dòng ghep-can phải còn sống. Bỏ vế chừa ghep-can-% ở SQL_RUT_THAY thì dòng ghep-can bị rút → đỏ (E6).
+  await c.query("BEGIN");
+  try {
+    const { rows: [{ id, subject_key, value }] } = await c.query(`SELECT id, subject_key, value FROM field_assertions
+        WHERE retracted_at IS NULL AND rule_id = $1 AND field = 'universal_property_sub_id' ORDER BY id LIMIT 1`, [RULE.truc]);
+    const { rows: khac } = await c.query(`SELECT stack_key FROM stacks WHERE status = 'active' AND stack_key <> split_part($1, ':', 1)
+        ORDER BY stack_key LIMIT 2`, [value]);
+    assert.equal(khac.length, 2, "bản chép cần ít nhất ba trục đang hoạt động");
+    const [moi, doiChung] = khac.map((r) => `${r.stack_key}:*`);
+    const { rows: [{ id: idDc }] } = await c.query(`INSERT INTO field_assertions (subject_key, field, value, evidence_tier, method, observed_at)
+        VALUES ($1, 'universal_property_sub_id', $2, 'inferred', 'e1_rule', now()) RETURNING id`, [subject_key, doiChung]);
+    await writeAssertions(c, [{ subject_key, field: "universal_property_sub_id", value: moi, evidence_tier: "inferred",
+      method: "e1_rule", method_version: "thu-pl36", rule_id: "khac-pl36" }], { replaceOwn: true });
+    const trang = async (i) => (await c.query(`SELECT retracted_at IS NOT NULL AS r, retract_reason AS ly FROM field_assertions WHERE id = $1`, [i])).rows[0];
+    const dc = await trang(idDc), gc = await trang(id);
+    assert.deepEqual(dc, { r: true, ly: "thay-boi-luot" }, "đối chứng: dòng e1_rule không rule, giá trị khác phải bị rút thay-boi-luot");
+    assert.deepEqual(gc, { r: false, ly: null }, `câu rút «thay bởi lượt» rút dòng ghep-can-truc ${id} của ${subject_key}`);
+  } finally { await c.query("ROLLBACK"); }
 });
 
 // AC-8 — bước cuối lượt nạp
