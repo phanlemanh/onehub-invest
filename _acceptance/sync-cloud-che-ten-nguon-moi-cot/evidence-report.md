@@ -1,13 +1,13 @@
 ---
 schema_version: 2
 feature_slug: sync-cloud-che-ten-nguon-moi-cot
-verdict: REJECT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 5c1c7a70b10503ef5b16de16532f6e3e51879e77
+verified_commit: f697abbe3f275075516a85f5f5221505eaaa6082
 human_signoff:
 ---
 
@@ -23,140 +23,147 @@ human_signoff:
 | E6 | AC-6 | script | PASS |
 | E8 | AC-8 | script | PASS |
 | E9 | AC-9 | script | PASS |
+| E11 | AC-7 | script | PASS |
 | E10 | AC-1 | test | PASS |
 
 không chạy theo hồ sơ: E7
 
-Verdict tổng là REJECT dù mọi eval máy đều xanh: ba finding trong hợp đồng (AC-5, AC-6, AC-7, AC-9 ở mục review-findings.md) cho thấy lệnh chấm chưa chứng minh được điều hợp đồng hứa. Danh sách failed_evals để trống vì không eval máy nào đỏ.
-
 ## Evidence
 
 - eval: E1
-  run_id: minted-sync-cloud-che-ten-nguon-moi-cot-E1-r1
+  run_id: minted-sync-cloud-che-ten-nguon-moi-cot-E1-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.scc_che
-  verified_at: 2026-11-26T17:11:57Z
+  verified_at: 2026-11-26T19:22:29Z
   output: |
-    lệnh: bash db/db-thu.sh oneinvest_suite_scc --chay node --test --test-concurrency=1 --test-name-pattern='^SCC-1:' pipeline/sync-cloud-che.test.mjs
-    ℹ duration_ms 537.7715
+    ℹ duration_ms 565.063916
+    __EXIT=0
 
 - eval: E2
-  run_id: minted-sync-cloud-che-ten-nguon-moi-cot-E2-r1
+  run_id: minted-sync-cloud-che-ten-nguon-moi-cot-E2-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.scc_soat
-  verified_at: 2026-11-26T17:11:57Z
+  verified_at: 2026-11-26T19:22:29Z
   output: |
-    lệnh: bash db/db-thu.sh oneinvest_suite_scc --chay node --test --test-concurrency=1 --test-name-pattern='^SCC-2:' pipeline/sync-cloud-che.test.mjs
-    ℹ duration_ms 2273.092
+    ℹ duration_ms 2389.921875
+    __EXIT=0
 
 - eval: E3
-  run_id: minted-sync-cloud-che-ten-nguon-moi-cot-E3-r1
+  run_id: minted-sync-cloud-che-ten-nguon-moi-cot-E3-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.scc_su_co
-  verified_at: 2026-11-26T17:11:57Z
+  verified_at: 2026-11-26T19:22:29Z
   output: |
-    lệnh: bash db/db-thu.sh oneinvest_suite_scc --chay node --test --test-concurrency=1 --test-name-pattern='^SCC-3:' pipeline/sync-cloud-che.test.mjs
-    ℹ duration_ms 1252.67525
+    ℹ duration_ms 1395.793125
+    __EXIT=0
 
 - eval: E4
   run_id: minted-sync-cloud-che-ten-nguon-moi-cot-E4-r1
   exit_code: 0
-  baseline: n-a
   verifier: config:executors.script.scc_do_hang_ngay
   verified_at: 2026-11-26T17:11:57Z
-  output: |
-    lệnh: cd app && node --import tsx --test tests/do-hang-ngay-che.test.tsx
-    ℹ duration_ms 139.469291
+  carried_from_round: 1
+  # carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E5
-  run_id: r1-l5-1-20261126171157
+  run_id: minted-sync-cloud-che-ten-nguon-moi-cot-E5-r2
   exit_code: 0
-  baseline: red
+  baseline: n-a
   verifier: config:executors.script.scc_kho
-  verified_at: 2026-11-26T17:11:57Z
+  verified_at: 2026-11-26T19:22:29Z
   output: |
-    lệnh: nice -n 10 node pipeline/sync-cloud.mjs --kho
-    kho xong: 1038884 dòng, 22 bảng; catalog 0.0s · gate-pre 0.0s · read 621.4s · che 23.2s · scan 27.6s; pha đọc+che+soát 672.2s; tới hết soát 672.2s
+    kiem-kho: XANH — mọi điều kiện AC-5 đạt; 8 đột biến của lượt vừa đo đều đỏ
+    __EXIT=0
 
 - eval: E6
-  run_id: minted-sync-cloud-che-ten-nguon-moi-cot-E6-r1
+  run_id: minted-sync-cloud-che-ten-nguon-moi-cot-E6-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.scc_do
-  verified_at: 2026-11-26T17:11:57Z
+  verified_at: 2026-11-26T19:22:29Z
   output: |
-    lệnh: node --test scripts/do-ten-nguon-cloud.test.mjs
-    ℹ duration_ms 75.432584
+    ℹ duration_ms 1916.265292
+    __EXIT=0
 
 - eval: E8
-  run_id: minted-sync-cloud-che-ten-nguon-moi-cot-E8-r1
+  run_id: minted-sync-cloud-che-ten-nguon-moi-cot-E8-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.scc_dinh_danh
-  verified_at: 2026-11-26T17:11:57Z
+  verified_at: 2026-11-26T19:22:29Z
   output: |
-    lệnh: bash db/db-thu.sh oneinvest_suite_scc --chay node --test --test-concurrency=1 --test-name-pattern='^SCC-8:' pipeline/sync-cloud-che.test.mjs
-    ℹ duration_ms 724.742833
+    ℹ duration_ms 931.672292
+    __EXIT=0
 
 - eval: E9
-  run_id: minted-sync-cloud-che-ten-nguon-moi-cot-E9-r1
+  run_id: minted-sync-cloud-che-ten-nguon-moi-cot-E9-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.scc_ben_doc
-  verified_at: 2026-11-26T17:11:57Z
+  verified_at: 2026-11-26T19:22:29Z
   output: |
-    lệnh: bash db/db-thu.sh oneinvest_suite_scc --chay node --test --test-concurrency=1 --test-name-pattern='^SCC-9:' pipeline/sync-cloud-che.test.mjs
-    ℹ duration_ms 4103.894209
+    ℹ duration_ms 6022.860083
+    __EXIT=0
+
+- eval: E11
+  run_id: minted-sync-cloud-che-ten-nguon-moi-cot-E11-r2
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.script.scc_ap
+  verified_at: 2026-11-26T19:22:29Z
+  output: |
+    kiem-ho-so: XANH — 3 lệnh chạy được theo đúng chỗ đứng; 3 đột biến đều đỏ
+    __EXIT=0
 
 - eval: E10
-  run_id: minted-sync-cloud-che-ten-nguon-moi-cot-E10-r1
+  run_id: minted-sync-cloud-che-ten-nguon-moi-cot-E10-r2
   exit_code: 0
   baseline: red
   verifier: config:executors.suite.pipeline_that
-  verified_at: 2026-11-26T17:11:57Z
+  verified_at: 2026-11-26T19:22:29Z
   output: |
-    lệnh: node scripts/suite-neu-doi.mjs pipeline_that -- 'cd pipeline && npm run test:that'
-    ℹ duration_ms 2470922.983625
+    ℹ duration_ms 2435754.849041
+    __EXIT=0
 
 ### Lệnh suite (hồi quy)
 
 - cmd: node scripts/suite-neu-doi.mjs agent -- 'cd agent && npm test'
-  run_id: minted-sync-cloud-che-ten-nguon-moi-cot-SUITE-node_scripts_suite_neu_doi_mjs_agent_cd_-r1
+  run_id: minted-sync-cloud-che-ten-nguon-moi-cot-SUITE-node_scripts_suite_neu_doi_mjs_agent_cd_-r2
   exit_code: 0
-  verified_at: 2026-11-26T17:11:57Z
+  verified_at: 2026-11-26T19:22:29Z
 
 - cmd: node scripts/suite-neu-doi.mjs app -- 'cd app && npx tsc --noEmit && npm run lint'
-  run_id: minted-sync-cloud-che-ten-nguon-moi-cot-SUITE-lint-r1
+  run_id: minted-sync-cloud-che-ten-nguon-moi-cot-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-11-26T17:11:57Z
+  verified_at: 2026-11-26T19:22:29Z
 
 - cmd: node scripts/suite-neu-doi.mjs app_ui -- 'cd app && npm test'
-  run_id: minted-sync-cloud-che-ten-nguon-moi-cot-SUITE-node_scripts_suite_neu_doi_mjs_app_ui_cd-r1
+  run_id: minted-sync-cloud-che-ten-nguon-moi-cot-SUITE-node_scripts_suite_neu_doi_mjs_app_ui_cd-r2
   exit_code: 0
-  verified_at: 2026-11-26T17:11:57Z
+  verified_at: 2026-11-26T19:22:29Z
 
 - cmd: node scripts/suite-neu-doi.mjs pipeline_a -- 'cd pipeline && npm run test:a'
-  run_id: minted-sync-cloud-che-ten-nguon-moi-cot-SUITE-test_a-r1
+  run_id: minted-sync-cloud-che-ten-nguon-moi-cot-SUITE-test_a-r2
   exit_code: 0
-  verified_at: 2026-11-26T17:11:57Z
+  verified_at: 2026-11-26T19:22:29Z
 
 - cmd: node scripts/suite-neu-doi.mjs pipeline_b -- 'cd pipeline && npm run test:b'
-  run_id: minted-sync-cloud-che-ten-nguon-moi-cot-SUITE-test_b-r1
+  run_id: minted-sync-cloud-che-ten-nguon-moi-cot-SUITE-test_b-r2
   exit_code: 0
-  verified_at: 2026-11-26T17:11:57Z
+  verified_at: 2026-11-26T19:22:29Z
 
 - cmd: node scripts/suite-neu-doi.mjs ui_lint_rules -- 'cd app && npm run test:lint-rules'
-  run_id: minted-sync-cloud-che-ten-nguon-moi-cot-SUITE-test_lint_rules-r1
+  run_id: minted-sync-cloud-che-ten-nguon-moi-cot-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-11-26T17:11:57Z
+  verified_at: 2026-11-26T19:22:29Z
 
 - cmd: node scripts/suite-neu-doi.mjs portal_static -- 'node scripts/check-portal-compliance.mjs'
-  run_id: minted-sync-cloud-che-ten-nguon-moi-cot-SUITE-node_scripts_suite_neu_doi_mjs_portal_st-r1
+  run_id: minted-sync-cloud-che-ten-nguon-moi-cot-SUITE-node_scripts_suite_neu_doi_mjs_portal_st-r2
   exit_code: 0
-  verified_at: 2026-11-26T17:11:57Z
+  verified_at: 2026-11-26T19:22:29Z
 
 ## Known limits
 
@@ -164,24 +171,25 @@ Verdict tổng là REJECT dù mọi eval máy đều xanh: ba finding trong hợ
 
 ## Analyst
 
-none — mọi eval feature đều red trên baseline (có phân biệt)
+none — moi eval feature deu red tren baseline (co phan biet)
 
-Ghi chú: hai eval có baseline đo được là E5 và E10, cả hai red. Bảy eval còn lại không đo được baseline (xem dưới), nên không thể nói chúng phân biệt hay không.
+Ghi chú: chỉ E10 có baseline red; các eval còn lại là eval mới nên không đo được trên code cũ (xem mục dưới), không phải eval không phân biệt.
 
-### Baseline không đo
-
-- bash db/db-thu.sh oneinvest_suite_scc --chay node --test --test-concurrency=1 --test-name-pattern='^SCC-1:' pipeline/sync-cloud-che.test.mjs: bo qua baseline: tep pipeline/sync-cloud-che.test.mjs co o cay dang kiem nhung chua co o merge-base a45a0dd7dd880ad26196d6b8763babec533d76fd — eval moi, chay tren code cu khong phan biet gi
-- bash db/db-thu.sh oneinvest_suite_scc --chay node --test --test-concurrency=1 --test-name-pattern='^SCC-2:' pipeline/sync-cloud-che.test.mjs: bo qua baseline: tep pipeline/sync-cloud-che.test.mjs co o cay dang kiem nhung chua co o merge-base a45a0dd7dd880ad26196d6b8763babec533d76fd — eval moi, chay tren code cu khong phan biet gi
-- bash db/db-thu.sh oneinvest_suite_scc --chay node --test --test-concurrency=1 --test-name-pattern='^SCC-3:' pipeline/sync-cloud-che.test.mjs: bo qua baseline: tep pipeline/sync-cloud-che.test.mjs co o cay dang kiem nhung chua co o merge-base a45a0dd7dd880ad26196d6b8763babec533d76fd — eval moi, chay tren code cu khong phan biet gi
-- cd app && node --import tsx --test tests/do-hang-ngay-che.test.tsx: bo qua baseline: tep app/tests/do-hang-ngay-che.test.tsx co o cay dang kiem nhung chua co o merge-base a45a0dd7dd880ad26196d6b8763babec533d76fd — eval moi, chay tren code cu khong phan biet gi
-- node --test scripts/do-ten-nguon-cloud.test.mjs: bo qua baseline: tep scripts/do-ten-nguon-cloud.test.mjs co o cay dang kiem nhung chua co o merge-base a45a0dd7dd880ad26196d6b8763babec533d76fd — eval moi, chay tren code cu khong phan biet gi
-- bash db/db-thu.sh oneinvest_suite_scc --chay node --test --test-concurrency=1 --test-name-pattern='^SCC-8:' pipeline/sync-cloud-che.test.mjs: bo qua baseline: tep pipeline/sync-cloud-che.test.mjs co o cay dang kiem nhung chua co o merge-base a45a0dd7dd880ad26196d6b8763babec533d76fd — eval moi, chay tren code cu khong phan biet gi
-- bash db/db-thu.sh oneinvest_suite_scc --chay node --test --test-concurrency=1 --test-name-pattern='^SCC-9:' pipeline/sync-cloud-che.test.mjs: bo qua baseline: tep pipeline/sync-cloud-che.test.mjs co o cay dang kiem nhung chua co o merge-base a45a0dd7dd880ad26196d6b8763babec533d76fd — eval moi, chay tren code cu khong phan biet gi
+Baseline khong do
+- bash db/db-thu.sh oneinvest_suite_scc --chay node --test --test-concurrency=1 --test-name-pattern='^SCC-1:' pipeline/sync-cloud-che.test.mjs: bo qua baseline: tep pipeline/sync-cloud-che.test.mjs co o cay dang kiem nhung chua co o merge-base befda13c624655ee0c0e4bb44b8f6482fec427d4 — eval moi, chay tren code cu khong phan biet gi
+- bash db/db-thu.sh oneinvest_suite_scc --chay node --test --test-concurrency=1 --test-name-pattern='^SCC-2:' pipeline/sync-cloud-che.test.mjs: bo qua baseline: tep pipeline/sync-cloud-che.test.mjs co o cay dang kiem nhung chua co o merge-base befda13c624655ee0c0e4bb44b8f6482fec427d4 — eval moi, chay tren code cu khong phan biet gi
+- bash db/db-thu.sh oneinvest_suite_scc --chay node --test --test-concurrency=1 --test-name-pattern='^SCC-3:' pipeline/sync-cloud-che.test.mjs: bo qua baseline: tep pipeline/sync-cloud-che.test.mjs co o cay dang kiem nhung chua co o merge-base befda13c624655ee0c0e4bb44b8f6482fec427d4 — eval moi, chay tren code cu khong phan biet gi
+- node --test pipeline/tests/sync-cloud-kho-xet.test.mjs && node _acceptance/sync-cloud-che-ten-nguon-moi-cot/probes/kiem-kho.mjs: bo qua baseline: tep pipeline/tests/sync-cloud-kho-xet.test.mjs co o cay dang kiem nhung chua co o merge-base befda13c624655ee0c0e4bb44b8f6482fec427d4 — eval moi, chay tren code cu khong phan biet gi
+- node --test scripts/do-ten-nguon-cloud.test.mjs && bash db/db-thu.sh oneinvest_suite_scc6 --chay-trong node --test scripts/do-ten-nguon-cloud.itest.mjs: bo qua baseline: tep scripts/do-ten-nguon-cloud.test.mjs co o cay dang kiem nhung chua co o merge-base befda13c624655ee0c0e4bb44b8f6482fec427d4 — eval moi, chay tren code cu khong phan biet gi
+- bash db/db-thu.sh oneinvest_suite_scc --chay node --test --test-concurrency=1 --test-name-pattern='^SCC-8:' pipeline/sync-cloud-che.test.mjs: bo qua baseline: tep pipeline/sync-cloud-che.test.mjs co o cay dang kiem nhung chua co o merge-base befda13c624655ee0c0e4bb44b8f6482fec427d4 — eval moi, chay tren code cu khong phan biet gi
+- bash db/db-thu.sh oneinvest_suite_scc --chay node --test --test-concurrency=1 --test-name-pattern='^SCC-9:' pipeline/sync-cloud-che.test.mjs: bo qua baseline: tep pipeline/sync-cloud-che.test.mjs co o cay dang kiem nhung chua co o merge-base befda13c624655ee0c0e4bb44b8f6482fec427d4 — eval moi, chay tren code cu khong phan biet gi
+- node --test _acceptance/sync-cloud-che-ten-nguon-moi-cot/ap-may-thu/cho-ranh.test.mjs && node _acceptance/sync-cloud-che-ten-nguon-moi-cot/ap-may-thu/kiem-ho-so.mjs: bo qua baseline: tep _acceptance/sync-cloud-che-ten-nguon-moi-cot/ap-may-thu/cho-ranh.test.mjs co o cay dang kiem nhung chua co o merge-base befda13c624655ee0c0e4bb44b8f6482fec427d4 — eval moi, chay tren code cu khong phan biet gi
 
 ## Variance
 
-none — mọi eval nhiều lần chạy đều đồng nhất (mọi eval chạy một lần, tất định)
+none — every multi-run eval is uniform
 
 ## Iterations
 
-Round 1: mọi eval máy xanh (E7 không chạy theo hồ sơ), nhưng finding trong hợp đồng cho thấy lệnh chấm E5 chỉ kiểm một số bằng 0 chứ không kiểm các quan hệ hợp đồng hứa, E9 và E6 dùng đối chứng/giả lập chưa chứng minh đủ, và hồ sơ áp hở bước sao lưu. Trả về cho bên làm.
+Round 1: bằng chứng gốc của tính năng (E4 giữ nguyên từ vòng này).
+Round 2: bốn finding S4 của vòng 1 thành lệnh máy; E1, E2, E3, E5, E6, E8, E9, E10, E11 chạy lại và đạt; E4 mang sang từ vòng 1 (delta không chạm paths); E7 không chạy theo hồ sơ.
