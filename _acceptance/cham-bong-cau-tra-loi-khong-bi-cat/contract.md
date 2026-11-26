@@ -5,7 +5,7 @@ slug: cham-bong-cau-tra-loi-khong-bi-cat
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [script]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-22
 design_doc: docs/superpowers/specs/2026-11-22-cham-bong-cau-tra-loi-khong-bi-cat-design.md
@@ -73,3 +73,11 @@ Ai đọc đầu ra phía sau: probe E11 của NB1 (`thu-30.sh`, lượt 2 sau g
 ## Known limits
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-26:
+  - Ngoài-2: Phép kiểm dùng lại kết quả có thể báo đạt khi lượt cũ không có dữ liệu để so (dòng đếm 0/0).
+  - Ngoài-3: Phép đo mức chi 30 thẻ dùng bản công thức chép riêng; công thức thật đổi thì số báo có thể lệch.
+  - Ngoài-5: Dòng dừng vì trần quy mọi thẻ thiếu cho trần kể cả khi lượt có lời gọi lỗi; số lỗi vẫn in ngay dưới.
+  - Ngoài-6: Thẻ đổi chữ giữa hai lượt bị xếp vào thiếu nên phép kiểm dùng lại có thể đỏ giả.
+  - Ngoài-7: Bài kiểm chưa đo đoạn trao trần chữ trả về cho nhà cung cấp model thật; lỗi nếu có lộ ở lượt thử thật kế.
+  - Ngoài-8: Bài kiểm dòng dừng vì trần chưa ghim số trần và số tiền đã chi in ra.
