@@ -15,7 +15,8 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { after, before, describe, test } from "node:test";
 
-import { PROBES, SLO_HOURS, TIME_SOURCE, describe as moTa, readFreshness } from "./lib/freshness.mjs";
+import { PROBES, TIME_SOURCE, describe as moTa, readFreshness } from "./lib/freshness.mjs";
+import { cadenceMap122, themCot122 } from "./lib/so-nguon-122.mjs";
 import { SAO_LUU_SLO_GIO, docTrangThaiSaoLuu } from "./lib/sao-luu-ngoai-may.mjs";
 
 // Ca CLI chạy với thư mục trạng thái sao lưu RỖNG của riêng lượt (chưa bật) — không đọc ~/.oneinvest của máy chạy test.
@@ -27,6 +28,11 @@ const require = createRequire(new URL("../app/package.json", import.meta.url));
 const pg = require("pg");
 const DB_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 
+// NK1: nhịp không còn là hằng trong mã — một chỗ ghi là migration 122; fixture và ca biên đọc nó qua bộ đọc 122.
+const SLO_HOURS = cadenceMap122();
+/** Mã có câu đo riêng (PROBES) — ma trận biên và ma trận cột thời gian phủ đúng tập này; mã đo qua bảng nạp (S09, S16) có
+ *  ca NK-AC-3 riêng ở cuối tệp. */
+const PROBE_SLO = Object.fromEntries(Object.entries(SLO_HOURS).filter(([k]) => k in PROBES));
 const NOW = new Date("2026-10-23T12:00:00Z");
 const ago = (h) => new Date(NOW.getTime() - h * 3.6e6).toISOString();
 const TABLES = ["source_registry", "airbnb_snapshots", "airdna_markets", "stg_zalo_posts", "stg_chotot_ads", "stg_s08_inventory"];
@@ -116,10 +122,14 @@ function ageSnapshot(f, id, at) {
 async function seed(c, schema, f) {
   await c.query(`CREATE SCHEMA "${schema}"`);
   for (const t of TABLES) await c.query(`CREATE TABLE "${schema}".${t} (LIKE public.${t} INCLUDING ALL)`);
+  await themCot122(c, schema); // DB chưa áp 122 thì LIKE thiếu cột của sổ mới
   const q = (sql, v) => c.query(sql.replaceAll("§", `"${schema}"`), v);
   for (const r of f.registry) {
-    await q(`INSERT INTO §.source_registry (code, real_name, label_vi, status, source_ids) VALUES ($1,$2,'x',$3,$4)`,
-      [r.code, `${CANARY}-${r.code}`, r.status, r.ids]);
+    // Nhịp mặc định = migration 122; ca nào đo nhịp/bảng nạp/thị trường thì ghi đè trên chính dòng fixture.
+    const cadence = "cadence" in r ? r.cadence : (SLO_HOURS[r.code] ?? null);
+    await q(`INSERT INTO §.source_registry (code, real_name, label_vi, status, source_ids, cadence_hours, stg_tables, measured_markets, reason)
+             VALUES ($1,$2,'x',$3,$4,$5,$6,$7,$8)`,
+      [r.code, `${CANARY}-${r.code}`, r.status, r.ids, cadence, r.stg ?? [], r.markets ?? null, r.reason ?? null]);
   }
   for (const s of f.snapshots) {
     await q(`INSERT INTO §.airbnb_snapshots (snapshot_id, city, source, manifest, collected_at) VALUES ($1,$2,$3,'{}',$4)`,
@@ -140,7 +150,23 @@ async function seed(c, schema, f) {
     await q(`INSERT INTO §.stg_s08_inventory (source_id, snapshot_id, project_id, state, product_code, payload)
              VALUES ($1, $2, 'p1', 'notSold', 'x', '{}')`, [u.id, u.snap]);
   }
+  // NK1: bảng nạp nguồn kho (S09, S16) — chỉ dựng khi fixture có dòng cho chúng.
+  if (f.stgRows) {
+    for (const t of STG_KHO) await c.query(`CREATE TABLE "${schema}".${t} (LIKE public.${t} INCLUDING ALL)`);
+    let i = 0;
+    for (const [t, snaps] of Object.entries(f.stgRows)) {
+      for (const snap of snaps) {
+        i++;
+        if (t === "stg_s09_item")
+          await q(`INSERT INTO §.${t} (snapshot_id, source_id, kind, payload) VALUES ($1, $2, 'du-an', '{}')`, [snap, `i${i}`]);
+        else if (t === "stg_s16_can_chi_tiet")
+          await q(`INSERT INTO §.${t} (snapshot_id, du_an, ma_can, dong) VALUES ($1, 'd', $2, $3)`, [snap, `m${i}`, i]);
+        else throw new Error(`fixture: chưa có khuôn chèn cho ${t}`);
+      }
+    }
+  }
 }
+const STG_KHO = ["stg_s09_item", "stg_s16_can", "stg_s16_can_chi_tiet", "stg_s16_item", "stg_s16_khu", "stg_s16_toa"];
 
 /** Ca module: schema tạm trong giao dịch ROLLBACK — không để lại gì. */
 async function freshnessOf(f) {
@@ -235,8 +261,9 @@ describe("AC-5 SLO", () => {
     assert.deepEqual(rows.filter((r) => r.code === "S07").map((r) => r.status), ["no-slo"], "mã active chưa khai SLO phải ra đúng một no-slo");
   });
   test("AC-5 bảng SLO đúng từng giá trị giờ", () => {
-    // khai-slo-s10-s11 AC-1: S10, S11 = 192 giờ (giám sát đợt duyệt 12/11).
-    assert.deepEqual(SLO_HOURS, { S01: 192, S02: 840, S03: 72, S05: 96, S06: 36, S08: 192, S10: 192, S11: 192 });
+    // khai-slo-s10-s11 AC-1: S10, S11 = 192 giờ (giám sát đợt duyệt 12/11). NK1: nhịp đọc từ migration 122 — các mã cũ giữ
+    // đúng số; S09, S16 là mã đo qua bảng nạp (192 giữ chỗ, Hỏi-1 NK1).
+    assert.deepEqual(SLO_HOURS, { S01: 192, S02: 840, S03: 72, S05: 96, S06: 36, S08: 192, S09: 192, S10: 192, S11: 192, S16: 192 });
   });
 });
 
@@ -562,7 +589,7 @@ describe("GT-AC-4 ma trận biên SLO", () => {
     }
   }
   test("GT-AC-4 ma trận biên đủ 16 ca", () => {
-    assert.deepEqual(EDGE.map((e) => e[0]).sort(), Object.keys(SLO_HOURS).sort(), "ma trận phải phủ đúng mọi mã có SLO");
+    assert.deepEqual(EDGE.map((e) => e[0]).sort(), Object.keys(PROBE_SLO).sort(), "ma trận phải phủ đúng mọi mã có SLO và câu đo riêng");
     assert.equal(edgeRan, 16, `chỉ ${edgeRan}/16 ca biên đã chạy tới cuối`);
   });
 });
@@ -591,7 +618,7 @@ const TIME_MATRIX = {
 /** Cột mà SQL của probe thật sự lấy max — giải bí danh bảng từ FROM/JOIN. Trả danh sách lỗi có tên mã. */
 function timeColumnProblems(probes, declared) {
   const out = [];
-  for (const code of Object.keys(SLO_HOURS)) {
+  for (const code of Object.keys(PROBE_SLO)) {
     const sql = probes[code]?.sql;
     if (!sql) { out.push(`${code}: không có probe`); continue; }
     const m = sql.match(/max\(\s*(?:(\w+)\.)?(\w+)\s*\)/);
@@ -609,7 +636,7 @@ function timeColumnProblems(probes, declared) {
 describe("GT-AC-8 ma trận mã → cột thời gian", () => {
   test("GT-AC-8 TIME_SOURCE bằng ma trận viết trước, đủ mọi mã có SLO", () => {
     assert.deepEqual(TIME_SOURCE, TIME_MATRIX);
-    assert.deepEqual(Object.keys(TIME_SOURCE).sort(), Object.keys(SLO_HOURS).sort());
+    assert.deepEqual(Object.keys(TIME_SOURCE).sort(), Object.keys(PROBE_SLO).sort());
   });
   test("GT-AC-8 SQL từng probe lấy max(đúng cột)", () => {
     assert.deepEqual(timeColumnProblems(PROBES, TIME_SOURCE), []);
@@ -703,5 +730,222 @@ describe("C12 sao lưu ngoài máy (sao-luu-ma-hoa-b2 AC-7)", () => {
     assert.match(r37.stderr, /Sao lưu ngoài máy: quá hạn 36 giờ/, "C12 CLI 37h: stderr");
     assert.equal(r35.code, 0, `C12 CLI 35h: mã\n${r35.stderr}`);
     assert.match(r35.stdout, /Sao lưu ngoài máy: ok/, "C12 CLI 35h: stdout");
+  });
+});
+
+// ======================================================================================================== NK1 ==
+// so-nguon-kho-khai-bao AC-2/3/4: sổ ở AC-1 = sổ trước 122 (nhịp trống, S05 paused, S11, S16 active) rồi chạy CHÍNH migration
+// 122 trong schema tạm; CLI (scripts/lib/freshness.mjs) và app (app/src/lib/freshness.ts, Node nạp thẳng TS) đọc cùng lược đồ.
+const appFresh = await import(pathToFileURL(path.join(HERE, "..", "app", "src", "lib", "freshness.ts")).href);
+const { doc122 } = await import("./lib/so-nguon-122.mjs");
+const HAI_BAN = [["CLI", { readFreshness }], ["app", appFresh]];
+
+function nkFixture() {
+  const f = baseFixture();
+  // Sổ trước 122: không nhịp (cadence null), S05 paused như máy thu, S16 active với source_ids riêng; S09, S17 do 122 chèn.
+  f.registry = f.registry.map((r) => ({ ...r, cadence: null, ...(r.code === "S05" ? { status: "paused", reason: "x" } : {}) }));
+  f.registry.push({ code: "S16", status: "active", ids: ["canary-s16"], cadence: null });
+  f.snapshots.push(
+    { id: "vn__s01__cu", city: "vn", source: IDS.S01[0], at: ago(24 * 30) },
+    // S16: bản thu có source NGOÀI source_ids của S16, có dòng ở stg_s16_can_chi_tiet → vẫn tính (đo qua bảng nạp).
+    { id: "vn__s16__1", city: "vn", source: "canary-s16-thu-khac", at: ago(30) },
+    // Bẫy: bản thu mới hơn mang source S16 nhưng chỉ có dòng ở bảng NGOÀI stg_tables của S16 (stg_s08_inventory).
+    { id: "vn__s16__bay", city: "vn", source: "canary-s16", at: ago(1) },
+    { id: "vn__s09__1", city: "vn", source: "canary-s09-thu", at: ago(5) },
+  );
+  f.s08 = [...f.s08, { id: "s16bay", snap: "vn__s16__bay", at: ago(1) }];
+  f.stgRows = { stg_s16_can_chi_tiet: ["vn__s16__1", "vn__s16__1"], stg_s09_item: ["vn__s09__1"] };
+  return f;
+}
+
+/** Seed + migration 122 trong schema tạm (ROLLBACK), `sua(q)` chỉnh sổ sau áp; trả hàng của từng bản. */
+async function nkOf(f, { sua, ban = HAI_BAN, spy } = {}) {
+  const schema = `freshness_nk_${process.pid}_${++seq}`;
+  await client.query("BEGIN");
+  try {
+    await seed(client, schema, f);
+    await client.query(`SET LOCAL search_path TO "${schema}"`);
+    await client.query(doc122());
+    if (sua) await sua((sql) => client.query(sql));
+    const out = {};
+    for (const [ten, mod] of ban) out[ten] = await mod.readFreshness(spy ? spy(client) : client, { now: NOW });
+    return out;
+  } finally {
+    await client.query("ROLLBACK");
+  }
+}
+const key = (r) => [r.code, r.city, r.ageHours, r.sloHours, r.status];
+
+// Bảng mong đợi viết TRƯỚC cho nkFixture() sau 122: mã · thành phố · tuổi · nhịp · trạng thái.
+const NK_MONG = [
+  ["S01", "hanoi", 24, 192, "fresh"],
+  ["S02", "vn", 48, 840, "fresh"],
+  ["S03", "hanoi", 1, 72, "fresh"],
+  ["S06", "hanoi", 10, 36, "fresh"],
+  ["S06", "hcmc", 10, 36, "fresh"],
+  ["S08", "vn", 2, 192, "fresh"],
+  ["S09", "vn", 5, 192, "fresh"],
+  ["S10", "vn", 3, 192, "fresh"],
+  ["S16", "vn", 30, 192, "fresh"],
+];
+
+async function napBanPha(ten, from, to) {
+  const goc = readFileSync(path.join(HERE, "lib", "freshness.mjs"), "utf8");
+  const pha = goc.replace(from, to);
+  assert.notEqual(pha, goc, `bản phá ${ten}: khuôn không khớp mã nguồn`);
+  const f = path.join(SCRATCH, `freshness-nk-${ten}.mjs`);
+  writeFileSync(f, pha);
+  return import(pathToFileURL(f).href);
+}
+
+/** Đổi nhịp S06 trong sổ thành 9 giờ: hàng S06/hanoi (10 giờ) phải stale với nhịp 9. Trả lỗi theo tên mã. */
+async function doiNhipLoi(ban) {
+  const kq = await nkOf(nkFixture(), { ban, sua: (q) => q("UPDATE source_registry SET cadence_hours = 9 WHERE code = 'S06'") });
+  const out = [];
+  for (const [ten, rows] of Object.entries(kq)) {
+    const r = rows.find((x) => x.code === "S06" && x.city === "hanoi");
+    if (!r || r.sloHours !== 9 || r.status !== "stale") out.push(`${ten} S06: không đổi theo cadence_hours (sloHours ${r?.sloHours})`);
+  }
+  return out;
+}
+
+/** S16 không được lấy tuổi từ bản thu chỉ có dòng ở bảng ngoài stg_tables. */
+async function bangNgoaiLoi(ban) {
+  const kq = await nkOf(nkFixture(), { ban });
+  return Object.entries(kq).flatMap(([ten, rows]) => {
+    const r = rows.find((x) => x.code === "S16");
+    return r?.ageHours === 30 ? [] : [`${ten} S16: tuổi ${r?.ageHours} — tính cả bản thu chỉ có dòng ngoài stg_tables`];
+  });
+}
+
+/** S01 measured_markets {hanoi}: không hàng hcmc, vn. */
+async function thiTruongLoi(ban) {
+  const kq = await nkOf(nkFixture(), { ban });
+  return Object.entries(kq).flatMap(([ten, rows]) => {
+    const c = rows.filter((x) => x.code === "S01").map((x) => x.city);
+    return JSON.stringify(c) === JSON.stringify(["hanoi"]) ? [] : [`${ten} S01: thành phố ${c.join(",")}`];
+  });
+}
+
+describe("NK-AC-2 nhịp đọc từ sổ", () => {
+  test("NK-AC-2 bảng mong đợi từng hàng (S01 hanoi, S02, S03, S06, S08, S10) khớp CLI và app", async (t) => {
+    if (needDb(t)) return;
+    const kq = await nkOf(nkFixture());
+    for (const [ten, rows] of Object.entries(kq)) {
+      assert.deepEqual(rows.filter((r) => r.code !== "S04").map(key), NK_MONG, `${ten}: lệch bảng mong đợi`);
+    }
+    assert.deepEqual(kq.app, kq.CLI, "app và CLI phải ra cùng từng hàng");
+  });
+  test("NK-AC-2 S05, S11 paused không có hàng; đổi sang active thì có hàng (thông điệp gọi tên mã)", async (t) => {
+    if (needDb(t)) return;
+    const kq = await nkOf(nkFixture());
+    for (const [ten, rows] of Object.entries(kq))
+      for (const ma of ["S05", "S11"]) assert.equal(rows.filter((r) => r.code === ma).length, 0, `${ten}: ${ma} paused mà còn hàng`);
+    const bat = await nkOf(nkFixture(), { sua: (q) => q("UPDATE source_registry SET status = 'active' WHERE code IN ('S05','S11')") });
+    for (const [ten, rows] of Object.entries(bat)) {
+      assert.deepEqual(rows.filter((r) => r.code === "S05").map(key), [["S05", "hanoi", 2, 96, "fresh"]], `${ten}: S05 bật lại phải có hàng`);
+      assert.deepEqual(rows.filter((r) => r.code === "S11").map(key), [["S11", "vn", 4, 192, "fresh"]], `${ten}: S11 bật lại phải có hàng`);
+    }
+  });
+  test("NK-AC-2 sửa cadence_hours một mã: CLI và app cùng đổi", async (t) => {
+    if (needDb(t)) return;
+    assert.deepEqual(await doiNhipLoi(HAI_BAN), []);
+  });
+  test("NK-AC-2 sổ thiếu cột: hai bản ném lỗi gọi tên migration 122", async (t) => {
+    if (needDb(t)) return;
+    const schema = `freshness_nk_${process.pid}_${++seq}`;
+    await client.query("BEGIN");
+    try {
+      await seed(client, schema, baseFixture());
+      await client.query(`ALTER TABLE "${schema}".source_registry DROP COLUMN cadence_hours`);
+      await client.query(`SET LOCAL search_path TO "${schema}"`);
+      for (const [ten, mod] of HAI_BAN) {
+        await client.query("SAVEPOINT sp");
+        await assert.rejects(mod.readFreshness(client, { now: NOW }), /source_registry chưa có cột cadence_hours — áp migration 122/, `${ten}`);
+        await client.query("ROLLBACK TO SAVEPOINT sp");
+      }
+    } finally {
+      await client.query("ROLLBACK");
+    }
+    // Client trả dòng sổ thiếu khoá (client giả, bộ đọc cũ) cũng ném, không rơi về số cũ.
+    const gia = { query: async () => ({ rows: [{ code: "S01", source_ids: [] }] }) };
+    for (const [ten, mod] of HAI_BAN) await assert.rejects(mod.readFreshness(gia), /áp migration 122/, `${ten} client thiếu khoá`);
+  });
+  test("chiều đỏ NK-AC-2: bản phá đọc hằng cũ thì ca đổi nhịp đỏ", async (t) => {
+    if (needDb(t)) return;
+    const pha = await napBanPha("hang-cu", "const sloHours = cadence ?? null;",
+      "const sloHours = ({ S01: 192, S02: 840, S03: 72, S05: 96, S06: 36, S08: 192, S09: 192, S10: 192, S11: 192, S16: 192 })[code] ?? (cadence, null);");
+    assert.deepEqual(await doiNhipLoi([["CLI", pha]]), ["CLI S06: không đổi theo cadence_hours (sloHours 36)"]);
+  });
+});
+
+describe("NK-AC-3 nguồn kho đo qua bảng nạp", () => {
+  test("NK-AC-3 S16 đo qua stg_tables: tuổi từ snapshot có dòng stg_s16_can_chi_tiet, source ngoài source_ids", async (t) => {
+    if (needDb(t)) return;
+    const kq = await nkOf(nkFixture());
+    for (const [ten, rows] of Object.entries(kq)) {
+      assert.deepEqual(rows.filter((r) => r.code === "S16").map(key), [["S16", "vn", 30, 192, "fresh"]], ten);
+      assert.ok(!rows.some((r) => r.status === "no-slo"), `${ten}: còn hàng chưa khai SLO`);
+      assert.ok(!rows.map(moTa).some((d) => /S16: nguồn active chưa khai SLO/.test(d)), `${ten}: còn dòng S16 chưa khai SLO`);
+    }
+  });
+  test("NK-AC-3 S09 có hàng, tuổi từ stg_s09_item", async (t) => {
+    if (needDb(t)) return;
+    const kq = await nkOf(nkFixture());
+    for (const [ten, rows] of Object.entries(kq))
+      assert.deepEqual(rows.filter((r) => r.code === "S09").map(key), [["S09", "vn", 5, 192, "fresh"]], ten);
+  });
+  test("NK-AC-3 snapshot chỉ có dòng ở bảng ngoài stg_tables không được tính", async (t) => {
+    if (needDb(t)) return;
+    assert.deepEqual(await bangNgoaiLoi(HAI_BAN), []);
+  });
+  test("NK-AC-3 tên bảng sai khuôn hay không có thật: hàng chưa có dữ liệu kèm lý do, không chạy SQL mang tên đó", async (t) => {
+    if (needDb(t)) return;
+    const XAU = "stg_x; DROP TABLE airbnb_snapshots";
+    const sqls = [];
+    const spy = (c) => ({ query: (sql, v) => (sqls.push(sql), c.query(sql, v)) });
+    const kq = await nkOf(nkFixture(), {
+      spy,
+      sua: (q) => q(`UPDATE source_registry SET stg_tables = CASE code WHEN 'S16' THEN ARRAY['${XAU.replaceAll("'", "''")}']
+                                                                    WHEN 'S09' THEN ARRAY['stg_khong_co_that'] END
+                      WHERE code IN ('S16','S09')`),
+    });
+    for (const [ten, rows] of Object.entries(kq)) {
+      const s16 = rows.filter((r) => r.code === "S16");
+      const s09 = rows.filter((r) => r.code === "S09");
+      assert.deepEqual(s16.map((r) => [r.status, r.sloHours]), [["none", 192]], `${ten} S16`);
+      assert.match(s16[0].reason ?? "", /sai khuôn tên/, `${ten} S16 lý do`);
+      assert.deepEqual(s09.map((r) => [r.status, r.sloHours]), [["none", 192]], `${ten} S09`);
+      assert.match(s09[0].reason ?? "", /không có/, `${ten} S09 lý do`);
+      assert.match(moTa(s09[0]), /^S09: chưa có dữ liệu ở bảng nạp của nguồn — bảng nạp không có/, `${ten} chữ CLI nêu lý do`);
+    }
+    assert.ok(!sqls.some((q) => q.includes("DROP TABLE") || q.includes("stg_khong_co_that")), "có câu SQL mang tên bảng xấu");
+  });
+  test("chiều đỏ NK-AC-3: bỏ lọc stg_tables thì ca bảng ngoài đỏ", async (t) => {
+    if (needDb(t)) return;
+    const pha = await napBanPha("bo-loc-stg", "const u = tables.map((t) => `SELECT snapshot_id FROM ${t}`).join(\" UNION \");",
+      "const u = `SELECT snapshot_id FROM airbnb_snapshots WHERE city = 'vn' AND source LIKE 'canary-s16%'`;");
+    assert.deepEqual(await bangNgoaiLoi([["CLI", pha]]), ["CLI S16: tuổi 1 — tính cả bản thu chỉ có dòng ngoài stg_tables"]);
+  });
+});
+
+describe("NK-AC-4 thị trường có lịch", () => {
+  test("NK-AC-4 S01 measured_markets {hanoi}: chỉ hàng hanoi ở CLI và app", async (t) => {
+    if (needDb(t)) return;
+    assert.deepEqual(await thiTruongLoi(HAI_BAN), []);
+  });
+  test("NK-AC-4 measured_markets NULL: mọi thành phố có dữ liệu như trước", async (t) => {
+    if (needDb(t)) return;
+    const kq = await nkOf(nkFixture(), { sua: (q) => q("UPDATE source_registry SET measured_markets = NULL WHERE code = 'S01'") });
+    for (const [ten, rows] of Object.entries(kq)) {
+      assert.deepEqual(rows.filter((r) => r.code === "S01").map((r) => [r.city, r.status]),
+        [["hanoi", "fresh"], ["hcmc", "fresh"], ["vn", "stale"]], `${ten}: S01 mọi thành phố có dữ liệu`);
+      assert.deepEqual(rows.filter((r) => r.code === "S06").map((r) => r.city), ["hanoi", "hcmc"], `${ten}: S06 (NULL) giữ mọi thành phố`);
+    }
+  });
+  test("chiều đỏ NK-AC-4: bỏ lọc thị trường thì hcmc, vn hiện lại", async (t) => {
+    if (needDb(t)) return;
+    const pha = await napBanPha("bo-loc-tt", ".filter((r) => !markets || markets.includes(r.city))", "");
+    assert.deepEqual(await thiTruongLoi([["CLI", pha]]), ["CLI S01: thành phố hanoi,hcmc,vn"]);
   });
 });
