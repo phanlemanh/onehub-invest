@@ -54,3 +54,16 @@ export function dongTongKet(d: DemLuot): string[] {
   }
   return dong;
 }
+
+/**
+ * NB11 AC-6: dòng tổng kết số đề xuất «có căn cứ chờ phiếu độc lập» — trùng luật (E1 / toà danh bạ) nhưng lượt hằng đêm
+ * chuyển sang thẻ chờ, không áp. In ở cả chế độ dry lẫn ghi thật.
+ */
+export function dongChuyenThe(n: number): string {
+  return `có căn cứ chờ phiếu độc lập (chuyển thẻ, không áp): ${n}`;
+}
+
+/** Toàn bộ dòng tổng kết lượt ghi thật mà CLI in (enrich-run.ts) — test E6 đọc đúng hàm này. */
+export function dongTongKetLuot(d: DemLuot, chuyenThe: number): string[] {
+  return [...dongTongKet(d), dongChuyenThe(chuyenThe)];
+}
