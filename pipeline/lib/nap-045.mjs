@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 import { napLai061 } from "./nap-061.mjs";
 import { daCoPhanGiu068, MIG_068 } from "./nap-068.mjs";
 import { napLai095 } from "./nap-095.mjs";
+import { DAU_VA_136, VA_136 } from "./nap-136.mjs";
 
 const MIG = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../db/migrations/045_phat_bieu_va_phan_xu.sql"), "utf8");
 /** Phần hàm của 045 (mục 6–8): nạp lại khi DB đã áp, tránh ALTER bảng dùng chung (khoá độc quyền) trong test. */
@@ -44,11 +45,11 @@ const MIG_099 = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../.
 
 /**
  * Mọi migration định nghĩa hay chèn vào resolve_offer_fields, theo đúng thứ tự chuỗi nạp lại của napPhatBieu (045 → 059 →
- * 061 + 069 → 095 → 068 → 099). Ca canh HT5 (scripts/kiem-tin-rao-gan-khu-vuc.test.mjs) đối chiếu danh sách này với mọi tệp
+ * 061 + 069 → 095 → 068 → 099 → 136). Ca canh HT5 (scripts/kiem-tin-rao-gan-khu-vuc.test.mjs) đối chiếu danh sách này với mọi tệp
  * trong db/migrations có `FUNCTION resolve_offer_fields` hay `to_regprocedure('resolve_offer_fields` — thêm migration mới chạm
  * hàm mà quên nạp lại ở đây thì đỏ gọi tên tệp.
  */
-export const CHUOI_PHAN_XU = ["045", "059", "061", "069", "095", "068", "099"];
+export const CHUOI_PHAN_XU = ["045", "059", "061", "069", "095", "068", "099", "136"];
 
 /** Phần chèn đang có trong DB, đọc TRƯỚC khi nạp lại 045: chỉ áp lại thứ DB đã có (bộ phân xử hiện hành, không hơn không kém). */
 async function docPhanChen(client) {
@@ -59,11 +60,13 @@ async function docPhanChen(client) {
     co068: rows[0].phan_xu ? await daCoPhanGiu068(client) : false,
     // 099 chèn lời gọi resolve_offer_area_du_an vào thân bộ phân xử; 102 định nghĩa lại hàm ấy (không chèn mốc).
     co099: rows[0].phan_xu?.includes("resolve_offer_area_du_an") ?? false,
+    // 136 (YC0) chèn bộ lọc bốn trường của Yêu cầu vào CTE `a` của bộ phân xử tin.
+    co136: rows[0].phan_xu?.includes(DAU_VA_136) ?? false,
     duAn: rows[0].du_an,
   };
 }
 
-/** Áp lại phần chèn 068 rồi 099 sau chuỗi nạp lại; 099 định nghĩa lại resolve_offer_area_du_an bản cũ nên trả lại đúng bản DB
+/** Áp lại phần chèn 068 rồi 099 (rồi 136) sau chuỗi nạp lại; 099 định nghĩa lại resolve_offer_area_du_an bản cũ nên trả lại đúng bản DB
  *  đang có (bản 102 nếu đã áp — «áp lại 099 sau 102 thì phải áp lại 102»). */
 async function napLaiPhanChen(client, truoc, boQuaChen = []) {
   if (truoc.co068 && !boQuaChen.includes("068")) await client.query(MIG_068);
@@ -71,6 +74,7 @@ async function napLaiPhanChen(client, truoc, boQuaChen = []) {
     await client.query(MIG_099);
     if (truoc.duAn && !boQuaChen.includes("tra-du-an")) await client.query(truoc.duAn);
   }
+  if (truoc.co136 && !boQuaChen.includes("136")) await client.query(VA_136);
 }
 
 /** Gọi ngay sau mọi lần nạp lại 045 trong giao dịch: DB đã áp 059 → nạp lại phần 059 mà 045 vừa đè, rồi hàm 063. */
