@@ -10,6 +10,7 @@ import { spawn, spawnSync } from "node:child_process";
 import { chmodSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const SH = path.join(import.meta.dirname, "../db/db-thu.sh");
 const TEN = "oneinvest_suite_ht9thu";
@@ -32,7 +33,9 @@ exec docker "$@"
 chmodSync(BOC, 0o755);
 
 const dk = (...a) => spawnSync("docker", a, { encoding: "utf8" });
-const conLai = () => dk("ps", "-a", "--filter", `name=^${TIEN_TO}`, "--format", "{{.Names}}").stdout.split("\n").filter(Boolean);
+// Nơi không có lệnh docker (container của ci-test-local) spawnSync trả stdout undefined: coi như không còn container,
+// để hook after không làm đỏ cả tệp khi bảy ca đã bỏ qua (soát M5 trên 88488c118).
+const conLai = () => (dk("ps", "-a", "--filter", `name=^${TIEN_TO}`, "--format", "{{.Names}}").stdout ?? "").split("\n").filter(Boolean);
 const dbThat = () => {
   const r = dk("exec", "-e", "PGPASSWORD=oneinvest", "-e", "PGOPTIONS=-c default_transaction_read_only=on", "one-invest-db",
     "psql", "-U", "oneinvest", "-h", "localhost", "-At", "-c", `SELECT datname FROM pg_database WHERE datname LIKE '${TEN}%'`);
@@ -203,4 +206,18 @@ test("chay-trong chiều đỏ: bỏ trần → ghim «container thứ ba»", { 
     r = await luot("echo X", { ban, env: { DB_THU_TRONG_INIT: "true", DB_THU_TRONG_CHO_GIAY: "3" } });
   } finally { await nha(); }
   assert.throws(() => kiemLuot({ out: r.out, truoc, sau: dbThat() }), /container thứ ba/);
+});
+
+// Giữ nhánh «không có docker»: chạy chính tệp này với PATH không có docker và CI=true — bảy ca bỏ qua, tệp phải xanh.
+// Bỏ «?? ""» ở conLai thì hook after ném TypeError và lượt con thoát khác 0.
+test("không có lệnh docker (CI=true): bảy ca bỏ qua, hook dọn không làm đỏ tệp", { skip: process.env.DB_THU_TRONG_KHONG_DOCKER === "1" ? "lượt con" : false }, () => {
+  const rong = mkdtempSync(path.join(tmpdir(), "khong-docker-"));
+  const env = { ...process.env, PATH: rong, CI: "true", DB_THU_TRONG_KHONG_DOCKER: "1" };
+  delete env.NODE_TEST_CONTEXT;
+  const r = spawnSync(process.execPath, ["--test", "--test-concurrency=1", fileURLToPath(import.meta.url)], { encoding: "utf8", env });
+  const out = `${r.stdout}${r.stderr}`;
+  assert.equal(spawnSync("docker", ["--version"], { env: { PATH: rong } }).error?.code, "ENOENT", "PATH lượt con vẫn thấy docker");
+  assert.equal(r.status, 0, `tệp đỏ khi không có docker:\n${out}`);
+  assert.match(out, /ℹ skipped 8/);
+  assert.match(out, /ℹ fail 0/);
 });
