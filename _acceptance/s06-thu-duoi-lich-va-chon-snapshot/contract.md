@@ -106,4 +106,6 @@ PL38 nối transform, resolve, sync-cloud theo nhịp. Hồ sơ này chỉ bảo
   không có cấu hình vùng; thoát 3 không để dấu gì, 5 phút sau launchd gọi lại nguồn. Đã báo GS để trả ZCode qua LL. Probe
   `chon-nap.mjs` thêm ca E11, E12 khi ZCode giao sha (tên cấu hình và hạn dấu chặn do ZCode chọn).
 - E5 chạy trên M5 (lời GS 27/11), hai lượt xanh/đối chứng đỏ: cách dựng ở `probes/E5-CHAY-TREN-M5.md`.
+  Kết quả 27/11 @212b7145a (`evidence/m5-e5-212b7145a.txt`): mã ZCode 7fe8bb5b0 `CHON-NAP OK`, gồm ca «quét đủ đè → không nạp
+  lại» và «nội dung stg không lùi»; mã cũ 7173fc21a `CHON-NAP DO (5 ca)`. Lượt đầu @9614ab0af hỏng vì probe (đã sửa), không tính.
 - Test của nhánh dùng shim `node`, nên bước tra stg và bộ nạp không chạy thật. AC-5 là ca duy nhất nối wrapper với bộ nạp thật.

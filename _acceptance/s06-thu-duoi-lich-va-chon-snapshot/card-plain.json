@@ -1,5 +1,5 @@
 {
- "feature_plain": "Tin S06 mới đăng được thu và vào kho tạm mỗi 5 phút thay vì chờ lượt quét đủ hai lần một ngày, để gần thước «đăng → Invest» 30 phút. Vòng này chỉ đưa mã vào, chưa bật lịch. Ba điều CHƯA xong: giới hạn vùng và nghỉ sau khi bị chặn đang chờ ZCode thêm vào mã; phép đo chọn-nạp trên bộ nạp thật đang chạy trên máy M5; việc này chỉ gộp sau KEV1.",
+ "feature_plain": "Tin S06 mới đăng được thu và vào kho tạm mỗi 5 phút thay vì chờ lượt quét đủ hai lần một ngày, để gần thước «đăng → Invest» 30 phút. Vòng này chỉ đưa mã vào, chưa bật lịch. Hai điều CHƯA xong: giới hạn vùng và nghỉ sau khi bị chặn đang chờ ZCode thêm vào mã; việc này chỉ gộp sau KEV1. Đã đo: chọn-nạp trên bộ nạp thật xanh trên bản mới (không nạp lại gói đã nạp, dữ liệu không lùi) và đỏ trên bản cũ.",
  "will_do": [
   {
    "id": "AC-1",
