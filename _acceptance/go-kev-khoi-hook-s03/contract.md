@@ -5,7 +5,7 @@ slug: go-kev-khoi-hook-s03
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli, config]
-status: implemented
+status: verified
 approved_by: Mạnh
 approved_at: 2026-11-24T10:10:07Z
 design_doc: docs/superpowers/specs/2026-11-24-go-kev-khoi-hook-s03-design.md
