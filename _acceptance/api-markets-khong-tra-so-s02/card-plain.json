@@ -1,0 +1,92 @@
+{
+  "feature_plain": "Danh sách thị trường trên API công khai thôi hiện điểm thị trường lấy từ S02 và thôi xếp theo điểm đó; thị trường nhiều tin đứng trước, bằng số tin thì theo tên.",
+  "will_do": [
+    {
+      "id": "AC-1",
+      "p": "Sẽ trả mỗi thị trường đúng bốn thông tin: mã, tên, quốc gia, số tin — không còn điểm thị trường S02."
+    },
+    {
+      "id": "AC-2",
+      "p": "Sẽ xếp thị trường theo số tin nhiều trước, bằng nhau thì theo tên."
+    },
+    {
+      "id": "AC-3",
+      "p": "Sẽ báo đỏ khi một route công khai đọc bảng số S02, kể cả đọc gián tiếp qua thư viện dùng chung."
+    },
+    {
+      "id": "AC-4",
+      "p": "Sẽ chứng rào bằng bốn ca cấy lỗi, mỗi ca phải đỏ đúng câu báo."
+    },
+    {
+      "id": "AC-5",
+      "p": "Sẽ soát cả bốn route công khai hiện có: sau khi sửa không route nào đỏ."
+    },
+    {
+      "id": "AC-6",
+      "p": "Sẽ sửa ghi chú trong sổ API cho đúng: danh sách thị trường và số tin, không mang số S02."
+    },
+    {
+      "id": "AC-7",
+      "p": "Sẽ giữ xanh bộ test app, kiểm kiểu và bộ soát ranh giới cổng."
+    }
+  ],
+  "wont_do": [
+    {
+      "id": "OOS-1",
+      "p": "KHÔNG đụng màn Ops chất lượng dữ liệu (/ops/quality) — đó là chỗ đúng của số S02."
+    },
+    {
+      "id": "OOS-2",
+      "p": "KHÔNG đụng đồng bộ cloud, không đổi cấu trúc DB, không ghi cloud."
+    },
+    {
+      "id": "OOS-3",
+      "p": "KHÔNG đụng API riêng data-api (hàng HT19/HT20 đang giữ)."
+    }
+  ],
+  "coverage_plain": [
+    {
+      "i": 0,
+      "p": "Phản hồi có hay không có điểm S02 — AC-1 đo trên DB thử có một thị trường mang điểm S02."
+    },
+    {
+      "i": 1,
+      "p": "Thứ tự theo điểm S02 hay theo số tin — AC-2 dựng thị trường điểm cao nhưng ít tin nhất."
+    },
+    {
+      "i": 2,
+      "p": "Mọi đường số S02 lọt vào route công khai: trực tiếp, qua thư viện, tên bảng trên cloud, và tệp đổi tên bảng — AC-3, AC-4."
+    },
+    {
+      "i": 3,
+      "p": "Bốn route công khai hiện có đều qua rào mới — AC-5."
+    },
+    {
+      "i": 4,
+      "p": "Sổ API khai đúng chế độ, phương thức và ghi chú — AC-6."
+    }
+  ],
+  "gap_probe_plain": [
+    {
+      "i": 0,
+      "p": "Rào ban đầu định bỏ qua cả tệp kết nối DB dùng chung, để lọt một truy vấn số S02 thêm vào tệp đó sau này. Đã sửa: tệp đó bị quét trọn, không ngoại lệ (mẫu đổi tên bảng tự không khớp luật quét), thêm ca cấy lỗi vào tệp đó."
+    },
+    {
+      "i": 1,
+      "p": "Bỏ hẳn điểm thị trường khỏi API công khai từng được ghi là không có lối khác, trong khi giữ ô ấy luôn trống cũng đúng luật. Đã chuyển thành câu hỏi Hỏi-1; giám sát đã phán: bỏ hẳn khoá."
+    },
+    {
+      "i": 2,
+      "p": "Ca đối chứng từng đọc bản mã trên nhánh chính, sau khi gộp sẽ hết đỏ. Đã sửa: ghim văn bản cũ ngay trong test."
+    },
+    {
+      "i": 3,
+      "p": "Lệnh đo trên prod chỉ đếm dòng có điểm S02, nên prod lỗi cũng ra 0. Đã sửa: phải thấy mã 200, đủ 5 dòng, đủ bốn thông tin rồi mới đếm."
+    },
+    {
+      "i": 4,
+      "p": "AC-7 hứa chạy bộ test app mà chưa có eval nào chạy. Đã thêm eval chạy bộ test app."
+    }
+  ],
+  "analyst_plain": "Ba lệnh kiểm của bộ soát bề mặt API chạy giống nhau trước và sau sửa, nên chúng không phân biệt được bản cũ với bản mới; chiều đỏ của chúng nằm ở ca cấy lỗi riêng."
+}

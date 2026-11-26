@@ -20,6 +20,9 @@ const COT = ["subject_key", "field", "value", "evidence_tier", "method", "method
  * có lúc chọn Nested Loop Anti Join quét lại bảng tạm cho mỗi dòng — bậc hai, mảng 213 nghìn dòng chạy quá 3 phút
  * (đo 20/11, hồ sơ slt-dc-cham-va-giu-khoa-33033). Lọc `<> ALL` trên từng dòng nối thì tuyến tính ở mọi kế hoạch.
  * `<> ALL` đúng nghĩa NOT EXISTS vì `value` NOT NULL nên `value_key` và mọi phần tử của `vks` không NULL.
+ * Chừa dòng của bước gắn toà PL20 (rule_id `ghep-toa-*`): bước ấy tự đối chiếu dòng của nó cuối lượt nạp (ghiGan), còn thẻ nhóm
+ * ghi `subzone_node_id` cùng phương pháp e1_rule — không chừa thì mỗi lượt nạp rút dòng gắn ở bài thẻ và máy khác phân khu,
+ * bước gắn lại chèn lại (đo S4 r1 24/11: 212 dòng mỗi lượt, E7).
  */
 export const SQL_RUT_THAY =
   `WITH k AS (SELECT s, f, m, array_agg(DISTINCT assertion_value_key(v)) AS vks
@@ -27,7 +30,8 @@ export const SQL_RUT_THAY =
    UPDATE field_assertions fa SET retracted_at = clock_timestamp(), retract_reason = 'thay-boi-luot'
      FROM k
     WHERE fa.retracted_at IS NULL AND fa.subject_key = k.s AND fa.field = k.f AND fa.method = k.m
-      AND fa.value_key <> ALL (k.vks)`;
+      AND fa.value_key <> ALL (k.vks)
+      AND (fa.rule_id IS NULL OR fa.rule_id NOT LIKE 'ghep-toa-%')`;
 
 /**
  * Ghi lô phát biểu bằng một câu INSERT … unnest (chạy lại không nhân dòng — chỉ mục sống của 045).
