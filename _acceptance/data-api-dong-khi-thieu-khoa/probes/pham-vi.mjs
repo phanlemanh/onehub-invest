@@ -118,7 +118,13 @@ const trungNoiDung = (a, b) => {
     return false;
   }
 };
-const ht19DaVaoMain = laToTien(HT19_LUC_CAT, "origin/main") || trungNoiDung(dinhHt19, "origin/main");
+let dinhNhanhHt19;
+try {
+  dinhNhanhHt19 = git("rev-parse", HT19_REF).trim();
+} catch {
+  dinhNhanhHt19 = null; // nhánh đã xoá: chỉ còn phép thử tổ tiên
+}
+const ht19DaVaoMain = laToTien(HT19_LUC_CAT, "origin/main") || (dinhNhanhHt19 !== null && trungNoiDung(dinhNhanhHt19, "origin/main"));
 const dungTrenHt19 = laToTien(HT19_LUC_CAT, "HEAD") && !ht19DaVaoMain;
 const goc = dungTrenHt19 ? dinhHt19 : mainBase;
 const tenNen = dungTrenHt19 ? `đỉnh HT19 ${goc.slice(0, 9)} (HT19 chưa vào origin/main)` : `merge-base ${goc.slice(0, 9)}`;
