@@ -146,8 +146,10 @@ check_soat() {
 }
 run_soat() {
   check_soat "$ROOT" 1
-  mkdir -p "$ROOT/_acceptance/db-chi-nghe-noi-bo-va-chinh-postgres/evidence"
-  local ra="$ROOT/_acceptance/db-chi-nghe-noi-bo-va-chinh-postgres/evidence/soat-ben-noi.txt"
+  # Đầu ra ghi NGOÀI cây hồ sơ (_acceptance/ là sử liệu chỉ đọc sau Cổng Bằng chứng; làn ghim 26/11 bắt executor ghi đè
+  # evidence/soat-ben-noi.txt). SOAT_RA đổi đường ghi; làm mới tệp bằng chứng đã commit là việc có chủ ý, chép tay.
+  local ra="${SOAT_RA:-$ROOT/.acceptance-runs/db-chi-nghe-noi-bo-va-chinh-postgres/soat-ben-noi.txt}"
+  mkdir -p "$(dirname "$ra")"
   { echo "# Tệp có docker run / docker exec chạm one-invest-db hay mạng container: — sinh bởi check-db-noi-bo.sh soat $(git -C "$ROOT" rev-parse --short HEAD)"
     git -C "$ROOT" grep -l -E 'docker (run|exec)|docker compose .*(up|exec)' -- 'scripts/*' 'db/*' 'pipeline/*.sh' 'pipeline/*.mjs' 'app/scripts/*' \
       | grep -v -x 'db/docker-compose.yml' | while read -r f; do

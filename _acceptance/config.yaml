@@ -647,7 +647,7 @@ executors:
     db_noi_bo_static: "bash scripts/check-db-noi-bo.sh static"
     db_noi_bo_mutation: "bash scripts/check-db-noi-bo.sh mutation"
     db_noi_bo_cong: "bash scripts/check-db-noi-bo.sh cong"                 # container tạm nc ht8-cong-*; cần IP LAN (en0/en1)
-    db_noi_bo_soat: "bash scripts/check-db-noi-bo.sh soat"                 # ghi evidence/soat-ben-noi.txt của hồ sơ
+    db_noi_bo_soat: "bash scripts/check-db-noi-bo.sh soat"                 # ghi .acceptance-runs/<slug>/soat-ben-noi.txt (SOAT_RA đổi), không ghi vào cây hồ sơ
     db_noi_bo_tham_so: "bash scripts/check-db-noi-bo.sh tham-so"           # nặng: container Postgres tạm ht8-ts-*, volume onehub_ht8_*
     db_noi_bo_do: "bash scripts/check-db-noi-bo.sh do"                     # nặng: chép hai bảng lớn (đọc one-invest-db read-only), đo trước/sau
     db_noi_bo_cu_khong_gay: "bash scripts/check-db-noi-bo.sh cu-khong-gay"
