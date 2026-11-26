@@ -5,7 +5,9 @@ slug: bang-yeu-cau-noi-lai
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [data, cli]
-status: draft
+status: approved
+approved_by: Mạnh
+approved_at: 2026-11-26
 design_doc: docs/superpowers/specs/2026-11-26-bang-yeu-cau-noi-lai-design.md
 ---
 
