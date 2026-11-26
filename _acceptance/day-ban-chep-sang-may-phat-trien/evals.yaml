@@ -86,3 +86,27 @@ evals:
     expected: "exit 0: ADR-0019 tồn tại và nêu năm rào + lối đã bỏ; AGENTS.md có mục «Hai máy» trỏ docs/ops/hai-may.md; runtime-map trỏ hai-may.md; ROADMAP §3 mục 64 nêu lệnh đẩy; git grep toàn kho với danh sách loại trừ rỗng (in danh sách loại trừ ra output) không có tên máy M5, địa chỉ cầu của hai máy, tên tệp khoá dựng máy (đọc giá trị so từ cấu hình riêng máy, không viết cứng vào ca). Chiều đỏ: cấy tên máy vào một tệp tạm đã git add → ca nêu tệp"
     paths: [docs/adr/0019*, AGENTS.md, docs/ops/hai-may.md, docs/ops/runtime-map.md, docs/ROADMAP.md]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E13
+    criterion: AC-11
+    executor: test
+    cmd: config:executors.suite.pipeline_a
+    long_running: 30
+    paths: [docs/ops/hai-may.md, docs/ops/runtime-map.md, scripts/day-ban-chep-kiem-m5.mjs, scripts/day-ban-chep.itest.mjs, scripts/day-ban-chep.mjs, scripts/day-ban-chep.test.mjs, scripts/nhan-ban-chep.sh]
+    expected: "exit 0; nửa A bộ test pipeline trên cụm PostGIS dùng một lần (HT9, ~5′), 0 fail; khai để có long_running và paths hẹp theo luật R4."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E14
+    criterion: AC-11
+    executor: test
+    cmd: config:executors.suite.pipeline_b
+    long_running: 30
+    paths: [docs/ops/hai-may.md, docs/ops/runtime-map.md, scripts/day-ban-chep-kiem-m5.mjs, scripts/day-ban-chep.itest.mjs, scripts/day-ban-chep.mjs, scripts/day-ban-chep.test.mjs, scripts/nhan-ban-chep.sh]
+    expected: "exit 0; nửa B bộ test pipeline trên cụm dùng một lần (HT9), 0 fail; khai để có long_running và paths hẹp theo luật R4."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E15
+    criterion: AC-11
+    executor: test
+    cmd: config:executors.suite.pipeline_that
+    long_running: 60
+    paths: [docs/ops/hai-may.md, docs/ops/runtime-map.md, scripts/day-ban-chep-kiem-m5.mjs, scripts/day-ban-chep.itest.mjs, scripts/day-ban-chep.mjs, scripts/day-ban-chep.test.mjs, scripts/nhan-ban-chep.sh]
+    expected: "exit 0; 30 ca pipeline dữ liệu thật (HT9 pipeline_that, kích vì nhánh đổi docs/ops), 0 fail; khai để có long_running và paths hẹp theo luật R4."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
