@@ -1,5 +1,5 @@
 // Phán xét lượt khô E5 (HT26 AC-5): mọi quan hệ AC-5 thành mã thoát, không còn đối chiếu bằng tay. Thuần — đầu vào là chữ in của
-// các lệnh (chỉ số, không giá trị) và số đo; bộ chạy ở `_acceptance/sync-cloud-che-ten-nguon-moi-cot/probes/kiem-kho.mjs`.
+// các lệnh (chỉ số, không giá trị) và số đo; bộ chạy là thước E5 (probes) trong hồ sơ HT26 sync-cloud-che-ten-nguon-moi-cot.
 
 /** Trần thời gian của AC-5: pha đọc + che + soát mã mới ≤ 1,5 lần mã cũ, và phần thêm ≤ 2 phút (sửa 25/11 theo lời Mạnh). */
 export const TRAN_TI_SO = 1.5;
