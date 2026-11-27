@@ -1,0 +1,11 @@
+NB10 chạy thử lùi 129 (CHUNG điểm 13) — Mac mini, 2026-11-27T10:58Z, @9c84998b7
+DB lượt: db/db-thu.sh oneinvest_suite_nb10lui --chay (chép từ bản mẫu oneinvest_suite_mau = bản chép DB máy thu, chưa áp 129)
+Trình tự: dấu trạng thái → áp db/migrations/129_ghi_tam_lo.sql → nạp mẫu (ghi_ket_qua_do_bu đạt một lô) → psql < probes/lui-129.sql → so dấu
+
+DB lượt: oneinvest_suite_nb10lui_13373 · có 129 trước khi áp: f
+lô sau 129: doc-toan-bo-loai-hinh=1993 truoc-doc-lap-loai-hinh=187 truoc-doc-lap-toa=110
+nạp mẫu: lô doc-toan-bo-loai-hinh → dat
+dấu trước 129: ham=3e344c1e67caa442b059e33c8292afc9 · ham-moi=- · bang-moi=- · cot=62ecc686506b9e13244185a61d0b832d · de-xuat=300ecc9576512c22c5f81b7c2b1338da · tin=ca2c1c59e4c6e79b1a6a67a2b36463c0
+dấu sau 129:   ham=e4b310b9d20d1b779adaaeab4575cc2e · ham-moi=ghi_ket_qua_do_bu,rut_lo_ghi_tam,xet_han_ghi_tam · bang-moi=ghi_tam_lo,ghi_tam_o · cot=997e076e5ae5f955c41b8527a1ba373c · de-xuat=300ecc9576512c22c5f81b7c2b1338da · tin=ca2c1c59e4c6e79b1a6a67a2b36463c0
+dấu sau lùi:   ham=3e344c1e67caa442b059e33c8292afc9 · ham-moi=- · bang-moi=- · cot=62ecc686506b9e13244185a61d0b832d · de-xuat=300ecc9576512c22c5f81b7c2b1338da · tin=ca2c1c59e4c6e79b1a6a67a2b36463c0
+LÙI ĐẠT: DB về đúng trạng thái trước 129

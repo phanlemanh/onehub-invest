@@ -54,9 +54,37 @@ rm -f "$ERR"
 kiem >/dev/null || { echo "ĐỎ AC-4: chạy lại 129 sau 066 làm đổi lô"; exit 1; }
 echo "chạy lại 129: bản vá phục hồi, ba lô giữ nguyên"
 
-echo "== chạy thử khối lùi"
+echo "== chạy thử khối lùi (CHUNG điểm 13: bản chép mới → dấu trạng thái → 129 → nạp mẫu → lùi → so dấu)"
+# Dấu trạng thái: thân ba hàm 129 chạm tới, ba hàm mới, hai bảng mới, cột của enrichment_proposals, dữ liệu đề xuất và giá trị tin.
+DAU="SELECT concat_ws(' · ',
+  'ham=' || (SELECT md5(string_agg(proname || ':' || md5(pg_get_functiondef(oid)), ',' ORDER BY proname)) FROM pg_proc
+              WHERE proname IN ('revert_enrichment', 'unit_data_level', 'apply_enrichment')),
+  'ham-moi=' || coalesce((SELECT string_agg(proname, ',' ORDER BY proname) FROM pg_proc
+              WHERE proname IN ('rut_lo_ghi_tam', 'ghi_ket_qua_do_bu', 'xet_han_ghi_tam')), '-'),
+  'bang-moi=' || coalesce((SELECT string_agg(relname, ',' ORDER BY relname) FROM pg_class WHERE relname IN ('ghi_tam_lo', 'ghi_tam_o')), '-'),
+  'cot=' || (SELECT md5(string_agg(column_name || ':' || data_type, ',' ORDER BY column_name)) FROM information_schema.columns
+              WHERE table_schema = current_schema() AND table_name = 'enrichment_proposals'),
+  'de-xuat=' || (SELECT md5(string_agg(id || ':' || status || ':' || coalesce(value, '') || ':' || coalesce(route, ''), ',' ORDER BY id))
+              FROM enrichment_proposals),
+  'tin=' || (SELECT md5(string_agg(offer_id || ':' || coalesce(property_type, '') || ':' || coalesce(block_raw, ''), ',' ORDER BY offer_id))
+              FROM sale_offers))"
+bash db/db-thu.sh "$TEN" >/dev/null
+d0="$("${P[@]}" -c "$DAU")"
+"${P[@]}" < "$GOC/db/migrations/129_ghi_tam_lo.sql"
+d1="$("${P[@]}" -c "$DAU")"
+[ "$d0" != "$d1" ] || { echo "ĐỎ lùi: dấu trạng thái không đổi sau khi áp 129 — phép so không thấy 129"; exit 1; }
+# Nạp mẫu: ghi kết quả đo bù «đạt» cho một lô (đổi cờ ghi tạm của giá trị, không đổi giá trị tin).
+LOM="$("${P[@]}" -c "SELECT ma FROM ghi_tam_lo ORDER BY ma LIMIT 1")"
+"${P[@]}" -c "SELECT ghi_ket_qua_do_bu('$LOM', 'dat', 'hitl:thu-lui')" >/dev/null
+echo "nạp mẫu: lô $LOM ghi «đạt» ($("${P[@]}" -c "SELECT trang_thai FROM ghi_tam_lo WHERE ma = '$LOM'"))"
+echo "lệnh lùi: psql -v ON_ERROR_STOP=1 < _acceptance/ghi-tam-do-sau-co-han/probes/lui-129.sql"
 "${P[@]}" < "$HS/probes/lui-129.sql"
-echo "sau lùi: bảng ghi_tam_lo $("${P[@]}" -c "SELECT to_regclass('ghi_tam_lo') IS NULL") (true = đã gỡ) · cột lo_id $("${P[@]}" -c "SELECT count(*) FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'enrichment_proposals' AND column_name IN ('lo_id','ghi_tam')") (0 = đã gỡ)"
+d2="$("${P[@]}" -c "$DAU")"
+echo "dấu trước 129: $d0"
+echo "dấu sau 129:   $d1"
+echo "dấu sau lùi:   $d2"
+[ "$d0" = "$d2" ] || { echo "ĐỎ lùi: DB không về trạng thái trước 129"; exit 1; }
+echo "sau lùi: DB về đúng trạng thái trước 129 (thân hàm, hàm mới, bảng mới, cột, đề xuất, giá trị tin)"
 
 hong=0
 dotbien() {  # $1 tên, $2 chuỗi tìm, $3 chuỗi thay, $4 thông điệp ghim

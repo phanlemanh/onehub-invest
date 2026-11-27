@@ -59,7 +59,20 @@ Một giao dịch: gỡ ba hàm mới (`rut_lo_ghi_tam`, `ghi_ket_qua_do_bu`, `x
 nào trên tin (2.290 giá trị đã áp giữ nguyên, chỉ mất lô và cờ). Đã có lô bị rút thì giá trị đã rút KHÔNG tự về lại khi lùi —
 áp lại bằng lệnh người là việc riêng.
 
-Chạy thử trên bản chép (cùng lượt `ban-chep.sh`): sau lùi bảng `ghi_tam_lo` đã gỡ, cột `lo_id`/`ghi_tam` còn 0.
+Chạy thử (CHUNG điểm 13, 27/11, Mac mini — `evidence/lui-129-chay-thu.txt`): DB lượt chép từ bản mẫu = bản chép DB máy thu (chưa
+áp 129) → ghi dấu trạng thái → áp 129 (ba lô 1.993 / 187 / 110) → nạp mẫu (ghi «đạt» cho một lô) → `lui-129.sql` → so dấu. Dấu gồm
+md5 thân `revert_enrichment`, `unit_data_level`, `apply_enrichment`; ba hàm mới; hai bảng mới; cột của `enrichment_proposals`;
+md5 dữ liệu đề xuất (id, trạng thái, giá trị, route); md5 giá trị tin (loại hình, toà).
+
+| Dấu | Trước 129 | Sau 129 | Sau lùi |
+|---|---|---|---|
+| thân ba hàm | `3e344c1e…` | `e4b310b9…` | `3e344c1e…` |
+| hàm mới · bảng mới | — · — | 3 hàm · `ghi_tam_lo`, `ghi_tam_o` | — · — |
+| cột `enrichment_proposals` | `62ecc686…` | `997e076e…` | `62ecc686…` |
+| dữ liệu đề xuất · giá trị tin | `300ecc95…` · `ca2c1c59…` | không đổi | không đổi |
+
+Kết quả: DB về đúng trạng thái trước 129. Cùng phép so nằm ở cuối `probes/ban-chep.sh AC-4` (chạy trên bản chép đầy đủ).
+Lượt cũ trên M5 @fe6c96e69 chỉ kiểm bảng và cột đã gỡ, và chạy sau bước bẫy 066 nên không so được thân hàm trước áp.
 
 Lùi mã (lượt hằng đêm quay về chốt NB11) là revert commit gộp của PR; chỉ lùi DB mà giữ mã mới thì bộ chạy đêm lỗi vì thiếu bảng
 lô — luôn lùi mã trước, DB sau.
