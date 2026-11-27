@@ -1,0 +1,8 @@
+NB10 probe AC-6 trên M5 ＠19656da2ea6b1d55a4341df5dd059f62f30c4e54 — 2026-11-27T01:20:10Z
+Lệnh: bash _acceptance/ghi-tam-do-sau-co-han/probes/cham.sh AC-6 (DB lượt qua db-thu.sh --chay; không áp gì vào DB oneinvest)
+
+xanh AC-6 trên mã thật: tests 3, skipped 0
+đỏ đúng AC-6 «bỏ kiểm hạn đo bù»: AC-6 lượt kế không rút lô quá hạn
+đỏ đúng AC-6 «ô dừng vẫn ghi»: AC-6 lô quá hạn vẫn ghi thêm loại hình
+đỏ đúng AC-6 «bẫy 066: bỏ bước chạy lại 129»: AC-6 chạy lại 129 không phục hồi bản vá
+--- mã thoát: 0
