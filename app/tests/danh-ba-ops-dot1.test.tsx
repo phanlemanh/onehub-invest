@@ -184,7 +184,20 @@ test("DBO-AC-9 dòng phụ bỏ bí danh trùng tên sau gấp dấu, giữ bí 
   assert.equal(soAssert, BANG.length)
   const html = await veLuoi([hangCay()])
   assert.ok(html.includes("VGP") && !html.includes("vinhomes grand park"), "AC-9 bí danh trùng tên còn hiện ở dòng phụ")
-  assert.ok(hangCay().timKiem.includes("vinhomes grand park"), "AC-9 ô tìm mất bí danh")
+  // Ô tìm đo trên hàng do dungCay THẬT dựng (không đọc fixture): bí danh thứ tư bị cắt khỏi dòng phụ vẫn tìm được.
+  const { dungCay, khopTim } = await import("../src/lib/ops/registry/cay")
+  type Nut = import("../src/lib/ops/registry/doc").NutDanhBa
+  const nut: Nut = { id: 9, loai: "project", parentId: null, ten: "Đông Park", biDanh: ["dong park", "a1", "a2", "a3", "zz-bi-danh-4"], bac: "xac_minh",
+    tinhId: null, nguon: [], soPhanKhu: 0, soToa: 0, toaChuaCan: 0, soCan: 0, tin: {} }
+  // Bộ che cần ít nhất một tên nguồn (danh sách rỗng → che mọi chữ thành «—», đúng chiều an toàn của trang).
+  const NGUON = [{ code: "S99", realName: "NguonGiaDbo" }]
+  const [h] = dungCay([nut], {}, NGUON)
+  assert.deepEqual(biDanhKhacTen(h.ten, h.biDanh), ["a1", "a2", "a3"], "AC-9 tiền đề: dòng phụ không cắt bí danh thứ tư")
+  for (const chu of ["zz-bi-danh-4", "dong park", "Đông Park"]) assert.ok(khopTim(h, chu), `AC-9 ô tìm mất bí danh: «${chu}»`)
+  // Chiều đỏ cùng fixture: bản dungCay dựng ô tìm từ bí danh đã lọc cho dòng phụ → bí danh thứ tư không tìm được.
+  const phaCay = await banPha<{ dungCay: typeof dungCay; khopTim: typeof khopTim }>("src/lib/ops/registry/cay.ts",
+    "timKiem: fold([ten, ...biDanh].join(\" \")),", "timKiem: fold([ten, ...biDanhKhacTen(ten, biDanh)].join(\" \")),")
+  assert.ok(!phaCay.khopTim(phaCay.dungCay([nut], {}, NGUON)[0], "zz-bi-danh-4"), "AC-9 đối chứng: ô tìm dựng từ bí danh đã lọc mà vẫn tìm được — phép đo không phân biệt")
   const pha = await banPha<{ biDanhKhacTen: (t: string, b: string[]) => string[] }>("src/lib/ops/registry/cay.ts",
     "return biDanh.filter((b) => fold(b) !== t).slice(0, toiDa)", "return biDanh.filter((b) => b !== ten).slice(0, toiDa)")
   assert.deepEqual(pha.biDanhKhacTen("Vinhomes Grand Park", ["vinhomes grand park"]), ["vinhomes grand park"], "AC-9 đối chứng: so không gấp dấu mà vẫn bỏ được — bảng không phân biệt")
