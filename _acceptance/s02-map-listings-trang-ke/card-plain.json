@@ -1,0 +1,26 @@
+{
+  "feature_plain": "Lượt thu S02 lấy đủ mọi trang danh sách căn trên bản đồ của mỗi thị trường (Hà Nội từ 15 000 lên khoảng 30 600 căn), và dừng có báo lỗi nếu nguồn trả trang mãi không hết. Dữ liệu S02 chỉ để hiệu chuẩn, không lên cổng Invest.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ gửi trang kế tới đúng đường dẫn không hậu tố, vị trí trang nằm trong thân lời gọi; bản ghi vẫn mang tên trang để phân biệt các trang."},
+    {"id": "AC-2", "p": "Sẽ giữ nguyên trang đầu: đường dẫn và tên bản ghi không đổi."},
+    {"id": "AC-3", "p": "Sẽ chỉ đổi tệp bộ thu S02, tệp test của nó, hồ sơ và bản đồ; không chạm phần lõi bộ thu, lệnh dòng lệnh hay pipeline."},
+    {"id": "AC-4", "p": "Sẽ để bộ nạp phía sau đọc được trang kế mà không phải sửa: mã thị trường vẫn lấy ra đúng từ địa chỉ đã gửi."},
+    {"id": "AC-5", "p": "Sẽ dừng vòng lấy trang ở 10 trang mỗi thị trường (150 000 căn) khi nguồn trả trang mãi không hết, ghi một dòng lý do và tính lượt là có lỗi; trang cuối dưới 15 000 căn thì dừng bình thường, không báo gì."},
+    {"id": "AC-6", "p": "Sẽ KHÔNG thêm dòng nào mang tên miền nguồn thật vào kho công khai."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "Không chạy bộ thu với phiên thật hay đọc profile thật — giới hạn phía Claude; bằng chứng chạy thật là ba trang Hà Nội ZCode đo 26/11."},
+    {"id": "OOS-2", "p": "Không đổi bộ nạp hay pipeline; số dòng S02 của thị trường lớn sẽ tăng khoảng gấp đôi sau khi áp."},
+    {"id": "OOS-3", "p": "Không đo số trang thật của các thị trường lớn khác; ZCode báo số sau triển khai."},
+    {"id": "OOS-4", "p": "Không build bộ thu ở checkout chính trong vòng code; việc này giao ZV cùng bước triển khai của ZC22."},
+    {"id": "OOS-5", "p": "Không gộp trước ZC22, vì nhánh này chồng trên nhánh ZC22."},
+    {"id": "OOS-6", "p": "Không thêm bộ báo người khi một trang lẻ lỗi mà lượt vẫn xong; lỗi lẻ đã được đếm trong số lỗi của lượt."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Người đọc đầu ra: bộ nạp lấy mã thị trường từ địa chỉ đã gửi; mọi bên khác đọc bảng đã nạp, không đọc tên trang — AC-4."},
+    {"i": 1, "p": "Tên nguồn trên kho công khai: không dòng mới nào trong mã hay test mang tên miền thật — AC-6."},
+    {"i": 2, "p": "Vùng thay đổi: chỉ tệp bộ thu, tệp test, hồ sơ và bản đồ — AC-3."},
+    {"i": 3, "p": "Bỏ: chạy thật với nguồn sống, vì cần phiên của Mạnh và lưu lượng thật."}
+  ],
+  "scope_plain": "Gộp chưa có nghĩa là đang chạy: sau gộp (sau ZC22), ZV build lại bộ thu ở checkout chính; lượt 19:05 kế tiếp mới lấy đủ trang."
+}
