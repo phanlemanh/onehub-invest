@@ -1,8 +1,8 @@
--- 016_airdna_v2.sql — E2 C1: AirDNA v2 submarket timeseries + future rates + listing LTM
--- (endpoint đã RE trong docs/research/airdna-listing-api.md, survey 7-9)
+-- 016_s02_v2.sql — E2 C1: S02 v2 submarket timeseries + future rates + listing LTM
+-- (endpoint đã RE trong tài liệu nghiên cứu nội bộ về API listing của S02, survey 7-9)
 
--- Timeseries tháng của submarket (mirror airdna_market_metrics ở cấp market;
--- airdna_submarket_metrics hiện là bảng registry quen tên — giữ nguyên)
+-- Timeseries tháng của submarket (mirror bảng metrics cấp market của S02;
+-- bảng submarket_metrics của S02 hiện là bảng registry quen tên — giữ nguyên)
 CREATE TABLE IF NOT EXISTS airdna_sub_monthly (
   airdna_sub_id  text NOT NULL,
   metric         text NOT NULL,           -- adr | occupancy | revenue | revpar | listing_count
@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS airdna_future_daily (
 );
 
 -- Listing-level LTM từ map_listings (+ enrich từ submarket listings).
--- id = 'abnb_<airbnb_id>' — CÙNG khóa với listings.id để join thẳng.
+-- id = 'abnb_<id listing S01>' — CÙNG khóa với listings.id để join thẳng.
 CREATE TABLE IF NOT EXISTS airdna_listings (
   id                    text PRIMARY KEY,
   airdna_market_id      text,

@@ -1,4 +1,4 @@
--- 009_airdna_ref.sql — AirDNA reference data (đối chiếu + nguồn hạng nhất)
+-- 009_s02_ref.sql — S02 reference data (đối chiếu + nguồn hạng nhất)
 CREATE TABLE IF NOT EXISTS airdna_markets (
   airdna_id     text PRIMARY KEY,      -- '47'
   name          text,
