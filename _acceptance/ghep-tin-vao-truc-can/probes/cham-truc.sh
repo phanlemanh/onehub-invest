@@ -15,4 +15,9 @@ THE_CAI="${THE_CAI:-$HOME/dev/onehub-invest/research-local/gan-nhan-tro-ly/the-c
 # Thiếu tệp thì dừng có tên, không lặng lẽ chấm một tập khác (finding r1, ngoài hợp đồng); không dùng mảng rỗng với set -u
 # (bash 3.2 của macOS báo «unbound variable» — đo S4 r1 trên M5).
 [ -f "$THE_CAI" ] || { echo "ĐỎ: thiếu tệp thẻ cài lỗi $THE_CAI (chỉ ở máy thu) — chép sang hoặc trỏ THE_CAI rồi chấm lại"; exit 5; }
-node scripts/ghep-tin-truc-can-cham.mjs --tep "$ROOT/$TEP" --bam "$BAM" --ra "$HS/evidence/cham-truc.md" --bo-the-cai "$THE_CAI"
+# Bản chấm ghi ra thư mục lượt chạy; chỉ chép vào evidence/ khi nội dung khác (sau Cổng Bằng chứng cây hồ sơ là chỉ đọc — làn
+# trước chữ ký đỏ 27/11 vì lượt chấm ghi lại cùng nội dung lên tệp đã thông cổng).
+RA="$ROOT/.acceptance-runs/ghep-tin-vao-truc-can/cham-truc.md"
+mkdir -p "$(dirname "$RA")"
+node scripts/ghep-tin-truc-can-cham.mjs --tep "$ROOT/$TEP" --bam "$BAM" --ra "$RA" --bo-the-cai "$THE_CAI"
+cmp -s "$RA" "$HS/evidence/cham-truc.md" || cp "$RA" "$HS/evidence/cham-truc.md"
