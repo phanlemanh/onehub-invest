@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 8a7f9f59a690112898a5cfa1b1f4e63adfca95d3
-human_signoff:
+human_signoff: Mạnh 2026-11-27
 ---
 
 # Evidence Report: s02-cua-api

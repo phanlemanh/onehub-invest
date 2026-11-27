@@ -5,7 +5,7 @@ slug: s02-cua-api
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-27
 design_doc: _acceptance/s02-cua-api/design.md
@@ -173,3 +173,8 @@ nguồn xoay refresh thì đêm thứ hai mới lộ. ZCode đo trên log lượ
 - Triển khai (gộp ≠ đang chạy): build `collector/dist` ở checkout chính là việc GIAO cho ZV sau gộp — `ap-trien-khai/README.md`.
 - Hồ sơ tự dựng của nhánh zcode giữ nguyên ở git tại @2f0748d06 (`_acceptance/s02-cua-api/`); `design.md`, `plan.md` giữ làm tài
   liệu thiết kế.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-27:
+  - Ngoài-1: tài liệu bộ thu (`collector/CLAUDE.md`) còn ghi nhịp S02 cũ 0,3 lời/giây, mã chạy 0,2.
+  - Ngoài-2: tài liệu vận hành nói mọi lỗi 403 là bị chặn, trong khi ở bước đăng nhập 403 được báo là lỗi đăng nhập.
+  - Ngoài-3: phép kiểm dòng báo lỗi đăng nhập chỉ soát chữ trong mã, chưa kiểm dòng đó thật sự được in ra ở cả hai chỗ.
+  - Ngoài-4: phép kiểm «bị chặn thì dừng» chỉ đếm lời xin dữ liệu, chưa chứng chặt là không còn lời xin token nào sau đó.
