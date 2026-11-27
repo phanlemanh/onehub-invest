@@ -605,6 +605,14 @@ Luật đọc:
    (`phuongPhap: "luoi"`, `khuVuc` = mã ô), gặp lại ở ô khác tính là trùng (`soTrung`). Xong ô thì ghi bản gộp
    `thua_o`. Số điểm của một ô là độ phủ theo lưới, KHÔNG phải số thửa thật của ô (cùng giới hạn với `thua_khu_vuc`
    ở luật 10).
+15. *(mốc mở rộng, sửa 27/11 theo claudedp-2611-19)* **Dòng `phan-hoi` của nhật ký chạy** (tệp `run.log.jsonl` ở thư
+   mục trạng thái, chỉ ở máy). Pha kiểm phiên ghi mọi câu trả lời của nguồn, pha khác chỉ ghi câu trả lời khác 200. Một
+   dòng có: vai, mã trạng thái, thời gian chờ, các header được chọn (retry-after, ratelimit-*, mã yêu cầu…), và phần thân
+   ĐÃ CHE: độ dài, loại (json, html, xml, text, khác), cùng các trường chẩn đoán của thân JSON theo danh sách trắng (mã
+   trạng thái/lỗi của nguồn, mã yêu cầu, hạn mức) với giá trị đã kiểm là số, cờ, chuỗi số, mã viết hoa hay định danh lời
+   gọi. Dòng này KHÔNG chứa định danh tài khoản thu, mã phiên, khoá, cookie, đường API, hay bất kỳ chữ tự do nào của thân
+   (lời báo) — nên được trích dẫn. Thân GỐC của câu trả lời lỗi (tối đa 64 KB) nằm ở tệp riêng
+   `<thư mục trạng thái>/phan-hoi/*.txt`, là tầng A ở máy: chỉ người vận hành đọc, không trích dẫn lên kênh.
 
 **Việc kèm bên one-invest (làn Claude, DA58)**: ALLOWLIST thêm `s17-thua-dinh-gia`; migration `stg_s17_*` (sổ số giữ
 128 tạm). Mẫu snapshot thật lấy từ thư mục snapshot của máy thu (thư mục `vn/vn__s17-thua-dinh-gia__*` mang dấu hiệu
