@@ -5,7 +5,7 @@ slug: giu-tuoi-vat-the-khu-thieu-tinh
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [script]
-status: implemented
+status: verified
 veto_state: mo
 veto_opened_at: 2026-11-27T19:16:15Z
 approved_by:
