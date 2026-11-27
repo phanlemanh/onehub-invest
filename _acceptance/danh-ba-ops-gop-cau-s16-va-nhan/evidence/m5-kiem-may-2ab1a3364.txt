@@ -1,0 +1,16 @@
+DA67 — nguyên đầu ra kiem.sh may trên M5 ＠2ab1a3364f9350bf2f151b4a180122cbc94e9e56 (2026-11-27T12:12:18Z), chạy riêng ngay sau làn ghim.
+DB: DB riêng của lượt oneinvest_suite_da67 (chép từ bản chép máy thu 26/11) qua DBO_DB_URL ở chế độ chỉ đọc. Máy: M5 (load ~5, một lượt S4 khác chạy song song).
+Bốn trung vị AC-4 (dự án 16, 3 lần xen kẽ): DB main 3451 ms · DB mới 1765 ms · tường main 1746 ms · tường mới 1783 ms → tỉ lệ DB 0.51 (≤ 0,6), tỉ lệ tường 1.02 (≤ 1,1).
+Lượt đo trước trên M5 (27/11, trước vòng 1): tỉ lệ DB 0.53, tường 1.05.
+Lệnh: bash _acceptance/danh-ba-ops-gop-cau-s16-va-nhan/probes/kiem.sh may — thoát 0
+
+AC-1 bản mới: 1 câu v_unit_thuoc_tinh, 1 câu v_s16_gia_cdt · bản main: 2 câu, 2 câu
+AC-3 dự án 16: 89 toà · 37591 căn có thuộc tính/giá · ô phủ 37591/38138, giá 1850, chưa vào 0 — khớp bản main
+AC-3 dự án 1: 160 toà · 32098 căn có thuộc tính/giá · ô phủ 32097/34402, giá 10000, chưa vào 4 — khớp bản main
+AC-3 dự án 4: 37 toà · 2546 căn có thuộc tính/giá · ô phủ 2546/22119, giá 0, chưa vào 0 — khớp bản main
+AC-3 dự án 2: 14 toà · 9791 căn có thuộc tính/giá · ô phủ 9791/12413, giá 3, chưa vào 0 — khớp bản main
+AC-3 dự án 3: 7 toà · 2797 căn có thuộc tính/giá · ô phủ 2797/4599, giá 0, chưa vào 0 — khớp bản main
+AC-3 đối chứng: bản phá co_gia lệch ở 5/5 dự án
+AC-4 dự án 16 (trung vị 3 lần): DB main 3451 ms · mới 1765 ms · tỉ lệ 0.51
+AC-4 thời gian tường: main 1746 ms · mới 1783 ms · tỉ lệ 1.02
+so-s16: ĐẠT

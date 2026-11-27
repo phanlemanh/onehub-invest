@@ -1,0 +1,20 @@
+HT20 S4 vòng 2 trên M5 ＠fa36da91eb42e6db5ef4518ff7813d11129370b6 — KHÔNG CHẤM: lượt soát fa36da91e-20261127T164828 đỏ một ca khác QV-AC-5.
+
+Soát: data-api xanh · scripts ĐỎ 1 ca: «AC-7 plist không đổi so với origin/main» (scripts/zalo-import-tran.test.mjs:293).
+Đọc ca: test chạy «git diff --quiet origin/main -- pipeline/cron» trong bản clone của lượt soát. Nhánh không đổi pipeline/cron so với merge-base (diff rỗng),
+nhưng main đã đổi pipeline/cron sau merge-base (1fe6ab9ca «gỡ Kev khỏi hook S03…» #567) — nên cây của nhánh khác origin/main ở thư mục đó.
+Ca đỏ do nhánh chưa gộp main mới, không do mã HT20. Gộp main (có 1fe6ab9ca) rồi soát lại là đủ.
+
+== Nguyên văn ca đỏ (scripts.log) ==
+✖ failing tests:
+
+test at scripts/zalo-import-tran.test.mjs:293:1
+✖ AC-7 plist không đổi so với origin/main (15.353687ms)
+  Error: Command failed: git -C /repo diff --quiet origin/main -- pipeline/cron
+    status: 1,
+    signal: null,
+    output: [ null, <Buffer >, <Buffer > ],
+    pid: 134499,
+    stdout: <Buffer >,
+    stderr: <Buffer >
+  }

@@ -1,0 +1,70 @@
+{
+  "feature_plain": "API dữ liệu thôi đưa ra ngoài điểm số và chỉ số thị trường của S02 (nguồn chỉ được dùng để hiệu chuẩn) ở cả bốn đường thị trường — khi API mở cho bên ngoài, không số S02 nào đi theo.",
+  "will_do": [
+    {
+      "id": "AC-1",
+      "p": "Sẽ trả danh sách thị trường chỉ gồm tên, mã, quốc gia, số tin, xếp theo số tin nhiều nhất trước — không còn điểm S02, không còn xếp theo điểm S02."
+    },
+    {
+      "id": "AC-2",
+      "p": "Sẽ trả trang một thị trường cùng hình một dòng danh sách, không kèm điểm S02; mã thị trường cũ vẫn dùng được, mã không có thì báo «không tìm thấy»."
+    },
+    {
+      "id": "AC-3",
+      "p": "Sẽ trả danh sách tiểu vùng chỉ gồm tên, mã và số tin, xếp theo tên — không còn điểm hay chỉ số của S02; mã cũ vẫn dùng được."
+    },
+    {
+      "id": "AC-4",
+      "p": "Sẽ báo rõ đường «chỉ số theo tháng» của thị trường đã gỡ (mã 410 kèm lời giải thích, với mọi mã thị trường) và bỏ nó khỏi tài liệu API."
+    },
+    {
+      "id": "AC-5",
+      "p": "Sẽ chặn mọi đường của API đọc bảng S02, kể cả tên bảng S02 phía cloud và cách lén truyền mã S02 qua tham số: lúc chạy không câu truy vấn nào chạm bảng S02, ca kiểm đỏ ngay khi mã có lại tên bảng S02."
+    },
+    {
+      "id": "AC-6",
+      "p": "Sẽ có ca kiểm tự đỏ ngay khi ai đó đưa lại bản cũ của đường thị trường."
+    },
+    {
+      "id": "AC-7",
+      "p": "Sẽ chỉ đụng đúng các tệp được giao, sửa README và tài liệu API không còn chữ điểm số hay chỉ số S02, không làm đỏ ca kiểm cũ, không lộ tên nguồn, qua bước kiểm kiểu."
+    }
+  ],
+  "wont_do": [
+    {
+      "id": "OOS-1",
+      "p": "KHÔNG sửa dữ liệu mẫu công khai (câu chèn điểm S02 trong bản mẫu) — việc PB2 bỏ, PB5 dọn tên nguồn."
+    },
+    {
+      "id": "OOS-2",
+      "p": "KHÔNG đổi tên trường theo chuẩn RESO cho đường thị trường — giữ tên hiện có."
+    },
+    {
+      "id": "OOS-3",
+      "p": "KHÔNG đụng đường thị trường của app (đã sửa ở HT23) và các màn Ops dùng điểm S02 để hiệu chuẩn."
+    },
+    {
+      "id": "OOS-4",
+      "p": "KHÔNG triển khai API, KHÔNG đẩy sang kho công khai, KHÔNG đổi DB hay cloud."
+    }
+  ],
+  "scope_plain": "Ngoài phạm vi vòng này:",
+  "coverage_plain": [
+    {
+      "i": 0,
+      "p": "Phủ cả bốn đường thị trường: danh sách, một thị trường, tiểu vùng, chỉ số theo tháng."
+    },
+    {
+      "i": 1,
+      "p": "Phủ mọi kiểu khu vực: có điểm S02, không điểm, có tin, không tin, mã cũ, mã không có."
+    },
+    {
+      "i": 2,
+      "p": "Phủ mọi lối số S02 có thể lọt ra: trong thân trả về, trong thứ tự, trong câu truy vấn lúc chạy, trong mã (AC-1, AC-5)."
+    },
+    {
+      "i": 3,
+      "p": "Phủ thứ ngoài đường: tài liệu API, README, ca kiểm cũ, kiểm kiểu (AC-7)."
+    }
+  ]
+}

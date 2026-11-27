@@ -1,0 +1,19 @@
+# DA72 itest — máy thu 27/11 19:12:52Z, khoá s4 P1 qua giu-nhip, DB lượt chép từ máy thu (có 145 nút khu S09)
+## mã gốc dad1be620 — thoát 1
+ℹ fail 3
+ℹ pass 0
+ℹ tests 3
+✖ DA72-AC-1 lượt đêm có khu thiếu tỉnh (không dòng S08): không ném, in dòng đếm khu bỏ ISO, «đêm {khu: N}» đủ mọi khu (104.298959ms)
+✖ DA72-AC-2 khu CÓ dòng S08 mà thiếu tỉnh vẫn dừng gọi tên, không ghi (luật cũ giữ cho chỗ ISO được dùng) (29.992542ms)
+✖ DA72-AC-3 refresh-bait-gap thật trên DB lượt thoát 0, có dòng «đêm», không «khong-co-tinh» (6644.238959ms)
+  Error: khu s09-ecohome-3-2bc963e3: khong-co-tinh
+## mã sửa (cây làm việc) — thoát 0
+ℹ fail 0
+ℹ pass 3
+ℹ tests 3
+✔ DA72-AC-1 lượt đêm có khu thiếu tỉnh (không dòng S08): không ném, in dòng đếm khu bỏ ISO, «đêm {khu: N}» đủ mọi khu (3193.343125ms)
+✔ DA72-AC-2 khu CÓ dòng S08 mà thiếu tỉnh vẫn dừng gọi tên, không ghi (luật cũ giữ cho chỗ ISO được dùng) (26.325667ms)
+✔ DA72-AC-3 refresh-bait-gap thật trên DB lượt thoát 0, có dòng «đêm», không «khong-co-tinh» (9267.640916ms)
+## ca đỏ sẵn trên main (cùng giờ): gốc → sửa
+danh-ba-vat-the-iso — gốc: ✔ DA1-AC-1 ✔ DA1-AC-2 ✔ DA1-AC-3 ✔ DA1-AC-4b ✔ DA1-AC-5b ✔ DA1-AC-6 ✖ DA1-AC-4c ✖ DA1-AC-5 ✖ DA1-AC-7 | sửa: ✔ DA1-AC-1 ✔ DA1-AC-2 ✔ DA1-AC-3 ✔ DA1-AC-4b ✔ DA1-AC-5 ✔ DA1-AC-5b ✔ DA1-AC-6 ✖ DA1-AC-4c ✖ DA1-AC-7 
+danh-ba-s09-toa — gốc: ✔ DA42 ✔ DA42 E1 ✔ DA42 E3 ✔ DA42 E4 ✔ DA42 E5 ✔ DA42 E6 ✔ DA42 E8 ✖ DA42 E9 | sửa: ✔ DA42 ✔ DA42 E1 ✔ DA42 E3 ✔ DA42 E4 ✔ DA42 E5 ✔ DA42 E6 ✔ DA42 E8 ✖ DA42 E9 
