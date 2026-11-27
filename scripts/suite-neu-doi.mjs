@@ -29,6 +29,8 @@ const LOI_PIPELINE = [
   "collector/scripts/**", "data-api/src/**", "tools/**", "CONTEXT.md", "LO-TRINH.html", "docs/ROADMAP.md",
   "docs/ops/**",
   "docs/adr/**", "docs/research/pty-project-type-s06.md",
+  // pipeline/scripts/noi-du-an-s08-that.mjs (DA55 E7) nạp probe bảng phủ của hồ sơ.
+  "_acceptance/soat-noi-s08-danh-ba/probes/bang-phu.mjs",
   "_acceptance/danh-ba-phuong-xa-toan-quoc/**", "_acceptance/du-an-cua-tin-len-dinh-vi/**",
   "_acceptance/gop-tin-chi-anh-o-transform/**",
   "_acceptance/lay-mau-khu-trung-theo-tin/**", "_acceptance/nhom-dang-ky-hai-lan-s03/**",

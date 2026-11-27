@@ -14,10 +14,10 @@ CREATE TABLE IF NOT EXISTS source_registry (
 );
 
 INSERT INTO source_registry (code, real_name, label_vi) VALUES
-  ('S01', 'airbnb',   'Tự thu'),
-  ('S02', 'airdna',   'Hiệu chuẩn'),
-  ('S03', 'zalo',     'Cộng đồng'),
-  ('S04', 'osm',      'Địa giới mở')
+  ('S01', 'Nguồn mẫu S01', 'Tự thu'),
+  ('S02', 'Nguồn mẫu S02', 'Hiệu chuẩn'),
+  ('S03', 'Nguồn mẫu S03', 'Cộng đồng'),
+  ('S04', 'Nguồn mẫu S04', 'Địa giới mở')
 ON CONFLICT (code) DO NOTHING;
 
 -- ===== Clearance law — users.role (portals.md) =====
@@ -40,5 +40,5 @@ CREATE INDEX IF NOT EXISTS dq_check_results_checked_at_idx ON dq_check_results (
 ALTER TABLE market_metrics ADD COLUMN IF NOT EXISTS source text NOT NULL DEFAULT 'S01';
 
 -- Đổi giá trị cũ sang mã
-UPDATE area_sources SET source = 'S02' WHERE source = 'airdna';
+UPDATE area_sources SET source = 'S02' WHERE source = 'nguon-mau-cu-s02';
 UPDATE sale_offers SET source = 'S03' WHERE source = 'mock';
