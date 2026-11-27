@@ -131,3 +131,6 @@ PL38 nối transform, resolve, sync-cloud theo nhịp. Hồ sơ này chỉ bảo
   Kết quả 27/11 @212b7145a (`evidence/m5-e5-212b7145a.txt`): mã ZCode 7fe8bb5b0 `CHON-NAP OK`, gồm ca «quét đủ đè → không nạp
   lại» và «nội dung stg không lùi»; mã cũ 7173fc21a `CHON-NAP DO (5 ca)`. Lượt đầu @9614ab0af hỏng vì probe (đã sửa), không tính.
 - Test của nhánh dùng shim `node`, nên bước tra stg và bộ nạp không chạy thật. AC-5 là ca duy nhất nối wrapper với bộ nạp thật.
+- Giá trị khi cài lịch (Mạnh ở Cổng Phạm vi 27/11; GS phán 27/11): khối EnvironmentVariables của plist đặt
+  `THU_DUOI_S06_VUNG` một vùng, `THU_DUOI_S06_NGHI_SAU_CHAN_PHUT=60`, `THU_DUOI_S06_DUNG_LAN_HAI` bật (để mặc định). Khuôn plist trong
+  kho chưa có khối này; việc cài là bước triển khai sau gộp, GIAO ZCode qua LL, U2 không tự cài.
