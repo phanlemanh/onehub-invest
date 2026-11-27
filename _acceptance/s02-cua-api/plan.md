@@ -1,20 +1,22 @@
-# s02-cua-api — kế hoạch (S2, T2)
+# Kế hoạch thi công — s02-cua-api (ZC22, T3)
 
-Mạnh giao trực tiếp ngày 26/11: «Đồng ý nhanh mới và thử trước báo với claude code việc thử nghiệm này», rồi
-«Đồng ý» (22:37) với chuỗi hồ sơ T2 → PR → gộp qua cổng Claude → build lại collector. Mã viết theo TDD (ca đỏ trước)
-trên nhánh mới từ `origin/main`; hợp đồng và evals dựng lại từ các tình huống đo được — ghi ở sổ quyết định. Phép đo
-đột biến chạy thử lúc viết đã lộ hai kẽ hở của bộ test và một chỗ mã nên chặt hơn; cả ba sửa trong phạm vi mười tiêu
-chí, theo TDD.
+Hợp đồng: `_acceptance/s02-cua-api/contract.md` (Mạnh duyệt 27/11, giữ cỡ 13 tiêu chí). Mã của làn thu đã viết xong ở
+`origin/zcode/s02-cua-api` @2f0748d06 và gộp nguyên vào nhánh `fix/s02-cua-api` (17 tệp khớp byte). Vòng này KHÔNG viết thêm
+mã sản phẩm: ZT không sửa logic thu của làn ZCode (lỗi logic → MỞ LẠI qua LL). Việc còn lại là phép đo, chấm và hồ sơ.
 
-| Việc | Tệp | Phục vụ | independent |
-|---|---|---|---|
-| 1. Đọc phiên trên đĩa theo định dạng LevelDB (nhật ký cắt mảnh, bảng nén tiền tố, giải nén snappy, mới nhất thắng) | tệp phiên S02 (xuất `docPhienTuProfile`) | AC-2 | — (đã làm) |
-| 2. Tra đổi token hai lời; phân loại phản hồi; lỗi xác thực và lỗi bị chặn thành hai loại riêng | tệp phiên S02 | AC-3, AC-4 | — (đã làm) |
-| 3. Bộ thu không còn trình duyệt; trình lấy token; `call()` dừng khi bị chặn, không nuốt lỗi bước làm mới; nhịp 0,2; lệnh `login` | tệp bộ thu S02 (xuất `docExpAppToken`) | AC-1, AC-4 → AC-6, AC-8, AC-9 | — (đã làm) |
-| 4. Lệnh `login` của CLI, mỗi lệnh một nhánh đóng; hợp đồng `Collector` không đổi | `collector/src/cli.ts` | AC-9 | — (đã làm) |
-| 5. Test đơn vị: kho localStorage và phản hồi HTTP dựng bằng số; lệnh `login` đen-trắng qua CLI thật với Chrome giả | `collector/src/test/s02-doc-phien.test.ts` · `s02-cua-api.test.ts` · `s02-bo-thu-cua-api.test.ts` | E12 | true |
-| 6. Ba phép đo, mỗi phép có chiều đỏ trên bản đột biến hoặc tệp cấy | `probes/chay-test-dot-bien.mjs` · `probes/khong-trinh-duyet.sh` · `probes/vung.sh` | E1 → E11 | true |
-| 7. Chỉ dẫn cho agent: lượt thu không cần trình duyệt, lệnh `login`, phiên có hạn, agent không đọc tay profile | `collector/CLAUDE.md` · `collector/AGENTS.md` | AC-9, AC-10 | true |
+| # | Việc | Tệp | Lệnh kiểm từng việc | Phục vụ | independent |
+|---|---|---|---|---|---|
+| 1 | Đọc phiên trên đĩa, đổi token hai lời, bộ thu không mở trình duyệt, lệnh login (ZCode, đã xong) | hai tệp bộ thu S02 · `collector/src/cli.ts` · `collector/src/test/s02-*.test.ts` · `collector/CLAUDE.md` · `collector/AGENTS.md` | `git diff --stat HEAD 2f0748d06 -- <17 tệp>` rỗng | E1–E13 | — (đã xong) |
+| 2 | Ba phép đo đột biến, tĩnh, vùng (ZCode, đã xong) | `_acceptance/s02-cua-api/probes/chay-test-dot-bien.mjs` · `khong-trinh-duyet.sh` · `vung.sh` | ba lệnh của E1–E11: XANH, 23 đột biến bị bắt | E1–E11 | — (đã xong) |
+| 3 | Phép soát giá trị phiên không rời bộ nhớ và bộ test không chạm profile thật (ZT, đã xong) | `_acceptance/s02-cua-api/probes/khong-lo-phien.sh` | `bash …/khong-lo-phien.sh`: XANH, sáu bản cấy bị bắt (cặp hai chiều trên cùng tệp) | E14, E15 | — (đã xong) |
+| 4 | Phép đo dừng cả lượt, đếm nhịp, đuôi nhật ký ghi dở (ZT, đã xong) | `_acceptance/s02-cua-api/probes/dung-ca-luot.mjs` | `node …/dung-ca-luot.mjs`: XANH, hai bản đột biến bị bắt | E16–E18 | — (đã xong) |
+| 5 | Gộp main mới nhất + vẽ lại bản đồ ngay trước khi chấm | `PRODUCT-MAP.md` · `LO-TRINH.html` | `node scripts/product-map.mjs --root .`; `bash …/vung.sh` XANH | E11 | false |
+| 6 | Hợp đồng sang `implemented`; GS xếp chấm S4 trên M5 (collector thuần, không cần thứ chỉ máy thu có) | `contract.md` | kết quả soat-m5 + verdict S4 | E1–E18 | false |
+| 7 | Làn trước chữ ký trên Mac mini dưới khoá s4 | — | `repin-lane.mjs --allow-dirty --write` xanh | E1–E18 | false |
+| 8 | Sau gộp: GIAO triển khai build collector cho ZCode qua LL; đo ba lượt 19:05 | — | ZCode báo số qua LL | Đường đo | false |
 
-Verify mỗi việc: chạy chính phép đo đó cả hai chiều (đã chạy lúc viết: xanh, và mọi bản đột biến bị bắt). Không còn
-mã nào phải viết.
+Thứ tự: 5 → 6 → (Cổng Bằng chứng) → 7 → PR → gộp sau KEV1 nếu khoá trùng → 8. ZC23 (`s02-map-listings-trang-ke`) xếp chồng
+trên nhánh này và gộp sau.
+
+Giới hạn giữ suốt vòng: không đọc profile hay phiên thật, không chạy bộ thu với phiên thật, không build hay chạy trên checkout
+chính, không giá trị phiên trong log, fixture, hồ sơ.
