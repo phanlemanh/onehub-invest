@@ -251,6 +251,9 @@ const NGOAI_LE = [
   { suite: "pipeline_b", duong: "collector", ly_do: "như pipeline_a — hai nửa cùng cây mã" },
   { suite: "pipeline_b", duong: "docs", ly_do: "như pipeline_a" },
   { suite: "pipeline_b", duong: "_acceptance", ly_do: "như pipeline_a" },
+  // DA42 (26/11): ca «lui-nap.sql chỉ gỡ ba bản thu» của itest đọc lệnh lùi trong hồ sơ áp để chứng phạm vi xoá — itest không thuộc npm test (chạy qua eval s09_toa_db), lệnh lùi không phải mã suite nạp.
+  { suite: "pipeline_a", duong: "_acceptance/nap-s09-toa-tang-vao-danh-ba/ap-may-thu/lui-nap.sql", ly_do: "danh-ba-s09-toa.itest.mjs đọc lệnh lùi của hồ sơ áp DA42 để thử phạm vi xoá; itest không thuộc npm test" },
+  { suite: "pipeline_b", duong: "_acceptance/nap-s09-toa-tang-vao-danh-ba/ap-may-thu/lui-nap.sql", ly_do: "như pipeline_a" },
   { suite: "agent", duong: "app", ly_do: "agent/src/memory/store.ts: giá trị enum source «app», không phải đường dẫn" },
   // Nhận main 16/11: bốn đường mới là chú thích, danh sách bỏ qua, hay thư mục GHI ra — không phải tệp suite nạp.
   { suite: "app", duong: "_acceptance/sao-luu-ma-hoa-b2", ly_do: "scripts/lib/sao-luu-ngoai-may.mjs: chuỗi trong khối chú thích đầu tệp (trỏ hồ sơ), không phải đường lúc chạy" },
