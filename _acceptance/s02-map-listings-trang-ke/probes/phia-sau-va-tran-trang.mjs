@@ -70,7 +70,9 @@ async function vong(kieu) {
       if (kieu === "cuoi" && soTrang === 2) return json(200, { payload: { listings: trang(15000).payload.listings.slice(0, 623) } });
       return json(200, trang(kieu === "lap" ? 0 : soTrang * 15000));
     }
-    return json(500, {});
+    // lời khác của lượt (chuỗi thời gian, phân khu…) trả 200 rỗng: coverage.failed chỉ còn do vòng phân trang,
+    // để vế không bắn đo đúng «trang cuối dưới 15000 thì không lỗi» (bản trước trả 500 nên vế này đỏ giả)
+    return json(200, {});
   };
   const m = await import(pathToFileURL(BOTHU).href + `?k=${Math.random()}`);
   const boThu = Object.values(m).find((v) => v && typeof v === "object" && typeof v.collect === "function");

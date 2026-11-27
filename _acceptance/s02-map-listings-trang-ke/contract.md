@@ -27,7 +27,7 @@ AC-5 (trần vòng phân trang).
 
 Phát hiện khi soát (ZT 27/11): trước sửa, trang 2 luôn 404 nên vòng dừng ngay; sau sửa vòng chỉ dừng khi nguồn trả dưới 15000
 căn. Đo trên fixture: nguồn lặp lại trang đầu, hoặc trả trang mới mãi → vòng gửi tới 30 lời (chặn của bản giả), tức lưu lượng
-thật không trần. AC-5 đòi chốt; chốt là logic thu nên do ZCode viết (đã gửi LL 27/11) — AC-5 đỏ tới khi có sha mới.
+thật không trần. AC-5 đòi chốt; chốt là logic thu nên do ZCode viết — có ở @2b9e94afb (trần 10 trang, chạm trần thì một dòng log và lượt lộ lỗi).
 
 Người dùng: lượt thu S02 hằng đêm; người đọc đầu ra phía sau là `pipeline/transform-airdna.mjs` (bảng `airdna_listings`, chỉ hiệu
 chuẩn — luật 5) và danh sách thu S01 lấy từ ID của S02.
@@ -50,7 +50,8 @@ chuẩn — luật 5) và danh sách thu S01 lấy từ ID của S02.
   offset và trả lại trang đầu mãi, (b) nguồn trả trang mới đủ 15000 căn mãi, Then vòng phân trang dừng trong ≤ 11 lời
   `map_listings` ở cả hai ca, ghi một dòng log nói lý do dừng, và lượt lộ lỗi (ném, hoặc `coverage.failed > 0`) — không «xong» im
   lặng với dữ liệu bị cắt; vế không bắn: trang cuối dưới 15000 căn thì dừng như cũ, không dòng ấy, không lỗi. Cách dừng và con số
-  trần do ZCode chọn (LL giao 27/11), trần 11 lời là mức trên của phép đo; con số cụ thể trình ở Cổng.
+  trần do ZCode chọn (LL giao 27/11), trần 11 lời là mức trên của phép đo. Trần đã chọn: `TRANG_MAP_TOIDA = 10` trang mỗi thị
+  trường (150 000 căn, khoảng 5 lần Hà Nội) — hai ca bất thường dừng ở đúng lời thứ 10; đổi trần phải qua cổng.
 - AC-6: Given phần diff của `collector/` so với mốc (nhánh ZC22, hoặc `origin/main` khi ZC22 đã gộp), When đếm dòng thêm mới mang
   tên miền gốc của nguồn (rút từ hằng của tệp bộ thu, không gõ trong phép đo), Then 0 dòng — hàng không thêm tên nguồn thật vào kho
   công khai; cấy một dòng thì phép đo đỏ.
@@ -98,8 +99,12 @@ transform trên DB máy thu (chỉ đọc).
 
 - Giới hạn phía Claude (ZT): không đọc profile hay phiên thật, không chạy bộ thu với phiên thật — chấm chỉ trên fixture; không giá
   trị phiên hay định danh tài khoản thu trong log, fixture, hồ sơ; dữ liệu S02 theo luật 5.
-- Mục ghi cho Cổng: (1) ca test mới của ZCode thêm ba dòng mang tên miền nguồn thật — AC-6 đòi 0 dòng mới, đã nhờ LL chuyển ZCode
-  viết lại bằng hằng xuất của tệp bộ thu (không lộ chữ); nếu Mạnh cho giữ thì sửa AC-6 ở Cổng; (2) chốt AC-5 là logic thu → ZCode viết, ZT không sửa; (3) sau gộp GIAO build collector cho ZCode cùng ZC22.
-- Phép đo ZCode chạy lại 27/11: `chay-test-dot-bien.mjs trang-ke` XANH, bốn đột biến bị bắt. `phia-sau-va-tran-trang.mjs` (ZT): AC-4
-  đạt; AC-5 ĐỎ (30 lời ở cả hai ca) — chờ chốt của ZCode. `khong-ten-mien-moi.sh` (ZT): AC-6 ĐỎ (3 dòng) — chờ ZCode.
+- Mục ghi cho Cổng: (1) ba dòng test mang tên miền nguồn thật: ZCode đã viết lại bằng hằng `API` xuất từ tệp bộ thu (@2b9e94afb),
+  AC-6 giữ nguyên; (2) chốt AC-5 là logic thu → ZCode viết (`lapTrangMapListings`, `TRANG_MAP_TOIDA`), ZT không sửa; (3) sau gộp
+  GIAO build collector cho ZV cùng lượt với ZC22 (hoặc build lại một lần nếu ZC22 đã triển khai).
+- Nguồn mã mới: `origin/zcode/zt-s02-trang-ke` @2b9e94afb (con của 99d49687f, LL soát cổng ĐẠT 27/11), gộp nguyên — hai tệp mã khớp byte.
+- Phép đo chạy lại 27/11 trên nhánh tích hợp: `chay-test-dot-bien.mjs trang-ke` XANH (40 ca, bốn đột biến bị bắt);
+  `phia-sau-va-tran-trang.mjs` XANH — AC-4 đạt; AC-5 hai ca bất thường dừng ở 10 lời, một dòng lý do, lượt lộ lỗi; vế không bắn
+  2 lời, 0 dòng, không lỗi; đối chứng âm trên mã 99d49687f: hai ca chạy tới 30 lời → ĐỎ. `khong-ten-mien-moi.sh` XANH (0 dòng).
+  Sửa phép đo AC-5: lời ngoài `map_listings` của bản giả trả 200 rỗng thay vì 500 (bản trước làm vế không bắn đỏ giả).
 - `vung.sh` và `khong-ten-mien-moi.sh` tự chọn mốc: ZC22 chưa vào main → nhánh ZC22; đã vào → `origin/main`; in «mốc so: …».
