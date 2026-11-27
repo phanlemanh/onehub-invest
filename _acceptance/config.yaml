@@ -150,6 +150,7 @@ executors:
     tdb_app: "cd app && bash ../db/db-thu.sh oneinvest_suite_tdb --chay node --import tsx --test --test-concurrency=1 tests/registry-chi-doc.test.tsx"   # trang-danh-ba-chi-doc E1–E8, E11 — lược đồ tạm tdb_<pid> trên DB của riêng lượt, route thật
     tdb_doi_chieu: "cd app && node --import tsx --test probes/registry-doi-chieu.test.tsx"   # trang-danh-ba-chi-doc E14 — chỉ SELECT trên DB máy thu :5433 trong giao dịch READ ONLY, chỉ in số
     tir_be_mat: "node --test scripts/check-api-surface.test.mjs scripts/check-mcp-tools.test.mjs"   # tin-rao-tren-invest E6 — sổ bề mặt: khoá publicOffers, đối chứng route khác
+    ht30_dong: "node --test --test-concurrency=1 scripts/pipeline-that-hang-ngay.test.mjs"   # dong-du-lieu-that-neu-lan-do-moi-nhat E1–E4 — dòng «ca dữ liệu thật» nêu lần đỏ mới nhất, sổ không đọc được
     ht33_vai: "node --test --test-concurrency=1 scripts/vai-may.test.mjs"   # pipeline-that-ca-may-thu-co-ten-tren-may-phat-trien E1–E4 — vai máy, chay-that bỏ qua có tên ca chỉ máy thu
     api_markets_s02: "cd app && bash ../db/db-thu.sh oneinvest_suite_ht23 --chay node --import tsx --test tests/api-markets-khong-s02.test.tsx"   # api-markets-khong-tra-so-s02 E1/E2 — /api/v1/markets không mang khoá, không xếp theo số S02 (DB thử trắng)
     # yeu-cau-khong-thanh-tin-thue (PL42)
@@ -630,6 +631,7 @@ executors:
     idempotent_selftest: "bash db/check-idempotent.selftest.sh"
     zalo_media_roundtrip: "cd pipeline && node scripts/media-files-roundtrip.mjs"
     zalo_media_backfill: "cd pipeline && SNAPSHOTS_DIR=$HOME/dev/onehub-invest/collector/snapshots node backfill-zalo-media.mjs --check"
+    zc20_kiem: "cd collector && rm -rf dist && npm run build && cd .. && bash _acceptance/s03-tai-bu-anh-bai-cu/probes/kiem.sh"   # s03-tai-bu-anh-bai-cu E1–E6 — dựng dist (backfill tải lại qua media-fetch của dist), probe: backfill trên cụm PostGIS dùng một lần (skipped 0), họ zalo-import HOME tạm, nap-argmax + AC-3 lối vào, DATA-CONTRACT điều 7, hai đột biến replay
     # stg-s08-inventory — cần DB local :5433 (docker one-invest-db); reso cần research-local/reso/dd-2.1.json (env DD_JSON)
     migration_040: "bash db/check-idempotent.sh db/migrations/040_stg_s08_inventory.sql stg_s08_inventory"
     s08_shape: "cd pipeline && node scripts/check-s08-inventory.mjs shape"
@@ -1147,6 +1149,13 @@ executors:
     gnt_doc: "node --test --test-concurrency=1 --test-name-pattern='^GNT-6:' pipeline/scripts/phan-khu-s16-ma-can.itest.mjs"   # gop-nut-trung-ma-can-s16 AC-6
     gnt_dem: "node --test --test-concurrency=1 --test-name-pattern='^GNT-7:' pipeline/scripts/phan-khu-s16-ma-can.itest.mjs"   # gop-nut-trung-ma-can-s16 AC-7
     gnt_that: "node pipeline/scripts/phan-khu-s16-ma-can-that.mjs"   # gop-nut-trung-ma-can-s16 AC-8 — bản chép DB máy thu, DB máy thu chỉ đọc
+    ns8_lop: "node --test pipeline/scripts/noi-du-an-s08-lop.test.mjs"   # soat-noi-s08-danh-ba AC-1 — luật xếp ngả, thuần
+    ns8_the: "node --test --test-concurrency=1 --test-name-pattern='^NS8-2:' pipeline/scripts/noi-du-an-s08-luat.itest.mjs"   # soat-noi-s08-danh-ba AC-2
+    ns8_ap: "node --test --test-concurrency=1 --test-name-pattern='^NS8-3:' pipeline/scripts/noi-du-an-s08-luat.itest.mjs"   # soat-noi-s08-danh-ba AC-3
+    ns8_dao: "node --test --test-concurrency=1 --test-name-pattern='^NS8-4:' pipeline/scripts/noi-du-an-s08-luat.itest.mjs"   # soat-noi-s08-danh-ba AC-4
+    ns8_kiem: "node --test --test-concurrency=1 --test-name-pattern='^NS8-5:' pipeline/scripts/noi-du-an-s08-luat.itest.mjs"   # soat-noi-s08-danh-ba AC-5
+    ns8_app: "cd app && bash ../db/db-thu.sh oneinvest_suite_rs8 --chay node --import tsx --test --test-concurrency=1 tests/registry-s08-luat.test.tsx"   # soat-noi-s08-danh-ba AC-6 — lược đồ tạm trên DB của riêng lượt
+    ns8_that: "cd app && node --import tsx ../pipeline/scripts/noi-du-an-s08-that.mjs"   # soat-noi-s08-danh-ba AC-7 — bản chép DB máy thu, DB máy thu chỉ đọc
     ht4_that: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_ht4 --chay node --test --test-concurrency=1 scripts/nap-dvhc-cu.test.mjs"   # px1-ac-10-so-dung-tin-gan-theo-ten E1, E2 — bản chép DB máy thu của riêng lượt
     ht4_ci: "node _acceptance/hai-ca-app-dung-tren-du-lieu-may/probes/px1-the-ci.mjs"   # px1-ac-10-so-dung-tin-gan-theo-ten E3 — DB dựng từ migration, mọi ca bỏ qua có tên
     s37_db: "node --test --test-concurrency=1 pipeline/scripts/danh-ba-s16-cau-truc.itest.mjs"   # danh-ba-s16-thang-cau-truc E1, E2–E8 — itest tự dựng DB oneinvest_dbv_s37_<pid> từ db/migrations, xoá khi xong
