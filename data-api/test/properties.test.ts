@@ -27,6 +27,8 @@ const { BUILDING_KEY_NAMES, UNIT_KEY_NAMES, LOOKUP_KEY_NAMES } = await import(".
 const HAT = (process.env.PB6_HAT ?? String(process.pid)).replace(/[^0-9]/g, "").padStart(5, "0").slice(-5);
 const khoa = (loai: string, n: number) => `${loai}_01PB6${HAT}${String(n).padStart(16, "0")}`;
 const T1 = khoa("bld", 1), T2 = khoa("bld", 2), T3 = khoa("bld", 3), T9 = khoa("bld", 9);
+// Ma trận thứ tự tên toà (finding r1 AC-1): T4 có S08 · S16 · S03 (không S09) → S08; T5 có S16 · S03 → S16.
+const T4 = khoa("bld", 4), T5 = khoa("bld", 5);
 const S1 = khoa("stk", 1);
 const C1 = khoa("unt", 1), C2 = khoa("unt", 2), C3 = khoa("unt", 3), C4 = khoa("unt", 4);
 const upi = (k: string) => `urn:onehub:upi:1:VN:VN-HN:${k}`;
@@ -45,6 +47,12 @@ const CANH = {
   canCu: `PB6CANH-CAN-CU-${HAT}`,            // field_assertions.evidence
   nguonPhatBieu: `PB6CANH-NGUON-${HAT}`,
   slugNut: `pb6-canh-slug-noi-bo-${HAT}`,    // slug nút dự án
+  // Bí danh `ten` của nguồn thua thứ tự (finding r1 AC-6): route chỉ được trả tên của nguồn thắng.
+  tenThuaT1s16: `PB6CANH-TEN-THUA-T1-S16-${HAT}`,
+  tenThuaT1s03: `PB6CANH-TEN-THUA-T1-S03-${HAT}`,
+  tenThuaT4s16: `PB6CANH-TEN-THUA-T4-S16-${HAT}`,
+  tenThuaT4s03: `PB6CANH-TEN-THUA-T4-S03-${HAT}`,
+  tenThuaT5s03: `PB6CANH-TEN-THUA-T5-S03-${HAT}`,
 };
 const CANH_MOI = Object.values(CANH);
 
@@ -92,8 +100,22 @@ before(async () => {
     await sql(`INSERT INTO buildings (building_key, region_node_id, upi, iso_region, catalog_tier) VALUES ($1, $2, $3, 'VN-HN', $4)`, [k, nut, upi(k), tier]);
   }
   await sql(`INSERT INTO buildings (building_key, status, merged_into, region_node_id, upi, iso_region, catalog_tier) VALUES ($1, 'merged', $2, $3, $4, 'VN-HN', 'xac_minh')`, [T9, T1, vung, upi(T9)]);
-  // Tên toà: T1 có ba nguồn — phải ra tên S09. T2 «Tháp B» (S03), T3 «Tháp B» (S09) → trùng tên trong dự án.
-  const ten = [[T1, "S09", "Tháp A"], [T1, "S16", "A"], [T1, "S03", "toà A"], [T2, "S03", "Tháp B"], [T3, "S09", "Tháp B"]];
+  // T4, T5 ở một nút dự án riêng để không đổi các ca tra theo dự án DU_AN.
+  const rieng = await sql(
+    `INSERT INTO asset_nodes (node_type, name, slug, catalog_tier, area_ids) VALUES ('project', $1, $2, 'xac_minh', ARRAY[$3]) RETURNING id`,
+    [`PB6 Dự Án Thứ Tự ${HAT}`, `pb6-thu-tu-${HAT}`, PHUONG],
+  );
+  for (const k of [T4, T5]) {
+    await sql(`INSERT INTO buildings (building_key, region_node_id, upi, iso_region, catalog_tier) VALUES ($1, $2, $3, 'VN-HN', 'xac_minh')`, [k, Number(rieng.rows[0].id), upi(k)]);
+  }
+  // Tên toà theo thứ tự S09 → S08 → S16 → S03: T1 (S09 · S16 · S03) → S09; T4 (S08 · S16 · S03) → S08; T5 (S16 · S03) → S16.
+  // T2 «Tháp B» (S03), T3 «Tháp B» (S09) → trùng tên trong dự án. Tên của nguồn thua là chuỗi canh (AC-6).
+  const ten = [
+    [T1, "S09", "Tháp A"], [T1, "S16", CANH.tenThuaT1s16], [T1, "S03", CANH.tenThuaT1s03],
+    [T4, "S08", "Tháp S08"], [T4, "S16", CANH.tenThuaT4s16], [T4, "S03", CANH.tenThuaT4s03],
+    [T5, "S16", "Tháp S16"], [T5, "S03", CANH.tenThuaT5s03],
+    [T2, "S03", "Tháp B"], [T3, "S09", "Tháp B"],
+  ];
   for (const [k, s, v] of ten) await sql(`INSERT INTO registry_aliases (object_key, kind, value, source, first_seen) VALUES ($1, 'ten', $2, $3, now())`, [k, v, s]);
   await sql(`INSERT INTO registry_aliases (object_key, kind, value, source, first_seen) VALUES ($1, 'ma_nguon', $2, 'S16', now())`, [T1, CANH.maToaNguon]);
   await sql(`INSERT INTO stacks (stack_key, building_key, catalog_tier) VALUES ($1, $2, 'xac_minh')`, [S1, T1]);
@@ -155,6 +177,12 @@ test("PB6-AC-1 toà theo UPI", async () => {
   assert.equal(d.universalPropertyId, upi(T1), "PB6-AC-1 sai universalPropertyId");
   assert.equal(d.buildingKey, T1);
   assert.equal(d.buildingName, "Tháp A", "PB6-AC-1 tên toà không theo thứ tự S09 → S08 → S16 → S03");
+  // Ma trận thứ tự: mỗi cặp liền kề của S09 → S08 → S16 → S03 có một toà đo (T1: S09 > S16, S03; T4: S08 > S16, S03; T5: S16 > S03).
+  for (const [k, mong] of [[T4, "Tháp S08"], [T5, "Tháp S16"]] as const) {
+    const t = await goi(toa(k));
+    assert.equal(t.status, 200, `PB6-AC-1 toà ${k} không 200`);
+    assert.equal(t.than.data.buildingName, mong, "PB6-AC-1 tên toà không theo thứ tự S09 → S08 → S16 → S03");
+  }
   assert.equal(d.complexName, PHAN_KHU, "PB6-AC-1 complexName phải là phân khu");
   assert.equal(d.subdivisionName, DU_AN, "PB6-AC-1 subdivisionName phải là dự án");
   assert.equal(d.projectId, duAnId, "PB6-AC-1 sai projectId");
@@ -317,8 +345,10 @@ test("PB6-AC-6 không lộ (chạy sau cùng, soát mọi thân đã gom)", asyn
   const loi: string[] = [];
   for (const t of moiThan) {
     for (const c of CANH_MOI) {
-      // unitNumber nhắc lại chuỗi khách nhập (AC-3) được phép; mọi chỗ khác thì không.
-      if (t.includes(c) && !t.includes(`"unitNumber":"${c}"`)) loi.push(`chuỗi canh ${c}`);
+      // unitNumber nhắc lại chuỗi khách nhập (AC-3) được phép, đúng một lần cho mỗi lần nhắc; mọi chỗ khác thì không —
+      // đếm số lần xuất hiện, không xét cả thân (finding r1 AC-6).
+      const dem = (chu: string) => t.split(chu).length - 1;
+      if (dem(c) > dem(`"unitNumber":"${c}"`)) loi.push(`chuỗi canh ${c}`);
     }
     const khoaCo = moiKhoa(JSON.parse(t));
     for (const k of KHOA_CAM) if (khoaCo.has(k)) loi.push(`khoá cấm ${k}`);
