@@ -1,38 +1,7 @@
 {
-  "feature_plain": "Máy được tự điền loại hình và toà cho tin khi luật và model đọc độc lập ra cùng một đáp án; mỗi đợt tự điền thành một lô có hạn đo bù hai tuần, rút được cả lô, và tự tụt khi quá hạn hay đo không đạt.",
-  "will_do": [
-    {"id": "AC-1", "p": "Sẽ bỏ đáp án của luật (loại hình, mã toà đọc từ tên nhóm) khỏi lời nhắc gửi model; vẫn giữ tên dự án và khu vực."},
-    {"id": "AC-2", "p": "Sẽ không tính là phiếu thứ hai khi lời nhắc thật sự gửi đi có đáp án của luật hay danh sách toà — giá trị ấy lên thẻ duyệt, không tự điền."},
-    {"id": "AC-3", "p": "Sẽ gắn mọi giá trị tự điền vào một lô (mã lô, cờ «chưa đo», ai điền, model, nấc, hạn đo bù hai tuần) — cả lượt hằng đêm lẫn lượt đọc toàn bộ."},
-    {"id": "AC-4", "p": "Sẽ gắn 2.290 giá trị đã tự điền vào ba lô: đọc toàn bộ 1.993 loại hình, hai lô «trước độc lập» của lượt đêm (187 loại hình, 110 toà); hạn đo bù tính từ ngày áp."},
-    {"id": "AC-5", "p": "Sẽ có một lệnh rút cả lô: chạy thử in số trước, khi ghi thì tin và đề xuất về đúng như trước lần điền; chỉ người có tên và lý do mới rút được."},
-    {"id": "AC-6", "p": "Sẽ dừng tự điền một trường và rút lô khi lô của trường ấy quá hạn đo bù mà chưa đạt — xét ở đầu mỗi lượt hoặc bằng một lệnh riêng, không cần chờ lượt."},
-    {"id": "AC-7", "p": "Sẽ nhận kết quả đo bù do người ghi: «không đạt» thì rút lô và dừng trường; «đạt» thì giá trị thôi mang cờ chưa đo."},
-    {"id": "AC-8", "p": "Sẽ không để giá trị chưa đo làm căn lên bậc «Gắn căn» (B3); hôm nay chưa căn nào bị ảnh hưởng."},
-    {"id": "AC-9", "p": "Sẽ mở lại tự điền cho lượt hằng đêm chỉ khi phiếu độc lập và trường đang mở; mọi lối duyệt khác giữ nguyên như trước."},
-    {"id": "AC-10", "p": "Sẽ kèm hồ sơ áp lên máy thu đủ năm thứ: lệnh áp, số chạy thử trên bản chép, sao lưu, cách lùi, lệnh kiểm sau."}
+  "feature_plain": "Máy chỉ tự ghi loại hình hay toà vào tin khi luật và model đọc độc lập cùng nói một giá trị; mỗi giá trị tự ghi mang mã lô và hạn đo bù hai tuần, rút được cả lô bằng một lệnh, và trường có lô quá hạn hay đo bù không đạt thì tự dừng ghi.",
+  "decisions": [
+    {"id": "E10", "q": "Hồ sơ áp lên máy thu đã đủ năm thứ chưa?", "why": "Lệnh áp, số chạy thử trên bản chép (ba lô 1.993 · 187 · 110), sao lưu trước, cách lùi đã chạy thử đủ trình tự (DB về đúng trạng thái trước), lệnh kiểm sau — đều có trong ap-may-thu.md; hội đồng ba thấu kính đề xuất Đạt."}
   ],
-  "scope_plain": "Việc này KHÔNG làm:",
-  "wont_do": [
-    {"id": "OOS-1", "p": "KHÔNG làm lô đo bù, thẻ cài và lên nấc chính thức — đó là phiên gắn nhãn và chữ ký từng ô của anh."},
-    {"id": "OOS-2", "p": "KHÔNG dựng thước đo bù tự động từ nhãn — chờ lớp xuất xứ nhãn (NB2); kết quả đo bù do người ghi bằng lệnh."},
-    {"id": "OOS-3", "p": "KHÔNG đổi trần 50 lời gọi mỗi đêm — trần nằm ở script của làn ZCode và là tiền (xem Hỏi-1)."},
-    {"id": "OOS-4", "p": "KHÔNG đụng giá trị luật điền một mình (48 giá trị) và đường đọc gộp S03."},
-    {"id": "OOS-5", "p": "KHÔNG tự nối lệnh xét hạn vào lịch hằng ngày — giao ZCode sau khi gộp; trước đó lô quá hạn tụt ở lượt kế hoặc khi người gõ lệnh."},
-    {"id": "OOS-6", "p": "Nếu anh chọn lối khác ở Hỏi-3 hay Hỏi-5, lời của AC-3, AC-4, AC-9 đổi theo trước khi làm."}
-  ],
-  "coverage_plain": [
-    {"i": 0, "p": "Mỗi lượt (đọc toàn bộ, hằng đêm, về sau) và mỗi trường (loại hình, toà) đều có lô — AC-3, AC-4, AC-9; ô đọc toàn bộ × toà không có dữ liệu."},
-    {"i": 1, "p": "Lời nhắc sạch và lời nhắc lỡ mang đáp án đều được thử — AC-1, AC-2."},
-    {"i": 2, "p": "Đủ vòng đời một lô: đang điền, quá hạn, đạt, không đạt, đã rút, chạy lại — AC-5, AC-6, AC-7."},
-    {"i": 3, "p": "Người đọc phía sau: giá trị trên tin, Hàng duyệt, bậc căn B3 — AC-5, AC-2, AC-8."},
-    {"i": 4, "p": "Áp lên máy thu: áp, chạy lại không đổi, lùi được — AC-4, AC-10."}
-  ],
-  "gap_probe_plain": [
-    {"i": 0, "p": "Việc bật lại tự điền đêm và tự rút lô đều đổi giá trị trên tin thật, nhưng máy đã tự quyết dựa trên một dòng chú thích code — nay thành hai câu hỏi cho anh (Hỏi-3, Hỏi-4)."},
-    {"i": 1, "p": "Máy coi «một lô mỗi lượt × trường» là cách duy nhất, nhưng «một lô mỗi lượt, rút lọc theo trường» cũng được — nay thành câu hỏi cho anh (Hỏi-5)."},
-    {"i": 2, "p": "Nếu không có lượt nào chạy thì lô quá hạn đứng mãi — đã thêm lệnh xét hạn riêng, không cần chờ lượt; nối vào lịch hằng ngày để sau."},
-    {"i": 3, "p": "Lời nhắc mang danh sách toà thì model có thể chọn lại từ danh sách — đã thêm ca thử: khi đó không tính là phiếu độc lập."},
-    {"i": 4, "p": "Chưa ghim lô đọc toàn bộ là độc lập hay không — đã ghi «độc lập» theo mục 63 và thêm phép thử."}
-  ]
+  "analyst_plain": ""
 }
