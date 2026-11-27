@@ -34,12 +34,13 @@ const CAY = ["cdn.gia-lap.test", "21.0001", "105.0001"]
 const SNAP = "q56__s09-danh-ba__qc"
 
 const q = (sql: string, args: unknown[] = []) => sc.query(sql, args)
-const canQc = (id: string, ma: string, gia: number | null) => ({
+const canQc = (id: string, ma: string, gia: number | null, k: Record<string, unknown> = {}) => ({
   id, property_code: ma, property_type: ["Chung cư"], number_of_bedrooms: 2, number_of_bathrooms: [1], min_area: 72.5, max_area: 72.5,
   min_selling_price: gia ?? 0, max_selling_price: gia ?? 0, min_unit_price: gia ? 69_000_000 : 0, max_unit_price: gia ? 69_000_000 : 0,
   status: "ON_STOCK", available_for_sale_status: "AVAILABLE", block_id: "q-toa",
   // chuỗi cấy: stg thật đã bỏ hai khoá này ở bộ nạp; ở đây cố ý để lại để soát lớp đọc và màn không lộ chúng
   galleries: [{ urls: [`https://${CAY[0]}/anh-${id}.jpg`] }], geolocation: { lat_cdnt: 21.0001, long_cdnt: 105.0001 },
+  ...k, // khác biệt từng căn (AC-8 đo theo dòng: mỗi căn một bộ số riêng, một căn trạng thái khác)
 })
 let dong = 0
 const trang = (duAn: string, cans: ReturnType<typeof canQc>[]) =>
@@ -64,7 +65,10 @@ before(async () => {
     ('S09', 'qa', $1, 'noi', NULL), ('S09', 'qb', $1, 'noi', NULL), ('S09', 'qc', $2, 'noi', NULL), ('S09', 'qd', NULL, 'chua_noi', 'cho-the-luat')`, [N.D1, N.D2])
   await q(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ($1, 'vn', 's09-danh-ba', '{}')`, [SNAP])
   await trang("qa", [canQc("c-a1", "A1.05.01", 5_000_000_000), canQc("c-a2", "A1.05.02", null), canQc("c-dup", "A1.06.01", 4_250_000_000)])
-  await trang("qb", [canQc("c-dup", "A1.06.01", 4_250_000_000), canQc("c-b1", "B2.10.03", 6_100_000_000)])
+  await trang("qb", [canQc("c-dup", "A1.06.01", 4_250_000_000), canQc("c-b1", "B2.10.03", 6_100_000_000, {
+    number_of_bedrooms: 3, number_of_bathrooms: [2], min_area: 95, max_area: 95, min_unit_price: 64_210_000, max_unit_price: 64_210_000,
+    available_for_sale_status: "LOCKED",
+  })])
   await trang("qd", [canQc("c-d1", "D.01", 3_000_000_000)])
   await trang("qe", [canQc("c-e1", "E.01", 2_000_000_000)])
 })
@@ -91,6 +95,13 @@ function oQuyCan(html: string): string {
   assert.ok(i >= 0, "AC-7 quỹ căn: trang không có ô «Căn CĐT đang bán S09»")
   return html.slice(i, i + 1200).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ")
 }
+/** Chữ của đúng một dòng bảng quỹ căn mang mã `m` (tách theo <tr>, bỏ thẻ) — AC-8 đo quan hệ dòng ↔ giá, không đo chuỗi rời. */
+function dongCan(html: string, m: string): string {
+  const dong = html.split(/<tr[\s>]/).filter((t) => t.includes(`translate="no">${m}<`))
+  assert.equal(dong.length, 1, `AC-8: mã ${m} phải ở đúng một dòng (thấy ${dong.length})`)
+  const t = dong[0].split("</tr>")[0]
+  return t.slice(t.indexOf(">") + 1).replace(/<[^>]+>/g, " ").replace(/&nbsp;|\u00a0/g, " ").replace(/\s+/g, " ").trim()
+}
 const ma = (html: string) => [...html.matchAll(/translate="no">([A-Z][A-Z0-9.]*)</g)].map((m) => m[1]).filter((x) => /\./.test(x))
 
 test("AC-7 ô «Căn CĐT đang bán S09» bằng SELECT trên view của cùng DB; dòng phụ ba số cộng bằng số dự án; cấy thêm một căn thì tăng đúng một", async () => {
@@ -114,10 +125,14 @@ test("AC-8 trang dự án: nút có quỹ căn ra đúng số dòng và giá; ha
   assert.match(html, /Căn CĐT đang bán/)
   assert.deepEqual(ma(html).filter((m) => /^[AB]\d/.test(m)).sort(), ["A1.05.01", "A1.05.02", "A1.06.01", "B2.10.03"], "AC-8 số dòng quỹ căn lệch view")
   assert.match(html, /4 căn\./, "AC-8 số dòng quỹ căn lệch view")
-  assert.match(html, /5 tỷ/)
-  assert.match(html, /4,25 tỷ/)
-  assert.match(html, /69 tr\/m²/)
-  assert.match(html, /AVAILABLE/)
+  // Mỗi dòng: mã · loại hình · PN · WC · diện tích · giá bán · giá/m² · trạng thái của CHÍNH căn đó (viết trước từ fixture).
+  const KY_VONG: Record<string, string> = {
+    "A1.05.01": "A1.05.01 Chung cư 2 · 1 72,5 m² 5 tỷ 69 tr/m² AVAILABLE",
+    "A1.05.02": "A1.05.02 Chung cư 2 · 1 72,5 m² — — AVAILABLE",
+    "A1.06.01": "A1.06.01 Chung cư 2 · 1 72,5 m² 4,25 tỷ 69 tr/m² AVAILABLE",
+    "B2.10.03": "B2.10.03 Chung cư 3 · 2 95 m² 6,1 tỷ 64,2 tr/m² LOCKED",
+  }
+  for (const [m, kv] of Object.entries(KY_VONG)) assert.equal(dongCan(html, m), kv, `AC-8 dòng ${m} lệch giá, đơn giá hay trạng thái`)
   const hai = await htmlDuAn(N.D2)
   assert.match(hai, /Chưa có căn CĐT đang bán của nguồn S09 cho dự án này/)
   assert.match(hai, /Về danh bạ/)
