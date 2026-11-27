@@ -420,3 +420,15 @@ Khoá nối với S16/S08 (chi tiết số đo ở tệp kê local của lượt
 5. Snapshot có `error` (run failed) vẫn hợp lệ về hình dạng — dùng cho chẩn đoán,
    không dùng làm nguồn metrics.
 6. Ảnh `media/*` là PII tầng A (ADR-0007): chỉ máy local, không sync cloud.
+7. **Nạp lại stg từ raw (replay): snapshot tải-bù ảnh S03 phải nạp SAU CHÓT.**
+   Snapshot bù mang `manifest.coverage.loai = "tai-bu-anh-2511"` và tên theo
+   **giờ chạy** (từ 25/11; 5 snapshot 21–25/11 ghi trước đó mang tên NGÀY ĐĂNG —
+   `…2026-11-21T143738670 · …22T140520119 · …23T134413716 · …24T131547604 ·
+   …25T125516859`). Bộ nạp ghi `media_files` thay trọn khi giá trị khác null,
+   nên replay theo thuần thứ tự tên sẽ để bản gốc (entry lỗi) nạp sau đè ảnh đã
+   bù của 695 bài: 21/11 177 · 22/11 318 · 23/11 35 · 24/11 165 · 25/11 0.
+   Quy tắc: nạp snapshot thường theo tên trước, mọi snapshot
+   `coverage.loai = "tai-bu-anh-2511"` phase CUỐI — hàm sẵn
+   `sapXepReplay()` trong `pipeline/backfill-s03-media-2511.mjs`. Hai chỗ nạp
+   lại raw hiện biết: `scripts/zalo-import-daily.sh` khi state đặt lại về
+   `00000000T000000`, và `pipeline/finalize-hanoi.sh` trên DB mới.

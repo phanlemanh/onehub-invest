@@ -1,0 +1,43 @@
+schema_version: 1
+slug: can-gia-tot-ba-vai-ten-nguon-trong
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/can-gia-tot-ba-vai-ten-nguon-trong/probes/cham.sh AC-1
+    paths: [scripts/can-gia-tot-ba-vai-ten-nguon.mjs, scripts/can-gia-tot-ba-vai-ten-nguon.test.mjs]
+    expected: "Ma trận viết tay 8 dòng (tên thường, NULL, rỗng, chỉ khoảng trắng, thiếu cột, dòng null, số 42, tên có khoảng trắng hai đầu), mỗi dòng một assert không ném lỗi và một assert đầu ra viết tay; cả 8 dòng gộp ra đúng [nguongiaa, nguongiab]. Đột biến bỏ lọc dòng không tên đỏ với «dòng NULL: ra [\"\"]»; đột biến không cắt khoảng trắng đỏ với «dòng chỉ khoảng trắng: ra [\"   \"]»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/can-gia-tot-ba-vai-ten-nguon-trong/probes/cham.sh AC-2
+    paths: [scripts/can-gia-tot-ba-vai-ten-nguon.mjs, scripts/can-gia-tot-ba-vai-ten-nguon.test.mjs]
+    expected: "Ba chuỗi không chứa tên (gồm chuỗi rỗng) không bị báo lộ; đối chứng dương: chuỗi chứa NGUONGIAA (khác hoa thường) và nguongiab bị bắt. Đột biến giữ tên rỗng trong danh sách đỏ với «bị báo lộ tên nguồn giả»; đột biến so phân biệt hoa thường đỏ với «tên NguonGiaA viết hoa không bị bắt»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/can-gia-tot-ba-vai-ten-nguon-trong/probes/cham.sh AC-3
+    paths: [scripts/can-gia-tot-ba-vai.mjs, scripts/can-gia-tot-ba-vai-ten-nguon.test.mjs]
+    expected: "Script đo ba vai nạp napTenNguon từ mô-đun mới, gọi napTenNguon(c), batBuocCoTen(nap), coTenNguonTrong(tenNguon, s), và không còn real_name.toLowerCase(). Ba đột biến đỏ với thông điệp ghim: đọc sổ nguồn trực tiếp («script không đọc sổ nguồn qua napTenNguon»), soát trang bằng includes («script không soát trang qua coTenNguonTrong»), bỏ chặn rỗng («script không chặn danh sách tên rỗng»). Giới hạn: kiểm cách nối bằng đọc mã nguồn, không chạy trọn script (cần bản app và tài khoản thử)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/can-gia-tot-ba-vai-ten-nguon-trong/probes/cham.sh AC-4
+    paths: [scripts/can-gia-tot-ba-vai-ten-nguon.mjs, scripts/can-gia-tot-ba-vai-ten-nguon.test.mjs]
+    expected: "batBuocCoTen({ten: [], bo: 15}) ném lỗi đúng chữ «0 tên nguồn để soát (bỏ 15 dòng sổ nguồn không có tên)»; đối chứng dương: một tên thì trả lại danh sách. Đột biến bỏ chặn đỏ với «danh sách rỗng không bị chặn»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/can-gia-tot-ba-vai-ten-nguon-trong/probes/nap-db.sh
+    paths: [scripts/can-gia-tot-ba-vai-ten-nguon.mjs]
+    expected: "Trên DB của riêng lượt (db-thu.sh --chay, chép từ máy thu): trong giao dịch cấy dòng S9ZRONG tên '' và S9ZTRANG tên '   ', napTenNguon chạy CAU_TEN_NGUON; số tên bằng count(*) FILTER (WHERE btrim(real_name) <> '') đếm độc lập, số bỏ bằng phần còn lại và ≥ 2, mọi tên khác rỗng và đã chuẩn hoá; ROLLBACK. Chỉ in số đếm. Đột biến không lọc tên rỗng đỏ với «số tên 17, đếm độc lập 15»-dạng thông điệp."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

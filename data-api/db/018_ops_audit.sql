@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS ops_audit (
   id bigserial PRIMARY KEY,
   at timestamptz NOT NULL DEFAULT now(),
   actor text NOT NULL,            -- 'machine:cloud-sync' | 'user:<id>' | 'api:<token-name>'
-  action text NOT NULL,           -- 'ops.ingest' | 'zalo.account.create' | ...
+  action text NOT NULL,           -- 'ops.ingest' | 's03.account.create' | ...
   env text NOT NULL DEFAULT 'local', -- 'local' | 'cloud'
   detail jsonb DEFAULT '{}'
 );
