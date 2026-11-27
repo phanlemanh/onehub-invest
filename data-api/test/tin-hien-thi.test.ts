@@ -157,9 +157,14 @@ test("PB7-AC-4 nguồn ẩn vắng ở căn giá tốt", async () => {
 test("PB7-AC-5 chi tiết tin nguồn ẩn là 404", async () => {
   const loi: string[] = [];
   const khong = await goi(`/v1/listings/pb7-${HAT}-khong-co`);
+  if (khong.status !== 404 || khong.than.error?.code !== "NOT_FOUND") loi.push("PB7 mốc khoá không có không phải 404 NOT_FOUND");
+  /** Thân hai lời đáp khác nhau (so cả thân, không chỉ mã) — tin ẩn phải y hệt khoá không có, không lộ là «có mà ẩn». */
+  const thanKhac = (a: unknown, b: unknown) => JSON.stringify(a) !== JSON.stringify(b);
+  // Đối chứng cùng ca: một thân 404 khác chữ phải bị bộ so bắt.
+  assert.ok(thanKhac({ error: { code: "NOT_FOUND", message: "Listing hidden" } }, khong.than), "PB7 bộ so thân không bắt được thân khác");
   for (const [nguon, oid] of Object.entries(AN)) {
     const r = await goi(`/v1/listings/${oid}`);
-    if (r.status !== 404 || r.than.error?.code !== "NOT_FOUND" || khong.status !== 404) loi.push(`PB7 nguồn ẩn lọt ra API: ${nguon} ở chi-tiet`);
+    if (r.status !== khong.status || thanKhac(r.than, khong.than)) loi.push(`PB7 nguồn ẩn lọt ra API: ${nguon} ở chi-tiet`);
   }
   const dc = await goi(`/v1/listings/${DC_BAN}`);
   if (dc.status !== 200) loi.push("PB7 đối chứng S06 vắng ở chi-tiet");
