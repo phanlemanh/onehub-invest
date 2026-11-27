@@ -5,9 +5,9 @@ slug: s02-cua-api
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli]
-status: draft
-approved_by:
-approved_at:
+status: approved
+approved_by: Mạnh
+approved_at: 2026-11-27
 design_doc: _acceptance/s02-cua-api/design.md
 ---
 
