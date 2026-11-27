@@ -20,14 +20,15 @@ huỷ và in tên hàm — không đổi gì.
 ## 2. Số chạy thử trên bản chép DB máy thu
 
 Lệnh: `bash _acceptance/ghi-tam-do-sau-co-han/probes/ban-chep.sh AC-4`. Lượt chép DB máy thu sang DB thử chỉ đọc DB nguồn.
+Đo trên M5 @fe6c96e69 (bản chép DB máy thu sang M5 26/11 05:45Z; mã 129 không đổi tới @19656da2e) — `evidence/m5-probe-fe6c96e69.txt`.
 
 | Ô | Mong (đếm 26/11) | Chạy thử |
 |---|---|---|
-| lô `doc-toan-bo-loai-hinh` (độc lập true, hạn ngày áp + 14) | 1.993 | chờ lượt `ban-chep.sh` |
-| lô `truoc-doc-lap-loai-hinh` (độc lập false) | 187 | chờ lượt `ban-chep.sh` |
-| lô `truoc-doc-lap-toa` (độc lập false) | 110 | chờ lượt `ban-chep.sh` |
-| giá trị tự ghi trước 24/11 còn thiếu lô | 0 | chờ lượt `ban-chep.sh` |
-| áp lần hai: băm cột `lo_id`/`ghi_tam`, số lô | không đổi | chờ lượt `ban-chep.sh` |
+| lô `doc-toan-bo-loai-hinh` (độc lập true, hạn ngày áp + 14) | 1.993 | 1.993 |
+| lô `truoc-doc-lap-loai-hinh` (độc lập false) | 187 | 187 |
+| lô `truoc-doc-lap-toa` (độc lập false) | 110 | 110 |
+| giá trị tự ghi trước 24/11 còn thiếu lô | 0 | 0 |
+| áp lần hai: băm cột `lo_id`/`ghi_tam`, số lô | không đổi | không đổi (băm 6189ae1a…, 3 lô) |
 
 ## 3. Sao lưu trước khi áp
 
@@ -58,7 +59,7 @@ Một giao dịch: gỡ ba hàm mới (`rut_lo_ghi_tam`, `ghi_ket_qua_do_bu`, `x
 nào trên tin (2.290 giá trị đã áp giữ nguyên, chỉ mất lô và cờ). Đã có lô bị rút thì giá trị đã rút KHÔNG tự về lại khi lùi —
 áp lại bằng lệnh người là việc riêng.
 
-Chạy thử trên bản chép (cùng lượt `ban-chep.sh`): chờ lượt.
+Chạy thử trên bản chép (cùng lượt `ban-chep.sh`): sau lùi bảng `ghi_tam_lo` đã gỡ, cột `lo_id`/`ghi_tam` còn 0.
 
 Lùi mã (lượt hằng đêm quay về chốt NB11) là revert commit gộp của PR; chỉ lùi DB mà giữ mã mới thì bộ chạy đêm lỗi vì thiếu bảng
 lô — luôn lùi mã trước, DB sau.
@@ -77,7 +78,7 @@ docker exec -i -e PGPASSWORD=oneinvest one-invest-db psql -U oneinvest -h localh
   SELECT proname, prosrc ~ '129 \\(NB10' FROM pg_proc WHERE proname IN ('revert_enrichment', 'unit_data_level')"
 ```
 
-Mong: cả hai dòng `t`. Đo trên bản chép (lượt `ban-chep.sh`, mục «bẫy thứ tự 066»): chờ lượt.
+Mong: cả hai dòng `t`. Đo trên bản chép (lượt `ban-chep.sh`, mục «bẫy thứ tự 066»): mất bản vá thì rút bằng actor máy bị từ chối, lô còn `dang-ghi`; chạy lại 129 thì bản vá phục hồi, ba lô giữ nguyên.
 
 ## 5. Lệnh kiểm sau khi áp
 
