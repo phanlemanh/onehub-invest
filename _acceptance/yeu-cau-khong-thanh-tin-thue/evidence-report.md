@@ -6,8 +6,8 @@ failed_evals: []
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 3c1fe5acdf08088df7f0d66348016453ebd07460
-human_signoff:
+verified_commit: f419527408363051dd7b91fddef939920563bbb4
+human_signoff: Mạnh 2026-11-27
 ---
 
 # Evidence Report: yeu-cau-khong-thanh-tin-thue
@@ -186,3 +186,11 @@ none — mọi eval nhiều lần chạy đều đồng đều (không eval nào
 
 Round 1: E10 BLOCKED — suite pipeline_that vượt trần 30 phút của công cụ (khai long_running 90 theo khuôn HT9 E3a). Trả lại để khai lại eval.
 Round 2: toàn bộ eval PASS, E6 do hội đồng đề xuất PASS.
+
+### Re-pin lần 1 — 2026-11-27, do gộp main facd418dc (PL41 đã vào) sau chữ ký Cổng Bằng chứng
+run_id: repin-20261127T031102Z-46441
+sha: 2959fe8184cd5b18859693b781e2e471d8263320 · suites: 8 lệnh exit 0 · evals: 9/9 eval máy đạt kỳ vọng · ngoài làn máy: E6 (E6 không khai paths) · AC không có chốt máy: AC-6
+
+### Re-pin lần 2 — 2026-11-27, do AC-5 lối (b) mốc đo lúc chạy, lời Mạnh 27/11; gộp main 1fe6ab9ca
+run_id: repin-20261127T091012Z-33901
+sha: f419527408363051dd7b91fddef939920563bbb4 · suites: 8 lệnh exit 0 · evals: 9/9 eval máy đạt kỳ vọng · ngoài làn máy: E6 (E6 không khai paths) · AC không có chốt máy: AC-6

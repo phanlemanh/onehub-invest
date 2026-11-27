@@ -5,7 +5,7 @@ slug: yeu-cau-khong-thanh-tin-thue
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [data, cli]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-26-yeu-cau-khong-thanh-tin-thue-design.md
 veto_state: mo
 veto_opened_at: 2026-11-26T11:05:00Z
@@ -53,8 +53,9 @@ Given bản chép DB máy thu (db-thu, ROLLBACK). Định nghĩa đếm: chỉ t
 một bài mà nhãn Haiku hợp lệ mới nhất (json_ok không false) là `inquiry` và nhãn ghi từ 12/11 đến hết 26/11,
 When `pipeline/scripts/do-yeu-cau-lot-tin.mjs --kiem` in khối «trước» trên bản chép, chạy transform-zalo rồi xếp hạng giá (420),
 rồi in khối «sau»,
-Then khối «trước» tái lập mốc 264 tin rò và 51 tin thuê «giá tốt» rò (±2, lệch thì thoát 1 «mốc lệch»); khối «sau»: tin rò ≤ 85
-(thử 76), tin thuê «giá tốt» rò ≤ 16 (thử 13); số bài mà luật mới đổi sang Yêu cầu mà nhãn Haiku của chính bài khác `inquiry`
+Then khối «trước» là mốc của lượt, đo trên chính bản chép; sàn tin rò ≥ 262 và giá tốt thuê rò ≥ 49 (dưới sàn → thoát 1 «mốc dưới
+sàn»; cửa sổ nhãn đóng 27/11 nên mốc chỉ lên); khối «sau»: tin rò ≤ ⌈trước × 85/264⌉ (thử 76 trên mốc 264), tin thuê «giá tốt»
+rò ≤ ⌈trước × 16/51⌉ (thử 13 trên mốc 51); số bài mà luật mới đổi sang Yêu cầu mà nhãn Haiku của chính bài khác `inquiry`
 ≤ 10; số tin rao thuê sau = trước − số tin thuê rút trọn (lệch thì thoát 1); in số tin thuê «giá tốt» trước/sau (mốc 1.165) và
 nhánh Yêu cầu của data-flow trước/sau (đơn vị: bài). Biên của ngưỡng (≤ 85 so với thử 76, ≤ 16 so với thử 13) là khoảng 12%: bản chép dựng sau ngày đo
 26/11 có thêm bài mới và nhãn mới, số trước/sau dịch vài tin; biên nhỏ hơn thì đỏ vì dữ liệu mới, không vì luật. Tệp mẫu `_acceptance/yeu-cau-khong-thanh-tin-thue/evidence/mau-tin-rut.md`
@@ -95,3 +96,8 @@ Then xanh, và hai tệp test cũ không đổi so với main (không ca cũ nà
 ## Notes
 
 - Không có lượt áp riêng: lượt đêm `zalo-import-daily.sh` (transform-zalo rồi 420) đưa luật vào hiệu lực sau gộp; xem design doc.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-27:
+  - Ngoài-1: Hồ sơ ghi lần chạy toàn bộ bộ kiểm thử đường ống như thể ở bản trước lần sửa luật cuối; thực tế tệp bằng chứng ghi đúng bản code cuối, nên mục này thừa.
+  - Ngoài-2: Phép kiểm «bộ test cũ không bị sửa» so với nhánh chính thay vì một bản ghim, nên có thể báo đỏ oan và sau khi gộp thì không còn bắt được gì.
+  - Ngoài-3: Tài liệu hướng dẫn lệnh đo từng ghi sai chỗ lưu tệp mẫu (đã sửa dòng chữ ở bản này).
+  - Ngoài-4: Phép kiểm trên máy phát triển chỉ xác nhận bộ kiểm thử xanh, chưa xác nhận số ca bị bỏ qua đúng danh sách đã khai.
