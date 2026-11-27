@@ -25,6 +25,8 @@ export type KhoaHopDong = {
   lookup?: string;
   /** Giá trị local không thuộc lookup DD (khai lý do; probe miễn có tên). */
   localValue?: string;
+  /** Trường phát biểu (field_assertions.field, resource Unit) mà khoá đọc — một mã mỗi khoá, route rút danh sách từ đây. */
+  assertionField?: string;
   why: string;
 };
 
@@ -48,17 +50,22 @@ export const BUILDING_KEYS: readonly KhoaHopDong[] = [
 export const UNIT_KEYS: readonly KhoaHopDong[] = [
   { key: "unitKey", resource: "extension", type: "string", why: "khoá mờ unt_… của căn (ULID ngẫu nhiên, không suy được căn khác)" },
   { key: "unitFloorLocation", resource: "Property", ddField: "UnitFloorLocation", type: "string", why: "tầng của căn" },
-  { key: "livingArea", resource: "Property", ddField: "LivingArea", type: "number", why: "diện tích sử dụng" },
+  { key: "livingArea", resource: "Property", ddField: "LivingArea", type: "number", assertionField: "living_area", why: "diện tích sử dụng" },
   { key: "livingAreaUnits", resource: "Property", ddField: "LivingAreaUnits", type: "string", lookup: "AreaUnits", why: "Square Meters khi có diện tích" },
-  { key: "bedroomsTotal", resource: "Property", ddField: "BedroomsTotal", type: "integer", why: "số phòng ngủ" },
-  { key: "bathroomsTotalInteger", resource: "Property", ddField: "BathroomsTotalInteger", type: "integer", why: "số WC" },
-  { key: "propertySubType", resource: "Property", ddField: "PropertySubType", type: "string", lookup: "PropertySubType", why: "loại căn theo bảng đổi của mappings.yaml" },
+  { key: "bedroomsTotal", resource: "Property", ddField: "BedroomsTotal", type: "integer", assertionField: "bedrooms", why: "số phòng ngủ" },
+  { key: "bathroomsTotalInteger", resource: "Property", ddField: "BathroomsTotalInteger", type: "integer", assertionField: "bathrooms", why: "số WC" },
+  { key: "propertySubType", resource: "Property", ddField: "PropertySubType", type: "string", lookup: "PropertySubType", assertionField: "property_type", why: "loại căn theo bảng đổi của mappings.yaml" },
 ];
 
 /** Thêm vào phần tử căn CHỈ ở `GET /v1/properties/lookup`: nhắc lại đúng chuỗi mã căn khách đã nhập. */
 export const LOOKUP_EXTRA_KEYS: readonly KhoaHopDong[] = [
   { key: "unitNumber", resource: "Property", ddField: "UnitNumber", type: "string", why: "nhắc lại mã căn khách nhập — không bao giờ phát mã khách chưa biết" },
 ];
+
+/** Trường phát biểu thuộc tính căn mà route đọc — rút từ khoá, không viết tay danh sách (lưới sổ từ vựng VL-AC-5). */
+export const UNIT_ASSERTION_FIELDS: readonly string[] = UNIT_KEYS.flatMap((k) => (k.assertionField ? [k.assertionField] : []));
+/** Trường phát biểu của một khoá phần tử căn. */
+export const truongCua = (key: string) => UNIT_KEYS.find((k) => k.key === key)?.assertionField ?? "";
 
 export const BUILDING_KEY_NAMES = BUILDING_KEYS.map((k) => k.key);
 export const UNIT_KEY_NAMES = [...BUILDING_KEY_NAMES, ...UNIT_KEYS.map((k) => k.key)];

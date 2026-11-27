@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import type { Context } from "hono";
 import { pool } from "../db/client.js";
-import { BUILDING_KEY_NAMES, PROPERTY_SUB_TYPE, UNIT_KEY_NAMES } from "../contract/property.js";
+import { BUILDING_KEY_NAMES, PROPERTY_SUB_TYPE, UNIT_ASSERTION_FIELDS, UNIT_KEY_NAMES, truongCua } from "../contract/property.js";
 
 /**
  * GET /v1/properties… — Property (danh bạ nhà): toà và căn của danh bạ vật thể (ADR-0016), PB6.
@@ -206,21 +206,24 @@ async function thuocTinhCan(unitKey: string): Promise<Json> {
        FROM field_assertions fa
       WHERE fa.subject_key = $1 AND fa.resource_name = 'Unit' AND fa.retracted_at IS NULL
         AND fa.method <> 'registry_inherit'
-        AND fa.field = ANY (ARRAY['living_area', 'bedrooms', 'bathrooms', 'property_type'])
+        AND fa.field = ANY ($2)
       ORDER BY fa.field,
                CASE fa.evidence_tier WHEN 'fact' THEN 3 WHEN 'observed' THEN 2 ELSE 1 END DESC,
                fa.observed_at DESC, fa.id DESC`,
-    [unitKey],
+    [unitKey, UNIT_ASSERTION_FIELDS],
   );
   const f = new Map(rows.map((r) => [String(r.field), String(r.value)]));
-  const so = (k: string) => (f.has(k) && Number.isFinite(Number(f.get(k))) ? Number(f.get(k)) : null);
-  const livingArea = so("living_area");
-  const loai = f.get("property_type");
+  const so = (key: string) => {
+    const v = f.get(truongCua(key));
+    return v !== undefined && Number.isFinite(Number(v)) ? Number(v) : null;
+  };
+  const livingArea = so("livingArea");
+  const loai = f.get(truongCua("propertySubType"));
   return {
     livingArea,
     livingAreaUnits: livingArea === null ? null : "Square Meters",
-    bedroomsTotal: so("bedrooms"),
-    bathroomsTotalInteger: so("bathrooms"),
+    bedroomsTotal: so("bedroomsTotal"),
+    bathroomsTotalInteger: so("bathroomsTotalInteger"),
     // Giá trị nội bộ không có dòng đổi → null: giá trị local không bao giờ ra API.
     propertySubType: loai !== undefined && loai in PROPERTY_SUB_TYPE ? PROPERTY_SUB_TYPE[loai] : null,
   };
