@@ -5,7 +5,7 @@ slug: s02-map-listings-trang-ke
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli]
-status: implemented
+status: verified
 approved_by: Mạnh
 approved_at: 2026-11-28
 design_doc: _acceptance/s02-map-listings-trang-ke/design.md
