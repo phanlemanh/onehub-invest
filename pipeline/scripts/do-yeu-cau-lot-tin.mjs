@@ -5,8 +5,9 @@
 //
 //   node pipeline/scripts/do-yeu-cau-lot-tin.mjs          chỉ đọc (giao dịch read-only), in một khối số hiện tại — kiểm sau lượt đêm
 //   node pipeline/scripts/do-yeu-cau-lot-tin.mjs --kiem   CHỈ trên DB thử `oneinvest_<…>` (db-thu), trong BEGIN…ROLLBACK:
-//       khối «trước» trên bản chép (mốc 264 / 51 ± 2, lệch → thoát 1 «mốc lệch»), transform-zalo rồi xếp hạng giá (420), khối
-//       «sau»; ngưỡng: tin rò ≤ 85, tin thuê «giá tốt» rò ≤ 16, bài nhãn khác inquiry bị đổi ≤ 10; tin thuê sau = trước − tin
+//       khối «trước» trên bản chép là mốc của lượt (sàn: tin rò ≥ 262, giá tốt thuê rò ≥ 49 — dưới sàn là định nghĩa
+//       đếm hỏng → thoát 1 «mốc dưới sàn»), transform-zalo rồi xếp hạng giá (420), khối «sau»; ngưỡng theo tỉ lệ của mốc lượt:
+//       tin rò ≤ ⌈trước × 85/264⌉, tin thuê «giá tốt» rò ≤ ⌈trước × 16/51⌉, bài nhãn khác inquiry bị đổi ≤ 10; tin thuê sau = trước − tin
 //       thuê rút trọn (xem dưới); ghi tệp mẫu chấm tay (AC-6). Vượt ngưỡng nào thì thoát 1 gọi tên ngưỡng; DB sai thì thoát 2.
 //
 // «Tin thuê rút trọn» dự đoán TRƯỚC transform bằng luật (mọi bài của tin rơi vào nhánh `yeu-cau` của nhanhCuaBai), rồi đối chiếu
@@ -76,19 +77,29 @@ export const duDoanRut = (tin, nhanh) => tin.filter((o) => o.post_ids.length && 
  */
 export function xet({ truoc, sau, doi, thue, mau }) {
   const hong = [...xetMoc(truoc)];
-  if (sau.ro > NGUONG.roSau) hong.push(`tin rò sau ${sau.ro} > ${NGUONG.roSau}`);
-  if (sau.gia_tot_thue_ro > NGUONG.giaTotRoSau) hong.push(`tin thuê «giá tốt» rò sau ${sau.gia_tot_thue_ro} > ${NGUONG.giaTotRoSau}`);
+  const tran = tranSau(truoc);
+  if (sau.ro > tran.ro) hong.push(`tin rò sau ${sau.ro} > ${tran.ro}`);
+  if (sau.gia_tot_thue_ro > tran.gia_tot_thue_ro) hong.push(`tin thuê «giá tốt» rò sau ${sau.gia_tot_thue_ro} > ${tran.gia_tot_thue_ro}`);
   if (doi.khac > NGUONG.doiKhac) hong.push(`bài nhãn khác inquiry bị đổi ${doi.khac} > ${NGUONG.doiKhac}`);
   if (thue.con !== truoc.thue - thue.rutDuDoan) hong.push(`tin thuê lệch rút trọn: sau ${thue.con} ≠ trước ${truoc.thue} − rút ${thue.rutDuDoan}`);
   if (mau.ngauNhien < NGUONG.mauNgauNhien) hong.push(`mẫu thiếu: ${mau.ngauNhien} < ${NGUONG.mauNgauNhien} bài chưa nhãn`);
   return hong;
 }
 
-/** Khối «trước» tái lập mốc đo 26/11 (± saiMoc). */
+/**
+ * Khối «trước» là mốc của lượt, đo trên chính bản chép (Mạnh <ngày>, lối b). Cửa sổ nhãn đóng 27/11 nên dữ liệu mới chỉ thêm
+ * tin chứa bài đã nhãn — mốc chỉ lên; dưới sàn (mốc 26/11 − saiMoc) nghĩa là định nghĩa đếm hỏng, không phải dữ liệu đổi.
+ */
 export function xetMoc(truoc) {
-  const lech = Math.abs(truoc.ro - NGUONG.mocRo) > NGUONG.saiMoc || Math.abs(truoc.gia_tot_thue_ro - NGUONG.mocGiaTotRo) > NGUONG.saiMoc;
-  return lech ? [`mốc lệch: tin rò ${truoc.ro} (mốc ${NGUONG.mocRo}), giá tốt thuê rò ${truoc.gia_tot_thue_ro} (mốc ${NGUONG.mocGiaTotRo}), sai số ±${NGUONG.saiMoc}`] : [];
+  const san = truoc.ro < NGUONG.mocRo - NGUONG.saiMoc || truoc.gia_tot_thue_ro < NGUONG.mocGiaTotRo - NGUONG.saiMoc;
+  return san ? [`mốc dưới sàn: tin rò ${truoc.ro} (sàn ${NGUONG.mocRo - NGUONG.saiMoc}), giá tốt thuê rò ${truoc.gia_tot_thue_ro} (sàn ${NGUONG.mocGiaTotRo - NGUONG.saiMoc})`] : [];
 }
+
+/** Trần khối «sau» theo tỉ lệ của mốc lượt: giữ đúng tỉ lệ hợp đồng 85/264 và 16/51. */
+export const tranSau = (truoc) => ({
+  ro: Math.ceil((truoc.ro * NGUONG.roSau) / NGUONG.mocRo),
+  gia_tot_thue_ro: Math.ceil((truoc.gia_tot_thue_ro * NGUONG.giaTotRoSau) / NGUONG.mocGiaTotRo),
+});
 
 /** Bộ sinh số giả ngẫu nhiên có hạt giống (mulberry32 trên băm FNV-1a của chuỗi). */
 function sinhSo(hat) {

@@ -4,13 +4,13 @@ import { describe, test } from "node:test";
 import assert from "node:assert/strict";
 
 import {
-  CUA_SO, NGUONG, cheSo, chonNgauNhien, demKhoi, duDoanRut, khuTrungChu, laNhanRo, vietMau, xet, xetMoc,
+  CUA_SO, NGUONG, cheSo, chonNgauNhien, demKhoi, duDoanRut, khuTrungChu, laNhanRo, tranSau, vietMau, xet, xetMoc,
 } from "./do-yeu-cau-lot-tin.mjs";
 
 /** Ca nền: mọi số đúng tại biên được phép — phải đạt. */
 const nen = () => ({
-  truoc: { ro: NGUONG.mocRo + NGUONG.saiMoc, gia_tot_thue_ro: NGUONG.mocGiaTotRo - NGUONG.saiMoc, thue: 5709 },
-  sau: { ro: NGUONG.roSau, gia_tot_thue_ro: NGUONG.giaTotRoSau },
+  truoc: { ro: 277, gia_tot_thue_ro: 54, thue: 5709 },
+  sau: { ro: 90, gia_tot_thue_ro: 17 }, // ⌈277×85/264⌉ = 90, ⌈54×16/51⌉ = 17
   doi: { khac: NGUONG.doiKhac },
   thue: { con: 5709 - 176, rutDuDoan: 176 },
   mau: { ngauNhien: NGUONG.mauNgauNhien },
@@ -18,10 +18,10 @@ const nen = () => ({
 
 // [tên ca, đổi, mẫu tên ngưỡng phải gọi]
 const VUOT = [
-  ["mốc tin rò lệch", (x) => { x.truoc.ro = NGUONG.mocRo + NGUONG.saiMoc + 1; }, /^mốc lệch: tin rò 267/],
-  ["mốc giá tốt rò lệch", (x) => { x.truoc.gia_tot_thue_ro = NGUONG.mocGiaTotRo - NGUONG.saiMoc - 1; }, /^mốc lệch: .*giá tốt thuê rò 48/],
-  ["tin rò sau", (x) => { x.sau.ro = NGUONG.roSau + 1; }, /^tin rò sau 86 > 85$/],
-  ["giá tốt thuê rò sau", (x) => { x.sau.gia_tot_thue_ro = NGUONG.giaTotRoSau + 1; }, /^tin thuê «giá tốt» rò sau 17 > 16$/],
+  ["mốc tin rò dưới sàn", (x) => { x.truoc.ro = 261; x.sau.ro = 0; }, /^mốc dưới sàn: tin rò 261 \(sàn 262\)/],
+  ["mốc giá tốt rò dưới sàn", (x) => { x.truoc.gia_tot_thue_ro = 48; x.sau.gia_tot_thue_ro = 0; }, /^mốc dưới sàn: .*giá tốt thuê rò 48 \(sàn 49\)/],
+  ["tin rò sau", (x) => { x.sau.ro = 91; }, /^tin rò sau 91 > 90$/],
+  ["giá tốt thuê rò sau", (x) => { x.sau.gia_tot_thue_ro = 18; }, /^tin thuê «giá tốt» rò sau 18 > 17$/],
   ["bài nhãn khác inquiry", (x) => { x.doi.khac = NGUONG.doiKhac + 1; }, /^bài nhãn khác inquiry bị đổi 11 > 10$/],
   ["tin thuê lệch rút trọn", (x) => { x.thue.con -= 1; }, /^tin thuê lệch rút trọn: sau 5532 ≠ trước 5709 − rút 176$/],
   ["mẫu thiếu", (x) => { x.mau.ngauNhien = NGUONG.mauNgauNhien - 1; }, /^mẫu thiếu: 19 < 20/],
@@ -41,9 +41,14 @@ describe("PL42-AC-5 ngưỡng của thước tin lọt", () => {
   test("ngưỡng khớp hợp đồng AC-5 (mốc 264 / 51 ± 2; ≤ 85; ≤ 16; ≤ 10; mẫu 20)", () => {
     assert.deepEqual({ ...NGUONG }, { mocRo: 264, mocGiaTotRo: 51, saiMoc: 2, roSau: 85, giaTotRoSau: 16, doiKhac: 10, mauNgauNhien: 20 });
   });
-  test("xetMoc: mốc đúng → rỗng; lệch ba → gọi «mốc lệch»", () => {
-    assert.deepEqual(xetMoc({ ro: 264, gia_tot_thue_ro: 51 }), []);
-    assert.match(xetMoc({ ro: 261, gia_tot_thue_ro: 51 })[0], /^mốc lệch/);
+  test("xetMoc: tại sàn và trên mốc bao nhiêu cũng đạt; dưới sàn một → «mốc dưới sàn»", () => {
+    assert.deepEqual(xetMoc({ ro: 262, gia_tot_thue_ro: 49 }), []);
+    assert.deepEqual(xetMoc({ ro: 400, gia_tot_thue_ro: 90 }), []);
+    assert.match(xetMoc({ ro: 261, gia_tot_thue_ro: 51 })[0], /^mốc dưới sàn/);
+  });
+  test("tranSau: tại mốc 26/11 ra đúng trần hợp đồng 85 / 16; theo tỉ lệ khi mốc lượt lên", () => {
+    assert.deepEqual(tranSau({ ro: 264, gia_tot_thue_ro: 51 }), { ro: 85, gia_tot_thue_ro: 16 });
+    assert.deepEqual(tranSau({ ro: 277, gia_tot_thue_ro: 54 }), { ro: 90, gia_tot_thue_ro: 17 });
   });
 });
 
