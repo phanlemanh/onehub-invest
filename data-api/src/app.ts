@@ -7,6 +7,8 @@ import { listingsRoute } from "./routes/listings.js";
 import { dealsRoute } from "./routes/deals.js";
 import { assetStatsRoute } from "./routes/asset-stats.js";
 import { coverageRoute } from "./routes/coverage.js";
+import { propertiesRoute } from "./routes/properties.js";
+import { BUILDING_KEYS, LOOKUP_EXTRA_KEYS, UNIT_KEYS, schemaTu } from "./contract/property.js";
 import { auth } from "./middleware/auth.js";
 import { errorHandler } from "./middleware/error-handler.js";
 
@@ -25,6 +27,8 @@ app.route("/v1/listings", listingsRoute);
 app.route("/v1/deals", dealsRoute);
 app.route("/v1/asset-stats", assetStatsRoute);
 app.route("/v1/coverage", coverageRoute);
+// Property = danh bạ nhà (toà, căn — UPI); KHÔNG phải resource Property của RESO (resource đó là một tin rao).
+app.route("/v1/properties", propertiesRoute);
 
 app.get("/openapi.json", (c) => {
   return c.json({
@@ -38,15 +42,26 @@ app.get("/openapi.json", (c) => {
     servers: [{ url: `http://localhost:${process.env.PORT ?? 3001}` }],
     paths: {
       "/health": { get: { summary: "Health check", responses: { 200: { description: "OK" } } } },
-      "/v1/markets": { get: { summary: "List markets", responses: { 200: { description: "Market list" } } } },
-      "/v1/markets/{id}": { get: { summary: "Market detail", responses: { 200: { description: "Detail" } } } },
-      "/v1/markets/{id}/submarkets": { get: { summary: "Submarkets", responses: { 200: { description: "Submarket list" } } } },
-      "/v1/markets/{id}/insights": { get: { summary: "Market insights", responses: { 200: { description: "Insights" } } } },
+      "/v1/markets": { get: { summary: "List markets (id, name, countryCode, listingCount), most listings first", responses: { 200: { description: "Market list" } } } },
+      "/v1/markets/{id}": { get: { summary: "One market (id, name, countryCode, listingCount)", responses: { 200: { description: "Market" }, 404: { description: "Not found" } } } },
+      "/v1/markets/{id}/submarkets": { get: { summary: "Submarkets of a market (id, name, listingCount), by name", responses: { 200: { description: "Submarket list" } } } },
       "/v1/listings": { get: { summary: "List listings", responses: { 200: { description: "Listing list" } } } },
       "/v1/listings/{id}": { get: { summary: "Listing detail", responses: { 200: { description: "Detail" } } } },
       "/v1/deals": { get: { summary: "Best-value deals", responses: { 200: { description: "Deals" } } } },
       "/v1/asset-stats": { get: { summary: "Asset statistics", responses: { 200: { description: "Stats" } } } },
       "/v1/coverage": { get: { summary: "Data coverage", responses: { 200: { description: "Coverage" } } } },
+      "/v1/properties": { get: { summary: "Property (danh bạ nhà): buildings of a project — ?project=<node id | project name>; units are never listed", responses: { 200: { description: "Building list" } } } },
+      "/v1/properties/lookup": { get: { summary: "Property: look up ONE unit by ?project=&building=&unitNumber= the caller already knows", responses: { 200: { description: "Zero or one unit" } } } },
+      "/v1/properties/{universalPropertyId}": { get: { summary: "Property: one building by UniversalPropertyId", responses: { 200: { description: "Building" } } } },
+      "/v1/properties/{universalPropertyId}/units/{unitKey}": { get: { summary: "Property: one unit by its opaque unitKey", responses: { 200: { description: "Unit" } } } },
+    },
+    components: {
+      schemas: {
+        // Sinh từ data-api/src/contract/property.ts — nguồn duy nhất của khoá phần tử Property.
+        PropertyBuilding: schemaTu(BUILDING_KEYS),
+        PropertyUnit: schemaTu([...BUILDING_KEYS, ...UNIT_KEYS]),
+        PropertyUnitLookup: schemaTu([...BUILDING_KEYS, ...UNIT_KEYS, ...LOOKUP_EXTRA_KEYS]),
+      },
     },
   });
 });

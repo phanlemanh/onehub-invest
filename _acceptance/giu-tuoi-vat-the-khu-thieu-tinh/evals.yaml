@@ -1,0 +1,31 @@
+schema_version: 1
+feature_slug: giu-tuoi-vat-the-khu-thieu-tinh
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.da72_dem
+    paths: ["pipeline/danh-ba-vat-the.mjs", "pipeline/scripts/danh-ba-vat-the-dem-khu-thieu-tinh.itest.mjs"]
+    expected: "exit 0; ca DA72-AC-1 xanh: buocVatTheDem không ném với khu cấy area_ids rỗng có toà; dòng «khu không suy được tỉnh, bỏ ISO (không dòng S08): K» K ≥ 1; «đêm {khu: N}» N = số khu khuDaDung; số toà không giảm"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.da72_dem
+    paths: ["pipeline/danh-ba-vat-the.mjs", "pipeline/scripts/danh-ba-vat-the-dem-khu-thieu-tinh.itest.mjs"]
+    expected: "exit 0; ca DA72-AC-2 xanh: Grand Park (có dòng S08) area_ids rỗng → dung từ chối «khu vinhomes-grand-park: khong-co-tinh», số toà không đổi; area_ids khôi phục ở finally"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.da72_dem
+    paths: ["pipeline/danh-ba-vat-the.mjs", "pipeline/refresh-bait-gap.mjs", "pipeline/scripts/danh-ba-vat-the-dem-khu-thieu-tinh.itest.mjs"]
+    expected: "exit 0; ca DA72-AC-3 xanh: node refresh-bait-gap.mjs trên DB lượt thoát 0, có «danh-ba-vat-the: đêm {\"khu\":…», không «khong-co-tinh»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.da72_doi_chung
+    paths: ["pipeline/danh-ba-vat-the.mjs", "pipeline/scripts/danh-ba-vat-the-dem-khu-thieu-tinh.itest.mjs"]
+    expected: "exit 0; bản danh-ba-vat-the.mjs của dad1be620 đặt tạm vào cây (khôi phục sau), cùng tệp ca chạy → DA72-AC-1 và DA72-AC-3 đỏ với «khong-co-tinh»; lệnh in «ĐỐI CHỨNG: mã gốc đỏ đúng»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

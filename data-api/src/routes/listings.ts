@@ -78,18 +78,17 @@ listingsRoute.get("/", async (c) => {
 
 /**
  * GET /v1/listings/:id — chi tiết 1 listing
+ * HT19: không đọc bảng S02; `photos.source` là "self" hoặc null, khoá `listingUrl` đã gỡ.
  */
 listingsRoute.get("/:id", async (c) => {
   const id = c.req.param("id");
   const { rows } = await pool.query(
     `SELECT l.*, l.last_seen::text AS last_seen_text,
             a.name AS area_name, a.id AS area_id, a.region_type AS area_type,
-            p.id AS parent_id, p.name AS parent_name,
-            al.photo_urls AS airdna_photos, al.listing_url
+            p.id AS parent_id, p.name AS parent_name
      FROM listings l
      LEFT JOIN areas a ON a.id = l.area_id
      LEFT JOIN areas p ON p.id = a.parent_id
-     LEFT JOIN airdna_listings al ON al.id = l.id
      WHERE l.id = $1`,
     [id],
   );
@@ -99,13 +98,10 @@ listingsRoute.get("/:id", async (c) => {
     return c.json({ error: { code: "NOT_FOUND", message: `Listing "${id}" not found` } }, 404);
   }
 
-  // Photos: prefer self-collected, fallback to calibration
-  const photoUrls = Array.isArray(r.photo_urls) && r.photo_urls.length > 0
-    ? r.photo_urls
-    : r.airdna_photos ?? null;
-  const photoSource = Array.isArray(r.photo_urls) && r.photo_urls.length > 0
-    ? "self"
-    : r.airdna_photos ? "calibration" : null;
+  // Ảnh: chỉ ảnh tự thu. Không lấy ảnh dự phòng từ bảng S02 (S02 chỉ để hiệu chuẩn — HT19); tin không có ảnh thì để trống.
+  const coAnh = Array.isArray(r.photo_urls) && r.photo_urls.length > 0;
+  const photoUrls = coAnh ? r.photo_urls : null;
+  const photoSource = coAnh ? "self" : null;
 
   return c.json({
     data: {
@@ -123,7 +119,6 @@ listingsRoute.get("/:id", async (c) => {
       area: { id: r.area_id, name: r.area_name, type: r.area_type },
       market: { id: r.parent_id, name: r.parent_name },
       photos: { urls: photoUrls, source: photoSource },
-      listingUrl: r.listing_url ?? null,
       reviewCount: r.review_count ?? null,
       lastSeen: r.last_seen_text,
     },

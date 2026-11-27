@@ -77,3 +77,11 @@ evals:
     paths: [pipeline/lib/noi-du-an-s08-lop.mjs, pipeline/noi-du-an-s08-luat.mjs, pipeline/scripts/noi-du-an-s08-lop.test.mjs, pipeline/scripts/noi-du-an-s08-luat.itest.mjs, pipeline/scripts/noi-du-an-s08-that.mjs, pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs, pipeline/test-nua.json]
     expected: "exit 0; nửa B bộ test pipeline (suite của lượt chấm, khai ở đây chỉ để có long_running 90; lời GS 24/11), 0 fail."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.suite.pipeline_that
+    long_running: 90
+    paths: [pipeline/lib/noi-du-an-s08-lop.mjs, pipeline/noi-du-an-s08-luat.mjs, pipeline/scripts/noi-du-an-s08-that.mjs]
+    expected: "exit 0; ca pipeline dữ liệu thật (HT9 pipeline_that, kích vì nhánh đổi pipeline/lib/noi-du-an-s08-lop.mjs và pipeline/noi-du-an-s08-luat.mjs) trên bản chép DB máy thu, 0 fail; khai để có long_running 90 (luật CHUNG.md 26/11, khuôn HT9 E3a)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

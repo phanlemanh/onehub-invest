@@ -126,6 +126,15 @@ model khác nút» phải bằng nhau. Hồ sơ áp năm thứ:
    thì khôi phục bản sao lưu rồi để lượt đêm đồng bộ lại.
 5. Kiểm sau: `--kiem <rule_id>` thoát 0; ba ô trên màn bằng số chạy thử (lệch → dừng, báo); sáng hôm sau đếm chỉ đọc trên cloud số
    nút `meta.nguon = 'S08'` bằng số nút đã đúc.
+   Thêm (GS 26/11, sau S4 vòng 1): đếm nút S08 trùng khoá nhóm phải bằng 0. Nút đúc mang tên gốc của nhóm và tỉnh trong `area_ids`,
+   nên hai nút cùng tên, cùng `area_ids` là cùng khoá nhóm:
+   `SELECT count(*) - count(DISTINCT (lower(name), area_ids)) AS nut_trung FROM asset_nodes WHERE meta ->> 'nguon' = 'S08'` → 0.
+
+**Rào áp (GS 26/11):** không chạy lại lượt áp sau khi có snapshot S08 mới, cho tới khi hàng sửa «đúc theo khoá nhóm» (DA65,
+GS cấp 27/11) gộp. Lý do: luật đúc chỉ gom theo khoá nhóm (tên gốc + tỉnh) trong một lượt; lượt áp sau không tìm nút S08 đã đúc
+cùng khoá, nên mỗi dự án mới rơi vào nhóm đã đúc sinh một nút thứ hai (slug `-2`) trong danh bạ. Số đo chỉ đọc DB máy thu 26/11:
+thẻ đúc 163 dự án vào 158 nhóm, 5 nhóm nhiều dự án (10 dự án); qua 3 snapshot S08 06→20/11 không nhóm nào có thành viên về ở ngày
+thu khác nhau, nên lượt áp đầu sinh 0 nút trùng. Điều kiện phát sinh sắp có thật vì S08 đang được thu toàn bộ (lời 22/11).
 
 Ràng buộc PL20: thẻ chỉ thêm nút mới, dòng nối và bí danh ở `registry_aliases`; không đổi dòng `asset_nodes` nào có sẵn, kể cả ở
 Grand Park, Ocean Park. Nút có sẵn nhận bí danh S08 thì liệt kê trong hồ sơ áp.

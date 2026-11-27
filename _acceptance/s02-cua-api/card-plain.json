@@ -1,0 +1,5 @@
+{
+  "feature_plain": "Lượt thu S02 hằng đêm lấy token bằng phiên Mạnh đã đăng nhập sẵn trong profile riêng của bộ thu, không mở trình duyệt; bị nguồn chặn thì dừng cả lượt; phiên hết thì Mạnh chạy lệnh đăng nhập. Dữ liệu S02 chỉ để hiệu chuẩn, không lên cổng Invest.",
+  "scope_plain": "Gộp chưa có nghĩa là đang chạy: sau gộp, phiên vận hành ZV build lại bộ thu ở checkout chính theo hồ sơ triển khai (cách lùi đã chạy thử, mất vài giây); lượt 19:05 đầu tiên sau đó mới chạy mã mới. Vòng chấm 1 có một ca chập chờn khi nhiều nhóm chạy cùng lúc, chưa chứng được nguyên nhân; vòng 2 không lặp lại.",
+  "analyst_plain": "Không có phép đo nào xanh cả trước lẫn sau thay đổi mà bị tính là bằng chứng: mọi phép đo của hàng này là mới, nên không có số «trước» để so."
+}
