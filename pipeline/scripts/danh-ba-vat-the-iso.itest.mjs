@@ -62,16 +62,25 @@ function bangVang(chup = ISO_CHUP, tinh = docDanhBa().tinh) {
   return out;
 }
 
-test("DA1-AC-7 chưa áp 088: bước đêm chạy như cũ theo meta.city; dựng lần đầu khu chưa có toà bị chặn; 082 còn khoá hai mã", async () => {
-  assert.equal(await coBang(), false, "DA1-AC-7 DB của lượt phải chưa có 088");
-  const truoc = await anhToa();
-  const dong = [];
-  await buocVatTheDem(c, { log: (s) => dong.push(String(s)) });
-  assert.ok(dong.includes("danh-ba-vat-the: chưa áp 088 — ISO theo meta.city"), `DA1-AC-7 thiếu dòng: ${dong.join(" | ")}`);
-  assert.deepEqual(await anhToa(), truoc, "DA1-AC-7 UPI đổi khi chưa áp 088");
-  await assert.rejects(dung(c, { khuSlugs: ["vinhomes-ocean-park-2"], log: () => {} }), /chưa áp 088 — chỉ dựng lại khu đã có toà/);
-  assert.deepEqual(await anhToa(), truoc, "DA1-AC-7 khu mới đã được dựng khi chưa áp 088");
-  // Đối chứng cho E2: trên 082, toà Hưng Yên bị từ chối.
+test("DA1-AC-7 chưa áp 088: bước đêm chạy như cũ theo meta.city; dựng lần đầu khu chưa có toà bị chặn; 082 còn khoá hai mã", async (t) => {
+  // DA73: bản chép máy thu đã áp 088 từ lâu, nên tiền đề «DB chưa có 088» không còn tự có. Giả lập bằng cách tạm đổi tên bảng
+  // iso_regions (DB lượt dùng một lần; FK của buildings đi theo bảng nên không mất) → napBangIso thấy vắng; đổi lại ở finally.
+  const thatChuaCo = !(await coBang());
+  if (!thatChuaCo) await c.query("ALTER TABLE iso_regions RENAME TO iso_regions_da73_tam");
+  try {
+    assert.equal(await coBang(), false, "DA1-AC-7 DB của lượt phải chưa có 088 (thật hay giả lập)");
+    const truoc = await anhToa();
+    const dong = [];
+    await buocVatTheDem(c, { log: (s) => dong.push(String(s)) });
+    assert.ok(dong.includes("danh-ba-vat-the: chưa áp 088 — ISO theo meta.city"), `DA1-AC-7 thiếu dòng: ${dong.join(" | ")}`);
+    assert.deepEqual(await anhToa(), truoc, "DA1-AC-7 UPI đổi khi chưa áp 088");
+    await assert.rejects(dung(c, { khuSlugs: ["vinhomes-ocean-park-2"], log: () => {} }), /chưa áp 088 — chỉ dựng lại khu đã có toà/);
+    assert.deepEqual(await anhToa(), truoc, "DA1-AC-7 khu mới đã được dựng khi chưa áp 088");
+  } finally {
+    if (!thatChuaCo) await c.query("ALTER TABLE iso_regions_da73_tam RENAME TO iso_regions");
+  }
+  // Đối chứng cho E2 (082 còn khoá hai mã) chỉ đo được trên bản chép THẬT chưa áp 088: 088 đã gỡ CHECK của 082.
+  if (!thatChuaCo) { t.diagnostic("DA1-AC-7: bản chép đã áp 088 — vế «082 còn khoá hai mã» không đo được ở đây (088 gỡ CHECK của 082)"); return; }
   await trongGd(async () => {
     const e = await bi(() => chenToa("VN-66"));
     assert.ok(e && /buildings_iso_region_check/.test(e.message), "DA1-AC-2 082 còn khoá hai mã");
@@ -134,15 +143,20 @@ test("DA1-AC-2 toà nhận đủ 34 mã ISO; mã lạ và UPI lệch bị từ c
   });
 });
 
-test("DA1-AC-4c trên dữ liệu thật: sau DV1, 20/20 nút ra ISO; ba khu Hưng Yên VN-66", async () => {
+test("DA1-AC-4c trên dữ liệu thật: sau DV1, mọi nút DV1 quản (bằng số mục tệp xã) ra ISO; ba khu Hưng Yên VN-66", async () => {
   await suaXaNut(c, {});
   const bang = await napBangIso(c);
-  const { rows } = await c.query("SELECT slug, area_ids, meta->>'city' AS city FROM asset_nodes WHERE node_type = 'project'");
+  // DA73: đúng tập nút DV1 quản (SQL_NUT_SUA_XA — bỏ nút ứng viên mot_loi_khai do thẻ luật S06, lượt dựng S09 DA42… đúc, xã lấy từ
+  // tin hay chưa có), thay vì mọi nút dự án: sau DA42 máy thu có 660 nút, 145 khu S09 area_ids rỗng → ca ghim «20/20» đỏ oan.
+  const { rows } = await c.query(`SELECT n.slug, n.area_ids, n.meta->>'city' AS city FROM asset_nodes n
+     WHERE n.node_type = 'project' AND (to_jsonb(n) ->> 'catalog_tier') IS DISTINCT FROM 'mot_loi_khai'`);
+  const soTepXa = Object.keys(JSON.parse(readFileSync(join(GOC, "pipeline/data/xa-nut-du-an.json"), "utf8")).nut).length;
+  assert.equal(rows.length, soTepXa, `DA1-AC-4c số nút DV1 quản (${rows.length}) lệch số mục tệp xã (${soTepXa})`);
   const iso = Object.fromEntries(rows.map((r) => [r.slug, isoCuaKhu(r, bang)]));
   const ghim = { "vinhomes-ocean-park-2": "VN-66", "vinhomes-ocean-park-3": "VN-66", ecopark: "VN-66",
     "vinhomes-ocean-park-1": "VN-HN", "vinhomes-grand-park": "VN-SG" };
   for (const [s, v] of Object.entries(ghim)) assert.deepEqual(iso[s], { iso: v }, `DA1-AC-4c ${s}`);
-  assert.equal(Object.values(iso).filter((x) => x.iso).length, 20, `DA1-AC-4c nút lỗi: ${JSON.stringify(Object.entries(iso).filter(([, x]) => x.loi))}`);
+  assert.equal(Object.values(iso).filter((x) => x.iso).length, soTepXa, `DA1-AC-4c nút lỗi: ${JSON.stringify(Object.entries(iso).filter(([, x]) => x.loi))}`);
   for (const s of ["vinhomes-ocean-park-2", "ecopark"]) {
     assert.equal(rows.find((r) => r.slug === s).city, "hanoi", "DA1-AC-4c meta.city sai tỉnh (đối chứng: nhãn ghi hanoi)");
   }
