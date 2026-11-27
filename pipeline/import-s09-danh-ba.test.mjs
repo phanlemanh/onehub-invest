@@ -2,9 +2,6 @@
 // GS CHỐT (BÁO claudedp-2011-19). DB của riêng lượt (db-thu) — bảng stg_s09_danh_ba TỰ DỰNG
 // đúng 7 cột GS NGOÀI db/migrations (index là migration 115 phía làn import).
 //
-// 2711-1: CHỈ nối DB SUITE — `xacThucUrlSuite` ném khi DATABASE_URL thiếu hoặc tên DB không khớp
-// oneinvest_suite_* (dừng có lời, không nối, không tạo bảng, không ghi; ca chứng minh cuối tệp).
-//
 // LỆNH PHÁ theo danh sách cho phép (bản chép hỏng cạnh bản thật — mỗi lệnh làm ca ĐỎ):
 //   T1 (thứ tự tệp): trong docSnapshot thay .sort(...) bằng .sort(() => 0) → ca "T1-đỏ"
 //      (manifest.files trộn items-2 trước items-1, bản hỏng xếp sai thứ tự dong).
@@ -26,61 +23,13 @@ import { spawn } from "node:child_process";
 import pg from "pg";
 
 import { docSnapshot, napDanhBaThuMuc } from "./import-s09-danh-ba.mjs";
-import { urlCiChoPhep } from "./lib/db-thu-chot.mjs";
+import { chotDbThu } from "./lib/db-thu-chot.mjs";
 
 const TEP = fileURLToPath(new URL("./import-s09-danh-ba.mjs", import.meta.url));
-
-// 2711-1 (claudedp-2711-1): test CHỈ được nối DB SUITE (tên oneinvest_suite_* do db/db-thu.sh đặt).
-// Thiếu DATABASE_URL hoặc tên DB khác → NÉM NGAY KHI NẠP: dừng có lời rõ, KHÔNG tạo client,
-// KHÔNG CREATE TABLE, KHÔNG ghi — bài học 21/11: một lượt chạy trần tệp này đã ghi 40 dòng fixture
-// (24 snapshot_id …__test…) vào DB máy thu thật vì URL mặc định trỏ DB chung :5433.
-export function xacThucUrlSuite(url) {
-  let u;
-  try {
-    u = new URL(url ?? "");
-  } catch {
-    throw new Error("TỪ CHỐI DATABASE_URL: không đọc được URL — cần postgres:// tới DB oneinvest_suite_* của riêng lượt (db/db-thu.sh --chay)");
-  }
-  const ten = decodeURIComponent(u.pathname.replace(/^\//, ""));
-  if (!/^oneinvest_suite_[a-z0-9_]+$/.test(ten)) {
-    throw new Error(
-      `TỪ CHỐI DATABASE_URL: tên DB «${ten || "(trống)"}» không phải oneinvest_suite_* — test này TỰ DỰNG bảng ` +
-        `stg_s09_danh_ba nên CHỈ chạy trên DB suite của riêng lượt: bash db/db-thu.sh oneinvest_suite_<bộ> --chay <lệnh> ` +
-        `(db-thu đặt DATABASE_URL). Không bao giờ trỏ DB chung :5433.`,
-    );
-  }
-  return url;
-}
-// HT35 (lỗi tích hợp với CI): runner CI không đặt DATABASE_URL — `urlCiChoPhep` trả DB dịch vụ CI; ngoài CI giữ nguyên rào 2711-1.
-const DB_URL = urlCiChoPhep(process.env.DATABASE_URL) ?? xacThucUrlSuite(process.env.DATABASE_URL); // ném ở đây nếu thiếu/sai — tệp không nạp nổi, không đụng DB
-
-// CA CHỨNG MINH 2711-1: đặt DATABASE_URL trỏ TÊN DB CHUNG → tệp (chạy tiến trình con) thoát LỖI với
-// lời từ chối, và KHÔNG ca nào chạy (không CREATE TABLE, không ghi — guard ném trước khi có client).
-// Lời từ chối ném TRƯỚC mọi kết nối nên ca này an toàn cả khi URL là DB chung thật.
-// Đỏ trên main 1a2cb6a43: bản đó không có xacThucUrlSuite — tệp chấp nhận URL tên-chung rồi tự nối
-// (chứng minh ở lượt chạy riêng với URL cùng tên nhưng CỔNG CHẾT để không đụng DB chung thật).
-test("2711-1: DATABASE_URL trỏ DB chung → tiến trình con thoát lỗi với lời từ chối, 0 ca chạy 0 ghi", async () => {
-  const { execFile } = await import("node:child_process");
-  const { promisify } = await import("node:util");
-  const chay = promisify(execFile);
-  const urlChung = "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
-  let ra = null;
-  // gỡ biến ngữ cảnh của node --test cha — không thì con `node --test` lồng vào chế độ child-IPC và
-  // thoát 0 im lặng (đã đụng thật: ca đỏ giả khi quên gỡ)
-  const envCon = { ...process.env, DATABASE_URL: urlChung };
-  delete envCon.NODE_TEST_CONTEXT;
-  try {
-    const r = await chay(process.execPath, ["--test", fileURLToPath(import.meta.url)], {
-      env: envCon,
-      timeout: 120_000,
-    });
-    ra = "con thoát 0 — stdout đầu: " + String(r.stdout).slice(0, 400);
-  } catch (e) {
-    ra = String(e.stdout) + String(e.stderr);
-  }
-  assert.match(ra, /TỪ CHỐI DATABASE_URL/, ra?.slice(0, 300));
-  assert.doesNotMatch(ra, /0\/setup/, "không ca nào được chạy");
-});
+// HT35 (test-khong-roi-ve-db-chung, làn hạ tầng test): tệp này TỰ DỰNG stg_s09_danh_ba rồi ghi — chỉ DB thử; thiếu
+// DATABASE_URL thì bỏ qua cả tệp có lời, tên khác thì thoát 2 — trước mọi kết nối (sự cố 21/11: 24 bản thu test vào máy thu).
+// Ca chứng minh (tiến trình con với URL DB chung → thoát lỗi, 0 câu ghi): RV-2/RV-3 trong scripts/db-thu-chot.test.mjs.
+const DB_URL = chotDbThu({ ten: "import-s09-danh-ba.test", khiThieu: "bo-qua" });
 
 async function banChep(tim, thay, chay) {
   const goc = readFileSync(TEP, "utf8");
