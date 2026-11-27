@@ -27,6 +27,8 @@ const { default: app } = await import("../src/app.js");
 const DATA_API = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const HAT = (process.env.HT20_HAT ?? String(process.pid)).replace(/[^0-9]/g, "").padStart(5, "0").slice(-5);
 const ma = (s: string) => `vn-ht20${HAT}-${s}`;
+// Quốc gia cấy riêng mỗi lượt: lượt chạy lặp trên cùng DB (E6) không thấy thị trường cấy của lượt trước.
+const QG = `zz${HAT}`;
 const A = ma("a"), B = ma("b"), C = ma("c");
 const A1 = `${A}-1`, A2 = `${A}-2`;
 // Tên bảng nguồn trong chuỗi nháy đơn đúng bằng định danh đã biết (lưới tên nguồn PB5).
@@ -81,20 +83,20 @@ function cauDocS02(cau: Cau[]): string[] {
 before(async () => {
   await sql(
     `INSERT INTO areas (id, parent_id, region_type, name, country_code) VALUES
-       ($1, NULL, 'market', $4, 'zz'), ($2, NULL, 'market', $5, 'zz'), ($3, NULL, 'market', $6, 'zz')`,
-    [A, B, C, `HT20 Thị trường A ${HAT}`, `HT20 Thị trường B ${HAT}`, `HT20 Thị trường C ${HAT}`],
+       ($1, NULL, 'market', $4, $7), ($2, NULL, 'market', $5, $7), ($3, NULL, 'market', $6, $7)`,
+    [A, B, C, `HT20 Thị trường A ${HAT}`, `HT20 Thị trường B ${HAT}`, `HT20 Thị trường C ${HAT}`, QG],
   );
   await sql(
     `INSERT INTO areas (id, parent_id, region_type, name, country_code) VALUES
-       ($1, $3, 'submarket', $4, 'zz'), ($2, $3, 'submarket', $5, 'zz')`,
-    [A1, A2, A, `HT20 Tiểu vùng 1 ${HAT}`, `HT20 Tiểu vùng 2 ${HAT}`],
+       ($1, $3, 'submarket', $4, $6), ($2, $3, 'submarket', $5, $6)`,
+    [A1, A2, A, `HT20 Tiểu vùng 1 ${HAT}`, `HT20 Tiểu vùng 2 ${HAT}`, QG],
   );
   // Số tin: A = 3 (2 ở A1, 1 ở A2), B = 1, C = 1. B có điểm S02 cao nhất mà ít tin.
   const tin: [string, string][] = [[A1, "1"], [A1, "2"], [A2, "3"], [B, "4"], [C, "5"]];
   for (const [khu, n] of tin) await sql(`INSERT INTO listings (id, area_id, name, last_seen) VALUES ($1, $2, 'HT20 listing', now())`, [`ht20-${HAT}-${n}`, khu]);
   // Dòng canh ở mọi bảng S02, nối qua bảng khu nguồn.
   await sql(`INSERT INTO area_sources (area_id, source, source_area_key) VALUES ($1, 'S02', $2), ($3, 'S02', $4)`, [B, `ht20-s02-${HAT}`, A2, `ht20-s02-sub-${HAT}`]);
-  await sql(`INSERT INTO ${BANG_THI_TRUONG} (airdna_id, name, country_code) VALUES ($1, 'HT20 S02', 'zz')`, [`ht20-s02-${HAT}`]);
+  await sql(`INSERT INTO ${BANG_THI_TRUONG} (airdna_id, name, country_code) VALUES ($1, 'HT20 S02', $2)`, [`ht20-s02-${HAT}`, QG]);
   await sql(`INSERT INTO ${BANG_DIEM} (airdna_id, total, seasonality, revenue_growth, regulation, rental_demand) VALUES ($1, $2, 1, 1, 1, 1)`, [`ht20-s02-${HAT}`, CANH.diem]);
   await sql(`INSERT INTO ${BANG_TIEU_VUNG} (airdna_sub_id, airdna_market_id, name, meta) VALUES ($1, $2, $3, $4)`,
     [`ht20-s02-sub-${HAT}`, `ht20-s02-${HAT}`, CANH.chiSoCon, JSON.stringify({ market_score: CANH.diemCon, metrics: { canh: CANH.chiSoCon } })]);
@@ -106,7 +108,7 @@ after(async () => {
 });
 
 test("HT20-AC-1 danh sách không S02", async () => {
-  const r = await goi(`/v1/markets?country=zz&limit=5`);
+  const r = await goi(`/v1/markets?country=${QG}&limit=5`);
   assert.equal(r.status, 200, "HT20-AC-1 danh sách không 200");
   const cay = (r.than.data as any[]).filter((d) => [A, B, C].includes(d.id));
   assert.equal(cay.length, 3, "HT20-AC-1 thiếu thị trường cấy");
@@ -119,7 +121,7 @@ test("HT20-AC-1 danh sách không S02", async () => {
 });
 
 test("HT20-AC-2 chi tiết không S02", async () => {
-  const ds = await goi(`/v1/markets?country=zz`);
+  const ds = await goi(`/v1/markets?country=${QG}`);
   for (const k of [B, A]) {
     const r = await goi(`/v1/markets/${k}`);
     assert.equal(r.status, 200, `HT20-AC-2 ${k} không 200`);
@@ -205,7 +207,7 @@ function raoTinh(thay: Record<string, string> = {}): string[] {
 test("HT20-AC-5 không câu SQL nào đọc S02", async () => {
   const loi: string[] = [];
   const goiMoi = [
-    await goi(`/v1/markets?country=zz`), await goi(`/v1/markets/${B}`), await goi(`/v1/markets/${A}/submarkets`),
+    await goi(`/v1/markets?country=${QG}`), await goi(`/v1/markets/${B}`), await goi(`/v1/markets/${A}/submarkets`),
   ];
   for (const [i, r] of goiMoi.entries()) {
     if (r.sql.length === 0) loi.push(`HT20-AC-5 đường ${i} không phát câu nào — bộ ghi không chạy`);
