@@ -50,29 +50,22 @@ test("CHOT-3 tệp test S08 thật thoát 2 trước khi nối DB với mọi UR
   }
 });
 
-// ── HT35 (test-khong-roi-ve-db-chung): hai tệp test TỰ DỰNG bảng thật rồi ghi — chỉ DB oneinvest_suite_* ngoài CI, CI vẫn chạy.
-// Bảng phủ 62 tệp và phần để lại cho HT36: _acceptance/test-khong-roi-ve-db-chung/bang-phu.md.
+// ── HT35 (test-khong-roi-ve-db-chung): tệp test TỰ DỰNG bảng thật rồi ghi — chỉ DB thử; thiếu DATABASE_URL thì bỏ qua có lời
+// (quy ước sẵn của kho, chotDbThu khiThieu «bo-qua»), tên khác thì thoát 2 — trước mọi kết nối.
+// Bảng phủ 66 tệp và phần để lại cho HT36: _acceptance/test-khong-roi-ve-db-chung/bang-phu.md.
 import { writeFileSync, readFileSync, rmSync } from "node:fs";
-import { urlCiChoPhep, urlDbTestGhi } from "../lib/db-thu-chot.mjs";
+import { MAU_DB_THU } from "../lib/db-thu-chot.mjs";
 
 const GOC = join(PIPE, "..");
 // Cổng chết (9 — discard, không ai nghe): rào hỏng thì tiến trình con gặp ECONNREFUSED, không bao giờ chạm DB thật.
 const CHET = (db) => url("postgres", TK, "127.0.0.1:9", db);
-// Tệp trong phạm vi · lời từ chối của rào tệp ấy · dòng rào (đột biến thay bằng URL trần) · mẫu bỏ ca khi chạy bản đột biến.
-// Ca 2711-1 của tệp S09 tự gọi chính tệp với URL DB chung THẬT (:5433) — bản đột biến không rào nên PHẢI bỏ ca ấy.
+// Tệp trong phạm vi · tên rào · dòng rào (đột biến thay bằng URL trần) · thông điệp khi tệp thử nối mà DB không tới.
+// pipeline/import-s09-danh-ba.test.mjs vào bảng này khi nhận bản vá mới của zk (GS phán 27/11: tích hợp khớp byte).
 const PHAM_VI = [
   {
-    tep: "pipeline/import-s09-danh-ba.test.mjs",
-    loi: /TỪ CHỐI DATABASE_URL/,
-    rao: "const DB_URL = urlCiChoPhep(process.env.DATABASE_URL) ?? xacThucUrlSuite(process.env.DATABASE_URL);",
-    boCa: "2711-1",
-    noi: /DB của lượt không chạy/,
-  },
-  {
     tep: "scripts/check-freshness.test.mjs",
-    loi: /check-freshness\.test: từ chối/,
-    rao: 'const DB_URL = urlDbTestGhi({ ten: "check-freshness.test" });',
-    boCa: null,
+    ten: "check-freshness.test",
+    rao: 'const DB_URL = chotDbThu({ ten: "check-freshness.test", khiThieu: "bo-qua" });',
     noi: /DB local không tới \(connect ECONNREFUSED 127\.0\.0\.1:9\)/,
   },
 ];
@@ -84,59 +77,52 @@ function envNgoaiCi(them) {
   for (const [k, v] of Object.entries(them)) if (v === undefined) delete env[k];
   return env;
 }
-function chay(tep, env, boCa) {
-  const args = ["--test", "--test-concurrency=1", ...(boCa ? [`--test-skip-pattern=${boCa}`] : []), tep];
-  const r = spawnSync(process.execPath, args, { encoding: "utf8", timeout: 120_000, env, cwd: GOC });
+function chay(tep, env) {
+  const r = spawnSync(process.execPath, ["--test", "--test-concurrency=1", tep], { encoding: "utf8", timeout: 120_000, env, cwd: GOC });
   return { status: r.status, ra: (r.stdout || "") + (r.stderr || "") };
 }
 
-test("RV-1 ma trận urlDbTestGhi: ngoài CI chỉ suite; CI=true thiếu URL → DB dịch vụ CI, tên khác oneinvest → nhận, oneinvest tường minh → từ chối", () => {
-  // thiếu URL viết là "" — undefined sẽ rơi về tham số mặc định process.env.DATABASE_URL (db-thu đặt nó)
-  const ngoai = {};
-  const ci = { CI: "true" };
-  // ngoài CI
-  for (const u of TU_CHOI) assert.throws(() => urlDbTestGhi({ ten: "t", url: u, env: ngoai }), /t: từ chối — DB '.+' không phải DB thử/, u);
-  assert.throws(() => urlDbTestGhi({ ten: "t", url: "", env: ngoai }), /t: từ chối — thiếu DATABASE_URL/);
-  for (const u of NHAN) assert.equal(urlDbTestGhi({ ten: "t", url: u, env: ngoai }), u);
-  // CI=true
-  assert.equal(tenDbThu(urlDbTestGhi({ ten: "t", url: "", env: ci })), "oneinvest", "CI thiếu URL → DB dịch vụ của ci-test.yml");
-  const ciScripts = url("postgres", TK, "localhost:5433", "oneinvest_ci_scripts_4242");
-  assert.equal(urlDbTestGhi({ ten: "t", url: ciScripts, env: ci }), ciScripts, "bước scripts của suite-neu-doi");
-  for (const u of TU_CHOI.slice(0, 4)) assert.throws(() => urlDbTestGhi({ ten: "t", url: u, env: ci }), /từ chối/, `CI vẫn từ chối tên DB chung: ${u}`);
-  assert.equal(urlCiChoPhep("", ngoai), null);
-  assert.equal(urlCiChoPhep("", { CI: "1" }), null, "chỉ CI=\"true\" mới là runner CI");
+test("RV-1 MAU_DB_THU nhận DB trống bước scripts (oneinvest_ci_scripts_<pid>), vẫn từ chối DB chung và tên gần giống", () => {
+  for (const ten of ["oneinvest_ci_scripts_4242", "oneinvest_suite_ht35"]) assert.match(ten, MAU_DB_THU, ten);
+  for (const ten of ["oneinvest", "oneinvest_ci_scripts_", "oneinvest_ci_scripts_x", "oneinvest_ci_scripts_1;", "oneinvest_cix_scripts_1", "oneinvest_s10_danhba"]) {
+    assert.doesNotMatch(ten, MAU_DB_THU, `phải từ chối: ${ten}`);
+  }
+  assert.equal(lyDoTuChoi(url("postgres", TK, "localhost:5433", "oneinvest_ci_scripts_77")), null);
 });
 
-test("RV-2 chạy trần từng tệp trong phạm vi (URL DB chung ở cổng chết, hay thiếu URL; cả CI=true với URL DB chung) → thoát lỗi, lời từ chối, không nối, 0 ca", () => {
-  const ca = [
-    ["URL DB chung", envNgoaiCi({ DATABASE_URL: CHET("oneinvest") })],
-    ["thiếu URL", envNgoaiCi({ DATABASE_URL: undefined })],
-    ["CI=true + URL DB chung", { ...envNgoaiCi({ DATABASE_URL: CHET("oneinvest") }), CI: "true" }],
-  ];
+test("RV-2 chạy trần tệp trong phạm vi: URL DB chung (cả khi CI=true) → thoát 2, lời từ chối, không nối; thiếu URL → bỏ qua có lời, thoát 0, 0 ca", () => {
   for (const p of PHAM_VI) {
-    for (const [nhan, env] of ca) {
-      const { status, ra } = chay(p.tep, env, null);
+    // URL DB chung ở cổng chết TRƯỚC: tệp mất rào sẽ đỏ ở đây và vòng dừng — ca thiếu URL (rơi về :5433 thật nếu mất rào)
+    // không bao giờ chạy trên tệp mất rào (gap-probe P1-1).
+    for (const [nhan, env] of [
+      ["URL DB chung", envNgoaiCi({ DATABASE_URL: CHET("oneinvest") })],
+      ["CI=true + URL DB chung", { ...envNgoaiCi({ DATABASE_URL: CHET("oneinvest") }), CI: "true" }],
+    ]) {
+      const { status, ra } = chay(p.tep, env);
+      assert.match(ra, new RegExp(`${p.ten}: từ chối — DB 'oneinvest' không phải DB thử`), `${p.tep} · ${nhan}: thiếu lời từ chối — ${ra.slice(0, 300)}`);
       assert.notEqual(status, 0, `${p.tep} · ${nhan}: phải thoát lỗi`);
-      assert.match(ra, p.loi, `${p.tep} · ${nhan}: thiếu lời từ chối — ${ra.slice(0, 300)}`);
       assert.doesNotMatch(ra, p.noi, `${p.tep} · ${nhan}: đã thử nối DB`);
       assert.doesNotMatch(ra, /ECONNREFUSED/, `${p.tep} · ${nhan}: đã mở kết nối`);
-      assert.match(ra, /^(?:ℹ|#) pass 0$/m, `${p.tep} · ${nhan}: có ca đã chạy`);
       assert.ok(!ra.includes(TK + "@"), "không in URL kèm mật khẩu");
     }
+    const { status, ra } = chay(p.tep, envNgoaiCi({ DATABASE_URL: undefined }));
+    assert.match(ra, new RegExp(`${p.ten}: bỏ qua — thiếu DATABASE_URL`), `${p.tep} · thiếu URL: thiếu lời bỏ qua — ${ra.slice(0, 300)}`);
+    assert.equal(status, 0, `${p.tep} · thiếu URL: bỏ qua phải thoát 0`);
+    assert.doesNotMatch(ra, /ECONNREFUSED|DB local không tới/, `${p.tep} · thiếu URL: đã thử nối DB`);
   }
 });
 
-test("RV-3 đột biến bỏ rào (bản chép cạnh bản thật) → không còn lời từ chối, tệp đi tới mở kết nối — chứng rào là thứ chặn", () => {
+test("RV-3 đột biến bỏ rào (bản chép cạnh bản thật) → không còn lời từ chối, tệp đi tới chỗ thử nối DB — chứng rào là thứ chặn", () => {
   for (const p of PHAM_VI) {
     const goc = readFileSync(join(GOC, p.tep), "utf8");
     assert.ok(goc.includes(p.rao), `${p.tep}: không thấy dòng rào để phá — thước lệch tệp`);
     const ban = join(GOC, p.tep.replace(/\.test\.mjs$/, `.dot-bien-${process.pid}.test.mjs`));
     writeFileSync(ban, goc.replace(p.rao, "const DB_URL = process.env.DATABASE_URL;"));
     try {
-      const { status, ra } = chay(ban, envNgoaiCi({ DATABASE_URL: CHET("oneinvest") }), p.boCa);
-      assert.doesNotMatch(ra, p.loi, `${p.tep}: bản bỏ rào vẫn in lời từ chối — thước không phân biệt`);
+      // chỉ cổng chết — bản mất rào không bao giờ được chạy thiếu URL
+      const { ra } = chay(ban, envNgoaiCi({ DATABASE_URL: CHET("oneinvest") }));
+      assert.doesNotMatch(ra, /từ chối —/, `${p.tep}: bản bỏ rào vẫn in lời từ chối — thước không phân biệt`);
       assert.match(ra, p.noi, `${p.tep}: bản bỏ rào không thử nối DB — đột biến không tới chỗ nối`);
-      assert.notEqual(status, null, "tiến trình con bị ngắt");
     } finally {
       rmSync(ban, { force: true });
     }

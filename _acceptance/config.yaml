@@ -62,9 +62,8 @@ executors:
     s08ns_094: "bash db/db-thu.sh oneinvest_suite_s08ns_094 --chay node --test --test-name-pattern='^S08-1' pipeline/tests/s08-danh-muc-nap.test.mjs"   # s08-nap-sua E3 — có 094: nạp dự án, nạp lại không nhân
     s08ns_chia: "cd pipeline && node --test scripts/chia-nua.test.mjs"   # s08-nap-sua E4 — tệp test mới nằm đúng một nửa
     s08ns_chot: "cd pipeline && node --test scripts/db-thu-chot.test.mjs"   # s08-nap-sua E5 — chốt chặn chung: chỉ DB oneinvest_suite_*, tệp S08 thoát 2 với mọi cách viết DB máy thu
-    ht35_rao: "cd pipeline && node --test --test-name-pattern='RV-|CHOT-' scripts/db-thu-chot.test.mjs"   # test-khong-roi-ve-db-chung E1–E3 — rào hai tệp tự dựng bảng: ma trận URL, chạy trần ở cổng chết, đột biến bỏ rào (không nối DB nào)
-    ht35_chay_that: "bash db/db-thu.sh oneinvest_suite_ht35 --chay node scripts/kiem-ht35.mjs chay"   # test-khong-roi-ve-db-chung E5 — hai tệp chạy đủ ca trên DB của riêng lượt (0 fail, 0 bỏ qua; GT-AC-1 đỏ sẵn trên main)
-    ht35_chay_ci: "bash db/db-thu.sh oneinvest_suite_ht35 --chay node scripts/kiem-ht35.mjs chay --ci"   # test-khong-roi-ve-db-chung E3c — CI=true + URL tên khác oneinvest: hai tệp vẫn chạy đủ ca
+    ht35_rao: "cd pipeline && node --test --test-name-pattern='RV-|CHOT-' scripts/db-thu-chot.test.mjs"   # test-khong-roi-ve-db-chung E1–E3 — rào tệp tự dựng bảng: ma trận tên DB thử, chạy trần (DB chung ở cổng chết → từ chối; thiếu URL → bỏ qua), đột biến bỏ rào (không nối DB nào)
+    ht35_chay_that: "bash db/db-thu.sh oneinvest_suite_ht35 --chay node scripts/kiem-ht35.mjs chay"   # test-khong-roi-ve-db-chung E5 — tệp trong phạm vi chạy đủ ca trên DB của riêng lượt (0 fail, 0 bỏ qua; GT-AC-1 đỏ sẵn trên main)
     s06tt_chan: "bash db/db-thu.sh oneinvest_suite_s06tt_chan --chay node --test pipeline/scripts/collect-chotot-chan.test.mjs"   # s06-tran-trang E2 — 403/429 dừng cả lượt, không thử lại, rc 3, snapshot phần đã có
     s06tt_tran: "node --test _acceptance/s06-tran-trang/probes/tran-mac-dinh.test.mjs"   # s06-tran-trang E1 — trần mặc định 210, cờ --pages và CHOTOT_MAX_PAGES vẫn thắng
     s06tt_chia: "cd pipeline && node --test scripts/chia-nua.test.mjs"   # s06-tran-trang E3 — tệp test mới nằm đúng một nửa
@@ -394,7 +393,7 @@ executors:
     ht9_phut: "node --test --test-concurrency=1 scripts/do-phut-s4.test.mjs"   # db-thu-tach-khoi-cum-that E8 — phút giữ khoá s4
     ht9_hang_ngay: "node --test --test-concurrency=1 scripts/pipeline-that-hang-ngay.test.mjs"   # db-thu-tach-khoi-cum-that E11 — soát ca dữ liệu thật hằng ngày trên main + dòng «ca dữ liệu thật» của lượt chấm
   script:
-    ht35_zk_khop: "node scripts/kiem-ht35.mjs zk-khop"   # test-khong-roi-ve-db-chung E6 — tệp S09 khác bản zk đúng lớp gọi rào
+    ht35_zk_khop: "node scripts/kiem-ht35.mjs zk-khop"   # test-khong-roi-ve-db-chung E6 — tệp S09 khớp bản vá zk từng byte
     ht35_executor_db_thu: "node scripts/kiem-ht35.mjs executor-db-thu"   # test-khong-roi-ve-db-chung E7 — lệnh chấm chạy check-freshness.test qua db-thu
     ht35_bang_phu: "node scripts/kiem-ht35.mjs bang-phu"   # test-khong-roi-ve-db-chung E8 — bảng phủ khớp kho
     ht33_may_thu: "env -u ONEHUB_HAI_MAY_TEP node --input-type=module -e \"import { vaiMay } from './scripts/lib/vai-may.mjs'; const v = vaiMay(); console.log(v); process.exit(v === 'may-thu' ? 0 : 1)\""   # HT33 E6 — máy chấm là máy thu

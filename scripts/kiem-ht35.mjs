@@ -20,25 +20,17 @@ let loi = 0;
 const sai = (m) => { console.log(`FAIL ${m}`); loi = 1; };
 const dat = (m) => console.log(`PASS ${m}`);
 
+// Sha bản vá zk mà tệp S09 phải khớp từng byte (LL chuyển; GS 27/11 «tích hợp khớp byte, không tự chỉnh tệp của zk»).
 function zkKhop() {
   const tacGia = git("log", "-1", "--format=%an <%ae>", ZK).trim();
-  const coCommit = git("log", "--format=%H %an", "--", TEP_S09).split("\n").some((l) => l.startsWith(git("rev-parse", ZK).trim()));
-  // commit zk hay bản cherry-pick của nó (cùng tác giả, cùng tiêu đề) có trong lịch sử nhánh
   const tieuDe = git("log", "-1", "--format=%s", ZK).trim();
-  const pick = git("log", "--format=%an <%ae>%x09%s", "--", TEP_S09).split("\n").some((l) => l === `${tacGia}\t${tieuDe}`);
-  if (coCommit || pick) dat(`zk giữ tác giả: ${tacGia}`);
-  else sai(`không thấy commit zk (${ZK}, «${tieuDe}») của ${tacGia} trong lịch sử ${TEP_S09}`);
+  const tren = git("log", "--format=%H%x09%an <%ae>%x09%s", "--", TEP_S09).split("\n").filter(Boolean)
+    .find((l) => l.split("\t")[2] === tieuDe);
+  if (tren && tren.split("\t")[1] === tacGia) dat(`zk giữ tác giả: ${tacGia} (commit ${tren.slice(0, 9)})`);
+  else sai(`không thấy commit «${tieuDe}» của ${tacGia} trong lịch sử ${TEP_S09}${tren ? ` (thấy tác giả ${tren.split("\t")[1]})` : ""}`);
   const diff = git("diff", "--unified=0", ZK, "--", TEP_S09).split("\n").filter((l) => /^[+-](?![+-])/.test(l));
-  const cho = [
-    /^\+import \{ urlCiChoPhep \} from "\.\/lib\/db-thu-chot\.mjs";$/,
-    /^\+\/\/ HT35 \(lỗi tích hợp với CI\)/,
-    /^\+const DB_URL = urlCiChoPhep\(process\.env\.DATABASE_URL\) \?\? xacThucUrlSuite\(process\.env\.DATABASE_URL\);/,
-    /^-const DB_URL = xacThucUrlSuite\(process\.env\.DATABASE_URL\);/,
-  ];
-  const la = diff.filter((l) => !cho.some((m) => m.test(l)));
-  for (const l of la) sai(`dòng lạ so bản zk: ${l.slice(0, 160)}`);
-  for (const m of cho) if (!diff.some((l) => m.test(l))) sai(`thiếu dòng lớp gọi: ${m}`);
-  if (!la.length && diff.length === cho.length) dat(`${TEP_S09} khác bản zk đúng ${diff.length} dòng lớp gọi rào`);
+  for (const l of diff) sai(`dòng khác bản zk: ${l.slice(0, 160)}`);
+  if (!diff.length) dat(`${TEP_S09} khớp bản zk ${ZK} từng byte`);
 }
 
 function executorDbThu() {
@@ -97,6 +89,8 @@ function bangPhu() {
 
 // AC-3, AC-5: chạy THẬT hai tệp trên DB của lượt (gọi dưới db/db-thu.sh … --chay), đòi 0 fail và 0 ca bỏ qua — ca bỏ qua
 // vì «DB không tới» cũng cho 0 fail, nên chỉ đếm fail là xanh rỗng. `--ci`: đặt CI=true (runner CI, URL tên khác oneinvest).
+// Tệp trong phạm vi chạy thật. Tệp S09 vào khi nhận bản vá mới của zk (GS 27/11: tích hợp khớp byte).
+const TEP_CHAY = ["scripts/check-freshness.test.mjs"];
 function chay() {
   const ci = process.argv.includes("--ci");
   const url = process.env.DATABASE_URL ?? "";
@@ -104,8 +98,8 @@ function chay() {
   const env = { ...process.env };
   delete env.NODE_TEST_CONTEXT;
   if (ci) env.CI = "true"; else delete env.CI;
-  const r = spawnSync(process.execPath, ["--test", "--test-concurrency=1", "--test-skip-pattern=GT-AC-1",
-    "pipeline/import-s09-danh-ba.test.mjs", "scripts/check-freshness.test.mjs"], { cwd: GOC, env, encoding: "utf8", timeout: 900_000 });
+  const r = spawnSync(process.execPath, ["--test", "--test-concurrency=1", "--test-skip-pattern=GT-AC-1", ...TEP_CHAY],
+    { cwd: GOC, env, encoding: "utf8", timeout: 900_000 });
   const ra = (r.stdout || "") + (r.stderr || "");
   const so = (k) => Number((ra.match(new RegExp(`^(?:ℹ|#) ${k} (\\d+)$`, "m")) ?? [])[1] ?? NaN);
   const [tests, pass, fail, skipped] = ["tests", "pass", "fail", "skipped"].map(so);
@@ -113,7 +107,7 @@ function chay() {
   if (r.status !== 0 || fail !== 0) sai(`có ca đỏ hay tiến trình lỗi (exit ${r.status})`);
   else if (!(skipped === 0)) sai(`có ${skipped} ca bỏ qua — DB không tới hay rào trả URL sai`);
   else if (!(pass > 0 && pass === tests)) sai(`pass ${pass} ≠ tests ${tests}`);
-  else dat(`hai tệp chạy đủ ${pass} ca${ci ? " khi CI=true" : ""}`);
+  else dat(`${TEP_CHAY.length} tệp chạy đủ ${pass} ca${ci ? " khi CI=true" : ""}`);
 }
 
 const lenh = { chay, "zk-khop": zkKhop, "executor-db-thu": executorDbThu, "bang-phu": bangPhu }[process.argv[2]];

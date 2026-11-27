@@ -38,7 +38,7 @@ Tổng: 70 tệp có khuôn; 66 tệp rơi về DB chung; trong đó 62 không r
 | `app/tests/tin-rao-cong-khai.test.tsx` | app | có |  |  | để lại cho HT36 — có ghi, chưa rào |
 | `app/tests/tin-rao-doi-chieu.test.tsx` | app | có |  |  | để lại cho HT36 — có ghi, chưa rào |
 | `app/tests/ty-le-listing-gop.test.tsx` | app | có |  |  | để lại cho HT36 — có ghi, chưa rào |
-| `pipeline/import-s09-danh-ba.test.mjs` | pipeline | có | có | có | **trong phạm vi** — tự dựng bảng thật rồi ghi |
+| `pipeline/import-s09-danh-ba.test.mjs` | pipeline | có | có | có | **trong phạm vi** — tự dựng bảng thật rồi ghi; bản vá zk (chờ sha mới, tích hợp khớp byte) |
 | `pipeline/lib/s16-soat.test.mjs` | pipeline | không |  |  | ngoài phạm vi, vì chỉ đọc |
 | `pipeline/scripts/bait-gap-sellers.test.mjs` | pipeline | có |  |  | để lại cho HT36 — có ghi, chưa rào |
 | `pipeline/scripts/can-theo-tin.itest.mjs` | pipeline | có |  |  | để lại cho HT36 — có ghi, chưa rào |
