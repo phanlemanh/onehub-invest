@@ -5,7 +5,7 @@ slug: giu-tuoi-vat-the-khu-thieu-tinh
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [script]
-status: verified
+status: machine-cleared
 veto_state: mo
 veto_opened_at: 2026-11-27T19:16:15Z
 approved_by:
@@ -70,3 +70,7 @@ Lối sửa GS chọn: `dung()` chỉ đòi ISO cho khu ISO được dùng; khu 
 
 - Đo tại máy thu 27/11 19:12–19:14Z dưới khoá s4 (qua giu-nhip), DB của lượt chép từ máy thu (có sẵn 145 nút khu S09): mã gốc
   ba ca đỏ («khu s09-ecohome-3-…: khong-co-tinh»), mã sửa ba ca xanh. Đầu ra: `evidence/`.
+- Known limits — GS phán 28/11 sau S4 vòng 1 (ngoại lệ sửa sự cố, máy-thông T2), sửa ở DA73 (cùng tệp, cùng người):
+  - Ngoài-1: Kỳ vọng của E4 tả cơ chế đối chứng khác với `doi-chung.sh` đang làm (worktree tạm ở mã gốc + tệp ca hiện tại).
+  - Ngoài-2: Trục khu khai hàng «đích nối S09 khu/S16 thiếu tỉnh» nhưng chưa có ca nào đo hàng ấy.
+  - Ngoài-3: `doi-chung.sh` dò «khong-co-tinh» trên toàn đầu ra, chưa buộc AC-1 và AC-3 đỏ VÌ lỗi ấy.
