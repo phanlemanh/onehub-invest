@@ -113,6 +113,7 @@
     "scripts/ghep-tin-danh-muc-lat-nhan.test.mjs",
     "scripts/ghep-tin-danh-muc-cham.test.mjs",
     "tests/import-s16-chi-tiet.test.mjs",
+    "scripts/street-raw-tran-dem.test.mjs",
     "scripts/dong-the-bo-sung-tin.test.mjs",
     "import-s09-danh-ba.test.mjs"
   ]
