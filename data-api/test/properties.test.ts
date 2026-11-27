@@ -22,27 +22,29 @@ const { default: app } = await import("../src/app.js");
 const { xoaBoNhoProperty } = await import("../src/routes/properties.js");
 const { BUILDING_KEY_NAMES, UNIT_KEY_NAMES, LOOKUP_KEY_NAMES } = await import("../src/contract/property.js");
 
-// ── Khoá cấy: ULID Crockford hợp lệ, tiền tố 01PB6 không trùng dữ liệu thật ─────────────────────────────────────────
-const khoa = (loai: string, n: number) => `${loai}_01PB6${String(n).padStart(21, "0")}`;
+// ── Khoá cấy: ULID Crockford hợp lệ, tiền tố 01PB6 không trùng dữ liệu thật. Hạt (5 chữ số) khác nhau mỗi lượt để
+// chạy lặp trên cùng DB thử (probe đối chứng E9 chạy test nhiều lần; bảng danh bạ chỉ-thêm, không dọn được). ─────────────
+const HAT = (process.env.PB6_HAT ?? String(process.pid)).replace(/[^0-9]/g, "").padStart(5, "0").slice(-5);
+const khoa = (loai: string, n: number) => `${loai}_01PB6${HAT}${String(n).padStart(16, "0")}`;
 const T1 = khoa("bld", 1), T2 = khoa("bld", 2), T3 = khoa("bld", 3), T9 = khoa("bld", 9);
 const S1 = khoa("stk", 1);
 const C1 = khoa("unt", 1), C2 = khoa("unt", 2), C3 = khoa("unt", 3), C4 = khoa("unt", 4);
 const upi = (k: string) => `urn:onehub:upi:1:VN:VN-HN:${k}`;
-const PHUONG = "vn-pb6-phuong-cay";
-const DU_AN = "PB6 Dự Án Cấy Thử";
-const PHAN_KHU = "PB6 Phân Khu Cấy";
+const PHUONG = `vn-pb6-phuong-cay-${HAT}`;
+const DU_AN = `PB6 Dự Án Cấy Thử ${HAT}`;
+const PHAN_KHU = `PB6 Phân Khu Cấy ${HAT}`;
 
 // Chuỗi canh — chỉ bản mã lộ bí danh, căn cứ, nguồn hay tên nút nội bộ mới trả ra được.
 const CANH = {
-  duAnNguon: "PB6CANHDUAN",           // phần <dự án>/ của mã căn nguồn
-  maC1: "PB6MA-0912",                 // phần mã của căn C1 (khách nhập để tra)
-  maC3s16: "PB6MA-1501",
-  maC3s08: "PB6MB-1501",
-  maToaNguon: "PB6CANH-MA-TOA",       // mã toà tại nguồn
-  maTrucNguon: "PB6CANH-MA-TRUC",
-  canCu: "PB6CANH-CAN-CU",            // field_assertions.evidence
-  nguonPhatBieu: "PB6CANH-NGUON",
-  slugNut: "pb6-canh-slug-noi-bo",    // slug nút dự án
+  duAnNguon: `PB6CANHDUAN${HAT}`,           // phần <dự án>/ của mã căn nguồn
+  maC1: `PB6MA${HAT}-0912`,                 // phần mã của căn C1 (khách nhập để tra)
+  maC3s16: `PB6MA${HAT}-1501`,
+  maC3s08: `PB6MB${HAT}-1501`,
+  maToaNguon: `PB6CANH-MA-TOA-${HAT}`,       // mã toà tại nguồn
+  maTrucNguon: `PB6CANH-MA-TRUC-${HAT}`,
+  canCu: `PB6CANH-CAN-CU-${HAT}`,            // field_assertions.evidence
+  nguonPhatBieu: `PB6CANH-NGUON-${HAT}`,
+  slugNut: `pb6-canh-slug-noi-bo-${HAT}`,    // slug nút dự án
 };
 const CANH_MOI = Object.values(CANH);
 
@@ -75,15 +77,15 @@ const KHOA_CAM = ["universalPropertySubId", "stack", "stackKey", "nguon", "evide
 let duAnId = 0;
 
 before(async () => {
-  await sql(`INSERT INTO areas (id, parent_id, region_type, name, country_code) VALUES ($1, NULL, 'ward', 'PB6 Phường Cấy', 'vn')`, [PHUONG]);
+  await sql(`INSERT INTO areas (id, parent_id, region_type, name, country_code) VALUES ($1, NULL, 'ward', $2, 'vn')`, [PHUONG, `PB6 Phường Cấy ${HAT}`]);
   const p = await sql(
     `INSERT INTO asset_nodes (node_type, name, slug, catalog_tier, area_ids) VALUES ('project', $1, $2, 'xac_minh', ARRAY[$3]) RETURNING id`,
     [DU_AN, CANH.slugNut, PHUONG],
   );
   duAnId = Number(p.rows[0].id);
   const z = await sql(
-    `INSERT INTO asset_nodes (node_type, name, slug, parent_id, catalog_tier, area_ids) VALUES ('subzone', $1, 'pb6-pk', $2, 'xac_minh', ARRAY[$3]) RETURNING id`,
-    [PHAN_KHU, duAnId, PHUONG],
+    `INSERT INTO asset_nodes (node_type, name, slug, parent_id, catalog_tier, area_ids) VALUES ('subzone', $1, $4, $2, 'xac_minh', ARRAY[$3]) RETURNING id`,
+    [PHAN_KHU, duAnId, PHUONG, `pb6-pk-${HAT}`],
   );
   const vung = Number(z.rows[0].id);
   for (const [k, tier, nut] of [[T1, "xac_minh", vung], [T2, "mot_loi_khai", vung], [T3, "xac_minh", duAnId]] as const) {
@@ -101,7 +103,7 @@ before(async () => {
   await sql(`INSERT INTO units (unit_key, building_key, sub_id, catalog_tier) VALUES ($1, $2, $1, 'xac_minh')`, [C2, T1]);
   await sql(`INSERT INTO units (unit_key, building_key, sub_id, catalog_tier) VALUES ($1, $2, $1, 'xac_minh')`, [C3, T1]);
   await sql(`INSERT INTO units (unit_key, building_key, sub_id, catalog_tier, status, merged_into) VALUES ($1, $2, $1, 'xac_minh', 'merged', $3)`, [C4, T1, C1]);
-  const ma = [[C1, "S16", `${CANH.duAnNguon}/${CANH.maC1}`], [C3, "S16", `${CANH.duAnNguon}/${CANH.maC3s16}`], [C3, "S08", `991/${CANH.maC3s08}`]];
+  const ma = [[C1, "S16", `${CANH.duAnNguon}/${CANH.maC1}`], [C3, "S16", `${CANH.duAnNguon}/${CANH.maC3s16}`], [C3, "S08", `99${HAT}/${CANH.maC3s08}`]];
   for (const [k, s, v] of ma) await sql(`INSERT INTO registry_aliases (object_key, kind, value, source, first_seen) VALUES ($1, 'ma_nguon', $2, $3, now())`, [k, v, s]);
   // Thuộc tính: C1 hai phát biểu diện tích — bậc fact thắng observed; C2 loại house → null; C3 không thuộc tính.
   const pb = [
@@ -121,7 +123,7 @@ before(async () => {
     );
   }
   // Một tin S03 đang rao gắn T1 (offer_building mức toà) và một tin đã nghỉ gắn T1 — chỉ tin đang rao được đếm.
-  for (const [id, trangThai, bai] of [["pb6-offer-song", "active", "pb6-post-1"], ["pb6-offer-nghi", "withdrawn", "pb6-post-2"]]) {
+  for (const [id, trangThai, bai] of [[`pb6-offer-song-${HAT}`, "active", `pb6-post-1-${HAT}`], [`pb6-offer-nghi-${HAT}`, "withdrawn", `pb6-post-2-${HAT}`]]) {
     await sql(
       `INSERT INTO sale_offer_records (offer_id, kind, area_id, price_vnd, area_m2, price_perm2, confidence, first_seen, last_seen,
          n_reposts, post_ids, source, property_type, offer_status)
@@ -156,7 +158,7 @@ test("PB6-AC-1 toà theo UPI", async () => {
   assert.equal(d.complexName, PHAN_KHU, "PB6-AC-1 complexName phải là phân khu");
   assert.equal(d.subdivisionName, DU_AN, "PB6-AC-1 subdivisionName phải là dự án");
   assert.equal(d.projectId, duAnId, "PB6-AC-1 sai projectId");
-  assert.equal(d.city, "PB6 Phường Cấy", "PB6-AC-1 sai city");
+  assert.equal(d.city, `PB6 Phường Cấy ${HAT}`, "PB6-AC-1 sai city");
   assert.equal(d.stateOrProvince, "VN-HN");
   assert.equal(d.country, "VN");
   assert.equal(d.catalogTier, "xac_minh");
@@ -202,7 +204,7 @@ test("PB6-AC-3 tra theo dự án + toà + mã căn", async () => {
   const q = (p: string, b: string, u: string) =>
     `/v1/properties/lookup?project=${encodeURIComponent(p)}&building=${encodeURIComponent(b)}&unitNumber=${encodeURIComponent(u)}`;
   const nhap = CANH.maC1.toLowerCase();
-  const r = await goi(q("pb6 du an cay thu", "thap a", nhap));
+  const r = await goi(q(`pb6 du an cay thu ${HAT}`, "thap a", nhap));
   assert.equal(r.status, 200, "PB6-AC-3 tra không 200");
   assert.equal(r.than.meta.total, 1, "PB6-AC-3 không khớp đúng một căn");
   assert.deepEqual(bangTap(Object.keys(r.than.data[0])), bangTap(LOOKUP_KEY_NAMES), "PB6-AC-3 sai tập khoá");
@@ -251,6 +253,9 @@ test("PB6-AC-4 liệt kê toà có trần", async () => {
 test("PB6-AC-5 không dò được", async () => {
   const goc = await goi(can(T1, C1));
   assert.equal(goc.status, 200);
+  for (const k of ["universalPropertySubId", "stack", "stackKey", "unitNumber"]) {
+    assert.ok(!(k in goc.than.data), `PB6-AC-5 phát khoá dò được: ${k}`);
+  }
   let lo = 0;
   // Khoá cấy của test liền số (…1, …2) nên «đổi ký tự cuối» sẽ trúng căn cấy khác — giới hạn của bộ cấy, không phải của
   // API: khoá thật là ULID có 80 bit ngẫu nhiên. Đổi sang ký tự không có trong bộ khoá cấy để đo đúng câu «khoá đoán bừa → 404».
@@ -262,7 +267,7 @@ test("PB6-AC-5 không dò được", async () => {
     const r = await goi(`${can(T1, C1)}?floor=${tang}`);
     if (r.status === 200 && r.than.data?.unitKey !== C1) lo++;
   }
-  const lienKe = await goi(`/v1/properties/lookup?project=${duAnId}&building=${T1}&unitNumber=PB6MA-0913`);
+  const lienKe = await goi(`/v1/properties/lookup?project=${duAnId}&building=${T1}&unitNumber=PB6MA${HAT}-0913`);
   lo += lienKe.than.data?.length ?? 0;
   console.log(`số căn lộ thêm khi dò: ${lo}`);
   assert.equal(lo, 0, "PB6-AC-5 dò từ một căn ra căn khác");
