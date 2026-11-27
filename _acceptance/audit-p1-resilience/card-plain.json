@@ -1,7 +1,67 @@
 {
-  "feature_plain": "Lớp canh an toàn Zalo không còn bỏ sót tin bot tự trả lời ở đầu ngày mới, có cảnh báo khi tin bị chặn tăng vọt hoặc khi cơ sở dữ liệu chết, và lượt nạp tin Zalo ban đêm tự giữ chỗ để nạp lại khi cơ sở dữ liệu lên trở lại.",
-  "scope_plain": "Những việc dưới đây cố ý để ngoài lần nghiệm thu này:",
-  "decisions_plain": [
-    {"id": "d-20261023T090355Z-1", "p": "KHÔNG chạy bước phản biện riêng trước khi duyệt (nghiệm thu gọn theo lời giao) — đổi lại, phiên kiểm độc lập được giao tự đi tìm lỗ và đã ghi 6 điểm ngoài phạm vi."}
-  ]
+ "feature_plain": "Hồ sơ này hạ bậc T3 → T2 vì lượt này chỉ sửa thước, không đổi lớp an toàn nào; anh muốn giữ T3 thì nói (Hỏi-1). Việc: đưa phép đo «lượt nạp tin Zalo hằng đêm tự phục hồi khi DB sập» về đo được bản đang chạy — phép đo này đỏ oan từ 25/10 vì lượt nạp đã thêm bước mà phép đo chưa biết.",
+ "will_do": [
+  {
+   "id": "AC-2",
+   "p": "Sẽ giữ nguyên phép đo watchdog lần chạy đầu trên log gateway (không đổi, vẫn xanh)."
+  },
+  {
+   "id": "AC-3",
+   "p": "Sẽ giữ nguyên phép đo cảnh báo khi số tin bị bỏ tăng vọt (không đổi, vẫn xanh)."
+  },
+  {
+   "id": "AC-4",
+   "p": "Sẽ giữ nguyên phép đo cảnh báo khi DB không nghe (không đổi, vẫn xanh)."
+  },
+  {
+   "id": "AC-5",
+   "p": "Sẽ đo lại đúng lời đã ký: nạp lỗi thì giữ chỗ và dừng, DB chập chờn thì thử lại 5 lần cách 20 giây — nay trên bản lượt nạp đang chạy."
+  },
+  {
+   "id": "AC-6",
+   "p": "Sẽ giữ nguyên phép đo dòng lỗi có đủ mã và địa chỉ khi DB từ chối kết nối."
+  },
+  {
+   "id": "AC-7",
+   "p": "Sẽ đo lượt nạp gặp gói tin thu chưa ghi xong: dưới 30 phút thì dừng chờ lượt sau; từ 30 phút thì bỏ gói dở và nạp tiếp (vế này là Hỏi-2)."
+  },
+  {
+   "id": "AC-8",
+   "p": "Sẽ chạy mọi phép đo trong hộp cát riêng: thư mục nhà giả, không chạm DB, gateway hay cấu hình Zalo thật; thấy thư mục nhà thật thì từ chối chạy."
+  },
+  {
+   "id": "AC-9",
+   "p": "Sẽ tự đọc danh sách bước của lượt nạp từ chính script mỗi lần đo, nên lần sau lượt nạp thêm bước thì phép đo tự theo, gặp dạng lạ thì báo đúng tên thay vì đỏ mù."
+  }
+ ],
+ "wont_do": [
+  {
+   "id": "AC-1",
+   "p": "Sẽ KHÔNG để watchdog bỏ sót lượt agent đầu ngày mới (phép đo cũ, giữ nguyên)."
+  },
+  {
+   "id": "OOS-1",
+   "p": "KHÔNG chạy watchdog thật lên OpenClaw hay chạm cấu hình Zalo thật."
+  },
+  {
+   "id": "OOS-2",
+   "p": "KHÔNG làm bước triển khai marker trên máy (việc của ZCode)."
+  },
+  {
+   "id": "OOS-3",
+   "p": "KHÔNG đụng phía job pipeline, Kev hay chính sách khởi động lại DB."
+  },
+  {
+   "id": "OOS-4",
+   "p": "KHÔNG chỉnh ngưỡng cảnh báo tin bị bỏ."
+  },
+  {
+   "id": "OOS-5",
+   "p": "KHÔNG sửa script lượt nạp (làn ZCode): lộ hành vi sai thật thì ghi giới hạn đã biết và báo chuyển ZCode."
+  },
+  {
+   "id": "OOS-6",
+   "p": "KHÔNG thêm khoá lệnh đo mới vào cấu hình chung của kho."
+  }
+ ]
 }

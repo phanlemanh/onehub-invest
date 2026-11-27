@@ -33,7 +33,8 @@ evals:
     criterion: AC-5
     executor: script
     cmd: config:executors.script.zc3_import_daily
-    expected: "exit 0; stdout có 'IMPORT-DAILY PASS'; ca 1 ok: state tới cuối, transform chạy, should-NOT-fire snapshot cũ không nạp lại; ca 2 lỗi thường: exit ≠ 0, state giữ, chuỗi dừng, 1 lần thử, không sleep, không transform; ca 3 ECONNREFUSED×2: 3 lần thử, 2× sleep 20, đi tiếp; ca 4 ECONNREFUSED mãi: 5 lần thử, sleep 20, exit ≠ 0, state giữ, không transform"
+    expected: "exit 0; stdout có 'IMPORT-DAILY PASS'; chạy trên bản chép zalo-import-daily.sh của cây đang chấm, fixture mỗi snapshot có manifest.json; ca 1 ok: state tới cuối, transform chạy, should-NOT-fire snapshot cũ không nạp lại; ca 2 lỗi thường: exit ≠ 0, state giữ, chuỗi dừng, 1 lần thử, không sleep, không transform; ca 3 ECONNREFUSED×2: 3 lần thử, 2× sleep 20, đi tiếp, transform chạy, exit 0; ca 4 ECONNREFUSED mãi: 5 lần thử, sleep 20, exit ≠ 0, state giữ, không transform; chiều đỏ: bỏ manifest khỏi một snapshot của ca 1 → ca 1 đỏ"
+    paths: ["scripts/audit-p1-resilience/acceptance.mjs", "scripts/zalo-import-daily.sh", "scripts/lib/job-step.sh"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E6
@@ -55,4 +56,28 @@ evals:
     executor: test
     cmd: config:executors.test.pipeline
     expected: "exit 0; 0 fail — suite pipeline không hồi quy"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E9
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.zc3_import_daily
+    expected: "cùng lượt với E5 (exit 0, 'IMPORT-DAILY PASS'); ca manifest <30′ (mtime 5′ trước): stdout có 'snapshot chưa xong', exit ≠ 0, state giữ ở snapshot trước, snapshot ấy và sau không nạp, không transform; ca manifest ≥30′ (mtime 45′ trước): stdout có 'snapshot mồ côi', snapshot ấy 0 lần nạp, snapshot sau nạp, state tới cuối, transform chạy, exit 0; chiều đỏ của chính ca: đổi mtime 45′ thành 5′ thì ca mồ côi đỏ"
+    paths: ["scripts/audit-p1-resilience/acceptance.mjs", "scripts/zalo-import-daily.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E10
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.zc3_import_daily
+    expected: "cùng lượt với E5; mỗi ca in dòng 'an toàn: HOME và TMPDIR dưới sandbox' và môi trường không có DATABASE_URL, PG*, khoá model; đối chứng HOME = HOME thật: thông điệp 'từ chối: HOME của lượt là HOME thật', thoát 2, tệp đánh dấu spawned vắng; đối chứng HOME = /var/empty: thông điệp 'từ chối: HOME ngoài thư mục tạm của lượt', thoát 2, spawned vắng; đối chứng dương: ca 1 có spawned; sau mọi ca git status --porcelain của kho thật không đổi; calls.log không có đường ngoài sandbox, không có '.openclaw'"
+    paths: ["scripts/audit-p1-resilience/acceptance.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E11
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.zc3_import_daily
+    expected: "cùng lượt với E5; stdout in bảng lớp đường rút từ script (thư viện, bước, thư mục cd, dữ liệu) và tổng lần $ROOT bằng tổng các lớp; thước không có hằng tên bước; ca 1: tập bước in ra bằng tập rút từ script, mỗi bước đúng một lời gọi trong calls.log; đối chứng dạng cd-tương-đối: bản chép thêm cd «$ROOT/pipeline» && node buoc.mjs → thoát 3 gọi tên; đối chứng bước lạ: bản chép thêm dòng buoc … node «$ROOT/pipeline/buoc-la.mjs» → ca đường xanh thấy lời gọi pipeline/buoc-la.mjs; đối chứng đường không xếp được: bản chép thêm «$ROOT/khong-xep-duoc.bin» → thước thoát 3, thông điệp gọi tên khong-xep-duoc.bin"
+    paths: ["scripts/audit-p1-resilience/acceptance.mjs", "scripts/zalo-import-daily.sh"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]

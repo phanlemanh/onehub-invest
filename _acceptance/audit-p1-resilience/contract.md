@@ -3,12 +3,13 @@ schema_version: 1
 feature: ZC3 — watchdog Zalo không sót log đầu ngày, cảnh báo drop bất thường và DB chết; nạp Zalo đêm phục hồi sau khi DB sập
 slug: audit-p1-resilience
 owner: phanlemanh@gmail.com
-risk_tier: T3
+risk_tier: T2
 surfaces: [cli, config]
-status: signed-off
+status: draft
 approved_by:
 approved_at:
 gate1_skipped: true
+design_doc: docs/superpowers/specs/2026-11-27-audit-p1-resilience-do-tren-main-design.md
 ---
 
 # Acceptance Contract: audit-p1-resilience
@@ -44,6 +45,29 @@ Source input: prompt (brief phiên điều phối liên làn local_5d0e32a0…, 
   - lỗi khác thì không retry;
   - snapshot cũ hơn state thì không nạp lại.
 - AC-6: Given `collect-chotot.mjs` / `import-chotot.mjs` chết vì AggregateError message rỗng (ECONNREFUSED), When `main()` bắt lỗi, Then dòng «❌» in code kèm mọi lỗi con (địa chỉ:cổng); lỗi thường giữ nguyên message; lỗi không có code/message vẫn in được.
+- AC-7: Given một snapshot mới hơn state thiếu `manifest.json`, When `zalo-import-daily.sh` chạy, Then:
+  - thư mục sửa dưới 30′ trước → dòng «snapshot chưa xong», state giữ, snapshot ấy và các snapshot sau không nạp, transform không
+    chạy, exit ≠ 0;
+  - thư mục sửa từ 30′ trở lên → dòng «snapshot mồ côi», snapshot ấy không nạp, state vượt qua nó, snapshot sau vẫn nạp, chuỗi
+    đi tiếp tới transform, exit 0.
+    - Vế này là Hỏi-2 ở Cổng Phạm vi: nó nghiệm thu việc state nhảy qua snapshot thiếu manifest, đúng lớp hậu quả của sự cố 22/10.
+    - Lối khác: chỉ đo rồi ghi Known limits, báo LL.
+- AC-8: Given thước ZC3 dựng sandbox cho lượt nạp, When nó sắp chạy `zalo-import-daily.sh`, Then:
+  - HOME và TMPDIR của lượt là thư mục con của sandbox; môi trường không kế thừa `DATABASE_URL`, `PG*` hay khoá model;
+  - HOME bằng HOME thật → từ chối «HOME của lượt là HOME thật»;
+  - HOME ngoài thư mục tạm → từ chối «HOME ngoài thư mục tạm của lượt»;
+  - cả hai từ chối: thoát 2, script không được spawn (tệp đánh dấu dòng đầu vắng);
+  - sau mỗi ca: cây kho thật không đổi, `calls.log` không có đường ngoài sandbox hay `.openclaw`;
+  - `psql`, `launchctl`, `pkill`, `osascript` là stub thắng PATH.
+- AC-9: Given văn bản `zalo-import-daily.sh` lúc chạy, When thước dựng sandbox, Then:
+  - mọi đường `$ROOT/…` script dùng được rút từ chính văn bản ấy: thư viện source thì chép bản thật, bước thì sinh bản giả ghi lời
+    gọi;
+  - không danh sách bước viết tay;
+  - tổng số lần `$ROOT` trong văn bản bằng tổng các lớp đã xếp (thư viện, bước, thư mục cd, dữ liệu);
+  - ca đường xanh của AC-5 có đúng một lời gọi cho mỗi bước sau nạp đếm từ script;
+  - script thêm một bước mới → thước tự giả lập nó, và ca đường xanh thấy lời gọi;
+  - đường `$ROOT/…` không xếp được, hay dạng gọi thước không nhận (ví dụ `cd "$ROOT/pipeline" && node x.mjs`) → thước thoát 3,
+    gọi tên đường ấy.
 
 ## Coverage
 
@@ -54,15 +78,30 @@ Source input: prompt (brief phiên điều phối liên làn local_5d0e32a0…, 
   - DB: nghe / không nghe;
   - kết quả nạp: ok / lỗi thường / ECONNREFUSED tạm / ECONNREFUSED mãi.
 
+- Vòng 2 (27/11): thêm hai trục:
+  - manifest: có / thiếu dưới 30′ / thiếu từ 30′;
+  - sandbox: HOME giả / HOME thật / chuỗi có bước mới / đường không xếp được.
+  - Chép tay, không quét hình thái: thước một tệp, trục do hành vi đang chạy trên main quyết.
+
 ## Out of scope
 
 - Chạy watchdog thật lên OpenClaw, đụng `~/.openclaw`, `launchctl`: alert() kill gateway (luật 8). Mọi eval chạy bản chép trong thư mục tạm với HOME giả và stub.
 - Triển khai: lượt watchdog thật đầu tiên sau merge sẽ viết lại marker `4211` và khởi tạo gw-marker trên máy. Việc này do ZCode làm qua kênh tin.
 - Phía job pipeline (AU3), Kev gate :8009, restart policy của container DB.
 - Chỉnh ngưỡng L4a (20/5′): giữ số ZCode chọn, không đo phân bố thật.
+- (vòng 2) Sửa `scripts/zalo-import-daily.sh` hay bất kỳ tệp làn ZCode nào: thước đo hành vi đang chạy. Lộ hành vi sai thật thì
+  báo GS để chuyển LL, ghi Known limits.
+- (vòng 2) Thêm khoá executor mới vào `_acceptance/config.yaml`: các ca mới chạy trong mode `import-daily` có sẵn
+  (`zc3_import_daily`). `config.yaml` nằm ngoài ranh giới của hàng.
 
 ## Notes
 
-- T3 vì `scripts/zalo-watchdog.sh` ∈ `t3_paths` (an toàn Zalo); lộ trình cũng ghi `"hang": "T3"`. Chữ ký Mạnh bắt buộc dù xanh.
+- Vòng 2 (27/11, hàng `audit-p1-resilience-do-tren-main`): mở lại hồ sơ đã ký để đưa thước `zc3_import_daily` về đo được main
+  (đỏ từ 25/10).
+  - Bậc theo `_acceptance/config.yaml`: tệp đổi là `scripts/audit-p1-resilience/acceptance.mjs` và vật hồ sơ. 0/16 mẫu `t3_paths`
+    trúng, nên máy xếp T2.
+  - Hồ sơ gốc ký T3 ngày 23/10. Hạ bậc là câu hỏi ở Cổng Phạm vi.
+
+- (vòng 1) T3 vì `scripts/zalo-watchdog.sh` ∈ `t3_paths` (an toàn Zalo); lộ trình cũng ghi `"hang": "T3"`. Chữ ký Mạnh bắt buộc dù xanh.
 - Hợp đồng dựng SAU khi code xong (ZCode, 3 commit) nên `gate1_skipped: true`.
 - Bản chép watchdog chỉ đổi đúng 2 dòng (đường log /tmp theo ngày và cổng :5433, trỏ vào tệp/cổng giả). Harness kiểm diff đúng 2 dòng và kiểm stub thắng PATH trước mỗi lần chạy, sai thì bỏ chạy (exit 2).
