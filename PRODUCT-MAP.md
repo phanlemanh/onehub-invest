@@ -10,8 +10,8 @@ flowchart TD
   GD --> B["Sắp mở vòng<br/>20 việc"]
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
-  B --> CD["Chờ duyệt phạm vi<br/>23 việc"] --> GP{"Cổng Phạm vi"}
-  GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
+  B --> CD["Chờ duyệt phạm vi<br/>22 việc"] --> GP{"Cổng Phạm vi"}
+  GP --> DL["Đang làm<br/>2 việc"] --> GB{"Cổng Bằng chứng"}
   GB --> DG["Đã giao<br/>235 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>146 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
@@ -65,7 +65,6 @@ flowchart TD
 - Typecheck của app xanh trên cây không có .next — các layout và trang /ops/data-flow khai props tại chỗ, không dựa vào kiểu toàn cục LayoutProps/PageProps do next typegen sinh (`props-layout-khong-next`)
 - Trang /ops/quality khai props đúng kiểu trang của Next nên typecheck của app xanh cả khi thư mục kiểu sinh .next/types cũ hay vắng (`props-trang-ops-quality`)
 - MCP ReUI của kho gửi kèm key giấy phép (đọc từ biến môi trường) và kiểu giao diện của app, để phiên Claude dùng được gói Pro mà không phải đăng nhập (`reui-mcp-key`)
-- Đưa lớp lịch thu đuôi S06 của làn thu vào main (wrapper một vòng, chọn-nạp snapshot, khuôn plist) — chưa cài lịch (`s06-thu-duoi-lich-va-chon-snapshot`)
 - harness của s06-vung-moi-len-canonical chạy được transform-chotot có import gan-sdt-s06.mjs (`s06-vung-moi-harness-gan-sdt`)
 - DATA-CONTRACT v15 (nháp) mục nguồn S09 danh bạ căn, gồm khuôn lượt bù căn thấp tầng 20/11, vào main để bộ nạp và DA50 đọc theo một bản (`s09-dc-v15-thap-tang`)
 - Tách bộ kiểm pipeline của lượt chấm thành hai nửa chạy song song, mỗi nửa một DB thử, để một lệnh không vượt trần chờ 30 phút của tác tử chấm (`tach-suite-pipeline`)
@@ -74,6 +73,7 @@ flowchart TD
 ## Đang làm
 
 - Đưa bộ thu đuôi S06 của làn thu vào main (chỉ mã thu và test, chưa lịch, chưa nạp) (`s06-thu-duoi-do`)
+- Đưa lớp lịch thu đuôi S06 của làn thu vào main (wrapper một vòng, chọn-nạp snapshot, khuôn plist) — chưa cài lịch (`s06-thu-duoi-lich-va-chon-snapshot`)
 
 ## Đã giao — chờ phiên nghiệm thu
 
