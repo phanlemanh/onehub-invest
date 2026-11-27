@@ -12,8 +12,8 @@ flowchart TD
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>22 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>239 việc"]
-  GB --> CN["Chờ phiên nghiệm thu<br/>146 việc"] --> GG{"Cổng Giá trị"}
+  GB --> DG["Đã giao<br/>244 việc"]
+  GB --> CN["Chờ phiên nghiệm thu<br/>147 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
 
@@ -180,6 +180,7 @@ flowchart TD
 - LLM đọc toàn bộ chữ S03 ở lớp đề xuất, tự áp loại hình khi trích dẫn có thật và qua luật; ý định, giá, diện tích chỉ đối chiếu; bất đồng lên /ops/review (`s03-llm-doc-toan-bo`)
 - Collector S03 nhận ảnh trên host R2 của người đăng và host đích chuyển hướng của CDN ảnh S03; ảnh JPEG XL được giữ nguyên byte (ZC15, phần host của ZC9) (`s03-media-r2-allowlist`)
 - Bộ nhận loại tin S03 nhận tin bán và tin thuê không ghi chữ «bán/cho thuê» theo tín hiệu chữ, đơn vị giá và bối cảnh nhóm; vẫn loại bài khách tìm nhà; bài đã có loại không đổi (`s03-nhan-loai-tin-rong`)
+- Tải bù ảnh S03 bài cũ sau ZC15 + ZC16 và giữ ảnh đã bù khi nạp lại raw — snapshot bù phase cuối, raw bất biến (ZC20) (`s03-tai-bu-anh-bai-cu`)
 - Vá hẹp bộ đọc tin S03 (diện tích, phòng ngủ, phường theo hướng, số ngữ cảnh, thuê từ 1 tỷ, giá che số, giá không đơn vị) và lưu toà, trục qua phát biểu có sẵn (`s03-va-doc-tin`)
 - check-freshness và /ops đo S05 theo nhịp 2 lượt/tuần: SLO_HOURS.S05 = 96 giờ ở cả hai bản chép, giữ parity với /ops (`s05-slo-theo-lich`)
 - Đường của tin S06 đi tới tin và căn, không rơi giữa chừng (`s06-duong-du-an-len-tin`)
@@ -272,6 +273,7 @@ flowchart TD
 - công tắc thật — mọi đường thu S01, S02, S05, S06 hỏi vòng đời nguồn × đơn vị qua một cổng trước khi gọi nhà cung cấp, hết danh sách cứng, lỗi DB thì dừng (`cong-tac-that`)
 - Trang /ops/people cho người vận hành xem danh bạ Người ở máy thu — người theo nguồn S0x, số tin đã đăng, bí danh, nhãn suy luận chỉ hiển thị (`danh-ba-nguoi-tren-ops`)
 - Trang Danh bạ trên Ops đặt mỗi toà dưới phân khu hiệu lực (cụm S09, rồi phân khu S09, rồi cột gốc) đọc từ view v_toa_nut_vung, và hiện cả gốc lẫn hiệu lực khi hai giá trị khác nhau (`danh-ba-toa-theo-phan-khu-hieu-luc`) — đã giao — máy thông, cửa veto còn mở
+- Lược đồ mẫu của data-api bản công khai không còn tên nguồn thật ngoài tên bảng/cột đã biết — chú thích, dữ liệu mẫu source_registry và tên tệp dưới data-api/db dùng mã S0x (`data-api-don-ten-nguon`)
 - data-api đóng ba đường trả dữ liệu trái luật (HT19) — deals thôi trả nội dung bài S03, coverage và listings/:id thôi đọc bảng S02 (`data-api-dong-ba-route-lo`)
 - data-api đóng khi thiếu khoá (PB3) — môi trường không khai rõ là dev/test mà danh sách khoá API rỗng thì từ chối mọi lời gọi dữ liệu và bản Node không khởi động (`data-api-dong-khi-thieu-khoa`)
 - Dấu lược đồ của bản mẫu DB thử phủ constraint, index, trigger, enum, độ dài kiểu, NOT NULL, DEFAULT, RLS, quyền và schema ngoài public, để bản mẫu dựng lại ngay khi migration đổi những thứ đó (`dau-luoc-do-ban-mau`)
@@ -300,6 +302,7 @@ flowchart TD
 - Mã giao diện của app hết hex thô ngoài thư mục vendor — màu bản đồ dời sang app/src/lib, mặt nạ quét dùng black, giữ đúng từng giá trị màu (`don-hex-tho`)
 - Biểu mẫu theo nhóm chọn đơn vị giá theo Loại tin, hỏi lại khi giá lạ, và thẻ hiện mã để chép (`don-vi-gia-theo-loai-tin`)
 - Đóng băng Stage B của bộ dựng căn và thẻ Ghép căn — không sinh cặp, không gieo thẻ, thẻ chờ không hiện, dữ liệu cũ giữ nguyên (`dong-bang-stage-b-resolve`)
+- Dòng «ca dữ liệu thật» của lượt chấm nêu cả lần đỏ mới nhất trên main khi nó mới hơn lần xanh cuối, và nói rõ khi không đọc được sổ (`dong-du-lieu-that-neu-lan-do-moi-nhat`)
 - Máy đóng theo luật xác định các thẻ «Bổ sung tin» mà mọi đề xuất chờ trùng giá trị tin đang có, ghi lý do từng thẻ, có chạy thử, chạy thật trong một giao dịch và lệnh lùi — tin không đổi (`dong-the-bo-sung-tin-theo-luat`)
 - Mọi tin S03, S05, S06 có chứng cứ dự án được định vị cấp dự án qua một nguồn chung trong DB (view offer_project, migration 105, chỉ máy thu), và ô Định vị của màn chặng cùng bậc B2 của thang dữ liệu đọc đúng nguồn ấy — ô Định vị S03 trên DB máy thu từ 0 lên khoảng 4.934 (`du-an-cua-tin-len-dinh-vi`)
 - dựng sẵn nguyên liệu M2 của design-floor (chưa bật) — lệnh sinh tokens DTCG + danh mục thành phần, skill onehub-ui buộc reuse-plan.md ở S1 (`dung-m2-song-song`)
@@ -314,6 +317,7 @@ flowchart TD
 - Người vận hành đọc mọi mốc giờ trên cổng Ops theo giờ Việt Nam có ghi múi, ngày gom theo giờ Việt Nam, và nguồn quá hạn hiện đúng mức trễ thay vì tuổi bằng SLO (`gio-ops-gio-vn`)
 - 2410-1 — mốc thu captured_at của stg Zalo và Chợ Tốt luôn là giờ thu snapshot, nạp lại không làm sai, có script khôi phục kèm sao lưu (`giu-captured-at`)
 - Ngôn ngữ chuẩn — CONTEXT.md, luật đặt tên, bối cảnh sản phẩm, test slug route (`glossary-context`)
+- Hook nhận tin S03 thôi gọi cổng chấm Kev; watchdog thôi canh :8009; gỡ plist cổng chấm khỏi kho (KEV1, phần làn thu của KV1) (`go-kev-khoi-hook-s03`) — đã giao — không đo, khai ở Cổng Đáng
 - Đọc gộp S03 và nháp nhãn PL35 có thêm đường gọi Haiku thẳng API Anthropic song song Vercel AI Gateway (thứ tự và tự lùi bằng bảng chọn), ghi rõ lỗi nhà cung cấp và dừng sớm khi hết tiền (`goi-thang-anthropic`)
 - Gộp nút phân khu do luật S16 đúc vào nút sẵn có bằng bằng chứng mã căn S16, qua thẻ nối có băm của DA46, đảo được (`gop-nut-trung-ma-can-s16`) — đã giao — máy thông, bằng chứng xanh-sạch
 - probe GS-AC-6 của the-so-gia-tri-song chỉ xét thẻ ghép căn có bên (evidence.<bên>.offer_id là chuỗi), không nhận nhầm thẻ danh bạ DA33 là «tin rời kho» (`gs-ac-6-the-khong-tin-a`) — đã giao — máy thông, cửa veto còn mở
@@ -404,6 +408,7 @@ flowchart TD
 - S05 có đệm cửa sổ thu 5 ngày, khoá nạp không văng hay quay bận, bước thu lỗi có dòng ghim (`s05-khoa-nap`)
 - Kho khớp lịch S06 2 lượt mỗi ngày đã cài trên máy thu — plist chotot trong main mang mốc 05:30 và 14:00, không va lịch job khác (`s06-hai-luot-ngay-gop-main`)
 - bộ thu S06 nhận mã tỉnh params.region bên cạnh region_v2, để bật được vùng mà mã cũ không hoạt động (`s06-region-tinh`)
+- Đưa bộ thu đuôi S06 của làn thu vào main (chỉ mã thu và test, chưa lịch, chưa nạp) (`s06-thu-duoi-do`)
 - Trần trang thu S06 mặc định 210, 403/429 dừng cả lượt không thử lại, kèm số đo chuỗi đêm khi nạp 55 nghìn tin (`s06-tran-trang`)
 - tin S06 của vùng mới (Đà Nẵng, Hải Phòng, Bình Dương đã sáp nhập vào TP.HCM) lên canonical có phường — mã thị trường ngắn một khuôn (migration 064), bước nạp phường và bước chuyển S06 đọc thành phố từ một chỗ ánh xạ thay cho danh sách cứng (`s06-vung-moi-len-canonical`)
 - S08 thu đúng một lượt mỗi tuần theo launchd và có SLO độ tươi 192 giờ (`s08-lich-tuan`)
@@ -424,6 +429,7 @@ flowchart TD
 - snapshot thu thập chỉ hiện ra cho bước nạp khi đã ghi trọn vẹn, nên lượt nạp không bao giờ đánh dấu «đã nạp» một snapshot dở dang (`snapshot-nguyen-tu`)
 - Số ghép S06 không vào danh bạ Người và hiện trên Invest kèm nhãn chưa xác minh — điều kiện trước khi áp 068, migration 070 (`so-ghep-s06-nhan-danh-ba`)
 - Lệnh tạm dừng có hẹn bật lại sai kiểu không còn làm kẹt hàng lệnh, job ops-apply tìm được node dưới launchd, và token máy cấp được từ máy thu qua Management API (`so-lenh-sua-sau-tv4`)
+- Nối dự án S08 vào danh bạ qua một thẻ luật theo nguồn (nối nút có sẵn, đúc nút ứng viên, từ chối có lý do), đảo được, màn Ops đếm được (`soat-noi-s08-danh-ba`)
 - ZC1 — hai tin chỉ có ảnh cùng nhóm cùng thời điểm đều vào raw với sourceId khác nhau (`sourceid-tin-anh`)
 - Danh mục cấp dự án của S08 (địa chỉ, chủ đầu tư, điểm toạ độ, hình thức sở hữu, loại hình) nằm trong stg_s08_project, nạp lại không nhân dòng (`stg-du-an-s08`)
 - Bảng staging stg_s08_inventory cho danh mục căn S08 (migration 040) (`stg-s08-inventory`)
