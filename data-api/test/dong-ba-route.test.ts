@@ -77,6 +77,9 @@ function moiKhoa(v: unknown, ra = new Set<string>()): Set<string> {
   return ra;
 }
 const coBang = (cau: string[], ...bang: string[]) => cau.filter((c) => bang.some((b) => c.includes(b)));
+// Tên bảng nguồn để trong chuỗi nháy đơn đúng bằng định danh đã biết (lưới PB5, scripts/data-api-ten-nguon.mjs).
+const BANG_BAI_S03 = 'stg_zalo_posts';
+const TIEN_TO_S02 = 'airdna_listings'.slice(0, -"listings".length);
 function chot(loi: string[]) {
   assert.equal(loi.length, 0, loi.join(" | "));
 }
@@ -175,14 +178,14 @@ test("DRL-AC-1 deals không trả nội dung bài S03", async () => {
   chot(loi);
 });
 
-test("DRL-AC-2 deals không đọc stg_zalo_posts ở hai nhánh", async () => {
+test("DRL-AC-2 deals không đọc bảng bài S03 ở hai nhánh", async () => {
   const loi: string[] = [];
 
   // Nhánh có bảng hạng.
   const hang = await goi(`/v1/deals?area=${ID.phuong}`);
   assert.equal(hang.status, 200);
   if (!hang.sql.some((c) => c.includes("FROM sale_offers"))) loi.push("DRL bộ ghi SQL không bắt được câu nào (nhánh bảng hạng)");
-  if (coBang(hang.sql, "stg_zalo_posts").length) loi.push("DRL deals đọc stg_zalo_posts (nhánh bảng hạng)");
+  if (coBang(hang.sql, BANG_BAI_S03).length) loi.push("DRL deals đọc bảng bài S03 (nhánh bảng hạng)");
 
   // Nhánh thước CG8: bảng hạng rỗng → route lùi về v_ruler_p2.
   await sql(`DELETE FROM offer_price_rank`);
@@ -190,7 +193,7 @@ test("DRL-AC-2 deals không đọc stg_zalo_posts ở hai nhánh", async () => {
     const cg8 = await goi(`/v1/deals?area=${ID.phuong}`);
     assert.equal(cg8.status, 200);
     if (!cg8.sql.some((c) => c.includes("v_ruler_p2"))) loi.push("DRL bộ ghi SQL không bắt được câu nào (nhánh CG8)");
-    if (coBang(cg8.sql, "stg_zalo_posts").length) loi.push("DRL deals đọc stg_zalo_posts (nhánh CG8)");
+    if (coBang(cg8.sql, BANG_BAI_S03).length) loi.push("DRL deals đọc bảng bài S03 (nhánh CG8)");
     const tin = (cg8.than.data as Record<string, unknown>[]).find((d) => d.offerId === ID.tinCanh);
     if (!tin) loi.push("DRL deals CG8 đổi hình: thiếu tin canh");
     else {
@@ -238,7 +241,7 @@ test("DRL-AC-3 coverage không đọc S02", async () => {
   for (const c of [CANH.soS02, CANH.kyS02]) if (r.vanBan.includes(c)) loi.push(`DRL coverage lộ chuỗi canh: ${c}`);
 
   if (r.sql.length === 0) loi.push("DRL bộ ghi SQL không bắt được câu nào (coverage)");
-  if (coBang(r.sql, "airdna_", "area_sources").length) loi.push("DRL coverage đọc bảng S02");
+  if (coBang(r.sql, TIEN_TO_S02, "area_sources").length) loi.push("DRL coverage đọc bảng S02");
   chot(loi);
 });
 
@@ -267,7 +270,7 @@ test("DRL-AC-4 listings/:id không đọc S02", async () => {
   }
   const moiCau = [...khongAnh.sql, ...coAnh.sql, ...khongCo.sql];
   if (moiCau.length === 0) loi.push("DRL bộ ghi SQL không bắt được câu nào (listings/:id)");
-  if (coBang(moiCau, "airdna_").length) loi.push("DRL listings/:id đọc bảng S02");
+  if (coBang(moiCau, TIEN_TO_S02).length) loi.push("DRL listings/:id đọc bảng S02");
   chot([...new Set(loi)]);
 });
 
