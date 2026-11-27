@@ -6,8 +6,12 @@
 //      `mot_loi_khai` (Hỏi-3) với nút vùng = cụm/phân khu, khớp từ hai → thẻ review_queue entity_match, không ghi toà nào.
 // Toà S08 giữ region_node_id (082 chỉ thêm); nút vùng hiệu lực qua view v_toa_nut_vung (097). DB chưa áp 097 hay khu không
 // có dòng S09 → bỏ qua có in lý do. Không in mã nguồn ra stdout.
-import { moiKhoa, upiToa } from "./danh-ba-vat-the.mjs";
+import { chuanHoaTenToa, moiKhoa, upiToa } from "./danh-ba-vat-the.mjs";
+import { DUONG, MA_DU_AN, MA_TOA, lechTangS16, phanLopDuAn, xetToa } from "./s09-danh-ba-can.mjs";
+import { NOI_DU_AN_S16 } from "./s16-danh-muc.mjs";
+import { createHash } from "node:crypto";
 import { NGUON_S09, NOI_KHU_S09, cumS09, khoaTenS09, tienToCum, toaS09 } from "./s09-du-an.mjs";
+const khoaTen = khoaTenS09;
 
 const thuong = (s) => String(s ?? "").normalize("NFC").trim().toLowerCase();
 const slugify = (s) => String(s).normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/gi, "d").toLowerCase()
@@ -169,6 +173,275 @@ export async function buocS09(c, { khu, isoKhu, noi = NOI_KHU_S09, log = console
         { khu: slug, ten_chuan: m.ten_chuan, sector_ids: m.sector_ids, block_ids: m.block_ids, ly_do: "cung-ten-khac-phan-khu" });
     }
     ra.khu[slug] = tk;
+  }
+  return ra;
+}
+
+// =====================================================================================================================
+// DA42 nap-s09-toa-tang-vao-danh-ba: bước S09 gói 1 (bảng stg_s09_danh_ba của 115). Chạy sau buocS09 (DA31) và trước buocS16
+// trong cùng giao dịch của dung(); không phụ thuộc danh sách khu: xét mọi dự án trong danh mục gói 1 mới nhất.
+//   1. dự án → bốn đường (phanLopDuAn): đã nối · thẻ luật nguồn S09 · thẻ từng cặp · nút ứng viên `mot_loi_khai`;
+//      trạng thái ghi vào project_links (migration 100), nút ứng viên nhận bí danh node:<id> `danh-ba-du-an/<id>`;
+//   2. toà của dự án đã nối (xetToa): bí danh `danh-ba-toa/<id>` + tên · thẻ · toà mới `mot_loi_khai` gắn nút dự án;
+//      toà trùng tên với toà S16 (đã dựng hay mới ở stg) so số tầng — lệch thì thẻ, 0 bí danh, toà S09 đúc riêng.
+// Không đổi cột gốc toà có sẵn, không xoá, không gộp, không tạo căn. Không in mã nguồn ra stdout.
+
+/** Mã thẻ cặp toà S09 lệch tầng với S16: cùng một mã dù bước S09 hay bước S16 phát hiện (AC-8). */
+export const theLechTangS16 = (toaId) => `s09-toa-lech-s16:${toaId}`;
+
+/**
+ * Chuông báo tới khi DA57 gộp (giám sát 22/11): số toà S09 gói 1 còn mang bí danh TÊN mà đã có thẻ lệch tầng với toà S16 cùng tên.
+ * Thẻ lệch chỉ phát khi đã phát hiện lệch, nên sau bản sửa cờ lechTang con số này chỉ khác 0 khi S16 về SAU lượt dựng S09 (toà
+ * S09 đúc trước khi biết lệch giữ tên của nó — lượt sau có thể gắn nhầm theo tên). Chỉ đọc. Lệnh: pipeline/scripts/danh-ba-s09-chuong-ten-lech.mjs.
+ */
+export const SQL_CHUONG_TEN_LECH = `
+SELECT count(DISTINCT m.object_key)::int AS so_toa
+  FROM registry_aliases m
+  JOIN registry_aliases t ON t.object_key = m.object_key AND t.kind = 'ten' AND t.retired_at IS NULL
+  JOIN review_queue q ON q.item_type = 'entity_match' AND q.item_id = 's09-toa-lech-s16:' || substring(m.value FROM 13)
+ WHERE m.source = 'S09' AND m.kind = 'ma_nguon' AND m.retired_at IS NULL AND m.value LIKE 'danh-ba-toa/%'`;
+
+/** Tầng có căn của toà S16 theo tên chuẩn trong các dự án S16 của nút: `{ so, ten }` (số tầng, tên các tầng có căn) — đọc stg,
+ * không phụ thuộc đã dựng hay chưa. */
+export async function soTangS16TheoTen(c, nodeSlug, noiS16 = NOI_DU_AN_S16) {
+  const duAn = Object.entries(noiS16).filter(([, s]) => s === nodeSlug).map(([d]) => d);
+  const ra = new Map();
+  if (!duAn.length || !(await c.query("SELECT to_regclass('public.v_s16_can') AS t")).rows[0].t) return ra;
+  const { rows } = await c.query(
+    "SELECT toa_ten, array_agg(DISTINCT tang::text) AS ds FROM v_s16_can WHERE du_an = ANY($1) AND NOT COALESCE(mo_ho, false) AND tang IS NOT NULL GROUP BY 1",
+    [duAn]);
+  for (const r of rows) {
+    const k = chuanHoaTenToa(r.toa_ten);
+    const ten = new Set([...(ra.get(k)?.ten ?? []), ...(r.ds ?? [])]);
+    ra.set(k, { so: ten.size, ten });
+  }
+  return ra;
+}
+
+/** Số tầng và tên tầng S09 của các toà mang bí danh gói 1, theo building_key (bước S16 tra trước khi gắn toà S09). */
+export async function soTangS09TheoToa(c, buildingKeys) {
+  const ra = new Map();
+  if (!buildingKeys.length || !(await c.query("SELECT to_regclass('public.v_s09_db_tang') AS t")).rows[0].t) return ra;
+  const { rows } = await c.query(
+    `SELECT a.object_key, substring(a.value FROM 13) AS toa_id, (SELECT count(*)::int FROM v_s09_db_tang f WHERE f.toa_id = substring(a.value FROM 13)) AS n,
+            (SELECT array_agg(f.tang_ten ORDER BY f.thu_tu) FROM v_s09_db_tang f WHERE f.toa_id = substring(a.value FROM 13)) AS tang
+       FROM registry_aliases a
+      WHERE a.retired_at IS NULL AND a.source = $1 AND a.kind = 'ma_nguon' AND a.value LIKE 'danh-ba-toa/%' AND a.object_key = ANY($2)`,
+    [NGUON_S09, buildingKeys]);
+  for (const r of rows) ra.set(r.object_key, { toa_id: r.toa_id, so_tang: r.n, tang: r.tang ?? [] });
+  return ra;
+}
+
+/** Thẻ entity_match một lần mỗi mã (mọi trạng thái), mã giữ nguyên văn — bước S16 dùng cho thẻ lệch tầng chung. */
+export async function theMuc(c, itemId, title, evidence) {
+  const r = await c.query(
+    `INSERT INTO review_queue (item_type, item_id, title, evidence)
+     SELECT 'entity_match', $1, $2, $3::jsonb
+      WHERE NOT EXISTS (SELECT 1 FROM review_queue WHERE item_type = 'entity_match' AND item_id = $1)`,
+    [itemId, title, JSON.stringify(evidence)]);
+  return r.rowCount;
+}
+
+/**
+ * DB đã áp 115 (bảng stg + view) và 125 (view dự án đọc province_code) chưa. Trả true, hoặc số migration còn thiếu.
+ * 125 không thêm đối tượng mới nên nhận biết bằng định nghĩa view.
+ * @returns {Promise<true|"115"|"125">}
+ */
+export async function daAp115Va125(c) {
+  const { rows: [r] } = await c.query(
+    `SELECT to_regclass('public.stg_s09_danh_ba') IS NOT NULL AND to_regclass('public.v_s09_db_toa') IS NOT NULL
+            AND to_regclass('public.v_s09_db_tang') IS NOT NULL AND to_regclass('public.v_s09_db_du_an') IS NOT NULL AS c115,
+            COALESCE(pg_get_viewdef(to_regclass('public.v_s09_db_du_an')) LIKE '%province_code%', false) AS c125`);
+  if (!r.c115) return "115";
+  if (!r.c125) return "125";
+  return true;
+}
+
+/**
+ * @param {import("pg").Client} c — trong giao dịch của dung()
+ * @param {{ noi?: Record<string,string>, noiS16?: Record<string,string>, log?: (s:string)=>void, taoKhoa?: (t:string)=>string }} o
+ *   noi: dự án S09 đã nối bằng tay (mã dự án → slug nút) — cùng bảng NOI_KHU_S09 của DA31.
+ */
+export async function buocS09DanhBa(c, { noi = NOI_KHU_S09, noiS16 = NOI_DU_AN_S16, log = console.log, taoKhoa = (t) => moiKhoa(t) } = {}) {
+  // Gộp khác áp (kế hoạch §2, T3b): launchd chạy mã từ main, nên lượt dựng đêm có thể tới trước khi DB máy thu áp 115 + 125.
+  // Thiếu một trong hai thì bỏ bước S09 gói 1, ghi một dòng, các bước khác của lượt dựng chạy như cũ.
+  const ap = await daAp115Va125(c);
+  if (ap !== true) {
+    log(`danh-ba-vat-the: S09 gói 1 bỏ qua — DB chưa áp ${ap}`);
+    return { bo_qua: `chua-ap-${ap}` };
+  }
+  const { rows: duAn } = await c.query("SELECT du_an_id, ten, ma_tinh FROM v_s09_db_du_an ORDER BY 1");
+  if (!duAn.length) { log("danh-ba-vat-the: S09 gói 1 bỏ qua — chưa có danh mục"); return { bo_qua: "chua-co-danh-muc" }; }
+  // Toà của dự án ngoài danh mục gói 1 có trong view nhưng không bao giờ được xét: các vòng dưới chỉ đi qua dự án trong danh mục.
+  const { rows: toaRows } = await c.query(
+    `SELECT t.du_an_id, t.toa_id, t.toa_ten, t.thu_tu, (SELECT count(*)::int FROM v_s09_db_tang f WHERE f.toa_id = t.toa_id) AS so_tang,
+            (SELECT array_agg(f.tang_ten ORDER BY f.thu_tu) FROM v_s09_db_tang f WHERE f.toa_id = t.toa_id) AS tang
+       FROM v_s09_db_toa t ORDER BY t.du_an_id, t.thu_tu`);
+  const toaTheoDuAn = new Map();
+  for (const r of toaRows) toaTheoDuAn.set(r.du_an_id, [...(toaTheoDuAn.get(r.du_an_id) ?? []), { toa_id: r.toa_id, ten: r.toa_ten, so_tang: r.so_tang, tang: r.tang ?? [] }]);
+
+  const { rows: iso } = await c.query("SELECT admin_code, iso_region FROM iso_regions").catch(() => ({ rows: [] }));
+  const isoTheoMa = new Map(iso.map((r) => [r.admin_code, r.iso_region]));
+  const { rows: nutRows } = await c.query("SELECT id::int AS id, name, aliases, slug FROM asset_nodes WHERE node_type = 'project'");
+  const nutTheoSlug = new Map(nutRows.map((n) => [n.slug, n]));
+  const noiCung = new Map(Object.entries(noi).filter(([, s]) => nutTheoSlug.has(s)).map(([p, s]) => [p, nutTheoSlug.get(s).id]));
+  const { rows: linkRows } = await c.query(
+    `SELECT l.source_project_id, l.status, l.asset_node_id::int AS asset_node_id,
+            EXISTS (SELECT 1 FROM registry_aliases a WHERE a.object_key = 'node:' || l.asset_node_id AND a.source = $1
+                      AND a.kind = 'ma_nguon' AND a.value = 'danh-ba-du-an/' || l.source_project_id AND a.retired_at IS NULL) AS la_ung_vien
+       FROM project_links l WHERE l.source = $1`, [NGUON_S09]);
+  const link = new Map(linkRows.map((r) => [r.source_project_id, r]));
+  const ungVienS09 = new Set(linkRows.filter((r) => r.la_ung_vien).map((r) => r.asset_node_id));
+  const nutSoKhop = nutRows.filter((n) => !ungVienS09.has(n.id));
+  const { rows: luat } = await c.query(
+    "SELECT id::int AS id FROM project_link_rules WHERE source = $1 AND dao_at IS NULL ORDER BY id DESC LIMIT 1", [NGUON_S09]);
+  const luatId = luat[0]?.id ?? null;
+  const { rows: theRows } = await c.query(
+    "SELECT item_id, status, evidence, decision_note FROM review_queue WHERE item_type = 'entity_match' AND item_id LIKE 's09-du-an:%'");
+  const theCap = new Map(theRows.map((r) => {
+    const ung = r.evidence?.ung_vien_cua ?? [];
+    const chon = /node:(\d+)/.exec(r.decision_note ?? "")?.[1];
+    return [r.item_id.slice("s09-du-an:".length), { status: r.status, node_id: chon ? Number(chon) : (ung.length === 1 ? ung[0] : null) }];
+  }));
+
+  const ra = { du_an: { da_noi: 0, the_luat_cho: 0, the_luat_noi: 0, the_cap_cho: 0, the_cap_noi: 0, ung_vien_moi: 0, ung_vien_giu: 0 },
+    toa: { da_noi: 0, bi_danh: 0, theo_ma_cu: 0, tao_moi: 0, the: 0, khong_so: 0, lech_tang_tao_rieng: 0, thuoc_du_an_chua_noi: 0, khong_iso: 0 },
+    the_moi: 0, the_luat: [] };
+  const datLink = async (pid, status, nodeId, lyDo, canCu) => c.query(
+    `INSERT INTO project_links (source, source_project_id, asset_node_id, status, can_cu, ly_do, rule_id, updated_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, now())
+     ON CONFLICT (source, source_project_id) DO UPDATE SET asset_node_id = EXCLUDED.asset_node_id, status = EXCLUDED.status,
+       can_cu = EXCLUDED.can_cu, ly_do = EXCLUDED.ly_do, rule_id = EXCLUDED.rule_id, updated_at = now()
+     WHERE (project_links.asset_node_id, project_links.status, project_links.ly_do, project_links.rule_id)
+           IS DISTINCT FROM (EXCLUDED.asset_node_id, EXCLUDED.status, EXCLUDED.ly_do, EXCLUDED.rule_id)`,
+    [NGUON_S09, pid, nodeId, status, canCu, lyDo, status === "noi" && canCu === "the-luat" ? luatId : null]);
+
+  const daNoi = []; // { du_an_id, node_id, iso }
+  for (const da of duAn) {
+    const kq = phanLopDuAn(da, nutSoKhop, { noiCung, link: link.get(da.du_an_id) ?? null, luatDuyet: luatId != null, theCap: theCap.get(da.du_an_id) ?? null });
+    const so = (toaTheoDuAn.get(da.du_an_id) ?? []).length;
+    if (kq.duong === DUONG.daNoi) {
+      ra.du_an.da_noi++;
+      await datLink(da.du_an_id, "noi", kq.node_id, null, "noi-tay");
+    } else if (kq.duong === DUONG.theLuat) {
+      ra.the_luat.push({ du_an_id: da.du_an_id, node_id: kq.node_id });
+      if (kq.noi) { ra.du_an.the_luat_noi++; await datLink(da.du_an_id, "noi", kq.node_id, null, "the-luat"); }
+      else { ra.du_an.the_luat_cho++; ra.toa.thuoc_du_an_chua_noi += so; await datLink(da.du_an_id, "chua_noi", null, kq.ly_do, null); }
+    } else if (kq.duong === DUONG.theCap) {
+      if (kq.noi) { ra.du_an.the_cap_noi++; await datLink(da.du_an_id, "noi", kq.node_id, null, "the-cap"); }
+      else {
+        ra.du_an.the_cap_cho++; ra.toa.thuoc_du_an_chua_noi += so;
+        ra.the_moi += await theMuc(c, `s09-du-an:${da.du_an_id}`, "S09: dự án gần giống dự án có sẵn",
+          { loai: "du-an-gan-giong", ung_vien_cua: kq.ung_vien_cua, so_toa: so });
+        await datLink(da.du_an_id, "chua_noi", null, kq.ly_do, null);
+      }
+    } else {
+      let nodeId = kq.node_id;
+      if (nodeId == null) {
+        const { rows } = await c.query(
+          `INSERT INTO asset_nodes (node_type, name, slug, aliases, area_ids, catalog_tier, meta)
+           VALUES ('project', $1, $2, ARRAY[lower($1)], '{}', 'mot_loi_khai', $3::jsonb) RETURNING id::int AS id`,
+          [String(da.ten).trim(), `s09-${slugify(da.ten)}-${da.du_an_id.slice(0, 8)}`, JSON.stringify({ nguon_ung_vien: NGUON_S09 })]);
+        nodeId = rows[0].id;
+        await c.query("INSERT INTO registry_aliases (object_key, kind, value, source) VALUES ($1, 'ma_nguon', $2, $3)",
+          [`node:${nodeId}`, MA_DU_AN(da.du_an_id), NGUON_S09]);
+        ra.du_an.ung_vien_moi++;
+      } else ra.du_an.ung_vien_giu++;
+      await datLink(da.du_an_id, "noi", nodeId, null, "ung-vien");
+      kq.node_id = nodeId;
+    }
+    if (kq.noi) daNoi.push({ du_an_id: da.du_an_id, node_id: kq.node_id, iso: isoTheoMa.get(da.ma_tinh) ?? null });
+  }
+  // Thẻ luật theo nguồn (mục 44 Hỏi-1): một thẻ cho cả tập dự án trùng tên đúng một nút; băm mẫu đổi thì thẻ mới.
+  if (ra.the_luat.length && luatId == null) {
+    const mau = ra.the_luat.map((x) => `${x.du_an_id}>${x.node_id}`).sort().join("\n");
+    const bam = createHash("sha256").update(mau).digest("hex");
+    ra.the_moi += await theMuc(c, `s09-luat-du-an:${bam.slice(0, 16)}`, `S09: thẻ luật nối ${ra.the_luat.length} dự án trùng tên đúng một dự án có sẵn`,
+      { loai: "the-luat-du-an", mau_bam: bam, so_ma: ra.the_luat.length, cap: ra.the_luat });
+  }
+
+  // ---- Toà ----
+  const { rows: mn } = await c.query(
+    "SELECT value, object_key FROM registry_aliases WHERE retired_at IS NULL AND kind = 'ma_nguon' AND source = $1 AND value LIKE 'danh-ba-toa/%'", [NGUON_S09]);
+  const maMoi = new Map(mn.map((r) => [r.value, r.object_key]));
+  const nutTheoId = new Map(nutRows.map((n) => [n.id, n]));
+  for (const d of daNoi) {
+    const ds = toaTheoDuAn.get(d.du_an_id) ?? [];
+    if (!ds.length) continue;
+    const { rows: toaKhu } = await c.query(
+      `SELECT b.building_key,
+              array_remove(array_agg(DISTINCT a.value) FILTER (WHERE a.kind = 'ten'), NULL) AS ten,
+              bool_or(a.source = $2 AND a.kind = 'ma_nguon' AND a.value NOT LIKE 'danh-ba-toa/%') AS ma_cu,
+              array_remove(array_agg(DISTINCT a.value) FILTER (WHERE a.source = $2 AND a.kind = 'ma_nguon' AND a.value NOT LIKE 'danh-ba-toa/%'), NULL) AS ma_cu_ds,
+              bool_or(a.source = 'S16' AND a.kind = 'ma_nguon') AS s16
+         FROM buildings b
+         JOIN asset_nodes n ON n.id = b.region_node_id
+         LEFT JOIN asset_nodes p ON p.id = n.parent_id
+         LEFT JOIN asset_nodes g ON g.id = p.parent_id
+         LEFT JOIN registry_aliases a ON a.object_key = b.building_key AND a.retired_at IS NULL
+        WHERE b.status = 'active' AND $1 IN (n.id, p.id, g.id)
+        GROUP BY b.building_key`, [d.node_id, NGUON_S09]);
+    const tangS16 = await soTangS16TheoTen(c, nutTheoId.get(d.node_id)?.slug, noiS16);
+    const toaCo = toaKhu.map((b) => ({ building_key: b.building_key, ten: b.ten ?? [], ma_cu: !!b.ma_cu, ma_cu_ds: b.ma_cu_ds ?? [], s16: !!b.s16,
+      ...(() => {
+        const s = b.s16 ? ((b.ten ?? []).map((t) => tangS16.get(chuanHoaTenToa(t))).find((x) => x != null) ?? null) : null;
+        return { so_tang_s16: s?.so ?? null, tang_s16: s ? [...s.ten] : null };
+      })() }));
+    for (const x of xetToa(ds, toaCo, maMoi)) {
+      const t = ds.find((y) => y.toa_id === x.toa_id);
+      if (x.loai === "da_noi") { ra.toa.da_noi++; continue; }
+      if (x.loai === "bi_danh") {
+        await c.query("INSERT INTO registry_aliases (object_key, kind, value, source) VALUES ($1, 'ma_nguon', $2, $3)", [x.building_key, MA_TOA(x.toa_id), NGUON_S09]);
+        // Nhánh mã cũ chỉ gắn bí danh MÃ: căn cứ là mã block, không phải tên (toà mang mã cũ đã có tên của nó).
+        if (!x.theo_ma_cu) {
+          await c.query(`INSERT INTO registry_aliases (object_key, kind, value, source) VALUES ($1, 'ten', $2, $3)
+                         ON CONFLICT (object_key, kind, value) WHERE kind = 'ten' DO NOTHING`, [x.building_key, x.ten_chuan, NGUON_S09]);
+        }
+        maMoi.set(MA_TOA(x.toa_id), x.building_key);
+        ra.toa.bi_danh++; if (x.khong_so) ra.toa.khong_so++; if (x.theo_ma_cu) ra.toa.theo_ma_cu++;
+        continue;
+      }
+      let taoRieng = x.loai === "tao_moi";
+      let lechTang = false; // toà đúc riêng vì lệch tầng với toà S16 cùng tên (đã dựng hay còn ở stg): không mang tên làm bí danh
+      if (x.loai === "the") {
+        if (x.ly_do === "lech-tang-s16") {
+          ra.the_moi += await theMuc(c, theLechTangS16(x.toa_id), "S09: toà cùng tên với toà S16 nhưng lệch tầng",
+            { loai: "toa-lech-tang-s16", so_tang_s09: t.so_tang, building_keys: x.building_keys });
+          ra.toa.lech_tang_tao_rieng++;
+          lechTang = true;
+          taoRieng = true; // có thể là hai toà thật cùng tên: 0 bí danh, toà S09 đúc riêng (giống thứ tự S09 trước rồi S16)
+        } else {
+          ra.the_moi += await theMuc(c, `s09-toa-db:${d.du_an_id}/${x.ten_chuan || x.toa_id}`, `S09: toà ${x.ly_do}`,
+            { loai: `toa-${x.ly_do}`, building_keys: x.building_keys ?? [], toa_ids: ds.filter((y) => khoaTen(y.ten) === x.ten_chuan).map((y) => y.toa_id) });
+          ra.toa.the++;
+          continue;
+        }
+      } else {
+        // Toà mới trùng tên với toà S16 còn ở stg (chưa dựng): so tầng ngay, để thứ tự S09 trước hay S16 trước cho cùng thẻ.
+        const lech = lechTangS16({ so: t.so_tang, ten: t.tang }, tangS16.get(chuanHoaTenToa(x.ten_chuan)) ?? null);
+        if (lech === true) {
+          ra.the_moi += await theMuc(c, theLechTangS16(x.toa_id), "S09: toà cùng tên với toà S16 nhưng lệch tầng",
+            { loai: "toa-lech-tang-s16", so_tang_s09: t.so_tang, building_keys: [] });
+          ra.toa.lech_tang_tao_rieng++;
+          lechTang = true;
+        }
+      }
+      if (taoRieng) {
+        if (!d.iso) { ra.toa.khong_iso++; continue; }
+        const key = taoKhoa("bld");
+        await c.query(`INSERT INTO buildings (building_key, region_node_id, upi, iso_region, catalog_tier) VALUES ($1, $2, $3, $4, 'mot_loi_khai')`,
+          [key, d.node_id, upiToa(d.iso, key), d.iso]);
+        await c.query("INSERT INTO registry_aliases (object_key, kind, value, source) VALUES ($1, 'ma_nguon', $2, $3)", [key, MA_TOA(x.toa_id), NGUON_S09]);
+        // Toà lệch tầng không mang tên làm bí danh: không để bước S16 hay lượt sau gắn nhầm theo tên — cả khi S09 dựng trước và
+        // phát hiện lệch với toà S16 còn ở stg (E8: thiếu điều này thì hai thứ tự nguồn ra khác bí danh tên).
+        if (!lechTang && x.loai !== "the") {
+          await c.query(`INSERT INTO registry_aliases (object_key, kind, value, source) VALUES ($1, 'ten', $2, $3)
+                         ON CONFLICT (object_key, kind, value) WHERE kind = 'ten' DO NOTHING`, [key, x.ten_chuan, NGUON_S09]);
+        }
+        maMoi.set(MA_TOA(x.toa_id), key);
+        ra.toa.tao_moi++;
+      }
+    }
   }
   return ra;
 }
