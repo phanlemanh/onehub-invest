@@ -8,7 +8,7 @@
 // Tệp dist gọi bằng VAI, tìm theo chữ ký xuất (không ghi tên tệp vào phép đo):
 //   boThu = tệp xuất docExpAppToken · phien = tệp xuất docPhienTuProfile · cli = dist/cli.js.
 //   node _acceptance/s02-cua-api/probes/chay-test-dot-bien.mjs <doc-phien|tra-doi-token|bo-thu>
-import { cpSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -93,7 +93,13 @@ const chayTest = (gocDist, tepTest) => {
   return { dat, do: do_, roi: r.status };
 };
 
-for (const f of readdirSync(join(ROOT, "collector")).filter((x) => x.startsWith(".s02-dot-bien-"))) rmSync(join(ROOT, "collector", f), { recursive: true, force: true });
+// Dọn thư mục tạm SÓT của lượt trước (quá 3 giờ). KHÔNG xoá thư mục mới: ba nhóm (doc-phien, tra-doi-token, bo-thu) chạy
+// song song trong lượt chấm, xoá hết lúc khởi là xoá bản chép của nhóm đang chạy (vòng 1 M5 27/11: bản đối chứng bo-thu thêm 1 ca đỏ).
+const SOT_MS = 3 * 3600_000;
+for (const f of readdirSync(join(ROOT, "collector")).filter((x) => x.startsWith(".s02-dot-bien-"))) {
+  const p = join(ROOT, "collector", f);
+  if (Date.now() - statSync(p).mtimeMs > SOT_MS) rmSync(p, { recursive: true, force: true });
+}
 let loi = 0;
 const tam = mkdtempSync(join(ROOT, "collector", ".s02-dot-bien-"));
 try {
@@ -113,7 +119,7 @@ try {
     const chep = join(tam, "doi-chung");
     cpSync(DIST, chep, { recursive: true });
     const chung = chayTest(chep, bo.tepTest);
-    console.log(`đạt: bản đối chứng (chép, không đổi) · ${chung.dat} ca đạt, ${chung.do.size} ca đỏ sẵn do chép${chung.do.size ? ` (ca đầu: ${[...chung.do][0]})` : ""}`);
+    console.log(`đạt: bản đối chứng (chép, không đổi) · ${chung.dat} ca đạt, ${chung.do.size} ca đỏ sẵn do chép${chung.do.size ? ` (${[...chung.do].join(" | ")})` : ""}`);
     // ---- các bản đột biến
     for (const [ten, vaiTen, tim, thayThe] of bo.dotBien) {
       const goc = readFileSync(join(DIST, vai[vaiTen]), "utf8");
