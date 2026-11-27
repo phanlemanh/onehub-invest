@@ -314,7 +314,7 @@ test("PB3-AC-5 index.ts không khởi động khi thiếu khoá", async () => {
   }
 
   const caDoiChung: { ten: string; env: EnvCa }[] = [
-    { ten: "production có khoá", env: { NODE_ENV: "production", DATA_API_KEYS: `${CANH}-khoi-dong` } },
+    { ten: "production có khoá", env: { NODE_ENV: "production", DATA_API_KEYS: `${CANH}-khoi-dong`, LISTING_KEY_SECRET: "khoa-thu-pb3-pb2-KHONG-DUNG-THAT" } }, // PB2: môi trường đóng còn đòi khoá bí mật của listingKey
     { ten: "development không khoá", env: { NODE_ENV: "development" } },
   ];
   for (const ca of caDoiChung) {
