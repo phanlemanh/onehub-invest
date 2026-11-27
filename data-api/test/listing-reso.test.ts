@@ -2,7 +2,7 @@
  * PB2 (data-api-hop-dong-reso-dd-2-1) — /v1/listings theo RESO DD 2.1, căn giá tốt là bộ lọc, price-stats, đường 410.
  *
  * Chạy trên DB thử có lược đồ thật:
- *   bash db/db-thu.sh oneinvest_suite_dapi_reso --chay sh -c 'cd data-api && node --import tsx --test test/listings-reso.test.ts'
+ *   bash db/db-thu.sh oneinvest_suite_dapi_reso --chay sh -c 'cd data-api && node --import tsx --test test/listing-reso.test.ts'
  * Dòng cấy ở một thị trường + phường riêng (khoá mang hạt PB2_HAT để chạy lặp trên cùng DB). Thông điệp ghim:
  * «PB2 <đường> sai tập khoá: <khoá>», «PB2 <đường> sai giá trị <khoá>», «PB2-AC-n …».
  */
@@ -60,7 +60,7 @@ const theoKhoa = (data: any[], k: string) => data.find((d) => d.listingKey === k
 // Ma trận loại hình design §3 — viết trước, số ca = số ô.
 const MA_TRAN: [string, string | null, string | null, string | null][] = [
   ["sale", "apartment", "Residential", "Condominium"], ["sale", "house", "Residential", null], ["sale", "land", "Land", "Unimproved Land"],
-  ["sale", "commercial", "Commercial Sale", null], ["sale", "room", null, null], ["sale", "unknown", null, null], ["sale", null, null, null],
+  ["sale", "commercial", "Commercial Sale", null], ["sale", "room", "Residential", "Room"], ["sale", "unknown", null, null], ["sale", null, null, null],
   ["rent_lt", "apartment", "Residential Lease", "Condominium"], ["rent_lt", "house", "Residential Lease", null], ["rent_lt", "land", null, null],
   ["rent_lt", "commercial", "Commercial Lease", null], ["rent_lt", "room", "Residential Lease", "Room"], ["rent_lt", "unknown", null, null], ["rent_lt", null, null, null],
 ];

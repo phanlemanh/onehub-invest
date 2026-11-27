@@ -71,7 +71,7 @@ const BANG_LOAI_HINH: Readonly<Record<string, readonly [string | null, string | 
   house: ["Residential", "Residential Lease", null, null], // Townhouse / Single Family Residence chưa phân biệt (khung §7, Q7)
   land: ["Land", null, "Unimproved Land", null],
   commercial: ["Commercial Sale", "Commercial Lease", null, null],
-  room: [null, "Residential Lease", null, "Room"], // Room: giá trị local, đã khai từ migration 025
+  room: ["Residential", "Residential Lease", "Room", "Room"], // Room: giá trị local, đã khai từ migration 025; sale × room thêm sau Cổng 1 (sổ d-20261127T095403Z-30)
 };
 
 export function loaiHinh(kind: string, loai: string | null): LoaiHinh {

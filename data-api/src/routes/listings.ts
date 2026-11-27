@@ -180,7 +180,6 @@ async function dungTrang(rows: Dong[]) {
 
 listingsRoute.get("/", async (c) => {
   const secret = listingKeySecret();
-  if (!secret) return loi(c, 503, "LISTING_KEY_NOT_CONFIGURED", "listingKey secret is not configured");
   const rawKind = c.req.query("kind");
   if (rawKind !== undefined && !(KIND as readonly string[]).includes(rawKind)) {
     return loi(c, 400, "BAD_REQUEST", "kind phải là sale, rent_lt hoặc rent_st");
@@ -203,6 +202,8 @@ listingsRoute.get("/", async (c) => {
   const kindsXem = (rawKind ? [rawKind] : [...KIND]) as Kind[];
   const giaTotMode = rawMin !== undefined || rawProject !== undefined;
   const coNganHan = !giaTotMode && kindsXem.includes("rent_st");
+  // Khoá bí mật chỉ cần khi trả tin ngắn hạn (listingKey HMAC); căn giá tốt và tin bán/thuê dài hạn không cần.
+  if (coNganHan && !secret) return loi(c, 503, "LISTING_KEY_NOT_CONFIGURED", "listingKey secret is not configured");
   // Khoá bí mật chỉ vào câu khi tập ghép có nhánh ngắn hạn (tham số không dùng là lỗi kiểu của Postgres).
   const params: unknown[] = coNganHan ? [secret] : [];
   const loc: string[] = [];

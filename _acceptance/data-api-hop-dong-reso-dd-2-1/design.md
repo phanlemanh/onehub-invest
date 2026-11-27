@@ -97,6 +97,7 @@ Theo `docs/architecture/reso-khung-phan-loai.md` §7 và ADR-0013 §8; giá tr�
 | sale × land | Land | Unimproved Land |
 | sale × commercial | Commercial Sale | null |
 | rent_lt × commercial | Commercial Lease | null |
+| sale × room | Residential | Room (thêm sau Cổng 1, 27/11: tin bán phòng có thật trong `sale_offers`; ca CG8-AC-6 của app khẳng định mọi tin giá tốt có loại hình — sổ d-20261127T095403Z-30) |
 | rent_lt × room | Residential Lease | Room (extension, đã khai từ migration 025) |
 | * × unknown, null | null | null («chưa biết» không gửi ra API) |
 | rent_st × (mọi loại) | Residential Lease | null — `listings.property_type` là chữ tự do của nguồn (200_transform.sql chép nguyên), không có bảng ánh xạ; data-api không trả chữ đó |
