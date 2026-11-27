@@ -212,6 +212,10 @@ test("2611-27 vừa bị chặn (collect RC 3) → ghi mốc nghỉ và thoát 3
   assert.equal(kq.status, 3);
   const moc = JSON.parse(readFileSync(join(t.goc, "bi-chan.json"), "utf8"));
   assert.ok(Date.parse(moc.hetLuc) > Date.now(), "mốc nghỉ phải ghi giờ hết trong tương lai");
+  // ZC18 (Mạnh duyệt Cổng Phạm vi 27/11): mặc định KHÔNG đặt biến nào phải nghỉ đúng 60 PHÚT —
+  // đổi mặc định wrapper về 30 (hay giá trị khác) là ca này đỏ.
+  const phut = (Date.parse(moc.hetLuc) - Date.now()) / 60_000;
+  assert.ok(phut >= 58 && phut <= 62, `nghỉ mặc định phải ~60 phút (ZC18 duyệt), thực tế ${phut.toFixed(1)} phút`);
   dung(t);
 });
 
@@ -402,5 +406,13 @@ test("plist template: Label đúng, StartInterval 300, wrapper qua __ROOT__ (tha
     writeFileSync(tam, nd.replace(/__ROOT__/g, "/tmp/gia"));
     const lint = spawnSync("/usr/bin/plutil", ["-lint", tam], { encoding: "utf8" });
     assert.equal(lint.status, 0, lint.stdout + lint.stderr);
+  }
+});
+
+test("ZC18 khuôn plist KHÔNG đè ba giá trị duyệt (một vùng đã đo, nghỉ 60 phút, luật lần hai bật)", () => {
+  const nd = readFileSync(join(REPO, "pipeline", "cron", "com.oneinvest.thu-duoi-s06.plist"), "utf8");
+  assert.doesNotMatch(nd, /EnvironmentVariables/, "plist không được cài khối biến môi trường — ba giá trị ZC18 là mặc định wrapper (nguồn duy nhất, test khóa)");
+  for (const khoa of ["THU_DUOI_S06_VUNG", "THU_DUOI_S06_NGHI_SAU_CHAN_PHUT", "THU_DUOI_S06_DUNG_LAN_HAI"]) {
+    assert.doesNotMatch(nd, new RegExp(khoa), `plist không được đè ${khoa}`);
   }
 });
