@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 0b08d4fb8fc7d6484f7a31e615dfb6515f312ba7
-human_signoff:
+human_signoff: Mạnh 2026-11-28
 ---
 
 # Evidence Report: s02-map-listings-trang-ke

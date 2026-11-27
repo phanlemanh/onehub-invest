@@ -5,7 +5,7 @@ slug: s02-map-listings-trang-ke
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-28
 design_doc: _acceptance/s02-map-listings-trang-ke/design.md
@@ -108,3 +108,8 @@ transform trên DB máy thu (chỉ đọc).
   2 lời, 0 dòng, không lỗi; đối chứng âm trên mã 99d49687f: hai ca chạy tới 30 lời → ĐỎ. `khong-ten-mien-moi.sh` XANH (0 dòng).
   Sửa phép đo AC-5: lời ngoài `map_listings` của bản giả trả 200 rỗng thay vì 500 (bản trước làm vế không bắn đỏ giả).
 - `vung.sh` và `khong-ten-mien-moi.sh` tự chọn mốc: ZC22 chưa vào main → nhánh ZC22; đã vào → `origin/main`; in «mốc so: …».
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-28:
+  - Ngoài-1: chạm trần 10 trang thì dòng nhật ký ghi «FAILED» nhưng lượt vẫn ghi là xong (chỉ kèm số lỗi lớn hơn 0), người đọc nhật ký dễ hiểu nhầm.
+  - Ngoài-2: thư mục tạm của phép cấy lỗi nằm trong collector/ mà không có trong .gitignore, lượt chấm bị ngắt có thể để rác bị commit nhầm.
+  - Ngoài-3: test đơn vị kiểm trần bằng chính hằng số của mã, không kiểm cận trên 11 lời; chỉ phép chấm riêng bắt khi trần bị nâng quá cao.
+  - Ngoài-4: test đơn vị dùng chung một bản giả cho hai ca nguồn bất thường; phép chấm riêng vẫn kiểm tách từng ca.
