@@ -1,0 +1,4 @@
+{
+  "feature_plain": "Bản mẫu công khai của API dữ liệu thôi mang tên nguồn thật (chú thích, dữ liệu mẫu, tên tệp đều dùng mã S0x), có thước máy quét toàn bộ để chặn tên mới lọt vào — điều kiện để đưa API ra kho công khai.",
+  "analyst_plain": "Lượt chấm lại không đo lại «bản cũ có đỏ không» (mốc đối chứng lấy từ vòng 1); các eval đều là ca kiểm có chiều đỏ viết sẵn trong test, nên đây là ghi chú, không phải lỗ. Không có eval phán đoán nên không có hội đồng chấm."
+}
