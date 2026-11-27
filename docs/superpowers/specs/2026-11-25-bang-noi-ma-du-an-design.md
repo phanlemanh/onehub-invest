@@ -1,5 +1,8 @@
 # DA3 bang-noi-ma-du-an — khuôn chung bản ghi nguồn cấp dự án và bộ khớp chạy bóng (thiết kế 25/11)
 
+> **Bản 27/11.** Phạm vi đổi sau khi DA42, DA55 áp lên DB máy thu: S09 rút khỏi đường ghi (chỉ đọc), K2 nay bắn. Số và phạm vi
+> hiện hành ở `_acceptance/bang-noi-ma-du-an/contract.md` và `evidence/bang-phu-s1.md` §8. Số 25/11 dưới đây giữ làm sử liệu.
+
 Thay bản 13/11 (`2026-11-13-bang-noi-ma-du-an-design.md`, nháp chưa qua Cổng Phạm vi). Chỉ dùng mã nguồn `S0x`.
 
 ## 0. Một trang
@@ -163,10 +166,10 @@ Hàm thuần `xepNga(banGhi, nut, daNoi)`. Thứ tự xếp, dừng ở ngả đ
 ### 3.3 Lệnh — `pipeline/noi-du-an-nguon.mjs`
 
 Khuôn DA32. Ba chế độ:
-- `--nguon <S07|S09|S10|S16> --the <tệp>`: dựng thẻ chỉ đọc. Thẻ có tổng theo ngả, 20 mẫu mỗi căn cứ nối, danh sách
+- `--nguon <S07|S10|S16> --the <tệp>`: dựng thẻ chỉ đọc (S08 dựng thẻ bóng đối chiếu; S09 bị từ chối, bản 27/11). Thẻ có tổng theo ngả, tối đa 20 mẫu mỗi ô căn cứ × hạng và nguồn đúc của nút đích, danh sách
   `khac_noi_san`, dòng cuối «băm: <hex>». Thẻ không in mã dự án nguồn.
 - `--ap --bam <hex> --nguoi <tên>`: băm lệch thì không ghi gì. Băm đúng thì ghi trong một giao dịch:
-  - mỗi loại căn cứ nối một dòng `project_link_rules` (`<nguồn>-K3`, `<nguồn>-T`), cộng một dòng cho nối có sẵn
+  - mỗi loại căn cứ nối một dòng `project_link_rules` (`<nguồn>-K2`, `<nguồn>-K3`, `<nguồn>-T`), cộng một dòng cho nối có sẵn
     (`<nguồn>-noi-san`) và một dòng cho trạng thái chưa nối (`<nguồn>-trang-thai`);
   - mỗi bản ghi một dòng `project_links` mang `rule_id` của lượt: `noi` kèm `can_cu`, hoặc `chua_noi` kèm `ly_do`;
   - mỗi dòng nối một bí danh `node:<id>` kind `ma_nguon` giá trị `du_an/<mã>`.
@@ -174,20 +177,20 @@ Khuôn DA32. Ba chế độ:
   `asset_nodes` không đổi. Mọi dòng mang `rule_id`, nên đảo đủ mọi luật của nguồn là cách lùi trọn, không xoá dòng nào.
 - `--dao <rule_id> --nguoi <tên>`: bí danh của luật nghỉ, dòng về `chua_noi` lý do `dao-luat`, dòng luật ghi người và giờ đảo.
 
-S08 bị từ chối kèm lời nhắn «S08 do thẻ luật DA55 nối».
+S08 bị từ chối kèm lời nhắn «S08 do thẻ luật DA55 nối». S09 bị từ chối ở mọi chế độ ghi, kể cả `--ap --bam` với băm của một thẻ S09, kèm lời nhắn «S09 do DA42 nối» (bản 27/11: DA42 sở hữu đường nối S09).
 
 ### 3.4 Màn — `app/src/lib/ops/registry/doc.ts`, `app/src/components/ops/registry/registry-view.tsx`
 
-Nhánh chồng lên DA55, riêng hai tệp này. Ô được cộng ở `registry-view.tsx`, nên đo cả con số dựng ra (AC-8). `SQL_DANH_MUC` thêm nhánh S07, S16 đếm từ bản ghi đã nạp và `project_links`. S09 đọc phần
-đã nối từ `project_links` thay hằng 0. S10 hiện dòng riêng lý do «không có vị trí». Mỗi dự án đếm một lần. Danh sách «chưa nối»
+Nhánh chồng lên DA55, riêng hai tệp này. Ô được cộng ở `registry-view.tsx`, nên đo cả con số dựng ra (AC-8). `SQL_DANH_MUC` thêm nhánh S07, S16 đếm từ bản ghi đã nạp và `project_links`. S09 chỉ đọc
+`project_links` S09 của DA42 (tập dự án theo Hỏi-3 bản 27/11), thay hằng 0. S10 hiện dòng riêng lý do «không có vị trí». Mỗi dự án đếm một lần. Danh sách «chưa nối»
 mang lý do của `project_links`.
 
 ## 4. Áp lên DB máy thu (hồ sơ năm thứ, viết ở S3, ký ở Cổng Bằng chứng)
 
-1. **Lệnh áp:** `noi-du-an-nguon.mjs --ap` cho S07, S09, S10, S16 theo băm in trên thẻ đã ký.
+1. **Lệnh áp:** `noi-du-an-nguon.mjs --ap` cho S07, S10, S16 theo băm in trên thẻ đã ký (S09 không áp, bản 27/11).
 2. **Số chạy thử:** trên bản chép.
 3. **Sao lưu:** `pg_dump` bốn bảng `project_links`, `project_link_rules`, `registry_aliases`, `asset_nodes` trước khi áp.
-4. **Cách lùi:** `--dao` đủ mọi `rule_id` của nguồn (K3, T, noi-san, trang-thai). Không xoá dòng nào. Chạy thử trên bản chép
+4. **Cách lùi:** `--dao` đủ mọi `rule_id` của nguồn (K2, K3, T, noi-san, trang-thai), đúng danh sách lệnh `--ap` in ra. Không xoá dòng nào. Chạy thử trên bản chép
    (AC-5).
 5. **Lệnh kiểm sau:** bất biến của AC-4 và AC-7.
 

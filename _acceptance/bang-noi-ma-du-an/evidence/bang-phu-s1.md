@@ -163,3 +163,65 @@ Phụ: cặp giữa hai nguồn khác nhau có điểm ≤ 300 m + tên trùng (
 7. `meta.city` của Ecopark, VOP2, VOP3 lệch tỉnh vùng.
 8. S08 2 dự án điểm lệch tỉnh với địa chỉ chữ; 3 dự án không có điểm (vẫn có tỉnh từ chữ).
 9. CĐT không chuẩn hoá giữa nguồn (S08 chữ hoa thương hiệu, S07/S09 tên pháp nhân) → nếu sau này có MST, K1 vẫn cần bảng CĐT riêng.
+
+## 8. Đo lại 27/11 21:34Z — sau khi DA42, DA55 áp (phạm vi đổi, sổ d-20261127T213940Z-36)
+
+Chỉ đọc trên DB máy thu (phiên `default_transaction_read_only`). Nguồn số:
+
+- bộ đo đóng băng: `cd pipeline && node ../_acceptance/bang-noi-ma-du-an/probes/s1/do.mjs`;
+- thẻ chỉ đọc của mã DA3: `node noi-du-an-nguon.mjs --nguon <S0x> --the <tệp>`;
+- ô trên màn: `docDanhBa` của app, chạy trên main và trên nhánh 6915541e5.
+
+JSON đầy đủ của bộ đo nằm ở ghi chú chung của đợt, tệp `da3-s1-do-lai-2711.json`.
+
+**Phía nút.** 660 nút dự án:
+
+| Hạng | Nguồn đúc | Số | Có điểm |
+|---|---|---|---|
+| xac_minh | — | 20 | 0 |
+| mot_loi_khai | S06 | 324 | 0 |
+| mot_loi_khai | S08 (DA55, 27/11) | 146 | 146 |
+| mot_loi_khai | S09 (DA42, 27/11) | 170 | 0 |
+
+**Hiện trạng nối mới.**
+- S09: `project_links` có 172 dòng `noi` (170 nút ứng viên, 2 nối tay) và 49 dòng `chua_noi` (cho-the-cap 36, cho-the-luat 13).
+  Cả 221 dòng thuộc tập `v_s09_db_du_an` của DA42.
+- S08: luật 5 nối 177 mã. `project_links` S08 có 159 dòng `noi`: 150 vào nút ứng viên, 9 vào nút tên chuẩn cùng tỉnh.
+
+**Chạy bóng (bộ đo đóng băng).**
+
+| Nguồn | Không tỉnh | K1 | K2 | K3 | T | K4 | Nhiều nút | Không khớp |
+|---|---|---|---|---|---|---|---|---|
+| S07 | 7 | 0 | 11 | 62 | 274 | 2 | 1 | 5.717 |
+| S08 | 0 | 0 | 150 | 9 | 4 | 0 | 0 | 22 |
+| S09 | 0 | 0 | 1 | 6 | 1 | 1 | 0 | 335 |
+| S10 | 119 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| S16 | 0 | 0 | 1 | 6 | 2 | 0 | 0 | 11 |
+
+**Thẻ chỉ đọc của mã DA3.** K4 không có mã nên rơi vào «không khớp»; dòng `giu` là nối có sẵn.
+- S07: K2 11, K3 62, T 274, nhiều nút 1, không tỉnh 7, không khớp 5.719.
+- S16: giữ 5, K2 1, K3 2, T 1, không khớp 11.
+- S09: giữ 99, K3 5, K2 1, không khớp 239. S09 rút khỏi đường ghi; số này chỉ để đối chiếu.
+
+**Nút đích của các ngả nối DA3 sẽ ghi** (hạng × nguồn đúc):
+
+| Nguồn | Căn cứ | Xác minh | Ứng viên S06 | Ứng viên S08 | Ứng viên S09 |
+|---|---|---|---|---|---|
+| S07 | K2 | 0 | 0 | 11 | 0 |
+| S07 | K3 | 1 | 47 | 14 | 0 |
+| S07 | T | 11 | 198 | 65 | 0 |
+| S16 | K2 | 0 | 0 | 1 | 0 |
+| S16 | K3 | 0 | 0 | 2 | 0 |
+| S16 | T | 0 | 0 | 1 | 0 |
+
+**Hai tập mã S09.**
+- DA42: `v_s09_db_du_an`, 221 dự án.
+- DA3: `v_s09_du_an_moi`, 344 dự án.
+- Hai tập chung 112 mã. Trong 172 dòng `noi` của DA42, 99 dòng có mã nằm trong tập 344; 73 dòng nằm ngoài.
+
+**Ô «Mã nguồn chưa nối»** (`docDanhBa`, chỉ đọc).
+- main: 370 (S06 8, S08 18, S09 344).
+- Nhánh trước áp: 6.484 (thêm S07 6.074, S16 20; S09 tập 344 trừ dòng nối khớp mã, còn 245; S10 119 riêng).
+- Theo AC-8 bản 27/11 (S09 đọc tập DA42):
+  - đổi phạm vi: 6.169 (S09 49);
+  - sau nối: 5.813 (S07 5.727, S16 11).

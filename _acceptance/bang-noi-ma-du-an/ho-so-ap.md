@@ -1,5 +1,8 @@
 # Hồ sơ áp DA3 bang-noi-ma-du-an lên DB máy thu
 
+> **Bản 25/11, CHƯA dùng được.** Phạm vi đổi 27/11 (sổ d-20261127T213940Z-36): S09 không áp, K2 vào danh sách luật, số đổi.
+> Hồ sơ áp viết lại ở S3 sau khi Mạnh duyệt Cổng Phạm vi bản 27/11; chữ ký Cổng Bằng chứng chỉ phủ bản viết lại.
+
 Không migration. Việc áp chỉ ghi dữ liệu nối vào `project_links`, `project_link_rules`, `registry_aliases` (bí danh `du_an/<mã>`)
 cho bốn nguồn S07, S09, S10, S16. `asset_nodes` không đổi. Không lên cloud: hai bảng nối và `registry_aliases` không nằm trong FILL
 của `pipeline/sync-cloud.mjs`.
