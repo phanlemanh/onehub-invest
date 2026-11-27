@@ -5,7 +5,7 @@ slug: can-gia-tot-ba-vai-ten-nguon-trong
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [script]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-11-22T08:50:00Z
 approved_by:
@@ -58,3 +58,5 @@ Ai đọc đầu ra phía sau: thước E10 của hồ sơ `can-gia-tot-biet-can
 ## Notes
 
 - Ngoài-2 (máy định tuyến 2026-11-26, đề xuất S4 known-limits): Phép kiểm việc nối dây chỉ xác nhận các dòng mã có mặt, chưa chạy thử script thật. Một bản sửa sai về hành vi vẫn có thể qua phép kiểm này. — `scripts/can-gia-tot-ba-vai-ten-nguon.test.mjs`
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-27:
+  - Ngoài-2: Phép kiểm AC-3 chỉ xác nhận các dòng nối dây có mặt trong mã, chưa chạy thử script thật; đo trọn script là thước E10 của hồ sơ CG1.
