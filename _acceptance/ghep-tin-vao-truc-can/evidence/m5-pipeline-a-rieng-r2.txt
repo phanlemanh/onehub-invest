@@ -1,0 +1,72 @@
+PL36 S4 vòng 2 trên M5 ＠7dd6bb0d64148af37748ec97740147014eba3365 — chạy lại riêng suite pipeline_a sau lượt (chẩn đoán, không đổi verdict)
+Lệnh: cd pipeline && npm run test:a
+
+== Ca đỏ trong lượt S4 (r2-l9, chạy song song với eval khác) ==
+✖ failing tests:
+
+test at scripts/tin-rao-gan-khu-vuc.test.mjs:254:1
+✖ TRG-AC-7 tập tệp khớp mẫu bằng đúng ma trận viết trước (18.691667ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   'transform-zalo.loi-pl36-98820.mjs: khớp mẫu gán khu vực nhưng không có trong ma trận'
+  + ]
+  - []
+  
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'transform-zalo.loi-pl36-98820.mjs: khớp mẫu gán khu vực nhưng không có trong ma trận' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at scripts/tin-rao-gan-khu-vuc.test.mjs:271:1
+✖ TRG-AC-7 bản sao thêm câu chọn riêng → báo tên tệp (15.562625ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+  +   'transform-zalo.loi-pl36-98820.mjs: khớp mẫu gán khu vực nhưng không có trong ma trận',
+      "transform-fb.mjs: còn câu chọn khu vực riêng (/region_type\\s*=\\s*'submarket'/)"
+    ]
+  
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'transform-zalo.loi-pl36-98820.mjs: khớp mẫu gán khu vực nhưng không có trong ma trận', "transform-fb.mjs: còn câu chọn khu vực riêng (/region_type\\s*=\\s*'submarket'/)" ],
+    expected: [ "transform-fb.mjs: còn câu chọn khu vực riêng (/region_type\\s*=\\s*'submarket'/)" ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at scripts/tin-rao-gan-khu-vuc.test.mjs:277:1
+✖ TRG-AC-7 tệp mới khớp mẫu ngoài ma trận → báo tệp (13.82625ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+  +   'transform-zalo.loi-pl36-98820.mjs: khớp mẫu gán khu vực nhưng không có trong ma trận',
+      'transform-moi.mjs: khớp mẫu gán khu vực nhưng không có trong ma trận'
+    ]
+  
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'transform-zalo.loi-pl36-98820.mjs: khớp mẫu gán khu vực nhưng không có trong ma trận', 'transform-moi.mjs: khớp mẫu gán khu vực nhưng không có trong ma trận' ],
+    expected: [ 'transform-moi.mjs: khớp mẫu gán khu vực nhưng không có trong ma trận' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+__EXIT=1
+
+== Chạy lại riêng ==
+ℹ tests 420
+ℹ suites 47
+ℹ pass 403
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 17
+ℹ todo 0
+ℹ duration_ms 196203.840375
+__EXIT=0
