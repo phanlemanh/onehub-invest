@@ -349,7 +349,7 @@ api_extensions:
       tra_cuu: "DD 2.1 Property (742 field, research-local/reso/dd-2.1.json, generatedOn 2026-10-07) — tra 2026-11-27"
       ly_do: "DD phân biệt bán/thuê bằng PropertyType (Residential / Residential Lease) và không có loại thuê ngắn hạn; kind là bộ lọc chính một tài nguyên ba loại tin"
       migration: "không cột mới — dựng từ sale_offers.kind; 'rent_st' cho bảng listings"
-      check: "CHECK kind IN ('sale','rent_lt') của sale_offer_records (migration 008); 'rent_st' là hằng của route"
+      check: "CHECK sale_offers_kind_chk kind IN ('sale','rent_lt') (migration 025); 'rent_st' là hằng của route"
       khai_bao: "data-api/src/contract/listing.ts (resource extension) và mục này"
       dq: "data-api/test/listing-reso.test.ts (PB2-AC-1, AC-2, AC-5 so giá trị với dòng cấy)"
     lastSeenTimestamp:
