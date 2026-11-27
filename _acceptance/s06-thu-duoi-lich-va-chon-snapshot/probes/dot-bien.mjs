@@ -9,10 +9,19 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const GOC = readFileSync(join(ROOT, "scripts/thu-duoi-s06.sh"), "utf8");
+const TEST = readFileSync(join(ROOT, "scripts/thu-duoi-s06.test.mjs"), "utf8");
+// Ca phải đỏ được nhận theo DẤU trong THÂN ca test (cách ca dựng nhánh đó), không theo tên ca: lượt chấm S4 vòng 1 (27/11)
+// đỏ giả vì làn thu đổi tên ca mà probe còn dò tên cũ. Dấu không khớp ca nào → probe đỏ, nói rõ lý do.
 const DOT_BIEN = [
-  { ten: "bo-kiem-pid-song", tim: `if [ -n "$PID_CU" ] && kill -0 "$PID_CU" 2>/dev/null; then`, thay: "if false; then", can: /khoá bận \(pid lượt trước còn sống\)/ },
-  { ten: "bo-nhuong-luot", tim: `if pgrep -f "scripts/chotot-daily.sh" >/dev/null 2>&1; then`, thay: "if false; then", can: /script nạp ngày đang chạy/ },
+  { ten: "bo-kiem-pid-song", tim: `if [ -n "$PID_CU" ] && kill -0 "$PID_CU" 2>/dev/null; then`, thay: "if false; then", dau: 'writeFileSync(join(`${t.goc}.lock`, "pid"), String(con.pid))' },
+  { ten: "bo-nhuong-luot", tim: `if pgrep -f "scripts/chotot-daily.sh" >/dev/null 2>&1; then`, thay: "if false; then", dau: 'PGREP_GIA_QUET_DU: "1"' },
 ];
+
+// tên các ca test( mà thân chứa dấu — thân tính tới ca test( kế tiếp
+function caTheoDau(nguon, dau) {
+  const mo = [...nguon.matchAll(/^test\("((?:[^"\\]|\\.)*)"/gm)];
+  return mo.filter((m, i) => nguon.slice(m.index, i + 1 < mo.length ? mo[i + 1].index : nguon.length).includes(dau)).map((m) => m[1]);
+}
 
 function chay(maNguon) {
   const t = mkdtempSync(join(tmpdir(), "zc18-dot-bien-"));
@@ -33,13 +42,19 @@ function chay(maNguon) {
 }
 
 let loi = 0;
+// tự kiểm bộ dò: một dấu không có trong tệp test phải khớp 0 ca (nếu khớp thì bộ dò hỏng, mọi kết luận dưới vô nghĩa)
+const gia = caTheoDau(TEST, "__ZC18_DAU_KHONG_TON_TAI__");
+console.log(`tu kiem mau do: dau gia khop ${gia.length} ca${gia.length ? "" : " (DUNG)"}`);
+if (gia.length) { loi++; console.log("TU KIEM MAU DO HONG"); }
 const lanh = chay(GOC);
 console.log(`ban chep lanh: exit ${lanh.exit} · ${lanh.do_.length} ca đỏ`);
 if (lanh.exit !== 0 || lanh.do_.length) { loi++; console.log("DOI CHUNG HONG"); }
 for (const d of DOT_BIEN) {
   if (GOC.split(d.tim).length !== 2) { loi++; console.log(`KHONG TIM THAY CHO PHA ${d.ten}`); continue; }
+  const can = caTheoDau(TEST, d.dau);
+  if (!can.length) { loi++; console.log(`MAU DO KHONG KHOP CA NAO ${d.ten}: khong ca test( nao chua dau ${JSON.stringify(d.dau)}`); continue; }
   const r = chay(GOC.replace(d.tim, d.thay));
-  const trung = r.do_.filter((s) => d.can.test(s));
+  const trung = r.do_.filter((s) => can.includes(s));
   console.log(`${trung.length ? "ĐỘT BIẾN BỊ BẮT" : "ĐỘT BIẾN SỐNG"} ${d.ten}: ${r.do_.length} ca đỏ, ${trung.length} đúng nhánh${trung[0] ? " — " + trung[0] : ""}`);
   if (!trung.length) loi++;
 }

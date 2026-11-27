@@ -6,7 +6,7 @@
 // quét đủ, để kết quả không phụ thuộc giờ chạy). Snapshot là bản thật của phép đo 24 giờ của làn thu (writer thật).
 //
 // Kịch bản:
-//   vòng 1: hai snapshot S1 < S2 ở hcmc, hanoi chưa có gì → nạp đúng 1 (S2), hanoi 0
+//   vòng 1: hai vùng cùng tồn đọng — hcmc S1 < S2, hanoi H1 < H2 (dựng từ snapshot thật khác) → mỗi vùng nạp đúng 1 (S2, H2)
 //   vòng 2: nạp S1 (tồn đọng thật)
 //   đè:     giả lượt quét đủ 05:30 — snapshot_id và captured_at của mọi dòng S1, S2 bị bản ngày mới hơn thay (đúng việc
 //           UPSERT của import-chotot làm khi lượt quét đủ thu lại cùng tin)
@@ -42,7 +42,7 @@ try {
   console.log(`KHONG CO PHEP DO: ${KHO}`);
   process.exit(2);
 }
-if (tatCa.length < 4) { console.log("KHONG CO PHEP DO: cần ≥ 4 snapshot có tin"); process.exit(2); }
+if (tatCa.length < 6) { console.log("KHONG CO PHEP DO: cần ≥ 6 snapshot có tin"); process.exit(2); }
 const [S1, S2, S3, S4] = [tatCa[0], tatCa[1], tatCa[2], tatCa[3]];
 console.log(`fixture tu writer that: ${tatCa.length} snapshot hcmc của phép đo 24 giờ (bộ thu đuôi ghi), dùng ${S1} · ${S2} · ${S3} · ${S4}`);
 
@@ -195,11 +195,27 @@ try {
   }
 
   // --- chọn-nạp (AC-5) ---
+  // Vòng 1 (sửa sau finding AC-5 lượt chấm 27/11): CẢ HAI vùng cùng tồn đọng hai snapshot. hanoi dựng từ hai snapshot
+  // thật khác của phép đo (thứ 5, 6 — tin không trùng S1..S4): chép, đổi tên thư mục + snapshotId + city; tệp items giữ
+  // nguyên nên sha256 vẫn khớp. Mỗi vùng phải nạp ĐÚNG 1, và là bản mới nhất của vùng đó.
   datSnap(S1); datSnap(S2);
-  const v1 = vong(1);
-  ok(v1.rc === 0 && v1.nap.length === 1 && v1.nap[0] === S2,
-    "hai vung: hanoi nap 0 · hcmc nap 1 · moi vung <= 1", `CHON-NAP DO vong 1: mong nap đúng ${S2}`);
+  const datSnapHanoi = (id) => {
+    const moi = id.replace(/^hcmc__/, "hanoi__");
+    chep(join(KHO, id), join(GOC, "snapshots/hanoi", moi));
+    const tm = join(GOC, "snapshots/hanoi", moi, "manifest.json");
+    writeFileSync(tm, JSON.stringify({ ...JSON.parse(readFileSync(tm, "utf8")), snapshotId: moi, city: "hanoi" }));
+    return moi;
+  };
+  const H1 = datSnapHanoi(tatCa[4]), H2 = datSnapHanoi(tatCa[5]);
+  const v1 = vong(1, { THU_DUOI_S06_VUNG: "hanoi hcmc" });
+  const napHn = v1.nap.filter((id) => id.startsWith("hanoi__")), napHcm = v1.nap.filter((id) => id.startsWith("hcmc__"));
+  ok(v1.rc === 0 && napHn.length === 1 && napHn[0] === H2 && napHcm.length === 1 && napHcm[0] === S2,
+    "hai vung ton dong: hanoi nap 1 (moi nhat) · hcmc nap 1 (moi nhat) · moi vung dung 1",
+    `CHON-NAP DO vong 1: hanoi nạp ${napHn.join(", ") || "0"} (mong ${H2}) · hcmc nạp ${napHcm.join(", ") || "0"} (mong ${S2})`);
   ok(await demStg(S2) === soTin(S2), "stg tang dung so tin cua snapshot moi nhat", `CHON-NAP DO stg ${await demStg(S2)} ≠ ${soTin(S2)}`);
+  ok(await demStg(H2) === soTin(tatCa[5]), "stg hanoi tang dung so tin cua snapshot moi nhat", `CHON-NAP DO stg hanoi ${await demStg(H2)} ≠ ${soTin(tatCa[5])}`);
+  // H1 còn tồn đọng ở hanoi: gỡ khỏi gốc tạm để các vòng sau (vòng 6 đo snapshot hanoi hỏng) không bị nó chen trước
+  rmSync(join(GOC, "snapshots/hanoi", H1), { recursive: true, force: true });
   const v2 = vong(2);
   ok(v2.nap.length === 1 && v2.nap[0] === S1, "ton dong: vong 2 nap S1", `CHON-NAP DO vong 2: mong nap ${S1}`);
   const v2b = vong("2b");

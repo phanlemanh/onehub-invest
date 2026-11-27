@@ -20,14 +20,14 @@ evals:
     executor: script
     cmd: config:executors.test.s06tl_dot_bien
     paths: [scripts/thu-duoi-s06.sh, scripts/thu-duoi-s06.test.mjs, _acceptance/s06-thu-duoi-lich-va-chon-snapshot/probes/dot-bien.mjs]
-    expected: "exit 0; 'ban chep lanh: exit 0 · 0 ca đỏ' (đối chứng dương trên cùng dựng); 'ĐỘT BIẾN BỊ BẮT bo-kiem-pid-song' kèm '— khoá bận (pid lượt trước còn sống)'; cuối 'DOT-BIEN OK'; should-NOT-fire: 'ĐỘT BIẾN SỐNG', 'DOI CHUNG HONG', 'KHONG TIM THAY CHO PHA'"
+    expected: "exit 0; 'tu kiem mau do: dau gia khop 0 ca (DUNG)'; 'ban chep lanh: exit 0 · 0 ca đỏ' (đối chứng dương trên cùng dựng); 'ĐỘT BIẾN BỊ BẮT bo-kiem-pid-song' kèm '— khoá bận (pid lượt trước còn sống)'; cuối 'DOT-BIEN OK'; should-NOT-fire: 'ĐỘT BIẾN SỐNG', 'DOI CHUNG HONG', 'KHONG TIM THAY CHO PHA', 'MAU DO KHONG KHOP CA NAO', 'TU KIEM MAU DO HONG'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E2b
     criterion: AC-2
     executor: script
     cmd: config:executors.test.s06tl_dot_bien
     paths: [scripts/thu-duoi-s06.sh, scripts/thu-duoi-s06.test.mjs, _acceptance/s06-thu-duoi-lich-va-chon-snapshot/probes/dot-bien.mjs]
-    expected: "exit 0; 'ĐỘT BIẾN BỊ BẮT bo-nhuong-luot' kèm '— script nạp ngày đang chạy'; cuối 'DOT-BIEN OK'; should-NOT-fire: 'ĐỘT BIẾN SỐNG', 'DOI CHUNG HONG'"
+    expected: "exit 0; 'ĐỘT BIẾN BỊ BẮT bo-nhuong-luot' kèm tên ca có 'nhường lượt' (ca nhận theo dấu PGREP_GIA_QUET_DU trong thân ca, không theo tên); cuối 'DOT-BIEN OK'; should-NOT-fire: 'ĐỘT BIẾN SỐNG', 'DOI CHUNG HONG', 'MAU DO KHONG KHOP CA NAO', 'TU KIEM MAU DO HONG'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3
     criterion: AC-3
@@ -49,7 +49,7 @@ evals:
     layer: backend-effect
     cmd: config:executors.test.s06tl_chon_nap
     paths: [scripts/thu-duoi-s06.sh, pipeline/import-chotot.mjs, _acceptance/s06-thu-duoi-lich-va-chon-snapshot/probes/chon-nap.mjs]
-    expected: "exit 0; probe từ chối DB không mang tên oneinvest_suite_* ('tu choi DB', exit 2); 'fixture tu writer that: … snapshot hcmc của phép đo 24 giờ (bộ thu đuôi ghi)'; 'khong snapshot: exit 0 · nap 0'; 'hai vung: hanoi nap 0 · hcmc nap 1 · moi vung <= 1'; 'ton dong: vong 2 nap S1'; 'da nap con trong stg: nap 0'; 'stg tang dung so tin cua snapshot moi nhat'; 'da nap roi bi luot quet du de: vong sau nap 0 · nhat ky 0 dong nap cho snapshot do · noi dung stg khong lui'; đối chứng dương: 'snapshot moi sau khi bi de: van nap 1'; cuối 'CHON-NAP OK'; should-NOT-fire: 'NAP LAI', 'NOI DUNG LUI', 'CHON-NAP DO', 'DOI CHUNG HONG'. Trên 7173fc21a dự kiến đỏ ở 'NAP LAI' (xem Notes của contract)."
+    expected: "exit 0; probe từ chối DB không mang tên oneinvest_suite_* ('tu choi DB', exit 2); 'fixture tu writer that: … snapshot hcmc của phép đo 24 giờ (bộ thu đuôi ghi)'; 'khong snapshot: exit 0 · nap 0'; 'hai vung ton dong: hanoi nap 1 (moi nhat) · hcmc nap 1 (moi nhat) · moi vung dung 1'; 'stg hanoi tang dung so tin cua snapshot moi nhat'; 'ton dong: vong 2 nap S1'; 'da nap con trong stg: nap 0'; 'stg tang dung so tin cua snapshot moi nhat'; 'da nap roi bi luot quet du de: vong sau nap 0 · nhat ky 0 dong nap cho snapshot do · noi dung stg khong lui'; đối chứng dương: 'snapshot moi sau khi bi de: van nap 1'; cuối 'CHON-NAP OK'; should-NOT-fire: 'NAP LAI', 'NOI DUNG LUI', 'CHON-NAP DO', 'DOI CHUNG HONG'. Trên 7173fc21a dự kiến đỏ ở 'NAP LAI' (xem Notes của contract)."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E6
     criterion: AC-6
