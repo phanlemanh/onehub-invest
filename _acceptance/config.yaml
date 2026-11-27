@@ -738,6 +738,11 @@ executors:
     kev_manifest_v3: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan/acceptance.mjs manifest-v3"
     kev_import_versions: "node scripts/kev-nhan/acceptance.mjs import-versions"
     kev_watchdog_l1: "node scripts/kev-nhan/acceptance.mjs watchdog-l1"
+    # go-kev-khoi-hook-s03 (KEV1, T3) — hook không cổng chấm; chốt tĩnh + tự phá; bộ kiểm sau áp chấm log mẫu (không chạm ~/.openclaw)
+    kev1_handler_test: "node --test collector/openclaw/handler.test.mjs"
+    kev1_khong_con_kev: "bash _acceptance/go-kev-khoi-hook-s03/probes/khong-con-kev.sh \"$PWD\" && bash _acceptance/go-kev-khoi-hook-s03/probes/khong-con-kev.sh --tu-thu \"$PWD\""
+    kev1_ap_may_thu: "bash _acceptance/go-kev-khoi-hook-s03/ap-may-thu/kiem.sh"
+    kev1_hsn_regress: "for m in auth-held held-then-hang reject-perm tam-thoi budget budget-env; do out=$(node scripts/hook-spool-nghiem-ngat/acceptance.mjs $m) || { echo \"$out\"; exit 1; }; echo \"$out\" | tail -1; done"
     kev_contract_doc: "grep -qE 'schemaVersion.: [3-9]' collector/docs/DATA-CONTRACT.md && grep -qE 'chấp nhận `\\{1,2,3(,[0-9]+)*\\}`' collector/docs/DATA-CONTRACT.md && echo CONTRACT-DOC OK"
     zc1_sourceid: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan/acceptance.mjs sourceid"
     zc1_stg_roundtrip: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan/acceptance.mjs stg-roundtrip"   # cần DB local :5433; kiểm trùng trước, xoá snapshot giả sau
