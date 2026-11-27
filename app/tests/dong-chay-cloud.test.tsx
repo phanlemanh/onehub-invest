@@ -326,9 +326,10 @@ describe("DC-AC-1 bảng tính sẵn", () => {
       // Bảng 051 chưa áp lên public trước merge (lời dặn giám sát) → bảng TẠM cùng khuôn trong giao dịch, rồi ROLLBACK.
       const ddl = migration051().replace("CREATE TABLE IF NOT EXISTS data_flow_snapshot", "CREATE TEMP TABLE data_flow_snapshot")
       assert.notEqual(ddl, migration051(), "khuôn bảng tạm lệch 051")
-      // DV7: DB local chưa áp 105 thì ô Định vị về CTE rỗng — đúng cách bộ chạy làm tươi làm (dinhViKhiCoView).
-      const { dinhViKhiCoView } = await import("../../pipeline/lib/than-600.mjs")
-      const body = (await dinhViKhiCoView(c, flowSql())).replace(/^BEGIN;$/m, "").replace(/^COMMIT;$/m, "")
+      // DV7 + ON25: DB local chưa áp 105 (offer_project) hay 117 (offer_building) thì ô Định vị, ô Khớp toà về CTE rỗng — đúng
+      // cách bộ chạy làm tươi làm (dinhViKhiCoView, toaKhiCoView).
+      const { dinhViKhiCoView, toaKhiCoView } = await import("../../pipeline/lib/than-600.mjs")
+      const body = (await toaKhiCoView(c, await dinhViKhiCoView(c, flowSql()))).replace(/^BEGIN;$/m, "").replace(/^COMMIT;$/m, "")
       assert.ok(!/^\s*(BEGIN|COMMIT);/m.test(body), "600 còn BEGIN/COMMIT — không chạy được trong giao dịch ROLLBACK")
       await c.query("BEGIN")
       await c.query(ddl)

@@ -92,6 +92,10 @@ export async function makeFlowSchema(
   // chép chưa áp 105. Ca muốn tin định vị thì chèn dòng vào bảng này.
   await admin.query(`CREATE TABLE IF NOT EXISTS "${schema}".offer_project (offer_id text PRIMARY KEY, source text, project_node_id bigint,
     status text, evidence text, catalog_tier text, n_posts int, n_posts_with_project int)`)
+  // ON25 (ops-hien-dung-chang-s03): «Khớp toà» của 600 đọc bộ ghép toà offer_building (view của 117, chỉ máy thu). Cùng lý do với
+  // offer_project: bảng rỗng bốn cột trong lược đồ tạm để 600 không đọc view của public. Ca muốn tin khớp toà thì chèn dòng
+  // (status = 'gan', muc = 'toa').
+  await admin.query(`CREATE TABLE IF NOT EXISTS "${schema}".offer_building (offer_id text PRIMARY KEY, status text, muc text, building_key text)`)
   if (tables.includes("stg_zalo_posts"))
     for (const [id, snap, agent, group, posted, media, files] of POSTS)
       await admin.query(

@@ -67,6 +67,8 @@ before(async () => {
   await admin.query(`CREATE TABLE ${S}.data_flow_snapshot (LIKE public.data_flow_snapshot INCLUDING ALL)`);
   await admin.query(`CREATE TABLE ${S}.offer_project (offer_id text PRIMARY KEY, source text, project_node_id bigint, status text,
     evidence text, catalog_tier text, n_posts int, n_posts_with_project int)`);
+  // ON25: «Khớp toà» đọc bộ ghép toà offer_building (view của 117) — ở đây là bảng bốn cột để ô viết trước đếm được chính xác.
+  await admin.query(`CREATE TABLE ${S}.offer_building (offer_id text PRIMARY KEY, status text, muc text, building_key text)`);
   await admin.query(`SET search_path = ${S}`);
   await admin.query(`CREATE VIEW ${S}.sale_offers AS ${v.def}`);
 });
@@ -75,15 +77,24 @@ after(async () => {
   await admin?.end();
 });
 
-const donSach = () => admin.query(`TRUNCATE sale_offer_records, offer_project, offer_price_rank, dq_check_results, data_flow_snapshot`);
+const donSach = () => admin.query(`TRUNCATE sale_offer_records, offer_project, offer_building, offer_price_rank, dq_check_results, data_flow_snapshot`);
 
 let dem = 0;
-/** Một tin của ma trận: `duAn` true = một dự án, chuỗi = trạng thái khác; `cap`/`diem` là dòng hạng. */
-async function tin({ nguon = "S03", kind = "sale", duAn = false, cap, diem = 50, nghi = false, ngayDau = LUC_D } = {}) {
+/** Một tin của ma trận: `duAn` true = một dự án, chuỗi = trạng thái khác; `cap`/`diem` là dòng hạng; `toa` = "status/muc" của dòng
+ * offer_building (vd "gan/toa", "xung_dot/"); `blockRaw`/`unitNumber` là chữ toà, mã căn trên tin (ON25). */
+async function tin({ nguon = "S03", kind = "sale", duAn = false, cap, diem = 50, nghi = false, ngayDau = LUC_D, toa, blockRaw = null,
+  unitNumber = null } = {}) {
   const id = `sm1fx-${++dem}`;
   await admin.query(`INSERT INTO sale_offer_records (offer_id, kind, property_type, confidence, first_seen, last_seen, n_reposts, post_ids,
       source, field_provenance, offer_status, retired_at)
     VALUES ($1, $5, 'apartment', 'medium', $2, $2, 1, '{}', $3, '{}', 'active', $4)`, [id, ngayDau, nguon, nghi ? LUC_D : null, kind]);
+  if (blockRaw !== null || unitNumber !== null) {
+    await admin.query(`UPDATE sale_offer_records SET block_raw = $2, unit_number = $3 WHERE offer_id = $1`, [id, blockRaw, unitNumber]);
+  }
+  if (toa !== undefined) {
+    const [st, muc] = toa.split("/");
+    await admin.query(`INSERT INTO offer_building (offer_id, status, muc, building_key) VALUES ($1, $2, $3, 'bld_on25')`, [id, st, muc || null]);
+  }
   if (duAn) {
     await admin.query(`INSERT INTO offer_project (offer_id, source, project_node_id, status, evidence, n_posts, n_posts_with_project)
       VALUES ($1, $2, 1, $3, 'bai', 1, 1)`, [id, nguon, duAn === true ? "mot_du_an" : duAn]);
@@ -257,22 +268,107 @@ for (const [ten, pha, mau] of DOT_BIEN_AC2) {
   });
 }
 
-/** Bản 600 đã nối `toa_link` vào đúng các mã tin cho trước: hôm nay CTE này rỗng nên chiều dương của `building_linked` phải dựng bằng đột biến. */
-const noiToa = (sql, ids) => doi(sql, "toa_link AS (SELECT NULL::text AS offer_id WHERE false),",
-  `toa_link AS (SELECT unnest(ARRAY[${ids.map((x) => `'${x}'`).join(", ")}]::text[]) AS offer_id),`);
+/** ON25: 600 nối `toa_link` vào bộ ghép toà offer_building; chiều dương của `building_linked` đi qua bảng thật của lược đồ tạm. */
+const TOA_RONG = "toa_link AS (SELECT NULL::text AS offer_id WHERE false),";
+const DONG_TOA = "toa_link AS MATERIALIZED (SELECT offer_id FROM offer_building WHERE status = 'gan' AND muc = 'toa'),";
 async function kiemKhopToa(pha = (s) => s) {
   await donSach();
-  const ids = [await tin({ duAn: true }), await tin({ nguon: "S05", duAn: true }), await tin({ duAn: true, nghi: true })];
-  await lamTuoi({ sql: pha(noiToa(SQL600, ids)) });
+  await tin({ duAn: true, toa: "gan/toa" });
+  await tin({ nguon: "S05", duAn: true, toa: "gan/toa" });
+  await tin({ duAn: true, nghi: true, toa: "gan/toa" });
+  await lamTuoi({ sql: pha(SQL600) });
   const d = JSON.parse((await dongNgay(NGAY_D))[0].detail);
   assert.equal(d.building_linked, 1, `cột building_linked: ba tin khớp toà (S03 đang rao, S05, S03 đã nghỉ) phải đếm 1, thấy ${d.building_linked}`);
 }
-test("SM1-AC-2 đối chứng dương: nối toa_link vào ba tin thì building_linked = 1", { timeout: 60_000 }, async () => {
+test("SM1-AC-2 đối chứng dương: ba tin có dòng gan/toa thì building_linked = 1", { timeout: 60_000 }, async () => {
   await kiemKhopToa();
 });
-test("SM1-AC-2 đột biến đặt cứng 0 cho building_linked trên bản đã nối toa_link thì đỏ, thông điệp nêu tên cột", { timeout: 60_000 }, async () => {
+test("SM1-AC-2 đột biến đặt cứng 0 cho building_linked thì đỏ, thông điệp nêu tên cột", { timeout: 60_000 }, async () => {
   const pha = (s) => doi(s, `'building_linked', count(*) FILTER (WHERE m.toa_khop)`, `'building_linked', 0`);
   await assert.rejects(() => kiemKhopToa(pha), /cột building_linked/);
+});
+
+// ---------- ON25 (ops-hien-dung-chang-s03): «Khớp toà» và «chờ khớp» đọc bộ ghép toà ----------
+
+/** Ma trận viết trước AC-1: mỗi ô một tin, đo bằng một lượt làm tươi chỉ chứa tin của ô; giá trị là building_linked mong đợi. */
+const O_KHOP_TOA = [
+  ["S03 sống gan/toa", { toa: "gan/toa" }, 1],
+  ["S03 sống gan/vung", { toa: "gan/vung" }, 0],
+  ["S03 sống xung_dot", { toa: "xung_dot/" }, 0],
+  ["S03 sống không dòng", {}, 0],
+  ["S03 đã nghỉ gan/toa", { nghi: true, toa: "gan/toa" }, 0],
+  ["S06 gan/toa", { nguon: "S06", toa: "gan/toa" }, 0],
+];
+async function kiemOKhopToa(sql = SQL600) {
+  const loi = [];
+  for (const [ten, o, mong] of O_KHOP_TOA) {
+    await donSach();
+    await tin({ duAn: true, ...o });
+    await lamTuoi({ sql });
+    const thay = JSON.parse((await dongNgay(NGAY_D))[0].detail).building_linked;
+    if (thay !== mong) loi.push(`building_linked ô «${ten}»: mong ${mong}, thấy ${thay}`);
+  }
+  assert.deepEqual(loi, [], loi.join(" | "));
+}
+test("ON25-AC-1 building_linked đếm đúng tin S03 đang rao có dòng gan/toa, sáu ô viết trước", { timeout: 180_000 }, async () => {
+  assert.ok(SQL600.includes(DONG_TOA), "ON25-AC-1: 600 không còn đúng dòng nối toa_link vào offer_building");
+  await kiemOKhopToa();
+});
+test("ON25-AC-1 đột biến đặt toa_link về CTE rỗng thì đỏ, thông điệp nêu building_linked và ô gan/toa", { timeout: 180_000 }, async () => {
+  await assert.rejects(() => kiemOKhopToa(doi(SQL600, DONG_TOA, TOA_RONG)), /building_linked ô «S03 sống gan\/toa»: mong 1, thấy 0/);
+});
+test("ON25-AC-1 đột biến bỏ điều kiện muc = 'toa' thì ô gan/vung đỏ", { timeout: 180_000 }, async () => {
+  await assert.rejects(() => kiemOKhopToa(doi(SQL600, "WHERE status = 'gan' AND muc = 'toa'", "WHERE status = 'gan'")),
+    /building_linked ô «S03 sống gan\/vung»: mong 0, thấy 1/);
+});
+test("ON25-AC-1 DB chưa có offer_building: bộ chạy thay dòng bằng CTE rỗng, lượt làm tươi không lỗi", { timeout: 60_000 }, async () => {
+  const { toaKhiCoView, DONG_KHOP_TOA } = await import("../lib/than-600.mjs");
+  assert.ok(DONG_KHOP_TOA.test(SQL600), "ON25-AC-1: bộ chạy không còn dò được dòng nối Khớp toà");
+  const c = await noi("on25-khong-view");
+  try {
+    assert.equal(await toaKhiCoView(c, SQL600), SQL600, "ON25-AC-1: có bảng offer_building mà bộ chạy vẫn thay dòng");
+    await donSach();
+    await tin({ duAn: true });
+    await admin.query(`ALTER TABLE offer_building RENAME TO offer_building_an`);
+    try {
+      const doiDong = await toaKhiCoView(c, SQL600);
+      assert.ok(!DONG_KHOP_TOA.test(doiDong) && doiDong.includes(TOA_RONG), "ON25-AC-1: không có offer_building mà dòng nối không về CTE rỗng");
+      await lamTuoi();
+      assert.equal(JSON.parse((await dongNgay(NGAY_D))[0].detail).building_linked, 0, "ON25-AC-1: không có view thì building_linked = 0");
+    } finally {
+      await admin.query(`ALTER TABLE offer_building_an RENAME TO offer_building`);
+    }
+  } finally {
+    await c.end().catch(() => {});
+  }
+});
+
+/** Ma trận viết trước AC-2: ghi toà × khớp toà; giá trị là locatedPending (cửa sổ all, S03) mong đợi của ô. */
+const O_CHO_KHOP = [
+  ["block_raw + gan/toa", { blockRaw: "A1", toa: "gan/toa" }, 0],
+  ["block_raw + không dòng", { blockRaw: "A1" }, 1],
+  ["mã căn xx + gan/toa", { unitNumber: "A1-xx05", toa: "gan/toa" }, 0],
+  ["mã căn xx + không dòng", { unitNumber: "A1-xx05" }, 1],
+  ["không ghi + gan/toa", { toa: "gan/toa" }, 0],
+  ["không ghi + không dòng", {}, 0],
+];
+async function kiemOChoKhop(sql = SQL600) {
+  const loi = [];
+  for (const [ten, o, mong] of O_CHO_KHOP) {
+    await donSach();
+    await tin({ duAn: true, ...o });
+    await lamTuoi({ sql });
+    const thay = (await factsCua("all")).sources.find((x) => x.source === "S03").locatedPending;
+    if (thay !== mong) loi.push(`locatedPending ô «${ten}»: mong ${mong}, thấy ${thay}`);
+  }
+  assert.deepEqual(loi, [], loi.join(" | "));
+}
+test("ON25-AC-2 locatedPending chỉ đếm tin ghi toà hay mã căn xx chưa có dòng gan/toa, sáu ô viết trước", { timeout: 180_000 }, async () => {
+  await kiemOChoKhop();
+});
+test("ON25-AC-2 đột biến bỏ «AND NOT m.toa_khop» thì đỏ, thông điệp nêu locatedPending và ô đã khớp", { timeout: 180_000 }, async () => {
+  await assert.rejects(() => kiemOChoKhop(doi(SQL600, "FILTER (WHERE m.ghi_toa AND NOT m.toa_khop)", "FILTER (WHERE m.ghi_toa)")),
+    /locatedPending ô «block_raw \+ gan\/toa»: mong 0, thấy 1/);
 });
 
 // ---------- AC-3: chạy lại cùng ngày, ngày kế, một giao dịch ----------

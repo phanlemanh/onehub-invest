@@ -33,3 +33,20 @@ export async function dinhViKhiCoView(c, sql) {
   console.error("refresh-data-flow: chưa có offer_project (chưa áp 105) — ô Định vị tạm bằng 0");
   return sql.replace(DONG_DINH_VI, "dinh_vi_link AS (SELECT NULL::text AS offer_id WHERE false),");
 }
+
+/** Dòng nối «Khớp toà» của 600 vào bộ ghép toà PL20 (view offer_building, migration 117) — ON25 `ops-hien-dung-chang-s03`. */
+export const DONG_KHOP_TOA = /^toa_link AS MATERIALIZED \(SELECT offer_id FROM offer_building WHERE status = 'gan' AND muc = 'toa'\),$/m;
+
+/**
+ * ON25: DB chưa có `offer_building` (DB chép cũ, lược đồ thử chưa áp 117) → thay dòng nối Khớp toà bằng CTE rỗng như trước ON25 và
+ * báo một dòng stderr, thay vì để cả lượt làm tươi lỗi. Có view (hay bảng cùng tên trên search_path) → giữ nguyên. Cùng khuôn
+ * `dinhViKhiCoView`.
+ * @param {import("pg").Client} c @param {string} sql @returns {Promise<string>}
+ */
+export async function toaKhiCoView(c, sql) {
+  if (!DONG_KHOP_TOA.test(sql)) return sql;
+  const { rows: [r] } = await c.query("SELECT to_regclass('offer_building') IS NOT NULL AS co");
+  if (r?.co) return sql;
+  console.error("refresh-data-flow: chưa có offer_building (chưa áp 117) — ô Khớp toà tạm bằng 0");
+  return sql.replace(DONG_KHOP_TOA, "toa_link AS (SELECT NULL::text AS offer_id WHERE false),");
+}
