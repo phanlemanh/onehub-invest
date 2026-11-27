@@ -266,6 +266,10 @@ const NGOAI_LE = [
   { suite: "pipeline_a", duong: "_acceptance/ma-du-an-s06-thanh-nut/evidence", ly_do: "pipeline/scripts/noi-du-an-s06-that.mjs: thư mục GHI bằng chứng (mkdirSync + writeFileSync), không phải đầu vào" },
   { suite: "pipeline_b", duong: "_acceptance/sao-luu-ma-hoa-b2", ly_do: "như pipeline_a" },
   { suite: "pipeline_b", duong: "docs/superpowers/specs/2026-11-11-sao-luu-ma-hoa-b2-design.md", ly_do: "như pipeline_a" },
+  // NB9 dong-the-bo-sung-tin-theo-luat: E9 nạp hai hằng SQL đếm «người quyết» của bao-cao-ngay.mjs; lo-trinh.json chỉ đọc
+  // trong hàm mốc GCM1 của báo cáo ngày, suite không gọi — đưa vào vùng thì mỗi lần sửa lộ trình kéo cả hai nửa pipeline.
+  { suite: "pipeline_a", duong: "docs/plan/lo-trinh.json", ly_do: "scripts/bao-cao-ngay.mjs: đọc trong hàm mốc GCM1, pipeline/scripts/dong-the-bo-sung-tin.test.mjs chỉ nạp hằng CONG_NGUOI_SQL, THE_NGUOI_QUYET_SQL" },
+  { suite: "pipeline_b", duong: "docs/plan/lo-trinh.json", ly_do: "như pipeline_a" },
   { suite: "pipeline_b", duong: "PRODUCT-MAP.md", ly_do: "như pipeline_a" },
   // DA37: lượt đo thật chạy ở eval E9 của hồ sơ, ngoài npm test của pipeline, nên suite không nạp thư mục đường lùi này.
   { suite: "pipeline_a", duong: "_acceptance/danh-ba-s16-thang-cau-truc/lui", ly_do: "pipeline/scripts/danh-ba-s16-cau-truc-that.mjs: phép đo thật của eval, không phải tệp npm test chạy" },
