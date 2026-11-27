@@ -67,8 +67,8 @@ evals:
 
   - id: E7c
     criterion: AC-7
-    executor: test
-    cmd: config:executors.test.s08l_do
+    executor: script
+    cmd: config:executors.script.s08l_do
     expected: "exit 0; ba tệp của s08l_do trên DB của riêng lượt, 0 fail"
     paths: ["_acceptance/config.yaml", "scripts/check-freshness.test.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
