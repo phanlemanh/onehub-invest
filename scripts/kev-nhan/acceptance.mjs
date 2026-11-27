@@ -67,7 +67,9 @@ async function runHandler(events, { kevDown = false } = {}) {
   writeFileSync(join(home, ".openclaw/credentials/oneinvest-agent.key"), "acc-key\n");
   if (resolve(home) === resolve(homedir())) throw new Error("HOME giả trùng HOME thật — bỏ chạy");
 
+  let kevHits = 0; // K1: cổng chấm đã gỡ — đếm để chứng minh hook KHÔNG gọi cổng nào
   const kev = createServer((req, res) => {
+    kevHits++;
     let body = "";
     req.on("data", (c) => (body += c));
     req.on("end", () => {
@@ -126,7 +128,7 @@ for (const ev of JSON.parse(process.env.ACC_EVENTS)) await h({ event: ev });
   const logFile = join(home, ".openclaw/logs/oneinvest-zalo-pipe.log");
   const log = existsSync(logFile) ? readFileSync(logFile, "utf8") : "";
   rmSync(S, { recursive: true, force: true });
-  return { code, err, posts, log };
+  return { code, err, posts, log, kevHits };
 }
 
 const ev = (text, extra = {}) => ({
@@ -149,14 +151,14 @@ async function modeHandlerLabel() {
   ];
   const r = await runHandler(events);
   const kevs = r.posts.map((p) => p.body.messages[0].kev);
-  console.log(`gate sống: hook exit ${r.code} · POST tới collector ${r.posts.length} · p = [${kevs.map((k) => k?.p).join(", ")}]`);
+  console.log(`khuôn kev-off: hook exit ${r.code} · POST tới collector ${r.posts.length} · p = [${kevs.map((k) => k?.p).join(", ")}] · gọi cổng chấm ${r.kevHits} lần`);
   check(r.code === 0 && r.err === "", "hook chạy xong, không ném lỗi");
   check(r.posts.length === 4, "4 tin có chữ của zalouser đều được đẩy — kể cả p=0.2 (dưới ngưỡng 0.9)");
-  check(kevs[0]?.p === 0.2 && kevs[1]?.p === 0.95, "p thấp và p cao đi kèm nguyên giá trị");
-  check(kevs[2]?.p === null && kevs[3]?.p === null, "Kev trả 500 hoặc thiếu noul → p = null (không giả 1.0)");
+  check(r.kevHits === 0, "KHÔNG lời gọi nào tới cổng chấm nhãn kể cả khi cổng sống (K1)");
+  check(kevs.every((k) => k && k.p === null), "mọi tin kev.p = null (không chấm điểm — khuôn kev-off)");
   check(
-    kevs.every((k) => k && k.model === "kev-latest" && k.threshold === 0.9 && !Number.isNaN(Date.parse(k.at))),
-    "mọi tin có meta.kev đủ {p, model, threshold, at}",
+    kevs.every((k) => k && k.model === "kev-off" && k.threshold === 0.9 && !Number.isNaN(Date.parse(k.at))),
+    "mọi tin có meta.kev đủ {p, model, threshold, at} với model kev-off",
   );
   check(r.posts.every((p) => p.path === "/agent-report" && p.auth === "Bearer acc-key"), "POST đúng /agent-report với khoá trong HOME giả");
   check(!/skip p=/.test(r.log), "log hook không còn dòng 'skip p=' (không bỏ tin theo điểm)");
@@ -165,10 +167,10 @@ async function modeHandlerLabel() {
 
   const down = await runHandler([ev("bán đất p=0.99 Đông Anh")], { kevDown: true });
   const k = down.posts[0]?.body.messages[0].kev;
-  console.log(`gate chết (cổng đóng): POST ${down.posts.length} · p = ${k?.p}`);
-  check(down.posts.length === 1 && k?.p === null, "Kev không nghe → tin vẫn đẩy, p = null");
-  // ZC6 (bd51084d) đổi chữ log khi Kev không trả lời từ «gate-down» thành «kev null (timeout/gate)» — cùng ý: log ghi Kev hỏng
-  check(/kev null \(timeout\/gate\)|gate-down/.test(down.log), "log ghi Kev không trả lời (kev null / gate-down)");
+  console.log(`cổng đóng hẳn: POST ${down.posts.length} · p = ${k?.p} · gọi cổng chấm ${down.kevHits} lần`);
+  check(down.posts.length === 1 && k?.p === null && down.kevHits === 0, "cổng chấm đóng hẳn → tin vẫn đẩy, p = null, không lời gọi nào");
+  // K1: dòng log post mang nhãn kev=off (thay 'kev null (timeout/gate)' cũ của ZC6/bd51084d)
+  check(/kev=off/.test(down.log), "log dòng post mang kev=off");
   finish("HANDLER-LABEL");
 }
 

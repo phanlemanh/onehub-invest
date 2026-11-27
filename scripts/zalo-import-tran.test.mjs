@@ -290,8 +290,29 @@ for (const [o, env, args, ke] of [
     assert.deepEqual(dong, ke.split("\n"), "AC-7 đồng hồ của lượt: mỗi dòng <trần> <ngưỡng WARN>, đúng số lần gọi và thứ tự");
   }));
 }
-test("AC-7 plist không đổi so với origin/main", () => {
-  execFileSync("git", ["-C", REPO, "diff", "--quiet", "origin/main", "--", "pipeline/cron"]);
+// AC-7 (hồ sơ s03-tran-thoi-gian-luot-nap): lượt đổi trần KHÔNG đụng plist của zalo-import. Phép so chỉ trên plist
+// zalo-import (com.oneinvest.zalo-import*) — plist khác trong pipeline/cron đổi theo hợp đồng của hàng khác (KEV1 gỡ
+// plist Kev; đổi kỳ vọng của hồ sơ đã ký ZI, GS cho phép 25/11). Cây làm việc truyền vào để ca phá chạy trên bản sao.
+const PLIST_ZI = "pipeline/cron/com.oneinvest.zalo-import*";
+const plistZiKhongDoi = (cayLamViec = REPO) =>
+  execFileSync("git", ["-C", REPO, `--work-tree=${cayLamViec}`, "diff", "--quiet", "origin/main", "--", PLIST_ZI]);
+const banSaoPlistZi = (sua) => {
+  const cay = mkdtempSync(join(tmpdir(), "zi-plist-"));
+  const tep = execFileSync("git", ["-C", REPO, "ls-tree", "--name-only", "origin/main", "pipeline/cron/"], { encoding: "utf8" })
+    .split("\n").filter((t) => t.startsWith(PLIST_ZI.slice(0, -1)));
+  assert.ok(tep.length >= 1, "AC-7 origin/main có ít nhất một plist zalo-import để so");
+  for (const t of tep) { mkdirSync(join(cay, dirname(t)), { recursive: true }); cpSync(join(REPO, t), join(cay, t)); }
+  if (sua) writeFileSync(join(cay, tep[0]), readFileSync(join(cay, tep[0]), "utf8").replace("</plist>", "<!-- sửa -->\n</plist>"));
+  return cay;
+};
+test("AC-7 plist zalo-import không đổi so với origin/main", () => plistZiKhongDoi());
+test("AC-7 chiều đối chứng: bản sao plist zalo-import nguyên vẹn → xanh", () => {
+  const cay = banSaoPlistZi(false);
+  try { plistZiKhongDoi(cay); } finally { rmSync(cay, { recursive: true, force: true }); }
+});
+test("AC-7 chiều đỏ: sửa plist zalo-import trên bản sao → đỏ", () => {
+  const cay = banSaoPlistZi(true);
+  try { assert.throws(() => plistZiKhongDoi(cay), /Command failed/); } finally { rmSync(cay, { recursive: true, force: true }); }
 });
 test("AC-7 node thật thiếu → TRẦN THỜI GIAN TẮT, cùng các bước, cùng mã thoát", () => voiRoot({}, async (root) => {
   const coDongHo = await chay(root, {});
