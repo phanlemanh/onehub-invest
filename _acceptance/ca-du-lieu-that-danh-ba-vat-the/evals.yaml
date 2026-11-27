@@ -3,15 +3,15 @@ feature_slug: ca-du-lieu-that-danh-ba-vat-the
 evals:
   - id: E1
     criterion: AC-1
-    executor: script
-    cmd: config:executors.script.da1_db
+    executor: test
+    cmd: config:executors.test.da1_db
     paths: ["pipeline/scripts/danh-ba-vat-the-iso.itest.mjs", "pipeline/data/xa-nut-du-an.json"]
     expected: "exit 0; ca DA1-AC-4c xanh: số nút dự án không mot_loi_khai = số mục tệp xã (20), mọi nút ra ISO, năm khu ghim đúng mã"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E2
     criterion: AC-2
-    executor: script
-    cmd: config:executors.script.da1_db
+    executor: test
+    cmd: config:executors.test.da1_db
     paths: ["pipeline/scripts/danh-ba-vat-the-iso.itest.mjs", "pipeline/danh-ba-vat-the.mjs"]
     expected: "exit 0; ca DA1-AC-7 xanh trên bản chép đã áp 088 (giả lập bằng đổi tên iso_regions, đổi lại ở finally); có dòng chẩn đoán «vế 082 còn khoá hai mã không đo được ở đây»; iso_regions còn nguyên sau ca (DA1-AC-1 chạy sau vẫn xanh)"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
