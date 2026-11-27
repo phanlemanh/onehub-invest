@@ -26,6 +26,11 @@ import {
   trinhTokenCuaApi,
 } from "../collectors/airdna-research.js";
 
+// ZC23 AC-6: hằng lấy từ tệp bộ thu — test KHÔNG gõ tên miền nguồn. Import ĐỘNG + Record
+// để CÙNG tệp test biên dịch được trên mốc cũ (chưa có các xuất này): trên mốc ca mới đỏ
+// từng ca khi chạy (boThu.API / lapTrangMapListings undefined), không nổ cả tệp.
+const boThu = (await import("../collectors/airdna-research.js")) as Record<string, any>;
+
 const jwt = (payload: object) =>
   `eyJhbGciOiJIUzI1NiJ9.${Buffer.from(JSON.stringify(payload)).toString("base64url")}.chuky`;
 const giay = (ms: number) => Math.floor(ms / 1000);
@@ -347,6 +352,33 @@ test("2511-s02 call: 401 RỒI bước làm mới gặp lỗi thường → ném
   assert.equal(demDong(dong, "AUTH FAIL [S02]"), 0);
 });
 
+test("2511-s02 call: trang kế map_listings@15000 → đường dẫn GỬI ĐI không mang @offset (hậu tố bị 404), danh tính bản ghi vẫn giữ tên trang", async () => {
+  // đo 26/11 18:38–18:41: /map_listings@15000 → 404; cùng lời với offset trong THÂN → 200, 15000 căn khác trang đầu
+  const daGoi: string[] = [];
+  const { ctx } = ctxThu(conHan, async () => {});
+  const kq = await call("POST", "/v1/market/47/map_listings@15000", { pagination: { page_size: 15000, offset: 15000 } }, ctx, fetchGia(async (goi) => {
+    daGoi.push(goi.url);
+    return json(200, { payload: { listings: [] } })();
+  }));
+  assert.deepEqual(daGoi, [`${boThu.API}/v1/market/47/map_listings`], "hậu tố @offset chỉ là tên trang, không gửi lên nguồn");
+  assert.deepEqual((kq as { payload: { reqBody: unknown } }).payload.reqBody, { pagination: { page_size: 15000, offset: 15000 } }, "offset nằm trong thân");
+  assert.equal(kq?.sourceId, "/v1/market/47/map_listings@15000", "sourceId giữ tên trang để các trang không trùng danh tính");
+  assert.equal(kq?.meta?.apiPath, "/v1/market/47/map_listings@15000");
+  assert.equal((kq as { payload: { url: string } }).payload.url, `${boThu.API}/v1/market/47/map_listings`);
+  assert.equal(ctx.failed, 0);
+});
+
+test("2511-s02 call: đường dẫn không có @offset thì giữ nguyên, gửi đúng", async () => {
+  const daGoi: string[] = [];
+  const { ctx } = ctxThu(conHan, async () => {});
+  const kq = await call("GET", "/v1/market/47/map_listings", null, ctx, fetchGia(async (goi) => {
+    daGoi.push(goi.url);
+    return json(200, { payload: { listings: [] } })();
+  }));
+  assert.deepEqual(daGoi, [`${boThu.API}/v1/market/47/map_listings`]);
+  assert.equal(kq?.sourceId, "/v1/market/47/map_listings");
+});
+
 // ---- lượt thu không còn trình duyệt, nhịp ≥ 5 giây giữa các lời
 // tệp test chạy qua dist/test → nguồn ở ../../src/collectors; chạy src/test trực tiếp → ../collectors.
 const thuMucTest = dirname(fileURLToPath(import.meta.url));
@@ -422,4 +454,65 @@ test("2511-s02 lệnh login: nguồn KHÔNG có lệnh login → in Usage, thoá
   assert.equal(r.status, 1);
   assert.match(r.stdout, /Usage:/);
   assert.doesNotMatch(r.stdout, /profile bộ thu/);
+});
+
+// ---- ZC23 AC-5: trần vòng phân trang map_listings — dừng ≤ 11 lời ở cả hai ca nguồn bất
+// thường, chạm trần thì lượt LỘ LỖI (không «xong» im lặng); thị trường thường vẫn đủ trang.
+const trang = (so: number) =>
+  json(200, { payload: { listings: Array.from({ length: so }, (_, i) => ({ id: i })) } })(); // call() bọc data — thân HTTP chỉ có payload
+
+test("ZC23 AC-5 nguồn LẶP trang đầu mãi → dừng đúng trần (≤ 11 lời), lượt lộ lỗi, có dòng log lý do", async () => {
+  assert.equal(typeof boThu.lapTrangMapListings, "function", "đỏ trên mốc 99d49687f: chưa có helper trần trang");
+  const lapTrangMapListings = boThu.lapTrangMapListings;
+  const TRANG_MAP_TOIDA = boThu.TRANG_MAP_TOIDA;
+  const { ctx, dong } = ctxThu(conHan, async () => {});
+  const dem = { mapListings: 0 };
+  const goi = (path: string, body: unknown) =>
+    call("POST", path, body, ctx, fetchGia((goiDi) => {
+      if (goiDi.url.includes("map_listings")) dem.mapListings += 1;
+      return trang(15000); // nguồn bỏ qua offset — luôn trả cùng 15000 căn
+    }));
+  const daLoi = { so: 0 };
+  const daNhan: string[] = [];
+  await lapTrangMapListings(goi, "47", (...a: unknown[]) => void dong.push(a.join(" ")), () => { daLoi.so += 1; }, (it: { sourceId?: string } | null) => daNhan.push(String(it?.sourceId)));
+  assert.equal(dem.mapListings, TRANG_MAP_TOIDA, `phải dừng đúng trần ${TRANG_MAP_TOIDA} lời (≤ 11 của hợp đồng; đỏ trên mốc: không có trần, chạy tới trần chặn bản giả 30)`);
+  assert.equal(daLoi.so, 1, "chạm trần phải ghi lỗi ĐÚNG MỘT lần — lượt lộ lỗi, không xong im lặng");
+  assert.ok(dong.some((d) => d.includes("chạm trần")), "phải có dòng log nói lý do dừng");
+  assert.equal(daNhan.length, TRANG_MAP_TOIDA, "các trang đã nhận vẫn vào items");
+});
+
+test("ZC23 AC-5 nguồn trả TRANG MỚI đủ 15000 căn mãi → dừng đúng trần (≤ 11 lời), lộ lỗi", async () => {
+  const lapTrangMapListings = boThu.lapTrangMapListings;
+  const TRANG_MAP_TOIDA = boThu.TRANG_MAP_TOIDA;
+  const { ctx, dong } = ctxThu(conHan, async () => {});
+  const dem = { mapListings: 0 };
+  const goi = (path: string, body: unknown) =>
+    call("POST", path, body, ctx, fetchGia((goiDi) => {
+      if (goiDi.url.includes("map_listings")) dem.mapListings += 1;
+      return trang(15000); // mỗi lời một «trang mới» đủ 15000 căn — không bao giờ cạn
+    }));
+  const daLoi = { so: 0 };
+  await lapTrangMapListings(goi, "47", (...a: unknown[]) => void dong.push(a.join(" ")), () => { daLoi.so += 1; }, () => {});
+  assert.equal(dem.mapListings, TRANG_MAP_TOIDA, `${dem.mapListings} lời — phải đúng trần ≤ 11 (đỏ trên mốc: không có trần)`);
+  assert.equal(daLoi.so, 1);
+  assert.ok(dong.some((d) => d.includes("chạm trần")));
+});
+
+test("ZC23 AC-5 vế KHÔNG bắn: thị trường 3 trang bình thường → đủ 3 trang, không lỗi, không dòng trần", async () => {
+  const lapTrangMapListings = boThu.lapTrangMapListings;
+  const { ctx, dong } = ctxThu(conHan, async () => {});
+  const dem = { mapListings: 0 };
+  const soTrang = [15000, 15000, 623]; // 2 trang đủ + trang cuối thiếu → dừng tự nhiên
+  const goi = (path: string, body: unknown) =>
+    call("POST", path, body, ctx, fetchGia((goiDi) => {
+      if (goiDi.url.includes("map_listings")) return trang(soTrang[dem.mapListings++] ?? 0);
+      return trang(0);
+    }));
+  const daLoi = { so: 0 };
+  const danhTinh: string[] = [];
+  await lapTrangMapListings(goi, "47", (...a: unknown[]) => void dong.push(a.join(" ")), () => { daLoi.so += 1; }, (it: { sourceId?: string } | null) => danhTinh.push(String(it?.sourceId)));
+  assert.equal(dem.mapListings, 3, "3 trang bình thường phải lấy đủ 3");
+  assert.equal(daLoi.so, 0, "không chạm trần → không ghi lỗi");
+  assert.ok(!dong.some((d) => d.includes("chạm trần")), "không có dòng trần");
+  assert.deepEqual(danhTinh, ["/v1/market/47/map_listings", "/v1/market/47/map_listings@15000", "/v1/market/47/map_listings@30000"]);
 });
