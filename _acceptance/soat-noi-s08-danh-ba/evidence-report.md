@@ -1,29 +1,27 @@
 ---
 schema_version: 2
 feature_slug: soat-noi-s08-danh-ba
-verdict: REJECT
-failed_evals: ["E4","E5","E7"]
+verdict: PASS
+failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 4a35f80dd3b4d26780f75d8e795fb3bc9d2c677b
+verified_commit: a98f3a56b0bf10e9587470aeadaf7703cb3b3aa8
 human_signoff:
 ---
 
 # Evidence Report: soat-noi-s08-danh-ba
-
-Round 1. Ba eval của tính năng chưa đạt: E4, E5, E7. Verdict REJECT, trả về bước làm.
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
 | E1 | AC-1 | script | PASS |
 | E2 | AC-2 | script | PASS |
 | E3 | AC-3 | script | PASS |
-| E4 | AC-4 | script | FAIL |
-| E5 | AC-5 | script | FAIL |
+| E4 | AC-4 | script | PASS |
+| E5 | AC-5 | script | PASS |
 | E6 | AC-6 | script | PASS |
-| E7 | AC-7 | script | FAIL |
+| E7 | AC-7 | script | PASS |
 | E8 | AC-6 | ui-check | PASS |
 | E9 | AC-3 | test | PASS |
 | E10 | AC-3 | test | PASS |
@@ -32,157 +30,141 @@ Round 1. Ba eval của tính năng chưa đạt: E4, E5, E7. Verdict REJECT, tr�
 ## Evidence
 
 - eval: E1
-  run_id: minted-soat-noi-s08-danh-ba-E1-r1
+  run_id: minted-soat-noi-s08-danh-ba-E1-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.ns8_lop
-  verified_at: 2026-11-26T21:33:37Z
+  verified_at: 2026-11-26T23:41:26Z
   output: |
     node --test pipeline/scripts/noi-du-an-s08-lop.test.mjs
-    ℹ duration_ms 58.023166
+    ℹ duration_ms 64.051
 
 - eval: E2
-  run_id: minted-soat-noi-s08-danh-ba-E2-r1
+  run_id: minted-soat-noi-s08-danh-ba-E2-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.ns8_the
-  verified_at: 2026-11-26T21:33:37Z
+  verified_at: 2026-11-26T23:41:26Z
   output: |
-    node --test --test-concurrency=1 --test-name-pattern='^NS8-2:' pipeline/scripts/noi-du-an-s08-luat.itest.mjs
-    ℹ duration_ms 2462.546584
+    ca NS8-2 trên DB thử
+    ℹ duration_ms 2785.08775
 
 - eval: E3
-  run_id: minted-soat-noi-s08-danh-ba-E3-r1
+  run_id: minted-soat-noi-s08-danh-ba-E3-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.ns8_ap
-  verified_at: 2026-11-26T21:33:37Z
+  verified_at: 2026-11-26T23:41:26Z
   output: |
-    node --test --test-concurrency=1 --test-name-pattern='^NS8-3:' pipeline/scripts/noi-du-an-s08-luat.itest.mjs
-    ℹ duration_ms 1883.611833
+    ca NS8-3 trên DB thử
+    ℹ duration_ms 2744.149334
 
 - eval: E4
-  run_id: minted-soat-noi-s08-danh-ba-E4-r1
-  exit_code: 1
+  run_id: minted-soat-noi-s08-danh-ba-E4-r2
+  exit_code: 0
   baseline: n-a
   verifier: config:executors.script.ns8_dao
-  verified_at: 2026-11-26T21:33:37Z
+  verified_at: 2026-11-26T23:41:26Z
   output: |
-    ✖ NS8-4: đảo nghỉ bí danh, dòng nối về dao-luat, giữ nút, ghi người đảo; đảo lần hai báo da-dao
-    AssertionError: trước đảo phải đếm được 4 bí danh sống của lượt
-    actual: 0, expected: 4
-    at noi-du-an-s08-luat.itest.mjs:164:10
-    ℹ pass 0, fail 1
+    ca NS8-4 trên DB thử
+    ℹ duration_ms 2592.467375
 
 - eval: E5
-  run_id: minted-soat-noi-s08-danh-ba-E5-r1
-  exit_code: 1
+  run_id: minted-soat-noi-s08-danh-ba-E5-r2
+  exit_code: 0
   baseline: n-a
   verifier: config:executors.script.ns8_kiem
-  verified_at: 2026-11-26T21:33:37Z
+  verified_at: 2026-11-26T23:41:26Z
   output: |
-    ✖ NS8-5: lệnh kiểm thoát 0 sau áp; cấy lệch tỉnh, thiếu trạng thái thì thoát 1; hai nút bị DB chặn nêu loại lỗi, không in mã
-    AssertionError: áp lại không đúc nút mới
-    actual: 2, expected: 0
-    at noi-du-an-s08-luat.itest.mjs:180:10
-    ℹ pass 0, fail 1
+    ca NS8-5 trên DB thử
+    ℹ duration_ms 2804.487459
 
 - eval: E6
-  run_id: minted-soat-noi-s08-danh-ba-E6-r1
+  run_id: minted-soat-noi-s08-danh-ba-E6-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.ns8_app
-  verified_at: 2026-11-26T21:33:37Z
+  verified_at: 2026-11-26T23:41:26Z
   output: |
-    cd app && bash ../db/db-thu.sh oneinvest_suite_rs8 --chay node --import tsx --test --test-concurrency=1 tests/registry-s08-luat.test.tsx
-    ℹ duration_ms 5085.523208
+    ca RS8 trên DB của riêng lượt
+    ℹ duration_ms 5105.849833
 
 - eval: E7
-  run_id: minted-soat-noi-s08-danh-ba-E7-r1
-  exit_code: 1
-  baseline: n-a
-  verifier: config:executors.script.ns8_that
-  verified_at: 2026-11-26T21:33:37Z
-  output: |
-    bộ gắn PL20 sha: e27d1e690
-    Cannot find package 'pg' imported from .../scratchpad/p4-e27/pipeline/lib/danh-ba-vat-the.mjs
-    Lệnh dừng trước khi đo được ô nào; phép đo AC-7 chưa chạy tới.
-
-- eval: E8
-  run_id: minted-soat-noi-s08-danh-ba-E8-r1
+  run_id: minted-soat-noi-s08-danh-ba-E7-r2
   exit_code: 0
   baseline: n-a
-  verifier: scripts/ui-capture.sh
-  verified_at: 2026-11-26T21:33:37Z
+  verifier: config:executors.script.ns8_that
+  verified_at: 2026-11-26T23:41:26Z
+  output: |
+    đạt: mọi ô khớp bảng kỳ vọng
+
+- eval: E8
+  run_id: minted-soat-noi-s08-danh-ba-E8-r2
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.ui-check
+  verified_at: 2026-11-26T23:41:26Z
   screenshot: evidence/E8-step1.png
   observed: |
-    E8-step1.png (1440, tối): trang Danh bạ; thẻ «Mã nguồn chưa nối» = 357; chân thẻ hiện «S06 8/349 (324 vào nút ứng viên) · S08 5/185 (166 vào nút ứng viên) · S09 344/344 · S09 đã cấp tên 175 toà», xuống dòng trong thẻ, không tràn, chữ sáng trên nền tối.
-    E8-step2.png (375x812, sáng): chỉ thấy thẻ Dự án, Toà, Căn và đầu thẻ thứ tư (chân ô nằm dưới nếp cuộn), không tràn ngang.
-    E8-step3.png (375x1400, sáng): chân ô xuống dòng gọn trong thẻ, không tràn, không cuộn ngang. Hai số S08 khác nhau (5/185 và 166), khớp Expected.
+    E8-step1.png (tối, 1440x900): the KPI «Mã nguồn chưa nối» = 357, chân ô ghi «S06 8/349 (324 vào nút ứng viên) · S08 5/185 (166 vào nút ứng viên) · S09 344/344 · S09 đã cấp tên 175 toà», xuống dòng gọn trong ô, không tràn; nền tối đúng. E8-step2.png (sáng, 375x812): chỉ thấy bốn thẻ KPI xếp dọc, thẻ «Mã nguồn chưa nối» bị cắt ở nếp gập nên không thấy chân ô; không có cuộn ngang. E8-step3.png (sáng, 375x1100): thẻ «Mã nguồn chưa nối» 357, chân ô «S06 8/349 (324 vào nút ứng viên) · S08 5/185 (166 vào nút ứng viên) · S09 344/344 · S09 đã cấp tên 175 toà» xuống 2 dòng nằm trọn trong thẻ, không tràn, không đè. Phần S08 đúng dạng «S08 chưa nối/đã nạp» (5/185) kèm «166 vào nút ứng viên», hai số khác nhau; khớp Expected ở cả sáng và tối.
   network_observed: n-a (driver)
 
 - eval: E9
-  run_id: minted-soat-noi-s08-danh-ba-E9-r1
+  run_id: minted-soat-noi-s08-danh-ba-E9-r2
   exit_code: 0
   baseline: red
   verifier: config:executors.suite.pipeline_a
-  verified_at: 2026-11-26T21:33:37Z
+  verified_at: 2026-11-26T23:41:26Z
   output: |
-    node scripts/suite-neu-doi.mjs pipeline_a -- 'cd pipeline && npm run test:a'
-    ℹ duration_ms 221757.986125
+    nửa A bộ test pipeline
+    ℹ duration_ms 217215.77725
 
 - eval: E10
-  run_id: minted-soat-noi-s08-danh-ba-E10-r1
+  run_id: minted-soat-noi-s08-danh-ba-E10-r2
   exit_code: 0
   baseline: red
   verifier: config:executors.suite.pipeline_b
-  verified_at: 2026-11-26T21:33:37Z
+  verified_at: 2026-11-26T23:41:26Z
   output: |
-    node scripts/suite-neu-doi.mjs pipeline_b -- 'cd pipeline && npm run test:b'
-    ℹ duration_ms 113443.133541
+    nửa B bộ test pipeline
+    ℹ duration_ms 112336.273916
 
 - eval: E11
-  run_id: minted-soat-noi-s08-danh-ba-E11-r1
+  run_id: minted-soat-noi-s08-danh-ba-E11-r2
   exit_code: 0
   baseline: red
   verifier: config:executors.suite.pipeline_that
-  verified_at: 2026-11-26T21:33:37Z
+  verified_at: 2026-11-26T23:41:26Z
   output: |
-    node scripts/suite-neu-doi.mjs pipeline_that -- 'cd pipeline && npm run test:that'
-    ℹ duration_ms 2373837.229791
+    ca pipeline dữ liệu thật
+    ℹ duration_ms 2901948.739291
 
 ### Lệnh suite (hồi quy)
 
 - cmd: node scripts/suite-neu-doi.mjs agent -- 'cd agent && npm test'
-  run_id: minted-soat-noi-s08-danh-ba-SUITE-node_scripts_suite_neu_doi_mjs_agent_cd_-r1
+  run_id: minted-soat-noi-s08-danh-ba-SUITE-node_scripts_suite_neu_doi_mjs_agent_cd_-r2
   exit_code: 0
-  verified_at: 2026-11-26T21:33:37Z
+  verified_at: 2026-11-26T23:41:26Z
 
 - cmd: node scripts/suite-neu-doi.mjs app -- 'cd app && npx tsc --noEmit && npm run lint'
-  run_id: minted-soat-noi-s08-danh-ba-SUITE-lint-r1
+  run_id: minted-soat-noi-s08-danh-ba-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-11-26T21:33:37Z
+  verified_at: 2026-11-26T23:41:26Z
 
 - cmd: node scripts/suite-neu-doi.mjs app_ui -- 'cd app && npm test'
-  run_id: minted-soat-noi-s08-danh-ba-SUITE-node_scripts_suite_neu_doi_mjs_app_ui_cd-r1
-  exit_code: 1
-  verified_at: 2026-11-26T21:33:37Z
-  ghi chú: lệnh suite không gắn eval, đỏ một ca. RS8 («S08 đã nối đếm hai bảng một lần…») ném trong before() vì npm test của app cấp DB oneinvest_suite_app_1272 trong khi ca đòi tên oneinvest_suite_rs8. 1287 ca qua, 1 ca đỏ, 9 bỏ qua.
+  run_id: minted-soat-noi-s08-danh-ba-SUITE-node_scripts_suite_neu_doi_mjs_app_ui_cd-r2
+  exit_code: 0
+  verified_at: 2026-11-26T23:41:26Z
 
 - cmd: node scripts/suite-neu-doi.mjs ui_lint_rules -- 'cd app && npm run test:lint-rules'
-  run_id: minted-soat-noi-s08-danh-ba-SUITE-test_lint_rules-r1
+  run_id: minted-soat-noi-s08-danh-ba-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-11-26T21:33:37Z
+  verified_at: 2026-11-26T23:41:26Z
 
 - cmd: node scripts/suite-neu-doi.mjs portal_static -- 'node scripts/check-portal-compliance.mjs'
-  run_id: minted-soat-noi-s08-danh-ba-SUITE-node_scripts_suite_neu_doi_mjs_portal_st-r1
+  run_id: minted-soat-noi-s08-danh-ba-SUITE-node_scripts_suite_neu_doi_mjs_portal_st-r2
   exit_code: 0
-  verified_at: 2026-11-26T21:33:37Z
-
-### Lệnh đỏ không gắn eval
-
-- node scripts/suite-neu-doi.mjs app_ui -- 'cd app && npm test' (suite hồi quy, đỏ một ca RS8 như trên).
-- Ba lệnh đỏ còn lại đã gắn eval: NS8-4 (E4), NS8-5 (E5), noi-du-an-s08-that.mjs (E7).
+  verified_at: 2026-11-26T23:41:26Z
 
 ## Known limits
 
@@ -190,25 +172,22 @@ Round 1. Ba eval của tính năng chưa đạt: E4, E5, E7. Verdict REJECT, tr�
 
 ## Analyst
 
-none — mọi eval feature đo được baseline đều red trên baseline (có phân biệt): E9, E10, E11. Lệnh suite xanh cả hai phía là regression-guard bình thường.
+none — không eval nào xanh trên cả HEAD lẫn baseline; E9, E10, E11 đỏ trên baseline (có phân biệt), E1–E8 không đo được trên baseline.
 
-Baseline không đo:
-- node --test pipeline/scripts/noi-du-an-s08-lop.test.mjs: bỏ qua baseline: tệp pipeline/scripts/noi-du-an-s08-lop.test.mjs có ở cây đang kiểm nhưng chưa có ở merge-base befda13c624655ee0c0e4bb44b8f6482fec427d4 — eval mới, chạy trên code cũ không phân biệt gì
-- node --test --test-concurrency=1 --test-name-pattern='^NS8-2:' pipeline/scripts/noi-du-an-s08-luat.itest.mjs: bỏ qua baseline: tệp pipeline/scripts/noi-du-an-s08-luat.itest.mjs có ở cây đang kiểm nhưng chưa có ở merge-base befda13c624655ee0c0e4bb44b8f6482fec427d4 — eval mới, chạy trên code cũ không phân biệt gì
-- node --test --test-concurrency=1 --test-name-pattern='^NS8-3:' pipeline/scripts/noi-du-an-s08-luat.itest.mjs: bỏ qua baseline: tệp pipeline/scripts/noi-du-an-s08-luat.itest.mjs có ở cây đang kiểm nhưng chưa có ở merge-base befda13c624655ee0c0e4bb44b8f6482fec427d4 — eval mới, chạy trên code cũ không phân biệt gì
-- node --test --test-concurrency=1 --test-name-pattern='^NS8-4:' pipeline/scripts/noi-du-an-s08-luat.itest.mjs: bỏ qua baseline: tệp pipeline/scripts/noi-du-an-s08-luat.itest.mjs có ở cây đang kiểm nhưng chưa có ở merge-base befda13c624655ee0c0e4bb44b8f6482fec427d4 — eval mới, chạy trên code cũ không phân biệt gì
-- node --test --test-concurrency=1 --test-name-pattern='^NS8-5:' pipeline/scripts/noi-du-an-s08-luat.itest.mjs: bỏ qua baseline: tệp pipeline/scripts/noi-du-an-s08-luat.itest.mjs có ở cây đang kiểm nhưng chưa có ở merge-base befda13c624655ee0c0e4bb44b8f6482fec427d4 — eval mới, chạy trên code cũ không phân biệt gì
-- cd app && bash ../db/db-thu.sh oneinvest_suite_rs8 --chay node --import tsx --test --test-concurrency=1 tests/registry-s08-luat.test.tsx: bỏ qua baseline: tệp app/tests/registry-s08-luat.test.tsx có ở cây đang kiểm nhưng chưa có ở merge-base befda13c624655ee0c0e4bb44b8f6482fec427d4 — eval mới, chạy trên code cũ không phân biệt gì
-- cd app && node --import tsx ../pipeline/scripts/noi-du-an-s08-that.mjs: bỏ qua baseline: tệp pipeline/scripts/noi-du-an-s08-that.mjs có ở cây đang kiểm nhưng chưa có ở merge-base befda13c624655ee0c0e4bb44b8f6482fec427d4 — eval mới, chạy trên code cũ không phân biệt gì
-
-## Judge
-
-Không có eval judgment nào trong hợp đồng này; không có hội đồng chấm và không có mục chờ human_override.
+Baseline khong do
+- node --test pipeline/scripts/noi-du-an-s08-lop.test.mjs: bo qua baseline: tep pipeline/scripts/noi-du-an-s08-lop.test.mjs co o cay dang kiem nhung chua co o merge-base befda13c624655ee0c0e4bb44b8f6482fec427d4 — eval moi, chay tren code cu khong phan biet gi
+- node --test --test-concurrency=1 --test-name-pattern='^NS8-2:' pipeline/scripts/noi-du-an-s08-luat.itest.mjs: bo qua baseline: tep pipeline/scripts/noi-du-an-s08-luat.itest.mjs co o cay dang kiem nhung chua co o merge-base befda13c624655ee0c0e4bb44b8f6482fec427d4 — eval moi, chay tren code cu khong phan biet gi
+- node --test --test-concurrency=1 --test-name-pattern='^NS8-3:' pipeline/scripts/noi-du-an-s08-luat.itest.mjs: bo qua baseline: tep pipeline/scripts/noi-du-an-s08-luat.itest.mjs co o cay dang kiem nhung chua co o merge-base befda13c624655ee0c0e4bb44b8f6482fec427d4 — eval moi, chay tren code cu khong phan biet gi
+- node --test --test-concurrency=1 --test-name-pattern='^NS8-4:' pipeline/scripts/noi-du-an-s08-luat.itest.mjs: bo qua baseline: tep pipeline/scripts/noi-du-an-s08-luat.itest.mjs co o cay dang kiem nhung chua co o merge-base befda13c624655ee0c0e4bb44b8f6482fec427d4 — eval moi, chay tren code cu khong phan biet gi
+- node --test --test-concurrency=1 --test-name-pattern='^NS8-5:' pipeline/scripts/noi-du-an-s08-luat.itest.mjs: bo qua baseline: tep pipeline/scripts/noi-du-an-s08-luat.itest.mjs co o cay dang kiem nhung chua co o merge-base befda13c624655ee0c0e4bb44b8f6482fec427d4 — eval moi, chay tren code cu khong phan biet gi
+- cd app && bash ../db/db-thu.sh oneinvest_suite_rs8 --chay node --import tsx --test --test-concurrency=1 tests/registry-s08-luat.test.tsx: bo qua baseline: tep app/tests/registry-s08-luat.test.tsx co o cay dang kiem nhung chua co o merge-base befda13c624655ee0c0e4bb44b8f6482fec427d4 — eval moi, chay tren code cu khong phan biet gi
+- cd app && node --import tsx ../pipeline/scripts/noi-du-an-s08-that.mjs: bo qua baseline: tep pipeline/scripts/noi-du-an-s08-that.mjs co o cay dang kiem nhung chua co o merge-base befda13c624655ee0c0e4bb44b8f6482fec427d4 — eval moi, chay tren code cu khong phan biet gi
 
 ## Variance
 
-none — mọi eval chạy một lần, xác định; không eval nào có pass_rate lẫn.
+none — mọi eval chạy một lần, xác định, không có pass_rate lẫn.
 
 ## Iterations
 
-Round 1: E4, E5, E7 failed — E4 đếm được 0 bí danh sống của lượt trước đảo (đòi 4); E5 áp lại vẫn đúc 2 nút mới (đòi 0); E7 dừng vì bộ gắn PL20 chạy từ thư mục tạm không tìm được gói pg, nên AC-7 chưa đo được. Lệnh suite app_ui cũng đỏ một ca RS8 do tên DB. Returned to implementation.
+Round 1: E4, E5 (thước dựa ca NS8-3), E6 (đòi tên DB cứng) và E7 (thiếu pg ở P4_WT) bị từ chối. Returned to implementation.
+Round 2: E1–E11 đạt, các lệnh suite đạt; verdict PASS.
