@@ -59,6 +59,13 @@ import { MAU_DB_THU } from "../lib/db-thu-chot.mjs";
 const GOC = join(PIPE, "..");
 // Cổng chết (9 — discard, không ai nghe): rào hỏng thì tiến trình con gặp ECONNREFUSED, không bao giờ chạm DB thật.
 const CHET = (db) => url("postgres", TK, "127.0.0.1:9", db);
+// AC-1 «mọi cách viết»: bốn cách viết tên `oneinvest` của CHOT-1, chuyển sang cổng chết (S4 r1, hình dạng 5).
+const CHET_4 = [
+  ["postgres://", CHET("oneinvest")],
+  ["postgresql://", url("postgres" + "ql", TK, "127.0.0.1:9", "oneinvest")],
+  ["?sslmode", url("postgres", TK, "localhost:9", "oneinvest?sslmode=disable")],
+  ["thiếu mật khẩu", url("postgres", "oneinvest", "127.0.0.1:9", "oneinvest")],
+];
 // Tệp trong phạm vi · tên rào · dòng rào (đột biến thay bằng URL trần) · thông điệp khi tệp thử nối mà DB không tới.
 const PHAM_VI = [
   {
@@ -99,10 +106,10 @@ test("RV-2 chạy trần tệp trong phạm vi: URL DB chung (cả khi CI=true) 
     let tuChoi = 0;
     // URL DB chung ở cổng chết TRƯỚC: tệp mất rào sẽ đỏ ở đây và vòng dừng — ca thiếu URL (rơi về :5433 thật nếu mất rào)
     // không bao giờ chạy trên tệp mất rào (gap-probe P1-1).
-    for (const [nhan, env] of [
-      ["URL DB chung", envNgoaiCi({ DATABASE_URL: CHET("oneinvest") })],
-      ["CI=true + URL DB chung", { ...envNgoaiCi({ DATABASE_URL: CHET("oneinvest") }), CI: "true" }],
-    ]) {
+    for (const [nhan, env] of CHET_4.flatMap(([cach, u]) => [
+      [`URL DB chung (${cach})`, envNgoaiCi({ DATABASE_URL: u })],
+      [`CI=true + URL DB chung (${cach})`, { ...envNgoaiCi({ DATABASE_URL: u }), CI: "true" }],
+    ])) {
       const { status, ra } = chay(p.tep, env);
       assert.match(ra, new RegExp(`${p.ten}: từ chối — DB 'oneinvest' không phải DB thử`), `${p.tep} · ${nhan}: thiếu lời từ chối — ${ra.slice(0, 300)}`);
       assert.notEqual(status, 0, `${p.tep} · ${nhan}: phải thoát lỗi`);
@@ -113,7 +120,7 @@ test("RV-2 chạy trần tệp trong phạm vi: URL DB chung (cả khi CI=true) 
     }
     // Chỉ bỏ URL khi rào của tệp đã được chứng ở hai ca trên (assert đỏ thì vòng dừng trước dòng này): tệp mất rào không bao
     // giờ được chạy thiếu URL — nó sẽ rơi về DB chung :5433 thật (gap-probe P1-1).
-    const daChungRao = tuChoi === 2;
+    const daChungRao = tuChoi === CHET_4.length * 2;
     const envThieu = envNgoaiCi({});
     if (!daChungRao) assert.fail("chưa chứng rào"); else delete envThieu.DATABASE_URL;
     const { status, ra } = chay(p.tep, envThieu);

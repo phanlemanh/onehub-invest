@@ -5,7 +5,7 @@ evals:
     criterion: AC-1
     executor: test
     cmd: config:executors.test.ht35_rao
-    expected: "exit 0; RV-2 xanh: mỗi tệp trong PHAM_VI × {URL DB chung ở cổng chết 127.0.0.1:9, CI=true + URL ấy} thoát ≠ 0, khớp «<tên>: từ chối — DB 'oneinvest' không phải DB thử», không khớp thông điệp thử nối, không ECONNREFUSED, không in URL kèm mật khẩu. Ca cổng chết chạy TRƯỚC ca thiếu URL, nên assert đầu đỏ thì vòng dừng và tệp mất rào không bao giờ được chạy thiếu URL (vì khi ấy nó rơi về :5433 thật). Chiều đỏ (đã thử): bỏ dòng rào ở check-freshness → RV-2 đỏ «scripts/check-freshness.test.mjs · URL DB chung: thiếu lời từ chối»"
+    expected: "exit 0; RV-2 xanh: mỗi tệp trong PHAM_VI × bốn cách viết tên oneinvest ở cổng chết :9 (postgres://, postgresql://, ?sslmode, thiếu mật khẩu) × {ngoài CI, CI=true} = 8 ca mỗi tệp, đều thoát ≠ 0, khớp «<tên>: từ chối — DB 'oneinvest' không phải DB thử», không khớp thông điệp thử nối, không ECONNREFUSED, không in URL kèm mật khẩu. Ca cổng chết chạy TRƯỚC ca thiếu URL, nên assert đầu đỏ thì vòng dừng và tệp mất rào không bao giờ được chạy thiếu URL (vì khi ấy nó rơi về :5433 thật). Chiều đỏ (đã thử): bỏ dòng rào ở check-freshness → RV-2 đỏ «scripts/check-freshness.test.mjs · URL DB chung (postgres://): thiếu lời từ chối»; tệp tự đổi URL postgresql:// sang tên suite trước rào → RV-2 đỏ «URL DB chung (postgresql://): thiếu lời từ chối» (S4 r1)"
     paths: ["pipeline/lib/db-thu-chot.mjs", "scripts/check-freshness.test.mjs", "pipeline/import-s09-danh-ba.test.mjs", "pipeline/scripts/db-thu-chot.test.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
@@ -85,6 +85,6 @@ evals:
     criterion: AC-8
     executor: script
     cmd: config:executors.script.ht35_bang_phu
-    expected: "exit 0; quét lại cây 1a2cb6a43 bằng cùng luật (tệp *.test.*|*.itest.* có DATABASE_URL ??|| mặc định /oneinvest) ra đúng tập tệp của bang-phu.md (66); mỗi dòng bảng có ô «Ô của HT35»; tệp trong phạm vi không còn chuỗi mặc định DB chung ở cây đang kiểm; thiết kế có mục «để lại cho HT36» nêu A và B. Lệch tập → exit 1 in tệp thừa/thiếu (đã thử: xoá dòng vn-day → «bảng thiếu tệp»)"
+    expected: "exit 0; quét lại cây 1a2cb6a43 bằng cùng luật (tệp *.test.*|*.itest.* có DATABASE_URL ??|| mặc định /oneinvest) ra đúng tập tệp của bang-phu.md (66); mỗi ô thuộc đúng một trong ba loại (**trong phạm vi** · ngoài phạm vi, vì … · để lại cho HT36) và khớp cột Ghi/Rào cùng dòng (Ghi=không → chỉ đọc; Ghi=có ∧ Rào=có → đã có rào; Ghi=có ∧ Rào trống → HT36; đúng hai dòng trong phạm vi); tệp trong phạm vi không còn chuỗi mặc định DB chung ở cây đang kiểm; thiết kế có mục «để lại cho HT36» nêu A và B. Lệch tập → exit 1 in tệp thừa/thiếu (đã thử: xoá dòng vn-day → «bảng thiếu tệp»; ô «xyz» → «ô không thuộc ba loại»; «ngoài phạm vi» thiếu vì → cùng lỗi; dòng Ghi=có Rào trống ghi «chỉ đọc» → «ô lệch cột Ghi/Rào», S4 r1)"
     paths: ["_acceptance/test-khong-roi-ve-db-chung/bang-phu.md", "docs/superpowers/specs/2026-11-27-test-khong-roi-ve-db-chung-design.md", "scripts/kiem-ht35.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]

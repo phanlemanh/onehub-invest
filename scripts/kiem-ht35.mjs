@@ -81,9 +81,34 @@ function bangPhu() {
     if (conLai.includes(f)) sai(`tệp trong phạm vi vẫn rơi về DB chung: ${f}`);
     else dat(`tệp trong phạm vi đã rào: ${f}`);
   }
-  const rong = dong.filter((l) => !l.split("|")[6]?.trim());
-  for (const l of rong) sai(`dòng thiếu ô của HT35: ${l.slice(0, 100)}`);
-  if (!rong.length) dat(`mọi dòng có ô (${dong.length})`);
+  // AC-8: ô phải là ĐÚNG một trong ba loại và khớp cột Ghi/Rào cùng dòng — không chỉ «khác rỗng» (S4 r1, hình dạng 3).
+  //   tệp trong phạm vi                → «**trong phạm vi**…» (và chỉ hai tệp ấy)
+  //   Ghi=không                         → «ngoài phạm vi, vì chỉ đọc…»
+  //   Ghi=có, Rào=có                    → «ngoài phạm vi, vì đã có rào…»
+  //   Ghi=có, Rào trống                 → «để lại cho HT36…»
+  const TRONG = ["pipeline/import-s09-danh-ba.test.mjs", "scripts/check-freshness.test.mjs"];
+  const loaiO = (o) =>
+    /^\*\*trong phạm vi\*\*/.test(o) ? "trong" :
+    /^ngoài phạm vi, vì \S/.test(o) ? "ngoai" :
+    /^để lại cho HT36\b/.test(o) ? "ht36" : null;
+  let lech = 0;
+  for (const l of dong) {
+    const c = l.split("|").map((x) => x.trim());
+    const tep = c[1].replace(/`/g, ""), ghi = c[3], rao = c[5], o = c[6] ?? "";
+    const loai = loaiO(o);
+    let mong;
+    if (TRONG.includes(tep)) mong = ["trong", /^\*\*trong phạm vi\*\*/];
+    else if (ghi === "không") mong = ["ngoai", /^ngoài phạm vi, vì chỉ đọc/];
+    else if (ghi === "có" && rao === "có") mong = ["ngoai", /^ngoài phạm vi, vì đã có rào/];
+    else if (ghi === "có" && rao === "") mong = ["ht36", /^để lại cho HT36/];
+    else mong = null;
+    if (!loai) { sai(`ô không thuộc ba loại (${tep}): «${o.slice(0, 80)}»`); lech += 1; }
+    else if (!mong) { sai(`cột Ghi/Rào lạ (${tep}): Ghi=«${ghi}» Rào=«${rao}»`); lech += 1; }
+    else if (loai !== mong[0] || !mong[1].test(o)) { sai(`ô lệch cột Ghi/Rào (${tep}): Ghi=«${ghi}» Rào=«${rao}» mà ô «${o.slice(0, 80)}»`); lech += 1; }
+  }
+  const soTrong = dong.filter((l) => loaiO(l.split("|")[6]?.trim() ?? "") === "trong").length;
+  if (soTrong !== TRONG.length) { sai(`số dòng «trong phạm vi» = ${soTrong}, phải = ${TRONG.length}`); lech += 1; }
+  if (!lech) dat(`mọi dòng có đúng một loại ô khớp cột Ghi/Rào (${dong.length})`);
   const tk = doc("docs/superpowers/specs/2026-11-27-test-khong-roi-ve-db-chung-design.md");
   const muc = tk.split(/^## /m).find((m) => /để lại cho HT36/i.test(m.split("\n")[0])) ?? "";
   if (/\*\*A:\*\*/.test(muc) && /\*\*B:\*\*/.test(muc)) dat("thiết kế nêu đề xuất A, B cho HT36");
