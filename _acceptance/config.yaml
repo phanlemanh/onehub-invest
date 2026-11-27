@@ -1101,6 +1101,8 @@ executors:
     s09_db: "node --test --test-concurrency=1 pipeline/scripts/danh-ba-s09.itest.mjs"   # toa-s09-hai-khu-vao-danh-ba E1, E3–E5, E8 — DB thử oneinvest_s09_<pid> ở :5433 áp 001…097, fixture tổng hợp
     s09_that: "node pipeline/scripts/danh-ba-s09-that.mjs"   # toa-s09-hai-khu-vao-danh-ba E6, E7 — chép máy thu sang DB thử, nạp bản thu API S09, đối chứng hai bản tay, chỉ in số; ngoài CI
     s09_ranh_gioi: "node pipeline/scripts/s09-ranh-gioi.mjs --base origin/main"   # toa-s09-hai-khu-vao-danh-ba E9 — vùng, tầng A, 097 áp hai lần
+    s09_toa_db: "node --test --test-concurrency=1 pipeline/lib/s09-danh-ba-can.test.mjs pipeline/scripts/danh-ba-s09-toa.itest.mjs"   # nap-s09-toa-tang-vao-danh-ba E1, E3–E6, E8, E9 — DB thử riêng lượt oneinvest_dbv_s09t_<pid> dựng từ db/migrations (db-thu-dbv.mjs), xoá khi xong; không đụng DB oneinvest
+    s09_toa_that: "node pipeline/scripts/danh-ba-s09-toa-that.mjs --tran-phut 40"   # nap-s09-toa-tang-vao-danh-ba E2, E10, E12 — chỉ đọc DB máy thu (chép sang DB thử để dựng), trần 40 phút, chỉ in số; ngoài CI
     s16_db: "node --test --test-concurrency=1 pipeline/scripts/danh-ba-s16.itest.mjs"   # nap-s16-vao-danh-ba E1, E3–E8 — itest tự dựng DB oneinvest_suite_s16_<pid> từ db/migrations, xoá khi xong
     s16_that: "node pipeline/scripts/danh-ba-s16-that.mjs"   # nap-s16-vao-danh-ba E2, E10 — ba bản thu thật trên DB thử chép máy thu, đếm độc lập, sync chạy thử đọc chỉ-đọc DB máy thu; ngoài CI
     nps_cay: "node --test --test-concurrency=1 --test-name-pattern='^NPS-1:' pipeline/scripts/phan-khu-s16-noi.itest.mjs"   # noi-phan-khu-trung-s16 AC-1
