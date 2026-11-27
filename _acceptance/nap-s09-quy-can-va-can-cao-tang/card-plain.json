@@ -1,5 +1,5 @@
 {
-  "feature_plain": "Quỹ căn đang bán của S09 (1.294 căn ở 40 dự án, 1.268 căn có giá chủ đầu tư) và căn cao tầng theo tầng (gói 2) được nạp vào kho trung gian trên máy thu, đã bỏ URL ảnh mang tên miền nguồn; trang Danh bạ của Ops hiện số quỹ căn và bảng giá từng căn trên trang dự án.",
+  "feature_plain": "Quỹ căn đang bán của S09 và căn cao tầng theo tầng được nạp vào kho trung gian trên máy thu, đã bỏ URL ảnh và toạ độ mang dấu nguồn. Trên màn Danh bạ của Ops: ô «Quỹ căn S09» đổi từ không có lên 1.294 căn · 40 dự án · 1.268 có giá (số diễn tập trên bản chép, số thật lấy lúc áp); trang mỗi dự án đã nối (24 dự án) có thêm khối «Quỹ căn đang bán». Finding vòng 2 (AC-10): lối lùi cuối cũ «pg_restore --clean» không chạy được, và chạy thử cho thấy nó còn xoá mất bảng stg; đã thay bằng lối lùi chỉ chạm dòng S09, chạy thử trên bản chép đạt (dữ liệu về đúng như trước, 14 bảng của nguồn khác không đổi).",
   "will_do": [
     {
       "id": "AC-1",
@@ -86,6 +86,13 @@
     {
       "i": 4,
       "p": "Bản thu hỏng thiếu trang đầu có thể cho trạng thái đối soát rỗng thay vì «chưa đủ» — đã ghi luật «thiếu trang đầu là chưa đủ» và thêm phép đo trên bản hỏng thật."
+    }
+  ],
+  "decisions": [
+    {
+      "id": "E10",
+      "q": "Hồ sơ áp đủ năm thứ và cách lùi mới đã chạy thử, anh thấy đạt chưa?",
+      "why": "Ba góc chấm đều đề xuất Đạt. Cách lùi 4c đã thay sau finding AC-10 vòng 2 và chạy thử 27/11 trên bản chép DB máy thu: về đúng 24 bản thu · 40 dòng như trước áp, 14 bảng stg nguồn khác giữ nguyên; lệnh cũ ở đối chứng xoá mất bảng stg_s09_danh_ba. Hồ sơ: ap-may-thu.md mục 4, bằng chứng evidence/lui-4c-thu.txt."
     }
   ]
 }
