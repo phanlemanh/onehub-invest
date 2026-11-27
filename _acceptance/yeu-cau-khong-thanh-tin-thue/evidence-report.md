@@ -6,7 +6,7 @@ failed_evals: []
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: f419527408363051dd7b91fddef939920563bbb4
+verified_commit: edbd5e745481c32919cf110a16b072ef426e220f
 human_signoff: Mạnh 2026-11-27
 ---
 
@@ -194,3 +194,7 @@ sha: 2959fe8184cd5b18859693b781e2e471d8263320 · suites: 8 lệnh exit 0 · eval
 ### Re-pin lần 2 — 2026-11-27, do AC-5 lối (b) mốc đo lúc chạy, lời Mạnh 27/11; gộp main 1fe6ab9ca
 run_id: repin-20261127T091012Z-33901
 sha: f419527408363051dd7b91fddef939920563bbb4 · suites: 8 lệnh exit 0 · evals: 9/9 eval máy đạt kỳ vọng · ngoài làn máy: E6 (E6 không khai paths) · AC không có chốt máy: AC-6
+
+### Re-pin lần 3 — 2026-11-27, do ngoại lệ vùng suite cho tệp mẫu PL42; gộp main 30c13f6e0
+run_id: repin-20261127T104400Z-87826
+sha: edbd5e745481c32919cf110a16b072ef426e220f · suites: 8 lệnh exit 0 · evals: 9/9 eval máy đạt kỳ vọng · ngoài làn máy: E6 (E6 không khai paths) · AC không có chốt máy: AC-6
