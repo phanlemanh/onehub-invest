@@ -5,10 +5,10 @@ slug: data-api-hop-dong-reso-dd-2-1
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api, docs]
-status: approved
+status: draft
 design_doc: _acceptance/data-api-hop-dong-reso-dd-2-1/design.md
-approved_by: Mạnh
-approved_at: 2026-11-25
+approved_by:
+approved_at:
 ---
 
 # Acceptance Contract: data-api-hop-dong-reso-dd-2-1
@@ -41,7 +41,8 @@ Source input: lời giao `m5-2411-4` (gs nhận đề xuất, mã PB2, PB1 gộp
 - AC-2: Given tin thuê ngắn hạn cấy trong `listings` (có ảnh, có đêm trong `nights`) và một tin không ảnh, When gọi
   `GET /v1/listings?kind=rent_st`, Then phần tử có cùng tập khoá như AC-1, `kind` = `rent_st`, `leaseAmount` = giá niêm yết một đêm (`price_listed`) của dòng cấy,
   `leaseAmountFrequency` = `Daily`, `propertyType` = `Residential Lease`, `propertySubType` null, `originatingSystemName` =
-  `S01`, `media` = `[{mediaURL, order}]` theo đúng thứ tự ảnh cấy (tin không ảnh: `media` null), `listingTitle`, `roomType`,
+  `S01`, `media` = null ở mọi tin thuê ngắn hạn, kể cả tin có ảnh cấy (URL ảnh có thể mang số phòng của nguồn — gs
+  `m5-2511-5`; ảnh tin ngắn hạn để hàng PB4), không chuỗi nào trong thân chứa URL ảnh cấy, `listingTitle`, `roomType`,
   `accommodates`, `minimumNights`, `reviewCount`, `occupancyRate`, `averageDailyRevenue` khớp dòng cấy; và `listingKey` =
   16 ký tự hex đầu của HMAC-SHA256 với khoá bí mật lấy từ biến môi trường, trên chuỗi `S01|<id>` (test tính lại bằng cùng
   khoá và so bằng nhau); thân trả về không chứa `id` gốc hay phần số của nó, kể cả sau khi giải base64, hex của mọi chuỗi
@@ -126,7 +127,8 @@ Không có `opportunity.md` (hàng nền, không ngưỡng UAT).
 - `stateOrProvince` (ADR-0013 §4: tỉnh theo mã ISO 3166-2:VN) — bảng `areas` chưa có mã ISO, chỉ `admin_code`; thêm sau là
   đổi không phá.
 - Phân biệt `Townhouse` / `Single Family Residence` cho nhà (khung §7: chờ Q7) — hàng này trả null.
-- Ảnh tin bán, thuê dài hạn trên API (HT19 bỏ ảnh S03; ảnh S06 mang tên miền nguồn) — `media` null cho hai loại đó.
+- Ảnh tin trên API ở cả ba loại tin: bán, thuê dài hạn (HT19 bỏ ảnh S03; ảnh S06 mang tên miền nguồn) và thuê ngắn hạn
+  (URL ảnh S01 có thể mang số phòng của nguồn, gs `m5-2511-5`) — `media` null cho mọi tin. Ảnh tin ngắn hạn: hàng PB4.
 - Mọi thứ thuộc bốn câu luật an toàn của đề xuất API sản phẩm (tài khoản khách, mã căn S16, dữ liệu S07, SĐT) — chưa có lời
   Mạnh. Triển khai data-api, `sync-public` (chỉ người gọi). ADR-0019 (gs: PB2 chưa cần ADR).
 - `docs/api/openapi.yaml` — là API nội bộ của app, không phải data-api.

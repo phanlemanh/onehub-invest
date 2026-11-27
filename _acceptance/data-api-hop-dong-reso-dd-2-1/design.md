@@ -52,7 +52,7 @@ Mỗi dòng: tên mới · field DD 2.1 (resource `Property` trừ khi ghi khác
 | `latitude` | Latitude | `latitude` | `latitude` | `lat` |
 | `longitude` | Longitude | `longitude` | `longitude` | `lng` |
 | `originalEntryTimestamp` | OriginalEntryTimestamp | `first_seen` | null (bảng không có) | `firstSeen` |
-| `media` | Property.Media → Media.MediaURL, Media.Order | null (HT19: không ảnh S03; ảnh S06 mang tên miền nguồn) | `photo_urls` → `[{mediaURL, order}]` | `photoUrls` · `photos` |
+| `media` | Property.Media → Media.MediaURL, Media.Order | null (HT19: không ảnh S03; ảnh S06 mang tên miền nguồn) | null (URL ảnh có thể mang số phòng nguồn, gs `m5-2511-5`; PB4) | `photoUrls` · `photos` |
 | `lastSeenTimestamp` | — extension | `last_seen` | `last_seen` | `lastSeen` |
 | `confidence` | — extension | `confidence` | null | `confidence` |
 | `repostCount` | — extension | `n_reposts` | null | `nReposts` |

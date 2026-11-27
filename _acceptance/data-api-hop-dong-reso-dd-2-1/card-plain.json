@@ -1,44 +1,140 @@
 {
   "feature_plain": "API dữ liệu công khai đổi sang đúng tên chuẩn RESO mà Quỹ hàng đang dùng, gộp tin bán, thuê dài hạn và thuê ngắn hạn thành một loại «tin» chung, và bản mẫu công khai chạy được ngay từ DB trống — đổi phá có chủ đích khi API chưa có ai dùng.",
   "will_do": [
-    {"id": "AC-1", "p": "Sẽ trả tin bán và tin thuê dài hạn bằng tên chuẩn RESO (giá bán, giá thuê theo tháng, diện tích kèm đơn vị m², giá/m², phòng ngủ, phường, thị trường…), đúng từng giá trị, không còn tên cũ nào."},
-    {"id": "AC-2", "p": "Sẽ trả tin thuê ngắn hạn cùng một hình đó (giá theo đêm, ảnh, số khách, tỉ lệ lấp đầy), với mã tin không lần ngược được về trang gốc của nguồn."},
-    {"id": "AC-3", "p": "Sẽ cho lấy cả ba loại tin ở một đường, lọc theo loại tin, khu, số phòng ngủ, phân trang đúng trên cả hai kho tin, xem chi tiết một tin bằng mã tin; loại tin sai thì báo lỗi rõ."},
-    {"id": "AC-4", "p": "Sẽ ghi loại nhà theo đúng bảng loại hình chuẩn (căn hộ là Condominium, đất là Unimproved Land…), nhà phố và thương mại để trống phân loại con vì chưa phân biệt được, không còn mã nội bộ."},
-    {"id": "AC-5", "p": "Sẽ trả danh sách căn giá tốt bằng đúng hình tin chung cộng ba chỉ số so giá, ở cả hai cách tính, và giữ nguyên mọi chặn dữ liệu cấm của HT19."},
-    {"id": "AC-6", "p": "Sẽ có ca kiểm tự đỏ ngay khi ai đó đưa lại bản cũ của đường tin hay đường căn giá tốt."},
-    {"id": "AC-7", "p": "Sẽ giữ một danh sách tên duy nhất, máy đối chiếu từng tên với từ điển RESO chính thức và với sổ trường riêng của kho, cấy sai là đỏ."},
-    {"id": "AC-8", "p": "Sẽ đưa sổ ánh xạ dữ liệu lên RESO bản 2.1, thêm phần cho tin thuê ngắn hạn, và khai đủ sáu điều kiện cho mỗi trường riêng không có trong chuẩn."},
-    {"id": "AC-9", "p": "Sẽ để bản mẫu công khai (lược đồ + dữ liệu bịa) dựng được trên DB trống và mọi đường trả kết quả, không còn số hiệu chuẩn S02 trong dữ liệu mẫu."},
-    {"id": "AC-10", "p": "Sẽ chỉ đụng đúng các tệp được giao, không còn tên nguồn thật ở bất kỳ đâu trong mã công khai, tài liệu API sinh từ danh sách tên, README có bảng tên cũ → mới, và qua bước kiểm kiểu."}
+    {
+      "id": "AC-1",
+      "p": "Sẽ trả tin bán và tin thuê dài hạn bằng tên chuẩn RESO (giá bán, giá thuê theo tháng, diện tích kèm đơn vị m², giá/m², phòng ngủ, phường, thị trường…), đúng từng giá trị, không còn tên cũ nào."
+    },
+    {
+      "id": "AC-2",
+      "p": "Sẽ trả tin thuê ngắn hạn cùng một hình đó (giá theo đêm, số khách, tỉ lệ lấp đầy) nhưng KHÔNG kèm ảnh, với mã tin không lần ngược được về trang gốc của nguồn."
+    },
+    {
+      "id": "AC-3",
+      "p": "Sẽ cho lấy cả ba loại tin ở một đường, lọc theo loại tin, khu, số phòng ngủ, phân trang đúng trên cả hai kho tin, xem chi tiết một tin bằng mã tin; loại tin sai thì báo lỗi rõ."
+    },
+    {
+      "id": "AC-4",
+      "p": "Sẽ ghi loại nhà theo đúng bảng loại hình chuẩn (căn hộ là Condominium, đất là Unimproved Land…), nhà phố và thương mại để trống phân loại con vì chưa phân biệt được, không còn mã nội bộ."
+    },
+    {
+      "id": "AC-5",
+      "p": "Sẽ trả danh sách căn giá tốt bằng đúng hình tin chung cộng ba chỉ số so giá, ở cả hai cách tính, và giữ nguyên mọi chặn dữ liệu cấm của HT19."
+    },
+    {
+      "id": "AC-6",
+      "p": "Sẽ có ca kiểm tự đỏ ngay khi ai đó đưa lại bản cũ của đường tin hay đường căn giá tốt."
+    },
+    {
+      "id": "AC-7",
+      "p": "Sẽ giữ một danh sách tên duy nhất, máy đối chiếu từng tên với từ điển RESO chính thức và với sổ trường riêng của kho, cấy sai là đỏ."
+    },
+    {
+      "id": "AC-8",
+      "p": "Sẽ đưa sổ ánh xạ dữ liệu lên RESO bản 2.1, thêm phần cho tin thuê ngắn hạn, và khai đủ sáu điều kiện cho mỗi trường riêng không có trong chuẩn."
+    },
+    {
+      "id": "AC-9",
+      "p": "Sẽ để bản mẫu công khai (lược đồ + dữ liệu bịa) dựng được trên DB trống và mọi đường trả kết quả, không còn số hiệu chuẩn S02 trong dữ liệu mẫu."
+    },
+    {
+      "id": "AC-10",
+      "p": "Sẽ chỉ đụng đúng các tệp được giao, không còn tên nguồn thật ở bất kỳ đâu trong mã công khai, tài liệu API sinh từ danh sách tên, README có bảng tên cũ → mới, và qua bước kiểm kiểu."
+    }
   ],
   "wont_do": [
-    {"id": "OOS-1", "p": "KHÔNG đổi API nội bộ của app — đội vận hành đang gọi bằng khoá, hàng riêng đi sau."},
-    {"id": "OOS-2", "p": "KHÔNG gộp hai bảng tin trong DB (GL1) — API đọc hai bảng, sau gộp bảng thì hình trả không đổi."},
-    {"id": "OOS-3", "p": "KHÔNG đổi nhóm đường thị trường — HT20 dựng lại không dùng số S02."},
-    {"id": "OOS-4", "p": "KHÔNG đổi đường thống kê giá và độ phủ — chuẩn RESO không có phần cho số thống kê."},
-    {"id": "OOS-5", "p": "KHÔNG thêm trạng thái chào (đang chào, đã cọc, đã bán) — hàng riêng."},
-    {"id": "OOS-6", "p": "KHÔNG trả tỉnh theo mã chuẩn quốc tế — kho chưa có mã đó, thêm sau không phá ai."},
-    {"id": "OOS-7", "p": "KHÔNG tách nhà phố với biệt thự, nhà riêng — chờ quyết định phân loại riêng."},
-    {"id": "OOS-8", "p": "KHÔNG trả ảnh tin bán và thuê dài hạn — ảnh nhóm chat đã bỏ ở HT19, ảnh nguồn khác mang tên nguồn."},
-    {"id": "OOS-9", "p": "KHÔNG đụng bốn câu luật an toàn của API sản phẩm (tài khoản khách, mã căn S16, dữ liệu S07, SĐT), KHÔNG triển khai, KHÔNG đẩy sang kho công khai, KHÔNG viết ADR."},
-    {"id": "OOS-10", "p": "KHÔNG đổi tài liệu API nội bộ của app."}
+    {
+      "id": "OOS-1",
+      "p": "KHÔNG đổi API nội bộ của app — đội vận hành đang gọi bằng khoá, hàng riêng đi sau."
+    },
+    {
+      "id": "OOS-2",
+      "p": "KHÔNG gộp hai bảng tin trong DB (GL1) — API đọc hai bảng, sau gộp bảng thì hình trả không đổi."
+    },
+    {
+      "id": "OOS-3",
+      "p": "KHÔNG đổi nhóm đường thị trường — HT20 dựng lại không dùng số S02."
+    },
+    {
+      "id": "OOS-4",
+      "p": "KHÔNG đổi đường thống kê giá và độ phủ — chuẩn RESO không có phần cho số thống kê."
+    },
+    {
+      "id": "OOS-5",
+      "p": "KHÔNG thêm trạng thái chào (đang chào, đã cọc, đã bán) — hàng riêng."
+    },
+    {
+      "id": "OOS-6",
+      "p": "KHÔNG trả tỉnh theo mã chuẩn quốc tế — kho chưa có mã đó, thêm sau không phá ai."
+    },
+    {
+      "id": "OOS-7",
+      "p": "KHÔNG tách nhà phố với biệt thự, nhà riêng — chờ quyết định phân loại riêng."
+    },
+    {
+      "id": "OOS-8",
+      "p": "KHÔNG trả ảnh ở cả ba loại tin — ảnh nhóm chat đã bỏ ở HT19, ảnh nguồn tin bán mang tên nguồn, đường dẫn ảnh tin ngắn hạn có thể lộ mã phòng của nguồn (ảnh tin ngắn hạn để việc PB4)."
+    },
+    {
+      "id": "OOS-9",
+      "p": "KHÔNG đụng bốn câu luật an toàn của API sản phẩm (tài khoản khách, mã căn S16, dữ liệu S07, SĐT), KHÔNG triển khai, KHÔNG đẩy sang kho công khai, KHÔNG viết ADR."
+    },
+    {
+      "id": "OOS-10",
+      "p": "KHÔNG đổi tài liệu API nội bộ của app."
+    }
   ],
   "scope_plain": "Những việc dưới đây cố ý để ngoài hàng này:",
   "coverage_plain": [
-    {"i": 0, "p": "Phủ mọi đường và nhánh: ba loại tin, không ghi loại, chi tiết từ hai kho, căn giá tốt hai cách tính (AC-1–AC-3, AC-5)."},
-    {"i": 1, "p": "Phủ từng tên trong bảng tên cũ → mới, cho loại tin dùng và không dùng nó (AC-1, AC-2, AC-7)."},
-    {"i": 2, "p": "Phủ mọi ô của bảng loại hình, ma trận viết trước (AC-4)."},
-    {"i": 3, "p": "Phủ tên chuẩn: tên trường, giá trị phân loại, trường riêng đã khai — đối chiếu từ điển RESO chính thức (AC-7, AC-8)."},
-    {"i": 4, "p": "Phủ phần ngoài mã: bản mẫu trên DB trống, sổ ánh xạ, tài liệu, ranh giới tệp, tên nguồn thật, kiểm kiểu (AC-8–AC-10)."},
-    {"i": 5, "p": "Mỗi đường đo hai lớp — đủ tên và đúng giá trị — rồi chứng chiều đỏ trên bản cũ (AC-6); trục này chưa có nguồn đối chiếu ngoài."},
-    {"i": 6, "p": "Ô bỏ có tên: thị trường, thống kê, trạng thái chào — ở mục ngoài phạm vi."}
+    {
+      "i": 0,
+      "p": "Phủ mọi đường và nhánh: ba loại tin, không ghi loại, chi tiết từ hai kho, căn giá tốt hai cách tính (AC-1–AC-3, AC-5)."
+    },
+    {
+      "i": 1,
+      "p": "Phủ từng tên trong bảng tên cũ → mới, cho loại tin dùng và không dùng nó (AC-1, AC-2, AC-7)."
+    },
+    {
+      "i": 2,
+      "p": "Phủ mọi ô của bảng loại hình, ma trận viết trước (AC-4)."
+    },
+    {
+      "i": 3,
+      "p": "Phủ tên chuẩn: tên trường, giá trị phân loại, trường riêng đã khai — đối chiếu từ điển RESO chính thức (AC-7, AC-8)."
+    },
+    {
+      "i": 4,
+      "p": "Phủ phần ngoài mã: bản mẫu trên DB trống, sổ ánh xạ, tài liệu, ranh giới tệp, tên nguồn thật, kiểm kiểu (AC-8–AC-10)."
+    },
+    {
+      "i": 5,
+      "p": "Mỗi đường đo hai lớp — đủ tên và đúng giá trị — rồi chứng chiều đỏ trên bản cũ (AC-6); trục này chưa có nguồn đối chiếu ngoài."
+    },
+    {
+      "i": 6,
+      "p": "Ô bỏ có tên: thị trường, thống kê, trạng thái chào — ở mục ngoài phạm vi."
+    }
   ],
   "gap_probe_plain": [
-    {"i": 0, "p": "Căn cứ cho cách ghi phường, thị trường đã trích thiếu câu — đã sửa bằng câu trích đúng của ADR-0013; tỉnh theo mã quốc tế ghi rõ là để sau vì kho chưa có mã."},
-    {"i": 1, "p": "Cách viết tên (camelCase) máy ghi là ADR đã chốt nhưng ADR không chốt — đã chuyển thành câu hỏi Hỏi-3 cho anh."},
-    {"i": 2, "p": "Mã tin thuê ngắn hạn và ba test app đang chờ giám sát mà sổ chưa ghi; phép đo mã tin dễ bị lách — đã thêm hai câu hỏi, đổi sang mã ký bằng khoá bí mật và thêm ca bắt mã lần ngược được."},
-    {"i": 3, "p": "Mã nguồn trên mỗi tin chỉ đo trên dữ liệu cấy tay — đã ép chỉ trả mã dạng S0x, khác thì để trống; đếm trên dữ liệu thật để lượt chấm trên Mac mini."},
-    {"i": 4, "p": "Tài liệu API máy đọc và số phiên bản chưa có phép đo — đã thêm một ca so tên trong tài liệu với danh sách tên."}
+    {
+      "i": 0,
+      "p": "Căn cứ cho cách ghi phường, thị trường đã trích thiếu câu — đã sửa bằng câu trích đúng của ADR-0013; tỉnh theo mã quốc tế ghi rõ là để sau vì kho chưa có mã."
+    },
+    {
+      "i": 1,
+      "p": "Cách viết tên (camelCase) máy ghi là ADR đã chốt nhưng ADR không chốt — đã chuyển thành câu hỏi Hỏi-3 cho anh."
+    },
+    {
+      "i": 2,
+      "p": "Mã tin thuê ngắn hạn và ba test app đang chờ giám sát mà sổ chưa ghi; phép đo mã tin dễ bị lách — đã thêm hai câu hỏi, đổi sang mã ký bằng khoá bí mật và thêm ca bắt mã lần ngược được."
+    },
+    {
+      "i": 3,
+      "p": "Mã nguồn trên mỗi tin chỉ đo trên dữ liệu cấy tay — đã ép chỉ trả mã dạng S0x, khác thì để trống; đếm trên dữ liệu thật để lượt chấm trên Mac mini."
+    },
+    {
+      "i": 4,
+      "p": "Tài liệu API máy đọc và số phiên bản chưa có phép đo — đã thêm một ca so tên trong tài liệu với danh sách tên."
+    }
   ]
 }
