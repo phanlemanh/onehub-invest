@@ -61,7 +61,7 @@ evals:
     criterion: AC-8
     executor: judgment
     inputs: [pipeline/mappings.yaml, data-api/src/contract/listing.ts, _acceptance/data-api-hop-dong-reso-dd-2-1/design.md, docs/adr/0011-reso-first-data-law.md]
-    question: "Đọc pipeline/mappings.yaml và data-api/src/contract/listing.ts. (1) meta.dd_version là \"2.1\"; trong canonical (sale_offers) offer_id ánh xạ ListingKey, price_perm2 ánh xạ SalePricePerArea/LeasePricePerArea, first_seen ánh xạ OriginalEntryTimestamp? (2) Có mục listings ánh xạ các cột của bảng thuê ngắn hạn mà design.md §2 liệt? (3) Mục api_extensions có một mục cho MỖI khoá ghi extension trong listing.ts, và mỗi mục viết rõ đủ sáu điều kiện của ADR-0011 Quyết định 3 (tra cứu DD, lý do DD không đủ, migration hoặc «không cột mới — dựng từ cột X», CHECK hoặc lý do không có, khai báo, DQ trỏ tệp test)? PASS khi cả ba vế đạt."
+    question: "Đọc pipeline/mappings.yaml và data-api/src/contract/listing.ts. (1) meta.dd_version là \"2.1\"; trong canonical (sale_offers) offer_id ánh xạ ListingKey, price_perm2 ánh xạ SalePricePerArea/LeasePricePerArea, first_seen ánh xạ OnMarketTimestamp (hợp đồng AC-8, sổ d-20261127T030832Z-28)? (2) Có mục listings ánh xạ các cột của bảng thuê ngắn hạn mà design.md §2 liệt? (3) Mục api_extensions có một mục cho MỖI khoá ghi extension trong listing.ts, và mỗi mục viết rõ đủ sáu điều kiện của ADR-0011 Quyết định 3 (tra cứu DD, lý do DD không đủ, migration hoặc «không cột mới — dựng từ cột X», CHECK hoặc lý do không có, khai báo, DQ trỏ tệp test)? PASS khi cả ba vế đạt."
     expected: "PASS — cả ba vế đạt"
     evidence_required: [run_id, verdict, judges, rationale]
   - id: E9

@@ -11,7 +11,8 @@ src/contract/listing.ts  danh sách khoá DUY NHẤT của phần tử Listing (
 src/routes/*.ts       mỗi nhóm một file
 src/middleware/       auth.ts (Bearer/X-API-Key, DATA_API_KEYS; đóng mặc định — khoá trống chỉ mở khi NODE_ENV=development|test và không VERCEL, nơi khác 503 AUTH_NOT_CONFIGURED và index.ts không khởi động), error-handler.ts
 src/db/client.ts      pg pool từ DATABASE_URL
-seed.sql, db/         dữ liệu mẫu cho người dùng repo public
+db/schema.sql         lược đồ mẫu DUY NHẤT (PB2 AC-9): dựng mọi bảng/view route đọc trên DB rỗng; thêm bảng/cột route mới đọc thì thêm vào đây
+seed.sql              dữ liệu mẫu cho người dùng repo public — không chèn dòng nào vào bảng S02
 ```
 
 ## Lệnh

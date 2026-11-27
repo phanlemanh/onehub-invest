@@ -28,9 +28,8 @@ docker run -d --name onehub-db \
   -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=onehub \
   -p 5432:5432 postgis/postgis:16-3.4
 
-# Apply schema migrations
-# (copy migrations from onehub-invest-app repo or create your own)
-psql $DATABASE_URL -f path/to/migrations/*.sql
+# Apply the sample schema (one file, idempotent)
+psql $DATABASE_URL -f db/schema.sql
 
 # Seed sample data
 psql $DATABASE_URL -f seed.sql
@@ -144,15 +143,17 @@ The API is **closed by default** when no keys are set:
 
 ## Database Schema
 
-This API reads from a PostgreSQL database with PostGIS. See [onehub-invest-app](https://github.com/phanlemanh/onehub-invest-app) for the full schema (20 migrations).
+`db/schema.sql` is the one sample schema for this API: PostgreSQL with PostGIS and pgcrypto (`hmac()` for the
+`listingKey` of short-term rentals). It builds every table and view the routes read on an empty database; `seed.sql`
+adds demo rows for every route. The Docker setup applies `db/` on first start (`docker-entrypoint-initdb.d`).
 
 Key tables:
-- `areas` — markets and submarkets with PostGIS polygons
-- `listings` — property listings with photos, pricing, availability
-- `nights` — nightly availability and pricing calendar
-- `market_metrics` — monthly market-level metrics
-- `market_asset_stats` — asset price statistics per area (median, quartiles)
-- `sale_offers` — for-sale listings from community sources
+- `areas` — markets and wards with PostGIS polygons
+- `listings` — short-term rental listings; `nights` — nightly availability and pricing calendar
+- `sale_offers` — for-sale and long-term-rent listings
+- `offer_price_rank` — price rank of each listing in its comparison group (computed by the pipeline); `v_ruler_p2` —
+  ward × property-type median price per m², the fallback when the rank table is empty
+- `market_metrics`, `market_asset_stats` — monthly market metrics, price statistics per area
 
 ## Self-Hosting
 
@@ -161,7 +162,7 @@ Key tables:
 1. Create a PostgreSQL database with PostGIS extension
 2. Set `DATABASE_URL` environment variable
 3. Deploy this repo
-4. Apply schema + seed data
+4. Apply `db/schema.sql`, then `seed.sql`
 
 ### Docker
 

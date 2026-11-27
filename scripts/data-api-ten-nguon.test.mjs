@@ -2,6 +2,19 @@
 // Hồ sơ data-api-don-ten-nguon (PB5): cây data-api/ (bản công khai qua subtree) không còn tên nguồn thật ngoài các tên
 // bảng/cột đã biết (nợ lược đồ, DINH_DANH_BIET), và lược đồ mẫu data-api/db + seed.sql dựng ra y như trước khi dọn.
 // Tên thật chỉ đọc lúc chạy từ db/migrations (tier-a-source-names) — tệp này không chứa tên nào. Tên ca mở đầu bằng mã AC.
+// PB2 (data-api-hop-dong-reso-dd-2-1, GS cho 27/11): data-api/db nay chỉ còn schema.sql (gộp 19 tệp cũ, giữ nguyên câu, mỗi
+// khúc mở bằng «-- ═════ <tệp cũ> ═════»). Các ca đọc tệp cũ trỏ sang khúc tương ứng của schema.sql; mỗi ca khẳng định đúng
+// điều cũ — bảng đối chiếu ở _acceptance/data-api-hop-dong-reso-dd-2-1/pb5-truoc-sau.md.
+const SCHEMA = "data-api/db/schema.sql";
+/** Một khúc của schema.sql theo tên tệp cũ (từ dòng mở khúc tới trước khúc kế). */
+function khuc(sql, tenCu) {
+  const dau = sql.indexOf(`-- ═════ ${tenCu}`);
+  assert.ok(dau >= 0, `schema.sql không có khúc ${tenCu} — fixture ca phá hỏng`);
+  const sau = sql.indexOf("\n-- ═════ ", dau + 1);
+  return sql.slice(dau, sau < 0 ? sql.length : sau + 1);
+}
+/** Bỏ các khúc có tên tệp cũ khớp mẫu khỏi schema.sql. */
+const boKhuc = (sql, re) => sql.split(/(?=^-- ═════ )/m).filter((k) => !re.test(k.split("\n")[0])).join("");
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, renameSync, rmSync, unlinkSync, writeFileSync } from "node:fs";
@@ -30,9 +43,9 @@ const viPham = (goc) => { const k = tongKet(quet(goc, { entries: ENTRIES })); re
 
 /** Dạng viết thật của một mã trong tên bảng (vd phần đầu của bảng listing S02) — đọc từ cây, không viết tay. */
 function dangDinhDanh(code) {
-  const sql = readFileSync(path.join(REPO, "data-api/db/009_s02_ref.sql"), "utf8");
+  const sql = khuc(readFileSync(path.join(REPO, SCHEMA), "utf8"), "009_s02_ref.sql");
   const h = findSourceNames(sql, ENTRIES).find((x) => x.code === code && loaiKyTu(sql, "x.sql")[x.start] === "m");
-  assert.ok(h, `không tìm thấy định danh ${code} trong 009 — fixture ca phá hỏng`);
+  assert.ok(h, `không tìm thấy định danh ${code} trong khúc 009 của schema.sql — fixture ca phá hỏng`);
   return sql.slice(h.start, h.end);
 }
 
@@ -48,9 +61,16 @@ describe("PB5 data-api-don-ten-nguon", () => {
   });
 
   test("PB5-AC-2 danh sách tên rỗng thì thước dừng, không chạy mù", () => {
+    const sql = readFileSync(path.join(REPO, SCHEMA), "utf8");
     const rong = path.join(TMP, "rong");
-    cpSync(path.join(REPO, "data-api/db"), path.join(rong, "db", "migrations"), { recursive: true, filter: (s) => !/012_|013_|014_/.test(s) });
+    mkdirSync(path.join(rong, "db", "migrations"), { recursive: true });
+    writeFileSync(path.join(rong, "db", "migrations", "schema.sql"), boKhuc(sql, /012_|013_|014_/));
     assert.throws(() => sourceRegistrySeeds(rong), /không rút được tên nào/);
+    // đối chứng: cùng tệp giữ ba khúc nguồn thì rút được tên — ca trên đỏ vì đúng ba khúc đó, không vì tệp hỏng
+    const du = path.join(TMP, "rong-doi-chung");
+    mkdirSync(path.join(du, "db", "migrations"), { recursive: true });
+    writeFileSync(path.join(du, "db", "migrations", "schema.sql"), sql);
+    assert.ok(sourceRegistrySeeds(du).length > 0, "schema.sql đủ khúc mà không rút được tên — fixture hỏng");
   });
 
   test("PB5-AC-2 CLI: migration không có tên nguồn → thoát khác 0, «không rút được tên nào»; đủ migration → thoát 0", () => {
@@ -77,14 +97,14 @@ describe("PB5 data-api-don-ten-nguon", () => {
       assert.deepEqual(viPham(banSao("lanh")), []);
     });
     const ca = [
-      ["chú thích SQL", "S02", (g) => writeFileSync(path.join(g, "data-api/db/001_init.sql"), `${readFileSync(path.join(g, "data-api/db/001_init.sql"), "utf8")}\n-- ghi chú ${ten("S02")}\n`), "chu-thich S02 data-api/db/001_init.sql"],
-      ["chuỗi dữ liệu SQL", "S03", (g) => writeFileSync(path.join(g, "data-api/db/018_ops_audit.sql"), `${readFileSync(path.join(g, "data-api/db/018_ops_audit.sql"), "utf8")}\nSELECT '${ten("S03")}';\n`), "chuoi S03 data-api/db/018_ops_audit.sql"],
+      ["chú thích SQL", "S02", (g) => writeFileSync(path.join(g, SCHEMA), `${readFileSync(path.join(g, SCHEMA), "utf8")}\n-- ghi chú ${ten("S02")}\n`), `chu-thich S02 ${SCHEMA}`],
+      ["chuỗi dữ liệu SQL", "S03", (g) => writeFileSync(path.join(g, SCHEMA), `${readFileSync(path.join(g, SCHEMA), "utf8")}\nSELECT '${ten("S03")}';\n`), `chuoi S03 ${SCHEMA}`],
       ["chú thích TS", "S03", (g) => writeFileSync(path.join(g, "data-api/src/routes/deals.ts"), `${readFileSync(path.join(g, "data-api/src/routes/deals.ts"), "utf8")}\n// ${ten("S03")}\n`), "chu-thich S03 data-api/src/routes/deals.ts"],
       ["chuỗi TS", "S01", (g) => writeFileSync(path.join(g, "data-api/src/routes/deals.ts"), `${readFileSync(path.join(g, "data-api/src/routes/deals.ts"), "utf8")}\nexport const __pb5 = "${ten("S01")}";\n`), "chuoi S01 data-api/src/routes/deals.ts"],
-      ["định danh mới ngoài danh sách", "S02", (g) => writeFileSync(path.join(g, "data-api/db/018_ops_audit.sql"), `${readFileSync(path.join(g, "data-api/db/018_ops_audit.sql"), "utf8")}\nCREATE TABLE ${dangDinhDanh("S02")}_pb5_moi (id int);\n`), "dinh-danh S02 data-api/db/018_ops_audit.sql"],
+      ["định danh mới ngoài danh sách", "S02", (g) => writeFileSync(path.join(g, SCHEMA), `${readFileSync(path.join(g, SCHEMA), "utf8")}\nCREATE TABLE ${dangDinhDanh("S02")}_pb5_moi (id int);\n`), `dinh-danh S02 ${SCHEMA}`],
       ["README (md)", "S02", (g) => writeFileSync(path.join(g, "data-api/README.md"), `${readFileSync(path.join(g, "data-api/README.md"), "utf8")}\nNguồn: ${ten("S02")}\n`), "chu-thich S02 data-api/README.md"],
       ["Dockerfile (tệp không đuôi)", "S01", (g) => writeFileSync(path.join(g, "data-api/Dockerfile"), `${readFileSync(path.join(g, "data-api/Dockerfile"), "utf8")}\n# ${ten("S01")}\n`), "chu-thich S01 data-api/Dockerfile"],
-      ["tên tệp", "S04", (g) => renameSync(path.join(g, "data-api/db/005_stg_s04.sql"), path.join(g, `data-api/db/005_stg_${ten("S04")}.sql`)), "ten-tep S04 data-api/db/005_stg_«S04».sql"],
+      ["tên tệp", "S04", (g) => writeFileSync(path.join(g, `data-api/db/stg_${ten("S04")}.sql`), "SELECT 1;\n"), "ten-tep S04 data-api/db/stg_«S04».sql"],
     ];
     ca.forEach(([nhan, , pha, mong], i) => {
       test(`phá ${nhan} → đúng một vi phạm «${mong}»`, () => {
@@ -95,19 +115,20 @@ describe("PB5 data-api-don-ten-nguon", () => {
     });
   });
 
-  // Lược đồ mẫu dựng trên origin/main 78ea448dd (trước khi dọn), DB trống mới, tên đã che. Lỗi có sẵn trên nền: 012 cập nhật
-  // area_sources chưa có (42P01) làm seed.sql lỗi theo — việc của hàng PB1, không phải PB5.
+  // Lược đồ mẫu: trước PB2 dựng từ 19 tệp data-api/db (origin/main 78ea448dd, có ba lỗi sẵn — 012 cập nhật area_sources chưa
+  // có, seed lỗi theo). Sau PB2 dựng từ schema.sql: danh sách bảng/view mong RÚT TỪ TỆP (mọi CREATE TABLE/VIEW của schema.sql
+  // cộng ba đối tượng của PostGIS), không lỗi nào; mặc định cột giữ nguyên 29 dòng ghim trước khi dọn, dòng mới chỉ được thuộc
+  // bảng do khúc PB2 của schema.sql tạo; source_registry giữ đúng ánh xạ trước → sau.
+  const POSTGIS = ["BASE TABLE spatial_ref_sys", "VIEW geography_columns", "VIEW geometry_columns"];
+  function mongTuTep(sql) {
+    const bang = [...sql.matchAll(/^CREATE TABLE IF NOT EXISTS ([a-z0-9_]+)/gim)].map((m) => `BASE TABLE ${m[1]}`);
+    const view = [...sql.matchAll(/^CREATE (?:OR REPLACE )?VIEW ([a-z0-9_]+)/gim)].map((m) => `VIEW ${m[1]}`);
+    const pb2 = sql.slice(sql.indexOf("-- ═════ PB2"));
+    const bangPb2 = new Set([...pb2.matchAll(/^CREATE TABLE IF NOT EXISTS ([a-z0-9_]+)/gim)].map((m) => m[1]));
+    return { doiTuong: [...new Set([...bang, ...view, ...POSTGIS])].map((d) => che(d, ENTRIES)).sort(), bangPb2 };
+  }
   const MONG = {
-    loi: ["1 LOI 012 42P01", "1 LOI see 42P01", "10 LOI see 25P02"],
-    doiTuong: [
-      "BASE TABLE «S01»_snapshots", "BASE TABLE «S02»_future_daily", "BASE TABLE «S02»_listings", "BASE TABLE «S02»_market_metrics",
-      "BASE TABLE «S02»_markets", "BASE TABLE «S02»_scores", "BASE TABLE «S02»_sub_monthly", "BASE TABLE «S02»_submarket_metrics",
-      "BASE TABLE area_breakdowns", "BASE TABLE areas", "BASE TABLE dq_check_results", "BASE TABLE listing_stats", "BASE TABLE listings",
-      "BASE TABLE market_asset_stats", "BASE TABLE market_metrics", "BASE TABLE nights", "BASE TABLE ops_audit", "BASE TABLE sale_offers",
-      "BASE TABLE saved_markets", "BASE TABLE sessions", "BASE TABLE source_registry", "BASE TABLE spatial_ref_sys",
-      "BASE TABLE stg_abnb_discovery", "BASE TABLE stg_abnb_listings", "BASE TABLE stg_abnb_nights", "BASE TABLE stg_«S04»_boundaries",
-      "BASE TABLE stg_«S03»_posts", "BASE TABLE users", "VIEW geography_columns", "VIEW geometry_columns",
-    ],
+    loi: [],
     // giá trị mặc định của mọi cột (29) — đổi chuỗi mẫu không được chạm DEFAULT nào
     macDinh: [
       "«S02»_listings.first_seen = now()",
@@ -172,22 +193,41 @@ describe("PB5 data-api-don-ten-nguon", () => {
         await quan.end();
       }
     }
+    /** Mặc định cột: đủ 29 dòng trước khi dọn, mọi dòng mới thuộc bảng của khúc PB2. */
+    const lechMacDinh = (macDinh, bangPb2) => [
+      ...MONG.macDinh.filter((d) => !macDinh.includes(d)).map((d) => `mất ${d}`),
+      ...macDinh.filter((d) => !MONG.macDinh.includes(d) && !bangPb2.has(d.split(".")[0])).map((d) => `thêm ngoài khúc PB2 ${d}`),
+    ];
     test("cây thật: cùng danh sách bảng/view, cùng lỗi có sẵn, cùng mặc định cột, source_registry đúng ánh xạ", { skip: URL ? false : "thiếu DATABASE_URL (ngoài CI)" }, async () => {
+      const mong = mongTuTep(readFileSync(path.join(REPO, SCHEMA), "utf8"));
+      assert.ok(mong.doiTuong.length > POSTGIS.length && mong.bangPb2.size > 0, "rút từ schema.sql ra rỗng — bộ rút hỏng");
       const r = await dung(path.join(REPO, "data-api"));
-      assert.deepEqual({ loi: r.loi, doiTuong: r.doiTuong }, { loi: MONG.loi, doiTuong: MONG.doiTuong });
-      assert.deepEqual(r.macDinh, MONG.macDinh, "giá trị mặc định của cột đổi so với trước khi dọn");
+      assert.deepEqual({ loi: r.loi, doiTuong: [...r.doiTuong].sort() }, { loi: MONG.loi, doiTuong: mong.doiTuong });
+      assert.deepEqual(lechMacDinh(r.macDinh, mong.bangPb2), [], "giá trị mặc định của cột đổi so với trước khi dọn");
       assert.deepEqual(r.nguon, NGUON_TRUOC.map(anhXa), "source_registry lệch ánh xạ trước → sau");
     });
-    test("đối chứng đỏ: bản sao bỏ tệp 018 → thiếu đúng ops_audit", { skip: URL ? false : "thiếu DATABASE_URL (ngoài CI)" }, async () => {
-      const g = banSao("db-pha");
-      unlinkSync(path.join(g, "data-api/db/018_ops_audit.sql"));
+    test("đối chứng đỏ: bản sao cấy tên nguồn thật vào source_registry ở schema.sql → dòng S03 lệch ánh xạ", { skip: URL ? false : "thiếu DATABASE_URL (ngoài CI)" }, async () => {
+      const g = banSao("db-pha-ten");
+      const f = path.join(g, SCHEMA);
+      writeFileSync(f, `${readFileSync(f, "utf8")}\nUPDATE source_registry SET real_name = '${ten("S03")}' WHERE code = 'S03';\n`);
       const r = await dung(path.join(g, "data-api"));
-      assert.deepEqual(MONG.doiTuong.filter((d) => !r.doiTuong.includes(d)), ["BASE TABLE ops_audit"]);
+      const mong = NGUON_TRUOC.map(anhXa);
+      assert.deepEqual(r.nguon.filter((d) => !mong.includes(d)), ["S03 | «S03» | s03-mock,s03-groups,s03-agent"]);
     });
-    test("đối chứng đỏ: bản sao đổi s03-groups thành s03-group ở 013 → dòng S03 lệch ánh xạ", { skip: URL ? false : "thiếu DATABASE_URL (ngoài CI)" }, async () => {
+    test("đối chứng đỏ: bản sao bỏ khúc 018 → thiếu đúng ops_audit", { skip: URL ? false : "thiếu DATABASE_URL (ngoài CI)" }, async () => {
+      const g = banSao("db-pha");
+      const f = path.join(g, SCHEMA);
+      writeFileSync(f, boKhuc(readFileSync(f, "utf8"), /018_/));
+      const r = await dung(path.join(g, "data-api"));
+      const mong = mongTuTep(readFileSync(path.join(REPO, SCHEMA), "utf8"));
+      assert.deepEqual(mong.doiTuong.filter((d) => !r.doiTuong.includes(d)), ["BASE TABLE ops_audit"]);
+    });
+    test("đối chứng đỏ: bản sao đổi s03-groups thành s03-group ở khúc 013 → dòng S03 lệch ánh xạ", { skip: URL ? false : "thiếu DATABASE_URL (ngoài CI)" }, async () => {
       const g = banSao("db-pha-nguon");
-      const f = path.join(g, "data-api/db/013_sale_offers_default_s03.sql");
-      writeFileSync(f, readFileSync(f, "utf8").replace("s03-groups", "s03-group"));
+      const f = path.join(g, SCHEMA);
+      const sql = readFileSync(f, "utf8");
+      const k = khuc(sql, "013_sale_offers_default_s03.sql");
+      writeFileSync(f, sql.replace(k, k.replace("s03-groups", "s03-group")));
       const r = await dung(path.join(g, "data-api"));
       const mong = NGUON_TRUOC.map(anhXa);
       assert.deepEqual(r.nguon.filter((d) => !mong.includes(d)), ["S03 | Nguồn mẫu S03 | s03-mock,s03-group,s03-agent"]);

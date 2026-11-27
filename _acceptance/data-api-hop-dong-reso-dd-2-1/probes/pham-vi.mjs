@@ -32,8 +32,22 @@ const DUOC = [
   /^_acceptance\/config\.yaml$/, // riêng tệp này còn soát từng dòng (soatConfig)
   /^(PRODUCT-MAP\.md|LO-TRINH\.html)$/,
   /^app\/tests\/(can-gia-cung-loai-db|hang-gia-doc|gia-tot-du-an-doc)\.test\.tsx$/, // GS xác nhận 27/11 (sổ quyết định)
-  /^scripts\/data-api-ten-nguon\.test\.mjs$/, // GS cho sửa ca PB5-AC-4 theo schema.sql, 27/11 (sổ quyết định)
+  /^scripts\/data-api-ten-nguon\.test\.mjs$/, // GS cho sửa ca PB5-AC-2, AC-3, AC-4 theo schema.sql, 27/11 (sổ quyết định)
+  /^app\/tests\/chuyen-huong-ma-thi-truong\.itest\.tsx$/, // GS cho 27/11 (CÂU C): chỉ phần gọi data-api
+  /^pipeline\/scripts\/vocab-lint\.test\.mjs$/, // GS cho 27/11 (CÂU A): đúng một dòng — soát riêng (soatVocabLint)
 ];
+/** Diff -U0 của vocab-lint.test.mjs: đúng một dòng đổi, ngoại lệ kind của data-api từ deals.ts sang listings.ts. */
+export function soatVocabLint(diff) {
+  const xoa = [], them = [];
+  for (const d of diff.split("\n")) {
+    if (/^(\+\+\+|---|@@|diff |index )/.test(d) || d === "") continue;
+    if (d.startsWith("-")) xoa.push(d.slice(1).trim());
+    else if (d.startsWith("+")) them.push(d.slice(1).trim());
+  }
+  if (!xoa.length && !them.length) return [];
+  const dung = xoa.length === 1 && them.length === 1 && xoa[0] === '"data-api/src/routes/deals.ts|kind",' && them[0] === '"data-api/src/routes/listings.ts|kind",';
+  return dung ? [] : ["AC-10 NGOÀI PHẠM VI: pipeline/scripts/vocab-lint.test.mjs đổi ngoài đúng một dòng ngoại lệ kind"];
+}
 
 /** Tệp ngoài ranh giới → dòng vi phạm. */
 export function soatTep(tep) {
@@ -119,7 +133,8 @@ const diffConfig = git("diff", "-U0", nen, "--", "_acceptance/config.yaml");
 const mapCu = YAML.parse(git("show", `${nen}:pipeline/mappings.yaml`));
 const mapMoi = YAML.parse(readFileSync(path.join(ROOT, "pipeline", "mappings.yaml"), "utf8"));
 const ten = soatTen(ROOT, entries);
-const loi = [...soatTep(tep), ...soatConfig(diffConfig), ...soatMappings(mapCu, mapMoi), ...ten.loi];
+const diffVocab = git("diff", "-U0", nen, "--", "pipeline/scripts/vocab-lint.test.mjs");
+const loi = [...soatTep(tep), ...soatConfig(diffConfig), ...soatMappings(mapCu, mapMoi), ...soatVocabLint(diffVocab), ...ten.loi];
 
 // ── Chiều đỏ: cùng các hàm trên, đầu vào cấy ─────────────────────────────────────────────────────────────────────
 const sao = structuredClone(mapMoi);
@@ -140,12 +155,14 @@ const o = {
   "pha-tep": soatTep([...tep, "db/migrations/x.sql"]).includes("AC-10 NGOÀI PHẠM VI: db/migrations/x.sql"),
   "pha-mappings": soatMappings(mapCu, sao).includes("AC-10 mappings.yaml đổi ngoài phần được giao: enums.kind"),
   "pha-ten": caySao,
+  "pha-vocab": soatVocabLint(`-  "data-api/src/routes/deals.ts|kind",\n+  "data-api/src/routes/listings.ts|kind",\n+  "x|kind",`).length === 1
+    && soatVocabLint(`-  "data-api/src/routes/deals.ts|kind",\n+  "data-api/src/routes/listings.ts|kind",`).length === 0,
   "pha-config": soatConfig(`+    khoa_la: "echo"\n+    dapi_reso_x: "echo"`).join("|") === "AC-10 NGOÀI PHẠM VI: _acceptance/config.yaml khoá khoa_la",
 };
 for (const [ten_o, dat] of Object.entries(o)) {
   if (!dat) { console.log(`pham-vi: thước không đỏ ở ${ten_o}`); process.exit(1); }
 }
-console.log(`chieu-do: ${Object.keys(o).join(", ")} — bốn ô cấy đều ra đúng (pha-tep → «AC-10 NGOÀI PHẠM VI: db/migrations/x.sql», pha-mappings → «… enums.kind», pha-ten → «AC-10 tên nguồn thật: ${don.code}», pha-config → «… khoá khoa_la»)`);
+console.log(`chieu-do: ${Object.keys(o).join(", ")} — năm ô cấy đều ra đúng (pha-vocab → thêm dòng thứ hai bị bắt, pha-tep → «AC-10 NGOÀI PHẠM VI: db/migrations/x.sql», pha-mappings → «… enums.kind», pha-ten → «AC-10 tên nguồn thật: ${don.code}», pha-config → «… khoá khoa_la»)`);
 
 if (loi.length) {
   for (const l of loi) console.log(l);
