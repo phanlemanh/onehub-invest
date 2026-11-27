@@ -117,13 +117,27 @@ test("executePhase: pha kiểm phiên ghi lại MỌI câu trả lời thành d�
   assert.deepEqual(ds[0], { suKien: "phan-hoi", vai: "balance", status: 200, ms: 42, contentType: "application/json", headers: { "x-ratelimit-remaining": "12", date: "Thu, 26 Nov 2026 05:00:00 GMT" } });
 }));
 
-test("executePhase: pha khác chỉ ghi «phan-hoi» khi câu trả lời KHÔNG phải 200 (kèm phần đầu thân); câu 200 không ghi", async () => withTmp(async (dir) => {
+test("executePhase: pha khác chỉ ghi «phan-hoi» khi câu trả lời KHÔNG phải 200 — dòng nhật ký mang số đo và các trường chẩn đoán đã che, thân gốc nằm ở tệp riêng trong máy; câu 200 không ghi", async () => withTmp(async (dir) => {
   const h = harness();
+  const than = '{"status":false,"message":"khong co"}';
   h.phu = { ms: 9, headers: { date: "Thu, 26 Nov 2026 05:00:00 GMT" } };
-  h.loi.push(["/projects/1/tree", { status: 404, contentType: "application/json", body: '{"status":false,"message":"khong co"}' }]);
+  h.loi.push(["/projects/1/tree", { status: 404, contentType: "application/json", body: than }]);
   await h.exec({ phase: "projects", checkBalance: false, dir }).catch(() => undefined);
   const ds = await docPhanHoi(dir);
-  assert.deepEqual(ds, [{ suKien: "phan-hoi", vai: "building-tree", status: 404, ms: 9, contentType: "application/json", headers: { date: "Thu, 26 Nov 2026 05:00:00 GMT" }, than: '{"status":false,"message":"khong co"}' }]);
+  assert.equal(ds.length, 1);
+  const { thanThoTep, ...dong } = ds[0] as Record<string, unknown> & { thanThoTep?: string };
+  assert.deepEqual(dong, {
+    suKien: "phan-hoi",
+    vai: "building-tree",
+    status: 404,
+    ms: 9,
+    contentType: "application/json",
+    headers: { date: "Thu, 26 Nov 2026 05:00:00 GMT" },
+    than: { dai: than.length, kieu: "json", chanDoan: { status: false }, daBo: 1 },
+  });
+  assert.equal(typeof thanThoTep, "string", "dòng nhật ký trỏ tới tệp giữ thân gốc");
+  const goc = await readFile(join(dir, "phan-hoi", thanThoTep as string), "utf8");
+  assert.equal(goc.slice(goc.indexOf("\n\n") + 2), than, "tệp riêng giữ nguyên thân gốc");
 }));
 
 test("executePhase: số dư giảm thì dừng cả lượt với lý do balance-spent", async () => withTmp(async (dir) => {
@@ -491,17 +505,142 @@ test("executePhase: kiểm phiên không đọc số dư với trần MỘT lờ
   assert.match(h.sent[0], /\/data-available$/, "đúng một lời, là lời kiểm phiên (máy chủ API)");
 }));
 
-test("executePhase: câu trả lời lỗi có thân DÀI thì dòng «phan-hoi» chỉ giữ ĐÚNG 600 ký tự đầu (cổng soát 26/11: đột biến bỏ chỗ cắt phải bị bắt)", async () => withTmp(async (dir) => {
+// ---------- claudedp-2611-19: dòng «phan-hoi» không được chứa định danh tài khoản thu, mã phiên, khoá, cookie ----------
+
+// Mọi chuỗi dưới đây là GIẢ (tự bịa), không lấy từ nguồn.
+const KIM_GIA = {
+  phien: "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI3Nzc3IiwidXNlciI6InR1dF9RSEifQ.c2lnbmF0dXJlLV9TVS1EYU5nLV8yMzQ1Njc4OTAtYWJjZGVmZ2hpamtsbW5vcA",
+  khoas: ["sk-live-QWERTYUIOP1234567890asdfghjkl", "phc_ZXCVBNM1234567890qwertyuiopASDF", "AKIAIOSFODNN7EXAMPLEQWERTYUIOPASDFGHJK"],
+  cookie: "JSESSIONID_GIA=ABCDEF0123456789abcdefABCDEF01; PHIEN_GIA=ZXCVBNM0987654321zxcvbnmQWERTY; refresh-token-gia=QWERTYUIOP0987654321asdfghjklzxcvbnm",
+  dinhDanh: ["thu.thu", "thu.thu@example.test", "Thu Thị Thu", "87654321", "0912345678"],
+};
+const docThanTho = async (dir: string, dong: Record<string, unknown>): Promise<string> => readFile(join(dir, "phan-hoi", String(dong.thanThoTep)), "utf8");
+
+test("dòng «phan-hoi» KHÔNG chứa định danh tài khoản thu, mã phiên, khoá, cookie dù thân câu trả lời lỗi có (claudedp-2611-19); thân gốc chỉ vào tệp riêng trong máy", async () => withTmp(async (dir) => {
   const h = harness();
-  const than = "x".repeat(1_000) + "HET";
+  const than = JSON.stringify({
+    status: false,
+    code: 401,
+    message: `Tài khoản ${KIM_GIA.dinhDanh[1]} (user_id ${KIM_GIA.dinhDanh[3]}, SĐT ${KIM_GIA.dinhDanh[4]}) bị khóa; token ${KIM_GIA.phien}`,
+    username: KIM_GIA.dinhDanh[0],
+    email: KIM_GIA.dinhDanh[1],
+    name: KIM_GIA.dinhDanh[2],
+    user_id: Number(KIM_GIA.dinhDanh[3]),
+    phone: KIM_GIA.dinhDanh[4],
+    token: KIM_GIA.phien,
+    api_key: KIM_GIA.khoas[0],
+    keys: KIM_GIA.khoas,
+    cookie: KIM_GIA.cookie,
+    authorization: `Bearer ${KIM_GIA.phien}`,
+    traceId: "a1b2c3d4e5f60718",
+    requestId: KIM_GIA.phien, // mã phiên đội lốt khoá «mã yêu cầu»: phải bị bỏ (có dấu chấm)
+    limit: 20000,
+    remaining: 0,
+    reset: 1799999999999,
+    errors: [{ field: "token", message: `khoá ${KIM_GIA.khoas[1]}`, code: "TOKEN_INVALID" }],
+    error: KIM_GIA.phien,
+    retryAfter: KIM_GIA.khoas[0],
+  });
+  h.loi.push(["/projects/1/tree", { status: 403, contentType: "application/json", body: than }]);
+  h.phu = { ms: 12, headers: { "retry-after": "30", "ratelimit-remaining": "0", "x-request-id": "req-09f1c2d3e4b5" } };
+  await h.exec({ phase: "projects", checkBalance: false, dir }).catch(() => undefined);
+  const nhatKy = await readFile(join(dir, "run.log.jsonl"), "utf8");
+  const dong = (await docPhanHoi(dir)).filter((d) => d.status === 403);
+  assert.equal(dong.length, 1);
+  // (a) không một dấu nhận diện nào lọt vào tệp nhật ký
+  const kim = [KIM_GIA.phien, "eyJhbGciOiJIUzI1NiJ9", "eyJzdWIiOiI3Nzc3IiwidXNlciI6InR1dF9RSEifQ", "c2lnbmF0dXJlLV9TVS1EYU5nLV8yMzQ1Njc4OTAt", ...KIM_GIA.khoas, ...KIM_GIA.dinhDanh, "JSESSIONID", "ABCDEF0123456789", "refresh-token", "Bearer", "Tài khoản", "TOKEN_INVALID "];
+  for (const k of kim) assert.equal(nhatKy.includes(k), false, `nhật ký không được chứa «${k.slice(0, 28)}»`);
+  assert.equal(/"thanTho"\s*:/.test(nhatKy), false, "thân gốc không có trường nào trong nhật ký");
+  // (b) chẩn đoán vẫn còn đủ
+  assert.deepEqual(dong[0], {
+    suKien: "phan-hoi",
+    vai: "building-tree",
+    status: 403,
+    ms: 12,
+    contentType: "application/json",
+    headers: { "retry-after": "30", "ratelimit-remaining": "0", "x-request-id": "req-09f1c2d3e4b5" },
+    than: { dai: than.length, kieu: "json", chanDoan: { status: false, code: 401, traceId: "a1b2c3d4e5f60718", limit: 20000, remaining: 0, reset: 1799999999999, errors: [{ code: "TOKEN_INVALID" }] }, daBo: 16 },
+    thanThoTep: dong[0].thanThoTep,
+  });
+  // Thân gốc còn nguyên ở tệp riêng (tầng A, không lên kênh)
+  const goc = await docThanTho(dir, dong[0]);
+  for (const k of [KIM_GIA.phien, KIM_GIA.dinhDanh[1], KIM_GIA.dinhDanh[4], KIM_GIA.cookie]) assert.equal(goc.includes(k), true, `tệp riêng giữ «${k.slice(0, 20)}»`);
+}));
+
+test("đối chứng (claudedp-2611-19): câu 429 vẫn ghi đủ chẩn đoán — mã trạng thái, retry-after, ratelimit-*, mã yêu cầu, và các trường số của thân; chữ tự do của thân không vào nhật ký", async () => withTmp(async (dir) => {
+  const h = harness();
+  const than = JSON.stringify({
+    timestamp: "2026-11-27T15:00:00.000+00:00",
+    status: 429,
+    error: "Too Many Requests",
+    message: `Số lượt tra cứu trong ngày của tài khoản ${KIM_GIA.dinhDanh[0]} đã hết: 20000`,
+    traceId: "ffeeddccbbaa0099",
+    limit: 20000,
+    remaining: 0,
+    resetAt: 1799999999999,
+    path: "/v9.x-gia/data-available",
+  });
+  h.loi.push(["/projects/1/tree", { status: 429, contentType: "application/json", body: than }]);
+  h.phu = { ms: 77, headers: { "retry-after": "30", "ratelimit-limit": "20000", "ratelimit-remaining": "0", "ratelimit-reset": "60", "x-request-id": "req-7788" } };
+  const r = await h.exec({ phase: "projects", checkBalance: false, dir }).catch(() => undefined);
+  void r;
+  const nhatKy = await readFile(join(dir, "run.log.jsonl"), "utf8");
+  const dong = (await docPhanHoi(dir)).filter((d) => d.status === 429);
+  assert.equal(dong.length, 1);
+  const { thanThoTep, ...d } = dong[0] as Record<string, unknown> & { thanThoTep?: string };
+  assert.deepEqual(d, {
+    suKien: "phan-hoi",
+    vai: "building-tree",
+    status: 429,
+    ms: 77,
+    contentType: "application/json",
+    headers: { "retry-after": "30", "ratelimit-limit": "20000", "ratelimit-remaining": "0", "ratelimit-reset": "60", "x-request-id": "req-7788" },
+    than: { dai: than.length, kieu: "json", chanDoan: { status: 429, traceId: "ffeeddccbbaa0099", limit: 20000, remaining: 0, resetAt: 1799999999999 }, daBo: 4 },
+  });
+  assert.equal(typeof thanThoTep, "string");
+  assert.equal(nhatKy.includes(KIM_GIA.dinhDanh[0]), false, "tên tài khoản trong lời báo của thân không vào nhật ký");
+  assert.equal(nhatKy.includes("Too Many Requests"), false, "chữ tự do của thân không vào nhật ký");
+}));
+
+test("thân KHÔNG phải JSON (trang HTML thử thách, trang lỗi XML) thì nhật ký chỉ có loại và độ dài; token, cookie, khoá trong trang không vào nhật ký", async () => withTmp(async (dir) => {
+  const html = "<html><head><script>var csrf='QWERTYUIOP0987654321asdfghjkl'; document.cookie=\"SID=ZXCVBNM0987654321zxcvbnm\";</script>Just a moment...</html>";
+  const xml = "<Error><Code>NoSuchKey</Code><AWSAccessKeyId>ASIAIOSFODNN7EXAMPLEQWERTYUIOPASDFGHJKL</AWSAccessKeyId></Error>";
+  // Mỗi câu ở một thư mục trạng thái riêng: lượt trước đã ghi «dự án 1 đã lấy chi tiết» nên lượt sau sẽ không hỏi lại toà.
+  const mot = async (ten: string, phuongTien: { status: number; contentType: string; body: string }) => {
+    const h = harness();
+    h.loi.push(["/projects/1/tree", phuongTien]);
+    await h.exec({ phase: "projects", checkBalance: false, dir: join(dir, ten) }).catch(() => undefined);
+    const ds = (await docPhanHoi(join(dir, ten))).filter((d) => d.status === phuongTien.status);
+    assert.ok(ds.length >= 1, `có dòng phan-hoi cho câu ${phuongTien.status}`);
+    return ds[0];
+  };
+  const dHtml = await mot("a", { status: 503, contentType: "text/html", body: html }); // 5xx: nguồn thử lại nên có vài dòng, lấy dòng đầu
+  const dXml = await mot("b", { status: 404, contentType: "application/xml", body: xml });
+  assert.deepEqual(
+    [[dHtml.status, dHtml.contentType, dHtml.than], [dXml.status, dXml.contentType, dXml.than]],
+    [
+      [503, "text/html", { dai: html.length, kieu: "html", chanDoan: {}, daBo: 0 }],
+      [404, "application/xml", { dai: xml.length, kieu: "xml", chanDoan: {}, daBo: 0 }],
+    ],
+  );
+  const nhatKy = (await readFile(join(dir, "a", "run.log.jsonl"), "utf8")) + (await readFile(join(dir, "b", "run.log.jsonl"), "utf8"));
+  for (const k of ["QWERTYUIOP0987654321", "SID=", "document.cookie", "Just a moment", "ASIAIOSFODNN7", "NoSuchKey"]) assert.equal(nhatKy.includes(k), false, `nhật ký không được chứa «${k}»`);
+  const goc = await docThanTho(join(dir, "a"), dHtml);
+  assert.equal(goc.includes("document.cookie"), true, "thân gốc HTML còn ở tệp riêng");
+}));
+
+test("thân câu trả lời lỗi DÀI: tệp riêng chỉ giữ 64 KB đầu; nhật ký ghi đúng độ dài thật (đột biến bỏ chỗ cắt phải bị bắt)", async () => withTmp(async (dir) => {
+  const h = harness();
+  const than = "y".repeat(65_536 + 5_000) + "HET";
   h.loi.push(["/projects/1/tree", { status: 404, contentType: "application/json", body: than }]);
   await h.exec({ phase: "projects", checkBalance: false, dir }).catch(() => undefined);
   const ds = await docPhanHoi(dir);
   assert.equal(ds.length, 1);
-  const daGhi = ds[0].than as string;
-  assert.equal(daGhi.length, 600, "đúng 600 ký tự");
-  assert.equal(daGhi, than.slice(0, 600), "là 600 ký tự đầu của thân");
-  assert.equal(daGhi.includes("HET"), false, "phần sau 600 ký tự không lọt vào nhật ký");
+  assert.deepEqual(ds[0].than, { dai: than.length, kieu: "khac", chanDoan: {}, daBo: 0 }, "không phải JSON hợp lệ: loại «khac», độ dài thật");
+  const goc = await docThanTho(dir, ds[0]);
+  const thanTep = goc.slice(goc.indexOf("\n\n") + 2);
+  assert.equal(thanTep.length, 65_536, "tệp riêng cắt ở 64 KB");
+  assert.equal(thanTep.includes("HET"), false, "phần sau 64 KB không lọt vào tệp");
 }));
 
 test("tăng tốc: bị chặn HAI LẦN THẬT thì dừng hẳn — lượt 1 trả 403, lượt 2 (một luồng, nhịp cũ) trả 403 nữa → trạng thái ghi 2 → lượt 3 dừng blocked-twice, không gửi gì (lượt xét vòng 1, AC-2: đo đường cộng dồn, không viết tay số 2)", async () => withTmp(async (dir) => {

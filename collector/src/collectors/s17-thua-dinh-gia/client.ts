@@ -26,14 +26,122 @@ export type Response = {
   headers?: Record<string, string>;
 };
 /**
- * Một câu trả lời của nguồn, đủ để đo: vai, trạng thái, thời gian chờ, các header được chọn. Thân (`than`) chỉ đưa
- * khi câu trả lời KHÔNG phải 200 và tối đa 600 ký tự. Lỗi mạng (không có câu trả lời) báo với `status: 0`.
+ * Thân câu trả lời đã CHE: chỉ có số đo (độ dài, loại) và các trường chẩn đoán được chọn lọc — không có chữ tự do nào
+ * của thân. `daBo` = số trường của thân không được giữ lại.
  */
-export type PhanHoi = { vai: string; status: number; ms?: number; contentType?: string; headers?: Record<string, string>; bytes?: number; than?: string };
+export type ThanDaChe = { dai: number; kieu: "json" | "html" | "xml" | "text" | "khac"; chanDoan: Record<string, unknown>; daBo: number };
+/**
+ * Một câu trả lời của nguồn, đủ để đo: vai, trạng thái, thời gian chờ, các header được chọn. Khi câu trả lời KHÔNG phải
+ * 200: `than` là phần thân đã che, và `thanTho` là phần thân gốc (tối đa TOI_DA_THAN_THO ký tự) — CHỈ để trình điều
+ * khiển ghi vào tệp riêng ở máy, không bao giờ vào nhật ký (claudedp-2611-19: thân câu 401/403/429 có thể lặp lại mã
+ * phiên, định danh tài khoản thu, khoá, cookie). Lỗi mạng (không có câu trả lời) báo với `status: 0`.
+ */
+export type PhanHoi = { vai: string; status: number; ms?: number; contentType?: string; headers?: Record<string, string>; bytes?: number; than?: ThanDaChe; thanTho?: string };
 export type Transport = (url: string, headers: Record<string, string>) => Promise<Response>;
 /** Gửi nhiều lời trong MỘT đợt (vd nhiều fetch đồng thời trong trang), lời i bắt đầu sau i × staggerMs. Mỗi phần tử: phản hồi hoặc lỗi mạng. */
 export type TransportMany = (requests: Array<{ url: string; headers: Record<string, string> }>, staggerMs: number) => Promise<Array<Response | Error>>;
 export type ManyResult<T> = { ok: true; value: T } | { ok: false; error: Error };
+/** Trần phần thân gốc đưa cho trình điều khiển ghi vào tệp riêng ở máy. */
+export const TOI_DA_THAN_THO = 64 * 1024;
+const KIEU_THAN: Array<[RegExp, ThanDaChe["kieu"]]> = [
+  [/json/i, "json"],
+  [/html/i, "html"],
+  [/xml/i, "xml"],
+  [/text|javascript|form/i, "text"],
+];
+/**
+ * Trường CHẨN ĐOÁN của thân JSON được xem xét (so không phân biệt hoa thường, bỏ gạch nối và gạch dưới): mã lỗi, mã
+ * yêu cầu, hạn mức… Giá trị chỉ được giữ khi là số, cờ, mã viết hoa, hay định danh lời gọi. Chữ tự do (lời báo, tên
+ * trường, đường dẫn) không bao giờ vào nhật ký: nó có thể chứa định danh tài khoản thu, đường API, mã phiên.
+ */
+const KHOA_CHAN_DOAN = new Set(["status", "code", "errorcode", "error", "errortype", "traceid", "requestid", "correlationid", "limit", "remaining", "reset", "resetat", "retryafter", "count", "total", "max", "quota", "exceeded", "errors"]);
+const KHOA_DINH_DANH_LOI_GOI = new Set(["traceid", "requestid", "correlationid"]);
+const chuanHoaKhoa = (k: string): string => k.toLowerCase().replace(/[-_]/g, "");
+const cheChuSo = (s: string): string => s.replace(/\d{6,}/g, "…");
+
+type GiaTriChanDoan = string | number | boolean | { [k: string]: GiaTriChanDoan } | GiaTriChanDoan[];
+
+/** Giá trị gốc (số, cờ, chuỗi) của một trường chẩn đoán được giữ không. `undefined` = bỏ. */
+function giaTriChanDoan(khoa: string, v: unknown): string | number | boolean | undefined {
+  if (typeof v === "number" || typeof v === "boolean") return v;
+  if (typeof v !== "string") return undefined;
+  if (KHOA_DINH_DANH_LOI_GOI.has(khoa)) return /^[A-Za-z0-9_-]{6,40}$/.test(v) ? v : undefined; // một khoá đơn ngắn, không có dấu chấm (loại JWT)
+  if (/^-?\d{1,15}(\.\d+)?$/.test(v)) return v;
+  if (/^[A-Z][A-Z0-9_]{0,63}$/.test(v)) return cheChuSo(v);
+  return undefined;
+}
+
+/**
+ * Lọc một nút của thân JSON: chỉ giữ trường chẩn đoán theo danh sách trắng, tối đa 4 lớp và 20 phần tử một mảng. Trả
+ * [nút đã lọc (có thể rỗng), số trường bị bỏ] — mỗi khoá ngoài danh sách trắng tính một, mỗi giá trị không giữ được
+ * tính một.
+ */
+function locNut(v: unknown, khoa: string | null, sau: number): [GiaTriChanDoan | undefined, number] {
+  if (sau > 4) return [undefined, 1];
+  if (Array.isArray(v)) {
+    const ds: GiaTriChanDoan[] = [];
+    let daBo = 0;
+    for (const x of v.slice(0, 20)) {
+      if (x && typeof x === "object") {
+        const [g, b] = locNut(x, null, sau + 1);
+        daBo += b;
+        if (g !== undefined && !Array.isArray(g) && Object.keys(g).length) ds.push(g);
+      } else daBo++; // phần tử không phải đối tượng: không giữ gì (có thể là chữ tự do)
+    }
+    return [ds, daBo];
+  }
+  if (v && typeof v === "object") {
+    const out: Record<string, GiaTriChanDoan> = {};
+    let daBo = 0;
+    for (const [k, x] of Object.entries(v as Record<string, unknown>)) {
+      const kh = chuanHoaKhoa(k);
+      if (!KHOA_CHAN_DOAN.has(kh)) {
+        daBo++;
+        continue;
+      }
+      if (x && typeof x === "object") {
+        const [g, b] = locNut(x, kh, sau + 1);
+        daBo += b;
+        if (g !== undefined && (Array.isArray(g) ? g.length : Object.keys(g).length)) out[k] = g; // mảng đã lọc, hoặc đối tượng có ít nhất một trường
+        continue;
+      }
+      const giu = giaTriChanDoan(kh, x);
+      if (giu === undefined) daBo++;
+      else out[k] = giu;
+    }
+    return [out, daBo];
+  }
+  return [undefined, 1]; // gốc là một giá trị đơn: không có gì để chẩn đoán
+}
+
+/**
+ * Che thân một câu trả lời lỗi cho nhật ký: không giữ chữ tự do nào. Với thân JSON, chỉ giữ các trường chẩn đoán theo
+ * danh sách trắng (mã trạng thái/lỗi của nguồn, mã yêu cầu, hạn mức) với giá trị đã kiểm; với trang HTML/XML thì chỉ
+ * ghi loại và độ dài. Thân gốc không đi qua đây — nó vào tệp riêng ở máy.
+ */
+export function cheThanPhanHoi(than: string, contentType: string): ThanDaChe {
+  let kieu: ThanDaChe["kieu"] = "khac";
+  for (const [re, k] of KIEU_THAN) {
+    if (re.test(contentType)) {
+      kieu = k;
+      break;
+    }
+  }
+  const out: ThanDaChe = { dai: than.length, kieu, chanDoan: {}, daBo: 0 };
+  const thu = than.trim();
+  // Trang HTML/XML không phân tích (mã kịch bản, khoá ký trong trang không được đọc); kiểu khác chỉ thử khi thân giống JSON.
+  if (kieu !== "json" && ((kieu === "html" || kieu === "xml") || !(thu.startsWith("{") || thu.startsWith("[")))) return out;
+  try {
+    const j = JSON.parse(than) as unknown;
+    const [g, b] = j && typeof j === "object" ? locNut(j, null, 0) : [undefined, 0];
+    out.daBo = b;
+    if (g !== undefined && !Array.isArray(g)) out.chanDoan = g as Record<string, unknown>;
+  } catch {
+    out.kieu = "khac"; // khai là JSON nhưng không phân tích được: không đọc gì thêm
+  }
+  return out;
+}
+
 /**
  * Số lời tối đa một đợt — HẰNG SỐ CHUNG của cả bộ thu (lớp gọi, dòng lệnh, trình điều khiển, các pha).
  * Mạnh cho tăng tốc thận trọng 24/11 («2 luồng»), trần bốn; 25/11 Mạnh chốt «tiếp tục tăng tốc» cho mốc mở rộng
@@ -192,9 +300,10 @@ export class S17Client {
 
   /**
    * Báo câu trả lời qua `onResponse` (nếu có) TRƯỚC mọi phân loại — kể cả câu gây dừng (403, 429, 401) và lỗi mạng.
-   * Lời 429 ngày 25/11 chỉ để lại «nguồn trả 429»; từ đây nhật ký giữ thời gian chờ, phần đầu thân và các header được
-   * chọn. Header chỉ đọc được khi nguồn lộ qua CORS: gọi trong trang là gọi tới máy chủ khác gốc, đo 26/11 câu trả lời
-   * 200 của máy chủ API không đọc được header nào (kể cả date) — số đo chắc chắn là trạng thái, thời gian và thân.
+   * Lời 429 ngày 25/11 chỉ để lại «nguồn trả 429»; từ đây câu trả lời lỗi mang thời gian chờ, các header được chọn và
+   * phần thân ĐÃ CHE (số đo + trường chẩn đoán), kèm thân gốc để trình điều khiển cất ở tệp riêng trong máy — thân gốc
+   * không bao giờ vào nhật ký. Header chỉ đọc được khi nguồn lộ qua CORS: gọi trong trang là gọi tới máy chủ khác gốc,
+   * đo 26/11 câu trả lời 200 của máy chủ API không đọc được header nào (kể cả date).
    */
   private baoPhanHoi(role: string, res: Response | null): void {
     if (!this.o.onResponse) return;
@@ -204,7 +313,10 @@ export class S17Client {
       if (res.contentType) r.contentType = res.contentType;
       if (res.headers && Object.keys(res.headers).length) r.headers = res.headers;
       if (res.bytes !== undefined) r.bytes = res.bytes;
-      if (res.status !== 200 && res.body) r.than = res.body.slice(0, 600);
+      if (res.status !== 200 && res.body) {
+        r.than = cheThanPhanHoi(res.body, res.contentType); // phần đã che: an toàn để trích dẫn
+        r.thanTho = res.body.slice(0, TOI_DA_THAN_THO); // thân gốc: CHỈ để trình điều khiển ghi vào tệp riêng ở máy
+      }
     }
     this.o.onResponse(r);
   }

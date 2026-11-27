@@ -74,10 +74,20 @@ function makeClient(
 const reasonOf = (e: unknown): string => (e instanceof RunStopped ? e.reason : e instanceof TemporaryFailure ? "temporary" : String(e));
 const task = (lat: number) => ({ role: "parcel-profile" as const, params: { latitude: lat, longitude: 105.85 } });
 
-test("onResponse: lớp gọi báo MỘT lần cho MỖI câu trả lời (vai, trạng thái, thời gian, header được chọn); thân chỉ đưa khi không phải 200; lời 429 được báo TRƯỚC khi dừng", async () => {
+test("onResponse: lớp gọi báo MỘT lần cho MỖI câu trả lời (vai, trạng thái, thời gian, header được chọn); thân chỉ đưa khi không phải 200 — phần đã che kèm thân gốc cho trình điều khiển; lời 429 được báo TRƯỚC khi dừng", async () => {
   const biChan = makeClient(() => ({ status: 429, contentType: "application/json", body: '{"message":"qua han"}', ms: 321, headers: { "retry-after": "30" } }));
   await assert.rejects(biChan.client.getJson("parcel-profile", task(1).params), (e: unknown) => e instanceof RunStopped && e.reason === "blocked");
-  assert.deepEqual(biChan.daBao, [{ vai: "parcel-profile", status: 429, ms: 321, contentType: "application/json", headers: { "retry-after": "30" }, than: '{"message":"qua han"}' }]);
+  assert.deepEqual(biChan.daBao, [
+    {
+      vai: "parcel-profile",
+      status: 429,
+      ms: 321,
+      contentType: "application/json",
+      headers: { "retry-after": "30" },
+      than: { dai: 21, kieu: "json", chanDoan: {}, daBo: 1 }, // lời báo không thuộc trường chẩn đoán: đã bỏ
+      thanTho: '{"message":"qua han"}',
+    },
+  ]);
   const tot = makeClient(() => ({ ...json({ status: true, data: { available: true } }), ms: 87, headers: { "x-ratelimit-remaining": "12" } }));
   await tot.client.getJson("parcel-profile", task(1).params);
   await tot.client.getJson("parcel-profile", task(2).params);

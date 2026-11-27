@@ -4,10 +4,11 @@
  * và log Ở MÁY. Dùng chung cho hai đường vận chuyển: fetch của Node (phần công khai) và fetch trong
  * trang của hồ sơ đăng nhập (phần cần phiên — ego.ts).
  */
-import { appendFileSync, closeSync, existsSync, mkdirSync, openSync, readFileSync, unlinkSync, writeSync } from "node:fs";
+import { randomBytes } from "node:crypto";
+import { appendFileSync, closeSync, existsSync, mkdirSync, openSync, readFileSync, unlinkSync, writeFileSync, writeSync } from "node:fs";
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import { MAX_CONCURRENCY, S17Client, RunStopped, type Caps, type Response, type StopReason, type Transport, type TransportMany } from "./client.js";
+import { MAX_CONCURRENCY, S17Client, RunStopped, type Caps, type PhanHoi, type Response, type StopReason, type Transport, type TransportMany } from "./client.js";
 import { MAX_ANH_LUONG_SONG } from "./pha-anh.js";
 import { ConfigError, type S17Config } from "./config.js";
 import { assertBalanceUnchanged } from "./kinds.js";
@@ -149,6 +150,22 @@ export function makeLogger(path: string): (event: Record<string, unknown>) => vo
   };
 }
 
+/**
+ * Thân GỐC của một câu trả lời lỗi → tệp riêng `<thư mục trạng thái>/phan-hoi/<giờ>-<vai>-<trạng thái>-<ngẫu nhiên>.txt`
+ * (dòng đầu là số đo đã che, rồi một dòng trống, rồi thân gốc). Đây là tầng A ở máy: chỉ người vận hành đọc, không
+ * trích dẫn lên kênh. Trả tên tệp; không ghi được thì trả chuỗi nói lý do — không bao giờ làm dừng lượt thu.
+ */
+function ghiThanTho(thuMuc: string, r: Omit<PhanHoi, "thanTho">, thanTho: string): string {
+  const ten = `phan-hoi-${new Date().toISOString().replace(/[:.]/g, "-")}-${String(r.vai).replace(/[^a-z0-9-]/gi, "_")}-${r.status}-${randomBytes(3).toString("hex")}.txt`;
+  try {
+    mkdirSync(join(thuMuc, "phan-hoi"), { recursive: true });
+    writeFileSync(join(thuMuc, "phan-hoi", ten), `${JSON.stringify(r)}\n\n${thanTho}`, { flag: "wx" });
+    return ten;
+  } catch (e) {
+    return `(không ghi được thân gốc: ${e instanceof Error ? e.message : String(e)})`.slice(0, 160);
+  }
+}
+
 /** Đọc số dư; không đọc được thì dừng cả lượt NGAY — thiếu bằng chứng số dư thì không chạy pha. */
 async function readBalanceOrStop(client: S17Client, when: "trước" | "sau"): Promise<number> {
   try {
@@ -233,9 +250,14 @@ export async function executePhase(o: ExecOptions): Promise<ExecResult> {
     shouldStop: () => existsSync(stopPath),
     ...(o.transportMany ? { transportMany: o.transportMany } : {}),
     // Ghi câu trả lời để đo nguồn: pha kiểm phiên (vài lời) ghi MỌI câu trả lời; pha khác chỉ ghi câu trả lời lỗi, kèm
-    // thời gian chờ, header hạn mức (nếu nguồn lộ qua CORS) và phần đầu thân (lần 429 ngày 25/11 không để lại gì ngoài «nguồn trả 429»).
+    // thời gian chờ, header hạn mức (nếu nguồn lộ qua CORS) và phần thân ĐÃ CHE (lần 429 ngày 25/11 không để lại gì
+    // ngoài «nguồn trả 429»). Thân GỐC không bao giờ vào nhật ký (claudedp-2611-19): thân câu 401/403/429 có thể lặp
+    // lại mã phiên, định danh tài khoản thu, khoá, cookie, còn nhật ký là thứ hay được trích dẫn — nó nằm ở tệp riêng
+    // trong thư mục trạng thái (tầng A), dòng nhật ký chỉ trỏ tên tệp.
     onResponse: (r) => {
-      if (r.status !== 200 || o.phase === "session-check") log({ suKien: "phan-hoi", ...r });
+      if (r.status === 200 && o.phase !== "session-check") return;
+      const { thanTho, ...dong } = r;
+      log({ suKien: "phan-hoi", ...dong, ...(thanTho !== undefined ? { thanThoTep: ghiThanTho(dirname(o.statePath), dong, thanTho) } : {}) });
     },
     sleep: env.sleep,
     now: () => env.now().getTime(),
