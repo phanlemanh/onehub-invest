@@ -5,7 +5,7 @@ slug: nap-s09-quy-can-va-can-cao-tang
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli, ui]
-status: implemented
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-25
 design_doc: docs/superpowers/specs/2026-11-25-nap-s09-quy-can-va-can-cao-tang-design.md
@@ -117,3 +117,7 @@ Lệnh đo sau áp: `DATABASE_URL=…/oneinvest node pipeline/scripts/s09-v16-th
 ## Notes
 
 - Thư mục chờ có tầng A: chỉ đọc tại máy, mẫu trong hồ sơ và PR phải che; không chép vào `_acceptance`.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-27:
+  - Ngoài-1: Nguồn thêm một trường mới vào căn cao tầng thì trường đó vào kho tạm máy thu mà không bị chặn hay báo.
+  - Ngoài-2: Một đường dẫn ảnh lồng sâu dưới trường được giữ của căn quỹ căn có thể vào kho tạm máy thu mà không bị chặn.
+  - Ngoài-3: Phép kiểm «nạp lại, nạp ngược cho cùng kết quả» không báo khi ai sửa sai cách chọn bản thu sau này.

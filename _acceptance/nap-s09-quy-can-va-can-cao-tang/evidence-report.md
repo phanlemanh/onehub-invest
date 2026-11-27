@@ -1,14 +1,14 @@
 ---
 schema_version: 2
 feature_slug: nap-s09-quy-can-va-can-cao-tang
-verdict: PENDING-JUDGMENT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 70079a04ea68da2dd8771b547ebb2385d50b373b
-human_signoff:
+human_signoff: Mạnh 2026-11-27
 ---
 
 # Evidence Report: nap-s09-quy-can-va-can-cao-tang
@@ -209,7 +209,7 @@ human_signoff:
     - operational-feasibility: PASS — lệnh áp 130 hai lần và vòng nạp từng bản v16 ở mục 2; sao lưu mục 1, cách lùi mục 4, kiểm sau mục 5; DATA-CONTRACT dòng 318 và 353.
     - spec-alignment: PASS — đủ năm thứ, số diễn tập khớp AC-5, áp sau DA42, DATA-CONTRACT có mục «Mở rộng v16» khai hai kind quy-can và can-cao-tang.
   lưu ý: review-findings có một finding trong hợp đồng AC-10 về cách lùi 4c, người cần cân nhắc khi quyết.
-  human_override:  # chi nguoi ghi
+  human_override: Mạnh 2026-11-27 — Đạt
 
 máy: M5 (M5 Max 18 nhân, colima 16/96) · DB: bản đầy đủ máy thu chép sang 26/11 05:45Z · ca đỏ có tên: không
 
