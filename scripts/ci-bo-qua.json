@@ -49,6 +49,11 @@
       "tep": "app/tests/can-gia-tot-doi-chieu.test.tsx",
       "ca": "CGT-DC đối chiếu DB máy thu chỉ đọc",
       "ly_do": "cần DB máy thu thật (DB trống của CI không có căn nào để đối chiếu); vẫn đo ở máy"
+    },
+    {
+      "tep": "app/tests/registry-s08-luat.test.tsx",
+      "ca": "RS8: S08 đã nối đếm hai bảng một lần, tách số nối vào nút ứng viên; chưa nối mang lý do bảng luật; chiều đỏ câu cũ",
+      "ly_do": "RS8 chạy trên DB của riêng lượt chép từ máy thu (db/db-thu.sh oneinvest_suite_rs8 --chay); CI không cấp DATABASE_URL cho DB đó"
     }
   ],
   "pipeline": [
