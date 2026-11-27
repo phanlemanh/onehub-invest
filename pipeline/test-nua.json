@@ -114,6 +114,8 @@
     "scripts/ghep-tin-danh-muc-cham.test.mjs",
     "tests/import-s16-chi-tiet.test.mjs",
     "scripts/do-yeu-cau-lot-tin.test.mjs",
-    "scripts/yeu-cau-khong-thanh-tin-thue.test.mjs"
+    "scripts/yeu-cau-khong-thanh-tin-thue.test.mjs",
+    "scripts/dong-the-bo-sung-tin.test.mjs",
+    "import-s09-danh-ba.test.mjs"
   ]
 }

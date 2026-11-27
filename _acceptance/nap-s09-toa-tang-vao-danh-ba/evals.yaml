@@ -1,0 +1,101 @@
+schema_version: 1
+feature_slug: nap-s09-toa-tang-vao-danh-ba
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.s09_toa_db
+    expected: "Fixture rút từ phản hồi mẫu thật (đã che) nạp hai lần: lần một đúng số dòng, lần hai 0 dòng, item hỏng đếm theo lý do, áp 115 lần hai không lỗi. Chiều đỏ: sửa một byte tệp fixture thì lượt nạp thoát khác 0 với thông điệp «sai băm», 0 dòng được ghi"
+    paths: ["db/migrations/115_*", "pipeline/lib/s09-danh-ba-can.mjs", "pipeline/lib/s09-dung.mjs", "pipeline/danh-ba-vat-the.mjs", "pipeline/scripts/danh-ba-s09-toa*"]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.s09_toa_that
+    expected: "Trên DB thử chép máy thu, bộ đếm độc lập không import pipeline/lib/s09* in bảng ba cột stg, đếm thẳng, manifest cho dự án, toà, tầng; bằng nhau từng ô. Chiều đỏ: bớt một tầng của một toà trong bản chép thì thoát 1 nêu toà đó. Chỉ in số"
+    paths: ["db/migrations/115_*", "pipeline/lib/s09-danh-ba-can.mjs", "pipeline/lib/s09-dung.mjs", "pipeline/danh-ba-vat-the.mjs", "pipeline/scripts/danh-ba-s09-toa*"]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.s09_toa_db
+    expected: "Ma trận bốn đường viết trước, mỗi ô assert kết quả: giữ nối, thẻ luật chưa nối, thẻ từng cặp chưa nối, đúng một nút ứng viên bậc mot_loi_khai; nút ứng viên không vào offer_project và không đủ điều kiện Invest; ba trạng thái thẻ: chưa duyệt 0 toà mới, duyệt rồi dựng lại toà đúng dự án và 0 trùng, từ chối vẫn không nối. Chiều đỏ: đột biến tự nối tên gần giống thì ca đỏ nêu «gần giống»"
+    paths: ["db/migrations/115_*", "pipeline/lib/s09-danh-ba-can.mjs", "pipeline/lib/s09-dung.mjs", "pipeline/danh-ba-vat-the.mjs", "pipeline/scripts/danh-ba-s09-toa*"]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.s09_toa_db
+    expected: "Khớp một thành bí danh và đếm toà không đổi; mã cũ nhận thêm mã mới trên đúng building_key; khớp hai và trùng tên 0 toà, mỗi ca một thẻ; không khớp đúng một toà mot_loi_khai; SELECT toà hai UPI bằng 0, mã S09 trỏ hai toà bằng 0. Chiều đỏ: đột biến chọn toà đầu khi khớp hai thì ca đỏ nêu «khớp hai»"
+    paths: ["db/migrations/115_*", "pipeline/lib/s09-danh-ba-can.mjs", "pipeline/lib/s09-dung.mjs", "pipeline/danh-ba-vat-the.mjs", "pipeline/scripts/danh-ba-s09-toa*"]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.s09_toa_db
+    expected: "Trên view nút vùng hiệu lực, toà có S16 giữ phân khu S16 khi S09 ghi phân khu khác; số lệch đếm theo cặp nguồn bằng giá trị viết trước; toà số tầng khớp thành bí danh, toà lệch tầng (S09 ít hơn số tầng có căn S16 quá 2, hoặc S16 có căn ở tầng S09 không kê, không so tầng 1) ra đúng một thẻ và 0 bí danh; toà S09 nhiều tầng hơn S16 hay chỉ thiếu tầng 1 vẫn thành bí danh, toà không so được thành bí danh và vào bộ đếm riêng. Chiều đỏ: đột biến xếp S09 trên S16 thì ca đỏ nêu «S16 thắng»; đột biến bỏ so số tầng thì ca đỏ nêu «hai toà cùng tên»"
+    paths: ["db/migrations/115_*", "pipeline/lib/s09-danh-ba-can.mjs", "pipeline/lib/s09-dung.mjs", "pipeline/danh-ba-vat-the.mjs", "pipeline/scripts/danh-ba-s09-toa*"]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.s09_toa_db
+    expected: "View tầng trả một dòng mỗi mã tầng, tên «12B» giữ nguyên văn, hai tầng trùng tên khác mã ra hai dòng, số tầng theo toà bằng giá trị viết trước. Chiều đỏ: đột biến gộp theo tên tầng thì ca đỏ nêu «trùng tên tầng»"
+    paths: ["db/migrations/115_*", "pipeline/lib/s09-danh-ba-can.mjs", "pipeline/lib/s09-dung.mjs", "pipeline/danh-ba-vat-the.mjs", "pipeline/scripts/danh-ba-s09-toa*"]
+  - id: E8
+    # Cách so (22/11, giám sát duyệt): bí danh TÊN so theo giá trị, không so nguồn — chỉ mục duy nhất của tên là (đối tượng, loại, giá trị) từ DA33/DA37, nguồn ghi trước giữ; mã nguồn so kèm nguồn. Thêm kịch bản «thứ tự đến» (S16 về sau S09) để chiều đỏ «bỏ tra bí danh S09 trong bước S16» phân biệt được.
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.s09_toa_db
+    expected: "Hai DB riêng cùng fixture, hai thứ tự nguồn: tập toà, căn, bí danh, thẻ bằng nhau; dựng thêm hai lần 0 khoá, 0 bí danh, 0 thẻ mới, băm tập khoá bằng nhau. Chiều đỏ: đột biến bỏ tra bí danh S09 trong bước S16 thì ca đỏ nêu «thứ tự»"
+    paths: ["db/migrations/115_*", "pipeline/lib/s09-danh-ba-can.mjs", "pipeline/lib/s09-dung.mjs", "pipeline/danh-ba-vat-the.mjs", "pipeline/scripts/danh-ba-s09-toa*"]
+  - id: E9
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.s09_toa_db
+    expected: "Danh sách đẩy của sync-cloud không có bảng stg gói 1, buildings, stacks, units; nút ứng viên không qua điều kiện Invest; soát thẻ, log, tệp của hàng ra 0 tên thật. Chiều đỏ: cấy chuỗi tên thật giả lập vào thẻ fixture thì bộ soát thoát khác 0, nêu bảng và cột, không in giá trị"
+    paths: ["db/migrations/115_*", "pipeline/lib/s09-danh-ba-can.mjs", "pipeline/lib/s09-dung.mjs", "pipeline/danh-ba-vat-the.mjs", "pipeline/scripts/danh-ba-s09-toa*"]
+  - id: E10
+    criterion: AC-10
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.s09_toa_that
+    expected: "Trên DB thử chép máy thu: hai phép cộng dự án, toà bằng tổng manifest, mỗi phần một SELECT riêng; bốn ngưỡng in cạnh số đo theo đúng công thức ở AC-10; 0 cặp bí danh lệch tầng theo luật AC-5; mẫu số ngưỡng mã cũ là 110 toà, 65 toà gom in thành dòng đếm riêng; toà hai UPI và căn hai khoá bằng 0; chạy lại cùng số. Chiều đỏ, mỗi đột biến thoát 1 nêu đúng tên: bỏ một phần → phần thiếu; nối mã mới sai toà → «nối mã cũ». Chỉ in số"
+    paths: ["db/migrations/115_*", "pipeline/lib/s09-danh-ba-can.mjs", "pipeline/lib/s09-dung.mjs", "pipeline/danh-ba-vat-the.mjs", "pipeline/scripts/danh-ba-s09-toa*"]
+  - id: E11
+    criterion: AC-10
+    executor: ui-check
+    layer: ui-observed
+    paths: ["app/src/app/ops/registry/**", "app/src/lib/ops/registry/**"]
+    steps:
+      - "Chạy app ở cổng riêng, trỏ vào DB thử đã dựng của E10, đăng nhập bằng tài khoản ops thử của máy."
+      - "Mở /ops/registry, chụp các ô tổng dự án, toà, căn → evidence/E11-tong.png."
+      - "Mở một nút ứng viên S09, chụp toà và căn → evidence/E11-ung-vien.png."
+    expected: "Ba ô tổng bằng SELECT đếm trên cùng DB; nút ứng viên hiện toà và số căn đúng, không hiện tên thật của nguồn"
+    evidence_required: [screenshot, observed, verifier, verified_at]
+  - id: E12
+    criterion: AC-11
+    executor: script
+    cmd: config:executors.script.s09_toa_that
+    expected: "Trên DB thử chép máy thu sau khi dựng: timNutTrungNoi của pipeline/lib/khop-tron.mjs trả mảng rỗng trên mọi bản ghi S09 đang xét; số toà của từng nút đã có trước lượt không giảm. Chiều đỏ trên cùng bản chép: cấy một bản ghi nằm sai nút thì hàm trả đúng một dòng nêu nút đó."
+    paths: ["pipeline/lib/khop-tron.mjs", "pipeline/danh-ba-vat-the.mjs", "pipeline/scripts/danh-ba-s09-toa*"]
+
+  - id: E8c
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.suite.pipeline_a
+    paths: ["db/migrations/115_stg_s09_danh_ba.sql", "db/migrations/125_v_s09_db_du_an_ma_tinh.sql", "pipeline/danh-ba-vat-the.mjs", "pipeline/import-s09-danh-ba*", "pipeline/lib/s09-danh-ba-can*", "pipeline/lib/s09-dung.mjs", "pipeline/lib/s16-dung.mjs", "pipeline/package.json", "pipeline/test-nua.json", "pipeline/scripts/danh-ba-s09-*", "pipeline/tests/fixtures/s09-danh-ba/**", "scripts/ops-local-dong-bang.test.mjs"]
+    expected: "exit 0; nửa A bộ test pipeline trên cụm PostGIS dùng một lần (db-thu --chay-trong, khuôn HT9; ~5′), 0 fail."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8d
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.suite.pipeline_b
+    paths: ["db/migrations/115_stg_s09_danh_ba.sql", "db/migrations/125_v_s09_db_du_an_ma_tinh.sql", "pipeline/danh-ba-vat-the.mjs", "pipeline/import-s09-danh-ba*", "pipeline/lib/s09-danh-ba-can*", "pipeline/lib/s09-dung.mjs", "pipeline/lib/s16-dung.mjs", "pipeline/package.json", "pipeline/test-nua.json", "pipeline/scripts/danh-ba-s09-*", "pipeline/tests/fixtures/s09-danh-ba/**", "scripts/ops-local-dong-bang.test.mjs"]
+    expected: "exit 0; nửa B bộ test pipeline trên cụm PostGIS dùng một lần (khuôn HT9; ~5′), gồm import-s09-danh-ba.test.mjs, 0 fail."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8e
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.suite.pipeline_that
+    long_running: 90
+    paths: ["db/migrations/115_stg_s09_danh_ba.sql", "db/migrations/125_v_s09_db_du_an_ma_tinh.sql", "pipeline/danh-ba-vat-the.mjs", "pipeline/import-s09-danh-ba*", "pipeline/lib/s09-danh-ba-can*", "pipeline/lib/s09-dung.mjs", "pipeline/lib/s16-dung.mjs", "pipeline/package.json", "pipeline/test-nua.json", "pipeline/scripts/danh-ba-s09-*", "pipeline/tests/fixtures/s09-danh-ba/**", "scripts/ops-local-dong-bang.test.mjs"]
+    expected: "exit 0; ca dữ liệu thật của bộ test pipeline (pipeline_that, khuôn HT9) trên bản chép, kích vì nhánh đổi db/migrations trong vùng của nó; 0 fail."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

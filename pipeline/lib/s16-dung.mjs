@@ -9,6 +9,8 @@
 import { chuanHoaTenToa, moiKhoa, upiToa } from "./danh-ba-vat-the.mjs";
 import { tachMa } from "./ma-can-s08.mjs";
 import { NGUON_S16, NOI_DU_AN_S16, duoiDuAn, khoaMa, s16Ref } from "./s16-danh-muc.mjs";
+import { lechTangS16 } from "./s09-danh-ba-can.mjs";
+import { soTangS09TheoToa, theLechTangS16, theMuc as theS09 } from "./s09-dung.mjs";
 
 const thuong = (s) => String(s ?? "").normalize("NFC").trim().toLowerCase();
 const TANG_HOP_LE = /^[0-9]+[A-Z]?$/;
@@ -141,6 +143,17 @@ async function dungMotDuAn(c, { du_an, k, iso, taoKhoa, ra }) {
   }
 
   // ---- Toà ----
+  // DA42: tra bí danh S09 gói 1 trên toà có sẵn trước khi gắn toà S16 vào chúng; số tầng S16 = số tầng có căn của toà.
+  const s09Toa = await soTangS09TheoToa(c, khoaToaKhu);
+  const tangS16 = new Map();
+  for (const r of canS16) {
+    if (r.mo_ho || r.tang == null) continue;
+    const id = toaCuaCan(r);
+    if (id) tangS16.set(id, new Set([...(tangS16.get(id) ?? []), r.tang]));
+  }
+  // Luật lệch một chiều của AC-5 (Q1 Cổng 1.5): S09 ít hơn số tầng có căn quá 2, hoặc S16 có căn ở tầng S09 không kê (không so tầng 1).
+  const lechVoiS09 = (key, toaId) => s09Toa.has(key) && lechTangS16({ so: s09Toa.get(key).so_tang, ten: s09Toa.get(key).tang },
+    { so: tangS16.get(toaId)?.size ?? null, ten: tangS16.get(toaId) ?? null }) === true;
   const nhomTen = new Map();
   for (const t of toaS16) { const n = chuanHoaTenToa(t.toa_ten); nhomTen.set(n, (nhomTen.get(n) ?? 0) + 1); }
   // Toà S16 trùng tên chuẩn hoá trong dự án (GS quyết 17/11 theo AC-7): máy không phân biệt được nên không đúc, không gắn,
@@ -166,6 +179,21 @@ async function dungMotDuAn(c, { du_an, k, iso, taoKhoa, ra }) {
           khoa_toa: [...khop].sort() });
       tk.toa_trung_ten++;
       tk.can_cho_trung_ten += so;
+    } else if (khop.length === 1 && lechVoiS09(khop[0], t.toa_id)) {
+      // DA42: toà có sẵn mang bí danh S09 gói 1 mà lệch tầng theo AC-5 — có thể là hai toà thật cùng tên: thẻ (cùng mã thẻ
+      // bước S09 phát), 0 bí danh, toà S16 đúc riêng như khi S16 dựng trước.
+      tk.the_moi += await theS09(c, theLechTangS16(s09Toa.get(khop[0]).toa_id), "S09: toà cùng tên với toà S16 nhưng lệch tầng",
+        { loai: "toa-lech-tang-s16", so_tang_s09: s09Toa.get(khop[0]).so_tang, building_keys: [] });
+      if (so > 0) {
+        const key = taoKhoa("bld");
+        const pk = phanKhu.filter((p) => t.khu_ten && [p.name, ...(p.aliases ?? [])].some((x) => thuong(x) === thuong(t.khu_ten)));
+        toaMoi.push({ key, region: pk.length === 1 ? pk[0].id : k.id });
+        toaKey.set(t.toa_id, key);
+        biDanhToa.push({ k: key, v });
+        tenMoi.push({ k: key, v: ten });
+        ra.toa_moi_so_can.push({ khu: k.slug, so_can: so });
+        tk.toa_moi++;
+      } else tk.toa_0_can++;
     } else if (khop.length === 1) {
       toaKey.set(t.toa_id, khop[0]);
       biDanhToa.push({ k: khop[0], v });
