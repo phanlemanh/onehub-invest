@@ -2,45 +2,68 @@
 
 ## Trong hợp đồng
 
-(không có)
+Không có finding nào map được vào AC.
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **Còn tên miền CDN của S01 («muscache») trong chú thích lược đồ mẫu công khai, thước PB5 không bắt**
-  Người dùng thấy gì: Bản công khai của API dữ liệu vẫn còn nhắc tên miền ảnh của một nguồn thật trong vài dòng chú thích và dữ liệu mẫu. Ai đọc kho công khai có thể suy ra nguồn nào đang được dùng, dù thước kiểm báo sạch.
-  Căn cứ: Tên miền nguồn thuộc nhóm tên nguồn phải giữ kín và kho này công khai, nên nặng vừa; dòng đã đẩy ra thì khó thu hồi, còn sửa thêm một đợt dọn nhỏ thì rẻ.
-  file: `data-api/db/020_s02_listing_media.sql`
-  severity: medium
-  Đề xuất: new-contract
-
-- **Kiểm tên tệp chỉ xét basename: thư mục mang tên nguồn thật dưới data-api/ lọt qua, thước vẫn báo SẠCH**
-  Người dùng thấy gì: Nếu sau này ai đó đặt tên một thư mục bằng tên nguồn thật, bộ kiểm vẫn báo sạch và tên đó đi thẳng ra kho công khai. Hiện chưa có thư mục nào như vậy.
-  Căn cứ: Chưa có trường hợp thật trong cây hiện tại nên hậu quả hiện bằng không; ghi vào giới hạn đã biết là đủ cho tới khi có ai thêm thư mục mới.
-  file: `scripts/data-api-ten-nguon.mjs`
+- **Tệp test HT19 né lưới PB5 bằng cách cắt chuỗi thay vì khai định danh**
+  Người dùng thấy gì: Một tệp kiểm thử vẫn mang tên nguồn thật, chỉ được ghép chuỗi để thước dò báo sạch. Người dùng cuối không thấy gì, nhưng kho công khai vẫn có dấu vết tên nguồn.
+  Căn cứ: Hậu quả nhẹ, chỉ là một tệp kiểm thử trên kho công khai và không ảnh hưởng người dùng; sửa sau rẻ và không mất dữ liệu.
+  file: `data-api/test/dong-ba-route.test.ts`
   severity: medium
   Đề xuất: known-limits
 
-- **Dấu nháy đơn lẻ trong template literal TS làm bộ phân loại mất đồng bộ: nuốt backtick đóng, chú thích và chuỗi TS phía sau bị tính là mã**
-  Người dùng thấy gì: Trong một số kiểu viết đặc biệt, bộ kiểm có thể xếp sai loại hoặc bỏ sót một tên nguồn thật nằm sau đó. Cây hiện tại không dính trường hợp này.
-  Căn cứ: Nhẹ vì chỉ xảy ra với cách viết hiếm, hiện chưa xảy ra, và người dùng cuối không thấy; sửa sau không tốn nhiều.
+- **Câu UPDATE đổi giá trị cũ sang mã trong 012 thành câu chết, có thêm giá trị bịa**
+  Người dùng thấy gì: Một câu chuyển dữ liệu cũ trong lược đồ mẫu công khai nay không còn khớp dòng nào, và chú thích bên cạnh có thể làm người đọc hiểu sai. Với lược đồ mẫu dựng mới thì kết quả không đổi.
+  Căn cứ: Chỉ ảnh hưởng người đọc lược đồ mẫu công khai, không mất dữ liệu thật; câu này vốn đã lỗi trên DB trống nên hậu quả rất nhẹ.
+  file: `data-api/db/012_source_registry_roles_dq.sql`
+  severity: low
+  Đề xuất: known-limits
+
+- **s4-args.json mới commit lên kho công khai vẫn chứa tên nguồn thật (tên tệp cũ)**
+  Người dùng thấy gì: Hồ sơ nghiệm thu do công cụ sinh ra có nhắc tên tệp cũ mang tên nguồn thật, và hồ sơ này nằm trên kho công khai. Việc dọn tên nguồn vì vậy chưa trọn ở chỗ này.
+  Căn cứ: Là tên tệp trong danh sách thay đổi, không phải dữ liệu người dùng; tệp do công cụ sinh nên không sửa tay được, chỉ cần ghi nhận lý do chấp nhận.
+  file: `_acceptance/data-api-don-ten-nguon/s4-args.json`
+  severity: low
+  Đề xuất: known-limits
+
+- **Migration 012 data-conversion UPDATE turned into a dead statement**
+  Người dùng thấy gì: Trên một DB mẫu cũ có sẵn dữ liệu, các dòng cũ sẽ không còn được đổi sang mã S02 như trước. Với DB mẫu dựng mới thì không có khác biệt.
+  Căn cứ: Chỉ chạm DB mẫu cũ của người tự dựng từ kho công khai, không phải dữ liệu thật; ảnh hưởng hẹp và có thể đổi lại sau.
+  file: `data-api/db/012_source_registry_roles_dq.sql`
+  severity: low
+  Đề xuất: known-limits
+
+- **Lexer goes out of sync when a SQL comment inside a template ends on the same line as the closing backtick**
+  Người dùng thấy gì: Thước dò tên nguồn có thể bỏ sót tên thật trong một dạng viết mã hiếm gặp, nên đôi khi báo sạch trong khi vẫn còn lọt. Hiện chưa có chỗ nào trong mã dính dạng này.
+  Căn cứ: Rủi ro thấp vì dạng này chưa xuất hiện và không ảnh hưởng người dùng; nếu lọt thì chỉ là lộ tên nguồn trên kho công khai, sửa sau rẻ.
   file: `scripts/data-api-ten-nguon.mjs`
   severity: low
   Đề xuất: known-limits
 
-- **Lỗi đọc tệp bị nuốt im lặng: tệp không đọc được bị bỏ qua mà vẫn được đếm là đã quét**
-  Người dùng thấy gì: Nếu một tệp không đọc được, bộ kiểm vẫn báo sạch như thể đã soát xong tệp đó. Một tên nguồn thật nằm trong tệp ấy sẽ không bị phát hiện.
-  Căn cứ: Hiếm gặp trên máy bình thường và chạy lại là thấy; hậu quả chỉ là bỏ sót tạm thời, không mất dữ liệu.
+- **The scan skips unreadable files and NUL-containing files without reporting them**
+  Người dùng thấy gì: Thước dò có thể lặng lẽ bỏ qua vài tệp không đọc được rồi vẫn báo sạch, nên không chắc đã quét hết kho.
+  Căn cứ: Hiếm gặp với tệp văn bản thông thường và không đụng người dùng hay dữ liệu; nếu bỏ sót thì chỉ lộ tên trên kho công khai, sửa sau rẻ.
   file: `scripts/data-api-ten-nguon.mjs`
   severity: low
   Đề xuất: known-limits
 
-- **Hình dạng 5: tuyên «mỗi kiểu rò» nhưng chỉ có 8 ca điểm, bỏ trống các nhánh phân loại của loaiKyTu, gồm cả nhánh miễn trừ**
-  Người dùng thấy gì: Bộ thử của thước kiểm mới chỉ cấy tám kiểu rò. Một số cách viết khác, như chú thích khối hoặc chuỗi nằm trong đoạn mã, chưa có ca thử riêng nên chưa chắc được bắt.
-  Căn cứ: Tám ca khớp đúng điều đã hứa và cây hiện tại sạch, nên rủi ro thấp; bổ sung ca thử sau là việc rẻ, không cần chặn bản này.
+- **Hình dạng 5 (tuyên quét LỚP nhưng chỉ có điểm-case): PB5-AC-4 nói lược đồ «dựng ra y như trước» nhưng chỉ so tên bảng/view, DEFAULT và source_registry**
+  Người dùng thấy gì: Phép kiểm lược đồ mẫu chỉ so tên bảng, giá trị mặc định và danh mục nguồn, nên một lần đổi tên cột hay mất chỉ mục sẽ không bị bắt. Lời nói lược đồ dựng ra y như trước rộng hơn những gì được đo.
+  Căn cứ: Việc dọn chỉ đổi chữ trong chú thích và chuỗi nên khó làm hỏng cột, và không chạm dữ liệu người dùng; mở rộng phép đo là việc riêng, không gấp.
   file: `scripts/data-api-ten-nguon.test.mjs`
   severity: medium
   Đề xuất: known-limits
+
+- **Hình dạng 2 (fixture viết tay đúng khuôn bên đọc): mốc «trước khi dọn» của AC-4 (MONG, NGUON_TRUOC) chép tay, không dựng lại từ origin/main**
+  Người dùng thấy gì: Mốc so sánh trước khi dọn là số chép tay, nên nếu chép sai thì phép kiểm vẫn xanh mà không ai biết. Hiện không có dấu hiệu chép sai.
+  Căn cứ: Số đã đo một lần trên bản gốc nên rủi ro chép sai thấp; không ảnh hưởng người dùng, và nếu cần có thể dựng lại bất cứ lúc nào.
+  file: `scripts/data-api-ten-nguon.test.mjs`
+  severity: low
+  Đề xuất: known-limits
+
+## Chưa adversarial-verify (refuter chết)
 
 Cụm ngoài vùng phủ: cluster: n-a (không đo được — không eval nào khai paths, hoặc dưới ngưỡng cụm).
