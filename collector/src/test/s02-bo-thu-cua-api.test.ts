@@ -379,16 +379,16 @@ test("2511-s02 bộ thu có lệnh login — CLI tìm được để Mạnh đă
   assert.equal(typeof airdnaResearch.login, "function");
 });
 
-test("2511-s02 thuMucProfile: AIRDNA_PROFILE_DIR thắng; thiếu hoặc rỗng thì dùng mặc định", () => {
-  assert.equal(thuMucProfile({ AIRDNA_PROFILE_DIR: "/ngoai-kho/profile/" }, "/mac-dinh/"), "/ngoai-kho/profile/");
+test("2511-s02 thuMucProfile: S02_PROFILE_DIR thắng; thiếu hoặc rỗng thì dùng mặc định", () => {
+  assert.equal(thuMucProfile({ S02_PROFILE_DIR: "/ngoai-kho/profile/" }, "/mac-dinh/"), "/ngoai-kho/profile/");
   assert.equal(thuMucProfile({}, "/mac-dinh/"), "/mac-dinh/");
-  assert.equal(thuMucProfile({ AIRDNA_PROFILE_DIR: "" }, "/mac-dinh/"), "/mac-dinh/");
+  assert.equal(thuMucProfile({ S02_PROFILE_DIR: "" }, "/mac-dinh/"), "/mac-dinh/");
 });
 
-test("2511-s02 duongChrome: AIRDNA_CHROME_BIN thắng; thiếu hoặc rỗng thì dùng Chrome ổn định của macOS", () => {
-  assert.equal(duongChrome({ AIRDNA_CHROME_BIN: "/x/chrome" }, "/mac-dinh"), "/x/chrome");
+test("2511-s02 duongChrome: S02_CHROME_BIN thắng; thiếu hoặc rỗng thì dùng Chrome ổn định của macOS", () => {
+  assert.equal(duongChrome({ S02_CHROME_BIN: "/x/chrome" }, "/mac-dinh"), "/x/chrome");
   assert.equal(duongChrome({}, "/mac-dinh"), "/mac-dinh");
-  assert.equal(duongChrome({ AIRDNA_CHROME_BIN: "" }, "/mac-dinh"), "/mac-dinh");
+  assert.equal(duongChrome({ S02_CHROME_BIN: "" }, "/mac-dinh"), "/mac-dinh");
 });
 
 // ---- P0 của vòng soát 25/11: lệnh login phải DỪNG sau khi mở cửa sổ — đo đen-trắng qua CLI thật, Chrome thay bằng /usr/bin/true
@@ -400,7 +400,7 @@ function chayCli(args: string[], env: Record<string, string>) {
 test("2511-s02 lệnh login: mở đúng profile rồi DỪNG — thoát 0, in hướng dẫn, không in Usage, không rơi sang nhánh thu", () => {
   const tmp = mkdtempSync(join(tmpdir(), "s02-login-"));
   try {
-    const r = chayCli(["login", "--source", "airdna-research"], { AIRDNA_CHROME_BIN: "/usr/bin/true", AIRDNA_PROFILE_DIR: `${tmp}/` });
+    const r = chayCli(["login", "--source", "airdna-research"], { S02_CHROME_BIN: "/usr/bin/true", S02_PROFILE_DIR: `${tmp}/` });
     assert.equal(r.status, 0, `stdout=${r.stdout}\nstderr=${r.stderr}`);
     assert.match(r.stdout, /profile bộ thu/, "phải in hướng dẫn đăng nhập");
     assert.doesNotMatch(r.stdout, /one-invest-collector|Usage:/, "không được in Usage");
@@ -411,14 +411,14 @@ test("2511-s02 lệnh login: mở đúng profile rồi DỪNG — thoát 0, in h
 });
 
 test("2511-s02 lệnh login: không mở được Chrome → báo lỗi ra stderr, thoát 1, không in Usage", () => {
-  const r = chayCli(["login", "--source", "airdna-research"], { AIRDNA_CHROME_BIN: "/khong-ton-at/chrome", AIRDNA_PROFILE_DIR: "/tmp/khong-dung/" });
+  const r = chayCli(["login", "--source", "airdna-research"], { S02_CHROME_BIN: "/khong-ton-at/chrome", S02_PROFILE_DIR: "/tmp/khong-dung/" });
   assert.equal(r.status, 1, `stdout=${r.stdout}\nstderr=${r.stderr}`);
   assert.ok(r.stderr.length > 0, "phải nói lý do");
   assert.doesNotMatch(r.stdout, /one-invest-collector|Usage:/, "đây là lỗi chạy, không phải lỗi cú pháp lệnh");
 });
 
 test("2511-s02 lệnh login: nguồn KHÔNG có lệnh login → in Usage, thoát 1, không mở gì", () => {
-  const r = chayCli(["login", "--source", "example"], { AIRDNA_CHROME_BIN: "/usr/bin/true" });
+  const r = chayCli(["login", "--source", "example"], { S02_CHROME_BIN: "/usr/bin/true" });
   assert.equal(r.status, 1);
   assert.match(r.stdout, /Usage:/);
   assert.doesNotMatch(r.stdout, /profile bộ thu/);

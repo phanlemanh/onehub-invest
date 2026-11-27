@@ -18,13 +18,13 @@ import { doiToken, docPhienTuProfile, khoaLocalStorage, LoiBiChan, LoiXacThuc, p
  *   AIRDNA_MARKETS=47,48   — override danh sách market id (mặc định theo city)
  *   AIRDNA_SUB_LISTINGS=0  — bỏ POST /submarket/{sid}/listings (đủ map_listings)
  *   AIRDNA_SUB_LIMIT=1     — giới hạn số submarket (smoke test)
- *   AIRDNA_PROFILE_DIR=…   — thư mục profile (mặc định .airdna-profile/ cạnh mã bộ thu)
- *   AIRDNA_CHROME_BIN=…    — tệp chạy Chrome cho lệnh login (mặc định Chrome ổn định của macOS)
+ *   S02_PROFILE_DIR=…   — thư mục profile (mặc định .airdna-profile/ cạnh mã bộ thu)
+ *   S02_CHROME_BIN=…    — tệp chạy Chrome cho lệnh login (mặc định Chrome ổn định của macOS)
  */
-/** 2511-s02: thư mục profile — AIRDNA_PROFILE_DIR thắng (chạy từ worktree, hoặc profile gom về một gốc
+/** 2511-s02: thư mục profile — S02_PROFILE_DIR thắng (chạy từ worktree, hoặc profile gom về một gốc
  * ngoài kho theo ROADMAP mục 60); thiếu thì giữ `.airdna-profile/` cạnh mã bộ thu như trước. */
 export function thuMucProfile(env: Record<string, string | undefined>, macDinh: string): string {
-  return env.AIRDNA_PROFILE_DIR || macDinh;
+  return env.S02_PROFILE_DIR || macDinh;
 }
 const PROFILE_DIR = thuMucProfile(process.env, new URL("../../.airdna-profile/", import.meta.url).pathname);
 /** Chỉ tên thư mục profile — phần đường dẫn đầy đủ không cần in ra manifest hay log. */
@@ -176,9 +176,9 @@ export function trinhTokenCuaApi(
 
 const CHROME_MAC = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
-/** 2511-s02b: tệp chạy Chrome cho lệnh login — AIRDNA_CHROME_BIN thắng; thiếu thì Chrome ổn định của macOS. */
+/** 2511-s02b: tệp chạy Chrome cho lệnh login — S02_CHROME_BIN thắng; thiếu thì Chrome ổn định của macOS. */
 export function duongChrome(env: Record<string, string | undefined>, macDinh: string): string {
-  return env.AIRDNA_CHROME_BIN || macDinh;
+  return env.S02_CHROME_BIN || macDinh;
 }
 
 /** 2511-s02: tham số mở Chrome THƯỜNG — không qua Playwright, không cờ tự động hoá, không kết nối gỡ lỗi —
