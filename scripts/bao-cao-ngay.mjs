@@ -34,10 +34,14 @@ const TZ = "Asia/Ho_Chi_Minh";
 /** Thẻ Ghép căn đóng băng (V7) — chép NGUYÊN VĂN từ app/src/lib/ops/review-dong-bang.ts (test ops-local-dong-bang so chuỗi). */
 export const THE_DONG_BANG_SQL = "(item_type = 'entity_match' AND status = 'pending')";
 
-/** Công người (H1 chờ, H1b quyết 24 giờ, thẻ vào 24 giờ): thẻ Ghép căn đang chờ đóng băng không tính. */
+/** Thẻ do NGƯỜI quyết — chép NGUYÊN VĂN từ app/src/lib/ops/review-dau-trang.ts (test NB9 E9 so chuỗi). */
+export const THE_NGUOI_QUYET_SQL = "NOT (coalesce(decided_by, '') LIKE ANY (ARRAY['may:%', 'transform:%', 'may-da37', 'dung-nguoi', 'nap-lai-nguoi', 'kich-ban-K1']))";
+
+/** Công người (H1 chờ, H1b quyết 24 giờ, thẻ vào 24 giờ): thẻ Ghép căn đang chờ đóng băng không tính; chỉ thẻ do người quyết
+ *  (THE_NGUOI_QUYET_SQL, NB9) tính là quyết. */
 export const CONG_NGUOI_SQL = `
       SELECT count(*) FILTER (WHERE status = 'pending')::int cho,
-             count(*) FILTER (WHERE decided_at >= now() - interval '24 hours')::int quyet,
+             count(*) FILTER (WHERE decided_at >= now() - interval '24 hours' AND ${THE_NGUOI_QUYET_SQL})::int quyet,
              count(*) FILTER (WHERE created_at >= now() - interval '24 hours')::int vao
         FROM review_queue WHERE NOT ${THE_DONG_BANG_SQL}`;
 
