@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 14b96d206ef5c11b230e0221de5e3e7c0ef40945
+verified_commit: aa87e130b08c8ac25d477bb050fad511ce1cd284
 human_signoff: Mạnh 2026-11-27
 ---
 
@@ -154,3 +154,7 @@ none — mọi eval chạy một lần, kết quả đồng nhất; không có j
 
 Round 1: baseline được đo (chi tiết ở lịch sử round 1).
 Round 2: E1 đến E7 đều đạt, các lệnh suite hồi quy xanh; baseline không đo lại.
+
+### Re-pin lần 1 — 2026-11-27, do ghim lại bằng làn eval
+run_id: repin-20261127T043727Z-10914
+sha: aa87e130b08c8ac25d477bb050fad511ce1cd284 · suites: 8 lệnh exit 0 · evals: 7/7 eval máy đạt kỳ vọng
