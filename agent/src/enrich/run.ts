@@ -19,7 +19,7 @@ import {
   llmFieldsFromEnrich, routeFields, summarizeRun, type BuildingNode, type EnrichField, type Routed,
 } from "./route.js";
 import { bamLoiNhac, phieuDocLap } from "./ghi-tam/doc-lap.js";
-import { ganLo, oDangDung, truongQuaHan, xetHan, type LoHetHan } from "./ghi-tam/lo.js";
+import { coLopGhiTam, ganLo, truongDangDung, xetHan, type LoHetHan } from "./ghi-tam/lo.js";
 import { demRong, type DemLuot } from "./tong-ket.js";
 
 /**
@@ -287,15 +287,17 @@ export async function runEnrich(opts: RunEnrichOpts): Promise<{
   // dừng tự ghi và tổng kết báo lỗi nguyên văn — không rút nửa chừng, không im lặng.
   let hetHan: LoHetHan[] = [];
   let loiXetHan: string | null = null;
-  if (!opts.dry) {
+  // DB chưa áp 129 (chưa có bảng lô): không xét hạn, mọi trường dừng tự ghi — đề xuất có căn cứ lên thẻ, lượt không lỗi.
+  const coLop = await coLopGhiTam(c);
+  if (!coLop) loiXetHan = "DB chưa áp migration 129 (chưa có lớp ghi tạm) — mọi trường dừng tự ghi";
+  else if (!opts.dry) {
     try {
       hetHan = await giaoDich(() => xetHan(c));
     } catch (e) {
       loiXetHan = e instanceof Error ? e.message : String(e);
     }
   }
-  const oDung = await oDangDung(c);
-  if (loiXetHan) for (const f of await truongQuaHan(c)) oDung.add(f);
+  const { dung: oDung } = await truongDangDung(c);
   const loDaGhi = new Set<string>();
   const buildings = opts.buildings ?? (await loadBuildings(c));
   const offers = await selectOffers(c, opts.limit, opts.offerIds);

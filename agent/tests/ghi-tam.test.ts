@@ -9,7 +9,8 @@ import type pg from "pg";
 import type { ContextResult } from "../src/agents/context-resolver.js";
 import { buildEnrichInput, type EnrichResult } from "../src/agents/enrich-text.js";
 import type { Nhan } from "../src/agents/nhan-bac-s03.js";
-import { chayLuot, docTraLoi } from "../src/enrich/doc-toan-bo.js";
+import { chayLuot, docTraLoi, xuLaiTrich } from "../src/enrich/doc-toan-bo.js";
+import { kiemTrichLoai } from "../src/enrich/luat-trich-dan.js";
 import { DAU_DAP_AN_LUAT, phieuDocLap } from "../src/enrich/ghi-tam/doc-lap.js";
 import { HAN_DO_BU_NGAY, NAC_GHI_TAM } from "../src/enrich/ghi-tam/lo.js";
 import { routeFields, type Routed } from "../src/enrich/route.js";
@@ -254,6 +255,61 @@ test("E6 AC-6 lượt đọc toàn bộ: lô loại hình quá hạn chưa rút 
     assert.ok(ds.every((d) => !(d.status === "applied" && d.ghi_tam)), "AC-6 đọc toàn bộ vẫn ghi tạm loại hình khi lô quá hạn");
     assert.equal((await dongTin(c, id)).property_type, "unknown", "AC-6 đọc toàn bộ đổi ô loại hình khi lô quá hạn");
     assert.equal(await lo(c, `${dtb}:property_type`), undefined, "AC-6 đọc toàn bộ mở lô mới cho trường quá hạn");
+  });
+});
+
+/** Đề xuất skipped «khong-tu-khoa» do một lượt đọc toàn bộ thật với luật cũ sinh ra — đầu vào của xuLaiTrich. */
+async function deXuatCho(c: pg.Client, tag: string): Promise<string> {
+  await c.query(await readFile(join(import.meta.dirname, "../../db/migrations/065_silver_labels.sql"), "utf8"));
+  await c.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ($1, 'hanoi', 'zalo-agent', '{}') ON CONFLICT (snapshot_id) DO NOTHING`, [SNAP_DTB]);
+  const post = `t_nb10_xl_${tag}_${process.pid}`;
+  const chu = `Cho thuê 2PN Times City 14tr ${tag}`;
+  await c.query(`INSERT INTO stg_zalo_posts (post_id, snapshot_id, agent_id, group_name, conversation_id, text, posted_at)
+    VALUES ($1, $2, 'openclaw-hook', 'Nhóm NB10', 'nb10', $3, '2026-11-26T08:00:00Z')`, [post, SNAP_DTB, chu]);
+  const id = `t_nb10_xl_${tag}_${process.pid}`;
+  await insertOffer(c, { offer_id: id, property_type: "unknown", post_ids: [post] });
+  const hoi = async (ch: string): Promise<Nhan> => {
+    const p = docTraLoi(traLoiDoc({ quote: "Cho thuê", property_type: "apartment", quote_loai: "2PN" }), ch);
+    return { model: "gateway:anthropic/claude-haiku-5.5", ...p, error_kind: null, latency_ms: 1, cost_usd: 0.001 };
+  };
+  // Luật cũ: «2PN» (trich-dan:so-phong) từng là khong-tu-khoa — đề xuất nằm skipped chờ xử lại.
+  const luatCu: typeof kiemTrichLoai = (v, q, ch) => { const k = kiemTrichLoai(v, q, ch); return k.ok && k.ma === "trich-dan:so-phong" ? { ok: false, lyDo: "khong-tu-khoa" } : k; };
+  await chayLuot({ client: c, runId: `nb10-xl-cu-${tag}-${seq}`, tranUsd: 3, tranThe: 500, thu: false, cam: [], chiTin: [id], hoi, resolve: async () => ctx({ matchedBy: "" }), kiemLoai: luatCu });
+  const [d] = await deXuat(c, id, "property_type");
+  assert.deepEqual([d?.status, d?.evidence?.ly_do], ["skipped", "khong-tu-khoa"], "AC-6 tiền đề: không dựng được đề xuất skipped cho xử lại");
+  return id;
+}
+test("E6 AC-6 xử lại trích dẫn: lô loại hình quá hạn chưa rút thì không ghi tạm; đối chứng: lô còn hạn thì áp ghi tạm", async () => {
+  await withTx(async (c) => {
+    const quaHan = await deXuatCho(c, "qh");
+    const ma = `nb10-e6x-${seq}:property_type`;
+    await c.query(`INSERT INTO ghi_tam_lo (ma, field, nguon_luot, doc_lap, ghi_boi, model, nac, han_do_bu)
+      VALUES ($1, 'property_type', 'nb10-e6x', true, 'test', null, 1, current_date - 1)`, [ma]);
+    const kq = await xuLaiTrich({ client: c, runId: `nb10-xl-${seq}`, thu: false, cam: [], chiTin: [quaHan], resolve: async () => ctx({ matchedBy: "" }) });
+    assert.equal(kq.dat, 1, `AC-6 tiền đề: đề xuất không đạt luật mới (${JSON.stringify(kq)})`);
+    assert.deepEqual([kq.daAp, kq.giuNguyen["o-dung"]], [0, 1], "AC-6 xử lại trích dẫn vẫn ghi tạm khi lô quá hạn");
+    assert.equal((await dongTin(c, quaHan)).property_type, "unknown", "AC-6 xử lại trích dẫn đổi ô loại hình khi lô quá hạn");
+    // Đối chứng dương cùng fixture: lô còn hạn → xử lại áp, giá trị mang lô và cờ ghi tạm.
+    await c.query(`UPDATE ghi_tam_lo SET han_do_bu = current_date + 1 WHERE ma = $1`, [ma]);
+    const kq2 = await xuLaiTrich({ client: c, runId: `nb10-xl2-${seq}`, thu: false, cam: [], chiTin: [quaHan], resolve: async () => ctx({ matchedBy: "" }) });
+    assert.equal(kq2.daAp, 1, `AC-6 đối chứng: lô còn hạn mà xử lại không áp (${JSON.stringify(kq2)})`);
+    const [d] = await deXuat(c, quaHan, "property_type");
+    assert.deepEqual([d.status, d.ghi_tam, d.lo_id], ["applied", true, `nb10-xl2-${seq}:property_type`], "AC-6 đối chứng: giá trị xử lại thiếu lô hay cờ");
+  });
+});
+
+test("E3 AC-3 DB chưa áp 129 (bản chép máy thu): lượt đêm không lỗi, không ghi tạm, đề xuất có căn cứ lên thẻ, tổng kết nêu 129", async () => {
+  await withTx(async (c) => {
+    // Giả lập DB máy thu chưa áp 129: bỏ hai bảng lô trong giao dịch (ROLLBACK khi xong).
+    await c.query(`DROP TABLE ghi_tam_o, ghi_tam_lo CASCADE`);
+    const t = await tin(c);
+    const r = await chay(c, `enrich-nb10-k129-${seq}`, [t], llmPrompt(kq({ property_type: "apartment" })), resolveWith({ propertyType: "apartment" }))
+      .catch((e: Error) => assert.fail(`AC-3 DB chưa 129: lượt đêm lỗi — ${e.message}`));
+    assert.equal((await c.query(`SELECT 1 AS ok`)).rows[0].ok, 1, "AC-3 DB chưa 129: giao dịch hỏng sau lượt");
+    assert.deepEqual((await deXuat(c, t, "property_type")).map((p) => [p.route, p.status, p.lo_id]), [["review", "queued", null]],
+      "AC-3 DB chưa 129 vẫn tự áp đề xuất có căn cứ");
+    assert.equal((await dongTin(c, t)).property_type, "unknown", "AC-3 DB chưa 129: ô loại hình bị đổi");
+    assert.match(r.ghiTam.loiXetHan ?? "", /129/, "AC-3 DB chưa 129: tổng kết không nêu migration 129");
   });
 });
 

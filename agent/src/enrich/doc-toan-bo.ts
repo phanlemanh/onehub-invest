@@ -13,7 +13,7 @@ import { recordCallDb, soToken, tenLop, type RecordCall } from "../runtime/ai-ca
 import { getModel } from "../runtime/models.js";
 import { KIND, LISTING_INTENT, PROPERTY_TYPE } from "../vocab.generated.js";
 import { kiemTrichLoai, trichCoThat } from "./luat-trich-dan.js";
-import { ganLo, oDangDung, truongQuaHan } from "./ghi-tam/lo.js";
+import { ganLo, truongDangDung } from "./ghi-tam/lo.js";
 import { routeFields, type EnrichField, type Routed } from "./route.js";
 import { catChu, giaoDichSavepoint, heldFields, syncReview, type GiaoDich, type ResolveFn } from "./run.js";
 
@@ -321,8 +321,7 @@ export async function chayLuot(o: {
       const ghiTamIds = new Map<EnrichField, number[]>();
       // NB10 AC-6: lô dang-ghi quá hạn đo bù mà chưa ai rút (lượt đêm chưa chạy, chưa gõ --het-han) vẫn dừng trường ở đây.
       // Lượt này không rút lô — rút là việc của lượt đêm hay lệnh --het-han; ở đây chỉ không ghi thêm.
-      const oDung = await oDangDung(c);
-      for (const f of await truongQuaHan(c)) oDung.add(f);
+      const { dung: oDung } = await truongDangDung(c);
       for (const d0 of q.de_xuat) {
         // Ô đang dừng tự ghi (lô quá hạn hay đo bù không đạt): đề xuất có căn cứ lên thẻ thay vì áp (NB10 AC-6).
         const d = d0.route === "corroborated" && d0.status === "queued" && oDung.has(d0.field)
@@ -440,7 +439,8 @@ export async function xuLaiTrich(o: {
     }
     kq.dat++;
     if (o.thu) continue;
-    if ((await oDangDung(c)).has("property_type")) { giu("o-dung"); continue; }
+    // NB10 AC-6: cùng nguồn «trường đang dừng» với lượt đêm và lượt đọc toàn bộ (gồm lô quá hạn chưa rút; DB chưa áp 129).
+    if ((await truongDangDung(c)).dung.has("property_type")) { giu("o-dung"); continue; }
     try {
       kq.daAp += await giaoDich(async () => {
         await c.query(

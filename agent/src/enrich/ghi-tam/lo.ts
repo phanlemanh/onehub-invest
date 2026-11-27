@@ -2,7 +2,7 @@
 // apply_enrichment: mở lô <run_id>:<field>, gắn lo_id + ghi_tam lên đề xuất. Ô đã dừng (quá hạn, đo bù không đạt) thì không ghi.
 import type pg from "pg";
 
-import type { EnrichField } from "../route.js";
+import { ENRICH_FIELDS, type EnrichField } from "../route.js";
 
 /** Hỏi-2 (Mạnh duyệt 26/11): ghi nấc hiện có của ô «Bổ sung tin» — nấc 1 — kèm cờ ghi tạm; thang 0–4 không đổi. */
 export const NAC_GHI_TAM = 1;
@@ -59,4 +59,26 @@ export async function truongQuaHan(c: pg.Client): Promise<EnrichField[]> {
       WHERE trang_thai = 'dang-ghi' AND ket_qua_do_bu = 'chua-do' AND han_do_bu < current_date ORDER BY field`,
   );
   return rows.map((r) => r.field);
+}
+
+/**
+ * DB đã có lớp ghi tạm (migration 129) chưa. DB máy thu chưa áp 129 (mã gộp trước lượt áp, hay bản chép DB máy thu ở S4)
+ * thì không có bảng lô: mọi đường ghi tạm phải dừng mọi trường, không được để câu đọc bảng lô làm hỏng giao dịch của lượt.
+ */
+export async function coLopGhiTam(c: pg.Client): Promise<boolean> {
+  const { rows } = await c.query<{ co: boolean }>(
+    `SELECT to_regclass('public.ghi_tam_lo') IS NOT NULL AND to_regclass('public.ghi_tam_o') IS NOT NULL AS co`,
+  );
+  return rows[0]?.co === true;
+}
+
+/**
+ * MỘT nguồn «trường đang dừng tự ghi» cho mọi đường ghi tạm (lượt đêm, lượt đọc toàn bộ, xử lại trích dẫn) — NB10 AC-6:
+ * ô đã dừng (ghi_tam_o.dung) cộng trường có lô dang-ghi quá hạn đo bù chưa ai rút; DB chưa áp 129 → mọi trường.
+ */
+export async function truongDangDung(c: pg.Client): Promise<{ dung: Set<EnrichField>; coLop: boolean }> {
+  if (!(await coLopGhiTam(c))) return { dung: new Set(ENRICH_FIELDS), coLop: false };
+  const dung = await oDangDung(c);
+  for (const f of await truongQuaHan(c)) dung.add(f);
+  return { dung, coLop: true };
 }
