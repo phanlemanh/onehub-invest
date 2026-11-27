@@ -1,0 +1,10 @@
+# Chạy thử áp + lùi ZC22 — 2026-11-27T12:35:47Z — hộp cát (KHÔNG phải checkout chính), node_modules mượn của worktree
+Trước (dist dựng từ origin/main a94013aaf):
+  băm dist: 996b69aa0433 · tệp mô-đun phiên mới: 0 · list-sources: 7 dòng, thoát 0 · login với nguồn không có login: thoát 1
+Sao lưu: cp -a dist dist.bak-202611271935
+Sau áp (dist dựng từ nhánh 5383f66c7 + sửa phép đo chưa commit — mã collector như HEAD):
+  băm dist: af4844bdb70a · tệp mô-đun phiên mới: 1 · list-sources: 7 dòng, thoát 0 · login với nguồn không có login: thoát 1
+Lùi: rm -rf dist && mv dist.bak-202611271935 dist
+Sau lùi:
+  băm dist: 996b69aa0433 · tệp mô-đun phiên mới: 0 · list-sources: 7 dòng, thoát 0 · login với nguồn không có login: thoát 1
+LÙI ĐẠT: băm dist sau lùi = trước (996b69aa0433)
