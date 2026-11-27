@@ -3,7 +3,7 @@ import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 
 import { marketsRoute } from "./routes/markets.js";
-import { listingsRoute } from "./routes/listings.js";
+import { KIND, listingsRoute } from "./routes/listings.js";
 import { dealsRoute } from "./routes/deals.js";
 import { assetStatsRoute } from "./routes/asset-stats.js";
 import { priceStatsRoute } from "./routes/price-stats.js";
@@ -46,7 +46,7 @@ app.get("/openapi.json", (c) => {
       "/v1/markets/{id}": { get: { summary: "Market detail", responses: { 200: { description: "Detail" } } } },
       "/v1/markets/{id}/submarkets": { get: { summary: "Submarkets", responses: { 200: { description: "Submarket list" } } } },
       "/v1/markets/{id}/insights": { get: { summary: "Market insights", responses: { 200: { description: "Insights" } } } },
-      "/v1/listings": { get: { summary: "Listings (RESO Property resource): ?kind=sale|rent_lt|rent_st, market, area, bedroomsTotal, minBelowMedianPct, project, limit, offset", responses: { 200: { description: "Listing list", content: { "application/json": { schema: { type: "object", properties: { data: { type: "array", items: { $ref: "#/components/schemas/Listing" } } } } } } } } } },
+      "/v1/listings": { get: { summary: `Listings (RESO Property resource): ?kind=${KIND.join("|")}, market, area, bedroomsTotal, minBelowMedianPct, project, limit, offset`, responses: { 200: { description: "Listing list", content: { "application/json": { schema: { type: "object", properties: { data: { type: "array", items: { $ref: "#/components/schemas/Listing" } } } } } } } } } },
       "/v1/listings/{listingKey}": { get: { summary: "One listing by listingKey", responses: { 200: { description: "Listing", content: { "application/json": { schema: { type: "object", properties: { data: { $ref: "#/components/schemas/Listing" } } } } } }, 404: { description: "Not found" } } } },
       "/v1/price-stats": { get: { summary: "Price statistics by area (?area= or ?market=)", responses: { 200: { description: "Stats" } } } },
       "/v1/coverage": { get: { summary: "Data coverage", responses: { 200: { description: "Coverage" } } } },

@@ -19,7 +19,7 @@ import { LISTING_KEY_NAMES, loaiHinh } from "../contract/listing.js";
  */
 export const listingsRoute = new Hono();
 
-const KIND = ["sale", "rent_lt", "rent_st"] as const;
+export const KIND = ["sale", "rent_lt", "rent_st"] as const;
 type Kind = (typeof KIND)[number];
 type Dong = Record<string, unknown>;
 
@@ -222,7 +222,7 @@ listingsRoute.get("/", async (c) => {
   // Căn giá tốt: bộ lọc của Listing (thay /v1/deals). Chỉ tin bán, thuê dài hạn có số so giá.
   if (giaTotMode) {
     const minPct = Math.max(0, Math.min(50, rawMin === undefined ? 5 : Number(rawMin)));
-    const kinds = (rawKind ? [rawKind] : ["sale", "rent_lt"]).filter((k) => k !== "rent_st") as Kind[];
+    const kinds = (rawKind ? [rawKind] : [...KIND]).filter((k) => k !== "rent_st") as Kind[];
     if (!kinds.length) return c.json({ data: [], meta: { total: 0, limit, offset } });
     const coBang = await coBangHang();
     if (rawProject !== undefined && !coBang) return c.json({ data: [], meta: { total: 0, limit, offset } });
