@@ -919,6 +919,15 @@ enums:
     values_from: source_registry.code
     note: "controlled vocabulary có sẵn từ migration 012 — không khai trùng ở đây (bộ đọc sổ bỏ qua khoá này)"
 
+# Nguồn không bao giờ hiển thị công khai (PB7 data-api-tin-hien-thi): chỗ DUY NHẤT viết danh sách. Bộ sinh phát hằng
+# SOURCE_HIDDEN vào app (luật «tin hiển thị được» của cổng Invest), data-api (/v1/listings), agent và pipeline. Mỗi mục:
+# code (mã S0x của source_registry) · can_cu (luật của kho). Đây là chính sách, không phải field hay enum dữ liệu.
+nguon_khong_hien_thi:
+  - code: S02
+    can_cu: "AGENTS.md luật 5 — S02 chỉ để hiệu chuẩn, số S02 không lên cổng hay API công khai"
+  - code: S08
+    can_cu: "AGENTS.md luật 6 — S02, S08 không tính là tin hiển thị được (Mạnh chốt 02/11)"
+
 # Ngoại lệ có chủ ý của `vocab.mjs --lint` — mỗi mục: path (tương đối gốc kho) · axis · reason. Mục thiếu reason
 # hoặc không còn khớp chỗ viết tay nào → lint đỏ. Tập này ghim ở hợp đồng PL6 AC-5; thêm mục là đổi phạm vi.
 enums_lint_allow:

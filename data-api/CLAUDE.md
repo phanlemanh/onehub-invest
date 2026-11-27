@@ -42,4 +42,8 @@ npm run dev           # :3001 (PORT)
   trị `StandardName` của lookup; không có mới là extension, và extension phải khai mục `api_extensions.listing` trong
   `pipeline/mappings.yaml` đủ sáu điều kiện ADR-0011. Không đặt tên extension trùng một field DD khác nghĩa
   (`roomType` → `spaceType`). Listing = resource `Property` của RESO; danh bạ nhà là `/v1/properties`.
+- **Nguồn không hiển thị công khai** (PB7): `/v1/listings` ở mọi nhánh lọc nguồn bằng `SOURCE_HIDDEN` của
+  `src/contract/vocab.generated.ts` — tệp MÁY SINH từ `nguon_khong_hien_thi` của `pipeline/mappings.yaml` (cùng nguồn với
+  cổng Invest). Không viết tay mã nguồn nào; thêm nguồn ẩn = sửa sổ rồi `node pipeline/vocab.mjs --write`. Route mới đọc
+  `sale_offers` phải đi qua cùng điều kiện; test `test/tin-hien-thi.test.ts`.
 - Khoá `listingKey` của tin thuê ngắn hạn là HMAC có khoá bí mật `LISTING_KEY_SECRET` — không bao giờ trả id gốc của nguồn.

@@ -41,14 +41,14 @@ evals:
     executor: script
     cmd: config:executors.script.dapi_an_pha
     paths: [data-api/src/routes/listings.ts, data-api/test/**, _acceptance/data-api-tin-hien-thi/probes/pha.mjs]
-    expected: "exit 0; probe in ba dòng ô viết trước (goc, bo-loc, theo-so) rồi «pha: đủ 3 ô». Ô goc: rc 0, fail 0. Ô bo-loc (bản chép data-api, điều kiện nguồn bị bỏ khỏi routes/listings.ts): rc ≠ 0; ba ca PB7-AC-3, AC-4, AC-5 đỏ; số thông điệp ghim «PB7 nguồn ẩn lọt ra API: <S0x> ở <ô>» khác nhau = số ô của hai ma trận + hai chi tiết (test chạy với cờ báo-hết-ô, không dừng ở assert đầu); mọi ca PB2 và DRL xanh. Ô theo-so (bản chép data-api/src/contract/vocab.generated.ts, SOURCE_HIDDEN thêm S06): ca AC-3, AC-4 đỏ với «PB7 điều kiện nguồn không theo SOURCE_HIDDEN: <ô>». Ca đỏ không kèm thông điệp ghim không được tính (ô tự đỏ cùng lượt trên nhật ký giả). Thiếu → thoát 1 «pha: N ô sai»; không dựng được bản chép → thoát 2."
+    expected: "exit 0; probe in dòng ma trận viết trước («viet_truoc»: 29 thông điệp lọt, 22 ô đối chứng) rồi ba ô và «pha: đủ 3 ô». Ô goc: rc 0, mọi ca PB7, PB2, DRL xanh. Ô bo-loc (điều kiện nguồn bị bỏ khỏi routes/listings.ts): rc ≠ 0; PB7-AC-3, AC-4, AC-5 đỏ; tập thông điệp «PB7 nguồn ẩn lọt ra API: <S0x> ở <ô>» trên dòng assert (không tính tiêu đề ca) BẰNG ĐÚNG 29 thông điệp viết trước — thiếu hay thừa đều sai; mọi ca PB2, DRL xanh. Ô theo-so (SOURCE_HIDDEN của bản chép data-api/src/contract/vocab.generated.ts thêm S06): mỗi ô trong 22 ô có đối chứng ra «PB7 đối chứng S06 vắng ở <ô>»; ô nào vẫn có S06 → probe in «PB7 điều kiện nguồn không theo SOURCE_HIDDEN: <ô>». Ô tự đỏ cùng lượt: nhật ký giả có thông điệp chỉ ở tiêu đề ca → ô bo-loc phải sai. Thiếu → thoát 1 «pha: N ô sai»; không dựng được bản chép → thoát 2."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E7
     criterion: AC-7
     executor: script
     cmd: config:executors.script.dapi_an_db
     paths: [data-api/src/routes/listings.ts, _acceptance/data-api-tin-hien-thi/probes/do-db.mjs]
-    expected: "exit 0; probe chạy trên bản chép DB (db/db-thu.sh) và gọi chính route /v1/listings (mọi kind, phân trang hết) của bản nền — routes/listings.ts ở merge-base gắn vào bản chép data-api, «nền <sha>» in ra — và của bản sau hàng; đếm khoá tin nguồn ẩn trả về: «do-db: nền <sha>; nguồn ẩn trong bảng <k> dòng; route trước <a>, sau 0; khoá còn lại trước <b> = sau <b>», k = 0 thì thêm «lỗ tiềm ẩn đã đóng». Probe không chứa chuỗi SQL tập ghép. Chiều đỏ cùng lượt: cấy một dòng S08 vào bản chép DB → «trước ≥ 1, sau 0»; bản chép route bỏ điều kiện nguồn → «sau ≥ 1»; ô không đỏ → thoát 1 «do-db: thước không đỏ ở <ô>». Không có DB máy thu → thoát 2 có tên."
+    expected: "exit 0; probe gọi chính route /v1/listings (mọi kind, phân trang hết theo từng khu) của ba bản — nền (routes/listings.ts ở merge-base mới hơn với origin/main và nhánh PB2, sha in ra), sau (hôm nay), bo-loc (hôm nay bỏ điều kiện nguồn) — trên bản chép DB (db/db-thu.sh), mẫu là ba khu có nhiều tin nhất; probe không chứa SQL tập ghép (SQL chỉ đếm bảng, cấy dòng, tra nguồn của khoá route trả). Lượt 1: «do-db: nền <sha>; nguồn ẩn trong bảng <k> dòng; route trước <a>, sau 0; khoá còn lại trước <b> = sau <b>», k = 0 thì thêm «lỗ tiềm ẩn đã đóng». Lượt 2 (chiều đỏ): cấy một tin S08 thuê dài → «trước ≥ 1, sau 0, bo-loc ≥ 1»; ô không đỏ → thoát 1 «do-db: thước không đỏ ở <ô>». Không chạy được trên bản chép DB → thoát 2 kèm lỗi."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E8
     criterion: AC-8
@@ -69,7 +69,7 @@ evals:
     executor: script
     cmd: config:executors.script.dapi_an_nguon
     paths: [pipeline/scripts/do-s03-len-cong.mjs, pipeline/lib/vocab.generated.mjs, _acceptance/data-api-tin-hien-thi/probes/nguon-chung.mjs]
-    expected: "exit 0; ô do-s03 của nguon-chung.mjs: chạy do-s03-len-cong.mjs --ben-doc thoát 0 và in «nguồn ẩn: S02, S08»; soát tĩnh: script nhập pipeline/lib/vocab.generated.mjs, không còn đọc chữ app/src/lib/offers-filters.ts (còn → «PB7 do-s03 còn đọc tệp app»). Chiều đỏ cùng lượt: bản chép pipeline có SOURCE_HIDDEN rỗng trong tệp sinh → --ben-doc thoát ≠ 0 kèm «SL1: không đọc được danh sách nguồn ẩn»; không đỏ → thoát 1 «nguon-chung: thước không đỏ ở do-s03»."
+    expected: "exit 0; phần do-s03 của nguon-chung.mjs: pipeline/scripts/do-s03-len-cong.mjs nhập SOURCE_HIDDEN từ pipeline/lib/vocab.generated.mjs (thiếu → «PB7 do-s03 không nhập SOURCE_HIDDEN từ tệp sinh»), không còn regex chữ OFFER_HIDDEN_SOURCES của app (còn → «PB7 do-s03 còn đọc tệp app»); đầu ra thật của bộ đọc luật hiển thị chạy trong tiến trình con không cần DB: nguonAn() = «'S02', 'S08'» (in «nguồn ẩn: S02, S08»), dieuKienVisible() chứa «o.source <> ALL(ARRAY['S02', 'S08'])». Chiều đỏ cùng lượt: nguonAn([]) ném «SL1: không đọc được danh sách nguồn ẩn»; không ném → «nguon-chung: thước không đỏ ở do-s03»."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E11
     criterion: AC-9
