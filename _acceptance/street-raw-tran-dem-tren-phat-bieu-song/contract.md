@@ -5,7 +5,7 @@ slug: street-raw-tran-dem-tren-phat-bieu-song
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-11-25T22:24:08Z
 approved_by:
@@ -61,6 +61,9 @@ lượt trước đã xử: không còn phát biểu sống trúng). Mọi giá 
 - Số «rút K chủ thể» đếm theo danh sách đọc trước (finding t1 PL39): ghi Known limits ở PL39.
 
 ## Notes
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-27:
+  - Ngoài-1: khi sổ nguồn thêm mục mới, tin đã thu từ trước vẫn có thể giữ chữ mang tên nguồn ở ô phường, quận mà job không báo; dữ liệu đó vẫn bị chặn ở bước lên cloud.
+  - Mù-1: suite pipeline_that không đọc được ở lượt chấm vòng 3 vì trần 30 phút; ghim lại ở làn trước chữ ký.
 - S3 25/11, phép đo trên bản chép (`probes/tran.sh`, tải 1′ 16,3): ca 1 bản PL39 dừng «52 giá trị chữ … vượt trần 50» trước
   mọi lần ghi (51 cấy + 1 ô thật của sự cố 24/11 còn trong stg); bản PL41 chạy trọn 310 s, log bỏ ghi street_raw 52; ca 2 (51 tin
   mới mang quận tên nguồn) bản PL41 dừng «51 ô chữ mới (tin mới + phát biểu sống) … vượt trần 50», số tin, phát biểu, lượt rút
