@@ -51,6 +51,7 @@ executors:
     nk_app: "cd app && bash ../db/db-thu.sh oneinvest_suite_nkapp --chay node --import tsx --test --test-concurrency=1 tests/slo-mot-nguon.test.tsx"   # so-nguon-kho-khai-bao E5 — bảng Sức khoẻ nguồn dựng trọn trên lược đồ cấy
     dv7_db: "bash db/db-thu.sh oneinvest_suite_dv7 --chay node --test --test-concurrency=1 pipeline/tests/offer-project.itest.mjs"   # du-an-cua-tin-len-dinh-vi E1–E5 — áp 105 rồi fixture chín lớp trên DB của riêng lượt
     dv7_lui: "bash db/db-thu.sh oneinvest_suite_dv7l --chay node --test --test-concurrency=1 pipeline/tests/offer-project-lui.itest.mjs"   # du-an-cua-tin-len-dinh-vi E10 — hồ sơ áp năm tệp + tệp lùi chạy thật
+    nb9_db: "bash db/db-thu.sh oneinvest_suite_nb9 --chay-trong node --test --test-concurrency=1 pipeline/scripts/dong-the-bo-sung-tin.test.mjs"   # dong-the-bo-sung-tin-theo-luat E1–E9 — cả tệp 9 ca trên cụm dùng một lần, DB trống từ migration (khuôn HT9 db-thu-tach-khoi-cum-that); không ca nào trong ci-bo-qua.json, eval đòi đủ 9 ca chạy
     dv7_app: "cd app && bash ../db/db-thu.sh oneinvest_suite_dv7a --chay node --import tsx --test --test-concurrency=1 tests/offer-project-app.itest.tsx tests/thang-bac-db.itest.tsx"   # du-an-cua-tin-len-dinh-vi E11 — bên đọc bản ghi, bậc của app
     collector: "cd collector && npm test"            # suy từ: collector/package.json — 13/13 xanh
     pipeline: "cd pipeline && npm test"              # suy từ: pipeline/package.json; npm test tự chạy trên DB của riêng lượt (db/db-thu.sh --chay)
@@ -646,6 +647,15 @@ executors:
     db_autostart_cleanup: "bash scripts/check-db-autostart.sh cleanup"     # lượt lỗi / SIGTERM giữa chừng vẫn dọn dind; DB thật không bị khởi động lại
     db_autostart_live_selftest: "bash scripts/check-db-autostart.sh live-selftest"   # bộ đọc live trên bản chép plist + inspect thật đã làm hỏng
     # db-vao-volume (P2, yêu cầu P2-74 giám sát duyệt 29/10) — dữ liệu DB local nằm trong volume có tên
+    # db-chi-nghe-noi-bo-va-chinh-postgres (HT8): DB chỉ nghe 127.0.0.1, tham số Postgres qua biến môi trường của ảnh kartoza
+    db_noi_bo_static: "bash scripts/check-db-noi-bo.sh static"
+    db_noi_bo_mutation: "bash scripts/check-db-noi-bo.sh mutation"
+    db_noi_bo_cong: "bash scripts/check-db-noi-bo.sh cong"                 # container tạm nc ht8-cong-*; cần IP LAN (en0/en1)
+    db_noi_bo_soat: "bash scripts/check-db-noi-bo.sh soat"                 # ghi .acceptance-runs/<slug>/soat-ben-noi.txt (SOAT_RA đổi), không ghi vào cây hồ sơ
+    db_noi_bo_tham_so: "bash scripts/check-db-noi-bo.sh tham-so"           # nặng: container Postgres tạm ht8-ts-*, volume onehub_ht8_*
+    db_noi_bo_do: "bash scripts/check-db-noi-bo.sh do"                     # nặng: chép hai bảng lớn (đọc one-invest-db read-only), đo trước/sau
+    db_noi_bo_cu_khong_gay: "bash scripts/check-db-noi-bo.sh cu-khong-gay"
+    db_noi_bo_live: "bash scripts/check-db-noi-bo.sh live-ba"              # bộ đọc live trên one-invest-db + hai container tạm
     db_volume_static: "bash scripts/db-volume-check.sh static"         # compose gộp: volume có tên gắn ở thư mục chứa DEFAULT_DATADIR của ảnh
     db_volume_mutation: "bash scripts/db-volume-check.sh mutation"     # năm bản compose hỏng đỏ với thông điệp ghim; bản lành xanh
     db_volume_tap_duot: "bash scripts/db-volume-check.sh tap-duot"     # cần docker + ảnh kartoza/postgis:17-3.5; container onehub-tapduot-* cổng riêng, không chạm one-invest-db
@@ -1092,6 +1102,8 @@ executors:
     s09_db: "node --test --test-concurrency=1 pipeline/scripts/danh-ba-s09.itest.mjs"   # toa-s09-hai-khu-vao-danh-ba E1, E3–E5, E8 — DB thử oneinvest_s09_<pid> ở :5433 áp 001…097, fixture tổng hợp
     s09_that: "node pipeline/scripts/danh-ba-s09-that.mjs"   # toa-s09-hai-khu-vao-danh-ba E6, E7 — chép máy thu sang DB thử, nạp bản thu API S09, đối chứng hai bản tay, chỉ in số; ngoài CI
     s09_ranh_gioi: "node pipeline/scripts/s09-ranh-gioi.mjs --base origin/main"   # toa-s09-hai-khu-vao-danh-ba E9 — vùng, tầng A, 097 áp hai lần
+    s09_toa_db: "node --test --test-concurrency=1 pipeline/lib/s09-danh-ba-can.test.mjs pipeline/scripts/danh-ba-s09-toa.itest.mjs"   # nap-s09-toa-tang-vao-danh-ba E1, E3–E6, E8, E9 — DB thử riêng lượt oneinvest_dbv_s09t_<pid> dựng từ db/migrations (db-thu-dbv.mjs), xoá khi xong; không đụng DB oneinvest
+    s09_toa_that: "node pipeline/scripts/danh-ba-s09-toa-that.mjs --tran-phut 40"   # nap-s09-toa-tang-vao-danh-ba E2, E10, E12 — chỉ đọc DB máy thu (chép sang DB thử để dựng), trần 40 phút, chỉ in số; ngoài CI
     s16_db: "node --test --test-concurrency=1 pipeline/scripts/danh-ba-s16.itest.mjs"   # nap-s16-vao-danh-ba E1, E3–E8 — itest tự dựng DB oneinvest_suite_s16_<pid> từ db/migrations, xoá khi xong
     s16_that: "node pipeline/scripts/danh-ba-s16-that.mjs"   # nap-s16-vao-danh-ba E2, E10 — ba bản thu thật trên DB thử chép máy thu, đếm độc lập, sync chạy thử đọc chỉ-đọc DB máy thu; ngoài CI
     nps_cay: "node --test --test-concurrency=1 --test-name-pattern='^NPS-1:' pipeline/scripts/phan-khu-s16-noi.itest.mjs"   # noi-phan-khu-trung-s16 AC-1
