@@ -58,6 +58,7 @@
     "scripts/cam-mau-s03.test.mjs",
     "scripts/chotot-khong-lui-noi-dung.test.mjs",
     "scripts/collect-chotot-chan.test.mjs",
+    "scripts/collect-s06-duoi.test.mjs",
     "scripts/cong-tac-that-v2.test.mjs",
     "scripts/cong-tac-that.test.mjs",
     "scripts/dac-trung-s06.test.mjs",
@@ -114,6 +115,7 @@
     "scripts/ghep-tin-danh-muc-lat-nhan.test.mjs",
     "scripts/ghep-tin-danh-muc-cham.test.mjs",
     "tests/import-s16-chi-tiet.test.mjs",
+    "scripts/street-raw-tran-dem.test.mjs",
     "scripts/dong-the-bo-sung-tin.test.mjs",
     "import-s09-danh-ba.test.mjs"
   ]
