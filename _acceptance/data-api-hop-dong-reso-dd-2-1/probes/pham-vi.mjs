@@ -74,6 +74,14 @@ export function soatMappings(cu, moi) {
   const DUOC_CANONICAL = new Set(["offer_id", "price_perm2", "first_seen"]);
   const MOI = new Set(["listings", "api_extensions"]);
   for (const k of new Set([...Object.keys(cu), ...Object.keys(moi)])) {
+    if (k === "api_extensions" && k in cu) {
+      // Nền đã có api_extensions (PB6 #575 vào main trước PB2 — GS phán 28/11): PB2 chỉ được thêm/sửa
+      // api_extensions.listing; mọi khoá con khác phải bằng đúng bản nền.
+      for (const c of new Set([...Object.keys(cu[k] ?? {}), ...Object.keys(moi[k] ?? {})])) {
+        if (c !== "listing" && !isDeepStrictEqual(cu[k]?.[c], moi[k]?.[c])) ngoai(`api_extensions.${c}`);
+      }
+      continue;
+    }
     if (MOI.has(k)) { if (k in cu) ngoai(k); continue; }
     if (k === "meta") {
       for (const m of new Set([...Object.keys(cu.meta ?? {}), ...Object.keys(moi.meta ?? {})])) {
@@ -139,6 +147,19 @@ const loi = [...soatTep(tep), ...soatConfig(diffConfig), ...soatMappings(mapCu, 
 // ── Chiều đỏ: cùng các hàm trên, đầu vào cấy ─────────────────────────────────────────────────────────────────────
 const sao = structuredClone(mapMoi);
 sao.enums.kind = { ...(sao.enums.kind ?? {}), pb2_cay: true };
+// pha-ext: nền đã có api_extensions → sửa một giá trị ở khoá con không phải listing phải đỏ gọi đúng tên khoá con;
+// sửa listing thì không đỏ. Nền chưa có api_extensions → luật cũ: thêm cả khoá gốc là được.
+const conNen = Object.keys(mapCu.api_extensions ?? {}).find((c) => c !== "listing");
+const phaExt = (() => {
+  if (!mapCu.api_extensions) return !soatMappings(mapCu, mapMoi).some((l) => l.includes("api_extensions"));
+  if (!conNen) return true;
+  const sua = structuredClone(mapMoi);
+  sua.api_extensions[conNen] = { ...(sua.api_extensions[conNen] ?? {}), pb2_cay: true };
+  const listingSua = structuredClone(mapMoi);
+  listingSua.api_extensions.listing = { ...(listingSua.api_extensions.listing ?? {}), pb2_cay: { tra_cuu: "x" } };
+  return soatMappings(mapCu, sua).includes(`AC-10 mappings.yaml đổi ngoài phần được giao: api_extensions.${conNen}`)
+    && soatMappings(mapCu, listingSua).length === soatMappings(mapCu, mapMoi).length;
+})();
 const don = entries.find((e) => /^[A-Za-z0-9]{5,}$/.test(e.realName)) ?? entries[0];
 const caySao = (() => {
   // pha-ten: tên trần vào bản chép tạm một tệp data-api, quét bản chép bằng cùng bộ quét
@@ -158,11 +179,12 @@ const o = {
   "pha-vocab": soatVocabLint(`-  "data-api/src/routes/deals.ts|kind",\n+  "data-api/src/routes/listings.ts|kind",\n+  "x|kind",`).length === 1
     && soatVocabLint(`-  "data-api/src/routes/deals.ts|kind",\n+  "data-api/src/routes/listings.ts|kind",`).length === 0,
   "pha-config": soatConfig(`+    khoa_la: "echo"\n+    dapi_reso_x: "echo"`).join("|") === "AC-10 NGOÀI PHẠM VI: _acceptance/config.yaml khoá khoa_la",
+  "pha-ext": phaExt,
 };
 for (const [ten_o, dat] of Object.entries(o)) {
   if (!dat) { console.log(`pham-vi: thước không đỏ ở ${ten_o}`); process.exit(1); }
 }
-console.log(`chieu-do: ${Object.keys(o).join(", ")} — năm ô cấy đều ra đúng (pha-vocab → thêm dòng thứ hai bị bắt, pha-tep → «AC-10 NGOÀI PHẠM VI: db/migrations/x.sql», pha-mappings → «… enums.kind», pha-ten → «AC-10 tên nguồn thật: ${don.code}», pha-config → «… khoá khoa_la»)`);
+console.log(`chieu-do: ${Object.keys(o).join(", ")} — sáu ô cấy đều ra đúng (pha-vocab → thêm dòng thứ hai bị bắt, pha-tep → «AC-10 NGOÀI PHẠM VI: db/migrations/x.sql», pha-mappings → «… enums.kind», pha-ten → «AC-10 tên nguồn thật: ${don.code}», pha-config → «… khoá khoa_la», pha-ext → «… api_extensions.${conNen ?? "(nền chưa có)"}», sửa listing không đỏ)`);
 
 if (loi.length) {
   for (const l of loi) console.log(l);
