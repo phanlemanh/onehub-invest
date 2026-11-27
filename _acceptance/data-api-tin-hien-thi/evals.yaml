@@ -1,0 +1,87 @@
+schema_version: 1
+feature_slug: data-api-tin-hien-thi
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.dapi_an_nguon
+    paths: [pipeline/mappings.yaml, pipeline/lib/vocab-core.mjs, pipeline/lib/vocab.generated.mjs, agent/src/vocab.generated.ts, app/src/lib/vocab.generated.ts, data-api/src/contract/vocab.generated.ts, _acceptance/data-api-tin-hien-thi/probes/nguon-chung.mjs]
+    expected: "exit 0; «nguon-chung: sổ khai <n> nguồn ẩn (S02, S08) ở nguon_khong_hien_thi, mỗi mục có căn cứ; 4 tệp sinh mang SOURCE_HIDDEN khớp sổ; vocab --check thoát 0». Chiều đỏ cùng lượt trên bản chép tạm: sửa tay SOURCE_HIDDEN ở bản chép data-api/src/contract/vocab.generated.ts → vocab --check thoát ≠ 0 và đầu ra gọi tên tệp đó; mục sổ thiếu căn cứ → «PB7 nguồn ẩn thiếu căn cứ: <mã>». Ô không đỏ → thoát 1 «nguon-chung: thước không đỏ ở <ô>»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.dapi_an_nguon
+    paths: [app/src/**, data-api/src/**, pipeline/**, scripts/**, _acceptance/data-api-tin-hien-thi/probes/nguon-chung.mjs]
+    expected: "exit 0; «nguon-chung: soát <m> tệp mã nguồn, 0 danh sách nguồn ẩn viết tay; OFFER_HIDDEN_SOURCES và điều kiện nguồn data-api nhập SOURCE_HIDDEN từ tệp sinh». Chiều đỏ cùng lượt: cấy [\"S02\", \"S08\"] vào bản chép data-api/src/routes/listings.ts → «PB7 danh sách nguồn ẩn viết tay: data-api/src/routes/listings.ts»; bản chép app/src/lib/offers-filters.ts không nhập SOURCE_HIDDEN → «PB7 app không lấy nguồn ẩn từ tệp sinh». Đối chứng dương: số tệp soát > 0."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.dapi_an
+    paths: [data-api/src/routes/listings.ts, data-api/src/contract/**, data-api/test/**]
+    expected: "exit 0; «ℹ fail 0», «ℹ skipped 0»; ca «PB7-AC-3 nguồn ẩn vắng ở mọi nhánh và bộ lọc» xanh trên ma trận ô viết trước (4 đường × 5 bộ lọc): mỗi ô thân không chứa khoá hai tin cấy, không originatingSystemName S02/S08 (sai → «PB7 nguồn ẩn lọt ra API: <S0x> ở <ô>»); tin S06 đối chứng của ô có mặt — bán ở ô bán, thuê dài ở ô thuê dài, cả hai ở ô không kind (thiếu → «PB7 đối chứng S06 vắng ở <ô>»); mọi phần tử rent_st mang S01; số ô đã assert = số ô ma trận (lệch → «PB7 ma trận thiếu ô»). Ca PB2-AC-1…AC-5, AC-11, AC-10c và DRL-AC-1…5 vẫn xanh."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.dapi_an
+    paths: [data-api/src/routes/listings.ts, data-api/test/**]
+    expected: "exit 0; ca «PB7-AC-4 nguồn ẩn vắng ở căn giá tốt» xanh trên ma trận ô viết trước: nhánh bảng hạng (hai tin cấy và hai tin S06 đối chứng có dòng hạng) × (không kind, kind=sale, kind=rent_lt, project) và nhánh thước CG8 (bảng hạng rỗng, nhóm phường × loại có năm căn S06 không ẩn cộng tin S02) × (không kind, kind=sale) — mỗi ô thân không chứa hai tin cấy (sai → «PB7 nguồn ẩn lọt ra API: <S0x> ở <ô>») và tin S06 đối chứng của ô có mặt (thiếu → «PB7 đối chứng S06 vắng ở <ô>»)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.dapi_an
+    paths: [data-api/src/routes/listings.ts, data-api/test/**]
+    expected: "exit 0; ca «PB7-AC-5 chi tiết tin nguồn ẩn là 404» xanh: /v1/listings/<khoá tin S02>, <khoá tin S08> → 404 error.code NOT_FOUND, thân y hình khoá không có (sai → «PB7 nguồn ẩn lọt ra API: <S0x> ở chi tiết»); chi tiết tin S06 đối chứng 200."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.dapi_an_pha
+    paths: [data-api/src/routes/listings.ts, data-api/test/**, _acceptance/data-api-tin-hien-thi/probes/pha.mjs]
+    expected: "exit 0; probe in ba dòng ô viết trước (goc, bo-loc, theo-so) rồi «pha: đủ 3 ô». Ô goc: rc 0, fail 0. Ô bo-loc (bản chép data-api, điều kiện nguồn bị bỏ khỏi routes/listings.ts): rc ≠ 0; ba ca PB7-AC-3, AC-4, AC-5 đỏ; số thông điệp ghim «PB7 nguồn ẩn lọt ra API: <S0x> ở <ô>» khác nhau = số ô của hai ma trận + hai chi tiết (test chạy với cờ báo-hết-ô, không dừng ở assert đầu); mọi ca PB2 và DRL xanh. Ô theo-so (bản chép data-api/src/contract/vocab.generated.ts, SOURCE_HIDDEN thêm S06): ca AC-3, AC-4 đỏ với «PB7 điều kiện nguồn không theo SOURCE_HIDDEN: <ô>». Ca đỏ không kèm thông điệp ghim không được tính (ô tự đỏ cùng lượt trên nhật ký giả). Thiếu → thoát 1 «pha: N ô sai»; không dựng được bản chép → thoát 2."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.dapi_an_db
+    paths: [data-api/src/routes/listings.ts, _acceptance/data-api-tin-hien-thi/probes/do-db.mjs]
+    expected: "exit 0; probe chạy trên bản chép DB (db/db-thu.sh) và gọi chính route /v1/listings (mọi kind, phân trang hết) của bản nền — routes/listings.ts ở merge-base gắn vào bản chép data-api, «nền <sha>» in ra — và của bản sau hàng; đếm khoá tin nguồn ẩn trả về: «do-db: nền <sha>; nguồn ẩn trong bảng <k> dòng; route trước <a>, sau 0; khoá còn lại trước <b> = sau <b>», k = 0 thì thêm «lỗ tiềm ẩn đã đóng». Probe không chứa chuỗi SQL tập ghép. Chiều đỏ cùng lượt: cấy một dòng S08 vào bản chép DB → «trước ≥ 1, sau 0»; bản chép route bỏ điều kiện nguồn → «sau ≥ 1»; ô không đỏ → thoát 1 «do-db: thước không đỏ ở <ô>». Không có DB máy thu → thoát 2 có tên."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.vocab
+    paths: [pipeline/lib/vocab-core.mjs, pipeline/mappings.yaml, pipeline/scripts/vocab*.test.mjs]
+    expected: "exit 0; test sổ từ vựng và lint xanh (gồm ca mới: đích data-api sinh SOURCE_HIDDEN; lint không còn ngoại lệ thừa)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/offers-filters.ts, app/src/lib/offers-public.ts, app/src/lib/vocab.generated.ts, app/tests/**]
+    expected: "exit 0; suite app xanh — cổng Invest giữ hành vi tin hiển thị được (VISIBLE không đổi chữ)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.dapi_an_nguon
+    paths: [pipeline/scripts/do-s03-len-cong.mjs, pipeline/lib/vocab.generated.mjs, _acceptance/data-api-tin-hien-thi/probes/nguon-chung.mjs]
+    expected: "exit 0; ô do-s03 của nguon-chung.mjs: chạy do-s03-len-cong.mjs --ben-doc thoát 0 và in «nguồn ẩn: S02, S08»; soát tĩnh: script nhập pipeline/lib/vocab.generated.mjs, không còn đọc chữ app/src/lib/offers-filters.ts (còn → «PB7 do-s03 còn đọc tệp app»). Chiều đỏ cùng lượt: bản chép pipeline có SOURCE_HIDDEN rỗng trong tệp sinh → --ben-doc thoát ≠ 0 kèm «SL1: không đọc được danh sách nguồn ẩn»; không đỏ → thoát 1 «nguon-chung: thước không đỏ ở do-s03»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.dapi_an_pham_vi
+    paths: [_acceptance/data-api-tin-hien-thi/probes/pham-vi.mjs, data-api/**, pipeline/**, app/src/lib/**, _acceptance/config.yaml]
+    expected: "exit 0; «pham-vi: <n> tệp đổi, đều trong ranh giới; mappings.yaml chỉ thêm nguon_khong_hien_thi; offers-filters.ts chỉ đổi dòng hằng nguồn ẩn; soát <k> tên nguồn thật trên toàn cây data-api, 0 khớp ngoài dạng định danh». Chiều đỏ cùng lượt: pha-tep (db/migrations/x.sql) → «AC-9 NGOÀI PHẠM VI: db/migrations/x.sql»; pha-mappings (đổi enums.kind) → «AC-9 mappings.yaml đổi ngoài phần được giao: enums.kind»; pha-ten → «AC-9 tên nguồn thật: S0x»; pha-config (khoá ngoài dapi_an*) → «AC-9 NGOÀI PHẠM VI: _acceptance/config.yaml khoá <khoá>»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E12
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.data_api
+    paths: [data-api/src/**, data-api/tsconfig.json]
+    expected: "exit 0; tsc --noEmit của data-api không lỗi."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
