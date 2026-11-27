@@ -1,0 +1,13 @@
+DA56 S4 vòng 1 trên M5 ＠9b0cbd0ca979ef4945f1c0006966a9586959e0f9 — chạy lại riêng E11b (suite pipeline_b) một lần sau lượt BLOCKED hạ tầng.
+Lý do chặn lượt chính: require('pg') từ app/package.json báo MODULE_NOT_FOUND giữa lượt — app/node_modules của worktree (vốn là symlink về checkout chính) bị một lệnh cài trong lượt thay bằng thư mục thật, đang cài dở lúc pipeline_b chạy song song.
+Lệnh: node scripts/suite-neu-doi.mjs pipeline_b -- 'cd pipeline && npm run test:b'
+
+ℹ tests 719
+ℹ suites 3
+ℹ pass 717
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 2
+ℹ todo 0
+ℹ duration_ms 109905.553209
+__EXIT=0
