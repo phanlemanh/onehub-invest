@@ -51,13 +51,13 @@ Mỗi dòng: tên mới · field DD 2.1 (resource `Property` trừ khi ghi khác
 | `mlsAreaMajor` | MLSAreaMajor | mã thị trường (`parent_id`) | mã thị trường | `marketId` · `market.id` |
 | `latitude` | Latitude | `latitude` | `latitude` | `lat` |
 | `longitude` | Longitude | `longitude` | `longitude` | `lng` |
-| `originalEntryTimestamp` | OriginalEntryTimestamp | `first_seen` | null (bảng không có) | `firstSeen` |
+| `onMarketTimestamp` | OnMarketTimestamp (ADR-0013 «Hệ quả»: `first_seen` → `OnMarketTimestamp`; `OriginalEntryTimestamp` là lúc tin vào hệ thống nguồn — mình không biết) | `first_seen` | null (bảng không có) | `firstSeen` |
 | `media` | Property.Media → Media.MediaURL, Media.Order | null (HT19: không ảnh S03; ảnh S06 mang tên miền nguồn) | null (URL ảnh có thể mang số phòng nguồn, gs `m5-2511-5`; PB4) | `photoUrls` · `photos` |
 | `lastSeenTimestamp` | — extension | `last_seen` | `last_seen` | `lastSeen` |
 | `confidence` | — extension | `confidence` | null | `confidence` |
 | `repostCount` | — extension | `n_reposts` | null | `nReposts` |
 | `listingTitle` | — extension | null | `name` | `name` |
-| `roomType` | — extension | null | `room_type` | `roomType` |
+| `spaceType` | — extension (không dùng `roomType`: trùng field chuẩn `RoomType` của Property/PropertyRooms, nghĩa là phòng bên trong căn) | null | `room_type` | `roomType` |
 | `accommodates` | — extension | null | `accommodates` | `accommodates` |
 | `minimumNights` | — extension | null | `minimum_nights` | `minimumNights` |
 | `reviewCount` | — extension | null | `review_count` | `reviewCount` |
@@ -66,9 +66,23 @@ Mỗi dòng: tên mới · field DD 2.1 (resource `Property` trừ khi ghi khác
 Phần tử luôn đủ mọi khoá trên (giá trị không áp cho loại tin thì `null`) — một hình cho mọi `kind`, người gọi không phải
 đoán khoá theo loại tin.
 
-`/v1/deals` trả đúng phần tử listing của tin bán / thuê dài hạn, thêm ba extension: `belowMedianPct` (cũ `discountPct`),
-`comparableMedianPricePerArea` (cũ `medianPerm2`), `priceRank` (cũ `rank`, giữ các khoá con). Tham số `min_discount` đổi
-thành `minBelowMedianPct`; `kind`, `project`, `market`, `area`, `limit` giữ.
+**Căn giá tốt là bộ lọc của Listing, không phải tài nguyên** (Mạnh 27/11). Phần tử listing luôn có ba extension so giá:
+`belowMedianPct` (cũ `discountPct`), `comparableMedianPricePerArea` (cũ `medianPerm2`), `priceRank` (cũ `rank`, giữ các khoá
+con) — null khi tin chưa có số so giá (thuê ngắn hạn luôn null). `GET /v1/listings?minBelowMedianPct=<n>` thay
+`/v1/deals?min_discount=<n>`: chỉ giữ tin bán / thuê dài hạn có số so giá, nhánh bảng hạng rồi lùi thước CG8 như `deals.ts`
+hôm nay; thêm lọc `project`. `/v1/deals` trả 410 trỏ sang đường mới. «Deal» trong tiếng Anh BĐS là giao dịch đã chốt
+(RESO: `TransactionManagement`, `ClosePrice`) — dùng cho tin đang rao là sai nghĩa.
+
+### 2b. Tên tài nguyên của data-api (rà 27/11)
+
+| Đường | Tên tài nguyên | RESO DD 2.1 | Quyết |
+|---|---|---|---|
+| `/v1/listings`, `/v1/listings/:listingKey` | Listing (tin rao: bán, thuê dài hạn, thuê ngắn hạn) | resource `Property` (một bản ghi = một tin) | giữ; README ghi rõ «Listing = RESO Property» |
+| `/v1/deals` | — | không có | gộp vào `/v1/listings?minBelowMedianPct=`; đường cũ 410 |
+| `/v1/asset-stats` | Thống kê giá theo khu | không có resource thống kê | đổi `/v1/price-stats` («asset» đã bị loại khỏi từ vựng); đường cũ 410 |
+| `/v1/markets*` | Thị trường | không có | giữ (HT20 dọn S02) |
+| `/v1/coverage` | Độ phủ | không có | giữ |
+| `/v1/properties` (PB6) | Property (danh bạ nhà: toà, căn — UPI) | UPI (`UniversalPropertyId`/`SubId`) + `Building`; **không phải** resource `Property` | hàng PB6; README ghi rõ khác RESO `Property` |
 
 ### 3. Loại hình: `kind` × `property_type` → `PropertyType` × `PropertySubType`
 

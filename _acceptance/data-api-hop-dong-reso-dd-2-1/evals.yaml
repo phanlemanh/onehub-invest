@@ -13,7 +13,7 @@ evals:
     executor: test
     cmd: config:executors.test.dapi_reso
     paths: [data-api/src/routes/listings.ts, data-api/src/contract/**, data-api/test/**]
-    expected: "exit 0; ca «PB2-AC-2 listings rent_st theo RESO» xanh: cùng tập khoá; kind rent_st, leaseAmount = giá niêm yết một đêm (price_listed) cấy, leaseAmountFrequency Daily, propertyType «Residential Lease», propertySubType null, originatingSystemName S01, media null ở cả tin có ảnh cấy lẫn tin không ảnh, JSON.stringify(thân) không chứa URL ảnh cấy nào → «PB2 rent_st lộ ảnh», listingTitle/roomType/accommodates/minimumNights/reviewCount/occupancyRate/averageDailyRevenue khớp; listingKey = 16 hex đầu của HMAC-SHA256(khoá thử của test, 'S01|<id>') tính lại trong test — khác → «PB2 rent_st listingKey không phải HMAC»; JSON.stringify(thân) và bản giải base64, hex của mọi chuỗi trong thân không chứa id gốc hay phần số → «PB2 rent_st lộ id gốc»; đối chứng đột biến trong cùng ca: hàm dựng khoá thay bằng base64('S01|'+id) phải bị bộ dò bắt với đúng thông điệp ấy; khởi động với NODE_ENV=production không có biến khoá → lỗi «PB2 thiếu khoá bí mật của listingKey»."
+    expected: "exit 0; ca «PB2-AC-2 listings rent_st theo RESO» xanh: cùng tập khoá; kind rent_st, leaseAmount = giá niêm yết một đêm (price_listed) cấy, leaseAmountFrequency Daily, propertyType «Residential Lease», propertySubType null, originatingSystemName S01, media null ở cả tin có ảnh cấy lẫn tin không ảnh, JSON.stringify(thân) không chứa URL ảnh cấy nào → «PB2 rent_st lộ ảnh», listingTitle/spaceType/accommodates/minimumNights/reviewCount/occupancyRate/averageDailyRevenue khớp; listingKey = 16 hex đầu của HMAC-SHA256(khoá thử của test, 'S01|<id>') tính lại trong test — khác → «PB2 rent_st listingKey không phải HMAC»; JSON.stringify(thân) và bản giải base64, hex của mọi chuỗi trong thân không chứa id gốc hay phần số → «PB2 rent_st lộ id gốc»; đối chứng đột biến trong cùng ca: hàm dựng khoá thay bằng base64('S01|'+id) phải bị bộ dò bắt với đúng thông điệp ấy; khởi động với NODE_ENV=production không có biến khoá → lỗi «PB2 thiếu khoá bí mật của listingKey»."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3
     criterion: AC-3
@@ -34,14 +34,21 @@ evals:
     executor: test
     cmd: config:executors.test.dapi_reso
     paths: [data-api/src/routes/deals.ts, data-api/src/contract/**, data-api/test/**]
-    expected: "exit 0; ca «PB2-AC-5 deals theo RESO hai nhánh» xanh: nhánh hạng và nhánh CG8 (xoá dòng offer_price_rank trong ca) mỗi phần tử có tập khoá listing + belowMedianPct + comparableMedianPricePerArea (+ priceRank ở nhánh hạng với các khoá con level, node, n, median, p20, percentile, label, needsVerification, metric, bedroomsGroup, reason); giá trị khớp dòng cấy; không khoá cũ; minBelowMedianPct loại tin dưới ngưỡng (đối chứng có tin bị loại); kind lạ → 400 error.code/message; VÀ năm ca DRL-AC-1…DRL-AC-5 của dong-ba-route.test.ts xanh với «ℹ skipped 0» — số ca DRL không giảm so với merge-base (5)."
+    expected: "exit 0; ca «PB2-AC-5 căn giá tốt là bộ lọc của listings» xanh: GET /v1/listings?kind=sale&minBelowMedianPct=<n> ở nhánh hạng và nhánh CG8 (xoá dòng offer_price_rank trong ca) mỗi phần tử có đúng tập khoá của tệp hợp đồng, belowMedianPct + comparableMedianPricePerArea khớp dòng cấy, priceRank có ở nhánh hạng, null ở nhánh CG8 (priceRank ở nhánh hạng với các khoá con level, node, n, median, p20, percentile, label, needsVerification, metric, bedroomsGroup, reason); giá trị khớp dòng cấy; không khoá cũ; minBelowMedianPct loại tin dưới ngưỡng (đối chứng có tin bị loại); kind lạ → 400 error.code/message; GET /v1/deals → 410 error.code GONE, message đúng chuỗi ghim «/v1/deals đã gộp vào /v1/listings: dùng ?minBelowMedianPct=»; VÀ năm ca DRL-AC-1…DRL-AC-5 của dong-ba-route.test.ts xanh với «ℹ skipped 0» — số ca DRL không giảm so với merge-base (5)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E14
+    criterion: AC-11
+    executor: test
+    cmd: config:executors.test.dapi_reso
+    paths: [data-api/src/routes/asset-stats.ts, data-api/src/app.ts, data-api/test/**]
+    expected: "exit 0; ca «PB2-AC-11 price-stats» xanh: GET /v1/price-stats?area=<phường cấy> và ?market=<thị trường cấy> trả đúng thân mà /v1/asset-stats trả trên merge-base cho cùng DB (so bằng nhau, ghim trong test); thiếu cả hai tham số → 400 như cũ; GET /v1/asset-stats → 410 error.code GONE, message «/v1/asset-stats đã đổi tên thành /v1/price-stats»; /openapi.json có /v1/price-stats, không có /v1/asset-stats, /v1/deals như đường sống"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E6
     criterion: AC-6
     executor: script
     cmd: config:executors.script.dapi_reso_pha
     paths: [data-api/src/routes/**, data-api/test/**, _acceptance/data-api-hop-dong-reso-dd-2-1/probes/pha.mjs]
-    expected: "exit 0; probe in 3 dòng JSON viết trước (ô goc, listings-cu, deals-cu) rồi «pha: đủ 3 ô». Ô goc: rc 0, fail 0. listings-cu: rc ≠ 0, đầu ra có «PB2 listings sai tập khoá» VÀ «PB2 listings sai giá trị» hoặc lỗi chặn trước giá trị được probe ghi rõ, ca PB2-AC-5 xanh. deals-cu: rc ≠ 0, có «PB2 deals sai tập khoá», ca PB2-AC-1..AC-4 xanh. Thiếu thông điệp hay ca đường kia đỏ → thoát 1 «pha: N ô sai»; không dựng được bản cũ → thoát 2."
+    expected: "exit 0; probe in 3 dòng JSON viết trước (ô goc, listings-cu, deals-cu, asset-stats-cu) rồi «pha: đủ 4 ô». Ô goc: rc 0, fail 0. listings-cu: rc ≠ 0, đầu ra có «PB2 listings sai tập khoá» VÀ «PB2 listings sai giá trị» hoặc lỗi chặn trước giá trị được probe ghi rõ, ca PB2-AC-5 xanh. deals-cu: rc ≠ 0, có «PB2 deals còn sống» (đường cũ không 410) hoặc «PB2 listings sai tập khoá» ở ca AC-5, ca PB2-AC-1..AC-4 xanh. asset-stats-cu: rc ≠ 0, có «PB2 price-stats», ca PB2-AC-1..AC-5 xanh. Thiếu thông điệp hay ca đường kia đỏ → thoát 1 «pha: N ô sai»; không dựng được bản cũ → thoát 2."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E7
     criterion: AC-7
@@ -62,7 +69,7 @@ evals:
     executor: script
     cmd: config:executors.script.dapi_reso_luoc_do
     paths: [data-api/db/**, data-api/seed.sql, data-api/src/**, _acceptance/data-api-hop-dong-reso-dd-2-1/probes/luoc-do-mau.mjs]
-    expected: "exit 0; probe tạo DB rỗng oneinvest_suite_pb2_<pid>, áp schema.sql rồi seed.sql, gọi 12 đường bằng app.request(): mỗi dòng «<đường> 200 (<n> phần tử)», /v1/listings mỗi kind ≥ 1, /v1/deals ≥ 1; «seed: 0 câu chèn vào bảng S02»; «db: chỉ schema.sql»; chiều đỏ cùng lượt trên lược đồ mẫu của merge-base → «luoc-do: bản cũ đỏ: <lỗi áp hoặc đường không 200>»; DB tạm bị xoá cuối lượt kể cả khi lỗi. Một đường không 200 → thoát 1 nêu đường; bản cũ không đỏ → thoát 1 «luoc-do: thước không đỏ ở ban-cu»."
+    expected: "exit 0; probe tạo DB rỗng oneinvest_suite_pb2_<pid>, áp schema.sql rồi seed.sql, gọi 12 đường bằng app.request(): mỗi dòng «<đường> 200 (<n> phần tử)», /v1/listings mỗi kind ≥ 1, /v1/listings?minBelowMedianPct=0 ≥ 1, /v1/price-stats 200, /v1/deals và /v1/asset-stats 410; «seed: 0 câu chèn vào bảng S02»; «db: chỉ schema.sql»; chiều đỏ cùng lượt trên lược đồ mẫu của merge-base → «luoc-do: bản cũ đỏ: <lỗi áp hoặc đường không 200>»; DB tạm bị xoá cuối lượt kể cả khi lỗi. Một đường không 200 → thoát 1 nêu đường; bản cũ không đỏ → thoát 1 «luoc-do: thước không đỏ ở ban-cu»."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E10
     criterion: AC-10

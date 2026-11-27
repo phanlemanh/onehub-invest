@@ -3,11 +3,11 @@
   "will_do": [
     {
       "id": "AC-1",
-      "p": "Sẽ trả tin bán và tin thuê dài hạn bằng tên chuẩn RESO (giá bán, giá thuê theo tháng, diện tích kèm đơn vị m², giá/m², phòng ngủ, phường, thị trường…), đúng từng giá trị, không còn tên cũ nào."
+      "p": "Sẽ trả tin bán và tin thuê dài hạn bằng tên chuẩn RESO 2.1 (giá bán, giá thuê theo tháng, diện tích kèm đơn vị m², giá/m², phòng ngủ, phường, thị trường, ngày tin lên thị trường…), đúng từng giá trị, kèm ba chỉ số so giá, không còn tên cũ nào."
     },
     {
       "id": "AC-2",
-      "p": "Sẽ trả tin thuê ngắn hạn cùng một hình đó (giá theo đêm, số khách, tỉ lệ lấp đầy) nhưng KHÔNG kèm ảnh, với mã tin không lần ngược được về trang gốc của nguồn."
+      "p": "Sẽ trả tin thuê ngắn hạn cùng một hình đó (giá theo đêm, loại chỗ ở, số khách, tỉ lệ lấp đầy) nhưng KHÔNG kèm ảnh, với mã tin không lần ngược được về trang gốc của nguồn."
     },
     {
       "id": "AC-3",
@@ -19,7 +19,7 @@
     },
     {
       "id": "AC-5",
-      "p": "Sẽ trả danh sách căn giá tốt bằng đúng hình tin chung cộng ba chỉ số so giá, ở cả hai cách tính, và giữ nguyên mọi chặn dữ liệu cấm của HT19."
+      "p": "Sẽ biến «căn giá tốt» thành một bộ lọc của danh sách tin (lọc theo mức rẻ hơn giá chung của nhóm) thay vì một đường riêng tên «deals»; đường cũ báo rõ đã chuyển."
     },
     {
       "id": "AC-6",
@@ -40,6 +40,10 @@
     {
       "id": "AC-10",
       "p": "Sẽ chỉ đụng đúng các tệp được giao, không còn tên nguồn thật ở bất kỳ đâu trong mã công khai, tài liệu API sinh từ danh sách tên, README có bảng tên cũ → mới, và qua bước kiểm kiểu."
+    },
+    {
+      "id": "AC-11",
+      "p": "Sẽ đổi tên đường thống kê giá theo khu thành «price-stats» (bỏ chữ «asset» đã loại khỏi từ vựng), số trả về giữ nguyên; đường cũ báo rõ đã đổi tên."
     }
   ],
   "wont_do": [
@@ -57,30 +61,42 @@
     },
     {
       "id": "OOS-4",
-      "p": "KHÔNG đổi đường thống kê giá và độ phủ — chuẩn RESO không có phần cho số thống kê."
+      "p": "KHÔNG đổi các con số của thống kê giá và độ phủ — chuẩn RESO không có phần cho số thống kê; chỉ đổi tên đường thống kê giá."
     },
     {
       "id": "OOS-5",
-      "p": "KHÔNG thêm trạng thái chào (đang chào, đã cọc, đã bán) — hàng riêng."
+      "p": "KHÔNG trả «lần đổi cuối» của tin theo RESO — kho chưa ghi lúc tin đổi; giữ «lần thấy cuối» như một trường riêng."
     },
     {
       "id": "OOS-6",
-      "p": "KHÔNG trả tỉnh theo mã chuẩn quốc tế — kho chưa có mã đó, thêm sau không phá ai."
+      "p": "KHÔNG làm danh bạ nhà (Property) trong hàng này — đó là hàng PB6."
     },
     {
       "id": "OOS-7",
-      "p": "KHÔNG tách nhà phố với biệt thự, nhà riêng — chờ quyết định phân loại riêng."
+      "p": "KHÔNG đổi tên «deals» ở route của app và nhãn «Căn giá tốt» trên cổng — ngoài API dữ liệu; làm riêng nếu anh muốn."
     },
     {
       "id": "OOS-8",
-      "p": "KHÔNG trả ảnh ở cả ba loại tin — ảnh nhóm chat đã bỏ ở HT19, ảnh nguồn tin bán mang tên nguồn, đường dẫn ảnh tin ngắn hạn có thể lộ mã phòng của nguồn (ảnh tin ngắn hạn để việc PB4)."
+      "p": "KHÔNG thêm trạng thái chào (đang chào, đã cọc, đã bán) — hàng riêng."
     },
     {
       "id": "OOS-9",
-      "p": "KHÔNG đụng bốn câu luật an toàn của API sản phẩm (tài khoản khách, mã căn S16, dữ liệu S07, SĐT), KHÔNG triển khai, KHÔNG đẩy sang kho công khai, KHÔNG viết ADR."
+      "p": "KHÔNG trả tỉnh theo mã chuẩn quốc tế — kho chưa có mã đó, thêm sau không phá ai."
     },
     {
       "id": "OOS-10",
+      "p": "KHÔNG tách nhà phố với biệt thự, nhà riêng — chờ quyết định phân loại riêng."
+    },
+    {
+      "id": "OOS-11",
+      "p": "KHÔNG trả ảnh ở cả ba loại tin — ảnh nhóm chat đã bỏ ở HT19, ảnh nguồn tin bán mang tên nguồn, đường dẫn ảnh tin ngắn hạn có thể lộ mã phòng của nguồn (ảnh tin ngắn hạn để việc PB4)."
+    },
+    {
+      "id": "OOS-12",
+      "p": "KHÔNG đụng bốn câu luật an toàn của API sản phẩm (tài khoản khách, mã căn S16, dữ liệu S07, SĐT), KHÔNG triển khai, KHÔNG đẩy sang kho công khai, KHÔNG viết ADR."
+    },
+    {
+      "id": "OOS-13",
       "p": "KHÔNG đổi tài liệu API nội bộ của app."
     }
   ],
