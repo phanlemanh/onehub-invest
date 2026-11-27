@@ -26,18 +26,21 @@ KHOA="$GOC.lock"
 MUC="${THU_DUOI_S06_MUC:-1000/u}"
 MOC_TOIDA="${THU_DUOI_S06_MOC_TOIDA:-200000}" # trần số id giữ lại trong moc.json
 # 2611-27 (1): tập vùng được thu — MẶC ĐỊNH bằng đúng phạm vi phép đo 24 giờ (2411-6):
-# MỘT vùng × một mục. Mở thêm bằng THU_DUOI_S06_VUNG="vùng1 vùng2 …" (phân tách dấu cách).
+# MỘT vùng × một mục — đây là giá trị «MỘT vùng (vùng đã đo)» Mạnh duyệt ở Cổng Phạm vi
+# ZC18 sáng 27/11, test khóa. Mở thêm bằng THU_DUOI_S06_VUNG="vùng1 vùng2 …" (dấu cách).
 VUNG_MAC_DINH="hcmc"
 VUNG_CHAY="${THU_DUOI_S06_VUNG:-$VUNG_MAC_DINH}"
 # 2611-27 (2): nghỉ có hạn sau khi nguồn trả 403/429 (bộ thu thoát 3) — các vòng kế trong
 # khoảng này KHÔNG gọi nguồn; hết nghỉ xoá mốc và chạy lại.
-NGHI_SAU_CHAN_PHUT="${THU_DUOI_S06_NGHI_SAU_CHAN_PHUT:-30}"
+# MẶC ĐỊNH 60 PHÚT là giá trị Mạnh duyệt ở Cổng Phạm vi ZC18 (sáng 27/11) — test khóa
+# (scripts/thu-duoi-s06.test.mjs ca «mặc định ZC18»); đổi mặc định phải qua cổng.
+NGHI_SAU_CHAN_PHUT="${THU_DUOI_S06_NGHI_SAU_CHAN_PHUT:-60}"
 BI_CHAN="$GOC/bi-chan.json"
-# 2611-27 (3, ZC18 — khuyến nghị Cổng Phạm vi, khớp chính sách «chỗ chặn thì dừng» 14/11):
-# nguồn chặn LẦN HAI trong 24 giờ kể từ lần chặn trước → DỪNG HẲN: không gọi nguồn ở các
-# lượt sau cho tới khi NGƯỜI gỡ dấu bằng tay (rm tệp dấu). Tắt bằng
-# THU_DUOI_S06_DUNG_LAN_HAI=0 (mặc định BẬT; đặt được trong plist) — tắt thì chặn lần hai
-# chỉ nghỉ như lần đầu, đúng hành vi fc3fa4a7a. Giờ chặn gần nhất vẫn ghi mọi khi (forensic).
+# 2611-27 (3, ZC18 — khuyến nghị Cổng Phạm vi, Mạnh duyệt sáng 27/11, khớp chính sách
+# «chỗ chặn thì dừng» 14/11): nguồn chặn LẦN HAI trong 24 giờ kể từ lần chặn trước →
+# DỪNG HẲN: không gọi nguồn ở các lượt sau cho tới khi NGƯỜI gỡ dấu bằng tay (rm tệp dấu).
+# Tắt bằng THU_DUOI_S06_DUNG_LAN_HAI=0 — tắt thì chặn lần hai chỉ nghỉ như lần đầu,
+# đúng hành vi fc3fa4a7a. Giờ chặn gần nhất vẫn ghi mọi khi (forensic).
 DUNG_LAN_HAI="${THU_DUOI_S06_DUNG_LAN_HAI:-1}"
 dung_lan_hai_tat() {
   case "$DUNG_LAN_HAI" in 0|false|FALSE|False|off|OFF|Off|tat|TAT|Tat) return 0 ;; *) return 1 ;; esac
