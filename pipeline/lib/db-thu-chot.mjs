@@ -40,3 +40,28 @@ export function chotDbThu({ ten = "test", url = process.env.DATABASE_URL, khiThi
   console.error(`${ten}: từ chối — ${lyDo}; test có lệnh phá chỉ chạy trên DB thử (db/db-thu.sh oneinvest_suite_<bộ> --chay)`);
   process.exit(2);
 }
+
+// HT35 (test-khong-roi-ve-db-chung): test TỰ DỰNG bảng thật rồi ghi. Trên máy người, M5, máy thu chỉ DB oneinvest_suite_*
+// được chạy; trên runner CI (CI=true) DB là dịch vụ dùng một lần nên ca VẪN CHẠY, không bỏ qua:
+//   - thiếu DATABASE_URL → DB dịch vụ của ci-test.yml (localhost:5433, tên «oneinvest», dựng từ migration) — Mạnh chốt ở HT23;
+//   - URL tên khác «oneinvest» (bước scripts của suite-neu-doi đặt oneinvest_ci_scripts_<pid>) → nhận.
+// URL ghi tường minh tên «oneinvest» thì TỪ CHỐI cả khi CI=true: đó là tên DB chung của máy, và runner CI không bao giờ đặt nó.
+// Giới hạn đã khai: một người tự đặt CI=true trên máy mà KHÔNG đặt URL thì rào nhường (cùng luật HT23).
+const URL_DB_CI = ["postgres://", ["oneinvest", "oneinvest"].join(":"), "@localhost:5433/oneinvest"].join("");
+
+/** URL CI được phép, hoặc null khi không ở runner CI / URL là tên DB chung. Không nối DB. */
+export function urlCiChoPhep(url = process.env.DATABASE_URL, env = process.env) {
+  if (env.CI !== "true") return null;
+  if (!url) return URL_DB_CI;
+  const ten = tenDbThu(url);
+  return ten && ten !== "oneinvest" ? url : null;
+}
+
+/** URL cho test có câu ghi: CI theo `urlCiChoPhep`, ngoài CI chỉ oneinvest_suite_*. Sai → NÉM trước mọi kết nối. */
+export function urlDbTestGhi({ ten = "test", url = process.env.DATABASE_URL, env = process.env } = {}) {
+  const ci = urlCiChoPhep(url, env);
+  if (ci) return ci;
+  const lyDo = lyDoTuChoi(url);
+  if (lyDo === null) return url;
+  throw new Error(`${ten}: từ chối — ${lyDo}; test tự dựng bảng rồi ghi chỉ chạy trên DB thử (db/db-thu.sh oneinvest_suite_<bộ> --chay)`);
+}

@@ -26,6 +26,7 @@ import { spawn } from "node:child_process";
 import pg from "pg";
 
 import { docSnapshot, napDanhBaThuMuc } from "./import-s09-danh-ba.mjs";
+import { urlCiChoPhep } from "./lib/db-thu-chot.mjs";
 
 const TEP = fileURLToPath(new URL("./import-s09-danh-ba.mjs", import.meta.url));
 
@@ -50,7 +51,8 @@ export function xacThucUrlSuite(url) {
   }
   return url;
 }
-const DB_URL = xacThucUrlSuite(process.env.DATABASE_URL); // ném ở đây nếu thiếu/sai — tệp không nạp nổi, không đụng DB
+// HT35 (lỗi tích hợp với CI): runner CI không đặt DATABASE_URL — `urlCiChoPhep` trả DB dịch vụ CI; ngoài CI giữ nguyên rào 2711-1.
+const DB_URL = urlCiChoPhep(process.env.DATABASE_URL) ?? xacThucUrlSuite(process.env.DATABASE_URL); // ném ở đây nếu thiếu/sai — tệp không nạp nổi, không đụng DB
 
 // CA CHỨNG MINH 2711-1: đặt DATABASE_URL trỏ TÊN DB CHUNG → tệp (chạy tiến trình con) thoát LỖI với
 // lời từ chối, và KHÔNG ca nào chạy (không CREATE TABLE, không ghi — guard ném trước khi có client).
