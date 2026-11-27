@@ -12,7 +12,7 @@ flowchart TD
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>22 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>239 việc"]
+  GB --> DG["Đã giao<br/>240 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>146 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
@@ -404,6 +404,7 @@ flowchart TD
 - S05 có đệm cửa sổ thu 5 ngày, khoá nạp không văng hay quay bận, bước thu lỗi có dòng ghim (`s05-khoa-nap`)
 - Kho khớp lịch S06 2 lượt mỗi ngày đã cài trên máy thu — plist chotot trong main mang mốc 05:30 và 14:00, không va lịch job khác (`s06-hai-luot-ngay-gop-main`)
 - bộ thu S06 nhận mã tỉnh params.region bên cạnh region_v2, để bật được vùng mà mã cũ không hoạt động (`s06-region-tinh`)
+- Đưa bộ thu đuôi S06 của làn thu vào main (chỉ mã thu và test, chưa lịch, chưa nạp) (`s06-thu-duoi-do`)
 - Trần trang thu S06 mặc định 210, 403/429 dừng cả lượt không thử lại, kèm số đo chuỗi đêm khi nạp 55 nghìn tin (`s06-tran-trang`)
 - tin S06 của vùng mới (Đà Nẵng, Hải Phòng, Bình Dương đã sáp nhập vào TP.HCM) lên canonical có phường — mã thị trường ngắn một khuôn (migration 064), bước nạp phường và bước chuyển S06 đọc thành phố từ một chỗ ánh xạ thay cho danh sách cứng (`s06-vung-moi-len-canonical`)
 - S08 thu đúng một lượt mỗi tuần theo launchd và có SLO độ tươi 192 giờ (`s08-lich-tuan`)
