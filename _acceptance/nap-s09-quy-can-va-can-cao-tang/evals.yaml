@@ -11,7 +11,7 @@ evals:
     criterion: AC-2
     executor: script
     cmd: config:executors.script.s09_v16_db
-    expected: "Bảng kiểm kê viết trước mọi khoá lá của căn quỹ căn và item căn cao tầng (rút từ bản thu thật, không từ fixture), mỗi khoá một assert giữ hay bỏ, số assert bằng số khoá; 0 dòng stg còn khoá bị bỏ; bộ nạp in số căn đã bỏ. Chiều đỏ: đột biến bỏ hàm lọc thì ca đỏ với thông điệp ghim «galleries»"
+    expected: "Bảng kiểm kê viết trước mọi khoá lá của căn quỹ căn và item căn cao tầng (rút từ bản thu thật, không từ fixture), mỗi khoá một assert giữ hay bỏ, số assert bằng số khoá; 0 dòng stg còn khoá bị bỏ; bộ nạp in số căn đã bỏ. Bảng lá ở khoá `la:quy-can` (59 lá) và `la:can-cao-tang` (4 lá) của s09-danh-ba-v16-khoa.json, kiemKe sinh trên mọi căn của mọi bản thật; fixture phải mang đúng tập lá ấy, mỗi lá một kết luận và một assert. Chiều đỏ: đột biến bỏ hàm lọc thì ca đỏ với thông điệp ghim «galleries»; fixture thiếu một lá thật (bản fixture vòng 1 thiếu property_furnitures.names) thì ca khoá lá đỏ gọi tên lá (S4 r1 chạy lại)"
     paths: ["pipeline/import-s09-danh-ba.mjs", "pipeline/lib/s09-danh-ba-v16*", "pipeline/scripts/s09-v16*", "pipeline/tests/fixtures/s09-v16/**"]
   - id: E3
     criterion: AC-3

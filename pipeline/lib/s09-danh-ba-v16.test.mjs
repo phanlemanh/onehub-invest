@@ -34,40 +34,40 @@ test("AC-2 bảng kiểm kê: mỗi khoá một assert — «bo» vắng sau l�
   assert.equal(soAssert, khoa.length);
 });
 
-// Khoá lá: đường tới mọi giá trị không phải object (mảng object bung thành «[]»). Kết luận của bảng đặt ở khoá cấp một; mọi lá
-// dưới khoá «bo» phải vắng, mọi lá dưới khoá «giu» phải bằng nguyên văn — mỗi lá một assert (review DA56 vòng 1, hình dạng 5).
-const duongLa = (v, p = "", ra = new Set()) => {
-  if (Array.isArray(v) && v.some((x) => x && typeof x === "object")) v.forEach((x) => duongLa(x, `${p}[]`, ra));
-  else if (v && typeof v === "object" && !Array.isArray(v)) for (const k of Object.keys(v)) duongLa(v[k], p ? `${p}.${k}` : k, ra);
-  else ra.add(p);
-  return ra;
-};
+// Khoá lá: đường tới mọi giá trị không phải object (mảng object bung thành «[]»). Danh sách lá VIẾT TRƯỚC từ bản thu thật
+// (`la:<kind>` của s09-danh-ba-v16-khoa.json, do kiemKe sinh trên MỌI căn của mọi bản thật — không tính từ fixture), mỗi lá một
+// kết luận riêng; fixture phải mang ĐÚNG tập lá ấy (thiếu: lá thật không có assert; thừa: chưa kiểm kê) — review DA56 vòng 1 r2.
+import { duongLa } from "../scripts/s09-v16-sinh-fixture.mjs";
 const layLa = (v, duong) => duong.split(/\.|(?=\[\])/).reduce((xs, b) => xs.flatMap((x) => (b === "[]" ? (Array.isArray(x) ? x : []) : b.startsWith("[]") ? (Array.isArray(x) ? x.map((y) => y?.[b.slice(3)]) : []) : [x?.[b]])), [v]);
 
-test("AC-2 bảng kiểm kê khoá lá quỹ căn: mỗi lá một assert — lá dưới khoá «bo» vắng, lá dưới khoá «giu» bằng nguyên văn", () => {
-  const bang = KHOA_V16["quy-can"];
-  const la = new Map();
-  for (const it of QUY_CAN) for (const c of it.payload?.data ?? []) for (const d of duongLa(c)) if (!la.has(d)) la.set(d, { it, c });
-  const dsLa = [...la.keys()].sort();
-  assert.ok(dsLa.some((d) => d.includes(".")) && dsLa.some((d) => d.includes("[]")), "fixture phải có lá lồng (object, mảng object)");
-  let soAssert = 0;
+test("AC-2 bảng kiểm kê khoá lá quỹ căn (viết trước từ bản thu thật): mỗi lá một assert — lá «bo» vắng, lá «giu» bằng nguyên văn", () => {
+  const bangLa = KHOA_V16["la:quy-can"];
+  const dsLa = Object.keys(bangLa);
+  assert.equal(dsLa.length, 59, "bảng lá quỹ căn phải đủ 59 lá rút từ bản thu thật (kiemKe 27/11)");
   for (const d of dsLa) {
     const goc = d.split(/[.[]/)[0];
-    assert.ok(goc in bang, `lá ${d}: khoá cấp một ${goc} chưa có trong bảng kiểm kê`);
+    assert.ok(goc in KHOA_V16["quy-can"], `lá ${d}: khoá cấp một ${goc} không có trong bảng khoá`);
+    assert.equal(bangLa[d], KHOA_V16["quy-can"][goc], `lá ${d}: kết luận lệch khoá cấp một ${goc}`);
+  }
+  const la = new Map();
+  for (const it of QUY_CAN) for (const c of it.payload?.data ?? []) for (const d of duongLa(c)) if (!la.has(d)) la.set(d, { it, c });
+  assert.deepEqual([...la.keys()].sort(), [...dsLa].sort(), "fixture phải mang đúng tập lá của bảng (thiếu: lá thật không có assert; thừa: chưa kiểm kê)");
+  let soAssert = 0;
+  for (const d of dsLa) {
     const { it, c } = la.get(d);
     const sau = locTangA("quy-can", it.payload).payload.data.find((x) => x.id === c.id);
-    if (bang[goc] === "bo") assert.equal(goc in sau, false, `lá ${d} phải vắng (khoá ${goc} bỏ)`);
+    if (bangLa[d] === "bo") assert.deepEqual(layLa(sau, d).filter((x) => x !== undefined), [], `lá ${d} phải vắng`);
     else assert.deepEqual(layLa(sau, d), layLa(c, d), `lá ${d} phải giữ nguyên văn`);
     soAssert++;
   }
-  assert.equal(soAssert, dsLa.length);
-  for (const d of ["galleries[].urls", "geolocation.lat_cdnt", "geolocation.long_cdnt"]) assert.ok(la.has(d), `fixture phải mang lá ${d}`);
+  assert.equal(soAssert, 59);
 });
 
 test("AC-2 bảng kiểm kê căn cao tầng: bảng khớp trọn bộ khoá của fixture, mỗi khoá một assert giữ nguyên văn", () => {
   const bang = KHOA_V16["can-cao-tang"];
   const khoa = Object.keys(bang).sort();
   assert.deepEqual(khoa, ["code", "id", "increment_number", "name"], "bảng kiểm kê căn cao tầng: 4 khoá rút từ bản thu thật");
+  assert.deepEqual(Object.keys(KHOA_V16["la:can-cao-tang"]).sort(), khoa, "bảng lá căn cao tầng (viết trước) phải bằng 4 khoá — không có lá lồng");
   const cans = TANG.filter((t) => t.kind === "can-cao-tang").flatMap((t) => (t.payload?.data ?? []).map((c) => ({ t, c })));
   assert.ok(cans.length > 0, "fixture không có căn cao tầng");
   const thay = new Set(cans.flatMap(({ c }) => [...duongLa(c)]));

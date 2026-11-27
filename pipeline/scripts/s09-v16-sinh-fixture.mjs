@@ -8,7 +8,8 @@
 // còn chuỗi «http» ngoài tên miền giả lập, hay còn bất kỳ chuỗi gốc nào dài ≥ 6 ký tự không thuộc danh sách giữ nguyên → thoát 1.
 // Chỉ in số, không in giá trị.
 import { createHash } from "node:crypto";
-import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { gunzipSync, gzipSync } from "node:zlib";
 
@@ -103,33 +104,44 @@ function ghiBan(thuMucRa, ten, items, mau, ghiChu) {
   return { ten, items: items.length };
 }
 
-/** Chọn căn phủ đủ khoá cấp một: tham lam theo số khoá mới, tối đa `tran` căn. */
-function chonCanPhuKhoa(can, tran) {
-  const daCo = new Set();
+/** Khoá lá: đường tới mọi giá trị không phải object; mảng object bung thành «[]» (cùng định nghĩa với test AC-2). */
+export const duongLa = (v, p = "", ra = new Set()) => {
+  if (Array.isArray(v) && v.some((x) => x && typeof x === "object")) v.forEach((x) => duongLa(x, `${p}[]`, ra));
+  else if (v && typeof v === "object" && !Array.isArray(v)) for (const k of Object.keys(v)) duongLa(v[k], p ? `${p}.${k}` : k, ra);
+  else ra.add(p);
+  return ra;
+};
+
+/** Chọn căn phủ đủ khoá LÁ (không chỉ khoá cấp một — review DA56 vòng 1 r2): tham lam theo số lá mới, tối đa `tran` căn;
+ *  `daCo` dùng chung giữa các lời gọi để căn sau ưu tiên lá chưa ai mang. */
+function chonCanPhuKhoa(can, tran, daCo = new Set()) {
   const chon = [];
-  const conLai = [...can];
+  const conLai = can.map((c) => ({ c, la: [...duongLa(c)] }));
+  const moi = (x) => x.la.filter((d) => !daCo.has(d)).length;
   while (chon.length < tran && conLai.length) {
-    conLai.sort((a, b) => Object.keys(b).filter((k) => !daCo.has(k)).length - Object.keys(a).filter((k) => !daCo.has(k)).length);
-    const c = conLai.shift();
-    if (chon.length >= 2 && !Object.keys(c).some((k) => !daCo.has(k))) break;
-    chon.push(c);
-    Object.keys(c).forEach((k) => daCo.add(k));
+    conLai.sort((a, b) => moi(b) - moi(a));
+    const x = conLai.shift();
+    if (chon.length >= 2 && !moi(x)) break;
+    chon.push(x.c);
+    x.la.forEach((d) => daCo.add(d));
   }
   return chon;
 }
 
 export function kiemKe(cacBan) {
   const khoa = { "quy-can": new Set(), "can-cao-tang": new Set() };
+  const la = { "quy-can": new Set(), "can-cao-tang": new Set() };
   for (const { items } of cacBan) {
     for (const it of items) {
       if (!khoa[it.kind]) continue;
-      for (const c of it.payload?.data ?? []) Object.keys(c).forEach((k) => khoa[it.kind].add(k));
+      for (const c of it.payload?.data ?? []) { Object.keys(c).forEach((k) => khoa[it.kind].add(k)); duongLa(c, "", la[it.kind]); }
     }
   }
   const ra = {};
-  for (const [kind, s] of Object.entries(khoa)) {
-    ra[kind] = Object.fromEntries([...s].sort().map((k) => [k, kind === "quy-can" && KHOA_BO.includes(k) ? "bo" : "giu"]));
-  }
+  const phan = (kind, k) => (kind === "quy-can" && KHOA_BO.includes(k) ? "bo" : "giu");
+  for (const [kind, s] of Object.entries(khoa)) ra[kind] = Object.fromEntries([...s].sort().map((k) => [k, phan(kind, k)]));
+  // Bảng khoá LÁ viết trước từ bản thu thật — mỗi lá một kết luận riêng (lá dưới khoá bỏ thì «bo»). Test AC-2 assert từng lá.
+  for (const [kind, s] of Object.entries(la)) ra[`la:${kind}`] = Object.fromEntries([...s].sort().map((d) => [d, phan(kind, d.split(/[.[]/)[0])]));
   return ra;
 }
 
@@ -167,8 +179,9 @@ function main() {
   const duAnNhieuTrang = [...theoDuAn.values()].filter((its) => its.length > 1).sort((a, b) => soKhoa(b) - soKhoa(a))[0];
   const duAnMotTrang = [...theoDuAn.values()].filter((its) => its.length === 1 && its[0].payload?.data?.length)
     .sort((a, b) => soKhoa(b) - soKhoa(a)).slice(0, 2);
+  const daCoLa = new Set();
   const catDuAn = (its, tranMoiTrang) => {
-    const trang = [...its].sort((a, b) => a.meta.trang - b.meta.trang).map((it) => ({ ...it, payload: { ...it.payload, data: chonCanPhuKhoa(it.payload.data, tranMoiTrang) } }));
+    const trang = [...its].sort((a, b) => a.meta.trang - b.meta.trang).map((it) => ({ ...it, payload: { ...it.payload, data: chonCanPhuKhoa(it.payload.data, tranMoiTrang, daCoLa) } }));
     const tong = trang.reduce((n, it) => n + it.payload.data.length, 0);
     return trang.map((it) => ({ ...it, meta: { ...it.meta, soCanNhan: it.payload.data.length, tongNguon: tong }, payload: { ...it.payload, meta: { ...it.payload.meta, total: tong } } }));
   };
@@ -186,7 +199,7 @@ function main() {
   const idNhieu = duAnNhieuTrang[0].meta.duAnId;
   const hongCuaDuAn = banHong.items.filter((i) => i.meta?.duAnId === idNhieu);
   const hongItems = (hongCuaDuAn.length ? hongCuaDuAn : banHong.items.filter((i) => i.payload?.data?.length).slice(0, 1))
-    .map((it) => ({ ...it, payload: { ...it.payload, data: chonCanPhuKhoa(it.payload.data ?? [], 2) } }))
+    .map((it) => ({ ...it, payload: { ...it.payload, data: chonCanPhuKhoa(it.payload.data ?? [], 2, daCoLa) } }))
     .map((it) => lamSachItem(it, boThay, dem));
   const rongHong = banHong.items.find((i) => !(i.payload?.data?.length));
   if (rongHong) hongItems.push(lamSachItem(rongHong, boThay, dem));
@@ -231,4 +244,5 @@ function main() {
   if (lo) process.exit(1);
 }
 
-main();
+// Chỉ chạy khi gọi trực tiếp — test AC-2 import `duongLa` từ tệp này.
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) main();
