@@ -7,8 +7,8 @@ reason: "Lệnh `node scripts/suite-neu-doi.mjs pipeline_that -- 'cd pipeline &&
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: c2bc40177de1d89b7353d9320228aeae7e81c05f
-human_signoff:
+verified_commit: 78f227e7313cf245f80e916ac04ce957de4b2962
+human_signoff: Mạnh 2026-11-27
 ---
 
 # Evidence Report: street-raw-tran-dem-tren-phat-bieu-song
@@ -156,3 +156,7 @@ Không có judgment item; không có judge panel nào được khai ở round n�
 
 Round 1: E1, E2, E3, E7 chạy và đạt; hồ sơ nền được tạo, baseline đo một lần.
 Round 3: E4, E5, E6 đạt; E1, E2, E3, E7 carry-forward từ round 1 vì delta không chạm paths của chúng. Lệnh suite pipeline_that quá trần chờ 30 phút chưa xong nên verdict BLOCKED, chờ chạy lại với trần dài hơn.
+
+### Re-pin lần 1 — 2026-11-27, do ghim lại bằng làn eval
+run_id: repin-20261127T014056Z-29206
+sha: 78f227e7313cf245f80e916ac04ce957de4b2962 · suites: 8 lệnh exit 0 · evals: 7/7 eval máy đạt kỳ vọng
