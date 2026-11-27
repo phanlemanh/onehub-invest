@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: cf31a15ed81650386de24f27f055cb433cf70189
-human_signoff:
+human_signoff: Mạnh 2026-11-27
 ---
 
 # Evidence Report: dong-the-bo-sung-tin-theo-luat

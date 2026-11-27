@@ -5,7 +5,7 @@ slug: dong-the-bo-sung-tin-theo-luat
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [script]
-status: verified
+status: signed-off
 approved_by:
 approved_at:
 veto_state: mo
@@ -161,5 +161,9 @@ dừng và báo, không tự sửa cho khớp.
 - Thước «chỉ hai bảng được ghi» (E2/E3) đọc `pg_stat_xact_user_tables` CHỈ ở schema `public` (25/11): DB chung và bản chép
   `db-thu.sh` mang schema rác của test khác trùng tên `review_queue`/`enrichment_proposals`; gom theo `relname` thì dòng rác
   (luôn 0) đè dòng thật và thước đỏ cả đối chứng dương.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-27:
+  - Ngoài-1: lùi sau khi người đã quyết một thẻ thì đề xuất dưới thẻ đó quay về hàng chờ mà thẻ đã xử xong — đề xuất nằm treo, xử tay.
+  - Ngoài-3: bài kiểm tra E8 không có đối chứng dương cho chính các đề xuất của lượt, có thể xanh dù lệnh không làm gì.
+  - Ngoài-4: bài kiểm tra E6 ở ca xung đột chỉ kiểm một thẻ, chưa kiểm hết các dòng còn lại về cũ.
 - Test chạy được trên DB trống kiểu CI (25/11): tin fixture lấy trong giao dịch từng ca; thiếu thì cài 14 tin sống, 1 tin
   thiếu phòng ngủ, 1 tin đã nghỉ, ROLLBACK cuối ca bỏ hết. Đo: bản chép 9/9, DB trống `ci-db-init` 9/9.
