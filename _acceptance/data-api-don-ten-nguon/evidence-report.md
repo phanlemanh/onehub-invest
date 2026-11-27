@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 678c08ec57a386bdbf8b23a3e54502f97696804d
-human_signoff:
+human_signoff: Mạnh 2026-11-27
 ---
 
 # Evidence Report: data-api-don-ten-nguon

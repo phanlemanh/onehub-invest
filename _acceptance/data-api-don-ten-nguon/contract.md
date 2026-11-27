@@ -5,7 +5,7 @@ slug: data-api-don-ten-nguon
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-25-data-api-don-ten-nguon-design.md
 veto_state: mo
 veto_opened_at: 2026-11-25T16:54:41Z
@@ -55,3 +55,12 @@ Hành vi lược đồ mẫu sau đổi: AC-4. Thước không mù: AC-2.
 - Mở rộng vùng tệp (GS phán 27/11): thêm `data-api/test/dong-ba-route.test.ts` (commit ae72cec34) — tệp test HT19 vào nhánh
   qua lần gộp `main` a83596627 mang 7 cụm tên nguồn trong chuỗi, làm E5 và AC-1 đỏ; tên bảng S03 và tiền tố bảng S02 chuyển
   vào hằng nháy đơn đúng bằng định danh đã biết, nghĩa kiểm không đổi; tệp nằm trong `data-api/**` (vùng của M5).
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-27:
+  - Ngoài-1: Tệp kiểm thử HT19 vẫn mang tên bảng có tên nguồn ở dạng định danh đã biết (nợ lược đồ, ngoài phạm vi PB5).
+  - Ngoài-2: Câu chuyển dữ liệu cũ trong bản mẫu 012 không còn khớp dòng nào; bản mẫu dựng mới không đổi.
+  - Ngoài-3: Tệp tham số lượt chấm (s4-args.json) do công cụ sinh còn nhắc tên tệp cũ mang tên nguồn.
+  - Ngoài-4: Trên DB mẫu cũ có sẵn dữ liệu, dòng cũ không còn được đổi sang mã như trước.
+  - Ngoài-5: Thước tên nguồn có thể bỏ sót ở một dạng viết mã hiếm (chú thích SQL kết cùng dòng với dấu đóng chuỗi mẫu).
+  - Ngoài-6: Thước tên nguồn lặng lẽ bỏ qua tệp không đọc được hay tệp nhị phân.
+  - Ngoài-7: Phép kiểm lược đồ mẫu chỉ so tên bảng, mặc định cột và danh mục nguồn — đổi tên cột hay mất chỉ mục không bị bắt.
+  - Ngoài-8: Mốc «trước khi dọn» của phép kiểm lược đồ mẫu là số chép tay, không dựng lại từ nhánh chính.
