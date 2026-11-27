@@ -7,13 +7,11 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 01e03e07e8f843e3589e9e735ebebb3f98c8434b
+verified_commit: 70079a04ea68da2dd8771b547ebb2385d50b373b
 human_signoff:
 ---
 
 # Evidence Report: nap-s09-quy-can-va-can-cao-tang
-
-Vòng 1. Mọi eval máy đều xanh; còn mục judgment E10 chờ người quyết ở Cổng 2 nên verdict là PENDING-JUDGMENT.
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
@@ -28,7 +26,7 @@ Vòng 1. Mọi eval máy đều xanh; còn mục judgment E10 chờ người quy
 | E8u | AC-8 | ui-check | PASS |
 | E9 | AC-9 | script | PASS |
 | E9b | AC-9 | script | PASS |
-| E10 | AC-10 | judgment | PENDING (chờ người) |
+| E10 | AC-10 | judgment | PENDING-JUDGMENT (máy đề xuất PASS, chờ người) |
 | E10b | AC-10 | script | PASS |
 | E11a | AC-6 | test | PASS |
 | E11b | AC-6 | test | PASS |
@@ -37,204 +35,185 @@ Vòng 1. Mọi eval máy đều xanh; còn mục judgment E10 chờ người quy
 ## Evidence
 
 - eval: E1
-  run_id: minted-nap-s09-quy-can-va-can-cao-tang-E1-r1
+  run_id: minted-nap-s09-quy-can-va-can-cao-tang-E1-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.s09_v16_db
-  verified_at: 2026-11-27T07:02:51Z
+  verified_at: 2026-11-27T08:20:53Z
   output: |
-    cmd: node --test --test-concurrency=1 pipeline/lib/s09-danh-ba-v16.test.mjs pipeline/scripts/s09-v16.itest.mjs
-    ℹ duration_ms 4367.687084
+    ℹ duration_ms 4287.395167
 
 - eval: E2
-  run_id: minted-nap-s09-quy-can-va-can-cao-tang-E2-r1
+  run_id: minted-nap-s09-quy-can-va-can-cao-tang-E2-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.s09_v16_db
-  verified_at: 2026-11-27T07:02:51Z
+  verified_at: 2026-11-27T08:20:53Z
   output: |
-    cùng lệnh với E1 (một lần chạy phủ E1, E2, E3, E4, E9)
-    ℹ duration_ms 4367.687084
+    ℹ duration_ms 4287.395167
 
 - eval: E3
-  run_id: minted-nap-s09-quy-can-va-can-cao-tang-E3-r1
+  run_id: minted-nap-s09-quy-can-va-can-cao-tang-E3-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.s09_v16_db
-  verified_at: 2026-11-27T07:02:51Z
+  verified_at: 2026-11-27T08:20:53Z
   output: |
-    cùng lệnh với E1
-    ℹ duration_ms 4367.687084
+    ℹ duration_ms 4287.395167
 
 - eval: E4
-  run_id: minted-nap-s09-quy-can-va-can-cao-tang-E4-r1
+  run_id: minted-nap-s09-quy-can-va-can-cao-tang-E4-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.s09_v16_db
-  verified_at: 2026-11-27T07:02:51Z
+  verified_at: 2026-11-27T08:20:53Z
   output: |
-    cùng lệnh với E1
-    ℹ duration_ms 4367.687084
+    ℹ duration_ms 4287.395167
 
 - eval: E9
-  run_id: minted-nap-s09-quy-can-va-can-cao-tang-E9-r1
+  run_id: minted-nap-s09-quy-can-va-can-cao-tang-E9-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.s09_v16_db
-  verified_at: 2026-11-27T07:02:51Z
+  verified_at: 2026-11-27T08:20:53Z
   output: |
-    cùng lệnh với E1
-    ℹ duration_ms 4367.687084
+    ℹ duration_ms 4287.395167
 
 - eval: E5
-  run_id: minted-nap-s09-quy-can-va-can-cao-tang-E5-r1
+  run_id: minted-nap-s09-quy-can-va-can-cao-tang-E5-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.s09_v16_that
-  verified_at: 2026-11-27T07:02:51Z
+  verified_at: 2026-11-27T08:20:53Z
   output: |
-    cmd: node pipeline/scripts/s09-v16-that.mjs --tran-phut 40
     s09-v16-that: khớp mọi ô
 
 - eval: E6
-  run_id: minted-nap-s09-quy-can-va-can-cao-tang-E6-r1
+  run_id: minted-nap-s09-quy-can-va-can-cao-tang-E6-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.s09_v16_that
-  verified_at: 2026-11-27T07:02:51Z
+  verified_at: 2026-11-27T08:20:53Z
   output: |
-    cùng lệnh với E5
     s09-v16-that: khớp mọi ô
 
 - eval: E7
-  run_id: minted-nap-s09-quy-can-va-can-cao-tang-E7-r1
+  run_id: minted-nap-s09-quy-can-va-can-cao-tang-E7-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.s09_v16_app
-  verified_at: 2026-11-27T07:02:51Z
+  verified_at: 2026-11-27T08:20:53Z
   output: |
-    cmd: cd app && bash ../db/db-thu.sh oneinvest_suite_qc --chay node --import tsx --test --test-concurrency=1 tests/registry-quy-can.test.tsx
-    ℹ duration_ms 1501.09325
+    ℹ duration_ms 1735.235375
 
 - eval: E8
-  run_id: minted-nap-s09-quy-can-va-can-cao-tang-E8-r1
+  run_id: minted-nap-s09-quy-can-va-can-cao-tang-E8-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.s09_v16_app
-  verified_at: 2026-11-27T07:02:51Z
+  verified_at: 2026-11-27T08:20:53Z
   output: |
-    cùng lệnh với E7
-    ℹ duration_ms 1501.09325
+    ℹ duration_ms 1735.235375
 
 - eval: E9b
-  run_id: minted-nap-s09-quy-can-va-can-cao-tang-E9b-r1
+  run_id: minted-nap-s09-quy-can-va-can-cao-tang-E9b-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.s09_v16_app
-  verified_at: 2026-11-27T07:02:51Z
+  verified_at: 2026-11-27T08:20:53Z
   output: |
-    cùng lệnh với E7
-    ℹ duration_ms 1501.09325
-
-- eval: E8u
-  run_id: minted-nap-s09-quy-can-va-can-cao-tang-E8u-r1
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.ui-check
-  verified_at: 2026-11-27T07:02:51Z
-  screenshot: evidence/E8u-step1.png
-  observed: |
-    step1 (/ops/registry): thẻ Dự án 514, Toà 854, Căn 111.671, Mã nguồn chưa nối 529; thẻ riêng «Căn CĐT đang bán S09» = 1.294, phụ đề «1.268 có giá · 40 dự án: 24 nối nút · 6 còn thẻ · 10 chưa có trong danh mục» khớp SELECT cùng DB; chỉ có mã S06/S08/S09, không URL.
-    step2-3 (/ops/registry/592, Masteri Waterfront): khối «Căn CĐT đang bán … nguồn S09 … 290 căn», bảng 7 cột Mã căn · Loại hình · PN·WC · Diện tích · Giá bán · Giá/m² · Trạng thái nguồn, hàng mẫu H1.02.05A | Chung cư | 2·2 | 63,3 m² | 5,25 tỷ | 83 tr/m² | AVAILABLE, phân trang 1–25/290; không ảnh, không URL, không toạ độ, không tên thật của nguồn.
-    Lưu ý cho người duyệt: nhãn trên màn là «Căn CĐT đang bán S09», không đúng chữ «Quỹ căn S09» trong steps của eval; nội dung và số khớp.
-  network_observed: no-app-traffic
+    ℹ duration_ms 1735.235375
 
 - eval: E10b
-  run_id: minted-nap-s09-quy-can-va-can-cao-tang-E10b-r1
+  run_id: minted-nap-s09-quy-can-va-can-cao-tang-E10b-r2
   exit_code: 0
-  baseline: n-a
+  baseline: red
   verifier: config:executors.script.s09_v16_dc
-  verified_at: 2026-11-27T07:02:51Z
+  verified_at: 2026-11-27T08:20:53Z
   output: |
-    cmd: git diff --exit-code 767c70c13 -- collector/docs/DATA-CONTRACT.md
-    diff rỗng
+    git diff 767c70c13 -- collector/docs/DATA-CONTRACT.md rỗng
 
 - eval: E11a
-  run_id: minted-nap-s09-quy-can-va-can-cao-tang-E11a-r1
+  run_id: minted-nap-s09-quy-can-va-can-cao-tang-E11a-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.suite.pipeline_a
-  verified_at: 2026-11-27T07:02:51Z
+  verified_at: 2026-11-27T08:20:53Z
   output: |
-    cmd: node scripts/suite-neu-doi.mjs pipeline_a -- 'cd pipeline && npm run test:a'
-    ℹ duration_ms 206609.604166
+    ℹ duration_ms 361128.385209
 
 - eval: E11b
-  run_id: minted-nap-s09-quy-can-va-can-cao-tang-E11b-r1
+  run_id: minted-nap-s09-quy-can-va-can-cao-tang-E11b-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.suite.pipeline_b
-  verified_at: 2026-11-27T07:02:51Z
+  verified_at: 2026-11-27T08:20:53Z
   output: |
-    cmd: node scripts/suite-neu-doi.mjs pipeline_b -- 'cd pipeline && npm run test:b'
-    ℹ duration_ms 114233.500084
+    ℹ duration_ms 176003.713666
 
 - eval: E11c
-  run_id: r1-l7-1-20261127070251
+  run_id: minted-nap-s09-quy-can-va-can-cao-tang-E11c-r2
+  exit_code: 0
+  baseline: red
+  verifier: config:executors.suite.pipeline_that
+  verified_at: 2026-11-27T08:20:53Z
+  output: |
+    ℹ duration_ms 2731764.917958
+
+- eval: E8u
+  run_id: minted-nap-s09-quy-can-va-can-cao-tang-E8u-r2
   exit_code: 0
   baseline: n-a
-  verifier: config:executors.suite.pipeline_that
-  verified_at: 2026-11-27T07:02:51Z
-  output: |
-    cmd: node scripts/suite-neu-doi.mjs pipeline_that -- 'cd pipeline && npm run test:that'
-    ℹ duration_ms 2626845.580875
-
-### Judgment
-
-- eval: E10
-  judged_by: judge-subagent (fresh context), panel đề xuất PASS
-  verdict: PASS
-  rationale: Ba góc nhìn đều thấy ap-may-thu.md đủ năm thứ và đúng thứ tự áp sau DA42; DATA-CONTRACT.md có mục «Mở rộng v16». Chi tiết ở phần panel bên dưới.
-  human_override:  # chi nguoi ghi
-
-Panel judge (đề xuất):
-
-- domain-correctness: PASS — ap-may-thu.md có đủ năm thứ và nói rõ thứ tự áp SAU DA42. Lệnh áp 130 chạy hai lần rồi vòng nạp các bản thu v16 sau khi ZK chép vào collector/snapshots. Số diễn tập khớp AC-5: 1.294 căn, 40 dự án, 1.268 có giá, chia 24/6/10, 0 dòng có http. Sao lưu pg_dump trước, ba nấc lùi và lệnh kiểm s09-v16-that.mjs --dem đều có. DATA-CONTRACT.md có mục «Mở rộng v16» khai hai kind quy-can và can-cao-tang, cùng dòng lịch sử «schemaVersion 16 (2026-11-24)».
-- operational-feasibility: PASS — ap-may-thu.md có đủ năm thứ. Lệnh áp 130 chạy hai lần rồi nạp từng bản thu v16 sau khi ZK chép vào collector/snapshots, nằm ở mục 2. Số diễn tập khớp AC-5: 1.294 căn, 40 dự án, 1.268 có giá, chia 24/6/10, 0 dòng có http. Sao lưu trước (mục 1), cách lùi (mục 4), lệnh kiểm sau (mục 5) và thứ tự áp sau DA42 (đầu tệp) đều có. DATA-CONTRACT.md có mục «Mở rộng v16» với hai kind quy-can và can-cao-tang, và có dòng lịch sử schemaVersion 16.
-- spec-alignment: PASS — ap-may-thu.md có đủ năm thứ: lệnh áp 130 chạy hai lần rồi nạp từng bản thu v16 sau khi ZK chép vào collector/snapshots; số diễn tập khớp AC-5 (1.294 căn · 40 dự án · 1.268 có giá; 24/6/10; 0 dòng chứa http); sao lưu trước (mục 1); cách lùi (mục 4); lệnh kiểm sau (mục 5). Hồ sơ nói rõ áp sau DA42. DATA-CONTRACT.md có mục «Mở rộng v16» với hai kind quy-can, can-cao-tang và dòng lịch sử schemaVersion 16. Hồ sơ nạp theo danh sách V16 lọc từ manifest, không ghi cứng «bốn bản thu». Số căn cao tầng lấy từ bộ đo chạy ngay trước lượt áp, không ghi sẵn.
-
-human_override của E10 để trống cho người quyết ở Cổng 2.
+  verifier: scripts/ui-capture.sh
+  verified_at: 2026-11-27T08:20:53Z
+  screenshot: evidence/E8u-tong.png
+  observed: |
+    E8u-tong.png (cũng là E8u-step1.png và E8u-step2.png, cùng nội dung): trang Danh bạ /ops/registry đã đăng nhập bằng tài khoản ops thử. Có ô tổng "Căn CĐT đang bán S09" = 1.294, dòng phụ "1.268 có giá · 40 dự án: 24 nối nút · 6 còn thẻ · 10 chưa có trong danh mục". Đúng bằng kết quả SELECT độc lập trên DB thử (1294|1268|40|24|6|10). Nhãn thật là "Căn CĐT đang bán S09", không phải chữ «Quỹ căn S09» như expected, nhưng nội dung và ý nghĩa khớp; chỉ ghi mã S09.
+    E8u-quy-can.png (cũng là E8u-step3.png), chụp /ops/registry/592 (Masteri Waterfront), khung 1280x2600: có khối "Căn CĐT đang bán" ghi "290 căn", bảng có các cột Mã căn, Loại hình, PN·WC, Diện tích, Giá bán (ví dụ 5,25 tỷ), Giá/m² (83 tr/m²) và Trạng thái nguồn (AVAILABLE). Phân trang 1–25/290. 290 khớp SELECT trên view (290 căn, 290 có giá). Ảnh không có URL ảnh, toạ độ hay tên nguồn thật. Ở các dòng toà, cột Nguồn chỉ ghi mã "S09".
+  network_observed: n-a (driver)
 
 ### Lệnh suite (hồi quy)
 
 - cmd: node scripts/suite-neu-doi.mjs agent -- 'cd agent && npm test'
-  run_id: minted-nap-s09-quy-can-va-can-cao-tang-SUITE-node_scripts_suite_neu_doi_mjs_agent_cd_-r1
+  run_id: minted-nap-s09-quy-can-va-can-cao-tang-SUITE-node_scripts_suite_neu_doi_mjs_agent_cd_-r2
   exit_code: 0
-  verified_at: 2026-11-27T07:02:51Z
+  verified_at: 2026-11-27T08:20:53Z
 
 - cmd: node scripts/suite-neu-doi.mjs app -- 'cd app && npx tsc --noEmit && npm run lint'
-  run_id: minted-nap-s09-quy-can-va-can-cao-tang-SUITE-lint-r1
+  run_id: minted-nap-s09-quy-can-va-can-cao-tang-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-11-27T07:02:51Z
+  verified_at: 2026-11-27T08:20:53Z
 
 - cmd: node scripts/suite-neu-doi.mjs app_ui -- 'cd app && npm test'
-  run_id: minted-nap-s09-quy-can-va-can-cao-tang-SUITE-node_scripts_suite_neu_doi_mjs_app_ui_cd-r1
+  run_id: minted-nap-s09-quy-can-va-can-cao-tang-SUITE-node_scripts_suite_neu_doi_mjs_app_ui_cd-r2
   exit_code: 0
-  verified_at: 2026-11-27T07:02:51Z
+  verified_at: 2026-11-27T08:20:53Z
 
 - cmd: node scripts/suite-neu-doi.mjs ui_lint_rules -- 'cd app && npm run test:lint-rules'
-  run_id: minted-nap-s09-quy-can-va-can-cao-tang-SUITE-test_lint_rules-r1
+  run_id: minted-nap-s09-quy-can-va-can-cao-tang-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-11-27T07:02:51Z
+  verified_at: 2026-11-27T08:20:53Z
 
 - cmd: node scripts/suite-neu-doi.mjs portal_static -- 'node scripts/check-portal-compliance.mjs'
-  run_id: minted-nap-s09-quy-can-va-can-cao-tang-SUITE-node_scripts_suite_neu_doi_mjs_portal_st-r1
+  run_id: minted-nap-s09-quy-can-va-can-cao-tang-SUITE-node_scripts_suite_neu_doi_mjs_portal_st-r2
   exit_code: 0
-  verified_at: 2026-11-27T07:02:51Z
+  verified_at: 2026-11-27T08:20:53Z
+
+### Judgment
+
+- eval: E10
+  judged_by: judge panel (fresh context), đề xuất PASS
+  rationale: Ba góc nhìn cùng đề xuất PASS. ap-may-thu.md có đủ năm thứ (sao lưu mục 1, lệnh áp 130 mục 2, cách lùi mục 4, lệnh kiểm sau mục 5, số diễn tập khớp AC-5), nêu rõ áp sau DA42; DATA-CONTRACT.md có mục «Mở rộng v16» và dòng lịch sử schemaVersion 16.
+  votes:
+    - domain-correctness: PASS — năm thứ đủ; số diễn tập 1.294 căn, 40 dự án, 1.268 có giá, chia 24·6·10, 0 dòng du rỗng, 0 dòng có http; áp sau DA42, cần 115 và 125 đã áp.
+    - operational-feasibility: PASS — lệnh áp 130 hai lần và vòng nạp từng bản v16 ở mục 2; sao lưu mục 1, cách lùi mục 4, kiểm sau mục 5; DATA-CONTRACT dòng 318 và 353.
+    - spec-alignment: PASS — đủ năm thứ, số diễn tập khớp AC-5, áp sau DA42, DATA-CONTRACT có mục «Mở rộng v16» khai hai kind quy-can và can-cao-tang.
+  lưu ý: review-findings có một finding trong hợp đồng AC-10 về cách lùi 4c, người cần cân nhắc khi quyết.
+  human_override:  # chi nguoi ghi
 
 máy: M5 (M5 Max 18 nhân, colima 16/96) · DB: bản đầy đủ máy thu chép sang 26/11 05:45Z · ca đỏ có tên: không
 
-Ghi chú phiên chấm M5 (sau lượt, không đổi verdict của kit): vòng 1 CHẠY LẠI trên 01e03e07e8f843e3589e9e735ebebb3f98c8434b (lượt trước ở 9b0cbd0ca BLOCKED vì pg vắng — GS ghi không tính). Trước khi chấm đã kiểm node_modules bốn module (lock trùng main; require.resolve('pg') ok ở app, pipeline, agent, data-api) theo CHAM-TREN-M5.md. Mọi eval máy PASS (E1–E11c, E8u), mọi lệnh suite thoát 0, không lệnh nào BLOCKED. pipeline_that (E11c, long_running 90): tests 37, pass 37, fail 0, skipped 0; «bỏ qua 1 ca chỉ máy thu» → ĐẠT theo luật GS 26/11. Chấm trên M5: ON22-AC-10 không chạy (HT33). Migration 130 chỉ áp trên DB lượt. Kit trả PENDING-JUDGMENT vì hàng T3 (judgment E10 đề xuất PASS chờ người). Review: một finding medium trong hợp đồng AC-2 (danh sách khoá lá tính lúc chạy từ fixture, không có bảng viết trước từ bản thu thật) — người ký Cổng 2 cần thấy; ba finding ngoài hợp đồng đề xuất Known limits. Ảnh E8u dùng tài khoản thử ops-test, không lộ email. Kit báo runLogWriteFailed — run-log do phiên chấm ghi.
+Ghi chú phiên chấm M5 (sau lượt, không đổi verdict của kit): vòng 2 trên 70079a04ea68da2dd8771b547ebb2385d50b373b (--no-carry, 16 eval); soát 70079a04e-20261127T152019 chỉ đỏ QV-AC-5. node_modules bốn module có pg trước khi chấm. Mọi eval máy PASS, mọi lệnh suite thoát 0, không lệnh nào BLOCKED. pipeline_that (E11c, long_running 90): 37/37, «bỏ qua 1 ca chỉ máy thu» → ĐẠT; chấm trên M5: ON22-AC-10 không chạy (HT33). Finding medium AC-2 của vòng 1 đã đóng. Kit trả PENDING-JUDGMENT (T3, E10 đề xuất PASS chờ người). Review: một finding medium trong hợp đồng AC-10 — cách lùi 4c trong ap-may-thu.md (pg_restore --clean -t …) không chạy được vì DROP TABLE bị chặn bởi phụ thuộc (FK tới airbnb_snapshots, view của 130) rồi COPY trùng khoá; người ký Cổng Bằng chứng cần thấy vì lời áp DB máy thu đòi đủ năm thứ gồm cách lùi. Ngoài hợp đồng: một finding high (phép băm E6 ba lượt không thể đỏ trước đột biến ORDER BY ngược) đề xuất Known limits. Ảnh E8u chụp lại, tài khoản thử ops-test, không lộ email. Migration 130 chỉ áp DB lượt. Kit báo runLogWriteFailed — run-log do phiên chấm ghi.
 
 ## Known limits
 
@@ -242,14 +221,22 @@ Ghi chú phiên chấm M5 (sau lượt, không đổi verdict của kit): vòng 
 
 ## Analyst
 
-carried tu round 1 — baseline khong do lai round nay
+none — moi eval feature deu red tren baseline (co phan biet)
 
-Eval không-phân-biệt (xanh cả hai phía): không có.
+Lưu ý: nhiều eval mới không đo được baseline nên ghi n-a, không phải kết luận phân biệt.
+
+Baseline khong do
+- node --test --test-concurrency=1 pipeline/lib/s09-danh-ba-v16.test.mjs pipeline/scripts/s09-v16.itest.mjs: bo qua baseline: tep pipeline/lib/s09-danh-ba-v16.test.mjs co o cay dang kiem nhung chua co o merge-base 1a2cb6a43b98f0a167262f4cdbbe40578fd86e8f — eval moi, chay tren code cu khong phan biet gi
+- node pipeline/scripts/s09-v16-that.mjs --tran-phut 40: bo qua baseline: tep pipeline/scripts/s09-v16-that.mjs co o cay dang kiem nhung chua co o merge-base 1a2cb6a43b98f0a167262f4cdbbe40578fd86e8f — eval moi, chay tren code cu khong phan biet gi
+- cd app && bash ../db/db-thu.sh oneinvest_suite_qc --chay node --import tsx --test --test-concurrency=1 tests/registry-quy-can.test.tsx: bo qua baseline: tep app/tests/registry-quy-can.test.tsx co o cay dang kiem nhung chua co o merge-base 1a2cb6a43b98f0a167262f4cdbbe40578fd86e8f — eval moi, chay tren code cu khong phan biet gi
+- node scripts/suite-neu-doi.mjs pipeline_a -- 'cd pipeline && npm run test:a': baseline vuot tran 180 giay/lenh — da dung ca cay tien trinh; BLOCKED ha tang, khong phai ket qua cua code cu
+- node scripts/suite-neu-doi.mjs pipeline_b -- 'cd pipeline && npm run test:b': baseline vuot tran 180 giay/lenh — da dung ca cay tien trinh; BLOCKED ha tang, khong phai ket qua cua code cu
 
 ## Variance
 
-none — mọi eval đều chạy một lần và đều xanh, không có phương sai.
+none — every multi-run eval is uniform
 
 ## Iterations
 
-Round 1: mọi eval máy xanh; chờ người chốt judgment E10 ở Cổng 2.
+Round 1: xem lịch sử vòng trước (S4 r1 chạy lại do fixture thiếu lá thật).
+Round 2: mọi eval máy xanh; E10 chờ người (judgment), nên verdict PENDING-JUDGMENT.
