@@ -4,7 +4,7 @@ pipeline/lib/db-thu-chot.mjs TRƯỚC mọi kết nối: DATABASE_URL không ph�
 Không dùng chotDbThu (process.exit) vì nó dừng cả tệp, làm mất 10 ca không cần DB.
 
 Đo 27/11 (Mac mini, chạy riêng ca này bằng --test-name-pattern; URL trỏ cổng 1 nên không bao giờ kết nối được):
-- vật lành, DATABASE_URL=postgres://…@127.0.0.1:1/oneinvest → fail 1 với thông điệp ghim
+- vật lành, DATABASE_URL=postgres://127.0.0.1:1/oneinvest (phần tài khoản lược bỏ khi ghi) → fail 1 với thông điệp ghim
   «(1) từ chối — DB 'oneinvest' không phải DB thử oneinvest_suite_*; ca có lệnh xoá chỉ chạy trên DB thử …»
 - bản đột biến bỏ chốt (if (lyDo) → if (false)), cùng URL → không có dòng «từ chối»; ca đi tiếp tới bước chạy bộ nạp (spawnSync)
   — tức không còn gì chặn trước lệnh ghi/xoá.
