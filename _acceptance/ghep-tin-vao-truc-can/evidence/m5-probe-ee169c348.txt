@@ -1,0 +1,150 @@
+PL36 tổng duyệt probe trên M5 ＠ee169c348d107bbe444b587691e915b4d98ecec1 — KHÔNG phải vòng chấm, không verdict, không tăng round.
+Log: .acceptance-runs/ghep-tin-vao-truc-can/probe-ee169c348-20261127T063411Z/ (ngoài git, trên M5). Mọi bước chạy trên DB lượt (db-thu --chay / cụm dùng một lần); không chạm DB oneinvest (bước ke-hoach chỉ EXPLAIN, phiên chỉ đọc).
+Không có PROBE HONG.
+
+Kết quả: 10/12 bước xanh; 2 bước đỏ cùng MỘT ca: tang-so-0-dau-trong-danh-ba-van-ra-can (pipeline/tests/ghep-tin-truc-can-131.itest.mjs:157).
+  Ca này chạy «UPDATE units SET floor = '0<tầng>' WHERE unit_key = …», nhưng units có rào chỉ-thêm của 082_danh_ba_vat_the.sql
+  (trigger units_chi_them_dong → vat_the_chi_them: chỉ đổi được status, merged_into) → P0001 «units: chỉ thêm — chỉ đổi được status,
+  merged_into» trước khi tới assert. Không phải PROBE HONG mà là ca đo dựng tiền đề bằng thao tác DB cấm; rào 082 có trên mọi DB đã áp
+  migration (kể cả DB lượt). Hướng: chèn một căn mới có floor «0<tầng>» (hoặc dùng căn/trục riêng của ca) thay vì UPDATE căn có sẵn.
+
+ 0) git status --short trước: 0 dòng.
+ 1) offer-unit.sh — ĐỎ, thoát 1 (35s): «ĐỎ: offer_unit không xanh trên mã thật»; 11/12 ca xanh (gồm bi-danh-mot-can-di-tron-ghi-den-view,
+    dau-cuoi-luat-that-va-view-khop: chèn 10164 · 514 tin · trục 465 · căn 49 · xung đột 0 · lệch 0, dau-cuoi-bo-do-hai-can-bao-dung-offer-id);
+    đỏ: tang-so-0-dau-trong-danh-ba-van-ra-can. Các đột biến của offer-unit.sh (gồm của 138) KHÔNG chạy vì bước xanh trên mã thật đã đỏ.
+ 2) itest 131 trọn tệp (db-thu --chay) — ĐỎ, thoát 1 (43s): tests 21, pass 20, fail 1 — cùng ca trên. Ca thời gian: offer_unit mức sâu 5.085s.
+ 3) itest ghi trọn tệp (db-thu --chay) — XANH, thoát 0 (291s).
+ 4) ham-gan.sh — XANH, thoát 0.
+ 5) chay-lai.sh — XANH, thoát 0.
+ 6) E8 song song: cuoi-luot-nap.sh thoát 0, npm run test:a thoát 0. git status mỗi 20s: một lần thấy «?? pipeline/scripts/.slt-dc-khoa-vszHeR/»
+    lúc 06:52:25Z (thư mục tạm của một ca pipeline_a, tự dọn — không phải tệp của probe PL36); cuối bước sạch.
+ 7) migration.sh — XANH, thoát 0.
+ 8) offer-building-nhanh.sh — XANH, thoát 0.
+ 9) ke-hoach-toa-vung.sh oneinvest — XANH, thoát 0 (chỉ đọc).
+10) cham-truc.sh — XANH, thoát 0; evidence/cham-truc.md không đổi.
+11) chay-kho.sh — XANH, thoát 0.
+12) git status --short sau: 0 dòng.
+
+== Tóm tắt máy ==
+sha ee169c348d107bbe444b587691e915b4d98ecec1
+buoc 0 status-truoc dong=0
+buoc 1 offer-unit exit=1 35s
+buoc 2 itest-131 exit=1 43s
+buoc 3 itest-ghi exit=0 291s
+buoc 4 ham-gan exit=0 74s
+buoc 5 chay-lai exit=0 471s
+buoc 6 e8-song-song cuoi-luot-nap exit=0 pipeline_a exit=0 git-status-dong=2 702s
+buoc 7 migration exit=0 23s
+buoc 8 offer-building-nhanh exit=0 49s
+buoc 9 ke-hoach-toa-vung exit=0 0s
+buoc 10 cham-truc exit=0 0s
+buoc 11 chay-kho exit=0 11s
+buoc 12 status-sau: 
+XONG .acceptance-runs/ghep-tin-vao-truc-can/probe-ee169c348-20261127T063411Z
+
+== 3-itest-ghi.log (dòng XANH/đột biến) ==
+ℹ tests 15
+ℹ pass 15
+ℹ fail 0
+ℹ skipped 0
+
+== 4-ham-gan.log (dòng XANH/đột biến) ==
+ℹ tests 28
+ℹ pass 28
+ℹ fail 0
+đột biến «bo-so-tien-to-toa» → ca «ô «toa-lech»» đỏ
+đột biến «tra-truc-moi-toa» → ca «ô «truc-cung-so-toa-khac-khong-chon»» đỏ
+đột biến «lay-tang-ma-khi-lech» → ca «ô «tang-lech»» đỏ
+đột biến «giu-so-0-tang» → ca «ô «tang-09-khop-9»» đỏ
+ℹ tests 2
+ℹ pass 2
+ℹ fail 0
+đột biến «rut-ca-floor-raw» → ca «floor-raw-cua-bo-doc-chu-khong-bi-rut-hay-de» đỏ
+XANH: ma trận, floor_raw và bốn đột biến
+
+== 5-chay-lai.log (dòng XANH/đột biến) ==
+ℹ tests 9
+ℹ pass 9
+ℹ fail 0
+đột biến «bo-chua-ghep-can» → ca «cau-rut-thay-boi-luot-chua-dong-ghep-can» đỏ
+đột biến «bo-khi-khong-dong» → ca «tat-het-nguon-buoc-gan-van-rut-het-dong-cu» đỏ
+XANH: vòng đời và hai đột biến
+
+== 6a-cuoi-luot-nap.log (dòng XANH/đột biến) ==
+ℹ tests 6
+ℹ pass 6
+ℹ fail 0
+đột biến «nem-loi-ra-ngoai» → ca «loi-khi-ghi-in-mot-canh-bao-va-khong-nem» đỏ
+đột biến «dao-thu-tu-hai-buoc» → ca «chạy trước bước gắn toà» đỏ
+XANH: bước cuối lượt nạp và hai đột biến
+
+== 7-migration.log (dòng XANH/đột biến) ==
+ℹ tests 6
+ℹ pass 6
+ℹ fail 0
+đột biến «bo-luat-khuon-sub-id» → ca «tu-choi-sai-khuon» đỏ
+XANH: khuôn phát biểu và một đột biến
+
+== 8-offer-building-nhanh.log (dòng XANH/đột biến) ==
+ℹ tests 4
+ℹ pass 4
+ℹ fail 0
+đột biến «doi-mot-dong-dau-ra» → ca «offer_building sau 131 khác 117 ở offer_id » đỏ
+đột biến «bo-materialized» → ca «kế hoạch thiếu bước «CTE toa_vung»» đỏ
+XANH: offer_building và hai đột biến
+
+== 9-ke-hoach-toa-vung.log (dòng XANH/đột biến) ==
+that: có bước «CTE toa_vung»
+dot_bien: KHÔNG có bước «CTE toa_vung»
+
+== 11-chay-kho.log (dòng XANH/đột biến) ==
+XANH: OP1 tin mức trục + căn 488 ≥ 350
+
+== Nguyên văn bước 1 (offer-unit.sh) ==
+== offer_unit trên mã thật
+✔ hai-bai-cung-truc-ra-truc (2006.696792ms)
+✔ truc-va-can-cung-truc-ra-can (321.837ms)
+✔ hai-truc-khac-nhau-xung-dot-giu-toa (363.59175ms)
+✔ truc-ngoai-toa-xung-dot-giu-toa (354.805666ms)
+✔ tin-chi-biet-toa-giu-toa (317.108ms)
+✔ tin-xung-dot-o-offer-building-khong-co-dong (330.628625ms)
+✔ bi-danh-mot-can-di-tron-ghi-den-view (336.379208ms)
+✖ tang-so-0-dau-trong-danh-ba-van-ra-can (2.518125ms)
+✔ rule-khac-khong-vao-view (320.906333ms)
+đầu–cuối: chèn 10164 · 514 tin có dòng ghep-can (không xung đột: trục 465 · căn 49; xung đột 0) · lệch 0
+✔ dau-cuoi-luat-that-va-view-khop (13369.776958ms)
+✔ dau-cuoi-ba-bai-rut-tu-ban-chep (953.632833ms)
+✔ dau-cuoi-bo-do-hai-can-bao-dung-offer-id (1015.029584ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 11
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 19786.748292
+
+✖ failing tests:
+
+test at tests/ghep-tin-truc-can-131.itest.mjs:62:27
+✖ tang-so-0-dau-trong-danh-ba-van-ra-can (2.518125ms)
+  error: units: chỉ thêm — chỉ đổi được status, merged_into
+    length: 180,
+    severity: 'ERROR',
+    code: 'P0001',
+    detail: undefined,
+    hint: undefined,
+    position: undefined,
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: 'PL/pgSQL function vat_the_chi_them() line 7 at RAISE',
+    schema: undefined,
+    table: undefined,
+    column: undefined,
+    dataType: undefined,
+    constraint: undefined,
+    file: 'pl_exec.c',
+    line: '3911',
+    routine: 'exec_stmt_raise'
+  }
+ĐỎ: offer_unit không xanh trên mã thật
