@@ -1,0 +1,111 @@
+schema_version: 1
+feature_slug: db-chi-nghe-noi-bo-va-chinh-postgres
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.db_noi_bo_static
+    expected: "exit 0; PASS cổng db 127.0.0.1:5433; PASS SHARED_BUFFERS=8GB; PASS WORK_MEM=64MB; PASS MAINTENANCE_WORK_MEM=1GB; PASS EXTRA_CONF effective_cache_size = 20GB; PASS shm_size=1073741824; PASS compose khớp main trước vòng (5a418983c) ngoài cổng, tham số, shm — đọc JSON của docker compose config, không đọc chuỗi YAML; chiều đỏ ở E2"
+    paths: ["db/docker-compose.yml", "scripts/check-db-noi-bo.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.db_noi_bo_mutation
+    expected: "exit 0; đối chứng dương: PASS bản lành xanh; sáu đột biến mỗi cái in PASS đột biến <tên> đỏ kèm đúng thông điệp ghim — cong-tran → FAIL cổng db 5433 host_ip=(trống); cong-0000 → FAIL cổng db 5433 host_ip=0.0.0.0; cong-thu-hai → FAIL cổng db 5434 host_ip=(trống); bo-shared-buffers → FAIL SHARED_BUFFERS=(vắng); command-c → FAIL SHARED_BUFFERS=(vắng) và FAIL compose có command: — ảnh kartoza không nhận -c; bo-shm → FAIL shm_size=(vắng); thiếu một thông điệp ghim → exit 1"
+    paths: ["db/docker-compose.yml", "scripts/check-db-noi-bo.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.db_noi_bo_cong
+    expected: "exit 0; bản 127.0.0.1: PASS Mac nghe 127.0.0.1:<p> (lsof), PASS nối 127.0.0.1:<p> được, PASS psql nối localhost:<p> được, PASS client pg của pipeline (Node của launchd) nối localhost:<p> được, PASS nối <IP LAN>:<p> bị từ chối, GHI ::1:<p> <được|từ chối>; đối chứng bản trần: PASS Mac nghe *:<q>, PASS nối <IP LAN>:<q> được, PASS client pg nối localhost:<q> được — nếu bản trần cũng bị từ chối thì FAIL thước không phân biệt (đối chứng chết); PASS không sót container ht8-cong-*; máy không có IP LAN → exit 2 nêu lý do, không xanh giả"
+    paths: ["scripts/check-db-noi-bo.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.db_noi_bo_tham_so
+    long_running: 30
+    expected: "exit 0; compose của cây: PASS shared_buffers=8GB, PASS work_mem=64MB, PASS maintenance_work_mem=1GB, PASS effective_cache_size=20GB, PASS /dev/shm 1.0G; đối chứng compose main 5a418983c: PASS shared_buffers=256MB, work_mem=16MB, maintenance_work_mem=128MB, /dev/shm 64M — giống nhau ở hai bộ thì FAIL tham số không đến từ compose; đường áp trên CÙNG volume: PASS main→cây shared_buffers=8GB và dòng mốc còn 1, PASS docker restart giữ 8GB, PASS cây→main (lùi) shared_buffers=256MB và dòng mốc còn 1 — volume đổi khác giữa các bước thì FAIL; container tạm tên ht8-ts-*, volume tạm, cổng 127.0.0.1:55434, không chạm one-invest-db; không sót sau lệnh"
+    paths: ["db/docker-compose.yml", "scripts/check-db-noi-bo.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.db_noi_bo_do
+    long_running: 30
+    expected: "exit 0; dòng nguồn: field_assertions <n>/<nguồn>, sale_offer_records <n>/<nguồn>, mỗi bảng ≥ 90% nguồn (dưới → FAIL dữ liệu đo thiếu); bảng | truy vấn | trung vị trước (ms) | trung vị sau (ms) | Workers Launched | cho mọi truy vấn của bộ, ba lần mỗi bộ; PASS ít nhất một truy vấn Workers Launched > 0; dòng PASS mọi truy vấn chạy xong ở cả hai bộ; đối chứng shm: tham số cây + shm 64MB → PASS đối chứng shm đỏ (could not resize shared memory segment) hoặc dòng ĐỐI CHỨNG SHM CHẾT (không tái hiện) — không có dòng nào trong hai thì FAIL; truy vấn lỗi (vd could not resize shared memory segment) → FAIL tên truy vấn + lỗi; không có ngưỡng nhanh hơn — số chỉ được in"
+    paths: ["db/docker-compose.yml", "scripts/check-db-noi-bo.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5b
+    criterion: AC-5
+    executor: judgment
+    inputs: ["_acceptance/db-chi-nghe-noi-bo-va-chinh-postgres/ap-may-thu.md", "docs/superpowers/specs/2026-11-24-db-chi-nghe-noi-bo-va-chinh-postgres-design.md"]
+    question: "ap-may-thu.md có ghi bảng đo trước/sau (truy vấn, trung vị trước, trung vị sau, máy, ngày, số lần) làm số chạy thử không; mỗi truy vấn chậm hơn sau khi đổi có được nêu thẳng và có câu xử lý (giữ số, đổi số, hay ghi giới hạn) không; số tham số trong hồ sơ áp có khớp design doc §4 không? Thiếu bảng, giấu truy vấn chậm hơn, hay số lệch design thì FAIL."
+    paths: ["_acceptance/db-chi-nghe-noi-bo-va-chinh-postgres/ap-may-thu.md"]
+    evidence_required: [verdict, verifier, verified_at]
+
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.db_noi_bo_soat
+    expected: "exit 0; PASS 0 chỗ trong kho và trong ~/Library/LaunchAgents/*.plist nối cổng 5433 qua host.docker.internal / 0.0.0.0 / 192.168.x / 10.x / 172.16–31.x (loại _acceptance/**/*.md, docs/research/**); PASS 0 lệnh docker run --network host; in DANH SÁCH mọi tệp có docker run/docker exec chạm one-invest-db kèm cách nối (container:, exec, container riêng); đối chứng trên cây tạm: cấy lần lượt host.docker.internal:5433, 172.21.0.1:5433, --network host vào bản chép một script → mỗi lần FAIL bên nối ngoài loopback: <tệp> (ghim tên tệp)"
+    paths: ["scripts/check-db-noi-bo.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6b
+    criterion: AC-6
+    executor: judgment
+    inputs: ["docs/superpowers/specs/2026-11-24-db-chi-nghe-noi-bo-va-chinh-postgres-design.md", "_acceptance/db-chi-nghe-noi-bo-va-chinh-postgres/evidence/soat-ben-noi.txt"]
+    question: "Tệp soat-ben-noi.txt là đầu ra của lệnh soát bên nối (danh sách tệp chạm DB thật và cách nối). Mỗi tệp hay nhóm tệp trong danh sách ấy có một hàng tương ứng ở bảng §3 của design doc, với cách nối khớp và hệ quả sau khi chỉ nghe 127.0.0.1 nêu rõ không? Thiếu hàng cho tệp nào, hoặc cách nối trong §3 trái với tệp soát, thì FAIL và nêu tên tệp."
+    paths: ["docs/superpowers/specs/2026-11-24-db-chi-nghe-noi-bo-va-chinh-postgres-design.md"]
+    evidence_required: [verdict, verifier, verified_at]
+
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.db_noi_bo_cu_khong_gay
+    expected: "exit 0; chạy check-db-autostart.sh static, mutation, diff và db-volume-check.sh static, mutation trên compose của cây — mỗi lệnh exit 0 với PASS cũ (gồm PASS đột biến cong-5434 đỏ — FAIL compose lệch commit trước vòng); PASS compose tập dượt sinh từ compose của cây không có 5433 (đọc tệp sinh ra: published=55433); chiều đỏ: chạy bộ sinh compose tập dượt với khuôn sed cũ trên compose của cây → FAIL tập dượt còn 5433"
+    paths: ["db/docker-compose.yml", "scripts/check-db-autostart.sh", "scripts/db-volume-check.sh", "scripts/check-db-noi-bo.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.db_noi_bo_live
+    long_running: 30
+    expected: "exit 0; lệnh chạy bộ đọc live ba lần: (a) one-invest-db trước áp → PASS live one-invest-db đỏ đúng: FAIL 5433 nghe * và FAIL shared_buffers=256MB (compose 8GB); (b) container tạm ht8-live-* dựng từ compose của cây ở 127.0.0.1:55435 → PASS live cây xanh: Mac chỉ nghe 127.0.0.1:55435, IP LAN từ chối, client pg nối localhost được, SHOW bằng compose bốn tham số, /dev/shm 1.0G; (c) container tạm từ compose main 5a418983c ở cổng trần 55436 → PASS live main đỏ đúng hai thông điệp ghim; bộ đọc chỉ đọc (lsof, nc, SHOW trong phiên read-only); sau áp, `bash scripts/check-db-noi-bo.sh live` trên one-invest-db là lệnh kiểm sau, exit 0"
+    paths: ["db/docker-compose.yml", "scripts/check-db-noi-bo.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E9
+    criterion: AC-9
+    executor: judgment
+    inputs: ["docs/ops/runtime-map.md", "_acceptance/db-chi-nghe-noi-bo-va-chinh-postgres/ap-may-thu.md", "db/docker-compose.yml"]
+    question: "Đối chiếu với db/docker-compose.yml: (1) runtime-map có nói DB chỉ nghe 127.0.0.1:5433 và vì sao (audit A1, DB có tầng A), với giá trị cổng trùng compose; (2) có bốn tham số và shm_size trùng compose, kèm câu vì sao đi biến môi trường của ảnh kartoza chứ không command: -c; (3) có lệnh kiểm `bash scripts/check-db-noi-bo.sh live`; (4) có cách đổi tham số — tạo lại container bằng compose, docker restart không sinh lại cấu hình; (5) ap-may-thu.md có đủ năm thứ: lệnh áp, số chạy thử, sao lưu trước, cách lùi, lệnh kiểm sau, cùng khung giờ ngoài lượt job; (6) không câu nào bảo agent tự chạy docker compose up hay khởi động lại colima? Thiếu điều nào hay lệch compose thì FAIL."
+    paths: ["docs/ops/runtime-map.md", "_acceptance/db-chi-nghe-noi-bo-va-chinh-postgres/ap-may-thu.md"]
+    evidence_required: [verdict, verifier, verified_at]
+
+  - id: E7c
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.suite.pipeline_a
+    long_running: 90
+    paths: ["db/docker-compose.yml", "scripts/check-db-noi-bo.sh", "scripts/check-db-autostart.sh", "scripts/db-volume-check.sh", "pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs"]
+    expected: "exit 0; nửa A bộ test pipeline (suite lượt chấm kéo theo vì nhánh chạm db/ và scripts/; khai ở đây chỉ để có long_running 90 — trên Mac mini nửa A ~41′, vượt trần chờ 30′ mặc định), 0 fail; nhánh mang 70bcecb3a (trần ca SLT-DC-7/9 480 → 900 s)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7d
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.suite.pipeline_b
+    long_running: 90
+    paths: ["db/docker-compose.yml", "scripts/check-db-noi-bo.sh", "scripts/check-db-autostart.sh", "scripts/db-volume-check.sh", "pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs"]
+    expected: "exit 0; nửa B bộ test pipeline (suite lượt chấm, khai ở đây chỉ để có long_running 90), 0 fail."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

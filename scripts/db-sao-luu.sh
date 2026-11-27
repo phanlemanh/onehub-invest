@@ -1,7 +1,7 @@
 #!/bin/bash
 # db-sao-luu.sh — sao lưu toàn bộ cụm DB local ra đĩa máy này (hồ sơ _acceptance/db-vao-volume/).
 #   bash scripts/db-sao-luu.sh [thư mục]     mặc định $HOME/onehub-backups/db/<UTC>/
-# Ra: <db>.dump (pg_dump -Fc) cho mỗi DB không phải template · globals.sql (pg_dumpall --globals-only) ·
+# Ra: <db>.dump (pg_dump -Fc) cho mỗi DB không phải template, trừ DB thử của suite (oneinvest_suite_*) · globals.sql (pg_dumpall --globals-only) ·
 #     so-dong.tsv (số dòng mọi bảng của oneinvest, đếm TRONG CÙNG snapshot với oneinvest.dump) · thong-tin.txt ·
 #     manifest.sha256.
 # Dump chứa user_events/user_profile (tầng A, AGENTS.md luật 6): thư mục nằm trong cây kho → thoát 2, không ghi gì.
@@ -83,7 +83,10 @@ fi
 phu pg_dump -U oneinvest -h localhost -Fc --snapshot="$SID" -f /b/oneinvest.dump oneinvest || die "pg_dump oneinvest lỗi"
 echo "COMMIT;" >&3; exec 3>&-; wait "$SNAP_PID" 2>/dev/null; exec 4<&-
 
+# DB thử của suite (oneinvest_suite_*, gồm bản mẫu) là bản chép dùng một lần, không phải dữ liệu: không sao lưu, ghi tên
+# DB bỏ vào thong-tin.txt (nằm trong manifest.sha256) — hồ sơ db-thu-tach-khoi-cum-that AC-7.
 for db in $("${PSQL[@]}" -d postgres -c "select datname from pg_database where not datistemplate and datname <> 'oneinvest' order by 1"); do
+  if [[ "$db" == oneinvest_suite_* ]]; then echo "bỏ DB thử của suite: $db" >> "$DICH/thong-tin.txt"; continue; fi
   phu pg_dump -U oneinvest -h localhost -Fc -f "/b/$db.dump" "$db" || die "pg_dump $db lỗi"
 done
 phu pg_dumpall -U oneinvest -h localhost --globals-only -f /b/globals.sql || die "pg_dumpall --globals-only lỗi"

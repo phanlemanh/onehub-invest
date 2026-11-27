@@ -100,7 +100,8 @@
     {
       "tep": "pipeline/scripts/ops-facts-so-tong-hop.test.mjs",
       "ca": "ON22-AC-10 máy thu thật, chế độ khô: năm khối có measured_at, freshness bằng check-freshness, 0 chỗ chặn, đầu ra chỉ tên khối + trạng thái",
-      "ly_do": "chạy launchctl của máy thu (chỉ có trên macOS)"
+      "ly_do": "chạy launchctl của máy thu (chỉ có trên macOS)",
+      "may_thu": "chạy push-ops-facts thật trên log, ~/.oneinvest, cấu hình OpenClaw, launchctl có job thật của máy thu — máy phát triển không có và luật cấm chạy push-ops-facts thật ở đó"
     },
     {
       "tep": "pipeline/scripts/install-collector-api.test.mjs",
@@ -201,6 +202,26 @@
       "tep": "pipeline/scripts/ops-apply-plist.test.mjs",
       "ca": "SS-AC-7 chạy đúng dòng cài của runtime-map vào thư mục tạm: node tuyệt đối chạy dưới PATH launchd",
       "ly_do": "cần plutil của macOS, chỉ chạy ở máy thu; lượt chấm S4 vòng 2 xanh; sẽ viết lại phép đọc plist không phụ thuộc plutil ở hàng nối"
+    },
+    {
+      "tep": "pipeline/scripts/assert-rut-thay.test.mjs",
+      "ca": "PL20-E7 ghi khác giá trị cùng bộ: dòng ghep-toa giữ sống, dòng không rule bị rút",
+      "ly_do": "cần dữ liệu thật (nút phân khu, phường, tin) — CI bỏ qua ngầm vì không đặt DATABASE_URL; trên DB trống có DATABASE_URL thì đỏ (HT9 S4 r1)"
+    },
+    {
+      "tep": "pipeline/scripts/assert-rut-thay.test.mjs",
+      "ca": "chiều đỏ PL20-E7: bản phá bỏ điều kiện chừa → dòng ghep-toa bị rút, đỏ",
+      "ly_do": "cần dữ liệu thật (nút phân khu, phường, tin) — CI bỏ qua ngầm vì không đặt DATABASE_URL; trên DB trống có DATABASE_URL thì đỏ (HT9 S4 r1)"
+    },
+    {
+      "tep": "pipeline/scripts/do-hang-ngay.test.mjs",
+      "ca": "DO1-AC-6 chuyển bậc trên DB: lập mốc, bảy loại đổi, đổi khoá, một dòng mỗi đơn vị, chạy lại 0 dòng",
+      "ly_do": "cần dữ liệu thật (nút phân khu, phường, tin) — CI bỏ qua ngầm vì không đặt DATABASE_URL; trên DB trống có DATABASE_URL thì đỏ (HT9 S4 r1)"
+    },
+    {
+      "tep": "pipeline/scripts/do-hang-ngay.test.mjs",
+      "ca": "DO1-AC-9 detail các dòng do1-* qua bộ ghi không mang chữ bài, trích, người đăng, labeler, tên nguồn; số đi qua writer",
+      "ly_do": "cần dữ liệu thật (nút phân khu, phường, tin) — CI bỏ qua ngầm vì không đặt DATABASE_URL; trên DB trống có DATABASE_URL thì đỏ (HT9 S4 r1)"
     }
   ],
   "agent": [
@@ -280,6 +301,26 @@
       "tep": "scripts/sao-luu-ngoai-may.test.mjs",
       "ca": "giữ phiên bản và khoá kho (AC-9)",
       "ly_do": "cần restic thật (brew, chỉ có trên máy thu) — runner ubuntu của CI không cài; ca bước chặn và quét lệnh dùng restic giả vẫn chạy"
+    },
+    {
+      "tep": "scripts/so-nguon-kho.test.mjs",
+      "ca": "NK-AC-1 năm cột, CHECK và giá trị từng mã đúng bảng viết trước",
+      "ly_do": "cần DB của riêng lượt (db-thu --chay): áp migration 122 lên public của bản chép; rào tên DB từ chối DB chung «oneinvest» — tên DB của job CI"
+    },
+    {
+      "tep": "scripts/so-nguon-kho.test.mjs",
+      "ca": "NK-AC-1 áp 122 lần hai: không ô nào đổi, match_whole giữ",
+      "ly_do": "cần DB của riêng lượt (db-thu --chay): áp migration 122 lên public của bản chép; rào tên DB từ chối DB chung «oneinvest» — tên DB của job CI"
+    },
+    {
+      "tep": "scripts/so-nguon-kho.test.mjs",
+      "ca": "chiều đỏ NK-AC-1: family ngoài flow|stock bị CHECK chặn",
+      "ly_do": "cần DB của riêng lượt (db-thu --chay): áp migration 122 lên public của bản chép; rào tên DB từ chối DB chung «oneinvest» — tên DB của job CI"
+    },
+    {
+      "tep": "scripts/so-nguon-kho.test.mjs",
+      "ca": "chiều đỏ NK-AC-1: bảng mong đợi lệch một nhịp thì ca đỏ gọi tên mã",
+      "ly_do": "cần DB của riêng lượt (db-thu --chay): áp migration 122 lên public của bản chép; rào tên DB từ chối DB chung «oneinvest» — tên DB của job CI"
     }
   ]
 }
