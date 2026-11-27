@@ -65,9 +65,29 @@ Mỗi nấc lùi được, không đụng dữ liệu nào ngoài lớp stg củ
 Q "DROP VIEW IF EXISTS v_s09_db_quy_can; DROP VIEW IF EXISTS v_s09_db_quy_can_doi_soat; DROP VIEW IF EXISTS v_s09_db_can_cao_tang"
 # 4b. Bỏ dòng stg của các bản thu v16 (xoá dữ liệu — cần lời riêng của Mạnh): xoá dòng airbnb_snapshots kéo theo stg (ON DELETE CASCADE).
 Q "DELETE FROM airbnb_snapshots WHERE snapshot_id = ANY(string_to_array('$(echo $V16 | tr ' ' ',')', ','))"
-# 4c. Lối cuối: khôi phục hai bảng từ bản dump của mục 1.
-docker exec -i -e PGPASSWORD=oneinvest one-invest-db pg_restore -U oneinvest -h localhost -d oneinvest --clean -t stg_s09_danh_ba -t airbnb_snapshots < $H/truoc-da56-$G.dump
+# 4c. Lối cuối (xoá dữ liệu — cần lời riêng của Mạnh như 4b): khôi phục DỮ LIỆU phạm vi S09 của hai bảng về đúng bản dump mục 1.
+#     Dump vào DB phụ, rồi lui-4c.sh xử trong MỘT giao dịch: dòng 'vn__s09-danh-ba__%' của airbnb_snapshots + trọn stg_s09_danh_ba,
+#     so dấu (số dòng + md5) với dump trước COMMIT; lệch → lùi trọn, thoát ≠ 0. Không DROP, không TRUNCATE bảng nào.
+X=oneinvest_lui_da56_$G
+docker exec -e PGPASSWORD=oneinvest one-invest-db createdb -U oneinvest -h localhost $X
+docker exec -i -e PGPASSWORD=oneinvest one-invest-db pg_restore -U oneinvest -h localhost -d $X --exit-on-error --no-owner < $H/truoc-da56-$G.dump
+bash _acceptance/nap-s09-quy-can-va-can-cao-tang/lui-4c.sh oneinvest $X    # in dấu dump · đích trước · đích sau; đích sau = dấu dump
+docker exec -e PGPASSWORD=oneinvest one-invest-db dropdb -U oneinvest -h localhost $X
 ```
+
+**Vì sao không `pg_restore --clean`** (S4 vòng 2, finding AC-10): `airbnb_snapshots` có 14 bảng stg của mọi nguồn trỏ khoá ngoại
+`ON DELETE CASCADE` tới nó. `--clean` phát `DROP TABLE` không kèm CASCADE, nên DROP bị chặn; sau đó COPY chèn trùng khoá và hỏng, tức
+bảng không về trạng thái trước. Nếu ai thêm CASCADE hay đổi sang TRUNCATE bảng này cho «chạy được», mọi stg của mọi nguồn sẽ bị xoá
+dây chuyền. Bản sửa chỉ chạm dòng S09.
+
+**Đã chạy thử** trên DB của lượt (bản chép DB máy thu): `bash db/db-thu.sh oneinvest_suite_lui_da56 --chay bash
+_acceptance/nap-s09-quy-can-va-can-cao-tang/probes/lui-4c-thu.sh`. Kịch bản: dấu trước → mục 1 → mục 2 (130 hai lần + nạp mọi bản v16)
+→ 4a → đối chứng lệnh 4c cũ (trên bản sao `createdb -T`) → 4c mới → dấu sau. Đầu ra: `evidence/lui-4c-thu.txt`.
+
+Số chạy thử 27/11 10:3xZ (khoá s4 P1, bản chép DB máy thu): dấu phạm vi S09 trước `24 bản thu · 40 dòng stg`; sau áp 7 bản v16
+`31 · 27.325`; sau 4c mới về đúng `24 · 40`, md5 trùng từng dòng. 14 bảng stg trỏ `airbnb_snapshots` và `airbnb_snapshots` (34.904)
+giữ nguyên số dòng. Đối chứng: lệnh 4c cũ thoát 1 «cannot drop table public.airbnb_snapshots because other objects depend on it» —
+và trước đó đã DROP được `stg_s09_danh_ba` (4a đã bỏ view nên không gì chặn): bảng stg MẤT trắng. Lệnh cũ không chỉ hỏng mà phá dữ liệu.
 
 ## 5. Lệnh kiểm sau
 
