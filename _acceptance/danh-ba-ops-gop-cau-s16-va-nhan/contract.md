@@ -5,9 +5,9 @@ slug: danh-ba-ops-gop-cau-s16-va-nhan
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui, db]
-status: draft
-approved_by:
-approved_at:
+status: approved
+approved_by: Mạnh
+approved_at: 2026-11-27
 design_doc: docs/superpowers/specs/2026-11-27-danh-ba-ops-gop-cau-s16-va-nhan-design.md
 ---
 
