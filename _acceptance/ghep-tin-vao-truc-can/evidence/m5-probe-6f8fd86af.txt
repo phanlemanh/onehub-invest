@@ -1,0 +1,31 @@
+# PL36 soát trước (E7, E8) trên M5 ＠6f8fd86afea923b2291b42da1be737491dcf9c50 — bắt đầu 2026-11-26T21:36:24Z
+
+## $ bash _acceptance/ghep-tin-vao-truc-can/probes/cuoi-luot-nap.sh — 21:36:24Z
+== Bước cuối lượt nạp trên mã thật
+ℹ tests 6
+ℹ pass 6
+ℹ fail 0
+== Đột biến
+đột biến «nem-loi-ra-ngoai» → ca «loi-khi-ghi-in-mot-canh-bao-va-khong-nem» đỏ
+đột biến «dao-thu-tu-hai-buoc» → ca «chạy trước bước gắn toà» đỏ
+XANH: bước cuối lượt nạp và hai đột biến
+→ mã thoát 0
+
+## $ bash _acceptance/ghep-tin-vao-truc-can/probes/offer-building-nhanh.sh — 21:47:58Z
+== offer_building trên mã thật
+thời gian: offer_building 0.37s · offer_unit 0.336s · offer_unit mức sâu 0.412s
+ℹ tests 3
+ℹ pass 3
+ℹ fail 0
+== Đột biến
+đột biến «doi-mot-dong-dau-ra» → ca «offer_building sau 131 khác 117» đỏ
+ĐỎ: đột biến «bo-materialized» không làm ca nào đỏ
+→ mã thoát 1
+# xong 2026-11-26T21:48:45Z
+
+## Ghi chú phiên chấm M5 (soát trước, không phải lượt chấm; không sửa mã)
+- máy: M5 (M5 Max 18 nhân, colima 16/96) · DB: bản đầy đủ máy thu chép sang 26/11 05:45Z · worktree cham-pl36 tại 6f8fd86af.
+- E8 cuoi-luot-nap.sh: XANH, 6/6, hai đột biến đỏ đúng (mã 0).
+- E7 offer-building-nhanh.sh: ĐỎ (mã 1). Bản gốc xanh 3/3 (offer_building 0.37s · offer_unit 0.336s · mức sâu 0.412s); đột biến «doi-mot-dong-dau-ra» đỏ đúng;
+  đột biến «bo-materialized» vẫn không làm ca nào đỏ — thêm ANALYZE trước khi đo chưa đủ để ca thời gian phân biệt bản có và không có materialized trên M5.
+- Migration 131 chỉ áp trên DB thử của lượt.

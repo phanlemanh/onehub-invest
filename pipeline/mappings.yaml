@@ -339,112 +339,6 @@ listings:
       note: "data-api trả media null: URL ảnh có thể mang số phòng của nguồn (hàng PB4)"
 
 # --------------------------------------------------------------------------
-# EXTENSION CỦA API — khoá phần tử Listing của data-api không có field DD 2.1 tương đương (danh sách khoá:
-# data-api/src/contract/listing.ts, resource "extension"). Mỗi mục đủ sáu điều kiện ADR-0011 Quyết định 3:
-# tra_cuu · ly_do · migration · check · khai_bao · dq. Không mục nào là cột mới.
-# --------------------------------------------------------------------------
-api_extensions:
-  listing:
-    kind:
-      tra_cuu: "DD 2.1 Property (742 field, research-local/reso/dd-2.1.json, generatedOn 2026-10-07) — tra 2026-11-27"
-      ly_do: "DD phân biệt bán/thuê bằng PropertyType (Residential / Residential Lease) và không có loại thuê ngắn hạn; kind là bộ lọc chính một tài nguyên ba loại tin"
-      migration: "không cột mới — dựng từ sale_offers.kind; 'rent_st' cho bảng listings"
-      check: "CHECK sale_offers_kind_chk kind IN ('sale','rent_lt') (migration 025); 'rent_st' là hằng của route"
-      khai_bao: "data-api/src/contract/listing.ts (resource extension) và mục này"
-      dq: "data-api/test/listing-reso.test.ts (PB2-AC-1, AC-2, AC-5 so giá trị với dòng cấy)"
-    lastSeenTimestamp:
-      tra_cuu: "DD 2.1 Property (742 field, research-local/reso/dd-2.1.json, generatedOn 2026-10-07) — tra 2026-11-27"
-      ly_do: "ModificationTimestamp là lúc tin đổi, không phải lúc thấy cuối; kho chưa ghi lúc tin đổi (contract Out of scope)"
-      migration: "không cột mới — dựng từ sale_offers.last_seen · listings.last_seen"
-      check: "không CHECK — timestamptz do collector ghi"
-      khai_bao: "data-api/src/contract/listing.ts (resource extension) và mục này"
-      dq: "data-api/test/listing-reso.test.ts (PB2-AC-1, AC-2, AC-5 so giá trị với dòng cấy)"
-    confidence:
-      tra_cuu: "DD 2.1 Property (742 field, research-local/reso/dd-2.1.json, generatedOn 2026-10-07) — tra 2026-11-27"
-      ly_do: "DD không có field độ tin của bộ đọc tin"
-      migration: "không cột mới — dựng từ sale_offers.confidence"
-      check: "giá trị high · medium · low do transform ghi; không CHECK riêng ở bảng (nhãn của parser)"
-      khai_bao: "data-api/src/contract/listing.ts (resource extension) và mục này"
-      dq: "data-api/test/listing-reso.test.ts (PB2-AC-1, AC-2, AC-5 so giá trị với dòng cấy)"
-    repostCount:
-      tra_cuu: "DD 2.1 Property (742 field, research-local/reso/dd-2.1.json, generatedOn 2026-10-07) — tra 2026-11-27"
-      ly_do: "DD không có field đếm số lần đăng lại cùng tin (gộp tin trùng là việc của OneHub)"
-      migration: "không cột mới — dựng từ sale_offers.n_reposts"
-      check: "integer ≥ 0 do transform đếm; không CHECK riêng"
-      khai_bao: "data-api/src/contract/listing.ts (resource extension) và mục này"
-      dq: "data-api/test/listing-reso.test.ts (PB2-AC-1, AC-2, AC-5 so giá trị với dòng cấy)"
-    listingTitle:
-      tra_cuu: "DD 2.1 Property (742 field, research-local/reso/dd-2.1.json, generatedOn 2026-10-07) — tra 2026-11-27"
-      ly_do: "DD 2.1 Property không có field tiêu đề tin (đã tra 742 field: không có *Title*); PublicRemarks là mô tả dài, khác nghĩa"
-      migration: "không cột mới — dựng từ listings.name"
-      check: "không CHECK — chữ của nguồn S01"
-      khai_bao: "data-api/src/contract/listing.ts (resource extension) và mục này"
-      dq: "data-api/test/listing-reso.test.ts (PB2-AC-1, AC-2, AC-5 so giá trị với dòng cấy)"
-    spaceType:
-      tra_cuu: "DD 2.1 Property (742 field, research-local/reso/dd-2.1.json, generatedOn 2026-10-07) — tra 2026-11-27"
-      ly_do: "DD không có loại chỗ ở thuê ngắn hạn (nguyên căn / phòng riêng / phòng chung); không dùng roomType vì trùng RoomType của DD (phòng bên trong căn)"
-      migration: "không cột mới — dựng từ listings.room_type"
-      check: "không CHECK — chữ của nguồn S01"
-      khai_bao: "data-api/src/contract/listing.ts (resource extension) và mục này"
-      dq: "data-api/test/listing-reso.test.ts (PB2-AC-1, AC-2, AC-5 so giá trị với dòng cấy)"
-    accommodates:
-      tra_cuu: "DD 2.1 Property (742 field, research-local/reso/dd-2.1.json, generatedOn 2026-10-07) — tra 2026-11-27"
-      ly_do: "DD không có field số khách tối đa (không có *Accommod*, *Guest*)"
-      migration: "không cột mới — dựng từ listings.accommodates"
-      check: "integer do transform-airbnb ghi; không CHECK riêng"
-      khai_bao: "data-api/src/contract/listing.ts (resource extension) và mục này"
-      dq: "data-api/test/listing-reso.test.ts (PB2-AC-1, AC-2, AC-5 so giá trị với dòng cấy)"
-    minimumNights:
-      tra_cuu: "DD 2.1 Property (742 field, research-local/reso/dd-2.1.json, generatedOn 2026-10-07) — tra 2026-11-27"
-      ly_do: "DD không có field số đêm tối thiểu (chỉ MinimumLeaseRate, MinimumDivisibleArea — khác nghĩa)"
-      migration: "không cột mới — dựng từ listings.minimum_nights"
-      check: "integer do transform-airbnb ghi; không CHECK riêng"
-      khai_bao: "data-api/src/contract/listing.ts (resource extension) và mục này"
-      dq: "data-api/test/listing-reso.test.ts (PB2-AC-1, AC-2, AC-5 so giá trị với dòng cấy)"
-    reviewCount:
-      tra_cuu: "DD 2.1 Property (742 field, research-local/reso/dd-2.1.json, generatedOn 2026-10-07) — tra 2026-11-27"
-      ly_do: "DD không có field số đánh giá (không có *Review*)"
-      migration: "không cột mới — dựng từ listings.review_count"
-      check: "integer do transform-airbnb ghi; không CHECK riêng"
-      khai_bao: "data-api/src/contract/listing.ts (resource extension) và mục này"
-      dq: "data-api/test/listing-reso.test.ts (PB2-AC-1, AC-2, AC-5 so giá trị với dòng cấy)"
-    occupancyRate:
-      tra_cuu: "DD 2.1 Property (742 field, research-local/reso/dd-2.1.json, generatedOn 2026-10-07) — tra 2026-11-27"
-      ly_do: "DD Property.OccupancyRate là phần diện tích đã cho thuê của toà (bất động sản cho thu nhập), không phải tỉ lệ đêm đã đặt — trùng tên khác nghĩa; đổi tên khoá cần Mạnh duyệt (hợp đồng AC-2 ghi tên này)"
-      migration: "không cột mới — dựng từ bảng nights (available) của tin, như /v1/listings/:id cũ"
-      check: "không cột mới; tính lúc đọc từ nights, giá trị 0–100"
-      khai_bao: "data-api/src/contract/listing.ts (resource extension) và mục này"
-      dq: "data-api/test/listing-reso.test.ts (PB2-AC-1, AC-2, AC-5 so giá trị với dòng cấy)"
-    averageDailyRevenue:
-      tra_cuu: "DD 2.1 Property (742 field, research-local/reso/dd-2.1.json, generatedOn 2026-10-07) — tra 2026-11-27"
-      ly_do: "DD không có chỉ số doanh thu theo đêm (không có *Revenue*, *Night*)"
-      migration: "không cột mới — dựng từ bảng nights (price của đêm đã đặt)"
-      check: "không cột mới; tính lúc đọc từ nights"
-      khai_bao: "data-api/src/contract/listing.ts (resource extension) và mục này"
-      dq: "data-api/test/listing-reso.test.ts (PB2-AC-1, AC-2, AC-5 so giá trị với dòng cấy)"
-    belowMedianPct:
-      tra_cuu: "DD 2.1 Property (742 field, research-local/reso/dd-2.1.json, generatedOn 2026-10-07) — tra 2026-11-27"
-      ly_do: "DD không có số so giá với nhóm tin cùng loại (không có *Median*, *Rank*)"
-      migration: "không cột mới — dựng từ offer_price_rank.duoi_trung_vi_pct (migration 104) hoặc thước CG8 v_ruler_p2"
-      check: "CHECK theo 420_price_rank.sql; route lọc trong khoảng 0–50"
-      khai_bao: "data-api/src/contract/listing.ts (resource extension) và mục này"
-      dq: "data-api/test/listing-reso.test.ts (PB2-AC-1, AC-2, AC-5 so giá trị với dòng cấy)"
-    comparableMedianPricePerArea:
-      tra_cuu: "DD 2.1 Property (742 field, research-local/reso/dd-2.1.json, generatedOn 2026-10-07) — tra 2026-11-27"
-      ly_do: "DD không có trung vị giá/m² của nhóm so sánh"
-      migration: "không cột mới — dựng từ offer_price_rank.trung_vi khi thuoc = 'gia-m2', hoặc v_ruler_p2.m"
-      check: "không CHECK riêng — số tính sẵn ở pipeline/sql"
-      khai_bao: "data-api/src/contract/listing.ts (resource extension) và mục này"
-      dq: "data-api/test/listing-reso.test.ts (PB2-AC-1, AC-2, AC-5 so giá trị với dòng cấy)"
-    priceRank:
-      tra_cuu: "DD 2.1 Property (742 field, research-local/reso/dd-2.1.json, generatedOn 2026-10-07) — tra 2026-11-27"
-      ly_do: "DD không có khối hạng giá trong nhóm so sánh"
-      migration: "không cột mới — dựng từ offer_price_rank (migration 104): cap, nut, n, trung_vi, p20, hang_pct, nhan, can_xac_minh, thuoc, pn_nhom, ly_do"
-      check: "CHECK của migration 104; route trả null khi không có dòng hạng"
-      khai_bao: "data-api/src/contract/listing.ts (resource extension) và mục này"
-      dq: "data-api/test/listing-reso.test.ts (PB2-AC-1, AC-2, AC-5 so giá trị với dòng cấy)"
-
-# --------------------------------------------------------------------------
 # LỚP NGUỒN — staging → canonical
 # --------------------------------------------------------------------------
 sources:
@@ -638,6 +532,7 @@ enums:
       - { code: direction_faces, label_vi: Hướng }   # DA40 (113): trục local direction_faces, tám mã
       - { code: lot_size_area, label_vi: Diện tích đất, dd_lookup: LotSizeArea }   # DA40 (113): nhà thấp tầng
       - { code: universal_property_id, label_vi: Toà của tin, dd_lookup: UniversalPropertyId }   # PL20 (117): resource Property, UPI của toà đang hoạt động (ADR-0016 §5)
+      - { code: universal_property_sub_id, label_vi: "Trục, căn của tin", dd_lookup: UniversalPropertySubId }   # PL36 (131): resource Property, «khoá trục:tầng» hay «khoá trục:*» (ADR-0016 §4)
   evidence_tier:
     term_vi: Lớp căn cứ
     dd_field: null
@@ -958,3 +853,164 @@ enums_lint_allow:
   - path: data-api/src/routes/listings.ts
     axis: kind
     reason: "CG9, PB2: data-api (subtree công khai) không có tệp hằng sinh; hằng KIND duy nhất của /v1/listings (đã gộp /v1/deals) kiểm giá trị tại chỗ"
+
+# Extension của API dữ liệu công khai (data-api) — khoá trả ra không có tương đương trong RESO DD 2.1. Mỗi mục đủ sáu
+# điều kiện ADR-0011 Qđ 3: tra (`dd: null` + `checked_on`), lý do (`rationale`), migration (`migration`), CHECK
+# (`check`), khai báo (`declared_in`), DQ (`dq`). Bộ đọc sổ từ vựng không đọc khối này.
+api_extensions:
+  property:  # PB6 data-api-property-danh-ba-nha — «Property» của OneHub là danh bạ nhà, không phải RESO Property (tin rao)
+    dd_version: "2.1"
+    checked_on: "2026-11-27"
+    keys:
+      projectId:
+        dd: null
+        rationale: "id nút dự án của kho (asset_nodes) để gọi ?project=; DD có SubdivisionName (tên) nhưng không có khoá dự án"
+        migration: "không cột mới — dựng từ asset_nodes.id"
+        check: "không có — asset_nodes.id là khoá chính bigint"
+        declared_in: data-api/src/contract/property.ts
+        dq: "data-api/test/properties.test.ts PB6-AC-1"
+      catalogTier:
+        dd: null
+        rationale: "bậc danh mục của toà (xac_minh · suy_ra_manh · mot_loi_khai, ADR-0016) — DD không có độ tin cậy của bản ghi vật thể"
+        migration: "không cột mới — dựng từ buildings.catalog_tier (migration 082)"
+        check: "buildings.catalog_tier CHECK IN ('xac_minh', 'suy_ra_manh', 'mot_loi_khai') (migration 082)"
+        declared_in: data-api/src/contract/property.ts
+        dq: "data-api/test/properties.test.ts PB6-AC-1"
+      unitCount:
+        dd: null
+        rationale: "số căn active của toà — DD Building không có đếm căn của danh bạ"
+        migration: "không cột mới — đếm units.status = 'active' theo building_key"
+        check: "không có — số đếm, luôn ≥ 0"
+        declared_in: data-api/src/contract/property.ts
+        dq: "data-api/test/properties.test.ts PB6-AC-1, PB6-AC-7"
+      activeListingCount:
+        dd: null
+        rationale: "số tin đang rao gắn toà (view offer_building, mức toà) — DD không có đếm tin theo toà"
+        migration: "không cột mới — dựng từ offer_building + sale_offers.offer_status, làm tươi 10 phút trong bộ nhớ"
+        check: "không có — số đếm, luôn ≥ 0"
+        declared_in: data-api/src/contract/property.ts
+        dq: "data-api/test/properties.test.ts PB6-AC-1"
+      unitKey:
+        dd: null
+        rationale: "khoá mờ unt_… của căn (ULID ngẫu nhiên); thay UniversalPropertySubId = <khoá trục>:<tầng> vì SubId cho dò tầng ra cả cột căn"
+        migration: "không cột mới — units.unit_key (migration 082)"
+        check: "units.unit_key CHECK ~ '^unt_[0-9A-HJKMNP-TV-Z]{26}$' (migration 082)"
+        declared_in: data-api/src/contract/property.ts
+        dq: "data-api/test/properties.test.ts PB6-AC-2, PB6-AC-5"
+    local_values:
+      stateOrProvince: "mã ISO 3166-2:VN (VN-HN, VN-SG, …) — lookup StateOrProvince của DD chỉ có bang Mỹ, Canada (ADR-0013 §4)"
+      city: "tên phường/xã — địa chỉ VN từ 07/2025 chỉ còn phường/xã + tỉnh (ADR-0013 §4)"
+    # Loại căn nội bộ (phát biểu property_type của Unit) → PropertySubType (StandardName DD 2.1). Bản sao ở
+    # data-api/src/contract/property.ts (PROPERTY_SUB_TYPE) — data-api đi kho công khai một mình nên không đọc tệp này;
+    # probe PB6 E8 giữ hai bản khớp và soát mọi giá trị thật trong DB.
+    property_sub_type:
+      apartment: "Condominium"
+      house: null        # Townhouse hay Single Family Residence chưa phân biệt được (khung §7, chờ Q7)
+      commercial: null   # DD tách Commercial ở PropertyType, không có SubType chung
+      land: "Unimproved Land"
+      unknown: null      # «chưa biết» không gửi ra API (ADR-0013 §8)
+      "": null
+  # --------------------------------------------------------------------------
+  # EXTENSION CỦA API — khoá phần tử Listing của data-api không có field DD 2.1 tương đương (danh sách khoá:
+  # data-api/src/contract/listing.ts, resource "extension"). Mỗi mục đủ sáu điều kiện ADR-0011 Quyết định 3:
+  # tra_cuu · ly_do · migration · check · khai_bao · dq. Không mục nào là cột mới.
+  # --------------------------------------------------------------------------
+  listing:
+    kind:
+      tra_cuu: "DD 2.1 Property (742 field, research-local/reso/dd-2.1.json, generatedOn 2026-10-07) — tra 2026-11-27"
+      ly_do: "DD phân biệt bán/thuê bằng PropertyType (Residential / Residential Lease) và không có loại thuê ngắn hạn; kind là bộ lọc chính một tài nguyên ba loại tin"
+      migration: "không cột mới — dựng từ sale_offers.kind; 'rent_st' cho bảng listings"
+      check: "CHECK sale_offers_kind_chk kind IN ('sale','rent_lt') (migration 025); 'rent_st' là hằng của route"
+      khai_bao: "data-api/src/contract/listing.ts (resource extension) và mục này"
+      dq: "data-api/test/listing-reso.test.ts (PB2-AC-1, AC-2, AC-5 so giá trị với dòng cấy)"
+    lastSeenTimestamp:
+      tra_cuu: "DD 2.1 Property (742 field, research-local/reso/dd-2.1.json, generatedOn 2026-10-07) — tra 2026-11-27"
+      ly_do: "ModificationTimestamp là lúc tin đổi, không phải lúc thấy cuối; kho chưa ghi lúc tin đổi (contract Out of scope)"
+      migration: "không cột mới — dựng từ sale_offers.last_seen · listings.last_seen"
+      check: "không CHECK — timestamptz do collector ghi"
+      khai_bao: "data-api/src/contract/listing.ts (resource extension) và mục này"
+      dq: "data-api/test/listing-reso.test.ts (PB2-AC-1, AC-2, AC-5 so giá trị với dòng cấy)"
+    confidence:
+      tra_cuu: "DD 2.1 Property (742 field, research-local/reso/dd-2.1.json, generatedOn 2026-10-07) — tra 2026-11-27"
+      ly_do: "DD không có field độ tin của bộ đọc tin"
+      migration: "không cột mới — dựng từ sale_offers.confidence"
+      check: "giá trị high · medium · low do transform ghi; không CHECK riêng ở bảng (nhãn của parser)"
+      khai_bao: "data-api/src/contract/listing.ts (resource extension) và mục này"
+      dq: "data-api/test/listing-reso.test.ts (PB2-AC-1, AC-2, AC-5 so giá trị với dòng cấy)"
+    repostCount:
+      tra_cuu: "DD 2.1 Property (742 field, research-local/reso/dd-2.1.json, generatedOn 2026-10-07) — tra 2026-11-27"
+      ly_do: "DD không có field đếm số lần đăng lại cùng tin (gộp tin trùng là việc của OneHub)"
+      migration: "không cột mới — dựng từ sale_offers.n_reposts"
+      check: "integer ≥ 0 do transform đếm; không CHECK riêng"
+      khai_bao: "data-api/src/contract/listing.ts (resource extension) và mục này"
+      dq: "data-api/test/listing-reso.test.ts (PB2-AC-1, AC-2, AC-5 so giá trị với dòng cấy)"
+    listingTitle:
+      tra_cuu: "DD 2.1 Property (742 field, research-local/reso/dd-2.1.json, generatedOn 2026-10-07) — tra 2026-11-27"
+      ly_do: "DD 2.1 Property không có field tiêu đề tin (đã tra 742 field: không có *Title*); PublicRemarks là mô tả dài, khác nghĩa"
+      migration: "không cột mới — dựng từ listings.name"
+      check: "không CHECK — chữ của nguồn S01"
+      khai_bao: "data-api/src/contract/listing.ts (resource extension) và mục này"
+      dq: "data-api/test/listing-reso.test.ts (PB2-AC-1, AC-2, AC-5 so giá trị với dòng cấy)"
+    spaceType:
+      tra_cuu: "DD 2.1 Property (742 field, research-local/reso/dd-2.1.json, generatedOn 2026-10-07) — tra 2026-11-27"
+      ly_do: "DD không có loại chỗ ở thuê ngắn hạn (nguyên căn / phòng riêng / phòng chung); không dùng roomType vì trùng RoomType của DD (phòng bên trong căn)"
+      migration: "không cột mới — dựng từ listings.room_type"
+      check: "không CHECK — chữ của nguồn S01"
+      khai_bao: "data-api/src/contract/listing.ts (resource extension) và mục này"
+      dq: "data-api/test/listing-reso.test.ts (PB2-AC-1, AC-2, AC-5 so giá trị với dòng cấy)"
+    accommodates:
+      tra_cuu: "DD 2.1 Property (742 field, research-local/reso/dd-2.1.json, generatedOn 2026-10-07) — tra 2026-11-27"
+      ly_do: "DD không có field số khách tối đa (không có *Accommod*, *Guest*)"
+      migration: "không cột mới — dựng từ listings.accommodates"
+      check: "integer do transform-airbnb ghi; không CHECK riêng"
+      khai_bao: "data-api/src/contract/listing.ts (resource extension) và mục này"
+      dq: "data-api/test/listing-reso.test.ts (PB2-AC-1, AC-2, AC-5 so giá trị với dòng cấy)"
+    minimumNights:
+      tra_cuu: "DD 2.1 Property (742 field, research-local/reso/dd-2.1.json, generatedOn 2026-10-07) — tra 2026-11-27"
+      ly_do: "DD không có field số đêm tối thiểu (chỉ MinimumLeaseRate, MinimumDivisibleArea — khác nghĩa)"
+      migration: "không cột mới — dựng từ listings.minimum_nights"
+      check: "integer do transform-airbnb ghi; không CHECK riêng"
+      khai_bao: "data-api/src/contract/listing.ts (resource extension) và mục này"
+      dq: "data-api/test/listing-reso.test.ts (PB2-AC-1, AC-2, AC-5 so giá trị với dòng cấy)"
+    reviewCount:
+      tra_cuu: "DD 2.1 Property (742 field, research-local/reso/dd-2.1.json, generatedOn 2026-10-07) — tra 2026-11-27"
+      ly_do: "DD không có field số đánh giá (không có *Review*)"
+      migration: "không cột mới — dựng từ listings.review_count"
+      check: "integer do transform-airbnb ghi; không CHECK riêng"
+      khai_bao: "data-api/src/contract/listing.ts (resource extension) và mục này"
+      dq: "data-api/test/listing-reso.test.ts (PB2-AC-1, AC-2, AC-5 so giá trị với dòng cấy)"
+    occupancyRate:
+      tra_cuu: "DD 2.1 Property (742 field, research-local/reso/dd-2.1.json, generatedOn 2026-10-07) — tra 2026-11-27"
+      ly_do: "DD Property.OccupancyRate là phần diện tích đã cho thuê của toà (bất động sản cho thu nhập), không phải tỉ lệ đêm đã đặt — trùng tên khác nghĩa; đổi tên khoá cần Mạnh duyệt (hợp đồng AC-2 ghi tên này)"
+      migration: "không cột mới — dựng từ bảng nights (available) của tin, như /v1/listings/:id cũ"
+      check: "không cột mới; tính lúc đọc từ nights, giá trị 0–100"
+      khai_bao: "data-api/src/contract/listing.ts (resource extension) và mục này"
+      dq: "data-api/test/listing-reso.test.ts (PB2-AC-1, AC-2, AC-5 so giá trị với dòng cấy)"
+    averageDailyRevenue:
+      tra_cuu: "DD 2.1 Property (742 field, research-local/reso/dd-2.1.json, generatedOn 2026-10-07) — tra 2026-11-27"
+      ly_do: "DD không có chỉ số doanh thu theo đêm (không có *Revenue*, *Night*)"
+      migration: "không cột mới — dựng từ bảng nights (price của đêm đã đặt)"
+      check: "không cột mới; tính lúc đọc từ nights"
+      khai_bao: "data-api/src/contract/listing.ts (resource extension) và mục này"
+      dq: "data-api/test/listing-reso.test.ts (PB2-AC-1, AC-2, AC-5 so giá trị với dòng cấy)"
+    belowMedianPct:
+      tra_cuu: "DD 2.1 Property (742 field, research-local/reso/dd-2.1.json, generatedOn 2026-10-07) — tra 2026-11-27"
+      ly_do: "DD không có số so giá với nhóm tin cùng loại (không có *Median*, *Rank*)"
+      migration: "không cột mới — dựng từ offer_price_rank.duoi_trung_vi_pct (migration 104) hoặc thước CG8 v_ruler_p2"
+      check: "CHECK theo 420_price_rank.sql; route lọc trong khoảng 0–50"
+      khai_bao: "data-api/src/contract/listing.ts (resource extension) và mục này"
+      dq: "data-api/test/listing-reso.test.ts (PB2-AC-1, AC-2, AC-5 so giá trị với dòng cấy)"
+    comparableMedianPricePerArea:
+      tra_cuu: "DD 2.1 Property (742 field, research-local/reso/dd-2.1.json, generatedOn 2026-10-07) — tra 2026-11-27"
+      ly_do: "DD không có trung vị giá/m² của nhóm so sánh"
+      migration: "không cột mới — dựng từ offer_price_rank.trung_vi khi thuoc = 'gia-m2', hoặc v_ruler_p2.m"
+      check: "không CHECK riêng — số tính sẵn ở pipeline/sql"
+      khai_bao: "data-api/src/contract/listing.ts (resource extension) và mục này"
+      dq: "data-api/test/listing-reso.test.ts (PB2-AC-1, AC-2, AC-5 so giá trị với dòng cấy)"
+    priceRank:
+      tra_cuu: "DD 2.1 Property (742 field, research-local/reso/dd-2.1.json, generatedOn 2026-10-07) — tra 2026-11-27"
+      ly_do: "DD không có khối hạng giá trong nhóm so sánh"
+      migration: "không cột mới — dựng từ offer_price_rank (migration 104): cap, nut, n, trung_vi, p20, hang_pct, nhan, can_xac_minh, thuoc, pn_nhom, ly_do"
+      check: "CHECK của migration 104; route trả null khi không có dòng hạng"
+      khai_bao: "data-api/src/contract/listing.ts (resource extension) và mục này"
+      dq: "data-api/test/listing-reso.test.ts (PB2-AC-1, AC-2, AC-5 so giá trị với dòng cấy)"

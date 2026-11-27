@@ -27,7 +27,7 @@ const urlDb = (db) => { const u = new URL(QUAN); u.pathname = `/${db}`; return u
 const DUONG = [
   ["/health", 200], ["/v1/listings?kind=sale", 200, 1], ["/v1/listings?kind=rent_lt", 200, 1], ["/v1/listings?kind=rent_st", 200, 1],
   ["/v1/listings?minBelowMedianPct=0", 200, 1], ["/v1/markets", 200], ["/v1/markets/vn-hanoi", 200], ["/v1/markets/vn-hanoi/submarkets", 200],
-  ["/v1/markets/vn-hanoi/insights", 200], ["/v1/price-stats?market=vn-hanoi", 200], ["/v1/coverage", 200], ["/v1/deals", 410], ["/v1/asset-stats", 410],
+  ["/v1/markets/vn-hanoi/insights", 410], ["/v1/price-stats?market=vn-hanoi", 200], ["/v1/coverage", 200], ["/v1/deals", 410], ["/v1/asset-stats", 410],
 ];
 
 /** Gọi các đường trên một DB; trả [{duong, status, n}]. */
