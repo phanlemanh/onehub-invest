@@ -232,11 +232,17 @@ test("E6 AC-6 xét hạn không cần lượt: xet_han_ghi_tam rút lô quá h�
 });
 
 const MIG_DIR = join(import.meta.dirname, "../../db/migrations");
-/** Thân revert_enrichment bản 066 nguyên văn — giả lập ngày 066 được áp lên máy thu SAU 129. */
-async function revert066(): Promise<string> {
+/**
+ * Phần hàm của 066 nguyên văn (mục 1–3: tin_that_su_chung, apply_enrichment, revert_enrichment) — giả lập ngày 066 được áp
+ * lên máy thu SAU 129. Nạp trọn phần hàm chứ không riêng thân revert_enrichment: thân đó gọi tin_that_su_chung, mà DB mẫu
+ * lượt và DB máy thu (chưa áp 066) không có — ca phải tự dựng đủ tiền đề (probe M5 @fe6c96e69, lỗi 42883). Mục 4 sửa dữ
+ * liệu bỏ ra, đúng lệ HAM_066 của pipeline/lib/nap-045.mjs.
+ */
+async function ham066(): Promise<string> {
   const t = await readFile(join(MIG_DIR, "066_can_theo_tin.sql"), "utf8");
-  const i = t.indexOf("CREATE OR REPLACE FUNCTION revert_enrichment");
-  return t.slice(i, t.indexOf("$$;", t.indexOf("AS $$", i)) + 3);
+  const i = t.indexOf("-- 4. Sửa dữ liệu một lần");
+  assert.ok(i > 0 && t.includes("FUNCTION tin_that_su_chung") && t.includes("FUNCTION revert_enrichment"), "AC-6 tiền đề: 066 đổi khuôn");
+  return t.slice(0, i);
 }
 test("E6 AC-6 bẫy thứ tự 066: áp 066 sau 129 làm mất bản vá → rút bằng actor máy bị từ chối nguyên khối, lượt báo lỗi và vẫn dừng trường; chạy lại 129 thì rút được", async () => {
   await withTx(async (c) => {
@@ -244,7 +250,9 @@ test("E6 AC-6 bẫy thứ tự 066: áp 066 sau 129 làm mất bản vá → rú
     await loBa(c, runId);
     const ma = `${runId}:block_raw`;
     await c.query(`UPDATE ghi_tam_lo SET han_do_bu = current_date - 1 WHERE ma = $1`, [ma]);
-    await c.query(await revert066());
+    await c.query(await ham066());
+    assert.equal(Number((await c.query(`SELECT count(*) FROM pg_proc WHERE proname = 'tin_that_su_chung'`)).rows[0].count), 1,
+      "AC-6 tiền đề: nạp 066 mà thiếu tin_that_su_chung");
     const vaCon = async () => (await c.query(`SELECT prosrc ~ '129 \\(NB10 Hỏi-4\\)' AS co FROM pg_proc WHERE proname = 'revert_enrichment'`)).rows[0].co;
     assert.equal(await vaCon(), false, "AC-6 tiền đề: nạp 066 phải làm mất bản vá 129");
     await c.query("SAVEPOINT s");

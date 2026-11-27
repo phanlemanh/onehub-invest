@@ -86,3 +86,5 @@ câu đếm của AC-4 trên DB máy thu sau khi áp: giá trị tự ghi có l�
 ## Known limits
 
 ## Notes
+
+- Thứ tự với 066 (GS phán 2026-11-27 sau probe M5 @fe6c96e69): 066 có trên `main` nhưng CHƯA áp DB máy thu (nợ GS trình Mạnh đường gỡ E7). 129 vá thân hàm đang chạy nên không phụ thuộc 066; ca E6 «bẫy thứ tự 066» tự nạp phần hàm của 066 (mục 1–3) vào DB lượt trước khi đo.
