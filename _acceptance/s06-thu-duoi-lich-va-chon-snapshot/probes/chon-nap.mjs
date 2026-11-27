@@ -169,6 +169,25 @@ try {
     `DUNG HAN KHI TAT: dấu dừng ${existsSync(DUNG_HAN)} · dấu nghỉ ${existsSync(BI_CHAN)}`);
   for (const f of [BI_CHAN, DUNG_HAN, LAN_CHAN]) rmSync(f, { force: true });
 
+  // --- ba giá trị Mạnh duyệt ở Cổng Phạm vi 27/11 là MẶC ĐỊNH: không đặt biến THU_DUOI_S06_* nào ---
+  const vMdChan = vong("mac-dinh-chan-1", { STUB_RC: "3" });
+  let hetMd = NaN;
+  try { hetMd = Date.parse(JSON.parse(readFileSync(BI_CHAN, "utf8")).hetLuc); } catch { /* không có dấu */ }
+  const phutMd = (hetMd - Date.now()) / 60_000;
+  ok(vMdChan.rc === 3 && phutMd >= 58 && phutMd <= 62, "mac dinh nghi sau chan: 60 phut",
+    `NGHI MAC DINH SAI: exit ${vMdChan.rc} · ${Number.isNaN(phutMd) ? "(không có dấu)" : phutMd.toFixed(1) + " phút"}`);
+  const gMdChan = vungGoi(vMdChan);
+  ok(gMdChan.length === 1 && gMdChan[0] === "hcmc", "mac dinh khi chan: chi goi hcmc",
+    `VUNG MAC DINH SAI: gọi ${gMdChan.join(", ") || "(không vùng nào)"}`);
+  rmSync(BI_CHAN, { force: true });
+  const vMdHai = vong("mac-dinh-chan-2", { STUB_RC: "3" }); // lan-chan.json còn từ vòng trước, trong 24 giờ
+  ok(vMdHai.rc === 3 && existsSync(DUNG_HAN), "mac dinh luat lan hai: bat",
+    `LUAT LAN HAI MAC DINH TAT: exit ${vMdHai.rc} · dấu dừng ${existsSync(DUNG_HAN)}`);
+  for (const f of [BI_CHAN, DUNG_HAN, LAN_CHAN]) rmSync(f, { force: true });
+  const plist = readFileSync(join(ROOT, "pipeline/cron/com.oneinvest.thu-duoi-s06.plist"), "utf8");
+  const de = ["EnvironmentVariables", "THU_DUOI_S06_VUNG", "THU_DUOI_S06_NGHI_SAU_CHAN_PHUT", "THU_DUOI_S06_DUNG_LAN_HAI"].filter((k) => plist.includes(k));
+  ok(de.length === 0, "khuon plist: khong de ba gia tri", `PLIST DE GIA TRI: ${de.join(", ")}`);
+
   for (const ma of [4, 5]) {
     const v = vong(`ma-${ma}`, { STUB_RC: String(ma) });
     ok(v.rc === ma && v.nap.length === 0 && !existsSync(join(T, "state/thu-duoi-s06.lock")),

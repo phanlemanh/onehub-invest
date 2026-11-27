@@ -1,5 +1,5 @@
 {
- "feature_plain": "Tin S06 mới đăng được thu và vào kho tạm mỗi 5 phút thay vì chờ lượt quét đủ hai lần một ngày, để gần thước «đăng → Invest» 30 phút. Vòng này chỉ đưa mã vào, chưa bật lịch. Giới hạn vùng (mặc định chỉ hcmc) và nghỉ sau khi bị chặn (mặc định 30 phút) nay đã có trong mã; bị chặn lần hai trong 24 giờ thì dừng hẳn tới khi người gỡ dấu (bật mặc định, tắt được). Câu trả lời Hỏi-3 chỉ là đặt số phút và bật/tắt luật lần hai khi cài lịch. Việc này chỉ gộp sau KEV1. Đã đo: chọn-nạp trên bộ nạp thật xanh trên bản mới (không nạp lại gói đã nạp, dữ liệu không lùi) và đỏ trên bản cũ.",
+ "feature_plain": "Tin S06 mới đăng được thu và vào kho tạm mỗi 5 phút thay vì chờ lượt quét đủ hai lần một ngày, để gần thước «đăng → Invest» 30 phút. Vòng này chỉ đưa mã vào, chưa bật lịch. Ba giá trị anh duyệt ở Cổng Phạm vi nay là mặc định của mã: chỉ một vùng (hcmc), nghỉ 60 phút sau khi bị chặn, bị chặn lần hai trong 24 giờ thì dừng hẳn tới khi người gỡ dấu; người cài lịch không phải đặt gì. Việc này chỉ gộp sau KEV1. Đã đo: chọn-nạp trên bộ nạp thật xanh trên bản mới và đỏ trên bản cũ; đổi một trong ba giá trị là đỏ.",
  "will_do": [
   {
    "id": "AC-1",
