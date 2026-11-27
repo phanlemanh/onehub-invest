@@ -82,6 +82,7 @@ executors:
     dapi_drl: "bash db/db-thu.sh oneinvest_suite_dapi --chay sh -c 'cd data-api && node --import tsx --test --test-reporter=spec --test-concurrency=1 test/dong-ba-route.test.ts'"   # data-api-dong-ba-route-lo E1–E5 — ba đường trên lược đồ thật, có dòng canh ở bảng cấm
     dapi_khoa: "bash db/db-thu.sh oneinvest_suite_dapi --chay sh -c 'cd data-api && node --import tsx --test --test-reporter=spec --test-concurrency=1 test/auth-dong.test.ts'"   # data-api-dong-khi-thieu-khoa E1–E6 — đóng khi thiếu khoá, ma trận môi trường × khoá × đường
     dapi_khoa_toan: "bash db/db-thu.sh oneinvest_suite_dapi --chay sh -c 'cd data-api && node --import tsx --test --test-reporter=spec --test-concurrency=1 test/*.test.ts'"   # data-api-dong-khi-thieu-khoa E11 — mọi test data-api chung một lượt (HT19 không gãy vì đóng mặc định)
+    dapi_mk: "bash db/db-thu.sh oneinvest_suite_dapi_mk --chay sh -c 'cd data-api && node --import tsx --test --test-reporter=spec --test-concurrency=1 test/markets-khong-s02.test.ts test/dong-ba-route.test.ts test/auth-dong.test.ts'"   # data-api-markets-khong-doc-s02 E1–E5 — bốn đường markets không S02, rào tĩnh; cùng lượt test cũ của data-api
     app_ui: "cd app && npm test"                     # test render jsdom (app/tests); npm test tự chạy trên DB của riêng lượt (db/db-thu.sh --chay)
     ui_lint_rules: "cd app && npm run test:lint-rules"   # plugin lint onehub-ui (RuleTester + script kèm)
     ui_routes_map: "cd app && node --test eslint-plugin-onehub-ui/tests/routes-map.test.mjs"
@@ -523,6 +524,8 @@ executors:
     dapi_drl_pham_vi: "node _acceptance/data-api-dong-ba-route-lo/probes/pham-vi.mjs"   # data-api-dong-ba-route-lo E8, E10 — phạm vi tệp, khoá config, tên nguồn thật
     dapi_khoa_pha: "node _acceptance/data-api-dong-khi-thieu-khoa/probes/pha.mjs"   # data-api-dong-khi-thieu-khoa E7 — auth.ts, index.ts của merge-base phải đỏ đúng ca ghim
     dapi_khoa_pham_vi: "node _acceptance/data-api-dong-khi-thieu-khoa/probes/pham-vi.mjs"   # data-api-dong-khi-thieu-khoa E8 — phạm vi tệp, khoá config, tên nguồn thật
+    dapi_mk_cu: "bash db/db-thu.sh oneinvest_suite_dapi_mk --chay node _acceptance/data-api-markets-khong-doc-s02/probes/ban-cu.mjs"   # data-api-markets-khong-doc-s02 E6 — markets.ts của merge-base đỏ đủ năm ca
+    dapi_mk_ranh: "sh -c 'cd data-api && node --import tsx ../_acceptance/data-api-markets-khong-doc-s02/probes/ranh.mjs'"   # data-api-markets-khong-doc-s02 E7 — ranh giới, chữ cấm README/openapi, typecheck, lưới tên nguồn
     nntd_do: "node _acceptance/ngoai-n-tu-dinh-tuyen-bat/do-mo-phong.mjs"   # ngoai-n-tu-dinh-tuyen-bat: dựng lại 9 hồ sơ đã ký (mốc d2b4beaf) về trước Cổng 2, chạy dinh-tuyen-may.cjs của kit với config thật
     nntd_luoi: "! bash scripts/pre-merge-check.sh . --base origin/main 2>&1 | grep '^VIOLATION' | grep -vF 'VIOLATION [ngoai-n-tu-dinh-tuyen-bat]'"   # ngoai-n-tu-dinh-tuyen-bat AC-8 — lưới trước-gộp không có vi phạm nào ngoài dòng chờ của chính hồ sơ
     gta_luoi: "! bash scripts/pre-merge-check.sh . --base origin/main 2>&1 | grep '^VIOLATION' | grep -vF 'VIOLATION [goi-thang-anthropic]'"   # goi-thang-anthropic E13
