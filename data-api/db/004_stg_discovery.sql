@@ -1,4 +1,4 @@
--- 004_stg_discovery.sql — staging output của airbnb-discovery (listing-ref)
+-- 004_stg_discovery.sql — staging output của s01-discovery (listing-ref)
 CREATE TABLE IF NOT EXISTS stg_abnb_discovery (
   listing_id   text NOT NULL,
   snapshot_id  text NOT NULL REFERENCES airbnb_snapshots(snapshot_id) ON DELETE CASCADE,

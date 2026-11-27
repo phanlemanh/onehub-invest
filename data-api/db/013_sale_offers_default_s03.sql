@@ -7,7 +7,7 @@
 ALTER TABLE sale_offers ALTER COLUMN source SET DEFAULT 'S03';
 
 ALTER TABLE source_registry ADD COLUMN IF NOT EXISTS source_ids text[] NOT NULL DEFAULT '{}';
-UPDATE source_registry SET source_ids = '{airbnb-discovery,airbnb-listing}'          WHERE code = 'S01';
-UPDATE source_registry SET source_ids = '{airdna-research}'                           WHERE code = 'S02';
-UPDATE source_registry SET source_ids = '{zalo-mock,zalo-groups}'                     WHERE code = 'S03';
-UPDATE source_registry SET source_ids = '{osm-boundaries}'                            WHERE code = 'S04';
+UPDATE source_registry SET source_ids = '{s01-discovery,s01-listing}'          WHERE code = 'S01';
+UPDATE source_registry SET source_ids = '{s02-research}'                           WHERE code = 'S02';
+UPDATE source_registry SET source_ids = '{s03-mock,s03-groups}'                     WHERE code = 'S03';
+UPDATE source_registry SET source_ids = '{s04-boundaries}'                            WHERE code = 'S04';
