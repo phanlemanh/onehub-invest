@@ -13,7 +13,7 @@ import { recordCallDb, soToken, tenLop, type RecordCall } from "../runtime/ai-ca
 import { getModel } from "../runtime/models.js";
 import { KIND, LISTING_INTENT, PROPERTY_TYPE } from "../vocab.generated.js";
 import { kiemTrichLoai, trichCoThat } from "./luat-trich-dan.js";
-import { ganLo, oDangDung } from "./ghi-tam/lo.js";
+import { ganLo, oDangDung, truongQuaHan } from "./ghi-tam/lo.js";
 import { routeFields, type EnrichField, type Routed } from "./route.js";
 import { catChu, giaoDichSavepoint, heldFields, syncReview, type GiaoDich, type ResolveFn } from "./run.js";
 
@@ -319,7 +319,10 @@ export async function chayLuot(o: {
       const ap: number[] = [];
       /** NB10: đề xuất corroborated sắp áp, theo trường — ghi tạm, gắn lô trước apply_enrichment (AC-3). */
       const ghiTamIds = new Map<EnrichField, number[]>();
+      // NB10 AC-6: lô dang-ghi quá hạn đo bù mà chưa ai rút (lượt đêm chưa chạy, chưa gõ --het-han) vẫn dừng trường ở đây.
+      // Lượt này không rút lô — rút là việc của lượt đêm hay lệnh --het-han; ở đây chỉ không ghi thêm.
       const oDung = await oDangDung(c);
+      for (const f of await truongQuaHan(c)) oDung.add(f);
       for (const d0 of q.de_xuat) {
         // Ô đang dừng tự ghi (lô quá hạn hay đo bù không đạt): đề xuất có căn cứ lên thẻ thay vì áp (NB10 AC-6).
         const d = d0.route === "corroborated" && d0.status === "queued" && oDung.has(d0.field)

@@ -231,6 +231,32 @@ test("E6 AC-6 xét hạn không cần lượt: xet_han_ghi_tam rút lô quá h�
   });
 });
 
+test("E6 AC-6 lượt đọc toàn bộ: lô loại hình quá hạn chưa rút thì không ghi tạm loại hình, đề xuất lên thẻ", async () => {
+  await withTx(async (c) => {
+    await c.query(await readFile(join(import.meta.dirname, "../../db/migrations/065_silver_labels.sql"), "utf8"));
+    const runId = `enrich-nb10-e6d-${seq}`;
+    await loBa(c, runId);
+    await c.query(`UPDATE ghi_tam_lo SET han_do_bu = current_date - 1 WHERE ma = $1`, [`${runId}:property_type`]);
+    await c.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ($1, 'hanoi', 'zalo-agent', '{}') ON CONFLICT (snapshot_id) DO NOTHING`, [SNAP_DTB]);
+    const post = `t_nb10_dtb6_${process.pid}`;
+    const chu = "Chính chủ bán căn hộ 2PN Times City giá 3 tỷ";
+    await c.query(`INSERT INTO stg_zalo_posts (post_id, snapshot_id, agent_id, group_name, conversation_id, text, posted_at)
+      VALUES ($1, $2, 'openclaw-hook', 'Nhóm NB10', 'nb10', $3, '2026-11-26T08:00:00Z')`, [post, SNAP_DTB, chu]);
+    const id = `t_nb10_dtb6_${process.pid}`;
+    await insertOffer(c, { offer_id: id, property_type: "unknown", post_ids: [post] });
+    const hoi = async (ch: string): Promise<Nhan> => {
+      const p = docTraLoi(traLoiDoc({ quote: "Chính chủ bán", property_type: "apartment", quote_loai: "bán căn hộ 2PN" }), ch);
+      return { model: "gateway:anthropic/claude-haiku-5.5", ...p, error_kind: null, latency_ms: 1, cost_usd: 0.001 };
+    };
+    const dtb = `nb10-dtb6-${seq}`;
+    await chayLuot({ client: c, runId: dtb, tranUsd: 3, tranThe: 500, thu: false, cam: [], chiTin: [id], hoi, resolve: async () => ctx({ matchedBy: "" }) });
+    const ds = await deXuat(c, id, "property_type");
+    assert.ok(ds.every((d) => !(d.status === "applied" && d.ghi_tam)), "AC-6 đọc toàn bộ vẫn ghi tạm loại hình khi lô quá hạn");
+    assert.equal((await dongTin(c, id)).property_type, "unknown", "AC-6 đọc toàn bộ đổi ô loại hình khi lô quá hạn");
+    assert.equal(await lo(c, `${dtb}:property_type`), undefined, "AC-6 đọc toàn bộ mở lô mới cho trường quá hạn");
+  });
+});
+
 const MIG_DIR = join(import.meta.dirname, "../../db/migrations");
 /**
  * Phần hàm của 066 nguyên văn (mục 1–3: tin_that_su_chung, apply_enrichment, revert_enrichment) — giả lập ngày 066 được áp

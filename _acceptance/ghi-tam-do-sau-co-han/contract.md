@@ -88,3 +88,4 @@ câu đếm của AC-4 trên DB máy thu sau khi áp: giá trị tự ghi có l�
 ## Notes
 
 - Thứ tự với 066 (GS phán 2026-11-27 sau probe M5 @fe6c96e69): 066 có trên `main` nhưng CHƯA áp DB máy thu (nợ GS trình Mạnh đường gỡ E7). 129 vá thân hàm đang chạy nên không phụ thuộc 066; ca E6 «bẫy thứ tự 066» tự nạp phần hàm của 066 (mục 1–3) vào DB lượt trước khi đo.
+- Vòng 1 trên M5 @2469d5342 (BLOCKED vì suite, không tính vòng), GS phán 2026-11-27: (a) finding AC-6 — lượt đọc toàn bộ không xét hạn đo bù, vẫn ghi tạm vào trường có lô quá hạn chưa rút — vá trong hàng này: lượt đọc toàn bộ coi trường quá hạn là ô dừng (không rút lô; rút là việc lượt đêm hay `--het-han`), thêm ca E6 và đột biến «đọc toàn bộ bỏ xét quá hạn»; (b) chỗ yếu của phép đo độc lập theo nhãn (`DAU_DAP_AN_LUAT`) — mở hợp đồng mới: NB13 «phép đo độc lập kiểm theo giá trị»; (c) trần 30′ của `pipeline_that` là việc kit/config (HT37), hồ sơ không khai `long_running`.
