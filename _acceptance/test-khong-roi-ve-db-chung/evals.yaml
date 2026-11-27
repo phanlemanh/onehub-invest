@@ -68,16 +68,16 @@ evals:
   - id: E7c
     criterion: AC-7
     executor: script
-    cmd: config:executors.script.s08l_do
-    expected: "exit 0; ba tệp của s08l_do trên DB của riêng lượt, 0 fail"
+    cmd: config:executors.script.ht35_s08l_vai
+    expected: "exit 0; «PASS s08l_do 3 tệp · tests N · pass N-k · bỏ có tên k ca chỉ máy thu (vai …)» trên DB của riêng lượt, 0 fail. Tệp đọc từ khoá executors.script.s08l_do (không chép tay). Ca chỉ máy thu đi qua cơ chế HT33: mục ci-bo-qua.json mang may_thu bị bỏ có tên CHỈ khi vai máy (hai-may.env) là may-phat-trien — trên M5 k = 1 (ON22-AC-10), trên máy thu k = 0 và ca chạy thật; ca đã gọi tên mà vẫn có dòng ✔/✖, ca bỏ qua ngoài danh sách, hay mục ci-bo-qua lệch tệp → FAIL (S4 r1: E7c đỏ trên M5 vì chạy cả ca chỉ máy thu)"
     paths: ["_acceptance/config.yaml", "scripts/check-freshness.test.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E7d
     criterion: AC-7
-    executor: test
-    cmd: config:executors.test.scripts
-    expected: "exit 0; trọn scripts/*.test.mjs trên DB của riêng lượt (bản chép db-thu), 0 fail. Đây là chứng việc bọc không làm đỏ các hồ sơ đã ký trỏ khoá này; ghi số tests/pass để so với job scripts của soát M5 (653 pass @1a2cb6a43)"
+    executor: script
+    cmd: config:executors.script.ht35_scripts_doi_chung
+    expected: "exit 0; trọn scripts/*.test.mjs chạy ở HEAD và ở cây gốc (merge-base với origin/main, worktree tạm, cùng máy), mỗi phía DB của riêng lượt; «PASS tập ca đỏ HEAD = gốc (k ca, baseline red), HEAD pass …/…». Baseline red có tên: 2 ca NK-AC-1 (so-nguon-kho.test.mjs so cột tầng A với bảng cứng, đỏ trên mọi bản chép DB thật — sửa ở HT38, xem Notes). Ca đỏ mới ở HEAD, ca đỏ ở gốc mà HEAD hết đỏ, hay một phía chết giữa chừng → exit 1 gọi tên (S4 r1: E7d 702/705 trên M5, đỏ đúng 2 ca NK-AC-1)"
     paths: ["_acceptance/config.yaml", "scripts/check-freshness.test.mjs", "pipeline/lib/db-thu-chot.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 

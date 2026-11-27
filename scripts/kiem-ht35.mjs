@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 // kiem-ht35.mjs — ba phép đo tĩnh của hồ sơ test-khong-roi-ve-db-chung (HT35), chỉ đọc kho, không nối DB.
 //   bash db/db-thu.sh oneinvest_suite_ht35 --chay node scripts/kiem-ht35.mjs chay [--ci]   AC-3/AC-5: chạy thật, 0 fail, 0 bỏ qua
+//   bash db/db-thu.sh oneinvest_suite_freshness --chay node scripts/kiem-ht35.mjs s08l   AC-7 E7c: s08l_do, ca chỉ máy thu theo HT33
+//   node scripts/kiem-ht35.mjs scripts-doi-chung   AC-7 E7d: scripts/*.test.mjs, tập ca đỏ HEAD = cây gốc (baseline red)
 //   node scripts/kiem-ht35.mjs s09-vung         AC-6: tệp S09 khác gốc hàng chỉ ở vùng chọn DB
 //   node scripts/kiem-ht35.mjs executor-db-thu  AC-7: bốn lệnh chấm chạy check-freshness.test đều qua db/db-thu.sh --chay
 //   node scripts/kiem-ht35.mjs bang-phu         AC-8: bảng phủ khớp tập tệp quét lại từ kho, mỗi dòng có ô, thiết kế nêu A–B
@@ -138,7 +140,97 @@ function chay() {
   else dat(`${TEP_CHAY.length} tệp chạy đủ ${pass} ca${ci ? " khi CI=true" : ""}`);
 }
 
-const lenh = { chay, "s09-vung": s09Vung, "executor-db-thu": executorDbThu, "bang-phu": bangPhu }[process.argv[2]];
-if (!lenh) { console.error("dùng: kiem-ht35.mjs chay [--ci]|s09-vung|executor-db-thu|bang-phu"); process.exit(2); }
-lenh();
+// AC-7 (E7c): chạy đúng các tệp của khoá executors.script.s08l_do (đọc từ config.yaml, không chép tay) trên DB của lượt.
+// Ca chỉ máy thu đi qua CƠ CHẾ HT33 như pipeline/chay-that.mjs: mục ci-bo-qua.json mang `may_thu` bị bỏ CÓ TÊN chỉ khi
+// vai máy (hai-may.env, không từ CI) là máy phát triển; máy thu — kể cả khi không đọc được vai — chạy đủ. Không thêm ngoại lệ.
+async function s08l() {
+  const url = process.env.DATABASE_URL ?? "";
+  if (!/\/oneinvest_suite_[a-z0-9_]+(\?|$)/.test(url)) { console.error("kiem-ht35 s08l: cần DATABASE_URL của db/db-thu.sh … --chay"); process.exit(2); }
+  const dongKhoa = doc("_acceptance/config.yaml").split("\n").find((l) => /^\s+s08l_do:\s/.test(l)) ?? "";
+  const tep = [...dongKhoa.matchAll(/(?:^|\s)((?:pipeline\/)?scripts\/[\w.-]+\.test\.mjs)/g)].map((m) => m[1]);
+  if (!tep.length) { sai("không đọc được tệp của executors.script.s08l_do"); return; }
+  const { VAI_PHAT_TRIEN, vaiMay } = await import("./lib/vai-may.mjs");
+  const { DANH_SACH, loiDanhSach } = await import("./lib/ci-can-du-lieu.mjs");
+  const ds = Object.values(JSON.parse(readFileSync(DANH_SACH, "utf8"))).flat().filter((m) => tep.includes(m.tep));
+  // Mục lệch (tên ca không còn trong tệp) → bỏ qua lặng là đọc sai; gọi tên và dừng như chay-that.
+  for (const l of loiDanhSach(ds, GOC)) sai(`mục lệch của ci-bo-qua.json — ${l}`);
+  if (loi) return;
+  const vai = vaiMay();
+  const bo = vai === VAI_PHAT_TRIEN ? ds.filter((m) => m.may_thu) : [];
+  if (bo.length) {
+    console.error(`kiem-ht35 s08l: vai ${vai} — bỏ qua ${bo.length} ca chỉ máy thu`);
+    for (const m of bo) console.error(`kiem-ht35 s08l: bỏ qua (chỉ máy thu) — ${m.tep} — ${m.ca} — ${m.may_thu}`);
+  } else console.error(`kiem-ht35 s08l: vai ${vai} — chạy đủ`);
+  const esc = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const env = { ...process.env };
+  delete env.NODE_TEST_CONTEXT;
+  const r = spawnSync(process.execPath, ["--test", ...bo.map((m) => `--test-skip-pattern=^${esc(m.ca)}$`), ...tep],
+    { cwd: GOC, env, encoding: "utf8", timeout: 900_000 });
+  const ra = (r.stdout || "") + (r.stderr || "");
+  process.stdout.write(ra.split("\n").filter((l) => /^(ℹ|✖|not ok)/.test(l)).join("\n") + "\n");
+  const so = (k) => Number((ra.match(new RegExp(`^(?:ℹ|#) ${k} (\\d+)$`, "m")) ?? [])[1] ?? NaN);
+  const [tests, pass, fail, skipped] = ["tests", "pass", "fail", "skipped"].map(so);
+  if (r.status !== 0 || fail !== 0) sai(`s08l_do: có ca đỏ (exit ${r.status}, fail ${fail})`);
+  else if (skipped !== 0) sai(`s08l_do: ${skipped} ca bỏ qua ngoài danh sách có tên — DB không tới hay rào trả URL sai`);
+  else if (!(pass > 0 && pass === tests)) sai(`s08l_do: pass ${pass} ≠ tests ${tests}`);
+  else {
+    // --test-skip-pattern lọc hẳn ca khỏi kết quả (không đếm vào skipped): chứng ca đã gọi tên KHÔNG chạy bằng cách soát dòng ca.
+    const daChay = bo.filter((m) => ra.split("\n").some((l) => /^\s*[✔✖]/.test(l) && l.includes(m.ca)));
+    for (const m of daChay) sai(`ca chỉ máy thu vẫn chạy trên máy phát triển: ${m.ca}`);
+    if (!daChay.length) dat(`s08l_do ${tep.length} tệp · tests ${tests} · pass ${pass} · bỏ có tên ${bo.length} ca chỉ máy thu (vai ${vai})`);
+  }
+}
+
+// AC-7 (E7d): trọn scripts/*.test.mjs là chứng «bọc db-thu không làm đỏ hồ sơ đã ký». Bản chép DB thật làm 2 ca NK-AC-1
+// (so-nguon-kho.test.mjs so cột tầng A của S09/S17 với bảng cứng; ZK đã điền tên thật) đỏ trên MỌI bản chép, kể cả máy thu —
+// không phải mã HT35, sửa ở HT38. Đối chứng: cùng lệnh, cùng máy, trên cây gốc (merge-base với origin/main — gốc mà nhánh
+// đứng; nhánh không gộp main theo lệnh GS) ở worktree tạm, mỗi phía DB của riêng lượt. Đạt khi tập ca đỏ hai phía BẰNG
+// NHAU; thêm hay bớt một ca đỏ so gốc → FAIL gọi tên ca. Không nêu tên ca nào trong mã này: tập đỏ đo tại chỗ.
+function caDo(ra) {
+  const i = ra.indexOf("✖ failing tests:");
+  if (i < 0) return [];
+  return [...new Set(ra.slice(i).split("\n").map((l) => l.match(/^\s*✖ (.+?) \(\d[\d.]*m?s\)\s*$/)?.[1]).filter(Boolean))].sort();
+}
+function chayScripts(goc, ten) {
+  const env = { ...process.env };
+  delete env.NODE_TEST_CONTEXT;
+  delete env.DATABASE_URL;
+  const r = spawnSync("bash", ["-c", `bash db/db-thu.sh ${ten} --chay node --test scripts/*.test.mjs`],
+    { cwd: goc, env, encoding: "utf8", timeout: 5_400_000, maxBuffer: 1 << 28 });
+  const ra = (r.stdout || "") + (r.stderr || "");
+  const so = (k) => Number((ra.match(new RegExp(`^(?:ℹ|#) ${k} (\\d+)$`, "m")) ?? [])[1] ?? NaN);
+  return { status: r.status, ra, tests: so("tests"), pass: so("pass"), fail: so("fail"), do: caDo(ra) };
+}
+async function scriptsDoiChung() {
+  const { mkdtempSync, symlinkSync, rmSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  git("fetch", "-q", "origin", "main");
+  const goc = git("merge-base", "HEAD", "FETCH_HEAD").trim();
+  const wt = mkdtempSync(path.join(tmpdir(), "ht35-goc-"));
+  git("worktree", "add", "-q", "--detach", wt, goc);
+  try {
+    for (const m of ["app", "pipeline", "agent", "data-api"]) {
+      try { symlinkSync(path.join(GOC, m, "node_modules"), path.join(wt, m, "node_modules")); } catch { /* module không có node_modules */ }
+    }
+    console.log(`đối chứng: HEAD ${git("rev-parse", "HEAD").trim().slice(0, 9)} ↔ gốc ${goc.slice(0, 9)}`);
+    const [h, b] = [chayScripts(GOC, "oneinvest_suite_scripts"), chayScripts(wt, "oneinvest_suite_scripts_goc")];
+    for (const [nhan, x] of [["HEAD", h], ["gốc", b]]) {
+      console.log(`${nhan}: exit ${x.status} · tests ${x.tests} · pass ${x.pass} · fail ${x.fail} · đỏ ${x.do.length}`);
+      for (const c of x.do) console.log(`  ${nhan} đỏ: ${c}`);
+      if (Number.isNaN(x.tests)) sai(`${nhan}: không đọc được dòng tổng kết — lượt chết giữa chừng (exit ${x.status})`);
+      if (x.fail !== x.do.length) sai(`${nhan}: fail ${x.fail} ≠ ${x.do.length} ca đỏ đọc được`);
+    }
+    const them = h.do.filter((c) => !b.do.includes(c)), bot = b.do.filter((c) => !h.do.includes(c));
+    for (const c of them) sai(`ca đỏ mới so gốc: ${c}`);
+    for (const c of bot) sai(`ca đỏ ở gốc mà HEAD hết đỏ (lệch đối chứng): ${c}`);
+    if (!loi) dat(`tập ca đỏ HEAD = gốc (${h.do.length} ca, baseline red), HEAD pass ${h.pass}/${h.tests}`);
+  } finally {
+    git("worktree", "remove", "--force", wt);
+    rmSync(wt, { recursive: true, force: true });
+  }
+}
+
+const lenh = { chay, s08l, "scripts-doi-chung": scriptsDoiChung, "s09-vung": s09Vung, "executor-db-thu": executorDbThu, "bang-phu": bangPhu }[process.argv[2]];
+if (!lenh) { console.error("dùng: kiem-ht35.mjs chay [--ci]|s08l|scripts-doi-chung|s09-vung|executor-db-thu|bang-phu"); process.exit(2); }
+await lenh();
 process.exit(loi);
