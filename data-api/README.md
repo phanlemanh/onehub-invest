@@ -54,14 +54,18 @@ npm run dev
 |---|---|---|
 | GET | `/health` | Health check |
 | GET | `/openapi.json` | OpenAPI 3.1 spec |
-| GET | `/v1/markets` | List markets with Market Score |
-| GET | `/v1/markets/:id` | Market detail with score breakdown |
-| GET | `/v1/markets/:id/submarkets` | Submarkets with metrics |
-| GET | `/v1/markets/:id/insights` | Monthly metrics (ADR, occupancy, revenue) |
+| GET | `/v1/markets` | List markets — id, name, country, listing count (most listings first) |
+| GET | `/v1/markets/:id` | One market — same four fields |
+| GET | `/v1/markets/:id/submarkets` | Submarkets — id, name, listing count (by name) |
+| GET | `/v1/markets/:id/insights` | **Removed** — `410 GONE` (no self-collected monthly series with enough coverage yet) |
 | GET | `/v1/listings` | Listings — for sale, long-term rent, short-term rent — one shape for every `kind` (see below) |
 | GET | `/v1/listings/:listingKey` | One listing |
 | GET | `/v1/price-stats` | Price statistics by area (median, p25, p75, yield): `?area=` or `?market=` |
 | GET | `/v1/coverage` | Self-collected listing count by market |
+| GET | `/v1/properties?project=` | Property (building directory): buildings of one project — units are never listed |
+| GET | `/v1/properties/lookup?project=&building=&unitNumber=` | Property: look up ONE unit you already know by project + building + unit number |
+| GET | `/v1/properties/:universalPropertyId` | Property: one building |
+| GET | `/v1/properties/:universalPropertyId/units/:unitKey` | Property: one unit |
 | GET | `/v1/deals` | **410 Gone** — merged into `/v1/listings?minBelowMedianPct=` |
 | GET | `/v1/asset-stats` | **410 Gone** — renamed `/v1/price-stats` |
 
@@ -70,7 +74,7 @@ npm run dev
 #### Listing
 
 A listing is one record of the RESO **Property** resource (RESO calls a listing "Property"; this API's own
-`/v1/properties`, when it ships, is the building and unit registry — a different thing). Field names follow the
+`/v1/properties` is the building and unit registry — a different thing). Field names follow the
 [RESO Data Dictionary 2.1](https://ddwiki.reso.org) in camelCase; values of `propertyType`, `propertySubType`,
 `leaseAmountFrequency`, `livingAreaUnits`, `pricePerAreaUnit` are DD 2.1 `StandardName` lookups. The key list lives in
 one file, `src/contract/listing.ts`; `/openapi.json` (`components.schemas.Listing`) is generated from it.
@@ -110,11 +114,50 @@ Extensions are declared with their DD lookup in `pipeline/mappings.yaml` (`api_e
 `priceRank` (when the price-rank table is available) keeps the sub-keys `level`, `node`, `n`, `median`, `p20`,
 `percentile`, `label`, `needsVerification`, `metric`, `bedroomsGroup`, `reason`. `meta`: `total`, `limit`, `offset`.
 
+`GET /v1/markets`, `GET /v1/markets/:id` — `id`, `name`, `countryCode`, `listingCount` (self-collected short-term rental
+listings, wards included); the list is ordered by `listingCount` then name, `meta`: `total`, `limit`.
+`GET /v1/markets/:id/submarkets` — `id`, `name`, `listingCount`, ordered by name; `meta`: `total`.
+
 `GET /v1/coverage` — one row per Vietnamese market: `areaId`, `name`, `ourListings` (self-collected short-term rental
 listings in the market, including its wards). Markets with no listings yet are included with `ourListings: 0`.
 
 Data boundaries: this API never returns the text, images, group name or sender name of community posts, and never
 reads or returns calibration-source data — those stay in the internal operations portal.
+
+## Property — danh bạ nhà (building directory)
+
+**«Property» here is OneHub's building directory, NOT the RESO `Property` resource.** In RESO Data Dictionary 2.1 the
+`Property` resource is a listing (that is `/v1/listings`); a physical building is identified by `UniversalPropertyId` plus
+the `Building` resource. Field names inside follow DD 2.1 (`Building.*`; `Property.UnitFloorLocation`, `LivingArea`, …).
+The single key list is `src/contract/property.ts`; `/openapi.json` publishes it as `PropertyBuilding`, `PropertyUnit`,
+`PropertyUnitLookup`.
+
+| Key | DD 2.1 | Meaning |
+|---|---|---|
+| `universalPropertyId` | Building.UniversalPropertyId | building UPI (`urn:onehub:upi:1:VN:<ISO 3166-2>:<buildingKey>`) |
+| `buildingKey` | Building.BuildingKey | opaque `bld_…` key |
+| `buildingName` | Building.BuildingName | building name |
+| `complexName` | Building.ComplexName | sub-zone of the project |
+| `subdivisionName` | Building.SubdivisionName | project name |
+| `projectId` | extension | project node id — pass it as `?project=` |
+| `city` | Building.City | ward (Vietnamese addresses are ward + province) |
+| `stateOrProvince` | Building.StateOrProvince | ISO 3166-2:VN code (local value — the DD lookup lists US/CA states) |
+| `country` | Building.Country | `VN` |
+| `catalogTier` | extension | `xac_minh` · `suy_ra_manh` · `mot_loi_khai` (catalogue confidence) |
+| `unitCount` | extension | active units in the building |
+| `activeListingCount` | extension | active listings linked to the building (refreshed every 10 minutes) |
+| `unitKey` | extension | opaque `unt_…` unit key |
+| `unitFloorLocation` | Property.UnitFloorLocation | floor |
+| `livingArea`, `livingAreaUnits` | Property.LivingArea, LivingAreaUnits | area, `Square Meters` |
+| `bedroomsTotal`, `bathroomsTotalInteger` | Property.BedroomsTotal, BathroomsTotalInteger | rooms |
+| `propertySubType` | Property.PropertySubType | `Condominium`, `Unimproved Land`, or null |
+| `unitNumber` | Property.UnitNumber | **lookup only**: echoes the unit number you sent |
+
+Rules: units are looked up one at a time — there is no unit listing, no floor/stack key, and `unitKey` is random, so one
+unit does not lead to another. Source-system codes are never returned and never accepted as input
+(`400 SOURCE_CODE_NOT_ACCEPTED`). Ambiguous names return `400 AMBIGUOUS_PROJECT` / `AMBIGUOUS_BUILDING` /
+`AMBIGUOUS_UNIT`; merged records return `404 MERGED` with `mergedInto`. Where the directory tables are absent the routes
+return `503 DIRECTORY_UNAVAILABLE` — today the directory lives only on the collection machine, not on the cloud database.
 
 ## Authentication
 
