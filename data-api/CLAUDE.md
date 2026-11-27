@@ -24,6 +24,8 @@ npm run dev           # :3001 (PORT)
 #   bash db/db-thu.sh oneinvest_suite_dapi --chay sh -c 'cd data-api && node --import tsx --test test/dong-ba-route.test.ts'
 # test Property (PB6):
 #   bash db/db-thu.sh oneinvest_suite_dapi_prop --chay sh -c 'cd data-api && node --import tsx --test test/properties.test.ts'
+# test bốn đường markets không đọc S02 (HT20), có rào tĩnh trên src/ và api/:
+#   bash db/db-thu.sh oneinvest_suite_dapi_mk --chay sh -c 'cd data-api && node --import tsx --test test/markets-khong-s02.test.ts'
 ```
 
 ## Luật
@@ -32,7 +34,8 @@ npm run dev           # :3001 (PORT)
   thô, đường dẫn/hostname nội bộ, secret. Nguồn gọi bằng mã `S0x`.
 - **Không đọc bảng `stg_*` thô** (bài, tin chưa qua transform) ở bất kỳ route nào — chỉ đọc lớp canonical và bảng tính sẵn.
 - **Không đọc bảng S02** và không trả số, ảnh hay đường dẫn nào suy từ S02: S02 chỉ để hiệu chuẩn, chỉ hiện ở cổng Ops
-  (AGENTS.md luật 5).
+  (AGENTS.md luật 5). Rào: `test/markets-khong-s02.test.ts` quét mọi chuỗi trong mã `src/`, `api/` và đỏ khi có tên bảng
+  S02, bảng nối khu nguồn hay chuỗi mã S02.
 - **Không trả chữ bài, ảnh, tên nhóm, tên người gửi của bài S03** — các thứ này chỉ hiện ở cổng Ops (AGENTS.md luật 6).
   Test `test/dong-ba-route.test.ts` cấy dòng canh vào các bảng cấm và đỏ khi một route đọc hay trả chúng; thêm route
   mới đọc tin, listing thì thêm ca vào tệp đó.

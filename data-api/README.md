@@ -54,10 +54,10 @@ npm run dev
 |---|---|---|
 | GET | `/health` | Health check |
 | GET | `/openapi.json` | OpenAPI 3.1 spec |
-| GET | `/v1/markets` | List markets with Market Score |
-| GET | `/v1/markets/:id` | Market detail with score breakdown |
-| GET | `/v1/markets/:id/submarkets` | Submarkets with metrics |
-| GET | `/v1/markets/:id/insights` | Monthly metrics (ADR, occupancy, revenue) |
+| GET | `/v1/markets` | List markets — id, name, country, listing count (most listings first) |
+| GET | `/v1/markets/:id` | One market — same four fields |
+| GET | `/v1/markets/:id/submarkets` | Submarkets — id, name, listing count (by name) |
+| GET | `/v1/markets/:id/insights` | **Removed** — `410 GONE` (no self-collected monthly series with enough coverage yet) |
 | GET | `/v1/listings` | Filter listings (market, area, bedrooms) |
 | GET | `/v1/listings/:id` | Listing detail with self-collected photos |
 | GET | `/v1/deals` | Best-value listings (price/m² vs group median, with price rank) |
@@ -74,6 +74,10 @@ npm run dev
 `marketId`, `propertyType`, `medianPerm2`, `discountPct`, `confidence`, `firstSeen`, `lastSeen`, `nReposts`, and — when
 the price-rank table is available — a `rank` block (`level`, `node`, `n`, `median`, `p20`, `percentile`, `label`,
 `needsVerification`, `metric`, `bedroomsGroup`, `reason`). `meta`: `total`, `minDiscount`, and `kind` when ranked.
+
+`GET /v1/markets`, `GET /v1/markets/:id` — `id`, `name`, `countryCode`, `listingCount` (self-collected short-term rental
+listings, wards included); the list is ordered by `listingCount` then name, `meta`: `total`, `limit`.
+`GET /v1/markets/:id/submarkets` — `id`, `name`, `listingCount`, ordered by name; `meta`: `total`.
 
 `GET /v1/coverage` — one row per Vietnamese market: `areaId`, `name`, `ourListings` (self-collected short-term rental
 listings in the market, including its wards). Markets with no listings yet are included with `ourListings: 0`.

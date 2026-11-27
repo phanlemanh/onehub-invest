@@ -42,10 +42,9 @@ app.get("/openapi.json", (c) => {
     servers: [{ url: `http://localhost:${process.env.PORT ?? 3001}` }],
     paths: {
       "/health": { get: { summary: "Health check", responses: { 200: { description: "OK" } } } },
-      "/v1/markets": { get: { summary: "List markets", responses: { 200: { description: "Market list" } } } },
-      "/v1/markets/{id}": { get: { summary: "Market detail", responses: { 200: { description: "Detail" } } } },
-      "/v1/markets/{id}/submarkets": { get: { summary: "Submarkets", responses: { 200: { description: "Submarket list" } } } },
-      "/v1/markets/{id}/insights": { get: { summary: "Market insights", responses: { 200: { description: "Insights" } } } },
+      "/v1/markets": { get: { summary: "List markets (id, name, countryCode, listingCount), most listings first", responses: { 200: { description: "Market list" } } } },
+      "/v1/markets/{id}": { get: { summary: "One market (id, name, countryCode, listingCount)", responses: { 200: { description: "Market" }, 404: { description: "Not found" } } } },
+      "/v1/markets/{id}/submarkets": { get: { summary: "Submarkets of a market (id, name, listingCount), by name", responses: { 200: { description: "Submarket list" } } } },
       "/v1/listings": { get: { summary: "List listings", responses: { 200: { description: "Listing list" } } } },
       "/v1/listings/{id}": { get: { summary: "Listing detail", responses: { 200: { description: "Detail" } } } },
       "/v1/deals": { get: { summary: "Best-value deals", responses: { 200: { description: "Deals" } } } },

@@ -1,0 +1,52 @@
+schema_version: 1
+feature_slug: data-api-markets-khong-doc-s02
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.dapi_mk
+    paths: [data-api/src/routes/markets.ts, data-api/test/**]
+    expected: "exit 0; «ℹ fail 0»; ca «HT20-AC-1 danh sách không S02» xanh: country=zz trả đúng ba dòng cấy (khẳng định có mặt trước khi soát), mỗi dòng đúng bốn khoá id, name, countryCode, listingCount; không marketScore; thứ tự zz-a, zz-b, zz-c; meta đúng {total: 3, limit: 5}; JSON.stringify(thân) không chứa số hay chuỗi canh S02 nào"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.dapi_mk
+    paths: [data-api/src/routes/markets.ts, data-api/test/**]
+    expected: "exit 0; ca «HT20-AC-2 chi tiết không S02» xanh: zz-b và zz-a đúng bốn khoá như dòng danh sách, listingCount = số tin cấy = dòng tương ứng ở /v1/markets; mã dài cũ cho cùng thân với mã ngắn; mã không có → 404 error.code NOT_FOUND; không số/chuỗi canh"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.dapi_mk
+    paths: [data-api/src/routes/markets.ts, data-api/test/**]
+    expected: "exit 0; ca «HT20-AC-3 submarkets không S02» xanh: zz-a trả đúng hai dòng zz-a-1, zz-a-2 theo tên, mỗi dòng đúng ba khoá id, name, listingCount (2 và 1); không marketScore, metrics, không số/chuỗi canh của bảng chỉ số tiểu vùng S02; mã dài cũ cùng thân; mã không có → 200 {data: [], meta: {total: 0}}"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.dapi_mk
+    paths: [data-api/src/routes/markets.ts, data-api/src/app.ts, data-api/test/**]
+    expected: "exit 0; ca «HT20-AC-4 insights đã gỡ» xanh: mã có, mã cũ, mã không có đều 410, error.code GONE, message đúng chuỗi ghim; bộ ghi SQL bắt 0 câu trong ba lời gọi; thân không chứa số/chuỗi canh; /openapi.json không có khoá /v1/markets/{id}/insights"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.dapi_mk
+    paths: [data-api/src/**, data-api/api/**, data-api/test/**]
+    expected: "exit 0; ca «HT20-AC-5 không câu SQL nào đọc S02» xanh: danh sách, chi tiết, submarkets mỗi đường ≥ 1 câu, insights 0 câu; 0 câu nhắc area_sources, airdna_, ref_calib_; 0 tham số bằng S02; rào tĩnh trên data-api/{src,api}/** (chuỗi trong mã, bỏ chú thích) 0 vi phạm; ba đột biến (JOIN cũ ghim trong test; WHERE source = $1 với ['S02']; FROM ref_calib_scores) mỗi cái đúng một vi phạm «HT20 route đọc bảng S02: <tệp>» — đơn vị là tệp"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.dapi_mk_cu
+    paths: [data-api/src/routes/markets.ts, data-api/test/**]
+    expected: "exit 0 khi: bản chép tạm data-api/ với markets.ts ở merge-base đỏ ở đủ năm ca HT20-AC-1 … HT20-AC-5, mỗi ca với thông điệp ghim riêng của nó; bản chép không thay xanh; in một dòng mỗi ca"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.dapi_mk_ranh
+    paths: [data-api/**, _acceptance/data-api-markets-khong-doc-s02/**]
+    expected: "exit 0 khi: mọi tệp đổi so với merge-base nằm trong vùng của Context; các dòng đường markets ở data-api/README.md và /openapi.json không chứa chữ cấm (score, Market Score, ADR, occupancy, revenue, metrics) và không còn insights như đường sống; npm run typecheck trong data-api/ thoát 0; dong-ba-route, auth-dong xanh; lưới tên nguồn PB5 sạch, hoặc khi tệp lưới vắng in đúng «HT20 lưới tên nguồn: bỏ qua — PB5 chưa gộp» và phép soát tier-a-source-names trên tệp đổi ra 0 cụm"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
