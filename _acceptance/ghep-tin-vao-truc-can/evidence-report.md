@@ -1,14 +1,14 @@
 ---
 schema_version: 2
 feature_slug: ghep-tin-vao-truc-can
-verdict: PENDING-JUDGMENT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 72acc1e0a1a1942d476e5ab306f73ad6f6f3ab56
-human_signoff:
+verified_commit: 6e946bb29f99fc3639f8e6f0b4baa29fd6692759
+human_signoff: Mạnh 2026-11-27
 ---
 
 # Evidence Report: ghep-tin-vao-truc-can
@@ -161,7 +161,7 @@ Round 4. Mọi eval máy đều xanh; còn một mục judgment (E10) chờ ngư
     - domain-correctness: PASS — bảng bài sai 0 dòng; không có kiểu lỗi chung của luật (dạng mã, tiền tố toà, tra trục), không có lỗi nhãn người hay danh bạ.
     - operational-feasibility: PASS — bảng rỗng, GP có 0 bài; AC-10 nói 0 bài sai là kết quả hợp lệ nên không có kiểu lỗi luật sửa được.
     - spec-alignment: PASS — AC-10 và decisions d-25 (Mạnh «E10 - A») cho phép 0 bài sai, khi đó người chấm ghi không có kiểu lỗi nào.
-  human_override:  # chi nguoi ghi
+  human_override: Mạnh 2026-11-27 — Đạt
 
 ### Lệnh suite (hồi quy)
 
@@ -212,3 +212,7 @@ none — mọi eval chạy một lần, xác định, không có phương sai.
 
 Round 1-3: lịch sử nằm trong run-log.jsonl của hồ sơ.
 Round 4: 13 eval máy xanh, 5 lệnh suite xanh; E10 (judgment) chờ người chốt nên verdict PENDING-JUDGMENT.
+
+### Re-pin lần 1 — 2026-11-27, do làn trọn trước chữ ký Cổng 2 sau gộp main a94013aaf, lượt 2 sau sửa probe cham-truc (T3, lời GS 27/11)
+run_id: repin-20261127T162015Z-75784
+sha: 6e946bb29f99fc3639f8e6f0b4baa29fd6692759 · suites: 8 lệnh exit 0 · evals: 13/13 eval máy đạt kỳ vọng · ngoài làn máy: E10 (E10 không khai paths)

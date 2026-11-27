@@ -5,7 +5,7 @@ slug: ghep-tin-vao-truc-can
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli, data]
-status: implemented
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-24
 design_doc: docs/superpowers/specs/2026-11-24-ghep-tin-vao-truc-can-design.md
@@ -107,3 +107,8 @@ Hôm nay 0 tin S03 gắn trục hay căn; 2.830 tin hai khu ở mức toà. Hạ
   scripts/ghep-tin-truc-can-do-bi-danh.mjs`: 42.113 bài, trục 9.591, căn 903; cả 903 căn tìm được qua trục + tầng, căn CHỈ qua
   bí danh 0. Cả DB có 28.261 căn active chỉ có bí danh (không stack_key, floor); toà hai khu có 10.320/72.540 căn. Trước 138 view
   offer_unit sẽ hạ một bài như thế về mức trục; ca `bi-danh-mot-can-di-tron-ghi-den-view` đo đường này trọn luật → ghi → view.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-27:
+  - Ngoài-1: Toà có tên nhiều chữ mà tin chỉ ghi mã căn trong chữ bài thì chưa gắn xuống trục hay căn, tin vẫn ở mức toà.
+  - Ngoài-2: Các bước chuẩn hoá khoá trục, khoá tầng và bí danh khi đọc danh bạ chưa có ca kiểm riêng; dữ liệu kiểm viết tay.
+  - Ngoài-3: Tệp bài cài lỗi của lệnh chấm trục đọc từ checkout chính, chưa ghim băm, nên số chấm có thể không tái lập ở máy khác.
+  - Ngoài-4: Việc bước gắn trục, căn chạy trong giao dịch riêng sau bước gắn toà chỉ được kiểm bằng cách đọc chữ trong mã.
