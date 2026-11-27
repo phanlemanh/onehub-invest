@@ -29,6 +29,8 @@ const LOI_PIPELINE = [
   "collector/scripts/**", "data-api/src/**", "tools/**", "CONTEXT.md", "LO-TRINH.html", "docs/ROADMAP.md",
   "docs/ops/**",
   "docs/adr/**", "docs/research/pty-project-type-s06.md",
+  // pipeline/scripts/noi-du-an-s08-that.mjs (DA55 E7) nạp probe bảng phủ của hồ sơ.
+  "_acceptance/soat-noi-s08-danh-ba/probes/bang-phu.mjs",
   "_acceptance/danh-ba-phuong-xa-toan-quoc/**", "_acceptance/du-an-cua-tin-len-dinh-vi/**",
   "_acceptance/gop-tin-chi-anh-o-transform/**",
   "_acceptance/lay-mau-khu-trung-theo-tin/**", "_acceptance/nhom-dang-ky-hai-lan-s03/**",
@@ -316,23 +318,52 @@ async function mainScripts(argv) {
 // Sổ lần chạy của pipeline-that-hang-ngay.mjs (ở đây, không import tệp đó: bản sao đối chứng của S4V-AC-2 chạy ngoài kho).
 export function duongSo(cwd = process.cwd()) {
   if (process.env.PIPELINE_THAT_SO) return process.env.PIPELINE_THAT_SO;
-  const common = spawnSync("git", ["-C", cwd, "rev-parse", "--path-format=absolute", "--git-common-dir"], { encoding: "utf8" }).stdout.trim();
+  const r = spawnSync("git", ["-C", cwd, "rev-parse", "--path-format=absolute", "--git-common-dir"], { encoding: "utf8" });
+  const common = (r.stdout ?? "").trim();
+  // Git lỗi (không phải kho) → null: dòng in nói «không đọc được sổ», không rơi về đường tương đối trông như sổ trống (HT30 AC-4).
+  if (r.status !== 0 || !path.isAbsolute(common)) return null;
   return path.join(path.dirname(common), ".acceptance-runs/pipeline-that/lan-chay.jsonl");
 }
 
-// Dòng «ca dữ liệu thật» (hồ sơ db-thu-tach-khoi-cum-that AC-11): mỗi lượt chấm nói rõ 30 ca cần dữ liệu thật có chạy
-// trong lượt không; không kích thì nêu lần xanh gần nhất trên main từ sổ của pipeline-that-hang-ngay.mjs.
+// Dòng «ca dữ liệu thật» (hồ sơ db-thu-tach-khoi-cum-that AC-11, HT30 dong-du-lieu-that-neu-lan-do-moi-nhat): mỗi lượt chấm
+// nói rõ ca cần dữ liệu thật có chạy trong lượt không; không kích thì nêu lần xanh gần nhất trên main từ sổ của
+// pipeline-that-hang-ngay.mjs, và lần ĐỎ mới hơn nếu dòng cuối của sổ đỏ. Sổ không đọc được thì nói thẳng.
+const KHONG = "ca dữ liệu thật: không kích — ";
+const caDoChu = (d) => {
+  const ten = Array.isArray(d.ca_do) ? d.ca_do.filter(Boolean) : [];
+  if (!ten.length) return "không bóc được tên ca";
+  return ten.slice(0, 3).join("; ") + (ten.length > 3 ? ` (+${ten.length - 3})` : "");
+};
+const moc = (d) => `${d.ngay} (${String(d.sha).slice(0, 9)})`;
 export function dongDuLieuThat(chay, so) {
   if (chay) return "ca dữ liệu thật: chạy trong lượt này";
-  let xanh = null;
+  if (!so) return `${KHONG}không đọc được sổ soát hằng ngày (không giải được thư mục kho)`;
+  let text;
   try {
-    for (const l of readFileSync(so, "utf8").split("\n")) {
-      try { const d = JSON.parse(l); if (d.ket_qua === "xanh") xanh = d; } catch { /* dòng hỏng */ }
-    }
-  } catch { /* sổ chưa có */ }
+    text = readFileSync(so, "utf8");
+  } catch (e) {
+    if (e.code === "ENOENT") return `${KHONG}chưa có lần xanh nào trên main`;
+    return `${KHONG}không đọc được sổ soát hằng ngày (${e.code ?? e.message})`;
+  }
+  const dong = text.split("\n").filter((l) => l.trim());
+  let xanh = null;
+  let cuoi = null;
+  dong.forEach((l, i) => {
+    let d = null;
+    try { d = JSON.parse(l); } catch { /* dòng hỏng */ }
+    if (i === dong.length - 1 && !d) cuoi = "hong";
+    if (!d) return; // dòng giữa hỏng: bỏ qua
+    if (d.ket_qua === "xanh") xanh = d;
+    cuoi = d;
+  });
+  if (cuoi === "hong") return `${KHONG}không đọc được sổ soát hằng ngày (dòng cuối hỏng)`;
+  if (!cuoi || cuoi.ket_qua === "xanh") {
+    return xanh ? `${KHONG}lần xanh gần nhất trên main: ${moc(xanh)}` : `${KHONG}chưa có lần xanh nào trên main`;
+  }
+  const do_ = `${moc(cuoi)} — ca đỏ: ${caDoChu(cuoi)}`;
   return xanh
-    ? `ca dữ liệu thật: không kích — lần xanh gần nhất trên main: ${xanh.ngay} (${String(xanh.sha).slice(0, 9)})`
-    : "ca dữ liệu thật: không kích — chưa có lần xanh nào trên main";
+    ? `${KHONG}lần xanh gần nhất trên main: ${moc(xanh)}; ĐỎ mới hơn: ${do_}`
+    : `${KHONG}chưa có lần xanh nào trên main; ĐỎ mới nhất: ${do_}`;
 }
 
 function main(argv) {
