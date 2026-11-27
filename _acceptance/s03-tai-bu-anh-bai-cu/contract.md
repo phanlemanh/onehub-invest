@@ -55,3 +55,6 @@ Hàng ZC20 (dãy ZT), sau HT9. Ba điều kiện cổng của GS (LL chuyển 26
 
 - Lượt soát trước của LL chỉ chạy họ zalo-import và backfill nên không thấy hai vi phạm luật main; M5 đỏ 4 ca @e994fc21a, ZT
   vá @aee72a12a, M5 xanh (26/11).
+- Rào áp (GS 27/11, hàng ZC25 «nạp lại raw S03 chịu được ngắt giữa chừng», làn ZCode qua LL): KHÔNG replay raw S03 từ state 0 trên
+  máy thu tới khi ZC25 gộp — lượt replay bị ngắt giữa chừng có thể đè hoặc bỏ vĩnh viễn ảnh đã bù của ~695 bài (Ngoài-1, Ngoài-4).
+  Ghi lại rào này trong thân PR của ZC20.
