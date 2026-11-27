@@ -12,7 +12,7 @@ flowchart TD
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>22 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>238 việc"]
+  GB --> DG["Đã giao<br/>241 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>146 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
@@ -247,6 +247,7 @@ flowchart TD
 - Bốn tên viết tắt phân khu (ori, rb, bs, gh) vào danh bạ qua thẻ luật có băm, đảo được, để GT5 đọc phân khu từ danh bạ (`bi-danh-viet-tat-phan-khu`)
 - Bộ canh kênh S03 tắt gateway khi có lượt agent mới dù lượt đó chạy nhanh, nhờ đếm trên kho phiên thay vì dò chuỗi trong log (`bo-canh-dem-luot-agent`)
 - ca E4b đối chiếu tin rao nạp danh sách che qua hàm chung có cờ khớp nguyên cụm — main thôi đỏ sau khi áp che-ten (`ca-doi-chieu-tin-rao-nap-co-khop-cum`)
+- Script đo ba vai của Căn giá tốt bỏ qua dòng sổ nguồn không có tên, không gãy giữa chừng và không báo «lộ tên nguồn» giả trên mọi trang (`can-gia-tot-ba-vai-ten-nguon-trong`)
 - Người vận hành thấy đúng tên người đăng, đúng lý do rời danh sách của căn đắt hơn thước, và đường về danh sách không quay lại chính trang một căn (`can-gia-tot-sua-ba-loi`)
 - Căn của tin chung bài đăng nhận theo khi đề xuất làm giàu được áp hay hoàn tác — migration 066 mở rộng chuỗi cập nhật căn của 063, kèm sửa một lần phần lệch đã có (`can-theo-tin-khi-phan-xu-lai`)
 - Bộ canh S03 thêm lớp L6 kiểm sống — cảnh báo khi S03 ngừng thu (không snapshot mới ban ngày, tự khởi động lại treo, not linked), không kill gateway (`canh-bao-s03-ngung-thu`)
@@ -299,6 +300,7 @@ flowchart TD
 - Mã giao diện của app hết hex thô ngoài thư mục vendor — màu bản đồ dời sang app/src/lib, mặt nạ quét dùng black, giữ đúng từng giá trị màu (`don-hex-tho`)
 - Biểu mẫu theo nhóm chọn đơn vị giá theo Loại tin, hỏi lại khi giá lạ, và thẻ hiện mã để chép (`don-vi-gia-theo-loai-tin`)
 - Đóng băng Stage B của bộ dựng căn và thẻ Ghép căn — không sinh cặp, không gieo thẻ, thẻ chờ không hiện, dữ liệu cũ giữ nguyên (`dong-bang-stage-b-resolve`)
+- Dòng «ca dữ liệu thật» của lượt chấm nêu cả lần đỏ mới nhất trên main khi nó mới hơn lần xanh cuối, và nói rõ khi không đọc được sổ (`dong-du-lieu-that-neu-lan-do-moi-nhat`)
 - Máy đóng theo luật xác định các thẻ «Bổ sung tin» mà mọi đề xuất chờ trùng giá trị tin đang có, ghi lý do từng thẻ, có chạy thử, chạy thật trong một giao dịch và lệnh lùi — tin không đổi (`dong-the-bo-sung-tin-theo-luat`)
 - Mọi tin S03, S05, S06 có chứng cứ dự án được định vị cấp dự án qua một nguồn chung trong DB (view offer_project, migration 105, chỉ máy thu), và ô Định vị của màn chặng cùng bậc B2 của thang dữ liệu đọc đúng nguồn ấy — ô Định vị S03 trên DB máy thu từ 0 lên khoảng 4.934 (`du-an-cua-tin-len-dinh-vi`)
 - dựng sẵn nguyên liệu M2 của design-floor (chưa bật) — lệnh sinh tokens DTCG + danh mục thành phần, skill onehub-ui buộc reuse-plan.md ở S1 (`dung-m2-song-song`)
@@ -403,6 +405,7 @@ flowchart TD
 - S05 có đệm cửa sổ thu 5 ngày, khoá nạp không văng hay quay bận, bước thu lỗi có dòng ghim (`s05-khoa-nap`)
 - Kho khớp lịch S06 2 lượt mỗi ngày đã cài trên máy thu — plist chotot trong main mang mốc 05:30 và 14:00, không va lịch job khác (`s06-hai-luot-ngay-gop-main`)
 - bộ thu S06 nhận mã tỉnh params.region bên cạnh region_v2, để bật được vùng mà mã cũ không hoạt động (`s06-region-tinh`)
+- Đưa bộ thu đuôi S06 của làn thu vào main (chỉ mã thu và test, chưa lịch, chưa nạp) (`s06-thu-duoi-do`)
 - Trần trang thu S06 mặc định 210, 403/429 dừng cả lượt không thử lại, kèm số đo chuỗi đêm khi nạp 55 nghìn tin (`s06-tran-trang`)
 - tin S06 của vùng mới (Đà Nẵng, Hải Phòng, Bình Dương đã sáp nhập vào TP.HCM) lên canonical có phường — mã thị trường ngắn một khuôn (migration 064), bước nạp phường và bước chuyển S06 đọc thành phố từ một chỗ ánh xạ thay cho danh sách cứng (`s06-vung-moi-len-canonical`)
 - S08 thu đúng một lượt mỗi tuần theo launchd và có SLO độ tươi 192 giờ (`s08-lich-tuan`)
