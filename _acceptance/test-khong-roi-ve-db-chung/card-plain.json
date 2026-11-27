@@ -1,0 +1,4 @@
+{
+  "feature_plain": "Hai tệp test tự dựng bảng thật rồi ghi (nạp S09, độ tươi nguồn) nay chỉ chạy trên DB thử của riêng lượt: trỏ DB chung oneinvest thì từ chối trước mọi kết nối, thiếu địa chỉ thì bỏ qua có lời. Hàng nền: miễn điểm số trên màn (không ô nào trên Invest hay Ops đổi). E7c bỏ có tên ca chỉ chạy được ở máy thu (ON22-AC-10) theo cơ chế HT33; trên máy thu ca vẫn chạy. E7d đạt theo đối chứng: hai ca NK-AC-1 đỏ y hệt ở cây gốc vì so cột tên nguồn với bảng cứng — không phải mã hàng này, sửa ở HT38. Còn một lỗi phép đo trong hợp đồng (AC-8): bảng phủ bỏ sót hai tệp test dùng hằng số trỏ DB chung (dev-ops-account.test, dev-register-check.test) — P1 khuyên chuyển sang HT36, GS đang phán.",
+  "analyst_plain": "Bốn eval rào (E1–E4) cũng xanh trên code cũ vì chúng là lưới giữ hành vi rào, không phải phép đo tính năng mới."
+}
