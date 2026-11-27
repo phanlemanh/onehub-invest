@@ -12,7 +12,7 @@ flowchart TD
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>22 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>243 việc"]
+  GB --> DG["Đã giao<br/>244 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>147 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
@@ -269,6 +269,7 @@ flowchart TD
 - công tắc thật — mọi đường thu S01, S02, S05, S06 hỏi vòng đời nguồn × đơn vị qua một cổng trước khi gọi nhà cung cấp, hết danh sách cứng, lỗi DB thì dừng (`cong-tac-that`)
 - Trang /ops/people cho người vận hành xem danh bạ Người ở máy thu — người theo nguồn S0x, số tin đã đăng, bí danh, nhãn suy luận chỉ hiển thị (`danh-ba-nguoi-tren-ops`)
 - Trang Danh bạ trên Ops đặt mỗi toà dưới phân khu hiệu lực (cụm S09, rồi phân khu S09, rồi cột gốc) đọc từ view v_toa_nut_vung, và hiện cả gốc lẫn hiệu lực khi hai giá trị khác nhau (`danh-ba-toa-theo-phan-khu-hieu-luc`) — đã giao — máy thông, cửa veto còn mở
+- Lược đồ mẫu của data-api bản công khai không còn tên nguồn thật ngoài tên bảng/cột đã biết — chú thích, dữ liệu mẫu source_registry và tên tệp dưới data-api/db dùng mã S0x (`data-api-don-ten-nguon`)
 - data-api đóng ba đường trả dữ liệu trái luật (HT19) — deals thôi trả nội dung bài S03, coverage và listings/:id thôi đọc bảng S02 (`data-api-dong-ba-route-lo`)
 - data-api đóng khi thiếu khoá (PB3) — môi trường không khai rõ là dev/test mà danh sách khoá API rỗng thì từ chối mọi lời gọi dữ liệu và bản Node không khởi động (`data-api-dong-khi-thieu-khoa`)
 - Dấu lược đồ của bản mẫu DB thử phủ constraint, index, trigger, enum, độ dài kiểu, NOT NULL, DEFAULT, RLS, quyền và schema ngoài public, để bản mẫu dựng lại ngay khi migration đổi những thứ đó (`dau-luoc-do-ban-mau`)

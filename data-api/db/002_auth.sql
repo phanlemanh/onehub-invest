@@ -1,5 +1,5 @@
 -- 002_auth.sql — M5′: auth + saved markets + plan (paywall demo)
--- Paywall mirror cơ chế AirDNA đã quan sát: field-level redaction (free) +
+-- Paywall mirror cơ chế S02 đã quan sát: field-level redaction (free) +
 -- endpoint-level 401 (pro-only sections). `plan` là demo switch, không phải billing thật.
 CREATE TABLE IF NOT EXISTS users (
   id            text PRIMARY KEY,             -- 'usr_' || random hex

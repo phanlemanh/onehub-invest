@@ -165,6 +165,8 @@ executors:
     svm_unit: "node --test pipeline/lib/thi-truong.test.mjs"   # s06-vung-moi-len-canonical AC-3 — ánh xạ một chỗ + quét chuỗi cứng, không DB
     ckl_unit: "node --test pipeline/scripts/chotot-khong-lui-noi-dung.test.mjs"   # 2510-6
     scripts: "node --test scripts/*.test.mjs"        # test script ở scripts/ (dev-ops-account) — cần DB local :5433
+    pb5_ten_nguon: "node --test scripts/data-api-ten-nguon.test.mjs"   # data-api-don-ten-nguon E1–E3 (PB5-AC-1..3); AC-4 tự bỏ qua ngoài CI khi thiếu DATABASE_URL
+    pb5_db_mau: "bash scripts/data-api-ten-nguon-db.sh"   # data-api-don-ten-nguon E4 (PB5-AC-4) — PostGIS dùng một lần + node cùng mạng docker, không DB :5433
     s4v_bo_qua: "node --test --test-name-pattern=S4V-AC-1 scripts/suite-neu-doi.test.mjs"   # s4-suite-theo-vung E1 — repo git tạm, không DB
     s4v_chay: "node --test --test-name-pattern=S4V-AC-2 scripts/suite-neu-doi.test.mjs"     # s4-suite-theo-vung E2
     s4v_keo: "node --test --test-name-pattern=S4V-AC-3 scripts/suite-neu-doi.test.mjs"      # s4-suite-theo-vung E3 — ma trận 18 ô
@@ -401,6 +403,7 @@ executors:
     ht9_phut: "node --test --test-concurrency=1 scripts/do-phut-s4.test.mjs"   # db-thu-tach-khoi-cum-that E8 — phút giữ khoá s4
     ht9_hang_ngay: "node --test --test-concurrency=1 scripts/pipeline-that-hang-ngay.test.mjs"   # db-thu-tach-khoi-cum-that E11 — soát ca dữ liệu thật hằng ngày trên main + dòng «ca dữ liệu thật» của lượt chấm
   script:
+    pb5_luoi: "node scripts/data-api-ten-nguon.mjs"   # data-api-don-ten-nguon E5 — lưới tên nguồn trên data-api/**, in tổng theo loại, thoát 1 khi còn vi phạm
     ht33_may_thu: "env -u ONEHUB_HAI_MAY_TEP node --input-type=module -e \"import { vaiMay } from './scripts/lib/vai-may.mjs'; const v = vaiMay(); console.log(v); process.exit(v === 'may-thu' ? 0 : 1)\""   # HT33 E6 — máy chấm là máy thu
     ht33_m5: "bash _acceptance/pipeline-that-ca-may-thu-co-ten-tren-may-phat-trien/kiem-m5.sh"   # HT33 E5 — đầu ra lượt pipeline_that trên M5
     ht13_ap: "bash _acceptance/tran-tong-luot-dem-va-tran-doc-gop/ap-may-thu/kiem.sh"   # tran-tong-luot-dem-va-tran-doc-gop E9 — README áp đủ năm mục, lệnh kiểm sau chấm đúng ba log mẫu

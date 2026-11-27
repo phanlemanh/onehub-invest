@@ -1,16 +1,16 @@
--- 003_airbnb_staging.sql — staging tiêu thụ snapshot từ one-invest-collector
+-- 003_s01_staging.sql — staging tiêu thụ snapshot từ one-invest-collector
 -- (DATA-CONTRACT schemaVersion 1; payload giữ nguyên vẹn, mọi chuẩn hoá ở tầng transform)
 CREATE TABLE IF NOT EXISTS airbnb_snapshots (
-  snapshot_id  text PRIMARY KEY,          -- "hanoi__airbnb-listing__20261017T155743"
+  snapshot_id  text PRIMARY KEY,          -- "hanoi__s01-listing__20261017T155743"
   city         text NOT NULL,
-  source       text NOT NULL,             -- airbnb-discovery | airbnb-listing | ...
+  source       text NOT NULL,             -- s01-discovery | s01-listing | ...
   collected_at timestamptz,
   manifest     jsonb NOT NULL             -- nguyên vẹn manifest (coverage telemetry)
 );
 
 -- Payload nguyên vẹn mỗi listing theo snapshot (re-parse được khi transform đổi)
 CREATE TABLE IF NOT EXISTS stg_abnb_listings (
-  listing_id  text NOT NULL,              -- Airbnb listing id ("1774…")
+  listing_id  text NOT NULL,              -- S01 listing id ("1774…")
   snapshot_id text NOT NULL REFERENCES airbnb_snapshots(snapshot_id) ON DELETE CASCADE,
   fetched_at  timestamptz,
   payload     jsonb NOT NULL,             -- {url, deferredState, pdpSections, calendar}
