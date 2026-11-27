@@ -407,6 +407,11 @@ test("sapXepReplay: snapshot bù (coverage.loai=tai-bu-anh-2511) luôn phase cu�
 });
 
 test("(1) nạp lại raw theo thứ tự tên vẫn giữ ảnh đã bù (tên bù theo giờ chạy xếp sau chót)", { skip: !process.env.DATABASE_URL && "cần DATABASE_URL (npm test pipeline cấp DB riêng lượt)" }, async () => {
+  // Ngoài-3 ZC20 (Mạnh «nâng phạm vi sửa ngay», 27/11): ca này nạp và XOÁ dòng — chỉ chạy trên DB thử oneinvest_suite_*,
+  // từ chối TRƯỚC mọi kết nối khi DATABASE_URL trỏ DB khác (cùng họ sự cố 21/11). Chốt chung: lib/db-thu-chot.mjs.
+  const { lyDoTuChoi } = await import("./lib/db-thu-chot.mjs");
+  const lyDo = lyDoTuChoi(process.env.DATABASE_URL);
+  if (lyDo) assert.fail(`(1) từ chối — ${lyDo}; ca có lệnh xoá chỉ chạy trên DB thử (db/db-thu.sh oneinvest_suite_<bộ> --chay)`);
   const { execFileSync } = await import("node:child_process");
   const pg = (await import("pg")).default;
   const pid = `buu-test-${Date.now()}`;
