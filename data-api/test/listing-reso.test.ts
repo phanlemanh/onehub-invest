@@ -244,14 +244,24 @@ test("PB2-AC-5 căn giá tốt là bộ lọc của listings", async () => {
   assert.deepEqual(g.than, { error: { code: "GONE", message: "/v1/deals đã gộp vào /v1/listings: dùng ?minBelowMedianPct=" } }, "PB2 deals còn sống");
 });
 
+/** Mốc so của PB2-AC-11: commit cha của PB2 (#578) trên main — asset-stats.ts còn là route cũ. */
+const MOC_ASSET_STATS_CU = "75f32bd55c15442e5ab0d258b1f998e70aa2072b";
+
 test("PB2-AC-11 price-stats", async () => {
-  // Thân cũ: chính tệp route asset-stats.ts ở nền (merge-base với origin/main), không chép tay — gắn vào một Hono riêng,
-  // gọi cùng truy vấn trên cùng DB thử. Tệp tạm đặt cạnh routes/ để import tương đối của nó chạy y nguyên; xoá cuối ca.
-  // PB2_GIT_ROOT: probe pha.mjs chạy test trên bản chép ngoài kho git — trỏ về gốc kho để đọc nền.
+  // Thân cũ: chính tệp route asset-stats.ts ở MỐC CỐ ĐỊNH, không chép tay — gắn vào một Hono riêng, gọi cùng truy vấn trên
+  // cùng DB thử. Tệp tạm đặt cạnh routes/ để import tương đối của nó chạy y nguyên; xoá cuối ca.
+  // Mốc = commit cha của PB2 (#578) trên main: bất biến «price-stats = asset-stats cũ» thuộc đúng một lần đổi, nên không so
+  // với nền động của nhánh — sau khi PB2 gộp, nền ấy đã là route 410 (PB9, GS phán 28/11).
+  // PB2_GIT_ROOT: probe chạy test trên bản chép ngoài kho git — trỏ về gốc kho để đọc mốc.
   const kho = process.env.PB2_GIT_ROOT ?? DATA_API;
-  const nen = execFileSync("git", ["-C", kho, "merge-base", "HEAD", "origin/main"], { encoding: "utf8" }).trim();
-  const cu = execFileSync("git", ["-C", kho, "show", `${nen}:data-api/src/routes/asset-stats.ts`], { encoding: "utf8" });
-  assert.match(cu, /export const assetStatsRoute/, "PB2-AC-11 bản asset-stats ở nền không phải route cũ — mốc so hỏng");
+  let cu = "";
+  try {
+    cu = execFileSync("git", ["-C", kho, "show", `${MOC_ASSET_STATS_CU}:data-api/src/routes/asset-stats.ts`], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+  } catch {
+    assert.fail(`PB2-AC-11 mốc so hỏng: kho không có ${MOC_ASSET_STATS_CU} (clone nông?)`);
+  }
+  assert.ok(/export const assetStatsRoute/.test(cu) && /FROM market_asset_stats/.test(cu),
+    `PB2-AC-11 mốc so hỏng: asset-stats.ts ở ${MOC_ASSET_STATS_CU} không phải route cũ đọc market_asset_stats`);
   const tam = path.join(DATA_API, "src", "routes", `__pb2-asset-stats-nen-${process.pid}.ts`);
   writeFileSync(tam, cu);
   try {
