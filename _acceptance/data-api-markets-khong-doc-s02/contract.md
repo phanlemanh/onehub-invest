@@ -5,7 +5,7 @@ slug: data-api-markets-khong-doc-s02
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api]
-status: implemented
+status: verified
 design_doc:
 approved_by: Mạnh
 approved_at: 2026-11-27
