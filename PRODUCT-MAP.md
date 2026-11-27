@@ -12,7 +12,7 @@ flowchart TD
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>22 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>248 việc"]
+  GB --> DG["Đã giao<br/>249 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>148 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
@@ -396,6 +396,7 @@ flowchart TD
 - Đưa view ruler v_ruler_p2_area + v_ruler_p2 vào migration và hướng dẫn bắt kịp schema cloud (`ruler-p2-views-migration`)
 - S02 lấy token đi cửa API: đọc phiên từ profile riêng của bộ thu trên đĩa, đổi token bằng hai lời xác thực của ứng dụng, KHÔNG mở trình duyệt khi thu; bị chặn thì dừng cả lượt; lệnh login mở đúng profile cho Mạnh tự đăng nhập (ZC22) (`s02-cua-api`)
 - Tích hợp ba nhánh ZCode cho bộ thu S02: lượt thu ném lỗi giữ thư mục tạm ẩn; bộ thu dừng ngay khi appToken hết hạn; xác thực hỏng (401 sau refresh, token hết hạn hay rác) ghi dòng AUTH FAIL (`s02-luot-loi-sach-va-kiem-han-token`)
+- S02 — trang kế của danh sách căn trên bản đồ gửi offset trong thân, không gắn hậu tố vào đường dẫn; vòng phân trang có trần (ZC23) (`s02-map-listings-trang-ke`)
 - Bài S03 có «<số> năm/nữ» (cho vay, tuyển dụng) không bị coi là dấu hiệu phòng ngủ «<số>n» nên không thành tin rao; viết tắt phòng ngủ thật («2n1wc», «1n1k») vẫn nhận như cũ (`s03-cho-vay-khong-phai-bds`) — đã giao — máy thông, cửa veto còn mở
 - Tin rao S03 thôi gộp nhầm bài của nhiều người khi thiếu phường/diện tích, và cột «Luồng 7 ngày» đếm đúng tập bài transform đọc (`s03-gop-trung-dung`)
 - S03 lên nhanh nấc 1 (phần Claude) — lượt nạp nhanh 15′ đặt lock_timeout ngắn cho ba bước transform, đụng khoá DB thì bỏ lượt và báo khi bỏ 8 lượt liền; bảy bước đo dời khỏi cloud-sync sang job mỗi giờ với cờ tự nhận (`s03-len-nhanh-nac-1`)
