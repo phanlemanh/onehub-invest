@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 2b5f0f7505e1fa776a3bb1309471633dd546df2f
-human_signoff:
+human_signoff: Mạnh 2026-11-27
 ---
 
 # Evidence Report: data-api-hop-dong-reso-dd-2-1

@@ -11,8 +11,8 @@ flowchart TD
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>22 việc"] --> GP{"Cổng Phạm vi"}
-  GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>244 việc"]
+  GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
+  GB --> DG["Đã giao<br/>245 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>147 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
@@ -69,10 +69,6 @@ flowchart TD
 - DATA-CONTRACT v15 (nháp) mục nguồn S09 danh bạ căn, gồm khuôn lượt bù căn thấp tầng 20/11, vào main để bộ nạp và DA50 đọc theo một bản (`s09-dc-v15-thap-tang`)
 - Tách bộ kiểm pipeline của lượt chấm thành hai nửa chạy song song, mỗi nửa một DB thử, để một lệnh không vượt trần chờ 30 phút của tác tử chấm (`tach-suite-pipeline`)
 - hai test app chạy trên DB chung thôi đỏ vì mã vùng dài cũ và thôi treo khi có DDL xếp hàng (`test-app-tren-db-chung`)
-
-## Đang làm
-
-- data-api theo RESO DD 2.1 (PB2) — một tài nguyên listing có kind đọc hai bảng, tên trường RESO camelCase, loại hình đúng PropertyType/PropertySubType, extension khai ở mappings.yaml, lược đồ mẫu và seed chạy trên DB rỗng (`data-api-hop-dong-reso-dd-2-1`)
 
 ## Đã giao — chờ phiên nghiệm thu
 
@@ -276,6 +272,7 @@ flowchart TD
 - Lược đồ mẫu của data-api bản công khai không còn tên nguồn thật ngoài tên bảng/cột đã biết — chú thích, dữ liệu mẫu source_registry và tên tệp dưới data-api/db dùng mã S0x (`data-api-don-ten-nguon`)
 - data-api đóng ba đường trả dữ liệu trái luật (HT19) — deals thôi trả nội dung bài S03, coverage và listings/:id thôi đọc bảng S02 (`data-api-dong-ba-route-lo`)
 - data-api đóng khi thiếu khoá (PB3) — môi trường không khai rõ là dev/test mà danh sách khoá API rỗng thì từ chối mọi lời gọi dữ liệu và bản Node không khởi động (`data-api-dong-khi-thieu-khoa`)
+- data-api theo RESO DD 2.1 (PB2) — một tài nguyên listing có kind đọc hai bảng, tên trường RESO camelCase, loại hình đúng PropertyType/PropertySubType, extension khai ở mappings.yaml, lược đồ mẫu và seed chạy trên DB rỗng (`data-api-hop-dong-reso-dd-2-1`)
 - Dấu lược đồ của bản mẫu DB thử phủ constraint, index, trigger, enum, độ dài kiểu, NOT NULL, DEFAULT, RLS, quyền và schema ngoài public, để bản mẫu dựng lại ngay khi migration đổi những thứ đó (`dau-luoc-do-ban-mau`)
 - DB máy thu chỉ nghe nội bộ (127.0.0.1) và chỉnh tham số Postgres (`db-chi-nghe-noi-bo-va-chinh-postgres`)
 - Suite pipeline của lượt chấm chạy trên cụm Postgres dùng một lần (DB trống chuẩn CI), ca dữ liệu thật tách thành suite kích hẹp, sao lưu bỏ DB thử của suite (`db-thu-tach-khoi-cum-that`)

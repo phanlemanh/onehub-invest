@@ -5,7 +5,7 @@ slug: data-api-hop-dong-reso-dd-2-1
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api, docs]
-status: verified
+status: signed-off
 design_doc: _acceptance/data-api-hop-dong-reso-dd-2-1/design.md
 approved_by: Mạnh
 approved_at: 2026-11-27
@@ -151,6 +151,13 @@ Không có `opportunity.md` (hàng nền, không ngưỡng UAT).
 - `docs/api/openapi.yaml` — là API nội bộ của app, không phải data-api.
 
 ## Notes
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-27:
+  - Ngoài-2: Số phòng ngủ không phải số ở /v1/listings trả lỗi máy chủ thay vì báo tham số sai.
+  - Ngoài-3: Ngày thấy tin lần cuối của tin thuê ngắn hạn có thể lùi một ngày khi máy chủ không chạy giờ UTC.
+  - Ngoài-4: Để trống số phòng ngủ ở /v1/listings thì chỉ trả tin 0 phòng ngủ; gõ sai thì lỗi máy chủ.
+  - Ngoài-5: Bài kiểm lược đồ mẫu rút danh sách bảng mong đợi từ chính schema.sql, nên không bắt được bảng cũ rơi mất lúc gộp.
+  - Ngoài-6: Bài kiểm chuyển hướng mã thị trường của app không kiểm phép thay dựng bản gốc có xảy ra; tệp này chỉ chạy được trên DB chưa áp 064.
+  - Ngoài-7: Khối hạng giá (priceRank) ở nhánh bảng hạng mới được so tập khoá, chưa so giá trị với dòng cấy.
 
 - **Đây là đổi phá có chủ đích**: không giữ hình cũ song song, không chuyển hướng (Hỏi-1).
 - Hỏi-1 (Cổng Phạm vi, Mạnh quyết): giữ đường `/v1` và đổi hình tại chỗ (khuyến nghị — chưa ai gọi, một hình duy nhất để
