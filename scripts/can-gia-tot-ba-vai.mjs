@@ -8,6 +8,7 @@ import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { batBuocCoTen, coTenNguonTrong, napTenNguon } from "./can-gia-tot-ba-vai-ten-nguon.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const BASE = process.argv[2] ?? "http://localhost:3460";
@@ -108,8 +109,13 @@ try {
   );
   const media = (await c.query("SELECT media_url, local_file FROM media WHERE resource_record_key = ANY($1::text[])", [ids])).rows;
   const urlGoc = media.map((m) => m.media_url).filter(Boolean);
-  const tenNguon = (await c.query("SELECT real_name FROM source_registry")).rows.map((r) => r.real_name.toLowerCase());
-  const coTenNguon = (s) => tenNguon.some((t) => s.toLowerCase().includes(t));
+  // Dòng sổ nguồn không có tên (NULL, rỗng) bị bỏ: NULL làm script ném lỗi, tên rỗng khớp mọi chuỗi. Không còn tên nào thì dừng
+  // «chưa đo được» thay vì cho mọi trang qua (can-gia-tot-ba-vai-ten-nguon-trong).
+  const nap = await napTenNguon(c);
+  let tenNguon;
+  try { tenNguon = batBuocCoTen(nap); } catch (e) { dungLai(e.message); }
+  if (nap.bo) console.error(`bỏ ${nap.bo} dòng sổ nguồn không có tên`);
+  const coTenNguon = (s) => coTenNguonTrong(tenNguon, s);
   // Tên người bán trùng đúng nhãn loại hình của căn là rác nguồn, không phải danh tính: chữ đó vai nào cũng thấy ở cột Loại hình.
   const loaiHinh = new Set(rows.map((r) => r.property_type).filter(Boolean));
   const CAM_VIEWER = rows.flatMap((r) => [
