@@ -5,7 +5,7 @@ slug: soat-noi-s08-danh-ba
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, ui]
-status: implemented
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-11-22T04:10:00Z
 approved_by:
@@ -96,3 +96,6 @@ Bảng phủ ca đếm trên DB máy thu ở design doc §2. Trục và ca:
 - Thẻ chỉ thêm nút mới, dòng nối và bí danh ở `registry_aliases`; không đổi dòng `asset_nodes` có sẵn ở Grand Park, Ocean Park (AC-3, AC-7).
 - Nút đúc lên cloud theo lượt đồng bộ `asset_nodes` đêm, như nút S06 của DA32; meta chỉ mang nguồn, mã lượt, điểm bản đồ.
 - Bộ gắn PL20 ở E7 ghim sha `e27d1e690` (nhánh `feat/ghep-tin-vao-danh-muc`). Vòng 1 đọc nó từ một worktree trong scratchpad phiên khác; vòng 2 đọc thẳng từ kho này, vì mã PL20 đã gộp main. Probe so chín tệp trong bao nạp của `ghep-tin-danh-muc-doc.mjs` với sha ghim, lệch thì `PROBE HONG` thoát 2. Không cần worktree riêng (GS 26/11 tối).
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-27:
+  - Ngoài-1: Khi môi trường chạy thước E7 thiếu (thiếu công cụ nạp mã, bản chép thiếu bảng) sau bước ghim, thước báo đỏ cùng mã với số đo lệch thay vì «PROBE HONG».
+  - Ngoài-3: Bảng tổng theo ngả ở đầu thẻ duyệt không được bài kiểm so với số ngả của bộ xếp; danh sách từng dòng vẫn đúng.

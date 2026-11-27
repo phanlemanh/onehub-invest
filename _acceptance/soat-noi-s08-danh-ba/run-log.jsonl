@@ -41,3 +41,4 @@
 {"ts":"2026-11-26T23:41:26Z","sha":"a98f3a56b0bf10e9587470aeadaf7703cb3b3aa8","round":2,"kind":"baseline","evals_hash":"64fde297a13afbf34ad251cb029fefe12884b6f804f65dfebd8df8d1b94d4b7c","non_discriminating":[]}
 {"ts":"2026-11-26T23:41:26Z","sha":"a98f3a56b0bf10e9587470aeadaf7703cb3b3aa8","round":2,"kind":"round-tally","verdict":"PASS","expected":16,"returned":16,"blocked":0}
 {"ts":"2026-11-26T23:41:26Z","sha":"a98f3a56b0bf10e9587470aeadaf7703cb3b3aa8","round":2,"kind":"chot-truong-nguoi","human_signoff":0,"human_override":0,"bypass_ack":0,"verified_at":16}
+{"ts":"2026-11-27T07:03:34Z","kind":"repin","run_id":"repin-20261127T055715Z-33919","sha":"a7d78fa67e866a01658bfdbf1dac3c89b5bcf001","suites_exit":[0,0,0,0,0,0,0,0],"evals_exit":{"E1":0,"E2":0,"E3":0,"E4":0,"E5":0,"E6":0,"E7":0,"E9":0,"E10":0,"E11":0},"wall_s":3979.1,"so_lenh":15,"evals_not_machine":["E8"],"tong_ket":{"ket_cuc":"xanh","phut":66.3,"so_lenh":15,"model_goi":0,"model_carry":0,"chap_chon":0}}

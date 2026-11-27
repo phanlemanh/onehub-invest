@@ -7,8 +7,8 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: a98f3a56b0bf10e9587470aeadaf7703cb3b3aa8
-human_signoff:
+verified_commit: a7d78fa67e866a01658bfdbf1dac3c89b5bcf001
+human_signoff: Mạnh 2026-11-27
 ---
 
 # Evidence Report: soat-noi-s08-danh-ba
@@ -102,7 +102,7 @@ human_signoff:
   run_id: minted-soat-noi-s08-danh-ba-E8-r2
   exit_code: 0
   baseline: n-a
-  verifier: config:executors.ui-check
+  verifier: config:dev_server.start   # tác tử chấm lái trình duyệt trên bản dev của worktree; bản tổng hợp ghi khoá executors.ui-check không có trong config — sửa nhãn theo tiền lệ của kho
   verified_at: 2026-11-26T23:41:26Z
   screenshot: evidence/E8-step1.png
   observed: |
@@ -191,3 +191,7 @@ none — mọi eval chạy một lần, xác định, không có pass_rate lẫn
 
 Round 1: E4, E5 (thước dựa ca NS8-3), E6 (đòi tên DB cứng) và E7 (thiếu pg ở P4_WT) bị từ chối. Returned to implementation.
 Round 2: E1–E11 đạt, các lệnh suite đạt; verdict PASS.
+
+### Re-pin lần 1 — 2026-11-27, do ghim lại bằng làn eval
+run_id: repin-20261127T055715Z-33919
+sha: a7d78fa67e866a01658bfdbf1dac3c89b5bcf001 · suites: 8 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng · ngoài làn máy: E8

@@ -11,8 +11,8 @@ flowchart TD
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>22 việc"] --> GP{"Cổng Phạm vi"}
-  GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>241 việc"]
+  GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
+  GB --> DG["Đã giao<br/>242 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>146 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
@@ -69,10 +69,6 @@ flowchart TD
 - DATA-CONTRACT v15 (nháp) mục nguồn S09 danh bạ căn, gồm khuôn lượt bù căn thấp tầng 20/11, vào main để bộ nạp và DA50 đọc theo một bản (`s09-dc-v15-thap-tang`)
 - Tách bộ kiểm pipeline của lượt chấm thành hai nửa chạy song song, mỗi nửa một DB thử, để một lệnh không vượt trần chờ 30 phút của tác tử chấm (`tach-suite-pipeline`)
 - hai test app chạy trên DB chung thôi đỏ vì mã vùng dài cũ và thôi treo khi có DDL xếp hàng (`test-app-tren-db-chung`)
-
-## Đang làm
-
-- Nối dự án S08 vào danh bạ qua một thẻ luật theo nguồn (nối nút có sẵn, đúc nút ứng viên, từ chối có lý do), đảo được, màn Ops đếm được (`soat-noi-s08-danh-ba`)
 
 ## Đã giao — chờ phiên nghiệm thu
 
@@ -426,6 +422,7 @@ flowchart TD
 - snapshot thu thập chỉ hiện ra cho bước nạp khi đã ghi trọn vẹn, nên lượt nạp không bao giờ đánh dấu «đã nạp» một snapshot dở dang (`snapshot-nguyen-tu`)
 - Số ghép S06 không vào danh bạ Người và hiện trên Invest kèm nhãn chưa xác minh — điều kiện trước khi áp 068, migration 070 (`so-ghep-s06-nhan-danh-ba`)
 - Lệnh tạm dừng có hẹn bật lại sai kiểu không còn làm kẹt hàng lệnh, job ops-apply tìm được node dưới launchd, và token máy cấp được từ máy thu qua Management API (`so-lenh-sua-sau-tv4`)
+- Nối dự án S08 vào danh bạ qua một thẻ luật theo nguồn (nối nút có sẵn, đúc nút ứng viên, từ chối có lý do), đảo được, màn Ops đếm được (`soat-noi-s08-danh-ba`)
 - ZC1 — hai tin chỉ có ảnh cùng nhóm cùng thời điểm đều vào raw với sourceId khác nhau (`sourceid-tin-anh`)
 - Danh mục cấp dự án của S08 (địa chỉ, chủ đầu tư, điểm toạ độ, hình thức sở hữu, loại hình) nằm trong stg_s08_project, nạp lại không nhân dòng (`stg-du-an-s08`)
 - Bảng staging stg_s08_inventory cho danh mục căn S08 (migration 040) (`stg-s08-inventory`)
