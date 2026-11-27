@@ -1,0 +1,35 @@
+{
+  "feature_plain": "Trang một dự án của Danh bạ Ops đọc thuộc tính căn bằng một lượt thay hai, nên máy chủ làm việc ít đi một nửa mà số trên ô phủ giữ nguyên; kèm vài chữ và trạng thái sai nghĩa được sửa trên danh bạ.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ đọc thuộc tính căn và ô phủ của một dự án bằng đúng một lượt dựng dữ liệu, các số vẫn đếm phía máy chủ."},
+    {"id": "AC-2", "p": "Sẽ giữ đúng từng giá trị và bốn số ô phủ như trước trên bộ dữ liệu thử của việc thuộc tính căn, kể cả toà chưa căn nào có thuộc tính."},
+    {"id": "AC-3", "p": "Sẽ cho ra đúng cùng lưới và ô phủ như bản đang chạy, trên cả 5 dự án có toà của máy thu."},
+    {"id": "AC-4", "p": "Sẽ giảm thời gian đọc dữ liệu của dự án lớn nhất (38.138 căn) xuống còn tối đa 60% so với bản đang chạy, và trang không chậm hơn."},
+    {"id": "AC-5", "p": "Sẽ giữ nguyên ba ca đặc biệt: dự án không có toà, máy chưa có dữ liệu thuộc tính, và lỗi đọc vẫn hiện «Thử lại» kèm lưới toà."},
+    {"id": "AC-6", "p": "Sẽ đọc nút mở hàng ở mọi bảng cây là «Mở hàng» và «Thu gọn hàng» thay cho chữ tiếng Anh."},
+    {"id": "AC-7", "p": "Sẽ ghi «Chưa có toà» dưới ô Toà khi dự án chưa có toà nào, thay cho «Mọi toà đã có căn»."},
+    {"id": "AC-8", "p": "Sẽ đưa mọi đường dẫn dự án sai về một trang riêng của Ops có nút «Về danh bạ», không còn nút sang cổng Invest."},
+    {"id": "AC-9", "p": "Sẽ bỏ dòng phụ chỉ nhắc lại tên dự án viết thường (329 trên 344 dự án hôm nay), các bí danh khác vẫn hiện và ô tìm vẫn tìm được theo mọi bí danh."},
+    {"id": "AC-10", "p": "Sẽ ẩn cột Bậc trên màn điện thoại để thấy ngay Toà, Căn, Tin đang rao; màn từ máy tính bảng trở lên vẫn có cột Bậc."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "KHÔNG làm nhanh trang danh sách và ô đếm «Tin đang rao» — việc riêng DA68, cần thêm bảng tính sẵn."},
+    {"id": "OOS-2", "p": "KHÔNG đổi cách trang dự án tải căn (chỉ tải khi mở toà, ô tìm toà, phân trang) — đợt 3."},
+    {"id": "OOS-3", "p": "KHÔNG tính sẵn thuộc tính căn ở bước xử lý dữ liệu — đợt 4, đó mới là chỗ giảm thời gian chờ thật."},
+    {"id": "OOS-4", "p": "KHÔNG sửa khoảng đệm và bóng của khung bảng — chờ khuôn chuẩn của bộ giao diện rồi sửa cả năm chỗ một lần."},
+    {"id": "OOS-5", "p": "KHÔNG đổi dòng bí danh ở đầu trang dự án và chuyện một phần tư số căn thiếu tầng (việc của làn dữ liệu)."}
+  ],
+  "scope_plain": "Năm việc dưới đây có hàng hay đợt riêng, không làm ở đây.",
+  "coverage_plain": [
+    {"i": 0, "p": "Đường đọc thuộc tính căn: đo trên dữ liệu thử, trên 5 dự án thật, và ba ca đặc biệt (AC-1, AC-2, AC-3, AC-5)."},
+    {"i": 1, "p": "Tốc độ: có ngưỡng cho phần đọc dữ liệu (AC-4); thời gian tải trang được đo và ghi lại, không đặt ngưỡng."},
+    {"i": 2, "p": "Chữ và trạng thái: nút mở hàng hai trạng thái, ô Toà ba ca, trang mã sai ba loại mã (AC-6, AC-7, AC-8)."},
+    {"i": 3, "p": "Danh sách: bí danh trùng tên, bí danh khác, ô tìm, và hai khổ màn 375 và 768 điểm ảnh (AC-9, AC-10)."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Bản đang chạy chạy hai lượt song song, nên bỏ một lượt chắc chắn giảm tải máy chủ một nửa nhưng thời gian chờ có thể giảm ít — hợp đồng nay nói thẳng điều này và đo thêm thời gian chờ thật (đã sửa)."},
+    {"i": 1, "p": "Phép đo «số đếm ở máy chủ» từng dò chữ trong mã thay vì đo đầu ra — nay đo số mang sẵn trong kết quả truy vấn, có bản phá phải đỏ (đã sửa)."},
+    {"i": 2, "p": "Ảnh chụp chỉ thử một loại mã sai — nay thử cả ba loại trên màn thật (đã sửa)."}
+  ],
+  "decisions_plain": []
+}

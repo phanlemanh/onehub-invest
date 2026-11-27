@@ -1,0 +1,98 @@
+schema_version: 1
+feature_slug: danh-ba-ops-gop-cau-s16-va-nhan
+# Lệnh eval gói trong _acceptance/danh-ba-ops-gop-cau-s16-va-nhan/probes/kiem.sh (không thêm khoá vào _acceptance/config.yaml):
+#   kiem.sh ttc   = bộ test DA40 app/tests/thuoc-tinh-can.test.tsx (DB thử dựng từ db/migrations, xoá khi xong)
+#   kiem.sh man   = app/tests/danh-ba-ops-dot1.test.tsx (render tĩnh component thật + DB thử cho trang dự án)
+#   kiem.sh may   = probes/so-s16.mts trên DB máy thu CHỈ ĐỌC (default_transaction_read_only), bản mới so bản origin/main
+#   kiem.sh bidanh = probes/bi-danh.mts trên DB máy thu CHỈ ĐỌC — đếm dòng phụ nhắc lại tên
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/danh-ba-ops-gop-cau-s16-va-nhan/probes/kiem.sh may
+    expected: "Với dự án 16 trên DB máy thu, lớp đọc mới qua một bộ đếm câu bọc q: đúng 1 câu có chữ v_unit_thuoc_tinh và 1 câu có v_s16_gia_cdt (không tính câu kiểm to_regclass); văn bản SQL của tệp mới có «v AS MATERIALIZED (SELECT * FROM v_unit_thuoc_tinh)». Đối chứng đỏ cùng lượt: bản origin/main qua cùng bộ đếm ra 2 câu v_unit_thuoc_tinh — probe in «AC-1 bản main: 2 câu» và đỏ nếu bản main cũng ra 1 (bộ đếm không phân biệt). Ghim: «AC-1 số câu chạm v_unit_thuoc_tinh»"
+    paths: ["app/src/lib/ops/thuoc-tinh-can.ts", "app/src/components/ops/registry/du-an-content.tsx", "_acceptance/danh-ba-ops-gop-cau-s16-va-nhan/probes/**"]
+  - id: E2
+    criterion: AC-1
+    executor: test
+    cmd: bash _acceptance/danh-ba-ops-gop-cau-s16-va-nhan/probes/kiem.sh man
+    expected: "Ca DBO-AC-1 đo theo quan hệ trên DB thử: (a) DuAnContent của dự án có toà, với pool bọc đếm câu, chạy đúng 1 câu chạm v_unit_thuoc_tinh; (b) qua một q bọc ghi lại kết quả câu: hàng đầu câu S16 trả về mang sẵn cột trong_danh_ba, co_thuoc_tinh, co_gia, lan_thu và ô phủ của docThuocTinhDuAn bằng đúng các cột ấy; (c) đối chứng đỏ: bản sao lớp đọc mà SQL bỏ cột trong_danh_ba → ô phủ lỗi hay lệch, ca đỏ nêu «AC-1 ô phủ không lấy từ SQL»; bản sao du-an-content gọi lại hai hàm cũ → 2 câu, ca đỏ nêu «AC-1 trang chạy hai câu S16»"
+    paths: ["app/src/lib/ops/thuoc-tinh-can.ts", "app/src/components/ops/registry/du-an-content.tsx", "app/tests/danh-ba-ops-dot1.test.tsx"]
+  - id: E3
+    criterion: AC-2
+    executor: test
+    cmd: bash _acceptance/danh-ba-ops-gop-cau-s16-va-nhan/probes/kiem.sh ttc
+    expected: "Toàn bộ ca TTC-AC-9, TTC-AC-10 của DA40 xanh không sửa lời assert cũ (lưới từng căn, ô phủ bằng lệnh đếm độc lập y=4 x=3 z=2 n=1, chiều đỏ HAVING và mo_ho vẫn đỏ, lỗi bọc, DB chưa 113). Ca mới TTC-AC-10 «toà có bí danh S16 mà không căn nào có thuộc tính»: docThuocTinhDuAn trả ô phủ trangThai co với coThuocTinh 0, trongDanhBa = số căn đếm độc lập, lưới rỗng. Chiều đỏ: bản sao lọc dòng trước khi đếm (đếm trên dòng đã lọc) → trongDanhBa lệch, ca đỏ nêu «AC-2 ô phủ đếm sau khi lọc»"
+    paths: ["app/src/lib/ops/thuoc-tinh-can.ts", "app/tests/thuoc-tinh-can.test.tsx"]
+  - id: E4
+    criterion: AC-3
+    executor: script
+    cmd: bash _acceptance/danh-ba-ops-gop-cau-s16-va-nhan/probes/kiem.sh may
+    expected: "Cho từng dự án 16, 1, 4, 2, 3 (toà lấy qua docDuAn thật): Map thuộc tính của bản mới deepEqual bản origin/main (mọi căn, mọi trường) và ô phủ deepEqual; in số căn có thuộc tính và trong_danh_ba mỗi dự án; dự án 16 ô phủ trangThai co, trongDanhBa > 0. Đối chứng dương: bản sao mới với co_gia đếm theo co_v → probe báo lệch ở dự án có căn có thuộc tính mà không giá. Ghim: «AC-3 lệch ở dự án <id>»"
+    paths: ["app/src/lib/ops/thuoc-tinh-can.ts", "_acceptance/danh-ba-ops-gop-cau-s16-va-nhan/probes/**"]
+  - id: E5
+    criterion: AC-4
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/danh-ba-ops-gop-cau-s16-va-nhan/probes/kiem.sh may
+    expected: "Dự án 16, ba lần xen kẽ main/mới: tổng thời gian các câu (bộ bọc q đo từng câu, cộng lại) trung vị bản mới ≤ 0,6 × trung vị bản main; thời gian tường của lời gọi đọc (main: Promise.all hai hàm như du-an-content của main; mới: một hàm) trung vị bản mới ≤ 1,1 × bản main; in bốn trung vị (ms) và hai tỉ lệ. Ghim đỏ: «AC-4 tỉ lệ DB <x> > 0,6» hay «AC-4 tỉ lệ tường <x> > 1,1»"
+    paths: ["app/src/lib/ops/thuoc-tinh-can.ts", "_acceptance/danh-ba-ops-gop-cau-s16-va-nhan/probes/**"]
+  - id: E6
+    criterion: AC-5
+    executor: test
+    cmd: bash _acceptance/danh-ba-ops-gop-cau-s16-va-nhan/probes/kiem.sh man
+    expected: "Ca DBO-AC-5: docThuocTinhDuAn([]) qua bộ đếm câu → 0 câu, ô phủ khong-nguon, lưới rỗng; ONEHUB_TTC_LOI_THU=1 → cả hai kết quả ok false và DuAnView render có «Không tải được thuộc tính căn», «Thử lại», «Toà và căn». (Ca DB chưa áp 113 nằm trong E3.) Chiều đỏ: bản sao bỏ nhánh toaKeys rỗng → ≥1 câu, ca đỏ nêu «AC-5 dự án 0 toà vẫn chạy câu»"
+    paths: ["app/src/lib/ops/thuoc-tinh-can.ts", "app/src/components/ops/registry/du-an-view.tsx", "app/tests/danh-ba-ops-dot1.test.tsx"]
+  - id: E7
+    criterion: AC-6
+    executor: test
+    cmd: bash _acceptance/danh-ba-ops-gop-cau-s16-va-nhan/probes/kiem.sh man
+    expected: "Ca DBO-AC-6: render tĩnh RegistryGrid thật với một dự án có phân khu (đóng) → nút mở hàng aria-label «Mở hàng»; với expanded mặc định → «Thu gọn hàng»; HTML không có «Expand row»/«Collapse row»; DATA_GRID_VI.labels có cả hai khoá. Chiều đỏ: bản DATA_GRID_VI thiếu expandRow → HTML có «Expand row», ca đỏ nêu «AC-6 nhãn tiếng Anh»"
+    paths: ["app/src/components/insight/insight-grid.tsx", "app/src/components/ops/registry/registry-grid.tsx", "app/tests/danh-ba-ops-dot1.test.tsx"]
+  - id: E8
+    criterion: AC-7
+    executor: test
+    cmd: bash _acceptance/danh-ba-ops-gop-cau-s16-va-nhan/probes/kiem.sh man
+    expected: "Ca DBO-AC-7: DuAnView ba ca (soToa 0 · soToa 3 toaChuaCan 2 · soToa 3 toaChuaCan 0) → chân ô Toà lần lượt «Chưa có toà», «2 toà chưa có căn», «Mọi toà đã có căn», đọc trong đúng khối ô Toà (không đếm chữ toàn trang); ca 0 toà không có «Mọi toà đã có căn». Chiều đỏ: bản sao bỏ nhánh soToa 0 → ca 0 toà ra «Mọi toà đã có căn», ca đỏ nêu «AC-7 dự án 0 toà»"
+    paths: ["app/src/components/ops/registry/du-an-view.tsx", "app/tests/danh-ba-ops-dot1.test.tsx"]
+  - id: E9
+    criterion: AC-8
+    executor: test
+    layer: backend-effect
+    cmd: bash _acceptance/danh-ba-ops-gop-cau-s16-va-nhan/probes/kiem.sh man
+    expected: "Ca DBO-AC-8: (a) tệp app/src/app/ops/registry/[nodeId]/not-found.tsx tồn tại, render có «Không có dự án này trong danh bạ», liên kết «Về danh bạ» href /ops/registry, không có «Xem thị trường Việt Nam»; (b) trên DB thử: parseNodeId('abc') null (page gọi notFound), DuAnContent với id không có và id của một phân khu (không phải dự án gốc) đều ném lỗi notFound của Next (digest NEXT_HTTP_ERROR_FALLBACK;404); đối chứng: id dự án gốc không ném. Chiều đỏ: bản not-found trỏ /vn → ca đỏ nêu «AC-8 nút không về danh bạ»"
+    paths: ["app/src/app/ops/registry/**", "app/src/components/ops/registry/du-an-content.tsx", "app/tests/danh-ba-ops-dot1.test.tsx"]
+  - id: E10
+    criterion: AC-9
+    executor: test
+    cmd: bash _acceptance/danh-ba-ops-gop-cau-s16-va-nhan/probes/kiem.sh man
+    expected: "Ca DBO-AC-9: biDanhKhacTen bảng viết trước (tên có dấu + bí danh không dấu chữ thường → bỏ; bí danh khác → giữ; 4 bí danh khác → 3; tên đ/Đ) đủ số assert = số ô; render RegistryGrid thật: dòng phụ không còn bí danh trùng tên, còn bí danh khác; timKiem của hàng vẫn chứa bí danh trùng tên (ô tìm không đổi). Chiều đỏ: bản sao so không gấp dấu → bí danh trùng tên còn, ca đỏ nêu «AC-9 bí danh trùng tên còn hiện»"
+    paths: ["app/src/lib/ops/registry/cay.ts", "app/src/components/ops/registry/registry-grid.tsx", "app/tests/danh-ba-ops-dot1.test.tsx"]
+  - id: E11
+    criterion: AC-9
+    executor: script
+    cmd: bash _acceptance/danh-ba-ops-gop-cau-s16-va-nhan/probes/kiem.sh bidanh
+    expected: "Trên DB máy thu chỉ đọc: docDanhBa + dungCay thật; số dự án gốc có bí danh fold(bí danh) = fold(tên) (đếm độc lập trong probe) = 329 ± dữ liệu mới, và số dòng phụ của hàm biDanhKhacTen còn chứa bí danh trùng tên = 0; in hai số. Ghim đỏ: «AC-9 còn <n> dòng phụ nhắc lại tên»"
+    paths: ["app/src/lib/ops/registry/cay.ts", "_acceptance/danh-ba-ops-gop-cau-s16-va-nhan/probes/**"]
+  - id: E12
+    criterion: AC-10
+    executor: test
+    cmd: bash _acceptance/danh-ba-ops-gop-cau-s16-va-nhan/probes/kiem.sh man
+    expected: "Ca DBO-AC-10: cột bac của bảng danh sách có meta headerClassName và cellClassName chứa «hidden md:table-cell»; cột toa, can, tin không có lớp hidden nào. Chiều đỏ: bản sao bỏ meta của cột bac → ca đỏ nêu «AC-10 Bậc không ẩn»"
+    paths: ["app/src/components/ops/registry/registry-grid.tsx", "app/tests/danh-ba-ops-dot1.test.tsx"]
+  - id: E13
+    criterion: AC-10
+    executor: ui-check
+    layer: ui-observed
+    paths: ["app/src/components/ops/registry/**", "app/src/components/insight/insight-grid.tsx", "app/src/app/ops/registry/**"]
+    steps:
+      - "Bản chạy: dev server của worktree danh-ba-ops-gop-cau-s16-va-nhan ở cổng riêng (không :3456) nối DB máy thu local :5433. KHÔNG tạo hay sửa tệp nào trong cây. Đăng nhập bằng tài khoản ops thử (.claude/ops-test-account.json; không in mật khẩu)."
+      - "/ops/registry ở 375 px tối → evidence/E13-step1.png: dòng đầu bảng thấy Tên, Toà, Căn, Tin đang rao; không có cột Bậc; dòng phụ dưới tên không lặp lại tên."
+      - "/ops/registry ở 1280 px sáng → evidence/E13-step2.png: có cột Bậc; rê/đọc aria-label nút mở hàng của một dự án có phân khu = «Mở hàng»."
+      - "/ops/registry/381 (dự án 0 toà) 1280 sáng → evidence/E13-step3.png: ô Toà chân «Chưa có toà»."
+      - "/ops/registry/abc 1280 sáng → evidence/E13-step4.png: «Không có dự án này trong danh bạ» + nút «Về danh bạ»; bấm nút về /ops/registry."
+      - "/ops/registry/999999 (số không có nút) và /ops/registry/<id một phân khu, lấy từ hàng con của dự án 16 trên danh bạ> 1280 sáng → evidence/E13-step4b.png, E13-step4c.png: cùng «Không có dự án này trong danh bạ» + «Về danh bạ», không có «Xem thị trường Việt Nam»."
+      - "/ops/registry/16 1280 sáng: đọc Navigation Timing (responseEnd − startTime, ms) ba lần tải thẳng → ghi vào observed; chụp → evidence/E13-step5.png (ô phủ thuộc tính có số)."
+    expected: "375 px không có cột Bậc, thấy Căn và Tin; 1280 px có Bậc; nút mở hàng «Mở hàng»; dự án 0 toà «Chưa có toà»; cả ba loại mã sai (abc, số không có, id phân khu) ra trang Ops có «Về danh bạ» và không có «Xem thị trường Việt Nam»; trang 16 tải xong với ô phủ có số, ghi ba số thời gian tải."
+    evidence_required: [run_id, verifier, verified_at, observed, screenshot]
