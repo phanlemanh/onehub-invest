@@ -224,7 +224,7 @@ test("ZJ-AC-6 rào: node giả, HOME tạm không có node thật, DB cổng đ�
 // ---- pl34-lich-dem-sau-buoc ----
 // Đọc khi cần, không lúc nạp tệp: ZL-AC-1 chạy ZJ-AC-5 trên cây đã xoá tệp bọc.
 const that = () => readFileSync(path.join(REPO, SCRIPT), "utf8");
-const DONG_DOC_GOP = 'job_run zalo-import-daily doc-gop-hang-ngay bash "$ROOT/pipeline/doc-gop-hang-ngay.sh"\n';
+const DONG_DOC_GOP = 'doc_gop_run bash "$ROOT/pipeline/doc-gop-hang-ngay.sh"\n';
 const DONG_ENRICH = "job_run zalo-import-daily enrich-run enrich_run\n";
 /** Bản sao tệp bọc: thay đúng một chuỗi (phải có mặt). */
 function dotBien(cu, moi, src = that()) {
@@ -256,10 +256,10 @@ test("PL34-AC-1 không mới: state đã ở snapshot mới nhất → mã 0, kh
   assert.equal(chay(cay()).calls[0], "import-airbnb", "PL34-AC-1 đối chứng: state cũ mà không nạp");
 });
 
-/** Đường tệp bước đọc gộp mà dòng job_run trỏ; ném khi tệp không có trong kho. */
+/** Đường tệp bước đọc gộp mà dòng chạy bước (doc_gop_run, 2311-5) trỏ; ném khi tệp không có trong kho. */
 function kiemTepBuoc(src) {
-  const m = src.match(/^job_run zalo-import-daily doc-gop-hang-ngay bash "\$ROOT\/([^"]+)"$/m);
-  assert.ok(m, "PL34-AC-3 không thấy dòng job_run doc-gop-hang-ngay");
+  const m = src.match(/^doc_gop_run bash "\$ROOT\/([^"]+)"$/m);
+  assert.ok(m, "PL34-AC-3 không thấy dòng doc_gop_run doc-gop-hang-ngay");
   if (!existsSync(path.join(REPO, m[1]))) throw new Error(`PL34-AC-3 tệp bước không có trong kho: ${m[1]}`);
   return m[1];
 }
@@ -333,6 +333,7 @@ const TEP_NHAC = [
   "scripts/zalo-import-job-nhe.test.mjs",
   "scripts/zalo-import-job.test.mjs",
   "scripts/zalo-import-chia-tran-zcode.test.mjs",   // 2311-5: lưới chia trần của ZCode
+  "scripts/zalo-import-replay.test.mjs",   // ZC20 2511-56: replay state 0 xếp snapshot bù phase cuối
 ];
 function quetTepNhac() {
   const ra = [];
@@ -352,9 +353,9 @@ function soTepNhac(thay, ke) {
   assert.deepEqual(thay, [...ke].sort(), "PL34-AC-4 tập tệp kê có tệp không còn nhắc zalo-import-daily");
 }
 
-test("PL34-AC-4 tập tệp: mọi tệp test nhắc zalo-import-daily đúng bằng mười lăm tệp kê trước (s03-len-nhanh-nac-1 thêm hai, CG9 thêm một, job-step-ghi-thoi-luong thêm một, 1711-4 trần thời gian thêm một, 1911-2 test trần ZCode thêm một, DA45 thêm một, 2311-5 lưới chia trần thêm một); thiếu một thì đỏ gọi tên", () => {
+test("PL34-AC-4 tập tệp: mọi tệp test nhắc zalo-import-daily đúng bằng mười sáu tệp kê trước (s03-len-nhanh-nac-1 thêm hai, CG9 thêm một, job-step-ghi-thoi-luong thêm một, 1711-4 trần thời gian thêm một, 1911-2 test trần ZCode thêm một, DA45 thêm một, 2311-5 lưới chia trần thêm một, ZC20 replay thêm một); thiếu một thì đỏ gọi tên", () => {
   const thay = quetTepNhac();
-  assert.equal(thay.length, 15, `PL34-AC-4 số tệp quét: ${thay.join(", ")}`);
+  assert.equal(thay.length, 16, `PL34-AC-4 số tệp quét: ${thay.join(", ")}`);
   soTepNhac(thay, TEP_NHAC);
   assert.throws(() => soTepNhac(thay, TEP_NHAC.filter((f) => f !== "scripts/nap-argmax.test.mjs")),
     /PL34-AC-4 tệp test nhắc zalo-import-daily chưa kê: scripts\/nap-argmax\.test\.mjs/);

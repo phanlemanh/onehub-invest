@@ -1,0 +1,72 @@
+ZC17 ghim lại trên M5 ＠3f9c0c323ec6342e00f0f861c41c45da1668c5e6 — LÀN ĐỎ, run_id repin-20261127T020146Z-98651
+Lệnh: node repin-lane.mjs --root <worktree> --slug s06-thu-duoi-do --write --tran-phut 130 (kit 2.37.0; lượt chạy trọn, bắt đầu trước khi có lời cho dùng --skip-unchanged)
+
+Suite: 8/8 thoát 0 (pipeline_that xanh). Eval: 14/15 thoát 0; E8 (probes/pham-vi.sh) thoát 1, chạy lại một lần vẫn 1, đầu ra hai lần giống hệt.
+
+Phân loại: cả ba ca đỏ thuộc mã PL41 (nhánh xếp chồng PL41 ＠78f227e73), không thuộc mã ZC17:
+  - NGOAI PHAM VI pipeline/transform-chotot.mjs — tệp của PL41
+  - NGOAI PHAM VI pipeline/scripts/street-raw-tran-dem.test.mjs — tệp của PL41
+  - TEST-NUA LECH (+2 −0) — dòng thứ hai là test của PL41
+pham-vi.sh so diff với merge-base origin/main, nên E8 sẽ tự xanh lại khi PL41 vào main; ghim lại sau đó (hoặc bản pham-vi.sh trừ phần của PL41) là đủ.
+Run-log: không commit (dòng repin-do do làn ghi đã bỏ khỏi cây).
+
+== Nguyên văn nhật ký E8 lần 1 ==
+# lệnh: bash _acceptance/s06-thu-duoi-do/probes/pham-vi.sh
+# mã thoát: 1
+=== stdout ===
+tự kiểm: app/src/app/page.tsx → NGOAI PHAM VI
+ok LO-TRINH.html
+ok PRODUCT-MAP.md
+ok _acceptance/config.yaml
+ok _acceptance/s06-thu-duoi-do/card-plain.json
+ok _acceptance/s06-thu-duoi-do/card.html
+ok _acceptance/s06-thu-duoi-do/contract.md
+ok _acceptance/s06-thu-duoi-do/decisions.jsonl
+ok _acceptance/s06-thu-duoi-do/evals.yaml
+ok _acceptance/s06-thu-duoi-do/evidence-page.html
+ok _acceptance/s06-thu-duoi-do/evidence-report.md
+ok _acceptance/s06-thu-duoi-do/evidence/m5-pipeline-that.txt
+ok _acceptance/s06-thu-duoi-do/gap-probe.md
+ok _acceptance/s06-thu-duoi-do/probes/chan-mang.mjs
+ok _acceptance/s06-thu-duoi-do/probes/dot-bien.mjs
+ok _acceptance/s06-thu-duoi-do/probes/khong-mang.mjs
+ok _acceptance/s06-thu-duoi-do/probes/pham-vi.sh
+ok _acceptance/s06-thu-duoi-do/probes/phu-ca.mjs
+ok _acceptance/s06-thu-duoi-do/review-findings.md
+ok _acceptance/s06-thu-duoi-do/run-log.jsonl
+ok _acceptance/street-raw-tran-dem-tren-phat-bieu-song/contract.md
+ok _acceptance/street-raw-tran-dem-tren-phat-bieu-song/decisions.jsonl
+ok _acceptance/street-raw-tran-dem-tren-phat-bieu-song/evals.yaml
+ok _acceptance/street-raw-tran-dem-tren-phat-bieu-song/evidence-report.md
+ok _acceptance/street-raw-tran-dem-tren-phat-bieu-song/evidence/m5-pipeline-that-r3.txt
+ok _acceptance/street-raw-tran-dem-tren-phat-bieu-song/evidence/m5-pipeline-that.txt
+ok _acceptance/street-raw-tran-dem-tren-phat-bieu-song/probes/tran.mjs
+ok _acceptance/street-raw-tran-dem-tren-phat-bieu-song/probes/tran.sh
+ok _acceptance/street-raw-tran-dem-tren-phat-bieu-song/review-findings.md
+ok _acceptance/street-raw-tran-dem-tren-phat-bieu-song/run-log.jsonl
+ok docs/superpowers/plans/2026-11-25-s06-thu-duoi-do.md
+ok docs/superpowers/specs/2026-11-25-s06-thu-duoi-do-design.md
+ok pipeline/collect-s06-duoi.mjs
+ok pipeline/scripts/collect-s06-duoi.test.mjs
+NGOAI PHAM VI pipeline/scripts/street-raw-tran-dem.test.mjs
+ok pipeline/test-nua.json
+NGOAI PHAM VI pipeline/transform-chotot.mjs
+pipeline/test-nua.json: +2 −0
+TEST-NUA LECH
+PHAM-VI DO (3)
+
+=== stderr ===
+
+== Tổng kết làn ==
+[lane] suite 1/8: node scripts/suite-neu-doi.mjs agent -- 'cd agent && npm test' → exit 0 (252.9s)
+[lane] suite 2/8: node scripts/suite-neu-doi.mjs app -- 'cd app && npx tsc --noEmit && npm run lint' → exit 0 (13.4s)
+[lane] suite 3/8: node scripts/suite-neu-doi.mjs app_ui -- 'cd app && npm test' → exit 0 (567.4s)
+[lane] suite 4/8: node scripts/suite-neu-doi.mjs pipeline_a -- 'cd pipeline && npm run test:a' → exit 0 (204.3s)
+[lane] suite 5/8: node scripts/suite-neu-doi.mjs pipeline_b -- 'cd pipeline && npm run test:b' → exit 0 (125.1s)
+[lane] suite 6/8: node scripts/suite-neu-doi.mjs pipeline_that -- 'cd pipeline && npm run test:that' → exit 0 (2519.5s)
+[lane] suite 7/8: node scripts/suite-neu-doi.mjs ui_lint_rules -- 'cd app && npm run test:lint-rules' → exit 0 (0.1s)
+[lane] suite 8/8: node scripts/suite-neu-doi.mjs portal_static -- 'node scripts/check-portal-compliance.mjs' → exit 0 (0.1s)
+[lane] chụp 385 hồ sơ đã thông Cổng Bằng chứng (6677 tệp) trước suite · sau eval: 0 tệp bị chạm
+repin-lane: s06-thu-duoi-do/E8: nhãn không gắn: không có dòng nền đỏ nào ghi eval này (đúng lượt nền được trỏ) trên nhánh chính
+repin-lane: LÀN ĐỎ — không ghi pin; dấu lượt đỏ ở run-log của 1 hồ sơ (suite [0,0,0,0,0,0,0,0]; eval đỏ: s06-thu-duoi-do/E8=1). Khắc phục nguyên nhân rồi chạy làn MỚI (run_id mới); không ký mù.
+[lane] TỔNG KẾT — do · 61.6 phút · 16 lệnh · eval model thật: gọi 0, carry 0 · chập chờn: 0

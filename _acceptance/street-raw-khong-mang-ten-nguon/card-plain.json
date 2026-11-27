@@ -1,0 +1,4 @@
+{
+  "feature_plain": "Lượt nạp tin S06 hằng đêm không còn ghi chữ địa chỉ mang tên nguồn thật (đường, toà, phường, quận); nhờ vậy đồng bộ lên cloud không bị chặn cả lượt vì một ô như sự cố đêm 24/11.",
+  "analyst_plain": "Lượt chấm cuối bị chặn vì máy, không vì luật: chế độ cô lập worktree của phiên chặn lệnh nền nên phép đo trên bản chép (E1–E3, E5) và nửa B bộ test (E7) không chạy. Cả năm đã đạt ở vòng 2 trên cùng phần mã (chỉ hồ sơ đổi giữa hai lượt); nửa A (E6) đạt ở lượt cuối. PR còn chạy CI đủ bộ."
+}

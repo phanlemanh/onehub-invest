@@ -1,0 +1,62 @@
+schema_version: 1
+slug: api-markets-khong-tra-so-s02
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.api_markets_s02
+    long_running: 90
+    paths: ["app/src/app/api/v1/markets/route.ts", "app/tests/api-markets-khong-s02.test.tsx"]
+    expected: "Ca HT23-AC-1 xanh: 200, mọi dòng đúng bốn khoá, không có marketScore. Chiều đỏ ghim trong test: chạy SQL của route cũ trên cùng DB thử ra dòng có market_score của S02 («route cũ mang số S02»)."
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.api_markets_s02
+    long_running: 90
+    paths: ["app/src/app/api/v1/markets/route.ts", "app/tests/api-markets-khong-s02.test.tsx"]
+    expected: "Ca HT23-AC-2 xanh: thứ tự listingCount giảm dần rồi tên. Chiều đỏ: SQL cũ đặt thị trường có điểm S02 lên đầu."
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.tir_be_mat
+    paths: ["scripts/check-api-surface.mjs", "scripts/check-api-surface.test.mjs", "app/src/lib/api-surface.ts", "app/src/app/api/v1/markets/route.ts"]
+    expected: "Sổ thật 0 vi phạm; ca HT23-AC-3 cấy route public đọc airdna_scores ra đúng MSG.publicS02; db.ts không làm route nào đỏ."
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.api_surface_mutation
+    paths: ["scripts/check-api-surface.mjs"]
+    expected: "Mọi đột biến (cũ và bốn đột biến HT23, gồm cấy FROM airdna_scores vào db.ts ngoài biểu thức đổi tên) đỏ đúng thông điệp ghim; thoát 0."
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.tir_be_mat
+    paths: ["scripts/check-api-surface.mjs", "scripts/check-api-surface.test.mjs", "app/src/app/api/**/route.ts"]
+    expected: "Ca HT23-AC-5: mọi route public 0 vi phạm publicS02; đối chứng cấy lại câu JOIN cũ (văn bản ghim trong test, không đọc git) thì đúng một route v1/markets đỏ với MSG.publicS02."
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.tir_be_mat
+    paths: ["app/src/lib/api-surface.ts", "scripts/check-api-surface.test.mjs"]
+    expected: "Ca HT23-AC-6: note v1/markets đúng câu, mode public, methods GET."
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.portal_static
+    paths: ["scripts/check-api-surface.mjs", "app/src/lib/api-surface.ts"]
+    expected: "check-portal-compliance thoát 0; suite app, app_ui do lượt chấm chạy theo suite_keys."
+  - id: E8
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.suite.app_ui
+    long_running: 90
+    paths: ["app/src/app/api/v1/markets/route.ts", "app/src/lib/api-surface.ts", "app/tests/api-markets-khong-s02.test.tsx"]
+    expected: "Bộ test app xanh trên DB thử; không test nào còn đọc marketScore của /api/v1/markets."
+  - id: E9
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.suite.pipeline_a
+    long_running: 90
+    paths: ["app/src/app/api/v1/markets/route.ts", "scripts/check-api-surface.mjs"]
+    expected: "exit 0; nửa a bộ pipeline xanh trên nhánh. Khai riêng để lượt chấm chờ đủ giờ khi máy tải — S4 r1 BLOCKED vì nửa a chạy quá 30 phút mặc định (khuôn E8c của HT6)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

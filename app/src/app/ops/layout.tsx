@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import { notFound, redirect } from "next/navigation";
 
 import { OpsShell } from "@/components/shell/ops-shell/ops-shell";
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
  * (session còn hạn + quyền). Shell riêng của Ops chuyển thể @reui/app-shell-36
  * (thanh bên nhóm); Invest giữ khung app-shell-30.
  */
-export default async function OpsLayout({ children }: LayoutProps<"/ops">) {
+export default async function OpsLayout({ children }: { children: ReactNode }) {
   const user = await getSessionUser();
   if (!user) redirect("/login?next=/ops");
   if (!canAccessOps(user)) notFound();

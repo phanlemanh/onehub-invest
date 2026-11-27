@@ -1,0 +1,13 @@
+[zalo-import-daily] trần: nạp ≤1800s · đọc gộp ≤2s (dừng sạch ở 60s) · lượt ≤40s
+bỏ qua thư mục TS không phải mốc thời gian: 
+JOB STEP [zalo-import-daily] bước truoc-lan-claude mã 0 giây 0 nhanh 0
+JOB STEP [zalo-import-daily] bước transform-zalo mã 0 giây 0 nhanh 0
+JOB STEP [zalo-import-daily] bước phuong-tu-du-an mã 0 giây 0 nhanh 0
+JOB STEP [zalo-import-daily] bước transform-media mã 0 giây 0 nhanh 0
+JOB STEP [zalo-import-daily] bước refresh-bait-gap mã 0 giây 0 nhanh 0
+JOB STEP [zalo-import-daily] bước xep-hang-gia mã 0 giây 0 nhanh 0
+❌ [zalo-import-daily] TIMEOUT: bước đọc gộp vượt trần 2s — gửi TERM để dừng bước, chuỗi chạy tiếp tới enrich
+<ROOT>/scripts/zalo-import-daily.sh: line 461: 38004 Terminated: 15          DOC_GOP_TRAN_GIAY="$DOC_GOP_TRAN_GIAY" "$@"
+JOB STEP [zalo-import-daily] bước doc-gop-hang-ngay mã 143 giây 2 nhanh 0
+JOB FAIL [zalo-import-daily] bước doc-gop-hang-ngay mã 143
+JOB STEP [zalo-import-daily] bước enrich-run mã 0 giây 0 nhanh 0

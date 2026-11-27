@@ -10,7 +10,7 @@ import { Frame, FrameDescription, FrameHeader, FramePanel, FrameTitle } from "@/
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
 import { LAT_CUON_CHIEU } from "@/lib/labels-cuon-chieu"
 import type { DoiChieu, DongTruongHop } from "@/lib/labels-luot-hai"
-import { LABEL_FIELDS_NHOM, nhanO, oCuaLat } from "@/lib/labels-normalize"
+import { LABEL_FIELDS_NHOM, moTaLatKhaiO, nhanO, oCuaLat } from "@/lib/labels-normalize"
 import type { DongThuanTruong, NhomCuaLat, TienDo, TinGan } from "@/lib/labels-queries"
 import { fmtInt, fmtVnDateTime } from "@/lib/format"
 
@@ -26,14 +26,14 @@ import { NguoiDang } from "./nguoi-dang"
 
 /**
  * /ops/labels «Gắn nhãn» (PL7 `man-gan-nhan-mu`) — khuôn danh sách-chi-tiết như /ops/review: hàng chờ ngầm (tin kế do
- * máy xếp), khung chi tiết = chữ gốc của tin + biểu mẫu chín trường. Không hiện giá trị máy nào (gắn mù, AC-4).
+ * máy xếp), khung chi tiết = chữ gốc của tin + biểu mẫu chín trường. Không hiện giá trị máy nào (gắn mù, AC-4) — trừ lát có nháp
+ * (cuộn chiếu, lát khai ô trong LAT_KHAI_O_CO_NHAP của HT21).
  * GC0: lát có nhóm thêm bộ chọn nhóm, biểu mẫu 17 trường bản D, lượt hai sau khi lưu, bảng trường hợp theo nhóm.
  */
 
 const CRUMBS = [{ label: "Vận hành", href: "/ops" }, { label: "Gắn nhãn" }]
 const DESCRIPTION = "Đọc chữ gốc của từng tin của lát và ghi chín trường lõi. Máy không cho thấy nó đã đọc ra gì."
 const DESCRIPTION_NHOM = "Gắn theo từng nhóm: ghi điều người trong nhóm hiểu, kèm căn cứ từng ô. Lưu xong mới thấy máy đọc gì."
-const DESCRIPTION_RUT_GON = "Đọc từng bài và ghi toà, phân khu hoặc cụm. Máy không cho thấy nó đã đọc ra gì."
 const DESCRIPTION_CUON_CHIEU = "Mẫu soát mỗi ngày 20 bài: máy đã điền nháp, anh giữ hoặc sửa từng ô rồi lưu. Số giữ nháp hiện ở Chất lượng dữ liệu."
 /** Lát mặc định của màn và lệnh lấy mẫu của nó. */
 export const LAT_THEO_NHOM = "s03-theo-nhom"
@@ -190,7 +190,7 @@ export function LabelsView(props: Props) {
         crumbs={CRUMBS}
         title="Gắn nhãn"
         stats={stats}
-        description={oLat ? DESCRIPTION_RUT_GON : cuonChieu ? DESCRIPTION_CUON_CHIEU : theoNhom || lat === LAT_THEO_NHOM ? DESCRIPTION_NHOM : DESCRIPTION}
+        description={oLat ? (moTaLatKhaiO(lat) ?? DESCRIPTION) : cuonChieu ? DESCRIPTION_CUON_CHIEU : theoNhom || lat === LAT_THEO_NHOM ? DESCRIPTION_NHOM : DESCRIPTION}
         actions={theoNhom && chon ? <ChonNhom nhom={nhom} chon={chon} hrefNhom={hrefNhom} /> : undefined}
       />
       {t.tong === 0 ? <LabelsEmpty lat={lat} /> : null}

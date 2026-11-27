@@ -11,7 +11,7 @@
 | OpenClaw Desktop (/Applications) | Không cần cho vận hành — headless làm được tất | ❌ (user được phép remove) | Không cài thêm Login Items |
 | ~/dev/openclaw (source 4.4G) | **Tham chiếu source để vá plugin** (đang đứng nhánh `fix/zalouser-plugin-hooks` = v2026.10.5 + port pluginHooks) | ✅ GIỮ (dev) | KHÔNG chạy production từ đây |
 | Zalo PC app / Zalo Web (Chrome) | **KHÔNG liên quan thu thập** — provider zca-js poll server Zalo trực tiếp bằng session QR-link | ❌ | Tiện cá nhân của user, muốn dùng thì dùng |
-| Kev :8009, collector :9210, MTPLX :8000 | Hạ tầng phụ thuộc hook | ✅ | launchd KeepAlive đã có |
+| collector :9210 | Hạ tầng phụ thuộc hook | ✅ | launchd KeepAlive đã có (K1: cổng chấm nhãn đã bỏ — mục 52) |
 
 ## Chuỗi tin Zalo (đúng như đã verify)
 
@@ -20,7 +20,7 @@ zca-js poll Zalo server (session QR-link, mỗi ~10′)
 → zalouser monitor (core gateway bundle)
 → [MENTION GATE]  ← ĐIỂM CHẾT: requireMention=true drop tin THƯỜNG
    │                  TRƯỚC khi hook thấy (log "drop no mention")
-→ processMessage → internal hook "oneinvest-zalo-pipe" → Kev → :9210
+→ processMessage → internal hook "oneinvest-zalo-pipe" (K1: không cổng chấm nhãn) → :9210
 → (song song) agent auto-reply turn —-layer nguy hiểm
 ```
 
@@ -245,7 +245,7 @@ local; mỗi khối mang `measured_at` (lúc khối đo xong). Khoá cũ của b
 | `/ops/collections` | Sức khoẻ nguồn, lưới nguồn | `freshness` + `sourceRuns` | «—» |
 | `/ops/collections` | Bản ghi 24h | `records24h` | «—» |
 | `/ops/collections` | Khoá an toàn (ô + lưới) | `lockdown` (ON23; tươi/cũ theo chính khối) | ô «—» + «Chưa kiểm được trên máy chủ», lưới 8/8 «Chỉ kiểm ở máy thu» (vàng) — khối lỗi cũng vậy |
-| `/ops/collections` | Máy móc: Kev gate, collector API | lớp «Cổng Kev :8009» / «Cổng nhận tin :9210» của `lockdown` (ON23) — cùng trạng thái với Khoá an toàn | «Chưa kiểm được» |
+| `/ops/collections` | Máy móc: collector API | lớp «Cổng nhận tin :9210» của `lockdown` (ON23) — cùng trạng thái với Khoá an toàn (K1: cổng chấm nhãn đã bỏ — mục 52) | «Chưa kiểm được» |
 | `/ops/collections` | Bảng nhóm S03: «đang bật N nhóm», «Vào bảng thô» theo nhóm | `s03` (ON4; N = hợp nhóm bật hiệu dụng mọi tài khoản, chỉ tên nhóm — không mã nhóm) | bảng không dựng, «nhóm S03» ở lại Alert gom; nhóm thiếu số tin vào «—», thiếu tên «Nhóm chưa có tên» |
 | `/ops/collections` | vùng còn lại (luồng, Cần chú ý, Zalo, xoay vòng…) | — không dựng trên cloud | một Alert «Phần còn lại của trang chưa có số trên máy chủ» |
 | `GET /api/v1/ops/coverage` | độ tươi từng nguồn × thành phố (máy đọc: audit-all, smoke) | khối `freshness` (AU12; `state` fresh/stale theo chính khối, `source: "facts"`; máy thu `source: "local"`, `state: "live"`) | `200`, `state: "none"`, `rows: null`, `note: «Chỉ đo ở máy thu»` — không `[]`, không 500 |
@@ -308,6 +308,24 @@ lạnh, hạn giữ bản lùi): `docs/ops/db-volume.md`.
 - Sao lưu: `bash scripts/db-sao-luu.sh` → `$HOME/onehub-backups/db/<UTC>/` (chỉ đĩa máy này — có tầng A).
 - Trong 7 ngày giữ bản lùi: không chạy `docker compose` từ checkout/worktree còn compose cũ (project `db`) — nó có thể
   xoá bản lùi.
+
+## DB chỉ nghe nội bộ + tham số Postgres (2026-11-24, `_acceptance/db-chi-nghe-noi-bo-va-chinh-postgres/`, HT8)
+
+- **Chỉ nghe 127.0.0.1:5433.** `db/docker-compose.yml` khai `"127.0.0.1:5433:5432"`. Trước đó khai trần `"5433:5432"` và bộ
+  chuyển cổng ssh của colima nghe `*:5433` — máy khác trong LAN nối được DB bằng mật khẩu mặc định, mà DB có hồ sơ user app
+  (tầng A; audit máy thu 24/11 A1). Đo 24/11: colima tôn trọng IP khai trong `ports:` (khai 127.0.0.1 → IP LAN bị từ chối).
+  Bên nối trên máy (`localhost:5433`), sao lưu/khôi phục (`--network container:`), `docker exec` không đổi. Cần nối từ máy
+  khác thì dùng đường hầm: `ssh -L 5433:127.0.0.1:5433 <máy thu>`.
+- **Tham số** (audit A8, VM colima 32 GB): `SHARED_BUFFERS: 8GB`, `WORK_MEM: 64MB`, `MAINTENANCE_WORK_MEM: 1GB`,
+  `EXTRA_CONF: "effective_cache_size = 20GB"`, `shm_size: 1gb`. Đi **biến môi trường** của ảnh kartoza — ảnh ghi chúng ra
+  `postgis.conf`/`extra.conf` lúc khởi động; ảnh KHÔNG nhận `command: -c …` (entrypoint bọc `gosu` sai). `shm_size` vì truy
+  vấn song song cấp vùng nhớ chung ở `/dev/shm` (mặc định Docker 64 MB).
+- **Đổi tham số = tạo lại container:** `docker compose -f db/docker-compose.yml up -d --force-recreate --wait --wait-timeout 240 db` (DB dừng ~10 giây; `--wait` chờ healthcheck xanh rồi mới trả về).
+  `docker restart` KHÔNG sinh lại cấu hình (tệp khoá cấu hình ở lớp container). Đây là khởi động lại dịch vụ nền: cần lời riêng
+  của Mạnh, theo `ap-may-thu.md` của hồ sơ; agent không tự chạy. Lưu ý: `scripts/setup.sh`, `scripts/migrate-export.sh`,
+  `pipeline/import.sh` có `docker compose up -d` — chạy tay chúng sau khi compose đổi cũng là tạo lại container.
+- **Kiểm (chỉ đọc):** `bash scripts/check-db-noi-bo.sh live` — Mac chỉ nghe `127.0.0.1:5433`, nối IP LAN bị từ chối, client
+  `pg` nối `localhost` được, `SHOW` bốn tham số bằng compose, `/dev/shm` 1.0G.
 
 ## Transform S03/S05 và migration enrich (chốt 2026-10-23, `_acceptance/enrich-hau-ky/`)
 
