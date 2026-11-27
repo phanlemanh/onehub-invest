@@ -165,5 +165,11 @@ nguồn xoay refresh thì đêm thứ hai mới lộ. ZCode đo trên log lượ
   (ZT): XANH, sáu bản cấy đều bị bắt. `dung-ca-luot.mjs` (ZT, sau gap-probe): XANH, hai bản đột biến đều bị bắt.
 - Chạy thật ZCode 26/11 (worktree, không mở trình duyệt): thị trường 95545 — 2 lời cấp token + 9 lời dữ liệu, 9 bản ghi, 0 lỗi;
   thị trường 47 — 2 + 18 lời, 17 bản ghi, 1 lỗi (404 trang kế, hàng ZC23). 0 lần 401, 0 AUTH FAIL, 0 bị chặn.
+- Vòng 1 S4 trên M5 (27/11, REJECT E3 E4 E5 E8 E9): bản đối chứng của nhóm bo-thu có 33 ca đạt, 2 ca đỏ sẵn thay vì 34 và 1
+  khi các nhóm chạy song song; chạy lại riêng thì 34/1, xanh. E9 mù nên ca đỏ thêm là «lệnh login: nguồn KHÔNG có lệnh login».
+  Nguyên nhân CHƯA chứng: nghi phép đo dọn thư mục tạm chéo nhóm; không tái hiện trên Mac mini (ba nhóm song song và so le).
+  Đã vá phép đo: chỉ dọn thư mục sót quá 3 giờ, và in tên mọi ca đỏ sẵn. Vòng sau lặp lại thì ghi tên ca và các nhóm đang
+  chạy song song lúc đó.
+- Triển khai (gộp ≠ đang chạy): build `collector/dist` ở checkout chính là việc GIAO cho ZV sau gộp — `ap-trien-khai/README.md`.
 - Hồ sơ tự dựng của nhánh zcode giữ nguyên ở git tại @2f0748d06 (`_acceptance/s02-cua-api/`); `design.md`, `plan.md` giữ làm tài
   liệu thiết kế.
