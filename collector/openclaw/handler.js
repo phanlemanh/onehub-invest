@@ -1,6 +1,7 @@
 /**
  * oneinvest-zalo-pipe — message:received (zalouser)
- * Gate Kev :8009 (noul is_bds) → NHÃN, không lọc (claudedp-2310-11): MỌI tin
+ * K1 (claudedp-2111-9): KHÔNG gọi cổng chấm nhãn nữa (mục 52 bỏ Kev; điểm kev cũ
+ * chỉ để GẮN NHÃN, không lọc — nhãn vẫn gửi với p=null, khuôn trường kev giữ nguyên).
  * đẩy vào collector kèm điểm kev; quyết định dùng p nằm ở transform. Không
  * ném lỗi — hook quan sát, tác dụng phụ phải tự im lặng.
  *
@@ -15,7 +16,6 @@ import { createHash } from "node:crypto";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
-const KEV = process.env.ONEINVEST_KEV_URL ?? "http://127.0.0.1:8009";
 const API = process.env.ONEINVEST_API_URL ?? "http://127.0.0.1:9210";
 const KEY_FILE = join(homedir(), ".openclaw/credentials/oneinvest-agent.key");
 const LOG = join(homedir(), ".openclaw/logs/oneinvest-zalo-pipe.log");
@@ -129,37 +129,6 @@ async function drainSpool(key) {
   }
 }
 
-/** Kev :8009 điểm is_bds; timeout 5s (treo thì hook KHÔNG treo); chỉ nhận
- *  số hữu hạn (NaN/Infinity/string → null = chưa phân loại). */
-async function kevScore(text) {
-  try {
-    const r = await fetch(`${KEV}/v1/systemone`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        state: text,
-        model: "kev-latest",
-        questions: {
-          is_bds: {
-            type: "noul",
-            instructions: "Đây có phải là tin rao bất động sản (bán/cho thuê/mua nhà, đất, chung cư)?",
-            criteria: {
-              true: "Tin đăng rao bán, cho thuê, hoặc tìm mua BĐS, có thể kèm giá/diện tích/địa điểm",
-              false: "Trò chuyện, chào hỏi, hỏi đáp, cảm ơn, tin tức, quảng cáo khác chủ đề",
-            },
-          },
-        },
-      }),
-      signal: AbortSignal.timeout(5_000),
-    });
-    if (!r.ok) return null;
-    const raw = (await r.json())?.answers?.is_bds?.noul;
-    return typeof raw === "number" && Number.isFinite(raw) ? raw : null;
-  } catch {
-    return null;
-  }
-}
-
 export default async function (context) {
   // Hình dạng lời gọi khác nhau theo phiên bản runtime: InternalHookEvent đặt
   // payload ở .context; một số đường cũ bọc .event. Đọc phòng thủ cả ba.
@@ -217,9 +186,7 @@ export default async function (context) {
       ? new Date(ev.timestamp).toISOString()
       : (ev.timestamp ?? new Date().toISOString());
 
-  const p = await kevScore(text);
-  if (p === null) await log(`kev null (timeout/gate) group=${group} account=${account}`);
-
+  // K1: không gọi cổng chấm nhãn — nhãn kev gửi p=null (gate down khuôn cũ).
   // NHÃN thay BỘ LỌC (claudedp-2310-11): mọi tin phải vào raw; p đi kèm.
   const message = {
     text,
@@ -229,7 +196,7 @@ export default async function (context) {
     senderId: ev.metadata?.senderId ?? ev.from ?? null,
     conversationId: ev.conversationId ?? null,
     media: mediaFacts.length ? mediaFacts : undefined,
-    kev: { p, model: "kev-latest", threshold: THRESHOLD, at: new Date().toISOString() },
+    kev: { p: null, model: "kev-off", threshold: THRESHOLD, at: new Date().toISOString() },
   };
 
   try {
@@ -242,8 +209,9 @@ export default async function (context) {
       await log(`spool +1 group=${group} account=${account}`);
       return;
     }
-    // KHUÔN LOG CŨ — 'post <status> <body60>' (5 nơi đọc chuỗi này, vòng 3)
-    await log(`post ${r.status} ${r.body} group=${group} p=${p === null ? "null" : p.toFixed(2)} account=${account} by=${ev.metadata?.senderName ?? "?"}${hasMedia ? ` media=${mediaFacts.length}` : ""}`);
+    // KHUÔN LOG CŨ — 'post <status> <body60>' (5 nơi đọc chuỗi này, vòng 3). «kev=off» đứng SAU account=: hai bên
+    // đọc tên nhóm (pipeline/lib/ops-flow.mjs parseLog, app collections-queries gateByGroup) dừng ở « p=» hay « account=».
+    await log(`post ${r.status} ${r.body} group=${group} account=${account} kev=off by=${ev.metadata?.senderName ?? "?"}${hasMedia ? ` media=${mediaFacts.length}` : ""}`);
   } catch (e) {
     // bất kỳ lỗi ngoài (đọc key/đĩa) — cố spool lại để không mất tin ở nguồn
     try {

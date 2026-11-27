@@ -330,16 +330,9 @@ grep -q "SuppressMessageReceivedHooks" "$OCZ_MON" 2>/dev/null \
   || alert "cờ chặn phát đôi SuppressMessageReceivedHooks BIẾN MẤT trong monitor zalouser — tin qua gate sẽ bị phát hook 2 lần"
 
 # L5 — ghi nhịp kiểm tra (im lặng = mọi lớp còn nguyên)
-# Kev gate :8009 chết = mất dữ liệu im lặng (đã xảy ra 2026-10-21) → cảnh
-# báo (KHÔNG kill OpenClaw — handler giờ fail-open, thu vẫn chạy).
-KEV_OK=$(curl -s -o /dev/null -w "%{http_code}" --max-time 3 http://127.0.0.1:8009/v1/models 2>/dev/null)
-KEV_NOTE="kev:ok"
-[ "$KEV_OK" = "200" ] || {
-  KEV_NOTE="kev:DOWN($(date +%H:%M))"
-  echo "$(date -Iseconds) WARN: Kev gate :8009 không đáp ứng (HTTP $KEV_OK) — handler đang fail-open" >> "$ALERT_LOG"
-  osascript -e "display notification \"Kev gate :8009 DOWN — tin Zalo chưa phân loại vẫn được thu\" with title \"Zalo Watchdog\"" 2>/dev/null || true
-}
-
+# K1 (claudedp-2111-9): cổng chấm nhãn đã BỎ (mục 52) — không còn gì để canh;
+# handler không-Kev ghi nhãn p=null rồi vẫn đẩy cổng thu. Khối canh cũ gỡ.
+KEV_NOTE="kev:off (K1)"
 # L5b — Postgres :5433 phải nghe (bài học 22/10: container DB chết 22:49,
 # restart policy=no, không lớp giám sát nào thấy trong 7 tiếng — zalo-import
 # 00:00 fail + chotot nạp fail, không một cảnh báo). Chỉ mở/kết nối TCP rồi

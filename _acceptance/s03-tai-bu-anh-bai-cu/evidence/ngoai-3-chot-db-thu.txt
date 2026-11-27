@@ -1,0 +1,12 @@
+Ngoài-3 ZC20 — Mạnh «nâng phạm vi sửa ngay» ở Cổng Bằng chứng 27/11. Sửa hạ tầng test (làn Claude), không đụng logic của ZCode.
+Ca DB «(1) nạp lại raw theo thứ tự tên vẫn giữ ảnh đã bù» (pipeline/backfill-s03-media-2511.test.mjs) gọi lyDoTuChoi của
+pipeline/lib/db-thu-chot.mjs TRƯỚC mọi kết nối: DATABASE_URL không phải DB thử oneinvest_suite_* → assert.fail, không nạp, không xoá.
+Không dùng chotDbThu (process.exit) vì nó dừng cả tệp, làm mất 10 ca không cần DB.
+
+Đo 27/11 (Mac mini, chạy riêng ca này bằng --test-name-pattern; URL trỏ cổng 1 nên không bao giờ kết nối được):
+- vật lành, DATABASE_URL=postgres://127.0.0.1:1/oneinvest (phần tài khoản lược bỏ khi ghi) → fail 1 với thông điệp ghim
+  «(1) từ chối — DB 'oneinvest' không phải DB thử oneinvest_suite_*; ca có lệnh xoá chỉ chạy trên DB thử …»
+- bản đột biến bỏ chốt (if (lyDo) → if (false)), cùng URL → không có dòng «từ chối»; ca đi tiếp tới bước chạy bộ nạp (spawnSync)
+  — tức không còn gì chặn trước lệnh ghi/xoá.
+- không DATABASE_URL → skipped 1 (như cũ).
+Trên DB thử oneinvest_suite_* (npm run test:that, M5) ca chạy như cũ — ghim lại trên M5 sau commit này.

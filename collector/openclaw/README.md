@@ -9,7 +9,6 @@ cp collector/openclaw/HOOK.md collector/openclaw/handler.js ~/.openclaw/hooks/on
 openclaw hooks enable oneinvest-zalo-pipe
 ```
 
-Đường dẫn: `message:received` (zalouser) → Kev gate :8009 (noul ≥0.9) →
-POST :9210/agent-report (key ở ~/.openclaw/credentials/oneinvest-agent.key).
+Đường dẫn: `message:received` (zalouser) → POST :9210/agent-report (K1: không cổng chấm nhãn) (key ở ~/.openclaw/credentials/oneinvest-agent.key).
 Log: ~/.openclaw/logs/oneinvest-zalo-pipe.log.
 Kèm: watcher agent (thinking low) bind zalouser — chỉ NO_REPLY mỗi turn.
