@@ -1,0 +1,70 @@
+schema_version: 1
+slug: ops-hien-dung-chang-s03
+# Lệnh chấm là probes trong hồ sơ (không thêm khoá vào _acceptance/config.yaml): mỗi probe chạy đúng một tệp test trên DB của riêng
+# lượt (bash db/db-thu.sh oneinvest_suite_on25_<x> --chay …), lọc theo tên ca ON25-AC-<n>, và đòi số ca đạt đúng bằng số ca khai —
+# lọc sai tên ra 0 ca thì đỏ, không xanh oan.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/ops-hien-dung-chang-s03/probes/moc.sh ON25-AC-1
+    paths: [pipeline/sql/600_data_flow.sql, pipeline/refresh-data-flow.mjs, pipeline/tests/so-moc-s03*]
+    expected: "Lược đồ tạm có BẢNG offer_building; ma trận viết trước sáu ô (S03 sống gan/toa · gan/vung · xung_dot · không dòng · S03 đã nghỉ gan/toa · S06 gan/toa), mỗi ô một assert building_linked qua lượt làm tươi thật (chayLamTuoi): chỉ ô thứ nhất = 1. Chiều đỏ cùng fixture: đột biến đặt toa_link về SELECT NULL … WHERE false trên chính văn bản 600 → ca đỏ, thông điệp nêu building_linked và tên ô; đột biến bỏ điều kiện muc = 'toa' → ô gan/vung đỏ. Các ca SM1-AC-2 cũ dựng chiều dương bằng chuỗi CTE rỗng được viết lại trên bảng thật và vẫn xanh."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/ops-hien-dung-chang-s03/probes/moc.sh ON25-AC-2
+    paths: [pipeline/sql/600_data_flow.sql, pipeline/refresh-data-flow.mjs, pipeline/tests/so-moc-s03*]
+    expected: "Ma trận viết trước sáu ô ghi toà (block_raw có · mã căn chứa xx · không ghi) × khớp toà (gan/toa · không dòng), mỗi ô một tin S03 sống, giá trị mong đợi của từng ô viết trước: block_raw+gan/toa = 0 · block_raw+không dòng = 1 · xx+gan/toa = 0 · xx+không dòng = 1 (xx tính là ghi toà theo đoạn LOCATED_PENDING của 600) · không ghi+gan/toa = 0 · không ghi+không dòng = 0; tổng sources[S03].locatedPending cửa sổ all = 2, mỗi ô một assert (ô đo bằng một lượt làm tươi chỉ chứa tin của ô). Chiều đỏ cùng fixture: đột biến bỏ «AND NOT m.toa_khop» → hai ô gan/toa có ghi toà đỏ, thông điệp nêu locatedPending và tên ô."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/ops-hien-dung-chang-s03/probes/may-thu.sh
+    paths: [pipeline/sql/600_data_flow.sql]
+    expected: "Trên bản chép dữ liệu thật (DB của riêng lượt chép từ máy thu; probe dừng trước khi chạy nếu chuỗi kết nối trỏ DB chung oneinvest) chạy lượt làm tươi thật rồi in: «building_linked hôm nay = X · offer_building gan/toa S03 sống = Y» với X = Y > 0; «locatedPending S03 all = A (trước sửa B)» với A < B, B đo bằng 600 của merge-base trên cùng bản chép; và bảy dòng luong7() «ngày · s03Offers · s03ActiveOffers» với mọi ngày s03Offers ≤ s03ActiveOffers và s03ActiveOffers > s03Offers ở ít nhất một ngày. Chiều đỏ: chạy probe với 600 của merge-base → X = 0 ≠ Y, probe thoát khác 0 và nêu building_linked; ngày nào s03Offers > s03ActiveOffers thì probe thoát khác 0 và nêu ngày."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/ops-hien-dung-chang-s03/probes/luong7.sh ON25-AC-4
+    paths: [pipeline/lib/ops-flow.mjs, app/tests/luong-7-ngay-dung-so.test.tsx]
+    expected: "Ma trận ngày viết trước, mỗi ô một ngày riêng của cửa sổ 7 ngày, giá trị mong đợi viết trước: tin S03 mới trong ngày (một bài) → s03ActiveOffers 1, s03Offers 1 · tin S03 cũ đăng lại (first_seen ngày trước, một bài ngày này) → 1, s03Offers 0 · một tin S03 ba bài cùng ngày → 1 · tin S05 một bài → 0 · tin S03 đã nghỉ (retired_at) một bài → 0 (theo Hỏi-2 khuyến nghị; Mạnh chọn lối khác thì ô này đổi thành 1 ở Cổng Phạm vi) · bài S03 không thuộc tin nào → 0 · ngày không bài → khoá có mặt, giá trị 0. Câu SQL không lọc bài thử: tin chỉ dựng từ bài transform đọc (đã gạt bài thử), nên không có ô bài thử. Mỗi ngày s03Offers ≤ s03ActiveOffers. Chiều đỏ cùng fixture: đột biến count(*) thay count(DISTINCT o.offer_id) → ô ba bài đỏ, thông điệp nêu s03ActiveOffers và ngày; đột biến bỏ source = 'S03' → ô S05 đỏ; đột biến sale_offer_records thay sale_offers → ô tin đã nghỉ đỏ."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/ops-hien-dung-chang-s03/probes/luong7.sh ON25-AC-5
+    paths: [pipeline/lib/ops-flow.mjs, app/src/lib/collections-queries.ts, app/tests/luong-7-ngay-dung-so.test.tsx]
+    expected: "Trên cùng lược đồ: getFlowDays().s03ActiveOffers = luong7().s03ActiveOffers từng ngày; văn bản S03_ACTIVE_OFFERS_SQL rút từ collections-queries.ts (rút bằng regex từ mã nguồn, không chép tay) trùng bản export của ops-flow.mjs. Chiều đỏ: bản app đổi một ký tự (bỏ DISTINCT) → ca đỏ, thông điệp nêu S03_ACTIVE_OFFERS_SQL."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    layer: backend-effect
+    cmd: bash _acceptance/ops-hien-dung-chang-s03/probes/luong7.sh ON25-AC-6
+    paths: [app/src/lib/collections-queries.ts, app/src/lib/ops-cloud.ts, app/tests/luong-7-ngay-dung-so.test.tsx]
+    expected: "Bản tin có khối luong7 mang s03ActiveOffers → getCloudFlowDays cho s03ActiveOffers đúng số từng ngày; bản tin khuôn cũ (thiếu khoá) → null, không 0; khối vắng → null. Chiều đỏ: đột biến «?? 0» thay «?? null» → ca khuôn cũ đỏ, thông điệp nêu s03ActiveOffers."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.tu_ngu_collections
+    paths: [app/src/components/ops/collections/sync-activity.tsx, app/tests/tu-ngu-collections.test.tsx, app/tests/fixtures/tu-ngu-collections/**, CONTEXT.md]
+    expected: "Render tĩnh SyncActivity: tab S03 có ba nhãn «S03 — bài nhận» «S03 — tin rao mới» «S03 — tin có bài hôm đó» (vai nguồn mặc định), không chuỗi «tin rao vào kho», không «bài thô» làm nhãn cột; ba Bar của tab S03 không mang stackId chung; dòng mô tả không cộng bài với tin; markup tab Listing trùng bản chụp; ba nhãn có trong CONTEXT.md. Trạng thái ST-luong7-s03-khoi-cu: hàm định dạng tooltip của tab S03 nhận s03ActiveOffers null thì in đúng «—», không «0» hay «NaN», và chú giải vẫn đủ ba nhãn. Chiều đỏ cùng bản chụp: trả nhãn cũ hoặc trả stackId → ca TN đỏ, thông điệp nêu nhãn hoặc stackId; hàm định dạng in số cho null → đỏ, thông điệp nêu s03ActiveOffers."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: ui-check
+    layer: ui-observed
+    paths: [app/src/components/ops/collections/sync-activity.tsx, app/src/components/charts/palette.ts, app/src/components/ops/data-flow/**]
+    steps: "app dev chạy từ worktree đang kiểm ở cổng riêng của dãy U1 :3460 (npm --prefix app run dev -- -p 3460 từ gốc worktree; không dùng :3456) với DATABASE_URL trỏ DB của riêng lượt (bản chép dữ liệu thật của E3, tên oneinvest_suite_on25_*) đã chạy lượt làm tươi 600 của nhánh — KHÔNG chạy 600 của nhánh lên DB chung oneinvest của máy thu (áp chỉ sau khi gộp); mọi URL là http://localhost:3460. Chạy 'node scripts/dev-ops-account.mjs' để có tài khoản ops thử (mật khẩu ở .claude/ops-test-account.json, không in ra), đăng nhập /login; mở /ops/collections, cuộn tới «Luồng 7 ngày», bấm tab S03, di chuột lên cột của ngày gần nhất; chụp. Mở /ops/data-flow, cuộn tới biểu đồ số mốc S03; chụp. Che email ở thanh bên trên ảnh."
+    expected: "Tab S03: chú giải đúng ba nhãn bài nhận · tin rao mới · tin có bài hôm đó, mỗi ngày ba cột đứng cạnh nhau (không chồng), tooltip hiện ba số; /ops/data-flow: đường «Khớp toà» có điểm khác 0 ngày hôm nay."
+    evidence_required: [screenshot, observed, verifier, verified_at]

@@ -1,0 +1,36 @@
+{
+  "feature_plain": "Hai màn Ops thôi làm số S03 trông thấp hơn thật: số mốc «Khớp toà» hiện số tin đã gắn toà (28/11: 3.167 thay vì 0), và «Luồng 7 ngày» tab S03 hiện thêm số tin có bài mỗi ngày (713–1.013) cạnh số tin mới (187–366).",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ đếm «Khớp toà» bằng các tin S03 đang rao đã gắn vào một toà của danh bạ; tin chỉ gắn tới vùng, tin xung đột, tin đã nghỉ và tin nguồn khác không tính."},
+    {"id": "AC-2", "p": "Sẽ thôi đếm vào «chờ khớp» những tin ghi toà mà đã khớp toà rồi."},
+    {"id": "AC-3", "p": "Sẽ đo trên bản chép dữ liệu thật: «Khớp toà» bằng đúng số tin gắn toà, «chờ khớp» nhỏ đi (28/11: 5.308 → 2.308), bảy ngày tin mới luôn không vượt tin có bài."},
+    {"id": "AC-4", "p": "Sẽ đếm «tin có bài hôm đó» là số tin S03 khác nhau có ít nhất một bài đăng trong ngày; tin nhiều bài cùng ngày chỉ tính một lần."},
+    {"id": "AC-5", "p": "Sẽ cho trang ở máy thu và bản tin gửi lên cloud ra cùng một số cho mỗi ngày."},
+    {"id": "AC-6", "p": "Sẽ hiện «—» trên cloud khi bản tin cũ chưa có số mới, không hiện 0."},
+    {"id": "AC-7", "p": "Sẽ đổi nhãn tab S03 thành «bài nhận», «tin rao mới», «tin có bài hôm đó» đúng từ vựng đã chốt, và thôi chồng cột tin lên nhau."},
+    {"id": "AC-8", "p": "Sẽ chụp màn thật hai trang để thấy ba cột cạnh nhau và đường «Khớp toà» có số."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "Chưa nối «Gom cụm», «Gắn căn» của S03: việc gắn căn (PL36) chưa gộp và máy thu chưa có bảng gắn căn; làm ở hàng riêng sau khi áp."},
+    {"id": "OOS-2", "p": "«Có hạng cấp toà» vẫn 0: ô này đọc bảng xếp hạng giá, mà bộ xếp hạng chưa xếp ở cấp toà."},
+    {"id": "OOS-3", "p": "Không ghi lại số mốc của các ngày đã qua; đường «Khớp toà» có số từ ngày gộp."},
+    {"id": "OOS-4", "p": "Không ghi gì lên cloud; số mới lên cloud ở lượt đẩy thường đầu tiên sau khi gộp."},
+    {"id": "OOS-5", "p": "Không nới luật đọc tin (ước +500–800 tin); đó là hàng khác của làn đọc tin."}
+  ],
+  "scope_plain": "Hàng này chỉ sửa cách đếm và cách hiện; không thêm tin nào vào kho.",
+  "coverage_plain": [
+    {"i": 0, "p": "Đủ bốn trạng thái gắn toà của tin (gắn toà, gắn vùng, xung đột, chưa gắn) — AC-1, AC-2."},
+    {"i": 1, "p": "Đủ bốn loại tin (S03 đang rao, S03 đã nghỉ, S05, S06) — AC-1, AC-4."},
+    {"i": 2, "p": "Đủ ba cách ghi toà trong chữ tin (ghi toà, mã căn có xx, không ghi) — AC-2."},
+    {"i": 3, "p": "Đủ các ca trong ngày: tin mới, tin cũ đăng lại, nhiều bài một tin, tin đã nghỉ, bài không thành tin, ngày không bài, bài S05 — AC-4, AC-5."},
+    {"i": 4, "p": "Đủ ba ca bản tin cloud: có số mới, bản cũ chưa có, vắng hẳn — AC-6."},
+    {"i": 5, "p": "Đủ các mặt hiển thị: tab S03, tab Listing, trang cloud (đủ và cũ), trang máy thu — AC-7, AC-8."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Chuyện đếm cả tin đã nghỉ hay chỉ tin đang rao là quyết định sản phẩm, máy đã tự quyết — nay đưa lên thành Hỏi-2 kèm số đo (chênh khoảng 1%)."},
+    {"i": 1, "p": "Bước chụp màn suýt chạy mã chưa ký lên DB thật của máy thu — đã đổi sang DB riêng của lượt chấm."},
+    {"i": 2, "p": "Chưa có phép kiểm cho cloud khi bản tin cũ thiếu số mới — đã thêm kiểm «—» thay vì 0."},
+    {"i": 3, "p": "Hai bảng ca chưa ghi trước giá trị mong đợi từng ô — đã ghi đủ."},
+    {"i": 4, "p": "Chuỗi mới chưa có lệnh đo trên dữ liệu thật — đã thêm bảy ngày đo trên bản chép thật."}
+  ]
+}
