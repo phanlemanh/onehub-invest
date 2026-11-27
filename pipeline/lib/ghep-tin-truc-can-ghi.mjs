@@ -21,7 +21,9 @@ export function dongPhatBieu(ketQuaBai) {
   });
   for (const [post_id, x] of ketQuaBai) {
     if (!x.muc || !x.rule_id) continue;
-    dong(post_id, ASSERTION_FIELD.universal_property_sub_id, subId(x), x.rule_id, x.can_cu ?? {});
+    // Mức căn mang unit_key của luật: căn khớp qua bí danh mã căn có thể không có stack_key, floor trong danh bạ, nên view
+    // offer_unit (138) đọc căn từ đây thay vì tra lại theo «trục:tầng» (finding S4 vòng 3, AC-5).
+    dong(post_id, ASSERTION_FIELD.universal_property_sub_id, subId(x), x.rule_id, x.muc === "can" ? { ...x.can_cu, unit: x.unit } : (x.can_cu ?? {}));
     if (x.tangTuMa) dong(post_id, ASSERTION_FIELD.floor_raw, x.tangTuMa, RULE.tangTuMa, { ma: x.can_cu?.ma, nguon: "ma-can" });
   }
   return ra;

@@ -1,6 +1,6 @@
-// ghep-tin-truc-can-131.itest.mjs — PL36: migration 131, trường trục/căn trên tin, view offer_unit, offer_building nhanh (AC-4, AC-5, AC-7).
+// ghep-tin-truc-can-131.itest.mjs — PL36: migration 131 + 138, trường trục/căn trên tin, view offer_unit, offer_building nhanh (AC-4, AC-5, AC-7).
 // Chạy: bash db/db-thu.sh oneinvest_suite_pl36 --chay node --test pipeline/tests/ghep-tin-truc-can-131.itest.mjs
-// DB của riêng lượt; mỗi ca đổi dữ liệu trong BEGIN … ROLLBACK. GHEP_MIG_131 trỏ bản đột biến cho probes của hồ sơ.
+// DB của riêng lượt; mỗi ca đổi dữ liệu trong BEGIN … ROLLBACK. GHEP_MIG_131, GHEP_MIG_138 trỏ bản đột biến cho probes của hồ sơ.
 import { strict as assert } from "node:assert";
 import { readFileSync } from "node:fs";
 import { after, before, test } from "node:test";
@@ -10,12 +10,16 @@ import pg from "pg";
 import { sqlNapLaiDayDu } from "../lib/nap-view-song.mjs";
 import { docDauVao, tinhGan } from "../lib/ghep-tin-truc-can-doc.mjs";
 import { dongPhatBieu, ghiGan } from "../lib/ghep-tin-truc-can-ghi.mjs";
-import { RULE } from "../lib/ghep-tin-truc-can.mjs";
+import { RULE, khoaBiDanh, xetBai } from "../lib/ghep-tin-truc-can.mjs";
 
 const DB_URL = process.env.DATABASE_URL ?? "";
 if (!/\/oneinvest_suite_[a-z0-9_]+$/.test(DB_URL)) throw new Error("ghep-tin-truc-can-131.itest: cần DATABASE_URL trỏ DB của riêng lượt oneinvest_suite_*");
-const mig = (t) => readFileSync(t.startsWith("131_") && process.env.GHEP_MIG_131 ? process.env.GHEP_MIG_131 : new URL(`../../db/migrations/${t}`, import.meta.url), "utf8");
+const DOT_BIEN = { "131_": process.env.GHEP_MIG_131, "138_": process.env.GHEP_MIG_138 };
+const mig = (t) => readFileSync(DOT_BIEN[t.slice(0, 4)] || new URL(`../../db/migrations/${t}`, import.meta.url), "utf8");
 const TEP_131 = "131_ghep_truc_can_tren_tin.sql";
+// 138 thay view offer_unit của 131 (căn đọc từ phát biểu, finding S4 vòng 3): luôn áp ngay sau 131.
+const TEP_138 = "138_offer_unit_can_tu_phat_bieu.sql";
+const ap131 = async () => { await c.query(mig(TEP_131)); await c.query(mig(TEP_138)); };
 const SUB = "universal_property_sub_id";
 
 let c, toa, truc, trucKhac, trucToaKhac, can, tin, obCu, coDuLieu, ketQuaThat;
@@ -25,7 +29,7 @@ before(async () => {
   // DB chép từ máy thu đã có 117: nạp lại các tệp trước giữ trục phát biểu sống (sự cố 24/11).
   for (const t of ["113_thuoc_tinh_can_s16.sql", "118_v_s16_gia_cdt_loai_mo_ho.sql", "117_ghep_toa_tren_tin.sql"]) await c.query(await sqlNapLaiDayDu(c, mig(t)));
   obCu = (await c.query(`SELECT pg_get_viewdef('offer_building'::regclass) AS d`)).rows[0].d.replace(/;\s*$/, "");
-  await c.query(mig(TEP_131));
+  await ap131();
   const dong = async (sql, p = []) => (await c.query(sql, p)).rows;
   // Toà có từ hai trục đang hoạt động, và một trục có căn DUY NHẤT ở một tầng (finding S4 r2: ô «trục + căn ra căn» phải đo đúng
   // ô mức căn, không lặng lẽ thoái hoá thành ô «ra trục» khi tầng có hai căn).
@@ -49,9 +53,9 @@ async function ca(fn) {
   await c.query("BEGIN");
   try { await fn(); } finally { await c.query("ROLLBACK"); }
 }
-const ghi = (bai, field, value, { rule_id = RULE.truc, resource_name = "Property", subject_key = `S03:${bai}` } = {}) => c.query(
+const ghi = (bai, field, value, { rule_id = RULE.truc, resource_name = "Property", subject_key = `S03:${bai}`, evidence = { ma: "thu" } } = {}) => c.query(
   `INSERT INTO field_assertions (resource_name, subject_key, field, value, evidence_tier, method, method_version, rule_id, evidence, observed_at)
-   VALUES ($1, $2, $3, $4, 'inferred', 'e1_rule', 'ghep-can@1', $5, '{"ma":"thu"}', now())`, [resource_name, subject_key, field, value, rule_id]);
+   VALUES ($1, $2, $3, $4, 'inferred', 'e1_rule', 'ghep-can@1', $5, $6, now())`, [resource_name, subject_key, field, value, rule_id, evidence]);
 const coToa = (bai, upi = toa.upi) => ghi(bai, "universal_property_id", upi, { rule_id: "ghep-toa-cot" });
 const tinCo = (...bai) => c.query(`UPDATE sale_offer_records SET post_ids = $2 WHERE offer_id = $1`, [tin, bai]);
 const doc = async () => (await c.query(`SELECT * FROM offer_unit WHERE offer_id = $1`, [tin])).rows;
@@ -84,7 +88,7 @@ test("tep-131-dinh-chinh-lui-cua-117", () => {
   assert.match(s, /ĐÍNH CHÍNH 117:.*«Lùi»/s, "131 phải mang dòng đính chính chú thích «Lùi» của 117");
   assert.match(s, /lui-117\.sql/, "đính chính phải trỏ cách lùi đúng");
 });
-test("ap-lan-hai-khong-loi", async () => { await c.query(mig(TEP_131)); });
+test("ap-lan-hai-khong-loi", async () => { await ap131(); });
 
 // AC-5 — một tin một mức (tin có toà qua phát biểu ghep-toa của chính các bài thử)
 caDl("hai-bai-cung-truc-ra-truc", async () => {
@@ -121,6 +125,42 @@ caDl("tin-xung-dot-o-offer-building-khong-co-dong", async () => {
   await tinCo("pl36t-1", "pl36t-2"); await coToa("pl36t-1"); await coToa("pl36t-2", upi2);
   await ghi("pl36t-1", SUB, `${truc}:*`);
   assert.equal((await doc()).length, 0, "ô «xung-dot-o-offer-building»");
+});
+// Căn khớp qua bí danh mã căn (finding S4 vòng 3, AC-3 + AC-5): căn không có stack_key, floor trong danh bạ. Luật thật ra mức căn,
+// bước ghi thật (dongPhatBieu) đưa unit_key vào phát biểu, view phải ra đúng căn ấy — không hạ về mức trục.
+test("bi-danh-mot-can-di-tron-ghi-den-view", async (t) => {
+  const [bd] = (await c.query(`
+    SELECT u.unit_key, b.building_key, b.upi, s.stack_key
+      FROM units u JOIN buildings b USING (building_key)
+      JOIN LATERAL (SELECT stack_key FROM stacks s WHERE s.building_key = b.building_key AND s.status = 'active' ORDER BY 1 LIMIT 1) s ON true
+     WHERE u.status = 'active' AND b.status = 'active' AND u.stack_key IS NULL AND u.floor IS NULL
+       AND EXISTS (SELECT 1 FROM registry_aliases a WHERE a.object_key = u.unit_key AND a.kind = 'ma_nguon' AND a.retired_at IS NULL)
+     ORDER BY 1 LIMIT 1`)).rows;
+  if (!bd || !tin) return t.skip("DB không có căn chỉ biết qua bí danh");
+  // Danh bạ một toà «BD»: trục 3 → trục thật của toà, không căn nào ở (trục, tầng); bí danh «BD1703» → căn chỉ có bí danh.
+  const d = { tenToa: [{ ten: "BD", key: bd.building_key }], truc: new Map([[bd.building_key, new Map([["3", [bd.stack_key]]])]]),
+    can: new Map(), biDanh: new Map([[khoaBiDanh("BD", "17", "3"), [bd.unit_key]]]) };
+  const kq = xetBai({ toa: bd.building_key, ma: ["BD.17.03"] }, d);
+  assert.deepEqual([kq.muc, kq.unit, kq.tang], ["can", bd.unit_key, "17"], "luật: mã khớp một bí danh phải ra căn ấy");
+  await ca(async () => {
+    await tinCo("pl36t-bd"); await coToa("pl36t-bd", bd.upi);
+    for (const x of dongPhatBieu(new Map([["pl36t-bd", kq]]))) {
+      if (x.field === SUB) await ghi("pl36t-bd", SUB, x.value, { rule_id: x.rule_id, evidence: x.evidence });
+    }
+    const [r] = await doc();
+    assert.deepEqual([r?.status, r?.muc, r?.stack_key, r?.floor, r?.unit_key], ["gan", "can", bd.stack_key, "17", bd.unit_key],
+      `ô «bi-danh-mot-can»: căn ${bd.unit_key} qua bí danh phải hiện ở offer_unit mức căn`);
+  });
+});
+// Dòng mức căn ghi trước 138 (chưa mang unit) tra theo trục + tầng; floor danh bạ «09» khớp tầng «9» của phát biểu (finding S4
+// vòng 3: view so chuỗi thô, luật JS chuẩn hoá bằng chuanTang).
+caDl("tang-so-0-dau-trong-danh-ba-van-ra-can", async () => {
+  const floor0 = `0${can.floor}`;
+  await c.query(`UPDATE units SET floor = $2 WHERE unit_key = $1`, [can.unit_key, floor0]);
+  await tinCo("pl36t-1"); await coToa("pl36t-1");
+  await ghi("pl36t-1", SUB, `${truc}:${can.floor}`, { rule_id: RULE.ma });
+  const [r] = await doc();
+  assert.deepEqual([r?.muc, r?.unit_key], ["can", can.unit_key], `ô «tang-09»: floor danh bạ «${floor0}» phải khớp tầng «${can.floor}»`);
 });
 caDl("rule-khac-khong-vao-view", async () => {
   await tinCo("pl36t-1"); await coToa("pl36t-1");

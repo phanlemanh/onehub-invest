@@ -39,7 +39,7 @@ let coDuLieu = false;
 before(async () => {
   c = new pg.Client({ connectionString: DB_URL });
   await c.connect();
-  for (const t of ["113_thuoc_tinh_can_s16.sql", "118_v_s16_gia_cdt_loai_mo_ho.sql", "117_ghep_toa_tren_tin.sql", "131_ghep_truc_can_tren_tin.sql"]) await c.query(await sqlNapLaiDayDu(c, mig(t)));
+  for (const t of ["113_thuoc_tinh_can_s16.sql", "118_v_s16_gia_cdt_loai_mo_ho.sql", "117_ghep_toa_tren_tin.sql", "131_ghep_truc_can_tren_tin.sql", "138_offer_unit_can_tu_phat_bieu.sql"]) await c.query(await sqlNapLaiDayDu(c, mig(t)));
   // DB chép từ máy thu có thể đã có dòng gắn trục, căn của lượt áp thật: rút trên DB của riêng lượt để lượt đầu đo đúng việc chèn.
   await c.query(`UPDATE field_assertions SET retracted_at = now(), retract_reason = 'thu-pl36-dau' WHERE retracted_at IS NULL AND rule_id = ANY ($1::text[])`, [[...TAT_CA_NGUON]]);
   dau = await luot();
@@ -79,6 +79,8 @@ caDl("truc-ngung-hoat-dong-rut-dong-cu", async () => {
 });
 caDl("tat-mot-nguon-chi-rut-dong-cua-nguon-do", async () => {
   const ma = await demRule(RULE.ma), truc = await demRule(RULE.truc);
+  // Đối chứng dương (finding S4 vòng 3, AC-6): bản chép không có dòng của nguồn bị tắt hay nguồn giữ thì ca qua rỗng 0 → 0.
+  assert.ok(ma > 0 && truc > 0, `cần dòng ghep-can-ma (${ma}) và ghep-can-truc (${truc}) sống trước ca`);
   await luot({ nguonBat: TAT_CA_NGUON.filter((r) => r !== RULE.ma) });
   assert.equal(await demRule(RULE.ma), 0, "tắt nguồn ghep-can-ma mà còn dòng");
   assert.equal(await demRule(RULE.truc), truc, "tắt ghep-can-ma làm đổi dòng ghep-can-truc");

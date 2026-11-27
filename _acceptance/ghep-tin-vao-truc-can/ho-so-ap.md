@@ -1,7 +1,8 @@
 # Áp PL36 lên DB máy thu — năm thứ cho lời áp (ROADMAP §3 mục 50)
 
 Chữ ký Cổng Bằng chứng của hồ sơ này kèm lời áp những gì dưới đây lên **DB máy thu** (`oneinvest` :5433): migration **131**
-(trường `universal_property_sub_id` trên tin, view `offer_unit`, thân `offer_building` nhanh hơn với đầu ra giữ nguyên) và **lượt
+(trường `universal_property_sub_id` trên tin, view `offer_unit`, thân `offer_building` nhanh hơn với đầu ra giữ nguyên), migration
+**138** (view `offer_unit` đọc căn từ phát biểu — sửa finding S4 vòng 3) và **lượt
 gắn đầu** — phát biểu trục hoặc căn trên từng bài S03 đã có toà của Ocean Park 1 và Grand Park, bốn `rule_id` `ghep-can-truc`,
 `ghep-can-ma`, `ghep-can-truc-tang`, `ghep-can-tang-tu-ma`. Từ lúc đó, bước gắn tự chạy cuối mỗi lượt nạp S03 ngay sau bước gắn
 toà (`transform-zalo.mjs`, giao dịch riêng, khoá `pg_try_advisory_xact_lock(hashtext('ghep-can'))`, trần 60 giây). **Cloud:** không
@@ -12,7 +13,7 @@ gì lên cloud — view và trường chỉ ở máy thu.
 - PR PL36 đã gộp, checkout chính `~/dev/onehub-invest` đã kéo `main`. GS chạy lệnh và báo số thật cạnh số chạy thử.
 - **117 đã áp** (24/11). 131 tự dừng khi thiếu 117 (`131: cần áp 117 trước`).
 - **Sau khi đã áp 131, KHÔNG áp lại 113 hay 117** (CHECK của hai tệp ấy thiếu mã `universal_property_sub_id`). Cần áp lại thì áp
-  lại 131 ngay sau. Test nạp lại migration cũ dùng `sqlNapLaiDayDu` (sự cố 24/11 ở hồ sơ PL20 mục 6).
+  lại 131 rồi 138 ngay sau (áp lại 131 đưa view `offer_unit` về thân cũ; 138 luôn đi sau 131). Test nạp lại migration cũ dùng `sqlNapLaiDayDu` (sự cố 24/11 ở hồ sơ PL20 mục 6).
 - Khung: ngoài lượt nạp S03 cho số đếm sạch. Lỡ trùng lượt nạp cũng an toàn: khoá tư vấn chỉ cho một bên ghi.
 - Gộp code trước khi áp 131 thì mỗi lượt nạp in một dòng `JOB WARN [ghep-can] chưa áp migration 131, bỏ qua lượt gắn` — vô hại;
   nên áp trong cùng buổi gộp.
@@ -35,11 +36,14 @@ Q "SELECT to_regclass('public.offer_building') IS NOT NULL, to_regclass('public.
 Q "SELECT count(*) FROM field_assertions WHERE rule_id IN ($R)"                                              # phải 0
 ```
 
-### 1b. Áp 131 (hai lần — lần hai phải sạch)
+### 1b. Áp 131 rồi 138 (hai lần — lần hai phải sạch)
 
 ```bash
 P < db/migrations/131_ghep_truc_can_tren_tin.sql
+P < db/migrations/138_offer_unit_can_tu_phat_bieu.sql
 P < db/migrations/131_ghep_truc_can_tren_tin.sql
+P < db/migrations/138_offer_unit_can_tu_phat_bieu.sql
+Q "SELECT pg_get_viewdef('offer_unit'::regclass) LIKE '%can_pb%'"                                            # phải t (thân 138)
 Q "SELECT to_regclass('public.offer_unit') IS NOT NULL,
           pg_get_constraintdef(oid) LIKE '%universal_property_sub_id%' FROM pg_constraint
     WHERE conname = 'field_assertions_field_chk' AND conrelid = 'public.field_assertions'::regclass"           # phải t|t
@@ -100,7 +104,7 @@ Q "SELECT to_regclass('public.offer_unit') IS NOT NULL"                         
 Q "SELECT status, muc, count(*) FROM offer_building GROUP BY 1, 2 ORDER BY 1, 2"             # như trước áp
 ```
 
-`lui-131.sql` trong một giao dịch: rút mọi dòng sống của bốn `rule_id` (`retract_reason = 'lui-pl36'`), bỏ view `offer_unit`,
+`lui-131.sql` trong một giao dịch: rút mọi dòng sống của bốn `rule_id` (`retract_reason = 'lui-pl36'`), bỏ view `offer_unit` (lùi luôn 138),
 dựng lại thân `offer_building` của 117 (chép nguyên văn; đầu ra như nhau, chỉ chậm hơn). Từ lượt nạp kế, bước gắn thấy thiếu view
 thì chỉ in `JOB WARN [ghep-can] chưa áp migration 131` và không ghi.
 
