@@ -1,27 +1,45 @@
 schema_version: 1
-slug: s02-map-listings-trang-ke
+feature_slug: s02-map-listings-trang-ke
 evals:
   - id: E1
     criterion: AC-1
     executor: script
     cmd: cd collector && npx tsc -p tsconfig.json && cd .. && node _acceptance/s02-map-listings-trang-ke/probes/chay-test-dot-bien.mjs trang-ke
-    expected: "exit 0; dòng cuối 'XANH'; dòng 'đạt: bản thật · trang-ke: 37 ca đạt, 0 ca đỏ'; dòng 'đạt: bản đối chứng (chép, không đổi) · 36 ca đạt, 1 ca đỏ sẵn do chép' (ca đỏ sẵn: ca đọc tệp nguồn, không được tính là bắt được); bốn dòng 'đạt: bản đột biến (…) bị bắt:' — gửi lại hậu tố @offset lên đường dẫn · cắt mất đường dẫn kể cả khi không có hậu tố · sourceId ghi đường dẫn gửi thay vì tên trang · payload.url ghi tên trang thay vì đường dẫn gửi"
+    expected: "exit 0; dòng cuối 'XANH'; dòng 'đạt: bản thật · trang-ke: N ca đạt, 0 ca đỏ'; bản đối chứng chỉ có 1 ca đỏ sẵn do chép (ca đọc tệp nguồn); bốn dòng 'đạt: bản đột biến (…) bị bắt' — gửi lại hậu tố @offset lên đường dẫn · cắt mất đường dẫn kể cả khi không có hậu tố · sourceId ghi đường dẫn gửi thay vì tên trang · payload.url ghi tên trang thay vì đường dẫn gửi"
     paths: [collector/src/collectors/**, collector/src/test/s02-bo-thu-cua-api.test.ts, _acceptance/s02-map-listings-trang-ke/probes/chay-test-dot-bien.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E2
     criterion: AC-2
     executor: script
     cmd: cd collector && npx tsc -p tsconfig.json && cd .. && node _acceptance/s02-map-listings-trang-ke/probes/chay-test-dot-bien.mjs trang-ke
-    expected: "cùng lệnh E1: dòng 'đạt: bản đột biến (cắt mất đường dẫn kể cả khi không có hậu tố) bị bắt:' — vế KHÔNG-BẮN: ca 'đường dẫn không có @offset thì giữ nguyên, gửi đúng' đạt ở bản thật"
+    expected: "cùng lệnh E1: ca 'đường dẫn không có @offset thì giữ nguyên, gửi đúng' đạt ở bản thật; dòng 'đạt: bản đột biến (cắt mất đường dẫn kể cả khi không có hậu tố) bị bắt'"
     paths: [collector/src/collectors/**, collector/src/test/s02-bo-thu-cua-api.test.ts, _acceptance/s02-map-listings-trang-ke/probes/chay-test-dot-bien.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3
     criterion: AC-3
     executor: script
     cmd: bash _acceptance/s02-map-listings-trang-ke/probes/vung.sh
-    expected: "exit 0; dòng cuối 'XANH: mọi tệp đổi nằm trong vùng'; hai dòng 'đạt: chiều đỏ — cấy … thì bộ lọc gọi tên nó' (pipeline/transform-ngoai-vung.mjs · collector/src/cli.ts); hai dòng 'đạt: có …'; tệp ngoài vùng thì 'ĐỎ: tệp ngoài vùng: <tệp>'"
-    paths: [collector/**, _acceptance/s02-map-listings-trang-ke/**]
+    expected: "exit 0; dòng cuối 'XANH: mọi tệp đổi nằm trong vùng'; hai dòng 'đạt: chiều đỏ — cấy … thì bộ lọc gọi tên nó'; hai dòng 'đạt: có …'"
+    paths: [collector/**, pipeline/**, _acceptance/s02-map-listings-trang-ke/**]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4
     criterion: AC-3
     executor: test
     cmd: config:executors.test.collector
     expected: "exit 0; tsc không lỗi, mọi ca node --test của collector đạt"
     paths: [collector/**]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-4
+    executor: script
+    cmd: cd collector && npx tsc -p tsconfig.json && cd .. && node _acceptance/s02-map-listings-trang-ke/probes/phia-sau-va-tran-trang.mjs
+    expected: "exit 0; dòng cuối 'XANH'; dòng 'đạt: bản thật · AC-4 bộ đọc phía sau lấy mã thị trường từ payload.url của trang kế (thực: 47)'; dòng 'đạt: bản đột biến (bộ đọc đòi hậu tố @ trong url) bị bắt'"
+    paths: [collector/src/collectors/**, pipeline/transform-airdna.mjs, _acceptance/s02-map-listings-trang-ke/probes/phia-sau-va-tran-trang.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-5
+    executor: script
+    cmd: cd collector && npx tsc -p tsconfig.json && cd .. && node _acceptance/s02-map-listings-trang-ke/probes/phia-sau-va-tran-trang.mjs
+    expected: "cùng lệnh E5: hai dòng 'đạt: bản thật · AC-5 <nguồn bỏ qua offset, trả lại trang đầu mãi | nguồn trả trang mới đủ 15000 căn mãi> → vòng phân trang dừng trong ≤ 11 lời map_listings, một dòng lý do'; dòng 'đạt: bản thật · AC-5 vế không bắn: trang cuối 623 căn → dừng sau 2 lời, không dòng lý do'"
+    paths: [collector/src/collectors/**, _acceptance/s02-map-listings-trang-ke/probes/phia-sau-va-tran-trang.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
