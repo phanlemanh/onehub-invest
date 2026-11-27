@@ -119,8 +119,10 @@ bash $A/dau-van-tay.sh oneinvest | diff $H/van-tay-truoc-da42-<G>.txt -         
 có (thẻ duyệt, lượt nạp) — khi đó `diff` lệch đúng ở các bảng ấy, đối chiếu tay với GS. Thẻ S09 đã có người duyệt giữa áp và lùi
 thì quyết định mất cùng thẻ. Chỉ lùi nạp (chưa dựng): `lui-nap.sql` rồi `lui-luoc-do.sql`. Chưa nạp: chỉ `lui-luoc-do.sql`.
 
-**Lối cuối** — khôi phục bản dump mục 0: `pg_restore -U oneinvest -h localhost -p 5433 -d oneinvest --clean --if-exists
-$H/truoc-da42-<G>.dump`. Giá: mất mọi dòng ghi sau lúc dump (S03 15 phút, S06, S03 kênh chat, thẻ đã duyệt), phải nạp lại từ raw bất biến.
+**Lối cuối — ĐÃ GẠCH** (GS 27/11, sau finding AC-10 của DA56). Trước đây ghi `pg_restore --clean --if-exists` bản dump toàn DB lên
+`oneinvest` đang sống. Nay: «4b hỏng thì giao dịch tự lùi; DỪNG, báo GS; KHÔNG pg_restore lên DB sống. Khôi phục toàn DB từ dump là
+việc không lùi được, chỉ làm khi có lời riêng của Mạnh cho đúng lần đó.» Lý do: 14 bảng stg của mọi nguồn trỏ khoá ngoại `ON DELETE
+CASCADE` vào `airbnb_snapshots`, lệnh không `--exit-on-error` nên có thể để DB nửa chừng, và lối này chưa từng chạy thử.
 
 ## 5. Lệnh kiểm sau và số chạy thử
 
