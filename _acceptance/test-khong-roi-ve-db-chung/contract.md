@@ -1,11 +1,11 @@
 ---
 schema_version: 1
-feature: Test tự dựng bảng rồi ghi không rơi về DB chung — rào hai tệp, thiếu URL thì bỏ qua có lời
+feature: Test tự dựng bảng rồi ghi không rơi về DB chung — rào hai tệp, CI vẫn chạy
 slug: test-khong-roi-ve-db-chung
 owner: phanlemanh@gmail.com
 risk_tier: T2      # tệp test + lib chốt chặn + lệnh chấm trong config — không chạm t3_paths
 surfaces: [cli]
-status: approved
+status: implemented
 veto_state: mo
 veto_opened_at: 2026-11-27T01:01:24Z
 design_doc: docs/superpowers/specs/2026-11-27-test-khong-roi-ve-db-chung-design.md
@@ -21,34 +21,29 @@ giao HT35 (27/11) và phán tách: hàng này chỉ rào hai tệp thuộc lớp
 
 ## Criteria
 
-Hành vi chung (GS chỉnh phán 27/11, theo quy ước sẵn của kho — `chotDbThu` khiThieu «bo-qua»): URL tên DB thử → chạy; thiếu
-`DATABASE_URL` → bỏ qua cả tệp có lời; URL tên khác → thoát 2 có lời từ chối. Cả ba ca đều trước mọi kết nối. Tệp S09
-(`pipeline/import-s09-danh-ba.test.mjs`) theo bản vá zk sửa lại cùng hành vi; P1 tích hợp khớp byte khi LL chuyển sha (AC-6).
-
-- **AC-1** Given chạy trần một tệp trong phạm vi, When `DATABASE_URL` trỏ DB tên `oneinvest` (mọi cách viết), kể cả khi
-  `CI=true`, Then tiến trình thoát lỗi với lời từ chối trước mọi kết nối.
-- **AC-2** Given chạy trần một tệp trong phạm vi, When `DATABASE_URL` vắng, Then tệp bỏ qua có lời («bỏ qua — thiếu
-  DATABASE_URL»), thoát 0, không thử nối, không tạo bảng.
-- **AC-3** Given danh sách cho phép của `chotDbThu`, When tên DB là `oneinvest_suite_*` hoặc `oneinvest_ci_scripts_<số>`
-  (DB trống mà bước scripts của `suite-neu-doi` tự dựng rồi xoá), Then nhận; tên gần giống (`oneinvest_ci_scripts_x`,
-  `oneinvest_ci_scripts_`, …) và `oneinvest` thì từ chối.
-- **AC-4** Given bản chép bỏ rào của từng tệp, When chạy với URL DB chung ở cổng chết, Then lời từ chối biến mất và tệp đi tới
-  chỗ thử nối DB. Đây là chứng rào là thứ chặn.
-- **AC-5** Given DB của riêng lượt (`db/db-thu.sh … --chay`), When chạy các tệp trong phạm vi, Then mọi ca chạy và xanh, với 0
-  ca bỏ qua (trừ GT-AC-1 đỏ sẵn trên main).
-- **AC-6** Given `pipeline/import-s09-danh-ba.test.mjs`, When so với sha bản vá mới của zk do LL chuyển, Then khớp từng byte,
-  và commit giữ tác giả và tiêu đề của zk.
+- **AC-1** Given chạy trần một trong hai tệp trong phạm vi trên máy không phải runner CI, When `DATABASE_URL` trỏ DB tên
+  `oneinvest` (mọi cách viết) hoặc vắng, Then tiến trình thoát lỗi với lời từ chối của rào trước mọi kết nối, và không ca
+  nào chạy.
+- **AC-2** Given `CI=true`, When `DATABASE_URL` ghi tường minh tên `oneinvest`, Then rào vẫn từ chối như AC-1.
+- **AC-3** Given runner CI (`CI=true`), When `DATABASE_URL` vắng, Then hai tệp dùng DB dịch vụ của `ci-test.yml`; When URL
+  tên khác `oneinvest` (vd `oneinvest_ci_scripts_<pid>`), Then nhận — các ca VẪN CHẠY, không bỏ qua.
+- **AC-4** Given bản chép bỏ rào của từng tệp, When chạy trần như AC-1, Then lời từ chối biến mất và tệp đi tới chỗ thử nối
+  DB. Đây là chứng rào là thứ chặn, không phải một nguyên nhân khác.
+- **AC-5** Given DB của riêng lượt (`db/db-thu.sh … --chay`), When chạy hai tệp, Then mọi ca xanh như trước (trừ GT-AC-1 đỏ
+  sẵn trên main).
+- **AC-6** Given `pipeline/import-s09-danh-ba.test.mjs`, When so với `origin/zcode/zk-s09-test-chong-db-chung` @3cb318df3,
+  Then chỉ khác đúng bốn dòng lớp gọi (thêm import `urlCiChoPhep`, chú thích HT35, dòng gọi rào mới; bỏ dòng gọi rào cũ), và commit mang bản vá trên nhánh có cùng tác giả và tiêu đề với 3cb318df3.
 - **AC-7** Given bốn lệnh chấm đang chạy `check-freshness.test` trần (`executors.test.scripts`, `check_freshness`,
-  `sl_freshness`, `s08l_do`), When đọc và chạy chúng, Then cả bốn chạy qua `db/db-thu.sh … --chay` và vẫn xanh. Không bọc thì
-  sau HT35 chúng xanh rỗng, vì tệp bỏ qua khi thiếu URL.
+  `sl_freshness`, `s08l_do`), When đọc `_acceptance/config.yaml` và chạy chúng, Then cả bốn chạy qua `db/db-thu.sh … --chay` và vẫn xanh trên DB của riêng lượt.
 - **AC-8** Given hồ sơ, When đọc `bang-phu.md`, Then có đủ 66 tệp rơi về DB chung, mỗi tệp một ô: trong phạm vi · ngoài phạm
   vi kèm vì sao · để lại cho HT36. Thiết kế ghi đề xuất A–B cho HT36.
 
 ## Coverage
 
-Trục: tệp (2 trong phạm vi) × URL (vắng · tên `oneinvest` bốn cách viết · suite · `ci_scripts`) × môi trường (ngoài CI ·
-`CI=true`) × rào (có · bỏ). AC-1 phủ {oneinvest} × {ngoài CI, CI}. AC-2 phủ vắng. AC-3 phủ ma trận tên. AC-4 phủ rào bỏ. AC-5
-phủ suite × có rào. AC-6 giữ tệp S09 đúng bản zk.
+Trục: tệp (2 trong phạm vi) × URL (vắng · tên `oneinvest` bốn cách viết · suite · `ci_scripts`) × môi trường (ngoài CI · CI=true)
+× rào (có · bỏ). AC-1 phủ ô ngoài CI × {vắng, oneinvest}. AC-2 phủ CI × oneinvest. AC-3 phủ CI × {vắng (hàm rào + runner GitHub), tên khác oneinvest (chạy thật, 0 bỏ qua)}. AC-4 phủ
+rào bỏ. AC-5 phủ suite × có rào. Ô ngoài CI × `ci_scripts` thì từ chối (RV-1). Ô CI × vắng trên một máy có DB chung là giới hạn
+đã biết (Notes).
 
 ## Out of scope
 
@@ -60,6 +55,5 @@ phủ suite × có rào. AC-6 giữ tệp S09 đúng bản zk.
 
 ## Notes
 
-- Thật thà: sau HT35, ca nạp S09 và ca của `check-freshness.test` KHÔNG còn chạy trên CI GitHub. Trước đây chúng chạy nhờ rơi
-  về DB dịch vụ; nay CI không đặt `DATABASE_URL` nên cả tệp bỏ qua có lời. Chúng chỉ còn chạy ở lượt chấm qua `db-thu` và ở
-  bước scripts của `suite-neu-doi`. HT36 quyết phương án CI (đề xuất A: CI đặt `DATABASE_URL` tên `oneinvest_suite_ci`).
+- Giới hạn đã biết: ai tự đặt `CI=true` trên máy mà không đặt URL thì rào nhường và test chạy trên `localhost:5433/oneinvest`.
+  Đây cùng luật HT23. Runner CI thật không có DB chung.

@@ -72,7 +72,7 @@ flowchart TD
 
 ## Đang làm
 
-- Test tự dựng bảng rồi ghi không rơi về DB chung — rào hai tệp, thiếu URL thì bỏ qua có lời (`test-khong-roi-ve-db-chung`)
+- Test tự dựng bảng rồi ghi không rơi về DB chung — rào hai tệp, CI vẫn chạy (`test-khong-roi-ve-db-chung`)
 
 ## Đã giao — chờ phiên nghiệm thu
 

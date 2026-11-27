@@ -5,47 +5,63 @@ evals:
     criterion: AC-1
     executor: test
     cmd: config:executors.test.ht35_rao
-    expected: "exit 0; RV-2 xanh: mỗi tệp trong PHAM_VI × {URL DB chung ở cổng chết 127.0.0.1:9, CI=true + URL ấy} thoát ≠ 0, khớp «<tên>: từ chối — DB 'oneinvest' không phải DB thử», không khớp thông điệp thử nối, không ECONNREFUSED, không in URL kèm mật khẩu. Ca cổng chết chạy TRƯỚC ca thiếu URL, nên assert đầu đỏ thì vòng dừng và tệp mất rào không bao giờ được chạy thiếu URL (vì khi ấy nó rơi về :5433 thật). Chiều đỏ (đã thử): bỏ dòng rào ở check-freshness → RV-2 đỏ «scripts/check-freshness.test.mjs · URL DB chung: thiếu lời từ chối»"
-    paths: ["pipeline/lib/db-thu-chot.mjs", "scripts/check-freshness.test.mjs", "pipeline/import-s09-danh-ba.test.mjs", "pipeline/scripts/db-thu-chot.test.mjs"]
+    expected: "exit 0; RV-2 xanh: mỗi tệp × {URL DB chung ở cổng chết 127.0.0.1:9, CI=true + URL ấy} thoát ≠ 0, khớp lời từ chối của tệp (TỪ CHỐI DATABASE_URL · check-freshness.test: từ chối), không ECONNREFUSED, «pass 0»; RV-1 ngoài CI: bốn cách viết tên oneinvest + oneinvest_s10_danhba + thiếu URL → urlDbTestGhi ném «từ chối»; suite → nhận. Ca thiếu URL KHÔNG chạy trần (tệp mất rào sẽ rơi về :5433 thật — gap-probe P1-1, DT-AC-7). Chiều đỏ (đã thử): bỏ dòng rào ở check-freshness → RV-2 đỏ «<tệp> · URL DB chung: thiếu lời từ chối»"
+    paths: ["pipeline/lib/db-thu-chot.mjs", "pipeline/import-s09-danh-ba.test.mjs", "scripts/check-freshness.test.mjs", "pipeline/scripts/db-thu-chot.test.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E2
     criterion: AC-2
     executor: test
     cmd: config:executors.test.ht35_rao
-    expected: "exit 0; RV-2 phần thiếu URL: mỗi tệp trong PHAM_VI chạy không DATABASE_URL (không CI) → khớp «<tên>: bỏ qua — thiếu DATABASE_URL», thoát 0, không ECONNREFUSED, không «DB local không tới». Chiều đỏ: tệp đổi khiThieu sang mặc định tu-choi → thoát 2, RV-2 đỏ «thiếu URL: thiếu lời bỏ qua»"
-    paths: ["pipeline/lib/db-thu-chot.mjs", "scripts/check-freshness.test.mjs", "pipeline/import-s09-danh-ba.test.mjs", "pipeline/scripts/db-thu-chot.test.mjs"]
+    expected: "exit 0; RV-2 ca «CI=true + URL DB chung» xanh cho cả hai tệp (thoát ≠ 0, lời từ chối); RV-1: CI=true với bốn cách viết tên oneinvest → ném «từ chối». Chiều đỏ: urlCiChoPhep nhận mọi URL khi CI=true → RV-2 đỏ «CI=true + URL DB chung: thiếu lời từ chối»"
+    paths: ["pipeline/lib/db-thu-chot.mjs", "pipeline/scripts/db-thu-chot.test.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E3
     criterion: AC-3
     executor: test
     cmd: config:executors.test.ht35_rao
-    expected: "exit 0; RV-1: MAU_DB_THU khớp oneinvest_ci_scripts_4242 và oneinvest_suite_ht35; không khớp oneinvest, oneinvest_ci_scripts_, oneinvest_ci_scripts_x, oneinvest_ci_scripts_1;, oneinvest_cix_scripts_1, oneinvest_s10_danhba; lyDoTuChoi(URL …/oneinvest_ci_scripts_77) = null; CHOT-1..3 (s08-nap-sua) vẫn xanh — mở danh sách không làm lọt URL nào của ma trận cũ. Chiều đỏ: mẫu nới thành oneinvest_.* → RV-1 đỏ «phải từ chối: oneinvest_s10_danhba»"
+    expected: "exit 0; RV-1: CI=true thiếu URL → URL_DB_CI (= process.env.DATABASE_URL ?? DB dịch vụ «oneinvest» của ci-test.yml); CI=true + oneinvest_ci_scripts_4242 → trả nguyên URL; CI=\"1\" không phải runner CI → null. Chiều đỏ: urlCiChoPhep trả null khi CI=true thiếu URL → RV-1 đỏ «CI thiếu URL → DB dịch vụ của ci-test.yml»"
     paths: ["pipeline/lib/db-thu-chot.mjs", "pipeline/scripts/db-thu-chot.test.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3b
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.suite.pipeline_b
+    expected: "exit 0; nửa B bộ test pipeline (cụm dùng một lần, CI=true) gồm import-s09-danh-ba.test.mjs và db-thu-chot.test.mjs, 0 fail — ca của tệp S09 chạy, không bị bỏ cả tệp"
+    paths: ["pipeline/import-s09-danh-ba.test.mjs", "pipeline/lib/db-thu-chot.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3c
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.ht35_chay_ci
+    expected: "exit 0; CI=true với URL tên DB của lượt (khác oneinvest) — hai tệp chạy thật: dòng «CI=true · tests N · pass N · fail 0 · skipped 0» rồi «PASS hai tệp chạy đủ N ca khi CI=true» (đo 27/11: N = 78). Chiều đỏ (đã thử): URL trỏ cổng chết → «skipped 60», FAIL, exit 1 — ca bỏ qua không được tính xanh. Ô CI thiếu URL chỉ đo được trên runner GitHub (job pipeline, scripts của ci-test.yml trên PR)"
+    paths: ["pipeline/lib/db-thu-chot.mjs", "pipeline/import-s09-danh-ba.test.mjs", "scripts/check-freshness.test.mjs", "scripts/kiem-ht35.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E4
     criterion: AC-4
     executor: test
     cmd: config:executors.test.ht35_rao
-    expected: "exit 0; RV-3 xanh: với mỗi tệp trong PHAM_VI, bản chép .dot-bien-<pid>.test.mjs thay dòng rào bằng URL trần, chạy CHỈ với URL DB chung ở cổng chết → không còn «từ chối —», khớp thông điệp thử nối của tệp (check-freshness: «DB local không tới (connect ECONNREFUSED 127.0.0.1:9)»); bản chép bị xoá sau ca. Chiều đỏ (đã thử): dòng rào trong tệp đổi chữ → RV-3 đỏ «không thấy dòng rào để phá — thước lệch tệp»"
-    paths: ["scripts/check-freshness.test.mjs", "pipeline/import-s09-danh-ba.test.mjs", "pipeline/scripts/db-thu-chot.test.mjs"]
+    expected: "exit 0; RV-3 xanh: với mỗi tệp, bản chép .dot-bien-<pid>.test.mjs thay dòng rào bằng URL trần → không còn lời từ chối, khớp thông điệp thử nối (S09: «DB của lượt không chạy»; check-freshness: «DB local không tới (connect ECONNREFUSED 127.0.0.1:9)»); bản chép bị xoá sau ca; ca 2711-1 bị bỏ ở bản đột biến. Chiều đỏ: dòng rào trong tệp đổi chữ → RV-3 đỏ «không thấy dòng rào để phá — thước lệch tệp»"
+    paths: ["pipeline/import-s09-danh-ba.test.mjs", "scripts/check-freshness.test.mjs", "pipeline/scripts/db-thu-chot.test.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E5
     criterion: AC-5
     executor: test
     cmd: config:executors.test.ht35_chay_that
-    expected: "exit 0; trên DB của riêng lượt oneinvest_suite_ht35: «ngoài CI · tests N · pass N · fail 0 · skipped 0» rồi «PASS <k> tệp chạy đủ N ca» (đo 27/11 trước khi nhận bản zk mới: k = 1, N = 67; GT-AC-1 lọc theo mẫu). Chiều đỏ (đã thử): DB không tới → skipped 60, FAIL, exit 1 — ca bỏ qua không được tính xanh"
-    paths: ["scripts/check-freshness.test.mjs", "pipeline/import-s09-danh-ba.test.mjs", "pipeline/lib/db-thu-chot.mjs", "scripts/kiem-ht35.mjs"]
+    expected: "exit 0; ngoài CI trên DB của riêng lượt oneinvest_suite_ht35: «ngoài CI · tests N · pass N · fail 0 · skipped 0» và «PASS hai tệp chạy đủ N ca» (đo 27/11: N = 78; GT-AC-1 lọc theo mẫu). Chiều đỏ: DB không tới → có ca bỏ qua → FAIL exit 1"
+    paths: ["pipeline/import-s09-danh-ba.test.mjs", "scripts/check-freshness.test.mjs", "pipeline/lib/db-thu-chot.mjs", "scripts/kiem-ht35.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E6
     criterion: AC-6
     executor: script
     cmd: config:executors.script.ht35_zk_khop
-    expected: "exit 0; «PASS zk giữ tác giả: <tác giả commit zk>» (commit trên nhánh có cùng tác giả + tiêu đề với sha zk) và «PASS pipeline/import-s09-danh-ba.test.mjs khớp bản zk từng byte»; một dòng khác bản zk → exit 1 kèm dòng lạ"
+    expected: "exit 0; in «zk giữ tác giả: <tên tác giả commit 3cb318df3>» và diff của pipeline/import-s09-danh-ba.test.mjs so 3cb318df3 có đúng 4 dòng diff: 3 dòng thêm (import urlCiChoPhep, dòng chú thích HT35, const DB_URL = urlCiChoPhep(...) ?? xacThucUrlSuite(...)) + 1 dòng bỏ (const DB_URL = xacThucUrlSuite(...)); thêm một dòng ngoài ba dòng ấy → exit 1 kèm dòng lạ"
     paths: ["pipeline/import-s09-danh-ba.test.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
@@ -53,7 +69,7 @@ evals:
     criterion: AC-7
     executor: script
     cmd: config:executors.script.ht35_executor_db_thu
-    expected: "exit 0; bốn khoá executors.test.scripts, check_freshness, sl_freshness, s08l_do đều bắt đầu «bash db/db-thu.sh oneinvest_suite_» và chứa «--chay»; không khoá executors nào khác chạy scripts/check-freshness.test.mjs hay scripts/*.test.mjs trần (trừ suite-neu-doi); thiếu một → exit 1 gọi tên khoá (đã thử)"
+    expected: "exit 0; bốn khoá executors.test.scripts, check_freshness, sl_freshness, s08l_do đều bắt đầu «bash db/db-thu.sh oneinvest_suite_» và chứa «--chay»; không khoá executors nào khác chạy scripts/check-freshness.test.mjs trần; thiếu một → exit 1 gọi tên khoá"
     paths: ["_acceptance/config.yaml"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
@@ -61,7 +77,7 @@ evals:
     criterion: AC-7
     executor: test
     cmd: config:executors.test.check_freshness
-    expected: "exit 0; lệnh đã bọc chạy check-freshness.test trên DB của riêng lượt, 0 fail, và ca CHẠY (dòng «ℹ pass» > 0, không có «bỏ qua — thiếu DATABASE_URL»)"
+    expected: "exit 0; lệnh đã bọc chạy check-freshness.test trên DB của riêng lượt, 0 fail (trước khi bọc: chạy trần trên DB chung)"
     paths: ["_acceptance/config.yaml", "scripts/check-freshness.test.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
@@ -77,7 +93,7 @@ evals:
     criterion: AC-7
     executor: test
     cmd: config:executors.test.scripts
-    expected: "exit 0; trọn scripts/*.test.mjs trên DB của riêng lượt (bản chép db-thu), 0 fail. Đây là chứng việc bọc không làm đỏ các hồ sơ đã ký trỏ khoá này; ghi số tests/pass để so với job scripts của soát M5 (653 pass @1a2cb6a43)"
+    expected: "exit 0; trọn scripts/*.test.mjs trên DB của riêng lượt (bản chép db-thu), 0 fail — chứng việc bọc không làm đỏ các hồ sơ đã ký trỏ khoá này; ghi số tests/pass để so với job scripts của soát M5 (653 pass @1a2cb6a43)"
     paths: ["_acceptance/config.yaml", "scripts/check-freshness.test.mjs", "pipeline/lib/db-thu-chot.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
@@ -85,6 +101,6 @@ evals:
     criterion: AC-8
     executor: script
     cmd: config:executors.script.ht35_bang_phu
-    expected: "exit 0; quét lại cây 1a2cb6a43 bằng cùng luật (tệp *.test.*|*.itest.* có DATABASE_URL ??|| mặc định /oneinvest) ra đúng tập tệp của bang-phu.md (66); mỗi dòng bảng có ô «Ô của HT35»; tệp trong phạm vi không còn chuỗi mặc định DB chung ở cây đang kiểm; thiết kế có mục «để lại cho HT36» nêu A và B. Lệch tập → exit 1 in tệp thừa/thiếu (đã thử: xoá dòng vn-day → «bảng thiếu tệp»)"
-    paths: ["_acceptance/test-khong-roi-ve-db-chung/bang-phu.md", "docs/superpowers/specs/2026-11-27-test-khong-roi-ve-db-chung-design.md", "scripts/kiem-ht35.mjs"]
+    expected: "exit 0; quét lại kho bằng cùng luật (tệp *.test.*|*.itest.* git theo dõi có DATABASE_URL ??|| mặc định /oneinvest) ra đúng tập tệp của bang-phu.md (66), mỗi dòng bảng có ô «Ô của HT35» không rỗng; thiết kế có mục «để lại cho HT36» nêu A và B; lệch tập → exit 1 in tệp thừa/thiếu"
+    paths: ["_acceptance/test-khong-roi-ve-db-chung/bang-phu.md", "docs/superpowers/specs/2026-11-27-test-khong-roi-ve-db-chung-design.md"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]

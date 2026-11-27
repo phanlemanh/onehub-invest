@@ -18,7 +18,7 @@ import { after, before, describe, test } from "node:test";
 import { PROBES, TIME_SOURCE, describe as moTa, readFreshness } from "./lib/freshness.mjs";
 import { cadenceMap122, themCot122 } from "./lib/so-nguon-122.mjs";
 import { SAO_LUU_SLO_GIO, docTrangThaiSaoLuu } from "./lib/sao-luu-ngoai-may.mjs";
-import { chotDbThu } from "../pipeline/lib/db-thu-chot.mjs";
+import { urlDbTestGhi } from "../pipeline/lib/db-thu-chot.mjs";
 
 // Ca CLI chạy với thư mục trạng thái sao lưu RỖNG của riêng lượt (chưa bật) — không đọc ~/.oneinvest của máy chạy test.
 const SAO_LUU_RONG = mkdtempSync(path.join(tmpdir(), "freshness-sao-luu-"));
@@ -27,9 +27,8 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const CLI = path.join(HERE, "check-freshness.mjs");
 const require = createRequire(new URL("../app/package.json", import.meta.url));
 const pg = require("pg");
-// HT35: tệp này dựng lược đồ tạm + bảng (LIKE public.*) rồi ghi — chỉ DB thử oneinvest_suite_* (hay DB trống bước scripts
-// oneinvest_ci_scripts_<pid>); thiếu DATABASE_URL thì bỏ qua cả tệp có lời, tên khác thì thoát 2 — trước mọi kết nối.
-const DB_URL = chotDbThu({ ten: "check-freshness.test", khiThieu: "bo-qua" });
+// HT35: tệp này dựng lược đồ tạm + bảng (LIKE public.*) rồi ghi — chỉ DB oneinvest_suite_* ngoài CI; ném trước mọi kết nối.
+const DB_URL = urlDbTestGhi({ ten: "check-freshness.test" });
 
 // NK1: nhịp không còn là hằng trong mã — một chỗ ghi là migration 122; fixture và ca biên đọc nó qua bộ đọc 122.
 const SLO_HOURS = cadenceMap122();
