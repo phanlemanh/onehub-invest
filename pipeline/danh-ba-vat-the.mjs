@@ -22,7 +22,7 @@ import {
 import { basename } from "node:path";
 import { khoaNhomThat } from "./lib/eval-labels.mjs";
 import { NOI_KHU_S09 } from "./lib/s09-du-an.mjs";
-import { buocS09 } from "./lib/s09-dung.mjs";
+import { buocS09, buocS09DanhBa } from "./lib/s09-dung.mjs";
 import { NOI_DU_AN_S16 } from "./lib/s16-danh-muc.mjs";
 import { buocS16, ganLechS16, napS16TheoKhu } from "./lib/s16-dung.mjs";
 
@@ -222,6 +222,8 @@ export async function dung(c, {
 
     // DA31: phân khu, cụm, toà S09 (sau bước S08, cùng giao dịch). Chưa áp 097 hay khu không có dòng S09 → bỏ qua có lý do.
     const s09 = await buocS09(c, { khu, isoKhu, noi: noiS09, log });
+    // DA42: dự án, toà S09 gói 1 (115) — mọi dự án trong danh mục, không theo danh sách khu; trước S16 để S16 tra bí danh S09.
+    const s09_goi1 = await buocS09DanhBa(c, { noi: noiS09, noiS16, log });
     // DA33: toà, căn S16 của khu đã nối (sau S08, S09; cùng giao dịch). Chưa áp 103 → bỏ qua có lý do.
     const s16 = await buocS16(c, { khu, isoKhu, noi: noiS16, log });
     await c.query("COMMIT");
@@ -251,6 +253,7 @@ export async function dung(c, {
       phuong_moi: phuong,
       ly_do_phuong: lyDoPhuong,
       s09,
+      s09_goi1,
       s16,
       s08_lech_s16: ganLech.choNghi, s08_gop_vao_s16: ganLech.gop,
     };
