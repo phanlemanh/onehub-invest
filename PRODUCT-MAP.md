@@ -13,7 +13,7 @@ flowchart TD
   B --> CD["Chờ duyệt phạm vi<br/>22 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
   GB --> DG["Đã giao<br/>242 việc"]
-  GB --> CN["Chờ phiên nghiệm thu<br/>146 việc"] --> GG{"Cổng Giá trị"}
+  GB --> CN["Chờ phiên nghiệm thu<br/>147 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
 
@@ -176,6 +176,7 @@ flowchart TD
 - LLM đọc toàn bộ chữ S03 ở lớp đề xuất, tự áp loại hình khi trích dẫn có thật và qua luật; ý định, giá, diện tích chỉ đối chiếu; bất đồng lên /ops/review (`s03-llm-doc-toan-bo`)
 - Collector S03 nhận ảnh trên host R2 của người đăng và host đích chuyển hướng của CDN ảnh S03; ảnh JPEG XL được giữ nguyên byte (ZC15, phần host của ZC9) (`s03-media-r2-allowlist`)
 - Bộ nhận loại tin S03 nhận tin bán và tin thuê không ghi chữ «bán/cho thuê» theo tín hiệu chữ, đơn vị giá và bối cảnh nhóm; vẫn loại bài khách tìm nhà; bài đã có loại không đổi (`s03-nhan-loai-tin-rong`)
+- Tải bù ảnh S03 bài cũ sau ZC15 + ZC16 và giữ ảnh đã bù khi nạp lại raw — snapshot bù phase cuối, raw bất biến (ZC20) (`s03-tai-bu-anh-bai-cu`)
 - Vá hẹp bộ đọc tin S03 (diện tích, phòng ngủ, phường theo hướng, số ngữ cảnh, thuê từ 1 tỷ, giá che số, giá không đơn vị) và lưu toà, trục qua phát biểu có sẵn (`s03-va-doc-tin`)
 - check-freshness và /ops đo S05 theo nhịp 2 lượt/tuần: SLO_HOURS.S05 = 96 giờ ở cả hai bản chép, giữ parity với /ops (`s05-slo-theo-lich`)
 - Đường của tin S06 đi tới tin và căn, không rơi giữa chừng (`s06-duong-du-an-len-tin`)
