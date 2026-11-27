@@ -161,6 +161,9 @@ dừng và báo, không tự sửa cho khớp.
 - Thước «chỉ hai bảng được ghi» (E2/E3) đọc `pg_stat_xact_user_tables` CHỈ ở schema `public` (25/11): DB chung và bản chép
   `db-thu.sh` mang schema rác của test khác trùng tên `review_queue`/`enrichment_proposals`; gom theo `relname` thì dòng rác
   (luôn 0) đè dòng thật và thước đỏ cả đối chứng dương.
+- Rào chạy thật (GS phán 2026-11-27, sau chữ ký): KHÔNG chạy lượt thật NB9 trên DB máy thu cho tới khi NB12 («đóng nhóm 2
+  khi thẻ mang evidence.doi_chieu», từ Ngoài-2) có quyết định của Mạnh hoặc đã gộp. Đếm chỉ đọc 27/11: 9 thẻ trong 232 thẻ nhóm 2
+  mang đối chiếu chưa xét (giá 3, ý định 6).
 - Known limits — chọn ở Cổng Bằng chứng 2026-11-27:
   - Ngoài-1: lùi sau khi người đã quyết một thẻ thì đề xuất dưới thẻ đó quay về hàng chờ mà thẻ đã xử xong — đề xuất nằm treo, xử tay.
   - Ngoài-3: bài kiểm tra E8 không có đối chứng dương cho chính các đề xuất của lượt, có thể xanh dù lệnh không làm gì.
