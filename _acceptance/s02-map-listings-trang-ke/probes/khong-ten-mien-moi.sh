@@ -7,7 +7,8 @@ F=$(grep -l 'export function docExpAppToken' collector/src/collectors/*.ts | hea
 GOC=$(sed -n 's/^const APP_ORIGIN = "https:\/\/[a-z]*\.\([^"]*\)".*/\1/p' "$F")
 [ -n "$GOC" ] || { echo "ĐỎ: không rút được tên miền gốc từ tệp bộ thu"; exit 2; }
 if [ -n "${S02_MOC_SO:-}" ]; then MOC="$S02_MOC_SO"
-elif git rev-parse -q --verify origin/fix/s02-cua-api >/dev/null && ! git merge-base --is-ancestor origin/fix/s02-cua-api origin/main; then MOC=origin/fix/s02-cua-api
+# ZC22 gộp kiểu squash nên không thành tổ tiên của main — nhận ra bằng nội dung: main đã có mô-đun phiên S02 thì so với origin/main
+elif ! git grep -q "export function docPhienTuProfile" origin/main -- collector/src && git rev-parse -q --verify origin/fix/s02-cua-api >/dev/null; then MOC=origin/fix/s02-cua-api
 else MOC=origin/main; fi
 echo "mốc so: $MOC"
 BASE=$(git merge-base "$MOC" HEAD)

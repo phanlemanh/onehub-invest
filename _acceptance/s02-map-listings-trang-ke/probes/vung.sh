@@ -12,7 +12,8 @@ VUNG='^(collector/src/collectors/[a-z]+-research\.ts|collector/src/test/s02-bo-t
 # gộp main mới hơn; ghi đè bằng S02_MOC_SO khi ZC22 đã vào main (khi đó dùng origin/main).
 # Tự chọn: ZC22 đã là tổ tiên của origin/main → so với origin/main; chưa → so với nhánh ZC22. In mốc đã dùng.
 if [ -n "${S02_MOC_SO:-}" ]; then MOC="$S02_MOC_SO"
-elif git rev-parse -q --verify origin/fix/s02-cua-api >/dev/null && ! git merge-base --is-ancestor origin/fix/s02-cua-api origin/main; then MOC=origin/fix/s02-cua-api
+# ZC22 gộp kiểu squash nên không thành tổ tiên của main — nhận ra bằng nội dung: main đã có mô-đun phiên S02 thì so với origin/main
+elif ! git grep -q "export function docPhienTuProfile" origin/main -- collector/src && git rev-parse -q --verify origin/fix/s02-cua-api >/dev/null; then MOC=origin/fix/s02-cua-api
 else MOC=origin/main; fi
 echo "mốc so: $MOC"
 BASE="$(git merge-base "$MOC" HEAD)" || { echo "ĐỎ: không tính được mốc gộp với $MOC"; exit 2; }
