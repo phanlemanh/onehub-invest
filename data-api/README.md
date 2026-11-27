@@ -63,6 +63,10 @@ npm run dev
 | GET | `/v1/deals` | Best-value listings (price/m² vs group median, with price rank) |
 | GET | `/v1/asset-stats` | Asset statistics (median, p25, p75, yield) |
 | GET | `/v1/coverage` | Self-collected listing count by market |
+| GET | `/v1/properties?project=` | Property (building directory): buildings of one project — units are never listed |
+| GET | `/v1/properties/lookup?project=&building=&unitNumber=` | Property: look up ONE unit you already know by project + building + unit number |
+| GET | `/v1/properties/:universalPropertyId` | Property: one building |
+| GET | `/v1/properties/:universalPropertyId/units/:unitKey` | Property: one unit |
 
 ### Response fields
 
@@ -81,6 +85,41 @@ are `null`.
 
 Data boundaries: this API never returns the text, images, group name or sender name of community posts, and never
 reads or returns calibration-source data — those stay in the internal operations portal.
+
+## Property — danh bạ nhà (building directory)
+
+**«Property» here is OneHub's building directory, NOT the RESO `Property` resource.** In RESO Data Dictionary 2.1 the
+`Property` resource is a listing (that is `/v1/listings`); a physical building is identified by `UniversalPropertyId` plus
+the `Building` resource. Field names inside follow DD 2.1 (`Building.*`; `Property.UnitFloorLocation`, `LivingArea`, …).
+The single key list is `src/contract/property.ts`; `/openapi.json` publishes it as `PropertyBuilding`, `PropertyUnit`,
+`PropertyUnitLookup`.
+
+| Key | DD 2.1 | Meaning |
+|---|---|---|
+| `universalPropertyId` | Building.UniversalPropertyId | building UPI (`urn:onehub:upi:1:VN:<ISO 3166-2>:<buildingKey>`) |
+| `buildingKey` | Building.BuildingKey | opaque `bld_…` key |
+| `buildingName` | Building.BuildingName | building name |
+| `complexName` | Building.ComplexName | sub-zone of the project |
+| `subdivisionName` | Building.SubdivisionName | project name |
+| `projectId` | extension | project node id — pass it as `?project=` |
+| `city` | Building.City | ward (Vietnamese addresses are ward + province) |
+| `stateOrProvince` | Building.StateOrProvince | ISO 3166-2:VN code (local value — the DD lookup lists US/CA states) |
+| `country` | Building.Country | `VN` |
+| `catalogTier` | extension | `xac_minh` · `suy_ra_manh` · `mot_loi_khai` (catalogue confidence) |
+| `unitCount` | extension | active units in the building |
+| `activeListingCount` | extension | active listings linked to the building (refreshed every 10 minutes) |
+| `unitKey` | extension | opaque `unt_…` unit key |
+| `unitFloorLocation` | Property.UnitFloorLocation | floor |
+| `livingArea`, `livingAreaUnits` | Property.LivingArea, LivingAreaUnits | area, `Square Meters` |
+| `bedroomsTotal`, `bathroomsTotalInteger` | Property.BedroomsTotal, BathroomsTotalInteger | rooms |
+| `propertySubType` | Property.PropertySubType | `Condominium`, `Unimproved Land`, or null |
+| `unitNumber` | Property.UnitNumber | **lookup only**: echoes the unit number you sent |
+
+Rules: units are looked up one at a time — there is no unit listing, no floor/stack key, and `unitKey` is random, so one
+unit does not lead to another. Source-system codes are never returned and never accepted as input
+(`400 SOURCE_CODE_NOT_ACCEPTED`). Ambiguous names return `400 AMBIGUOUS_PROJECT` / `AMBIGUOUS_BUILDING` /
+`AMBIGUOUS_UNIT`; merged records return `404 MERGED` with `mergedInto`. Where the directory tables are absent the routes
+return `503 DIRECTORY_UNAVAILABLE` — today the directory lives only on the collection machine, not on the cloud database.
 
 ## Authentication
 
