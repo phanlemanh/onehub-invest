@@ -155,12 +155,17 @@ test("bi-danh-mot-can-di-tron-ghi-den-view", async (t) => {
 // Dòng mức căn ghi trước 138 (chưa mang unit) tra theo trục + tầng; floor danh bạ «09» khớp tầng «9» của phát biểu (finding S4
 // vòng 3: view so chuỗi thô, luật JS chuẩn hoá bằng chuanTang).
 caDl("tang-so-0-dau-trong-danh-ba-van-ra-can", async () => {
-  const floor0 = `0${can.floor}`;
-  await c.query(`UPDATE units SET floor = $2 WHERE unit_key = $1`, [can.unit_key, floor0]);
+  // units chỉ thêm (rào 082: chỉ đổi được status, merged_into) nên không sửa floor căn có sẵn: chèn một căn mới của trục ở tầng
+  // «0987» mà trục chưa có căn nào ở tầng 987 (tiền đề tự kiểm), rồi phát biểu «trục:987» không mang unit.
+  const tang = "987", floor0 = `0${tang}`, unit = `unt_${"P36TANG09".padEnd(26, "0")}`;
+  const { rows: [{ n }] } = await c.query(`SELECT count(*)::int n FROM units WHERE stack_key = $1 AND regexp_replace(floor, '^0+(?=[0-9])', '') = $2`, [truc, tang]);
+  assert.equal(n, 0, `tiền đề: trục ${truc} đã có căn ở tầng ${tang}`);
+  await c.query(`INSERT INTO units (unit_key, building_key, stack_key, floor, sub_id, catalog_tier) VALUES ($1, $2, $3, $4, $3 || ':' || $4, 'xac_minh')`,
+    [unit, toa.building_key, truc, floor0]);
   await tinCo("pl36t-1"); await coToa("pl36t-1");
-  await ghi("pl36t-1", SUB, `${truc}:${can.floor}`, { rule_id: RULE.ma });
+  await ghi("pl36t-1", SUB, `${truc}:${tang}`, { rule_id: RULE.ma });
   const [r] = await doc();
-  assert.deepEqual([r?.muc, r?.unit_key], ["can", can.unit_key], `ô «tang-09»: floor danh bạ «${floor0}» phải khớp tầng «${can.floor}»`);
+  assert.deepEqual([r?.muc, r?.unit_key], ["can", unit], `ô «tang-09»: floor danh bạ «${floor0}» phải khớp tầng «${tang}»`);
 });
 caDl("rule-khac-khong-vao-view", async () => {
   await tinCo("pl36t-1"); await coToa("pl36t-1");
