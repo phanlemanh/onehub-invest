@@ -13,7 +13,8 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import pg from "pg";
 
 import { sqlNapLaiDayDu } from "../lib/nap-view-song.mjs";
-import { NGUON_BAT, RULE, TAT_CA_NGUON } from "../lib/ghep-tin-truc-can.mjs";
+import { NGUON_BAT, RULE, TAT_CA_NGUON, xetBai } from "../lib/ghep-tin-truc-can.mjs";
+import { RULE as RULE_TOA } from "../lib/ghep-tin-danh-muc.mjs";
 import { docDauVao, tinhGan } from "../lib/ghep-tin-truc-can-doc.mjs";
 const { buocGhepCan, dongPhatBieu, ghiGan } = await import(process.env.GHEP_CAN_GHI_LIB ? pathToFileURL(process.env.GHEP_CAN_GHI_LIB).href : "../lib/ghep-tin-truc-can-ghi.mjs");
 const { writeAssertions } = await import(process.env.GHEP_CAN_ASSERT_LIB ? pathToFileURL(process.env.GHEP_CAN_ASSERT_LIB).href : "../lib/assert.mjs");
@@ -95,21 +96,45 @@ caDl("tat-het-nguon-buoc-gan-van-rut-het-dong-cu", async () => {
   await luot();
 });
 caDl("floor-raw-cua-bo-doc-chu-khong-bi-rut-hay-de", async () => {
-  // AC-3: phát biểu floor_raw của bộ đọc chữ (không rule ghep-can) trên bài có dòng tầng suy từ mã còn sống, đúng giá trị, sau
-  // lượt gắn và lượt chạy lại.
-  const tangMa = [...dau.kq.ketQuaBai].find(([, x]) => x.tangTuMa);
-  assert.ok(tangMa, "bản chép cần ít nhất một bài có tầng suy từ mã");
-  // Giá trị bằng tầng suy từ mã: chữ bài và mã cùng một tầng, bài vẫn gắn được; lượt gắn ghi, rút dòng ghep-can cùng trường.
-  const [post, x] = tangMa;
-  const giaTri = String(x.tangTuMa);
-  await writeAssertions(c, [{ subject_key: `S03:${post}`, field: "floor_raw", value: giaTri, evidence_tier: "observed",
-    method: "parser", method_version: "thu-pl36", rule_id: null }]);
+  // AC-3: phát biểu floor_raw của bộ đọc chữ không bị rút hay đè khi lượt gắn rút dòng tầng suy từ mã cùng bài. Tiền đề TỰ DỰNG
+  // trong DB lượt (GS phán 27/11, cùng luật NB10 AC-6): bản chép M5 có 0/40.205 bài có tầng suy từ mã, nên cấy đúng một bài —
+  // toà của danh bạ (phát biểu ghep-toa) + mã căn «<toà>.<tầng>.<trục>» chỉ khớp một căn — rồi đo trên chính bài đó.
+  let cay = null;
+  for (const [, d] of dau.vao.danhBa) {
+    for (const [toaKey, m] of d.truc) {
+      const ten = d.tenToa.find((x) => x.key === toaKey)?.ten;
+      if (!ten) continue;
+      for (const [soTruc, stacks] of m) {
+        if (stacks.length !== 1) continue;
+        for (const [tang, units] of d.can.get(stacks[0]) ?? []) {
+          if (units.length !== 1 || !/^[0-9]{1,2}[A-Z]?$/.test(tang)) continue;
+          const ma = `${ten}.${tang}.${soTruc}`;
+          const kq = xetBai({ toa: toaKey, ma: [ma] }, d, { nguonBat: NGUON_BAT });
+          if (kq.muc === "can" && kq.tangTuMa) { cay = { toaKey, ma, tang: kq.tangTuMa }; break; }
+        }
+        if (cay) break;
+      }
+      if (cay) break;
+    }
+    if (cay) break;
+  }
+  assert.ok(cay, "danh bạ của DB lượt không có căn nào dựng được mã «<toà>.<tầng>.<trục>» chỉ khớp một căn");
+  const post = `pl36-cay-floor-${process.pid}`, sk = `S03:${post}`;
+  const { rows: [{ upi }] } = await c.query(`SELECT upi FROM buildings WHERE building_key = $1`, [cay.toaKey]);
+  await c.query(`INSERT INTO field_assertions (resource_name, subject_key, field, value, evidence_tier, method, method_version, rule_id, evidence, observed_at)
+      VALUES ('Property', $1, 'universal_property_id', $2, 'inferred', 'e1_rule', 'thu-pl36', $3, '{"thu":"pl36"}', now())`, [sk, upi, Object.values(RULE_TOA)[0]]);
+  await writeAssertions(c, [{ subject_key: sk, field: "unit_number", value: cay.ma, evidence_tier: "observed", method: "parser", method_version: "thu-pl36", rule_id: null }]);
+  await luot();
+  const tangMa = async () => (await song(post)).filter((d) => d.field === "floor_raw" && d.rule_id === RULE.tangTuMa);
+  assert.equal((await tangMa()).length, 1, `tiền đề: bài cấy ${post} (${cay.ma}) phải có đúng một dòng tầng suy từ mã`);
+  // Bộ đọc chữ ghi tầng cho bài: lượt kế rút dòng tầng suy từ mã (chữ bài đã có tầng); dòng của bộ đọc chữ phải còn nguyên.
+  await writeAssertions(c, [{ subject_key: sk, field: "floor_raw", value: cay.tang, evidence_tier: "observed", method: "parser", method_version: "thu-pl36", rule_id: null }]);
   const doc = async () => (await c.query(`SELECT id, value, retracted_at IS NOT NULL AS r FROM field_assertions
-      WHERE subject_key = $1 AND field = 'floor_raw' AND method = 'parser' AND value = $2 ORDER BY id`, [`S03:${post}`, giaTri])).rows;
+      WHERE subject_key = $1 AND field = 'floor_raw' AND method = 'parser' ORDER BY id`, [sk])).rows;
   const truoc = await doc();
-  assert.equal(truoc.length, 1, `cần đúng một dòng floor_raw bộ đọc chữ của bài ${post}`);
-  await luot({ nguonBat: TAT_CA_NGUON.filter((r) => r !== RULE.tangTuMa) });   // lượt rút dòng tầng suy từ mã
-  await luot();                                                                // lượt chèn lại
+  assert.equal(truoc.length, 1, `cần đúng một dòng floor_raw bộ đọc chữ của bài cấy ${post}`);
+  await luot(); await luot();
+  assert.equal((await tangMa()).length, 0, `bài cấy ${post} có tầng từ chữ bài mà dòng tầng suy từ mã chưa bị rút`);
   const sau = await doc();
   assert.deepEqual(sau, [{ ...truoc[0], r: false }], `floor_raw bộ đọc chữ của bài ${post} bị rút hay đè: ${JSON.stringify(sau)}`);
 });

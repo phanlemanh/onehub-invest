@@ -99,3 +99,6 @@ Hôm nay 0 tin S03 gắn trục hay căn; 2.830 tin hai khu ở mức toà. Hạ
 ## Notes
 
 - AC-10 chỉ đo được sau buổi gắn nhãn người trên `/ops/labels` (Hỏi-2).
+- AC-3 ô «floor_raw của bộ đọc chữ không bị rút hay đè»: ô chưa có dữ liệu thật, đo bằng bài cấy. Đo chỉ đọc trên DB máy thu
+  27/11 (docDauVao + tinhGan): 41.735 bài có toà, trục 9.530, căn 897, tầng suy từ mã 0; bản chép M5 0/40.205. Ca
+  `floor-raw-cua-bo-doc-chu-khong-bi-rut-hay-de` tự cấy một bài trong DB lượt (GS phán 27/11).
