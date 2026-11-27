@@ -103,6 +103,11 @@ _Avoid_: unit (trong chữ UI), căn hộ (khi nói chung mọi loại)
 - Ghi chú: trang `/ops/registry` «Danh bạ» (máy thu, chỉ đọc) đi theo cây dự án → phân khu → toà → căn với số đếm, bậc danh mục, nguồn `S0x`, tin đang rao và mã dự án nguồn chưa nối; `/ops/registry/<id nút>` mở một dự án xuống tới căn.
 _Avoid_: master data, MDM
 
+**Danh bạ nhà**: Phần vật thể của danh bạ (toà, trục, căn) nhìn từ bên ngoài kho — tài nguyên Property của API dữ liệu: tra một toà hay một căn bằng mã OneHub (UPI của toà, `unitKey` của căn) hoặc bằng dự án + toà + mã căn khách đã biết; liệt kê toà của một dự án, không liệt kê căn (PB6, Mạnh ký Cổng Phạm vi 27/11). Tên trường theo RESO DD 2.1 (`Building.*`, `Property.UnitFloorLocation`, `LivingArea`…); không trả mã của nguồn, không trả mã trục:tầng. Hôm nay chỉ chạy tại máy thu — danh bạ chưa lên cloud.
+- Code: `property` (API `/v1/properties`, tệp khoá `data-api/src/contract/property.ts`) · RESO: UPI (`UniversalPropertyId`) + resource Building — **không phải** resource Property của RESO (resource đó là một tin, ở `/v1/listings`)
+- Slug URL: `properties`
+_Avoid_: deals, asset, danh mục căn, «Property» theo nghĩa RESO khi nói về tin
+
 **Danh bạ người**: Phần người của danh bạ — mỗi người một khoá mờ `pty_…` cấp một lần, thuộc đúng một nguồn (chưa nối xuyên nguồn); định danh tại nguồn là bí danh, quan hệ với tin là vai trò (ADR-0016 §8). Chỉ ở DB local.
 - Code: `party` · RESO: resource Member (khung), khoá local
 - Slug URL: `people`

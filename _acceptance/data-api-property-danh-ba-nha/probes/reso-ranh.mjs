@@ -86,7 +86,7 @@ const VUNG = [
   /^data-api\/src\/routes\/properties\.ts$/, /^data-api\/src\/contract\/property\.ts$/, /^data-api\/src\/app\.ts$/,
   /^data-api\/src\/middleware\/error-handler\.ts$/, /^data-api\/README\.md$/, /^data-api\/CLAUDE\.md$/,
   /^data-api\/test\/properties\.test\.ts$/, /^data-api\/test\/dong-ba-route\.test\.ts$/, /^pipeline\/mappings\.yaml$/,
-  /^_acceptance\/config\.yaml$/, /^PRODUCT-MAP\.md$/, /^LO-TRINH\.html$/, /^_acceptance\/data-api-property-danh-ba-nha\//,
+  /^_acceptance\/config\.yaml$/, /^CONTEXT\.md$/, /^PRODUCT-MAP\.md$/, /^LO-TRINH\.html$/, /^_acceptance\/data-api-property-danh-ba-nha\//,
   /^docs\/superpowers\/plans\/2026-11-27-data-api-property-danh-ba-nha\.md$/,
 ];
 const base = execFileSync("git", ["-C", ROOT, "merge-base", "HEAD", "origin/main"], { encoding: "utf8" }).trim();
