@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 843d31e8f174c5c6db5d0224582593b8c0651d5f
-human_signoff:
+human_signoff: Mạnh 2026-11-27
 ---
 
 # Evidence Report: s06-thu-duoi-do
