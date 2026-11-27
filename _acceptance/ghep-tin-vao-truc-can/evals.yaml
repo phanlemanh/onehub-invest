@@ -116,7 +116,7 @@ evals:
     question: >
       Đọc bảng bài sai trong tệp chấm: các bài máy gắn sai trục có chung một kiểu lỗi luật sửa được (dạng mã, tiền tố toà, tra
       trục) không, hay là lỗi nhãn người hoặc dữ liệu danh bạ?
-    inputs: ["_acceptance/ghep-tin-vao-truc-can/evidence/cham-truc.md"]
+    inputs: ["_acceptance/ghep-tin-vao-truc-can/evidence/cham-truc.md", "_acceptance/ghep-tin-vao-truc-can/contract.md", "_acceptance/ghep-tin-vao-truc-can/decisions.jsonl"]
     expected: >
       Tệp chấm (do E10a sinh) có số bài, số máy gắn, số đúng, cận dưới Wilson, và bảng từng bài sai đủ bốn cột; người chấm
       xếp từng bài sai vào một kiểu và nói kiểu nào sửa được bằng luật.

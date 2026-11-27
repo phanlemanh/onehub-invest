@@ -3,8 +3,10 @@
 // DB của riêng lượt: các ca đổi dữ liệu thật rồi chạy lại bước gắn; DB bị xoá khi lệnh kết thúc.
 // GHEP_CAN_GHI_LIB, GHEP_CAN_ASSERT_LIB trỏ bản đột biến cho probes của hồ sơ.
 import { strict as assert } from "node:assert";
-import { readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { spawn } from "node:child_process";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { after, before, test } from "node:test";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -82,6 +84,35 @@ caDl("tat-mot-nguon-chi-rut-dong-cua-nguon-do", async () => {
   await luot();
   assert.equal(await demRule(RULE.ma), ma, "bật lại nguồn không về số cũ");
 });
+caDl("tat-het-nguon-buoc-gan-van-rut-het-dong-cu", async () => {
+  // Finding S4 r2 (AC-6): đầu vào có bài mà 0 bài gắn được (tắt hết nguồn) thì bước cuối lượt nạp vẫn rút các dòng cũ.
+  const truoc = (await c.query(`SELECT count(*) n FROM field_assertions WHERE retracted_at IS NULL AND rule_id = ANY ($1::text[])`, [[...TAT_CA_NGUON]])).rows[0].n;
+  assert.ok(Number(truoc) > 0, "cần dòng gắn sống trước ca");
+  const dong = [];
+  await buocGhepCan(c, { log: (s) => dong.push(s), nguonBat: [] });
+  const sau = Number((await c.query(`SELECT count(*) n FROM field_assertions WHERE retracted_at IS NULL AND rule_id = ANY ($1::text[])`, [[...TAT_CA_NGUON]])).rows[0].n);
+  assert.equal(sau, 0, `tắt hết nguồn mà bước gắn còn ${sau}/${truoc} dòng sống (${dong.join(" | ")})`);
+  await luot();
+});
+caDl("floor-raw-cua-bo-doc-chu-khong-bi-rut-hay-de", async () => {
+  // AC-3: phát biểu floor_raw của bộ đọc chữ (không rule ghep-can) trên bài có dòng tầng suy từ mã còn sống, đúng giá trị, sau
+  // lượt gắn và lượt chạy lại.
+  const tangMa = [...dau.kq.ketQuaBai].find(([, x]) => x.tangTuMa);
+  assert.ok(tangMa, "bản chép cần ít nhất một bài có tầng suy từ mã");
+  // Giá trị bằng tầng suy từ mã: chữ bài và mã cùng một tầng, bài vẫn gắn được; lượt gắn ghi, rút dòng ghep-can cùng trường.
+  const [post, x] = tangMa;
+  const giaTri = String(x.tangTuMa);
+  await writeAssertions(c, [{ subject_key: `S03:${post}`, field: "floor_raw", value: giaTri, evidence_tier: "observed",
+    method: "parser", method_version: "thu-pl36", rule_id: null }]);
+  const doc = async () => (await c.query(`SELECT id, value, retracted_at IS NOT NULL AS r FROM field_assertions
+      WHERE subject_key = $1 AND field = 'floor_raw' AND method = 'parser' AND value = $2 ORDER BY id`, [`S03:${post}`, giaTri])).rows;
+  const truoc = await doc();
+  assert.equal(truoc.length, 1, `cần đúng một dòng floor_raw bộ đọc chữ của bài ${post}`);
+  await luot({ nguonBat: TAT_CA_NGUON.filter((r) => r !== RULE.tangTuMa) });   // lượt rút dòng tầng suy từ mã
+  await luot();                                                                // lượt chèn lại
+  const sau = await doc();
+  assert.deepEqual(sau, [{ ...truoc[0], r: false }], `floor_raw bộ đọc chữ của bài ${post} bị rút hay đè: ${JSON.stringify(sau)}`);
+});
 caDl("cau-rut-thay-boi-luot-chua-dong-ghep-can", async () => {
   // Một bộ đọc khác ghi universal_property_sub_id cùng phương pháp e1_rule với replaceOwn, GIÁ TRỊ KHÁC, trên bài đang có dòng
   // ghep-can (khuôn của lượt nạp). Đối chứng dương: một dòng e1_rule không rule (giá trị thứ ba) cùng bài, cùng trường PHẢI bị rút
@@ -100,8 +131,10 @@ caDl("cau-rut-thay-boi-luot-chua-dong-ghep-can", async () => {
       method: "e1_rule", method_version: "thu-pl36", rule_id: "khac-pl36" }], { replaceOwn: true });
     const trang = async (i) => (await c.query(`SELECT retracted_at IS NOT NULL AS r, retract_reason AS ly FROM field_assertions WHERE id = $1`, [i])).rows[0];
     const dc = await trang(idDc), gc = await trang(id);
+    const { rows: [{ n }] } = await c.query(`SELECT count(*)::int n FROM field_assertions WHERE subject_key = $1
+        AND rule_id LIKE 'ghep-can-%' AND retract_reason = 'thay-boi-luot'`, [subject_key]);
     assert.deepEqual(dc, { r: true, ly: "thay-boi-luot" }, "đối chứng: dòng e1_rule không rule, giá trị khác phải bị rút thay-boi-luot");
-    assert.deepEqual(gc, { r: false, ly: null }, `câu rút «thay bởi lượt» rút dòng ghep-can-truc ${id} của ${subject_key}`);
+    assert.deepEqual([n, gc], [0, { r: false, ly: null }], `câu rút «thay bởi lượt» rút ${n} dòng ghep-can-* của ${subject_key} (dòng ${id})`);
   } finally { await c.query("ROLLBACK"); }
 });
 
@@ -132,16 +165,21 @@ test("luot-khac-giu-khoa-thi-bo-luot", async () => {
 // AC-8 trên lượt nạp thật (finding r1, hình dạng 1): chạy transform-zalo.mjs như launchd chạy, trên DB của riêng lượt; thứ tự
 // đo bằng dấu vết thật của hai bước (dòng «ghep-toa:» rồi «ghep-can:» ở stdout), không bằng văn bản mã. GHEP_ZALO_TEP trỏ bản
 // đột biến (probes/cuoi-luot-nap.sh đảo thứ tự hai bước → ca đỏ).
-const chayLuotNap = (tep) => new Promise((ok) => {
-  const p = spawn(process.execPath, [tep], { cwd: new URL("..", import.meta.url), env: { ...process.env, DATABASE_URL: DB_URL } });
+const chayLuotNap = (tep, themEnv = {}) => new Promise((ok) => {
+  const p = spawn(process.execPath, [tep], { cwd: new URL("..", import.meta.url), env: { ...process.env, DATABASE_URL: DB_URL, ...themEnv } });
   let ra = "";
   p.stdout.on("data", (d) => { ra += d; }); p.stderr.on("data", (d) => { ra += d; });
   p.on("close", (ma) => ok({ ma, dong: ra.split("\n") }));
 });
 const TEP_ZALO = fileURLToPath(new URL("../transform-zalo.mjs", import.meta.url));
 test("luot-nap-that-gan-can-chay-sau-gan-toa", { timeout: 900_000 }, async () => {
+  const { rows: [{ t0 }] } = await c.query("SELECT clock_timestamp() AS t0");
   const { ma, dong } = await chayLuotNap(process.env.GHEP_ZALO_TEP ?? TEP_ZALO);
   assert.equal(ma, 0, `lượt nạp thoát ${ma}: ${dong.slice(-5).join(" | ")}`);
+  // AC-6 trên lượt nạp thật (finding S4 r2): câu rút «thay bởi lượt» của các bộ đọc không được rút dòng ghep-can-* nào.
+  const { rows: [{ n }] } = await c.query(`SELECT count(*)::int n FROM field_assertions WHERE rule_id LIKE 'ghep-can-%'
+      AND retract_reason = 'thay-boi-luot' AND retracted_at >= $1`, [t0]);
+  assert.equal(n, 0, `lượt nạp thật rút ${n} dòng ghep-can-* lý do thay-boi-luot`);
   const i = dong.findIndex((d) => /^ghep-toa: /.test(d) || /JOB WARN \[ghep-toa\]/.test(d));
   const j = dong.findIndex((d) => /^ghep-can: /.test(d) || /JOB WARN \[ghep-can\]/.test(d));
   assert.ok(i >= 0 && j >= 0, `lượt nạp thiếu dấu vết bước gắn: ghep-toa ${i}, ghep-can ${j}`);
@@ -149,18 +187,21 @@ test("luot-nap-that-gan-can-chay-sau-gan-toa", { timeout: 900_000 }, async () =>
   assert.ok(dong.some((d) => /^ghep-can: /.test(d)), `bước gắn trục, căn không chạy trọn: ${dong[j]}`);
 });
 test("luot-nap-that-loi-nap-buoc-gan-can-van-thoat-0-mot-canh-bao", { timeout: 900_000 }, async () => {
-  // Cấy lỗi nạp mã vào bước gắn trục, căn ở một bản chép của transform (cạnh tệp gốc để import tương đối còn đúng).
+  // Cấy lỗi nạp mã vào bước gắn trục, căn. Nguồn đột biến ở thư mục tạm NGOÀI cây; transform-zalo.mjs chạy ở chỗ gốc, hook nạp
+  // module trả nguồn đột biến (S4 r2 M5, E11: bản chép cạnh tệp gốc lọt vào lượt quét pipeline/ của suite chạy song song).
   const goc = readFileSync(TEP_ZALO, "utf8"), tu = `await import("./lib/ghep-tin-truc-can-ghi.mjs")`;
   assert.ok(goc.includes(tu), "transform-zalo không còn nạp bước gắn trục, căn bằng import động");
-  const tam = TEP_ZALO.replace(/\.mjs$/, `.loi-pl36-${process.pid}.mjs`);
+  const dir = mkdtempSync(path.join(tmpdir(), "pl36-loi-nap-"));
+  const tam = path.join(dir, "transform-zalo.mjs");
   writeFileSync(tam, goc.replace(tu, `await import("./lib/khong-co-pl36.mjs")`));
   try {
-    const { ma, dong } = await chayLuotNap(tam);
+    const { ma, dong } = await chayLuotNap(TEP_ZALO, { THAY_NGUON_GOC: TEP_ZALO, THAY_NGUON_TEP: tam,
+      NODE_OPTIONS: `${process.env.NODE_OPTIONS ? process.env.NODE_OPTIONS + " " : ""}--import ${fileURLToPath(new URL("./thay-nguon-hook.mjs", import.meta.url))}` });
     assert.equal(ma, 0, `cấy lỗi bước gắn làm lượt nạp thoát ${ma}`);
     const canh = dong.filter((d) => d.includes("JOB WARN [ghep-can]"));
     assert.equal(canh.length, 1, `cần đúng một dòng JOB WARN [ghep-can], nhận ${canh.length}`);
     assert.ok(dong.some((d) => /^ghep-toa: /.test(d)), "cấy lỗi bước gắn trục, căn làm mất bước gắn toà");
-  } finally { rmSync(tam, { force: true }); }
+  } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 test("transform-zalo-goi-buoc-gan-can-sau-buoc-gan-toa-trong-try", () => {
   const s = readFileSync(new URL("../transform-zalo.mjs", import.meta.url), "utf8");

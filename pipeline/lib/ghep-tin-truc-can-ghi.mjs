@@ -61,15 +61,17 @@ export async function ghiGan(client, dong) {
 }
 
 /** Bước cuối lượt nạp S03, sau bước gắn toà. Không bao giờ ném: mọi lỗi thành đúng một dòng `JOB WARN [ghep-can]`. */
-export async function buocGhepCan(client, { log = console.warn } = {}) {
+export async function buocGhepCan(client, { log = console.warn, nguonBat } = {}) {
   try {
     const { rows: [{ co }] } = await client.query(`SELECT to_regclass('public.offer_unit') IS NOT NULL AS co`);
     if (!co) return log("JOB WARN [ghep-can] chưa áp migration 131, bỏ qua lượt gắn");
     const vao = await docDauVao(client);
-    const { ketQuaBai, dem } = tinhGan(vao);
+    const { ketQuaBai, dem } = tinhGan(vao, nguonBat ? { nguonBat } : undefined);
     const dong = dongPhatBieu(ketQuaBai);
-    // Đầu vào rỗng bất thường (bước gắn toà chưa chạy, danh bạ trống) thì giữ nguyên dữ liệu, không rút trọn các dòng đang sống.
-    if (!dong.length) return log("JOB WARN [ghep-can] không có dòng nào để ghi, giữ nguyên dữ liệu");
+    // Đầu vào rỗng bất thường (không bài nào đã gắn toà — bước gắn toà chưa chạy — hoặc danh bạ trục trống) thì giữ nguyên dữ
+    // liệu, không rút trọn các dòng đang sống. Đầu vào có mà 0 bài gắn được (tắt hết nguồn, danh bạ đổi) thì vẫn ghi: lượt rút
+    // các dòng cũ (finding S4 r2, AC-6).
+    if (!dem.tong) return log("JOB WARN [ghep-can] đầu vào rỗng (không bài đã gắn toà hoặc danh bạ trống), giữ nguyên dữ liệu");
     const r = await ghiGan(client, dong);
     if (r.bo_luot) return log("JOB WARN [ghep-can] lượt khác đang ghi, bỏ lượt này");
     console.log(`ghep-can: ${dem.truc + dem.can}/${dem.tong} bài gắn (trục ${dem.truc} · căn ${dem.can}) · chèn ${r.chen} · rút ${r.rut}`);

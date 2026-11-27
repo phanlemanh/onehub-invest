@@ -6,6 +6,7 @@ import { describe, test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -38,7 +39,8 @@ async function banDot(thay) {
     src = src.replace(a, b);
   }
   src = src.replace(/from "\.\/([^"]+)"/g, (_m, rel) => `from ${JSON.stringify(pathToFileURL(path.join(PIPE, "lib", rel)).href)}`);
-  const dir = mkdtempSync(path.join(PIPE, "scripts", ".trt-dot-"));
+  // Thư mục tạm ngoài cây (PL36 S4 r2: tệp tạm trong pipeline/ lọt vào lượt quét thư mục của suite chạy song song).
+  const dir = mkdtempSync(path.join(tmpdir(), "trt-dot-"));
   const f = path.join(dir, "assert.mjs");
   writeFileSync(f, src);
   try { return await import(pathToFileURL(f).href); } finally { rmSync(dir, { recursive: true, force: true }); }

@@ -18,7 +18,7 @@ const mig = (t) => readFileSync(t.startsWith("131_") && process.env.GHEP_MIG_131
 const TEP_131 = "131_ghep_truc_can_tren_tin.sql";
 const SUB = "universal_property_sub_id";
 
-let c, toa, truc, trucKhac, trucToaKhac, can, tin, obCu, coDuLieu;
+let c, toa, truc, trucKhac, trucToaKhac, can, tin, obCu, coDuLieu, ketQuaThat;
 before(async () => {
   c = new pg.Client({ connectionString: DB_URL });
   await c.connect();
@@ -27,15 +27,20 @@ before(async () => {
   obCu = (await c.query(`SELECT pg_get_viewdef('offer_building'::regclass) AS d`)).rows[0].d.replace(/;\s*$/, "");
   await c.query(mig(TEP_131));
   const dong = async (sql, p = []) => (await c.query(sql, p)).rows;
-  // Toà có từ hai trục đang hoạt động, một trục có căn duy nhất ở một tầng.
-  [toa] = await dong(`SELECT b.building_key, b.upi FROM buildings b JOIN stacks s USING (building_key)
-                        WHERE b.status = 'active' AND s.status = 'active' GROUP BY 1, 2 HAVING count(*) >= 2 ORDER BY 1 LIMIT 1`);
+  // Toà có từ hai trục đang hoạt động, và một trục có căn DUY NHẤT ở một tầng (finding S4 r2: ô «trục + căn ra căn» phải đo đúng
+  // ô mức căn, không lặng lẽ thoái hoá thành ô «ra trục» khi tầng có hai căn).
+  [toa] = await dong(`SELECT b.building_key, b.upi, s.stack_key, u.unit_key, u.floor
+                        FROM buildings b JOIN stacks s USING (building_key) JOIN units u ON u.stack_key = s.stack_key
+                       WHERE b.status = 'active' AND s.status = 'active' AND u.status = 'active' AND u.floor ~ '^[1-9][0-9]{0,2}[A-Z]?$'
+                         AND (SELECT count(*) FROM stacks s2 WHERE s2.building_key = b.building_key AND s2.status = 'active') >= 2
+                         AND (SELECT count(*) FROM units u2 WHERE u2.stack_key = s.stack_key AND u2.floor = u.floor AND u2.status = 'active') = 1
+                       ORDER BY b.building_key, s.stack_key, u.floor, u.unit_key LIMIT 1`);
   coDuLieu = Boolean(toa);
   if (!coDuLieu) return;
-  [truc, trucKhac] = (await dong(`SELECT stack_key FROM stacks WHERE building_key = $1 AND status = 'active' ORDER BY 1 LIMIT 2`, [toa.building_key])).map((r) => r.stack_key);
+  truc = toa.stack_key;
+  can = { unit_key: toa.unit_key, floor: toa.floor };
+  [{ stack_key: trucKhac }] = await dong(`SELECT stack_key FROM stacks WHERE building_key = $1 AND status = 'active' AND stack_key <> $2 ORDER BY 1 LIMIT 1`, [toa.building_key, truc]);
   [{ stack_key: trucToaKhac }] = await dong(`SELECT stack_key FROM stacks WHERE building_key <> $1 AND status = 'active' ORDER BY 1 LIMIT 1`, [toa.building_key]);
-  [can] = await dong(`SELECT unit_key, floor FROM units WHERE stack_key = $1 AND status = 'active' AND floor ~ '^[1-9][0-9]{0,2}[A-Z]?$'
-                       ORDER BY floor, unit_key LIMIT 1`, [truc]);
   tin = (await dong(`SELECT offer_id FROM sale_offers WHERE source = 'S03' ORDER BY offer_id LIMIT 1`))[0]?.offer_id;
 });
 after(async () => { await c?.end(); });
@@ -92,8 +97,7 @@ caDl("truc-va-can-cung-truc-ra-can", async () => {
   await tinCo("pl36t-1", "pl36t-2"); await coToa("pl36t-1"); await coToa("pl36t-2");
   await ghi("pl36t-1", SUB, `${truc}:*`); await ghi("pl36t-2", SUB, `${truc}:${can.floor}`, { rule_id: RULE.ma });
   const [r] = await doc();
-  const duyNhat = (await c.query(`SELECT count(*)::int n FROM units WHERE stack_key = $1 AND floor = $2 AND status = 'active'`, [truc, can.floor])).rows[0].n === 1;
-  assert.deepEqual([r?.muc, r?.unit_key], duyNhat ? ["can", can.unit_key] : ["truc", null], "ô «truc-va-can-cung-truc»");
+  assert.deepEqual([r?.status, r?.muc, r?.stack_key, r?.unit_key], ["gan", "can", truc, can.unit_key], "ô «truc-va-can-cung-truc»");
 });
 caDl("hai-truc-khac-nhau-xung-dot-giu-toa", async () => {
   await tinCo("pl36t-1", "pl36t-2"); await coToa("pl36t-1"); await coToa("pl36t-2");
@@ -138,20 +142,51 @@ test("dau-cuoi-luat-that-va-view-khop", async (t) => {
   const r = await ghiGan(c, dongPhatBieu(ketQuaBai));
   if (r.bo_luot) throw new Error("khoá đang bị giữ");
   assert.ok(r.chen > 0, "lượt gắn thật không chèn dòng nào trên bản chép");
-  // Mỗi tin không xung đột có dòng ghep-can-* sống: đúng một dòng offer_unit mức sâu, stack_key bằng trục của dòng.
+  ketQuaThat = ketQuaBai;
+  // «Không xung đột» suy từ PHÁT BIỂU, không từ đầu ra của view đang kiểm (finding S4 r2, hình dạng 3): tin mức toà ở
+  // offer_building có dòng ghep-can-* sống mà mọi dòng chỉ một trục, trục thuộc toà của tin → đúng một dòng offer_unit gan, mức
+  // trục hay căn, stack_key bằng trục đó; ngược lại (hai trục, trục toà khác) → một dòng xung_dot giữ mức toà.
   const { rows: tin } = await c.query(`
-    SELECT o.offer_id, array_agg(DISTINCT split_part(f.value, ':', 1)) AS truc, min(u.muc) AS muc, min(u.stack_key) AS stack_key, count(DISTINCT u)::int AS n
-      FROM field_assertions f
-      JOIN sale_offers o ON f.subject_key = ANY (SELECT 'S03:' || p FROM unnest(o.post_ids) p)
-      JOIN offer_unit u ON u.offer_id = o.offer_id
-     WHERE f.retracted_at IS NULL AND f.field = $1 AND f.rule_id LIKE 'ghep-can-%' AND u.status = 'gan'
-     GROUP BY o.offer_id`, [SUB]);
-  const sai = tin.filter((x) => x.n !== 1 || !["truc", "can"].includes(x.muc) || x.truc.length !== 1 || x.stack_key !== x.truc[0]);
-  const muc = Object.fromEntries(["truc", "can"].map((m) => [m, tin.filter((x) => x.muc === m).length]));
-  console.log(`đầu–cuối: chèn ${r.chen} · ${tin.length} tin không xung đột có dòng ghep-can (trục ${muc.truc} · căn ${muc.can}) · lệch ${sai.length}`);
-  assert.ok(tin.length > 0 && muc.truc + muc.can > 0, "ô đầu–cuối rỗng: không tin nào ở mức trục hay căn sau lượt gắn thật");
-  assert.deepEqual(sai.map((x) => x.offer_id), [], `tin lệch mức hay stack_key: ${sai.slice(0, 5).map((x) => `${x.offer_id} ${x.muc} ${x.stack_key}≠${x.truc}`).join(", ")}`);
+    WITH p AS (
+      SELECT o.offer_id, array_agg(DISTINCT split_part(f.value, ':', 1) ORDER BY split_part(f.value, ':', 1)) AS truc
+        FROM field_assertions f
+        JOIN sale_offers o ON f.subject_key = ANY (SELECT 'S03:' || p FROM unnest(o.post_ids) p)
+       WHERE f.retracted_at IS NULL AND f.field = $1 AND f.rule_id IN ('ghep-can-truc', 'ghep-can-ma', 'ghep-can-truc-tang')
+       GROUP BY 1)
+    SELECT p.offer_id, p.truc, ob.building_key AS toa,
+           (SELECT array_agg(DISTINCT s.building_key) FROM stacks s WHERE s.stack_key = ANY (p.truc) AND s.status = 'active') AS toa_truc,
+           (SELECT count(*) FROM offer_unit u WHERE u.offer_id = p.offer_id)::int AS n,
+           u.status, u.muc, u.stack_key
+      FROM p JOIN offer_building ob ON ob.offer_id = p.offer_id AND ob.status = 'gan' AND ob.muc = 'toa'
+      LEFT JOIN offer_unit u ON u.offer_id = p.offer_id`, [SUB]);
+  const khongXd = (x) => x.truc.length === 1 && x.toa_truc?.length === 1 && x.toa_truc[0] === x.toa;
+  const dung = (x) => x.n === 1 && (khongXd(x)
+    ? x.status === "gan" && ["truc", "can"].includes(x.muc) && x.stack_key === x.truc[0]
+    : x.status === "xung_dot" && x.muc === "toa" && x.stack_key === null);
+  const sai = tin.filter((x) => !dung(x));
+  const muc = Object.fromEntries(["truc", "can"].map((m) => [m, tin.filter((x) => khongXd(x) && x.muc === m).length]));
+  const xd = tin.filter((x) => !khongXd(x)).length;
+  console.log(`đầu–cuối: chèn ${r.chen} · ${tin.length} tin có dòng ghep-can (không xung đột: trục ${muc.truc} · căn ${muc.can}; xung đột ${xd}) · lệch ${sai.length}`);
+  assert.ok(muc.truc + muc.can > 0, "ô đầu–cuối rỗng: không tin nào ở mức trục hay căn sau lượt gắn thật");
+  assert.deepEqual(sai.map((x) => x.offer_id), [], `tin lệch mức hay stack_key: ${sai.slice(0, 5).map((x) => `${x.offer_id} [${x.truc}] → ${x.status}/${x.muc}/${x.stack_key} (${x.n} dòng)`).join(", ")}`);
   assert.deepEqual(await haiDong("SELECT * FROM offer_unit"), [], "một tin chỉ một dòng ở offer_unit (0 tin gắn hai căn)");
+});
+test("dau-cuoi-ba-bai-rut-tu-ban-chep", async (t) => {
+  // E5 (finding S4 r2): ba bài thật của bản chép sau lượt gắn thật — cùng trục; trục + tầng (mức căn); hai trục cùng toà → xung_dot.
+  if (!coDuLieu || !ketQuaThat) return t.skip("chưa có kết quả lượt gắn thật");
+  const ds = [...ketQuaThat];
+  const baiTruc = ds.find(([, x]) => x.muc === "truc");
+  const baiCan = ds.find(([, x]) => x.muc === "can");
+  const baiTrucKhac = baiTruc && ds.find(([, x]) => x.muc && x.toa === baiTruc[1].toa && x.stack !== baiTruc[1].stack);
+  assert.ok(baiTruc && baiCan && baiTrucKhac, "bản chép cần một bài mức trục, một bài mức căn và hai bài khác trục cùng toà");
+  await ca(async () => {
+    await tinCo(baiTruc[0]);
+    assert.deepEqual((await doc()).map((r) => [r.status, r.muc, r.stack_key]), [["gan", "truc", baiTruc[1].stack]], `ô «cùng trục» bài ${baiTruc[0]}`);
+    await tinCo(baiCan[0]);
+    assert.deepEqual((await doc()).map((r) => [r.status, r.muc, r.stack_key, r.unit_key]), [["gan", "can", baiCan[1].stack, baiCan[1].unit]], `ô «trục + tầng» bài ${baiCan[0]}`);
+    await tinCo(baiTruc[0], baiTrucKhac[0]);
+    assert.deepEqual((await doc()).map((r) => [r.status, r.muc, r.stack_key]), [["xung_dot", "toa", null]], `ô «hai trục» bài ${baiTruc[0]}, ${baiTrucKhac[0]}`);
+  });
 });
 test("dau-cuoi-bo-do-hai-can-bao-dung-offer-id", async (t) => {
   if (!coDuLieu) return t.skip("DB không có toà có trục");
@@ -166,6 +201,12 @@ const bam = async (sql) => (await c.query(`SELECT md5(coalesce(string_agg(x::tex
 const giay = async (sql) => { const t = Date.now(); await c.query(sql); return (Date.now() - t) / 1000; };
 test("offer-building-dau-ra-giu-nguyen", async () => {
   const [cu, moi] = [await bam(obCu), await bam("SELECT * FROM offer_building")];
+  // Lệch thì gọi tên offer_id (finding S4 r2, AC-7): so từng dòng dạng chữ theo hai chiều.
+  const lech = cu.h === moi.h ? [] : (await c.query(`SELECT DISTINCT offer_id FROM (
+      (SELECT x.offer_id, x::text t FROM (${obCu}) x EXCEPT ALL SELECT y.offer_id, y::text FROM offer_building y)
+      UNION ALL (SELECT y.offer_id, y::text FROM offer_building y EXCEPT ALL SELECT x.offer_id, x::text FROM (${obCu}) x)) d
+      ORDER BY 1 LIMIT 5`)).rows.map((r) => r.offer_id);
+  assert.deepEqual(lech, [], `offer_building sau 131 khác 117 ở offer_id ${lech.join(", ")}`);
   assert.deepEqual(moi, cu, `offer_building sau 131 khác 117: ${cu.n} → ${moi.n} dòng`);
 });
 // Chiều đỏ của MATERIALIZED đo bằng kế hoạch, không bằng đồng hồ (GS phán 27/11): DB lượt vừa khôi phục chạy nhanh cả khi bỏ

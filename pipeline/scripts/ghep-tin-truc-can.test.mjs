@@ -21,7 +21,7 @@ const OP1 = {
   truc: mapOf({ bld_ld2: { 3: ["stk_ld2_03"], 11: ["stk_ld2_11"] }, bld_ld3: { 3: ["stk_ld3_03"], 2: ["stk_ld3_02"] },
     bld_s209: { 10: ["stk_s209_10"] }, bld_r105: { 16: ["stk_r105_16"] }, bld_s105: { 10: ["stk_s105_10"] } }),
   can: mapOf({ stk_s209_10: { 17: ["unt_s209_1710"] }, stk_ld2_03: { 12: ["unt_ld2_1203"], 15: ["unt_a", "unt_b"] },
-    stk_r105_16: { 27: ["unt_r105_2716"] }, stk_ld3_02: { 7: ["unt_ld3_0702"] }, stk_s105_10: {} }),
+    stk_r105_16: { 27: ["unt_r105_2716"] }, stk_ld3_02: { 7: ["unt_ld3_0702"], 9: ["unt_ld3_0902"] }, stk_s105_10: {} }),
   biDanh: new Map([[khoaBiDanh("S1.05", "17", "10"), ["unt_s105_1710_s16"]], [khoaBiDanh("LD2", "20", "03"), ["unt_x", "unt_y"]]]),
 };
 // Grand Park: S2.05 của The Rainbow, ghi mã có dấu ngăn «S2.05.24.17».
@@ -72,7 +72,8 @@ moiO("truc-va-tang-chu-bai", { toa: "bld_ld2", ma: ["LD2xx03"], tangChu: ["12"] 
 moiO("can-ngoai-danh-ba", { toa: "bld_s209", ma: ["S2.092210"] }, { muc: "truc", stack: "stk_s209_10", ly_do: "can-ngoai-danh-ba" });
 moiO("tang-lech", { toa: "bld_s209", ma: ["S2.091710"], tangChu: ["21"] }, { muc: "truc", ly_do: "tang-lech", tangTuMa: null });
 moiO("chi-tang-tu-ma", { toa: "bld_r105", ma: ["R1.052716"] }, { muc: "can", unit: "unt_r105_2716", tangTuMa: "27" });
-moiO("tang-09-khop-9", { toa: "bld_ld3", ma: ["LD3.0702"], tangChu: ["07"] }, { muc: "can", unit: "unt_ld3_0702", tangTuMa: null });
+// Hai cách viết tầng khác nhau (finding S4 r2): mã ghi «09», chữ bài ghi «9» — phải khớp, ra căn tầng 9, không tang-lech.
+moiO("tang-09-khop-9", { toa: "bld_ld3", ma: ["LD3.0902"], tangChu: ["9"] }, { muc: "can", unit: "unt_ld3_0902", ly_do: undefined, tangTuMa: null });
 moiO("tang-12a-khong-can-sai-tang", { toa: "bld_s209", ma: ["S2.0912A10"] }, { muc: "truc", ly_do: "can-ngoai-danh-ba" });
 moiO("bi-danh-khop-mot-can", { toa: "bld_s105", ma: ["S1.051710"] }, { muc: "can", unit: "unt_s105_1710_s16" });
 moiO("bi-danh-hai-can", { toa: "bld_ld2", ma: ["LD2.2003"] }, { muc: "truc", ly_do: "bi-danh-mo-ho" });
