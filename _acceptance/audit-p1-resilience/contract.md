@@ -5,9 +5,9 @@ slug: audit-p1-resilience
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, config]
-status: draft
-approved_by:
-approved_at:
+status: approved
+approved_by: Mạnh
+approved_at: 2026-11-27T07:44:10Z
 gate1_skipped: true
 design_doc: docs/superpowers/specs/2026-11-27-audit-p1-resilience-do-tren-main-design.md
 ---
