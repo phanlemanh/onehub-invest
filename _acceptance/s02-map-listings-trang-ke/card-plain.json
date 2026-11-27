@@ -1,0 +1,5 @@
+{
+  "feature_plain": "Lượt thu S02 lấy đủ mọi trang danh sách căn trên bản đồ của mỗi thị trường (Hà Nội từ 15 000 lên khoảng 30 600 căn), và dừng ở 10 trang, có báo lỗi, nếu nguồn trả trang mãi không hết. Dữ liệu S02 chỉ để hiệu chuẩn, không lên cổng Invest.",
+  "scope_plain": "Không áp gì lên DB máy thu. Gộp chưa có nghĩa là đang chạy: hàng này gộp sau ZC22; sau gộp, ZV build lại bộ thu ở checkout chính (cùng các bước, sao lưu và cách lùi đã chạy thử của ZC22); lượt 19:05 kế tiếp mới lấy đủ trang.",
+  "analyst_plain": "Không có phép đo nào xanh cả trước lẫn sau thay đổi mà bị tính là bằng chứng: trên mã cũ, phép đo trần vòng lấy trang đỏ (chạy tới 30 lời), trên mã mới xanh."
+}

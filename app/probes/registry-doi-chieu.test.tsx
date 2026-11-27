@@ -72,10 +72,14 @@ test("TDB-DC dải số, tổng cây, tin theo nguồn, danh mục khớp đếm
 
   // Danh mục đã nạp theo nguồn.
   const dm = [
-    { source: "S06", daNap: await so(`SELECT count(*) AS n FROM project_links WHERE source = 'S06'`), daNoi: await so(`SELECT count(*) AS n FROM project_links WHERE source = 'S06' AND status = 'noi'`) },
-    { source: "S08", daNap: await so(`SELECT count(DISTINCT project_id) AS n FROM stg_s08_project`), daNoi: await so(`SELECT count(*) AS n FROM s08_project_links l WHERE status = 'noi' AND EXISTS (SELECT 1 FROM stg_s08_project p WHERE p.project_id = l.project_id)`) },
-    { source: "S09", daNap: await so(`SELECT count(DISTINCT project_id) AS n FROM stg_s09_item WHERE kind = 'du-an' AND detail_ok AND project_id IS NOT NULL`), daNoi: 0 },
-  ].map((x) => ({ ...x, chuaNoi: x.daNap - x.daNoi }))
+    { source: "S06", daNap: await so(`SELECT count(*) AS n FROM project_links WHERE source = 'S06'`), daNoi: await so(`SELECT count(*) AS n FROM project_links WHERE source = 'S06' AND status = 'noi'`),
+      noiUngVien: await so(`SELECT count(*) AS n FROM project_links pl JOIN asset_nodes n ON n.id = pl.asset_node_id WHERE pl.source = 'S06' AND pl.status = 'noi' AND n.catalog_tier = 'mot_loi_khai'`) },
+    // S08 (DA55): nối ở bảng tay DN1 hoặc ở project_links nguồn S08; đếm bằng tập hợp mã, độc lập với câu của doc.ts.
+    { source: "S08", daNap: await so(`SELECT count(DISTINCT project_id) AS n FROM stg_s08_project`),
+      daNoi: await so(`SELECT count(*) AS n FROM (SELECT project_id FROM s08_project_links WHERE status = 'noi' UNION SELECT source_project_id FROM project_links WHERE source = 'S08' AND status = 'noi') x WHERE x.project_id IN (SELECT project_id FROM stg_s08_project)`),
+      noiUngVien: await so(`SELECT count(*) AS n FROM project_links pl JOIN asset_nodes n ON n.id = pl.asset_node_id WHERE pl.source = 'S08' AND pl.status = 'noi' AND n.catalog_tier = 'mot_loi_khai' AND pl.source_project_id IN (SELECT project_id FROM stg_s08_project)`) },
+    { source: "S09", daNap: await so(`SELECT count(DISTINCT project_id) AS n FROM stg_s09_item WHERE kind = 'du-an' AND detail_ok AND project_id IS NOT NULL`), daNoi: 0, noiUngVien: 0 },
+  ].map((x) => ({ source: x.source, daNap: x.daNap, daNoi: x.daNoi, chuaNoi: x.daNap - x.daNoi, noiUngVien: x.noiUngVien }))
   assert.deepEqual(danhMuc, dm, "TDB-DC danh mục")
   console.log(`# TDB-DC danh mục ${JSON.stringify(dm)}`)
 

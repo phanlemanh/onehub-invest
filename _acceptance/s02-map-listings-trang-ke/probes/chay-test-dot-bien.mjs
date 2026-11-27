@@ -1,0 +1,115 @@
+#!/usr/bin/env node
+// Phép đo (hồ sơ s02-map-listings-trang-ke): chạy tệp test bộ thu của hàng S02 trên bản dist THẬT — phải đạt hết —
+// rồi trên các BẢN ĐỘT BIẾN (bản chép của collector/dist, đúng MỘT điểm đổi) — mỗi bản phải làm đỏ ít nhất một ca
+// NGOÀI số ca đỏ sẵn của BẢN ĐỐI CHỨNG (bản chép không đổi; đỏ ở đó là do môi trường chép, không tính). Thoát 0 chỉ
+// khi cả hai điều kiện đúng. Bản chép nằm TRONG collector/ (dist/cli.js nạp mọi bộ thu, cần resolve node_modules của
+// collector) ở thư mục tạm dạng collector/.s02-dot-bien-*; xoá trong finally, kể cả thư mục sót của lượt bị giết.
+// Không mạng, không trình duyệt thật: ca lệnh login tự dùng Chrome giả /usr/bin/true và profile thư mục tạm.
+// Tệp dist gọi bằng VAI, tìm theo chữ ký xuất (không ghi tên tệp vào phép đo):
+//   boThu = tệp xuất docExpAppToken · phien = tệp xuất docPhienTuProfile · cli = dist/cli.js.
+//   node _acceptance/s02-map-listings-trang-ke/probes/chay-test-dot-bien.mjs trang-ke
+import { cpSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
+const DIST = join(ROOT, "collector", "dist");
+const [nhom = ""] = process.argv.slice(2);
+
+const NHOM = {
+  "trang-ke": {
+    ac: "AC-1 · AC-2",
+    tepTest: "s02-bo-thu-cua-api.test.js",
+    mong: 37,
+    dotBien: [
+      ["gửi lại hậu tố @offset lên đường dẫn", "boThu", /path\.replace\(\/@\\d\+\$\/, ""\)/g, "path"],
+      ["cắt mất đường dẫn kể cả khi không có hậu tố", "boThu", /path\.replace\(\/@\\d\+\$\/, ""\)/g, 'path.split("/")[0]'],
+      ["sourceId ghi đường dẫn gửi thay vì tên trang", "boThu", /sourceId: path,/g, "sourceId: url,"],
+      ["payload.url ghi tên trang thay vì đường dẫn gửi", "boThu", /payload: \{ url, method, reqBody/g, "payload: { url: path, method, reqBody"],
+    ],
+  },
+};
+
+const TEP_THEO_VAI = () => {
+  const thuMuc = join(DIST, "collectors");
+  const tim = (chuKy) => readdirSync(thuMuc).filter((f) => f.endsWith(".js") && readFileSync(join(thuMuc, f), "utf8").includes(chuKy));
+  const boThu = tim("export function docExpAppToken");
+  const phien = tim("export function docPhienTuProfile");
+  if (boThu.length !== 1 || phien.length !== 1) throw new Error(`cần đúng một tệp cho mỗi vai; thấy bộ thu ${boThu.length}, phiên ${phien.length}`);
+  return { boThu: join("collectors", boThu[0]), phien: join("collectors", phien[0]), cli: "cli.js" };
+};
+
+/** Chạy đúng MỘT tệp test trong một gốc dist; trả { dat, do: Set<tên ca đỏ> } đọc từ báo cáo TAP (chỉ ca tầng ngoài). */
+const chayTest = (gocDist, tepTest) => {
+  const r = spawnSync(process.execPath, ["--test", "--test-reporter=tap", join(gocDist, "test", tepTest)], {
+    cwd: join(gocDist, ".."),
+    encoding: "utf8",
+    timeout: 180_000,
+    env: { ...process.env, NO_COLOR: "1" },
+  });
+  const dong = `${r.stdout}\n${r.stderr}`.split("\n");
+  let dat = 0;
+  const do_ = new Set();
+  for (const d of dong) {
+    const m = /^(not ok|ok) \d+ - (.*)$/.exec(d);
+    if (!m) continue;
+    if (m[1] === "ok") dat++;
+    else do_.add(m[2].replace(/ #.*$/, "").trim());
+  }
+  return { dat, do: do_, roi: r.status };
+};
+
+for (const f of readdirSync(join(ROOT, "collector")).filter((x) => x.startsWith(".s02-dot-bien-"))) rmSync(join(ROOT, "collector", f), { recursive: true, force: true });
+let loi = 0;
+const tam = mkdtempSync(join(ROOT, "collector", ".s02-dot-bien-"));
+try {
+  if (!nhom || !NHOM[nhom]) {
+    console.log(`ĐỎ: thiếu tên nhóm (một trong: ${Object.keys(NHOM).join(", ")})`);
+    loi = 2;
+  } else {
+    const bo = NHOM[nhom];
+    const vai = TEP_THEO_VAI();
+    const that = chayTest(DIST, bo.tepTest);
+    const du = that.dat >= bo.mong && that.do.size === 0 && that.roi === 0;
+    console.log(`${du ? "đạt" : "ĐỎ"}: bản thật · ${nhom}: ${that.dat} ca đạt, ${that.do.size} ca đỏ (${bo.tepTest}, cần ≥ ${bo.mong} ca đạt và 0 ca đỏ)`);
+    if (!du) {
+      loi = 1;
+      if (that.do.size) console.log(`ĐỎ: bản thật đỏ ở ca đầu: ${[...that.do][0]}`);
+      else if (that.dat < bo.mong) console.log(`ĐỎ: bản thật chỉ đạt ${that.dat} ca, dưới ngưỡng ${bo.mong}`);
+      else console.log(`ĐỎ: bản thật thoát với mã khác 0`);
+    }
+    // ---- bản đối chứng: bản chép KHÔNG đổi — ca đỏ ở đây là do môi trường chép, không được tính là «bắt được»
+    const chep = join(tam, "doi-chung");
+    cpSync(DIST, chep, { recursive: true });
+    const chung = chayTest(chep, bo.tepTest);
+    console.log(`đạt: bản đối chứng (chép, không đổi) · ${chung.dat} ca đạt, ${chung.do.size} ca đỏ sẵn do chép${chung.do.size ? ` (ca đầu: ${[...chung.do][0]})` : ""}`);
+    // ---- các bản đột biến
+    for (const [ten, vaiTen, tim, thayThe] of bo.dotBien) {
+      const goc = readFileSync(join(DIST, vai[vaiTen]), "utf8");
+      const so = (goc.match(tim) ?? []).length;
+      if (so !== 1) {
+        console.log(`ĐỎ: không thấy đúng một điểm đột biến «${ten}» trong dist (thấy ${so}) — phép đo lệch cây mã`);
+        loi = 1;
+        continue;
+      }
+      const dich = join(tam, `dot-bien-${ten.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").slice(0, 40)}`);
+      cpSync(DIST, dich, { recursive: true });
+      writeFileSync(join(dich, vai[vaiTen]), goc.replace(tim, thayThe));
+      const kq = chayTest(dich, bo.tepTest);
+      const moi = [...kq.do].filter((x) => !chung.do.has(x));
+      if (moi.length >= 1) console.log(`đạt: bản đột biến (${ten}) bị bắt: ${moi.length} ca đỏ ngoài ${chung.do.size} ca đỏ sẵn · ca đầu: ${moi[0]}`);
+      else {
+        console.log(`ĐỎ: thước mù — bản đột biến (${ten}) không làm đỏ ca nào ngoài ca đỏ sẵn của bản đối chứng`);
+        loi = 1;
+      }
+    }
+  }
+} catch (e) {
+  console.log(`ĐỎ: phép đo không chạy được — ${e instanceof Error ? e.message : String(e)}`);
+  loi = 2;
+} finally {
+  rmSync(tam, { recursive: true, force: true });
+}
+console.log(loi === 0 ? "XANH" : "ĐỎ");
+process.exit(loi);

@@ -1,8 +1,8 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useState, useSyncExternalStore } from "react"
 import Link from "next/link"
-import { useTable, type ColumnDef, type ExpandedState, type PaginationState } from "@tanstack/react-table"
+import { useTable, type ColumnDef, type ColumnSizingState, type ExpandedState, type PaginationState, type ColumnVisibilityState } from "@tanstack/react-table"
 import { MapPinIcon, RadioTowerIcon, SearchIcon, ShieldCheckIcon, TriangleAlertIcon } from "lucide-react"
 
 import { DATA_GRID_VI } from "@/components/insight/insight-grid"
@@ -19,7 +19,7 @@ import { Frame, FrameDescription, FrameFooter, FrameHeader, FramePanel, FrameTit
 import { Button } from "@/components/ui/button"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
 import { fmtInt } from "@/lib/format"
-import { CHO_THIEU_NHAN, khopTim, type ChoThieu, type HangCay } from "@/lib/ops/registry/cay"
+import { biDanhKhacTen, CHO_THIEU_NHAN, khopTim, type ChoThieu, type HangCay } from "@/lib/ops/registry/cay"
 import { LABELS_VI } from "@/lib/vocab.generated"
 
 import { BacBadge, NguonBadges } from "./registry-badges"
@@ -35,6 +35,28 @@ const CHUA_RO_TINH = "Chưa rõ tỉnh"
 const KHONG_NGUON = "Chưa nối nguồn"
 
 const so = (n: number) => <span className="text-sm tabular-nums">{fmtInt(n)}</span>
+
+/**
+ * Cột ẩn theo khổ màn phải rời bảng thật (khuôn /ops/deals): bảng `table-fixed` giữ thẻ <col> của cột chỉ ẩn bằng CSS nên vẫn
+ * rộng bằng tổng mọi cột (đo M5 27/11: 960 px trên khung 333 px), đẩy Căn, Tin ra ngoài. Ở khổ hẹp còn thu bề rộng bốn cột còn
+ * lại để vừa khung 375 px (DA67 AC-10). Lớp `hidden …:table-cell` của cột vẫn giữ cho lượt vẽ máy chủ (coi là khổ xl).
+ */
+const KHO_MAN = [["xl", "(min-width: 1280px)"], ["lg", "(min-width: 1024px)"], ["md", "(min-width: 768px)"]] as const
+export type KhoMan = "xl" | "lg" | "md" | "sm"
+export const BANG_THEO_KHO: Record<KhoMan, { an: ColumnVisibilityState; rong: ColumnSizingState }> = {
+  xl: { an: {}, rong: {} },
+  lg: { an: { phanKhu: false }, rong: {} },
+  md: { an: { phanKhu: false, tinh: false }, rong: {} },
+  sm: { an: { phanKhu: false, tinh: false, bac: false, nguon: false }, rong: { ten: 140, toa: 60, can: 60, tin: 70 } },
+}
+const coMatchMedia = () => typeof window !== "undefined" && typeof window.matchMedia === "function"
+const docKhoMan = (): KhoMan => (coMatchMedia() ? KHO_MAN.find(([, q]) => window.matchMedia(q).matches)?.[0] ?? "sm" : "xl")
+function theoDoiKhoMan(bao: () => void) {
+  if (!coMatchMedia()) return () => {}
+  const ds = KHO_MAN.map(([, q]) => window.matchMedia(q))
+  ds.forEach((m) => m.addEventListener("change", bao))
+  return () => ds.forEach((m) => m.removeEventListener("change", bao))
+}
 
 const COLUMNS: ColumnDef<DataGridFeatures, HangCay>[] = [
   {
@@ -59,7 +81,7 @@ const COLUMNS: ColumnDef<DataGridFeatures, HangCay>[] = [
             <span className="truncate text-sm">{row.original.ten}</span>
           )}
           <span className="text-muted-foreground max-w-full truncate text-xs">
-            {[row.depth > 0 ? LOAI[row.original.loai] : null, row.original.biDanh.slice(0, 3).join(" · ") || null].filter(Boolean).join(" · ")}
+            {[row.depth > 0 ? LOAI[row.original.loai] : null, biDanhKhacTen(row.original.ten, row.original.biDanh).join(" · ") || null].filter(Boolean).join(" · ")}
           </span>
         </div>
       </div>
@@ -67,7 +89,8 @@ const COLUMNS: ColumnDef<DataGridFeatures, HangCay>[] = [
     size: 260,
   },
   { id: "tinh", header: "Tỉnh/thành", cell: ({ row }) => <span className="text-sm">{row.depth === 0 ? (row.original.tinh ?? "—") : ""}</span>, size: 110, meta: { headerClassName: "hidden lg:table-cell", cellClassName: "hidden lg:table-cell" } },
-  { id: "bac", header: "Bậc", cell: ({ row }) => <BacBadge bac={row.original.bac} />, size: 110 },
+  // DA67: dưới md ẩn Bậc để Toà, Căn, Tin đang rao nằm trong khung (như Tỉnh/thành, Nguồn).
+  { id: "bac", header: "Bậc", cell: ({ row }) => <BacBadge bac={row.original.bac} />, size: 110, meta: { headerClassName: "hidden md:table-cell", cellClassName: "hidden md:table-cell" } },
   { id: "nguon", header: "Nguồn", cell: ({ row }) => <NguonBadges nguon={row.original.nguon} />, size: 100, meta: { headerClassName: "hidden md:table-cell", cellClassName: "hidden md:table-cell" } },
   { id: "phanKhu", header: "Phân khu", cell: ({ row }) => so(row.original.soPhanKhu), size: 80, meta: { headerClassName: "hidden xl:table-cell text-end", cellClassName: "hidden xl:table-cell text-end" } },
   {
@@ -139,8 +162,10 @@ export function hopLoc(query: FilterQuery): (h: HangCay) => boolean {
     })
 }
 
-/** `locBanDau`: bộ lọc mở sẵn (khuôn /ops/deals) — test dựng bảng đã lọc mà không cần bấm. */
-export function RegistryGrid({ rows, locBanDau }: { rows: HangCay[]; locBanDau?: FilterQuery }) {
+/** `locBanDau`: bộ lọc mở sẵn (khuôn /ops/deals) — test dựng bảng đã lọc mà không cần bấm. `khoMan`: ép khổ màn (test). */
+export function RegistryGrid({ rows, locBanDau, khoMan: khoEp }: { rows: HangCay[]; locBanDau?: FilterQuery; khoMan?: KhoMan }) {
+  const khoDo = useSyncExternalStore(theoDoiKhoMan, docKhoMan, () => "xl" as KhoMan)
+  const kho = BANG_THEO_KHO[khoEp ?? khoDo]
   const [query, setQuery] = useState<FilterQuery>(() => locBanDau ?? createFilterQuery())
   const [chu, setChu] = useState("")
   const [expanded, setExpanded] = useState<ExpandedState>({})
@@ -158,7 +183,7 @@ export function RegistryGrid({ rows, locBanDau }: { rows: HangCay[]; locBanDau?:
     getRowId: (h) => String(h.id),
     getSubRows: (h) => h.subRows,
     getRowCanExpand: (row) => Boolean(row.original.subRows?.length),
-    state: { expanded, pagination },
+    state: { expanded, pagination, columnVisibility: kho.an, columnSizing: kho.rong },
     onExpandedChange: setExpanded,
     onPaginationChange: setPagination,
     paginateExpandedRows: false,

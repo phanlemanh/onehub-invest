@@ -27,6 +27,7 @@ export const SCAN_FILES = [
   "src/app/ops/people/page.tsx",
   "src/app/ops/people/[partyKey]/page.tsx",
   "src/app/ops/registry/page.tsx",
+  "src/app/ops/registry/[nodeId]/not-found.tsx",
   "src/app/ops/registry/[nodeId]/page.tsx",
   "src/app/ops/layout.tsx",
   "src/app/ops/page.tsx",

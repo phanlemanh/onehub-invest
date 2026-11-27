@@ -166,7 +166,7 @@ async function modeSpoolReplay() {
     const lastPost = b.log().split("\n").filter((l) => / post 202 /.test(l)).pop() ?? "";
     check(/ post 202 \{"accepted":1/.test(lastPost) && /group=/.test(lastPost), `dòng log tin mới đúng khuôn cũ ' post 202 {"accepted":1…} group=…' (được: ${lastPost.slice(25, 110)})`);
     const kevOk = b.state.posts.find((p) => p.text === d.content)?.kev;
-    check(kevOk && typeof kevOk.p === "number", "tin gửi kèm meta kev.p là số khi Kev sống");
+    check(kevOk && kevOk.p === null && kevOk.model === "kev-off", "tin gửi kèm meta kev khuôn tắt (p = null, model kev-off)");
   } finally {
     await b.done();
   }
@@ -238,7 +238,7 @@ async function modeCap50() {
   finish("CAP-50");
 }
 
-// AC-7: Kev treo → p=null, tin vẫn gửi, hook không treo
+// AC-7 (K1): cổng chấm đã gỡ — tin vẫn gửi với p=null, hook không treo, lượt chạy nhanh
 async function modeKevHang() {
   const b = await sandbox({ kevHang: true });
   try {
@@ -246,8 +246,8 @@ async function modeKevHang() {
     const r = await b.run([ev("kev treo p=0.9")]);
     const p = b.state.posts[0];
     check(p && p.kev && p.kev.p === null, `tin vẫn tới collector với kev.p = null (được ${JSON.stringify(p?.kev?.p)})`);
-    check(r.ms >= 4_000 && r.ms < 12_000, `hook chờ Kev có trần (~5 giây), chạy ${Math.round(r.ms / 1000)} giây`);
-    check(/kev null/.test(b.log()), "log ghi 'kev null'");
+    check(r.ms < 12_000, `hook không treo, xong lượt trong ${Math.round(r.ms / 1000)} giây (< 12)`);
+    check(/kev=off/.test(b.log()), "log dòng post mang kev=off");
   } finally {
     await b.done();
   }
