@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 843d31e8f174c5c6db5d0224582593b8c0651d5f
+verified_commit: 3662251c0d1e365a5066ede41055128960f57876
 human_signoff: Mạnh 2026-11-27
 ---
 
@@ -249,3 +249,7 @@ none — every multi-run eval is uniform
 
 Round 1: các eval chạy lần đầu; kết quả chi tiết xem run-log.jsonl. E10b được chạy ở round 1 và giữ lại sang round 2.
 Round 2: toàn bộ eval PASS trên cây 843d31e8f174c5c6db5d0224582593b8c0651d5f; E10b carry-forward vì delta không chạm paths của eval; các lệnh suite xanh.
+
+### Re-pin lần 1 — 2026-11-27, do ghim lại bằng làn eval
+run_id: repin-20261127T031332Z-90051
+sha: 3662251c0d1e365a5066ede41055128960f57876 · suites: 8 lệnh exit 0 · evals: 15/15 eval máy đạt kỳ vọng
