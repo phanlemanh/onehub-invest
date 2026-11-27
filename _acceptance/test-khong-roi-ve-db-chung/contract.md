@@ -5,7 +5,7 @@ slug: test-khong-roi-ve-db-chung
 owner: phanlemanh@gmail.com
 risk_tier: T2      # tệp test + lib chốt chặn + lệnh chấm trong config — không chạm t3_paths
 surfaces: [cli]
-status: implemented
+status: verified
 veto_state: mo
 veto_opened_at: 2026-11-27T01:01:24Z
 design_doc: docs/superpowers/specs/2026-11-27-test-khong-roi-ve-db-chung-design.md
