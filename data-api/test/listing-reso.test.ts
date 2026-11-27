@@ -121,6 +121,7 @@ test("PB2-AC-1 listings sale, rent_lt theo RESO", async () => {
 test("PB2-AC-2 listings rent_st theo RESO", async () => {
   const r = await goi(`/v1/listings?kind=rent_st&area=${PH}`);
   assert.equal(r.status, 200);
+  for (const x of r.than.data) kiemKhoa("listings rent_st", x);
   const d = theoKhoa(r.than.data, hmac(`S01|${NGAN}`));
   assert.ok(d, "PB2 rent_st listingKey không phải HMAC");
   kiemKhoa("listings rent_st", d);
@@ -226,7 +227,7 @@ test("PB2-AC-5 căn giá tốt là bộ lọc của listings", async () => {
   kiemKhoa("listings giá tốt CG8", c8);
   bang("listings giá tốt CG8", c8, { belowMedianPct: 20, comparableMedianPricePerArea: 50000000, priceRank: null });
   const g = await goi(`/v1/deals`);
-  assert.equal(g.status, 410);
+  assert.equal(g.status, 410, "PB2 deals còn sống: /v1/deals không trả 410");
   assert.deepEqual(g.than, { error: { code: "GONE", message: "/v1/deals đã gộp vào /v1/listings: dùng ?minBelowMedianPct=" } }, "PB2 deals còn sống");
 });
 
@@ -240,7 +241,7 @@ test("PB2-AC-11 price-stats", async () => {
   const thieu = await goi(`/v1/price-stats`);
   assert.equal(thieu.status, 400);
   const cu = await goi(`/v1/asset-stats?area=${PH}`);
-  assert.equal(cu.status, 410);
+  assert.equal(cu.status, 410, "PB2 price-stats — /v1/asset-stats không trả 410");
   assert.deepEqual(cu.than, { error: { code: "GONE", message: "/v1/asset-stats đã đổi tên thành /v1/price-stats" } }, "PB2 price-stats — asset-stats còn sống");
 });
 
