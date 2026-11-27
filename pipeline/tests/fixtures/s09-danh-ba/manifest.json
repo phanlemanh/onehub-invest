@@ -1,0 +1,21 @@
+{
+ "schemaVersion": 15,
+ "snapshotId": "vn__s09-danh-ba__fixture-e1",
+ "city": "vn",
+ "source": "s09-danh-ba",
+ "startedAt": "2026-11-19T00:49:59.635Z",
+ "finishedAt": "2026-11-19T02:05:05.336Z",
+ "counts": {
+  "items": 10,
+  "failed": 0
+ },
+ "coverage": {
+  "notes": "DA42 E1: tập con của bản thu gói 1 ngày 19/11 (che meta.duong) + 3 item hỏng: phi-object, thiếu kind, thiếu sourceId"
+ },
+ "files": [
+  {
+   "name": "items-0001.json.gz",
+   "sha256": "7c227a6d247abcbee975e4bc8f418cd91f86a33fa836c020dbc5f61448a1c06e"
+  }
+ ]
+}
