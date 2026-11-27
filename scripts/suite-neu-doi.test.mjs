@@ -248,6 +248,8 @@ const NGOAI_LE = [
   { suite: "pipeline_a", duong: "collector", ly_do: "vocab.mjs ghép tới collector/docs/field-targets.yaml (đã phủ); vocab.test.mjs băm cây collector chỉ để so trước/sau" },
   { suite: "pipeline_a", duong: "docs", ly_do: "vocab.mjs: mảnh «docs» của join(root, \"collector\", \"docs\", …) — đã phủ bằng collector/docs/**" },
   { suite: "pipeline_a", duong: "_acceptance", ly_do: "vocab.test.mjs ghép tới _acceptance/truong-nhan-s03-081/decisions.jsonl — đã phủ" },
+  { suite: "pipeline_a", duong: "_acceptance/yeu-cau-khong-thanh-tin-thue/evidence/mau-tin-rut.md", ly_do: "do-yeu-cau-lot-tin.mjs chỉ GHI tệp này khi người gọi tay --ghi-evidence; không test nào đọc (khác mau-bai-lac-du-an-v2.md là đầu vào test)" },
+  { suite: "pipeline_b", duong: "_acceptance/yeu-cau-khong-thanh-tin-thue/evidence/mau-tin-rut.md", ly_do: "như pipeline_a" },
   { suite: "pipeline_b", duong: "collector", ly_do: "như pipeline_a — hai nửa cùng cây mã" },
   { suite: "pipeline_b", duong: "docs", ly_do: "như pipeline_a" },
   { suite: "pipeline_b", duong: "_acceptance", ly_do: "như pipeline_a" },

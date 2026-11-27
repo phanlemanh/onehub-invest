@@ -1,0 +1,49 @@
+PL36 probe offer-unit trên M5 ＠003db61dc0270886fb69300f3ad033d9148f725c — 2026-11-27T07:08:33Z. Không phải vòng chấm. XANH.
+Chỉ DB lượt (db-thu --chay); không chạm DB oneinvest. Cây sạch sau lượt.
+
+== bash _acceptance/ghep-tin-vao-truc-can/probes/offer-unit.sh ==
+== offer_unit trên mã thật
+ℹ tests 12
+ℹ pass 12
+ℹ fail 0
+== Đột biến
+đột biến «hai-truc-khong-xung-dot» → ca «ô «hai-truc»» đỏ
+đột biến «khong-ra-can» → ca «ô «truc-va-can-cung-truc»» đỏ
+đột biến «bo-can-cua-phat-bieu» → ca «ô «bi-danh-mot-can»» đỏ
+đột biến «so-tang-tho» → ca «ô «tang-09»» đỏ
+XANH: offer_unit và bốn đột biến
+--- mã thoát: 0
+
+== itest 131 trọn tệp: cd pipeline && bash ../db/db-thu.sh oneinvest_suite_pl36_i131 --chay node --test --test-concurrency=1 tests/ghep-tin-truc-can-131.itest.mjs ==
+✔ ghi-duoc-hai-muc-va-tang-tu-ma (1216.566208ms)
+✔ tu-choi-truc-ngung-hoat-dong (2.537209ms)
+✔ tu-choi-sai-khuon (5.145167ms)
+✔ tu-choi-resource-khac-property (1.209625ms)
+✔ tep-131-dinh-chinh-lui-cua-117 (0.527417ms)
+✔ ap-lan-hai-khong-loi (303.714125ms)
+✔ hai-bai-cung-truc-ra-truc (373.962666ms)
+✔ truc-va-can-cung-truc-ra-can (307.582208ms)
+✔ hai-truc-khac-nhau-xung-dot-giu-toa (336.5345ms)
+✔ truc-ngoai-toa-xung-dot-giu-toa (318.901334ms)
+✔ tin-chi-biet-toa-giu-toa (316.819208ms)
+✔ tin-xung-dot-o-offer-building-khong-co-dong (355.220083ms)
+✔ bi-danh-mot-can-di-tron-ghi-den-view (354.406833ms)
+✔ tang-so-0-dau-trong-danh-ba-van-ra-can (341.999458ms)
+✔ rule-khac-khong-vao-view (303.997458ms)
+đầu–cuối: chèn 10164 · 514 tin có dòng ghep-can (không xung đột: trục 465 · căn 49; xung đột 0) · lệch 0
+✔ dau-cuoi-luat-that-va-view-khop (12334.558ms)
+✔ dau-cuoi-ba-bai-rut-tu-ban-chep (1005.9985ms)
+✔ dau-cuoi-bo-do-hai-can-bao-dung-offer-id (1035.186ms)
+✔ offer-building-dau-ra-giu-nguyen (624.174834ms)
+✔ offer-building-ke-hoach-giu-buoc-vat-the-hoa-toa-vung (3.056084ms)
+thời gian: offer_building 0.323s · offer_unit 0.296s · offer_unit mức sâu 5.061s
+✔ offer-building-va-offer-unit-nhanh (9563.899959ms)
+ℹ tests 21
+ℹ suites 0
+ℹ pass 21
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 29187.545375
+--- mã thoát: 0

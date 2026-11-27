@@ -1,0 +1,18 @@
+# PL36 probe E7 trên M5 ＠654e716aa2af51299957472ee1d7d781029a578e — 2026-11-26T22:08:47Z
+## $ bash _acceptance/ghep-tin-vao-truc-can/probes/offer-building-nhanh.sh
+== offer_building trên mã thật
+thời gian: offer_building 0.283s · offer_unit 0.28s · offer_unit mức sâu 0.342s
+ℹ tests 4
+ℹ pass 4
+ℹ fail 0
+== Đột biến
+đột biến «doi-mot-dong-dau-ra» → ca «offer_building sau 131 khác 117» đỏ
+đột biến «bo-materialized» → ca «kế hoạch thiếu bước «CTE toa_vung»» đỏ
+XANH: offer_building và hai đột biến
+→ mã thoát 0
+# xong 2026-11-26T22:09:30Z
+
+## Ghi chú phiên chấm M5 (không sửa mã)
+- máy: M5 (M5 Max 18 nhân, colima 16/96) · DB: bản đầy đủ máy thu chép sang 26/11 05:45Z · migration 131 chỉ trên DB thử.
+- XANH (mã 0): bản thật 4/4 (offer_building 0.283s · offer_unit 0.28s · mức sâu 0.342s, có bước «CTE toa_vung»);
+  «doi-mot-dong-dau-ra» đỏ đúng; «bo-materialized» đỏ ở ca kế hoạch — thông điệp assert gọi tên view: «offer_building: kế hoạch thiếu bước «CTE toa_vung»» (pipeline/tests/ghep-tin-truc-can-131.itest.mjs:176).

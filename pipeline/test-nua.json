@@ -47,6 +47,7 @@
     "scripts/yeu-cau-ngan-sach.test.mjs",
     "tests/s08-danh-muc-nap.test.mjs",
     "scripts/khop-tron.test.mjs",
+    "scripts/thay-nguon-hook.test.mjs",
     "scripts/noi-du-an-s08-lop.test.mjs"
   ],
   "b": [
@@ -117,6 +118,10 @@
     "scripts/ghep-tin-danh-muc-lat-nhan.test.mjs",
     "scripts/ghep-tin-danh-muc-cham.test.mjs",
     "tests/import-s16-chi-tiet.test.mjs",
+    "scripts/ghep-tin-truc-can.test.mjs",
+    "scripts/ghep-tin-truc-can-cham.test.mjs",
+    "scripts/do-yeu-cau-lot-tin.test.mjs",
+    "scripts/yeu-cau-khong-thanh-tin-thue.test.mjs",
     "scripts/street-raw-tran-dem.test.mjs",
     "scripts/dong-the-bo-sung-tin.test.mjs",
     "import-s09-danh-ba.test.mjs"
