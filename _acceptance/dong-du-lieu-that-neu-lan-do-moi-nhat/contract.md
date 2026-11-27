@@ -5,7 +5,7 @@ slug: dong-du-lieu-that-neu-lan-do-moi-nhat
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by:
 veto_state: mo
 veto_opened_at: 2026-11-26T03:15:00Z
@@ -46,3 +46,8 @@ Hàng HT30, cắt từ mục Ngoài-5 của hồ sơ HT9 `db-thu-tach-khoi-cum-t
   `scripts/pipeline-that-hang-ngay.test.mjs`] — AC-1, AC-2, AC-3, AC-4.
 - Trục tên ca đỏ: thiếu khoá · rỗng · một · ba (không cắt) · bốn (cắt «+1») — AC-1, AC-2, AC-4.
 - Trục dòng sổ hỏng: dòng giữa hỏng (bỏ qua) · dòng cuối hỏng (báo) — AC-4.
+
+## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-27:
+  - Ngoài-1: Trên máy có bản git cũ, lượt soát hằng ngày có thể chạy xong mà không ghi được kết quả vào sổ; ngày ấy thiếu một dòng, lượt hôm sau ghi lại bình thường.
