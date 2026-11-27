@@ -35,9 +35,9 @@ echo "project_links S09 trước: $(wc -l < "$OUT/project-links-truoc.tsv" | tr 
 
 buoc "1. áp 115 rồi 125, mỗi tệp hai lần"
 P < db/migrations/115_stg_s09_danh_ba.sql; P < db/migrations/125_v_s09_db_du_an_ma_tinh.sql
-l1=$(bash $A/dau-van-tay.sh "$DB" | head -1)
+l1=$(bash $A/dau-van-tay.sh "$DB" | sed -n 1p)
 P < db/migrations/115_stg_s09_danh_ba.sql; P < db/migrations/125_v_s09_db_du_an_ma_tinh.sql
-l2=$(bash $A/dau-van-tay.sh "$DB" | head -1)
+l2=$(bash $A/dau-van-tay.sh "$DB" | sed -n 1p)
 [ "$l1" = "$l2" ] || loi "lược đồ đổi giữa lần áp một và hai"; echo "lược đồ lần một = lần hai: $l1"
 r=$(Q "SELECT (pg_get_viewdef('v_s09_db_du_an'::regclass) LIKE '%province_code%')::text")
 [ "$r" = true ] || loi "v_s09_db_du_an chưa đọc province_code"; echo "v_s09_db_du_an đọc province_code: $r"
@@ -71,7 +71,8 @@ if diff -q <(grep -v '^danh-ba' "$OUT/dem-sau.txt") <(grep -v '^danh-ba' "$OUT/d
 
 buoc "5a. cách tắt: áp lại 115 → bước S09 gói 1 bỏ qua; áp lại 125 → bật"
 P < db/migrations/115_stg_s09_danh_ba.sql
-node pipeline/danh-ba-vat-the.mjs --db "$URL" 2>&1 | grep -o 'S09 gói 1 bỏ qua — DB chưa áp 125' | head -1 || loi "áp lại 115 không tắt được bước"
+o5a=$(node pipeline/danh-ba-vat-the.mjs --db "$URL" 2>&1 || true); grep -o 'S09 gói 1 bỏ qua — DB chưa áp 125' <<<"$o5a" | sed -n 1p   # đọc trọn rồi lấy dòng: head -1 dưới pipefail chết SIGPIPE (soát 27/11)
+grep -q 'S09 gói 1 bỏ qua — DB chưa áp 125' <<<"$o5a" || loi "áp lại 115 không tắt được bước"
 P < db/migrations/125_v_s09_db_du_an_ma_tinh.sql
 echo "đã bật lại (125)"
 
@@ -80,7 +81,7 @@ buoc "5b. đường lùi trọn: lui-dung.sh → lui-nap.sql → lui-luoc-do.sql
 bash $A/lui-dung.sh "$OUT/khoa.tsv" "$OUT/project-links-truoc.tsv" "$DB" 2>&1 | sed 's/^psql:[^ ]* //'
 P < $A/lui-nap.sql; P < $A/lui-luoc-do.sql
 if bash $A/dau-van-tay.sh "$DB" | diff "$OUT/van-tay-truoc.txt" - ; then echo "dấu vân tay sau lùi TRÙNG trước áp (lược đồ + 10 bảng)"; else loi "dấu vân tay lệch"; fi
-r=$(Q "SELECT count(*) FROM pg_trigger WHERE tgname IN ('buildings_chi_them_dong','stacks_chi_them_dong','units_chi_them_dong','registry_aliases_chi_them_dong') AND tgenabled = 'O'")
+r=$(Q "SELECT count(*) FROM pg_trigger WHERE tgname IN ('buildings_chi_them_dong','stacks_chi_them_dong','units_chi_them_dong','registry_aliases_chi_them_dong') AND tgenabled = 'O' AND tgrelid::regclass::text NOT LIKE '%.%'")   # chỉ bảng ở public: DB máy thu có schema sót mang bản sao trigger
 [ "$r" = 4 ] || loi "rào chỉ-thêm bật $r/4"; echo "rào chỉ-thêm bật lại 4/4"
 
 buoc "5c. ca hỏng của đường lùi: tệp khoá của DB khác → thoát 4, không mở giao dịch"
