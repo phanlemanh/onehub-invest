@@ -5,7 +5,7 @@ slug: data-api-markets-khong-doc-s02
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api]
-status: verified
+status: signed-off
 design_doc:
 approved_by: Mạnh
 approved_at: 2026-11-27
@@ -112,6 +112,8 @@ mặt** trong thân trước khi soát chuỗi canh. Bộ ghi SQL bọc `pool.qu
 - Triển khai data-api, `sync-public`, DDL, ghi cloud.
 
 ## Notes
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-28:
+  - Ngoài-2: Phép soát chữ cấm ở README và tài liệu API chưa có đối chứng dương — có thể báo xanh nếu tài liệu đổi khuôn.
 
 - Hỏi-1 (Cổng Phạm vi, Mạnh quyết): chi tiết thị trường thay khối điểm S02 bằng gì — **(a) bỏ hẳn, chi tiết trả bốn khoá như
   một dòng danh sách** (khuyến nghị: số tự tính chỉ có ở 2/34 thị trường và là lịch dự kiến; tiền lệ HT23 bỏ hẳn ở route app);
