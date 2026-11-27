@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 0b08d4fb8fc7d6484f7a31e615dfb6515f312ba7
+verified_commit: 059c9be377a12d85b5b1ab4931494581e0d7bd65
 human_signoff: Mạnh 2026-11-28
 ---
 
@@ -156,3 +156,7 @@ none — every multi-run eval is uniform
 ## Iterations
 
 Round 1: mọi eval đạt, verdict PASS. Chưa có vòng nào bị trả lại.
+
+### Re-pin lần 1 — 2026-11-27, do hoá cũ do gộp main 0d0710089 (PL36 đổi pipeline/); phép đo chọn mốc theo nội dung
+run_id: repin-20261127T184741Z-11009
+sha: 059c9be377a12d85b5b1ab4931494581e0d7bd65 · suites: 8 lệnh exit 0 · evals: 7/7 eval máy đạt kỳ vọng
