@@ -5,7 +5,7 @@ slug: nap-s09-toa-tang-vao-danh-ba
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli, ui]
-status: implemented
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-18
 design_doc: docs/superpowers/specs/2026-11-18-nap-s09-toa-tang-vao-danh-ba-design.md
@@ -162,3 +162,8 @@ Known limits:
   74db731f-ed69-c0f0-85c6-f5668a50e8a3 · 74 · 4 — a98b8230-3aae-44bd-18af-5601cd38b02e · 74 · 2 —
   745d3571-b53c-e0b5-afd0-47173d9e6225 · 74 · 2 — 476a937c-3e24-c330-5f97-a1fa22951b5f · 77 · 2 —
   b4a5a02c-ab42-b573-8d04-4a06b709ef43 · 74 · 2.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-27:
+  - Ngoài-1: Tiến trình khác gọi bộ nạp mà dòng lệnh của nó có cờ «cho phép lỗi» thì vô tình mở đường nạp lượt thu hỏng.
+  - Ngoài-2: Bản thu ghi sai mã trong tệp mô tả có thể nạp dữ liệu mà đường lùi không gỡ được, hoặc gắn nhầm vào bản thu khác.
+  - Ngoài-5: Tệp dữ liệu sai khuôn bị bỏ cả tệp mà chỉ báo bỏ một mục; phép đối chiếu số với bản thu mới lộ chỗ thiếu.
+  - Ngoài-7: Ca hiếm, bảng đếm dự án theo cách nối có thể ghi sai nhóm, dù dự án vẫn nối đúng nút.

@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: c54f72ab75fe592219c9c06cbe38576d25c77c84
-human_signoff:
+human_signoff: Mạnh 2026-11-27
 ---
 
 # Evidence Report: nap-s09-toa-tang-vao-danh-ba
@@ -158,7 +158,7 @@ human_signoff:
   run_id: minted-nap-s09-toa-tang-vao-danh-ba-E11-r2
   exit_code: 0
   baseline: n-a
-  verifier: config:executors.ui-check
+  verifier: config:executors.design.ui_check
   verified_at: 2026-11-26T18:18:20Z
   screenshot: evidence/E11-tong.png
   observed: |
