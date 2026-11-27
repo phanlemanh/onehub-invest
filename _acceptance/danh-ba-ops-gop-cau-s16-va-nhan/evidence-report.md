@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 770b22de30e9200e720c3e454194d86ee56030c4
+verified_commit: 2ab1a3364f9350bf2f151b4a180122cbc94e9e56
 human_signoff:
 ---
 
@@ -143,7 +143,7 @@ human_signoff:
   run_id: minted-danh-ba-ops-gop-cau-s16-va-nhan-E13-r2
   exit_code: 0
   baseline: n-a
-  verifier: config:executors.ui-check
+  verifier: scripts/ui-capture.sh
   verified_at: 2026-11-27T11:22:25Z
   screenshot: evidence/E13-step1.png
   observed: |
@@ -217,3 +217,7 @@ none — every multi-run eval is uniform
 ## Iterations
 
 Round 2: 13 eval (E1–E13) va cac lenh suite deu xanh; verdict PASS. Noi dung round nay thay tron round cu, lich su round truoc xem run-log.jsonl.
+
+### Re-pin lần 1 — 2026-11-27, do ghim lại bằng làn eval
+run_id: repin-20261127T115628Z-98256
+sha: 2ab1a3364f9350bf2f151b4a180122cbc94e9e56 · suites: 8 lệnh exit 0 · evals: 12/12 eval máy đạt kỳ vọng · ngoài làn máy: E13
