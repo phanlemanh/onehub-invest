@@ -83,3 +83,8 @@ server của worktree với DB máy thu, cùng lượt đo bản `main`; số DB
 - Hai câu của bản `main` chạy song song, nên bỏ một câu chắc chắn giảm tải DB một nửa nhưng thời gian chờ trang có thể giảm
   ít hơn 3,3 s (chỉ bớt tranh CPU/IO). AC-4 hứa phần chắc chắn (tải DB) và «không chậm hơn» ở thời gian tường; số chờ thật
   đo và ghi ở E5 và E13 cạnh bản `main` (gap-probe P1). Giảm thời gian chờ thật là việc của đợt 4 (tính sẵn S16).
+- Finding AC-9 của vòng 2 (assert «ô tìm không đổi» đọc fixture) sửa SAU khi chấm, chỉ tệp `app/tests/danh-ba-ops-dot1.test.tsx`;
+  bằng chứng ghim lại trên M5 @2ab1a3364 (làn xanh, `repin-20261127T115628Z-98256`), phần sửa không qua hội đồng lần nữa.
+- Số đo trên hai máy: AC-4 dự án 16 — Mac mini DB 5.693 → 2.794 ms (0,49), tường 2.913 → 2.820 ms (0,97); M5 DB 3.451 → 1.765 ms
+  (0,51), tường 1.746 → 1.783 ms (1,02) — `evidence/m5-kiem-may-2ab1a3364.txt`. E13 375 px sáng = tối: scrollWidth/clientWidth
+  333/333, mép phải Căn 283,3 · Tin 354 ≤ 375 — `evidence/m5-e13-375-2ab1a3364.txt`.
