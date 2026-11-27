@@ -1,5 +1,5 @@
 -- One Invest — schema nền tảng (M1′)
--- Hierarchy areas mirror AirDNA: country → market → submarket (→ neighborhood sau này).
+-- Hierarchy areas mirror S02: country → market → submarket (→ neighborhood sau này).
 -- Metrics precompute theo area × tháng (ADR-0001/0002).
 CREATE EXTENSION IF NOT EXISTS postgis;
 
@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS nights (
 );
 CREATE INDEX IF NOT EXISTS nights_night_idx ON nights(night);
 
--- Metrics precompute — mirror quan sát AirDNA: một dòng / area / tháng
+-- Metrics precompute — mirror quan sát S02: một dòng / area / tháng
 CREATE TABLE IF NOT EXISTS market_metrics (
   area_id          text NOT NULL REFERENCES areas(id),
   month            date NOT NULL,        -- ngày đầu tháng

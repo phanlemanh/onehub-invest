@@ -1,0 +1,46 @@
+schema_version: 1
+slug: pipeline-that-ca-may-thu-co-ten-tren-may-phat-trien
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.ht33_vai
+    paths: ["scripts/lib/vai-may.mjs", "scripts/vai-may.test.mjs"]
+    expected: "Ca HT33-AC-1 xanh: ma trận viết trước mười một ô (vắng, may-thu, may-phat-trien, ngoặc kép, export, CRLF, khoảng trắng cuối, lạ, chú thích, không dòng VAI=, hai dòng VAI=) deepEqual kết quả; chiều đỏ bản sao coi tệp vắng là may-phat-trien → ghim «không đọc được vai mà vẫn nới»."
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.ht33_vai
+    paths: ["pipeline/chay-that.mjs", "scripts/ci-bo-qua.json", "scripts/vai-may.test.mjs"]
+    expected: "Ca HT33-AC-2 xanh: chay-that.mjs --liet với tệp vai may-phat-trien (đường tệp qua biến môi trường của test) liệt tập chạy = mọi mục pipeline trừ đúng các mục may_thu; đầu ra có «bỏ qua 1 ca chỉ máy thu» và dòng nêu ON22-AC-10 kèm lý do; CI=true không đổi kết quả. Chiều đỏ: bản sao bỏ lọc may_thu → ghim «máy phát triển chạy ca chỉ máy thu»."
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.ht33_vai
+    paths: ["pipeline/chay-that.mjs", "scripts/vai-may.test.mjs"]
+    expected: "Ca HT33-AC-3 xanh: vai may-thu và tệp vắng → --liet liệt đủ mọi mục pipeline, đầu ra «chạy đủ N ca», không dòng bỏ qua."
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.ht33_vai
+    paths: ["scripts/ci-bo-qua.json", "scripts/lib/ci-can-du-lieu.mjs", "scripts/vai-may.test.mjs"]
+    expected: "Ca HT33-AC-4 xanh: tập mục mang may_thu deepEqual danh sách viết trước [ON22-AC-10]; danh sách với may_thu rỗng, toàn khoảng trắng, số, true → loiDanhSach có lỗi gọi tên mục, chay-that thoát 2."
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.ht33_m5
+    paths: ["_acceptance/pipeline-that-ca-may-thu-co-ten-tren-may-phat-trien/evidence/m5-pipeline-that.txt"]
+    expected: "Tệp đầu ra lượt M5 có dòng sha bằng commit cuối chạm tệp ngoài _acceptance/ của nhánh, dòng «vai may-phat-trien», dòng «bỏ qua 1 ca chỉ máy thu» nêu ON22-AC-10, `ℹ tests 37`, `ℹ fail 0`, không có CI=true; thiếu hay lệch một thứ → thoát 1 gọi tên thứ đó; chiều đỏ trong kiem-m5.sh: bản tệp mẫu đổi sha cũ hay tests 38 → đỏ."
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.ht33_may_thu
+    paths: ["scripts/lib/vai-may.mjs"]
+    expected: "Chạy trên máy chấm (Mac mini): vaiMay() không đối số, ONEHUB_HAI_MAY_TEP không đặt → in «may-thu», thoát 0; ra giá trị khác → thoát 1."
+  - id: E7
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.suite.pipeline_that
+    long_running: 90
+    paths: ["pipeline/chay-that.mjs", "scripts/ci-bo-qua.json", "scripts/lib/vai-may.mjs", "scripts/lib/ci-can-du-lieu.mjs"]
+    expected: "exit 0; nhánh đổi pipeline/chay-that.mjs nên suite-neu-doi kích pipeline_that (dòng «ca dữ liệu thật: chạy trong lượt này»); trên máy chấm (Mac mini, vai may-thu) đầu ra có «chạy đủ N ca», không dòng «bỏ qua … ca chỉ máy thu», ON22-AC-10 chạy, `ℹ fail 0`."

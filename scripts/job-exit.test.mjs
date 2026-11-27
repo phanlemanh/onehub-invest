@@ -118,8 +118,8 @@ const JOBS_ARGS = {};
 
 const SQL = (n) => `-- ${n}\nSELECT 1;\n`;
 
-// Năm job có bước DB làn Claude (11 plist ở pipeline/cron — 6 job còn lại: zalo-import/watchdog/heartbeat,
-// collector thu, kev-gate là làn ZCode/dịch vụ; smoke không DB; backup chưa cài).
+// Năm job có bước DB làn Claude (các plist ở pipeline/cron — job còn lại ngoài bảng:
+// zalo-import/watchdog/heartbeat, collector thu là làn ZCode/dịch vụ; smoke không DB; backup chưa cài).
 const JOBS = {
   "chotot-daily": {
     script: "scripts/chotot-daily.sh",

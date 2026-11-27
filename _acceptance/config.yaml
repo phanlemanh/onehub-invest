@@ -9,7 +9,7 @@ recheck: strict              # CI re-check of COMMITTED evidence — repo mới,
 feature_loop:
   ngoai_n_tu_dinh_tuyen: true  # kit 2.37.0: máy tự xếp mục ngoài hợp đồng mà chính nó đề xuất known-limits/wont-fix ở hồ sơ T2 · PASS · 0 UNCERTAIN (Mạnh duyệt điểm D 15/11; hồ sơ ngoai-n-tu-dinh-tuyen-bat)
   ui_standards_skill: onehub-ui
-  suite_keys: [executors.suite.agent, executors.suite.app, executors.suite.app_ui, executors.suite.pipeline_a, executors.suite.pipeline_b, executors.suite.ui_lint_rules, executors.suite.portal_static]   # làn ghim lại (repin) chạy mỗi lượt; bọc suite-neu-doi — chỉ chạy suite có vùng bị nhánh đổi (s4-suite-theo-vung). pipeline tách hai nửa (tach-suite-pipeline, 13/11: một lệnh vượt trần chờ 30′ của tác tử chấm)
+  suite_keys: [executors.suite.agent, executors.suite.app, executors.suite.app_ui, executors.suite.pipeline_a, executors.suite.pipeline_b, executors.suite.pipeline_that, executors.suite.ui_lint_rules, executors.suite.portal_static]   # làn ghim lại (repin) chạy mỗi lượt; bọc suite-neu-doi — chỉ chạy suite có vùng bị nhánh đổi (s4-suite-theo-vung). pipeline tách hai nửa (tach-suite-pipeline, 13/11: một lệnh vượt trần chờ 30′ của tác tử chấm); hai nửa chạy cụm dùng một lần DB trống, 30 ca dữ liệu thật thành pipeline_that kích hẹp (db-thu-tach-khoi-cum-that)
   # Khoá làn ghim lại của kit (GUIDE §7.1; Mạnh duyệt 2026-10-26, hồ sơ kit-khoa-nhom-1).
   repin_retry: 1               # lệnh đỏ chạy lại đúng một lần, một mình; xanh lần hai → dòng pin gọi tên ca chập chờn
   repin_budget_min: 80         # trần mỗi lượt; vượt → thoát 4, không ghi pin, để lại repin-do «vuot-tran»
@@ -36,6 +36,7 @@ executors:
     app_ui: "node scripts/suite-neu-doi.mjs app_ui -- 'cd app && npm test'"
     pipeline_a: "node scripts/suite-neu-doi.mjs pipeline_a -- 'cd pipeline && npm run test:a'"
     pipeline_b: "node scripts/suite-neu-doi.mjs pipeline_b -- 'cd pipeline && npm run test:b'"
+    pipeline_that: "node scripts/suite-neu-doi.mjs pipeline_that -- 'cd pipeline && npm run test:that'"
     ui_lint_rules: "node scripts/suite-neu-doi.mjs ui_lint_rules -- 'cd app && npm run test:lint-rules'"
     portal_static: "node scripts/suite-neu-doi.mjs portal_static -- 'node scripts/check-portal-compliance.mjs'"
   test:
@@ -46,13 +47,17 @@ executors:
     tg2_pipeline: "node --test pipeline/scripts/dong-dau-dia-chi.test.mjs pipeline/scripts/transform-zalo-loai-tin.test.mjs"   # dong-dau-dia-chi-luc-nap E2, E3 — hàm thuần sinh dòng phát biểu, ô bán/thuê của thẻ trong suyLoai
     tg2_itest: "bash db/db-thu.sh oneinvest_suite_tg2 --chay node --test --test-concurrency=1 pipeline/tests/dia-chi-the-nhom.itest.mjs pipeline/tests/dong-dau-dia-chi.itest.mjs"   # dong-dau-dia-chi-luc-nap E4–E7, E9, E11 — bộ đọc thẻ + lượt nạp thật trên DB của riêng lượt
     trt_db: "bash db/db-thu.sh oneinvest_suite_trt --chay node --test --test-concurrency=1 pipeline/scripts/assert-rut-thay.test.mjs"   # slt-dc-cham-va-giu-khoa-33033 E1, E3 — câu rút thay bởi lượt: tương đương + không bậc hai, ROLLBACK trên DB của lượt
+    nk_db: "bash db/db-thu.sh oneinvest_suite_nk --chay node --test --test-concurrency=1 scripts/so-nguon-kho.test.mjs scripts/check-freshness.test.mjs scripts/freshness-parity.test.mjs"   # so-nguon-kho-khai-bao E1–E4 — sổ nguồn 122 + độ tươi đọc nhịp từ sổ, trên DB của riêng lượt
+    nk_app: "cd app && bash ../db/db-thu.sh oneinvest_suite_nkapp --chay node --import tsx --test --test-concurrency=1 tests/slo-mot-nguon.test.tsx"   # so-nguon-kho-khai-bao E5 — bảng Sức khoẻ nguồn dựng trọn trên lược đồ cấy
     dv7_db: "bash db/db-thu.sh oneinvest_suite_dv7 --chay node --test --test-concurrency=1 pipeline/tests/offer-project.itest.mjs"   # du-an-cua-tin-len-dinh-vi E1–E5 — áp 105 rồi fixture chín lớp trên DB của riêng lượt
     dv7_lui: "bash db/db-thu.sh oneinvest_suite_dv7l --chay node --test --test-concurrency=1 pipeline/tests/offer-project-lui.itest.mjs"   # du-an-cua-tin-len-dinh-vi E10 — hồ sơ áp năm tệp + tệp lùi chạy thật
+    nb9_db: "bash db/db-thu.sh oneinvest_suite_nb9 --chay-trong node --test --test-concurrency=1 pipeline/scripts/dong-the-bo-sung-tin.test.mjs"   # dong-the-bo-sung-tin-theo-luat E1–E9 — cả tệp 9 ca trên cụm dùng một lần, DB trống từ migration (khuôn HT9 db-thu-tach-khoi-cum-that); không ca nào trong ci-bo-qua.json, eval đòi đủ 9 ca chạy
     dv7_app: "cd app && bash ../db/db-thu.sh oneinvest_suite_dv7a --chay node --import tsx --test --test-concurrency=1 tests/offer-project-app.itest.tsx tests/thang-bac-db.itest.tsx"   # du-an-cua-tin-len-dinh-vi E11 — bên đọc bản ghi, bậc của app
     collector: "cd collector && npm test"            # suy từ: collector/package.json — 13/13 xanh
     pipeline: "cd pipeline && npm test"              # suy từ: pipeline/package.json; npm test tự chạy trên DB của riêng lượt (db/db-thu.sh --chay)
     pipeline_a: "cd pipeline && npm run test:a"     # tach-suite-pipeline — nửa A của npm test (pipeline/test-nua.json), DB thử oneinvest_suite_pipeline_a
     pipeline_b: "cd pipeline && npm run test:b"     # tach-suite-pipeline — nửa B, DB thử oneinvest_suite_pipeline_b; hợp hai nửa = npm test (scripts/chia-nua.test.mjs canh)
+    pipeline_that: "cd pipeline && npm run test:that"   # db-thu-tach-khoi-cum-that — đúng 30 ca pipeline của scripts/ci-bo-qua.json trên bản chép dữ liệu thật; test:a/b chạy cụm dùng một lần (--chay-trong), bỏ đúng 30 ca ấy
     s08ns_can: "bash db/db-thu.sh oneinvest_suite_s08ns_can --chay node --test --test-name-pattern='^S08-3' pipeline/tests/s08-danh-muc-nap.test.mjs"   # s08-nap-sua E1 — snapshot chỉ căn, thiếu 094: nạp + đánh dấu
     s08ns_hoan: "bash db/db-thu.sh oneinvest_suite_s08ns_hoan --chay node --test --test-name-pattern='^S08-2' pipeline/tests/s08-danh-muc-nap.test.mjs"   # s08-nap-sua E2 — có danh mục, thiếu 094: hoãn, không đánh dấu
     s08ns_094: "bash db/db-thu.sh oneinvest_suite_s08ns_094 --chay node --test --test-name-pattern='^S08-1' pipeline/tests/s08-danh-muc-nap.test.mjs"   # s08-nap-sua E3 — có 094: nạp dự án, nạp lại không nhân
@@ -62,9 +67,21 @@ executors:
     s06tt_tran: "node --test _acceptance/s06-tran-trang/probes/tran-mac-dinh.test.mjs"   # s06-tran-trang E1 — trần mặc định 210, cờ --pages và CHOTOT_MAX_PAGES vẫn thắng
     s06tt_chia: "cd pipeline && node --test scripts/chia-nua.test.mjs"   # s06-tran-trang E3 — tệp test mới nằm đúng một nửa
     s06tt_region: "bash db/db-thu.sh oneinvest_suite_s06tt_region --chay node --test _acceptance/s06-tran-trang/probes/nap-thieu-region.test.mjs"   # s06-tran-trang E5 — tin thiếu region_v2 bỏ qua có đếm, không huỷ cả vùng
+    s06td_test: "cd pipeline && node --test scripts/collect-s06-duoi.test.mjs"   # s06-thu-duoi-do E1–E3 — 51 ca không DB (nguồn giả, thư mục tạm), 5 ca DB tự bỏ qua khi không có DATABASE_URL
+    s06td_db: "bash db/db-thu.sh oneinvest_suite_s06td --chay node --test pipeline/scripts/collect-s06-duoi.test.mjs"   # s06-thu-duoi-do E4 — đủ 56 ca kể cả 5 ca DB thật, trên DB của riêng lượt
+    s06td_mang: "node _acceptance/s06-thu-duoi-do/probes/khong-mang.mjs"   # s06-thu-duoi-do E5 — HOME tạm, không DATABASE_URL, fetch và socket ra ngoài bị chặn và đếm
+    s06td_phu_ca: "node _acceptance/s06-thu-duoi-do/probes/phu-ca.mjs --do \"${S06_DUOI_DO:-$HOME/dev/onehub-wt/zt-thu-duoi-s06-do/state/phep-do-s06-24h}\""   # s06-thu-duoi-do E6 — bảng phủ ca + đọc lại mọi snapshot thật của phép đo 24 giờ bằng bộ nạp S06
+    s06td_so_do: "node _acceptance/s06-thu-duoi-do/probes/phu-ca.mjs --e9 --do \"${S06_DUOI_DO:-$HOME/dev/onehub-wt/zt-thu-duoi-s06-do/state/phep-do-s06-24h}\""   # s06-thu-duoi-do E9 — độ trễ tính độc lập từ nhật ký, so thước 24/11
+    s06td_chia: "cd pipeline && node --test scripts/chia-nua.test.mjs"   # s06-thu-duoi-do E7 — tệp test mới nằm đúng một nửa
+    s06td_pham_vi: "bash _acceptance/s06-thu-duoi-do/probes/pham-vi.sh"   # s06-thu-duoi-do E8 — nhánh chỉ đổi ba tệp của làn thu
+    s06td_dot_bien: "node _acceptance/s06-thu-duoi-do/probes/dot-bien.mjs"   # s06-thu-duoi-do E1b–E3b — chiều đỏ chạy trong lượt chấm: bản chép tạm, phá cổng vòng đời / dừng gặp tin đã có / nhận diện 403-429
+    ht31_ca: "bash db/db-thu.sh oneinvest_suite_ht31 --chay node --test --test-name-pattern='^DO1-AC-9 detail' pipeline/scripts/do-hang-ngay.test.mjs"   # do1-ac9-xanh-lai-sau-so-nguon-122 E1 — ca DO1-AC-9 trên bản chép đã có S09
     agent: "cd agent && npm test"                    # agent/tests/parsers.test.ts; npm test tự chạy trên DB của riêng lượt (db/db-thu.sh --chay)
     app: "cd app && npx tsc --noEmit && npm run lint"   # app chưa có test; lint 0 lỗi (3 cảnh báo cố ý)
     data_api: "cd data-api && npm run typecheck"     # suy từ: data-api/package.json — xanh
+    dapi_drl: "bash db/db-thu.sh oneinvest_suite_dapi --chay sh -c 'cd data-api && node --import tsx --test --test-reporter=spec --test-concurrency=1 test/dong-ba-route.test.ts'"   # data-api-dong-ba-route-lo E1–E5 — ba đường trên lược đồ thật, có dòng canh ở bảng cấm
+    dapi_khoa: "bash db/db-thu.sh oneinvest_suite_dapi --chay sh -c 'cd data-api && node --import tsx --test --test-reporter=spec --test-concurrency=1 test/auth-dong.test.ts'"   # data-api-dong-khi-thieu-khoa E1–E6 — đóng khi thiếu khoá, ma trận môi trường × khoá × đường
+    dapi_khoa_toan: "bash db/db-thu.sh oneinvest_suite_dapi --chay sh -c 'cd data-api && node --import tsx --test --test-reporter=spec --test-concurrency=1 test/*.test.ts'"   # data-api-dong-khi-thieu-khoa E11 — mọi test data-api chung một lượt (HT19 không gãy vì đóng mặc định)
     app_ui: "cd app && npm test"                     # test render jsdom (app/tests); npm test tự chạy trên DB của riêng lượt (db/db-thu.sh --chay)
     ui_lint_rules: "cd app && npm run test:lint-rules"   # plugin lint onehub-ui (RuleTester + script kèm)
     ui_routes_map: "cd app && node --test eslint-plugin-onehub-ui/tests/routes-map.test.mjs"
@@ -133,6 +150,15 @@ executors:
     tdb_app: "cd app && bash ../db/db-thu.sh oneinvest_suite_tdb --chay node --import tsx --test --test-concurrency=1 tests/registry-chi-doc.test.tsx"   # trang-danh-ba-chi-doc E1–E8, E11 — lược đồ tạm tdb_<pid> trên DB của riêng lượt, route thật
     tdb_doi_chieu: "cd app && node --import tsx --test probes/registry-doi-chieu.test.tsx"   # trang-danh-ba-chi-doc E14 — chỉ SELECT trên DB máy thu :5433 trong giao dịch READ ONLY, chỉ in số
     tir_be_mat: "node --test scripts/check-api-surface.test.mjs scripts/check-mcp-tools.test.mjs"   # tin-rao-tren-invest E6 — sổ bề mặt: khoá publicOffers, đối chứng route khác
+    ht30_dong: "node --test --test-concurrency=1 scripts/pipeline-that-hang-ngay.test.mjs"   # dong-du-lieu-that-neu-lan-do-moi-nhat E1–E4 — dòng «ca dữ liệu thật» nêu lần đỏ mới nhất, sổ không đọc được
+    ht33_vai: "node --test --test-concurrency=1 scripts/vai-may.test.mjs"   # pipeline-that-ca-may-thu-co-ten-tren-may-phat-trien E1–E4 — vai máy, chay-that bỏ qua có tên ca chỉ máy thu
+    api_markets_s02: "cd app && bash ../db/db-thu.sh oneinvest_suite_ht23 --chay node --import tsx --test tests/api-markets-khong-s02.test.tsx"   # api-markets-khong-tra-so-s02 E1/E2 — /api/v1/markets không mang khoá, không xếp theo số S02 (DB thử trắng)
+    # yeu-cau-khong-thanh-tin-thue (PL42)
+    pl42_unit: "node --test pipeline/scripts/yeu-cau-khong-thanh-tin-thue.test.mjs"
+    pl42_loai_tin: "git diff --exit-code origin/main -- pipeline/scripts/transform-zalo-loai-tin.test.mjs pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs && node --test pipeline/scripts/transform-zalo-loai-tin.test.mjs pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs"
+    pl42_ac4: "set -o pipefail; cd pipeline && bash ../db/db-thu.sh oneinvest_suite_pl42 --chay node --test --test-name-pattern 'PL42-AC-4' scripts/yeu-cau-khong-thanh-tin-thue.itest.mjs 2>&1 | awk '{print > \"/dev/stderr\"} /^ℹ pass /{p=$3} /^ℹ fail /{f=$3} /^ℹ skipped /{s=$3} END{exit !(p>=1 && f==0 && s==0)}'"
+    ht28_ac1: "set -o pipefail; cd app && bash ../db/db-thu.sh oneinvest_suite_ht28 --chay node --import tsx --test --test-name-pattern 'HT28-AC-1' tests/api-markets-khong-s02.test.tsx 2>&1 | tee /dev/stderr | grep '^ℹ pass 1$' >/dev/null"   # api-markets-doi-chung-tren-db E1 — chạy riêng một ca, đòi đúng một ca đạt
+    ht28_ac2: "set -o pipefail; cd app && bash ../db/db-thu.sh oneinvest_suite_ht28 --chay node --import tsx --test --test-name-pattern 'HT28-AC-2' tests/api-markets-khong-s02.test.tsx 2>&1 | tee /dev/stderr | grep '^ℹ pass 1$' >/dev/null"   # api-markets-doi-chung-tren-db E2
     svc_sync_cu: "node --test pipeline/sync-cloud.test.mjs pipeline/scripts/sync-cloud-pii.test.mjs pipeline/scripts/soat-tang-a.test.mjs"   # sellers-view-len-cloud E5 — hồi quy sync
     kns_lich_unit: "node --test pipeline/scripts/s05-b-lich.test.mjs"   # G1 2510-14
     tl_bao_cao: "node --test scripts/bao-cao-ngay.test.mjs"   # thuoc-lech-ma-nguon-va-lich-s05 AC-1 (thuần), AC-2 (DB máy thu chỉ đọc)
@@ -143,6 +169,8 @@ executors:
     svm_unit: "node --test pipeline/lib/thi-truong.test.mjs"   # s06-vung-moi-len-canonical AC-3 — ánh xạ một chỗ + quét chuỗi cứng, không DB
     ckl_unit: "node --test pipeline/scripts/chotot-khong-lui-noi-dung.test.mjs"   # 2510-6
     scripts: "node --test scripts/*.test.mjs"        # test script ở scripts/ (dev-ops-account) — cần DB local :5433
+    pb5_ten_nguon: "node --test scripts/data-api-ten-nguon.test.mjs"   # data-api-don-ten-nguon E1–E3 (PB5-AC-1..3); AC-4 tự bỏ qua ngoài CI khi thiếu DATABASE_URL
+    pb5_db_mau: "bash scripts/data-api-ten-nguon-db.sh"   # data-api-don-ten-nguon E4 (PB5-AC-4) — PostGIS dùng một lần + node cùng mạng docker, không DB :5433
     s4v_bo_qua: "node --test --test-name-pattern=S4V-AC-1 scripts/suite-neu-doi.test.mjs"   # s4-suite-theo-vung E1 — repo git tạm, không DB
     s4v_chay: "node --test --test-name-pattern=S4V-AC-2 scripts/suite-neu-doi.test.mjs"     # s4-suite-theo-vung E2
     s4v_keo: "node --test --test-name-pattern=S4V-AC-3 scripts/suite-neu-doi.test.mjs"      # s4-suite-theo-vung E3 — ma trận 18 ô
@@ -369,12 +397,31 @@ executors:
     ht3_do3: "bash db/db-thu.sh oneinvest_suite_ht3dl --chay bash -c 'cd app && ONEHUB_SUITE_CHUNG=1 node --import tsx --test tests/do-lam-giau.test.tsx'"   # hai-ca-app-dung-tren-du-lieu-may E1 — DO3-AC-7 trên DB thử chép dữ liệu máy
     ht3_sd6: "bash db/db-thu.sh oneinvest_suite_ht3sd --chay bash -c 'cd app && ONEHUB_SUITE_CHUNG=1 node --import tsx --test tests/sellers-chip.test.tsx'"   # hai-ca-app-dung-tren-du-lieu-may E2 — SD-AC-6 trên DB thử chép dữ liệu máy
     ht3_ci: "cd app && env -u DATABASE_URL CI=true node --import tsx --test tests/do-lam-giau.test.tsx tests/sellers-chip.test.tsx"   # hai-ca-app-dung-tren-du-lieu-may E3 — thế CI (CI=true, không DATABASE_URL): hai ca bỏ qua có tên
+    ht12_chia_tran: "node --test --test-concurrency=1 scripts/zalo-import-chia-tran-zcode.test.mjs"   # doc-gop-dong-ho-rieng-trong-luot-dem E1–E5, E7 — lưới chia trần A+B của ZCode (bản sao script, node giả, không DB)
+    ht12_tran: "node --test --test-concurrency=1 scripts/zalo-import-tran.test.mjs"   # doc-gop-dong-ho-rieng-trong-luot-dem E6, E7b, E8a — ma trận AC-7 hai đồng hồ + ca quan hệ HT13
+    ht12_luoi: "node --test --test-concurrency=1 scripts/zalo-import-tran-zcode.test.mjs scripts/zalo-import-job.test.mjs scripts/zalo-import-job-nhe.test.mjs scripts/zalo-import-job-lan.test.mjs scripts/enrich-buoc-job.test.mjs scripts/job-step-thoi-luong.test.mjs scripts/job-exit.test.mjs"   # doc-gop-dong-ho-rieng-trong-luot-dem E8b — lưới hồi quy tệp bọc + JST-AC-8
+    ht9_db_thu: "node --test --test-concurrency=1 scripts/db-thu-trong.test.mjs"   # db-thu-tach-khoi-cum-that E1, E9 — cụm PostGIS dùng một lần của db-thu.sh --chay-trong (cần docker)
+    ht9_that: "node --test --test-concurrency=1 scripts/pipeline-that.test.mjs"   # db-thu-tach-khoi-cum-that E2c, E3b, E6 — tập ca chuẩn-CI / dữ liệu thật, khoá config
+    ht9_suite_vung: "node --test --test-concurrency=1 scripts/suite-neu-doi.test.mjs"   # db-thu-tach-khoi-cum-that E4, E5 — vùng pipeline_that + ma trận kích
+    ht9_sao_luu: "node --test --test-concurrency=1 scripts/db-sao-luu.test.mjs"   # db-thu-tach-khoi-cum-that E7 — sao lưu bỏ DB thử của suite
+    ht9_phut: "node --test --test-concurrency=1 scripts/do-phut-s4.test.mjs"   # db-thu-tach-khoi-cum-that E8 — phút giữ khoá s4
+    ht9_hang_ngay: "node --test --test-concurrency=1 scripts/pipeline-that-hang-ngay.test.mjs"   # db-thu-tach-khoi-cum-that E11 — soát ca dữ liệu thật hằng ngày trên main + dòng «ca dữ liệu thật» của lượt chấm
   script:
+    pb5_luoi: "node scripts/data-api-ten-nguon.mjs"   # data-api-don-ten-nguon E5 — lưới tên nguồn trên data-api/**, in tổng theo loại, thoát 1 khi còn vi phạm
+    ht33_may_thu: "env -u ONEHUB_HAI_MAY_TEP node --input-type=module -e \"import { vaiMay } from './scripts/lib/vai-may.mjs'; const v = vaiMay(); console.log(v); process.exit(v === 'may-thu' ? 0 : 1)\""   # HT33 E6 — máy chấm là máy thu
+    ht33_m5: "bash _acceptance/pipeline-that-ca-may-thu-co-ten-tren-may-phat-trien/kiem-m5.sh"   # HT33 E5 — đầu ra lượt pipeline_that trên M5
     ht13_ap: "bash _acceptance/tran-tong-luot-dem-va-tran-doc-gop/ap-may-thu/kiem.sh"   # tran-tong-luot-dem-va-tran-doc-gop E9 — README áp đủ năm mục, lệnh kiểm sau chấm đúng ba log mẫu
+    ht12_ap: "bash _acceptance/doc-gop-dong-ho-rieng-trong-luot-dem/ap-may-thu/kiem.sh"   # doc-gop-dong-ho-rieng-trong-luot-dem E9 — README áp đủ năm mục, kiem-sau.sh chấm đúng chín ca
+    ht9_ap: "bash _acceptance/db-thu-tach-khoi-cum-that/ap-may-thu/kiem.sh"   # db-thu-tach-khoi-cum-that E10 — README áp đủ năm mục, lệnh kiểm sau
     trt_tuong_duong: "bash db/db-thu.sh oneinvest_suite_trtd --chay node _acceptance/slt-dc-cham-va-giu-khoa-33033/probes/tuong-duong-ba-luot.mjs"   # slt-dc-cham-va-giu-khoa-33033 E2 — câu cũ và câu mới rút cùng tập id ở cả ba lượt transform của SLT-DC
     trt_slt_dc_gio: "bash _acceptance/slt-dc-cham-va-giu-khoa-33033/probes/do-gio.sh 480 bash db/db-thu.sh oneinvest_suite_sltdc --chay node --test --test-concurrency=1 pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs"   # slt-dc-cham-va-giu-khoa-33033 E4, E5 — cả tệp SLT-DC dưới 480 s (= trần ca 7/9 và N khoá 33033), ca nhả khoá 33033
     trt_san_xuat: "node _acceptance/slt-dc-cham-va-giu-khoa-33033/probes/san-xuat.mjs"   # slt-dc-cham-va-giu-khoa-33033 E7 — bốn bước transform-zalo liền nhau sau gộp, chỉ đọc log
     trt_pham_vi: "bash _acceptance/slt-dc-cham-va-giu-khoa-33033/probes/pham-vi.sh"   # slt-dc-cham-va-giu-khoa-33033 E8 — tệp đổi chỉ trong vùng của hàng
+    nk_tang_a: "node _acceptance/so-nguon-kho-khai-bao/probes/tang-a.mjs"   # so-nguon-kho-khai-bao E6 — quét tệp đổi bằng tên thật S09, S17 (tệp cục bộ hoặc sổ máy thu), chỉ in mã và số
+    nk_may_thu: "node _acceptance/so-nguon-kho-khai-bao/probes/may-thu.mjs"   # so-nguon-kho-khai-bao E7 — đo sau áp trên DB máy thu, chỉ đọc
+    nk_pham_vi: "bash _acceptance/so-nguon-kho-khai-bao/probes/pham-vi.sh"   # so-nguon-kho-khai-bao E8 — tệp đổi chỉ trong vùng của hàng
+    ht31_doi_chung: "bash db/db-thu.sh oneinvest_suite_ht31dc --chay node _acceptance/do1-ac9-xanh-lai-sau-so-nguon-122/probes/doi-chung.mjs"   # do1-ac9-xanh-lai-sau-so-nguon-122 E2, E3 — bản main đỏ, gỡ bộ soát đỏ, sổ không S09 xanh
+    ht31_pham_vi: "bash _acceptance/do1-ac9-xanh-lai-sau-so-nguon-122/probes/pham-vi.sh"   # do1-ac9-xanh-lai-sau-so-nguon-122 E4 — một dòng mã, chỉ tệp test
     tg1_that_dem: "mkdir -p .acceptance-runs/the-dia-chi-nhom-s03 && node pipeline/scripts/the-dia-chi-nhom-that.mjs --dem --ghi .acceptance-runs/the-dia-chi-nhom-s03/so-chay-thu.md"   # the-dia-chi-nhom-s03 E7 — bản chép DB máy thu oneinvest_u1_tg1, áp 108 + dựng nháp
     tg1_that_chat_luong: "node pipeline/scripts/the-dia-chi-nhom-that.mjs --chat-luong"   # the-dia-chi-nhom-s03 E8 — 13 nhóm sổ một dự án, dựng nháp bỏ sổ
     tg2_phu_the: "node pipeline/scripts/dong-dau-dia-chi-that.mjs --do-neu-cu --thuoc phu-the"   # dong-dau-dia-chi-luc-nap E1 · AC-1(a) — bản chép oneinvest_p4_tg2, kịch bản K1 khai trước
@@ -472,6 +519,10 @@ executors:
     design_floor_fresh: "node scripts/design-floor/gen-tokens.mjs --root . --check && node scripts/design-floor/gen-registry.mjs --root . --check"   # dung-m2-song-song: design/*.json khớp nguồn — đo trạng thái cây
     portal_smoke: "BASE_URL=http://localhost:3456 node scripts/smoke-portal-compliance.mjs"   # cần app đang chạy :3456 + DB local
     product_map: "node scripts/product-map.mjs --root . --check"
+    dapi_drl_pha: "node _acceptance/data-api-dong-ba-route-lo/probes/pha.mjs"   # data-api-dong-ba-route-lo E6 — bản route cũ của main phải đỏ ở cả hai lớp
+    dapi_drl_pham_vi: "node _acceptance/data-api-dong-ba-route-lo/probes/pham-vi.mjs"   # data-api-dong-ba-route-lo E8, E10 — phạm vi tệp, khoá config, tên nguồn thật
+    dapi_khoa_pha: "node _acceptance/data-api-dong-khi-thieu-khoa/probes/pha.mjs"   # data-api-dong-khi-thieu-khoa E7 — auth.ts, index.ts của merge-base phải đỏ đúng ca ghim
+    dapi_khoa_pham_vi: "node _acceptance/data-api-dong-khi-thieu-khoa/probes/pham-vi.mjs"   # data-api-dong-khi-thieu-khoa E8 — phạm vi tệp, khoá config, tên nguồn thật
     nntd_do: "node _acceptance/ngoai-n-tu-dinh-tuyen-bat/do-mo-phong.mjs"   # ngoai-n-tu-dinh-tuyen-bat: dựng lại 9 hồ sơ đã ký (mốc d2b4beaf) về trước Cổng 2, chạy dinh-tuyen-may.cjs của kit với config thật
     nntd_luoi: "! bash scripts/pre-merge-check.sh . --base origin/main 2>&1 | grep '^VIOLATION' | grep -vF 'VIOLATION [ngoai-n-tu-dinh-tuyen-bat]'"   # ngoai-n-tu-dinh-tuyen-bat AC-8 — lưới trước-gộp không có vi phạm nào ngoài dòng chờ của chính hồ sơ
     gta_luoi: "! bash scripts/pre-merge-check.sh . --base origin/main 2>&1 | grep '^VIOLATION' | grep -vF 'VIOLATION [goi-thang-anthropic]'"   # goi-thang-anthropic E13
@@ -583,6 +634,7 @@ executors:
     idempotent_selftest: "bash db/check-idempotent.selftest.sh"
     zalo_media_roundtrip: "cd pipeline && node scripts/media-files-roundtrip.mjs"
     zalo_media_backfill: "cd pipeline && SNAPSHOTS_DIR=$HOME/dev/onehub-invest/collector/snapshots node backfill-zalo-media.mjs --check"
+    zc20_kiem: "cd collector && rm -rf dist && npm run build && cd .. && bash _acceptance/s03-tai-bu-anh-bai-cu/probes/kiem.sh"   # s03-tai-bu-anh-bai-cu E1–E6 — dựng dist (backfill tải lại qua media-fetch của dist), probe: backfill trên cụm PostGIS dùng một lần (skipped 0), họ zalo-import HOME tạm, nap-argmax + AC-3 lối vào, DATA-CONTRACT điều 7, hai đột biến replay
     # stg-s08-inventory — cần DB local :5433 (docker one-invest-db); reso cần research-local/reso/dd-2.1.json (env DD_JSON)
     migration_040: "bash db/check-idempotent.sh db/migrations/040_stg_s08_inventory.sql stg_s08_inventory"
     s08_shape: "cd pipeline && node scripts/check-s08-inventory.mjs shape"
@@ -612,6 +664,15 @@ executors:
     db_autostart_cleanup: "bash scripts/check-db-autostart.sh cleanup"     # lượt lỗi / SIGTERM giữa chừng vẫn dọn dind; DB thật không bị khởi động lại
     db_autostart_live_selftest: "bash scripts/check-db-autostart.sh live-selftest"   # bộ đọc live trên bản chép plist + inspect thật đã làm hỏng
     # db-vao-volume (P2, yêu cầu P2-74 giám sát duyệt 29/10) — dữ liệu DB local nằm trong volume có tên
+    # db-chi-nghe-noi-bo-va-chinh-postgres (HT8): DB chỉ nghe 127.0.0.1, tham số Postgres qua biến môi trường của ảnh kartoza
+    db_noi_bo_static: "bash scripts/check-db-noi-bo.sh static"
+    db_noi_bo_mutation: "bash scripts/check-db-noi-bo.sh mutation"
+    db_noi_bo_cong: "bash scripts/check-db-noi-bo.sh cong"                 # container tạm nc ht8-cong-*; cần IP LAN (en0/en1)
+    db_noi_bo_soat: "bash scripts/check-db-noi-bo.sh soat"                 # ghi .acceptance-runs/<slug>/soat-ben-noi.txt (SOAT_RA đổi), không ghi vào cây hồ sơ
+    db_noi_bo_tham_so: "bash scripts/check-db-noi-bo.sh tham-so"           # nặng: container Postgres tạm ht8-ts-*, volume onehub_ht8_*
+    db_noi_bo_do: "bash scripts/check-db-noi-bo.sh do"                     # nặng: chép hai bảng lớn (đọc one-invest-db read-only), đo trước/sau
+    db_noi_bo_cu_khong_gay: "bash scripts/check-db-noi-bo.sh cu-khong-gay"
+    db_noi_bo_live: "bash scripts/check-db-noi-bo.sh live-ba"              # bộ đọc live trên one-invest-db + hai container tạm
     db_volume_static: "bash scripts/db-volume-check.sh static"         # compose gộp: volume có tên gắn ở thư mục chứa DEFAULT_DATADIR của ảnh
     db_volume_mutation: "bash scripts/db-volume-check.sh mutation"     # năm bản compose hỏng đỏ với thông điệp ghim; bản lành xanh
     db_volume_tap_duot: "bash scripts/db-volume-check.sh tap-duot"     # cần docker + ảnh kartoza/postgis:17-3.5; container onehub-tapduot-* cổng riêng, không chạm one-invest-db
@@ -623,6 +684,9 @@ executors:
     api_surface_static: "node scripts/check-api-surface.mjs static"
     anh_goc_hd10_nguyen: "git diff --exit-code 6b610913 -- app/tests/anh-goc-qua-may-chu.test.tsx"   # proxy-anh-chan-svg AC-7 — bộ test HD10 không bị sửa kỳ vọng
     api_surface_mutation: "node scripts/check-api-surface.mjs mutation"
+    pl42_do_that: "cd pipeline && node --test scripts/do-yeu-cau-lot-tin.test.mjs && bash ../db/db-thu.sh oneinvest_suite_pl42_that --chay node scripts/do-yeu-cau-lot-tin.mjs --kiem"   # yeu-cau-khong-thanh-tin-thue E5 (AC-5) — bản chép dữ liệu thật, ROLLBACK
+    ht28_khong_theo_chen: "F=app/tests/api-markets-khong-s02.test.tsx; test -f $F && ! grep -nE 'theoChen|sort ổn định|giữ thứ tự chèn' $F && grep -q 'chiều đỏ tất định nằm ở HT28-AC-2' $F"   # api-markets-doi-chung-tren-db E3 — gỡ đối chứng mô hình JS, chú thích đúng
+    ht28_route_khong_doi: "git diff --exit-code 04b9ddc3b -- app/src/app/api/v1/markets/route.ts"   # api-markets-doi-chung-tren-db E5 — route không đổi
     api_surface_smoke: "BASE_URL=${BASE_URL:-http://localhost:3456} node scripts/smoke-api-surface.mjs"
     # mcp-tools-theo-so-be-mat (ON15) — bản khai công cụ MCP theo sổ bề mặt; historic cần lịch sử git có 1c6389b
     mcp_tools_static: "node scripts/check-mcp-tools.mjs static"
@@ -677,6 +741,11 @@ executors:
     kev_manifest_v3: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan/acceptance.mjs manifest-v3"
     kev_import_versions: "node scripts/kev-nhan/acceptance.mjs import-versions"
     kev_watchdog_l1: "node scripts/kev-nhan/acceptance.mjs watchdog-l1"
+    # go-kev-khoi-hook-s03 (KEV1, T3) — hook không cổng chấm; chốt tĩnh + tự phá; bộ kiểm sau áp chấm log mẫu (không chạm ~/.openclaw)
+    kev1_handler_test: "node --test collector/openclaw/handler.test.mjs"
+    kev1_khong_con_kev: "bash _acceptance/go-kev-khoi-hook-s03/probes/khong-con-kev.sh \"$PWD\" && bash _acceptance/go-kev-khoi-hook-s03/probes/khong-con-kev.sh --tu-thu \"$PWD\""
+    kev1_ap_may_thu: "bash _acceptance/go-kev-khoi-hook-s03/ap-may-thu/kiem.sh"
+    kev1_hsn_regress: "for m in auth-held held-then-hang reject-perm tam-thoi budget budget-env; do out=$(node scripts/hook-spool-nghiem-ngat/acceptance.mjs $m) || { echo \"$out\"; exit 1; }; echo \"$out\" | tail -1; done"
     kev_contract_doc: "grep -qE 'schemaVersion.: [3-9]' collector/docs/DATA-CONTRACT.md && grep -qE 'chấp nhận `\\{1,2,3(,[0-9]+)*\\}`' collector/docs/DATA-CONTRACT.md && echo CONTRACT-DOC OK"
     zc1_sourceid: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan/acceptance.mjs sourceid"
     zc1_stg_roundtrip: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan/acceptance.mjs stg-roundtrip"   # cần DB local :5433; kiểm trùng trước, xoá snapshot giả sau
@@ -733,6 +802,13 @@ executors:
     snh_scope: "f=$(git diff --name-only $(git merge-base HEAD origin/main) HEAD | grep -v -E '^(_acceptance/|PRODUCT-MAP[.]md$|LO-TRINH[.]html$)' | grep -v -x -E 'scripts/[a-z]+-import-daily[.]sh|scripts/s03-nap-(nhanh|ho-so)[.]test[.]mjs|pipeline/cron/com[.]oneinvest[.]s03-nap-15phut[.]plist'); [ -z \"$f\" ] && echo SCOPE OK || { echo \"NGOAI PHAM VI: $f\"; exit 1; }"
     # collector-graceful-shutdown — không chạm :9210 đang chạy (cổng ngẫu nhiên, snapshot vào thư mục tạm)
     collector_check: "cd collector && npm run check"
+    zc15_media_test: "cd collector && rm -rf dist && npm run build && node --test dist/test/media-fetch.test.js"   # s03-media-r2-allowlist E1–E6 — r2.dev, hậu tố host thêm từ cấu hình local, Accept, JPEG XL
+    zc15_khuon_media_files: "node _acceptance/s03-media-r2-allowlist/probes/khuon-media-files.mjs . && node _acceptance/s03-media-r2-allowlist/probes/khuon-media-files.mjs --tu-thu ."   # s03-media-r2-allowlist E9 — khuôn meta.mediaFiles giữ năm khoá (DATA-CONTRACT)
+    zc15_khong_ten_that: "bash _acceptance/s03-media-r2-allowlist/probes/khong-ten-that.sh \"$PWD\" && bash _acceptance/s03-media-r2-allowlist/probes/khong-ten-that.sh --tu-thu \"$PWD\""   # s03-media-r2-allowlist E10 — tên host đích (tầng A) không trong cây/lịch sử nhánh; chỉ đo được ở máy có tệp nguồn local
+    zc15_ap_may_thu: "bash _acceptance/s03-media-r2-allowlist/ap-may-thu/kiem.sh"   # s03-media-r2-allowlist E11 — hồ sơ áp năm mục + kiem-sau trên mẫu + round-trip collector API nhánh/main
+    zc16_media_test: "cd collector && rm -rf dist && npm test && git diff --exit-code origin/main -- docs/DATA-CONTRACT.md src/core/storage.ts && cd .. && bash _acceptance/s03-jpg-path-fallback/probes/tu-thu.sh"   # s03-jpg-path-fallback E1–E5, E9 — MỘT lệnh dựng dist (npm test = build + toàn bộ ca, gồm media-fetch) để lượt chấm không chạy hai lệnh rm -rf dist song song (S4 r1 25/11); thử lại một lần bỏ /jpg/, tên tệp băm URL đã tải, không urlFetched; DATA-CONTRACT + schemaVersion không đổi
+    zc16_ap_may_thu: "bash _acceptance/s03-jpg-path-fallback/ap-may-thu/kiem.sh"   # s03-jpg-path-fallback E8 — hồ sơ áp năm mục + kiem-sau trên mẫu + round-trip collector API nhánh/ZC15
+    zc19_cach_ly: "cd collector && rm -rf dist && HOME=$(mktemp -d) TMPDIR=$(mktemp -d) npm test && git diff --quiet $(git merge-base origin/main HEAD) -- src ':!src/test' && cd .. && bash _acceptance/s08-test-cach-ly-token/probes/cach-ly.sh"   # s08-test-cach-ly-token E1–E5 — MỘT lệnh dựng dist (npm test = build + toàn bộ ca collector, HOME + TMPDIR tạm như máy không có token); mã sản xuất collector ngoài src/test không đổi; probe HOME/TMPDIR tạm: 4/4, token HOME quyền 000 không bị chạm, hai bản phá đỏ đúng lý do
     collector_plist_lint: "plutil -lint pipeline/cron/com.oneinvest.collector-api.plist"
     shutdown_deadline: "node scripts/collector-shutdown/acceptance.mjs deadline"
     shutdown_skip_media: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/collector-shutdown/acceptance.mjs skip-media"
@@ -1049,6 +1125,8 @@ executors:
     s09_db: "node --test --test-concurrency=1 pipeline/scripts/danh-ba-s09.itest.mjs"   # toa-s09-hai-khu-vao-danh-ba E1, E3–E5, E8 — DB thử oneinvest_s09_<pid> ở :5433 áp 001…097, fixture tổng hợp
     s09_that: "node pipeline/scripts/danh-ba-s09-that.mjs"   # toa-s09-hai-khu-vao-danh-ba E6, E7 — chép máy thu sang DB thử, nạp bản thu API S09, đối chứng hai bản tay, chỉ in số; ngoài CI
     s09_ranh_gioi: "node pipeline/scripts/s09-ranh-gioi.mjs --base origin/main"   # toa-s09-hai-khu-vao-danh-ba E9 — vùng, tầng A, 097 áp hai lần
+    s09_toa_db: "node --test --test-concurrency=1 pipeline/lib/s09-danh-ba-can.test.mjs pipeline/scripts/danh-ba-s09-toa.itest.mjs"   # nap-s09-toa-tang-vao-danh-ba E1, E3–E6, E8, E9 — DB thử riêng lượt oneinvest_dbv_s09t_<pid> dựng từ db/migrations (db-thu-dbv.mjs), xoá khi xong; không đụng DB oneinvest
+    s09_toa_that: "node pipeline/scripts/danh-ba-s09-toa-that.mjs --tran-phut 40"   # nap-s09-toa-tang-vao-danh-ba E2, E10, E12 — chỉ đọc DB máy thu (chép sang DB thử để dựng), trần 40 phút, chỉ in số; ngoài CI
     s16_db: "node --test --test-concurrency=1 pipeline/scripts/danh-ba-s16.itest.mjs"   # nap-s16-vao-danh-ba E1, E3–E8 — itest tự dựng DB oneinvest_suite_s16_<pid> từ db/migrations, xoá khi xong
     s16_that: "node pipeline/scripts/danh-ba-s16-that.mjs"   # nap-s16-vao-danh-ba E2, E10 — ba bản thu thật trên DB thử chép máy thu, đếm độc lập, sync chạy thử đọc chỉ-đọc DB máy thu; ngoài CI
     nps_cay: "node --test --test-concurrency=1 --test-name-pattern='^NPS-1:' pipeline/scripts/phan-khu-s16-noi.itest.mjs"   # noi-phan-khu-trung-s16 AC-1
@@ -1079,6 +1157,13 @@ executors:
     gnt_doc: "node --test --test-concurrency=1 --test-name-pattern='^GNT-6:' pipeline/scripts/phan-khu-s16-ma-can.itest.mjs"   # gop-nut-trung-ma-can-s16 AC-6
     gnt_dem: "node --test --test-concurrency=1 --test-name-pattern='^GNT-7:' pipeline/scripts/phan-khu-s16-ma-can.itest.mjs"   # gop-nut-trung-ma-can-s16 AC-7
     gnt_that: "node pipeline/scripts/phan-khu-s16-ma-can-that.mjs"   # gop-nut-trung-ma-can-s16 AC-8 — bản chép DB máy thu, DB máy thu chỉ đọc
+    ns8_lop: "node --test pipeline/scripts/noi-du-an-s08-lop.test.mjs"   # soat-noi-s08-danh-ba AC-1 — luật xếp ngả, thuần
+    ns8_the: "node --test --test-concurrency=1 --test-name-pattern='^NS8-2:' pipeline/scripts/noi-du-an-s08-luat.itest.mjs"   # soat-noi-s08-danh-ba AC-2
+    ns8_ap: "node --test --test-concurrency=1 --test-name-pattern='^NS8-3:' pipeline/scripts/noi-du-an-s08-luat.itest.mjs"   # soat-noi-s08-danh-ba AC-3
+    ns8_dao: "node --test --test-concurrency=1 --test-name-pattern='^NS8-4:' pipeline/scripts/noi-du-an-s08-luat.itest.mjs"   # soat-noi-s08-danh-ba AC-4
+    ns8_kiem: "node --test --test-concurrency=1 --test-name-pattern='^NS8-5:' pipeline/scripts/noi-du-an-s08-luat.itest.mjs"   # soat-noi-s08-danh-ba AC-5
+    ns8_app: "cd app && bash ../db/db-thu.sh oneinvest_suite_rs8 --chay node --import tsx --test --test-concurrency=1 tests/registry-s08-luat.test.tsx"   # soat-noi-s08-danh-ba AC-6 — lược đồ tạm trên DB của riêng lượt
+    ns8_that: "cd app && node --import tsx ../pipeline/scripts/noi-du-an-s08-that.mjs"   # soat-noi-s08-danh-ba AC-7 — bản chép DB máy thu, DB máy thu chỉ đọc
     ht4_that: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_ht4 --chay node --test --test-concurrency=1 scripts/nap-dvhc-cu.test.mjs"   # px1-ac-10-so-dung-tin-gan-theo-ten E1, E2 — bản chép DB máy thu của riêng lượt
     ht4_ci: "node _acceptance/hai-ca-app-dung-tren-du-lieu-may/probes/px1-the-ci.mjs"   # px1-ac-10-so-dung-tin-gan-theo-ten E3 — DB dựng từ migration, mọi ca bỏ qua có tên
     s37_db: "node --test --test-concurrency=1 pipeline/scripts/danh-ba-s16-cau-truc.itest.mjs"   # danh-ba-s16-thang-cau-truc E1, E2–E8 — itest tự dựng DB oneinvest_dbv_s37_<pid> từ db/migrations, xoá khi xong

@@ -14,11 +14,13 @@ function requestTime(): number {
   return Date.now();
 }
 
+type DataFlowPageProps = { searchParams: Promise<Record<string, string | string[] | undefined>> };
+
 /**
  * /ops/data-flow «Dòng chảy dữ liệu»: đường ống bài → tin → căn, chất lượng từng chặng, tin mới nhất. Chạy ở cả máy thu
  * (bảng tính sẵn) lẫn máy chủ (khối bản tin) — DF1 `dong-chay-len-cloud`.
  */
-export default async function DataFlowPage({ searchParams }: PageProps<"/ops/data-flow">) {
+export default async function DataFlowPage({ searchParams }: DataFlowPageProps) {
   const window = parseFlowWindow((await searchParams).window);
   return (
     <RegionError what="dòng chảy dữ liệu">

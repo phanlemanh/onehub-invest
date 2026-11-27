@@ -402,7 +402,8 @@ export function parsePost(text, { giaKhongDonVi = true } = {}) {
   // nhóm "mua bán" thường không lặp chữ "bán", chỉ ghi giá ("Giá: 6.1 tỷ").
   // Transform tự suy kind theo bối cảnh khi cần; parser cứ parse đủ trường.
   // Ý định không vá ở đây (hồ sơ s03-cam-mau-so-lieu: việc của PL5).
-  if (/cho thuê|thuê dài hạn|cần cho thuê|thuê dài hạn/i.test(so)) out.kind = "rent_lt";
+  // PL42 AC-3: «cần/tìm thuê dài hạn» là chính câu tìm — không tính là thuê ở đây để luật Yêu cầu của suyLoai được xét.
+  if (/cho thuê|(?<!(?:cần|tìm)\s*)thuê dài hạn/iu.test(so)) out.kind = "rent_lt";
   else if (/bán|chính chủ bán|cần tiền bán|bán gấp/i.test(so)) out.kind = "sale";
 
   // giá: "45tr/m2", "3.2 tỷ", "2tỷ", "15tr/tháng", "12 triệu/th"
@@ -483,7 +484,31 @@ export const NGUON_LOAI = Object.freeze(["chu-bai", "tin-hieu-chu", "don-vi-gia"
 
 // Yêu cầu (listing_intent = inquiry, CONTEXT.md): bên mua — «cần mua/thuê/tìm», «tìm mua/thuê/căn/nhà», «khách … xem/tìm/cần»
 // trong cùng câu ngắn, «anh chị/ai có căn (gửi)». «Có khách cọc», «đã có khách» là tin rao (không có động từ tìm/xem/cần).
-const YEU_CAU = /(?:cần\s+(?:mua|thuê|tìm)|tìm\s+(?:mua|thuê|căn|nhà|phòng)|kh[aá]c?h\b[^.!?\n]{0,30}?\b(?:xem|tìm|cần)\b|(?:anh|a)\s*(?:\/\s*)?(?:chị|c)\s+(?:nào\s+)?có\s+căn|ai\s+có\s+căn|có\s+căn\s+gửi)/iu;
+const YEU_CAU_GOC = String.raw`cần\s+(?:mua|thuê|tìm)|tìm\s+(?:mua|thuê|căn|nhà|phòng)|kh[aá]c?h\b[^.!?\n]{0,30}?\b(?:xem|tìm|cần)\b|(?:anh|a)\s*(?:\/\s*)?(?:chị|c)\s+(?:nào\s+)?có\s+căn|ai\s+có\s+căn|có\s+căn\s+gửi`;
+// PL42 (yeu-cau-khong-thanh-tin-thue): câu tìm viết tắt — tám mẫu «giữ» của bảng phủ ca trong
+// docs/superpowers/specs/2026-11-26-yeu-cau-khong-thanh-tin-thue-design.md. KHÔNG thêm «khách thuê/mua»: bảng phủ ca đếm
+// 230 bài nhãn offer khớp («khách thuê cọc…» là tin rao). Viết tắt «N n» kết bằng lookahead chữ có dấu như DAU_HIEU_BDS.
+// «tìm» nhận cả dạng không dấu «tim» (cùng hàng «tim thue/mua» của bảng), «studio» nhận cả «stu».
+// Loại trừ hẹp (AC-2): «tìm gấp khách…», «em tìm khách…», «em tìm người thuê…» là câu môi giới tìm khách cho căn của mình.
+const PN_YC = String.raw`\d+\s*(?:pn|phòng\s*ngủ|wc|n\s*\+?\s*\d?(?![a-zà-ỹđ]))`;
+const KHONG_DINH_CHU = String.raw`(?<![\p{L}])`;
+const TIM = String.raw`${KHONG_DINH_CHU}t[iì]m`;
+const YEU_CAU_PL42 = [
+  String.raw`${TIM}\s+(?:gấp\s+)?(?:thu[eê]\s+)?${PN_YC}`, // «tìm (gấp/thuê) + N pn/n/wc»
+  String.raw`${TIM}\s+(?:gấp\s+)?stu(?:dio)?s?(?![\p{L}])`, // «tìm (gấp) studio»
+  String.raw`${TIM}\s+gấp(?!\s+(?:kh[aá]ch|người))`, // «tìm gấp», trừ «tìm gấp khách thuê» của môi giới
+  String.raw`${KHONG_DINH_CHU}tim\s+(?:thu[eê]|mua)(?![\p{L}])`, // «tim thue/mua» không dấu
+  String.raw`cần\s+(?:gấp\s+)?(?:studio|${PN_YC})`, // «cần + studio/N pn»
+  // Câu xin gửi căn: «ac/ace/anh chị/a c/ai (nào) có (thì) (căn) gửi/nhắn/ib/inbox (cho) em/e». «ac có khách gửi em» (môi
+  // giới xin khách) không khớp: sau «có» chỉ nhận «thì», «căn».
+  String.raw`${KHONG_DINH_CHU}(?:ace|ac|anh\s*(?:\/\s*)?chị|a\s*(?:\/\s*)?c|ai)\s+(?:nào\s+)?có\s+(?:thì\s+)?(?:căn\s+)?(?:gửi|nhắn|ib|inbox)\s+(?:cho\s+)?(?:em|e)(?![\p{L}])`,
+  // «khách e/em cọc hụt/chốt hụt» — «khách e chốt căn này rồi, còn 1 căn…» là tin rao, không khớp.
+  String.raw`kh[aá]ch\s+(?:e|em)\s+(?:cọc|chốt)\s+hụt`,
+  // «em/mình/e (đang) (cần) tìm», trừ «… tìm (gấp/được) khách/người (thuê)» của môi giới.
+  String.raw`${KHONG_DINH_CHU}(?:em|mình|e)\s+(?:đang\s+)?(?:cần\s+)?tìm(?![\p{L}])(?!\s+(?:gấp\s+|được\s+)?(?:kh[aá]ch|người))`,
+];
+const YEU_CAU = new RegExp(`(?:${[YEU_CAU_GOC, ...YEU_CAU_PL42].join("|")})`, "iu");
+const YEU_CAU_MAC_DINH = YEU_CAU;
 // Viết tắt «<số>n» (2n, 2n1wc) kết bằng lookahead chữ có dấu, không \b — \b của JS chỉ hiểu ASCII nên «1 năm», «3 nữ»
 // từng khớp (s03-cho-vay-khong-phai-bds).
 const DAU_HIEU_BDS = /(?:\d+\s*(?:pn|phòng\s*ngủ|wc|vs)\b|\d+\s*n\s*\+?\s*\d?(?![a-zà-ỹđ])|\d+(?:[.,]\d+)?\s*m[²2]|\bstudio\b|căn\s*hộ|chung\s*cư|\bccmn\b|shophouse|biệt\s*thự|liền\s*kề|nhà\s*phố|\bduplex\b|penthouse)/iu;
@@ -557,11 +582,15 @@ export function mucDichNhom(bai) {
  * @param {KIND.sale|KIND.rent_lt|"ca-hai"|undefined} mucDich
  * @param {KIND.sale|KIND.rent_lt|null} [mucDichThe] ô bán/thuê của thẻ địa chỉ nhóm ĐÃ DUYỆT (TG2), đã được bộ đọc
  *   thẻ ánh xạ từ ban/thue/ca_hai sang sale/rent_lt/null — suyLoai không tự ánh xạ.
+ * @param {{ yeuCau?: RegExp }} [luat] `yeuCau` thay biểu thức Yêu cầu CHỈ cho thước PL42 AC-4 (pha luật cũ); đường chạy thật
+ *   luôn dùng YEU_CAU của mô-đun.
  * @returns {{ kind: KIND.sale|KIND.rent_lt|null, nguon: string }}
  */
-export function suyLoai(pr, text, mucDich, mucDichThe = null) {
+export function suyLoai(pr, text, mucDich, mucDichThe = null, luat = {}) {
   if (pr.kind) return { kind: pr.kind, nguon: "chu-bai" };
   const so = gatSo(text ?? "");
+  // Tên trùng hằng mô-đun có chủ ý: dòng xét Yêu cầu ngay dưới là chỗ đột biến nguyên văn của transform-zalo-loai-tin.test.mjs.
+  const YEU_CAU = luat.yeuCau ?? YEU_CAU_MAC_DINH;
   if (YEU_CAU.test(so)) return { kind: null, nguon: "yeu-cau" };
   const giaKhongDonVi = pr.priceVnd == null && pr.pricePerm2Vnd == null ? so.match(GIA_NHAN_TRIEU) : null;
   const coGia = pr.priceVnd != null || pr.pricePerm2Vnd != null || giaKhongDonVi != null;
@@ -850,10 +879,12 @@ export async function docThiTruongNhom(client, khoaNhom = khoaNhomThat) {
 // `parse` chỉ để thước giả lập đổi rule parser (PL14 NL-AC-4); đường chạy thật luôn dùng parsePost.
 // `suyLoaiTin: false` tắt bước suy loại (RM1) — chỉ cho thước đối chiếu trước/sau; đường chạy thật luôn bật.
 // `khoaNhom` chỉ để thước truyền hàm đột biến (nhom-hai-lan-s03-xu-goc); đường chạy thật luôn dùng khoaNhomThat.
+// `luatYeuCau` (RegExp) thay biểu thức Yêu cầu của suyLoai CHỈ cho thước PL42 AC-4 (pha luật cũ → mới → cũ); đường chạy thật
+// không truyền, luôn dùng luật mới của mô-đun.
 /** Phiên bản bộ đọc tầng (DV4) — method_version của phát biểu tầng. */
 export const TANG_VERSION = "transform-zalo@dv4";
 
-export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin = true, khoaNhom = khoaNhomThat, ganSo = ganSdtQuaNguoi } = {}) {
+export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin = true, khoaNhom = khoaNhomThat, ganSo = ganSdtQuaNguoi, luatYeuCau = null } = {}) {
   // Phường theo thị trường của nhóm (N1): nhóm S03 khai market_codes ở sổ nhóm (collection_units, PL12) chỉ đối chiếu
   // phường của các thị trường đó; nhóm chưa khai (Hỏi-1, Mạnh duyệt 30/10) đối chiếu mọi thị trường có phường.
   const moiThiTruong = await docThiTruongCoPhuong(client);
@@ -901,7 +932,8 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
   const nguon = [];
   for (const { p, pr } of docBai) {
     if (suyLoaiTin) {
-      const r = suyLoai(pr, p.text, mucDich.get(p.conversation_id ?? ""), theNhom.get(p.conversation_id ?? "")?.mucDich ?? null);
+      const r = suyLoai(pr, p.text, mucDich.get(p.conversation_id ?? ""), theNhom.get(p.conversation_id ?? "")?.mucDich ?? null,
+        luatYeuCau ? { yeuCau: luatYeuCau } : {});
       pr.kind = r.kind;
       nguon.push(r.nguon);
     } else nguon.push(pr.kind ? "chu-bai" : "bo");
@@ -1122,6 +1154,14 @@ async function main() {
     } catch (e) {
       await client.query("ROLLBACK").catch(() => {});
       throw e;
+    }
+    // PL20: gắn tin vào toà, vùng của danh bạ trong giao dịch riêng, sau khi lượt nạp đã ghi. Nạp mô-đun tại đây để lỗi của bước
+    // này, kể cả lỗi nạp mã, chỉ là một dòng cảnh báo.
+    try {
+      const { buocGhepToa } = await import("./lib/ghep-tin-danh-muc-ghi.mjs");
+      await buocGhepToa(client);
+    } catch (e) {
+      console.warn(`JOB WARN [ghep-toa] ${e.message}`);
     }
   } finally {
     await client.end();

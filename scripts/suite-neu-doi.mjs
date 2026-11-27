@@ -29,6 +29,8 @@ const LOI_PIPELINE = [
   "collector/scripts/**", "data-api/src/**", "tools/**", "CONTEXT.md", "LO-TRINH.html", "docs/ROADMAP.md",
   "docs/ops/**",
   "docs/adr/**", "docs/research/pty-project-type-s06.md",
+  // pipeline/scripts/noi-du-an-s08-that.mjs (DA55 E7) nạp probe bảng phủ của hồ sơ.
+  "_acceptance/soat-noi-s08-danh-ba/probes/bang-phu.mjs",
   "_acceptance/danh-ba-phuong-xa-toan-quoc/**", "_acceptance/du-an-cua-tin-len-dinh-vi/**",
   "_acceptance/gop-tin-chi-anh-o-transform/**",
   "_acceptance/lay-mau-khu-trung-theo-tin/**", "_acceptance/nhom-dang-ky-hai-lan-s03/**",
@@ -36,6 +38,27 @@ const LOI_PIPELINE = [
   "_acceptance/the-dia-chi-nhom-s03/ap-may-thu/**",
   // pipeline/scripts/mau-bai-lac-du-an.test.mjs đọc hồ sơ mẫu v2 thật (khoá 100 mã, hạt giống, n) — đầu vào của test (TG2).
   "_acceptance/dong-dau-dia-chi-luc-nap/evidence/mau-bai-lac-du-an-v2.md",
+];
+
+// Ca cần dữ liệu thật (34 ca pipeline của scripts/ci-bo-qua.json, suite pipeline_that, hồ sơ db-thu-tach-khoi-cum-that):
+// chạy trên bản chép ~30′ nên vùng HẸP — tệp test của các ca, tệp chúng nạp (đồ thị import tĩnh), tệp chúng chạy bằng
+// tiến trình con hay đọc SQL. Canh phủ hai chiều trong scripts/suite-neu-doi.test.mjs: đồ thị import tĩnh hiện tại, và
+// fixture tệp thật sự mở của một lượt chạy thật (scripts/fixtures/pipeline-that-tep-mo.json). Không chứa LO-TRINH.html,
+// collector/src/**, docs/**.
+const VUNG_THAT = [
+  "pipeline/scripts/test-posts.test.mjs", "pipeline/scripts/deals-phi-ly.test.mjs",
+  "pipeline/scripts/ops-facts-so-tong-hop.test.mjs", "pipeline/scripts/install-collector-api.test.mjs",
+  "pipeline/scripts/reassign-areas.test.mjs", "pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs",
+  "pipeline/scripts/ops-apply-plist.test.mjs", "pipeline/scripts/assert-rut-thay.test.mjs",
+  "pipeline/scripts/do-hang-ngay.test.mjs", "agent/config/doc-gop-s03.json", "agent/src/enrich/doc-gop-s03/prompt.ts",
+  "pipeline/scripts/capture-ops-facts.mjs", "pipeline/scripts/ops-facts-fixture.mjs", "pipeline/scripts/test-data-residue.mjs",
+  "pipeline/*.mjs", "pipeline/*.sh", "pipeline/package.json", "pipeline/lib/**", "pipeline/sql/**", "pipeline/data/**",
+  "pipeline/cron/com.oneinvest.collector-api.plist",
+  "pipeline/cron/com.oneinvest.ops-apply.plist",
+  "db/migrations/**", "db/db-thu.sh", "db/dau-luoc-do.sql",
+  "scripts/check-freshness.mjs", "scripts/lib/**", "scripts/ci-bo-qua.json", "scripts/install-collector-api.sh",
+  "scripts/fixtures/launchctl-list-2026-10-23.txt", "docs/ops/runtime-map.md",
+  "app/package.json", "package.json",
 ];
 
 export const VUNG = {
@@ -46,6 +69,7 @@ export const VUNG = {
   // tệp nào kéo nửa A thì cũng kéo nửa B. Chia nửa là chia theo tệp test, không theo vùng mã.
   pipeline_a: LOI_PIPELINE,
   pipeline_b: LOI_PIPELINE,
+  pipeline_that: VUNG_THAT,
   agent: [
     "agent/**", "db/**", "pipeline/**", "scripts/**", "docs/ops/**",
     "app/src/lib/ops/review-can-cu.ts", "app/src/lib/vocab.generated.ts",
@@ -291,6 +315,57 @@ async function mainScripts(argv) {
   return ket(maNgat || ma);
 }
 
+// Sổ lần chạy của pipeline-that-hang-ngay.mjs (ở đây, không import tệp đó: bản sao đối chứng của S4V-AC-2 chạy ngoài kho).
+export function duongSo(cwd = process.cwd()) {
+  if (process.env.PIPELINE_THAT_SO) return process.env.PIPELINE_THAT_SO;
+  const r = spawnSync("git", ["-C", cwd, "rev-parse", "--path-format=absolute", "--git-common-dir"], { encoding: "utf8" });
+  const common = (r.stdout ?? "").trim();
+  // Git lỗi (không phải kho) → null: dòng in nói «không đọc được sổ», không rơi về đường tương đối trông như sổ trống (HT30 AC-4).
+  if (r.status !== 0 || !path.isAbsolute(common)) return null;
+  return path.join(path.dirname(common), ".acceptance-runs/pipeline-that/lan-chay.jsonl");
+}
+
+// Dòng «ca dữ liệu thật» (hồ sơ db-thu-tach-khoi-cum-that AC-11, HT30 dong-du-lieu-that-neu-lan-do-moi-nhat): mỗi lượt chấm
+// nói rõ ca cần dữ liệu thật có chạy trong lượt không; không kích thì nêu lần xanh gần nhất trên main từ sổ của
+// pipeline-that-hang-ngay.mjs, và lần ĐỎ mới hơn nếu dòng cuối của sổ đỏ. Sổ không đọc được thì nói thẳng.
+const KHONG = "ca dữ liệu thật: không kích — ";
+const caDoChu = (d) => {
+  const ten = Array.isArray(d.ca_do) ? d.ca_do.filter(Boolean) : [];
+  if (!ten.length) return "không bóc được tên ca";
+  return ten.slice(0, 3).join("; ") + (ten.length > 3 ? ` (+${ten.length - 3})` : "");
+};
+const moc = (d) => `${d.ngay} (${String(d.sha).slice(0, 9)})`;
+export function dongDuLieuThat(chay, so) {
+  if (chay) return "ca dữ liệu thật: chạy trong lượt này";
+  if (!so) return `${KHONG}không đọc được sổ soát hằng ngày (không giải được thư mục kho)`;
+  let text;
+  try {
+    text = readFileSync(so, "utf8");
+  } catch (e) {
+    if (e.code === "ENOENT") return `${KHONG}chưa có lần xanh nào trên main`;
+    return `${KHONG}không đọc được sổ soát hằng ngày (${e.code ?? e.message})`;
+  }
+  const dong = text.split("\n").filter((l) => l.trim());
+  let xanh = null;
+  let cuoi = null;
+  dong.forEach((l, i) => {
+    let d = null;
+    try { d = JSON.parse(l); } catch { /* dòng hỏng */ }
+    if (i === dong.length - 1 && !d) cuoi = "hong";
+    if (!d) return; // dòng giữa hỏng: bỏ qua
+    if (d.ket_qua === "xanh") xanh = d;
+    cuoi = d;
+  });
+  if (cuoi === "hong") return `${KHONG}không đọc được sổ soát hằng ngày (dòng cuối hỏng)`;
+  if (!cuoi || cuoi.ket_qua === "xanh") {
+    return xanh ? `${KHONG}lần xanh gần nhất trên main: ${moc(xanh)}` : `${KHONG}chưa có lần xanh nào trên main`;
+  }
+  const do_ = `${moc(cuoi)} — ca đỏ: ${caDoChu(cuoi)}`;
+  return xanh
+    ? `${KHONG}lần xanh gần nhất trên main: ${moc(xanh)}; ĐỎ mới hơn: ${do_}`
+    : `${KHONG}chưa có lần xanh nào trên main; ĐỎ mới nhất: ${do_}`;
+}
+
 function main(argv) {
   if (argv[0] === "--chay-scripts") return mainScripts(argv);
   const i = argv.indexOf("--");
@@ -302,6 +377,7 @@ function main(argv) {
   const lenh = argv.slice(i + 1).join(" ");
   const goc = gocKho(process.cwd());
   const q = quyetDinh(ten, tepDoi(goc), { ep: process.env.SUITE_NEU_DOI === "chay" });
+  if (ten === "pipeline_that") console.log(dongDuLieuThat(q.chay, duongSo(goc)));
   if (!q.chay) {
     console.log(`suite-neu-doi: bỏ qua ${ten}: ${q.ly_do}`);
     return 0;

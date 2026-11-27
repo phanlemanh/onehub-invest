@@ -5,7 +5,11 @@
  * sửa một bên thì sửa cả bên kia. Tệp thuần: không import lúc chạy, nhận client đã kết nối.
  *
  * Mỗi mã đọc bảng NẠP THẬT của nó, lọc bằng `source_ids` đọc từ `source_registry` (SPL: không literal nguồn,
- * không đọc `real_name`), tuổi tính theo GIỜ THU — không theo giờ nạp. Mã `completed` (S04) không đo.
+ * không đọc `real_name`), tuổi tính theo GIỜ THU — không theo giờ nạp. Chỉ đo dòng `active`. Mã không có câu đo riêng
+ * đo qua `stg_tables` của chính nó (S09, S16); thành phố lọc theo `measured_markets` khi sổ khai.
+ *
+ * Nhịp (SLO) đọc từ `source_registry.cadence_hours` (migration 122, NK1 so-nguon-kho-khai-bao) — không còn hằng trong mã;
+ * NULL = «chưa khai SLO». Sổ chưa có cột (chưa áp 122) → ném lỗi gọi tên migration, không rơi về số cũ.
  */
 
 export type FreshnessStatus = "fresh" | "stale" | "none" | "no-slo"
@@ -17,17 +21,14 @@ export type FreshnessRow = {
   ageHours: number | null
   sloHours: number | null
   status: FreshnessStatus
+  /** Chỉ có ở hàng `none` khi câu đo qua bảng nạp không chạy được (tên sai khuôn, bảng không có). */
+  reason?: string
 }
 
 /** Client tối thiểu (pg.Pool hay pg.Client đều khớp). */
 export type QueryClient = {
   query: (sql: string, args?: unknown[]) => Promise<{ rows: Record<string, unknown>[] }>
 }
-
-/** SLO theo giờ. S01/S02/S03 = 8/35/3 ngày (ADR-0007; Mạnh chốt Hỏi-1 AU4 23/10); S05/S06 theo nhịp thu —
- * S05 = 96 giờ: từ 7/11 thu 2 lượt/tuần (thứ Ba + thứ Sáu), khoảng dài nhất thứ Sáu → thứ Ba (s05-slo-theo-lich).
- * S10, S11 = 192 giờ (8 ngày, khuôn S01, S08): thu một lượt/tuần (khai-slo-s10-s11, giám sát đợt duyệt 12/11). */
-export const SLO_HOURS: Record<string, number> = { S01: 192, S02: 840, S03: 72, S05: 96, S06: 36, S08: 192, S10: 192, S11: 192 }
 
 /** Cột thời gian (giờ thu) mà probe của từng mã lấy max. */
 export const TIME_SOURCE: Record<string, string> = {
@@ -40,6 +41,9 @@ export const TIME_SOURCE: Record<string, string> = {
   S10: "airbnb_snapshots.collected_at",
   S11: "airbnb_snapshots.collected_at",
 }
+
+/** Cột thời gian của câu đo chung qua bảng nạp (mã không có câu riêng, đo theo `stg_tables`). */
+export const STG_TIME_SOURCE = "airbnb_snapshots.collected_at"
 
 const ZALO_POSTS = `
   SELECT s.city, max(s.collected_at) AS last
@@ -103,24 +107,77 @@ export function gopThanhPho<T extends { city: string | null; last: unknown }>(ro
   return [...m.values()]
 }
 
-export async function readFreshness(client: QueryClient, { now = new Date() }: { now?: Date } = {}): Promise<FreshnessRow[]> {
-  const { rows: reg } = await client.query(
-    `SELECT code, source_ids FROM source_registry WHERE status = 'active' ORDER BY code`,
+export const LOI_122 = "source_registry chưa có cột cadence_hours — áp migration 122"
+export const REGISTRY_SQL = `SELECT code, source_ids, cadence_hours, stg_tables, measured_markets
+    FROM source_registry WHERE status = 'active' ORDER BY code`
+
+type RegistryRow = {
+  code: string
+  source_ids: string[]
+  cadence_hours: number | null
+  stg_tables: string[]
+  measured_markets: string[] | null
+}
+
+/** Đọc các dòng `active` của sổ kèm cột của 122. Thiếu cột → lỗi gọi tên 122 (cả với client trả dòng thiếu khoá). */
+async function docSo(client: QueryClient): Promise<RegistryRow[]> {
+  let rows: Record<string, unknown>[]
+  try {
+    ;({ rows } = await client.query(REGISTRY_SQL))
+  } catch (e) {
+    if ((e as { code?: string })?.code === "42703") throw new Error(LOI_122)
+    throw e
+  }
+  for (const r of rows)
+    if (!("cadence_hours" in r) || !("stg_tables" in r) || !("measured_markets" in r)) throw new Error(LOI_122)
+  return rows as RegistryRow[]
+}
+
+/** Khuôn tên bảng nạp: chỉ tên này mới được ghép vào câu SQL (sau khi đã chắc bảng có thật và có cột snapshot_id). */
+export const STG_TEN = /^stg_[a-z0-9_]+$/
+
+/** Câu đo chung qua bảng nạp: snapshot có dòng ở một trong các bảng → max(collected_at) theo thành phố. Tên sai khuôn,
+ *  bảng không có thật hay không có snapshot_id → không chạy SQL mang tên đó, trả lý do. */
+export async function probeStg(
+  client: QueryClient,
+  tables: string[],
+): Promise<{ rows: { city: string; last: unknown }[]; reason?: string }> {
+  const sai = tables.filter((t) => typeof t !== "string" || !STG_TEN.test(t))
+  if (sai.length) return { rows: [], reason: `bảng nạp sai khuôn tên: ${sai.join(", ")}` }
+  if (tables.length === 0) return { rows: [], reason: "sổ không khai bảng nạp" }
+  const { rows: co } = await client.query(
+    `SELECT t FROM unnest($1::text[]) AS t
+      WHERE EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid = to_regclass(t) AND attname = 'snapshot_id' AND NOT attisdropped)`,
+    [tables],
   )
-  const registry = reg as { code: string; source_ids: string[] }[]
+  const coSet = new Set(co.map((r) => r.t as string))
+  const thieu = tables.filter((t) => !coSet.has(t))
+  if (thieu.length) return { rows: [], reason: `bảng nạp không có (hoặc thiếu snapshot_id): ${thieu.join(", ")}` }
+  const u = tables.map((t) => `SELECT snapshot_id FROM ${t}`).join(" UNION ")
+  const { rows } = await client.query(
+    `SELECT s.city, max(s.collected_at) AS last FROM airbnb_snapshots s JOIN (${u}) u USING (snapshot_id) GROUP BY s.city`,
+  )
+  return { rows: rows as { city: string; last: unknown }[] }
+}
+
+export async function readFreshness(client: QueryClient, { now = new Date() }: { now?: Date } = {}): Promise<FreshnessRow[]> {
+  const registry = await docSo(client)
   const out: FreshnessRow[] = []
-  for (const { code, source_ids: ids } of registry) {
-    const sloHours = SLO_HOURS[code] ?? null
+  for (const { code, source_ids: ids, cadence_hours: cadence, stg_tables: stg, measured_markets: markets } of registry) {
+    const sloHours = cadence ?? null
     if (sloHours === null) {
       out.push({ code, city: null, last: null, ageHours: null, sloHours: null, status: "no-slo" })
       continue
     }
     const probe = PROBES[code]
     const others = registry.filter((r) => r.code !== code).flatMap((r) => r.source_ids)
-    const rows = probe ? ((await client.query(probe.sql, probe.args(ids, others))).rows as { city: string; last: unknown }[]) : []
-    const seen = gopThanhPho(rows.filter((r) => r.last !== null))
+    let rows: { city: string; last: unknown }[] = []
+    let reason: string | undefined
+    if (probe) rows = (await client.query(probe.sql, probe.args(ids, others))).rows as { city: string; last: unknown }[]
+    else if (stg?.length) ({ rows, reason } = await probeStg(client, stg))
+    const seen = gopThanhPho(rows.filter((r) => r.last !== null)).filter((r) => !markets || markets.includes(r.city))
     if (seen.length === 0) {
-      out.push({ code, city: null, last: null, ageHours: null, sloHours, status: "none" })
+      out.push({ code, city: null, last: null, ageHours: null, sloHours, status: "none", ...(reason ? { reason } : {}) })
       continue
     }
     for (const r of seen) {

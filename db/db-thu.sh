@@ -8,6 +8,7 @@
 #   bash db/db-thu.sh <tên> --xoa    xoá DB thử
 #   bash db/db-thu.sh <tên> --neu-chua-co   có sẵn thì giữ nguyên (lượt chấm chạy song song nhiều lệnh trên một DB thử: dựng trước một lần)
 #   bash db/db-thu.sh oneinvest_suite_<bộ> --chay <lệnh…>   chạy lệnh trên DB của riêng lượt, chép từ bản mẫu, xoá khi lệnh dừng (hồ sơ test-suite-db-thu)
+#   bash db/db-thu.sh oneinvest_suite_<bộ> --chay-trong <lệnh…>   chạy lệnh trên cụm PostGIS dùng một lần, DB trống từ migration, CI=true (hồ sơ db-thu-tach-khoi-cum-that)
 #   bash db/db-thu.sh --dau          in dấu lược đồ hiện tại của DB chung, kèm chi_doc=on|off của chính lời gọi (hồ sơ dau-luoc-do-ban-mau)
 # Trỏ lệnh vào DB thử: DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/<tên>
 set -euo pipefail
@@ -24,6 +25,91 @@ if [ "${1:-}" = "--dau" ]; then
 fi
 TEN="${1:?thiếu tên DB thử}"
 [[ "$TEN" =~ ^oneinvest_[a-z0-9_]+$ ]] || { echo "db-thu: tên phải dạng oneinvest_<dãy>_<việc> (không được là oneinvest)"; exit 2; }
+
+# --chay-trong <lệnh…>: cụm PostGIS DÙNG MỘT LẦN cho lượt (hồ sơ db-thu-tach-khoi-cum-that). Container riêng, tên theo pid,
+# cổng ngẫu nhiên chỉ nghe 127.0.0.1, DB trống dựng từ migration như CI (scripts/ci-db-init.mjs), lệnh chạy với CI=true nên
+# bỏ đúng ca của scripts/ci-bo-qua.json. Không lệnh nào nhắm cụm thật one-invest-db. Container xoá ở trap EXIT, kể cả khi
+# lượt bị TERM/INT. Trần 2 cụm sống cùng lúc: lượt thứ ba chờ chỗ (DB_THU_TRONG_CHO_GIAY, mặc định 900), quá thì thoát 4.
+# Lệnh thấy DB_THU_CONTAINER (tên container) để test soi bên trong. DB_THU_DOCKER, DB_THU_TRONG_INIT chỉ để test thay.
+if [ "${2:-}" = "--chay-trong" ]; then
+  [[ "$TEN" =~ ^oneinvest_suite_[a-z0-9_]+$ ]] || { echo "db-thu: --chay-trong chỉ nhận tên oneinvest_suite_<bộ>"; exit 2; }
+  shift 2
+  [ "$#" -gt 0 ] || { echo "db-thu: --chay-trong thiếu lệnh"; exit 2; }
+  GOC="$(cd "$(dirname "$0")/.." && pwd)"
+  DK="${DB_THU_DOCKER:-docker}"
+  ANH="kartoza/postgis:17-3.5"  # ảnh của job pipeline trong .github/workflows/ci-test.yml
+  TIEN_TO="${DB_THU_TRONG_TIEN_TO:-one-invest-db-thu-}"  # test đặt tiền tố riêng để đếm trần không lẫn lượt thật
+  [[ "$TIEN_TO" =~ ^one-invest-db-thu-[a-z0-9-]*$ ]] || { echo "db-thu: tiền tố container phải bắt đầu one-invest-db-thu-"; exit 2; }
+  TRAN=2
+  CHO_TOI_DA="${DB_THU_TRONG_CHO_GIAY:-900}"
+  KHOA_TRONG="${DB_THU_TRONG_KHOA:-/tmp/onehub-db-thu-trong.lock}"
+  CT="${TIEN_TO}$$"
+  t0=$(date +%s)
+  # Container của lượt đã chết (SIGKILL, máy tắt) không ai dọn: đuôi là pid của chủ, pid hết sống thì xoá.
+  don_ct_mo_coi() {
+    local c
+    for c in $("$DK" ps -a --filter "name=^${TIEN_TO}" --format '{{.Names}}'); do
+      [[ "$c" =~ ^${TIEN_TO}[0-9]+$ ]] || continue
+      kill -0 "${c##*-}" 2>/dev/null || "$DK" rm -f -v "$c" >/dev/null 2>&1 || true
+    done
+  }
+  so_ct_song() { "$DK" ps --filter "name=^${TIEN_TO}" --format '{{.Names}}' | /usr/bin/grep -c . || true; }
+  xoa_ct() { "$DK" rm -f -v "$CT" >/dev/null 2>&1 || echo "db-thu: chưa xoá được container $CT"; }
+  trap 'exit 143' TERM
+  trap 'exit 130' INT
+  # Đếm chỗ và dựng container dưới một khoá: hai lượt cùng thấy một chỗ trống thì không cùng dựng.
+  cho=0
+  while :; do
+    if mkdir "$KHOA_TRONG" 2>/dev/null; then
+      echo $$ > "$KHOA_TRONG/pid"
+      don_ct_mo_coi
+      if [ "$(so_ct_song)" -lt "$TRAN" ]; then
+        trap xoa_ct EXIT
+        if ! "$DK" run -d --name "$CT" -p 127.0.0.1::5432 \
+            -e POSTGRES_USER=oneinvest -e POSTGRES_PASS=oneinvest -e POSTGRES_DB="$TEN" "$ANH" >/dev/null; then
+          rm -rf "$KHOA_TRONG"; echo "db-thu: dựng container $CT lỗi"; exit 1
+        fi
+        rm -rf "$KHOA_TRONG"
+        break
+      fi
+      rm -rf "$KHOA_TRONG"
+    else
+      chu=$(cat "$KHOA_TRONG/pid" 2>/dev/null || true)
+      if [ -n "$chu" ] && ! kill -0 "$chu" 2>/dev/null; then rm -rf "$KHOA_TRONG"; continue; fi
+    fi
+    [ "$cho" -lt "$CHO_TOI_DA" ] || { echo "db-thu: đã đủ $TRAN cụm dùng một lần, chờ quá ${CHO_TOI_DA}s — lệnh không chạy"; exit 4; }
+    [ "$cho" -gt 0 ] || echo "db-thu: đã có $TRAN cụm dùng một lần đang chạy — chờ chỗ (tối đa ${CHO_TOI_DA}s)"
+    sleep 3; cho=$((cho + 3))
+  done
+  CONG=$("$DK" port "$CT" 5432/tcp | head -1); CONG="${CONG##*:}"
+  [ -n "$CONG" ] || { echo "db-thu: không đọc được cổng của $CT"; exit 1; }
+  # kartoza khởi động postgres hai lần (lần dựng cụm rồi lần thật): đợi sẵn sàng ba lần liền.
+  lien=0
+  for _ in $(seq 1 150); do
+    if "$DK" exec "$CT" pg_isready -h localhost -U oneinvest -d "$TEN" >/dev/null 2>&1; then
+      lien=$((lien + 1)); [ "$lien" -ge 3 ] && break
+    else lien=0; fi
+    sleep 1
+  done
+  [ "$lien" -ge 3 ] || { echo "db-thu: $CT không sẵn sàng sau 150s"; exit 1; }
+  NGUOI=oneinvest  # tài khoản thử của ảnh PostGIS dùng một lần (như service của ci-test.yml)
+  # DB mang tên suite (oneinvest_suite_*), không phải «oneinvest»: rào DB thử của test (assert-rut-thay, do-lam-giau…) nhận
+  # đúng tên này; DB tên oneinvest bị coi là DB chung và từ chối.
+  export DATABASE_URL="postgres://$NGUOI:$NGUOI@127.0.0.1:$CONG/$TEN"
+  export TEST_DATABASE_URL_ADMIN="$DATABASE_URL"
+  export CI=true
+  export DB_THU_CONTAINER="$CT"
+  if [ -n "${DB_THU_TRONG_INIT+x}" ]; then init=(bash -c "$DB_THU_TRONG_INIT"); else init=(node "$GOC/scripts/ci-db-init.mjs"); fi
+  "${init[@]}" >/dev/null || { r=$?; echo "db-thu: dựng DB trống từ migration lỗi (mã $r)"; exit "$r"; }
+  echo "db-thu: cụm dùng một lần $CT cổng 127.0.0.1:$CONG — dựng cụm + migration $(( $(date +%s) - t0 )) s"
+  "$@" &
+  con=$!
+  trap 'kill -TERM "$con" 2>/dev/null; exit 143' TERM
+  trap 'kill -TERM "$con" 2>/dev/null; exit 130' INT
+  r=0
+  wait "$con" || r=$?
+  exit "$r"
+fi
 
 if [ "${2:-}" = "--chay" ]; then
   [[ "$TEN" =~ ^oneinvest_suite_[a-z0-9_]+$ ]] || { echo "db-thu: --chay chỉ nhận tên oneinvest_suite_<bộ>"; exit 2; }

@@ -1,13 +1,14 @@
 import { strict as assert } from "node:assert";
 import { createHash } from "node:crypto";
 import { createServer, type Server } from "node:http";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { gunzipSync } from "node:zlib";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, test } from "node:test";
 
 import { createAgentServer } from "../api/server.js";
+import { DEFAULTS, hostAllowed, parseHostSuffixes } from "../core/media-fetch.js";
 
 /**
  * N1 media: tin Zalo mang URL ảnh zdn.vn (URL CÓ HẠN) phải được tải về máy
@@ -17,9 +18,42 @@ import { createAgentServer } from "../api/server.js";
  * ảnh chậm (chạy chồng flush), redirect trong/out allowlist.
  */
 const JPG_A = Buffer.from("fake-jpeg-bytes-A");
+// ZC15: byte mở đầu của JPEG XL — codestream trần và hộp ISO-BMFF "JXL "
+const JXL_CS = Buffer.concat([Buffer.from([0xff, 0x0a]), Buffer.from("fake-jxl-codestream")]);
+const JXL_BOX = Buffer.concat([
+  Buffer.from([0x00, 0x00, 0x00, 0x0c]), Buffer.from("JXL "), Buffer.from([0x0d, 0x0a, 0x87, 0x0a]),
+  Buffer.from("fake-jxl-box"),
+]);
+/** ZC16: đếm yêu cầu theo đường dẫn — kiểm số lần thử lại. */
+const hits = new Map<string, number>();
+/** ZC15: header accept của yêu cầu ảnh gần nhất mà CDN giả nhận. */
+let lastAccept: string | undefined;
 let base = ""; // gán sau listen — handler đọc tại lúc có request
 const srv: Server = createServer((req, res) => {
-  if (req.url === "/a.jpg") {
+  lastAccept = req.headers.accept;
+  hits.set(req.url ?? "", (hits.get(req.url ?? "") ?? 0) + 1);
+  if (req.url === "/jpg/jx.jpg") {
+    res.writeHead(400); return void res.end("bad");
+  } else if (req.url === "/jx.jpg") {
+    // ZC16: URL thay thế đuôi .jpg mà byte là JPEG XL → đuôi phải theo byte
+    res.writeHead(200, { "content-type": "image/jxl" }); return void res.end(JXL_CS);
+  } else if (req.url === "/jpg/hang.jpg") {
+    return; // ZC16: treo — để timeout
+  } else if (req.url === "/r.jpg") {
+    // ZC16: URL thay thế chuyển hướng sang host ngoài danh sách (localhost ≠ 127.0.0.1)
+    res.writeHead(302, { location: base.replace("127.0.0.1", "localhost") + "/a.jpg" }); return void res.end();
+  } else if (req.url === "/plain400.jpg" || req.url === "/jpg/both-bad.jpg" || req.url === "/jpg/r.jpg") {
+    res.writeHead(400); return void res.end("bad");
+  } else if (req.url === "/both-bad.jpg" || req.url === "/jpg/gone.jpg") {
+    res.writeHead(404); return void res.end("gone");
+  }
+  if (req.url === "/jxl-cs.jpg") {
+    res.writeHead(200, { "content-type": "image/jxl" });
+    res.end(JXL_CS);
+  } else if (req.url === "/jxl-box.jpg") {
+    res.writeHead(200, { "content-type": "image/jxl" });
+    res.end(JXL_BOX);
+  } else if (req.url === "/a.jpg") {
     res.writeHead(200, { "content-type": "image/jpeg", "content-length": String(JPG_A.length) });
     res.end(JPG_A);
   } else if (req.url === "/404.jpg") {
@@ -40,10 +74,23 @@ const srv: Server = createServer((req, res) => {
     // redirect nội bộ cùng host — phải tải bình thường
     res.writeHead(302, { location: "/a.jpg" });
     res.end();
+  } else if (req.url === "/redir-ip.jpg") {
+    // ZC15: host nguồn (localhost) chuyển hướng sang host đích 127.0.0.1 — host
+    // đích chỉ được phép khi hậu tố "0.0.1" có trong cấu hình local
+    res.writeHead(302, { location: base + "/a.jpg" });
+    res.end();
   } else if (req.url === "/redir-out.jpg") {
     // redirect sang hostname khác (localhost ≠ 127.0.0.1 trong allowlist)
     res.writeHead(302, { location: base.replace("127.0.0.1", "localhost") + "/a.jpg" });
     res.end();
+  } else if (req.url === "/jpg/broken.jpg") {
+    // 2511-3: CDN nguồn trả 400 cho biến thể path có đoạn "/jpg/"
+    res.writeHead(400, { "content-type": "text/plain" });
+    res.end("bad");
+  } else if (req.url === "/broken.jpg") {
+    // cùng ảnh sau khi bỏ "/jpg/" — 200 (nội dung JPEG XL ở nguồn thật)
+    res.writeHead(200, { "content-type": "image/jxl", "content-length": String(JPG_A.length) });
+    res.end(JPG_A);
   } else {
     res.writeHead(403);
     res.end();
@@ -195,4 +242,214 @@ test("media: redirect cùng host tải bình thường; redirect ra host ngoài 
   assert.ok(okEntry && okEntry.file, "redirect nội bộ phải tải được");
   assert.equal(outEntry.error, "redirect-host");
   assert.equal(outEntry.file, undefined);
+});
+
+// ZC9 (2211-16): host R2 của người đăng S03 vào danh sách cho phép mặc định.
+// LỆNH PHÁ (bản chép hỏng): xoá `"r2.dev"` khỏi DEFAULTS.allowedHostSuffixes
+// trong src/core/media-fetch.ts → ca này ĐỎ.
+test("ZC9: DEFAULTS cho phép suffix r2.dev (ảnh người đăng S03 tự lưu Cloudflare R2)", async () => {
+  const ma = readFileSync(join(import.meta.dirname, "../../src/core/media-fetch.ts"), "utf8");
+  assert.match(ma, /allowedHostSuffixes:\s*\["zdn\.vn",\s*R2_SUFFIX_ZC9\]/, "DEFAULTS phải gồm zdn.vn + hằng R2");
+  assert.match(ma, /R2_SUFFIX_ZC9\s*=\s*"r2\.dev"/, "hằng R2 phải đúng suffix r2.dev");
+});
+
+// Đề nghị LL (BÁO claudedp-2211-17): ca HÀNH VI cạnh ca đọc chữ nguồn —
+// ranh giới dấu chấm của suffix + host người đăng r2.dev qua được mặc định.
+// LỆNH PHÁ (bản chép hỏng): xoá "r2.dev" khỏi DEFAULTS.allowedHostSuffixes
+// (hoặc đổi hostAllowed bỏ kiểm ranh giới dấu chấm) → ca này ĐỎ.
+test("ZC9-hành-vi: pub-x.r2.dev qua được mặc định; evilr2.dev bị chặn (ranh giới dấu chấm); zpc.zdn.vn trong allowlist", () => {
+  const duoi = DEFAULTS.allowedHostSuffixes;
+  assert.equal(hostAllowed("pub-x.r2.dev:443", duoi), true, "host người đăng r2.dev phải qua");
+  assert.equal(hostAllowed("evilr2.dev", duoi), false, "evilr2.dev KHÔNG khớp suffix r2.dev (ranh giới dấu chấm)");
+  assert.equal(hostAllowed("zdn.vn.evil.com", duoi), false, "tròng zdn.vn ở giữa không khớp");
+  assert.equal(hostAllowed("f20-zpc.zdn.vn", duoi), true, "CDN zpc nằm trong allowlist — 400 của nó không phải chặn của ta");
+});
+
+// ── ZC15 (bổ sung LL 24/11): host đích chuyển hướng qua cấu hình local, Accept, JPEG XL ──
+
+function stateDirWith(lines: string | null): string {
+  const d = fresh();
+  mkdirSync(d, { recursive: true });
+  if (lines !== null) writeFileSync(join(d, "media-host-suffixes.txt"), lines);
+  return d;
+}
+
+/** ZC15: fixture host — nguồn là localhost (được phép sẵn), host đích là 127.0.0.1 (hậu tố "0.0.1" chỉ từ cấu hình local). */
+const mediaOptsNguon = { ...mediaOpts, allowedHostSuffixes: ["localhost"] };
+const HAU_TO_DICH = "0.0.1";
+
+test("ZC15: tệp hậu tố trong stateDir mở host đích chuyển hướng; vắng tệp thì redirect-host như cũ", async () => {
+  const nguon = base.replace("127.0.0.1", "localhost");
+  // chiều xanh: tệp khai hậu tố của host đích
+  {
+    const root = fresh();
+    const s = await createAgentServer({
+      snapshotRoot: root, stateDir: stateDirWith(`# host đích ZC15\n${HAU_TO_DICH}\n`),
+      city: "hanoi", keys: ["k1"], media: mediaOptsNguon, log: () => {},
+    });
+    ingestWith(s, [msg("redirect sang host đích", [`${nguon}/redir-ip.jpg`, `${base}/a.jpg`], "2026-11-25T01:00:00Z")]);
+    const m = await s.flush();
+    assert.ok(m);
+    const [viaRedirect, direct] = readItems(root, m.snapshotId)[0].meta.mediaFiles;
+    assert.equal(viaRedirect.error, undefined, "có tệp hậu tố: ảnh chuyển hướng sang host đích phải tải được");
+    assert.ok(viaRedirect.file);
+    const onDisk: Buffer = readFileSync(join(root, "hanoi", m.snapshotId, viaRedirect.file as string));
+    assert.ok(onDisk.equals(JPG_A));
+    assert.equal(createHash("sha256").update(onDisk).digest("hex"), viaRedirect.sha256);
+    assert.equal(direct.error, undefined, "có tệp hậu tố: URL gốc ở host đích phải tải được");
+  }
+  // chiều đỏ: cùng fixture, stateDir không có tệp
+  {
+    const root = fresh();
+    const s = await createAgentServer({
+      snapshotRoot: root, stateDir: stateDirWith(null),
+      city: "hanoi", keys: ["k1"], media: mediaOptsNguon, log: () => {},
+    });
+    ingestWith(s, [msg("redirect sang host đích", [`${nguon}/redir-ip.jpg`, `${base}/a.jpg`], "2026-11-25T01:01:00Z")]);
+    const m = await s.flush();
+    assert.ok(m);
+    const [viaRedirect, direct] = readItems(root, m.snapshotId)[0].meta.mediaFiles;
+    assert.equal(viaRedirect.error, "redirect-host", "vắng tệp hậu tố: phải lỗi redirect-host");
+    assert.equal(direct.error, "host-not-allowed", "vắng tệp hậu tố: URL gốc host đích phải host-not-allowed");
+  }
+});
+
+test("ZC15: parseHostSuffixes lọc dòng hỏng — một nhãn, ký tự lạ, dấu chấm đầu/cuối, chú thích, dòng trống", () => {
+  assert.deepEqual(
+    parseHostSuffixes("vn\nlocalhost\n.x.com\nx.com.\na_b.com\n# chú thích\n\n Pub.Example.COM \npub.example.com, ,bad"),
+    ["pub.example.com"],
+  );
+  assert.deepEqual(parseHostSuffixes(undefined), []);
+  assert.deepEqual(parseHostSuffixes("a.r2.dev # ghi chú, b.example.org"), ["a.r2.dev", "b.example.org"]);
+});
+
+test("ZC15: biến môi trường ONEINVEST_MEDIA_HOST_SUFFIXES mở host đích; log chỉ in số, không in tên host", async () => {
+  const prev = process.env.ONEINVEST_MEDIA_HOST_SUFFIXES;
+  try {
+    for (const [env, wantErr] of [[`${HAU_TO_DICH},bad`, undefined], ["", "redirect-host"]] as const) {
+      process.env.ONEINVEST_MEDIA_HOST_SUFFIXES = env;
+      const lines: string[] = [];
+      const root = fresh();
+      const s = await createAgentServer({
+        snapshotRoot: root, city: "hanoi", keys: ["k1"], media: mediaOptsNguon, log: (l) => lines.push(l),
+      });
+      ingestWith(s, [msg("env", [`${base.replace("127.0.0.1", "localhost")}/redir-ip.jpg`], `2026-11-25T01:0${env ? 2 : 3}:00Z`)]);
+      const m = await s.flush();
+      assert.ok(m);
+      const e = readItems(root, m.snapshotId)[0].meta.mediaFiles[0];
+      assert.equal(e.error, wantErr, `env='${env}'`);
+      const log = lines.join("\n");
+      assert.match(log, env ? /\+ 1 hậu tố thêm/ : /\+ 0 hậu tố thêm/, "log khởi động phải in số hậu tố thêm");
+      assert.ok(!log.includes(HAU_TO_DICH), "log khởi động KHÔNG được in tên host thêm");
+    }
+  } finally {
+    if (prev === undefined) delete process.env.ONEINVEST_MEDIA_HOST_SUFFIXES;
+    else process.env.ONEINVEST_MEDIA_HOST_SUFFIXES = prev;
+  }
+});
+
+test("ZC15: Accept chỉ xin jpeg, png, webp, gif — không xin JPEG XL, không */*", async () => {
+  lastAccept = undefined;
+  const root = fresh();
+  const s = await createAgentServer({ snapshotRoot: root, city: "hanoi", keys: ["k1"], media: mediaOpts, log: () => {} });
+  ingestWith(s, [msg("accept", [`${base}/a.jpg?accept`], "2026-11-25T01:04:00Z")]);
+  assert.ok(await s.flush());
+  const acc = lastAccept as string | undefined;
+  assert.ok(acc, "CDN giả phải nhận header accept");
+  assert.ok(acc.includes("image/jpeg"), `accept phải có image/jpeg, được '${acc}'`);
+  assert.ok(!acc.includes("image/jxl"), `accept không được xin image/jxl, được '${acc}'`);
+  assert.ok(!acc.includes("*/*"), `accept không được là */*, được '${acc}'`);
+});
+
+test("ZC15: JPEG XL lưu nguyên byte với đuôi .jxl; JPEG giữ .jpg", async () => {
+  const root = fresh();
+  const s = await createAgentServer({ snapshotRoot: root, city: "hanoi", keys: ["k1"], media: mediaOpts, log: () => {} });
+  ingestWith(s, [msg("jxl", [`${base}/jxl-cs.jpg`, `${base}/jxl-box.jpg`, `${base}/a.jpg`], "2026-11-25T01:05:00Z")]);
+  const m = await s.flush();
+  assert.ok(m);
+  const files = readItems(root, m.snapshotId)[0].meta.mediaFiles;
+  for (const [e, bytes] of [[files[0], JXL_CS], [files[1], JXL_BOX]] as const) {
+    assert.equal(e.error, undefined);
+    assert.match(e.file, /^media\/[0-9a-f]{16}\.jxl$/, "đuôi .jxl cho byte JPEG XL");
+    const onDisk: Buffer = readFileSync(join(root, "hanoi", m.snapshotId, e.file as string));
+    assert.ok(onDisk.equals(bytes), "byte JPEG XL phải giữ nguyên");
+    assert.equal(e.sha256, createHash("sha256").update(bytes).digest("hex"));
+  }
+  assert.match(files[2].file, /\.jpg$/, "JPEG vẫn đuôi .jpg");
+});
+
+test("media (2511-3): URL /jpg/ bị CDN 400 → fallback bỏ /jpg/ tải được, tên tệp băm URL đã tải, không urlFetched; bỏ khối fallback thì ca này đỏ", async () => {
+  const root = fresh();
+  const s = await createAgentServer({ snapshotRoot: root, city: "hanoi", keys: ["k1"], media: mediaOpts });
+  ingestWith(s, [msg("link /jpg/ hỏng", [`${base}/jpg/broken.jpg`], "2026-10-22T10:05:00Z")]);
+  const m = await s.flush();
+  assert.ok(m);
+  const dir = join(root, "hanoi", m.snapshotId);
+  const manifest = JSON.parse(readFileSync(join(dir, "manifest.json"), "utf8"));
+  const mediaEntry = manifest.files.find((f: { name: string }) => f.name.startsWith("media/"));
+  assert.ok(mediaEntry, "fallback phải tải được ảnh khi bỏ /jpg/");
+  const items = readItems(root, m.snapshotId);
+  const mf = items[0].meta.mediaFiles[0];
+  // payload + meta.url giữ URL gốc nguyên văn — URL đã tải chỉ hiện qua tên tệp
+  assert.deepEqual(items[0].payload.media, [{ path: null, url: `${base}/jpg/broken.jpg`, type: "image/jpeg" }]);
+  assert.equal(mf.url, `${base}/jpg/broken.jpg`);
+  // ZC16 (phán GS 25/11): không ghi urlFetched — khuôn meta.mediaFiles giữ năm khoá;
+  // tên tệp là băm của URL ĐÃ TẢI (URL bỏ /jpg/), không phải của URL gốc
+  assert.equal(mf.urlFetched, undefined, "meta.mediaFiles không được có urlFetched");
+  assert.deepEqual(Object.keys(mf).sort(), ["bytes", "file", "sha256", "url"]);
+  const bam = (u: string) => createHash("sha256").update(u).digest("hex").slice(0, 16);
+  assert.ok(mf.file.startsWith(`media/${bam(`${base}/broken.jpg`)}.`), "tên tệp phải băm theo URL đã tải (bỏ /jpg/)");
+  assert.ok(!mf.file.startsWith(`media/${bam(`${base}/jpg/broken.jpg`)}.`), "tên tệp không được băm theo URL gốc");
+  assert.equal(mf.file, mediaEntry.name);
+  assert.equal(mf.error, undefined);
+  // nội dung trên đĩa khớp bytes fixture
+  const onDisk = readFileSync(join(dir, mediaEntry.name));
+  assert.ok(onDisk.equals(JPG_A), "byte trên đĩa phải khớp byte CDN trả");
+  assert.equal(mf.sha256, createHash("sha256").update(JPG_A).digest("hex"));
+  // AC-4: CDN trả header image/jxl mà byte là JPEG → đuôi theo BYTE (.jpg), không theo header
+  assert.match(mf.file, /\.jpg$/, "đuôi phải theo byte (.jpg) dù header là image/jxl");
+});
+
+test("ZC16: không thử lại sai chỗ — 400 không /jpg/, 404 có /jpg/, thay thế cũng lỗi → giữ lỗi gốc", async () => {
+  hits.clear();
+  const root = fresh();
+  const s = await createAgentServer({ snapshotRoot: root, city: "hanoi", keys: ["k1"], media: mediaOpts, log: () => {} });
+  ingestWith(s, [msg("lỗi", [`${base}/plain400.jpg`, `${base}/jpg/gone.jpg`, `${base}/jpg/both-bad.jpg`], "2026-11-25T03:00:00Z")]);
+  const m = await s.flush();
+  assert.ok(m);
+  const errs = readItems(root, m.snapshotId)[0].meta.mediaFiles.map((e: { error?: string }) => e.error);
+  assert.deepEqual(errs, ["http-400", "http-404", "http-400"], "entry giữ lỗi của URL gốc");
+  assert.equal(hits.get("/plain400.jpg"), 1, "400 không có /jpg/: không thử lại");
+  assert.equal(hits.get("/gone.jpg"), undefined, "404 có /jpg/: không thử lại");
+  assert.equal(hits.get("/jpg/gone.jpg"), 1);
+  assert.equal(hits.get("/both-bad.jpg"), 1, "400 có /jpg/: thử lại ĐÚNG một lần");
+});
+
+test("ZC16: timeout trên link /jpg/ không thử lại; URL thay thế chuyển hướng ra ngoài danh sách thì không lưu", async () => {
+  hits.clear();
+  const root = fresh();
+  const s = await createAgentServer({ snapshotRoot: root, city: "hanoi", keys: ["k1"], media: mediaOpts, log: () => {} });
+  ingestWith(s, [msg("lỗi", [`${base}/jpg/hang.jpg`, `${base}/jpg/r.jpg`], "2026-11-25T03:10:00Z")]);
+  const m = await s.flush();
+  assert.ok(m);
+  const [treo, ra] = readItems(root, m.snapshotId)[0].meta.mediaFiles;
+  assert.equal(treo.error, "timeout", "timeout giữ lỗi gốc");
+  assert.equal(hits.get("/hang.jpg"), undefined, "timeout có /jpg/: không thử lại");
+  assert.equal(hits.get("/r.jpg"), 1, "400 có /jpg/: thử lại một lần");
+  assert.equal(ra.file, undefined, "URL thay thế chuyển hướng ra host ngoài danh sách: KHÔNG được lưu tệp");
+  assert.equal(ra.error, "http-400", "entry giữ lỗi gốc khi lần thử lại bị chặn host");
+  assert.equal(existsSync(join(root, "hanoi", m.snapshotId, "media")), false, "không có tệp media nào được ghi");
+});
+
+test("ZC16: ảnh tải qua đường thử lại mà byte là JPEG XL → đuôi .jxl dù URL đuôi .jpg", async () => {
+  const root = fresh();
+  const s = await createAgentServer({ snapshotRoot: root, city: "hanoi", keys: ["k1"], media: mediaOpts, log: () => {} });
+  ingestWith(s, [msg("jxl qua thử lại", [`${base}/jpg/jx.jpg`], "2026-11-25T03:20:00Z")]);
+  const m = await s.flush();
+  assert.ok(m);
+  const e = readItems(root, m.snapshotId)[0].meta.mediaFiles[0];
+  assert.equal(e.error, undefined);
+  assert.match(e.file, /\.jxl$/, "byte JPEG XL qua đường thử lại phải mang đuôi .jxl");
+  const onDisk: Buffer = readFileSync(join(root, "hanoi", m.snapshotId, e.file as string));
+  assert.ok(onDisk.equals(JXL_CS));
 });

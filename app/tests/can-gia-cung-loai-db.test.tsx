@@ -141,7 +141,6 @@ const KHOA_CU: Record<string, string[]> = {
   offerId: ["string"], priceVnd: ["number", "null"], areaM2: ["number", "null"], pricePerm2: ["number", "null"],
   bedrooms: ["number", "null"], phuong: ["string", "null"], marketId: ["string", "null"], medianPerm2: ["number", "null"],
   discountPct: ["number", "null"], confidence: ["string"], firstSeen: ["string"], lastSeen: ["string"], nReposts: ["number"],
-  contact: ["object", "null"], postText: ["string", "null"],
 };
 const kieu = (v: unknown) => (v === null ? "null" : typeof v);
 

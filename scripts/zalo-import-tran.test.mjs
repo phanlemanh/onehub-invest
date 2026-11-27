@@ -269,25 +269,50 @@ const nodeGia = (root) => {
   return f;
 };
 for (const [o, env, args, ke] of [
-  ["00:00 mặc định", {}, [], "21600 10800"], // 2311-5: trần tổng lượt 00:00 4h → 6h (lưới chia trần)
+  ["00:00 mặc định", {}, [], "21600 10800\n16200"], // 2311-5: trần tổng lượt 00:00 4h → 6h, rồi đồng hồ bước đọc gộp
   ["nhanh mặc định", {}, ["--luot-nhanh"], "2400 1200"],
-  ["00:00 TRAN_TONG=100", { ZALO_IMPORT_TRAN_TONG: "100" }, [], "100 50"],
-  ["00:00 TRAN_TONG=100 CANH_BAO=7", { ZALO_IMPORT_TRAN_TONG: "100", ZALO_IMPORT_CANH_BAO: "7" }, [], "100 7"],
-  ["00:00 TRAN_TONG=32400", { ZALO_IMPORT_TRAN_TONG: "32400" }, [], "32400 16200"], // 2311-5: plist đêm 24→25/11 đặt 32400 một đêm — biến môi trường thắng mặc định
+  ["00:00 TRAN_TONG=100", { ZALO_IMPORT_TRAN_TONG: "100" }, [], "100 50\n60"],
+  ["00:00 TRAN_TONG=100 CANH_BAO=7", { ZALO_IMPORT_TRAN_TONG: "100", ZALO_IMPORT_CANH_BAO: "7" }, [], "100 7\n60"],
+  ["00:00 TRAN_TONG=32400", { ZALO_IMPORT_TRAN_TONG: "32400" }, [], "32400 16200\n27000"], // 2311-5: plist đêm 24→25/11 đặt 32400 một đêm — biến môi trường thắng mặc định
 ]) {
   // bước transform-zalo chậm 1 giây: lượt nhanh xong trước khi node giả kịp ghi thì trap đã giết nó
-  test(`AC-7 trần ${o} → ${ke}`, () => voiRoot({ cham: true }, async (root) => {
+  // 2311-5 (nhánh B): lượt 00:00 có HAI đồng hồ — tổng rồi của bước đọc gộp (dòng thứ hai chỉ có trần, không có
+  // ngưỡng WARN); lượt nhanh chỉ đồng hồ tổng. Mỗi dòng ghim là "<trần> <ngưỡng WARN>" của một lần node giả gọi.
+  test(`AC-7 trần ${o} → ${ke.replace("\n", " rồi ")}`, () => voiRoot({ cham: true }, async (root) => {
     const envBo = { ...env };
     for (const k of ["ZALO_IMPORT_TRAN_TONG", "ZALO_IMPORT_CANH_BAO"]) if (!(k in envBo)) envBo[k] = "";
     // biến rỗng = không đặt: ${X:-mặc định} lấy mặc định
+    // bước đọc gộp ngủ 1 giây: thoát tức thì thì đồng hồ giả của bước bị kết thúc trước khi kịp ghi sổ
+    writeFileSync(join(root, "pipeline", "doc-gop-hang-ngay.sh"), "sleep 1\n");
     await chay(root, { ...envBo, ZALO_IMPORT_NODE_BIN: nodeGia(root) }, { args });
-    const dong = readFileSync(join(root, "dong-ho.txt"), "utf8").trim().split("\n");
-    assert.equal(dong.length, 1, "một đồng hồ mỗi lượt");
-    assert.equal(dong[0].split(" ").slice(0, 2).join(" "), ke);
+    const dong = readFileSync(join(root, "dong-ho.txt"), "utf8").trim().split("\n")
+      .map((l) => l.trim().split(/\s+/).join(" "));
+    assert.deepEqual(dong, ke.split("\n"), "AC-7 đồng hồ của lượt: mỗi dòng <trần> <ngưỡng WARN>, đúng số lần gọi và thứ tự");
   }));
 }
-test("AC-7 plist không đổi so với origin/main", () => {
-  execFileSync("git", ["-C", REPO, "diff", "--quiet", "origin/main", "--", "pipeline/cron"]);
+// AC-7 (hồ sơ s03-tran-thoi-gian-luot-nap): lượt đổi trần KHÔNG đụng plist của zalo-import. Phép so chỉ trên plist
+// zalo-import (com.oneinvest.zalo-import*) — plist khác trong pipeline/cron đổi theo hợp đồng của hàng khác (KEV1 gỡ
+// plist Kev; đổi kỳ vọng của hồ sơ đã ký ZI, GS cho phép 25/11). Cây làm việc truyền vào để ca phá chạy trên bản sao.
+const PLIST_ZI = "pipeline/cron/com.oneinvest.zalo-import*";
+const plistZiKhongDoi = (cayLamViec = REPO) =>
+  execFileSync("git", ["-C", REPO, `--work-tree=${cayLamViec}`, "diff", "--quiet", "origin/main", "--", PLIST_ZI]);
+const banSaoPlistZi = (sua) => {
+  const cay = mkdtempSync(join(tmpdir(), "zi-plist-"));
+  const tep = execFileSync("git", ["-C", REPO, "ls-tree", "--name-only", "origin/main", "pipeline/cron/"], { encoding: "utf8" })
+    .split("\n").filter((t) => t.startsWith(PLIST_ZI.slice(0, -1)));
+  assert.ok(tep.length >= 1, "AC-7 origin/main có ít nhất một plist zalo-import để so");
+  for (const t of tep) { mkdirSync(join(cay, dirname(t)), { recursive: true }); cpSync(join(REPO, t), join(cay, t)); }
+  if (sua) writeFileSync(join(cay, tep[0]), readFileSync(join(cay, tep[0]), "utf8").replace("</plist>", "<!-- sửa -->\n</plist>"));
+  return cay;
+};
+test("AC-7 plist zalo-import không đổi so với origin/main", () => plistZiKhongDoi());
+test("AC-7 chiều đối chứng: bản sao plist zalo-import nguyên vẹn → xanh", () => {
+  const cay = banSaoPlistZi(false);
+  try { plistZiKhongDoi(cay); } finally { rmSync(cay, { recursive: true, force: true }); }
+});
+test("AC-7 chiều đỏ: sửa plist zalo-import trên bản sao → đỏ", () => {
+  const cay = banSaoPlistZi(true);
+  try { assert.throws(() => plistZiKhongDoi(cay), /Command failed/); } finally { rmSync(cay, { recursive: true, force: true }); }
 });
 test("AC-7 node thật thiếu → TRẦN THỜI GIAN TẮT, cùng các bước, cùng mã thoát", () => voiRoot({}, async (root) => {
   const coDongHo = await chay(root, {});
