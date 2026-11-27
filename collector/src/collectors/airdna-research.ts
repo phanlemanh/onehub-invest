@@ -228,7 +228,10 @@ export async function call(
   ctx: CallCtx,
   fetchImpl: typeof fetch = fetch,
 ): Promise<RawItem | null> {
-  const url = `${API}${path}`;
+  // 2511-s02: hậu tố «@offset» ở tên trang chỉ là DANH TÍNH của bản ghi (sourceId, apiPath) — không gửi lên
+  // nguồn. Đo 26/11: /map_listings@15000 trả 404, trong khi cùng lời với offset nằm trong thân trả 200 và đúng
+  // 15000 căn của trang kế → trang kế của mọi thị trường ≥ 15000 căn đã bị bỏ sót từ trước.
+  const url = `${API}${path.replace(/@\d+$/, "")}`;
   let loiBuocLamMoi: unknown = null; // lỗi ném ra từ ctx.refreshToken() của LỜI NÀY — luôn dừng cả lượt
   const lamMoi = async (): Promise<void> => {
     try {
