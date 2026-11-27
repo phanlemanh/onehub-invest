@@ -52,3 +52,6 @@ Hành vi lược đồ mẫu sau đổi: AC-4. Thước không mù: AC-2.
 ## Notes
 
 - Vùng tệp của vòng: `data-api/db/**`; thước mới `scripts/data-api-ten-nguon.mjs`, `scripts/data-api-ten-nguon.test.mjs`, `scripts/data-api-ten-nguon-db.sh`; ba khoá lệnh trong `_acceptance/config.yaml`; design doc; hồ sơ này.
+- Mở rộng vùng tệp (GS phán 27/11): thêm `data-api/test/dong-ba-route.test.ts` (commit ae72cec34) — tệp test HT19 vào nhánh
+  qua lần gộp `main` a83596627 mang 7 cụm tên nguồn trong chuỗi, làm E5 và AC-1 đỏ; tên bảng S03 và tiền tố bảng S02 chuyển
+  vào hằng nháy đơn đúng bằng định danh đã biết, nghĩa kiểm không đổi; tệp nằm trong `data-api/**` (vùng của M5).
