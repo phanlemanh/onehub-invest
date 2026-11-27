@@ -50,7 +50,7 @@ try {
   process.exit(2);
 }
 
-const env = { ...process.env };
+const env = { ...process.env, PB2_GIT_ROOT: ROOT }; // ca AC-11 đọc route asset-stats ở nền từ kho git, bản chép không phải kho
 delete env.DATABASE_URL; // để db-thu.sh dựng DB riêng cho từng ô từ bản mẫu
 delete env.TEST_DATABASE_URL_ADMIN;
 

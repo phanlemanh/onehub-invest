@@ -4,8 +4,11 @@
 //  2. DB rỗng tạm oneinvest_suite_pb2_<pid> trên PostGIS của máy: áp schema.sql rồi seed.sql — không lỗi.
 //  3. Gọi các đường bằng app.request() của data-api (tiến trình con tsx, DATABASE_URL trỏ DB tạm, NODE_ENV=test): đường sống
 //     200, /v1/listings mỗi kind ≥ 1, ?minBelowMedianPct=0 ≥ 1; /v1/deals, /v1/asset-stats 410.
-//  4. Chiều đỏ cùng lượt: lược đồ mẫu ở nền (data-api/db + seed.sql trước PB2) trên một DB tạm khác phải lỗi — áp lỗi, hoặc
-//     đường căn giá tốt hôm nay không 200 trên lược đồ đó.
+//  4. Chiều đỏ cùng lượt, ĐÚNG LÝ DO (finding S4 r1, AC-9): «răng» của PB2 là bốn thứ lược đồ mẫu cũ thiếu mà route hôm nay cần
+//     — bảng hạng giá offer_price_rank, thước v_ruler_p2, cột sale_offers.property_type, extension pgcrypto. Ô bản cũ (nền)
+//     chỉ đạt khi thiếu ĐỦ bốn thứ đó VÀ đường căn giá tốt không 200; lỗi có sẵn của nền (012 cập nhật area_sources chưa có)
+//     chỉ in ra, không được tính. Ô tự đỏ: schema.sql hôm nay bỏ khúc «PB2» phải ra đúng ba thứ thiếu của khúc đó và đường
+//     căn giá tốt không 200; ô hôm nay phải thiếu 0 thứ và 200 — cùng một hàm đo cả ba ô.
 // DB tạm bị xoá cuối lượt kể cả khi lỗi. Máy chủ: DATABASE_URL (chỉ dùng để CREATE/DROP DB tạm), mặc định PostGIS :5433 local.
 import { execFileSync, spawnSync } from "node:child_process";
 import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -86,6 +89,25 @@ async function voiDb(nhan, sqls, fn) {
 let sai = 0;
 const bao = (dung, dong) => { console.log(dong); if (!dung) sai++; };
 
+const RANG = ["offer_price_rank", "pgcrypto", "sale_offers.property_type", "v_ruler_p2"];
+const GIA_TOT = "/v1/listings?minBelowMedianPct=0";
+/** Đo răng trên một DB: thứ nào trong RANG vắng, và mã của đường căn giá tốt. */
+async function rang(db) {
+  const c = new pg.Client({ connectionString: urlDb(db) });
+  await c.connect();
+  try {
+    const { rows } = await c.query(`SELECT
+        to_regclass('public.offer_price_rank') IS NULL AS offer_price_rank,
+        NOT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pgcrypto') AS pgcrypto,
+        NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'sale_offers' AND column_name = 'property_type') AS "sale_offers.property_type",
+        to_regclass('public.v_ruler_p2') IS NULL AS v_ruler_p2`);
+    const thieu = RANG.filter((k) => rows[0][k] === true);
+    return { thieu, status: goiDuong(db, [GIA_TOT])[0].status };
+  } finally {
+    await c.end().catch(() => {});
+  }
+}
+
 // 1. Tệp
 const tepDb = readdirSync(path.join(ROOT, "data-api", "db")).sort();
 bao(tepDb.length === 1 && tepDb[0] === "schema.sql", `db: ${tepDb.length === 1 && tepDb[0] === "schema.sql" ? "chỉ schema.sql" : `còn ${tepDb.join(", ")}`}`);
@@ -98,6 +120,8 @@ const schema = readFileSync(path.join(ROOT, "data-api", "db", "schema.sql"), "ut
 await voiDb("moi", [["schema.sql", schema], ["seed.sql", seed]], async (db, loi) => {
   bao(!loi, `ap: ${loi ? `lỗi ${loi}` : "schema.sql rồi seed.sql không lỗi"}`);
   if (loi) return;
+  const r = await rang(db);
+  bao(r.thieu.length === 0 && r.status === 200, `rang-hom-nay: thiếu ${r.thieu.length ? r.thieu.join(", ") : "0 thứ"} — ${GIA_TOT} ${r.status}`);
   const kq = goiDuong(db, DUONG.map((d) => d[0]));
   for (const [d, mong, toiThieu] of DUONG) {
     const k = kq.find((x) => x.duong === d);
@@ -114,11 +138,20 @@ const cu = git("ls-tree", "--name-only", `${nen}:data-api/db`).split("\n").filte
   .map((n) => [n, git("show", `${nen}:data-api/db/${n}`)]);
 cu.push(["seed.sql", git("show", `${nen}:data-api/seed.sql`)]);
 await voiDb("cu", cu, async (db, loi) => {
-  if (loi) { console.log(`luoc-do: bản cũ đỏ: áp lỗi ${loi}`); return; }
-  const k = goiDuong(db, ["/v1/listings?minBelowMedianPct=0"])[0];
-  if (k.status !== 200) { console.log(`luoc-do: bản cũ đỏ: /v1/listings?minBelowMedianPct=0 ${k.status}`); return; }
-  console.log("luoc-do: thước không đỏ ở ban-cu");
-  sai++;
+  if (loi) console.log(`luoc-do: lỗi có sẵn ở nền (không tính vào ô): ${loi}`);
+  const r = await rang(db);
+  const du = RANG.every((k) => r.thieu.includes(k));
+  if (du && r.status !== 200) console.log(`luoc-do: bản cũ đỏ: thiếu ${r.thieu.join(", ")} — ${GIA_TOT} ${r.status}`);
+  else { console.log(`luoc-do: thước không đỏ ở ban-cu (thiếu ${r.thieu.join(", ") || "0 thứ"}, ${GIA_TOT} ${r.status})`); sai++; }
+});
+
+// Ô tự đỏ: schema.sql hôm nay bỏ khúc PB2 → đúng ba thứ của khúc đó vắng, đường căn giá tốt không 200.
+const boPb2 = schema.slice(0, schema.indexOf("-- ═════ PB2: cột, bảng, view"));
+const MONG_CAY = ["offer_price_rank", "sale_offers.property_type", "v_ruler_p2"];
+await voiDb("cay", [["schema.sql bỏ khúc PB2", boPb2], ["seed.sql", seed]], async (db) => {
+  const r = await rang(db);
+  const dung = JSON.stringify(r.thieu) === JSON.stringify(MONG_CAY) && r.status !== 200;
+  bao(dung, `tu-do: schema.sql bỏ khúc PB2 → thiếu ${r.thieu.join(", ") || "0 thứ"} — ${GIA_TOT} ${r.status}${dung ? "" : ` — mong thiếu đúng ${MONG_CAY.join(", ")} và không 200`}`);
 });
 
 if (sai) { console.log(`luoc-do: ${sai} ô sai`); process.exit(1); }

@@ -3,10 +3,12 @@
 // Ô goc trên cây thật phải sạch; bốn ô cấy trên bản chép tạm phải đỏ đúng thông điệp ghim. Không tìm thấy dd-2.1.json → thoát 2.
 //   - mọi khoá phần tử mà route dựng (khối `const v` của phanTu ở routes/listings.ts) có trong hợp đồng
 //   - khoá resource Property: field DD 2.1 có thật ở resource Property, tên khoá = tên field viết camelCase
-//   - khoá có lookup: mọi giá trị route trả là StandardName của lookup đó, hoặc giá trị local khai ở mappings.yaml
+//   - khoá có lookup: mọi giá trị ĐẦU RA của hàm dựng phần tử (phanTu của routes/listings.ts, chạy bằng tsx trên dòng mẫu mọi
+//     kind × loại — finding S4 r1: không grep mã nguồn) là StandardName của lookup đó, hoặc giá trị local khai ở mappings.yaml;
+//     mỗi lookup phải có ≥ 1 giá trị ở đầu ra (không xanh suông); tập khoá của đầu ra = tệp hợp đồng
 //   - khoá extension: có mục api_extensions.listing.<khoá> đủ sáu điều kiện ADR-0011 Qđ 3
-import { execFileSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { execFileSync, spawnSync } from "node:child_process";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import os from "node:os";
 import path from "node:path";
@@ -41,6 +43,33 @@ for (const l of DD.lookups) {
   STANDARD.get(ten).add(sn);
 }
 
+const LOAI = ["apartment", "house", "land", "commercial", "room", "unknown", null];
+/** Chạy phanTu của routes/listings.ts (bản trong cây `goc`) trên dòng mẫu mọi kind × loại; trả các phần tử đầu ra. */
+function dauRa(goc) {
+  const tam = mkdtempSync(path.join(os.tmpdir(), "pb2-hd-chay-"));
+  try {
+    const f = path.join(tam, "chay.mts");
+    writeFileSync(f, `const m = await import(${JSON.stringify(pathToFileURL(path.join(goc, "data-api", "src", "routes", "listings.ts")).href)});
+const ra = [];
+for (const kind of m.KIND) for (const loai of ${JSON.stringify(LOAI)}) {
+  const r = { k: "pb2-mau", kind, source: "S03", property_type: loai, gia: 5e9, area_m2: 70, price_perm2: 71428571, bedrooms: 2, wc: 1.5,
+    phuong: "P", ma_phuong: "p", ma_thi_truong: "t", latitude: 21, longitude: 105, first_seen: "2026-11-01T00:00:00Z",
+    last_seen: "2026-11-02T00:00:00Z", confidence: "high", n_reposts: 1, ten: "t", loai_cho: "Entire home/apt", so_khach: 2,
+    dem_toi_thieu: 1, so_danh_gia: 3 };
+  ra.push(m.phanTu(r, { below: 10, median: 1, rank: null }, { occupancy: 50, revenue: 1 }));
+}
+console.log("KQ " + JSON.stringify(ra));
+`);
+    // DATABASE_URL giả, không có tài khoản: client.ts chỉ dựng pool, không kết nối khi không truy vấn.
+    const r = spawnSync("npx", ["tsx", f], { cwd: path.join(goc, "data-api"), encoding: "utf8", env: { ...process.env, DATABASE_URL: "postgres://127.0.0.1:1/pb2" } });
+    const dong = (r.stdout ?? "").split("\n").find((l) => l.startsWith("KQ "));
+    if (!dong) throw new Error(`hop-dong: không chạy được phanTu: ${(r.stderr ?? "").split("\n").slice(-4).join(" | ")}`);
+    return JSON.parse(dong.slice(3));
+  } finally {
+    rmSync(tam, { recursive: true, force: true });
+  }
+}
+
 /** Kiểm một cây (gốc có data-api/ và pipeline/mappings.yaml). Trả danh sách thông điệp lỗi + số đếm. */
 async function kiem(goc, nhan) {
   const loi = [];
@@ -59,17 +88,14 @@ async function kiem(goc, nhan) {
       for (const m of khoi[1].matchAll(/^\s{4}([A-Za-z]\w*):/gm)) if (!khoa.has(m[1])) loi.push(`PB2 khoá không có trong hợp đồng: ${m[1]}`);
     }
 
-    // Giá trị lookup route trả: bảng loại hình qua loaiHinh() trên mọi kind × loại, cộng các hằng của route.
-    const giaTri = { PropertyType: new Set(), PropertySubType: new Set(), FeeFrequency: new Set(), AreaUnits: new Set() };
-    for (const kind of ["sale", "rent_lt", "rent_st"]) {
-      for (const loai of ["apartment", "house", "land", "commercial", "room", "unknown", null]) {
-        const { propertyType, propertySubType } = hd.loaiHinh(kind, loai);
-        if (propertyType) giaTri.PropertyType.add(propertyType);
-        if (propertySubType) giaTri.PropertySubType.add(propertySubType);
-      }
+    // Giá trị lookup: đọc từ ĐẦU RA của phanTu, mỗi khoá có lookup gom mọi giá trị khác null.
+    const ra = dauRa(goc);
+    const giaTri = {};
+    for (const k of hd.LISTING_KEYS.filter((x) => x.lookup)) giaTri[k.key] = new Set(ra.map((d) => d[k.key]).filter((v) => v !== null && v !== undefined));
+    for (const d of ra) {
+      const thua = Object.keys(d).filter((x) => !khoa.has(x)), thieu = [...khoa.keys()].filter((x) => !(x in d));
+      for (const x of [...thua, ...thieu]) loi.push(`PB2 đầu ra lệch tập khoá hợp đồng: ${x}`);
     }
-    for (const m of route.matchAll(/leaseAmountFrequency:[^\n]*/g)) for (const s of m[0].matchAll(/"([A-Z][A-Za-z ]+)"/g)) giaTri.FeeFrequency.add(s[1]);
-    for (const m of route.matchAll(/(?:livingAreaUnits|pricePerAreaUnit):[^\n]*/g)) for (const s of m[0].matchAll(/"([A-Z][A-Za-z ]+)"/g)) giaTri.AreaUnits.add(s[1]);
 
     const map = YAML.parse(readFileSync(path.join(goc, "pipeline", "mappings.yaml"), "utf8"));
     const local = new Set(
@@ -84,7 +110,8 @@ async function kiem(goc, nhan) {
         if (k.lookup) {
           const chuan = STANDARD.get(k.lookup);
           if (!chuan) loi.push(`PB2 không có lookup DD 2.1: ${k.lookup}`);
-          for (const v of giaTri[k.lookup] ?? []) {
+          if (!giaTri[k.key]?.size) loi.push(`PB2 lookup ${k.key} không có giá trị nào ở đầu ra`);
+          for (const v of giaTri[k.key] ?? []) {
             soGiaTri++;
             if (!chuan?.has(v) && !local.has(v.toLowerCase())) loi.push(`PB2 không phải StandardName của ${k.lookup}: ${v}`);
           }
@@ -106,10 +133,11 @@ async function kiem(goc, nhan) {
 /** Bản chép tối thiểu của cây để cấy lỗi. */
 function banChep(nhan, sua) {
   const g = mkdtempSync(path.join(os.tmpdir(), `pb2-hd-cay-${nhan}-`));
-  for (const p of ["data-api/src/contract/listing.ts", "data-api/src/routes/listings.ts", "pipeline/mappings.yaml"]) {
+  for (const p of ["data-api/src", "data-api/package.json", "pipeline/mappings.yaml"]) {
     mkdirSync(path.dirname(path.join(g, p)), { recursive: true });
-    cpSync(path.join(ROOT, p), path.join(g, p));
+    cpSync(path.join(ROOT, p), path.join(g, p), { recursive: true });
   }
+  symlinkSync(path.join(ROOT, "data-api", "node_modules"), path.join(g, "data-api", "node_modules"));
   sua(g);
   return g;
 }
@@ -135,6 +163,8 @@ const O = [
     sua: (g) => doiTep(g, "data-api/src/contract/listing.ts", 'ddField: "SalePricePerArea"', 'ddField: "ListPricePerArea"') },
   { o: "lookup-sai", mong: "PB2 không phải StandardName của PropertySubType: SingleFamilyResidence",
     sua: (g) => doiTep(g, "data-api/src/contract/listing.ts", '"Condominium", "Condominium"]', '"SingleFamilyResidence", "Condominium"]') },
+  { o: "lookup-rong", mong: "PB2 lookup leaseAmountFrequency không có giá trị nào ở đầu ra",
+    sua: (g) => doiTep(g, "data-api/src/routes/listings.ts", 'leaseAmountFrequency: kind === "rent_lt" ? "Monthly" : kind === "rent_st" ? "Daily" : null,', "leaseAmountFrequency: null,") },
   { o: "extension-thieu", mong: "PB2 extension chưa khai ở mappings.yaml: repostCount",
     sua: (g) => doiTep(g, "pipeline/mappings.yaml", "    repostCount:\n", "    repostCountBo:\n") },
 ];

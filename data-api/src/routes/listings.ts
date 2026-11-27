@@ -63,7 +63,7 @@ function tapGhep(kinds: Kind[], pKhoa: number, dieuKienBan = "", dieuKienNgan = 
 const COT_KHU = `a.name AS phuong, a.id AS ma_phuong, CASE WHEN a.region_type = 'market' THEN a.id ELSE a.parent_id END AS ma_thi_truong`;
 
 /** Phần tử Listing từ một dòng của tập ghép + số so giá + số lịch (khoá theo đúng tệp hợp đồng). */
-function phanTu(r: Dong, giaTot?: Dong, lich?: Dong): Record<string, unknown> {
+export function phanTu(r: Dong, giaTot?: Dong, lich?: Dong): Record<string, unknown> {
   const kind = String(r.kind) as Kind;
   const gia = so(r.gia);
   const dienTich = so(r.area_m2);

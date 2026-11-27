@@ -8,7 +8,9 @@
  */
 import assert from "node:assert/strict";
 import { createHmac } from "node:crypto";
-import { spawnSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
+import { rmSync, writeFileSync } from "node:fs";
+import { pathToFileURL } from "node:url";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { after, before, test } from "node:test";
@@ -211,8 +213,19 @@ test("PB2-AC-5 căn giá tốt là bộ lọc của listings", async () => {
   assert.deepEqual(tapKhoa(d.priceRank), [...PRICE_RANK_KEYS].sort(), "PB2 listings sai tập khoá: priceRank");
   const cao = await goi(`/v1/listings?kind=sale&minBelowMedianPct=30&area=${PH}`);
   assert.ok(!theoKhoa(cao.than.data, BAN), "PB2-AC-5 minBelowMedianPct không loại tin dưới ngưỡng");
+  await sql(
+    `INSERT INTO offer_price_rank (offer_id, kind, property_type, thuoc, cap, nut, n, trung_vi, p20, hang_pct, duoi_trung_vi_pct, nhan, can_xac_minh, ly_do, run_id)
+     VALUES ($1, 'rent_lt', 'apartment', 'gia-m2', 'phuong', $2, 12, 300000, 260000, 10, 16.7, 're-trong-phuong', false, 'pb2', 'pb2-run')`,
+    [THUE, PH],
+  );
   const thue = await goi(`/v1/listings?kind=rent_lt&minBelowMedianPct=0&area=${PH}`);
+  assert.ok((thue.than.data as any[]).length > 0, "PB2-AC-5 kind=rent_lt rỗng — đối chứng dương thiếu");
+  assert.ok((thue.than.data as any[]).some((x) => x.listingKey === THUE), "PB2-AC-5 kind=rent_lt thiếu tin thuê có hạng");
   assert.ok((thue.than.data as any[]).every((x) => x.kind === "rent_lt"), "PB2-AC-5 kind=rent_lt lọc sai");
+  const la = await goi(`/v1/listings?kind=khong-co&minBelowMedianPct=5&area=${PH}`);
+  assert.equal(la.status, 400, "PB2-AC-5 kind lạ ở đường giá tốt không 400");
+  assert.equal(la.than.error?.code, "BAD_REQUEST", "PB2-AC-5 kind lạ thiếu error.code");
+  assert.ok(typeof la.than.error?.message === "string" && la.than.error.message.length > 0, "PB2-AC-5 kind lạ thiếu error.message");
   // Nhánh CG8: bảng hạng rỗng → thước v_ruler_p2 (cần ≥ 5 căn cùng phường × loại).
   await sql(`DELETE FROM offer_price_rank`);
   for (let i = 0; i < 5; i++) {
@@ -232,23 +245,54 @@ test("PB2-AC-5 căn giá tốt là bộ lọc của listings", async () => {
 });
 
 test("PB2-AC-11 price-stats", async () => {
-  await sql(`INSERT INTO market_asset_stats (area_id, kind, n_offers, median_price, p25_price, p75_price, median_perm2, median_rent, updated_at)
-             VALUES ($1, 'apartment', 12, 5000000000, 4000000000, 6000000000, 70000000, 15000000, now())`, [PH]).catch(() => undefined);
-  const a = await goi(`/v1/price-stats?area=${PH}`);
-  const m = await goi(`/v1/price-stats?market=${TT}`);
-  assert.equal(a.status, 200, "PB2 price-stats ?area không 200");
-  assert.equal(m.status, 200, "PB2 price-stats ?market không 200");
-  const thieu = await goi(`/v1/price-stats`);
-  assert.equal(thieu.status, 400);
-  const cu = await goi(`/v1/asset-stats?area=${PH}`);
-  assert.equal(cu.status, 410, "PB2 price-stats — /v1/asset-stats không trả 410");
-  assert.deepEqual(cu.than, { error: { code: "GONE", message: "/v1/asset-stats đã đổi tên thành /v1/price-stats" } }, "PB2 price-stats — asset-stats còn sống");
+  // Thân cũ: chính tệp route asset-stats.ts ở nền (merge-base với origin/main), không chép tay — gắn vào một Hono riêng,
+  // gọi cùng truy vấn trên cùng DB thử. Tệp tạm đặt cạnh routes/ để import tương đối của nó chạy y nguyên; xoá cuối ca.
+  // PB2_GIT_ROOT: probe pha.mjs chạy test trên bản chép ngoài kho git — trỏ về gốc kho để đọc nền.
+  const kho = process.env.PB2_GIT_ROOT ?? DATA_API;
+  const nen = execFileSync("git", ["-C", kho, "merge-base", "HEAD", "origin/main"], { encoding: "utf8" }).trim();
+  const cu = execFileSync("git", ["-C", kho, "show", `${nen}:data-api/src/routes/asset-stats.ts`], { encoding: "utf8" });
+  assert.match(cu, /export const assetStatsRoute/, "PB2-AC-11 bản asset-stats ở nền không phải route cũ — mốc so hỏng");
+  const tam = path.join(DATA_API, "src", "routes", `__pb2-asset-stats-nen-${process.pid}.ts`);
+  writeFileSync(tam, cu);
+  try {
+    const { Hono } = await import("hono");
+    const cuApp = new Hono().route("/v1/asset-stats", (await import(pathToFileURL(tam).href)).assetStatsRoute);
+    await sql(`INSERT INTO market_asset_stats (area_id, kind, n_offers, median_price, p25_price, p75_price, median_perm2, median_rent, updated_at)
+               VALUES ($1, 'sale', 12, 5000000000, 4000000000, 6000000000, 70000000, 15000000, now())`, [PH]);
+    for (const q of [`?area=${PH}`, `?market=${TT}`, ``, `?area=pb2-khong-co-${HAT}`]) {
+      const moi = await goi(`/v1/price-stats${q}`);
+      const resCu = await cuApp.request(`/v1/asset-stats${q}`);
+      const thanCu = await resCu.json();
+      assert.equal(moi.status, resCu.status, `PB2 price-stats khác mã với asset-stats ở nền: ${q || "(không tham số)"}`);
+      assert.deepEqual(moi.than, thanCu, `PB2 price-stats khác thân asset-stats ở nền: ${q || "(không tham số)"}`);
+    }
+    // Đối chứng dương: thân so được có dòng cấy, đúng số cấy (không phải hai thân rỗng bằng nhau).
+    const a = await goi(`/v1/price-stats?area=${PH}`);
+    assert.equal(a.status, 200, "PB2 price-stats ?area không 200");
+    assert.ok(Array.isArray(a.than.data) && a.than.data.some((d: any) => d.median_price === 5000000000 || d.medianPrice === 5000000000),
+      `PB2 price-stats ?area thiếu dòng cấy: ${a.vanBan.slice(0, 160)}`);
+  } finally {
+    rmSync(tam, { force: true });
+  }
+  const cu410 = await goi(`/v1/asset-stats?area=${PH}`);
+  assert.equal(cu410.status, 410, "PB2 price-stats — /v1/asset-stats không trả 410");
+  assert.deepEqual(cu410.than, { error: { code: "GONE", message: "/v1/asset-stats đã đổi tên thành /v1/price-stats" } }, "PB2 price-stats — asset-stats còn sống");
 });
 
 test("PB2-AC-10c openapi và version", async () => {
   const api = (await goi("/openapi.json")).than;
   assert.equal(api.info.version, "0.2.0");
   assert.equal((await goi("/health")).than.version, "0.2.0");
-  assert.deepEqual(Object.keys(api.components.schemas.Listing.properties).sort(), [...LISTING_KEY_NAMES].sort(), "PB2 openapi Listing lệch tệp hợp đồng");
+  /** Bộ so schema phần tử Listing ↔ tệp hợp đồng: mỗi khoá lệch một dòng «AC-10 openapi lệch hợp đồng: <khoá>». */
+  const lech = (props: Record<string, unknown>) => {
+    const co = Object.keys(props), mong = [...LISTING_KEY_NAMES];
+    return [...co.filter((k) => !mong.includes(k)), ...mong.filter((k) => !co.includes(k))].map((k) => `AC-10 openapi lệch hợp đồng: ${k}`);
+  };
+  assert.deepEqual(lech(api.components.schemas.Listing.properties), [], "AC-10 openapi lệch hợp đồng");
+  // Đối chứng đột biến cùng ca: bản chép schema thêm một khoá → bộ so gọi đúng tên khoá đó.
+  const sao = { ...api.components.schemas.Listing.properties, pb2KhoaCay: { type: "string" } };
+  assert.deepEqual(lech(sao), ["AC-10 openapi lệch hợp đồng: pb2KhoaCay"], "AC-10 bộ so openapi không bắt khoá cấy");
+  // Đường sống có mặt (đối chứng dương), đường đã gỡ không còn là đường sống.
+  for (const p of ["/v1/listings", "/v1/listings/{listingKey}", "/v1/price-stats", "/v1/coverage"]) assert.ok(p in api.paths, `PB2 openapi thiếu đường sống ${p}`);
   for (const p of ["/v1/deals", "/v1/asset-stats"]) assert.ok(!(p in api.paths), `PB2 openapi còn ${p} như đường sống`);
 });
