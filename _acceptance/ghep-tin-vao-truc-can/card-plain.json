@@ -1,0 +1,3 @@
+{"feature_plain":"Tin S03 đã biết toà nay được gắn tiếp xuống trục căn, và xuống tận căn khi bài nêu mã căn khớp danh bạ; trang tin đọc kết quả qua view offer_unit.",
+"decisions":[{"id":"E10","q":"Trên 100 bài nhãn người, máy gắn sai 0 bài — chấp nhận kết quả này?","why":"Ba người chấm máy đều cho đạt: bảng bài sai rỗng, cận dưới độ đúng 0,963 trên ngưỡng 0,95; AC-10 cho phép 0 bài sai."}],
+"analyst_plain":"Không có phép đo nào chạy hai phía mà không phân biệt được; các lệnh suite chỉ để canh hồi quy."}
