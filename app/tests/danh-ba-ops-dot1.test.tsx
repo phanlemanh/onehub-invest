@@ -190,18 +190,29 @@ test("DBO-AC-9 dòng phụ bỏ bí danh trùng tên sau gấp dấu, giữ bí 
   assert.deepEqual(pha.biDanhKhacTen("Vinhomes Grand Park", ["vinhomes grand park"]), ["vinhomes grand park"], "AC-9 đối chứng: so không gấp dấu mà vẫn bỏ được — bảng không phân biệt")
 })
 
-test("DBO-AC-10 cột Bậc ẩn dưới md; Toà, Căn, Tin không ẩn", async () => {
+/** Khung bảng đo được ở 375 px trên M5 27/11 (clientWidth của vùng cuộn) — tổng bề rộng cột hiện phải không vượt nó. */
+const KHUNG_375 = 333
+const tieuDe = (html: string) => [...html.matchAll(/<th\b[^>]*>([\s\S]*?)<\/th>/g)].map((m) => m[1].replace(/<[^>]+>/g, "").trim()).filter(Boolean)
+const tongCot = (html: string) => [...html.matchAll(/<col\b[^>]*style="width:\s*(\d+)px/g)].reduce((t, m) => t + Number(m[1]), 0)
+const veKho = async (kho: "sm" | "md" | "xl") => {
+  const { RegistryGrid } = await import("../src/components/ops/registry/registry-grid")
+  return renderToStaticMarkup(<RegistryGrid rows={[hangCay()]} khoMan={kho} />)
+}
+
+test("DBO-AC-10 khổ 375 px: Bậc rời bảng, Toà Căn Tin còn, tổng bề rộng cột vừa khung; từ 768 px có Bậc; chiều đỏ: khổ xl tràn khung", async () => {
+  const sm = await veKho("sm")
+  const dsSm = tieuDe(sm)
+  assert.ok(!dsSm.includes("Bậc"), `AC-10 Bậc không ẩn ở 375 px: ${dsSm.join(" | ")}`)
+  for (const n of ["Toà", "Căn", "Tin đang rao"]) assert.ok(dsSm.includes(n), `AC-10 cột ${n} không có ở 375 px`)
+  const rong = tongCot(sm)
+  assert.ok(rong > 0 && rong <= KHUNG_375, `AC-10 tổng bề rộng cột ở 375 px là ${rong} px > ${KHUNG_375} — bảng phải cuộn ngang`)
+  assert.ok(tieuDe(await veKho("md")).includes("Bậc"), "AC-10 Bậc mất ở 768 px")
+  // Chiều đỏ cùng fixture: khổ xl (mọi cột, bề rộng gốc) vượt khung — phép đo bề rộng phân biệt được.
+  assert.ok(tongCot(await veKho("xl")) > KHUNG_375, "AC-10 đối chứng: khổ xl không vượt khung — phép đo không phân biệt")
+  // Lượt vẽ máy chủ (không ép khổ) vẫn giữ lớp ẩn theo breakpoint cho khung đầu trước khi trình duyệt đọc khổ màn.
   const html = await veLuoi([hangCay()])
-  const lop = (nhan: string) => [...html.matchAll(/<th\b[^>]*class="([^"]*)"[^>]*>([\s\S]*?)<\/th>/g)].find((m) => m[2].includes(`>${nhan}<`) || m[2].endsWith(nhan))?.[1]
-  assert.match(lop("Bậc") ?? "", /\bhidden md:table-cell\b/, "AC-10 Bậc không ẩn")
-  for (const n of ["Toà", "Căn", "Tin đang rao"]) assert.ok(lop(n) !== undefined && !/\bhidden\b/.test(lop(n)!), `AC-10 cột ${n} bị ẩn hay không thấy`)
-  const tdBac = [...html.matchAll(/<td\b[^>]*class="([^"]*)"/g)].some((m) => /\bhidden md:table-cell\b/.test(m[1]))
-  assert.ok(tdBac, "AC-10 ô Bậc của hàng không ẩn")
-  const pha = await banPha<{ RegistryGrid: (p: { rows: HangCay[] }) => ReactElement }>("src/components/ops/registry/registry-grid.tsx",
-    ', size: 110, meta: { headerClassName: "hidden md:table-cell", cellClassName: "hidden md:table-cell" } },', ", size: 110 },")
-  const h2 = renderToStaticMarkup(<pha.RegistryGrid rows={[hangCay()]} />)
-  const lop2 = [...h2.matchAll(/<th\b[^>]*class="([^"]*)"[^>]*>([\s\S]*?)<\/th>/g)].find((m) => m[2].includes(">Bậc<") || m[2].endsWith("Bậc"))?.[1] ?? ""
-  assert.ok(!/\bhidden md:table-cell\b/.test(lop2), "AC-10 đối chứng: bỏ meta mà Bậc vẫn ẩn — phép đo không phân biệt")
+  const lop = [...html.matchAll(/<th\b[^>]*class="([^"]*)"[^>]*>([\s\S]*?)<\/th>/g)].find((m) => m[2].includes(">Bậc<") || m[2].endsWith("Bậc"))?.[1] ?? ""
+  assert.match(lop, /\bhidden md:table-cell\b/, "AC-10 lượt vẽ máy chủ mất lớp ẩn Bậc")
 })
 
 // ---------- AC-7 ----------

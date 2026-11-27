@@ -79,7 +79,7 @@ evals:
     criterion: AC-10
     executor: test
     cmd: bash _acceptance/danh-ba-ops-gop-cau-s16-va-nhan/probes/kiem.sh man
-    expected: "Ca DBO-AC-10: cột bac của bảng danh sách có meta headerClassName và cellClassName chứa «hidden md:table-cell»; cột toa, can, tin không có lớp hidden nào. Chiều đỏ: bản sao bỏ meta của cột bac → ca đỏ nêu «AC-10 Bậc không ẩn»"
+    expected: "Ca DBO-AC-10 (vòng 2, đo theo bề rộng): RegistryGrid ép khổ sm — không có cột Bậc, có Toà, Căn, Tin đang rao, tổng bề rộng các thẻ <col> > 0 và ≤ 333 px (khung đo trên M5 vòng 1); ép khổ md — có Bậc; lượt vẽ máy chủ (không ép khổ) giữ lớp «hidden md:table-cell» của Bậc. Chiều đỏ cùng fixture: khổ xl tổng bề rộng > 333, ca nêu «AC-10 đối chứng»; bản cũ (Bậc chỉ ẩn bằng CSS) tổng 960 px → ca đỏ nêu «AC-10 tổng bề rộng cột ở 375 px»"
     paths: ["app/src/components/ops/registry/registry-grid.tsx", "app/tests/danh-ba-ops-dot1.test.tsx"]
   - id: E13
     criterion: AC-10
@@ -88,11 +88,12 @@ evals:
     paths: ["app/src/components/ops/registry/**", "app/src/components/insight/insight-grid.tsx", "app/src/app/ops/registry/**"]
     steps:
       - "Bản chạy: dev server của CHÍNH worktree đang kiểm, cổng riêng :3466 — khởi động từ gốc worktree bằng `npm --prefix app run dev -- -p 3466` (app/node_modules là bản cài riêng của worktree; KHÔNG dùng :3456 — đó là dev server của checkout chính, mã cũ). Kiểm trước khi chụp: trang /ops/registry/abc phải ra chữ của bản đang kiểm («Không có dự án này trong danh bạ»), không thì đang nhìn nhầm cây — dừng, báo. DB máy thu local :5433 (.env.local). KHÔNG tạo hay sửa tệp nào trong cây. Đăng nhập bằng tài khoản ops thử (~/dev/onehub-invest/.claude/ops-test-account.json ở checkout chính; không in mật khẩu)."
-      - "/ops/registry ở 375 px tối → evidence/E13-step1.png: dòng đầu bảng thấy Tên, Toà, Căn, Tin đang rao; không có cột Bậc; dòng phụ dưới tên không lặp lại tên."
+      - "/ops/registry ở 375 px tối → evidence/E13-step1.png: dòng đầu bảng thấy Tên, Toà, Căn, Tin đang rao; không có cột Bậc; dòng phụ dưới tên không lặp lại tên. ĐO (ghi vào observed): với vùng cuộn của bảng (phần tử cha gần nhất của <table> có overflow-x auto/scroll, hoặc chính [data-slot=data-grid-scroll-area] nếu có) đọc scrollWidth và clientWidth; và getBoundingClientRect().right của <th> «Căn» và «Tin đang rao» so với window.innerWidth. Đạt khi scrollWidth ≤ clientWidth VÀ cả hai right ≤ innerWidth."
+      - "/ops/registry ở 375 px sáng → evidence/E13-step1b.png: cùng phép đo như bước trên, ghi số vào observed."
       - "/ops/registry ở 1280 px sáng → evidence/E13-step2.png: có cột Bậc; rê/đọc aria-label nút mở hàng của một dự án có phân khu = «Mở hàng»."
       - "/ops/registry/381 (dự án 0 toà) 1280 sáng → evidence/E13-step3.png: ô Toà chân «Chưa có toà»."
       - "/ops/registry/abc 1280 sáng → evidence/E13-step4.png: «Không có dự án này trong danh bạ» + nút «Về danh bạ»; bấm nút về /ops/registry."
       - "/ops/registry/999999 (số không có nút) và /ops/registry/<id một phân khu, lấy từ hàng con của dự án 16 trên danh bạ> 1280 sáng → evidence/E13-step4b.png, E13-step4c.png: cùng «Không có dự án này trong danh bạ» + «Về danh bạ», không có «Xem thị trường Việt Nam»."
       - "/ops/registry/16 1280 sáng: đọc Navigation Timing (responseEnd − startTime, ms) ba lần tải thẳng → ghi vào observed; chụp → evidence/E13-step5.png (ô phủ thuộc tính có số)."
-    expected: "375 px không có cột Bậc, thấy Căn và Tin; 1280 px có Bậc; nút mở hàng «Mở hàng»; dự án 0 toà «Chưa có toà»; cả ba loại mã sai (abc, số không có, id phân khu) ra trang Ops có «Về danh bạ» và không có «Xem thị trường Việt Nam»; trang 16 tải xong với ô phủ có số, ghi ba số thời gian tải."
+    expected: "375 px (sáng và tối) không có cột Bậc, thấy Căn và Tin, bảng không cuộn ngang (scrollWidth ≤ clientWidth, mép phải hai cột ≤ innerWidth); 1280 px có Bậc; nút mở hàng «Mở hàng»; dự án 0 toà «Chưa có toà»; cả ba loại mã sai (abc, số không có, id phân khu) ra trang Ops có «Về danh bạ» và không có «Xem thị trường Việt Nam»; trang 16 tải xong với ô phủ có số, ghi ba số thời gian tải."
     evidence_required: [run_id, verifier, verified_at, observed, screenshot]
