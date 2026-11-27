@@ -29,7 +29,7 @@ const DB_URL =
 const BANG = ["stg_chotot_ads", "stg_zalo_posts", "sale_offer_records", "field_assertions", "ops_audit",
   "parties", "registry_aliases", "registry_events", "party_roles", "properties", "property_offers", "review_queue"];
 // Transform thật đọc phường ở public nên chỉ khoá, không chép rỗng.
-const CHI_KHOA = ["areas"];
+const CHI_KHOA = ["areas", "source_registry"]; // PL39: transform S06 đọc sổ nguồn để lọc ô chữ mang tên nguồn
 
 /** View của public dựng lại trong lược đồ riêng: lấy định nghĩa khi search_path chỉ có public để tên bảng không gắn lược đồ. */
 async function chepView(c, sc, ten) {

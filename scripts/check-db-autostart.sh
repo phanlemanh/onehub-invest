@@ -54,8 +54,9 @@ check_diff() { # $1 = tệp compose
     fail "không đọc được db/docker-compose.yml ở $BASE"; rm -rf "$t"; return
   fi
   # Volume và tên project đổi có chủ đích ở hồ sơ db-vao-volume (Hỏi-2, Mạnh duyệt 29/10): dữ liệu vào volume
-  # onehub_pgdata, project onehub-db. Ảnh, tên container, cổng, biến, healthcheck vẫn được canh như AU7.
-  local bo='del(.services.db.restart, .services.db.volumes, .volumes, .name)'
+  # onehub_pgdata, project onehub-db. HT8 (24/11) chỉ nghe 127.0.0.1 + bốn biến tham số + shm_size: bỏ khỏi phép so. Ảnh, tên
+  # container, số cổng, biến cũ, healthcheck vẫn được canh như AU7.
+  local bo='del(.services.db.restart, .services.db.volumes, .volumes, .name, .services.db.ports[]?.host_ip, .services.db.shm_size, .services.db.environment.SHARED_BUFFERS, .services.db.environment.WORK_MEM, .services.db.environment.MAINTENANCE_WORK_MEM, .services.db.environment.EXTRA_CONF)'
   a=$(docker compose -p au7cmp -f "$1" config --format json 2>/dev/null | jq -S "$bo")
   b=$(docker compose -p au7cmp -f "$t/base.yml" config --format json 2>/dev/null | jq -S "$bo")
   if [ -z "$a" ] || [ -z "$b" ]; then
@@ -239,7 +240,7 @@ case "$MODE" in
     grep -v '^    restart:' "$COMPOSE" > "$T/bo-dong.yml"
     sed 's/^    restart: .*/    restart: "no"/' "$COMPOSE" > "$T/no.yml"
     sed 's/^    restart: .*/    restart: on-failure/' "$COMPOSE" > "$T/on-failure.yml"
-    sed 's/"5433:5432"/"5434:5432"/' "$COMPOSE" > "$T/cong-5434.yml"
+    sed 's/5433:5432/5434:5432/' "$COMPOSE" > "$T/cong-5434.yml"
     for m in bo-dong no on-failure cong-5434; do
       cmp -s "$T/ok.yml" "$T/$m.yml" && fail "đột biến $m không đổi tệp — sed không khớp compose"
     done

@@ -5,7 +5,7 @@ slug: data-api-dong-ba-route-lo
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api, docs]
-status: approved
+status: signed-off
 design_doc: _acceptance/data-api-dong-ba-route-lo/design.md
 approved_by: Mạnh
 approved_at: 2026-11-25
@@ -114,3 +114,5 @@ Quét hình thái làm tay trong bước thiết kế (không nạp skill — kh
 - Lượt chấm chính thức (S4) chạy trên Mac mini, máy có dữ liệu thật (gs, `m5-2411-7`): bốn suite trọn trên M5 đỏ nền và che
   mất ba ca trên. M5 xong phần mình (bộ kiểm CI trên M5 xanh trừ QV-AC-5, 10/10 eval), đẩy nhánh; một dãy Mac mini chấm rồi
   commit bằng chứng lên cùng nhánh.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-26:
+  - Ngoài-1: README công khai nói API không đọc hay trả số của nguồn hiệu chuẩn, trong khi các đường /v1/markets* vẫn trả — hết khi hàng HT20 gộp.
