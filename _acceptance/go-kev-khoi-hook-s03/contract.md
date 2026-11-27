@@ -5,7 +5,7 @@ slug: go-kev-khoi-hook-s03
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli, config]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-24T10:10:07Z
 design_doc: docs/superpowers/specs/2026-11-24-go-kev-khoi-hook-s03-design.md
@@ -97,3 +97,6 @@ Không có người dùng cuối (ô cơ hội khai «Không đo được»). Co
 - Sửa tích hợp (vòng này): `collector/openclaw/handler.test.mjs` của nhánh ZCode import hook với HOME THẬT — mỗi lần chạy ghi dòng
   «post 202 … kev=off» giả vào log hook thật (99 dòng `group=t1|conv-*|c` từ 21/11, KHÔNG xoá — không chạm `~/.openclaw`), đọc khoá
   thật, và rút spool thật bằng fetch giả. Nay HOME + spool tạm đặt trước import, có chốt ném lỗi và ca cô-lập. Đã báo GS/LL.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-27:
+  - Ngoài-2: bộ log mẫu dùng để thử công cụ kiểm sau áp có thứ tự trường lệch với log thật, nên công cụ có thể không bắt một lệch khuôn theo đúng hướng này; phép thử bằng log sinh từ hook thật vẫn là chốt chính.
+  - Ngoài-3: phép thử «khoá không vào log» chỉ soi mã nguồn, chưa đọc tệp log thật; nếu sau này ai ghi khoá ra log thì phép thử vẫn đạt.

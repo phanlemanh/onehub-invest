@@ -7,8 +7,8 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 8c23b9fdc204a361d69199bf9e21673f13be0e2d
-human_signoff:
+verified_commit: 61d7e47dd02ffe2ccd30e4e8b57fa1a2f135ef34
+human_signoff: Mạnh 2026-11-27
 ---
 
 # Evidence Report: go-kev-khoi-hook-s03
@@ -282,3 +282,7 @@ none — every multi-run eval is uniform
 
 Round 1: lịch sử xem run-log.jsonl và review S4 r1 (ca khuôn kev giữa group= và account=, thiếu khai long_running 90 cho E19, HOME tạm); đã quay lại triển khai.
 Round 2: toàn bộ 19 eval và 5 lệnh suite xanh trên verified_commit 8c23b9fdc204a361d69199bf9e21673f13be0e2d; không có mục judgment, không có phương sai.
+
+### Re-pin lần 1 — 2026-11-27, do làn trước chữ ký
+run_id: repin-20261127T072509Z-96579
+sha: 61d7e47dd02ffe2ccd30e4e8b57fa1a2f135ef34 · suites: 8 lệnh exit 0 · evals: 19/19 eval máy đạt kỳ vọng
