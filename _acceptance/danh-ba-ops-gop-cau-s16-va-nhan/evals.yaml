@@ -87,7 +87,7 @@ evals:
     layer: ui-observed
     paths: ["app/src/components/ops/registry/**", "app/src/components/insight/insight-grid.tsx", "app/src/app/ops/registry/**"]
     steps:
-      - "Bản chạy: dev server của worktree danh-ba-ops-gop-cau-s16-va-nhan ở cổng riêng (không :3456) nối DB máy thu local :5433. KHÔNG tạo hay sửa tệp nào trong cây. Đăng nhập bằng tài khoản ops thử (.claude/ops-test-account.json; không in mật khẩu)."
+      - "Bản chạy: dev server của CHÍNH worktree đang kiểm, cổng riêng :3466 — khởi động từ gốc worktree bằng `npm --prefix app run dev -- -p 3466` (app/node_modules là bản cài riêng của worktree; KHÔNG dùng :3456 — đó là dev server của checkout chính, mã cũ). Kiểm trước khi chụp: trang /ops/registry/abc phải ra chữ của bản đang kiểm («Không có dự án này trong danh bạ»), không thì đang nhìn nhầm cây — dừng, báo. DB máy thu local :5433 (.env.local). KHÔNG tạo hay sửa tệp nào trong cây. Đăng nhập bằng tài khoản ops thử (~/dev/onehub-invest/.claude/ops-test-account.json ở checkout chính; không in mật khẩu)."
       - "/ops/registry ở 375 px tối → evidence/E13-step1.png: dòng đầu bảng thấy Tên, Toà, Căn, Tin đang rao; không có cột Bậc; dòng phụ dưới tên không lặp lại tên."
       - "/ops/registry ở 1280 px sáng → evidence/E13-step2.png: có cột Bậc; rê/đọc aria-label nút mở hàng của một dự án có phân khu = «Mở hàng»."
       - "/ops/registry/381 (dự án 0 toà) 1280 sáng → evidence/E13-step3.png: ô Toà chân «Chưa có toà»."
