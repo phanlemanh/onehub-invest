@@ -22,7 +22,7 @@
 2. **System Chrome** via `channel: "chrome"` (no browser download needed)
 3. **Pagination**: `A[aria-label^='Trang N']` links, NOT `pagination-next-button` testid
 4. **JS click**: `el.evaluate(el => el.click())` — actionability click fails on "element outside viewport"
-5. **S02 profile (AirDNA)**: thư mục profile Chrome tại `.airdna-profile/` (đổi chỗ bằng `AIRDNA_PROFILE_DIR`) —
+5. **S02 profile (AirDNA)**: thư mục profile Chrome tại `.airdna-profile/` (đổi chỗ bằng `S02_PROFILE_DIR`) —
    chỉ để Mạnh đăng nhập một lần bằng lệnh `login`. Khi thu, bộ thu KHÔNG mở trình duyệt: đọc bản ghi phiên `auth`
    thẳng từ kho localStorage của profile trên đĩa (đúng định dạng LevelDB, giải nén khối) rồi tra đổi lấy appToken
    (15 phút) bằng đúng hai lời ứng dụng vẫn gửi — `collectors/airdna-session.ts`. Phiên KHÔNG vĩnh viễn: hết →
