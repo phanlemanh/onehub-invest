@@ -5,8 +5,9 @@ slug: ops-hien-dung-chang-s03
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui, cli]
-status: draft
-approved_by:
+status: approved
+approved_by: Mạnh
+approved_at: 2026-11-27T18:16:29Z
 design_doc: docs/superpowers/specs/2026-11-28-ops-hien-dung-chang-s03-design.md
 ---
 
