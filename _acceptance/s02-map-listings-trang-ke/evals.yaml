@@ -19,7 +19,7 @@ evals:
     criterion: AC-3
     executor: script
     cmd: bash _acceptance/s02-map-listings-trang-ke/probes/vung.sh
-    expected: "exit 0; dòng cuối 'XANH: mọi tệp đổi nằm trong vùng'; hai dòng 'đạt: chiều đỏ — cấy … thì bộ lọc gọi tên nó'; hai dòng 'đạt: có …'"
+    expected: "exit 0; dòng đầu 'mốc so: <origin/fix/s02-cua-api khi ZC22 chưa vào main | origin/main>'; dòng cuối 'XANH: mọi tệp đổi nằm trong vùng'; hai dòng 'đạt: chiều đỏ — cấy … thì bộ lọc gọi tên nó'; hai dòng 'đạt: có …'"
     paths: [collector/**, pipeline/**, _acceptance/s02-map-listings-trang-ke/**]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4
@@ -40,6 +40,13 @@ evals:
     criterion: AC-5
     executor: script
     cmd: cd collector && npx tsc -p tsconfig.json && cd .. && node _acceptance/s02-map-listings-trang-ke/probes/phia-sau-va-tran-trang.mjs
-    expected: "cùng lệnh E5: hai dòng 'đạt: bản thật · AC-5 <nguồn bỏ qua offset, trả lại trang đầu mãi | nguồn trả trang mới đủ 15000 căn mãi> → vòng phân trang dừng trong ≤ 11 lời map_listings, một dòng lý do'; dòng 'đạt: bản thật · AC-5 vế không bắn: trang cuối 623 căn → dừng sau 2 lời, không dòng lý do'"
+    expected: "cùng lệnh E5: hai dòng 'đạt: bản thật · AC-5 <nguồn bỏ qua offset, trả lại trang đầu mãi | nguồn trả trang mới đủ 15000 căn mãi> → vòng phân trang dừng trong ≤ 11 lời map_listings, một dòng lý do' (thực mang 'lượt lộ lỗi'); dòng 'đạt: bản thật · AC-5 vế không bắn: trang cuối 623 căn → dừng sau 2 lời, không dòng lý do'"
     paths: [collector/src/collectors/**, _acceptance/s02-map-listings-trang-ke/probes/phia-sau-va-tran-trang.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-6
+    executor: script
+    cmd: bash _acceptance/s02-map-listings-trang-ke/probes/khong-ten-mien-moi.sh
+    expected: "exit 0; dòng 'mốc so: …'; dòng 'đạt: bản thật · AC-6 0 dòng mới mang tên miền nguồn trong collector/ so với mốc'; dòng 'đạt: bản đột biến (cấy một dòng mang tên miền) bị bắt'; dòng cuối 'XANH'"
+    paths: [collector/**, _acceptance/s02-map-listings-trang-ke/probes/khong-ten-mien-moi.sh]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]

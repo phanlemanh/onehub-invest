@@ -74,21 +74,24 @@ async function vong(kieu) {
   };
   const m = await import(pathToFileURL(BOTHU).href + `?k=${Math.random()}`);
   const boThu = Object.values(m).find((v) => v && typeof v === "object" && typeof v.collect === "function");
+  let kq = null;
   try {
-    await boThu.collect({ city: { id: "hanoi" }, rateLimit: { take: async () => {} }, log: (...a) => dong.push(a.join(" ")),
+    kq = await boThu.collect({ city: { id: "hanoi" }, rateLimit: { take: async () => {} }, log: (...a) => dong.push(a.join(" ")),
       checkpoint: { get: () => undefined, set: () => {}, save: async () => {} }, paths: { snapshotRoot: profile, stateDir: profile } });
   } catch { /* lượt dừng vì chốt là kết cục hợp lệ */ }
   rmSync(profile, { recursive: true, force: true });
   const lyDo = dong.filter((d) => /map_listings/.test(d) && /(dừng|trần|lặp)/i.test(d)).length;
-  return { n: soTrang, lyDo };
+  // lượt chạm trần phải lộ ra: ném (lượt FAILED) hoặc coverage.failed > 0 — không «xong» im lặng
+  const lo = kq === null || (kq.coverage?.failed ?? 0) > 0;
+  return { n: soTrang, lyDo, lo };
 }
 for (const [kieu, ten] of [["lap", "nguồn bỏ qua offset, trả lại trang đầu mãi"], ["moi", "nguồn trả trang mới đủ 15000 căn mãi"]]) {
-  const { n, lyDo } = await vong(kieu);
-  bao(n <= 11 && lyDo === 1, `bản thật · AC-5 ${ten} → vòng phân trang dừng trong ≤ 11 lời map_listings, một dòng lý do (thực: ${n} lời${n >= 30 ? ", chạm chặn của bản giả — vòng không trần" : ""}, ${lyDo} dòng lý do)`);
+  const { n, lyDo, lo } = await vong(kieu);
+  bao(n <= 11 && lyDo === 1 && lo, `bản thật · AC-5 ${ten} → vòng phân trang dừng trong ≤ 11 lời map_listings, một dòng lý do (thực: ${n} lời${n >= 30 ? ", chạm chặn của bản giả — vòng không trần" : ""}, ${lyDo} dòng lý do, lượt ${lo ? "lộ lỗi" : "báo xong im lặng"})`);
 }
 {
-  const { n, lyDo } = await vong("cuoi");
-  bao(n === 2 && lyDo === 0, `bản thật · AC-5 vế không bắn: trang cuối 623 căn → dừng sau 2 lời, không dòng lý do (thực: ${n} lời, ${lyDo} dòng)`);
+  const { n, lyDo, lo } = await vong("cuoi");
+  bao(n === 2 && lyDo === 0 && !lo, `bản thật · AC-5 vế không bắn: trang cuối 623 căn → dừng sau 2 lời, không dòng lý do (thực: ${n} lời, ${lyDo} dòng)`);
 }
 
 console.log(do_ ? "ĐỎ" : "XANH");
