@@ -1,4 +1,4 @@
-<!-- Soạn trên M5 cho GS mở PR hộ (gh trên M5 không có token). Nhánh: fix/data-api-don-ten-nguon → main. -->
+<!-- Soạn trên M5 cho GS mở PR hộ (gh trên M5 không có token). Nhánh: fix/data-api-don-ten-nguon → main. PR: phanlemanh/onehub-invest#564 (GS mở 27/11 @100349142). -->
 
 # Tiêu đề
 
