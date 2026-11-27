@@ -1,6 +1,6 @@
 # onehub-data-api
 
-Real estate data API for Vietnam — markets, listings, deals, asset statistics.
+Real estate data API for Vietnam — markets, listings (RESO Data Dictionary 2.1), price statistics.
 
 Built with [Hono](https://hono.dev) + TypeScript + PostgreSQL/PostGIS.
 
@@ -46,6 +46,7 @@ npm run dev
 | `DATABASE_URL` | *(see setup below)* | PostgreSQL connection string |
 | `PORT` | `3001` | API port |
 | `DATA_API_KEYS` | *(empty)* | Comma-separated API keys. **Required** outside `NODE_ENV=development` / `NODE_ENV=test` — see [Authentication](#authentication) |
+| `LISTING_KEY_SECRET` | *(empty)* | Secret for the `listingKey` of short-term rentals (HMAC-SHA256). **Required** outside `NODE_ENV=development` / `NODE_ENV=test`: without it the server refuses to start and short-term listings answer `503 LISTING_KEY_NOT_CONFIGURED` |
 | `PUBLIC_URL` | *(empty)* | Public URL for OpenAPI servers list |
 
 ## API Endpoints
@@ -58,26 +59,60 @@ npm run dev
 | GET | `/v1/markets/:id` | Market detail with score breakdown |
 | GET | `/v1/markets/:id/submarkets` | Submarkets with metrics |
 | GET | `/v1/markets/:id/insights` | Monthly metrics (ADR, occupancy, revenue) |
-| GET | `/v1/listings` | Filter listings (market, area, bedrooms) |
-| GET | `/v1/listings/:id` | Listing detail with self-collected photos |
-| GET | `/v1/deals` | Best-value listings (price/m² vs group median, with price rank) |
-| GET | `/v1/asset-stats` | Asset statistics (median, p25, p75, yield) |
+| GET | `/v1/listings` | Listings — for sale, long-term rent, short-term rent — one shape for every `kind` (see below) |
+| GET | `/v1/listings/:listingKey` | One listing |
+| GET | `/v1/price-stats` | Price statistics by area (median, p25, p75, yield): `?area=` or `?market=` |
 | GET | `/v1/coverage` | Self-collected listing count by market |
+| GET | `/v1/deals` | **410 Gone** — merged into `/v1/listings?minBelowMedianPct=` |
+| GET | `/v1/asset-stats` | **410 Gone** — renamed `/v1/price-stats` |
 
 ### Response fields
 
-`GET /v1/deals` — each item: `offerId`, `priceVnd`, `areaM2`, `pricePerm2`, `bedrooms`, `phuong` (ward name),
-`marketId`, `propertyType`, `medianPerm2`, `discountPct`, `confidence`, `firstSeen`, `lastSeen`, `nReposts`, and — when
-the price-rank table is available — a `rank` block (`level`, `node`, `n`, `median`, `p20`, `percentile`, `label`,
-`needsVerification`, `metric`, `bedroomsGroup`, `reason`). `meta`: `total`, `minDiscount`, and `kind` when ranked.
+#### Listing
+
+A listing is one record of the RESO **Property** resource (RESO calls a listing "Property"; this API's own
+`/v1/properties`, when it ships, is the building and unit registry — a different thing). Field names follow the
+[RESO Data Dictionary 2.1](https://ddwiki.reso.org) in camelCase; values of `propertyType`, `propertySubType`,
+`leaseAmountFrequency`, `livingAreaUnits`, `pricePerAreaUnit` are DD 2.1 `StandardName` lookups. The key list lives in
+one file, `src/contract/listing.ts`; `/openapi.json` (`components.schemas.Listing`) is generated from it.
+
+Query: `kind` (`sale` · `rent_lt` · `rent_st`; absent = all three), `market`, `area`, `bedroomsTotal`, `limit` (≤ 200,
+default 50), `offset`. Good-price filter: `minBelowMedianPct=<n>` (0–50) keeps sale and long-term-rent listings priced
+at least `n`% below the median of their comparison group, ordered by that gap; add `project=<project node id>` to compare
+inside a project. Errors are `{ "error": { "code", "message" } }`; an unknown `kind` answers `400`.
+
+Every item carries every key below (`null` when it does not apply to that `kind`):
+
+| Key | RESO DD 2.1 | Old name (≤ 0.1) |
+|---|---|---|
+| `listingKey` | ListingKey | `offerId` (deals) · `id` (listings) |
+| `kind` | extension | — |
+| `originatingSystemName` | OriginatingSystemName (source code `S0x`) | — |
+| `propertyType`, `propertySubType` | PropertyType, PropertySubType | `propertyType` (internal code) |
+| `listPrice` | ListPrice | `priceVnd` |
+| `leaseAmount`, `leaseAmountFrequency` | LeaseAmount, LeaseAmountFrequency (`Monthly` · `Daily`) | `priceVnd` · `priceListed` |
+| `livingArea`, `livingAreaUnits` | LivingArea, LivingAreaUnits (`Square Meters`) | `areaM2` |
+| `salePricePerArea`, `leasePricePerArea`, `pricePerAreaUnit` | SalePricePerArea, LeasePricePerArea, PricePerAreaUnit | `pricePerm2` |
+| `bedroomsTotal` | BedroomsTotal | `bedrooms` |
+| `bathroomsTotalInteger` | BathroomsTotalInteger | `bathrooms` |
+| `city` | City (ward name) | `phuong` · `area.name` |
+| `mlsAreaMinor`, `mlsAreaMajor` | MLSAreaMinor (ward id), MLSAreaMajor (market id) | `area.id`, `marketId` · `market.id` |
+| `latitude`, `longitude` | Latitude, Longitude | `lat`, `lng` |
+| `onMarketTimestamp` | OnMarketTimestamp | `firstSeen` |
+| `media` | Media (always `null` for now) | `photoUrls` · `photos` |
+| `lastSeenTimestamp` | extension | `lastSeen` |
+| `confidence` | extension | `confidence` |
+| `repostCount` | extension | `nReposts` |
+| `listingTitle`, `spaceType`, `accommodates`, `minimumNights`, `reviewCount` | extension (short-term rent) | `name`, `roomType`, … |
+| `occupancyRate`, `averageDailyRevenue` | extension (short-term rent, from the nightly calendar) | `stats.occupancy`, `stats.revenue` |
+| `belowMedianPct`, `comparableMedianPricePerArea`, `priceRank` | extension (good-price comparison) | `discountPct`, `medianPerm2`, `rank` (deals) |
+
+Extensions are declared with their DD lookup in `pipeline/mappings.yaml` (`api_extensions.listing`) of the main repo.
+`priceRank` (when the price-rank table is available) keeps the sub-keys `level`, `node`, `n`, `median`, `p20`,
+`percentile`, `label`, `needsVerification`, `metric`, `bedroomsGroup`, `reason`. `meta`: `total`, `limit`, `offset`.
 
 `GET /v1/coverage` — one row per Vietnamese market: `areaId`, `name`, `ourListings` (self-collected short-term rental
 listings in the market, including its wards). Markets with no listings yet are included with `ourListings: 0`.
-
-`GET /v1/listings/:id` — `id`, `name`, `roomType`, `propertyType`, `bedrooms`, `bathrooms`, `accommodates`,
-`minimumNights`, `priceListed`, `lat`, `lng`, `area`, `market`, `photos`, `reviewCount`, `lastSeen`.
-`photos` is `{ urls, source }`: `source` is `"self"` when the listing has self-collected photos, otherwise both
-are `null`.
 
 Data boundaries: this API never returns the text, images, group name or sender name of community posts, and never
 reads or returns calibration-source data — those stay in the internal operations portal.

@@ -6,7 +6,8 @@ public `onehub-data-api`. Mọi thứ trong thư mục này coi như công khai.
 ## Cấu trúc
 
 ```
-src/app.ts            mount /v1/markets, /v1/listings, /v1/deals, /v1/asset-stats, /v1/coverage
+src/app.ts            mount /v1/markets, /v1/listings, /v1/price-stats, /v1/coverage; /v1/deals, /v1/asset-stats trả 410
+src/contract/listing.ts  danh sách khoá DUY NHẤT của phần tử Listing (RESO DD 2.1) — route, openapi, test đọc từ đây
 src/routes/*.ts       mỗi nhóm một file
 src/middleware/       auth.ts (Bearer/X-API-Key, DATA_API_KEYS; đóng mặc định — khoá trống chỉ mở khi NODE_ENV=development|test và không VERCEL, nơi khác 503 AUTH_NOT_CONFIGURED và index.ts không khởi động), error-handler.ts
 src/db/client.ts      pg pool từ DATABASE_URL
@@ -19,8 +20,8 @@ seed.sql, db/         dữ liệu mẫu cho người dùng repo public
 npm install           # chưa cài sẵn trong monorepo
 npm run typecheck
 npm run dev           # :3001 (PORT)
-# test ba đường deals, coverage, listings/:id — chạy từ gốc monorepo, trên DB thử có lược đồ thật:
-#   bash db/db-thu.sh oneinvest_suite_dapi --chay sh -c 'cd data-api && node --import tsx --test test/dong-ba-route.test.ts'
+# test listings (RESO), coverage, các đường cấm đọc — chạy từ gốc monorepo, trên DB thử có lược đồ thật:
+#   bash db/db-thu.sh oneinvest_suite_dapi --chay sh -c 'cd data-api && node --import tsx --test --test-concurrency=1 test/*.test.ts'
 ```
 
 ## Luật
@@ -35,3 +36,9 @@ npm run dev           # :3001 (PORT)
   mới đọc tin, listing thì thêm ca vào tệp đó.
 - Chỉ đọc bảng/view đã precompute; không tính metrics nặng lúc request.
 - Đổi shape response → cập nhật `/openapi.json` và `docs/api/openapi.yaml` cùng lúc.
+- **Khoá phần tử Listing chỉ thêm qua `src/contract/listing.ts`** (PB2): tra RESO Data Dictionary 2.1 trước
+  (`research-local/reso/dd-2.1.json` của checkout chính); có field tương đương thì dùng đúng tên DD viết camelCase và giá
+  trị `StandardName` của lookup; không có mới là extension, và extension phải khai mục `api_extensions.listing` trong
+  `pipeline/mappings.yaml` đủ sáu điều kiện ADR-0011. Không đặt tên extension trùng một field DD khác nghĩa
+  (`roomType` → `spaceType`). Listing = resource `Property` của RESO; danh bạ nhà là `/v1/properties`.
+- Khoá `listingKey` của tin thuê ngắn hạn là HMAC có khoá bí mật `LISTING_KEY_SECRET` — không bao giờ trả id gốc của nguồn.
