@@ -13,7 +13,7 @@ flowchart TD
   B --> CD["Chờ duyệt phạm vi<br/>22 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
   GB --> DG["Đã giao<br/>246 việc"]
-  GB --> CN["Chờ phiên nghiệm thu<br/>147 việc"] --> GG{"Cổng Giá trị"}
+  GB --> CN["Chờ phiên nghiệm thu<br/>148 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
 
@@ -121,6 +121,7 @@ flowchart TD
 - check-freshness đo độ tươi theo bảng thật của từng nguồn, có SLO cho S05 và S06, không còn dòng quá hạn giả (`freshness-theo-nguon-that`)
 - Người gắn nhãn mở mẫu của từng nhóm S03 trên /ops/labels, gắn điều người trong nhóm hiểu gồm phân khu, trục, tầng, số WC, bài nhiều căn, người bán, SĐT, mỗi trường ghi căn cứ, bài phải dùng ngữ cảnh ghi lý do, rồi xem máy đọc gì để ghi loại trường hợp, và thấy bảng trường hợp theo nhóm (`gan-nhan-theo-nhom-s03`)
 - Tin căn hộ S03 của Ocean Park 1 và Grand Park được gắn vào toà của Danh bạ, hoặc phân khu, cụm khi bài chỉ nêu tới đó, từ ô tên toà, chữ bài và bản đọc của model, mỗi nhóm nguồn có căn cứ và tắt riêng được; người đọc phía sau lấy toà của tin từ một view (`ghep-tin-vao-danh-muc`)
+- Tin căn hộ S03 của Ocean Park 1 và Grand Park đã gắn toà được gắn tiếp vào trục hoặc căn của Danh bạ từ mã căn trong bài, tầng suy từ mã căn ghi thành phát biểu riêng, người đọc lấy mức sâu nhất của tin từ view offer_unit (`ghep-tin-vao-truc-can`)
 - Tin có dự án được xếp hạng giá trong nhóm dự án × loại (× số phòng ngủ) và mang nhãn «Giá tốt» khi nằm trong 20% thấp nhất và dưới trung vị từ 5%; tin chỉ biết phường giữ «Rẻ trong phường»; /ops/deals lọc được theo dự án, mỗi căn một dòng, tab «Cần xác minh» đếm trên toàn tập; dải diện tích dự án × PN là phát biểu suy ra riêng (`gia-tot-cap-du-an`)
 - Gỡ tài khoản Zalo kiểm bản cấu hình sau khi gỡ trước lệnh đăng xuất: cấu hình phạm bất biến bộ canh thì từ chối mà không đăng xuất phiên nào (`go-tai-khoan-kiem-cfg-truoc-logout`)
 - Route gỡ tài khoản thu DELETE /api/v1/ops/zalo/accounts từ chối id rỗng hoặc không có trong danh sách tài khoản trước khi gọi openclaw (`go-tai-khoan-kiem-id`)
