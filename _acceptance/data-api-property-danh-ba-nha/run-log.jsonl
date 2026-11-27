@@ -55,3 +55,4 @@
 {"ts":"2026-11-27T11:08:41Z","sha":"845d237ed4417632d548f87a78a708a931e877f2","round":2,"kind":"baseline","evals_hash":"1955149ca4325a646ac7e7f4849655e70fcf49756db1353ab3d6199a43cfa9ed","non_discriminating":[],"carried_from_round":1}
 {"ts":"2026-11-27T11:08:41Z","sha":"845d237ed4417632d548f87a78a708a931e877f2","round":2,"kind":"round-tally","verdict":"PASS","expected":12,"returned":12,"blocked":0}
 {"ts":"2026-11-27T11:08:41Z","sha":"845d237ed4417632d548f87a78a708a931e877f2","round":2,"kind":"chot-truong-nguoi","human_signoff":0,"human_override":0,"bypass_ack":0,"verified_at":19}
+{"ts":"2026-11-27T19:24:22Z","kind":"repin","run_id":"repin-20261127T190616Z-26352","sha":"3290b5f4bc9ec24f3f022b9f21af89e47b84d13c","suites_exit":[0,0,0,0,0,0,0,0],"evals_exit":{"E1":0,"E2":0,"E3":0,"E4":0,"E5":0,"E6":0,"E7":0,"E8":0,"E9":0,"E10":0,"E11":0},"wall_s":1085.6,"so_lenh":12,"tong_ket":{"ket_cuc":"xanh","phut":18.1,"so_lenh":12,"model_goi":0,"model_carry":0,"chap_chon":0}}
