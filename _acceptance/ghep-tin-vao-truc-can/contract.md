@@ -102,3 +102,8 @@ Hôm nay 0 tin S03 gắn trục hay căn; 2.830 tin hai khu ở mức toà. Hạ
 - AC-3 ô «floor_raw của bộ đọc chữ không bị rút hay đè»: ô chưa có dữ liệu thật, đo bằng bài cấy. Đo chỉ đọc trên DB máy thu
   27/11 (docDauVao + tinhGan): 41.735 bài có toà, trục 9.530, căn 897, tầng suy từ mã 0; bản chép M5 0/40.205. Ca
   `floor-raw-cua-bo-doc-chu-khong-bi-rut-hay-de` tự cấy một bài trong DB lượt (GS phán 27/11).
+- AC-3 + AC-5, căn qua bí danh mã căn (finding high S4 vòng 3, sửa bằng migration 138; lời AC không đổi): lỗi có thật trong
+  luật nhưng ẩn trên dữ liệu hôm nay. Đo chỉ đọc trên DB máy thu 27/11 bằng `cd pipeline && node
+  scripts/ghep-tin-truc-can-do-bi-danh.mjs`: 42.113 bài, trục 9.591, căn 903; cả 903 căn tìm được qua trục + tầng, căn CHỈ qua
+  bí danh 0. Cả DB có 28.261 căn active chỉ có bí danh (không stack_key, floor); toà hai khu có 10.320/72.540 căn. Trước 138 view
+  offer_unit sẽ hạ một bài như thế về mức trục; ca `bi-danh-mot-can-di-tron-ghi-den-view` đo đường này trọn luật → ghi → view.

@@ -81,6 +81,10 @@ Lượt gắn đầu chèn khoảng **9.532 dòng** (một dòng mỗi bài gắ
 bộ đọc chữ). Lý do không gắn theo bài: `khong-ma` 27.604 · `truc-ngoai-danh-ba` 212 (toà Pavilion, Z34, U38 chưa có trục trong
 danh bạ) · `ma-khong-toa` 2. Số lúc áp so với số này; lệch quá 2 điểm phần trăm ở tỉ lệ tin OP1 xuống trục + căn thì DỪNG và báo.
 
+**Căn qua bí danh (138), đo chỉ đọc 27/11** bằng `cd pipeline && node scripts/ghep-tin-truc-can-do-bi-danh.mjs`: 42.113 bài ·
+trục 9.591 · căn 903 (qua trục + tầng 903, chỉ qua bí danh **0**) · căn active chỉ có bí danh 28.261 cả DB, 10.320/72.540 ở toà
+hai khu. Lượt gắn đầu sau 138 ghi dòng mức căn kèm `evidence.unit`. Lúc áp chạy lại lệnh này trước mục 1c và chép số.
+
 ## 3. Sao lưu trước áp
 
 Ngay trước bước 1b, sau một lượt nạp S03 đã xong:
@@ -134,6 +138,9 @@ Q "SELECT count(*) FROM (SELECT subject_key, field FROM field_assertions WHERE r
     GROUP BY 1, 2 HAVING count(*) > 1) x"                                             # phải 0 — mỗi bài nhiều nhất một dòng sống mỗi trường
 Q "SELECT count(*) FROM (SELECT offer_id FROM offer_unit GROUP BY 1 HAVING count(*) > 1) x"   # phải 0 — không tin nào hai dòng
 time Q "SELECT count(*) FROM offer_unit WHERE muc <> 'toa'"                                   # dưới 15 giây
+Q "SELECT pg_get_viewdef('offer_unit'::regclass) LIKE '%can_pb%'"                              # phải t — thân 138
+Q "SELECT count(*) FROM field_assertions WHERE retracted_at IS NULL AND rule_id LIKE 'ghep-can-%'
+    AND field = 'universal_property_sub_id' AND value NOT LIKE '%:*' AND evidence ->> 'unit' IS NULL"  # phải 0 — mọi dòng mức căn có unit
 ```
 
 Lượt nạp S03 kế tiếp (log `zalo-import-daily`): phải có dòng `ghep-can: … · chèn <nhỏ> · rút <nhỏ>`, không có `JOB WARN [ghep-can]`.
