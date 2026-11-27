@@ -130,8 +130,8 @@ model khác nút» phải bằng nhau. Hồ sơ áp năm thứ:
    nên hai nút cùng tên, cùng `area_ids` là cùng khoá nhóm:
    `SELECT count(*) - count(DISTINCT (lower(name), area_ids)) AS nut_trung FROM asset_nodes WHERE meta ->> 'nguon' = 'S08'` → 0.
 
-**Rào áp (GS 26/11):** không chạy lại lượt áp sau khi có snapshot S08 mới, cho tới khi hàng sửa «đúc theo khoá nhóm» (mã tạm DA55b,
-GS cấp mã thật) gộp. Lý do: luật đúc chỉ gom theo khoá nhóm (tên gốc + tỉnh) trong một lượt; lượt áp sau không tìm nút S08 đã đúc
+**Rào áp (GS 26/11):** không chạy lại lượt áp sau khi có snapshot S08 mới, cho tới khi hàng sửa «đúc theo khoá nhóm» (DA65,
+GS cấp 27/11) gộp. Lý do: luật đúc chỉ gom theo khoá nhóm (tên gốc + tỉnh) trong một lượt; lượt áp sau không tìm nút S08 đã đúc
 cùng khoá, nên mỗi dự án mới rơi vào nhóm đã đúc sinh một nút thứ hai (slug `-2`) trong danh bạ. Số đo chỉ đọc DB máy thu 26/11:
 thẻ đúc 163 dự án vào 158 nhóm, 5 nhóm nhiều dự án (10 dự án); qua 3 snapshot S08 06→20/11 không nhóm nào có thành viên về ở ngày
 thu khác nhau, nên lượt áp đầu sinh 0 nút trùng. Điều kiện phát sinh sắp có thật vì S08 đang được thu toàn bộ (lời 22/11).

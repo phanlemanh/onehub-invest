@@ -15,7 +15,7 @@ Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm v
 
 - **Lượt áp sau đúc nút S08 thứ hai cho cùng khoá nhóm (r1)**
   Người dùng thấy gì: Khi S08 thu thêm một dự án cùng tên gốc, cùng tỉnh với một nhóm đã đúc nút, lượt áp kế đúc thêm một nút dự án thứ hai trùng tên trong danh bạ thay vì gộp vào nút cũ. Hôm nay 0 nút trùng: thẻ đúc 163 dự án vào 158 nhóm, 5 nhóm nhiều dự án (10 dự án), qua 3 snapshot S08 06→20/11 không nhóm nào có thành viên về ở ngày thu khác nhau. Lỗi phát sinh khi S08 thu thêm dự án vào nhóm đã đúc — S08 đang được thu toàn bộ (lời 22/11), nên sắp xảy ra thật.
-  Căn cứ: Mỗi dự án mới rơi vào nhóm đã đúc là một nút trùng trong danh bạ, phải đảo lượt và gộp tay; hồ sơ áp đã có rào «không áp lại sau snapshot S08 mới tới khi hàng sửa gộp» và phép đếm nút trùng khoá nhóm = 0 sau áp (design doc §7). Hàng sửa mã tạm DA55b, GS cấp mã thật, xếp trước lượt nạp S08 kế.
+  Căn cứ: Mỗi dự án mới rơi vào nhóm đã đúc là một nút trùng trong danh bạ, phải đảo lượt và gộp tay; hồ sơ áp đã có rào «không áp lại sau snapshot S08 mới tới khi hàng sửa gộp» và phép đếm nút trùng khoá nhóm = 0 sau áp (design doc §7). Hàng sửa mã DA65 (GS cấp 27/11), xếp trước lượt nạp S08 kế.
   file: `pipeline/lib/noi-du-an-s08-lop.mjs`
   severity: medium
   Đề xuất: new-contract

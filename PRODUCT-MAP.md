@@ -12,7 +12,7 @@ flowchart TD
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>22 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>235 việc"]
+  GB --> DG["Đã giao<br/>236 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>146 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
@@ -354,6 +354,7 @@ flowchart TD
 - Chuyển mọi agent làn Claude từ Qwen trên MTPLX sang Haiku 5.5 cloud (Anthropic thẳng, lùi sang Gateway), đổi model bằng cấu hình (`model-may-sang-haiku`)
 - Kiểm N1 đêm của danh bạ SĐT không đếm người đã tách là «chưa gộp», nên không đỏ vĩnh viễn sau lần tách đầu tiên (`n1-dem-nguoi-tach`)
 - Bộ nạp S09 của làn thu vào main — bản thu S09 khuôn API nạp được vào stg_s09_item (097) bằng lõi DA31, chạy lại không nhân dòng, chỉ ghi DB máy thu khi có cờ tường minh (`nap-s09`)
+- Dự án, toà và tầng S09 vào danh bạ, toà trùng S16, S08 thành bí danh, không sinh trùng (`nap-s09-toa-tang-vao-danh-ba`)
 - Dọn luật hỏi quyền rộng — rào push main chuyển sang branch protection GitHub như crm/kit (`narrow-ask-rules`)
 - Bật máy tự xếp mục ngoài hợp đồng loại «giới hạn đã biết» ở Cổng Bằng chứng (feature_loop.ngoai_n_tu_dinh_tuyen) (`ngoai-n-tu-dinh-tuyen-bat`)
 - Lệnh nhãn bạc S03 — model lớn (Claude Haiku 5.5, OpenAI Decisions, Qwen 27B local) đọc bài S03 và ghi ý định tin, bán/thuê, xác suất, câu trích vào bảng nhãn bạc riêng (migration 065), kèm chế độ đo trên tập vàng — không ghi dữ liệu canonical (`nhan-bac-model-lon-s03`)
