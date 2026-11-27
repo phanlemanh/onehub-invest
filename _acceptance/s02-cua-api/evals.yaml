@@ -1,5 +1,5 @@
 schema_version: 1
-slug: s02-cua-api
+feature_slug: s02-cua-api
 evals:
   - id: E1
     criterion: AC-2
@@ -7,75 +7,123 @@ evals:
     cmd: cd collector && npx tsc -p tsconfig.json && cd .. && node _acceptance/s02-cua-api/probes/chay-test-dot-bien.mjs doc-phien
     expected: "exit 0; dòng cuối 'XANH'; dòng 'đạt: bản thật · doc-phien: 35 ca đạt, 0 ca đỏ'; dòng 'đạt: bản đối chứng (chép, không đổi) · 35 ca đạt, 0 ca đỏ sẵn do chép' — vế KHÔNG-BẮN: bản đối chứng không đổi không sinh ca đỏ nào; năm dòng 'đạt: bản đột biến (…) bị bắt:' — chọn bản CŨ nhất thay vì mới nhất · bỏ giải nén tiền tố khoá của bảng · bỏ giải nén khối snappy · bỏ giữ mảnh FIRST của bản ghi cắt mảnh · bản XOÁ trong bảng coi là còn"
     paths: [collector/src/collectors/**, collector/src/test/s02-doc-phien.test.ts, _acceptance/s02-cua-api/probes/chay-test-dot-bien.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E2
     criterion: AC-3
     executor: script
     cmd: cd collector && npx tsc -p tsconfig.json && cd .. && node _acceptance/s02-cua-api/probes/chay-test-dot-bien.mjs tra-doi-token
     expected: "exit 0; dòng cuối 'XANH'; dòng 'đạt: bản thật · tra-doi-token: 18 ca đạt, 0 ca đỏ'; dòng 'đạt: bản đối chứng (chép, không đổi) · 18 ca đạt, 0 ca đỏ sẵn do chép' — vế KHÔNG-BẮN: bản đối chứng không đổi không sinh ca đỏ nào; sáu dòng 'đạt: bản đột biến (…) bị bắt:' — 429 không coi là bị chặn · trang thử thách không coi là bị chặn · 401/403 không thành lỗi xác thực · thiếu id_token vẫn gửi lời hai · refresh token rỗng vẫn gọi mạng · bỏ thời gian chờ của mỗi lời"
     paths: [collector/src/collectors/**, collector/src/test/s02-cua-api.test.ts, _acceptance/s02-cua-api/probes/chay-test-dot-bien.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3
     criterion: AC-4
     executor: script
     cmd: cd collector && npx tsc -p tsconfig.json && cd .. && node _acceptance/s02-cua-api/probes/chay-test-dot-bien.mjs bo-thu
     expected: "exit 0; dòng cuối 'XANH'; dòng 'đạt: bản thật · bo-thu: 35 ca đạt, 0 ca đỏ'; dòng 'đạt: bản đối chứng (chép, không đổi) · 34 ca đạt, 1 ca đỏ sẵn do chép' (ca đỏ sẵn: ca đọc tệp nguồn, không được tính là bắt được); bốn dòng 'đạt: bản đột biến (…) bị bắt:' — tra đổi bị từ chối mà không in AUTH FAIL · bị chặn lại in AUTH FAIL thay vì BỊ CHẶN · profile thiếu refresh token vẫn tra đổi · không cập nhật refresh token khi nguồn xoay phiên"
     paths: [collector/src/collectors/**, collector/src/test/s02-bo-thu-cua-api.test.ts, _acceptance/s02-cua-api/probes/chay-test-dot-bien.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4
     criterion: AC-5
     executor: script
     cmd: cd collector && npx tsc -p tsconfig.json && cd .. && node _acceptance/s02-cua-api/probes/chay-test-dot-bien.mjs bo-thu
     expected: "cùng lệnh E3: ba dòng 'đạt: bản đột biến (…) bị bắt:' — gửi lại dù token không đổi · bỏ làm mới token trước khi gửi · bỏ dòng AUTH FAIL sau 401 — vế KHÔNG-BẮN: ca 'lỗi thường (HTTP 500) → null, tính một lời lỗi — KHÔNG dừng cả lượt' đạt ở bản thật"
     paths: [collector/src/collectors/**, collector/src/test/s02-bo-thu-cua-api.test.ts, _acceptance/s02-cua-api/probes/chay-test-dot-bien.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E5
     criterion: AC-6
     executor: script
     cmd: cd collector && npx tsc -p tsconfig.json && cd .. && node _acceptance/s02-cua-api/probes/chay-test-dot-bien.mjs bo-thu
     expected: "cùng lệnh E3: hai dòng 'đạt: bản đột biến (…) bị bắt:' — bị chặn ở API dữ liệu vẫn đi tiếp · nuốt lỗi bước làm mới thành một lời lỗi lẻ"
     paths: [collector/src/collectors/**, collector/src/test/s02-bo-thu-cua-api.test.ts, _acceptance/s02-cua-api/probes/chay-test-dot-bien.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E6
     criterion: AC-7
     executor: script
     cmd: cd collector && npx tsc -p tsconfig.json && cd .. && node _acceptance/s02-cua-api/probes/chay-test-dot-bien.mjs tra-doi-token
     expected: "cùng lệnh E2: dòng 'đạt: bản thật · tra-doi-token: 18 ca đạt, 0 ca đỏ' — trong đó ca '401 ở lời đầu → LoiXacThuc, KHÔNG gửi lời hai, thông điệp không chứa refresh token' đạt — vế KHÔNG-BẮN: thông điệp lỗi không mang giá trị phiên"
     paths: [collector/src/collectors/**, collector/src/test/s02-cua-api.test.ts, _acceptance/s02-cua-api/probes/chay-test-dot-bien.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E7
     criterion: AC-7
     executor: script
     cmd: bash _acceptance/s02-cua-api/probes/khong-trinh-duyet.sh
     expected: "exit 0; dòng cuối 'XANH'; dòng 'đạt: bản thật · AC-7 dòng AUTH FAIL [S02] kèm mốc ISO và chuỗi «401 sau refresh token» cùng ở đúng một tệp bộ thu'; dòng 'đạt: bản đột biến (tệp cấy chứa literal AUTH FAIL) bị bắt ở ô: AC-7 dòng chuẩn ở đúng một tệp bộ thu'"
     paths: [collector/src/collectors/**, _acceptance/s02-cua-api/probes/khong-trinh-duyet.sh]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E8
     criterion: AC-8
     executor: script
     cmd: cd collector && npx tsc -p tsconfig.json && cd .. && node _acceptance/s02-cua-api/probes/chay-test-dot-bien.mjs bo-thu
     expected: "cùng lệnh E3: dòng 'đạt: bản đột biến (nhịp 0,3 lời/giây thay vì 0,2) bị bắt:' — vế KHÔNG-BẮN: ca 'nhịp: tối đa 0,2 lời/giây (≥ 5 giây giữa hai lời, chưa kể jitter của scheduler)' đạt ở bản thật"
     paths: [collector/src/collectors/**, collector/src/test/s02-bo-thu-cua-api.test.ts, _acceptance/s02-cua-api/probes/chay-test-dot-bien.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E9
     criterion: AC-9
     executor: script
     cmd: cd collector && npx tsc -p tsconfig.json && cd .. && node _acceptance/s02-cua-api/probes/chay-test-dot-bien.mjs bo-thu
     expected: "cùng lệnh E3: hai dòng 'đạt: bản đột biến (…) bị bắt:' — nguồn không có lệnh login vẫn chạy · lỗi mở Chrome vẫn thoát 0 — vế KHÔNG-BẮN: ca 'lệnh login: mở đúng profile rồi DỪNG — thoát 0, in hướng dẫn, không in Usage, không rơi sang nhánh thu' đạt ở bản thật"
     paths: [collector/src/cli.ts, collector/src/collectors/**, collector/src/test/s02-bo-thu-cua-api.test.ts, _acceptance/s02-cua-api/probes/chay-test-dot-bien.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E10
     criterion: AC-1
     executor: script
     cmd: bash _acceptance/s02-cua-api/probes/khong-trinh-duyet.sh
     expected: "cùng lệnh E7: hai dòng 'đạt: bản thật · AC-1 … không nhập playwright-core, không mở trình duyệt' (tệp bộ thu xuất docExpAppToken · tệp phiên xuất docPhienTuProfile) và dòng 'đạt: bản đột biến (tệp cấy nhập playwright-core) bị bắt ở ô: AC-1 tệp bộ thu không nhập playwright-core'"
     paths: [collector/src/collectors/**, _acceptance/s02-cua-api/probes/khong-trinh-duyet.sh]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E11
     criterion: AC-10
     executor: script
     cmd: bash _acceptance/s02-cua-api/probes/vung.sh
     expected: "exit 0; dòng cuối 'XANH: mọi tệp đổi nằm trong vùng'; hai dòng 'đạt: chiều đỏ — cấy … thì bộ lọc gọi tên nó' (pipeline/transform-ngoai-vung.mjs · collector/src/core/types.ts); tám dòng 'đạt: có …'; tệp ngoài vùng thì 'ĐỎ: tệp ngoài vùng: <tệp>'"
     paths: [collector/**, _acceptance/s02-cua-api/**]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E12
     criterion: AC-10
     executor: test
     cmd: config:executors.test.collector
     expected: "exit 0; tsc không lỗi, mọi ca node --test của collector đạt"
     paths: [collector/**]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E13
     criterion: AC-10
     executor: script
     cmd: config:executors.script.cli
     expected: "exit 0; build collector xong và lệnh list-sources in danh sách bộ thu, trong đó có bộ thu S02"
     paths: [collector/src/**, collector/package.json, collector/tsconfig.json]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E14
+    criterion: AC-11
+    executor: script
+    cmd: bash _acceptance/s02-cua-api/probes/khong-lo-phien.sh
+    expected: "exit 0; dòng cuối 'XANH'; ba dòng 'đạt: bản thật · AC-11 …' (mô-đun phiên không in, không ghi tệp · log và thông điệp lỗi của bộ thu không nội suy token hay phiên · của mô-đun phiên cũng vậy); ba dòng 'đạt: bản đột biến (…) bị bắt' — mô-đun phiên in giá trị · bộ thu ghi refresh token vào log · thông điệp lỗi mang appToken"
+    paths: [collector/src/collectors/**, _acceptance/s02-cua-api/probes/khong-lo-phien.sh]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E15
+    criterion: AC-12
+    executor: script
+    cmd: bash _acceptance/s02-cua-api/probes/khong-lo-phien.sh
+    expected: "cùng lệnh E14: dòng 'đạt: bản thật · AC-12 bộ test không gọi lượt thu, không dùng profile mặc định, CLI S02 có S02_PROFILE_DIR'; ba dòng 'đạt: bản đột biến (…) bị bắt' — test gọi lượt thu · test gọi CLI S02 không đặt S02_PROFILE_DIR · test đọc profile mặc định"
+    paths: [collector/src/test/s02-*.test.ts, _acceptance/s02-cua-api/probes/khong-lo-phien.sh]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E16
+    criterion: AC-13
+    executor: script
+    cmd: cd collector && npx tsc -p tsconfig.json && cd .. && node _acceptance/s02-cua-api/probes/dung-ca-luot.mjs
+    expected: "exit 0; dòng cuối 'XANH'; ba dòng 'đạt: bản thật · <429|thu-thach|403> ở lời dữ liệu đầu → collect() ném LoiBiChan, 1 lời dữ liệu, 0 lời cho thị trường 902, 1 dòng BỊ CHẶN'; dòng 'đạt: bản thật · vế không bắn: 500 là lời lỗi lẻ, lượt đi tiếp tới thị trường 902'; dòng 'đạt: bản đột biến (call() nuốt LoiBiChan, lượt đi tiếp) bị bắt'"
+    paths: [collector/src/collectors/**, collector/src/core/scheduler.ts, _acceptance/s02-cua-api/probes/dung-ca-luot.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E17
+    criterion: AC-2
+    executor: script
+    cmd: cd collector && npx tsc -p tsconfig.json && cd .. && node _acceptance/s02-cua-api/probes/dung-ca-luot.mjs
+    expected: "cùng lệnh E16: dòng 'đạt: bản thật · AC-2(g) đuôi nhật ký ghi dở → bỏ đuôi, đọc bản nguyên vẹn, không ném'"
+    paths: [collector/src/collectors/**, collector/src/core/scheduler.ts, _acceptance/s02-cua-api/probes/dung-ca-luot.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E18
+    criterion: AC-8
+    executor: script
+    cmd: cd collector && npx tsc -p tsconfig.json && cd .. && node _acceptance/s02-cua-api/probes/dung-ca-luot.mjs
+    expected: "cùng lệnh E16: dòng 'đạt: bản thật · mỗi lời gửi (cả hai lời cấp token và mọi lời dữ liệu) đúng một take()' với số take bằng số lời; dòng 'đạt: bản đột biến (call() gửi lời không qua take()) bị bắt'"
+    paths: [collector/src/collectors/**, collector/src/core/scheduler.ts, _acceptance/s02-cua-api/probes/dung-ca-luot.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
