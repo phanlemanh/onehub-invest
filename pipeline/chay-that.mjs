@@ -10,6 +10,7 @@ import { spawnSync } from 'node:child_process';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DANH_SACH, loiDanhSach } from '../scripts/lib/ci-can-du-lieu.mjs';
+import { VAI_PHAT_TRIEN, vaiMay } from '../scripts/lib/vai-may.mjs';
 
 const pipe = dirname(fileURLToPath(import.meta.url));
 const arg = (k) => { const i = process.argv.indexOf(k); return i > 0 ? process.argv[i + 1] : null; };
@@ -21,12 +22,21 @@ if (loi.length) {
   process.exit(2);
 }
 if (!ds.length) { console.error('chay-that: danh sách ca pipeline rỗng'); process.exit(2); }
+// HT33: máy phát triển (vai đọc từ ~/.config/onehub/hai-may.env, KHÔNG từ CI) bỏ qua có tên các ca chỉ máy thu chạy được
+// (mục mang `may_thu`); máy thu — kể cả khi không đọc được vai — chạy đủ. Dòng báo đi stderr để --liet giữ khuôn cũ.
+const vai = vaiMay();
+const bo = vai === VAI_PHAT_TRIEN ? ds.filter((m) => m.may_thu) : [];
+const chay = ds.filter((m) => !bo.includes(m));
+if (bo.length) {
+  console.error(`chay-that: vai ${vai} — bỏ qua ${bo.length} ca chỉ máy thu`);
+  for (const m of bo) console.error(`chay-that: bỏ qua (chỉ máy thu) — ${m.tep} — ${m.ca} — ${m.may_thu}`);
+} else console.error(`chay-that: vai ${vai} — chạy đủ ${ds.length} ca`);
 const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-const mau = ds.map((m) => `--test-name-pattern=^${esc(m.ca)}$`);
-const tep = [...new Set(ds.map((m) => join(goc, m.tep)))];
+const mau = chay.map((m) => `--test-name-pattern=^${esc(m.ca)}$`);
+const tep = [...new Set(chay.map((m) => join(goc, m.tep)))];
 if (process.argv.includes('--liet')) {
   console.log(tep.map((t) => relative(goc, t)).join('\n'));
-  console.log(ds.map((m) => m.ca).join('\n'));
+  console.log(chay.map((m) => m.ca).join('\n'));
   process.exit(0);
 }
 const r = spawnSync(process.execPath, ['--test', '--test-concurrency=1', ...mau, ...tep], { cwd: pipe, stdio: 'inherit' });
