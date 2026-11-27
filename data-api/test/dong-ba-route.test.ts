@@ -288,3 +288,30 @@ test("DRL-AC-5 listings danh sách giữ hình", async () => {
   const thieu = KHOA_DANH_SACH.filter((k) => !co.includes(k));
   assert.deepEqual([...thua, ...thieu], [], `DRL listings danh sách đổi hình: ${[...thua, ...thieu].join(", ")}`);
 });
+
+test("DRL-PB6 đường Property không đọc bảng thô stg_* hay bảng S02", async () => {
+  // Tên bảng nguồn trong chuỗi nháy đơn đúng bằng định danh đã biết (lưới tên nguồn PB5).
+  const tienToS02 = 'airdna_listings'.slice(0, -"listings".length);
+  const loi: string[] = [];
+  const { rows } = await sql(
+    `SELECT b.upi, b.building_key, (SELECT u.unit_key FROM units u WHERE u.building_key = b.building_key AND u.status = 'active' LIMIT 1) AS unit_key,
+            CASE n.node_type WHEN 'project' THEN n.id ELSE n.parent_id END AS du_an
+       FROM buildings b JOIN asset_nodes n ON n.id = b.region_node_id
+      WHERE b.status = 'active' AND EXISTS (SELECT 1 FROM units u WHERE u.building_key = b.building_key AND u.status = 'active')
+      LIMIT 1`,
+  );
+  assert.ok(rows[0], "DRL-PB6 DB thử không có toà nào có căn — ca rỗng nghĩa");
+  const t = rows[0];
+  const U = encodeURIComponent(String(t.upi));
+  const cau: string[] = [];
+  for (const d of [`/v1/properties/${U}`, `/v1/properties/${U}/units/${t.unit_key}`, `/v1/properties?project=${t.du_an}`,
+    `/v1/properties/lookup?project=${t.du_an}&building=${t.building_key}&unitNumber=X-1`]) {
+    const r = await goi(d);
+    if (r.status !== 200) loi.push(`DRL-PB6 ${d} không 200 (${r.status})`);
+    cau.push(...r.sql);
+  }
+  if (cau.length === 0) loi.push("DRL-PB6 bộ ghi SQL không bắt được câu nào");
+  if (cau.some((c) => /\bstg_[a-z0-9_]+/.test(c))) loi.push("DRL-PB6 đường Property đọc bảng stg_*");
+  if (coBang(cau, tienToS02, "ref_calib_", "area_sources").length) loi.push("DRL-PB6 đường Property đọc bảng S02");
+  chot(loi);
+});

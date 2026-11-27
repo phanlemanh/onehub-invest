@@ -787,3 +787,60 @@ enums_lint_allow:
   - path: data-api/src/routes/deals.ts
     axis: kind
     reason: "CG9: data-api (subtree công khai) không có tệp hằng sinh; tham số kind của /v1/deals kiểm hai giá trị tại chỗ"
+
+# Extension của API dữ liệu công khai (data-api) — khoá trả ra không có tương đương trong RESO DD 2.1. Mỗi mục đủ sáu
+# điều kiện ADR-0011 Qđ 3: tra (`dd: null` + `checked_on`), lý do (`rationale`), migration (`migration`), CHECK
+# (`check`), khai báo (`declared_in`), DQ (`dq`). Bộ đọc sổ từ vựng không đọc khối này.
+api_extensions:
+  property:  # PB6 data-api-property-danh-ba-nha — «Property» của OneHub là danh bạ nhà, không phải RESO Property (tin rao)
+    dd_version: "2.1"
+    checked_on: "2026-11-27"
+    keys:
+      projectId:
+        dd: null
+        rationale: "id nút dự án của kho (asset_nodes) để gọi ?project=; DD có SubdivisionName (tên) nhưng không có khoá dự án"
+        migration: "không cột mới — dựng từ asset_nodes.id"
+        check: "không có — asset_nodes.id là khoá chính bigint"
+        declared_in: data-api/src/contract/property.ts
+        dq: "data-api/test/properties.test.ts PB6-AC-1"
+      catalogTier:
+        dd: null
+        rationale: "bậc danh mục của toà (xac_minh · suy_ra_manh · mot_loi_khai, ADR-0016) — DD không có độ tin cậy của bản ghi vật thể"
+        migration: "không cột mới — dựng từ buildings.catalog_tier (migration 082)"
+        check: "buildings.catalog_tier CHECK IN ('xac_minh', 'suy_ra_manh', 'mot_loi_khai') (migration 082)"
+        declared_in: data-api/src/contract/property.ts
+        dq: "data-api/test/properties.test.ts PB6-AC-1"
+      unitCount:
+        dd: null
+        rationale: "số căn active của toà — DD Building không có đếm căn của danh bạ"
+        migration: "không cột mới — đếm units.status = 'active' theo building_key"
+        check: "không có — số đếm, luôn ≥ 0"
+        declared_in: data-api/src/contract/property.ts
+        dq: "data-api/test/properties.test.ts PB6-AC-1, PB6-AC-7"
+      activeListingCount:
+        dd: null
+        rationale: "số tin đang rao gắn toà (view offer_building, mức toà) — DD không có đếm tin theo toà"
+        migration: "không cột mới — dựng từ offer_building + sale_offers.offer_status, làm tươi 10 phút trong bộ nhớ"
+        check: "không có — số đếm, luôn ≥ 0"
+        declared_in: data-api/src/contract/property.ts
+        dq: "data-api/test/properties.test.ts PB6-AC-1"
+      unitKey:
+        dd: null
+        rationale: "khoá mờ unt_… của căn (ULID ngẫu nhiên); thay UniversalPropertySubId = <khoá trục>:<tầng> vì SubId cho dò tầng ra cả cột căn"
+        migration: "không cột mới — units.unit_key (migration 082)"
+        check: "units.unit_key CHECK ~ '^unt_[0-9A-HJKMNP-TV-Z]{26}$' (migration 082)"
+        declared_in: data-api/src/contract/property.ts
+        dq: "data-api/test/properties.test.ts PB6-AC-2, PB6-AC-5"
+    local_values:
+      stateOrProvince: "mã ISO 3166-2:VN (VN-HN, VN-SG, …) — lookup StateOrProvince của DD chỉ có bang Mỹ, Canada (ADR-0013 §4)"
+      city: "tên phường/xã — địa chỉ VN từ 07/2025 chỉ còn phường/xã + tỉnh (ADR-0013 §4)"
+    # Loại căn nội bộ (phát biểu property_type của Unit) → PropertySubType (StandardName DD 2.1). Bản sao ở
+    # data-api/src/contract/property.ts (PROPERTY_SUB_TYPE) — data-api đi kho công khai một mình nên không đọc tệp này;
+    # probe PB6 E8 giữ hai bản khớp và soát mọi giá trị thật trong DB.
+    property_sub_type:
+      apartment: "Condominium"
+      house: null        # Townhouse hay Single Family Residence chưa phân biệt được (khung §7, chờ Q7)
+      commercial: null   # DD tách Commercial ở PropertyType, không có SubType chung
+      land: "Unimproved Land"
+      unknown: null      # «chưa biết» không gửi ra API (ADR-0013 §8)
+      "": null
