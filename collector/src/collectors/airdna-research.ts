@@ -30,6 +30,7 @@ const PROFILE_DIR = thuMucProfile(process.env, new URL("../../.airdna-profile/",
 /** Chỉ tên thư mục profile — phần đường dẫn đầy đủ không cần in ra manifest hay log. */
 const TEN_PROFILE = PROFILE_DIR.replace(/\/+$/, "").split("/").pop() ?? PROFILE_DIR;
 const API = "https://api.airdna.co/api/explorer";
+export { API }; // test so URL gửi đi bằng hằng này — KHÔNG gõ tên miền trong test (AC-6, ZC23)
 const APP_ORIGIN = "https://app.airdna.co";
 /** Khoá localStorage `auth` của ứng dụng trong profile — nơi ứng dụng giữ phiên. */
 const KHOA_PHIEN = khoaLocalStorage(APP_ORIGIN, "auth");
@@ -45,6 +46,45 @@ const CITY_MARKET: Record<string, string> = {
 };
 
 const MONTHLY_METRICS = ["adr", "occupancy", "revenue", "revpar"] as const;
+
+/** AC-5 (ZC23): trần trang `map_listings` mỗi thị trường. Vòng cũ chỉ dừng khi nguồn trả
+ * dưới 15000 căn — nguồn lặp trang đầu hoặc trả trang mới mãi thì không bao giờ dừng
+ * (đo fixture 27/11: chạy tới 30 lời = trần chặn của bản giả, tức lưu lượng thật không trần).
+ * Trần 10 trang = 150.000 căn, ~5× Hà Nội (30.623 căn/3 trang) — thị trường thật không chạm;
+ * cả hai ca nguồn bất thường dừng ở đúng lời thứ 10 (≤ 11 của hợp đồng). Đổi trần phải qua cổng. */
+export const TRANG_MAP_TOIDA = 10;
+
+/** AC-5 (ZC23): vòng phân trang `map_listings` tách hẳn để đo được mà không cần phiên thật.
+ * `goi` là call() đã gắn CallCtx; `ghiLoi` tăng bộ đếm failed của lượt (→ coverage.failed > 0 —
+ * lượt LỘ LỖI với dữ liệu bị cắt, không «xong» im lặng); `dayThem` là push() của collect để
+ * từng trang vào items ngay khi nhận (giữ nguyên hành vi cũ khi lượt chết giữa chừng). */
+export async function lapTrangMapListings(
+  goi: (path: string, body: unknown) => Promise<RawItem | null>,
+  marketId: string,
+  log: (...a: unknown[]) => void,
+  ghiLoi: () => void,
+  dayThem: (it: RawItem | null) => void,
+): Promise<void> {
+  for (let offset = 0, trang = 0; ; offset += 15000) {
+    trang += 1;
+    if (trang > TRANG_MAP_TOIDA) {
+      log(
+        `  ⚠️ map_listings ${marketId}: chạm trần ${TRANG_MAP_TOIDA} trang, mỗi trang vẫn đủ 15000 căn — nguồn lặp trang hoặc không kết thúc; dừng thị trường này, lượt ghi FAILED`,
+      );
+      ghiLoi();
+      break;
+    }
+    const it = await goi(
+      offset === 0 ? `/v1/market/${marketId}/map_listings` : `/v1/market/${marketId}/map_listings@${offset}`,
+      { filters: [], currency: "vnd", sort_order: "revenue", pagination: { page_size: 15000, offset } },
+    );
+    dayThem(it);
+    const rows =
+      ((it?.payload as { data?: { payload?: { listings?: unknown[] } } })?.data?.payload?.listings
+        ?.length) ?? 0;
+    if (rows < 15000) break;
+  }
+}
 
 /** 1911-5: giải mã phần exp của JWT appToken (KHÔNG kiểm chữ ký — chỉ đọc hạn).
  * Token rỗng/không giải mã được → exp undefined; conLaiMs âm = đã hết hạn. */
@@ -380,20 +420,16 @@ export const airdnaResearch: Collector & { login(): Promise<void> } = {
         ),
         "timeseries",
       );
-      // map_listings: paginate tới hết (HCMC > 15k listings → 1 page bị cắt)
-      for (let offset = 0; ; offset += 15000) {
-        const it = await call(
-          "POST",
-          offset === 0 ? `/v1/market/${m}/map_listings` : `/v1/market/${m}/map_listings@${offset}`,
-          { filters: [], currency: "vnd", sort_order: "revenue", pagination: { page_size: 15000, offset } },
-          cctx,
-        );
-        push(it, "map-listings");
-        const rows =
-          ((it?.payload as { data?: { payload?: { listings?: unknown[] } } })?.data?.payload?.listings
-            ?.length) ?? 0;
-        if (rows < 15000) break;
-      }
+      // map_listings: paginate tới hết (HCMC > 15k listings → 1 page bị cắt); có trần AC-5
+      await lapTrangMapListings(
+        (path, body) => call("POST", path, body, cctx),
+        m,
+        log,
+        () => {
+          cctx.failed += 1; // coverage.failed > 0 — lượt lộ lỗi, không «xong» im lặng
+        },
+        (it) => push(it, "map-listings"),
+      );
 
       // ---- Cấp submarket ----
       const subsItem = items.find(
