@@ -5,7 +5,7 @@ slug: probe-danh-ba-dem-theo-luat-nghi
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: machine-cleared
 veto_state: mo
 veto_opened_at: 2026-11-25T06:53:21Z
 approved_by:
@@ -41,3 +41,5 @@ nút khác, DA46); probe vẫn đếm mọi nút không phải dự án. Chênh 
 - Ca khác của probe (tin theo nguồn, danh mục, quét tên nguồn): ngoài phạm vi, vì đã xanh trên bản chép 25/11.
 
 ## Notes
+
+- Ngoài-2 (máy định tuyến 2026-11-27, đề xuất S4 known-limits): Bước kiểm chứng ca phá đỏ đúng chỗ có thể báo qua dù ca đỏ vì lý do khác, nên thông báo lỗi có thể nêu sai nguyên nhân. Kết quả đỏ hay xanh cuối cùng vẫn đúng. — `_acceptance/probe-danh-ba-dem-theo-luat-nghi/probes/doi-chieu.sh`
