@@ -15,7 +15,7 @@ thiếu khoá → 503 và không phục vụ (PB3).
 | # | Điều kiện | Ai làm | Trạng thái 27/11 | Lệnh kiểm sau |
 |---|---|---|---|---|
 | 1 | Mã công khai không mang tên nguồn thật (PB5 `data-api-don-ten-nguon` gộp) | M5 code, GS gộp | chờ chấm vòng 1 lại @678c08ec5 | trên `main`: `node scripts/data-api-ten-nguon.mjs` thoát 0 |
-| 2 | Bốn đường thị trường không đọc S02 (HT20 `data-api-markets-khong-doc-s02` gộp) — **thiếu điều này thì mở API là đưa điểm S02 ra ngoài (luật 5)**; thay thế tạm: không mount `/v1/markets` khi triển khai | M5 code, Mạnh ký Cổng Phạm vi, GS gộp | thẻ Cổng Phạm vi chờ Mạnh @4693bede0 | `grep -rnE "airdna_\|area_sources\|ref_calib_" data-api/src data-api/api` chỉ còn chú thích |
+| 2 | Bốn đường thị trường không đọc S02 (HT20 `data-api-markets-khong-doc-s02` gộp) — **thiếu điều này thì mở API là đưa điểm S02 ra ngoài (luật 5)**; thay thế tạm: không mount `/v1/markets` khi triển khai | M5 code, Mạnh ký Cổng Phạm vi, GS gộp | thẻ Cổng Phạm vi chờ Mạnh @4693bede0 | rào tĩnh của HT20 (ca «HT20-AC-5», `data-api/test/markets-khong-s02.test.ts`) xanh trên `main` — 0 tệp chỉ còn chú thích |
 | 3 | Hình tin chuẩn RESO, mã tin thuê ngắn hạn là HMAC có khoá, không ảnh (PB2 gộp) | M5 code, GS gộp | Cổng Phạm vi ký lại 27/11 @8b189fdf9; S2 đang làm | test `dapi_reso` của hồ sơ PB2 xanh trên `main` |
 | 4 | Biến `DATA_API_KEYS` trên project Vercel của data-api (danh sách khoá, mỗi khách một khoá) | **lời riêng của Mạnh** (đặt secret) | chưa có (đo 25/11) | `vercel env ls` thấy tên biến (không in giá trị); gọi không khoá → 401 |
 | 5 | Biến khoá bí mật cho mã tin thuê ngắn hạn (PB2 AC-2; tên biến do PB2 chốt ở S2) | **lời riêng của Mạnh** | chưa có (PB2 chưa code) | khởi động production thiếu biến → dừng với thông điệp ghim của PB2 |
