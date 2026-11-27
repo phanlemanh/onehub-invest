@@ -5,7 +5,7 @@ slug: s06-thu-duoi-lich-va-chon-snapshot
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: verified
 design_doc: docs/superpowers/specs/2026-11-26-s06-thu-duoi-lich-va-chon-snapshot-design.md
 approved_by: Mạnh
 approved_at: 2026-11-27
