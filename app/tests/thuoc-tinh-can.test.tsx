@@ -150,6 +150,25 @@ test("TTC-AC-10 ô phủ bằng lệnh đếm độc lập; dự án không có 
   } finally { delete process.env.ONEHUB_TTC_LOI_THU }
 })
 
+test("TTC-AC-10 toà có bí danh S16 mà không căn nào có thuộc tính (DA67): ô phủ vẫn ra số, lưới rỗng; đếm sau khi lọc thì đỏ", async () => {
+  // Trong giao dịch của client thử: B2 nhận bí danh S16 riêng, căn QB1 không có phát biểu nào — ROLLBACK khi xong.
+  await db.query("BEGIN")
+  try {
+    await db.query(`INSERT INTO registry_aliases (object_key, kind, value, source) VALUES ($1, 'ma_nguon', $2, 'S16')`, [B2, `${DA}/TOA2`])
+    const y = (await db.query(`SELECT count(*)::int n FROM units WHERE building_key = $1 AND status = 'active'`, [B2])).rows[0].n
+    assert.ok(y > 0, "AC-2 tiền đề: toà B2 không có căn")
+    const kq = await lop.docThuocTinhDuAn([B2], db)
+    assert.ok(kq.phu.ok && kq.thuocTinh.ok, "AC-2 đọc lỗi")
+    assert.ok(kq.phu.data.trangThai === "co", "AC-2 toà có bí danh S16 phải ra ô phủ có số")
+    assert.deepEqual([kq.phu.data.trongDanhBa, kq.phu.data.coThuocTinh, kq.phu.data.coGia, kq.thuocTinh.data.size], [y, 0, 0, 0],
+      "AC-2 ô phủ toà không căn nào có thuộc tính lệch đếm độc lập")
+    // Chiều đỏ cùng fixture: đếm trên dòng đã lọc (căn có thuộc tính hay giá) thay vì mọi căn của toà.
+    const pha = await lopPha("    FROM ket\n),", "    FROM ket WHERE co_v OR co_g\n),")
+    const p = await pha.docThuocTinhDuAn([B2], db)
+    assert.ok(!p.phu.ok || p.phu.data.trangThai !== "co" || p.phu.data.trongDanhBa !== y, "AC-2 ô phủ đếm sau khi lọc mà phép đo không đỏ")
+  } finally { await db.query("ROLLBACK") }
+})
+
 test("TTC-AC-10 chiều đỏ: bỏ điều kiện một toà, hay luật mơ hồ toà, khi đếm «chưa vào danh bạ» → ô N lệch đếm độc lập", async () => {
   const pha = await lopPha("GROUP BY c.du_an, upper(btrim(c.ma_can)) HAVING count(DISTINCT c.toa) = 1", "GROUP BY c.du_an, upper(btrim(c.ma_can))")
   const p = await pha.docPhuThuocTinh([B1], db)

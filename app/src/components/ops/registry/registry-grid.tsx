@@ -19,7 +19,7 @@ import { Frame, FrameDescription, FrameFooter, FrameHeader, FramePanel, FrameTit
 import { Button } from "@/components/ui/button"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
 import { fmtInt } from "@/lib/format"
-import { CHO_THIEU_NHAN, khopTim, type ChoThieu, type HangCay } from "@/lib/ops/registry/cay"
+import { biDanhKhacTen, CHO_THIEU_NHAN, khopTim, type ChoThieu, type HangCay } from "@/lib/ops/registry/cay"
 import { LABELS_VI } from "@/lib/vocab.generated"
 
 import { BacBadge, NguonBadges } from "./registry-badges"
@@ -59,7 +59,7 @@ const COLUMNS: ColumnDef<DataGridFeatures, HangCay>[] = [
             <span className="truncate text-sm">{row.original.ten}</span>
           )}
           <span className="text-muted-foreground max-w-full truncate text-xs">
-            {[row.depth > 0 ? LOAI[row.original.loai] : null, row.original.biDanh.slice(0, 3).join(" · ") || null].filter(Boolean).join(" · ")}
+            {[row.depth > 0 ? LOAI[row.original.loai] : null, biDanhKhacTen(row.original.ten, row.original.biDanh).join(" · ") || null].filter(Boolean).join(" · ")}
           </span>
         </div>
       </div>
@@ -67,7 +67,8 @@ const COLUMNS: ColumnDef<DataGridFeatures, HangCay>[] = [
     size: 260,
   },
   { id: "tinh", header: "Tỉnh/thành", cell: ({ row }) => <span className="text-sm">{row.depth === 0 ? (row.original.tinh ?? "—") : ""}</span>, size: 110, meta: { headerClassName: "hidden lg:table-cell", cellClassName: "hidden lg:table-cell" } },
-  { id: "bac", header: "Bậc", cell: ({ row }) => <BacBadge bac={row.original.bac} />, size: 110 },
+  // DA67: dưới md ẩn Bậc để Toà, Căn, Tin đang rao nằm trong khung (như Tỉnh/thành, Nguồn).
+  { id: "bac", header: "Bậc", cell: ({ row }) => <BacBadge bac={row.original.bac} />, size: 110, meta: { headerClassName: "hidden md:table-cell", cellClassName: "hidden md:table-cell" } },
   { id: "nguon", header: "Nguồn", cell: ({ row }) => <NguonBadges nguon={row.original.nguon} />, size: 100, meta: { headerClassName: "hidden md:table-cell", cellClassName: "hidden md:table-cell" } },
   { id: "phanKhu", header: "Phân khu", cell: ({ row }) => so(row.original.soPhanKhu), size: 80, meta: { headerClassName: "hidden xl:table-cell text-end", cellClassName: "hidden xl:table-cell text-end" } },
   {
