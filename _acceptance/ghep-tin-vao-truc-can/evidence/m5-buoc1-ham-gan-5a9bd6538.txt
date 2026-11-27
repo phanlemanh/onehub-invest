@@ -1,0 +1,20 @@
+PL36 bước 1 ham-gan.sh trên M5 ＠5a9bd6538395942b7ee3376760e825db3c8018cc — 2026-11-27T03:31:10Z. Không phải vòng chấm.
+Điều kiện: soát 5a9bd6538-20261127T101849 xong, xanh — pipeline 1081/1158 fail 0, scripts 653/673 fail 0, ca_do rỗng.
+git status --short trước: 0 dòng · sau: 0 dòng.
+
+== Ma trận trên mã thật
+ℹ tests 28
+ℹ pass 28
+ℹ fail 0
+== Đột biến
+đột biến «bo-so-tien-to-toa» → ca «ô «toa-lech»» đỏ
+đột biến «tra-truc-moi-toa» → ca «ô «truc-cung-so-toa-khac-khong-chon»» đỏ
+đột biến «lay-tang-ma-khi-lech» → ca «ô «tang-lech»» đỏ
+đột biến «giu-so-0-tang» → ca «ô «tang-09-khop-9»» đỏ
+== floor_raw bộ đọc chữ trên DB thử
+ℹ tests 2
+ℹ pass 2
+ℹ fail 0
+đột biến «rut-ca-floor-raw» → ca «floor-raw-cua-bo-doc-chu-khong-bi-rut-hay-de» đỏ
+XANH: ma trận, floor_raw và bốn đột biến
+--- mã thoát: 0
