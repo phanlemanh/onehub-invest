@@ -6,7 +6,8 @@
  *   node scripts/audit-p1-resilience/acceptance.mjs gateway      # gateway.log lần đầu chỉ khởi tạo; turn mới → alert (stub)
  *   node scripts/audit-p1-resilience/acceptance.mjs l4a-drop     # "drop no mention" ≥ 20 trong một lượt → WARN, không kill
  *   node scripts/audit-p1-resilience/acceptance.mjs l5b-db       # cổng DB không nghe → WARN db:DOWN, không kill
- *   node scripts/audit-p1-resilience/acceptance.mjs import-daily # nạp lỗi giữ state, dừng chuỗi, exit ≠ 0; ECONNREFUSED retry 5×20s
+ *   node scripts/audit-p1-resilience/acceptance.mjs import-daily # nạp lỗi giữ state, dừng chuỗi, exit ≠ 0; ECONNREFUSED retry 5×20s;
+ *                                                                cổng manifest; sandbox rút bước từ script, gác HOME (vòng 2)
  *   node scripts/audit-p1-resilience/acceptance.mjs err-detail   # errDetail in đủ AggregateError
  *
  * AN TOÀN (luật 8 — alert() của watchdog kill OpenClaw): mọi lần chạy watchdog
@@ -17,10 +18,10 @@
  * Không đọc/ghi ~/.openclaw, /tmp/openclaw, pipeline/logs thật.
  */
 import { spawnSync } from "node:child_process";
-import { appendFileSync, chmodSync, copyFileSync, readdirSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { appendFileSync, chmodSync, copyFileSync, readdirSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, utimesSync, writeFileSync } from "node:fs";
 import { createServer } from "node:net";
-import { tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { homedir, tmpdir } from "node:os";
+import { dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -332,20 +333,112 @@ async function modeL5bDb() {
 }
 
 // ------------------------------------------------------------- import-daily
-function importSandbox(plan) {
+// Vòng 2 (27/11, hàng audit-p1-resilience-do-tren-main): sandbox dựng theo CHÍNH văn bản zalo-import-daily.sh lúc chạy —
+// mọi lần "$ROOT/…" được xếp lớp bằng luật (không danh sách tên bước viết tay); lần không xếp được → thoát 3 gọi tên (AC-9).
+// Fixture có manifest.json (cổng 2510-8, AC-7). Môi trường dựng từ đầu, HOME/TMPDIR trong sandbox, gác HOME thật (AC-8).
+const IMPORT_STUBS = [...STUB_NAMES, "psql"];
+const DU_LIEU = /^(pipeline\/logs\/|collector\/|\.env$)/;
+
+/** Xếp mọi lần `$ROOT` của văn bản script vào lớp. Trả { lop: {thu_vien, buoc, cd_tsx, du_lieu}, tong, loi: [] }. */
+export function phanLop(src) {
+  const lop = { thu_vien: [], buoc: [], cd_tsx: [], du_lieu: [] };
+  const loi = [];
+  const tong = (src.match(/\$ROOT/g) ?? []).length;
+  let daXep = 0;
+  src.split("\n").forEach((dong, i) => {
+    const re = /"\$ROOT\/([^"$]*)"/g;
+    let m;
+    const daNhan = new Set();
+    while ((m = re.exec(dong))) {
+      const duong = m[1];
+      const truoc = dong.slice(0, m.index);
+      const sau = dong.slice(m.index + m[0].length);
+      daNhan.add(m.index);
+      if (/(^|\s)\.\s+$/.test(truoc) && /\.sh$/.test(duong)) lop.thu_vien.push(duong);
+      else if (/(^|[\s;(&|])(node|bash)\s+$/.test(truoc) && /\.(mjs|sh|ts)$/.test(duong)) lop.buoc.push(duong);
+      else if (/(^|[\s;(])cd\s+$/.test(truoc)) {
+        // cd "$ROOT/<thư mục>" && … node … --import tsx <tệp tương đối>.ts — dạng cd duy nhất thước nhận (bước enrich).
+        const t = sau.match(/^\s*&&[^;)]*\bnode\b[^;)]*--import tsx\s+([\w./-]+\.ts)\b/);
+        if (t) lop.cd_tsx.push(`${duong}/${t[1]}`);
+        else loi.push(`dòng ${i + 1}: cd "$ROOT/${duong}" theo sau không phải node --import tsx <tệp>.ts — dạng gọi thước không nhận`);
+      } else if (DU_LIEU.test(duong)) lop.du_lieu.push(duong);
+      else loi.push(`dòng ${i + 1}: "$ROOT/${duong}" không xếp được vào lớp nào`);
+      daXep++;
+    }
+    // lần $ROOT không nằm trong "…"/ liền chuỗi → không lớp nào nhận
+    const tatCa = [...dong.matchAll(/\$ROOT/g)].map((x) => x.index);
+    for (const k of tatCa) if (!daNhan.has(k - 1)) loi.push(`dòng ${i + 1}: lần $ROOT ngoài dạng "$ROOT/<đường>" — không lớp nào nhận`);
+  });
+  const soLop = Object.values(lop).reduce((s, a) => s + a.length, 0);
+  if (loi.length === 0 && soLop + 0 !== daXep) loi.push(`tổng lớp ${soLop} ≠ số lần đã xếp ${daXep}`);
+  if (loi.length === 0 && daXep !== tong) loi.push(`tổng $ROOT ${tong} ≠ tổng các lớp ${daXep}`);
+  return { lop, tong, loi };
+}
+
+/** Dòng calls.log có đường TUYỆT ĐỐI ngoài sandbox `S` hay chuỗi .openclaw (đường tương đối như pipeline/x.mjs không tính). */
+export const laNgoai = (l, S) => /\.openclaw/.test(l) || [...l.matchAll(/(?:^|\s)(\/\S+)/g)].some((m) => !m[1].startsWith(S) && !/^\/(dev|usr|bin)\//.test(m[1]));
+
+const NHAP = "pipeline/import-airbnb.mjs"; // bước nạp đang bị đo (kế hoạch ok/fail/econn), không phải bước sau nạp
+
+function importSandbox(plan, opts = {}) {
   const S = mkdtempSync(join(tmpdir(), "acc-zc3-imp-"));
   const repo = join(S, "repo");
   const stub = join(S, "bin");
   const calls = join(S, "calls.log");
-  for (const d of ["scripts", "pipeline/logs", "collector/snapshots/hanoi"]) mkdirSync(join(repo, d), { recursive: true });
-  cpSync(IMPORT_DAILY, join(repo, "scripts/zalo-import-daily.sh"));
+  const spawned = join(S, "spawned");
+  const home = opts.home ?? join(S, "home");
+  const tmp = join(S, "tmp");
+  for (const d of ["scripts", "pipeline/logs", "collector/snapshots/hanoi", "tmp", "home"]) mkdirSync(join(d === "tmp" || d === "home" ? S : repo, d), { recursive: true });
+
+  // Bản chép: đúng một dòng đầu (đánh dấu đã spawn) + dòng đối chứng của ca chèn trước `exit "$JOB_RC"` cuối.
+  let src = opts.src ?? readFileSync(IMPORT_DAILY, "utf8");
+  const ds = src.split("\n");
+  const cuoi = ds.lastIndexOf('exit "$JOB_RC"');
+  if (!ds[0].startsWith("#!") || cuoi < 0) {
+    console.error('bản chép: thiếu shebang hay dòng exit "$JOB_RC" cuối — bỏ chạy');
+    process.exit(2);
+  }
+  ds.splice(cuoi, 0, ...(opts.chen ?? []));
+  ds.splice(1, 0, ': > "${ACC_SPAWNED:?}"');
+  src = ds.join("\n");
+  const pl = phanLop(src);
+  if (pl.loi.length) {
+    rmSync(S, { recursive: true, force: true });
+    return { code: 3, loi: pl.loi, stdout: "", imports: [], buocGoi: [], sleeps: [], spawned: false, pl };
+  }
+  writeFileSync(join(repo, "scripts/zalo-import-daily.sh"), src);
+  for (const f of pl.lop.thu_vien) {
+    mkdirSync(dirname(join(repo, f)), { recursive: true });
+    copyFileSync(join(ROOT, f), join(repo, f));
+  }
+  const ghiGia = (rel) => {
+    const p = join(repo, rel);
+    mkdirSync(dirname(p), { recursive: true });
+    if (rel.endsWith(".sh")) writeFileSync(p, `#!/bin/bash\necho "buoc ${rel}" >> "${calls}"\n`);
+    else writeFileSync(p, `import { appendFileSync } from "node:fs"; appendFileSync(${JSON.stringify(calls)}, ${JSON.stringify(`buoc ${rel}\n`)});\n`);
+  };
+  const sauNap = [...pl.lop.buoc.filter((b) => b !== NHAP), ...pl.lop.cd_tsx];
+  for (const b of sauNap) ghiGia(b);
+  for (const c of pl.lop.cd_tsx) {
+    const tsx = join(repo, c.split("/")[0], "node_modules/tsx");
+    mkdirSync(tsx, { recursive: true });
+    writeFileSync(join(tsx, "package.json"), JSON.stringify({ name: "tsx", type: "module", exports: "./index.mjs" }));
+    writeFileSync(join(tsx, "index.mjs"), "");
+  }
+  for (const d of pl.lop.du_lieu) if (!/\.(state|env)$/.test(d) && !d.endsWith(".env")) mkdirSync(join(repo, d), { recursive: true });
+
+  const now = Date.now() / 1000;
   for (const ts of ["2026-10-22T010000000", "2026-10-22T060000000", "2026-10-22T070000000", "2026-10-22T080000000"]) {
-    mkdirSync(join(repo, "collector/snapshots/hanoi", `hanoi__zalo-agent__${ts}`));
+    const dir = join(repo, "collector/snapshots/hanoi", `hanoi__zalo-agent__${ts}`);
+    mkdirSync(dir);
+    const thieu = opts.thieuManifest?.[ts];
+    if (thieu === undefined) writeFileSync(join(dir, "manifest.json"), "{}");
+    else utimesSync(dir, now - thieu * 60, now - thieu * 60); // thiếu manifest, thư mục sửa cách đây `thieu` phút
   }
   writeFileSync(join(repo, "pipeline/logs/apify-daily.state"), "2026-10-22T050000000\n");
   // import-airbnb giả: kế hoạch theo TS — "ok" | "fail" | "econn" (mãi) | "econn:N" (N lần ECONNREFUSED rồi ok)
   writeFileSync(
-    join(repo, "pipeline/import-airbnb.mjs"),
+    join(repo, NHAP),
     `import { appendFileSync, readFileSync, writeFileSync, existsSync } from "node:fs";
 const ts = process.argv[2].split("__").at(-1);
 const plan = JSON.parse(process.env.ACC_PLAN)[ts] ?? "ok";
@@ -359,12 +452,28 @@ if (n <= econnLeft) { console.error("❌ ECONNREFUSED — connect ECONNREFUSED 1
 console.log("đã nạp " + ts);
 `,
   );
-  for (const f of ["transform-zalo.mjs", "refresh-bait-gap.mjs"]) {
-    writeFileSync(join(repo, "pipeline", f), `import { appendFileSync } from "node:fs"; appendFileSync(${JSON.stringify(calls)}, "${f}\\n");\n`);
+  mkdirSync(stub, { recursive: true });
+  for (const name of IMPORT_STUBS) {
+    writeFileSync(join(stub, name), `#!/bin/bash\necho "${name} $*" >> "${calls}"\n${name === "curl" ? "echo -n 200\n" : ""}exit 0\n`);
+    chmodSync(join(stub, name), 0o755);
   }
-  makeStubs(stub, calls);
-  const env = { HOME: join(S, "home"), PATH: `${stub}:${dirname(process.execPath)}:/usr/bin:/bin`, ACC_PLAN: JSON.stringify(plan) };
-  assertStubsWin(env, stub);
+  // Môi trường dựng từ đầu — không kế thừa DATABASE_URL, PG*, khoá model của lượt chấm.
+  const env = { HOME: home, TMPDIR: tmp, PATH: `${stub}:${dirname(process.execPath)}:/usr/bin:/bin`, ACC_PLAN: JSON.stringify(plan), ACC_SPAWNED: spawned };
+  const rh = resolve(env.HOME);
+  const tuChoi = rh === resolve(homedir()) ? "từ chối: HOME của lượt là HOME thật" : !rh.startsWith(S + sep) ? "từ chối: HOME ngoài thư mục tạm của lượt" : null;
+  if (tuChoi) {
+    const out = { code: 2, tuChoi, stdout: "", imports: [], buocGoi: [], sleeps: [], spawned: existsSync(spawned), pl };
+    rmSync(S, { recursive: true, force: true });
+    return out;
+  }
+  if (!env.TMPDIR.startsWith(S + sep)) throw new Error("TMPDIR ngoài sandbox");
+  for (const k of Object.keys(env)) if (/^(DATABASE_URL|PG|ANTHROPIC|AI_GATEWAY)/.test(k)) throw new Error(`môi trường lượt có ${k}`);
+  const r0 = spawnSync("bash", ["-c", `for c in ${IMPORT_STUBS.join(" ")}; do command -v "$c"; done`], { env, encoding: "utf8" });
+  const got = r0.stdout.trim().split("\n");
+  if (got.length !== IMPORT_STUBS.length || !got.every((p) => p.startsWith(stub + "/"))) {
+    console.error(`AN TOÀN: stub không thắng PATH — bỏ chạy.\n${r0.stdout}${r0.stderr}`);
+    process.exit(2);
+  }
   const r = spawnSync("bash", [join(repo, "scripts/zalo-import-daily.sh")], { env, encoding: "utf8", timeout: 60_000 });
   const c = read(calls).trim().split("\n").filter(Boolean);
   const out = {
@@ -373,8 +482,14 @@ console.log("đã nạp " + ts);
     state: read(join(repo, "pipeline/logs/apify-daily.state")).trim(),
     imports: c.filter((l) => l.startsWith("import ")),
     sleeps: c.filter((l) => l.startsWith("sleep ")),
-    transform: c.includes("transform-zalo.mjs"),
-    refresh: c.includes("refresh-bait-gap.mjs"),
+    buocGoi: c.filter((l) => l.startsWith("buoc ")).map((l) => l.slice(5)),
+    sauNap,
+    spawned: existsSync(spawned),
+    // đường TUYỆT ĐỐI (token mở đầu bằng «/») nằm ngoài sandbox, hay chuỗi .openclaw — đường tương đối như pipeline/x.mjs không tính
+    ngoai: c.filter((l) => laNgoai(l, S)),
+    home,
+    S,
+    pl,
   };
   rmSync(S, { recursive: true, force: true });
   return out;
@@ -385,14 +500,31 @@ function modeImportDaily() {
   const T2 = "2026-10-22T070000000";
   const T3 = "2026-10-22T080000000";
   const tries = (o, ts) => o.imports.filter((l) => l.includes(ts)).length;
+  const transform = (o) => o.buocGoi.length > 0; // «transform/refresh chạy» = có lời gọi bước sau nạp
   const show = (tag, o) =>
-    console.log(`${tag}: exit ${o.code} · state ${o.state} · nạp [${o.imports.join(", ")}] · sleep ${o.sleeps.length} lần · transform ${o.transform ? "có" : "không"}`);
+    console.log(`${tag}: exit ${o.code} · state ${o.state} · nạp [${o.imports.join(", ")}] · sleep ${o.sleeps.length} lần · bước sau nạp gọi ${o.buocGoi.length}`);
+  const gitTruoc = spawnSync("git", ["-C", ROOT, "status", "--porcelain"], { encoding: "utf8" }).stdout;
+
+  // AC-9: bảng lớp rút từ chính script; lần nào không xếp được → thoát 3 gọi tên.
+  const pl = phanLop(readFileSync(IMPORT_DAILY, "utf8"));
+  if (pl.loi.length) {
+    for (const l of pl.loi) console.log(`KHÔNG XẾP ĐƯỢC: ${l}`);
+    console.log("IMPORT-DAILY: thước không dựng được sandbox cho script hiện tại — thoát 3");
+    process.exit(3);
+  }
+  for (const [k, v] of Object.entries(pl.lop)) console.log(`lớp ${k} (${v.length}): ${v.join(", ")}`);
+  console.log(`tổng $ROOT trong script: ${pl.tong} = tổng các lớp`);
 
   const ok = importSandbox({});
   show("1 mọi snapshot ok", ok);
+  console.log(`an toàn: HOME và TMPDIR dưới sandbox (${ok.home.startsWith(ok.S) ? "đúng" : "SAI"}); môi trường không DATABASE_URL/PG*/khoá model; ${IMPORT_STUBS.join("/")} → stub`);
   check(ok.code === 0 && ok.state === T3, "1: exit 0, state tiến tới snapshot cuối");
   check(ok.imports.length === 3 && !ok.imports.some((l) => l.includes("T010000000")), "should-NOT-fire: snapshot cũ hơn state không nạp lại; 3 snapshot mới nạp");
-  check(ok.transform && ok.refresh && ok.sleeps.length === 0, "1: transform + refresh có chạy, không sleep");
+  check(transform(ok) && ok.sleeps.length === 0, "1: transform + refresh có chạy, không sleep");
+  const dem = (a) => a.reduce((m, x) => m.set(x, (m.get(x) ?? 0) + 1), new Map());
+  const goi = dem(ok.buocGoi);
+  check(ok.sauNap.length > 0 && goi.size === ok.sauNap.length && ok.sauNap.every((b) => goi.get(b) === 1),
+    `1 (AC-9): mỗi bước sau nạp rút từ script có đúng một lời gọi (${ok.sauNap.length} bước: ${ok.sauNap.join(", ")})`);
 
   const fail = importSandbox({ [T2]: "fail" });
   show("2 snapshot giữa lỗi thường", fail);
@@ -400,7 +532,7 @@ function modeImportDaily() {
   check(fail.state === T1, "2: state giữ ở snapshot cuối đã nạp (không nhảy qua snapshot lỗi)");
   check(tries(fail, T3) === 0, "2: chuỗi DỪNG — snapshot sau không nạp");
   check(tries(fail, T2) === 1 && fail.sleeps.length === 0, "2: lỗi khác ECONNREFUSED không retry, không sleep");
-  check(!fail.transform && !fail.refresh, "2: transform/refresh KHÔNG chạy trên dữ liệu thiếu");
+  check(!transform(fail), "2: transform/refresh KHÔNG chạy trên dữ liệu thiếu");
   check(/❌ nạp fail tại .*T070000000 — giữ state/.test(fail.stdout), "2: log báo nạp fail tại snapshot nào");
 
   const flaky = importSandbox({ [T2]: "econn:2" });
@@ -408,14 +540,53 @@ function modeImportDaily() {
   check(flaky.code === 0 && flaky.state === T3, "3: DB lên lại → exit 0, state tới snapshot cuối");
   check(tries(flaky, T2) === 3, "3: snapshot đó thử 3 lần (2 retry)");
   check(flaky.sleeps.length === 2 && flaky.sleeps.every((l) => l === "sleep 20"), "3: chờ 20s trước mỗi lần thử lại");
-  check(flaky.transform, "3: transform có chạy");
+  check(transform(flaky), "3: transform có chạy");
 
   const down = importSandbox({ [T2]: "econn" });
   show("4 ECONNREFUSED mãi", down);
   check(down.code !== 0 && down.state === T1, "4: exit khác 0, state giữ ở snapshot cuối đã nạp");
   check(tries(down, T2) === 5, "4: đúng 5 lần thử");
   check(down.sleeps.length >= 4 && down.sleeps.every((l) => l === "sleep 20"), `4: chờ 20s giữa các lần (${down.sleeps.length} lần sleep)`);
-  check(tries(down, T3) === 0 && !down.transform, "4: dừng chuỗi, không transform");
+  check(tries(down, T3) === 0 && !transform(down), "4: dừng chuỗi, không transform");
+
+  // AC-7: cổng manifest 2510-8.
+  const chua = importSandbox({}, { thieuManifest: { [T2]: 5 } });
+  show("5 thiếu manifest, sửa 5′ trước", chua);
+  check(/snapshot chưa xong/.test(chua.stdout), "5 (AC-7): log «snapshot chưa xong»");
+  check(chua.code !== 0 && chua.state === T1, "5 (AC-7): exit ≠ 0, state giữ ở snapshot trước");
+  check(tries(chua, T2) === 0 && tries(chua, T3) === 0 && !transform(chua), "5 (AC-7): snapshot ấy và sau không nạp, không transform");
+  const moCoi = importSandbox({}, { thieuManifest: { [T2]: 45 } });
+  show("6 thiếu manifest, sửa 45′ trước", moCoi);
+  const moCoiDat = (o) => /snapshot mồ côi/.test(o.stdout) && tries(o, T2) === 0 && tries(o, T3) === 1 && o.state === T3 && transform(o) && o.code === 0;
+  check(moCoiDat(moCoi), "6 (AC-7): log «snapshot mồ côi», snapshot ấy 0 lần nạp, snapshot sau nạp, state tới cuối, transform chạy, exit 0");
+  const moCoiDo = importSandbox({}, { thieuManifest: { [T2]: 5 } });
+  check(!moCoiDat(moCoiDo), "chiều đỏ (AC-7): cùng ca mồ côi mà thư mục sửa 5′ trước → điều kiện mồ côi KHÔNG đạt");
+  const caMotDo = importSandbox({}, { thieuManifest: { [T3]: 5 } });
+  check(!(caMotDo.code === 0 && caMotDo.state === T3), "chiều đỏ (AC-5): bỏ manifest khỏi một snapshot của ca 1 → ca 1 không đạt");
+
+  // AC-8: gác HOME — không spawn.
+  for (const [ten, h, chuoi] of [["HOME thật", homedir(), "từ chối: HOME của lượt là HOME thật"], ["HOME /var/empty", "/var/empty", "từ chối: HOME ngoài thư mục tạm của lượt"]]) {
+    const o = importSandbox({}, { home: h });
+    console.log(`đối chứng ${ten}: ${o.tuChoi ?? `exit ${o.code}`}`);
+    check(o.code === 2 && o.tuChoi === chuoi && !o.spawned, `AC-8: ${ten} → «${chuoi}», thoát 2, script không spawn`);
+  }
+  check(ok.spawned, "AC-8 đối chứng dương: ca 1 có tệp đánh dấu spawned");
+  const ngoai = [ok, fail, flaky, down, chua, moCoi].flatMap((o) => o.ngoai);
+  const S0 = "/tmp/acc-zc3-imp-X";
+  check(laNgoai("psql -h /Users/ai-do/.openclaw/x", S0) && laNgoai("curl /var/lib/x", S0) && !laNgoai("buoc pipeline/transform-zalo.mjs", S0) && !laNgoai(`import ${S0}/repo/a`, S0),
+    "AC-8 đối chứng của phép soát: đường ngoài sandbox và .openclaw bị bắt; đường tương đối và đường trong sandbox không");
+  check(ngoai.length === 0, `AC-8: calls.log mọi ca không có đường ngoài sandbox hay .openclaw${ngoai.length ? ` (${ngoai.join(" | ")})` : ""}`);
+
+  // AC-9: đối chứng bước lạ, dạng cd không nhận, đường lạ.
+  const la = importSandbox({}, { chen: ['buoc zalo-import-daily buoc-la node "$ROOT/pipeline/buoc-la.mjs"'] });
+  check(la.buocGoi.includes("pipeline/buoc-la.mjs"), "AC-9: bản chép thêm bước lạ → thước tự giả lập, ca đường xanh thấy lời gọi pipeline/buoc-la.mjs");
+  const cdLa = importSandbox({}, { chen: ['(cd "$ROOT/pipeline" && node buoc.mjs)'] });
+  check(cdLa.code === 3 && cdLa.loi.some((l) => l.includes('cd "$ROOT/pipeline"')), `AC-9: dạng cd tương đối không tsx → thoát 3 gọi tên (${cdLa.loi?.[0] ?? `exit ${cdLa.code}`})`);
+  const binLa = importSandbox({}, { chen: [': "$ROOT/khong-xep-duoc.bin"'] });
+  check(binLa.code === 3 && binLa.loi.some((l) => l.includes("khong-xep-duoc.bin")), `AC-9: đường không xếp được → thoát 3 gọi tên (${binLa.loi?.[0] ?? `exit ${binLa.code}`})`);
+
+  const gitSau = spawnSync("git", ["-C", ROOT, "status", "--porcelain"], { encoding: "utf8" }).stdout;
+  check(gitTruoc === gitSau, "AC-8: cây kho thật không đổi sau mọi ca (git status --porcelain như nhau)");
   finish("IMPORT-DAILY");
 }
 

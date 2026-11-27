@@ -5,7 +5,7 @@ slug: audit-p1-resilience
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, config]
-status: approved
+status: implemented
 approved_by: Mạnh
 approved_at: 2026-11-27T07:44:10Z
 gate1_skipped: true
