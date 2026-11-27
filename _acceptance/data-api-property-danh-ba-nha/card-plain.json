@@ -1,0 +1,29 @@
+{
+  "feature_plain": "API dữ liệu có tài nguyên Property (danh bạ nhà): CRM nhập dự án + toà + mã căn, hoặc mã OneHub, nhận về căn có thật với định danh bền, tầng, thuộc tính căn và số tin đang rao trong toà — tên trường theo chuẩn RESO 2.1.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ trả một toà theo mã OneHub: tên toà, phân khu, dự án, phường, tỉnh, mức tin cậy của danh mục, số căn và số tin đang rao trong toà."},
+    {"id": "AC-2", "p": "Sẽ trả một căn theo mã OneHub: mã căn, tầng, trục, diện tích, phòng ngủ, WC, hướng, loại căn; căn chưa có thuộc tính thì để trống."},
+    {"id": "AC-3", "p": "Sẽ cho tra một căn bằng dự án + toà + mã căn như in trên hợp đồng; thiếu thông tin hay mơ hồ thì báo lỗi rõ, không đoán."},
+    {"id": "AC-4", "p": "Sẽ cho liệt kê các toà của một dự án, nhưng KHÔNG cho liệt kê hàng loạt căn."},
+    {"id": "AC-6", "p": "Sẽ có ca kiểm tự đỏ ngay khi đường danh bạ nhà mất đi hay trả sai."},
+    {"id": "AC-7", "p": "Sẽ giữ một danh sách tên trường duy nhất, máy đối chiếu từng tên với từ điển RESO 2.1 chính thức; trường riêng của OneHub khai đủ lý do."},
+    {"id": "AC-8", "p": "Sẽ ghi rõ trong tài liệu API rằng «Property» của OneHub là danh bạ nhà, khác «Property» của RESO (là tin rao), chỉ đụng đúng tệp được giao và qua bước kiểm kiểu."}
+  ],
+  "wont_do": [
+    {"id": "AC-5", "p": "Sẽ KHÔNG để lộ mã nội bộ của nguồn, tên nguồn thật hay tài khoản thu trong bất kỳ câu trả lời nào; căn là của OneHub, nguồn chỉ là bằng chứng."},
+    {"id": "OOS-1", "p": "KHÔNG đưa danh bạ lên cloud trong hàng này — cần lời riêng của anh (đổi cấu trúc và ghi dữ liệu cloud); tới khi đó API trên Vercel báo «danh bạ chưa lên cloud»."},
+    {"id": "OOS-2", "p": "KHÔNG dùng «căn nhà» máy gom từ tin (cụm tin, chưa gắn toà) làm danh bạ."},
+    {"id": "OOS-3", "p": "KHÔNG trả giá chủ đầu tư, quỹ căn — thêm sau, không phá ai."},
+    {"id": "OOS-4", "p": "KHÔNG nối từ căn sang tin rao của căn — tin gắn tới mức căn còn ít; chỉ đếm tin theo toà."},
+    {"id": "OOS-5", "p": "KHÔNG có thửa đất, nhà phố — danh bạ chưa có cấp đó."},
+    {"id": "OOS-6", "p": "KHÔNG làm tài khoản khách, đếm lượt, hoá đơn."}
+  ],
+  "scope_plain": "Ngoài phạm vi vòng này:",
+  "coverage_plain": [
+    {"i": 0, "p": "Phủ mọi cấp: toà, căn có trục + tầng, căn không trục, căn chỉ có mã danh mục công khai (AC-1, AC-2)."},
+    {"i": 1, "p": "Phủ mọi cách gọi: mã OneHub của toà, của căn, dự án + toà + mã căn, liệt kê toà, mã không có, mã mơ hồ (AC-1–AC-4)."},
+    {"i": 2, "p": "Phủ nguồn của thuộc tính căn: S16, danh mục công khai, không có (AC-2)."},
+    {"i": 3, "p": "Phủ mọi lối lộ: mã nguồn, tên nguồn thật, tài khoản thu (AC-5)."},
+    {"i": 4, "p": "Phủ tên chuẩn: trường RESO, giá trị chuẩn, trường riêng (AC-7)."}
+  ]
+}

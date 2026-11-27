@@ -1,0 +1,59 @@
+schema_version: 1
+feature_slug: data-api-property-danh-ba-nha
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.dapi_prop
+    paths: [data-api/src/routes/properties.ts, data-api/src/contract/property.ts, data-api/test/**]
+    expected: "exit 0; «ℹ fail 0»; ca «PB6-AC-1 toà theo UPI» xanh: tập khoá = tập khoá cấp toà của tệp hợp đồng (so bằng tập); universalPropertyId, buildingName, complexName, subdivisionName, city, stateOrProvince, country VN, catalogTier, unitCount 2, activeListingCount khớp dòng cấy"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.dapi_prop
+    paths: [data-api/src/routes/properties.ts, data-api/src/contract/property.ts, data-api/test/**]
+    expected: "exit 0; ca «PB6-AC-2 căn theo UPI + SubId» xanh: tập khoá cấp căn đúng; căn S16 có unitNumber, unitFloorLocation, stack, livingArea + livingAreaUnits «Square Meters», bedroomsTotal, bathroomsTotalInteger, directionFaces, propertySubType khớp phát biểu cấy (StandardName); căn chỉ S08 có thuộc tính null"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.dapi_prop
+    paths: [data-api/src/routes/properties.ts, data-api/test/**]
+    expected: "exit 0; ca «PB6-AC-3 tra theo dự án + toà + mã căn» xanh: đúng một căn; thiếu tham số → 400 error.code/message; không khớp → 200 {data: [], meta: {total: 0}}; mã căn trùng ở hai toà cùng dự án, thiếu building → 400"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.dapi_prop
+    paths: [data-api/src/routes/properties.ts, data-api/test/**]
+    expected: "exit 0; ca «PB6-AC-4 liệt kê toà, không liệt kê căn» xanh: ?project= trả danh sách toà của dự án cấy, phân trang limit/offset không trùng không sót; không phần tử nào mang universalPropertySubId; GET toà không có khoá mảng căn"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.dapi_prop
+    paths: [data-api/src/routes/properties.ts, data-api/test/**]
+    expected: "exit 0; ca «PB6-AC-5 không lộ mã nguồn» xanh: chuỗi canh cấy vào registry_aliases (ma_nguon S16, S08, S09) không có trong JSON.stringify(thân) của mọi lời gọi AC-1–AC-4; tier-a-source-names trên thân ra 0 cụm; không khoá originatingSystemName ở cấp căn"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.dapi_prop_cu
+    paths: [data-api/src/routes/properties.ts, data-api/test/**]
+    expected: "exit 0 khi: bản chép tạm data-api/ không mount properties làm đỏ đủ năm ca PB6-AC-1…AC-5 với thông điệp ghim riêng; bản không thay xanh; in một dòng mỗi ca"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.dapi_prop_reso
+    paths: [data-api/src/contract/property.ts, pipeline/mappings.yaml]
+    expected: "exit 0; probe đối chiếu tệp hợp đồng ↔ research-local/reso/dd-2.1.json ↔ mappings.yaml: mọi khoá chuẩn có thật ở Building hoặc Property, mọi lookup đúng StandardName, mọi extension có mục; bốn ô đột biến mỗi ô ra đúng thông điệp ghim; thiếu tệp DD → thoát 2 «PB6 thiếu dd-2.1.json»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.dapi_prop_ranh
+    paths: [data-api/**, pipeline/mappings.yaml, _acceptance/data-api-property-danh-ba-nha/**]
+    expected: "exit 0 khi: mọi tệp đổi trong vùng; /openapi.json có schema toà và căn bằng tập khoá tệp hợp đồng; README có mục «Property — danh bạ nhà» nói rõ khác RESO Property; lưới tên nguồn PB5 sạch; typecheck data-api thoát 0; dong-ba-route, auth-dong xanh"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
