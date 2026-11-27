@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 14b96d206ef5c11b230e0221de5e3e7c0ef40945
-human_signoff:
+human_signoff: Mạnh 2026-11-27
 ---
 
 # Evidence Report: s03-tai-bu-anh-bai-cu

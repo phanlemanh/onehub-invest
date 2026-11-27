@@ -5,7 +5,7 @@ slug: s03-tai-bu-anh-bai-cu
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-11-26T10:35:00Z
 design_doc: docs/superpowers/specs/2026-11-26-s03-tai-bu-anh-bai-cu-design.md
@@ -58,3 +58,7 @@ Hàng ZC20 (dãy ZT), sau HT9. Ba điều kiện cổng của GS (LL chuyển 26
 - Rào áp (GS 27/11, hàng ZC25 «nạp lại raw S03 chịu được ngắt giữa chừng», làn ZCode qua LL): KHÔNG replay raw S03 từ state 0 trên
   máy thu tới khi ZC25 gộp — lượt replay bị ngắt giữa chừng có thể đè hoặc bỏ vĩnh viễn ảnh đã bù của ~695 bài (Ngoài-1, Ngoài-4).
   Ghi lại rào này trong thân PR của ZC20.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-27:
+  - Ngoài-2: khi chạy tải bù với một kho dữ liệu thử, phần ghi vẫn có thể rơi vào kho chung của máy, nên dữ liệu thử lẫn vào dữ liệu thật.
+  - Ngoài-6: chạy tải bù trong khoảng 0 đến 7 giờ sáng giờ Việt Nam mà không chỉ định ngày kết thúc thì các bài đăng hôm nay bị bỏ sót.
+  - Ngoài-7: tên nhãn nhận diện lô ảnh bù bị đổi ở một phía thì các kiểm thử vẫn xanh nhưng lô bù thật bị nạp sai thứ tự và ảnh bù bị ghi đè.
