@@ -15,7 +15,7 @@ approved_at:
 
 > Mã hàng PB6 (GS giao 27/11, «API căn»). Tên tài nguyên theo lời Mạnh 27/11: «API có thể đặt đúng tên là Listing (Tin
 > rao) và Property (Danh bạ nhà)». AC-1–AC-11 viết theo khuyến nghị của ba câu Hỏi; bảng «Lối khác → AC đổi» ở cuối ghi
-> đúng AC nào đổi khi Mạnh chọn khác. Viết lại sau phản biện context sạch 27/11 (3 P0, 14 P1, 8 P2 — `gap-probe.md`).
+> đúng AC nào đổi khi Mạnh chọn khác. Viết lại sau phản biện context sạch 27/11 (3 P0, 15 P1, 9 P2 — `gap-probe.md`).
 
 ## Context
 

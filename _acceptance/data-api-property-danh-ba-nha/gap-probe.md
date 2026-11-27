@@ -3,8 +3,8 @@ slug: data-api-property-danh-ba-nha
 at: 2026-11-27T05:30:00Z
 verdict: findings
 p0: 3
-p1: 14
-p2: 8
+p1: 15
+p2: 9
 ---
 ## Findings
 | Sev | Artifact | Thiếu gì | Kịch bản fail | Thước đo | Xử lý |
