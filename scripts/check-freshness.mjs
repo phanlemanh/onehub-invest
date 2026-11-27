@@ -90,7 +90,11 @@ async function main() {
 
 if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   main().catch((e) => {
-    console.error(e.message ?? e);
+    // AggregateError (vd ECONNREFUSED khi DB :5433 không nghe) có message rỗng → in mã lỗi và từng lỗi con,
+    // để lượt thoát 1 không im lặng (máy thu Mac mini 24/11: freshness in một dòng trống).
+    const con = Array.isArray(e?.errors) ? e.errors.map((x) => x?.message ?? String(x)) : [];
+    console.error(`check-freshness: không chạy được — ${e?.message || e?.code || String(e)}`);
+    for (const l of con) console.error(`  ${l}`);
     process.exit(1);
   });
 }
