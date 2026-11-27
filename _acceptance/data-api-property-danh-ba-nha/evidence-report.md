@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 845d237ed4417632d548f87a78a708a931e877f2
-human_signoff:
+human_signoff: Mạnh 2026-11-28
 ---
 
 # Evidence Report: data-api-property-danh-ba-nha

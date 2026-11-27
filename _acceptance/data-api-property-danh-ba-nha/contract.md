@@ -5,7 +5,7 @@ slug: data-api-property-danh-ba-nha
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api, docs]
-status: verified
+status: signed-off
 design_doc:
 approved_by: Mạnh
 approved_at: 2026-11-27
@@ -151,6 +151,11 @@ in ở lượt chấm, không có ngưỡng.
 | Hỏi-3 S16 | Giữ S16 chỉ nội bộ | AC-1: toà chỉ có bí danh S16 (109) → 404; tên S16 không dùng cho `buildingName`, không khớp ở `building=`; `unitCount` không đếm căn chỉ S16. AC-2: căn chỉ S16 → 404; căn S08 + S16 (`C3`) ra với thuộc tính null. AC-3: chỉ khớp mã căn S08; mã S16 → 200 rỗng. AC-6: thêm canh — không giá trị nào suy từ S16. Còn lại: 198 toà, 1 749 căn, 0 thuộc tính |
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-28:
+  - Ngoài-3: Danh sách mã nguồn giữ trong bộ nhớ suốt đời tiến trình — thêm nguồn mới thì phải khởi động lại API mới chặn được mã của nguồn đó.
+  - Ngoài-5: Ma trận thứ tự tên toà chưa đo cặp S09 đứng trước S08 — đổi nhầm thứ tự hai nguồn này thì bài kiểm không bắt.
+  - Ngoài-6: Ca «không nhận tham số tầng» chưa có căn đối chứng ở tầng lân cận — bài kiểm có thể xanh dù route lộ căn qua tầng.
 
 - Đã tra tri thức (dòng sổ đầu): `wiki/chu-de/danh-ba-nha.md`, `wiki/dot/thuoc-tinh-can-s16-1811.md`; ROADMAP §3 «Nguồn S16».
 - `livingAreaUnits`: DD 2.1 StandardName là `Square Meters` (đã tra, có dấu cách); ADR-0013 §8 viết `SquareMeters` — lệch chữ
