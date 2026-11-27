@@ -14,7 +14,8 @@
 //       cao điểm, tin mới tràn sang trang 2 sẽ bị bỏ sót. Nhật ký giữ từng mục của mọi trang để tính lại luật này.
 //
 // Chạy phép đo — tiến trình của phiên, KHÔNG qua launchd, không đụng scripts/chotot-daily.sh hay collect-chotot.mjs:
-//   node collect-s06-duoi.mjs --vung <group_key> --muc 1000/u --goc <thư mục> [--nhap 5] [--thoi-gian 1440] [--toi-da-loi 1000]
+//   node collect-s06-duoi.mjs --vung <group_key> --muc 1000/u --goc <thư mục RIÊNG> [--nhap 5] [--thoi-gian 1440]
+//   (--goc KHÔNG được là collector/ hay collector/snapshots/ — mã thoát 6; xem laKhoChuan) [--toi-da-loi 1000]
 //   node collect-s06-duoi.mjs --bao-cao <thư mục>      bốn số: lời gọi/phút · tỉ lệ bắt được · độ trễ p50/p90 · bị chặn
 //
 // DB: CHỈ ĐỌC (BEGIN READ ONLY, có test) — cổng vòng đời nguồn + tra list_id trong stg. Không nạp, không ghi bảng nào.
@@ -23,7 +24,7 @@ import { createHash } from "node:crypto";
 import { gzipSync } from "node:zlib";
 import { appendFile, mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { existsSync, realpathSync } from "node:fs";
-import { join } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { docTrangThai } from "./lib/vong-doi.mjs";
 
@@ -37,7 +38,7 @@ export const LY_DO_DUNG = Object.freeze({
   GAP_DA_CO: LUAT_DUNG.GAP_DA_CO,
   TOI_DA_TRANG: "toi-da-trang",
 });
-export const MA_THOAT = Object.freeze({ XONG: 0, LOI: 1, BI_CHAN: 3, CONG_DONG: 4, VUOT_TRAN_LOI: 5 });
+export const MA_THOAT = Object.freeze({ XONG: 0, LOI: 1, BI_CHAN: 3, CONG_DONG: 4, VUOT_TRAN_LOI: 5, GOC_SAI: 6 });
 
 const PHUT = 60_000;
 const DB_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
@@ -304,6 +305,30 @@ async function phienCuoi(goc) {
 }
 
 /**
+ * HÀNG RÀOO kho chuẩn (claudedp-2511-26): script hằng ngày nạp snapshot có TÊN MỚI NHẤT mỗi thành phố trong
+ * `collector/snapshots`. Bộ thu đuôi ghi vào đó thì snapshot đuôi (mới hơn) bị nhầm làm snapshot ngày. Vì vậy
+ * `--goc` KHÔNG được là `collector` hay `collector/snapshots` của BẤT KỲ checkout nào — tính theo đường dẫn đã
+ * resolve symlink và realpath. Phép đo phải ghi ra thư mục riêng.
+ */
+export function laKhoChuan(goc) {
+  // goc có thể chưa tồn tại (phép đo mới): resolve symlink theo bậc cha gần nhất đã có, rồi nối phần còn lại
+  let q = resolve(goc);
+  const phanDu = [];
+  let x = q;
+  while (!existsSync(x)) {
+    const cha = dirname(x);
+    if (cha === x) break; // tới gốc mà vẫn không có: dừng, không lặp vô hạn
+    phanDu.unshift(basename(x));
+    x = cha;
+  }
+  q = join(realpathSync(x), ...phanDu);
+  const ten = basename(q);
+  if (ten !== "snapshots" && ten !== "collector") return false;
+  if (ten === "collector") return existsSync(join(q, "snapshots")) || existsSync(join(q, "package.json"));
+  return basename(dirname(q)) === "collector";
+}
+
+/**
  * Vòng lặp của phép đo: mỗi nhịp hỏi cổng vòng đời (fail-closed: DB lỗi → 0 lời gọi nguồn) rồi chạy một nhịp thu đuôi.
  * Mọi thứ nặng hoặc ngoài máy đều cắm được (moDb, taoLayTrang, sleep, bayGio, bao) để test chạy không DB, không mạng, không chờ.
  * @returns {Promise<{ma: number, soPhien: number, soLoiGoi: number, soLoi: number, soLuotLoi: number, biChan: number}>}
@@ -317,6 +342,10 @@ export async function chayDoi({
   bayGio = () => Date.now(),
   bao = () => {}, // nhận một dòng tóm tắt mỗi lượt
 }) {
+  if (laKhoChuan(goc)) {
+    // mã 6 — khác mọi mã đã có để nhật ký lượt chấm phân biệt được với cổng đóng (4) hay trần lời (5)
+    return { ma: MA_THOAT.GOC_SAI, soPhien: 0, soLoiGoi: 0, soLoi: 0, soLuotLoi: 0, biChan: 0 };
+  }
   await mkdir(goc, { recursive: true });
   const t0 = bayGio();
   const hetHan = t0 + thoiGianPhut * PHUT;
@@ -776,6 +805,9 @@ async function main(argv) {
     moDb: () => moDbChiDoc(DB_URL),
     taoLayTrang: (x) => taoLayTrangS06({ api: API_MAC_DINH, vung, feed, ...x, ...(khongNghi ? { sleep: async () => {} } : {}) }),
   });
+  if (kq.ma === MA_THOAT.GOC_SAI) {
+    console.error("S06 thu-duoi: TỪ CHỐI — --goc trỏ vào kho chuẩn (collector hoặc collector/snapshots). Script hằng ngày nạp snapshot có tên mới nhất, nên bộ thu đuôi phải ghi ra thư mục riêng.");
+  }
   console.log(`[S06 thu-duoi] ket thuc · ma ${kq.ma} · phien ${kq.soPhien} · loi goi ${kq.soLoiGoi} · loi ${kq.soLoi} · bi chan ${kq.biChan}`);
   return kq.ma;
 }

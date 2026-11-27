@@ -5,7 +5,7 @@ slug: s06-thu-duoi-do
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-11-25T03:53:20Z
 design_doc: docs/superpowers/specs/2026-11-25-s06-thu-duoi-do-design.md
@@ -103,3 +103,11 @@ Không có `opportunity.md`: hàng được GS mở trong đợt. Thước của
   đuôi chạy với `--goc` trỏ vào `collector/snapshots` sau lượt thu ngày, lượt nạp ngày sẽ nạp snapshot đuôi nhỏ thay cho lượt
   quét đủ. Trước hàng «chọn snapshot để nạp», CẤM chạy sống bộ thu đuôi vào `collector/snapshots` (GS đã chuyển LL ngày 25/11).
   Chép 231 snapshot cũ của phép đo vào kho chuẩn thì an toàn, vì tên của chúng cũ hơn lượt thu ngày kế.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-27:
+  - Ngoài-1: Rào chặn ghi vào kho chuẩn bị lách được khi gõ tên thư mục khác chữ hoa/thường trên máy Mac.
+  - Ngoài-2: Cùng lỗ hoa/thường với Ngoài-1, báo từ một lượt soi khác.
+  - Ngoài-3: Tỉ lệ bắt được trong báo cáo có thể thấp hơn thực tế khi một lượt thu bị chặn giữa chừng; tin không mất.
+  - Ngoài-4: Phép kiểm không gọi mạng mới chứng bằng một ca gọi web, chưa có ca socket.
+  - Ngoài-6: DB đứt giữa lượt thu thì báo cáo đếm thiếu số lời gọi nguồn; tin không mất.
+  - Ngoài-7: Tệp ghi nhớ tin đã thấy bị hỏng thì bộ thu lặng lẽ làm lại từ đầu, có thể đưa lại tin cũ như tin mới.
+  - Ngoài-8: Phép kiểm số đo 24 giờ cần thư mục phép đo của làn thu; vắng thì báo đỏ rõ, không xanh giả.
