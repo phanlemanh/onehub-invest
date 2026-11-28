@@ -303,10 +303,13 @@ test("TDB-AC-3 dải số đầu trang và danh mục đã nạp chưa nối the
   assert.deepEqual(tong.danhMuc, [
     { source: "S06", daNap: 3, daNoi: 2, chuaNoi: 1, noiUngVien: 0, tinhVaoO: true, lyDoRieng: null },
     { source: "S08", daNap: 4, daNoi: 1, chuaNoi: 3, noiUngVien: 0, tinhVaoO: true, lyDoRieng: null },
-    { source: "S09", daNap: 2, daNoi: 0, chuaNoi: 2, noiUngVien: 0, tinhVaoO: true, lyDoRieng: null },
+    // DA3 (Hỏi-3, Mạnh duyệt 28/11): dòng S09 cộng vào ô là tập DA42 (v_s09_db_du_an); lược đồ thử này chỉ có view cũ
+    // v_s09_du_an_moi, nên hai dự án S09 ra dòng riêng «chưa có ở danh bạ S09 mới», không cộng vào ô.
+    { source: "S09", daNap: 2, daNoi: 0, chuaNoi: 2, noiUngVien: 0, tinhVaoO: false, lyDoRieng: "chưa có ở danh bạ S09 mới" },
   ])
   const html = await htmlDanhBa()
   assert.match(html, /S08 3\/4/)
+  assert.match(html, /S09 2\/2 chưa có ở danh bạ S09 mới/)
   assert.match(html, /S09 đã cấp tên 1 toà/)
   const dot = await banChep<DocMod>("src/lib/ops/registry/doc.ts", [["FROM (SELECT DISTINCT project_id FROM stg_s08_project) p", "FROM (SELECT project_id FROM stg_s08_project) p"]])
   const s08 = (await dot.docDanhBa(sc)).tong.danhMuc.find((x) => x.source === "S08")

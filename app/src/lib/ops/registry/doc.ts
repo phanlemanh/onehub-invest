@@ -186,13 +186,15 @@ function sqlMaDanhMuc(co: BangCo): string {
   return phan.join("\nUNION ALL\n")
 }
 const coS10 = (co: BangCo) => co.has("stg_s10_project") && co.has("s10_project_links")
-const coTapCuS09 = (co: BangCo) => co.has("v_s09_du_an_moi") && co.has("v_s09_db_du_an")
+// Dòng S09 tập cũ cần view cũ; view tập DA42 vắng (DB chưa áp 125) thì mọi mã tập cũ đều «chưa có ở danh bạ S09 mới».
+const coTapCuS09 = (co: BangCo) => co.has("v_s09_du_an_moi")
 
 /**
  * Danh mục dự án đã nạp theo nguồn: số mã dự án khác nhau đã nạp, số đã nối nút, số đã nối vào nút ứng viên, số chưa nối (gồm
  * cả mã chưa qua bước nối). S06: mã trong `project_links`. S08: dự án của `stg_s08_project`, nối ở bảng tay `s08_project_links`
  * (DN1) hoặc ở `project_links` nguồn S08 (thẻ luật DA55) — mỗi dự án đếm một lần, bảng luật trước. S07, S09, S16: bản ghi
- * cấp dự án của khuôn chung DA3 (`pipeline/lib/ban-ghi-nguon.mjs`), nối ở `project_links` (thẻ luật DA3). S10: dự án của
+ * cấp dự án của khuôn chung DA3 (`pipeline/lib/ban-ghi-nguon.mjs`), nối ở `project_links` (thẻ luật DA3); S09 là tập DA42, mã chỉ
+ * có ở tập cũ thành dòng riêng `S09:tap-cu` không cộng vào ô (`DONG_RIENG`). S10: dự án của
  * `stg_s10_project`, nối ở `s10_project_links` hoặc `project_links`; không cộng vào ô (`NGUON_KHONG_VI_TRI`).
  */
 const sqlDanhMuc = (co: BangCo) => `
@@ -216,7 +218,7 @@ LEFT JOIN asset_nodes n ON n.id = pl.asset_node_id
 GROUP BY m.source
 ${coTapCuS09(co) ? `UNION ALL
 SELECT 'S09:tap-cu', count(*)::int, 0, 0
-FROM (SELECT DISTINCT project_id::text AS ma FROM v_s09_du_an_moi EXCEPT SELECT du_an_id FROM v_s09_db_du_an) x
+FROM (SELECT DISTINCT project_id::text AS ma FROM v_s09_du_an_moi${co.has("v_s09_db_du_an") ? " EXCEPT SELECT du_an_id FROM v_s09_db_du_an" : ""}) x
 HAVING count(*) > 0` : ""}
 ${coS10(co) ? `UNION ALL
 SELECT 'S10', count(*)::int, (count(*) FILTER (WHERE x.nut IS NOT NULL))::int,
