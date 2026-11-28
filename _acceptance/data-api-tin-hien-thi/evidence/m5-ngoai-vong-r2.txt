@@ -1,0 +1,15 @@
+PB7 S4 vòng 2 trên M5 ＠6f9e338ed8a675db9f123054ba0b683401643cf1 — pipeline_that chạy NGOÀI vòng (HT37; nhánh đổi pipeline/lib/vocab-core.mjs nên suite chạy).
+Lệnh: node scripts/suite-neu-doi.mjs pipeline_that -- 'cd pipeline && npm run test:that'
+chay-that: vai may-phat-trien — bỏ qua 1 ca chỉ máy thu
+ℹ tests 37
+ℹ pass 37
+ℹ fail 0
+ℹ skipped 0
+__EXIT=0
+→ ĐẠT theo luật GS 26/11. Chấm trên M5: ON22-AC-10 không chạy (HT33).
+
+E8 chạy lại riêng sau vòng (cây sạch, không tiến trình nào khác ghi vào data-api/src):
+cd pipeline && node --test scripts/vocab.test.mjs scripts/vocab-lint.test.mjs
+ℹ pass 28
+ℹ fail 0
+Trong vòng, E8 đỏ ở VL-AC-5 «cây thật còn chỗ viết tay ngoài sổ»: hai dòng trỏ data-api/src/routes/__pb7-boloc-36289.ts và __pb7-nen-36289.ts — tệp tạm do probe do-db.mjs (E7) của nhánh ghi vào cây nguồn trong lúc E8 chạy song song; do-db đã tự dọn khi xong.
