@@ -184,16 +184,22 @@ for CITY in $CITIES; do
          exit "$RC"; }
 
   # 7) chọn-nạp: duyệt snapshot mới nhất → cũ, nạp TỐI ĐA 1 snapshot/vùng/vòng
-  #    — snapshot đầu tiên (tính từ mới nhất) mà stg CHƯA có snapshot_id
-  SNAP="$(cd "$ROOT/pipeline" && node --input-type=module -e '
+  #    — snapshot đầu tiên (tính từ mới nhất) mà sổ nạp CHƯA có snapshot_id VÀ đọc được.
+  #    ZC26 (s06-thu-duoi-snapshot-hong-khong-chan): bản đọc không được (readSnapshot của bộ nạp từ
+  #    chối, hoặc source khác) được ghi dấu vào $GOC/bo-qua-hong.json, in MỘT dòng log, rồi xét bản
+  #    cũ hơn trong cùng vòng — thư mục snapshot KHÔNG bị xoá, KHÔNG bị sửa (raw bất biến). Dòng cờ
+  #    BO-QUA-MOI trên stdout → vòng thoát 1 để người vận hành thấy; vòng kế bản đã đánh dấu bị lọc.
+  KQ="$(cd "$ROOT/pipeline" && node --input-type=module -e '
     import pg from "pg";
-    import { readdirSync } from "node:fs";
+    import { readdirSync, readFileSync, writeFileSync, renameSync } from "node:fs";
+    import { pathToFileURL } from "node:url";
     const [city, goc] = process.argv.slice(1); // với -e: argv = [node, <đối số>…] — slice(2) mất đối số đầu
     const muc = `${goc}/snapshots/${city}`;
     let tatCa;
     try { tatCa = readdirSync(muc).filter((n) => n.startsWith(`${city}__chotot-ads__`)).sort().reverse(); }
     catch { process.exit(0); } // chưa có snapshot nào — không nạp gì
     if (tatCa.length === 0) process.exit(0);
+    let daCo;
     const c = new pg.Client({ connectionString: process.env.DATABASE_URL });
     try {
       await c.connect();
@@ -202,11 +208,65 @@ for CITY in $CITIES; do
       // snapshot đuôi sau lượt quét đủ trông như chưa nạp và bị nạp lại mỗi vòng.
       const co = await c.query("SELECT snapshot_id FROM airbnb_snapshots WHERE snapshot_id = ANY($1)", [tatCa]);
       await c.end();
-      const daCo = new Set(co.rows.map((r) => r.snapshot_id));
-      const chua = tatCa.find((id) => !daCo.has(id));
-      if (chua) console.log(`${muc}/${chua}`);
+      daCo = new Set(co.rows.map((r) => r.snapshot_id));
     } catch (e) { console.error("S06 tra-stg-loi: " + e.message); process.exit(1); }
+
+    // ZC26: tệp đánh dấu { <tên thư mục>: { lyDo, luc } } — tên mang tiền tố vùng nên hai vùng không
+    // trùng khoá; vắng hay hỏng → coi như chưa đánh dấu bản nào (kiểm lại, ghi lại tệp hợp lệ).
+    const tepDau = `${goc}/bo-qua-hong.json`;
+    let dau = {};
+    try { const x = JSON.parse(readFileSync(tepDau, "utf8")); if (x && typeof x === "object" && !Array.isArray(x)) dau = x; } catch {}
+    const gio = () => new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const ungVien = tatCa.filter((id) => !daCo.has(id) && !Object.hasOwn(dau, id));
+    if (ungVien.length === 0) process.exit(0);
+
+    // Bước kiểm dùng CHÍNH readSnapshot của bộ nạp (cùng luật schema, finishedAt, sha256, parse items —
+    // không chép luật sang đây). Mô-đun bộ nạp không nạp được (hỏng, thoát lúc nạp) là lỗi của BỘ KIỂM,
+    // không phải của bản thu → không đánh dấu bản nào; bản ấy đi tiếp tới bộ nạp, nạp lỗi thì vòng sau thử lại.
+    const thoatGoc = process.exit;
+    process.exit = (m) => { throw new Error(`thoát ${m}`); }; // readSnapshot thoát tiến trình ở nhánh source khác
+    let readSnapshot = null;
+    try { ({ readSnapshot } = await import(pathToFileURL(`${process.cwd()}/import-chotot.mjs`).href)); }
+    catch (e) { console.error(`${gio()} không nạp được bộ kiểm snapshot (${e.message}) — vòng này không đánh dấu bản nào`); }
+    let hongVi = async (dir) => {
+      let m;
+      try { m = JSON.parse(readFileSync(`${dir}/manifest.json`, "utf8")); }
+      catch (e) { return "manifest không đọc được: " + e.message; }
+      // kiểm source TRƯỚC: readSnapshot gọi process.exit(0) ở nhánh này (bộ nạp thoát 0 trong im lặng)
+      if (!m || m.source !== "chotot-ads") return `source khác chotot-ads (${JSON.stringify(m?.source)})`;
+      if (typeof readSnapshot !== "function") return null;
+      try { await readSnapshot(dir); return null; } catch (e) { return String(e?.message || e) || "readSnapshot từ chối"; }
+    };
+    /* ZC26-KIEM */
+
+    let chon = null, boQuaMoi = false;
+    try {
+      for (const id of ungVien) {
+        const lyDo = await hongVi(`${muc}/${id}`);
+        if (lyDo == null) { chon = id; break; }
+        dau[id] = { lyDo: String(lyDo), luc: gio() };
+        writeFileSync(tepDau + ".tmp", JSON.stringify(dau, null, 2) + "\n");
+        renameSync(tepDau + ".tmp", tepDau);
+        console.error(`${gio()} bỏ qua snapshot hỏng ${id}: ${lyDo} — không xoá, không sửa`);
+        boQuaMoi = true;
+      }
+    } catch (e) { console.error("S06 chon-nap-loi: " + e.message); thoatGoc(1); }
+    process.exit = thoatGoc;
+    if (boQuaMoi) console.log("BO-QUA-MOI");
+    if (chon) console.log(`${muc}/${chon}`);
   ' "$CITY" "$GOC")" || { echo "❌ tra stg vùng $CITY lỗi — dừng (fail-closed)"; exit 1; }
+
+  # tách kết quả: dòng cờ → thoát 1 cuối vòng; dòng đường dẫn (nếu có) → nạp; không có → không gọi bộ nạp
+  SNAP=""
+  while IFS= read -r DONG; do
+    case "$DONG" in
+      BO-QUA-MOI) RC=1 ;;
+      "") ;;
+      *) SNAP="$DONG" ;;
+    esac
+  done <<EOF_KQ
+$KQ
+EOF_KQ
 
   if [ -n "$SNAP" ]; then
     echo "$(date -u +%FT%TZ) nạp snapshot đuôi $SNAP"
