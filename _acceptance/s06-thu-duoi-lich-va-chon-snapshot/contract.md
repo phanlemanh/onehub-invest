@@ -5,7 +5,7 @@ slug: s06-thu-duoi-lich-va-chon-snapshot
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-26-s06-thu-duoi-lich-va-chon-snapshot-design.md
 approved_by: Mạnh
 approved_at: 2026-11-27
@@ -137,3 +137,11 @@ PL38 nối transform, resolve, sync-cloud theo nhịp. Hồ sơ này chỉ bảo
   biến nào và soi khuôn plist. Thử trên bản chép chỉ-đọc (Mac mini, cụm dùng một lần): `CHON-NAP OK`. Đối chứng đỏ: wrapper
   `a4ffc86b5` (30 phút) 1 ca; plist thêm khối biến 1 ca; hcmc→hanoi 6 ca; tắt luật lần hai 3 ca. Việc cài plist trên máy thu là
   bước triển khai sau gộp, GIAO ZCode qua LL, U2 không tự cài.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-28:
+  - Ngoài-1: Phép thử đột biến «bỏ kiểm tiến trình cũ còn sống» nhận ca đỏ theo một dấu có trong hai ca test, nên có thể báo đã bắt được lỗi khi ca đỏ là ca khác.
+  - Ngoài-2: Phép đo chọn-nạp hai vùng giả định tin của hai bản thu hanoi không trùng tin hcmc; đổi bộ dữ liệu đo thì có thể báo đỏ giả.
+  - Ngoài-3: Eval E2 còn ghim tên ca test cũ nên chỉ còn kiểm chiều âm; chiều đỏ của việc nhường lượt do E2b đo.
+  - Ngoài-4: Test e2e chọn-nạp của làn thu rơi về DB chung khi thiếu biến TEST_DATABASE_URL_ADMIN, và ca đầu không tự bỏ qua khi thiếu DB.
+  - Ngoài-8: Lượt nạp đứt giữa chừng không được thử lại ở vòng sau, vì sổ nạp ghi trước khi tin vào stg; phần thiếu về lại qua lượt quét đủ hằng ngày.
+  - Ngoài-11: Ca «khuôn plist không đè ba giá trị» chỉ soát tệp mẫu, chưa soát plist đã cài trên máy thu.
+  - Ngoài-12: Ca «dưới trần thì không ghi lại tệp mốc» chỉ soát tên tệp, chưa chứng tệp không bị ghi lại.
