@@ -50,6 +50,12 @@ export type NguonDanhMuc = {
 /** Nguồn danh mục không có địa chỉ, điểm hay tỉnh: không nối được theo luật chặn cùng tỉnh, nên không cộng vào ô (DA3). */
 export const NGUON_KHONG_VI_TRI: Record<string, string> = { S10: "không có vị trí" }
 
+/** Dòng riêng không cộng vào ô, khoá theo nhãn câu SQL → nguồn hiển thị và nhãn (DA3 AC-8, Hỏi-3 Mạnh duyệt 28/11). S09 có hai tập
+ *  mã: tập DA42 (`v_s09_db_du_an`) là dòng S09 cộng vào ô; mã chỉ có ở tập cũ (`v_s09_du_an_moi`) hiện riêng để không mất dấu. */
+export const DONG_RIENG: Record<string, { source: string; lyDo: string }> = {
+  "S09:tap-cu": { source: "S09", lyDo: "chưa có ở danh bạ S09 mới" },
+}
+
 export type TongDanhBa = {
   duAn: number
   duAnXacMinh: number
@@ -155,27 +161,32 @@ SELECT
 
 /**
  * Mã dự án đã nạp của ba nguồn danh mục S07, S09, S16 — đúng tập bản ghi cấp dự án mà bộ chuyển DA3 đọc
- * (`SQL_NGUON` của `pipeline/lib/ban-ghi-nguon.mjs`): S07 thẻ danh sách ∪ trang chi tiết, S09 `v_s09_du_an_moi`, S16 trang dự án ∪ khu.
+ * (`SQL_NGUON` của `pipeline/lib/ban-ghi-nguon.mjs`): S07 thẻ danh sách ∪ trang chi tiết, S16 trang dự án ∪ khu. S09 là tập dự án của
+ * DA42 (`v_s09_db_du_an`), nối ở `project_links` S09 do DA42 ghi — DA3 chỉ đọc S09 (phạm vi 27/11).
  */
 /** Bảng nguồn danh mục mà câu đếm cần; nguồn thiếu bảng (DB chưa nạp nguồn ấy, hay schema thử) thì không có dòng. */
-const BANG_DANH_MUC = ["stg_s07_project_card", "stg_s07_project", "stg_s16_item", "stg_s16_khu", "stg_s10_project", "s10_project_links"] as const
+const BANG_DANH_MUC = ["stg_s07_project_card", "stg_s07_project", "stg_s16_item", "stg_s16_khu", "stg_s10_project", "s10_project_links",
+  "v_s09_db_du_an", "v_s09_du_an_moi"] as const
 type BangCo = Set<string>
 
-function sqlMaDanhMuc(co: BangCo): string | null {
+function sqlMaDanhMuc(co: BangCo): string {
   const phan: string[] = []
   if (co.has("stg_s07_project_card") && co.has("stg_s07_project"))
     phan.push(`SELECT 'S07' AS source, m.ma, max(m.ten) AS ten FROM (
   SELECT pj_id::text AS ma, project_name AS ten FROM stg_s07_project_card
   UNION ALL SELECT pj_id::text, project_name FROM stg_s07_project) m GROUP BY m.ma`)
-  phan.push(`SELECT 'S09' AS source, project_id AS ma, max(data ->> 'name') AS ten FROM v_s09_du_an_moi GROUP BY project_id`)
+  if (co.has("v_s09_db_du_an")) phan.push(`SELECT 'S09' AS source, du_an_id AS ma, max(ten) AS ten FROM v_s09_db_du_an GROUP BY du_an_id`)
   if (co.has("stg_s16_item") && co.has("stg_s16_khu"))
     phan.push(`SELECT 'S16' AS source, m.ma, max(m.ten) AS ten FROM (
   SELECT payload -> 'html' ->> 'slug' AS ma, payload -> 'html' -> 'project' ->> 'name' AS ten FROM stg_s16_item
    WHERE kind = 'du-an' AND jsonb_typeof(payload -> 'html' -> 'project') = 'object'
   UNION ALL SELECT du_an, du_an_ten FROM stg_s16_khu) m GROUP BY m.ma`)
+  // Không nguồn nào có bảng (DB trống của CI): một nhánh rỗng giữ câu SQL hợp lệ.
+  if (!phan.length) phan.push("SELECT NULL::text AS source, NULL::text AS ma, NULL::text AS ten WHERE false")
   return phan.join("\nUNION ALL\n")
 }
 const coS10 = (co: BangCo) => co.has("stg_s10_project") && co.has("s10_project_links")
+const coTapCuS09 = (co: BangCo) => co.has("v_s09_du_an_moi") && co.has("v_s09_db_du_an")
 
 /**
  * Danh mục dự án đã nạp theo nguồn: số mã dự án khác nhau đã nạp, số đã nối nút, số đã nối vào nút ứng viên, số chưa nối (gồm
@@ -203,6 +214,10 @@ FROM (${sqlMaDanhMuc(co)}) m
 LEFT JOIN project_links pl ON pl.source = m.source AND pl.source_project_id = m.ma
 LEFT JOIN asset_nodes n ON n.id = pl.asset_node_id
 GROUP BY m.source
+${coTapCuS09(co) ? `UNION ALL
+SELECT 'S09:tap-cu', count(*)::int, 0, 0
+FROM (SELECT DISTINCT project_id::text AS ma FROM v_s09_du_an_moi EXCEPT SELECT du_an_id FROM v_s09_db_du_an) x
+HAVING count(*) > 0` : ""}
 ${coS10(co) ? `UNION ALL
 SELECT 'S10', count(*)::int, (count(*) FILTER (WHERE x.nut IS NOT NULL))::int,
        (count(*) FILTER (WHERE x.nut IS NOT NULL AND n.catalog_tier = 'mot_loi_khai'))::int
@@ -276,13 +291,13 @@ export async function docDanhBa(q: Q = pool): Promise<DanhBa> {
       can: t.can,
       toaBiDanhS09: t.toa_bi_danh_s09,
       danhMuc: danhMuc.rows.map((r) => ({
-        source: r.source,
+        source: DONG_RIENG[r.source]?.source ?? r.source,
         daNap: r.da_nap,
         daNoi: r.da_noi,
         chuaNoi: r.da_nap - r.da_noi,
         noiUngVien: r.noi_ung_vien,
-        tinhVaoO: !(r.source in NGUON_KHONG_VI_TRI),
-        lyDoRieng: NGUON_KHONG_VI_TRI[r.source] ?? null,
+        tinhVaoO: !(r.source in NGUON_KHONG_VI_TRI) && !(r.source in DONG_RIENG),
+        lyDoRieng: NGUON_KHONG_VI_TRI[r.source] ?? DONG_RIENG[r.source]?.lyDo ?? null,
       })),
     },
     nut: nut.rows.map(nutTuHang),

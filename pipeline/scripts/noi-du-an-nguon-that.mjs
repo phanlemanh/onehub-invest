@@ -3,7 +3,7 @@
 //   bo-chuyen          E1/AC-1: số bản ghi, tỉnh, xã, điểm của năm nguồn so với bộ đo S1 đóng băng (probes/s1/do.mjs, đếm độc
 //                      lập với mã của hàng); bảng 63 tỉnh đủ mã trong area_aliases; tỉnh cũ của một bản ghi S07 thật ra null khi bỏ
 //                      dòng alias; số trường bị quy ước rỗng giả đổi về trống theo nguồn × trường.
-//   ben-doc [--cay-do] E7/AC-7: băm đầu ra các bên đọc ở ba mốc (trước áp, sau áp S07 S09 S10 S16, sau đảo đủ luật), mọi ghi trong
+//   ben-doc [--cay-do] E7/AC-7: băm đầu ra các bên đọc ở ba mốc (trước áp, sau áp S07 S10 S16, sau đảo đủ luật; S09 do DA42 nối, DA3 không áp), mọi ghi trong
 //                      một giao dịch ROLLBACK. --cay-do cấy một bí danh S09 dạng toà trỏ node:<id> sau áp — phép so phải đỏ.
 // Thoát 1 khi lệch, gọi tên nguồn hay bên đọc.
 import { spawnSync } from "node:child_process";
@@ -25,7 +25,7 @@ if (!/\/oneinvest_suite_[a-z0-9_]+$/.test(DB_URL)) {
   console.error("noi-du-an-nguon-that: cần DATABASE_URL trỏ DB của riêng lượt oneinvest_suite_* (db/db-thu.sh --chay)");
   process.exit(2);
 }
-const NGUON_AP = ["S07", "S09", "S10", "S16"];
+const NGUON_AP = ["S07", "S10", "S16"];
 const VIEW = ["v_toa_nut_vung", "offer_building", "s06_offer_project", "v_s16_toa", "v_s09_toa"];
 
 /** Chạy bộ đo S1 đóng băng trên cùng DB, trả JSON kết quả. */
