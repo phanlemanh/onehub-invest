@@ -1,6 +1,7 @@
 import { localOnlyTable } from "@/lib/ops-queries"
 import { cheChuaNoi, dungCay } from "@/lib/ops/registry/cay"
 import { docDanhBa } from "@/lib/ops/registry/doc"
+import { docQuyCanTong } from "@/lib/ops/registry/quy-can"
 import { getSourceNameEntries } from "@/lib/source-roles"
 
 import { RegistryView } from "./registry-view"
@@ -11,13 +12,14 @@ import { RegistryView } from "./registry-view"
  */
 export async function RegistryContent() {
   if (process.env.VERCEL === "1" || (await localOnlyTable("buildings"))) return <RegistryView mode="cloud" />
-  const [danhBa, entries] = await Promise.all([docDanhBa(), getSourceNameEntries()])
+  const [danhBa, entries, quyCan] = await Promise.all([docDanhBa(), getSourceNameEntries(), docQuyCanTong()])
   return (
     <RegistryView
       mode="local"
       tong={danhBa.tong}
       rows={dungCay(danhBa.nut, danhBa.tinh, entries)}
       chuaNoi={cheChuaNoi(danhBa.chuaNoi, entries)}
+      quyCan={quyCan.ok ? quyCan.data : "loi"}
     />
   )
 }

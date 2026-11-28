@@ -1,0 +1,1 @@
+E8u: driver = scripts/ui-capture.sh (playwright-cli) + curl; khong co duong doc network (read_network_requests). networkObserved = n-a (driver). curl: /ops/registry 200, /ops/registry/592 200, /ops/registry/1 200.

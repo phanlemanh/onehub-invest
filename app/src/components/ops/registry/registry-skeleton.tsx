@@ -1,6 +1,8 @@
 import { Frame, FramePanel } from "@/components/reui/frame"
 import { Skeleton } from "@/components/ui/skeleton"
 
+import { DuAnQuyCanSkeleton } from "./du-an-quy-can-grid"
+
 function OSo({ so }: { so: number }) {
   return (
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -17,8 +19,9 @@ function OSo({ so }: { so: number }) {
   )
 }
 
-/** Khung tải theo bố cục trang «Danh bạ»: đầu trang + bốn ô số + bảng; `oPhu`: thêm hàng ba ô phủ thuộc tính của trang dự án. */
-export function RegistrySkeleton({ nhan = "Đang tải danh bạ", oPhu = false }: { nhan?: string; oPhu?: boolean }) {
+/** Khung tải theo bố cục trang «Danh bạ»: đầu trang + bốn ô số + bảng; `oPhu`: thêm hàng ba ô phủ thuộc tính của trang dự án;
+ * `quyCan`: thêm khối «Quỹ căn đang bán» dưới bảng toà (DA56). */
+export function RegistrySkeleton({ nhan = "Đang tải danh bạ", oPhu = false, quyCan = false }: { nhan?: string; oPhu?: boolean; quyCan?: boolean }) {
   return (
     <div className="flex flex-col gap-6" aria-busy="true" aria-label={nhan} data-registry-skeleton="">
       <div className="flex flex-col gap-3">
@@ -36,6 +39,7 @@ export function RegistrySkeleton({ nhan = "Đang tải danh bạ", oPhu = false 
           ))}
         </FramePanel>
       </Frame>
+      {quyCan && <DuAnQuyCanSkeleton />}
     </div>
   )
 }

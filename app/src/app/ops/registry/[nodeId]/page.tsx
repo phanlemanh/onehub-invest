@@ -22,7 +22,7 @@ export default async function RegistryDuAnPage({ params }: { params: Promise<{ n
   if (id == null) notFound()
   return (
     <RegionError what="dự án">
-      <Suspense fallback={<RegistrySkeleton nhan="Đang tải dự án" oPhu />}>
+      <Suspense fallback={<RegistrySkeleton nhan="Đang tải dự án" oPhu quyCan />}>
         <DuAnContent id={id} />
       </Suspense>
     </RegionError>
