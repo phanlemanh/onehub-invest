@@ -12,7 +12,7 @@ import { fileURLToPath } from "node:url";
 
 import pg from "pg";
 
-import { CAN_CU, LY_DO, NGUON, chuanTen, dungTheS08, phanLopS08, tenGoc } from "./lib/noi-du-an-s08-lop.mjs";
+import { CAN_CU, LY_DO, NGUON, chuanTen, dungTheS08, khoaNhom, phanLopS08, tenGoc } from "./lib/noi-du-an-s08-lop.mjs";
 
 const DB_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 
@@ -60,18 +60,34 @@ async function docBiDanh(client) {
   return new Map(rows.map((r) => [r.ma, r]));
 }
 
+/**
+ * DA65: khoá nhóm → id nút S08 đã đúc cho nhóm ở lượt trước. Hai đường gom: dự án S08 đang trỏ nút S08 (theo khoá của dự án),
+ * và chính nút S08 (theo tên gốc + tỉnh của nút) — nút có dự án đã rời nhóm vẫn được thấy.
+ */
+export function nhomDaDuc(duAn, nut, link) {
+  const m = new Map();
+  const them = (k, id) => m.set(k, [...new Set([...(m.get(k) ?? []), Number(id)])]);
+  for (const n of nut) if (n.nguon === NGUON && n.tinh) them(khoaNhom(n.name, n.tinh), n.id);
+  for (const d of duAn) {
+    const l = link.get(d.ma);
+    if (d.tinh && l?.node_id != null && l.nguon_nut === NGUON) them(khoaNhom(d.ten, d.tinh), l.node_id);
+  }
+  return m;
+}
+
 /** Dựng thẻ trên dữ liệu hiện tại. ds: mỗi dự án một dòng kèm kết cục. */
 export async function dungTheLuat(client) {
   const duAn = await docDuAn(client);
   const nut = await docNut(client);
   const link = await docLink(client);
+  const daDuc = nhomDaDuc(duAn, nut, link);
   const tenNut = new Map(nut.map((n) => [n.id, n.name]));
   const { rows: tenTinh } = await client.query("SELECT id, name FROM areas WHERE region_type = 'market'");
   const tinhTen = new Map(tenTinh.map((r) => [r.id, r.name]));
   const ds = duAn.map((d) => {
     const l = link.get(d.ma);
     const daNoi = l?.node_id != null ? { asset_node_id: l.node_id, laUngVienS08: l.nguon_nut === NGUON } : null;
-    const kq = phanLopS08({ ma: d.ma, ten: d.ten, tinh: d.tinh, noiTay: d.noiTay }, nut, daNoi);
+    const kq = phanLopS08({ ma: d.ma, ten: d.ten, tinh: d.tinh, noiTay: d.noiTay }, nut, daNoi, daDuc);
     return { ma: d.ma, ten: d.ten, tinh: tinhTen.get(d.tinh) ?? d.tinh, tinhId: d.tinh, xa: d.xa, lng: d.lng, lat: d.lat, soCan: d.soCan, kq,
       tenNut: kq.node_id != null ? tenNut.get(kq.node_id) : undefined, tenUngVien: kq.ung_vien?.map((id) => tenNut.get(id) ?? `#${id}`) };
   });

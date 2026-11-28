@@ -55,10 +55,18 @@ async function caLech(mod) {
   const g2 = mod.phanLopS08({ ma: "b2", ten: "SUN PARK_TT", tinh: "HN" }, NUT);
   const g3 = mod.phanLopS08({ ma: "b3", ten: "SUN PARK", tinh: "QN" }, NUT);
   if (!(g1.nhom && g1.nhom === g2.nhom && g1.nhom !== g3.nhom)) lech.push("nhom-duc");
+  // DA65: nhóm đã đúc ở lượt trước — dự án mới cùng khoá nối nút cũ; nhóm hai nút đi thẻ cặp; khoá khác vẫn đúc mới.
+  const daDuc = new Map([["du an duc s08|HN", [11]], ["song duc|HN", [13, 12]]]);
+  const h1 = mod.phanLopS08({ ma: "c1", ten: "DỰ ÁN ĐÚC S08_TT", tinh: "HN" }, NUT, null, daDuc);
+  if (!khop(h1, { status: "duc", node_id: 11, can_cu: "S08-nut-ung-vien" }) || mod.ketCucChuan(h1) !== "duc:#11") lech.push("nhom-da-duc-mot-nut");
+  const h2 = mod.phanLopS08({ ma: "c2", ten: "SONG DUC", tinh: "HN" }, NUT, null, daDuc);
+  if (!khop(h2, { status: "chua_noi", ly_do: "nhieu-ung-vien", ung_vien: [12, 13] })) lech.push("nhom-da-duc-hai-nut");
+  const h3 = mod.phanLopS08({ ma: "c3", ten: "DỰ ÁN ĐÚC S08", tinh: "QN" }, NUT, null, daDuc);
+  if (!khop(h3, { status: "duc", nhom: "du an duc s08|QN" })) lech.push("nhom-da-duc-khac-tinh");
   return lech;
 }
 
-test("NS8-1: ma trận mười lăm ca + nhóm đúc — mỗi ca đúng ngả", async () => {
+test("NS8-1: ma trận mười lăm ca + nhóm đúc + nhóm đã đúc (DA65) — mỗi ca đúng ngả", async () => {
   const mod = await import(pathToFileURL(join(LIB, "noi-du-an-s08-lop.mjs")).href);
   assert.deepEqual(await caLech(mod), [], "ca lệch trên lib thật");
 });
@@ -71,6 +79,8 @@ const PHA = [
   ["bo-nguong-8-ky-tu", "q.length >= DO_DAI_BI_DANH && k.length >= DO_DAI_BI_DANH &&", "", ["bi-danh-7-ky-tu"]],
   ["bo-bo-hau-to-tt", ".replace(/(?:_|\\s)TT$/i, \"\")", "", ["tt-tmdv-ve-nut-goc"]],
   ["nhan-nut-duc-s08", "if (n.nguon === NGUON) continue;", "", ["nut-duc-s08-khong-la-ung-vien"]],
+  ["bo-nhom-da-duc", "const daDuc = sap(new Set(nhomDaDuc?.get(nhom) ?? []));", "const daDuc = [];", ["nhom-da-duc-mot-nut", "nhom-da-duc-hai-nut"]],
+  ["nhom-hai-nut-lay-nut-dau", "if (daDuc.length > 1) return", "if (daDuc.length > 1) return { status: \"duc\", node_id: daDuc[0], can_cu: CAN_CU.duc }; if (false) return", ["nhom-da-duc-hai-nut"]],
 ];
 
 for (const [ten, goc, thay, phaiDo] of PHA) {

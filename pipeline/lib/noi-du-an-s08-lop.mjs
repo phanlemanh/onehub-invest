@@ -36,9 +36,11 @@ export const khoaNhom = (ten, tinh) => `${chuanTen(tenGoc(ten))}|${tinh}`;
  * @param {{id: number, name: string, aliases?: string[]|null, tinh: string|null, nguon?: string|null}[]} nut
  *   nút project; tinh null = chưa biết tỉnh (nút ứng viên S09 của DA42); nguon 'S08' = nút do luật S08 đúc
  * @param {{asset_node_id: number|null, laUngVienS08: boolean}|null} [daNoi]  dòng project_links S08 hiện có
+ * @param {Map<string, number[]>} [nhomDaDuc]  khoá nhóm → id nút S08 đã đúc cho nhóm ở lượt trước (DA65: dự án mới cùng khoá nối
+ *   nút cũ thay vì đúc nút thứ hai; nhóm đã có hai nút trở lên đi thẻ từng cặp)
  * @returns {{status: 'giu_tay'|'noi'|'duc'|'chua_noi', node_id?: number, ly_do?: string, ung_vien?: number[], nhom?: string, can_cu?: string}}
  */
-export function phanLopS08(d, nut, daNoi = null) {
+export function phanLopS08(d, nut, daNoi = null, nhomDaDuc = null) {
   if (d.noiTay) return { status: "giu_tay" };
   // Dự án đã có nút ứng viên do chính luật S08 đúc (lần áp trước, kể cả đã đảo): giữ nút ấy, không xếp lại.
   if (daNoi?.laUngVienS08 && daNoi.asset_node_id != null) return { status: "duc", node_id: Number(daNoi.asset_node_id), can_cu: CAN_CU.duc };
@@ -64,7 +66,11 @@ export function phanLopS08(d, nut, daNoi = null) {
   if (trung.size > 1) return { status: "chua_noi", ly_do: LY_DO.nhieuUngVien, ung_vien: sap(trung) };
   if (trungKhongTinh.size === 1) return { status: "chua_noi", ly_do: LY_DO.nutKhongTinh, ung_vien: sap(trungKhongTinh) };
   if (chua.size) return { status: "chua_noi", ly_do: LY_DO.ganGiong, ung_vien: sap(chua) };
-  return { status: "duc", nhom: khoaNhom(d.ten, d.tinh), can_cu: CAN_CU.duc };
+  const nhom = khoaNhom(d.ten, d.tinh);
+  const daDuc = sap(new Set(nhomDaDuc?.get(nhom) ?? []));
+  if (daDuc.length === 1) return { status: "duc", node_id: daDuc[0], can_cu: CAN_CU.duc };
+  if (daDuc.length > 1) return { status: "chua_noi", ly_do: LY_DO.nhieuUngVien, ung_vien: daDuc };
+  return { status: "duc", nhom, can_cu: CAN_CU.duc };
 }
 
 /** Kết cục chuẩn cho băm — mang nút đích, khoá nhóm đúc, id ứng viên, để đổi đích giữa thẻ và áp làm lệch băm. */

@@ -1,0 +1,24 @@
+schema_version: 1
+feature_slug: noi-s08-ap-lai-theo-khoa-nhom
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.ns8_lop
+    expected: "exit 0; ma trận DA55 mười lăm ca giữ nguyên; ba ca DA65: khoá nhóm có một nút S08 → duc node_id 11 và ketCucChuan «duc:#11»; khoá nhóm hai nút → chua_noi nhieu-ung-vien ung_vien [12, 13]; cùng tên khác tỉnh → đúc nhóm mới. Chiều đỏ trên cùng fixture: bỏ tra bảng nhóm đã đúc (mã trước DA65) thì hai ca một nút, hai nút đỏ; nhóm hai nút lấy nút đầu thì ca hai nút đỏ — mỗi phép phá nêu tên ca"
+    paths: ["pipeline/lib/noi-du-an-s08-lop.mjs", "pipeline/scripts/noi-du-an-s08-lop.test.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.ns65_ap
+    expected: "exit 0; ca NS8-6 trên DB thử của riêng lượt, trong giao dịch ROLLBACK: sau lượt áp đầu đã có nút «CONG VIEN THU»; dự án mới «TMDV CONG VIEN THU» cùng tỉnh → thẻ {duc, node_id nút cũ, S08-nut-ung-vien}, thẻ hứa 0 nút mới; áp soNutMoi 0, số dòng asset_nodes không đổi, project_links noi trỏ nút cũ, bí danh node:<nút cũ>; áp lại khongDoi; cấy nút S08 thứ hai cùng khoá rồi thêm «CONG VIEN THU TT» → chua_noi nhieu-ung-vien nêu hai id. Chiều đỏ: trên mã trước DA65 ca đỏ ở bước thẻ (ra nhom thay vì node_id)"
+    paths: ["pipeline/noi-du-an-s08-luat.mjs", "pipeline/lib/noi-du-an-s08-lop.mjs", "pipeline/scripts/noi-du-an-s08-luat.itest.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.ns65_that
+    expected: "exit 0 trên DB máy thu, giao dịch READ ONLY: in dòng đếm (dự án, ngả đúc, vào nút cũ, nút mới hứa, nhóm có nút S08 một nút / từ hai nút); PASS đối chứng đỏ (luật bỏ bảng nhóm đã đúc cho dự án giả cùng khoá đúc nhóm mới); PASS đối chứng xanh (luật hiện tại về nút cũ); PASS ba bất biến. Không in tên, mã dự án. Ngoài CI (cần DB máy thu)"
+    paths: ["pipeline/noi-du-an-s08-luat.mjs", "pipeline/lib/noi-du-an-s08-lop.mjs", "_acceptance/noi-s08-ap-lai-theo-khoa-nhom/probes/bat-bien-that.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

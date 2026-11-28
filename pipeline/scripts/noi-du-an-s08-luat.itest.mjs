@@ -229,3 +229,37 @@ test("NS8-5: lệnh kiểm thoát 0 sau áp; cấy lệch tỉnh, thiếu trạn
   }
   assert.equal(cli().status, 0, "hoàn lại thì lệnh kiểm về đạt");
 });
+
+test("NS8-6 (DA65): dự án mới cùng khoá nhóm với nút S08 đã đúc nối nút cũ, không đúc nút thứ hai; nhóm hai nút đi thẻ cặp", async () => {
+  const nutS08 = async () => (await db.query("SELECT id::int, name FROM asset_nodes WHERE meta ->> 'nguon' = 'S08' ORDER BY id")).rows;
+  if (!(await nutS08()).length) await apTheLuat(db, { bam: (await dungTheLuat(db)).bam, nguoi: "itest" });
+  const cu = (await nutS08()).find((n) => n.name === "CONG VIEN THU");
+  assert.ok(cu, "đối chứng: lượt trước đã đúc nút nhóm «CONG VIEN THU»");
+  const MOI = "S08PRJ0007", MOI2 = "S08PRJ0008";
+  const themDuAn = (ma, ten, lng, lat) => db.query(
+    "INSERT INTO stg_s08_project (snapshot_id, project_id, catalog_payload, detail_payload, fetched_at) VALUES ($1, $2, $3, $4, now())",
+    [SNAP, ma, { project_name: ten, project_code: "X" }, iframe(lng, lat)]);
+  await db.query("BEGIN");
+  try {
+    await themDuAn(MOI, "TMDV CONG VIEN THU", 105.83, 21.03);
+    const the = await dungTheLuat(db);
+    assert.deepEqual(ngaCua(the, MOI), { status: "duc", node_id: cu.id, can_cu: "S08-nut-ung-vien" }, "dự án mới cùng khoá về nút cũ");
+    assert.equal(the.soNutMoi, 0, "thẻ không hứa nút mới");
+    const soNut = (await db.query("SELECT count(*)::int AS n FROM asset_nodes")).rows[0].n;
+    const kq = await apTheLuat(db, { bam: the.bam, nguoi: "itest", giaoDich: "ngoai" });
+    assert.equal(kq.soNutMoi, 0, "áp không đúc nút thứ hai cho nhóm");
+    assert.equal((await db.query("SELECT count(*)::int AS n FROM asset_nodes")).rows[0].n, soNut);
+    const { rows: [l] } = await db.query("SELECT asset_node_id::int AS nut, status FROM project_links WHERE source = 'S08' AND source_project_id = $1", [MOI]);
+    assert.deepEqual(l, { nut: cu.id, status: "noi" });
+    const { rows: [a] } = await db.query("SELECT object_key FROM registry_aliases WHERE source = 'S08' AND retired_at IS NULL AND value = $1", [`du_an/${MOI}`]);
+    assert.equal(a?.object_key, `node:${cu.id}`);
+    assert.equal((await apTheLuat(db, { bam: (await dungTheLuat(db)).bam, nguoi: "itest", giaoDich: "ngoai" })).khongDoi, true, "áp lại không đổi");
+    // Nhóm đã có hai nút S08 (vd. lượt cũ đúc trùng): dự án mới của nhóm không chọn bừa — thẻ cặp nêu cả hai nút.
+    const { rows: [n2] } = await db.query(
+      `INSERT INTO asset_nodes (node_type, name, slug, aliases, area_ids, catalog_tier, meta)
+       VALUES ('project', 'CONG VIEN THU', 'ns8-cong-vien-thu-trung', ARRAY['cong vien thu'], ARRAY['ns8-hn-x1'], 'mot_loi_khai', '{"nguon":"S08"}') RETURNING id::int`);
+    await themDuAn(MOI2, "CONG VIEN THU TT", 105.84, 21.04);
+    const kq2 = ngaCua(await dungTheLuat(db), MOI2);
+    assert.deepEqual(kq2, { status: "chua_noi", ly_do: "nhieu-ung-vien", ung_vien: [cu.id, n2.id].sort((x, y) => x - y) });
+  } finally { await db.query("ROLLBACK"); }
+});
