@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: ded0ba07b522f0d903df3c768ece50f3dd2f2f8f
+verified_commit: 86bad6a105ffcf6ccb35cb4252f68fdbf429331d
 human_signoff: Mạnh 2026-11-28
 ---
 
@@ -259,3 +259,7 @@ none — every multi-run eval is uniform
 
 Round 1: E1, E2, E3, E6, E7, E8, E9, E10 chấm xanh; các eval này được mang sang round 2 vì delta không chạm paths của chúng.
 Round 2: chấm lại E1b, E2b, E4, E5, E1c, E3c, E4c, E6c, E11, E12 và bảy lệnh suite, tất cả xanh.
+
+### Re-pin lần 1 — 2026-11-28, do hoá cũ do đổi chuỗi kết nối giả (#583)
+run_id: repin-20261128T045155Z-66241
+sha: 86bad6a105ffcf6ccb35cb4252f68fdbf429331d · suites: 8 lệnh exit 0 · evals: 18/18 eval máy đạt kỳ vọng
