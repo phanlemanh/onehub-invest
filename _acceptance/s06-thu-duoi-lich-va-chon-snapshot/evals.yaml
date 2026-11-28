@@ -1,0 +1,131 @@
+# s06-thu-duoi-lich-va-chon-snapshot (ZC18) — map AC → eval. Lệnh là config: ref (_acceptance/config.yaml, executors.test.s06tl_* / suite.*).
+# paths hẹp theo luật R4 của GS (24/11): đúng tệp nhánh đổi + probe của chính eval.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.s06tl_test
+    paths: [scripts/thu-duoi-s06.sh, scripts/thu-duoi-s06.test.mjs]
+    expected: "exit 0; '✔ khoá bận (pid lượt trước còn sống) → thoát 0 im lặng, không lời gọi nào'; '✔ khoá sót của tiến trình đã chết → nhận lại khoá, vòng chạy bình thường'; 'ℹ fail 0', 'ℹ skipped 0'. Chiều đỏ đo trong lượt chấm ở E1b; should-NOT-fire: '✖'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.s06tl_test
+    paths: [scripts/thu-duoi-s06.sh, scripts/thu-duoi-s06.test.mjs]
+    expected: "exit 0; '✔ script nạp ngày đang chạy → thoát 0, nhường lượt, không lời gọi node'; should-NOT-fire: '✖'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E1b
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.test.s06tl_dot_bien
+    paths: [scripts/thu-duoi-s06.sh, scripts/thu-duoi-s06.test.mjs, _acceptance/s06-thu-duoi-lich-va-chon-snapshot/probes/dot-bien.mjs]
+    expected: "exit 0; 'tu kiem mau do: dau gia khop 0 ca (DUNG)'; 'ban chep lanh: exit 0 · 0 ca đỏ' (đối chứng dương trên cùng dựng); 'ĐỘT BIẾN BỊ BẮT bo-kiem-pid-song' kèm '— khoá bận (pid lượt trước còn sống)'; cuối 'DOT-BIEN OK'; should-NOT-fire: 'ĐỘT BIẾN SỐNG', 'DOI CHUNG HONG', 'KHONG TIM THAY CHO PHA', 'MAU DO KHONG KHOP CA NAO', 'TU KIEM MAU DO HONG'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2b
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.test.s06tl_dot_bien
+    paths: [scripts/thu-duoi-s06.sh, scripts/thu-duoi-s06.test.mjs, _acceptance/s06-thu-duoi-lich-va-chon-snapshot/probes/dot-bien.mjs]
+    expected: "exit 0; 'ĐỘT BIẾN BỊ BẮT bo-nhuong-luot' kèm tên ca có 'nhường lượt' (ca nhận theo dấu PGREP_GIA_QUET_DU trong thân ca, không theo tên); cuối 'DOT-BIEN OK'; should-NOT-fire: 'ĐỘT BIẾN SỐNG', 'DOI CHUNG HONG', 'MAU DO KHONG KHOP CA NAO', 'TU KIEM MAU DO HONG'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.s06tl_test
+    paths: [scripts/thu-duoi-s06.sh, scripts/thu-duoi-s06.test.mjs]
+    expected: "exit 0; '✔ cổng vòng đời từ chối (RC 3) → thoát 0 kèm lý do, không thu không nạp'; '✔ cổng vòng đời lỗi (RC 1) → thoát 1 fail-closed'; '✔ không vùng chạy được → thoát 0'; should-NOT-fire: '✖'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.s06tl_test
+    paths: [scripts/thu-duoi-s06.sh, scripts/thu-duoi-s06.test.mjs]
+    expected: "exit 0; '✔ GOC trỏ vào collector/ → thoát 1 trước mọi thao tác'; should-NOT-fire: '✖'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.test.s06tl_chon_nap
+    paths: [scripts/thu-duoi-s06.sh, pipeline/import-chotot.mjs, _acceptance/s06-thu-duoi-lich-va-chon-snapshot/probes/chon-nap.mjs]
+    expected: "exit 0; probe từ chối DB không mang tên oneinvest_suite_* ('tu choi DB', exit 2); 'fixture tu writer that: … snapshot hcmc của phép đo 24 giờ (bộ thu đuôi ghi)'; 'khong snapshot: exit 0 · nap 0'; 'hai vung ton dong: hanoi nap 1 (moi nhat) · hcmc nap 1 (moi nhat) · moi vung dung 1'; 'stg hanoi tang dung so tin cua snapshot moi nhat'; 'ton dong: vong 2 nap S1'; 'da nap con trong stg: nap 0'; 'stg tang dung so tin cua snapshot moi nhat'; 'da nap roi bi luot quet du de: vong sau nap 0 · nhat ky 0 dong nap cho snapshot do · noi dung stg khong lui'; đối chứng dương: 'snapshot moi sau khi bi de: van nap 1'; cuối 'CHON-NAP OK'; should-NOT-fire: 'NAP LAI', 'NOI DUNG LUI', 'CHON-NAP DO', 'DOI CHUNG HONG'. Trên 7173fc21a dự kiến đỏ ở 'NAP LAI' (xem Notes của contract)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.s06tl_test
+    paths: [scripts/thu-duoi-s06.sh, scripts/thu-duoi-s06.test.mjs]
+    expected: "exit 0; '✔ bị chặn nguồn (collect RC 3) → thoát 3, KHÔNG nạp gì'; '✔ nạp lỗi → thoát 1 cuối vòng'; should-NOT-fire: '✖'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E1c
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.test.s06tl_chon_nap
+    paths: [scripts/thu-duoi-s06.sh, pipeline/import-chotot.mjs, _acceptance/s06-thu-duoi-lich-va-chon-snapshot/probes/chon-nap.mjs]
+    expected: "exit 0; 'khoa go sau vong xanh'; 'ma 3: exit 3 · nap 0 · khoa go' (khoá được gỡ cả khi vòng thoát khác 0); should-NOT-fire: 'KHOA SOT'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3c
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.test.s06tl_chon_nap
+    paths: [scripts/thu-duoi-s06.sh, pipeline/import-chotot.mjs, _acceptance/s06-thu-duoi-lich-va-chon-snapshot/probes/chon-nap.mjs]
+    expected: "exit 0; 'doc vung loi: exit 1 · 0 loi goi bo thu' (DB không mở được → fail-closed, ca điều khiển in trước ca chọn-nạp); should-NOT-fire: 'CHON-NAP DO DB lỗi'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4c
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.test.s06tl_chon_nap
+    paths: [scripts/thu-duoi-s06.sh, pipeline/import-chotot.mjs, _acceptance/s06-thu-duoi-lich-va-chon-snapshot/probes/chon-nap.mjs]
+    expected: "exit 0; 'goc mac dinh: moi --goc duoi state/thu-duoi-s06 · 0 duong duoi collector/snapshots'; 'goc trong collector: exit 1 · khong tao thu muc · 0 loi goi bo thu'; should-NOT-fire: 'GHI VAO COLLECTOR'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6c
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.test.s06tl_chon_nap
+    paths: [scripts/thu-duoi-s06.sh, pipeline/import-chotot.mjs, _acceptance/s06-thu-duoi-lich-va-chon-snapshot/probes/chon-nap.mjs]
+    expected: "exit 0; 'ma 3: exit 3 · nap 0 · khoa go'; 'ma 4: exit 4 · nap 0 · khoa go'; 'ma 5: exit 5 · nap 0 · khoa go'; 'nap loi vung dau: vung sau van thu · exit 1'; should-NOT-fire: 'CHON-NAP DO mã', 'CHON-NAP DO nạp lỗi'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.s06tl_test
+    paths: [pipeline/lib/thu-duoi-moc.mjs, scripts/thu-duoi-s06.test.mjs]
+    expected: "exit 0; '✔ catMoc: vượt trần → giữ N id CUỐI, ghi tmp+rename không sót tmp'; '✔ catMoc: dưới trần → không cắt, KHÔNG ghi lại file'; '✔ catMoc: thiếu file / JSON hỏng / trần vô nghĩa → không nổ, không cắt'; '✔ trần mốc theo env THU_DUOI_S06_MOC_TOIDA đi vào lời gọi cắt'; '✔ CLI entry của helper in JSON một dòng'; should-NOT-fire: '✖'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.s06tl_test
+    paths: [scripts/install-cron.sh, scripts/install-cron-chi.test.mjs, pipeline/cron/com.oneinvest.thu-duoi-s06.plist]
+    expected: "exit 0; '✔ --chi thu-duoi-s06: CHỈ thu-duoi-s06 được cài — không chạm job nào khác'; '✔ vắng cờ: đủ 3 job như hành vi cũ'; '✔ tên job lạ → thoát 2, KHÔNG ghi plist nào'; '✔ --chi trơn → thoát 2, không plist nào'; '✔ plist template: Label đúng, StartInterval 300'; 'ℹ skipped 0' (máy chấm là macOS); should-NOT-fire: '✖'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.test.s06tl_pham_vi
+    paths: [scripts/thu-duoi-s06.sh, scripts/thu-duoi-s06.test.mjs, scripts/install-cron.sh, scripts/install-cron-chi.test.mjs, pipeline/lib/thu-duoi-moc.mjs, pipeline/cron/com.oneinvest.thu-duoi-s06.plist, pipeline/scripts/thu-duoi-chon-nap-e2e.test.mjs, pipeline/scripts/thu-duoi-moc-symlink.test.mjs, _acceptance/s06-thu-duoi-lich-va-chon-snapshot/probes/pham-vi.sh]
+    expected: "exit 0; 'doi chung launchctl: thay N job com.oneinvest.*' (N ≥ 1, chứng minh lệnh đọc được domain); 'launchctl: khong co com.oneinvest.thu-duoi-s06'; 'LaunchAgents: khong co com.oneinvest.thu-duoi-s06.plist'; mỗi tệp đổi so với origin/main một dòng 'ok <tệp>'; 'tự kiểm: app/src/app/page.tsx → NGOAI PHAM VI'; 'plist cai thu: __ROOT__ da thay bang goc kho'; 'test cach ly: exit 0 · loi goi mang that 0 · HOME tam rong'; 'tu kiem mang: bộ đếm bắt 1 lời (TRUNG)'; cuối 'PHAM-VI OK'; should-NOT-fire: 'DA CAI LICH', 'DOI CHUNG HONG', 'PLIST CON __ROOT__', 'PLIST SAI GOC', 'CAI THU LOI', 'NGOAI PHAM VI scripts', 'NGOAI PHAM VI pipeline', 'GOI MANG THAT', 'GHI VAO HOME', 'TU KIEM HONG'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.suite.pipeline_that
+    long_running: 90
+    paths: [pipeline/lib/thu-duoi-moc.mjs, pipeline/scripts/thu-duoi-moc-symlink.test.mjs, pipeline/scripts/thu-duoi-chon-nap-e2e.test.mjs]
+    expected: "exit 0 trong trần 90′ (luật GS 26/11: hàng đổi pipeline/lib/** kích pipeline_that, khuôn HT9 E3a); should-NOT-fire: '✖'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.test.s06tl_chon_nap
+    paths: [scripts/thu-duoi-s06.sh, pipeline/import-chotot.mjs, _acceptance/s06-thu-duoi-lich-va-chon-snapshot/probes/chon-nap.mjs]
+    expected: "dòng 'vung mac dinh: chi hcmc · loi goi vung khac 0' (hai vùng hanoi, hcmc chạy được, KHÔNG đặt cấu hình vùng); dòng 'vung ngoai danh sach: 0 loi goi · co dong nhat ky' (cấu hình chỉ hcmc, hanoi chạy được); dòng 'vung cau hinh hai vung: goi ca hai'; should-NOT-fire: 'VUNG MAC DINH CHAY CA', 'VUNG NGOAI DANH SACH BI GOI'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E12
+    criterion: AC-11
+    executor: script
+    cmd: config:executors.test.s06tl_chon_nap
+    paths: [scripts/thu-duoi-s06.sh, pipeline/import-chotot.mjs, pipeline/cron/com.oneinvest.thu-duoi-s06.plist, _acceptance/s06-thu-duoi-lich-va-chon-snapshot/probes/chon-nap.mjs]
+    expected: "dòng 'chan: vong 1 exit 3 · co dau chan co han'; dòng 'con han: vong 2 exit 0 · 0 loi goi bo thu · 0 loi nap'; dòng 'het han: vong 3 goi bo thu'; dòng 'chan giua chung: vung sau khong goi'; dòng 'lan hai trong 24 gio: exit 3 · co dau dung han'; dòng 'dung han: 0 loi goi du het han nghi · co dong go dau'; dòng 'nguoi go dau: vong sau goi bo thu'; dòng 'lan hai sau 24 gio: chi nghi'; dòng 'tat luat lan hai: chi nghi'; dòng 'mac dinh nghi sau chan: 60 phut'; dòng 'mac dinh khi chan: chi goi hcmc'; dòng 'mac dinh luat lan hai: bat'; dòng 'khuon plist: khong de ba gia tri'; should-NOT-fire: 'GOI NGUON KHI CON HAN', 'KHONG DAU CHAN', 'KET HAN', 'KHONG DUNG HAN', 'GOI NGUON KHI DUNG HAN', 'KET SAU KHI GO', 'DUNG HAN SAU 24 GIO', 'DUNG HAN KHI TAT', 'NGHI MAC DINH SAI', 'VUNG MAC DINH SAI', 'LUAT LAN HAI MAC DINH TAT', 'PLIST DE GIA TRI'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

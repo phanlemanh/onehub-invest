@@ -1,0 +1,18 @@
+PB2 S4 vòng 1 trên M5 ＠07ee68289db6e44135e6b3b2c37762847e5f728e — KHÔNG CHẤM: lượt soát 07ee68289-20261127T172917 đỏ một ca khác QV-AC-5.
+
+Soát: data-api xanh · pipeline xanh · app chỉ đỏ QV-AC-5 (ca đỏ có tên) · scripts ĐỎ 1 ca: «AC-7 plist không đổi so với origin/main» (scripts/zalo-import-tran.test.mjs:293).
+Đọc ca: test chạy «git diff --quiet origin/main -- pipeline/cron». Nhánh không đổi pipeline/cron so với merge-base, nhưng main đã đổi thư mục đó sau merge-base (1fe6ab9ca, #567) — nhánh chưa gộp main mới. Không do mã PB2; gộp main rồi soát lại là đủ (cùng ca với HT20 r2 ＠fa36da91e).
+
+== Nguyên văn ca đỏ (scripts.log) ==
+✖ failing tests:
+
+test at scripts/zalo-import-tran.test.mjs:293:1
+✖ AC-7 plist không đổi so với origin/main (14.96209ms)
+  Error: Command failed: git -C /repo diff --quiet origin/main -- pipeline/cron
+    status: 1,
+    signal: null,
+    output: [ null, <Buffer >, <Buffer > ],
+    pid: 134545,
+    stdout: <Buffer >,
+    stderr: <Buffer >
+  }

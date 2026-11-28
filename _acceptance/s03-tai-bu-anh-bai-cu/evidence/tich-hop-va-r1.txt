@@ -1,0 +1,10 @@
+ZC20 — tích hợp vá vòng 1 (ZT, Mac mini, 2026-11-26T23:55:50Z)
+Nguồn vá: zcode/zt-s03-tai-bu-anh @0464f238d (LL soát, BÁO claudedp-2611-35). Gộp bằng 16262f824, rồi gộp origin/main.
+So byte với 0464f238d: backfill-s03-media-2511.test.mjs KHỚP; backfill-s03-media-2511.mjs lệch đúng bằng bản vá tích hợp aee72a12a (lối vào CLI realpathSync, AC-3) — không thêm gì khác.
+Hai ca mới: 2/2 pass.
+✔ ghiSnapshotBuu: 403 ở url ĐẦU của bài nhiều ảnh → đúng 1 lời gọi, không gọi tiếp host vừa chặn (16.506917ms)
+✔ (2) raw bất biến: snapshot gốc (tệp + manifest) giữ nguyên băm trước/sau một lượt bù (9.379042ms)
+Đột biến 1 (bỏ 'if (maChan) break;'): ca 403-url-đầu ĐỎ — gọi 3)
+Đột biến 2 (daChep = null, bước chép không chạy): ca raw bất biến ĐỎ — soChep actual 0, expected 1
+Mã đã trả nguyên sau mỗi đột biến (git checkout, status sạch).
+Cả tệp backfill: 10 pass, 1 skip (ca DB cần DATABASE_URL — để M5 chấm); scripts/zalo-import-replay.test.mjs 2/2.

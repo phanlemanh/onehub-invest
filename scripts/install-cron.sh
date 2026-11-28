@@ -9,7 +9,8 @@
 # BACKUP_PASS lưu vào macOS Keychain (ADR-0007 DR) — KHÔNG ghi vào plist.
 set -euo pipefail
 
-# --chi <job...> (061-37): chỉ cài các job nêu tên (collector|smoke|backup);
+# --chi <job...> (061-37): chỉ cài các job nêu tên (collector|smoke|backup|
+# thu-duoi-s06 2511-29 — chỉ cài sau khi Mạnh ký);
 # vắng cờ thì cài đủ 3 như cũ. Nhiều tên cách nhau bởi khoảng trắng.
 # 0711-27: --chi mà KHÔNG kèm tên job nào → lỗi thoát 2, không ghi plist
 # (trước rơi về cài cả ba — vô tình khởi động lại collector).
@@ -22,8 +23,8 @@ while [ $# -gt 0 ]; do
       shift
       while [ $# -gt 0 ] && [ "${1#-}" = "$1" ]; do
         case "$1" in
-          collector|smoke|backup) JOBS+=("$1") ;;
-          *) echo "lỗi: job không biết '$1' (collector|smoke|backup)" >&2; exit 2 ;;
+          collector|smoke|backup|thu-duoi-s06) JOBS+=("$1") ;;
+          *) echo "lỗi: job không biết '$1' (collector|smoke|backup|thu-duoi-s06)" >&2; exit 2 ;;
         esac
         shift
       done
@@ -32,7 +33,7 @@ while [ $# -gt 0 ]; do
   esac
 done
 if [ "$CO_CHI" -eq 1 ] && [ "${#JOBS[@]}" -eq 0 ]; then
-  echo "lỗi: --chi cần ít nhất một tên job (collector|smoke|backup) — không ghi plist nào" >&2
+  echo "lỗi: --chi cần ít nhất một tên job (collector|smoke|backup|thu-duoi-s06) — không ghi plist nào" >&2
   exit 2
 fi
 if [ "${#JOBS[@]}" -eq 0 ]; then

@@ -1,0 +1,150 @@
+# ZC18 E5 trên M5 — theo probes/E5-CHAY-TREN-M5.md (＠d282312fa). Dữ liệu: S06_DUOI_DO=$HOME/dev/onehub-wt/zt-thu-duoi-s06-do/state/phep-do-s06-24h (chỉ đọc)
+# worktree đặt trong .claude/worktrees/ (probe-zc18, probe-zc18-dc) thay /tmp — luật kho.
+
+## Lượt 1 — XANH, đầu nhánh. Bắt đầu 2026-11-26T17:41:35Z
+$ S06_DUOI_DO=<…> bash db/db-thu.sh oneinvest_suite_s06tl --chay-trong node _acceptance/s06-thu-duoi-lich-va-chon-snapshot/probes/chon-nap.mjs
+git rev-parse HEAD: 9614ab0af11202e6dbef2228cc14d9f2eeb04a13
+git diff --stat HEAD: 
+db-thu: cụm dùng một lần one-invest-db-thu-26576 cổng 127.0.0.1:32831 — dựng cụm + migration 9 s
+fixture tu writer that: 231 snapshot hcmc của phép đo 24 giờ (bộ thu đuôi ghi), dùng hcmc__S06__2026-11-24T012115 · hcmc__S06__2026-11-24T012611 · hcmc__S06__2026-11-24T013109 · hcmc__S06__2026-11-24T013610
+vong goc-mac-dinh: exit 0 · nap 0
+goc mac dinh: moi --goc duoi state/thu-duoi-s06 · 0 duong duoi collector/snapshots
+khong snapshot: exit 0 · nap 0
+khoa go sau vong xanh
+vong goc-collector: exit 1 · nap 0
+❌ THU_DUOI_S06_GOC cấm trỏ vào collector/ — snapshot đuôi phải ở kho riêng
+
+goc trong collector: exit 1 · khong tao thu muc · 0 loi goi bo thu
+vong db-loi: exit 1 · nap 0
+❌ vong-doi S06 lỗi — dừng (fail-closed)
+vong-doi: không đọc được trạng thái (ECONNREFUSED)
+
+doc vung loi: exit 1 · 0 loi goi bo thu
+vong ma-3: exit 3 · nap 0
+{"daCat":false,"lyDo":"doc-loi"}
+❌ thu đuôi vùng hanoi thoát 3 — dừng vòng, nạp để vòng sau
+
+ma 3: exit 3 · nap 0 · khoa go
+vong ma-4: exit 4 · nap 0
+{"daCat":false,"lyDo":"doc-loi"}
+❌ thu đuôi vùng hanoi thoát 4 — dừng vòng, nạp để vòng sau
+
+ma 4: exit 4 · nap 0 · khoa go
+vong ma-5: exit 5 · nap 0
+{"daCat":false,"lyDo":"doc-loi"}
+❌ thu đuôi vùng hanoi thoát 5 — dừng vòng, nạp để vòng sau
+
+ma 5: exit 5 · nap 0 · khoa go
+vong 1: exit 0 · nap 1 (hcmc__S06__2026-11-24T012611)
+hai vung: hanoi nap 0 · hcmc nap 1 · moi vung <= 1
+stg tang dung so tin cua snapshot moi nhat
+vong 2: exit 0 · nap 1 (hcmc__S06__2026-11-24T012115)
+ton dong: vong 2 nap S1
+vong 2b: exit 0 · nap 0
+da nap con trong stg: nap 0
+/Users/manhphan/dev/onehub-invest/pipeline/node_modules/pg/lib/client.js:694
+          Error.captureStackTrace(err)
+                ^
+
+error: insert or update on table "stg_chotot_ads" violates foreign key constraint "stg_chotot_ads_snapshot_id_fkey"
+    at /Users/manhphan/dev/onehub-invest/pipeline/node_modules/pg/lib/client.js:694:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async file:///Users/manhphan/dev/onehub-invest/.claude/worktrees/probe-zc18/_acceptance/s06-thu-duoi-lich-va-chon-snapshot/probes/chon-nap.mjs:124:3 {
+  length: 335,
+  severity: 'ERROR',
+  code: '23503',
+  detail: 'Key (snapshot_id)=(hcmc__S06__2026-11-26T053000) is not present in table "airbnb_snapshots".',
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: 'public',
+  table: 'stg_chotot_ads',
+  column: undefined,
+  dataType: undefined,
+  constraint: 'stg_chotot_ads_snapshot_id_fkey',
+  file: 'ri_triggers.c',
+  line: '2599',
+  routine: 'ri_ReportViolation'
+}
+
+Node.js v24.21.0
+→ mã thoát 1
+
+## Lượt 2 — ĐỐI CHỨNG ĐỎ: 9614ab0af + git checkout 7173fc21a -- scripts/thu-duoi-s06.sh pipeline/lib/thu-duoi-moc.mjs. Bắt đầu 2026-11-26T17:41:47Z
+$ S06_DUOI_DO=<…> bash db/db-thu.sh oneinvest_suite_s06tl --chay-trong node _acceptance/s06-thu-duoi-lich-va-chon-snapshot/probes/chon-nap.mjs
+git rev-parse HEAD: 9614ab0af11202e6dbef2228cc14d9f2eeb04a13
+git diff --stat HEAD:
+ pipeline/lib/thu-duoi-moc.mjs | 5 ++---
+ scripts/thu-duoi-s06.sh       | 7 ++-----
+ 2 files changed, 4 insertions(+), 8 deletions(-)
+db-thu: cụm dùng một lần one-invest-db-thu-26960 cổng 127.0.0.1:32832 — dựng cụm + migration 9 s
+fixture tu writer that: 231 snapshot hcmc của phép đo 24 giờ (bộ thu đuôi ghi), dùng hcmc__S06__2026-11-24T012115 · hcmc__S06__2026-11-24T012611 · hcmc__S06__2026-11-24T013109 · hcmc__S06__2026-11-24T013610
+vong goc-mac-dinh: exit 0 · nap 0
+goc mac dinh: moi --goc duoi state/thu-duoi-s06 · 0 duong duoi collector/snapshots
+khong snapshot: exit 0 · nap 0
+khoa go sau vong xanh
+vong goc-collector: exit 1 · nap 0
+❌ THU_DUOI_S06_GOC cấm trỏ vào collector/ — snapshot đuôi phải ở kho riêng
+
+goc trong collector: exit 1 · khong tao thu muc · 0 loi goi bo thu
+vong db-loi: exit 1 · nap 0
+❌ vong-doi S06 lỗi — dừng (fail-closed)
+vong-doi: không đọc được trạng thái (ECONNREFUSED)
+
+doc vung loi: exit 1 · 0 loi goi bo thu
+vong ma-3: exit 3 · nap 0
+❌ thu đuôi vùng hanoi thoát 3 — dừng vòng, nạp để vòng sau
+
+ma 3: exit 3 · nap 0 · khoa go
+vong ma-4: exit 4 · nap 0
+❌ thu đuôi vùng hanoi thoát 4 — dừng vòng, nạp để vòng sau
+
+ma 4: exit 4 · nap 0 · khoa go
+vong ma-5: exit 5 · nap 0
+❌ thu đuôi vùng hanoi thoát 5 — dừng vòng, nạp để vòng sau
+
+ma 5: exit 5 · nap 0 · khoa go
+vong 1: exit 0 · nap 0
+CHON-NAP DO vong 1: mong nap đúng hcmc__S06__2026-11-24T012611
+CHON-NAP DO stg 0 ≠ 3
+vong 2: exit 0 · nap 0
+CHON-NAP DO vong 2: mong nap hcmc__S06__2026-11-24T012115
+vong 2b: exit 0 · nap 0
+da nap con trong stg: nap 0
+vong 3: exit 0 · nap 0
+vong 4: exit 0 · nap 0
+da nap roi bi luot quet du de: vong sau nap 0 · nhat ky 0 dong nap cho snapshot do
+noi dung stg khong lui
+vong 5: exit 0 · nap 0
+DOI CHUNG HONG: vòng 5 mong nạp hcmc__S06__2026-11-24T013109
+node:fs:2482
+    return binding.writeFileUtf8(
+                   ^
+
+Error: EACCES: permission denied, open '/var/folders/bp/cf66dm9n18x8q1rcjsylk6ph0000gq/T/zc18-chon-nap-UFXzQO/state/thu-duoi-s06/snapshots/hanoi/hanoi__S06__2026-11-24T000000/items-0001.json.gz'
+    at writeFileSync (node:fs:2482:20)
+    at file:///Users/manhphan/dev/onehub-invest/.claude/worktrees/probe-zc18-dc/_acceptance/s06-thu-duoi-lich-va-chon-snapshot/probes/chon-nap.mjs:142:3
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+  errno: -13,
+  code: 'EACCES',
+  syscall: 'open',
+  path: '/var/folders/bp/cf66dm9n18x8q1rcjsylk6ph0000gq/T/zc18-chon-nap-UFXzQO/state/thu-duoi-s06/snapshots/hanoi/hanoi__S06__2026-11-24T000000/items-0001.json.gz'
+}
+
+Node.js v24.21.0
+→ mã thoát 1
+# xong 2026-11-26T17:41:59Z
+
+## Ghi chú phiên chấm M5 (không sửa mã, không sửa probe)
+- máy: M5 (M5 Max 18 nhân, colima 16/96) · hai worktree tách tại 9614ab0af; lượt đỏ đúng hai tệp đổi (diff --stat ở trên). Dữ liệu phép đo chỉ đọc, không commit.
+- Lượt XANH (đầu nhánh): mã thoát 1 — KHÔNG phải kết quả E5. Mọi ca trước đó xanh (fixture writer thật, khoá gỡ, mã 3/4/5, hai vùng, tồn đọng,
+  «da nap con trong stg: nap 0»), rồi probe chết ở chon-nap.mjs:124: UPDATE stg_chotot_ads đổi snapshot_id sang NGAY TRƯỚC khi dòng 125 INSERT
+  airbnb_snapshots cho NGAY → vi phạm khoá ngoại stg_chotot_ads_snapshot_id_fkey (23503). Lỗi thứ tự của probe; ca «đè» và đối chứng dương chưa chạy.
+- Lượt ĐỐI CHỨNG (mã cũ 7173fc21a): đỏ đúng chỗ mong — «CHON-NAP DO vong 1: mong nap đúng …012611», «CHON-NAP DO stg 0 ≠ 3», «CHON-NAP DO vong 2»
+  (lỗi argv của mã cũ: vòng chọn không nạp gì), và «DOI CHUNG HONG» ở vòng 5; các ca điều khiển (khoá gỡ, mã 3/4/5) in trước. Nhưng probe chết ở
+  chon-nap.mjs:142 (EACCES) trước dòng tổng cuối: snapshot của phép đo có quyền r--r--r--, cpSync giữ quyền, writeFileSync ghi đè tệp items bị từ chối.
+  Dòng cuối vì thế không phải «CHON-NAP DO»; mã thoát 1. Không có «CHON-NAP OK» trên mã cũ.
+- Cần dãy U2 sửa probe (đổi thứ tự hai câu ở dòng 124–125; chmod u+w bản chép trước khi ghi ở dòng 140–142) rồi chạy lại cả hai lượt.
+- Che tên nguồn: trong mã snapshot, phần tên nguồn thật thay bằng «S06» trước khi commit (nội dung khác giữ nguyên văn).

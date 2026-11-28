@@ -62,7 +62,7 @@ export function DuAnView(p: DuAnProps) {
     .join(". ") || "Chưa có bí danh hay mã nguồn nối vào dự án."
   const oSo = [
     { title: "Phân khu", value: fmtInt(p.soPhanKhu), footer: "Phân khu và dự án con trong cây" },
-    { title: "Toà", value: fmtInt(p.soToa), footer: p.toaChuaCan > 0 ? `${fmtInt(p.toaChuaCan)} toà chưa có căn` : "Mọi toà đã có căn" },
+    { title: "Toà", value: fmtInt(p.soToa), footer: p.soToa === 0 ? "Chưa có toà" : p.toaChuaCan > 0 ? `${fmtInt(p.toaChuaCan)} toà chưa có căn` : "Mọi toà đã có căn" },
     { title: "Căn", value: fmtInt(p.soCan), footer: `${fmtInt(p.soTruc)} trục` },
     { title: "Tin đang rao", value: fmtInt(tin.reduce((a, [, n]) => a + n, 0)), footer: tin.map(([s, n]) => `${s} ${fmtInt(n)}`).join(" · ") || "Chưa có tin định vị tới dự án" },
   ]

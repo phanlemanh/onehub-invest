@@ -37,6 +37,15 @@ export type HangCay = {
 
 const che = (s: string, entries: SourceNameEntry[]) => maskSourceNames(s, entries) ?? "—"
 
+/**
+ * Bí danh để hiện ở dòng phụ dưới tên (DA67): bỏ bí danh chỉ nhắc lại tên sau khi gấp dấu (`fold` — cùng hàm ô tìm), giữ thứ
+ * tự, tối đa `toiDa`. Ô tìm vẫn khớp mọi bí danh (`timKiem` không đổi).
+ */
+export function biDanhKhacTen(ten: string, biDanh: string[], toiDa = 3): string[] {
+  const t = fold(ten)
+  return biDanh.filter((b) => fold(b) !== t).slice(0, toiDa)
+}
+
 function choThieu(n: NutDanhBa): ChoThieu[] {
   const out: ChoThieu[] = []
   if (n.soToa === 0) out.push("chua-toa")

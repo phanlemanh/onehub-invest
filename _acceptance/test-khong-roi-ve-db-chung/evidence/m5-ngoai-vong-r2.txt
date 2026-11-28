@@ -1,0 +1,23 @@
+HT35 S4 vòng 2 trên M5 ＠e767fbf5c524043c3859df9b6f41b667115266d1 — hai lệnh chạy NGOÀI vòng (HT37).
+
+1) E7d: node scripts/kiem-ht35.mjs scripts-doi-chung (HEAD ↔ merge-base với origin/main, mỗi phía một DB của lượt)
+đối chứng: HEAD e767fbf5c ↔ gốc d9afaa945
+HEAD: exit 1 · tests 705 · pass 701 · fail 3 · đỏ 3
+  HEAD đỏ: AC-7 plist không đổi so với origin/main
+  HEAD đỏ: NK-AC-1 năm cột, CHECK và giá trị từng mã đúng bảng viết trước
+  HEAD đỏ: chiều đỏ NK-AC-1: bảng mong đợi lệch một nhịp thì ca đỏ gọi tên mã
+gốc: exit 1 · tests 705 · pass 701 · fail 3 · đỏ 3
+  gốc đỏ: AC-7 plist không đổi so với origin/main
+  gốc đỏ: NK-AC-1 năm cột, CHECK và giá trị từng mã đúng bảng viết trước
+  gốc đỏ: chiều đỏ NK-AC-1: bảng mong đợi lệch một nhịp thì ca đỏ gọi tên mã
+PASS tập ca đỏ HEAD = gốc (3 ca, baseline red), HEAD pass 701/705
+__EXIT=0
+
+2) pipeline_that: node scripts/suite-neu-doi.mjs pipeline_that -- 'cd pipeline && npm run test:that'
+chay-that: vai may-phat-trien — bỏ qua 1 ca chỉ máy thu
+ℹ tests 37
+ℹ pass 37
+ℹ fail 0
+ℹ skipped 0
+__EXIT=0
+→ ĐẠT theo luật GS 26/11. Chấm trên M5: ON22-AC-10 không chạy (HT33).

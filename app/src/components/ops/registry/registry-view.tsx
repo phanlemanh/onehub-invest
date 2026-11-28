@@ -57,7 +57,11 @@ export function oSo(tong: TongDanhBa) {
       value: fmtInt(chuaNoi),
       footer:
         [
-          ...tong.danhMuc.map((d) => `${d.source} ${fmtInt(d.chuaNoi)}/${fmtInt(d.daNap)}`),
+          ...tong.danhMuc.map((d) =>
+            d.noiUngVien > 0
+              ? `${d.source} ${fmtInt(d.chuaNoi)}/${fmtInt(d.daNap)} (${fmtInt(d.noiUngVien)} vào nút ứng viên)`
+              : `${d.source} ${fmtInt(d.chuaNoi)}/${fmtInt(d.daNap)}`,
+          ),
           tong.toaBiDanhS09 > 0 ? `S09 đã cấp tên ${fmtInt(tong.toaBiDanhS09)} toà` : null,
         ]
           .filter(Boolean)

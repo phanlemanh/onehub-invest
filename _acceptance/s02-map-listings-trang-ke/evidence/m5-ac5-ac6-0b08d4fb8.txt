@@ -1,0 +1,15 @@
+ZC23 vòng 1 trên M5 ＠0b08d4fb8fc7d6484f7a31e615dfb6515f312ba7 — đầu ra đủ của hai phép đo AC-5 và AC-6 (chạy lại riêng sau lượt để lấy số; kit ghi XANH). Chỉ fixture: profile trong mkdtemp, fetch giả; không gọi nguồn.
+
+== node _acceptance/s02-map-listings-trang-ke/probes/phia-sau-va-tran-trang.mjs (thoát 0)
+đạt: bản thật · AC-4 bộ đọc phía sau lấy mã thị trường từ payload.url của trang kế (thực: 47)
+đạt: bản đột biến (bộ đọc đòi hậu tố @ trong url) bị bắt
+đạt: bản thật · AC-5 nguồn bỏ qua offset, trả lại trang đầu mãi → vòng phân trang dừng trong ≤ 11 lời map_listings, một dòng lý do (thực: 10 lời, 1 dòng lý do, lượt lộ lỗi)
+đạt: bản thật · AC-5 nguồn trả trang mới đủ 15000 căn mãi → vòng phân trang dừng trong ≤ 11 lời map_listings, một dòng lý do (thực: 10 lời, 1 dòng lý do, lượt lộ lỗi)
+đạt: bản thật · AC-5 vế không bắn: trang cuối 623 căn → dừng sau 2 lời, không dòng lý do (thực: 2 lời, 0 dòng)
+XANH
+
+== bash _acceptance/s02-map-listings-trang-ke/probes/khong-ten-mien-moi.sh (thoát 0)
+mốc so: origin/fix/s02-cua-api
+đạt: bản thật · AC-6 0 dòng mới mang tên miền nguồn trong collector/ so với mốc
+đạt: bản đột biến (cấy một dòng mang tên miền) bị bắt
+XANH

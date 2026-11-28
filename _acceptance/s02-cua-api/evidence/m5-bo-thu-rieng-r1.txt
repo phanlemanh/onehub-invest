@@ -1,0 +1,20 @@
+ZC22 S4 vòng 1 trên M5 ＠6c751c5964f4112d06e57e9c3bc9f483f0c66418 — chạy lại riêng lệnh bo-thu một lần sau lượt (đỏ trong vòng nghi do tải: ba lượt S4 chạy cùng lúc).
+Lệnh: cd collector && npx tsc -p tsconfig.json && cd .. && node _acceptance/s02-cua-api/probes/chay-test-dot-bien.mjs bo-thu
+Trong vòng: bản đối chứng (chép, không đổi) 33 đạt · 2 đỏ sẵn (kỳ vọng 34 · 1) → probe thoát 1 dù mọi đột biến bị bắt.
+Chạy lại riêng (thoát 0):
+
+đạt: bản thật · bo-thu: 35 ca đạt, 0 ca đỏ (s02-bo-thu-cua-api.test.js, cần ≥ 35 ca đạt và 0 ca đỏ)
+đạt: bản đối chứng (chép, không đổi) · 34 ca đạt, 1 ca đỏ sẵn do chép (ca đầu: 2511-s02 lượt thu KHÔNG mở trình duyệt: hai tệp bộ thu S02 không nhập playwright)
+đạt: bản đột biến (tra đổi bị từ chối mà không in AUTH FAIL) bị bắt: 1 ca đỏ ngoài 1 ca đỏ sẵn · ca đầu: 2511-s02 trình token: tra đổi bị từ chối (LoiXacThuc 401) → ném lại sau đúng MỘT dòng AUTH FAIL [S02]
+đạt: bản đột biến (bị chặn lại in AUTH FAIL thay vì BỊ CHẶN) bị bắt: 1 ca đỏ ngoài 1 ca đỏ sẵn · ca đầu: 2511-s02 trình token: tra đổi BỊ CHẶN (429) → ném LoiBiChan, in dòng BỊ CHẶN [S02], KHÔNG in AUTH FAIL
+đạt: bản đột biến (không cập nhật refresh token khi nguồn xoay phiên) bị bắt: 1 ca đỏ ngoài 1 ca đỏ sẵn · ca đầu: 2511-s02 trình token: nguồn xoay phiên → lần tra đổi kế dùng refresh token mới
+đạt: bản đột biến (profile thiếu refresh token vẫn tra đổi) bị bắt: 2 ca đỏ ngoài 1 ca đỏ sẵn · ca đầu: 2511-s02 trình token: profile chưa đăng nhập (không có bản ghi) → LoiXacThuc sau đúng MỘT dòng AUTH FAIL [S02], chỉ lệnh đăng nhập
+đạt: bản đột biến (bị chặn ở API dữ liệu vẫn đi tiếp) bị bắt: 3 ca đỏ ngoài 1 ca đỏ sẵn · ca đầu: 2511-s02 call: 403 ở API dữ liệu → ném LoiBiChan sau MỘT dòng BỊ CHẶN [S02]; không phải một lời lỗi lẻ, không gọi gì nữa
+đạt: bản đột biến (nuốt lỗi bước làm mới thành một lời lỗi lẻ) bị bắt: 2 ca đỏ ngoài 1 ca đỏ sẵn · ca đầu: 2511-s02 call: lỗi thường từ bước làm mới → ném lại (không nuốt thành một lời lỗi), không in AUTH FAIL
+đạt: bản đột biến (gửi lại dù token không đổi) bị bắt: 1 ca đỏ ngoài 1 ca đỏ sẵn · ca đầu: 2511-s02 call: 401 mà làm mới KHÔNG đổi token → không gửi lại, ném LoiXacThuc sau đúng MỘT dòng AUTH FAIL [S02]
+đạt: bản đột biến (bỏ làm mới token trước khi gửi) bị bắt: 3 ca đỏ ngoài 1 ca đỏ sẵn · ca đầu: 2511-s02 call: làm mới token mà phiên chết → NÉM LoiXacThuc, không gọi API nào, không tính là một lời lỗi
+đạt: bản đột biến (bỏ dòng AUTH FAIL sau 401) bị bắt: 1 ca đỏ ngoài 1 ca đỏ sẵn · ca đầu: 2511-s02 call: 401 mà làm mới KHÔNG đổi token → không gửi lại, ném LoiXacThuc sau đúng MỘT dòng AUTH FAIL [S02]
+đạt: bản đột biến (nhịp 0,3 lời/giây thay vì 0,2) bị bắt: 1 ca đỏ ngoài 1 ca đỏ sẵn · ca đầu: 2511-s02 nhịp: tối đa 0,2 lời/giây (≥ 5 giây giữa hai lời, chưa kể jitter của scheduler)
+đạt: bản đột biến (nguồn không có lệnh login vẫn chạy) bị bắt: 1 ca đỏ ngoài 1 ca đỏ sẵn · ca đầu: 2511-s02 lệnh login: nguồn KHÔNG có lệnh login → in Usage, thoát 1, không mở gì
+đạt: bản đột biến (lỗi mở Chrome vẫn thoát 0) bị bắt: 1 ca đỏ ngoài 1 ca đỏ sẵn · ca đầu: 2511-s02 lệnh login: không mở được Chrome → báo lỗi ra stderr, thoát 1, không in Usage
+XANH
