@@ -12,7 +12,7 @@ flowchart TD
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>22 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>255 việc"]
+  GB --> DG["Đã giao<br/>256 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>148 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
@@ -450,6 +450,7 @@ flowchart TD
 - ảnh mẫu snapshot trong các bộ test scripts/ có manifest, theo cổng «chỉ nạp snapshot đã ghi xong» của 2510-8 (`test-anh-mau-co-manifest`) — đã giao — máy thông, cửa veto còn mở
 - Các ca test /ops/deals cũ (CG8, CGT, CGB) tự dựng tiền đề «chưa có hạng» trong giao dịch — xanh cả khi DB của lượt là bản chép máy thu đã có dòng offer_price_rank (`test-deals-bang-hang-rong`)
 - test gỡ đúng worktree tạm của mình — bỏ git worktree prune trên kho dùng chung (zalo-import-job-lan.test.mjs và selftest hook typecheck-changed) (`test-khong-prune-worktree`)
+- Test tự dựng bảng rồi ghi không rơi về DB chung — rào hai tệp, thiếu URL thì bỏ qua có lời (`test-khong-roi-ve-db-chung`)
 - test app thôi đỏ nền khi nhiều bộ test dùng chung DB :5433 — giới hạn song song, thử lại lỗi DB tạm thời; chứng CT-AC-1 không còn phụ thuộc nhịp chờ (`test-nen-on22-on12`)
 - hai bộ test scripts/ theo khuôn tên snapshot và captured_at = giờ thu sau (`test-scripts-sau-87-90`) — đã giao — máy thông, cửa veto còn mở
 - npm test của app, pipeline, agent và eval SD-AC-6 chạy trên DB của riêng lượt bằng db-thu, không tranh khoá với job và phiên khác trên DB chung (`test-suite-db-thu`)

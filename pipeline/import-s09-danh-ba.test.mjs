@@ -23,10 +23,13 @@ import { spawn } from "node:child_process";
 import pg from "pg";
 
 import { docSnapshot, napDanhBaThuMuc } from "./import-s09-danh-ba.mjs";
+import { chotDbThu } from "./lib/db-thu-chot.mjs";
 
 const TEP = fileURLToPath(new URL("./import-s09-danh-ba.mjs", import.meta.url));
-const DB_URL =
-  process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
+// HT35 (test-khong-roi-ve-db-chung, làn hạ tầng test): tệp này TỰ DỰNG stg_s09_danh_ba rồi ghi — chỉ DB thử; thiếu
+// DATABASE_URL thì bỏ qua cả tệp có lời, tên khác thì thoát 2 — trước mọi kết nối (sự cố 21/11: 24 bản thu test vào máy thu).
+// Ca chứng minh (tiến trình con với URL DB chung → thoát lỗi, 0 câu ghi): RV-2/RV-3 trong scripts/db-thu-chot.test.mjs.
+const DB_URL = chotDbThu({ ten: "import-s09-danh-ba.test", khiThieu: "bo-qua" });
 
 async function banChep(tim, thay, chay) {
   const goc = readFileSync(TEP, "utf8");
