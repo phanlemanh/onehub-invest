@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 49d6060953a251df0077a065645ccca184d14b39
-human_signoff:
+human_signoff: Mạnh 2026-11-28
 ---
 
 # Evidence Report: s06-thu-duoi-snapshot-hong-khong-chan

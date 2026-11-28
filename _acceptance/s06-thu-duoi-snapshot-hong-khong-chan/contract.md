@@ -5,7 +5,7 @@ slug: s06-thu-duoi-snapshot-hong-khong-chan
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-28-s06-thu-duoi-snapshot-hong-khong-chan-design.md
 approved_by: Mạnh
 approved_at: 2026-11-28
@@ -96,3 +96,9 @@ bị chặn» và đang là 0 trước và sau, vì lịch thu đuôi chưa cài
   `readSnapshot` thoát tiến trình ở nhánh đó.
 - Vòng đầu gặp bản hỏng thoát 1 có chủ đích: để người vận hành thấy, và để probe chọn-nạp của ZC18 (vòng 6 dựng bản hanoi
   checksum sai, đòi thoát 1) vẫn xanh.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-28:
+  - Ngoài-1: Bộ thu đổi phiên bản dữ liệu trước khi bộ nạp kịp hỗ trợ thì các bản thu trong khoảng đó bị bỏ qua và không tự được nạp lại sau khi bộ nạp cập nhật; người vận hành gỡ dấu bằng tay.
+  - Ngoài-2: Chú thích đầu wrapper vẫn ghi mã thoát 1 là lỗi hệ thống, chưa nhắc nghĩa mới «có bản thu hỏng mới bị bỏ qua».
+  - Ngoài-3: Bản thu bị bỏ qua vì lỗi đọc nhất thời hay phiên bản chưa hỗ trợ không được thử lại ở các vòng sau; dữ liệu đó vắng khỏi kho tạm tới khi có người gỡ dấu.
+  - Ngoài-4: Probe chọn-nạp của ZC18 không còn thử thật ca «nạp lỗi ở vùng đầu, vùng sau vẫn được thử», vì bản hỏng nay bị chặn ở bước kiểm trước khi gọi bộ nạp.
+  - Ngoài-5: Ca đột biến bỏ kiểm trong probe chỉ khẳng định «bản lành không được nạp», nên một bản đột biến hỏng vì lý do khác cũng được tính là bị bắt.
