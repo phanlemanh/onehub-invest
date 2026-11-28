@@ -508,3 +508,118 @@ CREATE TABLE IF NOT EXISTS offer_price_rank (
   computed_at       timestamptz NOT NULL DEFAULT now(),
   run_id            text NOT NULL
 );
+
+-- ═════ PB8: danh bạ nhà — bảng mà /v1/properties* đọc (hình cột, CHECK, khoá lấy từ DB thật: 026, 032, 045, 055, 059,
+-- 061, 082, 088, 095, 096, 100, 103, 113, 117, 131 của kho chính). Bỏ trigger chỉ-thêm và khoá ngoại tới bảng không có trong
+-- lược đồ mẫu (iso_regions, stacks): lược đồ mẫu chỉ để đọc thử. ═════
+CREATE OR REPLACE FUNCTION assertion_value_key(p_value text) RETURNS text LANGUAGE sql IMMUTABLE AS $$
+  SELECT CASE WHEN btrim(p_value) ~ '^[0-9]+$' THEN (btrim(p_value)::numeric)::text ELSE lower(btrim(p_value)) END
+$$;
+
+CREATE TABLE IF NOT EXISTS asset_nodes (
+  id           bigserial PRIMARY KEY,
+  node_type    text NOT NULL CHECK (node_type IN ('project', 'subzone', 'building')),
+  name         text NOT NULL,
+  slug         text NOT NULL UNIQUE,
+  parent_id    bigint REFERENCES asset_nodes(id),
+  aliases      text[] NOT NULL DEFAULT '{}',
+  area_ids     text[] NOT NULL DEFAULT '{}',
+  dd_field     text,
+  meta         jsonb NOT NULL DEFAULT '{}',
+  created_at   timestamptz NOT NULL DEFAULT now(),
+  catalog_tier text NOT NULL DEFAULT 'xac_minh' CHECK (catalog_tier IN ('xac_minh', 'suy_ra_manh', 'mot_loi_khai'))
+);
+CREATE INDEX IF NOT EXISTS asset_nodes_parent_idx ON asset_nodes (parent_id);
+CREATE INDEX IF NOT EXISTS asset_nodes_type_idx ON asset_nodes (node_type);
+
+CREATE TABLE IF NOT EXISTS buildings (
+  building_key   text PRIMARY KEY CHECK (building_key ~ '^bld_[0-9A-HJKMNP-TV-Z]{26}$'),
+  status         text NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'merged', 'split', 'retired')),
+  merged_into    text REFERENCES buildings(building_key),
+  region_node_id bigint NOT NULL REFERENCES asset_nodes(id),
+  upi            text NOT NULL UNIQUE,
+  iso_region     text NOT NULL,
+  catalog_tier   text NOT NULL CHECK (catalog_tier IN ('xac_minh', 'suy_ra_manh', 'mot_loi_khai')),
+  created_at     timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT buildings_upi_khop_khoa CHECK (upi = 'urn:onehub:upi:1:VN:' || iso_region || ':' || building_key),
+  CONSTRAINT buildings_upi_khuon CHECK (upi ~ '^urn:onehub:upi:1:VN:VN-[0-9A-Z]{2}:bld_[0-9A-HJKMNP-TV-Z]{26}$')
+);
+CREATE INDEX IF NOT EXISTS buildings_region_idx ON buildings (region_node_id);
+
+CREATE TABLE IF NOT EXISTS units (
+  unit_key     text PRIMARY KEY CHECK (unit_key ~ '^unt_[0-9A-HJKMNP-TV-Z]{26}$'),
+  status       text NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'merged', 'split', 'retired')),
+  merged_into  text REFERENCES units(unit_key),
+  building_key text NOT NULL REFERENCES buildings(building_key),
+  stack_key    text,
+  floor        text CHECK (floor ~ '^[0-9]+[A-Z]?$'),
+  sub_id       text NOT NULL,
+  catalog_tier text NOT NULL CHECK (catalog_tier IN ('xac_minh', 'suy_ra_manh', 'mot_loi_khai')),
+  created_at   timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT units_sub_id_khop CHECK ((stack_key IS NOT NULL AND floor IS NOT NULL AND sub_id = stack_key || ':' || floor)
+                                      OR (stack_key IS NULL AND sub_id = unit_key))
+);
+CREATE INDEX IF NOT EXISTS units_building_idx ON units (building_key);
+
+CREATE TABLE IF NOT EXISTS registry_aliases (
+  id         bigserial PRIMARY KEY,
+  object_key text NOT NULL CHECK (object_key ~ '^((pty|prc|bld|stk|unt)_[0-9A-HJKMNP-TV-Z]{26}|node:[0-9]+)$'),
+  kind       text NOT NULL CHECK (kind IN ('tai_khoan_nguon', 'sdt_bam', 'ten', 'sdt', 'ma_nguon')),
+  value      text NOT NULL CHECK (btrim(value) <> ''),
+  source     text NOT NULL CHECK (source ~ '^S(0[1-9]|1[0-9])$'),
+  first_seen timestamptz NOT NULL DEFAULT now(),
+  retired_at timestamptz
+);
+CREATE INDEX IF NOT EXISTS registry_aliases_object_idx ON registry_aliases (object_key);
+
+CREATE TABLE IF NOT EXISTS field_assertions (
+  id             bigserial PRIMARY KEY,
+  resource_name  text NOT NULL DEFAULT 'Property' CHECK (resource_name IN ('Property', 'Building', 'Stack', 'Unit')),
+  subject_key    text NOT NULL CHECK (subject_key ~ '^[A-Z][A-Z0-9]{1,5}:.+$' OR subject_key ~ '^(bld|stk|unt)_[0-9A-HJKMNP-TV-Z]{26}$'),
+  field          text NOT NULL CHECK (field IN ('property_type', 'bedrooms', 'bathrooms', 'street_raw', 'block_raw', 'offer_status',
+                   'street_number', 'unit_number', 'frontage_length', 'lot_size_dimensions', 'stories', 'latitude', 'longitude',
+                   'builder_name', 'area_id', 'floor_raw', 'floor_band', 'project_node_id', 'subzone_node_id', 'living_area',
+                   'building_area_total', 'direction_faces', 'lot_size_area', 'universal_property_id')),
+  value          text NOT NULL,
+  value_key      text GENERATED ALWAYS AS (assertion_value_key(value)) STORED,
+  evidence_tier  text NOT NULL CHECK (evidence_tier IN ('fact', 'observed', 'inferred')),
+  method         text NOT NULL CHECK (method IN ('hitl', 'source_field', 'parser', 'e1_rule', 'e2_llm', 'legacy', 'registry_inherit')),
+  method_version text,
+  rule_id        text,
+  evidence       jsonb NOT NULL DEFAULT '{}',
+  observed_at    timestamptz NOT NULL,
+  changed_by     text,
+  run_id         text,
+  created_at     timestamptz NOT NULL DEFAULT clock_timestamp(),
+  retracted_at   timestamptz,
+  retract_reason text
+);
+CREATE INDEX IF NOT EXISTS field_assertions_subject_idx ON field_assertions (subject_key, field) WHERE retracted_at IS NULL;
+
+-- Trạng thái tin (DB thật: cột của sale_offer_records, CHECK 5 giá trị) — đếm tin đang rao trên toà.
+ALTER TABLE sale_offers ADD COLUMN IF NOT EXISTS offer_status text
+  CHECK (offer_status IN ('active', 'active_under_contract', 'closed', 'withdrawn', 'unknown'));
+
+-- offer_building: CÙNG CỘT với view thật (117, 131: offer_id, status, muc, building_key, upi, subzone_node_id, n_posts), thân
+-- rút gọn — chỉ nhánh «toà» từ phát biểu ghép toà trên bài S03; bỏ nhánh «phân khu» vì nó đọc bảng nguồn kho không có ở đây.
+CREATE OR REPLACE VIEW offer_building AS
+WITH phat_bieu AS (
+  SELECT o.offer_id, p.post_id, f.value AS upi
+    FROM sale_offers o
+    CROSS JOIN LATERAL unnest(o.post_ids) p(post_id)
+    JOIN field_assertions f ON f.subject_key = 'S03:' || p.post_id AND f.field = 'universal_property_id' AND f.retracted_at IS NULL
+                           AND f.rule_id = ANY (ARRAY['ghep-toa-cot', 'ghep-toa-cot-chuan', 'ghep-toa-chu-model', 'ghep-toa-model'])
+    JOIN buildings b ON b.upi = f.value AND b.status = 'active'
+   WHERE o.source = 'S03'
+), gom AS (
+  SELECT offer_id, count(DISTINCT post_id)::int AS n_posts, array_agg(DISTINCT upi) AS upis FROM phat_bieu GROUP BY offer_id
+)
+SELECT g.offer_id,
+       CASE WHEN cardinality(g.upis) = 1 THEN 'gan' ELSE 'xung_dot' END AS status,
+       CASE WHEN cardinality(g.upis) = 1 THEN 'toa' END AS muc,
+       CASE WHEN cardinality(g.upis) = 1 THEN b.building_key END AS building_key,
+       CASE WHEN cardinality(g.upis) = 1 THEN b.upi END AS upi,
+       NULL::bigint AS subzone_node_id,
+       g.n_posts
+  FROM gom g
+  LEFT JOIN buildings b ON cardinality(g.upis) = 1 AND b.upi = g.upis[1];

@@ -163,3 +163,31 @@ WHERE o.kind = 'sale'
 GROUP BY o.offer_id, o.kind, o.property_type, o.bedrooms, o.price_perm2, o.area_id, r.n, r.m;
 
 COMMIT;
+
+-- ═════ PB8: danh bạ nhà mẫu — một dự án, một toà, một căn, một tin đang rao gắn toà (dữ liệu bịa, không chép từ DB thật) ═════
+BEGIN;
+INSERT INTO asset_nodes (id, node_type, name, slug, aliases, area_ids, catalog_tier) VALUES
+  (900001, 'project', 'PB8 Dự án mẫu', 'pb8-du-an-mau', '{"Du an mau"}', '{vn-hanoi-hoan-kiem}', 'xac_minh')
+ON CONFLICT (id) DO NOTHING;
+INSERT INTO buildings (building_key, status, region_node_id, upi, iso_region, catalog_tier) VALUES
+  ('bld_01JD0000000000000000000001', 'active', 900001, 'urn:onehub:upi:1:VN:VN-HN:bld_01JD0000000000000000000001', 'VN-HN', 'xac_minh')
+ON CONFLICT (building_key) DO NOTHING;
+INSERT INTO units (unit_key, status, building_key, stack_key, floor, sub_id, catalog_tier) VALUES
+  ('unt_01JD0000000000000000000001', 'active', 'bld_01JD0000000000000000000001', NULL, '12', 'unt_01JD0000000000000000000001', 'xac_minh')
+ON CONFLICT (unit_key) DO NOTHING;
+INSERT INTO registry_aliases (object_key, kind, value, source) VALUES
+  ('bld_01JD0000000000000000000001', 'ten', 'PB8 Toà A', 'S03'),
+  ('unt_01JD0000000000000000000001', 'ma_nguon', 'PB8-A/A-1205', 'S03');
+INSERT INTO field_assertions (resource_name, subject_key, field, value, evidence_tier, method, observed_at) VALUES
+  ('Unit', 'unt_01JD0000000000000000000001', 'living_area', '68', 'fact', 'source_field', now()),
+  ('Unit', 'unt_01JD0000000000000000000001', 'bedrooms', '2', 'fact', 'source_field', now()),
+  ('Unit', 'unt_01JD0000000000000000000001', 'bathrooms', '2', 'fact', 'source_field', now());
+INSERT INTO sale_offers (offer_id, area_id, kind, property_type, price_vnd, area_m2, price_perm2, bedrooms, confidence,
+  first_seen, last_seen, n_reposts, post_ids, source, offer_status) VALUES
+  ('seed_offer_pb8_toa', 'vn-hanoi-hoan-kiem', 'sale', 'apartment', 6800000000, 68, 100000000, 2, 'high', now(), now(), 1,
+   '{pb8-bai-1}', 'S03', 'active')
+ON CONFLICT (offer_id) DO NOTHING;
+INSERT INTO field_assertions (resource_name, subject_key, field, value, evidence_tier, method, rule_id, observed_at) VALUES
+  ('Property', 'S03:pb8-bai-1', 'universal_property_id', 'urn:onehub:upi:1:VN:VN-HN:bld_01JD0000000000000000000001', 'observed',
+   'e1_rule', 'ghep-toa-cot', now());
+COMMIT;

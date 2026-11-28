@@ -1,0 +1,45 @@
+schema_version: 1
+feature_slug: data-api-schema-mau-du-bang-property
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.dapi_smp_route
+    paths: [data-api/db/schema.sql, data-api/seed.sql, data-api/src/**, _acceptance/data-api-schema-mau-du-bang-property/probes/moi-route.mjs]
+    expected: "exit 0; «moi-route: <n> lời gọi trên <k> đường openapi; route trả 500: 0; sai mã: 0» — trong đó bốn đường Property: ?project=<dự án mẫu> 200 ≥ 1 toà, activeListingCount ≥ 1; dự án không có 200 rỗng; /lookup 200 đúng 1 căn; toà 200, toà không có 404; căn 200; áp schema.sql rồi seed.sql không lỗi"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.dapi_smp_route
+    paths: [data-api/db/schema.sql, data-api/seed.sql, data-api/src/**, _acceptance/data-api-schema-mau-du-bang-property/probes/moi-route.mjs]
+    expected: "exit 0; mọi đường trong /openapi.json có mẫu gọi, số đường trả 500 = 0 (S1 đo 4); chiều đỏ cùng lượt: «chieu-do: bo-khuc-pb8 → <m ≥ 1> route trả 500 (đúng); duong-khong-mau → đúng»; dòng cuối «moi-route: đạt». Ô không đỏ → «moi-route: thước không đỏ ở <ô>», thoát 1"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.dapi_smp_hinh
+    paths: [data-api/db/schema.sql, _acceptance/data-api-schema-mau-du-bang-property/probes/hinh.mjs]
+    expected: "exit 0; «chieu-do: units.floor đổi kiểu → đúng một lệch, gọi đúng cột»; «hinh: <n> cột của 6 quan hệ và 1 cột lẻ khớp DB thật»; không dòng «PB8 lệch hình cột»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.dapi_smp_ten
+    paths: [data-api/**, scripts/data-api-ten-nguon*]
+    expected: "exit 0; «ℹ fail 0» — bộ quét tên nguồn thật của PB5 xanh trên toàn cây data-api (kể cả schema.sql, seed.sql sau hàng)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.dapi_smp_pham_vi
+    paths: ["**"]
+    expected: "exit 0; «pham-vi: nền <sha>; <n> tệp đổi so origin/main, đều trong ranh giới; data-api/src không đổi»; chiều đỏ cùng lượt «chieu-do: pha-tep, pha-config — hai ô cấy đều ra đúng»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.dapi_smp
+    paths: [data-api/**]
+    expected: "exit 0; «ℹ fail 0» — mọi test data-api xanh trên DB thử có lược đồ thật"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
