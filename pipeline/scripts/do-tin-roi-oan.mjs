@@ -11,7 +11,7 @@
 // (sổ nguồn rỗng thì không ghi, thoát 1). Đầu tệp ghi sha cây và hạt giống. Bốn phần: 20 tin mới ngẫu nhiên · 10 tin mới phần C
 // ngẫu nhiên · MỌI tin mới có bài nhãn Haiku `inquiry` · 20 bài còn rơi có dấu hiệu BĐS. Mỗi mục đủ sáu trường (TRUONG_MAU);
 // thiếu trường thì ném «mẫu thiếu trường». Chạy làm eval (E5) ghi ra `.acceptance-runs/s03-thu-lai-tin-roi-oan/`; cờ
-// `--ghi-evidence` chép thêm bản nộp chấm tay vào `_acceptance/s03-thu-lai-tin-roi-oan/evidence/`.
+// `--ghi-evidence` chép thêm bản nộp chấm tay vào `_acceptance/s03-thu-lai-tin-roi-oan/evidence/mau-tin-moi.md`.
 import { execFileSync } from "node:child_process";
 import { mkdirSync, realpathSync, writeFileSync } from "node:fs";
 import path from "node:path";

@@ -250,6 +250,8 @@ const NGOAI_LE = [
   { suite: "pipeline_a", duong: "_acceptance", ly_do: "vocab.test.mjs ghép tới _acceptance/truong-nhan-s03-081/decisions.jsonl — đã phủ" },
   { suite: "pipeline_a", duong: "_acceptance/yeu-cau-khong-thanh-tin-thue/evidence/mau-tin-rut.md", ly_do: "do-yeu-cau-lot-tin.mjs chỉ GHI tệp này khi người gọi tay --ghi-evidence; không test nào đọc (khác mau-bai-lac-du-an-v2.md là đầu vào test)" },
   { suite: "pipeline_b", duong: "_acceptance/yeu-cau-khong-thanh-tin-thue/evidence/mau-tin-rut.md", ly_do: "như pipeline_a" },
+  { suite: "pipeline_a", duong: "_acceptance/s03-thu-lai-tin-roi-oan/evidence/mau-tin-moi.md", ly_do: "do-tin-roi-oan.mjs chỉ GHI tệp này khi người gọi tay --ghi-evidence; không test nào đọc" },
+  { suite: "pipeline_b", duong: "_acceptance/s03-thu-lai-tin-roi-oan/evidence/mau-tin-moi.md", ly_do: "như pipeline_a" },
   { suite: "pipeline_b", duong: "collector", ly_do: "như pipeline_a — hai nửa cùng cây mã" },
   { suite: "pipeline_b", duong: "docs", ly_do: "như pipeline_a" },
   { suite: "pipeline_b", duong: "_acceptance", ly_do: "như pipeline_a" },
