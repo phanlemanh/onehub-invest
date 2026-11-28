@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 68b18ac7399c67715f0d1b62e1071d4fe0c001c3
+verified_commit: a6c4fdf1e39652dee19519bc3b0840e5e1d99d34
 human_signoff: Mạnh 2026-11-28
 ---
 
@@ -204,3 +204,7 @@ Round 3: mọi eval E1–E12 và các lệnh suite đều xanh trên verified_co
 ### Re-pin lần 1 — 2026-11-28, do hoá cũ do lần gộp hộ main 5013d45c0 của U2 sau vòng 3, trước chữ ký
 run_id: repin-20261128T063321Z-77176
 sha: 68b18ac7399c67715f0d1b62e1071d4fe0c001c3 · suites: 8 lệnh exit 0 · evals: 12/12 eval máy đạt kỳ vọng
+
+### Re-pin lần 2 — 2026-11-28, do hoá cũ do P2 gộp hộ main 2beb7d6ba (PB8 #584 chạm data-api/db) sau chữ ký
+run_id: repin-20261128T074240Z-96911
+sha: a6c4fdf1e39652dee19519bc3b0840e5e1d99d34 · suites: 8 lệnh exit 0 · evals: 12/12 eval máy đạt kỳ vọng
