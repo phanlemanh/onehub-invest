@@ -70,6 +70,14 @@ test("PL43-AC-3 câu tìm dạng mới vẫn là Yêu cầu; khẩu hiệu môi 
     "Ai có stu 6.5trbp ko ạ",
     "Em đang đi với khách, kiếm stu full ở liền <7tr",
     "kiếm 2pn full 10tr khu S",
+    // S4 r1: câu tìm lọt trong mẫu AC-6 vòng 1.
+    "Khách chốt onl stu full 5.5-6tr, ace có hàng gởi e",
+    "Tìm gđ3 view đảo căn góc đẹp 2 ngủ tc 4-5 tỷ ace có hàng ib gấp kh cọc trong tuần",
+    "Em cần nguồn 58m aquabay đông nam giá 2,9x luôn ạ",
+    "Gấp khách thuê stu trống 6 tháng tài chính 5-6 triệu ở ngay đang ở dự án có gửi căn hợp tác",
+    "Ai nắm chủ căn stu s801 1ty490 này ib e vs nha",
+    "3 tỷ tìm 50-55m wb gấp liên hệ",
+    "Em cần gấp chốt onl 7tr quay xe Stu NTCB OS Khách ở k làm BNB View gì cũng được ạ",
   ];
   for (const t of TIM) assert.equal(doc(t).nguon, "yeu-cau", `PL43-AC-3 «${t}» lẽ ra là Yêu cầu`);
   const KHAU = [
@@ -80,5 +88,6 @@ test("PL43-AC-3 câu tìm dạng mới vẫn là Yêu cầu; khẩu hiệu môi 
   // Chiều đỏ: bỏ phần đi cặp (F) thì câu tìm thành tin rao.
   const khongCap = { ...LUAT_PL43, yeuCauCap: false };
   const lot = TIM.filter((t) => doc(t, khongCap).kind);
-  assert.ok(lot.length >= 3, `PL43-AC-3 đối chứng: bỏ phần F mà chỉ ${lot.length} câu tìm thành tin`);
+  const khongLot = TIM.filter((t) => !doc(t, khongCap).kind);
+  assert.deepEqual(khongLot, [], "PL43-AC-3 đối chứng: bỏ phần F mà các câu này vẫn không thành tin — chúng không đo được phần F");
 });

@@ -536,6 +536,15 @@ const YEU_CAU_CAP = [
   String.raw`${TIM_PL43}\s+(?:gấp\s+)?stu(?:dio)?s?(?![\p{L}])`,
   String.raw`cần\s+(?:gấp\s+)?(?:stu(?:dio)?s?(?![\p{L}])|${PN_YC_PL43})`,
   String.raw`${KHONG_DINH_CHU}(?:ai|ac|ace)\s+(?:nào\s+)?có\s+(?:căn\s+)?(?:stu(?:dio)?s?(?![\p{L}])|${PN_YC_PL43})`,
+  // S4 r1 (mẫu AC-6: 3/20 tin ngẫu nhiên là câu tìm lọt): cụm xin hàng của người tìm. Đo trên DB máy thu 28/11, mọi bài bị
+  // kéo về Yêu cầu: 0 nhãn offer (hai «offer» của «em cần gấp» là chính câu tìm, model gán sai).
+  String.raw`${KHONG_DINH_CHU}(?:ace|ac|ai|anh\s*chị|a\s*c)\s+(?:nào\s+)?có\s+(?:hàng|căn)\s+(?:thì\s+)?(?:gửi|gởi|nhắn|ib|inbox)(?:\s+(?:gấp|cho))?\s+(?:em|e)(?![\p{L}])`,
+  String.raw`${KHONG_DINH_CHU}(?:ace|ac)\s+có\s+hàng\s+(?:ib|inbox|gửi|gởi)\s+gấp`,
+  String.raw`${KHONG_DINH_CHU}cần\s+nguồn(?![\p{L}])`,
+  String.raw`${KHONG_DINH_CHU}có\s+gửi\s+căn(?![\p{L}])`,
+  String.raw`${KHONG_DINH_CHU}ai\s+nắm\s+(?:chủ|căn)`,
+  String.raw`${TIM_PL43}\s+\d+(?:\s*-\s*\d+)?\s*m(?![\p{L}\d²2])`,
+  String.raw`${KHONG_DINH_CHU}(?:em|e|mình)\s+cần\s+gấp(?![\p{L}])`,
 ];
 // G: khẩu hiệu môi giới «Tìm nhà không khó – có em lo», «Tìm căn khó có em lo» không phải câu tìm (đo 20 offer · 0 inquiry).
 const YEU_CAU_GOC_PL43 = YEU_CAU_GOC.replace(String.raw`tìm\s+(?:mua|thuê|căn|nhà|phòng)`, String.raw`tìm\s+(?:mua|thuê|căn|nhà|phòng)(?!\s*(?:không\s*khó|khó))`);
