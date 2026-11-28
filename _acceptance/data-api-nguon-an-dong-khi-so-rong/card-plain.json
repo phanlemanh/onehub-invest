@@ -1,0 +1,31 @@
+{
+ "feature_plain": "Nếu danh sách nguồn phải ẩn (S02, S08) bị xoá trống hay hỏng, API dữ liệu từ chối trả tin rao thay vì lặng lẽ trả cả tin của hai nguồn ấy; đồng thời ô «gọi danh sách không lọc theo khu» mà lần trước phải đo tay nay có bài kiểm máy.",
+ "will_do": [
+  {"id": "AC-1", "p": "Sẽ nhận ra mọi dạng danh sách nguồn ẩn hỏng — rỗng, mã sai khuôn, có khoảng trắng, trùng, mất hẳn hay không phải danh sách — và chỉ chấp nhận danh sách đúng (chín trường hợp viết trước)."},
+  {"id": "AC-2", "p": "Sẽ trả mã đóng cho mọi lời gọi tin rao (mọi loại tin, căn giá tốt, xem chi tiết, mọi bộ lọc) khi danh sách nguồn ẩn hỏng, không trả tin nào và không chạm cơ sở dữ liệu — 216 ô viết trước, kèm đối chứng khi danh sách đúng."},
+  {"id": "AC-4", "p": "Sẽ có bài kiểm máy cho ô «gọi danh sách không lọc theo khu»: tin S02, S08 không lọt, tin đối chứng hiện đúng (24 ô)."},
+  {"id": "AC-5", "p": "Sẽ giữ các đường khác (thị trường, thống kê giá, độ phủ, danh bạ nhà, kiểm sức khoẻ) chạy bình thường khi danh sách hỏng, và ghi mã đóng vào tài liệu API."}
+ ],
+ "wont_do": [
+  {"id": "AC-3", "p": "Chặn trường hợp bài kiểm tự xanh khi chốt đóng bị gỡ: bỏ chốt, cho bộ kiểm nhận bừa, hay bỏ điều kiện nguồn thì bài kiểm phải đỏ đúng chỗ."},
+  {"id": "OOS-1", "p": "Không sửa bộ sinh danh sách ở phía đường ống dữ liệu; chốt đặt ở API là lớp cuối."},
+  {"id": "OOS-2", "p": "Không đổi trang kiểm sức khoẻ của API khi danh sách hỏng."},
+  {"id": "OOS-3", "p": "Không đổi danh sách nguồn ẩn, không áp trọn luật tin hiển thị của cổng Invest, không kiểm tham số ở biên (PB20), không triển khai API ra ngoài."}
+ ],
+ "coverage_plain": [
+  {"i": 0, "p": "Trạng thái danh sách nguồn ẩn: chín dạng (một đúng, tám hỏng) — đủ khi bộ kiểm trả đúng ở cả chín (AC-1) và tám dạng hỏng đều đóng API (AC-2)."},
+  {"i": 1, "p": "Đường đọc tin: mọi loại tin, căn giá tốt, căn giá tốt theo dự án, xem chi tiết ba loại — đủ khi mỗi đường đóng lúc danh sách hỏng (AC-2) và không lọt tin ẩn lúc danh sách đúng (AC-4)."},
+  {"i": 2, "p": "Bộ lọc: không lọc, theo khu, theo thị trường + số phòng ngủ, phân trang — đủ khi mỗi tổ hợp có ô riêng (AC-2, AC-4)."},
+  {"i": 3, "p": "Không lan: các đường khác của API giữ nguyên mã khi danh sách hỏng (AC-5)."},
+  {"i": 4, "p": "Chiều đỏ: gỡ chốt, bộ kiểm nhận bừa, bỏ điều kiện nguồn, bộ đếm truy vấn chết — mỗi kiểu phá đều làm bài kiểm đỏ (AC-2, AC-3, AC-4)."},
+  {"i": 5, "p": "Số đếm từ cơ sở dữ liệu máy: hôm nay 0 tin S02, 0 tin S08 — lỗ đang tiềm ẩn, nên bài kiểm cấy tin ẩn đủ trường cạnh dữ liệu thật."},
+  {"i": 6, "p": "Bỏ ngoài: nhánh thước giá dự phòng khi danh sách hỏng — chốt đóng chạy trước mọi nhánh."}
+ ],
+ "gap_probe_plain": [
+  {"i": 0, "p": "Trả mã lỗi 503 hay danh sách rỗng là lời hứa với khách API, máy không được tự quyết — đã chuyển thành câu hỏi cho anh (Hỏi-1)."},
+  {"i": 1, "p": "Lý do chọn cách dựng route bằng hàm chưa chứng các cách khác thật sự không dùng được — đã bổ sung lý do loại từng cách."},
+  {"i": 2, "p": "Thiếu ca danh sách mất hẳn hoặc không phải danh sách (có thể làm sập cả API) — đã thêm ba ca, ma trận lên 216 ô."},
+  {"i": 3, "p": "Ô «không lọc» chưa ghim số ô và đối chứng từng ô — đã ghim 24 ô và đối chứng của mỗi ô."},
+  {"i": 4, "p": "Bộ đếm truy vấn chưa có ca chứng nó còn sống — đã thêm đối chứng khi danh sách đúng."}
+ ]
+}

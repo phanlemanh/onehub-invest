@@ -1,0 +1,45 @@
+schema_version: 1
+feature_slug: data-api-nguon-an-dong-khi-so-rong
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.dapi_nad
+    paths: [data-api/src/lib/nguon-an.ts, data-api/test/nguon-an-dong.test.ts]
+    expected: "exit 0; «ℹ fail 0»; ca «PB10-AC-1 bộ kiểm sổ nguồn ẩn» xanh: chín trạng thái viết trước (gồm undefined, null, chuỗi không phải mảng), chỉ [\"S02\",\"S08\"] trả đúng [\"S02\",\"S08\"], tám trạng thái còn lại trả null không ném lỗi; số ô assert = 9"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.dapi_nad
+    paths: [data-api/src/routes/listings.ts, data-api/src/lib/nguon-an.ts, data-api/test/nguon-an-dong.test.ts]
+    expected: "exit 0; ca «PB10-AC-2 sổ hỏng thì /v1/listings đóng» xanh: 216 ô (8 trạng thái × 27 đường) đều mã đóng theo lối Hỏi-1 (khuyến nghị 503 thân đúng {error:{code:HIDDEN_SOURCES_NOT_CONFIGURED, message ghim}}), không khoá/mã tin cấy nào trong thân, bộ ghi SQL 0 câu đọc sale_offers/listings ở các ô ấy; đối chứng cùng tệp: route dựng từ sổ hợp lệ trên đúng 27 đường trả 200/404 như route thật và bộ ghi SQL bắt ≥ 1 câu đọc bảng tin ở mỗi đường"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.dapi_nad_pha
+    paths: [data-api/src/routes/listings.ts, data-api/src/lib/nguon-an.ts, data-api/test/nguon-an-dong.test.ts, data-api/test/tin-hien-thi.test.ts, _acceptance/data-api-nguon-an-dong-khi-so-rong/probes/pha.mjs]
+    expected: "exit 0; «pha: đủ 4 ô»; goc xanh; bo-chot: PB10-AC-2 đỏ, thông điệp «PB10 nguồn ẩn mở khi sổ <trạng thái>: <ô>» có ở đủ tám trạng thái và «PB10 tin nguồn ẩn lọt khi sổ rỗng: <ô>» ở đúng sáu ô liệt tên trong test; bo-kiem: PB10-AC-1 đỏ, «PB10 sổ hỏng được nhận: <trạng thái>» đúng 8 lần; bo-loc (AC-4): ba ô «không lọc» không kind, sale, rent_lt đỏ với «PB7 nguồn ẩn lọt ra API: <S0x> ở <đường>·không lọc»; probe không để tệp lạ trong cây nguồn (git status data-api/ không đổi)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.dapi_nad
+    paths: [data-api/src/routes/listings.ts, data-api/test/tin-hien-thi.test.ts]
+    expected: "exit 0; ca «PB7-AC-3 nguồn ẩn vắng ở mọi nhánh và bộ lọc» xanh với LOC có thêm «không lọc»: 4 đường × 6 bộ lọc = 24 ô, số assert = 24; ở mọi ô «không lọc» không tin S02/S08 lọt; đối chứng dương: tin S06 bán/thuê dài cấy trên trang đầu (không kind, sale, rent_lt), tin ngắn hạn cấy tìm thấy khi phân trang hết listings (rent_st)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.dapi_nad
+    paths: [data-api/src/app.ts, data-api/src/routes/**, data-api/test/nguon-an-dong.test.ts]
+    expected: "exit 0; ca «PB10-AC-5 sổ hỏng không lan sang route khác» xanh: /health, /v1/markets, /v1/price-stats?market=, /v1/coverage, /v1/properties?project= cùng mã giữa app dựng với sổ hỏng và app dựng với sổ hợp lệ; mọi test data-api khác xanh (markets-khong-s02 HT20-AC-5 rào S02 gồm)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.dapi_nad_pham_vi
+    paths: ["**"]
+    expected: "exit 0; «pham-vi: nền <sha>; <n> tệp đổi, đều trong ranh giới; openapi + README ghi 503 HIDDEN_SOURCES_NOT_CONFIGURED; không danh sách nguồn ẩn viết tay; typecheck data-api thoát 0»; chiều đỏ cùng lượt: cấy pipeline/lib/x.mjs vào danh sách tệp → «PB10 NGOÀI PHẠM VI: pipeline/lib/x.mjs»; cấy [\"S02\", \"S08\"] vào bản chép listings.ts → «PB10 danh sách nguồn ẩn viết tay: data-api/src/routes/listings.ts»; bỏ dòng 503 khỏi bản chép README → «PB10 tài liệu thiếu mã đóng: data-api/README.md»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
