@@ -4,6 +4,7 @@ import { pool } from "../db/client.js";
 import { giaiMaKhuVuc } from "../lib/ma-thi-truong.js";
 import { listingKeySecret } from "../lib/listing-key.js";
 import { LISTING_KEY_NAMES, loaiHinh } from "../contract/listing.js";
+import { SOURCE_HIDDEN } from "../contract/vocab.generated.js";
 
 /**
  * /v1/listings — Listing (tin rao) theo RESO DD 2.1 (PB2, `_acceptance/data-api-hop-dong-reso-dd-2-1`): MỘT tài nguyên có
@@ -38,6 +39,9 @@ export async function coBangHang(): Promise<boolean> {
 /** Mã khoá tin ngắn hạn trong SQL — $<p> là khoá bí mật. */
 const KHOA_NGAN_HAN = (cot: string, p: number) => `substr(encode(hmac('S01|' || ${cot}, $${p}::text, 'sha256'), 'hex'), 1, 16)`;
 
+/** Nguồn không bao giờ hiển thị công khai (PB7): điều kiện dựng từ hằng sinh của sổ, không viết tay mã nào. */
+const NGUON_HIEN = `o.source <> ALL(ARRAY[${SOURCE_HIDDEN.map((s) => `'${s}'`).join(", ")}]::text[])`;
+
 /** Hai nhánh của tập ghép, cùng tập cột. `dieuKien*` thêm điều kiện riêng từng bảng (vd tra theo khoá). */
 function tapGhep(kinds: Kind[], pKhoa: number, dieuKienBan = "", dieuKienNgan = ""): string {
   const nhanh: string[] = [];
@@ -47,7 +51,7 @@ function tapGhep(kinds: Kind[], pKhoa: number, dieuKienBan = "", dieuKienNgan = 
               o.bedrooms, o.bathrooms::numeric AS wc, o.area_id, o.latitude, o.longitude, o.first_seen, o.last_seen,
               o.confidence, o.n_reposts, NULL::text AS ten, NULL::text AS loai_cho, NULL::int AS so_khach,
               NULL::int AS dem_toi_thieu, NULL::int AS so_danh_gia, NULL::text AS lid
-         FROM sale_offers o WHERE o.kind IN (${banThue.map((k) => `'${k}'`).join(", ")})${dieuKienBan}`);
+         FROM sale_offers o WHERE o.kind IN (${banThue.map((k) => `'${k}'`).join(", ")}) AND ${NGUON_HIEN}${dieuKienBan}`);
   }
   if (kinds.includes("rent_st")) {
     nhanh.push(`SELECT ${KHOA_NGAN_HAN("l.id", pKhoa)} AS k, 'rent_st'::text AS kind, 'S01'::text AS source, l.property_type,

@@ -197,10 +197,19 @@ function moiTep(goc: string): string[] {
   di(goc);
   return ra;
 }
+// Tệp hằng MÁY SINH của PB7 khai danh sách nguồn ẨN (để LOẠI tin S02, S08 khỏi /v1/listings) — khai mã nguồn để loại không
+// phải đọc bảng S02. Chỉ miễn đúng dòng khai SOURCE_HIDDEN của đúng tệp ấy; mọi chuỗi khác trong tệp, và mọi tệp route, vẫn
+// quét như cũ (GS phán 28/11, ghép PB7 × HT20).
+const TEP_NGUON_AN = "src/contract/vocab.generated.ts";
+const DONG_NGUON_AN = /^export const SOURCE_HIDDEN = \[[^\]\n]*\] as const;$/m;
+const boDongNguonAn = (tuongDoi: string, noi: string) => (tuongDoi === TEP_NGUON_AN ? noi.replace(DONG_NGUON_AN, "") : noi);
 function raoTinh(thay: Record<string, string> = {}): string[] {
   const tep = [...moiTep(path.join(DATA_API, "src")), ...moiTep(path.join(DATA_API, "api"))];
   return tep
-    .filter((p) => viPhamTep(thay[path.relative(DATA_API, p)] ?? readFileSync(p, "utf8")))
+    .filter((p) => {
+      const td = path.relative(DATA_API, p);
+      return viPhamTep(boDongNguonAn(td, thay[td] ?? readFileSync(p, "utf8")));
+    })
     .map((p) => `HT20 route đọc bảng S02: ${path.relative(path.dirname(DATA_API), p)}`);
 }
 
@@ -226,6 +235,21 @@ test("HT20-AC-5 không câu SQL nào đọc S02", async () => {
   for (const [ten, noi] of dotBien) {
     const r = raoTinh({ [markets]: noi });
     if (r.length !== 1 || r[0] !== "HT20 route đọc bảng S02: data-api/src/routes/markets.ts") loi.push(`HT20-AC-5 đột biến «${ten}» không đỏ đúng một tệp: ${r.join(" | ")}`);
+  }
+  // Đối chứng vùng miễn (PB7): route thật tham chiếu bảng S02, hay viết tay danh sách mã S02 trong route → đỏ đúng tệp route;
+  // tệp hằng sinh có chuỗi S02 NGOÀI dòng SOURCE_HIDDEN → đỏ đúng tệp ấy.
+  const listings = "src/routes/listings.ts";
+  const gocL = readFileSync(path.join(DATA_API, listings), "utf8");
+  const gocV = readFileSync(path.join(DATA_API, TEP_NGUON_AN), "utf8");
+  if (!DONG_NGUON_AN.test(gocV)) loi.push("HT20-AC-5 tệp hằng sinh không còn dòng SOURCE_HIDDEN đúng khuôn — vùng miễn rỗng nghĩa");
+  const doiChung: [string, string, string][] = [
+    ["route đọc bảng S02", listings, gocL + `\nconst _s = "SELECT total FROM ${BANG_DIEM}";\n`],
+    ["route viết tay mã S02", listings, gocL + `\nexport const _an = ["S02", "S08"] as const;\n`],
+    ["tệp sinh ngoài dòng miễn", TEP_NGUON_AN, gocV + `\nexport const _q = "SELECT 1 FROM ${"area_sources"}";\n`],
+  ];
+  for (const [ten, tep, noi] of doiChung) {
+    const r = raoTinh({ [tep]: noi });
+    if (r.length !== 1 || r[0] !== `HT20 route đọc bảng S02: data-api/${tep}`) loi.push(`HT20-AC-5 đối chứng «${ten}» không đỏ đúng một tệp: ${r.join(" | ")}`);
   }
   // Lớp lúc chạy cũng bắt tham số 'S02' (bộ ghi tham số tự chứng).
   if (cauDocS02([{ text: "SELECT 1 WHERE source = $1", params: ["S02"] }]).length !== 1) loi.push("HT20-AC-5 bộ ghi tham số không bắt 'S02'");

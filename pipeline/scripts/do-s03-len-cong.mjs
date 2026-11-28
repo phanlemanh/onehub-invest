@@ -13,6 +13,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import pg from "pg";
 
 import { khaiSoNhom } from "../khai-so-nhom.mjs";
+import { SOURCE_HIDDEN } from "../lib/vocab.generated.mjs";
 import { napPhatBieu } from "../lib/nap-045.mjs";
 import { MIG_069 } from "../lib/nap-061.mjs";
 import { loadStgPosts } from "../lib/test-posts.mjs";
@@ -143,6 +144,11 @@ async function luotBanCo(c, chay = runTransformZalo) {
   await khaiSoNhom(c, TEP_SO, { ghi: true, out() {} });
   await imLog(() => chay(c));
 }
+/** Danh sách nguồn ẩn dạng SQL — từ hằng sinh của sổ (PB7), không đọc chữ tệp app. Rỗng → dừng có tên. */
+export function nguonAn(ds = SOURCE_HIDDEN) {
+  if (!Array.isArray(ds) || ds.length === 0) throw new Error("SL1: không đọc được danh sách nguồn ẩn");
+  return ds.map((s) => `'${s}'`).join(", ");
+}
 /** Điều kiện VISIBLE đọc thẳng từ mã cổng, một chỗ quyết tin nào hiện. */
 export function dieuKienVisible() {
   const src = readFileSync(join(GOC, "app/src/lib/offers-public.ts"), "utf8");
@@ -154,8 +160,7 @@ export function dieuKienVisible() {
     if (!r) throw new Error(`SL1-AC-9: không đọc được ${ten}`);
     return r[1].replaceAll("_", "");
   };
-  const an = loc.match(/OFFER_HIDDEN_SOURCES = \[([^\]]*)\]/)?.[1].replaceAll('"', "'");
-  if (!an) throw new Error("SL1-AC-9: không đọc được OFFER_HIDDEN_SOURCES");
+  const an = nguonAn();
   const sql = m[1]
     .replaceAll("${KIND.sale}", "sale").replaceAll("${KIND.rent_lt}", "rent_lt").replaceAll("${PROPERTY_TYPE.unknown}", "unknown")
     .replace(/\$\{OFFER_HIDDEN_SOURCES[^\n]*?\}\]/, `${an}]`)
@@ -320,6 +325,7 @@ export function kiemBenDoc(tepCo, maTran) {
   return loi;
 }
 function benDoc() {
+  in_(`nguồn ẩn: ${nguonAn().replaceAll("'", "")}`);
   const ds = [...dongGit("ls-files", "-c", ...PHAM_VI_DOC), ...chuaTheoDoi(...PHAM_VI_DOC)]
     .filter((f) => !f.includes("/node_modules/") && existsSync(join(GOC, f)))
     .filter((f) => { try { return MAU_BEN_DOC.test(readFileSync(join(GOC, f), "utf8")); } catch { return false; } });

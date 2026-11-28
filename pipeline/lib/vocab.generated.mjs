@@ -59,6 +59,9 @@ export const PRICE_BASIS = Object.freeze({ net: "net", gom_phi: "gom_phi", chua_
 
 export const CANONICAL_FIELDS = Object.freeze(["offer_id", "source", "kind", "price_vnd", "area_m2", "price_perm2", "bedrooms", "phuong_raw", "district_raw", "confidence", "first_seen", "last_seen", "n_reposts", "post_ids", "price_tier", "seller_name", "seller_phone", "seller_phone_inferred", "seller_phone_hash", "seller_ref", "bait_gap_pct", "listing_url", "property_type", "street_raw", "block_raw", "floor_raw", "floor_band", "project_node_id", "subzone_node_id", "living_area", "building_area_total", "lot_size_area", "direction_faces", "area_id", "bathrooms", "street_number", "unit_number", "frontage_length", "lot_size_dimensions", "stories", "latitude", "longitude"]);
 
+/** Nguồn không bao giờ hiển thị công khai (nguon_khong_hien_thi của mappings.yaml). */
+export const SOURCE_HIDDEN = Object.freeze(["S02", "S08"]);
+
 /** Danh sách code nối bằng `|` — cho chuỗi enum trong prompt LLM. */
 export function promptEnum(axis) {
   return VOCAB[axis].join("|");
