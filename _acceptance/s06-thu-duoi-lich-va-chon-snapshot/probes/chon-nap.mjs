@@ -109,7 +109,7 @@ try {
   const vCol = vong("goc-collector", { THU_DUOI_S06_GOC: join(T, "collector/snapshots") });
   ok(vCol.rc === 1 && !existsSync(join(T, "collector")) && vCol.stub.length === 0,
     "goc trong collector: exit 1 · khong tao thu muc · 0 loi goi bo thu", `GHI VAO COLLECTOR: exit ${vCol.rc} · thư mục ${existsSync(join(T, "collector"))}`);
-  const vDb = vong("db-loi", { DATABASE_URL: "postgres://khong:dung@127.0.0.1:1/oneinvest_suite_khong_co" });
+  const vDb = vong("db-loi", { DATABASE_URL: "postgres://127.0.0.1:1/oneinvest_suite_khong_co" });
   ok(vDb.rc === 1 && vDb.stub.length === 0, "doc vung loi: exit 1 · 0 loi goi bo thu", `CHON-NAP DO DB lỗi: exit ${vDb.rc} · ${vDb.stub.length} lời gọi bộ thu`);
   // --- phạm vi vùng (AC-10): hai vùng hanoi, hcmc chạy được trong DB ---
   const vungGoi = (v) => v.stub.map((l) => /--vung (\S+)/.exec(l)?.[1]).filter(Boolean);
