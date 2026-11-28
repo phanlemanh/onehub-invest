@@ -5,7 +5,7 @@ slug: ghi-tam-do-sau-co-han
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [script, db]
-status: implemented
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-26
 design_doc: docs/superpowers/specs/2026-11-26-ghi-tam-do-sau-co-han-design.md
@@ -90,3 +90,8 @@ câu đếm của AC-4 trên DB máy thu sau khi áp: giá trị tự ghi có l�
 - Thứ tự với 066 (GS phán 2026-11-27 sau probe M5 @fe6c96e69): 066 có trên `main` nhưng CHƯA áp DB máy thu (nợ GS trình Mạnh đường gỡ E7). 129 vá thân hàm đang chạy nên không phụ thuộc 066; ca E6 «bẫy thứ tự 066» tự nạp phần hàm của 066 (mục 1–3) vào DB lượt trước khi đo.
 - Vòng 1 trên M5 @2469d5342 (BLOCKED vì suite, không tính vòng), GS phán 2026-11-27: (a) finding AC-6 — lượt đọc toàn bộ không xét hạn đo bù, vẫn ghi tạm vào trường có lô quá hạn chưa rút — vá trong hàng này: lượt đọc toàn bộ coi trường quá hạn là ô dừng (không rút lô; rút là việc lượt đêm hay `--het-han`), thêm ca E6 và đột biến «đọc toàn bộ bỏ xét quá hạn»; (b) chỗ yếu của phép đo độc lập theo nhãn (`DAU_DAP_AN_LUAT`) — mở hợp đồng mới: NB13 «phép đo độc lập kiểm theo giá trị»; (c) trần 30′ của `pipeline_that` là việc kit/config (HT37), hồ sơ không khai `long_running`.
 - Vòng 1 trên M5 @03b9b5836 = REJECT (2a05d0d61), sửa trong vòng 2: (a) suite agent đỏ SL1-AC-11 (25P02) — `s03-len-cong.test.ts` có `withTx` riêng không nạp 129; trên DB chép máy thu (chưa áp 129) `xetHan` lỗi 42883 trong savepoint, rồi `oDangDung` đọc `ghi_tam_o` NGOÀI savepoint làm hỏng giao dịch. Cùng lỗi sẽ xảy ra trên máy thu nếu mã gộp trước khi áp 129 → thêm `coLopGhiTam`: DB chưa có lớp ghi tạm thì mọi trường dừng tự ghi, lượt không lỗi, tổng kết nêu 129 (ca E3 mới, đột biến «bỏ kiểm DB đã áp 129»); (b) hai finding AC-6: `xuLaiTrich` thiếu trường quá hạn → MỘT hàm `truongDangDung` (ô dừng ∪ lô quá hạn chưa rút ∪ chưa 129) cho cả ba đường máy áp đề xuất (`run.ts` lượt đêm, `doc-toan-bo.ts` lượt đọc toàn bộ, `xuLaiTrich`); ca E6 mới cho xử lại trích dẫn + đối chứng còn hạn; đột biến cho từng chỗ gọi và cho nguồn chung.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-27:
+  - Ngoài-1: Khi bước xét hạn đo bù của lượt đêm gặp lỗi, lượt vẫn thoát thành công; lỗi chỉ hiện ở dòng tổng kết, trường quá hạn vẫn dừng tự ghi.
+  - Ngoài-2: Bước bẫy thứ tự 066 trên bản chép tính mọi lỗi là «bị từ chối», chưa ghim đúng thông điệp từ chối.
+  - Ngoài-3: Đột biến AC-4 trên bản chép coi mọi lệch là «đỏ đúng», chưa so với thông điệp ghim.
+  - Ngoài-5: Ca «lượt đọc toàn bộ» của AC-6 còn vế kiểm trên mảng có thể rỗng, chưa có đối chứng dương riêng.
