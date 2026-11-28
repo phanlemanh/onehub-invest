@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.oneinvest.thu-duoi-s06</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>__ROOT__/scripts/thu-duoi-s06.sh</string>
+  </array>
+  <!-- 2511-29: nhịp 3–5 phút — StartInterval 300s (đo phép đo ZT 24h: vòng
+       trung bình 6,8s, p90 8,6s — chiếm <3% chu kỳ; vòng chồng bị flock chặn).
+       Đổi nhịp: sửa giá trị này rồi install-cron.sh --chi thu-duoi-s06.
+       ZC18 (Mạnh duyệt 27/11): ba giá trị vận hành — MỘT vùng đã đo, nghỉ sau
+       chặn 60 phút, luật chặn lần hai bật — là MẶC ĐỊNH của wrapper; KHÔNG thêm
+       khối biến môi trường ở đây để đè (test khóa). -->
+  <key>StartInterval</key><integer>300</integer>
+  <key>StandardOutPath</key><string>__ROOT__/pipeline/logs/thu-duoi-s06.log</string>
+  <key>StandardErrorPath</key><string>__ROOT__/pipeline/logs/thu-duoi-s06.log</string>
+</dict>
+</plist>
