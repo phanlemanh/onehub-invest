@@ -5,9 +5,9 @@ slug: bang-noi-ma-du-an
 owner: phanlemanh@gmail.com
 risk_tier: T3      # hàng khai T3: ghi dữ liệu nối trên DB máy thu
 surfaces: [cli, ui]
-status: draft
-approved_by:
-approved_at:
+status: approved
+approved_by: Mạnh
+approved_at: 2026-11-28
 design_doc: docs/superpowers/specs/2026-11-25-bang-noi-ma-du-an-design.md
 ---
 
