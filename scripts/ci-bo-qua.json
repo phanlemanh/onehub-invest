@@ -62,7 +62,12 @@
     },
     {
       "tep": "app/tests/registry-nguon-chua-noi.test.tsx",
-      "ca": "BN-AC-8 S09 da noi doc tu project_links, khong con hang 0",
+      "ca": "BN-AC-8 S09 theo tap DA42: da nap, da noi doc tu project_links S09; DA3 khong doi dong S09",
+      "ly_do": "cần bản chép DB máy thu (bảng tập bản ghi S07, S09, S10, S16 có dòng; apThe nối thật) — DB CI dựng từ migration rỗng; vẫn chạy ở máy qua db-thu"
+    },
+    {
+      "tep": "app/tests/registry-nguon-chua-noi.test.tsx",
+      "ca": "BN-AC-8 S09 tap cu: ma chi co o v_s09_du_an_moi hien dong rieng, khong cong vao o, ma co o hai tap dem mot lan",
       "ly_do": "cần bản chép DB máy thu (bảng tập bản ghi S07, S09, S10, S16 có dòng; apThe nối thật) — DB CI dựng từ migration rỗng; vẫn chạy ở máy qua db-thu"
     },
     {
@@ -72,12 +77,17 @@
     },
     {
       "tep": "app/tests/registry-nguon-chua-noi.test.tsx",
-      "ca": "BN-AC-8 o dung ra tren man bang tong nam nguon, khong cong S10",
+      "ca": "BN-AC-8 o dung ra tren man bang tong nam nguon, khong cong S10, khong cong S09 tap cu",
       "ly_do": "cần bản chép DB máy thu (bảng tập bản ghi S07, S09, S10, S16 có dòng; apThe nối thật) — DB CI dựng từ migration rỗng; vẫn chạy ở máy qua db-thu"
     },
     {
       "tep": "app/tests/registry-nguon-chua-noi.test.tsx",
       "ca": "BN-AC-8 chieu do: cong moi nguon vao o thi ca S10 do",
+      "ly_do": "cần bản chép DB máy thu (bảng tập bản ghi S07, S09, S10, S16 có dòng; apThe nối thật) — DB CI dựng từ migration rỗng; vẫn chạy ở máy qua db-thu"
+    },
+    {
+      "tep": "app/tests/registry-nguon-chua-noi.test.tsx",
+      "ca": "BN-AC-8 chieu do: tinh dong S09 tap cu vao o thi ca tap-cu do",
       "ly_do": "cần bản chép DB máy thu (bảng tập bản ghi S07, S09, S10, S16 có dòng; apThe nối thật) — DB CI dựng từ migration rỗng; vẫn chạy ở máy qua db-thu"
     }
   ],

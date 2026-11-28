@@ -14,6 +14,7 @@ import pg from "pg";
 
 import { docBanGhi, docVung, NGUON_DANH_MUC } from "./lib/ban-ghi-nguon.mjs";
 import { bamKetCuc, docNoiSan, docNut, LY_DO, xepNga } from "./lib/khop-du-an.mjs";
+import { CATALOG_TIER } from "./lib/vocab.generated.mjs";
 
 const DB_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 export const SO_MAU = 20;
@@ -39,7 +40,7 @@ const lechNoiSan = (kq) => kq.nga === "giu" && !(kq.bong.nga === "noi" && kq.bon
 const khoaNga = (kq) => (kq.nga === "giu" ? "giu" : kq.nga === "noi" ? kq.can_cu : kq.ly_do);
 
 const THU_TU_CAN = ["K1", "K2", "K3", "T"];
-const NHAN_HANG = { xac_minh: "đã xác minh", mot_loi_khai: "ứng viên" };
+const NHAN_HANG = { [CATALOG_TIER.xac_minh]: "đã xác minh", [CATALOG_TIER.suy_ra_manh]: "suy ra mạnh", [CATALOG_TIER.mot_loi_khai]: "ứng viên" };
 
 /** Ô mẫu của thẻ: căn cứ × hạng × nguồn đúc của nút đích (Hỏi-2, Mạnh duyệt 28/11). Hàm thuần.
  *  Trả [{ khoa, can, hang, nguonDuc, dem, mau }] theo thứ tự căn cứ rồi hạng rồi nguồn; mau = tối đa SO_MAU dòng, xếp theo tên. */
@@ -48,12 +49,12 @@ export function oMau(ds, nutTheoId) {
   for (const d of ds) {
     if (d.kq.nga !== "noi") continue;
     const n = nutTheoId.get(d.kq.node_id);
-    const hang = n?.tier ?? "—", nguonDuc = hang === "xac_minh" ? null : (n?.nguonDuc ?? null);
+    const hang = n?.tier ?? "—", nguonDuc = hang === CATALOG_TIER.xac_minh ? null : (n?.nguonDuc ?? null);
     const khoa = `${d.kq.can_cu}|${hang}|${nguonDuc ?? "—"}`;
     if (!o.has(khoa)) o.set(khoa, { khoa, can: d.kq.can_cu, hang, nguonDuc, dem: 0, ds: [] });
     const x = o.get(khoa); x.dem++; x.ds.push(d);
   }
-  const thuTu = (x) => [THU_TU_CAN.indexOf(x.can), x.hang === "xac_minh" ? 0 : 1, x.nguonDuc ?? ""];
+  const thuTu = (x) => [THU_TU_CAN.indexOf(x.can), x.hang === CATALOG_TIER.xac_minh ? 0 : 1, x.nguonDuc ?? ""];
   return [...o.values()]
     .sort((a, b) => { const p = thuTu(a), q = thuTu(b); return p[0] - q[0] || p[1] - q[1] || String(p[2]).localeCompare(String(q[2])); })
     .map(({ ds: nhom, ...x }) => ({ ...x, mau: [...nhom].sort((a, b) => a.ten.localeCompare(b.ten, "vi")).slice(0, SO_MAU) }));
