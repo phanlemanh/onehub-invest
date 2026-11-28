@@ -5,7 +5,7 @@ slug: ca-du-lieu-that-danh-ba-vat-the
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [script]
-status: implemented
+status: machine-cleared
 veto_state: mo
 veto_opened_at: 2026-11-27T20:54:19Z
 approved_by:
@@ -68,3 +68,8 @@ hàng «đích nối S09 khu/S16» mà không có ca; `doi-chung.sh` dò «khong
 
 - Vế «082 còn khoá hai mã» của DA1-AC-7 không còn đo được trên bất kỳ bản chép máy thu nào (088 đã gỡ CHECK của 082): giới hạn ghi
   rõ, ca in dòng chẩn đoán thay vì xanh lặng.
+- Known limits — GS định tuyến 28/11 sau S4 vòng 2 (làn V, máy-thông T2):
+  - Ngoài-1: Hợp đồng và kỳ vọng E2 chỉ nhắc đổi tên `iso_regions`; ca còn đổi tên `stg_s09_danh_ba` và cấy một nút khu `mot_loi_khai` không dọn.
+  - Ngoài-2: Chú thích khoá `da1_db` trong config vẫn ghi «bản chép chưa 088, áp 088 trong ca».
+  - Ngoài-3: Lệnh cấy nút ở DA1-AC-7 nằm ngoài khối try/finally; nếu nó lỗi thì hai bảng giữ tên tạm và ca sau đỏ dây chuyền (chỉ trên DB lượt dùng một lần).
+  - Ngoài-4: Phần soát tên nguồn trong tệp của DA42 E9 chưa có ca đối chứng cấy tên vào kênh tệp, và đọc tệp hỏng thì nuốt lỗi.
