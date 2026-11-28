@@ -5,7 +5,7 @@ slug: data-api-probe-ban-cu-moc-co-dinh
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api]
-status: implemented
+status: verified
 veto_state: mo
 veto_opened_at: 2026-11-28T03:38:44Z
 approved_by:
