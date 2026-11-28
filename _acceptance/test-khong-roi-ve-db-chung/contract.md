@@ -5,7 +5,7 @@ slug: test-khong-roi-ve-db-chung
 owner: phanlemanh@gmail.com
 risk_tier: T2      # tệp test + lib chốt chặn + lệnh chấm trong config — không chạm t3_paths
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-11-27T01:01:24Z
 design_doc: docs/superpowers/specs/2026-11-27-test-khong-roi-ve-db-chung-design.md
@@ -70,3 +70,9 @@ phủ suite × có rào. AC-6 giữ tệp S09 chỉ đổi vùng chọn DB.
 - Thật thà: sau HT35, ca nạp S09 và ca của `check-freshness.test` KHÔNG còn chạy trên CI GitHub. Trước đây chúng chạy nhờ rơi
   về DB dịch vụ; nay CI không đặt `DATABASE_URL` nên cả tệp bỏ qua có lời. Chúng chỉ còn chạy ở lượt chấm qua `db-thu` và ở
   bước scripts của `suite-neu-doi`. HT36 quyết phương án CI (đề xuất A: CI đặt `DATABASE_URL` tên `oneinvest_suite_ci`).
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-28:
+  - Ngoài-1: Lời từ chối và chú thích đầu tệp rào DB thử vẫn ghi chỉ nhận DB tên `oneinvest_suite_*`, dù rào đã nhận thêm DB trống của bước scripts.
+  - Ngoài-2: Ca đột biến RV-3 ghi bản chép không có rào ngay trong cây kho; lượt bị ngắt giữa chừng có thể để sót tệp ấy.
+  - Ngoài-3: Chú thích đầu `kiem-ht35.mjs` ghi «chỉ đọc kho, không nối DB», sai với các lệnh chạy thật trên DB lượt.
+  - Ngoài-4: Phép đối chứng E7d chỉ so tập ca đỏ, không so số ca chạy; một tệp thoát sớm làm mất ca mà E7d vẫn đạt.
+  - Ngoài-5: CI GitHub thôi chạy `check-freshness.test` và `import-s09-danh-ba.test` mà job vẫn xanh; hai tệp chỉ còn chạy ở lượt chấm qua db-thu (HT36 quyết phương án CI).
