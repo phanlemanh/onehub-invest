@@ -5,9 +5,7 @@ slug: s03-thu-lai-tin-roi-oan
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [data, cli]
-status: implemented
-approved_by: Mạnh
-approved_at: 2026-11-28
+status: draft
 design_doc: docs/superpowers/specs/2026-11-28-s03-thu-lai-tin-roi-oan-design.md
 ---
 
@@ -66,13 +64,6 @@ nhãn `inquiry`, cộng 20 bài còn rơi có dấu hiệu BĐS (để soát d�
 dưới số đã khai thì thoát 1 «mẫu thiếu»; mục thiếu trường thì thoát 1 «mẫu thiếu trường»; vượt ngưỡng nào thì thoát 1 gọi tên
 ngưỡng.
 
-### AC-6 (judgment) — Tin mới nhận đúng là tin rao, giá đúng bậc
-Given bản nộp chấm tay của tệp mẫu AC-5 (đầu tệp mang sha cây và hạt giống),
-When người chấm đọc từng tin,
-Then trong 20 tin ngẫu nhiên, ít nhất 18 tin là tin rao bán/cho thuê thật và giá đúng bậc (tỷ cho bán, triệu cho thuê); trong 10
-tin phần C, ít nhất 9 tin là tin bán thật với giá đúng; mỗi tin có bài nhãn `inquiry` được ghi «câu tìm lọt» hay «nhãn model sai»;
-20 bài còn rơi được ghi dạng chữ nào bị bỏ sót (nếu có).
-
 ### AC-7 — Không hồi quy
 Given cây sau sửa,
 When chạy test luật loại tin hiện có (`transform-zalo-loai-tin*.test.mjs`, `yeu-cau-khong-thanh-tin-thue.test.mjs`) và hai nửa
@@ -83,8 +74,8 @@ Then xanh, và các tệp test cũ không đổi kỳ vọng nào so với a9401
 
 - Trục A — dạng chữ × loại giá: dấu hiệu BĐS viết tắt và diện tích trần [AC-1] · giá không đơn vị bài bán [AC-2] · câu tìm cùng
   dạng và khẩu hiệu [AC-3]
-- Trục B — đường thật: transform, chạy lại, luật cũ đối chứng [AC-4] · dữ liệu thật, rào PL42, giá tốt [AC-5] · mẫu chấm tay
-  hai phía [AC-6] · hồi quy [AC-7]
+- Trục B — đường thật: transform, chạy lại, luật cũ đối chứng [AC-4] · dữ liệu thật, rào PL42, giá tốt [AC-5] · hồi quy [AC-7]
+- Mẫu soi tay hai phía: thu khỏi tiêu chí ở Cổng Bằng chứng (Mạnh «Thu phạm vi» 28/11) — số thật ở Known limits.
 - Bảng phủ ca đếm từ DB máy thu, cột «ai đọc phía sau»: design doc.
 
 ## Out of scope
@@ -93,6 +84,8 @@ Then xanh, và các tệp test cũ không đổi kỳ vọng nào so với a9401
 - Hẹp luật Yêu cầu theo khuôn khai căn hay chữ «độc quyền/sẵn sổ»: đo lọt câu tìm của người mua (2/24 và 17/34 bài có nhãn).
 - «4.350 chốt», «chốt giảm thêm 2.6 tỷ»: chạm bộ chặn số ngữ cảnh SV1 — hàng riêng.
 - Bài chỉ có ảnh; dựng căn S03; màn Ops (ON25 của U1).
+- PL44 (hàng kế, GS giao 28/11): bộ đọc giá «1ty490», «4tr5»; chặn tin «thuê» giá trên 100 triệu một tháng (tin bán, chênh, cắt lỗ,
+  voucher không thành tin thuê); câu tìm viết tự do kiểu «KH 1 nữ … in Stu 7tr».
 
 ## Đường đo
 
@@ -103,3 +96,11 @@ Then xanh, và các tệp test cũ không đổi kỳ vọng nào so với a9401
 ## Notes
 
 - Không có lượt áp riêng: lượt `zalo-import-daily.sh` kế tiếp (transform-zalo rồi 420) đưa luật vào hiệu lực sau gộp, như PL42.
+- Known limits — thu phạm vi ở Cổng Bằng chứng 2026-11-28 (Mạnh «Thu phạm vi»):
+  - AC-6 cũ (mẫu soi tay ≥ 18/20 tin rao thật): vòng 4 cả ba lăng kính đếm 17/20 — khoảng 15% tin mới còn sai. Hai tin bán
+    (chênh giá, cắt lỗ, voucher) bị đọc thành tin thuê 175–200 triệu, một câu tìm viết tự do lọt thành tin thuê. Phần C (giá từ
+    1 tỷ là bán) đạt 10/10. Chặn ở PL44.
+  - Bảng «tin mới theo phần luật» của thước AC-5 là xấp xỉ: phép gán phần không theo thẻ nhóm đã duyệt và không gộp khoá nhóm
+    như transform thật, nên số từng phần có thể lệch. Tổng tin thêm (+166) đo bằng chính transform thật hai lượt, không phụ thuộc
+    phép gán ấy.
+  - «1ty490 này» đọc thành 1 tỷ: lỗi có sẵn của bộ đọc giá, chuyển PL44.

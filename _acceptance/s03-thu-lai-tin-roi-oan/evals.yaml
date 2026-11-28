@@ -32,12 +32,6 @@ evals:
     long_running: 90
     paths: ["pipeline/transform-zalo.mjs", "pipeline/scripts/do-tin-roi-oan.mjs", "pipeline/scripts/do-yeu-cau-lot-tin.mjs"]
     expected: "Trên cùng bản chép, lượt «trước» bằng luật cũ tiêm qua tham số và lượt «sau» bằng luật mới: tin S03 sống sau − trước ≥ 150; tin rò ≤ 90 và giá tốt thuê rò ≤ 17 ở lượt sau (thước PL42), in tin rò thêm so với lượt trước; in giá tốt bán/thuê hai lượt, tin bán mới dưới 1 tỷ, tin mới theo phần luật; tệp mẫu ghi ra .acceptance-runs/s03-thu-lai-tin-roi-oan/mau-tin-moi.md (không ghi vào cây _acceptance khi chạy làm eval), đầu tệp có sha cây và hạt giống, đủ 20 ngẫu nhiên + 10 phần C + mọi tin nhãn inquiry + 20 bài còn rơi, mỗi mục đủ sáu trường; thoát 0. Chiều đỏ trong do-tin-roi-oan.test: vượt từng ngưỡng, phần ngẫu nhiên thiếu, mục thiếu trường thì thoát 1 gọi tên ngưỡng hay trường."
-  - id: E6
-    criterion: AC-6
-    executor: judgment
-    inputs: ["_acceptance/s03-thu-lai-tin-roi-oan/evidence/mau-tin-moi.md"]
-    question: "Đọc chữ bài từng mục của tệp mẫu. (1) Trong 20 tin ngẫu nhiên, bao nhiêu tin là tin rao bán hay cho thuê thật với giá đã đọc đúng bậc (tỷ cho bán, triệu cho thuê)? (2) Trong 10 tin phần C, bao nhiêu tin là tin bán thật với giá đúng? (3) Mỗi tin có bài nhãn inquiry: câu tìm lọt hay nhãn model sai? (4) Trong 20 bài còn rơi, dạng chữ nào cho thấy tin rao bị bỏ sót? Nêu mã tin của từng mục không đạt và chép dòng sha cây, hạt giống ở đầu tệp."
-    expected: "(1) ≥ 18/20; (2) ≥ 9/10; (3) mỗi tin có phán; (4) liệt dạng chữ bỏ sót hoặc «không có»; dòng sha và hạt giống có mặt."
   - id: E7
     criterion: AC-7
     executor: test
