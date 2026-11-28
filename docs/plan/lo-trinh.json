@@ -6442,6 +6442,165 @@
         "CONTEXT.md"
       ],
       "ghi_chu": "Giám sát xếp sau HT6. Nhãn «theo tin đăng, chưa đối chiếu» vào CONTEXT.md cùng commit của hàng này. Không đổi bộ phân xử và không gắn nút: gắn toà vẫn là PL20."
+    },
+    {
+      "ma": "PB10",
+      "dot": "quan-ly-khach-api-2811",
+      "nhom": "be-mat-api",
+      "phu": [
+        "PB10"
+      ],
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 5,
+      "dung_tren": [],
+      "cau_giao": "/v1/listings đóng khi sổ nguồn ẩn rỗng hay không đọc được, thay vì trả cả tin của nguồn phải ẩn",
+      "bat_khi": "Sổ nguồn ẩn rỗng → /v1/listings đóng (không trả tin S02, S08); ma trận AC-3 có thêm ô «không lọc» và ca chiều đỏ cho nó",
+      "vi_sao": "Ngoài-2 của PB7: sổ nguồn ẩn rỗng thì đường lọc mở toang (fail-open). Đứng sau PB7 (sổ nguồn ẩn dùng chung với cổng Invest); PB7 chưa có hàng trong lộ trình nên phụ thuộc ghi ở đây, không ở dung_tren. Phải xong trước khi cấp khoá đầu tiên cho bên ngoài.",
+      "vung": [
+        "data-api/src/routes",
+        "data-api/src/lib"
+      ]
+    },
+    {
+      "ma": "PB12",
+      "dot": "quan-ly-khach-api-2811",
+      "nhom": "be-mat-api",
+      "phu": [
+        "PB12"
+      ],
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 6,
+      "dung_tren": [],
+      "cau_giao": "Mỗi đường của data-api thuộc đúng một lớp dữ liệu khai ở một chỗ; đường chưa khai lớp thì đóng",
+      "bat_khi": "Mọi đường đang mount có lớp trong bảng ở data-api/src/contract/, bảng in vào /openapi.json; cấy một đường không khai thì test đỏ",
+      "vi_sao": "Bước đầu của quản lý khách API (ROADMAP §3 mục 65): kiểm lớp theo thoả thuận cần một bảng đường → lớp mà route, openapi và test cùng đọc.",
+      "vung": [
+        "data-api/src/contract",
+        "data-api/src/app.ts"
+      ]
+    },
+    {
+      "ma": "PB13",
+      "dot": "quan-ly-khach-api-2811",
+      "nhom": "be-mat-api",
+      "phu": [
+        "PB13"
+      ],
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 6,
+      "dung_tren": [],
+      "cau_giao": "Lược đồ có bốn bảng khách API (khách, thoả thuận, khoá băm, lượt dùng ngày) và role data-api chỉ ghi được bảng lượt dùng",
+      "bat_khi": "Áp migration trên DB thử rồi dựng lại lược đồ mẫu data-api/db có bốn bảng rỗng: PB8 vẫn 0 đường 500; role data-api SELECT bảng khoá, INSERT/UPDATE chỉ api_usage_daily",
+      "vi_sao": "Mục 65 câu 1 và 4: tài khoản khách API sống trên cloud (không thuộc tầng A), tự xây trên Supabase. Số migration lấy ở sổ GS khi mở. Áp lên cloud (DDL, quyền role) cần lời riêng của Mạnh — không thuộc hàng.",
+      "vung": [
+        "db/migrations",
+        "data-api/db"
+      ]
+    },
+    {
+      "ma": "PB14",
+      "dot": "quan-ly-khach-api-2811",
+      "nhom": "be-mat-api",
+      "phu": [
+        "PB14"
+      ],
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "dung_tren": [
+        "PB12",
+        "PB13",
+        "PB10"
+      ],
+      "cau_giao": "data-api nhận khoá của khách từ DB: khoá đã thu hồi hết tác dụng trong 60 giây, khoá thiếu lớp bị chặn ở đúng lớp đó",
+      "bat_khi": "Khoá đã thu hồi → 401 trong ≤ 60 s; khoá chỉ L0 gọi /v1/listings → 403 LAYER_NOT_GRANTED; mất bảng khoá → 503 AUTH_NOT_CONFIGURED (giữ fail-closed của PB3); ca chiều đỏ cho từng nhánh",
+      "vi_sao": "Thay so chuỗi DATA_API_KEYS bằng khoá băm + thoả thuận (mục 65). Đứng sau PB12, PB13, PB10 và PB7; PB7 chưa có hàng trong lộ trình nên ghi ở đây. Tới khi hàng này gộp không đưa khoá cho bên ngoài.",
+      "vung": [
+        "data-api/src/middleware"
+      ]
+    },
+    {
+      "ma": "PB15",
+      "dot": "quan-ly-khach-api-2811",
+      "nhom": "be-mat-api",
+      "phu": [
+        "PB15"
+      ],
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 6,
+      "dung_tren": [
+        "PB14"
+      ],
+      "cau_giao": "Mỗi khoá khách có hạn mức lượt gọi theo ngày; vượt trần thì nhận 429 và biết khi nào gọi lại",
+      "bat_khi": "Trần 5 lượt trên DB thử: lượt thứ 6 → 429 kèm Retry-After tới 0h giờ VN; mọi phản hồi mang X-RateLimit-Limit/Remaining; số trong api_usage_daily khớp số lời gọi",
+      "vi_sao": "Mục 65 câu 5: nội bộ 50.000, đối tác thử 5.000 lượt/ngày, chỉnh sau một tuần đo. Đếm trong Postgres vì Vercel chạy nhiều bản song song.",
+      "vung": [
+        "data-api/src/middleware"
+      ]
+    },
+    {
+      "ma": "PB16",
+      "dot": "quan-ly-khach-api-2811",
+      "nhom": "be-mat-api",
+      "phu": [
+        "PB16"
+      ],
+      "hang": "T2",
+      "vai": "Owner",
+      "tieu_chi": 9,
+      "dung_tren": [
+        "PB13"
+      ],
+      "cau_giao": "Owner mở trang Khách API trên Ops, cấp một khoá cho khách nội bộ và thấy khoá hiện đúng một lần cùng lượt dùng hôm nay",
+      "bat_khi": "Ô «Khách API đang hoạt động» trên /ops/api-clients từ 0 → 1 (khách nội bộ đầu tiên) không phải triển khai lại; thu hồi, xoay, sửa thoả thuận ghi ops_audit; admin xem và thu hồi, chỉ owner cấp và mở lớp",
+      "vi_sao": "Mục 65 câu 3, 4: cấp, thu hồi, xoay khoá phải bấm được, không sửa biến môi trường rồi triển khai lại. Cổng Phạm vi duyệt trên bản bấm được; thêm thuật ngữ «Khách API», «Khoá khách» vào CONTEXT.md cùng commit.",
+      "vung": [
+        "app/src/app/ops/api-clients",
+        "app/src/components/ops/api-clients",
+        "app/src/lib/ops-access.ts"
+      ]
+    },
+    {
+      "ma": "PB17",
+      "dot": "quan-ly-khach-api-2811",
+      "nhom": "be-mat-api",
+      "phu": [
+        "PB17"
+      ],
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 4,
+      "dung_tren": [],
+      "cau_giao": "Tài nguyên Property của data-api chạy được ở bản cloud, nơi không có bảng nguồn nội bộ",
+      "bat_khi": "Danh bạ có trên DB mà không có source_registry thì /v1/properties* không ra 500 (đọc mã nguồn từ chỗ có trên cloud); ca chiều đỏ khi bỏ bảng",
+      "vi_sao": "Hợp đồng mới từ Cổng Bằng chứng PB6 (Ngoài-1, Ngoài-2): route Property đọc source_registry — bảng chỉ ở máy thu — nên khi danh bạ lên cloud mọi request ra 500 thay vì 503.",
+      "vung": [
+        "data-api/src/routes/properties.ts"
+      ],
+      "ghi_chu": "Dưới mục tiêu cỡ; giữ riêng vì là hợp đồng mới có tên từ PB6, không cùng kết quả với hàng nào khác của đợt."
+    },
+    {
+      "ma": "HT44",
+      "dot": "quan-ly-khach-api-2811",
+      "nhom": "nen-giu-nha",
+      "phu": [
+        "HT44"
+      ],
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 3,
+      "dung_tren": [],
+      "cau_giao": "Thước chm_api của hồ sơ chuyển hướng mã thị trường chạy xanh trở lại trên main",
+      "bat_khi": "Executor chm_api xanh trên main sau khi /v1/markets insights trả 410; ca chiều đỏ còn đỏ đúng chỗ",
+      "vi_sao": "Hợp đồng mới từ Cổng Bằng chứng HT20 (Ngoài-1): insights trả 410 làm gãy executor chm_api của chuyen-huong-ma-thi-truong.",
+      "vung": [
+        "scripts/chuyen-huong-ma-thi-truong"
+      ],
+      "ghi_chu": "Dưới mục tiêu cỡ; việc giữ thước, không gộp được với hàng nào của đợt."
     }
   ],
   "chan_troi": [
