@@ -82,7 +82,7 @@ exit 1
   const env = {
     PATH: `${bin}:/bin:/usr/bin`,
     HOME: home,
-    DATABASE_URL: "postgres://thu-dung:khong-dung@127.0.0.1:1/khong-co", // shim không nối DB thật
+    DATABASE_URL: "postgres://127.0.0.1:1/khong-co", // shim không nối DB thật
     SHIM_CITIES: "hanoi hcmc",
     THU_DUOI_S06_GOC: goc,
   };
