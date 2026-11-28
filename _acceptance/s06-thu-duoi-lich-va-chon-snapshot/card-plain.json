@@ -1,0 +1,6 @@
+{
+ "feature_plain": "Đưa lớp lịch thu đuôi S06 vào main: mỗi 5 phút chạy một vòng thu cho đúng một vùng (hcmc), nạp đúng một bản thu mới nhất mỗi vùng, tự nghỉ 60 phút khi nguồn chặn và dừng hẳn khi bị chặn lần hai trong 24 giờ. Lượt chấm này chỉ đưa mã và khuôn lịch vào kho: không áp gì lên DB máy thu, chưa cài lịch. Bộ test dài pipeline_that chạy ngoài vòng chấm (quy trình HT37) trên Mac mini và xanh 38/38.",
+ "scope_plain": "Gộp không có nghĩa là đang chạy: cài lịch (plist) là việc của làn thu ZCode sau khi gộp, giao qua LL, và cần lời riêng của anh. Mục Ngoài-3 (E2 chỉ còn kiểm âm) em khuyên ghi Known limits chứ không sửa ngay: sửa phải ghim lại cả làn mất khoảng 60 phút, trong khi chiều đỏ của việc nhường lượt đã được E2b đo đúng ca. Mục Ngoài-9 (bản thu hỏng bị chọn lại mỗi vòng) em khuyên mở hợp đồng mới cho làn thu.",
+ "decisions": [],
+ "analyst_plain": ""
+}
