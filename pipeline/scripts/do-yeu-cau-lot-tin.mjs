@@ -168,7 +168,7 @@ export function vietMau({ khac, ngauNhien }, che) {
 
 // ---------------- DB ----------------
 
-async function docNhan(c) {
+export async function docNhan(c) {
   const { rows } = await c.query(
     `SELECT DISTINCT ON (post_id) post_id, listing_intent, labeled_at FROM silver_labels
       WHERE source_code = 'S03' AND model ILIKE '%haiku%' AND json_ok IS NOT FALSE
@@ -185,7 +185,7 @@ const inKhoi = (ten, k) => console.log(
   `${ten}: tin S03 ${k.tin} · tin rò ${k.ro} · tin thuê ${k.thue} · tin thuê «giá tốt» ${k.gia_tot_thue} (mốc 1.165) · ` +
   `tin thuê «giá tốt» rò ${k.gia_tot_thue_ro} · data-flow nhánh Yêu cầu ${k.nhanh_yeu_cau} bài`);
 
-async function khoi(c, nhan) {
+export async function khoi(c, nhan) {
   const { tin, giaTot } = await docTin(c);
   const nhanh = await tinhNhanhBai(c);
   // Bài thử không có nhánh (tinhNhanhBai đọc qua loadStgPosts đã gạt chúng) nên không bao giờ được đếm vào nhánh Yêu cầu.
