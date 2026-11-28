@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: beb516eeb30320126c2d0f4c5f26356b78560649
+verified_commit: 68b18ac7399c67715f0d1b62e1071d4fe0c001c3
 human_signoff: Mạnh 2026-11-28
 ---
 
@@ -200,3 +200,7 @@ Không có judgment item nào trong round này; mọi eval là máy (script ho�
 Round 1: lịch sử không nằm trong đầu vào round này; xem run-log.jsonl.
 Round 2: E8 failed — thước E8 (do-db dựng tạo phẩm ghi vào src/routes) bị bắt; sửa ở commit beb516eeb. Returned to implementation.
 Round 3: mọi eval E1–E12 và các lệnh suite đều xanh trên verified_commit; verdict PASS.
+
+### Re-pin lần 1 — 2026-11-28, do hoá cũ do lần gộp hộ main 5013d45c0 của U2 sau vòng 3, trước chữ ký
+run_id: repin-20261128T063321Z-77176
+sha: 68b18ac7399c67715f0d1b62e1071d4fe0c001c3 · suites: 8 lệnh exit 0 · evals: 12/12 eval máy đạt kỳ vọng
