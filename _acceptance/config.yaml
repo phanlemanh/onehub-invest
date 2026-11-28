@@ -90,6 +90,8 @@ executors:
     dapi_khoa: "bash db/db-thu.sh oneinvest_suite_dapi --chay sh -c 'cd data-api && node --import tsx --test --test-reporter=spec --test-concurrency=1 test/auth-dong.test.ts'"   # data-api-dong-khi-thieu-khoa E1–E6 — đóng khi thiếu khoá, ma trận môi trường × khoá × đường
     dapi_khoa_toan: "bash db/db-thu.sh oneinvest_suite_dapi --chay sh -c 'cd data-api && node --import tsx --test --test-reporter=spec --test-concurrency=1 test/*.test.ts'"   # data-api-dong-khi-thieu-khoa E11 — mọi test data-api chung một lượt (HT19 không gãy vì đóng mặc định)
     dapi_prop: "bash db/db-thu.sh oneinvest_suite_dapi_prop --chay sh -c 'cd data-api && node --import tsx --test --test-reporter=spec --test-concurrency=1 test/properties.test.ts test/dong-ba-route.test.ts'"   # data-api-property-danh-ba-nha E1–E7, E10 — Property trên lược đồ thật, dòng canh, ca DRL-PB6
+    dapi_smp: "bash db/db-thu.sh oneinvest_suite_dapi_smp --chay sh -c 'cd data-api && node --import tsx --test --test-reporter=spec --test-concurrency=1 test/*.test.ts'"   # data-api-schema-mau-du-bang-property E6 — mọi test data-api
+    dapi_smp_ten: "node --test scripts/data-api-ten-nguon.test.mjs"   # data-api-schema-mau-du-bang-property E4 — bộ quét tên nguồn thật PB5
     dapi_psn: "bash db/db-thu.sh oneinvest_suite_dapi_psn --chay sh -c 'cd data-api && node --import tsx --test --test-reporter=spec --test-concurrency=1 test/listing-reso.test.ts'"   # data-api-price-stats-so-nen-co-dinh E1 — PB2-AC-11 so mốc cố định
     dapi_mk: "bash db/db-thu.sh oneinvest_suite_dapi_mk --chay sh -c 'cd data-api && node --import tsx --test --test-reporter=spec --test-concurrency=1 test/markets-khong-s02.test.ts test/dong-ba-route.test.ts test/auth-dong.test.ts'"   # data-api-markets-khong-doc-s02 E1–E5 — bốn đường markets không S02, rào tĩnh; cùng lượt test cũ của data-api
     app_ui: "cd app && npm test"                     # test render jsdom (app/tests); npm test tự chạy trên DB của riêng lượt (db/db-thu.sh --chay)
@@ -545,6 +547,9 @@ executors:
     dapi_reso_hop_dong: "node _acceptance/data-api-hop-dong-reso-dd-2-1/probes/hop-dong.mjs"   # data-api-hop-dong-reso-dd-2-1 E7 — tệp hợp đồng ↔ DD 2.1 ↔ mappings.yaml
     dapi_reso_luoc_do: "node _acceptance/data-api-hop-dong-reso-dd-2-1/probes/luoc-do-mau.mjs"   # data-api-hop-dong-reso-dd-2-1 E9 — lược đồ mẫu + seed trên DB rỗng
     dapi_reso_pham_vi: "node _acceptance/data-api-hop-dong-reso-dd-2-1/probes/pham-vi.mjs"   # data-api-hop-dong-reso-dd-2-1 E10 — ranh giới, mappings, tên nguồn thật
+    dapi_smp_route: "bash db/db-thu.sh oneinvest_suite_dapi_smp_route --chay node _acceptance/data-api-schema-mau-du-bang-property/probes/moi-route.mjs"   # data-api-schema-mau-du-bang-property E1, E2 — mọi đường openapi trên DB mẫu
+    dapi_smp_hinh: "bash db/db-thu.sh oneinvest_suite_dapi_smp_hinh --chay node _acceptance/data-api-schema-mau-du-bang-property/probes/hinh.mjs"   # data-api-schema-mau-du-bang-property E3 — hình cột khớp DB thật
+    dapi_smp_pham_vi: "node _acceptance/data-api-schema-mau-du-bang-property/probes/pham-vi.mjs"   # data-api-schema-mau-du-bang-property E5 — ranh giới tệp
     dapi_psn_dot_bien: "node _acceptance/data-api-price-stats-so-nen-co-dinh/probes/dot-bien.mjs"   # data-api-price-stats-so-nen-co-dinh E2 — bốn ô đột biến AC-11
     dapi_psn_pham_vi: "node _acceptance/data-api-price-stats-so-nen-co-dinh/probes/pham-vi.mjs"   # data-api-price-stats-so-nen-co-dinh E3 — ranh giới tệp, không merge-base
     dapi_khoa_pha: "node _acceptance/data-api-dong-khi-thieu-khoa/probes/pha.mjs"   # data-api-dong-khi-thieu-khoa E7 — auth.ts, index.ts của merge-base phải đỏ đúng ca ghim
