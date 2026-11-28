@@ -368,6 +368,10 @@ _Avoid_: loại người bán
 - Code: tin có `MarketTier = primary` · RESO: resource Property + extension MarketTier
 _Avoid_: tin chủ đầu tư
 
+**Căn CĐT đang bán**: Căn chủ đầu tư đang chào bán theo danh sách công khai của S09, kèm giá niêm yết và trạng thái nguồn (DA56). Hiện ở ô tổng của Danh bạ Ops và khối trên trang một dự án đã nối; chưa thành tin, chưa vào bảng căn của danh bạ (DA43).
+- Code: view `v_s09_db_quy_can` (migration 130), `app/src/lib/ops/registry/quy-can.ts`
+_Avoid_: quỹ căn
+
 **Độ đủ hồ sơ**: Mức đầy đủ thông tin của một dự án theo bảy nhóm (danh tính, vị trí, phân loại và quy mô, pháp lý, tiến độ, sản phẩm sơ cấp và giá, mô tả và media); mỗi nhóm là trống, một nguồn, nhiều nguồn khớp hay mâu thuẫn; gộp thành mức hồ sơ M0 (có tên) tới M5 (đang bán) (DA20).
 - Code: thước DA20 · RESO: không có
 _Avoid_: điểm hồ sơ

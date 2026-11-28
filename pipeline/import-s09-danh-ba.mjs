@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// import-s09-danh-ba.mjs — bộ nạp danh bạ nguồn s09-danh-ba (DC v15, mọi kind của nguồn)
+// import-s09-danh-ba.mjs — bộ nạp danh bạ nguồn s09-danh-ba (DC v15, v16; mọi kind của nguồn)
 // vào stg_s09_danh_ba. Khớp từng điểm GS CHỐT (BÁO claudedp-2011-19, mảnh 2 của GIAO 2011-17):
 //   CỘT: snapshot_id (FK airbnb_snapshots ON DELETE CASCADE) · dong bigint · kind · source_id ·
 //        payload jsonb · meta jsonb · fetched_at · PK (snapshot_id, dong) — KHÔNG cột tiền tố
@@ -20,8 +20,10 @@ import { basename, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { gunzipSync } from "node:zlib";
 import pg from "pg";
+import { locTangA } from "./lib/s09-danh-ba-v16.mjs";
 
-export const SCHEMA_DANH_BA = [15];
+// v16 (DA56): thêm kind quy-can, can-cao-tang; căn quỹ căn bỏ khoá tầng A qua locTangA trước khi ghi (raw không đổi).
+export const SCHEMA_DANH_BA = [15, 16];
 const LO = 500; // dòng mỗi lệnh INSERT
 
 const CHAY_TRUC_TIEP =
@@ -87,6 +89,7 @@ export async function napDanhBaThuMuc(thuMuc, db) {
     // CHECK btrim(kind|source_id) <> '', một dòng rỗng làm cả lượt ROLLBACK (lỗi tích hợp, P1 sửa 22/11 theo GS + LL).
     const boTheoLyDo = { phi_object: 0, thieu_kind: 0, thieu_source_id: 0 };
     const hang = [];
+    let canBoKhoa = 0;
     for (let i = 0; i < items.length; i++) {
       const it = items[i];
       if (!it || typeof it !== "object" || Array.isArray(it)) { bo++; boTheoLyDo.phi_object++; continue; }
@@ -94,12 +97,15 @@ export async function napDanhBaThuMuc(thuMuc, db) {
       const sourceId = String(it.sourceId ?? "").trim() === "" ? null : String(it.sourceId);
       if (kind === null) { bo++; boTheoLyDo.thieu_kind++; continue; }
       if (sourceId === null) { bo++; boTheoLyDo.thieu_source_id++; continue; }
+      // tầng A của v16 (DA56): khoá ngoài bảng kiểm kê → ném, cả lượt ROLLBACK, không ghi dòng nào
+      const { payload, boKhoa } = locTangA(kind, it.payload ?? {});
+      canBoKhoa += boKhoa;
       hang.push([
         snapshotId,
         i + 1, // dong BẮT ĐẦU TỪ 1 (điểm chốt GS) — đếm mọi item kể cả bị bỏ
         kind,
         sourceId,
-        it.payload ?? {},
+        payload ?? {},
         it.meta ?? {},
         it.fetchedAt ?? null,
       ]);
@@ -120,9 +126,10 @@ export async function napDanhBaThuMuc(thuMuc, db) {
     console.log(
       `s09-danh-ba nạp: ${ghi}/${hang.length} dòng stg_s09_danh_ba (đọc ${items.length} item; ` +
       `bỏ ${bo} item: phi_object ${boTheoLyDo.phi_object}, thieu_kind ${boTheoLyDo.thieu_kind}, ` +
-      `thieu_source_id ${boTheoLyDo.thieu_source_id}; nạp lại bỏ trùng ${soLap}; đã có sẵn ${soCoSan} dòng trước lượt)`,
+      `thieu_source_id ${boTheoLyDo.thieu_source_id}; nạp lại bỏ trùng ${soLap}; đã có sẵn ${soCoSan} dòng trước lượt; ` +
+      `bỏ khoá tầng A ở ${canBoKhoa} căn)`,
     );
-    return { ghi, bo, boTheoLyDo, soCoSan, soLap, soDoc: items.length, snapshotId };
+    return { ghi, bo, boTheoLyDo, soCoSan, soLap, soDoc: items.length, snapshotId, canBoKhoa };
   } catch (err) {
     await client.query("ROLLBACK").catch(() => {});
     throw err;

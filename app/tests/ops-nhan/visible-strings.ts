@@ -118,6 +118,7 @@ export const SCAN_FILES = [
   "src/components/ops/people/person-content.tsx",
   "src/components/ops/people/person-view.tsx",
   "src/components/ops/registry/du-an-content.tsx",
+  "src/components/ops/registry/du-an-quy-can-grid.tsx",
   "src/components/ops/registry/du-an-toa-grid.tsx",
   "src/components/ops/registry/du-an-view.tsx",
   "src/components/ops/registry/registry-badges.tsx",
