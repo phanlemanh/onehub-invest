@@ -8,7 +8,7 @@
 // Cách tráo (cloud-sync-atomic, 2026-10-23 — docs/superpowers/specs/2026-10-23-cloud-sync-atomic-design.md):
 //   1. đọc catalog cloud (cột, khoá chính, FK) → kế hoạch topo
 //   2. đọc local trong MỘT snapshot REPEATABLE READ (pipeline có thể đang ghi)
-//   3. soát tên nguồn thật trong payload bảng người bán, chặn tụt
+//   3. che tên nguồn thật ở mọi ô của mọi bảng (HT26), soát MỌI bảng trước khi gửi, chặn tụt
 //   4. nạp vào sync_stage.rows (migration 038 — schema riêng, anon không đọc được)
 //   5. MỘT lời gọi chứa BEGIN … COMMIT: DELETE bảng thay-trọn → UPSERT bảng giữ-chỗ
 //      (bảng FILL bị bảng ngoài FILL tham chiếu, vd areas ← saved_markets) → INSERT
@@ -26,8 +26,10 @@
 //     trung tính ref_calib_*;
 //   - bảng người bán chỉ gửi cột trong CLOUD_ALLOW (cột mới mặc định ở lại máy);
 //   - seller_ref lên dạng «<mã S0x>:<dãy số cuối>» — giá trị gốc mang tiền tố/tên nguồn;
-//   - payload bảng người bán được soát ở local với tên + định danh nguồn đọc từ
-//     source_registry local (danh sách này không rời máy) — trúng là dừng, không gửi;
+//   - mọi ô chữ/json/mảng của mọi bảng FILL được che bằng pipeline/lib/che-ten-nguon-gia-tri.mjs (HT26, 25/11): chữ → mã
+//     S0x, URL đứng riêng → NULL, phần tử URL trong mảng bị bỏ, khoá/giá trị json → mã; tên cột (airdna_id…) giữ nguyên;
+//   - payload MỌI bảng được soát ở local với tên + định danh nguồn đọc từ source_registry local (danh sách này không rời
+//     máy) — trúng sau che là dừng, không gửi (fail-closed);
 //   - tên, SĐT người bán của sale_offers lên cloud (Mạnh chốt 02/11, tin-rao-tren-invest); giá trị
 //     mang định danh nguồn được che thành NULL ngay trong câu đọc, nên không rời máy và không
 //     làm dừng lượt; bộ soát phía sau vẫn là lưới cuối. sellers.name, properties.seller_name ở lại.
@@ -40,13 +42,14 @@ import { homedir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
+import { cheO, docJson } from "./lib/che-ten-nguon-gia-tri.mjs";
 import { fold, nameVariants } from "./lib/mask-source-names.mjs";
 import { docSourceNameEntries } from "./lib/source-name-entries.mjs";
 import { entriesFromTokens, guardValues, tokensFromEntries } from "./lib/tier-a-guard.mjs";
 import { kiemBangDay, soatDuLieu, thongDiepS16, tokenS16 } from "./lib/s16-soat.mjs";
 
 const REF = "smqpqiigzulwpmrsrhci";
-const MGMT = `https://api.supabase.com/v1/projects/${REF}/database/query`;
+export const MGMT = `https://api.supabase.com/v1/projects/${REF}/database/query`;
 const LOCAL_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 
@@ -415,25 +418,193 @@ export function scanSourceNames(text, tokens) {
 const khoaLong = (v) =>
   Array.isArray(v) ? v.flatMap(khoaLong) : v && typeof v === "object" ? Object.entries(v).flatMap(([k, x]) => [k, ...khoaLong(x)]) : [];
 
-/** Soát payload bảng người bán trước khi gửi: trúng là dừng, không dòng nào rời máy. `data`: tên cloud → dòng JSON. */
-export function assertNoSourceNames(data, tokens) {
-  for (const t of Object.keys(CLOUD_ALLOW)) {
-    for (const j of data.get(RENAME(t)) ?? []) {
-      // Hai cách soát, trúng một là dừng. (1) Chuỗi JSON thô — bắt cả KHOÁ lồng trong cột jsonb, như bản trước 19/11.
-      // (2) Từng giá trị đã giải JSON — chuỗi thô thoát xuống dòng thành «\\n», cụm «ten\\nhai» chỉ khớp sau khi giải (phản biện 19/11).
-      // Bỏ (1) là hẹp hơn bản cũ (S4 vòng 3, lời Mạnh 19/11 sửa ngay).
-      const row = JSON.parse(j);
-      // (3) Khoá lồng đã giải — khoá chứa xuống dòng thoát «\\n» thì (1) không thấy, (2) không đi qua khoá.
-      if (!scanSourceNames(j, tokens) && !guardValues(row, entriesFromTokens(tokens)).length && !guardValues(khoaLong(row), entriesFromTokens(tokens)).length) continue;
-      const col = Object.entries(row).find(
+// ───── Che + soát mọi bảng FILL (HT26 sync-cloud-che-ten-nguon-moi-cot, Mạnh duyệt 25/11) ─────
+// Đo 25/11: cloud giữ 3.743 ô mang tên nguồn ở 8 bảng.cột ngoài ba bảng người bán, và một ô S06 ở sale_offers.street_raw làm bộ chặn
+// dừng 17 lượt liền. Nay: che MỌI ô của MỌI bảng FILL bằng hàm dùng chung của HT18 (pipeline/lib/che-ten-nguon-gia-tri.mjs), rồi bộ
+// chặn soát MỌI bảng (fail-closed giữ nguyên). Khoá cấp dòng là TÊN CỘT lấy từ catalog — không che, không tính (airdna_id… ngoài phạm
+// vi đổi tên, AC-8); khoá json lồng vẫn che và vẫn soát.
+
+const FOLD_MAP = new Map(FOLD_FROM.map((ch, i) => [ch, FOLD_TO[i]]));
+const NGOAI_ASCII = /[^\x00-\x7f]/;
+const DAU_TACH_LOC = /(%[0-9a-f]{2}|[^\p{L}\p{N}])+/gu;
+
+/** Bộ lọc thô của từ điển: biến thể đã gập (khớp mọi chỗ, không xét ranh từ) và bản bỏ hết dấu phân tách — TẬP TRÊN của
+ *  findSourceNames (phủ cả khớp cụm của dòng khai cờ). Chỉ để bỏ qua nhanh chữ chắc chắn sạch; chữ qua lọc mới đi lõi. */
+export function boLoc(entries) {
+  const v = [...new Set(entries.flatMap((e) => nameVariants(e.realName, { wholeOnly: e.wholeOnly })))];
+  const lien = [...new Set(v.map((x) => x.replace(/[^\p{L}\p{N}]+/gu, "")).filter((x) => x.length >= 3))];
+  return { v, lien };
+}
+
+/** true khi chữ CÓ THỂ mang tên nguồn (lọc thô); false thì findSourceNames chắc chắn không trúng. Gập: NFC, chữ thường, bỏ dấu theo
+ *  đúng bảng của fold(), bỏ dấu tổ hợp còn sót (bỏ ký tự chỉ làm lọc thô trúng nhiều hơn, không ít hơn). */
+export function quaLoc(s, loc) {
+  let f = String(s).toLowerCase();
+  if (NGOAI_ASCII.test(f)) {
+    let o = "";
+    for (const ch of f.normalize("NFC")) o += FOLD_MAP.get(ch) ?? ch;
+    f = o.replace(/\p{M}/gu, "");
+  }
+  for (const x of loc.v) if (f.includes(x)) return true;
+  if (!loc.lien.length) return false;
+  const g = f.replace(DAU_TACH_LOC, "");
+  for (const x of loc.lien) if (g.includes(x)) return true;
+  return false;
+}
+
+/** Mọi chữ của một giá trị đã giải (chuỗi, khoá lồng, số) — cho lọc thô trên bản đã giải (chuỗi thô thoát «\\n» thì lọc trên thô hụt). */
+function chuoiGiai(v, out = []) {
+  if (typeof v === "string") out.push(v);
+  else if (typeof v === "number") out.push(String(v));
+  else if (Array.isArray(v)) for (const x of v) chuoiGiai(x, out);
+  else if (v && typeof v === "object") for (const [k, x] of Object.entries(v)) { out.push(k); chuoiGiai(x, out); }
+  return out;
+}
+
+const hetChuoi = (j, i) => {
+  for (i++; i < j.length; i++) {
+    const c = j.charCodeAt(i);
+    if (c === 92) i++;
+    else if (c === 34) return i + 1;
+  }
+  throw new Error("dòng JSON hỏng: chuỗi không đóng");
+};
+const laKhoangTrang = (c) => c === 32 || c === 9 || c === 10 || c === 13;
+
+/** Tách một dòng JSON phẳng (row_to_json) thành [{ k, a, b }]: tên cột và đoạn [a, b) của giá trị trong chính chuỗi dòng — để thay
+ *  đúng ô trúng và giữ nguyên từng byte ô khác (khoảng trắng jsonb, chữ số thập phân). Dòng không đúng khuôn thì ném. */
+export function tachDong(j) {
+  const n = j.length;
+  let i = 0;
+  const bo = () => { while (i < n && laKhoangTrang(j.charCodeAt(i))) i++; };
+  const loi = () => { throw new Error(`dòng JSON không đúng khuôn ở ký tự ${i}`); };
+  bo();
+  if (j[i] !== "{") loi();
+  i++;
+  bo();
+  const out = [];
+  if (j[i] === "}") return out;
+  for (;;) {
+    bo();
+    if (j[i] !== '"') loi();
+    const ka = i;
+    i = hetChuoi(j, i);
+    const k = JSON.parse(j.slice(ka, i));
+    bo();
+    if (j[i] !== ":") loi();
+    i++;
+    bo();
+    const a = i;
+    if (j[i] === '"') i = hetChuoi(j, i);
+    else if (j[i] === "{" || j[i] === "[") {
+      let sau = 0;
+      for (; i < n; i++) {
+        const c = j[i];
+        if (c === '"') { i = hetChuoi(j, i) - 1; continue; }
+        if (c === "{" || c === "[") sau++;
+        else if ((c === "}" || c === "]") && --sau === 0) { i++; break; }
+      }
+      if (sau !== 0) loi();
+    } else {
+      while (i < n && j[i] !== "," && j[i] !== "}" && !laKhoangTrang(j.charCodeAt(i))) i++;
+      if (i === a) loi();
+    }
+    out.push({ k, a, b: i });
+    bo();
+    if (j[i] === ",") { i++; continue; }
+    if (j[i] === "}") { i++; bo(); if (i !== n) loi(); return out; }
+    loi();
+  }
+}
+
+/** Lọc thô cả dòng, bỏ khoá cấp dòng là tên cột (`cot`). `khoaTrung` = tên cột tự qua lọc thô (airdna_id…): xoá chúng khỏi chuỗi thô
+ *  và lọc thêm trên bản đã giải (khoá lồng trùng tên cột vẫn được nhìn). */
+function dongQuaLoc(j, cot, khoaTrung, loc) {
+  if (!khoaTrung.length && !j.includes("\\")) return quaLoc(j, loc);
+  let jb = j;
+  for (const k of khoaTrung) jb = jb.split(`${JSON.stringify(k)}:`).join('"":');
+  if (quaLoc(jb, loc)) return true;
+  const parts = [];
+  for (const [k, v] of Object.entries(JSON.parse(j))) {
+    if (!cot.has(k)) parts.push(k);
+    chuoiGiai(v, parts);
+  }
+  return quaLoc(parts.join("\u0001"), loc);
+}
+
+const khoaTrungCua = (cot, loc) => [...cot].filter((k) => quaLoc(k, loc));
+
+/**
+ * Che MỘT dòng JSON (row_to_json) của bảng cloud `ct`: ô chữ/json/mảng trúng tên nguồn đi qua cheO (chữ → mã S0x, URL đứng riêng →
+ * null, phần tử URL trong mảng bị bỏ, khoá/giá trị json → mã); ô không trúng giữ nguyên từng byte; khoá cấp dòng không đổi. Số json
+ * giữ nguyên chữ số (docJson). `dem["ct.cot"]` cộng một cho mỗi ô bị che. `cheOImpl` chỉ cho lối thử (ca đột biến).
+ */
+export function cheDong(j, { entries, loc = boLoc(entries), cot = new Set(), khoaTrung = khoaTrungCua(cot, loc), ct = "?", dem = {}, cheOImpl = cheO }) {
+  if (!dongQuaLoc(j, cot, khoaTrung, loc)) return j;
+  let out = null;
+  let at = 0;
+  for (const { k, a, b } of tachDong(j)) {
+    const c0 = j.charCodeAt(a);
+    if (c0 !== 34 && c0 !== 123 && c0 !== 91) continue; // số, true/false/null: không mang chữ
+    const raw = j.slice(a, b);
+    if (!(raw.includes("\\") ? quaLoc(chuoiGiai(JSON.parse(raw)).join("\u0001"), loc) : quaLoc(raw, loc))) continue;
+    const { giaTri, soCho } = cheOImpl(docJson(raw), entries, { cot: k });
+    if (!soCho) continue;
+    out = (out ?? "") + j.slice(at, a) + (giaTri === null ? "null" : JSON.stringify(giaTri));
+    at = b;
+    dem[`${ct}.${k}`] = (dem[`${ct}.${k}`] ?? 0) + 1;
+  }
+  return out === null ? j : out + j.slice(at);
+}
+
+/** Che tại chỗ mọi dòng của mọi bảng trong `data` (tên cloud → dòng JSON). `columns[ct]` = tên cột đã gửi (khoá cấp dòng). Trả
+ *  { "ct.cot": số ô đã che }. Từ điển rỗng → ném (không biết tên thì không được coi là đã che). */
+export function cheDuLieu(data, entries, { columns = {}, cheOImpl = cheO } = {}) {
+  if (!entries?.length) throw new PhaseError("che", "không có từ điển tên nguồn — không che được, không gửi");
+  const loc = boLoc(entries);
+  const dem = {};
+  for (const [ct, rows] of data) {
+    const cot = new Set(columns[ct] ?? []);
+    const khoaTrung = khoaTrungCua(cot, loc);
+    for (let i = 0; i < rows.length; i++) rows[i] = cheDong(rows[i], { entries, loc, cot, khoaTrung, ct, dem, cheOImpl });
+  }
+  return dem;
+}
+
+/** Dòng cảnh báo của lượt: số ô đã che theo bảng.cột, không bao giờ chứa giá trị. null khi không che gì. */
+export function cheWarning(dem) {
+  const ds = Object.entries(dem).filter(([, n]) => n > 0).sort(([a], [b]) => a.localeCompare(b));
+  return ds.length ? `che tên nguồn ${ds.reduce((s, [, n]) => s + n, 0)} ô: ${ds.map(([k, n]) => `${k} ${n}`).join(", ")}` : null;
+}
+
+/**
+ * Bộ chặn trước khi gửi: soát MỌI bảng trong `data` (tên cloud → dòng JSON), trúng là dừng, không dòng nào rời máy. `columns[ct]` =
+ * tên cột của bảng (catalog): khoá cấp dòng mang tên ấy không tính (AC-8); bảng không khai cột thì mọi khoá đều soát (như bản cũ).
+ * Ba cách soát mỗi dòng, trúng một là dừng (giữ từ bản 19/11, không hẹp hơn): (1) chuỗi JSON thô — bắt khoá lồng và mảnh kề nhau;
+ * (2) từng giá trị đã giải — cụm «ten\\nhai» chỉ khớp sau khi giải; (3) khoá lồng đã giải. Lọc thô (tập trên của lõi) đứng trước để
+ * dòng sạch không tốn lõi.
+ */
+export function assertNoSourceNames(data, tokens, { columns } = {}) {
+  const entries = entriesFromTokens(tokens);
+  if (!entries.length) throw new PhaseError("scan", "không có token tên nguồn — không soát được, không gửi");
+  const loc = boLoc(entries);
+  for (const [ct, rows] of data) {
+    const cot = new Set(columns?.[ct] ?? []);
+    const khoaTrung = khoaTrungCua(cot, loc);
+    for (const j of rows) {
+      if (!dongQuaLoc(j, cot, khoaTrung, loc)) continue;
+      const ds = Object.entries(JSON.parse(j));
+      const tho = cot.size ? JSON.stringify(ds.map(([k, v]) => (cot.has(k) ? [v] : [k, v]))) : j;
+      const giaTri = ds.flatMap(([k, v]) => (cot.has(k) ? [v] : [k, v]));
+      if (!scanSourceNames(tho, tokens) && !guardValues(giaTri, entries).length && !guardValues(khoaLong(giaTri), entries).length) continue;
+      const trung = ds.find(
         ([k, v]) =>
-          scanSourceNames(k, tokens) ||
-          (v != null && (scanSourceNames(JSON.stringify(v), tokens) || guardValues([v, khoaLong(v)], entriesFromTokens(tokens)).length)),
-      )?.[0];
-      throw new PhaseError(
-        "scan",
-        `giá trị mang định danh nguồn (tầng A) ở ${t}.${col ?? "?"} — dừng trước khi gửi, không dòng nào rời máy`,
+          (!cot.has(k) && scanSourceNames(k, tokens)) ||
+          (v != null && (scanSourceNames(JSON.stringify(v), tokens) || guardValues([v, khoaLong(v)], entries).length)),
       );
+      // Khoá cấp dòng ngoài danh mục cột mà trúng: không in chính khoá (nó là tên nguồn).
+      const col = !trung ? "?" : !cot.has(trung[0]) && scanSourceNames(trung[0], tokens) ? "<khoá ngoài danh mục cột>" : trung[0];
+      throw new PhaseError("scan", `giá trị mang định danh nguồn (tầng A) ở ${ct}.${col} — dừng trước khi gửi, không dòng nào rời máy`);
     }
   }
 }
@@ -447,10 +618,10 @@ class PhaseError extends Error {
 
 /** exec(sql) qua Management API. Thử lại 429/502/503/504 có lùi; `{ retry: false }` cho
  * lời gọi không lặp được (tráo — đã COMMIT mà lặp lại sẽ báo lỗi giả). */
-export function mgmtExec(token, { fetchImpl = fetch, retries = 4, sleep = (ms) => new Promise((r) => setTimeout(r, ms)) } = {}) {
+export function mgmtExec(token, { fetchImpl = fetch, retries = 4, sleep = (ms) => new Promise((r) => setTimeout(r, ms)), url = MGMT } = {}) {
   return async (query, { retry = true } = {}) => {
     for (let attempt = 0; ; attempt++) {
-      const res = await fetchImpl(MGMT, {
+      const res = await fetchImpl(url, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "content-type": "application/json" },
         body: JSON.stringify({ query }),
@@ -625,8 +796,11 @@ async function gateAnon(exec) {
 }
 
 /** Một lượt đồng bộ. `local`: pg.Client tới DB local (dựng với `types: localTypes`).
- * `exec(sql, opts)` → mảng dòng của câu cuối. Ném PhaseError (`err.phase`) khi gãy. */
-export async function syncOnce({ local, exec, log = console.log, runId = newRunId(), swapPause = 0, sourceTokens, fill = FILL } = {}) {
+ * `exec(sql, opts)` → mảng dòng của câu cuối. Ném PhaseError (`err.phase`) khi gãy.
+ * `sourceEntries`: từ điển che ({ code, realName, wholeOnly }); vắng thì đọc source_registry local. `kho` (lượt khô, HT26 AC-5): đọc +
+ * che + soát, KHÔNG một lời gọi exec nào — cột lấy từ catalog local, bỏ pha catalog/gate/chặn tụt/nạp/tráo; trả thêm `data`.
+ * `che: false` chỉ cho lối thử (đối chứng «bỏ bước che» của AC-2/AC-3) — đường chạy thật không bao giờ đặt. */
+export async function syncOnce({ local, exec, log = console.log, runId = newRunId(), swapPause = 0, sourceTokens, sourceEntries, fill = FILL, kho = false, che = true } = {}) {
   const timings = {};
   const warnings = [];
   const warn = (m) => {
@@ -647,7 +821,7 @@ export async function syncOnce({ local, exec, log = console.log, runId = newRunI
 
   // 1. catalog
   let cloudCols, plan, cloudCounts;
-  try {
+  if (!kho) try {
     const [reg] = await exec(`SELECT to_regclass('sync_stage.rows')::text AS r, to_regclass('sync_stage.swaps')::text AS s`);
     if (!reg?.r || !reg?.s) {
       throw new Error("cloud chưa có sync_stage — Mạnh áp migration 038 trước (docs/ops/cloud-sync-atomic.md)");
@@ -698,8 +872,10 @@ export async function syncOnce({ local, exec, log = console.log, runId = newRunI
   lap("catalog");
 
   // 1b. quyền đọc công khai — dừng TRƯỚC khi đọc local/gửi: không dòng nào lên một cloud anon đang đọc được
-  await gateAnon(exec); // AU1:kiem-truoc-khi-gui
-  await gatePii(exec); // NT2: cột ngoài CLOUD_ALLOW / bảng tầng A có dòng → dừng trước khi đọc local và tráo
+  if (!kho) {
+    await gateAnon(exec); // AU1:kiem-truoc-khi-gui
+    await gatePii(exec); // NT2: cột ngoài CLOUD_ALLOW / bảng tầng A có dòng → dừng trước khi đọc local và tráo
+  }
   lap("gate-pre");
 
   // 2. đọc local — một snapshot
@@ -708,6 +884,7 @@ export async function syncOnce({ local, exec, log = console.log, runId = newRunI
   let readAt;
   let shrinkAudits = [];
   let tokens = sourceTokens;
+  let entries = sourceEntries;
   try {
     await local.query("BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY");
     readAt = (await local.query("SELECT transaction_timestamp()::text AS t")).rows[0].t;
@@ -721,7 +898,9 @@ export async function syncOnce({ local, exec, log = console.log, runId = newRunI
       ));
     }
     // Một hàm nạp chung (che-ten-nguon-khong-lay-tu-dau): mọi token của sổ kèm cờ match_whole; thiếu bảng → [] → dừng dưới.
-    if (!tokens) tokens = tokensFromEntries(await docSourceNameEntries(local));
+    // Bộ che (HT26) dùng chính từ điển ấy (cần mã S0x để thay); bộ chặn dùng token của nó.
+    if (!entries) entries = await docSourceNameEntries(local);
+    if (!tokens) tokens = tokensFromEntries(entries);
     // Không có gì để soát = bộ chặn tầng A đang mở → dừng thay vì cho qua (fail-closed).
     if (!tokens.length) throw new PhaseError("scan", "không đọc được tên/định danh nguồn nào từ source_registry local — không soát được, không gửi");
     const { rows: lc } = await local.query(
@@ -739,7 +918,8 @@ export async function syncOnce({ local, exec, log = console.log, runId = newRunI
       const ct = cloudOf.get(t);
       const sel = selectList(t, localCols.get(t) ?? []);
       for (const c of sel.unapproved) warn(`cột chưa duyệt lên cloud, ở lại máy: ${t}.${c}`);
-      const cloudSet = new Set(cloudCols.get(ct));
+      // Lượt khô không đọc catalog cloud: gửi đủ cột đã duyệt của máy thu (lệch schema cloud không thấy được ở đây).
+      const cloudSet = kho ? new Set(sel.cols) : new Set(cloudCols.get(ct));
       const drift = sel.cols.filter((c) => !cloudSet.has(c));
       for (const c of drift) warn(`lệch schema: cloud thiếu cột ${ct}.${c} — cột này không gửi`);
       const send = sel.cols.filter((c) => cloudSet.has(c));
@@ -755,8 +935,10 @@ export async function syncOnce({ local, exec, log = console.log, runId = newRunI
     if (hitS16) {
       throw new PhaseError("scan", thongDiepS16(hitS16));
     }
-    const masked = maskedSellerWarning(await countMaskedSeller(local, tokens));
-    if (masked) warn(masked);
+    if (fill.includes("sale_offers")) {
+      const masked = maskedSellerWarning(await countMaskedSeller(local, tokens));
+      if (masked) warn(masked);
+    }
     await local.query("COMMIT");
   } catch (e) {
     await local.query("ROLLBACK").catch(() => {});
@@ -765,9 +947,28 @@ export async function syncOnce({ local, exec, log = console.log, runId = newRunI
   }
   lap("read");
 
-  // 3. soát tên nguồn (bảng người bán) + chặn tụt
-  assertNoSourceNames(data, tokens);
+  // 2b. che tên nguồn ở mọi ô của mọi bảng (HT26) — trước bộ chặn; số ô che theo bảng.cột, không giá trị.
+  let daChe = {};
+  if (che) {
+    try {
+      daChe = cheDuLieu(data, entries, { columns });
+    } catch (e) {
+      if (e instanceof PhaseError) throw e;
+      throw new PhaseError("che", e.message);
+    }
+    const w = cheWarning(daChe);
+    if (w) warn(w);
+  }
+  lap("che");
+
+  // 3. soát tên nguồn MỌI bảng (khoá cấp dòng = tên cột không tính) + chặn tụt
+  assertNoSourceNames(data, tokens, { columns });
+  lap("scan");
   const counts = Object.fromEntries([...data].map(([t, rows]) => [t, rows.length]));
+  if (kho) {
+    const total = Object.values(counts).reduce((a, b) => a + b, 0);
+    return { runId, total, counts, timings, warnings, che: daChe, data, columns };
+  }
   for (const t of cloudNames) {
     const v = shrinkVerdict({ table: t, local: counts[t] ?? 0, cloud: cloudCounts[t] ?? 0, audits: shrinkAudits, now: readAt });
     if (!v.ok) throw new PhaseError("shrink", v.reason);
@@ -807,7 +1008,7 @@ export async function syncOnce({ local, exec, log = console.log, runId = newRunI
   if (leaks.length) throw new PhaseError("gate", `LEAK GATE FAIL (sau tráo): ${leaks.join(", ")}`);
 
   const total = Object.values(counts).reduce((a, b) => a + b, 0);
-  return { runId, total, counts, timings, warnings };
+  return { runId, total, counts, timings, warnings, che: daChe };
 }
 
 /** Đường chạy của tiến trình sync: in như log launchd đọc, trả mã thoát (0 xong, 1 gãy). main() chỉ dựng
@@ -855,7 +1056,54 @@ export async function runKiemCot({ exec, out = console.log }) {
   return 1;
 }
 
+/** exec của lượt khô: mọi lời gọi cloud là lỗi — lượt khô không được chạm cloud dù chỉ đọc. */
+export const execKho = async () => {
+  throw new Error("lượt khô (--kho): không gọi cloud");
+};
+
+/** `--kho` (HT26 AC-5): một lượt đọc + che + soát trên máy thu thật, KHÔNG đường nào tới cloud (không đọc tệp khoá, exec chặn mọi lời
+ *  gọi). In số dòng, số ô che theo bảng.cột, thời gian từng pha và phép đếm thô độc lập trên payload đã che; mã 0 khi bộ chặn và
+ *  phép đếm thô đều ra 0. Không in giá trị. `fill`, `che: false` chỉ cho thước E5 (chiều đỏ «ô bẩn» trên vài bảng thật); dòng lệnh
+ *  `--kho` không bao giờ đặt. */
+export async function runKho({ local, out = console.log, err = console.error, sourceEntries, fill = FILL, che: cheBat = true } = {}) {
+  const t0 = Date.now();
+  try {
+    const r = await syncOnce({ local, exec: execKho, log: out, kho: true, sourceEntries, fill, che: cheBat });
+    const tDoc = (Date.now() - t0) / 1000;
+    for (const [t, n] of Object.entries(r.counts)) out(`  ${t}: ${n}`);
+    const che = Object.entries(r.che).sort(([x], [y]) => x.localeCompare(y));
+    for (const [k, n] of che) out(`  che ${k}: ${n}`);
+    out(`kho che: ${che.reduce((s, [, n]) => s + n, 0)} ô ở ${che.length} bảng.cột`);
+    out("kho bộ chặn: 0 (mọi bảng, sau che)");
+    // Phép đếm thô ĐỘC LẬP với lõi che/soát: khớp thẳng chuỗi gốc của sổ, không phân biệt hoa thường (scripts/do-ten-nguon-cloud.mjs).
+    const { demThoDuLieu } = await import("../scripts/do-ten-nguon-cloud.mjs");
+    const entries = sourceEntries ?? (await docSourceNameEntries(local));
+    const tho = demThoDuLieu(r.data, entries);
+    const thoTong = Object.values(tho).reduce((s, n) => s + n, 0);
+    for (const [k, n] of Object.entries(tho)) out(`  thô còn ${k}: ${n}`);
+    out(`kho đếm thô độc lập trên payload đã che: ${thoTong}`);
+    const tm = Object.entries(r.timings).map(([k, v]) => `${k} ${v.toFixed(1)}s`).join(" · ");
+    const pha = (r.timings.read ?? 0) + (r.timings.che ?? 0) + (r.timings.scan ?? 0);
+    out(`kho xong: ${r.total} dòng, ${Object.keys(r.counts).length} bảng; ${tm}; pha đọc+che+soát ${pha.toFixed(1)}s; tới hết soát ${tDoc.toFixed(1)}s`);
+    return thoTong === 0 ? 0 : 1;
+  } catch (e) {
+    err(`KHO FAIL [${e.phase ?? "?"}] ${new Date().toISOString()}: ${e.message}`);
+    return 1;
+  }
+}
+
 async function main() {
+  if (process.argv.includes("--kho")) {
+    // Lượt khô: không đọc tệp khoá cloud, không dựng exec thật; DB máy thu chỉ đọc.
+    const local = new pg.Client({ connectionString: LOCAL_URL, types: localTypes, options: "-c default_transaction_read_only=on" });
+    await local.connect();
+    try {
+      process.exitCode = await runKho({ local });
+    } finally {
+      await local.end();
+    }
+    return;
+  }
   const env = await readFile(path.join(homedir(), ".oneinvest/cloud.env"), "utf8");
   const token = process.env.SUPABASE_MGMT_TOKEN ?? env.match(/SUPABASE_MGMT_TOKEN=(\S+)/)?.[1];
   if (!token) throw new Error("thiếu SUPABASE_MGMT_TOKEN trong ~/.oneinvest/cloud.env");
