@@ -44,7 +44,7 @@ const NHAN = [
   ["assertion_field", "floor_raw", "Tầng"], ["assertion_field", "floor_band", "Dải tầng"],
   ["assertion_field", "project_node_id", "Dự án"], ["assertion_field", "subzone_node_id", "Phân khu"],
   ["assertion_field", "living_area", "Diện tích thông thuỷ"], ["assertion_field", "building_area_total", "Diện tích tim tường"],
-  ["assertion_field", "direction_faces", "Hướng"], ["assertion_field", "lot_size_area", "Diện tích đất"], ["assertion_field", "universal_property_id", "Toà của tin"],
+  ["assertion_field", "direction_faces", "Hướng"], ["assertion_field", "lot_size_area", "Diện tích đất"], ["assertion_field", "universal_property_id", "Toà của tin"], ["assertion_field", "universal_property_sub_id", "Trục, căn của tin"],
   ["evidence_tier", "fact", "Sự thật"], ["evidence_tier", "observed", "Quan sát có trích dẫn"],
   ["evidence_tier", "inferred", "Suy luận"],
   ["assertion_method", "hitl", "Người quyết"], ["assertion_method", "source_field", "Trường có cấu trúc của nguồn"],
@@ -99,7 +99,7 @@ test("VB-AC-1 sổ thật: đủ 26 trục, đúng code + nhãn từng byte", ()
   const reg = loadRegister(SO_THAT);
   validateRegister(reg); // đối chứng dương: sổ thật không ném
   assert.deepEqual(reg.axes.map((a) => a.name), AXES);
-  assert.equal(NHAN.length, 132); // ghep-tin-vao-danh-muc (117): +1 mã assertion_field (universal_property_id); thuoc-tinh-can-s16 (113): +4 mã assertion_field (living_area, building_area_total, direction_faces, lot_size_area); truong-du-an-tren-tin (096): +2 mã assertion_field, area_id «Phường»; tang-tren-tin-s03 (095): +2 mã assertion_field, trục floor_band 3 mã; HD5 (061; giám sát duyệt P1-87): +7 mã assertion_field; SD3 thêm alias_kind sdt; enrich-nguoi-s03 (079) +4 mã liên lạc; link-nguoi-ban-s03 (080) +1 luật; truong-nhan-s03-081 +29 mã nhãn; danh-ba-toa-truc-can (082): +7 (builder_name, area_id, registry_inherit, ma_nguon, ba bậc catalog_tier)
+  assert.equal(NHAN.length, 133); // ghep-tin-vao-truc-can (131): +1 mã assertion_field (universal_property_sub_id); ghep-tin-vao-danh-muc (117): +1 mã assertion_field (universal_property_id); thuoc-tinh-can-s16 (113): +4 mã assertion_field (living_area, building_area_total, direction_faces, lot_size_area); truong-du-an-tren-tin (096): +2 mã assertion_field, area_id «Phường»; tang-tren-tin-s03 (095): +2 mã assertion_field, trục floor_band 3 mã; HD5 (061; giám sát duyệt P1-87): +7 mã assertion_field; SD3 thêm alias_kind sdt; enrich-nguoi-s03 (079) +4 mã liên lạc; link-nguoi-ban-s03 (080) +1 luật; truong-nhan-s03-081 +29 mã nhãn; danh-ba-toa-truc-can (082): +7 (builder_name, area_id, registry_inherit, ma_nguon, ba bậc catalog_tier)
   // wanted-thanh-inquiry AC-1: yêu cầu là bên mua, đối xứng với listing bên bán.
   const li = reg.axes.find((a) => a.name === "listing_intent");
   assert.deepEqual(li.values.map((v) => v.code), ["offer", "inquiry", "not_listing", "unknown"]);
@@ -210,7 +210,7 @@ test("VB-AC-3 --check: sạch thoát 0; sửa tay từng đích hoặc sửa s�
   assert.equal(chay(d, "--write").status, 0);
   const r0 = chay(d, "--check");
   assert.equal(r0.status, 0, r0.stderr);
-  assert.match(r0.stdout, /vocab --check: 4\/4 đích khớp sổ/);
+  assert.match(r0.stdout, /vocab --check: 5\/5 đích khớp sổ/);
   for (const p of [...DICH_SINH, "CONTEXT.md"]) {
     const f = join(d, p);
     const goc = readFileSync(f, "utf8");
@@ -228,6 +228,47 @@ test("VB-AC-3 --check: sạch thoát 0; sửa tay từng đích hoặc sửa s�
   assert.equal(r5.status, 1);
   for (const p of [...DICH_SINH, "CONTEXT.md"]) assert.ok(r5.stderr.includes(p), `(5) stderr thiếu ${p}`);
   assert.ok(!existsSync(join(d, "x")));
+});
+
+// ---------------------------------------------------------------------------------------------------------------------
+// PB7 (data-api-tin-hien-thi) — nguon_khong_hien_thi: một chỗ viết danh sách nguồn ẩn, bốn đích mã mang SOURCE_HIDDEN.
+const DICH_NGUON_AN = [...DICH_SINH, "data-api/src/contract/vocab.generated.ts"];
+const doiNguonAn = (fn) => { const doc = YAML.parse(SO_THAT); fn(doc); return YAML.stringify(doc); };
+
+test("PB7-VB nguồn ẩn: sổ thật S02, S08 có căn cứ; bốn đích mang SOURCE_HIDDEN; sửa tay đích hay sổ chưa --write thì --check đỏ", () => {
+  const reg = loadRegister(SO_THAT);
+  assert.deepEqual(reg.sourceHidden.map((x) => x.code), ["S02", "S08"]);
+  const d = khoTam();
+  assert.equal(chay(d, "--write").status, 0);
+  for (const p of DICH_NGUON_AN) {
+    assert.match(readFileSync(join(d, p), "utf8"), /export const SOURCE_HIDDEN = (Object\.freeze\()?\["S02", "S08"\]/, `${p} thiếu SOURCE_HIDDEN khớp sổ`);
+  }
+  // sửa tay từng đích → --check nêu đúng tệp
+  for (const p of DICH_NGUON_AN) {
+    const f = join(d, p);
+    const goc = readFileSync(f, "utf8");
+    writeFileSync(f, goc.replace('["S02", "S08"]', '["S02"]'));
+    const r = chay(d, "--check");
+    assert.equal(r.status, 1, `${p}: --check phải thoát 1`);
+    assert.ok(r.stderr.includes(p), `${p}: stderr không nêu tệp`);
+    writeFileSync(f, goc);
+  }
+  // sổ thêm nguồn mà chưa --write → bốn đích mã lệch
+  writeFileSync(join(d, "pipeline", "mappings.yaml"), doiNguonAn((doc) => doc.nguon_khong_hien_thi.push({ code: "S06", can_cu: "thử" })));
+  const r = chay(d, "--check");
+  assert.equal(r.status, 1);
+  for (const p of DICH_NGUON_AN) assert.ok(r.stderr.includes(p), `sổ đổi: stderr thiếu ${p}`);
+});
+
+test("PB7-VB nguồn ẩn: mục thiếu căn cứ, mã sai khuôn, mã trùng → sổ ném có tên", () => {
+  for (const [fn, mau] of [
+    [(doc) => { delete doc.nguon_khong_hien_thi[0].can_cu; }, /PB7 nguồn ẩn thiếu căn cứ/],
+    [(doc) => { doc.nguon_khong_hien_thi[0].code = "s02"; }, /code phải là mã nguồn/],
+    [(doc) => { doc.nguon_khong_hien_thi.push({ ...doc.nguon_khong_hien_thi[0] }); }, /mã trùng/],
+  ]) {
+    assert.throws(() => validateRegister(loadRegister(doiNguonAn(fn))), (e) => e instanceof VocabError && mau.test(e.message));
+  }
+  validateRegister(loadRegister(SO_THAT)); // đối chứng: sổ thật không ném
 });
 
 // ---------------------------------------------------------------------------------------------------------------------

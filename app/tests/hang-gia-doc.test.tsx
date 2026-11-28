@@ -27,7 +27,8 @@ const nap = async () => ({
   pool: (await import("../src/lib/db")).pool,
   GET: (await import("../src/app/api/v1/deals/route")).GET,
   poolApi: (await ngoai("../../data-api/src/db/client.ts")).pool as pg.Pool,
-  dealsRoute: (await ngoai("../../data-api/src/routes/deals.ts")).dealsRoute,
+  listingsRoute: (await ngoai("../../data-api/src/routes/listings.ts")).listingsRoute,
+  LISTING_KEY_NAMES: (await ngoai("../../data-api/src/contract/listing.ts")).LISTING_KEY_NAMES as string[],
 });
 let m: Awaited<ReturnType<typeof nap>>;
 type Db = { c: pg.Client; dong: () => Promise<void> };
@@ -164,7 +165,7 @@ test("CG9-AC-6/AC-7 bảng có ở public nhưng search_path trỏ lược đồ
     await c.query("CREATE SCHEMA cg9_khong_bang");
     await c.query("SET LOCAL search_path = cg9_khong_bang");
     assert.equal(await quaClient(c, () => m.deals.coBangHang()), false, "app: bảng không thấy theo search_path → false");
-    const api = (await ngoai("../../data-api/src/routes/deals.ts")).coBangHang as () => Promise<boolean>;
+    const api = (await ngoai("../../data-api/src/routes/listings.ts")).coBangHang as () => Promise<boolean>;
     assert.equal(await quaClient(c, () => api()), false, "data-api: bảng không thấy theo search_path → false");
   } finally {
     await c.query("ROLLBACK");
@@ -173,6 +174,40 @@ test("CG9-AC-6/AC-7 bảng có ở public nhưng search_path trỏ lược đồ
 });
 
 // ---------- AC-7: hai API ----------
+
+// PB2 (data-api-hop-dong-reso-dd-2-1, GS xác nhận 27/11): /v1/deals của data-api đã gộp vào /v1/listings?minBelowMedianPct=.
+// Chỉ phần gọi data-api đổi: lời gọi cũ dịch sang tham số mới (min_discount → minBelowMedianPct; kind vắng → sale như /v1/deals
+// cũ), phần tử mới dịch về tên khoá cũ theo bảng khoá cũ → mới của hồ sơ PB2 (khoa-cu-moi.md) — mỗi ca giữ nguyên điều nó
+// khẳng định (cùng tập tin, cùng thứ tự, cùng ngưỡng). Phần tử gốc còn được so với tập khoá của tệp hợp đồng Listing.
+const thamSoMoi = (q: string) => {
+  const ra = new URLSearchParams();
+  // Nghĩa cũ của /v1/deals: `Number(min_discount) || 5` (0 đọc thành 5), limit mặc định 30, trần 100 — dịch đúng nghĩa đó.
+  for (const [k, v] of new URLSearchParams(q)) {
+    if (k === "min_discount") ra.set("minBelowMedianPct", String(Math.max(0, Math.min(50, Number(v) || 5))));
+    else if (k === "limit") ra.set("limit", String(Math.min(100, Number(v) || 30)));
+    else ra.set(k, v);
+  }
+  if (!ra.has("kind")) ra.set("kind", "sale");
+  if (!ra.has("minBelowMedianPct")) ra.set("minBelowMedianPct", "5");
+  if (!ra.has("limit")) ra.set("limit", "30");
+  return ra.toString();
+};
+const loaiNoiBo = (pt: unknown, pst: unknown) =>
+  pst === "Condominium" ? "apartment" : pst === "Unimproved Land" ? "land" : pst === "Room" ? "room"
+    : typeof pt === "string" && pt.startsWith("Commercial") ? "commercial"
+      : pt === "Residential" || pt === "Residential Lease" ? "house" : null;
+/** Phần tử Listing → tên khoá cũ của /v1/deals. `khoaMoi` giữ tập khoá gốc để so với tệp hợp đồng. */
+const veHinhCu = (d: Record<string, unknown>) => ({
+  offerId: d.listingKey, priceVnd: d.listPrice ?? d.leaseAmount, areaM2: d.livingArea, pricePerm2: d.salePricePerArea ?? d.leasePricePerArea,
+  bedrooms: d.bedroomsTotal, phuong: d.city, marketId: d.mlsAreaMajor, propertyType: loaiNoiBo(d.propertyType, d.propertySubType),
+  medianPerm2: d.comparableMedianPricePerArea, discountPct: d.belowMedianPct, confidence: d.confidence, firstSeen: d.onMarketTimestamp,
+  lastSeen: d.lastSeenTimestamp, nReposts: d.repostCount, ...(d.priceRank ? { rank: d.priceRank } : {}), khoaMoi: Object.keys(d).sort(),
+});
+const goiListings = async (route: { request: (u: string) => Response | Promise<Response> }, q: string) => {
+  const res = await route.request(`/?${thamSoMoi(q)}`);
+  const j = (await res.json()) as { data?: Record<string, unknown>[] } & Record<string, unknown>;
+  return { status: res.status, body: { ...j, data: (j.data ?? []).map(veHinhCu) } };
+};
 const KHOA_CU_APP: Record<string, string> = { offerId: "string", source: "string", priceVnd: "number", areaM2: "number", pricePerm2: "number",
   bedrooms: "object|number", phuong: "string", medianPerm2: "number|object", rulerN: "number", discountPct: "number", confidence: "string", lastSeen: "string" };
 const KHOA_CU_API: Record<string, string> = { offerId: "string", priceVnd: "number", areaM2: "number", pricePerm2: "number", bedrooms: "object|number",
@@ -205,12 +240,13 @@ test("CG9-AC-7 /v1/deals data-api: kind vắng/sale/rent_lt, số = bảng, trư
   const { c } = db.co;
   const b = await bang(c);
   const goi = async (q: string) => quaClient(c, async () => {
-    const res = await m.dealsRoute.request(`/?${q}`);
-    return { status: res.status, body: (await res.json()) as { data: Dong[]; meta: Record<string, unknown> } };
+    const r = await goiListings(m.listingsRoute, q);
+    return { status: r.status, body: r.body as unknown as { data: Dong[]; meta: Record<string, unknown> } };
   });
   const vang = await goi("limit=100&min_discount=0");
   kiemRank(vang.body.data, b, "sale", "data-api kind vắng");
   for (const r of vang.body.data) kiemKhoa(r, KHOA_CU_API, `data-api ${r.offerId}`);
+  for (const r of vang.body.data) assert.deepEqual(r.khoaMoi, [...m.LISTING_KEY_NAMES].sort(), `data-api ${r.offerId}: tập khoá lệch tệp hợp đồng Listing`);
   assert.deepEqual((await goi("kind=sale&limit=100&min_discount=0")).body.data.map((r) => r.offerId), vang.body.data.map((r) => r.offerId));
   const thue = await goi("kind=rent_lt&limit=100&min_discount=0");
   kiemRank(thue.body.data, b, "rent_lt", "data-api kind=rent_lt");
@@ -225,9 +261,9 @@ test("CG9-AC-7 /v1/deals data-api: kind vắng/sale/rent_lt, số = bảng, trư
   assert.ok(tu15.every((r) => r.discountPct >= 15), "lọc min_discount: mọi dòng từ 15%");
   assert.equal((await goi("kind=xyz")).status, 400);
   for (const k of ["khong", "rong"]) {
-    const res = (await quaClient(db[k].c, () => m.dealsRoute.request("/?limit=100&min_discount=0"))) as Response;
+    const res = await quaClient(db[k].c, () => goiListings(m.listingsRoute, "limit=100&min_discount=0"));
     assert.equal(res.status, 200, `data-api ${k}: bảng thiếu/rỗng vẫn 200`);
-    const j = (await res.json()) as { data: Dong[] };
+    const j = res.body as unknown as { data: Dong[] };
     assert.ok(j.data.length > 0, `data-api ${k}: lối lùi CG8 phải có dòng (fixtureCg8)`);
     assert.ok(j.data.every((r) => r.rank === undefined), `data-api ${k}: đọc thước CG8, không khối rank`);
   }

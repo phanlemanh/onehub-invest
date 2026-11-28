@@ -1,0 +1,179 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hồ sơ · s02-cua-api</title>
+<style>
+:root{--bg:#faf9f6;--card:#fff;--bd:#e6e4de;--ink:#1f1f1d;--mut:#6c6a64;--hint:#9a988f}
+*{box-sizing:border-box}body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);margin:0;line-height:1.5;font-size:15px}
+.wrap{max-width:920px;margin:0 auto;padding:24px 20px 64px}
+h1{font-size:20px;margin:0 0 2px}h2{font-size:15px;margin:30px 0 10px;letter-spacing:.02em}
+.sub{font-size:13px;color:var(--mut)}
+.badge{display:inline-block;font-size:12px;font-weight:600;padding:3px 11px;border-radius:999px;vertical-align:middle}
+.pass{background:#E1F5EE;color:#085041}.pend{background:#FAEEDA;color:#633806}.rej{background:#FAECE7;color:#712B13}.neutral{background:#f1efe8;color:#444441}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--mut);margin-top:6px}
+.meta b{color:var(--ink);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:8px 9px;border-bottom:1px solid var(--bd)}th{color:var(--mut);font-weight:600;font-size:12px}
+td a{color:#185FA5;text-decoration:none}.mono{font-family:ui-monospace,Menlo,monospace;font-size:12px}
+.eval{scroll-margin-top:14px}.eval h3{font-size:14px;margin:0 0 4px}.eval .crit{font-size:13px;color:var(--mut);margin:0 0 8px}
+pre.out{background:#1f1f1d;color:#e8e6df;border-radius:8px;padding:11px 13px;overflow:auto;max-height:280px;font-size:12px;margin:8px 0}
+.kv{font-size:12px;color:var(--mut);display:flex;flex-wrap:wrap;gap:4px 16px;margin:6px 0}.kv b{color:var(--ink)}
+.shot img{display:block;max-width:100%;border:1px solid var(--bd);border-radius:8px}
+.slide{position:relative}.slide .frame{position:absolute;inset:0;opacity:0;transition:opacity .35s}.slide .frame:first-child{position:relative}.slide .frame.on{opacity:1}
+.slidebar{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--mut);margin-top:6px}
+.btn{font-size:12px;padding:4px 11px;border:1px solid var(--bd);border-radius:7px;background:#fff;cursor:pointer}
+.ov{background:#FAEEDA;color:#633806;border-radius:7px;padding:6px 10px;font-size:12px;display:inline-block}
+.ovok{background:#E1F5EE;color:#085041}
+.note{font-size:13px;color:var(--mut)}.flag{font-size:13px;border-radius:8px;padding:8px 11px;margin:6px 0}
+.fred{background:#FAECE7;color:#712B13}.fok{background:#E1F5EE;color:#085041}
+.foot{margin-top:30px;padding-top:14px;border-top:1px solid var(--bd);font-size:12px;color:var(--hint)}
+ul.ck{list-style:none;padding:0;margin:0}ul.ck li{padding:5px 0;font-size:14px}ul.ck input{margin-right:8px}
+.tl{border-left:2px solid var(--bd);padding-left:14px;margin:0}.tl li{font-size:13px;margin:0 0 6px;list-style:none}
+.dai{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0 8px}
+.o{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:8px 11px;min-width:0}
+.o .hoi{font-size:11px;color:var(--mut);text-transform:none;letter-spacing:.02em}
+.o .tra{font-size:13px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.vang{color:var(--hint);font-style:italic}
+.chu-kho{font-size:12px;color:var(--mut);display:flex;flex-wrap:wrap;gap:4px 14px;margin:0 0 10px}.chu-kho b{color:var(--ink)}
+details.muc{background:var(--card);border:1px solid var(--bd);border-radius:12px;margin:0 0 10px;padding:0 14px}
+details.muc>summary{cursor:pointer;font-weight:600;font-size:14px;padding:11px 0}
+details.muc[open]>summary{border-bottom:1px solid var(--bd);margin-bottom:10px}
+details.muc .noi{padding:0 0 12px;font-size:13px}
+.loc{display:flex;gap:6px;margin:0 0 8px}.loc .btn[aria-pressed="true"]{background:#1f1f1d;color:#fff}
+.tl li[hidden]{display:none}
+@media (max-width:720px){.dai{grid-template-columns:1fr}}
+</style></head><body><div class="wrap">
+<h1>&quot;S02 lấy token đi cửa API: đọc phiên từ profile riêng của bộ thu trên đĩa, đổi token bằng hai lời xác thực của ứng dụng, KHÔNG mở trình duyệt khi thu; bị chặn thì dừng cả lượt; lệnh login mở đúng profile cho Mạnh tự đăng nhập (ZC22)&quot;</h1><div class="sub">Trang hồ sơ · <span class="mono">s02-cua-api</span> · tier T3</div>
+<section class="dai" aria-label="Hồ sơ trong một phút"><div class="o" data-o="da_giao" data-nguon="contract.md"><div class="hoi">Đã giao gì</div><div class="tra">S02 lấy token đi cửa API: đọc phiên từ profile riêng của bộ thu trên đĩa, đổi token bằng hai lời xác thực của ứng dụng, KHÔNG mở trình duyệt khi thu; bị chặn thì dừng cả lượt; lệnh login mở đúng profile cho Mạnh tự đăng nhập (ZC22)</div></div><div class="o" data-o="vi_sao" data-nguon="contract.md"><div class="hoi">Vì sao</div><div class="tra">Hàng ZC22 (dãy ZT), GS giao 27/11. Thu S02 hỏng từ 29/10: lúc 401, rồi từ 24/11 mỗi đêm dừng ở «appToken ĐÃ HẾT HẠN» (lượt 19:05 ngày 26/11 vẫn vậy). Nguyên nhân ZCode đo 24–26/11: token 15 phút chỉ được cấp lại khi trình duyệt nạp được ứng dụng, mà route dữ liệu trả trang thử thách cho trình duyệt tự động. Mạnh: «Tiến hành S02 như mọi người» (phán «ngoài cổng» cũ đã rút 27/11, CHUNG.md điểm 9).</div></div><div class="o" data-o="trang_thai" data-nguon="contract.md"><div class="hoi">Trạng thái</div><div class="tra">Đang làm</div></div><div class="o" data-o="ngay" data-nguon="contract.md"><div class="hoi">Ngày</div><div class="tra">2026-11-27</div></div><div class="o" data-o="production" data-nguon="decisions.jsonl"><div class="hoi">Đã lên production chưa</div><div class="tra">chưa ghi quan sát production</div></div><div class="o" data-o="do_gi" data-nguon="opportunity.md"><div class="hoi">Sẽ đo gì, khi nào</div><div class="tra"><span class="vang">chưa có — opportunity.md</span></div></div><div class="o" data-o="ket_qua" data-nguon="uat-session.md"><div class="hoi">Kết quả</div><div class="tra">chưa đo</div></div><div class="o" data-o="chua_lam" data-nguon="contract.md"><div class="hoi">Chưa làm gì</div><div class="tra">8 mục để ngoài phạm vi · 0 giới hạn đã biết</div></div><div class="o" data-o="ai_quyet" data-nguon="contract.md"><div class="hoi">Ai quyết</div><div class="tra">Cổng Phạm vi: Mạnh · Cổng Bằng chứng: chưa ký</div></div></section>
+<div class="chu-kho" data-chu-kho><span data-k="tieu_chi">Tiêu chí <b>13</b></span><span data-k="phep_do">Phép đo <b>18</b></span><span data-k="luot_cham">Lượt chấm <b><span class="vang">chưa có — usage-report.md</span></b></span><span data-k="token">Token <b><span class="vang">chưa có — usage-report.md</span></b></span><span data-k="quyet_dinh_may">Quyết định máy <b>7</b></span><span data-k="quyet_dinh_nguoi">người <b>4</b></span><span data-k="ma">Mã <b>8a7f9f5</b></span></div>
+<details class="muc" id="vi-sao"><summary>Vì sao làm</summary><div class="noi"><p>Hàng ZC22 (dãy ZT), GS giao 27/11. Thu S02 hỏng từ 29/10: lúc 401, rồi từ 24/11 mỗi đêm dừng ở «appToken ĐÃ HẾT HẠN» (lượt 19:05 ngày 26/11 vẫn vậy). Nguyên nhân ZCode đo 24–26/11: token 15 phút chỉ được cấp lại khi trình duyệt nạp được ứng dụng, mà route dữ liệu trả trang thử thách cho trình duyệt tự động. Mạnh: «Tiến hành S02 như mọi người» (phán «ngoài cổng» cũ đã rút 27/11, CHUNG.md điểm 9).</p></div></details>
+<details class="muc" id="da-hua"><summary>Đã hứa</summary><div class="noi"><ol class="hua"><li data-ac="AC-1"><b>AC-1</b> — Given hai tệp bộ thu S02 — tệp xuất `docExpAppToken` và tệp xuất `docPhienTuProfile`, When soi tĩnh, Then không tệp nào</li><li data-ac="AC-2"><b>AC-2</b> — Given kho localStorage dựng bằng số trong thư mục tạm, When gọi `docPhienTuProfile(thư_mục, khoá)`, Then (a) bản ghi trong</li><li data-ac="AC-3"><b>AC-3</b> — Given `doiToken(refresh_token, cửa)` với fetch giả và bộ đếm `take()`, When gọi, Then gửi đúng hai lời theo thứ tự:</li><li data-ac="AC-4"><b>AC-4</b> — Given trình lấy token với bước đọc giả và bước đổi giả, When (a) bước đọc trả `null` · (b) bản ghi thiếu refresh token ·</li><li data-ac="AC-5"><b>AC-5</b> — Given `call()` với token còn 5 giây và bước làm mới cho token còn 10 phút, When gọi, Then làm mới đúng MỘT lần trước lời</li><li data-ac="AC-6"><b>AC-6</b> — Given `call()` với fetch giả trả 403 JSON, 429, hoặc 403 HTML kèm `cf-mitigated: challenge`, When gọi, Then ném</li><li data-ac="AC-7"><b>AC-7</b> — Given thông điệp `LoiXacThuc` khi lời đầu trả 401, Then không chứa refresh token — chỉ tên bước và mã trạng thái. Given</li><li data-ac="AC-8"><b>AC-8</b> — `requestsPerSecond` của bộ thu S02 ≤ 0,2 (≥ 5 giây giữa hai lời, chưa kể jitter); bản đột biến 0,3 bị bắt. Given một lượt</li><li data-ac="AC-9"><b>AC-9</b> — Given CLI `login --source &lt;bộ thu S02&gt;` với Chrome giả và profile thư mục tạm, Then thoát 0, in hướng dẫn có «profile bộ</li><li data-ac="AC-10"><b>AC-10</b> — Given nhánh so với `origin/main`, When so tệp đổi, Then chỉ gồm hai tệp bộ thu S02, `collector/src/cli.ts`,</li><li data-ac="AC-11"><b>AC-11</b> — Given mô-đun phiên (xuất `docPhienTuProfile`) và tệp bộ thu (xuất `docExpAppToken`), When soát tĩnh, Then mô-đun phiên</li><li data-ac="AC-12"><b>AC-12</b> — Given ba tệp `collector/src/test/s02-*.test.ts`, When soát tĩnh, Then không tệp nào gọi lượt thu (`.collect(`), dùng</li><li data-ac="AC-13"><b>AC-13</b> — Given một lượt `collect()` hai thị trường trên profile tạm dựng bằng số và fetch giả, When lời dữ liệu đầu tiên trả 429,</li></ol></div></details>
+<details class="muc" id="thiet-ke"><summary>Thiết kế</summary><div class="noi"><p class="mono" data-design-doc>_acceptance/s02-cua-api/design.md</p></div></details>
+<details class="muc" id="quyet-dinh"><summary>Quyết định</summary><div class="noi"><div class="loc" role="group" aria-label="Lọc quyết định"><button class="btn" data-loc="tat-ca" aria-pressed="true">Tất cả 11</button><button class="btn" data-loc="may" aria-pressed="false">Máy 7</button><button class="btn" data-loc="nguoi" aria-pressed="false">Người 4</button></div><ol class="tl" data-dong-thoi-gian><li data-loai="may" data-id="d-20261127T020228Z-1"><b>2026-11-27</b> · Máy · approach · S1 — Giữ nguyên cách đi cửa API của ZCode (đọc phiên trên đĩa, đổi token bằng hai lời của ứng dụng, không mở trình duyệt khi thu); mã gộp nguyên, 17 tệp khớp byte với @2f0748d06<div class="note">Mạnh «Tiến hành S02 như mọi người», LL đã soát cổng và soat-m5 xanh trừ QV-AC-5; ZT chỉ dựng hồ sơ, không sửa logic thu của làn ZCode</div></li><li data-loai="may" data-id="d-20261127T020228Z-2"><b>2026-11-27</b> · Máy · approach · S1 — Xếp hạng T3: Mạnh duyệt Cổng Phạm vi, Cổng 1.5 và Cổng Bằng chứng<div class="note">Hàng chạm phiên đăng nhập của bộ thu (lời giao GS 27/11)</div></li><li data-loai="may" data-id="d-20261127T020228Z-3"><b>2026-11-27</b> · Máy · approach · S1 — Giữ ba phép đo đột biến của ZCode làm E1–E13 và thêm phép soát khong-lo-phien.sh (AC-11 giá trị phiên không rời bộ nhớ, AC-12 bộ test không chạm profile thật)<div class="note">Hồ sơ zcode chưa có chốt cho lối ra giá trị phiên ngoài một ca thông điệp 401, và chưa có chốt bộ test không đụng profile thật khi chạy trên máy thu (bài học KEV1 24/11)</div></li><li data-loai="may" data-id="d-20261127T020228Z-4"><b>2026-11-27</b> · Máy · descope · S1 — KHÔNG chạy bộ thu với phiên thật và KHÔNG đọc profile thật trong vòng này; bằng chứng chạy thật là ba lượt ZCode 26/11 và lượt 19:05 sau triển khai<div class="note">Giới hạn phía Claude: không đọc phiên, khoá, profile thu (tầng A)</div></li><li data-loai="may" data-id="d-20261127T020228Z-5"><b>2026-11-27</b> · Máy · descope · S1 — KHÔNG build collector ở checkout chính; sau gộp GIAO triển khai cho ZCode qua LL<div class="note">Triển khai runtime làn ZCode cần lời GIAO riêng; ZT không chạy gì trên checkout chính</div></li><li data-loai="may" data-id="d-20261127T020228Z-6"><b>2026-11-27</b> · Máy · descope · S1 — KHÔNG sửa trang kế map_listings ở hàng này; để hàng ZC23 chồng lên và gộp sau<div class="note">GS cắt thành hai hàng; lỗi 404 trang kế có sẵn trước hàng này</div></li><li data-loai="nguoi" data-id="d-20261127T022159Z-8"><b>2026-11-27</b> · Người (Mạnh) · approach · gate1 — Câu human-gate1 (gap-probe F3): đổi token thẳng bằng phiên trên đĩa, không qua trang thử thách — CÓ, tính là cách thu được phép, theo khuyến nghị trên thẻ; Mạnh duyệt phạm vi không ghi ý khác<div class="note">Mạnh gõ «duyệt» trên thẻ ghi rõ khuyến nghị CÓ và lối khác dừng S02</div></li><li data-loai="nguoi" data-id="d-20261127T022159Z-9"><b>2026-11-27</b> · Người · seal · gate1 — </li><li data-loai="nguoi" data-id="d-20261127T021707Z-7"><b>2026-11-27</b> · Người (Mạnh) · approach · gate1 — giữ cỡ — mã đã viết xong trong một thay đổi, tiêu chí 13 là phép đo dừng cả lượt thêm sau phản biện<div class="note">Mạnh chọn giữ một vòng 13 tiêu chí thay vì tách</div></li><li data-loai="nguoi" data-id="d-20261127T044716Z-10"><b>2026-11-27</b> · Người (Mạnh) · approach · gate1.5 — duyệt kế hoạch s02-cua-api<div class="note">Mạnh duyệt Cổng 1.5 (T3) cho kế hoạch _acceptance/s02-cua-api/plan.md @f287c3872</div></li><li data-loai="may" data-id="d-20261127T123629Z-11"><b>2026-11-27</b> · Máy · fix · S4-r1 — Phép đo đột biến chỉ dọn thư mục tạm sót quá 3 giờ thay vì xoá mọi thư mục tạm lúc khởi, và in đủ tên mọi ca đỏ sẵn của bản đối chứng; vòng 2 chấm lại trọn trên M5.<div class="note">Vòng 1 M5: bản đối chứng bo-thu có 2 ca đỏ sẵn thay vì 1 khi ba nhóm chạy song song (E3, E4, E5, E8, E9 đỏ; E9 mù cho thấy ca thêm là «lệnh login: nguồn KHÔNG có lệnh login»); chạy lại riêng xanh; trên Mac mini chạy ba nhóm song song và so le không tái hiện được — nguyên nhân chưa chứng, việc xoá thư mục của nhóm đang chạy là một hiểm hoạ có thật nên vá, và bản in tên đủ để vòng sau gọi tên ca nếu lặp lại.</div></li></ol></div></details>
+<details class="muc" id="bang-chung"><summary>Bằng chứng</summary><div class="noi">
+<div class="card" style="margin-top:12px"><span class="badge pass">PASS</span>
+<div class="meta"><span>Verified by: <b>fresh-context verification subagent</b></span><span>Human signoff: <b>CHƯA ký</b></span><span>enforcement: <b>strict</b></span></div></div>
+<h2>Các eval</h2><div class="card" style="padding:4px 8px"><table><thead><tr><th>Eval</th><th>Tiêu chí</th><th>Loại</th><th>Verdict</th><th>run_id</th><th>verified_at</th></tr></thead><tbody>
+<tr><td><a href="#E1">E1</a></td><td>AC-2</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-s02-cua-api-E1-r2</td><td class="mono">2026-11-27T12:55:41Z</td></tr>
+<tr><td><a href="#E2">E2</a></td><td>AC-3</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-s02-cua-api-E2-r2</td><td class="mono">2026-11-27T12:55:41Z</td></tr>
+<tr><td><a href="#E3">E3</a></td><td>AC-4</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-s02-cua-api-E3-r2</td><td class="mono">2026-11-27T12:55:41Z</td></tr>
+<tr><td><a href="#E4">E4</a></td><td>AC-5</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-s02-cua-api-E4-r2</td><td class="mono">2026-11-27T12:55:41Z</td></tr>
+<tr><td><a href="#E5">E5</a></td><td>AC-6</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-s02-cua-api-E5-r2</td><td class="mono">2026-11-27T12:55:41Z</td></tr>
+<tr><td><a href="#E6">E6</a></td><td>AC-7</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-s02-cua-api-E6-r2</td><td class="mono">2026-11-27T12:55:41Z</td></tr>
+<tr><td><a href="#E7">E7</a></td><td>AC-7</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-s02-cua-api-E7-r2</td><td class="mono">2026-11-27T12:55:41Z</td></tr>
+<tr><td><a href="#E8">E8</a></td><td>AC-8</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-s02-cua-api-E8-r2</td><td class="mono">2026-11-27T12:55:41Z</td></tr>
+<tr><td><a href="#E9">E9</a></td><td>AC-9</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-s02-cua-api-E9-r2</td><td class="mono">2026-11-27T12:55:41Z</td></tr>
+<tr><td><a href="#E10">E10</a></td><td>AC-1</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-s02-cua-api-E10-r2</td><td class="mono">2026-11-27T12:55:41Z</td></tr>
+<tr><td><a href="#E11">E11</a></td><td>AC-10</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-s02-cua-api-E11-r2</td><td class="mono">2026-11-27T12:55:41Z</td></tr>
+<tr><td><a href="#E12">E12</a></td><td>AC-10</td><td>test</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-s02-cua-api-E12-r2</td><td class="mono">2026-11-27T12:55:41Z</td></tr>
+<tr><td><a href="#E13">E13</a></td><td>AC-10</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-s02-cua-api-E13-r2</td><td class="mono">2026-11-27T12:55:41Z</td></tr>
+<tr><td><a href="#E14">E14</a></td><td>AC-11</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-s02-cua-api-E14-r2</td><td class="mono">2026-11-27T12:55:41Z</td></tr>
+<tr><td><a href="#E15">E15</a></td><td>AC-12</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-s02-cua-api-E15-r2</td><td class="mono">2026-11-27T12:55:41Z</td></tr>
+<tr><td><a href="#E16">E16</a></td><td>AC-13</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-s02-cua-api-E16-r2</td><td class="mono">2026-11-27T12:55:41Z</td></tr>
+<tr><td><a href="#E17">E17</a></td><td>AC-2</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-s02-cua-api-E17-r2</td><td class="mono">2026-11-27T12:55:41Z</td></tr>
+<tr><td><a href="#E18">E18</a></td><td>AC-8</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-s02-cua-api-E18-r2</td><td class="mono">2026-11-27T12:55:41Z</td></tr>
+</tbody></table></div>
+<h2>Chi tiết từng eval</h2>
+<div class="card eval" id="E1"><h3><span class="badge pass">PASS</span> &nbsp;E1 · script</h3><p class="crit">AC-2: Given kho localStorage dựng bằng số trong thư mục tạm, When gọi `docPhienTuProfile(thư_mục, khoá)`, Then (a) bản ghi trong</p>
+<div class="kv"><span>run_id <b>minted-s02-cua-api-E1-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">_acceptance/s02-cua-api/probes/chay-test-dot-bien.mjs</b></span><span>verified_at <b>2026-11-27T12:55:41Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">cmd: cd collector &amp;&amp; npx tsc -p tsconfig.json &amp;&amp; cd .. &amp;&amp; node _acceptance/s02-cua-api/probes/chay-test-dot-bien.mjs doc-phien
+XANH</pre>
+</div>
+<div class="card eval" id="E2"><h3><span class="badge pass">PASS</span> &nbsp;E2 · script</h3><p class="crit">AC-3: Given `doiToken(refresh_token, cửa)` với fetch giả và bộ đếm `take()`, When gọi, Then gửi đúng hai lời theo thứ tự:</p>
+<div class="kv"><span>run_id <b>minted-s02-cua-api-E2-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">_acceptance/s02-cua-api/probes/chay-test-dot-bien.mjs</b></span><span>verified_at <b>2026-11-27T12:55:41Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">cmd: cd collector &amp;&amp; npx tsc -p tsconfig.json &amp;&amp; cd .. &amp;&amp; node _acceptance/s02-cua-api/probes/chay-test-dot-bien.mjs tra-doi-token
+XANH</pre>
+</div>
+<div class="card eval" id="E3"><h3><span class="badge pass">PASS</span> &nbsp;E3 · script</h3><p class="crit">AC-4: Given trình lấy token với bước đọc giả và bước đổi giả, When (a) bước đọc trả `null` · (b) bản ghi thiếu refresh token ·</p>
+<div class="kv"><span>run_id <b>minted-s02-cua-api-E3-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">_acceptance/s02-cua-api/probes/chay-test-dot-bien.mjs</b></span><span>verified_at <b>2026-11-27T12:55:41Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">cmd: cd collector &amp;&amp; npx tsc -p tsconfig.json &amp;&amp; cd .. &amp;&amp; node _acceptance/s02-cua-api/probes/chay-test-dot-bien.mjs bo-thu
+XANH</pre>
+</div>
+<div class="card eval" id="E4"><h3><span class="badge pass">PASS</span> &nbsp;E4 · script</h3><p class="crit">AC-5: Given `call()` với token còn 5 giây và bước làm mới cho token còn 10 phút, When gọi, Then làm mới đúng MỘT lần trước lời</p>
+<div class="kv"><span>run_id <b>minted-s02-cua-api-E4-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">_acceptance/s02-cua-api/probes/chay-test-dot-bien.mjs</b></span><span>verified_at <b>2026-11-27T12:55:41Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">cùng lệnh E3 (bo-thu)
+XANH</pre>
+</div>
+<div class="card eval" id="E5"><h3><span class="badge pass">PASS</span> &nbsp;E5 · script</h3><p class="crit">AC-6: Given `call()` với fetch giả trả 403 JSON, 429, hoặc 403 HTML kèm `cf-mitigated: challenge`, When gọi, Then ném</p>
+<div class="kv"><span>run_id <b>minted-s02-cua-api-E5-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">_acceptance/s02-cua-api/probes/chay-test-dot-bien.mjs</b></span><span>verified_at <b>2026-11-27T12:55:41Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">cùng lệnh E3 (bo-thu)
+XANH</pre>
+</div>
+<div class="card eval" id="E6"><h3><span class="badge pass">PASS</span> &nbsp;E6 · script</h3><p class="crit">AC-7: Given thông điệp `LoiXacThuc` khi lời đầu trả 401, Then không chứa refresh token — chỉ tên bước và mã trạng thái. Given</p>
+<div class="kv"><span>run_id <b>minted-s02-cua-api-E6-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">_acceptance/s02-cua-api/probes/chay-test-dot-bien.mjs</b></span><span>verified_at <b>2026-11-27T12:55:41Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">cùng lệnh E2 (tra-doi-token)
+XANH</pre>
+</div>
+<div class="card eval" id="E7"><h3><span class="badge pass">PASS</span> &nbsp;E7 · script</h3><p class="crit">AC-7: Given thông điệp `LoiXacThuc` khi lời đầu trả 401, Then không chứa refresh token — chỉ tên bước và mã trạng thái. Given</p>
+<div class="kv"><span>run_id <b>minted-s02-cua-api-E7-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">_acceptance/s02-cua-api/probes/khong-trinh-duyet.sh</b></span><span>verified_at <b>2026-11-27T12:55:41Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">cmd: bash _acceptance/s02-cua-api/probes/khong-trinh-duyet.sh
+XANH</pre>
+</div>
+<div class="card eval" id="E8"><h3><span class="badge pass">PASS</span> &nbsp;E8 · script</h3><p class="crit">AC-8: `requestsPerSecond` của bộ thu S02 ≤ 0,2 (≥ 5 giây giữa hai lời, chưa kể jitter); bản đột biến 0,3 bị bắt. Given một lượt</p>
+<div class="kv"><span>run_id <b>minted-s02-cua-api-E8-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">_acceptance/s02-cua-api/probes/chay-test-dot-bien.mjs</b></span><span>verified_at <b>2026-11-27T12:55:41Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">cùng lệnh E3 (bo-thu)
+XANH</pre>
+</div>
+<div class="card eval" id="E9"><h3><span class="badge pass">PASS</span> &nbsp;E9 · script</h3><p class="crit">AC-9: Given CLI `login --source &lt;bộ thu S02&gt;` với Chrome giả và profile thư mục tạm, Then thoát 0, in hướng dẫn có «profile bộ</p>
+<div class="kv"><span>run_id <b>minted-s02-cua-api-E9-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">_acceptance/s02-cua-api/probes/chay-test-dot-bien.mjs</b></span><span>verified_at <b>2026-11-27T12:55:41Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">cùng lệnh E3 (bo-thu)
+XANH</pre>
+</div>
+<div class="card eval" id="E10"><h3><span class="badge pass">PASS</span> &nbsp;E10 · script</h3><p class="crit">AC-1: Given hai tệp bộ thu S02 — tệp xuất `docExpAppToken` và tệp xuất `docPhienTuProfile`, When soi tĩnh, Then không tệp nào</p>
+<div class="kv"><span>run_id <b>minted-s02-cua-api-E10-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">_acceptance/s02-cua-api/probes/khong-trinh-duyet.sh</b></span><span>verified_at <b>2026-11-27T12:55:41Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">cùng lệnh E7
+XANH</pre>
+</div>
+<div class="card eval" id="E11"><h3><span class="badge pass">PASS</span> &nbsp;E11 · script</h3><p class="crit">AC-10: Given nhánh so với `origin/main`, When so tệp đổi, Then chỉ gồm hai tệp bộ thu S02, `collector/src/cli.ts`,</p>
+<div class="kv"><span>run_id <b>minted-s02-cua-api-E11-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">_acceptance/s02-cua-api/probes/vung.sh</b></span><span>verified_at <b>2026-11-27T12:55:41Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">cmd: bash _acceptance/s02-cua-api/probes/vung.sh
+XANH: mọi tệp đổi nằm trong vùng</pre>
+</div>
+<div class="card eval" id="E12"><h3><span class="badge pass">PASS</span> &nbsp;E12 · test</h3><p class="crit">AC-10: Given nhánh so với `origin/main`, When so tệp đổi, Then chỉ gồm hai tệp bộ thu S02, `collector/src/cli.ts`,</p>
+<div class="kv"><span>run_id <b>minted-s02-cua-api-E12-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.test.collector</b></span><span>verified_at <b>2026-11-27T12:55:41Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">cmd: cd collector &amp;&amp; npm test
+ℹ duration_ms 75287.018208</pre>
+</div>
+<div class="card eval" id="E13"><h3><span class="badge pass">PASS</span> &nbsp;E13 · script</h3><p class="crit">AC-10: Given nhánh so với `origin/main`, When so tệp đổi, Then chỉ gồm hai tệp bộ thu S02, `collector/src/cli.ts`,</p>
+<div class="kv"><span>run_id <b>minted-s02-cua-api-E13-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.cli</b></span><span>verified_at <b>2026-11-27T12:55:41Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">cmd: cd collector &amp;&amp; npm run build &amp;&amp; npm run collect -- list-sources
+s08-danh-muc     S08 inventory_unit quỹ căn OCP1-3 (REST+Bearer token local, chỉ đọc, 1 lần/tuần)</pre>
+</div>
+<div class="card eval" id="E14"><h3><span class="badge pass">PASS</span> &nbsp;E14 · script</h3><p class="crit">AC-11: Given mô-đun phiên (xuất `docPhienTuProfile`) và tệp bộ thu (xuất `docExpAppToken`), When soát tĩnh, Then mô-đun phiên</p>
+<div class="kv"><span>run_id <b>minted-s02-cua-api-E14-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">_acceptance/s02-cua-api/probes/khong-lo-phien.sh</b></span><span>verified_at <b>2026-11-27T12:55:41Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">cmd: bash _acceptance/s02-cua-api/probes/khong-lo-phien.sh
+XANH</pre>
+</div>
+<div class="card eval" id="E15"><h3><span class="badge pass">PASS</span> &nbsp;E15 · script</h3><p class="crit">AC-12: Given ba tệp `collector/src/test/s02-*.test.ts`, When soát tĩnh, Then không tệp nào gọi lượt thu (`.collect(`), dùng</p>
+<div class="kv"><span>run_id <b>minted-s02-cua-api-E15-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">_acceptance/s02-cua-api/probes/khong-lo-phien.sh</b></span><span>verified_at <b>2026-11-27T12:55:41Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">cùng lệnh E14
+XANH</pre>
+</div>
+<div class="card eval" id="E16"><h3><span class="badge pass">PASS</span> &nbsp;E16 · script</h3><p class="crit">AC-13: Given một lượt `collect()` hai thị trường trên profile tạm dựng bằng số và fetch giả, When lời dữ liệu đầu tiên trả 429,</p>
+<div class="kv"><span>run_id <b>minted-s02-cua-api-E16-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">_acceptance/s02-cua-api/probes/dung-ca-luot.mjs</b></span><span>verified_at <b>2026-11-27T12:55:41Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">cmd: cd collector &amp;&amp; npx tsc -p tsconfig.json &amp;&amp; cd .. &amp;&amp; node _acceptance/s02-cua-api/probes/dung-ca-luot.mjs
+XANH</pre>
+</div>
+<div class="card eval" id="E17"><h3><span class="badge pass">PASS</span> &nbsp;E17 · script</h3><p class="crit">AC-2: Given kho localStorage dựng bằng số trong thư mục tạm, When gọi `docPhienTuProfile(thư_mục, khoá)`, Then (a) bản ghi trong</p>
+<div class="kv"><span>run_id <b>minted-s02-cua-api-E17-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">_acceptance/s02-cua-api/probes/dung-ca-luot.mjs</b></span><span>verified_at <b>2026-11-27T12:55:41Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">cùng lệnh E16
+XANH</pre>
+</div>
+<div class="card eval" id="E18"><h3><span class="badge pass">PASS</span> &nbsp;E18 · script</h3><p class="crit">AC-8: `requestsPerSecond` của bộ thu S02 ≤ 0,2 (≥ 5 giây giữa hai lời, chưa kể jitter); bản đột biến 0,3 bị bắt. Given một lượt</p>
+<div class="kv"><span>run_id <b>minted-s02-cua-api-E18-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">_acceptance/s02-cua-api/probes/dung-ca-luot.mjs</b></span><span>verified_at <b>2026-11-27T12:55:41Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">cùng lệnh E16
+XANH</pre>
+</div>
+<h2>Eval không phân biệt (Analyst)</h2><div class="flag fred">carried từ round 1 — baseline khong do lai round nay
+Không có eval không-phân-biệt được liệt kê (evals.yaml không đổi từ lần baseline cuối, round 1). Lệnh suite xanh cả hai phía là regression-guard thông thường.</div>
+<h2>Vòng verify</h2><ul class="tl"><li>Round 1: baseline đã đo ở round này (xem lịch sử run-log).</li><li>Round 2: toàn bộ 18 eval và 8 lệnh suite đạt, không eval thất bại; baseline không đo lại.</li></ul>
+</div></details>
+<details class="muc" id="tai-nguyen"><summary>Tài nguyên</summary><div class="noi"><span class="vang">chưa có — usage-report.md</span></div></details>
+<details class="muc" id="gioi-han"><summary>Giới hạn và ngoài hợp đồng</summary><div class="noi"><ul data-gioi-han><li data-loai="ngoai">Chạy bộ thu với phiên thật, đọc profile thật — ngoài phạm vi vòng code, vì là giới hạn phía Claude (Notes); bằng chứng chạy thật là ba lượt ZCode ghi ngày 26/11 và lượt 19:05 sau triển khai.</li><li data-loai="ngoai">Build `collector/dist` ở checkout chính và lượt 19:05 chạy mã mới — ngoài phạm vi, vì là bước triển khai sau gộp: GIAO cho ZCode qua LL; ZT không build hay chạy trên checkout chính.</li><li data-loai="ngoai">Trang kế của `map_listings` (hậu tố `@offset` bị nguồn trả 404) — ngoài phạm vi, vì là hàng ZC23 `s02-map-listings-trang-ke`, chồng trên nhánh này và gộp SAU.</li><li data-loai="ngoai">Tên tệp mô-đun và dòng tên miền mang tên nguồn thật — ngoài phạm vi, vì cùng họ tệp sẵn có trên main; gom vào việc dọn tên nguồn (mục ghi cho Cổng ở Notes).</li><li data-loai="ngoai">Hạn của refresh token — ngoài phạm vi, vì chưa đo được (cùng giá trị 24–26/11); hết thì lượt dừng với một dòng AUTH FAIL và Mạnh chạy `login`.</li><li data-loai="ngoai">Bộ báo người khi đọc thấy `AUTH FAIL [S02]` / `BỊ CHẶN [S02]` trong log lượt đêm — ngoài phạm vi, vì là việc riêng của thước độ tươi; hàng này chỉ giữ khuôn dòng.</li><li data-loai="ngoai">Sửa bẫy kỹ thuật số 2 của `AGENTS.md` gốc («chỉ headful Chrome») — ngoài phạm vi, vì tài liệu gốc sửa ở đợt tài liệu của làn Claude sau khi lượt thật xanh.</li><li data-loai="ngoai">Dữ liệu S02 lên cloud hay cổng — ngoài phạm vi, vì luật 5 không đổi.</li></ul></div></details>
+<details class="muc" id="giao"><summary>Giao</summary><div class="noi"><div class="kv" data-giao><span>Mã đã chấm <b class="mono">8a7f9f59a690112898a5cfa1b1f4e63adfca95d3</b></span><span>Ngày ký <b>—</b></span><span>Cổng Phạm vi: Mạnh · Cổng Bằng chứng: chưa ký</span><span data-pr>chưa gộp</span></div><p class="note">chưa ghi quan sát production</p></div></details>
+<details class="muc" id="gia-tri"><summary>Giá trị</summary><div class="noi"><span class="vang">chưa có — opportunity.md</span></div></details>
+<div class="foot">Trang trình bày · KHÔNG quyết — <span class="mono">evidence-report.md</span> + hook là nguồn-sự-thật. Sinh từ run đã verify; ảnh/output gắn run_id.</div>
+<script>
+document.querySelectorAll('[data-loc]').forEach(function(b){b.addEventListener('click',function(){var v=b.getAttribute('data-loc');document.querySelectorAll('[data-loc]').forEach(function(x){x.setAttribute('aria-pressed',String(x===b));});document.querySelectorAll('[data-dong-thoi-gian] li').forEach(function(li){li.hidden=!(v==='tat-ca'||li.getAttribute('data-loai')===v);});});});
+document.querySelectorAll('.slide').forEach(function(s){var fr=s.querySelectorAll('.frame');if(fr.length<2)return;var i=0;fr[0].classList.add('on');var adv=function(){fr[i].classList.remove('on');i=(i+1)%fr.length;fr[i].classList.add('on');};s._t=setInterval(adv,1600);var bar=s.nextElementSibling,b=bar?bar.querySelector('[data-toggle]'):null;if(b)b.addEventListener('click',function(){if(s._t){clearInterval(s._t);s._t=null;b.textContent='▶ Chạy';}else{s._t=setInterval(adv,1600);b.textContent='⏸ Tạm dừng';}});});
+</script>
+</div></body></html>

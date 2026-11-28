@@ -1,0 +1,10 @@
+PB7 S4 vòng 3 trên M5 ＠beb516eeb30320126c2d0f4c5f26356b78560649 — pipeline_that chạy NGOÀI vòng (HT37; nhánh đổi pipeline/lib/vocab-core.mjs nên suite chạy). Chạy lại, không tái dùng r2.
+Lệnh: node scripts/suite-neu-doi.mjs pipeline_that -- 'cd pipeline && npm run test:that'
+chay-that: vai may-phat-trien — bỏ qua 1 ca chỉ máy thu
+ℹ tests 37
+ℹ pass 37
+ℹ fail 0
+ℹ skipped 0
+__EXIT=0
+→ ĐẠT theo luật GS 26/11. Chấm trên M5: ON22-AC-10 không chạy (HT33).
+Không soát lại năm job: git diff --stat 6f9e338ed beb516eeb chỉ đổi 6 tệp trong _acceptance/data-api-tin-hien-thi/ (soát 6f9e338ed-20261128T073216 chỉ đỏ QV-AC-5).

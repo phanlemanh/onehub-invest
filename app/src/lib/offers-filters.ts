@@ -1,12 +1,12 @@
-import { KIND, PROPERTY_TYPE } from "./vocab.generated";
+import { KIND, PROPERTY_TYPE, SOURCE_HIDDEN } from "./vocab.generated";
 
 /**
  * Tin rao trên cổng Invest — phần thuần (không "use client", không chạm DB): hằng số, kiểu, đọc bộ lọc từ query string.
  * Component client và trang server đều import được; truy vấn nằm ở `offers-public.ts`.
  */
 
-/** Nguồn không bao giờ hiển thị (AGENTS.md luật 5). */
-export const OFFER_HIDDEN_SOURCES = ["S02", "S08"] as const;
+/** Nguồn không bao giờ hiển thị (AGENTS.md luật 5, 6) — một nguồn: `nguon_khong_hien_thi` của pipeline/mappings.yaml (PB7). */
+export const OFFER_HIDDEN_SOURCES = SOURCE_HIDDEN;
 /** Nguồn tin nhóm chưa đối chiếu với nguồn khác: thẻ hiện nhãn «Chưa xác minh» (s03-len-cong). */
 export const OFFER_UNVERIFIED_SOURCE = "S03";
 /** Trần hiển thị: đo 02/11 có 8 tin trên 30 tầng và 3 tin mặt tiền trên 100 m, nghi bóc sai nên thẻ không hiện. */

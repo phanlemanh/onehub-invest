@@ -1,0 +1,79 @@
+PL36 tổng duyệt probe trên M5 ＠94714a8a8c00e718d4241bb1ad58f3b3f9552f2e — không phải vòng chấm. 10/11 bước xanh.
+Log từng bước: .acceptance-runs/ghep-tin-vao-truc-can/tong-duyet-20261127T024713Z/ (ngoài git, trên M5).
+
+0) git status --short trước: 0 dòng.
+1) ham-gan.sh — ĐỎ, thoát 1 (19s). Ma trận 28/28 xanh; 4 đột biến đỏ đúng ca (bo-so-tien-to-toa→toa-lech, tra-truc-moi-toa→truc-cung-so-toa-khac-khong-chon,
+   lay-tang-ma-khi-lech→tang-lech, giu-so-0-tang→tang-09-khop-9). Ca floor_raw đỏ ngay tiền đề: «bản chép cần ít nhất một bài có tầng suy từ mã»;
+   đột biến rut-ca-floor-raw vì thế không chạy. Không phải PROBE HONG mà là tiền đề dữ liệu không đạt trên bản chép M5 (máy thu 26/11 05:45Z):
+   đo riêng bằng docDauVao + tinhGan trên DB lượt (131 nạp như before() của itest): 40 205 bài xét, tang_tu_ma = 0; 853 bài mức căn đều lấy tầng
+   từ mã NHƯNG chữ bài cũng có tầng; 9 509 bài có mã mà không có tầng ở chữ đều ra mức trục không tầng (mã dạng trục). Ca phụ thuộc dữ liệu bản
+   chép có ít nhất một bài «mã có tầng, chữ không có tầng» — bản chép này không có. Đề xuất: ca tự dựng một bài như thế trên DB lượt.
+2) chay-lai.sh — XANH, thoát 0 (432s): «XANH: vòng đời và hai đột biến»; bo-chua-ghep-can→cau-rut-thay-boi-luot-chua-dong-ghep-can,
+   bo-khi-khong-dong→tat-het-nguon-buoc-gan-van-rut-het-dong-cu.
+3) E8 song song pipeline_a — XANH (722s): cuoi-luot-nap.sh thoát 0 («XANH: bước cuối lượt nạp và hai đột biến»; nem-loi-ra-ngoai,
+   dao-thu-tu-hai-buoc), npm run test:a thoát 0 (tests 424, pass 407, fail 0, skipped 17). git status mỗi 20s: tệp theo dõi rỗng (0 lần có tệp lạ)
+   — chỗ đỏ của vòng 2 (TRG-AC-7 thấy transform-zalo.loi-pl36-<pid>.mjs) đã hết.
+4) migration.sh — XANH, thoát 0: «XANH: khuôn phát biểu và một đột biến» (bo-luat-khuon-sub-id→tu-choi-sai-khuon).
+5) offer-unit.sh — XANH, thoát 0: «XANH: offer_unit và hai đột biến» (hai-truc-khong-xung-dot→ô «hai-truc», khong-ra-can→ô «truc-va-can-cung-truc»).
+6) offer-building-nhanh.sh — XANH, thoát 0: doi-mot-dong-dau-ra→«offer_building sau 131 khác 117 ở offer_id …» (probe ghim phần trước danh sách id),
+   bo-materialized→«kế hoạch thiếu bước «CTE toa_vung»».
+7) ke-hoach-toa-vung.sh oneinvest — XANH, thoát 0, chỉ đọc: «that: có bước «CTE toa_vung»» · «dot_bien: KHÔNG có bước «CTE toa_vung»».
+8) cham-truc.sh — XANH, thoát 0: 5/5 ca lệnh chấm; OP1 100 bài, 100 nhãn, 100 đúng, cận dưới Wilson 0.963 ≥ 0.95; 0 bài sai; 10 thẻ cài lỗi loại.
+   evidence/cham-truc.md không đổi (số trùng bản đã commit).
+9) chay-kho.sh — XANH, thoát 0: «XANH: OP1 tin mức trục + căn 488 ≥ 350».
+10) git status --short sau: 0 dòng.
+11) E10 hội đồng ba lăng kính (đầu vào: evidence/cham-truc.md, contract.md, decisions.jsonl) — PASS cả ba:
+- domain-correctness: PASS — Bảng bài sai trong tệp chấm có 0 dòng, nên không có bài sai nào để xếp kiểu và không có kiểu lỗi nào (không lỗi luật sửa được, không lỗi nhãn người hay danh bạ); đúng câu AC-10 «0 bài sai là kết quả hợp lệ». Cận dưới Wilson 0,963 ≥ 0,95 khớp 100/100. Tệp không có cột riêng «số máy gắn», chỉ suy ra được — không đổi phán xét.
+- operational-feasibility: PASS — OP1 100/100 đúng, Wilson 0,963 > 0,95; bảng bài sai đủ bốn cột, 0 dòng nên không có kiểu lỗi nào. AC-10 chấp nhận 0 bài sai (d-20261126T235903Z-25); rủi ro tập chấm thiếu bài khó đã được ghi ở cost_if_wrong, hợp đồng chấp nhận.
+- spec-alignment: PASS — 100 bài, 100 nhãn, 100 đúng, Wilson 0,963, 10 thẻ cài lỗi loại, GP chỉ báo số; bảng bài sai rỗng nhưng đủ bốn cột (thêm «Toà nhãn người»); theo câu AC-10 mới, không có kiểu lỗi nào. Không có cột riêng số bài máy gắn nhưng 0,963 khớp đúng Wilson của 100/100.
+
+== Nguyên văn bước 1 ==
+== Ma trận trên mã thật
+ℹ tests 28
+ℹ pass 28
+ℹ fail 0
+== Đột biến
+đột biến «bo-so-tien-to-toa» → ca «ô «toa-lech»» đỏ
+đột biến «tra-truc-moi-toa» → ca «ô «truc-cung-so-toa-khac-khong-chon»» đỏ
+đột biến «lay-tang-ma-khi-lech» → ca «ô «tang-lech»» đỏ
+đột biến «giu-so-0-tang» → ca «ô «tang-09-khop-9»» đỏ
+== floor_raw bộ đọc chữ trên DB thử
+✔ luot-dau-chen-va-moi-bai-mot-dong-moi-truong (6560.2495ms)
+✖ floor-raw-cua-bo-doc-chu-khong-bi-rut-hay-de (4.1705ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 1
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6658.46275
+
+✖ failing tests:
+
+test at tests/ghep-tin-truc-can-ghi.itest.mjs:48:27
+✖ floor-raw-cua-bo-doc-chu-khong-bi-rut-hay-de (4.1705ms)
+  AssertionError [ERR_ASSERTION]: bản chép cần ít nhất một bài có tầng suy từ mã
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+ĐỎ: floor_raw bộ đọc chữ không xanh trên mã thật
+
+== Tóm tắt máy ==
+sha 94714a8a8c00e718d4241bb1ad58f3b3f9552f2e
+buoc 0 status-truoc dong=0
+buoc 1 ham-gan exit=1 19s
+buoc 2 chay-lai exit=0 432s
+buoc 3 e8-song-song cuoi-luot-nap exit=0 pipeline_a exit=0 git-status-dong=0 722s
+buoc 4 migration exit=0 24s
+buoc 5 offer-unit exit=0 70s
+buoc 6 offer-building-nhanh exit=0 41s
+buoc 7 ke-hoach-toa-vung exit=0 0s
+buoc 8 cham-truc exit=0 0s
+buoc 9 chay-kho exit=0 12s
+buoc 10 status-sau: 
+XONG .acceptance-runs/ghep-tin-vao-truc-can/tong-duyet-20261127T024713Z

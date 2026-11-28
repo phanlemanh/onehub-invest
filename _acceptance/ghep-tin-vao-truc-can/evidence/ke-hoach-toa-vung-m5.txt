@@ -1,0 +1,23 @@
+# PL36 E7 probe kế hoạch toa_vung trên M5 ＠683e9b37399518dc0ba4f3a2a5589fb9d6fcf678 — 2026-11-26T21:54:40Z
+## $ bash db/db-thu.sh oneinvest_suite_pl36_kh --chay bash _acceptance/ghep-tin-vao-truc-can/probes/ke-hoach-toa-vung.sh oneinvest_suite_pl36_kh
+psql: error: connection to server at "localhost" (::1), port 5432 failed: FATAL:  database "oneinvest_suite_pl36_kh" does not exist
+→ mã thoát 1
+
+## $ bash db/db-thu.sh oneinvest_suite_pl36_kh --chay bash _acceptance/ghep-tin-vao-truc-can/probes/ke-hoach-toa-vung.sh oneinvest_suite_pl36_kh --thoi-gian
+psql: error: connection to server at "localhost" (::1), port 5432 failed: FATAL:  database "oneinvest_suite_pl36_kh" does not exist
+→ mã thoát 1
+# xong 2026-11-26T21:54:57Z
+
+## CHẨN ĐOÁN thêm của phiên chấm (ngoài lệnh giao, không sửa tệp): tên DB lấy từ DATABASE_URL của db-thu --chay
+## $ bash db/db-thu.sh oneinvest_suite_pl36_kh --chay bash -c 'bash _acceptance/ghep-tin-vao-truc-can/probes/ke-hoach-toa-vung.sh "${DATABASE_URL##*/}" --thoi-gian'
+that: có bước «CTE toa_vung» · Time: 505.744 ms
+dot_bien: KHÔNG có bước «CTE toa_vung» · Time: 403.081 ms
+→ mã thoát 0
+# xong chẩn đoán 2026-11-26T21:55:18Z
+
+## Kết luận của phiên chấm M5
+- PROBE HONG: hai lệnh giao thoát 1 — db-thu.sh --chay dựng DB riêng của lượt có đuôi pid (oneinvest_suite_pl36_kh_<pid>) và đặt DATABASE_URL,
+  còn probe nhận tên DB trần «oneinvest_suite_pl36_kh» làm tham số nên psql không thấy DB. Không phải kết quả đo.
+- Lượt chẩn đoán (cùng probe, tên DB lấy từ DATABASE_URL, không sửa tệp): thoát 0 — «that: có bước «CTE toa_vung»» (505.744 ms),
+  «dot_bien: KHÔNG có bước «CTE toa_vung»» (403.081 ms). Đúng kỳ vọng; số giây chỉ ghi nhận.
+- DB thử là bản chép DB máy thu trên M5 (26/11 05:45Z); phiên chỉ đọc; DB thử tự xoá khi lệnh dừng.

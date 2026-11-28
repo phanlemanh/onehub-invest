@@ -22,7 +22,8 @@ const COT = ["subject_key", "field", "value", "evidence_tier", "method", "method
  * `<> ALL` đúng nghĩa NOT EXISTS vì `value` NOT NULL nên `value_key` và mọi phần tử của `vks` không NULL.
  * Chừa dòng của bước gắn toà PL20 (rule_id `ghep-toa-*`): bước ấy tự đối chiếu dòng của nó cuối lượt nạp (ghiGan), còn thẻ nhóm
  * ghi `subzone_node_id` cùng phương pháp e1_rule — không chừa thì mỗi lượt nạp rút dòng gắn ở bài thẻ và máy khác phân khu,
- * bước gắn lại chèn lại (đo S4 r1 24/11: 212 dòng mỗi lượt, E7).
+ * bước gắn lại chèn lại (đo S4 r1 24/11: 212 dòng mỗi lượt, E7). Bước gắn trục, căn PL36 (`ghep-can-*`, ghi cả `floor_raw` cùng
+ * phương pháp e1_rule) cũng tự đối chiếu dòng của nó (ghiGan của ghep-tin-truc-can-ghi), nên cũng được chừa.
  */
 export const SQL_RUT_THAY =
   `WITH k AS (SELECT s, f, m, array_agg(DISTINCT assertion_value_key(v)) AS vks
@@ -31,7 +32,7 @@ export const SQL_RUT_THAY =
      FROM k
     WHERE fa.retracted_at IS NULL AND fa.subject_key = k.s AND fa.field = k.f AND fa.method = k.m
       AND fa.value_key <> ALL (k.vks)
-      AND (fa.rule_id IS NULL OR fa.rule_id NOT LIKE 'ghep-toa-%')`;
+      AND (fa.rule_id IS NULL OR (fa.rule_id NOT LIKE 'ghep-toa-%' AND fa.rule_id NOT LIKE 'ghep-can-%'))`;
 
 /**
  * Ghi lô phát biểu bằng một câu INSERT … unnest (chạy lại không nhân dòng — chỉ mục sống của 045).
