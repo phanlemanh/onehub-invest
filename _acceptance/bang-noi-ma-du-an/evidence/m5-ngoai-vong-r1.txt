@@ -1,0 +1,9 @@
+DA3 S4 vòng 1 trên M5 ＠c9471ce26d2a96f409980c64c3fb1bfb19296bfd — pipeline_that chạy TRONG vòng dưới dạng eval E13 (long_running 90; CHUNG điểm 16, khuôn PL36 E13). Suite pipeline_that trùng lặp bỏ khỏi suiteCommands. Không chạy thêm bản ngoài vòng: hai bản cùng dùng DB lượt oneinvest_suite_pipeline_that sẽ đè nhau.
+E13: node scripts/suite-neu-doi.mjs pipeline_that -- 'cd pipeline && npm run test:that' → exit 0, duration_ms 2569062.
+Vai máy phát triển — ca mang khoá may_thu bị bỏ qua có tên (pipeline/chay-that.mjs --liet ở cùng sha; chay-that ghi các dòng này ra stderr):
+chay-that: vai may-phat-trien — bỏ qua 1 ca chỉ máy thu
+chay-that: bỏ qua (chỉ máy thu) — pipeline/scripts/ops-facts-so-tong-hop.test.mjs — ON22-AC-10 máy thu thật, chế độ khô: năm khối có measured_at, freshness bằng check-freshness, 0 chỗ chặn, đầu ra chỉ tên khối + trạng thái — chạy push-ops-facts thật trên log, ~/.oneinvest, cấu hình OpenClaw, launchctl có job thật của máy thu — máy phát triển không có và luật cấm chạy push-ops-facts thật ở đó
+Chấm trên M5: ON22-AC-10 không chạy (HT33).
+DB: bản chép lượt lấy từ oneinvest của M5 (bản chép máy thu 28/11 08:58Z, đổi tên 10:25Z). Không áp gì lên oneinvest.
+E9 dau-cuoi.sh: exit 0; evidence/dau-cuoi.md sinh lại trùng bản đã commit — ô (oSo) 6169 → sau nối 5813 → sau đảo 6169, khớp số P4 đo 09:12Z trên máy thu. Không chạy lui/chay-thu-lui.sh riêng nên ho-so-ap mục 4 không đổi.
+Soát c9471ce26-20261128T161256: app chỉ đỏ QV-AC-5; pipeline, agent, data-api, scripts xanh.
