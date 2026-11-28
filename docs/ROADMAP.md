@@ -1231,6 +1231,42 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
       M5 xong, phần hạn mức M5 tiêu và số lượt ghim lại do PR của M5 gây ra; Mạnh quyết mở rộng hay dừng.
     - **Hàng:** HT18 `ban-chep-da-loc-cho-may-phat-trien` (T3) cho bước hai của (a). **Ghi ở đâu:** `AGENTS.md` mục phân làn
       (dòng «Máy M5»); luật kênh ở thân issue `phanlemanh/onehub-coord#4`.
+65. **Quản lý khách API cho data-api** (28/11).
+    - **Lời Mạnh:** 06:00Z, gõ «Đồng ý» ở phiên kiểm data-api, trả lời bản đề xuất «Quản lý khách API». GS đã đối chiếu bản ghi
+      phiên. Bản đề xuất nằm ở thư mục điều tra cục bộ (gitignored), sau bản kiểm data-api 28/11.
+    - **Vì sao cần:** hôm nay `data-api` giữ khoá trong biến môi trường `DATA_API_KEYS`, so bằng chuỗi nguyên văn, và mọi khoá
+      đúng đều gọi được mọi đường, kể cả `/v1/listings` (tin rao từng tin). Chưa có tên khách, phạm vi, hạn mức hay đo dùng.
+    - **Năm câu chốt theo khuyến nghị:**
+      - (1) Tài khoản khách API (tên tổ chức, người liên hệ, thoả thuận, khoá đã băm, lượt dùng) sống trên cloud, là dữ liệu
+        của mặt điều khiển data-api, **không thuộc tầng A**. Đây là sửa đổi luật 6, xem `AGENTS.md`.
+      - (2) Đối tác thử chỉ được L0 (danh mục) và L1 (thị trường tổng hợp). L2 (tin rao từng tin) chỉ cho khách nội bộ, tới
+        khi rà pháp lý xong.
+      - (3) Chỉ owner cấp khoá và mở lớp; admin xem và thu hồi.
+      - (4) Tự xây trên Vercel và Supabase đang có, cộng trang `/ops/api-clients`; không dùng dịch vụ ngoài. Xét lại khi có
+        khách trả tiền.
+      - (5) Hạn mức thử: khách nội bộ 50.000 lượt/ngày, đối tác thử 5.000 lượt/ngày. Chỉnh sau một tuần đo.
+    - **Lời này KHÔNG phủ** (mỗi việc cần lời riêng của Mạnh khi tới bước):
+      - DDL và quyền role trên cloud;
+      - triển khai AH2;
+      - cấp khoá thật đầu tiên.
+    - **Rào:** tới khi PB14 gộp, không đưa khoá `DATA_API_KEYS` cho bên ngoài, vì hôm nay khoá nào cũng gọi được L2. Khoá chỉ
+      hiện một lần trên Ops, không gửi qua kênh điều phối hay issue GitHub. Dữ liệu khách không bao giờ nằm trong `data-api/`
+      (thư mục đẩy sang kho công khai).
+    - **Hàng:**
+
+      | Mã | Việc | Hạng | Sau |
+      |---|---|---|---|
+      | PB10 | Nguồn ẩn fail-closed: sổ nguồn ẩn rỗng thì API đóng, không mở S02/S08; thêm ô «không lọc» của AC-3 (Ngoài-2 của PB7) | T2 | PB7 |
+      | PB12 | Bảng đường → lớp ở một chỗ trong `data-api/src/contract/`; đường chưa khai thì đóng; bảng in vào `/openapi.json` | T2 | — |
+      | PB13 | Migration bốn bảng (khách, thoả thuận, khoá, lượt dùng ngày) + quyền role data-api; lược đồ mẫu có bảng rỗng | T3 | — |
+      | PB14 | data-api kiểm khoá băm, lớp, thoả thuận từ DB; giữ fail-closed của PB3 | T3 | PB12, PB13, PB7, PB10 |
+      | PB15 | Hạn mức ngày, 429, header hạn mức, bảng `api_usage_daily` | T2 | PB14 |
+      | PB16 | Trang `/ops/api-clients`: cấp, thu hồi, xoay khoá, sửa thoả thuận, xem lượt | T2 (UI) | PB13 |
+      | PB17 | Property thôi phụ thuộc `source_registry` (hợp đồng mới từ PB6 Ngoài-1, Ngoài-2) | — | — |
+      | HT44 | Sửa executor `chm_api` gãy sau khi insights trả 410 (hợp đồng mới từ HT20 Ngoài-1) | — | — |
+
+    - **Đường găng** tới khách nội bộ đầu tiên: (PB7 → PB10) ∥ (PB12 → PB13 → PB14) → PB15 → PB16 → AH2 → áp cloud.
+    - Áp cloud và cấp khoá đầu tiên là việc vận hành của người, đi cùng AH2, cần lời riêng; không vào lộ trình.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
