@@ -166,6 +166,11 @@ phải tên thư mục (script thu của S02/S05/S06 nằm trong `pipeline/`).
    khoản khách API (tên tổ chức, người liên hệ, thoả thuận, khoá đã băm, lượt dùng) là dữ liệu của mặt điều khiển data-api, sống
    trên cloud. Hồ sơ người dùng app (`user_events/user_profile`) vẫn tầng A. Lời này chưa phủ DDL, quyền role trên cloud, triển
    khai và cấp khoá thật đầu tiên: mỗi việc cần lời riêng.
+   **Số người bán trong tin của data-api** (Mạnh chốt 2026-11-28 06:51Z, câu 7 sửa 06:53Z, sửa đổi lời 02/11 và ADR-0007; ROADMAP
+   §3 mục 65): khoá API có lớp L3 nhận tên, SĐT người bán và hồ sơ Zalo (có Zalo, tên hiển thị, ảnh đại diện) ngay trong tin. L2
+   và L3 mở cho mọi đối tác; owner tắt được từng khách; hạn mức tin có liên hệ mỗi ngày theo khoá. Cổng Invest giữ nút «Xem số».
+   Không bao giờ ra API: ngày sinh, giới tính, mã tài khoản Zalo, tin S02 và S08. Lời này chưa phủ DDL, quyền role trên cloud,
+   triển khai và cấp khoá thật đầu tiên.
 7. **LLM-off-data-path**: LLM/agent chỉ gate/judge/extract kèm audit + evidence; quyết định
    ghi dữ liệu đi qua người (`/ops/review`) hoặc luật xác định.
    **Thang tự chủ nấc 0–4** (Mạnh chốt 2026-11-21, ROADMAP §3 mục 61): mỗi loại việc gắn hay duyệt một nấc, lên nấc là chữ ký

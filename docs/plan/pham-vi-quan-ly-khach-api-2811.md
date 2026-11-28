@@ -17,7 +17,7 @@ Việc vận hành (áp cloud và cấp khoá đầu tiên) không vào bản n�
 ```
 dot: quan-ly-khach-api-2811
 dang: chuoi
-nguon: onehub-invest-tri-thuc:wiki/dot/quan-ly-khach-api-2811.md#296aca2745fb61a6d7d2e95014c4b3862d692864
+nguon: onehub-invest-tri-thuc:wiki/dot/quan-ly-khach-api-2811.md#046a939ceef5df17ecc061296ac91a23b46446f3
 
 - `PB10` — sổ nguồn ẩn rỗng thì /v1/listings đóng (không mở tin nguồn ẩn); thêm ô «không lọc» của ma trận AC-3 — xong khi: sổ rỗng → đóng, có ca chiều đỏ cho ô «không lọc»
 - `PB12` — bảng đường → lớp ở một chỗ trong data-api/src/contract/, đường chưa khai thì đóng, bảng in vào /openapi.json — xong khi: mọi đường đang mount có lớp; cấy một đường không khai thì test đỏ
@@ -27,5 +27,7 @@ nguon: onehub-invest-tri-thuc:wiki/dot/quan-ly-khach-api-2811.md#296aca2745fb61a
 - `PB16` — trang /ops/api-clients: cấp, thu hồi, xoay khoá, sửa thoả thuận, xem lượt; quyền owner/admin; ghi ops_audit — xong khi: ô «Khách API đang hoạt động» trên màn từ 0 → 1 (khách nội bộ đầu tiên), không phải triển khai lại
 - `PB17` — tài nguyên Property thôi phụ thuộc bảng nguồn nội bộ (source_registry chỉ ở máy thu) — xong khi: danh bạ có trên DB mà không có source_registry thì /v1/properties* không ra 500
 - `HT44` — executor chm_api của hồ sơ chuyen-huong-ma-thi-truong chạy lại được sau khi insights trả 410 — xong khi: executor chm_api xanh trên main, có ca chiều đỏ
+- `PB18` — tin của /v1/listings mang khối listAgent (tên, SĐT E.164, căn cứ của số) khi khoá có L3, hạn mức tin có liên hệ mỗi ngày tách khỏi hạn mức lượt gọi — xong khi: khoá có L3 nhận listAgent, khoá thiếu L3 không nhận; vượt hạn mức thì tin vẫn trả nhưng không có listAgent; cấy ngày sinh, giới tính vào dòng nguồn thì ca chiều đỏ đỏ
+- `PB19` — listAgent có hasZalo, zaloDisplayName, zaloCheckedAt, zaloAvatarUrl đọc từ kết quả EN3 — xong khi: bốn trạng thái Zalo (có, không, chưa tra, tra lỗi) trả đúng; không trường cấm nào ra API
 ```
 <!-- PHAM-VI-MA>>> -->

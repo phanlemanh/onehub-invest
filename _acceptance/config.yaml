@@ -420,6 +420,7 @@ executors:
     ht9_sao_luu: "node --test --test-concurrency=1 scripts/db-sao-luu.test.mjs"   # db-thu-tach-khoi-cum-that E7 — sao lưu bỏ DB thử của suite
     ht9_phut: "node --test --test-concurrency=1 scripts/do-phut-s4.test.mjs"   # db-thu-tach-khoi-cum-that E8 — phút giữ khoá s4
     ht9_hang_ngay: "node --test --test-concurrency=1 scripts/pipeline-that-hang-ngay.test.mjs"   # db-thu-tach-khoi-cum-that E11 — soát ca dữ liệu thật hằng ngày trên main + dòng «ca dữ liệu thật» của lượt chấm
+    dapi_an: bash db/db-thu.sh oneinvest_suite_dapi --chay sh -c 'cd data-api && node --import tsx --test --test-reporter=spec --test-concurrency=1 test/tin-hien-thi.test.ts test/listing-reso.test.ts test/dong-ba-route.test.ts'
   script:
     ht35_s09_vung: "node scripts/kiem-ht35.mjs s09-vung"   # test-khong-roi-ve-db-chung E6 — tệp S09 khác gốc hàng chỉ ở vùng chọn DB
     ht35_executor_db_thu: "node scripts/kiem-ht35.mjs executor-db-thu"   # test-khong-roi-ve-db-chung E7 — lệnh chấm chạy check-freshness.test qua db-thu
@@ -1218,6 +1219,10 @@ executors:
     zl3_ci_main: "bash _acceptance/zl-ac-3-doi-chung-dung-tren-main/probes/ci-the-main.sh"   # zl-ac-3-doi-chung-dung-tren-main E4 — bước test job scripts của ci-test.yml ở thế main (clone, origin/main = HEAD), env như CI, DB thử
     zl3_pham_vi: "node _acceptance/zl-ac-3-doi-chung-dung-tren-main/probes/pham-vi.mjs"   # zl-ac-3-doi-chung-dung-tren-main E5 — nhánh chỉ đổi tệp cho phép, ZL-AC-1, 2, 4 giữ nguyên từng byte
     ht3_pham_vi: "f=$(git diff --name-only $(git merge-base HEAD origin/main) HEAD | grep -v -E '^(_acceptance/hai-ca-app-dung-tren-du-lieu-may/|_acceptance/config.yaml$|docs/superpowers/specs/2026-11-22-px1-ac-10-so-dung-tin-gan-theo-ten-design[.]md$|PRODUCT-MAP[.]md$|LO-TRINH[.]html$|docs/superpowers/specs/2026-11-22-hai-ca-app-dung-tren-du-lieu-may-design[.]md$)' | grep -v -x -E 'app/tests/(do-lam-giau|sellers-chip)[.]test[.]tsx|pipeline/scripts/nap-dvhc-cu[.]test[.]mjs'); [ -z \"$f\" ] && echo SCOPE OK || { echo \"NGOAI PHAM VI: $f\"; exit 1; }"   # hai-ca-app-dung-tren-du-lieu-may E4 — nhánh chỉ đổi ba tệp test (gồm HT4 gộp vào) + hai hồ sơ
+    dapi_an_nguon: node _acceptance/data-api-tin-hien-thi/probes/nguon-chung.mjs
+    dapi_an_pha: node _acceptance/data-api-tin-hien-thi/probes/pha.mjs
+    dapi_an_db: node _acceptance/data-api-tin-hien-thi/probes/do-db.mjs
+    dapi_an_pham_vi: node _acceptance/data-api-tin-hien-thi/probes/pham-vi.mjs
   design:                                            # app/ là web UI
     # DOM mode cần jsdom: cài ở app/ (devDependency), trỏ bằng --jsdom app — thiếu cờ này mọi eval design ra BLOCKED.
     gate: "node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app"   # script tier (a11y/slop)
