@@ -1,0 +1,60 @@
+schema_version: 1
+slug: s03-thu-lai-tin-roi-oan
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.pl43_unit
+    paths: ["pipeline/transform-zalo.mjs", "pipeline/scripts/s03-thu-lai-tin-roi-oan.test.mjs"]
+    expected: "Ma trận dạng viết tắt × giá thuê/bán: mọi câu ra đúng loại; đối chứng chạy cùng ma trận bằng DAU_HIEU_BDS cũ ghim trong test thì các câu ấy ra «bo» (chiều đỏ, gọi tên dạng). Sáu câu chiều đỏ («1 năm», «3 nữ», «KH 1 nữ», «cách 500m», «Stuff», «studious») không có dấu hiệu BĐS; đột biến bỏ lookahead chữ có dấu thì ca đỏ gọi tên câu."
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.pl43_unit
+    paths: ["pipeline/transform-zalo.mjs", "pipeline/scripts/s03-thu-lai-tin-roi-oan.test.mjs"]
+    expected: "Bốn câu giá không đơn vị ra tin bán với giá 1,92 · 2,45 · 3,7 · 1,65 tỷ; bốn câu đối chứng giữ kết quả hàm cũ ghim trong test; đột biến bỏ điều kiện «không theo sau chữ tầng/lầu» ở dạng «1t9» thì ca «1t9 tầng cao» đỏ gọi tên câu."
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.pl43_unit
+    paths: ["pipeline/transform-zalo.mjs", "pipeline/scripts/s03-thu-lai-tin-roi-oan.test.mjs"]
+    expected: "Năm câu tìm dạng mới là Yêu cầu, hai bài khẩu hiệu là rent_lt; đối chứng: bỏ phần đi cặp (F) khỏi luật trong bản sao thì năm câu tìm thành tin rao, đỏ gọi tên câu."
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.pl43_ac4
+    paths: ["pipeline/transform-zalo.mjs", "pipeline/lib/nhanh-bai-s03.mjs", "pipeline/scripts/s03-thu-lai-tin-roi-oan.itest.mjs"]
+    expected: "Ca PL43-AC-4 chạy (pass ≥ 1, fail 0, skipped 0): ba bài oan thành ba tin đúng loại và giá, câu tìm ở nhánh yeu-cau, tin cũ y khoá, lần hai không đổi; pha luật cũ tiêm qua tham số thì ba bài không thành tin (chiều đỏ gọi tên bài)."
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.pl43_do_that
+    long_running: 90
+    paths: ["pipeline/transform-zalo.mjs", "pipeline/scripts/do-tin-roi-oan.mjs", "pipeline/scripts/do-yeu-cau-lot-tin.mjs"]
+    expected: "Trên cùng bản chép, lượt «trước» bằng luật cũ tiêm qua tham số và lượt «sau» bằng luật mới: tin S03 sống sau − trước ≥ 150; tin rò ≤ 90 và giá tốt thuê rò ≤ 17 ở lượt sau (thước PL42), in tin rò thêm so với lượt trước; in giá tốt bán/thuê hai lượt, tin bán mới dưới 1 tỷ, tin mới theo phần luật; tệp mẫu ghi ra .acceptance-runs/s03-thu-lai-tin-roi-oan/mau-tin-moi.md (không ghi vào cây _acceptance khi chạy làm eval), đầu tệp có sha cây và hạt giống, đủ 20 ngẫu nhiên + 10 phần C + mọi tin nhãn inquiry + 20 bài còn rơi, mỗi mục đủ sáu trường; thoát 0. Chiều đỏ trong do-tin-roi-oan.test: vượt từng ngưỡng, phần ngẫu nhiên thiếu, mục thiếu trường thì thoát 1 gọi tên ngưỡng hay trường."
+  - id: E6
+    criterion: AC-6
+    executor: judgment
+    inputs: ["_acceptance/s03-thu-lai-tin-roi-oan/evidence/mau-tin-moi.md"]
+    question: "Đọc chữ bài từng mục của tệp mẫu. (1) Trong 20 tin ngẫu nhiên, bao nhiêu tin là tin rao bán hay cho thuê thật với giá đã đọc đúng bậc (tỷ cho bán, triệu cho thuê)? (2) Trong 10 tin phần C, bao nhiêu tin là tin bán thật với giá đúng? (3) Mỗi tin có bài nhãn inquiry: câu tìm lọt hay nhãn model sai? (4) Trong 20 bài còn rơi, dạng chữ nào cho thấy tin rao bị bỏ sót? Nêu mã tin của từng mục không đạt và chép dòng sha cây, hạt giống ở đầu tệp."
+    expected: "(1) ≥ 18/20; (2) ≥ 9/10; (3) mỗi tin có phán; (4) liệt dạng chữ bỏ sót hoặc «không có»; dòng sha và hạt giống có mặt."
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.pl43_loai_tin
+    paths: ["pipeline/transform-zalo.mjs"]
+    expected: "transform-zalo-loai-tin.test.mjs, transform-zalo-loai-tin-doi-chieu.test.mjs, yeu-cau-khong-thanh-tin-thue.test.mjs xanh và không đổi kỳ vọng so với a94013aaf (diff chỉ thêm dòng)."
+  - id: E8
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.suite.pipeline_a
+    long_running: 90
+    paths: ["pipeline/**"]
+    expected: "Nửa a bộ pipeline xanh."
+  - id: E9
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.suite.pipeline_b
+    long_running: 90
+    paths: ["pipeline/**"]
+    expected: "Nửa b bộ pipeline xanh."

@@ -1,0 +1,24 @@
+{
+  "feature_plain": "Tin rao S03 viết tắt kiểu môi giới («2PN2w», «Stu», «2 NGỦ», «55m», «Giá 3.7 thu nét về», «1t920») thôi bị bỏ, được đưa vào kho thành tin rao — đo thử thêm khoảng 220 tin (+2,3%), trong khi câu tìm căn của người mua viết cùng kiểu vẫn không thành tin.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ nhận các cách viết số phòng, «Stu/studio», «N ngủ» và diện tích trần làm dấu hiệu bất động sản, nhưng vẫn không nhận «1 năm», «3 nữ», «cách 500m», «Stuff»."},
+    {"id": "AC-2", "p": "Sẽ đọc giá bán viết không đơn vị («1t920», «Giá 3.7 thu nét về», «1.650 net») thành giá tỷ, giữ nguyên sàn 300 triệu và luật chặn giá thuê từ 1 tỷ."},
+    {"id": "AC-3", "p": "Sẽ giữ câu tìm căn viết bằng chính các dạng mới («Tìm 1 ngủ», «Cần Stu», «Ai có stu», «kiếm 2pn») là Yêu cầu; khẩu hiệu môi giới «Tìm nhà không khó – có em lo» thôi bị coi là câu tìm."},
+    {"id": "AC-4", "p": "Sẽ chứng trên DB thử rằng ba bài rơi oan thành ba tin đúng loại và giá, câu tìm không thành tin, chạy lại không đổi gì, và luật cũ thì không ra các tin ấy."},
+    {"id": "AC-5", "p": "Sẽ đo trên bản chép dữ liệu thật hai lượt (luật cũ rồi luật mới): tin S03 thêm từ 150 trở lên, tin rò vẫn ≤ 90 và tin thuê «giá tốt» rò ≤ 17, in số tin giá tốt hai lượt và xuất mẫu soi."},
+    {"id": "AC-7", "p": "Sẽ giữ xanh mọi test luật loại tin cũ và hai nửa bộ test pipeline, không sửa kỳ vọng cũ nào."}
+  ],
+  "scope_plain": "Những phần rơi khác để hàng sau, vì mở luật cho chúng cần đo riêng:",
+  "coverage_plain": [
+    {"i": 0, "p": "Trục cách viết × loại giá: dấu hiệu BĐS viết tắt và diện tích trần (AC-1), giá không đơn vị ở bài bán (AC-2), câu tìm cùng cách viết và khẩu hiệu (AC-3) — đủ khi mỗi dạng có một ca giữ và một ca đỏ."},
+    {"i": 1, "p": "Trục đường thật: qua transform và chạy lại (AC-4), trên dữ liệu thật với rào tin rò và giá tốt (AC-5), mẫu chấm tay hai phía (AC-6), không hồi quy (AC-7)."},
+    {"i": 2, "p": "Bảng phủ ca đếm từ DB máy thu, kèm cột «ai đọc phía sau» (xếp hạng giá tốt, định vị, ghép toà, cổng Invest), nằm trong design doc."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Việc nhận bài giá từ 1 tỷ thành tin bán là lựa chọn của anh chứ không phải luật đã có — đã đưa thành câu hỏi Hỏi-3 và thêm 10 tin loại này vào mẫu chấm tay (đạt từ 9/10)."},
+    {"i": 1, "p": "Việc bỏ quét hình thái là đánh đổi chứ không phải luật bắt buộc — đã đưa thành câu hỏi Hỏi-4 và thêm 20 bài còn rơi vào mẫu để soát cách viết chưa có trong bảng."},
+    {"i": 2, "p": "Phép đo trước/sau từng lẫn phần dữ liệu tự trôi — đã sửa: đo hai lượt trên cùng bản chép, luật cũ rồi luật mới."},
+    {"i": 3, "p": "Tệp mẫu chấm tay từng có hai đường dẫn lệch nhau — đã ghim một đường, đầu tệp ghi mã cây và hạt giống."},
+    {"i": 4, "p": "Tệp mẫu chưa khai trường bắt buộc — đã liệt sáu trường mỗi mục, thiếu thì đo đỏ."}
+  ]
+}
