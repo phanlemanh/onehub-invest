@@ -12,7 +12,7 @@ flowchart TD
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>22 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>252 việc"]
+  GB --> DG["Đã giao<br/>255 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>148 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
@@ -275,7 +275,9 @@ flowchart TD
 - Lược đồ mẫu của data-api bản công khai không còn tên nguồn thật ngoài tên bảng/cột đã biết — chú thích, dữ liệu mẫu source_registry và tên tệp dưới data-api/db dùng mã S0x (`data-api-don-ten-nguon`)
 - data-api đóng ba đường trả dữ liệu trái luật (HT19) — deals thôi trả nội dung bài S03, coverage và listings/:id thôi đọc bảng S02 (`data-api-dong-ba-route-lo`)
 - data-api đóng khi thiếu khoá (PB3) — môi trường không khai rõ là dev/test mà danh sách khoá API rỗng thì từ chối mọi lời gọi dữ liệu và bản Node không khởi động (`data-api-dong-khi-thieu-khoa`)
+- data-api theo RESO DD 2.1 (PB2) — một tài nguyên listing có kind đọc hai bảng, tên trường RESO camelCase, loại hình đúng PropertyType/PropertySubType, extension khai ở mappings.yaml, lược đồ mẫu và seed chạy trên DB rỗng (`data-api-hop-dong-reso-dd-2-1`)
 - data-api — bốn đường /v1/markets (danh sách, chi tiết, submarkets, insights) thôi đọc và thôi trả số S02; rào test đỏ khi route nào của data-api tham chiếu bảng S02 (`data-api-markets-khong-doc-s02`)
+- Ca «PB2-AC-11 price-stats» so /v1/price-stats với route asset-stats cũ ở một commit CỐ ĐỊNH trước PB2 (75f32bd55) thay vì merge-base với origin/main, để ca không đỏ sẵn trên main sau khi PB2 đã gộp (PB9) (`data-api-price-stats-so-nen-co-dinh`) — đã giao — máy thông, cửa veto còn mở
 - data-api — tài nguyên Property (danh bạ nhà): tra toà và căn theo mã OneHub hoặc theo dự án + toà + mã căn, trả khung định danh và thuộc tính căn theo tên RESO DD 2.1, không cho dò hàng loạt (`data-api-property-danh-ba-nha`)
 - Dấu lược đồ của bản mẫu DB thử phủ constraint, index, trigger, enum, độ dài kiểu, NOT NULL, DEFAULT, RLS, quyền và schema ngoài public, để bản mẫu dựng lại ngay khi migration đổi những thứ đó (`dau-luoc-do-ban-mau`)
 - DB máy thu chỉ nghe nội bộ (127.0.0.1) và chỉnh tham số Postgres (`db-chi-nghe-noi-bo-va-chinh-postgres`)
@@ -389,6 +391,7 @@ flowchart TD
 - Suite pipeline_that chạy trên máy phát triển bỏ qua có tên, có đếm các ca chỉ máy thu chạy được; trên máy thu vẫn chạy đủ (`pipeline-that-ca-may-thu-co-ten-tren-may-phat-trien`) — đã giao — máy thông, cửa veto còn mở
 - Job nạp Zalo đêm chạy sáu bước — đọc gộp S03 hằng ngày sau nhả khoá nạp, trước enrich; bộ test job Zalo đo đúng bước mới (`pl34-lich-dem-sau-buoc`)
 - Vá ranh giới cổng — Căn giá tốt sang Ops, gỡ AirDNA khỏi Mô phỏng đầu tư (`portal-deals-airdna`)
+- Probe đối chiếu màn Danh bạ (/ops/registry) đếm phân khu theo cùng luật nghỉ với màn, nên xanh lại trên main và làm mốc trước/sau cho hàng sửa ô danh mục (`probe-danh-ba-dem-theo-luat-nghi`) — đã giao — máy thông, cửa veto còn mở
 - Bộ kiểm sổ bề mặt API (check-api-surface) không đỏ vì tệp đột biến tạm của test khác bị xoá giữa lúc quét — CI app thôi đỏ chập chờn ở QV-AC-9 (`qv-ac-9-khong-chap-chon`)
 - Khu vực Hà Nội chỉ gồm phường/xã của Hà Nội; metrics tính lại theo ranh giới đúng (`ranh-gioi-khu-vuc-dung`)
 - script đo nền hiệu năng chỉ chạy trên DB local — rào assertLocalDatabaseUrl trước mọi lệnh ghi DB (`rao-db-local-do-nen`)
