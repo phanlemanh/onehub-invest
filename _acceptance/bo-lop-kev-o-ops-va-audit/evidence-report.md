@@ -7,8 +7,8 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: dd69ad57b2f3045fa4f6837b5f8f6c42aa869f0e
-human_signoff:
+verified_commit: 4e36898a5cf001cf597d72689f7c744fa9f1c80a
+human_signoff: Mạnh 2026-11-27
 ---
 
 # Evidence Report: bo-lop-kev-o-ops-va-audit
@@ -177,3 +177,7 @@ none — every multi-run eval is uniform
 
 Round 1: mọi eval xanh (E1–E10), không eval nào đỏ; không có mục judgment nào cần người chốt.
 
+
+### Re-pin lần 1 — 2026-11-28, do làn trước chữ ký trên main mới (gộp e594ffeaf, sửa fixture AC-6 sau KEV1)
+run_id: repin-20261128T103516Z-16461
+sha: 4e36898a5cf001cf597d72689f7c744fa9f1c80a · suites: 8 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng

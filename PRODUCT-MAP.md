@@ -11,8 +11,8 @@ flowchart TD
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>22 việc"] --> GP{"Cổng Phạm vi"}
-  GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>260 việc"]
+  GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
+  GB --> DG["Đã giao<br/>261 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>148 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
@@ -69,10 +69,6 @@ flowchart TD
 - DATA-CONTRACT v15 (nháp) mục nguồn S09 danh bạ căn, gồm khuôn lượt bù căn thấp tầng 20/11, vào main để bộ nạp và DA50 đọc theo một bản (`s09-dc-v15-thap-tang`)
 - Tách bộ kiểm pipeline của lượt chấm thành hai nửa chạy song song, mỗi nửa một DB thử, để một lệnh không vượt trần chờ 30 phút của tác tử chấm (`tach-suite-pipeline`)
 - hai test app chạy trên DB chung thôi đỏ vì mã vùng dài cũ và thôi treo khi có DDL xếp hàng (`test-app-tren-db-chung`)
-
-## Đang làm
-
-- Trang Thu thập (Ops, máy thu và cloud) và audit-all thôi hiện lớp, hàng, dòng đỏ của Kev; phễu hook gọi đúng tên và thôi đếm đôi (`bo-lop-kev-o-ops-va-audit`)
 
 ## Đã giao — chờ phiên nghiệm thu
 
@@ -248,6 +244,7 @@ flowchart TD
 - Bật gói dieu-phoi ở cấp kho — thêm dieu-phoi@acceptance-gate-kit vào enabledPlugins của .claude/settings.json, cùng nguồn marketplace với các gói kit khác, không đổi gì khác (`bat-dieu-phoi-cap-du-an`)
 - Bốn tên viết tắt phân khu (ori, rb, bs, gh) vào danh bạ qua thẻ luật có băm, đảo được, để GT5 đọc phân khu từ danh bạ (`bi-danh-viet-tat-phan-khu`)
 - Bộ canh kênh S03 tắt gateway khi có lượt agent mới dù lượt đó chạy nhanh, nhờ đếm trên kho phiên thay vì dò chuỗi trong log (`bo-canh-dem-luot-agent`)
+- Trang Thu thập (Ops, máy thu và cloud) và audit-all thôi hiện lớp, hàng, dòng đỏ của Kev; phễu hook gọi đúng tên và thôi đếm đôi (`bo-lop-kev-o-ops-va-audit`)
 - ca E4b đối chiếu tin rao nạp danh sách che qua hàm chung có cờ khớp nguyên cụm — main thôi đỏ sau khi áp che-ten (`ca-doi-chieu-tin-rao-nap-co-khop-cum`)
 - Ca dữ liệu thật của danh bạ vật thể xanh lại sau DA42, và ba mục ngoài hợp đồng của DA72 (DA73) (`ca-du-lieu-that-danh-ba-vat-the`) — đã giao — máy thông, cửa veto còn mở
 - Script đo ba vai của Căn giá tốt bỏ qua dòng sổ nguồn không có tên, không gãy giữa chừng và không báo «lộ tên nguồn» giả trên mọi trang (`can-gia-tot-ba-vai-ten-nguon-trong`)

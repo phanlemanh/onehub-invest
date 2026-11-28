@@ -5,7 +5,7 @@ slug: bo-lop-kev-o-ops-va-audit
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [ui, cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-26T03:40:00Z
 design_doc: docs/superpowers/specs/2026-11-26-bo-lop-kev-o-ops-va-audit-design.md
@@ -64,3 +64,7 @@ Kev» ở khung đường ống Zalo và chú thích bảng nhóm, và `Service 
 ## Notes
 
 - Số trên màn: khối Khoá an toàn 8 → 7 dòng (một dòng đỏ giả bớt); lưới Máy móc bớt một hàng chết; audit-all bớt một FAIL.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-27:
+  - Ngoài-2: Phép kiểm phễu hook chưa thử hai loại dòng nhật ký (tin chỉ có ảnh, tin đẩy vào hàng chờ); cách đếm hai loại đó hỏng về sau thì bài kiểm không báo.
+  - Ngoài-3: Bài kiểm chú thích bảng nhóm chỉ soi chữ trong mã nguồn, không soi trang thật; chữ Kev quay lại bằng cách viết khác thì có thể lọt.
+  - Ngoài-4: Bài kiểm khối Máy móc chỉ xác nhận hàng Kev vắng trên bản tin mới, chưa so với bản tin cũ; bộ lọc ở máy chủ bị gỡ nhầm thì có thể không đỏ.
