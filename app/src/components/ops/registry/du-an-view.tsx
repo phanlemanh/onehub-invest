@@ -10,8 +10,10 @@ import { fmtInt, fmtVnDate } from "@/lib/format"
 import { LABELS_VI } from "@/lib/vocab.generated"
 
 import type { HangToa } from "@/lib/ops/registry/hang-toa"
+import type { CanQuyCan } from "@/lib/ops/registry/quy-can"
 import type { PhuThuocTinh } from "@/lib/ops/thuoc-tinh-can"
 
+import { DuAnQuyCanGrid, DuAnQuyCanLoi } from "./du-an-quy-can-grid"
 import { DuAnToaGrid } from "./du-an-toa-grid"
 
 /** Đầu trang một dự án: tên, bậc, tỉnh, nguồn, mã đã nối; bốn ô số; bảng toà → căn. */
@@ -32,6 +34,8 @@ export type DuAnProps = {
   /** Ô phủ thuộc tính căn S16 (DA40); null khi đọc lỗi. */
   phuThuocTinh: PhuThuocTinh | null
   loiThuocTinh: boolean
+  /** Quỹ căn S09 (DA56): danh sách căn; null hay vắng khi DB chưa có view quỹ căn (không hiện khối); "loi" khi đọc lỗi. */
+  quyCan?: CanQuyCan[] | null | "loi"
 }
 
 /** Ô phủ «căn có thuộc tính / căn trong danh bạ» — số đã đếm ở SQL, ở đây chỉ định dạng. */
@@ -94,6 +98,7 @@ export function DuAnView(p: DuAnProps) {
         </Alert>
       )}
       <DuAnToaGrid rows={p.rows} />
+      {p.quyCan === "loi" ? <DuAnQuyCanLoi /> : p.quyCan != null && <DuAnQuyCanGrid rows={p.quyCan} />}
     </div>
   )
 }

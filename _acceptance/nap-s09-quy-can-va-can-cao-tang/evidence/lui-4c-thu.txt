@@ -1,0 +1,19 @@
+# lui-4c-thu.sh — 27/11 10:32Z, máy thu, khoá s4 P1, nhánh 19d06224b + probe chưa commit
+$ bash db/db-thu.sh oneinvest_suite_lui_da56 --chay bash _acceptance/nap-s09-quy-can-va-can-cao-tang/probes/lui-4c-thu.sh
+trước : 24:5919d2d57c4cf2da2235664d77cd5f83 40:08bd20ba78033c90aad4fbed111ce0a9
+trước : stg_abnb_discovery=4194 stg_abnb_listings=1278 stg_chotot_ads=151655 stg_osm_boundaries=786 stg_s08_inventory=101161 stg_s08_project=542 stg_s09_danh_ba=40 stg_s09_item=345 stg_s16_can_chi_tiet=96309 stg_s16_can=186108 stg_s16_item=251 stg_s16_khu=170 stg_s16_toa=544 stg_zalo_posts=259376 airbnb_snapshots=34904
+sao lưu: 6558132 byte
+sau áp: 7 bản v16 · 31:2d6c8271adf054f1414e68d6f611eeab 27325:b9f63056c6b6fb80bd4f3e8dbf2dab7b
+4a    : view còn 0
+4c cũ (trên bản sao): thoát 1 · cannot drop table public.airbnb_snapshots because other objects depend on it · stg_s09_danh_ba sau lệnh: MẤT
+đối chứng: lệnh 4c cũ hỏng như finding
+lui-4c: dấu dump   24:5919d2d57c4cf2da2235664d77cd5f83 40:08bd20ba78033c90aad4fbed111ce0a9
+lui-4c: dấu đích trước 31:2d6c8271adf054f1414e68d6f611eeab 27325:b9f63056c6b6fb80bd4f3e8dbf2dab7b
+lui-4c: dấu đích sau  24:5919d2d57c4cf2da2235664d77cd5f83 40:08bd20ba78033c90aad4fbed111ce0a9
+sau lùi: 24:5919d2d57c4cf2da2235664d77cd5f83 40:08bd20ba78033c90aad4fbed111ce0a9
+sau lùi: stg_abnb_discovery=4194 stg_abnb_listings=1278 stg_chotot_ads=151655 stg_osm_boundaries=786 stg_s08_inventory=101161 stg_s08_project=542 stg_s09_danh_ba=40 stg_s09_item=345 stg_s16_can_chi_tiet=96309 stg_s16_can=186108 stg_s16_item=251 stg_s16_khu=170 stg_s16_toa=544 stg_zalo_posts=259376 airbnb_snapshots=34904
+PASS phạm vi S09 về đúng dấu trước
+PASS 14 bảng stg trỏ airbnb_snapshots và airbnb_snapshots giữ nguyên số dòng
+EXIT=0
+
+# Lượt đầu (cùng giờ, đối chứng chạy trên chính DB lượt): lệnh 4c cũ DROP được stg_s09_danh_ba rồi hỏng ở airbnb_snapshots → bảng stg mất trắng; vì thế đối chứng nay chạy trên bản sao createdb -T.

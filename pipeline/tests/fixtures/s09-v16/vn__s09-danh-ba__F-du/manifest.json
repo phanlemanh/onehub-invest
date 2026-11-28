@@ -1,0 +1,22 @@
+{
+ "schemaVersion": 16,
+ "snapshotId": "vn__s09-danh-ba__F-du",
+ "city": "vn",
+ "source": "s09-danh-ba",
+ "startedAt": "2026-11-24T03:11:40.549Z",
+ "finishedAt": "2026-11-24T03:13:52.236Z",
+ "counts": {
+  "items": 7,
+  "failed": 0
+ },
+ "coverage": {
+  "notes": "DA56: khuôn bản đủ quỹ căn (dự án nhiều trang + hai dự án một trang, cắt căn) + trang rỗng, item lỗi, item thiếu sourceId; đã thay mọi chuỗi"
+ },
+ "files": [
+  {
+   "name": "items-0001.json.gz",
+   "sha256": "70549cab750e86edfdc07ff3b827f423493ab1efc0590aac4b4a2ecfcbff85ad",
+   "bytes": 3907
+  }
+ ]
+}

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Luồng quỹ căn S09</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Lora:ital,wght@0,400;1,400&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:   #f5f5f5;
+      --color-ink:     #2d3142;
+      --color-muted:   #4f5d75;
+      --color-accent:  #eb6c36;
+      --font-sans:     'Geist', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', 'Lora', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace;
+    }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2rem;
+    }
+    .frame { max-width: 1320px; width: 100%; }
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 0.5rem;
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      color: var(--color-ink);
+      margin-bottom: 0.5rem;
+    }
+    .sub {
+      font-size: 0.875rem;
+      color: var(--color-muted);
+      margin-bottom: 1.5rem;
+    }
+    svg { width: 100%; min-width: 960px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Cổng Phạm vi · nap-s09-quy-can-va-can-cao-tang · DA56</p>
+    <h1>Luồng quỹ căn và căn cao tầng S09: từ thư mục chờ tới màn Ops</h1>
+    <p class="sub">Lớp stg cho hai kind v16, DA43 đọc stg · Hỏi-1 chỗ hiện quỹ căn · Hỏi-2 toạ độ căn</p>
+
+    <svg viewBox="0 48 1320 472" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/></marker>
+        <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/></marker>
+      </defs>
+
+      <rect x="0" y="48" width="1320" height="472" fill="#f5f5f5"/>
+
+      <!-- ===================== TIÊU ĐỀ CỘT ===================== -->
+      <text x="40" y="72" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.18em">RAW</text>
+      <text x="304" y="72" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.18em">NẠP</text>
+      <text x="560" y="72" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.18em">STG</text>
+      <text x="808" y="72" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.18em">VIEW · MIGRATION 130</text>
+      <text x="1080" y="72" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.18em">NGƯỜI ĐỌC</text>
+
+      <!-- ===================== MŨI TÊN (vẽ trước) ===================== -->
+      <!-- Thư mục chờ → bộ nạp -->
+      <line x1="200" y1="240" x2="304" y2="240" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- Bộ nạp → stg -->
+      <line x1="504" y1="240" x2="560" y2="240" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- stg → ba view (ba điểm gắn riêng trên cạnh phải) -->
+      <path d="M736,216 H764 Q772,216 772,208 V140 Q772,132 780,132 H808" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="736" y1="240" x2="808" y2="240" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <path d="M736,264 H764 Q772,264 772,272 V340 Q772,348 780,348 H808" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- Đối soát → quỹ căn (chọn bản đủ) -->
+      <line x1="912" y1="204" x2="912" y2="168" stroke="#4f5d75" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+      <!-- View quỹ căn → Danh bạ Ops -->
+      <line x1="1016" y1="132" x2="1080" y2="132" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- View căn cao tầng → DA43 -->
+      <line x1="1016" y1="348" x2="1080" y2="348" stroke="#4f5d75" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+
+      <!-- ===================== NHÃN MŨI TÊN ===================== -->
+      <rect x="212" y="204" width="80" height="28" rx="2" fill="#f5f5f5"/>
+      <text x="252" y="216" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">CHỈ MÁY THU</text>
+      <text x="252" y="228" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">KHÔNG CLOUD</text>
+
+      <rect x="920" y="176" width="80" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="924" y="188" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.06em">CHỌN BẢN ĐỦ</text>
+
+      <!-- ===================== RAW ===================== -->
+      <rect x="40" y="196" width="160" height="88" rx="6" fill="#f5f5f5"/>
+      <rect x="40" y="196" width="160" height="88" rx="6" fill="rgba(45,49,66,0.05)" stroke="#4f5d75" stroke-width="1"/>
+      <text x="120" y="228" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Thư mục chờ v16</text>
+      <text x="120" y="246" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">quy-can · can-cao-tang</text>
+      <text x="120" y="262" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">ngoài kho · có tầng A</text>
+
+      <!-- ===================== BỘ NẠP (focal — Hỏi-2) ===================== -->
+      <rect x="304" y="184" width="200" height="112" rx="6" fill="#f5f5f5"/>
+      <rect x="304" y="184" width="200" height="112" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="404" y="212" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Bộ nạp S09</text>
+      <text x="404" y="228" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">import-s09-danh-ba.mjs</text>
+      <text x="404" y="242" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">boTangA(kind, payload)</text>
+      <text x="404" y="264" fill="#ba4513" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" text-anchor="middle">galleries bỏ ·</text>
+      <text x="404" y="278" fill="#ba4513" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" text-anchor="middle">geolocation: Hỏi-2</text>
+      <text x="404" y="316" fill="#636b80" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">Hỏi-2: bỏ toạ độ khỏi stg / giữ ở stg</text>
+
+      <!-- ===================== STG ===================== -->
+      <rect x="560" y="196" width="176" height="88" rx="6" fill="#f5f5f5"/>
+      <rect x="560" y="196" width="176" height="88" rx="6" fill="rgba(45,49,66,0.05)" stroke="#4f5d75" stroke-width="1"/>
+      <text x="648" y="230" fill="#2d3142" font-size="12" font-weight="500" font-family="'Geist Mono', monospace" text-anchor="middle">stg_s09_danh_ba</text>
+      <text x="648" y="248" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">bảng có sẵn (115)</text>
+      <text x="648" y="262" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">2 kind mới · nạp lại 0 dòng</text>
+
+      <!-- ===================== VIEW ===================== -->
+      <rect x="808" y="96" width="208" height="72" rx="6" fill="#f5f5f5"/>
+      <rect x="808" y="96" width="208" height="72" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="912" y="124" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Quỹ căn</text>
+      <text x="912" y="140" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">v_s09_db_quy_can</text>
+      <text x="912" y="156" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">bản đủ mới nhất · hợp theo id</text>
+
+      <rect x="808" y="204" width="208" height="72" rx="6" fill="#f5f5f5"/>
+      <rect x="808" y="204" width="208" height="72" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="912" y="232" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Đối soát quỹ căn</text>
+      <text x="912" y="248" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">v_s09_db_quy_can_doi_soat</text>
+      <text x="912" y="264" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">du = (Σ id = tongNguon)</text>
+
+      <rect x="808" y="312" width="208" height="72" rx="6" fill="#f5f5f5"/>
+      <rect x="808" y="312" width="208" height="72" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="912" y="340" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Căn cao tầng</text>
+      <text x="912" y="356" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">v_s09_db_can_cao_tang</text>
+      <text x="912" y="372" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">bản tầng tốt mới nhất</text>
+
+      <!-- ===================== DANH BẠ OPS (focal — Hỏi-1) ===================== -->
+      <rect x="1080" y="88" width="200" height="120" rx="6" fill="#f5f5f5"/>
+      <rect x="1080" y="88" width="200" height="120" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="1180" y="116" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Danh bạ Ops</text>
+      <text x="1180" y="132" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">/ops/registry</text>
+      <text x="1180" y="152" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">ô tổng: căn · có giá · dự án</text>
+      <text x="1180" y="166" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">khối «Quỹ căn đang bán»</text>
+      <text x="1180" y="180" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">trên trang dự án</text>
+      <text x="1180" y="196" fill="#ba4513" font-size="9" font-weight="500" font-family="'Geist', sans-serif" text-anchor="middle">(Hỏi-1)</text>
+      <text x="1180" y="228" fill="#636b80" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">Hỏi-1: ô tổng + khối trang dự án</text>
+      <text x="1180" y="242" fill="#636b80" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">hay chỉ cột giá</text>
+
+      <!-- ===================== DA43 (hàng khác) ===================== -->
+      <rect x="1080" y="312" width="200" height="72" rx="6" fill="#f5f5f5"/>
+      <rect x="1080" y="312" width="200" height="72" rx="6" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="1180" y="340" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">DA43</text>
+      <text x="1180" y="356" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">căn vào danh bạ</text>
+      <text x="1180" y="372" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">đọc view căn cao tầng</text>
+
+      <!-- ===================== GHI CHÚ ===================== -->
+      <text x="40" y="428" fill="#4f5d75" font-size="14" font-style="italic" font-family="'Instrument Serif', 'Lora', serif">Bảng stg và ba view không vào danh sách đồng bộ cloud; màn chỉ ghi mã S09.</text>
+      <text x="1280" y="428" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end" letter-spacing="0.06em">AC-1 · AC-2 · AC-3 · AC-4 · AC-7 · AC-8 · AC-9</text>
+
+      <!-- ===================== CHÚ GIẢI ===================== -->
+      <line x1="40" y1="452" x2="1280" y2="452" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+      <text x="40" y="472" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.18em">CHÚ GIẢI</text>
+
+      <rect x="40" y="484" width="24" height="16" rx="2" fill="rgba(45,49,66,0.05)" stroke="#4f5d75" stroke-width="1"/>
+      <text x="72" y="496" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Kho dữ liệu</text>
+
+      <rect x="168" y="484" width="24" height="16" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="200" y="496" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">View đọc stg</text>
+
+      <rect x="304" y="484" width="24" height="16" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.2"/>
+      <text x="336" y="496" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Có điểm chờ Mạnh chọn (Hỏi-1, Hỏi-2)</text>
+
+      <rect x="552" y="484" width="24" height="16" rx="2" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="584" y="496" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Hàng khác đọc đầu ra</text>
+
+      <line x1="724" y1="492" x2="756" y2="492" stroke="#4f5d75" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+      <text x="764" y="496" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Đọc gián tiếp</text>
+    </svg>
+  </div>
+</body>
+</html>

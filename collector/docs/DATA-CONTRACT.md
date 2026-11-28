@@ -235,10 +235,11 @@ Luật đọc:
 3. Tên tệp và nội dung có thể chứa SĐT người bán (tầng C) — giữ nguyên, collector không chuẩn hoá.
 4. Cùng `driveId` ở hai snapshot: lấy bản mới nhất theo `fetchedAt`; cùng `sha256` là cùng nội dung.
 
-## Nguồn S09 `s09-danh-ba` — danh bạ căn: bản đồ toà/tầng/thấp tầng (nháp v15, claudedp-1811-12)
+## Nguồn S09 `s09-danh-ba` — danh bạ căn: bản đồ (v15) + quỹ căn và căn cao tầng (v16)
 
-> **NHÁP — số 15 CHƯA GHIM**: v13 = S09 danh mục; v14 = S16 thuộc tính căn (nháp đang trên nhánh khác);
-> S17 cũng đang nháp cùng số 15. Số chốt lúc gộp, bên đọc nhận diện theo `source`, không theo số.
+> Số 15 ĐÃ GHIM (gói 1 bản đồ, trên main): v13 = S09 danh mục, v14 = S16 thuộc tính căn — cả hai đã ghim
+> trên main. v16 khai tại mục con «Mở rộng v16» phía dưới (quỹ căn + căn cao tầng theo tầng). S17 lấy số
+> kế tiếp sau 16, LL cấp khi dự án S17 được duyệt — KHÔNG tái dùng 15.
 
 - Thư mục `vn/vn__s09-danh-ba__<id>/`; **không đăng nhập**, API danh bạ công khai (client `publicRequester`);
   `manifest.coverage.methods = {"danh-ba-cong-khai-http": n}`. Script thu ở `research-local/` (mang tên miền), không
@@ -314,12 +315,51 @@ Khoá nối với S16/S08 (chi tiết số đo ở tệp kê local của lượt
 - UUID dự án/toà/tầng/căn của nguồn này là quan hệ bền (khoá nối cấp cao nhất); **khác** namespace với
   `insight_by_block[].id` của nguồn `s09-du-an` — ánh xạ qua (`du_an_id`, tên toà), không so uuid chéo.
 
+### Mở rộng v16 — quỹ căn (`quy-can`) và căn cao tầng theo tầng (`can-cao-tang`) (claudedp-2411-3, claudedp-2411-5)
+
+Cùng nguồn `s09-danh-ba`, cùng thư mục `vn/vn__s09-danh-ba__<id>/`, cùng `coverage.methods =
+{"danh-ba-cong-khai-http": n}`; chỉ đường công khai không đăng nhập; nhịp 3s; 403/429 → dừng cả lượt;
+không gọi API đếm gộp (đang trả 400). `manifest.schemaVersion = 16` từ lượt 24/11. Các snapshot v16
+(quỹ căn, gói 2, B3) nằm ở thư mục chờ ngoài `collector/snapshots` (chỉ-đọc, có tệp băm sha256) và
+chuyển vào kho NGUYÊN TỆP sau khi hàng DA56 (bộ nạp S09, mang cả mục này) gộp — mục 16 KHÔNG gộp riêng.
+
+| `kind` | `sourceId` | `payload` (nguyên văn) | `meta` |
+|---|---|---|---|
+| `quy-can` | `<du_an_id>` | `{data[căn], meta{code, page, size, total}}` — phản hồi đầy đủ kể cả `meta` của nguồn (khoá gốc chỉ có `data` và `meta`; `meta.code` là chuỗi «200»); một item mỗi TRANG | `duAnId` · `trang` (**đánh từ 0**) · `size` · `soCanNhan` (số căn nhận được của trang) · `tongNguon` (= `meta.total` của nguồn) · `duong` · `status` · `loi?` |
+| `can-cao-tang` | `<tang_id>` | `{code, data[căn]}` — MỘT item mỗi TẦNG, kể cả tầng trả rỗng | `duAnId` · `toaId` · `toaTen` · `tangId` · `tangTen` (nguyên văn «02», «12B») · `duong` · `status` · `loi?` |
+
+Luật đọc (bên nạp):
+
+1. **Trang quỹ căn đánh từ 0**: lượt đầu 24/11 gọi trang từ 1 nên dự án ≤ 200 căn trả rỗng (bản
+   `…T024022939` — bất biến, giữ nguyên để đối soát); bản đủ là lượt bù cùng ngày (trang từ 0,
+   40 dự án nhận đủ 1.294/1.294). Bên đọc lấy bản đủ theo `captured_at` muộn hơn; chênh lượt là việc
+   của bước đọc stg.
+2. **Hợp căn quỹ căn theo `data[].id`** giữa các trang của cùng dự án (khử trùng); đối soát đủ/thiếu
+   bằng Σ id hợp so `tongNguon` của trang đầu. `data[]` mang mã căn (`property_code`, khuôn
+   `TÒA.TẦNG.CĂN`), giá (`min/max_selling_price`, `min/max_unit_price`), trạng thái, phân khu/toà
+   (`sector_id`/`block_id`) — giá và trạng thái quỹ căn là dữ liệu công khai của nguồn (ROADMAP §3
+   mục 38), đi qua stg bình thường. **Tầng A trong raw**: `galleries[].urls` mang tên miền CDN của nguồn
+   và `geolocation` là toạ độ từng căn — raw ở lại máy thu; stg phải bỏ URL ảnh (hoặc đổi sang đường dẫn
+   tương tự quy tắc S07) trước khi đi bất kỳ đâu.
+3. `can-cao-tang` là gói 2 (DA43) và phần B3 ngoài Hà Nội (claudedp-2411-3): khoá bền từng cấp là
+   uuid dự án; uuid + tên toà; uuid + tên tầng (`tangId` = `sourceId`). Căn khuôn `data[].name ==
+   data[].code` dạng `TÒA.TẦNG.CĂN` — nối trực tiếp với (`toa`, `ma_can`) của S16 và `property_code`
+   của S08; tầng so qua tên tầng nguyên văn.
+4. Thu nhiều đêm thì mỗi đêm một snapshot mới (một dự án thu lại ở snapshot sau là dòng mới);
+   chọn bản mới nhất theo `captured_at` là việc của bước đọc stg.
+
 ## Lịch sử phiên bản
 
-- **schemaVersion 15 (2026-11-19, nháp claudedp-1811-12 — S09 danh bạ căn, gói 1 bản đồ)**: thêm nguồn
+- **schemaVersion 16 (2026-11-24, claudedp-2411-3 và claudedp-2411-5 — S09 quỹ căn + căn cao tầng theo tầng)**: nguồn
+  `s09-danh-ba` thêm hai kind `quy-can` (B4, 394 dự án) và `can-cao-tang` (gói 2 Hà Nội + B3 ngoài
+  Hà Nội) — khuôn ở mục «Mở rộng v16». RawItem không thêm trường chung; payload nguyên văn;
+  `manifest.schemaVersion = 16` từ lượt 24/11. Các snapshot v16 (quỹ căn, gói 2, B3) ghi ở thư mục chờ
+  ngoài `collector/snapshots` (chỉ-đọc, có tệp băm sha256), chuyển vào kho nguyên tệp sau khi hàng DA56
+  (bộ nạp S09, mang cả mục này) gộp — mục 16 KHÔNG gộp riêng.
+- **schemaVersion 15 (2026-11-19, claudedp-1811-12 — S09 danh bạ căn, gói 1 bản đồ; ĐÃ GHIM, trên
+  main)**: thêm nguồn
   `s09-danh-ba` (mục ở trên) với năm kind `danh-muc/toa/tang/khu-thap-tang/can-thap-tang`, payload nguyên văn
-  `{code,data}`. NHÁP — số 15 chưa ghim (v14 = S16 thuộc tính căn đang nháp nhánh khác; S17 cũng nháp cùng số);
-  bên đọc nhận diện theo `source`. Chưa có bộ nạp/migration (làn Claude giữ 115); gói 2 căn cao tầng theo tầng là
+  `{code,data}`. Chưa có bộ nạp/migration (làn Claude giữ 115); gói 2 căn cao tầng theo tầng là
   lượt riêng của nguồn này (DA43 đã ký Cổng Phạm vi, chờ Cổng Bằng chứng).
 - **schemaVersion 13 (2026-11-14, claudedp-1411-8 — S09 danh mục dự án khuôn API, bộ nạp `stg_s09_item`)**: nguồn
   `s09-du-an` (khuôn API, một lượt thu toàn danh mục `vn/vn__s09-du-an__<ISO>/`, `manifest.coverage.methods =

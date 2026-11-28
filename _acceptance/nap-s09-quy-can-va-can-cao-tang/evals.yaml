@@ -1,0 +1,110 @@
+schema_version: 1
+feature_slug: nap-s09-quy-can-va-can-cao-tang
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.s09_v16_db
+    expected: "Fixture v16 sinh từ khuôn bản thu thật (thay tên, URL, toạ độ) nạp hai lần trên DB riêng lượt: lần một đúng số dòng từng kind, lần hai 0 dòng, item hỏng đếm theo lý do. Chiều đỏ cùng fixture: sửa một byte một tệp thì lượt thoát khác 0 với thông điệp «sai băm» và 0 dòng được ghi"
+    paths: ["db/migrations/130_*", "pipeline/import-s09-danh-ba.mjs", "pipeline/lib/s09-danh-ba-v16*", "pipeline/scripts/s09-v16*", "pipeline/tests/fixtures/s09-v16/**"]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.s09_v16_db
+    expected: "Bảng kiểm kê viết trước mọi khoá lá của căn quỹ căn và item căn cao tầng (rút từ bản thu thật, không từ fixture), mỗi khoá một assert giữ hay bỏ, số assert bằng số khoá; 0 dòng stg còn khoá bị bỏ; bộ nạp in số căn đã bỏ. Bảng lá ở khoá `la:quy-can` (59 lá) và `la:can-cao-tang` (4 lá) của s09-danh-ba-v16-khoa.json, kiemKe sinh trên mọi căn của mọi bản thật; fixture phải mang đúng tập lá ấy, mỗi lá một kết luận và một assert. Chiều đỏ: đột biến bỏ hàm lọc thì ca đỏ với thông điệp ghim «galleries»; fixture thiếu một lá thật (bản fixture vòng 1 thiếu property_furnitures.names) thì ca khoá lá đỏ gọi tên lá (S4 r1 chạy lại)"
+    paths: ["pipeline/import-s09-danh-ba.mjs", "pipeline/lib/s09-danh-ba-v16*", "pipeline/scripts/s09-v16*", "pipeline/tests/fixtures/s09-v16/**"]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.s09_v16_db
+    expected: "Ma trận sáu ô viết trước (hỏng trước đủ · hỏng sau đủ · căn hai trang · thiếu trang · chỉ bản hỏng · hai bản đủ khác giá), số assert bằng số ô, mỗi ô assert trạng thái trọn của dự án trên v_s09_db_quy_can và v_s09_db_quy_can_doi_soat. Chiều đỏ: đột biến chọn bản theo captured_at bỏ đối soát thì ô «hỏng sau đủ» đỏ nêu tên ô"
+    paths: ["db/migrations/130_*", "pipeline/scripts/s09-v16*"]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.s09_v16_db
+    expected: "Ma trận năm ô viết trước (tốt rồi lỗi · lỗi rồi tốt · tốt rồi rỗng · code khác name · tầng ở hai bản), mỗi ô một assert trạng thái trọn của tầng trên v_s09_db_can_cao_tang. Chiều đỏ: đột biến để bản rỗng đè bản tốt thì ô «tốt rồi rỗng» đỏ nêu tên ô"
+    paths: ["db/migrations/130_*", "pipeline/scripts/s09-v16*"]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.s09_v16_that
+    expected: "Trên DB thử chép máy thu: kiểm băm thư mục chờ, nạp bốn bản thu, bộ đếm độc lập không import pipeline/lib/s09* in bảng ba cột (stg · đếm thẳng · manifest) theo bản thu × kind × cấp; bằng nhau từng ô; view quỹ căn 1.294 căn · 40 dự án · 1.268 có giá; đối soát bản hỏng 0 dòng du rỗng, du=false bằng số dự án bộ đếm; 40 dự án chia 24 nối · 6 thẻ · 10 ngoài danh mục; 0 dòng stg hai kind có payload chứa http hay tên miền thật đọc từ sổ nguồn local. Chiều đỏ: xoá một căn của một trang trong bản chép thì thoát 1 nêu ô lệch. Chỉ in số"
+    paths: ["db/migrations/130_*", "pipeline/import-s09-danh-ba.mjs", "pipeline/lib/s09-danh-ba-v16*", "pipeline/scripts/s09-v16*"]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.s09_v16_that
+    expected: "Băm tập dòng hai view theo khoá giống nhau ở lượt nạp một, nạp lại, và DB thử thứ hai nạp ngược thứ tự; áp 130 lần hai không lỗi. Chiều đỏ: đột biến ORDER BY ngược trong view chọn bản thì băm khác và lượt nêu view"
+    paths: ["db/migrations/130_*", "pipeline/import-s09-danh-ba.mjs", "pipeline/scripts/s09-v16*"]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.s09_v16_app
+    layer: backend-effect
+    expected: "Route thật /ops/registry trên lược đồ tạm: ô «Quỹ căn S09» in đúng số căn, số có giá, số dự án bằng SELECT trên view của cùng DB; dự án chưa nối đếm ở dòng phụ. Chiều đỏ: cấy thêm một căn vào stg thì số trên trang tăng đúng một, và đột biến đếm sai view thì ca đỏ nêu «quỹ căn»"
+    paths: ["app/src/lib/ops/registry/**", "app/src/app/ops/registry/**", "app/src/components/ops/registry/**", "app/tests/registry-quy-can*"]
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.s09_v16_app
+    layer: backend-effect
+    expected: "Route thật /ops/registry/[nodeId] ba ca: nút có quỹ căn ra đúng số dòng view và đúng giá, trạng thái từng dòng; nút không quỹ căn ra chữ trạng thái trống; truy vấn lỗi ra khối lỗi có nút Thử lại. Chiều đỏ: đột biến nối sai cột project_links thì ca đầu đỏ nêu số dòng"
+    paths: ["app/src/lib/ops/registry/**", "app/src/app/ops/registry/**", "app/src/components/ops/registry/**", "app/tests/registry-quy-can*"]
+  - id: E8u
+    criterion: AC-8
+    executor: ui-check
+    layer: ui-observed
+    paths: ["app/src/app/ops/registry/**", "app/src/components/ops/registry/**"]
+    steps:
+      - "Chạy app ở cổng riêng (app/node_modules là thư mục thật, Turbopack), trỏ vào DB thử của E5 đã dựng DA42, đăng nhập bằng tài khoản ops thử của máy."
+      - "Mở /ops/registry, chụp ô tổng có «Quỹ căn S09» → evidence/E8u-tong.png."
+      - "Mở một nút dự án có quỹ căn, chụp khối «Quỹ căn đang bán» → evidence/E8u-quy-can.png."
+    expected: "Ô tổng bằng SELECT trên cùng DB; bảng quỹ căn có giá, trạng thái đọc được; trang chỉ ghi mã S09, không URL ảnh, không toạ độ, không tên thật của nguồn"
+    evidence_required: [screenshot, observed, verifier, verified_at]
+  - id: E9
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.s09_v16_db
+    expected: "Cấy chuỗi tên miền giả lập vào URL ảnh và toạ độ giả lập: stg, log bộ nạp không chứa chuỗi cấy; danh sách FILL của pipeline/sync-cloud.mjs không có stg_s09_danh_ba hay ba view v_s09_db_quy_can*, v_s09_db_can_cao_tang. Chiều đỏ: bỏ hàm lọc thì ca đỏ nêu chuỗi cấy"
+    paths: ["pipeline/import-s09-danh-ba.mjs", "pipeline/lib/s09-danh-ba-v16*", "pipeline/sync-cloud.mjs", "pipeline/scripts/s09-v16*"]
+  - id: E9b
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.s09_v16_app
+    expected: "HTML hai trang của E7, E8 render trên fixture cấy không chứa chuỗi tên miền giả lập hay toạ độ giả lập; chỉ chữ «S09». Chiều đỏ: đột biến đưa cột galleries vào truy vấn trang thì ca đỏ nêu chuỗi cấy"
+    paths: ["app/src/lib/ops/registry/**", "app/src/components/ops/registry/**", "app/tests/registry-quy-can*"]
+  - id: E10
+    criterion: AC-10
+    executor: judgment
+    question: "ap-may-thu.md có đủ năm thứ (lệnh áp 130 và lượt nạp bốn bản thu v16 sau khi bản thu vào collector/snapshots, số chạy thử khớp số AC-5 của contract, sao lưu trước, cách lùi, lệnh kiểm sau) và nói thứ tự áp sau DA42 không; DATA-CONTRACT.md có mục «Mở rộng v16» với hai kind quy-can, can-cao-tang và dòng lịch sử schemaVersion 16 không? Thiếu một thứ thì FAIL nêu thứ thiếu."
+    inputs: ["_acceptance/nap-s09-quy-can-va-can-cao-tang/ap-may-thu.md", "collector/docs/DATA-CONTRACT.md", "_acceptance/nap-s09-quy-can-va-can-cao-tang/contract.md"]
+    paths: ["_acceptance/nap-s09-quy-can-va-can-cao-tang/ap-may-thu.md", "collector/docs/DATA-CONTRACT.md"]
+  - id: E10b
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.script.s09_v16_dc
+    expected: "Khối «### Mở rộng v16» (tới tiêu đề kế) và gạch lịch sử «- **schemaVersion 16» của collector/docs/DATA-CONTRACT.md khớp bản làn thu @767c70c13 thì thoát 0 và in «PASS khối «Mở rộng v16» … khớp»; lệch thì thoát 1 gọi tên khối lệch; thiếu tiêu đề hay gạch thì ném. Đối chứng kèm trong cùng lệnh (--doi-chung): đổi 1 ký tự trong khối v16 → phải lệch «muc»; thêm một dòng ngoài khối (mô phỏng ZC20 #561) → phải khớp. Đổi sau chữ ký Cổng Bằng chứng 27/11 (GS phán 28/11): bản cũ `git diff --exit-code 767c70c13 -- DATA-CONTRACT.md` so trọn tệp nên đỏ oan khi làn thu sửa phần khác; lời tiêu chí AC-10 giữ nguyên."
+    paths: ["collector/docs/DATA-CONTRACT.md", "_acceptance/nap-s09-quy-can-va-can-cao-tang/dc-v16.mjs"]
+  - id: E11a
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.suite.pipeline_a
+    paths: ["db/migrations/130_*", "pipeline/import-s09-danh-ba.mjs", "pipeline/lib/s09-danh-ba-v16*", "pipeline/scripts/s09-v16*", "pipeline/tests/fixtures/s09-v16/**"]
+    expected: "exit 0; nửa A bộ test pipeline trên cụm PostGIS dùng một lần (db-thu --chay-trong, khuôn HT9; ~5′), 0 fail."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11b
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.suite.pipeline_b
+    paths: ["db/migrations/130_*", "pipeline/import-s09-danh-ba.mjs", "pipeline/lib/s09-danh-ba-v16*", "pipeline/scripts/s09-v16*", "pipeline/tests/fixtures/s09-v16/**"]
+    expected: "exit 0; nửa B bộ test pipeline trên cụm PostGIS dùng một lần (khuôn HT9; ~5′), 0 fail."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11c
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.suite.pipeline_that
+    long_running: 90
+    paths: ["db/migrations/130_*", "pipeline/import-s09-danh-ba.mjs", "pipeline/lib/s09-danh-ba-v16*", "pipeline/scripts/s09-v16*", "pipeline/tests/fixtures/s09-v16/**"]
+    expected: "exit 0; ca dữ liệu thật của bộ test pipeline (pipeline_that, khuôn HT9) trên bản chép, kích vì nhánh đổi db/migrations trong vùng của nó; 0 fail."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
