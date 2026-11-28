@@ -14,8 +14,12 @@ cp "$ROOT/$CA" "$WT/$CA"
 ra=$(cd "$WT" && bash db/db-thu.sh oneinvest_suite_da72_goc --chay node --test --test-concurrency=1 "$CA" 2>&1); ma=$?
 echo "$ra" | grep -E "^(✔|✖) DA72|^ℹ (pass|fail)" | sort -u
 loi=0
-for ca in DA72-AC-1 DA72-AC-3; do echo "$ra" | grep -q "^✖ $ca" || { echo "FAIL $ca không đỏ trên mã gốc $GOC"; loi=1; }; done
-echo "$ra" | grep -q "khong-co-tinh" || { echo "FAIL mã gốc không gãy vì khong-co-tinh"; loi=1; }
+# DA73: mỗi ca phải đỏ VÌ khong-co-tinh — soát khối lỗi của chính ca ấy trong mục «failing tests», không dò toàn đầu ra.
+khoi(){ echo "$ra" | awk -v ca="$1" '/^✖ failing tests:/{f=1;next} f&&/^✖ /{in_=(index($0,"✖ " ca)==1);next} f&&in_{print}'; }
+for ca in DA72-AC-1 DA72-AC-3; do
+  echo "$ra" | grep -q "^✖ $ca" || { echo "FAIL $ca không đỏ trên mã gốc $GOC"; loi=1; continue; }
+  khoi "$ca" | grep -q "khong-co-tinh" || { echo "FAIL $ca đỏ nhưng không vì khong-co-tinh"; loi=1; }
+done
 [ $ma -ne 0 ] || { echo "FAIL tệp ca thoát 0 trên mã gốc"; loi=1; }
 [ $loi -eq 0 ] && echo "ĐỐI CHỨNG: mã gốc đỏ đúng (khong-co-tinh) ở $GOC"
 exit $loi

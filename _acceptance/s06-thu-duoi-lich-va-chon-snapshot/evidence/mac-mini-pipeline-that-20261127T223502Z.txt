@@ -1,0 +1,257 @@
+# pipeline_that chạy riêng ngoài vòng (HT37) — Mac mini · HEAD da528ba0694d22a3611a1c9255db21358a5f388d (cây ngoài _acceptance/ = 788f6bb0f) · bắt đầu 20261127T223502Z
+# lệnh: node scripts/suite-neu-doi.mjs pipeline_that -- 'cd pipeline && npm run test:that'
+ca dữ liệu thật: chạy trong lượt này
+suite-neu-doi: chạy pipeline_that — đổi pipeline/lib/thu-duoi-moc.mjs
+
+> test:that
+> bash ../db/db-thu.sh oneinvest_suite_pipeline_that --chay node chay-that.mjs
+
+chay-that: vai may-thu — chạy đủ 34 ca
+▶ PL20 câu rút chừa dòng bước gắn toà (ROLLBACK)
+  ✔ PL20-E7 ghi khác giá trị cùng bộ: dòng ghep-toa giữ sống, dòng không rule bị rút (13.658083ms)
+  ✔ chiều đỏ PL20-E7: bản phá bỏ điều kiện chừa → dòng ghep-toa bị rút, đỏ (7.304542ms)
+✔ PL20 câu rút chừa dòng bước gắn toà (ROLLBACK) (36.590292ms)
+✔ DP-AC-2 loaiTinPhiLy (129.351167ms)
+✔ DP-AC-2 tập toàn tin hợp lý không ghi audit (84.479042ms)
+ruler: apartment=1 phường (phường × loại, n≥5)
+bait_gap_pct: cập nhật 9 offers P1
+không chấm: chua-ro-loai=0 thieu-thuoc-cung-loai=0
+sellers (view): 1 người bán
+loại tin phi lý: 3 tin {"phong-qua-nho":1,"thieu-dien-tich":1,"dien-tich-ngoai-khoang":1}
+  broker: ? — 4 tin, gap giữa 25%, đa kênh=false
+✔ DP-AC-2 refreshBaitGap giữ registry người bán (85.77225ms)
+✔ DO1-AC-6 chuyển bậc trên DB: lập mốc, bảy loại đổi, đổi khoá, một dòng mỗi đơn vị, chạy lại 0 dòng (807951.526292ms)
+✔ DO1-AC-9 detail các dòng do1-* qua bộ ghi không mang chữ bài, trích, người đăng, labeler, tên nguồn; số đi qua writer (102968.458333ms)
+✔ cài thật: ghi plist vào LaunchAgents của HOME giả, plutil sạch, chmod 600, chỉ IN lệnh launchctl (38.449334ms)
+✔ 2610-5: tạo thư mục pipeline/logs (khuôn install-*.sh) + sed lỗi không đè plist cũ (42.200541ms)
+✔ SS-AC-6 plist neo node bằng __NODE__, không còn /usr/bin/env (5.480292ms)
+✔ SS-AC-7 chạy đúng dòng cài của runtime-map vào thư mục tạm: node tuyệt đối chạy dưới PATH launchd (38.059625ms)
+# ON22-AC-10 bảng data_flow_snapshot ở máy thu: có
+# ON22-AC-10 bảng ai_calls ở máy thu: có
+▶ ON22-AC-10 máy thu thật
+  ✔ ON22-AC-10 máy thu thật, chế độ khô: năm khối có measured_at, freshness bằng check-freshness, 0 chỗ chặn, đầu ra chỉ tên khối + trạng thái (4146.09475ms)
+✔ ON22-AC-10 máy thu thật (4220.589916ms)
+✔ AU9-AC-1 chỉ ranh giới cấp 6 thành phường (751.609459ms)
+✔ AU9-AC-1 ranh giới cấp 4 bao Hà Nội không vào areas (819.97375ms)
+✔ AU9-AC-2 phường cấp 6 nằm ngoài polygon market bị bỏ, in tên (762.859208ms)
+✔ AU9-AC-2 market chưa có polygon → không chốt, in cảnh báo (862.442167ms)
+✔ AU9-AC-3 dọn khu vực lạc (1057.537167ms)
+✔ AU9-AC-3 khu vực lạc có saved_markets thì giữ (1044.193166ms)
+✔ AU9-AC-3 khu vực lạc có properties thì giữ; market_asset_stats là cache thì xoá cùng khu vực (2084.142708ms)
+✔ AU9-AC-4 chạy lần hai không đổi gì (1993.252833ms)
+✔ AU9-AC-9 snapshot mất tag admin_level → dừng, không xoá gì (406.165166ms)
+✔ AU9-AC-9 snapshot còn dưới một nửa số phường → dừng, không xoá gì (406.265458ms)
+✔ AU9-AC-5 DQ area_con_ngoai_cha fail khi có con ngoài cha (75.14ms)
+✔ AU9-AC-5 DQ area_con_ngoai_cha pass trên dữ liệu sạch (1072.05425ms)
+✔ AU9-AC-10 không cờ: khu vực lạc và metrics còn nguyên, listing vẫn gán lại (1088.714916ms)
+✔ AU9-AC-10 có cờ: khu vực lạc bị xoá (1058.461333ms)
+posts: 264738 (gạt 1265 post thử {"agent":1,"group":2,"noi-dung":2,"snapshot-source":1260})
+parse: 698 high, 117448 medium, 143143 fail — coverage 0.3%
+giá phi lý (không thành offer): {"thue-tu-1-ty":2,"ban-tren-100-ty":5}
+loại tin theo nguồn: {"chu-bai":69336,"tin-hieu-chu":15514,"don-vi-gia":34520,"the-nhom":2010,"boi-canh-nhom":215,"yeu-cau":27657,"bo":115486}
+dedup: 9739 unique offers (từ 118146 tin có giá)
+tin nhiều SĐT: 81
+loại hình: 101987 phát biểu, rút 0
+thẻ nhóm: 43 thẻ đã duyệt, 232439 phát biểu {"the":112719,"chu_bai":372,"bo":4486}, hoà giải tin {"chuBaiThang":21,"chuBaiBatDong":0,"theBatDong":7,"theGiuHienTai":7,"xungLuatKhac":0}, rút 0 theo bản thẻ + 19 theo lượt + 0 dòng DV6, ghi lại 0 dòng DV6 theo ý định DV6 (39 bài DV6 không còn muốn), ô bỏ {"duAn":0,"areaId":0,"phanKhu":0}
+tầng: 14700 phát biểu, rút 0
+gán số qua người đăng: đổi 1967 · gán 1967 (so_tren_tin=1773 so_trong_bai=194) · rút 0 · bỏ dấu 0
+đối soát: {"kept":0,"links":0,"moved":0,"stale":0,"merged":0,"source":"S03","reapplied":0,"candidates":0,"links_journaled":0}
+offers ghi: 9739 (SĐT: 648 người bán)
+posts: 264737 (gạt 1266 post thử {"agent":1,"group":3,"noi-dung":2,"snapshot-source":1260})
+parse: 697 high, 117448 medium, 143143 fail — coverage 0.3%
+giá phi lý (không thành offer): {"thue-tu-1-ty":2,"ban-tren-100-ty":5}
+loại tin theo nguồn: {"chu-bai":69335,"tin-hieu-chu":15514,"don-vi-gia":34520,"the-nhom":2010,"boi-canh-nhom":215,"yeu-cau":27657,"bo":115486}
+dedup: 9738 unique offers (từ 118145 tin có giá)
+tin nhiều SĐT: 81
+loại hình: 101986 phát biểu, rút 1
+thẻ nhóm: 43 thẻ đã duyệt, 232439 phát biểu {"the":112719,"chu_bai":372,"bo":4486}, hoà giải tin {"chuBaiThang":21,"chuBaiBatDong":0,"theBatDong":7,"theGiuHienTai":7,"xungLuatKhac":0}, rút 0 theo bản thẻ + 0 theo lượt + 0 dòng DV6, ghi lại 0 dòng DV6 theo ý định DV6 (39 bài DV6 không còn muốn), ô bỏ {"duAn":0,"areaId":0,"phanKhu":0}
+tầng: 14700 phát biểu, rút 0
+gán số qua người đăng: đổi 1967 · gán 1967 (so_tren_tin=1773 so_trong_bai=194) · rút 0 · bỏ dấu 0
+đối soát: {"kept":0,"links":0,"moved":0,"stale":1,"merged":0,"source":"S03","reapplied":0,"candidates":0,"links_journaled":0}
+offers ghi: 9738 (SĐT: 647 người bán)
+✔ AC-4 rút offer giả qua đối soát (219676.9165ms)
+posts: 264737 (gạt 0 post thử {})
+parse: 697 high, 117448 medium, 143143 fail — coverage 0.3%
+giá phi lý (không thành offer): {"thue-tu-1-ty":2,"ban-tren-100-ty":5}
+loại tin theo nguồn: {"chu-bai":69335,"tin-hieu-chu":15514,"don-vi-gia":34520,"the-nhom":2010,"boi-canh-nhom":215,"yeu-cau":27657,"bo":115486}
+dedup: 9738 unique offers (từ 118145 tin có giá)
+tin nhiều SĐT: 81
+loại hình: 101986 phát biểu, rút 0
+thẻ nhóm: 43 thẻ đã duyệt, 232439 phát biểu {"the":112719,"chu_bai":372,"bo":4486}, hoà giải tin {"chuBaiThang":21,"chuBaiBatDong":0,"theBatDong":7,"theGiuHienTai":7,"xungLuatKhac":0}, rút 0 theo bản thẻ + 19 theo lượt + 0 dòng DV6, ghi lại 0 dòng DV6 theo ý định DV6 (39 bài DV6 không còn muốn), ô bỏ {"duAn":0,"areaId":0,"phanKhu":0}
+tầng: 14700 phát biểu, rút 0
+gán số qua người đăng: đổi 1967 · gán 1967 (so_tren_tin=1773 so_trong_bai=194) · rút 0 · bỏ dấu 0
+đối soát: {"kept":0,"links":0,"moved":0,"stale":0,"merged":0,"source":"S03","reapplied":0,"candidates":0,"links_journaled":0}
+offers ghi: 9738 (SĐT: 647 người bán)
+posts: 264737 (gạt 1 post thử {"group":1})
+parse: 697 high, 117448 medium, 143143 fail — coverage 0.3%
+giá phi lý (không thành offer): {"thue-tu-1-ty":2,"ban-tren-100-ty":5}
+loại tin theo nguồn: {"chu-bai":69335,"tin-hieu-chu":15514,"don-vi-gia":34520,"the-nhom":2010,"boi-canh-nhom":215,"yeu-cau":27657,"bo":115486}
+dedup: 9738 unique offers (từ 118145 tin có giá)
+tin nhiều SĐT: 81
+loại hình: 101986 phát biểu, rút 0
+thẻ nhóm: 43 thẻ đã duyệt, 232439 phát biểu {"the":112719,"chu_bai":372,"bo":4486}, hoà giải tin {"chuBaiThang":21,"chuBaiBatDong":0,"theBatDong":7,"theGiuHienTai":7,"xungLuatKhac":0}, rút 0 theo bản thẻ + 0 theo lượt + 0 dòng DV6, ghi lại 0 dòng DV6 theo ý định DV6 (39 bài DV6 không còn muốn), ô bỏ {"duAn":0,"areaId":0,"phanKhu":0}
+tầng: 14700 phát biểu, rút 0
+gán số qua người đăng: đổi 1967 · gán 1967 (so_tren_tin=1773 so_trong_bai=194) · rút 0 · bỏ dấu 0
+đối soát: {"kept":0,"links":0,"moved":0,"stale":0,"merged":0,"source":"S03","reapplied":0,"candidates":0,"links_journaled":0}
+offers ghi: 9738 (SĐT: 647 người bán)
+posts: 0 (gạt 264738 post thử {"group":264738})
+parse: 0 high, 0 medium, 0 fail — coverage NaN%
+giá phi lý (không thành offer): {"thue-tu-1-ty":0,"ban-tren-100-ty":0}
+loại tin theo nguồn: {"chu-bai":0,"tin-hieu-chu":0,"don-vi-gia":0,"the-nhom":0,"boi-canh-nhom":0,"yeu-cau":0,"bo":0}
+dedup: 0 unique offers (từ 0 tin có giá)
+tin nhiều SĐT: 0
+loại hình: 0 phát biểu, rút 101986
+thẻ nhóm: 43 thẻ đã duyệt, 0 phát biểu {"the":0,"chu_bai":0,"bo":0}, hoà giải tin {"chuBaiThang":0,"chuBaiBatDong":0,"theBatDong":0,"theGiuHienTai":0,"xungLuatKhac":0}, rút 0 theo bản thẻ + 0 theo lượt + 0 dòng DV6, ghi lại 0 dòng DV6 theo ý định DV6 (0 bài DV6 không còn muốn), ô bỏ {"duAn":0,"areaId":0,"phanKhu":0}
+✔ AC-5 lượt sạch và lượt toàn thử (229501.074458ms)
+posts: 264737 (gạt 1265 post thử {"agent":1,"group":2,"noi-dung":2,"snapshot-source":1260})
+parse: 697 high, 117448 medium, 143143 fail — coverage 0.3%
+giá phi lý (không thành offer): {"thue-tu-1-ty":2,"ban-tren-100-ty":5}
+loại tin theo nguồn: {"chu-bai":69335,"tin-hieu-chu":15514,"don-vi-gia":34520,"the-nhom":2010,"boi-canh-nhom":215,"yeu-cau":27657,"bo":115486}
+dedup: 9738 unique offers (từ 118145 tin có giá)
+tin nhiều SĐT: 81
+loại hình: 101986 phát biểu, rút 0
+thẻ nhóm: 43 thẻ đã duyệt, 232439 phát biểu {"the":112719,"chu_bai":372,"bo":4486}, hoà giải tin {"chuBaiThang":21,"chuBaiBatDong":0,"theBatDong":7,"theGiuHienTai":7,"xungLuatKhac":0}, rút 0 theo bản thẻ + 19 theo lượt + 0 dòng DV6, ghi lại 0 dòng DV6 theo ý định DV6 (39 bài DV6 không còn muốn), ô bỏ {"duAn":0,"areaId":0,"phanKhu":0}
+tầng: 14700 phát biểu, rút 0
+gán số qua người đăng: đổi 1967 · gán 1967 (so_tren_tin=1773 so_trong_bai=194) · rút 0 · bỏ dấu 0
+đối soát: {"kept":0,"links":0,"moved":0,"stale":0,"merged":0,"source":"S03","reapplied":0,"candidates":0,"links_journaled":0}
+offers ghi: 9738 (SĐT: 647 người bán)
+FB posts: 100 (gạt 0 post thử {})
+parse: 21 high, 36 medium, 19 fail — coverage 21.0%
+dedup: 30 unique offers
+tin nhiều SĐT: 1
+đối soát: {"kept":0,"links":0,"moved":0,"stale":0,"merged":0,"source":"S05","reapplied":0,"candidates":0,"links_journaled":0}
+S05 offers ghi: 30 (SĐT: 21 người bán)
+✔ AC-9 stg không đổi (114535.71575ms)
+FB posts: 100 (gạt 1 post thử {"group":1})
+parse: 21 high, 36 medium, 19 fail — coverage 21.0%
+dedup: 30 unique offers
+tin nhiều SĐT: 1
+đối soát: {"kept":0,"links":0,"moved":0,"stale":0,"merged":0,"source":"S05","reapplied":0,"candidates":0,"links_journaled":0}
+S05 offers ghi: 30 (SĐT: 21 người bán)
+FB posts: 101 (gạt 0 post thử {})
+parse: 22 high, 36 medium, 19 fail — coverage 21.8%
+dedup: 31 unique offers
+tin nhiều SĐT: 1
+đối soát: {"kept":0,"links":0,"moved":0,"stale":0,"merged":0,"source":"S05","reapplied":0,"candidates":0,"links_journaled":0}
+S05 offers ghi: 31 (SĐT: 22 người bán)
+✔ AC-3 transform S05 dùng cùng bộ lọc (461.502458ms)
+posts: 264738 (gạt 1266 post thử {"agent":1,"group":2,"noi-dung":2,"snapshot-source":1261})
+parse: 698 high, 117448 medium, 143143 fail — coverage 0.3%
+giá phi lý (không thành offer): {"thue-tu-1-ty":2,"ban-tren-100-ty":5}
+loại tin theo nguồn: {"chu-bai":69336,"tin-hieu-chu":15514,"don-vi-gia":34520,"the-nhom":2010,"boi-canh-nhom":215,"yeu-cau":27657,"bo":115486}
+dedup: 9739 unique offers (từ 118146 tin có giá)
+tin nhiều SĐT: 81
+loại hình: 101987 phát biểu, rút 0
+thẻ nhóm: 43 thẻ đã duyệt, 232439 phát biểu {"the":112719,"chu_bai":372,"bo":4486}, hoà giải tin {"chuBaiThang":21,"chuBaiBatDong":0,"theBatDong":7,"theGiuHienTai":7,"xungLuatKhac":0}, rút 0 theo bản thẻ + 19 theo lượt + 0 dòng DV6, ghi lại 0 dòng DV6 theo ý định DV6 (39 bài DV6 không còn muốn), ô bỏ {"duAn":0,"areaId":0,"phanKhu":0}
+tầng: 14700 phát biểu, rút 0
+gán số qua người đăng: đổi 1967 · gán 1967 (so_tren_tin=1773 so_trong_bai=194) · rút 0 · bỏ dấu 0
+đối soát: {"kept":0,"links":0,"moved":0,"stale":0,"merged":0,"source":"S03","reapplied":0,"candidates":0,"links_journaled":0}
+offers ghi: 9739 (SĐT: 648 người bán)
+ruler: apartment=161 phường, commercial=42 phường, house=227 phường, land=182 phường (phường × loại, n≥5)
+bait_gap_pct: cập nhật 2243 offers P1
+không chấm: chua-ro-loai=459 thieu-thuoc-cung-loai=252
+sellers (view): 13879 người bán
+loại tin phi lý: 13 tin {"thieu-dien-tich":5,"dien-tich-ngoai-khoang":4,"phong-qua-nho":3,"phong-ngu-ngoai-khoang":1}
+  broker: Thảo Vương — 3 tin, gap giữa 99.7%, đa kênh=false
+  broker: ? — 1 tin, gap giữa 98.8%, đa kênh=false
+  broker: Lục Văn Xuân — 1 tin, gap giữa 98.3%, đa kênh=false
+posts: 264739 (gạt 1265 post thử {"agent":1,"group":2,"noi-dung":2,"snapshot-source":1260})
+parse: 699 high, 117448 medium, 143143 fail — coverage 0.3%
+giá phi lý (không thành offer): {"thue-tu-1-ty":2,"ban-tren-100-ty":5}
+loại tin theo nguồn: {"chu-bai":69337,"tin-hieu-chu":15514,"don-vi-gia":34520,"the-nhom":2010,"boi-canh-nhom":215,"yeu-cau":27657,"bo":115486}
+dedup: 9740 unique offers (từ 118147 tin có giá)
+tin nhiều SĐT: 81
+loại hình: 101988 phát biểu, rút 0
+thẻ nhóm: 43 thẻ đã duyệt, 232439 phát biểu {"the":112719,"chu_bai":372,"bo":4486}, hoà giải tin {"chuBaiThang":21,"chuBaiBatDong":0,"theBatDong":7,"theGiuHienTai":7,"xungLuatKhac":0}, rút 0 theo bản thẻ + 0 theo lượt + 0 dòng DV6, ghi lại 0 dòng DV6 theo ý định DV6 (39 bài DV6 không còn muốn), ô bỏ {"duAn":0,"areaId":0,"phanKhu":0}
+tầng: 14700 phát biểu, rút 0
+gán số qua người đăng: đổi 1967 · gán 1967 (so_tren_tin=1773 so_trong_bai=194) · rút 0 · bỏ dấu 0
+đối soát: {"kept":0,"links":0,"moved":0,"stale":0,"merged":0,"source":"S03","reapplied":0,"candidates":0,"links_journaled":0}
+offers ghi: 9740 (SĐT: 649 người bán)
+ruler: apartment=161 phường, commercial=42 phường, house=227 phường, land=182 phường (phường × loại, n≥5)
+bait_gap_pct: cập nhật 2244 offers P1
+không chấm: chua-ro-loai=459 thieu-thuoc-cung-loai=252
+sellers (view): 13879 người bán
+loại tin phi lý: 13 tin {"dien-tich-ngoai-khoang":4,"phong-qua-nho":3,"thieu-dien-tich":5,"phong-ngu-ngoai-khoang":1}
+  broker: Thảo Vương — 3 tin, gap giữa 99.7%, đa kênh=false
+  broker: ? — 1 tin, gap giữa 98.8%, đa kênh=false
+  broker: Lục Văn Xuân — 1 tin, gap giữa 98.3%, đa kênh=false
+✔ AC-6 bait gap tính lại (262285.418166ms)
+posts: 264737 (gạt 1265 post thử {"agent":1,"group":2,"noi-dung":2,"snapshot-source":1260})
+parse: 697 high, 117448 medium, 143143 fail — coverage 0.3%
+giá phi lý (không thành offer): {"thue-tu-1-ty":2,"ban-tren-100-ty":5}
+loại tin theo nguồn: {"chu-bai":69335,"tin-hieu-chu":15514,"don-vi-gia":34520,"the-nhom":2010,"boi-canh-nhom":215,"yeu-cau":27657,"bo":115486}
+dedup: 9738 unique offers (từ 118145 tin có giá)
+tin nhiều SĐT: 81
+loại hình: 101986 phát biểu, rút 0
+thẻ nhóm: 43 thẻ đã duyệt, 232439 phát biểu {"the":112719,"chu_bai":372,"bo":4486}, hoà giải tin {"chuBaiThang":21,"chuBaiBatDong":0,"theBatDong":7,"theGiuHienTai":7,"xungLuatKhac":0}, rút 0 theo bản thẻ + 19 theo lượt + 0 dòng DV6, ghi lại 0 dòng DV6 theo ý định DV6 (39 bài DV6 không còn muốn), ô bỏ {"duAn":0,"areaId":0,"phanKhu":0}
+tầng: 14700 phát biểu, rút 0
+gán số qua người đăng: đổi 1967 · gán 1967 (so_tren_tin=1773 so_trong_bai=194) · rút 0 · bỏ dấu 0
+đối soát: {"kept":0,"links":0,"moved":0,"stale":0,"merged":0,"source":"S03","reapplied":0,"candidates":0,"links_journaled":0}
+offers ghi: 9738 (SĐT: 647 người bán)
+ruler: apartment=161 phường, commercial=42 phường, house=227 phường, land=182 phường (phường × loại, n≥5)
+bait_gap_pct: cập nhật 2242 offers P1
+không chấm: chua-ro-loai=459 thieu-thuoc-cung-loai=252
+sellers (view): 13879 người bán
+loại tin phi lý: 13 tin {"dien-tich-ngoai-khoang":4,"phong-qua-nho":3,"thieu-dien-tich":5,"phong-ngu-ngoai-khoang":1}
+  broker: Thảo Vương — 3 tin, gap giữa 99.7%, đa kênh=false
+  broker: ? — 1 tin, gap giữa 98.8%, đa kênh=false
+  broker: Lục Văn Xuân — 1 tin, gap giữa 98.3%, đa kênh=false
+posts: 264738 (gạt 1265 post thử {"agent":1,"group":2,"noi-dung":2,"snapshot-source":1260})
+parse: 698 high, 117448 medium, 143143 fail — coverage 0.3%
+giá phi lý (không thành offer): {"thue-tu-1-ty":2,"ban-tren-100-ty":5}
+loại tin theo nguồn: {"chu-bai":69336,"tin-hieu-chu":15514,"don-vi-gia":34520,"the-nhom":2010,"boi-canh-nhom":215,"yeu-cau":27657,"bo":115486}
+dedup: 9739 unique offers (từ 118146 tin có giá)
+tin nhiều SĐT: 81
+loại hình: 101987 phát biểu, rút 0
+thẻ nhóm: 43 thẻ đã duyệt, 232439 phát biểu {"the":112719,"chu_bai":372,"bo":4486}, hoà giải tin {"chuBaiThang":21,"chuBaiBatDong":0,"theBatDong":7,"theGiuHienTai":7,"xungLuatKhac":0}, rút 0 theo bản thẻ + 0 theo lượt + 0 dòng DV6, ghi lại 0 dòng DV6 theo ý định DV6 (39 bài DV6 không còn muốn), ô bỏ {"duAn":0,"areaId":0,"phanKhu":0}
+tầng: 14700 phát biểu, rút 0
+gán số qua người đăng: đổi 1967 · gán 1967 (so_tren_tin=1773 so_trong_bai=194) · rút 0 · bỏ dấu 0
+đối soát: {"kept":0,"links":0,"moved":0,"stale":0,"merged":0,"source":"S03","reapplied":0,"candidates":0,"links_journaled":0}
+offers ghi: 9739 (SĐT: 648 người bán)
+posts: 264737 (gạt 1266 post thử {"agent":1,"group":3,"noi-dung":2,"snapshot-source":1260})
+parse: 697 high, 117448 medium, 143143 fail — coverage 0.3%
+giá phi lý (không thành offer): {"thue-tu-1-ty":2,"ban-tren-100-ty":5}
+loại tin theo nguồn: {"chu-bai":69335,"tin-hieu-chu":15514,"don-vi-gia":34520,"the-nhom":2010,"boi-canh-nhom":215,"yeu-cau":27657,"bo":115486}
+dedup: 9738 unique offers (từ 118145 tin có giá)
+tin nhiều SĐT: 81
+loại hình: 101986 phát biểu, rút 1
+thẻ nhóm: 43 thẻ đã duyệt, 232439 phát biểu {"the":112719,"chu_bai":372,"bo":4486}, hoà giải tin {"chuBaiThang":21,"chuBaiBatDong":0,"theBatDong":7,"theGiuHienTai":7,"xungLuatKhac":0}, rút 0 theo bản thẻ + 0 theo lượt + 0 dòng DV6, ghi lại 0 dòng DV6 theo ý định DV6 (39 bài DV6 không còn muốn), ô bỏ {"duAn":0,"areaId":0,"phanKhu":0}
+tầng: 14700 phát biểu, rút 0
+gán số qua người đăng: đổi 1967 · gán 1967 (so_tren_tin=1773 so_trong_bai=194) · rút 0 · bỏ dấu 0
+đối soát: {"kept":0,"links":0,"moved":0,"stale":1,"merged":0,"source":"S03","reapplied":0,"candidates":0,"links_journaled":0}
+offers ghi: 9738 (SĐT: 647 người bán)
+ruler: apartment=161 phường, commercial=42 phường, house=227 phường, land=182 phường (phường × loại, n≥5)
+bait_gap_pct: cập nhật 2242 offers P1
+không chấm: chua-ro-loai=459 thieu-thuoc-cung-loai=252
+sellers (view): 13879 người bán
+loại tin phi lý: 13 tin {"thieu-dien-tich":5,"phong-qua-nho":3,"dien-tich-ngoai-khoang":4,"phong-ngu-ngoai-khoang":1}
+  broker: Thảo Vương — 3 tin, gap giữa 99.7%, đa kênh=false
+  broker: ? — 1 tin, gap giữa 98.8%, đa kênh=false
+  broker: Lục Văn Xuân — 1 tin, gap giữa 98.3%, đa kênh=false
+✔ AC-8 thước dư lượng bắt được tin giả (371057.515583ms)
+SLT-DC-KHOA lưới máy chủ (ca 7/9): trần 900 s → transaction_timeout 930s
+SLT-DC-9 tắt {"ban":2826,"ban_duoi_300tr":58} · bật {"ban":4030,"ban_duoi_300tr":58} · nguồn {"chu-bai":69336,"tin-hieu-chu":15514,"don-vi-gia":34520,"the-nhom":2010,"boi-canh-nhom":215,"yeu-cau":27665,"bo":115486}
+SLT-DC-9 thuê từ 1 tỷ (trước lọc giá phi lý): tắt 3 · bật 3
+▶ SLT-DC đối chiếu trên DB máy thu (ROLLBACK)
+  ▶ SLT-DC-7, SLT-DC-9: tắt rồi bật suy loại, rồi tắt lại — cùng một transaction
+    ✔ SLT-DC-9 tin bán S03 tăng ≥ 30%, thuê ≥ 1 tỷ và bán < 300 triệu không tăng (0.920209ms)
+    ✔ SLT-DC-9 tập Yêu cầu mẫu không bài nào thành tin (62.226875ms)
+SLT-DC-7 nhóm ≥ 2 bài 7083 · lệch 0
+    ✔ SLT-DC-7 nhóm gộp không lẫn bài khác PN hay khác DT (3677.011917ms)
+SLT-DC-9 tin chỉ gồm bài suy loại: còn sống 0 · bản ghi (gồm đã rút) 4405
+    ✔ SLT-DC-9 chạy lại với suy loại tắt: tin chỉ gồm bài suy loại đều bị rút (14881.134ms)
+  ✔ SLT-DC-7, SLT-DC-9: tắt rồi bật suy loại, rồi tắt lại — cùng một transaction (584793.58ms)
+SLT-DC-KHOA lưới máy chủ (ca 10): trần 120 s → transaction_timeout 150s
+SLT-DC-10 lần một 30 · lần hai 0 · --thu 0 · tầng {"chu-bai":{"co":5516,"chon":10},"moi-nhan":{"co":4460,"chon":10},"van-bo":{"co":72171,"chon":10}}
+  ✔ SLT-DC-10 lát s03-loai-tin: lần một thêm n, lần hai cùng seed thêm 0, --thu thêm 0 (52454.577875ms)
+✔ SLT-DC đối chiếu trên DB máy thu (ROLLBACK) (637248.858541ms)
+ℹ tests 38
+ℹ suites 3
+ℹ pass 38
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2764497.960375
+__EXIT=0
+# xong 20261127T232125Z

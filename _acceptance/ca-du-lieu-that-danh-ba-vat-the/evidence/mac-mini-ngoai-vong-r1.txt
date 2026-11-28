@@ -1,0 +1,8 @@
+# pipeline_that NGOÀI vòng S4 (HT37) — máy thu (Mac mini), khoá s4 P1 qua giu-nhip, 27/11 23:48:19Z
+$ node scripts/suite-neu-doi.mjs pipeline_that -- 'cd pipeline && npm run test:that'
+149297a53ed27a7ae379fdd8a1a2070650f5001c
+ca dữ liệu thật: không kích — chưa có lần xanh nào trên main
+suite-neu-doi: bỏ qua pipeline_that: không đổi pipeline/scripts/test-posts.test.mjs, pipeline/scripts/deals-phi-ly.test.mjs, pipeline/scripts/ops-facts-so-tong-hop.test.mjs, pipeline/scripts/install-collector-api.test.mjs … (+29) (5 tệp đổi ngoài vùng)
+__EXIT=0
+Fri Nov 27 23:48:19 UTC 2026
+Ghi chú: suite-neu-doi không kích pipeline_that (nhánh không đổi tệp trong vùng của nó) — không có dòng ℹ tests/pass/fail vì không ca nào chạy.
