@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 70079a04ea68da2dd8771b547ebb2385d50b373b
+verified_commit: 9f3b6cd91fa0dc51221917834c8cd294fc0bf23a
 human_signoff: Mạnh 2026-11-27
 ---
 
@@ -240,3 +240,7 @@ none — every multi-run eval is uniform
 
 Round 1: xem lịch sử vòng trước (S4 r1 chạy lại do fixture thiếu lá thật).
 Round 2: mọi eval máy xanh; E10 chờ người (judgment), nên verdict PENDING-JUDGMENT.
+
+### Re-pin lần 1 — 2026-11-28, do gộp main tới e594ffeaf sau chữ ký; E10b đổi sang so khối v16 (GS phán 28/11)
+run_id: repin-20261128T091509Z-26690
+sha: 9f3b6cd91fa0dc51221917834c8cd294fc0bf23a · suites: 8 lệnh exit 0 · evals: 14/14 eval máy đạt kỳ vọng · ngoài làn máy: E8u, E10 · diff chạm vật đo ngoài làn máy: E8u, E10 — chưa chứng lại, đi vòng S4 delta
