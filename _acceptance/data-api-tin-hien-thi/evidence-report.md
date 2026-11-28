@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: beb516eeb30320126c2d0f4c5f26356b78560649
-human_signoff:
+human_signoff: Mạnh 2026-11-28
 ---
 
 # Evidence Report: data-api-tin-hien-thi

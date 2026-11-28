@@ -5,7 +5,7 @@ slug: data-api-tin-hien-thi
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api]
-status: verified
+status: signed-off
 design_doc: _acceptance/data-api-tin-hien-thi/design.md
 approved_by: Mạnh
 approved_at: 2026-11-27
@@ -95,3 +95,13 @@ khi mở API. Đo 27/11 trên bản chép DB M5: 0 dòng S02, 0 dòng S08 lọt 
   của worktree PB2 — hàng này thay phần chép tay bằng hằng sinh.
 - Tệp ngoài vùng M5 (`pipeline/lib/**`, `pipeline/mappings.yaml`, `app/src/lib/**`, `agent/src/**`, `pipeline/scripts/**`)
   chờ GS cho sửa trước S3.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-28:
+  - Ngoài-1: Ghi chú giải thích vì sao tệp danh sách tin được miễn lưới từ vựng nay nói sai lý do; người dùng không thấy gì.
+  - Ngoài-3: Việc kiểm cổng Invest và API cùng lấy danh sách nguồn ẩn từ chỗ chung chưa có ca cố tình làm sai để chứng nó biết kêu.
+  - Ngoài-4: Tin thuê ngắn hạn luôn mang nguồn tự thu S01 và không đi qua danh sách nguồn ẩn; thêm nguồn ngắn hạn bị ẩn thì phải sửa.
+  - Ngoài-7: Thời điểm đăng và thấy tin lần cuối trên API bị làm tròn xuống giây.
+  - Ngoài-9: Khi máy chủ thiếu khoá bí mật, danh sách trả mã tin nhưng xem chi tiết tin bán, thuê dài lại báo lỗi dịch vụ.
+  - Ngoài-11: Phần kiểm «khoá cũ vẫn còn» ở test cổng Invest chỉ kiểm bộ chuyển trong chính test, đổi tên khoá API vẫn xanh phần này.
+  - Ngoài-12: Phép đo trước/sau trên DB máy lấy bản nền bằng merge-base; sau khi hàng gộp nó so bản mới với chính nó (nợ HT43).
+  - Ngoài-13: Phép đo trước/sau so số khoá còn lại bằng số đếm, không so từng khoá.
+  - Ngoài-14: Kiểm «script đo S03 không còn đọc tệp app» chưa có đối chứng dương.
