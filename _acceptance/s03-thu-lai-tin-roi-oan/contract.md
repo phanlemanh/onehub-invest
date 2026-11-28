@@ -5,7 +5,7 @@ slug: s03-thu-lai-tin-roi-oan
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [data, cli]
-status: approved
+status: implemented
 approved_by: Mạnh
 approved_at: 2026-11-28
 design_doc: docs/superpowers/specs/2026-11-28-s03-thu-lai-tin-roi-oan-design.md
