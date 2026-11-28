@@ -1,0 +1,45 @@
+NB10 S4 vòng 1 trên M5 ＠3ea5935909f2f15ea1cb9d3b282a9701c8837667 — KHÔNG CHẤM: lượt soát 3ea593590-20261127T090554 đỏ ca khác QV-AC-5.
+
+Kết quả soát (~/onehub-soat/kq/3ea5935909f2f15ea1cb9d3b282a9701c8837667.json):
+  pipeline xanh 1041/1118 · agent xanh 412/423 · app đỏ 1 ca QV-AC-5 (ca đỏ có tên — đạt theo luật) · scripts ĐỎ 1 ca:
+  HT5-AC-1 mọi migration định nghĩa hay chèn vào resolve_offer_fields nằm trong chuỗi nạp lại của napPhatBieu
+
+Đọc ca: bảng viết trước BANG_PHAN_XU (scripts/kiem-tin-rao-gan-khu-vuc.test.mjs) có '129', nhưng tập migration nhắc resolve_offer_fields đo được không có 129 — migration 129 sinh lại theo khuôn vá thân hàm không còn nhắc resolve_offer_fields (đếm trên 3ea593590: 0 lần). Gốc: BANG_PHAN_XU (scripts/kiem-tin-rao-gan-khu-vuc.test.mjs:164-165) còn «"129": "goi"» với chú thích «129 chép thân revert_enrichment của 066» — đúng ở 1fe832496, nhưng từ fe6c96e69 («129 vá đúng một khối trên thân hàm đang chạy, không chép thân 066») 129 không còn chữ resolve_offer_fields. Hướng: bỏ «"129"» khỏi BANG_PHAN_XU và sửa chú thích.
+
+== Nguyên văn ca đỏ (scripts.log) ==
+✖ failing tests:
+
+test at scripts/kiem-tin-rao-gan-khu-vuc.test.mjs:170:1
+✖ HT5-AC-1 mọi migration định nghĩa hay chèn vào resolve_offer_fields nằm trong chuỗi nạp lại của napPhatBieu (93.140109ms)
+  AssertionError [ERR_ASSERTION]: HT5-AC-1 tập migration nhắc resolve_offer_fields khác bảng viết trước — xếp loại tệp mới vào BANG_PHAN_XU
+  + actual - expected
+  ... Skipped lines
+  
+    [
+      '045',
+      '059',
+      '061',
+      '063',
+  ...
+      '102',
+  -   '129'
+    ]
+  
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [
+      '045', '059', '061',
+      '063', '066', '068',
+      '069', '095', '096',
+      '099', '102'
+    ],
+    expected: [
+      '045', '059', '061',
+      '063', '066', '068',
+      '069', '095', '096',
+      '099', '102', '129'
+    ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+::do test

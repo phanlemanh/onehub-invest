@@ -1,0 +1,9 @@
+NB10 S4 vòng 2 trên M5 ＠715362cc246996de9d2c4cbab384b818ab714df6 — pipeline_that chạy NGOÀI vòng (HT37).
+Lệnh: node scripts/suite-neu-doi.mjs pipeline_that -- 'cd pipeline && npm run test:that'
+chay-that: vai may-phat-trien — bỏ qua 1 ca chỉ máy thu
+ℹ tests 37
+ℹ pass 37
+ℹ fail 0
+ℹ skipped 0
+__EXIT=0
+→ ĐẠT theo luật GS 26/11. Chấm trên M5: ON22-AC-10 không chạy (HT33).

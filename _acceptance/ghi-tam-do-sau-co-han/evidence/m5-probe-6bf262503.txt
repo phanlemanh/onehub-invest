@@ -1,0 +1,248 @@
+# NB10 probe trên M5 ＠6bf262503b9127798635a177e5c3c12778013207 — bắt đầu 2026-11-26T16:38:34Z
+
+## $ bash _acceptance/ghi-tam-do-sau-co-han/probes/cham.sh AC-1
+xanh AC-1 trên mã thật: tests 2, skipped 0
+đỏ đúng AC-1 «trả lại dòng loại hình của luật»: AC-1 ô loại=true toà=true: lời nhắc còn dòng «Loại hình từ nhóm»
+đỏ đúng AC-1 «trả lại dòng mã toà của luật»: AC-1 ô loại=true toà=true: lời nhắc còn dòng «Mã tòa phát hiện»
+→ mã thoát 0
+
+## $ bash _acceptance/ghi-tam-do-sau-co-han/probes/cham.sh AC-2
+xanh AC-2 trên mã thật: tests 1, skipped 0
+đỏ đúng AC-2 «bỏ kiểm phiếu độc lập»: AC-2 tin B (lời nhắc mang đáp án) route corroborated
+đỏ đúng AC-2 «bỏ dấu danh sách toà»: AC-2 tin C (danh sách toà) route corroborated
+→ mã thoát 0
+
+## $ bash _acceptance/ghi-tam-do-sau-co-han/probes/cham.sh AC-3
+xanh AC-3 trên mã thật: tests 2, skipped 0
+đỏ đúng AC-3 «áp không mở lô (lượt đêm)»: AC-3 lô của lượt lệch
+đỏ đúng AC-3 «áp không mở lô (đọc toàn bộ)»: AC-3 đọc toàn bộ áp mà thiếu lô
+→ mã thoát 0
+
+## $ bash _acceptance/ghi-tam-do-sau-co-han/probes/cham.sh AC-4
+xanh AC-4 trên mã thật: tests 1, skipped 0
+→ mã thoát 0
+
+## $ bash _acceptance/ghi-tam-do-sau-co-han/probes/cham.sh AC-5
+ĐỎ AC-5 trên mã thật (thoát 1, pass 0, skipped 0):
+✖ E5 AC-5 rút cả lô: tin và đề xuất về như trước, lô da-rut, chạy lại 0; actor không phải người hay thiếu lý do thì từ chối (699.4985ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 855.824917
+
+✖ failing tests:
+
+test at tests/ghi-tam.test.ts:11:1349
+✖ E5 AC-5 rút cả lô: tin và đề xuất về như trước, lô da-rut, chạy lại 0; actor không phải người hay thiếu lý do thì từ chối (699.4985ms)
+  error: function tin_that_su_chung(text[]) does not exist
+      at /Users/manhphan/dev/onehub-invest/agent/node_modules/pg/lib/client.js:694:17
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async <anonymous> (/Users/manhphan/dev/onehub-invest/.claude/worktrees/probe-nb10/agent/tests/ghi-tam.test.ts:160:27)
+      at async withTx (/Users/manhphan/dev/onehub-invest/.claude/worktrees/probe-nb10/agent/tests/helpers/db.ts:65:12)
+      at async TestContext.<anonymous> (/Users/manhphan/dev/onehub-invest/.claude/worktrees/probe-nb10/agent/tests/ghi-tam.test.ts:149:3)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    length: 489,
+    severity: 'ERROR',
+    code: '42883',
+    detail: undefined,
+    hint: 'No function matches the given name and argument types. You might need to add explicit type casts.',
+    position: undefined,
+    internalPosition: '14',
+    internalQuery: 'tap_chung := tin_that_su_chung(ARRAY[subj])',
+    where: 'PL/pgSQL function revert_enrichment(bigint[],text,text) line 56 at assignment\nPL/pgSQL assignment "n := revert_enrichment(ids, p_actor, p_ly_do)"\nPL/pgSQL function rut_lo_ghi_tam(text,text,text,boolean) line 20 at assignment',
+    schema: undefined,
+    table: undefined,
+    column: undefined,
+    dataType: undefined,
+    constraint: undefined,
+    file: 'parse_func.c',
+    line: '629',
+    routine: 'ParseFuncOrColumn'
+  }
+
+→ mã thoát 1
+
+## $ bash _acceptance/ghi-tam-do-sau-co-han/probes/cham.sh AC-6
+ĐỎ AC-6 trên mã thật (thoát 1, pass 0, skipped 0):
+/dev/onehub-invest/.claude/worktrees/probe-nb10/agent/src/enrich/run.ts:286:34)
+      at async <anonymous> (/Users/manhphan/dev/onehub-invest/.claude/worktrees/probe-nb10/agent/tests/ghi-tam.test.ts:206:15)
+      at async withTx (/Users/manhphan/dev/onehub-invest/.claude/worktrees/probe-nb10/agent/tests/helpers/db.ts:65:12)
+      at async TestContext.<anonymous> (/Users/manhphan/dev/onehub-invest/.claude/worktrees/probe-nb10/agent/tests/ghi-tam.test.ts:201:3)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    length: 478,
+    severity: 'ERROR',
+    code: '42883',
+    detail: undefined,
+    hint: 'No function matches the given name and argument types. You might need to add explicit type casts.',
+    position: undefined,
+    internalPosition: '14',
+    internalQuery: 'tap_chung := tin_that_su_chung(ARRAY[subj])',
+    where: 'PL/pgSQL function revert_enrichment(bigint[],text,text) line 56 at assignment\nPL/pgSQL function rut_lo_ghi_tam(text,text,text,boolean) line 20 at assignment\nPL/pgSQL function xet_han_ghi_tam() line 9 at assignment',
+    schema: undefined,
+    table: undefined,
+    column: undefined,
+    dataType: undefined,
+    constraint: undefined,
+    file: 'parse_func.c',
+    line: '629',
+    routine: 'ParseFuncOrColumn'
+  }
+
+test at tests/ghi-tam.test.ts:11:7106
+✖ E6 AC-6 xét hạn không cần lượt: xet_han_ghi_tam rút lô quá hạn, lô còn hạn giữ nguyên (700.2115ms)
+  error: function tin_that_su_chung(text[]) does not exist
+      at /Users/manhphan/dev/onehub-invest/agent/node_modules/pg/lib/client.js:694:17
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async <anonymous> (/Users/manhphan/dev/onehub-invest/.claude/worktrees/probe-nb10/agent/tests/ghi-tam.test.ts:228:22)
+      at async withTx (/Users/manhphan/dev/onehub-invest/.claude/worktrees/probe-nb10/agent/tests/helpers/db.ts:65:12)
+      at async TestContext.<anonymous> (/Users/manhphan/dev/onehub-invest/.claude/worktrees/probe-nb10/agent/tests/ghi-tam.test.ts:224:3)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    length: 478,
+    severity: 'ERROR',
+    code: '42883',
+    detail: undefined,
+    hint: 'No function matches the given name and argument types. You might need to add explicit type casts.',
+    position: undefined,
+    internalPosition: '14',
+    internalQuery: 'tap_chung := tin_that_su_chung(ARRAY[subj])',
+    where: 'PL/pgSQL function revert_enrichment(bigint[],text,text) line 56 at assignment\nPL/pgSQL function rut_lo_ghi_tam(text,text,text,boolean) line 20 at assignment\nPL/pgSQL function xet_han_ghi_tam() line 9 at assignment',
+    schema: undefined,
+    table: undefined,
+    column: undefined,
+    dataType: undefined,
+    constraint: undefined,
+    file: 'parse_func.c',
+    line: '629',
+    routine: 'ParseFuncOrColumn'
+  }
+
+→ mã thoát 1
+
+## $ bash _acceptance/ghi-tam-do-sau-co-han/probes/cham.sh AC-7
+ĐỎ AC-7 trên mã thật (thoát 1, pass 0, skipped 0):
+✖ E7 AC-7 kết quả đo bù: không đạt → rút + dừng ô; đạt → thôi cờ, không rút; actor máy không rút được đề xuất ngoài lô (793.199834ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 950.878
+
+✖ failing tests:
+
+test at tests/ghi-tam.test.ts:11:3329
+✖ E7 AC-7 kết quả đo bù: không đạt → rút + dừng ô; đạt → thôi cờ, không rút; actor máy không rút được đề xuất ngoài lô (793.199834ms)
+  error: function tin_that_su_chung(text[]) does not exist
+      at /Users/manhphan/dev/onehub-invest/agent/node_modules/pg/lib/client.js:694:17
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async <anonymous> (/Users/manhphan/dev/onehub-invest/.claude/worktrees/probe-nb10/agent/tests/ghi-tam.test.ts:177:5)
+      at async withTx (/Users/manhphan/dev/onehub-invest/.claude/worktrees/probe-nb10/agent/tests/helpers/db.ts:65:12)
+      at async TestContext.<anonymous> (/Users/manhphan/dev/onehub-invest/.claude/worktrees/probe-nb10/agent/tests/ghi-tam.test.ts:174:3)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    length: 491,
+    severity: 'ERROR',
+    code: '42883',
+    detail: undefined,
+    hint: 'No function matches the given name and argument types. You might need to add explicit type casts.',
+    position: undefined,
+    internalPosition: '14',
+    internalQuery: 'tap_chung := tin_that_su_chung(ARRAY[subj])',
+    where: 'PL/pgSQL function revert_enrichment(bigint[],text,text) line 56 at assignment\nPL/pgSQL function rut_lo_ghi_tam(text,text,text,boolean) line 20 at assignment\nPL/pgSQL function ghi_ket_qua_do_bu(text,text,text) line 28 at RETURN',
+    schema: undefined,
+    table: undefined,
+    column: undefined,
+    dataType: undefined,
+    constraint: undefined,
+    file: 'parse_func.c',
+    line: '629',
+    routine: 'ParseFuncOrColumn'
+  }
+
+→ mã thoát 1
+
+## $ bash _acceptance/ghi-tam-do-sau-co-han/probes/cham.sh AC-8
+ĐỎ AC-8 trên mã thật (thoát 1, pass 0, skipped 0):
+✖ E8 AC-8 loại hình ghi tạm không làm căn lên B3; lô đạt thì lên; bậc tin không đổi (70.952625ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 209.130958
+
+✖ failing tests:
+
+test at tests/ghi-tam.test.ts:11:7816
+✖ E8 AC-8 loại hình ghi tạm không làm căn lên B3; lô đạt thì lên; bậc tin không đổi (70.952625ms)
+  error: insert or update on table "sale_offer_records" violates foreign key constraint "sale_offers_area_id_fkey"
+      at /Users/manhphan/dev/onehub-invest/agent/node_modules/pg/lib/client.js:694:17
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async <anonymous> (/Users/manhphan/dev/onehub-invest/.claude/worktrees/probe-nb10/agent/tests/ghi-tam.test.ts:247:5)
+      at async withTx (/Users/manhphan/dev/onehub-invest/.claude/worktrees/probe-nb10/agent/tests/helpers/db.ts:65:12)
+      at async TestContext.<anonymous> (/Users/manhphan/dev/onehub-invest/.claude/worktrees/probe-nb10/agent/tests/ghi-tam.test.ts:236:3)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    length: 292,
+    severity: 'ERROR',
+    code: '23503',
+    detail: 'Key (area_id)=(vn-hanoi-test) is not present in table "areas".',
+    hint: undefined,
+    position: undefined,
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: undefined,
+    schema: 'public',
+    table: 'sale_offer_records',
+    column: undefined,
+    dataType: undefined,
+    constraint: 'sale_offers_area_id_fkey',
+    file: 'ri_triggers.c',
+    line: '2599',
+    routine: 'ri_ReportViolation'
+  }
+
+→ mã thoát 1
+
+## $ bash _acceptance/ghi-tam-do-sau-co-han/probes/cham.sh AC-9
+xanh AC-9 trên mã thật: tests 1, skipped 0
+đỏ đúng AC-9 «áp corroborated khi ô dừng»: AC-9 áp corroborated khi ô dừng
+→ mã thoát 0
+
+## $ bash _acceptance/ghi-tam-do-sau-co-han/probes/ban-chep.sh AC-4
+== bản chép DB máy thu + 129
+NOTICE:  database "oneinvest_nb10_ban_chep" does not exist, skipping
+lô: doc-toan-bo-loai-hinh=1993:true:14 truoc-doc-lap-loai-hinh=187:false:14 truoc-doc-lap-toa=110:false:14 · giá trị tự ghi trước 24/11 thiếu lô: 0
+NOTICE:  relation "ghi_tam_lo" already exists, skipping
+NOTICE:  relation "ghi_tam_o" already exists, skipping
+NOTICE:  column "lo_id" of relation "enrichment_proposals" already exists, skipping
+NOTICE:  column "ghi_tam" of relation "enrichment_proposals" already exists, skipping
+NOTICE:  relation "enrichment_proposals_lo_id_idx" already exists, skipping
+áp lần hai: không đổi (băm 6189ae1a5c2fcf938eb00da508d0e8e9, 3 lô)
+== chạy thử khối lùi
+sau lùi: bảng ghi_tam_lo t (true = đã gỡ) · cột lo_id 0 (0 = đã gỡ)
+đỏ đúng AC-4 «gộp hai lô đêm thành một»: lô truoc-doc-lap-toa thiếu — lô: doc-toan-bo-loai-hinh=1993:true:14 truoc-doc-lap-loai-hinh=297:false:14 truoc-doc-lap-toa=0:false:14 · giá trị tự ghi trước 24/11 thiếu lô: 0
+đỏ đúng AC-4 «đảo doc_lap lô đọc toàn bộ»: lô doc-toan-bo-loai-hinh doc_lap lệch — lô: doc-toan-bo-loai-hinh=1993:false:14 truoc-doc-lap-loai-hinh=187:false:14 truoc-doc-lap-toa=110:false:14 · giá trị tự ghi trước 24/11 thiếu lô: 0
+→ mã thoát 0
+# xong 2026-11-26T16:42:15Z
+DB thử oneinvest_nb10_ban_chep còn sau lượt: 0 (0 = đã xoá)
+
+## Ghi chú phiên chấm M5 (không sửa mã)
+- máy: M5 (M5 Max 18 nhân, colima 16/96) · DB: bản đầy đủ máy thu chép sang 26/11 05:45Z · worktree tại đúng 6bf262503, node_modules nối về checkout chính.
+- Xanh: AC-1, AC-2, AC-3, AC-4, AC-9 (ca thật xanh, mọi đột biến đỏ đúng thông điệp ghim); bản chép AC-4 xanh: 1993 · 187 · 110, thiếu lô 0,
+  áp lần hai không đổi, khối lùi gỡ sạch, hai đột biến đỏ đúng; DB thử đã tự xoá; DB oneinvest chỉ đọc.
+- Đỏ: AC-5, AC-6, AC-7 — ca thật lỗi «function tin_that_su_chung(text[]) does not exist». Hàm do migration 066 tạo; DB oneinvest của M5
+  (bản chép máy thu) không có hàm này (pg_proc 0) và không thân hàm nào nhắc tới nó (prosrc 0) — dấu hiệu 066 chưa áp trên DB máy thu,
+  trong khi thân revert_enrichment của 129 (dựng từ thân 066) gọi hàm đó. Cần dãy chủ hàng xác định: thiếu 066 trên máy thu hay ca test cần tự nạp 066.
+- Đỏ: AC-8 — ca thật lỗi khoá ngoại «sale_offers_area_id_fkey» khi chèn sale_offer_records (fixture dùng area_id không có trong bản chép DB).

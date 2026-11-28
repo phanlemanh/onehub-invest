@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import pg from "pg";
 
@@ -464,6 +464,9 @@ test("AC-10 migration idempotent", async () => {
     const { rows: [r101] } = await c.query(
       `SELECT bool_or(pg_get_functiondef(oid) LIKE '%links_journaled%') AS co FROM pg_proc WHERE proname = 'reconcile_stale_offers'`);
     if (r101.co) files.push(join(files[0].slice(0, files[0].lastIndexOf("/")), "101_doi_soat_chuyen_link.sql"));
+    // NB10: helper nạp 129 sau 045 (revert_enrichment bản 129 chép thân 066) → nạp lại 129 sau 045 cho cùng cấu trúc.
+    const mig129 = join(files[0].slice(0, files[0].lastIndexOf("/")), "129_ghi_tam_lo.sql");
+    if (existsSync(mig129)) files.push(mig129);
     const s1 = (await c.query(SHAPE)).rows[0].h;
     const n1 = (await c.query(COUNTS)).rows[0].n;
     for (const round of [2, 3]) {

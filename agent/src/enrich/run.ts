@@ -4,8 +4,10 @@
 //   review: thẻ /ops/review agent_output enrich:<offer_id> (người quyết)
 //   review + conflict (E1 trái LLM): cả hai lên thẻ, người chọn một bên (AC-7, AC-11)
 // File này KHÔNG có câu UPDATE sale_offers/properties nào (AC-1).
-// NB11 (Mạnh «Chờ sửa xong» 24/11): lượt hằng đêm KHÔNG tự áp đường corroborated (LLM trùng E1, LLM trùng toà danh bạ) — lời nhắc
-// đêm đưa sẵn đáp án E1 nên phiếu LLM chưa độc lập; chúng lên thẻ (route review, căn cứ cũ ở evidence.trung_luat) tới khi NB10 xong.
+// NB10 (thay chốt chặn NB11, ROADMAP mục 63 QĐ3): đường corroborated (LLM trùng E1, LLM trùng toà danh bạ) chỉ tự áp khi lời nhắc
+// thật sự gửi đi không mang đáp án của luật (phiếu độc lập) VÀ ô của trường đang mở; áp thì là GHI TẠM — mang lô <run_id>:<field>,
+// cờ chưa đo, hạn đo bù. Không đủ điều kiện → lên thẻ (route review, căn cứ cũ ở evidence.trung_luat) như NB11. Đầu mỗi lượt ghi
+// thật, lô quá hạn đo bù bị rút và ô của trường dừng (xet_han_ghi_tam, migration 129).
 // enrich-chay-sau-nap: mỗi tin hai pha — đọc + gọi LLM NGOÀI giao dịch, ghi trong giao dịch riêng của tin
 // (opts.giaoDich); tin ghi hỏng lui lại một mình. Bộ đếm cộng từ những gì thật sự ghi.
 import type pg from "pg";
@@ -16,27 +18,35 @@ import type { Tran } from "../runtime/model-agent.js";
 import {
   llmFieldsFromEnrich, routeFields, summarizeRun, type BuildingNode, type EnrichField, type Routed,
 } from "./route.js";
+import { bamLoiNhac, phieuDocLap } from "./ghi-tam/doc-lap.js";
+import { coLopGhiTam, ganLo, truongDangDung, xetHan, type LoHetHan } from "./ghi-tam/lo.js";
 import { demRong, type DemLuot } from "./tong-ket.js";
 
-/** `loi` = tên lớp lỗi khi lời gọi ném lỗi; `result: null` mà không `loi` = câu trả lời không đọc được. */
+/**
+ * `loi` = tên lớp lỗi khi lời gọi ném lỗi; `result: null` mà không `loi` = câu trả lời không đọc được. `prompt` = lời nhắc THẬT
+ * SỰ gửi đi (NB10 AC-2) — vắng thì phiếu không được tính là độc lập.
+ */
 export type LlmFn = (
   text: string,
   ctx: ContextResult,
-) => Promise<{ result: EnrichResult | null; model: string; tracePath: string | null; loi?: string }>;
+) => Promise<{ result: EnrichResult | null; model: string; tracePath: string | null; loi?: string; prompt?: string }>;
 /** Chạy fn trong giao dịch của một tin: commit khi xong, lui lại rồi ném lại khi lỗi. */
 export type GiaoDich = <T>(fn: () => Promise<T>) => Promise<T>;
 
-/** Đề xuất đêm sau khi chặn tự áp: căn cứ cũ (e1 | asset_nodes:<slug>) giữ ở `trungLuat`, ghi vào evidence.trung_luat. */
-export type RoutedDem = Routed & { trungLuat?: string };
+/** Đề xuất corroborated không qua cổng ghi tạm: căn cứ cũ (e1 | asset_nodes:<slug>) giữ ở `trungLuat` (evidence.trung_luat). */
+export type RoutedDem = Routed & { trungLuat?: string; lyDoKhongGhi?: "khong-doc-lap" | "o-dung" };
 
 /**
- * NB11: corroborated → review (không áp), corroboratedBy rỗng, căn cứ giữ ở trungLuat. Mọi nhánh khác giữ nguyên. Gỡ hàm này khi
- * NB10 làm phiếu thứ hai độc lập (ROADMAP mục 63).
+ * NB10 cổng ghi tạm (thay chanTuApCanCu của NB11): corroborated chỉ giữ route khi phiếu độc lập và ô của trường đang mở; khác thì
+ * → review, corroboratedBy rỗng, căn cứ ở trungLuat, kèm lý do. Mọi nhánh khác của routeFields giữ nguyên (AC-9).
  */
-export function chanTuApCanCu(rs: Routed[]): RoutedDem[] {
-  return rs.map((r) =>
-    r.route === "corroborated" ? { ...r, route: "review", corroboratedBy: null, trungLuat: r.corroboratedBy ?? "khong-ro" } : r,
-  );
+export function congGhiTam(rs: Routed[], o: { docLap: boolean; oDung: ReadonlySet<EnrichField> }): RoutedDem[] {
+  return rs.map((r) => {
+    if (r.route !== "corroborated") return r;
+    const lyDo = !o.docLap ? "khong-doc-lap" : o.oDung.has(r.field) ? "o-dung" : null;
+    if (lyDo === null) return r;
+    return { ...r, route: "review", corroboratedBy: null, trungLuat: r.corroboratedBy ?? "khong-ro", lyDoKhongGhi: lyDo };
+  });
 }
 
 /** Cửa sổ không bốc lại tin đã thử (Hỏi-3, Mạnh duyệt 30/10). */
@@ -82,11 +92,6 @@ export type RunEnrichOpts = {
   giaoDich?: GiaoDich;
   /** Trần tiền của lượt (MH1 AC-5): lời gọi kế có thể vượt trần thì dừng vòng trước lời gọi ấy, ghi dem.hetTran. */
   tran?: Tran;
-  /**
-   * NB11: chặn tự áp đường corroborated theo LƯỢT GỌI. Vắng → true (chặn; an toàn khi bên gọi mới quên khai). enrich-run (lượt
-   * hằng đêm) khai true tường minh; false chỉ để test giữ hành vi cũ. Lượt đọc toàn bộ không đi qua runEnrich nên không đổi.
-   */
-  chanTuApCanCu?: boolean;
 };
 
 type OfferRow = {
@@ -270,11 +275,30 @@ export async function runEnrich(opts: RunEnrichOpts): Promise<{
   summary: ReturnType<typeof summarizeRun>;
   reviewIds: number[];
   dem: DemLuot;
-  /** NB11: số đề xuất có căn cứ đã GHI vào thẻ thay vì tự áp (chế độ dry: 0). */
+  /** Số đề xuất có căn cứ đã GHI vào thẻ thay vì tự áp — phiếu không độc lập hoặc ô dừng (chế độ dry: 0). */
   chuyenThe: number;
+  /** NB10: lô quá hạn vừa rút ở đầu lượt, các trường đang dừng, và các lô lượt này đã ghi vào. */
+  ghiTam: { hetHan: LoHetHan[]; oDung: EnrichField[]; lo: string[]; loiXetHan: string | null };
 }> {
   const c = opts.client;
   const giaoDich = opts.giaoDich ?? giaoDichSavepoint(c);
+  // NB10 AC-6: xét hạn trước khi đọc tin — lô quá hạn bị rút, ô dừng; lượt dry chỉ đọc trạng thái ô.
+  // Lệnh rút bị từ chối (vd revert_enrichment mất bản vá 129 vì 066 được áp sau) → lượt không rút, nhưng trường quá hạn vẫn
+  // dừng tự ghi và tổng kết báo lỗi nguyên văn — không rút nửa chừng, không im lặng.
+  let hetHan: LoHetHan[] = [];
+  let loiXetHan: string | null = null;
+  // DB chưa áp 129 (chưa có bảng lô): không xét hạn, mọi trường dừng tự ghi — đề xuất có căn cứ lên thẻ, lượt không lỗi.
+  const coLop = await coLopGhiTam(c);
+  if (!coLop) loiXetHan = "DB chưa áp migration 129 (chưa có lớp ghi tạm) — mọi trường dừng tự ghi";
+  else if (!opts.dry) {
+    try {
+      hetHan = await giaoDich(() => xetHan(c));
+    } catch (e) {
+      loiXetHan = e instanceof Error ? e.message : String(e);
+    }
+  }
+  const { dung: oDung } = await truongDangDung(c);
+  const loDaGhi = new Set<string>();
   const buildings = opts.buildings ?? (await loadBuildings(c));
   const offers = await selectOffers(c, opts.limit, opts.offerIds);
   const routed: RoutedDem[][] = [];
@@ -311,13 +335,16 @@ export async function runEnrich(opts: RunEnrichOpts): Promise<{
       held,
       inferredFields: o.loai_suy ? new Set<EnrichField>(["property_type"]) : undefined,
     });
-    const rs: RoutedDem[] = opts.chanTuApCanCu === false ? rsGoc : chanTuApCanCu(rsGoc);
+    // Phiếu thứ hai chỉ độc lập khi lời nhắc thật sự gửi đi không mang đáp án của luật (NB10 AC-2).
+    const docLap = llmRes?.result ? phieuDocLap(llmRes.prompt) : false;
+    const rs = congGhiTam(rsGoc, { docLap, oDung });
     routed.push(rs);
     if (opts.dry) continue;
 
     const evidence = {
       text: catChu(text, 300), group_name: o.group_name,
       matchedBy: ctx.matchedBy, projectSlug: ctx.projectSlug,
+      ...(llmRes ? { doc_lap: docLap, loi_nhac_bam: bamLoiNhac(llmRes.prompt) } : {}),
     };
     const llmMeta = llmRes?.result
       ? { model: llmRes.model, confidence: llmRes.result.confidence ?? null, tracePath: llmRes.tracePath }
@@ -325,8 +352,10 @@ export async function runEnrich(opts: RunEnrichOpts): Promise<{
 
     // Pha ghi — một giao dịch của tin. Bộ đếm của tin chỉ cộng vào lượt khi giao dịch xong.
     const ghi = async () => {
-      const t = { deXuatMoi: 0, daAp: 0, choDuyet: 0, chuyenThe: 0, card: null as number | null };
+      const t = { deXuatMoi: 0, daAp: 0, choDuyet: 0, chuyenThe: 0, card: null as number | null, lo: [] as string[] };
       const applyIds: number[] = [];
+      /** Đề xuất corroborated sắp áp, theo trường — gắn lô trước apply_enrichment (AC-3). */
+      const ghiTamIds = new Map<EnrichField, number[]>();
       for (const r of rs) {
         const llmRow = r.source === "e2_llm";
         const status = r.route === "superseded" ? "superseded" : "queued";
@@ -342,15 +371,25 @@ export async function runEnrich(opts: RunEnrichOpts): Promise<{
             llmRow ? (llmRes?.result?.confidence ?? null) : null,
             llmRow ? (llmRes?.model ?? null) : "context-resolver",
             llmRow ? (llmRes?.tracePath ?? null) : null,
-            { ...evidence, basis: basisOf(r, ctx, llmMeta), ...(r.trungLuat ? { trung_luat: r.trungLuat } : {}) },
+            {
+              ...evidence, basis: basisOf(r, ctx, llmMeta),
+              ...(r.trungLuat ? { trung_luat: r.trungLuat } : {}),
+              ...(r.lyDoKhongGhi ? { ly_do_khong_ghi: r.lyDoKhongGhi } : {}),
+            },
             status,
           ],
         );
         if (!rows[0]) continue;
         t.deXuatMoi++;
         if (r.route === "direct" || r.route === "corroborated") applyIds.push(Number(rows[0].id));
+        if (r.route === "corroborated") ghiTamIds.set(r.field, [...(ghiTamIds.get(r.field) ?? []), Number(rows[0].id)]);
         else if (r.route === "review" && status === "queued") t.choDuyet++;
         if (r.trungLuat) t.chuyenThe++;
+      }
+      for (const [field, ids] of ghiTamIds) {
+        t.lo.push(await ganLo(c, ids, {
+          runId: opts.runId, field, docLap, ghiBoi: `enrich-run:${opts.runId}`, model: llmRes?.model ?? null,
+        }));
       }
       if (applyIds.length > 0) {
         const { rows } = await c.query(`SELECT apply_enrichment($1, $2) AS n`, [applyIds, `enrich-run:${opts.runId}`]);
@@ -375,6 +414,7 @@ export async function runEnrich(opts: RunEnrichOpts): Promise<{
       dem.daAp += t.daAp;
       dem.choDuyet += t.choDuyet;
       chuyenThe += t.chuyenThe;
+      for (const l of t.lo) loDaGhi.add(l);
       if (t.card !== null) reviewIds.push(t.card);
     } catch (e) {
       const err = e as { code?: string; name?: string };
@@ -383,5 +423,8 @@ export async function runEnrich(opts: RunEnrichOpts): Promise<{
   }
 
   dem.the = new Set(reviewIds).size;
-  return { routed, summary: summarizeRun(routed), reviewIds, dem, chuyenThe };
+  return {
+    routed, summary: summarizeRun(routed), reviewIds, dem, chuyenThe,
+    ghiTam: { hetHan, oDung: [...oDung].sort(), lo: [...loDaGhi].sort(), loiXetHan },
+  };
 }

@@ -1,0 +1,7 @@
+{
+  "feature_plain": "Máy chỉ tự ghi loại hình hay toà vào tin khi luật và model đọc độc lập cùng nói một giá trị; mỗi giá trị tự ghi mang mã lô và hạn đo bù hai tuần, rút được cả lô bằng một lệnh, và trường có lô quá hạn hay đo bù không đạt thì tự dừng ghi.",
+  "decisions": [
+    {"id": "E10", "q": "Hồ sơ áp lên máy thu đã đủ năm thứ chưa?", "why": "Lệnh áp, số chạy thử trên bản chép (ba lô 1.993 · 187 · 110), sao lưu trước, cách lùi đã chạy thử đủ trình tự (DB về đúng trạng thái trước), lệnh kiểm sau — đều có trong ap-may-thu.md; hội đồng ba thấu kính đề xuất Đạt."}
+  ],
+  "analyst_plain": ""
+}

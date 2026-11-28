@@ -1,0 +1,111 @@
+NB10 probe lần ba trên M5 ＠fe6c96e69bbd54ec78a4d3b6a2d943e7e0f7c99a — 2026-11-27T00:07:01Z
+Kết quả: 9/10 xanh. Đỏ: cham.sh AC-6 (ca «bẫy thứ tự 066»).
+Phân loại AC-6: đỏ do môi trường M5, chưa phải số đo của mã. Ca này nạp thân revert_enrichment bản 066 nguyên văn; thân đó gọi tin_that_su_chung(text[]) — hàm của 066 không có trên DB mẫu lượt (oneinvest_suite_mau) và cả DB oneinvest của M5 (pg_proc đếm 0). Lỗi 42883 nổ trước khẳng định «chỉ người được hoàn tác», nên tiền đề ca không đạt. Hai ca AC-6 còn lại xanh. Không áp migration nào vào DB oneinvest; mọi ca chạy trên DB lượt (db-thu.sh --chay) và bản chép do ban-chep.sh tự dựng, tự xoá.
+
+===== cham.sh AC-1 =====
+xanh AC-1 trên mã thật: tests 2, skipped 0
+đỏ đúng AC-1 «trả lại dòng loại hình của luật»: AC-1 ô loại=true toà=true: lời nhắc còn dòng «Loại hình từ nhóm»
+đỏ đúng AC-1 «trả lại dòng mã toà của luật»: AC-1 ô loại=true toà=true: lời nhắc còn dòng «Mã tòa phát hiện»
+--- mã thoát: 0
+===== cham.sh AC-2 =====
+xanh AC-2 trên mã thật: tests 1, skipped 0
+đỏ đúng AC-2 «bỏ kiểm phiếu độc lập»: AC-2 tin B (lời nhắc mang đáp án) route corroborated
+đỏ đúng AC-2 «bỏ dấu danh sách toà»: AC-2 tin C (danh sách toà) route corroborated
+--- mã thoát: 0
+===== cham.sh AC-3 =====
+xanh AC-3 trên mã thật: tests 2, skipped 0
+đỏ đúng AC-3 «áp không mở lô (lượt đêm)»: AC-3 lô của lượt lệch
+đỏ đúng AC-3 «áp không mở lô (đọc toàn bộ)»: AC-3 đọc toàn bộ áp mà thiếu lô
+--- mã thoát: 0
+===== cham.sh AC-4 =====
+xanh AC-4 trên mã thật: tests 1, skipped 0
+--- mã thoát: 0
+===== cham.sh AC-5 =====
+xanh AC-5 trên mã thật: tests 1, skipped 0
+đỏ đúng AC-5 «rút bỏ lọc theo lô»: AC-5 số giá trị rút
+--- mã thoát: 0
+===== cham.sh AC-6 =====
+ĐỎ AC-6 trên mã thật (thoát 1, pass 2, skipped 0):
+✔ E6 AC-6 lô quá hạn: lượt kế không ghi trường đó, báo tên lô, rút bằng actor máy, ô dừng; trường khác vẫn ghi (333.282542ms)
+✔ E6 AC-6 xét hạn không cần lượt: xet_han_ghi_tam rút lô quá hạn, lô còn hạn giữ nguyên (537.557583ms)
+✖ E6 AC-6 bẫy thứ tự 066: áp 066 sau 129 làm mất bản vá → rút bằng actor máy bị từ chối nguyên khối, lượt báo lỗi và vẫn dừng trường; chạy lại 129 thì rút được (738.604667ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 2
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1755.735208
+
+✖ failing tests:
+
+test at tests/ghi-tam.test.ts:11:8127
+✖ E6 AC-6 bẫy thứ tự 066: áp 066 sau 129 làm mất bản vá → rút bằng actor máy bị từ chối nguyên khối, lượt báo lỗi và vẫn dừng trường; chạy lại 129 thì rút được (738.604667ms)
+  error: function tin_that_su_chung(text[]) does not exist
+      at /Users/manhphan/dev/onehub-invest/agent/node_modules/pg/lib/client.js:694:17
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async <anonymous> (/Users/manhphan/dev/onehub-invest/.claude/worktrees/probe-nb10c/agent/tests/ghi-tam.test.ts:263:23)
+      at async withTx (/Users/manhphan/dev/onehub-invest/.claude/worktrees/probe-nb10c/agent/tests/helpers/db.ts:65:12)
+      at async TestContext.<anonymous> (/Users/manhphan/dev/onehub-invest/.claude/worktrees/probe-nb10c/agent/tests/ghi-tam.test.ts:242:3)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    length: 478,
+    severity: 'ERROR',
+    code: '42883',
+    detail: undefined,
+    hint: 'No function matches the given name and argument types. You might need to add explicit type casts.',
+    position: undefined,
+    internalPosition: '14',
+    internalQuery: 'tap_chung := tin_that_su_chung(ARRAY[subj])',
+    where: 'PL/pgSQL function revert_enrichment(bigint[],text,text) line 56 at assignment\nPL/pgSQL function rut_lo_ghi_tam(text,text,text,boolean) line 20 at assignment\nPL/pgSQL function xet_han_ghi_tam() line 9 at assignment',
+    schema: undefined,
+    table: undefined,
+    column: undefined,
+    dataType: undefined,
+    constraint: undefined,
+    file: 'parse_func.c',
+    line: '629',
+    routine: 'ParseFuncOrColumn'
+  }
+
+--- mã thoát: 1
+===== cham.sh AC-7 =====
+xanh AC-7 trên mã thật: tests 1, skipped 0
+đỏ đúng AC-7 «actor máy rút mọi đề xuất»: AC-7 actor máy rút được đề xuất ngoài lô
+đỏ đúng AC-7 «đạt mà không thôi cờ»: AC-7 lô đạt mà giá trị còn cờ hoặc bị rút
+--- mã thoát: 0
+===== cham.sh AC-8 =====
+xanh AC-8 trên mã thật: tests 1, skipped 0
+đỏ đúng AC-8 «bỏ điều kiện ghi tạm ở B3»: AC-8 căn lên bậc nhờ loại hình ghi tạm
+--- mã thoát: 0
+===== cham.sh AC-9 =====
+xanh AC-9 trên mã thật: tests 1, skipped 0
+đỏ đúng AC-9 «áp corroborated khi ô dừng»: AC-9 áp corroborated khi ô dừng
+--- mã thoát: 0
+===== ban-chep.sh AC-4 =====
+== bản chép DB máy thu + 129
+NOTICE:  database "oneinvest_nb10_ban_chep" does not exist, skipping
+lô: doc-toan-bo-loai-hinh=1993:true:14 truoc-doc-lap-loai-hinh=187:false:14 truoc-doc-lap-toa=110:false:14 · giá trị tự ghi trước 24/11 thiếu lô: 0
+NOTICE:  relation "ghi_tam_lo" already exists, skipping
+NOTICE:  relation "ghi_tam_o" already exists, skipping
+NOTICE:  column "lo_id" of relation "enrichment_proposals" already exists, skipping
+NOTICE:  column "ghi_tam" of relation "enrichment_proposals" already exists, skipping
+NOTICE:  relation "enrichment_proposals_lo_id_idx" already exists, skipping
+NOTICE:  129: revert_enrichment(bigint[],text,text) đã vá — bỏ qua
+NOTICE:  129: unit_data_level() đã vá — bỏ qua
+áp lần hai: không đổi (băm 6189ae1a5c2fcf938eb00da508d0e8e9, 3 lô)
+== bẫy thứ tự 066 (giả lập 066 áp sau 129)
+mất bản vá: rút bằng actor máy bị từ chối — chỉ người được hoàn tác (actor hitl:<tên>); lô doc-toan-bo-loai-hinh còn dang-ghi
+NOTICE:  relation "ghi_tam_lo" already exists, skipping
+NOTICE:  relation "ghi_tam_o" already exists, skipping
+NOTICE:  column "lo_id" of relation "enrichment_proposals" already exists, skipping
+NOTICE:  column "ghi_tam" of relation "enrichment_proposals" already exists, skipping
+NOTICE:  relation "enrichment_proposals_lo_id_idx" already exists, skipping
+NOTICE:  129: unit_data_level() đã vá — bỏ qua
+chạy lại 129: bản vá phục hồi, ba lô giữ nguyên
+== chạy thử khối lùi
+sau lùi: bảng ghi_tam_lo t (true = đã gỡ) · cột lo_id 0 (0 = đã gỡ)
+đỏ đúng AC-4 «gộp hai lô đêm thành một»: lô truoc-doc-lap-toa thiếu — lô: doc-toan-bo-loai-hinh=1993:true:14 truoc-doc-lap-loai-hinh=297:false:14 truoc-doc-lap-toa=0:false:14 · giá trị tự ghi trước 24/11 thiếu lô: 0
+đỏ đúng AC-4 «đảo doc_lap lô đọc toàn bộ»: lô doc-toan-bo-loai-hinh doc_lap lệch — lô: doc-toan-bo-loai-hinh=1993:false:14 truoc-doc-lap-loai-hinh=187:false:14 truoc-doc-lap-toa=110:false:14 · giá trị tự ghi trước 24/11 thiếu lô: 0
+--- mã thoát: 0

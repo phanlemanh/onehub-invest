@@ -34,6 +34,7 @@
     "scripts/push-ops-facts-import.test.mjs",
     "scripts/quet-doc-stg.test.mjs",
     "scripts/refresh-bait-gap-goi.test.mjs",
+    "scripts/rut-lo-ghi-tam.test.mjs",
     "scripts/s16-bon-phan.test.mjs",
     "scripts/soat-tang-a.test.mjs",
     "scripts/tap-nhan-hai-khu.test.mjs",
