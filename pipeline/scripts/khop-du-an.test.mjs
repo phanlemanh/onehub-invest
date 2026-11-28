@@ -13,7 +13,8 @@ const LIB = join(dirname(fileURLToPath(import.meta.url)), "../lib");
 const TAM = mkdtempSync(join(tmpdir(), "da3-khop-"));
 after(() => rmSync(TAM, { recursive: true, force: true }));
 
-const nut = (id, ten, tinh, xa = [], o = {}) => ({ id, ten, tinh, xa: new Set(xa), khoa: khoaNut(ten, o.biDanh ?? []), diem: o.diem ?? null, mst: o.mst ?? null });
+const nut = (id, ten, tinh, xa = [], o = {}) => ({ id, ten, tinh, xa: new Set(xa), khoa: khoaNut(ten, o.biDanh ?? []), diem: o.diem ?? null, mst: o.mst ?? null,
+  tier: o.tier ?? "xac_minh", nguonDuc: o.nguonDuc ?? null });
 const bg = (ten, tinh, xa = null, o = {}) => ({ ma: o.ma ?? "m1", ten_chuan: ten ? chuanKhop(ten) : null, tinh, xa, diem: o.diem ?? null, mst: o.mst ?? null, ly_do_trong: o.lyDo ?? null });
 
 const N = [
@@ -22,6 +23,8 @@ const N = [
   nut(3, "Happy One Central", "vn-hcmc"), nut(4, "Happy One Central", "vn-hcmc"),
   nut(5, "Saigon Pearl", "vn-hcmc", ["x-thanh-my-tay"]),
   nut(6, "The Manor", "vn-hanoi"),
+  // Nút ứng viên do S06 đúc (mot_loi_khai, nguonDuc S06): ô «nút ứng viên nguồn khác» chạy trên nút này, không trên nút xác minh 5.
+  nut(8, "Masteri Centre Point", "vn-hcmc", ["x-an-loi-dong"], { tier: "mot_loi_khai", nguonDuc: "S06" }),
 ];
 
 // Ma trận viết trước: [tên ô, bản ghi, nối sẵn, kết cục mong].
@@ -37,7 +40,7 @@ const MA_TRAN = [
   ["T", bg("Saigon Pearl", "vn-hcmc", "x-khac"), undefined, { nga: "noi", can_cu: "T", node_id: 5 }],
   ["hai-nut", bg("Happy One Central", "vn-hcmc"), undefined, { nga: "chua_noi", ly_do: "nhieu-nut" }],
   ["khac-tinh (cung-tinh)", bg("The Manor", "vn-hcmc"), undefined, { nga: "chua_noi", ly_do: "khong-khop" }],
-  ["nut-ung-vien-nguon-khac", bg("Saigon Pearl", "vn-hcmc"), undefined, { nga: "noi", can_cu: "T", node_id: 5 }],
+  ["nut-ung-vien-nguon-khac", bg("Masteri Centre Point", "vn-hcmc", "x-khac"), undefined, { nga: "noi", can_cu: "T", node_id: 8 }],
 ];
 
 const goc = (kq) => ({ nga: kq.nga, ...(kq.can_cu ? { can_cu: kq.can_cu } : {}), ...(kq.node_id ? { node_id: kq.node_id } : {}), ...(kq.ly_do ? { ly_do: kq.ly_do } : {}) });
@@ -80,14 +83,15 @@ test("BN-AC-3 bam-doi-khi-ket-cuc-doi", () => {
 // Ô biên K2 (Hỏi-1, Mạnh duyệt 28/11; ngưỡng 300 m của thiết kế §3.2). Nút ứng viên do S08 đúc có điểm (21.0, 105.75).
 // 1° vĩ độ ≈ 111.195 m: 150 m ≈ 0,001349°, 301 m ≈ 0,002707°, 350 m ≈ 0,003148°. Quá ngưỡng thì không ra K2 mà rơi xuống ngả
 // kế theo thứ tự K2 → K3 → T: cùng xã → K3, khác xã → T (tên trùng đúng một nút cùng tỉnh).
-const NUT_S08 = [nut(7, "Celesta Gold", "vn-hcmc", ["x-nha-be"], { diem: { lat: 21.0, lng: 105.75 } })];
+const NUT_S08 = [nut(7, "Celesta Gold", "vn-hcmc", ["x-nha-be"], { diem: { lat: 21.0, lng: 105.75 }, tier: "mot_loi_khai", nguonDuc: "S08" })];
 const BIEN_K2 = [
   ["150m", bg("Celesta Gold", "vn-hcmc", "x-khac", { diem: { lat: 21.001349, lng: 105.75 } }), { nga: "noi", can_cu: "K2", node_id: 7 }],
   ["301m-khac-xa", bg("Celesta Gold", "vn-hcmc", "x-khac", { diem: { lat: 21.002707, lng: 105.75 } }), { nga: "noi", can_cu: "T", node_id: 7 }],
   ["350m-khac-xa", bg("Celesta Gold", "vn-hcmc", "x-khac", { diem: { lat: 21.003148, lng: 105.75 } }), { nga: "noi", can_cu: "T", node_id: 7 }],
   ["301m-cung-xa", bg("Celesta Gold", "vn-hcmc", "x-nha-be", { diem: { lat: 21.002707, lng: 105.75 } }), { nga: "noi", can_cu: "K3", node_id: 7 }],
 ];
-const kiemBienK2 = (fn) => { for (const [ten, b, mong] of BIEN_K2) assert.deepEqual(goc(fn(b, NUT_S08)), mong, `ô K2 biên ${ten} (nguong 300)`); };
+const kiemO = (fn, ten) => { const [, b, mong] = BIEN_K2.find(([t]) => t === ten); assert.deepEqual(goc(fn(b, NUT_S08)), mong, `ô K2 biên ${ten} (nguong 300)`); };
+const kiemBienK2 = (fn) => { for (const [ten] of BIEN_K2) kiemO(fn, ten); };
 
 test("BN-AC-2 k2-bien-300m: 150 m ra K2; 301 m, 350 m khong ra K2", () => kiemBienK2(xepNga));
 
@@ -99,7 +103,9 @@ test("BN-AC-2 chieu-do: nang nguong K2 len 400 m thi o 350 m do", async () => {
   const f = join(TAM, "khop-dot-k2.mjs");
   writeFileSync(f, ban);
   const m = await import(pathToFileURL(f).href);
-  assert.throws(() => kiemBienK2(m.xepNga), /ô K2 biên 301m-khac-xa \(nguong 300\)|ô K2 biên 350m-khac-xa \(nguong 300\)/);
+  // Chứng riêng ô 350 m (không dừng ở ô 301 m đỏ trước): với ngưỡng 400 m, ô 350 m phải đỏ, ô 150 m vẫn xanh.
+  assert.throws(() => kiemO(m.xepNga, "350m-khac-xa"), /ô K2 biên 350m-khac-xa \(nguong 300\)/);
+  assert.doesNotThrow(() => kiemO(m.xepNga, "150m"), "đối chứng: ô 150 m vẫn ra K2 với ngưỡng 400 m");
 });
 
 test("BN-AC-2 chieu-do: bo dieu kien cung tinh thi o khac-tinh do", async () => {
@@ -111,4 +117,16 @@ test("BN-AC-2 chieu-do: bo dieu kien cung tinh thi o khac-tinh do", async () => 
   writeFileSync(f, ban);
   const m = await import(pathToFileURL(f).href);
   assert.throws(() => kiemMaTran(m.xepNga), /ô khac-tinh \(cung-tinh\)/);
+});
+
+test("BN-AC-2 chieu-do: bo khop loc bo nut ung vien thi o nut-ung-vien-nguon-khac va o K2 nut S08 do", async () => {
+  const src = readFileSync(join(LIB, "khop-du-an.mjs"), "utf8");
+  const tu = "n.tinh === b.tinh && n.khoa.has(b.ten_chuan)";
+  assert.ok(src.includes(tu), "đột biến không áp được");
+  const ban = src.replace(tu, `${tu} && n.tier !== "mot_loi_khai"`).replace(/from "\.\/([^"]+)"/g, (_m, t) => `from "${pathToFileURL(join(LIB, t)).href}"`);
+  const f = join(TAM, "khop-dot-hang.mjs");
+  writeFileSync(f, ban);
+  const m = await import(pathToFileURL(f).href);
+  assert.throws(() => kiemMaTran(m.xepNga), /ô nut-ung-vien-nguon-khac/);
+  assert.throws(() => kiemO(m.xepNga, "150m"), /ô K2 biên 150m \(nguong 300\)/);
 });

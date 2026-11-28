@@ -5,6 +5,12 @@
 //                      dòng alias; số trường bị quy ước rỗng giả đổi về trống theo nguồn × trường.
 //   ben-doc [--cay-do] E7/AC-7: băm đầu ra các bên đọc ở ba mốc (trước áp, sau áp S07 S10 S16, sau đảo đủ luật; S09 do DA42 nối, DA3 không áp), mọi ghi trong
 //                      một giao dịch ROLLBACK. --cay-do cấy một bí danh S09 dạng toà trỏ node:<id> sau áp — phép so phải đỏ.
+//   ben-doc-that --moc <truoc|ap|dao> [--cay-do]
+//                      E7/AC-7 bên đọc THẬT: chạy dung() của danh-ba-vat-the.mjs (gọi luôn buocS09DanhBa của lib/s09-dung.mjs) trên
+//                      DB thử dùng một lần của mốc — truoc: không áp; ap: áp S07 S10 S16; dao: áp rồi đảo đủ luật lệnh áp trả về. Lệnh
+//                      dựng vật thể tự COMMIT nên mỗi mốc một bản chép riêng (probes/ben-doc.sh dựng). In «TOM_TAT <json>»: bản tóm tắt
+//                      dung() trả về (toàn số đếm, không khoá ngẫu nhiên). --cay-do (mốc ap): cho nghỉ một bí danh toà S09
+//                      «danh-ba-toa/…» mà buocS09DanhBa đọc — tóm tắt phải khác mốc trước.
 // Thoát 1 khi lệch, gọi tên nguồn hay bên đọc.
 import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
@@ -17,6 +23,7 @@ import { napS16TheoKhu } from "../lib/s16-dung.mjs";
 import { chuanTen } from "../lib/noi-du-an-s06-lop.mjs";
 import { boTienToTinh, maTinhCu, TINH_CU } from "../lib/tinh-cu.mjs";
 import { apThe, daoLuat, dungThe } from "../noi-du-an-nguon.mjs";
+import { dung } from "../danh-ba-vat-the.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../..");
 const DO_S1 = join(ROOT, "_acceptance/bang-noi-ma-du-an/probes/s1/do.mjs");
@@ -95,9 +102,9 @@ async function chup(c, nhan) {
   const { rows: khu } = await c.query("SELECT id::int FROM asset_nodes WHERE node_type = 'project'");
   const s16 = await napS16TheoKhu(c, khu.map((r) => r.id));
   kq.napS16TheoKhu = JSON.stringify([...s16].sort((a, b) => a[0] - b[0]).map(([k, m]) => [k, [...m.toa].sort(), [...m.truc].sort(), [...m.can].map(([x, y]) => [x, y.unit_key]).sort()]));
-  // Bản đồ value → object_key mà s09-dung (S09) và danh-ba-vat-the (S08) đọc; chỉ phần khoá toà, trục, căn (không «du_an/») là phần
-  // các bộ ấy tra — khoá «du_an/<mã>» của DA3 không bao giờ trùng khuôn «<pid>/<id>».
-  for (const [ten, nguon] of [["s09-dung", "S09"], ["danh-ba-vat-the", "S08"]]) {
+  // Bản đồ bí danh mã nguồn toà, trục, căn của S09, S08 (SQL của probe, không phải bên đọc): phép chặn rẻ trong một giao dịch. Bên
+  // đọc thật (dung() của danh-ba-vat-the, buocS09DanhBa của s09-dung) đo ở lệnh ben-doc-that trên bản chép riêng từng mốc.
+  for (const [ten, nguon] of [["bi-danh-toa-S09 (SQL)", "S09"], ["bi-danh-toa-S08 (SQL)", "S08"]]) {
     kq[ten] = await bam(`SELECT value, object_key FROM registry_aliases WHERE retired_at IS NULL AND kind = 'ma_nguon' AND source = '${nguon}' AND value NOT LIKE 'du\\_an/%'`);
   }
   return kq;
@@ -130,11 +137,36 @@ async function benDoc(c, cayDo) {
   } finally { await c.query("ROLLBACK"); }
 }
 
+/** E7 bên đọc thật trên DB thử dùng một lần: áp/đảo theo mốc (COMMIT, DB bỏ sau mốc), rồi chạy dung() thật và in bản tóm tắt. */
+async function benDocThat(c, moc, cayDo) {
+  if (!["truoc", "ap", "dao"].includes(moc)) { console.error("ben-doc-that: --moc truoc|ap|dao"); return -1; }
+  if (moc !== "truoc") {
+    const luat = [];
+    for (const n of NGUON_AP) {
+      const the = await dungThe(c, n);
+      luat.push(...(await apThe(c, { nguon: n, bam: the.bam, nguoi: "do-ben-doc-that" })).rules.map((x) => x.id));
+    }
+    if (moc === "dao") for (const id of luat) await daoLuat(c, { ruleId: id, nguoi: "do-ben-doc-that" });
+  }
+  if (cayDo) {
+    const { rowCount } = await c.query(`UPDATE registry_aliases SET retired_at = now() WHERE id = (SELECT id FROM registry_aliases
+      WHERE source = 'S09' AND kind = 'ma_nguon' AND retired_at IS NULL AND value LIKE 'danh-ba-toa/%' ORDER BY id LIMIT 1)`);
+    if (rowCount !== 1) { console.error("ben-doc-that --cay-do: không có bí danh toà S09 nào để cho nghỉ"); return 1; }
+  }
+  const tt = await dung(c, { runId: "da3-e7-ben-doc-that", log: () => {} });
+  // Giờ chạy (vd s16.moc = lúc lượt dựng) khác ở mỗi mốc mà không phải đầu ra của bên đọc: thay bằng nhãn trước khi so.
+  const GIO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/;
+  console.log(`TOM_TAT ${JSON.stringify(tt, (_k, v) => (typeof v === "string" && GIO.test(v) ? "<giờ chạy>" : v))}`);
+  return 0;
+}
+
 const [lenh, ...co] = process.argv.slice(2);
+const coGt = (k) => { const i = co.indexOf(k); return i >= 0 ? co[i + 1] : undefined; };
 const c = new pg.Client({ connectionString: DB_URL });
 await c.connect();
 try {
-  const loi = lenh === "bo-chuyen" ? await boChuyen(c) : lenh === "ben-doc" ? await benDoc(c, co.includes("--cay-do")) : -1;
-  if (loi < 0) { console.error("dùng: bo-chuyen | ben-doc [--cay-do]"); process.exitCode = 2; }
+  const loi = lenh === "bo-chuyen" ? await boChuyen(c) : lenh === "ben-doc" ? await benDoc(c, co.includes("--cay-do"))
+    : lenh === "ben-doc-that" ? await benDocThat(c, coGt("--moc"), co.includes("--cay-do")) : -1;
+  if (loi < 0) { console.error("dùng: bo-chuyen | ben-doc [--cay-do] | ben-doc-that --moc truoc|ap|dao [--cay-do]"); process.exitCode = 2; }
   else process.exitCode = loi ? 1 : 0;
 } finally { await c.end(); }

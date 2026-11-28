@@ -6,7 +6,8 @@ import { after, before, test } from "node:test";
 
 import pg from "pg";
 
-import { apThe, daoLuat, dungThe } from "../noi-du-an-nguon.mjs";
+import { apThe, daoLuat, dungThe, GHI_CHU_CON_CHA, luatCua, vietThe } from "../noi-du-an-nguon.mjs";
+import { duoiDuAn, NOI_DU_AN_S16 } from "../lib/s16-danh-muc.mjs";
 import { bamKetCuc, docNoiSan, docNut, xepNga } from "../lib/khop-du-an.mjs";
 import { docBanGhi, docVung } from "../lib/ban-ghi-nguon.mjs";
 
@@ -45,6 +46,14 @@ test("BN-AC-3 the-chi-doc-bam-on-dinh-khong-in-ma", async () => {
   const o = new Set(md.slice(md.indexOf("\n## ")).split("\n").filter((l) => l.startsWith("| ")).flatMap((l) => l.split("|").map((x) => x.trim())));
   const loMa = a.ds.filter((d) => o.has(d.ma));
   assert.equal(loMa.length, 0, `thẻ lộ mã nguồn: ${loMa.slice(0, 3).map((d) => d.ma).join(", ")}`);
+  // Quét TRỌN tệp (mọi dòng, mọi bảng, chữ thường): thay mỗi mã bằng một chuỗi giả độc nhất rồi dựng lại thẻ bằng chính vietThe;
+  // không chuỗi giả nào được có mặt ở bất kỳ đâu trong tệp (finding vòng 1: phép quét cũ chỉ xét ô bảng sau «##» đầu tiên).
+  const gia = new Map(a.ds.map((d, i) => [d.ma, `ZZMA${i}ZZ`]));
+  const doiMa = (d) => ({ ...d, ma: gia.get(d.ma) });
+  const md2 = vietThe({ nguon: a.nguon, ds: a.ds.map(doiMa), tong: a.tong, mau: a.mau.map((x) => ({ ...x, mau: x.mau.map(doiMa) })),
+    lech: a.lech.map(doiMa), bam: a.bam });
+  const lo2 = md2.match(/ZZMA\d+ZZ/g) ?? [];
+  assert.equal(lo2.length, 0, `thẻ in mã nguồn ở ${lo2.length} chỗ (quét trọn tệp)`);
   // Ô mẫu căn cứ × hạng × nguồn đúc: đếm độc lập bằng SQL trên nút đích, mỗi ô min(20, số cặp) mẫu.
   const { rows: nutDb } = await c.query(`SELECT id::int, catalog_tier AS hang, CASE WHEN catalog_tier = 'xac_minh' THEN '—'
     ELSE coalesce(meta ->> 'nguon', meta ->> 'nguon_ung_vien', '—') END AS nguon FROM asset_nodes WHERE node_type = 'project'`);
@@ -125,10 +134,22 @@ test("BN-AC-5 dao-tung-luat-roi-lui-tron", () => trongGiaoDich(async () => {
 test("BN-AC-6 noi-san-thang-s08-tu-choi-s08-liet-6-ca", () => trongGiaoDich(async () => {
   const s16 = await dungThe(c, "S16");
   assert.equal(s16.tong.giu, 5, "S16 giữ 5 chép cứng");
+  // Mỗi dòng giữ: nút đích là đúng nút của slug trong NOI_DU_AN_S16, luật ghi là S16-noi-san.
+  const { rows: slugRows } = await c.query("SELECT id::int, slug FROM asset_nodes WHERE slug = ANY($1)", [Object.values(NOI_DU_AN_S16)]);
+  const idSlug = new Map(slugRows.map((r) => [r.slug, r.id]));
+  for (const d of s16.ds.filter((x) => x.kq.nga === "giu")) {
+    const slug = NOI_DU_AN_S16[duoiDuAn(d.ma)];
+    assert.ok(slug, `dòng giữ S16 «${d.ten}» có trong NOI_DU_AN_S16`);
+    assert.equal(d.kq.node_id, idSlug.get(slug), `dòng giữ S16 «${d.ten}» trỏ đúng nút ${slug}`);
+    assert.equal(luatCua("S16", d.kq), "S16-noi-san", `dòng giữ S16 «${d.ten}» mang căn cứ S16-noi-san`);
+  }
   await assert.rejects(apThe(c, { nguon: "S08", bam: "0".repeat(64), nguoi: "thu", giaoDich: "ngoai" }), /S08 do thẻ luật DA55 nối/);
   const s08 = await dungThe(c, "S08");
   assert.equal(s08.lech.length, 6, "thẻ bóng S08 liệt 6 ca khác nối tay");
-  assert.match(s08.markdown, /quy ước dự án con có cha \(ROADMAP §3 mục 39\)/);
+  // Mỗi ca trong 6 ca có đúng một dòng bảng mang ghi chú dự án con có cha.
+  const dongLech = s08.markdown.split("\n").filter((l) => l.startsWith("| ") && l.includes(GHI_CHU_CON_CHA));
+  assert.equal(dongLech.length, 6, "mỗi ca S08 lệch một dòng ghi «quy ước dự án con có cha (mục 39)»");
+  for (const d of s08.lech) assert.ok(dongLech.some((l) => l.startsWith(`| ${d.ten} |`)), `ca S08 «${d.ten}» có ghi chú riêng`);
   // Cấy nút trùng tên, cùng xã với một dự án S16 chép cứng: bản ghi vẫn giữ nút chép cứng, có mặt ở danh sách khác nối sẵn.
   const g = s16.ds.find((d) => d.kq.nga === "giu" && d.xa) ?? s16.ds.find((d) => d.kq.nga === "giu" && d.tinh);
   assert.ok(g, "có một dự án S16 chép cứng mang xã hoặc tỉnh để cấy nút trùng");
@@ -161,4 +182,26 @@ test("BN-AC-6 s09-do-da42-noi: ba duong ghi S09 deu bi tu choi, khong ghi gi; do
   const kq = await apThe(c, { nguon: "S07", bam: s07.bam, nguoi: "thu", giaoDich: "ngoai" });
   assert.ok(kq.rules.length > 0, "đối chứng: S07 áp được");
   assert.equal(await bam("SELECT * FROM project_links WHERE source = 'S09'"), s09Truoc, "áp S07 không đụng dòng S09");
+}));
+
+test("BN-AC-4 BN-AC-5 dong noi san cua hang khac: ap khong doi rule_id, lui trọn khong cham, bi danh con hieu luc", () => trongGiaoDich(async () => {
+  // Cấy một dòng nối sẵn S07 của hàng khác (luật «S07-hang-khac») cho một bản ghi mà bóng ra nối, kèm bí danh của nó.
+  const the0 = await dungThe(c, "S07");
+  const d = the0.ds.find((x) => x.kq.nga === "noi");
+  const { rows: [r] } = await c.query(
+    "INSERT INTO project_link_rules (source, can_cu, mau_bam, so_ma, decided_by) VALUES ('S07', 'S07-hang-khac', $1, 1, 'thu') RETURNING id::int", ["0".repeat(64)]);
+  await c.query(`INSERT INTO project_links (source, source_project_id, asset_node_id, status, can_cu, rule_id)
+    VALUES ('S07', $1, $2, 'noi', 'S07-hang-khac', $3)`, [d.ma, d.kq.node_id, r.id]);
+  await c.query("INSERT INTO registry_aliases (object_key, kind, value, source) VALUES ($1, 'ma_nguon', $2, 'S07')", [`node:${d.kq.node_id}`, `du_an/${d.ma}`]);
+  const dong = () => bam(`SELECT pl.status, pl.asset_node_id, pl.rule_id, pl.can_cu, pl.ly_do FROM project_links pl WHERE pl.source = 'S07' AND pl.source_project_id = '${d.ma}'`);
+  const biDanhSong = () => dem("registry_aliases", "source = 'S07' AND kind = 'ma_nguon' AND retired_at IS NULL AND value = $1", [`du_an/${d.ma}`]);
+  const truoc = await dong();
+  const the = await dungThe(c, "S07");
+  assert.equal(the.ds.find((x) => x.ma === d.ma).kq.nga, "giu", "bản ghi có dòng nối sẵn ra giu");
+  const { rules } = await apThe(c, { nguon: "S07", bam: the.bam, nguoi: "thu", giaoDich: "ngoai" });
+  assert.equal(await dong(), truoc, "áp không đổi dòng nối sẵn của hàng khác (rule_id, nút, trạng thái)");
+  for (const x of rules) await daoLuat(c, { ruleId: x.id, nguoi: "thu", giaoDich: "ngoai" });
+  assert.equal(await dong(), truoc, "lùi trọn luật DA3 không chạm dòng nối sẵn của hàng khác");
+  assert.equal(await biDanhSong(), 1, "bí danh của dòng nối sẵn còn hiệu lực sau lùi");
+  assert.ok(!rules.some((x) => x.id === r.id), "luật của hàng khác không nằm trong danh sách luật DA3 lùi");
 }));

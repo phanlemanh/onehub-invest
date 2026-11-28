@@ -90,6 +90,7 @@ evals:
     criterion: AC-7
     executor: script
     cmd: bash _acceptance/bang-noi-ma-du-an/probes/ben-doc.sh
+    long_running: 60
     layer: backend-effect
     paths: ["pipeline/noi-du-an-nguon.mjs", "pipeline/lib/ban-ghi-nguon*.mjs", "pipeline/lib/khop-du-an*.mjs"]
     expected: >
@@ -135,8 +136,9 @@ evals:
     question: >
       Đọc mẫu nối căn cứ K2, K3, T trong thẻ S07 (evidence/the-S07.md), tách theo hạng và nguồn đúc của nút đích: có cặp nào là hai dự
       án khác nhau chỉ trùng tên chung chung không, nhất là cặp vào nút ứng viên S08 mới đúc? Có kiểu sai lặp lại mà luật sửa được
-      không?
-    inputs: ["_acceptance/bang-noi-ma-du-an/evidence/the-S07.md"]
+      không? Danh sách ĐỦ mọi cặp nối (evidence/e10-cap-noi-S07.md, hai phía có địa chỉ và chủ đầu tư, tên chung chung xếp đầu) để
+      người chấm soi ngoài phần mẫu.
+    inputs: ["_acceptance/bang-noi-ma-du-an/evidence/the-S07.md", "_acceptance/bang-noi-ma-du-an/evidence/e10-cap-noi-S07.md"]
     expected: >
       Thẻ có min(20, số cặp) mẫu mỗi ô căn cứ × hạng × nguồn đúc của nút đích; người chấm đánh từng mẫu đúng/sai/không chắc kèm một dòng lý do và kết luận căn cứ T có đủ tin để
       Mạnh duyệt mẫu hay cần siết (ví dụ đòi thêm xã).

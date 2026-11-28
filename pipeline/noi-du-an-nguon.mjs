@@ -19,6 +19,7 @@ import { CATALOG_TIER } from "./lib/vocab.generated.mjs";
 const DB_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 export const SO_MAU = 20;
 export const NGUON_DA55 = "S08";
+export const GHI_CHU_CON_CHA = "quy ước dự án con có cha (ROADMAP §3 mục 39)";
 /** Nguồn DA3 không bao giờ áp, kèm lời từ chối. S08: thẻ luật DA55. S09: đường nối duy nhất của DA42 (Mạnh duyệt 28/11). */
 export const NGUON_KHONG_AP = Object.freeze({ S08: "S08 do thẻ luật DA55 nối", S09: "S09 do DA42 nối" });
 
@@ -104,8 +105,10 @@ export function vietThe({ nguon, ds, tong, mau, lech, bam }) {
   }
   out.push(`## Nối sẵn mà bóng ra khác (${lech.length})`, "");
   if (nguon === NGUON_DA55 && lech.length) out.push("Nối tay gắn dự án con vào dự án cha: khác do quy ước dự án con có cha (ROADMAP §3 mục 39).", "");
-  out.push("| Tên nguồn | Nút nối sẵn | Bóng ra |", "|---|---|---|",
-    ...lech.map((d) => `| ${d.ten} | ${d.tenNut ?? "—"} | ${d.kq.bong.nga === "noi" ? `${d.tenBong} (${d.kq.bong.can_cu})` : d.kq.bong.ly_do} |`), "",
+  // Mỗi dòng S08 lệch ghi lý do riêng (finding vòng 1: lời hứa cho từng ca, không chỉ một câu cho cả bảng).
+  const ghiChu = nguon === NGUON_DA55 ? GHI_CHU_CON_CHA : "—";
+  out.push("| Tên nguồn | Nút nối sẵn | Bóng ra | Ghi chú |", "|---|---|---|---|",
+    ...lech.map((d) => `| ${d.ten} | ${d.tenNut ?? "—"} | ${d.kq.bong.nga === "noi" ? `${d.tenBong} (${d.kq.bong.can_cu})` : d.kq.bong.ly_do} | ${ghiChu} |`), "",
     `băm: ${bam}`, "");
   return out.join("\n").replace(/\n{3,}/g, "\n\n");
 }
@@ -120,7 +123,8 @@ async function dongGiaoDich(client, giaoDich, ok) {
 
 async function docLink(client, nguon) {
   const { rows } = await client.query(
-    "SELECT source_project_id AS ma, asset_node_id::int AS node_id, status, ly_do FROM project_links WHERE source = $1", [nguon]);
+    `SELECT pl.source_project_id AS ma, pl.asset_node_id::int AS node_id, pl.status, pl.ly_do, r.can_cu AS luat
+       FROM project_links pl LEFT JOIN project_link_rules r ON r.id = pl.rule_id WHERE pl.source = $1`, [nguon]);
   return new Map(rows.map((r) => [r.ma, r]));
 }
 
@@ -148,14 +152,20 @@ export async function apThe(client, { nguon, bam, nguoi, giaoDich = "rieng", _sa
     if (the.bam !== bam) throw new Error(`bam-lech: thẻ hiện tại ${the.bam}, băm khai ${bam} — dựng thẻ mới rồi xem lại`);
     const link = await docLink(client, nguon);
     const biDanh = await docBiDanh(client, nguon);
+    // Dòng nối sẵn KHÔNG do DA3 ghi (luật của hàng khác, hay dòng tay không luật): áp không đụng tới — không đổi rule_id, không
+    // đổi bí danh — nên đảo luật DA3 về sau cũng không chạm (finding vòng 1, GS phán 28/11: đường mất dữ liệu của hàng khác).
+    const luatDa3 = new Set(moiTenLuat(nguon));
+    const cuaHangKhac = (d) => { const l = link.get(d.ma); return d.kq.nga === "giu" && l?.status === "noi" && !luatDa3.has(l.luat); };
     const dungRoi = (d) => {
+      if (cuaHangKhac(d)) return true;
       const l = link.get(d.ma), a = biDanh.get(d.ma);
       if (!coNut(d.kq)) return l?.status === "chua_noi" && l.ly_do === d.kq.ly_do && !a;
       return l?.status === "noi" && l.node_id === d.kq.node_id && a?.object_key === `node:${d.kq.node_id}`;
     };
     if (the.ds.every(dungRoi)) { ok = true; return { rules: [], khongDoi: true }; }
+    const ghi = the.ds.filter((d) => !cuaHangKhac(d));
     const dem = new Map();
-    for (const d of the.ds) dem.set(luatCua(nguon, d.kq), (dem.get(luatCua(nguon, d.kq)) ?? 0) + 1);
+    for (const d of ghi) dem.set(luatCua(nguon, d.kq), (dem.get(luatCua(nguon, d.kq)) ?? 0) + 1);
     const ruleId = new Map();
     for (const [can, so] of [...dem].sort()) {
       const { rows: [r] } = await client.query(
@@ -164,7 +174,7 @@ export async function apThe(client, { nguon, bam, nguoi, giaoDich = "rieng", _sa
       ruleId.set(can, r.id);
     }
     let soBiDanh = 0;
-    for (const d of the.ds) {
+    for (const d of ghi) {
       const can = luatCua(nguon, d.kq);
       const a = biDanh.get(d.ma);
       if (!coNut(d.kq)) {
