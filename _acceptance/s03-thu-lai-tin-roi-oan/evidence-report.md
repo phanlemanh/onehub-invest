@@ -2,16 +2,18 @@
 schema_version: 2
 feature_slug: s03-thu-lai-tin-roi-oan
 verdict: REJECT
-failed_evals: []
+failed_evals: ["E9"]
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 9df37772491db2172d97775b648e6f591ee26586
+verified_commit: 24b54a9b2d2120afad9200ef6ca9943ca0ddad9b
 human_signoff:
 ---
 
 # Evidence Report: s03-thu-lai-tin-roi-oan
+
+Round 4. Nội dung thay trọn round cũ; lịch sử round ở mục Iterations.
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
@@ -20,144 +22,138 @@ human_signoff:
 | E3 | AC-3 | test | PASS |
 | E4 | AC-4 | test | PASS |
 | E5 | AC-5 | script | PASS |
-| E6 | AC-6 | judgment | UNCERTAIN |
+| E6 | AC-6 | judgment | đề xuất của hội đồng judge: FAIL, chờ người quyết |
 | E7 | AC-7 | test | PASS |
 | E8 | AC-7 | test | PASS |
-| E9 | AC-7 | test | PASS |
-
-Verdict tổng REJECT do máy tính sẵn; không eval máy nào đỏ (failed_evals rỗng). Hội đồng chấm E6 (judgment) có ý kiến lệch và chưa có human_override; một finding trong hợp đồng (AC-3, mức high) nằm ở review-findings.md.
+| E9 | AC-7 | test | FAIL |
 
 ## Evidence
 
 - eval: E1
-  run_id: minted-s03-thu-lai-tin-roi-oan-E1-r3
+  run_id: minted-s03-thu-lai-tin-roi-oan-E1-r4
   exit_code: 0
   baseline: n-a
-  runs: 1
   verifier: config:executors.test.pl43_unit
-  verified_at: 2026-11-28T04:21:27Z
-  cmd: node --test pipeline/scripts/s03-thu-lai-tin-roi-oan.test.mjs
+  verified_at: 2026-11-28T06:56:00Z
   output: |
-    ℹ duration_ms 121.924875
+    lệnh: node --test pipeline/scripts/s03-thu-lai-tin-roi-oan.test.mjs
+    ℹ duration_ms 144.513583
 
 - eval: E2
-  run_id: minted-s03-thu-lai-tin-roi-oan-E2-r3
+  run_id: minted-s03-thu-lai-tin-roi-oan-E2-r4
   exit_code: 0
   baseline: n-a
-  runs: 1
   verifier: config:executors.test.pl43_unit
-  verified_at: 2026-11-28T04:21:27Z
-  cmd: node --test pipeline/scripts/s03-thu-lai-tin-roi-oan.test.mjs
+  verified_at: 2026-11-28T06:56:00Z
   output: |
-    ℹ duration_ms 121.924875
+    cùng lệnh với E1 (một lượt chạy phủ E1, E2, E3)
+    ℹ duration_ms 144.513583
 
 - eval: E3
-  run_id: minted-s03-thu-lai-tin-roi-oan-E3-r3
+  run_id: minted-s03-thu-lai-tin-roi-oan-E3-r4
   exit_code: 0
   baseline: n-a
-  runs: 1
   verifier: config:executors.test.pl43_unit
-  verified_at: 2026-11-28T04:21:27Z
-  cmd: node --test pipeline/scripts/s03-thu-lai-tin-roi-oan.test.mjs
+  verified_at: 2026-11-28T06:56:00Z
   output: |
-    ℹ duration_ms 121.924875
+    cùng lệnh với E1 (một lượt chạy phủ E1, E2, E3)
+    ℹ duration_ms 144.513583
 
 - eval: E4
-  run_id: minted-s03-thu-lai-tin-roi-oan-E4-r3
+  run_id: minted-s03-thu-lai-tin-roi-oan-E4-r4
   exit_code: 0
   baseline: n-a
-  runs: 1
   verifier: config:executors.test.pl43_ac4
-  verified_at: 2026-11-28T04:21:27Z
-  cmd: cd pipeline && bash ../db/db-thu.sh oneinvest_suite_pl43 --chay node --test --test-name-pattern 'PL43-AC-4' scripts/s03-thu-lai-tin-roi-oan.itest.mjs (qua awk kiểm pass ≥ 1, fail 0, skipped 0)
+  verified_at: 2026-11-28T06:56:00Z
   output: |
-    ℹ duration_ms 62181.826458
+    lệnh: db-thu.sh oneinvest_suite_pl43 --chay node --test --test-name-pattern 'PL43-AC-4' scripts/s03-thu-lai-tin-roi-oan.itest.mjs
+    ℹ duration_ms 59784.898958
 
 - eval: E5
-  run_id: minted-s03-thu-lai-tin-roi-oan-E5-r3
+  run_id: minted-s03-thu-lai-tin-roi-oan-E5-r4
   exit_code: 0
   baseline: n-a
-  runs: 1
   verifier: config:executors.script.pl43_do_that
-  verified_at: 2026-11-28T04:21:27Z
-  cmd: cd pipeline && node --test scripts/do-tin-roi-oan.test.mjs && bash ../db/db-thu.sh oneinvest_suite_pl43_that --chay node scripts/do-tin-roi-oan.mjs --kiem
+  verified_at: 2026-11-28T06:56:00Z
   output: |
+    lệnh: node --test scripts/do-tin-roi-oan.test.mjs rồi do-tin-roi-oan.mjs --kiem trên DB suite
     KẾT: đạt
 
 - eval: E7
-  run_id: minted-s03-thu-lai-tin-roi-oan-E7-r3
+  run_id: minted-s03-thu-lai-tin-roi-oan-E7-r4
   exit_code: 0
   baseline: n-a
-  runs: 1
   verifier: config:executors.test.pl43_loai_tin
-  verified_at: 2026-11-28T04:21:27Z
-  cmd: diff so với a94013aaf chỉ thêm dòng ở ba tệp test loại tin, rồi node --test ba tệp đó
+  verified_at: 2026-11-28T06:56:00Z
   output: |
-    ℹ duration_ms 719548.771334
+    git diff so với a94013aaf chỉ thêm dòng ở ba tệp test; ba tệp test chạy xanh
+    ℹ duration_ms 954979.456833
 
 - eval: E8
-  run_id: minted-s03-thu-lai-tin-roi-oan-E8-r3
+  run_id: minted-s03-thu-lai-tin-roi-oan-E8-r4
   exit_code: 0
   baseline: n-a
-  runs: 1
   verifier: config:executors.suite.pipeline_a
-  verified_at: 2026-11-28T04:21:27Z
-  cmd: node scripts/suite-neu-doi.mjs pipeline_a -- 'cd pipeline && npm run test:a'
+  verified_at: 2026-11-28T06:56:00Z
   output: |
-    ℹ duration_ms 245096.315292
+    lệnh: node scripts/suite-neu-doi.mjs pipeline_a -- 'cd pipeline && npm run test:a'
+    ℹ duration_ms 247906.628834
 
 - eval: E9
-  run_id: minted-s03-thu-lai-tin-roi-oan-E9-r3
-  exit_code: 0
+  run_id: minted-s03-thu-lai-tin-roi-oan-E9-r4
+  exit_code: 1
   baseline: n-a
-  runs: 1
   verifier: config:executors.suite.pipeline_b
-  verified_at: 2026-11-28T04:21:27Z
-  cmd: node scripts/suite-neu-doi.mjs pipeline_b -- 'cd pipeline && npm run test:b'
+  verified_at: 2026-11-28T06:56:00Z
   output: |
-    ℹ duration_ms 116467.245166
-
-### Judgment
-
-- eval: E6
-  judged_by: hội đồng đề xuất (domain-correctness, operational-feasibility, spec-alignment)
-  proposal: UNCERTAIN
-  votes:
-    - domain-correctness: FAIL — Mục (1) chỉ khoảng 17/20 đạt, dưới ngưỡng 18. offer_d95d957a294f24a2 là voucher 175tr của căn sơ cấp nhưng bị đọc thành rent_lt 175.000.000 đ. offer_9a625fdd7cd2d23c ghi «4tr5» mà đọc thành 4.000.000 đ. offer_434fbd14381fd873 gộp bốn căn thành một tin 10,8tr. Mục (2) phần C ước 9–10/10, nhưng f783487ab449e953 và 5b82d3c5fec2ac20 là cùng một bài, còn d042b8faeccf4a02 có hai giá (1.550 và 1.690), nên chưa chắc đạt. Mục (3) offer_79af18d5de9dc86b «KH 1 nữ… in Stu full 7tr» là bài khách tìm: nhãn inquiry của model đúng nhưng câu tìm lọt, bài vẫn thành rent_lt 7tr. Mục (4) tin rao bị sót ở các dạng sau. Giá viết gọn không có «tỷ» hay «tr»: «Full 8500 cọc 2» (d10e6673…), «Giá thu về: 1.620» (0c28c098…), «thu về 3,1xx» (a5777e88…), «Chỉ còn 2.5xx» (a5a34866…). Giá viết «Tài Chính 3,2 tỷ» (6f26a33c…, db4560a7…), «TTS: 6,555 tỷ» (10443675…) và «cắt giá 1,4XX thu về» (bba77da6…). Chữ toán học Unicode «𝟑,𝟒𝟏 𝐭𝐲̉» (ca5fb2f2…, 2f007742…). Bài nhiều căn «Cho thuê… Link ảnh» (7f1e37d0…, 3fdbb9d7…). Dòng sha ở đầu tệp: 08ff710dd773b81b262593b30615e2242e919557; hạt giống: pl43-mau-tin-moi.
-    - operational-feasibility: UNCERTAIN — Mẫu 20 tin có 2 tin sai rõ: offer_d95d957a294f24a2 (tin bán có HĐMB, voucher 175tr, bị đọc thành rent_lt 175 triệu) và offer_9a625fdd7cd2d23c (giá 4tr5 bị đọc là 4.000.000). offer_434fbd14381fd873 là bài gộp bốn căn với một giá 10,8tr, nên chưa rõ có tính là tin đúng hay không: nếu tính thì đạt đúng ngưỡng 18/20, nếu không thì 17/20 và trượt. Phần C đạt 10/10. Tin inquiry offer_79af18d5de9dc86b là câu tìm thật, nhãn model đúng. Trong 20 bài còn rơi, các dạng chữ bị bỏ sót gồm: 3,2 tỷ trần, 8500, thu về 1.620, 2.5xx, chữ toán học in đậm kiểu 𝟑,𝟒𝟏 𝐭𝐲̉. Dòng sha đầu tệp: 08ff710dd773b81b262593b30615e2242e919557; hạt giống: pl43-mau-tin-moi.
-    - spec-alignment: PASS — Trong 20 tin ngẫu nhiên có 18 tin đạt (ngưỡng ≥18), 2 tin không đạt. Tin offer_d95d957a294f24a2 là voucher/cọc bị đọc thành thuê 175tr. Tin offer_9a625fdd7cd2d23c ghi 4tr5 nhưng đọc thành 4tr, đúng bậc nhưng sai số. Cả 10 tin phần C là tin bán thật, giá đúng bậc tỷ, đạt ≥9. Tin offer_f783487ab449e953 và offer_5b82d3c5fec2ac20 cùng chữ bài nên có thể là bản trùng. Tin nhãn inquiry duy nhất offer_79af18d5de9dc86b ("KH 1 nữ … in Stu full 7tr") là câu tìm lọt vào phần A. Trong 20 bài còn rơi, các dạng bị bỏ sót là giá viết tắt không có đơn vị: "1.620", "8500", "2.5xx", "3,1xx", "1,4XX", "3,2 tỷ", "6,555 tỷ" và "2,35 tỷ"/"3,41 tỷ" viết bằng chữ Unicode đậm; ngoài ra có bài nhãn inquiry/not_listing đáng nghi. Dòng sha và hạt giống ở đầu tệp: sha 08ff710dd773b81b262593b30615e2242e919557, hat_giong pl43-mau-tin-moi.
-  required_evidence:
-    - Bản mẫu chạy lại ở cây mới nhất (sha dc4ff8711 hoặc sau đó) bằng `pipeline/scripts/do-tin-roi-oan.mjs --kiem` với hạt giống pl43-mau-tin-moi, ghi vào _acceptance/s03-thu-lai-tin-roi-oan/evidence/mau-tin-moi.md. Trong 20 tin ngẫu nhiên phải có ít nhất 18 tin đúng giá và đúng bậc: d95d957a294f24a2 (voucher 175tr), 9a625fdd7cd2d23c (4tr5) và 434fbd14381fd873 (gộp nhiều căn) phải được sửa hoặc loại.
-    - Dòng sha ở đầu tệp mẫu khớp với cây đã chạy lượt đo. Hiện tệp ghi 08ff710dd, trong khi lượt đo gần nhất ghi ở dc4ff8711.
-    - Phán quyết của người cho offer_434fbd14381fd873 (bài gộp bốn căn, giá 10,8tr) là đạt hay không đạt, lấy từ chữ bài gốc trong bản chép DB. Nếu tính đạt thì 18/20; nếu không thì dưới ngưỡng.
-  human_override:  # chi nguoi ghi
+    lệnh: node scripts/suite-neu-doi.mjs pipeline_b -- 'cd pipeline && npm run test:b'
+    ℹ tests 872 · pass 869 · fail 1 · skipped 2
+    Ca đỏ duy nhất: scripts/thu-duoi-chon-nap-e2e.test.mjs:120 «snapshot đuôi đã nạp bị lượt quét đủ đè hết snapshot_id → vòng rảnh kế KHÔNG nạp lại»
+    AssertionError tại dòng 178: «snapshot C mới thật phải được nạp»; đầu ra thực tế là «nhường lượt — script nạp ngày đang chạy» thay cho «nạp snapshot đuôi …»
+    Lệnh fail này gắn eval E9 (không có lệnh fail nào ngoài eval).
 
 ### Lệnh suite (hồi quy)
 
 - cmd: node scripts/suite-neu-doi.mjs agent -- 'cd agent && npm test'
-  run_id: minted-s03-thu-lai-tin-roi-oan-SUITE-node_scripts_suite_neu_doi_mjs_agent_cd_-r3
+  run_id: minted-s03-thu-lai-tin-roi-oan-SUITE-node_scripts_suite_neu_doi_mjs_agent_cd_-r4
   exit_code: 0
-  verified_at: 2026-11-28T04:21:27Z
+  verified_at: 2026-11-28T06:56:00Z
 
 - cmd: node scripts/suite-neu-doi.mjs app -- 'cd app && npx tsc --noEmit && npm run lint'
-  run_id: minted-s03-thu-lai-tin-roi-oan-SUITE-lint-r3
+  run_id: minted-s03-thu-lai-tin-roi-oan-SUITE-lint-r4
   exit_code: 0
-  verified_at: 2026-11-28T04:21:27Z
+  verified_at: 2026-11-28T06:56:00Z
 
 - cmd: node scripts/suite-neu-doi.mjs app_ui -- 'cd app && npm test'
-  run_id: minted-s03-thu-lai-tin-roi-oan-SUITE-node_scripts_suite_neu_doi_mjs_app_ui_cd-r3
+  run_id: minted-s03-thu-lai-tin-roi-oan-SUITE-node_scripts_suite_neu_doi_mjs_app_ui_cd-r4
   exit_code: 0
-  verified_at: 2026-11-28T04:21:27Z
+  verified_at: 2026-11-28T06:56:00Z
 
 - cmd: node scripts/suite-neu-doi.mjs ui_lint_rules -- 'cd app && npm run test:lint-rules'
-  run_id: minted-s03-thu-lai-tin-roi-oan-SUITE-test_lint_rules-r3
+  run_id: minted-s03-thu-lai-tin-roi-oan-SUITE-test_lint_rules-r4
   exit_code: 0
-  verified_at: 2026-11-28T04:21:27Z
+  verified_at: 2026-11-28T06:56:00Z
 
 - cmd: node scripts/suite-neu-doi.mjs portal_static -- 'node scripts/check-portal-compliance.mjs'
-  run_id: minted-s03-thu-lai-tin-roi-oan-SUITE-node_scripts_suite_neu_doi_mjs_portal_st-r3
+  run_id: minted-s03-thu-lai-tin-roi-oan-SUITE-node_scripts_suite_neu_doi_mjs_portal_st-r4
   exit_code: 0
-  verified_at: 2026-11-28T04:21:27Z
+  verified_at: 2026-11-28T06:56:00Z
+
+### Judgment (E6, AC-6)
+
+- eval: E6
+  judged_by: hội đồng judge (fresh context), đề xuất — người quyết ở Cổng 2
+  proposal: FAIL
+  panel:
+    - domain-correctness: FAIL — Trong 20 tin ngẫu nhiên chỉ khoảng 17 đạt, thấp hơn ngưỡng 18. Ba tin không đạt: offer_6cc78e866f74ff45 (200 triệu «bao phí», chuyển nhượng/cắt lỗ, bị gán rent_lt), offer_d95d957a294f24a2 (voucher 175tr, «thu về 200tr chưa ký HĐMB», bị gán rent_lt), offer_79af18d5de9dc86b (khách tìm thuê «KH 1 nữ… in Stu full 7tr», nhãn inquiry vẫn lọt thành rent_lt 7tr). Mục (2): 10/10 tin phần C là tin bán thật đúng bậc tỷ, đạt. Mục (3): tin nhãn inquiry duy nhất là offer_79af18d5de9dc86b, câu tìm lọt thành tin thuê, không đạt. Mục (4): 20 bài còn rơi cho thấy tin rao bị bỏ sót ở các dạng giá ẩn «1.6xx», «31xxtỷ», «2.6x tỷ», «3.3», «6.5 in liền», «7tr», «giá 3,2 tỷ», giỏ hàng nhiều căn «TTS 9,382 tỷ». Dòng sha đầu tệp là 098c05bde12b586c47eb6eaf32b9863e084dd470, hạt giống pl43-mau-tin-moi.
+    - operational-feasibility: FAIL — Chỉ 17 tin đạt, dưới ngưỡng 18. offer_6cc78e866f74ff45 (bán quyền «cắt hơn 700 tr», đọc nhầm thành thuê 200 triệu), offer_d95d957a294f24a2 (voucher 175tr, đọc nhầm thành thuê 175 triệu), offer_79af18d5de9dc86b (khách cần thuê, nhãn inquiry đúng nhưng vẫn lọt vào tập tin rao). Phần C có 10 mục nhưng chỉ 8 tin riêng biệt: offer_0419022963e18429 và offer_be02bbbf9d3d1e0e trùng với tập 20 tin; f783487ab449e953 và 5b82d3c5fec2ac20 cùng một bài.
+    - spec-alignment: FAIL — Mục (1) chỉ đạt 17/20, thấp hơn ngưỡng 18. offer_6cc78e866f74ff45 và offer_d95d957a294f24a2 bị đọc thành rent_lt 200 triệu và 175 triệu nhưng chữ bài là chênh giá hoặc voucher của căn bán. offer_79af18d5de9dc86b là tin khách tìm thuê mà vẫn nằm trong 20 tin rao. Phần C có vẻ đạt 10/10 dù f783487ab449e953 và 5b82d3c5fec2ac20 trùng chữ bài. Mục (3) tệp chưa ghi «câu tìm lọt» hay «nhãn model sai». Mục (4) có nhiều tin rao thật bị bỏ sót.
+  required_evidence:
+    - Mẫu 20 tin ngẫu nhiên mới, hoặc bản sửa lỗi gán loại, trong đó ít nhất 18 tin là tin rao thật đúng bậc giá. Nguồn: chạy lại `pipeline/scripts/do-tin-roi-oan.mjs --kiem` rồi ghi vào evidence/mau-tin-moi.md. Cần bằng chứng offer_6cc78e866f74ff45 và offer_d95d957a294f24a2 (chuyển nhượng/voucher, không phải thuê dài hạn) không còn bị gán rent_lt.
+    - Bằng chứng offer_79af18d5de9dc86b (khách tìm thuê, nhãn inquiry) không còn thành offer; mục «nhãn inquiry» ghi «câu tìm lọt» hoặc «nhãn model sai» cho từng tin, mục này rỗng hoặc đã xử lý.
+    - Dòng sha trong tệp mẫu (098c05bde...) khớp cây đã chạy lượt đo; kiểm bằng `git rev-parse` trên nhánh fix/s03-thu-lai-tin-roi-oan, vì HEAD hiện là 24b54a9b2.
+    - Phần C có đủ 10 tin riêng biệt, không trùng nhau và không trùng với 20 tin ở mục trên.
+  human_override:  # chi nguoi ghi
 
 ## Known limits
 
@@ -165,14 +161,15 @@ Verdict tổng REJECT do máy tính sẵn; không eval máy nào đỏ (failed_e
 
 ## Analyst
 
-carried tu round 1 — baseline khong do lai round nay
+carried tu round 1 — baseline khong do lai round nay (evals.yaml không đổi từ lần baseline cuối, round 1). Field baseline của từng eval ghi n-a.
 
-none
+Eval không-phân-biệt (xanh cả trên code cũ lẫn code mới): không có. Các lệnh suite xanh cả hai phía là regression-guard bình thường, không liệt kê.
 
 ## Variance
 
-none — every multi-run eval is uniform
+none — không eval nào chạy nhiều lần; mọi eval deterministic và cho kết quả đồng nhất.
 
 ## Iterations
 
-Round 3: không eval máy nào đỏ; E6 (judgment) chưa người chốt, hội đồng lệch (một phiếu FAIL, một UNCERTAIN, một PASS), còn một finding trong hợp đồng AC-3 mức high. Verdict REJECT, chuyển người quyết. Lịch sử round 1 và 2 không có trong dữ liệu round này.
+Round 1 đến round 3: xem run-log.jsonl cùng thư mục; round này thay thế nội dung các round trước.
+Round 4: E9 không đạt — một ca đỏ trong nửa b bộ pipeline (thu-duoi-chon-nap-e2e.test.mjs:120), đầu ra thực tế là «nhường lượt — script nạp ngày đang chạy» thay cho dòng nạp snapshot đuôi (chưa xác định là do môi trường hay do thay đổi, cần chạy lại riêng). E6 hội đồng judge đề xuất không đạt: mẫu 20 tin ngẫu nhiên chỉ đạt khoảng 17/20. Trả về implementation.

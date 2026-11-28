@@ -1,82 +1,83 @@
-# Review findings: s03-thu-lai-tin-roi-oan (round 3)
+# Review findings: s03-thu-lai-tin-roi-oan (round 4)
 
 ## Trong hợp đồng
 
-- **Hình dạng 5: lời hứa nói cả lớp dạng AC-1 nhận thêm, nhưng test câu tìm AC-3 chỉ có vài câu lẻ, không phải ma trận đủ dạng**
-  AC: AC-3
-  file: `pipeline/scripts/s03-thu-lai-tin-roi-oan.test.mjs:78`
-  severity: high
-  source: measurement
-  detail: Luật bất biến khai trong transform-zalo.mjs: «dạng chữ nào mới nhận làm dấu hiệu BĐS (A) thì câu tìm viết bằng dạng ấy vẫn là Yêu cầu (F)». Contract AC-3 cũng viết «ma trận câu tìm dùng đúng các dạng AC-1 nhận thêm». Mảng TIM (dòng 78–96) chỉ là câu lẻ cho «1 ngủ», «Stu/stu», «2pn» và vài cụm xin hàng. Nó không duyệt DANG (9 dạng) cùng diện tích trần, nên số assert khác số phần tử của lớp. Chạy thử bằng đúng helper `doc` của test, nhóm «ca-hai», LUAT_PL43: «Tìm BE5 Stu full đồ 8tr», «Cần BE5 Stu full đồ 8tr», «Ai có BE5 Stu 8tr ko ạ», «kiếm BE5 Stu full 8tr» đều ra rent_lt/don-vi-gia; «Tìm BE5 Stu tầm 2.6 tỷ» ra sale; «Cần 55m full đồ 8tr», «Ai có 55m 8tr ko ạ» ra rent_lt. Cả bảy câu, với LUAT_TRUOC_PL43, đều ra kind null/bo. Nghĩa là luật mới biến câu tìm viết bằng dạng mới «BE5 Stu» và diện tích trần thành tin rao, đúng điều AC-3 hứa không xảy ra, mà test vẫn xanh vì ma trận không phủ hai dạng ấy. Đối chứng `khongCap` (dòng 104–107) cũng chỉ chạy trên cùng danh sách lẻ đó.
-  rationale: AC-3 hứa câu tìm viết bằng đúng các dạng AC-1 nhận thêm vẫn là Yêu cầu; finding chỉ ra câu tìm dạng «BE5 Stu» và diện tích trần thành tin rao mà test không phủ.
+- **Thước gán «phần luật» bỏ qua thẻ nhóm, nên mẫu «10 tin phần C» có thể lẫn tin thực ra vào qua thẻ nhóm**
+  AC: AC-5
+  file: `pipeline/scripts/do-tin-roi-oan.mjs:50`
+  severity: low
+  source: conventions
+  detail: `phanLuatCua` gọi `suyLoai({...pr}, text, mucDich, null, { pl43: luat })`, tức truyền cứng `mucDichThe = null`. Transform thật truyền `theNhom.get(conversation_id)?.mucDich` (transform-zalo.mjs dòng 1006). Ví dụ một tin mới ở nhóm có thẻ bán, giá từ 1 tỷ: ở transform thật nó vào qua nhánh `the-nhom` ngay khi bật phần A. Ở thước, nhánh thẻ bị tắt nên vòng lặp đi tới C và gán «C». Tin như vậy lọt vào `mau.phanC`, chính là đầu vào ngưỡng AC-6 «≥ 9/10 tin phần C». Phần luật ghi trong tệp mẫu không chắc là phần đã thật sự đưa tin vào.
+  rationale: AC-5 yêu cầu thước in tin mới theo phần luật và chọn 10 tin phần C; gán sai phần làm mẫu này sai.
+
+- **phanLuatCua gán phần luật khác cách transform thật chọn bài (không có thẻ nhóm, không gộp khoá nhóm), nên mẫu phần C của AC-6 và bảng đếm theo phần bị lệch**
+  AC: AC-5
+  file: `pipeline/scripts/do-tin-roi-oan.mjs:50`
+  severity: medium
+  source: bugs
+  detail: runTransformZalo gọi suyLoai với mucDich tính trên bài đã qua veKhoaNhom(p, khoaNhomThat) và mucDichThe = theNhom.get(...).mucDich (thẻ địa chỉ nhóm đã duyệt, TG2). Thước làm khác ở hai chỗ. (1) Dòng 187 tính mucDich bằng mucDichNhom trên conversation_id thô của loadStgPosts, không gộp khoá nhóm. (2) phanLuatCua (dòng 50) gọi suyLoai(..., mucDich, null, { pl43: luat }), luôn bỏ thẻ nhóm. Ví dụ: bài ở nhóm có thẻ «bán» đã duyệt, mucDich là «ca-hai», chỉ nhờ luật A mới có dấu hiệu BĐS. Transform thật nhận bài này qua nhánh `the-nhom` ở luật A. Trong phanLuatCua, bước A rơi xuống «bo» vì mucDichThe = null, bước B cũng vậy, đến bước C (tuMotTy) bài được gán «C» nếu giá từ 1 tỷ, hoặc null («khác»). Bài nhóm đôi khoá cũng lệch tương tự: mucDich thô có thể là «ca-hai» trong khi khoá gộp đã là sale. Hệ quả: dòng «theo phần luật» in sai, và danh sách `phanC` (10 tin đưa người chấm AC-6 theo tiêu chí «phần C ≥ 9/10 tin bán thật») có thể lẫn tin thật ra vào nhờ luật A qua thẻ nhóm. Cách sửa: tính mucDich trên posts.map(p => veKhoaNhom(p, khoaNhomThat)), và truyền mucDichThe từ docTheDaDuyet vào phanLuatCua.
+  rationale: Bảng đếm theo phần luật và mẫu 10 tin phần C là đầu ra AC-5, và là đầu vào ngưỡng chấm AC-6; gán phần lệch với transform thật.
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **suyLoai mặc định chạy luật PL43, còn parsePost/laYeuCau/coDauHieuBds mặc định chạy luật cũ: ai gọi theo mặc định sẽ nhận luật nửa cũ nửa mới**
-  Người dùng thấy gì: Một vài thước đo nội bộ có thể đo bằng bộ luật lai, nên con số so sánh trước/sau của chúng chưa phản ánh đúng đường đọc thật. Tin rao thật vào kho không bị ảnh hưởng.
-  Căn cứ: Chỉ lệch ở công cụ đo nội bộ, không làm mất hay sai tin của người dùng, và sửa sau vẫn rẻ.
+- **Mặc định luật tách đôi: hàm đọc giữ luật cũ, hàm quyết loại dùng luật mới, nên đường đọc ảnh S03 (KC3) lệch với transform S03**
+  Người dùng thấy gì: Những bài mà đường chính đã nhận thành tin rao vẫn có thể bị đường đọc ảnh coi là thiếu dấu hiệu rồi đem đi đọc ảnh, tốn công mà vô ích. Câu tìm nhà cũng có thể lọt qua đường này.
+  Căn cứ: Hậu quả nhẹ: chỉ gây lệch và tốn xử lý ở một đường phụ, không mất hay lộ dữ liệu, chạy lại là sửa được; sửa sau không đắt nhưng cần đo riêng.
+  file: `pipeline/transform-zalo.mjs`
+  severity: medium
+  Đề xuất: new-contract
+
+- **Rào «không sửa kỳ vọng cũ» của pl43_loai_tin cho qua lặng lẽ khi git diff lỗi**
+  Người dùng thấy gì: Nếu môi trường kiểm thiếu lịch sử git, bước kiểm xem có ai sửa kỳ vọng cũ sẽ báo đạt dù chưa kiểm được gì.
+  Căn cứ: Rủi ro thấp vì CI lấy đủ lịch sử, không ảnh hưởng người dùng cuối; chỉ là lưới an toàn nội bộ, sửa sau rẻ.
+  file: `_acceptance/config.yaml`
+  severity: low
+  Đề xuất: known-limits
+
+- **Hằng YEU_CAU_TRUOC_PL43 không được dùng, mà comment nói là có dùng**
+  Người dùng thấy gì: Không ảnh hưởng người dùng; chỉ có thể làm người đọc mã sau này hiểu lầm.
+  Căn cứ: Không có tác động lên dữ liệu hay màn hình nào, dọn lúc nào cũng được nên không đáng mở việc riêng.
+  file: `pipeline/transform-zalo.mjs`
+  severity: low
+  Đề xuất: wont-fix
+
+- **suyLoai mặc định dùng luật PL43, còn parsePost, coDauHieuBds và laYeuCau mặc định dùng luật cũ: gọi không truyền luật ra luật lai**
+  Người dùng thấy gì: Hai công cụ đo phụ có thể in số liệu theo một luật lai, ví dụ bài giá «1t920» bị tính là không có giá, nên số đo ở đó không khớp với kho thật.
+  Căn cứ: Chỉ làm sai số đo nội bộ, không đổi dữ liệu người dùng thấy và chạy lại là có số đúng; sửa rẻ nhưng cần quyết hướng thống nhất.
   file: `pipeline/transform-zalo.mjs`
   severity: medium
   Đề xuất: known-limits
 
-- **Thước PL9 (eval-classify, cách đọc `parser`) vẫn chấm parsePost luật cũ trên bài S03, không phải bộ đọc mà transform S03 đang chạy**
-  Người dùng thấy gì: Số đo độ đúng giá của một thước chất lượng có thể không khớp bộ đọc đang sinh tin. Người dùng cuối không thấy gì khác.
-  Căn cứ: Chỉ ảnh hưởng một số đo nội bộ, không đụng dữ liệu hiển thị, nhẹ và sửa sau không đắt.
-  file: `pipeline/lib/eval-classify.mjs`
+- **Rào «không đổi kỳ vọng» của pl43_loai_tin cho qua im lặng khi git diff lỗi, và bỏ sót dòng trống bị xoá**
+  Người dùng thấy gì: Bước kiểm không ai sửa kỳ vọng cũ có thể báo xanh dù chưa kiểm được, và bỏ sót việc xoá dòng trống.
+  Căn cứ: Tác động thấp, không chạm dữ liệu người dùng, và sửa sau rẻ; rủi ro thực tế nhỏ vì lịch sử git luôn đủ trên CI.
+  file: `_acceptance/config.yaml`
   severity: low
   Đề xuất: known-limits
 
-- **Hợp đồng `parse` của runTransformZalo đổi từ một đối số sang hai đối số; các thước cũ truyền parse một đối số sẽ âm thầm chạy với phần D tắt**
-  Người dùng thấy gì: Một số bài kiểm so sánh hai lượt có thể lệch nhẹ về cách đọc giá. Hiện chưa gây đỏ hay sai dữ liệu.
-  Căn cứ: Chưa có ca nào sai, chỉ là rủi ro về sau cho người viết test, sửa sau rẻ.
-  file: `pipeline/transform-zalo.mjs`
-  severity: low
-  Đề xuất: known-limits
-
-- **Dòng transform-zalo.mjs trong pipeline/CLAUDE.md chưa cập nhật luật PL43 và tham số `luatPl43`**
-  Người dùng thấy gì: Tài liệu hướng dẫn cho người làm sau chưa nhắc luật mới, nên họ dễ dùng nhầm mặc định. Người dùng cuối không bị ảnh hưởng.
-  Căn cứ: Chỉ là thiếu ghi chú, không mất hay lộ dữ liệu, bổ sung sau rất rẻ.
-  file: `pipeline/CLAUDE.md`
-  severity: low
-  Đề xuất: known-limits
-
-- **Mặc định luật lệch nhau: suyLoai mặc định luật PL43, parsePost mặc định luật cũ, nên do-va-doc-tin.mjs đo một bộ luật lai (từ vòng 2, chưa sửa)**
-  Người dùng thấy gì: Thước đo số tin mọc/nghỉ có thể báo xanh hoặc đỏ sai so với thực tế. Tin trên cổng không đổi.
-  Căn cứ: Ảnh hưởng độ tin cậy của một phép đo nội bộ, không làm hỏng dữ liệu người dùng, sửa sau không đắt.
-  file: `pipeline/transform-zalo.mjs`
-  severity: medium
-  Đề xuất: known-limits
-
-- **Thước PL43: phanLuatCua quy phần luật bằng mục đích nhóm khác với transform; khối «trước (luật cũ)» đếm nhánh Yêu cầu bằng luật mới**
-  Người dùng thấy gì: Bảng đếm tin mới theo từng phần luật và mẫu chấm tay có thể lẫn vài tin vào nhầm phần. Tin vào kho không đổi.
-  Căn cứ: Chỉ làm lệch số thống kê và mẫu chấm, người chấm vẫn soát từng tin nên bắt được, sửa sau không đắt.
-  file: `pipeline/scripts/do-tin-roi-oan.mjs`
-  severity: low
-  Đề xuất: known-limits
-
-- **Phép đếm «nguồn độc lập thứ hai» của test DF6 gọi parsePost/laYeuCau luật cũ, trong khi nhanh-bai-s03 nay dùng LUAT_PL43**
-  Người dùng thấy gì: Một bài kiểm đối chiếu độc lập có thể không bắt được lỗi nếu luật nhánh Yêu cầu hỏng sau này. Hiện vẫn xanh đúng.
-  Căn cứ: Chỉ làm yếu lưới an toàn của test, không sai dữ liệu hiện tại, sửa sau rẻ.
-  file: `app/tests/data-flow-bai-chi-anh.test.tsx`
-  severity: low
-  Đề xuất: known-limits
-
-- **Hình dạng 2: phanLuatCua được test bằng mục đích nhóm «ca-hai» viết tay, không phải giá trị thật mà bên gọi tính ra**
-  Người dùng thấy gì: Mẫu 10 tin cần người chấm có thể lẫn vài tin không thuộc đúng phần luật. Người chấm vẫn đọc từng tin nên khó lọt sai.
-  Căn cứ: Rủi ro nhỏ lên chất lượng mẫu chấm, không mất dữ liệu, sửa sau không đắt.
+- **Hình dạng 2 — hàm che trong test tệp mẫu là bản viết tay, không phải hàm che mà lượt --kiem dùng; phép che tên nguồn không được đo**
+  Người dùng thấy gì: Không có phép đo tự động nào xác nhận tên nguồn thật được thay bằng mã trong tệp mẫu đưa lên kho công khai, nên nếu hàm che hỏng thì không ai biết trước.
+  Căn cứ: Nếu lỗi thật thì lộ tên nguồn và không rút lại được trên kho công khai, nhưng hiện chỉ là thiếu kiểm chứ chưa có lỗi, và người ký đọc tệp mẫu trước khi đẩy.
   file: `pipeline/scripts/do-tin-roi-oan.test.mjs`
   severity: medium
   Đề xuất: known-limits
 
-- **Hình dạng 1: helper `doc` trả giá của parsePost trước khi suyLoai sửa, không phải giá mà transform ghi ra**
-  Người dùng thấy gì: Một số kiểm tra giá trong test đo ở bước giữa chứ không phải giá cuối trên tin. Hiện giá vẫn đúng.
-  Căn cứ: Chưa gây sai tin nào, chỉ giảm độ chặt của test, sửa sau rẻ.
+- **Hình dạng 1 — ca «PL43-AC-6» đo câu hướng dẫn in sẵn ở đầu tệp, không đo đầu ra AC-6**
+  Người dùng thấy gì: Một bài kiểm tự động mang tên tiêu chí chất lượng nhưng chỉ kiểm câu hướng dẫn, nên dễ bị tưởng là đã có bằng chứng.
+  Căn cứ: Không ảnh hưởng người dùng, chỉ gây nhầm khi đọc hồ sơ; người ký chấm tay nên không mất gì.
+  file: `pipeline/scripts/do-tin-roi-oan.test.mjs`
+  severity: low
+  Đề xuất: wont-fix
+
+- **Hình dạng 3 — ca đối chứng «sàn giá bán 300 triệu» ghim một câu đi đường không chạm sàn**
+  Người dùng thấy gì: Quy tắc bài giá dưới 300 triệu không thành tin bán chưa được kiểm trên đúng các ca sát ngưỡng, nên nếu luật mới làm lệch chỗ này thì bài tự động không báo.
+  Căn cứ: Nếu lệch thì chỉ vài tin bán giá thấp bị nhận sai, người dùng ít thấy và chạy lại luật là sửa được; thêm ca kiểm sau rẻ.
   file: `pipeline/scripts/s03-thu-lai-tin-roi-oan.test.mjs`
   severity: low
   Đề xuất: known-limits
 
 ## Chưa adversarial-verify (refuter chết)
 
-Cụm ngoài vùng phủ: cluster: n-a (không đo được — không eval nào khai paths, hoặc dưới ngưỡng cụm).
+⚠ Cụm ngoài vùng phủ: 2/10 lỗi rơi vào file không bộ đo nào phủ (_acceptance/config.yaml) — dừng và quyết: mở rộng hợp đồng hay rút phạm vi.
