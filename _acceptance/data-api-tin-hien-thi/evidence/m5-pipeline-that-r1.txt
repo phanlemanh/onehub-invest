@@ -1,0 +1,11 @@
+PB7 S4 vòng 1 trên M5 ＠2e903ac6473fcd7cc4947b370985e624edb3a965 — chạy lại riêng suite pipeline_that một lần sau khi kit BLOCKED (trần 30′ mặc định, HT37).
+Lệnh: node scripts/suite-neu-doi.mjs pipeline_that -- 'cd pipeline && npm run test:that'
+chay-that: vai may-phat-trien — bỏ qua 1 ca chỉ máy thu
+ℹ tests 37
+ℹ pass 37
+ℹ fail 0
+ℹ skipped 0
+__EXIT=0
+→ ĐẠT theo luật GS 26/11. Chấm trên M5: ON22-AC-10 không chạy (HT33).
+
+Soát: 2e903ac64-20261128T010140 (data-api xanh; scripts đỏ «audit-all nói thật (AU5)», «AA-AC-5 /ops 500 → ❌») → soát lại riêng scripts 2e903ac64-20261128T011903 xanh; 2e903ac64-20261128T010822 (app chỉ QV-AC-5, pipeline, agent xanh).

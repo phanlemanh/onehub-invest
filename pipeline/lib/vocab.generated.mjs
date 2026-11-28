@@ -7,7 +7,7 @@ export const VOCAB = Object.freeze({
   confidence: Object.freeze(["high", "medium", "low"]),
   price_tier: Object.freeze(["P0", "P1", "P2"]),
   enrich_field: Object.freeze(["property_type", "bedrooms", "bathrooms", "street_raw", "block_raw"]),
-  assertion_field: Object.freeze(["property_type", "bedrooms", "bathrooms", "street_raw", "block_raw", "offer_status", "street_number", "unit_number", "frontage_length", "lot_size_dimensions", "stories", "latitude", "longitude", "builder_name", "area_id", "floor_raw", "floor_band", "project_node_id", "subzone_node_id", "living_area", "building_area_total", "direction_faces", "lot_size_area", "universal_property_id"]),
+  assertion_field: Object.freeze(["property_type", "bedrooms", "bathrooms", "street_raw", "block_raw", "offer_status", "street_number", "unit_number", "frontage_length", "lot_size_dimensions", "stories", "latitude", "longitude", "builder_name", "area_id", "floor_raw", "floor_band", "project_node_id", "subzone_node_id", "living_area", "building_area_total", "direction_faces", "lot_size_area", "universal_property_id", "universal_property_sub_id"]),
   evidence_tier: Object.freeze(["fact", "observed", "inferred"]),
   assertion_method: Object.freeze(["hitl", "source_field", "parser", "e1_rule", "e2_llm", "legacy", "registry_inherit"]),
   registry_status: Object.freeze(["active", "merged", "split", "retired"]),
@@ -35,7 +35,7 @@ export const PROPERTY_TYPE = Object.freeze({ apartment: "apartment", house: "hou
 export const CONFIDENCE = Object.freeze({ high: "high", medium: "medium", low: "low" });
 export const PRICE_TIER = Object.freeze({ P0: "P0", P1: "P1", P2: "P2" });
 export const ENRICH_FIELD = Object.freeze({ property_type: "property_type", bedrooms: "bedrooms", bathrooms: "bathrooms", street_raw: "street_raw", block_raw: "block_raw" });
-export const ASSERTION_FIELD = Object.freeze({ property_type: "property_type", bedrooms: "bedrooms", bathrooms: "bathrooms", street_raw: "street_raw", block_raw: "block_raw", offer_status: "offer_status", street_number: "street_number", unit_number: "unit_number", frontage_length: "frontage_length", lot_size_dimensions: "lot_size_dimensions", stories: "stories", latitude: "latitude", longitude: "longitude", builder_name: "builder_name", area_id: "area_id", floor_raw: "floor_raw", floor_band: "floor_band", project_node_id: "project_node_id", subzone_node_id: "subzone_node_id", living_area: "living_area", building_area_total: "building_area_total", direction_faces: "direction_faces", lot_size_area: "lot_size_area", universal_property_id: "universal_property_id" });
+export const ASSERTION_FIELD = Object.freeze({ property_type: "property_type", bedrooms: "bedrooms", bathrooms: "bathrooms", street_raw: "street_raw", block_raw: "block_raw", offer_status: "offer_status", street_number: "street_number", unit_number: "unit_number", frontage_length: "frontage_length", lot_size_dimensions: "lot_size_dimensions", stories: "stories", latitude: "latitude", longitude: "longitude", builder_name: "builder_name", area_id: "area_id", floor_raw: "floor_raw", floor_band: "floor_band", project_node_id: "project_node_id", subzone_node_id: "subzone_node_id", living_area: "living_area", building_area_total: "building_area_total", direction_faces: "direction_faces", lot_size_area: "lot_size_area", universal_property_id: "universal_property_id", universal_property_sub_id: "universal_property_sub_id" });
 export const EVIDENCE_TIER = Object.freeze({ fact: "fact", observed: "observed", inferred: "inferred" });
 export const ASSERTION_METHOD = Object.freeze({ hitl: "hitl", source_field: "source_field", parser: "parser", e1_rule: "e1_rule", e2_llm: "e2_llm", legacy: "legacy", registry_inherit: "registry_inherit" });
 export const REGISTRY_STATUS = Object.freeze({ active: "active", merged: "merged", split: "split", retired: "retired" });
@@ -58,6 +58,9 @@ export const RENT_INCLUDES = Object.freeze({ management: "management", electrici
 export const PRICE_BASIS = Object.freeze({ net: "net", gom_phi: "gom_phi", chua_gom_phi: "chua_gom_phi" });
 
 export const CANONICAL_FIELDS = Object.freeze(["offer_id", "source", "kind", "price_vnd", "area_m2", "price_perm2", "bedrooms", "phuong_raw", "district_raw", "confidence", "first_seen", "last_seen", "n_reposts", "post_ids", "price_tier", "seller_name", "seller_phone", "seller_phone_inferred", "seller_phone_hash", "seller_ref", "bait_gap_pct", "listing_url", "property_type", "street_raw", "block_raw", "floor_raw", "floor_band", "project_node_id", "subzone_node_id", "living_area", "building_area_total", "lot_size_area", "direction_faces", "area_id", "bathrooms", "street_number", "unit_number", "frontage_length", "lot_size_dimensions", "stories", "latitude", "longitude"]);
+
+/** Nguồn không bao giờ hiển thị công khai (nguon_khong_hien_thi của mappings.yaml). */
+export const SOURCE_HIDDEN = Object.freeze(["S02", "S08"]);
 
 /** Danh sách code nối bằng `|` — cho chuỗi enum trong prompt LLM. */
 export function promptEnum(axis) {

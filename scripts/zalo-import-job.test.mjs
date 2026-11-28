@@ -333,6 +333,7 @@ const TEP_NHAC = [
   "scripts/zalo-import-job-nhe.test.mjs",
   "scripts/zalo-import-job.test.mjs",
   "scripts/zalo-import-chia-tran-zcode.test.mjs",   // 2311-5: lưới chia trần của ZCode
+  "scripts/zalo-import-replay.test.mjs",   // ZC20 2511-56: replay state 0 xếp snapshot bù phase cuối
 ];
 function quetTepNhac() {
   const ra = [];
@@ -352,9 +353,9 @@ function soTepNhac(thay, ke) {
   assert.deepEqual(thay, [...ke].sort(), "PL34-AC-4 tập tệp kê có tệp không còn nhắc zalo-import-daily");
 }
 
-test("PL34-AC-4 tập tệp: mọi tệp test nhắc zalo-import-daily đúng bằng mười lăm tệp kê trước (s03-len-nhanh-nac-1 thêm hai, CG9 thêm một, job-step-ghi-thoi-luong thêm một, 1711-4 trần thời gian thêm một, 1911-2 test trần ZCode thêm một, DA45 thêm một, 2311-5 lưới chia trần thêm một); thiếu một thì đỏ gọi tên", () => {
+test("PL34-AC-4 tập tệp: mọi tệp test nhắc zalo-import-daily đúng bằng mười sáu tệp kê trước (s03-len-nhanh-nac-1 thêm hai, CG9 thêm một, job-step-ghi-thoi-luong thêm một, 1711-4 trần thời gian thêm một, 1911-2 test trần ZCode thêm một, DA45 thêm một, 2311-5 lưới chia trần thêm một, ZC20 replay thêm một); thiếu một thì đỏ gọi tên", () => {
   const thay = quetTepNhac();
-  assert.equal(thay.length, 15, `PL34-AC-4 số tệp quét: ${thay.join(", ")}`);
+  assert.equal(thay.length, 16, `PL34-AC-4 số tệp quét: ${thay.join(", ")}`);
   soTepNhac(thay, TEP_NHAC);
   assert.throws(() => soTepNhac(thay, TEP_NHAC.filter((f) => f !== "scripts/nap-argmax.test.mjs")),
     /PL34-AC-4 tệp test nhắc zalo-import-daily chưa kê: scripts\/nap-argmax\.test\.mjs/);

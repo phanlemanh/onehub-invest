@@ -32,6 +32,8 @@ const LOI_PIPELINE = [
   // pipeline/sync-cloud-che.test.mjs (HT26 SCC-9) chạy mã của data-api bằng tsx của gói data-api — tham chiếu thư mục gốc gói;
   // mã nguồn đã có ở data-api/src/** (đường trần, không «data-api/**», để đổi README… của data-api không kéo suite pipeline).
   "data-api",
+  // pipeline/scripts/noi-du-an-s08-that.mjs (DA55 E7) nạp probe bảng phủ của hồ sơ.
+  "_acceptance/soat-noi-s08-danh-ba/probes/bang-phu.mjs",
   "_acceptance/danh-ba-phuong-xa-toan-quoc/**", "_acceptance/du-an-cua-tin-len-dinh-vi/**",
   "_acceptance/gop-tin-chi-anh-o-transform/**",
   "_acceptance/lay-mau-khu-trung-theo-tin/**", "_acceptance/nhom-dang-ky-hai-lan-s03/**",

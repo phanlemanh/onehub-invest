@@ -1231,6 +1231,107 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
       M5 xong, phần hạn mức M5 tiêu và số lượt ghim lại do PR của M5 gây ra; Mạnh quyết mở rộng hay dừng.
     - **Hàng:** HT18 `ban-chep-da-loc-cho-may-phat-trien` (T3) cho bước hai của (a). **Ghi ở đâu:** `AGENTS.md` mục phân làn
       (dòng «Máy M5»); luật kênh ở thân issue `phanlemanh/onehub-coord#4`.
+65. **Quản lý khách API cho data-api** (28/11).
+    - **Lời Mạnh:** 06:00Z, gõ «Đồng ý» ở phiên kiểm data-api, trả lời bản đề xuất «Quản lý khách API». GS đã đối chiếu bản ghi
+      phiên. Bản đề xuất nằm ở thư mục điều tra cục bộ (gitignored), sau bản kiểm data-api 28/11.
+    - **Vì sao cần:** hôm nay `data-api` giữ khoá trong biến môi trường `DATA_API_KEYS`, so bằng chuỗi nguyên văn, và mọi khoá
+      đúng đều gọi được mọi đường, kể cả `/v1/listings` (tin rao từng tin). Chưa có tên khách, phạm vi, hạn mức hay đo dùng.
+    - **Năm câu chốt theo khuyến nghị:**
+      - (1) Tài khoản khách API (tên tổ chức, người liên hệ, thoả thuận, khoá đã băm, lượt dùng) sống trên cloud, là dữ liệu
+        của mặt điều khiển data-api, **không thuộc tầng A**. Đây là sửa đổi luật 6, xem `AGENTS.md`.
+      - (2) ~~Đối tác thử chỉ được L0 (danh mục) và L1 (thị trường tổng hợp). L2 (tin rao từng tin) chỉ cho khách nội bộ, tới
+        khi rà pháp lý xong.~~ **Đã thay bằng (7)(c), 06:53Z** (xem «Bổ sung» dưới): L2 và L3 mở cho mọi đối tác.
+      - (3) Chỉ owner cấp khoá và mở lớp; admin xem và thu hồi.
+      - (4) Tự xây trên Vercel và Supabase đang có, cộng trang `/ops/api-clients`; không dùng dịch vụ ngoài. Xét lại khi có
+        khách trả tiền.
+      - (5) Hạn mức thử: khách nội bộ 50.000 lượt/ngày, đối tác thử 5.000 lượt/ngày. Chỉnh sau một tuần đo.
+    - **Lời này KHÔNG phủ** (mỗi việc cần lời riêng của Mạnh khi tới bước):
+      - DDL và quyền role trên cloud;
+      - triển khai AH2;
+      - cấp khoá thật đầu tiên.
+    - **Rào:** tới khi PB14 gộp, không đưa khoá `DATA_API_KEYS` cho bên ngoài. Lý do: khoá hôm nay không gắn tên khách, không
+      thu hồi được nếu không triển khai lại, và chưa có hạn mức. Hạn mức của câu (8) là lớp chặn việc lấy số hàng loạt, nên
+      phải có PB14 và PB15 trước khi mở L2, L3 cho đối tác theo (7)(c). Khoá chỉ hiện một lần trên Ops, không gửi qua kênh
+      điều phối hay issue GitHub. Dữ liệu khách không bao giờ nằm trong `data-api/` (thư mục đẩy sang kho công khai).
+    - **Hàng:**
+
+      | Mã | Việc | Hạng | Sau |
+      |---|---|---|---|
+      | PB10 | Nguồn ẩn fail-closed: sổ nguồn ẩn rỗng thì API đóng, không mở S02/S08; thêm ô «không lọc» của AC-3 (Ngoài-2 của PB7) | T2 | PB7 |
+      | PB12 | Bảng đường → lớp ở một chỗ trong `data-api/src/contract/`; đường chưa khai thì đóng; bảng in vào `/openapi.json` | T2 | — |
+      | PB13 | Migration bốn bảng (khách, thoả thuận, khoá, lượt dùng ngày) + quyền role data-api; lược đồ mẫu có bảng rỗng | T3 | — |
+      | PB14 | data-api kiểm khoá băm, lớp, thoả thuận từ DB; giữ fail-closed của PB3 | T3 | PB12, PB13, PB7, PB10 |
+      | PB15 | Hạn mức ngày, 429, header hạn mức, bảng `api_usage_daily` | T2 | PB14 |
+      | PB16 | Trang `/ops/api-clients`: cấp, thu hồi, xoay khoá, sửa thoả thuận, xem lượt | T2 (UI) | PB13 |
+      | PB17 | Property thôi phụ thuộc `source_registry` (hợp đồng mới từ PB6 Ngoài-1, Ngoài-2) | — | — |
+      | HT44 | Sửa executor `chm_api` gãy sau khi insights trả 410 (hợp đồng mới từ HT20 Ngoài-1) | — | — |
+
+    - **Bổ sung 06:51Z và 06:53Z (Mạnh, cùng phiên):** «Tin phải bao gồm cả liên hệ người bán là thông tin và số điện thoại.
+      Hiện nay đường enrich thông qua zalo đã có ở repo zalo-lookup và có cả api.» Bốn câu chốt:
+      - (6) Sửa luật 02/11 «số không nằm trong danh sách API» cho **riêng data-api**: tin mang khối `listAgent` (tên, SĐT E.164,
+        căn cứ của số `phoneBasis`) khi khoá có L3. Cổng Invest giữ nút «Xem số».
+      - (7) **06:53Z sửa sang (c): L2 và L3 mở cho mọi đối tác.** Khoá đối tác mặc định có L0–L3; owner vẫn tắt được từng khách.
+        Câu này **thay câu (2)** ở trên. Hạn mức của câu (8) là lớp chặn việc lấy số hàng loạt.
+      - (8) Hạn mức tin có liên hệ, tách khỏi hạn mức lượt gọi: nội bộ 20.000 tin/ngày, đối tác 2.000 tin/ngày. Vượt hạn mức
+        thì tin vẫn trả về, chỉ không có `listAgent`. Chỉnh sau một tuần đo.
+      - (9) Trường Zalo trả về: `hasZalo`, `zaloDisplayName`, `zaloCheckedAt`, **`zaloAvatarUrl`** (Mạnh thêm ảnh đại diện).
+        Không bao giờ trả ngày sinh, giới tính, `uid`, `global_id`, ảnh bìa, dữ liệu gốc.
+      - EN4 (API tra hồ sơ Zalo) coi như đã có: chính là kho zalo-lookup. Data-api không làm lại đường tra Zalo, chỉ đọc kết
+        quả EN3 đã nạp.
+    - **Hàng thêm:**
+
+      | Mã | Việc | Hạng | Sau |
+      |---|---|---|---|
+      | PB18 | Khối `listAgent` (tên, SĐT, căn cứ) trong tin cho khoá có L3, hạn mức tin có liên hệ; ca chiều đỏ cho trường cấm | T3 | PB14, PB15 |
+      | PB19 | Trường Zalo trong `listAgent` (có Zalo, tên hiển thị, lúc tra, ảnh đại diện) | T3 | PB18, EN3 |
+
+    - **Đường găng** tới khách nội bộ đầu tiên: (PB7 → PB10) ∥ (PB12 → PB13 → PB14) → PB15 → PB16 → AH2 → áp cloud.
+    - Áp cloud và cấp khoá đầu tiên là việc vận hành của người, đi cùng AH2, cần lời riêng; không vào lộ trình.
+66. **Danh bạ môi giới ở `/ops/people`: hồ sơ liên hệ đầy đủ và quy trình mời ngay trong Ops** (28/11).
+    - **Lời Mạnh:** «Bên cạnh tôi muốn thu hút để acquire chính các môi giới này tham gia cùng mạng lưới… xây dựng lại chi tiết
+      hơn cho màn này như một danh bạ contact có thông tin chi tiết. Như các biểu đồ vùng hoạt động, danh sách tin, lịch sử hoạt
+      động, thông tin chi tiết profile». Chốt 06:51Z: nhóm B theo khuyến nghị, trừ câu 1 và câu 5 dưới đây. Câu 2 chốt ngay sau
+      06:53Z. Bảng phủ ca được «Đồng ý và tiếp tục».
+    - **Số đo 28/11 (DB máy thu):**
+      - 6.383 môi giới suy luận (có từ 5 tin), 4.784 người còn hoạt động trong 14 ngày.
+      - Người nối được với tin: 99,8%.
+      - Ở S06, người đăng và người mang số là **hai dòng `parties`**: trong 5.152 cặp số của môi giới, chỉ **2** số gắn đúng
+        người đăng; 13.887 người có 0 tin.
+      - 13.913 SĐT khác nhau trên tin; chỉ 30 số chưa từng xuất hiện trực tiếp trên tin nào. 83.138 tin S06 mang số ghép (gắn qua tin khác của cùng người).
+      - Dữ liệu tin có ở 5 / 34 thị trường.
+    - **Câu chốt:**
+      - (1) **Quy trình mời** (trạng thái tiếp cận, người phụ trách, ghi chú, hẹn gọi lại, cờ «không liên hệ») **đặt ngay trong
+        `/ops` của onehub**; sau này mở API riêng cho khách nội bộ. **Sửa đổi ADR-0017** và lời chốt 03/11, vốn đặt mạng
+        lưới môi giới ở Quỹ hàng.
+      - (2) Nền tảng không giới hạn khu hay dự án: «Làm API nền tảng nên không giới hạn ở khu vực hay dự án. Ở khu vực hay dự
+        án chỉ là cách lựa chọn tối ưu nguồn lực và thời điểm.» Danh bạ, điểm tiềm năng và API phủ toàn bộ. Khu và dự án là
+        bộ lọc hoặc trọng số của từng đợt mời.
+      - (3) Danh bạ Người lên cloud, chỉ ở `/ops`, vai ops trở lên. DDL cloud cần lời riêng khi tới bước.
+      - (4) Người thật gọi từng người. Ai từ chối thì ghi «không liên hệ». Không gửi tin hàng loạt tự động (luật 8). Rà pháp lý
+        (Nghị định 13/2023, 91/2020) trước khi chạy chiến dịch có kịch bản.
+      - (5) **Ở máy thu, `/ops` hiện đủ hồ sơ Zalo, gồm ngày sinh và giới tính**, vì chỉ Mạnh xem. Chặn hai lớp: trang chạy ở
+        máy thu **và** vai owner. Luật 18/11 giữ nguyên: hai trường này không bao giờ lên cloud.
+    - **Thời điểm tra hồ sơ Zalo (Mạnh «Đồng ý» 07:15Z):**
+      - Tra **sau bước dựng Người** (SĐT đã chuẩn E.164 và đã gộp người, nên mỗi số tra một lần).
+      - Là **một nhánh chạy song song** với chuỗi đêm, không nằm giữa chuỗi thu, không chặn `resolve-properties`,
+        `xep-hang-gia`, `sync-cloud`. Kết quả vào danh bạ ở lượt chạy kế.
+      - Hàng tra theo thứ tự ưu tiên:
+        - số mới trong 24 giờ;
+        - môi giới đang hoạt động chưa từng tra;
+        - số của người có tin mới mà đệm đã hết hạn;
+        - phần còn lại theo hạn đệm;
+        - người đang ở quy trình mời được làm tươi trước khi gọi.
+        - Người có cờ «không liên hệ» không tra lại.
+      - Ranh giới làn:
+        - lập hàng tra và transform kết quả vào danh bạ Người là **làn Claude**;
+        - tra và nạp `stg_*` là **làn thu ZCode**.
+      - **KHÔNG lượt tra thật nào** trước khi lớp kiểm lockdown của tài khoản tra chạy trên máy thu và `runtime-map` đã ghi
+        (ràng buộc EN3 giữ nguyên).
+    - **Bảng tiếp cận của NG7 ghi ở đâu:** chốt ở Cổng Phạm vi của NG7; ghi lên cloud thì cần lời riêng về DDL.
+    - **Luật phủ ca:** tính năng không viết riêng cho nơi nào. Thiếu dữ liệu thì tách ba trạng thái «có», «không», «chưa biết».
+      «Xong» đo trên toàn bộ DB máy thu. Mỗi hàng chép bảng phủ ca vào `contract.md` ở S1.
+    - **Hàng:** xem bản phạm vi `docs/plan/pham-vi-danh-ba-moi-gioi-2811.md`.
+      Đường găng: NG0 → NG1 → (NG2 ∥ NG3) → NG7.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 

@@ -10,8 +10,10 @@ import { fmtInt, fmtVnDate } from "@/lib/format"
 import { LABELS_VI } from "@/lib/vocab.generated"
 
 import type { HangToa } from "@/lib/ops/registry/hang-toa"
+import type { CanQuyCan } from "@/lib/ops/registry/quy-can"
 import type { PhuThuocTinh } from "@/lib/ops/thuoc-tinh-can"
 
+import { DuAnQuyCanGrid, DuAnQuyCanLoi } from "./du-an-quy-can-grid"
 import { DuAnToaGrid } from "./du-an-toa-grid"
 
 /** Đầu trang một dự án: tên, bậc, tỉnh, nguồn, mã đã nối; bốn ô số; bảng toà → căn. */
@@ -32,6 +34,8 @@ export type DuAnProps = {
   /** Ô phủ thuộc tính căn S16 (DA40); null khi đọc lỗi. */
   phuThuocTinh: PhuThuocTinh | null
   loiThuocTinh: boolean
+  /** Quỹ căn S09 (DA56): danh sách căn; null hay vắng khi DB chưa có view quỹ căn (không hiện khối); "loi" khi đọc lỗi. */
+  quyCan?: CanQuyCan[] | null | "loi"
 }
 
 /** Ô phủ «căn có thuộc tính / căn trong danh bạ» — số đã đếm ở SQL, ở đây chỉ định dạng. */
@@ -58,7 +62,7 @@ export function DuAnView(p: DuAnProps) {
     .join(". ") || "Chưa có bí danh hay mã nguồn nối vào dự án."
   const oSo = [
     { title: "Phân khu", value: fmtInt(p.soPhanKhu), footer: "Phân khu và dự án con trong cây" },
-    { title: "Toà", value: fmtInt(p.soToa), footer: p.toaChuaCan > 0 ? `${fmtInt(p.toaChuaCan)} toà chưa có căn` : "Mọi toà đã có căn" },
+    { title: "Toà", value: fmtInt(p.soToa), footer: p.soToa === 0 ? "Chưa có toà" : p.toaChuaCan > 0 ? `${fmtInt(p.toaChuaCan)} toà chưa có căn` : "Mọi toà đã có căn" },
     { title: "Căn", value: fmtInt(p.soCan), footer: `${fmtInt(p.soTruc)} trục` },
     { title: "Tin đang rao", value: fmtInt(tin.reduce((a, [, n]) => a + n, 0)), footer: tin.map(([s, n]) => `${s} ${fmtInt(n)}`).join(" · ") || "Chưa có tin định vị tới dự án" },
   ]
@@ -94,6 +98,7 @@ export function DuAnView(p: DuAnProps) {
         </Alert>
       )}
       <DuAnToaGrid rows={p.rows} />
+      {p.quyCan === "loi" ? <DuAnQuyCanLoi /> : p.quyCan != null && <DuAnQuyCanGrid rows={p.quyCan} />}
     </div>
   )
 }

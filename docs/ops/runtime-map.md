@@ -11,7 +11,7 @@
 | OpenClaw Desktop (/Applications) | Không cần cho vận hành — headless làm được tất | ❌ (user được phép remove) | Không cài thêm Login Items |
 | ~/dev/openclaw (source 4.4G) | **Tham chiếu source để vá plugin** (đang đứng nhánh `fix/zalouser-plugin-hooks` = v2026.10.5 + port pluginHooks) | ✅ GIỮ (dev) | KHÔNG chạy production từ đây |
 | Zalo PC app / Zalo Web (Chrome) | **KHÔNG liên quan thu thập** — provider zca-js poll server Zalo trực tiếp bằng session QR-link | ❌ | Tiện cá nhân của user, muốn dùng thì dùng |
-| Kev :8009, collector :9210, MTPLX :8000 | Hạ tầng phụ thuộc hook | ✅ | launchd KeepAlive đã có |
+| collector :9210 | Hạ tầng phụ thuộc hook | ✅ | launchd KeepAlive đã có (K1: cổng chấm nhãn đã bỏ — mục 52) |
 
 ## Chuỗi tin Zalo (đúng như đã verify)
 
@@ -20,7 +20,7 @@ zca-js poll Zalo server (session QR-link, mỗi ~10′)
 → zalouser monitor (core gateway bundle)
 → [MENTION GATE]  ← ĐIỂM CHẾT: requireMention=true drop tin THƯỜNG
    │                  TRƯỚC khi hook thấy (log "drop no mention")
-→ processMessage → internal hook "oneinvest-zalo-pipe" → Kev → :9210
+→ processMessage → internal hook "oneinvest-zalo-pipe" (K1: không cổng chấm nhãn) → :9210
 → (song song) agent auto-reply turn —-layer nguy hiểm
 ```
 
@@ -245,7 +245,7 @@ local; mỗi khối mang `measured_at` (lúc khối đo xong). Khoá cũ của b
 | `/ops/collections` | Sức khoẻ nguồn, lưới nguồn | `freshness` + `sourceRuns` | «—» |
 | `/ops/collections` | Bản ghi 24h | `records24h` | «—» |
 | `/ops/collections` | Khoá an toàn (ô + lưới) | `lockdown` (ON23; tươi/cũ theo chính khối) | ô «—» + «Chưa kiểm được trên máy chủ», lưới 8/8 «Chỉ kiểm ở máy thu» (vàng) — khối lỗi cũng vậy |
-| `/ops/collections` | Máy móc: Kev gate, collector API | lớp «Cổng Kev :8009» / «Cổng nhận tin :9210» của `lockdown` (ON23) — cùng trạng thái với Khoá an toàn | «Chưa kiểm được» |
+| `/ops/collections` | Máy móc: collector API | lớp «Cổng nhận tin :9210» của `lockdown` (ON23) — cùng trạng thái với Khoá an toàn (K1: cổng chấm nhãn đã bỏ — mục 52) | «Chưa kiểm được» |
 | `/ops/collections` | Bảng nhóm S03: «đang bật N nhóm», «Vào bảng thô» theo nhóm | `s03` (ON4; N = hợp nhóm bật hiệu dụng mọi tài khoản, chỉ tên nhóm — không mã nhóm) | bảng không dựng, «nhóm S03» ở lại Alert gom; nhóm thiếu số tin vào «—», thiếu tên «Nhóm chưa có tên» |
 | `/ops/collections` | vùng còn lại (luồng, Cần chú ý, Zalo, xoay vòng…) | — không dựng trên cloud | một Alert «Phần còn lại của trang chưa có số trên máy chủ» |
 | `GET /api/v1/ops/coverage` | độ tươi từng nguồn × thành phố (máy đọc: audit-all, smoke) | khối `freshness` (AU12; `state` fresh/stale theo chính khối, `source: "facts"`; máy thu `source: "local"`, `state: "live"`) | `200`, `state: "none"`, `rows: null`, `note: «Chỉ đo ở máy thu»` — không `[]`, không 500 |

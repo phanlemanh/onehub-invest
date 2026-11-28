@@ -35,7 +35,8 @@ export type NutDanhBa = {
   tin: Record<string, number>
 }
 
-export type NguonDanhMuc = { source: string; daNap: number; daNoi: number; chuaNoi: number }
+/** `noiUngVien`: số mã đã nối mà nút đích là nút ứng viên (`catalog_tier = 'mot_loi_khai'`, chưa ai xác minh) — DA55 tách khỏi số nối nút có sẵn. */
+export type NguonDanhMuc = { source: string; daNap: number; daNoi: number; chuaNoi: number; noiUngVien: number }
 
 export type TongDanhBa = {
   duAn: number
@@ -141,25 +142,34 @@ SELECT
      WHERE a.source = 'S09' AND a.retired_at IS NULL AND b.status = 'active')::int AS toa_bi_danh_s09`
 
 /**
- * Danh mục dự án đã nạp theo nguồn: số mã dự án khác nhau đã nạp, số đã nối nút, số chưa nối (gồm cả mã chưa qua bước
- * nối). S06: mã trong `project_links`. S08: dự án của `stg_s08_project`. S09: dự án của `v_s09_du_an_moi` — kho chưa có
- * bảng nối dự án S09 nên đã nối = 0.
+ * Danh mục dự án đã nạp theo nguồn: số mã dự án khác nhau đã nạp, số đã nối nút, số đã nối vào nút ứng viên, số chưa nối (gồm
+ * cả mã chưa qua bước nối). S06: mã trong `project_links`. S08: dự án của `stg_s08_project`, nối ở bảng tay `s08_project_links`
+ * (DN1) hoặc ở `project_links` nguồn S08 (thẻ luật DA55) — mỗi dự án đếm một lần, bảng luật trước. S09: dự án của
+ * `v_s09_du_an_moi` — kho chưa có bảng nối dự án S09 nên đã nối = 0.
  */
 const SQL_DANH_MUC = `
-SELECT 'S06' AS source, count(*)::int AS da_nap, (count(*) FILTER (WHERE status = 'noi'))::int AS da_noi FROM project_links WHERE source = 'S06'
+SELECT 'S06' AS source, count(*)::int AS da_nap, (count(*) FILTER (WHERE pl.status = 'noi'))::int AS da_noi,
+       (count(*) FILTER (WHERE pl.status = 'noi' AND n.catalog_tier = 'mot_loi_khai'))::int AS noi_ung_vien
+FROM project_links pl LEFT JOIN asset_nodes n ON n.id = pl.asset_node_id WHERE pl.source = 'S06'
 UNION ALL
-SELECT 'S08', count(*)::int, (count(*) FILTER (WHERE l.status = 'noi'))::int
-FROM (SELECT DISTINCT project_id FROM stg_s08_project) p LEFT JOIN s08_project_links l USING (project_id)
+SELECT 'S08', count(*)::int, (count(*) FILTER (WHERE x.nut IS NOT NULL))::int,
+       (count(*) FILTER (WHERE x.nut IS NOT NULL AND n.catalog_tier = 'mot_loi_khai'))::int
+FROM (SELECT p.project_id, coalesce(
+        (SELECT asset_node_id FROM project_links pl WHERE pl.source = 'S08' AND pl.source_project_id = p.project_id AND pl.status = 'noi'),
+        (SELECT asset_node_id FROM s08_project_links l WHERE l.project_id = p.project_id AND l.status = 'noi')) AS nut
+      FROM (SELECT DISTINCT project_id FROM stg_s08_project) p) x
+LEFT JOIN asset_nodes n ON n.id = x.nut
 UNION ALL
-SELECT 'S09', count(*)::int, 0 FROM v_s09_du_an_moi`
+SELECT 'S09', count(*)::int, 0, 0 FROM v_s09_du_an_moi`
 
 /** Mã dự án nguồn chưa nối (thứ tự: nguồn, mã). Tên dự án S08, S09 là thông tin dự án công khai (ROADMAP §3 mục 38). */
 const SQL_CHUA_NOI = `
 SELECT 'S06' AS source, source_project_id AS ma, NULL::text AS ten, ly_do FROM project_links WHERE source = 'S06' AND status = 'chua_noi'
 UNION ALL
-SELECT 'S08', p.project_id, max(p.project_name), max(l.ly_do)
+SELECT 'S08', p.project_id, max(p.project_name), coalesce(max(pl.ly_do), max(l.ly_do))
 FROM stg_s08_project p LEFT JOIN s08_project_links l USING (project_id)
-WHERE l.status IS DISTINCT FROM 'noi' GROUP BY p.project_id
+LEFT JOIN project_links pl ON pl.source = 'S08' AND pl.source_project_id = p.project_id
+WHERE l.status IS DISTINCT FROM 'noi' AND pl.status IS DISTINCT FROM 'noi' GROUP BY p.project_id
 UNION ALL
 SELECT 'S09', project_id, data ->> 'name', NULL FROM v_s09_du_an_moi
 ORDER BY 1, 2`
@@ -187,7 +197,7 @@ export async function docDanhBa(q: Q = pool): Promise<DanhBa> {
   const [tong, nut, danhMuc, chuaNoi, tinh] = await Promise.all([
     q.query<{ du_an: number; du_an_xac_minh: number; phan_khu: number; toa: number; toa_co_can: number; truc: number; can: number; toa_bi_danh_s09: number }>(SQL_TONG),
     q.query<HangNut>(SQL_NUT),
-    q.query<{ source: string; da_nap: number; da_noi: number }>(SQL_DANH_MUC),
+    q.query<{ source: string; da_nap: number; da_noi: number; noi_ung_vien: number }>(SQL_DANH_MUC),
     q.query<{ source: string; ma: string; ten: string | null; ly_do: string | null }>(SQL_CHUA_NOI),
     q.query<{ id: string; name: string }>(`SELECT id, name FROM areas WHERE parent_id IS NULL`),
   ])
@@ -202,7 +212,7 @@ export async function docDanhBa(q: Q = pool): Promise<DanhBa> {
       truc: t.truc,
       can: t.can,
       toaBiDanhS09: t.toa_bi_danh_s09,
-      danhMuc: danhMuc.rows.map((r) => ({ source: r.source, daNap: r.da_nap, daNoi: r.da_noi, chuaNoi: r.da_nap - r.da_noi })),
+      danhMuc: danhMuc.rows.map((r) => ({ source: r.source, daNap: r.da_nap, daNoi: r.da_noi, chuaNoi: r.da_nap - r.da_noi, noiUngVien: r.noi_ung_vien })),
     },
     nut: nut.rows.map(nutTuHang),
     // Tên ngắn như getAreaNames của /ops: bỏ tiền tố «Thành phố »/«Tỉnh ».

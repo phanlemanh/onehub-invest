@@ -524,18 +524,27 @@ if (PHAN === "api") {
   let apiPool: Pool
   let demApi = 0
   before(async () => {
+    // PB2: /v1/listings trả cả tin thuê ngắn hạn, listingKey của nó cần khoá bí mật — khoá thử, không dùng thật.
+    process.env.LISTING_KEY_SECRET ??= "khoa-thu-chm-KHONG-DUNG-THAT"
     HonoCls = (await import(req.resolve("hono"))).Hono as new () => Hono
     apiPool = (await import(abs(`${DA}/db/client.ts`))).pool as Pool
     const goc = apiPool.query.bind(apiPool)
     apiPool.query = (...a: unknown[]) => { demApi++; return goc(...a) }
   })
   after(async () => { await apiPool?.end() })
-  const R = {
+  // PB2 (data-api-hop-dong-reso-dd-2-1, GS cho 27/11): /v1/asset-stats đổi tên /v1/price-stats (thân giữ nguyên — gốc hàng
+  // vẫn là asset-stats.ts ở mốc); /v1/deals gộp vào /v1/listings?minBelowMedianPct=. Phần tử /v1/listings đổi hình theo RESO
+  // nên bản ở mốc không còn so từng byte được: gốc hàng của hai đường listings là CHÍNH tệp hôm nay bỏ bước giải mã khu vực
+  // (`gocTuNay`) — đúng điều ca khẳng định: mã không đích chạy như khi chưa có chuyển hướng.
+  const R: Record<string, { tep: string; ten: string; goc: string; tepGoc?: string; tenGoc?: string; gocTuNay?: boolean }> = {
     markets: { tep: `${DA}/routes/markets.ts`, ten: "marketsRoute", goc: "/v1/markets" },
-    listings: { tep: `${DA}/routes/listings.ts`, ten: "listingsRoute", goc: "/v1/listings" },
-    assetStats: { tep: `${DA}/routes/asset-stats.ts`, ten: "assetStatsRoute", goc: "/v1/asset-stats" },
-    deals: { tep: `${DA}/routes/deals.ts`, ten: "dealsRoute", goc: "/v1/deals" },
+    listings: { tep: `${DA}/routes/listings.ts`, ten: "listingsRoute", goc: "/v1/listings", gocTuNay: true },
+    priceStats: { tep: `${DA}/routes/price-stats.ts`, ten: "priceStatsRoute", goc: "/v1/price-stats", tepGoc: `${DA}/routes/asset-stats.ts`, tenGoc: "assetStatsRoute" },
+    giaTot: { tep: `${DA}/routes/listings.ts`, ten: "listingsRoute", goc: "/v1/listings", gocTuNay: true },
   }
+  /** Bản gốc hàng của một route: tệp ở mốc, hoặc (gocTuNay) tệp hôm nay bỏ giải mã khu vực. */
+  const banGocHang = (r: (typeof R)[string]) =>
+    r.gocTuNay ? docTep(r.tep).replace(/await giaiMaKhuVuc\((raw\w+)\)/g, "$1") : docGoc(r.tepGoc ?? r.tep)
   async function appTu(tep: string, ten: string, goc: string): Promise<Hono> {
     const mod = await import(tep)
     return new HonoCls().route(goc, mod[ten])
@@ -561,10 +570,11 @@ if (PHAN === "api") {
     { ten: "/v1/markets/:id/insights", r: "markets", url: (m) => `/v1/markets/${m}/insights` },
     { ten: "/v1/listings?market", r: "listings", url: (m) => `/v1/listings?market=${m}&limit=200` },
     { ten: "/v1/listings?area", r: "listings", url: (m) => `/v1/listings?area=${m}&limit=200` },
-    { ten: "/v1/asset-stats?market", r: "assetStats", url: (m) => `/v1/asset-stats?market=${m}` },
-    { ten: "/v1/asset-stats?area", r: "assetStats", url: (m) => `/v1/asset-stats?area=${m}` },
-    { ten: "/v1/deals?market", r: "deals", url: (m) => `/v1/deals?market=${m}&limit=100&min_discount=0` },
-    { ten: "/v1/deals?area", r: "deals", url: (m) => `/v1/deals?area=${m}&limit=100&min_discount=0` },
+    { ten: "/v1/price-stats?market", r: "priceStats", url: (m) => `/v1/price-stats?market=${m}` },
+    { ten: "/v1/price-stats?area", r: "priceStats", url: (m) => `/v1/price-stats?area=${m}` },
+    // min_discount=0 của /v1/deals cũ đọc thành 5 (`Number(x) || 5`), kind vắng là sale — dịch đúng nghĩa đó.
+    { ten: "/v1/listings?minBelowMedianPct&market", r: "giaTot", url: (m) => `/v1/listings?market=${m}&kind=sale&minBelowMedianPct=5&limit=100` },
+    { ten: "/v1/listings?minBelowMedianPct&area", r: "giaTot", url: (m) => `/v1/listings?area=${m}&kind=sale&minBelowMedianPct=5&limit=100` },
   ]
   const boDoiApi = (s: string) =>
     s.replace(/await giaiMaKhuVuc\(c\.req\.param\("id"\)\)/g, 'await giaiMaKhuVuc(c.req.param("id")).then(() => c.req.param("id"))')
@@ -621,7 +631,7 @@ if (PHAN === "api") {
     for (const o of O_API) {
       const r = R[o.r]
       const app = await appTu(abs(r.tep), r.ten, r.goc)
-      gocCua[o.r] ??= await appTu(chep(r.tep, `goc-${o.r}`, docGoc(r.tep)), r.ten, r.goc)
+      gocCua[o.r] ??= await appTu(chep(r.tep, `goc-${o.r}`, banGocHang(r)), r.tenGoc ?? r.ten, r.goc)
       luonCua[o.r] ??= await appTu(chep(r.tep, `luon-tra-${o.r}`, doi(docTep(r.tep), '"../lib/ma-thi-truong.js"', `"../lib/${libLuon}.js"`)), r.ten, r.goc)
       const goc = gocCua[o.r]!
       const kK = await goi(app, o.url(KD))

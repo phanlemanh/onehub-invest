@@ -1,0 +1,88 @@
+# s06-thu-duoi-snapshot-hong-khong-chan (ZC26) — map AC → eval. Lệnh là config: ref (_acceptance/config.yaml,
+# executors.test.zc26_* và s06tl_* của ZC18). paths hẹp: đúng tệp hàng đổi + probe của chính eval.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.test.zc26_bo_qua
+    paths: [scripts/thu-duoi-s06.sh, pipeline/import-chotot.mjs, _acceptance/s06-thu-duoi-snapshot-hong-khong-chan/probes/bo-qua-hong.mjs]
+    expected: "exit 0; 'fixture tu writer that: … snapshot hcmc của phép đo 24 giờ'; với mỗi lớp thieu-manifest, manifest-hong, source-khac, schema-la, finishedAt-hong, checksum-sai, thieu-tep-items: '<lớp>: vong 1 nap ban lanh cu hon'; 'vung toan hong: 0 lan nap · 2 dong log · thoat 1'; 'vung toan hong: vong 2 im lang · thoat 0'; 'dot bien bo kiem: bi bat (ban lanh bi chan)'; cuối 'BO-QUA-HONG OK'; should-NOT-fire: 'CHAN HANG DOI', 'GOI NAP RONG', 'CHON LAI toan-hong', 'DOT BIEN SONG', 'DOT BIEN KHONG TIM THAY CHO PHA', 'PROBE HONG'. Trên main c644f2a50 đỏ 'CHAN HANG DOI' ở cả bảy lớp (đo S1 28/11)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.test.zc26_bo_qua
+    paths: [scripts/thu-duoi-s06.sh, _acceptance/s06-thu-duoi-snapshot-hong-khong-chan/probes/bo-qua-hong.mjs]
+    expected: "exit 0; với mỗi lớp: '<lớp>: mot dong log goi ten ban hong — bỏ qua snapshot hỏng <id>: <lý do> — không xoá, không sửa' (đúng một dòng, khớp khuôn) và '<lớp>: vong 1 thoat 1 (lan dau phat hien)'; should-NOT-fire: 'IM LANG', 'LOG SAI KHUON', 'MA THOAT SAI'. Trên main đỏ 'IM LANG' ở cả bảy lớp, 'MA THOAT SAI source-khac' (bộ nạp thoát 0 im lặng)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.test.zc26_bo_qua
+    paths: [scripts/thu-duoi-s06.sh, _acceptance/s06-thu-duoi-snapshot-hong-khong-chan/probes/bo-qua-hong.mjs]
+    expected: "exit 0; với mỗi lớp: '<lớp>: ban hong co trong tep danh dau (lyDo «…» · luc <ISO>Z)' và '<lớp>: khoa danh dau la ten thu muc co tien to vung'; should-NOT-fire: 'KHONG DANH DAU', 'LUC KHONG UTC', 'KHOA KHONG VUNG'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.test.zc26_bo_qua
+    paths: [scripts/thu-duoi-s06.sh, _acceptance/s06-thu-duoi-snapshot-hong-khong-chan/probes/bo-qua-hong.mjs]
+    expected: "exit 0; với mỗi lớp: '<lớp>: ban hong y nguyen (khong xoa, khong sua)' (so danh sách tệp + sha256 từng tệp trước/sau); should-NOT-fire: 'SUA RAW'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.test.zc26_bo_qua
+    paths: [scripts/thu-duoi-s06.sh, _acceptance/s06-thu-duoi-snapshot-hong-khong-chan/probes/bo-qua-hong.mjs]
+    expected: "exit 0; với mỗi lớp: '<lớp>: vong 2 khong chon lai, khong lap log, thoat 0'; should-NOT-fire: 'CHON LAI'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.test.zc26_bo_qua
+    paths: [scripts/thu-duoi-s06.sh, _acceptance/s06-thu-duoi-snapshot-hong-khong-chan/probes/bo-qua-hong.mjs]
+    expected: "exit 0; 'nap loi tam: khong danh dau · vong sau thu lai' (bộ nạp thay bằng stub thoát 1 trên bản lành: hai vòng đều thoát 1, đều thử nạp bản ấy, tệp đánh dấu không có nó); should-NOT-fire: 'DANH DAU NHAM'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.test.zc26_bo_qua
+    paths: [scripts/thu-duoi-s06.sh, _acceptance/s06-thu-duoi-snapshot-hong-khong-chan/probes/bo-qua-hong.mjs]
+    expected: "exit 0; 'tep danh dau hong: khong no · van chon dung'; should-NOT-fire: 'DAU HONG LAM NO'. Trên main đỏ ca này (bản hỏng vẫn chặn)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.test.zc26_pham_vi
+    paths: [scripts/thu-duoi-s06.sh, scripts/thu-duoi-s06.test.mjs, pipeline/import-chotot.mjs, _acceptance/s06-thu-duoi-snapshot-hong-khong-chan/probes/pham-vi.mjs]
+    expected: "exit 0; mỗi tệp đổi một dòng 'ok <tệp>'; 'tu kiem: pipeline/import-chotot.mjs → NGOAI PHAM VI (dung)'; 'launchctl: khong co com.oneinvest.thu-duoi-s06'; cuối 'PHAM-VI OK'; should-NOT-fire: 'NGOAI PHAM VI scripts', 'NGOAI PHAM VI pipeline', 'SUA BO NAP', 'DA CAI LICH', 'TU KIEM HONG'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9a
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.s06tl_test
+    paths: [scripts/thu-duoi-s06.sh, scripts/thu-duoi-s06.test.mjs]
+    expected: "exit 0; 'ℹ fail 0', 'ℹ skipped 0' — tệp test shim của ZC18 (wrapper + install-cron) xanh trên mã mới; should-NOT-fire: '✖'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9b
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.test.s06tl_dot_bien
+    paths: [scripts/thu-duoi-s06.sh, scripts/thu-duoi-s06.test.mjs]
+    expected: "exit 0; 'tu kiem mau do: dau gia khop 0 ca (DUNG)'; hai 'ĐỘT BIẾN BỊ BẮT'; cuối 'DOT-BIEN OK' — probe đột biến của ZC18 vẫn bắt hai đột biến trên wrapper mới; should-NOT-fire: 'ĐỘT BIẾN SỐNG', 'KHONG TIM THAY CHO PHA', 'MAU DO KHONG KHOP CA NAO'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9c
+    criterion: AC-9
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.test.s06tl_chon_nap
+    paths: [scripts/thu-duoi-s06.sh, pipeline/import-chotot.mjs]
+    expected: "exit 0; cuối 'CHON-NAP OK'; có 'hai vung ton dong: hanoi nap 1 (moi nhat) · hcmc nap 1 (moi nhat) · moi vung dung 1' và 'nap loi vung dau: vung sau van thu · exit 1' (vòng 6 dựng bản hanoi checksum sai: nay bị bỏ qua có ghi dấu, vòng vẫn thoát 1, hcmc vẫn nạp) — probe chọn-nạp của ZC18 trên mã mới; should-NOT-fire: 'CHON-NAP DO', 'NAP LAI', 'PROBE HONG'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

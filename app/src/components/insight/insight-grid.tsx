@@ -41,6 +41,8 @@ export const DATA_GRID_VI: DataGridI18nOverrides = {
     previousPage: "Trang trước",
     nextPage: "Trang sau",
     goToPage: (page) => `Tới trang ${page}`,
+    expandRow: "Mở hàng",
+    collapseRow: "Thu gọn hàng",
   },
 }
 

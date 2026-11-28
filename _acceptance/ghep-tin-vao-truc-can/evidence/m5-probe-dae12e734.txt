@@ -1,0 +1,1985 @@
+# PL36 soát trước trên M5 ＠dae12e7341299dcedf408a2ba30ad60b61ef2ee5 — bắt đầu 2026-11-26T20:47:52Z. THE_CAI=$HOME/dev/onehub-invest/research-local/gan-nhan-tro-ly/the-cai-hai-khu-truc-2411.json (chỉ đọc)
+
+## $ bash _acceptance/ghep-tin-vao-truc-can/probes/ham-gan.sh — 20:47:52Z
+== Ma trận trên mã thật
+ℹ tests 28
+ℹ pass 28
+ℹ fail 0
+== Đột biến
+đột biến «bo-so-tien-to-toa» → ca «ô «toa-lech»» đỏ
+đột biến «tra-truc-moi-toa» → ca «ô «truc-cung-so-toa-khac-khong-chon»» đỏ
+đột biến «lay-tang-ma-khi-lech» → ca «ô «tang-lech»» đỏ
+XANH: ma trận và ba đột biến
+→ mã thoát 0
+
+## $ bash _acceptance/ghep-tin-vao-truc-can/probes/migration.sh — 20:47:53Z
+== Khuôn phát biểu trên mã thật
+ℹ tests 6
+ℹ pass 6
+ℹ fail 0
+== Đột biến
+đột biến «bo-luat-khuon-sub-id» → ca «tu-choi-sai-khuon» đỏ
+XANH: khuôn phát biểu và một đột biến
+→ mã thoát 0
+
+## $ bash _acceptance/ghep-tin-vao-truc-can/probes/offer-unit.sh — 20:48:14Z
+== offer_unit trên mã thật
+ℹ tests 9
+ℹ pass 9
+ℹ fail 0
+== Đột biến
+đột biến «hai-truc-khong-xung-dot» → ca «ô «hai-truc»» đỏ
+XANH: offer_unit và một đột biến
+→ mã thoát 0
+
+## $ bash _acceptance/ghep-tin-vao-truc-can/probes/chay-lai.sh — 20:48:55Z
+== Vòng đời dòng trên mã thật
+ℹ tests 7
+ℹ pass 7
+ℹ fail 0
+== Đột biến
+đột biến «bo-chua-ghep-can» → ca «cau-rut-thay-boi-luot-chua-dong-ghep-can» đỏ
+XANH: vòng đời và một đột biến
+→ mã thoát 0
+
+## $ bash _acceptance/ghep-tin-vao-truc-can/probes/offer-building-nhanh.sh — 20:50:06Z
+== offer_building trên mã thật
+thời gian: offer_building 0.305s · offer_unit 0.318s · offer_unit mức sâu 0.368s
+ℹ tests 3
+ℹ pass 3
+ℹ fail 0
+== Đột biến
+đột biến «doi-mot-dong-dau-ra» → ca «offer_building sau 131 khác 117» đỏ
+ĐỎ: đột biến «bo-materialized» không làm ca nào đỏ
+→ mã thoát 1
+
+## $ bash _acceptance/ghep-tin-vao-truc-can/probes/cuoi-luot-nap.sh — 20:50:33Z
+== Bước cuối lượt nạp trên mã thật
+ℹ tests 4
+ℹ pass 4
+ℹ fail 0
+== Đột biến
+đột biến «nem-loi-ra-ngoai» → ca «loi-khi-ghi-in-mot-canh-bao-va-khong-nem» đỏ
+XANH: bước cuối lượt nạp và một đột biến
+→ mã thoát 0
+
+## $ bash _acceptance/ghep-tin-vao-truc-can/probes/chay-kho.sh — 20:51:16Z
+Bài có toà: 40205 · trục 9311 · căn 853 · tầng suy từ mã 0
+  bài op1: 24538 · trục 9302 · căn 772
+  bài gp: 15667 · trục 9 · căn 81
+Lý do không gắn (theo bài): khong-ma 29820 · truc-ngoai-danh-ba 219 · ma-khong-toa 2
+Tin op1: mức toà 1243 → trục 460 · căn 28 · xung đột 0
+Tin gp: mức toà 1786 → trục 5 · căn 21 · xung đột 0
+Tin mức căn (mã căn · tầng từ mã · tầng danh bạ · căn):
+  gp offer_a35ed43461eff825 · BE1-0512 · 5 · 5 · unt_01M6XQYGS5BTQHN1H6ZS5J2CBM
+  gp offer_3182950f39de4945 · BE222.04 · 22 · 22 · unt_01M7N0NQR2FRW64JQCYEQPS28G
+  gp offer_f497704f7f4cf3ce · BS15.16.12 · 16 · 16 · unt_01M7N0NQRD38SQNNCN916NX1TJ
+  gp offer_dce7d437c291d2b3 · BS1510.21 · 10 · 10 · unt_01M7N0NQRD4R1RE374ZGZ201WN
+  gp offer_282ee9fcb1e5f4b1 · BE6.2614 · 26 · 26 · unt_01M7N0NQR5QYV08BB327023MRJ
+  gp offer_77a00b5c9f3211c9 · Bs1605.25 · 5 · 5 · unt_01M7N0NQRESK1K7GDGKFHQBTZ2
+  gp offer_b2909e8a9c0a6f07 · GH2-21.14 · 21 · 21 · unt_01M7N0NQRRTXT5ZJ9RD341C3WD
+  gp offer_89d16e71cd3fad36 · GH2-21.14 · 21 · 21 · unt_01M7N0NQRRTXT5ZJ9RD341C3WD
+  gp offer_2d5ff59b97fc02a5 · BS8.32.26 · 32 · 32 · unt_01M7N0NQRN36ZE81NADN4M07T1
+  gp offer_181ba2ec0036c757 · OS1.0411 · 4 · 4 · unt_01M7N0NQRXYZYHRKND46JJFA8R
+  gp offer_240acc8c184e0a0f · GH6-22.04 · 22 · 22 · unt_01M7N0NQRWSTX7WEPRX046YHXA
+  gp offer_9842c208810c343e · S6.01.08.03 · 8 · 8 · unt_01M7N0NQT3BTNEGST92XSNZBJR
+  gp offer_f38fc4d5e435acaa · OS5.13.13 · 13 · 13 · unt_01M7N0NQRY158KDJMHSGRRVHK2
+  op1 offer_9cc2e514e05bd9fe · LD2.0213 · 2 · 2 · unt_01M7N0NRFVNGC7J2P04PHGY24K
+  op1 offer_c177cfd8f80842da · Pr3.0305 · 3 · 3 · unt_01M7N0NRGAQ9N40J0SD6KWKWMH
+  op1 offer_82d0ad5176d02ee5 · PR3.2914 · 29 · 29 · unt_01M7N0NRGAMEA99E830JQWSW48
+  op1 offer_e5746e7c932933ce · pr6.3826 · 38 · 38 · unt_01M7N0NRGD1YFWXD6WPRWGN1J0
+  op1 offer_78be93de09aafe7a · PR6.1107 · 11 · 11 · unt_01M7N0NRGCW9220B0VGK90R489
+  op1 offer_4ca895694e56943f · Pr6.1805 · 18 · 18 · unt_01M7N0NRGCC59K3BQS0EVES14D
+  op1 offer_1ecacae523d3d312 · PR6.1107 · 11 · 11 · unt_01M7N0NRGCW9220B0VGK90R489
+  op1 offer_2b49f33a2c696942 · PR6.2616 · 26 · 26 · unt_01M7N0NRGD4S8ZXKVVA4PJF6K1
+  op1 offer_d3579161e737f422 · LD1.0318 · 3 · 3 · unt_01M7N0NRFTV554ETBVE99PYGE1
+  op1 offer_31ff85a50350a6ec · LD1.2606 · 26 · 26 · unt_01M7N0NRFVS6D4KME2KDKF5Z71
+  op1 offer_2d5ed99659ebf18a · BE4.0612 · 6 · 6 · unt_01M7N0NRFPVB3RKDMD2JW9KQ97
+  op1 offer_e2ef1dc844cd3734 · PR1.0710 · 7 · 7 · unt_01M7N0NRG8HKK94WZA9077KNRH
+  op1 offer_a64ca5c9b872f81a · PR1.0710 · 7 · 7 · unt_01M7N0NRG8HKK94WZA9077KNRH
+  op1 offer_9806c6113b8a8ef4 · PR1.0710 · 7 · 7 · unt_01M7N0NRG8HKK94WZA9077KNRH
+  op1 offer_54233b31938a670b · BE3.1009 · 10 · 10 · unt_01M7N0NRFN2AKQD98A1PJCVGPY
+  op1 offer_0fd1c4a9ad98f374 · BE3.1009 · 10 · 10 · unt_01M7N0NRFN2AKQD98A1PJCVGPY
+  op1 offer_f8ba7d72f5c4ced9 · BE3.1009 · 10 · 10 · unt_01M7N0NRFN2AKQD98A1PJCVGPY
+  op1 offer_e9f43d771eab7ab3 · BE3.0509 · 5 · 5 · unt_01M7N0NRFNA0RSW001MQJXCJ1Q
+  op1 offer_ea80a6e3ed1c9389 · BE3.1009 · 10 · 10 · unt_01M7N0NRFN2AKQD98A1PJCVGPY
+  op1 offer_e3e9dc449e25f7f5 · LD3.0702 · 7 · 7 · unt_01M7N0NRFWF9P5Q5BKBSQKSE35
+  op1 offer_9cb0d924418ce154 · LD3.0702 · 7 · 7 · unt_01M7N0NRFWF9P5Q5BKBSQKSE35
+  op1 offer_5310040f6fb21efc · LD3.0702 · 7 · 7 · unt_01M7N0NRFWF9P5Q5BKBSQKSE35
+  op1 offer_344760c2ba020cb0 · LD3.1304 · 13 · 13 · unt_01M7N0NRFWS1044E08SH987WGW
+  op1 offer_b7fbe789029fdfd2 · BE1.1425 · 14 · 14 · unt_01M7N0NRFKWKHCRHKKKK4ZH399
+  op1 offer_a81210b8dcdca9ab · BE1.0906 · 9 · 9 · unt_01M7N0NRFK8MQ8B5ZVFCHTMXWD
+  op1 offer_726b984dd45d783e · BE1.1525 · 15 · 15 · unt_01M7N0NRFKH71P0FNH39S0EWA6
+  op1 offer_0ca7e6b2518e9e9a · BE1.0906 · 9 · 9 · unt_01M7N0NRFK8MQ8B5ZVFCHTMXWD
+  op1 offer_594bcfea9656f1c7 · ZR1.3221 · 32 · 32 · unt_01M7N0NRHV6C7XZ6WK7BZW6K61
+  gp offer_bac0160e78aed5cb · GH3.02.10 · 2 · 2 · unt_01M7N0NQRSHN5E51KXH75S3SCT
+  gp offer_bdf0f8bad50d9fdf · GH337.17 · 37 · 37 · unt_01M7N0NQRVQ852YW4AES31WEQR
+  gp offer_be2625c9bace65d2 · Gh524.10 · 24 · 24 · unt_01M7N0NQRVRRV8ZFN535EMV2W6
+  gp offer_4a8a117100c8db48 · S1.03.20.14 · 20 · 20 · unt_01M7N0NQS3H9CJFXZCJZTSZYPV
+  gp offer_4f232e6438f016d2 · S2.05.24.17 · 24 · 24 · unt_01M7N0NQSPC5ZKHPW2DBNJM81X
+  gp offer_d3950efc7f532b7d · S5.02.20.15 · 20 · 20 · unt_01M7N0NQT1NEN0736V2DXF6D12
+  gp offer_c6022e0d532e4186 · S5.03.25.19 · 25 · 25 · unt_01M7N0NQT2AY99J4J51NRJ6ERF
+  gp offer_56d8c545ae2e67fc · S5.03-22.06 · 22 · 22 · unt_01M7N0NQT29XQK31CD3TE310TW
+XANH: OP1 tin mức trục + căn 488 ≥ 350
+→ mã thoát 0
+
+## $ bash _acceptance/ghep-tin-vao-truc-can/probes/cham-truc.sh — 20:51:25Z
+✔ tap-dung-het-dat-nguong (0.603625ms)
+✔ ba-bai-sai-hut-nguong-va-bang-bai-sai-du-cot (0.226166ms)
+✔ doi-mot-nhan-trong-tap-thi-bam-lech-goi-ten-tap (0.181916ms)
+✔ thieu-nhan-nguoi-thi-chua-dat (0.572958ms)
+✔ the-cai-loai-khoi-phep-tinh-va-dem-nguoi-duyet-sua-dung (0.194959ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 52.172458
+# Chấm gắn trục PL36 — tập hai-khu-truc-pl36-2411
+
+sha256 tập: `54e8401dc06416e419e1db2c19d179be283c9754522ee5be8c0c53f3373868f0`
+
+Thẻ cài lỗi loại khỏi phép tính: 10 · nhãn đã lưu của thẻ cài đúng giá trị 10/10 (hệ số bắt lỗi lúc duyệt do phiên gắn nhãn đo riêng).
+
+| Khu | Bài trong tập | Đã có nhãn | Máy gắn đúng | Cận dưới Wilson 95% | Ngưỡng | Kết luận |
+|---|---|---|---|---|---|---|
+| OP1 | 100 | 100 | 100 | 0.963 | 0.95 | đạt |
+| GP | 0 | — | — | — | báo số | GP gần như không nêu mã căn (Hỏi-1) |
+
+## Bài máy gắn sai (0)
+
+| ref_id | Mã căn nguyên văn | Toà | Trục máy gắn | Trục nhãn người | Toà nhãn người |
+|---|---|---|---|---|---|
+
+→ mã thoát 0
+
+## $ node scripts/suite-neu-doi.mjs pipeline_a -- 'cd pipeline && npm run test:a' — 20:51:26Z
+suite-neu-doi: chạy pipeline_a — đổi CONTEXT.md (+23 tệp trong vùng)
+
+> test:a
+> bash ../db/db-thu.sh oneinvest_suite_pipeline_a --chay-trong node chay-nua.mjs a
+
+db-thu: cụm dùng một lần one-invest-db-thu-20408 cổng 127.0.0.1:32854 — dựng cụm + migration 7 s
+chay-nua: bỏ qua 13 ca của ci-bo-qua.json có tệp trong nửa a (CI=true)
+chay-nua: bỏ qua — pipeline/scripts/test-posts.test.mjs — AC-3 transform S05 dùng cùng bộ lọc
+chay-nua: bỏ qua — pipeline/scripts/test-posts.test.mjs — AC-4 rút offer giả qua đối soát
+chay-nua: bỏ qua — pipeline/scripts/test-posts.test.mjs — AC-5 lượt sạch và lượt toàn thử
+chay-nua: bỏ qua — pipeline/scripts/test-posts.test.mjs — AC-6 bait gap tính lại
+chay-nua: bỏ qua — pipeline/scripts/test-posts.test.mjs — AC-8 thước dư lượng bắt được tin giả
+chay-nua: bỏ qua — pipeline/scripts/test-posts.test.mjs — AC-9 stg không đổi
+chay-nua: bỏ qua — pipeline/scripts/ops-facts-so-tong-hop.test.mjs — ON22-AC-10 máy thu thật, chế độ khô: năm khối có measured_at, freshness bằng check-freshness, 0 chỗ chặn, đầu ra chỉ tên khối + trạng thái
+chay-nua: bỏ qua — pipeline/scripts/install-collector-api.test.mjs — cài thật: ghi plist vào LaunchAgents của HOME giả, plutil sạch, chmod 600, chỉ IN lệnh launchctl
+chay-nua: bỏ qua — pipeline/scripts/install-collector-api.test.mjs — 2610-5: tạo thư mục pipeline/logs (khuôn install-*.sh) + sed lỗi không đè plist cũ
+chay-nua: bỏ qua — pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs — SLT-DC-7, SLT-DC-9: tắt rồi bật suy loại, rồi tắt lại — cùng một transaction
+chay-nua: bỏ qua — pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs — SLT-DC-10 lát s03-loai-tin: lần một thêm n, lần hai cùng seed thêm 0, --thu thêm 0
+chay-nua: bỏ qua — pipeline/scripts/assert-rut-thay.test.mjs — PL20-E7 ghi khác giá trị cùng bộ: dòng ghep-toa giữ sống, dòng không rule bị rút
+chay-nua: bỏ qua — pipeline/scripts/assert-rut-thay.test.mjs — chiều đỏ PL20-E7: bản phá bỏ điều kiện chừa → dòng ghep-toa bị rút, đỏ
+▶ TR-AC-1 câu rút mới tương đương câu cũ (ca biên, ROLLBACK)
+  ✔ TR-AC-1 bảy ca biên: tập id rút trùng câu cũ; mảng rỗng không chạy câu nào (57.564583ms)
+  ✔ TR-AC-1 đối chứng dương: ca một rút đúng 1 dòng (bedrooms=4 parser), ca «chỉ ở bảng» rút 0 (14.214416ms)
+  ✔ chiều đỏ TR-AC-1: bản phá `<> ALL` → `= ANY` (rút nhầm dòng khớp) → đỏ ghim «TR-AC-1 tập rút lệch câu cũ» (10.844ms)
+  ✔ chiều đỏ TR-AC-1: bản phá bỏ điều kiện phương pháp (rút sang bộ khác) → đỏ ghim «TR-AC-1 tập rút lệch câu cũ» (8.845917ms)
+✔ TR-AC-1 câu rút mới tương đương câu cũ (ca biên, ROLLBACK) (98.649542ms)
+▶ PL20 câu rút chừa dòng bước gắn toà (ROLLBACK)
+  ✔ PL20-E7 mọi rule_id của bước gắn mang tiền tố ghep-toa- (khớp mẫu trong SQL_RUT_THAY) (0.138959ms)
+✔ PL20 câu rút chừa dòng bước gắn toà (ROLLBACK) (0.238875ms)
+TR-AC-3 n=10: ép nested loop 0.00 s · ép hash 0.00 s
+▶ TR-AC-3 không bậc hai ở mọi kế hoạch (ROLLBACK)
+  ✔ TR-AC-3 n=10: ép nested loop và ép hash đều không Anti Join, dưới 30 s, rút đúng 5% (7.390625ms)
+TR-AC-3 n=1000: ép nested loop 0.00 s · ép hash 0.00 s
+  ✔ TR-AC-3 n=1000: ép nested loop và ép hash đều không Anti Join, dưới 30 s, rút đúng 5% (39.40075ms)
+TR-AC-3 n=200000: ép nested loop 0.58 s · ép hash 0.50 s
+  ✔ TR-AC-3 n=200000: ép nested loop và ép hash đều không Anti Join, dưới 30 s, rút đúng 5% (6391.675084ms)
+  ✔ chiều đỏ TR-AC-3: câu cũ ép nested loop ở n=200000 → đỏ ghim «TR-AC-3 kế hoạch có Anti Join» (2726.140791ms)
+✔ TR-AC-3 không bậc hai ở mọi kế hoạch (ROLLBACK) (9164.91025ms)
+▶ TR-RAO rào DB thử
+  ✔ TR-RAO chiều đỏ: DATABASE_URL trỏ DB «oneinvest» (cổng chết) → tệp từ chối, thoát 2, không mở kết nối nào (45.077708ms)
+✔ TR-RAO rào DB thử (45.145375ms)
+✔ CN-1 hợp hai nửa bằng đúng tập tệp npm test chạy, không sót, không trùng (4.682334ms)
+✔ CN-2 mỗi nửa chạy qua db-thu.sh --chay trên DB thử tên riêng, khác DB của npm test (0.178042ms)
+✔ manifest THIẾU finishedAt → từ chối: exit 1, KHÔNG sinh dòng NULL, không ghi snapshot (62.910042ms)
+✔ dòng NULL CÓ SẴN vẫn cập nhật được bằng snapshot có mốc (không đóng băng ngược) (55.50475ms)
+✔ DND-AC-1 bốn bản SQL bài thử khớp testMarker từng dòng (24.564709ms)
+✔ DND-AC-4 câu đếm độc lập của test-data-residue đếm tin sinh từ bài nội dung thử (12.78ms)
+✔ CHOT-1 tenDbThu quy mọi cách viết về tên DB (0.597875ms)
+✔ CHOT-2 ma trận: 5 URL bị từ chối, 2 URL suite được nhận, thiếu URL bị từ chối (0.510958ms)
+✔ CHOT-3 tệp test S08 thật thoát 2 trước khi nối DB với mọi URL bị từ chối, không lộ URL (126.845833ms)
+✔ CG15-HT-1 bảng 107 có trong DB thử; đối chứng bỏ 107 (760.609208ms)
+✔ CG15-AC-1 nhóm đủ hai bên: đếm phiếu, trung vị từng nguồn, độ lệch; ba đột biến đỏ (6729.193208ms)
+✔ CG15-AC-2 ma trận thiếu bên, nguồn khác, cấp phường, tin loại ra (1794.979375ms)
+✔ CG15-AC-3 thuê m² và thuê giá tháng tách dòng, khoá khớp nhóm hạng; bán và thuê không trộn (4906.783583ms)
+✔ CG15-AC-4 chạy lại giống hệt; lỗi giữa chừng giữ bảng cũ; chưa áp 107; không view; 107 áp hai lần (5066.724209ms)
+✔ YCNS-DO-AC-3 bài mẫu dựng từ đầu ra thật của bộ đọc (7.235709ms)
+✔ YCNS-DO-AC-3 đối chứng dương: hai bộ đọc như nhau thì không lý do nào (0.184916ms)
+✔ YCNS-DO-AC-3 đột biến mat-va-giam bật đúng SO CO NGAN SACH GIAM + MAT NGAN SACH (0.104709ms)
+✔ YCNS-DO-AC-3 đột biến chi-mat bật đúng MAT NGAN SACH (0.07425ms)
+✔ YCNS-DO-AC-3 đột biến thue-100-trieu bật đúng THUE TU 100 TRIEU (0.064ms)
+✔ YCNS-DO-AC-3 đột biến min-lon-hon-max bật đúng MIN LON HON MAX (0.064083ms)
+✔ YCNS-DO-AC-4 tự kiểm đỏ khi bỏ một nhánh (91.78475ms)
+▶ AC-3 ma trận chín ô «chữ bài × thẻ»: mỗi bài đúng một hoặc không dòng dự án
+  ✔ ô im×mot (0.303708ms)
+  ✔ ô cung×mot (0.036791ms)
+  ✔ ô khac×mot (0.029458ms)
+  ✔ ô im×hai (0.034958ms)
+  ✔ ô cung×hai (0.034167ms)
+  ✔ ô khac×hai (0.024417ms)
+  ✔ ô im×khong (0.021458ms)
+  ✔ ô cung×khong (0.024917ms)
+  ✔ ô khac×khong (0.039291ms)
+✔ AC-3 ma trận chín ô «chữ bài × thẻ»: mỗi bài đúng một hoặc không dòng dự án (0.998917ms)
+▶ AC-4 bốn ô đúng chỗ
+  ✔ ba trường thành phát biểu, đúng lớp, phương pháp, luật, phiên bản, căn cứ ba khoá (0.350584ms)
+  ✔ bán/thuê KHÔNG thành phát biểu — nó đi cột kind qua suyLoai (0.057833ms)
+  ✔ chữ bài đã nêu phường thì thẻ không ghi ô phường cho bài ấy (chữ bài trước) (0.05275ms)
+  ✔ thẻ khác khoá nhóm không lọt vào căn cứ (khoá nhóm là tầng A) (0.037333ms)
+✔ AC-4 bốn ô đúng chỗ (0.575042ms)
+▶ Review Focus và tập bài được đóng dấu
+  ✔ RF3 thẻ đã duyệt mà mọi ô trống: 0 dòng, không ném (0.05875ms)
+  ✔ RF4 chữ bài nêu tên ngoài danh bạ (vắng trong nhanDuAn) thì rơi về thẻ, không mất dự án (0.038ms)
+  ✔ RF5 bài không có khoá nhóm: 0 dòng, không ném (0.021166ms)
+  ✔ baiDong là đúng tập bài có ít nhất một dòng — phạm vi rút dòng cũ ở bước sau (0.032333ms)
+  ✔ đếm theo nguồn của ô dự án: the · chu_bai · bo (0.038458ms)
+✔ Review Focus và tập bài được đóng dấu (0.250958ms)
+▶ AC-8 hoà giải ở mức tin: không tự sinh xung đột
+  ✔ bài đăng lại chéo hai nhóm, thẻ bất đồng, chữ im: không đoán — 0 dòng dự án trong tin (0.069833ms)
+  ✔ một bài chữ nêu dự án khác: chữ bài thắng trên CẢ tin — bài im cùng tin không nhận dự án của thẻ (0.041916ms)
+  ✔ chữ bài trùng dự án thẻ: giữ cả hai nguồn, tin vẫn một dự án (0.028333ms)
+  ✔ hai bài chữ nêu hai dự án khác nhau trong một tin: xung đột thật của chữ — 0 dòng dự án (0.029875ms)
+  ✔ bài khác cùng tin mang dòng dự án của luật khác, khác giá trị, mà hàng này không thay: không đóng dấu dự án cả tin (0.038416ms)
+  ✔ dòng của luật khác trên CHÍNH bài được đóng dấu không tính — bước sau rút nó (0.027708ms)
+  ✔ dòng phường và phân khu không bị hoà giải dự án kéo theo — chỉ ô dự án bị bỏ (0.041917ms)
+  ✔ bài không mang mã tin thì xét như một tin riêng (giữ hành vi cũ) (0.0345ms)
+✔ AC-8 hoà giải ở mức tin: không tự sinh xung đột (0.392334ms)
+▶ AC-8 duyệt từng đợt: thẻ bất đồng không được làm tin mất dự án nó đang mang
+  ✔ tin đang mang đúng một dự án nằm trong các thẻ bất đồng: giữ dự án ấy, chỉ bỏ dòng của thẻ khác (0.05875ms)
+  ✔ tin chưa mang dự án nào: vẫn không đoán (0.029625ms)
+  ✔ tin đang mang dự án KHÔNG nằm trong các thẻ: không đoán (0.022542ms)
+  ✔ tin đang mang HAI dự án (đã xung đột sẵn): không đoán (0.0225ms)
+✔ AC-8 duyệt từng đợt: thẻ bất đồng không được làm tin mất dự án nó đang mang (0.171917ms)
+✔ AC-1 mười hai lối vào chạy qua symlink (1912.49275ms)
+✔ AC-2 khuôn cũ câm, khuôn mới chạy (72.662708ms)
+✔ AC-3 không còn khuôn cũ (117.39875ms)
+✔ AC-4 nhập như mô-đun không chạy main (141.067042ms)
+✔ CG10-HT-1 view offer_project tạm và bảng 106 có trong DB thử; đối chứng bỏ view, bỏ 106 (870.203083ms)
+✔ CG10-AC-1 cấp dự án gom hai phường: số, nhãn gia-tot, chia/lùi PN, thuê tách bán; ba đột biến đỏ (6468.065709ms)
+✔ CG10-AC-2 ma trận lùi cấp: <5, 5–9 với phường đủ/thiếu, xung đột, không dự án, dự án con, thiếu loại, bán thiếu m², căn ở hai dự án (1780.803667ms)
+✔ CG10-AC-3 thuê thiếu m²: 2PN theo giá tháng nhóm dự án, 1PN 5–9 lùi, thiếu cả hai; đột biến bỏ PN đỏ (3372.432333ms)
+✔ CG10-AC-4 không view: chỉ phường bằng 420; view ngoài public dò thấy; chưa 106 bỏ dải; chạy lại giống hệt; tin rời dự án về phường (8148.653417ms)
+✔ CG10-AC-5 dải m²: 2PN 12 mẫu ra p10/p50/p90, 1PN 7 mẫu không dòng, ngoài khoảng loại; không chảy vào giá; lỗi giữa chừng giữ cũ; 106 hai lần (5838.474542ms)
+✔ CG10-AC-8 sync-cloud (không sửa) chọn đúng các dòng cap=du_an của tin sống; project_area_band không trong FILL (1730.973792ms)
+✔ GTA-AC-7 bước đêm: hôm qua thoát 4 (hết tiền) → bỏ hôm kia, thoát 4, dòng JOB FAIL het-tien; thoát 3 giữ hành vi cũ (1113.081458ms)
+✔ GTA-AC-7 mau-soat: con doc-gop thoát 4 → lỗi het_tien, main in JOB FAIL [cloud-sync] … het-tien và thoát 4; thoát 3 là chạm trần như cũ (526.052875ms)
+✔ GTA-AC-8 nháp PL35 đường anthropic: POST /v1/messages model claude-haiku-5-5 khoá từ ANTHROPIC_API_KEY; thiếu khoá gọi tên biến; 402 bài đầu → dừng lát (99.810667ms)
+✔ GTA-AC-8 nháp PL35 đường anthropic: 400 «credit balance is too low» cũng là hết tiền, lát dừng ở bài đầu (1.722584ms)
+✔ GTA-AC-8 nháp PL35 qua Gateway: 402 insufficient_funds cũng là hết tiền (0.260916ms)
+✔ GTA-AC-8 nháp PL35 tự lùi: Anthropic hết tiền → dòng chuyen-duong, bài đó và các bài sau qua Gateway; thiếu khoá Anthropic → lùi từ đầu (1.664208ms)
+✔ GTA-AC-8 nháp PL35 khoá sai 401: tự lùi sang Gateway (bảng tự lùi); một đường thì dừng lát sau 1 lời gọi (2.435ms)
+✔ CG9-AC-1 ngưỡng nhóm 12 · 7 · 4 và điều kiện nhãn; đột biến bỏ 5% và hạ ngưỡng 10 đỏ (3614.456458ms)
+✔ CG9-AC-2 căn ba tin một phiếu (tin thấy sau cùng), tin hai căn một phiếu, S03 chung nhóm; đột biến mỗi tin một phiếu đỏ (2515.646208ms)
+✔ CG9-AC-3 ma trận 12 ô: chia PN, lùi PN, không PN, sáu lý do không chấm, cần xác minh (1711.509083ms)
+✔ CG9-AC-4 thuê: có m² so giá/m² trong nhóm thuê; thiếu m² so giá tháng cùng PN; 1PN dưới 5; thiếu cả hai; ngoài khoảng; đột biến bỏ kind đỏ (2114.715792ms)
+✔ CG9-AC-5 chạy lại giống hệt; lỗi sau khi xoá giữ bảng cũ; một dòng mỗi tin; tin nghỉ rời bảng; 104 áp hai lần; CHECK cap (4987.871708ms)
+✔ CG9-AC-5 hai lượt chạy chồng xếp hàng theo khoá, không dòng trùng (3377.076833ms)
+✔ CG9-AC-11 ba job đêm có đúng một bước xep-hang-gia sau bước định vị; đột biến bỏ bước hay đặt trước đỏ (2.5355ms)
+✔ CG9-AC-11 DB chưa áp 104: thoát êm, đúng dòng «chưa áp 104», không ghi; DB có 104: run_id mới (3405.538417ms)
+✔ schemaVersion: cả hai importer chấp nhận {1..5} — v4 và v5 cùng lúc (0.542709ms)
+✔ readSnapshot: manifest v5 + item có seller đọc qua (giữ seller trong payload) (4.571209ms)
+✔ readSnapshot: v12 chưa khai bị từ chối rõ ràng (1.462042ms)
+manifest ok: hanoi__S06__2026-11-26T205301146 — 1 items
+✅ 1 ads → stg_chotot_ads
+manifest ok: hanoi__S06__2026-11-26T205302252 — 1 items
+✅ 1 ads → stg_chotot_ads
+✔ đA: nạp v5 có số rồi nạp bản thường MỚI HƠN — phone còn nguyên, mô tả lấy bản mới (1133.733708ms)
+manifest ok: hanoi__S06__2026-11-26T205302280 — 1 items
+✅ 1 ads → stg_chotot_ads
+manifest ok: hanoi__S06__2026-11-26T205303385 — 1 items
+✅ 1 ads → stg_chotot_ads (lượt lấy số: chỉ cập nhật seller)
+manifest ok: hanoi__S06__2026-11-26T205304491 — 1 items
+✅ 1 ads → stg_chotot_ads (lượt lấy số: chỉ cập nhật seller)
+✔ đB: lượt lấy số (hienSo) không đổi captured_at/payload, chỉ thêm seller; không đè tên, không xoá số (2236.333333ms)
+✔ --dry: in plist đã thế __ROOT__ + cặp lệnh triển khai, KHÔNG ghi tệp nào (20.994333ms)
+✔ kiểm trước chặn: dist cũ hơn src / thiếu khoá / node không có — exit ≠0, không ghi (30.958667ms)
+✔ KT-1 khớp đủ mọi phần tử (0.9655ms)
+✔ KT-1 khớp đúng sàn phần tử chung (0.053584ms)
+✔ KT-1 khớp đúng sàn một nửa (0.038875ms)
+✔ KT-1 bằng chứng trùng lặp cùng một nút (0.03525ms)
+✔ KT-1 rẽ hai nút (0.06375ms)
+✔ KT-1 nút nhận từ hai bản ghi (0.039292ms)
+✔ KT-1 dưới sàn phần tử chung (0.035125ms)
+✔ KT-1 dưới sàn một nửa (0.038916ms)
+✔ KT-2 không có bằng chứng thì trả null (0.063417ms)
+✔ KT-3 sàn phần tử chung là 3 (0.071041ms)
+✔ KT-4 đếm bản ghi theo nút: một bản ghi lặp một nút chỉ tính một lần (0.066583ms)
+✔ KT-5 phép đo nút trùng nơi bắt đúng bản ghi nằm sai nút, bỏ qua ca đúng và ca chỉ cảnh báo (0.105084ms)
+✔ KT-6 hai bản ghi cùng trỏ một nút không bị coi là trùng nơi (0.047625ms)
+✔ KD-AC-1 ma trận 10 ô đi hết đường thật tới danh-ba-sdt:n3 (140.673292ms)
+✔ KD-AC-1 dấu sinh từ bộ gán thật, và hai câu thiếu vế cho đỏ giả trên cùng ô (69.979792ms)
+✔ KD-AC-2 sau khi dựng danh bạ n3 xanh dù có số chỉ trên tin ghép, số mới chưa có bí danh thì đỏ, dựng lại thì xanh (130.234333ms)
+✔ KD-AC-3 ma trận bốn migration × hai trạng thái view (61.987625ms)
+✔ KD-AC-3 chạy thẳng câu view báo lỗi, đi qua sqlNapLai thì không và view còn cột (54.782666ms)
+✔ KD khoá: view sellers chỉ kéo bảng đã khoá từ đầu, bỏ một bảng khỏi danh sách thì phép đo gọi tên nó (67.035834ms)
+✔ SL-AC-5 kiemLenh .mjs đúng từng ô của ma trận viết trước (32 ô + 3 ô payload) (1.471667ms)
+✔ SL-AC-5 danh sách loại và khoá cấm bằng đúng văn bản ADR-0015 §4, §7 (0.527291ms)
+✔ SL-AC-5b bản TS trả giống hệt bản .mjs trên mọi ô; danh sách hai bản bằng nhau (71.055125ms)
+✔ SL-AC-5 đối chứng đỏ: đột biến chỉ khớp khoá cấm từ gốc payload thì đúng 11 ô độ sâu 3 lệch (2.24325ms)
+✔ SS-AC-1 kiemLenh .mjs: resume_when số, đúng/sai, đối tượng, mảng bị chặn; vắng, null, chuỗi nhận (9 ô) (1.735084ms)
+✔ SS-AC-2 bản TS và bản .mjs trả giống hệt nhau trên 44 ô (9 ô resume_when + 35 ô SL-AC-5) (11.62525ms)
+✔ LDR bản chép rỗng mang đủ ràng buộc, chỉ mục, cột sinh, dãy riêng và search_path trỏ vào nó (45.45025ms)
+✔ LDR từ chối view (7.142542ms)
+✔ LDR hai phiên dựng song song không chờ nhau, không giữ khoá 33033, rollback không để lại gì (58.061042ms)
+✔ LDR chuỗi ca DDL giữ khoá liền nhau: phiên đọc xếp hàng 33033 rồi vào được, không hết lượt thử, không giữ lại 33033 (1515.691125ms)
+✔ LDR xếp hàng bị lock_timeout cắt: giao dịch không hỏng, thử lại tới khi vào được (1034.258417ms)
+✔ MCS-AC-1: mã căn chỉ từ unitnumber thật, không bao giờ từ cờ unitnumber_display (7.363792ms)
+✔ MCS-AC-2: số nhà chỉ từ street_number thật, bỏ số toàn chữ số 0, giữ «1» (0.754291ms)
+✔ MCS-AC-3: block của nguồn thành block_raw, chữ đã chuẩn hoá; rỗng không thành phát biểu (0.571666ms)
+(node:21285) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+stg có giá+DT: 20
+ô chữ mang tên nguồn: bỏ ghi street_raw 0 · block_raw 0 · phuong_raw 0 · district_raw 0 · rút 0 chủ thể (trần 50)
+phát biểu S06: +123 (rút 3) · phân xử 20 tin, đổi 20
+SĐT S06: đổi 0 tin (trực tiếp 0, ghép 0, rút 0) · khôi phục 0 · không rõ gốc 0 · tài khoản từ 2 số 0 · số sai dạng 0
+P2 offers: 0 high / 20 medium / 0 skip — phường: 0 ward_v3 + 0 text-match + 0 bí danh xã cũ (match 0.0%)
+stg có giá+DT: 20
+ô chữ mang tên nguồn: bỏ ghi street_raw 0 · block_raw 0 · phuong_raw 0 · district_raw 0 · rút 0 chủ thể (trần 50)
+phát biểu S06: +123 (rút 0) · phân xử 20 tin, đổi 20
+SĐT S06: đổi 0 tin (trực tiếp 0, ghép 0, rút 0) · khôi phục 0 · không rõ gốc 0 · tài khoản từ 2 số 0 · số sai dạng 0
+P2 offers: 0 high / 20 medium / 0 skip — phường: 0 ward_v3 + 0 text-match + 0 bí danh xã cũ (match 0.0%)
+stg có giá+DT: 20
+ô chữ mang tên nguồn: bỏ ghi street_raw 0 · block_raw 0 · phuong_raw 0 · district_raw 0 · rút 0 chủ thể (trần 50)
+phát biểu S06: +123 (rút 3) · phân xử 20 tin, đổi 20
+SĐT S06: đổi 0 tin (trực tiếp 0, ghép 0, rút 0) · khôi phục 0 · không rõ gốc 0 · tài khoản từ 2 số 0 · số sai dạng 0
+P2 offers: 0 high / 20 medium / 0 skip — phường: 0 ward_v3 + 0 text-match + 0 bí danh xã cũ (match 0.0%)
+✔ MCS-AC-4: transform không phát biểu từ cờ, thay rác bằng mã thật (nhóm A), giữ rác chỉ có cờ (nhóm B), toà 20/20 (175.742417ms)
+stg có giá+DT: 11
+ô chữ mang tên nguồn: bỏ ghi street_raw 0 · block_raw 0 · phuong_raw 0 · district_raw 0 · rút 0 chủ thể (trần 50)
+phát biểu S06: +59 (rút 0) · phân xử 11 tin, đổi 11
+SĐT S06: đổi 0 tin (trực tiếp 0, ghép 0, rút 0) · khôi phục 0 · không rõ gốc 0 · tài khoản từ 2 số 0 · số sai dạng 0
+P2 offers: 0 high / 11 medium / 0 skip — phường: 0 ward_v3 + 0 text-match + 0 bí danh xã cũ (match 0.0%)
+stg có giá+DT: 11
+ô chữ mang tên nguồn: bỏ ghi street_raw 0 · block_raw 0 · phuong_raw 0 · district_raw 0 · rút 0 chủ thể (trần 50)
+phát biểu S06: +59 (rút 0) · phân xử 11 tin, đổi 11
+SĐT S06: đổi 0 tin (trực tiếp 0, ghép 0, rút 0) · khôi phục 0 · không rõ gốc 0 · tài khoản từ 2 số 0 · số sai dạng 0
+P2 offers: 0 high / 11 medium / 0 skip — phường: 0 ward_v3 + 0 text-match + 0 bí danh xã cũ (match 0.0%)
+stg có giá+DT: 11
+ô chữ mang tên nguồn: bỏ ghi street_raw 0 · block_raw 0 · phuong_raw 0 · district_raw 0 · rút 0 chủ thể (trần 50)
+phát biểu S06: +59 (rút 0) · phân xử 11 tin, đổi 11
+SĐT S06: đổi 0 tin (trực tiếp 0, ghép 0, rút 0) · khôi phục 0 · không rõ gốc 0 · tài khoản từ 2 số 0 · số sai dạng 0
+P2 offers: 0 high / 11 medium / 0 skip — phường: 0 ward_v3 + 0 text-match + 0 bí danh xã cũ (match 0.0%)
+✔ MCS-AC-5: lệnh dọn chạy thử chỉ đếm; --ghi rút đúng rác S06, giữ sạch và ngoài diện, phân xử lại cột (153.338458ms)
+✔ MCS-RF-1: DB chưa có field_assertions — lệnh dọn dừng có tên (1.914417ms)
+✔ MCS-AC-6: bảng nghĩa pty_project_type theo category, tỉ lệ trên số tin của giá trị (45.479375ms)
+▶ AC-10 khoảng Wilson 95%
+  ✔ không ca lạc nào trên 100 bài vẫn cho cận trên 3,70% — không phải 0 (0.304208ms)
+  ✔ bốn ca lạc trên 100 bài ĐẠT ngưỡng 10%, năm ca thì TRƯỢT (0.074542ms)
+  ✔ mẫu nhỏ bị phạt đúng: 0 ca lạc trên 20 bài cho cận trên 16,1%, quá ngưỡng (0.048041ms)
+  ✔ cỡ mẫu 0 không trả số giả (0.143542ms)
+✔ AC-10 khoảng Wilson 95% (0.974916ms)
+▶ AC-10 rút mẫu có hạt giống
+  ✔ cùng hạt giống cho cùng mẫu, khác hạt giống cho mẫu khác (1.933625ms)
+  ✔ mẫu không lặp bài, và không im lặng trả thiếu khi kho nhỏ hơn cỡ mẫu (0.4355ms)
+✔ AC-10 rút mẫu có hạt giống (2.445625ms)
+▶ AC-10 đọc bảng đã điền — chỉ dòng nhãn thật mới được tính
+  ✔ đếm đúng cỡ mẫu và số ca lạc trên bảng hợp lệ (0.176583ms)
+  ✔ bảng ngưỡng của tệp bằng chứng KHÔNG bị đếm thành bài lạc (0.110916ms)
+  ✔ dòng nhãn thiếu post_id bị bỏ qua, đúng như chú thích nói (0.050458ms)
+  ✔ cỡ mẫu phải là số nguyên dương, không nhận NaN hay 0 (0.105959ms)
+✔ AC-10 đọc bảng đã điền — chỉ dòng nhãn thật mới được tính (0.544917ms)
+▶ AC-10 mẫu rút lại được
+  ✔ kho lớn lên thì cùng hạt giống KHÔNG còn cho cùng mẫu — nên hồ sơ phải ghi danh sách mã bài (1.082625ms)
+✔ AC-10 mẫu rút lại được (1.108375ms)
+▶ AC-10 mẫu v2 — khung rút và định nghĩa khai trước (lối A, GS 17/11)
+  ✔ khung «bài trong tin»: chỉ giữ bài nằm trong một tin đang rao — đúng tập bài sẽ bị đóng dấu (0.071ms)
+  ✔ định nghĩa «trong hệ VGP»: bài MCP hay LBV trong nhóm VGP không lạc; dự án khác vẫn lạc (0.033083ms)
+✔ AC-10 mẫu v2 — khung rút và định nghĩa khai trước (lối A, GS 17/11) (0.136625ms)
+▶ AC-10 mẫu v2 — đọc tệp nhãn người duyệt lưu từ trang duyệt
+  ✔ chỉ dòng người đã bấm mới tính; «đúng nháp» lấy nháp, «sửa» lấy giá trị người chọn (0.143625ms)
+  ✔ tệp thiếu tên người duyệt hay giờ thì không nhận — nhãn người phải có người (0.057ms)
+  ✔ tệp của mẫu khác hay hạt giống khác thì không nhận (0.030125ms)
+  ✔ lựa chọn lạ thì không nhận, không đoán (0.033834ms)
+  ✔ tệp bỏ hẳn một mã bài của mẫu thì không nhận, gọi tên mã thiếu (0.043209ms)
+  ✔ tệp có mã bài ngoài mẫu thì không nhận, gọi tên mã lạ (0.0395ms)
+  ✔ tệp trùng một mã bài thì không nhận — trùng là thổi cỡ mẫu (0.037375ms)
+  ✔ ô nháp ngoài «lac» / «khong» thì không nhận — «đúng nháp» trên nháp hỏng không được đếm thành «không lạc» (0.062875ms)
+  ✔ thiếu hạt giống hay danh sách mã khoá thì không đọc — không có đường bỏ qua phép đối chiếu (0.053417ms)
+  ✔ tệp đủ, đúng danh sách, đã duyệt hết thì đọc ra n bằng cỡ mẫu khai trước (0.022333ms)
+✔ AC-10 mẫu v2 — đọc tệp nhãn người duyệt lưu từ trang duyệt (0.60325ms)
+▶ AC-10 mẫu v2 — đọc danh sách mã bài đã khoá từ hồ sơ
+  ✔ lấy khối mã ngay dưới mục «Đã rút», bỏ dòng trống (0.091959ms)
+  ✔ hồ sơ không có mục «Đã rút» hay khối mã rỗng thì báo lỗi, không trả danh sách rỗng (0.081584ms)
+  ✔ hồ sơ v2 thật khoá đúng 100 mã, không trùng (0.416084ms)
+✔ AC-10 mẫu v2 — đọc danh sách mã bài đã khoá từ hồ sơ (0.635292ms)
+▶ AC-10 --tinh-duyet ở dòng lệnh — mã thoát của từng nhánh
+  ✔ đủ 100 dòng, đã duyệt hết, 0 lạc → thoát 0, in ĐẠT và cỡ mẫu 100 (36.129042ms)
+  ✔ còn một dòng chưa bấm → thoát 1, KHÔNG in «ĐẠT» (35.079875ms)
+  ✔ hồ sơ có số mã khoá khác cỡ mẫu khai trước → thoát 1, không tính trên mẫu bị cắt (35.141416ms)
+  ✔ --seed khác hạt giống khai trong hồ sơ → thoát 1 (32.836916ms)
+  ✔ tệp bỏ hẳn một dòng → thoát 1, gọi tên mã thiếu (34.44275ms)
+  ✔ tệp trùng dòng → thoát 1 (34.220417ms)
+  ✔ thiếu --mau hay --seed → thoát 2, không tính (65.835125ms)
+  ✔ năm bài lạc trên 100 → thoát 1, CHƯA ĐẠT (33.023792ms)
+✔ AC-10 --tinh-duyet ở dòng lệnh — mã thoát của từng nhánh (306.942375ms)
+▶ AC-10 đọc phần khai trước của hồ sơ mẫu
+  ✔ hồ sơ v2 thật: hạt giống, n = 100, 100 mã (0.333916ms)
+  ✔ thiếu dòng hạt giống hay cỡ mẫu thì báo lỗi (0.0555ms)
+✔ AC-10 đọc phần khai trước của hồ sơ mẫu (0.435458ms)
+﹣ PX1-AC-10 bộ đọc tên chạy như cũ, in đúng một dòng «chưa áp 084» (10.172333ms) # không có bản chép thật của DB máy thu (CI dựng từ migration)
+﹣ PX1-AC-10 gán S06, S03 bằng code mới = giá trị nguồn ghi (6.043917ms) # không có bản chép thật của DB máy thu (CI dựng từ migration)
+﹣ PX1-AC-10 chiều đỏ: phá ánh xạ tên → khu thì lệch trên chính tập so; tập so rỗng thì ném (5.521458ms) # không có bản chép thật của DB máy thu (CI dựng từ migration)
+﹣ PX1-AC-10 reassign mới cho cùng kết quả với reassign của nhánh chính (5.048583ms) # không có bản chép thật của DB máy thu (CI dựng từ migration)
+﹣ PX1-AC-10 chiều đỏ: bỏ kiểm cột thì câu khớp tên gãy khi chưa áp 084 (5.504959ms) # không có bản chép thật của DB máy thu (CI dựng từ migration)
+✔ PX1-AC-1 NGUON.json khai đủ băm, băm thật khớp (14.871458ms)
+﹣ PX1-AC-1 chiều đỏ: một byte lệch → bộ nạp thoát 2, 0 dòng ghi (0.172ms) # DB oneinvest_suite_pipeline_a không có 34 thị trường thật (CI dựng từ migration)
+﹣ PX1-AC-2 đủ 3.321 xã dưới đúng 34 tỉnh, mã duy nhất (0.073333ms) # DB oneinvest_suite_pipeline_a không có 34 thị trường thật (CI dựng từ migration)
+﹣ PX1-AC-2 chiều đỏ: thiếu thị trường, tên thị trường lệch → dừng có tên, không ghi (0.046333ms) # DB oneinvest_suite_pipeline_a không có 34 thị trường thật (CI dựng từ migration)
+﹣ PX1-AC-3 giữ id cũ, gắn mã phường OSM, chèn xã thiếu đúng khuôn (0.068333ms) # DB oneinvest_suite_pipeline_a không có 34 thị trường thật (CI dựng từ migration)
+﹣ PX1-AC-3 chiều đỏ: hai phường OSM cùng tên một xã → dừng có tên (0.050416ms) # DB oneinvest_suite_pipeline_a không có 34 thị trường thật (CI dựng từ migration)
+﹣ PX1-AC-4 10.033 bí danh, 441 tách, đích nằm trong danh bạ (0.048542ms) # DB oneinvest_suite_pipeline_a không có 34 thị trường thật (CI dựng từ migration)
+﹣ PX1-AC-5 084 áp hai lần không đổi lược đồ (0.049167ms) # DB oneinvest_suite_pipeline_a không có 34 thị trường thật (CI dựng từ migration)
+﹣ PX1-AC-7-db bộ đọc tên thật sau bộ nạp thật: S06, S03 khai và chưa khai (0.083458ms) # DB oneinvest_suite_pipeline_a không có 34 thị trường thật (CI dựng từ migration)
+﹣ PX1-AC-6 reassign (lượt thường) không xoá xã danh bạ, vẫn xoá khu không mã (0.064208ms) # DB oneinvest_suite_pipeline_a không có 34 thị trường thật (CI dựng từ migration)
+﹣ PX1-AC-6 reassign (--xoa-khu-vuc-lac) không xoá xã danh bạ, vẫn xoá khu không mã (0.0325ms) # DB oneinvest_suite_pipeline_a không có 34 thị trường thật (CI dựng từ migration)
+﹣ PX1-AC-6 chiều đỏ: xã chèn mới mất mã thì reassign xoá nó (điều kiện admin_code là thứ giữ nó lại) (0.0295ms) # DB oneinvest_suite_pipeline_a không có 34 thị trường thật (CI dựng từ migration)
+﹣ PX1-AC-5 bộ nạp thật hai lần: lần hai doi=0, nội dung bằng hệt (0.048625ms) # DB oneinvest_suite_pipeline_a không có 34 thị trường thật (CI dựng từ migration)
+✔ NLF-1 danh sách FK đọc từ lược đồ có media_offer_fk và đủ sáu FK đời 039, không có khoá tự trỏ (11.567542ms)
+✔ NLF-2 đối chứng 039 (FK đọc từ lược đồ) xoá tin còn ảnh không vướng FK, ảnh đi theo (13.568042ms)
+✔ chiều đỏ NLF-2: danh sách cứng sáu FK đời 039 → xoá tin còn ảnh vướng media_offer_fk (10.984125ms)
+▶ ON22-AC-1 năm khối
+  ✔ ON22-AC-1 bản tin có đúng năm khối, mỗi khối measured_at trong khoảng chạy, khoá cũ còn đủ (880.989375ms)
+  ✔ ON22-AC-1 bản sao bỏ measured_at một khối → ca bắt, nêu tên khối (878.467792ms)
+✔ ON22-AC-1 năm khối (1804.663667ms)
+▶ ON22-AC-2 độ tươi một định nghĩa
+  ✔ ON22-AC-2 khối freshness bằng từng hàng check-freshness --json cùng now (944.1975ms)
+  ✔ ON22-AC-2 bản sao đổi SLO một mã → phép so bắt đúng mã (912.546583ms)
+✔ ON22-AC-2 độ tươi một định nghĩa (1857.2755ms)
+▶ ON22-AC-4 thẻ chờ duyệt
+  ✔ ON22-AC-4 reviewQueue = số thẻ pending theo item_type, chỉ ba khoá (885.799541ms)
+  ✔ ON22-AC-4 bản sao đẩy tiêu đề thẻ → bắt (882.730084ms)
+✔ ON22-AC-4 thẻ chờ duyệt (1769.028459ms)
+▶ ON22-AC-6 job launchd
+  ✔ ON22-AC-6 khối jobs khớp bản chụp launchctl 23/10: mỗi nhãn của pipeline/cron có mặt, lastExit, pid, nhãn che S0x (880.701125ms)
+  ✔ ON22-AC-6 bản liệt viết trước: đúng các nhãn cron có mặt, pid số, mã thoát, lastLogAt null khi tệp log vắng, nhãn ngoài cron bị loại (882.347291ms)
+  ✔ ON22-AC-6 bản sao mất bộ lọc nhãn cron → bắt (882.311708ms)
+  ✔ ON22-AC-6 launchctl không chạy → error, 0 hàng (882.512125ms)
+✔ ON22-AC-6 job launchd (3528.683833ms)
+▶ ON22-AC-7 khối không đo được
+  ✔ ON22-AC-7 ma trận khối không đo được → {measured_at, error}, khối khác vẫn đo, bản tin vẫn gửi (6370.040875ms)
+  ✔ ON22-AC-7 bản sao lỗi dây chuyền (độ tươi hỏng kéo khối khác) → bắt (930.51075ms)
+  ✔ ON22-AC-7 bản sao thay lỗi bằng 0 → bắt (931.361125ms)
+✔ ON22-AC-7 khối không đo được (8232.358292ms)
+▶ ON22-AC-8 bộ soát tầng A trên năm khối
+  ✔ ON22-AC-8 ma trận cấy tên vào năm khối → mỗi bản thoát ≠0, 0 POST, dòng chặn nêu blocks.<khối> viết trước (8803.600542ms)
+✔ ON22-AC-8 bộ soát tầng A trên năm khối (8803.811042ms)
+✔ ON22-AC-10 máy thu thật (0.154375ms)
+✔ PB-AC-5 quét cây thật: không câu nào ghi thẳng năm cột vào bảng tin ngoài bộ phân xử (184.528083ms)
+✔ PB-AC-5 ma trận đối chứng: sáu dạng ghi thẳng viết trước đều đỏ, nêu tệp:dòng (0.458167ms)
+✔ PB-AC-5 ENRICH_COLS: write-offers.mjs không còn xuất danh sách cột đóng băng (0.999666ms)
+✔ PB-AC-6 chỗ gọi: tập chỗ gọi đúng ma trận viết trước; người truyền actor 'hitl:', máy không (358.508916ms)
+✔ PB-AC-6 đối chứng: ma trận đổi vai route decide sang máy thì bộ kiểm vai đỏ, nêu tệp route (596.335125ms)
+✔ PB-AC-10 cloud: nguồn gốc và bảng phát biểu không vào tập đồng bộ (0.141ms)
+✔ PB-AC-8 bộ so mốc: chỉ miễn đúng mục khai trước; mỗi biến thể đổi MỘT chiều (nguồn · trường · trước · sau) đều là lệch (0.21125ms)
+✔ TT-AC-1 dưới tải sinh-xoá tệp ẩn: hai bộ quét qua lớp bọc không ném, đủ tệp thường; gọi thẳng thì gặp ENOENT (368.152667ms)
+✔ TT-AC-2 lớp bọc không nuốt lỗi thật: ENOENT tệp thường và lỗi khác ném ngay, tệp ẩn ném sau đúng trần; bản lỏng đỏ (0.59825ms)
+✔ TT-AC-3 mọi lời gọi quét cây thật trong tệp này đi qua lớp bọc; bỏ bọc một chỗ thì bộ soát nêu dòng (0.296375ms)
+✔ PTD-AC-1 nút một phường sinh phát biểu kế thừa; nút nhiều phường, chỉ tỉnh, trống và bài không dự án không sinh (3581.914375ms)
+✔ PTD-AC-1 chiều đỏ: bỏ điều kiện đúng-một-phường (100.085041ms)
+✔ PTD-AC-2 bài hai dự án khác nhau không nhận phường; hai dòng cùng dự án nhận một (69.303208ms)
+✔ PTD-AC-2 chiều đỏ: bỏ luật mâu thuẫn (87.703208ms)
+✔ PTD-AC-3 ma trận cột × phường kế thừa sau phân xử; phường nguồn không bị đổi (95.189333ms)
+✔ PTD-AC-3 qua bộ ghi tin writeOffers (bộ ghi S03 dùng): cột tỉnh nhận W1 (96.035917ms)
+✔ PTD-AC-3 chiều đỏ: 102 bỏ điều kiện «cột không phải phường» (101.704791ms)
+✔ PTD-AC-3 chiều đỏ: bộ ghi đổi khoá chủ thể — phát biểu không tới cột (114.52225ms)
+✔ PTD-AC-4 gỡ dự án, nút đổi phường: rút có lý do, cột về giá trị gốc, chạy lại không đổi (93.448ms)
+✔ PTD-AC-4 chiều đỏ: tệp lệnh bỏ bước rút (103.123542ms)
+✔ PTD-AC-4 chiều đỏ: 102 coi mọi cột phường là giữ nguyên (108.836625ms)
+posts: 1 (gạt 0 post thử {})
+parse: 0 high, 1 medium, 0 fail — coverage 0.0%
+giá phi lý (không thành offer): {"thue-tu-1-ty":0,"ban-tren-100-ty":0}
+loại tin theo nguồn: {"chu-bai":1,"tin-hieu-chu":0,"don-vi-gia":0,"the-nhom":0,"boi-canh-nhom":0,"yeu-cau":0,"bo":0}
+dedup: 1 unique offers (từ 1 tin có giá)
+tin nhiều SĐT: 0
+loại hình: 1 phát biểu, rút 0
+thẻ nhóm: 0 thẻ đã duyệt, 0 phát biểu {"the":0,"chu_bai":0,"bo":0}, hoà giải tin {"chuBaiThang":0,"chuBaiBatDong":0,"theBatDong":0,"theGiuHienTai":0,"xungLuatKhac":0}, rút 0 theo bản thẻ + 0 theo lượt + 0 dòng DV6, ghi lại 0 dòng DV6 theo ý định DV6 (0 bài DV6 không còn muốn), ô bỏ {"duAn":0,"areaId":0,"phanKhu":0}
+tầng: 0 phát biểu, rút 0
+gán số qua người đăng: đổi 0 · gán 0 (0) · rút 0 · bỏ dấu 0
+đối soát: {"kept":0,"links":0,"moved":0,"stale":0,"merged":0,"source":"S03","reapplied":0,"candidates":0,"links_journaled":0}
+offers ghi: 1 (SĐT: 1 người bán)
+posts: 1 (gạt 0 post thử {})
+parse: 0 high, 1 medium, 0 fail — coverage 0.0%
+giá phi lý (không thành offer): {"thue-tu-1-ty":0,"ban-tren-100-ty":0}
+loại tin theo nguồn: {"chu-bai":1,"tin-hieu-chu":0,"don-vi-gia":0,"the-nhom":0,"boi-canh-nhom":0,"yeu-cau":0,"bo":0}
+dedup: 1 unique offers (từ 1 tin có giá)
+tin nhiều SĐT: 0
+loại hình: 1 phát biểu, rút 0
+thẻ nhóm: 0 thẻ đã duyệt, 0 phát biểu {"the":0,"chu_bai":0,"bo":0}, hoà giải tin {"chuBaiThang":0,"chuBaiBatDong":0,"theBatDong":0,"theGiuHienTai":0,"xungLuatKhac":0}, rút 0 theo bản thẻ + 0 theo lượt + 0 dòng DV6, ghi lại 0 dòng DV6 theo ý định DV6 (0 bài DV6 không còn muốn), ô bỏ {"duAn":0,"areaId":0,"phanKhu":0}
+tầng: 0 phát biểu, rút 0
+gán số qua người đăng: đổi 0 · gán 0 (0) · rút 0 · bỏ dấu 0
+đối soát: {"kept":0,"links":0,"moved":0,"stale":0,"merged":0,"source":"S03","reapplied":0,"candidates":0,"links_journaled":0}
+offers ghi: 1 (SĐT: 1 người bán)
+✔ PTD-AC-5 chuỗi S03 → phân xử → reassign-areas → phân xử giữ phường kế thừa và NULL của khu lạc (173.621292ms)
+posts: 1 (gạt 0 post thử {})
+parse: 0 high, 1 medium, 0 fail — coverage 0.0%
+giá phi lý (không thành offer): {"thue-tu-1-ty":0,"ban-tren-100-ty":0}
+loại tin theo nguồn: {"chu-bai":1,"tin-hieu-chu":0,"don-vi-gia":0,"the-nhom":0,"boi-canh-nhom":0,"yeu-cau":0,"bo":0}
+dedup: 1 unique offers (từ 1 tin có giá)
+tin nhiều SĐT: 0
+loại hình: 1 phát biểu, rút 0
+thẻ nhóm: 0 thẻ đã duyệt, 0 phát biểu {"the":0,"chu_bai":0,"bo":0}, hoà giải tin {"chuBaiThang":0,"chuBaiBatDong":0,"theBatDong":0,"theGiuHienTai":0,"xungLuatKhac":0}, rút 0 theo bản thẻ + 0 theo lượt + 0 dòng DV6, ghi lại 0 dòng DV6 theo ý định DV6 (0 bài DV6 không còn muốn), ô bỏ {"duAn":0,"areaId":0,"phanKhu":0}
+tầng: 0 phát biểu, rút 0
+gán số qua người đăng: đổi 0 · gán 0 (0) · rút 0 · bỏ dấu 0
+đối soát: {"kept":0,"links":0,"moved":0,"stale":0,"merged":0,"source":"S03","reapplied":0,"candidates":0,"links_journaled":0}
+offers ghi: 1 (SĐT: 1 người bán)
+posts: 1 (gạt 0 post thử {})
+parse: 0 high, 1 medium, 0 fail — coverage 0.0%
+giá phi lý (không thành offer): {"thue-tu-1-ty":0,"ban-tren-100-ty":0}
+loại tin theo nguồn: {"chu-bai":1,"tin-hieu-chu":0,"don-vi-gia":0,"the-nhom":0,"boi-canh-nhom":0,"yeu-cau":0,"bo":0}
+dedup: 1 unique offers (từ 1 tin có giá)
+tin nhiều SĐT: 0
+loại hình: 1 phát biểu, rút 0
+thẻ nhóm: 0 thẻ đã duyệt, 0 phát biểu {"the":0,"chu_bai":0,"bo":0}, hoà giải tin {"chuBaiThang":0,"chuBaiBatDong":0,"theBatDong":0,"theGiuHienTai":0,"xungLuatKhac":0}, rút 0 theo bản thẻ + 0 theo lượt + 0 dòng DV6, ghi lại 0 dòng DV6 theo ý định DV6 (0 bài DV6 không còn muốn), ô bỏ {"duAn":0,"areaId":0,"phanKhu":0}
+tầng: 0 phát biểu, rút 0
+gán số qua người đăng: đổi 0 · gán 0 (0) · rút 0 · bỏ dấu 0
+đối soát: {"kept":0,"links":0,"moved":0,"stale":0,"merged":0,"source":"S03","reapplied":0,"candidates":0,"links_journaled":0}
+offers ghi: 1 (SĐT: 1 người bán)
+✔ PTD-AC-5 chiều đỏ: bước ghi tin bỏ lời gọi phân xử (152.835625ms)
+✔ PTD-AC-5 phường kế thừa bị reassign-areas dọn: phân xử không vỡ, tin giữ NULL (107.576542ms)
+✔ PTD-AC-5 chiều đỏ: 102 bỏ điều kiện phường còn trong areas (126.961333ms)
+✔ PTD-AC-6 đếm độc lập: tin có phường sau = trước + K, tin vốn có phường không đổi (102.055792ms)
+✔ PTD-AC-7 áp lại 099 rồi 102 không đổi thân hai hàm; thân hàm khác bản dựng tới 098 (229.181917ms)
+✔ PTD-AC-8 chạy thử không đổi gì; thiếu 096/099 thoát 2; lỗi giữa chừng không để lại dòng (353.529083ms)
+✔ PTD-AC-8 chiều đỏ: bỏ ROLLBACK (230.66025ms)
+✔ PCT-AC-2 chuỗi không tự chạy lượt ghi đầu; đã áp thì bài mới nhận phường (364.178042ms)
+✔ PCT-AC-2 chiều đỏ: bỏ chốt lượt đầu (177.514916ms)
+✔ AC-10 chỉ import tệp: 0 lời gọi tới máy chủ thu, thoát 0 (52.536834ms)
+✔ AC-10 chiều đỏ: bản sao gọi main() không chốt → đỏ ghim «AC-10 import đã gửi bản tin» (874.033959ms)
+✔ AC-10 đối chứng: chạy tệp làm lệnh chính → đúng 1 lời gọi (876.250042ms)
+✔ AC-10 chạy khô --kho → 0 lời gọi (873.436375ms)
+✔ AC-10 chạy qua symlink như launchd (~/dev/one-invest) → vẫn là lệnh chính, đúng 1 lời gọi (869.117542ms)
+✔ E8 tệp của hàng hôm nay: 0 câu đọc thẳng stg_zalo_posts (2.184ms)
+✔ chiều đỏ E8: cấy một câu FROM / JOIN stg_zalo_posts vào bản sao thì bắt đúng dòng (0.22025ms)
+✔ chú thích nhắc tên bảng không tính (0.049541ms)
+✔ RB-AC-8 cây thật: refreshBaitGap chỉ gọi trong buocDem hay sau BEGIN, buocDem ngoài test không truyền savepoint (55.744542ms)
+✔ RB-AC-8 đối chứng dương: tệp gọi thẳng refreshBaitGap ngoài giao dịch bị gọi tên, tệp gọi sau BEGIN thì không (1.6045ms)
+✔ đủ phần: bí danh + gộp vào căn S16 bằng tổng (0.425875ms)
+✔ đỏ khi bỏ phần gộp (thước trước DA37) (0.054041ms)
+✔ biDanh: phần khác 0 được cộng vào tổng (0.04025ms)
+✔ biDanh: tổng thiếu một thì đỏ (0.041459ms)
+✔ biDanh: tổng thừa một thì đỏ (0.038125ms)
+✔ gop: phần khác 0 được cộng vào tổng (0.031458ms)
+✔ gop: tổng thiếu một thì đỏ (0.0335ms)
+✔ gop: tổng thừa một thì đỏ (0.022833ms)
+✔ lech: phần khác 0 được cộng vào tổng (0.033292ms)
+✔ lech: tổng thiếu một thì đỏ (0.064333ms)
+✔ lech: tổng thừa một thì đỏ (0.033625ms)
+✔ moHo: phần khác 0 được cộng vào tổng (0.031375ms)
+✔ moHo: tổng thiếu một thì đỏ (0.02425ms)
+✔ moHo: tổng thừa một thì đỏ (0.029292ms)
+✔ toaThe: phần khác 0 được cộng vào tổng (0.017709ms)
+✔ toaThe: tổng thiếu một thì đỏ (0.018167ms)
+✔ toaThe: tổng thừa một thì đỏ (0.058125ms)
+▶ NT2-AC-6 một bộ soát
+  ✔ NT2-AC-6 bảng ca ON7 qua scanSourceNames và guardValues → cùng kết quả từng ca (1.294042ms)
+✔ NT2-AC-6 một bộ soát (1.643667ms)
+▶ che-ten AC-2: bộ soát bảng người bán soát từng giá trị đã giải JSON
+  ✔ cụm khai cờ trong cột ngoài nhóm người bán bị chặn (dài 18) (1.659917ms)
+  ✔ cụm khai cờ trong cột ngoài nhóm người bán bị chặn (dài 18) (0.147834ms)
+  ✔ cụm khai cờ trong cột ngoài nhóm người bán bị chặn (dài 20) (1.057417ms)
+  ✔ đối chứng: tên mang thương hiệu đi qua (0.123458ms)
+✔ che-ten AC-2: bộ soát bảng người bán soát từng giá trị đã giải JSON (3.102333ms)
+▶ che-ten AC-4: guardValues với dòng khai khớp nguyên cụm (tải giả)
+  ✔ tên dự án mang thương hiệu: 0 chỗ trúng khi khai cờ, ≥ 1 khi không khai (0.0925ms)
+  ✔ cụm tên hay tên miền bị bắt ở cả hai trạng thái cờ (dài 17) (0.0665ms)
+  ✔ cụm tên hay tên miền bị bắt ở cả hai trạng thái cờ (dài 25) (0.066625ms)
+  ✔ cụm tên hay tên miền bị bắt ở cả hai trạng thái cờ (dài 12) (0.056542ms)
+✔ che-ten AC-4: guardValues với dòng khai khớp nguyên cụm (tải giả) (0.451542ms)
+▶ NT2-AC-1…AC-5 push-ops-facts qua bộ soát
+  ✔ NT2-AC-1 bản tin lành → thoát 0, máy chủ thu nhận đúng một POST (880.184167ms)
+  ✔ NT2-AC-2 bản sao bỏ bộ che → thoát ≠0, 0 POST, dòng FACTS CHẶN [tầng A] jobs[0].lastLine S02, không in tên (878.069333ms)
+  ✔ NT2-AC-3 ma trận viết trước: mỗi khoá cấp một + một chuỗi lồng sâu + trường anh em cạnh đường miễn → mỗi bản thoát ≠0, 0 POST, dòng chặn nêu đúng đường JSON viết trước (10498.850625ms)
+  ✔ NT2-AC-3 tên trong zaloGroups[0].name (tầng C) → không chặn (876.312917ms)
+  ✔ NT2-AC-4 cấu hình tài khoản có tên → bản tin gửi zaloAccounts[i].name null (876.013292ms)
+  ✔ NT2-AC-4 bản sao gửi tên tài khoản → chặn, nêu zaloAccounts[0].name (876.032375ms)
+  ✔ NT2-AC-5 không đọc được source_registry → chặn, 0 POST, dòng nói không có danh sách tên (873.052917ms)
+✔ NT2-AC-1…AC-5 push-ops-facts qua bộ soát (15758.906625ms)
+▶ DD-AC-6 bản tin không mang mã nhóm (dinh-danh-tai-khoan-thu-theo-vai, Hỏi-1 = A)
+  ✔ DD-AC-6 bản tin gửi soNhomBat, enabledGroups rỗng (872.994666ms)
+  ✔ DD-AC-6 bản sao gửi cùng một số nhóm cho mọi tài khoản → bảng tài khoản đỏ (877.808708ms)
+  ✔ DD-AC-6 bản sao gửi mã nhóm → chặn, nêu zaloAccounts[0].enabledGroups (882.919667ms)
+✔ DD-AC-6 bản tin không mang mã nhóm (dinh-danh-tai-khoan-thu-theo-vai, Hỏi-1 = A) (2633.914333ms)
+▶ NT2-AC-10 bản tin thật, chế độ khô
+  ✔ NT2-AC-10 bản tin dựng từ log và cấu hình thật (chế độ khô, không gửi) → 0 chỗ trúng (885.449541ms)
+  ✔ NT2-AC-10 chiều đỏ: chế độ khô với bản sao cấy tên → thoát ≠0, chỉ in đường JSON + mã S0x (883.217292ms)
+✔ NT2-AC-10 bản tin thật, chế độ khô (1768.817167ms)
+▶ che-ten AC-4 chỗ đọc qua hàm nạp chung
+  ✔ AC-4 sáu chỗ đọc không còn tự đọc real_name/source_ids từ source_registry; mỗi chỗ gọi hàm nạp chung (2.258583ms)
+  ✔ AC-4 chiều đỏ: chèn câu tự đọc sổ vào bản sao → đỏ ghim «AC-4 chỗ đọc tự dựng danh sách che» (43) (0.374792ms)
+  ✔ AC-4 chiều đỏ: chèn câu tự đọc sổ vào bản sao → đỏ ghim «AC-4 chỗ đọc tự dựng danh sách che» (44) (0.227084ms)
+  ✔ AC-4 chiều đỏ: chèn câu tự đọc sổ vào bản sao → đỏ ghim «AC-4 chỗ đọc tự dựng danh sách che» (29) (0.178792ms)
+  ✔ AC-4 chiều đỏ: chèn câu tự đọc sổ vào bản sao → đỏ ghim «AC-4 chỗ đọc tự dựng danh sách che» (40) (0.277958ms)
+✔ che-ten AC-4 chỗ đọc qua hàm nạp chung (3.403625ms)
+▶ che-ten AC-4: bộ soát bảng không hẹp hơn bản trên main (S4 vòng 3, lời Mạnh 19/11 sửa ngay)
+  ✔ mọi mẫu cấy bản trên main chặn thì bản mới cũng chặn (4.845541ms)
+  ✔ khoá đỉnh: cụm hai từ, tên miền, cụm xuống dòng đều bị chặn (0.338208ms)
+  ✔ khoá lồng jsonb: cụm hai từ, tên miền, cụm xuống dòng đều bị chặn (0.273416ms)
+  ✔ khoá trong mảng: cụm hai từ, tên miền, cụm xuống dòng đều bị chặn (0.222166ms)
+  ✔ đối chứng: khoá mang thương hiệu (dòng khai cờ) và khoá thường đi qua (0.410583ms)
+✔ che-ten AC-4: bộ soát bảng không hẹp hơn bản trên main (S4 vòng 3, lời Mạnh 19/11 sửa ngay) (6.153792ms)
+✔ PL35-AC-3 nhóm op1 (0.469041ms)
+✔ PL35-AC-3 nhóm op1-vhop (0.126917ms)
+✔ PL35-AC-3 nhóm gp (0.077083ms)
+✔ PL35-AC-3 nhóm gp-vhgp (0.033583ms)
+✔ PL35-AC-3 nhóm khop-hai (0.039333ms)
+✔ PL35-AC-3 nhóm khong-khop (0.036416ms)
+✔ PL35-AC-3 nhóm ocp2 (0.030208ms)
+✔ PL35-AC-4 ô toa-khop (0.394ms)
+✔ PL35-AC-4 ô truc-khop (0.220125ms)
+✔ PL35-AC-4 ô toa-ngoai-danh-ba (0.152ms)
+✔ PL35-AC-4 ô khong-neu-toa (0.053875ms)
+✔ PL35-AC-4 ô toa-mo-ho (0.035166ms)
+✔ PL35-AC-4 ranh từ: S10.01 không khớp tên S10.010, QA1 không khớp QA12; tên nhiều từ khớp (0.066417ms)
+✔ PL35-AC-4 đổi danh bạ đầu vào thì ô đổi theo (bộ phân tầng chỉ dựa danh bạ truyền vào) (0.061042ms)
+✔ PL35 tầng: trục GP gộp vào toà GP; năm tầng, bốn tầng bắt buộc (0.287625ms)
+✔ PL35 Wilson: đúng hết 73 ca → cận dưới ≥ 0,95; 72 ca → dưới 0,95 (0.05375ms)
+✔ PL35 chọn mẫu thuần: mỗi tầng min(cỡ, số bài khác nhau), tầng thiếu mang nhãn bắt buộc / cho PL36 (2.50375ms)
+✔ PL35 lọc loại nhà bằng chữ: nêu loại khác và không dấu hiệu căn hộ → loại; còn lại giữ (0.886333ms)
+✔ PL35-AC-4 mã căn của toà có trong danh bạ mà trục chưa có → toa; toà không có tên không khớp con số (0.069083ms)
+✔ PL35 tác tử Gateway: trả lời không phải JSON → ném lỗi; DeepSeek ghim nhà cung cấp; model ngoài danh sách → lỗi (8.106416ms)
+✔ PL35 MODEL_DUYET, DUONG_ANTHROPIC và luật DeepSeek của pipeline khớp agent/src/enrich/doc-gop-s03/cau-hinh.ts (0.52875ms)
+✔ AC-1 ma trận dấu (1.20125ms)
+✔ AC-1 chiều đỏ: luật nhóm lỏng bị ma trận bắt (0.12475ms)
+posts: 1 (gạt 1 post thử {"snapshot-source":1})
+parse: 0 high, 1 medium, 0 fail — coverage 0.0%
+giá phi lý (không thành offer): {"thue-tu-1-ty":0,"ban-tren-100-ty":0}
+loại tin theo nguồn: {"chu-bai":1,"tin-hieu-chu":0,"don-vi-gia":0,"the-nhom":0,"boi-canh-nhom":0,"yeu-cau":0,"bo":0}
+dedup: 1 unique offers (từ 1 tin có giá)
+tin nhiều SĐT: 0
+loại hình: 1 phát biểu, rút 0
+thẻ nhóm: 0 thẻ đã duyệt, 0 phát biểu {"the":0,"chu_bai":0,"bo":0}, hoà giải tin {"chuBaiThang":0,"chuBaiBatDong":0,"theBatDong":0,"theGiuHienTai":0,"xungLuatKhac":0}, rút 0 theo bản thẻ + 0 theo lượt + 0 dòng DV6, ghi lại 0 dòng DV6 theo ý định DV6 (0 bài DV6 không còn muốn), ô bỏ {"duAn":0,"areaId":0,"phanKhu":0}
+tầng: 0 phát biểu, rút 0
+gán số qua người đăng: đổi 0 · gán 0 (0) · rút 0 · bỏ dấu 0
+đối soát: {"kept":0,"links":0,"moved":0,"stale":0,"merged":0,"source":"S03","reapplied":0,"candidates":0,"links_journaled":0}
+offers ghi: 1 (SĐT: 1 người bán)
+posts: 1 (gạt 2 post thử {"snapshot-source":1,"group":1})
+parse: 0 high, 1 medium, 0 fail — coverage 0.0%
+giá phi lý (không thành offer): {"thue-tu-1-ty":0,"ban-tren-100-ty":0}
+loại tin theo nguồn: {"chu-bai":1,"tin-hieu-chu":0,"don-vi-gia":0,"the-nhom":0,"boi-canh-nhom":0,"yeu-cau":0,"bo":0}
+dedup: 1 unique offers (từ 1 tin có giá)
+tin nhiều SĐT: 0
+loại hình: 1 phát biểu, rút 0
+thẻ nhóm: 0 thẻ đã duyệt, 0 phát biểu {"the":0,"chu_bai":0,"bo":0}, hoà giải tin {"chuBaiThang":0,"chuBaiBatDong":0,"theBatDong":0,"theGiuHienTai":0,"xungLuatKhac":0}, rút 0 theo bản thẻ + 0 theo lượt + 0 dòng DV6, ghi lại 0 dòng DV6 theo ý định DV6 (0 bài DV6 không còn muốn), ô bỏ {"duAn":0,"areaId":0,"phanKhu":0}
+tầng: 0 phát biểu, rút 0
+gán số qua người đăng: đổi 0 · gán 0 (0) · rút 0 · bỏ dấu 0
+đối soát: {"kept":0,"links":0,"moved":0,"stale":0,"merged":0,"source":"S03","reapplied":0,"candidates":0,"links_journaled":0}
+offers ghi: 1 (SĐT: 1 người bán)
+posts: 2 (gạt 1 post thử {"group":1})
+parse: 0 high, 2 medium, 0 fail — coverage 0.0%
+giá phi lý (không thành offer): {"thue-tu-1-ty":0,"ban-tren-100-ty":0}
+loại tin theo nguồn: {"chu-bai":2,"tin-hieu-chu":0,"don-vi-gia":0,"the-nhom":0,"boi-canh-nhom":0,"yeu-cau":0,"bo":0}
+dedup: 2 unique offers (từ 2 tin có giá)
+tin nhiều SĐT: 0
+loại hình: 2 phát biểu, rút 0
+thẻ nhóm: 0 thẻ đã duyệt, 0 phát biểu {"the":0,"chu_bai":0,"bo":0}, hoà giải tin {"chuBaiThang":0,"chuBaiBatDong":0,"theBatDong":0,"theGiuHienTai":0,"xungLuatKhac":0}, rút 0 theo bản thẻ + 0 theo lượt + 0 dòng DV6, ghi lại 0 dòng DV6 theo ý định DV6 (0 bài DV6 không còn muốn), ô bỏ {"duAn":0,"areaId":0,"phanKhu":0}
+tầng: 0 phát biểu, rút 0
+gán số qua người đăng: đổi 0 · gán 0 (0) · rút 0 · bỏ dấu 0
+đối soát: {"kept":0,"links":0,"moved":0,"stale":0,"merged":0,"source":"S03","reapplied":0,"candidates":0,"links_journaled":0}
+offers ghi: 2 (SĐT: 2 người bán)
+✔ AC-2 transform S03 từ chối post thử (131.731292ms)
+✔ AC-3 quét quan hệ: chỉ loadStgPosts đưa stg vào canonical (36.800875ms)
+✔ AC-4 không câu DELETE FROM sale_offers mới (128.713292ms)
+✔ tài khoản đã có số ở tin KHÁC tin mới nhất không vào việc (76.480708ms)
+✔ đối chứng: tài khoản chưa có số vào việc đúng một lần dù có nhiều tin (75.946416ms)
+✔ tin ẩn số không vào việc (66.958541ms)
+✔ mặc định không lấy mẫu; --mau N tường minh mới thêm tin thứ hai (116.676042ms)
+✔ pha 2 đã bỏ: thoát khác 0, không chạy (33.231125ms)
+✔ --threads lớn hơn 2: thoát 1; 2 luồng vẫn qua được bước kiểm (68.318ms)
+✔ thiếu S06_WEB_BASE: thoát khác 0, không có miền mặc định (33.244833ms)
+✔ mã thu và tài liệu mới không chứa URL ngoài máy (miền nguồn chỉ ở env) (0.6565ms)
+✔ TRG-AC-1 docPhuongHopLe chỉ trả phường hợp lệ (60.562791ms)
+✔ TRG-AC-1 gỡ dấu lac thì khu vực trở lại (30.906666ms)
+posts: 3 (gạt 0 post thử {})
+parse: 2 high, 1 medium, 0 fail — coverage 66.7%
+giá phi lý (không thành offer): {"thue-tu-1-ty":0,"ban-tren-100-ty":0}
+loại tin theo nguồn: {"chu-bai":3,"tin-hieu-chu":0,"don-vi-gia":0,"the-nhom":0,"boi-canh-nhom":0,"yeu-cau":0,"bo":0}
+dedup: 3 unique offers (từ 3 tin có giá)
+tin nhiều SĐT: 0
+loại hình: 3 phát biểu, rút 0
+thẻ nhóm: 0 thẻ đã duyệt, 0 phát biểu {"the":0,"chu_bai":0,"bo":0}, hoà giải tin {"chuBaiThang":0,"chuBaiBatDong":0,"theBatDong":0,"theGiuHienTai":0,"xungLuatKhac":0}, rút 0 theo bản thẻ + 0 theo lượt + 0 dòng DV6, ghi lại 0 dòng DV6 theo ý định DV6 (0 bài DV6 không còn muốn), ô bỏ {"duAn":0,"areaId":0,"phanKhu":0}
+tầng: 0 phát biểu, rút 0
+gán số qua người đăng: đổi 0 · gán 0 (0) · rút 0 · bỏ dấu 0
+đối soát: {"kept":0,"links":0,"moved":0,"stale":0,"merged":0,"source":"S03","reapplied":0,"candidates":0,"links_journaled":0}
+offers ghi: 3 (SĐT: 3 người bán)
+✔ TRG-AC-2 transform-zalo không gán khu vực lạc (70.282875ms)
+FB posts: 4 (gạt 0 post thử {})
+parse: 2 high, 2 medium, 0 fail — coverage 50.0%
+dedup: 4 unique offers
+tin nhiều SĐT: 0
+đối soát: {"kept":0,"links":0,"moved":0,"stale":0,"merged":0,"source":"S05","reapplied":0,"candidates":0,"links_journaled":0}
+S05 offers ghi: 4 (SĐT: 4 người bán)
+✔ TRG-AC-3 transform-fb không gán khu vực lạc (Hà Nội, TP.HCM) (43.109917ms)
+stg có giá+DT: 2
+ô chữ mang tên nguồn: bỏ ghi street_raw 0 · block_raw 0 · phuong_raw 0 · district_raw 0 · rút 0 chủ thể (trần 50)
+phát biểu S06: +2 (rút 0) · phân xử 2 tin, đổi 2
+SĐT S06: đổi 0 tin (trực tiếp 0, ghép 0, rút 0) · khôi phục 0 · không rõ gốc 0 · tài khoản từ 2 số 0 · số sai dạng 0
+P2 offers: 1 high / 1 medium / 0 skip — phường: 1 ward_v3 + 0 text-match + 0 bí danh xã cũ (match 50.0%)
+✔ TRG-AC-4 transform-chotot không gán khu vực lạc (45.461542ms)
+FB posts: 1 (gạt 0 post thử {})
+parse: 0 high, 1 medium, 0 fail — coverage 0.0%
+dedup: 1 unique offers
+tin nhiều SĐT: 0
+đối soát: {"kept":0,"links":0,"moved":0,"stale":0,"merged":0,"source":"S05","reapplied":0,"candidates":0,"links_journaled":0}
+S05 offers ghi: 1 (SĐT: 1 người bán)
+✔ TRG-AC-5 transform-fb không gán khu vực [nguồn] (37.194333ms)
+✔ TRG-AC-6 ganPhuongTheoToaDo bỏ qua khu vực lạc (29.416667ms)
+✔ TRG-AC-7 tập tệp khớp mẫu bằng đúng ma trận viết trước (14.920334ms)
+✔ TRG-AC-7 tệp dùng bộ chung không còn câu chọn riêng (9.134667ms)
+✔ TRG-AC-7 bản sao thêm câu chọn riêng → báo tên tệp (11.592416ms)
+✔ TRG-AC-7 tệp mới khớp mẫu ngoài ma trận → báo tệp (10.649666ms)
+▶ SLT-AC-10 lát nhãn phân tầng (thuần)
+  ✔ SLT-AC-10 60 bài 20/20/20, n=12 → 4/4/4 ở năm seed; cùng seed cùng kết quả, seed khác khác (7.347209ms)
+  ✔ chiều đỏ SLT-AC-10: bản đột biến bỏ phân tầng (một kho chung) → đỏ ghim «SLT-AC-10 mẫu không phân tầng» (2.504333ms)
+✔ SLT-AC-10 lát nhãn phân tầng (thuần) (10.227541ms)
+▶ SLT-AC-9 sàn giá bán (thuần)
+  ✔ SLT-AC-9 bài suy ra bán mà giá < 300 triệu giữ rỗng (nhóm bán, tín hiệu chữ) (12.427542ms)
+  ✔ chiều đỏ SLT-AC-9: bản đột biến bỏ sàn giá → ô «5.000.000» đỏ ghim «SLT-AC-9 bán dưới 300 triệu» (3.7685ms)
+✔ SLT-AC-9 sàn giá bán (thuần) (16.300209ms)
+SLT-DC-KHOA hết trần thật: 33033 rảnh sau 0.0 s
+▶ SLT-DC-KHOA ca hết trần nhả khoá 33033
+  ✔ SLT-DC-KHOA hết trần thật (node:test tự huỷ, v24.21.0) → 33033 rảnh trong 8 s (2344.186ms)
+  ✔ chiều đỏ SLT-DC-KHOA hết trần thật: không truyền signal → 33033 vẫn bị giữ (10534.312917ms)
+SLT-DC-KHOA lưới máy chủ (bản không khai trần): trần 900 s → transaction_timeout 0
+  ✔ chiều đỏ SLT-DC-KHOA lưới máy chủ: giao dịch mở không khai trần → kiemLuoi đỏ ghim «SLT-DC-KHOA lưới máy chủ lệch» (1550.257667ms)
+  ✔ SLT-DC-KHOA huỷ signal của ca → khoá 33033 rảnh trong 5 s, câu đang chạy bị cắt (43.331917ms)
+  ✔ chiều đỏ SLT-DC-KHOA: không truyền signal (như trước hồ sơ) → đỏ ghim «SLT-DC-KHOA 33033 vẫn bị giữ» (7030.668292ms)
+✔ SLT-DC-KHOA ca hết trần nhả khoá 33033 (21503.183916ms)
+✔ SLT-DC đối chiếu trên DB máy thu (ROLLBACK) (0.28875ms)
+▶ SLT-AC-1 tín hiệu bán → sale
+  ✔ SLT-AC-1 ma trận 9 ô viết tay + 2 ô đối chứng giá thuê (15.954291ms)
+  ✔ SLT-AC-1 «3400 tỷ thu về» là 3,4 tỷ (nhóm nghìn) (0.357042ms)
+  ✔ chiều đỏ SLT-AC-1 thiếu tín hiệu bán: bỏ «thu về» khỏi danh sách → ô «Giá: 4,000 thu về» đỏ (4.560083ms)
+✔ SLT-AC-1 tín hiệu bán → sale (21.270958ms)
+▶ SLT-AC-2 giá triệu / tháng / pass → rent_lt
+  ✔ SLT-AC-2 ma trận 7 ô viết tay + ô đối chứng giá theo m² (4.910292ms)
+  ✔ chiều đỏ SLT-AC-2 giá theo m2 thành thuê: bản đột biến coi giá theo m² là thuê → ô 45tr/m2 đỏ (3.175584ms)
+  ✔ SLT-AC-2 nhóm thuê mà giá từ 1 tỷ hay theo m² → không thành thuê (giữ rỗng) (0.09825ms)
+  ✔ chiều đỏ SLT-AC-2 nhóm thuê giá tỷ: bản đột biến bỏ chặn giá ở bối cảnh nhóm → ô «3.800.000.000» đỏ (2.862709ms)
+  ✔ SLT-AC-2 «tháng» không sau giá (bàn giao, nhận nhà) trong bài bán → không thành thuê (0.098834ms)
+  ✔ chiều đỏ SLT-AC-2 tháng thành thuê: bản đột biến coi «tháng» trần là thuê, bỏ chặn giá m²/tỷ → hai ô đỏ (2.957041ms)
+✔ SLT-AC-2 giá triệu / tháng / pass → rent_lt (14.286875ms)
+▶ SLT-AC-3 mục đích nhóm
+  ✔ SLT-AC-3 ma trận 5 nhóm × bài giá không đơn vị (0.4205ms)
+  ✔ chiều đỏ SLT-AC-3 ngưỡng tỉ lệ: hạ ngưỡng 20 bài xuống 1 → nhóm 19 bài đỏ (2.866125ms)
+✔ SLT-AC-3 mục đích nhóm (3.335334ms)
+▶ SLT-AC-4 Yêu cầu không thành tin rao
+  ✔ SLT-AC-4 ma trận 8 ô viết tay + đối chứng «có khách cọc» (0.186459ms)
+  ✔ chiều đỏ SLT-AC-4 Yêu cầu lọt thành tin rao: xét tín hiệu bán trước Yêu cầu → ô «Kháh xem liền» đỏ (2.919ms)
+✔ SLT-AC-4 Yêu cầu không thành tin rao (3.145ms)
+▶ SLT-AC-5 không thêm tin rác
+  ✔ SLT-AC-5 ma trận 5 ô viết tay (0.391625ms)
+  ✔ chiều đỏ SLT-AC-5 CN thành bán: thêm CN trần vào tín hiệu bán và xét trước giá → ô «CN 2PN 14tr» đỏ (2.920709ms)
+✔ SLT-AC-5 không thêm tin rác (3.353958ms)
+▶ SLT-AC-6 bài đã có loại giữ nguyên
+  ✔ SLT-AC-6 hai bài parsePost đã gán loại → nguồn chu-bai, loại không đổi (0.084542ms)
+  ✔ chiều đỏ SLT-AC-6 đổi loại đã có: suy loại chạy cả khi kind có sẵn → ô «Cho thuê … 3 tỷ» đỏ (2.6545ms)
+✔ SLT-AC-6 bài đã có loại giữ nguyên (2.775375ms)
+▶ SLT-AC-7 repostKey tách căn khác
+  ✔ SLT-AC-7 cùng phường khác PN / DT / giá → khác khoá; cùng mọi trường → cùng khoá (0.098334ms)
+✔ SLT-AC-7 repostKey tách căn khác (0.118042ms)
+▶ SLT-AC-8 đếm theo nguồn
+  ✔ SLT-AC-8 bộ bài viết tay → đúng số từng nguồn, tổng = số bài (0.808166ms)
+✔ SLT-AC-8 đếm theo nguồn (0.835708ms)
+▶ CV-AC-1/2 «<số> năm/nữ» không phải phòng ngủ, viết tắt thật giữ nguyên
+  ✔ CV-AC-1 năm ô «<số> năm/nữ/nét» có giá → không dấu hiệu BĐS, không thành tin; bản cũ khớp (đối chứng dương) (3.677333ms)
+  ✔ chiều đỏ CV-AC-1: bản chép đặt lại ranh giới từ cũ → ô «Cho vay … 1 năm» đỏ (2.951ms)
+  ✔ CV-AC-2 tám ô viết tắt: dấu hiệu BĐS và loại bằng bản cũ (3.458ms)
+  ✔ chiều đỏ CV-AC-2: bản đột biến lookahead dương (chỉ chữ số, + hay khoảng trắng sau) → ô «căn 2n, giá 14tr» đỏ (6.337333ms)
+✔ CV-AC-1/2 «<số> năm/nữ» không phải phòng ngủ, viết tắt thật giữ nguyên (16.510458ms)
+▶ TN ô bán/thuê của thẻ nhóm chen trước nhánh boi-canh-nhom
+  ✔ TN-1 bảy ô «nhóm × thẻ»: thẻ thắng bối cảnh, chữ bài thắng thẻ, trượt cửa thì rơi xuống (0.256667ms)
+  ✔ TN-2 «the-nhom» là một nguồn khai báo, nằm giữa don-vi-gia và boi-canh-nhom (0.035042ms)
+  ✔ TN-3 bài rơi-xuống giữ nguyên pr; bài thẻ thắng được điền giá y như nhánh cũ vẫn điền (0.071666ms)
+  ✔ chiều đỏ TN-1c: bản đột biến dời khối thẻ LÊN TRƯỚC don-vi-gia và tin-hieu-chu → hai ô chữ bài đỏ (3.006792ms)
+  ✔ chiều đỏ TN-1: bản đột biến cho nhánh thẻ BỎ thay vì rơi xuống → hai ô trượt cửa đỏ (2.849417ms)
+  ✔ chiều đỏ TN-1b: bản đột biến cho thẻ THAY nhánh cũ (bỏ nhánh boi-canh-nhom) → ô không-thẻ mất kind (3.58825ms)
+✔ TN ô bán/thuê của thẻ nhóm chen trước nhánh boi-canh-nhom (9.903ms)
+✔ TDT-AC-1 ba trường ở Property ghi được với đủ chín cặp lớp/phương pháp (3687.387375ms)
+✔ TDT-AC-2 ma trận ca sai bị từ chối có tên trường, số dòng không tăng (25.053541ms)
+✔ TDT-AC-1, AC-2 trên DB đủ migration (sau 113): hành vi DA2 giữ nguyên — 36 ca đúng ghi được, 17 ca sai bị từ chối đúng tên (26.226709ms)
+✔ TDT-RF-1 id quá lớn so với bigint bị từ chối có tên trường (0.711583ms)
+✔ TDT-AC-3 luật đúng trước hàng này vẫn đúng (6.770125ms)
+✔ TDT-AC-4 áp 096 lần hai không lỗi, dấu lược đồ không đổi (4.229583ms)
+✔ TDT-AC-5 sổ từ vựng khai ba trường, khớp DB thử (334.027666ms)
+✔ TV39-AC-1 CONTEXT có thuật ngữ Dự án thay Khu đô thị, Phân khu theo chủ đầu tư (0.64675ms)
+✔ TV39-AC-1 đối chứng: chèn lại khối Khu đô thị hay tránh dự án con ở Phân khu → đỏ (0.684125ms)
+✔ TV39-AC-2 sáu thuật ngữ mới đủ mục bắt buộc (0.493ms)
+✔ TV39-AC-2 đối chứng: bỏ khối Tin sơ cấp hay bỏ huy hiệu Đã bàn giao → đỏ gọi tên (0.718167ms)
+✔ TV39-AC-3 khối Bẫy tên RESO có đúng bốn bẫy (0.121458ms)
+✔ TV39-AC-3 đối chứng: bỏ bẫy YearBuilt hay thêm bẫy thứ năm → đỏ (0.164667ms)
+✔ TV39-AC-4 ba ADR mang dấu sửa đổi mục 39 ở năm mục (0.299125ms)
+✔ TV39-AC-4 đối chứng: 0016 §7 mất dấu, 0011 giữ nhãn Khu đô thị → đỏ gọi tên (0.200542ms)
+✔ TV39-AC-5 mappings.yaml khai đúng ba dòng và bỏ nhãn chỉ nội bộ của S08 (0.677583ms)
+✔ TV39-AC-5 đối chứng: mỗi ô đưa giá trị cũ về → đỏ gọi tên ô (1.544ms)
+✔ TV39-AC-6 vocab --check xanh, --write không đổi tệp sinh, khu đô thị chỉ ở nghĩa quy mô (238.5555ms)
+✔ TV39-AC-6 đối chứng: thêm dòng «Khu đô thị Ocean Park» → đỏ gọi tên tệp và dòng (0.986583ms)
+✔ VB-AC-1 sổ thật: đủ 26 trục, đúng code + nhãn từng byte (15.6745ms)
+✔ VB-AC-1 sai khuôn (a) thiếu label_vi: ném, nêu trục và code (20.975417ms)
+✔ VB-AC-1 sai khuôn (b) code trùng: ném, nêu trục và code (14.76375ms)
+✔ VB-AC-1 sai khuôn (c) code sai khuôn: ném, nêu trục và code (16.014541ms)
+✔ VB-AC-1 sai khuôn (d) local thiếu rationale: ném, nêu trục và code (12.549875ms)
+✔ VB-AC-1 sai khuôn (e) vừa dd_lookup vừa local: ném, nêu trục và code (11.665125ms)
+✔ VB-AC-1 sai khuôn (f) một cột ở hai trục: ném, nêu trục và code (11.639ms)
+✔ VB-AC-1 sai khuôn (g) nhãn NFD: ném, nêu trục và code (11.99125ms)
+✔ VB-AC-2 --write hai lần ra cùng byte, nạp lại bằng sổ, CONTEXT.md ngoài mốc không đổi (194.152708ms)
+✔ VB-AC-2 thiếu mốc VOCAB: --write thoát 1, CONTEXT.md không đổi (56.018417ms)
+✔ VB-AC-3 --check: sạch thoát 0; sửa tay từng đích hoặc sửa sổ chưa --write thì thoát 1, nêu tệp (417.06175ms)
+✔ VB-AC-9 --check-field-targets: khớp 0 · tên ngoài sổ 1 · tệp vắng 0 · khuôn lạ 1 · không ghi collector/ (300.404125ms)
+✔ TN081-AC-8 năm trục nhãn mới khớp RESO DD 2.1 và nhánh Hỏi-2 (11.985583ms)
+✔ YCNS bảng ca: tổng ghim và mỗi mã có ít nhất hai ca; xoá một ca Ngoài-7 thì đỏ (0.848375ms)
+✔ YCNS-KLR khoảng có phần lẻ viết rời (yc1-khoang-le-va-doi-chung-do AC-1) (9.143708ms)
+✔ YCNS bảng ca cũ của YC1 giữ nguyên; đổi đích một ca cũ thì đỏ (0.2065ms)
+✔ YCNS-AC-1 phần lẻ viết liền (1.734042ms)
+✔ YCNS-AC-2 phần lẻ viết rời và sáu chữ chặn (21.001959ms)
+✔ YCNS-AC-3 khoảng đầu dưới thiếu đơn vị (0.902292ms)
+✔ YCNS-AC-4 không bao giờ min lớn hơn max (mọi ca của ma trận) (0.932333ms)
+✔ YCNS-AC-5 tc và tài chính theo dịch vụ (0.72675ms)
+✔ YCNS-AC-6 quay đầu (0.689167ms)
+✔ YCNS-AC-8 ngoài khối ngân sách giữ nguyên (0.171ms)
+✔ YCNS hồi quy lượt đo: ngày không thành phần lẻ, số trơn nhường số kế bên (3.88725ms)
+✔ S08-1 có 094 (áp CHÍNH migration 094 — 1311-1a): catalog+detail → 2 dự án, nạp lại → 0 (163.982417ms)
+✔ S08-2 chiều đỏ: CÓ catalog, thiếu 094 → CHUA-AP-094, KHÔNG đánh dấu snapshot (59.769958ms)
+✔ S08-3 đối chứng DƯƠNG (1311-2): CHỈ căn, thiếu 094 → vẫn nạp stg_s08_inventory + CÓ đánh dấu (65.548667ms)
+ℹ tests 420
+ℹ suites 47
+ℹ pass 403
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 17
+ℹ todo 0
+ℹ duration_ms 189406.697334
+→ mã thoát 0
+
+## $ node scripts/suite-neu-doi.mjs pipeline_b -- 'cd pipeline && npm run test:b' — 20:54:43Z
+suite-neu-doi: chạy pipeline_b — đổi CONTEXT.md (+23 tệp trong vùng)
+
+> test:b
+> bash ../db/db-thu.sh oneinvest_suite_pipeline_b --chay-trong node chay-nua.mjs b
+
+db-thu: cụm dùng một lần one-invest-db-thu-22383 cổng 127.0.0.1:32855 — dựng cụm + migration 8 s
+chay-nua: bỏ qua 21 ca của ci-bo-qua.json có tệp trong nửa b (CI=true)
+chay-nua: bỏ qua — pipeline/scripts/deals-phi-ly.test.mjs — DP-AC-2 loaiTinPhiLy
+chay-nua: bỏ qua — pipeline/scripts/deals-phi-ly.test.mjs — DP-AC-2 refreshBaitGap giữ registry người bán
+chay-nua: bỏ qua — pipeline/scripts/deals-phi-ly.test.mjs — DP-AC-2 tập toàn tin hợp lý không ghi audit
+chay-nua: bỏ qua — pipeline/scripts/reassign-areas.test.mjs — AU9-AC-1 chỉ ranh giới cấp 6 thành phường
+chay-nua: bỏ qua — pipeline/scripts/reassign-areas.test.mjs — AU9-AC-1 ranh giới cấp 4 bao Hà Nội không vào areas
+chay-nua: bỏ qua — pipeline/scripts/reassign-areas.test.mjs — AU9-AC-2 phường cấp 6 nằm ngoài polygon market bị bỏ, in tên
+chay-nua: bỏ qua — pipeline/scripts/reassign-areas.test.mjs — AU9-AC-2 market chưa có polygon → không chốt, in cảnh báo
+chay-nua: bỏ qua — pipeline/scripts/reassign-areas.test.mjs — AU9-AC-3 dọn khu vực lạc
+chay-nua: bỏ qua — pipeline/scripts/reassign-areas.test.mjs — AU9-AC-3 khu vực lạc có saved_markets thì giữ
+chay-nua: bỏ qua — pipeline/scripts/reassign-areas.test.mjs — AU9-AC-3 khu vực lạc có properties thì giữ; market_asset_stats là cache thì xoá cùng khu vực
+chay-nua: bỏ qua — pipeline/scripts/reassign-areas.test.mjs — AU9-AC-4 chạy lần hai không đổi gì
+chay-nua: bỏ qua — pipeline/scripts/reassign-areas.test.mjs — AU9-AC-9 snapshot mất tag admin_level → dừng, không xoá gì
+chay-nua: bỏ qua — pipeline/scripts/reassign-areas.test.mjs — AU9-AC-9 snapshot còn dưới một nửa số phường → dừng, không xoá gì
+chay-nua: bỏ qua — pipeline/scripts/reassign-areas.test.mjs — AU9-AC-5 DQ area_con_ngoai_cha fail khi có con ngoài cha
+chay-nua: bỏ qua — pipeline/scripts/reassign-areas.test.mjs — AU9-AC-5 DQ area_con_ngoai_cha pass trên dữ liệu sạch
+chay-nua: bỏ qua — pipeline/scripts/reassign-areas.test.mjs — AU9-AC-10 không cờ: khu vực lạc và metrics còn nguyên, listing vẫn gán lại
+chay-nua: bỏ qua — pipeline/scripts/reassign-areas.test.mjs — AU9-AC-10 có cờ: khu vực lạc bị xoá
+chay-nua: bỏ qua — pipeline/scripts/ops-apply-plist.test.mjs — SS-AC-6 plist neo node bằng __NODE__, không còn /usr/bin/env
+chay-nua: bỏ qua — pipeline/scripts/ops-apply-plist.test.mjs — SS-AC-7 chạy đúng dòng cài của runtime-map vào thư mục tạm: node tuyệt đối chạy dưới PATH launchd
+chay-nua: bỏ qua — pipeline/scripts/do-hang-ngay.test.mjs — DO1-AC-6 chuyển bậc trên DB: lập mốc, bảy loại đổi, đổi khoá, một dòng mỗi đơn vị, chạy lại 0 dòng
+chay-nua: bỏ qua — pipeline/scripts/do-hang-ngay.test.mjs — DO1-AC-9 detail các dòng do1-* qua bộ ghi không mang chữ bài, trích, người đăng, labeler, tên nguồn; số đi qua writer
+✔ giá tỷ thập phân: '2.9 tỷ' → 2.9e9, không nhân 10 (9.317292ms)
+✔ giá tỷ 2 chữ số thập phân: '2.93 tỷ' → 2.93e9 (3.8865ms)
+✔ giá tỷ chẵn: '3 tỷ' → 3e9 (0.868291ms)
+✔ perm2 thập phân: '45.5tr/m²' → 45.5e6 (0.070583ms)
+✔ triệu/tháng thập phân: '8.5tr/tháng' → 8.5e6 (3.220917ms)
+✔ giữ nguyên hành vi khác: kind/area/bedrooms (0.079167ms)
+✔ 't' của chữ 'tổng' không bị nhận là đơn vị tỷ (\b ASCII) (0.120708ms)
+✔ tỷ ba chữ số sau dấu: '2.900 tỷ' → 2.9e9; không trộn với 'triệu' (0.387292ms)
+✔ phẩy thập phân kiểu VN: '2,9 tỷ' → 2.9e9, '8,5tr/tháng' → 8.5e6 (0.269792ms)
+✔ SĐT dạng thường: '0963466005' (0.324541ms)
+✔ SĐT phân tách space: '0973 034 567' (0.04025ms)
+✔ SĐT phân tách chấm: '0973.034.567' (0.03025ms)
+✔ SĐT +84: '+84973034567' giữ dạng E.164 (0.025292ms)
+✔ SĐT 11 số không nhận (di động VN chỉ còn 10 số — SD2): '03745678901' (0.021625ms)
+✔ parsePost gắn phone + phones; test cũ có sẵn SĐT trong text (0.052625ms)
+✔ bỏ số cố định đầu 024 và dãy số ngắn (diện tích/giá) (0.030667ms)
+✔ không cắt giữa dãy số dài (?<!\d guard) — mã 12 số không vớ ra (0.017458ms)
+✔ GC1-AC-1 nhan khong don vi: "Loại: 1N+\nDiện tích: 45.7\nHướng: TN" (1.121042ms)
+✔ GC1-AC-1 nhan khong don vi: "Loại căn : Studio\nDiện tích : 27.2\nHướng : TN" (0.394375ms)
+✔ GC1-AC-1 nhan khong don vi: "Diện tích 64" (0.02675ms)
+✔ GC1-AC-1 nhan khong don vi: "Diện tích: 86,5\nGiá bán: 4 tỷ" (0.030334ms)
+✔ GC1-AC-1 nhan khong don vi: "✅️Diện tích: 30.6 ✅️Hướng: Đông nam" (0.391084ms)
+✔ GC1-AC-1 nhan khong don vi: "DIỆN TÍCH: 60" (0.026667ms)
+✔ GC1-AC-1 nhan khong don vi: "dien tich: 72" (0.496042ms)
+✔ GC1-AC-2 chu kieu unicode: "💰 𝟓𝟗𝐦𝟐| 2PN2WC" (0.035334ms)
+✔ GC1-AC-2 chu kieu unicode: "Căn 2PN ( 𝟓𝟗 𝐦𝟐 ) Full NT" (0.025416ms)
+✔ GC1-AC-2 chu kieu unicode: "𝟑𝟒𝐦² Studio" (0.0215ms)
+✔ GC1-AC-2 chu kieu unicode: "Căn 70㎡ view hồ" (0.025334ms)
+✔ GC1-AC-2 chu kieu unicode: "✅𝐃𝐢ệ𝐧 𝐭í𝐜𝐡: 𝟔𝟕𝐦𝟐" (0.027375ms)
+✔ GC1-AC-2 chu kieu unicode: "𝐃𝐢ệ𝐧 𝐭í𝐜𝐡: 𝟒𝟓" (0.020416ms)
+✔ GC1-AC-2 chi dien tich di qua chuan hoa: gia viet dam van rong, gia thuong giu nguyen (0.131833ms)
+✔ GC1-AC-2 SDT viet dam khong thanh dien tich (0.0325ms)
+✔ GC1-AC-3 khong doc nham: "Hợp đồng hdt 21 triệu" (0.032292ms)
+✔ GC1-AC-3 khong doc nham: "DT 21 triệu" (0.021708ms)
+✔ GC1-AC-3 khong doc nham: "DT 65" (0.025ms)
+✔ GC1-AC-3 khong doc nham: "Diện tích: 3pn2wc" (0.021916ms)
+✔ GC1-AC-3 khong doc nham: "Diện tích: 5x20" (0.019666ms)
+✔ GC1-AC-3 khong doc nham: "Diện tích: 20 x 30" (0.020709ms)
+✔ GC1-AC-3 khong doc nham: "Diện tích: 5×20" (0.019125ms)
+✔ GC1-AC-3 khong doc nham: "Diện tích: 25×30" (0.019958ms)
+✔ GC1-AC-3 khong doc nham: "Diện tích: 60-70" (0.019875ms)
+✔ GC1-AC-3 khong doc nham: "Diện tích: 60 - 70" (0.020791ms)
+✔ GC1-AC-3 khong doc nham: "Diện tích: 60/70" (0.023875ms)
+✔ GC1-AC-3 khong doc nham: "Diện tích: 65 triệu" (0.031ms)
+✔ GC1-AC-3 khong doc nham: "Diện tích: 65 pn" (0.021ms)
+✔ GC1-AC-3 khong doc nham: "Diện tích: 14.9" (0.116042ms)
+✔ GC1-AC-3 khong doc nham: "Diện tích: 501" (0.01925ms)
+✔ GC1-AC-3 khong doc nham: "Diện tích: 1200" (0.022791ms)
+✔ GC1-AC-3 khong doc nham: "Diện tích: 1.200" (0.023667ms)
+✔ GC1-AC-3 khong doc nham: "Ảnh https://cdn.example/1WUpuksCc5M2FMS93qGF9.jpg" (0.018417ms)
+✔ GC1-AC-3 doi chung cung khuon doc ra so: "Diện tích: 21" (0.02225ms)
+✔ GC1-AC-3 doi chung cung khuon doc ra so: "Diện tích: 65" (0.017917ms)
+✔ GC1-AC-3 doi chung cung khuon doc ra so: "Diện tích: 15" (0.017083ms)
+✔ GC1-AC-3 doi chung cung khuon doc ra so: "Diện tích: 500" (0.017917ms)
+✔ GC1-AC-3 doi chung cung khuon doc ra so: "Diện tích: 64, 2pn" (0.027667ms)
+✔ GC1-AC-4 khong doi so da doc: bai co so dam va so thuong giu so thuong (0.03775ms)
+✔ AN-AC-6 nhánh cho nghỉ của ghiListing ghi toạ độ lần thu mới, không chặn bằng retired_at IS NULL (1.147875ms)
+✔ AN-AC-6 đối chứng: câu cho nghỉ cũ bị bộ kiểm gọi tên cả hai lỗi (0.149458ms)
+✔ mediaSnapshots nhận v2 và v3, bỏ v1, mồ côi và nguồn khác (1.927834ms)
+✔ postsWithMedia đọc được bài có ảnh trong snapshot v3 (có meta.kev) (1.075542ms)
+✔ gọi qua symlink (như ~/dev/one-invest) main vẫn chạy — không thoát 0 im lặng (34.395458ms)
+✔ SD3 sellers là view sau 060 (51.669292ms)
+✔ AC-7 (PL2) không dòng mồ côi: số có người mà không tin sống không có dòng sellers (50.092417ms)
+✔ SD-AC-1/3 mọi SĐT trên tin có một dòng, cột tổng hợp và tên đúng (51.629541ms)
+✔ SD-AC-1 đỏ: view bản chép bỏ đếm n_rent → bắt «cột tổng hợp của C» (51.037584ms)
+ruler: 0 phường (phường × loại, n≥5)
+bait_gap_pct: cập nhật 0 offers P1
+không chấm: chua-ro-loai=0 thieu-thuoc-cung-loai=0
+sellers (view): 2 người bán
+loại tin phi lý: 0 tin {}
+ruler: 0 phường (phường × loại, n≥5)
+bait_gap_pct: cập nhật 0 offers P1
+không chấm: chua-ro-loai=0 thieu-thuoc-cung-loai=0
+sellers (view): 2 người bán
+loại tin phi lý: 0 tin {}
+✔ SD-AC-2 refresh-bait-gap chạy hai lượt không đổi view, không ghi sellers (55.505959ms)
+✔ SD-AC-7 đối chiếu danh bạ theo SĐT trên tin (bí danh sdt) (44.016875ms)
+✔ SD-AC-8 payload cloud: đủ SĐT trên tin, không cột name, không số gốc (48.673292ms)
+✔ SD-AC-1: ma trận hình thái — mỗi ô ra đúng số +84xxxxxxxxx, số assert bằng số ô (1.07875ms)
+✔ SD-AC-1 đỏ: bộ bóc dùng lại PHONE_RE cũ thì ô «•» trượt (2.643125ms)
+✔ SD-AC-2: không nhận số 11 chữ số; hai số kề ra đủ hai số theo thứ tự (0.091666ms)
+✔ SD-AC-2 đỏ: bản sao nhận độ dài 11 thì trượt dòng «11 chữ số» (2.208583ms)
+✔ SD-AC-2 đỏ: bản sao cho khớp vượt 10 chữ số rồi mới bỏ thì trượt «hai số kề» (2.529084ms)
+✔ SD-AC-3: câu không có SĐT ra rỗng, bản đối chứng cùng câu thêm một SĐT ra đúng số ấy (0.078625ms)
+✔ SD-AC-3: gatSo của mọi câu trong ma trận SD-AC-1…3 bằng bản gốc của vòng (14.295709ms)
+✔ SD-AC-3 đỏ: bản sao bỏ guard chữ số đứng sau thì «dãy 12 số» ra số (2.179ms)
+✔ SD-AC-4: chonSdtTin — nhiều bài nhất, hoà thì theo thứ tự neo; số assert bằng số dòng (0.1175ms)
+✔ SD-AC-4 đỏ: bản sao chọn số đầu của bài đầu thì trượt «nhiều bài nhất» (2.05925ms)
+✔ SD3-E1: mọi số bộ bóc trả ở hai ma trận đều dạng +84… (0.199333ms)
+✔ SD3-E1 đỏ: bản sao trả dạng 0… → bắt «DANG SO KHONG PHAI E164» (1.969125ms)
+✔ CM-AC-1: giá/DT/PN không lấy từ URL hay SĐT; phones đọc từ chữ gốc (13.613666ms)
+✔ CM-AC-1 đột biến: bỏ bước gạt URL/SĐT → dòng SĐT «T.Lan» ra sai (2.772166ms)
+✔ CM-AC-1 đột biến: chỉ bỏ bước gạt SĐT → cả ba dòng SĐT ra giá sai (2.483791ms)
+✔ CM-AC-2: 12 dạng giá tỷ và 6 dạng số đếm sau chữ tỷ ra đúng số đồng (1.555959ms)
+✔ CM-AC-2 đột biến: parseVnNumber cũ → «2.650 tỷ» ra sai (2.556833ms)
+✔ CM-AC-2 đột biến: bỏ danh sách chặn số đếm → «8 tỷ 4 tầng» ra 8,4 tỷ (2.52ms)
+✔ CM-AC-3: 9 dạng giá triệu / không đơn vị ra đúng (0.681ms)
+✔ CM-AC-3 đột biến: tắt luật đơn giá đồng và bỏ chặn «/m» → «45.000.000/m2» thành tổng giá (2.297833ms)
+✔ CM-AC-3 đột biến: bỏ luật «tr chen phần lẻ» → «5tr5» ra sai (2.33975ms)
+✔ CM-AC-4: 5 dạng diện tích ra đúng, 4 dạng bề ngang ra null, biên 15–500 (0.707291ms)
+✔ CM-AC-4 đột biến: bỏ danh sách chặn bề ngang → «mặt tiền 20m» ra số (2.429792ms)
+✔ CM-AC-5: bốn biên chốt khoảng giá (0.045541ms)
+✔ CM-AC-5 đột biến: biên «>=» thành «>» → thuê 1 tỷ lọt (2.02325ms)
+✔ CM-AC-6: bảng bốn ô khoá gom (0.607458ms)
+✔ CM-AC-6: maToaCan bỏ mốc «T4/2027» và mã trong URL (0.033917ms)
+✔ CM-AC-6 đột biến: bỏ mã khỏi khoá → khác mã chung một khoá (2.556375ms)
+✔ upsert có WHERE EXCLUDED.captured_at >= dòng hiện có, đặt SAU mọi SET (0.276291ms)
+✔ các cột nội dung + snapshot_id + captured_at đặt THẲNG EXCLUDED (hết CASE của 2410-1 v2) (0.048708ms)
+✔ should-NOT-fire: dấu bằng bị đổi thành > sẽ hổng 'nạp lại cùng snapshot' (0.066292ms)
+✔ CA-ĐỎ tĩnh: fetchPage còn gắn dungLuot và còn nhánh ném ngay 403/429 (0.298708ms)
+✔ 429 ở trang 2 → fetch đúng 10 lời (không thử lại), rc 3, snapshot vùng xong trước + phần đã có của vùng đang chạy (111.638625ms)
+✔ v2: vong-doi trả 3 → script in dòng bỏ-đi và THOÁT 0 (không còn chết ngầm mã 3) (128.605084ms)
+✔ v2: vong-doi trả 2 (DB lỗi) → script THOÁT 1 rõ ràng với dòng lỗi (125.270041ms)
+✔ v2: vong-doi trả 0 → script VƯỢT cổng sang bước kế (không chết ở thay thế lệnh) (297.000875ms)
+✔ TV2b (a): S05 paused → 0 lời gọi, thoát 0, một dòng mã + lý_do (252.771958ms)
+✔ TV2b (b): S05 active nhưng 0 nhóm active → 0 lượt, KHÔNG fallback, thoát 0 (266.76925ms)
+✔ TV2b (c)+(d): S06 — vùng active được thu (kể cả vùng MỚI), vùng paused/retired bị bỏ, nạp theo DB (676.924875ms)
+✔ TV2b (e): DB lỗi → 0 lời gọi, thoát ≠0 (fail-closed) — cả S05 lẫn S06 (77.664292ms)
+✔ TV2b (f): trạng thái lạ → chặn (fail-closed) — nguồn lẫn đơn vị (414.105334ms)
+✔ TV2b: cổng script bash S01/S02 — vong-doi CLI exit 3 → bỏ lượt exit 0 (208.556667ms)
+✔ TV2b (nửa dương): S05 active + nhóm active → lời gọi tới nhà cung cấp giả đúng nhóm active (312.996459ms)
+✔ DT-AC-3: docDacTrungS06 — mỗi dòng ma trận ra đúng tập {field, value, rule_id}; số assert bằng số dòng (0.921583ms)
+✔ DT-AC-3 đỏ: bản sao bỏ kiểm chiều dài thì dòng «ngang hợp lệ + dài rác 0» ra ngang × dài (0.813958ms)
+✔ DT-AC-3 đỏ: bản sao bỏ trần WC thì dòng «WC · rác > 50» ra phát biểu (0.537ms)
+✔ DT-AC-3 đỏ: bản sao bỏ khung toạ độ VN thì dòng «toạ độ ngoài khung» ra phát biểu (0.98925ms)
+✔ DS1-AC-1 ma trận 27 hàng (0.978208ms)
+✔ DS1 đường nguồn trả dạng mã hoá thì không phát biểu; đường thật có gạch chéo vẫn giữ (0.202959ms)
+✔ DS1-AC-1 đỏ: bản sao bỏ luật địa danh thì ca đỏ gọi tên hàng 17 (1.100834ms)
+✔ DS1-AC-1 đỏ: bản sao bỏ neo đầu chuỗi thì ca đỏ gọi tên hàng 9 (0.818417ms)
+✔ AC-5 luật bí danh SĐT: ma trận bảy dòng (a)–(g), SĐT là người riêng của nguồn (0.995ms)
+✔ AC-5 chiều đỏ: luật theo lối khác của Hỏi-4 (gắn SĐT vào người tài khoản) làm dòng (a) đỏ (0.412542ms)
+✔ AC-9 chỉ local, không suy, không tầng A (0.595625ms)
+✔ rutDinhDanh: S06 seller_ref, người gửi S03/S05, Review Focus 1/2/4 (0.143209ms)
+✔ moiKhoaNguoi: pty_ + 26 ký tự Crockford, không trùng (2.091083ms)
+✔ AC-6 bài mất (tin có SĐT): giữ vai theo bài, không vai parser thay; chiều đỏ khi bỏ giữ (0.160833ms)
+✔ AC-6 chonVaiRut: chỉ rút khi có bằng chứng thay; bài mất thì giữ (0.099541ms)
+✔ RF6 hai bản ghi cùng chủ thể (tin nghỉ doi_khoa + tin thay): một vai, bằng chứng từ bản ghi sống (0.082834ms)
+✔ SD3-E4: số có sdt_bam đời trước → thêm bí danh sdt cho đúng người cũ, không người mới (0.140708ms)
+✔ SD3-E4 đỏ: bản chép bỏ tra sdt_bam đời trước → bắt «NGUOI MOI THAY VI GIU» (5.18825ms)
+✔ SD3-E4: bộ dựng nghỉ sdt_bam bằng retired_at, không DELETE (0.072125ms)
+✔ HD13 E1 chonGop: ma trận mười dáng, chỉ cặp một–một cùng nguồn của người active được gộp (0.579791ms)
+✔ HD13 E2 anhXaVai: tin chỉ SĐT của số đã gộp về người tài khoản (parser/observed); chưa gộp thì ở người theo SĐT (0.098084ms)
+✔ HD13 E10 đọc tĩnh: SQL bộ dựng + dung-nguoi.mjs không tầng A, không xoá, ghi danh bạ đúng hai kiểu (0.621208ms)
+✔ CTG E3 docCongTac: ma trận bảy dáng, dòng id lớn nhất thắng, chỉ detail.bat === true là bật (0.097125ms)
+✔ CTG E8 đọc tĩnh: ops_audit chỉ SELECT/INSERT, một câu đọc + một câu ghi công tắc, mã chạy thật không truyền gop (0.832916ms)
+✔ DP-AC-1 ma trận lý do (0.336541ms)
+✔ DO1-AC-3 giữ nháp theo cách đọc × ô × tuần, Wilson, chênh, ý nghĩa, dung sai, tỉ lệ soát, cơ cấu, phiên bản thước (6.962167ms)
+✔ DO1-AC-4 ước bỏ sót trên thẻ tin rao, đọc từ nháp đã chụp, thiếu nháp đếm riêng (0.318125ms)
+✔ DO1-AC-5 tín hiệu không cần nhãn: JSON hỏng, trích lạc, phủ ô + sai khuôn, bất đồng, cách đọc vắng thì skip (0.508042ms)
+✔ DO1-AC-7 phân rã thị trường, phường (30 ô + khác), hai ô chưa gắn, tổng ô = tổng chung (0.810542ms)
+✔ DO1-CHUAN-HOA bảng vào/ra viết trước khớp quy tắc chuanHoaLuot (0.19425ms)
+✔ DO1-AC-6 phần thuần: hướng, mảng lý do, đổi khoá, một dòng mỗi đơn vị, nguồn (0.500292ms)
+✔ DO1-AC-10 phần thuần: so cặp có ý nghĩa và không ý nghĩa (0.109875ms)
+✔ DO1-AC-9 phần thuần: chanLo bắt chuỗi cấm (0.5565ms)
+✔ tuần ISO giờ VN (0.047375ms)
+✔ DO1-AC-1 rút 20 bài ngày D, gạt bài thử, khử trùng, gồm bài không thành tin, chụp nháp mọi cách đọc, chạy lại 0 dòng (130.22375ms)
+✔ DO1-AC-1-GOI gọi đọc gộp đúng bài thiếu, một lần, trước khi chụp, dừng ở trần (90.401834ms)
+✔ DO1-AC-7 lát thẻ: người chọn «Không suy ra được» thì không lấy nháp máy (0.146083ms)
+✔ DO1-AC-9 chặn rò không báo giả: mã khu vực, mã cách đọc, tên người đăng giữa từ; ô theo chữ bài trùng tên gộp vào khác (0.962125ms)
+✔ DO1-AC-9 chuoiCam dừng khi source_registry không có tên (không soát được thì không ghi) (0.1775ms)
+✔ DO1-AC-9-FILL bảng 083 và thẻ nhãn không vào FILL của sync-cloud, dq_check_results có (0.028458ms)
+✔ DO1-AC-10 so cặp trên cùng bài 4 tuần: gọi đúng bài thiếu, cặp đủ hai bên, ý nghĩa, dừng ở trần (83.639959ms)
+✔ DO3-NAP 086 nạp trong giao dịch, chạy lại không lỗi, ROLLBACK thì mất (17.325083ms)
+✔ DO3 sổ đường: bốn khoá nguyên văn, hai đường đang có mã ghi (0.148833ms)
+✔ DO3 ngày đo theo giờ VN: lượt 00:30 giờ VN thuộc ngày VN, không theo UTC (0.048541ms)
+✔ DO3 phần thuần: soAnh, gopNgay, demThayDoi, nguoiSua, tuSoat (4.537959ms)
+✔ DO3-AC-1 bốn dòng do3-thay-doi mỗi ngày: đường đang chạy pass, chưa chạy skip không số 0, chạy lại thay dòng, tự soát (177.862292ms)
+﹣ DO3-AC-1-THAT câu đọc giá trị sống trên DB máy thu (chỉ đọc): hai đường đang chạy có giá trị (0.094958ms) # CI: không có DB máy thu
+✔ DO3-CHUA-AP DB chưa áp 086: chua_ap '086', 0 dòng dq (8.760292ms)
+✔ DO3-AC-2 ảnh chụp và dòng đổi: lập mốc, thêm/đổi/máy rút, người rút không vào máy rút, gộp bốn lượt cùng ngày (197.08125ms)
+✔ DO3-AC-2 đường đã lập mốc mà mất hết giá trị: máy rút, chạy lại cùng ngày giữ nguyên, ngày sau không «chưa chạy», giá trị quay lại là «thêm» (62.31675ms)
+✔ DO3-AC-3 người sửa = nhãn ngày D khác giá trị + ghi đè hitl ngày D khác giá trị; không đường nào có lối người rút; bộ đếm rút đo trên sổ thử (231.2965ms)
+✔ DO3-AC-4 phần thuần: bỏ-một-ra số qua người đăng trên ma trận viết trước, Wilson, so tuần trước (1.464042ms)
+✔ DO3-AC-5 phần thuần: bỏ-một-ra loại hình theo nhóm, gọi đúng loaiHinhNhom/docLoaiHinh của transform-zalo (0.362417ms)
+✔ DO3-AC-4 nhịp tuần qua bộ ghi: lỗi tiêm không để dòng, lượt sau ghi đúng một dòng, lượt nữa không thêm; không gọi model (143.863209ms)
+✔ DO3-AC-5 đường đang chạy chưa có hàm kiểm ngược ghi skip «chưa có kiểm ngược», không số 0 (50.222958ms)
+✔ DO3-AC-6 lát của DO1 trên detail thật: thị trường, phường 30 ô + khác, hai ô chưa gắn tách nhau, dự án, tổng ô = tổng chung (1235.737917ms)
+✔ DO3-AC-8 detail do3-* không mang SĐT, băm SĐT, người đăng, chữ bài, labeler, tên nguồn thật; bảng ảnh chụp không vào FILL; có rò thì dừng (88.206416ms)
+✔ DAT-AC-1 nhóm đúng một dự án sinh phát biểu, nhóm nhiều/không/lệch và bài ngoài tin không sinh (1506.646333ms)
+✔ DAT-AC-1 chiều đỏ: bỏ điều kiện đúng-một-dự-án (115.108583ms)
+✔ DAT-AC-2 tên bài: chỉ nhãn chu_bai có trích đã kiểm, khớp đúng một nút, nhãn mới nhất (72.263542ms)
+✔ DAT-AC-2 chiều đỏ: bỏ lọc căn cứ nhãn (97.538125ms)
+✔ DAT-AC-3 tin mâu thuẫn không ghi, đưa vào bảng; tin hai nguồn cùng dự án có hai dòng (74.820334ms)
+✔ DAT-AC-3 chiều đỏ: bỏ luật mâu thuẫn (102.913083ms)
+✔ DAT-AC-4 xét lại khi sổ nhóm hay danh bạ đổi; chạy lại không đổi gì (84.682125ms)
+✔ DAT-AC-4 chiều đỏ: bỏ bước rút phần thừa (tệp lệnh) (110.548ms)
+✔ DAT-AC-5 không đụng phát biểu của phương pháp khác, nhường tầng cao (77.580375ms)
+✔ DAT-AC-5 chiều đỏ: bỏ kiểm tầng cao (112.4965ms)
+✔ DAT-AC-6 chạy thử không đổi tập dòng sống; lỗi giữa chừng không để lại thay đổi (103.000541ms)
+✔ DAT-AC-6 chiều đỏ: bỏ ROLLBACK (tệp lệnh) → ghi dở (120.501541ms)
+✔ DAT-AC-6 lệnh thật: mã thoát 0/2/1, stdout, stderr (326.196334ms)
+✔ DAT-AC-7 bảng đếm khớp truy vấn độc lập; tin có dự án = tin có dòng sống sau --ghi (100.789ms)
+✔ DAT-AC-7 chiều đỏ: tin có dự án gồm cả tin mâu thuẫn (115.126916ms)
+﹣ DAT-AC-7b chạy thử trên DB của lượt (bản sao dữ liệu thật): nguồn nhóm ra tin, gặp đủ hai dạng khoá (6.377125ms) # DB của lượt không có dữ liệu S03 (bản sao rỗng)
+✔ DAT-AC-1 chiều đỏ: bỏ luật «mọi dòng sổ cùng một dự án» → nhóm đăng ký hai lần lệch vẫn ghi (122.279208ms)
+✔ DAT-AC-3 chiều đỏ: tin có bài chung với tin mâu thuẫn rơi im lặng (112.147125ms)
+✔ DAT-AC-6 chiều đỏ: lệnh thật trả 1 thay vì 2 khi DB thiếu (59.963166ms)
+✔ DAT-AC-8 chỉ import pg, node:*, pipeline/lib; không mạng/model; không viết tay mã sổ (0.383541ms)
+✔ DAT-AC-8 đối chứng dương: thêm import node:https bị bắt (0.260084ms)
+✔ DAT-thuần: bài thuộc hai tin, một tin mâu thuẫn → bài không ghi (0.115583ms)
+✔ EN-AC-1 thuần: bảng 7 ô liên lạc (5.216833ms)
+✔ EN-AC-1 chiều đỏ: tắt luật số chung thì ô so-chung-hai-nguoi đỏ (0.67325ms)
+✔ EN-AC-3 thuần: bảng 8 ô luật chọn số (0.12225ms)
+✔ EN-AC-3 chiều đỏ: đảo ưu tiên tin/bài thì ô 1-tin-1-bai đỏ (0.130292ms)
+✔ EN-AC-8 thuần: lượt đo xanh không có mã lỗi; mỗi mã đỏ có ca của nó (0.146167ms)
+✔ ECR-AC-1 ghep rut tu ben ghi that dung bon loai dong (0.325458ms)
+✔ ECR-AC-1 bo doc cham tren chu tin ghep (12.460333ms)
+✔ ECR-AC-1 doi chung: cung nhan cham tren URL anh thi so dung tut (4.135625ms)
+✔ ECR-AC-2 bai anh khong tin chu co nhan: khong cham, dem khong_chu, khong tinh mat_chu (0.088875ms)
+✔ ECR-AC-2 doi chung: bo nhanh khong tin chu thi URL vao tap cham (0.080083ms)
+✔ ECR-AC-3 dong trung cum co nhan: khong cham, dem trung_co_nhan, cum cham mot lan (0.054292ms)
+✔ ECR-AC-3 dai dien chua nhan: cum gop 0 dong, dong trung van dem (0.038709ms)
+✔ ECR-AC-3 dong vua trung vua khong chu dem vao trung_co_nhan (0.040959ms)
+✔ ECR-AC-3 doi chung: bo trung_voi thi cum cham hai lan (0.066166ms)
+✔ ECR-AC-4 ghep null: dem moi bang 0, tin giong dong khong co cot ghep (0.125291ms)
+✔ GS-AC-1 (068) giữ khoá SĐT qua phân xử, áp hai lần không đổi dòng nào (57.987584ms)
+✔ GS-AC-1 (068) chiều đỏ: hàm trước 068 làm mất khoá (32.328167ms)
+✔ GS-AC-1 (068) chiều đỏ: mất mốc văn bản thì RAISE có tên (55.170917ms)
+✔ GS-AC-2 ma trận đúng 88 ô, mỗi ô đúng một dòng luật (0.492792ms)
+✔ GS-AC-2 bộ gán đúng cả 88 ô, chạy lại đổi 0 dòng (126.774542ms)
+✔ GS-AC-2 chiều đỏ: AN-SO-BI-GHEP qua «WHEN m.an AND m.lop = 'ghep' THEN 'rut'» (100.04175ms)
+✔ GS-AC-2 chiều đỏ: AN-SO-BI-GHEP qua «WHEN m.an THEN 'giu'» (105.239ms)
+✔ GS-AC-2 chiều đỏ: HAI-SO-BI-GHEP qua «WHEN m.n = 1 AND m.lop IN ('trong', 'ghe» (107.879542ms)
+✔ GS-AC-2 chiều đỏ: TU-TIN-LECH qua «min(d.list_id) AS tu_tin» (105.797542ms)
+✔ GS-AC-2 chiều đỏ: SAI-E164-VAO-TIN qua «CASE WHEN tho ~ '^\+84[35789][0-9]{8}$' » (117.781958ms)
+✔ GS-AC-3a chuyển ẩn số (35.981ms)
+✔ GS-AC-3a chuyển ẩn số chiều đỏ: bỏ bước rút (35.763917ms)
+✔ GS-AC-3b thêm số thứ hai (36.643291ms)
+✔ GS-AC-3b thêm số thứ hai chiều đỏ: bỏ bước rút (33.759708ms)
+✔ GS-AC-5 số sai dạng không vào tin, không tính vào tài khoản, được đếm; băm khớp node:crypto (33.515417ms)
+✔ GS-AC-5 chiều đỏ: bỏ lọc dạng thì số sai vào tin (33.549083ms)
+✔ GS-AC-7 tin nguồn khác không đổi, tin đã nghỉ vẫn được gán (32.175542ms)
+✔ GS-AC-7 chiều đỏ: bỏ lọc nguồn thì chạm tin S03 (32.97125ms)
+✔ GS-RF nhiều tin cùng một số vẫn là một số; số dạng 0 không thành số thứ hai (36.299708ms)
+✔ GS-RF dòng stg không có tin vẫn góp số; tu_tin nhỏ nhất theo số, không theo chữ (34.617917ms)
+✔ GS-RF account_id toàn khoảng trắng là trống mã; phone_hidden dạng chuỗi vẫn là ẩn (38.223083ms)
+stg có giá+DT: 3
+ô chữ mang tên nguồn: bỏ ghi street_raw 0 · block_raw 0 · phuong_raw 0 · district_raw 0 · rút 0 chủ thể (trần 50)
+phát biểu S06: +3 (rút 0) · phân xử 3 tin, đổi 3
+gán SĐT S06: CHUA-AP-068 — hàm phân xử chưa giữ khoá seller_phone, lượt này không ghi
+P2 offers: 0 high / 3 medium / 0 skip — phường: 0 ward_v3 + 0 text-match + 0 bí danh xã cũ (match 0.0%)
+city_code lạ: x (3 tin) — không ánh xạ được thị trường, area_id NULL
+stg có giá+DT: 3
+ô chữ mang tên nguồn: bỏ ghi street_raw 0 · block_raw 0 · phuong_raw 0 · district_raw 0 · rút 0 chủ thể (trần 50)
+phát biểu S06: +3 (rút 0) · phân xử 3 tin, đổi 3
+SĐT S06: đổi 2 tin (trực tiếp 1, ghép 1, rút 0) · khôi phục 0 · không rõ gốc 0 · tài khoản từ 2 số 0 · số sai dạng 0
+P2 offers: 0 high / 3 medium / 0 skip — phường: 0 ward_v3 + 0 text-match + 0 bí danh xã cũ (match 0.0%)
+city_code lạ: x (3 tin) — không ánh xạ được thị trường, area_id NULL
+✔ GS-AC-1 tin do bộ gán ghi, qua phân xử giữ khoá, khoá khác giống bản trước 068 (63.526875ms)
+stg có giá+DT: 3
+ô chữ mang tên nguồn: bỏ ghi street_raw 0 · block_raw 0 · phuong_raw 0 · district_raw 0 · rút 0 chủ thể (trần 50)
+phát biểu S06: +3 (rút 0) · phân xử 3 tin, đổi 3
+SĐT S06: đổi 2 tin (trực tiếp 1, ghép 1, rút 0) · khôi phục 0 · không rõ gốc 0 · tài khoản từ 2 số 0 · số sai dạng 0
+P2 offers: 0 high / 3 medium / 0 skip — phường: 0 ward_v3 + 0 text-match + 0 bí danh xã cũ (match 0.0%)
+city_code lạ: x (3 tin) — không ánh xạ được thị trường, area_id NULL
+stg có giá+DT: 3
+ô chữ mang tên nguồn: bỏ ghi street_raw 0 · block_raw 0 · phuong_raw 0 · district_raw 0 · rút 0 chủ thể (trần 50)
+phát biểu S06: +0 (rút 0) · phân xử 3 tin, đổi 0
+SĐT S06: đổi 0 tin (trực tiếp 0, ghép 0, rút 0) · khôi phục 0 · không rõ gốc 0 · tài khoản từ 2 số 0 · số sai dạng 0
+P2 offers: 0 high / 3 medium / 0 skip — phường: 0 ward_v3 + 0 text-match + 0 bí danh xã cũ (match 0.0%)
+city_code lạ: x (3 tin) — không ánh xạ được thị trường, area_id NULL
+stg có giá+DT: 3
+ô chữ mang tên nguồn: bỏ ghi street_raw 0 · block_raw 0 · phuong_raw 0 · district_raw 0 · rút 0 chủ thể (trần 50)
+phát biểu S06: +0 (rút 0) · phân xử 3 tin, đổi 0
+SĐT S06: đổi 0 tin (trực tiếp 0, ghép 0, rút 0) · khôi phục 0 · không rõ gốc 0 · tài khoản từ 2 số 0 · số sai dạng 0
+P2 offers: 0 high / 3 medium / 0 skip — phường: 0 ward_v3 + 0 text-match + 0 bí danh xã cũ (match 0.0%)
+city_code lạ: x (3 tin) — không ánh xạ được thị trường, area_id NULL
+✔ GS-AC-4 chạy lại đổi 0 dòng; stg mất số thì tin không mất gì (72.630583ms)
+stg có giá+DT: 3
+ô chữ mang tên nguồn: bỏ ghi street_raw 0 · block_raw 0 · phuong_raw 0 · district_raw 0 · rút 0 chủ thể (trần 50)
+phát biểu S06: +3 (rút 0) · phân xử 3 tin, đổi 3
+SĐT S06: đổi 2 tin (trực tiếp 1, ghép 1, rút 0) · khôi phục 0 · không rõ gốc 0 · tài khoản từ 2 số 0 · số sai dạng 0
+P2 offers: 0 high / 3 medium / 0 skip — phường: 0 ward_v3 + 0 text-match + 0 bí danh xã cũ (match 0.0%)
+city_code lạ: x (3 tin) — không ánh xạ được thị trường, area_id NULL
+✔ GS-AC-4 chiều đỏ: gán null khi stg trống thì mất số (69.208125ms)
+stg có giá+DT: 3
+ô chữ mang tên nguồn: bỏ ghi street_raw 0 · block_raw 0 · phuong_raw 0 · district_raw 0 · rút 0 chủ thể (trần 50)
+phát biểu S06: +3 (rút 0) · phân xử 3 tin, đổi 3
+SĐT S06: đổi 2 tin (trực tiếp 1, ghép 1, rút 0) · khôi phục 0 · không rõ gốc 0 · tài khoản từ 2 số 0 · số sai dạng 0
+P2 offers: 0 high / 3 medium / 0 skip — phường: 0 ward_v3 + 0 text-match + 0 bí danh xã cũ (match 0.0%)
+city_code lạ: x (3 tin) — không ánh xạ được thị trường, area_id NULL
+✔ GS-AC-6 có phần giữ thì tin có số; chưa có thì không ghi, báo tên, không ném (217.783708ms)
+✔ GS-AC-7 doSdtS06 tách bán, thuê, sống, nghỉ (58.383416ms)
+✔ GS-AC-8 câu đếm độc lập bằng số ghép sau lượt gán, và đúng khi tin đã có số từ trước (59.169125ms)
+✔ GS-AC-8 chiều đỏ: bất biến sai thì ra đúng mã (60.221541ms)
+✔ GS-AC-8 bộ in chặn SĐT, cho qua số đếm (0.264459ms)
+✔ KP «ghi đè» là bản hàm thật của tệp 061: chưa có phần giữ nhưng còn hai mốc của 068 (0.045542ms)
+✔ KP-AC-1 (62.073125ms)
+✔ KP-AC-1 chiều đỏ: bỏ nhánh khôi phục (64.026333ms)
+✔ KP-AC-2 (81.137208ms)
+✔ KP-AC-2 chiều đỏ: bỏ nhánh khôi phục (62.13175ms)
+✔ KP-AC-3 xuất xứ dựng lại giống hệt bản bộ gán thật ghi, chạy lại không đổi (52.360417ms)
+✔ KP-AC-3 tài khoản có hai dòng mang số: tu_tin dựng lại giữ dòng nhỏ nhất (56.078334ms)
+✔ KP-AC-3 chiều đỏ: tu_tin tính khác công thức cũ thì lệch bản gốc (66.930833ms)
+✔ KP-AC-4 ma trận đúng 48 ô, gạch 22, còn 26, mỗi ô đúng một dòng, số ô mỗi dòng khớp bảng (0.272ms)
+✔ KP-AC-4 bộ gán đúng cả 26 ô, tổng 12 dựng lại và 14 không rõ gốc, chạy lại đổi 0 dòng (63.809667ms)
+✔ KP-AC-4 chiều đỏ: bỏ nhánh số riêng (55.576041ms)
+✔ KP-AC-4 chiều đỏ: bỏ nhánh số tài khoản (60.819542ms)
+✔ KP-AC-5 khoá lạ và số không khớp stg không bị rút qua cả hai bước; tin khớp số tài khoản thì bị rút (40.353083ms)
+✔ KP-AC-5 khoá lạ mà số trùng số tài khoản: giữ nguyên số và khoá (34.499458ms)
+✔ KP-AC-5 chiều đỏ: bỏ điều kiện không-có-khoá thì tin khoá lạ bị rút (32.439041ms)
+✔ KP-AC-5 khoá lạ mà số trùng số riêng: giữ nguyên số và khoá (29.067834ms)
+✔ KP-AC-5 chiều đỏ: bỏ điều kiện không-có-khoá ở nhánh số riêng thì khoá lạ bị thay (28.017292ms)
+✔ KP-AC-6 khoá bị xoá bằng lệnh phân xử toàn bộ, không qua transform (44.780416ms)
+✔ KP-AC-6 chiều đỏ: bỏ nhánh khôi phục (46.063292ms)
+✔ KP-AC-7 hàm còn bị ghi đè thì không đổi gì, báo tên, không ném; áp lại thì khôi phục (70.803333ms)
+✔ KP-AC-8 chưa có cột nhãn 070: tin ghép được giữ nguyên không tính là đã khôi phục (52.681125ms)
+✔ KP-AC-8 nhật ký và dòng lệnh đo mang đúng hai số đếm, không lộ số; số lọt vào dòng thì ném (48.905042ms)
+✔ KP-AC-8 hai số đếm khác nhau: mỗi nhãn in đúng số của nó (47.43125ms)
+✔ KP-AC-10 G1 giới hạn đã khai: tin nguồn đổi số thì tin ẩn còn số cũ (54.960042ms)
+✔ KP-AC-10 G1 đối chứng: tin nguồn không đổi thì tin ẩn bị rút (53.239875ms)
+✔ may-toa-nguoi-dung-toa (0.443291ms)
+✔ may-toa-nguoi-khac-toa (0.04425ms)
+✔ may-toa-nguoi-chi-ghi-vung (0.038875ms)
+✔ may-toa-nguoi-khong-neu (0.033584ms)
+✔ may-toa-nguoi-ghi-ten-la (0.035ms)
+✔ may-vung-nguoi-dung-vung (0.044584ms)
+✔ may-vung-nguoi-ghi-toa-trong-vung (0.035042ms)
+✔ may-vung-nguoi-ghi-vung-con (0.031167ms)
+✔ may-vung-nguoi-ghi-toa-vung-khac (0.055292ms)
+✔ may-vung-nguoi-ghi-vung-khac (0.087708ms)
+✔ may-vung-nguoi-khong-neu (0.044916ms)
+✔ may-vung-nguoi-ghi-toa-chua-co-vung-va-dung-vung (0.039916ms)
+✔ may-vung-nguoi-chi-ghi-toa-chua-co-vung (0.025375ms)
+✔ may-vung-nguoi-ghi-toa-phan-khu-chua-noi (0.114958ms)
+✔ may-vung-nguoi-ghi-toa-phan-khu-da-noi (0.060709ms)
+✔ du-co-dung-het-thi-dat (1.017708ms)
+✔ mot-bai-sai-van-dat (0.244ms)
+✔ hai-bai-sai-o-n2-thi-do-dung-n2 (0.167083ms)
+✔ n2-hut-thi-nguon-c-f-phai-tat (0.182375ms)
+✔ ma-thoat-hut-khac-ma-loi-do (0.328917ms)
+✔ thieu-co-mau-n1-thi-do (0.173709ms)
+✔ hai-nguoi-lech-nhau-thi-loai-va-bao (0.197333ms)
+✔ bao-cao-tach-nguon-muc-khu (0.203792ms)
+✔ dau-ra-ma-cuoi-khac-ban-dong-bang-thi-ghim-ma-bai (0.082542ms)
+✔ so-trong-bao-cao-doc-lai-duoc (0.579917ms)
+✔ bai-may-sai-ghi-cach-quy-nhan (0.286916ms)
+✔ doc-nhap-bo-chu-thich-giu-phay-trong-nhay (0.204083ms)
+✔ ti-le-manh-sua-tinh-tu-nhan-trong-db-theo-nhom (0.115ms)
+✔ doc-nhap-dang-dai-tach-the-cai (0.237458ms)
+✔ tach-so-theo-loai-the-va-bat-gio-luu-truoc-duyet (0.179541ms)
+✔ vong-2-gop-n1-lat-cu-n2-lat-moi (0.059333ms)
+✔ mot-bai-chu-dai-nhat-moi-tin (0.662916ms)
+✔ uu-tien-bai-model-con-giup-duoc (0.058292ms)
+✔ loai-tin-da-gan (0.03825ms)
+✔ loai-tin-xung-dot (0.034625ms)
+✔ loai-tin-da-co-ban-doc (0.033542ms)
+✔ loai-tin-ngoai-hai-khu (0.036542ms)
+✔ loai-bai-thu-vi-khong-co-trong-dau-vao (0.032833ms)
+✔ loai-bai-khong-co-chu (0.034667ms)
+✔ cung-du-lieu-ra-cung-bam (0.244209ms)
+✔ nac-thu-dat-thi-doc-tiep (0.083542ms)
+✔ nac-thu-qua-nhieu-bai-hong-thi-dung (0.069041ms)
+✔ nac-thu-tien-moi-bai-qua-cao-thi-dung (0.038541ms)
+✔ nac-thu-khong-bai-nao-doc-duoc-thi-dung (0.053042ms)
+✔ luot-2-doc-dung-bai-luat-doc-ra-du-tin-da-co-ban-doc-bai-khac (0.065125ms)
+✔ luot-2-moi-tin-mot-bai (0.040166ms)
+✔ luot-2-loai-tin-da-gan (0.034625ms)
+✔ luot-2-loai-bai-da-doc (0.015917ms)
+✔ luot-2-loai-bai-khong-neu (0.274333ms)
+✔ luot-2-loai-tin-ngoai-hai-khu (0.038958ms)
+✔ du-110-bai-moi-nhom (8.614084ms)
+✔ nguon-vao-dung-nhom (2.752292ms)
+✔ cung-hat-giong-cung-mau-khac-hat-giong-khac-mau (6.876625ms)
+✔ moi-tin-mot-bai (0.096708ms)
+✔ khong-trung-text-hash-giua-cac-nhom (0.081541ms)
+✔ khong-lay-bai-cua-lat-pl35 (0.077167ms)
+✔ chi-lay-tin-da-gan-va-bai-co-chu (0.051958ms)
+✔ nhom-thieu-bai-thi-bao-so-thieu (0.06125ms)
+✔ nguon-da-tat-khong-vao-mau (0.0555ms)
+✔ dong-bang-doi-mot-nut-thi-doi-bam (0.160208ms)
+✔ vong-2-chi-rut-nhom-n2-va-bo-bai-lat-cu (2.960541ms)
+✔ vong-2-tep-dong-bang-mang-lat-va-sha-ma-ma-bam-chi-theo-dong (0.0825ms)
+✔ cot-khop-dung (1.056959ms)
+✔ cot-khop-sau-chuan-hoa (0.645792ms)
+✔ cot-mo-ho (0.056959ms)
+✔ cot-khop-vung (0.055666ms)
+✔ cot-ngoai-danh-ba (0.038333ms)
+✔ cot-khop-nhung-chu-neu-hai-toa (0.06875ms)
+✔ cot-khop-nhung-model-bao-nhieu-can (0.025958ms)
+✔ cot-mo-ho-khong-roi-xuong-chu-bai (0.387ms)
+✔ cot-ngoai-khong-roi-xuong-chu-bai (0.041541ms)
+✔ hai-gia-tri-cot-chi-hai-toa (0.067041ms)
+✔ ma-trung-giua-hai-du-an (0.077125ms)
+✔ tin-khu-khac (0.060417ms)
+✔ tin-chua-co-du-an (0.01875ms)
+✔ tin-khong-phai-can-ho (0.015666ms)
+✔ ma-trung-qua-xet-tin-theo-du-an-cua-tin (0.114417ms)
+✔ tin-trong-pham-vi-doi-chung-duong (0.048875ms)
+✔ luat-va-model-cung-toa (0.091334ms)
+✔ luat-va-model-khac-toa (0.029583ms)
+✔ luat-doc-duoc-model-chua-doc (0.025375ms)
+✔ model-mot-minh-ten-trong-trich (0.054125ms)
+✔ model-mot-minh-ten-ngoai-trich (0.0255ms)
+✔ luat-va-model-cung-vung (0.030959ms)
+✔ model-mot-minh-vung-ten-trong-trich (0.028416ms)
+✔ model-mot-minh-vung-ten-ngoai-trich (0.02875ms)
+✔ can-cu-kien-thuc-nghe-coi-nhu-chua-doc (0.029208ms)
+✔ doan-trich-chua-kiem-coi-nhu-chua-doc (0.027083ms)
+✔ khong-neu-gi (0.025584ms)
+✔ bai-chi-co-anh-chu-null (0.0225ms)
+✔ bai-chi-co-anh-van-xet-o-ten-toa (0.022083ms)
+✔ o-model-v-khong-phai-chuoi (0.023542ms)
+✔ o-model-trich-rong (0.022417ms)
+✔ ten-danh-ba-mot-ky-tu-khong-khop (0.017291ms)
+✔ can-cu-cua-tung-nguon (0.32575ms)
+✔ mac-dinh-nguon-chi-co-model-dang-tat (0.040542ms)
+✔ nguon-tat-khong-gan (0.030584ms)
+✔ trung-ten-toa-vung-o-cot-gan-muc-vung (0.037084ms)
+✔ trung-ten-toa-vung-ma-can-la-gan-muc-vung (0.043125ms)
+✔ trung-ten-khong-dem-la-toa-thu-hai-trong-chu (0.019792ms)
+✔ hai-vung-trung-ten-khong-dem-la-hai-toa (0.01775ms)
+✔ ten-toa-rieng-van-gan-muc-toa (0.022875ms)
+✔ ma-dinh-so-khong-doc-ra-vung-ngan (0.037334ms)
+✔ ma-can-co-dau-sau-ten-toa-van-doc-ra-toa (0.029458ms)
+✔ ma-can-dinh-lien-sau-ten-toa-van-doc-ra-toa (0.296708ms)
+✔ ten-vung-dung-rieng-van-doc-ra-vung (0.044667ms)
+✔ trung-ten-cung-ket-qua-khi-con-va-da-go-dong-toa: o-cot (0.057167ms)
+✔ trung-ten-cung-ket-qua-khi-con-va-da-go-dong-toa: o-cot-ma-can-la (0.041417ms)
+✔ trung-ten-cung-ket-qua-khi-con-va-da-go-dong-toa: chu-va-model-cung-vung (0.029375ms)
+✔ trung-ten-cung-ket-qua-khi-con-va-da-go-dong-toa: model-ghi-vao-o-toa (0.02525ms)
+✔ trung-ten-cung-ket-qua-khi-con-va-da-go-dong-toa: chu-mot-toa-mot-vung (0.025792ms)
+✔ trung-ten-cung-ket-qua-khi-con-va-da-go-dong-toa: chu-hai-vung (0.022125ms)
+✔ mot-toa-hai-vung-trung-ten-la-mo-ho (0.078375ms)
+✔ mot-toa-hai-vung-ma-can-la-mo-ho (0.059125ms)
+✔ hai-toa-mot-vung-trung-ten-la-mo-ho (0.014ms)
+✔ gop-toa-va-phan-khu-chua-noi-thi-xung-dot (0.072ms)
+✔ gop-toa-va-phan-khu-da-noi-ra-muc-toa (0.047667ms)
+✔ gop-hai-toa-khac-nhau (0.034958ms)
+✔ gop-toa-va-vung-chua-no (0.014792ms)
+✔ gop-toa-va-vung-khong-chua-no (0.015792ms)
+✔ gop-hai-vung-khong-long-nhau (0.023875ms)
+✔ gop-hai-nguon-cung-toa (0.015917ms)
+✔ gop-hai-vung-long-nhau-lay-vung-sau (0.015417ms)
+✔ gop-toa-khong-co-vung-va-mot-vung (0.0145ms)
+✔ gop-khong-co-gi (0.012333ms)
+✔ ten-dai-beverly-solari-khong-roi-ve-beverly (0.139583ms)
+✔ ten-ngan-beverly-mot-minh-van-gan (0.039834ms)
+✔ chu-the-dau-ten-duoc-bo (0.018375ms)
+✔ nhieu-can-so-dem (0.028792ms)
+✔ nhieu-can-hai-can (0.015291ms)
+✔ nhieu-can-chu-nhieu (0.020667ms)
+✔ can-thu-2-can-ra-khong-phai-nhieu-can (0.019333ms)
+✔ nhieu-can-chan-ca-o-ten-toa (0.018916ms)
+✔ so-tang-va-ma-toa-truoc-chu-can-khong-phai-nhieu-can (0.018416ms)
+✔ bo-the-khong-dung-ten-tran-cua-nut-khac (0.054541ms)
+✔ ten-dai-the-rainbow-thang-rainbow (0.029417ms)
+✔ co-2-can-ban-khong-phai-nhieu-can (0.017292ms)
+✔ tap-dung-het-dat-nguong (0.594917ms)
+✔ ba-bai-sai-hut-nguong-va-bang-bai-sai-du-cot (0.221ms)
+✔ doi-mot-nhan-trong-tap-thi-bam-lech-goi-ten-tap (0.193333ms)
+✔ thieu-nhan-nguoi-thi-chua-dat (0.616459ms)
+✔ the-cai-loai-khoi-phep-tinh-va-dem-nguoi-duyet-sua-dung (0.20975ms)
+✔ ma-dang-truc (0.981541ms)
+✔ ma-dang-tang-can (0.426708ms)
+✔ ma-co-dau-ngan-gp-tu-chu-bai (0.503208ms)
+✔ ma-gach-ngang-gp-tu-chu-bai (0.091417ms)
+✔ tang-che-mot-phan (0.056958ms)
+✔ tầng che một phần có dấu chấm (BE3.1x13) (0.186958ms)
+✔ toa-lech (0.046584ms)
+✔ ma-khong-toa (0.047875ms)
+✔ ma-la (0.083125ms)
+✔ ma-nhieu (0.077875ms)
+✔ bai-nhieu-can (0.036958ms)
+✔ khong-ma (0.178333ms)
+✔ R1.01 là tên toà, không tách thành R1 + trục 01 (quy ước Mã căn, bài 11543) (0.061167ms)
+✔ diện tích và mã tin sàn không phải mã căn trong chữ bài (0.057917ms)
+✔ truc-so-0-dau (0.038833ms)
+✔ truc-ngoai-danh-ba (0.038625ms)
+✔ truc-cung-so-toa-khac-khong-chon (0.037584ms)
+✔ truc-va-tang-chu-bai (0.271291ms)
+✔ can-ngoai-danh-ba (0.060541ms)
+✔ tang-lech (0.037583ms)
+✔ chi-tang-tu-ma (0.0295ms)
+✔ tang-09-khop-9 (0.026166ms)
+✔ tang-12a-khong-can-sai-tang (0.029292ms)
+✔ bi-danh-khop-mot-can (0.023792ms)
+✔ bi-danh-hai-can (0.021458ms)
+✔ hai-can-cung-truc-tang (0.032541ms)
+✔ tầng chuẩn và giá trị SubId (0.067458ms)
+✔ tắt một nguồn thì bài của nguồn đó không gắn (0.03425ms)
+✔ GT-AC-1: 8 dòng giá đồng ra đúng số đồng (18.392333ms)
+✔ GT-AC-1 đột biến: bỏ điều kiện bỏ-qua → «3.000.000.000» ra null (3.204375ms)
+✔ GT-AC-2: 7 dòng SĐT trước «T.Lan» đều ra giá 9 triệu (0.348084ms)
+✔ GT-AC-2 đột biến: chỉ xét ký tự đứng trước → SĐT nối SĐT lọt vào bước đọc số (2.49475ms)
+✔ GT-AC-3: extractPhones — giá tỷ chẵn ra rỗng, SĐT ra đúng (0.325333ms)
+✔ GT-AC-3 đột biến: điều kiện vào PHONE_RE dùng chung → SĐT nối SĐT chỉ còn một số (2.580458ms)
+✔ GT-AC-4: giá đồng phi lý bị chốt khoảng loại đúng lý do (0.139792ms)
+✔ GT-AC-4 đối chứng: bỏ điều kiện bỏ-qua → giá bị nuốt nên lọt chốt (2.9395ms)
+✔ GS-AC-1: 8 dòng giá đồng ra đúng số đồng, 4 trường đứng sau giá ra đúng (14.359584ms)
+✔ GS-AC-1 đột biến: bỏ nhánh đuôi → «3.000.000.000\n50m2» ra null (3.268916ms)
+✔ GS-AC-2: 10 dòng SĐT đều ra giá 9 triệu (0.336417ms)
+✔ GS-AC-2 đột biến: bỏ điều kiện nhóm cuối «000» → «2.098.765.432 1» lọt vào bước đọc số (3.1175ms)
+✔ GS-AC-2 đột biến: bỏ điều kiện thân số tiền → «50m2.098.765.000 1» lọt vào bước đọc số (2.564834ms)
+✔ GS-AC-3: extractPhones của cây bằng của bản nền (đổi sang dạng E.164 của SD3) ở 15 dòng (0.380292ms)
+✔ GS-AC-3 đột biến: lối (a) — PHONE_RE thôi nhận khoảng trắng → «liên hệ.0901 234 567» lệch bản nền (2.135667ms)
+✔ GS-AC-4: giá phi lý bị chốt khoảng loại đúng lý do (0.126ms)
+✔ GS-AC-4 đối chứng: bỏ nhánh đuôi → giá bị nuốt nên lọt chốt (2.795625ms)
+✔ GA-AC-1: 6 dòng chữ — chỉ-URL và rỗng là tin chỉ-ảnh, có lời thì không (0.353125ms)
+✔ GA-AC-1 đột biến: bỏ bước gạt URL → dòng một URL không còn là tin chỉ-ảnh (0.556209ms)
+✔ GA-AC-2: 9 dòng gán — đúng bài chữ hoặc không gán (0.132417ms)
+✔ GA-AC-2 đột biến: bỏ điều kiện cùng người → ảnh vào bài chữ của người khác (0.371166ms)
+✔ GA-AC-2 đột biến: «< cửa sổ» thành «<=» → dòng cách 120 giây bị gán (0.354625ms)
+✔ GA-AC-2 đột biến: lấy bài chữ đầu tiên thay vì gần nhất → dòng hai bài chữ vào A (0.325291ms)
+✔ GT-AC-1 thiếu phường và diện tích: hai người đăng cùng nội dung → hai khoá; một người đăng lại → một khoá (10.393958ms)
+✔ GT-AC-1 thiếu phường, có diện tích vẫn phân biệt người đăng (2.072375ms)
+✔ GT-AC-2 đủ phường và diện tích: khoá như cũ, bài người khác đăng lại cùng căn vẫn gộp (0.114375ms)
+✔ GT-AC-3 không có sender_id: SĐT trong bài phân biệt; không SĐT: chữ bài đã chuẩn hoá (1.044084ms)
+✔ GT-AC-3 normText: NFC, chữ thường, gộp dấu cách và dấu câu (0.118334ms)
+manifest ok: hanoi__S06__2026-11-26T205507776 — 3 items
+⚠ bỏ 1/3 tin thiếu region_v2 (payload lẫn meta đều rỗng — trang sâu; 1411-23)
+✅ 2 ads → stg_chotot_ads (bỏ 1 thiếu region_v2 — VƯỢT NGƯỠNG 1%)
+✔ S06C-1: tin thiếu region_v2 giữa tin hợp lệ → nạp 2, bỏ 1 có đếm, vuotNguong=false (1/3 dưới ngưỡng 1%? — KHÔNG: 1/3 = 33% VƯỚT ngưỡng) (57.339208ms)
+manifest ok: hanoi__S06__2026-11-26T205507794 — 2 items
+✅ 2 ads → stg_chotot_ads
+✔ S06C-2: toàn tin hợp lệ → bỏ 0, vuotNguong=false (nạp lại cùng snapshot vẫn 0 mới) (11.373833ms)
+✔ s08RowOf: mapping đủ cột từ payload/meta, giữ đơn vị nguồn (0.415875ms)
+✔ s08RowOf: state detail/lạ → null (bỏ, không ghi stg) (0.048208ms)
+✔ s08Num/s08Int: chuỗi số hợp lệ đổi được; '', 'S', '2PN', thiếu → null (9.912667ms)
+✔ s08Num siết (2610-22): ' ', '0x10', '1.500.000', '1 500' → null; ' 100,5 ' → 100.5; '1,500' → 1.5 (0.101084ms)
+✔ s08RowOf: cột số qua s08Num/s08Int — 'S', '', chuỗi phẩy đổi đúng (0.071125ms)
+✔ allowlist: nguồn thật đi qua, mọi nguồn khác bị chặn (kể cả lạ) (0.328667ms)
+✔ isTestSnapshot (nghĩa mới = ngoài allowlist): theo segment nguồn của tên dir (0.097292ms)
+✔ khuôn tên: thư mục segment thử (TEST/e2e) bị bỏ dù nguồn hợp lệ (0.098959ms)
+✔ khuôn tên: tên thật có mốc thời gian vẫn nạp (cả 3 dạng storage) (0.281417ms)
+✔ khuôn tên: thiếu/thừa segment hoặc mốc rác → bỏ (0.049583ms)
+✔ TS_RE bốn bản (2 importer + 2 daily script) phải identical (BÁO 2510-5) (2.810333ms)
+✔ KTA-AC-1 mỗi băm một dòng, giữ lần đầu, thứ tự liền nhau, khoá theo tệp đầu (1.6255ms)
+✔ KTA-AC-1 cùng băm ở hai tin vẫn là hai dòng của hai tin (0.100208ms)
+✔ KTA-AC-1 ca đỏ: khử xuyên tin (1.26875ms)
+✔ KTA-AC-1 ca đỏ: bỏ khử băm thì báo tên dòng (0.635292ms)
+✔ KTA-AC-2 thiếu băm khử theo tệp, chỉ URL khử theo URL; hàm không đọc đĩa, không gọi mạng (0.277541ms)
+✔ KTA-AC-2 ca đỏ: URL của tệp đã khử quay lại (0.684708ms)
+✔ KTA-AC-2 ca đỏ: tệp lần sau có băm sinh hai dòng cùng khoá (0.533625ms)
+✔ KTA-AC-9 cùng đầu vào cùng kết quả, bản giữ là lần đầu theo post_ids (0.106292ms)
+✔ KTA-AC-9 ca đỏ: chọn bản giữ theo tên tệp nhỏ nhất (4.4515ms)
+✔ GHEP-AC-1 mot tin chu (0.59025ms)
+✔ GHEP-AC-1 dong trung cum tro ve dai dien (0.050917ms)
+✔ GHEP-AC-1 cum lech lay so lon nhat tren cum (0.037625ms)
+✔ GHEP-AC-1 khong tin chu (0.043708ms)
+✔ GHEP-AC-1 co chu co cum (0.033834ms)
+✔ GHEP-AC-1 co chu khong cum la null (0.034333ms)
+✔ GHEP-AC-1 thieu nguoi gui (0.035667ms)
+✔ GHEP-AC-1 cum lech: dong sau cung cum co cung co (0.026917ms)
+✔ GHEP-AC-1 bai khong con trong stg la null (0.037833ms)
+✔ GHEP-AC-1 ma tran du moi dong mau (0.069667ms)
+✔ GHEP-AC-1 moi dong khop ganBaiAnh goi truc tiep (0.079583ms)
+✔ GHEP-AC-1 cum lech that: moi bai khac so tin chu gan, co cua cum la so lon nhat, dot bien bo so lon nhat thi do (1.185ms)
+✔ GHEP-AC-2 dich lenh ghep: DB thu (0.069542ms)
+✔ GHEP-AC-2 dich lenh ghep: DB that (0.035833ms)
+✔ GHEP-AC-2 dich lenh ghep: ten khac (0.023333ms)
+✔ GHEP-AC-2 dich lenh ghep: may khac cung ten thu (0.016625ms)
+✔ GHEP-AC-1 cach 119 giay do khi doi cua so sang 60: doi chung ban sao dot bien (1.079958ms)
+✔ GHEP-AC-3 anh_refs theo thoi gian khi nguoc thu tu ma: doi chung ban sao dot bien (5.57325ms)
+✔ GHEP-AC-1 khong co luat thu hai (109.176375ms)
+✔ GN2-AC-5 label-ghep thường và --lam-lai: mỗi nhóm trùng một thẻ hiện, giữ dấu ẩn tay và thẻ có nhãn (138.461333ms)
+(node:23600) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/manhphan/dev/onehub-invest/.claude/worktrees/probe-pl36/app/src/lib/last-log-line.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/manhphan/dev/onehub-invest/.claude/worktrees/probe-pl36/app/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+▶ LD-AC-6 dòng log cuối có nghĩa
+  ✔ LD-AC-6 pipeline/lib/last-log-line.mjs · mẫu cloud-sync thật 24/10 → "sync xong 2026-10-24T05:" (0.410709ms)
+  ✔ LD-AC-6 pipeline/lib/last-log-line.mjs · chỉ có cảnh báo → null (0.44025ms)
+  ✔ LD-AC-6 pipeline/lib/last-log-line.mjs · một dòng thường → "smoke ok — 12 listing, m" (0.036625ms)
+  ✔ LD-AC-6 pipeline/lib/last-log-line.mjs · dòng thường rồi cảnh báo [DEP0040] → "smoke ok — 12 listing, m" (0.027291ms)
+  ✔ LD-AC-6 pipeline/lib/last-log-line.mjs · tệp rỗng → null (0.060541ms)
+  ✔ LD-AC-6 app/src/lib/last-log-line.ts · mẫu cloud-sync thật 24/10 → "sync xong 2026-10-24T05:" (0.06175ms)
+  ✔ LD-AC-6 app/src/lib/last-log-line.ts · chỉ có cảnh báo → null (0.030208ms)
+  ✔ LD-AC-6 app/src/lib/last-log-line.ts · một dòng thường → "smoke ok — 12 listing, m" (0.037208ms)
+  ✔ LD-AC-6 app/src/lib/last-log-line.ts · dòng thường rồi cảnh báo [DEP0040] → "smoke ok — 12 listing, m" (0.054583ms)
+  ✔ LD-AC-6 app/src/lib/last-log-line.ts · tệp rỗng → null (0.057458ms)
+  ✔ LD-AC-6 tailLog đọc tệp mẫu cloud-sync → lastLine sync xong … (3.611291ms)
+  ✔ LD-AC-6 push-ops-facts.mjs import tailLog từ lib và không còn hàm tailFile / lines.at(-1) riêng (0.498666ms)
+  ✔ LD-AC-6 chiều đỏ: bản không lọc ra dòng (Use `node --trace- (0.071667ms)
+✔ LD-AC-6 dòng log cuối có nghĩa (6.021ms)
+✔ LNB-AC-7 co-username khớp Người → một chat_profile username trần, luật hồ sơ, bằng chứng có mã và thời điểm (0.699083ms)
+✔ LNB-AC-7 không ghi: mã lệch (hậu tố), không khớp Người, khong-ro, username dạng link hay rỗng (3.961459ms)
+✔ LNB-AC-7 chạy lại giữ nguyên; đổi username rút doi-username rồi thêm; khong-tim-thay và khong-username rút bo-username (0.157709ms)
+✔ LNB-AC-7 hai mã cùng Người cùng username → một liên lạc (0.058583ms)
+✔ LNB-AC-8 chọn: toàn chữ số, mọi tin không số, Người không số, chưa tra, đủ tin; sắp theo số tin; đối chứng khác mã chọn (0.123667ms)
+✔ LNB-AC-8 tệp yêu cầu nằm ngoài ~/.openclaw và ngoài snapshots/ (0.054ms)
+✔ NH-AC-1 mappings khai bảng media (23.192708ms)
+✔ NH-AC-10 chạy hằng đêm (0.973333ms)
+✔ NH-AC-10 bước chen giữa (DA45): đúng một bước phuong-tu-du-an được nhận; bước lạ, hai bước, đảo thứ tự đều đỏ (0.786709ms)
+✔ NL-AC-4 S03 nhóm dựng lại nguyên vẹn (cùng post): offer_id của tin p1 không đổi (0.728875ms)
+✔ NL-AC-4 S03 nhóm tách: p2 sang nhóm khác: offer_id của tin p1 không đổi (0.103583ms)
+✔ NL-AC-4 S03 nhóm dựng lại, thứ tự post đảo: offer_id của tin p1 không đổi (0.075625ms)
+✔ NL-AC-4 S03 nhóm dựng lại khi tin cũ còn nhóm khác (q1) vắng: offer_id của tin p1 không đổi (0.062875ms)
+✔ NL-AC-4 S03 thêm repost muộn hơn: offer_id của tin p1 không đổi (0.051333ms)
+✔ NL-AC-4 S03 thu bù post SỚM hơn neo: offer_id của tin p1 không đổi (0.041584ms)
+✔ NL-AC-4 S05 nhóm dựng lại nguyên vẹn (cùng post): offer_id của tin p1 không đổi (0.044959ms)
+✔ NL-AC-4 S05 nhóm tách: p2 sang nhóm khác: offer_id của tin p1 không đổi (0.043833ms)
+✔ NL-AC-4 S05 nhóm dựng lại, thứ tự post đảo: offer_id của tin p1 không đổi (0.038917ms)
+✔ NL-AC-4 S05 nhóm dựng lại khi tin cũ còn nhóm khác (q1) vắng: offer_id của tin p1 không đổi (0.079666ms)
+✔ NL-AC-4 S05 thêm repost muộn hơn: offer_id của tin p1 không đổi (0.047166ms)
+✔ NL-AC-4 S05 thu bù post SỚM hơn neo: offer_id của tin p1 không đổi (0.038709ms)
+✔ NL-AC-4 khoá mới = 'offer_' + sha256('S03|'+post neo)[:16], neo = post sớm nhất (0.054791ms)
+✔ NL-AC-4 đối chứng: nhóm mới hoàn toàn (không post chung) → khoá khác; tin khoá cũ (băm nội dung) không được thừa kế (0.064042ms)
+✔ NL-AC-4 nhóm tách mà neo trùng khoá gốc tin cũ → không cấp trùng id (0.086333ms)
+✔ NL-AC-4 hoà số post chung: tin còn sống thắng tin đã nghỉ; kết quả không phụ thuộc thứ tự existing (0.066334ms)
+✔ NL-AC-8 cây pipeline/ không còn DELETE FROM / TRUNCATE nhắm bảng tin hay listing (33.13075ms)
+✔ NL-AC-8 đối chứng: cây giả cấy một câu DELETE → đỏ nêu đường:dòng; chú thích và dấu bỏ qua không tính (0.889584ms)
+✔ scripts/ops-apply-plist.test.mjs (31.466125ms)
+(node:23605) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/manhphan/dev/onehub-invest/.claude/worktrees/probe-pl36/app/src/lib/mask-source-names.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/manhphan/dev/onehub-invest/.claude/worktrees/probe-pl36/app/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+▶ ON7-AC-7 bộ che
+  ✔ ON7-AC-7 bộ che: bảng ca dùng chung — bản pipeline và bản app đúng kết quả viết trước từng ca và giống hệt nhau (12.985959ms)
+  ✔ AC-2 che-ten: mọi ca không mang cờ ra đúng chuỗi như bản lõi của origin/main (rút bằng git show, không viết tay) (14.8605ms)
+  ✔ AC-2 che-ten chiều đỏ: bản sao lõi bỏ qua wholeOnly → ca tên dự án đỏ ghim «AC-2 thương hiệu dự án bị che nhầm» (1.619791ms)
+  ✔ ON7-AC-7 tên ba ký tự giữa một từ khác không bị thay (0.090833ms)
+  ✔ ON7-AC-7 danh sách tên rỗng → cả hai bản trả null (0.050125ms)
+✔ ON7-AC-7 bộ che (30.120833ms)
+▶ ON7-AC-4 payload facts
+  ✔ ON7-AC-4 push-ops-facts thật → payload bắt được: 6 job, 0 tên nguồn thật trong MỌI giá trị chuỗi (trừ zaloGroups[].name và zaloAccounts[]), id trung tính, dòng log cuối mang mã S0x (874.2165ms)
+  ✔ ON7-AC-4 chiều đỏ: bản sao bỏ bộ che → bắt dòng log cuối, nêu mã S0x (874.447416ms)
+  ✔ ON7-AC-4 chiều đỏ: bản sao thêm giá trị mang tên thật ngoài jobs → bắt, nêu đường JSON (871.704958ms)
+✔ ON7-AC-4 payload facts (2620.618042ms)
+✔ AU9-AC-10 transform-airbnb dùng chung điều kiện phường hợp lệ (0.513167ms)
+✔ AU9-AC-10 finalize-hanoi.sh không mang cờ xoá (0.109792ms)
+✔ SL1-AC-1 ma trận nhóm × chữ (0.595833ms)
+✔ SL1-AC-1 confidence theo khu vực: cấp thị trường không lên high (0.063708ms)
+✔ SL1-AC-7 thước tập tin đỏ khi đổi giá, diện tích, loại tin hay mất, thêm tin (0.113916ms)
+✔ SL1-AC-3 quét bên đọc bỏ tệp tạm đột biến, tệp lạ thường vẫn đỏ (0.117208ms)
+✔ SL1-AC-10 chữ bài: bắt đoạn dán không nháy, trong «» và qua dòng xuống; ngắn hơn cửa sổ thì không (0.189417ms)
+✔ SL1-AC-9 sai nặng: từng lý do, trường trống không tính (0.07375ms)
+✔ SL1-AC-1 đỏ: bản bỏ điều kiện đúng một thị trường (3.479459ms)
+✔ SL1-AC-1 mã thị trường không còn trong areas thì để trống (0.047833ms)
+✔ SL1-AC-1 gộp bài: bài sau có mã thì nhận, hai thị trường thì trống và giữ trống, tin có phường không đổi (0.086292ms)
+✔ SL1-AC-4 ma trận đáp án loại hình theo chữ (0.221292ms)
+✔ SL1-AC-4 đỏ: bản nhận «PN» là căn hộ (2.331625ms)
+✔ SL1-AC-4 ngưỡng nhóm: 19 bài không đủ, 20 bài đủ, dưới 85% không nhận (0.108875ms)
+✔ stripNullBytes: chuỗi có \0 → lọc sạch; mảng/đối tượng đệ quy; phần khác giữ nguyên (0.6015ms)
+✔ cửa sổ mặc định phủ khoảng cách lượt dài nhất của lịch Ba/Sáu (≥ 4 ngày) (0.399792ms)
+✔ S05_NEWER_THAN env đè được (G2/V1 chỉnh) — kiểm cả plist pin '4 days' (0.057542ms)
+✔ S05_RESULTS_LIMIT rác/không hợp lệ → về mặc định 100 (không NaN) (0.049875ms)
+✔ region (tỉnh): params.region → mọi lời gọi mang region=<mã>, meta mang region (319.036833ms)
+✔ region_v2 (cũ): HN/HCM/ĐN không đổi hành vi — lời gọi region_v2, meta region_v2 (384.029541ms)
+✔ ưu tiên region khi vùng có cả hai mã (296.352209ms)
+✔ vùng active thiếu cả hai mã → params-hong, 0 lời gọi cho vùng đó, lượt vẫn chạy vùng khác (338.443833ms)
+✔ S07-AC-1 áp 093 hai lần: đủ ba bảng, khoá, chỉ mục, chú thích; lần hai không đổi lược đồ (60.648209ms)
+✔ S07-AC-1 should-NOT-fire: ba bản đột biến của 093 đỏ đúng tên (61.472167ms)
+✔ S07-AC-8 chưa áp 093: in CHUA-AP-093, thoát 0, không đánh dấu snapshot (56.531708ms)
+✔ S07-AC-5 nạp, nạp lại, so từng cột đọc lại từ DB (184.653166ms)
+✔ S07-AC-5 thư mục cha: chỉ nạp snapshot S07 chưa có dấu, bỏ nguồn khác; cùng dự án ở snapshot mới là dòng mới (123.47175ms)
+✔ S07-AC-5 hai thứ tự: nạp cũ→mới và mới→cũ cho cùng nội dung ba bảng (328.898916ms)
+✔ S07-AC-6 tên miền không vào stg; S07_HOST sai cũng không làm lọt (206.700958ms)
+✔ S07-AC-8 should-NOT-fire: phiên bản lạ, checksum sai bị từ chối; thư mục sai khuôn, thiếu manifest bị bỏ qua (353.527958ms)
+✔ S07-AC-2 thẻ chính: mỗi thẻ một dòng đủ trường, khối «nổi bật» không tính (1.892458ms)
+✔ S07-AC-2 should-NOT-fire: thẻ không trỏ tới trang dự án bị bỏ có đếm; trang rỗng ra 0 thẻ (0.372625ms)
+✔ S07-AC-3 trang dự án: mỗi trường một khẳng định, mô tả trọn khối, link ứng viên (0.919208ms)
+✔ S07-AC-3 should-NOT-fire: toạ độ 0,0 → NULL; meta.loaiHinh sai không được tin; item rỗng → null (0.391125ms)
+✔ S07-AC-3 đường dẫn: mã, loại hình khớp tên dài nhất, khu vực có gạch dưới; trang lọc không phải dự án (0.115792ms)
+✔ S07-AC-4 sitemap: chỉ đường dẫn dự án, bỏ trang lọc, khử trùng mã (0.158667ms)
+✔ S07-AC-6 tên miền: suy từ canonical hoặc link; bỏ khỏi link trang, link ảnh, chữ trần (0.389334ms)
+✔ S07-AC-6 rào còn sót: soát theo MỌI miền suy được; còn tên miền thì ném, gọi tên bảng (0.944625ms)
+✔ S07-AC-7 phiên khách và bộ đếm: cờ true hoặc thiếu cờ không nạp, phần bỏ đếm theo sáu lý do (0.759375ms)
+✔ S10-1 khuôn 177: đủ 29 ô, giá đọc từ ô trong chú thích, ngày d/m/yyyy, DT bỏ đơn vị (12.419125ms)
+✔ S10-2 khuôn 178: 16 ô, hướng nằm trong chú thích, không cột giá, không ngày (0.149792ms)
+✔ S10-3 should-NOT-fire: dòng thiếu một ô là LỆCH KHUÔN — giữ raw_row, mọi trường NULL, không đoán vị trí (0.070833ms)
+✔ S10-4 should-NOT-fire: block_type lạ → lệch khuôn; dòng không stock_id bị bỏ có đếm (0.135875ms)
+✔ S10-5 giá 0 hoặc rỗng → NULL; giá có dấu nhóm nghìn → chữ số (0.104417ms)
+✔ S10-6 bộ lọc rộng: thiếu area_max hoặc price_max là THIẾU (máy chủ đã lọc) (0.302791ms)
+✔ S10-7 importer: nguồn S10 trong ALLOWLIST, nhận schemaVersion 8 (0.069875ms)
+✔ S10-8 DB chưa có 089: in CHUA-AP-089, thoát 0, KHÔNG đánh dấu snapshot đã nạp (59.167083ms)
+✔ S10-9 có 089: nạp dòng đủ lọc, bỏ item thiếu lọc có đếm, nạp lại cùng snapshot không nhân đôi; schemaVersion 4 cũ vẫn nhận (155.541792ms)
+✔ S10-10: snapshot schemaVersion 9 được nạp (v9 [nguồn] nhận {1..11} — 1211-29) (67.633375ms)
+✔ SDT-AC-1 ma trận 17 hàng (1.5695ms)
+✔ SDT-AC-1 đỏ: bỏ luật số thì đỏ ở hàng 1 (1.36375ms)
+✔ SDT-AC-1 đỏ: bỏ ngăn trong mẫu thì đỏ ở hàng 4 (0.973458ms)
+✔ SDT-AC-1 đỏ: hạ ngưỡng xuống 8 chữ số thì đỏ ở hàng 11 (1.279583ms)
+✔ SR AC-1: tin một người gửi → seller_ref là sender_id đã trim (0.359167ms)
+✔ SR AC-1 đỏ: bản sao trả author_hash → «SELLER_REF CON LA HANG» (2.8405ms)
+✔ SR AC-2: ma trận bốn ô — mỗi ô trả người gửi bài neo (0.08975ms)
+✔ SR AC-2 đỏ: bản sao lấy bài đầu mảng → «SELLER_REF KHONG THEO NEO» (2.531209ms)
+✔ SR AC-3: bài neo thiếu người gửi → bài kế; không ai gửi → null (0.072125ms)
+✔ SR AC-3 đỏ: bản sao rơi về author_hash → «SELLER_REF ROI VE HANG» (2.249417ms)
+✔ SR AC-6: rutDinhDanh của tin S03/S05 không đổi khi seller_ref đổi từ hằng sang người gửi (0.437209ms)
+✔ SG-AC-1 ma trận 12 ô: S06 chỉ số có dấu trực tiếp sinh bí danh, S03 và S05 không đổi (111.646375ms)
+✔ SG-AC-1 chiều đỏ: chỉ loại dấu ghép thì đỏ ở ô mất dấu (74.692958ms)
+✔ SG-AC-2a tin chuyển ẩn số: rút số ghép, danh bạ không đổi (82.070542ms)
+✔ SG-AC-2b tài khoản có thêm số thứ hai: chỉ thêm đúng cặp của số trực tiếp mới (80.723416ms)
+✔ SG-AC-3 sellers và sellersThieuNguoi: số có tin trực tiếp hiện, số chỉ trên tin ghép không hiện, không báo thiếu (83.448125ms)
+✔ SG-AC-4 070 áp hai lần: cột cuối đúng năm ô, cột cũ và bảng không đổi, qua phân xử vẫn đúng (80.510084ms)
+✔ SG-AC-4 chiều đỏ: view chỉ nhận dấu ghép thì sai ở ô mất dấu (75.767875ms)
+✔ SG-AC-5 qua transform thật: chưa có cột thì không ghi số ghép, số trực tiếp vẫn ghi, báo tên; bị ghi đè thì lại báo (114.070125ms)
+✔ SG-AC-9 bất biến: bộ số đạt thì sạch, mỗi đột biến đỏ đúng khoá (0.150334ms)
+✔ SG-AC-9 lệnh từ chối DB dùng chung và thoát 2 trước khi nối DB (35.30325ms)
+✔ SG-AC-9 phần đo chạy thật: dữ liệu đạt trả 0, chạy lại không có bí danh mới thì bất biến sai và trả 1 (89.199709ms)
+✔ fixture không ghi đè hàm phân xử của public: 068 áp lên bản riêng (67.000125ms)
+✔ SG-AC-9 mọi giá trị in đi qua chặn số: mang dạng số thì veDong ném, số đếm thì không (0.435375ms)
+✔ SG-AC-9 trên fixture: nhánh chặn số ghép, bỏ nhánh thì ra số, dòng in không có số (83.696667ms)
+✔ SG-AC-10 kiểm DQ so-chua-xac-minh: skip khi chưa có cột, pass có số trực tiếp, fail khi dấu mất hàng loạt (76.975333ms)
+✔ AC-10 PII không lên cloud: FILL thật không có bảng đề xuất/hàng duyệt (0.412666ms)
+✔ AC-10 chiều đỏ: chèn enrichment_proposals vào FILL → bộ đọc phát hiện (0.1035ms)
+✔ readFillList ném lỗi ghim khi không có FILL (0.148834ms)
+ma_ca_da_chay=M1,M2,M3,M4,M5,M6,M7,M8,M9,M10,M11,M12,M13,M14,M15,M16,M17,M18,M19,M20,M21,M22,M23,M24,M25,M26,M27,M28,M29,M30,M31,M32,R1,R2
+✔ DV4-AC-3 ma trận M1…M28 và Review Focus: mỗi ca một assert, trích dẫn có thật (8.648541ms)
+✔ DV4-AC-3 đột biến: bỏ chặn «tầng 2-3» thì M22 đỏ; đọc «T<số>» trần thì M17 đỏ (1.214666ms)
+✔ DV4-AC-3 parsePost mang tầng của bài (4.113417ms)
+✔ TN-AC-1 mỗi nhóm nhiều–nhiều một thẻ (1.007041ms)
+✔ TN-AC-1 chiều đỏ: bản đột biến coi một–một là nhóm (1.224584ms)
+✔ TN-AC-1b evidence và lần gộp theo thẻ (hàm thuần) (0.245042ms)
+✔ TN-AC-9 test đã ký HD13 không đổi (52.025416ms)
+✔ canDungNgay: 403/429 dừng ngay (kèm nhãn Retry-After); captcha/khong-ra-so/timeout KHÔNG (0.3085ms)
+✔ chonTinChuaHetHan: nhảy sang tin kế khi tin mới nhất het-han (0.072625ms)
+✔ laChromeBoThuCuaLenh: chứa profileDir thì được tắt; không chứa thì sống (0.054083ms)
+✔ SV1-AC-1 diện tích có phẩy đọc đủ, dạng cũ không đổi; ca đỏ bỏ phẩy khỏi regex (15.298083ms)
+✔ SV1-AC-2 phòng ngủ viết tắt ra đúng số, chữ gần giống ra null; ca đỏ bỏ chặn chữ sau «n» (4.713416ms)
+✔ SV1-AC-3 tên phường trùng hướng chỉ khớp khi gọi đích danh; ca đỏ bỏ luật hướng (3.494083ms)
+✔ SV1-AC-4 số ngữ cảnh không thành giá, giá có nhãn thắng; ca đỏ bỏ luật ngữ cảnh (13.593208ms)
+✔ SV1-AC-5 thuê từ 1 tỷ không ghi tháng đổi thành bán, «/tháng» giữ thuê; ca đỏ bỏ bước đổi (10.502667ms)
+✔ SV1-AC-6 giá che số ra số sàn, mã căn không thành giá; ca đỏ bỏ luật che (2.960041ms)
+✔ SV1-AC-7 giá không đơn vị đọc hẹp khi bật, không đọc khi tắt; mặc định bật; ca đỏ bỏ điều kiện nhãn (2.7245ms)
+✔ SV1-AC-8 đọc toà, trục giữ nguyên chữ; bài nhiều mã trống trục; ca đỏ bỏ luật nhiều mã (2.481334ms)
+✔ SV1-AC-8 phát biểu: mỗi bài có giá trị một dòng parser, bài trống không có dòng (0.343791ms)
+✔ SV1-AC-8 khoá gom tách hai trục khác nhau, bài cùng trục cùng người vẫn chung (0.12575ms)
+(node:24358) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/manhphan/dev/onehub-invest/.claude/worktrees/probe-pl36/app/src/lib/format.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/manhphan/dev/onehub-invest/.claude/worktrees/probe-pl36/app/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ GV-AC-6 hàm dựng zaloFlow/funnel bản pipeline trên lược đồ tạm (26.920125ms)
+✔ GV-AC-6 vnDayKey bản pipeline cùng ma trận khoá ngày (0.189375ms)
+✔ GV-AC-6 push-ops-facts dùng hàm lib, không còn ::date/date_trunc/to_char thiếu AT TIME ZONE (0.49425ms)
+✔ GV-AC-6 bản sao push-ops-facts dùng captured_at::date::text → thước báo (0.218125ms)
+✔ GV-AC-10 parseLog bản pipeline bỏ qua dòng mốc hỏng (0.087958ms)
+✔ GV-AC-10 bản sao ops-flow bỏ chặn mốc → ném, nêu mốc hỏng (1.821709ms)
+✔ VL-AC-4 sáu dạng: mỗi dạng đúng một dòng đỏ đường:dòng · trục · code (3.115083ms)
+✔ VL-AC-4 một code: cùng sáu tệp chỉ còn một code mỗi chỗ → 0 chỗ đỏ (1.190667ms)
+✔ VL-AC-4 vùng không quét: tệp sinh, db/migrations, collector, tệp test → 0 chỗ đỏ; collector được đếm (1.157666ms)
+✔ VL-AC-4 ngoại lệ: mục thiếu reason đỏ; mục không còn khớp đỏ; mục khớp có reason thì cho qua (17.004417ms)
+✔ VL-AC-4 trùng chữ: object số, mã lẻ, tên cột trần, comment, ${} lẻ, tệp chép kit → 0 chỗ đỏ (1.250584ms)
+✔ VL-AC-4 nối chuỗi hai code là một danh sách viết tay → đỏ (0.077ms)
+✔ VL-AC-4 regex có dấu nháy không làm lệch bộ quét (0.105916ms)
+✔ VL-AC-4 danh sách cột: quá nửa phần tử không phải code → không đỏ; quá nửa là code → đỏ (0.079416ms)
+✔ VL-AC-4 prompt dạng "a"|"b" trong template literal → đỏ (0.10775ms)
+✔ VL-AC-4 mã cài từ registry (components/ui|reui|blocks) ngoài vùng quét (0.784084ms)
+✔ VL-AC-4 object ánh xạ sang code ({s: 'sale', u: 'rent_lt'}) → đỏ; map nhãn tính theo khoá (0.115459ms)
+✔ VL-AC-5 ma trận kiểm kê: sáu tệp đọc hằng sinh, tập ngoại lệ đúng bản ghim (201.549167ms)
+✔ VL-AC-5 đối chứng: bản trước vòng của dq-enum-vocab.mjs bị lint bắt (0.360416ms)
+✔ VD-AC-4 isRunnable: đủ 49 ô nguồn × đơn vị, đúng hai ô chạy (0.699292ms)
+✔ VD-AC-4 isRunnable: hỏi đơn vị mà không có dòng → don-vi-khong-co; nguồn chặn trước (0.055083ms)
+✔ VD-AC-4b đột biến ghim: completed qua cổng nguồn như active → đúng 7 ô nguồn completed lệch (1.084625ms)
+✔ AC-1 nạp lại giữ đề xuất (64.835459ms)
+✔ AC-1 chiều đỏ: khối ghi cũ (DELETE toàn nguồn) bị chặn (34.114917ms)
+✔ AC-2 offer kế nhận đề xuất, áp lại, thẻ trỏ sang (40.160334ms)
+✔ AC-2 offer kế đã có thẻ chờ: thẻ cũ để sau, đề xuất thành lỏng (40.762458ms)
+✔ AC-2 offer kế có giá trị máy khác: quyết định người áp lại vẫn thắng (PL15 — hết fill-gap) (37.590083ms)
+✔ AC-2 post tách: offer chung nhiều post nhất nhận, hoà thì mã nhỏ hơn (62.077167ms)
+✔ AC-2 chiều đỏ: offer không chung post không nhận đề xuất (33.54925ms)
+✔ AC-3 trùng khoá giữ dòng đã quyết (125.682958ms)
+✔ AC-3 hai offer cũ cùng đổ về một offer kế (33.721208ms)
+✔ AC-4 offer không kế: nghỉ, giữ nguyên đề xuất, ảnh chụp không PII; tin quay lại thì sống lại (38.750209ms)
+✔ AC-5 khoá ngoại RESTRICT (29.296166ms)
+✔ AC-5 transform không DELETE toàn nguồn (0.824958ms)
+✔ AC-5 thiếu migration 044 thì dừng trước khi ghi (21.861666ms)
+✔ lượt nạp rỗng bị từ chối (25.448459ms)
+✔ CA-ĐỎ tĩnh: heartbeat còn gọi song_d_down_kdai; s03-song còn hàm (d) (0.379542ms)
+✔ D3-1: DOWN 2 nhịp → đúng 1 cảnh báo L6(d); nhịp 3 không lặp; lệnh nhóm ≤1/giờ; reason=session (397.552958ms)
+✔ D3-2: up lại → tự đóng (state xoá); sự cố kế sau khi hồi sẽ báo lại (308.457917ms)
+✔ D3-3: directory lỗi khác (không phải Đăng nhập thất bại) → reason=stopped (89.50725ms)
+✔ D3-4 (1411-20 MỞ LẠI): UP → zalo-drift.sh (giả) ĐƯỢC gọi; DOWN → không được gọi. CA ĐỎ: ai thêm lại exit 0 ở nhánh UP thì ca này đỏ (drift không được gọi) (170.433542ms)
+✔ D3-5: UP mà post 202 cuối cũ hơn 24 giờ → có dòng alert silent-gate (126.841417ms)
+✔ D3-6 (vòng 3-3): CLI directory treo quá trần 20s → heartbeat kết thúc < ~25s, reason=unknown, VẪN cảnh báo L6(d) (20346.612125ms)
+✔ D3-7 (vòng 4): CLI status ngủ quá trần → heartbeat < ~25s, DOWN reason=unknown, nhịp tăng, lần 2 có [d]. CA ĐỎ: gỡ bọc trần status (gọi trực tiếp) → ca này timeout đỏ (40114.313916ms)
+✔ D3-8 (vòng 4): lệnh nhóm in MỘT PHẦN output rồi ngủ quá trần → reason=unknown (không phải stopped). CA ĐỎ: đảo ưu tiên kiểm stopped trước unknown → ca này đỏ (20314.701916ms)
+✔ danh sách cho phép không giao danh sách loại (PII_EXCLUDE, SOURCE_EXCLUDE) (0.543334ms)
+✔ selectList: cột chưa duyệt ở lại máy, seller_ref chuẩn hoá, cột loại vắng (0.368166ms)
+✔ so-ghep-s06 E6: nhãn số chưa xác minh gửi, xuất xứ ở lại máy (0.05675ms)
+✔ E1 ma trận cột: bốn cột tin rao gửi, cột còn lại ở lại máy; số ô đúng chín (0.399542ms)
+✔ E1 đối chứng: giữ seller_phone trong danh sách loại thì ô SĐT đỏ (0.082ms)
+✔ E1 piiColumnLeaks: bốn cột mới trên cloud sạch, cột khác đỏ (0.434042ms)
+✔ E2 selectList: thiếu danh sách token thì tên, số thành NULL, không gửi giá trị chưa che (0.079917ms)
+✔ E2 selectList: token có nháy đơn và ký tự regex đi qua an toàn; biến thể ngắn chỉ khớp nguyên từ (0.24ms)
+✔ planTables: cha trước con, xoá ngược lại, areas giữ-chỗ vì saved_markets (0.166083ms)
+✔ planTables: vòng FK giữa hai bảng sync → lỗi ghim; bảng giữ-chỗ không khoá → lỗi ghim (0.217166ms)
+✔ chunkRows: chia theo byte thân yêu cầu; dòng quá lớn → lỗi ghim (0.12575ms)
+✔ dollarTag/assertNoTag: dữ liệu chứa thẻ của lượt → dừng (0.091792ms)
+✔ buildSwapSql: một giao dịch, DELETE trước INSERT, upsert giữ-chỗ, không DDL (0.38225ms)
+✔ scanSourceNames: trúng token không phân biệt hoa thường; danh sách rỗng → null (0.214167ms)
+✔ scanSourceNames: token ngắn (< 4) so theo ranh giới từ — không bỏ qua, không trúng giữa từ (0.323916ms)
+✔ pool: một job lỗi → không job mới nào bắt đầu, chỉ trả về khi mọi worker đã dừng (12.909125ms)
+✔ localTypes: date/timestamp giữ nguyên chuỗi, kiểu khác theo node-pg (0.083042ms)
+✔ mgmtExec: 429/503 thử lại rồi thành công; retry:false không lặp; 400 ném ngay (0.201834ms)
+✔ AC-10 chặn tụt có audit (0.08375ms)
+✔ SD3 SHRINK_AUDIT thôi khai sellers: audit mồ côi cũ không còn miễn trừ tụt sellers (0.024459ms)
+✔ AC-10 chiều đỏ: bỏ so remaining thì ô (2) cho qua (0.049208ms)
+✔ NH-AC-9 media không lên cloud (1.14425ms)
+✔ SVC E1 ma trận kiểu bảng đích: r, p qua; v, m, f chặn (0.074916ms)
+✔ SVC E1 đường thật: sellers là view → syncOnce dừng ở pha catalog, không gửi dòng nào lên staging (1.151041ms)
+✔ SVC E1 bảng FILL vắng trên cloud giữ lỗi «cloud thiếu bảng» có sẵn (0.127459ms)
+✔ SVC E8 mọi cột khoá người bán lên cloud nằm trong bảng FILL (tráo cùng một giao dịch) (0.126666ms)
+✔ CG9-AC-8 offer_price_rank trong FILL, chép như bảng con của tin sống, không cột lộ tên nguồn (0.055459ms)
+✔ CG9-AC-8 cloud chưa có offer_price_rank: bỏ qua một dòng, không dừng ở catalog; đối chứng bảng khác vắng vẫn dừng (0.255958ms)
+✔ SM1-AC-6 câu đọc dq_check_results loại đúng dòng s03-moc-ngay, bảng khác không đổi (0.033292ms)
+✔ FILL không chứa bảng staging stg_* nào (0.508458ms)
+✔ FILL không chứa stg_zalo_posts (media, media_files = ảnh PII tầng A) (0.067333ms)
+✔ FILL không chứa stg_s08_inventory (S08 chỉ dùng nội bộ — AGENTS.md luật 5, migration 040) (0.03475ms)
+✔ FILL không chứa data_flow_snapshot (DF1 — số tổng hợp chỉ ở máy thu, lên cloud qua khối dataFlow của push-ops-facts) (0.032042ms)
+✔ FILL không chứa raw/registry tầng A (0.041375ms)
+✔ không bảng nào trong FILL có cột ảnh media/media_files (schema DB local) (24.713959ms)
+✔ mediaFilesOf: gắn snapshotId vào từng phần tử, giữ nguyên field hợp đồng (0.1755ms)
+✔ mediaFilesOf: v1 / không ảnh / mảng rỗng → null (SQL NULL, COALESCE giữ bản cũ) (0.057875ms)
+S09 nạp: 3/3 dòng (snapshot vn__s09-du-an__2026-11-26T205639505); bỏ 0 thiếu-source-id, 0 kind-lạ, 0 chi-tiet-lỗi
+S09 nạp: 0/3 dòng (snapshot vn__s09-du-an__2026-11-26T205639505); bỏ 0 thiếu-source-id, 0 kind-lạ, 0 chi-tiet-lỗi
+✔ S09-1: nạp trọn snapshot đúng khuôn → số dòng = số item, chèn snapshot FK; nạp lại → 0 dòng mới (98.510916ms)
+S09 nạp: 1/1 dòng (snapshot vn__s09-du-an__2026-11-26T205639560); bỏ 1 thiếu-source-id, 1 kind-lạ, 1 chi-tiet-lỗi
+✔ S09-2 ca đỏ: thiếu sourceId / kind lạ / du-an thiếu chiTiet.data.id → bỏ có đếm đúng ba lý do (8.308583ms)
+✔ S09-3 chặn cho phép (1411-8 MỞ LẠI(2)): URL biến thể trỏ DB không phải suite, không --may-thu → bộ nạp từ chối rc 2 (102.742ms)
+✔ S09-4 đối chứng dương của chốt chặn (nap-s09 AC-3): cùng ba URL kèm --may-thu → qua chốt, lỗi là lỗi kết nối (125.348917ms)
+S16 thuộc tính nạp: 2/2 dòng stg_s16_can_chi_tiet (đọc 3 item, snapshot 1 dòng airbnb_snapshots); bỏ 1 kind-lạ, 0 thiếu-du-an, 0 thiếu-mã-căn
+S16 thuộc tính nạp: 0/2 dòng stg_s16_can_chi_tiet (đọc 3 item, snapshot 1 dòng airbnb_snapshots); bỏ 1 kind-lạ, 0 thiếu-du-an, 0 thiếu-mã-căn
+✔ CT-1 nạp trọn đúng cột, dong là số thứ tự item toàn cục; nạp lại 0 dòng mới (110.578ms)
+✔ CT-2 ca đỏ checksum: sửa một byte items-*.json.gz → ném 'checksum sai', 0 dòng stg lẫn airbnb_snapshots; lỗi không lộ tên nguồn/thư mục (13.503583ms)
+✔ CT-3 ca đỏ schemaVersion lạ: sv 99 → ném 'chưa hỗ trợ', 0 dòng (11.705917ms)
+✔ CT-4 ca đỏ manifest không có tệp items: ném trước khi mở DB, không chèn airbnb_snapshots (10.12525ms)
+✔ CT-5 chốt cho phép (khuôn S16-3): URL biến thể trỏ DB không phải suite, không --may-thu → rc 2 TRƯỚC khi kết nối (38.101917ms)
+✔ CT-6 đối chứng dương chốt (khuôn S16-4): cùng URL kèm --may-thu → qua chốt, lỗi là lỗi kết nối (41.581ms)
+S16 nạp: item 8/8, khu 2/2, toà 2/2, căn 5/5 (tổng 17/17; đọc 8 items); bỏ 0 thiếu-source-id, 0 kind-lạ, 0 csv-lỗi, 0 jsonl-lỗi
+S16 nạp: item 0/8, khu 0/2, toà 0/2, căn 0/5 (tổng 0/17; đọc 8 items); bỏ 0 thiếu-source-id, 0 kind-lạ, 0 csv-lỗi, 0 jsonl-lỗi
+✔ S16-1: nạp trọn snapshot đúng khuôn → bốn bảng đúng số dòng, snapshot source S16; nạp lại → 0 dòng mới (138.263208ms)
+S16 nạp: item 3/3, khu 0/0, toà 0/0, căn 0/0 (tổng 3/3; đọc 5 items); bỏ 1 thiếu-source-id, 1 kind-lạ, 1 csv-lỗi, 1 jsonl-lỗi
+✔ S16-2 ca đỏ: thiếu sourceId / kind lạ / csv số cột lệch / jsonl hỏng → bỏ có đếm đúng bốn lý do (7.441875ms)
+✔ S16-3 chặn cho phép (khuôn S09-3): URL biến thể trỏ DB không phải suite, không --may-thu → rc 2 TRƯỚC khi kết nối (100.778084ms)
+✔ S16-4 đối chứng dương chốt chặn (khuôn S09-4): cùng URL kèm --may-thu → qua chốt, lỗi là lỗi kết nối (122.582084ms)
+ℹ tests 742
+ℹ suites 3
+ℹ pass 740
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 2
+ℹ todo 0
+ℹ duration_ms 109332.508458
+→ mã thoát 0
+
+## $ node scripts/suite-neu-doi.mjs pipeline_that -- 'cd pipeline && npm run test:that' — 20:56:40Z
+ca dữ liệu thật: chạy trong lượt này
+suite-neu-doi: chạy pipeline_that — đổi db/migrations/131_ghep_truc_can_tren_tin.sql (+7 tệp trong vùng)
+
+> test:that
+> bash ../db/db-thu.sh oneinvest_suite_pipeline_that --chay node chay-that.mjs
+
+chay-that: vai may-phat-trien — bỏ qua 1 ca chỉ máy thu
+chay-that: bỏ qua (chỉ máy thu) — pipeline/scripts/ops-facts-so-tong-hop.test.mjs — ON22-AC-10 máy thu thật, chế độ khô: năm khối có measured_at, freshness bằng check-freshness, 0 chỗ chặn, đầu ra chỉ tên khối + trạng thái — chạy push-ops-facts thật trên log, ~/.oneinvest, cấu hình OpenClaw, launchctl có job thật của máy thu — máy phát triển không có và luật cấm chạy push-ops-facts thật ở đó
+▶ PL20 câu rút chừa dòng bước gắn toà (ROLLBACK)
+  ✔ PL20-E7 ghi khác giá trị cùng bộ: dòng ghep-toa giữ sống, dòng không rule bị rút (8.205042ms)
+  ✔ chiều đỏ PL20-E7: bản phá bỏ điều kiện chừa → dòng ghep-toa bị rút, đỏ (5.095625ms)
+✔ PL20 câu rút chừa dòng bước gắn toà (ROLLBACK) (22.221541ms)
+✔ DP-AC-2 loaiTinPhiLy (64.68775ms)
+✔ DP-AC-2 tập toàn tin hợp lý không ghi audit (49.28075ms)
+ruler: apartment=1 phường (phường × loại, n≥5)
+bait_gap_pct: cập nhật 9 offers P1
+không chấm: chua-ro-loai=0 thieu-thuoc-cung-loai=0
+sellers (view): 1 người bán
+loại tin phi lý: 3 tin {"phong-qua-nho":1,"thieu-dien-tich":1,"dien-tich-ngoai-khoang":1}
+  broker: ? — 4 tin, gap giữa 25%, đa kênh=false
+✔ DP-AC-2 refreshBaitGap giữ registry người bán (53.349375ms)
+✔ DO1-AC-6 chuyển bậc trên DB: lập mốc, bảy loại đổi, đổi khoá, một dòng mỗi đơn vị, chạy lại 0 dòng (633219.217417ms)
+✔ DO1-AC-9 detail các dòng do1-* qua bộ ghi không mang chữ bài, trích, người đăng, labeler, tên nguồn; số đi qua writer (84636.431417ms)
+✔ cài thật: ghi plist vào LaunchAgents của HOME giả, plutil sạch, chmod 600, chỉ IN lệnh launchctl (42.4235ms)
+✔ 2610-5: tạo thư mục pipeline/logs (khuôn install-*.sh) + sed lỗi không đè plist cũ (46.300333ms)
+✔ SS-AC-6 plist neo node bằng __NODE__, không còn /usr/bin/env (5.951333ms)
+✔ SS-AC-7 chạy đúng dòng cài của runtime-map vào thư mục tạm: node tuyệt đối chạy dưới PATH launchd (40.659458ms)
+✔ AU9-AC-1 chỉ ranh giới cấp 6 thành phường (642.185958ms)
+✔ AU9-AC-1 ranh giới cấp 4 bao Hà Nội không vào areas (651.306042ms)
+✔ AU9-AC-2 phường cấp 6 nằm ngoài polygon market bị bỏ, in tên (653.67025ms)
+✔ AU9-AC-2 market chưa có polygon → không chốt, in cảnh báo (743.442208ms)
+✔ AU9-AC-3 dọn khu vực lạc (920.388708ms)
+✔ AU9-AC-3 khu vực lạc có saved_markets thì giữ (1032.188791ms)
+✔ AU9-AC-3 khu vực lạc có properties thì giữ; market_asset_stats là cache thì xoá cùng khu vực (1852.205041ms)
+✔ AU9-AC-4 chạy lần hai không đổi gì (1774.709333ms)
+✔ AU9-AC-9 snapshot mất tag admin_level → dừng, không xoá gì (350.094916ms)
+✔ AU9-AC-9 snapshot còn dưới một nửa số phường → dừng, không xoá gì (346.456958ms)
+✔ AU9-AC-5 DQ area_con_ngoai_cha fail khi có con ngoài cha (62.108792ms)
+✔ AU9-AC-5 DQ area_con_ngoai_cha pass trên dữ liệu sạch (900.032542ms)
+✔ AU9-AC-10 không cờ: khu vực lạc và metrics còn nguyên, listing vẫn gán lại (918.167875ms)
+✔ AU9-AC-10 có cờ: khu vực lạc bị xoá (925.698208ms)
+posts: 247222 (gạt 1265 post thử {"agent":1,"group":2,"noi-dung":2,"snapshot-source":1260})
+parse: 628 high, 110645 medium, 132681 fail — coverage 0.3%
+giá phi lý (không thành offer): {"thue-tu-1-ty":2,"ban-tren-100-ty":5}
+loại tin theo nguồn: {"chu-bai":64496,"tin-hieu-chu":14343,"don-vi-gia":33617,"the-nhom":1880,"boi-canh-nhom":205,"yeu-cau":23469,"bo":109212}
+dedup: 9485 unique offers (từ 111273 tin có giá)
+tin nhiều SĐT: 80
+loại hình: 96595 phát biểu, rút 0
+thẻ nhóm: 43 thẻ đã duyệt, 219306 phát biểu {"the":106772,"chu_bai":327,"bo":3710}, hoà giải tin {"chuBaiThang":20,"chuBaiBatDong":0,"theBatDong":4,"theGiuHienTai":6,"xungLuatKhac":0}, rút 0 theo bản thẻ + 0 theo lượt + 0 dòng DV6, ghi lại 0 dòng DV6 theo ý định DV6 (39 bài DV6 không còn muốn), ô bỏ {"duAn":0,"areaId":0,"phanKhu":0}
+tầng: 13384 phát biểu, rút 0
+gán số qua người đăng: đổi 1917 · gán 1917 (so_tren_tin=1721 so_trong_bai=196) · rút 0 · bỏ dấu 0
+đối soát: {"kept":0,"links":0,"moved":0,"stale":0,"merged":0,"source":"S03","reapplied":0,"candidates":0,"links_journaled":0}
+offers ghi: 9485 (SĐT: 634 người bán)
+posts: 247221 (gạt 1266 post thử {"agent":1,"group":3,"noi-dung":2,"snapshot-source":1260})
+parse: 627 high, 110645 medium, 132681 fail — coverage 0.3%
+giá phi lý (không thành offer): {"thue-tu-1-ty":2,"ban-tren-100-ty":5}
+loại tin theo nguồn: {"chu-bai":64495,"tin-hieu-chu":14343,"don-vi-gia":33617,"the-nhom":1880,"boi-canh-nhom":205,"yeu-cau":23469,"bo":109212}
+dedup: 9484 unique offers (từ 111272 tin có giá)
+tin nhiều SĐT: 80
+loại hình: 96594 phát biểu, rút 1
+thẻ nhóm: 43 thẻ đã duyệt, 219306 phát biểu {"the":106772,"chu_bai":327,"bo":3710}, hoà giải tin {"chuBaiThang":20,"chuBaiBatDong":0,"theBatDong":4,"theGiuHienTai":6,"xungLuatKhac":0}, rút 0 theo bản thẻ + 0 theo lượt + 0 dòng DV6, ghi lại 0 dòng DV6 theo ý định DV6 (39 bài DV6 không còn muốn), ô bỏ {"duAn":0,"areaId":0,"phanKhu":0}
+tầng: 13384 phát biểu, rút 0
+gán số qua người đăng: đổi 1917 · gán 1917 (so_tren_tin=1721 so_trong_bai=196) · rút 0 · bỏ dấu 0
+đối soát: {"kept":0,"links":0,"moved":0,"stale":1,"merged":0,"source":"S03","reapplied":0,"candidates":0,"links_journaled":0}
+offers ghi: 9484 (SĐT: 633 người bán)
+✔ AC-4 rút offer giả qua đối soát (183326.549375ms)
+posts: 247221 (gạt 0 post thử {})
+parse: 627 high, 110645 medium, 132681 fail — coverage 0.3%
+giá phi lý (không thành offer): {"thue-tu-1-ty":2,"ban-tren-100-ty":5}
+loại tin theo nguồn: {"chu-bai":64495,"tin-hieu-chu":14343,"don-vi-gia":33617,"the-nhom":1880,"boi-canh-nhom":205,"yeu-cau":23469,"bo":109212}
+dedup: 9484 unique offers (từ 111272 tin có giá)
+tin nhiều SĐT: 80
+loại hình: 96594 phát biểu, rút 0
+thẻ nhóm: 43 thẻ đã duyệt, 219306 phát biểu {"the":106772,"chu_bai":327,"bo":3710}, hoà giải tin {"chuBaiThang":20,"chuBaiBatDong":0,"theBatDong":4,"theGiuHienTai":6,"xungLuatKhac":0}, rút 0 theo bản thẻ + 0 theo lượt + 0 dòng DV6, ghi lại 0 dòng DV6 theo ý định DV6 (39 bài DV6 không còn muốn), ô bỏ {"duAn":0,"areaId":0,"phanKhu":0}
+tầng: 13384 phát biểu, rút 0
+gán số qua người đăng: đổi 1917 · gán 1917 (so_tren_tin=1721 so_trong_bai=196) · rút 0 · bỏ dấu 0
+đối soát: {"kept":0,"links":0,"moved":0,"stale":0,"merged":0,"source":"S03","reapplied":0,"candidates":0,"links_journaled":0}
+offers ghi: 9484 (SĐT: 633 người bán)
+posts: 247221 (gạt 1 post thử {"group":1})
+parse: 627 high, 110645 medium, 132681 fail — coverage 0.3%
+giá phi lý (không thành offer): {"thue-tu-1-ty":2,"ban-tren-100-ty":5}
+loại tin theo nguồn: {"chu-bai":64495,"tin-hieu-chu":14343,"don-vi-gia":33617,"the-nhom":1880,"boi-canh-nhom":205,"yeu-cau":23469,"bo":109212}
+dedup: 9484 unique offers (từ 111272 tin có giá)
+tin nhiều SĐT: 80
+loại hình: 96594 phát biểu, rút 0
+thẻ nhóm: 43 thẻ đã duyệt, 219306 phát biểu {"the":106772,"chu_bai":327,"bo":3710}, hoà giải tin {"chuBaiThang":20,"chuBaiBatDong":0,"theBatDong":4,"theGiuHienTai":6,"xungLuatKhac":0}, rút 0 theo bản thẻ + 0 theo lượt + 0 dòng DV6, ghi lại 0 dòng DV6 theo ý định DV6 (39 bài DV6 không còn muốn), ô bỏ {"duAn":0,"areaId":0,"phanKhu":0}
+tầng: 13384 phát biểu, rút 0
+gán số qua người đăng: đổi 1917 · gán 1917 (so_tren_tin=1721 so_trong_bai=196) · rút 0 · bỏ dấu 0
+đối soát: {"kept":0,"links":0,"moved":0,"stale":0,"merged":0,"source":"S03","reapplied":0,"candidates":0,"links_journaled":0}
+offers ghi: 9484 (SĐT: 633 người bán)
+posts: 0 (gạt 247222 post thử {"group":247222})
+parse: 0 high, 0 medium, 0 fail — coverage NaN%
+giá phi lý (không thành offer): {"thue-tu-1-ty":0,"ban-tren-100-ty":0}
+loại tin theo nguồn: {"chu-bai":0,"tin-hieu-chu":0,"don-vi-gia":0,"the-nhom":0,"boi-canh-nhom":0,"yeu-cau":0,"bo":0}
+dedup: 0 unique offers (từ 0 tin có giá)
+tin nhiều SĐT: 0
+loại hình: 0 phát biểu, rút 96594
+thẻ nhóm: 43 thẻ đã duyệt, 0 phát biểu {"the":0,"chu_bai":0,"bo":0}, hoà giải tin {"chuBaiThang":0,"chuBaiBatDong":0,"theBatDong":0,"theGiuHienTai":0,"xungLuatKhac":0}, rút 0 theo bản thẻ + 0 theo lượt + 0 dòng DV6, ghi lại 0 dòng DV6 theo ý định DV6 (0 bài DV6 không còn muốn), ô bỏ {"duAn":0,"areaId":0,"phanKhu":0}
+✔ AC-5 lượt sạch và lượt toàn thử (193004.147416ms)
+posts: 247221 (gạt 1265 post thử {"agent":1,"group":2,"noi-dung":2,"snapshot-source":1260})
+parse: 627 high, 110645 medium, 132681 fail — coverage 0.3%
+giá phi lý (không thành offer): {"thue-tu-1-ty":2,"ban-tren-100-ty":5}
+loại tin theo nguồn: {"chu-bai":64495,"tin-hieu-chu":14343,"don-vi-gia":33617,"the-nhom":1880,"boi-canh-nhom":205,"yeu-cau":23469,"bo":109212}
+dedup: 9484 unique offers (từ 111272 tin có giá)
+tin nhiều SĐT: 80
+loại hình: 96594 phát biểu, rút 0
+thẻ nhóm: 43 thẻ đã duyệt, 219306 phát biểu {"the":106772,"chu_bai":327,"bo":3710}, hoà giải tin {"chuBaiThang":20,"chuBaiBatDong":0,"theBatDong":4,"theGiuHienTai":6,"xungLuatKhac":0}, rút 0 theo bản thẻ + 0 theo lượt + 0 dòng DV6, ghi lại 0 dòng DV6 theo ý định DV6 (39 bài DV6 không còn muốn), ô bỏ {"duAn":0,"areaId":0,"phanKhu":0}
+tầng: 13384 phát biểu, rút 0
+gán số qua người đăng: đổi 1917 · gán 1917 (so_tren_tin=1721 so_trong_bai=196) · rút 0 · bỏ dấu 0
+đối soát: {"kept":0,"links":0,"moved":0,"stale":0,"merged":0,"source":"S03","reapplied":0,"candidates":0,"links_journaled":0}
+offers ghi: 9484 (SĐT: 633 người bán)
+FB posts: 100 (gạt 0 post thử {})
+parse: 21 high, 36 medium, 19 fail — coverage 21.0%
+dedup: 30 unique offers
+tin nhiều SĐT: 1
+đối soát: {"kept":0,"links":0,"moved":0,"stale":0,"merged":0,"source":"S05","reapplied":0,"candidates":0,"links_journaled":0}
+S05 offers ghi: 30 (SĐT: 21 người bán)
+✔ AC-9 stg không đổi (90537.731125ms)
+FB posts: 100 (gạt 1 post thử {"group":1})
+parse: 21 high, 36 medium, 19 fail — coverage 21.0%
+dedup: 30 unique offers
+tin nhiều SĐT: 1
+đối soát: {"kept":0,"links":0,"moved":0,"stale":0,"merged":0,"source":"S05","reapplied":0,"candidates":0,"links_journaled":0}
+S05 offers ghi: 30 (SĐT: 21 người bán)
+FB posts: 101 (gạt 0 post thử {})
+parse: 22 high, 36 medium, 19 fail — coverage 21.8%
+dedup: 31 unique offers
+tin nhiều SĐT: 1
+đối soát: {"kept":0,"links":0,"moved":0,"stale":0,"merged":0,"source":"S05","reapplied":0,"candidates":0,"links_journaled":0}
+S05 offers ghi: 31 (SĐT: 22 người bán)
+✔ AC-3 transform S05 dùng cùng bộ lọc (405.890125ms)
+posts: 247222 (gạt 1266 post thử {"agent":1,"group":2,"noi-dung":2,"snapshot-source":1261})
+parse: 628 high, 110645 medium, 132681 fail — coverage 0.3%
+giá phi lý (không thành offer): {"thue-tu-1-ty":2,"ban-tren-100-ty":5}
+loại tin theo nguồn: {"chu-bai":64496,"tin-hieu-chu":14343,"don-vi-gia":33617,"the-nhom":1880,"boi-canh-nhom":205,"yeu-cau":23469,"bo":109212}
+dedup: 9485 unique offers (từ 111273 tin có giá)
+tin nhiều SĐT: 80
+loại hình: 96595 phát biểu, rút 0
+thẻ nhóm: 43 thẻ đã duyệt, 219306 phát biểu {"the":106772,"chu_bai":327,"bo":3710}, hoà giải tin {"chuBaiThang":20,"chuBaiBatDong":0,"theBatDong":4,"theGiuHienTai":6,"xungLuatKhac":0}, rút 0 theo bản thẻ + 0 theo lượt + 0 dòng DV6, ghi lại 0 dòng DV6 theo ý định DV6 (39 bài DV6 không còn muốn), ô bỏ {"duAn":0,"areaId":0,"phanKhu":0}
+tầng: 13384 phát biểu, rút 0
+gán số qua người đăng: đổi 1917 · gán 1917 (so_tren_tin=1721 so_trong_bai=196) · rút 0 · bỏ dấu 0
+đối soát: {"kept":0,"links":0,"moved":0,"stale":0,"merged":0,"source":"S03","reapplied":0,"candidates":0,"links_journaled":0}
+offers ghi: 9485 (SĐT: 634 người bán)
+ruler: apartment=161 phường, commercial=40 phường, house=226 phường, land=181 phường (phường × loại, n≥5)
+bait_gap_pct: cập nhật 2127 offers P1
+không chấm: chua-ro-loai=412 thieu-thuoc-cung-loai=236
+sellers (view): 13865 người bán
+loại tin phi lý: 12 tin {"dien-tich-ngoai-khoang":4,"phong-qua-nho":3,"thieu-dien-tich":4,"phong-ngu-ngoai-khoang":1}
+  broker: Thảo Vương — 3 tin, gap giữa 99.7%, đa kênh=false
+  broker: ? — 1 tin, gap giữa 98.9%, đa kênh=false
+  broker: Lục Văn Xuân — 1 tin, gap giữa 98.3%, đa kênh=false
+posts: 247223 (gạt 1265 post thử {"agent":1,"group":2,"noi-dung":2,"snapshot-source":1260})
+parse: 629 high, 110645 medium, 132681 fail — coverage 0.3%
+giá phi lý (không thành offer): {"thue-tu-1-ty":2,"ban-tren-100-ty":5}
+loại tin theo nguồn: {"chu-bai":64497,"tin-hieu-chu":14343,"don-vi-gia":33617,"the-nhom":1880,"boi-canh-nhom":205,"yeu-cau":23469,"bo":109212}
+dedup: 9486 unique offers (từ 111274 tin có giá)
+tin nhiều SĐT: 80
+loại hình: 96596 phát biểu, rút 0
+thẻ nhóm: 43 thẻ đã duyệt, 219306 phát biểu {"the":106772,"chu_bai":327,"bo":3710}, hoà giải tin {"chuBaiThang":20,"chuBaiBatDong":0,"theBatDong":4,"theGiuHienTai":6,"xungLuatKhac":0}, rút 0 theo bản thẻ + 0 theo lượt + 0 dòng DV6, ghi lại 0 dòng DV6 theo ý định DV6 (39 bài DV6 không còn muốn), ô bỏ {"duAn":0,"areaId":0,"phanKhu":0}
+tầng: 13384 phát biểu, rút 0
+gán số qua người đăng: đổi 1917 · gán 1917 (so_tren_tin=1721 so_trong_bai=196) · rút 0 · bỏ dấu 0
+đối soát: {"kept":0,"links":0,"moved":0,"stale":0,"merged":0,"source":"S03","reapplied":0,"candidates":0,"links_journaled":0}
+offers ghi: 9486 (SĐT: 635 người bán)
+ruler: apartment=161 phường, commercial=40 phường, house=226 phường, land=181 phường (phường × loại, n≥5)
+bait_gap_pct: cập nhật 2128 offers P1
+không chấm: chua-ro-loai=412 thieu-thuoc-cung-loai=236
+sellers (view): 13865 người bán
+loại tin phi lý: 12 tin {"phong-qua-nho":3,"thieu-dien-tich":4,"dien-tich-ngoai-khoang":4,"phong-ngu-ngoai-khoang":1}
+  broker: Thảo Vương — 3 tin, gap giữa 99.7%, đa kênh=false
+  broker: ? — 1 tin, gap giữa 98.9%, đa kênh=false
+  broker: Lục Văn Xuân — 1 tin, gap giữa 98.3%, đa kênh=false
+✔ AC-6 bait gap tính lại (181935.666625ms)
+posts: 247221 (gạt 1265 post thử {"agent":1,"group":2,"noi-dung":2,"snapshot-source":1260})
+parse: 627 high, 110645 medium, 132681 fail — coverage 0.3%
+giá phi lý (không thành offer): {"thue-tu-1-ty":2,"ban-tren-100-ty":5}
+loại tin theo nguồn: {"chu-bai":64495,"tin-hieu-chu":14343,"don-vi-gia":33617,"the-nhom":1880,"boi-canh-nhom":205,"yeu-cau":23469,"bo":109212}
+dedup: 9484 unique offers (từ 111272 tin có giá)
+tin nhiều SĐT: 80
+loại hình: 96594 phát biểu, rút 0
+thẻ nhóm: 43 thẻ đã duyệt, 219306 phát biểu {"the":106772,"chu_bai":327,"bo":3710}, hoà giải tin {"chuBaiThang":20,"chuBaiBatDong":0,"theBatDong":4,"theGiuHienTai":6,"xungLuatKhac":0}, rút 0 theo bản thẻ + 0 theo lượt + 0 dòng DV6, ghi lại 0 dòng DV6 theo ý định DV6 (39 bài DV6 không còn muốn), ô bỏ {"duAn":0,"areaId":0,"phanKhu":0}
+tầng: 13384 phát biểu, rút 0
+gán số qua người đăng: đổi 1917 · gán 1917 (so_tren_tin=1721 so_trong_bai=196) · rút 0 · bỏ dấu 0
+đối soát: {"kept":0,"links":0,"moved":0,"stale":0,"merged":0,"source":"S03","reapplied":0,"candidates":0,"links_journaled":0}
+offers ghi: 9484 (SĐT: 633 người bán)
+ruler: apartment=161 phường, commercial=40 phường, house=226 phường, land=181 phường (phường × loại, n≥5)
+bait_gap_pct: cập nhật 2126 offers P1
+không chấm: chua-ro-loai=412 thieu-thuoc-cung-loai=236
+sellers (view): 13865 người bán
+loại tin phi lý: 12 tin {"dien-tich-ngoai-khoang":4,"thieu-dien-tich":4,"phong-qua-nho":3,"phong-ngu-ngoai-khoang":1}
+  broker: Thảo Vương — 3 tin, gap giữa 99.7%, đa kênh=false
+  broker: ? — 1 tin, gap giữa 98.9%, đa kênh=false
+  broker: Lục Văn Xuân — 1 tin, gap giữa 98.3%, đa kênh=false
+posts: 247222 (gạt 1265 post thử {"agent":1,"group":2,"noi-dung":2,"snapshot-source":1260})
+parse: 628 high, 110645 medium, 132681 fail — coverage 0.3%
+giá phi lý (không thành offer): {"thue-tu-1-ty":2,"ban-tren-100-ty":5}
+loại tin theo nguồn: {"chu-bai":64496,"tin-hieu-chu":14343,"don-vi-gia":33617,"the-nhom":1880,"boi-canh-nhom":205,"yeu-cau":23469,"bo":109212}
+dedup: 9485 unique offers (từ 111273 tin có giá)
+tin nhiều SĐT: 80
+loại hình: 96595 phát biểu, rút 0
+thẻ nhóm: 43 thẻ đã duyệt, 219306 phát biểu {"the":106772,"chu_bai":327,"bo":3710}, hoà giải tin {"chuBaiThang":20,"chuBaiBatDong":0,"theBatDong":4,"theGiuHienTai":6,"xungLuatKhac":0}, rút 0 theo bản thẻ + 0 theo lượt + 0 dòng DV6, ghi lại 0 dòng DV6 theo ý định DV6 (39 bài DV6 không còn muốn), ô bỏ {"duAn":0,"areaId":0,"phanKhu":0}
+tầng: 13384 phát biểu, rút 0
+gán số qua người đăng: đổi 1917 · gán 1917 (so_tren_tin=1721 so_trong_bai=196) · rút 0 · bỏ dấu 0
+đối soát: {"kept":0,"links":0,"moved":0,"stale":0,"merged":0,"source":"S03","reapplied":0,"candidates":0,"links_journaled":0}
+offers ghi: 9485 (SĐT: 634 người bán)
+posts: 247221 (gạt 1266 post thử {"agent":1,"group":3,"noi-dung":2,"snapshot-source":1260})
+parse: 627 high, 110645 medium, 132681 fail — coverage 0.3%
+giá phi lý (không thành offer): {"thue-tu-1-ty":2,"ban-tren-100-ty":5}
+loại tin theo nguồn: {"chu-bai":64495,"tin-hieu-chu":14343,"don-vi-gia":33617,"the-nhom":1880,"boi-canh-nhom":205,"yeu-cau":23469,"bo":109212}
+dedup: 9484 unique offers (từ 111272 tin có giá)
+tin nhiều SĐT: 80
+loại hình: 96594 phát biểu, rút 1
+thẻ nhóm: 43 thẻ đã duyệt, 219306 phát biểu {"the":106772,"chu_bai":327,"bo":3710}, hoà giải tin {"chuBaiThang":20,"chuBaiBatDong":0,"theBatDong":4,"theGiuHienTai":6,"xungLuatKhac":0}, rút 0 theo bản thẻ + 0 theo lượt + 0 dòng DV6, ghi lại 0 dòng DV6 theo ý định DV6 (39 bài DV6 không còn muốn), ô bỏ {"duAn":0,"areaId":0,"phanKhu":0}
+tầng: 13384 phát biểu, rút 0
+gán số qua người đăng: đổi 1917 · gán 1917 (so_tren_tin=1721 so_trong_bai=196) · rút 0 · bỏ dấu 0
+đối soát: {"kept":0,"links":0,"moved":0,"stale":1,"merged":0,"source":"S03","reapplied":0,"candidates":0,"links_journaled":0}
+offers ghi: 9484 (SĐT: 633 người bán)
+ruler: apartment=161 phường, commercial=40 phường, house=226 phường, land=181 phường (phường × loại, n≥5)
+bait_gap_pct: cập nhật 2126 offers P1
+không chấm: chua-ro-loai=412 thieu-thuoc-cung-loai=236
+sellers (view): 13865 người bán
+loại tin phi lý: 12 tin {"thieu-dien-tich":4,"phong-qua-nho":3,"dien-tich-ngoai-khoang":4,"phong-ngu-ngoai-khoang":1}
+  broker: Thảo Vương — 3 tin, gap giữa 99.7%, đa kênh=false
+  broker: ? — 1 tin, gap giữa 98.9%, đa kênh=false
+  broker: Lục Văn Xuân — 1 tin, gap giữa 98.3%, đa kênh=false
+✔ AC-8 thước dư lượng bắt được tin giả (276320.091875ms)
+SLT-DC-KHOA lưới máy chủ (ca 7/9): trần 900 s → transaction_timeout 930s
+SLT-DC-9 tắt {"ban":2671,"ban_duoi_300tr":56} · bật {"ban":3790,"ban_duoi_300tr":56} · nguồn {"chu-bai":64496,"tin-hieu-chu":14343,"don-vi-gia":33617,"the-nhom":1880,"boi-canh-nhom":205,"yeu-cau":23477,"bo":109212}
+SLT-DC-9 thuê từ 1 tỷ (trước lọc giá phi lý): tắt 3 · bật 3
+▶ SLT-DC đối chiếu trên DB máy thu (ROLLBACK)
+  ▶ SLT-DC-7, SLT-DC-9: tắt rồi bật suy loại, rồi tắt lại — cùng một transaction
+    ✔ SLT-DC-9 tin bán S03 tăng ≥ 30%, thuê ≥ 1 tỷ và bán < 300 triệu không tăng (0.772792ms)
+    ✔ SLT-DC-9 tập Yêu cầu mẫu không bài nào thành tin (66.8865ms)
+SLT-DC-7 nhóm ≥ 2 bài 6892 · lệch 0
+    ✔ SLT-DC-7 nhóm gộp không lẫn bài khác PN hay khác DT (2909.024667ms)
+SLT-DC-9 tin chỉ gồm bài suy loại: còn sống 0 · bản ghi (gồm đã rút) 4410
+    ✔ SLT-DC-9 chạy lại với suy loại tắt: tin chỉ gồm bài suy loại đều bị rút (10173.240584ms)
+  ✔ SLT-DC-7, SLT-DC-9: tắt rồi bật suy loại, rồi tắt lại — cùng một transaction (343030.5605ms)
+SLT-DC-KHOA lưới máy chủ (ca 10): trần 120 s → transaction_timeout 150s
+SLT-DC-10 lần một 30 · lần hai 0 · --thu 0 · tầng {"chu-bai":{"co":5249,"chon":10},"moi-nhan":{"co":4471,"chon":10},"van-bo":{"co":67436,"chon":10}}
+  ✔ SLT-DC-10 lát s03-loai-tin: lần một thêm n, lần hai cùng seed thêm 0, --thu thêm 0 (39647.329292ms)
+✔ SLT-DC đối chiếu trên DB máy thu (ROLLBACK) (382678.492792ms)
+ℹ tests 37
+ℹ suites 2
+ℹ pass 37
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2038688.718333
+→ mã thoát 0
+# xong 2026-11-26T21:30:46Z
+
+## Ghi chú phiên chấm M5 (soát trước, không phải lượt chấm; không sửa mã)
+- máy: M5 (M5 Max 18 nhân, colima 16/96) · DB: bản đầy đủ máy thu chép sang 26/11 05:45Z · worktree tách tại dae12e734.
+- Xanh: ham-gan, migration, offer-unit, chay-lai, cuoi-luot-nap, chay-kho (OP1 488 ≥ 350), cham-truc (5/5, thẻ cài đọc qua THE_CAI, chỉ đọc),
+  pipeline_a (exit 0), pipeline_b (exit 0), pipeline_that (37/37, fail 0, chỉ bỏ ON22-AC-10 — «bỏ qua 1 ca chỉ máy thu»; ĐẠT theo luật GS 26/11).
+- Đỏ: offer-building-nhanh.sh (mã 1) — ca thật 3/3 xanh nhưng đột biến «bo-materialized» không làm ca nào đỏ.
+- Migration 131 chỉ áp trên DB thử của lượt; cham-truc đọc DB oneinvest qua kết nối chỉ đọc. Tệp evidence/cham-truc.md do probe ghi không commit ở lượt này.
+- Che tên nguồn: mã snapshot và hai tên nguồn trong tên ca test thay bằng «S06» / «[nguồn]» trước khi commit.

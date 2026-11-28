@@ -1,0 +1,175 @@
+schema_version: 1
+feature_slug: data-api-property-danh-ba-nha
+evals:
+- id: E1
+  criterion: AC-1
+  executor: test
+  cmd: config:executors.test.dapi_prop
+  paths:
+  - data-api/src/routes/properties.ts
+  - data-api/src/contract/property.ts
+  - data-api/test/**
+  expected: 'exit 0; «ℹ fail 0»; ca «PB6-AC-1 toà theo UPI» xanh: status 200 và có toà cấy; tập khoá = tập khoá cấp toà của tệp hợp đồng; complexName = phân khu, subdivisionName = dự án (dòng cấy hai giá
+    trị khác nhau); buildingName «Tháp A» theo thứ tự S09 → S08 → S16 → S03, hai lần gọi bằng nhau; stateOrProvince = iso_region; unitCount chỉ đếm căn active; activeListingCount khớp tin cấy; T2 catalogTier
+    mot_loi_khai'
+  evidence_required:
+  - run_id
+  - exit_code
+  - verifier
+  - verified_at
+  - output
+- id: E2
+  criterion: AC-2
+  executor: test
+  cmd: config:executors.test.dapi_prop
+  paths:
+  - data-api/src/routes/properties.ts
+  - data-api/src/contract/property.ts
+  - data-api/test/**
+  expected: 'exit 0; ca «PB6-AC-2 căn theo unitKey» xanh: C1, C2, C3 đúng tập khoá cấp căn, giá trị khớp phát biểu cấy, unitFloorLocation null ở C2; livingAreaUnits «Square Meters»; không khoá unitNumber,
+    universalPropertySubId, stack hay khoá trục nào'
+  evidence_required:
+  - run_id
+  - exit_code
+  - verifier
+  - verified_at
+  - output
+- id: E3
+  criterion: AC-3
+  executor: test
+  cmd: config:executors.test.dapi_prop
+  paths:
+  - data-api/src/routes/properties.ts
+  - data-api/src/contract/property.ts
+  - data-api/test/**
+  expected: 'exit 0; ca «PB6-AC-3 tra theo dự án + toà + mã căn» xanh: khớp → đúng một căn, unitNumber đúng chuỗi khách nhập, meta.total 1; tên gập chữ khớp; hai toà trùng tên → 400 AMBIGUOUS_BUILDING;
+    thiếu tham số → 400 BAD_REQUEST; không khớp → 200 rỗng total 0; hai mã của C3 cùng unitKey; đầu vào là mã nguồn → 400 SOURCE_CODE_NOT_ACCEPTED'
+  evidence_required:
+  - run_id
+  - exit_code
+  - verifier
+  - verified_at
+  - output
+- id: E4
+  criterion: AC-4
+  executor: test
+  cmd: config:executors.test.dapi_prop
+  paths:
+  - data-api/src/routes/properties.ts
+  - data-api/src/contract/property.ts
+  - data-api/test/**
+  expected: 'exit 0; ca «PB6-AC-4 liệt kê toà có trần» xanh: ?project= trả toà của dự án cấy, meta.total = tổng khớp, limit > 100 bị kẹp 100, hai trang liền không trùng không sót; không phần tử nào mang
+    unitKey; GET toà không có mảng căn'
+  evidence_required:
+  - run_id
+  - exit_code
+  - verifier
+  - verified_at
+  - output
+- id: E5
+  criterion: AC-5
+  executor: test
+  cmd: config:executors.test.dapi_prop
+  paths:
+  - data-api/src/routes/properties.ts
+  - data-api/test/**
+  expected: 'exit 0; ca «PB6-AC-5 không dò được» xanh: đổi ký tự cuối unitKey → 404; không tham số tầng nào được nhận; lookup mã căn liền kề không khớp nhập → không trả căn đó; in «số căn lộ thêm khi dò:
+    0»'
+  evidence_required:
+  - run_id
+  - exit_code
+  - verifier
+  - verified_at
+  - output
+- id: E6
+  criterion: AC-6
+  executor: test
+  cmd: config:executors.test.dapi_prop
+  paths:
+  - data-api/src/**
+  - data-api/test/**
+  expected: 'exit 0; ca «PB6-AC-6 không lộ» xanh: chuỗi canh ở bí danh ma_nguon (hai phần), bí danh ten của nguồn bị loại, field_assertions, v_unit_thuoc_tinh.nguon, tên nút nội bộ không có trong JSON.stringify
+    của mọi thân AC-1–AC-5, thân 400/404/503 và /openapi.json; tier-a-source-names 0 cụm; không khoá nguon, evidence, originatingSystemName, originatingSystemKey, aliases'
+  evidence_required:
+  - run_id
+  - exit_code
+  - verifier
+  - verified_at
+  - output
+- id: E7
+  criterion: AC-7
+  executor: test
+  cmd: config:executors.test.dapi_prop
+  paths:
+  - data-api/src/routes/properties.ts
+  - data-api/test/**
+  expected: 'exit 0; ca «PB6-AC-7 gộp» xanh: GET toà, căn merged → 404 error.code MERGED kèm mergedInto đúng khoá mới; unitCount không đếm căn merged'
+  evidence_required:
+  - run_id
+  - exit_code
+  - verifier
+  - verified_at
+  - output
+- id: E8
+  criterion: AC-8
+  executor: script
+  cmd: config:executors.script.dapi_prop_loai
+  paths:
+  - pipeline/mappings.yaml
+  - data-api/src/routes/properties.ts
+  expected: 'exit 0; probe đọc mọi giá trị khác nhau của v_unit_thuoc_tinh.property_sub_type trên DB thử: mỗi giá trị có dòng đổi trong mappings.yaml; in bảng giá trị → StandardName|null; 0 giá trị local
+    ra API; cấy giá trị lạ → thoát 1 «PB6 loại căn chưa có dòng đổi: <giá trị>»'
+  evidence_required:
+  - run_id
+  - exit_code
+  - verifier
+  - verified_at
+  - output
+- id: E9
+  criterion: AC-9
+  executor: script
+  cmd: config:executors.script.dapi_prop_cu
+  paths:
+  - data-api/src/routes/properties.ts
+  - data-api/test/**
+  expected: 'exit 0 khi: ba đột biến trên bản chép tạm data-api/ — không mount (mọi ca PB6 đỏ), ghép ma_nguon vào thân (AC-6 đỏ), trả universalPropertySubId (AC-2 và AC-5 đỏ) — mỗi ca thông điệp ghim riêng;
+    bản gốc xanh; in một dòng mỗi ô'
+  evidence_required:
+  - run_id
+  - exit_code
+  - verifier
+  - verified_at
+  - output
+- id: E10
+  criterion: AC-10
+  executor: test
+  cmd: config:executors.test.dapi_prop
+  paths:
+  - data-api/src/routes/properties.ts
+  - data-api/src/middleware/error-handler.ts
+  - data-api/test/**
+  expected: 'exit 0; ca «PB6-AC-10 cloud và lỗi» xanh: DB thử không có buildings → mọi đường Property 503 DIRECTORY_UNAVAILABLE «danh bạ chưa lên cloud»; lỗi cấy trong câu truy vấn → thân không chứa SELECT,
+    FROM, tên bảng, tên cột'
+  evidence_required:
+  - run_id
+  - exit_code
+  - verifier
+  - verified_at
+  - output
+- id: E11
+  criterion: AC-11
+  executor: script
+  cmd: config:executors.script.dapi_prop_reso
+  paths:
+  - data-api/**
+  - pipeline/mappings.yaml
+  - _acceptance/data-api-property-danh-ba-nha/**
+  expected: 'exit 0 tại máy thu (thiếu research-local/reso/dd-2.1.json → thoát 0 kèm dòng «PB6 bỏ qua đối chiếu DD: chỉ chạy tại máy thu»): tệp hợp đồng ↔ dd-2.1.json ↔ mappings.yaml khớp, stateOrProvince
+    khai giá trị local, mọi extension đủ sáu điều kiện; bốn đột biến mỗi ô một thông điệp ghim; mọi tệp đổi trong Vùng; openapi có schema toà và căn bằng tập khoá; README có mục «Property — danh bạ nhà»
+    và câu «chỉ tại máy thu»; dong-ba-route có ca PB6, xanh; lưới tên nguồn PB5 sạch; typecheck 0'
+  evidence_required:
+  - run_id
+  - exit_code
+  - verifier
+  - verified_at
+  - output

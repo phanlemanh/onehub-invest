@@ -4,8 +4,9 @@ import { localOnlyTable } from "@/lib/ops-queries"
 import { maskSourceNames } from "@/lib/mask-source-names"
 import { dungCay } from "@/lib/ops/registry/cay"
 import { docDuAn } from "@/lib/ops/registry/du-an"
+import { docQuyCanDuAn } from "@/lib/ops/registry/quy-can"
 import { dungHangToa } from "@/lib/ops/registry/hang-toa"
-import { docPhuThuocTinh, docThuocTinhCan } from "@/lib/ops/thuoc-tinh-can"
+import { docThuocTinhDuAn } from "@/lib/ops/thuoc-tinh-can"
 import { getSourceNameEntries } from "@/lib/source-roles"
 
 import { RegistryView } from "./registry-view"
@@ -17,15 +18,15 @@ import { DuAnView } from "./du-an-view"
  */
 export async function DuAnContent({ id }: { id: number }) {
   if (process.env.VERCEL === "1" || (await localOnlyTable("buildings"))) return <RegistryView mode="cloud" />
-  const [duAn, entries] = await Promise.all([docDuAn(id), getSourceNameEntries()])
+  const [duAn, entries, quyCan] = await Promise.all([docDuAn(id), getSourceNameEntries(), docQuyCanDuAn(id)])
   if (!duAn) notFound()
   const che = (s: string) => maskSourceNames(s, entries) ?? "—"
   const goc = dungCay(duAn.nut, {}, entries)[0]
   const nutGoc = duAn.nut.find((n) => n.id === id)
   if (!goc || !nutGoc) notFound()
-  // Thuộc tính căn S16 (DA40): đọc theo đúng các toà của trang; lỗi đọc không làm hỏng lưới toà — trang hiện lỗi nội tuyến.
-  const toaKeys = duAn.toa.map((t) => t.key)
-  const [tt, phu] = await Promise.all([docThuocTinhCan(toaKeys), docPhuThuocTinh(toaKeys)])
+  // Thuộc tính căn S16 (DA40): đọc theo đúng các toà của trang, một câu cho lưới lẫn ô phủ (DA67); lỗi đọc không làm hỏng lưới
+  // toà — trang hiện lỗi nội tuyến.
+  const { thuocTinh: tt, phu } = await docThuocTinhDuAn(duAn.toa.map((t) => t.key))
   const rows = dungHangToa(duAn, id, entries, tt.ok ? tt.data : undefined)
   const tinh = nutGoc.tinhId
   return (
@@ -45,6 +46,7 @@ export async function DuAnContent({ id }: { id: number }) {
       rows={rows}
       phuThuocTinh={phu.ok ? phu.data : null}
       loiThuocTinh={!tt.ok || !phu.ok}
+      quyCan={quyCan.ok ? quyCan.data : "loi"}
     />
   )
 }
