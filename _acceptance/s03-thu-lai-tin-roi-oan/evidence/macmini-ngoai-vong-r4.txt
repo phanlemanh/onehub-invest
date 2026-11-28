@@ -1,0 +1,9 @@
+pipeline_that chạy NGOÀI vòng S4 (HT37, CHUNG.md điểm 16) — Mac mini, dưới khoá s4 qua giu-nhip
+sha: fc78bbce7505ebc9e88ecc5bc750ac4c502fe294
+lệnh: node scripts/suite-neu-doi.mjs pipeline_that -- 'cd pipeline && npm run test:that'
+xong: 2026-11-28T06:55Z
+ℹ tests 38
+ℹ pass 38
+ℹ fail 0
+ℹ skipped 0
+__EXIT=0
