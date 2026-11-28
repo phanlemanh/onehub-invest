@@ -1,0 +1,95 @@
+Đo tay ở Cổng Bằng chứng (GS giao 28/11) — GET /v1/listings KHÔNG tham số khu, trên bản chép DB máy (db/db-thu.sh oneinvest_suite_pb7_dotay), cây ＠5e3c8bcaaed142a79a036372519b5d12c9e68090.
+Cấy 4 tin cùng khu nhiều tin nhất, khoá xếp ĐẦU theo listingKey: 000000pb7tay-s02 (bán, S02), 000000pb7tay-s08 (thuê dài, S08), 000000pb7tay-s06a (bán, S06 đối chứng), 000000pb7tay-s06b (thuê dài, S06 đối chứng).
+Route sắp theo listingKey nên tin S02/S08 lọt thì phải đứng trước hai tin S06 ở trang đầu. Chỉ đo, không sửa test.
+{
+    "/v1/listings": {
+        "status": 200,
+        "n": 50,
+        "co_s02": false,
+        "co_s08": false,
+        "co_s06_ban": true,
+        "co_s06_thue": true,
+        "nguon": [
+            "S06",
+            "S01"
+        ],
+        "dau": [
+            "000000pb7tay-s06a",
+            "000000pb7tay-s06b",
+            "00001aeec7cc1013",
+            "000791260b691c8a"
+        ]
+    },
+    "/v1/listings?kind=sale": {
+        "status": 200,
+        "n": 50,
+        "co_s02": false,
+        "co_s08": false,
+        "co_s06_ban": true,
+        "co_s06_thue": false,
+        "nguon": [
+            "S06",
+            "S03"
+        ],
+        "dau": [
+            "000000pb7tay-s06a",
+            "offer_00014006364f432f",
+            "offer_000311a2917fc8d8",
+            "offer_00039c795492228b"
+        ]
+    },
+    "/v1/listings?kind=rent_lt": {
+        "status": 200,
+        "n": 50,
+        "co_s02": false,
+        "co_s08": false,
+        "co_s06_ban": false,
+        "co_s06_thue": true,
+        "nguon": [
+            "S06",
+            "S03"
+        ],
+        "dau": [
+            "000000pb7tay-s06b",
+            "offer_00000514d850e703",
+            "offer_0002d0509e787e54",
+            "offer_0003cd4d002a77b2"
+        ]
+    },
+    "/v1/listings?limit=200": {
+        "status": 200,
+        "n": 200,
+        "co_s02": false,
+        "co_s08": false,
+        "co_s06_ban": true,
+        "co_s06_thue": true,
+        "nguon": [
+            "S06",
+            "S01"
+        ],
+        "dau": [
+            "000000pb7tay-s06a",
+            "000000pb7tay-s06b",
+            "00001aeec7cc1013",
+            "000791260b691c8a"
+        ]
+    },
+    "/v1/listings?bedroomsTotal=2": {
+        "status": 200,
+        "n": 50,
+        "co_s02": false,
+        "co_s08": false,
+        "co_s06_ban": true,
+        "co_s06_thue": true,
+        "nguon": [
+            "S06",
+            "S01"
+        ],
+        "dau": [
+            "000000pb7tay-s06a",
+            "000000pb7tay-s06b",
+            "001db7ba2b546e3e",
+            "066f0210f5aea391"
+        ]
+    }
+}
