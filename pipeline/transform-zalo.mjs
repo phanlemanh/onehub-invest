@@ -49,6 +49,9 @@ const GIA_TY_NHOM_NGHIN = /^\d{1,2}[.,]\d{3}$/;
 // "3 tỷ 2 ô tô tránh" — Ngoài-1, Ngoài-4 nâng phạm vi ở Cổng Bằng chứng 30/10).
 const GIA_TY_LE = /(?<![\p{L}\d.,])(\d{1,3})\s*t(?:ỷ|y)\s*(\d{1,3})(?![\d.,])(?!\s*(?:pn|phòng|wc|tr|triệu|m\b|m2|m²|%|n\b|ng|tầng|lầu|trệt|ô\s*tô|oto|căn|mặt))/giu;
 // "5tr5", "8tr5" (không dấu cách giữa tr và phần lẻ).
+// PL43 D: «1t920», «2t45 btp».
+const GIA_T_LE = /(?<![\p{L}\d.,])(\d{1,2})t(\d{2,3})(?![\p{L}\d.,])/giu;
+const SAU_BAN_T_LE = /^\s*\(?\s*(?:btp|bao\s*phí|bao\s*thuế|net|nét|thu\s*về)(?![\p{L}])/iu;
 const GIA_TR_LE = /(?<![\p{L}\d.,])(\d{1,3})tr(\d{1,2})(?![\d.,])(?!\s*(?:pn|wc|m\b|m2|m²))/giu;
 // Số dính chữ cái («S702 triệu») không phải giá; cờ g để bỏ qua số ngữ cảnh rồi xét số kế (khopGia).
 const GIA_TY = /(?<![\p{L}\d])(?<!\d[.,])(\d+(?:[.,]\d+)*)\s*t(?:ỷ|y|\b)(?![a-zA-Zà-ỹÀ-Ỹ])/giu;
@@ -392,7 +395,7 @@ export function docToaTruc(text) {
 }
 
 // ---- Bước 2: parse ----
-export function parsePost(text, { giaKhongDonVi = true } = {}) {
+export function parsePost(text, { giaKhongDonVi = true, luat = LUAT_PL43 } = {}) {
   const out = { kind: null, priceVnd: null, pricePerm2Vnd: null, areaM2: null, bedrooms: null, phuong: null, phone: null, phones: null };
 
   // Số đọc trên chữ đã gạt URL và SĐT (N1); SĐT người đăng đọc từ chữ gốc ở dưới.
@@ -421,6 +424,14 @@ export function parsePost(text, { giaKhongDonVi = true } = {}) {
   if (che != null) out.priceVnd = che;
   else if (tyLe) out.priceVnd = Math.round(parseFloat(`${tyLe[1]}.${tyLe[2]}`) * 1e9);
   else if (ty) out.priceVnd = Math.round(soTy(ty[1]) * 1e9);
+  // D (PL43): «1t920» → 1,92 tỷ. Phần lẻ ba chữ số; hai chữ số chỉ khi ngay sau là «btp/bao phí/net/thu về» («5t5» có thể là
+  // 5,5 triệu của tin thuê). Phần lẻ một chữ số («1t9 tầng») không đọc.
+  if (out.priceVnd == null && luat.giaTLe) {
+    const tLe = khopGia(GIA_T_LE, so);
+    if (tLe && (tLe[2].length === 3 || SAU_BAN_T_LE.test(so.slice(tLe.index + tLe[0].length)))) {
+      out.priceVnd = Math.round(parseFloat(`${tLe[1]}.${tLe[2]}`) * 1e9);
+    }
+  }
 
   if (!out.priceVnd && !out.pricePerm2Vnd) {
     // "5tr5", "8tr5": phần sau chữ tr là phần lẻ (5,5 triệu).
@@ -479,7 +490,8 @@ export function parsePost(text, { giaKhongDonVi = true } = {}) {
 // (giá + dấu hiệu BĐS) → đơn vị giá thuê → tín hiệu bán → mục đích nhóm. Model thay luật này qua KC1/PL5 khi tập nhãn
 // vàng xác nhận; luật ở lại làm dự phòng.
 
-/** Nguồn suy loại, theo thứ tự đếm của dòng log. */
+/** Nguồn suy loại, theo thứ tự đếm của dòng log. Nguồn «gia-tu-1-ty» (PL43 phần C) không nằm trong danh sách cố định này
+ *  (SLT-AC-8 ghim đúng bảy khoá): `demNguonLoai` vẫn đếm nó thành khoá thêm khi có bài đi qua. */
 export const NGUON_LOAI = Object.freeze(["chu-bai", "tin-hieu-chu", "don-vi-gia", "the-nhom", "boi-canh-nhom", "yeu-cau", "bo"]);
 
 // Yêu cầu (listing_intent = inquiry, CONTEXT.md): bên mua — «cần mua/thuê/tìm», «tìm mua/thuê/căn/nhà», «khách … xem/tìm/cần»
@@ -507,11 +519,42 @@ const YEU_CAU_PL42 = [
   // «em/mình/e (đang) (cần) tìm», trừ «… tìm (gấp/được) khách/người (thuê)» của môi giới.
   String.raw`${KHONG_DINH_CHU}(?:em|mình|e)\s+(?:đang\s+)?(?:cần\s+)?tìm(?![\p{L}])(?!\s+(?:gấp\s+|được\s+)?(?:kh[aá]ch|người))`,
 ];
-const YEU_CAU = new RegExp(`(?:${[YEU_CAU_GOC, ...YEU_CAU_PL42].join("|")})`, "iu");
+/** Luật Yêu cầu trước PL43 — chỉ để test và thước tiêm luật cũ (`luat.pl43 = LUAT_TRUOC_PL43`). */
+const YEU_CAU_TRUOC_PL43 = new RegExp(`(?:${[YEU_CAU_GOC, ...YEU_CAU_PL42].join("|")})`, "iu");
+
+// ---- PL43 (s03-thu-lai-tin-roi-oan): bài có chữ mà regex bỏ sót. Bảng phủ ca và số đo từng phần:
+// docs/superpowers/specs/2026-11-28-s03-thu-lai-tin-roi-oan-design.md. Sáu phần bật riêng để test và thước tiêm luật cũ.
+// Luật bất biến của hàng: dạng chữ nào mới nhận làm dấu hiệu BĐS (A) thì câu tìm viết bằng dạng ấy vẫn là Yêu cầu (F).
+export const LUAT_PL43 = Object.freeze({ dauHieu: true, dienTich: true, tuMotTy: true, giaTLe: true, yeuCauCap: true, khauHieu: true });
+export const LUAT_TRUOC_PL43 = Object.freeze({ dauHieu: false, dienTich: false, tuMotTy: false, giaTLe: false, yeuCauCap: false, khauHieu: false });
+
+// F: «ngủ» trong dạng số phòng, «kiếm» như «tìm», «cần stu», «ai/ac có stu|N pn».
+const PN_YC_PL43 = String.raw`\d+\s*(?:pn|phòng\s*ngủ|ngủ|wc|n\s*\+?\s*\d?(?![a-zà-ỹđ]))`;
+const TIM_PL43 = String.raw`${KHONG_DINH_CHU}(?:t[iì]m|kiếm)`;
+const YEU_CAU_CAP = [
+  String.raw`${TIM_PL43}\s+(?:gấp\s+)?(?:thu[eê]\s+)?${PN_YC_PL43}`,
+  String.raw`${TIM_PL43}\s+(?:gấp\s+)?stu(?:dio)?s?(?![\p{L}])`,
+  String.raw`cần\s+(?:gấp\s+)?(?:stu(?:dio)?s?(?![\p{L}])|${PN_YC_PL43})`,
+  String.raw`${KHONG_DINH_CHU}(?:ai|ac|ace)\s+(?:nào\s+)?có\s+(?:căn\s+)?(?:stu(?:dio)?s?(?![\p{L}])|${PN_YC_PL43})`,
+];
+// G: khẩu hiệu môi giới «Tìm nhà không khó – có em lo», «Tìm căn khó có em lo» không phải câu tìm (đo 20 offer · 0 inquiry).
+const YEU_CAU_GOC_PL43 = YEU_CAU_GOC.replace(String.raw`tìm\s+(?:mua|thuê|căn|nhà|phòng)`, String.raw`tìm\s+(?:mua|thuê|căn|nhà|phòng)(?!\s*(?:không\s*khó|khó))`);
+const dungYeuCau = (cap, khauHieu) =>
+  new RegExp(`(?:${[khauHieu ? YEU_CAU_GOC_PL43 : YEU_CAU_GOC, ...YEU_CAU_PL42, ...(cap ? YEU_CAU_CAP : [])].join("|")})`, "iu");
+const YEU_CAU_THEO = new Map([[true, true], [true, false], [false, true], [false, false]].map(([c, k]) => [`${c}|${k}`, dungYeuCau(c, k)]));
+/** Biểu thức Yêu cầu theo luật PL43 đang bật. */
+const yeuCauCua = (p43) => YEU_CAU_THEO.get(`${!!p43.yeuCauCap}|${!!p43.khauHieu}`);
+const YEU_CAU = yeuCauCua(LUAT_PL43);
 const YEU_CAU_MAC_DINH = YEU_CAU;
 // Viết tắt «<số>n» (2n, 2n1wc) kết bằng lookahead chữ có dấu, không \b — \b của JS chỉ hiểu ASCII nên «1 năm», «3 nữ»
 // từng khớp (s03-cho-vay-khong-phai-bds).
-const DAU_HIEU_BDS = /(?:\d+\s*(?:pn|phòng\s*ngủ|wc|vs)\b|\d+\s*n\s*\+?\s*\d?(?![a-zà-ỹđ])|\d+(?:[.,]\d+)?\s*m[²2]|\bstudio\b|căn\s*hộ|chung\s*cư|\bccmn\b|shophouse|biệt\s*thự|liền\s*kề|nhà\s*phố|\bduplex\b|penthouse)/iu;
+const NHANH_N = String.raw`\d+\s*n\s*\+?\s*\d?(?![a-zà-ỹđ])`; // dùng chung cho hai biểu thức dưới (đột biến CV-AC cắn cả hai)
+const LOAI_CAN = String.raw`\d+(?:[.,]\d+)?\s*m[²2]|căn\s*hộ|chung\s*cư|\bccmn\b|shophouse|biệt\s*thự|liền\s*kề|nhà\s*phố|\bduplex\b|penthouse`;
+const DAU_HIEU_BDS = new RegExp(String.raw`(?:\d+\s*(?:pn|phòng\s*ngủ|wc|vs)\b|${NHANH_N}|\bstudio\b|${LOAI_CAN})`, "iu");
+// A (PL43): cùng luật nhưng kết bằng lookahead chữ có dấu thay \b — «2PN2w», «2pn2wc», «2 phòng ngủ +» từng trượt; thêm «N ngủ»
+// và «stu/studio» đứng riêng («Stuff», «studious» không khớp).
+const DAU_HIEU_BDS_PL43 = new RegExp(String.raw`(?:\d+\s*(?:pn|phòng\s*ngủ|ngủ|wc|vs)(?![a-zà-ỹđ])|${NHANH_N}|(?<![\p{L}])stu(?:dio)?s?(?![\p{L}])|${LOAI_CAN})`, "iu");
+const dauHieuCua = (p43) => (p43.dauHieu ? DAU_HIEU_BDS_PL43 : DAU_HIEU_BDS);
 // Tín hiệu bán: giá đơn vị tỷ, «thu về», «cắt lỗ», «hạ giá», «giá tốt», «chuyển nhượng», «bao thuế phí»/«BTP», «sổ hồng/đỏ».
 // KHÔNG «CN» trần — trong bài S03 «CN» hay là «chủ nhật» («xem nhà T7-CN»).
 const CO_TY = /\d(?:[\d.,]*\d)?\s*t(?:ỷ|y)(?![a-zà-ỹ])/iu;
@@ -527,13 +570,13 @@ const NHOM_TI_LE = 0.85;
 const GIA_BAN_SAN = 3e8;
 
 /** Bài là Yêu cầu (bên mua). */
-export function laYeuCau(text) {
-  return YEU_CAU.test(gatSo(text ?? ""));
+export function laYeuCau(text, luat = LUAT_PL43) {
+  return yeuCauCua(luat).test(gatSo(text ?? ""));
 }
 
 /** Bài có dấu hiệu BĐS (số phòng, diện tích, loại căn). */
-export function coDauHieuBds(text) {
-  return DAU_HIEU_BDS.test(gatSo(text ?? ""));
+export function coDauHieuBds(text, luat = LUAT_PL43) {
+  return dauHieuCua(luat).test(gatSo(text ?? ""));
 }
 
 /** Mục đích nhóm theo tên: chỉ bán («chuyển nhượng», «giỏ hàng»…) hay chỉ thuê («cho thuê»); lẫn hoặc không rõ → null. */
@@ -590,11 +633,13 @@ export function suyLoai(pr, text, mucDich, mucDichThe = null, luat = {}) {
   if (pr.kind) return { kind: pr.kind, nguon: "chu-bai" };
   const so = gatSo(text ?? "");
   // Tên trùng hằng mô-đun có chủ ý: dòng xét Yêu cầu ngay dưới là chỗ đột biến nguyên văn của transform-zalo-loai-tin.test.mjs.
-  const YEU_CAU = luat.yeuCau ?? YEU_CAU_MAC_DINH;
+  const p43 = luat.pl43 ?? LUAT_PL43;
+  const YEU_CAU = luat.yeuCau ?? (luat.pl43 ? yeuCauCua(p43) : YEU_CAU_MAC_DINH);
   if (YEU_CAU.test(so)) return { kind: null, nguon: "yeu-cau" };
   const giaKhongDonVi = pr.priceVnd == null && pr.pricePerm2Vnd == null ? so.match(GIA_NHAN_TRIEU) : null;
   const coGia = pr.priceVnd != null || pr.pricePerm2Vnd != null || giaKhongDonVi != null;
-  if (!coGia || !DAU_HIEU_BDS.test(so)) return { kind: null, nguon: "bo" };
+  // B (PL43): diện tích đã đọc (15–500 m², không sau chữ bề ngang) đi cùng giá cũng là dấu hiệu BĐS.
+  if (!coGia || !(dauHieuCua(p43).test(so) || (p43.dienTich && pr.areaM2 != null))) return { kind: null, nguon: "bo" };
   const coTy = CO_TY.test(so);
   const giaThue = pr.priceVnd != null && pr.priceVnd < 1e9 && pr.pricePerm2Vnd == null && !coTy && GIA_TRIEU.test(so);
   // Giá theo m² hay giá từ 1 tỷ không bao giờ là thuê (AC-2), dù chữ có «/tháng» hay «pass».
@@ -626,6 +671,12 @@ export function suyLoai(pr, text, mucDich, mucDichThe = null, luat = {}) {
     if (mucDich === KIND.sale && pr.priceVnd != null && pr.priceVnd < GIA_BAN_SAN) return { kind: null, nguon: "bo" };
     if (mucDich === KIND.rent_lt && !giaCoTheThue) return { kind: null, nguon: "bo" };
     return { kind: mucDich, nguon: "boi-canh-nhom" };
+  }
+  // C (PL43, Mạnh «Theo khuyến nghị cả ba» 27/11): nhóm đăng cả bán lẫn thuê, không chữ «bán», không tín hiệu bán, mà giá đã
+  // đọc từ 1 tỷ (không phải giá/m²) — giá từ 1 tỷ không bao giờ là thuê, nên bài ấy là bán. Nhánh cuối, nguồn riêng để đếm; thẻ
+  // nhóm THUÊ đã duyệt thì không áp.
+  if (p43.tuMotTy && pr.priceVnd != null && pr.priceVnd >= 1e9 && pr.pricePerm2Vnd == null && mucDichThe !== KIND.rent_lt) {
+    return { kind: KIND.sale, nguon: "gia-tu-1-ty" };
   }
   return { kind: null, nguon: "bo" };
 }
@@ -884,7 +935,7 @@ export async function docThiTruongNhom(client, khoaNhom = khoaNhomThat) {
 /** Phiên bản bộ đọc tầng (DV4) — method_version của phát biểu tầng. */
 export const TANG_VERSION = "transform-zalo@dv4";
 
-export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin = true, khoaNhom = khoaNhomThat, ganSo = ganSdtQuaNguoi, luatYeuCau = null } = {}) {
+export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin = true, khoaNhom = khoaNhomThat, ganSo = ganSdtQuaNguoi, luatYeuCau = null, luatPl43 = LUAT_PL43 } = {}) {
   // Phường theo thị trường của nhóm (N1): nhóm S03 khai market_codes ở sổ nhóm (collection_units, PL12) chỉ đối chiếu
   // phường của các thị trường đó; nhóm chưa khai (Hỏi-1, Mạnh duyệt 30/10) đối chiếu mọi thị trường có phường.
   const moiThiTruong = await docThiTruongCoPhuong(client);
@@ -926,14 +977,14 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
   let nFull = 0, nPartial = 0, nFail = 0;
   const loaiGiaPhiLy = { "thue-tu-1-ty": 0, "ban-tren-100-ty": 0 };
   // Đọc mọi bài trước: mục đích nhóm (bước 2b) tính trên loại chữ bài của cả nhóm.
-  const docBai = posts.map((p) => ({ p, pr: parse(p.text) }));
+  const docBai = posts.map((p) => ({ p, pr: parse(p.text, { luat: luatPl43 }) }));
   const mucDich = mucDichNhom(docBai.map(({ p, pr }) => ({ conversation_id: p.conversation_id, group_name: p.group_name, kind: pr.kind })));
   const loaiNhom = loaiHinhNhom(posts.map((p) => ({ conversation_id: p.conversation_id, loai: docLoaiHinh(p.text) })));
   const nguon = [];
   for (const { p, pr } of docBai) {
     if (suyLoaiTin) {
       const r = suyLoai(pr, p.text, mucDich.get(p.conversation_id ?? ""), theNhom.get(p.conversation_id ?? "")?.mucDich ?? null,
-        luatYeuCau ? { yeuCau: luatYeuCau } : {});
+        luatYeuCau ? { yeuCau: luatYeuCau, pl43: luatPl43 } : { pl43: luatPl43 });
       pr.kind = r.kind;
       nguon.push(r.nguon);
     } else nguon.push(pr.kind ? "chu-bai" : "bo");

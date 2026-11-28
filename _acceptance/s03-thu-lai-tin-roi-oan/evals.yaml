@@ -12,7 +12,7 @@ evals:
     executor: test
     cmd: config:executors.test.pl43_unit
     paths: ["pipeline/transform-zalo.mjs", "pipeline/scripts/s03-thu-lai-tin-roi-oan.test.mjs"]
-    expected: "Bốn câu giá không đơn vị ra tin bán với giá 1,92 · 2,45 · 3,7 · 1,65 tỷ; bốn câu đối chứng giữ kết quả hàm cũ ghim trong test; đột biến bỏ điều kiện «không theo sau chữ tầng/lầu» ở dạng «1t9» thì ca «1t9 tầng cao» đỏ gọi tên câu."
+    expected: "Bốn câu giá không đơn vị ra tin bán với giá 1,92 · 2,45 · 3,7 · 1,65 tỷ; bốn câu đối chứng giữ kết quả hàm cũ ghim trong test; «1t9 tầng cao», «5t5», «5t50» (không tín hiệu bán) không ra giá; đột biến bỏ điều kiện «phần lẻ ba chữ số hoặc tín hiệu bán ngay sau» thì ca «5t50» đỏ gọi tên câu."
   - id: E3
     criterion: AC-3
     executor: test
