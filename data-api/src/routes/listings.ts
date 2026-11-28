@@ -5,6 +5,7 @@ import { giaiMaKhuVuc } from "../lib/ma-thi-truong.js";
 import { listingKeySecret } from "../lib/listing-key.js";
 import { LISTING_KEY_NAMES, loaiHinh } from "../contract/listing.js";
 import { SOURCE_HIDDEN } from "../contract/vocab.generated.js";
+import { kiemNguonAn, LOI_NGUON_AN } from "../lib/nguon-an.js";
 
 /**
  * /v1/listings — Listing (tin rao) theo RESO DD 2.1 (PB2, `_acceptance/data-api-hop-dong-reso-dd-2-1`): MỘT tài nguyên có
@@ -18,8 +19,6 @@ import { SOURCE_HIDDEN } from "../contract/vocab.generated.js";
  * HT19: không đọc bảng bài thô (`stg_*`), không trả chữ bài, ảnh, tên nhóm, người gửi của bài S03; không đọc bảng S02.
  * `media` luôn null (ảnh tin bán/thuê mang tên nguồn; URL ảnh ngắn hạn có thể mang số phòng nguồn — PB4).
  */
-export const listingsRoute = new Hono();
-
 export const KIND = ["sale", "rent_lt", "rent_st"] as const;
 type Kind = (typeof KIND)[number];
 type Dong = Record<string, unknown>;
@@ -39,11 +38,11 @@ export async function coBangHang(): Promise<boolean> {
 /** Mã khoá tin ngắn hạn trong SQL — $<p> là khoá bí mật. */
 const KHOA_NGAN_HAN = (cot: string, p: number) => `substr(encode(hmac('S01|' || ${cot}, $${p}::text, 'sha256'), 'hex'), 1, 16)`;
 
-/** Nguồn không bao giờ hiển thị công khai (PB7): điều kiện dựng từ hằng sinh của sổ, không viết tay mã nào. */
-const NGUON_HIEN = `o.source <> ALL(ARRAY[${SOURCE_HIDDEN.map((s) => `'${s}'`).join(", ")}]::text[])`;
+/** Nguồn không bao giờ hiển thị công khai (PB7): điều kiện dựng từ danh sách ĐÃ KIỂM của sổ (PB10), không viết tay mã nào. */
+const dieuKienNguon = (ds: readonly string[]) => `o.source <> ALL(ARRAY[${ds.map((s) => `'${s}'`).join(", ")}]::text[])`;
 
 /** Hai nhánh của tập ghép, cùng tập cột. `dieuKien*` thêm điều kiện riêng từng bảng (vd tra theo khoá). */
-function tapGhep(kinds: Kind[], pKhoa: number, dieuKienBan = "", dieuKienNgan = ""): string {
+function tapGhep(kinds: Kind[], pKhoa: number, NGUON_HIEN: string, dieuKienBan = "", dieuKienNgan = ""): string {
   const nhanh: string[] = [];
   const banThue = kinds.filter((k) => k !== "rent_st");
   if (banThue.length) {
@@ -182,7 +181,20 @@ async function dungTrang(rows: Dong[]) {
   return rows.map((r) => phanTu(r, gt.get(String(r.k)), r.lid ? lich.get(String(r.lid)) : undefined));
 }
 
-listingsRoute.get("/", async (c) => {
+/**
+ * Route /v1/listings dựng từ danh sách nguồn ẩn (PB10). Sổ hỏng (`kiemNguonAn` trả null) → mọi đường của route trả 503
+ * HIDDEN_SOURCES_NOT_CONFIGURED TRƯỚC khi chạm DB: đóng khi không biết phải ẩn gì (fail-closed), không lặng lẽ mở S02, S08.
+ */
+export function taoListingsRoute(dsNguonAn: unknown): Hono {
+  const r = new Hono();
+  const nguon = kiemNguonAn(dsNguonAn);
+  if (!nguon) {
+    r.all("*", (c) => c.json({ error: { ...LOI_NGUON_AN } }, 503));
+    return r;
+  }
+  const NGUON_HIEN = dieuKienNguon(nguon);
+
+r.get("/", async (c) => {
   const secret = listingKeySecret();
   const rawKind = c.req.query("kind");
   if (rawKind !== undefined && !(KIND as readonly string[]).includes(rawKind)) {
@@ -251,7 +263,7 @@ listingsRoute.get("/", async (c) => {
     params.push(limit, offset);
     const xep = coBang ? "h.duoi_trung_vi_pct" : "ROUND((1 - t.price_perm2::numeric / s.m) * 100, 1)";
     const { rows } = await pool.query(
-      `WITH t AS (${tapGhep(kinds, 0)})
+      `WITH t AS (${tapGhep(kinds, 0, NGUON_HIEN)})
        SELECT t.*, ${COT_KHU} FROM t LEFT JOIN areas a ON a.id = t.area_id ${noi}
         WHERE ${[dk, ...loc].join(" AND ")}
         ORDER BY ${xep} DESC, t.k
@@ -263,7 +275,7 @@ listingsRoute.get("/", async (c) => {
 
   params.push(limit, offset);
   const { rows } = await pool.query(
-    `WITH t AS (${tapGhep(kindsXem, 1)})
+    `WITH t AS (${tapGhep(kindsXem, 1, NGUON_HIEN)})
      SELECT t.*, ${COT_KHU} FROM t LEFT JOIN areas a ON a.id = t.area_id
       ${loc.length ? `WHERE ${loc.join(" AND ")}` : ""}
       ORDER BY t.k
@@ -273,15 +285,20 @@ listingsRoute.get("/", async (c) => {
   return c.json({ data: await dungTrang(rows), meta: { total: rows.length, limit, offset } });
 });
 
-listingsRoute.get("/:listingKey", async (c) => {
+r.get("/:listingKey", async (c) => {
   const secret = listingKeySecret();
   if (!secret) return loi(c, 503, "LISTING_KEY_NOT_CONFIGURED", "listingKey secret is not configured");
   const key = c.req.param("listingKey");
   const { rows } = await pool.query(
-    `WITH t AS (${tapGhep([...KIND], 1, " AND o.offer_id = $2", ` AND ${KHOA_NGAN_HAN("l.id", 1)} = $2`)})
+    `WITH t AS (${tapGhep([...KIND], 1, NGUON_HIEN, " AND o.offer_id = $2", ` AND ${KHOA_NGAN_HAN("l.id", 1)} = $2`)})
      SELECT t.*, ${COT_KHU} FROM t LEFT JOIN areas a ON a.id = t.area_id LIMIT 1`,
     [secret, key],
   );
   if (!rows[0]) return loi(c, 404, "NOT_FOUND", "Listing not found");
   return c.json({ data: (await dungTrang(rows))[0] });
 });
+
+  return r;
+}
+
+export const listingsRoute = taoListingsRoute(SOURCE_HIDDEN);

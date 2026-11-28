@@ -54,4 +54,8 @@ npm run dev           # :3001 (PORT)
   `src/contract/vocab.generated.ts` — tệp MÁY SINH từ `nguon_khong_hien_thi` của `pipeline/mappings.yaml` (cùng nguồn với
   cổng Invest). Không viết tay mã nguồn nào; thêm nguồn ẩn = sửa sổ rồi `node pipeline/vocab.mjs --write`. Route mới đọc
   `sale_offers` phải đi qua cùng điều kiện; test `test/tin-hien-thi.test.ts`.
+- **Sổ nguồn ẩn hỏng thì ĐÓNG** (PB10): `/v1/listings` dựng bằng `taoListingsRoute(ds)`, kiểm sổ bằng `kiemNguonAn`
+  (`src/lib/nguon-an.ts`); sổ rỗng, sai khuôn mã, trùng hay không phải mảng → mọi đường của route trả 503
+  `HIDDEN_SOURCES_NOT_CONFIGURED` trước khi chạm DB. App dựng bằng `taoApp(ds)` (không giá trị mặc định cho `ds`); test
+  `test/nguon-an-dong.test.ts`.
 - Khoá `listingKey` của tin thuê ngắn hạn là HMAC có khoá bí mật `LISTING_KEY_SECRET` — không bao giờ trả id gốc của nguồn.

@@ -83,6 +83,9 @@ Query: `kind` (`sale` · `rent_lt` · `rent_st`; absent = all three), `market`, 
 default 50), `offset`. Good-price filter: `minBelowMedianPct=<n>` (0–50) keeps sale and long-term-rent listings priced
 at least `n`% below the median of their comparison group, ordered by that gap; add `project=<project node id>` to compare
 inside a project. Errors are `{ "error": { "code", "message" } }`; an unknown `kind` answers `400`.
+If the server's list of sources that are never shown publicly (`SOURCE_HIDDEN`, generated) is empty or unusable, every
+`/v1/listings` call — list, good-price filter, single listing — answers `503` with code `HIDDEN_SOURCES_NOT_CONFIGURED`
+instead of returning listings: the API fails closed rather than exposing sources that must stay hidden.
 
 Every item carries every key below (`null` when it does not apply to that `kind`):
 

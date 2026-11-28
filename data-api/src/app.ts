@@ -3,7 +3,8 @@ import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 
 import { marketsRoute } from "./routes/markets.js";
-import { KIND, listingsRoute } from "./routes/listings.js";
+import { KIND, taoListingsRoute } from "./routes/listings.js";
+import { SOURCE_HIDDEN } from "./contract/vocab.generated.js";
 import { dealsRoute } from "./routes/deals.js";
 import { assetStatsRoute } from "./routes/asset-stats.js";
 import { priceStatsRoute } from "./routes/price-stats.js";
@@ -14,6 +15,14 @@ import { BUILDING_KEYS, LOOKUP_EXTRA_KEYS, UNIT_KEYS, schemaTu } from "./contrac
 import { auth } from "./middleware/auth.js";
 import { errorHandler } from "./middleware/error-handler.js";
 
+export const API_VERSION = "0.2.0";
+
+/**
+ * Dựng app. `dsNguonAn` = danh sách nguồn không hiển thị công khai (app mặc định dùng hằng sinh SOURCE_HIDDEN; không đặt giá
+ * trị mặc định cho tham số — `undefined` phải là sổ hỏng, không được rơi về hằng sinh); sổ hỏng chỉ đóng
+ * /v1/listings (503 HIDDEN_SOURCES_NOT_CONFIGURED, PB10), các route khác không đổi — test dựng app với sổ hỏng qua hàm này.
+ */
+export function taoApp(dsNguonAn: unknown): Hono {
 const app = new Hono();
 
 app.use("*", logger());
@@ -22,11 +31,10 @@ app.use("*", auth);
 
 app.onError(errorHandler);
 
-export const API_VERSION = "0.2.0";
 app.get("/health", (c) => c.json({ status: "ok", version: API_VERSION }));
 
 app.route("/v1/markets", marketsRoute);
-app.route("/v1/listings", listingsRoute);
+app.route("/v1/listings", taoListingsRoute(dsNguonAn));
 app.route("/v1/deals", dealsRoute); // 410 — gộp vào /v1/listings?minBelowMedianPct=
 app.route("/v1/asset-stats", assetStatsRoute); // 410 — đổi tên thành /v1/price-stats
 app.route("/v1/price-stats", priceStatsRoute);
@@ -49,8 +57,8 @@ app.get("/openapi.json", (c) => {
       "/v1/markets": { get: { summary: "List markets (id, name, countryCode, listingCount), most listings first", responses: { 200: { description: "Market list" } } } },
       "/v1/markets/{id}": { get: { summary: "One market (id, name, countryCode, listingCount)", responses: { 200: { description: "Market" }, 404: { description: "Not found" } } } },
       "/v1/markets/{id}/submarkets": { get: { summary: "Submarkets of a market (id, name, listingCount), by name", responses: { 200: { description: "Submarket list" } } } },
-      "/v1/listings": { get: { summary: `Listings (RESO Property resource): ?kind=${KIND.join("|")}, market, area, bedroomsTotal, minBelowMedianPct, project, limit, offset`, responses: { 200: { description: "Listing list", content: { "application/json": { schema: { type: "object", properties: { data: { type: "array", items: { $ref: "#/components/schemas/Listing" } } } } } } } } } },
-      "/v1/listings/{listingKey}": { get: { summary: "One listing by listingKey", responses: { 200: { description: "Listing", content: { "application/json": { schema: { type: "object", properties: { data: { $ref: "#/components/schemas/Listing" } } } } } }, 404: { description: "Not found" } } } },
+      "/v1/listings": { get: { summary: `Listings (RESO Property resource): ?kind=${KIND.join("|")}, market, area, bedroomsTotal, minBelowMedianPct, project, limit, offset`, responses: { 200: { description: "Listing list", content: { "application/json": { schema: { type: "object", properties: { data: { type: "array", items: { $ref: "#/components/schemas/Listing" } } } } } } }, 503: { description: "HIDDEN_SOURCES_NOT_CONFIGURED — hidden-source list unusable, listings closed" } } } },
+      "/v1/listings/{listingKey}": { get: { summary: "One listing by listingKey", responses: { 200: { description: "Listing", content: { "application/json": { schema: { type: "object", properties: { data: { $ref: "#/components/schemas/Listing" } } } } } }, 404: { description: "Not found" }, 503: { description: "HIDDEN_SOURCES_NOT_CONFIGURED — hidden-source list unusable, listings closed" } } } },
       "/v1/price-stats": { get: { summary: "Price statistics by area (?area= or ?market=)", responses: { 200: { description: "Stats" } } } },
       "/v1/coverage": { get: { summary: "Data coverage", responses: { 200: { description: "Coverage" } } } },
       "/v1/properties": { get: { summary: "Property (danh bạ nhà): buildings of a project — ?project=<node id | project name>; units are never listed", responses: { 200: { description: "Building list" } } } },
@@ -72,5 +80,8 @@ app.get("/openapi.json", (c) => {
 });
 
 app.notFound((c) => c.json({ error: { code: "NOT_FOUND", message: "Endpoint not found" } }, 404));
+return app;
+}
 
+const app = taoApp(SOURCE_HIDDEN);
 export default app;
