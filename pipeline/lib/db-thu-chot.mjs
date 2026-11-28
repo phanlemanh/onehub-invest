@@ -3,7 +3,9 @@
 // (postgresql://, ?sslmode, host 127.0.0.1, thiếu mật khẩu) đều quy về tên rồi mới so, nên DB máy thu
 // `oneinvest` không lọt. Hồ sơ s08-nap-sua AC-5; hàng test-pha-chi-chay-db-suite áp cho các tệp còn lại.
 
-export const MAU_DB_THU = /^oneinvest_suite_[a-z0-9_]+$/;
+// HT35: thêm `oneinvest_ci_scripts_<pid>` — DB trống bước scripts của suite-neu-doi tự dựng rồi xoá trong lượt chấm (cùng
+// server :5433); không có nó thì check-freshness.test bị từ chối ngay trong lượt chấm.
+export const MAU_DB_THU = /^oneinvest_(suite_[a-z0-9_]+|ci_scripts_\d+)$/;
 
 /** Tên DB từ URL Postgres (postgres:// hay postgresql://, bỏ query, giải %xx). URL hỏng → "". */
 export function tenDbThu(url) {

@@ -1,0 +1,71 @@
+HT35 S4 vòng 1 trên M5 ＠9fa8ea4f8bb747c9eb4a3c8e630ba1a5b2d39cdb — chạy lại riêng hai lệnh bị chặn (trần 30′ mặc định, hồ sơ không khai long_running), mỗi lệnh một lần.
+
+== E7d: bash db/db-thu.sh oneinvest_suite_scripts --chay node --test scripts/*.test.mjs
+ℹ live: thoát json=1 chữ=1 · lỗi: S09/vn stale last=2026-11-13T12:09:08.194Z, S10/vn stale last=2026-11-11T02:21:29.809Z · chấm lúc 2026-11-27T06:10:45.713Z
+ℹ gt-live: thoát json=1 chữ=1 · lỗi: S09/vn stale last=2026-11-13T12:09:08.194Z, S10/vn stale last=2026-11-11T02:21:29.809Z · S03 nạp=2026-11-26T05:28:31.479Z thu=2026-11-26T05:28:31.479Z lệch-snapshot=0 · S05 nạp=— thu=— lệch-snapshot=0 · S06 nạp=2026-11-25T23:08:53.507Z thu=2026-11-25T23:08:53.507Z lệch-snapshot=0 · chấm lúc 2026-11-27T06:10:47.992Z
+ℹ tests 705
+ℹ suites 77
+ℹ pass 702
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 1
+ℹ todo 0
+ℹ duration_ms 1905325.332833
+__EXIT=1
+✖ failing tests:
+
+test at scripts/so-nguon-kho.test.mjs:108:3
+✖ NK-AC-1 năm cột, CHECK và giá trị từng mã đúng bảng viết trước (8.759708ms)
+  AssertionError [ERR_ASSERTION]: sổ sau 122 lệch bảng mong đợi
+  + actual - expected
+  
+  + [
+  +   'S09: real_name lệch bảng mong đợi',
+  +   'S09: source_ids lệch bảng mong đợi',
+  +   'S17: real_name lệch bảng mong đợi',
+  +   'S17: source_ids lệch bảng mong đợi'
+  + ]
+  - []
+  
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [ 'S09: real_name lệch bảng mong đợi', 'S09: source_ids lệch bảng mong đợi', 'S17: real_name lệch bảng mong đợi', 'S17: source_ids lệch bảng mong đợi' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at scripts/so-nguon-kho.test.mjs:173:3
+✖ chiều đỏ NK-AC-1: bảng mong đợi lệch một nhịp thì ca đỏ gọi tên mã (1.012917ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+      'S06: cadence_hours lệch bảng mong đợi',
+  +   'S09: real_name lệch bảng mong đợi',
+  +   'S09: source_ids lệch bảng mong đợi',
+  +   'S17: real_name lệch bảng mong đợi',
+  +   'S17: source_ids lệch bảng mong đợi'
+    ]
+  
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'S06: cadence_hours lệch bảng mong đợi', 'S09: real_name lệch bảng mong đợi', 'S09: source_ids lệch bảng mong đợi', 'S17: real_name lệch bảng mong đợi', 'S17: source_ids lệch bảng mong đợi' ],
+    expected: [ 'S06: cadence_hours lệch bảng mong đợi' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+__EXIT=1
+
+== pipeline_that: node scripts/suite-neu-doi.mjs pipeline_that -- 'cd pipeline && npm run test:that'
+chay-that: vai may-phat-trien — bỏ qua 1 ca chỉ máy thu
+chay-that: bỏ qua (chỉ máy thu) — pipeline/scripts/ops-facts-so-tong-hop.test.mjs — ON22-AC-10 máy thu thật, chế độ khô: n
+ℹ tests 37
+ℹ suites 2
+ℹ pass 37
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2113796.445
+__EXIT=0

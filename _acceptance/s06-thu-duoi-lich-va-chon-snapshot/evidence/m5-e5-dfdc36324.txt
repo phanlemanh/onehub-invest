@@ -1,0 +1,145 @@
+# ZC18 E5 trên M5 — theo probes/E5-CHAY-TREN-M5.md (＠dfdc36324, mục «Lượt 27/11 (sau fc3fa4a7a)»). Dữ liệu: S06_DUOI_DO=$HOME/dev/onehub-wt/zt-thu-duoi-s06-do/state/phep-do-s06-24h (chỉ đọc)
+# worktree đặt trong .claude/worktrees/ (probe-zc18, probe-zc18-dc) thay /tmp — luật kho.
+
+## Lượt 1 — XANH, đầu nhánh. Bắt đầu 2026-11-26T21:56:40Z
+$ S06_DUOI_DO=<…> bash db/db-thu.sh oneinvest_suite_s06tl --chay-trong node _acceptance/s06-thu-duoi-lich-va-chon-snapshot/probes/chon-nap.mjs
+git rev-parse HEAD: dfdc363241be0ea2718486755a830d79cbbdd532
+git diff --stat HEAD: 
+db-thu: cụm dùng một lần one-invest-db-thu-74582 cổng 127.0.0.1:32857 — dựng cụm + migration 7 s
+fixture tu writer that: 231 snapshot hcmc của phép đo 24 giờ (bộ thu đuôi ghi), dùng hcmc__S06__2026-11-24T012115 · hcmc__S06__2026-11-24T012611 · hcmc__S06__2026-11-24T013109 · hcmc__S06__2026-11-24T013610
+vong goc-mac-dinh: exit 0 · nap 0
+goc mac dinh: moi --goc duoi state/thu-duoi-s06 · 0 duong duoi collector/snapshots
+khong snapshot: exit 0 · nap 0
+khoa go sau vong xanh
+vong goc-collector: exit 1 · nap 0
+❌ THU_DUOI_S06_GOC cấm trỏ vào collector/ — snapshot đuôi phải ở kho riêng
+
+goc trong collector: exit 1 · khong tao thu muc · 0 loi goi bo thu
+vong db-loi: exit 1 · nap 0
+❌ vong-doi S06 lỗi — dừng (fail-closed)
+vong-doi: không đọc được trạng thái (ECONNREFUSED)
+
+doc vung loi: exit 1 · 0 loi goi bo thu
+vung mac dinh: chi hcmc · loi goi vung khac 0
+vong vung-mot: exit 0 · nap 0
+vung ngoai danh sach: 0 loi goi · co dong nhat ky
+vong vung-hai: exit 0 · nap 0
+vung cau hinh hai vung: goi ca hai
+vong ma-3: exit 3 · nap 0
+{"daCat":false,"lyDo":"doc-loi"}
+❌ thu đuôi vùng hanoi thoát 3 — dừng vòng, nạp để vòng sau
+
+ma 3: exit 3 · nap 0 · khoa go
+chan: vong 1 exit 3 · co dau chan co han
+chan giua chung: vung sau khong goi
+vong con-han: exit 0 · nap 0
+con han: vong 2 exit 0 · 0 loi goi bo thu · 0 loi nap
+vong het-han: exit 0 · nap 0
+het han: vong 3 goi bo thu
+vong ma-4: exit 4 · nap 0
+{"daCat":false,"lyDo":"doc-loi"}
+2026-11-26T21:56:49Z bỏ vùng hanoi: ngoài tập đã cấu hình (THU_DUOI_S06_VUNG)
+❌ thu đuôi vùng hcmc thoát 4 — dừng vòng, nạp để vòng sau
+
+ma 4: exit 4 · nap 0 · khoa go
+vong ma-5: exit 5 · nap 0
+{"daCat":false,"lyDo":"doc-loi"}
+2026-11-26T21:56:49Z bỏ vùng hanoi: ngoài tập đã cấu hình (THU_DUOI_S06_VUNG)
+❌ thu đuôi vùng hcmc thoát 5 — dừng vòng, nạp để vòng sau
+
+ma 5: exit 5 · nap 0 · khoa go
+vong 1: exit 0 · nap 1 (hcmc__S06__2026-11-24T012611)
+hai vung: hanoi nap 0 · hcmc nap 1 · moi vung <= 1
+stg tang dung so tin cua snapshot moi nhat
+vong 2: exit 0 · nap 1 (hcmc__S06__2026-11-24T012115)
+ton dong: vong 2 nap S1
+vong 2b: exit 0 · nap 0
+da nap con trong stg: nap 0
+vong 3: exit 0 · nap 0
+vong 4: exit 0 · nap 0
+da nap roi bi luot quet du de: vong sau nap 0 · nhat ky 0 dong nap cho snapshot do
+noi dung stg khong lui
+vong 5: exit 0 · nap 1 (hcmc__S06__2026-11-24T013109)
+snapshot moi sau khi bi de: van nap 1
+vong 6: exit 1 · nap 2 (hanoi__S06__2026-11-24T000000, hcmc__S06__2026-11-24T013610)
+{"daCat":false,"lyDo":"doc-loi"}
+2026-11-26T21:56:51Z nạp snapshot đuôi /var/folders/bp/cf66dm9n18x8q1rcjsylk6ph0000gq/T/zc18-chon-nap-kLxR1R/state/thu-duoi-s06/snapshots/hanoi/hanoi__S06__2026-11-24T000000
+❌ nạp /var/folders/bp/cf66dm9n18x8q1rcjsylk6ph0000gq/T/zc18-chon-nap-kLxR1R/state/thu-duoi-s06/snapshots/hanoi/hanoi__S06__2026-11-24T000000 lỗi — vùng khác vẫn thử, thoát 1 cuối vòng
+2026-11-26T21:56:52Z nạp snapshot đuôi /var/folders/bp/cf66dm9n18x8q1rcjsylk6ph0000gq/T/zc18-chon-nap-kLxR1R/state/thu-duoi-s06/snapshots/hcmc/hcmc__S06__2026-11-24T013610
+manifest ok: hcmc__S06__2026-11-24T013610 — 2 items
+✅ 2 ads → stg_chotot_ads
+❌ checksum sai: items-0001.json.gz
+
+nap loi vung dau: vung sau van thu · exit 1
+CHON-NAP OK
+→ mã thoát 0
+
+## Lượt 2 — ĐỐI CHỨNG ĐỎ: dfdc36324 + git checkout 7173fc21a -- scripts/thu-duoi-s06.sh pipeline/lib/thu-duoi-moc.mjs. Bắt đầu 2026-11-26T21:56:52Z
+$ S06_DUOI_DO=<…> bash db/db-thu.sh oneinvest_suite_s06tl --chay-trong node _acceptance/s06-thu-duoi-lich-va-chon-snapshot/probes/chon-nap.mjs
+git rev-parse HEAD: dfdc363241be0ea2718486755a830d79cbbdd532
+git diff --stat HEAD:
+ pipeline/lib/thu-duoi-moc.mjs |  5 ++--
+ scripts/thu-duoi-s06.sh       | 70 ++-----------------------------------------
+ 2 files changed, 5 insertions(+), 70 deletions(-)
+db-thu: cụm dùng một lần one-invest-db-thu-74983 cổng 127.0.0.1:32858 — dựng cụm + migration 8 s
+fixture tu writer that: 231 snapshot hcmc của phép đo 24 giờ (bộ thu đuôi ghi), dùng hcmc__S06__2026-11-24T012115 · hcmc__S06__2026-11-24T012611 · hcmc__S06__2026-11-24T013109 · hcmc__S06__2026-11-24T013610
+vong goc-mac-dinh: exit 0 · nap 0
+goc mac dinh: moi --goc duoi state/thu-duoi-s06 · 0 duong duoi collector/snapshots
+khong snapshot: exit 0 · nap 0
+khoa go sau vong xanh
+vong goc-collector: exit 1 · nap 0
+❌ THU_DUOI_S06_GOC cấm trỏ vào collector/ — snapshot đuôi phải ở kho riêng
+
+goc trong collector: exit 1 · khong tao thu muc · 0 loi goi bo thu
+vong db-loi: exit 1 · nap 0
+❌ vong-doi S06 lỗi — dừng (fail-closed)
+vong-doi: không đọc được trạng thái (ECONNREFUSED)
+
+doc vung loi: exit 1 · 0 loi goi bo thu
+VUNG MAC DINH CHAY CA: hanoi, hcmc
+vong vung-mot: exit 0 · nap 0
+VUNG NGOAI DANH SACH BI GOI: gọi hanoi, hcmc · dòng nhật ký false
+vong vung-hai: exit 0 · nap 0
+vung cau hinh hai vung: goi ca hai
+vong ma-3: exit 3 · nap 0
+❌ thu đuôi vùng hanoi thoát 3 — dừng vòng, nạp để vòng sau
+
+ma 3: exit 3 · nap 0 · khoa go
+KHONG DAU CHAN: exit 3 · hetLuc (không có)
+chan giua chung: vung sau khong goi
+vong con-han: exit 0 · nap 0
+GOI NGUON KHI CON HAN: exit 0 · 2 lời gọi bộ thu · nap 0
+vong het-han: exit 0 · nap 0
+KET HAN: exit 0 · 2 lời gọi bộ thu · dấu còn true
+vong ma-4: exit 4 · nap 0
+❌ thu đuôi vùng hanoi thoát 4 — dừng vòng, nạp để vòng sau
+
+ma 4: exit 4 · nap 0 · khoa go
+vong ma-5: exit 5 · nap 0
+❌ thu đuôi vùng hanoi thoát 5 — dừng vòng, nạp để vòng sau
+
+ma 5: exit 5 · nap 0 · khoa go
+vong 1: exit 0 · nap 0
+CHON-NAP DO vong 1: mong nap đúng hcmc__S06__2026-11-24T012611
+CHON-NAP DO stg 0 ≠ 3
+vong 2: exit 0 · nap 0
+CHON-NAP DO vong 2: mong nap hcmc__S06__2026-11-24T012115
+vong 2b: exit 0 · nap 0
+da nap con trong stg: nap 0
+vong 3: exit 0 · nap 0
+vong 4: exit 0 · nap 0
+da nap roi bi luot quet du de: vong sau nap 0 · nhat ky 0 dong nap cho snapshot do
+noi dung stg khong lui
+vong 5: exit 0 · nap 0
+DOI CHUNG HONG: vòng 5 mong nạp hcmc__S06__2026-11-24T013109
+vong 6: exit 0 · nap 0
+CHON-NAP DO nạp lỗi: exit 0 · nap 
+CHON-NAP DO (10 ca)
+→ mã thoát 1
+# xong 2026-11-26T21:57:05Z
+
+## Ghi chú phiên chấm M5 (không sửa mã, không sửa probe)
+- máy: M5 (M5 Max 18 nhân, colima 16/96) · hai worktree tách tại dfdc36324; lượt đối chứng đúng hai tệp đổi về 7173fc21a (diff --stat ở trên). Dữ liệu phép đo chỉ đọc, không commit. Không gọi nguồn thật, không chạy bộ thu (probe thay bộ thu bằng stub).
+- Lượt XANH (đầu nhánh): mã 0, dòng cuối «CHON-NAP OK»; đủ bảy dòng E11/E12: vung mac dinh, vung ngoai danh sach, vung cau hinh hai vung, chan, chan giua chung, con han, het han; 0 PROBE HONG, 0 NAP LAI.
+- Lượt ĐỐI CHỨNG (7173fc21a): mã 1, dòng cuối «CHON-NAP DO (10 ca)». E11/E12 đỏ 5/7: «VUNG MAC DINH CHAY CA», «VUNG NGOAI DANH SACH BI GOI», «KHONG DAU CHAN», «GOI NGUON KHI CON HAN», «KET HAN»; hai dòng còn xanh trên mã cũ: «vung cau hinh hai vung» (mã cũ vốn gọi cả hai vùng) và «chan giua chung» (mã cũ vốn dừng vòng khi bị chặn). Các ca AC-5 đỏ (vòng chọn đầu nạp 0, DOI CHUNG HONG vòng 5). Không «CHON-NAP OK», không PROBE HONG.
+- Che tên nguồn: trong mã snapshot, phần tên nguồn thật thay bằng «S06» trước khi commit.

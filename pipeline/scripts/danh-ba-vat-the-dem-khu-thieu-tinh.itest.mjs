@@ -68,6 +68,24 @@ test("DA72-AC-2 khu CÓ dòng S08 mà thiếu tỉnh vẫn dừng gọi tên, kh
   }
 });
 
+test("DA73-AC-2b khu ĐÍCH NỐI S16 (không dòng S08) mà thiếu tỉnh vẫn dừng gọi tên, không ghi — hàng «đích nối» của trục khu", async () => {
+  const SLUG_S16 = "vinhomes-smart-city";
+  const { rows: [g] } = await c.query("SELECT area_ids FROM asset_nodes WHERE slug = $1", [SLUG_S16]);
+  assert.ok(g, `DA73-AC-2b không có nút ${SLUG_S16} trên DB chép — ca không đo được`);
+  const { rows: [s] } = await c.query(`SELECT count(*)::int AS n FROM stg_s08_inventory i JOIN s08_project_links l
+      ON l.project_id = i.project_id AND l.status = 'noi' JOIN asset_nodes a ON a.id = l.asset_node_id
+     WHERE a.slug = $1 AND i.project_type = 'high_rise'`, [SLUG_S16]);
+  assert.equal(s.n, 0, "DA73-AC-2b khu đích nối có dòng S08 — ca đo nhầm hàng «có S08»");
+  const truoc = await demToa();
+  await c.query("UPDATE asset_nodes SET area_ids = '{}' WHERE slug = $1", [SLUG_S16]);
+  try {
+    await assert.rejects(dung(c, { khuSlugs: [SLUG_S16, SLUG], log: () => {} }), new RegExp(`khu ${SLUG_S16}: khong-co-tinh`));
+    assert.equal(await demToa(), truoc, "DA73-AC-2b đã ghi khi khu đích nối thiếu tỉnh");
+  } finally {
+    await c.query("UPDATE asset_nodes SET area_ids = $1 WHERE slug = $2", [g.area_ids, SLUG_S16]);
+  }
+});
+
 test("DA72-AC-3 refresh-bait-gap thật trên DB lượt thoát 0, có dòng «đêm», không «khong-co-tinh»", () => {
   const env = { ...process.env, DATABASE_URL: URL_LUOT };
   delete env.NODE_TEST_CONTEXT;
