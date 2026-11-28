@@ -1,7 +1,7 @@
 // do-tin-roi-oan.test.mjs — PL43 AC-5: ngưỡng của thước, trường bắt buộc của tệp mẫu, phép che, phép gán phần luật.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { NGUONG, TRUONG_MAU, phanLuatCua, vietMau, xet } from "./do-tin-roi-oan.mjs";
+import { NGUONG, TRUONG_MAU, ketLuot, maThoat, phanLuatCua, vietMau, xet } from "./do-tin-roi-oan.mjs";
 import { cheSo } from "./do-yeu-cau-lot-tin.mjs";
 
 const TRUOC = { tin: 9700, ro: 78, gia_tot_thue_ro: 12 };
@@ -65,4 +65,22 @@ test("PL43-AC-5 gán phần luật cho bài mới nhận", () => {
     ["Tìm 1 ngủ toà Be dưới 7 triệu", "ca-hai", null],
   ];
   for (const [t, md, phan] of CA) assert.equal(phanLuatCua(t, md), phan, `PL43-AC-5 «${t}» gán sai phần`);
+});
+
+test("PL43-AC-5 chiều đỏ: mục thiếu trường → lượt thoát 1 «mẫu thiếu trường», không ghi tệp; đủ trường → thoát 0", () => {
+  const du = { ngauNhien: Array(20).fill(MUC), phanC: Array(10).fill(MUC), roMoi: [], conRoi: Array(20).fill(MUC) };
+  const tot = ketLuot({ truoc: TRUOC, sau: SAU, mau: du, sha: "x", che });
+  assert.equal(maThoat(tot.hong), 0, `PL43-AC-5 lượt đủ trường lẽ ra thoát 0: ${tot.hong.join(" · ")}`);
+  assert.ok(tot.md, "PL43-AC-5 lượt đủ trường không dựng tệp mẫu");
+  const { nhan: _bo, ...thieu } = MUC;
+  const xau = ketLuot({ truoc: TRUOC, sau: SAU, mau: { ...du, phanC: [...du.phanC.slice(1), thieu] }, sha: "x", che });
+  assert.equal(maThoat(xau.hong), 1, "PL43-AC-5 mục thiếu trường lẽ ra thoát 1");
+  assert.ok(xau.hong.some((h) => /mẫu thiếu trường: nhan/.test(h)), `PL43-AC-5 thông điệp không gọi tên trường: ${xau.hong.join(" · ")}`);
+  assert.equal(xau.md, null, "PL43-AC-5 mục thiếu trường mà vẫn dựng tệp mẫu");
+});
+
+test("PL43-AC-6 đầu tệp mẫu ghi ngưỡng đạt cho người chấm", () => {
+  const md = vietMau({ ngauNhien: [MUC], phanC: [], roMoi: [], conRoi: [] }, { sha: "abc", che });
+  assert.match(md, /ít nhất 18 là tin rao/);
+  assert.match(md, /trong 10 tin phần C ít nhất 9/);
 });

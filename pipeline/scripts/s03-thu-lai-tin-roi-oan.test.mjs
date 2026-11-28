@@ -61,8 +61,16 @@ test("PL43-AC-2 giá không đơn vị ở bài bán", () => {
   assert.equal(docGia("thuê 5t5 full đồ studio"), null, "PL43-AC-2 «5t5» (5,5 triệu) không được thành 5,5 tỷ");
   assert.equal(docGia("studio 5t50 full đồ ở liền"), null, "PL43-AC-2 «5t50» không tín hiệu bán không được thành 5,5 tỷ");
   // Đối chứng: giữ đúng kết quả hàm cũ.
-  for (const t of ["2PN 70m2 Giá 2.5 tỷ/tháng", "bán căn 2PN 50m2 250 triệu", "căn 45m2 giá 7.000.000/m2 2PN"]) {
-    assert.deepEqual(doc(t), doc(t, LUAT_TRUOC_PL43), `PL43-AC-2 đối chứng «${t}» đổi kết quả so với luật cũ`);
+  // Kết quả ghim (hàm cũ, đo 28/11): thuê từ 1 tỷ không thành thuê; «bán» chữ bài giữ nguyên giá 250 triệu (sàn 300 triệu chỉ áp
+  // cho loại suy ra); giá/m² không thành tổng giá và không đủ thành tin.
+  const DOI_CHUNG = [
+    ["2PN 70m2 Giá 2.5 tỷ/tháng", { kind: "sale", nguon: "tin-hieu-chu", priceVnd: 2_500_000_000 }],
+    ["bán căn 2PN 50m2 250 triệu", { kind: "sale", nguon: "chu-bai", priceVnd: 250_000_000 }],
+    ["căn 45m2 giá 7.000.000/m2 2PN", { kind: null, nguon: "bo", priceVnd: null }],
+  ];
+  for (const [t, can] of DOI_CHUNG) {
+    assert.deepEqual(doc(t), can, `PL43-AC-2 đối chứng «${t}» lệch kết quả ghim`);
+    assert.deepEqual(doc(t, LUAT_TRUOC_PL43), can, `PL43-AC-2 đối chứng «${t}» luật cũ lệch kết quả ghim`);
   }
 });
 
@@ -81,6 +89,9 @@ test("PL43-AC-3 câu tìm dạng mới vẫn là Yêu cầu; khẩu hiệu môi 
     "Ai nắm chủ căn stu s801 1ty490 này ib e vs nha",
     "3 tỷ tìm 50-55m wb gấp liên hệ",
     "Em cần gấp chốt onl 7tr quay xe Stu NTCB OS Khách ở k làm BNB View gì cũng được ạ",
+    // S4 r2.
+    "khách kiêm stu 6tr ở liền ạ",
+    "Khách em tài chính 2,5-2,7 tỷ muốn mua 1 ngủ onsen . Sáng mai đi xem",
   ];
   for (const t of TIM) assert.equal(doc(t).nguon, "yeu-cau", `PL43-AC-3 «${t}» lẽ ra là Yêu cầu`);
   const KHAU = [

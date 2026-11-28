@@ -58,6 +58,21 @@ export function phanLuatCua(text, mucDich) {
   return null;
 }
 
+/**
+ * Kết của lượt: ngưỡng hỏng (xet) cộng lỗi dựng tệp mẫu («mẫu thiếu trường», không che được tên nguồn) — cả hai đều thoát 1
+ * (hợp đồng AC-5). Trả { hong, md }; md null khi không dựng được tệp mẫu.
+ */
+export function ketLuot({ truoc, sau, mau, sha, che }) {
+  const hong = xet({ truoc, sau, mau: { ngauNhien: mau.ngauNhien.length, phanC: mau.phanC.length, conRoi: mau.conRoi.length } });
+  try {
+    return { hong, md: vietMau(mau, { sha, che }) };
+  } catch (e) {
+    return { hong: [...hong, e.message], md: null };
+  }
+}
+/** Mã thoát của lượt `--kiem`: 0 đạt, 1 hỏng một ngưỡng hay tệp mẫu. */
+export const maThoat = (hong) => (hong.length ? 1 : 0);
+
 /** So hai lượt, trả tên các ngưỡng hỏng (rỗng = đạt). `mau` = số mục mỗi phần ngẫu nhiên của tệp mẫu. */
 export function xet({ truoc, sau, mau }) {
   const hong = [];
@@ -84,6 +99,10 @@ export function vietMau({ ngauNhien, phanC, roMoi, conRoi }, { sha, hatGiong = H
     "",
     "Sinh bởi `pipeline/scripts/do-tin-roi-oan.mjs --kiem` trên bản chép DB máy thu (ROLLBACK). Chữ đã gạt URL và SĐT, chuỗi từ",
     "8 chữ số trở lên thành «#», tên nguồn thật che bằng mã. Mỗi mục: mã tin · phần luật · loại · giá đã đọc · nhãn Haiku · chữ bài.",
+    "",
+    "Ngưỡng đạt (hợp đồng AC-6): trong 20 tin ngẫu nhiên ít nhất 18 là tin rao bán hay cho thuê thật, giá đúng bậc (tỷ cho bán,",
+    "triệu cho thuê); trong 10 tin phần C ít nhất 9 là tin bán thật, giá đúng. Mỗi tin nhãn inquiry ghi «câu tìm lọt» hay «nhãn",
+    "model sai»; 20 bài còn rơi ghi dạng chữ nào bị bỏ sót (không có ngưỡng). Dòng sha là cây đã chạy lượt đo.",
     "",
   ];
   const phan = (tieuDe, ds) => {
@@ -196,17 +215,16 @@ async function main() {
       roMoi: muc.filter((m) => m.nhan === "inquiry"),
       conRoi: chonNgauNhien(conRoiTat, NGUONG.mauConRoi, `${HAT_GIONG}-con-roi`, theoMa),
     };
-    const hong = xet({ truoc: truoc.k, sau: sau.k, mau: { ngauNhien: mau.ngauNhien.length, phanC: mau.phanC.length, conRoi: mau.conRoi.length } });
     const sha = execFileSync("git", ["rev-parse", "HEAD"], { cwd: GOC, encoding: "utf8" }).trim();
-    const md = vietMau(mau, { sha, che: (t) => maskSourceNames(cheSo(gatSo(t)), entries) });
-    const dich = process.argv.includes("--ghi-evidence") ? [TEP_MAU, TEP_MAU_EVIDENCE] : [TEP_MAU];
+    const { hong, md } = ketLuot({ truoc: truoc.k, sau: sau.k, mau, sha, che: (t) => maskSourceNames(cheSo(gatSo(t)), entries) });
+    const dich = md == null ? [] : process.argv.includes("--ghi-evidence") ? [TEP_MAU, TEP_MAU_EVIDENCE] : [TEP_MAU];
     for (const t of dich) {
       mkdirSync(path.dirname(t), { recursive: true });
       writeFileSync(t, md);
       console.log(`tệp mẫu: ${path.relative(GOC, t)} (${mau.ngauNhien.length} + ${mau.phanC.length} + ${mau.roMoi.length} + ${mau.conRoi.length} mục)`);
     }
     console.log(hong.length ? `KẾT: hỏng — ${hong.join(" · ")}` : "KẾT: đạt");
-    return hong.length ? 1 : 0;
+    return maThoat(hong);
   } finally {
     await c.query("ROLLBACK").catch(() => {});
     await c.end();

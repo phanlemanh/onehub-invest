@@ -547,6 +547,9 @@ const YEU_CAU_CAP = [
   String.raw`${KHONG_DINH_CHU}ai\s+nắm\s+(?:chủ|căn)`,
   String.raw`${TIM_PL43}\s+\d+(?:\s*-\s*\d+)?\s*m(?![\p{L}\d²2])`,
   String.raw`${KHONG_DINH_CHU}(?:em|e|mình)\s+cần\s+gấp(?![\p{L}])`,
+  // S4 r2: «khách kiếm/kiêm stu», «Khách em tài chính … muốn mua 1 ngủ» (đo 28/11: 0 nhãn offer).
+  String.raw`${KHONG_DINH_CHU}kh[aá]ch\s+(?:kiếm|kiêm)(?![\p{L}])`,
+  String.raw`${KHONG_DINH_CHU}kh[aá]ch\s+(?:e|em|mình)(?![\p{L}])[^.!?\n]{0,40}?(?:muốn|cần)\s+(?:mua|thuê)(?![\p{L}])`,
 ];
 // G: khẩu hiệu môi giới «Tìm nhà không khó – có em lo», «Tìm căn khó có em lo» không phải câu tìm (đo 20 offer · 0 inquiry).
 const YEU_CAU_GOC_PL43 = YEU_CAU_GOC.replace(String.raw`tìm\s+(?:mua|thuê|căn|nhà|phòng)`, String.raw`tìm\s+(?:mua|thuê|căn|nhà|phòng)(?!\s*(?:không\s*khó|khó))`);

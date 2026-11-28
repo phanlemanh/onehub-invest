@@ -7,7 +7,12 @@
 // lượt transform cũ vẫn là tin. Kết quả nạp vào bảng TẠM `flow_s03_branch` của phiên và bật `oneinvest.flow_branch`;
 // 600 chạy trên cùng phiên đọc bảng ấy (bộ chạy: refresh-data-flow.mjs). Chỉ đọc bảng thật.
 import { baiAnhCuaTin } from "../transform-media.mjs";
-import { LUAT_PL43, laYeuCau, parsePost } from "../transform-zalo.mjs";
+import { LUAT_PL43, laYeuCau as laYeuCauGoc, parsePost as parsePostGoc } from "../transform-zalo.mjs";
+
+// PL43: nhánh data-flow tính bằng đúng luật của transform S03 (mặc định của parsePost/laYeuCau là luật cũ). Bọc ở đây để dòng
+// quyết nhánh dưới giữ nguyên văn (app/tests/data-flow-bai-chi-anh.test.tsx DF6-AC-1 đột biến đúng chuỗi ấy).
+const parsePost = (text) => parsePostGoc(text, { luat: LUAT_PL43 });
+const laYeuCau = (text) => laYeuCauGoc(text, LUAT_PL43);
 import { laChiAnh } from "./gop-anh.mjs";
 import { loadStgPosts } from "./test-posts.mjs";
 
@@ -22,8 +27,7 @@ export const NHANH = Object.freeze({ anhDaGhep: "anh-da-ghep", anhChuaGhep: "anh
  */
 export function nhanhCuaBai(bai, daGhep) {
   if (laChiAnh(bai.text)) return daGhep.has(bai.post_id) ? NHANH.anhDaGhep : NHANH.anhChuaGhep;
-  // PL43: nhánh data-flow tính bằng đúng luật của transform S03 (mặc định của parsePost/laYeuCau là luật cũ).
-  if (!parsePost(bai.text ?? "", { luat: LUAT_PL43 }).kind && laYeuCau(bai.text, LUAT_PL43)) return NHANH.yeuCau;
+  if (!parsePost(bai.text ?? "").kind && laYeuCau(bai.text)) return NHANH.yeuCau;
   return null;
 }
 
