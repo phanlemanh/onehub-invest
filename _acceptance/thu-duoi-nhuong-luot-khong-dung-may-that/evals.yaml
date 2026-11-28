@@ -1,0 +1,46 @@
+# thu-duoi-nhuong-luot-khong-dung-may-that (HT46) — map AC → eval. Lệnh là config: ref (_acceptance/config.yaml,
+# executors.test.ht46_* và s06tl_test của ZC18). paths hẹp: đúng tệp hàng đổi + probe của chính eval.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.test.ht46_e2e
+    paths: [pipeline/scripts/thu-duoi-chon-nap-e2e.test.mjs, scripts/thu-duoi-s06.sh, _acceptance/thu-duoi-nhuong-luot-khong-dung-may-that/probes/e2e-khi-quet-du-song.mjs]
+    expected: "exit 0; 'tien trinh gia song: pgrep that thay pid <n>'; 'ban cay: 2 pass · 0 fail · 0 skip'; 'doi chung 2beb7d6ba + pgrep gia: 2 pass (nguyen nhan la nhuong luot)'; 'ban 2beb7d6ba: do o «snapshot C mới thật phải được nạp» (dung chieu do)'; cuối 'E2E-CACH-LY OK'; should-NOT-fire: 'BAN CAY DO', 'BAN CAY BO QUA', 'BAN CU KHONG DO', 'DOI CHUNG KHONG XANH', 'PGREP KHONG THAY', 'PROBE HONG'. Trên main 2beb7d6ba đỏ 'BAN CAY DO' khi tiến trình khớp mẫu đang sống (PL43 vòng 4, 28/11)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.ht46_nhuong
+    paths: [pipeline/scripts/thu-duoi-nhuong-luot.test.mjs, scripts/thu-duoi-s06.sh]
+    expected: "exit 0; '✔ tiến trình thật khớp scripts/chotot-daily.sh + pgrep thật → nhường lượt, thoát 0, 0 lời gọi node'; 'so loi goi node: 0'; 'khoa chi o goc tam'; 'ℹ fail 0', 'ℹ skipped 0'; should-NOT-fire: '✖', 'THIEU DONG NHUONG LUOT', 'CO LOI GOI NODE'. Trên main tệp chưa có (đỏ: không tìm thấy tệp)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.test.ht46_dot_bien
+    paths: [pipeline/scripts/thu-duoi-nhuong-luot.test.mjs, scripts/thu-duoi-s06.sh, _acceptance/thu-duoi-nhuong-luot-khong-dung-may-that/probes/dot-bien-nhuong.mjs]
+    expected: "exit 0; 'ban that: test xanh · so loi goi node 0'; 'dot bien tat nhuong luot: test do (dung) · so loi goi node <n≥1>' (đỏ đúng ở thông điệp ghim THIEU DONG NHUONG LUOT — đối chứng dương cho vế 0 lời gọi node); cuối 'DOT-BIEN-NHUONG OK'; should-NOT-fire: 'DOT BIEN SONG', 'KHONG TIM THAY CHO PHA', 'BAN THAT DO'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.test.ht46_pham_vi
+    paths: [scripts/thu-duoi-s06.sh, pipeline/scripts/thu-duoi-chon-nap-e2e.test.mjs, pipeline/scripts/thu-duoi-nhuong-luot.test.mjs, _acceptance/thu-duoi-nhuong-luot-khong-dung-may-that/probes/pham-vi.mjs]
+    expected: "exit 0; mỗi tệp đổi một dòng 'ok <tệp>'; 'wrapper: scripts/thu-duoi-s06.sh bang origin/main'; 'tu kiem: scripts/thu-duoi-s06.sh → NGOAI PHAM VI (dung)'; cuối 'PHAM-VI OK'; should-NOT-fire: 'NGOAI PHAM VI', 'SUA WRAPPER', 'TU KIEM HONG'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.s06tl_test
+    paths: [scripts/thu-duoi-s06.sh, scripts/thu-duoi-s06.test.mjs]
+    expected: "exit 0; 'ℹ fail 0', 'ℹ skipped 0' — test shim ZC18 xanh trên mã mới; should-NOT-fire: '✖'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.test.ht46_soat
+    paths: [_acceptance/thu-duoi-nhuong-luot-khong-dung-may-that/soat-tien-trinh.md, _acceptance/thu-duoi-nhuong-luot-khong-dung-may-that/probes/soat.mjs]
+    expected: "exit 0; mỗi tệp mã rút được một dòng 'co dong <tệp>'; 'e2e thu duoi: sua trong hang'; 'tu kiem: tep gia → THIEU DONG (dung)'; cuối 'SOAT OK'; should-NOT-fire: 'THIEU DONG', 'THIEU KET LUAN', 'E2E KHONG GHI SUA', 'TU KIEM HONG'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

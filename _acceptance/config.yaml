@@ -83,6 +83,11 @@ executors:
     s06tl_pham_vi: "bash _acceptance/s06-thu-duoi-lich-va-chon-snapshot/probes/pham-vi.sh"   # s06-thu-duoi-lich-va-chon-snapshot E9 — không cài lịch, sáu tệp, test cách ly
     zc26_bo_qua: "bash db/db-thu.sh oneinvest_suite_zc26 --chay-trong node _acceptance/s06-thu-duoi-snapshot-hong-khong-chan/probes/bo-qua-hong.mjs"   # s06-thu-duoi-snapshot-hong-khong-chan E1–E5, E7 — wrapper + import-chotot thật trên cụm dùng một lần; bảy lớp hỏng, nạp lỗi tạm, tệp đánh dấu hỏng, đột biến bỏ kiểm
     zc26_pham_vi: "node _acceptance/s06-thu-duoi-snapshot-hong-khong-chan/probes/pham-vi.mjs"   # s06-thu-duoi-snapshot-hong-khong-chan E8 — tệp đổi trong danh sách, bộ nạp không đổi, không cài lịch
+    ht46_e2e: "bash db/db-thu.sh oneinvest_suite_ht46 --chay-trong node _acceptance/thu-duoi-nhuong-luot-khong-dung-may-that/probes/e2e-khi-quet-du-song.mjs"   # thu-duoi-nhuong-luot-khong-dung-may-that E1 — ca e2e thu đuôi xanh khi có tiến trình khớp scripts/chotot-daily.sh; bản 2beb7d6ba đỏ cùng điều kiện
+    ht46_nhuong: "node --test pipeline/scripts/thu-duoi-nhuong-luot.test.mjs"   # thu-duoi-nhuong-luot-khong-dung-may-that E2 — tiến trình thật + pgrep thật → nhường lượt, 0 lời gọi node; không DB
+    ht46_dot_bien: "node _acceptance/thu-duoi-nhuong-luot-khong-dung-may-that/probes/dot-bien-nhuong.mjs"   # thu-duoi-nhuong-luot-khong-dung-may-that E3 — chiều đỏ: bản chép tắt nhường lượt
+    ht46_pham_vi: "node _acceptance/thu-duoi-nhuong-luot-khong-dung-may-that/probes/pham-vi.mjs"   # thu-duoi-nhuong-luot-khong-dung-may-that E4 — tệp đổi trong ranh giới, wrapper bằng origin/main
+    ht46_soat: "node _acceptance/thu-duoi-nhuong-luot-khong-dung-may-that/probes/soat.mjs"   # thu-duoi-nhuong-luot-khong-dung-may-that E6 — bảng soát khớp danh sách rút từ mã
     ht31_ca: "bash db/db-thu.sh oneinvest_suite_ht31 --chay node --test --test-name-pattern='^DO1-AC-9 detail' pipeline/scripts/do-hang-ngay.test.mjs"   # do1-ac9-xanh-lai-sau-so-nguon-122 E1 — ca DO1-AC-9 trên bản chép đã có S09
     agent: "cd agent && npm test"                    # agent/tests/parsers.test.ts; npm test tự chạy trên DB của riêng lượt (db/db-thu.sh --chay)
     app: "cd app && npx tsc --noEmit && npm run lint"   # app chưa có test; lint 0 lỗi (3 cảnh báo cố ý)
