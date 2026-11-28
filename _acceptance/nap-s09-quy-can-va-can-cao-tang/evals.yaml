@@ -84,8 +84,8 @@ evals:
     criterion: AC-10
     executor: script
     cmd: config:executors.script.s09_v16_dc
-    expected: "git diff 767c70c13 -- collector/docs/DATA-CONTRACT.md rỗng thì thoát 0; có diff thì thoát 1 và in dòng lệch. Chiều đỏ: sửa một chữ trong mục «Mở rộng v16» ở bản chép tạm thì lệnh đỏ nêu dòng"
-    paths: ["collector/docs/DATA-CONTRACT.md"]
+    expected: "Khối «### Mở rộng v16» (tới tiêu đề kế) và gạch lịch sử «- **schemaVersion 16» của collector/docs/DATA-CONTRACT.md khớp bản làn thu @767c70c13 thì thoát 0 và in «PASS khối «Mở rộng v16» … khớp»; lệch thì thoát 1 gọi tên khối lệch; thiếu tiêu đề hay gạch thì ném. Đối chứng kèm trong cùng lệnh (--doi-chung): đổi 1 ký tự trong khối v16 → phải lệch «muc»; thêm một dòng ngoài khối (mô phỏng ZC20 #561) → phải khớp. Đổi sau chữ ký Cổng Bằng chứng 27/11 (GS phán 28/11): bản cũ `git diff --exit-code 767c70c13 -- DATA-CONTRACT.md` so trọn tệp nên đỏ oan khi làn thu sửa phần khác; lời tiêu chí AC-10 giữ nguyên."
+    paths: ["collector/docs/DATA-CONTRACT.md", "_acceptance/nap-s09-quy-can-va-can-cao-tang/dc-v16.mjs"]
   - id: E11a
     criterion: AC-6
     executor: test
