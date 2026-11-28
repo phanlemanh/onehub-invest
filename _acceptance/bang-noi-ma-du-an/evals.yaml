@@ -156,3 +156,11 @@ evals:
     long_running: 90
     paths: ["pipeline/noi-du-an-nguon.mjs", "pipeline/lib/ban-ghi-nguon*.mjs", "pipeline/lib/khop-du-an*.mjs", "pipeline/tests/noi-du-an-nguon*.mjs"]
     expected: "exit 0; nửa B bộ test pipeline, 0 fail (khai ở đây để có long_running 90)."
+
+  - id: E13
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.suite.pipeline_that
+    long_running: 90
+    paths: ["pipeline/noi-du-an-nguon.mjs", "pipeline/lib/ban-ghi-nguon*.mjs", "pipeline/lib/khop-du-an*.mjs", "pipeline/lib/tinh-cu.mjs"]
+    expected: "exit 0; nhánh đổi pipeline/lib/ban-ghi-nguon.mjs và tệp trong vùng hẹp của suite pipeline_that (ca dữ liệu thật trên bản chép) nên suite chạy; `ℹ fail 0`. Khai ở đây để có long_running 90 (CHUNG điểm 16, luật GS 26/11; khuôn PL36 E13)."
