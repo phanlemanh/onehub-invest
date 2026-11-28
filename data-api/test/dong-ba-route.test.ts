@@ -21,8 +21,14 @@ if (!tenDb.includes("_suite_")) {
 delete process.env.DATA_API_KEYS;
 process.env.NODE_ENV = "test";
 
+delete process.env.LISTING_KEY_SECRET;
+const { createHmac } = await import("node:crypto");
 const { pool } = await import("../src/db/client.js");
 const { default: app } = await import("../src/app.js");
+const { LISTING_KEY_NAMES } = await import("../src/contract/listing.js");
+const { KHOA_THU } = await import("../src/lib/listing-key.js");
+// PB2: tin ngắn hạn tra bằng listingKey = 16 hex đầu HMAC-SHA256(khoá, "S01|<id>"); khoá thử ở NODE_ENV=test.
+const khoaNgan = (lid: string) => createHmac("sha256", KHOA_THU).update(`S01|${lid}`).digest("hex").slice(0, 16);
 
 // ── Chuỗi canh: chỉ bản mã đọc bảng cấm mới trả ra được ───────────────────────────────────────────────────────────
 const CANH = {
@@ -159,17 +165,19 @@ after(async () => {
 const KHOA_CAM_DEALS = ["contact", "postText", "senderName", "groupName", "mediaPath"];
 const CANH_S03 = [CANH.nhom, CANH.nguoiGui, CANH.chuBai, CANH.anhBai];
 
+// PB2: «căn giá tốt» là bộ lọc của /v1/listings (?minBelowMedianPct=) — /v1/deals đã 410. Khoá theo bảng design §2.
+const GIA_TOT = `/v1/listings?kind=sale&minBelowMedianPct=5&area=`;
+
 test("DRL-AC-1 deals không trả nội dung bài S03", async () => {
-  const r = await goi(`/v1/deals?area=${ID.phuong}`);
+  const r = await goi(`${GIA_TOT}${ID.phuong}`);
   assert.equal(r.status, 200);
   const data = r.than.data as Record<string, unknown>[];
-  const tin = data.find((d) => d.offerId === ID.tinCanh);
+  const tin = data.find((d) => d.listingKey === ID.tinCanh);
   assert.ok(tin, "DRL deals thiếu tin canh trong data");
   // Phần giữ lại vẫn đúng dòng cấy.
-  assert.equal(tin.priceVnd, 40_000_000 * 70);
-  assert.equal(tin.discountPct, 20);
-  assert.equal((tin.rank as Record<string, unknown>).label, "re-trong-phuong");
-  assert.equal((r.than.meta as Record<string, unknown>).kind, "sale");
+  assert.equal(tin.listPrice, 40_000_000 * 70);
+  assert.equal(tin.belowMedianPct, 20);
+  assert.equal((tin.priceRank as Record<string, unknown>).label, "re-trong-phuong");
 
   const loi: string[] = [];
   const khoa = moiKhoa(r.than);
@@ -182,7 +190,7 @@ test("DRL-AC-2 deals không đọc bảng bài S03 ở hai nhánh", async () => 
   const loi: string[] = [];
 
   // Nhánh có bảng hạng.
-  const hang = await goi(`/v1/deals?area=${ID.phuong}`);
+  const hang = await goi(`${GIA_TOT}${ID.phuong}`);
   assert.equal(hang.status, 200);
   if (!hang.sql.some((c) => c.includes("FROM sale_offers"))) loi.push("DRL bộ ghi SQL không bắt được câu nào (nhánh bảng hạng)");
   if (coBang(hang.sql, BANG_BAI_S03).length) loi.push("DRL deals đọc bảng bài S03 (nhánh bảng hạng)");
@@ -190,20 +198,19 @@ test("DRL-AC-2 deals không đọc bảng bài S03 ở hai nhánh", async () => 
   // Nhánh thước CG8: bảng hạng rỗng → route lùi về v_ruler_p2.
   await sql(`DELETE FROM offer_price_rank`);
   try {
-    const cg8 = await goi(`/v1/deals?area=${ID.phuong}`);
+    const cg8 = await goi(`${GIA_TOT}${ID.phuong}`);
     assert.equal(cg8.status, 200);
     if (!cg8.sql.some((c) => c.includes("v_ruler_p2"))) loi.push("DRL bộ ghi SQL không bắt được câu nào (nhánh CG8)");
     if (coBang(cg8.sql, BANG_BAI_S03).length) loi.push("DRL deals đọc bảng bài S03 (nhánh CG8)");
-    const tin = (cg8.than.data as Record<string, unknown>[]).find((d) => d.offerId === ID.tinCanh);
+    const tin = (cg8.than.data as Record<string, unknown>[]).find((d) => d.listingKey === ID.tinCanh);
     if (!tin) loi.push("DRL deals CG8 đổi hình: thiếu tin canh");
     else {
-      for (const k of ["priceVnd", "medianPerm2", "discountPct"]) {
+      for (const k of ["listPrice", "comparableMedianPricePerArea", "belowMedianPct"]) {
         if (typeof tin[k] !== "number") loi.push(`DRL deals CG8 đổi hình: ${k}`);
       }
-      if (tin.medianPerm2 !== 50_000_000 || tin.discountPct !== 20) loi.push("DRL deals CG8 đổi hình: số trung vị hay số giảm lệch dòng cấy");
-      if ("rank" in tin) loi.push("DRL deals CG8 đổi hình: rank");
+      if (tin.comparableMedianPricePerArea !== 50_000_000 || tin.belowMedianPct !== 20) loi.push("DRL deals CG8 đổi hình: số trung vị hay số giảm lệch dòng cấy");
+      if (tin.priceRank !== null) loi.push("DRL deals CG8 đổi hình: priceRank");
     }
-    if ("kind" in (cg8.than.meta as Record<string, unknown>)) loi.push("DRL deals CG8 đổi hình: meta.kind");
   } finally {
     await sql(
       `INSERT INTO offer_price_rank
@@ -248,17 +255,16 @@ test("DRL-AC-3 coverage không đọc S02", async () => {
 test("DRL-AC-4 listings/:id không đọc S02", async () => {
   const loi: string[] = [];
 
-  const khongAnh = await goi(`/v1/listings/${ID.listingKhongAnh}`);
+  // PB2: media luôn null ở tin ngắn hạn (URL ảnh có thể mang số phòng nguồn — PB4), kể cả ảnh tự thu.
+  const khongAnh = await goi(`/v1/listings/${khoaNgan(ID.listingKhongAnh)}`);
   assert.equal(khongAnh.status, 200);
   const d1 = khongAnh.than.data as Record<string, unknown>;
-  const p1 = d1.photos as Record<string, unknown>;
-  if (p1.urls !== null || p1.source !== null) loi.push(`DRL listings/:id lộ ảnh S02: photos = ${JSON.stringify(p1)}`);
+  if (d1.media !== null) loi.push(`DRL listings/:id lộ ảnh S02: media = ${JSON.stringify(d1.media)}`);
 
-  const coAnh = await goi(`/v1/listings/${ID.listingCoAnh}`);
+  const coAnh = await goi(`/v1/listings/${khoaNgan(ID.listingCoAnh)}`);
   assert.equal(coAnh.status, 200);
-  const p2 = (coAnh.than.data as Record<string, unknown>).photos as Record<string, unknown>;
-  assert.equal(p2.source, "self");
-  assert.deepEqual(p2.urls, [ANH_TU_THU]);
+  if ((coAnh.than.data as Record<string, unknown>).media !== null) loi.push("DRL listings/:id lộ ảnh: media khác null");
+  if (coAnh.vanBan.includes(ANH_TU_THU)) loi.push("DRL listings/:id lộ URL ảnh tự thu");
 
   const khongCo = await goi("/v1/listings/drl-khong-co");
   assert.equal(khongCo.status, 404);
@@ -274,17 +280,43 @@ test("DRL-AC-4 listings/:id không đọc S02", async () => {
   chot([...new Set(loi)]);
 });
 
-const KHOA_DANH_SACH = [
-  "area", "bedrooms", "id", "lat", "lng", "market", "name", "photoUrls", "priceListed", "reviewCount", "roomType", "stats",
-];
+// PB2: hình phần tử là tệp hợp đồng data-api/src/contract/listing.ts.
+const KHOA_DANH_SACH = LISTING_KEY_NAMES;
 
 test("DRL-AC-5 listings danh sách giữ hình", async () => {
-  const r = await goi(`/v1/listings?area=${ID.phuong}`);
+  const r = await goi(`/v1/listings?kind=rent_st&area=${ID.phuong}`);
   assert.equal(r.status, 200);
-  const dong = (r.than.data as Record<string, unknown>[]).find((d) => d.id === ID.listingCoAnh);
+  const dong = (r.than.data as Record<string, unknown>[]).find((d) => d.listingKey === khoaNgan(ID.listingCoAnh));
   assert.ok(dong, "DRL listings danh sách đổi hình: thiếu listing cấy");
   const co = Object.keys(dong).sort();
   const thua = co.filter((k) => !KHOA_DANH_SACH.includes(k));
   const thieu = KHOA_DANH_SACH.filter((k) => !co.includes(k));
   assert.deepEqual([...thua, ...thieu], [], `DRL listings danh sách đổi hình: ${[...thua, ...thieu].join(", ")}`);
+});
+
+test("DRL-PB6 đường Property không đọc bảng thô stg_* hay bảng S02", async () => {
+  // Tên bảng nguồn trong chuỗi nháy đơn đúng bằng định danh đã biết (lưới tên nguồn PB5).
+  const tienToS02 = 'airdna_listings'.slice(0, -"listings".length);
+  const loi: string[] = [];
+  const { rows } = await sql(
+    `SELECT b.upi, b.building_key, (SELECT u.unit_key FROM units u WHERE u.building_key = b.building_key AND u.status = 'active' LIMIT 1) AS unit_key,
+            CASE n.node_type WHEN 'project' THEN n.id ELSE n.parent_id END AS du_an
+       FROM buildings b JOIN asset_nodes n ON n.id = b.region_node_id
+      WHERE b.status = 'active' AND EXISTS (SELECT 1 FROM units u WHERE u.building_key = b.building_key AND u.status = 'active')
+      LIMIT 1`,
+  );
+  assert.ok(rows[0], "DRL-PB6 DB thử không có toà nào có căn — ca rỗng nghĩa");
+  const t = rows[0];
+  const U = encodeURIComponent(String(t.upi));
+  const cau: string[] = [];
+  for (const d of [`/v1/properties/${U}`, `/v1/properties/${U}/units/${t.unit_key}`, `/v1/properties?project=${t.du_an}`,
+    `/v1/properties/lookup?project=${t.du_an}&building=${t.building_key}&unitNumber=X-1`]) {
+    const r = await goi(d);
+    if (r.status !== 200) loi.push(`DRL-PB6 ${d} không 200 (${r.status})`);
+    cau.push(...r.sql);
+  }
+  if (cau.length === 0) loi.push("DRL-PB6 bộ ghi SQL không bắt được câu nào");
+  if (cau.some((c) => /\bstg_[a-z0-9_]+/.test(c))) loi.push("DRL-PB6 đường Property đọc bảng stg_*");
+  if (coBang(cau, tienToS02, "ref_calib_", "area_sources").length) loi.push("DRL-PB6 đường Property đọc bảng S02");
+  chot(loi);
 });

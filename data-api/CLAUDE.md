@@ -6,11 +6,14 @@ public `onehub-data-api`. Mọi thứ trong thư mục này coi như công khai.
 ## Cấu trúc
 
 ```
-src/app.ts            mount /v1/markets, /v1/listings, /v1/deals, /v1/asset-stats, /v1/coverage
+src/app.ts            mount /v1/markets, /v1/listings, /v1/price-stats, /v1/coverage, /v1/properties; /v1/deals, /v1/asset-stats trả 410
+src/contract/listing.ts  danh sách khoá DUY NHẤT của phần tử Listing (RESO DD 2.1) — route, openapi, test đọc từ đây
+src/contract/property.ts danh sách khoá DUY NHẤT của phần tử Property (danh bạ nhà)
 src/routes/*.ts       mỗi nhóm một file
 src/middleware/       auth.ts (Bearer/X-API-Key, DATA_API_KEYS; đóng mặc định — khoá trống chỉ mở khi NODE_ENV=development|test và không VERCEL, nơi khác 503 AUTH_NOT_CONFIGURED và index.ts không khởi động), error-handler.ts
 src/db/client.ts      pg pool từ DATABASE_URL
-seed.sql, db/         dữ liệu mẫu cho người dùng repo public
+db/schema.sql         lược đồ mẫu DUY NHẤT (PB2 AC-9): dựng mọi bảng/view route đọc trên DB rỗng; thêm bảng/cột route mới đọc thì thêm vào đây
+seed.sql              dữ liệu mẫu cho người dùng repo public — không chèn dòng nào vào bảng S02
 ```
 
 ## Lệnh
@@ -19,10 +22,10 @@ seed.sql, db/         dữ liệu mẫu cho người dùng repo public
 npm install           # chưa cài sẵn trong monorepo
 npm run typecheck
 npm run dev           # :3001 (PORT)
-# test ba đường deals, coverage, listings/:id — chạy từ gốc monorepo, trên DB thử có lược đồ thật:
-#   bash db/db-thu.sh oneinvest_suite_dapi --chay sh -c 'cd data-api && node --import tsx --test test/dong-ba-route.test.ts'
-# test bốn đường markets không đọc S02 (HT20), có rào tĩnh trên src/ và api/:
-#   bash db/db-thu.sh oneinvest_suite_dapi_mk --chay sh -c 'cd data-api && node --import tsx --test test/markets-khong-s02.test.ts'
+# mọi test data-api (listings RESO, markets không S02, Property, coverage, các đường cấm đọc) — chạy từ gốc monorepo, trên
+# DB thử có lược đồ thật:
+#   bash db/db-thu.sh oneinvest_suite_dapi --chay sh -c 'cd data-api && node --import tsx --test --test-concurrency=1 test/*.test.ts'
+# riêng Property (PB6): test/properties.test.ts; riêng markets (HT20, có rào tĩnh trên src/ và api/): test/markets-khong-s02.test.ts
 ```
 
 ## Luật
@@ -37,4 +40,14 @@ npm run dev           # :3001 (PORT)
   Test `test/dong-ba-route.test.ts` cấy dòng canh vào các bảng cấm và đỏ khi một route đọc hay trả chúng; thêm route
   mới đọc tin, listing thì thêm ca vào tệp đó.
 - Chỉ đọc bảng/view đã precompute; không tính metrics nặng lúc request.
+- **Property (danh bạ nhà)**: khoá phần tử chỉ thêm qua `src/contract/property.ts`, tra RESO DD 2.1 trước; extension phải
+  có mục `api_extensions.property` trong `pipeline/mappings.yaml`. Không trả mã căn, mã toà, mã dự án của nguồn
+  (`unitNumber` chỉ nhắc lại chuỗi khách nhập ở `/lookup`), không trả `UniversalPropertySubId` hay khoá trục, không liệt
+  kê căn. Không đọc `v_unit_thuoc_tinh` hay `offer_building` lúc request (đo 27/11: 864 ms/căn, 501 ms/toà).
 - Đổi shape response → cập nhật `/openapi.json` và `docs/api/openapi.yaml` cùng lúc.
+- **Khoá phần tử Listing chỉ thêm qua `src/contract/listing.ts`** (PB2): tra RESO Data Dictionary 2.1 trước
+  (`research-local/reso/dd-2.1.json` của checkout chính); có field tương đương thì dùng đúng tên DD viết camelCase và giá
+  trị `StandardName` của lookup; không có mới là extension, và extension phải khai mục `api_extensions.listing` trong
+  `pipeline/mappings.yaml` đủ sáu điều kiện ADR-0011. Không đặt tên extension trùng một field DD khác nghĩa
+  (`roomType` → `spaceType`). Listing = resource `Property` của RESO; danh bạ nhà là `/v1/properties`.
+- Khoá `listingKey` của tin thuê ngắn hạn là HMAC có khoá bí mật `LISTING_KEY_SECRET` — không bao giờ trả id gốc của nguồn.
