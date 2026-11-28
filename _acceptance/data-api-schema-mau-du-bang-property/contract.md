@@ -5,7 +5,7 @@ slug: data-api-schema-mau-du-bang-property
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api]
-status: verified
+status: machine-cleared
 veto_state: mo
 veto_opened_at: 2026-11-28T02:45:09Z
 approved_by:
@@ -57,3 +57,4 @@ Bỏ quét không gian tiêu chí — xem dòng sổ `descope` «bỏ coverage-s
 ## Notes
 
 - Nhánh `fix/data-api-schema-mau-du-bang-property` do U2 tạo từ main 5013d45c0.
+- Ngoài-1 (máy định tuyến 2026-11-28, đề xuất S4 known-limits): Bảng lộ trình hiện thêm một cảnh báo là có hồ sơ đang mở mà chưa thuộc việc nào, dù tính năng cho người dùng không bị ảnh hưởng. — `LO-TRINH.html`
