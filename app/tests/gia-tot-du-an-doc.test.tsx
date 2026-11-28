@@ -20,7 +20,8 @@ const nap = async () => ({
   pool: (await import("../src/lib/db")).pool,
   GET: (await import("../src/app/api/v1/deals/route")).GET,
   poolApi: (await ngoai("../../data-api/src/db/client.ts")).pool as pg.Pool,
-  dealsRoute: (await ngoai("../../data-api/src/routes/deals.ts")).dealsRoute,
+  listingsRoute: (await ngoai("../../data-api/src/routes/listings.ts")).listingsRoute,
+  LISTING_KEY_NAMES: (await ngoai("../../data-api/src/contract/listing.ts")).LISTING_KEY_NAMES as string[],
 });
 let m: Awaited<ReturnType<typeof nap>>;
 const M = 1_000_000;
@@ -190,6 +191,40 @@ const KHOA_CU_DATA_API: [string, string[]][] = [["offerId", ["string"]], ["price
 const KHOA_CU_APP: [string, string[]][] = [["offerId", ["string"]], ["source", CHU], ["priceVnd", SO], ["areaM2", SO], ["pricePerm2", SO],
   ["bedrooms", SO], ["phuong", CHU], ["medianPerm2", SO], ["rulerN", SO], ["discountPct", SO], ["confidence", CHU], ["lastSeen", CHU]];
 const kieu = (v: unknown) => (v === null ? "null" : typeof v);
+
+// PB2 (data-api-hop-dong-reso-dd-2-1, GS xác nhận 27/11): /v1/deals của data-api đã gộp vào /v1/listings?minBelowMedianPct=.
+// Chỉ phần gọi data-api đổi: lời gọi cũ dịch sang tham số mới (min_discount → minBelowMedianPct; kind vắng → sale như /v1/deals
+// cũ), phần tử mới dịch về tên khoá cũ theo bảng khoá cũ → mới của hồ sơ PB2 (khoa-cu-moi.md) — mỗi ca giữ nguyên điều nó
+// khẳng định (cùng tập tin, cùng thứ tự, cùng ngưỡng). Phần tử gốc còn được so với tập khoá của tệp hợp đồng Listing.
+const thamSoMoi = (q: string) => {
+  const ra = new URLSearchParams();
+  // Nghĩa cũ của /v1/deals: `Number(min_discount) || 5` (0 đọc thành 5), limit mặc định 30, trần 100 — dịch đúng nghĩa đó.
+  for (const [k, v] of new URLSearchParams(q)) {
+    if (k === "min_discount") ra.set("minBelowMedianPct", String(Math.max(0, Math.min(50, Number(v) || 5))));
+    else if (k === "limit") ra.set("limit", String(Math.min(100, Number(v) || 30)));
+    else ra.set(k, v);
+  }
+  if (!ra.has("kind")) ra.set("kind", "sale");
+  if (!ra.has("minBelowMedianPct")) ra.set("minBelowMedianPct", "5");
+  if (!ra.has("limit")) ra.set("limit", "30");
+  return ra.toString();
+};
+const loaiNoiBo = (pt: unknown, pst: unknown) =>
+  pst === "Condominium" ? "apartment" : pst === "Unimproved Land" ? "land" : pst === "Room" ? "room"
+    : typeof pt === "string" && pt.startsWith("Commercial") ? "commercial"
+      : pt === "Residential" || pt === "Residential Lease" ? "house" : null;
+/** Phần tử Listing → tên khoá cũ của /v1/deals. `khoaMoi` giữ tập khoá gốc để so với tệp hợp đồng. */
+const veHinhCu = (d: Record<string, unknown>) => ({
+  offerId: d.listingKey, priceVnd: d.listPrice ?? d.leaseAmount, areaM2: d.livingArea, pricePerm2: d.salePricePerArea ?? d.leasePricePerArea,
+  bedrooms: d.bedroomsTotal, phuong: d.city, marketId: d.mlsAreaMajor, propertyType: loaiNoiBo(d.propertyType, d.propertySubType),
+  medianPerm2: d.comparableMedianPricePerArea, discountPct: d.belowMedianPct, confidence: d.confidence, firstSeen: d.onMarketTimestamp,
+  lastSeen: d.lastSeenTimestamp, nReposts: d.repostCount, ...(d.priceRank ? { rank: d.priceRank } : {}), khoaMoi: Object.keys(d).sort(),
+});
+const goiListings = async (route: { request: (u: string) => Response | Promise<Response> }, q: string) => {
+  const res = await route.request(`/?${thamSoMoi(q)}`);
+  const j = (await res.json()) as { data?: Record<string, unknown>[] } & Record<string, unknown>;
+  return { status: res.status, body: { ...j, data: (j.data ?? []).map(veHinhCu) } };
+};
 function kiemKhoaCu(ten: string, x: Record<string, unknown>, khoa: [string, string[]][]) {
   for (const [k, cho] of khoa) {
     assert.ok(k in x, `${ten} ${String(x.offerId)} thiếu khoá cũ ${k}`);
@@ -211,8 +246,9 @@ test("CG10-AC-8 /v1/deals và /api/v1/deals: project lọc tin cấp dự án, r
   const ky = await kyTap(c6, String(d6));
   assert.ok(ky.size > 0, "đối chứng: dự án Sáu phải có tin bán nhãn cấp dự án");
   const dataApi = async (cl: pg.Client, q: string) => quaClient(cl, async () => {
-    const res = await m.dealsRoute.request(`/?${q}`);
-    return { status: res.status, body: (await res.json()) as { data: DongApi[] } };
+    const r = await goiListings(m.listingsRoute, q);
+    for (const x of r.body.data) assert.deepEqual(x.khoaMoi, [...m.LISTING_KEY_NAMES].sort(), `data-api ${String(x.offerId)}: tập khoá lệch tệp hợp đồng Listing`);
+    return { status: r.status, body: r.body as unknown as { data: DongApi[] } };
   });
   const cu = process.env.OPS_API_TOKEN;
   process.env.OPS_API_TOKEN = "cg10-thu-token";

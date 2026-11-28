@@ -1,0 +1,19 @@
+schema_version: 1
+slug: probe-danh-ba-dem-theo-luat-nghi
+# Lệnh đo ở probes/*.sh của hồ sơ (_acceptance/config.yaml là tệp bảo vệ). Chạy trên DB của riêng lượt (db/db-thu.sh --chay).
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: bash _acceptance/probe-danh-ba-dem-theo-luat-nghi/probes/doi-chieu.sh
+    paths: ["app/probes/registry-doi-chieu.test.tsx"]
+    expected: >
+      exit 0; probe TDB-DC xanh trên bản chép DB máy thu (ℹ pass 1, fail 0), in dải số; phanKhu của probe bằng phanKhu của doc.ts.
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: bash _acceptance/probe-danh-ba-dem-theo-luat-nghi/probes/doi-chieu.sh
+    paths: ["app/probes/registry-doi-chieu.test.tsx"]
+    expected: >
+      exit 0; cùng lệnh chạy bản sao probe bỏ lọc nghỉ: bản sao đỏ ở «TDB-DC dải số», chênh phanKhu (đếm độc lập − doc.ts) bằng số nút
+      phân khu, toà mang meta.nghi = true trên cùng bản chép và lớn hơn 0; in «ca phá đỏ đúng N nút nghỉ».

@@ -79,6 +79,19 @@ _Avoid_: block, chung cư
 - Code: `stack` · RESO: không có — extension `Stack` (ADR-0013 §9)
 _Avoid_: line căn, dòng căn
 
+**Cụm**: Nhóm toà trong một phân khu có chung phần đầu tên toà — phần trước dấu chấm: cụm S1 gồm toà S1.01, S1.05; cụm R1 gồm
+R1.01. Thứ bậc chung hai khu: Dự án → Phân khu → Cụm (khi có) → Toà → Trục → Căn; toà không có cụm (LD2, BE3, GH3, BS10) gắn
+thẳng phân khu. Bài chỉ nêu «S1» gắn mức cụm, không đoán toà; cùng chữ ở hai dự án là hai cụm khác nhau (Mạnh chốt 24/11).
+- Code: `asset_nodes.node_type = subzone`, con của phân khu
+_Avoid_: block
+
+**Mã căn**: Chuỗi định vị căn trong bài hay ở nguồn danh mục, đọc theo một quy ước cho cả hai khu (Mạnh chốt 24/11): khớp tên
+toà dài nhất có trong danh bạ trước, phần còn lại là tầng rồi trục — trục là hai chữ số cuối của số căn, có thể kèm một chữ cái.
+`S2.091710` → toà S2.09, tầng 17, trục 10; `S2.05.24.17` (cách ghi Grand Park) → toà S2.05, tầng 24, trục 17; `LD2XX03` → toà
+LD2, trục 03, che tầng. «R1.01» là tên toà, không tách thành R1 + 01. Máy gắn và trợ lý gắn nháp dùng chung một hàm tách mã.
+- Code: `unit_number`
+_Avoid_: số căn (chỉ là phần trục), mã phòng
+
 **Tầng (của tin)**: Tầng nơi căn rao nằm, đọc từ chữ bài («tầng 12», «lầu 5») hoặc từ mã căn đủ («S1.12.08»), lưu là số 1–999. Nhãn UI «Tầng».
 - Code: `floor_raw` · RESO: UnitFloorLocation (DD 2.1)
 _Avoid_: số tầng (đó là `stories` — tổng tầng của nhà), lầu
@@ -102,6 +115,11 @@ _Avoid_: unit (trong chữ UI), căn hộ (khi nói chung mọi loại)
 - Slug URL: `registry`
 - Ghi chú: trang `/ops/registry` «Danh bạ» (máy thu, chỉ đọc) đi theo cây dự án → phân khu → toà → căn với số đếm, bậc danh mục, nguồn `S0x`, tin đang rao và mã dự án nguồn chưa nối; `/ops/registry/<id nút>` mở một dự án xuống tới căn.
 _Avoid_: master data, MDM
+
+**Danh bạ nhà**: Phần vật thể của danh bạ (toà, trục, căn) nhìn từ bên ngoài kho — tài nguyên Property của API dữ liệu: tra một toà hay một căn bằng mã OneHub (UPI của toà, `unitKey` của căn) hoặc bằng dự án + toà + mã căn khách đã biết; liệt kê toà của một dự án, không liệt kê căn (PB6, Mạnh ký Cổng Phạm vi 27/11). Tên trường theo RESO DD 2.1 (`Building.*`, `Property.UnitFloorLocation`, `LivingArea`…); không trả mã của nguồn, không trả mã trục:tầng. Hôm nay chỉ chạy tại máy thu — danh bạ chưa lên cloud.
+- Code: `property` (API `/v1/properties`, tệp khoá `data-api/src/contract/property.ts`) · RESO: UPI (`UniversalPropertyId`) + resource Building — **không phải** resource Property của RESO (resource đó là một tin, ở `/v1/listings`)
+- Slug URL: `properties`
+_Avoid_: deals, asset, danh mục căn, «Property» theo nghĩa RESO khi nói về tin
 
 **Danh bạ người**: Phần người của danh bạ — mỗi người một khoá mờ `pty_…` cấp một lần, thuộc đúng một nguồn (chưa nối xuyên nguồn); định danh tại nguồn là bí danh, quan hệ với tin là vai trò (ADR-0016 §8). Chỉ ở DB local.
 - Code: `party` · RESO: resource Member (khung), khoá local
@@ -500,7 +518,7 @@ Mọi enum dữ liệu (loại tin, loại hình, trạng thái chào…) khai �
 | Độ tin trích xuất | `confidence` | local | `sale_offers.confidence` | `high` «cao» · `medium` «trung bình» · `low` «thấp» |
 | Bậc giá | `price_tier` | local | `sale_offers.price_tier` | `P0` «giá giao dịch (P0)» · `P1` «giá nội bộ (P1)» · `P2` «giá công khai (P2)» |
 | Trường làm giàu | `enrich_field` | local | `enrichment_proposals.field` | `property_type` «Loại hình» · `bedrooms` «Phòng ngủ» · `bathrooms` «WC» · `street_raw` «Đường» · `block_raw` «Toà» |
-| Trường phát biểu | `assertion_field` | local | `field_assertions.field` | `property_type` «Loại hình» · `bedrooms` «Phòng ngủ» · `bathrooms` «WC» · `street_raw` «Đường» · `block_raw` «Toà» · `offer_status` «Trạng thái chào» · `street_number` «Số nhà» · `unit_number` «Mã căn» · `frontage_length` «Mặt tiền» · `lot_size_dimensions` «Ngang × dài» · `stories` «Số tầng» · `latitude` «Vĩ độ» · `longitude` «Kinh độ» · `builder_name` «Chủ đầu tư» · `area_id` «Phường» · `floor_raw` «Tầng» · `floor_band` «Dải tầng» · `project_node_id` «Dự án» · `subzone_node_id` «Phân khu» · `living_area` «Diện tích thông thuỷ» · `building_area_total` «Diện tích tim tường» · `direction_faces` «Hướng» · `lot_size_area` «Diện tích đất» · `universal_property_id` «Toà của tin» |
+| Trường phát biểu | `assertion_field` | local | `field_assertions.field` | `property_type` «Loại hình» · `bedrooms` «Phòng ngủ» · `bathrooms` «WC» · `street_raw` «Đường» · `block_raw` «Toà» · `offer_status` «Trạng thái chào» · `street_number` «Số nhà» · `unit_number` «Mã căn» · `frontage_length` «Mặt tiền» · `lot_size_dimensions` «Ngang × dài» · `stories` «Số tầng» · `latitude` «Vĩ độ» · `longitude` «Kinh độ» · `builder_name` «Chủ đầu tư» · `area_id` «Phường» · `floor_raw` «Tầng» · `floor_band` «Dải tầng» · `project_node_id` «Dự án» · `subzone_node_id` «Phân khu» · `living_area` «Diện tích thông thuỷ» · `building_area_total` «Diện tích tim tường» · `direction_faces` «Hướng» · `lot_size_area` «Diện tích đất» · `universal_property_id` «Toà của tin» · `universal_property_sub_id` «Trục, căn của tin» |
 | Lớp căn cứ | `evidence_tier` | local | `field_assertions.evidence_tier`, `party_roles.evidence_tier` | `fact` «Sự thật» · `observed` «Quan sát có trích dẫn» · `inferred` «Suy luận» |
 | Phương pháp phát biểu | `assertion_method` | local | `field_assertions.method`, `party_roles.method` | `hitl` «Người quyết» · `source_field` «Trường có cấu trúc của nguồn» · `parser` «Bộ đọc tin» · `e1_rule` «Luật E1» · `e2_llm` «LLM E2» · `legacy` «Giá trị có trước» · `registry_inherit` «Kế thừa từ danh bạ» |
 | Trạng thái danh bạ | `registry_status` | local | `parties.status`, `buildings.status`, `stacks.status`, `units.status` | `active` «Đang dùng» · `merged` «Đã gộp» · `split` «Đã tách» · `retired` «Đã nghỉ» |

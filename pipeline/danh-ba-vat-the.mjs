@@ -22,7 +22,7 @@ import {
 import { basename } from "node:path";
 import { khoaNhomThat } from "./lib/eval-labels.mjs";
 import { NOI_KHU_S09 } from "./lib/s09-du-an.mjs";
-import { buocS09 } from "./lib/s09-dung.mjs";
+import { buocS09, buocS09DanhBa } from "./lib/s09-dung.mjs";
 import { NOI_DU_AN_S16 } from "./lib/s16-danh-muc.mjs";
 import { buocS16, ganLechS16, napS16TheoKhu } from "./lib/s16-dung.mjs";
 
@@ -100,11 +100,22 @@ export async function dung(c, {
     const isoKhu = new Map();
     const bangIso = await napBangIso(c);
     if (bangIso) {
+      // DA72: ISO chỉ BẮT BUỘC ở khu mà nó được dùng — khu có dòng S08 (gắn vào dòng s08 rồi đúc toà) và khu đích nối của bước
+      // S09 khu, S16 (đúc toà theo ISO khu). Khu khác (vd 145 nút khu S09 gói 1 của DA42, area_ids rỗng; S09 gói 1 tự tra ISO
+      // theo mã tỉnh) thiếu tỉnh thì bỏ ISO, đếm một dòng — không làm gãy cả lượt giữ tươi (sự cố đêm 28/11).
+      const canIso = new Set([...s08.map((d) => d.khu_id),
+        ...[...khu.values()].filter((k) => Object.values(noiS09).includes(k.slug) || Object.values(noiS16).includes(k.slug)).map((k) => k.id)]);
+      let boIso = 0;
       for (const k of khu.values()) {
         const kq = isoTheo ? { iso: isoTheo(k) } : isoCuaKhu(k, bangIso);
-        if (kq.loi) throw new LoiGoi(`khu ${k.slug}: ${kq.loi}`);
+        if (kq.loi) {
+          if (canIso.has(k.id)) throw new LoiGoi(`khu ${k.slug}: ${kq.loi}`);
+          boIso++;
+          continue;
+        }
         isoKhu.set(k.id, kq.iso);
       }
+      if (boIso) log(`danh-ba-vat-the: khu không suy được tỉnh, bỏ ISO (không dòng S08): ${boIso}`);
     } else {
       const daCoToa = new Set(await khuDaDung(c));
       const moi = [...khu.values()].filter((k) => !daCoToa.has(k.slug)).map((k) => k.slug);
@@ -222,6 +233,8 @@ export async function dung(c, {
 
     // DA31: phân khu, cụm, toà S09 (sau bước S08, cùng giao dịch). Chưa áp 097 hay khu không có dòng S09 → bỏ qua có lý do.
     const s09 = await buocS09(c, { khu, isoKhu, noi: noiS09, log });
+    // DA42: dự án, toà S09 gói 1 (115) — mọi dự án trong danh mục, không theo danh sách khu; trước S16 để S16 tra bí danh S09.
+    const s09_goi1 = await buocS09DanhBa(c, { noi: noiS09, noiS16, log });
     // DA33: toà, căn S16 của khu đã nối (sau S08, S09; cùng giao dịch). Chưa áp 103 → bỏ qua có lý do.
     const s16 = await buocS16(c, { khu, isoKhu, noi: noiS16, log });
     await c.query("COMMIT");
@@ -251,6 +264,7 @@ export async function dung(c, {
       phuong_moi: phuong,
       ly_do_phuong: lyDoPhuong,
       s09,
+      s09_goi1,
       s16,
       s08_lech_s16: ganLech.choNghi, s08_gop_vao_s16: ganLech.gop,
     };

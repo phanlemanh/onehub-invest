@@ -1,0 +1,33 @@
+schema_version: 1
+slug: data-api-don-ten-nguon
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.pb5_ten_nguon
+    expected: "Ca PB5-AC-1 xanh: vi phạm ngoài DINH_DANH_BIET = [] và tên tệp = [] trên cây thật; theoLoai chỉ có dinh-danh; đối chứng dương dinhDanhBiet > 0. Chiều đỏ: trả data-api/db/001_init.sql về bản origin/main thì ca đỏ với «data-api còn tên nguồn ngoài định danh lược đồ đã biết»."
+    paths: ["data-api/**", "scripts/data-api-ten-nguon.mjs", "scripts/data-api-ten-nguon.test.mjs", "scripts/lib/tier-a-source-names.mjs", "pipeline/lib/mask-source-names.mjs"]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.pb5_ten_nguon
+    expected: "Hai ca PB5-AC-2 xanh: (1) thư mục migration không có INSERT source_registry → sourceRegistrySeeds ném «không rút được tên nào»; (2) CLI trên cây tạm không có migration → status ≠ 0 và stderr khớp «không rút được tên nào»; cùng cây có đủ db/migrations → status 0, stdout «SẠCH — ngoài định danh lược đồ đã biết, 0 cụm»."
+    paths: ["scripts/lib/tier-a-source-names.mjs", "scripts/data-api-ten-nguon.test.mjs"]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.pb5_ten_nguon
+    expected: "Nhóm PB5-AC-3 xanh: bản sao chưa phá → []; tám ca phá mỗi ca đúng một vi phạm ghim nguyên văn «chu-thich S02 data-api/db/001_init.sql», «chuoi S03 data-api/db/018_ops_audit.sql», «chu-thich S03 data-api/src/routes/deals.ts», «chuoi S01 data-api/src/routes/deals.ts», «chu-thich S02 data-api/README.md», «chu-thich S01 data-api/Dockerfile», «dinh-danh S02 data-api/db/018_ops_audit.sql», «ten-tep S04 data-api/db/005_stg_«S04».sql»."
+    paths: ["scripts/data-api-ten-nguon.mjs", "scripts/data-api-ten-nguon.test.mjs", "data-api/**"]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.pb5_db_mau
+    expected: "Lệnh bọc thoát 0 với «ℹ pass 3», «ℹ fail 0», «ℹ skipped 0» trên PostGIS dùng một lần: cây thật ra đúng MONG (30 đối tượng đã che; lỗi [1 LOI 012 42P01, 1 LOI see 42P01, 10 LOI see 25P02]; 29 mặc định cột) và source_registry = NGUON_TRUOC qua ánh xạ; đối chứng đỏ bỏ 018 → thiếu đúng [BASE TABLE ops_audit]; đổi s03-groups ở 013 → lệch đúng dòng «S03 | Nguồn mẫu S03 | s03-mock,s03-group,s03-agent». Có ca bị bỏ qua thì lệnh thoát 3 «có ca PB5-AC-4 bị bỏ qua» (đã thử bằng bản bỏ DATABASE_URL)."
+    paths: ["data-api/db/**", "data-api/seed.sql", "scripts/data-api-ten-nguon.mjs", "scripts/data-api-ten-nguon.test.mjs", "scripts/data-api-ten-nguon-db.sh"]
+  - id: E5
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.pb5_luoi
+    expected: "Thoát 0, dòng cuối «data-api ten-nguon: SẠCH — ngoài định danh lược đồ đã biết, 0 cụm»; dòng đầu nêu số tệp đã quét, theoLoai chỉ có dinh-danh, tên tệp 0, số định danh ≤ 89. Chiều đỏ: trên origin/main 78ea448dd thoát 1 với «ĐỎ — 52 vi phạm»."
+    paths: ["data-api/**", "scripts/data-api-ten-nguon.mjs"]

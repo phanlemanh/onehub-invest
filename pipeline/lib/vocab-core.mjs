@@ -46,7 +46,9 @@ export function loadRegister(yamlText) {
   }
   const allow = (doc.enums_lint_allow ?? []).map((x) => ({ path: x?.path, axis: x?.axis, reason: x?.reason }));
   const canonicalFields = Object.keys(doc.canonical?.fields ?? {});
-  return { axes, allow, canonicalFields };
+  // PB7: nguồn không bao giờ hiển thị công khai — chính sách, không phải trục.
+  const sourceHidden = (doc.nguon_khong_hien_thi ?? []).map((x) => ({ code: x?.code, can_cu: x?.can_cu }));
+  return { axes, allow, canonicalFields, sourceHidden };
 }
 
 /** Kiểm khuôn sổ; ném VocabError nêu trục + code đầu tiên sai. */
@@ -82,6 +84,14 @@ export function validateRegister(reg) {
   for (const x of reg.allow) {
     if (!x.path || !x.axis) throw new VocabError(`enums_lint_allow: mục thiếu path/axis (${x.path ?? "?"})`, x.axis);
   }
+  const thayNguon = new Set();
+  for (const x of reg.sourceHidden ?? []) {
+    const loi = (msg) => { throw new VocabError(`nguon_khong_hien_thi · ${x.code ?? "?"}: ${msg}`, "nguon_khong_hien_thi", x.code ?? null); };
+    if (typeof x.code !== "string" || !/^S\d{2}$/.test(x.code)) loi("code phải là mã nguồn S + hai chữ số");
+    if (thayNguon.has(x.code)) loi("mã trùng");
+    thayNguon.add(x.code);
+    if (typeof x.can_cu !== "string" || !x.can_cu.trim()) loi("PB7 nguồn ẩn thiếu căn cứ");
+  }
 }
 
 /** Đọc + kiểm sổ từ gốc kho (hoặc tệp chỉ định). */
@@ -101,6 +111,7 @@ export const TARGETS = {
   pipeline: "pipeline/lib/vocab.generated.mjs",
   agent: "agent/src/vocab.generated.ts",
   app: "app/src/lib/vocab.generated.ts",
+  dataApi: "data-api/src/contract/vocab.generated.ts",
   context: "CONTEXT.md",
 };
 
@@ -117,6 +128,7 @@ function renderJs(reg) {
   L.push("});", "");
   for (const a of reg.axes) L.push(`export const ${hang(a.name)} = Object.freeze(${objCode(a)});`);
   L.push("", `export const CANONICAL_FIELDS = Object.freeze([${reg.canonicalFields.map(q).join(", ")}]);`, "");
+  L.push(...dongNguonAn(reg, (m) => `Object.freeze(${m})`));
   L.push("/** Danh sách code nối bằng `|` — cho chuỗi enum trong prompt LLM. */");
   L.push("export function promptEnum(axis) {", "  return VOCAB[axis].join(\"|\");", "}", "");
   return L.join("\n");
@@ -131,6 +143,7 @@ function renderTs(reg, { labels }) {
   L.push("");
   for (const a of reg.axes) L.push(`export const ${hang(a.name)} = ${objCode(a)} as const;`);
   L.push("", `export const CANONICAL_FIELDS = [${reg.canonicalFields.map(q).join(", ")}] as const;`, "");
+  L.push(...dongNguonAn(reg, (m) => `${m} as const`));
   if (labels) {
     L.push("/** Nhãn tiếng Việt từng giá trị (label_vi của sổ). */");
     L.push("export const LABELS_VI = {");
@@ -141,6 +154,19 @@ function renderTs(reg, { labels }) {
   }
   L.push("/** Danh sách code nối bằng `|` — cho chuỗi enum trong prompt LLM. */");
   L.push("export function promptEnum(axis: VocabAxis): string {", "  return VOCAB[axis].join(\"|\");", "}", "");
+  return L.join("\n");
+}
+
+/** Hằng SOURCE_HIDDEN (PB7) — một dòng chú thích + một dòng hằng; `boc` bọc mảng theo ngôn ngữ đích. */
+function dongNguonAn(reg, boc) {
+  const m = `[${(reg.sourceHidden ?? []).map((x) => q(x.code)).join(", ")}]`;
+  return ["/** Nguồn không bao giờ hiển thị công khai (nguon_khong_hien_thi của mappings.yaml). */", `export const SOURCE_HIDDEN = ${boc(m)};`, ""];
+}
+
+/** Đích data-api (PB7): data-api đi kho công khai một mình — chỉ mang hằng nó dùng. */
+function renderDataApi(reg) {
+  const L = [HEADER, "// Sổ từ vựng một nguồn (PL6) — hằng cho data-api/ (đi kho công khai một mình nên tự mang tệp sinh).", ""];
+  L.push(...dongNguonAn(reg, (m) => `${m} as const`));
   return L.join("\n");
 }
 
@@ -157,12 +183,13 @@ function renderContextBlock(reg) {
   return L.join("\n");
 }
 
-/** Bốn đích; đích CONTEXT mang nội dung KHỐI (BEGIN…END), không phải cả tệp. */
+/** Năm đích; đích CONTEXT mang nội dung KHỐI (BEGIN…END), không phải cả tệp. */
 export function renderTargets(reg) {
   return [
     { path: TARGETS.pipeline, content: renderJs(reg) },
     { path: TARGETS.agent, content: renderTs(reg, { labels: false }) },
     { path: TARGETS.app, content: renderTs(reg, { labels: true }) },
+    { path: TARGETS.dataApi, content: renderDataApi(reg) },
     { path: TARGETS.context, content: renderContextBlock(reg), block: true },
   ];
 }
