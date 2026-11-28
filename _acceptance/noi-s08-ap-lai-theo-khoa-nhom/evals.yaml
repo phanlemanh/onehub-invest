@@ -22,3 +22,10 @@ evals:
     expected: "exit 0 trên DB máy thu, giao dịch READ ONLY: in dòng đếm (dự án, ngả đúc, vào nút cũ, nút mới hứa, nhóm có nút S08 một nút / từ hai nút); PASS đối chứng đỏ (luật bỏ bảng nhóm đã đúc cho dự án giả cùng khoá đúc nhóm mới); PASS đối chứng xanh (luật hiện tại về nút cũ); PASS ba bất biến. Không in tên, mã dự án. Ngoài CI (cần DB máy thu)"
     paths: ["pipeline/noi-du-an-s08-luat.mjs", "pipeline/lib/noi-du-an-s08-lop.mjs", "_acceptance/noi-s08-ap-lai-theo-khoa-nhom/probes/bat-bien-that.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.ns65_ban_chep
+    expected: "exit 0 trên bản chép DB máy thu (db-thu.sh --chay, DB của riêng lượt; DB «oneinvest» bị từ chối exit 2): dòng đếm «nút S08 trước N · khoá nhóm chưa có nút K · sau áp N+K · sau áp lần hai N+K · dự án giả về nút cũ: có · áp lần hai khongDoi: true» (bản chép 28/11 08:58Z: N 146, K 0) và PASS. Chiều đỏ đã chứng trên DB thử cấy: mã trước DA65 ra FAIL «dự án giả ra duc (nhóm mới)» và «dòng nối không trỏ nút cũ», exit 1. Ngoài CI"
+    paths: ["pipeline/noi-du-an-s08-luat.mjs", "pipeline/lib/noi-du-an-s08-lop.mjs", "_acceptance/noi-s08-ap-lai-theo-khoa-nhom/probes/ap-lan-hai-ban-chep.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

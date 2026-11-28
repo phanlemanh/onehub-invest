@@ -37,19 +37,33 @@ nhóm đã đúc thì luật xếp ngả không thấy nút cũ (nút do luật 
 - AC-3: Given DB máy thu (chỉ đọc), When dựng thẻ, Then không dự án ngả đúc nào đúc lại nhóm đã có nút, dự án của nhóm một nút trỏ
   nút ấy, số nút mới thẻ hứa bằng số khoá nhóm chưa có nút; dự án giả cùng khoá với một dự án đã đúc (không ghi DB) về nút cũ, còn
   luật bỏ bảng nhóm đã đúc thì đúc nhóm mới.
+- AC-4: Given bản chép DB máy thu (DB của riêng lượt, không bao giờ DB sống), When cấy một dự án S08 cùng khoá nhóm với một dự án
+  đã đúc rồi dựng thẻ, áp, áp lần hai, Then dự án cấy nối nút cũ; lượt áp đúc đúng số khoá nhóm chưa có nút và số nút S08 sau áp
+  bằng trước cộng số đó (bản chép 28/11 08:58Z: 146 → 146); áp lần hai không đổi gì.
 
 ## Coverage
 
 - Bảng nhóm đã đúc: không có, một nút, hai nút, khác tỉnh → AC-1
 - Đường gom nhóm: dự án đang trỏ nút S08, chính nút S08 theo tên gốc + tỉnh → AC-2 (cấy nút thứ hai không có dự án nào trỏ)
 - Áp: lượt sau cùng nhóm, bí danh, áp lần hai → AC-2
-- Dữ liệu thật: ba bất biến + đối chứng hai chiều trên DB máy thu → AC-3
+- Dữ liệu thật: ba bất biến + đối chứng hai chiều trên DB máy thu → AC-3; áp lần hai trên bản chép sau cấy → AC-4
 
 ## Đường đo
 
-Hàng nền: số trên màn không đổi hôm nay — đo chỉ đọc DB máy thu 28/11 cho kết cục mã gốc và mã mới trùng ở 185/185 dự án, 146/146
-nhóm một nút. Ô sẽ giữ đúng khi lượt nạp S08 kế về: chân ô «Mã nguồn chưa nối» S08 ở `/ops/registry` và số nút
-`meta.nguon = 'S08'` không tăng theo dự án mới cùng nhóm. Lệnh đo: E3 (`probes/bat-bien-that.mjs`).
+Hàng nền dữ liệu — kỳ vọng «không đổi». Đo chỉ đọc DB máy thu 28/11: kết cục mã gốc và mã mới trùng ở 185/185 dự án; 146 khoá nhóm,
+đều đúng 1 nút S08, 0 khoá từ 2 nút; bản thu S08 mới nhất (22/11) có 18 dự án chưa nối, cả 18 không thuộc nhóm đã có nút (14 không
+khớp được, 4 không tỉnh). Ô màn chịu ảnh hưởng: ba ô S08 của chân «Mã nguồn chưa nối» ở `/ops/registry` (14 · 153 · 18) — giữ
+nguyên sau mã này; khi lượt nạp S08 kế về, số nút `meta.nguon = 'S08'` chỉ tăng theo khoá nhóm thật sự mới. Lệnh đo: E3 (DB máy
+thu chỉ đọc), E4 (bản chép, áp lần hai).
+
+Bảng phủ ca (DB máy thu 28/11, chỉ đọc):
+
+| Loại khoá nhóm | Số khoá | Dự án bản thu mới nhất chưa nối | Ai đọc đầu ra phía sau |
+|---|---|---|---|
+| 1 nút S08 | 146 | 0 | thẻ luật (ngả đúc → `duc:#id`), băm mẫu, màn Danh bạ |
+| ≥ 2 nút S08 | 0 | 0 | thẻ luật (thẻ từng cặp, chờ người) |
+| 0 nút (không khớp / không tỉnh) | — | 14 / 4 | thẻ luật như DA55; ngoài phạm vi đổi, vì DA65 chỉ chạm ngả đúc |
+| Bên đọc DA3 (nhánh `feat/bang-noi-ma-du-an`) | — | — | `khop-du-an.mjs` đọc dòng `project_links` S08 là «nối có sẵn» (mã → nút), `noi-du-an-nguon.mjs` chỉ dựng thẻ bóng cho S08, từ chối áp; DA65 không đổi khuôn dòng, chỉ bớt nút trùng — đổi bên đọc ngoài phạm vi, vì không cần; tệp chung duy nhất là `_acceptance/config.yaml` (chỉ thêm dòng) |
 
 ## Out of scope
 
