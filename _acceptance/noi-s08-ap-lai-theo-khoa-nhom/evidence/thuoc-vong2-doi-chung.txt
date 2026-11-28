@@ -1,0 +1,12 @@
+DA65 — sửa thước sau S4 vòng 1 (GS phán (b) 28/11), đối chứng chạy tại máy thu, Mac mini, 28/11 ~12:20Z.
+
+E3 bat-bien-that.mjs trên DB máy thu (READ ONLY):
+  mã mới:            dự án 185 · ngả đúc 150 (vào nút cũ 150, nút mới hứa 0) · nhóm có nút S08 146 (một nút 146, từ hai nút 0)
+                     PASS (A) · PASS (B) ×3 · PASS (C) đối chứng đỏ · PASS (C) phân biệt → exit 0
+  lib bản main:      PASS (A) · PASS (B) ×3 · PASS (C) đối chứng đỏ · FAIL (C) phân biệt: luật hiện tại ra duc (nhóm mới) → exit 1
+E4 ap-lan-hai-ban-chep.mjs trên DB thử cấy (oneinvest_dbv_da65t_*, một nhóm đã đúc + một nhóm mới thật):
+  mã mới:            nút S08 trước 1 · khoá nhóm chưa có nút 1 · sau áp 2 · sau áp lần hai 2 · dự án giả về nút cũ: có → PASS exit 0
+  chỉ có tên «_TT»:  FAIL không có mẫu hợp lệ … → exit 1
+  lib bản main:      FAIL thẻ: dự án giả ra duc (nhóm mới) · FAIL dòng nối không trỏ nút cũ → exit 1
+  DB «oneinvest»:    HONG … từ chối ghi → exit 2
+DB máy thu (chỉ đọc): 142 dự án là mẫu hợp lệ cho E4.

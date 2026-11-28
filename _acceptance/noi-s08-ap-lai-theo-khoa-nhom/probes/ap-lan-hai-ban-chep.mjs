@@ -4,7 +4,7 @@
 //   bash db/db-thu.sh oneinvest_suite_da65 --chay node _acceptance/noi-s08-ap-lai-theo-khoa-nhom/probes/ap-lan-hai-ban-chep.mjs
 // Đạt: dự án giả về nút cũ; lượt áp đúc đúng số khoá nhóm chưa có nút (bản chép 28/11 08:58Z: 0), số nút S08 sau áp = trước + số đó
 // (146 → 146); dòng nối của dự án giả trỏ nút cũ; áp lần hai không đổi. Thoát 0 đạt, 1 lệch (in ô), 2 hỏng/không phải bản chép.
-// Không in tên hay mã dự án thật.
+// Không có mẫu hợp lệ → FAIL có tên (thoát 1), không FAIL giả. Không in tên hay mã dự án thật.
 import { execFileSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { join } from "node:path";
@@ -13,6 +13,7 @@ import { pathToFileURL } from "node:url";
 const GOC = execFileSync("git", ["-C", import.meta.dirname, "rev-parse", "--show-toplevel"], { encoding: "utf8" }).trim();
 const pg = createRequire(join(GOC, "pipeline/package.json"))("pg");
 const luat = await import(pathToFileURL(join(GOC, "pipeline/noi-du-an-s08-luat.mjs")).href);
+const lop = await import(pathToFileURL(join(GOC, "pipeline/lib/noi-du-an-s08-lop.mjs")).href);
 
 const url = process.env.DATABASE_URL;
 if (!url) { console.log("HONG thiếu DATABASE_URL — chạy qua db/db-thu.sh --chay"); process.exit(2); }
@@ -26,8 +27,13 @@ const soNutS08 = async () => (await c.query("SELECT count(*)::int AS n FROM asse
 const lech = [];
 try {
   const truoc = await luat.dungTheLuat(c);
-  const mau = truoc.ds.find((d) => d.kq.status === "duc" && d.kq.node_id != null && d.tinhId);
-  if (!mau) { console.log("HONG bản chép không có dự án S08 đã đúc nào làm mẫu"); process.exit(2); }
+  const { daDuc } = await luat.docDauVao(c);
+  // Mẫu hợp lệ: đã đúc vào nút cũ, khoá nhóm có ĐÚNG một nút S08 (nhóm hai nút ra thẻ cặp — đúng luật, không phải lỗi), tên chưa có
+  // hậu tố «_TT»/« TT» hay đầu «TMDV » (tên cấy «<tên>_TT» phải về đúng khoá của mẫu).
+  const mau = truoc.ds.find((d) => d.kq.status === "duc" && d.kq.node_id != null && d.tinhId
+    && lop.tenGoc(d.ten) === String(d.ten ?? "").trim()
+    && (daDuc.get(lop.khoaNhom(d.ten, d.tinhId)) ?? []).length === 1);
+  if (!mau) { console.log("FAIL không có mẫu hợp lệ: không dự án S08 nào đã đúc vào nhóm đúng một nút với tên chưa có hậu tố — thước không đo được gì"); process.exit(1); }
   await c.query(`INSERT INTO stg_s08_project (snapshot_id, project_id, catalog_payload, detail_payload, fetched_at)
     SELECT snapshot_id, $2, jsonb_set(catalog_payload, '{project_name}', to_jsonb((catalog_payload ->> 'project_name') || '_TT')),
            detail_payload, now()

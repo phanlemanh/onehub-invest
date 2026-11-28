@@ -75,12 +75,17 @@ export function nhomDaDuc(duAn, nut, link) {
   return m;
 }
 
-/** Dựng thẻ trên dữ liệu hiện tại. ds: mỗi dự án một dòng kèm kết cục. */
-export async function dungTheLuat(client) {
+/** Đọc mọi đầu vào của thẻ một lần: dự án, nút, dòng nối S08, bảng nhóm đã đúc (bộ soát dùng đúng hàm này, không chép SQL). */
+export async function docDauVao(client) {
   const duAn = await docDuAn(client);
   const nut = await docNut(client);
   const link = await docLink(client);
-  const daDuc = nhomDaDuc(duAn, nut, link);
+  return { duAn, nut, link, daDuc: nhomDaDuc(duAn, nut, link) };
+}
+
+/** Dựng thẻ trên dữ liệu hiện tại. ds: mỗi dự án một dòng kèm kết cục. */
+export async function dungTheLuat(client) {
+  const { duAn, nut, link, daDuc } = await docDauVao(client);
   const tenNut = new Map(nut.map((n) => [n.id, n.name]));
   const { rows: tenTinh } = await client.query("SELECT id, name FROM areas WHERE region_type = 'market'");
   const tinhTen = new Map(tenTinh.map((r) => [r.id, r.name]));
