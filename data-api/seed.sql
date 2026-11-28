@@ -1,12 +1,13 @@
 -- Seed data for onehub-data-api local development
--- Creates: 3 markets, 12 submarkets, 60 listings, metrics, asset stats
--- Run: psql $DATABASE_URL -f seed.sql
+-- Creates: 3 markets, 12 submarkets, 60 short-term listings, nights, asset stats, 26 sale / long-term-rent listings,
+-- price ranks. No calibration-source rows (the API never reads or returns them).
+-- Run after the schema: psql $DATABASE_URL -f db/schema.sql && psql $DATABASE_URL -f seed.sql
 
 BEGIN;
 
 -- Clear existing seed data
 TRUNCATE listings, nights, areas, market_metrics, market_asset_stats,
-  sale_offers, airdna_scores, airdna_market_metrics, airdna_listings, area_sources
+  sale_offers, properties, property_offers, offer_price_rank
   RESTART IDENTITY CASCADE;
 
 -- Markets (3)
@@ -30,57 +31,11 @@ INSERT INTO areas (id, parent_id, name, region_type, country_code, meta) VALUES
   ('vn-dn-ngu-hanh-son', 'vn-thanh-pho-da-nang', 'Ngũ Hành Sơn', 'submarket', 'vn', '{"seed": true}'),
   ('vn-dn-lien-chieu', 'vn-thanh-pho-da-nang', 'Liên Chiểu', 'submarket', 'vn', '{"seed": true}');
 
--- Market Scores
-INSERT INTO airdna_scores (airdna_id, total, seasonality, revenue_growth, regulation, rental_demand, captured_at) VALUES
-  ('seed-hn', 89, 82, 74, 71, 91, now()),
-  ('seed-hcmc', 94, 97, 76, 67, 59, now()),
-  ('seed-dn', 76, 88, 62, 78, 73, now());
-
--- Crosswalk
-INSERT INTO area_sources (area_id, source, source_area_key, meta) VALUES
-  ('vn-hanoi', 'S02', 'seed-hn', '{"seed": true}'),
-  ('vn-hcmc', 'S02', 'seed-hcmc', '{"seed": true}'),
-  ('vn-thanh-pho-da-nang', 'S02', 'seed-dn', '{"seed": true}');
-
--- Market metrics (12 months ADR, occupancy, revenue)
-INSERT INTO airdna_market_metrics (airdna_id, metric, period, value)
-SELECT
-  m.airdna_id,
-  metric,
-  (date_trunc('month', current_date) - (n || ' months')::interval)::date::text,
-  CASE metric
-    WHEN 'adr' THEN base_adr * (1 + (random() - 0.5) * 0.15)
-    WHEN 'occupancy' THEN LEAST(95, GREATEST(35, base_occ + (random() - 0.5) * 15))
-    WHEN 'revenue' THEN base_rev * (1 + (random() - 0.5) * 0.2)
-    WHEN 'revpar' THEN base_adr * base_occ / 100 * (1 + (random() - 0.5) * 0.15)
-  END
-FROM airdna_scores m
-CROSS JOIN generate_series(0, 11) AS n
-CROSS JOIN (VALUES ('adr'), ('occupancy'), ('revenue'), ('revpar')) AS t(metric)
-CROSS JOIN LATERAL (
-  SELECT
-    CASE m.airdna_id
-      WHEN 'seed-hn' THEN 950000
-      WHEN 'seed-hcmc' THEN 1250000
-      ELSE 1450000
-    END AS base_adr,
-    CASE m.airdna_id
-      WHEN 'seed-hn' THEN 58
-      WHEN 'seed-hcmc' THEN 62
-      ELSE 55
-    END AS base_occ,
-    CASE m.airdna_id
-      WHEN 'seed-hn' THEN 14000000
-      WHEN 'seed-hcmc' THEN 22000000
-      ELSE 18000000
-    END AS base_rev
-) b;
-
 -- Listings (60 total, ~20 per market, distributed across submarkets)
 INSERT INTO listings (id, area_id, name, room_type, bedrooms, accommodates,
   price_listed, latitude, longitude, photo_urls, review_count, last_seen)
 SELECT
-  'seed_' || market_code || '_' || LPAD(n::text, 3, '0'),
+  'seed_' || area_id || '_' || LPAD(n::text, 3, '0'),
   area_id,
   'Listing ' || area_name || ' #' || n,
   CASE WHEN n % 3 = 0 THEN 'Entire home' ELSE 'Private room' END,
@@ -99,14 +54,14 @@ SELECT
   (n * 7) % 300,
   now() - (n % 7 || ' days')::interval
 FROM (
-  SELECT 'hn' AS market_code, 'vn-hanoi' AS market_id, area_id, name AS area_name,
+  SELECT 'hn' AS market_code, 'vn-hanoi' AS market_id, id AS area_id, name AS area_name,
     21.02 AS base_lat, 105.80 AS base_lng
   FROM areas WHERE parent_id = 'vn-hanoi'
   UNION ALL
-  SELECT 'hcmc', 'vn-hcmc', area_id, name, 10.78, 106.68
+  SELECT 'hcmc', 'vn-hcmc', id, name, 10.78, 106.68
   FROM areas WHERE parent_id = 'vn-hcmc'
   UNION ALL
-  SELECT 'dn', 'vn-thanh-pho-da-nang', area_id, name, 16.06, 108.22
+  SELECT 'dn', 'vn-thanh-pho-da-nang', id, name, 16.06, 108.22
   FROM areas WHERE parent_id = 'vn-thanh-pho-da-nang'
 ) sub
 CROSS JOIN generate_series(1, 5) AS n;
@@ -126,29 +81,31 @@ CROSS JOIN generate_series(0, 29) AS n;
 
 -- Asset stats (per submarket)
 INSERT INTO market_asset_stats (area_id, kind, n_offers, median_price, p25_price, p75_price, median_perm2, median_rent)
-SELECT area_id, 'sale',
-  20 + (substr(md5(area_id), 1, 2)::bit(8)::int % 30),
-  3500000000 + (substr(md5(area_id), 1, 4)::bit(16)::int % 5000000000),
-  2500000000 + (substr(md5(area_id), 2, 4)::bit(16)::int % 3000000000),
-  5000000000 + (substr(md5(area_id), 3, 4)::bit(16)::int % 7000000000),
-  45000000 + (substr(md5(area_id), 1, 3)::bit(12)::int % 40000000),
-  12000000 + (substr(md5(area_id), 2, 3)::bit(12)::int % 15000000)
+SELECT id, 'sale',
+  20 + (('x' || substr(md5(id), 1, 2))::bit(8)::int % 30),
+  3500000000 + (('x' || substr(md5(id), 1, 4))::bit(16)::int % 5000000000),
+  2500000000 + (('x' || substr(md5(id), 2, 4))::bit(16)::int % 3000000000),
+  5000000000 + (('x' || substr(md5(id), 3, 4))::bit(16)::int % 7000000000),
+  45000000 + (('x' || substr(md5(id), 1, 3))::bit(12)::int % 40000000),
+  12000000 + (('x' || substr(md5(id), 2, 3))::bit(12)::int % 15000000)
 FROM areas WHERE region_type = 'submarket';
 
--- Sale offers (20 for deals demo)
-INSERT INTO sale_offers (offer_id, area_id, kind, price_vnd, area_m2, price_perm2,
-  bedrooms, confidence, first_seen, last_seen, n_reposts, post_ids, source)
+-- Sale listings (20: 10 apartments in each of two wards, some below the ward median) and long-term rent listings (6)
+INSERT INTO sale_offers (offer_id, area_id, kind, property_type, price_vnd, area_m2, price_perm2,
+  bedrooms, bathrooms, latitude, longitude, confidence, first_seen, last_seen, n_reposts, post_ids, source)
 SELECT
   'seed_offer_' || LPAD(n::text, 3, '0'),
-  (SELECT id FROM areas WHERE region_type = 'submarket' ORDER BY md5(id) LIMIT 1 OFFSET (n % 12)),
+  CASE WHEN n <= 10 THEN 'vn-hanoi-hoan-kiem' ELSE 'vn-hcmc-quan-1' END,
   'sale',
-  -- Some below median (deals), some above
-  CASE WHEN n % 3 = 0 THEN 2500000000 + (n * 137) % 1000000000
-       ELSE 4000000000 + (n * 173) % 3000000000 END,
+  'apartment',
+  (60 + (n * 7) % 60)::bigint * CASE WHEN n % 3 = 0 THEN 30000000 + (n * 11) % 10000000 ELSE 55000000 + (n * 13) % 20000000 END,
   60 + (n * 7) % 60,
   CASE WHEN n % 3 = 0 THEN 30000000 + (n * 11) % 10000000
        ELSE 55000000 + (n * 13) % 20000000 END,
   CASE WHEN n % 3 = 0 THEN 2 ELSE 3 END,
+  2,
+  CASE WHEN n <= 10 THEN 21.03 ELSE 10.78 END,
+  CASE WHEN n <= 10 THEN 105.85 ELSE 106.70 END,
   CASE WHEN n % 2 = 0 THEN 'high' ELSE 'medium' END,
   now() - (n % 10 || ' days')::interval,
   now() - (n % 5 || ' days')::interval,
@@ -157,23 +114,52 @@ SELECT
   'S03'
 FROM generate_series(1, 20) AS n;
 
--- Calibration listings (for coverage demo)
-INSERT INTO airdna_listings (id, airdna_market_id, combined_market_id, bedrooms,
-  revenue_ltm, occupancy, adr, latitude, longitude, photo_urls, captured_at, first_seen)
+INSERT INTO sale_offers (offer_id, area_id, kind, property_type, price_vnd, area_m2, price_perm2,
+  bedrooms, bathrooms, latitude, longitude, confidence, first_seen, last_seen, n_reposts, post_ids, source)
 SELECT
-  'abnb_seed_' || LPAD(n::text, 4, '0'),
-  market_key,
-  NULL,
-  1 + (n % 4),
-  500000000 + (n * 137) % 2000000000,
-  0.4 + (n % 5) * 0.08,
-  800000 + (n * 173) % 2000000,
-  16.0 + (n % 10) * 0.05,
-  108.0 + (n % 10) * 0.05,
-  jsonb_build_array('https://a0.muscache.com/im/pictures/hosting/Hosting-cal/cal-' || n || '/photo-1.jpeg'),
+  'seed_rent_' || LPAD(n::text, 3, '0'),
+  CASE WHEN n <= 3 THEN 'vn-hanoi-ba-dinh' ELSE 'vn-dn-hai-chau' END,
+  'rent_lt',
+  'apartment',
+  (8000000 + n * 1500000),
+  50 + n * 5,
+  (8000000 + n * 1500000) / (50 + n * 5),
+  1 + n % 3,
+  1,
+  CASE WHEN n <= 3 THEN 21.04 ELSE 16.06 END,
+  CASE WHEN n <= 3 THEN 105.82 ELSE 108.22 END,
+  'medium',
+  now() - (n || ' days')::interval,
   now(),
-  now()
-FROM generate_series(1, 200) AS n
-CROSS JOIN (VALUES ('seed-hn'), ('seed-hcmc'), ('seed-dn')) AS t(market_key);
+  1,
+  ARRAY['seed_rent_post_' || n],
+  'S03'
+FROM generate_series(1, 6) AS n;
+
+-- One unit per sale listing (CG8 ruler: ward × property type median over units)
+INSERT INTO properties (area_id, property_type, kind)
+SELECT area_id, property_type, kind FROM sale_offers WHERE kind = 'sale' ORDER BY offer_id;
+INSERT INTO property_offers (property_id, offer_id)
+SELECT p.id, o.offer_id
+FROM (SELECT id, row_number() OVER (ORDER BY id) AS i FROM properties) p
+JOIN (SELECT offer_id, row_number() OVER (ORDER BY offer_id) AS i FROM sale_offers WHERE kind = 'sale') o ON o.i = p.i;
+
+-- Price rank per sale listing against its ward ruler (the pipeline computes this table in production)
+INSERT INTO offer_price_rank (offer_id, kind, property_type, bedrooms, thuoc, gia_tri, cap, nut, n, trung_vi, p20,
+  hang_pct, duoi_trung_vi_pct, nhan, can_xac_minh, ly_do, run_id)
+SELECT o.offer_id, o.kind, o.property_type, o.bedrooms, 'gia-m2', o.price_perm2, 'phuong', o.area_id, r.n, r.m,
+  percentile_cont(0.2) WITHIN GROUP (ORDER BY o2.price_perm2) ,
+  ROUND((100.0 * (SELECT count(*) FROM sale_offers o3 WHERE o3.area_id = o.area_id AND o3.kind = 'sale' AND o3.price_perm2 <= o.price_perm2)
+         / r.n)::numeric, 1),
+  ROUND((1 - o.price_perm2::numeric / r.m::numeric) * 100, 1),
+  CASE WHEN o.price_perm2 < r.m * 0.95 THEN 're-trong-phuong' END,
+  false,
+  NULL,
+  'seed'
+FROM sale_offers o
+JOIN v_ruler_p2 r ON r.area_id = o.area_id AND r.property_type = o.property_type
+JOIN sale_offers o2 ON o2.area_id = o.area_id AND o2.kind = 'sale'
+WHERE o.kind = 'sale'
+GROUP BY o.offer_id, o.kind, o.property_type, o.bedrooms, o.price_perm2, o.area_id, r.n, r.m;
 
 COMMIT;

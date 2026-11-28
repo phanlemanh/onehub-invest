@@ -81,6 +81,16 @@ function moiKhoa(v: unknown, ra = new Set<string>()): Set<string> {
   return ra;
 }
 const KHOA_CAM = ["universalPropertySubId", "stack", "stackKey", "nguon", "evidence", "originatingSystemName", "originatingSystemKey", "aliases"];
+/** Khoá cấm có trong một thân. `/openapi.json` mang cả lược đồ Listing (PB2, đã ký, có `originatingSystemName`) — lời hứa
+ *  AC-6 là của tài nguyên Property, nên ở thân openapi chỉ soát phần không phải `components.schemas.Listing` (GS phán 28/11). */
+function khoaCamTrong(v: any): string[] {
+  if (v?.openapi && v.components?.schemas?.Listing) {
+    v = { ...v, components: { ...v.components, schemas: { ...v.components.schemas } } };
+    delete v.components.schemas.Listing;
+  }
+  const co = moiKhoa(v);
+  return KHOA_CAM.filter((k) => co.has(k));
+}
 
 let duAnId = 0;
 
@@ -337,6 +347,17 @@ test("PB6-AC-10 cloud và lỗi", async () => {
   }
 });
 
+test("PB6-AC-6 đối chứng vùng soát openapi: khoá cấm trong lược đồ Property thì đỏ, trong Listing thì không", () => {
+  const vo = (schemas: Record<string, unknown>) => ({ openapi: "3.1.0", paths: {}, components: { schemas } });
+  const listing = { type: "object", properties: { originatingSystemName: { type: "string" } } };
+  assert.deepEqual(khoaCamTrong(vo({ Listing: listing })), [], "PB6-AC-6 đối chứng: khoá của Listing bị tính là lộ");
+  for (const ten of ["PropertyBuilding", "PropertyUnit", "PropertyUnitLookup"]) {
+    assert.deepEqual(khoaCamTrong(vo({ Listing: listing, [ten]: listing })), ["originatingSystemName"],
+      `PB6-AC-6 đối chứng: khoá cấm trong ${ten} không bị bắt`);
+  }
+  assert.deepEqual(khoaCamTrong({ data: { originatingSystemName: "S0x" } }), ["originatingSystemName"], "PB6-AC-6 đối chứng: thân thường không bị soát");
+});
+
 test("PB6-AC-6 không lộ (chạy sau cùng, soát mọi thân đã gom)", async () => {
   const api = await goi("/openapi.json");
   assert.equal(api.status, 200);
@@ -350,8 +371,7 @@ test("PB6-AC-6 không lộ (chạy sau cùng, soát mọi thân đã gom)", asyn
       const dem = (chu: string) => t.split(chu).length - 1;
       if (dem(c) > dem(`"unitNumber":"${c}"`)) loi.push(`chuỗi canh ${c}`);
     }
-    const khoaCo = moiKhoa(JSON.parse(t));
-    for (const k of KHOA_CAM) if (khoaCo.has(k)) loi.push(`khoá cấm ${k}`);
+    for (const k of khoaCamTrong(JSON.parse(t))) loi.push(`khoá cấm ${k}`);
   }
   assert.deepEqual([...new Set(loi)], [], `PB6-AC-6 lộ: ${[...new Set(loi)].join(", ")}`);
 });

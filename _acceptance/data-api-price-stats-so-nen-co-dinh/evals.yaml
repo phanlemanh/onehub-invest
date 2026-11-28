@@ -1,0 +1,24 @@
+schema_version: 1
+feature_slug: data-api-price-stats-so-nen-co-dinh
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.dapi_psn
+    paths: [data-api/test/listing-reso.test.ts, data-api/src/routes/price-stats.ts]
+    expected: "exit 0; «ℹ fail 0»; ca «PB2-AC-11 price-stats» xanh trên cây dựng từ main đã chứa PB2: bốn truy vấn (?area, ?market, không tham số, khu không có) cùng mã và cùng thân với asset-stats.ts ở mốc cố định 75f32bd55c15442e5ab0d258b1f998e70aa2072b; đối chứng dương có dòng cấy; /v1/asset-stats vẫn 410"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.dapi_psn_dot_bien
+    paths: [data-api/test/listing-reso.test.ts, data-api/src/routes/price-stats.ts, _acceptance/data-api-price-stats-so-nen-co-dinh/probes/dot-bien.mjs]
+    expected: "exit 0; «dot-bien: đủ 4 ô»; ô goc xanh; doi-ma đỏ «PB2 price-stats khác mã với asset-stats ở nền»; doi-than đỏ «PB2 price-stats khác thân asset-stats ở nền»; moc-sai đỏ «PB2-AC-11 mốc so hỏng». Ô nào ra khác → «dot-bien: ô <tên> sai» và thoát 1"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.dapi_psn_pham_vi
+    paths: ["**"]
+    expected: "exit 0; «pham-vi: <n> tệp đổi so origin/main, đều trong ranh giới; listing-reso.test.ts không gọi merge-base»; chiều đỏ cùng lượt: cấy data-api/src/routes/price-stats.ts vào danh sách tệp → «PB9 NGOÀI PHẠM VI: data-api/src/routes/price-stats.ts»; cấy khoá config khác dapi_psn* → «PB9 NGOÀI PHẠM VI: _acceptance/config.yaml khoá <khoá>». Ô không đỏ → thoát 1"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
