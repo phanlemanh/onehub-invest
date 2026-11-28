@@ -5,7 +5,7 @@ slug: data-api-price-stats-so-nen-co-dinh
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api]
-status: verified
+status: machine-cleared
 veto_state: mo
 veto_opened_at: 2026-11-27T23:28:09Z
 approved_by:
@@ -53,3 +53,4 @@ Bỏ quét không gian tiêu chí — xem dòng sổ `descope` «bỏ coverage-s
 ## Notes
 
 - Nhánh `fix/data-api-price-stats-so-nen` do U2 tạo từ main a80d389d9 (M5 không đẩy được nhánh mới từ main).
+- Ngoài-1 (máy định tuyến 2026-11-28, đề xuất S4 known-limits): Bộ kiểm có một phép đo xác nhận bài test không còn gọi cách so cũ, nhưng chưa có ca thử chứng minh phép đo này sẽ đỏ khi lỗi xuất hiện. Nếu phép đo hỏng ngầm, nó vẫn báo xanh. Người dùng cuối không bị ảnh hưởng, chỉ là độ tin cậy của bộ kiểm nội bộ kém hơn một chút. — `_acceptance/data-api-price-stats-so-nen-co-dinh/probes/pham-vi.mjs`
