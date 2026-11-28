@@ -1,11 +1,12 @@
 #!/usr/bin/env node
-// noi-du-an-nguon.mjs — DA3 bang-noi-ma-du-an AC-3..AC-6: nối bản ghi dự án của nguồn danh mục (S07, S09, S10, S16) vào nút danh
-// bạ có sẵn theo loại căn cứ (K3, T), qua thẻ luật người xem mẫu trước khi áp (khuôn DA32 noi-du-an-s06.mjs). Thiết kế §3.3.
+// noi-du-an-nguon.mjs — DA3 bang-noi-ma-du-an AC-3..AC-6: nối bản ghi dự án của nguồn danh mục (S07, S10, S16) vào nút danh
+// bạ có sẵn theo loại căn cứ (K2, K3, T), qua thẻ luật người xem mẫu trước khi áp (khuôn DA32 noi-du-an-s06.mjs). Thiết kế §3.3.
 //   node noi-du-an-nguon.mjs --nguon <S0x> --the <tệp>                      dựng thẻ (chỉ đọc), dòng cuối «băm: <hex>»
 //   node noi-du-an-nguon.mjs --ap --nguon <S0x> --bam <hex> --nguoi <tên>    áp đúng thẻ đã xem (băm lệch → không ghi gì)
 //   node noi-du-an-nguon.mjs --dao <rule_id> --nguoi <tên>                   đảo một luật: bí danh nghỉ, dòng về chua_noi/dao-luat
-// Mọi dòng ghi mang rule_id của lượt (<nguồn>-K3, -T, -noi-san, -trang-thai); đảo đủ mọi luật của nguồn là lùi trọn, không xoá
-// dòng. S08 do thẻ luật DA55 nối: lệnh chỉ dựng thẻ bóng đối chiếu, từ chối áp. Áp lên DB máy thu là lời của Mạnh ở Cổng Bằng chứng.
+// Mọi dòng ghi mang rule_id của lượt (<nguồn>-K2, -K3, -T, -noi-san, -trang-thai); đảo đủ mọi luật của nguồn là lùi trọn, không
+// xoá dòng. S08 do thẻ luật DA55 nối: lệnh chỉ dựng thẻ bóng đối chiếu, từ chối áp. S09 do DA42 nối (phạm vi 27/11): lệnh từ chối
+// cả dựng thẻ lẫn áp. Áp lên DB máy thu là lời của Mạnh ở Cổng Bằng chứng.
 import { realpathSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
@@ -17,6 +18,8 @@ import { bamKetCuc, docNoiSan, docNut, LY_DO, xepNga } from "./lib/khop-du-an.mj
 const DB_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 export const SO_MAU = 20;
 export const NGUON_DA55 = "S08";
+/** Nguồn DA3 không bao giờ áp, kèm lời từ chối. S08: thẻ luật DA55. S09: đường nối duy nhất của DA42 (Mạnh duyệt 28/11). */
+export const NGUON_KHONG_AP = Object.freeze({ S08: "S08 do thẻ luật DA55 nối", S09: "S09 do DA42 nối" });
 
 /** Bốn tên luật của một nguồn. */
 export const tenLuat = (nguon) => ({ K3: `${nguon}-K3`, T: `${nguon}-T`, K1: `${nguon}-K1`, K2: `${nguon}-K2`, giu: `${nguon}-noi-san`, trangThai: `${nguon}-trang-thai` });
@@ -35,14 +38,39 @@ const lechNoiSan = (kq) => kq.nga === "giu" && !(kq.bong.nga === "noi" && kq.bon
 
 const khoaNga = (kq) => (kq.nga === "giu" ? "giu" : kq.nga === "noi" ? kq.can_cu : kq.ly_do);
 
+const THU_TU_CAN = ["K1", "K2", "K3", "T"];
+const NHAN_HANG = { xac_minh: "đã xác minh", mot_loi_khai: "ứng viên" };
+
+/** Ô mẫu của thẻ: căn cứ × hạng × nguồn đúc của nút đích (Hỏi-2, Mạnh duyệt 28/11). Hàm thuần.
+ *  Trả [{ khoa, can, hang, nguonDuc, dem, mau }] theo thứ tự căn cứ rồi hạng rồi nguồn; mau = tối đa SO_MAU dòng, xếp theo tên. */
+export function oMau(ds, nutTheoId) {
+  const o = new Map();
+  for (const d of ds) {
+    if (d.kq.nga !== "noi") continue;
+    const n = nutTheoId.get(d.kq.node_id);
+    const hang = n?.tier ?? "—", nguonDuc = hang === "xac_minh" ? null : (n?.nguonDuc ?? null);
+    const khoa = `${d.kq.can_cu}|${hang}|${nguonDuc ?? "—"}`;
+    if (!o.has(khoa)) o.set(khoa, { khoa, can: d.kq.can_cu, hang, nguonDuc, dem: 0, ds: [] });
+    const x = o.get(khoa); x.dem++; x.ds.push(d);
+  }
+  const thuTu = (x) => [THU_TU_CAN.indexOf(x.can), x.hang === "xac_minh" ? 0 : 1, x.nguonDuc ?? ""];
+  return [...o.values()]
+    .sort((a, b) => { const p = thuTu(a), q = thuTu(b); return p[0] - q[0] || p[1] - q[1] || String(p[2]).localeCompare(String(q[2])); })
+    .map(({ ds: nhom, ...x }) => ({ ...x, mau: [...nhom].sort((a, b) => a.ten.localeCompare(b.ten, "vi")).slice(0, SO_MAU) }));
+}
+
+const nhanO = (x) => `${x.can} · ${NHAN_HANG[x.hang] ?? x.hang}${x.nguonDuc ? ` ${x.nguonDuc}` : ""}`;
+
 /** Dựng thẻ (chỉ đọc). ds: mỗi bản ghi một dòng {ma, ten, tinh, kq, tenNut}. */
 export async function dungThe(client, nguon) {
   if (!NGUON_DANH_MUC.includes(nguon)) throw new Error(`nguon-la: ${nguon}`);
+  if (nguon === "S09") throw new Error(`${NGUON_KHONG_AP.S09} — DA3 không dựng thẻ, không áp S09`);
   const ctx = await docVung(client);
   const banGhi = await docBanGhi(client, nguon, ctx);
   const nut = await docNut(client);
   const san = await docNoiSan(client, nguon, { maDa3: moiTenLuat(nguon) });
   const tenNut = new Map(nut.map((n) => [n.id, n.ten]));
+  const nutTheoId = new Map(nut.map((n) => [n.id, n]));
   const ds = banGhi.map((b) => {
     const kq = xepNga(b, nut, san);
     return { ma: b.ma, ten: b.ten_goc ?? "", tinh: b.tinh, xa: b.xa, kq, tenNut: kq.node_id != null ? tenNut.get(kq.node_id) : null,
@@ -50,11 +78,7 @@ export async function dungThe(client, nguon) {
   });
   const tong = {};
   for (const d of ds) tong[khoaNga(d.kq)] = (tong[khoaNga(d.kq)] ?? 0) + 1;
-  const mau = {};
-  for (const can of ["K1", "K2", "K3", "T"]) {
-    const nhom = ds.filter((d) => d.kq.nga === "noi" && d.kq.can_cu === can).sort((a, b) => a.ten.localeCompare(b.ten, "vi"));
-    if (nhom.length) mau[can] = nhom.slice(0, SO_MAU);
-  }
+  const mau = oMau(ds, nutTheoId);
   const lech = ds.filter((d) => lechNoiSan(d.kq));
   const bam = bamKetCuc(ds.map((d) => ({ ma: d.ma, kq: d.kq })));
   return { nguon, ds, tong, mau, lech, bam, markdown: vietThe({ nguon, ds, tong, mau, lech, bam }) };
@@ -69,8 +93,13 @@ export function vietThe({ nguon, ds, tong, mau, lech, bam }) {
     `Tổng: ${ds.length} bản ghi.`, "", "| Ngả | Số |", "|---|---|",
     ...Object.entries(tong).sort().map(([k, v]) => `| ${k} | ${v} |`), "",
   ];
-  for (const [can, nhom] of Object.entries(mau)) {
-    out.push(`## Mẫu căn cứ ${can} (${nhom.length}/${tong[can]})`, "", "| Tên nguồn | Tỉnh | Xã | Nút danh bạ |", "|---|---|---|---|", ...nhom.map(dong), "");
+  if (mau.length) {
+    // Bảng đếm nằm ở phần tổng (trước mục «##» đầu tiên): chỉ có nhãn và số đếm, không có tên hay mã dự án nguồn.
+    out.push("**Nối theo hạng nút đích**", "", "| Căn cứ | Hạng nút | Nguồn đúc nút | Số |", "|---|---|---|---|",
+      ...mau.map((x) => `| ${x.can} | ${NHAN_HANG[x.hang] ?? x.hang} | ${x.nguonDuc ?? "—"} | ${x.dem} |`), "");
+  }
+  for (const x of mau) {
+    out.push(`## Mẫu căn cứ ${nhanO(x)} (${x.mau.length}/${x.dem})`, "", "| Tên nguồn | Tỉnh | Xã | Nút danh bạ |", "|---|---|---|---|", ...x.mau.map(dong), "");
   }
   out.push(`## Nối sẵn mà bóng ra khác (${lech.length})`, "");
   if (nguon === NGUON_DA55 && lech.length) out.push("Nối tay gắn dự án con vào dự án cha: khác do quy ước dự án con có cha (ROADMAP §3 mục 39).", "");
@@ -105,7 +134,7 @@ const coNut = (kq) => kq.nga === "noi" || kq.nga === "giu";
 
 /** Áp thẻ đúng băm. Băm lệch → ném «bam-lech», không ghi gì. Trạng thái đã đúng → {khongDoi: true}. */
 export async function apThe(client, { nguon, bam, nguoi, giaoDich = "rieng", _sauBiDanh = null }) {
-  if (nguon === NGUON_DA55) throw new Error("S08 do thẻ luật DA55 nối — DA3 không áp S08");
+  if (NGUON_KHONG_AP[nguon]) throw new Error(`${NGUON_KHONG_AP[nguon]} — DA3 không áp ${nguon}`);
   if (!NGUON_DANH_MUC.includes(nguon)) throw new Error(`nguon-la: ${nguon}`);
   if (!/^[0-9a-f]{64}$/.test(String(bam ?? ""))) throw new Error("bam-sai-khuon: cần --bam <64 hex>");
   if (!String(nguoi ?? "").trim()) throw new Error("thieu-nguoi: cần --nguoi <tên>");

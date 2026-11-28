@@ -5,7 +5,6 @@
 import { createHash } from "node:crypto";
 
 import { chuanKhop, DO_DAI_BI_DANH } from "./noi-du-an-s06-lop.mjs";
-import { NOI_KHU_S09 } from "./s09-du-an.mjs";
 import { duoiDuAn, NOI_DU_AN_S16 } from "./s16-danh-muc.mjs";
 
 export const CAN_CU = Object.freeze(["K1", "K2", "K3", "T"]);
@@ -67,15 +66,16 @@ export async function docNut(client) {
            coalesce((SELECT array_agg(s.id) FROM areas s WHERE s.id = ANY (n.area_ids) AND s.region_type = 'submarket'), '{}') AS xa
       FROM asset_nodes n LEFT JOIN areas a ON a.id = n.area_ids[1]
      WHERE n.node_type = 'project' ORDER BY n.id`);
-  return rows.map((r) => ({ id: r.id, ten: r.name, slug: r.slug, tier: r.tier, tinh: r.tinh, xa: new Set(r.xa),
+  // nguonDuc: nguồn đúc nút ứng viên — meta.nguon (S06, S08) hoặc meta.nguon_ung_vien (S09 do DA42); nút đã xác minh để null.
+  return rows.map((r) => ({ id: r.id, ten: r.name, slug: r.slug, tier: r.tier, nguonDuc: r.meta?.nguon ?? r.meta?.nguon_ung_vien ?? null, tinh: r.tinh, xa: new Set(r.xa),
     khoa: khoaNut(r.name, r.aliases ?? []), diem: r.meta?.diem ?? null, mst: r.meta?.mst ?? null }));
 }
 
-/** Nối có sẵn của nguồn: chép cứng (S09, S16), bảng tay và thẻ DA55 (S08), dòng project_links nối không do DA3 ghi. */
+/** Nối có sẵn của nguồn: chép cứng (S16), bảng tay và thẻ DA55 (S08), dòng project_links nối không do DA3 ghi. S09 không còn qua
+ *  đây (DA42 nối S09; DA3 từ chối dựng thẻ S09, phạm vi 27/11). */
 export async function docNoiSan(client, nguon, { maDa3 = [] } = {}) {
   const ra = new Map();
   const slugNut = async (slug) => (await client.query("SELECT id::int FROM asset_nodes WHERE slug = $1", [slug])).rows[0]?.id ?? null;
-  if (nguon === "S09") for (const [ma, slug] of Object.entries(NOI_KHU_S09)) { const id = await slugNut(slug); if (id) ra.set(ma, id); }
   if (nguon === "S16") {
     const { rows } = await client.query(
       `SELECT DISTINCT payload -> 'html' ->> 'slug' AS ma FROM stg_s16_item WHERE kind = 'du-an' AND payload -> 'html' ->> 'slug' IS NOT NULL

@@ -50,6 +50,7 @@
     "scripts/tinh-cu.test.mjs",
     "scripts/ban-ghi-nguon.test.mjs",
     "scripts/khop-du-an.test.mjs",
+    "scripts/noi-du-an-nguon-the.test.mjs",
     "scripts/thay-nguon-hook.test.mjs",
     "scripts/noi-du-an-s08-lop.test.mjs"
   ],

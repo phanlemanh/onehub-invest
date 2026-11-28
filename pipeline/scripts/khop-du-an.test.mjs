@@ -77,6 +77,31 @@ test("BN-AC-3 bam-doi-khi-ket-cuc-doi", () => {
   assert.notEqual(bamKetCuc(doi), h);
 });
 
+// Ô biên K2 (Hỏi-1, Mạnh duyệt 28/11; ngưỡng 300 m của thiết kế §3.2). Nút ứng viên do S08 đúc có điểm (21.0, 105.75).
+// 1° vĩ độ ≈ 111.195 m: 150 m ≈ 0,001349°, 301 m ≈ 0,002707°, 350 m ≈ 0,003148°. Quá ngưỡng thì không ra K2 mà rơi xuống ngả
+// kế theo thứ tự K2 → K3 → T: cùng xã → K3, khác xã → T (tên trùng đúng một nút cùng tỉnh).
+const NUT_S08 = [nut(7, "Celesta Gold", "vn-hcmc", ["x-nha-be"], { diem: { lat: 21.0, lng: 105.75 } })];
+const BIEN_K2 = [
+  ["150m", bg("Celesta Gold", "vn-hcmc", "x-khac", { diem: { lat: 21.001349, lng: 105.75 } }), { nga: "noi", can_cu: "K2", node_id: 7 }],
+  ["301m-khac-xa", bg("Celesta Gold", "vn-hcmc", "x-khac", { diem: { lat: 21.002707, lng: 105.75 } }), { nga: "noi", can_cu: "T", node_id: 7 }],
+  ["350m-khac-xa", bg("Celesta Gold", "vn-hcmc", "x-khac", { diem: { lat: 21.003148, lng: 105.75 } }), { nga: "noi", can_cu: "T", node_id: 7 }],
+  ["301m-cung-xa", bg("Celesta Gold", "vn-hcmc", "x-nha-be", { diem: { lat: 21.002707, lng: 105.75 } }), { nga: "noi", can_cu: "K3", node_id: 7 }],
+];
+const kiemBienK2 = (fn) => { for (const [ten, b, mong] of BIEN_K2) assert.deepEqual(goc(fn(b, NUT_S08)), mong, `ô K2 biên ${ten} (nguong 300)`); };
+
+test("BN-AC-2 k2-bien-300m: 150 m ra K2; 301 m, 350 m khong ra K2", () => kiemBienK2(xepNga));
+
+test("BN-AC-2 chieu-do: nang nguong K2 len 400 m thi o 350 m do", async () => {
+  const src = readFileSync(join(LIB, "khop-du-an.mjs"), "utf8");
+  const tu = "const K2_M = 300;";
+  assert.ok(src.includes(tu), "đột biến ngưỡng không áp được");
+  const ban = src.replace(tu, "const K2_M = 400;").replace(/from "\.\/([^"]+)"/g, (_m, t) => `from "${pathToFileURL(join(LIB, t)).href}"`);
+  const f = join(TAM, "khop-dot-k2.mjs");
+  writeFileSync(f, ban);
+  const m = await import(pathToFileURL(f).href);
+  assert.throws(() => kiemBienK2(m.xepNga), /ô K2 biên 301m-khac-xa \(nguong 300\)|ô K2 biên 350m-khac-xa \(nguong 300\)/);
+});
+
 test("BN-AC-2 chieu-do: bo dieu kien cung tinh thi o khac-tinh do", async () => {
   const src = readFileSync(join(LIB, "khop-du-an.mjs"), "utf8");
   const tu = "n.tinh === b.tinh && n.khoa.has(b.ten_chuan)";
