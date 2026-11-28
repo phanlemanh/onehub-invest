@@ -58,7 +58,7 @@ async function cayTin(oid: string, kind: string, source: string, gia: number, pe
 async function hang(oid: string, kind: string, cap: string, nut: string) {
   await sql(
     `INSERT INTO offer_price_rank (offer_id, kind, property_type, thuoc, cap, nut, n, trung_vi, p20, hang_pct, duoi_trung_vi_pct, nhan, can_xac_minh, ly_do, run_id)
-     VALUES ($1, $2, 'apartment', 'gia-m2', $3, $4, 12, 90000000, 75000000, 8, 49.0, 're-trong-phuong', false, 'pb10', 'pb10-run')`,
+     VALUES ($1, $2, 'apartment', 'gia-m2', $3, $4, 12, 90000000, 75000000, 8, 50.0, 're-trong-phuong', false, 'pb10', 'pb10-run')`,
     [oid, kind, cap, nut],
   );
 }
