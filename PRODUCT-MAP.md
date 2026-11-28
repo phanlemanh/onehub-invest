@@ -12,7 +12,7 @@ flowchart TD
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>22 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>251 việc"]
+  GB --> DG["Đã giao<br/>260 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>148 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
@@ -248,6 +248,7 @@ flowchart TD
 - Bốn tên viết tắt phân khu (ori, rb, bs, gh) vào danh bạ qua thẻ luật có băm, đảo được, để GT5 đọc phân khu từ danh bạ (`bi-danh-viet-tat-phan-khu`)
 - Bộ canh kênh S03 tắt gateway khi có lượt agent mới dù lượt đó chạy nhanh, nhờ đếm trên kho phiên thay vì dò chuỗi trong log (`bo-canh-dem-luot-agent`)
 - ca E4b đối chiếu tin rao nạp danh sách che qua hàm chung có cờ khớp nguyên cụm — main thôi đỏ sau khi áp che-ten (`ca-doi-chieu-tin-rao-nap-co-khop-cum`)
+- Ca dữ liệu thật của danh bạ vật thể xanh lại sau DA42, và ba mục ngoài hợp đồng của DA72 (DA73) (`ca-du-lieu-that-danh-ba-vat-the`) — đã giao — máy thông, cửa veto còn mở
 - Script đo ba vai của Căn giá tốt bỏ qua dòng sổ nguồn không có tên, không gãy giữa chừng và không báo «lộ tên nguồn» giả trên mọi trang (`can-gia-tot-ba-vai-ten-nguon-trong`)
 - Người vận hành thấy đúng tên người đăng, đúng lý do rời danh sách của căn đắt hơn thước, và đường về danh sách không quay lại chính trang một căn (`can-gia-tot-sua-ba-loi`)
 - Căn của tin chung bài đăng nhận theo khi đề xuất làm giàu được áp hay hoàn tác — migration 066 mở rộng chuỗi cập nhật căn của 063, kèm sửa một lần phần lệch đã có (`can-theo-tin-khi-phan-xu-lai`)
@@ -277,8 +278,12 @@ flowchart TD
 - Lược đồ mẫu của data-api bản công khai không còn tên nguồn thật ngoài tên bảng/cột đã biết — chú thích, dữ liệu mẫu source_registry và tên tệp dưới data-api/db dùng mã S0x (`data-api-don-ten-nguon`)
 - data-api đóng ba đường trả dữ liệu trái luật (HT19) — deals thôi trả nội dung bài S03, coverage và listings/:id thôi đọc bảng S02 (`data-api-dong-ba-route-lo`)
 - data-api đóng khi thiếu khoá (PB3) — môi trường không khai rõ là dev/test mà danh sách khoá API rỗng thì từ chối mọi lời gọi dữ liệu và bản Node không khởi động (`data-api-dong-khi-thieu-khoa`)
+- data-api theo RESO DD 2.1 (PB2) — một tài nguyên listing có kind đọc hai bảng, tên trường RESO camelCase, loại hình đúng PropertyType/PropertySubType, extension khai ở mappings.yaml, lược đồ mẫu và seed chạy trên DB rỗng (`data-api-hop-dong-reso-dd-2-1`)
 - data-api — bốn đường /v1/markets (danh sách, chi tiết, submarkets, insights) thôi đọc và thôi trả số S02; rào test đỏ khi route nào của data-api tham chiếu bảng S02 (`data-api-markets-khong-doc-s02`)
+- Ca «PB2-AC-11 price-stats» so /v1/price-stats với route asset-stats cũ ở một commit CỐ ĐỊNH trước PB2 (75f32bd55) thay vì merge-base với origin/main, để ca không đỏ sẵn trên main sau khi PB2 đã gộp (PB9) (`data-api-price-stats-so-nen-co-dinh`) — đã giao — máy thông, cửa veto còn mở
 - data-api — tài nguyên Property (danh bạ nhà): tra toà và căn theo mã OneHub hoặc theo dự án + toà + mã căn, trả khung định danh và thuộc tính căn theo tên RESO DD 2.1, không cho dò hàng loạt (`data-api-property-danh-ba-nha`)
+- Lược đồ mẫu của data-api (db/schema.sql + seed.sql) đủ bảng cho tài nguyên Property (danh bạ nhà), và một probe gọi mọi đường khai trong /openapi.json trên DB mẫu để route nào trả 500 thì đỏ (PB8) (`data-api-schema-mau-du-bang-property`) — đã giao — máy thông, cửa veto còn mở
+- data-api chỉ trả tin hiển thị được (PB7) — /v1/listings ở mọi nhánh, bộ lọc, căn giá tốt và chi tiết không trả tin của nguồn S02, S08; danh sách nguồn ẩn một nguồn chung với cổng Invest (`data-api-tin-hien-thi`)
 - Dấu lược đồ của bản mẫu DB thử phủ constraint, index, trigger, enum, độ dài kiểu, NOT NULL, DEFAULT, RLS, quyền và schema ngoài public, để bản mẫu dựng lại ngay khi migration đổi những thứ đó (`dau-luoc-do-ban-mau`)
 - DB máy thu chỉ nghe nội bộ (127.0.0.1) và chỉnh tham số Postgres (`db-chi-nghe-noi-bo-va-chinh-postgres`)
 - Suite pipeline của lượt chấm chạy trên cụm Postgres dùng một lần (DB trống chuẩn CI), ca dữ liệu thật tách thành suite kích hẹp, sao lưu bỏ DB thử của suite (`db-thu-tach-khoi-cum-that`)
@@ -391,6 +396,7 @@ flowchart TD
 - Suite pipeline_that chạy trên máy phát triển bỏ qua có tên, có đếm các ca chỉ máy thu chạy được; trên máy thu vẫn chạy đủ (`pipeline-that-ca-may-thu-co-ten-tren-may-phat-trien`) — đã giao — máy thông, cửa veto còn mở
 - Job nạp Zalo đêm chạy sáu bước — đọc gộp S03 hằng ngày sau nhả khoá nạp, trước enrich; bộ test job Zalo đo đúng bước mới (`pl34-lich-dem-sau-buoc`)
 - Vá ranh giới cổng — Căn giá tốt sang Ops, gỡ AirDNA khỏi Mô phỏng đầu tư (`portal-deals-airdna`)
+- Probe đối chiếu màn Danh bạ (/ops/registry) đếm phân khu theo cùng luật nghỉ với màn, nên xanh lại trên main và làm mốc trước/sau cho hàng sửa ô danh mục (`probe-danh-ba-dem-theo-luat-nghi`) — đã giao — máy thông, cửa veto còn mở
 - Bộ kiểm sổ bề mặt API (check-api-surface) không đỏ vì tệp đột biến tạm của test khác bị xoá giữa lúc quét — CI app thôi đỏ chập chờn ở QV-AC-9 (`qv-ac-9-khong-chap-chon`)
 - Khu vực Hà Nội chỉ gồm phường/xã của Hà Nội; metrics tính lại theo ranh giới đúng (`ranh-gioi-khu-vuc-dung`)
 - script đo nền hiệu năng chỉ chạy trên DB local — rào assertLocalDatabaseUrl trước mọi lệnh ghi DB (`rao-db-local-do-nen`)
@@ -415,6 +421,8 @@ flowchart TD
 - Kho khớp lịch S06 2 lượt mỗi ngày đã cài trên máy thu — plist chotot trong main mang mốc 05:30 và 14:00, không va lịch job khác (`s06-hai-luot-ngay-gop-main`)
 - bộ thu S06 nhận mã tỉnh params.region bên cạnh region_v2, để bật được vùng mà mã cũ không hoạt động (`s06-region-tinh`)
 - Đưa bộ thu đuôi S06 của làn thu vào main (chỉ mã thu và test, chưa lịch, chưa nạp) (`s06-thu-duoi-do`)
+- Đưa lớp lịch thu đuôi S06 của làn thu vào main (wrapper một vòng, chọn-nạp snapshot, khuôn plist) — chưa cài lịch (`s06-thu-duoi-lich-va-chon-snapshot`)
+- Bản thu đuôi S06 hỏng không còn chặn hàng đợi nạp của vùng — wrapper bỏ qua có ghi dấu, không xoá, không sửa raw (`s06-thu-duoi-snapshot-hong-khong-chan`)
 - Trần trang thu S06 mặc định 210, 403/429 dừng cả lượt không thử lại, kèm số đo chuỗi đêm khi nạp 55 nghìn tin (`s06-tran-trang`)
 - tin S06 của vùng mới (Đà Nẵng, Hải Phòng, Bình Dương đã sáp nhập vào TP.HCM) lên canonical có phường — mã thị trường ngắn một khuôn (migration 064), bước nạp phường và bước chuyển S06 đọc thành phố từ một chỗ ánh xạ thay cho danh sách cứng (`s06-vung-moi-len-canonical`)
 - S08 thu đúng một lượt mỗi tuần theo launchd và có SLO độ tươi 192 giờ (`s08-lich-tuan`)
@@ -449,6 +457,7 @@ flowchart TD
 - ảnh mẫu snapshot trong các bộ test scripts/ có manifest, theo cổng «chỉ nạp snapshot đã ghi xong» của 2510-8 (`test-anh-mau-co-manifest`) — đã giao — máy thông, cửa veto còn mở
 - Các ca test /ops/deals cũ (CG8, CGT, CGB) tự dựng tiền đề «chưa có hạng» trong giao dịch — xanh cả khi DB của lượt là bản chép máy thu đã có dòng offer_price_rank (`test-deals-bang-hang-rong`)
 - test gỡ đúng worktree tạm của mình — bỏ git worktree prune trên kho dùng chung (zalo-import-job-lan.test.mjs và selftest hook typecheck-changed) (`test-khong-prune-worktree`)
+- Test tự dựng bảng rồi ghi không rơi về DB chung — rào hai tệp, thiếu URL thì bỏ qua có lời (`test-khong-roi-ve-db-chung`)
 - test app thôi đỏ nền khi nhiều bộ test dùng chung DB :5433 — giới hạn song song, thử lại lỗi DB tạm thời; chứng CT-AC-1 không còn phụ thuộc nhịp chờ (`test-nen-on22-on12`)
 - hai bộ test scripts/ theo khuôn tên snapshot và captured_at = giờ thu sau (`test-scripts-sau-87-90`) — đã giao — máy thông, cửa veto còn mở
 - npm test của app, pipeline, agent và eval SD-AC-6 chạy trên DB của riêng lượt bằng db-thu, không tranh khoá với job và phiên khác trên DB chung (`test-suite-db-thu`)
