@@ -40,7 +40,7 @@ chứng nhánh nhường lượt vẫn chạy với `pgrep` thật trên một t
   `scripts/thu-duoi-s06.sh` không đổi (hành vi mặc định ở máy thu giữ nguyên).
 - AC-5: Given mã mới, When chạy tệp test shim của ZC18 (`scripts/thu-duoi-s06.test.mjs`, `scripts/install-cron-chi.test.mjs`),
   Then xanh như trên main.
-- AC-6: Given `soat-tien-trinh.md` của hồ sơ, When rút lại từ mã danh sách tệp trong `scripts/**` và `pipeline/**` gọi
+- AC-6: Given `soat-tien-trinh.md` của hồ sơ, When lấy lại từ mã danh sách tệp trong `scripts/**` và `pipeline/**` gọi
   `pgrep`, `pidof` hay `launchctl list`, Then mỗi tệp có một dòng trong bảng soát kèm kết luận, và dòng của
   `pipeline/scripts/thu-duoi-chon-nap-e2e.test.mjs` ghi «sửa trong hàng».
 
@@ -53,7 +53,7 @@ Không gian ca là các đường một test chạm tiến trình thật của m
 - Trục nhánh nhường lượt: còn chạy với `pgrep` thật · bị tắt thì test bắt → AC-2, AC-3
 - Trục hành vi chạy thật: wrapper không đổi → AC-4
 - Trục không phá lời hứa cũ: test shim ZC18 → AC-5
-- Trục các test khác cùng kiểu: bảng soát rút từ mã (`pgrep`, `pidof`, `launchctl`), mỗi dòng có kết luận → AC-6. Phần
+- Trục các test khác cùng kiểu: bảng soát lấy từ mã (`pgrep`, `pidof`, `launchctl`), mỗi dòng có kết luận → AC-6. Phần
   tệp khoá/pid (`*.lock`, `kill -0`) chỉ soát tay, ghi cuối bảng soát — không có máy đo.
 - Số đếm (soát 28/11 trên 2beb7d6ba): 1 tệp test phụ thuộc máy thật không chủ ý (ca e2e này); 1 tệp cố ý đọc máy thu thật
   (ON22-AC-10, đã nằm trong `scripts/ci-bo-qua.json`); các tệp còn lại có shim hoặc chạy trên bản chép tạm.
