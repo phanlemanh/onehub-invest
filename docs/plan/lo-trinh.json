@@ -6460,7 +6460,8 @@
       "vung": [
         "data-api/src/routes",
         "data-api/src/lib"
-      ]
+      ],
+      "slug": "data-api-nguon-an-dong-khi-so-rong"
     },
     {
       "ma": "PB12",
@@ -6479,7 +6480,8 @@
       "vung": [
         "data-api/src/contract",
         "data-api/src/app.ts"
-      ]
+      ],
+      "slug": "data-api-bang-duong-lop"
     },
     {
       "ma": "PB13",
@@ -6498,7 +6500,8 @@
       "vung": [
         "db/migrations",
         "data-api/db"
-      ]
+      ],
+      "slug": "khach-api-bon-bang-va-quyen"
     },
     {
       "ma": "PB14",
@@ -6520,7 +6523,8 @@
       "vi_sao": "Thay so chuỗi DATA_API_KEYS bằng khoá băm + thoả thuận (mục 65). Đứng sau PB12, PB13, PB10 và PB7; PB7 chưa có hàng trong lộ trình nên ghi ở đây. Tới khi hàng này gộp không đưa khoá cho bên ngoài.",
       "vung": [
         "data-api/src/middleware"
-      ]
+      ],
+      "slug": "data-api-kiem-khoa-khach-tu-db"
     },
     {
       "ma": "PB15",
@@ -6540,7 +6544,8 @@
       "vi_sao": "Mục 65 câu 5: nội bộ 50.000, đối tác thử 5.000 lượt/ngày, chỉnh sau một tuần đo. Đếm trong Postgres vì Vercel chạy nhiều bản song song.",
       "vung": [
         "data-api/src/middleware"
-      ]
+      ],
+      "slug": "data-api-han-muc-ngay"
     },
     {
       "ma": "PB16",
@@ -6562,7 +6567,8 @@
         "app/src/app/ops/api-clients",
         "app/src/components/ops/api-clients",
         "app/src/lib/ops-access.ts"
-      ]
+      ],
+      "slug": "ops-khach-api"
     },
     {
       "ma": "PB17",
@@ -6581,7 +6587,8 @@
       "vung": [
         "data-api/src/routes/properties.ts"
       ],
-      "ghi_chu": "Dưới mục tiêu cỡ; giữ riêng vì là hợp đồng mới có tên từ PB6, không cùng kết quả với hàng nào khác của đợt."
+      "ghi_chu": "Dưới mục tiêu cỡ; giữ riêng vì là hợp đồng mới có tên từ PB6, không cùng kết quả với hàng nào khác của đợt.",
+      "slug": "data-api-property-khong-doc-source-registry"
     },
     {
       "ma": "HT44",
@@ -6600,7 +6607,259 @@
       "vung": [
         "scripts/chuyen-huong-ma-thi-truong"
       ],
-      "ghi_chu": "Dưới mục tiêu cỡ; việc giữ thước, không gộp được với hàng nào của đợt."
+      "ghi_chu": "Dưới mục tiêu cỡ; việc giữ thước, không gộp được với hàng nào của đợt.",
+      "slug": "chm-api-sau-insights-410"
+    },
+    {
+      "ma": "PB18",
+      "slug": "data-api-lien-he-nguoi-ban-trong-tin",
+      "dot": "quan-ly-khach-api-2811",
+      "nhom": "be-mat-api",
+      "phu": [
+        "PB18"
+      ],
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "dung_tren": [
+        "PB14",
+        "PB15"
+      ],
+      "cau_giao": "Khoá có lớp L3 nhận khối liên hệ người bán (tên, SĐT E.164, căn cứ của số) ngay trong tin của /v1/listings, trong hạn mức tin có liên hệ mỗi ngày",
+      "bat_khi": "Khoá có L3 nhận listAgent, khoá thiếu L3 không nhận; vượt hạn mức tin có liên hệ thì tin vẫn trả nhưng không có listAgent; cấy ngày sinh, giới tính vào dòng nguồn thì ca chiều đỏ đỏ",
+      "vi_sao": "ROADMAP §3 mục 65 câu (6), (7)(c), (8): Mạnh 06:51Z, 06:53Z sửa luật 02/11 «số không nằm trong danh sách API» cho riêng data-api; hạn mức nội bộ 20.000, đối tác 2.000 tin/ngày là lớp chặn lấy số hàng loạt.",
+      "vung": [
+        "data-api/src/routes",
+        "data-api/src/contract",
+        "data-api/src/middleware"
+      ]
+    },
+    {
+      "ma": "PB19",
+      "slug": "data-api-truong-zalo-trong-lien-he",
+      "dot": "quan-ly-khach-api-2811",
+      "nhom": "be-mat-api",
+      "phu": [
+        "PB19"
+      ],
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 6,
+      "dung_tren": [
+        "PB18",
+        "EN3"
+      ],
+      "cau_giao": "Khối liên hệ người bán trong tin của data-api mang hồ sơ Zalo đã tra (có Zalo, tên hiển thị, lúc tra, ảnh đại diện), không mang trường cấm",
+      "bat_khi": "Bốn trạng thái Zalo (có, không, chưa tra, tra lỗi) trả đúng hasZalo, zaloDisplayName, zaloCheckedAt, zaloAvatarUrl; không trường cấm nào (ngày sinh, giới tính, uid, global_id, ảnh bìa, dữ liệu gốc) ra API, có ca chiều đỏ",
+      "vi_sao": "Mục 65 câu (9): Mạnh thêm ảnh đại diện. Data-api không tra Zalo, chỉ đọc kết quả EN3 đã nạp (EN4 là kho zalo-lookup).",
+      "vung": [
+        "data-api/src/routes",
+        "data-api/src/contract"
+      ],
+      "ghi_chu": "Dưới mục tiêu cỡ; giữ riêng vì phụ thuộc EN3 (chưa mở), khác nhịp với PB18."
+    },
+    {
+      "ma": "NG0",
+      "slug": "gop-nguoi-dang-va-nguoi-mang-so-s06",
+      "dot": "danh-ba-moi-gioi-2811",
+      "nhom": "danh-ba-nguoi",
+      "phu": [
+        "NG0"
+      ],
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "dung_tren": [
+        "HD13"
+      ],
+      "cau_giao": "Ở S06, người đăng tin và người mang số của cùng một tài khoản là một Người trong danh bạ, gộp có vết và đảo được",
+      "bat_khi": "Số môi giới có SĐT gắn vào chính mình từ 2 lên số đo sau gộp (trần trên khoảng 5.003); số người 0 tin giảm tương ứng; phép đếm SQL độc lập khớp; S1 đo nguyên nhân HD13 không phủ cặp này",
+      "vi_sao": "ROADMAP §3 mục 66: trong 5.152 cặp số của môi giới S06 chỉ 2 số gắn đúng người đăng; 13.887 người có 0 tin. Gộp theo luật HD13 (công tắc gộp, vết, tách lại).",
+      "vung": [
+        "pipeline/dung-nguoi.mjs",
+        "pipeline/lib/danh-ba-nguoi.mjs"
+      ]
+    },
+    {
+      "ma": "NG1",
+      "slug": "tong-hop-theo-nguoi",
+      "dot": "danh-ba-moi-gioi-2811",
+      "nhom": "danh-ba-nguoi",
+      "phu": [
+        "NG1"
+      ],
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "dung_tren": [
+        "NG0"
+      ],
+      "cau_giao": "Mỗi Người có một dòng tổng hợp tính sẵn ở pipeline: số tin theo trạng thái, khu và dự án chính, khoảng giá, tuần hoạt động, điểm tiềm năng",
+      "bat_khi": "Bảng tổng hợp khớp phép đếm SQL độc lập trên toàn bộ DB máy thu; chạy lại lần hai không đổi số; điểm tiềm năng là phát biểu suy luận, không gắn khu cố định",
+      "vi_sao": "Mục 66 câu (2): không giới hạn khu, dự án — khu và dự án là bộ lọc hay trọng số của đợt mời. Metrics tính sẵn ở pipeline (luật 10).",
+      "vung": [
+        "pipeline/sql",
+        "pipeline/lib/danh-ba-nguoi.mjs"
+      ]
+    },
+    {
+      "ma": "NG2",
+      "slug": "ho-so-360-nguoi",
+      "dot": "danh-ba-moi-gioi-2811",
+      "nhom": "danh-ba-nguoi",
+      "phu": [
+        "NG2"
+      ],
+      "hang": "T2",
+      "vai": "Ops",
+      "tieu_chi": 9,
+      "dung_tren": [
+        "NG1"
+      ],
+      "cau_giao": "Ops mở hồ sơ một môi giới bất kỳ và thấy thẻ liên hệ, vùng hoạt động, danh sách tin bấm được, lịch sử hoạt động, chân dung và bằng chứng",
+      "bat_khi": "Mở một môi giới bất kỳ của S03, S05, S06 trên /ops/people/[partyKey] đều thấy đủ vùng; vùng thiếu dữ liệu ghi «chưa biết»; không còn cột khoá băm",
+      "vi_sao": "Mục 66: Mạnh muốn màn này thành danh bạ liên hệ chi tiết (vùng hoạt động, danh sách tin, lịch sử, profile). Thân PersonBody dùng chung cho sheet và trang.",
+      "vung": [
+        "app/src/app/ops/people",
+        "app/src/components/ops/people"
+      ]
+    },
+    {
+      "ma": "NG3",
+      "slug": "danh-sach-moi-gioi",
+      "dot": "danh-ba-moi-gioi-2811",
+      "nhom": "danh-ba-nguoi",
+      "phu": [
+        "NG3"
+      ],
+      "hang": "T2",
+      "vai": "Ops",
+      "tieu_chi": 8,
+      "dung_tren": [
+        "NG1"
+      ],
+      "cau_giao": "Ops lọc danh sách Môi giới theo khu, dự án, hoạt động, loại liên hệ và thấy ai sẵn sàng gọi, xếp theo điểm tiềm năng",
+      "bat_khi": "Ô «Sẵn sàng gọi» trên màn đổi từ 2 lên số đo sau NG0, tách hai mức số xác minh và số suy ra; ẩn được người 0 tin",
+      "vi_sao": "Mục 66: danh bạ phục vụ đợt mời; khu và dự án là bộ lọc.",
+      "vung": [
+        "app/src/app/ops/people",
+        "app/src/components/ops/people"
+      ]
+    },
+    {
+      "ma": "NG4",
+      "slug": "truong-zalo-tren-ho-so-nguoi",
+      "dot": "danh-ba-moi-gioi-2811",
+      "nhom": "danh-ba-nguoi",
+      "phu": [
+        "NG4"
+      ],
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 6,
+      "dung_tren": [
+        "EN3",
+        "NG2"
+      ],
+      "cau_giao": "Hồ sơ và danh sách Người trên Ops hiện trường Zalo; ngày sinh, giới tính chỉ hiện khi trang chạy ở máy thu và người xem là owner",
+      "bat_khi": "Ô «Có Zalo» từ 0 lên số đo; cấy ngày sinh, giới tính vào bản cloud thì bộ soát đỏ",
+      "vi_sao": "Mục 66 câu (5): ở máy thu hiện đủ hồ sơ Zalo vì chỉ Mạnh xem, chặn hai lớp (máy thu và vai owner); luật 18/11 giữ: hai trường không lên cloud. Sau EN3.",
+      "vung": [
+        "app/src/components/ops/people"
+      ],
+      "ghi_chu": "Dưới mục tiêu cỡ; T3 vì chạm dữ liệu nhạy cảm chỉ ở máy thu, không gộp với hàng T2."
+    },
+    {
+      "ma": "NG5",
+      "slug": "danh-ba-nguoi-len-cloud",
+      "dot": "danh-ba-moi-gioi-2811",
+      "nhom": "danh-ba-nguoi",
+      "phu": [
+        "NG5"
+      ],
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 7,
+      "dung_tren": [
+        "NG1"
+      ],
+      "cau_giao": "Danh bạ Người và bảng tổng hợp theo người có trên bản cloud, chỉ ở /ops cho vai ops trở lên",
+      "bat_khi": "Bản cloud mở được hồ sơ một người; không có ngày sinh, giới tính; bộ soát đường cloud xanh, cấy một trường cấm thì đỏ",
+      "vi_sao": "Mục 66 câu (3). DDL cloud và lượt đẩy đầu cần lời riêng của Mạnh khi tới bước.",
+      "vung": [
+        "pipeline/sync-cloud.mjs"
+      ],
+      "ghi_chu": "Dưới mục tiêu cỡ; T3 (sync-cloud thuộc t3_paths), tách khỏi hàng T2."
+    },
+    {
+      "ma": "NG6",
+      "slug": "trao-danh-sach-tiem-nang-qua-api",
+      "dot": "danh-ba-moi-gioi-2811",
+      "nhom": "danh-ba-nguoi",
+      "phu": [
+        "NG6"
+      ],
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 6,
+      "dung_tren": [
+        "PB14",
+        "NG3"
+      ],
+      "cau_giao": "Khách nội bộ có khoá L3 nhận được danh sách môi giới tiềm năng qua API, có nhật ký, không bao giờ có người «không liên hệ»",
+      "bat_khi": "Một danh sách 50 người được trao và nhận đúng, có nhật ký; người «không liên hệ» không bao giờ có mặt",
+      "vi_sao": "Mục 66: sau này mở API riêng cho khách nội bộ; đi qua lớp khách API (mục 65).",
+      "vung": [
+        "data-api/src/routes"
+      ],
+      "ghi_chu": "Dưới mục tiêu cỡ; phụ thuộc lớp khách API, khác nhịp với các hàng Ops."
+    },
+    {
+      "ma": "NG7",
+      "slug": "quy-trinh-moi-moi-gioi",
+      "dot": "danh-ba-moi-gioi-2811",
+      "nhom": "danh-ba-nguoi",
+      "phu": [
+        "NG7"
+      ],
+      "hang": "T3",
+      "vai": "Ops",
+      "tieu_chi": 10,
+      "dung_tren": [
+        "NG2",
+        "NG3"
+      ],
+      "cau_giao": "Ops giao người phụ trách cho một nhóm môi giới, kéo thẻ qua các trạng thái tiếp cận và ghi nhật ký cuộc gọi trên hồ sơ",
+      "bat_khi": "Ô «Đã liên hệ tuần này» từ 0 lên số thật; người «không liên hệ» bị loại khỏi mọi danh sách xuất; mọi thao tác ghi ops_audit",
+      "vi_sao": "Mục 66 câu (1), (4): quy trình mời đặt trong /ops (sửa ADR-0017, lời 03/11); người thật gọi từng người, không gửi tin hàng loạt (luật 8). Bảng tiếp cận ghi ở đâu chốt ở Cổng Phạm vi của NG7; ghi lên cloud cần lời riêng về DDL.",
+      "vung": [
+        "app/src/app/ops/people",
+        "app/src/components/ops/people",
+        "db/migrations"
+      ]
+    },
+    {
+      "ma": "NG8",
+      "slug": "api-noi-bo-quy-trinh-moi",
+      "dot": "danh-ba-moi-gioi-2811",
+      "nhom": "danh-ba-nguoi",
+      "phu": [
+        "NG8"
+      ],
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 6,
+      "dung_tren": [
+        "NG7",
+        "PB14"
+      ],
+      "cau_giao": "Một ứng dụng nội bộ đọc được danh sách tiềm năng và trạng thái tiếp cận, ghi được trạng thái, qua lớp khách API",
+      "bat_khi": "Một ứng dụng nội bộ đọc danh sách tiềm năng và trạng thái tiếp cận, ghi một trạng thái; khoá thiếu lớp bị chặn",
+      "vi_sao": "Mục 66 câu (1): sau này mở API riêng cho khách nội bộ.",
+      "vung": [
+        "data-api/src/routes"
+      ],
+      "ghi_chu": "Dưới mục tiêu cỡ; đứng cuối đường găng, sau NG7."
     }
   ],
   "chan_troi": [
