@@ -40,7 +40,7 @@ const ROTATION = {
   next: TEN.map((name, i) => ({ id: String(100 + i), name, lastCapturedAt: null })),
 }
 const DAYS = Array.from({ length: 7 }, (_, i) => ({
-  day: `2026-10-${String(25 - i).padStart(2, "0")}`, airbnbListingsSeen: 3, airbnbSnapshots: 1, zaloPosts: 2, zaloOffers: 1,
+  day: `2026-10-${String(25 - i).padStart(2, "0")}`, airbnbListingsSeen: 3, airbnbSnapshots: 1, zaloPosts: 2, zaloOffers: 1, s03ActiveOffers: 2,
 }))
 
 let fmt: typeof import("../src/lib/format")
@@ -124,12 +124,18 @@ describe("ON6-AC-1 tab Listing", () => {
   })
 })
 
-/** Lỗi mô tả biểu đồ theo tab: phải nói đang đếm gì, kèm tổng và giờ VN. */
-function loiMoTa(tab: "listings" | "zalo", text: string, total: number): string[] {
-  const can = tab === "listings" ? "Listing tự thu (S01)" : "Bài thô và tin rao S03 theo ngày đăng"
+/** Lỗi mô tả biểu đồ theo tab: phải nói đang đếm gì, kèm tổng và giờ VN. Tab S03 (ON25): tổng bài nhận và tổng tin rao mới
+ * nêu riêng, không gộp thành «bản ghi». */
+function loiMoTa(tab: "listings" | "zalo", text: string, total: number, tinMoi?: number): string[] {
+  const can = tab === "listings" ? "Listing tự thu (S01)" : "S03 theo ngày đăng"
   const out: string[] = []
   if (!text.includes(can)) out.push(`${tab}: thiếu «${can}»`)
-  if (!text.includes(fmt.fmtInt(total))) out.push(`${tab}: thiếu tổng ${total}`)
+  if (tab === "listings" && !text.includes(fmt.fmtInt(total))) out.push(`${tab}: thiếu tổng ${total}`)
+  if (tab === "zalo") {
+    if (!text.includes(`${fmt.fmtInt(total)} bài nhận`)) out.push(`${tab}: thiếu tổng bài nhận ${total}`)
+    if (!text.includes(`${fmt.fmtInt(tinMoi ?? 0)} tin rao mới`)) out.push(`${tab}: thiếu tổng tin rao mới ${tinMoi}`)
+    if (text.includes("bản ghi")) out.push(`${tab}: còn cộng bài với tin thành «bản ghi»`)
+  }
   if (!text.includes("giờ VN")) out.push(`${tab}: thiếu «giờ VN»`)
   return out
 }
@@ -137,12 +143,15 @@ describe("ON6-AC-2 mô tả biểu đồ", () => {
   test("ON6-AC-2 mô tả biểu đồ nói đang đếm gì theo tab", async () => {
     ready()
     const { describeMode } = await import("../src/components/ops/collections/sync-activity")
-    assert.deepEqual(loiMoTa("listings", describeMode("listings", 21), 21), [])
-    assert.deepEqual(loiMoTa("zalo", describeMode("zalo", 21), 21), [])
+    assert.deepEqual(loiMoTa("listings", describeMode("listings", DAYS), 21), [])
+    // ON25: tab S03 nêu riêng 14 bài nhận (7 × 2) và 7 tin rao mới (7 × 1), không cộng thành «bản ghi».
+    assert.deepEqual(loiMoTa("zalo", describeMode("zalo", DAYS), 14, 7), [])
   })
   test("ON6-AC-2 bản sao mô tả chung → báo tab", () => {
     ready()
     assert.deepEqual(loiMoTa("listings", "21 bản ghi trong 7 ngày (ngày theo giờ VN)", 21), ["listings: thiếu «Listing tự thu (S01)»"])
+    // ON25 chiều đỏ: câu cũ của tab S03 cộng bài với tin → báo.
+    assert.deepEqual(loiMoTa("zalo", "S03 theo ngày đăng — 14 bài nhận · 7 tin rao mới · 21 bản ghi, giờ VN", 14, 7), ["zalo: còn cộng bài với tin thành «bản ghi»"])
   })
 })
 
@@ -155,7 +164,7 @@ describe("ON6-AC-3 bảng luồng máy thu", () => {
   test("ON6-AC-3 bảng máy thu 5 cột, getFlowDays không đọc airdna", async () => {
     ready()
     const { FlowTable } = await import("../src/components/ops/collections-tables")
-    assert.deepEqual(thIds(await render(<FlowTable days={DAYS} />)), ["day", "airbnbSeen", "airbnbSnapshots", "zaloPosts", "zaloOffers"])
+    assert.deepEqual(thIds(await render(<FlowTable days={DAYS} />)), ["day", "airbnbSeen", "airbnbSnapshots", "zaloPosts", "zaloOffers", "s03ActiveOffers"])
     const { pool } = await import("../src/lib/db")
     const seen: string[] = []
     const orig = pool.query.bind(pool)

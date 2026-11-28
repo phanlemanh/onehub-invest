@@ -58,6 +58,7 @@ Luật chọn màu (chốt ở B3, Cổng Phạm vi 2026-10-23):
 | `hatch` | Vạch chéo + chấm "Khác" | zinc-300 | zinc-600 | Cơ cấu doanh thu | miễn |
 | `opsVolume` | Ops: bản ghi đã vào kho theo ngày | blue-600 (5,26) | blue-400 (6,79) | Ops — Luồng 7 ngày | |
 | `opsVolumeRaw` | Ops: bản ghi thô/chạm theo ngày | violet-600 (5,88) | violet-400 (6,28) | Ops — Luồng 7 ngày | |
+| `opsVolumeActive` | Ops: tin S03 có bài trong ngày (tập rộng hơn tin rao mới) | blue-500 (3,76) | blue-300 (9,89) | Ops — Luồng 7 ngày (ON25) | |
 
 - **Chuỗi chỉ có ở Ops** (biểu đồ của block Ops, vd `solution-dev-ops-*`): khai nhóm khoá riêng
   (tiền tố `ops`) trong `palette.ts`, giữ màu block gốc kèm cặp `dark:`; không lẫn vào các nghĩa
@@ -74,7 +75,7 @@ Biểu đồ của cổng Ops (đợt B1, `ui-clean-b1-ops`) — chuỗi chỉ c
 
 | Biểu đồ | File | Chuỗi → khoá |
 |---|---|---|
-| Luồng 7 ngày (`/ops/collections`) | `components/ops/collections/sync-activity.tsx` | Chế độ Listing: S01 listing tươi → `opsVolume`, S02 listing chạm → `opsVolumeRaw`; chế độ Tin Zalo: S03 offer vào DB → `opsVolume`, S03 post raw → `opsVolumeRaw` |
+| Luồng 7 ngày (`/ops/collections`) | `components/ops/collections/sync-activity.tsx` | Chế độ Listing: S01 listing tươi → `opsVolume`, S02 listing chạm → `opsVolumeRaw`; chế độ S03: tin rao mới → `opsVolume`, tin có bài hôm đó → `opsVolumeActive`, bài nhận → `opsVolumeRaw` (ON25: ba cột đứng cạnh nhau, không chồng) |
 
 `opsVolume` giữ sắc "volume" (xanh dương) của block gốc `solution-dev-ops-6`; `opsVolumeRaw` là chuỗi thứ hai (tím).
 Ô số và thanh phân đoạn của Ops dùng token trạng thái (`bg-success`, `bg-warning`, `bg-destructive`, `bg-muted-foreground/40`), không phải màu chuỗi.

@@ -58,13 +58,23 @@ export function FlowTable({ days, roles = {} }: { days: FlowDay[]; roles?: Sourc
         meta: NUM,
         enableSorting: true,
       },
+      // ON25: tin S03 khác nhau có bài đăng trong ngày (gồm tin cũ đăng lại) — đứng cạnh tin rao mới, không cộng với nó.
+      {
+        id: "s03ActiveOffers",
+        accessorFn: (r) => r.s03ActiveOffers,
+        header: ({ column }) => <DataGridColumnHeader title={`${sourceLabel("S03", roles)} — tin có bài hôm đó`} column={column} />,
+        cell: ({ row }) => fmtInt(row.original.s03ActiveOffers),
+        size: 170,
+        meta: NUM,
+        enableSorting: true,
+      },
     ],
     [roles]
   )
   return (
     <InsightGrid
       title="Luồng 7 ngày qua"
-      description="Số bản ghi theo nguồn, theo ngày (giờ VN); S03 tính theo ngày đăng bài; tin rao mới có sau lượt đọc đêm nên hôm nay chưa đủ"
+      description="Số bản ghi theo nguồn, theo ngày (giờ VN); S03 tính theo ngày đăng bài; tin rao mới là tin lần đầu thấy, tin có bài hôm đó gồm cả tin cũ đăng lại; hai cột tin có sau lượt đọc đêm nên hôm nay chưa đủ"
       data={days}
       columns={columns}
       getRowId={(r) => r.day}
@@ -80,7 +90,7 @@ function cloudCount(n: number | null, stale: boolean) {
 }
 
 /**
- * «Luồng 7 ngày qua» trên máy chủ (ON5, ADR-0014): hai cột S03 từ khối `luong7` máy thu đẩy lên, listing tươi S01 từ bảng
+ * «Luồng 7 ngày qua» trên máy chủ (ON5, ADR-0014): ba cột S03 từ khối `luong7` (ON25 thêm tin có bài hôm đó) máy thu đẩy lên, listing tươi S01 từ bảng
  * đã đồng bộ, snapshot S01 là bảng thô chỉ ở máy thu (ghi «Chỉ ở máy thu»), không cột S02 (luật 5 — ON6 gỡ cả ở máy thu).
  */
 export function CloudFlowTable({ days, stale, roles = {} }: { days: CloudFlowDay[]; stale: boolean; roles?: SourceRoles }) {
@@ -124,6 +134,16 @@ export function CloudFlowTable({ days, stale, roles = {} }: { days: CloudFlowDay
         accessorFn: (r) => r.zaloOffers ?? -1,
         header: ({ column }) => <DataGridColumnHeader title={`${sourceLabel("S03", roles)} — tin rao mới`} column={column} />,
         cell: ({ row }) => cloudCount(row.original.zaloOffers, stale),
+        size: 230,
+        meta: NUM,
+        enableSorting: true,
+      },
+      // ON25: bản tin trước ON25 không có khoá → null → «—» (không 0).
+      {
+        id: "s03ActiveOffers",
+        accessorFn: (r) => r.s03ActiveOffers ?? -1,
+        header: ({ column }) => <DataGridColumnHeader title={`${sourceLabel("S03", roles)} — tin có bài hôm đó`} column={column} />,
+        cell: ({ row }) => cloudCount(row.original.s03ActiveOffers, stale),
         size: 230,
         meta: NUM,
         enableSorting: true,

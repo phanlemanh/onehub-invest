@@ -229,7 +229,8 @@ test("GV-AC-4 getFlowDays gom ngày theo giờ VN trên lược đồ tạm", as
   canDb()
   const { getFlowDays } = await import("../src/lib/collections-queries")
   // ON6 (collections-khong-so-s02, luật 5): FlowDay không còn hai trường S02 — getFlowDays thôi đếm airdna_*.
-  const ngay = (day: string, n: number, zalo = n) => ({ day, airbnbListingsSeen: n, airbnbSnapshots: n, zaloPosts: zalo, zaloOffers: n })
+  // ON25: s03ActiveOffers = 0 — tin của lược đồ này không mang post_ids.
+  const ngay = (day: string, n: number, zalo = n) => ({ day, airbnbListingsSeen: n, airbnbSnapshots: n, zaloPosts: zalo, zaloOffers: n, s03ActiveOffers: 0 })
   const mong = [
     ngay("2026-10-24", 1), ngay("2026-10-23", 1), ngay("2026-10-22", 0), ngay("2026-10-21", 0),
     ngay("2026-10-20", 0), ngay("2026-10-19", 0), ngay("2026-10-18", 0, 1),

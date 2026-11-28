@@ -15,8 +15,9 @@ export type CloudLockdown = { layers: LockdownLayer[]; lastWatchdogAt: string | 
 /** Khối `s03` máy thu đẩy lên (ON4): N nhóm bật + hàng từng nhóm (chỉ tên — tầng C, Hỏi-1 = A). Tên `""` = nhóm chưa có
  * tên (bên ghi bỏ mã nhóm); `accepted` null = không biết số tin vào. `stale` theo `measured_at` CỦA KHỐI. */
 export type CloudS03 = { allowlistEnabled: number; groups: ZaloGroupRow[]; stale: boolean }
-/** Một ngày của khối `luong7` (ON5): hai cột S03 máy thu đếm sẵn — bài S03 thật theo ngày đăng, tin rao nguồn S03. */
-export type Luong7Day = { day: string; s03Posts: number; s03Offers: number }
+/** Một ngày của khối `luong7` (ON5): cột S03 máy thu đếm sẵn — bài S03 thật theo ngày đăng, tin rao mới nguồn S03, và (ON25) tin có
+ * bài hôm đó. Bản tin trước ON25 không có `s03ActiveOffers` → khoá vắng, trang hiện «—». */
+export type Luong7Day = { day: string; s03Posts: number; s03Offers: number; s03ActiveOffers?: number }
 
 export type CloudOpsView = {
   state: FactsState

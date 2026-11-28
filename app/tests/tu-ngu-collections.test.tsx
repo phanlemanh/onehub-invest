@@ -24,6 +24,16 @@ const BA_CAP: [string, string][] = [
   ["2 tin bị cổng chặn", "2 bài bị cổng chặn"],
 ]
 
+/** ON25 (ops-hien-dung-chang-s03): biến màu của biểu đồ Luồng 7 ngày — tab S03 xếp bài nhận · tin rao mới · tin có bài hôm đó.
+ * Khuôn khối CSS đúng như ChartContainer in; dựng từ bảng (khoá, màu sáng, màu tối), không chép tay chuỗi. */
+const khoiMau = (rows: [string, string, string][]) =>
+  `\n [data-chart=chart-_R_2_] {\n${rows.map(([k, l]) => `  --color-${k}: var(--color-${l});\n`).join("")}}\n\n\n` +
+  `.dark [data-chart=chart-_R_2_] {\n${rows.map(([k, , d]) => `  --color-${k}: var(--color-${d});\n`).join("")}}\n`
+const CAP_ON25: [string, string] = [
+  khoiMau([["airbnbListingsSeen", "blue-600", "blue-400"], ["zaloOffers", "blue-600", "blue-400"], ["zaloPosts", "violet-600", "violet-400"]]),
+  khoiMau([["airbnbListingsSeen", "blue-600", "blue-400"], ["zaloPosts", "violet-600", "violet-400"], ["zaloOffers", "blue-600", "blue-400"], ["s03ActiveOffers", "blue-500", "blue-300"]]),
+]
+
 /** Bản chụp: dòng đầu `<!-- sha: … sha256: … -->`, thân là markup. */
 function banChup(ten: string): string {
   const text = readFileSync(path.join(FIX, ten), "utf8")
@@ -53,7 +63,7 @@ const sapXep = (cap: [string, string][]) => [...cap].sort((x, y) => x[0].localeC
 test("TN-AC-7 markup chỉ khác bản chụp trước vòng đúng các cặp thay đã duyệt", async () => {
   const m = await renderHai(SYNC, TILES)
   const khac = [...soNutVanBan(banChup("sync.html"), m.sync), ...soNutVanBan(banChup("tiles.html"), m.tiles)]
-  assert.deepEqual(sapXep(khac), sapXep(BA_CAP))
+  assert.deepEqual(sapXep(khac), sapXep([...BA_CAP, CAP_ON25]))
   for (const html of [m.sync, m.tiles]) {
     assert.ok(!html.includes("Tin S03"), "còn «Tin S03»")
     assert.ok(!html.includes("tin bị cổng chặn"), "còn «tin bị cổng chặn»")
@@ -72,4 +82,54 @@ test("TN-AC-7 đối chứng: thêm một chuỗi đổi trong bản sao → hà
   const sao = m.tiles.replace("Qua cổng", "Đã qua cổng")
   assert.notEqual(sao, m.tiles, "bản sao phải đổi được")
   assert.deepEqual(soNutVanBan(m.tiles, sao), [["Qua cổng", "Đã qua cổng"]])
+})
+
+// ---------- ON25 (ops-hien-dung-chang-s03) AC-7: nhãn tab S03, không chồng cột, mô tả, «—» cho bản tin cũ, từ vựng ----------
+
+const NHAN_S03 = ["S03 · Cộng đồng — bài nhận", "S03 · Cộng đồng — tin rao mới", "S03 · Cộng đồng — tin có bài hôm đó"]
+/** Lỗi của tab S03: ba nhãn đúng thứ tự, không nhãn cũ, không chồng cột; tab Listing vẫn chồng. */
+function loiTabS03(m: { SERIES: Record<string, string[]>; configOf: (r: Record<string, string>) => Record<string, { label: string }>; stackOf: (x: "zalo" | "listings") => string | undefined }): string[] {
+  const out: string[] = []
+  const cfg = m.configOf({ S01: "Tự thu", S03: "Cộng đồng" })
+  const nhan = m.SERIES.zalo.map((k) => cfg[k]?.label)
+  if (JSON.stringify(nhan) !== JSON.stringify(NHAN_S03)) out.push(`nhãn tab S03: ${nhan.join(" | ")}`)
+  for (const l of Object.values(cfg).map((c) => c.label)) if (/tin rao vào kho|bài thô/.test(l)) out.push(`nhãn cũ: ${l}`)
+  if (m.stackOf("zalo") !== undefined) out.push(`stackId tab S03: ${m.stackOf("zalo")}`)
+  if (m.stackOf("listings") !== "listings") out.push(`stackId tab Listing: ${m.stackOf("listings")}`)
+  return out
+}
+
+test("TN-AC-7 ON25-AC-7 tab S03 có ba nhãn bài nhận · tin rao mới · tin có bài hôm đó, không chồng cột", async () => {
+  const m = await import(SYNC)
+  assert.deepEqual(loiTabS03(m), [])
+})
+test("TN-AC-7 ON25-AC-7 đối chứng: nhãn cũ hoặc chồng cột ở tab S03 → báo nhãn, stackId", async () => {
+  const m = await import(SYNC)
+  const cu = { ...m, configOf: (r: Record<string, string>) => ({ ...m.configOf(r), zaloOffers: { label: "Cộng đồng — tin rao vào kho" } }), stackOf: (x: string) => x }
+  const loi = loiTabS03(cu)
+  assert.ok(loi.some((l) => l.startsWith("nhãn tab S03")) && loi.some((l) => l.startsWith("nhãn cũ")) && loi.includes("stackId tab S03: zalo"), loi.join(" | "))
+})
+test("TN-AC-7 ON25-AC-7 mô tả tab S03 nêu riêng bài nhận và tin rao mới, không «bản ghi»", async () => {
+  const { describeMode } = await import(SYNC)
+  const days = [1, 2, 3].map((i) => ({ day: `2026-10-2${i}`, airbnbListingsSeen: 0, airbnbSnapshots: 0, zaloPosts: 10 * i, zaloOffers: i, s03ActiveOffers: 3 * i }))
+  const t = describeMode("zalo", days)
+  assert.match(t, /60 bài nhận · 6 tin rao mới; mỗi ngày 3–9 tin có bài/)
+  assert.doesNotMatch(t, /bản ghi/)
+})
+test("TN-AC-7 ON25-AC-7 bảng máy chủ: bản tin cũ (khoá vắng → null) in «—» ở cột tin có bài, không «0»", async () => {
+  const { renderToStaticMarkup } = await import("react-dom/server")
+  const { CloudFlowTable } = await import(path.join(APP, "src/components/ops/collections-tables"))
+  const o = (n: number | null) => renderToStaticMarkup(<CloudFlowTable days={[{ day: "2026-10-25", airbnbListingsSeen: 1, zaloPosts: 2, zaloOffers: 1, s03ActiveOffers: n }]} stale={false} />)
+  const o25 = (html: string) => {
+    const ids = [...html.slice(html.indexOf("<thead"), html.indexOf("</thead>")).matchAll(/<th[^>]*data-col-id="([^"]+)"/g)].map((x) => x[1])
+    const tds = [...html.slice(html.indexOf("<tbody")).matchAll(/<td[\s\S]*?<\/td>/g)].map((x) => x[0].replace(/<[^>]+>/g, "").trim())
+    return tds[ids.indexOf("s03ActiveOffers")]
+  }
+  assert.equal(o25(o(null)), "—", "s03ActiveOffers bản tin cũ phải in «—»")
+  assert.equal(o25(o(5)), "5", "đối chứng dương: khối có khoá in số")
+  assert.notEqual(o25(o(0)), "—", "đối chứng: 0 thật không thành «—»")
+})
+test("TN-AC-7 ON25-AC-7 CONTEXT.md có thuật ngữ «Tin có bài hôm đó» và nhãn bài nhận, tin rao mới", () => {
+  const ctx = readFileSync(path.join(APP, "..", "CONTEXT.md"), "utf8")
+  for (const t of ["**Tin có bài hôm đó**", "«S03 — bài nhận»", "«S03 — tin rao mới»", "`s03ActiveOffers`"]) assert.ok(ctx.includes(t), `CONTEXT.md thiếu ${t}`)
 })

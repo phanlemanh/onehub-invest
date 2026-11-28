@@ -73,8 +73,8 @@ export function parseLog(text, { now = Date.now() } = {}) {
   return { funnel, health, groups: groupRows };
 }
 
-// ---- Luồng 7 ngày, hai cột S03 (ON5 `luong-7-ngay-dung-so`) ----
-// MỘT định nghĩa cho bên ghi (khối `luong7` của bản tin) và `getFlowDays` của app ở máy thu — app chép nguyên văn hai câu
+// ---- Luồng 7 ngày, ba cột S03 (ON5 `luong-7-ngay-dung-so`, ON25 thêm cột tin có bài) ----
+// MỘT định nghĩa cho bên ghi (khối `luong7` của bản tin) và `getFlowDays` của app ở máy thu — app chép nguyên văn ba câu
 // SQL này (app/src/lib/collections-queries.ts); app/tests/luong-7-ngay-dung-so.test.tsx (ON5-AC-4) giữ hai bên khớp.
 // Cùng đồng hồ «ngày đăng»: bài theo posted_at, tin theo first_seen (= giờ đăng bài sớm nhất) — tin không vượt bài.
 /**
@@ -87,17 +87,28 @@ export function parseLog(text, { now = Date.now() } = {}) {
 export const S03_POSTS_SQL = `SELECT ${VN_DAY_SQL("posted_at")} d, count(*)::int n FROM stg_zalo_posts WHERE posted_at >= $1 AND split_part(snapshot_id, '__', 2) <> 'example' AND split_part(snapshot_id, '__', 2) !~* '(mock|test|e2e)' AND coalesce(agent_id, '') <> 'apify-facebook' AND coalesce(agent_id, '') !~* '^(e2e|test|mock)' AND btrim(coalesce(group_name, '')) !~* '^test($|[^[:alpha:]])' AND NOT (${NOI_DUNG_SQL}) GROUP BY 1`;
 /** Tin rao nguồn S03 theo ngày VN của `first_seen`. $1 như trên. */
 export const S03_OFFERS_SQL = `SELECT ${VN_DAY_SQL("first_seen")} d, count(*)::int n FROM sale_offers WHERE first_seen >= $1 AND source = 'S03' GROUP BY 1`;
+/**
+ * ON25 (`ops-hien-dung-chang-s03`): «tin có bài hôm đó» — số tin S03 KHÁC NHAU còn đang rao có ít nhất một bài đăng trong ngày VN
+ * (theo `posted_at` của bài trong `post_ids`). Cùng gốc `sale_offers` với S03_OFFERS_SQL: `first_seen` là giờ bài sớm nhất của tin,
+ * nên mỗi ngày tin rao mới ≤ tin có bài hôm đó. Không lọc bài thử: tin chỉ dựng từ bài transform đọc (đã gạt bài thử). $1 như trên.
+ */
+export const S03_ACTIVE_OFFERS_SQL = `SELECT ${VN_DAY_SQL("p.posted_at")} d, count(DISTINCT o.offer_id)::int n FROM sale_offers o CROSS JOIN LATERAL unnest(o.post_ids) AS u(post_id) JOIN stg_zalo_posts p ON p.post_id = u.post_id WHERE o.source = 'S03' AND p.posted_at >= $1 GROUP BY 1`;
 
-/** Hai cột S03 cho `n` ngày VN tính tới `now`, cũ → mới, ngày không có dòng = 0: [{ day, s03Posts, s03Offers }]. */
+/** Ba cột S03 cho `n` ngày VN tính tới `now`, cũ → mới, ngày không có dòng = 0: [{ day, s03Posts, s03Offers, s03ActiveOffers }]. */
 export async function luong7(client, { now = Date.now(), n = 7 } = {}) {
   const since = vnDayStart(vnDayKey(now - (n - 1) * 86400000));
-  const [posts, offers] = await Promise.all([client.query(S03_POSTS_SQL, [since]), client.query(S03_OFFERS_SQL, [since])]);
+  const [posts, offers, active] = await Promise.all([
+    client.query(S03_POSTS_SQL, [since]),
+    client.query(S03_OFFERS_SQL, [since]),
+    client.query(S03_ACTIVE_OFFERS_SQL, [since]),
+  ]);
   const P = new Map(posts.rows.map((r) => [r.d, r.n]));
   const O = new Map(offers.rows.map((r) => [r.d, r.n]));
+  const A = new Map(active.rows.map((r) => [r.d, r.n]));
   const days = [];
   for (let i = n - 1; i >= 0; i--) {
     const day = vnDayKey(now - i * 86400000);
-    days.push({ day, s03Posts: P.get(day) ?? 0, s03Offers: O.get(day) ?? 0 });
+    days.push({ day, s03Posts: P.get(day) ?? 0, s03Offers: O.get(day) ?? 0, s03ActiveOffers: A.get(day) ?? 0 });
   }
   return days;
 }

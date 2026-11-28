@@ -128,7 +128,7 @@ _Avoid_: gắn cụm, linked (trên UI)
 - Slug URL: — (không có trang riêng; số hiện trên trang Dòng chảy dữ liệu)
 _Avoid_: gắn toà, căn suy ra
 
-**Định vị (cấp dự án)**: Mức định vị hiện có từ 15/11: tin có đúng một dự án gốc trong nguồn chung «dự án của tin» — S03, S05 qua phát biểu dự án trên bài, S06 qua mã dự án nguồn đã nối nút. Tin có bài mang hai dự án gốc khác nhau là «xung đột», không định vị. Nút phân khu, toà quy về dự án gốc. Cấp toà, trục chưa có, nên «chờ khớp» vẫn đếm tin ghi toà, trục chưa khớp nút toà, kể cả tin đã định vị cấp dự án.
+**Định vị (cấp dự án)**: Mức định vị hiện có từ 15/11: tin có đúng một dự án gốc trong nguồn chung «dự án của tin» — S03, S05 qua phát biểu dự án trên bài, S06 qua mã dự án nguồn đã nối nút. Tin có bài mang hai dự án gốc khác nhau là «xung đột», không định vị. Nút phân khu, toà quy về dự án gốc. Từ 28/11 (ON25) «chờ khớp» đếm tin ghi toà, trục mà chưa có dòng gắn toà mức toà của bộ ghép toà (`offer_building`), kể cả tin đã định vị cấp dự án; số mốc «Khớp toà» đọc cùng bảng.
 - Code: view `offer_project` (`status` `mot_du_an` · `xung_dot`), `offer_located()`; trên màn: cột `located` · RESO: `SubdivisionName`
 - Slug URL: — (số hiện trên trang Dòng chảy dữ liệu)
 _Avoid_: định vị toà (khi mới tới dự án), gắn dự án
@@ -833,8 +833,15 @@ _Avoid_: deadline, hạn burst
 - Nhãn đếm: «bài nhận» = bài thật transform đọc (`loadStgPosts` + `testMarker`, không bài S05, không bài thử) theo ngày
   đăng — cột «S03 — bài nhận» của «Luồng 7 ngày qua», chặng «Bài nhận» của Dòng chảy. Cột «S03 — tin rao mới» cạnh nó
   đếm tin theo ngày `first_seen`, có sau lượt đọc đêm (~00:00 giờ VN) nên ngày hôm nay chưa đủ (đổi nhãn 27/10, trước là
-  «bài thô» / «tin rao (đã đọc)»).
+  «bài thô» / «tin rao (đã đọc)»). Từ 28/11 (ON25) biểu đồ «Luồng 7 ngày» cũng dùng hai nhãn này, thêm cột «S03 — tin có bài
+  hôm đó»; ba cột đứng cạnh nhau, không chồng.
 _Avoid_: post raw, post mock, bài post, bài thô (làm nhãn cột đếm)
+
+**Tin có bài hôm đó**: Số tin rao S03 khác nhau còn đang rao có ít nhất một bài đăng trong ngày (giờ VN) — gồm tin mới và tin cũ
+đăng lại; một tin nhiều bài cùng ngày tính một lần. Luôn ≥ «tin rao mới» của cùng ngày.
+- Code: `s03ActiveOffers` (khối `luong7`, `FlowDay`, `CloudFlowDay`), câu `S03_ACTIVE_OFFERS_SQL` (pipeline/lib/ops-flow.mjs) · RESO: —
+- Slug URL: — (cột của «Luồng 7 ngày» trên trang Thu thập)
+_Avoid_: tin hoạt động, tin vào kho (khi nói tin mới), tin đang chạy
 
 **Gộp trùng**: Bước gom các bài đăng lại cùng một tin thành một tin rao (transform S03/S05 bước 4, `repostKey`). Nội dung
 đủ phường và diện tích thì gộp theo nội dung (kind · phường · giá · diện tích · PN), kể cả bài của người khác; thiếu một

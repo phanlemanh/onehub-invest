@@ -35,6 +35,8 @@ export const SERIES = {
   // opsVolume giữ sắc "volume" (--info) của solution-dev-ops-6; opsVolumeRaw là chuỗi thứ hai (bản ghi thô).
   opsVolume:    { light: "var(--color-blue-600)",   dark: "var(--color-blue-400)",   swatch: "bg-blue-600 dark:bg-blue-400" },
   opsVolumeRaw: { light: "var(--color-violet-600)", dark: "var(--color-violet-400)", swatch: "bg-violet-600 dark:bg-violet-400" },
+  // ON25: tin có bài hôm đó — cùng họ «volume» với opsVolume (tin rao mới), nhạt hơn một nấc vì là tập rộng hơn.
+  opsVolumeActive: { light: "var(--color-blue-500)", dark: "var(--color-blue-300)", swatch: "bg-blue-500 dark:bg-blue-300" },
   // Ops «Dòng chảy dữ liệu» (proto 26/10): bốn chặng đường ống là một thang xanh lam — đậm dần khi càng gần đích.
   flowReceived: { light: "var(--color-blue-500)", dark: "var(--color-blue-200)", swatch: "bg-blue-500 dark:bg-blue-200" },
   flowReadable: { light: "var(--color-blue-600)", dark: "var(--color-blue-300)", swatch: "bg-blue-600 dark:bg-blue-300" },

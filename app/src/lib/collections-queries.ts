@@ -107,14 +107,17 @@ export type FlowDay = {
   airbnbSnapshots: number;
   zaloPosts: number;
   zaloOffers: number;
+  /** ON25: tin S03 khác nhau còn đang rao có bài đăng trong ngày (S03_ACTIVE_OFFERS_SQL). */
+  s03ActiveOffers: number;
 };
 
-// Hai cột S03 (ON5): CHÉP NGUYÊN VĂN S03_POSTS_SQL / S03_OFFERS_SQL của pipeline/lib/ops-flow.mjs — bên ghi khối `luong7`
+// Ba cột S03 (ON5, ON25): CHÉP NGUYÊN VĂN S03_POSTS_SQL / S03_OFFERS_SQL / S03_ACTIVE_OFFERS_SQL của pipeline/lib/ops-flow.mjs — bên ghi khối `luong7`
 // dùng bản đó; app/tests/luong-7-ngay-dung-so.test.tsx (ON5-AC-4) đối chiếu hai bên trên cùng lược đồ. Bài S03 thật
 // (đúng tập transform S03 đọc — loadStgPosts + testMarker: không snapshot mock/thử, không bài S05 `apify-facebook`, không bài thử — gồm dấu nội dung NOI_DUNG_SQL, GN5) theo ngày đăng; tin rao chỉ
 // nguồn S03 theo first_seen (= giờ đăng bài sớm nhất).
 const S03_POSTS_SQL = `SELECT (posted_at AT TIME ZONE '${VN_TZ}')::date::text d, count(*)::int n FROM stg_zalo_posts WHERE posted_at >= $1 AND split_part(snapshot_id, '__', 2) <> 'example' AND split_part(snapshot_id, '__', 2) !~* '(mock|test|e2e)' AND coalesce(agent_id, '') <> 'apify-facebook' AND coalesce(agent_id, '') !~* '^(e2e|test|mock)' AND btrim(coalesce(group_name, '')) !~* '^test($|[^[:alpha:]])' AND NOT (normalize(coalesce(text, ''), NFC) ~* 'trycloudflare\\.com|\\[tên sàn\\]') GROUP BY 1`;
 const S03_OFFERS_SQL = `SELECT (first_seen AT TIME ZONE '${VN_TZ}')::date::text d, count(*)::int n FROM sale_offers WHERE first_seen >= $1 AND source = 'S03' GROUP BY 1`;
+const S03_ACTIVE_OFFERS_SQL = `SELECT (p.posted_at AT TIME ZONE '${VN_TZ}')::date::text d, count(DISTINCT o.offer_id)::int n FROM sale_offers o CROSS JOIN LATERAL unnest(o.post_ids) AS u(post_id) JOIN stg_zalo_posts p ON p.post_id = u.post_id WHERE o.source = 'S03' AND p.posted_at >= $1 GROUP BY 1`;
 
 /** Luồng N ngày gần nhất theo nguồn. Perf-audit: từng là 42 subquery
  * non-sargable (col::date = d, 250ms, tăng theo bảng) — nay mỗi nguồn MỘT
@@ -127,14 +130,15 @@ export async function getFlowDays(n = 7, opts: { now?: number } = {}): Promise<F
   const since = vnDayStart(oldest);
   const vnDay = (col: string) => `(${col} AT TIME ZONE '${VN_TZ}')::date::text`;
   // ON6 (luật 5): trang Thu thập không có số S02 — không đếm airdna_* ở đây; số S02 chỉ ở /ops/quality.
-  const [li, sn, zp, of] = await Promise.all([
+  const [li, sn, zp, of, ac] = await Promise.all([
     pool.query(`SELECT last_seen::date::text d, count(*)::int n FROM listings WHERE last_seen >= $1::date GROUP BY 1`, [oldest]),
     pool.query(`SELECT ${vnDay("collected_at")} d, count(*)::int n FROM airbnb_snapshots WHERE collected_at >= $1 GROUP BY 1`, [since]),
     pool.query(S03_POSTS_SQL, [since]),
     pool.query(S03_OFFERS_SQL, [since]),
+    pool.query(S03_ACTIVE_OFFERS_SQL, [since]),
   ]);
   const pick = (rows: { d: string; n: number }[]) => new Map(rows.map((r) => [r.d, r.n]));
-  const [L, S, Z, O] = [pick(li.rows), pick(sn.rows), pick(zp.rows), pick(of.rows)];
+  const [L, S, Z, O, A] = [pick(li.rows), pick(sn.rows), pick(zp.rows), pick(of.rows), pick(ac.rows)];
   const days: FlowDay[] = [];
   for (let i = 0; i < n; i++) {
     const d = vnDayKey(now - i * 86400000);
@@ -144,6 +148,7 @@ export async function getFlowDays(n = 7, opts: { now?: number } = {}): Promise<F
       airbnbSnapshots: S.get(d) ?? 0,
       zaloPosts: Z.get(d) ?? 0,
       zaloOffers: O.get(d) ?? 0,
+      s03ActiveOffers: A.get(d) ?? 0,
     });
   }
   return days; // từ mốc `since` trở đi; đủ n ngày gần nhất
@@ -151,12 +156,19 @@ export async function getFlowDays(n = 7, opts: { now?: number } = {}): Promise<F
 
 /** Một ngày của «Luồng 7 ngày» trên máy chủ (ON5): S03 từ khối `luong7` của bản tin (null = khối vắng/lỗi hoặc ngày
  * ngoài khối), listing tươi S01 từ bảng `listings` đã đồng bộ. Snapshot S01 (bảng thô) và S02 (luật 5) không có ở đây. */
-export type CloudFlowDay = { day: string; airbnbListingsSeen: number; zaloPosts: number | null; zaloOffers: number | null };
+export type CloudFlowDay = {
+  day: string;
+  airbnbListingsSeen: number;
+  zaloPosts: number | null;
+  zaloOffers: number | null;
+  /** ON25: null khi khối vắng, ngày ngoài khối, hoặc bản tin trước ON25 (thiếu khoá) — không 0. */
+  s03ActiveOffers: number | null;
+};
 
 /** «Luồng 7 ngày» trên máy chủ: 7 ngày VN tới `now`, mới → cũ như `getFlowDays`. Không đọc bảng nào chỉ có ở máy thu
  * (ADR-0014 §4) — `listings` là bảng đã đồng bộ. */
 export async function getCloudFlowDays(
-  luong7: { day: string; s03Posts: number; s03Offers: number }[] | null,
+  luong7: { day: string; s03Posts: number; s03Offers: number; s03ActiveOffers?: number }[] | null,
   opts: { now?: number; n?: number } = {},
 ): Promise<CloudFlowDay[]> {
   const now = opts.now ?? Date.now();
@@ -172,7 +184,13 @@ export async function getCloudFlowDays(
   for (let i = 0; i < n; i++) {
     const d = vnDayKey(now - i * 86400000);
     const b = B.get(d);
-    days.push({ day: d, airbnbListingsSeen: L.get(d) ?? 0, zaloPosts: b?.s03Posts ?? null, zaloOffers: b?.s03Offers ?? null });
+    days.push({
+      day: d,
+      airbnbListingsSeen: L.get(d) ?? 0,
+      zaloPosts: b?.s03Posts ?? null,
+      zaloOffers: b?.s03Offers ?? null,
+      s03ActiveOffers: b?.s03ActiveOffers ?? null,
+    });
   }
   return days;
 }

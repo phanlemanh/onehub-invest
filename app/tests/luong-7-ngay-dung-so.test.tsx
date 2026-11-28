@@ -9,10 +9,11 @@ import { readFileSync } from "node:fs"
 
 import { captureOpsFacts, localDbUrl, mutantPush } from "../../pipeline/scripts/capture-ops-facts.mjs"
 import { dropOpsSchema, makeOpsSchema, schemaUrl } from "../../pipeline/scripts/ops-facts-fixture.mjs"
-import { S03_OFFERS_SQL, S03_POSTS_SQL } from "../../pipeline/lib/ops-flow.mjs"
+import { S03_ACTIVE_OFFERS_SQL, S03_OFFERS_SQL, S03_POSTS_SQL, luong7 } from "../../pipeline/lib/ops-flow.mjs"
 
 const S = `on5_app_${process.pid}`
 const S_ERR = `on5_app_err_${process.pid}`
+const S25 = `on25_l7_${process.pid}`
 process.env.DATABASE_URL = schemaUrl(S) // pool của app đọc lúc import — đặt TRƯỚC mọi import động
 
 /** Mốc đo ghim 00:30 giờ VN ngày 25/10 (17:30 UTC ngày 24) — ngày cuối của cửa sổ là ngày VN, không ngày UTC. */
@@ -41,12 +42,13 @@ const NOI_DUNG: [string, string, string][] = [
   ["n1", "2026-10-22T09:00:00", "Bán căn [Tên sàn] giá tốt"],
   ["n2", "2026-10-22T10:00:00", "Xem ảnh https://abc.trycloudflare.com/x nhé"],
 ]
-// [offer_id, source, first_seen (giờ VN)] — 23:59 và 00:01 hai bên nửa đêm, một tin S06 cùng ngày.
-const OFFERS: [string, string, string][] = [
-  ["o1", "S03", "2026-10-23T23:59:00"],
-  ["o2", "S03", "2026-10-24T00:01:00"],
-  ["o3", "S06", "2026-10-23T12:00:00"],
-  ["o4", "S03", "2026-10-23T10:00:00"],
+// [offer_id, source, first_seen (giờ VN), post_ids] — 23:59 và 00:01 hai bên nửa đêm, một tin S06 cùng ngày. post_ids (ON25) nối
+// tin với bài đã có để cột «tin có bài hôm đó» có số; không đổi số bài hay số tin rao mới của ON5.
+const OFFERS: [string, string, string, string[]][] = [
+  ["o1", "S03", "2026-10-23T23:59:00", ["p2"]],
+  ["o2", "S03", "2026-10-24T00:01:00", ["p3"]],
+  ["o3", "S06", "2026-10-23T12:00:00", []],
+  ["o4", "S03", "2026-10-23T10:00:00", ["p1", "p4"]],
 ]
 /** Đáp án viết trước theo ngày (ngày không ghi = 0). */
 const WANT_POSTS: Record<string, number> = { "2026-10-23": 2, "2026-10-24": 1, "2026-10-25": 1 }
@@ -78,8 +80,9 @@ before(async () => {
         `INSERT INTO "${S}".stg_zalo_posts (post_id, snapshot_id, text, posted_at, captured_at, agent_id, group_name) VALUES ($1, 'hanoi__zalo-agent__2026-10-22T090000', $2, $3, $3, 'openclaw-hook', 'Nhóm thật')`,
         [id, text, vn(posted)],
       )
-    for (const [id, source, seen] of OFFERS)
-      await admin.query(`INSERT INTO "${S}".sale_offers (offer_id, kind, first_seen, last_seen, source) VALUES ($1, 'sale', $2, $2, $3)`, [id, vn(seen), source])
+    for (const [id, source, seen, postIds] of OFFERS)
+      await admin.query(`INSERT INTO "${S}".sale_offers (offer_id, kind, first_seen, last_seen, source, post_ids) VALUES ($1, 'sale', $2, $2, $3, $4)`, [id, vn(seen), source, postIds])
+    await dungS25()
   } catch (e) {
     setupErr = (e as Error).message
   }
@@ -87,6 +90,7 @@ before(async () => {
 after(async () => {
   await dropOpsSchema(admin, S).catch(() => {})
   await dropOpsSchema(admin, S_ERR).catch(() => {})
+  await admin.query(`DROP SCHEMA IF EXISTS "${S25}" CASCADE`).catch(() => {})
   await admin.end().catch(() => {})
   const { pool } = await import("../src/lib/db")
   await pool.end()
@@ -151,7 +155,7 @@ describe("ON5-AC-2 bài thô S03", () => {
 // ---------- AC-7: trang máy thu ----------
 
 // ON6 (collections-khong-so-s02, luật 5) bỏ hai cột S02 khỏi bảng ở máy thu.
-const COT_MAY_THU = ["day", "airbnbSeen", "airbnbSnapshots", "zaloPosts", "zaloOffers"]
+const COT_MAY_THU = ["day", "airbnbSeen", "airbnbSnapshots", "zaloPosts", "zaloOffers", "s03ActiveOffers"]
 
 async function render(el: unknown): Promise<string> {
   const { renderToStaticMarkup } = await import("react-dom/server")
@@ -159,7 +163,7 @@ async function render(el: unknown): Promise<string> {
 }
 const thIds = (html: string) => [...html.slice(html.indexOf("<thead"), html.indexOf("</thead>")).matchAll(/<th[^>]*data-col-id="([^"]+)"/g)].map((m) => m[1])
 const thieuCot = (ids: string[]) => COT_MAY_THU.filter((c) => !ids.includes(c))
-const MAU = DAYS.map((day) => ({ day, airbnbListingsSeen: 3, airbnbSnapshots: 4, zaloPosts: 5, zaloOffers: 6 }))
+const MAU = DAYS.map((day) => ({ day, airbnbListingsSeen: 3, airbnbSnapshots: 4, zaloPosts: 5, zaloOffers: 6, s03ActiveOffers: 7 }))
 
 describe("ON5-AC-7 trang máy thu", () => {
   test("ON5-AC-7 máy thu đủ cột như main (trừ hai cột S02 ON6 gỡ), mô tả nói giờ VN và ngày đăng bài", async () => {
@@ -179,7 +183,7 @@ describe("ON5-AC-7 trang máy thu", () => {
 
 // ---------- AC-3, AC-4: khối `luong7` của bản tin (bên ghi thật) ----------
 
-type Day7 = { day: string; s03Posts: number; s03Offers: number }
+type Day7 = { day: string; s03Posts: number; s03Offers: number; s03ActiveOffers?: number }
 type Payload = Record<string, unknown> & { pushedAt: string; blocks: Record<string, Record<string, unknown>> }
 const push = (opts: Record<string, unknown> = {}, schema = S) =>
   captureOpsFacts({
@@ -248,6 +252,7 @@ async function lechKhoi(payload: Payload): Promise<string[]> {
     const p = page.get(d.day)
     if (p?.zaloPosts !== d.s03Posts) out.push(`${d.day}: bài thô khối ${d.s03Posts} ≠ trang ${p?.zaloPosts}`)
     if (p?.zaloOffers !== d.s03Offers) out.push(`${d.day}: tin rao khối ${d.s03Offers} ≠ trang ${p?.zaloOffers}`)
+    if (p?.s03ActiveOffers !== d.s03ActiveOffers) out.push(`${d.day}: s03ActiveOffers khối ${d.s03ActiveOffers} ≠ trang ${p?.s03ActiveOffers}`)
   }
   return out
 }
@@ -398,7 +403,7 @@ describe("ON5-AC-5 bảng trên máy chủ, bản tin tươi", () => {
     const { html } = await trangMayChu()
     const t = bangLuong(html)!
     assert.equal((t.match(/Chỉ ở máy thu/g) ?? []).length, 7)
-    assert.deepEqual(thIds(t), ["day", "airbnbSeen", "airbnbSnapshots", "zaloPosts", "zaloOffers"])
+    assert.deepEqual(thIds(t), ["day", "airbnbSeen", "airbnbSnapshots", "zaloPosts", "zaloOffers", "s03ActiveOffers"])
     assert.ok(alertMayThu(html).length > 0, "Alert «Phần còn lại…» vắng")
     assert.ok(!alertMayThu(html).includes("Luồng 7 ngày"), `Alert còn «Luồng 7 ngày»: ${alertMayThu(html)}`)
   })
@@ -483,5 +488,152 @@ describe("ON5-AC-6 bảng trên máy chủ, ba trạng thái", () => {
     const loi = loiBangMayChu((await trangMayChu({ now: new Date(Date.parse(p.pushedAt) + 46 * 60_000), staleTable: false })).html, "so", true)
     assert.equal(loi.length, 14, loi.join(" | "))
     assert.ok(loi.includes("2026-10-24: s03Offers không mờ"), loi.join(" | "))
+  })
+})
+
+// =====================================================================================================================
+// ON25 (ops-hien-dung-chang-s03) — cột «tin có bài hôm đó» (s03ActiveOffers) của Luồng 7 ngày.
+// =====================================================================================================================
+
+// Lược đồ riêng S25: sale_offers là VIEW dựng từ đúng định nghĩa của public trên sale_offer_records (tin đã nghỉ rời view như
+// thật). Ma trận viết trước, mỗi ô một ngày VN của cửa sổ 19–25/10: [ô, post_ids của tin, nguồn, first_seen, nghỉ, bài (giờ VN)].
+const O25: { o: string; nguon: string; dau: string; nghi: boolean; bai: string[] }[] = [
+  { o: "19 tin mới một bài", nguon: "S03", dau: "2026-10-19T09:00:00", nghi: false, bai: ["2026-10-19T09:00:00"] },
+  { o: "20 tin cũ đăng lại", nguon: "S03", dau: "2026-10-10T09:00:00", nghi: false, bai: ["2026-10-10T09:00:00", "2026-10-20T09:00:00"] },
+  { o: "21 một tin ba bài cùng ngày", nguon: "S03", dau: "2026-10-21T08:00:00", nghi: false, bai: ["2026-10-21T08:00:00", "2026-10-21T12:00:00", "2026-10-21T18:00:00"] },
+  { o: "22 tin S05", nguon: "S05", dau: "2026-10-22T09:00:00", nghi: false, bai: ["2026-10-22T09:00:00"] },
+  { o: "23 tin S03 đã nghỉ", nguon: "S03", dau: "2026-10-23T09:00:00", nghi: true, bai: ["2026-10-23T09:00:00"] },
+]
+/** Bài S03 ngày 24 không thuộc tin nào; ngày 25 không bài. */
+const BAI_LE = "2026-10-24T09:00:00"
+const WANT_ACTIVE: Record<string, number> = { "2026-10-19": 1, "2026-10-20": 1, "2026-10-21": 1, "2026-10-22": 0, "2026-10-23": 0, "2026-10-24": 0, "2026-10-25": 0 }
+const WANT_MOI25: Record<string, number> = { "2026-10-19": 1, "2026-10-21": 1 }
+
+async function dungS25() {
+  const { rows: [v] } = await admin.query(`SELECT pg_get_viewdef('public.sale_offers'::regclass, true) AS def`)
+  await admin.query(`DROP SCHEMA IF EXISTS "${S25}" CASCADE`)
+  await admin.query(`CREATE SCHEMA "${S25}"`)
+  await admin.query(`CREATE TABLE "${S25}".stg_zalo_posts (LIKE public.stg_zalo_posts INCLUDING DEFAULTS)`)
+  await admin.query(`CREATE TABLE "${S25}".sale_offer_records (LIKE public.sale_offer_records INCLUDING DEFAULTS)`)
+  await admin.query(`SET search_path = "${S25}"`)
+  try {
+    await admin.query(`CREATE VIEW "${S25}".sale_offers AS ${v.def}`)
+  } finally {
+    await admin.query(`SET search_path = DEFAULT`)
+  }
+  let n = 0
+  const bai = async (luc: string) => {
+    const id = `on25p-${++n}`
+    await admin.query(`INSERT INTO "${S25}".stg_zalo_posts (post_id, snapshot_id, text, posted_at, captured_at) VALUES ($1, 'hanoi__zalo-agent__on25', 'bài', $2, $2)`, [id, vn(luc)])
+    return id
+  }
+  let k = 0
+  for (const t of O25) {
+    const ids = []
+    for (const luc of t.bai) ids.push(await bai(luc))
+    await admin.query(`INSERT INTO "${S25}".sale_offer_records (offer_id, kind, property_type, confidence, first_seen, last_seen, n_reposts, post_ids,
+        source, field_provenance, offer_status, retired_at) VALUES ($1, 'sale', 'apartment', 'medium', $2, $2, $3, $4, $5, '{}', 'active', $6)`,
+      [`on25o-${++k}`, vn(t.dau), ids.length, ids, t.nguon, t.nghi ? vn(t.dau) : null])
+  }
+  await bai(BAI_LE)
+}
+const urlS25 = () => schemaUrl(S25)
+async function demS25(sql: string): Promise<[string, number][]> {
+  const c = new pg.Client({ connectionString: urlS25() })
+  await c.connect()
+  try {
+    const { rows } = await c.query<{ d: string; n: number }>(sql, [vn("2026-10-19T00:00:00")])
+    const m = new Map(rows.map((r) => [r.d, r.n]))
+    return DAYS.map((d) => [d, m.get(d) ?? 0])
+  } finally {
+    await c.end()
+  }
+}
+
+describe("ON25-AC-4 tin có bài hôm đó (bên ghi)", () => {
+  test("ON25-AC-4 luong7 đếm s03ActiveOffers đúng bảy ô viết trước, mỗi ngày tin rao mới ≤ tin có bài", async () => {
+    ready()
+    const c = new pg.Client({ connectionString: urlS25() })
+    await c.connect()
+    try {
+      const days = await luong7(c, { now: NOW })
+      assert.deepEqual(days.map((d) => d.day), DAYS)
+      for (const d of days) assert.ok("s03ActiveOffers" in d, `${d.day}: khối thiếu khoá s03ActiveOffers`)
+      const got = days.map((d) => [d.day, d.s03ActiveOffers] as [string, number])
+      console.log(`# ON25-AC-4 ${got.map(([d, x]) => `${d}=${x}`).join(" ")}`)
+      assert.deepEqual(loiCot("s03ActiveOffers", got, want(WANT_ACTIVE)), [])
+      assert.deepEqual(loiCot("tin rao mới", days.map((d) => [d.day, d.s03Offers] as [string, number]), want(WANT_MOI25)), [])
+      for (const d of days) assert.ok(d.s03Offers <= d.s03ActiveOffers, `${d.day}: tin rao mới ${d.s03Offers} > tin có bài ${d.s03ActiveOffers}`)
+    } finally {
+      await c.end()
+    }
+  })
+  test("ON25-AC-4 đột biến đếm bài thay vì tin → ô ba bài cùng ngày đỏ", async () => {
+    ready()
+    const sai = await demS25(S03_ACTIVE_OFFERS_SQL.replace("count(DISTINCT o.offer_id)", "count(*)"))
+    assert.deepEqual(loiCot("s03ActiveOffers", sai, want(WANT_ACTIVE)), ["2026-10-21: s03ActiveOffers 3 ≠ 1"])
+  })
+  test("ON25-AC-4 đột biến bỏ lọc nguồn S03 → ô S05 đỏ", async () => {
+    ready()
+    const sai = await demS25(S03_ACTIVE_OFFERS_SQL.replace("o.source = 'S03' AND ", ""))
+    assert.deepEqual(loiCot("s03ActiveOffers", sai, want(WANT_ACTIVE)), ["2026-10-22: s03ActiveOffers 1 ≠ 0"])
+  })
+  test("ON25-AC-4 đột biến đếm cả tin đã nghỉ (sale_offer_records) → ô tin nghỉ đỏ", async () => {
+    ready()
+    const sai = await demS25(S03_ACTIVE_OFFERS_SQL.replace("FROM sale_offers o", "FROM sale_offer_records o"))
+    assert.deepEqual(loiCot("s03ActiveOffers", sai, want(WANT_ACTIVE)), ["2026-10-23: s03ActiveOffers 1 ≠ 0"])
+  })
+})
+
+/** Bản S03_ACTIVE_OFFERS_SQL của app, rút từ mã nguồn rồi dựng như lúc chạy. */
+function appS03ActiveSql(src = readFileSync(new URL("../src/lib/collections-queries.ts", import.meta.url), "utf8")): string {
+  const m = src.match(/const S03_ACTIVE_OFFERS_SQL = `([^`]*)`/)
+  assert.ok(m, "không rút được S03_ACTIVE_OFFERS_SQL trong collections-queries.ts")
+  return new Function("VN_TZ", `return \`${m[1]}\`;`)("Asia/Ho_Chi_Minh") as string
+}
+
+describe("ON25-AC-5 tin có bài: trang máy thu bằng khối", () => {
+  test("ON25-AC-5 S03_ACTIVE_OFFERS_SQL của app trùng bản ops-flow; getFlowDays bằng khối luong7 từng ngày", async () => {
+    ready()
+    assert.equal(appS03ActiveSql(), S03_ACTIVE_OFFERS_SQL, "S03_ACTIVE_OFFERS_SQL của app lệch bản ops-flow.mjs")
+    const page = (await flow()).map((d) => [d.day, d.s03ActiveOffers] as [string, number])
+    // Lược đồ ON5: o1 (p2, 23/10), o2 (p3, 24/10), o4 (p1 23/10, p4 25/10); o3 là S06.
+    assert.deepEqual(loiCot("s03ActiveOffers", page, want({ "2026-10-23": 2, "2026-10-24": 1, "2026-10-25": 1 })), [])
+    const r = await push()
+    assert.equal(r.code, 0, r.stderr.slice(0, 800))
+    assert.deepEqual(await lechKhoi(r.payload), [])
+  })
+  test("ON25-AC-5 bản app bỏ DISTINCT → báo S03_ACTIVE_OFFERS_SQL lệch", () => {
+    const src = readFileSync(new URL("../src/lib/collections-queries.ts", import.meta.url), "utf8").replace("count(DISTINCT o.offer_id)", "count(o.offer_id)")
+    assert.throws(() => assert.equal(appS03ActiveSql(src), S03_ACTIVE_OFFERS_SQL, "S03_ACTIVE_OFFERS_SQL của app lệch bản ops-flow.mjs"), /S03_ACTIVE_OFFERS_SQL/)
+  })
+})
+
+describe("ON25-AC-6 tin có bài trên máy chủ", () => {
+  /** Lỗi của bộ dựng ngày cloud: khối mới → đúng số; khối cũ thiếu khoá → null; khối vắng → null. */
+  async function loiCloud(dung: (l7: Day7[] | null, o: { now: number }) => Promise<{ day: string; s03ActiveOffers: number | null }[]>) {
+    const out: string[] = []
+    const moi = DAYS.map((day, i) => ({ day, s03Posts: 1, s03Offers: 1, s03ActiveOffers: 10 + i }))
+    const cu = DAYS.map((day) => ({ day, s03Posts: 1, s03Offers: 1 }))
+    for (const d of await dung(moi, { now: NOW })) {
+      const w = 10 + DAYS.indexOf(d.day)
+      if (d.s03ActiveOffers !== w) out.push(`${d.day}: s03ActiveOffers khối mới ${d.s03ActiveOffers} ≠ ${w}`)
+    }
+    for (const d of await dung(cu, { now: NOW })) if (d.s03ActiveOffers !== null) out.push(`${d.day}: s03ActiveOffers khối cũ ${d.s03ActiveOffers} ≠ null`)
+    for (const d of await dung(null, { now: NOW })) if (d.s03ActiveOffers !== null) out.push(`${d.day}: s03ActiveOffers khối vắng ${d.s03ActiveOffers} ≠ null`)
+    return out
+  }
+  test("ON25-AC-6 khối mới cho số, khối cũ thiếu khoá và khối vắng cho null (không 0)", async () => {
+    ready()
+    const { getCloudFlowDays } = await import("../src/lib/collections-queries")
+    assert.deepEqual(await loiCloud(getCloudFlowDays), [])
+  })
+  test("ON25-AC-6 đột biến «?? 0» → khối cũ đỏ, thông điệp nêu s03ActiveOffers", async () => {
+    ready()
+    const { getCloudFlowDays } = await import("../src/lib/collections-queries")
+    const pha = async (l7: Day7[] | null, o: { now: number }) =>
+      (await getCloudFlowDays(l7, o)).map((d) => ({ ...d, s03ActiveOffers: d.s03ActiveOffers ?? 0 }))
+    const loi = await loiCloud(pha)
+    assert.ok(loi.length === 14 && loi.every((l) => /s03ActiveOffers khối (cũ|vắng) 0 ≠ null/.test(l)), loi.join(" | "))
   })
 })

@@ -1,7 +1,8 @@
 // may-thu.mjs — hồ sơ ops-hien-dung-chang-s03, E3 (AC-3): số «Khớp toà» và «chờ khớp» của S03 trên BẢN CHÉP dữ liệu thật của riêng
 // lượt (db/db-thu.sh oneinvest_suite_on25_that --chay). Chạy lượt làm tươi thật (chayLamTuoi) với 600 của nhánh rồi với 600 của
 // merge-base trên cùng bản chép, in số cạnh nhau. Từ chối chạy trên DB chung `oneinvest`. Gốc kho suy từ vị trí tệp.
-// Đợt B (luong7) nối thêm bảy dòng «ngày · tin rao mới · tin có bài hôm đó» vào cuối.
+// Đợt B: bảy dòng «ngày · tin rao mới · tin có bài hôm đó» của luong7() thật trên cùng bản chép; ngày nào tin rao mới vượt tin có
+// bài thì thoát khác 0, nêu ngày.
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -16,6 +17,7 @@ if (!/^oneinvest_suite_[a-z0-9_]+$/.test(db)) {
 }
 const pg = (await import(pathToFileURL(join(GOC, "pipeline/node_modules/pg/lib/index.js")).href)).default;
 const { chayLamTuoi } = await import(pathToFileURL(join(GOC, "pipeline/refresh-data-flow.mjs")).href);
+const { luong7 } = await import(pathToFileURL(join(GOC, "pipeline/lib/ops-flow.mjs")).href);
 
 const base = process.env.ON25_BASE || execFileSync("git", ["-C", GOC, "merge-base", "HEAD", "origin/main"], { encoding: "utf8" }).trim();
 const sqlNhanh = readFileSync(join(GOC, "pipeline/sql/600_data_flow.sql"), "utf8");
@@ -41,6 +43,14 @@ try {
   console.log(`locatedPending S03 all = ${sau.lp} (trước sửa ${truoc.lp})`);
   if (!(y.n > 0 && sau.bl === y.n)) { console.error(`may-thu: building_linked ${sau.bl} ≠ ${y.n}`); loi++; }
   if (!(sau.lp < truoc.lp)) { console.error(`may-thu: locatedPending ${sau.lp} không nhỏ hơn ${truoc.lp}`); loi++; }
+  const days = await luong7(c);
+  let lon = 0;
+  for (const d of days) {
+    console.log(`${d.day} · tin rao mới ${d.s03Offers} · tin có bài hôm đó ${d.s03ActiveOffers}`);
+    if (d.s03Offers > d.s03ActiveOffers) { console.error(`may-thu: ngày ${d.day} tin rao mới ${d.s03Offers} > tin có bài ${d.s03ActiveOffers}`); loi++; }
+    if (d.s03ActiveOffers > d.s03Offers) lon++;
+  }
+  if (lon === 0) { console.error("may-thu: không ngày nào tin có bài lớn hơn tin rao mới — chuỗi mới không thêm gì"); loi++; }
 } finally {
   await c.end();
 }
