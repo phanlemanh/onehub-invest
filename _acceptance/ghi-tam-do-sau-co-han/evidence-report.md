@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 715362cc246996de9d2c4cbab384b818ab714df6
+verified_commit: 1b25bca464992d97cfe3e47a0cbe1b94cb5bab60
 human_signoff:
 ---
 
@@ -180,3 +180,7 @@ none — mọi eval chạy một lần, kết quả đồng nhất.
 
 Round 1: lịch sử xem run-log.jsonl.
 Round 2: chín eval máy E1–E9 đạt, bảy lệnh suite đạt; E10 là mục judgment, hội đồng đề xuất PASS, chờ người chốt (human_override để trống) nên verdict là PENDING-JUDGMENT.
+
+### Re-pin lần 1 — 2026-11-28, do ghim lại bằng làn eval
+run_id: repin-20261128T091354Z-86616
+sha: 1b25bca464992d97cfe3e47a0cbe1b94cb5bab60 · suites: 8 lệnh exit 0 · evals: 9/9 eval máy đạt kỳ vọng · ngoài làn máy: E10 (E10 không khai paths) · AC không có chốt máy: AC-10

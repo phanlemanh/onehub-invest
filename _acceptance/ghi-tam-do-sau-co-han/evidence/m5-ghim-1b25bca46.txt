@@ -1,0 +1,7 @@
+NB10 làn ghim trên M5 ＠1b25bca464992d97cfe3e47a0cbe1b94cb5bab60 — repin-lane --write --tran-phut 130 (kit 2.37.0), run_id repin-20261128T091354Z-86616: xanh, 60.1 phút, 17 lệnh (8 suite + 9 eval máy), chập chờn 0, recheck-evidence xanh.
+pipeline_that chạy TRONG làn: node scripts/suite-neu-doi.mjs pipeline_that -- 'cd pipeline && npm run test:that' → exit 0 (2162.0s).
+Vai máy phát triển — ca mang khoá may_thu bị bỏ qua có tên (dòng in bởi pipeline/chay-that.mjs --liet ở cùng sha, chay-that ghi các dòng này ra stderr, làn không giữ stderr của suite):
+chay-that: vai may-phat-trien — bỏ qua 1 ca chỉ máy thu
+chay-that: bỏ qua (chỉ máy thu) — pipeline/scripts/ops-facts-so-tong-hop.test.mjs — ON22-AC-10 máy thu thật, chế độ khô: năm khối có measured_at, freshness bằng check-freshness, 0 chỗ chặn, đầu ra chỉ tên khối + trạng thái — chạy push-ops-facts thật trên log, ~/.oneinvest, cấu hình OpenClaw, launchctl có job thật của máy thu — máy phát triển không có và luật cấm chạy push-ops-facts thật ở đó
+Chấm trên M5: ON22-AC-10 không chạy (HT33).
+Soát 1b25bca46-20261128T155649: app chỉ đỏ QV-AC-5; pipeline, agent, data-api, scripts xanh.
