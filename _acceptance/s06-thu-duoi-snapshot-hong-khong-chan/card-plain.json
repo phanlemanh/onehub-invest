@@ -60,7 +60,7 @@
    "p": "KHÔNG gửi báo động ra ngoài máy khi gặp bản hỏng."
   }
  ],
- "scope_plain": "Hàng phòng ngừa: hôm nay máy thu chưa có bản thu hỏng nào (233 bản đều đọc được) và lịch thu đuôi chưa cài, nên con số trên màn không đổi.",
+ "scope_plain": "Hàng phòng ngừa: hôm nay máy thu chưa có bản thu hỏng nào (233 bản đều đọc được) và lịch thu đuôi chưa cài, nên con số trên màn không đổi. Cách kiểm bản thu: GS đã phán dùng chính hàm đọc của bộ nạp. Chân đỏ «engine» của nền hạ tầng là lỗi bộ công cụ đã biết, GS chấp nhận có tên, nợ ở hàng HT41.",
  "coverage_plain": [
   {
    "i": 0,
@@ -110,7 +110,7 @@
  "gap_probe_plain": [
   {
    "i": 0,
-   "p": "Căn cứ của hai lựa chọn chưa đứng: đã sửa — bỏ quét độ phủ nay liệt trục thẳng, và cách kiểm bản thu chuyển thành Hỏi-1 cho anh."
+   "p": "Căn cứ của hai lựa chọn chưa đứng: đã sửa — bỏ quét độ phủ nay liệt trục thẳng; cách kiểm bản thu do GS phán (dùng hàm đọc của bộ nạp)."
   },
   {
    "i": 1,
