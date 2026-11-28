@@ -6,8 +6,11 @@
 //         nhất + khu cấy, mọi kind, phân trang hết). k = 0 → «lỗ tiềm ẩn đã đóng».
 //  Lượt 2 (chiều đỏ): cấy một tin S08 thuê dài vào bản chép → trước ≥ 1, sau 0, bo-loc ≥ 1.
 // Không có DB máy (db-thu lỗi) → thoát 2; ô không đỏ → thoát 1 «do-db: thước không đỏ ở <ô>».
+// Tạo phẩm (ba bản route, tệp chạy) nằm trong một bản chép data-api/ ở thư mục tạm của hệ thống, KHÔNG trong cây nguồn —
+// suite và lưới khác (VL-AC-5) quét data-api/src lúc probe chạy song song (sửa thước sau S4 vòng 2, PL36). Cuối lượt soát
+// `git status --porcelain data-api` không đổi so đầu lượt, đổi → thoát 1.
 import { execFileSync, spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -18,21 +21,26 @@ const gitOk = (...a) => { try { git(...a); return true; } catch { return false; 
 const ung = [git("merge-base", "HEAD", "origin/main").trim()];
 if (gitOk("rev-parse", "--verify", "-q", "origin/feat/data-api-hop-dong-reso-dd-2-1")) ung.push(git("merge-base", "HEAD", "origin/feat/data-api-hop-dong-reso-dd-2-1").trim());
 const nen = ung.find((c) => ung.every((d) => d === c || gitOk("merge-base", "--is-ancestor", d, c))) ?? ung[0];
-const R = path.join(ROOT, "data-api", "src", "routes");
-const hom = readFileSync(path.join(R, "listings.ts"), "utf8");
+const trangThai = () => git("status", "--porcelain", "--untracked-files=all", "--", "data-api");
+const truoc = trangThai();
+const hom = readFileSync(path.join(ROOT, "data-api", "src", "routes", "listings.ts"), "utf8");
 if (!hom.includes(" AND ${NGUON_HIEN}")) { console.log("do-db: bản hôm nay không có điều kiện nguồn để bỏ"); process.exit(2); }
 const BAN = {
   nen: [`__pb7-nen-${process.pid}.ts`, git("show", `${nen}:data-api/src/routes/listings.ts`)],
   boloc: [`__pb7-boloc-${process.pid}.ts`, hom.replace(" AND ${NGUON_HIEN}", "")],
 };
-for (const [f, s] of Object.values(BAN)) writeFileSync(path.join(R, f), s);
 const tam = mkdtempSync(path.join(os.tmpdir(), "pb7-db-"));
+const BC = path.join(tam, "data-api"); // bản chép data-api/: route tương đối (../db/client.js, ../contract/…) chạy y nguyên
+const R = path.join(BC, "src", "routes");
 let ma = 0;
 try {
-  const chay = path.join(ROOT, "data-api", `.__pb7-do-db-${process.pid}.mts`); // trong data-api/ để nhập được hono
+  for (const p of ["src", "package.json", "tsconfig.json"]) cpSync(path.join(ROOT, "data-api", p), path.join(BC, p), { recursive: true });
+  symlinkSync(path.join(ROOT, "data-api", "node_modules"), path.join(BC, "node_modules"));
+  for (const [f, s] of Object.values(BAN)) writeFileSync(path.join(R, f), s);
+  const chay = path.join(BC, "do-db-chay.mts"); // trong bản chép data-api/ để nhập được hono
   writeFileSync(chay, `process.env.NODE_ENV = "test"; delete process.env.DATA_API_KEYS; delete process.env.LISTING_KEY_SECRET;
 const { Hono } = await import("hono");
-const { pool } = await import(${JSON.stringify(path.join(ROOT, "data-api/src/db/client.ts"))});
+const { pool } = await import(${JSON.stringify(path.join(BC, "src/db/client.ts"))});
 const mk = async (f) => new Hono().route("/v1/listings", (await import(${JSON.stringify(R)} + "/" + f)).listingsRoute);
 const ban = { nen: await mk(${JSON.stringify(BAN.nen[0])}), sau: await mk("listings.ts"), boloc: await mk(${JSON.stringify(BAN.boloc[0])}) };
 const AN = ${JSON.stringify(["S02", "S08"])};
@@ -72,7 +80,7 @@ console.log("KQ " + JSON.stringify({ k, vung, l1: { nen_an: tong(l1, "nen", "an"
 `);
   const env = { ...process.env };
   delete env.DATABASE_URL;
-  const r = spawnSync("bash", [path.join(ROOT, "db", "db-thu.sh"), "oneinvest_suite_pb7_db", "--chay", "sh", "-c", `cd '${path.join(ROOT, "data-api")}' && npx tsx '${chay}'`],
+  const r = spawnSync("bash", [path.join(ROOT, "db", "db-thu.sh"), "oneinvest_suite_pb7_db", "--chay", "sh", "-c", `cd '${BC}' && npx tsx '${chay}'`],
     { cwd: ROOT, env, encoding: "utf8", maxBuffer: 64 << 20 });
   const dong = (r.stdout ?? "").split("\n").find((l) => l.startsWith("KQ "));
   if (!dong) { console.log(`do-db: không chạy được trên bản chép DB:\n${(r.stderr ?? "").split("\n").filter(Boolean).slice(-12).join("\n")}`); ma = 2; }
@@ -91,8 +99,11 @@ console.log("KQ " + JSON.stringify({ k, vung, l1: { nen_an: tong(l1, "nen", "an"
   ma = sai ? 1 : 0;
   }
 } finally {
-  for (const [f] of Object.values(BAN)) rmSync(path.join(R, f), { force: true });
-  rmSync(path.join(ROOT, "data-api", `.__pb7-do-db-${process.pid}.mts`), { force: true });
   rmSync(tam, { recursive: true, force: true });
 }
+const sau = trangThai();
+if (sau !== truoc) {
+  console.log(`do-db: probe để tạo phẩm trong cây nguồn data-api/:\n${sau}`);
+  ma = ma || 1;
+} else console.log("do-db: cây nguồn data-api/ không đổi sau probe");
 process.exit(ma);
