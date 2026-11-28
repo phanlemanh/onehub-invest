@@ -395,7 +395,9 @@ export function docToaTruc(text) {
 }
 
 // ---- Bước 2: parse ----
-export function parsePost(text, { giaKhongDonVi = true, luat = LUAT_PL43 } = {}) {
+// PL43: mặc định là luật CŨ — khoanh luật mới về đúng transform S03 (runTransformZalo và thước truyền LUAT_PL43 tường minh);
+// transform-fb (S05), đường đọc ảnh, yeu-cau.mjs gọi không truyền luật nên giữ hành vi trước PL43.
+export function parsePost(text, { giaKhongDonVi = true, luat = LUAT_TRUOC_PL43 } = {}) {
   const out = { kind: null, priceVnd: null, pricePerm2Vnd: null, areaM2: null, bedrooms: null, phuong: null, phone: null, phones: null };
 
   // Số đọc trên chữ đã gạt URL và SĐT (N1); SĐT người đăng đọc từ chữ gốc ở dưới.
@@ -579,12 +581,12 @@ const NHOM_TI_LE = 0.85;
 const GIA_BAN_SAN = 3e8;
 
 /** Bài là Yêu cầu (bên mua). */
-export function laYeuCau(text, luat = LUAT_PL43) {
+export function laYeuCau(text, luat = LUAT_TRUOC_PL43) {
   return yeuCauCua(luat).test(gatSo(text ?? ""));
 }
 
 /** Bài có dấu hiệu BĐS (số phòng, diện tích, loại căn). */
-export function coDauHieuBds(text, luat = LUAT_PL43) {
+export function coDauHieuBds(text, luat = LUAT_TRUOC_PL43) {
   return dauHieuCua(luat).test(gatSo(text ?? ""));
 }
 
@@ -703,7 +705,7 @@ export function demNguonLoai(nguon) {
  * @param {{ post_id: string, text: string, conversation_id?: string|null, group_name?: string|null }[]} posts
  * @returns {Map<string, "chu-bai"|"moi-nhan"|"van-bo">}
  */
-export function tangLoai(posts, { parse = parsePost, khoaNhom = khoaNhomThat } = {}) {
+export function tangLoai(posts, { parse = (t) => parsePost(t, { luat: LUAT_PL43 }), khoaNhom = khoaNhomThat } = {}) {
   const docBai = posts.map((p) => ({ p: veKhoaNhom(p, khoaNhom), pr: parse(p.text) }));
   const mucDich = mucDichNhom(docBai.map(({ p, pr }) => ({ conversation_id: p.conversation_id, group_name: p.group_name, kind: pr.kind })));
   const out = new Map();

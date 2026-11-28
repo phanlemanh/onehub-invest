@@ -7,7 +7,7 @@
 // lượt transform cũ vẫn là tin. Kết quả nạp vào bảng TẠM `flow_s03_branch` của phiên và bật `oneinvest.flow_branch`;
 // 600 chạy trên cùng phiên đọc bảng ấy (bộ chạy: refresh-data-flow.mjs). Chỉ đọc bảng thật.
 import { baiAnhCuaTin } from "../transform-media.mjs";
-import { laYeuCau, parsePost } from "../transform-zalo.mjs";
+import { LUAT_PL43, laYeuCau, parsePost } from "../transform-zalo.mjs";
 import { laChiAnh } from "./gop-anh.mjs";
 import { loadStgPosts } from "./test-posts.mjs";
 
@@ -22,7 +22,8 @@ export const NHANH = Object.freeze({ anhDaGhep: "anh-da-ghep", anhChuaGhep: "anh
  */
 export function nhanhCuaBai(bai, daGhep) {
   if (laChiAnh(bai.text)) return daGhep.has(bai.post_id) ? NHANH.anhDaGhep : NHANH.anhChuaGhep;
-  if (!parsePost(bai.text ?? "").kind && laYeuCau(bai.text)) return NHANH.yeuCau;
+  // PL43: nhánh data-flow tính bằng đúng luật của transform S03 (mặc định của parsePost/laYeuCau là luật cũ).
+  if (!parsePost(bai.text ?? "", { luat: LUAT_PL43 }).kind && laYeuCau(bai.text, LUAT_PL43)) return NHANH.yeuCau;
   return null;
 }
 

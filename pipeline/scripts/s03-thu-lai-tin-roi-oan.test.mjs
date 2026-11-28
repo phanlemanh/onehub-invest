@@ -2,7 +2,10 @@
 // _acceptance/s03-thu-lai-tin-roi-oan/contract.md; chiều đỏ chạy cùng ma trận bằng luật cũ tiêm qua `luat.pl43`.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { parsePost, suyLoai, coDauHieuBds, LUAT_PL43, LUAT_TRUOC_PL43 } from "../transform-zalo.mjs";
+import { parsePost, suyLoai, coDauHieuBds as coDauHieuBdsMd, laYeuCau, LUAT_PL43, LUAT_TRUOC_PL43 } from "../transform-zalo.mjs";
+
+const coDauHieuBds = (t) => coDauHieuBdsMd(t, LUAT_PL43);
+const docGia = (t) => parsePost(t, { luat: LUAT_PL43 }).priceVnd;
 
 const doc = (text, pl43 = LUAT_PL43) => {
   const pr = parsePost(text, { luat: pl43 });
@@ -54,9 +57,9 @@ test("PL43-AC-2 giá không đơn vị ở bài bán", () => {
     assert.equal(r.kind, "sale", `PL43-AC-2 «${t}» không thành tin bán`);
     assert.equal(r.priceVnd, gia, `PL43-AC-2 «${t}» đọc sai giá`);
   }
-  assert.equal(parsePost("căn góc 1t9 tầng cao view hồ").priceVnd, null, "PL43-AC-2 «1t9 tầng cao» không được là giá");
-  assert.equal(parsePost("thuê 5t5 full đồ studio").priceVnd, null, "PL43-AC-2 «5t5» (5,5 triệu) không được thành 5,5 tỷ");
-  assert.equal(parsePost("studio 5t50 full đồ ở liền").priceVnd, null, "PL43-AC-2 «5t50» không tín hiệu bán không được thành 5,5 tỷ");
+  assert.equal(docGia("căn góc 1t9 tầng cao view hồ"), null, "PL43-AC-2 «1t9 tầng cao» không được là giá");
+  assert.equal(docGia("thuê 5t5 full đồ studio"), null, "PL43-AC-2 «5t5» (5,5 triệu) không được thành 5,5 tỷ");
+  assert.equal(docGia("studio 5t50 full đồ ở liền"), null, "PL43-AC-2 «5t50» không tín hiệu bán không được thành 5,5 tỷ");
   // Đối chứng: giữ đúng kết quả hàm cũ.
   for (const t of ["2PN 70m2 Giá 2.5 tỷ/tháng", "bán căn 2PN 50m2 250 triệu", "căn 45m2 giá 7.000.000/m2 2PN"]) {
     assert.deepEqual(doc(t), doc(t, LUAT_TRUOC_PL43), `PL43-AC-2 đối chứng «${t}» đổi kết quả so với luật cũ`);
@@ -90,4 +93,13 @@ test("PL43-AC-3 câu tìm dạng mới vẫn là Yêu cầu; khẩu hiệu môi 
   const lot = TIM.filter((t) => doc(t, khongCap).kind);
   const khongLot = TIM.filter((t) => !doc(t, khongCap).kind);
   assert.deepEqual(khongLot, [], "PL43-AC-3 đối chứng: bỏ phần F mà các câu này vẫn không thành tin — chúng không đo được phần F");
+});
+
+test("PL43 khoanh: gọi không truyền luật (transform-fb S05, đường đọc ảnh, yeu-cau.mjs) giữ hành vi trước PL43", () => {
+  assert.equal(parsePost("Rainbow 1PN+ 47m2 Giá 1t920 BTP có sổ").priceVnd, null, "PL43 khoanh: parsePost mặc định đọc «1t920» — luật D lọt ra ngoài S03");
+  assert.equal(coDauHieuBdsMd("Sẵn Stu kệ bếp 5tr3"), false, "PL43 khoanh: coDauHieuBds mặc định nhận «Stu» — luật A lọt ra ngoài S03");
+  assert.equal(laYeuCau("Ai có stu 6.5trbp ko ạ"), false, "PL43 khoanh: laYeuCau mặc định đổi — luật F lọt ra ngoài S03");
+  // Đối chứng dương: truyền LUAT_PL43 thì luật mới chạy.
+  assert.equal(parsePost("Rainbow 1PN+ 47m2 Giá 1t920 BTP có sổ", { luat: LUAT_PL43 }).priceVnd, 1_920_000_000);
+  assert.equal(laYeuCau("Ai có stu 6.5trbp ko ạ", LUAT_PL43), true);
 });

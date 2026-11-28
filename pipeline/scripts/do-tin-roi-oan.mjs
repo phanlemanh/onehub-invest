@@ -187,8 +187,8 @@ async function main() {
 
     // Bài còn rơi có dấu hiệu BĐS (luật mới): có chữ, không trong tin sống nào, không nhánh Yêu cầu.
     const dungSau = new Set(sau.tin.flatMap((o) => o.post_ids));
-    const conRoiTat = posts.filter((p) => !dungSau.has(p.post_id) && !laChiAnh(p.text) && sau.nhanh.get(p.post_id) !== NHANH.yeuCau && coDauHieuBds(p.text))
-      .map((p) => ({ ma_tin: p.post_id, phan_luat: "còn rơi", kind: null, price_vnd: parsePost(p.text).priceVnd, nhan: nhan.get(p.post_id)?.listing_intent ?? null, chu_bai: p.text }));
+    const conRoiTat = posts.filter((p) => !dungSau.has(p.post_id) && !laChiAnh(p.text) && sau.nhanh.get(p.post_id) !== NHANH.yeuCau && coDauHieuBds(p.text, LUAT_PL43))
+      .map((p) => ({ ma_tin: p.post_id, phan_luat: "còn rơi", kind: null, price_vnd: parsePost(p.text, { luat: LUAT_PL43 }).priceVnd, nhan: nhan.get(p.post_id)?.listing_intent ?? null, chu_bai: p.text }));
     const theoMa = (m) => m.ma_tin;
     const mau = {
       ngauNhien: chonNgauNhien(muc, NGUONG.mauNgauNhien, HAT_GIONG, theoMa),
