@@ -44,14 +44,15 @@ trên DB M5) — lỗ tiềm ẩn, nhưng lộ thật khi sổ hỏng VÀ có d�
 
 ## 3. Bảng phủ ca
 
-Số tin trên DB M5 (bản chép máy thu 26/11, đo 28/11): `sale_offers` S06 60.548 bán / 80.702 thuê dài · S03 3.790 / 5.694 ·
-S05 25 / 5 · **S02 0 · S08 0**; `listings` (thuê ngắn hạn, S01) 989; `offer_price_rank` 150.764 dòng. Hai nguồn ẩn không có dòng
+Số tin trên DB M5 (bản chép máy thu 28/11 08:58Z, đo lại 28/11 sau khi GS thay DB): `sale_offers` S06 63.232 bán / 86.276 thuê
+dài · S03 4.093 / 5.777 · S05 25 / 5 · **S02 0 · S08 0**; `listings` (thuê ngắn hạn, S01) 989; `offer_price_rank` 159.408 dòng. (Bản
+26/11 lúc S1: S06 60.548 / 80.702, S03 3.790 / 5.694, `offer_price_rank` 150.764 — S02, S08, `listings` không đổi.) Hai nguồn ẩn không có dòng
 nào nên ô nguồn ẩn dùng tin cấy (đủ trường), không fixture viết tay cho phần còn lại — ô đối chứng là tin S06 cấy cạnh dữ liệu thật.
 
 | Chiều | Giá trị | Ai đọc đầu ra phía sau |
 |---|---|---|
 | Trạng thái sổ | hợp lệ `[S02, S08]` · rỗng · phần tử rỗng · sai khuôn `S2` · có khoảng trắng · trùng · undefined · null · chuỗi không phải mảng | khách API (mã 503 thay vì tin lọt) |
-| Đường | không kind · sale · rent_lt · rent_st · `minBelowMedianPct=0` (nhánh bảng hạng — DB có 150.764 dòng) · `minBelowMedianPct=0&project` · chi tiết S02 · chi tiết S06 · chi tiết ngắn hạn | khách API |
+| Đường | không kind · sale · rent_lt · rent_st · `minBelowMedianPct=0` (nhánh bảng hạng — DB có 159.408 dòng) · `minBelowMedianPct=0&project` · chi tiết S02 · chi tiết S06 · chi tiết ngắn hạn | khách API |
 | Bộ lọc | không lọc · area · market+bedroomsTotal · limit/offset | khách API |
 | Route khác khi sổ hỏng | /health · markets · price-stats · coverage · properties | khách API (không lan) |
 | Ô bỏ | nhánh thước CG8 khi sổ hỏng — ngoài phạm vi: chốt đóng chạy trước mọi nhánh, PB7 AC-4 đã đo CG8 khi sổ hợp lệ | — |
