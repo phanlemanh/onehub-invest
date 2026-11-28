@@ -18,9 +18,19 @@ const CA_GHIM = ["PB3-AC-1", "PB3-AC-4", "PB3-AC-5"];
 const TEP_CU = ["src/middleware/auth.ts", "src/index.ts"];
 const LENH_TEST = "node --import tsx --test --test-reporter=spec --test-concurrency=1 test/auth-dong.test.ts";
 
+// PB11 (GS phán 28/11): mốc so CỐ ĐỊNH — cha của lần gộp PB3 trên main (c16ebe9df). Trước đây lấy merge-base với
+// origin/main; sau khi hàng gộp, merge-base của mọi nhánh mới đã chứa hàng nên «bản cũ» = bản mới. PB11_MOC_THU chỉ để ô đột
+// biến của PB11 đổi mốc; mốc nào đã chứa lần gộp của hàng → thoát 2 «mốc so hỏng».
+const MOC = process.env.PB11_MOC_THU ?? "816796cf304c9fcdd5511991d7010963a6c1e1eb";
+const GOP_HANG = "c16ebe9df8da4bda019e4fa062dab6614667d9d1";
+try {
+  execFileSync("git", ["-C", ROOT, "merge-base", "--is-ancestor", GOP_HANG, MOC], { stdio: "ignore" });
+  console.log(`pha: mốc so hỏng: ${MOC.slice(0, 9)} đã chứa lần gộp ${GOP_HANG.slice(0, 9)} của hàng`);
+  process.exit(2);
+} catch { /* không chứa — đúng */ }
 let goc;
 try {
-  goc = git("merge-base", "HEAD", "origin/main").trim();
+  goc = MOC;
 } catch {
   console.log("pha: không dựng được bản cũ (không tìm được merge-base với origin/main)");
   process.exit(2);

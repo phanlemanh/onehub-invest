@@ -542,6 +542,9 @@ executors:
     dapi_reso_hop_dong: "node _acceptance/data-api-hop-dong-reso-dd-2-1/probes/hop-dong.mjs"   # data-api-hop-dong-reso-dd-2-1 E7 — tệp hợp đồng ↔ DD 2.1 ↔ mappings.yaml
     dapi_reso_luoc_do: "node _acceptance/data-api-hop-dong-reso-dd-2-1/probes/luoc-do-mau.mjs"   # data-api-hop-dong-reso-dd-2-1 E9 — lược đồ mẫu + seed trên DB rỗng
     dapi_reso_pham_vi: "node _acceptance/data-api-hop-dong-reso-dd-2-1/probes/pham-vi.mjs"   # data-api-hop-dong-reso-dd-2-1 E10 — ranh giới, mappings, tên nguồn thật
+    dapi_pbm_nam: "sh -c 'node _acceptance/data-api-hop-dong-reso-dd-2-1/probes/luoc-do-mau.mjs && node _acceptance/data-api-hop-dong-reso-dd-2-1/probes/pha.mjs && node _acceptance/data-api-dong-khi-thieu-khoa/probes/pha.mjs && bash db/db-thu.sh oneinvest_suite_dapi_mk --chay node _acceptance/data-api-markets-khong-doc-s02/probes/ban-cu.mjs'"   # data-api-probe-ban-cu-moc-co-dinh E1 — bốn probe ghim mốc
+    dapi_pbm_dot_bien: "node _acceptance/data-api-probe-ban-cu-moc-co-dinh/probes/dot-bien.mjs"   # data-api-probe-ban-cu-moc-co-dinh E3 — đột biến mốc năm ô
+    dapi_pbm_pham_vi: "node _acceptance/data-api-probe-ban-cu-moc-co-dinh/probes/pham-vi.mjs"   # data-api-probe-ban-cu-moc-co-dinh E4 — ranh giới, không merge-base
     dapi_psn_dot_bien: "node _acceptance/data-api-price-stats-so-nen-co-dinh/probes/dot-bien.mjs"   # data-api-price-stats-so-nen-co-dinh E2 — bốn ô đột biến AC-11
     dapi_psn_pham_vi: "node _acceptance/data-api-price-stats-so-nen-co-dinh/probes/pham-vi.mjs"   # data-api-price-stats-so-nen-co-dinh E3 — ranh giới tệp, không merge-base
     dapi_khoa_pha: "node _acceptance/data-api-dong-khi-thieu-khoa/probes/pha.mjs"   # data-api-dong-khi-thieu-khoa E7 — auth.ts, index.ts của merge-base phải đỏ đúng ca ghim

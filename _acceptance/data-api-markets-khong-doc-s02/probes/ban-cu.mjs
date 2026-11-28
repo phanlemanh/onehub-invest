@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// HT20 E6 (AC-6) — bản chép tạm data-api/ với markets.ts ở merge-base phải đỏ đủ năm ca HT20-AC-1…AC-5; bản không thay xanh.
+// HT20 E6 (AC-6) — bản chép tạm data-api/ với markets.ts ở mốc cố định trước HT20 phải đỏ đủ năm ca HT20-AC-1…AC-5; bản không thay xanh.
 // Chạy trên DB thử: bash db/db-thu.sh oneinvest_suite_dapi_mk --chay node _acceptance/data-api-markets-khong-doc-s02/probes/ban-cu.mjs
 // Thoát 0 = cả hai ô đúng; 1 = có ô sai; 2 = không dựng được bản chép.
 import { cpSync, mkdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
@@ -10,12 +10,22 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
 const RUN = path.join(ROOT, ".acceptance-runs/data-api-markets-khong-doc-s02", `ban-cu-${process.pid}`);
 const CA = ["HT20-AC-1", "HT20-AC-2", "HT20-AC-3", "HT20-AC-4", "HT20-AC-5"];
+// PB11 (GS phán 28/11): mốc so CỐ ĐỊNH — cha của lần gộp HT20 (#572) trên main (0d0710089). Trước đây lấy merge-base với
+// origin/main; sau khi hàng gộp, merge-base của mọi nhánh mới đã chứa hàng nên «bản cũ» = bản mới. PB11_MOC_THU chỉ để ô đột
+// biến của PB11 đổi mốc; mốc nào đã chứa lần gộp của hàng → thoát 2 «mốc so hỏng».
+const MOC = process.env.PB11_MOC_THU ?? "e83b5a91d26717038a3d1b53e45f3f062aaf317b";
+const GOP_HANG = "0d07100894f06a02b4a620ad62ae8996a295fea8";
+try {
+  execFileSync("git", ["-C", ROOT, "merge-base", "--is-ancestor", GOP_HANG, MOC], { stdio: "ignore" });
+  console.log(`ban-cu: mốc so hỏng: ${MOC.slice(0, 9)} đã chứa lần gộp ${GOP_HANG.slice(0, 9)} của hàng`);
+  process.exit(2);
+} catch { /* không chứa — đúng */ }
 let base, cu;
 try {
-  base = execFileSync("git", ["-C", ROOT, "merge-base", "HEAD", "origin/main"], { encoding: "utf8" }).trim();
+  base = MOC;
   cu = execFileSync("git", ["-C", ROOT, "show", `${base}:data-api/src/routes/markets.ts`], { encoding: "utf8" });
 } catch (e) {
-  console.error(`ban-cu: không đọc được markets.ts ở merge-base: ${e.message}`);
+  console.error(`ban-cu: không đọc được markets.ts ở mốc: ${e.message}`);
   process.exit(2);
 }
 /** Chấm một ô từ nhật ký test. Bản cũ (thay): đủ năm ca đỏ, mỗi ca kèm thông điệp ghim «HT20-AC-n …» của nó (dòng

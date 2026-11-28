@@ -1,0 +1,31 @@
+schema_version: 1
+feature_slug: data-api-probe-ban-cu-moc-co-dinh
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.dapi_pbm_nam
+    paths: [data-api/**, _acceptance/data-api-hop-dong-reso-dd-2-1/probes/**, _acceptance/data-api-dong-khi-thieu-khoa/probes/**, _acceptance/data-api-markets-khong-doc-s02/probes/**, _acceptance/data-api-dong-ba-route-lo/probes/**]
+    expected: "exit 0; bốn dòng kết: «luoc-do: nền 75f32bd55; … bản cũ đỏ», «pha: đủ 4 ô» (PB2), «pha: cây thật xanh» (PB3), «pha: đủ 2 ô» (HT20) — mỗi probe chạy bằng đúng lệnh executor của hồ sơ gốc"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.dapi_drl_pha
+    paths: [_acceptance/data-api-dong-ba-route-lo/probes/pha.mjs]
+    expected: "exit 0; ô goc xanh năm ca DRL; deals-cu, coverage-cu, listings-cu mỗi ô lop_json, lop_sql, duong_minh_do, duong_khac_xanh đều true; «pha: đủ 4 ô»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.dapi_pbm_dot_bien
+    paths: [_acceptance/data-api-probe-ban-cu-moc-co-dinh/probes/dot-bien.mjs, _acceptance/*/probes/pha.mjs, _acceptance/*/probes/luoc-do-mau.mjs, _acceptance/*/probes/ban-cu.mjs]
+    expected: "exit 0; năm dòng JSON dat: true (rc 2); «dot-bien: đủ 5 ô — mốc đã chứa lần gộp thì cả năm probe dừng «mốc so hỏng»»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.dapi_pbm_pham_vi
+    paths: ["**"]
+    expected: "exit 0; «chieu-do: pha-tep, pha-config — hai ô cấy đều ra đúng»; «pham-vi: nền <sha>; <n> tệp đổi so origin/main, đều trong ranh giới; năm probe không còn chọn bản cũ bằng merge-base»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

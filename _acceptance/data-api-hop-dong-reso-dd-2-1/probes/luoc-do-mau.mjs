@@ -131,9 +131,17 @@ await voiDb("moi", [["schema.sql", schema], ["seed.sql", seed]], async (db, loi)
 });
 
 // 4. Chiều đỏ: lược đồ mẫu ở nền (trước PB2).
-const ung = [git("merge-base", "HEAD", "origin/main").trim()];
-if (gitOk("rev-parse", "--verify", "-q", "origin/fix/data-api-don-ten-nguon")) ung.push(git("merge-base", "HEAD", "origin/fix/data-api-don-ten-nguon").trim());
-const nen = ung.find((c) => ung.every((d) => d === c || gitOk("merge-base", "--is-ancestor", d, c))) ?? ung[0];
+// PB11 (GS phán 28/11): mốc so CỐ ĐỊNH — cha của lần gộp PB2 (#578) trên main (a80d389d9). Trước đây lấy merge-base với
+// origin/main; sau khi hàng gộp, merge-base của mọi nhánh mới đã chứa hàng nên «bản cũ» = bản mới. PB11_MOC_THU chỉ để ô đột
+// biến của PB11 đổi mốc; mốc nào đã chứa lần gộp của hàng → thoát 2 «mốc so hỏng».
+const MOC = process.env.PB11_MOC_THU ?? "75f32bd55c15442e5ab0d258b1f998e70aa2072b";
+const GOP_HANG = "a80d389d929291e5a81b8ee0cff8ee7421d0676e";
+try {
+  execFileSync("git", ["-C", ROOT, "merge-base", "--is-ancestor", GOP_HANG, MOC], { stdio: "ignore" });
+  console.log(`luoc-do: mốc so hỏng: ${MOC.slice(0, 9)} đã chứa lần gộp ${GOP_HANG.slice(0, 9)} của hàng`);
+  process.exit(2);
+} catch { /* không chứa — đúng */ }
+const nen = MOC;
 const cu = git("ls-tree", "--name-only", `${nen}:data-api/db`).split("\n").filter((n) => n.endsWith(".sql")).sort()
   .map((n) => [n, git("show", `${nen}:data-api/db/${n}`)]);
 cu.push(["seed.sql", git("show", `${nen}:data-api/seed.sql`)]);
