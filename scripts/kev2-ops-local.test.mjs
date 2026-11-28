@@ -71,25 +71,36 @@ test("KEV2-AC-3 lưới Máy móc của bản tin (scheduler của push-ops-fact
   assert.throws(() => ghim(jp), /bản tin còn Kev/);
 });
 
+// KEV1 (#567, 1fe6ab9ca) gỡ lời gọi cổng chấm khỏi hook: handler.js hiện tại không còn ghi dòng «kev null», dòng post đổi khuôn
+// («… account=… kev=off by=…», bỏ p=). Nhật ký cũ trên máy thu vẫn còn dòng kev null, nên khuôn ấy (và khuôn post cũ) rút từ
+// handler.js ở sha ngay trước KEV1 bằng git show; khuôn post mới từ handler hiện tại. Đổi fixture sau chữ ký Cổng 2 (GS phán 28/11).
+const SHA_TRUOC_KEV1 = "1fe6ab9ca545ceb7286b84597a4250330b33488d^";
 /** Nhật ký hook dựng từ khuôn dòng log rút từ collector/openclaw/handler.js (đọc nguồn, không viết tay chữ log). */
 function nhatKyTuHandler() {
   const h = readFileSync(path.join(ROOT, "collector/openclaw/handler.js"), "utf8");
-  const khuon = (re, ten) => { const m = h.match(re); assert.ok(m, `handler.js không còn dòng log «${ten}» — thước mất mỏ neo`); return m[1]; };
-  const kevNull = khuon(/log\(`(kev null \(timeout\/gate\)) group=/, "kev null");
-  const post = khuon(/log\(`(post) \$\{r\.status\}/, "post");
-  const skip = khuon(/log\(`(skip \(rỗng\)) group=/, "skip (rỗng)");
+  const g = spawnSync("git", ["-C", ROOT, "show", `${SHA_TRUOC_KEV1}:collector/openclaw/handler.js`], { encoding: "utf8" });
+  assert.equal(g.status, 0, `không đọc được handler.js trước KEV1: ${g.stderr}`);
+  const hCu = g.stdout;
+  const khuon = (nguon, re, ten) => { const m = nguon.match(re); assert.ok(m, `handler.js không còn dòng log «${ten}» — thước mất mỏ neo`); return m[1]; };
+  const kevNull = khuon(hCu, /log\(`(kev null \(timeout\/gate\)) group=/, "kev null (trước KEV1)");
+  const post = khuon(hCu, /log\(`(post) \$\{r\.status\}/, "post (trước KEV1)");
+  const skip = khuon(h, /log\(`(skip \(rỗng\)) group=/, "skip (rỗng)");
+  const kevOff = khuon(h, /log\(`post \$\{r\.status\} \$\{r\.body\} group=\$\{group\} account=\$\{account\} (kev=off) by=/, "post khuôn mới kev=off");
   const t = (phut) => new Date(Date.now() - phut * 60_000).toISOString();
   const dong = [];
-  // Ma trận viết trước: 3 tin đi đủ (mỗi tin một dòng kev null + một dòng post 202), 1 tin rỗng (skip), 1 heartbeat.
+  // Ma trận viết trước: 3 tin khuôn cũ đi đủ (mỗi tin một dòng kev null + một dòng post 202), 1 tin khuôn mới, 1 tin rỗng (skip),
+  // 1 heartbeat.
   for (let i = 0; i < 3; i++) {
     dong.push(`${t(30 - i)} ${kevNull} group=Nhóm A account=acc-1`);
     dong.push(`${t(30 - i)} ${post} 202 {"accepted":1} group=Nhóm A p=null account=acc-1 by=x`);
   }
+  // Khuôn post MỚI (sau KEV1): một tin, không có dòng kev null đi kèm.
+  dong.push(`${t(12)} post 202 {"accepted":1} group=Nhóm A account=acc-1 ${kevOff} by=y`);
   dong.push(`${t(10)} ${skip} group=Nhóm A account=acc-1`);
   dong.push(`${t(5)} heartbeat up`);
   return dong.join("\n") + "\n";
 }
-const MONG = { messages: 4, passed: 3, skipped: 1, accepted: 3 };
+const MONG = { messages: 5, passed: 4, skipped: 1, accepted: 4 };
 
 test("KEV2-AC-6-GHI parseLog của bản tin không đếm dòng kev null; khớp số với bộ đếm của app", async () => {
   const { parseLog } = await import(path.join(ROOT, "pipeline/lib/ops-flow.mjs"));
@@ -97,7 +108,7 @@ test("KEV2-AC-6-GHI parseLog của bản tin không đếm dòng kev null; khớ
   const { funnel, groups } = parseLog(log);
   const lay = (b) => ({ messages: b.messages, passed: b.passed, skipped: b.skipped, accepted: b.accepted });
   assert.deepEqual(lay(funnel.last7), MONG);
-  assert.equal([...groups.values()].find((g) => g.name === "Nhóm A")?.seen, 4, "số tin theo nhóm đếm đôi");
+  assert.equal([...groups.values()].find((g) => g.name === "Nhóm A")?.seen, 5, "số tin theo nhóm đếm đôi");
   const pha = await banPha("pipeline/lib/ops-flow.mjs", "    if (/ kev null /.test(line)) continue;\n", "");
   const ghim = (b) => { if (b.messages !== MONG.messages) throw new Error(`bản tin đếm đôi: ${b.messages}`); };
   ghim(funnel.last7);
