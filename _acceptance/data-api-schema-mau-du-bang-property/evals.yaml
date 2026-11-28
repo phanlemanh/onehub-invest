@@ -6,14 +6,14 @@ evals:
     executor: script
     cmd: config:executors.script.dapi_smp_route
     paths: [data-api/db/schema.sql, data-api/seed.sql, data-api/src/**, _acceptance/data-api-schema-mau-du-bang-property/probes/moi-route.mjs]
-    expected: "exit 0; «moi-route: <n> lời gọi trên <k> đường openapi; route trả 500: 0; sai mã: 0» — trong đó bốn đường Property: ?project=<dự án mẫu> 200 ≥ 1 toà, activeListingCount ≥ 1; dự án không có 200 rỗng; /lookup 200 đúng 1 căn; toà 200, toà không có 404; căn 200; áp schema.sql rồi seed.sql không lỗi"
+    expected: "exit 0; «moi-route: <n> lời gọi trên <k> đường openapi; route trả 500: 0; sai mã: 0» — trong đó bốn đường Property: ?project=<dự án mẫu> 200 ≥ 1 toà, activeListingCount ≥ 1; dự án không có 200 với đúng 0 phần tử; /lookup 200 với đúng 1 căn (đẳng thức, không phải ngưỡng dưới); toà 200, toà không có 404; căn 200; áp schema.sql rồi seed.sql không lỗi"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E2
     criterion: AC-2
     executor: script
     cmd: config:executors.script.dapi_smp_route
     paths: [data-api/db/schema.sql, data-api/seed.sql, data-api/src/**, _acceptance/data-api-schema-mau-du-bang-property/probes/moi-route.mjs]
-    expected: "exit 0; mọi đường trong /openapi.json có mẫu gọi, số đường trả 500 = 0 (S1 đo 4); chiều đỏ cùng lượt: «chieu-do: bo-khuc-pb8 → <m ≥ 1> route trả 500 (đúng); duong-khong-mau → đúng»; dòng cuối «moi-route: đạt». Ô không đỏ → «moi-route: thước không đỏ ở <ô>», thoát 1"
+    expected: "exit 0; mọi đường trong /openapi.json có mẫu gọi, số đường trả 500 = 0 (S1 đo 4); chiều đỏ cùng lượt: «chieu-do: bo-khuc-pb8 → <m ≥ 1> route trả 500 (đúng); duong-khong-mau → đúng; lookup-2-can → đúng; du-an-khong-co-1-toa → đúng»; «seed-chay-lai: khúc PB8 áp hai lần, 6 bảng giữ nguyên số dòng»; «chieu-do: seed-bo-chot-trung → đúng (bí danh, phát biểu nhân đôi)»; dòng cuối «moi-route: đạt». Ô không đỏ → «moi-route: thước không đỏ ở <ô>», thoát 1"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3
     criterion: AC-3

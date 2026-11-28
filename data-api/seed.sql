@@ -175,19 +175,23 @@ ON CONFLICT (building_key) DO NOTHING;
 INSERT INTO units (unit_key, status, building_key, stack_key, floor, sub_id, catalog_tier) VALUES
   ('unt_01JD0000000000000000000001', 'active', 'bld_01JD0000000000000000000001', NULL, '12', 'unt_01JD0000000000000000000001', 'xac_minh')
 ON CONFLICT (unit_key) DO NOTHING;
-INSERT INTO registry_aliases (object_key, kind, value, source) VALUES
+-- Bí danh, phát biểu không có khoá tự nhiên duy nhất trong lược đồ mẫu → chỉ chèn khi chưa có (seed chạy lại không nhân đôi).
+INSERT INTO registry_aliases (object_key, kind, value, source)
+SELECT v.object_key, v.kind, v.value, v.source FROM (VALUES
   ('bld_01JD0000000000000000000001', 'ten', 'PB8 Toà A', 'S03'),
-  ('unt_01JD0000000000000000000001', 'ma_nguon', 'PB8-A/A-1205', 'S03');
-INSERT INTO field_assertions (resource_name, subject_key, field, value, evidence_tier, method, observed_at) VALUES
-  ('Unit', 'unt_01JD0000000000000000000001', 'living_area', '68', 'fact', 'source_field', now()),
-  ('Unit', 'unt_01JD0000000000000000000001', 'bedrooms', '2', 'fact', 'source_field', now()),
-  ('Unit', 'unt_01JD0000000000000000000001', 'bathrooms', '2', 'fact', 'source_field', now());
+  ('unt_01JD0000000000000000000001', 'ma_nguon', 'PB8-A/A-1205', 'S03')) v(object_key, kind, value, source)
+WHERE NOT EXISTS (SELECT 1 FROM registry_aliases r WHERE r.object_key = v.object_key AND r.kind = v.kind AND r.value = v.value);
+INSERT INTO field_assertions (resource_name, subject_key, field, value, evidence_tier, method, observed_at)
+SELECT 'Unit', 'unt_01JD0000000000000000000001', v.field, v.value, 'fact', 'source_field', now() FROM (VALUES
+  ('living_area', '68'), ('bedrooms', '2'), ('bathrooms', '2')) v(field, value)
+WHERE NOT EXISTS (SELECT 1 FROM field_assertions f WHERE f.subject_key = 'unt_01JD0000000000000000000001' AND f.field = v.field);
 INSERT INTO sale_offers (offer_id, area_id, kind, property_type, price_vnd, area_m2, price_perm2, bedrooms, confidence,
   first_seen, last_seen, n_reposts, post_ids, source, offer_status) VALUES
   ('seed_offer_pb8_toa', 'vn-hanoi-hoan-kiem', 'sale', 'apartment', 6800000000, 68, 100000000, 2, 'high', now(), now(), 1,
    '{pb8-bai-1}', 'S03', 'active')
 ON CONFLICT (offer_id) DO NOTHING;
-INSERT INTO field_assertions (resource_name, subject_key, field, value, evidence_tier, method, rule_id, observed_at) VALUES
-  ('Property', 'S03:pb8-bai-1', 'universal_property_id', 'urn:onehub:upi:1:VN:VN-HN:bld_01JD0000000000000000000001', 'observed',
-   'e1_rule', 'ghep-toa-cot', now());
+INSERT INTO field_assertions (resource_name, subject_key, field, value, evidence_tier, method, rule_id, observed_at)
+SELECT 'Property', 'S03:pb8-bai-1', 'universal_property_id', 'urn:onehub:upi:1:VN:VN-HN:bld_01JD0000000000000000000001', 'observed',
+   'e1_rule', 'ghep-toa-cot', now()
+WHERE NOT EXISTS (SELECT 1 FROM field_assertions f WHERE f.subject_key = 'S03:pb8-bai-1' AND f.field = 'universal_property_id');
 COMMIT;
