@@ -74,6 +74,28 @@ test("PL43-AC-2 giá không đơn vị ở bài bán", () => {
   }
 });
 
+// AC-3 (vòng 4): ma trận câu tìm sinh từ ĐÚNG danh sách dạng của AC-1 (DANG) cộng diện tích trần, × bốn động từ tìm × có/không giá.
+const DANG_TIM = [...DANG, "55m"];
+const DONG_TU = ["Tìm", "Cần", "Ai có", "kiếm"];
+const CAU_TIM = DONG_TU.flatMap((v) => DANG_TIM.flatMap((d) => [`${v} ${d} full đồ 8tr`, `${v} ${d} full đồ ạ`]));
+
+test("PL43-AC-3 ma trận câu tìm: mọi dạng AC-1 nhận thêm × động từ tìm × có/không giá là Yêu cầu", () => {
+  assert.equal(CAU_TIM.length, DONG_TU.length * DANG_TIM.length * 2);
+  const lech = CAU_TIM.filter((t) => doc(t).nguon !== "yeu-cau").map((t) => `«${t}» → ${doc(t).kind}/${doc(t).nguon}`);
+  assert.deepEqual(lech, [], "PL43-AC-3 câu tìm dạng mới không ra Yêu cầu");
+  // Chiều đỏ: bỏ phần F thì mọi câu có giá viết bằng «BE5 Stu» và diện tích trần thành tin rao — gọi tên câu.
+  const khongCap = { ...LUAT_PL43, yeuCauCap: false };
+  const phaiLot = CAU_TIM.filter((t) => /8tr$/.test(t) && /BE5 Stu|55m/.test(t));
+  const khongLot = phaiLot.filter((t) => !doc(t, khongCap).kind);
+  assert.deepEqual(khongLot, [], "PL43-AC-3 đối chứng: bỏ phần F mà các câu này vẫn không thành tin — chúng không đo được phần F");
+  // Đối chứng phía tin rao: môi giới tìm KHÁCH cho căn của mình không phải câu tìm (chữ chen «khách» bị loại).
+  const RAO = [
+    ["tìm khách 1pn+ 6,5 triệu nhà trống có ac em hợp tác nhé", "rent_lt"],
+    ["Ai có khách 1 ngủ bên LD giá 2,2 tỷ inbox mình", "sale"],
+  ];
+  for (const [t, kind] of RAO) assert.equal(doc(t).kind, kind, `PL43-AC-3 tin rao «${t}» bị coi là câu tìm`);
+});
+
 test("PL43-AC-3 câu tìm dạng mới vẫn là Yêu cầu; khẩu hiệu môi giới là tin rao", () => {
   const TIM = [
     "Tìm 1 ngủ toà Be cơ bản giá dưới 7 triệu ạ",

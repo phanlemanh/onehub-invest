@@ -547,6 +547,10 @@ const YEU_CAU_CAP = [
   String.raw`${KHONG_DINH_CHU}ai\s+nắm\s+(?:chủ|căn)`,
   String.raw`${TIM_PL43}\s+\d+(?:\s*-\s*\d+)?\s*m(?![\p{L}\d²2])`,
   String.raw`${KHONG_DINH_CHU}(?:em|e|mình)\s+cần\s+gấp(?![\p{L}])`,
+  // S4 r3 (vòng 4, Mạnh «Cho chấm thêm»): động từ tìm + (tối đa một chữ chen, như mã toà «BE5») + mọi dạng A nhận thêm, kể cả
+  // diện tích trần — «Tìm BE5 Stu…», «Cần 55m…», «Ai có BE5 Stu…». Chữ chen không được là «bán/cho/chuyển/sang/pass/nhượng/khách/
+  // người» (môi giới tìm khách). Đo DB máy thu 28/11: kéo 4 bài, 0 nhãn offer.
+  String.raw`${KHONG_DINH_CHU}(?:t[iì]m|kiếm|cần|(?:ai|ac|ace)\s+(?:nào\s+)?có)\s+(?:gấp\s+|thu[eê]\s+|mua\s+|căn\s+)?(?:(?!(?:bán|cho|chuyển|sang|pass|nhượng|kh[aá]ch|kh|người)(?![\p{L}]))[\p{L}\p{N}]{1,6}\s+)?(?:stu(?:dio)?s?(?![\p{L}])|${PN_YC_PL43}|\d+(?:[.,]\d+)?\s*m(?![\p{L}\d²2]))`,
   // S4 r2: «khách kiếm/kiêm stu», «Khách em tài chính … muốn mua 1 ngủ» (đo 28/11: 0 nhãn offer).
   String.raw`${KHONG_DINH_CHU}kh[aá]ch\s+(?:kiếm|kiêm)(?![\p{L}])`,
   String.raw`${KHONG_DINH_CHU}kh[aá]ch\s+(?:e|em|mình)(?![\p{L}])[^.!?\n]{0,40}?(?:muốn|cần)\s+(?:mua|thuê)(?![\p{L}])`,
