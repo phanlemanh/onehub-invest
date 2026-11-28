@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 1b25bca464992d97cfe3e47a0cbe1b94cb5bab60
+verified_commit: 2da877599c4cc79120b14ccc470fb11e0c133e28
 human_signoff: Mạnh 2026-11-27
 ---
 
@@ -184,3 +184,7 @@ Round 2: chín eval máy E1–E9 đạt, bảy lệnh suite đạt; E10 là mụ
 ### Re-pin lần 1 — 2026-11-28, do ghim lại bằng làn eval
 run_id: repin-20261128T091354Z-86616
 sha: 1b25bca464992d97cfe3e47a0cbe1b94cb5bab60 · suites: 8 lệnh exit 0 · evals: 9/9 eval máy đạt kỳ vọng · ngoài làn máy: E10 (E10 không khai paths) · AC không có chốt máy: AC-10
+
+### Re-pin lần 2 — 2026-11-28, do ghim lại bằng làn eval
+run_id: repin-20261128T120257Z-25046
+sha: 2da877599c4cc79120b14ccc470fb11e0c133e28 · suites: 8 lệnh exit 0 · evals: 9/9 eval máy đạt kỳ vọng · ngoài làn máy: E10 (E10 không khai paths) · AC không có chốt máy: AC-10
