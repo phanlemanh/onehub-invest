@@ -1,0 +1,12 @@
+{"feature_plain":"Lượt chấm và làn ghim trên Mac mini không còn đỏ oan khi lượt nạp ngày thật của máy thu đang chạy: ca test thu đuôi S06 dùng pgrep giả, còn nhánh nhường lượt có một test riêng chứng nó vẫn chạy. Mã chạy thật ở máy thu không đổi.",
+"will_do":[
+{"id":"AC-1","p":"Sẽ cho ca test thu đuôi đầu-cuối xanh ngay cả khi có một tiến trình tên trùng lượt nạp ngày đang chạy; bản test cũ trong cùng điều kiện vẫn đỏ, và đỏ đúng vì nhường lượt."},
+{"id":"AC-2","p":"Sẽ có một test mới dựng tiến trình thật tên trùng rồi chứng wrapper vẫn nhường lượt: thoát 0, đúng một dòng báo, không chạy bước nào khác, khoá chỉ ở thư mục tạm."},
+{"id":"AC-3","p":"Sẽ chứng test mới bắt được lỗi: tắt nhánh nhường lượt trên bản chép thì test đỏ đúng chỗ."},
+{"id":"AC-4","p":"Sẽ chỉ đổi hai tệp test; wrapper chạy ở máy thu giữ nguyên từng byte."},
+{"id":"AC-5","p":"Sẽ giữ xanh các test cũ của wrapper từ ZC18."},
+{"id":"AC-6","p":"Sẽ có bảng soát mọi script gọi pgrep hay launchctl, mỗi dòng ghi test nào chạy nó và kết luận; máy rút lại danh sách mỗi lượt chấm để bảng không thiếu dòng."}],
+"wont_do":[
+{"id":"OOS-1","p":"KHÔNG sửa wrapper, kể cả siết mẫu tìm tiến trình đang khớp nhầm cả tiến trình lạ — đó là hành vi chạy thật, việc riêng."},
+{"id":"OOS-2","p":"KHÔNG sửa ca ON22-AC-10 cố ý đọc máy thu thật (đã nằm trong danh sách CI bỏ qua)."},
+{"id":"OOS-3","p":"KHÔNG cài lịch hay launchd cho thu đuôi."}]}
