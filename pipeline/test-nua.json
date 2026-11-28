@@ -120,6 +120,8 @@
     "scripts/ghep-tin-truc-can-cham.test.mjs",
     "scripts/do-yeu-cau-lot-tin.test.mjs",
     "scripts/yeu-cau-khong-thanh-tin-thue.test.mjs",
+    "scripts/s03-thu-lai-tin-roi-oan.test.mjs",
+    "scripts/do-tin-roi-oan.test.mjs",
     "scripts/street-raw-tran-dem.test.mjs",
     "scripts/dong-the-bo-sung-tin.test.mjs",
     "import-s09-danh-ba.test.mjs"
