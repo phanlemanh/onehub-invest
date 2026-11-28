@@ -1,0 +1,101 @@
+schema_version: 1
+feature_slug: data-api-hop-dong-reso-dd-2-1
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.dapi_reso
+    paths: [data-api/src/routes/listings.ts, data-api/src/contract/**, data-api/test/**]
+    expected: "exit 0; «ℹ fail 0», «ℹ skipped 0»; ca «PB2-AC-1 listings sale, rent_lt theo RESO» xanh: tập khoá mỗi phần tử = tập khoá của tệp hợp đồng (so bằng tập); từng giá trị so với dòng cấy theo bảng design §2 (listPrice/leaseAmount theo kind, leaseAmountFrequency Monthly, salePricePerArea/leasePricePerArea theo kind, livingAreaUnits và pricePerAreaUnit «Square Meters», city = tên phường, mlsAreaMinor = mã phường, mlsAreaMajor = mã thị trường, originatingSystemName = mã S0x của dòng; một tin cấy source mang chữ không phải mã phải ra originatingSystemName null — sai → «PB2 originatingSystemName không phải mã S0x»); quét không gặp khoá nào của danh sách khoá cũ. Thiếu/thừa khoá → «PB2 listings sai tập khoá: <khoá>»; sai giá trị → «PB2 listings sai giá trị <khoá>». Đối chứng: số phần tử so được = 0 → đỏ «PB2 không so được phần tử nào» (không xanh rỗng)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.dapi_reso
+    paths: [data-api/src/routes/listings.ts, data-api/src/contract/**, data-api/test/**]
+    expected: "exit 0; ca «PB2-AC-2 listings rent_st theo RESO» xanh: cùng tập khoá; kind rent_st, leaseAmount = giá niêm yết một đêm (price_listed) cấy, leaseAmountFrequency Daily, propertyType «Residential Lease», propertySubType null, originatingSystemName S01, media null ở cả tin có ảnh cấy lẫn tin không ảnh, JSON.stringify(thân) không chứa URL ảnh cấy nào → «PB2 rent_st lộ ảnh», listingTitle/spaceType/accommodates/minimumNights/reviewCount/occupancyRate/averageDailyRevenue khớp; listingKey = 16 hex đầu của HMAC-SHA256(khoá thử của test, 'S01|<id>') tính lại trong test — khác → «PB2 rent_st listingKey không phải HMAC»; JSON.stringify(thân) và bản giải base64, hex của mọi chuỗi trong thân không chứa id gốc hay phần số → «PB2 rent_st lộ id gốc»; đối chứng đột biến trong cùng ca: hàm dựng khoá thay bằng base64('S01|'+id) phải bị bộ dò bắt với đúng thông điệp ấy; khởi động với NODE_ENV=production không có biến khoá → lỗi «PB2 thiếu khoá bí mật của listingKey»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.dapi_reso
+    paths: [data-api/src/routes/listings.ts, data-api/test/**]
+    expected: "exit 0; ca «PB2-AC-3 listings kind, lọc, trang, chi tiết» xanh: không kind → có cả ba kind, sắp theo listingKey; kind lạ → 400 với error.code và error.message là chuỗi; market, area, bedroomsTotal mỗi lọc chỉ giữ tin thoả (có tin không thoả bị loại — đối chứng); limit=2 offset=0 và offset=2 không trùng, hợp lại = trang limit=4; chi tiết theo listingKey của tin bán, tin thuê dài hạn, tin ngắn hạn trả đúng tin và cùng tập khoá; khoá không có → 404 error.code NOT_FOUND."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.dapi_reso
+    paths: [data-api/src/routes/listings.ts, data-api/src/contract/**, data-api/test/**]
+    expected: "exit 0; ca «PB2-AC-4 ma trận loại hình» xanh: ma trận viết trước trong test có đúng 15 ô (sale và rent_lt × apartment, house, land, commercial, room, unknown, null = 14 ô, cộng rent_st), số assert = 15; mỗi ô đúng cặp propertyType/propertySubType của design §3; không phần tử nào mang mã nội bộ ở hai khoá. Sai một ô → «PB2 loại hình sai ô <kind>×<property_type>: <được>≠<mong>»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.dapi_reso
+    paths: [data-api/src/routes/deals.ts, data-api/src/contract/**, data-api/test/**]
+    expected: "exit 0; ca «PB2-AC-5 căn giá tốt là bộ lọc của listings» xanh: GET /v1/listings?kind=sale&minBelowMedianPct=<n> ở nhánh hạng và nhánh CG8 (xoá dòng offer_price_rank trong ca) mỗi phần tử có đúng tập khoá của tệp hợp đồng, belowMedianPct + comparableMedianPricePerArea khớp dòng cấy, priceRank có ở nhánh hạng, null ở nhánh CG8 (priceRank ở nhánh hạng với các khoá con level, node, n, median, p20, percentile, label, needsVerification, metric, bedroomsGroup, reason); giá trị khớp dòng cấy; không khoá cũ; minBelowMedianPct loại tin dưới ngưỡng (đối chứng có tin bị loại); kind lạ → 400 error.code/message; GET /v1/deals → 410 error.code GONE, message đúng chuỗi ghim «/v1/deals đã gộp vào /v1/listings: dùng ?minBelowMedianPct=»; VÀ năm ca DRL-AC-1…DRL-AC-5 của dong-ba-route.test.ts xanh với «ℹ skipped 0» — số ca DRL không giảm so với merge-base (5)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E14
+    criterion: AC-11
+    executor: test
+    cmd: config:executors.test.dapi_reso
+    paths: [data-api/src/routes/asset-stats.ts, data-api/src/app.ts, data-api/test/**]
+    expected: "exit 0; ca «PB2-AC-11 price-stats» xanh: GET /v1/price-stats?area=<phường cấy> và ?market=<thị trường cấy> trả đúng thân mà /v1/asset-stats trả trên merge-base cho cùng DB (so bằng nhau, ghim trong test); thiếu cả hai tham số → 400 như cũ; GET /v1/asset-stats → 410 error.code GONE, message «/v1/asset-stats đã đổi tên thành /v1/price-stats»; /openapi.json có /v1/price-stats, không có /v1/asset-stats, /v1/deals như đường sống"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.dapi_reso_pha
+    paths: [data-api/src/routes/**, data-api/test/**, _acceptance/data-api-hop-dong-reso-dd-2-1/probes/pha.mjs]
+    expected: "exit 0; probe in 3 dòng JSON viết trước (ô goc, listings-cu, deals-cu, asset-stats-cu) rồi «pha: đủ 4 ô». Ô goc: rc 0, fail 0. listings-cu: rc ≠ 0, đầu ra có «PB2 listings sai tập khoá» VÀ «PB2 listings sai giá trị» hoặc lỗi chặn trước giá trị được probe ghi rõ, ca PB2-AC-5 xanh. deals-cu: rc ≠ 0, có «PB2 deals còn sống» (đường cũ không 410) hoặc «PB2 listings sai tập khoá» ở ca AC-5, ca PB2-AC-1..AC-4 xanh. asset-stats-cu: rc ≠ 0, có «PB2 price-stats», ca PB2-AC-1..AC-5 xanh. Thiếu thông điệp hay ca đường kia đỏ → thoát 1 «pha: N ô sai»; không dựng được bản cũ → thoát 2."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.dapi_reso_hop_dong
+    paths: [data-api/src/contract/**, pipeline/mappings.yaml, _acceptance/data-api-hop-dong-reso-dd-2-1/probes/hop-dong.mjs]
+    expected: "exit 0; «hop-dong: <n> khoá (<k> field DD 2.1, <e> extension), <v> giá trị lookup — đều khớp DD 2.1 <generatedOn> và mappings.yaml». Chiều đỏ cùng lượt, bốn ô cấy trên bản chép tạm: khoa-khong-khai → «PB2 khoá không có trong hợp đồng: <khoá>»; ten-dd-sai (listPricePerArea) → «PB2 không có field DD 2.1: Property.ListPricePerArea»; lookup-sai (SingleFamilyResidence) → «PB2 không phải StandardName của PropertySubType: SingleFamilyResidence»; extension-thieu → «PB2 extension chưa khai ở mappings.yaml: <khoá>». Ô không đỏ → thoát 1 «hop-dong: thước không đỏ ở <ô>»; không tìm thấy dd-2.1.json (env DD21_JSON hoặc research-local/reso/dd-2.1.json của checkout chính) → thoát 2."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: judgment
+    inputs: [pipeline/mappings.yaml, data-api/src/contract/listing.ts, _acceptance/data-api-hop-dong-reso-dd-2-1/design.md, docs/adr/0011-reso-first-data-law.md]
+    question: "Đọc pipeline/mappings.yaml và data-api/src/contract/listing.ts. (1) meta.dd_version là \"2.1\"; trong canonical (sale_offers) offer_id ánh xạ ListingKey, price_perm2 ánh xạ SalePricePerArea/LeasePricePerArea, first_seen ánh xạ OnMarketTimestamp (hợp đồng AC-8, sổ d-20261127T030832Z-28)? (2) Có mục listings ánh xạ các cột của bảng thuê ngắn hạn mà design.md §2 liệt? (3) Mục api_extensions có một mục cho MỖI khoá ghi extension trong listing.ts, và mỗi mục viết rõ đủ sáu điều kiện của ADR-0011 Quyết định 3 (tra cứu DD, lý do DD không đủ, migration hoặc «không cột mới — dựng từ cột X», CHECK hoặc lý do không có, khai báo, DQ trỏ tệp test)? PASS khi cả ba vế đạt."
+    expected: "PASS — cả ba vế đạt"
+    evidence_required: [run_id, verdict, judges, rationale]
+  - id: E9
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.dapi_reso_luoc_do
+    paths: [data-api/db/**, data-api/seed.sql, data-api/src/**, _acceptance/data-api-hop-dong-reso-dd-2-1/probes/luoc-do-mau.mjs]
+    expected: "exit 0; probe tạo DB rỗng oneinvest_suite_pb2_<pid>, áp schema.sql rồi seed.sql, gọi 12 đường bằng app.request(): mỗi dòng «<đường> 200 (<n> phần tử)», /v1/listings mỗi kind ≥ 1, /v1/listings?minBelowMedianPct=0 ≥ 1, /v1/price-stats 200, /v1/deals và /v1/asset-stats 410; «seed: 0 câu chèn vào bảng S02»; «db: chỉ schema.sql»; chiều đỏ cùng lượt trên lược đồ mẫu của merge-base → «luoc-do: bản cũ đỏ: <lỗi áp hoặc đường không 200>»; DB tạm bị xoá cuối lượt kể cả khi lỗi. Một đường không 200 → thoát 1 nêu đường; bản cũ không đỏ → thoát 1 «luoc-do: thước không đỏ ở ban-cu»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.script.dapi_reso_pham_vi
+    paths: [_acceptance/data-api-hop-dong-reso-dd-2-1/probes/pham-vi.mjs, data-api/**, pipeline/mappings.yaml, _acceptance/config.yaml]
+    expected: "exit 0; «pham-vi: <n> tệp đổi, đều trong ranh giới; mappings.yaml chỉ đổi meta, ba mục canonical, thêm listings, api_extensions; soát <k> tên nguồn thật trên toàn cây data-api (<m> tệp), 0 khớp ngoài dạng định danh» (không in tên). Chiều đỏ cùng lượt: pha-tep (cấy db/migrations/x.sql vào danh sách tệp) → «AC-10 NGOÀI PHẠM VI: db/migrations/x.sql»; pha-mappings (cấy đổi mục enums.kind) → «AC-10 mappings.yaml đổi ngoài phần được giao: enums.kind»; pha-ten (tên trần vào bản chép tạm một tệp data-api) → «AC-10 tên nguồn thật: S0x»; pha-config (khoá ngoài dapi_reso*) → «AC-10 NGOÀI PHẠM VI: _acceptance/config.yaml khoá <khoá>»; pha-ext (nền đã có api_extensions: cấy đổi một khoá con không phải listing) → «AC-10 mappings.yaml đổi ngoài phần được giao: api_extensions.<khoá con>», sửa api_extensions.listing không đỏ. Ô không đỏ → thoát 1."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-10
+    executor: judgment
+    inputs: [data-api/README.md, data-api/CLAUDE.md, data-api/src/contract/listing.ts, _acceptance/data-api-hop-dong-reso-dd-2-1/design.md]
+    question: "Đọc data-api/README.md và data-api/CLAUDE.md. (1) README có bảng tên cũ → tên mới khớp design.md §2, và mô tả /v1/listings (tham số kind, market, area, bedroomsTotal, limit, offset), /v1/listings/:listingKey, /v1/deals (minBelowMedianPct và ba extension) đúng hình mới, không còn mô tả tên cũ như đang có? (2) CLAUDE.md có luật: khoá phần tử listing chỉ thêm qua data-api/src/contract/listing.ts, tra RESO DD 2.1 trước, khoá không có trong DD thì khai extension ở pipeline/mappings.yaml? PASS khi cả hai vế đạt."
+    expected: "PASS — cả hai vế đạt"
+    evidence_required: [run_id, verdict, judges, rationale]
+  - id: E12
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.data_api
+    paths: [data-api/src/**, data-api/tsconfig.json]
+    expected: "exit 0; tsc --noEmit không lỗi."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E13
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.dapi_reso
+    paths: [data-api/src/app.ts, data-api/src/contract/**, data-api/test/**]
+    expected: "exit 0; ca «PB2-AC-10c openapi sinh từ hợp đồng» xanh: tập khoá của schema phần tử listing trong /openapi.json = tập khoá của listing.ts (so bằng tập); /health version và openapi info.version = 0.2.0. Đối chứng trong cùng ca: bản chép schema thêm một khoá → bộ so ra «AC-10 openapi lệch hợp đồng: <khoá>»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

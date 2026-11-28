@@ -1,0 +1,17 @@
+DA72 S4 vòng 1 trên M5 ＠e53d73967d170ef3ad57be13e5884bd205af5772 — pipeline_that chạy NGOÀI vòng (HT37; nhánh đổi pipeline/danh-ba-vat-the.mjs nên suite chạy).
+Lệnh: node scripts/suite-neu-doi.mjs pipeline_that -- 'cd pipeline && npm run test:that'
+chay-that: vai may-phat-trien — bỏ qua 1 ca chỉ máy thu
+ℹ tests 37
+ℹ pass 37
+ℹ fail 0
+ℹ skipped 0
+__EXIT=0
+→ ĐẠT theo luật GS 26/11. Chấm trên M5: ON22-AC-10 không chạy (HT33).
+
+E4 doi-chung.sh chạy thử trước vòng (kịch bản chạy được, không cần P1 sửa):
+ℹ fail 3
+ℹ pass 0
+✖ DA72-AC-1 lượt đêm có khu thiếu tỉnh (không dòng S08): không ném, in dòng đếm khu bỏ ISO, «đêm {khu: N}» đủ mọi khu (69.7375ms)
+✖ DA72-AC-2 khu CÓ dòng S08 mà thiếu tỉnh vẫn dừng gọi tên, không ghi (luật cũ giữ cho chỗ ISO được dùng) (14.924958ms)
+✖ DA72-AC-3 refresh-bait-gap thật trên DB lượt thoát 0, có dòng «đêm», không «khong-co-tinh» (5512.924417ms)
+ĐỐI CHỨNG: mã gốc đỏ đúng (khong-co-tinh) ở dad1be620

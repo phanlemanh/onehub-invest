@@ -1,0 +1,13 @@
+DA67 — số đo E13 step1 (tối) và step1b (sáng) ở 375 px trên M5 ＠2ab1a3364f9350bf2f151b4a180122cbc94e9e56
+Cách đo: ego lite, CDP Emulation.setDeviceMetricsOverride 375×812 (mobile, DPR 2) + Emulation.setEmulatedMedia prefers-color-scheme;
+trang /ops/registry trên dev server :3466 của worktree chấm, đọc DB riêng oneinvest_suite_da67 (chép từ bản chép máy thu);
+đăng nhập tài khoản ops thử ops-test@local.test (không email nào khác trên trang). Bảng đo: bảng đầu trang (Dự án · phân khu),
+khung cuộn = tổ tiên gần nhất có overflow-x auto/scroll; mép phải = getBoundingClientRect().right của <th> cột.
+
+| chế độ | innerWidth | scrollWidth | clientWidth | mép phải «Căn» | mép phải «Tin đang rao» | tổng <col> | cột đầu bảng |
+|---|---|---|---|---|---|---|---|
+| sáng (step1b) | 375 | 333 | 333 | 283.3 | 354 | 333 | Dự án · phân khu · Toà · Căn · Tin đang rao |
+| tối (step1)   | 375 | 333 | 333 | 283.3 | 354 | 333 | Dự án · phân khu · Toà · Căn · Tin đang rao |
+
+Kết luận: scrollWidth ≤ clientWidth (333 = 333, không cuộn ngang); mép phải Căn và Tin ≤ innerWidth (283.3 và 354 ≤ 375) ở cả hai chế độ;
+tổng bề rộng <col> 333 ≤ 333; không có cột Bậc ở 375 px.

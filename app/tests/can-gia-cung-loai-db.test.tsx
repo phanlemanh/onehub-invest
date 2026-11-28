@@ -27,7 +27,8 @@ const nap = async () => ({
   pool: (await import("../src/lib/db")).pool,
   GET: (await import("../src/app/api/v1/deals/route")).GET,
   poolApi: (await ngoai("../../data-api/src/db/client.ts")).pool as pg.Pool,
-  dealsRoute: (await ngoai("../../data-api/src/routes/deals.ts")).dealsRoute,
+  listingsRoute: (await ngoai("../../data-api/src/routes/listings.ts")).listingsRoute,
+  LISTING_KEY_NAMES: (await ngoai("../../data-api/src/contract/listing.ts")).LISTING_KEY_NAMES as string[],
 });
 let m: Awaited<ReturnType<typeof nap>>;
 before(async () => {
@@ -144,10 +145,44 @@ const KHOA_CU: Record<string, string[]> = {
 };
 const kieu = (v: unknown) => (v === null ? "null" : typeof v);
 
+// PB2 (data-api-hop-dong-reso-dd-2-1, GS xác nhận 27/11): /v1/deals của data-api đã gộp vào /v1/listings?minBelowMedianPct=.
+// Chỉ phần gọi data-api đổi: lời gọi cũ dịch sang tham số mới (min_discount → minBelowMedianPct; kind vắng → sale như /v1/deals
+// cũ), phần tử mới dịch về tên khoá cũ theo bảng khoá cũ → mới của hồ sơ PB2 (khoa-cu-moi.md) — mỗi ca giữ nguyên điều nó
+// khẳng định (cùng tập tin, cùng thứ tự, cùng ngưỡng). Phần tử gốc còn được so với tập khoá của tệp hợp đồng Listing.
+const thamSoMoi = (q: string) => {
+  const ra = new URLSearchParams();
+  // Nghĩa cũ của /v1/deals: `Number(min_discount) || 5` (0 đọc thành 5), limit mặc định 30, trần 100 — dịch đúng nghĩa đó.
+  for (const [k, v] of new URLSearchParams(q)) {
+    if (k === "min_discount") ra.set("minBelowMedianPct", String(Math.max(0, Math.min(50, Number(v) || 5))));
+    else if (k === "limit") ra.set("limit", String(Math.min(100, Number(v) || 30)));
+    else ra.set(k, v);
+  }
+  if (!ra.has("kind")) ra.set("kind", "sale");
+  if (!ra.has("minBelowMedianPct")) ra.set("minBelowMedianPct", "5");
+  if (!ra.has("limit")) ra.set("limit", "30");
+  return ra.toString();
+};
+const loaiNoiBo = (pt: unknown, pst: unknown) =>
+  pst === "Condominium" ? "apartment" : pst === "Unimproved Land" ? "land" : pst === "Room" ? "room"
+    : typeof pt === "string" && pt.startsWith("Commercial") ? "commercial"
+      : pt === "Residential" || pt === "Residential Lease" ? "house" : null;
+/** Phần tử Listing → tên khoá cũ của /v1/deals. `khoaMoi` giữ tập khoá gốc để so với tệp hợp đồng. */
+const veHinhCu = (d: Record<string, unknown>) => ({
+  offerId: d.listingKey, priceVnd: d.listPrice ?? d.leaseAmount, areaM2: d.livingArea, pricePerm2: d.salePricePerArea ?? d.leasePricePerArea,
+  bedrooms: d.bedroomsTotal, phuong: d.city, marketId: d.mlsAreaMajor, propertyType: loaiNoiBo(d.propertyType, d.propertySubType),
+  medianPerm2: d.comparableMedianPricePerArea, discountPct: d.belowMedianPct, confidence: d.confidence, firstSeen: d.onMarketTimestamp,
+  lastSeen: d.lastSeenTimestamp, nReposts: d.repostCount, ...(d.priceRank ? { rank: d.priceRank } : {}), khoaMoi: Object.keys(d).sort(),
+});
+const goiListings = async (route: { request: (u: string) => Response | Promise<Response> }, q: string) => {
+  const res = await route.request(`/?${thamSoMoi(q)}`);
+  const j = (await res.json()) as { data?: Record<string, unknown>[] } & Record<string, unknown>;
+  return { status: res.status, body: { ...j, data: (j.data ?? []).map(veHinhCu) } };
+};
+
 test("CG8-AC-6 data-api /v1/deals: propertyType, thước cùng loại, khoá cũ giữ, lọc như trước", async () => {
   await m.fx.withTx(async (c: pg.Client) => {
     const { ac1, ac2, thuoc, tin } = await chuanBi(c);
-    const goi = async (q: string) => quaClient(c, async () => (await (await m.dealsRoute.request(`/?${q}`)).json()) as {
+    const goi = async (q: string) => quaClient(c, async () => (await goiListings(m.listingsRoute, q)).body as unknown as {
       data: Record<string, unknown>[]; meta: { minDiscount: number };
     });
     const tat = await goi("limit=100&min_discount=0");
@@ -160,6 +195,7 @@ test("CG8-AC-6 data-api /v1/deals: propertyType, thước cùng loại, khoá c�
       assert.equal(t.kind, "sale", `CG8-AC-6 ${d.offerId}: tin thuê`);
       const k = thuoc.get(`${t.area}|${t.type}`)!;
       assert.ok(Math.abs((d.discountPct as number) - gapLai(t.perm2, k.m)) <= 0.1, `CG8-AC-6 ${d.offerId}: số giảm lệch`);
+      assert.deepEqual(d.khoaMoi, [...m.LISTING_KEY_NAMES].sort(), `CG8-AC-6 ${d.offerId}: tập khoá lệch tệp hợp đồng Listing`);
       for (const [khoa, ks] of Object.entries(KHOA_CU)) {
         assert.ok(khoa in d && ks.includes(kieu(d[khoa])), `CG8-AC-6 ${d.offerId}: khoá ${khoa} mất hay đổi kiểu (${kieu(d[khoa])})`);
       }
