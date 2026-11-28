@@ -57,7 +57,7 @@ export function ZaloPipePanel({ zalo, funnel, lastPostHours, roles = {} }: { zal
           {!zalo.silentAlert24h && !zalo.driftAlert24h ? <span className="text-muted-foreground text-xs">Không có cảnh báo im lặng hay lệch danh sách cho phép trong 24 giờ.</span> : null}
         </div>
         <p className="text-muted-foreground text-xs">
-          Cổng Kev: sự kiện cuối {fmtVnDateTime(funnel.lastEventAt)}. 7 ngày qua: {fmtInt(funnel.last7.messages)} tin thấy → {fmtInt(funnel.last7.passed)} qua cổng → {fmtInt(funnel.last7.accepted)} nhận vào bảng thô
+          Hook S03: sự kiện cuối {fmtVnDateTime(funnel.lastEventAt)}. 7 ngày qua: {fmtInt(funnel.last7.messages)} tin thấy → {fmtInt(funnel.last7.passed)} đẩy vào cổng nhận tin → {fmtInt(funnel.last7.accepted)} nhận vào bảng thô
           {funnel.last7.media > 0 ? ` · ${fmtInt(funnel.last7.media)} chỉ có ảnh` : ""}.
         </p>
       </FramePanel>

@@ -26,7 +26,7 @@ export async function docTrangThuThap(nowMs: number): Promise<CollectionsData> {
   if (await freshnessLocalOnly()) {
     const [cloud, funnel, factsPushedAt, roles] = await Promise.all([getCloudOpsView(), readGateFunnel(), getFactsPushedAt(), getSourceRoles()]);
     // Lưới job đọc khối job của bản tin; chưa có bản tin thì không đọc (nhánh dò launchd chỉ có nghĩa trên máy thu).
-    // Kev gate / collector API cùng trạng thái với khối khoá an toàn (ON23).
+    // Cổng nhận tin cùng trạng thái với khối khoá an toàn (ON23).
     const jobs = cloud.state === "none" ? [] : withLockdownGates(await readSchedulerStatus(), cloud.lockdown);
     // «Luồng 7 ngày» (ON5): hai cột S03 từ khối luong7, listing tươi từ bảng đã đồng bộ; chưa có bản tin thì không dựng.
     const cloudDays = cloud.state === "none" ? [] : await getCloudFlowDays(cloud.luong7, { now: nowMs });
@@ -85,5 +85,5 @@ const CLOUD_EMPTY = {
   zaloGroups: [],
   zaloAllowlist: [],
   zaloHealth: { connected: null, uptime24h: null, heartbeatAgeMin: null, lastHeartbeatAt: null, lastPostAt: null, silentAlert24h: false, driftAlert24h: false },
-  lockdown: { layers: [], lastWatchdogAt: null, agentTurnsToday: null, openClawUp: false, kevUp: false, collectorUp: false },
+  lockdown: { layers: [], lastWatchdogAt: null, agentTurnsToday: null, openClawUp: false, collectorUp: false },
 } satisfies Partial<CollectionsData>;

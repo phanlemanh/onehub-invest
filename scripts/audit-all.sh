@@ -165,7 +165,7 @@ echo "─── F. INFRASTRUCTURE ───"
 AGENTS=$(launchctl list 2>/dev/null | count_matches "oneinvest")
 pass "launchd agents: $AGENTS đang chạy"
 # Scheduler health
-for svc in ":8009" ":9210"; do
+for svc in ":9210"; do  # :8009 (cổng chấm điểm) gỡ khỏi máy 24/11 — KEV2
   ALIVE=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 2 "http://127.0.0.1$svc/" 2>/dev/null)
   [ "$ALIVE" != "000" ] && pass "Service $svc sống" || fail "Service $svc chết"
 done

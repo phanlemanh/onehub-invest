@@ -99,9 +99,8 @@ export async function readLockdown({ root, agentLogDir = "/tmp/openclaw", now = 
   } catch {
     /* tệp vắng hoặc không đọc được */
   }
-  const [openClawUp, kevUp, collectorUp] = await Promise.all([
+  const [openClawUp, collectorUp] = await Promise.all([
     pgrep(),
-    probe("http://127.0.0.1:8009/v1/models"),
     probe("http://127.0.0.1:9210/agent-report"),
   ]);
   const layers = [
@@ -111,7 +110,6 @@ export async function readLockdown({ root, agentLogDir = "/tmp/openclaw", now = 
     { layer: "L4", desc: "Bộ canh 5′ đang chạy", ok: wdFresh },
     { layer: "L4b", desc: "Lượt máy tự trả lời hôm nay = 0", ok: turns === null ? null : turns === 0 },
     { layer: "Hạ tầng", desc: "OpenClaw đang chạy", ok: openClawUp },
-    { layer: "Hạ tầng", desc: "Cổng Kev :8009", ok: kevUp },
     { layer: "Hạ tầng", desc: "Cổng nhận tin :9210", ok: collectorUp },
   ];
   return { layers, lastWatchdogAt: lastWd, agentTurnsToday: turns };

@@ -103,7 +103,7 @@ async function collections(variant: "canh-bao" | "lanh"): Promise<string> {
         : { connected: true, uptime24h: 1, heartbeatAgeMin: 5, lastHeartbeatAt: null, lastPostAt: "2026-10-24T02:00:00Z", silentAlert24h: false, driftAlert24h: false },
       factsPushedAt: bad ? new Date(NOW - 90 * 60_000).toISOString() : null,
       feedHealth: bad ? [feed("S05", "stale"), feed("S06", "none")] : [],
-      lockdown: { layers: bad ? [{ layer: "L1", desc: "bindings", ok: false }] : [], lastWatchdogAt: null, agentTurnsToday: bad ? 1 : 0, openClawUp: true, kevUp: true, collectorUp: true },
+      lockdown: { layers: bad ? [{ layer: "L1", desc: "bindings", ok: false }] : [], lastWatchdogAt: null, agentTurnsToday: bad ? 1 : 0, openClawUp: true, collectorUp: true },
       nowMs: NOW,
       roles: await getSourceRoles(),
     } as never),
@@ -118,8 +118,8 @@ describe("ON7-AC-1 /ops/collections", () => {
     const text = readable(h)
     const missing = ISSUE_TITLES.filter((t) => !text.some((x) => x.includes(t)))
     assert.deepEqual(missing, [], `fixture phải bật đủ ${ISSUE_TITLES.length} nhánh cảnh báo viết trước`)
-    const jobRows = [...h.matchAll(/data-row-id="([^"]+)"/g)].map((m) => m[1]).filter((id) => /^(s0\d-|collector-api|kev|cloud-sync)/.test(id))
-    assert.equal(new Set(jobRows).size, 6, `lưới job phải đủ 6 job: ${jobRows.join(", ")}`)
+    const jobRows = [...h.matchAll(/data-row-id="([^"]+)"/g)].map((m) => m[1]).filter((id) => /^(s0\d-|collector-api|cloud-sync)/.test(id))
+    assert.equal(new Set(jobRows).size, 5, `lưới job phải đủ 5 job (hàng kev gỡ ở KEV2): ${jobRows.join(", ")}`)
     const down = alertBlock(h, "Kênh S03 · Cộng đồng đứt")
     assert.ok(down, "phải có khối cảnh báo «Kênh S03 · Cộng đồng đứt»")
     assert.ok(down.includes('href="/ops/sources"'), "liên kết /ops/sources phải nằm TRONG cảnh báo kênh đứt")

@@ -151,7 +151,7 @@ async function renderCollections(): Promise<string> {
       zaloHealth: { connected: null, uptime24h: null, heartbeatAgeMin: null, lastHeartbeatAt: null, lastPostAt: null, silentAlert24h: false, driftAlert24h: false },
       factsPushedAt: null,
       feedHealth: await getSourceFeedHealth(),
-      lockdown: { layers: [], lastWatchdogAt: null, agentTurnsToday: 0, openClawUp: false, kevUp: false, collectorUp: false },
+      lockdown: { layers: [], lastWatchdogAt: null, agentTurnsToday: 0, openClawUp: false, collectorUp: false },
       nowMs: Date.now(),
     }),
   )

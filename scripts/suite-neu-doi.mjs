@@ -22,6 +22,8 @@ const LOI_APP = [
   "app/**", "agent/**", "pipeline/**", "scripts/**", "db/**", "data-api/**", "CONTEXT.md",
   ".claude/skills/onehub-ui/**", "docs/architecture/**", "docs/product/**", "docs/ops/**",
   "_acceptance/tap-nhan-mau-ocp1/**",
+  // app/tests/kev2-thu-thap.test.tsx rút khuôn dòng log từ hook Zalo (KEV2): hook đổi chữ log thì suite app phải chạy.
+  "collector/openclaw/handler.js",
 ];
 
 const LOI_PIPELINE = [

@@ -310,7 +310,7 @@ const EMPTY = { messages: 0, passed: 0, skipped: 0, accepted: 0, media: 0 }
 const BASE = {
   days: DAYS, funnel: { lastEventAt: null, today: EMPTY, last7: EMPTY }, jobs: [], rotation: ROTATION, zaloGroups: [], zaloAllowlist: [],
   zaloHealth: { connected: null, uptime24h: null, heartbeatAgeMin: null, lastHeartbeatAt: null, lastPostAt: null, silentAlert24h: false, driftAlert24h: false },
-  factsPushedAt: null, lockdown: { layers: [], lastWatchdogAt: null, agentTurnsToday: null, openClawUp: false, kevUp: false, collectorUp: false }, nowMs: NOW,
+  factsPushedAt: null, lockdown: { layers: [], lastWatchdogAt: null, agentTurnsToday: null, openClawUp: false, collectorUp: false }, nowMs: NOW,
 }
 async function trangMayChu(View?: (p: never) => unknown): Promise<string> {
   const { getCloudOpsView } = await import("../src/lib/ops-cloud")

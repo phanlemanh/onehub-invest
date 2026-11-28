@@ -170,7 +170,7 @@ export async function getSourceFeedHealth(): Promise<SourceFeedHealth[]> {
 
 export type LockdownLayer = { layer: string; desc: string; ok: boolean | null };
 
-/** Tám lớp khoá an toàn theo thứ tự hiện — một chỗ cho máy thu (`getLockdownStatus`) và máy chủ khi chưa có khối
+/** Bảy dòng khoá an toàn theo thứ tự hiện (năm lớp khoá + hai dòng hạ tầng; dòng cổng :8009 gỡ ở KEV2 — máy đó rời máy 24/11) — một chỗ cho máy thu (`getLockdownStatus`) và máy chủ khi chưa có khối
  * `lockdown` (ON23 hiện đủ 8 lớp «Chỉ kiểm ở máy thu»). Bản .mjs bên ghi: `scripts/lib/ops-local.mjs` `readLockdown`. */
 export const LOCKDOWN_LAYERS: readonly { layer: string; desc: string }[] = [
   { layer: "L1", desc: "Chỉ đọc — không có API gửi tin" },
@@ -179,7 +179,6 @@ export const LOCKDOWN_LAYERS: readonly { layer: string; desc: string }[] = [
   { layer: "L4", desc: "Bộ canh 5′ đang chạy" },
   { layer: "L4b", desc: "Lượt máy tự trả lời hôm nay = 0" },
   { layer: "Hạ tầng", desc: "OpenClaw đang chạy" },
-  { layer: "Hạ tầng", desc: "Cổng Kev :8009" },
   { layer: "Hạ tầng", desc: "Cổng nhận tin :9210" },
 ];
 
@@ -197,7 +196,6 @@ export async function getLockdownStatus(
   lastWatchdogAt: string | null;
   agentTurnsToday: number | null;
   openClawUp: boolean;
-  kevUp: boolean;
   collectorUp: boolean;
 }> {
   const { readFile } = await import("node:fs/promises");
@@ -242,9 +240,8 @@ export async function getLockdownStatus(
       return false;
     }
   };
-  const [openClawUp, kevUp, collectorUp] = await Promise.all([
+  const [openClawUp, collectorUp] = await Promise.all([
     run("pgrep", ["-f", "openclaw"]).then(() => true).catch(() => false),
-    probe("http://127.0.0.1:8009/v1/models"),
     probe("http://127.0.0.1:9210/agent-report"),
   ]);
 
@@ -255,11 +252,10 @@ export async function getLockdownStatus(
     wdFresh,
     turns === null ? null : turns === 0,
     openClawUp,
-    kevUp,
     collectorUp,
   ];
   const layers: LockdownLayer[] = LOCKDOWN_LAYERS.map((l, i) => ({ ...l, ok: oks[i] }));
-  return { layers, lastWatchdogAt: lastWd, agentTurnsToday: turns, openClawUp, kevUp, collectorUp };
+  return { layers, lastWatchdogAt: lastWd, agentTurnsToday: turns, openClawUp, collectorUp };
 }
 
 export type RulerHealth = {
