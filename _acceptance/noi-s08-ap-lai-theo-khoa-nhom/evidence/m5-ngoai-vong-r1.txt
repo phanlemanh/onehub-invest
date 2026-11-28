@@ -1,0 +1,24 @@
+DA65 S4 vòng 1 trên M5 ＠db2cedd144a9a2552affab7b3d0867223f087aa4 — pipeline_that chạy NGOÀI vòng (CHUNG điểm 16; hồ sơ không có eval long_running cho nó; nhánh đổi pipeline/lib/noi-du-an-s08-lop.mjs nên suite chạy).
+Lệnh: node scripts/suite-neu-doi.mjs pipeline_that -- 'cd pipeline && npm run test:that'
+chay-that: vai may-phat-trien — bỏ qua 1 ca chỉ máy thu
+chay-that: bỏ qua (chỉ máy thu) — pipeline/scripts/ops-facts-so-tong-hop.test.mjs — ON22-AC-10 máy thu thật, chế độ khô: năm khối có measured_at, freshness bằng check-freshness, 0 chỗ chặn, đầu ra chỉ tên khối + trạng thái — chạy push-ops-facts thật trên log, ~/.oneinvest, cấu hình OpenClaw, launchctl có job thật của máy thu — máy phát triển không có và luật cấm chạy push-ops-facts thật ở đó
+ℹ tests 37
+ℹ pass 37
+ℹ fail 0
+ℹ skipped 0
+__EXIT=0
+→ ĐẠT theo luật GS 26/11. Chấm trên M5: ON22-AC-10 không chạy (HT33).
+
+E3 trong vòng: bọc bằng db/db-thu.sh oneinvest_suite_da65_doc --chay (chỉ trong args của lượt, evals.yaml không đổi) để đọc bản chép, không đọc DB oneinvest.
+
+E4 chạy lại sau vòng để lấy dòng số (bản tóm tắt của kit cắt mất), bản chép mới từ oneinvest 28/11 08:58Z:
+bản chép oneinvest_suite_da65_12520: dự án 186 · nút S08 trước 146 · khoá nhóm chưa có nút 0 · sau áp 146 · sau áp lần hai 146 · dự án giả về nút cũ: có · áp lần hai khongDoi: true
+PASS áp sau cùng khoá nhóm không đúc nút thứ hai; số nút S08 chỉ tăng theo khoá nhóm thật sự mới; áp lần hai không đổi
+__EXIT=0
+Khớp kỳ vọng GS: nút S08 146 → 146, dự án giả về nút cũ, áp lần hai khongDoi.
+
+E4 chiều từ chối (không chạy trên oneinvest): DATABASE_URL trỏ DB «postgres» chỉ đọc →
+HONG «postgres» không phải DB của riêng lượt — từ chối ghi
+exit 2. Thiếu DATABASE_URL → «HONG thiếu DATABASE_URL — chạy qua db/db-thu.sh --chay», exit 2. Chốt là regex ^oneinvest_(suite|dbv)_ — tên «oneinvest» không khớp nên rơi đúng nhánh từ chối này.
+
+Soát db2cedd14-20261128T180432: pipeline, agent xanh; app chỉ đỏ QV-AC-5.

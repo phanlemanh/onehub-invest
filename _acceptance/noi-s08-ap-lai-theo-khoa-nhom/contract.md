@@ -5,7 +5,7 @@ slug: noi-s08-ap-lai-theo-khoa-nhom
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: verified
 veto_state: mo
 veto_opened_at: 2026-11-28T11:00:36Z
 approved_by:
