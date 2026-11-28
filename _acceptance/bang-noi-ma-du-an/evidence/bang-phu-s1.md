@@ -225,3 +225,21 @@ JSON đầy đủ của bộ đo nằm ở ghi chú chung của đợt, tệp `d
 - Theo AC-8 bản 27/11 (S09 đọc tập DA42):
   - đổi phạm vi: 6.169 (S09 49);
   - sau nối: 5.813 (S07 5.727, S16 11).
+
+## 9. Đo lại lúc S3 — 28/11 05:27Z (Task 7, DB máy thu chỉ đọc, mã nhánh)
+
+**Không lệch so với §8.** Main 5013d45c0 không đổi danh bạ dự án: 660 nút, dòng nối S06, S08, S09 như cũ.
+- Thẻ S07: K2 11 · K3 62 · T 274 · nhiều nút 1 · không tỉnh 7 · không khớp 5.719.
+- Thẻ S16: giữ 5 · K2 1 · K3 2 · T 1 · không khớp 11.
+- Thẻ S10: không vị trí 119.
+- Ô theo `oSo` trên `docDanhBa`: 6.169 (đổi phạm vi). Hai dòng riêng không cộng vào ô: S09 tập cũ 232 và S10 119.
+
+**Ngả T với bản ghi và nút đều có điểm, cách nhau hơn 300 m, khác xã** (điểm GS hỏi 28/11, sổ d-…-fix E2): chỉ 2 bản ghi.
+
+| Nguồn | Tên nguồn | Nút đích | Khoảng cách | Tỉnh |
+|---|---|---|---|---|
+| S07 | Vinhomes King Park | VINHOMES KING PARK (ứng viên S08) | 1.170 m | vn-bac-ninh |
+| S16 | Vinhomes Green City | VINHOMES GREEN CITY (ứng viên S08) | 1.163 m | vn-tay-ninh |
+
+Trong 274 bản ghi S07 nối theo T, chỉ 1 bản ghi có điểm ở cả hai phía. Nút ứng viên S06 và nút đã xác minh không có điểm.
+Lệnh đo: tính khoảng cách điểm bản ghi ↔ điểm nút cho mọi dòng `noi:T` của thẻ, đếm dòng cách hơn 300 m.

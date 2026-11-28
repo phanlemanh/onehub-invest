@@ -29,7 +29,7 @@ evals:
       tên khác → chua_noi:khong-khop; cùng xã + tên trùng → noi:K3; tên trùng một nút cùng tỉnh khác xã → noi:T; tên trùng hai nút cùng
       tỉnh → chua_noi:nhieu-nut; tên trùng một nút khác tỉnh → chua_noi:khong-khop; nút mot_loi_khai nguồn khác cùng tỉnh trùng tên →
       noi:T; nút mot_loi_khai do S08 đúc có điểm cách 150 m, tên trùng → noi:K2 (Hỏi-1 bản 27/11); cùng nút, tên trùng, cách 301 m
-      và cách 350 m → không ra K2 (khác xã thì chua_noi:khong-khop, cùng xã thì noi:K3). Chiều đỏ: bản đột biến bỏ điều kiện cùng tỉnh
+      và cách 350 m → không ra K2 (khác xã thì noi:T, cùng xã thì noi:K3). Chiều đỏ: bản đột biến bỏ điều kiện cùng tỉnh
       thì ô khác tỉnh đỏ, thông điệp ghim «cung-tinh»; bản đột biến nâng ngưỡng K2 lên 400 m thì ô 350 m đỏ, thông điệp ghim «300».
 
   - id: E3
