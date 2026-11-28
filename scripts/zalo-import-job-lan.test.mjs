@@ -5,7 +5,7 @@
 // sửa phần nạp của tệp bọc, rồi chạy tệp test thật trong đó. Không đụng cây thật, không DB, không OpenClaw.
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -32,6 +32,17 @@ before(() => {
   git(REPO, "worktree", "add", "-q", "--detach", WT, "HEAD");
   // Bản test đang đo (cây làm việc của kho, có thể chưa commit) chép vào cây tạm.
   writeFileSync(path.join(WT, TEST), readFileSync(path.join(REPO, TEST), "utf8"));
+  // Sổ PL34-AC-4 trong bản test kê tên các tệp test nhắc zalo-import-daily —
+  // tệp mới kê trong sổ phải có MẶT trong cây tạm, nếu không quét tệp của
+  // PL34-AC-4 lệch sổ (đỏ giả trên nhánh mô phỏng).
+  const SO_TEP = [...readFileSync(path.join(REPO, TEST), "utf8").matchAll(/"(scripts\/[^"]+\.(?:test|itest)\.mjs)"/g)]
+    .map((m) => m[1]).filter((f) => f !== TEST);
+  for (const f of SO_TEP) {
+    const nguon = path.join(REPO, f);
+    const dich = path.join(WT, f);
+    mkdirSync(path.dirname(dich), { recursive: true });
+    writeFileSync(dich, readFileSync(nguon, "utf8"));
+  }
   // Mô phỏng ZCode sửa hợp lệ phần nạp, commit thành một nhánh rời.
   const goc = readFileSync(path.join(WT, SCRIPT), "utf8");
   const sua = goc.replace(SUA_GOC, SUA_MOI);

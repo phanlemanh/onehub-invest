@@ -161,7 +161,7 @@ const NGOAI_LE = [
   "agent/src/enrich/run.ts|confidence",
   "app/src/components/compare/compare-types.ts|confidence",
   // CG9 bang-hang-gia-m2: data-api (subtree công khai) không có tệp hằng sinh; tham số kind của /v1/deals kiểm hai giá trị tại chỗ.
-  "data-api/src/routes/deals.ts|kind",
+  "data-api/src/routes/listings.ts|kind",
   // app/src/lib/source-status-labels.ts|registry_status gỡ ở hàng nhan-trang-thai-nguon-draft: bảng có thêm draft (năm
   // khoá, hai trùng chữ active/retired) nên lint không còn coi là trục registry_status — ngoại lệ thừa thì allowStale đỏ.
 ];

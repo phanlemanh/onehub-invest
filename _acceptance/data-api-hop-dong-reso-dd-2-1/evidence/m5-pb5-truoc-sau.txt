@@ -1,0 +1,12 @@
+PB2 vòng 1 trên M5 ＠2b768db014e0c4384bd2eda1e453b39b3ca1c863 — kiểm bảng pb5-truoc-sau.md: chạy lại bốn ca PB5 đã trỏ sang schema.sql.
+Lệnh: DATABASE_URL=<postgres local :5433, DB postgres> node --test scripts/data-api-ten-nguon.test.mjs (ca tự tạo rồi xoá DB pb5_<pid>_<n>; không chạm oneinvest)
+▶ PB5 data-api-don-ten-nguon
+✔ PB5 data-api-don-ten-nguon (1321.112208ms)
+ℹ tests 16
+ℹ suites 3
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1444.366416

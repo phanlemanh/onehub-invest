@@ -7,9 +7,13 @@
 
 ## Không được đụng
 
-- **Không đọc** `.env`, `.env.local`, `.env.production*`, `*.har`, `.airdna-profile/**`.
+- **Không đọc** `.env`, `.env.local`, `.env.production*`, `*.har`, `.airdna-profile/**` (và thư mục nào mà
+  `S02_PROFILE_DIR` trỏ tới). Riêng BỘ THU S02 đọc bản ghi phiên `auth` của profile đó lúc chạy (trong bộ nhớ,
+  không in, không ghi); agent không đọc tay — công cụ soi chỉ in cấu trúc (độ dài, số thứ tự, băm), không in giá trị.
 - **Không sửa/xoá** gì trong `snapshots/` — raw snapshot bất biến, collector chỉ ghi mới.
-- **Không sửa** `.airdna-profile/` (cookie đăng nhập AirDNA, đăng nhập một lần dùng mãi).
+- **Không sửa** `.airdna-profile/` (hay thư mục `S02_PROFILE_DIR` trỏ tới) — nơi giữ phiên đăng nhập S02.
+  Phiên CÓ hạn, không phải «đăng nhập một lần dùng mãi»: hết thì Mạnh tự đăng nhập lại bằng
+  `npm run collect -- login --source airdna-research`; agent chỉ mở cửa sổ bằng lệnh đó, không gõ mật khẩu.
 - Không `git push --force`; không merge vào `main`; không checkout nhánh khác trong
   `~/dev/onehub-invest` (launchd chạy code từ đó).
 - Không sửa migration đã commit trong `db/migrations/`; không tự chạy migration.
@@ -127,5 +131,6 @@ cd pipeline && npm test        # khi đụng script thu/nạp trong pipeline/
 node scripts/check-freshness.mjs
 ```
 
-Bẫy: Airbnb/AirDNA chỉ chạy headful Chrome; phân trang Airbnb dùng `A[aria-label^='Trang N']`;
+Bẫy: Airbnb chỉ chạy headful Chrome; phân trang Airbnb dùng `A[aria-label^='Trang N']`;
+S02 thu KHÔNG cần trình duyệt (đi cửa API, xem `collector/CLAUDE.md` mục 5) — chỉ lệnh `login` mở Chrome thường.
 OSM dùng `out geom` + header UA.

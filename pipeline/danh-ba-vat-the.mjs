@@ -100,11 +100,22 @@ export async function dung(c, {
     const isoKhu = new Map();
     const bangIso = await napBangIso(c);
     if (bangIso) {
+      // DA72: ISO chỉ BẮT BUỘC ở khu mà nó được dùng — khu có dòng S08 (gắn vào dòng s08 rồi đúc toà) và khu đích nối của bước
+      // S09 khu, S16 (đúc toà theo ISO khu). Khu khác (vd 145 nút khu S09 gói 1 của DA42, area_ids rỗng; S09 gói 1 tự tra ISO
+      // theo mã tỉnh) thiếu tỉnh thì bỏ ISO, đếm một dòng — không làm gãy cả lượt giữ tươi (sự cố đêm 28/11).
+      const canIso = new Set([...s08.map((d) => d.khu_id),
+        ...[...khu.values()].filter((k) => Object.values(noiS09).includes(k.slug) || Object.values(noiS16).includes(k.slug)).map((k) => k.id)]);
+      let boIso = 0;
       for (const k of khu.values()) {
         const kq = isoTheo ? { iso: isoTheo(k) } : isoCuaKhu(k, bangIso);
-        if (kq.loi) throw new LoiGoi(`khu ${k.slug}: ${kq.loi}`);
+        if (kq.loi) {
+          if (canIso.has(k.id)) throw new LoiGoi(`khu ${k.slug}: ${kq.loi}`);
+          boIso++;
+          continue;
+        }
         isoKhu.set(k.id, kq.iso);
       }
+      if (boIso) log(`danh-ba-vat-the: khu không suy được tỉnh, bỏ ISO (không dòng S08): ${boIso}`);
     } else {
       const daCoToa = new Set(await khuDaDung(c));
       const moi = [...khu.values()].filter((k) => !daCoToa.has(k.slug)).map((k) => k.slug);
