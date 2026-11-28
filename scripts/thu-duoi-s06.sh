@@ -225,9 +225,14 @@ for CITY in $CITIES; do
     // không phải của bản thu → không đánh dấu bản nào; bản ấy đi tiếp tới bộ nạp, nạp lỗi thì vòng sau thử lại.
     const thoatGoc = process.exit;
     process.exit = (m) => { throw new Error(`thoát ${m}`); }; // readSnapshot thoát tiến trình ở nhánh source khác
+    // import-chotot.mjs dò «chạy trực tiếp» bằng realpathSync(process.argv[1]) — với -e, argv[1] là tên vùng →
+    // ENOENT. Ẩn đối số trong lúc nạp mô-đun rồi trả lại.
+    const argvGoc = process.argv;
+    process.argv = [argvGoc[0]];
     let readSnapshot = null;
     try { ({ readSnapshot } = await import(pathToFileURL(`${process.cwd()}/import-chotot.mjs`).href)); }
     catch (e) { console.error(`${gio()} không nạp được bộ kiểm snapshot (${e.message}) — vòng này không đánh dấu bản nào`); }
+    finally { process.argv = argvGoc; }
     let hongVi = async (dir) => {
       let m;
       try { m = JSON.parse(readFileSync(`${dir}/manifest.json`, "utf8")); }
