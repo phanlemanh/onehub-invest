@@ -12,7 +12,7 @@ flowchart TD
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>22 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>257 việc"]
+  GB --> DG["Đã giao<br/>258 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>148 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
@@ -279,6 +279,7 @@ flowchart TD
 - data-api — bốn đường /v1/markets (danh sách, chi tiết, submarkets, insights) thôi đọc và thôi trả số S02; rào test đỏ khi route nào của data-api tham chiếu bảng S02 (`data-api-markets-khong-doc-s02`)
 - Ca «PB2-AC-11 price-stats» so /v1/price-stats với route asset-stats cũ ở một commit CỐ ĐỊNH trước PB2 (75f32bd55) thay vì merge-base với origin/main, để ca không đỏ sẵn trên main sau khi PB2 đã gộp (PB9) (`data-api-price-stats-so-nen-co-dinh`) — đã giao — máy thông, cửa veto còn mở
 - data-api — tài nguyên Property (danh bạ nhà): tra toà và căn theo mã OneHub hoặc theo dự án + toà + mã căn, trả khung định danh và thuộc tính căn theo tên RESO DD 2.1, không cho dò hàng loạt (`data-api-property-danh-ba-nha`)
+- Lược đồ mẫu của data-api (db/schema.sql + seed.sql) đủ bảng cho tài nguyên Property (danh bạ nhà), và một probe gọi mọi đường khai trong /openapi.json trên DB mẫu để route nào trả 500 thì đỏ (PB8) (`data-api-schema-mau-du-bang-property`) — đã giao — máy thông, cửa veto còn mở
 - Dấu lược đồ của bản mẫu DB thử phủ constraint, index, trigger, enum, độ dài kiểu, NOT NULL, DEFAULT, RLS, quyền và schema ngoài public, để bản mẫu dựng lại ngay khi migration đổi những thứ đó (`dau-luoc-do-ban-mau`)
 - DB máy thu chỉ nghe nội bộ (127.0.0.1) và chỉnh tham số Postgres (`db-chi-nghe-noi-bo-va-chinh-postgres`)
 - Suite pipeline của lượt chấm chạy trên cụm Postgres dùng một lần (DB trống chuẩn CI), ca dữ liệu thật tách thành suite kích hẹp, sao lưu bỏ DB thử của suite (`db-thu-tach-khoi-cum-that`)
