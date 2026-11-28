@@ -1,0 +1,38 @@
+schema_version: 1
+feature_slug: ca-du-lieu-that-danh-ba-vat-the
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.da1_db
+    paths: ["pipeline/scripts/danh-ba-vat-the-iso.itest.mjs", "pipeline/data/xa-nut-du-an.json"]
+    expected: "exit 0; ca DA1-AC-4c xanh: số nút dự án không mot_loi_khai = số mục tệp xã (20), mọi nút ra ISO, năm khu ghim đúng mã"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.da1_db
+    paths: ["pipeline/scripts/danh-ba-vat-the-iso.itest.mjs", "pipeline/danh-ba-vat-the.mjs"]
+    expected: "exit 0; ca DA1-AC-7 xanh trên bản chép đã áp 088 (giả lập bằng đổi tên iso_regions, đổi lại ở finally); có dòng chẩn đoán «vế 082 còn khoá hai mã không đo được ở đây»; iso_regions còn nguyên sau ca (DA1-AC-1 chạy sau vẫn xanh)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.s09_toa_db
+    paths: ["pipeline/scripts/danh-ba-s09-toa.itest.mjs"]
+    expected: "exit 0; ca DA42 E9 xanh trên main: tập tệp soát lấy từ git ls-files theo VUNG_E9 (khác rỗng), 0 tên nguồn thật; chiều đỏ cấy tên vẫn bị bắt"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.da72_dem
+    paths: ["pipeline/scripts/danh-ba-vat-the-dem-khu-thieu-tinh.itest.mjs", "pipeline/danh-ba-vat-the.mjs"]
+    expected: "exit 0; ca DA73-AC-2b xanh: vinhomes-smart-city (đích nối S16, 0 dòng S08) area_ids rỗng → dung từ chối «khu vinhomes-smart-city: khong-co-tinh», số toà không đổi; DA72-AC-1..3 vẫn xanh"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.da72_doi_chung
+    paths: ["_acceptance/giu-tuoi-vat-the-khu-thieu-tinh/doi-chung.sh", "pipeline/scripts/danh-ba-vat-the-dem-khu-thieu-tinh.itest.mjs"]
+    expected: "exit 0; worktree tạm ở mã gốc dad1be620 + tệp ca hiện tại: DA72-AC-1 và DA72-AC-3 đỏ, khối lỗi của CHÍNH từng ca trong mục «failing tests» chứa «khong-co-tinh»; in «ĐỐI CHỨNG: mã gốc đỏ đúng»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

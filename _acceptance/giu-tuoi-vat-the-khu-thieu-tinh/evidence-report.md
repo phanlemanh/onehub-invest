@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: e53d73967d170ef3ad57be13e5884bd205af5772
+verified_commit: a87eb1393e7c0ad5f2786a9d5b0d0b7914f08204
 human_signoff:
 ---
 
@@ -128,3 +128,7 @@ Không có eval judgment nào trong hợp đồng này; không có panel nào c�
 ## Iterations
 
 Round 1: E1, E2, E3, E4 đều xanh; không eval nào hỏng, không cần quay lại implementation.
+
+### Re-pin lần 1 — 2026-11-28, do DA73 đổi tệp ca và doi-chung.sh trong paths eval (cây đã gộp main 21751c95d)
+run_id: repin-20261128T013313Z-66821
+sha: a87eb1393e7c0ad5f2786a9d5b0d0b7914f08204 · suites: 8 lệnh exit 0 · evals: 4/4 eval máy đạt kỳ vọng

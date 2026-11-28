@@ -664,8 +664,10 @@ test("DA42 E9 (AC-9): danh sách đẩy không có stg gói 1 và bảng vật t
     assert.equal(phanLop(ma, [{ ...uv, catalog_tier: "xac_minh", tinh: "01" }]).node_id, uv.id, "chiều đỏ: cùng nút bậc xác minh phải được nhận");
 
     // 5. Soát tên thật: thẻ, log, tệp của hàng. Báo chỗ trúng, không giá trị.
-    const tep = execFileSync("git", ["-C", join(import.meta.dirname, "../.."), "diff", "--name-only", "origin/main...HEAD"], { encoding: "utf8" })
-      .split("\n").filter((f) => VUNG_E9.some((re) => re.test(f)));
+    // DA73: soát MỌI tệp đang theo dõi trong vùng của hàng (git ls-files), không theo diff nhánh — sau khi #555 gộp, diff
+    // origin/main...HEAD rỗng nên ca đỏ «tiền đề» trên main. Bỏ tệp ảnh (bằng chứng chụp màn).
+    const tep = execFileSync("git", ["-C", join(import.meta.dirname, "../.."), "ls-files"], { encoding: "utf8" })
+      .split("\n").filter((f) => VUNG_E9.some((re) => re.test(f)) && !/\.(png|jpe?g|webp|gif)$/i.test(f));
     assert.ok(tep.length > 0, "tiền đề: phải có tệp của hàng để soát");
     const noiDungTep = Object.fromEntries(tep.map((f) => {
       try { return [f, boDinhDanh(readFileSync(join(import.meta.dirname, "../..", f), "utf8"))]; } catch { return [f, ""]; }
