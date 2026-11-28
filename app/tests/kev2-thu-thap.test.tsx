@@ -172,18 +172,29 @@ test("KEV2-AC-5 khung đường ống «Hook S03 … đẩy vào cổng nhận t
   assert.doesNotMatch(bang, /cổng Kev/)
 })
 
+// KEV1 (#567, 1fe6ab9ca) gỡ lời gọi cổng Kev khỏi hook: handler.js hiện tại không còn ghi dòng «kev null», dòng post đổi khuôn
+// («… account=… kev=off by=…», bỏ p=). Nhật ký cũ trên máy thu vẫn còn dòng kev null, nên khuôn ấy rút từ handler.js ở sha ngay
+// trước KEV1 (git show, không viết tay); khuôn post cũ cùng sha, khuôn post mới từ handler hiện tại. Đổi fixture sau chữ ký Cổng 2
+// (GS phán 28/11) — mã đọc phễu không đổi.
+const SHA_TRUOC_KEV1 = "1fe6ab9ca545ceb7286b84597a4250330b33488d^"
 test("KEV2-AC-6 phễu máy thu không đếm dòng kev null (nhật ký từ khuôn log của handler.js); tệp vắng → 0", async () => {
   const h = readFileSync(join(ROOT, "collector/openclaw/handler.js"), "utf8")
-  const khuon = (re: RegExp, ten: string) => { const m = h.match(re); assert.ok(m, `handler.js không còn dòng log «${ten}»`); return m![1] }
-  const kevNull = khuon(/log\(`(kev null \(timeout\/gate\)) group=/, "kev null")
-  const post = khuon(/log\(`(post) \$\{r\.status\}/, "post")
-  const skip = khuon(/log\(`(skip \(rỗng\)) group=/, "skip (rỗng)")
+  const g = spawnSync("git", ["-C", ROOT, "show", `${SHA_TRUOC_KEV1}:collector/openclaw/handler.js`], { encoding: "utf8" })
+  assert.equal(g.status, 0, `không đọc được handler.js trước KEV1: ${g.stderr}`)
+  const hCu = g.stdout
+  const khuon = (nguon: string, re: RegExp, ten: string) => { const m = nguon.match(re); assert.ok(m, `handler.js không còn dòng log «${ten}»`); return m![1] }
+  const kevNull = khuon(hCu, /log\(`(kev null \(timeout\/gate\)) group=/, "kev null (trước KEV1)")
+  const post = khuon(hCu, /log\(`(post) \$\{r\.status\}/, "post (trước KEV1)")
+  const skip = khuon(h, /log\(`(skip \(rỗng\)) group=/, "skip (rỗng)")
+  const kevOff = khuon(h, /log\(`post \$\{r\.status\} \$\{r\.body\} group=\$\{group\} account=\$\{account\} (kev=off) by=/, "post khuôn mới kev=off")
   const t = (phut: number) => new Date(Date.now() - phut * 60_000).toISOString()
   const dong: string[] = []
   for (let i = 0; i < 3; i++) {
     dong.push(`${t(30 - i)} ${kevNull} group=Nhóm A account=acc-1`)
     dong.push(`${t(30 - i)} ${post} 202 {"accepted":1} group=Nhóm A p=null account=acc-1 by=x`)
   }
+  // Khuôn post MỚI (sau KEV1): một tin, không có dòng kev null đi kèm.
+  dong.push(`${t(12)} post 202 {"accepted":1} group=Nhóm A account=acc-1 ${kevOff} by=y`)
   dong.push(`${t(10)} ${skip} group=Nhóm A account=acc-1`, `${t(5)} heartbeat up`)
   const home = mkdtempSync(join(tmpdir(), "kev2-home-"))
   mkdirSync(join(home, ".openclaw/logs"), { recursive: true })
@@ -198,11 +209,11 @@ test("KEV2-AC-6 phễu máy thu không đếm dòng kev null (nhật ký từ kh
     writeFileSync(join(home, ".openclaw/logs/oneinvest-zalo-pipe.log"), dong.join("\n") + "\n")
     const f = await readGateFunnel()
     const lay = (b: typeof f.last7) => ({ messages: b.messages, passed: b.passed, skipped: b.skipped, accepted: b.accepted })
-    const ghim = (b: typeof f.last7) => { if (b.messages !== 4) throw new Error(`tin thấy đếm đôi: ${b.messages}`) }
+    const ghim = (b: typeof f.last7) => { if (b.messages !== 5) throw new Error(`tin thấy đếm đôi: ${b.messages}`) }
     ghim(f.last7)
-    assert.deepEqual(lay(f.last7), { messages: 4, passed: 3, skipped: 1, accepted: 3 })
-    assert.equal(gateByGroup(dong.join("\n")).get("Nhóm A")?.seen, 4, "tin thấy theo nhóm đếm đôi")
-    // Chiều đỏ: cùng nhật ký mà không bỏ dòng kev null → 7 tin thấy.
+    assert.deepEqual(lay(f.last7), { messages: 5, passed: 4, skipped: 1, accepted: 4 })
+    assert.equal(gateByGroup(dong.join("\n")).get("Nhóm A")?.seen, 5, "tin thấy theo nhóm đếm đôi")
+    // Chiều đỏ: cùng nhật ký mà không bỏ dòng kev null → 8 tin thấy.
     assert.throws(() => ghim({ ...f.last7, messages: dong.filter((l) => !/ heartbeat /.test(l)).length }), /tin thấy đếm đôi/)
   } finally {
     if (prevHome === undefined) delete process.env.HOME
